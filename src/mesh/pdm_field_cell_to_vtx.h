@@ -99,6 +99,15 @@ PDM_field_cell_to_vtx_part_set
 
 
 void
+PDM_field_cell_to_vtx_part_mesh_nodal_set
+(
+  PDM_field_cell_to_vtx_t   *mi,
+  int                        i_domain,
+  PDM_part_mesh_nodal_t     *pmn
+);
+
+
+void
 PDM_field_cell_to_vtx_graph_comm_set
 (
   PDM_field_cell_to_vtx_t   *mi,

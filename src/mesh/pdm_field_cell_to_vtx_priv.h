@@ -12,6 +12,7 @@
 // #include "pdm_multipart.h"
 #include "pdm_part_priv.h"
 #include "pdm_part_domain_interface.h"
+#include "pdm_part_mesh_nodal.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -53,7 +54,9 @@ struct _pdm_field_cell_to_vtx_t {
   PDM_part_domain_interface_t  *pdi;
   int                           n_interface;
 
-  _part_t  **parts;
+  _part_t               **parts;
+  PDM_part_mesh_nodal_t **pmn;
+  int is_nodal;
 
   double **cell_center;
 

@@ -326,7 +326,6 @@ _prepare_vtx_cell
  PDM_field_cell_to_vtx_t*  fctv
 )
 {
-
   /*
    * Create vtx_cell
    */
@@ -367,6 +366,183 @@ _prepare_vtx_cell
   }
 }
 
+static
+void
+_prepare_cell_center_nodal
+(
+  PDM_field_cell_to_vtx_t* fctv
+)
+{
+  assert(fctv->cell_center == NULL);
+  PDM_geometry_kind_t geom_kind = PDM_GEOMETRY_KIND_VOLUMIC;
+  int order = 1;
+
+  int shift_part = 0;
+  fctv->cell_center = malloc(fctv->n_part_loc_all_domain * sizeof(double * ));
+  for(int i_domain = 0; i_domain < fctv->n_domain; ++i_domain) {
+
+    int n_section    = PDM_part_mesh_nodal_n_section_get  (fctv->pmn[i_domain], geom_kind);
+    int *sections_id = PDM_part_mesh_nodal_sections_id_get(fctv->pmn[i_domain], geom_kind);
+
+    for(int i_part = 0; i_part < fctv->n_part[i_domain]; ++i_part) {
+
+      int n_vtx        = PDM_part_mesh_nodal_n_vtx_get      (fctv->pmn[i_domain], i_part);
+
+      int n_elmt = 0;
+      for(int i_section = 0; i_section < n_section; ++i_section) {
+        int n_elmt_in_section = PDM_part_mesh_nodal_block_n_elt_get(fctv->pmn[i_domain],
+                                                                    geom_kind,
+                                                                    sections_id[i_section],
+                                                                    i_part);
+        n_elmt     += n_elmt_in_section;
+      }
+
+      fctv->cell_center[i_part+shift_part] = malloc(3 * n_elmt * sizeof(double));
+      double *_entity_center = fctv->cell_center[i_part+shift_part];
+      double *pvtx_coord = fctv->parts[i_domain][i_part].vtx;
+
+      n_elmt = 0;
+      for(int i_section = 0; i_section < n_section; ++i_section) {
+        PDM_Mesh_nodal_elt_t t_elt = PDM_part_mesh_nodal_section_elt_type_get(fctv->pmn[i_domain], geom_kind, sections_id[i_section]);
+        int n_vtx_per_elmt = PDM_Mesh_nodal_n_vtx_elt_get(t_elt, order);
+        int n_elmt_in_section = PDM_part_mesh_nodal_block_n_elt_get(fctv->pmn[i_domain],
+                                                                    geom_kind,
+                                                                    sections_id[i_section],
+                                                                    i_part);
+        int            *connec              = NULL;
+        PDM_g_num_t    *numabs              = NULL;
+        int            *parent_num          = NULL;
+        PDM_g_num_t    *parent_entity_g_num = NULL;
+        PDM_part_mesh_nodal_block_std_get(fctv->pmn[i_domain],
+                                          geom_kind,
+                                          sections_id[i_section],
+                                          i_part,
+                                          &connec,
+                                          &numabs,
+                                          &parent_num,
+                                          &parent_entity_g_num);
+
+        double pond = 1./((double) n_vtx_per_elmt);
+        for(int i_elmt = 0; i_elmt < n_elmt_in_section; ++i_elmt) {
+          _entity_center[3*n_elmt  ] = 0.;
+          _entity_center[3*n_elmt+1] = 0.;
+          _entity_center[3*n_elmt+2] = 0.;
+          int i_vtx = connec[i_elmt]-1;
+          for(int k = 0; k < n_vtx_per_elmt; ++k) {
+            _entity_center[3*n_elmt  ] += pvtx_coord[3*i_vtx  ];
+            _entity_center[3*n_elmt+1] += pvtx_coord[3*i_vtx+1];
+            _entity_center[3*n_elmt+2] += pvtx_coord[3*i_vtx+2];
+          }
+          _entity_center[3*n_elmt  ] = _entity_center[3*n_elmt  ] * pond;
+          _entity_center[3*n_elmt+1] = _entity_center[3*n_elmt+1] * pond;
+          _entity_center[3*n_elmt+2] = _entity_center[3*n_elmt+2] * pond;
+          n_elmt++;
+        }
+      } /* End section */
+    }
+    shift_part += fctv->n_part[i_domain];
+  }
+
+}
+
+
+static
+void
+_prepare_vtx_cell_nodal
+(
+ PDM_field_cell_to_vtx_t*  fctv
+)
+{
+
+  PDM_geometry_kind_t geom_kind = PDM_GEOMETRY_KIND_VOLUMIC;
+  int order = 1;
+  /*
+   * Create vtx_cell
+   */
+  int shift_part = 0;
+  fctv->pvtx_cell_n   = malloc(fctv->n_part_g_idx[fctv->n_domain] * sizeof(int *));
+  fctv->pvtx_cell_idx = malloc(fctv->n_part_g_idx[fctv->n_domain] * sizeof(int *));
+  fctv->pvtx_cell     = malloc(fctv->n_part_g_idx[fctv->n_domain] * sizeof(int *));
+  for(int i_domain = 0; i_domain < fctv->n_domain; ++i_domain) {
+
+    int n_section    = PDM_part_mesh_nodal_n_section_get  (fctv->pmn[i_domain], geom_kind);
+    int *sections_id = PDM_part_mesh_nodal_sections_id_get(fctv->pmn[i_domain], geom_kind);
+    for(int i_part = 0; i_part < fctv->n_part[i_domain]; ++i_part) {
+
+      int n_vtx        = PDM_part_mesh_nodal_n_vtx_get      (fctv->pmn[i_domain], i_part);
+
+      int n_elmt = 0;
+      int n_cell_vtx = 0;
+      for(int i_section = 0; i_section < n_section; ++i_section) {
+        PDM_Mesh_nodal_elt_t t_elt = PDM_part_mesh_nodal_section_elt_type_get(fctv->pmn[i_domain], geom_kind, sections_id[i_section]);
+        int n_vtx_per_elmt = PDM_Mesh_nodal_n_vtx_elt_get(t_elt, order);
+        int n_elmt_in_section = PDM_part_mesh_nodal_block_n_elt_get(fctv->pmn[i_domain],
+                                                                    geom_kind,
+                                                                    sections_id[i_section],
+                                                                    i_part);
+        n_elmt     += n_elmt_in_section;
+        n_cell_vtx += n_elmt_in_section * n_vtx_per_elmt;
+      }
+
+      assert(n_elmt == fctv->parts[i_domain][i_part].n_cell); // Pour l'instant 3D
+
+      int *_cell_vtx_idx = malloc((n_elmt+1) * sizeof(int));
+      int *_cell_vtx     = malloc(n_cell_vtx * sizeof(int));
+
+      n_cell_vtx = 0;
+      n_elmt     = 0;
+      _cell_vtx_idx[0] = 0;
+      for(int i_section = 0; i_section < n_section; ++i_section) {
+        PDM_Mesh_nodal_elt_t t_elt = PDM_part_mesh_nodal_section_elt_type_get(fctv->pmn[i_domain], geom_kind, sections_id[i_section]);
+        int n_vtx_per_elmt = PDM_Mesh_nodal_n_vtx_elt_get(t_elt, order);
+        int n_elmt_in_section = PDM_part_mesh_nodal_block_n_elt_get(fctv->pmn[i_domain],
+                                                                    geom_kind,
+                                                                    sections_id[i_section],
+                                                                    i_part);
+        int            *connec              = NULL;
+        PDM_g_num_t    *numabs              = NULL;
+        int            *parent_num          = NULL;
+        PDM_g_num_t    *parent_entity_g_num = NULL;
+        PDM_part_mesh_nodal_block_std_get(fctv->pmn[i_domain],
+                                          geom_kind,
+                                          sections_id[i_section],
+                                          i_part,
+                                          &connec,
+                                          &numabs,
+                                          &parent_num,
+                                          &parent_entity_g_num);
+
+        for(int i_elmt = 0; i_elmt < n_elmt_in_section; ++i_elmt) {
+          _cell_vtx_idx[n_elmt+1] = _cell_vtx_idx[n_elmt] + n_vtx_per_elmt;
+          for(int k = 0; k < n_vtx_per_elmt; ++k) {
+            _cell_vtx[n_cell_vtx++] = connec[n_vtx_per_elmt*i_elmt+k];
+          }
+          n_elmt++;
+        }
+      } /* End section */
+
+      /* Transpose */
+      PDM_connectivity_transpose(n_elmt,
+                                 n_vtx,
+                                 _cell_vtx_idx,
+                                 _cell_vtx,
+                                 &fctv->pvtx_cell_idx[i_part+shift_part],
+                                 &fctv->pvtx_cell    [i_part+shift_part]);
+
+      fctv->pvtx_cell_n[i_part+shift_part] = malloc(fctv->parts[i_domain][i_part].n_vtx * sizeof(int));
+      for(int i_vtx = 0; i_vtx < fctv->parts[i_domain][i_part].n_vtx; ++i_vtx) {
+        fctv->pvtx_cell_n[i_part+shift_part][i_vtx] = fctv->pvtx_cell_idx[i_part+shift_part][i_vtx+1] - fctv->pvtx_cell_idx[i_part+shift_part][i_vtx];
+      }
+
+      /* Free */
+      free(_cell_vtx_idx);
+      free(_cell_vtx    );
+
+    }
+    shift_part += fctv->n_part[i_domain];
+  }
+
+}
 
 
 
@@ -393,7 +569,7 @@ _warm_up_distant_neighbor
 
   if(fctv->pdi != NULL) {
 
-    int is_describe_vtx  = 0; //PDM_part_domain_interface_exist_get(fctv->pdi, PDM_BOUND_TYPE_VTX );
+    int is_describe_vtx  = PDM_part_domain_interface_exist_get(fctv->pdi, PDM_BOUND_TYPE_VTX );
     int is_describe_edge = PDM_part_domain_interface_exist_get(fctv->pdi, PDM_BOUND_TYPE_EDGE);
     int is_describe_face = PDM_part_domain_interface_exist_get(fctv->pdi, PDM_BOUND_TYPE_FACE);
 
@@ -404,6 +580,9 @@ _warm_up_distant_neighbor
     PDM_MPI_Allreduce(&is_describe_edge_l, &is_describe_edge, 1, PDM_MPI_INT, PDM_MPI_MAX, fctv->comm);
     PDM_MPI_Allreduce(&is_describe_face_l, &is_describe_face, 1, PDM_MPI_INT, PDM_MPI_MAX, fctv->comm);
 
+    printf("is_describe_vtx_l  = %i \n", is_describe_vtx_l );
+    printf("is_describe_edge_l = %i \n", is_describe_edge_l);
+    printf("is_describe_face_l = %i \n", is_describe_face_l);
 
     int **pn_vtx = malloc(fctv->n_domain * sizeof(int *));
     for(int i_domain = 0; i_domain < fctv->n_domain; ++i_domain) {
@@ -413,38 +592,50 @@ _warm_up_distant_neighbor
       }
     }
 
-    int          **pn_face        = malloc(fctv->n_domain * sizeof(int          *));
-    PDM_g_num_t ***pface_ln_to_gn = malloc(fctv->n_domain * sizeof(PDM_g_num_t **));
-    PDM_g_num_t ***pvtx_ln_to_gn  = malloc(fctv->n_domain * sizeof(PDM_g_num_t **));
-    int         ***pface_vtx_idx  = malloc(fctv->n_domain * sizeof(int         **));
-    int         ***pface_vtx      = malloc(fctv->n_domain * sizeof(int         **));
-    for(int i_domain = 0; i_domain < fctv->n_domain; ++i_domain) {
-      pn_face       [i_domain] = malloc(fctv->n_part[i_domain] * sizeof(int          ));
-      pvtx_ln_to_gn [i_domain] = malloc(fctv->n_part[i_domain] * sizeof(PDM_g_num_t *));
-      pface_ln_to_gn[i_domain] = malloc(fctv->n_part[i_domain] * sizeof(PDM_g_num_t *));
-      pface_vtx_idx [i_domain] = malloc(fctv->n_part[i_domain] * sizeof(int         *));
-      pface_vtx     [i_domain] = malloc(fctv->n_part[i_domain] * sizeof(int         *));
-      for(int i_part = 0; i_part < fctv->n_part[i_domain]; ++i_part) {
-        pn_face       [i_domain][i_part] = fctv->parts[i_domain][i_part].n_face;
-        pvtx_ln_to_gn [i_domain][i_part] = fctv->parts[i_domain][i_part].vtx_ln_to_gn;
-        pface_ln_to_gn[i_domain][i_part] = fctv->parts[i_domain][i_part].face_ln_to_gn;
-        pface_vtx_idx [i_domain][i_part] = fctv->parts[i_domain][i_part].face_vtx_idx;
-        pface_vtx     [i_domain][i_part] = fctv->parts[i_domain][i_part].face_vtx;
+    if(is_describe_vtx_l == 0 && is_describe_face_l == 1) {
+      int          **pn_face        = malloc(fctv->n_domain * sizeof(int          *));
+      PDM_g_num_t ***pface_ln_to_gn = malloc(fctv->n_domain * sizeof(PDM_g_num_t **));
+      PDM_g_num_t ***pvtx_ln_to_gn  = malloc(fctv->n_domain * sizeof(PDM_g_num_t **));
+      int         ***pface_vtx_idx  = malloc(fctv->n_domain * sizeof(int         **));
+      int         ***pface_vtx      = malloc(fctv->n_domain * sizeof(int         **));
+      for(int i_domain = 0; i_domain < fctv->n_domain; ++i_domain) {
+        pn_face       [i_domain] = malloc(fctv->n_part[i_domain] * sizeof(int          ));
+        pvtx_ln_to_gn [i_domain] = malloc(fctv->n_part[i_domain] * sizeof(PDM_g_num_t *));
+        pface_ln_to_gn[i_domain] = malloc(fctv->n_part[i_domain] * sizeof(PDM_g_num_t *));
+        pface_vtx_idx [i_domain] = malloc(fctv->n_part[i_domain] * sizeof(int         *));
+        pface_vtx     [i_domain] = malloc(fctv->n_part[i_domain] * sizeof(int         *));
+        for(int i_part = 0; i_part < fctv->n_part[i_domain]; ++i_part) {
+          pn_face       [i_domain][i_part] = fctv->parts[i_domain][i_part].n_face;
+          pvtx_ln_to_gn [i_domain][i_part] = fctv->parts[i_domain][i_part].vtx_ln_to_gn;
+          pface_ln_to_gn[i_domain][i_part] = fctv->parts[i_domain][i_part].face_ln_to_gn;
+          pface_vtx_idx [i_domain][i_part] = fctv->parts[i_domain][i_part].face_vtx_idx;
+          pface_vtx     [i_domain][i_part] = fctv->parts[i_domain][i_part].face_vtx;
+        }
       }
+
+      PDM_part_domain_interface_face2vtx(fctv->pdi,
+                                         fctv->n_part,
+                                         pn_face,
+                                         pface_ln_to_gn,
+                                         pn_vtx,
+                                         pvtx_ln_to_gn,
+                                         pface_vtx_idx,
+                                         pface_vtx);
+
+      for(int i_domain = 0; i_domain < fctv->n_domain; ++i_domain) {
+        free(pn_face       [i_domain]);
+        free(pvtx_ln_to_gn [i_domain]);
+        free(pface_ln_to_gn[i_domain]);
+        free(pface_vtx_idx [i_domain]);
+        free(pface_vtx     [i_domain]);
+      }
+      free(pn_face);
+      free(pvtx_ln_to_gn );
+      free(pface_ln_to_gn);
+      free(pface_vtx_idx );
+      free(pface_vtx     );
     }
 
-    PDM_part_domain_interface_face2vtx(fctv->pdi,
-                                       fctv->n_part,
-                                       pn_face,
-                                       pface_ln_to_gn,
-                                       pn_vtx,
-                                       pvtx_ln_to_gn,
-                                       pface_vtx_idx,
-                                       pface_vtx);
-
-    printf("is_describe_vtx_l  = %i \n", is_describe_vtx_l );
-    printf("is_describe_edge_l = %i \n", is_describe_edge_l);
-    printf("is_describe_face_l = %i \n", is_describe_face_l);
 
     PDM_part_domain_interface_as_graph(fctv->pdi,
                                        PDM_BOUND_TYPE_VTX,
@@ -458,19 +649,9 @@ _warm_up_distant_neighbor
                                        &composed_ln_to_gn_sorted);
 
     for(int i_domain = 0; i_domain < fctv->n_domain; ++i_domain) {
-      free(pn_face       [i_domain]);
-      free(pvtx_ln_to_gn [i_domain]);
-      free(pface_ln_to_gn[i_domain]);
-      free(pface_vtx_idx [i_domain]);
-      free(pface_vtx     [i_domain]);
       free(pn_vtx        [i_domain]);
     }
     free(pn_vtx);
-    free(pn_face);
-    free(pvtx_ln_to_gn );
-    free(pface_ln_to_gn);
-    free(pface_vtx_idx );
-    free(pface_vtx     );
   }
 
 
@@ -1065,6 +1246,8 @@ PDM_field_cell_to_vtx_create
   fctv->interp_kind = interp_kind;
   fctv->idw_p       = 0;
 
+  fctv->is_nodal    = 0;
+
   fctv->n_domain    = n_domain;
   fctv->n_part      = malloc( n_domain * sizeof(int)); // Make a copy to avoid pb in cython
   fctv->n_group     = malloc( n_domain * sizeof(int)); // Make a copy to avoid pb in cython
@@ -1077,6 +1260,10 @@ PDM_field_cell_to_vtx_create
   fctv->n_part_idx    = (int * ) malloc( (n_domain + 1) * sizeof(int));
   fctv->n_part_g_idx  = (int * ) malloc( (n_domain + 1) * sizeof(int));
   fctv->parts = malloc(n_domain * sizeof(_part_t *));
+  fctv->pmn   = malloc(n_domain * sizeof(PDM_part_mesh_nodal_t *));
+  for(int i_domain = 0; i_domain < n_domain; ++i_domain) {
+    fctv->pmn[i_domain] = NULL;
+  }
 
 
   fctv->n_part_idx  [0] = 0;
@@ -1227,8 +1414,13 @@ PDM_field_cell_to_vtx_compute
     }
   }
 
-  _prepare_cell_center     (fctv);
-  _prepare_vtx_cell        (fctv);
+  if(fctv->is_nodal == 0) {
+    _prepare_cell_center     (fctv);
+    _prepare_vtx_cell        (fctv);
+  } else {
+    _prepare_cell_center_nodal(fctv);
+    _prepare_vtx_cell_nodal   (fctv);
+  }
   _create_bnd_graph        (fctv);
   _warm_up_distant_neighbor(fctv);
 
@@ -1471,6 +1663,17 @@ PDM_field_cell_to_vtx_part_set
   fctv->parts[i_domain][i_part].vtx = vtx_coord;
 }
 
+void
+PDM_field_cell_to_vtx_part_mesh_nodal_set
+(
+  PDM_field_cell_to_vtx_t   *fctv,
+  int                        i_domain,
+  PDM_part_mesh_nodal_t     *pmn
+)
+{
+  fctv->is_nodal = 1;
+  fctv->pmn[i_domain] = pmn;
+}
 
 void
 PDM_field_cell_to_vtx_graph_comm_set
@@ -1843,6 +2046,7 @@ PDM_field_cell_to_vtx_free
     free(fctv->cell_center[i_domain]);
   }
   free(fctv->parts);
+  free(fctv->pmn);
   free(fctv->n_part_idx);
   free(fctv->n_part_g_idx);
   free(fctv->n_part);
