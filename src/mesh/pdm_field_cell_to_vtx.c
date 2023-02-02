@@ -861,6 +861,65 @@ _create_bnd_graph
 }
 
 static
+void
+_create_bnd_graph_nodal
+(
+ PDM_field_cell_to_vtx_t* fctv
+)
+{
+
+  /*
+   * Create also vtx_face_bound :
+   *   - Vertex can be on 2 boundaries
+   */
+  PDM_geometry_kind_t geom_kind = PDM_GEOMETRY_KIND_SURFACIC;
+  int order = 1;
+
+  int shift_part = 0;
+  fctv->vtx_face_bound_idx    = malloc(fctv->n_part_g_idx[fctv->n_domain] * sizeof(int * ));
+  fctv->vtx_face_bound_n      = malloc(fctv->n_part_g_idx[fctv->n_domain] * sizeof(int * ));
+  fctv->vtx_face_bound        = malloc(fctv->n_part_g_idx[fctv->n_domain] * sizeof(int * ));
+  fctv->vtx_face_bound_group  = malloc(fctv->n_part_g_idx[fctv->n_domain] * sizeof(int * ));
+  fctv->vtx_face_bound_coords = malloc(fctv->n_part_g_idx[fctv->n_domain] * sizeof(int * ));
+
+  for(int i_domain = 0; i_domain < fctv->n_domain; ++i_domain) {
+
+    int n_section    = PDM_part_mesh_nodal_n_section_get  (fctv->pmn[i_domain], geom_kind);
+    int *sections_id = PDM_part_mesh_nodal_sections_id_get(fctv->pmn[i_domain], geom_kind);
+
+    PDM_UNUSED(n_section);
+    PDM_UNUSED(sections_id);
+
+    for(int i_part = 0; i_part < fctv->n_part[i_domain]; ++i_part) {
+
+      /* Setup idx */
+      int *section_elmt_idx = PDM_part_mesh_nodal_compute_sections_idx(fctv->pmn[i_domain],
+                                                                       geom_kind,
+                                                                       i_part);
+
+      int         *group_elmt_idx = NULL;
+      int         *group_elmt     = NULL;
+      PDM_g_num_t *group_ln_to_gn = NULL;
+
+      int n_group_part = PDM_part_mesh_nodal_group_get(fctv->pmn[i_domain],
+                                                       geom_kind,
+                                                       i_part,
+                                                       &group_elmt_idx,
+                                                       &group_elmt,
+                                                       &group_ln_to_gn);
+
+
+      PDM_UNUSED(n_group_part);
+      free(section_elmt_idx);
+
+    }
+    shift_part   += fctv->n_part              [i_domain];
+  }
+
+}
+
+
+static
 inline
 double
 _evaluate_distance
@@ -1417,11 +1476,12 @@ PDM_field_cell_to_vtx_compute
   if(fctv->is_nodal == 0) {
     _prepare_cell_center     (fctv);
     _prepare_vtx_cell        (fctv);
+    _create_bnd_graph        (fctv);
   } else {
     _prepare_cell_center_nodal(fctv);
     _prepare_vtx_cell_nodal   (fctv);
+    _create_bnd_graph_nodal   (fctv);
   }
-  _create_bnd_graph        (fctv);
   _warm_up_distant_neighbor(fctv);
 
   /* Free unused */

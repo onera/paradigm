@@ -674,6 +674,23 @@ PDM_part_mesh_nodal_elmts_for_cwipi
        PDM_part_mesh_nodal_elmts_t **pmne
  );
 
+int
+PDM_part_mesh_nodal_elmts_group_get
+(
+       PDM_part_mesh_nodal_elmts_t  *pmne,
+ const int                           id_block,
+       int                         **group_elmt_idx,
+       int                         **group_elmt,
+       PDM_g_num_t                 **group_ln_to_gn
+);
+
+int*
+PDM_part_mesh_nodal_elmts_compute_sections_idx
+(
+ PDM_part_mesh_nodal_elmts_t  *pmne,
+ const int                     id_part
+);
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

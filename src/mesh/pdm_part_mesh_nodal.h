@@ -1243,6 +1243,25 @@ PDM_part_mesh_nodal_sections_id_get
 //  const int       ***select_elt_l_num
 //  );
 
+int
+PDM_part_mesh_nodal_group_get
+(
+      PDM_part_mesh_nodal_t  *pmn,
+      PDM_geometry_kind_t     geom_kind,
+const int                     id_part,
+      int                   **group_elmt_idx,
+      int                   **group_elmt,
+      PDM_g_num_t           **group_ln_to_gn
+);
+
+int*
+PDM_part_mesh_nodal_compute_sections_idx
+(
+ PDM_part_mesh_nodal_t  *pmn,
+ PDM_geometry_kind_t     geom_kind,
+ const int               id_part
+);
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

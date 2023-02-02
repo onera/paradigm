@@ -6122,3 +6122,39 @@ PDM_part_mesh_nodal_elmts_for_cwipi
   free(i_null_rank);
   free(block_type);
 }
+
+int
+PDM_part_mesh_nodal_elmts_group_get
+(
+       PDM_part_mesh_nodal_elmts_t  *pmne,
+ const int                           i_part,
+       int                         **group_elmt_idx,
+       int                         **group_elmt,
+       PDM_g_num_t                 **group_ln_to_gn
+)
+{
+  *group_elmt_idx = pmne->group_elmt_idx[i_part];
+  *group_elmt     = pmne->group_elmt    [i_part];
+  *group_ln_to_gn = pmne->group_ln_to_gn[i_part];
+  return pmne->n_group[i_part];
+}
+
+
+int*
+PDM_part_mesh_nodal_elmts_compute_sections_idx
+(
+ PDM_part_mesh_nodal_elmts_t  *pmne,
+ const int                     id_part
+)
+{
+  int n_section = pmne->n_section;
+  int *section_elmt_idx = malloc((n_section+1) * sizeof(int));
+  section_elmt_idx[0] = 0;
+  for(int i_section = 0; i_section < n_section; ++i_section) {
+    int id_section = pmne->sections_id[i_section];
+    int n_elmt = PDM_part_mesh_nodal_elmts_block_n_elt_get(pmne, id_section, id_part);
+    section_elmt_idx[i_section+1] = section_elmt_idx[i_section] + n_elmt;
+  }
+
+  return section_elmt_idx;
+}

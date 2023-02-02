@@ -54,7 +54,11 @@ struct _pdm_part_mesh_nodal_elmts_t {
   PDM_Mesh_nodal_block_poly2d_t      **sections_poly2d;           /*!< Polygon sections              */
   PDM_Mesh_nodal_block_poly3d_t      **sections_poly3d;           /*!< Polyhedron sections           */
 
-  // group to manage
+  /* Group */
+  int          *n_group;
+  int         **group_elmt_idx;
+  int         **group_elmt;
+  PDM_g_num_t **group_ln_to_gn;
 
   PDM_l_num_t                        **num_elmt_parent_to_local;  /*!< Initial local numbering to local numbering
                                                                    *   imposed by blocks */
