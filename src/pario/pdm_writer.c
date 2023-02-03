@@ -1516,9 +1516,15 @@ PDM_writer_geom_cell3d_cellface_add
                                           PDM_OWNERSHIP_KEEP);
 
   if (face_som_nb != NULL) {
+    if (geom->_face_vtx_idx[id_part] != NULL) {
+      free(geom->_face_vtx_idx[id_part]);
+    }
     geom->_face_vtx_idx[id_part] = _face_som_idx;
   }
   if (cell_face_nb != NULL) {
+    if (geom->_cell_face_idx[id_part] != NULL) {
+      free(geom->_cell_face_idx[id_part]);
+    }
     geom->_cell_face_idx[id_part] = _cell_face_idx;
   }
 
