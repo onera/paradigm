@@ -445,12 +445,13 @@ PDM_dmesh_nodal_elmts_to_part_mesh_nodal_elmts
   /*
    *  We don't need to exchange the section because we find it with binary search on section_distribution
    */
-  int          *pelmt_by_section_n        = (int          *) malloc( (n_section+1) * sizeof(int          ));
-  int         **connec                    = (int         **) malloc( (n_section+1) * sizeof(int         *));
-  int         **connec_idx                = (int         **) malloc( (n_section  ) * sizeof(int         *));
-  PDM_g_num_t **numabs                    = (PDM_g_num_t **) malloc( (n_section+1) * sizeof(PDM_g_num_t *));
-  int         **parent_num                = (int         **) malloc( (n_section+1) * sizeof(int         *));
-  PDM_g_num_t **sparent_entitity_ln_to_gn = (PDM_g_num_t **) malloc( (n_section+1) * sizeof(PDM_g_num_t *));
+  int          *pelmt_by_section_n        = (int          *) malloc( (n_section) * sizeof(int          ));
+  int         **connec                    = (int         **) malloc( (n_section) * sizeof(int         *));
+  int         **connec_idx                = (int         **) malloc( (n_section) * sizeof(int         *));
+  PDM_g_num_t **numabs                    = (PDM_g_num_t **) malloc( (n_section) * sizeof(PDM_g_num_t *));
+  int         **parent_num                = (int         **) malloc( (n_section) * sizeof(int         *));
+  PDM_g_num_t **sparent_entitity_ln_to_gn = (PDM_g_num_t **) malloc( (n_section) * sizeof(PDM_g_num_t *));
+  PDM_g_num_t **section_elmts_ln_to_gn    = (PDM_g_num_t **) malloc( (n_part   ) * sizeof(PDM_g_num_t *));
 
   for(int i_section = 0; i_section < n_section; ++i_section){
     sparent_entitity_ln_to_gn[i_section] = NULL;

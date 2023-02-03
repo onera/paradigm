@@ -1198,10 +1198,6 @@ PDM_part_mesh_nodal_elmts_create
   pmne->num_elmt_parent_to_local = NULL;
   pmne->numabs                   = NULL;
 
-  pmne->group_elmt_idx   = NULL;
-  pmne->group_elmt       = NULL;
-  pmne->group_ln_to_gn   = NULL;
-
   pmne->ownership_group  = PDM_OWNERSHIP_KEEP;
   pmne->n_group          = 0;
   pmne->n_group_elmt     = NULL;
@@ -2138,17 +2134,6 @@ PDM_part_mesh_nodal_elmts_free
     }
 
     if(pmne->n_group_elmt  != NULL) {
-      if(pmne->n_group_elmt  [i_part] != NULL) {
-        free(pmne->n_group_elmt  [i_part]);
-      }
-
-      if(pmne->n_group_elmt  [i_part] != NULL) {
-        free(pmne->group_elmt    [i_part]);
-      }
-
-      if(pmne->group_ln_to_gn[i_part] != NULL) {
-        free(pmne->group_ln_to_gn[i_part]);
-      }
 
       for(int i_part = 0; i_part < pmne->n_part; ++i_part) {
 
@@ -2163,7 +2148,7 @@ PDM_part_mesh_nodal_elmts_free
           free(pmne->n_group_elmt  [i_part]);
         }
 
-        if(pmne->n_group_elmt  [i_part] != NULL) {
+        if(pmne->group_elmt  [i_part] != NULL) {
           free(pmne->group_elmt    [i_part]);
         }
 
@@ -6274,7 +6259,7 @@ PDM_part_mesh_nodal_elmts_compute_sections_idx
   section_elmt_idx[0] = 0;
   for(int i_section = 0; i_section < n_section; ++i_section) {
     int id_section = pmne->sections_id[i_section];
-    int n_elmt = PDM_part_mesh_nodal_elmts_block_n_elt_get(pmne, id_section, id_part);
+    int n_elmt = PDM_part_mesh_nodal_elmts_section_n_elt_get(pmne, id_section, id_part);
     section_elmt_idx[i_section+1] = section_elmt_idx[i_section] + n_elmt;
   }
 

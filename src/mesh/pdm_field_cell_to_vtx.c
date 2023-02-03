@@ -382,19 +382,20 @@ _prepare_cell_center_nodal
   fctv->cell_center = malloc(fctv->n_part_loc_all_domain * sizeof(double * ));
   for(int i_domain = 0; i_domain < fctv->n_domain; ++i_domain) {
 
-    int n_section    = PDM_part_mesh_nodal_n_section_get  (fctv->pmn[i_domain], geom_kind);
-    int *sections_id = PDM_part_mesh_nodal_sections_id_get(fctv->pmn[i_domain], geom_kind);
+    PDM_part_mesh_nodal_elmts_t* pmne = PDM_part_mesh_nodal_part_mesh_nodal_elmts_get(fctv->pmn[i_domain], geom_kind);
+
+    int n_section    = PDM_part_mesh_nodal_elmts_n_section_get  (pmne);
+    int *sections_id = PDM_part_mesh_nodal_elmts_sections_id_get(pmne);
 
     for(int i_part = 0; i_part < fctv->n_part[i_domain]; ++i_part) {
 
-      // int n_vtx        = PDM_part_mesh_nodal_n_vtx_get      (fctv->pmn[i_domain], i_part);
+      // int n_vtx        = PDM_part_mesh_nodal_elmts_n_vtx_get      (pmne, i_part);
 
       int n_elmt = 0;
       for(int i_section = 0; i_section < n_section; ++i_section) {
-        int n_elmt_in_section = PDM_part_mesh_nodal_block_n_elt_get(fctv->pmn[i_domain],
-                                                                    geom_kind,
-                                                                    sections_id[i_section],
-                                                                    i_part);
+        int n_elmt_in_section = PDM_part_mesh_nodal_elmts_section_n_elt_get(pmne,
+                                                                            sections_id[i_section],
+                                                                            i_part);
         n_elmt     += n_elmt_in_section;
       }
 
@@ -404,24 +405,22 @@ _prepare_cell_center_nodal
 
       n_elmt = 0;
       for(int i_section = 0; i_section < n_section; ++i_section) {
-        PDM_Mesh_nodal_elt_t t_elt = PDM_part_mesh_nodal_section_elt_type_get(fctv->pmn[i_domain], geom_kind, sections_id[i_section]);
+        PDM_Mesh_nodal_elt_t t_elt = PDM_part_mesh_nodal_elmts_section_type_get(pmne, sections_id[i_section]);
         int n_vtx_per_elmt = PDM_Mesh_nodal_n_vtx_elt_get(t_elt, order);
-        int n_elmt_in_section = PDM_part_mesh_nodal_block_n_elt_get(fctv->pmn[i_domain],
-                                                                    geom_kind,
-                                                                    sections_id[i_section],
-                                                                    i_part);
+        int n_elmt_in_section = PDM_part_mesh_nodal_elmts_section_n_elt_get(pmne,
+                                                                            sections_id[i_section],
+                                                                            i_part);
         int            *connec              = NULL;
         PDM_g_num_t    *numabs              = NULL;
         int            *parent_num          = NULL;
         PDM_g_num_t    *parent_entity_g_num = NULL;
-        PDM_part_mesh_nodal_block_std_get(fctv->pmn[i_domain],
-                                          geom_kind,
-                                          sections_id[i_section],
-                                          i_part,
-                                          &connec,
-                                          &numabs,
-                                          &parent_num,
-                                          &parent_entity_g_num);
+        PDM_part_mesh_nodal_elmts_section_std_get(pmne,
+                                                  sections_id[i_section],
+                                                  i_part,
+                                                  &connec,
+                                                  &numabs,
+                                                  &parent_num,
+                                                  &parent_entity_g_num);
 
         double pond = 1./((double) n_vtx_per_elmt);
         for(int i_elmt = 0; i_elmt < n_elmt_in_section; ++i_elmt) {
@@ -466,8 +465,9 @@ _prepare_vtx_cell_nodal
   fctv->pvtx_cell     = malloc(fctv->n_part_g_idx[fctv->n_domain] * sizeof(int *));
   for(int i_domain = 0; i_domain < fctv->n_domain; ++i_domain) {
 
-    int n_section    = PDM_part_mesh_nodal_n_section_get  (fctv->pmn[i_domain], geom_kind);
-    int *sections_id = PDM_part_mesh_nodal_sections_id_get(fctv->pmn[i_domain], geom_kind);
+    PDM_part_mesh_nodal_elmts_t* pmne = PDM_part_mesh_nodal_part_mesh_nodal_elmts_get(fctv->pmn[i_domain], geom_kind);
+    int n_section    = PDM_part_mesh_nodal_elmts_n_section_get  (pmne);
+    int *sections_id = PDM_part_mesh_nodal_elmts_sections_id_get(pmne);
     for(int i_part = 0; i_part < fctv->n_part[i_domain]; ++i_part) {
 
       int n_vtx        = PDM_part_mesh_nodal_n_vtx_get      (fctv->pmn[i_domain], i_part);
@@ -475,12 +475,11 @@ _prepare_vtx_cell_nodal
       int n_elmt = 0;
       int n_cell_vtx = 0;
       for(int i_section = 0; i_section < n_section; ++i_section) {
-        PDM_Mesh_nodal_elt_t t_elt = PDM_part_mesh_nodal_section_elt_type_get(fctv->pmn[i_domain], geom_kind, sections_id[i_section]);
+        PDM_Mesh_nodal_elt_t t_elt = PDM_part_mesh_nodal_elmts_section_type_get(pmne, sections_id[i_section]);
         int n_vtx_per_elmt = PDM_Mesh_nodal_n_vtx_elt_get(t_elt, order);
-        int n_elmt_in_section = PDM_part_mesh_nodal_block_n_elt_get(fctv->pmn[i_domain],
-                                                                    geom_kind,
-                                                                    sections_id[i_section],
-                                                                    i_part);
+        int n_elmt_in_section = PDM_part_mesh_nodal_elmts_section_n_elt_get(pmne,
+                                                                            sections_id[i_section],
+                                                                            i_part);
         n_elmt     += n_elmt_in_section;
         n_cell_vtx += n_elmt_in_section * n_vtx_per_elmt;
       }
@@ -494,24 +493,22 @@ _prepare_vtx_cell_nodal
       n_elmt     = 0;
       _cell_vtx_idx[0] = 0;
       for(int i_section = 0; i_section < n_section; ++i_section) {
-        PDM_Mesh_nodal_elt_t t_elt = PDM_part_mesh_nodal_section_elt_type_get(fctv->pmn[i_domain], geom_kind, sections_id[i_section]);
+        PDM_Mesh_nodal_elt_t t_elt = PDM_part_mesh_nodal_elmts_section_type_get(pmne, sections_id[i_section]);
         int n_vtx_per_elmt = PDM_Mesh_nodal_n_vtx_elt_get(t_elt, order);
-        int n_elmt_in_section = PDM_part_mesh_nodal_block_n_elt_get(fctv->pmn[i_domain],
-                                                                    geom_kind,
-                                                                    sections_id[i_section],
-                                                                    i_part);
+        int n_elmt_in_section = PDM_part_mesh_nodal_elmts_section_n_elt_get(pmne,
+                                                                            sections_id[i_section],
+                                                                            i_part);
         int            *connec              = NULL;
         PDM_g_num_t    *numabs              = NULL;
         int            *parent_num          = NULL;
         PDM_g_num_t    *parent_entity_g_num = NULL;
-        PDM_part_mesh_nodal_block_std_get(fctv->pmn[i_domain],
-                                          geom_kind,
-                                          sections_id[i_section],
-                                          i_part,
-                                          &connec,
-                                          &numabs,
-                                          &parent_num,
-                                          &parent_entity_g_num);
+        PDM_part_mesh_nodal_elmts_section_std_get(pmne,
+                                                  sections_id[i_section],
+                                                  i_part,
+                                                  &connec,
+                                                  &numabs,
+                                                  &parent_num,
+                                                  &parent_entity_g_num);
 
         for(int i_elmt = 0; i_elmt < n_elmt_in_section; ++i_elmt) {
           _cell_vtx_idx[n_elmt+1] = _cell_vtx_idx[n_elmt] + n_vtx_per_elmt;
@@ -885,8 +882,10 @@ _create_bnd_graph_nodal
 
   for(int i_domain = 0; i_domain < fctv->n_domain; ++i_domain) {
 
-    int n_section    = PDM_part_mesh_nodal_n_section_get  (fctv->pmn[i_domain], geom_kind);
-    int *sections_id = PDM_part_mesh_nodal_sections_id_get(fctv->pmn[i_domain], geom_kind);
+    PDM_part_mesh_nodal_elmts_t* pmne = PDM_part_mesh_nodal_part_mesh_nodal_elmts_get(fctv->pmn[i_domain], geom_kind);
+
+    int n_section    = PDM_part_mesh_nodal_elmts_n_section_get  (pmne);
+    int *sections_id = PDM_part_mesh_nodal_elmts_sections_id_get(pmne);
 
     int **connect        = malloc(n_section * sizeof(int *));
     int  *n_vtx_per_elmt = malloc(n_section * sizeof(int  ));
@@ -896,12 +895,10 @@ _create_bnd_graph_nodal
       int n_vtx = fctv->parts[i_domain][i_part].n_vtx;
 
       /* Setup idx */
-      int *section_elmt_idx = PDM_part_mesh_nodal_compute_sections_idx(fctv->pmn[i_domain],
-                                                                       geom_kind,
+      int *section_elmt_idx = PDM_part_mesh_nodal_elmts_compute_sections_idx(pmne,
                                                                        i_part);
 
-      int n_group_part = PDM_part_mesh_nodal_n_group_get(fctv->pmn[i_domain],
-                                                         geom_kind);
+      int n_group_part = PDM_part_mesh_nodal_elmts_n_group_get(pmne);
 
 
       fctv->vtx_face_bound_idx[i_part+shift_part] = malloc( (n_vtx + 1) * sizeof(int));
@@ -914,20 +911,19 @@ _create_bnd_graph_nodal
        * Prepare usefull shorcut
        */
       for(int i_section = 0; i_section < n_section; ++i_section) {
-        PDM_Mesh_nodal_elt_t t_elt = PDM_part_mesh_nodal_section_elt_type_get(fctv->pmn[i_domain], geom_kind, sections_id[i_section]);
+        PDM_Mesh_nodal_elt_t t_elt = PDM_part_mesh_nodal_elmts_section_type_get(pmne, sections_id[i_section]);
         n_vtx_per_elmt[i_section] = PDM_Mesh_nodal_n_vtx_elt_get(t_elt, order);
 
         PDM_g_num_t    *numabs              = NULL;
         int            *parent_num          = NULL;
         PDM_g_num_t    *parent_entity_g_num = NULL;
-        PDM_part_mesh_nodal_block_std_get(fctv->pmn[i_domain],
-                                          geom_kind,
-                                          sections_id[i_section],
-                                          i_part,
-                                          &connect[i_section],
-                                          &numabs,
-                                          &parent_num,
-                                          &parent_entity_g_num);
+        PDM_part_mesh_nodal_elmts_section_std_get(pmne,
+                                                  sections_id[i_section],
+                                                  i_part,
+                                                  &connect[i_section],
+                                                  &numabs,
+                                                  &parent_num,
+                                                  &parent_entity_g_num);
       }
 
       for(int i_group = 0; i_group < n_group_part; ++i_group) {
@@ -936,13 +932,12 @@ _create_bnd_graph_nodal
         int         *group_elmt     = NULL;
         PDM_g_num_t *group_ln_to_gn = NULL;
 
-        PDM_part_mesh_nodal_group_get(fctv->pmn[i_domain],
-                                      geom_kind,
-                                      i_part,
-                                      i_group,
-                                      &n_group_elmt,
-                                      &group_elmt,
-                                      &group_ln_to_gn);
+        PDM_part_mesh_nodal_elmts_group_get(pmne,
+                                            i_part,
+                                            i_group,
+                                            &n_group_elmt,
+                                            &group_elmt,
+                                            &group_ln_to_gn);
 
         for(int idx_elmt = 0; idx_elmt < n_group_elmt; ++idx_elmt) {
           int i_elmt    = group_elmt[idx_elmt]-1;
@@ -976,13 +971,12 @@ _create_bnd_graph_nodal
         int         *group_elmt     = NULL;
         PDM_g_num_t *group_ln_to_gn = NULL;
 
-        PDM_part_mesh_nodal_group_get(fctv->pmn[i_domain],
-                                      geom_kind,
-                                      i_part,
-                                      i_group,
-                                      &n_group_elmt,
-                                      &group_elmt,
-                                      &group_ln_to_gn);
+        PDM_part_mesh_nodal_elmts_group_get(pmne,
+                                            i_part,
+                                            i_group,
+                                            &n_group_elmt,
+                                            &group_elmt,
+                                            &group_ln_to_gn);
 
         for(int idx_elmt = 0; idx_elmt < n_group_elmt; ++idx_elmt) {
           int i_elmt    = group_elmt[idx_elmt]-1;
