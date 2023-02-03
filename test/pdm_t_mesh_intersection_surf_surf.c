@@ -668,8 +668,6 @@ char *argv[]
                            &request);
     PDM_part_to_part_iexch_wait(ptp, request);
 
-
-
     log_trace("FROM B USER POV\n");
     for (int ipart = 0; ipart < n_part; ipart++) {
 
