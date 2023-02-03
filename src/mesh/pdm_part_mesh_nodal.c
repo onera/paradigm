@@ -2364,3 +2364,14 @@ PDM_part_mesh_nodal_n_group_get
   assert(pmne != NULL);
   return PDM_part_mesh_nodal_elmts_n_group_get(pmne);
 }
+
+
+PDM_part_mesh_nodal_elmts_t*
+PDM_part_mesh_nodal_part_mesh_nodal_elmts_get
+(
+ PDM_part_mesh_nodal_t  *pmn,
+ PDM_geometry_kind_t     geom_kind
+)
+{
+  return _get_from_geometry_kind(pmn, geom_kind);
+}
