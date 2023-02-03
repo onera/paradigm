@@ -2167,10 +2167,6 @@ PDM_part_mesh_nodal_elmts_free
         free(pmne->group_ln_to_gn);
       }
     }
-
-    free(pmne->n_group_elmt  );
-    free(pmne->group_elmt    );
-    free(pmne->group_ln_to_gn);
   }
 
   free(pmne);
