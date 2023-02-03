@@ -722,9 +722,6 @@ char *argv[]
   PDM_DMesh_nodal_free(dmn_surf_a);
   PDM_multipart_free(mpart_surf_a);
 
-
-
-
   PDM_MPI_Barrier(comm);
 
   if (i_rank == 0) {
