@@ -15,6 +15,7 @@
 #include "pdm.h"
 #include "pdm_priv.h"
 #include "pdm_mpi.h"
+#include "pdm_mesh_nodal_priv.h"
 #include "pdm_part_mesh_nodal.h"
 #include "pdm_part_mesh_nodal_priv.h"
 #include "pdm_printf.h"
@@ -4371,7 +4372,7 @@ const PDM_g_num_t                  *face_ln_to_gn,
 const int                          *cell_face_idx,
 const int                          *cell_face,
 const PDM_g_num_t                  *cell_ln_to_gn,
-const double                       *vtx_coord,
+      PDM_Mesh_nodal_vtx_t        **vtx,
 const PDM_ownership_t               ownership
 )
 {
@@ -4551,6 +4552,10 @@ const PDM_ownership_t               ownership
 
 
     for (int i_part = 0; i_part < pmne->n_part; i_part++) {
+
+      assert(vtx[i_part] != NULL);
+      double *vtx_coord = vtx[i_part]->_coords;
+      assert(vtx_coord != NULL);
 
       PDM_l_num_t n_cell_courant = pmne->prepa_blocks->n_cell[i_part];
       PDM_l_num_t *num_cell_parent_to_local_courant = pmne->num_elmt_parent_to_local[i_part];
@@ -4819,7 +4824,7 @@ const PDM_ownership_t               ownership
       if (som_elts[0] > 0)
         PDM_part_mesh_nodal_elmts_std_set(pmne,
                                           id_bloc_tetra4,
-                                          id_part,
+                                          i_part,
                                           n_tetra_part,
                                           connec_tetra,
                                           numabs_tetra,
@@ -4830,7 +4835,7 @@ const PDM_ownership_t               ownership
       if (som_elts[1] > 0)
         PDM_part_mesh_nodal_elmts_std_set(pmne,
                                           id_bloc_hexa8,
-                                          id_part,
+                                          i_part,
                                           n_hexa_part,
                                           connec_hexa,
                                           numabs_hexa,
@@ -4841,7 +4846,7 @@ const PDM_ownership_t               ownership
       if (som_elts[2] > 0)
         PDM_part_mesh_nodal_elmts_std_set(pmne,
                                           id_bloc_prism6,
-                                          id_part,
+                                          i_part,
                                           n_prism_part,
                                           connec_prism,
                                           numabs_prism,
@@ -4852,7 +4857,7 @@ const PDM_ownership_t               ownership
       if (som_elts[3] > 0)
         PDM_part_mesh_nodal_elmts_std_set(pmne,
                                           id_bloc_pyramid5,
-                                          id_part,
+                                          i_part,
                                           n_pyramid_part,
                                           connec_pyramid,
                                           numabs_pyramid,
@@ -4862,18 +4867,18 @@ const PDM_ownership_t               ownership
 
       if (som_elts[4] > 0) {
         PDM_part_mesh_nodal_elmts_section_poly3d_set(pmne,
-                                                   id_bloc_poly_3d,
-                                                   id_part,
-                                                   n_poly3d_part,
-                                                   n_face_poly,
-                                                   facsom_poly_idx,
-                                                   facsom_poly,
-                                                   block_face_ln_to_gn,
-                                                   cellfac_poly_idx,
-                                                   cellfac_poly,
-                                                   numabs_poly3d,
-                                                   num_parent_poly3d,
-                                                   ownership);
+                                                     id_bloc_poly_3d,
+                                                     i_part,
+                                                     n_poly3d_part,
+                                                     n_face_poly,
+                                                     facsom_poly_idx,
+                                                     facsom_poly,
+                                                     block_face_ln_to_gn,
+                                                     cellfac_poly_idx,
+                                                     cellfac_poly,
+                                                     numabs_poly3d,
+                                                     num_parent_poly3d,
+                                                     ownership);
         // PDM_log_trace_array_int(num_parent_poly3d, n_poly3d_part, "num_parent_poly3d ::");
       }
     }
@@ -5234,7 +5239,7 @@ const PDM_ownership_t               ownership
       if (som_elts[0] > 0)
         PDM_part_mesh_nodal_elmts_std_set(pmne,
                                           id_bloc_tria3,
-                                          id_part,
+                                          i_part,
                                           n_tria,
                                           connec_tria,
                                           numabs_tria,
@@ -5245,7 +5250,7 @@ const PDM_ownership_t               ownership
       if (som_elts[1] > 0)
         PDM_part_mesh_nodal_elmts_std_set(pmne,
                                           id_bloc_quad4,
-                                          id_part,
+                                          i_part,
                                           n_quad,
                                           connec_quad,
                                           numabs_quad,
@@ -5255,14 +5260,14 @@ const PDM_ownership_t               ownership
 
       if (som_elts[2] > 0)
         PDM_part_mesh_nodal_elmts_section_poly2d_set(pmne,
-                                                   id_bloc_poly_2d,
-                                                   id_part,
-                                                   n_poly2d,
-                                                   connec_poly2d_idx,
-                                                   connec_poly2d,
-                                                   numabs_poly2d,
-                                                   num_parent_poly2d,
-                                                   ownership);
+                                                     id_bloc_poly_2d,
+                                                     i_part,
+                                                     n_poly2d,
+                                                     connec_poly2d_idx,
+                                                     connec_poly2d,
+                                                     numabs_poly2d,
+                                                     num_parent_poly2d,
+                                                     ownership);
     }
     if (pmne->prepa_blocks != NULL) {
       free(pmne->prepa_blocks->n_cell);
@@ -5596,7 +5601,7 @@ const PDM_ownership_t               ownership
       if (som_elts[0] > 0)
         PDM_part_mesh_nodal_elmts_std_set(pmne,
                                           id_bloc_tetra4,
-                                          id_part,
+                                          i_part,
                                           n_tetra_part,
                                           connec_tetra,
                                           numabs_tetra,
@@ -5607,7 +5612,7 @@ const PDM_ownership_t               ownership
       if (som_elts[1] > 0)
         PDM_part_mesh_nodal_elmts_std_set(pmne,
                                           id_bloc_hexa8,
-                                          id_part,
+                                          i_part,
                                           n_hexa_part,
                                           connec_hexa,
                                           numabs_hexa,
@@ -5618,7 +5623,7 @@ const PDM_ownership_t               ownership
       if (som_elts[2] > 0)
         PDM_part_mesh_nodal_elmts_std_set(pmne,
                                           id_bloc_prism6,
-                                          id_part,
+                                          i_part,
                                           n_prism_part,
                                           connec_prism,
                                           numabs_prism,
@@ -5629,7 +5634,7 @@ const PDM_ownership_t               ownership
       if (som_elts[3] > 0)
         PDM_part_mesh_nodal_elmts_std_set(pmne,
                                           id_bloc_pyramid5,
-                                          id_part,
+                                          i_part,
                                           n_pyramid_part,
                                           connec_pyramid,
                                           numabs_pyramid,
@@ -5928,7 +5933,7 @@ const PDM_ownership_t               ownership
       if (som_elts[0] > 0)
         PDM_part_mesh_nodal_elmts_std_set(pmne,
                                           id_bloc_tria3,
-                                          id_part,
+                                          i_part,
                                           n_tria,
                                           connec_tria,
                                           numabs_tria,
@@ -5939,7 +5944,7 @@ const PDM_ownership_t               ownership
       if (som_elts[1] > 0)
         PDM_part_mesh_nodal_elmts_std_set(pmne,
                                           id_bloc_quad4,
-                                          id_part,
+                                          i_part,
                                           n_quad,
                                           connec_quad,
                                           numabs_quad,
@@ -5949,14 +5954,14 @@ const PDM_ownership_t               ownership
 
       if (som_elts[2] > 0)
         PDM_part_mesh_nodal_elmts_section_poly2d_set(pmne,
-                                                   id_bloc_poly_2d,
-                                                   id_part,
-                                                   n_poly2d,
-                                                   connec_poly2d_idx,
-                                                   connec_poly2d,
-                                                   numabs_poly2d,
-                                                   num_parent_poly2d,
-                                                   ownership);
+                                                     id_bloc_poly_2d,
+                                                     i_part,
+                                                     n_poly2d,
+                                                     connec_poly2d_idx,
+                                                     connec_poly2d,
+                                                     numabs_poly2d,
+                                                     num_parent_poly2d,
+                                                     ownership);
     }
     if (pmne->prepa_blocks != NULL) {
       free(pmne->prepa_blocks->n_face);

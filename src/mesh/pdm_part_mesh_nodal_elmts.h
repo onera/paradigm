@@ -13,6 +13,7 @@
 #include "pdm_mpi.h"
 #include "pdm_io.h"
 #include "pdm_mesh_nodal.h"
+#include "pdm_mesh_nodal_priv.h"
 
 /*=============================================================================
  * Macro definition
@@ -569,7 +570,7 @@ const PDM_g_num_t                  *face_ln_to_gn,
 const int                          *cell_face_idx,
 const int                          *cell_face,
 const PDM_g_num_t                  *cell_ln_to_gn,
-const double                       *vtx_coord,
+      PDM_Mesh_nodal_vtx_t        **vtx,
 const PDM_ownership_t               ownership
 );
 

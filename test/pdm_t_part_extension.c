@@ -225,29 +225,29 @@ _visu
   /* Creation des variables */
 
   int id_var_num_part = PDM_writer_var_create(id_cs,
-                                    PDM_WRITER_OFF,
-                                    PDM_WRITER_VAR_SCALAR,
-                                    PDM_WRITER_VAR_ELEMENTS,
-                                    "num_part");
+                                              PDM_WRITER_OFF,
+                                              PDM_WRITER_VAR_SCALAR,
+                                              PDM_WRITER_VAR_ELEMENTS,
+                                              "num_part");
 
 
   int id_var_num_rank = PDM_writer_var_create(id_cs,
-                                    PDM_WRITER_OFF,
-                                    PDM_WRITER_VAR_SCALAR,
-                                    PDM_WRITER_VAR_ELEMENTS,
-                                    "num_rank");
+                                              PDM_WRITER_OFF,
+                                              PDM_WRITER_VAR_SCALAR,
+                                              PDM_WRITER_VAR_ELEMENTS,
+                                              "num_rank");
 
   int id_var_cell_num = PDM_writer_var_create(id_cs,
-                                    PDM_WRITER_OFF,
-                                    PDM_WRITER_VAR_SCALAR,
-                                    PDM_WRITER_VAR_ELEMENTS,
-                                    "cell_num");
+                                              PDM_WRITER_OFF,
+                                              PDM_WRITER_VAR_SCALAR,
+                                              PDM_WRITER_VAR_ELEMENTS,
+                                              "cell_num");
 
   int id_var_cell_gnum = PDM_writer_var_create(id_cs,
-                                    PDM_WRITER_OFF,
-                                    PDM_WRITER_VAR_SCALAR,
-                                    PDM_WRITER_VAR_ELEMENTS,
-                                    "cell_gnum");
+                                               PDM_WRITER_OFF,
+                                               PDM_WRITER_VAR_SCALAR,
+                                               PDM_WRITER_VAR_ELEMENTS,
+                                               "cell_gnum");
 
 
   PDM_real_t **val_num_part = (PDM_real_t **) malloc(sizeof(PDM_real_t *) * n_part);
@@ -258,6 +258,7 @@ _visu
   int **cell_face_n = (int **) malloc(sizeof(int *) * n_part);
   PDM_writer_step_beg (id_cs, 0.);
   for (int i_part = 0; i_part < n_part; i_part++) {
+    log_trace("i_part = %d\n", i_part);
 
     face_vtx_n[i_part] = (int *) malloc(sizeof(int) * n_face[i_part]);
     cell_face_n[i_part] = (int *) malloc(sizeof(int) * n_cell[i_part]);
@@ -349,8 +350,20 @@ _visu
   PDM_writer_var_write(id_cs,
                        id_var_cell_gnum);
 
-  // PDM_writer_var_free(id_cs,
-  //                     id_var_num_part);
+
+  PDM_writer_var_free(id_cs,
+                      id_var_num_part);
+
+  PDM_writer_var_free(id_cs,
+                      id_var_num_rank);
+
+  PDM_writer_var_free(id_cs,
+                      id_var_cell_num);
+
+  PDM_writer_var_free(id_cs,
+                      id_var_cell_gnum);
+
+  PDM_writer_step_end(id_cs);
 
   for (int i_part = 0; i_part < n_part; i_part++) {
     free (face_vtx_n[i_part]);
@@ -371,7 +384,6 @@ _visu
   // PDM_writer_geom_free(id_cs,
   //                      id_geom);
 
-  PDM_writer_step_end(id_cs);
   PDM_writer_free(id_cs);
 
 }

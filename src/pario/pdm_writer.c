@@ -319,6 +319,14 @@ const PDM_MPI_Comm  comm
   geom->s_section = 10;
   geom->section_owner = malloc(sizeof(PDM_ownership_t) * geom->s_section);
 
+  geom->n_part = n_part;
+  geom->_face_vtx_idx  = malloc(sizeof(int *) * n_part);
+  geom->_cell_face_idx = malloc(sizeof(int *) * n_part);
+  for (int i = 0; i < n_part; i++) {
+    geom->_face_vtx_idx [i] = NULL;
+    geom->_cell_face_idx[i] = NULL;
+  }
+
   geom->geom_kind = PDM_GEOMETRY_KIND_MAX; // not yet defined
 }
 
@@ -912,6 +920,10 @@ PDM_writer_geom_create_from_mesh_nodal
   geom->s_section = 10;
   geom->section_owner = malloc(sizeof(PDM_ownership_t) * geom->s_section);
 
+  geom->n_part = PDM_part_mesh_nodal_n_part_get(mesh);
+  geom->_face_vtx_idx  = NULL;
+  geom->_cell_face_idx = NULL;
+
   /* Infer geometry kind from part mesh_nodal */
   PDM_geometry_kind_t geom_kind_min;
   switch (mesh->mesh_dimension) {
@@ -977,6 +989,10 @@ PDM_writer_geom_set_from_mesh_nodal
 
   geom->s_section = 10;
   geom->section_owner = malloc(sizeof(PDM_ownership_t) * geom->s_section);
+
+  geom->n_part = PDM_part_mesh_nodal_n_part_get(mesh);
+  geom->_face_vtx_idx  = NULL;
+  geom->_cell_face_idx = NULL;
 
   /* Infer geometry kind from part mesh_nodal */
   PDM_geometry_kind_t geom_kind_min;
@@ -1500,10 +1516,10 @@ PDM_writer_geom_cell3d_cellface_add
                                           PDM_OWNERSHIP_KEEP);
 
   if (face_som_nb != NULL) {
-    free(_face_som_idx);
+    geom->_face_vtx_idx[id_part] = _face_som_idx;
   }
   if (cell_face_nb != NULL) {
-    free(_cell_face_idx);
+    geom->_cell_face_idx[id_part] = _cell_face_idx;
   }
 
   if (0 == 1) {
@@ -1612,9 +1628,8 @@ PDM_writer_geom_cell2d_cellface_add
                                           cell_face,
                                           numabs,
                                           PDM_OWNERSHIP_KEEP);
-
   if (cell_face_nb != NULL) {
-    free(_cell_face_idx);
+    geom->_cell_face_idx[id_part] = _cell_face_idx;
   }
 }
 
@@ -1814,6 +1829,24 @@ PDM_writer_geom_free
 
     if (geom->section_owner != NULL) {
       free(geom->section_owner);
+    }
+
+    if (geom->_face_vtx_idx != NULL) {
+      for (int i = 0; i < geom->n_part; i++) {
+        if (geom->_face_vtx_idx[i] != NULL) {
+          free(geom->_face_vtx_idx[i]);
+        }
+      }
+      free(geom->_face_vtx_idx);
+    }
+
+    if (geom->_cell_face_idx != NULL) {
+      for (int i = 0; i < geom->n_part; i++) {
+        if (geom->_cell_face_idx[i] != NULL) {
+          free(geom->_cell_face_idx[i]);
+        }
+      }
+      free(geom->_cell_face_idx);
     }
 
     free(geom);

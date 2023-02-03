@@ -2006,8 +2006,6 @@ const PDM_ownership_t         ownership
     PDM_part_mesh_nodal_add_part_mesh_nodal_elmts(pmn, pmne, PDM_OWNERSHIP_KEEP);
   }
 
-  double *vtx_coord = PDM_part_mesh_nodal_vtx_coord_get(pmn, id_part);
-
   int n_section_before = PDM_part_mesh_nodal_n_section_in_geom_kind_get(pmn,
                                                                         PDM_GEOMETRY_KIND_VOLUMIC);
 
@@ -2021,7 +2019,7 @@ const PDM_ownership_t         ownership
                                                 cell_face_idx,
                                                 cell_face,
                                                 cell_ln_to_gn,
-                                                vtx_coord,
+                                                pmn->vtx,
                                                 ownership);
 
   // update pmn->n_section, pmn->section_kind, pmn->section_id

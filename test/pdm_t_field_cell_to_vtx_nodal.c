@@ -661,9 +661,9 @@ int main
                                        &pvtx_coord[i_dom][i_part],
                                        PDM_OWNERSHIP_KEEP);
       int  n_bound = 0;
-      int* group_face_idx      = 0;
-      int* group_face          = 0;
-      int* face_group_ln_to_gn = 0;
+      int* group_face_idx      = NULL;
+      int* group_face          = NULL;
+      PDM_g_num_t* face_group_ln_to_gn = NULL;
 
       PDM_multipart_bound_get(mpart,
                               i_dom,

@@ -107,6 +107,28 @@ _read_args
   }
 }
 
+static double R[3][3] =
+{
+  {-0.14547275709949994,  0.8415293589391187 , -0.5202557207618055 },
+  { 0.9893622576902102 ,  0.12373586628506748, -0.07649678720582984},
+  { 0.                 , -0.5258495730132333 , -0.8505775840931856 }
+};
+
+static void _rotate (const int  n_pts,
+                     double    *coord)
+{
+
+  for (int i = 0; i < n_pts; i++) {
+    double x = coord[3*i];
+    double y = coord[3*i+1];
+    double z = coord[3*i+2];
+
+    for (int j = 0; j < 3; j++) {
+      coord[3*i+j] = R[j][0]*x + R[j][1]*y + R[j][2]*z;
+    }
+  }
+}
+
 
 
 /*============================================================================
@@ -157,11 +179,12 @@ main
                               0, // seed
                               0, // geometric_g_num
                               gn_src,
-                              -radius, -radius, -radius,
-                              radius, radius, radius,
+                              -100*radius, -10*radius, -radius,
+                              100*radius, 10*radius, radius,
                               &n_src,
                               &src_coord,
                               &src_g_num);
+  _rotate(n_src, src_coord);
 
   int *weight =  malloc( n_src * sizeof(int));
   for(int i = 0; i < n_src; ++i) {
@@ -169,8 +192,8 @@ main
   }
   PDM_MPI_Barrier(comm);
   double t1 = PDM_MPI_Wtime();
-  PDM_part_geom_t part_geom_kind = PDM_PART_GEOM_HILBERT;
-  // PDM_part_geom_t part_geom_kind = PDM_PART_GEOM_MORTON;
+  // PDM_part_geom_t part_geom_kind = PDM_PART_GEOM_HILBERT;
+  PDM_part_geom_t part_geom_kind = PDM_PART_GEOM_MORTON;
   PDM_part_to_block_t* ptb = PDM_part_to_block_geom_create(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
                                                            PDM_PART_TO_BLOCK_POST_CLEANUP,
                                                            1.,
@@ -216,6 +239,8 @@ main
   int          n_parent    = PDM_part_to_block_n_elt_block_get  (ptb);
   PDM_g_num_t* parent_gnum = PDM_part_to_block_block_gnum_get   (ptb);
   PDM_g_num_t* distrib_pts = PDM_part_to_block_distrib_index_get(ptb);
+
+  PDM_log_trace_array_long(distrib_pts, n_rank+1, "distrib_pts : ");
 
   /*
    * Pour le retour :

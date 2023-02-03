@@ -46,6 +46,10 @@ struct _PDM_writer_geom_t {
   PDM_ownership_t *section_owner;
 
   PDM_geometry_kind_t geom_kind;
+
+  int n_part;
+  int **_face_vtx_idx;
+  int **_cell_face_idx;
 };
 
 typedef struct _PDM_writer_geom_tab_t {
