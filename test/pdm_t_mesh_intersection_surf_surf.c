@@ -660,7 +660,7 @@ char *argv[]
                            PDM_STRIDE_CST_INTERLACED,
                            PDM_PART_TO_PART_DATA_DEF_ORDER_PART1_TO_PART2,
                            1,
-                           sizeof(PDM_g_num_t),
+                           sizeof(double),
                            NULL,
                            (const void  **) pelt_a_elt_b_weight,
                            NULL,
