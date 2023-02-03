@@ -692,7 +692,6 @@ char *argv[]
 
     PDM_MPI_Barrier(comm);
 
-
     for (int ipart = 0; ipart < n_part; ipart++) {
       free(pelt_a_elt_b_n[ipart]);
     }
