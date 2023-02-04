@@ -158,7 +158,7 @@ program testf
    n_vtx,                                       & !- NOMBRE DE SOMMETS
    vtx_coord,                                   & !- COORDONNEES DES SOMMETS
    vtx_ln_to_gn,                                & !- NUMEROTATION ABSOLUE DES SOMMETS
-   PDM_OWNERSHIP_USER)                            !- OWNERSHIP
+   PDM_OWNERSHIP_KEEP)                            !- OWNERSHIP
 
   if (i_rank .eq. 0) then
     write(*, *) "-- Set cell-face connectivity"
