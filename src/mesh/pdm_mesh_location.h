@@ -424,6 +424,21 @@ PDM_mesh_location_point_location_get
  */
 
 void
+PDM_mesh_location_cell_vertex_compute
+(
+       PDM_mesh_location_t  *ml
+);
+
+void
+PDM_mesh_location_cell_vertex_dim_get
+(
+       PDM_mesh_location_t  *ml,
+ const int                   i_part,
+       int                  *n_cell,
+       int                  *s_cell_vtx
+);
+
+void
 PDM_mesh_location_cell_vertex_get
 (
        PDM_mesh_location_t  *ml,

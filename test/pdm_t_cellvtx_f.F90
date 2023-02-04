@@ -26,7 +26,8 @@ program testf
 #ifdef PDM_HAVE_FORTRAN_MPI_MODULE
   use mpi
 #endif
-  use PDM_mesh_nodal
+  use pdm_mesh_nodal
+  use pdm_mesh_location
   use iso_c_binding
 
   implicit none
@@ -37,24 +38,24 @@ program testf
 
   !-----------------------------------------------------------
   integer,                   parameter :: f_comm  = MPI_COMM_WORLD
-  integer,                   parameter :: elements(5) = (/ 3,4,3,0,4 /)
 
   type(c_ptr)                          :: mesh = C_NULL_PTR
-  double precision,          pointer   :: vtx_coord(:,:)   => null()
-  integer(kind=pdm_g_num_s), pointer   :: vtx_ln_to_gn(:)  => null()
-  integer(kind=pdm_g_num_s), pointer   :: cell_ln_to_gn(:) => null()
-  integer,                   pointer   :: cell_vtx_idx(:)  => null()
-  integer,                   pointer   :: cell_vtx_nb(:)   => null()
-  integer,                   pointer   :: cell_vtx(:)      => null()
-  integer,                   pointer   :: cell_face_idx(:) => null()
-  integer,                   pointer   :: cell_face_nb(:)  => null()
-  integer,                   pointer   :: cell_face(:)     => null()
-  integer(kind=pdm_g_num_s), pointer   :: face_ln_to_gn(:) => null()
-  integer,                   pointer   :: face_vtx_idx(:)  => null()
-  integer,                   pointer   :: face_vtx_nb(:)   => null()
-  integer,                   pointer   :: face_vtx(:)      => null()
-  integer,                   pointer   :: nums(:,:)        => null()
-
+  type(c_ptr)                          :: loc  = C_NULL_PTR
+  double precision,          pointer   :: vtx_coord(:,:)      => null()
+  integer(kind=pdm_g_num_s), pointer   :: vtx_ln_to_gn(:)     => null()
+  integer(kind=pdm_g_num_s), pointer   :: cell_ln_to_gn(:)    => null()
+  integer,                   pointer   :: cell_vtx_idx(:)     => null()
+  integer,                   pointer   :: cell_vtx_nb(:)      => null()
+  integer,                   pointer   :: cell_vtx(:)         => null()
+  integer,                   pointer   :: cell_face_idx(:)    => null()
+  integer,                   pointer   :: cell_face_nb(:)     => null()
+  integer,                   pointer   :: cell_face(:)        => null()
+  integer(kind=pdm_g_num_s), pointer   :: face_ln_to_gn(:)    => null()
+  integer,                   pointer   :: face_vtx_idx(:)     => null()
+  integer,                   pointer   :: face_vtx_nb(:)      => null()
+  integer,                   pointer   :: face_vtx(:)         => null()
+  integer,                   pointer   :: tmp_cell_vtx_idx(:) => null()
+  integer,                   pointer   :: tmp_cell_vtx(:)     => null()
   integer                              :: code
   integer                              :: i_rank
   integer                              :: n_rank
@@ -62,8 +63,7 @@ program testf
   integer                              :: n_face
   integer                              :: n_cell
 
-  integer                              :: i, ifac, jfac, isom, jsom, tmp(6)
-  integer                              :: numf, adrs, cfac(2), csom(2)
+  integer                              :: i, ifac, isom, tmp(6)
   integer                              :: fid = 13
   character                            :: strnum
   !-----------------------------------------------------------
@@ -135,74 +135,20 @@ program testf
   end do
   close(fid)
 
-  ! Convert connectivity
-  if (i_rank .eq. 0) then
-    write(*, *) "-- Convert connectivity to cell -> vtx"
-  end if
-
-  allocate(cell_vtx_idx(n_cell+1))
-  allocate(cell_vtx_nb(n_cell))
-  allocate(nums(8,n_cell))
-  cell_vtx_nb = 0
-  nums = 0
-
-  do i = 1,n_cell
-    do ifac = 1,cell_face_nb(i)
-      numf = cell_face(cell_face_idx(i)+ifac-1)
-      adrs = face_vtx_idx(numf)
-      do isom = 1,face_vtx_nb(numf)
-          if (any(nums(1:cell_vtx_nb(i),i) == face_vtx(adrs+isom-1))) cycle
-          cell_vtx_nb(i) = cell_vtx_nb(i) + 1
-          nums(cell_vtx_nb(i),i) = face_vtx(adrs+isom-1)
-      end do
-    end do
-  end do
-
-  deallocate(nums)
-  allocate(cell_vtx(sum(cell_vtx_nb)))
-  cell_vtx_idx(1) = 1
-  cell_vtx = -1
-
-  do i = 1,n_cell
-    do ifac = 1,cell_face_nb(i)
-      numf = cell_face(cell_face_idx(i)+ifac-1)
-      if (face_vtx_nb(numf) == elements(cell_vtx_nb(i)-3)) exit
-    end do
-
-    adrs = face_vtx_idx(numf)
-    cell_vtx(cell_vtx_idx(i):cell_vtx_idx(i)+face_vtx_nb(numf)-1) = face_vtx(adrs:adrs+face_vtx_nb(numf)-1)
-
-    do isom = 1,cell_vtx_nb(i)-face_vtx_nb(numf)
-      do ifac = 1,cell_face_nb(i)
-        cfac(1) = cell_face(cell_face_idx(i)+ifac-1)
-        if (cfac(1) == numf) cycle
-        csom(1) = face_vtx_idx(cfac(1))
-        if (all(face_vtx(csom(1):csom(1)+face_vtx_nb(cfac(1))-1) /= cell_vtx(cell_vtx_idx(i)+isom-1))) cycle
-        do jfac = ifac+1,cell_face_nb(i)
-          cfac(2) = cell_face(cell_face_idx(i)+jfac-1)
-          if (cfac(2) == numf) cycle
-          csom(2) = face_vtx_idx(cfac(2))
-          if (all(face_vtx(csom(2):csom(2)+face_vtx_nb(cfac(2))-1) /= cell_vtx(cell_vtx_idx(i)+isom-1))) cycle
-          do jsom = 1,face_vtx_nb(cfac(2))
-            if (face_vtx(csom(2)+jsom-1) == cell_vtx(cell_vtx_idx(i)+isom-1)) cycle
-            if (all(face_vtx(csom(1):csom(1)+face_vtx_nb(cfac(1))-1) /= face_vtx(csom(2)+jsom-1))) cycle
-            cell_vtx(cell_vtx_idx(i)+face_vtx_nb(numf)+isom-1) = face_vtx(csom(2)+jsom-1)
-            exit
-          end do
-          if (cell_vtx(cell_vtx_idx(i)+face_vtx_nb(numf)+isom-1) /= -1) exit
-        end do
-        if (cell_vtx(cell_vtx_idx(i)+face_vtx_nb(numf)+isom-1) /= -1) exit
-      end do
-    end do
-
-    cell_vtx_idx(i+1) = cell_vtx_idx(i) + cell_vtx_nb(i)
-
-  end do
-
   ! Convert Fortran -> C
-  cell_vtx_idx = cell_vtx_idx - 1
   face_vtx_idx = face_vtx_idx - 1
   cell_face_idx = cell_face_idx - 1
+
+  if (i_rank .eq. 0) then
+    write(*, *) "-- Create mesh locator"
+  end if
+
+  call pdm_mesh_location_create                 &
+  (loc,                                         & !- IDENTIFICATEUR OBJET LOCALISATEUR
+   PDM_MESH_NATURE_MESH_SETTED,                 & !- NATURE DU MAILLAGE
+   1,                                           & !- NOMBRE DE NUAGE DE POINTS
+   f_comm,                                        & !- COMMUNICATEUR MPI
+   PDM_OWNERSHIP_KEEP)                            !- OWNERSHIP
 
   if (i_rank .eq. 0) then
     write(*, *) "-- Create nodal mesh"
@@ -228,7 +174,85 @@ program testf
    PDM_OWNERSHIP_USER)                            !- OWNERSHIP
 
   if (i_rank .eq. 0) then
-    write(*, *) "-- Set connectivity"
+    write(*, *) "-- Set cell-face connectivity"
+  end if
+
+  ! Définition de la connectivité du maillage 3D
+  call pdm_mesh_nodal_cell3d_cellface_add       &
+  (mesh,                                        & !- IDENTIFICATEUR OBJET MAILLAGE NODAL
+   0,                                           & !- INDICE DE PARTITION DU MAILLAGE NODAL
+   n_cell,                                      & !- NOMBRE DE CELLULES
+   n_face,                                      & !- NOMBRE DE FACES
+   face_vtx_idx,                                & !- ADRESSES DES NUMEROS DE FACES PAR CELLULE
+   face_vtx_nb,                                 & !- NOMBRES DE SOMMETS PAR FACE
+   face_vtx,                                    & !- NUMEROS DE SOMMETS PAR FACE
+   face_ln_to_gn,                               & !- NUMEROTATION ABSOLUE DES FACES
+   cell_face_idx,                               & !- ADRESSES DES NUMEROS DE FACES PAR CELLULE
+   cell_face_nb,                                & !- NOMBRES DE FACES PAR CELLULE
+   cell_face,                                   & !- NUMEROS DE FACES PAR CELLULE
+   cell_ln_to_gn,                               & !- NUMEROTATION ABSOLUE DES CELLULES
+   PDM_OWNERSHIP_KEEP)                            !- OWNERSHIP
+
+  if (i_rank .eq. 0) then
+    write(*, *) "-- Get cell-vertex connectivity"
+  end if
+
+  ! Association du maillage nodal au localisateur
+  call pdm_mesh_location_shared_nodal_mesh_set  & !-
+  (loc,                                         & !- IDENTIFICATEUR OBJET LOCALISATEUR
+   mesh)                                          !- IDENTIFICATEUR OBJET MAILLAGE NODAL
+
+  ! Détermination de la connectivité du maillage
+  call pdm_mesh_location_cell_vertex_compute    &
+  (loc)                                           !- IDENTIFICATEUR OBJET LOCALISATEUR
+
+  ! Récupération de la connectivité du maillage
+  call pdm_mesh_location_cell_vertex_get        & !-
+  (loc,                                         & !- IDENTIFICATEUR OBJET LOCALISATEUR
+   0,                                           & !- INDICE DE PARTITION DU MAILLAGE NODAL
+   tmp_cell_vtx_idx,                            & !- ADRESSES DES NUMEROS DE SOMMETS PAR CELLULE
+   tmp_cell_vtx)                                  !- NUMEROS DE SOMMETS PAR CELLULE
+
+  ! Conversion de la connectivité
+  allocate(cell_vtx_idx(n_cell+1))
+  allocate(cell_vtx_nb(n_cell))
+  allocate(cell_vtx(tmp_cell_vtx_idx(n_cell+1)))
+  cell_vtx_idx = tmp_cell_vtx_idx
+  cell_vtx = tmp_cell_vtx
+  do i = 1,n_cell
+    cell_vtx_nb(i) = cell_vtx_idx(i+1)-cell_vtx_idx(i)
+  end do
+
+  ! Free memory
+  call pdm_mesh_location_free(loc)
+  nullify(tmp_cell_vtx_idx)
+  nullify(tmp_cell_vtx)
+
+  if (i_rank .eq. 0) then
+    write(*, *) "-- Create nodal mesh"
+  end if
+
+  ! Création de l'objet "MAILLAGE NODAL"
+  call pdm_mesh_nodal_create                    & !
+  (mesh,                                        & !- IDENTIFICATEUR OBJET MAILLAGE NODAL
+   1,                                           & !- NOMBRE DE PARTITIONS DU MAILLAGE NODAL SUR LE PROCESSUS COURANT
+   f_comm)                                        !- COMMUNICATEUR MPI
+
+  if (i_rank .eq. 0) then
+    write(*, *) "-- Set vertices"
+  end if
+
+  ! Définition des sommets du maillage nodal
+  call pdm_mesh_nodal_coord_set                 &
+  (mesh,                                        & !- IDENTIFICATEUR OBJET MAILLAGE NODAL
+   0,                                           & !- INDICE DE PARTITION DU MAILLAGE NODAL
+   n_vtx,                                       & !- NOMBRE DE SOMMETS
+   vtx_coord,                                   & !- COORDONNEES DES SOMMETS
+   vtx_ln_to_gn,                                & !- NUMEROTATION ABSOLUE DES SOMMETS
+   PDM_OWNERSHIP_USER)                            !- OWNERSHIP
+
+  if (i_rank .eq. 0) then
+    write(*, *) "-- Set cell-vertex connectivity"
   end if
 
   ! Définition de la connectivité du maillage nodal

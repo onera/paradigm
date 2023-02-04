@@ -1487,6 +1487,36 @@ PDM_mesh_location_point_location_get
  * \param [out]  cell_vtx              Cell vertex connectivity
  *
  */
+
+void
+PDM_mesh_location_cell_vertex_compute
+(
+       PDM_mesh_location_t  *ml
+)
+{
+
+  _store_cell_vtx(ml);
+
+}
+
+void
+PDM_mesh_location_cell_vertex_dim_get
+(
+       PDM_mesh_location_t  *ml,
+ const int                   i_part,
+       int                  *n_cell,
+       int                  *s_cell_vtx
+)
+{
+
+    int n_elt = PDM_Mesh_nodal_n_cell_get (ml->mesh_nodal,
+                                           i_part);
+
+   *n_cell = n_elt;
+   *s_cell_vtx = ml->cell_vtx_idx[i_part][n_elt];
+
+}
+
 void
 PDM_mesh_location_cell_vertex_get
 (
