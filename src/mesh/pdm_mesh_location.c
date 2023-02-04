@@ -1479,12 +1479,9 @@ PDM_mesh_location_point_location_get
 
 /**
  *
- * \brief get cell vertex connectivity
+ * \brief compute cell vertex connectivity
  *
  * \param [in]   id                    Pointer to \ref PDM_mesh_location object
- * \param [in]   i_part                Index of partition of the cloud
- * \param [out]  cell_vtx_idx          Index in (size = n_elt + 1)
- * \param [out]  cell_vtx              Cell vertex connectivity
  *
  */
 
@@ -1498,6 +1495,18 @@ PDM_mesh_location_cell_vertex_compute
   _store_cell_vtx(ml);
 
 }
+
+
+/**
+ *
+ * \brief get cell vertex connectivity dimension
+ *
+ * \param [in]   id                    Pointer to \ref PDM_mesh_location object
+ * \param [in]   i_part                Index of partition of the cloud
+ * \param [out]  n_cell                Number of cells
+ * \param [out]  s_cell_vtx            Size of cell_vtx
+ *
+ */
 
 void
 PDM_mesh_location_cell_vertex_dim_get
@@ -1516,6 +1525,18 @@ PDM_mesh_location_cell_vertex_dim_get
    *s_cell_vtx = ml->cell_vtx_idx[i_part][n_elt];
 
 }
+
+
+/**
+ *
+ * \brief get cell vertex connectivity
+ *
+ * \param [in]   id                    Pointer to \ref PDM_mesh_location object
+ * \param [in]   i_part                Index of partition of the cloud
+ * \param [out]  cell_vtx_idx          Index in (size = n_elt + 1)
+ * \param [out]  cell_vtx              Cell vertex connectivity
+ *
+ */
 
 void
 PDM_mesh_location_cell_vertex_get

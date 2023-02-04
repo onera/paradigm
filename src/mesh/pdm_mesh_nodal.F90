@@ -273,7 +273,7 @@ module pdm_mesh_nodal
   end subroutine
 
 
-!> Define cells by cell-edge connectivity
+!> Define 2D cells by cell-edge connectivity
 !!
 !! @param[in]  mesh          Pointer to \ref PDM_Mesh_nodal object
 !! @param[in]  id_part       Partition identifier
@@ -349,7 +349,7 @@ subroutine PDM_Mesh_nodal_cell2d_celledge_add (mesh, id_part, n_elt, n_edge, edg
 
   end subroutine
 
-!> Define cells by cell-face connectivity
+!> Define 3D cells by cell-face connectivity
 !!
 !! @param[in]  mesh          Pointer to \ref PDM_Mesh_nodal object
 !! @param[in]  id_part       Partition identifier
@@ -358,7 +358,7 @@ subroutine PDM_Mesh_nodal_cell2d_celledge_add (mesh, id_part, n_elt, n_edge, edg
 !! @param[in]  face_vtx_idx  Index of face vertex connectivity
 !! @param[in]  face_vtx_nb   Number of vertices for each face
 !! @param[in]  face_vtx      Face vertex connectivity
-!! @param[in]  face_ln_to_gn Global numbering
+!! @param[in]  face_ln_to_gn Global face numbering
 !! @param[in]  cell_face_idx Index of cell face connectivity
 !! @param[in]  cell_face_nb  Number of faces for each cell
 !! @param[in]  cell_face     Cell face connectivity
