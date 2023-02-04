@@ -5053,6 +5053,7 @@ const PDM_ownership_t  ownership
 
       PDM_l_num_t n_cell_courant = mesh->prepa_blocks->n_cell[i_part];
       PDM_l_num_t *num_cell_parent_to_local_courant = mesh->num_cell_parent_to_local[i_part];
+      PDM_l_num_t *face_som_idx_courant = mesh->prepa_blocks->face_vtx_idx[i_part];
       PDM_l_num_t *face_som_courant = mesh->prepa_blocks->face_vtx[i_part];
       PDM_l_num_t *cell_face_idx_courant = mesh->prepa_blocks->cell_face_idx[i_part];
       PDM_l_num_t *cell_face_nb_courant = mesh->prepa_blocks->cell_face_nb[i_part];
@@ -5139,8 +5140,8 @@ const PDM_ownership_t  ownership
 
         for (int j = ideb; j < ifin; j++) {
           PDM_l_num_t ifac = PDM_ABS(cell_face_courant[j]) - 1;
-          PDM_l_num_t isom1 = face_som_courant[2*ifac] - 1;
-          PDM_l_num_t isom2 = face_som_courant[2*ifac+1] - 1;
+          PDM_l_num_t isom1 = face_som_courant[face_som_idx_courant[ifac]] - 1;
+          PDM_l_num_t isom2 = face_som_courant[face_som_idx_courant[ifac]+1] - 1;
 
           if (connec_som_are[2*isom1] == -1)
             connec_som_are[2*isom1] = ifac;
@@ -5188,8 +5189,8 @@ const PDM_ownership_t  ownership
 
         PDM_l_num_t idx_som = 0;
         PDM_l_num_t face_courant = PDM_ABS(cell_face_courant[ideb]) - 1;
-        PDM_l_num_t isom1 = face_som_courant[2*face_courant] - 1;
-        PDM_l_num_t isom_suiv = face_som_courant[2*face_courant + 1] - 1;
+        PDM_l_num_t isom1 = face_som_courant[face_som_idx_courant[face_courant]] - 1;
+        PDM_l_num_t isom_suiv = face_som_courant[face_som_idx_courant[face_courant] + 1] - 1;
         connec_courant[idx_som++] = isom1 + 1;
 
         while (isom1 != isom_suiv) {
@@ -5205,9 +5206,9 @@ const PDM_ownership_t  ownership
 
           /* Sommet suivant */
 
-          PDM_l_num_t isom_tmp = face_som_courant[2*face_courant] - 1;
+          PDM_l_num_t isom_tmp = face_som_courant[face_som_idx_courant[face_courant]] - 1;
           if (isom_tmp == isom_suiv)
-            isom_tmp = face_som_courant[2*face_courant + 1] - 1;
+            isom_tmp = face_som_courant[face_som_idx_courant[face_courant] + 1] - 1;
           isom_suiv = isom_tmp;
         }
 
