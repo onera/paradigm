@@ -258,12 +258,9 @@ module pdm_mesh_location
 
     !>
     !!
-    !! \brief get cell vertex connectivity
+    !! \brief compute cell vertex connectivity
     !!
     !! \param [in]   mloc                  Pointer to \ref PDM_mesh_location object
-    !! \param [in]   i_part                Index of partition of the cloud
-    !! \param [out]  cell_vtx_idx          Index in (size = n_elt + 1)
-    !! \param [out]  cell_vtx              Cell vertex connectivity
     !!
     !!
 
@@ -278,6 +275,17 @@ module pdm_mesh_location
       type (c_ptr), value :: mloc
 
     end subroutine PDM_mesh_location_cell_vertex_compute
+
+    !>
+    !!
+    !! \brief get cell vertex connectivity dimension
+    !!
+    !! \param [in]   mloc                  Pointer to \ref PDM_mesh_location object
+    !! \param [in]   i_part                Index of partition of the cloud
+    !! \param [out]  n_cell                Number of cells
+    !! \param [out]  s_cell_vtx            Size of cell_vtx
+    !!
+    !!
 
     subroutine PDM_mesh_location_cell_vertex_dim_get (mloc, &
                                                   i_part, &
@@ -296,6 +304,17 @@ module pdm_mesh_location
       integer(c_int)        :: s_cell_vtx
 
     end subroutine PDM_mesh_location_cell_vertex_dim_get
+
+    !>
+    !!
+    !! \brief get cell vertex connectivity
+    !!
+    !! \param [in]   mloc                  Pointer to \ref PDM_mesh_location object
+    !! \param [in]   i_part                Index of partition of the cloud
+    !! \param [out]  cell_vtx_idx          Index in (size = n_elt + 1)
+    !! \param [out]  cell_vtx              Cell vertex connectivity
+    !!
+    !!
 
     subroutine PDM_mesh_location_cell_vertex_get_cf (mloc, &
                                                   i_part, &
