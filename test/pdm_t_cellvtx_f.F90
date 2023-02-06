@@ -171,7 +171,7 @@ program testf
    n_vtx,                                       & !- NOMBRE DE SOMMETS
    vtx_coord,                                   & !- COORDONNEES DES SOMMETS
    vtx_ln_to_gn,                                & !- NUMEROTATION ABSOLUE DES SOMMETS
-   PDM_OWNERSHIP_KEEP)                            !- OWNERSHIP
+   PDM_OWNERSHIP_USER)                            !- OWNERSHIP
 
   if (i_rank .eq. 0) then
     write(*, *) "-- Set cell-face connectivity"
@@ -267,6 +267,7 @@ program testf
    PDM_OWNERSHIP_KEEP)                            !- OWNERSHIP
 
   ! Free memory
+  call pdm_mesh_nodal_free(mesh)
   deallocate(vtx_coord)
   deallocate(vtx_ln_to_gn)
   deallocate(face_ln_to_gn)
@@ -280,7 +281,6 @@ program testf
   deallocate(cell_vtx_idx)
   deallocate(cell_vtx_nb)
   deallocate(cell_vtx)
-  call pdm_mesh_nodal_free(mesh)
 
   if (i_rank .eq. 0) then
     write(*, *) "-- End"
