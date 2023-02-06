@@ -54,6 +54,7 @@ extern "C" {
 struct _pdm_part_mesh_t
 {
   int                  n_part;
+  int                  tn_part;
   PDM_MPI_Comm         comm;
 
   int                **pn_entity;                       /* Size for each entity (size = PDM_MESH_ENTITY_MAX)            */
@@ -73,9 +74,13 @@ struct _pdm_part_mesh_t
   PDM_g_num_t       ***pbound_ln_to_gn;                 /* Array of connectivty (size = PDM_CONNECTIVITY_TYPE_MAX)           */
   int               ***pbound;                          /* Array of connectivty (size = PDM_CONNECTIVITY_TYPE_MAX)            */
   int               ***pbound_idx;                      /* Array of connectivty_idx if any (size = PDM_CONNECTIVITY_TYPE_MAX) */
-
   PDM_bool_t         *is_owner_bound;
-  PDM_bool_t         *is_owner_bound_ln_to_gn;
+
+  /* Comm graph */
+  int               ***ppart_bound_proc_idx;            /* Array of connectivty (size = PDM_CONNECTIVITY_TYPE_MAX)            */
+  int               ***ppart_bound_part_idx;            /* Array of connectivty_idx if any (size = PDM_CONNECTIVITY_TYPE_MAX) */
+  int               ***ppart_bound;                     /* Array of connectivty_idx if any (size = PDM_CONNECTIVITY_TYPE_MAX) */
+  PDM_bool_t         *is_owner_part_bound;
 
 
 };
