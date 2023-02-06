@@ -4714,6 +4714,11 @@ const PDM_ownership_t  ownership
         }
       }
 
+      int adjust2 = 0;
+      if (face_som_idx_courant[0] == 1) {
+        adjust2 = 1;
+      }
+
       n_tria   = mesh->prepa_blocks->n_tria[i_part];
       n_quad    = mesh->prepa_blocks->n_quad[i_part];
       n_poly2d  = mesh->prepa_blocks->n_poly2d[i_part];
@@ -4787,8 +4792,8 @@ const PDM_ownership_t  ownership
 
         for (int j = ideb; j < ifin; j++) {
           PDM_l_num_t ifac = PDM_ABS(cell_face_courant[j]) - 1;
-          PDM_l_num_t isom1 = face_som_courant[face_som_idx_courant[ifac]] - 1;
-          PDM_l_num_t isom2 = face_som_courant[face_som_idx_courant[ifac]+1] - 1;
+          PDM_l_num_t isom1 = face_som_courant[face_som_idx_courant[ifac]-adjust2] - 1;
+          PDM_l_num_t isom2 = face_som_courant[face_som_idx_courant[ifac]-adjust2+1] - 1;
 
           if (connec_som_are[2*isom1] == -1)
             connec_som_are[2*isom1] = ifac;
@@ -4836,8 +4841,8 @@ const PDM_ownership_t  ownership
 
         PDM_l_num_t idx_som = 0;
         PDM_l_num_t face_courant = PDM_ABS(cell_face_courant[ideb]) - 1;
-        PDM_l_num_t isom1 = face_som_courant[face_som_idx_courant[face_courant]] - 1;
-        PDM_l_num_t isom_suiv = face_som_courant[face_som_idx_courant[face_courant] + 1] - 1;
+        PDM_l_num_t isom1 = face_som_courant[face_som_idx_courant[face_courant] - adjust2] - 1;
+        PDM_l_num_t isom_suiv = face_som_courant[face_som_idx_courant[face_courant] - adjust2 + 1] - 1;
         connec_courant[idx_som++] = isom1 + 1;
 
         while (isom1 != isom_suiv) {
@@ -4853,9 +4858,9 @@ const PDM_ownership_t  ownership
 
           /* Sommet suivant */
 
-          PDM_l_num_t isom_tmp = face_som_courant[face_som_idx_courant[face_courant]] - 1;
+          PDM_l_num_t isom_tmp = face_som_courant[face_som_idx_courant[face_courant] - adjust2] - 1;
           if (isom_tmp == isom_suiv)
-            isom_tmp = face_som_courant[face_som_idx_courant[face_courant] + 1] - 1;
+            isom_tmp = face_som_courant[face_som_idx_courant[face_courant] - adjust2 + 1] - 1;
           isom_suiv = isom_tmp;
         }
 
