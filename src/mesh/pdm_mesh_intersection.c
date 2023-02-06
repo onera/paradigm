@@ -2222,6 +2222,8 @@ _dump_elementary_vol_vol
 
   fclose(f);
 }
+
+
 static
 void
 _mesh_intersection_vol_vol
@@ -3137,381 +3139,6 @@ _clip2
     *v *= iw;
   }
 }
-
-static
-void
-_mesh_intersection_surf_surf
-(
- PDM_mesh_intersection_t *mi,
- PDM_extract_part_t      *extrp_mesh_a,
- PDM_extract_part_t      *extrp_mesh_b,
- int                     *redistribute_box_a_to_box_b_idx,
- int                     *redistribute_box_a_to_box_b
-)
-{
-  int dbg_enabled = 0;
-
-  /*
-   * Panic
-   */
-  if (dbg_enabled) {
-    _export_vtk_2d("extrp_mesh_a", extrp_mesh_a);
-    _export_vtk_2d("extrp_mesh_b", extrp_mesh_b);
-  }
-
-  /*
-   * TODO : Faire la géometrie :D
-   */
-  int *faceA_faceB_idx = redistribute_box_a_to_box_b_idx;
-  int *faceA_faceB     = redistribute_box_a_to_box_b;
-
-  /* Get connectivities and coordinates */
-  int          n_faceA         = 0;
-  int          n_edgeA         = 0;
-  int          n_vtxA          = 0;
-  int         *faceA_edgeA_idx = NULL;
-  int         *faceA_edgeA     = NULL;
-  int         *edgeA_vtxA      = NULL;
-  double      *vtxA_coord      = NULL;
-  PDM_g_num_t *faceA_ln_to_gn  = NULL;
-  _get_extracted_mesh_surf(extrp_mesh_a,
-                           &n_faceA,
-                           &n_edgeA,
-                           &n_vtxA,
-                           &faceA_edgeA_idx,
-                           &faceA_edgeA,
-                           &edgeA_vtxA,
-                           &vtxA_coord,
-                           &faceA_ln_to_gn);
-
-  int          n_faceB         = 0;
-  int          n_edgeB         = 0;
-  int          n_vtxB          = 0;
-  int         *faceB_edgeB_idx = NULL;
-  int         *faceB_edgeB     = NULL;
-  int         *edgeB_vtxB      = NULL;
-  double      *vtxB_coord      = NULL;
-  PDM_g_num_t *faceB_ln_to_gn  = NULL;
-  _get_extracted_mesh_surf(extrp_mesh_b,
-                           &n_faceB,
-                           &n_edgeB,
-                           &n_vtxB,
-                           &faceB_edgeB_idx,
-                           &faceB_edgeB,
-                           &edgeB_vtxB,
-                           &vtxB_coord,
-                           &faceB_ln_to_gn);
-
-
-  double *faceA_faceB_volume = malloc(sizeof(double) * faceA_faceB_idx[n_faceA]);
-
-  for (int faceA_id = 0; faceA_id < n_faceA; faceA_id++) {
-
-    double faceA_normal[3];
-    double faceA_center[3];
-    _polygon_geom_properties(faceA_edgeA_idx[faceA_id+1] - faceA_edgeA_idx[faceA_id],
-                             faceA_edgeA + faceA_edgeA_idx[faceA_id],
-                             edgeA_vtxA,
-                             vtxA_coord,
-                             faceA_normal,
-                             faceA_center);
-
-    /* Unit normal */
-    double mag = PDM_DOT_PRODUCT(faceA_normal, faceA_normal);
-    if (mag <= 0) {
-      // degenerate polygon
-      continue;
-    }
-
-    double imag = 1./sqrt(mag);
-    for (int i = 0; i < 3; i++) {
-      faceA_normal[i] *= imag;
-    }
-
-    for (int ifaceB = faceA_faceB_idx[faceA_id]; ifaceB < faceA_faceB_idx[faceA_id+1]; ifaceB++) {
-      int faceB_id = faceA_faceB[ifaceB];
-
-      int dbg_pair = 0;// dbg_enabled && (faceA_id == 5 && faceB_id == 0);
-
-      double area = 0.;
-
-      double faceB_normal[3];// Compute only once and store?
-      double faceB_center[3];// Not used
-      _polygon_geom_properties(faceB_edgeB_idx[faceB_id+1] - faceB_edgeB_idx[faceB_id],
-                               faceB_edgeB + faceB_edgeB_idx[faceB_id],
-                               edgeB_vtxB,
-                               vtxB_coord,
-                               faceB_normal,
-                               faceB_center);
-
-      int signAB = (int) PDM_SIGN(PDM_DOT_PRODUCT(faceA_normal, faceB_normal));
-      if (dbg_pair) {
-        log_trace("faceA %d ("PDM_FMT_G_NUM") faceB %d ("PDM_FMT_G_NUM"), signAB = %d\n",
-                  faceA_id, faceA_ln_to_gn[faceA_id], faceB_id, faceB_ln_to_gn[faceB_id], signAB);
-        log_trace("faceA_center = %f %f %f\n", faceA_center[0], faceA_center[1], faceA_center[2]);
-        log_trace("faceA_normal = %f %f %f\n", faceA_normal[0], faceA_normal[1], faceA_normal[2]);
-      }
-
-      for (int iedgeA = faceA_edgeA_idx[faceA_id]; iedgeA < faceA_edgeA_idx[faceA_id+1]; iedgeA++) {
-        int edgeA_id   = PDM_ABS (faceA_edgeA[iedgeA]) - 1;
-        int edgeA_sign = PDM_SIGN(faceA_edgeA[iedgeA]);
-
-        int vtxA_id0 = edgeA_vtxA[2*edgeA_id  ] - 1;
-        int vtxA_id1 = edgeA_vtxA[2*edgeA_id+1] - 1;
-        if (edgeA_sign < 0) {
-          int tmp = vtxA_id0;
-          vtxA_id0 = vtxA_id1;
-          vtxA_id1 = tmp;
-        }
-
-        if (dbg_pair) {
-          log_trace("  edgeA (%d)%d: %d %d\n", edgeA_sign, edgeA_id, vtxA_id0, vtxA_id1);
-        }
-
-        double *a = vtxA_coord + 3*vtxA_id0;
-        double *b = vtxA_coord + 3*vtxA_id1;
-
-        double ka[3], kb[3];
-        _vector_ab(ka, faceA_center, a);
-        _vector_ab(kb, faceA_center, b);
-
-        double kaka = PDM_DOT_PRODUCT(ka, ka);
-        double kakb = PDM_DOT_PRODUCT(ka, kb);
-        double kbkb = PDM_DOT_PRODUCT(kb, kb);
-
-        double det = kaka*kbkb - kakb*kakb;
-
-        if (det <= 0.) {
-          // points k, a and b are collinear, skip edge ab
-          continue;
-        }
-
-        double idet = 1./det;
-
-        double normal_kab[3];
-        PDM_CROSS_PRODUCT(normal_kab, ka, kb);
-
-        double area_kab = 0.5*PDM_DOT_PRODUCT(normal_kab, faceA_normal);
-
-
-        for (int iedgeB = faceB_edgeB_idx[faceB_id]; iedgeB < faceB_edgeB_idx[faceB_id+1]; iedgeB++) {
-          int edgeB_id   = PDM_ABS (faceB_edgeB[iedgeB]) - 1;
-          int edgeB_sign = PDM_SIGN(faceB_edgeB[iedgeB]);
-
-          int vtxB_id0 = edgeB_vtxB[2*edgeB_id  ] - 1;
-          int vtxB_id1 = edgeB_vtxB[2*edgeB_id+1] - 1;
-          if (edgeB_sign < 0) {
-            int tmp = vtxB_id0;
-            vtxB_id0 = vtxB_id1;
-            vtxB_id1 = tmp;
-          }
-
-          if (dbg_pair) {
-            log_trace("    edgeB (%d)%d: %d %d\n", edgeB_sign, edgeB_id, vtxB_id0, vtxB_id1);
-          }
-
-          double *c = vtxB_coord + 3*vtxB_id0;
-          double *d = vtxB_coord + 3*vtxB_id1;
-
-          /* Compute the barycentric coordinates of c and d in kab */
-          double kc[3], kd[3];
-          _vector_ab(kc, faceA_center, c);
-          _vector_ab(kd, faceA_center, d);
-
-          double kcka = PDM_DOT_PRODUCT(kc, ka);
-          double kckb = PDM_DOT_PRODUCT(kc, kb);
-          double kdka = PDM_DOT_PRODUCT(kd, ka);
-          double kdkb = PDM_DOT_PRODUCT(kd, kb);
-
-          double uc = kcka*kbkb - kckb*kakb;
-          double ud = kdka*kbkb - kdkb*kakb;
-
-          if (dbg_pair) {
-            log_trace("      uc = %f, ud = %f\n", uc, ud);
-          }
-
-          if (uc <= 0 && ud <= 0) {
-            continue;
-          }
-
-          double vc = kaka*kckb - kakb*kcka;
-          double vd = kaka*kdkb - kakb*kdka;
-
-          if (dbg_pair) {
-            log_trace("      vc = %f, vd = %f\n", vc, vd);
-          }
-
-          if (vc <= 0 && vd <= 0) {
-            continue;
-          }
-
-          if (uc*vd - vc*ud == 0) {
-            // points k, c and d are collinear, skip edge cd
-            continue;
-          }
-
-          uc *= idet;
-          vc *= idet;
-          ud *= idet;
-          vd *= idet;
-
-          /* Compute intersection between ab and cd */
-          int intersect = 0;
-          double m00 = -1;
-          double m01 = uc - ud;
-          double m10 = 1;
-          double m11 = vc - vd;
-          double s;
-
-          double det2 = m00*m11 - m01*m10;
-          if (det2 != 0) {
-            double idet2 = 1./det2;
-            double r0 = uc - 1;
-            double r1 = vc;
-            s        = (r0*m11 - r1*m01) * idet2;
-            double t = (m00*r1 - m10*r0) * idet2;
-            if (s >= 0 && s <= 1 && t >= 0 && t <= 1) {
-              intersect = 1;
-            }
-          }
-
-          /* Clip kcd by 'quarter space' {u,v >= 0} */
-          _clip1(&uc, &vc, ud, vd);
-          _clip1(&ud, &vd, uc, vc);
-
-          /* Clip kcd by triangle kab {u+v <= 1} */
-          _clip2(&uc, &vc);
-          _clip2(&ud, &vd);
-
-          if (dbg_pair) {
-            log_trace("      final uc = %f, vc = %f\n", uc, vc);
-            log_trace("      final ud = %f, vd = %f\n", ud, vd);
-          }
-
-          /* Add contribution */
-          double f = 0;
-          if (intersect) {
-            f = (1-s)*(vd - vc) + s*(uc - ud);
-            if (dbg_pair) {
-              log_trace("    c2 = %f %f %f\n",
-                        faceA_center[0] + uc*ka[0] + vc*kb[0],
-                        faceA_center[1] + uc*ka[1] + vc*kb[1],
-                        faceA_center[2] + uc*ka[2] + vc*kb[2]);
-              log_trace("    x  = %f %f %f\n",
-                        faceA_center[0] + (1-s)*ka[0] + s*kb[0],
-                        faceA_center[1] + (1-s)*ka[1] + s*kb[1],
-                        faceA_center[2] + (1-s)*ka[2] + s*kb[2]);
-              log_trace("    d2 = %f %f %f\n",
-                        faceA_center[0] + ud*ka[0] + vd*kb[0],
-                        faceA_center[1] + ud*ka[1] + vd*kb[1],
-                        faceA_center[2] + ud*ka[2] + vd*kb[2]);
-            }
-          }
-          else {
-            f = uc*vd - vc*ud;
-            if (dbg_pair) {
-              log_trace("    c2 = %f %f %f\n",
-                        faceA_center[0] + uc*ka[0] + vc*kb[0],
-                        faceA_center[1] + uc*ka[1] + vc*kb[1],
-                        faceA_center[2] + uc*ka[2] + vc*kb[2]);
-              log_trace("    d2 = %f %f %f\n",
-                        faceA_center[0] + ud*ka[0] + vd*kb[0],
-                        faceA_center[1] + ud*ka[1] + vd*kb[1],
-                        faceA_center[2] + ud*ka[2] + vd*kb[2]);
-            }
-          }
-
-          if (dbg_pair) {
-            log_trace("    f = %f\n", f);
-            log_trace("    area += %f\n", f*area_kab);
-          }
-          area += f*area_kab;
-
-        } // End of loop on current faceB's edges
-
-      } // End of loop on current faceA's edges
-
-      faceA_faceB_volume[ifaceB] = signAB * area;
-      if (0) {//dbg_enabled) {
-        log_trace("faceA %d ("PDM_FMT_G_NUM") faceB %d ("PDM_FMT_G_NUM"), volume = %20.16f (%3.3f%)\n",
-                  faceA_id, faceA_ln_to_gn[faceA_id],
-                  faceB_id, faceB_ln_to_gn[faceB_id],
-                  faceA_faceB_volume[ifaceB],
-                  100*faceA_faceB_volume[ifaceB]*imag*2);
-      }
-
-    } // End of loop on faces B
-
-  } // End of loop on faces A
-
-
-  if (dbg_enabled) {
-    // Crude check
-    double l_total_area_AB = 0;
-    for (int i = 0; i < faceA_faceB_idx[n_faceA]; i++) {
-      l_total_area_AB += faceA_faceB_volume[i];
-    }
-
-    double l_total_area_A = 0;
-    int idx = 0;
-    for (int faceA_id = 0; faceA_id < n_faceA; faceA_id++) {
-      double faceA_normal[3];
-      double faceA_center[3];
-      _polygon_geom_properties(faceA_edgeA_idx[faceA_id+1] - faceA_edgeA_idx[faceA_id],
-                               faceA_edgeA + faceA_edgeA_idx[faceA_id],
-                               edgeA_vtxA,
-                               vtxA_coord,
-                               faceA_normal,
-                               faceA_center);
-      double area = 0.5*PDM_MODULE(faceA_normal);
-
-      if (1) {//faceA_ln_to_gn[faceA_id] == 2385) {
-        double sum = 0;
-        for (int j = faceA_faceB_idx[faceA_id]; j < faceA_faceB_idx[faceA_id+1]; j++) {
-        // for (int j = 0; j < faceA_faceB_n[faceA_id]; j++) {
-          log_trace(PDM_FMT_G_NUM"-"PDM_FMT_G_NUM" : %20.16f\n",
-                    faceA_ln_to_gn[faceA_id], faceB_ln_to_gn[faceA_faceB[idx]], faceA_faceB_volume[idx]);
-          sum += faceA_faceB_volume[idx];
-          idx++;
-        }
-        log_trace(PDM_FMT_G_NUM" : sum = %20.16f / %20.16f (%f%%)\n",
-                  faceA_ln_to_gn[faceA_id], sum,area, 100*sum/area);
-      }
-
-      l_total_area_A += area;
-    }
-
-    double g_total_area_AB;
-    PDM_MPI_Allreduce(&l_total_area_AB, &g_total_area_AB, 1,
-                      PDM_MPI_DOUBLE, PDM_MPI_SUM, mi->comm);
-
-    double g_total_area_A;
-    PDM_MPI_Allreduce(&l_total_area_A, &g_total_area_A, 1,
-                      PDM_MPI_DOUBLE, PDM_MPI_SUM, mi->comm);
-
-    log_trace("total area of A inter B : local = %20.16f, global = %20.16f (%3.3f%%)\n",
-              l_total_area_AB, g_total_area_AB,
-              100*g_total_area_AB / g_total_area_A);
-
-    // cas plan, translation (0.5,0.5,0) + rotation PI/5
-    double exact = 0.0875401518835469;
-    log_trace("error : absolute = %e, relative = %e\n",
-              PDM_ABS(g_total_area_AB - exact),
-              PDM_ABS(g_total_area_AB - exact)/exact);
-
-  }
-
-
-  _build_ptp(mi,
-             faceA_faceB_idx,
-             faceA_faceB,
-             faceA_faceB_volume);
-
-
-  // free(faceA_faceB_n);
-  free(faceA_faceB_volume);
-
-}
 PDM_GCC_SUPPRESS_WARNING_POP
 
 
@@ -4260,7 +3887,7 @@ _mesh_intersection_surf_line
 
 static
 void
-_mesh_intersection_surf_surf2
+_mesh_intersection_surf_surf
 (
  PDM_mesh_intersection_t *mi,
  int                     *a_to_b_idx,
@@ -4937,8 +4564,24 @@ _mesh_intersection_surf_surf2
 }
 
 
+static
+void
+_mesh_intersection_vol_vol2
+(
+ PDM_mesh_intersection_t *mi,
+ int                     *a_to_b_idx,
+ int                     *a_to_b
+)
+{
+  int i_rank;
+  PDM_MPI_Comm_rank(mi->comm, &i_rank);
 
+  int dbg_enabled = 1;
 
+  PDM_part_mesh_nodal_elmts_t *pmne[2] = {NULL, NULL};
+
+  //TODO
+}
 
 
 /*=============================================================================
@@ -5344,11 +4987,18 @@ PDM_mesh_intersection_compute
   // }
 
   if(mi->dim_mesh[0] == 3 && mi->dim_mesh[1] == 3) {
-    _mesh_intersection_vol_vol(mi,
-                               extrp_mesh_a,
-                               extrp_mesh_b,
-                               redistribute_box_a_to_box_b_idx,
-                               redistribute_box_a_to_box_b);
+    if (1) {
+      _mesh_intersection_surf_surf(mi,
+                                   redistribute_box_a_to_box_b_idx,
+                                   redistribute_box_a_to_box_b);
+    }
+    else {
+      _mesh_intersection_vol_vol(mi,
+                                 extrp_mesh_a,
+                                 extrp_mesh_b,
+                                 redistribute_box_a_to_box_b_idx,
+                                 redistribute_box_a_to_box_b);
+    }
   } else if(mi->dim_mesh[0] == 3 && mi->dim_mesh[1] == 2) {
     // On suppose que l'utilisateur met A = Vol et B = Surf
     _mesh_intersection_vol_surf(mi,
@@ -5357,18 +5007,9 @@ PDM_mesh_intersection_compute
                                 redistribute_box_a_to_box_b_idx,
                                 redistribute_box_a_to_box_b);
   } else if(mi->dim_mesh[0] == 2 && mi->dim_mesh[1] == 2) {
-    if (0) {
-      _mesh_intersection_surf_surf(mi,
-                                   extrp_mesh_a,
-                                   extrp_mesh_b,
-                                   redistribute_box_a_to_box_b_idx,
-                                   redistribute_box_a_to_box_b);
-    }
-    else {
-      _mesh_intersection_surf_surf2(mi,
-                                    redistribute_box_a_to_box_b_idx,
-                                    redistribute_box_a_to_box_b);
-    }
+    _mesh_intersection_surf_surf(mi,
+                                 redistribute_box_a_to_box_b_idx,
+                                 redistribute_box_a_to_box_b);
   } else if(mi->dim_mesh[0] == 2 && mi->dim_mesh[1] == 1) {
     // On suppose que l'utilisateur met A = Vol et B = Surf
     _mesh_intersection_surf_line(mi,
