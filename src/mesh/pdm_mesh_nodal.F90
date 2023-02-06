@@ -288,7 +288,8 @@ module pdm_mesh_nodal
 !! @param[in]  numabs        Global numbering
 !! @param[in]  owner         Ownership
 
-subroutine PDM_Mesh_nodal_cell2d_celledge_add (mesh, id_part, n_elt, n_edge, edge_vtx_idx, edge_vtx_nb, edge_vtx, cell_edge_idx, cell_edge_nb, cell_edge, numabs, owner)
+subroutine PDM_Mesh_nodal_cell2d_celledge_add (mesh, id_part, n_elt, n_edge, edge_vtx_idx, edge_vtx_nb, edge_vtx, &
+                                               cell_edge_idx, cell_edge_nb, cell_edge, numabs, owner)
     use iso_c_binding
 
     implicit none
@@ -314,7 +315,8 @@ subroutine PDM_Mesh_nodal_cell2d_celledge_add (mesh, id_part, n_elt, n_edge, edg
     type(c_ptr) :: c_numabs = C_NULL_PTR
 
     interface
-      subroutine PDM_Mesh_nodal_cell2d_celledge_add_c (mesh, id_part, n_elt, n_edge, edge_vtx_idx, edge_vtx_nb, edge_vtx, cell_edge_idx, cell_edge_nb, cell_edge, numabs, owner) &
+      subroutine PDM_Mesh_nodal_cell2d_celledge_add_c (mesh, id_part, n_elt, n_edge, edge_vtx_idx, edge_vtx_nb, edge_vtx, &
+                                                       cell_edge_idx, cell_edge_nb, cell_edge, numabs, owner) &
         bind(c, name='PDM_Mesh_nodal_cell2d_celledge_add')
 
         use iso_c_binding
@@ -345,7 +347,8 @@ subroutine PDM_Mesh_nodal_cell2d_celledge_add (mesh, id_part, n_elt, n_edge, edg
     c_cell_edge = c_loc (cell_edge)
     c_numabs = c_loc (numabs)
 
-    call  PDM_Mesh_nodal_cell2d_celledge_add_c (mesh, id_part, n_elt, n_edge, c_edge_vtx_idx, c_edge_vtx_nb, c_edge_vtx, c_cell_edge_idx, c_cell_edge_nb, c_cell_edge, c_numabs, owner)
+    call  PDM_Mesh_nodal_cell2d_celledge_add_c (mesh, id_part, n_elt, n_edge, c_edge_vtx_idx, c_edge_vtx_nb, c_edge_vtx, &
+                                                c_cell_edge_idx, c_cell_edge_nb, c_cell_edge, c_numabs, owner)
 
   end subroutine
 
@@ -365,7 +368,8 @@ subroutine PDM_Mesh_nodal_cell2d_celledge_add (mesh, id_part, n_elt, n_edge, edg
 !! @param[in]  numabs        Global numbering
 !! @param[in]  owner         Ownership
 
-subroutine PDM_Mesh_nodal_cell3d_cellface_add (mesh, id_part, n_elt, n_face, face_vtx_idx, face_vtx_nb, face_vtx, face_ln_to_gn, cell_face_idx, cell_face_nb, cell_face, numabs, owner)
+subroutine PDM_Mesh_nodal_cell3d_cellface_add (mesh, id_part, n_elt, n_face, face_vtx_idx, face_vtx_nb, face_vtx, &
+                                               face_ln_to_gn, cell_face_idx, cell_face_nb, cell_face, numabs, owner)
     use iso_c_binding
 
     implicit none
@@ -393,7 +397,8 @@ subroutine PDM_Mesh_nodal_cell3d_cellface_add (mesh, id_part, n_elt, n_face, fac
     type(c_ptr) :: c_numabs = C_NULL_PTR
 
     interface
-      subroutine PDM_Mesh_nodal_cell3d_cellface_add_c (mesh, id_part, n_elt, n_face, face_vtx_idx, face_vtx_nb, face_vtx, face_ln_to_gn, cell_face_idx, cell_face_nb, cell_face, numabs, owner) &
+      subroutine PDM_Mesh_nodal_cell3d_cellface_add_c (mesh, id_part, n_elt, n_face, face_vtx_idx, face_vtx_nb, face_vtx, &
+                                                       face_ln_to_gn, cell_face_idx, cell_face_nb, cell_face, numabs, owner) &
         bind(c, name='PDM_Mesh_nodal_cell3d_cellface_add')
 
         use iso_c_binding
@@ -426,7 +431,8 @@ subroutine PDM_Mesh_nodal_cell3d_cellface_add (mesh, id_part, n_elt, n_face, fac
     c_cell_face = c_loc (cell_face)
     c_numabs = c_loc (numabs)
 
-    call  PDM_Mesh_nodal_cell3d_cellface_add_c (mesh, id_part, n_elt, n_face, c_face_vtx_idx, c_face_vtx_nb, c_face_vtx, c_face_ln_to_gn, c_cell_face_idx, c_cell_face_nb, c_cell_face, c_numabs, owner)
+    call  PDM_Mesh_nodal_cell3d_cellface_add_c (mesh, id_part, n_elt, n_face, c_face_vtx_idx, c_face_vtx_nb, c_face_vtx, &
+                                                c_face_ln_to_gn, c_cell_face_idx, c_cell_face_nb, c_cell_face, c_numabs, owner)
 
   end subroutine
 
