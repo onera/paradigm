@@ -1131,6 +1131,7 @@ PDM_mesh_location_shared_nodal_mesh_set
 )
 {
   ml->mesh_nodal = mesh_nodal;
+  ml->mesh_nodal-> cell_vtx_owner = ml->owner;
   ml->shared_nodal = 1;
 
   ml->mesh_dimension = mesh_nodal->mesh_dimension;
@@ -1508,6 +1509,7 @@ PDM_mesh_location_cell_vertex_get
   *cell_vtx     = ml->cell_vtx[i_part];
 
   ml->tag_cell_vtx_get = 1;
+  ml->mesh_nodal->is_cell_vtx_get = 1;
 
 }
 
@@ -1735,15 +1737,6 @@ PDM_mesh_location_free
     int _n_part = PDM_part_mesh_nodal_n_part_get(ml->mesh_nodal);
 
     if (ml->cell_vtx_idx != NULL) {
-      for (int i = 0; i< _n_part; i++) {
-        if(( ml->owner == PDM_OWNERSHIP_KEEP ) ||
-           ( ml->owner == PDM_OWNERSHIP_UNGET_RESULT_IS_FREE && !ml->tag_cell_vtx_get)) {
-          if(ml->cell_vtx_idx[i] != NULL) {
-            free(ml->cell_vtx[i]);
-            free(ml->cell_vtx_idx[i]);
-          }
-        }
-      }
       free(ml->cell_vtx);
       free(ml->cell_vtx_idx);
     }
