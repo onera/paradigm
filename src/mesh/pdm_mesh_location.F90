@@ -42,10 +42,6 @@ module pdm_mesh_location
   pdm_mesh_location_cloud_set_
   end interface
 
-  interface PDM_mesh_location_cell_vertex_get ; module procedure &
-  pdm_mesh_location_cell_vertex_get_
-  end interface
-
   interface PDM_mesh_location_part_set ; module procedure &
   pdm_mesh_location_part_set_
   end interface
@@ -73,7 +69,6 @@ module pdm_mesh_location
 
   private :: pdm_mesh_location_create_
   private :: pdm_mesh_location_cloud_set_
-  private :: pdm_mesh_location_cell_vertex_get_
   private :: pdm_mesh_location_part_set_
   private :: pdm_mesh_location_part_set_2d_
   private :: PDM_mesh_location_located_get_
@@ -258,55 +253,6 @@ module pdm_mesh_location
 
     !>
     !!
-    !! \brief compute cell vertex connectivity
-    !!
-    !! \param [in]   mloc                  Pointer to \ref PDM_mesh_location object
-    !!
-    !!
-
-    subroutine PDM_mesh_location_cell_vertex_compute (mloc) &
-     bind (c, name = 'PDM_mesh_location_cell_vertex_compute')
-
-      use iso_c_binding
-
-      implicit none
-
-
-      type (c_ptr), value :: mloc
-
-    end subroutine PDM_mesh_location_cell_vertex_compute
-
-    !>
-    !!
-    !! \brief get cell vertex connectivity dimension
-    !!
-    !! \param [in]   mloc                  Pointer to \ref PDM_mesh_location object
-    !! \param [in]   i_part                Index of partition of the cloud
-    !! \param [out]  n_cell                Number of cells
-    !! \param [out]  s_cell_vtx            Size of cell_vtx
-    !!
-    !!
-
-    subroutine PDM_mesh_location_cell_vertex_dim_get (mloc, &
-                                                  i_part, &
-                                                  n_cell, &
-                                                  s_cell_vtx) &
-     bind (c, name = 'PDM_mesh_location_cell_vertex_dim_get')
-
-      use iso_c_binding
-
-      implicit none
-
-
-      type (c_ptr), value :: mloc
-      integer(c_int), value :: i_part
-      integer(c_int)        :: n_cell
-      integer(c_int)        :: s_cell_vtx
-
-    end subroutine PDM_mesh_location_cell_vertex_dim_get
-
-    !>
-    !!
     !! \brief get cell vertex connectivity
     !!
     !! \param [in]   mloc                  Pointer to \ref PDM_mesh_location object
@@ -316,7 +262,7 @@ module pdm_mesh_location
     !!
     !!
 
-    subroutine PDM_mesh_location_cell_vertex_get_cf (mloc, &
+    subroutine PDM_mesh_location_cell_vertex_get (mloc, &
                                                   i_part, &
                                                   cell_vtx_idx, &
                                                   cell_vtx) &
@@ -332,7 +278,7 @@ module pdm_mesh_location
       type(c_ptr)           :: cell_vtx_idx
       type(c_ptr)           :: cell_vtx
 
-    end subroutine PDM_mesh_location_cell_vertex_get_cf
+    end subroutine PDM_mesh_location_cell_vertex_get
 
 
     !>
@@ -880,59 +826,6 @@ module pdm_mesh_location
 
   end subroutine PDM_mesh_location_create_
 
-
-    !>
-    !!
-    !! \brief get cell vertex connectivity
-    !!
-    !! \param [in]   mloc                  Pointer to \ref PDM_mesh_location object
-    !! \param [in]   i_part                Index of partition of the cloud
-    !! \param [out]  cell_vtx_idx          Index in (size = n_elt + 1)
-    !! \param [out]  cell_vtx              Cell vertex connectivity
-    !!
-    !!
-
-    subroutine pdm_mesh_location_cell_vertex_get_ (mloc, &
-                                              i_part, &
-                                              cell_vtx_idx, &
-                                              cell_vtx)
-
-      use iso_c_binding
-
-      implicit none
-
-      type (c_ptr), value                :: mloc
-      integer, intent(in)                :: i_part
-      integer(kind=pdm_l_num_s), pointer :: cell_vtx_idx(:)
-      integer(kind=pdm_l_num_s), pointer :: cell_vtx(:)
-
-      integer(c_int)                     :: n_cell
-      integer(c_int)                     :: s_cell_vtx
-      integer(c_int)                     :: c_i_part
-      type(c_ptr)                        :: c_cell_vtx_idx = C_NULL_PTR
-      type(c_ptr)                        :: c_cell_vtx     = C_NULL_PTR
-
-      c_i_part = i_part
-
-      call PDM_mesh_location_cell_vertex_dim_get (mloc, &
-                                                  i_part, &
-                                                  n_cell, &
-                                                  s_cell_vtx)
-
-      call PDM_mesh_location_cell_vertex_get_cf (mloc, &
-                                          c_i_part, &
-                                          c_cell_vtx_idx, &
-                                          c_cell_vtx)
-
-      call c_f_pointer(c_cell_vtx_idx,   &
-                       cell_vtx_idx,     &
-                       [n_cell+1])
-
-      call c_f_pointer(c_cell_vtx,   &
-                       cell_vtx,     &
-                       [s_cell_vtx])
-
-    end subroutine pdm_mesh_location_cell_vertex_get_
 
 
   !>
