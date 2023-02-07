@@ -216,8 +216,8 @@ typedef struct PDM_Mesh_nodal_prepa_blocks_t {
 
 struct _PDM_Mesh_nodal_t {
 
-  int                                 n_part;                   /*!< Number of partitions */
-  PDM_Mesh_nodal_vtx_t              **vtx;                      /*!< Description des sommmets de chaque partition */
+  int                                  n_part;                  /*!< Number of partitions */
+  PDM_Mesh_nodal_vtx_t               **vtx;                     /*!< Description des sommmets de chaque partition */
   PDM_l_num_t                         *n_cell;                  /*!< Nombre de blocs d'elements standard */
 
   int                                  n_block_std;
@@ -235,7 +235,10 @@ struct _PDM_Mesh_nodal_t {
   int                                 *blocks_id;               /*!< Blocks identifier */
   int                                  n_blocks;                /*!< Total number of blocks */
   int                      is_vtx_def_from_parent;              /*<! Are the points defined from parents */
-  PDM_g_num_t                          **numabs;                 /*<! Global numbering per cell per partition */
+  PDM_g_num_t                        **numabs;                  /*<! Global numbering per cell per partition */
+
+  PDM_l_num_t **cell_vtx_idx;                                   /*<! Index of cell vertex connectivity */
+  PDM_l_num_t **cell_vtx;                                       /*<! Cell vertex connectivity */
 };
 
 

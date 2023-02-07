@@ -873,6 +873,28 @@ PDM_Mesh_nodal_block_poly3d_cell_vtx_connect_get
  PDM_l_num_t           **cellvtx
 );
 
+
+/**
+ *
+ * \brief Get cell-vertex connectivity
+ *
+ * \param [in]   mesh           Pointer to \ref PDM_mesh_nodal object
+ * \param [in]   id_part        Partition identifier
+ * \param [out]  cellvtx_idx    Index of cell vertex connectivity
+ * \param [out]  cellvtx        Cell vertex connectivity
+ *
+ */
+
+void
+PDM_Mesh_nodal_cell_vtx_connectivity_get
+(
+ PDM_Mesh_nodal_t       *mesh,
+ const int               id_part,
+ PDM_l_num_t           **cellvtx_idx,
+ PDM_l_num_t           **cellvtx
+);
+
+
 /**
  * \brief  Add some 3D cells from cell face conectivity.
  *

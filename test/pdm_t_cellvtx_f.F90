@@ -27,7 +27,6 @@ program testf
   use mpi
 #endif
   use pdm_mesh_nodal
-  use pdm_mesh_location
   use iso_c_binding
 
   implicit none
@@ -40,7 +39,6 @@ program testf
   integer,                   parameter :: f_comm  = MPI_COMM_WORLD
 
   type(c_ptr)                          :: mesh = C_NULL_PTR
-  type(c_ptr)                          :: loc  = C_NULL_PTR
   double precision,          pointer   :: vtx_coord(:,:)      => null()
   integer(kind=pdm_g_num_s), pointer   :: vtx_ln_to_gn(:)     => null()
   integer(kind=pdm_g_num_s), pointer   :: cell_ln_to_gn(:)    => null()
@@ -140,17 +138,6 @@ program testf
   cell_face_idx = cell_face_idx - 1
 
   if (i_rank .eq. 0) then
-    write(*, *) "-- Create mesh locator"
-  end if
-
-  call pdm_mesh_location_create                 &
-  (loc,                                         & !- IDENTIFICATEUR OBJET LOCALISATEUR
-   PDM_MESH_NATURE_MESH_SETTED,                 & !- NATURE DU MAILLAGE
-   1,                                           & !- NOMBRE DE NUAGE DE POINTS
-   f_comm,                                        & !- COMMUNICATEUR MPI
-   PDM_OWNERSHIP_KEEP)                            !- OWNERSHIP
-
-  if (i_rank .eq. 0) then
     write(*, *) "-- Create nodal mesh"
   end if
 
@@ -197,18 +184,9 @@ program testf
     write(*, *) "-- Get cell-vertex connectivity"
   end if
 
-  ! Association du maillage nodal au localisateur
-  call pdm_mesh_location_shared_nodal_mesh_set  & !-
-  (loc,                                         & !- IDENTIFICATEUR OBJET LOCALISATEUR
-   mesh)                                          !- IDENTIFICATEUR OBJET MAILLAGE NODAL
-
-  ! Détermination de la connectivité du maillage
-  call pdm_mesh_location_cell_vertex_compute    &
-  (loc)                                           !- IDENTIFICATEUR OBJET LOCALISATEUR
-
   ! Récupération de la connectivité du maillage
-  call pdm_mesh_location_cell_vertex_get        & !-
-  (loc,                                         & !- IDENTIFICATEUR OBJET LOCALISATEUR
+  call pdm_mesh_nodal_cell_vtx_connectivity_get & !-
+  (mesh,                                        & !- IDENTIFICATEUR OBJET LOCALISATEUR
    0,                                           & !- INDICE DE PARTITION DU MAILLAGE NODAL
    tmp_cell_vtx_idx,                            & !- ADRESSES DES NUMEROS DE SOMMETS PAR CELLULE
    tmp_cell_vtx)                                  !- NUMEROS DE SOMMETS PAR CELLULE
@@ -224,7 +202,7 @@ program testf
   end do
 
   ! Free memory
-  call pdm_mesh_location_free(loc)
+  call pdm_mesh_nodal_free(mesh)
   nullify(tmp_cell_vtx_idx)
   nullify(tmp_cell_vtx)
 
