@@ -414,42 +414,6 @@ PDM_mesh_location_point_location_get
 
 /**
  *
- * \brief compute cell vertex connectivity
- *
- * \param [in]   id                    Pointer to \ref PDM_mesh_location object
- *
- */
-
-void
-PDM_mesh_location_cell_vertex_compute
-(
-       PDM_mesh_location_t  *ml
-);
-
-
-/**
- *
- * \brief get cell vertex connectivity dimension
- *
- * \param [in]   id                    Pointer to \ref PDM_mesh_location object
- * \param [in]   i_part                Index of partition of the cloud
- * \param [out]  n_cell                Number of cells
- * \param [out]  s_cell_vtx            Size of cell_vtx
- *
- */
-
-void
-PDM_mesh_location_cell_vertex_dim_get
-(
-       PDM_mesh_location_t  *ml,
- const int                   i_part,
-       int                  *n_cell,
-       int                  *s_cell_vtx
-);
-
-
-/**
- *
  * \brief get cell vertex connectivity
  *
  * \param [in]   id                    Pointer to \ref PDM_mesh_location object

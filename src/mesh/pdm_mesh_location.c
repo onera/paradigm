@@ -1479,9 +1479,12 @@ PDM_mesh_location_point_location_get
 
 /**
  *
- * \brief compute cell vertex connectivity
+ * \brief get cell vertex connectivity
  *
  * \param [in]   id                    Pointer to \ref PDM_mesh_location object
+ * \param [in]   i_part                Index of partition of the cloud
+ * \param [out]  cell_vtx_idx          Index in (size = n_elt + 1)
+ * \param [out]  cell_vtx              Cell vertex connectivity
  *
  */
 
