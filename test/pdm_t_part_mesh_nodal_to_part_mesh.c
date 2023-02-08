@@ -28,6 +28,7 @@
 #include "pdm_logging.h"
 #include "pdm_priv.h"
 #include "pdm_gnum_location.h"
+#include "pdm_part_mesh_nodal_to_pmesh.h"
 #include "pdm_distrib.h"
 
 /*============================================================================
@@ -238,7 +239,9 @@ int main(int argc, char *argv[])
   PDM_multipart_get_part_mesh_nodal(mpart_id, 0, &pmesh_nodal, PDM_OWNERSHIP_KEEP);
 
 
-
+  PDM_part_mesh_t* pm = PDM_part_mesh_nodal_to_part_mesh(pmesh_nodal,
+                                                         PDM_DMESH_NODAL_TO_DMESH_TRANSFORM_TO_FACE,
+                                                         PDM_DMESH_NODAL_TO_DMESH_TRANSLATE_GROUP_TO_FACE);
 
 
   PDM_multipart_free(mpart_id);

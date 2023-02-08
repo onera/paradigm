@@ -106,12 +106,18 @@ PDM_part_mesh_nodal_to_part_mesh
     vtx_ln_to_gn[i_part] = PDM_part_mesh_nodal_vtx_g_num_get(pmn, i_part);
   }
 
-  int         *elmt_face_vtx_idx      = malloc(n_face_elt_vol_tot     * sizeof(int        ));
+  int         *elmt_face_vtx_idx      = malloc((n_face_elt_vol_tot+1) * sizeof(int        ));
   PDM_g_num_t *elmt_face_vtx          = malloc(n_sum_vtx_vol_face_tot * sizeof(PDM_g_num_t));
-  int         *elmt_cell_face_vtx_idx = malloc(n_elmt_vol_tot         * sizeof(int        ));
+  int         *elmt_cell_face_vtx_idx = malloc((n_elmt_vol_tot+1)     * sizeof(int        ));
   int         *parent_elmt_position   = malloc(n_face_elt_vol_tot     * sizeof(int        ));
 
+  printf("n_face_elt_vol_tot     : %i\n", n_face_elt_vol_tot    );
+  printf("n_sum_vtx_vol_face_tot : %i\n", n_sum_vtx_vol_face_tot);
+  printf("n_elmt_vol_tot         : %i\n", n_elmt_vol_tot        );
+  printf("n_face_elt_vol_tot     : %i\n", n_face_elt_vol_tot    );
 
+  elmt_face_vtx_idx     [0] = 0;
+  elmt_cell_face_vtx_idx[0] = 0;
   PDM_part_mesh_nodal_elmts_sections_decompose_faces(pmn->volumic,
                                                      vtx_ln_to_gn,
                                                      elmt_face_vtx_idx,
@@ -119,7 +125,14 @@ PDM_part_mesh_nodal_to_part_mesh
                                                      elmt_cell_face_vtx_idx,
                                                      parent_elmt_position);
 
+  // PDM_log_trace_array_int(elmt_face_vtx_idx, n_face_elt_vol_tot, "elmt_face_vtx_idx ::");
+
+
   free(vtx_ln_to_gn);
+  free(elmt_face_vtx_idx     );
+  free(elmt_face_vtx         );
+  free(elmt_cell_face_vtx_idx);
+  free(parent_elmt_position  );
 
   return NULL;
 }
