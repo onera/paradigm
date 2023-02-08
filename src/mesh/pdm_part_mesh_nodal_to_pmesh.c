@@ -367,12 +367,11 @@ PDM_part_mesh_nodal_to_part_mesh
 
     for(int j = 0; j < n_conflict_entitys; ++j ) {
       already_treat[j] = -1;
-      order_parent [j] = key_conflict_idx[i]+j;
+      order_parent [j] = j;
     }
 
-    for(int idx_entity = key_conflict_idx[i]; idx_entity < key_conflict_idx[i+1]; ++idx_entity) {
-      // int i_entity = order[idx_entity];
-      int i_entity = order_parent[idx_entity-key_conflict_idx[i]];
+    for(int idx_entity = 0; idx_entity < n_conflict_entitys; ++idx_entity) {
+      int i_entity     = order[key_conflict_idx[i]+order_parent[idx_entity]];
 
       int beg_1 = recv_face_vtx_idx[i_entity];
       int n_vtx_in_entity1 = recv_face_vtx_idx[i_entity+1] - beg_1;
@@ -382,7 +381,7 @@ PDM_part_mesh_nodal_to_part_mesh
       same_entity_idx[idx_next_same_entity++] = i_entity;
 
       /* Only if not treated we search correspondance with other */
-      if(already_treat[i_entity] != 1) {
+      if(already_treat[idx_entity] != 1) {
 
         PDM_g_num_t key_1 = 0;
         int idx_min_1 = -1;
@@ -397,15 +396,15 @@ PDM_part_mesh_nodal_to_part_mesh
         }
         PDM_quick_sort_long(loc_entity_vtx_1, 0, n_vtx_in_entity1-1);
 
-        for(int idx_entity2 = key_conflict_idx[i]; idx_entity2 < key_conflict_idx[i+1]; ++idx_entity2) {
-          int i_entity_next = order_parent[idx_entity2-key_conflict_idx[i]];
+        for(int idx_entity2 = 0; idx_entity2 < n_conflict_entitys; ++idx_entity2) {
+          int i_entity_next = order[key_conflict_idx[i]+order_parent[idx_entity2]];
 
           if (i_entity_next == i_entity) {
             continue;
           }
 
           printf("conflict : i_entity = %d, i_entity_next = %d...\n", i_entity, i_entity_next);
-          if(already_treat[i_entity_next] == 1) {
+          if(already_treat[idx_entity2] == 1) {
             continue;
           }
 
@@ -436,8 +435,53 @@ PDM_part_mesh_nodal_to_part_mesh
                 break;
               }
             }
+
+            if(is_same_entity == 1 ){
+              if(n_vtx_in_entity1 == 2) {
+                PDM_g_num_t i1 = recv_face_vtx[beg_1  ];
+                PDM_g_num_t i2 = recv_face_vtx[beg_1+1];
+
+                PDM_g_num_t j1 = recv_face_vtx[beg_2];
+                PDM_g_num_t j2 = recv_face_vtx[beg_2+1];
+                if(i1 == j1) {
+                  sens_entity[idx_next_same_entity] = 1;
+                } else {
+                  assert(i1 == j2);
+                  assert(i2 == j1);
+                  sens_entity[idx_next_same_entity] = -1;
+                }
+              } else {
+                // Determine the sens
+                PDM_g_num_t i1 = recv_face_vtx[beg_1 +  idx_min_1                      ];
+                PDM_g_num_t i2 = recv_face_vtx[beg_1 + (idx_min_1+1) % n_vtx_in_entity1];
+
+                PDM_g_num_t j1 = recv_face_vtx[beg_2 +  idx_min_2                      ];
+                PDM_g_num_t j2 = recv_face_vtx[beg_2 + (idx_min_2+1) % n_vtx_in_entity1];
+                // printf(" i1 = %i | i2 = %i | j1 = %i | j2 = %i\n", i1, i2, j1, j2);
+                assert(i1 == j1); // Panic
+                if(i2 != j2) {
+                  sens_entity[idx_next_same_entity] = -1;
+                  // printf(" idx3 = %i \n", (idx_min_1+n_vtx_in_entity1) % n_vtx_in_entity1);
+                  PDM_g_num_t i3 = recv_face_vtx[beg_1 + (idx_min_1+n_vtx_in_entity1-1) % n_vtx_in_entity1];
+                  // printf(" i1 = %i | i2 = %i | i3 = %i | j1 = %i | j2 = %i\n", i1, i2, i3, j1, j2);
+                  assert(i3 == j2);
+                } else {
+                  sens_entity[idx_next_same_entity] = 1;
+                  assert(i2 == j2);
+                }
+              }
+              // Check if same sens
+              same_entity_idx[idx_next_same_entity++] = i_entity_next;
+            }
           }
         }
+
+        printf("[%i] - same_entity_idx::", idx_next_same_entity);
+        for(int ii = 0; ii < idx_next_same_entity; ++ii) {
+          printf(" %i", same_entity_idx[ii]);
+        }
+        printf("\n");
+
 
       } /* End if already_treat[i_entity] */
     } /* End conflict */
