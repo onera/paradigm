@@ -32,6 +32,7 @@
 #include "pdm_dmesh.h"
 #include "pdm_gnum.h"
 #include "pdm_distrib.h"
+#include "pdm_unique.h"
 #include "pdm_quick_sort.h"
 #include "pdm_para_graph_dual.h"
 #include "pdm_array.h"
@@ -381,7 +382,7 @@ PDM_part_mesh_nodal_to_part_mesh
   /*
    * Solve conflict
    */
-  if(1 == 1) {
+  if(0 == 1) {
     for(int i = 0; i < n_conflit_to_solve; ++i) {
       log_trace(" ------ i = %i \n", i);
       for(int i_key = key_conflict_idx[i]; i_key < key_conflict_idx[i+1]; ++i_key) {
@@ -541,7 +542,7 @@ PDM_part_mesh_nodal_to_part_mesh
           int i_same_entity = same_entity_idx[k];
           int t_entity      = order[key_conflict_idx[i]+order_parent[i_same_entity]];
           int sign = sens_entity[k];
-          recv_elmts_entity[t_entity] = i_abs_entity;
+          recv_elmts_entity[t_entity] = sign * i_abs_entity;
           printf("[%i] - i_same_entity = %i | sign = %i \n", k, i_same_entity, sign);
           already_treat[i_same_entity] = 1;
         }
@@ -579,11 +580,58 @@ PDM_part_mesh_nodal_to_part_mesh
                     pmn->comm);
 
   PDM_log_trace_array_long(elmt_cell_face, send_idx[n_rank] , "elmt_cell_face ::");
-  free(elmt_cell_face);
 
   /*
-   * Renvoie de la connectivité dface_vtx via block_to_part
+   * Separation en partition
    */
+  int shift_cell_face = 0;
+  int idx_read_elmt   = 0;
+
+  PDM_g_num_t **face_ln_to_gn = malloc(pmn->n_part * sizeof(PDM_g_num_t *));
+  int         **cell_face     = malloc(pmn->n_part * sizeof(int         *));
+
+  for(int i_part = 0; i_part < pmn->n_part; ++i_part) {
+    int n_elmts = PDM_part_mesh_nodal_n_elmts_get(pmn, PDM_GEOMETRY_KIND_VOLUMIC, i_part);
+
+    int pn_cell_face_idx = elmt_cell_face_idx[idx_read_elmt+n_elmts] - elmt_cell_face_idx[idx_read_elmt];
+    face_ln_to_gn[i_part] = malloc(pn_cell_face_idx * sizeof(PDM_g_num_t));
+    int *unique_order     = malloc(pn_cell_face_idx * sizeof(int        ));
+
+    PDM_g_num_t *_elmt_cell_face = &elmt_cell_face[shift_cell_face];
+    for(int i = 0; i < pn_cell_face_idx; ++i) {
+      face_ln_to_gn[i_part][i] = PDM_ABS(_elmt_cell_face[i]);
+    }
+
+    int n_unique = PDM_inplace_unique_long(face_ln_to_gn[i_part], unique_order, 0, pn_cell_face_idx-1);
+    face_ln_to_gn[i_part] = realloc(face_ln_to_gn[i_part], n_unique * sizeof(PDM_g_num_t));
+
+    PDM_log_trace_array_long(face_ln_to_gn[i_part], n_unique, "face_ln_to_gn ::");
+
+    cell_face[i_part] = malloc(pn_cell_face_idx * sizeof(int));
+    for(int idx = 0; idx < pn_cell_face_idx; ++idx) {
+      int g_sgn  = PDM_SIGN(_elmt_cell_face[idx]);
+      int l_elmt = unique_order[idx];
+      cell_face[i_part][idx] = (l_elmt + 1) * g_sgn;
+    }
+
+    idx_read_elmt   += n_elmts;
+    shift_cell_face += pn_cell_face_idx;
+
+    free(unique_order);
+
+  }
+
+
+  for(int i_part = 0; i_part < pmn->n_part; ++i_part) {
+    free(cell_face    [i_part]);
+    free(face_ln_to_gn[i_part]);
+  }
+  free(cell_face    );
+  free(face_ln_to_gn);
+
+
+
+  free(elmt_cell_face);
 
   free(dentity_vtx_idx  );
   free(dentity_vtx      );
