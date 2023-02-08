@@ -120,7 +120,7 @@ PDM_part_mesh_nodal_tetra_decomposes_faces
 
     _elmt_cell_face_idx[ielt+1] = _elmt_cell_face_idx[ielt] +  n_face_elt;
 
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 0]  = 0; //vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[0]]-1];
+    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 0]  = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[0]]-1];
     _current_elmt_face_vtx[n_sum_vtx_face * ielt + 1]  = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[2]]-1];
     _current_elmt_face_vtx[n_sum_vtx_face * ielt + 2]  = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[1]]-1];
 

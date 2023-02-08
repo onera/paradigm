@@ -35,6 +35,7 @@
 #include "pdm_quick_sort.h"
 #include "pdm_para_graph_dual.h"
 #include "pdm_array.h"
+#include "pdm_order.h"
 #include "pdm_partitioning_algorithm.h"
 #include "pdm_part_mesh_nodal_to_pmesh.h"
 #include "pdm_sort.h"
@@ -293,9 +294,79 @@ PDM_part_mesh_nodal_to_part_mesh
                     PDM_MPI_INT,
                     pmn->comm);
 
+  PDM_log_trace_array_int (recv_face_vtx_n, recv_idx[n_rank]           , "recv_face_vtx_n ::");
+  PDM_log_trace_array_long(recv_face_key  , recv_idx[n_rank]           , "recv_face_key   ::");
+  PDM_log_trace_array_long(recv_face_vtx  , recv_s_face_vtx_idx[n_rank], "recv_face_vtx   ::");
 
-  PDM_log_trace_array_int(recv_face_vtx_n, recv_idx[n_rank], "recv_face_vtx_n ::");
+  int *recv_face_vtx_idx = malloc((recv_idx[n_rank]+1) * sizeof(int));
+  recv_face_vtx_idx[0] = 0;
+  int n_max_vtx = 0;
+  for(int i = 0; i < recv_idx[n_rank]; ++i) {
+    recv_face_vtx_idx[i+1] = recv_face_vtx_idx[i] + recv_face_vtx_n[i];
+    n_max_vtx = PDM_MAX(n_max_vtx, recv_face_vtx_n[i]);
+  }
 
+  /*
+   * All data are exchange we need to order the key and resolve conflit in hash table
+   */
+  int n_recv_key = recv_idx[n_rank];
+  int *order = malloc(n_recv_key * sizeof(int));
+  PDM_order_gnum_s(recv_face_key, 1, order, n_recv_key);
+
+  int n_conflit_to_solve = 0;
+  PDM_g_num_t last_gnum = -1;
+
+  int *key_conflict_idx = malloc((n_recv_key+1) * sizeof(int));
+  key_conflict_idx[0] = 0;
+  for(int i = 0; i < n_recv_key; ++i) {
+    if(recv_face_key[order[i]] != last_gnum){
+      key_conflict_idx[n_conflit_to_solve+1] = key_conflict_idx[n_conflit_to_solve]+1;
+      n_conflit_to_solve++;
+      last_gnum = recv_face_key[order[i]];
+    } else {
+      key_conflict_idx[n_conflit_to_solve]++;
+    }
+  }
+
+  PDM_log_trace_array_int(key_conflict_idx, n_conflit_to_solve, "key_conflict_idx ::  ");
+
+
+  int n_max_entity_per_key = 0;
+  for(int i = 0; i < n_conflit_to_solve; ++i) {
+    n_max_entity_per_key = PDM_MAX(n_max_entity_per_key, key_conflict_idx[i+1]-key_conflict_idx[i]);
+  }
+
+
+  /*
+   * Solve conflict
+   */
+  if(1 == 1) {
+    for(int i = 0; i < n_conflit_to_solve; ++i) {
+      log_trace(" ------ i = %i \n", i);
+      for(int i_key = key_conflict_idx[i]; i_key < key_conflict_idx[i+1]; ++i_key) {
+        int i_conflict = order[i_key];
+        int beg = recv_face_vtx_idx[i_conflict];
+        int n_vtx_in_face = recv_face_vtx_idx[i_conflict+1] - beg;
+        log_trace(" \t i_key = %i | beg = %i / n = %i \n", recv_face_key[i_conflict], beg, n_vtx_in_face);
+      }
+    }
+  }
+
+
+
+  // for(int i = 0; i < n_conflit_to_solve; ++i) {
+  //   for(int i_key = key_conflict_idx[i]; i_key < key_conflict_idx[i+1]; ++i_key) {
+  //     int i_conflict = order[i_key];
+
+  //   }
+  // }
+
+
+
+  PDM_log_trace_array_int (order, n_recv_key , "order ::");
+
+  free(key_conflict_idx);
+  free(order);
 
   free(send_n);
   free(send_idx);
@@ -303,6 +374,7 @@ PDM_part_mesh_nodal_to_part_mesh
   free(recv_idx);
   free(dest_rank);
   free(recv_face_vtx_n);
+  free(recv_face_vtx_idx);
 
   free(send_face_vtx);
   free(recv_face_vtx);
