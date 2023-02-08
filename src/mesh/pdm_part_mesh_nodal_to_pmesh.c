@@ -353,17 +353,119 @@ PDM_part_mesh_nodal_to_part_mesh
   }
 
 
+  PDM_g_num_t* loc_entity_vtx_1 = (PDM_g_num_t *) malloc(  n_max_vtx               * sizeof(PDM_g_num_t) );
+  PDM_g_num_t* loc_entity_vtx_2 = (PDM_g_num_t *) malloc(  n_max_vtx               * sizeof(PDM_g_num_t) );
+  int*         already_treat    = (int         *) malloc(  n_max_entity_per_key    * sizeof(int        ) );
+  int*         same_entity_idx  = (int         *) malloc( (n_max_entity_per_key+1) * sizeof(int        ) );
+  int*         sens_entity      = (int         *) malloc(  n_max_entity_per_key    * sizeof(int        ) );
+  PDM_g_num_t *tmp_parent       = (PDM_g_num_t *) malloc(n_max_entity_per_key      * sizeof(PDM_g_num_t) );
+  int         *order_parent     = (int         *) malloc(n_max_entity_per_key      * sizeof(int        ) );
 
-  // for(int i = 0; i < n_conflit_to_solve; ++i) {
-  //   for(int i_key = key_conflict_idx[i]; i_key < key_conflict_idx[i+1]; ++i_key) {
-  //     int i_conflict = order[i_key];
+  for(int i = 0; i < n_conflit_to_solve; ++i) {
 
-  //   }
-  // }
+    int n_conflict_entitys = key_conflict_idx[i+1] - key_conflict_idx[i];
 
+    for(int j = 0; j < n_conflict_entitys; ++j ) {
+      already_treat[j] = -1;
+      order_parent [j] = key_conflict_idx[i]+j;
+    }
 
+    for(int idx_entity = key_conflict_idx[i]; idx_entity < key_conflict_idx[i+1]; ++idx_entity) {
+      // int i_entity = order[idx_entity];
+      int i_entity = order_parent[idx_entity-key_conflict_idx[i]];
+
+      int beg_1 = recv_face_vtx_idx[i_entity];
+      int n_vtx_in_entity1 = recv_face_vtx_idx[i_entity+1] - beg_1;
+
+      int idx_next_same_entity = 0;
+      sens_entity    [idx_next_same_entity] = 1;
+      same_entity_idx[idx_next_same_entity++] = i_entity;
+
+      /* Only if not treated we search correspondance with other */
+      if(already_treat[i_entity] != 1) {
+
+        PDM_g_num_t key_1 = 0;
+        int idx_min_1 = -1;
+        PDM_g_num_t min_1 = max_vtx_gnum+1;
+        for(int j = 0; j < n_vtx_in_entity1; ++j) {
+          loc_entity_vtx_1[j] = recv_face_vtx[beg_1+j];
+          key_1 += loc_entity_vtx_1[j];
+          if(loc_entity_vtx_1[j] < min_1) {
+            min_1 = loc_entity_vtx_1[j];
+            idx_min_1 = j;
+          };
+        }
+        PDM_quick_sort_long(loc_entity_vtx_1, 0, n_vtx_in_entity1-1);
+
+        for(int idx_entity2 = key_conflict_idx[i]; idx_entity2 < key_conflict_idx[i+1]; ++idx_entity2) {
+          int i_entity_next = order_parent[idx_entity2-key_conflict_idx[i]];
+
+          if (i_entity_next == i_entity) {
+            continue;
+          }
+
+          printf("conflict : i_entity = %d, i_entity_next = %d...\n", i_entity, i_entity_next);
+          if(already_treat[i_entity_next] == 1) {
+            continue;
+          }
+
+          int beg_2 = recv_face_vtx_idx[i_entity_next];
+          int n_vtx_in_entity2 = recv_face_vtx_idx[i_entity_next+1] - beg_2;
+          if(n_vtx_in_entity1 == n_vtx_in_entity2 ) {
+
+            PDM_g_num_t key_2 = 0;
+            int idx_min_2 = -1;
+            PDM_g_num_t min_2 = max_vtx_gnum+1;
+            for(int j = 0; j < n_vtx_in_entity1; ++j) {
+              loc_entity_vtx_2[j] = recv_face_vtx[beg_2+j];
+              key_2 += loc_entity_vtx_2[j];
+              if(loc_entity_vtx_2[j] < min_2) {
+                min_2 = loc_entity_vtx_2[j];
+                idx_min_2 = j;
+              };
+            }
+            PDM_quick_sort_long(loc_entity_vtx_2, 0, n_vtx_in_entity2-1);
+
+            printf("key_1 : %d, key_2 = %d...\n", key_1, key_2);
+            assert(key_1 == key_2);
+
+            int is_same_entity = 1;
+            for(int i_vtx = 0; i_vtx < n_vtx_in_entity1; ++i_vtx) {
+              if(loc_entity_vtx_1[i_vtx] != loc_entity_vtx_2[i_vtx]) {
+                is_same_entity = -1;
+                break;
+              }
+            }
+          }
+        }
+
+      } /* End if already_treat[i_entity] */
+    } /* End conflict */
+  }
 
   PDM_log_trace_array_int (order, n_recv_key , "order ::");
+
+  /*
+   * Reconstruction du face_ln_to_gn + cell_face local
+   */
+
+
+
+
+  /*
+   * Renvoie de la connectivité dface_vtx via block_to_part
+   */
+
+
+
+
+  free(loc_entity_vtx_1);
+  free(loc_entity_vtx_2);
+  free(already_treat   );
+  free(same_entity_idx );
+  free(sens_entity     );
+  free(tmp_parent      );
+  free(order_parent    );
 
   free(key_conflict_idx);
   free(order);
