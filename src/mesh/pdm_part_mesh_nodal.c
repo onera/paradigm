@@ -2372,3 +2372,11 @@ PDM_part_mesh_nodal_part_mesh_nodal_elmts_get
 {
   return _get_from_geometry_kind(pmn, geom_kind);
 }
+
+
+
+/*----------------------------------------------------------------------------*/
+
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */
