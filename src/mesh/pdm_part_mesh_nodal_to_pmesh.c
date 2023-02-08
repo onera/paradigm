@@ -216,17 +216,22 @@ PDM_part_mesh_nodal_to_part_mesh
   /*
    * Prepare send
    */
-  int *send_face_vtx_n   = malloc( n_face_elt_vol_tot * sizeof(int));
+  int         *send_face_vtx_n   = malloc( n_face_elt_vol_tot * sizeof(int        ));
+  PDM_g_num_t *send_face_key     = malloc( n_face_elt_vol_tot * sizeof(PDM_g_num_t));
   for(int i_face = 0; i_face < n_face_elt_vol_tot; ++i_face) {
     int t_rank = dest_rank[i_face];
     int idx_write = send_idx[t_rank] + send_n[t_rank]++;
 
     send_face_vtx_n[idx_write] = elmt_face_vtx_idx[i_face+1]-elmt_face_vtx_idx[i_face];
+    send_face_key  [idx_write] = key_ln_to_gn[i_face];
     send_s_face_vtx_n[t_rank] += elmt_face_vtx_idx[i_face+1]-elmt_face_vtx_idx[i_face];
 
   }
 
-  int *recv_face_vtx_n = malloc(recv_idx[n_rank] * sizeof(int));
+  int         *recv_face_vtx_n = malloc(recv_idx[n_rank] * sizeof(int        ));
+  PDM_g_num_t *recv_face_key   = malloc(recv_idx[n_rank] * sizeof(PDM_g_num_t));
+
+  PDM_log_trace_array_int(send_face_vtx_n, n_face_elt_vol_tot, "send_face_vtx_n ::");
   PDM_MPI_Alltoallv(send_face_vtx_n,
                     send_n,
                     send_idx,
@@ -236,6 +241,18 @@ PDM_part_mesh_nodal_to_part_mesh
                     recv_idx,
                     PDM_MPI_INT,
                     pmn->comm);
+  free(send_face_vtx_n);
+
+  PDM_MPI_Alltoallv(send_face_key,
+                    send_n,
+                    send_idx,
+                    PDM_MPI_INT,
+                    recv_face_key,
+                    recv_n,
+                    recv_idx,
+                    PDM_MPI_INT,
+                    pmn->comm);
+  free(send_face_key);
 
   /*
    * Exchange size of connectivity
@@ -254,20 +271,42 @@ PDM_part_mesh_nodal_to_part_mesh
   /*
    * Exchange of connectivity
    */
+  PDM_g_num_t* send_face_vtx = malloc(send_s_face_vtx_idx[n_rank] * sizeof(PDM_g_num_t));
+  PDM_g_num_t* recv_face_vtx = malloc(recv_s_face_vtx_idx[n_rank] * sizeof(PDM_g_num_t));
+  for(int i_face = 0; i_face < n_face_elt_vol_tot; ++i_face) {
+    int t_rank = dest_rank[i_face];
+    int idx_write = send_s_face_vtx_idx[t_rank];
+
+    for(int k = elmt_face_vtx_idx[i_face]; k < elmt_face_vtx_idx[i_face+1]; ++k) {
+      send_face_vtx[idx_write+send_s_face_vtx_n[t_rank]++] = elmt_face_vtx[k];
+    }
+  }
 
 
+  PDM_MPI_Alltoallv(send_face_vtx,
+                    send_s_face_vtx_n,
+                    send_s_face_vtx_idx,
+                    PDM_MPI_INT,
+                    recv_face_vtx,
+                    recv_s_face_vtx_n,
+                    recv_s_face_vtx_idx,
+                    PDM_MPI_INT,
+                    pmn->comm);
 
-  PDM_log_trace_array_int(send_face_vtx_n, n_face_elt_vol_tot, "send_face_vtx_n ::");
+
   PDM_log_trace_array_int(recv_face_vtx_n, recv_idx[n_rank], "recv_face_vtx_n ::");
 
 
-  free(send_face_vtx_n);
   free(send_n);
   free(send_idx);
   free(recv_n);
   free(recv_idx);
   free(dest_rank);
   free(recv_face_vtx_n);
+
+  free(send_face_vtx);
+  free(recv_face_vtx);
+  free(recv_face_key);
 
   free(send_s_face_vtx_n  );
   free(recv_s_face_vtx_n  );
