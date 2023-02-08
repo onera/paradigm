@@ -102,9 +102,17 @@ PDM_part_mesh_nodal_to_part_mesh
                                                      &n_sum_vtx_surf_face_tot);
 
   PDM_g_num_t **vtx_ln_to_gn = malloc(sizeof(PDM_g_num_t *));
+  PDM_g_num_t _max_vtx_gnum = -1;
   for(int i_part = 0; i_part < pmn->n_part; ++i_part) {
     vtx_ln_to_gn[i_part] = PDM_part_mesh_nodal_vtx_g_num_get(pmn, i_part);
+    int n_vtx = PDM_part_mesh_nodal_n_vtx_get(pmn, i_part);
+    for(int i_vtx = 0; i_vtx < n_vtx; ++i_vtx) {
+      _max_vtx_gnum = PDM_MAX(_max_vtx_gnum, vtx_ln_to_gn[i_part][i_vtx]);
+    }
   }
+  PDM_g_num_t max_vtx_gnum = 0;
+  PDM_MPI_Allreduce(&_max_vtx_gnum, &max_vtx_gnum, 1, PDM__PDM_MPI_G_NUM, PDM_MPI_MAX, pmn->comm);
+
 
   int         *elmt_face_vtx_idx      = malloc((n_face_elt_vol_tot+1) * sizeof(int        ));
   PDM_g_num_t *elmt_face_vtx          = malloc(n_sum_vtx_vol_face_tot * sizeof(PDM_g_num_t));
@@ -125,9 +133,49 @@ PDM_part_mesh_nodal_to_part_mesh
                                                      elmt_cell_face_vtx_idx,
                                                      parent_elmt_position);
 
-  // PDM_log_trace_array_int(elmt_face_vtx_idx, n_face_elt_vol_tot, "elmt_face_vtx_idx ::");
+  PDM_log_trace_array_int(elmt_face_vtx_idx, n_face_elt_vol_tot, "elmt_face_vtx_idx ::");
 
 
+  /*
+   * Create hash table
+   */
+  PDM_g_num_t *key_ln_to_gn = malloc(n_face_elt_vol_tot * sizeof(PDM_g_num_t));
+  double      *key_weight   = malloc(n_face_elt_vol_tot * sizeof(double     ));
+  PDM_g_num_t key_mod = 4 * max_vtx_gnum;
+  for(int i_face = 0; i_face < n_face_elt_vol_tot; ++i_face) {
+    PDM_g_num_t key = 0;
+    for(int idx = elmt_face_vtx_idx[i_face]; idx < elmt_face_vtx_idx[i_face+1]; ++idx) {
+      key += elmt_face_vtx[idx];
+    }
+    // min_vtx =
+    key_ln_to_gn[i_face] = key % key_mod + 1;
+    key_weight  [i_face] = elmt_face_vtx_idx[i_face+1]-elmt_face_vtx_idx[i_face];
+  }
+
+
+  int n_rank;
+  PDM_MPI_Comm_size (pmn->comm, &n_rank);
+  int sampling_factor = 2;
+  int n_iter_max      = 5;
+  double tol = 0.10;
+  PDM_g_num_t *distrib_key = NULL;
+  PDM_distrib_weight(      sampling_factor,
+                           n_rank,
+                           1,
+                           &n_face_elt_vol_tot,
+    (const PDM_g_num_t **) &key_ln_to_gn,
+    (const double      **) &key_weight,
+                           n_iter_max,
+                           tol,
+                           pmn->comm,
+                           &distrib_key);
+
+  PDM_log_trace_array_int(distrib_key, n_rank+1, "distrib_key ::");
+
+
+  free(distrib_key);
+  free(key_ln_to_gn);
+  free(key_weight);
   free(vtx_ln_to_gn);
   free(elmt_face_vtx_idx     );
   free(elmt_face_vtx         );
