@@ -38,16 +38,6 @@ extern "C" {
  * Public function interfaces
  *============================================================================*/
 
-
-void
-PDM_part_mesh_nodal_elmts_decompose_faces_get_size
-(
-PDM_part_mesh_nodal_elmts_t *pmne,
-int                         *n_face_elt_tot,
-int                         *n_sum_vtx_face_tot
-);
-
-
 PDM_part_mesh_t*
 PDM_part_mesh_nodal_to_part_mesh
 (

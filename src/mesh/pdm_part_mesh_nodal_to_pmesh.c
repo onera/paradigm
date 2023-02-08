@@ -83,19 +83,43 @@ PDM_part_mesh_nodal_to_part_mesh
   PDM_UNUSED(transform_kind);
   PDM_UNUSED(transform_group_kind);
 
+  int n_elmt_vol_tot         = 0;
   int n_face_elt_vol_tot     = 0;
   int n_sum_vtx_vol_face_tot = 0;
 
+  int n_elmt_surf_tot         = 0;
   int n_face_elt_surf_tot     = 0;
   int n_sum_vtx_surf_face_tot = 0;
 
   PDM_part_mesh_nodal_elmts_decompose_faces_get_size(pmn->volumic,
+                                                     &n_elmt_vol_tot,
                                                      &n_face_elt_vol_tot,
                                                      &n_sum_vtx_vol_face_tot );
 
   PDM_part_mesh_nodal_elmts_decompose_faces_get_size(pmn->surfacic,
+                                                     &n_elmt_surf_tot,
                                                      &n_face_elt_surf_tot,
                                                      &n_sum_vtx_surf_face_tot);
+
+  PDM_g_num_t **vtx_ln_to_gn = malloc(sizeof(PDM_g_num_t *));
+  for(int i_part = 0; i_part < pmn->n_part; ++i_part) {
+    vtx_ln_to_gn[i_part] = PDM_part_mesh_nodal_vtx_g_num_get(pmn, i_part);
+  }
+
+  int         *elmt_face_vtx_idx      = malloc(n_face_elt_vol_tot     * sizeof(int        ));
+  PDM_g_num_t *elmt_face_vtx          = malloc(n_sum_vtx_vol_face_tot * sizeof(PDM_g_num_t));
+  int         *elmt_cell_face_vtx_idx = malloc(n_elmt_vol_tot         * sizeof(int        ));
+  int         *parent_elmt_position   = malloc(n_face_elt_vol_tot     * sizeof(int        ));
+
+
+  PDM_part_mesh_nodal_elmts_sections_decompose_faces(pmn->volumic,
+                                                     vtx_ln_to_gn,
+                                                     elmt_face_vtx_idx,
+                                                     elmt_face_vtx,
+                                                     elmt_cell_face_vtx_idx,
+                                                     parent_elmt_position);
+
+  free(vtx_ln_to_gn);
 
   return NULL;
 }

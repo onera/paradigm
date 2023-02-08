@@ -382,6 +382,7 @@ void
 PDM_part_mesh_nodal_elmts_decompose_faces_get_size
 (
  PDM_part_mesh_nodal_elmts_t *pmne,
+ int                         *n_elt_tot,
  int                         *n_face_elt_tot,
  int                         *n_sum_vtx_face_tot
 )
@@ -397,6 +398,7 @@ PDM_part_mesh_nodal_elmts_decompose_faces_get_size
       int n_face_elt     = PDM_n_face_elt_per_elmt    (pmne->sections_std[i_section]->t_elt);
       int n_sum_vtx_face = PDM_n_sum_vtx_face_per_elmt(pmne->sections_std[i_section]->t_elt);
 
+      *n_elt_tot          += pmne->sections_std[i_section]->n_elt[i_part];
       *n_face_elt_tot     += pmne->sections_std[i_section]->n_elt[i_part] * n_face_elt;
       *n_sum_vtx_face_tot += pmne->sections_std[i_section]->n_elt[i_part] * n_sum_vtx_face;
 
@@ -407,6 +409,8 @@ PDM_part_mesh_nodal_elmts_decompose_faces_get_size
       *n_face_elt_tot += _n_face;
       int n_face_vtx   = pmne->sections_poly3d[i_section]->_facvtx_idx[i_part][_n_face];
       *n_sum_vtx_face_tot += n_face_vtx;
+
+      *n_elt_tot          += pmne->sections_poly3d[i_section]->n_elt[i_part];
     }
 
     for (int i_section = 0; i_section < pmne->n_section_poly2d; i_section++) {
@@ -414,6 +418,7 @@ PDM_part_mesh_nodal_elmts_decompose_faces_get_size
       *n_face_elt_tot += _n_face;
       int n_edge_vtx   = pmne->sections_poly2d[i_section]->_connec_idx[i_part][_n_face];
       *n_sum_vtx_face_tot += n_edge_vtx;
+      *n_elt_tot          += pmne->sections_poly2d[i_section]->n_elt[i_part];
     }
 
     assert(pmne->n_section_poly3d == 0); // Not implemented
