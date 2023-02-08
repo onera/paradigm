@@ -589,6 +589,7 @@ PDM_part_mesh_nodal_to_part_mesh
 
   PDM_g_num_t **face_ln_to_gn = malloc(pmn->n_part * sizeof(PDM_g_num_t *));
   int         **cell_face     = malloc(pmn->n_part * sizeof(int         *));
+  int          *pn_face       = malloc(pmn->n_part * sizeof(int          ));
 
   for(int i_part = 0; i_part < pmn->n_part; ++i_part) {
     int n_elmts = PDM_part_mesh_nodal_n_elmts_get(pmn, PDM_GEOMETRY_KIND_VOLUMIC, i_part);
@@ -602,10 +603,10 @@ PDM_part_mesh_nodal_to_part_mesh
       face_ln_to_gn[i_part][i] = PDM_ABS(_elmt_cell_face[i]);
     }
 
-    int n_unique = PDM_inplace_unique_long(face_ln_to_gn[i_part], unique_order, 0, pn_cell_face_idx-1);
-    face_ln_to_gn[i_part] = realloc(face_ln_to_gn[i_part], n_unique * sizeof(PDM_g_num_t));
+    pn_face[i_part] = PDM_inplace_unique_long(face_ln_to_gn[i_part], unique_order, 0, pn_cell_face_idx-1);
+    face_ln_to_gn[i_part] = realloc(face_ln_to_gn[i_part], pn_face[i_part] * sizeof(PDM_g_num_t));
 
-    PDM_log_trace_array_long(face_ln_to_gn[i_part], n_unique, "face_ln_to_gn ::");
+    PDM_log_trace_array_long(face_ln_to_gn[i_part], pn_face[i_part], "face_ln_to_gn ::");
 
     cell_face[i_part] = malloc(pn_cell_face_idx * sizeof(int));
     for(int idx = 0; idx < pn_cell_face_idx; ++idx) {
@@ -622,14 +623,90 @@ PDM_part_mesh_nodal_to_part_mesh
   }
 
 
+  /*
+   * Hook face_vtx
+   */
+  PDM_block_to_part_t* btp = PDM_block_to_part_create(entity_distrib,
+                              (const PDM_g_num_t **)  face_ln_to_gn,
+                                                      pn_face,
+                                                      pmn->n_part,
+                                                      pmn->comm);
+
+  int *dentity_vtx_n = malloc(i_abs_entity * sizeof(int));
+  for(int i_entity = 0; i_entity < i_abs_entity; ++i_entity) {
+    dentity_vtx_n[i_entity] = dentity_vtx_idx[i_entity+1] - dentity_vtx_idx[i_entity];
+  }
+
+  PDM_g_num_t **pface_vtx_gnum = NULL;
+  int         **pface_vtx_n    = NULL;
+  PDM_block_to_part_exch(btp,
+                         sizeof(PDM_g_num_t),
+                         PDM_STRIDE_VAR_INTERLACED,
+                         dentity_vtx_n,
+                         dentity_vtx,
+                         &pface_vtx_n,
+            (void ***)   &pface_vtx_gnum);
+
+  free(dentity_vtx_n);
+
+  int **pface_vtx_idx = malloc(pmn->n_part * sizeof(int *));
+  int **pface_vtx     = malloc(pmn->n_part * sizeof(int *));
+  for(int i_part = 0; i_part < pmn->n_part; ++i_part) {
+
+    pface_vtx_idx[i_part] = malloc((pn_face[i_part] + 1) * sizeof(int));
+    pface_vtx_idx[i_part][0] = 0;
+    for(int i_entity = 0; i_entity < pn_face[i_part]; ++i_entity) {
+      pface_vtx_idx[i_part][i_entity+1] = pface_vtx_idx[i_part][i_entity] + pface_vtx_n[i_part][i_entity];
+    }
+    pface_vtx[i_part] = malloc(pface_vtx_idx[i_part][pn_face[i_part]] * sizeof(int));
+
+    /*
+     * Translate local
+     */
+    int n_vtx = PDM_part_mesh_nodal_n_vtx_get(pmn, i_part);
+    PDM_g_num_t  *tmp_vtx_ln_to_gn = malloc(n_vtx * sizeof(PDM_g_num_t));
+    int *order_vtx = malloc(n_vtx * sizeof(int));
+    for(int i_vtx = 0; i_vtx < n_vtx; ++i_vtx) {
+      tmp_vtx_ln_to_gn[i_vtx] = vtx_ln_to_gn[i_part][i_vtx];
+      order_vtx       [i_vtx] = i_vtx;
+    }
+    PDM_sort_long(tmp_vtx_ln_to_gn, order_vtx, n_vtx);
+
+    for(int i = 0; i < pface_vtx_idx[i_part][pn_face[i_part]]; ++i) {
+      int old_vtx = PDM_binary_search_long(pface_vtx_gnum[i_part][i], tmp_vtx_ln_to_gn, n_vtx);
+      pface_vtx[i_part][i] = order_vtx[old_vtx]+1;
+    }
+
+
+    free(tmp_vtx_ln_to_gn);
+    free(order_vtx);
+    free(pface_vtx_n   [i_part]);
+    free(pface_vtx_gnum[i_part]);
+
+  }
+
+  free(pface_vtx_n);
+  free(pface_vtx_gnum);
+
+
+
+  PDM_block_to_part_free(btp);
+
   for(int i_part = 0; i_part < pmn->n_part; ++i_part) {
     free(cell_face    [i_part]);
     free(face_ln_to_gn[i_part]);
   }
   free(cell_face    );
   free(face_ln_to_gn);
+  free(pn_face);
 
 
+  for(int i_part = 0; i_part < pmn->n_part; ++i_part) {
+    free(pface_vtx    [i_part]);
+    free(pface_vtx_idx[i_part]);
+  }
+  free(pface_vtx    );
+  free(pface_vtx_idx);
 
   free(elmt_cell_face);
 
