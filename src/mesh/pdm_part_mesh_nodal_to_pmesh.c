@@ -172,6 +172,59 @@ PDM_part_mesh_nodal_to_part_mesh
 
   PDM_log_trace_array_int(distrib_key, n_rank+1, "distrib_key ::");
 
+  /*
+   * Prepare send
+   */
+  int *send_n   = malloc( n_rank    * sizeof(int));
+  int *send_idx = malloc((n_rank+1) * sizeof(int));
+  int *recv_n   = malloc( n_rank    * sizeof(int));
+  int *recv_idx = malloc((n_rank+1) * sizeof(int));
+  for(int i = 0; i < n_rank; ++i) {
+    send_n[i] = 0;
+  }
+
+  for(int i_face = 0; i_face < n_face_elt_vol_tot; ++i_face) {
+    PDM_g_num_t key = key_ln_to_gn[i_face];
+    int t_rank = PDM_binary_search_gap_long(key-1, distrib_key, n_rank+1);
+    send_n[t_rank]++;
+  }
+
+  PDM_MPI_Alltoall(send_n, 1, PDM_MPI_INT,
+                   recv_n, 1, PDM_MPI_INT, pmn->comm);
+
+  PDM_log_trace_array_int(send_n  , n_rank  , "send_n   ::");
+
+  send_idx[0] = 0;
+  recv_idx[0] = 0;
+  for(int i = 0; i < n_rank; ++i) {
+    send_idx[i+1] = send_idx[i] + send_n[i];
+    recv_idx[i+1] = recv_idx[i] + recv_n[i];
+    send_n  [i] = 0;
+  }
+
+  PDM_log_trace_array_int(send_idx, n_rank+1, "send_idx ::");
+  PDM_log_trace_array_int(recv_n  , n_rank  , "recv_n   ::");
+  PDM_log_trace_array_int(recv_idx, n_rank+1, "recv_idx ::");
+
+  /*
+   * Prepare send
+   */
+  int *send_face_vtx_n = malloc(n_face_elt_vol_tot * sizeof(int));
+  for(int i_face = 0; i_face < n_face_elt_vol_tot; ++i_face) {
+    PDM_g_num_t key = key_ln_to_gn[i_face];
+    int t_rank = PDM_binary_search_gap_long(key-1, distrib_key, n_rank+1);
+    int idx_write = send_idx[t_rank] + send_n[t_rank]++;
+    send_face_vtx_n[idx_write] = elmt_face_vtx_idx[i_face+1]-elmt_face_vtx_idx[i_face];
+  }
+
+  PDM_log_trace_array_int(send_face_vtx_n, n_face_elt_vol_tot, "send_face_vtx_n ::");
+
+
+  free(send_face_vtx_n);
+  free(send_n);
+  free(send_idx);
+  free(recv_n);
+  free(recv_idx);
 
   free(distrib_key);
   free(key_ln_to_gn);
