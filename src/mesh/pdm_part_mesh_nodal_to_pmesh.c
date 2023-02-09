@@ -40,6 +40,7 @@
 #include "pdm_partitioning_algorithm.h"
 #include "pdm_part_mesh_nodal_to_pmesh.h"
 #include "pdm_sort.h"
+#include "pdm_vtk.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -691,6 +692,26 @@ PDM_part_mesh_nodal_to_part_mesh
 
 
   PDM_block_to_part_free(btp);
+
+  if(1 == 1) {
+    for(int i_part = 0; i_part < pmn->n_part; ++i_part) {
+
+      int n_vtx = PDM_part_mesh_nodal_n_vtx_get(pmn, i_part);
+      double *vtx_coord = PDM_part_mesh_nodal_vtx_coord_get(pmn, i_part);
+      char filename[999];
+      sprintf(filename, "out_pmesh_nodal_to_pmesh_%i_%i.vtk", i_part, i_rank);
+      PDM_vtk_write_polydata(filename,
+                             n_vtx,
+                             vtx_coord,
+                             vtx_ln_to_gn [i_part],
+                             pn_face[i_part],
+                             pface_vtx_idx[i_part],
+                             pface_vtx    [i_part],
+                             face_ln_to_gn[i_part],
+                             NULL);
+    }
+  }
+
 
   for(int i_part = 0; i_part < pmn->n_part; ++i_part) {
     free(cell_face    [i_part]);
