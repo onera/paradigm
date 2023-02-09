@@ -1009,11 +1009,10 @@ _dist_cloud_surf_compute_optim
 {
   int dbg_enabled = 0;
 
-  const int n_point_cloud      = dist->n_point_cloud;
-  // PDM_Mesh_nodal_t *mesh_nodal = dist->mesh_nodal;
+  const int n_point_cloud           = dist->n_point_cloud;
   PDM_part_mesh_nodal_t *mesh_nodal = dist->mesh_nodal;
-  PDM_surf_mesh_t  *surf_mesh  = dist->_surf_mesh;
-  PDM_MPI_Comm comm            = dist->comm;
+  PDM_surf_mesh_t       *surf_mesh  = dist->_surf_mesh;
+  PDM_MPI_Comm comm                 = dist->comm;
 
   int rank;
   PDM_MPI_Comm_rank (comm, &rank);
@@ -1063,28 +1062,29 @@ _dist_cloud_surf_compute_optim
     n_part_mesh = PDM_surf_mesh_n_part_get (surf_mesh);
   }
   else {
-    PDM_error(__FILE__, __LINE__, 0,
-        "PDM_dist_cloud_surf error : The surface mesh is not defined. "
-        "To do that : \n"
-        "        Call PDM_dist_cloud_surf_nodal_mesh_set or\n"
-        "        Call PDM_dist_cloud_surf_surf_mesh_global_data_set +"
-        " PDM_dist_cloud_surf_surf_mesh_part_set\n");
+    log_trace("empty mesh\n");
+    // PDM_error(__FILE__, __LINE__, 0,
+    //     "PDM_dist_cloud_surf error : The surface mesh is not defined. "
+    //     "To do that : \n"
+    //     "        Call PDM_dist_cloud_surf_nodal_mesh_set or\n"
+    //     "        Call PDM_dist_cloud_surf_surf_mesh_global_data_set +"
+    //     " PDM_dist_cloud_surf_surf_mesh_part_set\n");
   }
 
   PDM_octree_t      *octree      = NULL;
   PDM_para_octree_t *para_octree = NULL;
   if (octree_type == PDM_OCTREE_SERIAL) {
     octree = PDM_octree_create (n_part_mesh,
-        depth_max,
-        points_in_leaf_max,
-        tolerance,
-        comm);
+                                depth_max,
+                                points_in_leaf_max,
+                                tolerance,
+                                comm);
   } else {
     para_octree = PDM_para_octree_create (n_part_mesh,
-        depth_max,
-        points_in_leaf_max,
-        0,
-        comm);
+                                          depth_max,
+                                          points_in_leaf_max,
+                                          0,
+                                          comm);
   }
 
   for (int i_part = 0; i_part < n_part_mesh; i_part++) {
@@ -1098,18 +1098,18 @@ _dist_cloud_surf_compute_optim
       vertices_coords = PDM_part_mesh_nodal_vtx_coord_get(mesh_nodal, i_part);
       vertices_gnum   = PDM_part_mesh_nodal_vtx_g_num_get(mesh_nodal, i_part);
     } else if (surf_mesh != NULL) {
-      n_vertices      = PDM_surf_mesh_part_n_vtx_get(surf_mesh, i_part);
-      vertices_coords = PDM_surf_mesh_part_vtx_get  (surf_mesh, i_part);
-      vertices_gnum   = PDM_surf_mesh_part_vtx_g_num_get (surf_mesh, i_part);
+      n_vertices      = PDM_surf_mesh_part_n_vtx_get    (surf_mesh, i_part);
+      vertices_coords = PDM_surf_mesh_part_vtx_get      (surf_mesh, i_part);
+      vertices_gnum   = PDM_surf_mesh_part_vtx_g_num_get(surf_mesh, i_part);
     }
-    else {
-      PDM_error(__FILE__, __LINE__, 0,
-          "PDM_dist_cloud_surf error : The surface mesh is not defined. "
-          "To do that : \n"
-          "        Call PDM_dist_cloud_surf_nodal_mesh_set or\n"
-          "        Call PDM_dist_cloud_surf_surf_mesh_global_data_set +"
-          " PDM_dist_cloud_surf_surf_mesh_part_set\n");
-    }
+    // else {
+    //   PDM_error(__FILE__, __LINE__, 0,
+    //       "PDM_dist_cloud_surf error : The surface mesh is not defined. "
+    //       "To do that : \n"
+    //       "        Call PDM_dist_cloud_surf_nodal_mesh_set or\n"
+    //       "        Call PDM_dist_cloud_surf_surf_mesh_global_data_set +"
+    //       " PDM_dist_cloud_surf_surf_mesh_part_set\n");
+    // }
 
     if (octree_type == PDM_OCTREE_SERIAL) {
       PDM_octree_point_cloud_set (octree, i_part, n_vertices,
@@ -1123,50 +1123,64 @@ _dist_cloud_surf_compute_optim
   /*
    * Build octree
    */
-  int                *part_n_elt       = malloc (sizeof(int          ) * n_part_mesh);
-  // const double      **part_elt_extents = malloc (sizeof(double      *) * n_part_mesh);
-  // const PDM_g_num_t **part_elt_g_num   = malloc (sizeof(PDM_g_num_t *) * n_part_mesh);
+  int          *part_n_elt       = malloc (sizeof(int          ) * n_part_mesh);
   double      **part_elt_extents = malloc (sizeof(double      *) * n_part_mesh);
   PDM_g_num_t **part_elt_g_num   = malloc (sizeof(PDM_g_num_t *) * n_part_mesh);
 
   PDM_geometry_kind_t geom_kind;
 
-  if (mesh_nodal != NULL) {
+  PDM_part_mesh_nodal_elmts_t *pmne = NULL;
+  if (surf_mesh == NULL) {
     /* Infer mesh dimension from mesh_nodal (< 3?) */
     PDM_geometry_kind_t l_geom_kind = PDM_GEOMETRY_KIND_SURFACIC; // volume??
-    for (l_geom_kind = PDM_GEOMETRY_KIND_SURFACIC; l_geom_kind < PDM_GEOMETRY_KIND_MAX; l_geom_kind++) {
-      int n_section = PDM_part_mesh_nodal_n_section_in_geom_kind_get(mesh_nodal,
-                                                                     l_geom_kind);
+    if (mesh_nodal != NULL) {
+      for (l_geom_kind = PDM_GEOMETRY_KIND_SURFACIC; l_geom_kind < PDM_GEOMETRY_KIND_MAX; l_geom_kind++) {
+        int n_section = PDM_part_mesh_nodal_n_section_in_geom_kind_get(mesh_nodal,
+                                                                       l_geom_kind);
 
-      if (n_section > 0) {
-        break;
+        if (n_section > 0) {
+          break;
+        }
       }
     }
 
+
     PDM_MPI_Allreduce(&l_geom_kind, &geom_kind, 1, PDM_MPI_INT, PDM_MPI_MIN, dist->comm);
 
-    if (dbg_enabled) {
-      PDM_part_mesh_nodal_dump_vtk(mesh_nodal,
-                                   geom_kind,
-                                   "dist_cloud_surf_nodal_");
+    if (mesh_nodal != NULL) {
+      switch (geom_kind) {
+      case PDM_GEOMETRY_KIND_RIDGE:
+        pmne = mesh_nodal->ridge;
+        break;
+      case PDM_GEOMETRY_KIND_SURFACIC:
+        pmne = mesh_nodal->surfacic;
+        break;
+      default:
+        PDM_error(__FILE__, __LINE__, 0, "invalid geom_kind %d\n", (int) geom_kind);
+      }
+
     }
+
+    PDM_part_mesh_nodal_elmts_for_cwipi(comm,
+                                        n_part_mesh,
+                                        &pmne);
+  }
+
+  if (pmne != NULL) {
 
     for (int i_part = 0; i_part < n_part_mesh; i_part++) {
       part_n_elt[i_part] = 0;
 
-      int n_section = PDM_part_mesh_nodal_n_section_in_geom_kind_get(mesh_nodal, geom_kind);
+      int n_section = PDM_part_mesh_nodal_elmts_n_section_get(pmne);
 
-      int *sections_id = PDM_part_mesh_nodal_sections_id_in_geom_kind_get(mesh_nodal, geom_kind);
+      int *sections_id = PDM_part_mesh_nodal_elmts_sections_id_get(pmne);
 
       int max_n_elt = 0;
       for (int isection = 0; isection < n_section; isection++) {
-        int id_section_in_geom_kind = sections_id[isection];
-        int id_section = PDM_part_mesh_nodal_section_id_from_geom_kind_get(mesh_nodal,
-                                                                           geom_kind,
-                                                                           id_section_in_geom_kind);
-        int n_elt = PDM_part_mesh_nodal_section_n_elt_get(mesh_nodal,
-                                                          id_section,
-                                                          i_part);
+        int id_section = sections_id[isection];
+        int n_elt = PDM_part_mesh_nodal_elmts_section_n_elt_get(pmne,
+                                                                id_section,
+                                                                i_part);
 
         part_n_elt[i_part] += n_elt;
 
@@ -1178,30 +1192,33 @@ _dist_cloud_surf_compute_optim
 
       double *_extents = malloc(sizeof(double) * max_n_elt * 6);
 
+      const double *vtx_coord = NULL;
+      if (mesh_nodal != NULL) {
+        vtx_coord = PDM_part_mesh_nodal_vtx_coord_get(mesh_nodal, i_part);
+      }
+
       int idx = 0;
       for (int isection = 0; isection < n_section; isection++) {
-        int id_section_in_geom_kind = sections_id[isection];
-        int id_section = PDM_part_mesh_nodal_section_id_from_geom_kind_get(mesh_nodal,
-                                                                           geom_kind,
-                                                                           id_section_in_geom_kind);
+        int id_section = sections_id[isection];
 
-        int *parent_num = PDM_part_mesh_nodal_section_parent_num_get(mesh_nodal,
-                                                                     id_section,
-                                                                     i_part);
+        int *parent_num = PDM_part_mesh_nodal_elmts_parent_num_get(pmne,
+                                                                   id_section,
+                                                                   i_part);
 
-        PDM_g_num_t *_elt_g_num = PDM_part_mesh_nodal_g_num_get(mesh_nodal,
+        PDM_g_num_t *_elt_g_num = PDM_part_mesh_nodal_elmts_g_num_get(pmne,
+                                                                      id_section,
+                                                                      i_part);
+
+        int n_elt = PDM_part_mesh_nodal_elmts_section_n_elt_get(pmne,
                                                                 id_section,
                                                                 i_part);
 
-        int n_elt = PDM_part_mesh_nodal_section_n_elt_get(mesh_nodal,
-                                                          id_section,
-                                                          i_part);
-
-        PDM_part_mesh_nodal_section_elt_extents_compute(mesh_nodal,
-                                                        id_section,
-                                                        i_part,
-                                                        1e-8,
-                                                        _extents);
+        PDM_part_mesh_nodal_elmts_elt_extents_compute(pmne,
+                                                      id_section,
+                                                      i_part,
+                                                      1e-8,
+                                           (double *) vtx_coord,
+                                                      _extents);
 
         for (int i = 0; i < n_elt; i++) {
           idx = i;
@@ -1491,15 +1508,6 @@ _dist_cloud_surf_compute_optim
     if (i_point_cloud == n_point_cloud -1 ) { //Now useless
       PDM_dbbtree_free (dbbt);
       PDM_box_set_destroy (&surf_mesh_boxes);
-      // free(part_n_elt);
-      // if (mesh_nodal != NULL) {
-      //   for (int i = 0; i < n_part_mesh; i++) {
-      //     free(part_elt_g_num  [i]);
-      //     free(part_elt_extents[i]);
-      //   }
-      // }
-      // free(part_elt_g_num);
-      // free(part_elt_extents);
     }
 
     PDM_timer_hang_on(dist->timer);
@@ -1558,25 +1566,20 @@ _dist_cloud_surf_compute_optim
                                                         PDM_FALSE,                         // compute_child_gnum
                                                         PDM_OWNERSHIP_KEEP,
                                                         dist->comm);
-    if (mesh_nodal != NULL) {
-      PDM_part_mesh_nodal_elmts_t *pmne = NULL;
-      if (geom_kind == PDM_GEOMETRY_KIND_RIDGE) {
-        pmne = mesh_nodal->ridge;
-      }
-      else if (geom_kind == PDM_GEOMETRY_KIND_SURFACIC) {
-        pmne = mesh_nodal->surfacic;
-      }
-      else {
-        PDM_error(__FILE__, __LINE__, 0, "Invalid geom_kind %d\n", (int) geom_kind);
-      }
-
+    if (pmne != NULL) {
       PDM_extract_part_part_nodal_set(extrp, pmne);
 
       for (int i_part = 0; i_part < n_part_mesh; i_part++) {
 
-        int n_vtx = PDM_part_mesh_nodal_n_vtx_get(mesh_nodal, i_part);
-        const double      *vtx_coord    = PDM_part_mesh_nodal_vtx_coord_get(mesh_nodal, i_part);
-        const PDM_g_num_t *vtx_ln_to_gn = PDM_part_mesh_nodal_vtx_g_num_get(mesh_nodal, i_part);
+        int n_vtx = 0;
+        const double      *vtx_coord    = NULL;
+        const PDM_g_num_t *vtx_ln_to_gn = NULL;
+
+        if (mesh_nodal != NULL) {
+          n_vtx        = PDM_part_mesh_nodal_n_vtx_get    (mesh_nodal, i_part);
+          vtx_coord    = PDM_part_mesh_nodal_vtx_coord_get(mesh_nodal, i_part);
+          vtx_ln_to_gn = PDM_part_mesh_nodal_vtx_g_num_get(mesh_nodal, i_part);
+        }
 
         int n_cell = 0;
         int n_face = 0;
@@ -1648,18 +1651,18 @@ _dist_cloud_surf_compute_optim
                                   n_face,
                                   0,
                                   n_vtx,
-                                NULL, // pcell_face_idx[i_part],
-                                NULL, // pcell_face[i_part],
-                                NULL, // pface_edge_idx[i_part],
-                                NULL, // pface_edge[i_part],
-                                NULL, // pedge_vtx[i_part],
-                  (int *)       part_face_vtx_idx, // pface_vtx_idx[i_part],
-                  (int *)       part_face_vtx, // pface_vtx[i_part],
-                  NULL,
+                                  NULL, // pcell_face_idx[i_part],
+                                  NULL, // pcell_face[i_part],
+                                  NULL, // pface_edge_idx[i_part],
+                                  NULL, // pface_edge[i_part],
+                                  NULL, // pedge_vtx[i_part],
+                  (int         *) part_face_vtx_idx, // pface_vtx_idx[i_part],
+                  (int         *) part_face_vtx, // pface_vtx[i_part],
+                                  NULL,
                   (PDM_g_num_t *) face_ln_to_gn,
-                  NULL,
+                                  NULL,
                   (PDM_g_num_t *) vtx_ln_to_gn,
-                  (double *) part_vtx_coords);
+                  (double      *) part_vtx_coords);
 
       }
     }
@@ -1691,7 +1694,7 @@ _dist_cloud_surf_compute_optim
     }
 
     PDM_part_mesh_nodal_elmts_t *extract_pmne = NULL;
-    if (mesh_nodal != NULL) {
+    if (pmne != NULL) {
       PDM_extract_part_part_mesh_nodal_get(extrp,
                                            &extract_pmne,
                                            PDM_OWNERSHIP_USER);
@@ -1713,7 +1716,7 @@ _dist_cloud_surf_compute_optim
     int pn_extract_face = 0;
     PDM_g_num_t *pextract_face_ln_to_gn = NULL;
 
-    if (mesh_nodal != NULL) {
+    if (pmne != NULL) {
       pn_extract_face = 0;
 
       int n_section = PDM_part_mesh_nodal_elmts_n_section_get(extract_pmne);
@@ -1779,14 +1782,14 @@ _dist_cloud_surf_compute_optim
           int          order               = 0;
           const char  *ho_ordering         = NULL;
           PDM_part_mesh_nodal_elmts_section_std_ho_get(extract_pmne,
-                                                     id_section,
-                                                     0,
-                                                     &connec,
-                                                     &numabs,
-                                                     &_parent_num,
-                                                     &parent_entity_g_num,
-                                                     &order,
-                                                     &ho_ordering);
+                                                       id_section,
+                                                       0,
+                                                       &connec,
+                                                       &numabs,
+                                                       &_parent_num,
+                                                       &parent_entity_g_num,
+                                                       &order,
+                                                       &ho_ordering);
 
           int n_vtx = PDM_Mesh_nodal_n_vtx_elt_get(t_elt,
                                                    order);
@@ -1816,11 +1819,11 @@ _dist_cloud_surf_compute_optim
         int id_section = sections_id[i];
 
         int n_elt = PDM_part_mesh_nodal_elmts_section_n_elt_get(extract_pmne,
-                                                              id_section,
-                                                              0);
+                                                                id_section,
+                                                                0);
 
         PDM_Mesh_nodal_elt_t t_elt = PDM_part_mesh_nodal_elmts_section_type_get(extract_pmne,
-                                                                              id_section);
+                                                                                id_section);
 
         int *parent_num = PDM_part_mesh_nodal_elmts_parent_num_get(extract_pmne,
                                                                    id_section,
@@ -1831,10 +1834,10 @@ _dist_cloud_surf_compute_optim
           int *connec_idx;
           int *connec;
           PDM_part_mesh_nodal_elmts_section_poly2d_get(extract_pmne,
-                                                     id_section,
-                                                     0,
-                                                     &connec_idx,
-                                                     &connec);
+                                                       id_section,
+                                                       0,
+                                                       &connec_idx,
+                                                       &connec);
 
           for (int ielt = 0; ielt < n_elt; ielt++) {
             int iface = ielt;
@@ -1861,14 +1864,14 @@ _dist_cloud_surf_compute_optim
           int          order               = 0;
           const char  *ho_ordering         = NULL;
           PDM_part_mesh_nodal_elmts_section_std_ho_get(extract_pmne,
-                                                     id_section,
-                                                     0,
-                                                     &connec,
-                                                     &numabs,
-                                                     &_parent_num,
-                                                     &parent_entity_g_num,
-                                                     &order,
-                                                     &ho_ordering);
+                                                       id_section,
+                                                       0,
+                                                       &connec,
+                                                       &numabs,
+                                                       &_parent_num,
+                                                       &parent_entity_g_num,
+                                                       &order,
+                                                       &ho_ordering);
 
           int *ijk_to_user = NULL;
           if (ho_ordering != NULL) {
@@ -2190,7 +2193,7 @@ _dist_cloud_surf_compute_optim
     free(elt_order);
     free(elt_type);
 
-    if (mesh_nodal != NULL) {
+    if (pmne != NULL) {
       free(pextract_face_vtx    );
       free(pextract_face_vtx_idx);
     }
