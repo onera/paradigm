@@ -1036,7 +1036,12 @@ PDM_vtk_write_polydata
     fprintf(f, "\n");
   }
 
-  fprintf(f, "POLYGONS %d %d\n", n_face, n_face + face_vtx_idx[n_face]);
+  int s_face_vtx = 0;
+  if (n_face > 0) {
+    assert(face_vtx_idx != NULL);
+    s_face_vtx = face_vtx_idx[n_face];
+  }
+  fprintf(f, "POLYGONS %d %d\n", n_face, n_face + s_face_vtx);
   for (int i = 0; i < n_face; i++) {
     fprintf(f, "%d", face_vtx_idx[i+1] - face_vtx_idx[i]);
     for (int j = face_vtx_idx[i]; j < face_vtx_idx[i+1]; j++) {
@@ -1120,7 +1125,12 @@ PDM_vtk_write_polydata_with_field
     fprintf(f, "\n");
   }
 
-  fprintf(f, "POLYGONS %d %d\n", n_face, n_face + face_vtx_idx[n_face]);
+  int s_face_vtx = 0;
+  if (n_face > 0) {
+    assert(face_vtx_idx != NULL);
+    s_face_vtx = face_vtx_idx[n_face];
+  }
+  fprintf(f, "POLYGONS %d %d\n", n_face, n_face + s_face_vtx);
   for (int i = 0; i < n_face; i++) {
     fprintf(f, "%d", face_vtx_idx[i+1] - face_vtx_idx[i]);
     for (int j = face_vtx_idx[i]; j < face_vtx_idx[i+1]; j++) {
@@ -1224,7 +1234,12 @@ PDM_vtk_write_polydata_field
     fprintf(f, "\n");
   }
 
-  fprintf(f, "POLYGONS %d %d\n", n_face, n_face + face_vtx_idx[n_face]);
+  int s_face_vtx = 0;
+  if (n_face > 0) {
+    assert(face_vtx_idx != NULL);
+    s_face_vtx = face_vtx_idx[n_face];
+  }
+  fprintf(f, "POLYGONS %d %d\n", n_face, n_face + s_face_vtx);
   for (int i = 0; i < n_face; i++) {
     fprintf(f, "%d", face_vtx_idx[i+1] - face_vtx_idx[i]);
     for (int j = face_vtx_idx[i]; j < face_vtx_idx[i+1]; j++) {
