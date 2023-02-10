@@ -35,7 +35,7 @@ function(test_c_create name n_proc)
              ${MPIEXEC_POSTFLAGS})
 
   if (CMAKE_BUILD_TYPE STREQUAL "Sanitize")
-    set_property(TEST ${name} PROPERTY ENVIRONMENT "LSAN_OPTIONS=suppressions=${CMAKE_SOURCE_DIR}/script/asan/asan.supp")
+    set_property(TEST ${name} PROPERTY ENVIRONMENT "LSAN_OPTIONS=suppressions=${CMAKE_SOURCE_DIR}/script/asan/asan.supp LD_PRELOAD=${CMAKE_BINARY_DIR}/script/asan/fake_dlclose/libdlclose.so")
   endif()
 
 endfunction()
@@ -65,7 +65,7 @@ function(test_fortran_create name n_proc)
              ${MPIEXEC_POSTFLAGS})
 
   if (CMAKE_BUILD_TYPE STREQUAL "Sanitize")
-    set_property(TEST ${name} PROPERTY ENVIRONMENT "LSAN_OPTIONS=suppressions=${CMAKE_SOURCE_DIR}/script/asan/asan.supp")
+    set_property(TEST ${name} PROPERTY ENVIRONMENT "LSAN_OPTIONS=suppressions=${CMAKE_SOURCE_DIR}/script/asan/asan.supp LD_PRELOAD=${CMAKE_BINARY_DIR}/script/asan/fake_dlclose/libdlclose.so")
   endif()
 
 endfunction()
