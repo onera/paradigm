@@ -53,6 +53,21 @@ PDM_part_mesh_nodal_tetra_decomposes_faces
        int         *parent_elmt_position
 );
 
+void
+PDM_part_mesh_nodal_hexa_decomposes_faces
+(
+       int          n_elt,
+       int          order,
+       int         *parent_node,
+       int         *n_elt_current,
+       int         *n_face_current,
+ const PDM_g_num_t *vtx_ln_to_gn,
+ const int         *connectivity_elmt_vtx,
+       int         *elmt_face_vtx_idx,
+       PDM_g_num_t *elmt_face_vtx,
+       int         *elmt_cell_face_idx,
+       int         *parent_elmt_position
+);
 
 void
 PDM_part_mesh_nodal_std_decomposes_faces

@@ -143,7 +143,95 @@ PDM_part_mesh_nodal_tetra_decomposes_faces
 
 }
 
+void
+PDM_part_mesh_nodal_hexa_decomposes_faces
+(
+       int          n_elt,
+       int          order,
+       int         *parent_node,
+       int         *n_elt_current,
+       int         *n_face_current,
+ const PDM_g_num_t *vtx_ln_to_gn,
+ const int         *connectivity_elmt_vtx,
+       int         *elmt_face_vtx_idx,
+       PDM_g_num_t *elmt_face_vtx,
+       int         *elmt_cell_face_idx,
+       int         *parent_elmt_position
+)
+{
+  const int n_face_elt     = 6;
+  const int n_sum_vtx_face = 24;
+  int n_sum_vtx_elt        = 8;
+  if(order > 1) {
+    n_sum_vtx_elt     = PDM_Mesh_nodal_n_vtx_elt_get(PDM_MESH_NODAL_HEXAHO, order);
+  }
 
+  int __parent_node[8] = {0, 1, 2, 3, 4, 5, 6, 7};
+  int *_parent_node;
+  if (parent_node == NULL) {
+    _parent_node = __parent_node;
+  } else {
+    _parent_node = parent_node;
+  }
+
+  int _n_face_current = *n_face_current;
+  int _n_elt_current  = *n_elt_current;
+  int         *_current_elmt_face_vtx_idx = elmt_face_vtx_idx    + _n_face_current;
+  PDM_g_num_t *_current_elmt_face_vtx     = elmt_face_vtx        + elmt_face_vtx_idx[_n_face_current];
+  int         *_parent_elmt_position      = parent_elmt_position + _n_face_current;
+  int         *_elmt_cell_face_idx        = elmt_cell_face_idx   + _n_elt_current;
+
+  /*
+   * For each element we flaten all connectivities in one array
+   */
+
+
+  for (int ielt = 0; ielt < n_elt; ielt++) {
+
+    /* Store the face_cell */
+    for (int i_face = 0; i_face < n_face_elt; i_face++) {
+      _current_elmt_face_vtx_idx[ielt * n_face_elt + i_face + 1] = _current_elmt_face_vtx_idx[ielt * n_face_elt + i_face] + 4;
+      _parent_elmt_position     [ielt * n_face_elt + i_face    ] = i_face;
+    }
+
+    _elmt_cell_face_idx[ielt+1] = _elmt_cell_face_idx[ielt] + n_face_elt;
+
+    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 0]  = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[3]]-1];
+    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 1]  = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[2]]-1];
+    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 2]  = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[1]]-1];
+    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 3]  = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[0]]-1];
+
+    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 4]  = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[6]]-1];
+    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 5]  = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[7]]-1];
+    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 6]  = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[4]]-1];
+    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 7]  = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[5]]-1];
+
+    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 8]  = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[4]]-1];
+    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 9]  = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[7]]-1];
+    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 10] = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[3]]-1];
+    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 11] = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[0]]-1];
+
+    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 12] = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[7]]-1];
+    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 13] = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[6]]-1];
+    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 14] = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[2]]-1];
+    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 15] = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[3]]-1];
+
+    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 16] = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[2]]-1];
+    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 17] = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[6]]-1];
+    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 18] = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[5]]-1];
+    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 19] = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[1]]-1];
+
+    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 20] = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[1]]-1];
+    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 21] = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[5]]-1];
+    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 22] = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[4]]-1];
+    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 23] = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[0]]-1];
+
+  }
+
+
+  *n_elt_current  += n_elt;
+  *n_face_current += n_elt * n_face_elt;
+}
 
 void
 PDM_part_mesh_nodal_std_decomposes_faces
@@ -256,20 +344,17 @@ PDM_part_mesh_nodal_std_decomposes_faces
      break;
    case PDM_MESH_NODAL_HEXA8:
    case PDM_MESH_NODAL_HEXAHO:
-     // PDM_hexa_decomposes_faces(n_elt,
-     //                           order,
-     //                           parent_node,
-     //                           n_elt_current,
-     //                           n_dface_current,
-     //                           beg_gnum_elt_current,
-     //                           beg_gnum_face_current,
-     //                           connectivity_elmt_vtx,
-     //                           elmt_face_vtx_idx,
-     //                           elmt_face_vtx,
-     //                           elmt_face_cell,
-     //                           elmt_cell_face_idx,
-     //                           elmt_cell_face,
-     //                           parent_elmt_position);
+     PDM_part_mesh_nodal_hexa_decomposes_faces(n_elt,
+                                                order,
+                                                parent_node,
+                                                n_elt_current,
+                                                n_face_current,
+                                                vtx_ln_to_gn,
+                                                connectivity_elmt_vtx,
+                                                elmt_face_vtx_idx,
+                                                elmt_face_vtx,
+                                                elmt_cell_face_idx,
+                                                parent_elmt_position);
      break;
    default:
      PDM_error(__FILE__, __LINE__, 0, "Error PDM_sections_decompose_faces : Element type is supported\n");

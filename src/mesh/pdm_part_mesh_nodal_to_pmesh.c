@@ -675,6 +675,7 @@ PDM_part_mesh_nodal_to_part_mesh
 
     for(int i = 0; i < pface_vtx_idx[i_part][pn_face[i_part]]; ++i) {
       int old_vtx = PDM_binary_search_long(pface_vtx_gnum[i_part][i], tmp_vtx_ln_to_gn, n_vtx);
+      log_trace("old_vtx = %i - %i \n", old_vtx, pface_vtx_gnum[i_part][i]);
       pface_vtx[i_part][i] = order_vtx[old_vtx]+1;
     }
 
