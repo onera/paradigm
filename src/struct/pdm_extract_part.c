@@ -37,7 +37,7 @@
 #include "pdm_gnum_location.h"
 #include "pdm_unique.h"
 #include "pdm_part_mesh_nodal_elmts_priv.h"
-
+#include "pdm_ho_ordering.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -1190,6 +1190,13 @@ _extract_part_nodal
 
       int n_vtx_per_elmt = PDM_Mesh_nodal_n_vtx_elt_get(t_elt, order);
 
+      int *ijk_to_user = NULL;
+      if (ho_ordering != NULL) {
+        ijk_to_user = PDM_ho_ordering_ijk_to_user_get(ho_ordering,
+                                                      t_elt,
+                                                      order);
+      }
+
       /* Selection */
       for(int i_elt = 0; i_elt < n_elt; ++i_elt) {
         int parent_elt = i_elt;
@@ -1198,14 +1205,17 @@ _extract_part_nodal
         }
         if(is_selected[i_part][parent_elt] != -1) {
 
-
           int idx_write = n_selected_section[i_part][i_section]++;
           idx_selected_section[i_part][i_section][idx_write] = i_elt;
           extract_parent_num  [i_part][i_section][idx_write] = is_selected[i_part][parent_elt];
 
           int beg = i_elt * n_vtx_per_elmt;
           for(int idx_vtx = 0; idx_vtx < n_vtx_per_elmt; ++idx_vtx) {
-            int i_vtx = elt_vtx[beg+idx_vtx] - 1;
+            int _idx_vtx = idx_vtx;
+            if (ijk_to_user != NULL) {
+              _idx_vtx = ijk_to_user[idx_vtx];
+            }
+            int i_vtx = elt_vtx[beg+_idx_vtx] - 1;
             if(is_selected_vtx[i_part][i_vtx] == 0) {
               is_selected_vtx         [i_part][i_vtx                ] = 1;
               old_to_new_vtx          [i_part][i_vtx                ] = n_extract_vtx[i_part];
@@ -1285,6 +1295,13 @@ _extract_part_nodal
 
       int n_vtx_per_elmt = PDM_Mesh_nodal_n_vtx_elt_get(t_elt, order);
 
+      int *ijk_to_user = NULL;
+      if (ho_ordering != NULL) {
+        ijk_to_user = PDM_ho_ordering_ijk_to_user_get(ho_ordering,
+                                                      t_elt,
+                                                      order);
+      }
+
       /* Allocate */
       int         *extract_elt_vtx      = malloc( n_selected_section  [i_part][i_section] * n_vtx_per_elmt * sizeof(int        ));
       PDM_g_num_t *extract_elt_ln_to_gn = malloc( n_selected_section  [i_part][i_section]                  * sizeof(PDM_g_num_t));
@@ -1298,7 +1315,11 @@ _extract_part_nodal
         int beg  = ielt * n_vtx_per_elmt;
 
         for(int k = 0; k < n_vtx_per_elmt; ++k) {
-          int old_vtx = elt_vtx[beg+k]-1;
+          int _k = k;
+          if (ijk_to_user != NULL) {
+            _k = ijk_to_user[k];
+          }
+          int old_vtx = elt_vtx[beg+_k]-1;
           extract_elt_vtx[idx_write++] = old_to_new_vtx[i_part][old_vtx]+1;
         }
 
@@ -1327,7 +1348,7 @@ _extract_part_nodal
                                            extract_parent_num[i_part][i_section],
                                            NULL,
                                            order,
-                                           ho_ordering,
+                                           NULL,//ho_ordering,
                                            PDM_OWNERSHIP_KEEP);
 
       free(idx_selected_section[i_part][i_section]);
@@ -1982,6 +2003,13 @@ _extract_part_and_reequilibrate_nodal_from_target
 
         int n_vtx_per_elmt = PDM_Mesh_nodal_n_vtx_elt_get(t_elt, order);
 
+        int *ijk_to_user = NULL;
+        if (ho_ordering != NULL) {
+          ijk_to_user = PDM_ho_ordering_ijk_to_user_get(ho_ordering,
+                                                        t_elt,
+                                                        order);
+        }
+
         /* Selection */
         for(int i_elt = 0; i_elt < n_elt; ++i_elt) {
           // int parent_elt = i_elt;
@@ -1998,7 +2026,11 @@ _extract_part_and_reequilibrate_nodal_from_target
             int idx_read  = i_elt * n_vtx_per_elmt;
             int idx_write = elt_vtx_idx[idx];
             for(int k = 0; k < n_vtx_per_elmt; ++k) {
-              elmt_vtx         [i_part][idx_write+k] = _vtx_ln_to_gn[elt_vtx[idx_read+k]-1];
+              int _k = k;
+              if (ijk_to_user != NULL) {
+                _k = ijk_to_user[k];
+              }
+              elmt_vtx         [i_part][idx_write+k] = _vtx_ln_to_gn[elt_vtx[idx_read+_k]-1];
               vtx_init_location[i_part][3*(idx_write+k)  ] = i_rank;
               vtx_init_location[i_part][3*(idx_write+k)+1] = i_part;
               vtx_init_location[i_part][3*(idx_write+k)+2] = elt_vtx[idx_read+k]-1;
@@ -2315,7 +2347,7 @@ _extract_part_and_reequilibrate_nodal_from_target
                                                    &order,
                                                    &ho_ordering);
 
-        extract_section_id = PDM_part_mesh_nodal_elmts_ho_add(extract_pmne, t_elt, order, ho_ordering);
+        extract_section_id = PDM_part_mesh_nodal_elmts_ho_add(extract_pmne, t_elt, order, NULL);//ho_ordering);
       }
       else {
         extract_section_id = PDM_part_mesh_nodal_elmts_add(extract_pmne, t_elt);
@@ -2479,7 +2511,7 @@ _extract_part_and_reequilibrate_nodal_from_target
                                                extract_parent_num  [i_section],
                                                extract_parent_g_num[i_section],
                                                order,
-                                               ho_ordering,
+                                               NULL,//ho_ordering,
                                                PDM_OWNERSHIP_KEEP);
 
         }

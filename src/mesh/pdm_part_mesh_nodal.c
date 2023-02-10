@@ -1155,14 +1155,14 @@ PDM_part_mesh_nodal_dump_vtk
           int         *parent_num      = NULL;
           PDM_g_num_t *parent_elmt_num = NULL;
           PDM_part_mesh_nodal_elmts_section_std_ho_get(pmne,
-                                                     section_id[i_section],
-                                                     i_part,
-                                                     &pcell_vtx,
-                                                     &pelmt_ln_to_gn,
-                                                     &parent_num,
-                                                     &parent_elmt_num,
-                                                     &order,
-                                                     &ho_ordering);
+                                                       section_id[i_section],
+                                                       i_part,
+                                                       &pcell_vtx,
+                                                       &pelmt_ln_to_gn,
+                                                       &parent_num,
+                                                       &parent_elmt_num,
+                                                       &order,
+                                                       &ho_ordering);
 
           int n_vtx_per_elmt = PDM_Mesh_nodal_n_vtx_elt_get (t_elt, order);
           int *pcell_vtx_out = malloc(n_vtx_per_elmt * n_elt * sizeof(int));
@@ -1177,7 +1177,6 @@ PDM_part_mesh_nodal_dump_vtk
                                          n_elt,
                                          pcell_vtx,
                                          pcell_vtx_out);
-
 
           PDM_vtk_write_std_elements_ho(filename,
                                         order,

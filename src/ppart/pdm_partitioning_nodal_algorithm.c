@@ -610,26 +610,27 @@ PDM_dmesh_nodal_elmts_to_part_mesh_nodal_elmts
         abort();
       }
       else {
-        PDM_part_mesh_nodal_elmts_std_set(pmne,
-                                          id_section,
-                                          i_part,
-                                          n_elmt_in_section,
-                                          connec                   [i_section],
-                                          numabs                   [i_section],
-                                          parent_num               [i_section],
-                                          sparent_entitity_ln_to_gn[i_section],
-                                          PDM_OWNERSHIP_KEEP);
-        // HO????
-        // int order = section_order[i_section];
-        // PDM_part_mesh_nodal_elmts_std_ho_set(pmne,
-        //                                      id_section,
-        //                                      i_part,
-        //                                      n_elmt_in_section,
-        //                                      connec                   [i_section],
-        //                                      numabs                   [i_section],
-        //                                      parent_num               [i_section],
-        //                                      sparent_entitity_ln_to_gn[i_section],
-        //                                      PDM_OWNERSHIP_KEEP);
+        // PDM_part_mesh_nodal_elmts_std_set(pmne,
+        //                                   id_section,
+        //                                   i_part,
+        //                                   n_elmt_in_section,
+        //                                   connec                   [i_section],
+        //                                   numabs                   [i_section],
+        //                                   parent_num               [i_section],
+        //                                   sparent_entitity_ln_to_gn[i_section],
+        //                                   PDM_OWNERSHIP_KEEP);
+        int order = section_order[i_section];
+        PDM_part_mesh_nodal_elmts_std_ho_set(pmne,
+                                             id_section,
+                                             i_part,
+                                             n_elmt_in_section,
+                                             connec                   [i_section],
+                                             numabs                   [i_section],
+                                             parent_num               [i_section],
+                                             sparent_entitity_ln_to_gn[i_section],
+                                             order,
+                                             NULL,// ho_ordering?
+                                             PDM_OWNERSHIP_KEEP);
       }
 
       connec                   [i_section] = NULL;
