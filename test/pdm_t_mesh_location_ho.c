@@ -860,13 +860,15 @@ int main(int argc, char *argv[])
         pcell_vtx_out[i] = connec[i];
       }
 
-      PDM_Mesh_nodal_reorder_elt_vtx(elt_type,
-                                     _order,
-                                     ho_ordering,
-                                     "PDM_HO_ORDERING_VTK",
-                                     n_elt,
-                                     connec,
-                                     pcell_vtx_out);
+      if (_order > 1) {
+        PDM_Mesh_nodal_reorder_elt_vtx(elt_type,
+                                       _order,
+                                       ho_ordering,
+                                       "PDM_HO_ORDERING_VTK",
+                                       n_elt,
+                                       connec,
+                                       pcell_vtx_out);
+      }
 
       field_value[0] = src_field[ipart];
       PDM_vtk_write_std_elements_ho_with_vtx_field(filename,

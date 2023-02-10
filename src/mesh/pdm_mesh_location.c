@@ -754,13 +754,15 @@ const int                           n_part,
           pcell_vtx_out[i] = pcell_vtx[i];
         }
 
-        PDM_Mesh_nodal_reorder_elt_vtx(t_elt,
-                                       order,
-                                       ho_ordering,
-                                       "PDM_HO_ORDERING_VTK",
-                                       n_elt,
-                                       pcell_vtx,
-                                       pcell_vtx_out);
+        if (order > 1) {
+          PDM_Mesh_nodal_reorder_elt_vtx(t_elt,
+                                         order,
+                                         ho_ordering,
+                                         "PDM_HO_ORDERING_VTK",
+                                         n_elt,
+                                         pcell_vtx,
+                                         pcell_vtx_out);
+        }
 
 
         PDM_vtk_write_std_elements_ho(filename,

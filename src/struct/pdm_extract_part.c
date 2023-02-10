@@ -1191,7 +1191,7 @@ _extract_part_nodal
       int n_vtx_per_elmt = PDM_Mesh_nodal_n_vtx_elt_get(t_elt, order);
 
       int *ijk_to_user = NULL;
-      if (ho_ordering != NULL) {
+      if (order > 1 && ho_ordering != NULL) {
         ijk_to_user = PDM_ho_ordering_ijk_to_user_get(ho_ordering,
                                                       t_elt,
                                                       order);
@@ -1296,7 +1296,7 @@ _extract_part_nodal
       int n_vtx_per_elmt = PDM_Mesh_nodal_n_vtx_elt_get(t_elt, order);
 
       int *ijk_to_user = NULL;
-      if (ho_ordering != NULL) {
+      if (order > 1 && ho_ordering != NULL) {
         ijk_to_user = PDM_ho_ordering_ijk_to_user_get(ho_ordering,
                                                       t_elt,
                                                       order);
@@ -2004,7 +2004,7 @@ _extract_part_and_reequilibrate_nodal_from_target
         int n_vtx_per_elmt = PDM_Mesh_nodal_n_vtx_elt_get(t_elt, order);
 
         int *ijk_to_user = NULL;
-        if (ho_ordering != NULL) {
+        if (order > 1 && ho_ordering != NULL) {
           ijk_to_user = PDM_ho_ordering_ijk_to_user_get(ho_ordering,
                                                         t_elt,
                                                         order);
