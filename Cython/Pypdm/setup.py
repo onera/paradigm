@@ -7,8 +7,8 @@ import sys
 setup(
     name = "Pypdm",
     packages     = ['Pypdm'],
-    data_files = [('', ["Pypdm/Pypdm.so"])],
-    author = 'E. Quemerais, B. Maugars, B. Andrieu, J. Coulet',
+    data_files = [('', ["Pypdm.so"])],
+    author = 'E. Quemerais, B. Maugars, B. Andrieu, K.Hoogveld, J. Coulet',
     author_email='eric.quemerais@onera.fr, bruno.maugars@onera.fr, bastien.andrieu@onera.fr, julien.coulet@onera.fr',
     description = 'Toolkit for parallel distributed computational geometry',
     license = 'LGPL',
