@@ -79,9 +79,11 @@ PDM_part_mesh_nodal_tetra_decomposes_faces
        int         *n_face_current,
  const PDM_g_num_t *vtx_ln_to_gn,
  const int         *connectivity_elmt_vtx,
+ const PDM_g_num_t *elmt_ln_to_gn,
        int         *elmt_face_vtx_idx,
        PDM_g_num_t *elmt_face_vtx,
        int         *elmt_cell_face_idx,
+       PDM_g_num_t *elmt_face_cell,
        int         *parent_elmt_position
 )
 {
@@ -107,6 +109,7 @@ PDM_part_mesh_nodal_tetra_decomposes_faces
   PDM_g_num_t *_current_elmt_face_vtx     = elmt_face_vtx        + elmt_face_vtx_idx[_n_face_current];
   int         *_parent_elmt_position      = parent_elmt_position + _n_face_current;
   int         *_elmt_cell_face_idx        = elmt_cell_face_idx   + _n_elt_current;
+  PDM_g_num_t *_elmt_face_cell            = elmt_face_cell       + _n_face_current;
 
   /*
    * For each element we flaten all connectivities in one array
@@ -116,6 +119,7 @@ PDM_part_mesh_nodal_tetra_decomposes_faces
     for (int i_face = 0; i_face < n_face_elt; i_face++) {
       _current_elmt_face_vtx_idx[ielt * n_face_elt + i_face + 1] = _current_elmt_face_vtx_idx[ielt * n_face_elt + i_face] + 3;
       _parent_elmt_position     [ielt * n_face_elt + i_face    ] = i_face;
+      _elmt_face_cell           [ielt * n_face_elt + i_face    ] = elmt_ln_to_gn[ielt];
     }
 
     _elmt_cell_face_idx[ielt+1] = _elmt_cell_face_idx[ielt] + n_face_elt;
@@ -153,9 +157,11 @@ PDM_part_mesh_nodal_hexa_decomposes_faces
        int         *n_face_current,
  const PDM_g_num_t *vtx_ln_to_gn,
  const int         *connectivity_elmt_vtx,
+ const PDM_g_num_t *elmt_ln_to_gn,
        int         *elmt_face_vtx_idx,
        PDM_g_num_t *elmt_face_vtx,
        int         *elmt_cell_face_idx,
+       int         *elmt_face_cell,
        int         *parent_elmt_position
 )
 {
@@ -180,6 +186,7 @@ PDM_part_mesh_nodal_hexa_decomposes_faces
   PDM_g_num_t *_current_elmt_face_vtx     = elmt_face_vtx        + elmt_face_vtx_idx[_n_face_current];
   int         *_parent_elmt_position      = parent_elmt_position + _n_face_current;
   int         *_elmt_cell_face_idx        = elmt_cell_face_idx   + _n_elt_current;
+  PDM_g_num_t *_elmt_face_cell            = elmt_face_cell       + _n_face_current;
 
   /*
    * For each element we flaten all connectivities in one array
@@ -192,6 +199,7 @@ PDM_part_mesh_nodal_hexa_decomposes_faces
     for (int i_face = 0; i_face < n_face_elt; i_face++) {
       _current_elmt_face_vtx_idx[ielt * n_face_elt + i_face + 1] = _current_elmt_face_vtx_idx[ielt * n_face_elt + i_face] + 4;
       _parent_elmt_position     [ielt * n_face_elt + i_face    ] = i_face;
+      _elmt_face_cell           [ielt * n_face_elt + i_face    ] = elmt_ln_to_gn[ielt];
     }
 
     _elmt_cell_face_idx[ielt+1] = _elmt_cell_face_idx[ielt] + n_face_elt;
@@ -244,9 +252,11 @@ PDM_part_mesh_nodal_std_decomposes_faces
        int                  *n_face_current,
  const PDM_g_num_t          *vtx_ln_to_gn,
  const int                  *connectivity_elmt_vtx,
+ const PDM_g_num_t          *elmt_ln_to_gn,
        int                  *elmt_face_vtx_idx,
        PDM_g_num_t          *elmt_face_vtx,
        int                  *elmt_cell_face_idx,
+       PDM_g_num_t          *elmt_face_cell,
        int                  *parent_elmt_position
 )
 {
@@ -303,9 +313,11 @@ PDM_part_mesh_nodal_std_decomposes_faces
                                                 n_face_current,
                                                 vtx_ln_to_gn,
                                                 connectivity_elmt_vtx,
+                                                elmt_ln_to_gn,
                                                 elmt_face_vtx_idx,
                                                 elmt_face_vtx,
                                                 elmt_cell_face_idx,
+                                                elmt_face_cell,
                                                 parent_elmt_position);
      break;
    case PDM_MESH_NODAL_PYRAMID5:
@@ -351,9 +363,11 @@ PDM_part_mesh_nodal_std_decomposes_faces
                                                 n_face_current,
                                                 vtx_ln_to_gn,
                                                 connectivity_elmt_vtx,
+                                                elmt_ln_to_gn,
                                                 elmt_face_vtx_idx,
                                                 elmt_face_vtx,
                                                 elmt_cell_face_idx,
+                                                elmt_face_cell,
                                                 parent_elmt_position);
      break;
    default:
@@ -373,6 +387,7 @@ PDM_part_mesh_nodal_elmts_sections_decompose_faces
   int                          *elmt_face_vtx_idx,
   PDM_g_num_t                  *elmt_face_vtx,
   int                          *elmt_cell_face_idx,
+  PDM_g_num_t                  *elmt_face_cell,
   int                          *parent_elmt_position
 )
 {
@@ -424,9 +439,11 @@ PDM_part_mesh_nodal_elmts_sections_decompose_faces
                                                    &n_face_current,
                                                    vtx_ln_to_gn[i_part],
                                                    connec,
+                                                   numabs,
                                                    elmt_face_vtx_idx,
                                                    elmt_face_vtx,
                                                    elmt_cell_face_idx,
+                                                   elmt_face_cell,
                                                    parent_elmt_position);
 
           break;

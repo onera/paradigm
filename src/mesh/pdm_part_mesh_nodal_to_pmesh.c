@@ -161,6 +161,7 @@ PDM_part_mesh_nodal_to_part_mesh
   PDM_g_num_t *elmt_face_vtx        = malloc(n_sum_vtx_vol_face_tot * sizeof(PDM_g_num_t));
   int         *elmt_cell_face_idx   = malloc((n_elmt_vol_tot+1)     * sizeof(int        ));
   int         *parent_elmt_position = malloc(n_face_elt_vol_tot     * sizeof(int        ));
+  PDM_g_num_t *elmt_face_cell       = malloc(n_face_elt_vol_tot     * sizeof(PDM_g_num_t));
 
   printf("n_face_elt_vol_tot     : %i\n", n_face_elt_vol_tot    );
   printf("n_sum_vtx_vol_face_tot : %i\n", n_sum_vtx_vol_face_tot);
@@ -174,9 +175,8 @@ PDM_part_mesh_nodal_to_part_mesh
                                                      elmt_face_vtx_idx,
                                                      elmt_face_vtx,
                                                      elmt_cell_face_idx,
+                                                     elmt_face_cell,
                                                      parent_elmt_position);
-
-  PDM_log_trace_array_int(elmt_face_vtx_idx, n_face_elt_vol_tot, "elmt_face_vtx_idx ::");
 
   /*
    * Create hash table
@@ -214,7 +214,9 @@ PDM_part_mesh_nodal_to_part_mesh
                            pmn->comm,
                            &distrib_key);
 
-  PDM_log_trace_array_int(distrib_key, n_rank+1, "distrib_key ::");
+  if(1 == 0) {
+    PDM_log_trace_array_int(distrib_key, n_rank+1, "distrib_key ::");
+  }
 
   /*
    * Prepare send
@@ -238,8 +240,6 @@ PDM_part_mesh_nodal_to_part_mesh
   PDM_MPI_Alltoall(send_n, 1, PDM_MPI_INT,
                    recv_n, 1, PDM_MPI_INT, pmn->comm);
 
-  PDM_log_trace_array_int(send_n  , n_rank  , "send_n   ::");
-
   int *send_s_face_vtx_n   = malloc( n_rank    * sizeof(int));
   int *recv_s_face_vtx_n   = malloc( n_rank    * sizeof(int));
   int *send_s_face_vtx_idx = malloc((n_rank+1) * sizeof(int));
@@ -253,29 +253,29 @@ PDM_part_mesh_nodal_to_part_mesh
     send_s_face_vtx_n[i] = 0;
   }
 
-  PDM_log_trace_array_int(send_idx, n_rank+1, "send_idx ::");
-  PDM_log_trace_array_int(recv_n  , n_rank  , "recv_n   ::");
-  PDM_log_trace_array_int(recv_idx, n_rank+1, "recv_idx ::");
-
   /*
    * Prepare send
    */
-  int         *send_face_vtx_n   = malloc( n_face_elt_vol_tot * sizeof(int        ));
-  PDM_g_num_t *send_face_key     = malloc( n_face_elt_vol_tot * sizeof(PDM_g_num_t));
+  int         *send_face_vtx_n     = malloc( n_face_elt_vol_tot * sizeof(int        ));
+  PDM_g_num_t *send_face_key       = malloc( n_face_elt_vol_tot * sizeof(PDM_g_num_t));
+  PDM_g_num_t *send_elmt_face_cell = malloc( n_face_elt_vol_tot * sizeof(PDM_g_num_t));
   for(int i_face = 0; i_face < n_face_elt_vol_tot; ++i_face) {
     int t_rank = dest_rank[i_face];
     int idx_write = send_idx[t_rank] + send_n[t_rank]++;
 
-    send_face_vtx_n[idx_write] = elmt_face_vtx_idx[i_face+1]-elmt_face_vtx_idx[i_face];
-    send_face_key  [idx_write] = key_ln_to_gn[i_face];
+    send_face_vtx_n    [idx_write] = elmt_face_vtx_idx[i_face+1]-elmt_face_vtx_idx[i_face];
+    send_face_key      [idx_write] = key_ln_to_gn  [i_face];
+    send_elmt_face_cell[idx_write] = elmt_face_cell[i_face];
     send_s_face_vtx_n[t_rank] += elmt_face_vtx_idx[i_face+1]-elmt_face_vtx_idx[i_face];
 
   }
 
-  int         *recv_face_vtx_n = malloc(recv_idx[n_rank] * sizeof(int        ));
-  PDM_g_num_t *recv_face_key   = malloc(recv_idx[n_rank] * sizeof(PDM_g_num_t));
+  free(elmt_face_cell);
 
-  PDM_log_trace_array_int(send_face_vtx_n, n_face_elt_vol_tot, "send_face_vtx_n ::");
+  int         *recv_face_vtx_n     = malloc(recv_idx[n_rank] * sizeof(int        ));
+  PDM_g_num_t *recv_face_key       = malloc(recv_idx[n_rank] * sizeof(PDM_g_num_t));
+  PDM_g_num_t *recv_elmt_face_cell = malloc(recv_idx[n_rank] * sizeof(PDM_g_num_t));
+
   PDM_MPI_Alltoallv(send_face_vtx_n,
                     send_n,
                     send_idx,
@@ -290,13 +290,24 @@ PDM_part_mesh_nodal_to_part_mesh
   PDM_MPI_Alltoallv(send_face_key,
                     send_n,
                     send_idx,
-                    PDM_MPI_INT,
+                    PDM__PDM_MPI_G_NUM,
                     recv_face_key,
                     recv_n,
                     recv_idx,
-                    PDM_MPI_INT,
+                    PDM__PDM_MPI_G_NUM,
                     pmn->comm);
   free(send_face_key);
+
+  PDM_MPI_Alltoallv(send_elmt_face_cell,
+                    send_n,
+                    send_idx,
+                    PDM__PDM_MPI_G_NUM,
+                    recv_elmt_face_cell,
+                    recv_n,
+                    recv_idx,
+                    PDM__PDM_MPI_G_NUM,
+                    pmn->comm);
+  free(send_elmt_face_cell);
 
   /*
    * Exchange size of connectivity
@@ -337,9 +348,11 @@ PDM_part_mesh_nodal_to_part_mesh
                     PDM_MPI_INT,
                     pmn->comm);
 
-  PDM_log_trace_array_int (recv_face_vtx_n, recv_idx[n_rank]           , "recv_face_vtx_n ::");
-  PDM_log_trace_array_long(recv_face_key  , recv_idx[n_rank]           , "recv_face_key   ::");
-  PDM_log_trace_array_long(recv_face_vtx  , recv_s_face_vtx_idx[n_rank], "recv_face_vtx   ::");
+  if(1 == 0) {
+    PDM_log_trace_array_int (recv_face_vtx_n, recv_idx[n_rank]           , "recv_face_vtx_n ::");
+    PDM_log_trace_array_long(recv_face_key  , recv_idx[n_rank]           , "recv_face_key   ::");
+    PDM_log_trace_array_long(recv_face_vtx  , recv_s_face_vtx_idx[n_rank], "recv_face_vtx   ::");
+  }
 
   int *recv_face_vtx_idx = malloc((recv_idx[n_rank]+1) * sizeof(int));
   recv_face_vtx_idx[0] = 0;
@@ -371,7 +384,6 @@ PDM_part_mesh_nodal_to_part_mesh
     }
   }
 
-  PDM_log_trace_array_int(key_conflict_idx, n_conflit_to_solve, "key_conflict_idx ::  ");
 
 
   int n_max_entity_per_key = 0;
@@ -384,6 +396,7 @@ PDM_part_mesh_nodal_to_part_mesh
    * Solve conflict
    */
   if(0 == 1) {
+    PDM_log_trace_array_int(key_conflict_idx, n_conflit_to_solve, "key_conflict_idx ::  ");
     for(int i = 0; i < n_conflit_to_solve; ++i) {
       log_trace(" ------ i = %i \n", i);
       for(int i_key = key_conflict_idx[i]; i_key < key_conflict_idx[i+1]; ++i_key) {
@@ -396,13 +409,13 @@ PDM_part_mesh_nodal_to_part_mesh
   }
 
 
-  PDM_g_num_t* loc_entity_vtx_1 = (PDM_g_num_t *) malloc(  n_max_vtx               * sizeof(PDM_g_num_t) );
-  PDM_g_num_t* loc_entity_vtx_2 = (PDM_g_num_t *) malloc(  n_max_vtx               * sizeof(PDM_g_num_t) );
-  int*         already_treat    = (int         *) malloc(  n_max_entity_per_key    * sizeof(int        ) );
-  int*         same_entity_idx  = (int         *) malloc( (n_max_entity_per_key+1) * sizeof(int        ) );
-  int*         sens_entity      = (int         *) malloc(  n_max_entity_per_key    * sizeof(int        ) );
-  PDM_g_num_t *tmp_parent       = (PDM_g_num_t *) malloc(n_max_entity_per_key      * sizeof(PDM_g_num_t) );
-  int         *order_parent     = (int         *) malloc(n_max_entity_per_key      * sizeof(int        ) );
+  PDM_g_num_t* loc_entity_vtx_1   = (PDM_g_num_t *) malloc(  n_max_vtx               * sizeof(PDM_g_num_t) );
+  PDM_g_num_t* loc_entity_vtx_2   = (PDM_g_num_t *) malloc(  n_max_vtx               * sizeof(PDM_g_num_t) );
+  int*         already_treat      = (int         *) malloc(  n_max_entity_per_key    * sizeof(int        ) );
+  int*         same_entity_idx    = (int         *) malloc( (n_max_entity_per_key+1) * sizeof(int        ) );
+  int*         sens_entity        = (int         *) malloc(  n_max_entity_per_key    * sizeof(int        ) );
+  PDM_g_num_t *tmp_parent         = (PDM_g_num_t *) malloc(2 * n_max_entity_per_key  * sizeof(PDM_g_num_t) );
+  int         *order_parent       = (int         *) malloc(n_max_entity_per_key      * sizeof(int        ) );
 
   /* Resulting array */
   int         *dentity_vtx_idx   = malloc((n_recv_key+1)              * sizeof(int        ));
@@ -418,8 +431,28 @@ PDM_part_mesh_nodal_to_part_mesh
 
     for(int j = 0; j < n_conflict_entitys; ++j ) {
       already_treat[j] = -1;
-      order_parent [j] = j;
+      int i_conflict = order[key_conflict_idx[i]+j];
+      int i_entity1 = order[key_conflict_idx[i]+j];
+      int beg_face_vtx    = recv_face_vtx_idx[i_entity1];
+      // int n_vtx_in_entity = recv_face_vtx_idx[i_entity1+1] - beg_face_vtx;
+      // PDM_g_num_t min_1 = max_vtx_gnum+1;
+      // for(int k = 0; k < n_vtx_in_entity; ++k) {
+      //   if(recv_face_vtx[beg_face_vtx+k] < min_1) {
+      //     min_1 = recv_face_vtx[beg_face_vtx+k];
+      //   };
+      // }
+      tmp_parent   [2*j  ] = recv_elmt_face_cell[i_conflict];
+      tmp_parent   [2*j+1] = recv_face_vtx[beg_face_vtx];
+
     }
+
+    PDM_order_gnum_s(tmp_parent, 2, order_parent, n_conflict_entitys);
+
+    if(1 == 0) {
+      PDM_log_trace_array_long(tmp_parent  ,2 * n_conflict_entitys, "tmp_parent   ::" );
+      PDM_log_trace_array_int (order_parent, n_conflict_entitys, "order_parent ::" );
+    }
+
 
     for(int idx_entity = 0; idx_entity < n_conflict_entitys; ++idx_entity) {
       int i_entity     = order[key_conflict_idx[i]+order_parent[idx_entity]];
@@ -454,7 +487,7 @@ PDM_part_mesh_nodal_to_part_mesh
             continue;
           }
 
-          printf("conflict : i_entity = %d, i_entity_next = %d...\n", i_entity, i_entity_next);
+          // printf("conflict : i_entity = %d, i_entity_next = %d...\n", i_entity, i_entity_next);
           if(already_treat[idx_entity2] == 1) {
             continue;
           }
@@ -476,7 +509,7 @@ PDM_part_mesh_nodal_to_part_mesh
             }
             PDM_quick_sort_long(loc_entity_vtx_2, 0, n_vtx_in_entity2-1);
 
-            printf("key_1 : %d, key_2 = %d...\n", key_1, key_2);
+            // printf("key_1 : %d, key_2 = %d...\n", key_1, key_2);
             assert(key_1 == key_2);
 
             int is_same_entity = 1;
@@ -528,11 +561,11 @@ PDM_part_mesh_nodal_to_part_mesh
           }
         }
 
-        printf("[%i] - same_entity_idx::", idx_next_same_entity);
-        for(int ii = 0; ii < idx_next_same_entity; ++ii) {
-          printf(" %i", same_entity_idx[ii]);
-        }
-        printf("\n");
+        // printf("[%i] - same_entity_idx::", idx_next_same_entity);
+        // for(int ii = 0; ii < idx_next_same_entity; ++ii) {
+        //   printf(" %i", same_entity_idx[ii]);
+        // }
+        // printf("\n");
 
         dentity_vtx_idx[i_abs_entity+1] = dentity_vtx_idx[i_abs_entity] + n_vtx_in_entity1;
         for(int i_vtx = 0; i_vtx < n_vtx_in_entity1; ++i_vtx) {
@@ -543,8 +576,8 @@ PDM_part_mesh_nodal_to_part_mesh
           int i_same_entity = same_entity_idx[k];
           int t_entity      = order[key_conflict_idx[i]+order_parent[i_same_entity]];
           int sign = sens_entity[k];
-          recv_elmts_entity[t_entity] = sign * i_abs_entity;
-          printf("[%i] - i_same_entity = %i | sign = %i \n", k, i_same_entity, sign);
+          recv_elmts_entity[t_entity] = sign * (i_abs_entity+1);
+          // printf("[%i] - i_same_entity = %i | sign = %i \n", k, i_same_entity, sign);
           already_treat[i_same_entity] = 1;
         }
         i_abs_entity++;
@@ -553,15 +586,23 @@ PDM_part_mesh_nodal_to_part_mesh
     } /* End conflict */
   }
 
-  PDM_log_trace_array_int (order, n_recv_key , "order ::");
-  PDM_log_trace_array_long(recv_elmts_entity, n_recv_key , "recv_elmts_entity ::");
+  if(1 == 0) {
+    PDM_log_trace_array_int (order, n_recv_key , "order ::");
+    PDM_log_trace_array_long(recv_elmts_entity, n_recv_key , "recv_elmts_entity ::");
+    PDM_log_trace_connectivity_long(dentity_vtx_idx, dentity_vtx , i_abs_entity, "dentity_vtx ::");
+  }
+
+
+  free(recv_elmt_face_cell);
 
   /*
    * Setup distrib
    */
   PDM_g_num_t* entity_distrib = _make_absolute_entity_numbering(i_abs_entity, pmn->comm);
-  for(int i = 0; i < recv_idx[n_rank]; ++i){
-    recv_elmts_entity[i] += entity_distrib[i_rank] + 1;
+  for(int i = 0; i < recv_idx[n_rank]; ++i) {
+    PDM_g_num_t g_num = PDM_ABS (recv_elmts_entity[i]);
+    int         sgn   = PDM_SIGN(recv_elmts_entity[i]);
+    recv_elmts_entity[i] = sgn * (g_num + entity_distrib[i_rank]);
   }
 
 
@@ -573,14 +614,14 @@ PDM_part_mesh_nodal_to_part_mesh
   PDM_MPI_Alltoallv(recv_elmts_entity,
                     recv_n,
                     recv_idx,
-                    PDM_MPI_INT,
+                    PDM__PDM_MPI_G_NUM,
                     elmt_cell_face,
                     send_n,
                     send_idx,
-                    PDM_MPI_INT,
+                    PDM__PDM_MPI_G_NUM,
                     pmn->comm);
 
-  PDM_log_trace_array_long(elmt_cell_face, send_idx[n_rank] , "elmt_cell_face ::");
+  // PDM_log_trace_array_long(elmt_cell_face, send_idx[n_rank] , "elmt_cell_face ::");
 
   /*
    * Separation en partition
@@ -607,7 +648,7 @@ PDM_part_mesh_nodal_to_part_mesh
     pn_face[i_part] = PDM_inplace_unique_long(face_ln_to_gn[i_part], unique_order, 0, pn_cell_face_idx-1);
     face_ln_to_gn[i_part] = realloc(face_ln_to_gn[i_part], pn_face[i_part] * sizeof(PDM_g_num_t));
 
-    PDM_log_trace_array_long(face_ln_to_gn[i_part], pn_face[i_part], "face_ln_to_gn ::");
+    // PDM_log_trace_array_long(face_ln_to_gn[i_part], pn_face[i_part], "face_ln_to_gn ::");
 
     cell_face[i_part] = malloc(pn_cell_face_idx * sizeof(int));
     for(int idx = 0; idx < pn_cell_face_idx; ++idx) {
@@ -622,7 +663,6 @@ PDM_part_mesh_nodal_to_part_mesh
     free(unique_order);
 
   }
-
 
   /*
    * Hook face_vtx
@@ -675,7 +715,6 @@ PDM_part_mesh_nodal_to_part_mesh
 
     for(int i = 0; i < pface_vtx_idx[i_part][pn_face[i_part]]; ++i) {
       int old_vtx = PDM_binary_search_long(pface_vtx_gnum[i_part][i], tmp_vtx_ln_to_gn, n_vtx);
-      log_trace("old_vtx = %i - %i \n", old_vtx, pface_vtx_gnum[i_part][i]);
       pface_vtx[i_part][i] = order_vtx[old_vtx]+1;
     }
 
@@ -689,7 +728,6 @@ PDM_part_mesh_nodal_to_part_mesh
 
   free(pface_vtx_n);
   free(pface_vtx_gnum);
-
 
 
   PDM_block_to_part_free(btp);
