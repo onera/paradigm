@@ -1305,6 +1305,59 @@ PDM_part_mesh_nodal_std_decomposes_faces
 }
 
 
+void
+PDM_part_mesh_nodal_poly2d_decomposes_edges
+(
+       int                   n_elt,
+       int                  *n_elt_current,
+       int                  *n_edge_current,
+ const PDM_g_num_t          *vtx_ln_to_gn,
+ const int                  *connectivity_elmt_vtx,
+ const int                  *connectivity_elmt_vtx_idx,
+ const PDM_g_num_t          *elmt_ln_to_gn,
+       int                  *elmt_edge_vtx_idx,
+       PDM_g_num_t          *elmt_edge_vtx,
+       int                  *elmt_cell_edge_idx,
+       PDM_g_num_t          *elmt_edge_cell,
+       int                  *parent_elmt_position
+)
+{
+
+  int _n_edge_current = *n_edge_current;
+  int _n_elt_current  = *n_elt_current;
+  int         *_current_elmt_edge_vtx_idx = elmt_edge_vtx_idx    + _n_edge_current;
+  PDM_g_num_t *_current_elmt_edge_vtx     = elmt_edge_vtx        + elmt_edge_vtx_idx[_n_edge_current];
+  int         *_parent_elmt_position      = parent_elmt_position + _n_edge_current;
+  int         *_elmt_cell_edge_idx        = elmt_cell_edge_idx   + _n_elt_current;
+  PDM_g_num_t *_elmt_edge_cell            = elmt_edge_cell       + _n_edge_current;
+
+  int idx = 0;
+  for (int ielt = 0; ielt < n_elt; ielt++) {
+    // Reminder for poly2d -> Number of vertex = Number of edge
+    int n_edge_elt = connectivity_elmt_vtx_idx[ielt+1] - connectivity_elmt_vtx_idx[ielt];
+    *n_edge_current += n_edge_elt;
+    int idx2 = connectivity_elmt_vtx_idx[ielt];
+    for (int i_edge = 0; i_edge < n_edge_elt; i_edge++) {
+      _current_elmt_edge_vtx_idx[idx + 1] = _current_elmt_edge_vtx_idx[idx] + 2;
+      _parent_elmt_position     [idx    ] = i_edge;
+
+      _elmt_edge_cell           [ielt * n_edge_elt + i_edge    ] = elmt_ln_to_gn[ielt];
+
+      _elmt_cell_edge_idx[ielt+1] = _elmt_cell_edge_idx[ielt] + n_edge_elt;
+
+      int inext = (i_edge + 1) % n_edge_elt;
+      _current_elmt_edge_vtx[2 * idx    ]  = vtx_ln_to_gn[connectivity_elmt_vtx[idx2 + i_edge]-1];
+      _current_elmt_edge_vtx[2 * idx + 1]  = vtx_ln_to_gn[connectivity_elmt_vtx[idx2 + inext ]-1];
+
+      idx += 1;
+    }
+  }
+
+
+  *n_elt_current  += n_elt;
+
+}
+
 
 void
 PDM_part_mesh_nodal_std_decomposes_edges
@@ -1691,6 +1744,37 @@ PDM_part_mesh_nodal_elmts_sections_decompose_edges
         }
         case PDM_MESH_NODAL_POLY_2D:
         {
+          int         *connec              = NULL;
+          int         *connec_idx          = NULL;
+
+          int n_elt = PDM_part_mesh_nodal_elmts_section_n_elt_get(pmne, id_section, i_part);
+          // int         *PDM_part_mesh_nodal_elmts_parent_num_get(pmne,
+          //                                                       id_section,
+          //                                                       i_part);
+
+          PDM_g_num_t *numabs = PDM_part_mesh_nodal_elmts_g_num_get(pmne,
+                                                                    id_section,
+                                                                    i_part);
+
+          PDM_part_mesh_nodal_elmts_section_poly2d_get(pmne,
+                                                       id_section,
+                                                       i_part,
+                                                       &connec_idx,
+                                                       &connec);
+
+          PDM_part_mesh_nodal_poly2d_decomposes_edges(n_elt,
+                                                      &n_elt_current,
+                                                      &n_edge_current,
+                                                      vtx_ln_to_gn[i_part],
+                                                      connec,
+                                                      connec_idx,
+                                                      numabs,
+                                                      elmt_edge_vtx_idx,
+                                                      elmt_edge_vtx,
+                                                      elmt_cell_edge_idx,
+                                                      elmt_edge_cell,
+                                                      parent_elmt_position);
+
           PDM_error(__FILE__, __LINE__, 0, "Error PDM_part_mesh_nodal_elmts_sections_decompose_edges : Element type is supported\n");
           break;
         }

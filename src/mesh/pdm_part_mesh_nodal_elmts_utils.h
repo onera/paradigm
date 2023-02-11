@@ -360,7 +360,22 @@ PDM_part_mesh_nodal_elmts_decompose_edges_get_size
  int                         *n_sum_vtx_edge_tot
 );
 
-
+void
+PDM_part_mesh_nodal_poly2d_decomposes_edges
+(
+       int                   n_elt,
+       int                  *n_elt_current,
+       int                  *n_edge_current,
+ const PDM_g_num_t          *vtx_ln_to_gn,
+ const int                  *connectivity_elmt_vtx,
+ const int                  *connectivity_elmt_vtx_idx,
+ const PDM_g_num_t          *elmt_ln_to_gn,
+       int                  *elmt_edge_vtx_idx,
+       PDM_g_num_t          *elmt_edge_vtx,
+       int                  *elmt_cell_edge_idx,
+       PDM_g_num_t          *elmt_edge_cell,
+       int                  *parent_elmt_position
+);
 
 #ifdef __cplusplus
 }
