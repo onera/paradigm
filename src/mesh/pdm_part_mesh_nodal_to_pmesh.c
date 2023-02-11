@@ -668,10 +668,10 @@ _generate_faces_from_part_mesh_nodal
   int         *parent_elmt_position = malloc(n_face_elt_vol_tot     * sizeof(int        ));
   PDM_g_num_t *elmt_face_cell       = malloc(n_face_elt_vol_tot     * sizeof(PDM_g_num_t));
 
-  printf("n_face_elt_vol_tot     : %i\n", n_face_elt_vol_tot    );
-  printf("n_sum_vtx_vol_face_tot : %i\n", n_sum_vtx_vol_face_tot);
-  printf("n_elmt_vol_tot         : %i\n", n_elmt_vol_tot        );
-  printf("n_face_elt_vol_tot     : %i\n", n_face_elt_vol_tot    );
+  // printf("n_face_elt_vol_tot     : %i\n", n_face_elt_vol_tot    );
+  // printf("n_sum_vtx_vol_face_tot : %i\n", n_sum_vtx_vol_face_tot);
+  // printf("n_elmt_vol_tot         : %i\n", n_elmt_vol_tot        );
+  // printf("n_face_elt_vol_tot     : %i\n", n_face_elt_vol_tot    );
 
   elmt_face_vtx_idx [0] = 0;
   elmt_cell_face_idx[0] = 0;
@@ -909,10 +909,10 @@ _generate_edges_from_part_mesh_nodal
   int         *parent_elmt_position = malloc(n_edge_elt_vol_tot     * sizeof(int        ));
   PDM_g_num_t *elmt_edge_cell       = malloc(n_edge_elt_vol_tot     * sizeof(PDM_g_num_t));
 
-  printf("n_edge_elt_vol_tot     : %i\n", n_edge_elt_vol_tot    );
-  printf("n_sum_vtx_vol_edge_tot : %i\n", n_sum_vtx_vol_edge_tot);
-  printf("n_elmt_vol_tot         : %i\n", n_elmt_vol_tot        );
-  printf("n_edge_elt_vol_tot     : %i\n", n_edge_elt_vol_tot    );
+  // printf("n_edge_elt_vol_tot     : %i\n", n_edge_elt_vol_tot    );
+  // printf("n_sum_vtx_vol_edge_tot : %i\n", n_sum_vtx_vol_edge_tot);
+  // printf("n_elmt_vol_tot         : %i\n", n_elmt_vol_tot        );
+  // printf("n_edge_elt_vol_tot     : %i\n", n_edge_elt_vol_tot    );
 
   elmt_edge_vtx_idx [0] = 0;
   elmt_cell_edge_idx[0] = 0;
@@ -923,7 +923,6 @@ _generate_edges_from_part_mesh_nodal
                                                      elmt_cell_edge_idx,
                                                      elmt_edge_cell,
                                                      parent_elmt_position);
-
 
   PDM_g_num_t *elmt_cell_edge  = NULL;
   PDM_g_num_t *entity_distrib  = NULL;
@@ -954,7 +953,7 @@ _generate_edges_from_part_mesh_nodal
   int          *pn_edge       = malloc(pmn->n_part * sizeof(int          ));
 
   for(int i_part = 0; i_part < pmn->n_part; ++i_part) {
-    int n_elmts = PDM_part_mesh_nodal_n_elmts_get(pmn, PDM_GEOMETRY_KIND_VOLUMIC, i_part);
+    int n_elmts = PDM_part_mesh_nodal_n_elmts_get(pmn, PDM_GEOMETRY_KIND_SURFACIC, i_part);
 
     int pn_cell_edge_idx = elmt_cell_edge_idx[idx_read_elmt+n_elmts] - elmt_cell_edge_idx[idx_read_elmt];
     edge_ln_to_gn[i_part] = malloc(pn_cell_edge_idx * sizeof(PDM_g_num_t));
@@ -1049,7 +1048,6 @@ _generate_edges_from_part_mesh_nodal
   free(pedge_vtx_n);
   free(pedge_vtx_gnum);
 
-
   PDM_block_to_part_free(btp);
 
   if(1 == 1) {
@@ -1059,15 +1057,17 @@ _generate_edges_from_part_mesh_nodal
       double *vtx_coord = PDM_part_mesh_nodal_vtx_coord_get(pmn, i_part);
       char filename[999];
       sprintf(filename, "out_pmesh_nodal_to_pmesh_%i_%i.vtk", i_part, i_rank);
-      PDM_vtk_write_polydata(filename,
-                             n_vtx,
-                             vtx_coord,
-                             vtx_ln_to_gn [i_part],
-                             pn_edge[i_part],
-                             pedge_vtx_idx[i_part],
-                             pedge_vtx    [i_part],
-                             edge_ln_to_gn[i_part],
-                             NULL);
+      PDM_vtk_write_std_elements(filename,
+                                 n_vtx,
+                                 vtx_coord,
+                                 vtx_ln_to_gn [i_part],
+                                 PDM_MESH_NODAL_BAR2,
+                                 pn_edge[i_part],
+                                 pedge_vtx    [i_part],
+                                 edge_ln_to_gn[i_part],
+                                 0,
+                                 NULL,
+                                 NULL);
     }
   }
 

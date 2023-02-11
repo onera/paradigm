@@ -205,13 +205,17 @@ int main(int argc, char *argv[])
                                                          PDM_OWNERSHIP_KEEP);
   PDM_dcube_nodal_gen_build (dcube);
 
+  int dim = PDM_Mesh_nodal_elt_dim_get(elt_type);
 
   PDM_dmesh_nodal_t* dmn = PDM_dcube_nodal_gen_dmesh_nodal_get(dcube);
   PDM_dmesh_nodal_generate_distribution(dmn);
 
   if(post) {
-    PDM_dmesh_nodal_dump_vtk(dmn, PDM_GEOMETRY_KIND_VOLUMIC , "out_volumic");
+    if(dim == 3) {
+      PDM_dmesh_nodal_dump_vtk(dmn, PDM_GEOMETRY_KIND_VOLUMIC , "out_volumic");
+    }
     PDM_dmesh_nodal_dump_vtk(dmn, PDM_GEOMETRY_KIND_SURFACIC, "out_surfacic");
+    PDM_dmesh_nodal_dump_vtk(dmn, PDM_GEOMETRY_KIND_RIDGE   , "out_ridge");
   }
 
   /*
@@ -238,9 +242,13 @@ int main(int argc, char *argv[])
   PDM_part_mesh_nodal_t *pmesh_nodal = NULL;
   PDM_multipart_get_part_mesh_nodal(mpart_id, 0, &pmesh_nodal, PDM_OWNERSHIP_KEEP);
 
+  PDM_dmesh_nodal_to_dmesh_transform_t transform_kind = PDM_DMESH_NODAL_TO_DMESH_TRANSFORM_TO_FACE;
+  if(dim == 2) {
+    transform_kind = PDM_DMESH_NODAL_TO_DMESH_TRANSFORM_TO_EDGE;
+  }
 
   PDM_part_mesh_t* pm = PDM_part_mesh_nodal_to_part_mesh(pmesh_nodal,
-                                                         PDM_DMESH_NODAL_TO_DMESH_TRANSFORM_TO_FACE,
+                                                         transform_kind,
                                                          PDM_DMESH_NODAL_TO_DMESH_TRANSLATE_GROUP_TO_FACE);
 
 
