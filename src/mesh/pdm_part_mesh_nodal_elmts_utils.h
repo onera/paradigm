@@ -351,6 +351,15 @@ PDM_part_mesh_nodal_elmts_sections_decompose_edges
   int                          *parent_elmt_position
 );
 
+void
+PDM_part_mesh_nodal_elmts_decompose_edges_get_size
+(
+ PDM_part_mesh_nodal_elmts_t *pmne,
+ int                         *n_elt_tot,
+ int                         *n_edge_elt_tot,
+ int                         *n_sum_vtx_edge_tot
+);
+
 
 
 #ifdef __cplusplus

@@ -1762,6 +1762,52 @@ PDM_part_mesh_nodal_elmts_decompose_faces_get_size
 }
 
 
+
+void
+PDM_part_mesh_nodal_elmts_decompose_edges_get_size
+(
+ PDM_part_mesh_nodal_elmts_t *pmne,
+ int                         *n_elt_tot,
+ int                         *n_edge_elt_tot,
+ int                         *n_sum_vtx_edge_tot
+)
+{
+  /* Get current structure to treat */
+  *n_edge_elt_tot     = 0;
+  *n_sum_vtx_edge_tot = 0;
+
+  for(int i_part = 0; i_part < pmne->n_part; ++i_part) {
+
+    for (int i_section = 0; i_section < pmne->n_section_std; i_section++) {
+
+      int n_edge_elt     = PDM_n_nedge_elt_per_elmt   (pmne->sections_std[i_section]->t_elt);
+      int n_sum_vtx_edge = PDM_n_sum_vtx_edge_per_elmt(pmne->sections_std[i_section]->t_elt);
+
+      *n_elt_tot          += pmne->sections_std[i_section]->n_elt[i_part];
+      *n_edge_elt_tot     += pmne->sections_std[i_section]->n_elt[i_part] * n_edge_elt;
+      *n_sum_vtx_edge_tot += pmne->sections_std[i_section]->n_elt[i_part] * n_sum_vtx_edge;
+
+    }
+
+    for (int i_section = 0; i_section < pmne->n_section_poly3d; i_section++) {
+      int _n_face          = pmne->sections_poly3d[i_section]->n_face[i_part];
+      *n_edge_elt_tot     +=     pmne->sections_poly3d[i_section]->_facvtx_idx[i_part][_n_face];
+      *n_sum_vtx_edge_tot += 2 * pmne->sections_poly3d[i_section]->_facvtx_idx[i_part][_n_face];
+      *n_elt_tot          += pmne->sections_poly3d[i_section]->n_elt[i_part];
+    }
+
+    for (int i_section = 0; i_section < pmne->n_section_poly2d; i_section++) {
+      int _n_face          =     pmne->sections_poly2d[i_section]->n_elt[i_part];
+      *n_edge_elt_tot     +=     pmne->sections_poly2d[i_section]->_connec_idx[i_part][_n_face];
+      *n_sum_vtx_edge_tot += 2 * pmne->sections_poly2d[i_section]->_connec_idx[i_part][_n_face];
+      *n_elt_tot          +=     pmne->sections_poly2d[i_section]->n_elt[i_part];
+    }
+  }
+
+  // printf("n_edge_elt_tot     ::%i\n", *n_edge_elt_tot   );
+  // printf("n_sum_vtx_edge_tot::%i\n" , *n_sum_vtx_edge_tot);
+}
+
 /*----------------------------------------------------------------------------*/
 
 #ifdef __cplusplus
