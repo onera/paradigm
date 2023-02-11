@@ -109,6 +109,515 @@ _make_absolute_entity_numbering
   return entity_distrib;
 }
 
+static
+void
+_generate_part_entitiy_connectivity
+(
+  PDM_MPI_Comm   comm,
+  int            n_elmt_vol_tot,
+  int            n_entity_elt_vol_tot,
+  PDM_g_num_t    max_vtx_gnum,
+  int           *elmt_entity_vtx_idx,
+  PDM_g_num_t   *elmt_entity_vtx,
+  int           *elmt_cell_entity_idx,
+  int           *parent_elmt_position,
+  PDM_g_num_t   *elmt_entity_cell,
+  PDM_g_num_t  **dentity_vtx_out,
+  int          **dentity_vtx_idx_out,
+  PDM_g_num_t  **distrib_entity_out,
+  PDM_g_num_t  **elmt_cell_entity_out
+)
+{
+  int n_rank;
+  int i_rank;
+  PDM_MPI_Comm_size (comm, &n_rank);
+  PDM_MPI_Comm_rank (comm, &i_rank);
+
+  /*
+   * Generate key
+   */
+  PDM_g_num_t *key_ln_to_gn = malloc(n_entity_elt_vol_tot * sizeof(PDM_g_num_t));
+  double      *key_weight   = malloc(n_entity_elt_vol_tot * sizeof(double     ));
+  PDM_g_num_t key_mod = 4 * max_vtx_gnum;
+  for(int i_entity = 0; i_entity < n_entity_elt_vol_tot; ++i_entity) {
+    PDM_g_num_t key = 0;
+    for(int idx = elmt_entity_vtx_idx[i_entity]; idx < elmt_entity_vtx_idx[i_entity+1]; ++idx) {
+      key += elmt_entity_vtx[idx];
+    }
+    // min_vtx =
+    key_ln_to_gn[i_entity] = key % key_mod + 1;
+    key_weight  [i_entity] = elmt_entity_vtx_idx[i_entity+1]-elmt_entity_vtx_idx[i_entity];
+  }
+
+  /*
+   * Generate distribution
+   */
+  int sampling_factor = 2;
+  int n_iter_max      = 5;
+  double tol = 0.10;
+  PDM_g_num_t *distrib_key = NULL;
+  PDM_distrib_weight(      sampling_factor,
+                           n_rank,
+                           1,
+                           &n_entity_elt_vol_tot,
+    (const PDM_g_num_t **) &key_ln_to_gn,
+    (const double      **) &key_weight,
+                           n_iter_max,
+                           tol,
+                           comm,
+                           &distrib_key);
+
+  free(key_weight);
+
+
+  /*
+   * Prepare send
+   */
+  int *send_n    = malloc( n_rank              * sizeof(int));
+  int *send_idx  = malloc((n_rank+1)           * sizeof(int));
+  int *recv_n    = malloc( n_rank              * sizeof(int));
+  int *recv_idx  = malloc((n_rank+1)           * sizeof(int));
+  int *dest_rank = malloc(n_entity_elt_vol_tot   * sizeof(int));
+  for(int i = 0; i < n_rank; ++i) {
+    send_n[i] = 0;
+  }
+
+  for(int i_entity = 0; i_entity < n_entity_elt_vol_tot; ++i_entity) {
+    PDM_g_num_t key = key_ln_to_gn[i_entity];
+    int t_rank = PDM_binary_search_gap_long(key-1, distrib_key, n_rank+1);
+    dest_rank[i_entity] = t_rank;
+    send_n[t_rank]++;
+  }
+
+  PDM_MPI_Alltoall(send_n, 1, PDM_MPI_INT,
+                   recv_n, 1, PDM_MPI_INT, comm);
+
+  int *send_s_entity_vtx_n   = malloc( n_rank    * sizeof(int));
+  int *recv_s_entity_vtx_n   = malloc( n_rank    * sizeof(int));
+  int *send_s_entity_vtx_idx = malloc((n_rank+1) * sizeof(int));
+  int *recv_s_entity_vtx_idx = malloc((n_rank+1) * sizeof(int));
+  send_idx[0] = 0;
+  recv_idx[0] = 0;
+  for(int i = 0; i < n_rank; ++i) {
+    send_idx         [i+1] = send_idx[i] + send_n[i];
+    recv_idx         [i+1] = recv_idx[i] + recv_n[i];
+    send_n           [i] = 0;
+    send_s_entity_vtx_n[i] = 0;
+  }
+
+  /*
+   * Prepare send
+   */
+  int         *send_entity_vtx_n     = malloc( n_entity_elt_vol_tot * sizeof(int        ));
+  PDM_g_num_t *send_entity_key       = malloc( n_entity_elt_vol_tot * sizeof(PDM_g_num_t));
+  PDM_g_num_t *send_elmt_entity_cell = malloc( n_entity_elt_vol_tot * sizeof(PDM_g_num_t));
+  for(int i_entity = 0; i_entity < n_entity_elt_vol_tot; ++i_entity) {
+    int t_rank = dest_rank[i_entity];
+    int idx_write = send_idx[t_rank] + send_n[t_rank]++;
+
+    send_entity_vtx_n    [idx_write] = elmt_entity_vtx_idx[i_entity+1]-elmt_entity_vtx_idx[i_entity];
+    send_entity_key      [idx_write] = key_ln_to_gn  [i_entity];
+    send_elmt_entity_cell[idx_write] = elmt_entity_cell[i_entity];
+    send_s_entity_vtx_n[t_rank] += elmt_entity_vtx_idx[i_entity+1]-elmt_entity_vtx_idx[i_entity];
+  }
+
+  free(key_ln_to_gn);
+  free(elmt_entity_cell);
+
+  int         *recv_entity_vtx_n     = malloc(recv_idx[n_rank] * sizeof(int        ));
+  PDM_g_num_t *recv_entity_key       = malloc(recv_idx[n_rank] * sizeof(PDM_g_num_t));
+  PDM_g_num_t *recv_elmt_entity_cell = malloc(recv_idx[n_rank] * sizeof(PDM_g_num_t));
+
+  PDM_MPI_Alltoallv(send_entity_vtx_n,
+                    send_n,
+                    send_idx,
+                    PDM_MPI_INT,
+                    recv_entity_vtx_n,
+                    recv_n,
+                    recv_idx,
+                    PDM_MPI_INT,
+                    comm);
+  free(send_entity_vtx_n);
+
+  PDM_MPI_Alltoallv(send_entity_key,
+                    send_n,
+                    send_idx,
+                    PDM__PDM_MPI_G_NUM,
+                    recv_entity_key,
+                    recv_n,
+                    recv_idx,
+                    PDM__PDM_MPI_G_NUM,
+                    comm);
+  free(send_entity_key);
+
+  PDM_MPI_Alltoallv(send_elmt_entity_cell,
+                    send_n,
+                    send_idx,
+                    PDM__PDM_MPI_G_NUM,
+                    recv_elmt_entity_cell,
+                    recv_n,
+                    recv_idx,
+                    PDM__PDM_MPI_G_NUM,
+                    comm);
+  free(send_elmt_entity_cell);
+
+  /*
+   * Exchange size of connectivity
+   */
+  PDM_MPI_Alltoall(send_s_entity_vtx_n, 1, PDM_MPI_INT,
+                   recv_s_entity_vtx_n, 1, PDM_MPI_INT, comm);
+
+  send_s_entity_vtx_idx[0] = 0;
+  recv_s_entity_vtx_idx[0] = 0;
+  for(int i = 0; i < n_rank; ++i) {
+    send_s_entity_vtx_idx[i+1] = send_s_entity_vtx_idx[i] + send_s_entity_vtx_n[i];
+    recv_s_entity_vtx_idx[i+1] = recv_s_entity_vtx_idx[i] + recv_s_entity_vtx_n[i];
+    send_s_entity_vtx_n  [i] = 0;
+  }
+
+  /*
+   * Exchange of connectivity
+   */
+  PDM_g_num_t* send_entity_vtx = malloc(send_s_entity_vtx_idx[n_rank] * sizeof(PDM_g_num_t));
+  PDM_g_num_t* recv_entity_vtx = malloc(recv_s_entity_vtx_idx[n_rank] * sizeof(PDM_g_num_t));
+  for(int i_entity = 0; i_entity < n_entity_elt_vol_tot; ++i_entity) {
+    int t_rank = dest_rank[i_entity];
+    int idx_write = send_s_entity_vtx_idx[t_rank];
+
+    for(int k = elmt_entity_vtx_idx[i_entity]; k < elmt_entity_vtx_idx[i_entity+1]; ++k) {
+      send_entity_vtx[idx_write+send_s_entity_vtx_n[t_rank]++] = elmt_entity_vtx[k];
+    }
+  }
+
+
+  PDM_MPI_Alltoallv(send_entity_vtx,
+                    send_s_entity_vtx_n,
+                    send_s_entity_vtx_idx,
+                    PDM_MPI_INT,
+                    recv_entity_vtx,
+                    recv_s_entity_vtx_n,
+                    recv_s_entity_vtx_idx,
+                    PDM_MPI_INT,
+                    comm);
+
+  if(1 == 0) {
+    PDM_log_trace_array_int (recv_entity_vtx_n, recv_idx[n_rank]           , "recv_entity_vtx_n ::");
+    PDM_log_trace_array_long(recv_entity_key  , recv_idx[n_rank]           , "recv_entity_key   ::");
+    PDM_log_trace_array_long(recv_entity_vtx  , recv_s_entity_vtx_idx[n_rank], "recv_entity_vtx   ::");
+  }
+
+  int *recv_entity_vtx_idx = malloc((recv_idx[n_rank]+1) * sizeof(int));
+  recv_entity_vtx_idx[0] = 0;
+  int n_max_vtx = 0;
+  for(int i = 0; i < recv_idx[n_rank]; ++i) {
+    recv_entity_vtx_idx[i+1] = recv_entity_vtx_idx[i] + recv_entity_vtx_n[i];
+    n_max_vtx = PDM_MAX(n_max_vtx, recv_entity_vtx_n[i]);
+  }
+
+  /*
+   * All data are exchange we need to order the key and resolve conflit in hash table
+   */
+  int n_recv_key = recv_idx[n_rank];
+  int *order = malloc(n_recv_key * sizeof(int));
+  PDM_order_gnum_s(recv_entity_key, 1, order, n_recv_key);
+
+  int n_conflit_to_solve = 0;
+  PDM_g_num_t last_gnum = -1;
+
+  int *key_conflict_idx = malloc((n_recv_key+1) * sizeof(int));
+  key_conflict_idx[0] = 0;
+  for(int i = 0; i < n_recv_key; ++i) {
+    if(recv_entity_key[order[i]] != last_gnum){
+      key_conflict_idx[n_conflit_to_solve+1] = key_conflict_idx[n_conflit_to_solve]+1;
+      n_conflit_to_solve++;
+      last_gnum = recv_entity_key[order[i]];
+    } else {
+      key_conflict_idx[n_conflit_to_solve]++;
+    }
+  }
+
+
+
+  int n_max_entity_per_key = 0;
+  for(int i = 0; i < n_conflit_to_solve; ++i) {
+    n_max_entity_per_key = PDM_MAX(n_max_entity_per_key, key_conflict_idx[i+1]-key_conflict_idx[i]);
+  }
+
+
+  /*
+   * Solve conflict
+   */
+  if(0 == 1) {
+    PDM_log_trace_array_int(key_conflict_idx, n_conflit_to_solve, "key_conflict_idx ::  ");
+    for(int i = 0; i < n_conflit_to_solve; ++i) {
+      log_trace(" ------ i = %i \n", i);
+      for(int i_key = key_conflict_idx[i]; i_key < key_conflict_idx[i+1]; ++i_key) {
+        int i_conflict = order[i_key];
+        int beg = recv_entity_vtx_idx[i_conflict];
+        int n_vtx_in_entity = recv_entity_vtx_idx[i_conflict+1] - beg;
+        log_trace(" \t i_key = %i | beg = %i / n = %i \n", recv_entity_key[i_conflict], beg, n_vtx_in_entity);
+      }
+    }
+  }
+
+
+  PDM_g_num_t* loc_entity_vtx_1   = (PDM_g_num_t *) malloc(  n_max_vtx               * sizeof(PDM_g_num_t) );
+  PDM_g_num_t* loc_entity_vtx_2   = (PDM_g_num_t *) malloc(  n_max_vtx               * sizeof(PDM_g_num_t) );
+  int*         already_treat      = (int         *) malloc(  n_max_entity_per_key    * sizeof(int        ) );
+  int*         same_entity_idx    = (int         *) malloc( (n_max_entity_per_key+1) * sizeof(int        ) );
+  int*         sens_entity        = (int         *) malloc(  n_max_entity_per_key    * sizeof(int        ) );
+  PDM_g_num_t *tmp_parent         = (PDM_g_num_t *) malloc(2 * n_max_entity_per_key  * sizeof(PDM_g_num_t) );
+  int         *order_parent       = (int         *) malloc(n_max_entity_per_key      * sizeof(int        ) );
+
+  /* Resulting array */
+  int         *dentity_vtx_idx   = malloc((n_recv_key+1)              * sizeof(int        ));
+  PDM_g_num_t *dentity_vtx       = malloc(recv_s_entity_vtx_idx[n_rank] * sizeof(PDM_g_num_t));
+  PDM_g_num_t *recv_elmts_entity = malloc( recv_idx[n_rank]           * sizeof(PDM_g_num_t));
+
+  int i_abs_entity   = 0;
+  int idx_entity_vtx = 0;
+  dentity_vtx_idx[0] = 0;
+  for(int i = 0; i < n_conflit_to_solve; ++i) {
+
+    int n_conflict_entitys = key_conflict_idx[i+1] - key_conflict_idx[i];
+
+    for(int j = 0; j < n_conflict_entitys; ++j ) {
+      already_treat[j] = -1;
+      int i_conflict = order[key_conflict_idx[i]+j];
+      int i_entity1 = order[key_conflict_idx[i]+j];
+      int beg_entity_vtx    = recv_entity_vtx_idx[i_entity1];
+      // int n_vtx_in_entity = recv_entity_vtx_idx[i_entity1+1] - beg_entity_vtx;
+      // PDM_g_num_t min_1 = max_vtx_gnum+1;
+      // for(int k = 0; k < n_vtx_in_entity; ++k) {
+      //   if(recv_entity_vtx[beg_entity_vtx+k] < min_1) {
+      //     min_1 = recv_entity_vtx[beg_entity_vtx+k];
+      //   };
+      // }
+      tmp_parent   [2*j  ] = recv_elmt_entity_cell[i_conflict];
+      tmp_parent   [2*j+1] = recv_entity_vtx[beg_entity_vtx];
+
+    }
+
+    PDM_order_gnum_s(tmp_parent, 2, order_parent, n_conflict_entitys);
+
+    if(1 == 0) {
+      PDM_log_trace_array_long(tmp_parent  ,2 * n_conflict_entitys, "tmp_parent   ::" );
+      PDM_log_trace_array_int (order_parent, n_conflict_entitys, "order_parent ::" );
+    }
+
+
+    for(int idx_entity = 0; idx_entity < n_conflict_entitys; ++idx_entity) {
+      int i_entity     = order[key_conflict_idx[i]+order_parent[idx_entity]];
+
+      int beg_1 = recv_entity_vtx_idx[i_entity];
+      int n_vtx_in_entity1 = recv_entity_vtx_idx[i_entity+1] - beg_1;
+
+      int idx_next_same_entity = 0;
+      sens_entity    [idx_next_same_entity] = 1;
+      same_entity_idx[idx_next_same_entity++] = idx_entity;
+
+      /* Only if not treated we search correspondance with other */
+      if(already_treat[idx_entity] != 1) {
+
+        PDM_g_num_t key_1 = 0;
+        int idx_min_1 = -1;
+        PDM_g_num_t min_1 = max_vtx_gnum+1;
+        for(int j = 0; j < n_vtx_in_entity1; ++j) {
+          loc_entity_vtx_1[j] = recv_entity_vtx[beg_1+j];
+          key_1 += loc_entity_vtx_1[j];
+          if(loc_entity_vtx_1[j] < min_1) {
+            min_1 = loc_entity_vtx_1[j];
+            idx_min_1 = j;
+          };
+        }
+        PDM_quick_sort_long(loc_entity_vtx_1, 0, n_vtx_in_entity1-1);
+
+        for(int idx_entity2 = 0; idx_entity2 < n_conflict_entitys; ++idx_entity2) {
+          int i_entity_next = order[key_conflict_idx[i]+order_parent[idx_entity2]];
+
+          if (i_entity_next == i_entity) {
+            continue;
+          }
+
+          // printf("conflict : i_entity = %d, i_entity_next = %d...\n", i_entity, i_entity_next);
+          if(already_treat[idx_entity2] == 1) {
+            continue;
+          }
+
+          int beg_2 = recv_entity_vtx_idx[i_entity_next];
+          int n_vtx_in_entity2 = recv_entity_vtx_idx[i_entity_next+1] - beg_2;
+          if(n_vtx_in_entity1 == n_vtx_in_entity2 ) {
+
+            PDM_g_num_t key_2 = 0;
+            int idx_min_2 = -1;
+            PDM_g_num_t min_2 = max_vtx_gnum+1;
+            for(int j = 0; j < n_vtx_in_entity1; ++j) {
+              loc_entity_vtx_2[j] = recv_entity_vtx[beg_2+j];
+              key_2 += loc_entity_vtx_2[j];
+              if(loc_entity_vtx_2[j] < min_2) {
+                min_2 = loc_entity_vtx_2[j];
+                idx_min_2 = j;
+              };
+            }
+            PDM_quick_sort_long(loc_entity_vtx_2, 0, n_vtx_in_entity2-1);
+
+            // printf("key_1 : %d, key_2 = %d...\n", key_1, key_2);
+            assert(key_1 == key_2);
+
+            int is_same_entity = 1;
+            for(int i_vtx = 0; i_vtx < n_vtx_in_entity1; ++i_vtx) {
+              if(loc_entity_vtx_1[i_vtx] != loc_entity_vtx_2[i_vtx]) {
+                is_same_entity = -1;
+                break;
+              }
+            }
+
+            if(is_same_entity == 1 ){
+              if(n_vtx_in_entity1 == 2) {
+                PDM_g_num_t i1 = recv_entity_vtx[beg_1  ];
+                PDM_g_num_t i2 = recv_entity_vtx[beg_1+1];
+
+                PDM_g_num_t j1 = recv_entity_vtx[beg_2];
+                PDM_g_num_t j2 = recv_entity_vtx[beg_2+1];
+                if(i1 == j1) {
+                  sens_entity[idx_next_same_entity] = 1;
+                } else {
+                  assert(i1 == j2);
+                  assert(i2 == j1);
+                  sens_entity[idx_next_same_entity] = -1;
+                }
+              } else {
+                // Determine the sens
+                PDM_g_num_t i1 = recv_entity_vtx[beg_1 +  idx_min_1                      ];
+                PDM_g_num_t i2 = recv_entity_vtx[beg_1 + (idx_min_1+1) % n_vtx_in_entity1];
+
+                PDM_g_num_t j1 = recv_entity_vtx[beg_2 +  idx_min_2                      ];
+                PDM_g_num_t j2 = recv_entity_vtx[beg_2 + (idx_min_2+1) % n_vtx_in_entity1];
+                // printf(" i1 = %i | i2 = %i | j1 = %i | j2 = %i\n", i1, i2, j1, j2);
+                assert(i1 == j1); // Panic
+                if(i2 != j2) {
+                  sens_entity[idx_next_same_entity] = -1;
+                  // printf(" idx3 = %i \n", (idx_min_1+n_vtx_in_entity1) % n_vtx_in_entity1);
+                  PDM_g_num_t i3 = recv_entity_vtx[beg_1 + (idx_min_1+n_vtx_in_entity1-1) % n_vtx_in_entity1];
+                  // printf(" i1 = %i | i2 = %i | i3 = %i | j1 = %i | j2 = %i\n", i1, i2, i3, j1, j2);
+                  assert(i3 == j2);
+                } else {
+                  sens_entity[idx_next_same_entity] = 1;
+                  assert(i2 == j2);
+                }
+              }
+              // Check if same sens
+              // same_entity_idx[idx_next_same_entity++] = i_entity_next;
+              same_entity_idx[idx_next_same_entity++] = idx_entity2;
+            }
+          }
+        }
+
+        // printf("[%i] - same_entity_idx::", idx_next_same_entity);
+        // for(int ii = 0; ii < idx_next_same_entity; ++ii) {
+        //   printf(" %i", same_entity_idx[ii]);
+        // }
+        // printf("\n");
+
+        dentity_vtx_idx[i_abs_entity+1] = dentity_vtx_idx[i_abs_entity] + n_vtx_in_entity1;
+        for(int i_vtx = 0; i_vtx < n_vtx_in_entity1; ++i_vtx) {
+          dentity_vtx[idx_entity_vtx++] = recv_entity_vtx[beg_1+i_vtx];
+        }
+
+        for(int k = 0; k < idx_next_same_entity; ++k) {
+          int i_same_entity = same_entity_idx[k];
+          int t_entity      = order[key_conflict_idx[i]+order_parent[i_same_entity]];
+          int sign = sens_entity[k];
+          recv_elmts_entity[t_entity] = sign * (i_abs_entity+1);
+          // printf("[%i] - i_same_entity = %i | sign = %i \n", k, i_same_entity, sign);
+          already_treat[i_same_entity] = 1;
+        }
+        i_abs_entity++;
+
+      } /* End if already_treat[i_entity] */
+    } /* End conflict */
+  }
+
+  if(1 == 0) {
+    PDM_log_trace_array_int (order, n_recv_key , "order ::");
+    PDM_log_trace_array_long(recv_elmts_entity, n_recv_key , "recv_elmts_entity ::");
+    PDM_log_trace_connectivity_long(dentity_vtx_idx, dentity_vtx , i_abs_entity, "dentity_vtx ::");
+  }
+
+
+  free(recv_elmt_entity_cell);
+
+  /*
+   * Setup distrib
+   */
+  PDM_g_num_t* entity_distrib = _make_absolute_entity_numbering(i_abs_entity, comm);
+  for(int i = 0; i < recv_idx[n_rank]; ++i) {
+    PDM_g_num_t g_num = PDM_ABS (recv_elmts_entity[i]);
+    int         sgn   = PDM_SIGN(recv_elmts_entity[i]);
+    recv_elmts_entity[i] = sgn * (g_num + entity_distrib[i_rank]);
+  }
+
+
+  /*
+   * Reconstruction du entity_ln_to_gn + cell_entity local
+   */
+  PDM_g_num_t *elmt_cell_entity = malloc( elmt_cell_entity_idx[n_elmt_vol_tot] * sizeof(PDM_g_num_t));
+
+  PDM_MPI_Alltoallv(recv_elmts_entity,
+                    recv_n,
+                    recv_idx,
+                    PDM__PDM_MPI_G_NUM,
+                    elmt_cell_entity,
+                    send_n,
+                    send_idx,
+                    PDM__PDM_MPI_G_NUM,
+                    comm);
+
+
+
+
+  free(recv_elmts_entity);
+  free(loc_entity_vtx_1);
+  free(loc_entity_vtx_2);
+  free(already_treat   );
+  free(same_entity_idx );
+  free(sens_entity     );
+  free(tmp_parent      );
+  free(order_parent    );
+
+  free(key_conflict_idx);
+  free(order);
+
+  free(send_n);
+  free(send_idx);
+  free(recv_n);
+  free(recv_idx);
+  free(dest_rank);
+  free(recv_entity_vtx_n);
+  free(recv_entity_vtx_idx);
+
+  free(send_entity_vtx);
+  free(recv_entity_vtx);
+  free(recv_entity_key);
+
+  free(send_s_entity_vtx_n  );
+  free(recv_s_entity_vtx_n  );
+  free(send_s_entity_vtx_idx);
+  free(recv_s_entity_vtx_idx);
+
+  free(distrib_key);
+  free(elmt_entity_vtx_idx     );
+  free(elmt_entity_vtx         );
+  free(parent_elmt_position  );
+
+
+  *dentity_vtx_out      = dentity_vtx;
+  *dentity_vtx_idx_out  = dentity_vtx_idx;
+  *distrib_entity_out   = entity_distrib;
+  *elmt_cell_entity_out = elmt_cell_entity;
+
+}
+
 
 /*=============================================================================
  * Public function definitions
@@ -123,6 +632,10 @@ PDM_part_mesh_nodal_to_part_mesh
   const PDM_dmesh_nodal_to_dmesh_translate_group_t  transform_group_kind
 )
 {
+  int n_rank;
+  int i_rank;
+  PDM_MPI_Comm_size (pmn->comm, &n_rank);
+  PDM_MPI_Comm_rank (pmn->comm, &i_rank);
   // PDM_part_mesh_nodal_elmts_t* pmne_vol = PDM_part_mesh_nodal_part_mesh_nodal_elmts_get(pmn, PDM_GEOMETRY_KIND_VOLUMIC);
   PDM_UNUSED(transform_kind);
   PDM_UNUSED(transform_group_kind);
@@ -178,453 +691,27 @@ PDM_part_mesh_nodal_to_part_mesh
                                                      elmt_face_cell,
                                                      parent_elmt_position);
 
-  /*
-   * Create hash table
-   */
-  PDM_g_num_t *key_ln_to_gn = malloc(n_face_elt_vol_tot * sizeof(PDM_g_num_t));
-  double      *key_weight   = malloc(n_face_elt_vol_tot * sizeof(double     ));
-  PDM_g_num_t key_mod = 4 * max_vtx_gnum;
-  for(int i_face = 0; i_face < n_face_elt_vol_tot; ++i_face) {
-    PDM_g_num_t key = 0;
-    for(int idx = elmt_face_vtx_idx[i_face]; idx < elmt_face_vtx_idx[i_face+1]; ++idx) {
-      key += elmt_face_vtx[idx];
-    }
-    // min_vtx =
-    key_ln_to_gn[i_face] = key % key_mod + 1;
-    key_weight  [i_face] = elmt_face_vtx_idx[i_face+1]-elmt_face_vtx_idx[i_face];
-  }
 
-
-  int n_rank;
-  int i_rank;
-  PDM_MPI_Comm_size (pmn->comm, &n_rank);
-  PDM_MPI_Comm_rank (pmn->comm, &i_rank);
-  int sampling_factor = 2;
-  int n_iter_max      = 5;
-  double tol = 0.10;
-  PDM_g_num_t *distrib_key = NULL;
-  PDM_distrib_weight(      sampling_factor,
-                           n_rank,
-                           1,
-                           &n_face_elt_vol_tot,
-    (const PDM_g_num_t **) &key_ln_to_gn,
-    (const double      **) &key_weight,
-                           n_iter_max,
-                           tol,
-                           pmn->comm,
-                           &distrib_key);
-
-  if(1 == 0) {
-    PDM_log_trace_array_int(distrib_key, n_rank+1, "distrib_key ::");
-  }
-
-  /*
-   * Prepare send
-   */
-  int *send_n    = malloc( n_rank              * sizeof(int));
-  int *send_idx  = malloc((n_rank+1)           * sizeof(int));
-  int *recv_n    = malloc( n_rank              * sizeof(int));
-  int *recv_idx  = malloc((n_rank+1)           * sizeof(int));
-  int *dest_rank = malloc(n_face_elt_vol_tot   * sizeof(int));
-  for(int i = 0; i < n_rank; ++i) {
-    send_n[i] = 0;
-  }
-
-  for(int i_face = 0; i_face < n_face_elt_vol_tot; ++i_face) {
-    PDM_g_num_t key = key_ln_to_gn[i_face];
-    int t_rank = PDM_binary_search_gap_long(key-1, distrib_key, n_rank+1);
-    dest_rank[i_face] = t_rank;
-    send_n[t_rank]++;
-  }
-
-  PDM_MPI_Alltoall(send_n, 1, PDM_MPI_INT,
-                   recv_n, 1, PDM_MPI_INT, pmn->comm);
-
-  int *send_s_face_vtx_n   = malloc( n_rank    * sizeof(int));
-  int *recv_s_face_vtx_n   = malloc( n_rank    * sizeof(int));
-  int *send_s_face_vtx_idx = malloc((n_rank+1) * sizeof(int));
-  int *recv_s_face_vtx_idx = malloc((n_rank+1) * sizeof(int));
-  send_idx[0] = 0;
-  recv_idx[0] = 0;
-  for(int i = 0; i < n_rank; ++i) {
-    send_idx         [i+1] = send_idx[i] + send_n[i];
-    recv_idx         [i+1] = recv_idx[i] + recv_n[i];
-    send_n           [i] = 0;
-    send_s_face_vtx_n[i] = 0;
-  }
-
-  /*
-   * Prepare send
-   */
-  int         *send_face_vtx_n     = malloc( n_face_elt_vol_tot * sizeof(int        ));
-  PDM_g_num_t *send_face_key       = malloc( n_face_elt_vol_tot * sizeof(PDM_g_num_t));
-  PDM_g_num_t *send_elmt_face_cell = malloc( n_face_elt_vol_tot * sizeof(PDM_g_num_t));
-  for(int i_face = 0; i_face < n_face_elt_vol_tot; ++i_face) {
-    int t_rank = dest_rank[i_face];
-    int idx_write = send_idx[t_rank] + send_n[t_rank]++;
-
-    send_face_vtx_n    [idx_write] = elmt_face_vtx_idx[i_face+1]-elmt_face_vtx_idx[i_face];
-    send_face_key      [idx_write] = key_ln_to_gn  [i_face];
-    send_elmt_face_cell[idx_write] = elmt_face_cell[i_face];
-    send_s_face_vtx_n[t_rank] += elmt_face_vtx_idx[i_face+1]-elmt_face_vtx_idx[i_face];
-
-  }
-
-  free(elmt_face_cell);
-
-  int         *recv_face_vtx_n     = malloc(recv_idx[n_rank] * sizeof(int        ));
-  PDM_g_num_t *recv_face_key       = malloc(recv_idx[n_rank] * sizeof(PDM_g_num_t));
-  PDM_g_num_t *recv_elmt_face_cell = malloc(recv_idx[n_rank] * sizeof(PDM_g_num_t));
-
-  PDM_MPI_Alltoallv(send_face_vtx_n,
-                    send_n,
-                    send_idx,
-                    PDM_MPI_INT,
-                    recv_face_vtx_n,
-                    recv_n,
-                    recv_idx,
-                    PDM_MPI_INT,
-                    pmn->comm);
-  free(send_face_vtx_n);
-
-  PDM_MPI_Alltoallv(send_face_key,
-                    send_n,
-                    send_idx,
-                    PDM__PDM_MPI_G_NUM,
-                    recv_face_key,
-                    recv_n,
-                    recv_idx,
-                    PDM__PDM_MPI_G_NUM,
-                    pmn->comm);
-  free(send_face_key);
-
-  PDM_MPI_Alltoallv(send_elmt_face_cell,
-                    send_n,
-                    send_idx,
-                    PDM__PDM_MPI_G_NUM,
-                    recv_elmt_face_cell,
-                    recv_n,
-                    recv_idx,
-                    PDM__PDM_MPI_G_NUM,
-                    pmn->comm);
-  free(send_elmt_face_cell);
-
-  /*
-   * Exchange size of connectivity
-   */
-  PDM_MPI_Alltoall(send_s_face_vtx_n, 1, PDM_MPI_INT,
-                   recv_s_face_vtx_n, 1, PDM_MPI_INT, pmn->comm);
-
-  send_s_face_vtx_idx[0] = 0;
-  recv_s_face_vtx_idx[0] = 0;
-  for(int i = 0; i < n_rank; ++i) {
-    send_s_face_vtx_idx[i+1] = send_s_face_vtx_idx[i] + send_s_face_vtx_n[i];
-    recv_s_face_vtx_idx[i+1] = recv_s_face_vtx_idx[i] + recv_s_face_vtx_n[i];
-    send_s_face_vtx_n  [i] = 0;
-  }
-
-  /*
-   * Exchange of connectivity
-   */
-  PDM_g_num_t* send_face_vtx = malloc(send_s_face_vtx_idx[n_rank] * sizeof(PDM_g_num_t));
-  PDM_g_num_t* recv_face_vtx = malloc(recv_s_face_vtx_idx[n_rank] * sizeof(PDM_g_num_t));
-  for(int i_face = 0; i_face < n_face_elt_vol_tot; ++i_face) {
-    int t_rank = dest_rank[i_face];
-    int idx_write = send_s_face_vtx_idx[t_rank];
-
-    for(int k = elmt_face_vtx_idx[i_face]; k < elmt_face_vtx_idx[i_face+1]; ++k) {
-      send_face_vtx[idx_write+send_s_face_vtx_n[t_rank]++] = elmt_face_vtx[k];
-    }
-  }
-
-
-  PDM_MPI_Alltoallv(send_face_vtx,
-                    send_s_face_vtx_n,
-                    send_s_face_vtx_idx,
-                    PDM_MPI_INT,
-                    recv_face_vtx,
-                    recv_s_face_vtx_n,
-                    recv_s_face_vtx_idx,
-                    PDM_MPI_INT,
-                    pmn->comm);
-
-  if(1 == 0) {
-    PDM_log_trace_array_int (recv_face_vtx_n, recv_idx[n_rank]           , "recv_face_vtx_n ::");
-    PDM_log_trace_array_long(recv_face_key  , recv_idx[n_rank]           , "recv_face_key   ::");
-    PDM_log_trace_array_long(recv_face_vtx  , recv_s_face_vtx_idx[n_rank], "recv_face_vtx   ::");
-  }
-
-  int *recv_face_vtx_idx = malloc((recv_idx[n_rank]+1) * sizeof(int));
-  recv_face_vtx_idx[0] = 0;
-  int n_max_vtx = 0;
-  for(int i = 0; i < recv_idx[n_rank]; ++i) {
-    recv_face_vtx_idx[i+1] = recv_face_vtx_idx[i] + recv_face_vtx_n[i];
-    n_max_vtx = PDM_MAX(n_max_vtx, recv_face_vtx_n[i]);
-  }
-
-  /*
-   * All data are exchange we need to order the key and resolve conflit in hash table
-   */
-  int n_recv_key = recv_idx[n_rank];
-  int *order = malloc(n_recv_key * sizeof(int));
-  PDM_order_gnum_s(recv_face_key, 1, order, n_recv_key);
-
-  int n_conflit_to_solve = 0;
-  PDM_g_num_t last_gnum = -1;
-
-  int *key_conflict_idx = malloc((n_recv_key+1) * sizeof(int));
-  key_conflict_idx[0] = 0;
-  for(int i = 0; i < n_recv_key; ++i) {
-    if(recv_face_key[order[i]] != last_gnum){
-      key_conflict_idx[n_conflit_to_solve+1] = key_conflict_idx[n_conflit_to_solve]+1;
-      n_conflit_to_solve++;
-      last_gnum = recv_face_key[order[i]];
-    } else {
-      key_conflict_idx[n_conflit_to_solve]++;
-    }
-  }
-
-
-
-  int n_max_entity_per_key = 0;
-  for(int i = 0; i < n_conflit_to_solve; ++i) {
-    n_max_entity_per_key = PDM_MAX(n_max_entity_per_key, key_conflict_idx[i+1]-key_conflict_idx[i]);
-  }
-
-
-  /*
-   * Solve conflict
-   */
-  if(0 == 1) {
-    PDM_log_trace_array_int(key_conflict_idx, n_conflit_to_solve, "key_conflict_idx ::  ");
-    for(int i = 0; i < n_conflit_to_solve; ++i) {
-      log_trace(" ------ i = %i \n", i);
-      for(int i_key = key_conflict_idx[i]; i_key < key_conflict_idx[i+1]; ++i_key) {
-        int i_conflict = order[i_key];
-        int beg = recv_face_vtx_idx[i_conflict];
-        int n_vtx_in_face = recv_face_vtx_idx[i_conflict+1] - beg;
-        log_trace(" \t i_key = %i | beg = %i / n = %i \n", recv_face_key[i_conflict], beg, n_vtx_in_face);
-      }
-    }
-  }
-
-
-  PDM_g_num_t* loc_entity_vtx_1   = (PDM_g_num_t *) malloc(  n_max_vtx               * sizeof(PDM_g_num_t) );
-  PDM_g_num_t* loc_entity_vtx_2   = (PDM_g_num_t *) malloc(  n_max_vtx               * sizeof(PDM_g_num_t) );
-  int*         already_treat      = (int         *) malloc(  n_max_entity_per_key    * sizeof(int        ) );
-  int*         same_entity_idx    = (int         *) malloc( (n_max_entity_per_key+1) * sizeof(int        ) );
-  int*         sens_entity        = (int         *) malloc(  n_max_entity_per_key    * sizeof(int        ) );
-  PDM_g_num_t *tmp_parent         = (PDM_g_num_t *) malloc(2 * n_max_entity_per_key  * sizeof(PDM_g_num_t) );
-  int         *order_parent       = (int         *) malloc(n_max_entity_per_key      * sizeof(int        ) );
-
-  /* Resulting array */
-  int         *dentity_vtx_idx   = malloc((n_recv_key+1)              * sizeof(int        ));
-  PDM_g_num_t *dentity_vtx       = malloc(recv_s_face_vtx_idx[n_rank] * sizeof(PDM_g_num_t));
-  PDM_g_num_t *recv_elmts_entity = malloc( recv_idx[n_rank]           * sizeof(PDM_g_num_t));
-
-  int i_abs_entity   = 0;
-  int idx_entity_vtx = 0;
-  dentity_vtx_idx[0] = 0;
-  for(int i = 0; i < n_conflit_to_solve; ++i) {
-
-    int n_conflict_entitys = key_conflict_idx[i+1] - key_conflict_idx[i];
-
-    for(int j = 0; j < n_conflict_entitys; ++j ) {
-      already_treat[j] = -1;
-      int i_conflict = order[key_conflict_idx[i]+j];
-      int i_entity1 = order[key_conflict_idx[i]+j];
-      int beg_face_vtx    = recv_face_vtx_idx[i_entity1];
-      // int n_vtx_in_entity = recv_face_vtx_idx[i_entity1+1] - beg_face_vtx;
-      // PDM_g_num_t min_1 = max_vtx_gnum+1;
-      // for(int k = 0; k < n_vtx_in_entity; ++k) {
-      //   if(recv_face_vtx[beg_face_vtx+k] < min_1) {
-      //     min_1 = recv_face_vtx[beg_face_vtx+k];
-      //   };
-      // }
-      tmp_parent   [2*j  ] = recv_elmt_face_cell[i_conflict];
-      tmp_parent   [2*j+1] = recv_face_vtx[beg_face_vtx];
-
-    }
-
-    PDM_order_gnum_s(tmp_parent, 2, order_parent, n_conflict_entitys);
-
-    if(1 == 0) {
-      PDM_log_trace_array_long(tmp_parent  ,2 * n_conflict_entitys, "tmp_parent   ::" );
-      PDM_log_trace_array_int (order_parent, n_conflict_entitys, "order_parent ::" );
-    }
-
-
-    for(int idx_entity = 0; idx_entity < n_conflict_entitys; ++idx_entity) {
-      int i_entity     = order[key_conflict_idx[i]+order_parent[idx_entity]];
-
-      int beg_1 = recv_face_vtx_idx[i_entity];
-      int n_vtx_in_entity1 = recv_face_vtx_idx[i_entity+1] - beg_1;
-
-      int idx_next_same_entity = 0;
-      sens_entity    [idx_next_same_entity] = 1;
-      same_entity_idx[idx_next_same_entity++] = idx_entity;
-
-      /* Only if not treated we search correspondance with other */
-      if(already_treat[idx_entity] != 1) {
-
-        PDM_g_num_t key_1 = 0;
-        int idx_min_1 = -1;
-        PDM_g_num_t min_1 = max_vtx_gnum+1;
-        for(int j = 0; j < n_vtx_in_entity1; ++j) {
-          loc_entity_vtx_1[j] = recv_face_vtx[beg_1+j];
-          key_1 += loc_entity_vtx_1[j];
-          if(loc_entity_vtx_1[j] < min_1) {
-            min_1 = loc_entity_vtx_1[j];
-            idx_min_1 = j;
-          };
-        }
-        PDM_quick_sort_long(loc_entity_vtx_1, 0, n_vtx_in_entity1-1);
-
-        for(int idx_entity2 = 0; idx_entity2 < n_conflict_entitys; ++idx_entity2) {
-          int i_entity_next = order[key_conflict_idx[i]+order_parent[idx_entity2]];
-
-          if (i_entity_next == i_entity) {
-            continue;
-          }
-
-          // printf("conflict : i_entity = %d, i_entity_next = %d...\n", i_entity, i_entity_next);
-          if(already_treat[idx_entity2] == 1) {
-            continue;
-          }
-
-          int beg_2 = recv_face_vtx_idx[i_entity_next];
-          int n_vtx_in_entity2 = recv_face_vtx_idx[i_entity_next+1] - beg_2;
-          if(n_vtx_in_entity1 == n_vtx_in_entity2 ) {
-
-            PDM_g_num_t key_2 = 0;
-            int idx_min_2 = -1;
-            PDM_g_num_t min_2 = max_vtx_gnum+1;
-            for(int j = 0; j < n_vtx_in_entity1; ++j) {
-              loc_entity_vtx_2[j] = recv_face_vtx[beg_2+j];
-              key_2 += loc_entity_vtx_2[j];
-              if(loc_entity_vtx_2[j] < min_2) {
-                min_2 = loc_entity_vtx_2[j];
-                idx_min_2 = j;
-              };
-            }
-            PDM_quick_sort_long(loc_entity_vtx_2, 0, n_vtx_in_entity2-1);
-
-            // printf("key_1 : %d, key_2 = %d...\n", key_1, key_2);
-            assert(key_1 == key_2);
-
-            int is_same_entity = 1;
-            for(int i_vtx = 0; i_vtx < n_vtx_in_entity1; ++i_vtx) {
-              if(loc_entity_vtx_1[i_vtx] != loc_entity_vtx_2[i_vtx]) {
-                is_same_entity = -1;
-                break;
-              }
-            }
-
-            if(is_same_entity == 1 ){
-              if(n_vtx_in_entity1 == 2) {
-                PDM_g_num_t i1 = recv_face_vtx[beg_1  ];
-                PDM_g_num_t i2 = recv_face_vtx[beg_1+1];
-
-                PDM_g_num_t j1 = recv_face_vtx[beg_2];
-                PDM_g_num_t j2 = recv_face_vtx[beg_2+1];
-                if(i1 == j1) {
-                  sens_entity[idx_next_same_entity] = 1;
-                } else {
-                  assert(i1 == j2);
-                  assert(i2 == j1);
-                  sens_entity[idx_next_same_entity] = -1;
-                }
-              } else {
-                // Determine the sens
-                PDM_g_num_t i1 = recv_face_vtx[beg_1 +  idx_min_1                      ];
-                PDM_g_num_t i2 = recv_face_vtx[beg_1 + (idx_min_1+1) % n_vtx_in_entity1];
-
-                PDM_g_num_t j1 = recv_face_vtx[beg_2 +  idx_min_2                      ];
-                PDM_g_num_t j2 = recv_face_vtx[beg_2 + (idx_min_2+1) % n_vtx_in_entity1];
-                // printf(" i1 = %i | i2 = %i | j1 = %i | j2 = %i\n", i1, i2, j1, j2);
-                assert(i1 == j1); // Panic
-                if(i2 != j2) {
-                  sens_entity[idx_next_same_entity] = -1;
-                  // printf(" idx3 = %i \n", (idx_min_1+n_vtx_in_entity1) % n_vtx_in_entity1);
-                  PDM_g_num_t i3 = recv_face_vtx[beg_1 + (idx_min_1+n_vtx_in_entity1-1) % n_vtx_in_entity1];
-                  // printf(" i1 = %i | i2 = %i | i3 = %i | j1 = %i | j2 = %i\n", i1, i2, i3, j1, j2);
-                  assert(i3 == j2);
-                } else {
-                  sens_entity[idx_next_same_entity] = 1;
-                  assert(i2 == j2);
-                }
-              }
-              // Check if same sens
-              // same_entity_idx[idx_next_same_entity++] = i_entity_next;
-              same_entity_idx[idx_next_same_entity++] = idx_entity2;
-            }
-          }
-        }
-
-        // printf("[%i] - same_entity_idx::", idx_next_same_entity);
-        // for(int ii = 0; ii < idx_next_same_entity; ++ii) {
-        //   printf(" %i", same_entity_idx[ii]);
-        // }
-        // printf("\n");
-
-        dentity_vtx_idx[i_abs_entity+1] = dentity_vtx_idx[i_abs_entity] + n_vtx_in_entity1;
-        for(int i_vtx = 0; i_vtx < n_vtx_in_entity1; ++i_vtx) {
-          dentity_vtx[idx_entity_vtx++] = recv_face_vtx[beg_1+i_vtx];
-        }
-
-        for(int k = 0; k < idx_next_same_entity; ++k) {
-          int i_same_entity = same_entity_idx[k];
-          int t_entity      = order[key_conflict_idx[i]+order_parent[i_same_entity]];
-          int sign = sens_entity[k];
-          recv_elmts_entity[t_entity] = sign * (i_abs_entity+1);
-          // printf("[%i] - i_same_entity = %i | sign = %i \n", k, i_same_entity, sign);
-          already_treat[i_same_entity] = 1;
-        }
-        i_abs_entity++;
-
-      } /* End if already_treat[i_entity] */
-    } /* End conflict */
-  }
-
-  if(1 == 0) {
-    PDM_log_trace_array_int (order, n_recv_key , "order ::");
-    PDM_log_trace_array_long(recv_elmts_entity, n_recv_key , "recv_elmts_entity ::");
-    PDM_log_trace_connectivity_long(dentity_vtx_idx, dentity_vtx , i_abs_entity, "dentity_vtx ::");
-  }
-
-
-  free(recv_elmt_face_cell);
-
-  /*
-   * Setup distrib
-   */
-  PDM_g_num_t* entity_distrib = _make_absolute_entity_numbering(i_abs_entity, pmn->comm);
-  for(int i = 0; i < recv_idx[n_rank]; ++i) {
-    PDM_g_num_t g_num = PDM_ABS (recv_elmts_entity[i]);
-    int         sgn   = PDM_SIGN(recv_elmts_entity[i]);
-    recv_elmts_entity[i] = sgn * (g_num + entity_distrib[i_rank]);
-  }
-
+  PDM_g_num_t *elmt_cell_face  = NULL;
+  PDM_g_num_t *entity_distrib  = NULL;
+  PDM_g_num_t *dentity_vtx     = NULL;
+  int         *dentity_vtx_idx = NULL;
+  _generate_part_entitiy_connectivity(pmn->comm,
+                                      n_elmt_vol_tot,
+                                      n_face_elt_vol_tot,
+                                      max_vtx_gnum,
+                                      elmt_face_vtx_idx,
+                                      elmt_face_vtx,
+                                      elmt_cell_face_idx,
+                                      parent_elmt_position,
+                                      elmt_face_cell,
+                                      &dentity_vtx,
+                                      &dentity_vtx_idx,
+                                      &entity_distrib,
+                                      &elmt_cell_face);
 
   /*
    * Reconstruction du face_ln_to_gn + cell_face local
-   */
-  PDM_g_num_t *elmt_cell_face = malloc( elmt_cell_face_idx[n_elmt_vol_tot] * sizeof(PDM_g_num_t));
-
-  PDM_MPI_Alltoallv(recv_elmts_entity,
-                    recv_n,
-                    recv_idx,
-                    PDM__PDM_MPI_G_NUM,
-                    elmt_cell_face,
-                    send_n,
-                    send_idx,
-                    PDM__PDM_MPI_G_NUM,
-                    pmn->comm);
-
-  // PDM_log_trace_array_long(elmt_cell_face, send_idx[n_rank] , "elmt_cell_face ::");
-
-  /*
-   * Separation en partition
    */
   int shift_cell_face = 0;
   int idx_read_elmt   = 0;
@@ -672,9 +759,9 @@ PDM_part_mesh_nodal_to_part_mesh
                                                       pn_face,
                                                       pmn->n_part,
                                                       pmn->comm);
-
-  int *dentity_vtx_n = malloc(i_abs_entity * sizeof(int));
-  for(int i_entity = 0; i_entity < i_abs_entity; ++i_entity) {
+  int dn_entity = entity_distrib[i_rank+1] - entity_distrib[i_rank];
+  int *dentity_vtx_n = malloc(dn_entity * sizeof(int));
+  for(int i_entity = 0; i_entity < dn_entity; ++i_entity) {
     dentity_vtx_n[i_entity] = dentity_vtx_idx[i_entity+1] - dentity_vtx_idx[i_entity];
   }
 
@@ -769,49 +856,12 @@ PDM_part_mesh_nodal_to_part_mesh
   free(pface_vtx_idx);
 
   free(elmt_cell_face);
+  free(elmt_cell_face_idx);
 
+  free(vtx_ln_to_gn);
   free(dentity_vtx_idx  );
   free(dentity_vtx      );
-  free(recv_elmts_entity);
   free(entity_distrib);
-
-
-  free(loc_entity_vtx_1);
-  free(loc_entity_vtx_2);
-  free(already_treat   );
-  free(same_entity_idx );
-  free(sens_entity     );
-  free(tmp_parent      );
-  free(order_parent    );
-
-  free(key_conflict_idx);
-  free(order);
-
-  free(send_n);
-  free(send_idx);
-  free(recv_n);
-  free(recv_idx);
-  free(dest_rank);
-  free(recv_face_vtx_n);
-  free(recv_face_vtx_idx);
-
-  free(send_face_vtx);
-  free(recv_face_vtx);
-  free(recv_face_key);
-
-  free(send_s_face_vtx_n  );
-  free(recv_s_face_vtx_n  );
-  free(send_s_face_vtx_idx);
-  free(recv_s_face_vtx_idx);
-
-  free(distrib_key);
-  free(key_ln_to_gn);
-  free(key_weight);
-  free(vtx_ln_to_gn);
-  free(elmt_face_vtx_idx     );
-  free(elmt_face_vtx         );
-  free(elmt_cell_face_idx);
-  free(parent_elmt_position  );
 
   return NULL;
 }
