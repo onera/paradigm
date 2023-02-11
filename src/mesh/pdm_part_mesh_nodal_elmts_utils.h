@@ -294,6 +294,27 @@ PDM_part_mesh_nodal_std_decomposes_faces
        int                  *parent_elmt_position
 );
 
+
+void
+PDM_part_mesh_nodal_std_decomposes_edges
+(
+       PDM_Mesh_nodal_elt_t  t_elt,
+       int                   n_elt,
+       int                   order,
+       int                  *parent_node,
+       int                  *n_elt_current,
+       int                  *n_edge_current,
+ const PDM_g_num_t          *vtx_ln_to_gn,
+ const int                  *connectivity_elmt_vtx,
+ const PDM_g_num_t          *elmt_ln_to_gn,
+       int                  *elmt_edge_vtx_idx,
+       PDM_g_num_t          *elmt_edge_vtx,
+       int                  *elmt_cell_edge_idx,
+       PDM_g_num_t          *elmt_edge_cell,
+       int                  *parent_elmt_position
+);
+
+
 void
 PDM_part_mesh_nodal_elmts_sections_decompose_faces
 (
@@ -315,6 +336,19 @@ PDM_part_mesh_nodal_elmts_decompose_faces_get_size
  int                         *n_elt_tot,
  int                         *n_face_elt_tot,
  int                         *n_sum_vtx_face_tot
+);
+
+
+void
+PDM_part_mesh_nodal_elmts_sections_decompose_edges
+(
+  PDM_part_mesh_nodal_elmts_t  *pmne,
+  PDM_g_num_t                 **vtx_ln_to_gn,
+  int                          *elmt_edge_vtx_idx,
+  PDM_g_num_t                  *elmt_edge_vtx,
+  int                          *elmt_cell_edge_idx,
+  PDM_g_num_t                  *elmt_edge_cell,
+  int                          *parent_elmt_position
 );
 
 

@@ -1306,6 +1306,135 @@ PDM_part_mesh_nodal_std_decomposes_faces
 
 
 
+void
+PDM_part_mesh_nodal_std_decomposes_edges
+(
+       PDM_Mesh_nodal_elt_t  t_elt,
+       int                   n_elt,
+       int                   order,
+       int                  *parent_node,
+       int                  *n_elt_current,
+       int                  *n_edge_current,
+ const PDM_g_num_t          *vtx_ln_to_gn,
+ const int                  *connectivity_elmt_vtx,
+ const PDM_g_num_t          *elmt_ln_to_gn,
+       int                  *elmt_edge_vtx_idx,
+       PDM_g_num_t          *elmt_edge_vtx,
+       int                  *elmt_cell_edge_idx,
+       PDM_g_num_t          *elmt_edge_cell,
+       int                  *parent_elmt_position
+)
+{
+  switch (t_elt) {
+   case PDM_MESH_NODAL_POINT:
+     abort();
+     break;
+   case PDM_MESH_NODAL_BAR2:
+   case PDM_MESH_NODAL_BARHO:
+   case PDM_MESH_NODAL_BARHO_BEZIER:
+     abort();
+     break;
+   case PDM_MESH_NODAL_TRIA3:
+   case PDM_MESH_NODAL_TRIAHO:
+    case PDM_MESH_NODAL_TRIAHO_BEZIER:
+     PDM_part_mesh_nodal_tri_decomposes_edges(n_elt,
+                                              order,
+                                              parent_node,
+                                              n_elt_current,
+                                              n_edge_current,
+                                              vtx_ln_to_gn,
+                                              connectivity_elmt_vtx,
+                                              elmt_ln_to_gn,
+                                              elmt_edge_vtx_idx,
+                                              elmt_edge_vtx,
+                                              elmt_cell_edge_idx,
+                                              elmt_edge_cell,
+                                              parent_elmt_position);
+     break;
+   case PDM_MESH_NODAL_QUAD4:
+   case PDM_MESH_NODAL_QUADHO:
+     PDM_part_mesh_nodal_quad_decomposes_edges(n_elt,
+                                               order,
+                                               parent_node,
+                                               n_elt_current,
+                                               n_edge_current,
+                                               vtx_ln_to_gn,
+                                               connectivity_elmt_vtx,
+                                               elmt_ln_to_gn,
+                                               elmt_edge_vtx_idx,
+                                               elmt_edge_vtx,
+                                               elmt_cell_edge_idx,
+                                               elmt_edge_cell,
+                                               parent_elmt_position);
+     break;
+   case PDM_MESH_NODAL_TETRA4:
+   case PDM_MESH_NODAL_TETRAHO:
+     PDM_part_mesh_nodal_tetra_decomposes_edges(n_elt,
+                                                order,
+                                                parent_node,
+                                                n_elt_current,
+                                                n_edge_current,
+                                                vtx_ln_to_gn,
+                                                connectivity_elmt_vtx,
+                                                elmt_ln_to_gn,
+                                                elmt_edge_vtx_idx,
+                                                elmt_edge_vtx,
+                                                elmt_cell_edge_idx,
+                                                elmt_edge_cell,
+                                                parent_elmt_position);
+     break;
+   case PDM_MESH_NODAL_PYRAMID5:
+   case PDM_MESH_NODAL_PYRAMIDHO:
+     PDM_part_mesh_nodal_pyra_decomposes_edges(n_elt,
+                                                order,
+                                                parent_node,
+                                                n_elt_current,
+                                                n_edge_current,
+                                                vtx_ln_to_gn,
+                                                connectivity_elmt_vtx,
+                                                elmt_ln_to_gn,
+                                                elmt_edge_vtx_idx,
+                                                elmt_edge_vtx,
+                                                elmt_cell_edge_idx,
+                                                elmt_edge_cell,
+                                                parent_elmt_position);
+     break;
+   case PDM_MESH_NODAL_PRISM6:
+   case PDM_MESH_NODAL_PRISMHO:
+     PDM_part_mesh_nodal_prism_decomposes_edges(n_elt,
+                                                order,
+                                                parent_node,
+                                                n_elt_current,
+                                                n_edge_current,
+                                                vtx_ln_to_gn,
+                                                connectivity_elmt_vtx,
+                                                elmt_ln_to_gn,
+                                                elmt_edge_vtx_idx,
+                                                elmt_edge_vtx,
+                                                elmt_cell_edge_idx,
+                                                elmt_edge_cell,
+                                                parent_elmt_position);
+     break;
+   case PDM_MESH_NODAL_HEXA8:
+   case PDM_MESH_NODAL_HEXAHO:
+     PDM_part_mesh_nodal_hexa_decomposes_edges(n_elt,
+                                                order,
+                                                parent_node,
+                                                n_elt_current,
+                                                n_edge_current,
+                                                vtx_ln_to_gn,
+                                                connectivity_elmt_vtx,
+                                                elmt_ln_to_gn,
+                                                elmt_edge_vtx_idx,
+                                                elmt_edge_vtx,
+                                                elmt_cell_edge_idx,
+                                                elmt_edge_cell,
+                                                parent_elmt_position);
+     break;
+   default:
+     PDM_error(__FILE__, __LINE__, 0, "Error PDM_sections_decompose_edges : Element type is supported\n");
+  }
+}
 
 
 void
@@ -1327,8 +1456,7 @@ PDM_part_mesh_nodal_elmts_sections_decompose_faces
   int n_elt_current  = 0;
   int n_face_current = 0;
 
-  // int parent_node[8];
-
+  int parent_node[8];
 
   for(int i_part = 0; i_part < pmne->n_part; ++i_part) {
 
@@ -1387,6 +1515,42 @@ PDM_part_mesh_nodal_elmts_sections_decompose_faces
         case PDM_MESH_NODAL_PRISMHO:
         case PDM_MESH_NODAL_HEXAHO:
         {
+          int n_elt = PDM_part_mesh_nodal_elmts_section_n_elt_get(pmne, id_section, i_part);
+
+          int         *connec              = NULL;
+          PDM_g_num_t *numabs              = NULL;
+          int         *parent_num          = NULL;
+          PDM_g_num_t *parent_entity_g_num = NULL;
+          int          order               = -1;
+          const char* ho_ordering          = NULL;
+          PDM_part_mesh_nodal_elmts_section_std_ho_get(pmne,
+                                                       id_section,
+                                                       i_part,
+                                                       &connec,
+                                                       &numabs,
+                                                       &parent_num,
+                                                       &parent_entity_g_num,
+                                                       &order,
+                                                       &ho_ordering);
+          PDM_Mesh_nodal_ho_parent_node(t_elt,
+                                        order,
+                                        ho_ordering,
+                                        parent_node);
+
+          PDM_part_mesh_nodal_std_decomposes_faces(t_elt,
+                                                   n_elt,
+                                                   order,
+                                                   parent_node,
+                                                   &n_elt_current,
+                                                   &n_face_current,
+                                                   vtx_ln_to_gn[i_part],
+                                                   connec,
+                                                   numabs,
+                                                   elmt_face_vtx_idx,
+                                                   elmt_face_vtx,
+                                                   elmt_cell_face_idx,
+                                                   elmt_face_cell,
+                                                   parent_elmt_position);
         break;
         }
         case PDM_MESH_NODAL_POLY_2D:
@@ -1407,6 +1571,143 @@ PDM_part_mesh_nodal_elmts_sections_decompose_faces
     }
   }
 }
+
+
+void
+PDM_part_mesh_nodal_elmts_sections_decompose_edges
+(
+  PDM_part_mesh_nodal_elmts_t  *pmne,
+  PDM_g_num_t                 **vtx_ln_to_gn,
+  int                          *elmt_edge_vtx_idx,
+  PDM_g_num_t                  *elmt_edge_vtx,
+  int                          *elmt_cell_edge_idx,
+  PDM_g_num_t                  *elmt_edge_cell,
+  int                          *parent_elmt_position
+)
+{
+
+  int  n_section  = PDM_part_mesh_nodal_elmts_n_section_get  (pmne);
+  int *section_id = PDM_part_mesh_nodal_elmts_sections_id_get(pmne);
+
+  int n_elt_current  = 0;
+  int n_edge_current = 0;
+
+  int parent_node[8];
+
+  for(int i_part = 0; i_part < pmne->n_part; ++i_part) {
+
+    for (int i_section = 0; i_section < n_section; i_section++) {
+      int id_section = section_id[i_section];
+      PDM_Mesh_nodal_elt_t t_elt = PDM_part_mesh_nodal_elmts_section_type_get(pmne, id_section);
+
+      switch (t_elt) {
+        case PDM_MESH_NODAL_POINT:
+        case PDM_MESH_NODAL_BAR2:
+        case PDM_MESH_NODAL_TRIA3:
+        case PDM_MESH_NODAL_QUAD4:
+        case PDM_MESH_NODAL_TETRA4:
+        case PDM_MESH_NODAL_PYRAMID5:
+        case PDM_MESH_NODAL_PRISM6:
+        case PDM_MESH_NODAL_HEXA8:
+        {
+          int n_elt = PDM_part_mesh_nodal_elmts_section_n_elt_get(pmne, id_section, i_part);
+
+          int         *connec              = NULL;
+          PDM_g_num_t *numabs              = NULL;
+          int         *parent_num          = NULL;
+          PDM_g_num_t *parent_entity_g_num = NULL;
+          PDM_part_mesh_nodal_elmts_section_std_get(pmne,
+                                                    id_section,
+                                                    i_part,
+                                                    &connec,
+                                                    &numabs,
+                                                    &parent_num,
+                                                    &parent_entity_g_num);
+
+          PDM_part_mesh_nodal_std_decomposes_edges(t_elt,
+                                                   n_elt,
+                                                   1,
+                                                   NULL,
+                                                   &n_elt_current,
+                                                   &n_edge_current,
+                                                   vtx_ln_to_gn[i_part],
+                                                   connec,
+                                                   numabs,
+                                                   elmt_edge_vtx_idx,
+                                                   elmt_edge_vtx,
+                                                   elmt_cell_edge_idx,
+                                                   elmt_edge_cell,
+                                                   parent_elmt_position);
+
+          break;
+        }
+        case PDM_MESH_NODAL_BARHO:
+        case PDM_MESH_NODAL_BARHO_BEZIER:
+        case PDM_MESH_NODAL_TRIAHO:
+        case PDM_MESH_NODAL_TRIAHO_BEZIER:
+        case PDM_MESH_NODAL_QUADHO:
+        case PDM_MESH_NODAL_TETRAHO:
+        case PDM_MESH_NODAL_PYRAMIDHO:
+        case PDM_MESH_NODAL_PRISMHO:
+        case PDM_MESH_NODAL_HEXAHO:
+        {
+          int n_elt = PDM_part_mesh_nodal_elmts_section_n_elt_get(pmne, id_section, i_part);
+
+          int         *connec              = NULL;
+          PDM_g_num_t *numabs              = NULL;
+          int         *parent_num          = NULL;
+          PDM_g_num_t *parent_entity_g_num = NULL;
+          int          order               = -1;
+          const char* ho_ordering          = NULL;
+          PDM_part_mesh_nodal_elmts_section_std_ho_get(pmne,
+                                                       id_section,
+                                                       i_part,
+                                                       &connec,
+                                                       &numabs,
+                                                       &parent_num,
+                                                       &parent_entity_g_num,
+                                                       &order,
+                                                       &ho_ordering);
+          PDM_Mesh_nodal_ho_parent_node(t_elt,
+                                        order,
+                                        ho_ordering,
+                                        parent_node);
+
+          PDM_part_mesh_nodal_std_decomposes_edges(t_elt,
+                                                   n_elt,
+                                                   order,
+                                                   parent_node,
+                                                   &n_elt_current,
+                                                   &n_edge_current,
+                                                   vtx_ln_to_gn[i_part],
+                                                   connec,
+                                                   numabs,
+                                                   elmt_edge_vtx_idx,
+                                                   elmt_edge_vtx,
+                                                   elmt_cell_edge_idx,
+                                                   elmt_edge_cell,
+                                                   parent_elmt_position);
+        break;
+        }
+        case PDM_MESH_NODAL_POLY_2D:
+        {
+          PDM_error(__FILE__, __LINE__, 0, "Error PDM_part_mesh_nodal_elmts_sections_decompose_edges : Element type is supported\n");
+          break;
+        }
+
+        case PDM_MESH_NODAL_POLY_3D:
+        {
+          PDM_error(__FILE__, __LINE__, 0, "Error PDM_part_mesh_nodal_elmts_sections_decompose_edges : Element type is supported\n");
+          break;
+        }
+
+        default:
+          PDM_error(__FILE__, __LINE__, 0, "Error PDM_part_mesh_nodal_elmts_sections_decompose_edges : Element type is supported\n");
+      }
+    }
+  }
+}
+
 
 
 void
