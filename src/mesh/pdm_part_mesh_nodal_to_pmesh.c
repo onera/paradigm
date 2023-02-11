@@ -618,27 +618,17 @@ _generate_part_entitiy_connectivity
 
 }
 
-
-/*=============================================================================
- * Public function definitions
- *============================================================================*/
-
-
+static
 PDM_part_mesh_t*
-PDM_part_mesh_nodal_to_part_mesh
+_generate_faces_from_part_mesh_nodal
 (
-        PDM_part_mesh_nodal_t                      *pmn,
-  const PDM_dmesh_nodal_to_dmesh_transform_t        transform_kind,
-  const PDM_dmesh_nodal_to_dmesh_translate_group_t  transform_group_kind
+  PDM_part_mesh_nodal_t* pmn
 )
 {
   int n_rank;
   int i_rank;
   PDM_MPI_Comm_size (pmn->comm, &n_rank);
   PDM_MPI_Comm_rank (pmn->comm, &i_rank);
-  // PDM_part_mesh_nodal_elmts_t* pmne_vol = PDM_part_mesh_nodal_part_mesh_nodal_elmts_get(pmn, PDM_GEOMETRY_KIND_VOLUMIC);
-  PDM_UNUSED(transform_kind);
-  PDM_UNUSED(transform_group_kind);
 
   int n_elmt_vol_tot         = 0;
   int n_face_elt_vol_tot     = 0;
@@ -864,6 +854,55 @@ PDM_part_mesh_nodal_to_part_mesh
   free(entity_distrib);
 
   return NULL;
+}
+
+
+static
+PDM_part_mesh_t*
+_generate_edges_from_part_mesh_nodal
+(
+  PDM_part_mesh_nodal_t* pmn
+)
+{
+  PDM_UNUSED(pmn);
+  abort();
+  return NULL;
+}
+
+
+
+/*=============================================================================
+ * Public function definitions
+ *============================================================================*/
+
+
+PDM_part_mesh_t*
+PDM_part_mesh_nodal_to_part_mesh
+(
+        PDM_part_mesh_nodal_t                      *pmn,
+  const PDM_dmesh_nodal_to_dmesh_transform_t        transform_kind,
+  const PDM_dmesh_nodal_to_dmesh_translate_group_t  transform_group_kind
+)
+{
+  PDM_UNUSED(transform_group_kind);
+  PDM_part_mesh_t* pm = NULL;
+
+  switch (transform_kind) {
+
+    case PDM_DMESH_NODAL_TO_DMESH_TRANSFORM_TO_FACE:
+    {
+      pm = _generate_faces_from_part_mesh_nodal(pmn);
+    }
+    break;
+
+    case PDM_DMESH_NODAL_TO_DMESH_TRANSFORM_TO_EDGE:
+    {
+      pm = _generate_edges_from_part_mesh_nodal(pmn);
+    }
+    break;
+  }
+
+  return pm;
 }
 
 
