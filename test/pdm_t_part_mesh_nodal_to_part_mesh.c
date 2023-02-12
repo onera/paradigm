@@ -252,8 +252,6 @@ int main(int argc, char *argv[])
                                                          PDM_DMESH_NODAL_TO_DMESH_TRANSLATE_GROUP_TO_FACE);
 
   if(post) {
-
-
     if(dim == 3) {
 
       int n_face_group = PDM_part_mesh_n_bound_get(pm, PDM_BOUND_TYPE_FACE);
@@ -320,6 +318,71 @@ int main(int argc, char *argv[])
 
     } else {
 
+      int n_edge_group = PDM_part_mesh_n_bound_get(pm, PDM_BOUND_TYPE_EDGE);
+      for(int i_part = 0; i_part < n_part; ++i_part) {
+
+        int n_vtx = PDM_part_mesh_nodal_n_vtx_get(pmesh_nodal, i_part);
+        double *vtx_coord = PDM_part_mesh_nodal_vtx_coord_get(pmesh_nodal, i_part);
+        PDM_g_num_t *vtx_ln_to_gn = PDM_part_mesh_nodal_vtx_g_num_get(pmesh_nodal, i_part);
+
+        PDM_g_num_t *edge_ln_to_gn = NULL;
+        int         *edge_vtx_idx  = NULL;
+        int         *edge_vtx      = NULL;
+        int pn_edge = PDM_part_mesh_n_entity_get(pm, i_part, PDM_MESH_ENTITY_EDGE);
+        PDM_part_mesh_entity_ln_to_gn_get(pm,
+                                          i_part,
+                                          PDM_MESH_ENTITY_EDGE,
+                                          &edge_ln_to_gn,
+                                          PDM_OWNERSHIP_KEEP);
+        PDM_part_mesh_connectivity_get(pm,
+                                       i_part,
+                                       PDM_CONNECTIVITY_TYPE_EDGE_VTX,
+                                       &edge_vtx,
+                                       &edge_vtx_idx,
+                                       PDM_OWNERSHIP_KEEP);
+        assert(edge_vtx_idx == NULL);
+        int *edge_flags = malloc(pn_edge * sizeof(int));
+        for(int i_edge = 0; i_edge < pn_edge; ++i_edge) {
+          edge_flags[i_edge] = -1;
+        }
+
+        for(int i_group = 0; i_group < n_edge_group; ++i_group ) {
+          int          pn_bound        = 0;
+          int         *pbound          = NULL;
+          PDM_g_num_t *pbound_ln_to_gn = NULL;
+          PDM_part_mesh_bound_get(pm,
+                                  i_part,
+                                  i_group,
+                                  PDM_BOUND_TYPE_EDGE,
+                                  &pn_bound,
+                                  &pbound,
+                                  &pbound_ln_to_gn,
+                                  PDM_OWNERSHIP_KEEP);
+          // PDM_log_trace_array_int(pbound, pn_bound, "pbound : ");
+          for(int idx_edge = 0; idx_edge < pn_bound; ++idx_edge) {
+            int i_edge = pbound[idx_edge]-1;
+            edge_flags[i_edge] = i_group;
+          }
+        }
+
+        char filename[999];
+        sprintf(filename, "out_pmesh_nodal_to_pmesh_%i_%i.vtk", i_part, i_rank);
+        const char* field_name[] = {"edge_color", 0 };
+        const int *edge_field[2] = {edge_flags};
+        PDM_vtk_write_std_elements(filename,
+                                   n_vtx,
+                                   vtx_coord,
+                                   vtx_ln_to_gn ,
+                                   PDM_MESH_NODAL_BAR2,
+                                   pn_edge,
+                                   edge_vtx    ,
+                                   edge_ln_to_gn,
+                                   1,
+                                   field_name,
+                                   edge_field);
+
+        free(edge_flags);
+      }
     }
 
 

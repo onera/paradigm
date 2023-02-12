@@ -1383,7 +1383,19 @@ PDM_part_mesh_nodal_std_decomposes_edges
    case PDM_MESH_NODAL_BAR2:
    case PDM_MESH_NODAL_BARHO:
    case PDM_MESH_NODAL_BARHO_BEZIER:
-     abort();
+     PDM_part_mesh_nodal_bar_decomposes_edges(n_elt,
+                                              order,
+                                              parent_node,
+                                              n_elt_current,
+                                              n_edge_current,
+                                              vtx_ln_to_gn,
+                                              connectivity_elmt_vtx,
+                                              elmt_ln_to_gn,
+                                              elmt_edge_vtx_idx,
+                                              elmt_edge_vtx,
+                                              elmt_cell_edge_idx,
+                                              elmt_edge_cell,
+                                              parent_elmt_position);
      break;
    case PDM_MESH_NODAL_TRIA3:
    case PDM_MESH_NODAL_TRIAHO:
