@@ -544,8 +544,6 @@ PDM_part_mesh_nodal_quad_decomposes_faces
   /*
    * For each element we flaten all connectivities in one array
    */
-
-
   for (int ielt = 0; ielt < n_elt; ielt++) {
 
     /* Store the face_cell */

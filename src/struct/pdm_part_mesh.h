@@ -189,9 +189,10 @@ PDM_part_mesh_bound_set
 (
  PDM_part_mesh_t          *pmesh,
  int                       i_part,
+ int                       i_group,
  PDM_bound_type_t          bound_type,
+ int                       pn_bound,
  int                      *pbound,
- int                      *pbound_idx,
  PDM_g_num_t              *pbound_ln_to_gn,
  PDM_ownership_t           ownership
 );
@@ -201,9 +202,10 @@ PDM_part_mesh_bound_get
 (
  PDM_part_mesh_t          *pmesh,
  int                       i_part,
+ int                       i_group,
  PDM_bound_type_t          bound_type,
+ int                      *pn_bound,
  int                     **pbound,
- int                     **pbound_idx,
  PDM_g_num_t             **pbound_ln_to_gn,
  PDM_ownership_t           ownership
 );

@@ -194,8 +194,8 @@ int main(int argc, char *argv[])
 
   PDM_dcube_nodal_t* dcube = PDM_dcube_nodal_gen_create (comm,
                                                          n_vtx_seg,
-                                                         n_vtx_seg,
-                                                         n_vtx_seg,
+                                                         2,
+                                                         2,
                                                          length,
                                                          0.,
                                                          0.,
@@ -251,10 +251,90 @@ int main(int argc, char *argv[])
                                                          transform_kind,
                                                          PDM_DMESH_NODAL_TO_DMESH_TRANSLATE_GROUP_TO_FACE);
 
+  if(post) {
+
+
+    if(dim == 3) {
+
+      int n_face_group = PDM_part_mesh_n_bound_get(pm, PDM_BOUND_TYPE_FACE);
+      for(int i_part = 0; i_part < n_part; ++i_part) {
+
+        int n_vtx = PDM_part_mesh_nodal_n_vtx_get(pmesh_nodal, i_part);
+        double *vtx_coord = PDM_part_mesh_nodal_vtx_coord_get(pmesh_nodal, i_part);
+        PDM_g_num_t *vtx_ln_to_gn = PDM_part_mesh_nodal_vtx_g_num_get(pmesh_nodal, i_part);
+
+        PDM_g_num_t *face_ln_to_gn = NULL;
+        int         *face_vtx_idx  = NULL;
+        int         *face_vtx      = NULL;
+        int pn_face = PDM_part_mesh_n_entity_get(pm, i_part, PDM_MESH_ENTITY_FACE);
+        PDM_part_mesh_entity_ln_to_gn_get(pm,
+                                          i_part,
+                                          PDM_MESH_ENTITY_FACE,
+                                          &face_ln_to_gn,
+                                          PDM_OWNERSHIP_KEEP);
+        PDM_part_mesh_connectivity_get(pm,
+                                       i_part,
+                                       PDM_CONNECTIVITY_TYPE_FACE_VTX,
+                                       &face_vtx,
+                                       &face_vtx_idx,
+                                       PDM_OWNERSHIP_KEEP);
+
+        int *face_flags = malloc(pn_face * sizeof(int));
+        for(int i_face = 0; i_face < pn_face; ++i_face) {
+          face_flags[i_face] = -1;
+        }
+
+        for(int i_group = 0; i_group < n_face_group; ++i_group ) {
+          int          pn_bound        = 0;
+          int         *pbound          = NULL;
+          PDM_g_num_t *pbound_ln_to_gn = NULL;
+          PDM_part_mesh_bound_get(pm,
+                                  i_part,
+                                  i_group,
+                                  PDM_BOUND_TYPE_FACE,
+                                  &pn_bound,
+                                  &pbound,
+                                  &pbound_ln_to_gn,
+                                  PDM_OWNERSHIP_KEEP);
+          PDM_log_trace_array_int(pbound, pn_bound, "pbound : ");
+          for(int idx_face = 0; idx_face < pn_bound; ++idx_face) {
+            int i_face = pbound[idx_face]-1;
+            face_flags[i_face] = i_group;
+          }
+
+        }
+
+        char filename[999];
+        sprintf(filename, "out_pmesh_nodal_to_pmesh_%i_%i.vtk", i_part, i_rank);
+        PDM_vtk_write_polydata(filename,
+                               n_vtx,
+                               vtx_coord,
+                               vtx_ln_to_gn,
+                               pn_face      ,
+                               face_vtx_idx,
+                               face_vtx    ,
+                               face_ln_to_gn,
+                               face_flags);
+
+        free(face_flags);
+      }
+
+    } else {
+
+    }
+
+
+
+
+  }
+
+
+
 
   PDM_multipart_free(mpart_id);
   PDM_dcube_nodal_gen_free(dcube);
   PDM_part_mesh_nodal_free(pmesh_nodal);
+  PDM_part_mesh_free(pm);
 
   if (i_rank == 0) {
     printf("-- End\n");

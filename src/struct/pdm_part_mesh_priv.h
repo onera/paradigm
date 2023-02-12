@@ -71,9 +71,9 @@ struct _pdm_part_mesh_t
   PDM_bool_t          is_owner_vtx_coord;
 
   int                  n_group_bnd[PDM_BOUND_TYPE_MAX]; /*!< Number of group by elememnt type                                 */
-  PDM_g_num_t       ***pbound_ln_to_gn;                 /* Array of connectivty (size = PDM_CONNECTIVITY_TYPE_MAX)           */
-  int               ***pbound;                          /* Array of connectivty (size = PDM_CONNECTIVITY_TYPE_MAX)            */
-  int               ***pbound_idx;                      /* Array of connectivty_idx if any (size = PDM_CONNECTIVITY_TYPE_MAX) */
+  int               ***pn_bound;                        /* Array of connectivty (size = PDM_CONNECTIVITY_TYPE_MAX)            */
+  PDM_g_num_t      ****pbound_ln_to_gn;                 /* Array of connectivty (size = PDM_CONNECTIVITY_TYPE_MAX)            */
+  int              ****pbound;                          /* Array of connectivty_idx if any (size = PDM_CONNECTIVITY_TYPE_MAX) */
   PDM_bool_t         *is_owner_bound;
 
   /* Comm graph */

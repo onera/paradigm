@@ -642,13 +642,19 @@ _generate_faces_from_part_mesh_nodal
                                                      &n_elmt_vol_tot,
                                                      &n_face_elt_vol_tot,
                                                      &n_sum_vtx_vol_face_tot );
-
+  int have_surface = 0;
   if(pmn->surfacic != NULL) {
+    have_surface = 1;
     PDM_part_mesh_nodal_elmts_decompose_faces_get_size(pmn->surfacic,
                                                        &n_elmt_surf_tot,
                                                        &n_face_elt_surf_tot,
                                                        &n_sum_vtx_surf_face_tot);
   }
+
+  int n_elmt_tot         = n_elmt_vol_tot         + n_elmt_surf_tot;
+  int n_face_elt_tot     = n_face_elt_vol_tot     + n_face_elt_surf_tot;
+  int n_sum_vtx_face_tot = n_sum_vtx_vol_face_tot + n_sum_vtx_surf_face_tot;
+
 
   PDM_g_num_t **vtx_ln_to_gn = malloc(sizeof(PDM_g_num_t *));
   PDM_g_num_t _max_vtx_gnum = -1;
@@ -662,16 +668,19 @@ _generate_faces_from_part_mesh_nodal
   PDM_g_num_t max_vtx_gnum = 0;
   PDM_MPI_Allreduce(&_max_vtx_gnum, &max_vtx_gnum, 1, PDM__PDM_MPI_G_NUM, PDM_MPI_MAX, pmn->comm);
 
-  int         *elmt_face_vtx_idx    = malloc((n_face_elt_vol_tot+1) * sizeof(int        ));
-  PDM_g_num_t *elmt_face_vtx        = malloc(n_sum_vtx_vol_face_tot * sizeof(PDM_g_num_t));
-  int         *elmt_cell_face_idx   = malloc((n_elmt_vol_tot+1)     * sizeof(int        ));
-  int         *parent_elmt_position = malloc(n_face_elt_vol_tot     * sizeof(int        ));
-  PDM_g_num_t *elmt_face_cell       = malloc(n_face_elt_vol_tot     * sizeof(PDM_g_num_t));
+  int         *elmt_face_vtx_idx    = malloc((n_face_elt_tot+1) * sizeof(int        ));
+  PDM_g_num_t *elmt_face_vtx        = malloc(n_sum_vtx_face_tot * sizeof(PDM_g_num_t));
+  int         *elmt_cell_face_idx   = malloc((n_elmt_tot+1)     * sizeof(int        ));
+  int         *parent_elmt_position = malloc(n_face_elt_tot     * sizeof(int        ));
+  PDM_g_num_t *elmt_face_cell       = malloc(n_face_elt_tot     * sizeof(PDM_g_num_t));
 
-  // printf("n_face_elt_vol_tot     : %i\n", n_face_elt_vol_tot    );
-  // printf("n_sum_vtx_vol_face_tot : %i\n", n_sum_vtx_vol_face_tot);
-  // printf("n_elmt_vol_tot         : %i\n", n_elmt_vol_tot        );
-  // printf("n_face_elt_vol_tot     : %i\n", n_face_elt_vol_tot    );
+  printf("n_face_elt_vol_tot     : %i\n", n_face_elt_vol_tot    );
+  printf("n_sum_vtx_vol_face_tot : %i\n", n_sum_vtx_vol_face_tot);
+  printf("n_elmt_vol_tot         : %i\n", n_elmt_vol_tot        );
+
+  printf("n_elmt_surf_tot         : %i\n", n_elmt_surf_tot        );
+  printf("n_face_elt_surf_tot     : %i\n", n_face_elt_surf_tot    );
+  printf("n_sum_vtx_surf_face_tot : %i\n", n_sum_vtx_surf_face_tot);
 
   elmt_face_vtx_idx [0] = 0;
   elmt_cell_face_idx[0] = 0;
@@ -683,14 +692,30 @@ _generate_faces_from_part_mesh_nodal
                                                      elmt_face_cell,
                                                      parent_elmt_position);
 
+  if(have_surface == 1) {
+    int         *surf_elmt_face_vtx_idx    = &elmt_face_vtx_idx   [n_face_elt_vol_tot];
+    // PDM_g_num_t *surf_elmt_face_vtx        = &elmt_face_vtx       [n_sum_vtx_vol_face_tot];
+    int         *surf_elmt_cell_face_idx   = &elmt_cell_face_idx  [n_elmt_vol_tot];
+    int         *surf_parent_elmt_position = &parent_elmt_position[n_face_elt_vol_tot];
+    PDM_g_num_t *surf_elmt_face_cell       = &elmt_face_cell      [n_face_elt_vol_tot];
+
+    PDM_part_mesh_nodal_elmts_sections_decompose_faces(pmn->surfacic,
+                                                       vtx_ln_to_gn,
+                                                       surf_elmt_face_vtx_idx,
+                                                       elmt_face_vtx,
+                                                       surf_elmt_cell_face_idx,
+                                                       surf_elmt_face_cell,
+                                                       surf_parent_elmt_position);
+  }
+
 
   PDM_g_num_t *elmt_cell_face  = NULL;
   PDM_g_num_t *entity_distrib  = NULL;
   PDM_g_num_t *dentity_vtx     = NULL;
   int         *dentity_vtx_idx = NULL;
   _generate_part_entitiy_connectivity(pmn->comm,
-                                      n_elmt_vol_tot,
-                                      n_face_elt_vol_tot,
+                                      n_elmt_tot,
+                                      n_face_elt_tot,
                                       max_vtx_gnum,
                                       elmt_face_vtx_idx,
                                       elmt_face_vtx,
@@ -701,6 +726,10 @@ _generate_faces_from_part_mesh_nodal
                                       &dentity_vtx_idx,
                                       &entity_distrib,
                                       &elmt_cell_face);
+
+
+  PDM_part_mesh_t* pm = PDM_part_mesh_create(pmn->n_part,
+                                             pmn->comm);
 
   /*
    * Reconstruction du face_ln_to_gn + cell_face local
@@ -719,12 +748,18 @@ _generate_faces_from_part_mesh_nodal
     face_ln_to_gn[i_part] = malloc(pn_cell_face_idx * sizeof(PDM_g_num_t));
     int *unique_order     = malloc(pn_cell_face_idx * sizeof(int        ));
 
+    int *pcell_face_idx = malloc((n_elmts+1) * sizeof(int));
+    pcell_face_idx[0] = 0;
+    for(int i = 0; i < n_elmts; ++i) {
+      pcell_face_idx[i+1] = pcell_face_idx[i] + elmt_cell_face_idx[idx_read_elmt+i+1] - elmt_cell_face_idx[idx_read_elmt+i];
+    }
+
     PDM_g_num_t *_elmt_cell_face = &elmt_cell_face[shift_cell_face];
     for(int i = 0; i < pn_cell_face_idx; ++i) {
       face_ln_to_gn[i_part][i] = PDM_ABS(_elmt_cell_face[i]);
     }
 
-    pn_face[i_part] = PDM_inplace_unique_long(face_ln_to_gn[i_part], unique_order, 0, pn_cell_face_idx-1);
+    pn_face      [i_part] = PDM_inplace_unique_long2(face_ln_to_gn[i_part], unique_order, 0, pn_cell_face_idx-1);
     face_ln_to_gn[i_part] = realloc(face_ln_to_gn[i_part], pn_face[i_part] * sizeof(PDM_g_num_t));
 
     // PDM_log_trace_array_long(face_ln_to_gn[i_part], pn_face[i_part], "face_ln_to_gn ::");
@@ -741,7 +776,110 @@ _generate_faces_from_part_mesh_nodal
 
     free(unique_order);
 
+    /*
+     * Fill part_mesh
+     */
+    PDM_part_mesh_n_entity_set(pm,
+                               i_part,
+                               PDM_MESH_ENTITY_CELL,
+                               n_elmts);
+
+    PDM_part_mesh_n_entity_set(pm,
+                               i_part,
+                               PDM_MESH_ENTITY_FACE,
+                               pn_face[i_part]);
+
+    PDM_part_mesh_connectivity_set(pm,
+                                   i_part,
+                                   PDM_CONNECTIVITY_TYPE_CELL_FACE,
+                                   cell_face    [i_part],
+                                   pcell_face_idx,
+                                   PDM_OWNERSHIP_KEEP);
+
+
   }
+
+  /*
+   * Post-treat surface
+   */
+  PDM_g_num_t **face_bnd_ln_to_gn = malloc(pmn->n_part * sizeof(PDM_g_num_t *));
+  int         **cell_face_bnd     = malloc(pmn->n_part * sizeof(int         *));
+  int          *pn_face_bnd       = malloc(pmn->n_part * sizeof(int          ));
+
+  int n_group = PDM_part_mesh_nodal_n_group_get(pmn, PDM_GEOMETRY_KIND_SURFACIC);
+  PDM_part_mesh_n_bound_set(pm, PDM_BOUND_TYPE_FACE, n_group);
+
+  for(int i_part = 0; i_part < pmn->n_part; ++i_part) {
+    int n_elmts = PDM_part_mesh_nodal_n_elmts_get(pmn, PDM_GEOMETRY_KIND_SURFACIC, i_part);
+
+    int pn_cell_face_bnd_idx = elmt_cell_face_idx[idx_read_elmt+n_elmts] - elmt_cell_face_idx[idx_read_elmt];
+    face_bnd_ln_to_gn[i_part] = malloc(pn_cell_face_bnd_idx * sizeof(PDM_g_num_t));
+    int *unique_order     = malloc(pn_cell_face_bnd_idx * sizeof(int        ));
+
+    PDM_g_num_t *_elmt_cell_face_bnd = &elmt_cell_face[shift_cell_face];
+    for(int i = 0; i < pn_cell_face_bnd_idx; ++i) {
+      face_bnd_ln_to_gn[i_part][i] = PDM_ABS(_elmt_cell_face_bnd[i]);
+    }
+
+    pn_face_bnd[i_part] = PDM_inplace_unique_long2(face_bnd_ln_to_gn[i_part], unique_order, 0, pn_cell_face_bnd_idx-1);
+    face_bnd_ln_to_gn[i_part] = realloc(face_bnd_ln_to_gn[i_part], pn_face_bnd[i_part] * sizeof(PDM_g_num_t));
+
+    PDM_log_trace_array_long(face_bnd_ln_to_gn[i_part], pn_face_bnd[i_part], "face_bnd_ln_to_gn ::");
+    PDM_log_trace_array_int(unique_order, pn_cell_face_bnd_idx, "unique_order ::");
+    PDM_log_trace_array_long(_elmt_cell_face_bnd, pn_cell_face_bnd_idx, "_elmt_cell_face_bnd ::");
+
+    cell_face_bnd[i_part] = malloc(pn_cell_face_bnd_idx * sizeof(int));
+    for(int idx = 0; idx < pn_cell_face_bnd_idx; ++idx) {
+      int g_sgn  = PDM_SIGN(_elmt_cell_face_bnd[idx]);
+      int l_elmt = unique_order[idx];
+      cell_face_bnd[i_part][idx] = (l_elmt + 1) * g_sgn;
+    }
+
+    PDM_log_trace_array_long(cell_face_bnd[i_part], pn_cell_face_bnd_idx, "cell_face_bnd ::");
+
+    idx_read_elmt   += n_elmts;
+    shift_cell_face += pn_cell_face_bnd_idx;
+
+    free(unique_order);
+
+    /*
+     * Post-treatment
+     */
+
+    for(int i_group = 0; i_group < n_group; ++i_group) {
+
+      int          n_face_group             = 0;
+      int         *group_elmt_face          = NULL;
+      PDM_g_num_t *group_elmt_face_ln_to_gn = NULL;
+      PDM_part_mesh_nodal_group_get(pmn,
+                                    PDM_GEOMETRY_KIND_SURFACIC,
+                                    i_part,
+                                    i_group,
+                                    &n_face_group,
+                                    &group_elmt_face,
+                                    &group_elmt_face_ln_to_gn);
+
+      int         *group_face          = malloc(n_face_group * sizeof(int        ));
+      PDM_g_num_t *group_face_ln_to_gn = malloc(n_face_group * sizeof(PDM_g_num_t));
+
+      for(int idx_face = 0; idx_face < n_face_group; ++idx_face) {
+        int i_elmt_face = group_elmt_face[idx_face]-1;
+        group_face         [idx_face] = cell_face_bnd[i_part][i_elmt_face];
+        group_face_ln_to_gn[idx_face] = group_elmt_face_ln_to_gn[idx_face];
+      }
+
+      PDM_part_mesh_bound_set(pm,
+                              i_part,
+                              i_group,
+                              PDM_BOUND_TYPE_FACE,
+                              n_face_group,
+                              group_face,
+                              group_face_ln_to_gn,
+                              PDM_OWNERSHIP_KEEP);
+    }
+  }
+
+
 
   /*
    * Hook face_vtx
@@ -803,6 +941,18 @@ _generate_faces_from_part_mesh_nodal
     free(pface_vtx_n   [i_part]);
     free(pface_vtx_gnum[i_part]);
 
+    PDM_part_mesh_connectivity_set(pm,
+                                   i_part,
+                                   PDM_CONNECTIVITY_TYPE_FACE_VTX,
+                                   pface_vtx    [i_part],
+                                   pface_vtx_idx[i_part],
+                                   PDM_OWNERSHIP_KEEP);
+
+    PDM_part_mesh_entity_ln_to_gn_set(pm,
+                                      i_part,
+                                      PDM_MESH_ENTITY_FACE,
+                                      face_ln_to_gn[i_part],
+                                      PDM_OWNERSHIP_KEEP);
   }
 
   free(pface_vtx_n);
@@ -811,7 +961,7 @@ _generate_faces_from_part_mesh_nodal
 
   PDM_block_to_part_free(btp);
 
-  if(1 == 1) {
+  if(0 == 1) {
     for(int i_part = 0; i_part < pmn->n_part; ++i_part) {
 
       int n_vtx = PDM_part_mesh_nodal_n_vtx_get(pmn, i_part);
@@ -832,18 +982,17 @@ _generate_faces_from_part_mesh_nodal
 
 
   for(int i_part = 0; i_part < pmn->n_part; ++i_part) {
-    free(cell_face    [i_part]);
-    free(face_ln_to_gn[i_part]);
+    free(cell_face_bnd    [i_part]);
+    free(face_bnd_ln_to_gn[i_part]);
   }
   free(cell_face    );
   free(face_ln_to_gn);
   free(pn_face);
 
+  free(cell_face_bnd    );
+  free(face_bnd_ln_to_gn);
+  free(pn_face_bnd);
 
-  for(int i_part = 0; i_part < pmn->n_part; ++i_part) {
-    free(pface_vtx    [i_part]);
-    free(pface_vtx_idx[i_part]);
-  }
   free(pface_vtx    );
   free(pface_vtx_idx);
 
@@ -855,7 +1004,7 @@ _generate_faces_from_part_mesh_nodal
   free(dentity_vtx      );
   free(entity_distrib);
 
-  return NULL;
+  return pm;
 }
 
 
@@ -964,7 +1113,7 @@ _generate_edges_from_part_mesh_nodal
       edge_ln_to_gn[i_part][i] = PDM_ABS(_elmt_cell_edge[i]);
     }
 
-    pn_edge[i_part] = PDM_inplace_unique_long(edge_ln_to_gn[i_part], unique_order, 0, pn_cell_edge_idx-1);
+    pn_edge[i_part] = PDM_inplace_unique_long2(edge_ln_to_gn[i_part], unique_order, 0, pn_cell_edge_idx-1);
     edge_ln_to_gn[i_part] = realloc(edge_ln_to_gn[i_part], pn_edge[i_part] * sizeof(PDM_g_num_t));
 
     // PDM_log_trace_array_long(edge_ln_to_gn[i_part], pn_edge[i_part], "edge_ln_to_gn ::");
