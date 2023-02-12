@@ -195,7 +195,7 @@ int main(int argc, char *argv[])
   PDM_dcube_nodal_t* dcube = PDM_dcube_nodal_gen_create (comm,
                                                          n_vtx_seg,
                                                          n_vtx_seg,
-                                                         2,
+                                                         n_vtx_seg,
                                                          length,
                                                          0.,
                                                          0.,
@@ -296,10 +296,10 @@ int main(int argc, char *argv[])
                                   &pbound,
                                   &pbound_ln_to_gn,
                                   PDM_OWNERSHIP_KEEP);
-          PDM_log_trace_array_int(pbound, pn_bound, "pbound : ");
+          // PDM_log_trace_array_int(pbound, pn_bound, "pbound : ");
           for(int idx_face = 0; idx_face < pn_bound; ++idx_face) {
             int i_face = pbound[idx_face]-1;
-            // face_flags[i_face] = i_group;
+            face_flags[i_face] = i_group;
           }
         }
 
