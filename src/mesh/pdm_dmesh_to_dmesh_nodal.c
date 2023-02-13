@@ -334,15 +334,53 @@ _dmesh_to_dmesh_nodal
     free(section_kind_idx);
     free(section_kind_n);
     free(section_n);
+    free(section_kind);
 
     if(0 == 0) {
       PDM_log_trace_array_int (post_section_kind, n_section_post, "post_section_kind ::");
       PDM_log_trace_array_long(post_section_n   , n_section_post, "post_section_n    ::");
-
     }
+
+    /*
+     * Compute global shift
+     */
+    PDM_g_num_t* post_section_idx = malloc((n_section_post+1) * sizeof(PDM_g_num_t));
+    post_section_idx[0] = 0;
+    for(int i = 0; i < n_section_post; ++i) {
+      post_section_idx[i+1] = post_section_idx[i] + post_section_n[i];
+    }
+
+    /*
+     * Reanrange in global section the local one
+     */
+    PDM_g_num_t* local_post_section_n   = malloc((n_section_post  ) * sizeof(PDM_g_num_t));
+    PDM_g_num_t* local_post_section_idx = malloc((n_section_post+1) * sizeof(PDM_g_num_t));
+    for(int i = 0; i < n_section_post; ++i) {
+      local_post_section_n[i] = 0;
+    }
+
+    for(int i_face = 0; i_face < dn_face; ++i_face) {
+      PDM_g_num_t gnum = distrib_face[i_rank] + i_face + 1;
+      int t_section = PDM_binary_search_gap_long(gnum-1, post_section_idx, n_section_post+1);
+      local_post_section_n[t_section]++;
+    }
+
+    local_post_section_idx[0] = 0;
+    for(int i = 0; i < n_section_post; ++i) {
+      local_post_section_idx[i+1] = local_post_section_idx[i] + local_post_section_n[i];
+    }
+
+    if(1 == 1) {
+      PDM_log_trace_array_int (local_post_section_idx, n_section_post+1, "local_post_section_idx ::");
+    }
+
+
 
     free(post_section_kind);
     free(post_section_n   );
+    free(post_section_idx );
+    free(local_post_section_n  );
+    free(local_post_section_idx);
 
 
     /*
@@ -352,12 +390,7 @@ _dmesh_to_dmesh_nodal
     printf("n_section_quad   = %i\n", n_section_quad  );
     printf("n_section_poly2d = %i\n", n_section_poly2d);
 
-    int n_section_bar = n_edge_bound;
-
-
-
-    // free(section_idx );
-    free(section_kind);
+    // int n_section_bar = n_edge_bound;
 
 
     free(pedge_vtx_bnd_idx);
