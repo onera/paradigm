@@ -200,10 +200,10 @@ _dmesh_to_dmesh_nodal
                                               pedge_vtx,
                                               &pface_vtx);
 
-      PDM_log_trace_connectivity_int(pedge_vtx_idx, pedge_vtx, pn_edge, "pedge_vtx ::");
+      // PDM_log_trace_connectivity_int(pedge_vtx_idx, pedge_vtx, pn_edge, "pedge_vtx ::");
 
+      pface_vtx_idx = pface_edge_idx;
 
-      free(pface_edge_idx);
       free(pface_edge    );
       free(pedge_ln_to_gn);
       free(pedge_vtx_idx);
@@ -245,6 +245,119 @@ _dmesh_to_dmesh_nodal
                                                              &pedge_vtx_bnd_idx,
                                                              &pedge_bnd_vtx);
 
+    /*
+     * Reconstruction of section for surfacic
+     */
+    PDM_g_num_t          *section_n  = malloc((dn_face+1) * sizeof(PDM_g_num_t         )); // Suralloc
+    PDM_Mesh_nodal_elt_t *section_kind = malloc( dn_face    * sizeof(PDM_Mesh_nodal_elt_t)); // Suralloc
+
+    int n_section_tot    = 0;
+    int n_section_tri    = 0;
+    int n_section_quad   = 0;
+    int n_section_poly2d = 0;
+    int ln_vtx_old = -1;
+    for(int i_face = 0; i_face < dn_face; ++i_face) {
+      int ln_vtx = pface_vtx_idx[i_face+1] - pface_vtx_idx[i_face];
+      if(ln_vtx_old == ln_vtx){
+        section_n[n_section_tot-1]++;
+        continue;
+      }
+      if(ln_vtx == 3) {
+        section_kind[n_section_tot] = PDM_MESH_NODAL_TRIA3;
+        n_section_tri++;
+      } else if(ln_vtx == 4){
+        section_kind[n_section_tot] = PDM_MESH_NODAL_QUAD4;
+        n_section_quad++;
+      } else {
+        section_kind[n_section_tot] = PDM_MESH_NODAL_POLY_2D;
+        n_section_poly2d++;
+      }
+      section_n[n_section_tot] = 1;
+      n_section_tot++;
+      ln_vtx_old = ln_vtx;
+    }
+    section_n    = realloc(section_n   , (n_section_tot+1) * sizeof(PDM_g_num_t         ));
+    section_kind = realloc(section_kind,  n_section_tot    * sizeof(PDM_Mesh_nodal_elt_t));
+
+    /*
+     * Rebuild sections
+     */
+    int *section_kind_n = malloc(n_rank * sizeof(int));
+    PDM_MPI_Allgather(&n_section_tot, 1, PDM_MPI_INT, section_kind_n, 1, PDM_MPI_INT, comm);
+
+    int *section_kind_idx = malloc((n_rank+1) * sizeof(int));
+    section_kind_idx[0] = 0;
+    for(int i = 0; i < n_rank; ++i) {
+      section_kind_idx[i+1] = section_kind_idx[i] + section_kind_n[i];
+    }
+
+
+    int         *g_section_kind = (int         *) malloc(section_kind_idx[n_rank] * sizeof(int        ));
+    PDM_g_num_t *g_section_n      = (PDM_g_num_t *) malloc(section_kind_idx[n_rank] * sizeof(PDM_g_num_t));
+
+    PDM_MPI_Allgatherv(section_kind, n_section_tot, PDM_MPI_INT,
+                       g_section_kind, section_kind_n, section_kind_idx, PDM_MPI_INT, comm);
+    PDM_MPI_Allgatherv(section_n, n_section_tot, PDM__PDM_MPI_G_NUM,
+                       g_section_n, section_kind_n, section_kind_idx, PDM__PDM_MPI_G_NUM, comm);
+
+    if(0 == 0) {
+      PDM_log_trace_array_long(section_n, n_section_tot, "section_n ::");
+      PDM_log_trace_array_long(distrib_face, n_rank+1, "distrib_face ::");
+      PDM_log_trace_connectivity_int(section_kind_idx, g_section_kind, n_rank, "g_section_kind : ");
+      PDM_log_trace_connectivity_int(section_kind_idx, g_section_n   , n_rank, "g_section_n      : ");
+    }
+
+    /*
+     * Post-treament
+     */
+    int n_section_all_rank = section_kind_idx[n_rank];
+    int         *post_section_kind = (int         *) malloc(section_kind_idx[n_rank] * sizeof(int        ));
+    PDM_g_num_t *post_section_n    = (PDM_g_num_t *) malloc(section_kind_idx[n_rank] * sizeof(PDM_g_num_t));
+
+
+    int n_section_post = 0;
+    PDM_Mesh_nodal_elt_t first = PDM_MESH_NODAL_N_ELEMENT_TYPES;
+    for(int i = 0; i < n_section_all_rank; ++i) {
+      if(first != (PDM_Mesh_nodal_elt_t) g_section_kind[i]) {
+        first = g_section_kind[i];
+        post_section_kind[n_section_post] = first;
+        post_section_n   [n_section_post] = g_section_n[i];
+        n_section_post++;
+      }
+      post_section_n[n_section_post-1] += g_section_n[i];
+    }
+    post_section_kind = realloc(post_section_kind, n_section_post * sizeof(int        ));
+    post_section_n    = realloc(post_section_n   , n_section_post * sizeof(PDM_g_num_t));
+
+    free(g_section_kind);
+    free(g_section_n);
+    free(section_kind_idx);
+    free(section_kind_n);
+    free(section_n);
+
+    if(0 == 0) {
+      PDM_log_trace_array_int (post_section_kind, n_section_post, "post_section_kind ::");
+      PDM_log_trace_array_long(post_section_n   , n_section_post, "post_section_n    ::");
+
+    }
+
+    free(post_section_kind);
+    free(post_section_n   );
+
+
+    /*
+     *
+     */
+    printf("n_section_tri    = %i\n", n_section_tri   );
+    printf("n_section_quad   = %i\n", n_section_quad  );
+    printf("n_section_poly2d = %i\n", n_section_poly2d);
+
+    int n_section_bar = n_edge_bound;
+
+
+
+    // free(section_idx );
+    free(section_kind);
 
 
     free(pedge_vtx_bnd_idx);
