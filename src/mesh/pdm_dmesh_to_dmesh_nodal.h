@@ -81,8 +81,8 @@ PDM_dmesh_to_dmesh_nodal_connectivity_set
   const int                         i_mesh,
         int                        *dcell_face_idx,
         PDM_g_num_t                *dcell_face,
-        PDM_g_num_t                *dface_edge,
         int                        *dface_edge_idx,
+        PDM_g_num_t                *dface_edge,
         PDM_g_num_t                *dedge_vtx,
         int                        *dface_vtx_idx,
         PDM_g_num_t                *dface_vtx

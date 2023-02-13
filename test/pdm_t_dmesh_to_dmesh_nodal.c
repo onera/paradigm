@@ -189,9 +189,16 @@ int main(int argc, char *argv[])
 
   PDM_dmesh_nodal_to_dmesh_set_post_treat_result(dmntodm, 1);
 
+  int dim = PDM_Mesh_nodal_elt_dim_get(t_elt);
+  PDM_dmesh_nodal_to_dmesh_transform_t       transform_kind       = PDM_DMESH_NODAL_TO_DMESH_TRANSFORM_TO_FACE;
+  PDM_dmesh_nodal_to_dmesh_translate_group_t transform_group_kind = PDM_DMESH_NODAL_TO_DMESH_TRANSLATE_GROUP_TO_FACE;
+  if(dim == 2) {
+    transform_kind       = PDM_DMESH_NODAL_TO_DMESH_TRANSFORM_TO_EDGE;
+    transform_group_kind = PDM_DMESH_NODAL_TO_DMESH_TRANSLATE_GROUP_TO_EDGE;
+  }
   PDM_dmesh_nodal_to_dmesh_compute(dmntodm,
-                                   PDM_DMESH_NODAL_TO_DMESH_TRANSFORM_TO_FACE,
-                                   PDM_DMESH_NODAL_TO_DMESH_TRANSLATE_GROUP_TO_FACE);
+                                   transform_kind,
+                                   transform_group_kind);
 
   PDM_dmesh_t* dmesh = NULL;
   PDM_dmesh_nodal_to_dmesh_get_dmesh(dmntodm, 0, &dmesh);
@@ -242,7 +249,8 @@ int main(int argc, char *argv[])
 
   if(0 == 1) {
     PDM_log_trace_connectivity_long(dedge_vtx_idx , dedge_vtx , dn_edge, "dedge_vtx ::");
-    PDM_log_trace_connectivity_long(dedge_face_idx, dedge_face, dn_edge, "dedge_face ::");
+    // PDM_log_trace_connectivity_long(dedge_face_idx, dedge_face, dn_edge, "dedge_face ::");
+    PDM_log_trace_connectivity_long(dface_edge_idx, dface_edge, dn_face, "dface_edge ::");
   }
 
   PDM_UNUSED(dn_face);
@@ -280,15 +288,28 @@ int main(int argc, char *argv[])
                                               dface_vtx_idx,
                                               dface_vtx);
   } else {
-    PDM_dmesh_to_dmesh_nodal_connectivity_set(dm_to_dmn,
-                                              0,
-                                              dcell_face_idx,
-                                              dcell_face,
-                                              NULL,
-                                              NULL,
-                                              NULL,
-                                              dface_vtx_idx,
-                                              dface_vtx);
+
+    if(dim == 2) {
+      PDM_dmesh_to_dmesh_nodal_connectivity_set(dm_to_dmn,
+                                                0,
+                                                dcell_face_idx,
+                                                dcell_face,
+                                                dface_edge_idx,
+                                                dface_edge,
+                                                dedge_vtx,
+                                                dface_vtx_idx,
+                                                dface_vtx);
+    } else {
+      PDM_dmesh_to_dmesh_nodal_connectivity_set(dm_to_dmn,
+                                                0,
+                                                dcell_face_idx,
+                                                dcell_face,
+                                                NULL,
+                                                NULL,
+                                                NULL,
+                                                dface_vtx_idx,
+                                                dface_vtx);
+    }
   }
 
   int         *dbound_face_idx = NULL;
