@@ -197,9 +197,9 @@ int main(int argc, char *argv[])
   PDM_dmesh_nodal_to_dmesh_get_dmesh(dmntodm, 0, &dmesh);
 
   int         *dface_vtx_idx;
-  PDM_g_num_t *tmp_dface_vtx;
+  PDM_g_num_t *dface_vtx;
   int dn_face = PDM_dmesh_connectivity_get(dmesh, PDM_CONNECTIVITY_TYPE_FACE_VTX,
-                                           &tmp_dface_vtx,
+                                           &dface_vtx,
                                            &dface_vtx_idx,
                                            PDM_OWNERSHIP_KEEP);
 
@@ -225,6 +225,13 @@ int main(int argc, char *argv[])
                                            &dedge_face_idx,
                                            PDM_OWNERSHIP_KEEP);
 
+  int         *dface_edge_idx;
+  PDM_g_num_t *dface_edge;
+  PDM_dmesh_connectivity_get(dmesh, PDM_CONNECTIVITY_TYPE_FACE_EDGE,
+                             &dface_edge,
+                             &dface_edge_idx,
+                             PDM_OWNERSHIP_KEEP);
+
   int         *dedge_vtx_idx;
   PDM_g_num_t *dedge_vtx;
   int dn_edge2 = PDM_dmesh_connectivity_get(dmesh, PDM_CONNECTIVITY_TYPE_EDGE_VTX,
@@ -246,13 +253,79 @@ int main(int argc, char *argv[])
   /* Recreate dmesh_nodal */
   PDM_dmesh_to_dmesh_nodal_t *dm_to_dmn = PDM_dmesh_to_dmesh_nodal_create(1, comm);
 
+  PDM_g_num_t *distrib_cell = NULL;
+  PDM_g_num_t *distrib_face = NULL;
+  PDM_g_num_t *distrib_edge = NULL;
+  PDM_g_num_t *distrib_vtx  = NULL;
+
+  PDM_dmesh_distrib_get(dmesh, PDM_MESH_ENTITY_CELL  , &distrib_cell);
+  PDM_dmesh_distrib_get(dmesh, PDM_MESH_ENTITY_FACE  , &distrib_face);
+  PDM_dmesh_distrib_get(dmesh, PDM_MESH_ENTITY_EDGE  , &distrib_edge);
+  PDM_dmesh_distrib_get(dmesh, PDM_MESH_ENTITY_VERTEX, &distrib_vtx );
+
+  PDM_dmesh_to_dmesh_nodal_distribution_set(dm_to_dmn,
+                                            0,
+                                            distrib_cell,
+                                            distrib_face,
+                                            distrib_edge,
+                                            distrib_vtx );
+  if(0 == 1) {
+    PDM_dmesh_to_dmesh_nodal_connectivity_set(dm_to_dmn,
+                                              0,
+                                              dcell_face_idx,
+                                              dcell_face,
+                                              dface_edge_idx,
+                                              dface_edge,
+                                              dedge_vtx,
+                                              dface_vtx_idx,
+                                              dface_vtx);
+  } else {
+    PDM_dmesh_to_dmesh_nodal_connectivity_set(dm_to_dmn,
+                                              0,
+                                              dcell_face_idx,
+                                              dcell_face,
+                                              NULL,
+                                              NULL,
+                                              NULL,
+                                              dface_vtx_idx,
+                                              dface_vtx);
+  }
+
+  int         *dbound_face_idx = NULL;
+  PDM_g_num_t *dbound_face     = NULL;
+  int         *dbound_edge_idx = NULL;
+  PDM_g_num_t *dbound_edge     = NULL;
+  int n_group_face = PDM_dmesh_bound_get(dmesh,
+                                         PDM_BOUND_TYPE_FACE,
+                                         &dbound_face,
+                                         &dbound_face_idx,
+                                         PDM_OWNERSHIP_KEEP);
+
+  int n_group_edge = PDM_dmesh_bound_get(dmesh,
+                                         PDM_BOUND_TYPE_EDGE,
+                                         &dbound_edge,
+                                         &dbound_edge_idx,
+                                         PDM_OWNERSHIP_KEEP);
+
+  PDM_dmesh_to_dmesh_nodal_group_set(dm_to_dmn,
+                                     0,
+                                     PDM_BOUND_TYPE_FACE,
+                                     n_group_face,
+                                     dbound_face,
+                                     dbound_face_idx);
+
+  PDM_dmesh_to_dmesh_nodal_group_set(dm_to_dmn,
+                                     0,
+                                     PDM_BOUND_TYPE_EDGE,
+                                     n_group_edge,
+                                     dbound_edge,
+                                     dbound_edge_idx);
+
+  PDM_dmesh_to_dmesh_nodal_compute(dm_to_dmn);
 
 
 
   PDM_dmesh_to_dmesh_nodal_free(dm_to_dmn);
-
-
-
 
   PDM_dmesh_nodal_to_dmesh_free(dmntodm);
   PDM_dcube_nodal_gen_free(dcube);

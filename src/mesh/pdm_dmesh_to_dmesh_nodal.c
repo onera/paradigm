@@ -70,7 +70,32 @@ extern "C" {
  * Private function definitions
  *============================================================================*/
 
+static
+PDM_dmesh_nodal_t*
+_dmesh_to_dmesh_nodal
+(
+ PDM_MPI_Comm    comm,
+ PDM_g_num_t    *distrib_cell,
+ PDM_g_num_t    *distrib_face,
+ PDM_g_num_t    *distrib_edge,
+ PDM_g_num_t    *distrib_vtx,
+ PDM_g_num_t    *dcell_face,
+ int            *dcell_face_idx,
+ PDM_g_num_t    *dface_edge,
+ int            *dface_edge_idx,
+ PDM_g_num_t    *dface_vtx,
+ int            *dface_vtx_idx,
+ PDM_g_num_t    *dedge_vtx,
+ int            *n_bound,
+ int           **dbound_idx,
+ PDM_g_num_t   **dbound
+)
+{
 
+
+
+
+}
 
 /*=============================================================================
  * Public function definitions
@@ -120,19 +145,20 @@ PDM_dmesh_to_dmesh_nodal_create
     dm_to_dmn->distrib_vtx [i_mesh] = NULL;
   }
 
-  dm_to_dmn->n_bound         = malloc( PDM_BOUND_TYPE_MAX * sizeof(int          *) );
-  dm_to_dmn->dbound          = malloc( PDM_BOUND_TYPE_MAX * sizeof(PDM_g_num_t **) );
-  dm_to_dmn->dbound_idx      = malloc( PDM_BOUND_TYPE_MAX * sizeof(int         **) );
+  dm_to_dmn->n_bound         = malloc( n_mesh * sizeof(int          *) );
+  dm_to_dmn->dbound          = malloc( n_mesh * sizeof(PDM_g_num_t **) );
+  dm_to_dmn->dbound_idx      = malloc( n_mesh * sizeof(int         **) );
 
-  for(int i = 0; i < PDM_BOUND_TYPE_MAX; ++i ) {
-    dm_to_dmn->n_bound   [i] = malloc( n_mesh * sizeof(int          ) );
-    dm_to_dmn->dbound    [i] = malloc( n_mesh * sizeof(PDM_g_num_t *) );
-    dm_to_dmn->dbound_idx[i] = malloc( n_mesh * sizeof(int         *) );
+  for(int i_mesh = 0; i_mesh < n_mesh; ++i_mesh) {
 
-    for(int i_mesh = 0; i_mesh < n_mesh; ++i_mesh) {
-      dm_to_dmn->n_bound   [i][i_mesh] = 0;
-      dm_to_dmn->dbound    [i][i_mesh] = NULL;
-      dm_to_dmn->dbound_idx[i][i_mesh] = NULL;
+    dm_to_dmn->n_bound   [i_mesh] = malloc( PDM_BOUND_TYPE_MAX * sizeof(int          ) );
+    dm_to_dmn->dbound    [i_mesh] = malloc( PDM_BOUND_TYPE_MAX * sizeof(PDM_g_num_t *) );
+    dm_to_dmn->dbound_idx[i_mesh] = malloc( PDM_BOUND_TYPE_MAX * sizeof(int         *) );
+
+    for(int i = 0; i < PDM_BOUND_TYPE_MAX; ++i ) {
+      dm_to_dmn->n_bound   [i_mesh][i] = 0;
+      dm_to_dmn->dbound    [i_mesh][i] = NULL;
+      dm_to_dmn->dbound_idx[i_mesh][i] = NULL;
     }
   }
 
@@ -150,6 +176,24 @@ PDM_dmesh_to_dmesh_nodal_compute
  PDM_dmesh_to_dmesh_nodal_t *dm_to_dmn
 )
 {
+  for(int i_mesh = 0; i_mesh < dm_to_dmn->n_mesh; ++i_mesh) {
+    dm_to_dmn->dmn[i_mesh] = _dmesh_to_dmesh_nodal(dm_to_dmn->comm,
+                                                   dm_to_dmn->distrib_cell  [i_mesh],
+                                                   dm_to_dmn->distrib_face  [i_mesh],
+                                                   dm_to_dmn->distrib_edge  [i_mesh],
+                                                   dm_to_dmn->distrib_vtx   [i_mesh],
+                                                   dm_to_dmn->dcell_face    [i_mesh],
+                                                   dm_to_dmn->dcell_face_idx[i_mesh],
+                                                   dm_to_dmn->dface_edge    [i_mesh],
+                                                   dm_to_dmn->dface_edge_idx[i_mesh],
+                                                   dm_to_dmn->dface_vtx     [i_mesh],
+                                                   dm_to_dmn->dface_vtx_idx [i_mesh],
+                                                   dm_to_dmn->dedge_vtx     [i_mesh],
+                                                   dm_to_dmn->n_bound       [i_mesh],
+                                                   dm_to_dmn->dbound_idx    [i_mesh],
+                                                   dm_to_dmn->dbound        [i_mesh]);
+  }
+
 
 }
 
@@ -219,9 +263,9 @@ PDM_dmesh_to_dmesh_nodal_group_set
         PDM_g_num_t                *dbound
 )
 {
-  dm_to_dmn->n_bound   [bound_type][i_mesh] = n_group;
-  dm_to_dmn->dbound_idx[bound_type][i_mesh] = dbound_idx;
-  dm_to_dmn->dbound    [bound_type][i_mesh] = dbound;
+  dm_to_dmn->n_bound   [i_mesh][bound_type] = n_group;
+  dm_to_dmn->dbound_idx[i_mesh][bound_type] = dbound_idx;
+  dm_to_dmn->dbound    [i_mesh][bound_type] = dbound;
 }
 
 
@@ -248,7 +292,7 @@ PDM_dmesh_to_dmesh_nodal_free
   free(dm_to_dmn->distrib_edge);
   free(dm_to_dmn->distrib_vtx );
 
-  for(int i = 0; i < PDM_BOUND_TYPE_MAX; ++i ) {
+  for(int i = 0; i < dm_to_dmn->n_mesh; ++i ) {
     free(dm_to_dmn->n_bound   [i]);
     free(dm_to_dmn->dbound    [i]);
     free(dm_to_dmn->dbound_idx[i]);
