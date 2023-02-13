@@ -40,6 +40,7 @@
 #include "pdm_part_mesh_nodal_to_pmesh.h"
 #include "pdm_dmesh_to_dmesh_nodal.h"
 #include "pdm_dmesh_to_dmesh_nodal_priv.h"
+#include "pdm_part_connectivity_transform.h"
 #include "pdm_sort.h"
 #include "pdm_vtk.h"
 
@@ -149,55 +150,112 @@ _dmesh_to_dmesh_nodal
       pface_ln_to_gn[i_face] = distrib_face[i_rank] + i_face + 1;
     }
 
-    /* Translate */
-    int pn_edge = 0;
-    int         *pface_edge_idx = NULL;
-    int         *pface_edge     = NULL;
-    PDM_g_num_t *pedge_ln_to_gn = NULL;
-
-    PDM_log_trace_connectivity_long(dface_edge_idx, dface_edge, dn_face, "dface_edge ::");
-
-    PDM_part_dconnectivity_to_pconnectivity_sort_single_part(comm,
-                                                             distrib_face,
-                                                             dface_edge_idx,
-                                                             dface_edge,
-                                                             dn_face,
-                                                             pface_ln_to_gn,
-                                                             &pn_edge,
-                                                             &pedge_ln_to_gn,
-                                                             &pface_edge_idx,
-                                                             &pface_edge);
-
-    int pn_vtx = 0;
-    int         *pedge_vtx_idx = NULL;
-    int         *pedge_vtx     = NULL;
-    PDM_g_num_t *pvtx_ln_to_gn = NULL;
-
     int dn_edge = distrib_edge[i_rank+1] - distrib_edge[i_rank];
     int* dedge_vtx_idx = malloc( (dn_edge+1) * sizeof(int));
     for(int i_edge = 0; i_edge < dn_edge+1; ++i_edge) {
       dedge_vtx_idx[i_edge] = 2 * i_edge;
     }
+
+    int pn_vtx = 0;
+    int         *pface_vtx_idx = NULL;
+    int         *pface_vtx     = NULL;
+    PDM_g_num_t *pvtx_ln_to_gn = NULL;
+
+    /* Translate */
+    if(dface_vtx == NULL){
+      int pn_edge = 0;
+      int         *pface_edge_idx = NULL;
+      int         *pface_edge     = NULL;
+      PDM_g_num_t *pedge_ln_to_gn = NULL;
+
+      PDM_part_dconnectivity_to_pconnectivity_sort_single_part(comm,
+                                                               distrib_face,
+                                                               dface_edge_idx,
+                                                               dface_edge,
+                                                               dn_face,
+                                                               pface_ln_to_gn,
+                                                               &pn_edge,
+                                                               &pedge_ln_to_gn,
+                                                               &pface_edge_idx,
+                                                               &pface_edge);
+
+      pn_vtx = 0;
+      int         *pedge_vtx_idx = NULL;
+      int         *pedge_vtx     = NULL;
+
+      PDM_part_dconnectivity_to_pconnectivity_sort_single_part(comm,
+                                                               distrib_edge,
+                                                               dedge_vtx_idx,
+                                                               dedge_vtx,
+                                                               pn_edge,
+                                                               pedge_ln_to_gn,
+                                                               &pn_vtx,
+                                                               &pvtx_ln_to_gn,
+                                                               &pedge_vtx_idx,
+                                                               &pedge_vtx);
+
+      PDM_compute_face_vtx_from_face_and_edge(dn_face,
+                                              pface_edge_idx,
+                                              pface_edge,
+                                              pedge_vtx,
+                                              &pface_vtx);
+
+      PDM_log_trace_connectivity_int(pedge_vtx_idx, pedge_vtx, pn_edge, "pedge_vtx ::");
+
+
+      free(pface_edge_idx);
+      free(pface_edge    );
+      free(pedge_ln_to_gn);
+      free(pedge_vtx_idx);
+      free(pedge_vtx    );
+    } else {
+      PDM_part_dconnectivity_to_pconnectivity_sort_single_part(comm,
+                                                               distrib_face,
+                                                               dface_vtx_idx,
+                                                               dface_vtx,
+                                                               dn_face,
+                                                               pface_ln_to_gn,
+                                                               &pn_vtx,
+                                                               &pvtx_ln_to_gn,
+                                                               &pface_vtx_idx,
+                                                               &pface_vtx);
+    }
+
+    /*
+     * Recuperation des bords
+     */
+    int          n_edge_bound   = n_bound   [PDM_BOUND_TYPE_EDGE];
+    int         *edge_bound_idx = dbound_idx[PDM_BOUND_TYPE_EDGE];
+    PDM_g_num_t *edge_bound     = dbound    [PDM_BOUND_TYPE_EDGE];
+
+    int n_edge_bnd_tot = edge_bound_idx[n_edge_bound];
+    int          pn_vtx_bnd = 0;
+    int         *pedge_vtx_bnd_idx = NULL;
+    int         *pedge_bnd_vtx     = NULL;
+    PDM_g_num_t *pvtx_bnd_ln_to_gn = NULL;
+
     PDM_part_dconnectivity_to_pconnectivity_sort_single_part(comm,
                                                              distrib_edge,
                                                              dedge_vtx_idx,
                                                              dedge_vtx,
-                                                             pn_edge,
-                                                             pedge_ln_to_gn,
-                                                             &pn_vtx,
-                                                             &pvtx_ln_to_gn,
-                                                             &pedge_vtx_idx,
-                                                             &pedge_vtx);
+                                                             n_edge_bnd_tot,
+                                                             edge_bound,
+                                                             &pn_vtx_bnd,
+                                                             &pvtx_bnd_ln_to_gn,
+                                                             &pedge_vtx_bnd_idx,
+                                                             &pedge_bnd_vtx);
 
-    PDM_log_trace_connectivity_int(pedge_vtx_idx, pedge_vtx, pn_edge, "pedge_vtx ::");
+
+
+    free(pedge_vtx_bnd_idx);
+    free(pedge_bnd_vtx    );
+    free(pvtx_bnd_ln_to_gn);
     free(dedge_vtx_idx);
-    free(pface_edge_idx);
-    free(pface_edge    );
+
     free(pface_ln_to_gn);
-    free(pedge_ln_to_gn);
-    free(pedge_vtx_idx);
-    free(pedge_vtx    );
     free(pvtx_ln_to_gn);
+    free(pface_vtx_idx);
+    free(pface_vtx    );
 
   }
 

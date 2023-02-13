@@ -332,15 +332,15 @@ int main(int argc, char *argv[])
                                      0,
                                      PDM_BOUND_TYPE_FACE,
                                      n_group_face,
-                                     dbound_face,
-                                     dbound_face_idx);
+                                     dbound_face_idx,
+                                     dbound_face);
 
   PDM_dmesh_to_dmesh_nodal_group_set(dm_to_dmn,
                                      0,
                                      PDM_BOUND_TYPE_EDGE,
                                      n_group_edge,
-                                     dbound_edge,
-                                     dbound_edge_idx);
+                                     dbound_edge_idx,
+                                     dbound_edge);
 
   PDM_dmesh_to_dmesh_nodal_compute(dm_to_dmn);
 
