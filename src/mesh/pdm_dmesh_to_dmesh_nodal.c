@@ -222,33 +222,9 @@ _dmesh_to_dmesh_nodal
     }
 
     /*
-     * Recuperation des bords
-     */
-    int          n_edge_bound   = n_bound   [PDM_BOUND_TYPE_EDGE];
-    int         *edge_bound_idx = dbound_idx[PDM_BOUND_TYPE_EDGE];
-    PDM_g_num_t *edge_bound     = dbound    [PDM_BOUND_TYPE_EDGE];
-
-    int n_edge_bnd_tot = edge_bound_idx[n_edge_bound];
-    int          pn_vtx_bnd = 0;
-    int         *pedge_vtx_bnd_idx = NULL;
-    int         *pedge_bnd_vtx     = NULL;
-    PDM_g_num_t *pvtx_bnd_ln_to_gn = NULL;
-
-    PDM_part_dconnectivity_to_pconnectivity_sort_single_part(comm,
-                                                             distrib_edge,
-                                                             dedge_vtx_idx,
-                                                             dedge_vtx,
-                                                             n_edge_bnd_tot,
-                                                             edge_bound,
-                                                             &pn_vtx_bnd,
-                                                             &pvtx_bnd_ln_to_gn,
-                                                             &pedge_vtx_bnd_idx,
-                                                             &pedge_bnd_vtx);
-
-    /*
      * Reconstruction of section for surfacic
      */
-    PDM_g_num_t          *section_n  = malloc((dn_face+1) * sizeof(PDM_g_num_t         )); // Suralloc
+    PDM_g_num_t          *section_n    = malloc((dn_face+1) * sizeof(PDM_g_num_t         )); // Suralloc
     PDM_Mesh_nodal_elt_t *section_kind = malloc( dn_face    * sizeof(PDM_Mesh_nodal_elt_t)); // Suralloc
 
     int n_section_tot    = 0;
@@ -379,8 +355,8 @@ _dmesh_to_dmesh_nodal
      */
     for(int i_section = 0; i_section < n_section_post; ++i_section) {
 
-      int beg = local_post_section_n[i_section];
-      int end = local_post_section_n[i_section+1];
+      int beg = local_post_section_idx[i_section];
+      int end = local_post_section_idx[i_section+1];
       int nl_elmt = end - beg;
 
       PDM_g_num_t* distrib_elmt = PDM_compute_uniform_entity_distribution(comm, post_section_n[i_section]);
@@ -413,10 +389,6 @@ _dmesh_to_dmesh_nodal
         }
       }
 
-      // pface_vtx_idx
-      // pface_vtx
-      // pvtx_ln_to_gn
-
       PDM_part_to_block_exch(ptb,
                              sizeof(PDM_g_num_t),
                              PDM_STRIDE_VAR_INTERLACED,
@@ -426,8 +398,37 @@ _dmesh_to_dmesh_nodal
                (int  **)     &blk_face_vtx_n,
                (void **)     &blk_face_vtx);
 
+      free(send_face_vtx_n);
+      free(send_face_vtx);
+
+
+      PDM_Mesh_nodal_elt_t t_elt = (PDM_Mesh_nodal_elt_t) post_section_kind[i_section];
+      int id_section = PDM_DMesh_nodal_section_add(dmn,
+                                                   PDM_GEOMETRY_KIND_SURFACIC,
+                                                   t_elt);
+
+      int dn_elmt = distrib_elmt[i_rank+1] - distrib_elmt[i_rank];
+      if(t_elt == PDM_MESH_NODAL_POLY_2D) {
+
+        int *blk_face_vtx_idx = PDM_array_new_idx_from_sizes_int(blk_face_vtx_n, dn_elmt);
+        PDM_DMesh_nodal_section_poly2d_set(dmn,
+                                           PDM_GEOMETRY_KIND_SURFACIC,
+                                           id_section,
+                                           dn_elmt,
+                                           blk_face_vtx_idx,
+                                           blk_face_vtx,
+                                           PDM_OWNERSHIP_KEEP);
+      } else {
+        PDM_DMesh_nodal_section_std_set(dmn,
+                                        PDM_GEOMETRY_KIND_SURFACIC,
+                                        id_section,
+                                        dn_elmt,
+                                        blk_face_vtx,
+                                        PDM_OWNERSHIP_KEEP);
+      }
+
       free(blk_face_vtx_n);
-      free(blk_face_vtx);
+      // free(blk_face_vtx);
 
       PDM_part_to_block_free(ptb);
       free(distrib_elmt);
@@ -449,8 +450,51 @@ _dmesh_to_dmesh_nodal
     printf("n_section_quad   = %i\n", n_section_quad  );
     printf("n_section_poly2d = %i\n", n_section_poly2d);
 
+    /*
+     * Recuperation des bords
+     */
+    int          n_edge_bound   = n_bound   [PDM_BOUND_TYPE_EDGE];
+    int         *edge_bound_idx = dbound_idx[PDM_BOUND_TYPE_EDGE];
+    PDM_g_num_t *edge_bound     = dbound    [PDM_BOUND_TYPE_EDGE];
     // int n_section_bar = n_edge_bound;
 
+    int n_edge_bnd_tot = edge_bound_idx[n_edge_bound];
+    int          pn_vtx_bnd = 0;
+    int         *pedge_vtx_bnd_idx = NULL;
+    int         *pedge_bnd_vtx     = NULL;
+    PDM_g_num_t *pvtx_bnd_ln_to_gn = NULL;
+
+    PDM_part_dconnectivity_to_pconnectivity_sort_single_part(comm,
+                                                             distrib_edge,
+                                                             dedge_vtx_idx,
+                                                             dedge_vtx,
+                                                             n_edge_bnd_tot,
+                                                             edge_bound,
+                                                             &pn_vtx_bnd,
+                                                             &pvtx_bnd_ln_to_gn,
+                                                             &pedge_vtx_bnd_idx,
+                                                             &pedge_bnd_vtx);
+
+    /*
+     * On ne veut pas changer la numerotation absolu des bar
+     */
+
+    PDM_Mesh_nodal_elt_t t_elt = PDM_MESH_NODAL_BAR2;
+    int id_section = PDM_DMesh_nodal_section_add(dmn,
+                                                 PDM_GEOMETRY_KIND_RIDGE,
+                                                 t_elt);
+
+    PDM_g_num_t *pedge_bnd_vtx_gnum = malloc(n_edge_bnd_tot * sizeof(PDM_g_num_t));
+    for(int i = 0; i < n_edge_bnd_tot; ++i) {
+      pedge_bnd_vtx_gnum[i] = pvtx_bnd_ln_to_gn[pedge_bnd_vtx[i]-1];
+    }
+
+    PDM_DMesh_nodal_section_std_set(dmn,
+                                    PDM_GEOMETRY_KIND_RIDGE,
+                                    id_section,
+                                    n_edge_bnd_tot,
+                                    pedge_bnd_vtx_gnum,
+                                    PDM_OWNERSHIP_KEEP);
 
     free(pedge_vtx_bnd_idx);
     free(pedge_bnd_vtx    );
