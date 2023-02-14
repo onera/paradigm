@@ -515,6 +515,74 @@ _dmesh_to_dmesh_nodal
 
     PDM_log_trace_connectivity_long(out_edge_bound_idx, out_edge_bound, n_edge_bound, "out_edge_bound ::");
 
+    /*
+     *  Il faut créer un table qui permet d'updater les numero de faces/edges en numero d'element
+     *     - dedge_to_elmts_n
+     *     - dedge_to_elmts
+     *  Donc c'est un ptb partial
+     *    -> Si on a une liste de edge_ln_to_gn
+     *  PDM_block_to_part_create_from_sparse_block
+     *
+     */
+    PDM_part_to_block_t* ptb_edge = PDM_part_to_block_create(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
+                                                             PDM_PART_TO_BLOCK_POST_CLEANUP,
+                                                             1.,
+                                                             &edge_bound,
+                                                             NULL,
+                                                             &n_edge_bnd_tot,
+                                                             1,
+                                                             comm);
+    PDM_g_num_t *gnum_edge = PDM_part_to_block_block_gnum_get(ptb_edge);
+    int n_blk_edge = PDM_part_to_block_n_elt_block_get(ptb_edge);
+
+    PDM_g_num_t *blk_out_edge_bound = NULL;
+    PDM_part_to_block_exch(ptb_edge,
+                           sizeof(PDM_g_num_t),
+                           PDM_STRIDE_CST_INTERLACED,
+                           1,
+                           NULL,
+                (void **)  &out_edge_bound,
+                           NULL,
+                (void **)  &blk_out_edge_bound);
+
+
+    PDM_log_trace_array_long(gnum_edge, n_blk_edge, "gnum_edge ::");
+    PDM_log_trace_array_long(blk_out_edge_bound, n_blk_edge, "blk_out_edge_bound ::");
+
+
+    /*
+     *  Translation face -> elmts
+     */
+    PDM_block_to_part_t *btp = PDM_block_to_part_create_from_sparse_block(gnum_edge,
+                                                                          n_blk_edge,
+                                              (const PDM_g_num_t **)      &edge_bound,
+                                                                          &n_edge_bnd_tot,
+                                                                          1,
+                                                                          comm);
+
+    PDM_part_to_block_free(ptb_edge);
+
+    int stride_one = 1;
+    PDM_g_num_t **tmp_edge_to_elmt = NULL;
+    PDM_block_to_part_exch(btp,
+                           sizeof(PDM_g_num_t),
+                           PDM_STRIDE_CST_INTERLACED,
+                           &stride_one,
+                           blk_out_edge_bound,
+                           NULL,
+                (void ***) &tmp_edge_to_elmt);
+    PDM_g_num_t *edge_to_elmt = tmp_edge_to_elmt[0];
+    free(tmp_edge_to_elmt);
+
+    PDM_log_trace_array_long(edge_to_elmt, n_edge_bnd_tot, "edge_to_elmt ::");
+
+
+    free(edge_to_elmt);
+    free(blk_out_edge_bound);
+
+    PDM_block_to_part_free(btp);
+
+
     free(distrib_bar);
 
     free(pedge_vtx_bnd_idx);
