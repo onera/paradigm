@@ -344,6 +344,28 @@ int main(int argc, char *argv[])
 
   PDM_dmesh_to_dmesh_nodal_compute(dm_to_dmn);
 
+  PDM_dmesh_nodal_t* dmn_out = NULL;
+  PDM_dmesh_to_dmesh_nodal_dmesh_nodal_get(dm_to_dmn,
+                                           0,
+                                           &dmn_out,
+                                           PDM_OWNERSHIP_KEEP);
+
+  double *dvtx_coords = PDM_DMesh_nodal_vtx_get(dmn);
+  int dn_vtx2 = PDM_DMesh_nodal_n_vtx_get(dmn);
+
+  PDM_DMesh_nodal_coord_set(dmn_out,
+                            dn_vtx2,
+                            dvtx_coords,
+                            PDM_OWNERSHIP_USER);
+
+
+  if(1 == 1) {
+    if(dim == 3) {
+      PDM_dmesh_nodal_dump_vtk(dmn_out, PDM_GEOMETRY_KIND_VOLUMIC , "out_post_volumic");
+    }
+    PDM_dmesh_nodal_dump_vtk(dmn_out, PDM_GEOMETRY_KIND_SURFACIC, "out_post_surfacic");
+    PDM_dmesh_nodal_dump_vtk(dmn_out, PDM_GEOMETRY_KIND_RIDGE   , "out_post_ridge");
+  }
 
 
   PDM_dmesh_to_dmesh_nodal_free(dm_to_dmn);

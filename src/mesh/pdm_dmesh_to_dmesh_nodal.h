@@ -99,6 +99,14 @@ PDM_dmesh_to_dmesh_nodal_group_set
         PDM_g_num_t                *dbound
 );
 
+void
+PDM_dmesh_to_dmesh_nodal_dmesh_nodal_get
+(
+        PDM_dmesh_to_dmesh_nodal_t *dm_to_dmn,
+  const int                         i_mesh,
+        PDM_dmesh_nodal_t         **dmn,
+        PDM_ownership_t             ownership
+);
 
 void
 PDM_dmesh_to_dmesh_nodal_free
