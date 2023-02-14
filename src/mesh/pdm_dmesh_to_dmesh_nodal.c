@@ -353,8 +353,8 @@ _dmesh_to_dmesh_nodal
     /*
      * Reanrange in global section the local one
      */
-    PDM_g_num_t* local_post_section_n   = malloc((n_section_post  ) * sizeof(PDM_g_num_t));
-    PDM_g_num_t* local_post_section_idx = malloc((n_section_post+1) * sizeof(PDM_g_num_t));
+    int* local_post_section_n   = malloc((n_section_post  ) * sizeof(int));
+    int* local_post_section_idx = malloc((n_section_post+1) * sizeof(int));
     for(int i = 0; i < n_section_post; ++i) {
       local_post_section_n[i] = 0;
     }
@@ -374,8 +374,47 @@ _dmesh_to_dmesh_nodal
       PDM_log_trace_array_int (local_post_section_idx, n_section_post+1, "local_post_section_idx ::");
     }
 
+    /*
+     * Requilibrate all block
+     */
+    int *send_n   = malloc( n_rank    * sizeof(int));
+    int *send_idx = malloc((n_rank+1) * sizeof(int));
+    int *recv_n   = malloc( n_rank    * sizeof(int));
+    int *recv_idx = malloc((n_rank+1) * sizeof(int));
+    for(int i_section = 0; i_section < n_section_post; ++i_section) {
+
+      for(int i = 0; i < n_rank; ++i) {
+        send_n[i] = 0;
+      }
+
+      PDM_g_num_t* distrib_elmt = PDM_compute_uniform_entity_distribution(comm, post_section_n[i_section]);
+      PDM_g_num_t* ln_to_gn = malloc(local_post_section_n[i_section] * sizeof(PDM_g_num_t));
+
+      for(int i = 0; i < local_post_section_n[i_section]; ++i) {
+        ln_to_gn[i] = distrib_face[i_rank] + local_post_section_idx[i_section] + i + 1;
+      }
+
+      PDM_part_to_block_t* ptb = PDM_part_to_block_create_from_distrib(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
+                                                                       PDM_PART_TO_BLOCK_POST_CLEANUP,
+                                                                       1.,
+                                                                       &ln_to_gn,
+                                                                       distrib_elmt,
+                                                                       &local_post_section_n[i_section],
+                                                                       1,
+                                                                       comm);
 
 
+      PDM_part_to_block_free(ptb);
+      free(distrib_elmt);
+      free(ln_to_gn);
+
+    }
+
+
+    free(recv_n  );
+    free(recv_idx);
+    free(send_n  );
+    free(send_idx);
     free(post_section_kind);
     free(post_section_n   );
     free(post_section_idx );
