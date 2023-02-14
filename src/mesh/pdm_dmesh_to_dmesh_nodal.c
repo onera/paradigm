@@ -377,15 +377,11 @@ _dmesh_to_dmesh_nodal
     /*
      * Requilibrate all block
      */
-    int *send_n   = malloc( n_rank    * sizeof(int));
-    int *send_idx = malloc((n_rank+1) * sizeof(int));
-    int *recv_n   = malloc( n_rank    * sizeof(int));
-    int *recv_idx = malloc((n_rank+1) * sizeof(int));
     for(int i_section = 0; i_section < n_section_post; ++i_section) {
 
-      for(int i = 0; i < n_rank; ++i) {
-        send_n[i] = 0;
-      }
+      int beg = local_post_section_n[i_section];
+      int end = local_post_section_n[i_section+1];
+      int nl_elmt = end - beg;
 
       PDM_g_num_t* distrib_elmt = PDM_compute_uniform_entity_distribution(comm, post_section_n[i_section]);
       PDM_g_num_t* ln_to_gn = malloc(local_post_section_n[i_section] * sizeof(PDM_g_num_t));
@@ -402,7 +398,36 @@ _dmesh_to_dmesh_nodal
                                                                        &local_post_section_n[i_section],
                                                                        1,
                                                                        comm);
+      int n_face_vtx_tot = pface_vtx_idx[end] - pface_vtx_idx[beg];
+      int         *send_face_vtx_n = malloc(nl_elmt        * sizeof(int        ));
+      PDM_g_num_t *send_face_vtx   = malloc(n_face_vtx_tot * sizeof(PDM_g_num_t));
+      int         *blk_face_vtx_n  = NULL;
+      PDM_g_num_t *blk_face_vtx    = NULL;
 
+      int idx_write = 0;
+      for(int i = 0; i < nl_elmt; ++i) {
+        send_face_vtx_n[i] = pface_vtx_idx[beg+i+1] - pface_vtx_idx[beg+i];
+        for(int j = pface_vtx_idx[beg+i]; j < pface_vtx_idx[beg+i+1]; ++j) {
+          int i_vtx = pface_vtx[j];
+          send_face_vtx[idx_write++] = pvtx_ln_to_gn[i_vtx-1];
+        }
+      }
+
+      // pface_vtx_idx
+      // pface_vtx
+      // pvtx_ln_to_gn
+
+      PDM_part_to_block_exch(ptb,
+                             sizeof(PDM_g_num_t),
+                             PDM_STRIDE_VAR_INTERLACED,
+                             -1,
+               (int  **)     &send_face_vtx_n,
+               (void **)     &send_face_vtx,
+               (int  **)     &blk_face_vtx_n,
+               (void **)     &blk_face_vtx);
+
+      free(blk_face_vtx_n);
+      free(blk_face_vtx);
 
       PDM_part_to_block_free(ptb);
       free(distrib_elmt);
@@ -410,11 +435,6 @@ _dmesh_to_dmesh_nodal
 
     }
 
-
-    free(recv_n  );
-    free(recv_idx);
-    free(send_n  );
-    free(send_idx);
     free(post_section_kind);
     free(post_section_n   );
     free(post_section_idx );
