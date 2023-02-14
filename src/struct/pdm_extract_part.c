@@ -1338,7 +1338,7 @@ _extract_part_nodal
       //                                   extract_parent_num[i_part][i_section],
       //                                   NULL,
       //                                   PDM_OWNERSHIP_KEEP);
-      int extract_section_id = PDM_part_mesh_nodal_elmts_ho_add(extract_pmne, t_elt, order, ho_ordering);
+      int extract_section_id = PDM_part_mesh_nodal_elmts_add(extract_pmne, t_elt);
       PDM_part_mesh_nodal_elmts_std_ho_set(extract_pmne,
                                            extract_section_id,
                                            i_part,
@@ -2327,31 +2327,7 @@ _extract_part_and_reequilibrate_nodal_from_target
 
       PDM_Mesh_nodal_elt_t t_elt = PDM_part_mesh_nodal_elmts_section_type_get(extrp->pmne, sections_id[i_section]);
 
-      int extract_section_id = 0;
-
-      if (PDM_Mesh_nodal_elmt_is_ho(t_elt)) {
-        int         *elt_vtx          = NULL;
-        int         *_parent_num      = NULL;
-        PDM_g_num_t *elt_ln_to_gn     = NULL;
-        PDM_g_num_t *parent_elt_g_num = NULL;
-        int          order;
-        const char  *ho_ordering;
-
-        PDM_part_mesh_nodal_elmts_section_std_ho_get(extrp->pmne,
-                                                   sections_id[i_section],
-                                                   i_part,
-                                                   &elt_vtx,
-                                                   &elt_ln_to_gn,
-                                                   &_parent_num,
-                                                   &parent_elt_g_num,
-                                                   &order,
-                                                   &ho_ordering);
-
-        extract_section_id = PDM_part_mesh_nodal_elmts_ho_add(extract_pmne, t_elt, order, NULL);//ho_ordering);
-      }
-      else {
-        extract_section_id = PDM_part_mesh_nodal_elmts_add(extract_pmne, t_elt);
-      }
+      int extract_section_id = PDM_part_mesh_nodal_elmts_add(extract_pmne, t_elt);
 
       if (t_elt == PDM_MESH_NODAL_POLY_2D) {
         PDM_part_mesh_nodal_elmts_section_poly2d_set(extract_pmne,
@@ -2483,25 +2459,10 @@ _extract_part_and_reequilibrate_nodal_from_target
         free(extract_parent_g_num[i_section]);// pass to extract_pmne?
       }
       else {
-        int         *elt_vtx          = NULL;
-        int         *_parent_num      = NULL;
-        PDM_g_num_t *elt_ln_to_gn     = NULL;
-        PDM_g_num_t *parent_elt_g_num = NULL;
-        int          order = 1;
-        const char  *ho_ordering = NULL;
-
         if (PDM_Mesh_nodal_elmt_is_ho(t_elt)) {
-          // fails if extrp->pmne->n_part < extrp->n_part_out
-          PDM_part_mesh_nodal_elmts_section_std_ho_get(extrp->pmne,
-                                                     sections_id[i_section],
-                                                     i_part,
-                                                     &elt_vtx,
-                                                     &elt_ln_to_gn,
-                                                     &_parent_num,
-                                                     &parent_elt_g_num,
-                                                     &order,
-                                                     &ho_ordering);
-
+          int order = extrp->pmne->sections_std[sections_id[i_section]]->order;
+          const char *ho_ordering = extrp->pmne->sections_std[sections_id[i_section]]->ho_ordering;
+          log_trace(" ho_ordering : %s\n", ho_ordering);
           PDM_part_mesh_nodal_elmts_std_ho_set(extract_pmne,
                                                extract_section_id,
                                                i_part,
@@ -2511,7 +2472,7 @@ _extract_part_and_reequilibrate_nodal_from_target
                                                extract_parent_num  [i_section],
                                                extract_parent_g_num[i_section],
                                                order,
-                                               NULL,//ho_ordering,
+                                               ho_ordering,
                                                PDM_OWNERSHIP_KEEP);
 
         }

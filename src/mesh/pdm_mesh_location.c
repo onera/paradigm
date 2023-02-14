@@ -1953,12 +1953,6 @@ PDM_mesh_location_compute
    *  -------------------------------------
    */
 
-
-  /* Create dummy part_mesh_nodal */
-
-  // PDM_part_mesh_nodal_elmts_t *pmne = _mesh_nodal_to_pmesh_nodal_elmts(ml->mesh_nodal, ml->comm);
-
-
   /* Infer geometry kind from part mesh_nodal */
   int mesh_dimension;
   PDM_MPI_Allreduce(&ml->mesh_dimension, &mesh_dimension, 1, PDM_MPI_INT, PDM_MPI_MAX, ml->comm);
@@ -2011,144 +2005,6 @@ PDM_mesh_location_compute
   PDM_part_mesh_nodal_elmts_for_cwipi(ml->comm,
                                       n_part,
                                       &pmne);
-  /*
-  int send_buf[2];
-  int *recv_buf = malloc(sizeof(int) * 2 * n_rank);
-
-  if (ml->mesh_nodal == NULL) {
-    send_buf[0] = 1; // is_null
-    send_buf[1] = 0; // n_block
-  }
-  else {
-    switch (geom_kind) {
-    case PDM_GEOMETRY_KIND_VOLUMIC:
-      pmne = ml->mesh_nodal->volumic;
-      break;
-    case PDM_GEOMETRY_KIND_SURFACIC:
-      pmne = ml->mesh_nodal->surfacic;
-      break;
-    case PDM_GEOMETRY_KIND_RIDGE:
-      pmne = ml->mesh_nodal->ridge;
-      break;
-    case PDM_GEOMETRY_KIND_CORNER:
-      pmne = ml->mesh_nodal->corner;
-      break;
-    default:
-      PDM_error(__FILE__, __LINE__, 0, "Invalid geometry kind\n", (int) geom_kind);
-    }
-
-    n_part = PDM_part_mesh_nodal_n_part_get(ml->mesh_nodal);
-
-    n_block   = PDM_part_mesh_nodal_n_section_in_geom_kind_get  (ml->mesh_nodal, geom_kind);
-    blocks_id = PDM_part_mesh_nodal_sections_id_in_geom_kind_get(ml->mesh_nodal, geom_kind);
-
-    send_buf[0] = 0; // is_null
-    send_buf[1] = n_block;
-  }
-
-  PDM_MPI_Allgather(send_buf, 2, PDM_MPI_INT, recv_buf, 2, PDM_MPI_INT, ml->comm);
-
-  // Find lowest rank with non-null mesh_nodal
-  int master = -1;
-  int n_null_rank = 0;
-  int *i_null_rank = malloc(sizeof(int) * n_rank);
-  for (int i = 0; i < n_rank; i++) {
-    if (recv_buf[2*i] == 1) {
-      i_null_rank[n_null_rank++] = i;
-    }
-    else if (master < 0) {
-      master = i;
-    }
-  }
-
-  assert(master >= 0);
-
-  n_block         = recv_buf[2*master+1];
-  int *block_type = malloc(sizeof(int) * n_block);
-  free(recv_buf);
-
-  if (i_rank == master) {
-    for (int iblock = 0; iblock < n_block; iblock++) {
-      int id_section_in_geom_kind = blocks_id[iblock];
-      int i_section = PDM_part_mesh_nodal_section_id_from_geom_kind_get(ml->mesh_nodal,
-                                                                        geom_kind,
-                                                                        id_section_in_geom_kind);
-
-      block_type[iblock] = (int) PDM_part_mesh_nodal_section_elt_type_get(ml->mesh_nodal,
-                                                                          i_section);
-    }
-
-
-    for (int dest = 0; dest < n_null_rank; dest++) {
-      PDM_MPI_Send(block_type, n_block, PDM_MPI_INT, i_null_rank[dest], 1, ml->comm);
-    }
-  }
-  else if (ml->mesh_nodal == NULL) {
-    PDM_MPI_Recv(block_type, n_block, PDM_MPI_INT, master, 1, ml->comm);
-
-    // Create empty part_mesh_nodal_elmts
-    pmne = PDM_part_mesh_nodal_elmts_create(mesh_dimension, n_part, ml->comm);
-
-    pmne->n_section        = n_block;
-    pmne->n_section_std    = 0;
-    pmne->n_section_poly2d = 0;
-    pmne->n_section_poly3d = 0;
-
-    pmne->sections_id = malloc(sizeof(int) * n_block);
-    for (int i = 0; i < n_block; i++) {
-      if (block_type[i] == PDM_MESH_NODAL_POLY_2D) {
-        pmne->sections_id[i] = i + PDM_BLOCK_ID_BLOCK_POLY2D;
-        pmne->n_section_poly2d++;
-      }
-      else if (block_type[i] == PDM_MESH_NODAL_POLY_3D) {
-        pmne->sections_id[i] = i + PDM_BLOCK_ID_BLOCK_POLY3D;
-        pmne->n_section_poly3d++;
-      }
-      else {
-        pmne->sections_id[i] = i;
-        pmne->n_section_std++;
-      }
-    }
-
-    pmne->sections_std    = malloc(sizeof(PDM_Mesh_nodal_block_std_t    *) * pmne->n_section_std   );
-    pmne->sections_poly2d = malloc(sizeof(PDM_Mesh_nodal_block_poly2d_t *) * pmne->n_section_poly2d);
-    pmne->sections_poly3d = malloc(sizeof(PDM_Mesh_nodal_block_poly3d_t *) * pmne->n_section_poly3d);
-
-    pmne->n_section_std    = 0;
-    pmne->n_section_poly2d = 0;
-    pmne->n_section_poly3d = 0;
-
-    // Add empty nodal blocks with appropriate types
-    for (int isection = 0; isection < n_block; isection++) {
-      PDM_Mesh_nodal_elt_t type = (PDM_Mesh_nodal_elt_t) block_type[isection];
-
-      if (type == PDM_MESH_NODAL_POLY_2D) {
-        pmne->sections_poly2d[pmne->n_section_poly2d++] = NULL;
-      }
-      else if (type == PDM_MESH_NODAL_POLY_3D) {
-        pmne->sections_poly3d[pmne->n_section_poly3d++] = NULL;
-      }
-      else {
-        pmne->sections_std[pmne->n_section_std++] = malloc(sizeof(PDM_Mesh_nodal_block_std_t));
-        PDM_Mesh_nodal_block_std_t *block = pmne->sections_std[pmne->n_section_std-1];
-        block->t_elt       = type;
-        block->n_part      = n_part;
-        block->order       = 1;    // ?
-        block->ho_ordering = NULL; // ?
-      }
-
-    }
-
-    for (int i = 0; i < n_part; i++) {
-      pmne->n_elmts[i] = 0;
-    }
-  }
-  free(i_null_rank);
-  free(block_type);
-  */
-
-
-
 
   int *req_pts_proj_coord = PDM_array_const_int(ml->n_point_cloud, -1);
   int *req_pts_dist2      = PDM_array_const_int(ml->n_point_cloud, -1);
@@ -2880,11 +2736,13 @@ PDM_mesh_location_compute
 
     if (dbg_enabled) {
       char filename[999];
-      sprintf(filename, "mesh_location_extract_boxes_%d_%3.3d.vtk", icloud, i_rank);
-      PDM_vtk_write_boxes(filename,
-                          n_select_elt[0],
-                          select_elt_extents[0],
-                          select_elt_g_num_user[0]);
+      for (int ipart = 0; ipart < n_part; ipart++) {
+        sprintf(filename, "mesh_location_extract_boxes_%d_part%d_%3.3d.vtk", icloud, ipart, i_rank);
+        PDM_vtk_write_boxes(filename,
+                            n_select_elt[ipart],
+                            select_elt_extents[ipart],
+                            select_elt_g_num_user[ipart]);
+      }
     }
 
     PDM_part_to_block_t *ptb_elt = PDM_part_to_block_geom_create(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,

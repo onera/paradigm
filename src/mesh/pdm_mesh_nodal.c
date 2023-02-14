@@ -6475,6 +6475,9 @@ PDM_Mesh_nodal_reorder_elt_vtx
         ev_out[ijk_to_out[i]] = tmp[i];
       }
     }
+    else {
+      memcpy(ev_out, tmp, sizeof(int) * stride);
+    }
 
   }
 

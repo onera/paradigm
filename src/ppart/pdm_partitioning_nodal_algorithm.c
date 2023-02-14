@@ -339,7 +339,7 @@ PDM_dmesh_nodal_elmts_to_part_mesh_nodal_elmts
                                                                                  &ho_ordering);
 
         section_order[i_section] = order;
-        pid_section  [i_section] = PDM_part_mesh_nodal_elmts_ho_add(pmne, t_elt, order, ho_ordering);
+        pid_section  [i_section] = PDM_part_mesh_nodal_elmts_add(pmne, t_elt);
         int n_elt           = PDM_DMesh_nodal_elmts_section_n_elt_get(dmne, id_section);
         block_elmts_n_vtx[i_section] = (int                  * ) malloc( n_elt * sizeof(int                 ));
         block_elmts_types[i_section] = (PDM_Mesh_nodal_elt_t * ) malloc( n_elt * sizeof(PDM_Mesh_nodal_elt_t));

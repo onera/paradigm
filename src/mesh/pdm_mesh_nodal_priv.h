@@ -77,7 +77,7 @@ typedef struct PDM_Mesh_nodal_block_std_t {
   int                     is_parent_num_get;
   int                     is_parent_entity_g_num_get;
   int                     order;                /*!< Element order */
-  const char             *ho_ordering;          /*!< HO node ordering */
+  char                   *ho_ordering;          /*!< HO node ordering */
 
 
 } PDM_Mesh_nodal_block_std_t;
