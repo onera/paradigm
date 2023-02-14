@@ -2441,7 +2441,7 @@ _create
     }
   }
 
-  if (gnum_elt2 != NULL) {
+  if (from_triplet == 0) {
     PDM_gnum_location_free (gl);
   }
 
