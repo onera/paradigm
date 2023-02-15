@@ -60,8 +60,11 @@ struct _pdm_dmesh_to_dmesh_nodal_t {
   int                 ***dbound_idx;
   PDM_g_num_t         ***dbound;
 
+  /* Result */
   PDM_dmesh_nodal_t    **dmn;
-
+  int                  **n_blk_gnum;
+  PDM_g_num_t         ***blk_entity_gnum;
+  PDM_g_num_t         ***blk_elmt_gnum;
 
 };
 
