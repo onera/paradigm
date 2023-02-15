@@ -512,15 +512,7 @@ int main(int argc, char *argv[])
   int         n_part_mesh  = 1;
   int         n_part_cloud = 1;
   int         post         = 0;
-#ifdef PDM_HAVE_PARMETIS
-  PDM_split_dual_t     part_method = PDM_SPLIT_DUAL_WITH_PARMETIS;
-#else
-#ifdef PDM_HAVE_PTSCOTCH
-  PDM_split_dual_t     part_method = PDM_SPLIT_DUAL_WITH_PTSCOTCH;
-#else
   PDM_split_dual_t     part_method = PDM_SPLIT_DUAL_WITH_HILBERT;
-#endif
-#endif
 
   PDM_mesh_location_method_t loc_method = PDM_MESH_LOCATION_OCTREE;
 

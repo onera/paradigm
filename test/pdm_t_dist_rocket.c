@@ -268,15 +268,9 @@ _gen_cloud_grid
   /*
    *  Create mesh partitions
    */
-#ifdef PDM_HAVE_PARMETIS
-  PDM_part_split_t part_method  = PDM_PART_SPLIT_PARMETIS;
-#else
-#ifdef PDM_HAVE_PTSCOTCH
-  PDM_part_split_t part_method  = PDM_PART_SPLIT_PTSCOTCH;
-#else
+
   PDM_part_split_t part_method  = PDM_PART_SPLIT_HILBERT;
-#endif
-#endif
+
   // int ppart_id = 0;
   int have_dcell_part = 0;
 
@@ -1200,16 +1194,7 @@ _gen_src_mesh
     /*
      *  Split mesh
      */
-#ifdef PDM_HAVE_PARMETIS
-    PDM_part_split_t part_method  = PDM_PART_SPLIT_PARMETIS;
-#else
-#ifdef PDM_HAVE_PTSCOTCH
-    PDM_part_split_t part_method  = PDM_PART_SPLIT_PTSCOTCH;
-#else
     PDM_part_split_t part_method  = PDM_PART_SPLIT_HILBERT;
-#endif
-#endif
-
 
     int n_property_face = 0;
     int *renum_properties_face = NULL;

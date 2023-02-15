@@ -242,13 +242,7 @@ int main(int argc, char *argv[])
   int                   post           = 0;
   int                   ngon           = 0;
 
-#ifdef PDM_HAVE_PARMETIS
-  PDM_split_dual_t part_method    = PDM_SPLIT_DUAL_WITH_PARMETIS;
-#else
-#ifdef PDM_HAVE_PTSCOTCH
-  PDM_split_dual_t part_method    = PDM_SPLIT_DUAL_WITH_PTSCOTCH;
-#endif
-#endif
+  PDM_split_dual_t part_method    = PDM_SPLIT_DUAL_WITH_HILBERT;
 
   setenv("PDM_DIST_CLOUD_SURF_OPTIM", "1", 1);
 

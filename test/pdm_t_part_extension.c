@@ -411,13 +411,7 @@ int main(int argc, char *argv[])
   int                post            = 0;
   PDM_extend_type_t  extend_type     = PDM_EXTEND_FROM_FACE;
   int                extension_depth = 1;
-#ifdef PDM_HAVE_PARMETIS
-  PDM_part_split_t method  = PDM_PART_SPLIT_PARMETIS;
-#else
-#ifdef PDM_HAVE_PTSCOTCH
-  PDM_part_split_t method  = PDM_PART_SPLIT_PTSCOTCH;
-#endif
-#endif
+  PDM_part_split_t method  = PDM_PART_SPLIT_HILBERT;
 
   /*
    *  Read args

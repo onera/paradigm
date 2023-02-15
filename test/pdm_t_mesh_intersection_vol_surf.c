@@ -462,13 +462,7 @@ char *argv[]
   PDM_g_num_t n_vtx_b   = 10;
   PDM_Mesh_nodal_elt_t elt_type  = PDM_MESH_NODAL_HEXA8;
 
-#ifdef PDM_HAVE_PARMETIS
-  PDM_split_dual_t part_method    = PDM_SPLIT_DUAL_WITH_PARMETIS;
-#else
-#ifdef PDM_HAVE_PTSCOTCH
-  PDM_split_dual_t part_method    = PDM_SPLIT_DUAL_WITH_PTSCOTCH;
-#endif
-#endif
+  PDM_split_dual_t part_method    = PDM_SPLIT_DUAL_WITH_HILBERT;
 
   int n_part = 1;
 

@@ -41,7 +41,7 @@ n_part = 1
 mpart = PDM.MultiPart(1,
                       np.array([n_part]).astype(np.intc),
                       0,
-                      PDM._PDM_SPLIT_DUAL_WITH_PTSCOTCH,
+                      PDM._PDM_SPLIT_DUAL_WITH_HILBERT,
                       1,
                       np.ones(1).astype(np.double),
                       comm)

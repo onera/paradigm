@@ -85,13 +85,7 @@ program testf
 
   ! Initialize multipart
 
-#ifdef PDM_HAVE_PARMETIS
-  split_method  = PDM_SPLIT_DUAL_WITH_PARMETIS;
-#else
-#ifdef PDM_HAVE_PTSCOTCH
-  split_method  = PDM_SPLIT_DUAL_WITH_PTSCOTCH;
-#endif
-#endif
+  split_method  = PDM_SPLIT_DUAL_WITH_HILBERT;
 
   allocate(n_part_zones(n_zone), &
            dface_join_idx(n_jn+1))

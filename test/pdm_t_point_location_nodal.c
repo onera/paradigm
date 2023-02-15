@@ -980,15 +980,8 @@ int main(int argc, char *argv[])
   int                  post        = 0;
   PDM_Mesh_nodal_elt_t t_elt       = PDM_MESH_NODAL_HEXA8;
   double               tolerance   = 1e-6;
-#ifdef PDM_HAVE_PARMETIS
-  PDM_split_dual_t     part_method = PDM_SPLIT_DUAL_WITH_PARMETIS;
-#else
-#ifdef PDM_HAVE_PTSCOTCH
-  PDM_split_dual_t     part_method = PDM_SPLIT_DUAL_WITH_PTSCOTCH;
-#else
   PDM_split_dual_t     part_method = PDM_SPLIT_DUAL_WITH_HILBERT;
-#endif
-#endif
+
   char       *filename_mesh = NULL;
 
   /*

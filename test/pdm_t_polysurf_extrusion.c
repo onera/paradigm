@@ -230,13 +230,7 @@ int main(int argc, char *argv[])
   int randomize   = 0;
   int random_seed = 0;
 
-#ifdef PDM_HAVE_PARMETIS
-  PDM_split_dual_t method  = PDM_SPLIT_DUAL_WITH_PARMETIS;
-#else
-#ifdef PDM_HAVE_PTSCOTCH
-  PDM_split_dual_t method  = PDM_SPLIT_DUAL_WITH_PTSCOTCH;
-#endif
-#endif
+  PDM_split_dual_t method  = PDM_SPLIT_DUAL_WITH_HILBERT;
 
   int use_multipart = 0;
 

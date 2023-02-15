@@ -142,12 +142,10 @@ int main(int argc, char *argv[])
   int         n_part    = 1;
   int         verbose   = 0;
 #ifdef PDM_HAVE_PARMETIS
-  PDM_part_split_t method  = PDM_PART_SPLIT_PARMETIS;
+   PDM_split_dual_t part_method  = PDM_SPLIT_DUAL_WITH_PARMETIS;
 #else
 #ifdef PDM_HAVE_PTSCOTCH
-  PDM_part_split_t method  = PDM_PART_SPLIT_PTSCOTCH;
-#else
-  PDM_part_split_t method  = PDM_PART_SPLIT_HILBERT;
+  PDM_split_dual_t part_method  = PDM_SPLIT_DUAL_WITH_PTSCOTCH;
 #endif
 #endif
 

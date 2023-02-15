@@ -167,13 +167,7 @@ int main(int argc, char *argv[])
   double             length  = 1.;
   int                n_part   = 1;
   int                post    = 0;
-#ifdef PDM_HAVE_PARMETIS
-  PDM_part_split_t method  = PDM_PART_SPLIT_PARMETIS;
-#else
-#ifdef PDM_HAVE_PTSCOTCH
-  PDM_part_split_t method  = PDM_PART_SPLIT_PTSCOTCH;
-#endif
-#endif
+  PDM_part_split_t method  = PDM_PART_SPLIT_HILBERT;
 
   /*
    *  Read args
@@ -200,13 +194,7 @@ int main(int argc, char *argv[])
   PDM_MPI_Comm_rank(PDM_MPI_COMM_WORLD, &i_rank);
   PDM_MPI_Comm_size(PDM_MPI_COMM_WORLD, &n_rank);
 
-#ifdef PDM_HAVE_PARMETIS
-  PDM_split_dual_t part_method    = PDM_SPLIT_DUAL_WITH_PARMETIS;
-#else
-#ifdef PDM_HAVE_PTSCOTCH
-  PDM_split_dual_t part_method    = PDM_SPLIT_DUAL_WITH_PTSCOTCH;
-#endif
-#endif
+  PDM_split_dual_t part_method    = PDM_SPLIT_DUAL_WITH_HILBERT;
 
   /*
    *  Create distributed cube

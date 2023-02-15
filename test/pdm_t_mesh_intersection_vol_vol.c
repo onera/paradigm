@@ -621,13 +621,7 @@ main
   double              *tetraisation_pt_coord = malloc(sizeof(double) * 3);
   double               shift_b[3]            = {0.5, 0.5, 0.5};
 
-#ifdef PDM_HAVE_PARMETIS
-  PDM_split_dual_t part_method               = PDM_SPLIT_DUAL_WITH_PARMETIS;
-#else
-#ifdef PDM_HAVE_PTSCOTCH
-  PDM_split_dual_t part_method               = PDM_SPLIT_DUAL_WITH_PTSCOTCH;
-#endif
-#endif
+  PDM_split_dual_t part_method               = PDM_SPLIT_DUAL_WITH_HILBERT;
 
   int n_part = 1;
 

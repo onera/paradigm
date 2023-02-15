@@ -491,13 +491,7 @@ char *argv[]
   PDM_g_num_t   n_vtx_seg = 4;
   double        length  = 1.;
   int           n_part   = 1;
-#ifdef PDM_HAVE_PARMETIS
-  PDM_part_split_t method  = PDM_PART_SPLIT_PARMETIS;
-#else
-#ifdef PDM_HAVE_PTSCOTCH
-  PDM_part_split_t method  = PDM_PART_SPLIT_PTSCOTCH;
-#endif
-#endif
+  PDM_part_split_t method  = PDM_PART_SPLIT_HILBERT;
   int           have_random = 0;
 
   int           i_rank;

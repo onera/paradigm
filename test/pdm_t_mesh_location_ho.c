@@ -473,15 +473,7 @@ int main(int argc, char *argv[])
   double      marge               = 0.;
   int         n_part              = 1;
   int         post                = 0;
-#ifdef PDM_HAVE_PARMETIS
-  PDM_split_dual_t part_method  = PDM_SPLIT_DUAL_WITH_PARMETIS;
-#else
-#ifdef PDM_HAVE_PTSCOTCH
-  PDM_split_dual_t part_method  = PDM_SPLIT_DUAL_WITH_PTSCOTCH;
-#else
   PDM_split_dual_t part_method  = PDM_SPLIT_DUAL_WITH_HILBERT;
-#endif
-#endif
 
   PDM_g_num_t gn_pts = 10;
   PDM_mesh_location_method_t loc_method = PDM_MESH_LOCATION_OCTREE;

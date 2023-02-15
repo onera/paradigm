@@ -21,7 +21,7 @@ program testf
   !-----------------------------------------------------------
   integer, parameter                :: comm        = MPI_COMM_WORLD
   integer, parameter                :: n_part      = 1
-  integer, parameter                :: part_method = 1
+  integer, parameter                :: part_method = 3
 
   integer(pdm_g_num_s)              :: n        = 5
   double precision                  :: x_center = 1.d0
