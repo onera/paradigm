@@ -237,47 +237,47 @@ _read_args(int                          argc,
   }
 }
 
-static double R[3][3] =
-{
-  {-0.14547275709949994,  0.8415293589391187 , -0.5202557207618055 },
-  { 0.9893622576902102 ,  0.12373586628506748, -0.07649678720582984},
-  { 0.                 , -0.5258495730132333 , -0.8505775840931856 }
-};
+// static double R[3][3] =
+// {
+//   {-0.14547275709949994,  0.8415293589391187 , -0.5202557207618055 },
+//   { 0.9893622576902102 ,  0.12373586628506748, -0.07649678720582984},
+//   { 0.                 , -0.5258495730132333 , -0.8505775840931856 }
+// };
 
-static void _rotate
-(
- const int     n_pts,
-       double *coord
- )
-{
-  for (int i = 0; i < n_pts; i++) {
-    double x = coord[3*i];
-    double y = coord[3*i+1];
-    double z = coord[3*i+2];
+// static void _rotate
+// (
+//  const int     n_pts,
+//        double *coord
+//  )
+// {
+//   for (int i = 0; i < n_pts; i++) {
+//     double x = coord[3*i];
+//     double y = coord[3*i+1];
+//     double z = coord[3*i+2];
 
-    for (int j = 0; j < 3; j++) {
-      coord[3*i+j] = R[j][0]*x + R[j][1]*y + R[j][2]*z;
-    }
-  }
-}
+//     for (int j = 0; j < 3; j++) {
+//       coord[3*i+j] = R[j][0]*x + R[j][1]*y + R[j][2]*z;
+//     }
+//   }
+// }
 
-static void
-_unrotate
-(
- const int     n_pts,
-       double *coord
- )
-{
-  for (int i = 0 ; i < n_pts ; i++) {
-    double x = coord[3 * i];
-    double y = coord[3 * i + 1];
-    double z = coord[3 * i + 2];
+// static void
+// _unrotate
+// (
+//  const int     n_pts,
+//        double *coord
+//  )
+// {
+//   for (int i = 0 ; i < n_pts ; i++) {
+//     double x = coord[3 * i];
+//     double y = coord[3 * i + 1];
+//     double z = coord[3 * i + 2];
 
-    for (int j = 0 ; j < 3 ; j++) {
-      coord[3 * i + j] = R[0][j] * x + R[1][j] * y + R[2][j] * z;
-    }
-  }
-}
+//     for (int j = 0 ; j < 3 ; j++) {
+//       coord[3 * i + j] = R[0][j] * x + R[1][j] * y + R[2][j] * z;
+//     }
+//   }
+// }
 
 static void
 _eval_deformation
