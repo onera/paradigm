@@ -1873,6 +1873,12 @@ int     *new_to_old_order
                           part->face_group); // OK
   }
 
+  if (part->face_bound != NULL) {
+    PDM_part_renum_array (part->face_bound_idx[part->n_face_group],
+                          old_to_new_order,
+                          part->face_bound); // OK
+  }
+
   /** face_cell Face **/
   PDM_order_face_cell (part->n_face,
                        new_to_old_order,

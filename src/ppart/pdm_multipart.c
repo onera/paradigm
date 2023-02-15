@@ -2153,6 +2153,48 @@ PDM_MPI_Comm       comm
   }
 
   /*
+   * Group can be necessary for renumumbering
+   */
+  if(pn_cell != NULL){
+    PDM_g_num_t *dface_bound = NULL;
+    int         *dface_bound_idx = NULL;
+    int n_face_group = PDM_dmesh_bound_get(dmesh,
+                                           PDM_BOUND_TYPE_FACE,
+                                           &dface_bound,
+                                           &dface_bound_idx,
+                                           PDM_OWNERSHIP_KEEP);
+
+    int         **pface_bound_idx               = NULL;
+    int         **pface_bound                   = NULL;
+    PDM_g_num_t **pface_bound_ln_to_gn          = NULL;
+    PDM_part_distgroup_to_partgroup(comm,
+                                    face_distri,
+                                    n_face_group,
+                                    dface_bound_idx,
+                                    dface_bound,
+                                    n_part,
+                                    pn_face,
+             (const PDM_g_num_t **) pface_ln_to_gn,
+                                   &pface_bound_idx,
+                                   &pface_bound,
+                                   &pface_bound_ln_to_gn);
+
+    for (int ipart = 0; ipart < n_part; ipart++) {
+      pmeshes->parts[ipart]->n_face_group        = n_face_group;
+      pmeshes->parts[ipart]->face_bound_idx      = pface_bound_idx     [ipart];
+      pmeshes->parts[ipart]->face_bound          = pface_bound         [ipart];
+      pmeshes->parts[ipart]->face_bound_ln_to_gn = pface_bound_ln_to_gn[ipart];
+
+    }
+
+    free(pface_bound_idx               );
+    free(pface_bound                   );
+    free(pface_bound_ln_to_gn          );
+  }
+
+
+
+  /*
    * Real re-numebering
    */
   PDM_part_renum_cell(pmeshes->parts, n_part, pmeshes->renum_cell_method, (void *) pmeshes->renum_cell_properties);
@@ -2224,34 +2266,6 @@ PDM_MPI_Comm       comm
    *  All data has been reorder, we can now and only now setup desired comm graph
    */
   if(pn_cell != NULL){
-    PDM_g_num_t *dface_bound = NULL;
-    int         *dface_bound_idx = NULL;
-    int n_face_group = PDM_dmesh_bound_get(dmesh,
-                                           PDM_BOUND_TYPE_FACE,
-                                           &dface_bound,
-                                           &dface_bound_idx,
-                                           PDM_OWNERSHIP_KEEP);
-
-    // assert(n_face_group == pmeshes->n_bounds);
-
-    int         **pface_bound_idx               = NULL;
-    int         **pface_bound                   = NULL;
-    // int         **pface_join_idx                = NULL;
-    int         **pinternal_face_bound_proc_idx = NULL;
-    int         **pinternal_face_bound_part_idx = NULL;
-    int         **pinternal_face_bound          = NULL;
-    PDM_g_num_t **pface_bound_ln_to_gn          = NULL;
-    PDM_part_distgroup_to_partgroup(comm,
-                                    face_distri,
-                                    n_face_group,
-                                    dface_bound_idx,
-                                    dface_bound,
-                                    n_part,
-                                    pn_face,
-             (const PDM_g_num_t **) pface_ln_to_gn,
-                                   &pface_bound_idx,
-                                   &pface_bound,
-                                   &pface_bound_ln_to_gn);
     // int **pface_join_tmp = NULL;
     // PDM_part_distgroup_to_partgroup(comm,
     //                                 face_distri,
@@ -2265,6 +2279,10 @@ PDM_MPI_Comm       comm
     //                                &pface_join_tmp,
     //                                &pface_join_ln_to_gn);
 
+    // int         **pface_join_idx                = NULL;
+    int         **pinternal_face_bound_proc_idx = NULL;
+    int         **pinternal_face_bound_part_idx = NULL;
+    int         **pinternal_face_bound          = NULL;
     PDM_part_generate_entity_graph_comm(comm,
                                         distrib_partition,
                                         face_distri,
@@ -2278,23 +2296,16 @@ PDM_MPI_Comm       comm
                                         NULL);
 
     for (int ipart = 0; ipart < n_part; ipart++) {
-      pmeshes->parts[ipart]->n_face_group        = n_face_group;
-      pmeshes->parts[ipart]->face_bound_idx      = pface_bound_idx     [ipart];
-      pmeshes->parts[ipart]->face_bound          = pface_bound         [ipart];
-      pmeshes->parts[ipart]->face_bound_ln_to_gn = pface_bound_ln_to_gn[ipart];
 
       pmeshes->parts[ipart]->face_part_bound_proc_idx = pinternal_face_bound_proc_idx[ipart];
       pmeshes->parts[ipart]->face_part_bound_part_idx = pinternal_face_bound_part_idx[ipart];
       pmeshes->parts[ipart]->face_part_bound          = pinternal_face_bound[ipart];
 
     }
-    free(pface_bound_idx               );
-    free(pface_bound                   );
     // free(pface_join_idx                );
     free(pinternal_face_bound_proc_idx );
     free(pinternal_face_bound_part_idx );
     free(pinternal_face_bound          );
-    free(pface_bound_ln_to_gn          );
 
   } else {
 
@@ -2678,6 +2689,31 @@ PDM_MPI_Comm      comm
     pmeshes->parts[ipart]->vtx_ln_to_gn  = pvtx_ln_to_gn[ipart];
   }
 
+
+  // Now genererate bounds and comm data -- we need update pface_ln_to_gn which has been modified
+  for (int ipart = 0; ipart < n_part; ipart++) {
+    pface_ln_to_gn[ipart] = pmeshes->parts[ipart]->face_ln_to_gn;
+  }
+
+  PDM_part_distgroup_to_partgroup(comm,
+                                  face_distri,
+                                  n_bnd,
+                                  dface_bound_idx,
+                                  dface_bound,
+                                  n_part,
+                                  pn_face,
+           (const PDM_g_num_t **) pface_ln_to_gn,
+                                 &pface_bound_idx,
+                                 &pface_bound,
+                                 &pface_bound_ln_to_gn);
+
+  for (int ipart = 0; ipart < n_part; ipart++) {
+    pmeshes->parts[ipart]->n_face_group        = n_bnd;
+    pmeshes->parts[ipart]->face_bound_idx      = pface_bound_idx[ipart];
+    pmeshes->parts[ipart]->face_bound          = pface_bound[ipart];
+    pmeshes->parts[ipart]->face_bound_ln_to_gn = pface_bound_ln_to_gn[ipart];
+  }
+
   // Use the structure to call renumbering procedures
   PDM_part_renum_cell(pmeshes->parts, n_part, pmeshes->renum_cell_method,
                       (void *) pmeshes->renum_cell_properties);
@@ -2719,22 +2755,6 @@ PDM_MPI_Comm      comm
   free(pinternal_vtx_priority);
 
 
-  // Now genererate bounds and comm data -- we need update pface_ln_to_gn which has been modified
-  for (int ipart = 0; ipart < n_part; ipart++) {
-    pface_ln_to_gn[ipart] = pmeshes->parts[ipart]->face_ln_to_gn;
-  }
-
-  PDM_part_distgroup_to_partgroup(comm,
-                                  face_distri,
-                                  n_bnd,
-                                  dface_bound_idx,
-                                  dface_bound,
-                                  n_part,
-                                  pn_face,
-           (const PDM_g_num_t **) pface_ln_to_gn,
-                                 &pface_bound_idx,
-                                 &pface_bound,
-                                 &pface_bound_ln_to_gn);
   int **pface_join_tmp = NULL;
   PDM_part_distgroup_to_partgroup(comm,
                                   face_distri,
@@ -2781,10 +2801,6 @@ PDM_MPI_Comm      comm
 
   // Finally complete parts structure with internal join data and bounds
   for (int ipart = 0; ipart < n_part; ipart++) {
-    pmeshes->parts[ipart]->n_face_group        = n_bnd;
-    pmeshes->parts[ipart]->face_bound_idx      = pface_bound_idx[ipart];
-    pmeshes->parts[ipart]->face_bound          = pface_bound[ipart];
-    pmeshes->parts[ipart]->face_bound_ln_to_gn = pface_bound_ln_to_gn[ipart];
 
     /* For face_join, the function only returns local id of face in join, we have to
        allocate to set up expected size (4*nb_face_join) */
