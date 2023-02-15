@@ -388,9 +388,9 @@ _extract_gnum_and_compute_child
   for(int i_part = 0; i_part < n_part; ++i_part) {
     entity_extract_g_num[i_part] = (PDM_g_num_t *) malloc( n_extract[i_part] * sizeof(PDM_g_num_t));
     for(int i_entity = 0; i_entity < n_extract[i_part]; ++i_entity) {
-      log_trace("extract_lnum[i_part][%d] = %d\n",
-                i_entity,
-                extract_lnum[i_part][i_entity]);
+      // log_trace("extract_lnum[i_part][%d] = %d\n",
+      //           i_entity,
+      //           extract_lnum[i_part][i_entity]);
       entity_extract_g_num[i_part][i_entity] = entity_g_num[i_part][extract_lnum[i_part][i_entity]];
     }
   }
@@ -2462,7 +2462,6 @@ _extract_part_and_reequilibrate_nodal_from_target
         if (PDM_Mesh_nodal_elmt_is_ho(t_elt)) {
           int order = extrp->pmne->sections_std[sections_id[i_section]]->order;
           const char *ho_ordering = extrp->pmne->sections_std[sections_id[i_section]]->ho_ordering;
-          log_trace(" ho_ordering : %s\n", ho_ordering);
           PDM_part_mesh_nodal_elmts_std_ho_set(extract_pmne,
                                                extract_section_id,
                                                i_part,
@@ -2623,7 +2622,7 @@ _extract_part
   PDM_g_num_t** entity_extract_g_num = NULL;
   PDM_g_num_t** child_selected_g_num = NULL;
 
-  PDM_log_trace_array_long(entity_g_num[0], pn_entity[0], "entity_g_num : ");
+  // PDM_log_trace_array_long(entity_g_num[0], pn_entity[0], "entity_g_num : ");
 
   _extract_gnum_and_compute_child(extrp->comm,
                                   extrp->compute_child_gnum,
@@ -2830,7 +2829,7 @@ _extract_part
    */
   extrp->pextract_vtx_coord = (double **) malloc( extrp->n_part_in * sizeof(double *));
   for(int i_part = 0; i_part < extrp->n_part_in; ++i_part) {
-    log_trace("n_extract_vtx[%d] = %d\n", i_part, n_extract_vtx[i_part]);
+    // log_trace("n_extract_vtx[%d] = %d\n", i_part, n_extract_vtx[i_part]);
     extrp->pextract_vtx_coord[i_part] = (double *) malloc( 3 * n_extract_vtx[i_part] * sizeof(double));
 
     for(int idx_vtx = 0; idx_vtx < n_extract_vtx[i_part]; ++idx_vtx) {
@@ -2874,7 +2873,7 @@ _extract_part_and_reequilibrate_from_target
   if (0) {
     extrp->pextract_entity_parent_ln_to_gn[entity_type] = malloc(sizeof(PDM_g_num_t * ) * extrp->n_part_out);
     for (int ipart = 0; ipart < extrp->n_part_out; ipart++) {
-      log_trace("extrp->n_target[%d] = %d\n", ipart, extrp->n_target[ipart]);
+      // log_trace("extrp->n_target[%d] = %d\n", ipart, extrp->n_target[ipart]);
       extrp->pextract_entity_parent_ln_to_gn[entity_type][ipart] = malloc(sizeof(PDM_g_num_t) * extrp->n_target[ipart]);
       memcpy(extrp->pextract_entity_parent_ln_to_gn[entity_type][ipart],
              extrp->target_gnum[ipart],
