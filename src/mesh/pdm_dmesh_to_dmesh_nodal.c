@@ -565,37 +565,34 @@ _dmesh_to_dmesh_nodal
       blk_elmt_gnum  [PDM_BOUND_TYPE_EDGE][i] = gnum_edge[i];
     }
 
+    PDM_part_to_block_free(ptb_edge);
     /*
      *  Translation face -> elmts
      */
-    PDM_block_to_part_t *btp = PDM_block_to_part_create_from_sparse_block(gnum_edge,
-                                                                          n_blk_edge,
-                                              (const PDM_g_num_t **)      &edge_bound,
-                                                                          &n_edge_bnd_tot,
-                                                                          1,
-                                                                          comm);
+    // PDM_block_to_part_t *btp = PDM_block_to_part_create_from_sparse_block(gnum_edge,
+    //                                                                       n_blk_edge,
+    //                                           (const PDM_g_num_t **)      &edge_bound,
+    //                                                                       &n_edge_bnd_tot,
+    //                                                                       1,
+    //                                                                       comm);
+    // int stride_one = 1;
+    // PDM_g_num_t **tmp_edge_to_elmt = NULL;
+    // PDM_block_to_part_exch(btp,
+    //                        sizeof(PDM_g_num_t),
+    //                        PDM_STRIDE_CST_INTERLACED,
+    //                        &stride_one,
+    //                        blk_out_edge_bound,
+    //                        NULL,
+    //             (void ***) &tmp_edge_to_elmt);
+    // PDM_g_num_t *edge_to_elmt = tmp_edge_to_elmt[0];
+    // free(tmp_edge_to_elmt);
 
-    PDM_part_to_block_free(ptb_edge);
-
-    int stride_one = 1;
-    PDM_g_num_t **tmp_edge_to_elmt = NULL;
-    PDM_block_to_part_exch(btp,
-                           sizeof(PDM_g_num_t),
-                           PDM_STRIDE_CST_INTERLACED,
-                           &stride_one,
-                           blk_out_edge_bound,
-                           NULL,
-                (void ***) &tmp_edge_to_elmt);
-    PDM_g_num_t *edge_to_elmt = tmp_edge_to_elmt[0];
-    free(tmp_edge_to_elmt);
-
-    PDM_log_trace_array_long(edge_to_elmt, n_edge_bnd_tot, "edge_to_elmt ::");
+    // PDM_log_trace_array_long(edge_to_elmt, n_edge_bnd_tot, "edge_to_elmt ::");
 
 
-    free(edge_to_elmt);
-    // free(blk_out_edge_bound);
-
-    PDM_block_to_part_free(btp);
+    // free(edge_to_elmt);
+    // // free(blk_out_edge_bound);
+    // PDM_block_to_part_free(btp);
 
 
     free(distrib_bar);
@@ -880,6 +877,50 @@ PDM_dmesh_to_dmesh_nodal_free
 
   free(dm_to_dmn);
   dm_to_dmn = NULL;
+}
+
+
+
+void
+PDM_dmesh_to_dmesh_nodal_update_group
+(
+ PDM_dmesh_to_dmesh_nodal_t *dm_to_dmn,
+ int                         i_mesh,
+ PDM_bound_type_t            bound_type,
+ int                         dn_elmt_bound,
+ PDM_g_num_t                *dentity_bound,
+ PDM_g_num_t               **delmt_bound
+)
+{
+
+  int n_blk_gnum           = dm_to_dmn->n_blk_gnum     [i_mesh][bound_type];
+  PDM_g_num_t* gnum_entity = dm_to_dmn->blk_entity_gnum[i_mesh][bound_type];
+  PDM_g_num_t* gnum_elmt   = dm_to_dmn->blk_elmt_gnum  [i_mesh][bound_type];
+
+  PDM_block_to_part_t *btp = PDM_block_to_part_create_from_sparse_block(gnum_entity,
+                                                                        n_blk_gnum,
+                                            (const PDM_g_num_t **)      &dentity_bound,
+                                                                        &dn_elmt_bound,
+                                                                        1,
+                                                                        dm_to_dmn->comm);
+
+  int stride_one = 1;
+  PDM_g_num_t **tmp_entity_to_elmt = NULL;
+  PDM_block_to_part_exch(btp,
+                         sizeof(PDM_g_num_t),
+                         PDM_STRIDE_CST_INTERLACED,
+                         &stride_one,
+                         gnum_elmt,
+                         NULL,
+              (void ***) &tmp_entity_to_elmt);
+  PDM_g_num_t *entity_to_elmt = tmp_entity_to_elmt[0];
+  free(tmp_entity_to_elmt);
+
+  // PDM_log_trace_array_long(entity_to_elmt, dn_elmt_bound, "entity_to_elmt ::");
+
+  *delmt_bound = entity_to_elmt;
+
+  PDM_block_to_part_free(btp);
 }
 
 

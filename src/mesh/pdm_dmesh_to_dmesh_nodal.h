@@ -114,6 +114,17 @@ PDM_dmesh_to_dmesh_nodal_free
  PDM_dmesh_to_dmesh_nodal_t *dm_to_dmn
 );
 
+void
+PDM_dmesh_to_dmesh_nodal_update_group
+(
+ PDM_dmesh_to_dmesh_nodal_t *dm_to_dmn,
+ int                         i_mesh,
+ PDM_bound_type_t            bound_type,
+ int                         dn_elmt_bound,
+ PDM_g_num_t                *dentity_bound,
+ PDM_g_num_t               **delmt_bound
+);
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
