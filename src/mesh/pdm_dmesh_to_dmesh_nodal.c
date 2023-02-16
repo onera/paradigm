@@ -1446,6 +1446,7 @@ _rebuild_dmesh_nodal_3d
   /*
    * Requilibrate all block
    */
+  int lconnect[24];
   for(int i_section = 0; i_section < n_section_post; ++i_section) {
 
     int beg = local_post_section_idx[i_section];
@@ -1459,6 +1460,10 @@ _rebuild_dmesh_nodal_3d
       ln_to_gn[i] = distrib_cell[i_rank] + local_post_section_idx[i_section] + i + 1;
     }
 
+    int n_vtx_per_elmt = PDM_Mesh_nodal_n_vertices_element((PDM_Mesh_nodal_elt_t) post_section_kind[i_section], 1);
+
+    PDM_g_num_t* cell_vtx = malloc(nl_elmt * n_vtx_per_elmt * sizeof(PDM_g_num_t));
+
     for(int i_cell = 0; i_cell < local_post_section_n[i_section]; ++i_cell) {
       PDM_Mesh_nodal_elt_t cell_type = _type_cell_3D(pcell_face_idx[i_cell+1]-pcell_face_idx[i_cell],
                                                      pcell_face + pcell_face_idx[i_cell],
@@ -1467,6 +1472,45 @@ _rebuild_dmesh_nodal_3d
                                                      cell_som_tria,
                                                      cell_som_quad);
       assert(cell_type == (PDM_Mesh_nodal_elt_t) post_section_kind[i_section]);
+
+      switch(cell_type) {
+        case PDM_MESH_NODAL_TETRA4 :
+          _connec_tetra(pvtx_coords,
+                        cell_som_tria,
+                        lconnect);
+        break;
+        case PDM_MESH_NODAL_HEXA8 :
+          _connec_hexa(pvtx_coords,
+                        cell_som_quad,
+                        lconnect);
+        break;
+        case PDM_MESH_NODAL_PRISM6 :
+          _connec_prism(pvtx_coords,
+                        cell_som_tria,
+                        cell_som_quad,
+                        lconnect);
+        break;
+        case PDM_MESH_NODAL_PYRAMID5 :
+          _connec_pyramid(pvtx_coords,
+                          cell_som_tria,
+                          cell_som_quad,
+                          lconnect);
+        break;
+
+        case PDM_MESH_NODAL_POLY_3D :
+          {
+            abort();
+            break;
+          }
+        default :
+          break;
+      }
+
+      for(int i = 0; i < n_vtx_per_elmt; ++i) {
+        cell_vtx[n_vtx_per_elmt * i_cell + i] = pvtx_ln_to_gn[lconnect[i]-1];
+      }
+
+
     }
 
     // _connec_tetra()
