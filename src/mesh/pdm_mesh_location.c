@@ -754,7 +754,7 @@ const int                           n_part,
           pcell_vtx_out[i] = pcell_vtx[i];
         }
 
-        if (order > 1) {
+        if (PDM_Mesh_nodal_elmt_is_ho(t_elt)) {
           PDM_Mesh_nodal_reorder_elt_vtx(t_elt,
                                          order,
                                          ho_ordering,

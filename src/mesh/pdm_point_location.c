@@ -2181,149 +2181,6 @@ _locate_in_polyhedron
   return 0;
 }
 
-
-static int
-_compute_uvw_ho
-(
- const PDM_Mesh_nodal_elt_t elt_type,
- const int                  order,
- const double               point_coords[3],
- const double               vertex_coords[],
- const double               tolerance,
- double                     uvw[3],
- double                     proj_coord[3],
- double                    *_weight // size = 4*n_node
- )
-{
-  double duvw     = 1e-8;
-  double inv_duvw = 1./duvw;
-
-  int i, j, n_node, iter;
-  const int max_iter = 30;
-  const double tolerance2 = tolerance * tolerance;
-  double dist;
-  double a[3][3], b[3], x[3];
-
-  // log_trace("\ntarget: %f %f %f\n", point_coords[0], point_coords[1], point_coords[2]);
-
-
-  /* Get number of nodes */
-  n_node = PDM_Mesh_nodal_n_vtx_elt_get(elt_type, order);
-  // double *weight     = malloc(sizeof(double) * n_node);
-  // double *dweight_du = malloc(sizeof(double) * n_node);
-  // double *dweight_dv = malloc(sizeof(double) * n_node);
-  // double *dweight_dw = malloc(sizeof(double) * n_node);
-  double *weight     = _weight;
-  double *dweight_du = _weight + n_node;
-  double *dweight_dv = _weight + n_node*2;
-  double *dweight_dw = _weight + n_node*3;
-
-  double *dw[3] = {dweight_du, dweight_dv, dweight_dw};
-
-  // assert (elt_type == PDM_MESH_NODAL_PYRAMID5 ||
-  //         elt_type == PDM_MESH_NODAL_PRISM6   ||
-  //         elt_type == PDM_MESH_NODAL_HEXA8);
-
-  /* Use Newton-method to determine parametric coordinates and shape function */
-  for (i = 0; i < 3; i++) {
-    uvw[i] = 0.5;
-  }
-
-  double _uvw[12];
-  // double *_weight = malloc(sizeof(double) * n_node * 4);
-
-  for (iter = 0; iter < max_iter; iter++) {
-
-    memcpy(_uvw,   uvw, sizeof(double) * 3);
-    memcpy(_uvw+3, uvw, sizeof(double) * 3);
-    memcpy(_uvw+6, uvw, sizeof(double) * 3);
-    memcpy(_uvw+9, uvw, sizeof(double) * 3);
-    _uvw[3]  += duvw;
-    _uvw[7]  += duvw;
-    _uvw[11] += duvw;
-
-    PDM_ho_basis(elt_type,
-                 order,
-                 n_node,
-                 4,
-                 _uvw,
-                 _weight);
-
-    for (i = 0; i < n_node; i++) {
-      weight[i] = _weight[i];
-      for (j = 0; j < 3; j++) {
-        dw[j][i] = (_weight[(j+1)*n_node + i] - _weight[i]) * inv_duvw;
-      }
-    }
-
-
-    b[0] = - point_coords[0];
-    b[1] = - point_coords[1];
-    b[2] = - point_coords[2];
-
-
-    for (i = 0; i < 3; i++) {
-      for (j = 0; j < 3; j++) {
-        a[i][j] = 0.0;
-      }
-    }
-
-    for (i = 0; i < n_node; i++) {
-
-      b[0] += (weight[i] * vertex_coords[3*i]);
-      b[1] += (weight[i] * vertex_coords[3*i+1]);
-      b[2] += (weight[i] * vertex_coords[3*i+2]);
-
-      for (j = 0; j < 3; j++) {
-        a[0][j] -= (dw[j][i] * vertex_coords[3*i]);
-        a[1][j] -= (dw[j][i] * vertex_coords[3*i+1]);
-        a[2][j] -= (dw[j][i] * vertex_coords[3*i+2]);
-      }
-
-    }
-    // log_trace("current: %f %f %f,  res_xyz = %e\n",
-    //           b[0] + point_coords[0], b[1] + point_coords[1], b[2] + point_coords[2],
-    //           PDM_MODULE(b));
-
-    if (_solve_3x3(a, b, x) == PDM_FALSE) {
-      printf("_compute_uvw_ho : singular matrix\n");
-      return 0;
-    }
-
-    dist = 0.0;
-
-    for (i = 0; i < 3; i++) {
-      dist += x[i] * x[i];
-      uvw[i] += x[i];
-    }
-
-    // log_trace("iter %d, dist = %e\n", iter, dist);
-
-    if (dist <= tolerance2) {
-      // log_trace("converged :) %e %e %e\n", uvw[0], uvw[1], uvw[2]);
-
-      // free(weight    );
-      // free(dweight_du);
-      // free(dweight_dv);
-      // free(dweight_dw);
-      // free(_weight);
-      return 1;
-    }
-
-  }
-
-  memcpy(proj_coord, b, sizeof(double) * 3);
-
-  // free(weight    );
-  // free(dweight_du);
-  // free(dweight_dv);
-  // free(dweight_dw);
-  // free(_weight);
-  return 0;
-}
-
-
-
 /*============================================================================
  * Public function definitions
  *============================================================================*/
@@ -2949,7 +2806,9 @@ PDM_point_location_nodal
                                                       order);
             double *elt_coord = malloc(sizeof(double) * n_node * 3);
 
-            double *work_array = malloc(sizeof(double) * n_node * 4);
+            int elt_dim = PDM_Mesh_nodal_elt_dim_get(t_elt);
+
+            double *work_array = malloc(sizeof(double) * n_node * (elt_dim+1));
 
             int *ijk_to_user = NULL;
             if (ho_ordering != NULL) {
@@ -2959,12 +2818,14 @@ PDM_point_location_nodal
               assert(ijk_to_user != NULL);
             }
 
-
+            int count           = 0;
+            int count_converged = 0;
             for (int ielt = 0; ielt < n_elt; ielt++) {
               int icell = ielt;
               if (parent_num != NULL) {
                 icell = parent_num[ielt];
               }
+              // log_trace("icell = %d\n", icell);
 
               int *_connec = connec + n_node*ielt;
               for (int idx_ijk = 0; idx_ijk < n_node; idx_ijk++) {
@@ -2977,26 +2838,36 @@ PDM_point_location_nodal
               }
 
               for (int idx_pt = pts_idx[ipart][icell]; idx_pt < pts_idx[ipart][icell+1]; idx_pt++) {
+                count++;
                 // First, try Newton method
-                int converged = _compute_uvw_ho(t_elt,
-                                                order,
-                               (const double *) pts_coord[ipart] + idx_pt * 3,
-                                                elt_coord,
-                                                tolerance,
-                                                _uvw             + idx_pt * 3,
-                                                _projected_coord + idx_pt * 3,
-                                                work_array);
+                int converged = 0;
+                if (1) {
+                  _distance[idx_pt] = PDM_ho_location_newton(t_elt,
+                                                             order,
+                                                             n_node,
+                                                             elt_coord,
+                                            (const double *) pts_coord[ipart] + idx_pt * 3,
+                                                             tolerance,
+                                                             _projected_coord + idx_pt * 3,
+                                                             _uvw             + idx_pt * 3,
+                                                             &converged,
+                                                             work_array);
+                }
                 // log_trace("converged? %d\n", converged);
 
                 if (converged) {
-                  // compute projected coord + distance
-                  _distance[idx_pt] = 0.;
-                  for (int i = 0; i < 3; i++) {
-                    _distance[idx_pt] += (_projected_coord[3*idx_pt+i] - pts_coord[ipart][3*idx_pt+i]);
-                  }
+                  count_converged++;
+                  // log_trace("Newton converged :D (%f %f %f)\n",
+                  //           pts_coord[ipart][3*idx_pt+0],
+                  //           pts_coord[ipart][3*idx_pt+1],
+                  //           pts_coord[ipart][3*idx_pt+2]);
                 }
                 else {
-                  // Newton failed to converge, try more robut method
+                  // log_trace("Newton HO failed to converge! (%f %f %f)\n",
+                  //           pts_coord[ipart][3*idx_pt+0],
+                  //           pts_coord[ipart][3*idx_pt+1],
+                  //           pts_coord[ipart][3*idx_pt+2]);
+                  // Newton failed to converge, try more robust method
                   _distance[idx_pt] = PDM_ho_location(t_elt,
                                                       order,
                                                       n_node,
@@ -3005,8 +2876,10 @@ PDM_point_location_nodal
                                                       _projected_coord + idx_pt * 3,
                                                       _uvw             + idx_pt * 3);
                 }
+                // log_trace("dist2 = %e\n", _distance[idx_pt]);
 
               } // End of loop on current elt's points
+
 
               int idx_pt0 = pts_idx[ipart][icell];
               PDM_ho_basis(t_elt,
@@ -3017,6 +2890,7 @@ PDM_point_location_nodal
                            _bar_coord + _bar_coord_idx[idx_pt0]);
 
             } // End of loop on elt
+            // log_trace("%d converged / %d\n", count_converged, count);
             free(elt_coord);
             free(work_array);
             break;

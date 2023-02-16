@@ -781,12 +781,33 @@ int main(int argc, char *argv[])
                                                0,
                                                0);
 
+  PDM_g_num_t *location;
+  double      *dist2;
+  double      *projected_coord;
+  PDM_mesh_location_point_location_get(mesh_loc,
+                                       0,
+                                       0,
+                                       &location,
+                                       &dist2,
+                                       &projected_coord);
+
   double err_max = 0.;
   for (int i = 0; i < n_located; i++) {
     int pt_id = located[i] - 1;
     tgt_field_interp[pt_id] = recv_field[0][i];
 
     double err = PDM_ABS(tgt_field_interp[pt_id] - tgt_field_exact[pt_id]);
+
+    if (err > 1e-6) {
+      printf("error = %e "PDM_FMT_G_NUM" (%f %f %f) located in "PDM_FMT_G_NUM" at distance %e\n",
+             err,
+             pts_ln_to_gn[pt_id],
+             pts_coord[3*pt_id+0],
+             pts_coord[3*pt_id+1],
+             pts_coord[3*pt_id+2],
+             location[pt_id],
+             sqrt(PDM_ABS(dist2[pt_id])));
+    }
 
     err_max = PDM_MAX(err_max, err);
   }
@@ -852,7 +873,7 @@ int main(int argc, char *argv[])
         pcell_vtx_out[i] = connec[i];
       }
 
-      if (_order > 1) {
+      if (PDM_Mesh_nodal_elmt_is_ho(elt_type)) {
         PDM_Mesh_nodal_reorder_elt_vtx(elt_type,
                                        _order,
                                        ho_ordering,

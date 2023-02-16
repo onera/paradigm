@@ -56,6 +56,9 @@
 #include "pdm_triangulate.h"
 #include "pdm_tetrahedron.h"
 
+#include "pdm_vtk.h"
+#include "pdm_ho_ordering.h"
+
 /*----------------------------------------------------------------------------
  *  Header for the current file
  *----------------------------------------------------------------------------*/
@@ -4725,6 +4728,10 @@ _compute_dist2_from_closest_tetra_subdivision
  int                        *uncertain_result
  )
 {
+  const int dbg_enabled = 0;
+  if (dbg_enabled) {
+    log_trace(">> _compute_dist2_from_closest_tetra_subdivision\n");
+  }
   *uncertain_result = 0;
   *n_it = 0;
   *err_proj = HUGE_VAL;
@@ -4760,6 +4767,23 @@ _compute_dist2_from_closest_tetra_subdivision
       PDM_error(__FILE__, __LINE__, 0,
                 "Heap is empty %s\n");
       abort();
+    }
+
+    if (dbg_enabled) {
+      char filename[999];
+      sprintf(filename, "closest_tetra_it%d.vtk", *n_it);
+      int connec[4] = {1, 2, 3, 4};
+      PDM_vtk_write_std_elements(filename,
+                                 4,
+                                 _vtx_tetra_current,
+                                 NULL,
+                                 PDM_MESH_NODAL_TETRA4,
+                                 1,
+                                 connec,
+                                 NULL,
+                                 0,
+                                 NULL,
+                                 NULL);
     }
 
     if ((distance_extension == 0) && (_dist2_current > dist2_pre)) {
@@ -4817,6 +4841,9 @@ _compute_dist2_from_closest_tetra_subdivision
 
     /* Break if error is ok */
     if (sqrt(*err_proj) <= err_max || (*n_it)++ >= n_it_max) {
+      if (dbg_enabled) {
+        log_trace("finished at n_it = %d, err_proj = %e/%e\n", *n_it, sqrt(*err_proj), err_max);
+      }
 
       for (int j = 0; j < 3; j++) {
         projected_coords[j] = _projected_coords_from_pn[j];
@@ -4902,6 +4929,10 @@ _compute_dist2_from_uniform_tetra_subdivision
  double                     *err_proj
  )
 {
+  const int dbg_enabled = 0;
+  if (dbg_enabled) {
+    log_trace(">> _compute_dist2_from_uniform_tetra_subdivision\n");
+  }
   *n_it = 0;
   *err_proj = HUGE_VAL;
   double dist2 = HUGE_VAL;
@@ -4982,6 +5013,9 @@ _compute_dist2_from_uniform_tetra_subdivision
     /* Break if error is ok */
 
     if (sqrt(*err_proj) <= err_max || (*n_it)++ >= n_it_max) {
+      if (dbg_enabled) {
+        log_trace("finished at n_it = %d, err_proj = %e/%e\n", *n_it, sqrt(*err_proj), err_max);
+      }
 
       for (int j = 0; j < 3; j++) {
         projected_coords[j] = _projected_coords_from_pn[j];
@@ -5641,6 +5675,951 @@ _get_user_elt (PDM_Mesh_nodal_elt_t elt_type)
 }
 
 
+
+
+
+static inline int
+_argmax
+(
+ const int     n,
+ const double *a
+ )
+{
+  double amax = -HUGE_VAL;
+  int    imax = -1;
+  for (int i = 0; i < n; i++) {
+    if (a[i] > amax) {
+      amax = a[i];
+      imax = i;
+    }
+  }
+
+  return imax;
+}
+
+#define _tria_ij2idx(i, j, order)        ((i) + (j)*((order) + 1) - ((j)-1)*(j)/2)
+#define _quad_ij2idx(i, j, order)        ((i) + (j)*((order) + 1))
+#define _tetra_ijk2idx(i, j, k, order)   ((i) + (j)*((order) + 1 - (k)) - (j)*((j)-1)/2 + ((k)*((k)*((k) - 3*(order) - 6) + 3*(order)*((order) + 4) + 11)) / 6)
+#define _pyramid_ijk2idx(i, j, k, order) ((i) + (j)*((order)+1-(k)) + ((k)*((k)*(2*(k) - 6*(order) - 9) + 6*(order)*((order) + 3) + 13)) / 6)
+#define _prism_ijk2idx(i, j, k, order)   ((i) + (j)*((order)+1) - (j)*((j)-1)/2 + (k)*((order)+1)*((order)+2)/2)
+#define _hexa_ijk2idx(i, j, k, order)    ((i) + ((order)+1)*((j) + ((order)+1)*(k)))
+
+static int
+_boundary_child_element_coord
+(
+ const PDM_Mesh_nodal_elt_t  parent_elt_type,
+ const int                   order,
+ const double               *parent_uvw,
+ const double               *parent_node_coord,
+       PDM_Mesh_nodal_elt_t *child_elt_type,
+       int                  *child_n_node,
+       double               *child_node_coord
+ )
+ {
+  int i_bnd = -1;
+
+  switch (parent_elt_type) {
+    case PDM_MESH_NODAL_BARHO:
+    case PDM_MESH_NODAL_BARHO_BEZIER: {
+      *child_elt_type = PDM_MESH_NODAL_POINT;
+      if (parent_uvw[0] < 0) {
+        i_bnd = 0;
+        // memcpy(child_node_coord, parent_node_coord, sizeof(double) * 3);
+      }
+      else if (parent_uvw[0] > 1) {
+        i_bnd = 1;
+        // memcpy(child_node_coord, parent_node_coord + 3*order, sizeof(double) * 3);
+      }
+      break;
+    }
+
+    case PDM_MESH_NODAL_TRIAHO:
+    case PDM_MESH_NODAL_TRIAHO_BEZIER: {
+      *child_elt_type = PDM_MESH_NODAL_BARHO;
+      if (parent_elt_type == PDM_MESH_NODAL_TRIAHO_BEZIER) {
+        *child_elt_type = PDM_MESH_NODAL_BARHO_BEZIER;
+      }
+
+      double dist_bnd[3] = {
+        -parent_uvw[1],
+        parent_uvw[0] + parent_uvw[1] - 1,
+        -parent_uvw[0]
+      };
+      int imax = _argmax(3, dist_bnd);
+
+      if (dist_bnd[imax] > 0) {
+        i_bnd = imax;
+
+        switch (imax) {
+          case 0: {
+            memcpy(child_node_coord, parent_node_coord, sizeof(double) * 3 * (order+1));
+            break;
+          }
+          case 1: {
+            for (int j = 0; j <= order; j++) {
+              int idx = _tria_ij2idx(order-j, j, order);
+              memcpy(child_node_coord + 3*j, parent_node_coord + 3*idx, sizeof(double) * 3);
+            }
+            break;
+          }
+          case 2: {
+            for (int j = 0; j <= order; j++) {
+              int idx = _tria_ij2idx(0, order-j, order);
+              memcpy(child_node_coord + 3*j, parent_node_coord + 3*idx, sizeof(double) * 3);
+            }
+            break;
+          }
+        }
+      }
+      break;
+    }
+
+    case PDM_MESH_NODAL_QUADHO: {
+      *child_elt_type = PDM_MESH_NODAL_BARHO;
+
+      double dist_bnd[4] = {
+        -parent_uvw[1],
+        parent_uvw[0] - 1,
+        parent_uvw[1] - 1,
+        -parent_uvw[0]
+      };
+      int imax = _argmax(4, dist_bnd);
+
+      if (dist_bnd[imax] > 0) {
+        i_bnd = imax;
+
+        switch (imax) {
+          case 0: {
+            memcpy(child_node_coord, parent_node_coord, sizeof(double) * 3 * (order+1));
+            break;
+          }
+          case 1: {
+            for (int j = 0; j <= order; j++) {
+              int idx = _quad_ij2idx(order, j, order);
+              memcpy(child_node_coord + 3*j, parent_node_coord + 3*idx, sizeof(double) * 3);
+            }
+            break;
+          }
+          case 2: {
+            for (int j = 0; j <= order; j++) {
+              int idx = _quad_ij2idx(order-j, order, order);
+              memcpy(child_node_coord + 3*j, parent_node_coord + 3*idx, sizeof(double) * 3);
+            }
+            break;
+          }
+          case 3: {
+            for (int j = 0; j <= order; j++) {
+              int idx = _quad_ij2idx(0, order-j, order);
+              memcpy(child_node_coord + 3*j, parent_node_coord + 3*idx, sizeof(double) * 3);
+            }
+            break;
+          }
+        }
+      }
+      break;
+    }
+
+    case PDM_MESH_NODAL_TETRAHO: {
+
+      *child_elt_type = PDM_MESH_NODAL_TRIAHO;
+
+      double dist_bnd[4] = {
+        -parent_uvw[1],
+        parent_uvw[0] + parent_uvw[1] + parent_uvw[2] - 1,
+        -parent_uvw[0],
+        -parent_uvw[2]
+      };
+      int imax = _argmax(4, dist_bnd);
+
+      if (dist_bnd[imax] > 0) {
+        i_bnd = imax;
+
+        switch (imax) {
+          case 0: {
+            int idx_write = 0;
+            for (int k = 0; k <= order; k++) {
+              for (int i = 0; i <= order - k; i++) {
+                int idx_read = _tetra_ijk2idx(i, 0, k, order);
+                memcpy(child_node_coord + 3*idx_write, parent_node_coord + 3*idx_read, sizeof(double) * 3);
+                idx_write++;
+              }
+            }
+            break;
+          }
+          case 1: {
+            int idx_write = 0;
+            for (int k = 0; k <= order; k++) {
+              for (int j = 0; j <= order - k; j++) {
+                int idx_read = _tetra_ijk2idx(order-j-k, j, k, order);
+                memcpy(child_node_coord + 3*idx_write, parent_node_coord + 3*idx_read, sizeof(double) * 3);
+                idx_write++;
+              }
+            }
+            break;
+          }
+          case 2: {
+            int idx_write = 0;
+            for (int k = 0; k <= order; k++) {
+              for (int j = 0; j <= order - k; j++) {
+                int idx_read = _tetra_ijk2idx(0, order-k-j, k, order);
+                memcpy(child_node_coord + 3*idx_write, parent_node_coord + 3*idx_read, sizeof(double) * 3);
+                idx_write++;
+              }
+            }
+            break;
+          }
+          case 3: {
+            memcpy(child_node_coord, parent_node_coord, sizeof(double) * 3 * (order+1)*(order+2)/2);
+            break;
+          }
+        }
+      }
+
+      break;
+    }
+
+    case PDM_MESH_NODAL_PYRAMIDHO: {
+
+      double dist_bnd[5] = {
+        -parent_uvw[2],
+        -parent_uvw[1],
+        parent_uvw[0] + parent_uvw[2] - 1,
+        parent_uvw[1] + parent_uvw[2] - 1,
+        -parent_uvw[0],
+      };
+      int imax = _argmax(5, dist_bnd);
+
+      if (dist_bnd[imax] > 0) {
+        i_bnd = imax;
+
+        switch (imax) {
+          case 0: {
+            *child_elt_type = PDM_MESH_NODAL_QUADHO;
+            memcpy(child_node_coord, parent_node_coord, sizeof(double) * (order+1)*(order+1) * 3);
+            break;
+          }
+          case 1: {
+            *child_elt_type = PDM_MESH_NODAL_TRIAHO;
+            int idx_write = 0;
+            for (int k = 0; k <= order; k++) {
+              for (int i = 0; i <= order - k; i++) {
+                int idx_read = _pyramid_ijk2idx(i, 0, k, order);
+                memcpy(child_node_coord + 3*idx_write, parent_node_coord + 3*idx_read, sizeof(double) * 3);
+                idx_write++;
+              }
+            }
+            break;
+          }
+          case 2: {
+            *child_elt_type = PDM_MESH_NODAL_TRIAHO;
+            int idx_write = 0;
+            for (int k = 0; k <= order; k++) {
+              for (int j = 0; j <= order - k; j++) {
+                int idx_read = _pyramid_ijk2idx(order-k, j, k, order);
+                memcpy(child_node_coord + 3*idx_write, parent_node_coord + 3*idx_read, sizeof(double) * 3);
+                idx_write++;
+              }
+            }
+            break;
+          }
+          case 3: {
+            *child_elt_type = PDM_MESH_NODAL_TRIAHO;
+            int idx_write = 0;
+            for (int k = 0; k <= order; k++) {
+              for (int i = 0; i <= order - k; i++) {
+                int idx_read = _pyramid_ijk2idx(order-k-i, order-k, k, order);
+                memcpy(child_node_coord + 3*idx_write, parent_node_coord + 3*idx_read, sizeof(double) * 3);
+                idx_write++;
+              }
+            }
+            break;
+          }
+          case 4: {
+            *child_elt_type = PDM_MESH_NODAL_TRIAHO;
+            int idx_write = 0;
+            for (int k = 0; k <= order; k++) {
+              for (int j = 0; j <= order - k; j++) {
+                int idx_read = _pyramid_ijk2idx(0, order-k-j, k, order);
+                memcpy(child_node_coord + 3*idx_write, parent_node_coord + 3*idx_read, sizeof(double) * 3);
+                idx_write++;
+              }
+            }
+            break;
+          }
+        }
+      }
+
+      break;
+    }
+
+    case PDM_MESH_NODAL_PRISMHO: {
+
+      double dist_bnd[5] = {
+        -parent_uvw[2],
+        parent_uvw[2] - 1,
+        -parent_uvw[1],
+        parent_uvw[0] + parent_uvw[1] - 1,
+        -parent_uvw[0],
+      };
+      int imax = _argmax(5, dist_bnd);
+
+      if (dist_bnd[imax] > 0) {
+        i_bnd = imax;
+
+        switch (imax) {
+          case 0: {
+            *child_elt_type = PDM_MESH_NODAL_TRIAHO;
+            memcpy(child_node_coord, parent_node_coord, sizeof(double) * (order+1)*(order+1) * 3);
+            break;
+          }
+          case 1: {
+            *child_elt_type = PDM_MESH_NODAL_TRIAHO;
+            int idx_write = 0;
+            for (int j = 0; j <= order; j++) {
+              for (int i = 0; i <= order - j; i++) {
+                int idx_read = _prism_ijk2idx(i, j, order, order);
+                memcpy(child_node_coord + 3*idx_write, parent_node_coord + 3*idx_read, sizeof(double) * 3);
+                idx_write++;
+              }
+            }
+            break;
+          }
+          case 2: {
+            *child_elt_type = PDM_MESH_NODAL_QUADHO;
+            int idx_write = 0;
+            for (int k = 0; k <= order; k++) {
+              for (int i = 0; i <= order; i++) {
+                int idx_read = _prism_ijk2idx(i, 0, k, order);
+                memcpy(child_node_coord + 3*idx_write, parent_node_coord + 3*idx_read, sizeof(double) * 3);
+                idx_write++;
+              }
+            }
+            break;
+          }
+          case 3: {
+            *child_elt_type = PDM_MESH_NODAL_QUADHO;
+            int idx_write = 0;
+            for (int k = 0; k <= order; k++) {
+              for (int j = 0; j <= order; j++) {
+                int idx_read = _prism_ijk2idx(order-j, j, k, order);
+                memcpy(child_node_coord + 3*idx_write, parent_node_coord + 3*idx_read, sizeof(double) * 3);
+                idx_write++;
+              }
+            }
+            break;
+          }
+          case 4: {
+            *child_elt_type = PDM_MESH_NODAL_QUADHO;
+            int idx_write = 0;
+            for (int k = 0; k <= order; k++) {
+              for (int j = 0; j <= order; j++) {
+                int idx_read = _prism_ijk2idx(0, order-j, k, order);
+                memcpy(child_node_coord + 3*idx_write, parent_node_coord + 3*idx_read, sizeof(double) * 3);
+                idx_write++;
+              }
+            }
+            break;
+          }
+        }
+      }
+      break;
+    }
+
+    case PDM_MESH_NODAL_HEXAHO: {
+      *child_elt_type = PDM_MESH_NODAL_QUADHO;
+
+      double dist_bnd[6];
+      for (int i = 0; i < 3; i++) {
+        dist_bnd[2*i  ] = -parent_uvw[i];
+        dist_bnd[2*i+1] = parent_uvw[i] - 1;
+      }
+
+      int imax = _argmax(6, dist_bnd);
+
+      if (dist_bnd[imax] > 0) {
+        i_bnd = imax;
+
+        int ivar = imax/2;
+        int ival = order * (imax%2);
+
+        int ijk[3];
+        int idx_write = 0;
+        for (int jj = 0; jj <= order; jj++) {
+          for (int ii = 0; ii <= order; ii++) {
+            ijk[ivar      ] = ival;
+            ijk[(ivar+1)%3] = ii;
+            ijk[(ivar+2)%3] = jj;
+            int idx_read = _hexa_ijk2idx(ijk[0], ijk[1], ijk[2], order);
+            memcpy(child_node_coord + 3*idx_write, parent_node_coord + 3*idx_read, sizeof(double) * 3);
+            idx_write++;
+          }
+        }
+      }
+
+      break;
+    }
+
+    default:
+      PDM_error(__FILE__, __LINE__, 0, "Invalid elt_type %d\n", (int) parent_elt_type);
+
+  }
+
+  if (i_bnd >= 0) {
+    *child_n_node = PDM_Mesh_nodal_n_vtx_elt_get(*child_elt_type, order);
+  }
+
+  return i_bnd;
+}
+
+#undef _tria_ij2idx
+#undef _quad_ij2idx
+#undef _tetra_ijk2idx
+#undef _pyramid_ijk2idx
+#undef _prism_ijk2idx
+#undef _hexa_ijk2idx
+
+
+
+static void
+_boundary_child_uvw_to_parent_uvw
+(
+ const PDM_Mesh_nodal_elt_t  parent_elt_type,
+ const int                   i_bnd,
+ const double               *child_uvw,
+       double               *parent_uvw
+ )
+ {
+  switch (parent_elt_type) {
+  case PDM_MESH_NODAL_BARHO:
+  case PDM_MESH_NODAL_BARHO_BEZIER:
+    if (i_bnd == 0) {
+      parent_uvw[0] = 0;
+    }
+    else {
+      parent_uvw[0] = 1;
+    }
+    break;
+  case PDM_MESH_NODAL_TRIAHO:
+  case PDM_MESH_NODAL_TRIAHO_BEZIER:
+    switch (i_bnd) {
+    case 0:
+      parent_uvw[0] = child_uvw[0];
+      parent_uvw[1] = 0;
+      break;
+    case 1:
+      parent_uvw[0] = 1 - child_uvw[0];
+      parent_uvw[1] = child_uvw[0];
+      break;
+    case 2:
+      parent_uvw[0] = 0;
+      parent_uvw[1] = 1 - child_uvw[0];
+      break;
+    default:
+      PDM_error(__FILE__, __LINE__, 0, "Invalid i_bnd (%d) for elt_type %d\n", i_bnd, (int) parent_elt_type);
+    }
+    break;
+  case PDM_MESH_NODAL_QUADHO:
+    switch (i_bnd) {
+    case 0:
+      parent_uvw[0] = child_uvw[0];
+      parent_uvw[1] = 0;
+      break;
+    case 1:
+      parent_uvw[0] = 1;
+      parent_uvw[1] = child_uvw[0];
+      break;
+    case 2:
+      parent_uvw[0] = 1 - child_uvw[0];
+      parent_uvw[1] = 1;
+      break;
+    case 3:
+      parent_uvw[0] = 0;
+      parent_uvw[1] = 1 - child_uvw[0];
+      break;
+    default:
+      PDM_error(__FILE__, __LINE__, 0, "Invalid i_bnd (%d) for elt_type %d\n", i_bnd, (int) parent_elt_type);
+    }
+    break;
+  case PDM_MESH_NODAL_TETRAHO:
+    switch (i_bnd) {
+    case 0:
+      parent_uvw[0] = child_uvw[0];
+      parent_uvw[1] = 0;
+      parent_uvw[2] = child_uvw[1];
+      break;
+    case 1:
+      parent_uvw[0] = 1 - child_uvw[0] - child_uvw[1];
+      parent_uvw[1] = child_uvw[0];
+      parent_uvw[2] = child_uvw[1];
+      break;
+    case 2:
+      parent_uvw[0] = 0;
+      parent_uvw[1] = 1 - child_uvw[0];
+      parent_uvw[2] = child_uvw[1];
+      break;
+    case 3:
+      parent_uvw[0] = child_uvw[0];
+      parent_uvw[1] = child_uvw[1];
+      parent_uvw[2] = 0;
+      break;
+    default:
+      PDM_error(__FILE__, __LINE__, 0, "Invalid i_bnd (%d) for elt_type %d\n", i_bnd, (int) parent_elt_type);
+    }
+    break;
+  case PDM_MESH_NODAL_PYRAMIDHO:
+    switch (i_bnd) {
+    case 0:
+      parent_uvw[0] = child_uvw[0];
+      parent_uvw[1] = child_uvw[1];
+      parent_uvw[2] = 0;
+      break;
+    case 1:
+      parent_uvw[0] = child_uvw[0];
+      parent_uvw[1] = 0;
+      parent_uvw[2] = child_uvw[1];
+      break;
+    case 2:
+      parent_uvw[0] = 1 - child_uvw[1];
+      parent_uvw[1] = child_uvw[0];
+      parent_uvw[2] = child_uvw[1];
+      break;
+    case 3:
+      parent_uvw[0] = 1 - child_uvw[0] - child_uvw[1];
+      parent_uvw[1] = 1 - child_uvw[1];
+      parent_uvw[2] = child_uvw[1];
+      break;
+    case 4:
+      parent_uvw[0] = 0;
+      parent_uvw[1] = 1 - child_uvw[0] - child_uvw[1];
+      parent_uvw[2] = child_uvw[1];
+      break;
+    default:
+      PDM_error(__FILE__, __LINE__, 0, "Invalid i_bnd (%d) for elt_type %d\n", i_bnd, (int) parent_elt_type);
+    }
+    break;
+  case PDM_MESH_NODAL_PRISMHO:
+    switch (i_bnd) {
+    case 0:
+      parent_uvw[0] = child_uvw[0];
+      parent_uvw[1] = child_uvw[1];
+      parent_uvw[2] = 0;
+      break;
+    case 1:
+      parent_uvw[0] = child_uvw[0];
+      parent_uvw[1] = child_uvw[1];
+      parent_uvw[2] = 1;
+      break;
+    case 2:
+      parent_uvw[0] = child_uvw[0];
+      parent_uvw[1] = 0;
+      parent_uvw[2] = child_uvw[1];
+      break;
+    case 3:
+      parent_uvw[0] = 1 - child_uvw[0];
+      parent_uvw[1] = child_uvw[0];
+      parent_uvw[2] = child_uvw[1];
+      break;
+    case 4:
+      parent_uvw[0] = 0;
+      parent_uvw[1] = 1 - child_uvw[0];
+      parent_uvw[2] = child_uvw[1];
+      break;
+    default:
+      PDM_error(__FILE__, __LINE__, 0, "Invalid i_bnd (%d) for elt_type %d\n", i_bnd, (int) parent_elt_type);
+    }
+    break;
+  case PDM_MESH_NODAL_HEXAHO: {
+    int ivar = i_bnd/2;
+    parent_uvw[ivar      ] = i_bnd%2;
+    parent_uvw[(ivar+1)%3] = child_uvw[0];
+    parent_uvw[(ivar+2)%3] = child_uvw[1];
+    break;
+  }
+  default:
+    PDM_error(__FILE__, __LINE__, 0, "Invalid elt_type %d\n", (int) parent_elt_type);
+  }
+}
+
+
+static void
+_init_uvw
+(
+ const PDM_Mesh_nodal_elt_t  elt_type,
+       double               *uvw
+ )
+{
+  switch (elt_type) {
+  case PDM_MESH_NODAL_BARHO:
+  case PDM_MESH_NODAL_BARHO_BEZIER:
+    uvw[0] = 0.5;
+    break;
+  case PDM_MESH_NODAL_TRIAHO:
+  case PDM_MESH_NODAL_TRIAHO_BEZIER:
+    uvw[0] = 1./3.;
+    uvw[1] = uvw[0];
+    break;
+  case PDM_MESH_NODAL_QUADHO:
+    uvw[0] = 0.5;
+    uvw[1] = 0.5;
+    break;
+  case PDM_MESH_NODAL_TETRAHO:
+    uvw[0] = 0.25;
+    uvw[1] = 0.25;
+    uvw[2] = 0.25;
+    break;
+  case PDM_MESH_NODAL_PYRAMIDHO:
+    uvw[0] = 0.5;
+    uvw[1] = 0.5;
+    uvw[2] = 0.25;
+    break;
+  case PDM_MESH_NODAL_PRISMHO:
+    uvw[0] = 1./3.;
+    uvw[1] = uvw[0];
+    uvw[2] = 0.25;
+    break;
+  case PDM_MESH_NODAL_HEXAHO:
+    uvw[0] = 0.5;
+    uvw[1] = 0.5;
+    uvw[2] = 0.5;
+    break;
+  default:
+    PDM_error(__FILE__, __LINE__, 0, "Invalid elt_type %d\n", (int) elt_type);
+  }
+}
+
+
+
+static double _epsilon_denom = 1.e-30;       /* Minimum denominator */
+
+static inline double
+_determinant_3x3
+(
+ const double a[3],
+ const double b[3],
+ const double c[3]
+ )
+{
+  return a[0] * (b[1]*c[2] - b[2]*c[1])
+    +    a[1] * (b[2]*c[0] - b[0]*c[2])
+    +    a[2] * (b[0]*c[1] - b[1]*c[0]);
+}
+
+/*---------------------------------------------------------------------------
+ * Solve the equation "A.x = b" with Cramer's rule.
+ *
+ * parameters:
+ *   A[3][3] <-- equation matrix
+ *   b[3]    <-- b equation right hand side
+ *   x[3]    <-> equation solution (unchanged if matrix is singular)
+ *
+ * returns:
+ *   PDM_FALSE if matrix is singular, PDM_TRUE otherwise
+ *----------------------------------------------------------------------------*/
+
+static int
+_solve_3x3(double *A,
+           double  b[3],
+           double  x[3])
+{
+  double det, det_inv, x0, x1, x2;
+
+  det = A[0]*(A[4]*A[8] - A[7]*A[5])
+    -   A[3]*(A[1]*A[8] - A[7]*A[2])
+    +   A[6]*(A[1]*A[5] - A[4]*A[2]);
+
+  if (PDM_ABS(det) < _epsilon_denom) {
+    printf("_solve_3x3: det = %e\n", det);
+    return 1;
+  }
+
+  else {
+    det_inv = 1./det;
+  }
+
+  /* Use local variables to ensure no aliasing */
+
+  x0 = (  b[0]*(A[4]*A[8] - A[7]*A[5])
+          - b[1]*(A[1]*A[8] - A[7]*A[2])
+          + b[2]*(A[1]*A[5] - A[4]*A[2])) * det_inv;
+
+  x1 = (  A[0]*(b[1]*A[8] - b[2]*A[5])
+          - A[3]*(b[0]*A[8] - b[2]*A[2])
+          + A[6]*(b[0]*A[5] - b[1]*A[2])) * det_inv;
+
+  x2 = (  A[0]*(A[4]*b[2] - A[7]*b[1])
+          - A[3]*(A[1]*b[2] - A[7]*b[0])
+          + A[6]*(A[1]*b[1] - A[4]*b[0])) * det_inv;
+
+  /* Copy local variables to output */
+  x[0] = x0;
+  x[1] = x1;
+  x[2] = x2;
+
+  return 0;
+}
+
+
+static int
+_compute_uvw_ho
+(
+ const PDM_Mesh_nodal_elt_t  elt_type,
+ const int                   order,
+ const int                   n_node,
+ const double                point_coords[3],
+ const double                vertex_coords[],
+ const double                tolerance,
+       double               *uvw,
+       double               *work_array
+ )
+{
+  const int dbg_enabled = 0;
+
+  // Take these 2 as input arguments to avoid redundant computations?
+  int elt_dim = PDM_Mesh_nodal_elt_dim_get  (elt_type);
+
+  assert(elt_dim > 0);
+  // int n_node  = PDM_Mesh_nodal_n_vtx_elt_get(elt_type, order);
+
+  if (dbg_enabled) {
+    log_trace(">> _compute_uvw_ho (type %d, dim %d)\n", (int) elt_type, elt_dim);
+  }
+
+  if (1 && dbg_enabled) {
+    int *connec = malloc(sizeof(int) * n_node);
+
+    int *ijk_to_user = PDM_ho_ordering_ijk_to_user_get("PDM_HO_ORDERING_VTK",
+                                                       elt_type,
+                                                       order);
+
+    for (int i = 0; i < n_node; i++) {
+      connec[ijk_to_user[i]] = i + 1;
+    }
+
+    char filename[999];
+    sprintf(filename, "_compute_uvw_ho_%d.vtk", (int) elt_type);
+
+    PDM_vtk_write_std_elements_ho(filename,
+                                  order,
+                                  n_node,
+                                  vertex_coords,
+                                  NULL,
+                                  elt_type,
+                                  1,
+                                  connec,
+                                  NULL,
+                                  0,
+                                  NULL,
+                                  NULL);
+    free(connec);
+  }
+
+  double *weight     = work_array;
+  double *diff_weight[3];
+  for (int i = 0; i < elt_dim; i++) {
+    diff_weight[i] = &work_array[(i+1)*n_node];
+  }
+
+  double finite_difference_dx = 1e-8;
+  double inv_finite_difference_dx = 1./finite_difference_dx;
+
+
+  const int    max_iter   = 15;
+  const double tolerance2 = tolerance * tolerance;
+
+  double _uvw[12];
+
+  double a[9];
+  double b[3];
+
+  double duvw[3]; // Newton step in uvw-space
+
+  _init_uvw(elt_type, uvw);
+
+  // PDM_log_trace_array_double(uvw, elt_dim, "init uvw : ");
+
+  PDM_Mesh_nodal_elt_t child_elt_type;
+  int child_n_node;
+  double child_node_coord[n_node*3];
+
+  for (int iter = 0; iter < max_iter; iter++) {
+
+    /* Evaluate position and approximate gradient */
+    memcpy(_uvw, uvw, sizeof(double) * elt_dim);
+    for (int i = 0; i < elt_dim; i++) {
+      memcpy(_uvw + elt_dim*(i+1), uvw, sizeof(double) * elt_dim);
+      _uvw[elt_dim*(i+1)+i] += finite_difference_dx;
+    }
+
+    PDM_ho_basis(elt_type,
+                 order,
+                 n_node,
+                 4,
+                 _uvw,
+                 work_array);
+
+    for (int j = 0; j < elt_dim; j++) {
+      for (int i = 0; i < n_node; i++) {
+        diff_weight[j][i] = (diff_weight[j][i] - weight[i]) * inv_finite_difference_dx;
+      }
+    }
+
+    int singular = 0;
+
+    for (int i = 0; i < 3; i++) {
+      b[i] = point_coords[i];
+    }
+    for (int k = 0; k < n_node; k++) {
+      for (int i = 0; i < 3; i++) {
+        b[i] -= weight[k] * vertex_coords[3*k+i];
+      }
+    }
+    for (int i = 0; i < 3*elt_dim; i++) {
+      a[i] = 0;
+    }
+
+    for (int k = 0; k < n_node; k++) {
+      for (int i = 0; i < 3; i++) {
+        for (int j = 0; j < elt_dim; j++) {
+          a[elt_dim*i+j] += diff_weight[j][k] * vertex_coords[3*k+i];
+        }
+      }
+    }
+
+    switch (elt_dim) {
+      case 3: {
+        singular = _solve_3x3(a, b, duvw);
+        break;
+      }
+
+      case 2: {
+        double xuxu = a[0]*a[0] + a[2]*a[2] + a[4]*a[4];
+        double xuxv = a[0]*a[1] + a[2]*a[3] + a[4]*a[5];
+        double xvxv = a[1]*a[1] + a[3]*a[3] + a[5]*a[5];
+
+        double denom = xuxu*xvxv - xuxv*xuxv;
+
+        singular = (PDM_ABS(denom) < _epsilon_denom);
+
+        if (!singular) {
+          double rhs[2] = {
+            a[0]*b[0] + a[2]*b[1] + a[4]*b[2],
+            a[1]*b[0] + a[3]*b[1] + a[5]*b[2]
+          };
+
+          double idenom = 1./denom;
+          duvw[0] = idenom * (rhs[0]*xvxv - rhs[1]*xuxv);
+          duvw[1] = idenom * (rhs[1]*xuxu - rhs[0]*xuxv);
+        }
+
+        break;
+      }
+
+      case 1: {
+        double aa = PDM_DOT_PRODUCT(a, a);
+
+        singular = (aa < _epsilon_denom);
+
+        if (!singular) {
+          duvw[0] = PDM_DOT_PRODUCT(a, b) / aa;
+        }
+
+        break;
+      }
+
+      default:
+        PDM_error(__FILE__, __LINE__, 0, "Invalid elt dimension %d\n", elt_dim);
+      }
+
+    if (singular) {
+      printf("_compute_uvw_ho : singularity\n");
+      return -1;
+    }
+
+    double mag2_duvw = 0;
+    for (int i = 0; i < elt_dim; i++) {
+      mag2_duvw += duvw[i]*duvw[i];
+      uvw[i] += duvw[i];
+    }
+
+    if (dbg_enabled) {
+      log_trace("iter %2d, mag2_duvw %e\n", iter, mag2_duvw);
+      PDM_log_trace_array_double(uvw, elt_dim, "uvw : ");
+    }
+
+
+    if (mag2_duvw < tolerance2) {
+      int i_bnd = _boundary_child_element_coord(elt_type,
+                                                order,
+                                                uvw,
+                                                vertex_coords,
+                                                &child_elt_type,
+                                                &child_n_node,
+                                                child_node_coord);
+
+      if (dbg_enabled) {
+        log_trace("i_bnd = %d\n", i_bnd);
+      }
+
+      if (i_bnd < 0) {
+        if (dbg_enabled) {
+          log_trace("converged\n");
+        }
+        return 1;
+      }
+      else {
+        if (child_elt_type == PDM_MESH_NODAL_POINT) {
+          _boundary_child_uvw_to_parent_uvw(elt_type,
+                                            i_bnd,
+                                            NULL,
+                                            uvw);
+          if (dbg_enabled) {
+            PDM_log_trace_array_double(uvw, elt_dim, "parent_uvw : ");
+          }
+          return 1;
+        }
+
+        double child_uvw[2];
+        _init_uvw(child_elt_type, child_uvw);
+        int child_converged = _compute_uvw_ho(child_elt_type,
+                                              order,
+                                              child_n_node,
+                                              point_coords,
+                                              child_node_coord,
+                                              tolerance,
+                                              child_uvw,
+                                              work_array);
+
+        if (child_converged) {
+          if (dbg_enabled) {
+            log_trace("child converged\n");
+          }
+          // Translate child_uvw to parent_uvw
+          _boundary_child_uvw_to_parent_uvw(elt_type,
+                                            i_bnd,
+                                            child_uvw,
+                                            uvw);
+          if (dbg_enabled) {
+            PDM_log_trace_array_double(child_uvw, elt_dim-1, "child_uvw  : ");
+            PDM_log_trace_array_double(uvw,       elt_dim,   "parent_uvw : ");
+          }
+        }
+        return child_converged;
+      }
+    }
+
+
+  }
+
+  if (dbg_enabled) {
+    log_trace("failed to converge\n");
+  }
+  return 0;
+}
+
+
+
+
+
 /*============================================================================
  * Public function definitions
  *============================================================================*/
@@ -5656,7 +6635,7 @@ _get_user_elt (PDM_Mesh_nodal_elt_t elt_type)
  * \param [out]  projected_coords  Coordinates of the projection on the element (size = 3)
  * \param [out]  uvw               Parametric coordinates of the projection on the element
  *
- * \return       Distance from the point to the element
+ * \return       Squared distance from the point to the element
  *
  */
 
@@ -5779,9 +6758,91 @@ PDM_ho_location_uvw_nodes
     break;
 
     default:
-    PDM_error(__FILE__, __LINE__, 0,
+    PDM_error(__FILE__ , __LINE__, 0,
               "Invalid element type %d\n", type);
   }
+}
+
+
+/**
+ * \brief Point location in a high order element
+ *
+ * \param [in]   type              Element type
+ * \param [in]   order             Element order
+ * \param [in]   n_nodes           Number of nodes
+ * \param [in]   nodes_coords      Coordinates of the nodes (size = 3 * \ref n_nodes)
+ * \param [in]   point_coords      Coordinates of the point to locate (size = 3)
+ * \param [in]   tolerance         Tolerance for Newton step in uvw-space
+ * \param [out]  projected_coords  Coordinates of the projection on the element (size = 3)
+ * \param [out]  uvw               Parametric coordinates of the projection on the element
+ * \param [out]  converged         Convergence status (1 if successful, 0 else)
+ * \param [in]   work_array        Optional work array (size = (elt_dim+1) * \ref n_nodes or NULL)
+ *
+ * \return       Distance from the point to the element
+ *
+ */
+
+double
+PDM_ho_location_newton
+(
+ const PDM_Mesh_nodal_elt_t  type,
+ const int                   order,
+ const int                   n_nodes,
+ const double               *nodes_coords,
+ const double               *point_coords,
+ const double                tolerance,
+       double               *projected_coords,
+       double               *uvw,
+       int                  *converged,
+       double               *work_array
+)
+{
+  double *_work_array = work_array;
+  if (work_array == NULL) {
+    int elt_dim = PDM_Mesh_nodal_elt_dim_get(type);
+    _work_array = malloc(sizeof(double) * n_nodes * (elt_dim + 1));
+  }
+  int stat = _compute_uvw_ho(type,
+                             order,
+                             n_nodes,
+                             point_coords,
+                             nodes_coords,
+                             tolerance,
+                             uvw,
+                             _work_array);
+
+  *converged = (stat >= 0);
+
+  double dist2 = HUGE_VAL;
+  if (*converged) {
+    PDM_ho_basis(type,
+                 order,
+                 n_nodes,
+                 1,
+                 uvw,
+                 _work_array);
+
+    for (int j = 0; j < 3; j++) {
+      projected_coords[j] = 0;
+    }
+
+    for (int i = 0; i < n_nodes; i++) {
+      for (int j = 0; j < 3; j++) {
+        projected_coords[j] += _work_array[i] * nodes_coords[3*i+j];
+      }
+    }
+
+    dist2 = 0;
+    for (int j = 0; j < 3; j++) {
+      dist2 += (projected_coords[j] - point_coords[j])*(projected_coords[j] - point_coords[j]);
+    }
+  }
+
+  if (work_array == NULL) {
+    free(_work_array);
+  }
+
+  return dist2;
 }
 
 #ifdef __cplusplus

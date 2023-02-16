@@ -73,7 +73,7 @@ typedef double (*PDM_ho_location_fct_t)
  * \param [out]  projected_coords  Coordinates of the projection on the element (size = 3)
  * \param [out]  uvw               Parametric coordinates of the projection on the element
  *
- * \return       Distance from the point to the element
+ * \return       Squared distance from the point to the element
  *
  */
 
@@ -118,6 +118,40 @@ PDM_ho_location_uvw_nodes
  const double                wmax,
        double               *uvw_node
  );
+
+
+/**
+ * \brief Point location in a high order element
+ *
+ * \param [in]   type              Element type
+ * \param [in]   order             Element order
+ * \param [in]   n_nodes           Number of nodes
+ * \param [in]   nodes_coords      Coordinates of the nodes (size = 3 * \ref n_nodes)
+ * \param [in]   point_coords      Coordinates of the point to locate (size = 3)
+ * \param [in]   tolerance         Tolerance for Newton step in uvw-space
+ * \param [out]  projected_coords  Coordinates of the projection on the element (size = 3)
+ * \param [out]  uvw               Parametric coordinates of the projection on the element
+ * \param [out]  converged         Convergence status (1 if successful, 0 else)
+ * \param [in]   work_array        Optional work array (size = (elt_dim+1) * \ref n_nodes or NULL)
+ *
+ * \return       Squared distance from the point to the element
+ *
+ */
+
+double
+PDM_ho_location_newton
+(
+ const PDM_Mesh_nodal_elt_t  type,
+ const int                   order,
+ const int                   n_nodes,
+ const double               *nodes_coords,
+ const double               *point_coords,
+ const double                tolerance,
+       double               *projected_coords,
+       double               *uvw,
+       int                  *converged,
+       double               *work_array
+);
 
 #ifdef __cplusplus
 }
