@@ -81,6 +81,10 @@ endif()
 # Test pdm_t_part_cube
 # --------------
 
+
+set (MPIEXEC_MAX_NUMPROCS 2)
+
+
 include(TestCreate)
 
 if(PDM_ENABLE_UNIT_TEST)
