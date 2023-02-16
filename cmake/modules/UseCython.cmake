@@ -189,7 +189,7 @@ function( COMPILE_PYX _name generated_file)
     ARGS ${cxx_arg} ${include_directory_arg} ${version_arg}
     ${annotate_arg} ${no_docstrings_arg} ${cython_debug_arg} ${CYTHON_FLAGS}
     --output-file  ${_generated_file} ${pyx_locations}
-    DEPENDS ${pyx_locations} ${COMPILE_PYX_SOURCE_PXI}
+    DEPENDS ${pyx_locations} ${COMPILE_PYX_DEPENDS}
     IMPLICIT_DEPENDS ${pyx_lang}
     COMMENT ${comment}
    )

@@ -1,6 +1,6 @@
 
 cdef extern from "pdm_closest_points.h":
-  # > Wrapping of Ppart Structure
+  # > Wrapping of Ppart Structures
   ctypedef struct PDM_closest_point_t:
     pass
   # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::

@@ -237,7 +237,9 @@ test_c_create (pdm_t_mesh_intersection_surf_surf_atomic 1)
 
 if (PDM_ENABLE_PYTHON_BINDINGS)
    test_python_create (pdm_t_part_to_part_p 2)
+   add_dependencies (pdm_t_part_to_part_p Pypdm)
    test_python_create (test_demr 2)
+   add_dependencies (test_demr Pypdm)
 endif()
 
 if (PDM_ENABLE_STATIC_Fortran_INTERFACE OR PDM_ENABLE_SHARED_Fortran_INTERFACE)
