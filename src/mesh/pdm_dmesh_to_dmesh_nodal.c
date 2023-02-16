@@ -726,6 +726,113 @@ _rebuild_dmesh_nodal_2d
 
 }
 
+/**
+ * \brief Get element type
+ *
+ *   \param[in] n_cell_face     Number of faces in the current cell
+ *   \param[in]  face_cell      Face to cell connectivity
+ *   \param[in]  face_cell_idx  Face to vertex connectivity index
+ *   \param[in]  face_cell_n    Number of vertices for each face
+ *   \param[in]  face_vtx       Face to vertex connectivity
+ *   \param[out] tria_vtx       Quadrangles connectivity
+ *   \param[out] quad_vtx       Quadrangles connectivity
+ *
+ *  \return   Cell type
+ */
+
+inline static
+PDM_Mesh_nodal_elt_t
+_type_cell_3D
+(
+ const int             n_cell_face,
+ const PDM_l_num_t    *cell_face,
+ const PDM_l_num_t    *face_vtx_idx,
+ const PDM_l_num_t    *face_vtx,
+ PDM_l_num_t           tria_vtx[],
+ PDM_l_num_t           quad_vtx[]
+)
+{
+  PDM_l_num_t  n_trias = 0;
+  PDM_l_num_t  n_quads = 0;
+
+  if (n_cell_face > 6) {
+    return PDM_MESH_NODAL_POLY_3D;
+  }
+
+  for (int i = 0; i < n_cell_face; i++) {
+
+    const int face_id = PDM_ABS(cell_face[i]) - 1;
+    const int n_som_face = face_vtx_idx[face_id+1]-face_vtx_idx[face_id];
+    PDM_l_num_t idx = face_vtx_idx[face_id];
+
+    if (n_som_face == 3) {
+      PDM_l_num_t *cell_som_tria_courant = tria_vtx + 3*n_trias;
+      for (int j = idx; j < idx + n_som_face; j++) {
+        cell_som_tria_courant[j-idx] = face_vtx[j];
+      }
+      n_trias += 1;
+    }
+    else if (n_som_face == 4) {
+      PDM_l_num_t *cell_som_quad_courant = quad_vtx + 4*n_quads;
+      for (int j = idx; j < idx + n_som_face; j++) {
+        cell_som_quad_courant[j-idx] = face_vtx[j];
+      }
+      n_quads += 1;
+    }
+    else
+      return PDM_MESH_NODAL_POLY_3D;
+
+  }
+
+  PDM_Mesh_nodal_elt_t cell_type;
+
+  if ((n_quads == 0) && (n_trias == 4))
+    cell_type = PDM_MESH_NODAL_TETRA4;
+  else if (n_quads == 6)
+    cell_type = PDM_MESH_NODAL_HEXA8;
+  else if ((n_quads == 1) && (n_trias == 4))
+    cell_type = PDM_MESH_NODAL_PYRAMID5;
+  else if ((n_quads == 3) && (n_trias == 2)) {
+    int trias[6];
+    n_trias = 0;
+    for (int i = 0; i < n_cell_face; i++) {
+
+      const int face_id = PDM_ABS(cell_face[i]) - 1;
+      const int ideb = face_vtx_idx[face_id];
+
+      const int n_som_face = face_vtx_idx[face_id+1]-face_vtx_idx[face_id];
+
+      if (n_som_face == 3) {
+        for (int j = 0; j < 3; j++) {
+          trias[3*n_trias+j] = face_vtx[ideb+j];
+        }
+        n_trias += 1;
+      }
+      if (n_trias >= 2)
+        break;
+    }
+
+    cell_type = PDM_MESH_NODAL_PRISM6;
+    for (int i = 0; i < 3; i++) {
+      for (int j = 0; j < 3; j++) {
+        if (trias[i] == trias[3+j]) {
+          cell_type = PDM_MESH_NODAL_POLY_3D;
+          break;
+        }
+      }
+      if (cell_type == PDM_MESH_NODAL_POLY_3D)
+        break;
+    }
+  }
+
+  else {
+    cell_type = PDM_MESH_NODAL_POLY_3D;
+  }
+
+  return cell_type;
+
+}
+
 
 static
 void
@@ -826,6 +933,28 @@ _rebuild_dmesh_nodal_3d
                                         &tmp_pvtx_coords);
   double *pvtx_coords = tmp_pvtx_coords[0];
   free(tmp_pvtx_coords);
+
+  /*
+   * Reconstruction of volumic part
+   */
+  PDM_l_num_t cell_som_tria[18]; /* 6 triangles max in _type_cell_3D */
+  PDM_l_num_t cell_som_quad[24]; /* 6 quadrangles max in _type_cell_3D */
+
+  for(int i_cell = 0; i_cell < dn_cell; ++i_cell) {
+    PDM_Mesh_nodal_elt_t cell_type = _type_cell_3D(pcell_face_idx[i_cell+1]-pcell_face_idx[i_cell],
+                                                   pcell_face + pcell_face_idx[i_cell],
+                                                   pface_vtx_idx,
+                                                   pface_vtx,
+                                                   cell_som_tria,
+                                                   cell_som_quad);
+  }
+
+
+
+
+
+
+
 
   free(pcell_ln_to_gn);
   free(pface_vtx_idx);
