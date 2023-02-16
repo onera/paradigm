@@ -271,6 +271,8 @@ int main(int argc, char *argv[])
   PDM_dmesh_distrib_get(dmesh, PDM_MESH_ENTITY_EDGE  , &distrib_edge);
   PDM_dmesh_distrib_get(dmesh, PDM_MESH_ENTITY_VERTEX, &distrib_vtx );
 
+  double *dvtx_coords = PDM_DMesh_nodal_vtx_get(dmn);
+
   PDM_dmesh_to_dmesh_nodal_distribution_set(dm_to_dmn,
                                             0,
                                             distrib_cell,
@@ -286,7 +288,8 @@ int main(int argc, char *argv[])
                                               dface_edge,
                                               dedge_vtx,
                                               dface_vtx_idx,
-                                              dface_vtx);
+                                              dface_vtx,
+                                              dvtx_coords);
   } else {
 
     if(dim == 2) {
@@ -298,7 +301,8 @@ int main(int argc, char *argv[])
                                                 dface_edge,
                                                 dedge_vtx,
                                                 dface_vtx_idx,
-                                                dface_vtx);
+                                                dface_vtx,
+                                                dvtx_coords);
     } else {
       PDM_dmesh_to_dmesh_nodal_connectivity_set(dm_to_dmn,
                                                 0,
@@ -308,7 +312,8 @@ int main(int argc, char *argv[])
                                                 NULL,
                                                 NULL,
                                                 dface_vtx_idx,
-                                                dface_vtx);
+                                                dface_vtx,
+                                                dvtx_coords);
     }
   }
 
@@ -350,7 +355,6 @@ int main(int argc, char *argv[])
                                            &dmn_out,
                                            PDM_OWNERSHIP_KEEP);
 
-  double *dvtx_coords = PDM_DMesh_nodal_vtx_get(dmn);
   int dn_vtx2 = PDM_DMesh_nodal_n_vtx_get(dmn);
 
   PDM_DMesh_nodal_coord_set(dmn_out,

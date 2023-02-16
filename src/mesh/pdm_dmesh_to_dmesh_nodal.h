@@ -85,7 +85,8 @@ PDM_dmesh_to_dmesh_nodal_connectivity_set
         PDM_g_num_t                *dface_edge,
         PDM_g_num_t                *dedge_vtx,
         int                        *dface_vtx_idx,
-        PDM_g_num_t                *dface_vtx
+        PDM_g_num_t                *dface_vtx,
+        double                     *dvtx_coords
 );
 
 void

@@ -737,6 +737,7 @@ _rebuild_dmesh_nodal_3d
   PDM_g_num_t        *distrib_face,
   PDM_g_num_t        *distrib_edge,
   PDM_g_num_t        *distrib_vtx,
+  double             *dvtx_coords,
   PDM_g_num_t        *dcell_face,
   int                *dcell_face_idx,
   PDM_g_num_t        *dface_edge,
@@ -783,6 +784,57 @@ _rebuild_dmesh_nodal_3d
     pcell_ln_to_gn[i_cell] = distrib_cell[i_rank] + i_cell + 1;
   }
 
+
+  int pn_face = 0;
+  int         *pcell_face_idx = NULL;
+  int         *pcell_face     = NULL;
+  PDM_g_num_t *pface_ln_to_gn = NULL;
+
+  PDM_part_dconnectivity_to_pconnectivity_sort_single_part(comm,
+                                                           distrib_cell,
+                                                           dcell_face_idx,
+                                                           dcell_face,
+                                                           dn_cell,
+                                                           pcell_ln_to_gn,
+                                                           &pn_face,
+                                                           &pface_ln_to_gn,
+                                                           &pcell_face_idx,
+                                                           &pcell_face);
+
+  int pn_vtx = 0;
+  int         *pface_vtx_idx = NULL;
+  int         *pface_vtx     = NULL;
+  PDM_g_num_t *pvtx_ln_to_gn = NULL;
+
+  PDM_part_dconnectivity_to_pconnectivity_sort_single_part(comm,
+                                                           distrib_face,
+                                                           dface_vtx_idx,
+                                                           dface_vtx,
+                                                           pn_face,
+                                                           pface_ln_to_gn,
+                                                           &pn_vtx,
+                                                           &pvtx_ln_to_gn,
+                                                           &pface_vtx_idx,
+                                                           &pface_vtx);
+  double **tmp_pvtx_coords = NULL;
+  PDM_part_dcoordinates_to_pcoordinates(comm,
+                                        1,
+                                        distrib_vtx,
+                                        dvtx_coords,
+                                        &pn_vtx,
+                 (const PDM_g_num_t **) &pvtx_ln_to_gn,
+                                        &tmp_pvtx_coords);
+  double *pvtx_coords = tmp_pvtx_coords[0];
+  free(tmp_pvtx_coords);
+
+  free(pcell_ln_to_gn);
+  free(pface_vtx_idx);
+  free(pface_vtx    );
+  free(pvtx_ln_to_gn);
+  free(pcell_face_idx);
+  free(pcell_face    );
+  free(pface_ln_to_gn);
+  free(pvtx_coords);
 }
 
 
@@ -795,6 +847,7 @@ _dmesh_to_dmesh_nodal
  PDM_g_num_t    *distrib_face,
  PDM_g_num_t    *distrib_edge,
  PDM_g_num_t    *distrib_vtx,
+ double         *dvtx_coords,
  PDM_g_num_t    *dcell_face,
  int            *dcell_face_idx,
  PDM_g_num_t    *dface_edge,
@@ -866,6 +919,7 @@ _dmesh_to_dmesh_nodal
                             distrib_face,
                             distrib_edge,
                             distrib_vtx,
+                            dvtx_coords,
                             dcell_face,
                             dcell_face_idx,
                             dface_edge,
@@ -1402,22 +1456,26 @@ PDM_dmesh_to_dmesh_nodal_create
   dm_to_dmn->results_is_getted = PDM_FALSE;
   dm_to_dmn->n_mesh            = n_mesh;
 
-  dm_to_dmn->dcell_face     = malloc(n_mesh * sizeof(PDM_g_num_t *));
-  dm_to_dmn->dcell_face_idx = malloc(n_mesh * sizeof(int         *));
-  dm_to_dmn->dface_edge     = malloc(n_mesh * sizeof(PDM_g_num_t *));
-  dm_to_dmn->dface_edge_idx = malloc(n_mesh * sizeof(int         *));
-  dm_to_dmn->dface_vtx      = malloc(n_mesh * sizeof(PDM_g_num_t *));
-  dm_to_dmn->dface_vtx_idx  = malloc(n_mesh * sizeof(int         *));
-  dm_to_dmn->dedge_vtx      = malloc(n_mesh * sizeof(PDM_g_num_t *));
+  dm_to_dmn->dcell_face            = malloc(n_mesh * sizeof(PDM_g_num_t *));
+  dm_to_dmn->dcell_face_idx        = malloc(n_mesh * sizeof(int         *));
+  dm_to_dmn->dface_edge            = malloc(n_mesh * sizeof(PDM_g_num_t *));
+  dm_to_dmn->dface_edge_idx        = malloc(n_mesh * sizeof(int         *));
+  dm_to_dmn->dface_vtx             = malloc(n_mesh * sizeof(PDM_g_num_t *));
+  dm_to_dmn->dface_vtx_idx         = malloc(n_mesh * sizeof(int         *));
+  dm_to_dmn->dedge_vtx             = malloc(n_mesh * sizeof(PDM_g_num_t *));
+  dm_to_dmn->dvtx_coords           = malloc(n_mesh * sizeof(double      *));
+  dm_to_dmn->dparent_elmt_position = malloc(n_mesh * sizeof(int      *));
 
   for(int i_mesh = 0; i_mesh < n_mesh; ++i_mesh) {
-    dm_to_dmn->dcell_face    [i_mesh] = NULL;
-    dm_to_dmn->dcell_face_idx[i_mesh] = NULL;
-    dm_to_dmn->dface_edge    [i_mesh] = NULL;
-    dm_to_dmn->dface_edge_idx[i_mesh] = NULL;
-    dm_to_dmn->dface_vtx     [i_mesh] = NULL;
-    dm_to_dmn->dface_vtx_idx [i_mesh] = NULL;
-    dm_to_dmn->dedge_vtx     [i_mesh] = NULL;
+    dm_to_dmn->dcell_face           [i_mesh] = NULL;
+    dm_to_dmn->dcell_face_idx       [i_mesh] = NULL;
+    dm_to_dmn->dface_edge           [i_mesh] = NULL;
+    dm_to_dmn->dface_edge_idx       [i_mesh] = NULL;
+    dm_to_dmn->dface_vtx            [i_mesh] = NULL;
+    dm_to_dmn->dface_vtx_idx        [i_mesh] = NULL;
+    dm_to_dmn->dedge_vtx            [i_mesh] = NULL;
+    dm_to_dmn->dvtx_coords          [i_mesh] = NULL;
+    dm_to_dmn->dparent_elmt_position[i_mesh] = NULL;
   }
 
   dm_to_dmn->distrib_cell = malloc(n_mesh * sizeof(PDM_g_num_t *));
@@ -1482,6 +1540,7 @@ PDM_dmesh_to_dmesh_nodal_compute
                                                    dm_to_dmn->distrib_face   [i_mesh],
                                                    dm_to_dmn->distrib_edge   [i_mesh],
                                                    dm_to_dmn->distrib_vtx    [i_mesh],
+                                                   dm_to_dmn->dvtx_coords    [i_mesh],
                                                    dm_to_dmn->dcell_face     [i_mesh],
                                                    dm_to_dmn->dcell_face_idx [i_mesh],
                                                    dm_to_dmn->dface_edge     [i_mesh],
@@ -1558,7 +1617,8 @@ PDM_dmesh_to_dmesh_nodal_connectivity_set
         PDM_g_num_t                *dface_edge,
         PDM_g_num_t                *dedge_vtx,
         int                        *dface_vtx_idx,
-        PDM_g_num_t                *dface_vtx
+        PDM_g_num_t                *dface_vtx,
+        double                     *dvtx_coords
 )
 {
   dm_to_dmn->dcell_face_idx[i_mesh] = dcell_face_idx;
@@ -1568,6 +1628,7 @@ PDM_dmesh_to_dmesh_nodal_connectivity_set
   dm_to_dmn->dedge_vtx     [i_mesh] = dedge_vtx;
   dm_to_dmn->dface_vtx_idx [i_mesh] = dface_vtx_idx;
   dm_to_dmn->dface_vtx     [i_mesh] = dface_vtx;
+  dm_to_dmn->dvtx_coords   [i_mesh] = dvtx_coords;
 }
 
 void
@@ -1604,6 +1665,8 @@ PDM_dmesh_to_dmesh_nodal_free
   free(dm_to_dmn->dface_vtx     );
   free(dm_to_dmn->dface_vtx_idx );
   free(dm_to_dmn->dedge_vtx     );
+  free(dm_to_dmn->dvtx_coords   );
+  free(dm_to_dmn->dparent_elmt_position);
 
   free(dm_to_dmn->distrib_cell);
   free(dm_to_dmn->distrib_face);

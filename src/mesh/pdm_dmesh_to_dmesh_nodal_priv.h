@@ -55,6 +55,8 @@ struct _pdm_dmesh_to_dmesh_nodal_t {
   PDM_g_num_t         **dface_vtx;
   int                 **dface_vtx_idx;
   PDM_g_num_t         **dedge_vtx;
+  double              **dvtx_coords;
+  int                 **dparent_elmt_position;
 
   int                  **n_bound;
   int                 ***dbound_idx;
