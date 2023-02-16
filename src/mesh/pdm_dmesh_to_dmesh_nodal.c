@@ -1571,8 +1571,6 @@ _rebuild_dmesh_nodal_3d
     free(ln_to_gn);
   }
 
-
-
   free(post_section_n        );
   free(post_section_kind     );
   free(local_post_section_n  );
@@ -1587,6 +1585,37 @@ _rebuild_dmesh_nodal_3d
   free(pcell_face    );
   free(pface_ln_to_gn);
   free(pvtx_coords);
+
+  /*
+   * Recuperation des bords
+   */
+  int          n_face_bound   = n_bound   [PDM_BOUND_TYPE_FACE];
+  int         *face_bound_idx = dbound_idx[PDM_BOUND_TYPE_FACE];
+  PDM_g_num_t *face_bound     = dbound    [PDM_BOUND_TYPE_FACE];
+
+
+  int n_face_bnd_tot = face_bound_idx[n_face_bound];
+  int          pn_vtx_bnd = 0;
+  int         *pface_vtx_bnd_idx = NULL;
+  int         *pface_bnd_vtx     = NULL;
+  PDM_g_num_t *pvtx_bnd_ln_to_gn = NULL;
+
+  PDM_part_dconnectivity_to_pconnectivity_sort_single_part(comm,
+                                                           distrib_face,
+                                                           dface_vtx_idx,
+                                                           dface_vtx,
+                                                           n_face_bnd_tot,
+                                                           face_bound,
+                                                           &pn_vtx_bnd,
+                                                           &pvtx_bnd_ln_to_gn,
+                                                           &pface_vtx_bnd_idx,
+                                                           &pface_bnd_vtx);
+
+  free(pface_vtx_bnd_idx);
+  free(pface_bnd_vtx    );
+  free(pvtx_bnd_ln_to_gn);
+
+
 }
 
 
