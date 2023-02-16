@@ -315,7 +315,475 @@ _generate_sections
 }
 >>>>>>> 0ae5e9e7... [pdm_dmesh_to_dmesh_nodal] Factorize generate section
 
+static
+void
+_rebuild_dmesh_nodal_2d
+(
+  PDM_dmesh_nodal_t  *dmn,
+  PDM_MPI_Comm        comm,
+  PDM_g_num_t        *distrib_face,
+  PDM_g_num_t        *distrib_edge,
+  PDM_g_num_t        *distrib_vtx,
+  PDM_g_num_t        *dface_edge,
+  int                *dface_edge_idx,
+  PDM_g_num_t        *dface_vtx,
+  int                *dface_vtx_idx,
+  PDM_g_num_t        *dedge_vtx,
+  int                *n_bound,
+  int               **dbound_idx,
+  PDM_g_num_t       **dbound,
+  int                *n_blk_gnum,
+  PDM_g_num_t       **blk_entity_gnum,
+  PDM_g_num_t       **blk_elmt_gnum
+)
+{
+  PDM_UNUSED(distrib_vtx);
 
+  int i_rank;
+  int n_rank;
+  PDM_MPI_Comm_rank(comm, &i_rank);
+  PDM_MPI_Comm_size(comm, &n_rank);
+
+  /* Create implicit partitionning */
+  int dn_face = distrib_face[i_rank+1] - distrib_face[i_rank];
+  PDM_g_num_t* pface_ln_to_gn = malloc(dn_face * sizeof(PDM_g_num_t));
+  for(int i_face = 0; i_face < dn_face; ++i_face) {
+    pface_ln_to_gn[i_face] = distrib_face[i_rank] + i_face + 1;
+  }
+
+  int dn_edge = distrib_edge[i_rank+1] - distrib_edge[i_rank];
+  int* dedge_vtx_idx = malloc( (dn_edge+1) * sizeof(int));
+  for(int i_edge = 0; i_edge < dn_edge+1; ++i_edge) {
+    dedge_vtx_idx[i_edge] = 2 * i_edge;
+  }
+
+  int pn_vtx = 0;
+  int         *pface_vtx_idx = NULL;
+  int         *pface_vtx     = NULL;
+  PDM_g_num_t *pvtx_ln_to_gn = NULL;
+
+  /* Translate */
+  if(dface_vtx == NULL){
+    int pn_edge = 0;
+    int         *pface_edge_idx = NULL;
+    int         *pface_edge     = NULL;
+    PDM_g_num_t *pedge_ln_to_gn = NULL;
+
+    PDM_part_dconnectivity_to_pconnectivity_sort_single_part(comm,
+                                                             distrib_face,
+                                                             dface_edge_idx,
+                                                             dface_edge,
+                                                             dn_face,
+                                                             pface_ln_to_gn,
+                                                             &pn_edge,
+                                                             &pedge_ln_to_gn,
+                                                             &pface_edge_idx,
+                                                             &pface_edge);
+
+    pn_vtx = 0;
+    int         *pedge_vtx_idx = NULL;
+    int         *pedge_vtx     = NULL;
+
+    PDM_part_dconnectivity_to_pconnectivity_sort_single_part(comm,
+                                                             distrib_edge,
+                                                             dedge_vtx_idx,
+                                                             dedge_vtx,
+                                                             pn_edge,
+                                                             pedge_ln_to_gn,
+                                                             &pn_vtx,
+                                                             &pvtx_ln_to_gn,
+                                                             &pedge_vtx_idx,
+                                                             &pedge_vtx);
+
+    PDM_compute_face_vtx_from_face_and_edge(dn_face,
+                                            pface_edge_idx,
+                                            pface_edge,
+                                            pedge_vtx,
+                                            &pface_vtx);
+
+    // PDM_log_trace_connectivity_int(pedge_vtx_idx, pedge_vtx, pn_edge, "pedge_vtx ::");
+
+    pface_vtx_idx = pface_edge_idx;
+
+    free(pface_edge    );
+    free(pedge_ln_to_gn);
+    free(pedge_vtx_idx);
+    free(pedge_vtx    );
+  } else {
+    PDM_part_dconnectivity_to_pconnectivity_sort_single_part(comm,
+                                                             distrib_face,
+                                                             dface_vtx_idx,
+                                                             dface_vtx,
+                                                             dn_face,
+                                                             pface_ln_to_gn,
+                                                             &pn_vtx,
+                                                             &pvtx_ln_to_gn,
+                                                             &pface_vtx_idx,
+                                                             &pface_vtx);
+  }
+
+  /*
+   * Reconstruction of section for surfacic
+   */
+  PDM_g_num_t          *section_n    = malloc((dn_face+1) * sizeof(PDM_g_num_t         )); // Suralloc
+  PDM_Mesh_nodal_elt_t *section_kind = malloc( dn_face    * sizeof(PDM_Mesh_nodal_elt_t)); // Suralloc
+
+  int n_section_tot    = 0;
+  int n_section_tri    = 0;
+  int n_section_quad   = 0;
+  int n_section_poly2d = 0;
+  int ln_vtx_old = -1;
+  for(int i_face = 0; i_face < dn_face; ++i_face) {
+    int ln_vtx = pface_vtx_idx[i_face+1] - pface_vtx_idx[i_face];
+    if(ln_vtx_old == ln_vtx){
+      section_n[n_section_tot-1]++;
+      continue;
+    }
+    if(ln_vtx == 3) {
+      section_kind[n_section_tot] = PDM_MESH_NODAL_TRIA3;
+      n_section_tri++;
+    } else if(ln_vtx == 4){
+      section_kind[n_section_tot] = PDM_MESH_NODAL_QUAD4;
+      n_section_quad++;
+    } else {
+      section_kind[n_section_tot] = PDM_MESH_NODAL_POLY_2D;
+      n_section_poly2d++;
+    }
+    section_n[n_section_tot] = 1;
+    n_section_tot++;
+    ln_vtx_old = ln_vtx;
+  }
+  section_n    = realloc(section_n   , (n_section_tot+1) * sizeof(PDM_g_num_t         ));
+  section_kind = realloc(section_kind,  n_section_tot    * sizeof(PDM_Mesh_nodal_elt_t));
+
+  PDM_g_num_t *post_section_n         = NULL;
+  int         *post_section_kind      = NULL;
+  int         *local_post_section_n   = NULL;
+  int         *local_post_section_idx = NULL;
+
+  int n_section_post = _generate_sections(comm,
+                                          distrib_face,
+                                          section_n,
+                                          section_kind,
+                                          n_section_tot,
+                                          &post_section_n,
+                                          &post_section_kind,
+                                          &local_post_section_n,
+                                          &local_post_section_idx);
+
+  /*
+   * Requilibrate all block
+   */
+  for(int i_section = 0; i_section < n_section_post; ++i_section) {
+
+    int beg = local_post_section_idx[i_section];
+    int end = local_post_section_idx[i_section+1];
+    int nl_elmt = end - beg;
+
+    PDM_g_num_t* distrib_elmt = PDM_compute_uniform_entity_distribution(comm, post_section_n[i_section]);
+    PDM_g_num_t* ln_to_gn = malloc(local_post_section_n[i_section] * sizeof(PDM_g_num_t));
+
+    for(int i = 0; i < local_post_section_n[i_section]; ++i) {
+      ln_to_gn[i] = distrib_face[i_rank] + local_post_section_idx[i_section] + i + 1;
+    }
+
+    PDM_part_to_block_t* ptb = PDM_part_to_block_create_from_distrib(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
+                                                                     PDM_PART_TO_BLOCK_POST_CLEANUP,
+                                                                     1.,
+                                                                     &ln_to_gn,
+                                                                     distrib_elmt,
+                                                                     &local_post_section_n[i_section],
+                                                                     1,
+                                                                     comm);
+    int n_face_vtx_tot = pface_vtx_idx[end] - pface_vtx_idx[beg];
+    int         *send_face_vtx_n = malloc(nl_elmt        * sizeof(int        ));
+    PDM_g_num_t *send_face_vtx   = malloc(n_face_vtx_tot * sizeof(PDM_g_num_t));
+    int         *blk_face_vtx_n  = NULL;
+    PDM_g_num_t *blk_face_vtx    = NULL;
+
+    int idx_write = 0;
+    for(int i = 0; i < nl_elmt; ++i) {
+      send_face_vtx_n[i] = pface_vtx_idx[beg+i+1] - pface_vtx_idx[beg+i];
+      for(int j = pface_vtx_idx[beg+i]; j < pface_vtx_idx[beg+i+1]; ++j) {
+        int i_vtx = pface_vtx[j];
+        send_face_vtx[idx_write++] = pvtx_ln_to_gn[i_vtx-1];
+      }
+    }
+
+    PDM_part_to_block_exch(ptb,
+                           sizeof(PDM_g_num_t),
+                           PDM_STRIDE_VAR_INTERLACED,
+                           -1,
+             (int  **)     &send_face_vtx_n,
+             (void **)     &send_face_vtx,
+             (int  **)     &blk_face_vtx_n,
+             (void **)     &blk_face_vtx);
+
+    free(send_face_vtx_n);
+    free(send_face_vtx);
+
+
+    PDM_Mesh_nodal_elt_t t_elt = (PDM_Mesh_nodal_elt_t) post_section_kind[i_section];
+    int id_section = PDM_DMesh_nodal_section_add(dmn,
+                                                 PDM_GEOMETRY_KIND_SURFACIC,
+                                                 t_elt);
+
+    int dn_elmt = distrib_elmt[i_rank+1] - distrib_elmt[i_rank];
+    if(t_elt == PDM_MESH_NODAL_POLY_2D) {
+
+      int *blk_face_vtx_idx = PDM_array_new_idx_from_sizes_int(blk_face_vtx_n, dn_elmt);
+      PDM_DMesh_nodal_section_poly2d_set(dmn,
+                                         PDM_GEOMETRY_KIND_SURFACIC,
+                                         id_section,
+                                         dn_elmt,
+                                         blk_face_vtx_idx,
+                                         blk_face_vtx,
+                                         PDM_OWNERSHIP_KEEP);
+    } else {
+      PDM_DMesh_nodal_section_std_set(dmn,
+                                      PDM_GEOMETRY_KIND_SURFACIC,
+                                      id_section,
+                                      dn_elmt,
+                                      blk_face_vtx,
+                                      PDM_OWNERSHIP_KEEP);
+    }
+
+    free(blk_face_vtx_n);
+    // free(blk_face_vtx);
+
+    PDM_part_to_block_free(ptb);
+    free(distrib_elmt);
+    free(ln_to_gn);
+
+  }
+
+  free(post_section_kind);
+  free(post_section_n   );
+  free(local_post_section_n  );
+  free(local_post_section_idx);
+
+  if(1 == 0) {
+    printf("n_section_tri    = %i\n", n_section_tri   );
+    printf("n_section_quad   = %i\n", n_section_quad  );
+    printf("n_section_poly2d = %i\n", n_section_poly2d);
+  }
+
+  /*
+   * Recuperation des bords
+   */
+  int          n_edge_bound   = n_bound   [PDM_BOUND_TYPE_EDGE];
+  int         *edge_bound_idx = dbound_idx[PDM_BOUND_TYPE_EDGE];
+  PDM_g_num_t *edge_bound     = dbound    [PDM_BOUND_TYPE_EDGE];
+  // int n_section_bar = n_edge_bound;
+
+  int n_edge_bnd_tot = edge_bound_idx[n_edge_bound];
+  int          pn_vtx_bnd = 0;
+  int         *pedge_vtx_bnd_idx = NULL;
+  int         *pedge_bnd_vtx     = NULL;
+  PDM_g_num_t *pvtx_bnd_ln_to_gn = NULL;
+
+  PDM_part_dconnectivity_to_pconnectivity_sort_single_part(comm,
+                                                           distrib_edge,
+                                                           dedge_vtx_idx,
+                                                           dedge_vtx,
+                                                           n_edge_bnd_tot,
+                                                           edge_bound,
+                                                           &pn_vtx_bnd,
+                                                           &pvtx_bnd_ln_to_gn,
+                                                           &pedge_vtx_bnd_idx,
+                                                           &pedge_bnd_vtx);
+
+  /*
+   * On ne veut pas changer la numerotation absolu des bar
+   */
+
+  PDM_Mesh_nodal_elt_t t_elt = PDM_MESH_NODAL_BAR2;
+  int id_section = PDM_DMesh_nodal_section_add(dmn,
+                                               PDM_GEOMETRY_KIND_RIDGE,
+                                               t_elt);
+
+  PDM_g_num_t *pedge_bnd_vtx_gnum = malloc(2 * n_edge_bnd_tot * sizeof(PDM_g_num_t));
+  for(int i = 0; i < 2 * n_edge_bnd_tot; ++i) {
+    pedge_bnd_vtx_gnum[i] = pvtx_bnd_ln_to_gn[pedge_bnd_vtx[i]-1];
+  }
+  PDM_DMesh_nodal_section_std_set(dmn,
+                                  PDM_GEOMETRY_KIND_RIDGE,
+                                  id_section,
+                                  n_edge_bnd_tot,
+                                  pedge_bnd_vtx_gnum,
+                                  PDM_OWNERSHIP_KEEP);
+
+
+  PDM_g_num_t* distrib_bar = PDM_compute_entity_distribution(comm, n_edge_bnd_tot);
+  int         *out_edge_bound_idx = malloc((n_edge_bound+1) * sizeof(int        ));
+  PDM_g_num_t *out_edge_bound     = malloc( n_edge_bnd_tot  * sizeof(PDM_g_num_t));
+
+  out_edge_bound_idx[0] = edge_bound_idx[0];
+  for(int i_group = 0; i_group < n_edge_bound; ++i_group) {
+    out_edge_bound_idx[i_group+1] = edge_bound_idx[i_group+1];
+    for(int idx_edge = edge_bound_idx[i_group]; idx_edge < edge_bound_idx[i_group+1]; ++idx_edge) {
+      out_edge_bound[idx_edge] = distrib_bar[i_rank] + idx_edge + 1;
+    }
+  }
+
+  PDM_DMesh_nodal_section_group_elmt_set(dmn,
+                                         PDM_GEOMETRY_KIND_RIDGE,
+                                         n_edge_bound,
+                                         out_edge_bound_idx,
+                                         out_edge_bound,
+                                         PDM_OWNERSHIP_KEEP);
+
+  PDM_log_trace_connectivity_long(out_edge_bound_idx, out_edge_bound, n_edge_bound, "out_edge_bound ::");
+
+  /*
+   *  Il faut créer un table qui permet d'updater les numero de faces/edges en numero d'element
+   *     - dedge_to_elmts_n
+   *     - dedge_to_elmts
+   *  Donc c'est un ptb partial
+   *    -> Si on a une liste de edge_ln_to_gn
+   *  PDM_block_to_part_create_from_sparse_block
+   *
+   */
+  PDM_part_to_block_t* ptb_edge = PDM_part_to_block_create(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
+                                                           PDM_PART_TO_BLOCK_POST_CLEANUP,
+                                                           1.,
+                                                           &edge_bound,
+                                                           NULL,
+                                                           &n_edge_bnd_tot,
+                                                           1,
+                                                           comm);
+  PDM_g_num_t *gnum_edge = PDM_part_to_block_block_gnum_get(ptb_edge);
+  int n_blk_edge = PDM_part_to_block_n_elt_block_get(ptb_edge);
+
+  PDM_g_num_t *blk_out_edge_bound = NULL;
+  PDM_part_to_block_exch(ptb_edge,
+                         sizeof(PDM_g_num_t),
+                         PDM_STRIDE_CST_INTERLACED,
+                         1,
+                         NULL,
+              (void **)  &out_edge_bound,
+                         NULL,
+              (void **)  &blk_out_edge_bound);
+
+
+  PDM_log_trace_array_long(gnum_edge, n_blk_edge, "gnum_edge ::");
+  PDM_log_trace_array_long(blk_out_edge_bound, n_blk_edge, "blk_out_edge_bound ::");
+
+  /* Store it */
+  assert(n_blk_gnum     [PDM_BOUND_TYPE_EDGE] == 0);
+  assert(blk_entity_gnum[PDM_BOUND_TYPE_EDGE] == NULL);
+  assert(blk_elmt_gnum  [PDM_BOUND_TYPE_EDGE] == NULL);
+
+  n_blk_gnum     [PDM_BOUND_TYPE_EDGE] = n_blk_edge;
+  blk_entity_gnum[PDM_BOUND_TYPE_EDGE] = malloc(n_blk_edge * sizeof(PDM_g_num_t));
+  blk_elmt_gnum  [PDM_BOUND_TYPE_EDGE] = blk_out_edge_bound;
+
+  for(int i = 0; i < n_blk_edge; ++i) {
+    blk_elmt_gnum  [PDM_BOUND_TYPE_EDGE][i] = gnum_edge[i];
+  }
+
+  PDM_part_to_block_free(ptb_edge);
+  /*
+   *  Translation face -> elmts
+   */
+  // PDM_block_to_part_t *btp = PDM_block_to_part_create_from_sparse_block(gnum_edge,
+  //                                                                       n_blk_edge,
+  //                                           (const PDM_g_num_t **)      &edge_bound,
+  //                                                                       &n_edge_bnd_tot,
+  //                                                                       1,
+  //                                                                       comm);
+  // int stride_one = 1;
+  // PDM_g_num_t **tmp_edge_to_elmt = NULL;
+  // PDM_block_to_part_exch(btp,
+  //                        sizeof(PDM_g_num_t),
+  //                        PDM_STRIDE_CST_INTERLACED,
+  //                        &stride_one,
+  //                        blk_out_edge_bound,
+  //                        NULL,
+  //             (void ***) &tmp_edge_to_elmt);
+  // PDM_g_num_t *edge_to_elmt = tmp_edge_to_elmt[0];
+  // free(tmp_edge_to_elmt);
+
+  // PDM_log_trace_array_long(edge_to_elmt, n_edge_bnd_tot, "edge_to_elmt ::");
+
+
+  // free(edge_to_elmt);
+  // // free(blk_out_edge_bound);
+  // PDM_block_to_part_free(btp);
+
+
+  free(distrib_bar);
+
+  free(pedge_vtx_bnd_idx);
+  free(pedge_bnd_vtx    );
+  free(pvtx_bnd_ln_to_gn);
+  free(dedge_vtx_idx);
+
+  free(pface_ln_to_gn);
+  free(pvtx_ln_to_gn);
+  free(pface_vtx_idx);
+  free(pface_vtx    );
+
+}
+
+
+static
+void
+_rebuild_dmesh_nodal_3d
+(
+  PDM_dmesh_nodal_t  *dmn,
+  PDM_MPI_Comm        comm,
+  PDM_g_num_t        *distrib_cell,
+  PDM_g_num_t        *distrib_face,
+  PDM_g_num_t        *distrib_edge,
+  PDM_g_num_t        *distrib_vtx,
+  PDM_g_num_t        *dcell_face,
+  int                *dcell_face_idx,
+  PDM_g_num_t        *dface_edge,
+  int                *dface_edge_idx,
+  PDM_g_num_t        *dface_vtx,
+  int                *dface_vtx_idx,
+  PDM_g_num_t        *dedge_vtx,
+  int                *n_bound,
+  int               **dbound_idx,
+  PDM_g_num_t       **dbound,
+  int                *n_blk_gnum,
+  PDM_g_num_t       **blk_entity_gnum,
+  PDM_g_num_t       **blk_elmt_gnum
+)
+{
+  PDM_UNUSED(dmn);
+  PDM_UNUSED(comm);
+  PDM_UNUSED(distrib_cell);
+  PDM_UNUSED(distrib_face);
+  PDM_UNUSED(distrib_edge);
+  PDM_UNUSED(distrib_vtx);
+  PDM_UNUSED(dcell_face);
+  PDM_UNUSED(dcell_face_idx);
+  PDM_UNUSED(dface_edge);
+  PDM_UNUSED(dface_edge_idx);
+  PDM_UNUSED(dface_vtx);
+  PDM_UNUSED(dface_vtx_idx);
+  PDM_UNUSED(dedge_vtx);
+  PDM_UNUSED(n_bound);
+  PDM_UNUSED(dbound_idx);
+  PDM_UNUSED(dbound);
+  PDM_UNUSED(n_blk_gnum);
+  PDM_UNUSED(blk_entity_gnum);
+  PDM_UNUSED(blk_elmt_gnum);
+
+  int i_rank;
+  int n_rank;
+  PDM_MPI_Comm_rank(comm, &i_rank);
+  PDM_MPI_Comm_size(comm, &n_rank);
+
+  int dn_cell = distrib_cell[i_rank+1] - distrib_cell[i_rank];
+  PDM_g_num_t* pcell_ln_to_gn = malloc(dn_cell * sizeof(PDM_g_num_t));
+  for(int i_cell = 0; i_cell < dn_cell; ++i_cell) {
+    pcell_ln_to_gn[i_cell] = distrib_cell[i_rank] + i_cell + 1;
+  }
+
+}
 
 
 static
@@ -392,8 +860,28 @@ _dmesh_to_dmesh_nodal
                                                   n_edge);
 
   if(is_3d) {
+    _rebuild_dmesh_nodal_3d(dmn,
+                            comm,
+                            distrib_cell,
+                            distrib_face,
+                            distrib_edge,
+                            distrib_vtx,
+                            dcell_face,
+                            dcell_face_idx,
+                            dface_edge,
+                            dface_edge_idx,
+                            dface_vtx,
+                            dface_vtx_idx,
+                            dedge_vtx,
+                            n_bound,
+                            dbound_idx,
+                            dbound,
+                            n_blk_gnum,
+                            blk_entity_gnum,
+                            blk_elmt_gnum);
 
   } else {
+<<<<<<< HEAD
 
     /* Create implicit partitionning */
     int dn_face = distrib_face[i_rank+1] - distrib_face[i_rank];
@@ -872,6 +1360,24 @@ _dmesh_to_dmesh_nodal
     free(pface_vtx_idx);
     free(pface_vtx    );
 
+=======
+    _rebuild_dmesh_nodal_2d(dmn,
+                            comm,
+                            distrib_face,
+                            distrib_edge,
+                            distrib_vtx,
+                            dface_edge,
+                            dface_edge_idx,
+                            dface_vtx,
+                            dface_vtx_idx,
+                            dedge_vtx,
+                            n_bound,
+                            dbound_idx,
+                            dbound,
+                            n_blk_gnum,
+                            blk_entity_gnum,
+                            blk_elmt_gnum);
+>>>>>>> 9155496a... [pdm_dmesh_to_dmesh_nodal] Prepare 3D and separate method
   }
 
 
