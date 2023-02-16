@@ -1611,10 +1611,60 @@ _rebuild_dmesh_nodal_3d
                                                            &pface_vtx_bnd_idx,
                                                            &pface_bnd_vtx);
 
+  PDM_g_num_t          *section_face_bnd_n    = malloc((n_face_bnd_tot+1) * sizeof(PDM_g_num_t         )); // Suralloc
+  PDM_Mesh_nodal_elt_t *section_face_bnd_kind = malloc( n_face_bnd_tot    * sizeof(PDM_Mesh_nodal_elt_t)); // Suralloc
+
+  int ln_vtx_old = -1;
+  int n_section_face_bnd_tot = 0;
+  for(int i_face = 0; i_face < n_face_bnd_tot; ++i_face) {
+
+    int ln_vtx = pface_vtx_bnd_idx[i_face+1] - pface_vtx_bnd_idx[i_face];
+    if(ln_vtx_old == ln_vtx) {
+      section_face_bnd_n[n_section_face_bnd_tot-1]++;
+      continue;
+    }
+    if(ln_vtx == 3) {
+      section_face_bnd_kind[n_section_face_bnd_tot] = PDM_MESH_NODAL_TRIA3;
+    } else if(ln_vtx == 4){
+      section_face_bnd_kind[n_section_face_bnd_tot] = PDM_MESH_NODAL_QUAD4;
+    } else {
+      section_face_bnd_kind[n_section_face_bnd_tot] = PDM_MESH_NODAL_POLY_2D;
+    }
+    section_n[n_section_face_bnd_tot] = 1;
+    n_section_face_bnd_tot++;
+    ln_vtx_old = ln_vtx;
+  }
+  section_face_bnd_n    = realloc(section_face_bnd_n   , (n_section_face_bnd_tot+1) * sizeof(PDM_g_num_t         ));
+  section_face_bnd_kind = realloc(section_face_bnd_kind,  n_section_face_bnd_tot    * sizeof(PDM_Mesh_nodal_elt_t));
+
+
+  // PDM_g_num_t *post_section_face_bnd_n         = NULL;
+  // int         *post_section_face_bnd_kind      = NULL;
+  // int         *local_post_section_face_bnd_n   = NULL;
+  // int         *local_post_section_face_bnd_idx = NULL;
+
+  // int n_section_face_bnd_post = _generate_sections(comm,
+  //                                                  distrib_face,
+  //                                                  section_face_bnd_n,
+  //                                                  section_face_bnd_kind,
+  //                                                  n_section_face_bnd_tot,
+  //                                                  &post_section_face_bnd_n,
+  //                                                  &post_section_face_bnd_kind,
+  //                                                  &local_post_section_face_bnd_n,
+  //                                                  &local_post_section_face_bnd_idx);
+
+  // free(post_section_face_bnd_n        );
+  // free(post_section_face_bnd_kind     );
+  // free(local_post_section_face_bnd_n  );
+  // free(local_post_section_face_bnd_idx);
+
+
+  free(section_face_bnd_n   );
+  free(section_face_bnd_kind);
+
   free(pface_vtx_bnd_idx);
   free(pface_bnd_vtx    );
   free(pvtx_bnd_ln_to_gn);
-
 
 }
 
