@@ -833,6 +833,468 @@ _type_cell_3D
 
 }
 
+static inline double
+_p_dot
+(
+ const double a[3],
+ const double b[3]
+ )
+{
+  return a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+}
+
+
+static inline void
+_p_cross
+(
+ const double a[3],
+ const double b[3],
+ double c[3]
+ )
+{
+  c[0] = a[1] * b[2] - b[1] * a[2];
+  c[1] = b[0] * a[2] - a[0] * b[2];
+  c[2] = a[0] * b[1] - b[0] * a[1];
+}
+
+
+/**
+ *
+ * \brief Build tetrahedron nodal connectivity from faces connectivity
+ *
+ *   \param[in] vtx         Vertices coordinates
+ *   \param[in] tria_vtx    Faces connectivity
+ *   \param[out] tetra_vtx   Tetrahedron connectivity
+ *
+ */
+
+static void
+_connec_tetra
+(
+ double      *coords,
+ PDM_l_num_t *tria_vtx,
+ PDM_l_num_t  tetra_vtx[]
+ )
+{
+
+  /* Initialization */
+
+  tetra_vtx[0] = tria_vtx[0];
+  tetra_vtx[1] = tria_vtx[1];
+  tetra_vtx[2] = tria_vtx[2];
+
+  for (int i = 3; i < 11; i++) {
+    if ((tria_vtx[i] != tetra_vtx[0]) &&
+        (tria_vtx[i] != tetra_vtx[1]) &&
+        (tria_vtx[i] != tetra_vtx[2]))
+      tetra_vtx[3] = tria_vtx[i];
+  }
+
+  /* Orientation */
+  double v1[3];
+  double v2[3];
+  double v3[3];
+  double n[3];
+
+  for (int i = 0; i < 3; i++) {
+    v1[i] = coords[3*(tetra_vtx[1] - 1) + i] - coords[3*(tetra_vtx[0] - 1) + i];
+    v2[i] = coords[3*(tetra_vtx[2] - 1) + i] - coords[3*(tetra_vtx[0] - 1) + i];
+    v3[i] = coords[3*(tetra_vtx[3] - 1) + i] - coords[3*(tetra_vtx[0] - 1) + i];
+  }
+
+  _p_cross(v1, v2, n);
+  double orient = _p_dot(v3, n);
+
+  if (orient < 0) {
+    tetra_vtx[0] = tria_vtx[2];
+    tetra_vtx[1] = tria_vtx[1];
+    tetra_vtx[2] = tria_vtx[0];
+  }
+}
+
+/**
+ *
+ * \brief Build prism nodal connectivity from faces connectivity
+ *
+ *   \param[in] vtx         Vertices coordinates
+ *   \param[in] tria_vtx    Faces connectivity
+ *   \param[in] quad_vtx    Faces connectivity
+ *   \param[out] prism_vtx   Prism connectivity
+ *
+ */
+
+static void
+_connec_prism
+(
+ double      *coords,
+ PDM_l_num_t *tria_vtx,
+ PDM_l_num_t *quad_vtx,
+ PDM_l_num_t  prism_vtx[]
+ )
+{
+
+  /* Initialisation */
+
+  for (int i = 0; i < 6; i++)
+    prism_vtx[i] = tria_vtx[i];
+
+  /* Orientation des faces */
+  double c[6];
+  double n[6];
+
+  for (int i = 0; i < 2; i++) {
+    for (int k = 0; k < 3; k++)
+      c[3*i+k] = 0.;
+    for (int j = 0; j < 3; j++) {
+      int isom = prism_vtx[3*i+j] - 1;
+      for (int k = 0; k < 3; k++)
+        c[3*i+k] += coords[3*isom+k];
+    }
+    for (int k = 0; k < 3; k++)
+      c[3*i+k] *= 1.0/3.0;
+
+    for (int k = 0; k < 3; k++)
+      n[3*i+k] = 0.;
+
+    double v1[3];
+    double v2[3];
+    int isom3 = prism_vtx[3*i+2] - 1 ;
+    int isom2 = prism_vtx[3*i+1] - 1;
+    int isom1 = prism_vtx[3*i] - 1;
+
+    for (int k = 0; k < 3; k++) {
+      v1[k] = coords[3*isom2+k] - coords[3*isom1+k];
+      v2[k] = coords[3*isom3+k] - coords[3*isom1+k];
+    }
+    _p_cross(v1, v2, n + 3*i);
+  }
+
+  double cc[3];
+  for (int k = 0; k < 3; k++)
+    cc[k] = c[3+k] - c[k];
+
+  double orientation = _p_dot(cc, n);
+  double orientation2 = _p_dot(cc, n+3);
+
+  if (orientation < 0) {
+    int tmp = prism_vtx[1];
+    prism_vtx[1] = prism_vtx[2];
+    prism_vtx[2] = tmp;
+  }
+
+  if (orientation2 < 0) {
+    int tmp = prism_vtx[4];
+    prism_vtx[4] = prism_vtx[5];
+    prism_vtx[5] = tmp;
+  }
+
+  /* Permutation circulaire */
+
+  int id1 = -1;
+  for (int j = 0; j < 12; j++) {
+    if (quad_vtx[j] == prism_vtx[0]) {
+      id1 = j;
+      break;
+    }
+  }
+
+  int id2 = (id1 / 4) * 4 + (id1 + 1) % 4;
+  if ((quad_vtx[id2] == prism_vtx[1]) ||
+      (quad_vtx[id2] == prism_vtx[2]))
+    id2 =  (id1 / 4) * 4 + (id1 + 3) % 4;
+
+  int id_deb = -1;
+  for (int j = 0; j < 3; j++) {
+    if (quad_vtx[id2] == prism_vtx[3+j]) {
+      id_deb = j;
+      break;
+    }
+  }
+
+  int tmp[3];
+  for (int j = 0; j < 3; j++)
+    tmp[j] = prism_vtx[3+j];
+
+  for (int j = 0; j < 3; j++) {
+    int idx = (id_deb + j) % 3;
+    prism_vtx[3+j] = tmp[idx];
+  }
+
+}
+
+
+/**
+ *
+ * \brief Build pyramid nodal connectivity from faces connectivity
+ *
+ *   \param[in] vtx         Vertices coordinates
+ *   \param[in] tria_vtx    Faces connectivity
+ *   \param[in] quad_vtx    Faces connectivity
+ *   \param[out] pyramid_vtx Pyramid connectivity
+ *
+ */
+
+static void
+_connec_pyramid
+(
+ double      *coords,
+ PDM_l_num_t *tria_vtx,
+ PDM_l_num_t *quad_vtx,
+ PDM_l_num_t  pyramid_vtx[]
+ )
+{
+
+  /* Initialisation */
+
+  pyramid_vtx[0] = quad_vtx[0];
+  pyramid_vtx[1] = quad_vtx[1];
+  pyramid_vtx[2] = quad_vtx[2];
+  pyramid_vtx[3] = quad_vtx[3];
+
+  for (int i = 0; i < 9; i++) {
+    if ((tria_vtx[i] != pyramid_vtx[0]) &&
+        (tria_vtx[i] != pyramid_vtx[1]) &&
+        (tria_vtx[i] != pyramid_vtx[2]) &&
+        (tria_vtx[i] != pyramid_vtx[3])) {
+      pyramid_vtx[4] = tria_vtx[i];
+      break;
+    }
+  }
+
+  /* Orientation */
+  double c[3];
+  double n[3];
+
+  for (int k = 0; k < 3; k++)
+    c[k] = 0.;
+  for (int j = 0; j < 4; j++) {
+    int isom = pyramid_vtx[j] - 1;
+    for (int k = 0; k < 3; k++)
+      c[k] += coords[3*isom+k];
+  }
+  for (int k = 0; k < 3; k++)
+    c[k] *= 0.25;
+
+  for (int k = 0; k < 3; k++)
+    n[k] = 0.;
+
+  for (int j = 0; j < 4; j++) {
+    int isom = pyramid_vtx[j] - 1;
+    int suiv = (j+1) % 4;
+    int isom_suiv = pyramid_vtx[suiv] - 1;
+
+    double v1[3];
+    double v2[3];
+    for (int k = 0; k < 3; k++) {
+      v1[k] = coords[3*isom+k] -  c[k];
+      v2[k] = coords[3*isom_suiv+k] -  c[k];
+    }
+
+    _p_cross(v1, v2, n);
+
+  }
+
+  double cc[3];
+  for (int k = 0; k < 3; k++)
+    cc[k] = coords[3*(pyramid_vtx[3] - 1) + k] - c[k];
+
+  /* Inversion eventuelle des sens de rotation des faces*/
+
+  double orientation = _p_dot(cc, n);
+
+  if (orientation < 0) {
+    int tmp = pyramid_vtx[0];
+    pyramid_vtx[0] = pyramid_vtx[3];
+    pyramid_vtx[3] = tmp;
+    tmp = pyramid_vtx[1];
+    pyramid_vtx[1] = pyramid_vtx[2];
+    pyramid_vtx[2] = tmp;
+  }
+
+}
+
+
+/**
+ *
+ * \brief Build hexahedron nodal connectivity from faces connectivity
+ *
+ *   \param[in] vtx         Vertices coordinates
+ *   \param[in] quad_vtx    Faces connectivity
+ *   \param[out] hexa_vtx    Hexahedron connectivity
+ *
+ */
+
+static void
+_connec_hexa
+(
+ double       *coords,
+ PDM_l_num_t  *quad_vtx,
+ PDM_l_num_t   hexa_vtx[]
+)
+{
+
+  /* Initialization */
+
+  hexa_vtx[0] = quad_vtx[0];
+  hexa_vtx[1] = quad_vtx[1];
+  hexa_vtx[2] = quad_vtx[2];
+  hexa_vtx[3] = quad_vtx[3];
+
+  PDM_l_num_t face_contact[4];
+
+  for (int i = 1; i < 6; i++) {
+    int cpt = 0;
+    for (int j = 0; j < 4; j++) {
+      PDM_l_num_t som_courant = quad_vtx[4*i+j];
+      if ((som_courant != hexa_vtx[0]) &&
+          (som_courant != hexa_vtx[1]) &&
+          (som_courant != hexa_vtx[2]) &&
+          (som_courant != hexa_vtx[3]))
+        cpt += 1;
+    }
+    if (cpt == 4) {
+      hexa_vtx[4] = quad_vtx[4*i];
+      hexa_vtx[5] = quad_vtx[4*i+1];
+      hexa_vtx[6] = quad_vtx[4*i+2];
+      hexa_vtx[7] = quad_vtx[4*i+3];
+    }
+    if (cpt == 2) {
+      face_contact[0] = quad_vtx[4*i];
+      face_contact[1] = quad_vtx[4*i+1];
+      face_contact[2] = quad_vtx[4*i+2];
+      face_contact[3] = quad_vtx[4*i+3];
+    }
+  }
+
+  /* Calcul des centres et normales de la base et de la face opposee */
+  double c[6];
+  double n[6];
+
+  for (int i = 0; i < 2; i++) {
+    for (int k = 0; k < 3; k++)
+      c[3*i+k] = 0.;
+    for (int j = 0; j < 4; j++) {
+      int isom = hexa_vtx[4*i+j] - 1;
+      for (int k = 0; k < 3; k++)
+        c[3*i+k] += coords[3*isom+k];
+    }
+    for (int k = 0; k < 3; k++)
+      c[3*i+k] *= 0.25;
+
+    for (int k = 0; k < 3; k++)
+      n[3*i+k] = 0.;
+
+    for (int j = 0; j < 4; j++) {
+      int isom = hexa_vtx[4*i+j] - 1;
+      int suiv = (j+1) % 4;
+      int isom_suiv = hexa_vtx[4*i+suiv] - 1;
+
+      double v1[3];
+      double v2[3];
+      for (int k = 0; k < 3; k++) {
+        v1[k] = coords[3*isom+k] -  c[3*i+k];
+        v2[k] = coords[3*isom_suiv+k] -  c[3*i+k];
+      }
+
+      _p_cross(v1, v2, n + 3*i);
+
+    }
+
+  }
+
+  double cc[3];
+  for (int k = 0; k < 3; k++)
+    cc[k] = c[3+k] - c[k];
+
+  /* Inversion eventuelle des sens de rotation des faces*/
+
+  double orientation = _p_dot(cc, n);
+  double orientation2 = _p_dot(cc, n+3);
+
+  if (orientation < 0) {
+    int tmp = hexa_vtx[0];
+    hexa_vtx[0] = hexa_vtx[3];
+    hexa_vtx[3] = tmp;
+    tmp = hexa_vtx[1];
+    hexa_vtx[1] = hexa_vtx[2];
+    hexa_vtx[2] = tmp;
+  }
+
+  if (orientation2 < 0) {
+    int tmp = hexa_vtx[4];
+    hexa_vtx[4] = hexa_vtx[7];
+    hexa_vtx[7] = tmp;
+    tmp = hexa_vtx[5];
+    hexa_vtx[5] = hexa_vtx[6];
+    hexa_vtx[6] = tmp;
+  }
+
+  /* Permutation circulaire eventuelle de la face sup */
+
+  int id1 = -1;
+  int k1 = -1;
+  for (int k = 0; k < 4; k++) {
+    for (int j = 0; j < 4; j++) {
+      if (face_contact[j] == hexa_vtx[k]) {
+        id1 = j;
+        k1 = k;
+        break;
+      }
+      if (id1 != -1)
+        break;
+    }
+  }
+
+  if (k1 == -1) {
+    printf("Error connect_hexa : %d %d %d %d %d %d %d %d\n",
+               hexa_vtx[0],
+               hexa_vtx[1],
+               hexa_vtx[2],
+               hexa_vtx[3],
+               hexa_vtx[4],
+               hexa_vtx[5],
+               hexa_vtx[6],
+               hexa_vtx[7]);
+
+    for (int i10 = 0; i10 < 4; i10++) {
+      printf("   face %d : %d %d %d %d\n", i10+1, quad_vtx[4*i10],
+                 quad_vtx[4*i10+1],
+                 quad_vtx[4*i10+2],
+                 quad_vtx[4*i10+3]);
+    }
+    abort();
+
+  }
+
+  int id2 = (id1 + 1) % 4;
+  int k2 = (k1 + 1) % 4;
+  int k3 = (k1 + 3) % 4;
+
+  if ((face_contact[id2] == hexa_vtx[k2]) ||
+      (face_contact[id2] == hexa_vtx[k3]))
+    id2 = (id1 + 3) % 4;
+
+  int id_deb = -1;
+  for (int j = 0; j < 4; j++) {
+    if (face_contact[id2] == hexa_vtx[4+j]) {
+      id_deb = (j - k1);
+      if (id_deb < 0)
+        id_deb += 4;
+      id_deb = id_deb % 4;
+      break;
+    }
+  }
+
+  int tmp[4];
+  for (int j = 0; j < 4; j++)
+    tmp[j] = hexa_vtx[4+j];
+
+  for (int j = 0; j < 4; j++) {
+    int idx = (id_deb + j) % 4;
+    hexa_vtx[4+j] = tmp[idx];
+  }
+}
+
 
 static
 void
@@ -940,6 +1402,12 @@ _rebuild_dmesh_nodal_3d
   PDM_l_num_t cell_som_tria[18]; /* 6 triangles max in _type_cell_3D */
   PDM_l_num_t cell_som_quad[24]; /* 6 quadrangles max in _type_cell_3D */
 
+  PDM_g_num_t          *section_n    = malloc((dn_cell+1) * sizeof(PDM_g_num_t         )); // Suralloc
+  PDM_Mesh_nodal_elt_t *section_kind = malloc( dn_cell    * sizeof(PDM_Mesh_nodal_elt_t)); // Suralloc
+
+
+  int cell_kind_old = -1;
+  int n_section_tot    = 0;
   for(int i_cell = 0; i_cell < dn_cell; ++i_cell) {
     PDM_Mesh_nodal_elt_t cell_type = _type_cell_3D(pcell_face_idx[i_cell+1]-pcell_face_idx[i_cell],
                                                    pcell_face + pcell_face_idx[i_cell],
@@ -947,13 +1415,139 @@ _rebuild_dmesh_nodal_3d
                                                    pface_vtx,
                                                    cell_som_tria,
                                                    cell_som_quad);
+    if(cell_type == (PDM_Mesh_nodal_elt_t) cell_kind_old ){
+      section_n[n_section_tot-1]++;
+      continue;
+    }
+
+    section_kind[n_section_tot] = cell_type;
+    section_n[n_section_tot] = 1;
+    n_section_tot++;
+    cell_kind_old = cell_type;
+  }
+
+  section_n    = realloc(section_n   , (n_section_tot+1) * sizeof(PDM_g_num_t         ));
+  section_kind = realloc(section_kind,  n_section_tot    * sizeof(PDM_Mesh_nodal_elt_t));
+
+  PDM_g_num_t *post_section_n         = NULL;
+  int         *post_section_kind      = NULL;
+  int         *local_post_section_n   = NULL;
+  int         *local_post_section_idx = NULL;
+
+  int n_section_post = _generate_sections(comm,
+                                          distrib_cell,
+                                          section_n,
+                                          section_kind,
+                                          n_section_tot,
+                                          &post_section_n,
+                                          &post_section_kind,
+                                          &local_post_section_n,
+                                          &local_post_section_idx);
+  /*
+   * Requilibrate all block
+   */
+  for(int i_section = 0; i_section < n_section_post; ++i_section) {
+
+    int beg = local_post_section_idx[i_section];
+    int end = local_post_section_idx[i_section+1];
+    int nl_elmt = end - beg;
+
+    PDM_g_num_t* distrib_elmt = PDM_compute_uniform_entity_distribution(comm, post_section_n[i_section]);
+    PDM_g_num_t* ln_to_gn = malloc(local_post_section_n[i_section] * sizeof(PDM_g_num_t));
+
+    for(int i = 0; i < local_post_section_n[i_section]; ++i) {
+      ln_to_gn[i] = distrib_cell[i_rank] + local_post_section_idx[i_section] + i + 1;
+    }
+
+    for(int i_cell = 0; i_cell < local_post_section_n[i_section]; ++i_cell) {
+      PDM_Mesh_nodal_elt_t cell_type = _type_cell_3D(pcell_face_idx[i_cell+1]-pcell_face_idx[i_cell],
+                                                     pcell_face + pcell_face_idx[i_cell],
+                                                     pface_vtx_idx,
+                                                     pface_vtx,
+                                                     cell_som_tria,
+                                                     cell_som_quad);
+      assert(cell_type == (PDM_Mesh_nodal_elt_t) post_section_kind[i_section]);
+    }
+
+    // _connec_tetra()
+
+    PDM_part_to_block_t* ptb = PDM_part_to_block_create_from_distrib(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
+                                                                     PDM_PART_TO_BLOCK_POST_CLEANUP,
+                                                                     1.,
+                                                                     &ln_to_gn,
+                                                                     distrib_elmt,
+                                                                     &local_post_section_n[i_section],
+                                                                     1,
+                                                                     comm);
+    int n_face_vtx_tot = pface_vtx_idx[end] - pface_vtx_idx[beg];
+    int         *send_face_vtx_n = malloc(nl_elmt        * sizeof(int        ));
+    PDM_g_num_t *send_face_vtx   = malloc(n_face_vtx_tot * sizeof(PDM_g_num_t));
+    int         *blk_face_vtx_n  = NULL;
+    PDM_g_num_t *blk_face_vtx    = NULL;
+
+    int idx_write = 0;
+    for(int i = 0; i < nl_elmt; ++i) {
+      send_face_vtx_n[i] = pface_vtx_idx[beg+i+1] - pface_vtx_idx[beg+i];
+      for(int j = pface_vtx_idx[beg+i]; j < pface_vtx_idx[beg+i+1]; ++j) {
+        int i_vtx = pface_vtx[j];
+        send_face_vtx[idx_write++] = pvtx_ln_to_gn[i_vtx-1];
+      }
+    }
+
+    PDM_part_to_block_exch(ptb,
+                           sizeof(PDM_g_num_t),
+                           PDM_STRIDE_VAR_INTERLACED,
+                           -1,
+             (int  **)     &send_face_vtx_n,
+             (void **)     &send_face_vtx,
+             (int  **)     &blk_face_vtx_n,
+             (void **)     &blk_face_vtx);
+
+    free(send_face_vtx_n);
+    free(send_face_vtx);
+
+
+    PDM_Mesh_nodal_elt_t t_elt = (PDM_Mesh_nodal_elt_t) post_section_kind[i_section];
+    int id_section = PDM_DMesh_nodal_section_add(dmn,
+                                                 PDM_GEOMETRY_KIND_SURFACIC,
+                                                 t_elt);
+
+    int dn_elmt = distrib_elmt[i_rank+1] - distrib_elmt[i_rank];
+    if(t_elt == PDM_MESH_NODAL_POLY_2D) {
+
+      int *blk_face_vtx_idx = PDM_array_new_idx_from_sizes_int(blk_face_vtx_n, dn_elmt);
+      PDM_DMesh_nodal_section_poly2d_set(dmn,
+                                         PDM_GEOMETRY_KIND_SURFACIC,
+                                         id_section,
+                                         dn_elmt,
+                                         blk_face_vtx_idx,
+                                         blk_face_vtx,
+                                         PDM_OWNERSHIP_KEEP);
+    } else {
+      PDM_DMesh_nodal_section_std_set(dmn,
+                                      PDM_GEOMETRY_KIND_SURFACIC,
+                                      id_section,
+                                      dn_elmt,
+                                      blk_face_vtx,
+                                      PDM_OWNERSHIP_KEEP);
+    }
+
+    free(blk_face_vtx_n);
+    // free(blk_face_vtx);
+
+    PDM_part_to_block_free(ptb);
+    free(distrib_elmt);
+    free(ln_to_gn);
+
+
   }
 
 
 
-
-
-
+  free(post_section_n        );
+  free(post_section_kind     );
+  free(local_post_section_n  );
+  free(local_post_section_idx);
 
 
   free(pcell_ln_to_gn);
