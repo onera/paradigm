@@ -1446,7 +1446,6 @@ _rebuild_dmesh_nodal_3d
   /*
    * Requilibrate all block
    */
-  int lconnect[24];
   for(int i_section = 0; i_section < n_section_post; ++i_section) {
 
     int beg = local_post_section_idx[i_section];
@@ -1462,41 +1461,40 @@ _rebuild_dmesh_nodal_3d
 
     int n_vtx_per_elmt = PDM_Mesh_nodal_n_vertices_element((PDM_Mesh_nodal_elt_t) post_section_kind[i_section], 1);
 
-    PDM_g_num_t* cell_vtx = malloc(nl_elmt * n_vtx_per_elmt * sizeof(PDM_g_num_t));
+    int *pcell_vtx = malloc(nl_elmt * n_vtx_per_elmt * sizeof(int));
 
     for(int i_cell = 0; i_cell < local_post_section_n[i_section]; ++i_cell) {
-      PDM_Mesh_nodal_elt_t cell_type = _type_cell_3D(pcell_face_idx[i_cell+1]-pcell_face_idx[i_cell],
+      PDM_Mesh_nodal_elt_t cell_type = _type_cell_3D(pcell_face_idx[beg+i_cell+1]-pcell_face_idx[beg+i_cell],
                                                      pcell_face + pcell_face_idx[i_cell],
                                                      pface_vtx_idx,
                                                      pface_vtx,
                                                      cell_som_tria,
                                                      cell_som_quad);
       assert(cell_type == (PDM_Mesh_nodal_elt_t) post_section_kind[i_section]);
-
+      int *lconnect = &pcell_vtx[i_cell * n_vtx_per_elmt];
       switch(cell_type) {
         case PDM_MESH_NODAL_TETRA4 :
           _connec_tetra(pvtx_coords,
                         cell_som_tria,
                         lconnect);
-        break;
+          break;
         case PDM_MESH_NODAL_HEXA8 :
           _connec_hexa(pvtx_coords,
                         cell_som_quad,
                         lconnect);
-        break;
+          break;
         case PDM_MESH_NODAL_PRISM6 :
           _connec_prism(pvtx_coords,
                         cell_som_tria,
                         cell_som_quad,
                         lconnect);
-        break;
+          break;
         case PDM_MESH_NODAL_PYRAMID5 :
           _connec_pyramid(pvtx_coords,
                           cell_som_tria,
                           cell_som_quad,
                           lconnect);
-        break;
-
+          break;
         case PDM_MESH_NODAL_POLY_3D :
           {
             abort();
@@ -1505,15 +1503,7 @@ _rebuild_dmesh_nodal_3d
         default :
           break;
       }
-
-      for(int i = 0; i < n_vtx_per_elmt; ++i) {
-        cell_vtx[n_vtx_per_elmt * i_cell + i] = pvtx_ln_to_gn[lconnect[i]-1];
-      }
-
-
     }
-
-    // _connec_tetra()
 
     PDM_part_to_block_t* ptb = PDM_part_to_block_create_from_distrib(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
                                                                      PDM_PART_TO_BLOCK_POST_CLEANUP,
@@ -1523,67 +1513,62 @@ _rebuild_dmesh_nodal_3d
                                                                      &local_post_section_n[i_section],
                                                                      1,
                                                                      comm);
-    int n_face_vtx_tot = pface_vtx_idx[end] - pface_vtx_idx[beg];
-    int         *send_face_vtx_n = malloc(nl_elmt        * sizeof(int        ));
-    PDM_g_num_t *send_face_vtx   = malloc(n_face_vtx_tot * sizeof(PDM_g_num_t));
-    int         *blk_face_vtx_n  = NULL;
-    PDM_g_num_t *blk_face_vtx    = NULL;
+    int n_cell_vtx_tot = nl_elmt * n_vtx_per_elmt;
+    int         *send_cell_vtx_n = malloc(nl_elmt        * sizeof(int        ));
+    PDM_g_num_t *send_cell_vtx   = malloc(n_cell_vtx_tot * sizeof(PDM_g_num_t));
+    // int         *blk_cell_vtx_n  = NULL;
+    PDM_g_num_t *blk_cell_vtx    = NULL;
 
-    int idx_write = 0;
-    for(int i = 0; i < nl_elmt; ++i) {
-      send_face_vtx_n[i] = pface_vtx_idx[beg+i+1] - pface_vtx_idx[beg+i];
-      for(int j = pface_vtx_idx[beg+i]; j < pface_vtx_idx[beg+i+1]; ++j) {
-        int i_vtx = pface_vtx[j];
-        send_face_vtx[idx_write++] = pvtx_ln_to_gn[i_vtx-1];
-      }
+    for(int i = 0; i < n_cell_vtx_tot; ++i) {
+      int i_vtx = pcell_vtx[i];
+      send_cell_vtx[i] = pvtx_ln_to_gn[i_vtx-1];
     }
+    free(pcell_vtx);
 
     PDM_part_to_block_exch(ptb,
                            sizeof(PDM_g_num_t),
-                           PDM_STRIDE_VAR_INTERLACED,
-                           -1,
-             (int  **)     &send_face_vtx_n,
-             (void **)     &send_face_vtx,
-             (int  **)     &blk_face_vtx_n,
-             (void **)     &blk_face_vtx);
+                           PDM_STRIDE_CST_INTERLACED,
+                           n_vtx_per_elmt,
+                           NULL,
+             (void **)     &send_cell_vtx,
+                           NULL,
+             (void **)     &blk_cell_vtx);
 
-    free(send_face_vtx_n);
-    free(send_face_vtx);
+    free(send_cell_vtx_n);
+    free(send_cell_vtx);
 
 
     PDM_Mesh_nodal_elt_t t_elt = (PDM_Mesh_nodal_elt_t) post_section_kind[i_section];
     int id_section = PDM_DMesh_nodal_section_add(dmn,
-                                                 PDM_GEOMETRY_KIND_SURFACIC,
+                                                 PDM_GEOMETRY_KIND_VOLUMIC,
                                                  t_elt);
 
     int dn_elmt = distrib_elmt[i_rank+1] - distrib_elmt[i_rank];
-    if(t_elt == PDM_MESH_NODAL_POLY_2D) {
-
-      int *blk_face_vtx_idx = PDM_array_new_idx_from_sizes_int(blk_face_vtx_n, dn_elmt);
-      PDM_DMesh_nodal_section_poly2d_set(dmn,
-                                         PDM_GEOMETRY_KIND_SURFACIC,
-                                         id_section,
-                                         dn_elmt,
-                                         blk_face_vtx_idx,
-                                         blk_face_vtx,
-                                         PDM_OWNERSHIP_KEEP);
+    if(t_elt == PDM_MESH_NODAL_POLY_3D) {
+      abort();
+      // int *blk_face_vtx_idx = PDM_array_new_idx_from_sizes_int(blk_face_vtx_n, dn_elmt);
+      // PDM_DMesh_nodal_section_poly2d_set(dmn,
+      //                                    PDM_GEOMETRY_KIND_SURFACIC,
+      //                                    id_section,
+      //                                    dn_elmt,
+      //                                    blk_face_vtx_idx,
+      //                                    blk_face_vtx,
+      //                                    PDM_OWNERSHIP_KEEP);
     } else {
       PDM_DMesh_nodal_section_std_set(dmn,
-                                      PDM_GEOMETRY_KIND_SURFACIC,
+                                      PDM_GEOMETRY_KIND_VOLUMIC,
                                       id_section,
                                       dn_elmt,
-                                      blk_face_vtx,
+                                      blk_cell_vtx,
                                       PDM_OWNERSHIP_KEEP);
     }
 
-    free(blk_face_vtx_n);
+    // free(blk_face_vtx_n);
     // free(blk_face_vtx);
 
     PDM_part_to_block_free(ptb);
     free(distrib_elmt);
     free(ln_to_gn);
-
-
   }
 
 
