@@ -71,122 +71,122 @@ extern "C" {
  * Private function definitions
  *============================================================================*/
 
-static
-void
-_generate_sections
-(
- PDM_MPI_Comm           comm,
- PDM_g_num_t           *distrib_entity,
- PDM_g_num_t           *section_n,
- PDM_Mesh_nodal_elt_t  *section_kind,
- int                    n_section_tot,
- int                  **out_local_post_section_n,
- int                  **out_local_post_section_idx
-)
-{
-  int i_rank;
-  int n_rank;
-  PDM_MPI_Comm_rank(comm, &i_rank);
-  PDM_MPI_Comm_size(comm, &n_rank);
+// static
+// void
+// _generate_sections
+// (
+//  PDM_MPI_Comm           comm,
+//  PDM_g_num_t           *distrib_entity,
+//  PDM_g_num_t           *section_n,
+//  PDM_Mesh_nodal_elt_t  *section_kind,
+//  int                    n_section_tot,
+//  int                  **out_local_post_section_n,
+//  int                  **out_local_post_section_idx
+// )
+// {
+//   int i_rank;
+//   int n_rank;
+//   PDM_MPI_Comm_rank(comm, &i_rank);
+//   PDM_MPI_Comm_size(comm, &n_rank);
 
-  /*
-   * Rebuild sections
-   */
-  int *section_kind_n = malloc(n_rank * sizeof(int));
-  PDM_MPI_Allgather(&n_section_tot, 1, PDM_MPI_INT, section_kind_n, 1, PDM_MPI_INT, comm);
+//   /*
+//    * Rebuild sections
+//    */
+//   int *section_kind_n = malloc(n_rank * sizeof(int));
+//   PDM_MPI_Allgather(&n_section_tot, 1, PDM_MPI_INT, section_kind_n, 1, PDM_MPI_INT, comm);
 
-  int *section_kind_idx = malloc((n_rank+1) * sizeof(int));
-  section_kind_idx[0] = 0;
-  for(int i = 0; i < n_rank; ++i) {
-    section_kind_idx[i+1] = section_kind_idx[i] + section_kind_n[i];
-  }
+//   int *section_kind_idx = malloc((n_rank+1) * sizeof(int));
+//   section_kind_idx[0] = 0;
+//   for(int i = 0; i < n_rank; ++i) {
+//     section_kind_idx[i+1] = section_kind_idx[i] + section_kind_n[i];
+//   }
 
-  int         *g_section_kind = (int         *) malloc(section_kind_idx[n_rank] * sizeof(int        ));
-  PDM_g_num_t *g_section_n    = (PDM_g_num_t *) malloc(section_kind_idx[n_rank] * sizeof(PDM_g_num_t));
+//   int         *g_section_kind = (int         *) malloc(section_kind_idx[n_rank] * sizeof(int        ));
+//   PDM_g_num_t *g_section_n    = (PDM_g_num_t *) malloc(section_kind_idx[n_rank] * sizeof(PDM_g_num_t));
 
-  PDM_MPI_Allgatherv(section_kind, n_section_tot, PDM_MPI_INT,
-                     g_section_kind, section_kind_n, section_kind_idx, PDM_MPI_INT, comm);
-  PDM_MPI_Allgatherv(section_n, n_section_tot, PDM__PDM_MPI_G_NUM,
-                     g_section_n, section_kind_n, section_kind_idx, PDM__PDM_MPI_G_NUM, comm);
+//   PDM_MPI_Allgatherv(section_kind, n_section_tot, PDM_MPI_INT,
+//                      g_section_kind, section_kind_n, section_kind_idx, PDM_MPI_INT, comm);
+//   PDM_MPI_Allgatherv(section_n, n_section_tot, PDM__PDM_MPI_G_NUM,
+//                      g_section_n, section_kind_n, section_kind_idx, PDM__PDM_MPI_G_NUM, comm);
 
-  if(0 == 0) {
-    PDM_log_trace_array_long(section_n, n_section_tot, "section_n ::");
-    PDM_log_trace_array_long(distrib_entity, n_rank+1, "distrib_entity ::");
-    PDM_log_trace_connectivity_int(section_kind_idx, g_section_kind, n_rank, "g_section_kind : ");
-    PDM_log_trace_connectivity_int(section_kind_idx, g_section_n   , n_rank, "g_section_n      : ");
-  }
+//   if(0 == 0) {
+//     PDM_log_trace_array_long(section_n, n_section_tot, "section_n ::");
+//     PDM_log_trace_array_long(distrib_entity, n_rank+1, "distrib_entity ::");
+//     PDM_log_trace_connectivity_int (section_kind_idx, g_section_kind, n_rank, "g_section_kind : ");
+//     PDM_log_trace_connectivity_long(section_kind_idx, g_section_n   , n_rank, "g_section_n      : ");
+//   }
 
-  /*
-   * Post-treament
-   */
-  int n_section_all_rank = section_kind_idx[n_rank];
-  int         *post_section_kind = (int         *) malloc(section_kind_idx[n_rank] * sizeof(int        ));
-  PDM_g_num_t *post_section_n    = (PDM_g_num_t *) malloc(section_kind_idx[n_rank] * sizeof(PDM_g_num_t));
+//   /*
+//    * Post-treament
+//    */
+//   int n_section_all_rank = section_kind_idx[n_rank];
+//   int         *post_section_kind = (int         *) malloc(section_kind_idx[n_rank] * sizeof(int        ));
+//   PDM_g_num_t *post_section_n    = (PDM_g_num_t *) malloc(section_kind_idx[n_rank] * sizeof(PDM_g_num_t));
 
-  int n_section_post = 0;
-  PDM_Mesh_nodal_elt_t first = PDM_MESH_NODAL_N_ELEMENT_TYPES;
-  for(int i = 0; i < n_section_all_rank; ++i) {
-    if(first != (PDM_Mesh_nodal_elt_t) g_section_kind[i]) {
-      first = g_section_kind[i];
-      post_section_kind[n_section_post] = first;
-      post_section_n   [n_section_post] = g_section_n[i];
-      n_section_post++;
-    } else {
-      post_section_n[n_section_post-1] += g_section_n[i];
-    }
-  }
-  post_section_kind = realloc(post_section_kind, n_section_post * sizeof(int        ));
-  post_section_n    = realloc(post_section_n   , n_section_post * sizeof(PDM_g_num_t));
+//   int n_section_post = 0;
+//   PDM_Mesh_nodal_elt_t first = PDM_MESH_NODAL_N_ELEMENT_TYPES;
+//   for(int i = 0; i < n_section_all_rank; ++i) {
+//     if(first != (PDM_Mesh_nodal_elt_t) g_section_kind[i]) {
+//       first = g_section_kind[i];
+//       post_section_kind[n_section_post] = first;
+//       post_section_n   [n_section_post] = g_section_n[i];
+//       n_section_post++;
+//     } else {
+//       post_section_n[n_section_post-1] += g_section_n[i];
+//     }
+//   }
+//   post_section_kind = realloc(post_section_kind, n_section_post * sizeof(int        ));
+//   post_section_n    = realloc(post_section_n   , n_section_post * sizeof(PDM_g_num_t));
 
-  free(g_section_kind);
-  free(g_section_n);
-  free(section_kind_idx);
-  free(section_kind_n);
-  free(section_n);
-  free(section_kind);
-
-
-  if(0 == 0) {
-    PDM_log_trace_array_int (post_section_kind, n_section_post, "post_section_kind ::");
-    PDM_log_trace_array_long(post_section_n   , n_section_post, "post_section_n    ::");
-  }
-
-  /*
-   * Compute global shift
-   */
-  PDM_g_num_t* post_section_idx = malloc((n_section_post+1) * sizeof(PDM_g_num_t));
-  post_section_idx[0] = 0;
-  for(int i = 0; i < n_section_post; ++i) {
-    post_section_idx[i+1] = post_section_idx[i] + post_section_n[i];
-  }
+//   free(g_section_kind);
+//   free(g_section_n);
+//   free(section_kind_idx);
+//   free(section_kind_n);
+//   free(section_n);
+//   free(section_kind);
 
 
-  int dn_entity = distrib_entity[i_rank+1] - distrib_entity[i_rank];
+//   if(0 == 0) {
+//     PDM_log_trace_array_int (post_section_kind, n_section_post, "post_section_kind ::");
+//     PDM_log_trace_array_long(post_section_n   , n_section_post, "post_section_n    ::");
+//   }
 
-  /*
-   * Reanrange in global section the local one
-   */
-  int* local_post_section_n   = malloc((n_section_post  ) * sizeof(int));
-  int* local_post_section_idx = malloc((n_section_post+1) * sizeof(int));
-  for(int i = 0; i < n_section_post; ++i) {
-    local_post_section_n[i] = 0;
-  }
+//   /*
+//    * Compute global shift
+//    */
+//   PDM_g_num_t* post_section_idx = malloc((n_section_post+1) * sizeof(PDM_g_num_t));
+//   post_section_idx[0] = 0;
+//   for(int i = 0; i < n_section_post; ++i) {
+//     post_section_idx[i+1] = post_section_idx[i] + post_section_n[i];
+//   }
 
-  for(int i_entity = 0; i_entity < dn_entity; ++i_entity) {
-    PDM_g_num_t gnum = distrib_entity[i_rank] + i_entity + 1;
-    int t_section = PDM_binary_search_gap_long(gnum-1, post_section_idx, n_section_post+1);
-    local_post_section_n[t_section]++;
-  }
 
-  local_post_section_idx[0] = 0;
-  for(int i = 0; i < n_section_post; ++i) {
-    local_post_section_idx[i+1] = local_post_section_idx[i] + local_post_section_n[i];
-  }
+//   int dn_entity = distrib_entity[i_rank+1] - distrib_entity[i_rank];
 
-  *out_local_post_section_n   = local_post_section_n;
-  *out_local_post_section_idx = local_post_section_idx;
+//   /*
+//    * Reanrange in global section the local one
+//    */
+//   int* local_post_section_n   = malloc((n_section_post  ) * sizeof(int));
+//   int* local_post_section_idx = malloc((n_section_post+1) * sizeof(int));
+//   for(int i = 0; i < n_section_post; ++i) {
+//     local_post_section_n[i] = 0;
+//   }
 
-}
+//   for(int i_entity = 0; i_entity < dn_entity; ++i_entity) {
+//     PDM_g_num_t gnum = distrib_entity[i_rank] + i_entity + 1;
+//     int t_section = PDM_binary_search_gap_long(gnum-1, post_section_idx, n_section_post+1);
+//     local_post_section_n[t_section]++;
+//   }
+
+//   local_post_section_idx[0] = 0;
+//   for(int i = 0; i < n_section_post; ++i) {
+//     local_post_section_idx[i+1] = local_post_section_idx[i] + local_post_section_n[i];
+//   }
+
+//   *out_local_post_section_n   = local_post_section_n;
+//   *out_local_post_section_idx = local_post_section_idx;
+
+// }
 
 
 
@@ -215,6 +215,8 @@ _dmesh_to_dmesh_nodal
  PDM_g_num_t   **blk_elmt_gnum
 )
 {
+  PDM_UNUSED(dcell_face);
+  PDM_UNUSED(dcell_face_idx);
 
   int i_rank;
   int n_rank;
@@ -402,8 +404,8 @@ _dmesh_to_dmesh_nodal
     if(0 == 0) {
       PDM_log_trace_array_long(section_n, n_section_tot, "section_n ::");
       PDM_log_trace_array_long(distrib_face, n_rank+1, "distrib_face ::");
-      PDM_log_trace_connectivity_int(section_kind_idx, g_section_kind, n_rank, "g_section_kind : ");
-      PDM_log_trace_connectivity_int(section_kind_idx, g_section_n   , n_rank, "g_section_n      : ");
+      PDM_log_trace_connectivity_int (section_kind_idx, g_section_kind, n_rank, "g_section_kind : ");
+      PDM_log_trace_connectivity_long(section_kind_idx, g_section_n   , n_rank, "g_section_n      : ");
     }
 
     /*

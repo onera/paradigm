@@ -305,15 +305,14 @@ _generate_part_entitiy_connectivity
     }
   }
 
-
   PDM_MPI_Alltoallv(send_entity_vtx,
                     send_s_entity_vtx_n,
                     send_s_entity_vtx_idx,
-                    PDM_MPI_INT,
+                    PDM__PDM_MPI_G_NUM,
                     recv_entity_vtx,
                     recv_s_entity_vtx_n,
                     recv_s_entity_vtx_idx,
-                    PDM_MPI_INT,
+                    PDM__PDM_MPI_G_NUM,
                     comm);
 
   if(0 == 1) {

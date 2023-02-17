@@ -212,10 +212,10 @@ int main(int argc, char *argv[])
 
   if(post) {
     if(dim == 3) {
-      PDM_dmesh_nodal_dump_vtk(dmn, PDM_GEOMETRY_KIND_VOLUMIC , "out_volumic");
+      PDM_dmesh_nodal_dump_vtk(dmn, PDM_GEOMETRY_KIND_VOLUMIC , "dmn_volumic");
     }
-    PDM_dmesh_nodal_dump_vtk(dmn, PDM_GEOMETRY_KIND_SURFACIC, "out_surfacic");
-    PDM_dmesh_nodal_dump_vtk(dmn, PDM_GEOMETRY_KIND_RIDGE   , "out_ridge");
+    PDM_dmesh_nodal_dump_vtk(dmn, PDM_GEOMETRY_KIND_SURFACIC, "dmn_surfacic");
+    PDM_dmesh_nodal_dump_vtk(dmn, PDM_GEOMETRY_KIND_RIDGE   , "dmn_ridge");
   }
 
   /*
@@ -241,6 +241,14 @@ int main(int argc, char *argv[])
 
   PDM_part_mesh_nodal_t *pmesh_nodal = NULL;
   PDM_multipart_get_part_mesh_nodal(mpart_id, 0, &pmesh_nodal, PDM_OWNERSHIP_KEEP);
+
+  if(post) {
+    if(dim == 3) {
+      PDM_part_mesh_nodal_dump_vtk(pmesh_nodal, PDM_GEOMETRY_KIND_VOLUMIC , "pmn_volumic");
+    }
+    PDM_part_mesh_nodal_dump_vtk(pmesh_nodal, PDM_GEOMETRY_KIND_SURFACIC, "pmn_surfacic");
+    PDM_part_mesh_nodal_dump_vtk(pmesh_nodal, PDM_GEOMETRY_KIND_RIDGE   , "pmn_ridge");
+  }
 
   PDM_dmesh_nodal_to_dmesh_transform_t transform_kind = PDM_DMESH_NODAL_TO_DMESH_TRANSFORM_TO_FACE;
   if(dim == 2) {

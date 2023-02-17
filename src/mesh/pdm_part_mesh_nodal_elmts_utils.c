@@ -347,7 +347,7 @@ PDM_part_mesh_nodal_hexa_decomposes_faces
        int         *elmt_face_vtx_idx,
        PDM_g_num_t *elmt_face_vtx,
        int         *elmt_cell_face_idx,
-       int         *elmt_face_cell,
+       PDM_g_num_t *elmt_face_cell,
        int         *parent_elmt_position
 )
 {
@@ -442,7 +442,7 @@ PDM_part_mesh_nodal_tri_decomposes_faces
        int         *elmt_face_vtx_idx,
        PDM_g_num_t *elmt_face_vtx,
        int         *elmt_cell_face_idx,
-       int         *elmt_face_cell,
+       PDM_g_num_t *elmt_face_cell,
        int         *parent_elmt_position
 )
 {
@@ -513,7 +513,7 @@ PDM_part_mesh_nodal_quad_decomposes_faces
        int         *elmt_face_vtx_idx,
        PDM_g_num_t *elmt_face_vtx,
        int         *elmt_cell_face_idx,
-       int         *elmt_face_cell,
+       PDM_g_num_t *elmt_face_cell,
        int         *parent_elmt_position
 )
 {
@@ -581,7 +581,7 @@ PDM_part_mesh_nodal_bar_decomposes_edges
        int         *elmt_edge_vtx_idx,
        PDM_g_num_t *elmt_edge_vtx,
        int         *elmt_cell_edge_idx,
-       int         *elmt_edge_cell,
+       PDM_g_num_t *elmt_edge_cell,
        int         *parent_elmt_position
 )
 {
@@ -649,7 +649,7 @@ PDM_part_mesh_nodal_tri_decomposes_edges
        int         *elmt_edge_vtx_idx,
        PDM_g_num_t *elmt_edge_vtx,
        int         *elmt_cell_edge_idx,
-       int         *elmt_edge_cell,
+       PDM_g_num_t *elmt_edge_cell,
        int         *parent_elmt_position
 )
 {
@@ -722,7 +722,7 @@ PDM_part_mesh_nodal_quad_decomposes_edges
        int         *elmt_edge_vtx_idx,
        PDM_g_num_t *elmt_edge_vtx,
        int         *elmt_cell_edge_idx,
-       int         *elmt_edge_cell,
+       PDM_g_num_t *elmt_edge_cell,
        int         *parent_elmt_position
 )
 {
@@ -796,7 +796,7 @@ PDM_part_mesh_nodal_tetra_decomposes_edges
        int         *elmt_edge_vtx_idx,
        PDM_g_num_t *elmt_edge_vtx,
        int         *elmt_cell_edge_idx,
-       int         *elmt_edge_cell,
+       PDM_g_num_t *elmt_edge_cell,
        int         *parent_elmt_position
 )
 {
@@ -882,7 +882,7 @@ PDM_part_mesh_nodal_prism_decomposes_edges
        int         *elmt_edge_vtx_idx,
        PDM_g_num_t *elmt_edge_vtx,
        int         *elmt_cell_edge_idx,
-       int         *elmt_edge_cell,
+       PDM_g_num_t *elmt_edge_cell,
        int         *parent_elmt_position
 )
 {
@@ -981,7 +981,7 @@ PDM_part_mesh_nodal_pyra_decomposes_edges
        int         *elmt_edge_vtx_idx,
        PDM_g_num_t *elmt_edge_vtx,
        int         *elmt_cell_edge_idx,
-       int         *elmt_edge_cell,
+       PDM_g_num_t *elmt_edge_cell,
        int         *parent_elmt_position
 )
 {
@@ -1076,7 +1076,7 @@ PDM_part_mesh_nodal_hexa_decomposes_edges
        int         *elmt_edge_vtx_idx,
        PDM_g_num_t *elmt_edge_vtx,
        int         *elmt_cell_edge_idx,
-       int         *elmt_edge_cell,
+       PDM_g_num_t *elmt_edge_cell,
        int         *parent_elmt_position
 )
 {
