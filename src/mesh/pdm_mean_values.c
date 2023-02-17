@@ -91,6 +91,7 @@ _compute_mean_value_coord_polygon
  const double *vtx_coord,
  const int     n_pts,
  const double *pts_coord,
+ const int     project_on_boundary,
        double *mean_value_coord
  )
 {
@@ -139,6 +140,43 @@ _compute_mean_value_coord_polygon
     int dbg = 0;
     // int dbg = (p[0] > -0.424127 && p[0] < -0.424125 &&
     //            p[1] > -0.029731 && p[1] < -0.029729);
+
+    if (project_on_boundary) {
+      /* Check if current point lies inside polygon */
+      PDM_polygon_status_t stat = PDM_polygon_point_in_new(p,
+                                                           n_vtx,
+                                                           vtx_coord,
+                                                           NULL,
+                                                           normal);
+      if (stat == PDM_POLYGON_OUTSIDE) {
+        /* Project on polygon boundary */
+        int    imin = -1;
+        double tmin;
+        double dmin = HUGE_VAL;
+        double cp[3];
+        for (int ivtx = 0; ivtx < n_vtx; ivtx++) {
+          m[ivtx] = 0;
+
+          double t;
+          double dist_line = PDM_line_distance(p,
+                                               &vtx_coord[3*ivtx],
+                                               &vtx_coord[3*((ivtx+1)%n_vtx)],
+                                               &t,
+                                               cp);
+
+          if (dist_line < dmin) {
+            dmin = dist_line;
+            tmin = t;
+            imin = ivtx;
+          }
+        }
+
+        m[imin]           = 1 - tmin;
+        m[(imin+1)%n_vtx] = tmin;
+
+        continue;
+      }
+    }
 
 
     if (dbg) {
@@ -498,6 +536,7 @@ PDM_mean_values_polygon_3d
                                       vtx_coord,
                                       n_pts,
                                       pts_coord,
+                                      1,
                                       mean_value_coord);
     return;
   }
