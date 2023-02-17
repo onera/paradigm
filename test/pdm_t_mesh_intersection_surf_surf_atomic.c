@@ -166,7 +166,7 @@ PDM_GCC_SUPPRESS_WARNING_POP
                                                                edgeB_coord,
                                                                edgeB_normal);
 
-  log_trace("area = %20.16f\n", area);
+  printf("area = %20.16f\n", area);
 
   // Finalize
   PDM_MPI_Finalize();

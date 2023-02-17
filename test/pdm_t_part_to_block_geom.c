@@ -240,7 +240,6 @@ main
   PDM_g_num_t* parent_gnum = PDM_part_to_block_block_gnum_get   (ptb);
   PDM_g_num_t* distrib_pts = PDM_part_to_block_distrib_index_get(ptb);
 
-  PDM_log_trace_array_long(distrib_pts, n_rank+1, "distrib_pts : ");
 
   /*
    * Pour le retour :

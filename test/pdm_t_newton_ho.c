@@ -327,7 +327,7 @@ int main(int argc, char *argv[])
   if (seed < 0) {
     seed = time(NULL);
   }
-  log_trace("seed = %d\n", seed);
+  printf("seed = %d\n", seed);
   srand(seed);
   for (int i = 0; i < elt_dim; i++) {
     uvw[i] = 0.5 + 1.0*(2*((double) rand() / (double) RAND_MAX) - 1);
@@ -368,7 +368,7 @@ int main(int argc, char *argv[])
                                  uvw2,
                                  &converged,
                                  work_array);
-  log_trace("converged? %d\n", converged);
+  printf("converged? %d\n", converged);
   free(work_array);
 
 
@@ -382,16 +382,30 @@ int main(int argc, char *argv[])
                                  proj_coord3,
                                  uvw3);
 
-  PDM_log_trace_array_double(uvw,  elt_dim, "uvw  : ");
-  PDM_log_trace_array_double(uvw2, elt_dim, "uvw2 : ");
-  PDM_log_trace_array_double(uvw3, elt_dim, "uvw3 : ");
+  printf("uvw  : ");
+  for (int i = 0; i < elt_dim; i++) {
+    printf("%e ", uvw[i]);
+  }
+  printf("\n");
+
+  printf("uvw2 : ");
+  for (int i = 0; i < elt_dim; i++) {
+    printf("%e ", uvw2[i]);
+  }
+  printf("\n");
+
+  printf("uvw3 : ");
+  for (int i = 0; i < elt_dim; i++) {
+    printf("%e ", uvw3[i]);
+  }
+  printf("\n");
 
 
 
 
 
-  log_trace("dist_newton = %e, dist_subdiv = %e, delta = %e, relatif = %e\n",
-            sqrt(dist2), sqrt(dist3), sqrt(dist2) - sqrt(dist3), (sqrt(dist2) - sqrt(dist3))/sqrt(dist2));
+  printf("dist_newton = %e, dist_subdiv = %e, delta = %e, relatif = %e\n",
+         sqrt(dist2), sqrt(dist3), sqrt(dist2) - sqrt(dist3), (sqrt(dist2) - sqrt(dist3))/sqrt(dist2));
 
   free(weight);
 

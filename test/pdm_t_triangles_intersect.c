@@ -455,7 +455,7 @@ _classify_pts_wrt_triangle
                                             x[2],
                                             p);
 
-    if (1) {
+    if (verbose) {
       // log_trace("_pt_det**2 = %e / %e\n", _pt_det*_pt_det, det*pts_eps[ipt]*pts_eps[ipt]);
       log_trace("_pt_det = %e * sqrt(det)\n", _pt_det/sqrt(det));
     }
@@ -787,7 +787,7 @@ _intersect_triangle_triangle_coplanar
  _point_triangle_loc_t *inter_locB
  )
 {
-  int dbg = 1;
+  int dbg = 0;
   PDM_UNUSED(epsA);
   PDM_UNUSED(epsB);
 
@@ -1030,8 +1030,8 @@ _intersect_triangle_triangle
  _point_triangle_loc_t *inter_locB
  )
 {
-  int verbose = 1;
-  int dbg = 1;
+  int verbose = 0;
+  int dbg     = 0;
 
   /* Classify vtx of A wrt B */
   _point_triangle_loc_t vtxA_locB[3];
@@ -1473,7 +1473,8 @@ _read_args
  double        *a1,
  double        *a2,
  double        *scale,
- double        *noise_scale
+ double        *noise_scale,
+ int           *verbose
  )
 {
   int i = 1;
@@ -1566,6 +1567,9 @@ _read_args
         *noise_scale = atof(argv[i]);
       }
     }
+    else if (strcmp(argv[i], "-verbose") == 0) {
+      *verbose = 1;
+    }
 
     else {
       _usage(EXIT_FAILURE);
@@ -1600,6 +1604,7 @@ int main(int argc, char *argv[])
   double a2[3]       = {0, 1, 0};
   double scale       = 1.;
   double noise_scale = 0.;
+  int    verbose     = 0;
   _read_args(argc,
              argv,
              &seed,
@@ -1610,7 +1615,8 @@ int main(int argc, char *argv[])
              a1,
              a2,
              &scale,
-             &noise_scale);
+             &noise_scale,
+             &verbose);
 
   if (seed < 0) {
     seed = time(NULL);
@@ -1732,12 +1738,14 @@ int main(int argc, char *argv[])
     }
   }
 
-  log_trace("seed = %d, noise_scale = %f, scale = %f\n",
-            seed, noise_scale, scale);
-  log_trace("vtx_epsA : %e %e %e\n",
-            vtx_epsA[0], vtx_epsA[1], vtx_epsA[2]);
-  log_trace("vtx_epsB : %e %e %e\n",
-            vtx_epsB[0], vtx_epsB[1], vtx_epsB[2]);
+  if (verbose) {
+    log_trace("seed = %d, noise_scale = %f, scale = %f\n",
+              seed, noise_scale, scale);
+    log_trace("vtx_epsA : %e %e %e\n",
+              vtx_epsA[0], vtx_epsA[1], vtx_epsA[2]);
+    log_trace("vtx_epsB : %e %e %e\n",
+              vtx_epsB[0], vtx_epsB[1], vtx_epsB[2]);
+  }
 
   double coordA[9] = {
     vtx_coordA[0][0], vtx_coordA[0][1], vtx_coordA[0][2],
@@ -1750,8 +1758,10 @@ int main(int argc, char *argv[])
     vtx_coordB[2][0], vtx_coordB[2][1], vtx_coordB[2][2]
   };
 
-  _dump_triangle("triangleA.vtk", vtx_coordA);
-  _dump_triangle("triangleB.vtk", vtx_coordB);
+  if (verbose) {
+    _dump_triangle("triangleA.vtk", vtx_coordA);
+    _dump_triangle("triangleB.vtk", vtx_coordB);
+  }
 
 
   double                inter_coord[6*3];
@@ -1765,32 +1775,35 @@ int main(int argc, char *argv[])
                                              inter_locA,
                                              inter_locB);
 
-  log_trace("n_inter = %d\n", n_inter);
-  for (int i = 0; i < n_inter; i++) {
-    log_trace("  %f %f %f A%d B%d\n",
-              inter_coord[3*i], inter_coord[3*i+1], inter_coord[3*i+2],
-              (int) inter_locA[i],
-              (int) inter_locB[i]);
+  if (verbose) {
+    log_trace("n_inter = %d\n", n_inter);
+    for (int i = 0; i < n_inter; i++) {
+      log_trace("  %f %f %f A%d B%d\n",
+                inter_coord[3*i], inter_coord[3*i+1], inter_coord[3*i+2],
+                (int) inter_locA[i],
+                (int) inter_locB[i]);
+    }
+
+
+    // PDM_vtk_write_point_cloud("interAB.vtk",
+    //                           n_inter,
+    //                           inter_coord,
+    //                           NULL, NULL);
+    const char *field_name [2] = {"locA", "locB"};
+    const int  *field_value[2] = {(int *) inter_locA, (int *) inter_locB};
+
+    PDM_vtk_write_std_elements("interAB.vtk",
+                               n_inter,
+                               inter_coord,
+                               NULL,
+                               PDM_MESH_NODAL_POINT,
+                               n_inter,
+                               NULL,
+                               NULL,
+                               2,
+                               field_name,
+                               field_value);
   }
-
-  // PDM_vtk_write_point_cloud("interAB.vtk",
-  //                           n_inter,
-  //                           inter_coord,
-  //                           NULL, NULL);
-  const char *field_name [2] = {"locA", "locB"};
-  const int  *field_value[2] = {(int *) inter_locA, (int *) inter_locB};
-
-  PDM_vtk_write_std_elements("interAB.vtk",
-                             n_inter,
-                             inter_coord,
-                             NULL,
-                             PDM_MESH_NODAL_POINT,
-                             n_inter,
-                             NULL,
-                             NULL,
-                             2,
-                             field_name,
-                             field_value);
 
 
 

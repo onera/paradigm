@@ -83,7 +83,8 @@ _read_args
  PDM_Mesh_nodal_elt_t  *elt_type_a,
  PDM_Mesh_nodal_elt_t  *elt_type_b,
  int                   *nodal_a,
- int                   *nodal_b
+ int                   *nodal_b,
+ int                   *verbose
 )
 {
   int i = 1;
@@ -142,6 +143,9 @@ _read_args
     }
     else if (strcmp(argv[i], "-nodalB") == 0) {
       *nodal_b = 1;
+    }
+    else if (strcmp(argv[i], "-verbose") == 0) {
+      *verbose = 1;
     }
     else {
       _usage(EXIT_FAILURE);
@@ -503,6 +507,7 @@ char *argv[]
   PDM_split_dual_t part_method   = PDM_SPLIT_DUAL_WITH_HILBERT;
 
   int n_part = 1;
+  int verbose = 0;
 
   _read_args(argc,
              argv,
@@ -512,7 +517,8 @@ char *argv[]
              &elt_type_a,
              &elt_type_b,
              &nodal_a,
-             &nodal_b);
+             &nodal_b,
+             &verbose);
 
   /*
    * Generate meshA
@@ -614,7 +620,9 @@ char *argv[]
                                          &pelt_b_elt_a_idx,
                                          &pelt_b_elt_a);
 
-    log_trace("FROM A USER POV\n");
+    if (verbose) {
+      log_trace("FROM A USER POV\n");
+    }
     int    **pelt_a_elt_b_n      = malloc(sizeof(int    *) * n_part);
     double **pelt_a_elt_b_weight = malloc(sizeof(double *) * n_part);
 
@@ -639,11 +647,13 @@ char *argv[]
       for (int i = 0; i < n_elt_a; i++) {
         pelt_a_elt_b_n[ipart][i] = elt_a_elt_b_idx[i+1] - elt_a_elt_b_idx[i];
 
-        log_trace("elt_a "PDM_FMT_G_NUM" : ", elt_a_ln_to_gn[i]);
-        for (int j = elt_a_elt_b_idx[i]; j < elt_a_elt_b_idx[i+1]; j++) {
-          log_trace("("PDM_FMT_G_NUM", %f)  ", elt_a_elt_b[j], pelt_a_elt_b_weight[ipart][j]);
+        if (verbose) {
+          log_trace("elt_a "PDM_FMT_G_NUM" : ", elt_a_ln_to_gn[i]);
+          for (int j = elt_a_elt_b_idx[i]; j < elt_a_elt_b_idx[i+1]; j++) {
+            log_trace("("PDM_FMT_G_NUM", %f)  ", elt_a_elt_b[j], pelt_a_elt_b_weight[ipart][j]);
+          }
+          log_trace("\n");
         }
-        log_trace("\n");
       }
     }
 
@@ -662,7 +672,9 @@ char *argv[]
                            &request);
     PDM_part_to_part_iexch_wait(ptp, request);
 
-    log_trace("FROM B USER POV\n");
+    if (verbose) {
+      log_trace("FROM B USER POV\n");
+    }
     for (int ipart = 0; ipart < n_part; ipart++) {
 
       PDM_g_num_t *elt_b_ln_to_gn = NULL;
@@ -676,11 +688,13 @@ char *argv[]
 
       for (int i = 0; i < n_ref_b[ipart]; i++) {
         int faceB_id = ref_b[ipart][i] - 1;
-        log_trace("elt_b "PDM_FMT_G_NUM" : ", elt_b_ln_to_gn[faceB_id]);
-        for (int j = pelt_b_elt_a_idx[ipart][i]; j < pelt_b_elt_a_idx[ipart][i+1]; j++) {
-          log_trace("("PDM_FMT_G_NUM", %f)  ", pelt_b_elt_a[ipart][j], pelt_b_elt_a_weight[ipart][j]);
+        if (verbose) {
+          log_trace("elt_b "PDM_FMT_G_NUM" : ", elt_b_ln_to_gn[faceB_id]);
+          for (int j = pelt_b_elt_a_idx[ipart][i]; j < pelt_b_elt_a_idx[ipart][i+1]; j++) {
+            log_trace("("PDM_FMT_G_NUM", %f)  ", pelt_b_elt_a[ipart][j], pelt_b_elt_a_weight[ipart][j]);
+          }
+          log_trace("\n");
         }
-        log_trace("\n");
       }
     }
 

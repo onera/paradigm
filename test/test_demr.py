@@ -15,10 +15,12 @@ from mod_vtk import *
 parser = argparse.ArgumentParser()
 
 parser.add_argument("-n", "--n_vtx_seg", default=3)
+parser.add_argument("-v", "--visu", action="store_true")
 
 args = parser.parse_args()
 
 n = int(args.n_vtx_seg)
+visu = args.visu
 
 
 comm = MPI.COMM_WORLD
@@ -226,44 +228,45 @@ part2_stride, part2_data = ptp.wait(request)
 
 ############################################################################
 # Export for visu (ENSIGHT/VTK?)
-faces = mpart.multipart_connectivity_get(0, 0, PDM._PDM_CONNECTIVITY_TYPE_FACE_EDGE)
-face_edge_idx = faces["np_entity1_entity2_idx"]
-face_edge     = faces["np_entity1_entity2"]
+if visu:
+  faces = mpart.multipart_connectivity_get(0, 0, PDM._PDM_CONNECTIVITY_TYPE_FACE_EDGE)
+  face_edge_idx = faces["np_entity1_entity2_idx"]
+  face_edge     = faces["np_entity1_entity2"]
 
-n_face = len(face_edge_idx)-1
+  n_face = len(face_edge_idx)-1
 
-face_vtx = PDM.compute_face_vtx_from_face_and_edge(n_face,
-                                                   face_edge_idx,
-                                                   face_edge,
-                                                   edge_vtx)
-
-
-_edge_vtx = np.reshape(edge_vtx-1, (n_edge, 2), order="C")
-_vtx_coord = np.reshape(vtx_coord, (n_vtx, 3), order="C")
-vtk_write_std_elements("sphere_edges_rank%d.vtk" % i_rank,
-                       _vtx_coord,
-                       ELT_TYPE_EDGE,
-                       _edge_vtx,
-                       {"gnum" : edge_ln_to_gn,
-                       "field" : edge_field})
-
-vtk_write_std_elements("sphere_segments_rank%d.vtk" % i_rank,
-                       segment_coord,
-                       ELT_TYPE_EDGE,
-                       segment_connec,
-                       {"gnum" : segment_ln_to_gn,
-                       "field" : part2_data[0]})
+  face_vtx = PDM.compute_face_vtx_from_face_and_edge(n_face,
+                                                     face_edge_idx,
+                                                     face_edge,
+                                                     edge_vtx)
 
 
-connec = []
-for j in range(n_face):
-  start = face_edge_idx[j]
-  end   = face_edge_idx[j+1]
-  connec.append([k for k in face_vtx[start:end] - 1])
+  _edge_vtx = np.reshape(edge_vtx-1, (n_edge, 2), order="C")
+  _vtx_coord = np.reshape(vtx_coord, (n_vtx, 3), order="C")
+  vtk_write_std_elements("sphere_edges_rank%d.vtk" % i_rank,
+                         _vtx_coord,
+                         ELT_TYPE_EDGE,
+                         _edge_vtx,
+                         {"gnum" : edge_ln_to_gn,
+                         "field" : edge_field})
 
-vtk_write_polydata("sphere_mesh_rank%d.vtk" % i_rank,
-                   _vtx_coord,
-                   connec)
+  vtk_write_std_elements("sphere_segments_rank%d.vtk" % i_rank,
+                         segment_coord,
+                         ELT_TYPE_EDGE,
+                         segment_connec,
+                         {"gnum" : segment_ln_to_gn,
+                         "field" : part2_data[0]})
+
+
+  connec = []
+  for j in range(n_face):
+    start = face_edge_idx[j]
+    end   = face_edge_idx[j+1]
+    connec.append([k for k in face_vtx[start:end] - 1])
+
+  vtk_write_polydata("sphere_mesh_rank%d.vtk" % i_rank,
+                     _vtx_coord,
+                     connec)
 ############################################################################
 
 print("[{}] End".format(i_rank))
