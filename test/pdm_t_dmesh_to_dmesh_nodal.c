@@ -124,6 +124,7 @@ int main(int argc, char *argv[])
   PDM_g_num_t        n_vtx_seg = 10;
   double             length    = 1.;
   PDM_Mesh_nodal_elt_t t_elt   = PDM_MESH_NODAL_HEXA8;
+  // PDM_Mesh_nodal_elt_t t_elt   = PDM_MESH_NODAL_PRISM6;
 
   /*
    *  Read args
@@ -363,7 +364,7 @@ int main(int argc, char *argv[])
                             PDM_OWNERSHIP_USER);
 
 
-  if(1 == 1) {
+  if(0 == 1) {
     if(dim == 3) {
       PDM_dmesh_nodal_dump_vtk(dmn_out, PDM_GEOMETRY_KIND_VOLUMIC , "out_post_volumic");
     }

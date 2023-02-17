@@ -229,7 +229,7 @@ _generate_sections
   PDM_MPI_Allgatherv(section_n, n_section_tot, PDM__PDM_MPI_G_NUM,
                      g_section_n, section_kind_n, section_kind_idx, PDM__PDM_MPI_G_NUM, comm);
 
-  if(1 == 1) {
+  if(0 == 0) {
     PDM_log_trace_array_long(section_n, n_section_tot, "section_n ::");
     PDM_log_trace_array_long(distrib_entity, n_rank+1, "distrib_entity ::");
     PDM_log_trace_connectivity_int(section_kind_idx, g_section_kind, n_rank, "g_section_kind : ");
@@ -266,7 +266,7 @@ _generate_sections
   free(section_kind);
 
 
-  if(1 == 1) {
+  if(0 == 0) {
     PDM_log_trace_array_int (post_section_kind, n_section_post, "post_section_kind ::");
     PDM_log_trace_array_long(post_section_n   , n_section_post, "post_section_n    ::");
   }
@@ -1443,6 +1443,9 @@ _rebuild_dmesh_nodal_3d
                                           &post_section_kind,
                                           &local_post_section_n,
                                           &local_post_section_idx);
+  PDM_log_trace_array_long(local_post_section_n  , n_section_post, "local_post_section_n ::");
+  PDM_log_trace_array_long(local_post_section_idx, n_section_post+1, "local_post_section_idx ::");
+
   /*
    * Requilibrate all block
    */
@@ -1645,7 +1648,7 @@ _rebuild_dmesh_nodal_3d
   int         *local_post_section_face_bnd_n   = NULL;
   int         *local_post_section_face_bnd_idx = NULL;
 
-  PDM_g_num_t* distrib_face_bnd = PDM_compute_entity_distribution(comm, n_section_face_bnd_tot);
+  PDM_g_num_t* distrib_face_bnd = PDM_compute_entity_distribution(comm, n_face_bnd_tot);
   int n_section_face_bnd_post = _generate_sections(comm,
                                                    distrib_face_bnd,
                                                    section_face_bnd_n,
@@ -1657,6 +1660,7 @@ _rebuild_dmesh_nodal_3d
                                                    &local_post_section_face_bnd_idx);
 
   // PDM_log_trace_array_long(section_face_bnd_n, n_section_face_bnd_tot, "section_face_bnd_n ::");
+  PDM_log_trace_array_long(local_post_section_face_bnd_n  , n_section_face_bnd_post, "local_post_section_face_bnd_n ::");
   PDM_log_trace_array_long(local_post_section_face_bnd_idx, n_section_face_bnd_post+1, "local_post_section_face_bnd_idx ::");
   /*
    * Generate and redistribute surfacique
