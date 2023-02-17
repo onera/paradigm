@@ -229,7 +229,7 @@ _generate_sections
   PDM_MPI_Allgatherv(section_n, n_section_tot, PDM__PDM_MPI_G_NUM,
                      g_section_n, section_kind_n, section_kind_idx, PDM__PDM_MPI_G_NUM, comm);
 
-  if(0 == 0) {
+  if(1 == 1) {
     PDM_log_trace_array_long(section_n, n_section_tot, "section_n ::");
     PDM_log_trace_array_long(distrib_entity, n_rank+1, "distrib_entity ::");
     PDM_log_trace_connectivity_int(section_kind_idx, g_section_kind, n_rank, "g_section_kind : ");
@@ -266,7 +266,7 @@ _generate_sections
   free(section_kind);
 
 
-  if(0 == 0) {
+  if(1 == 1) {
     PDM_log_trace_array_int (post_section_kind, n_section_post, "post_section_kind ::");
     PDM_log_trace_array_long(post_section_n   , n_section_post, "post_section_n    ::");
   }
@@ -1630,37 +1630,120 @@ _rebuild_dmesh_nodal_3d
     } else {
       section_face_bnd_kind[n_section_face_bnd_tot] = PDM_MESH_NODAL_POLY_2D;
     }
-    section_n[n_section_face_bnd_tot] = 1;
+    section_face_bnd_n[n_section_face_bnd_tot] = 1;
     n_section_face_bnd_tot++;
     ln_vtx_old = ln_vtx;
   }
-  section_face_bnd_n    = realloc(section_face_bnd_n   , (n_section_face_bnd_tot+1) * sizeof(PDM_g_num_t         ));
-  section_face_bnd_kind = realloc(section_face_bnd_kind,  n_section_face_bnd_tot    * sizeof(PDM_Mesh_nodal_elt_t));
+  section_face_bnd_n    = realloc(section_face_bnd_n   ,  n_section_face_bnd_tot * sizeof(PDM_g_num_t         ));
+  section_face_bnd_kind = realloc(section_face_bnd_kind,  n_section_face_bnd_tot * sizeof(PDM_Mesh_nodal_elt_t));
 
 
-  // PDM_g_num_t *post_section_face_bnd_n         = NULL;
-  // int         *post_section_face_bnd_kind      = NULL;
-  // int         *local_post_section_face_bnd_n   = NULL;
-  // int         *local_post_section_face_bnd_idx = NULL;
-
-  // int n_section_face_bnd_post = _generate_sections(comm,
-  //                                                  distrib_face,
-  //                                                  section_face_bnd_n,
-  //                                                  section_face_bnd_kind,
-  //                                                  n_section_face_bnd_tot,
-  //                                                  &post_section_face_bnd_n,
-  //                                                  &post_section_face_bnd_kind,
-  //                                                  &local_post_section_face_bnd_n,
-  //                                                  &local_post_section_face_bnd_idx);
-
-  // free(post_section_face_bnd_n        );
-  // free(post_section_face_bnd_kind     );
-  // free(local_post_section_face_bnd_n  );
-  // free(local_post_section_face_bnd_idx);
 
 
-  free(section_face_bnd_n   );
-  free(section_face_bnd_kind);
+  PDM_g_num_t *post_section_face_bnd_n         = NULL;
+  int         *post_section_face_bnd_kind      = NULL;
+  int         *local_post_section_face_bnd_n   = NULL;
+  int         *local_post_section_face_bnd_idx = NULL;
+
+  PDM_g_num_t* distrib_face_bnd = PDM_compute_entity_distribution(comm, n_section_face_bnd_tot);
+  int n_section_face_bnd_post = _generate_sections(comm,
+                                                   distrib_face_bnd,
+                                                   section_face_bnd_n,
+                                                   section_face_bnd_kind,
+                                                   n_section_face_bnd_tot,
+                                                   &post_section_face_bnd_n,
+                                                   &post_section_face_bnd_kind,
+                                                   &local_post_section_face_bnd_n,
+                                                   &local_post_section_face_bnd_idx);
+
+  // PDM_log_trace_array_long(section_face_bnd_n, n_section_face_bnd_tot, "section_face_bnd_n ::");
+  PDM_log_trace_array_long(local_post_section_face_bnd_idx, n_section_face_bnd_post+1, "local_post_section_face_bnd_idx ::");
+  /*
+   * Generate and redistribute surfacique
+   */
+  for(int i_section = 0; i_section < n_section_face_bnd_post; ++i_section) {
+
+    int beg = local_post_section_face_bnd_idx[i_section];
+    int end = local_post_section_face_bnd_idx[i_section+1];
+    int nl_elmt = end - beg;
+
+    PDM_g_num_t* distrib_elmt = PDM_compute_uniform_entity_distribution(comm, post_section_face_bnd_n[i_section]);
+    PDM_g_num_t* ln_to_gn = malloc(nl_elmt * sizeof(PDM_g_num_t));
+
+    for(int i = 0; i < nl_elmt; ++i) {
+      ln_to_gn[i] = distrib_face_bnd[i_rank] + local_post_section_face_bnd_idx[i_section] + i + 1;
+    }
+
+    PDM_log_trace_array_long(ln_to_gn, nl_elmt, "face_bnd_ln_to_gn ::");
+
+    int n_vtx_per_elmt = PDM_Mesh_nodal_n_vertices_element((PDM_Mesh_nodal_elt_t) post_section_face_bnd_kind[i_section], 1);
+    int n_cell_vtx_tot = nl_elmt * n_vtx_per_elmt;
+    PDM_g_num_t* face_vtx_gnum = (PDM_g_num_t *) malloc(n_cell_vtx_tot * sizeof(PDM_g_num_t));
+    for(int i_face = 0; i_face < nl_elmt; ++i_face) {
+      int idx_read = pface_vtx_bnd_idx[beg+i_face];
+      for(int j = 0; j < n_vtx_per_elmt; ++j) {
+        face_vtx_gnum[n_vtx_per_elmt*i_face+j] = pvtx_bnd_ln_to_gn[pface_bnd_vtx[idx_read+j]-1];
+      }
+    }
+
+    PDM_log_trace_array_long(face_vtx_gnum, nl_elmt * n_vtx_per_elmt, "face_vtx_gnum :");
+    PDM_part_to_block_t* ptb = PDM_part_to_block_create_from_distrib(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
+                                                                     PDM_PART_TO_BLOCK_POST_CLEANUP,
+                                                                     1.,
+                                                                     &ln_to_gn,
+                                                                     distrib_elmt,
+                                                                     &nl_elmt,
+                                                                     1,
+                                                                     comm);
+
+    printf("n_vtx_per_elmt = %i \n", n_vtx_per_elmt);
+    printf("nl_elmt = %i \n", nl_elmt);
+
+    PDM_g_num_t *blk_face_vtx    = NULL;
+    PDM_part_to_block_exch(ptb,
+                           sizeof(PDM_g_num_t),
+                           PDM_STRIDE_CST_INTERLACED,
+                           n_vtx_per_elmt,
+                           NULL,
+             (void **)     &face_vtx_gnum,
+                           NULL,
+             (void **)     &blk_face_vtx);
+
+    PDM_Mesh_nodal_elt_t t_elt = (PDM_Mesh_nodal_elt_t) post_section_face_bnd_kind[i_section];
+    int id_section = PDM_DMesh_nodal_section_add(dmn,
+                                                 PDM_GEOMETRY_KIND_SURFACIC,
+                                                 t_elt);
+
+
+
+    int dn_elmt = distrib_elmt[i_rank+1] - distrib_elmt[i_rank];
+    if(t_elt == PDM_MESH_NODAL_POLY_2D) {
+      abort();
+    } else {
+      PDM_log_trace_array_long(blk_face_vtx, dn_elmt * n_vtx_per_elmt, "blk_face_vtx :");
+      PDM_DMesh_nodal_section_std_set(dmn,
+                                      PDM_GEOMETRY_KIND_SURFACIC,
+                                      id_section,
+                                      dn_elmt,
+                                      blk_face_vtx,
+                                      PDM_OWNERSHIP_KEEP);
+    }
+
+    PDM_part_to_block_free(ptb);
+    free(face_vtx_gnum);
+    free(distrib_elmt);
+    free(ln_to_gn);
+  }
+
+
+
+
+
+  free(post_section_face_bnd_n        );
+  free(post_section_face_bnd_kind     );
+  free(local_post_section_face_bnd_n  );
+  free(local_post_section_face_bnd_idx);
+  free(distrib_face_bnd);
 
   free(pface_vtx_bnd_idx);
   free(pface_bnd_vtx    );
