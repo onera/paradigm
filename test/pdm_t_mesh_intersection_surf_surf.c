@@ -558,7 +558,7 @@ char *argv[]
                           &dmn_surf_b,
                           &mpart_surf_b);
 
-  if(0 == 1) {
+  if(verbose) {
     PDM_dmesh_nodal_dump_vtk(dmn_surf_a,
                              PDM_GEOMETRY_KIND_SURFACIC,
                              "dmn_surf_a_");
@@ -685,15 +685,32 @@ char *argv[]
                                       &elt_b_ln_to_gn,
                                       PDM_OWNERSHIP_USER);
 
+      double *volume = NULL;
+      PDM_mesh_intersection_elt_volume_get(mi,
+                                           1,
+                                           ipart,
+                                           &volume);
+
+      double *elt_b_elt_a_weight = NULL;
+      PDM_mesh_intersection_result_from_b_get(mi,
+                                              ipart,
+                                              &elt_b_elt_a_weight);
+
 
       for (int i = 0; i < n_ref_b[ipart]; i++) {
         int faceB_id = ref_b[ipart][i] - 1;
         if (verbose) {
           log_trace("elt_b "PDM_FMT_G_NUM" : ", elt_b_ln_to_gn[faceB_id]);
+          double sum_w = 0;
           for (int j = pelt_b_elt_a_idx[ipart][i]; j < pelt_b_elt_a_idx[ipart][i+1]; j++) {
-            log_trace("("PDM_FMT_G_NUM", %f)  ", pelt_b_elt_a[ipart][j], pelt_b_elt_a_weight[ipart][j]);
+            log_trace("("PDM_FMT_G_NUM", %f (%f))  ",
+                      pelt_b_elt_a[ipart][j],
+                      pelt_b_elt_a_weight[ipart][j],
+                      elt_b_elt_a_weight[j]);
+            sum_w += elt_b_elt_a_weight[j];
           }
           log_trace("\n");
+          log_trace("  sum_w = %f/%f (%.1f%%)\n", sum_w, volume[faceB_id], 100*sum_w/volume[faceB_id]);
         }
       }
     }

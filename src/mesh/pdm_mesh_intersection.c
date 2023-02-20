@@ -4564,26 +4564,6 @@ _mesh_intersection_surf_surf
 }
 
 
-static
-void
-_mesh_intersection_vol_vol2
-(
- PDM_mesh_intersection_t *mi,
- int                     *a_to_b_idx,
- int                     *a_to_b
-)
-{
-  int i_rank;
-  PDM_MPI_Comm_rank(mi->comm, &i_rank);
-
-  int dbg_enabled = 1;
-
-  PDM_part_mesh_nodal_elmts_t *pmne[2] = {NULL, NULL};
-
-  //TODO
-}
-
-
 /*=============================================================================
  * Public function definitions
  *============================================================================*/
@@ -4626,6 +4606,11 @@ PDM_mesh_intersection_create
   mi->ptp                = NULL;
   mi->ptp_ownership      = PDM_OWNERSHIP_KEEP;
 
+  mi->tag_elt_volume_get[0] = 0;
+  mi->tag_elt_volume_get[1] = 0;
+  mi->elt_volume[0] = NULL;
+  mi->elt_volume[1] = NULL;
+
 
   return mi;
 }
@@ -4653,18 +4638,13 @@ PDM_mesh_intersection_n_part_set
   mi->n_part_mesh[i_mesh] = n_part;
 
   mi->mesh[i_mesh] = PDM_part_mesh_create(n_part, mi->comm);
+
+  mi->elt_volume[i_mesh] = malloc(sizeof(double *) * mi->n_part_mesh[i_mesh]);
+  for (int i = 0; i < mi->n_part_mesh[i_mesh]; i++) {
+    mi->elt_volume[i_mesh][i] = NULL;
+  }
 }
 
-void
-PDM_mesh_intersection_n_part_set2
-(
-  PDM_mesh_intersection_t *mi,
-  const int                i_mesh,
-  const int                n_part
-)
-{
-  mi->n_part_mesh[i_mesh] = n_part;
-}
 
 void
 PDM_mesh_intersection_compute
@@ -5059,6 +5039,11 @@ PDM_mesh_intersection_mesh_nodal_set
   mi->mesh_nodal[i_mesh] = mesh;
 
   mi->n_part_mesh[i_mesh] = PDM_part_mesh_nodal_n_part_get(mesh);
+
+  mi->elt_volume[i_mesh] = malloc(sizeof(double *) * mi->n_part_mesh[i_mesh]);
+  for (int i = 0; i < mi->n_part_mesh[i_mesh]; i++) {
+    mi->elt_volume[i_mesh][i] = NULL;
+  }
 }
 
 
@@ -5155,7 +5140,6 @@ PDM_mesh_intersection_free
     PDM_part_to_part_free(mi->ptp);
   }
 
-  // !! ownership
   if (mi->elt_a_elt_b_idx != NULL) {
     if ((mi->owner == PDM_OWNERSHIP_KEEP ) ||
         (mi->owner == PDM_OWNERSHIP_UNGET_RESULT_IS_FREE && !mi->tag_elt_a_elt_b_get)) {
@@ -5202,6 +5186,20 @@ PDM_mesh_intersection_free
       }
     }
     free(mi->elt_b_elt_a_weight);
+  }
+
+  for (int imesh = 0; imesh < 2; imesh++) {
+    if (mi->elt_volume[imesh] != NULL) {
+      if ((mi->owner == PDM_OWNERSHIP_KEEP ) ||
+          (mi->owner == PDM_OWNERSHIP_UNGET_RESULT_IS_FREE && !mi->tag_elt_volume_get[imesh])) {
+        for (int ipart = 0; ipart < mi->n_part_mesh[1]; ipart++) {
+          if (mi->elt_volume[imesh][ipart] != NULL) {
+            free(mi->elt_volume[imesh][ipart]);
+          }
+        }
+      }
+      free(mi->elt_volume[imesh]);
+    }
   }
 
   free(mi);
@@ -5263,6 +5261,161 @@ PDM_mesh_intersection_result_from_b_get
   *elt_b_elt_a_weight = mi->elt_b_elt_a_weight[ipart];
 
   mi->tag_elt_b_elt_a_get = 1;
+}
+
+
+void
+PDM_mesh_intersection_elt_volume_get
+(
+       PDM_mesh_intersection_t  *mi,
+ const int                       imesh,
+ const int                       ipart,
+       double                  **elt_volume
+ )
+{
+  assert(imesh >= 0 && imesh < 2);
+  assert(ipart < mi->n_part_mesh[imesh]);
+
+  if (mi->elt_volume[imesh][ipart] == NULL) {
+    /* Compute elt volumes */
+    if (mi->mesh_nodal[imesh] == NULL && mi->mesh[imesh] != NULL) {
+
+      int n_vtx = PDM_part_mesh_n_entity_get(mi->mesh[imesh],
+                                             ipart,
+                                             PDM_MESH_ENTITY_VERTEX);
+      double *vtx_coord = NULL;
+      PDM_part_mesh_vtx_coord_get(mi->mesh[imesh],
+                                  ipart,
+                                  &vtx_coord,
+                                  PDM_OWNERSHIP_KEEP);
+
+      int n_face = PDM_part_mesh_n_entity_get(mi->mesh[imesh],
+                                              ipart,
+                                              PDM_MESH_ENTITY_FACE);
+      int *face_vtx_idx = NULL;
+      int *face_vtx     = NULL;
+      PDM_part_mesh_connectivity_get(mi->mesh[imesh],
+                                     ipart,
+                                     PDM_CONNECTIVITY_TYPE_FACE_VTX,
+                                     &face_vtx,
+                                     &face_vtx_idx,
+                                     PDM_OWNERSHIP_KEEP);
+
+      int n_edge = PDM_part_mesh_n_entity_get(mi->mesh[imesh],
+                                              ipart,
+                                              PDM_MESH_ENTITY_EDGE);
+      int *edge_vtx_idx = NULL;
+      int *edge_vtx     = NULL;
+      PDM_part_mesh_connectivity_get(mi->mesh[imesh],
+                                     ipart,
+                                     PDM_CONNECTIVITY_TYPE_EDGE_VTX,
+                                     &edge_vtx,
+                                     &edge_vtx_idx,
+                                     PDM_OWNERSHIP_KEEP);
+
+      int *_face_vtx = face_vtx;
+      if (mi->dim_mesh[imesh] > 1 && face_vtx == NULL) {
+        int *face_edge = NULL;
+        PDM_part_mesh_connectivity_get(mi->mesh[imesh],
+                                       ipart,
+                                       PDM_CONNECTIVITY_TYPE_FACE_EDGE,
+                                       &face_edge,
+                                       &face_vtx_idx,
+                                       PDM_OWNERSHIP_KEEP);
+
+        PDM_compute_face_vtx_from_face_and_edge(n_face,
+                                                face_vtx_idx,
+                                                face_edge,
+                                                edge_vtx,
+                                                &_face_vtx);
+      }
+
+      switch (mi->dim_mesh[imesh]) {
+      case 1: {
+       mi->elt_volume[imesh][ipart] = malloc(sizeof(double) * n_edge);
+       double *center = malloc(sizeof(double) * n_face * 3);
+       PDM_geom_elem_edges_properties(n_edge,
+                                      edge_vtx,
+                                      vtx_coord,
+                                      center,
+                                      mi->elt_volume[imesh][ipart],
+                                      NULL,
+                                      NULL);
+       free(center);
+        break;
+      }
+      case 2: {
+        mi->elt_volume[imesh][ipart] = malloc(sizeof(double) * n_face * 3);
+        double *center = malloc(sizeof(double) * n_face * 3);
+        PDM_geom_elem_polygon_properties(n_face,
+                                         face_vtx_idx,
+                                         _face_vtx,
+                                         vtx_coord,
+                                         mi->elt_volume[imesh][ipart],
+                                         center,
+                                         NULL,
+                                         NULL);
+        free(center);
+        for (int i = 0; i < n_face; i++) {
+          mi->elt_volume[imesh][ipart][i] = PDM_MODULE(mi->elt_volume[imesh][ipart] + 3*i);
+        }
+        mi->elt_volume[imesh][ipart] = realloc(mi->elt_volume[imesh][ipart],
+                                               sizeof(double) * n_face);
+        break;
+      }
+      case 3: {
+        int n_cell = PDM_part_mesh_n_entity_get(mi->mesh[imesh],
+                                                ipart,
+                                                PDM_MESH_ENTITY_CELL);
+        int *cell_face     = NULL;
+        int *cell_face_idx = NULL;
+        PDM_part_mesh_connectivity_get(mi->mesh[imesh],
+                                       ipart,
+                                       PDM_CONNECTIVITY_TYPE_CELL_FACE,
+                                       &cell_face,
+                                       &cell_face_idx,
+                                       PDM_OWNERSHIP_KEEP);
+
+
+
+
+        mi->elt_volume[imesh][ipart] = malloc(sizeof(double) * n_cell);
+        double *center = malloc(sizeof(double) * n_cell * 3);
+        PDM_geom_elem_polyhedra_properties(1,
+                                           n_cell,
+                                           n_face,
+                                           face_vtx_idx,
+                                           _face_vtx,
+                                           cell_face_idx,
+                                           cell_face,
+                                           n_vtx,
+                                           vtx_coord,
+                                           mi->elt_volume[imesh][ipart],
+                                           center,
+                                           NULL,
+                                           NULL);
+        free(center);
+        break;
+      }
+      default:
+        PDM_error(__FILE__, __LINE__, 0, "Invalid dim_mesh %d for mesh %d\n", mi->dim_mesh[imesh], imesh);
+      }
+
+
+
+      if (mi->dim_mesh[imesh] > 1 && face_vtx == NULL) {
+        free(_face_vtx);
+      }
+    }
+    else if (mi->mesh_nodal[imesh] != NULL) {
+      // TODO...
+      PDM_error(__FILE__, __LINE__, 0, "Not implemented yet for nodal mesh\n");
+    }
+  }
+
+  *elt_volume = mi->elt_volume[imesh][ipart];
+
+  mi->tag_elt_volume_get[imesh] = 1;
 }
 
 
