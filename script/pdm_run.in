@@ -1,0 +1,170 @@
+#!/bin/bash
+
+Help()
+{
+  echo "Run a pdm test case."
+  echo
+  echo "Syntax: pdm_run [-m|mpirun|no_log_vtk|h] -n <number of ranks> -t <test name and its options>"
+  echo "options:"
+  echo "m                                Make test before run"
+  echo "h                                Print this Help"
+  echo "mpirun                           Run with mpirun command (default is mpiexec)"
+  echo "n <number of ranks>              Number of ranks"
+  echo "no_log_vtk                       Exit on error if test writes some log and vtk files"
+  echo "t <\"test name and its options\">  Test name ans its options"
+  echo
+}
+
+# Get the options
+
+ExeMPI="mpiexec"
+Testoutput=0
+ForbidVtk=0
+Nrank=2
+runMake=0
+
+while [ -n "$1" ]
+do
+case "$1" in
+    -m) runMake=1;;
+    -n) Nrank="$2"
+        shift;;
+    -t) Test="$2"
+        shift;;
+    -mpirun) ExeMPI="mpirun";;
+    -no_log_vtk) ForbidVtk=1;;
+    -h) Help
+        exit;;    
+    *) echo "Error : $1 is not an option"
+        exit;;
+esac
+shift
+done
+
+IsIntelMPI=$(echo $($ExeMPI --version) | grep -c Intel)
+
+TestName=$(echo $Test | awk '{print $1}')
+
+postOutput="_o"
+postErr="_e"
+
+OutputFile=$(echo $TestName$postOutput)
+ErrFile=$(echo $TestName$postErr)
+
+start=$(($(date +%s%N)/1000000))
+
+if [ $runMake -eq 1 ]
+then
+  make $TestName
+fi 
+
+#
+# Cleanup
+
+
+#echo  "TestName   : $TestName"
+#echo  "OutputFile : $OutputFile"
+#echo  "ErrFile    : $ErrFile"
+
+#rm -f *.vtk *.log core.* *_ens ${OutputFile}*
+rm -rf *.vtk *.log core.* *_ens $OutputFile* $ErrFile* run_test.sh
+
+#
+# Run test
+
+if [ $IsIntelMPI -gt 0 ] 
+then
+#  echo "@PDM_RUN_LSAN@ @PDM_RUN_PYTHONPATH@ /usr/bin/time  -f \"Maximum Resident Memory : %M Kb\" $Test" > run_test.sh 
+#  chmod +x run_test.sh
+#  $ExeMPI -outfile-pattern $OutputFile.%r -errfile-pattern $ErrFile.%r -n $Nrank run_test.sh 
+
+ @PDM_RUN_PRELOAD@ @PDM_RUN_LSAN@ @PDM_RUN_PYTHONPATH@ $ExeMPI -outfile-pattern $OutputFile.%r -errfile-pattern $ErrFile.%r -n $Nrank  /usr/bin/time  -f "Maximum Resident Memory : %M Kb" $Test 
+  if [ "$?" -ne "0" ]
+  then
+    Testoutput=1
+  fi
+else
+  echo "Error : OpenMPI is not available for pdm_run script"
+  exit 1
+  @PDM_RUN_PRELOAD@ @PDM_RUN_LSAN@ @PDM_RUN_PYTHONPATH@ $ExeMPI -output-filename $OutputFile -n $Nrank /usr/bin/time -f "Maximum Resident Memory : %M Kb" $Test 
+  if [ "$?" -ne "0" ]
+  then
+    Testoutput=1
+  fi
+fi    
+
+end=$(($(date +%s%N)/1000000))
+
+#
+# Compute elapsed time
+
+elapsed=$(echo "scale=2; ($end-$start)/1000" | bc)
+
+echo ""
+echo "Elapsed Time: $elapsed s"
+
+#
+# Check Maximum Resident memory 
+
+max="-1"
+min="10000000"
+
+minRank=-1
+maxRank=-1
+rank=0
+
+if [ $IsIntelMPI -gt 0 ] 
+then
+  listErrFile=$(ls $ErrFile*)
+else
+  listErrFile=$(find $OutputFile -name stderr)
+fi
+
+for file in $listErrFile
+do
+  v=$(grep -m 1 "Maximum Resident Memory" $file | awk '{print $5}')
+  maxRank=$(echo "if($v>$max) $rank else $maxRank" | bc)
+  minRank=$(echo "if($v<$min) $rank else $minRank" | bc)
+  max=$(echo "if($v>$max) $v else $max" | bc)
+  min=$(echo "if($v<$min) $v else $min" | bc)
+  rank=$((rank+1))
+done
+
+maxM=$(echo "scale=2; $max/1000" | bc)
+minM=$(echo "scale=2; $min/1000" | bc)
+
+echo "Maximum of Maximum Resident Memory: $maxM Mb on rank $maxRank"
+echo "Minimum of Maximum Resident Memory: $minM Mb on rank $minRank"
+
+#
+# Check *vtk and *log file 
+
+val_vtk=`ls -l *.vtk  2> /dev/null | wc -l`;
+val_log=`ls -l *.log  2> /dev/null | wc -l`;
+ 
+if [ $val_vtk -gt 0 ] || [ $val_log -gt 0 ]
+then
+  echo "Number of vtk files = $val_vtk"
+  echo "Number of log files = $val_log"
+fi
+
+#
+# Exit
+
+if [ "$ForbidVtk" -eq "1" ]
+then
+  if [ $val_vtk -gt 0 ] || [ $val_log -gt 0 ]
+  then
+    if [ "$Testoutput" -eq "1" ]
+    then     
+      echo "Error : Test exited in Error"
+    fi   
+    echo "Error : *vtk and *log files are not allowed"
+    exit 1
+  else 
+    exit $Testoutput
+  fi    
+else
+  exit $Testoutput
+fi    
+

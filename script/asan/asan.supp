@@ -18,3 +18,4 @@ leak:list_extend
 leak:resize_compact
 leak:function_code_fastcall
 leak:ofi_mem_init
+leak:HYD_getcwd
