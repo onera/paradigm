@@ -3907,6 +3907,7 @@ const PDM_ownership_t               ownership
       }
     }
     else {
+      PDM_gnum_free(gnum_gen);
       return;
     }
 
@@ -3936,6 +3937,7 @@ const PDM_ownership_t               ownership
       }
     }
     else {
+      PDM_gnum_free(gnum_gen);
       return;
     }
 
@@ -3964,6 +3966,7 @@ const PDM_ownership_t               ownership
       }
     }
     else {
+      PDM_gnum_free(gnum_gen);
       return;
     }
 
