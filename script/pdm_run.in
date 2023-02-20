@@ -44,6 +44,7 @@ done
 IsIntelMPI=$(echo $($ExeMPI --version) | grep -c Intel)
 
 TestName=$(echo $Test | awk '{print $1}')
+TestOption=$(echo $Test |  awk '!($1="")')
 
 isPythonTest=$(find . -name "$TestName.py" | wc -l)
 
@@ -53,13 +54,12 @@ postErr="_e"
 OutputFile=$(echo $TestName$postOutput)
 ErrFile=$(echo $TestName$postErr)
 
-start=$(($(date +%s%N)/1000000))
-
 if [ $runMake -eq 1 ]
 then
   make $TestName
 fi 
 
+start=$(($(date +%s%N)/1000000))
 #
 # Cleanup
 
@@ -81,7 +81,7 @@ then
 #  $ExeMPI -outfile-pattern $OutputFile.%r -errfile-pattern $ErrFile.%r -n $Nrank run_test.sh
  if [ $isPythonTest -gt 0  ]
  then
-   @PDM_RUN_PRELOAD@ @PDM_RUN_LSAN@ @PDM_RUN_PYTHONPATH@ $ExeMPI -outfile-pattern $OutputFile.%r -errfile-pattern $ErrFile.%r -n $Nrank  /usr/bin/time  -f "Maximum Resident Memory : %M Kb" python $Test.py 2>/dev/null
+   @PDM_RUN_PRELOAD@ @PDM_RUN_LSAN@ @PDM_RUN_PYTHONPATH@ $ExeMPI -outfile-pattern $OutputFile.%r -errfile-pattern $ErrFile.%r -n $Nrank  /usr/bin/time  -f "Maximum Resident Memory : %M Kb" python $TestName.py $TestOption 2>/dev/null
    if [ "$?" -ne "0" ]
    then
      Testoutput=1
@@ -110,7 +110,6 @@ end=$(($(date +%s%N)/1000000))
 
 elapsed=$(echo "scale=2; ($end-$start)/1000" | bc)
 
-echo ""
 echo "Elapsed Time: $elapsed s"
 
 #
@@ -167,7 +166,7 @@ then
   then
     if [ "$Testoutput" -eq "1" ]
     then     
-      echo "Error : Test exited in Error"
+      echo "Error : Test exited on Error"
     fi   
     echo "Error : *vtk and *log files are not allowed"
     exit 1
