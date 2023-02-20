@@ -45,6 +45,8 @@ IsIntelMPI=$(echo $($ExeMPI --version) | grep -c Intel)
 
 TestName=$(echo $Test | awk '{print $1}')
 
+isPythonTest=$(find . -name "$TestName.py" | wc -l)
+
 postOutput="_o"
 postErr="_e"
 
@@ -76,13 +78,21 @@ if [ $IsIntelMPI -gt 0 ]
 then
 #  echo "@PDM_RUN_LSAN@ @PDM_RUN_PYTHONPATH@ /usr/bin/time  -f \"Maximum Resident Memory : %M Kb\" $Test" > run_test.sh 
 #  chmod +x run_test.sh
-#  $ExeMPI -outfile-pattern $OutputFile.%r -errfile-pattern $ErrFile.%r -n $Nrank run_test.sh 
-
- @PDM_RUN_PRELOAD@ @PDM_RUN_LSAN@ @PDM_RUN_PYTHONPATH@ $ExeMPI -outfile-pattern $OutputFile.%r -errfile-pattern $ErrFile.%r -n $Nrank  /usr/bin/time  -f "Maximum Resident Memory : %M Kb" $Test 
-  if [ "$?" -ne "0" ]
-  then
-    Testoutput=1
-  fi
+#  $ExeMPI -outfile-pattern $OutputFile.%r -errfile-pattern $ErrFile.%r -n $Nrank run_test.sh
+ if [ $isPythonTest -gt 0  ]
+ then
+   @PDM_RUN_PRELOAD@ @PDM_RUN_LSAN@ @PDM_RUN_PYTHONPATH@ $ExeMPI -outfile-pattern $OutputFile.%r -errfile-pattern $ErrFile.%r -n $Nrank  /usr/bin/time  -f "Maximum Resident Memory : %M Kb" python $Test.py 2>/dev/null
+   if [ "$?" -ne "0" ]
+   then
+     Testoutput=1
+   fi
+ else 
+   @PDM_RUN_PRELOAD@ @PDM_RUN_LSAN@ @PDM_RUN_PYTHONPATH@ $ExeMPI -outfile-pattern $OutputFile.%r -errfile-pattern $ErrFile.%r -n $Nrank  /usr/bin/time  -f "Maximum Resident Memory : %M Kb" $Test 2>/dev/null
+   if [ "$?" -ne "0" ]
+   then
+     Testoutput=1
+   fi
+  fi 
 else
   echo "Error : OpenMPI is not available for pdm_run script"
   exit 1
