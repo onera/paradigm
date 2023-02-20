@@ -161,7 +161,7 @@ PDM_mesh_intersection_result_from_a_get
  const int                       ipart,
        int                     **elt_a_elt_b_idx,
        PDM_g_num_t             **elt_a_elt_b,
-       double                  **elt_a_elt_b_weight
+       double                  **elt_a_elt_b_volume
 );
 
 void
@@ -169,7 +169,7 @@ PDM_mesh_intersection_result_from_b_get
 (
        PDM_mesh_intersection_t  *mi,
  const int                       ipart,
-       double                  **elt_b_elt_a_weight
+       double                  **elt_b_elt_a_volume
  );
 
 void

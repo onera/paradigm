@@ -1871,8 +1871,8 @@ _build_ptp
   free(elt_a_elt_b_g_num);
 
 
-  mi->elt_a_elt_b_weight = NULL;
-  int request_weight = -1;
+  mi->elt_a_elt_b_volume = NULL;
+  int request_volume = -1;
   PDM_part_to_part_iexch(ptp_a,
                          comm_kind,
                          PDM_STRIDE_VAR_INTERLACED,
@@ -1882,8 +1882,8 @@ _build_ptp
         (const int   **) &elt_a_elt_b_n,
         (const void  **) &elt_a_elt_b_volume,
                          &user_elt_a_b_n,
-        (      void ***) &mi->elt_a_elt_b_weight,
-                         &request_weight);
+        (      void ***) &mi->elt_a_elt_b_volume,
+                         &request_volume);
 
   // exchange faceA_faceB triplets and stride...
   int **user_elt_a_b_init_loc_n = NULL;
@@ -1915,7 +1915,7 @@ _build_ptp
         (      void ***) &user_elt_a_b_init_loc,
                          &request_init_loc);
 
-  PDM_part_to_part_iexch_wait(ptp_a, request_weight);
+  PDM_part_to_part_iexch_wait(ptp_a, request_volume);
   PDM_part_to_part_iexch_wait(ptp_a, request_init_loc_n);
   PDM_part_to_part_iexch_wait(ptp_a, request_init_loc);
   free(elt_a_elt_b_init_loc_stride);
@@ -2119,7 +2119,7 @@ _build_ptp
 
   /* Reverse weights */
   if (1) {
-    request_weight = -1;
+    request_volume = -1;
     PDM_part_to_part_iexch(mi->ptp,
                            comm_kind,
                            PDM_STRIDE_CST_INTERLACED,
@@ -2127,12 +2127,12 @@ _build_ptp
                            1,
                            sizeof(double),
                            NULL,
-          (const void  **) mi->elt_a_elt_b_weight,
+          (const void  **) mi->elt_a_elt_b_volume,
                            NULL,
-          (void       ***) &mi->elt_b_elt_a_weight,
-                           &request_weight);
+          (void       ***) &mi->elt_b_elt_a_volume,
+                           &request_volume);
 
-    PDM_part_to_part_iexch_wait(mi->ptp, request_weight);
+    PDM_part_to_part_iexch_wait(mi->ptp, request_volume);
   }
 
   free(user_n_elt_a);
@@ -4601,8 +4601,8 @@ PDM_mesh_intersection_create
   mi->tag_elt_b_elt_a_get = 0;
   mi->elt_a_elt_b_idx    = NULL;
   mi->elt_a_elt_b        = NULL;
-  mi->elt_a_elt_b_weight = NULL;
-  mi->elt_b_elt_a_weight = NULL;
+  mi->elt_a_elt_b_volume = NULL;
+  mi->elt_b_elt_a_volume = NULL;
   mi->ptp                = NULL;
   mi->ptp_ownership      = PDM_OWNERSHIP_KEEP;
 
@@ -5164,28 +5164,28 @@ PDM_mesh_intersection_free
     free(mi->elt_a_elt_b);
   }
 
-  if (mi->elt_a_elt_b_weight != NULL) {
+  if (mi->elt_a_elt_b_volume != NULL) {
     if ((mi->owner == PDM_OWNERSHIP_KEEP ) ||
         (mi->owner == PDM_OWNERSHIP_UNGET_RESULT_IS_FREE && !mi->tag_elt_a_elt_b_get)) {
       for (int ipart = 0; ipart < mi->n_part_mesh[0]; ipart++) {
-        if (mi->elt_a_elt_b_weight[ipart] != NULL) {
-          free(mi->elt_a_elt_b_weight[ipart]);
+        if (mi->elt_a_elt_b_volume[ipart] != NULL) {
+          free(mi->elt_a_elt_b_volume[ipart]);
         }
       }
     }
-    free(mi->elt_a_elt_b_weight);
+    free(mi->elt_a_elt_b_volume);
   }
 
-  if (mi->elt_b_elt_a_weight != NULL) {
+  if (mi->elt_b_elt_a_volume != NULL) {
     if ((mi->owner == PDM_OWNERSHIP_KEEP ) ||
         (mi->owner == PDM_OWNERSHIP_UNGET_RESULT_IS_FREE && !mi->tag_elt_b_elt_a_get)) {
       for (int ipart = 0; ipart < mi->n_part_mesh[1]; ipart++) {
-        if (mi->elt_b_elt_a_weight[ipart] != NULL) {
-          free(mi->elt_b_elt_a_weight[ipart]);
+        if (mi->elt_b_elt_a_volume[ipart] != NULL) {
+          free(mi->elt_b_elt_a_volume[ipart]);
         }
       }
     }
-    free(mi->elt_b_elt_a_weight);
+    free(mi->elt_b_elt_a_volume);
   }
 
   for (int imesh = 0; imesh < 2; imesh++) {
@@ -5235,14 +5235,14 @@ PDM_mesh_intersection_result_from_a_get
  const int                       ipart,
        int                     **elt_a_elt_b_idx,
        PDM_g_num_t             **elt_a_elt_b,
-       double                  **elt_a_elt_b_weight
+       double                  **elt_a_elt_b_volume
  )
 {
   assert(ipart < mi->n_part_mesh[0]);
 
   *elt_a_elt_b_idx    = mi->elt_a_elt_b_idx   [ipart];
   *elt_a_elt_b        = mi->elt_a_elt_b       [ipart];
-  *elt_a_elt_b_weight = mi->elt_a_elt_b_weight[ipart];
+  *elt_a_elt_b_volume = mi->elt_a_elt_b_volume[ipart];
 
   mi->tag_elt_a_elt_b_get = 1;
 }
@@ -5253,12 +5253,12 @@ PDM_mesh_intersection_result_from_b_get
 (
        PDM_mesh_intersection_t  *mi,
  const int                       ipart,
-       double                  **elt_b_elt_a_weight
+       double                  **elt_b_elt_a_volume
  )
 {
   assert(ipart < mi->n_part_mesh[1]);
 
-  *elt_b_elt_a_weight = mi->elt_b_elt_a_weight[ipart];
+  *elt_b_elt_a_volume = mi->elt_b_elt_a_volume[ipart];
 
   mi->tag_elt_b_elt_a_get = 1;
 }

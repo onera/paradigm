@@ -779,7 +779,7 @@ main
       log_trace("FROM A USER POV\n");
     }
     int    **pelt_a_elt_b_n      = malloc(sizeof(int    *) * n_part);
-    double **pelt_a_elt_b_weight = malloc(sizeof(double *) * n_part);
+    double **pelt_a_elt_b_volume = malloc(sizeof(double *) * n_part);
 
 
     for (int ipart = 0; ipart < n_part; ipart++) {
@@ -789,7 +789,7 @@ main
                                               ipart,
                                               &elt_a_elt_b_idx,
                                               &elt_a_elt_b,
-                                              &pelt_a_elt_b_weight[ipart]);
+                                              &pelt_a_elt_b_volume[ipart]);
 
       PDM_g_num_t *elt_a_ln_to_gn = NULL;
       int n_elt_a = PDM_multipart_part_ln_to_gn_get(mpart_a,
@@ -806,14 +806,14 @@ main
         if (verbose) {
           log_trace("elt_a "PDM_FMT_G_NUM" : ", elt_a_ln_to_gn[i]);
           for (int j = elt_a_elt_b_idx[i]; j < elt_a_elt_b_idx[i+1]; j++) {
-            log_trace("("PDM_FMT_G_NUM", %f)  ", elt_a_elt_b[j], pelt_a_elt_b_weight[ipart][j]);
+            log_trace("("PDM_FMT_G_NUM", %f)  ", elt_a_elt_b[j], pelt_a_elt_b_volume[ipart][j]);
           }
           log_trace("\n");
         }
       }
     }
 
-    double **pelt_b_elt_a_weight = NULL;
+    double **pelt_b_elt_a_volume = NULL;
     int request = -1;
     PDM_part_to_part_iexch(ptp,
                            PDM_MPI_COMM_KIND_P2P,
@@ -822,9 +822,9 @@ main
                            1,
                            sizeof(double),
                            NULL,
-                           (const void  **) pelt_a_elt_b_weight,
+                           (const void  **) pelt_a_elt_b_volume,
                            NULL,
-                           (      void ***) &pelt_b_elt_a_weight,
+                           (      void ***) &pelt_b_elt_a_volume,
                            &request);
     PDM_part_to_part_iexch_wait(ptp, request);
 
@@ -849,7 +849,7 @@ main
         if (verbose) {
           log_trace("elt_b "PDM_FMT_G_NUM" : ", elt_b_ln_to_gn[faceB_id]);
           for (int j = pelt_b_elt_a_idx[ipart][i]; j < pelt_b_elt_a_idx[ipart][i+1]; j++) {
-            log_trace("("PDM_FMT_G_NUM", %f)  ", pelt_b_elt_a[ipart][j], pelt_b_elt_a_weight[ipart][j]);
+            log_trace("("PDM_FMT_G_NUM", %f)  ", pelt_b_elt_a[ipart][j], pelt_b_elt_a_volume[ipart][j]);
           }
           log_trace("\n");
         }
@@ -862,12 +862,12 @@ main
       free(pelt_a_elt_b_n[ipart]);
     }
     free(pelt_a_elt_b_n     );
-    free(pelt_a_elt_b_weight);
+    free(pelt_a_elt_b_volume);
 
     for (int ipart = 0; ipart < n_part; ipart++) {
-      free(pelt_b_elt_a_weight[ipart]);
+      free(pelt_b_elt_a_volume[ipart]);
     }
-    free(pelt_b_elt_a_weight);
+    free(pelt_b_elt_a_volume);
   }
 
 
