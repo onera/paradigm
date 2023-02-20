@@ -64,14 +64,6 @@ PDM_mesh_intersection_n_part_set
 );
 
 void
-PDM_mesh_intersection_n_part_set2
-(
-  PDM_mesh_intersection_t *mi,
-  const int                i_mesh,
-  const int                n_part
-);
-
-void
 PDM_mesh_intersection_compute
 (
   PDM_mesh_intersection_t  *mi
@@ -169,7 +161,7 @@ PDM_mesh_intersection_result_from_a_get
  const int                       ipart,
        int                     **elt_a_elt_b_idx,
        PDM_g_num_t             **elt_a_elt_b,
-       double                  **elt_a_elt_b_weight
+       double                  **elt_a_elt_b_volume
 );
 
 void
@@ -177,7 +169,16 @@ PDM_mesh_intersection_result_from_b_get
 (
        PDM_mesh_intersection_t  *mi,
  const int                       ipart,
-       double                  **elt_b_elt_a_weight
+       double                  **elt_b_elt_a_volume
+ );
+
+void
+PDM_mesh_intersection_elt_volume_get
+(
+       PDM_mesh_intersection_t  *mi,
+ const int                       imesh,
+ const int                       ipart,
+       double                  **elt_volume
  );
 
 #ifdef  __cplusplus

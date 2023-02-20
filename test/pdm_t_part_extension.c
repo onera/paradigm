@@ -258,7 +258,6 @@ _visu
   int **cell_face_n = (int **) malloc(sizeof(int *) * n_part);
   PDM_writer_step_beg (id_cs, 0.);
   for (int i_part = 0; i_part < n_part; i_part++) {
-    log_trace("i_part = %d\n", i_part);
 
     face_vtx_n[i_part] = (int *) malloc(sizeof(int) * n_face[i_part]);
     cell_face_n[i_part] = (int *) malloc(sizeof(int) * n_cell[i_part]);

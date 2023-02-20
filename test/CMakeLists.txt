@@ -235,6 +235,8 @@ test_c_create (pdm_t_triangles_intersect 1)
 test_c_create (pdm_t_unit_tetra_intersect_triangle 1)
 test_c_create (pdm_t_mesh_intersection_surf_surf_atomic 1)
 
+test_c_create (pdm_t_newton_ho 1)
+
 if (PDM_ENABLE_PYTHON_BINDINGS)
    test_python_create (pdm_t_part_to_part_p 2)
    add_dependencies (pdm_t_part_to_part_p Pypdm)

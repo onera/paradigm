@@ -84,7 +84,8 @@ _read_args
  PDM_Mesh_nodal_elt_t  *elt_type,
  int                   *n_band,
  double                *ratio,
- double                *length
+ double                *length,
+ int                   *verbose
 )
 {
   int i = 1;
@@ -144,6 +145,9 @@ _read_args
       else {
         *length = atof(argv[i]);
       }
+    }
+    else if (strcmp(argv[i], "-verbose") == 0) {
+      *verbose = 1;
     }
     else {
       _usage(EXIT_FAILURE);
@@ -969,6 +973,7 @@ char *argv[]
   int    n_band = 5;
   double ratio  = 1.;
   double length = 1.;
+  int    verbose = 0;
 
   _read_args(argc,
              argv,
@@ -977,7 +982,8 @@ char *argv[]
              &elt_type,
              &n_band,
              &ratio,
-             &length);
+             &length,
+             &verbose);
 
   /* Generate mesh */
   PDM_multipart_t *mpart = NULL;
@@ -999,7 +1005,9 @@ char *argv[]
                  ratio,
                  levels);
 
-  PDM_log_trace_array_double(levels, n_band+1, "levels : ");
+  if (verbose) {
+    PDM_log_trace_array_double(levels, n_band+1, "levels : ");
+  }
 
 
 
@@ -1118,10 +1126,12 @@ char *argv[]
     double lo = PDM_MAX(levels[band_id], 0);
     double exact_area = (hi - lo) * length;
     double err = PDM_ABS(global_band_area[band_id] - exact_area);
-    log_trace("band %d [%f, %f]: %f / %f, err abs = %e, rel = %e\n",
-              band_id, lo, hi,
-              global_band_area[band_id], exact_area,
-              err, err/exact_area);
+    if (verbose) {
+      log_trace("band %d [%f, %f]: %f / %f, err abs = %e, rel = %e\n",
+                band_id, lo, hi,
+                global_band_area[band_id], exact_area,
+                err, err/exact_area);
+    }
   }
   free(global_band_area);
 

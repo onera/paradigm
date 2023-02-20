@@ -148,6 +148,20 @@ PDM_ho_ordering_compute_ijk_to_user
  const int                  *user_to_ijk
 );
 
+/**
+ * \brief Return the ID of an HO ordering
+ *
+ * \param[in] name         Name of the HO ordering
+ *
+ * \return   ID of the HO ordering (-1 if not found)
+ */
+
+int
+PDM_ho_ordering_id_get
+(
+ const char *name
+ );
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

@@ -58,21 +58,11 @@ const PDM_MPI_Comm comm
 );
 
 
-// OWNERSHIP??
 int
 PDM_part_mesh_nodal_elmts_add
 (
       PDM_part_mesh_nodal_elmts_t *pmne,
 const PDM_Mesh_nodal_elt_t         t_elt
-);
-
-int
-PDM_part_mesh_nodal_elmts_ho_add
-(
-      PDM_part_mesh_nodal_elmts_t *pmne,
-const PDM_Mesh_nodal_elt_t         t_elt,
-const int                          order,
-const char                        *ho_ordering
 );
 
 void

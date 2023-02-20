@@ -223,7 +223,7 @@ PDM_part_mesh_entity_ln_to_gn_get
   }
   if(ownership == PDM_OWNERSHIP_USER || ownership == PDM_OWNERSHIP_UNGET_RESULT_IS_FREE) {
     pmesh->is_owner_ln_to_gn[entity_type] = PDM_FALSE;
-  } else {
+  } else if (ownership == PDM_OWNERSHIP_KEEP) {
     pmesh->is_owner_ln_to_gn[entity_type] = PDM_TRUE;
   }
 }
@@ -292,7 +292,7 @@ PDM_part_mesh_vtx_coord_get
   }
   if(ownership == PDM_OWNERSHIP_USER || ownership == PDM_OWNERSHIP_UNGET_RESULT_IS_FREE) {
     pmesh->is_owner_vtx_coord = PDM_FALSE;
-  } else {
+  } else if (ownership == PDM_OWNERSHIP_KEEP) {
     pmesh->is_owner_vtx_coord = PDM_TRUE;
   }
 }
@@ -318,7 +318,7 @@ PDM_part_mesh_connectivity_get
 
   if(ownership == PDM_OWNERSHIP_USER || ownership == PDM_OWNERSHIP_UNGET_RESULT_IS_FREE) {
     pmesh->is_owner_connectivity[connectivity_type] = PDM_FALSE;
-  } else {
+  } else if (ownership == PDM_OWNERSHIP_KEEP) {
     pmesh->is_owner_connectivity[connectivity_type] = PDM_TRUE;
   }
 }
@@ -364,7 +364,7 @@ PDM_part_mesh_bound_get
 
   if(ownership == PDM_OWNERSHIP_USER || ownership == PDM_OWNERSHIP_UNGET_RESULT_IS_FREE) {
     pmesh->is_owner_bound[bound_type] = PDM_FALSE;
-  } else {
+  } else if (ownership == PDM_OWNERSHIP_KEEP) {
     pmesh->is_owner_bound[bound_type] = PDM_TRUE;
   }
 }
@@ -403,7 +403,7 @@ PDM_part_mesh_bound_ln_to_gn_get
 
   if(ownership == PDM_OWNERSHIP_USER || ownership == PDM_OWNERSHIP_UNGET_RESULT_IS_FREE) {
     pmesh->is_owner_bound_ln_to_gn[bound_type] = PDM_FALSE;
-  } else {
+  } else if (ownership == PDM_OWNERSHIP_KEEP) {
     pmesh->is_owner_bound_ln_to_gn[bound_type] = PDM_TRUE;
   }
 }
@@ -462,6 +462,7 @@ PDM_part_mesh_free
     if(pmesh->is_owner_vtx_coord == PDM_TRUE) {
       for(int i_part = 0; i_part < pmesh->n_part; ++i_part) {
         free(pmesh->vtx_coords[i_part]);
+        pmesh->vtx_coords[i_part] = NULL;
       }
     }
     free(pmesh->vtx_coords);

@@ -221,7 +221,8 @@ _read_args
  double        *eps,
  int           *n_repeat,
  double        *aniso_max,
- double        *scale
+ double        *scale,
+ int           *visu
  )
 {
   int i = 1;
@@ -278,6 +279,9 @@ _read_args
         *scale = atof(argv[i]);
       }
     }
+    else if (strcmp(argv[i], "-visu") == 0) {
+      *visu = 1;
+    }
 
     else {
       _usage(EXIT_FAILURE);
@@ -307,13 +311,15 @@ int main(int argc, char *argv[])
   int    n_repeat  = 1;
   double aniso_max = 1.;
   double scale     = 1.;
+  int    visu      = 0;
   _read_args(argc,
              argv,
              &seed,
              &eps,
              &n_repeat,
              &aniso_max,
-             &scale);
+             &scale,
+             &visu);
 
   if (seed < 0) {
     srand(time(NULL));
@@ -351,17 +357,18 @@ int main(int argc, char *argv[])
                           &cell_face_idx,
                           &cell_face);
 
-
-  int connec[4] = {1, 2, 3, 4};
-  PDM_vtk_write_std_elements("tetrahedron.vtk",
-                             n_vtx,
-                             vtx_coord,
-                             NULL,
-                             PDM_MESH_NODAL_TETRA4,
-                             n_cell,
-                             connec,
-                             NULL,
-                             0, NULL, NULL);
+  if (visu) {
+    int connec[4] = {1, 2, 3, 4};
+    PDM_vtk_write_std_elements("tetrahedron.vtk",
+                               n_vtx,
+                               vtx_coord,
+                               NULL,
+                               PDM_MESH_NODAL_TETRA4,
+                               n_cell,
+                               connec,
+                               NULL,
+                               0, NULL, NULL);
+  }
 
 
   free(vtx_coord    );

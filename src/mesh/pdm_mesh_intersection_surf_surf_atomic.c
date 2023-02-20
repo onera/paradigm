@@ -469,7 +469,7 @@ double PDM_mesh_intersection_surf_surf_atomic_compute
  double edgeB_normal[6]
  )
 {
-  int dbg_enabled = 1;
+  int dbg_enabled = 0;
 
   double mat[3][3];
   double rhs[3];

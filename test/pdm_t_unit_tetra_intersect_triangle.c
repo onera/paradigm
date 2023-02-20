@@ -148,18 +148,20 @@ double pt2[3] = {1.00000000000000000e+00,-1.89999999999999991e+00,1.899999999999
   memcpy(triaB_coord + 3*1, pt1, sizeof(double)*3);
   memcpy(triaB_coord + 3*2, pt2, sizeof(double)*3);
 
-  int connec[3] = {1, 2, 3};
-  PDM_vtk_write_std_elements("T.vtk",
-                             3,
-                             triaB_coord,
-                             NULL,
-                             PDM_MESH_NODAL_TRIA3,
-                             1,
-                             connec,
-                             NULL,
-                             0,
-                             NULL,
-                             NULL);
+  if (0) {
+    int connec[3] = {1, 2, 3};
+    PDM_vtk_write_std_elements("T.vtk",
+                               3,
+                               triaB_coord,
+                               NULL,
+                               PDM_MESH_NODAL_TRIA3,
+                               1,
+                               connec,
+                               NULL,
+                               0,
+                               NULL,
+                               NULL);
+  }
 
 
   double  *vtx_coordA = NULL;
@@ -180,16 +182,16 @@ double pt2[3] = {1.00000000000000000e+00,-1.89999999999999991e+00,1.899999999999
                                                              &face_vtxB,
                                                              &n_faceB);
 
-  log_trace("vol1 = %20.16f\n\n\n", vol1);
+  printf("vol1 = %20.16f\n\n\n", vol1);
 
   double vol2 = PDM_mesh_intersection_vol_vol_atomic_compute2(triaB_coord);
 
-  log_trace("vol2 = %20.16f\n\n\n", vol2);
+  printf("vol2 = %20.16f\n\n\n", vol2);
 
 
   double vol3 = PDM_mesh_intersection_vol_vol_atomic_compute3(triaB_coord);
 
-  log_trace("vol3 = %20.16f\n\n\n", vol3);
+  printf("vol3 = %20.16f\n\n\n", vol3);
 
 
   // Finalize

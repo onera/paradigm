@@ -93,6 +93,11 @@ _block_std_free_partial
     _block_std->_numabs = NULL;
   }
 
+  if (_block_std->ho_ordering != NULL) {
+    free(_block_std->ho_ordering);
+    _block_std->ho_ordering = NULL;
+  }
+
 }
 
 
@@ -1239,6 +1244,15 @@ const PDM_Mesh_nodal_elt_t         t_elt
   case PDM_MESH_NODAL_PYRAMID5 :
   case PDM_MESH_NODAL_PRISM6   :
   case PDM_MESH_NODAL_HEXA8    :
+  case PDM_MESH_NODAL_BARHO    :
+  case PDM_MESH_NODAL_TRIAHO   :
+  case PDM_MESH_NODAL_BARHO_BEZIER    :
+  case PDM_MESH_NODAL_TRIAHO_BEZIER   :
+  case PDM_MESH_NODAL_QUADHO   :
+  case PDM_MESH_NODAL_TETRAHO  :
+  case PDM_MESH_NODAL_PYRAMIDHO:
+  case PDM_MESH_NODAL_PRISMHO  :
+  case PDM_MESH_NODAL_HEXAHO   :
     {
       /* Mise a jour du tableau de stockage */
 
@@ -1385,98 +1399,6 @@ const PDM_Mesh_nodal_elt_t         t_elt
 
 
 
-int
-PDM_part_mesh_nodal_elmts_ho_add
-(
-      PDM_part_mesh_nodal_elmts_t *pmne,
-const PDM_Mesh_nodal_elt_t         t_elt,
-const int                          order,
-const char                        *ho_ordering
-)
-{
-  if (pmne == NULL) {
-    PDM_error (__FILE__, __LINE__, 0, "Bad pmne nodal identifier\n");
-  }
-
-  int elt_dim = PDM_Mesh_nodal_elt_dim_get(t_elt);
-  if (elt_dim != pmne->mesh_dimension) {
-    PDM_error (__FILE__, __LINE__, 0, "Bad mesh_dimension in PDM_part_mesh_nodal_elmts_ho_add = expected = %i and given = %i \n",
-               pmne->mesh_dimension, elt_dim);
-  }
-
-  int id_section = -1;
-
-  switch (t_elt) {
-
-  case PDM_MESH_NODAL_BAR2      :
-  case PDM_MESH_NODAL_BARHO     :
-  case PDM_MESH_NODAL_BARHO_BEZIER:
-  case PDM_MESH_NODAL_TRIA3     :
-  case PDM_MESH_NODAL_TRIAHO    :
-  case PDM_MESH_NODAL_TRIAHO_BEZIER:
-  case PDM_MESH_NODAL_QUAD4     :
-  case PDM_MESH_NODAL_QUADHO    :
-  case PDM_MESH_NODAL_TETRA4    :
-  case PDM_MESH_NODAL_TETRAHO   :
-  case PDM_MESH_NODAL_PYRAMID5  :
-  case PDM_MESH_NODAL_PYRAMIDHO :
-  case PDM_MESH_NODAL_PRISM6    :
-  case PDM_MESH_NODAL_PRISMHO   :
-  case PDM_MESH_NODAL_HEXA8     :
-  case PDM_MESH_NODAL_HEXAHO    :
-    {
-      /* Mise a jour du tableau de stockage */
-
-      pmne->n_section_std++;
-
-      pmne->sections_std = realloc(pmne->sections_std, pmne->n_section_std * sizeof(PDM_Mesh_nodal_block_std_t *));
-
-      id_section = pmne->n_section_std-1;
-
-      /* Intialisation du bloc */
-      pmne->sections_std[id_section] = malloc( sizeof(PDM_Mesh_nodal_block_std_t) );
-      pmne->sections_std[id_section]->t_elt        = t_elt;
-      pmne->sections_std[id_section]->n_part       = pmne->n_part;
-
-      pmne->sections_std[id_section]->n_elt                 = (int  *) malloc(sizeof(int  ) * pmne->sections_std[id_section]->n_part);
-      pmne->sections_std[id_section]->_connec               = (int **) malloc(sizeof(int *) * pmne->sections_std[id_section]->n_part);
-      pmne->sections_std[id_section]->_numabs               = (PDM_g_num_t **) malloc(sizeof(PDM_g_num_t *) * pmne->sections_std[id_section]->n_part);
-      pmne->sections_std[id_section]->numabs_int            = NULL;
-      pmne->sections_std[id_section]->_parent_num           = NULL;
-      pmne->sections_std[id_section]->_parent_entity_g_num  = NULL;
-      pmne->sections_std[id_section]->cell_centers          = NULL;
-      pmne->sections_std[id_section]->owner                 = PDM_OWNERSHIP_KEEP;
-      pmne->sections_std[id_section]->order                 = order;
-      pmne->sections_std[id_section]->ho_ordering           = ho_ordering;
-
-      for (int i = 0; i < pmne->sections_std[id_section]->n_part; i++) {
-        pmne->sections_std[id_section]->n_elt    [i] = 0;
-        pmne->sections_std[id_section]->_connec  [i] = NULL;
-        pmne->sections_std[id_section]->_numabs  [i] = NULL;
-      }
-
-      id_section += PDM_BLOCK_ID_BLOCK_STD;
-      if (id_section >= PDM_BLOCK_ID_BLOCK_POLY2D) {
-        PDM_error(__FILE__, __LINE__, 0, "The number of standard blocks must be less than %d\n",
-                  PDM_BLOCK_ID_BLOCK_POLY2D);
-        abort();
-      }
-    }
-
-    break;
-  default :
-    PDM_error(__FILE__, __LINE__, 0, "Unknown element type\n");
-    break;
-
-  }
-
-  _update_elmt_sections_id (pmne);
-  return id_section ;
-
-}
-
-
-
 void
 PDM_part_mesh_nodal_elmts_std_set
 (
@@ -1571,7 +1493,15 @@ const char                        *ho_ordering,
   PDM_Mesh_nodal_block_std_t *block = pmne->sections_std[_id_section];
 
   block->order       = order;
-  block->ho_ordering = ho_ordering;
+  if (block->ho_ordering != NULL) {
+    free(block->ho_ordering);
+    block->ho_ordering = NULL;
+  }
+  if (ho_ordering != NULL) {
+    block->ho_ordering = malloc(sizeof(char) * (strlen(ho_ordering) + 1));
+    strcpy(block->ho_ordering, ho_ordering);
+  }
+  // block->ho_ordering = ho_ordering;
 }
 
 void
@@ -3977,6 +3907,7 @@ const PDM_ownership_t               ownership
       }
     }
     else {
+      PDM_gnum_free(gnum_gen);
       return;
     }
 
@@ -4006,6 +3937,7 @@ const PDM_ownership_t               ownership
       }
     }
     else {
+      PDM_gnum_free(gnum_gen);
       return;
     }
 
@@ -4034,6 +3966,7 @@ const PDM_ownership_t               ownership
       }
     }
     else {
+      PDM_gnum_free(gnum_gen);
       return;
     }
 
@@ -6036,28 +5969,79 @@ PDM_part_mesh_nodal_elmts_for_cwipi
   assert(master >= 0);
 
 
-  n_block         = recv_buf[3*master+1];
-  mesh_dimension  = recv_buf[3*master+2];
-  int *block_type = malloc(sizeof(int) * n_block);
+  n_block        = recv_buf[3*master+1];
+  mesh_dimension = recv_buf[3*master+2];
+  int   *block_type            = malloc(sizeof(int   ) * n_block);
+  int   *block_order           = malloc(sizeof(int   ) * n_block);
+  int   *block_len_ho_ordering = malloc(sizeof(char *) * n_block);
+  char  *char_buf              = NULL;
   free(recv_buf);
 
+  int s_char_buf = 0;
   if (i_rank == master) {
     for (int iblock = 0; iblock < n_block; iblock++) {
       block_type[iblock] = (int) PDM_part_mesh_nodal_elmts_section_type_get(_pmne,
                                                                             blocks_id[iblock]);
+      if (PDM_Mesh_nodal_elmt_is_ho(block_type[iblock])) {
+        block_order[iblock] = _pmne->sections_std[blocks_id[iblock]]->order;
+        if (_pmne->sections_std[blocks_id[iblock]]->ho_ordering != NULL) {
+          block_len_ho_ordering[iblock] = strlen(_pmne->sections_std[blocks_id[iblock]]->ho_ordering) + 1;
+        }
+        else {
+          block_len_ho_ordering[iblock] = 0;
+        }
+      }
+      else {
+        block_order[iblock] = 1;
+        block_len_ho_ordering[iblock] = 0;
+      }
+
+      s_char_buf += block_len_ho_ordering[iblock];
     }
 
 
     for (int dest = 0; dest < n_null_rank; dest++) {
-      PDM_MPI_Send(block_type, n_block, PDM_MPI_INT, i_null_rank[dest], 1, comm);
+      PDM_MPI_Send(block_type,            n_block, PDM_MPI_INT, i_null_rank[dest], 1, comm);
+      PDM_MPI_Send(block_order,           n_block, PDM_MPI_INT, i_null_rank[dest], 1, comm);
+      PDM_MPI_Send(block_len_ho_ordering, n_block, PDM_MPI_INT, i_null_rank[dest], 1, comm);
+    }
+
+    if (s_char_buf > 0) {
+      char_buf = malloc(sizeof(char) * s_char_buf);
+      int idx = 0;
+      for (int iblock = 0; iblock < n_block; iblock++) {
+        if (PDM_Mesh_nodal_elmt_is_ho(block_type[iblock])) {
+          char *ho_ordering = _pmne->sections_std[blocks_id[iblock]]->ho_ordering;
+          for (int i = 0; i < block_len_ho_ordering[iblock]-1; i++) {
+            char_buf[idx++] = ho_ordering[i];
+          }
+          char_buf[idx++] = '\0';
+        }
+      }
+
+      for (int dest = 0; dest < n_null_rank; dest++) {
+        PDM_MPI_Send(char_buf, s_char_buf, PDM_MPI_CHAR, i_null_rank[dest], 1, comm);
+      }
     }
   }
   else if (_pmne == NULL) {
-    PDM_MPI_Recv(block_type, n_block, PDM_MPI_INT, master, 1, comm);
+    PDM_MPI_Recv(block_type,            n_block, PDM_MPI_INT, master, 1, comm);
+    PDM_MPI_Recv(block_order,           n_block, PDM_MPI_INT, master, 1, comm);
+    PDM_MPI_Recv(block_len_ho_ordering, n_block, PDM_MPI_INT, master, 1, comm);
+
+    for (int i = 0; i < n_block; i++) {
+      s_char_buf += block_len_ho_ordering[i];
+    }
+
+    if (s_char_buf > 0) {
+      char_buf = malloc(sizeof(char) * s_char_buf);
+      PDM_MPI_Recv(char_buf, s_char_buf, PDM_MPI_CHAR, master, 1, comm);
+    }
 
     /* Create empty part_mesh_nodal_elmts */
     *pmne = PDM_part_mesh_nodal_elmts_create(mesh_dimension, n_part, comm);
 
+    int idx = 0;
     for (int i = 0; i < n_block; i++) {
 
       PDM_Mesh_nodal_elt_t type = (PDM_Mesh_nodal_elt_t) block_type[i];
@@ -6095,16 +6079,31 @@ PDM_part_mesh_nodal_elmts_for_cwipi
         }
       }
       else {
+        char *ho_ordering = NULL;
+        if (char_buf != NULL) {
+          ho_ordering = &char_buf[idx];
+        }
+        idx += block_len_ho_ordering[i];
+        if (n_part == 0) {
+          (*pmne)->sections_std[id_section]->order = block_order[i];
+          if (ho_ordering != NULL) {
+            (*pmne)->sections_std[id_section]->ho_ordering = malloc(sizeof(char) * block_len_ho_ordering[i]);
+            strcpy((*pmne)->sections_std[id_section]->ho_ordering, ho_ordering);
+          }
+        }
+
         for (int ipart = 0; ipart < n_part; ipart++) {
-          PDM_part_mesh_nodal_elmts_std_set(*pmne,
-                                            id_section,
-                                            ipart,
-                                            0,
-                                            NULL,
-                                            NULL,
-                                            NULL,
-                                            NULL,
-                                            PDM_OWNERSHIP_KEEP);
+          PDM_part_mesh_nodal_elmts_std_ho_set(*pmne,
+                                               id_section,
+                                               ipart,
+                                               0,
+                                               NULL,
+                                               NULL,
+                                               NULL,
+                                               NULL,
+                                               block_order[i],
+                                               ho_ordering,
+                                               PDM_OWNERSHIP_KEEP);
         }
       }
 
@@ -6166,6 +6165,11 @@ PDM_part_mesh_nodal_elmts_for_cwipi
   }
   free(i_null_rank);
   free(block_type);
+  free(block_order);
+  free(block_len_ho_ordering);
+  if (char_buf != NULL) {
+    free(char_buf);
+  }
 }
 
 

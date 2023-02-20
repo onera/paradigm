@@ -284,8 +284,9 @@ PDM_dmesh_nodal_elmts_to_part_mesh_nodal_elmts
   int                  **block_elmts_n_vtx       = (int                  ** ) malloc( n_section * sizeof(int                  *));
   PDM_Mesh_nodal_elt_t **block_elmts_types       = (PDM_Mesh_nodal_elt_t ** ) malloc( n_section * sizeof(PDM_Mesh_nodal_elt_t *));
   int                  **stride_one              = (int                  ** ) malloc( n_section * sizeof(int                  *));
-  int                   *pid_section             = (int                  * )  malloc( n_section * sizeof(int                   ));
-  int                   *section_order           = (int                  * )  malloc( n_section * sizeof(int                   ));
+  int                   *pid_section             = (int                  *  ) malloc( n_section * sizeof(int                   ));
+  int                   *section_order           = (int                  *  ) malloc( n_section * sizeof(int                   ));
+  const char           **section_ho_ordering     = (const char           ** ) malloc( n_section * sizeof(char                 *));
 
   for (int i_section = 0; i_section < n_section; i_section++) {
     int id_section = dmne->sections_id[i_section];
@@ -307,9 +308,10 @@ PDM_dmesh_nodal_elmts_to_part_mesh_nodal_elmts
       case PDM_MESH_NODAL_PRISM6:
       case PDM_MESH_NODAL_HEXA8:
       {
-        section_order[i_section] = 1;
-        pid_section  [i_section] = PDM_part_mesh_nodal_elmts_add(pmne, t_elt);
-        int n_elt           = PDM_DMesh_nodal_elmts_section_n_elt_get(dmne, id_section);
+        section_order      [i_section] = 1;
+        section_ho_ordering[i_section] = NULL;
+        pid_section        [i_section] = PDM_part_mesh_nodal_elmts_add(pmne, t_elt);
+        int n_elt = PDM_DMesh_nodal_elmts_section_n_elt_get(dmne, id_section);
         block_elmts_n_vtx[i_section] = (int                  * ) malloc( n_elt * sizeof(int                 ));
         block_elmts_types[i_section] = (PDM_Mesh_nodal_elt_t * ) malloc( n_elt * sizeof(PDM_Mesh_nodal_elt_t));
         int n_vtx_per_elmt = PDM_Mesh_nodal_n_vtx_elt_get (t_elt, 1);
@@ -338,9 +340,10 @@ PDM_dmesh_nodal_elmts_to_part_mesh_nodal_elmts
                                                                                  &order,
                                                                                  &ho_ordering);
 
-        section_order[i_section] = order;
-        pid_section  [i_section] = PDM_part_mesh_nodal_elmts_ho_add(pmne, t_elt, order, ho_ordering);
-        int n_elt           = PDM_DMesh_nodal_elmts_section_n_elt_get(dmne, id_section);
+        section_order      [i_section] = order;
+        section_ho_ordering[i_section] = ho_ordering;
+        pid_section        [i_section] = PDM_part_mesh_nodal_elmts_add(pmne, t_elt);
+        int n_elt = PDM_DMesh_nodal_elmts_section_n_elt_get(dmne, id_section);
         block_elmts_n_vtx[i_section] = (int                  * ) malloc( n_elt * sizeof(int                 ));
         block_elmts_types[i_section] = (PDM_Mesh_nodal_elt_t * ) malloc( n_elt * sizeof(PDM_Mesh_nodal_elt_t));
         int n_vtx_per_elmt = PDM_Mesh_nodal_n_vtx_elt_get (t_elt, order);
@@ -352,8 +355,9 @@ PDM_dmesh_nodal_elmts_to_part_mesh_nodal_elmts
       }
       case PDM_MESH_NODAL_POLY_2D:
       {
-        section_order[i_section] = 1;
-        pid_section  [i_section] = PDM_part_mesh_nodal_elmts_add(pmne, t_elt);
+        section_order      [i_section] = 1;
+        section_ho_ordering[i_section] = NULL;
+        pid_section        [i_section] = PDM_part_mesh_nodal_elmts_add(pmne, t_elt);
         int n_elt = PDM_DMesh_nodal_elmts_section_n_elt_get(dmne, id_section);
 
         int         *connec_idx = NULL;
@@ -375,8 +379,9 @@ PDM_dmesh_nodal_elmts_to_part_mesh_nodal_elmts
 
       case PDM_MESH_NODAL_POLY_3D:
       {
-        section_order[i_section] = 1;
-        pid_section[i_section] = PDM_part_mesh_nodal_elmts_add(pmne, t_elt);
+        section_order      [i_section] = 1;
+        section_ho_ordering[i_section] = NULL;
+        pid_section        [i_section] = PDM_part_mesh_nodal_elmts_add(pmne, t_elt);
         PDM_error(__FILE__, __LINE__, 0, "Error PDM_dmesh_nodal_elmts_to_part_mesh_nodal_elmts : Element type %d is not supported\n", (int) t_elt);
         break;
       }
@@ -610,16 +615,6 @@ PDM_dmesh_nodal_elmts_to_part_mesh_nodal_elmts
         abort();
       }
       else {
-        // PDM_part_mesh_nodal_elmts_std_set(pmne,
-        //                                   id_section,
-        //                                   i_part,
-        //                                   n_elmt_in_section,
-        //                                   connec                   [i_section],
-        //                                   numabs                   [i_section],
-        //                                   parent_num               [i_section],
-        //                                   sparent_entitity_ln_to_gn[i_section],
-        //                                   PDM_OWNERSHIP_KEEP);
-        int order = section_order[i_section];
         PDM_part_mesh_nodal_elmts_std_ho_set(pmne,
                                              id_section,
                                              i_part,
@@ -628,8 +623,8 @@ PDM_dmesh_nodal_elmts_to_part_mesh_nodal_elmts
                                              numabs                   [i_section],
                                              parent_num               [i_section],
                                              sparent_entitity_ln_to_gn[i_section],
-                                             order,
-                                             NULL,// ho_ordering?
+                                             section_order            [i_section],
+                                             section_ho_ordering      [i_section],
                                              PDM_OWNERSHIP_KEEP);
       }
 
@@ -720,6 +715,7 @@ PDM_dmesh_nodal_elmts_to_part_mesh_nodal_elmts
   free(pelmts_types );
   free(pid_section  );
   free(section_order);
+  free(section_ho_ordering);
   free(pelmts_stride_idx);
   free(section_elmts_ln_to_gn);
 

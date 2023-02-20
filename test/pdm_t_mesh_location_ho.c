@@ -237,47 +237,47 @@ _read_args(int                          argc,
   }
 }
 
-static double R[3][3] =
-{
-  {-0.14547275709949994,  0.8415293589391187 , -0.5202557207618055 },
-  { 0.9893622576902102 ,  0.12373586628506748, -0.07649678720582984},
-  { 0.                 , -0.5258495730132333 , -0.8505775840931856 }
-};
+// static double R[3][3] =
+// {
+//   {-0.14547275709949994,  0.8415293589391187 , -0.5202557207618055 },
+//   { 0.9893622576902102 ,  0.12373586628506748, -0.07649678720582984},
+//   { 0.                 , -0.5258495730132333 , -0.8505775840931856 }
+// };
 
-static void _rotate
-(
- const int     n_pts,
-       double *coord
- )
-{
-  for (int i = 0; i < n_pts; i++) {
-    double x = coord[3*i];
-    double y = coord[3*i+1];
-    double z = coord[3*i+2];
+// static void _rotate
+// (
+//  const int     n_pts,
+//        double *coord
+//  )
+// {
+//   for (int i = 0; i < n_pts; i++) {
+//     double x = coord[3*i];
+//     double y = coord[3*i+1];
+//     double z = coord[3*i+2];
 
-    for (int j = 0; j < 3; j++) {
-      coord[3*i+j] = R[j][0]*x + R[j][1]*y + R[j][2]*z;
-    }
-  }
-}
+//     for (int j = 0; j < 3; j++) {
+//       coord[3*i+j] = R[j][0]*x + R[j][1]*y + R[j][2]*z;
+//     }
+//   }
+// }
 
-static void
-_unrotate
-(
- const int     n_pts,
-       double *coord
- )
-{
-  for (int i = 0 ; i < n_pts ; i++) {
-    double x = coord[3 * i];
-    double y = coord[3 * i + 1];
-    double z = coord[3 * i + 2];
+// static void
+// _unrotate
+// (
+//  const int     n_pts,
+//        double *coord
+//  )
+// {
+//   for (int i = 0 ; i < n_pts ; i++) {
+//     double x = coord[3 * i];
+//     double y = coord[3 * i + 1];
+//     double z = coord[3 * i + 2];
 
-    for (int j = 0 ; j < 3 ; j++) {
-      coord[3 * i + j] = R[0][j] * x + R[1][j] * y + R[2][j] * z;
-    }
-  }
-}
+//     for (int j = 0 ; j < 3 ; j++) {
+//       coord[3 * i + j] = R[0][j] * x + R[1][j] * y + R[2][j] * z;
+//     }
+//   }
+// }
 
 static void
 _eval_deformation
@@ -781,12 +781,33 @@ int main(int argc, char *argv[])
                                                0,
                                                0);
 
+  PDM_g_num_t *location;
+  double      *dist2;
+  double      *projected_coord;
+  PDM_mesh_location_point_location_get(mesh_loc,
+                                       0,
+                                       0,
+                                       &location,
+                                       &dist2,
+                                       &projected_coord);
+
   double err_max = 0.;
   for (int i = 0; i < n_located; i++) {
     int pt_id = located[i] - 1;
     tgt_field_interp[pt_id] = recv_field[0][i];
 
     double err = PDM_ABS(tgt_field_interp[pt_id] - tgt_field_exact[pt_id]);
+
+    if (err > 1e-6) {
+      printf("error = %e "PDM_FMT_G_NUM" (%f %f %f) located in "PDM_FMT_G_NUM" at distance %e\n",
+             err,
+             pts_ln_to_gn[pt_id],
+             pts_coord[3*pt_id+0],
+             pts_coord[3*pt_id+1],
+             pts_coord[3*pt_id+2],
+             location[pt_id],
+             sqrt(PDM_ABS(dist2[pt_id])));
+    }
 
     err_max = PDM_MAX(err_max, err);
   }
@@ -852,7 +873,7 @@ int main(int argc, char *argv[])
         pcell_vtx_out[i] = connec[i];
       }
 
-      if (_order > 1) {
+      if (PDM_Mesh_nodal_elmt_is_ho(elt_type)) {
         PDM_Mesh_nodal_reorder_elt_vtx(elt_type,
                                        _order,
                                        ho_ordering,

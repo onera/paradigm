@@ -83,7 +83,8 @@ _read_args
  PDM_Mesh_nodal_elt_t  *elt_type_a,
  PDM_Mesh_nodal_elt_t  *elt_type_b,
  int                   *nodal_a,
- int                   *nodal_b
+ int                   *nodal_b,
+ int                   *verbose
 )
 {
   int i = 1;
@@ -142,6 +143,9 @@ _read_args
     }
     else if (strcmp(argv[i], "-nodalB") == 0) {
       *nodal_b = 1;
+    }
+    else if (strcmp(argv[i], "-verbose") == 0) {
+      *verbose = 1;
     }
     else {
       _usage(EXIT_FAILURE);
@@ -503,6 +507,7 @@ char *argv[]
   PDM_split_dual_t part_method   = PDM_SPLIT_DUAL_WITH_HILBERT;
 
   int n_part = 1;
+  int verbose = 0;
 
   _read_args(argc,
              argv,
@@ -512,7 +517,8 @@ char *argv[]
              &elt_type_a,
              &elt_type_b,
              &nodal_a,
-             &nodal_b);
+             &nodal_b,
+             &verbose);
 
   /*
    * Generate meshA
@@ -552,7 +558,7 @@ char *argv[]
                           &dmn_surf_b,
                           &mpart_surf_b);
 
-  if(0 == 1) {
+  if(verbose) {
     PDM_dmesh_nodal_dump_vtk(dmn_surf_a,
                              PDM_GEOMETRY_KIND_SURFACIC,
                              "dmn_surf_a_");
@@ -614,9 +620,11 @@ char *argv[]
                                          &pelt_b_elt_a_idx,
                                          &pelt_b_elt_a);
 
-    log_trace("FROM A USER POV\n");
+    if (verbose) {
+      log_trace("FROM A USER POV\n");
+    }
     int    **pelt_a_elt_b_n      = malloc(sizeof(int    *) * n_part);
-    double **pelt_a_elt_b_weight = malloc(sizeof(double *) * n_part);
+    double **pelt_a_elt_b_volume = malloc(sizeof(double *) * n_part);
 
     for (int ipart = 0; ipart < n_part; ipart++) {
       int         *elt_a_elt_b_idx = NULL;
@@ -625,7 +633,7 @@ char *argv[]
                                               ipart,
                                               &elt_a_elt_b_idx,
                                               &elt_a_elt_b,
-                                              &pelt_a_elt_b_weight[ipart]);
+                                              &pelt_a_elt_b_volume[ipart]);
 
       PDM_g_num_t *elt_a_ln_to_gn = NULL;
       int n_elt_a = PDM_multipart_part_ln_to_gn_get(mpart_surf_a,
@@ -639,15 +647,17 @@ char *argv[]
       for (int i = 0; i < n_elt_a; i++) {
         pelt_a_elt_b_n[ipart][i] = elt_a_elt_b_idx[i+1] - elt_a_elt_b_idx[i];
 
-        log_trace("elt_a "PDM_FMT_G_NUM" : ", elt_a_ln_to_gn[i]);
-        for (int j = elt_a_elt_b_idx[i]; j < elt_a_elt_b_idx[i+1]; j++) {
-          log_trace("("PDM_FMT_G_NUM", %f)  ", elt_a_elt_b[j], pelt_a_elt_b_weight[ipart][j]);
+        if (verbose) {
+          log_trace("elt_a "PDM_FMT_G_NUM" : ", elt_a_ln_to_gn[i]);
+          for (int j = elt_a_elt_b_idx[i]; j < elt_a_elt_b_idx[i+1]; j++) {
+            log_trace("("PDM_FMT_G_NUM", %f)  ", elt_a_elt_b[j], pelt_a_elt_b_volume[ipart][j]);
+          }
+          log_trace("\n");
         }
-        log_trace("\n");
       }
     }
 
-    double **pelt_b_elt_a_weight = NULL;
+    double **pelt_b_elt_a_volume = NULL;
     int request = -1;
     PDM_part_to_part_iexch(ptp,
                            PDM_MPI_COMM_KIND_P2P,
@@ -656,13 +666,15 @@ char *argv[]
                            1,
                            sizeof(double),
                            NULL,
-                           (const void  **) pelt_a_elt_b_weight,
+                           (const void  **) pelt_a_elt_b_volume,
                            NULL,
-                           (      void ***) &pelt_b_elt_a_weight,
+                           (      void ***) &pelt_b_elt_a_volume,
                            &request);
     PDM_part_to_part_iexch_wait(ptp, request);
 
-    log_trace("FROM B USER POV\n");
+    if (verbose) {
+      log_trace("FROM B USER POV\n");
+    }
     for (int ipart = 0; ipart < n_part; ipart++) {
 
       PDM_g_num_t *elt_b_ln_to_gn = NULL;
@@ -673,14 +685,37 @@ char *argv[]
                                       &elt_b_ln_to_gn,
                                       PDM_OWNERSHIP_USER);
 
+      double *volume = NULL;
+      if (!nodal_b) { // en attendant le calcul des volumes en nodal...
+        PDM_mesh_intersection_elt_volume_get(mi,
+                                             1,
+                                             ipart,
+                                             &volume);
+      }
+
+      double *elt_b_elt_a_volume = NULL;
+      PDM_mesh_intersection_result_from_b_get(mi,
+                                              ipart,
+                                              &elt_b_elt_a_volume);
+
 
       for (int i = 0; i < n_ref_b[ipart]; i++) {
         int faceB_id = ref_b[ipart][i] - 1;
-        log_trace("elt_b "PDM_FMT_G_NUM" : ", elt_b_ln_to_gn[faceB_id]);
-        for (int j = pelt_b_elt_a_idx[ipart][i]; j < pelt_b_elt_a_idx[ipart][i+1]; j++) {
-          log_trace("("PDM_FMT_G_NUM", %f)  ", pelt_b_elt_a[ipart][j], pelt_b_elt_a_weight[ipart][j]);
+        if (verbose) {
+          log_trace("elt_b "PDM_FMT_G_NUM" : ", elt_b_ln_to_gn[faceB_id]);
+          double sum_w = 0;
+          for (int j = pelt_b_elt_a_idx[ipart][i]; j < pelt_b_elt_a_idx[ipart][i+1]; j++) {
+            log_trace("("PDM_FMT_G_NUM", %f (%f))  ",
+                      pelt_b_elt_a[ipart][j],
+                      pelt_b_elt_a_volume[ipart][j],
+                      elt_b_elt_a_volume[j]);
+            sum_w += elt_b_elt_a_volume[j];
+          }
+          log_trace("\n");
+          if (volume != NULL) {
+            log_trace("  sum_w = %f/%f (%.1f%%)\n", sum_w, volume[faceB_id], 100*sum_w/volume[faceB_id]);
+          }
         }
-        log_trace("\n");
       }
     }
 
@@ -690,12 +725,12 @@ char *argv[]
       free(pelt_a_elt_b_n[ipart]);
     }
     free(pelt_a_elt_b_n     );
-    free(pelt_a_elt_b_weight);
+    free(pelt_a_elt_b_volume);
 
     for (int ipart = 0; ipart < n_part; ipart++) {
-      free(pelt_b_elt_a_weight[ipart]);
+      free(pelt_b_elt_a_volume[ipart]);
     }
-    free(pelt_b_elt_a_weight);
+    free(pelt_b_elt_a_volume);
 
 
     PDM_part_to_part_free(ptp);

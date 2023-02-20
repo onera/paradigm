@@ -797,28 +797,48 @@ _basis_pyra_pn
       double e1 = uvw[3*i];
       double e2 = uvw[3*i+1];
       double e5 = uvw[3*i+2];
-      double e3 = 1 - e1 - e5;
-      double e4 = 1 - e2 - e5;
+PDM_GCC_SUPPRESS_WARNING_WITH_PUSH("-Wfloat-equal")
+      if (e5 == 1.) {
+PDM_GCC_SUPPRESS_WARNING_POP
+        weights[14*i+ 8] = 0.;
+        weights[14*i+ 6] = 0.;
+        weights[14*i+ 0] = 0.;
+        weights[14*i+ 2] = 0.;
+        weights[14*i+ 5] = 0.;
+        weights[14*i+ 7] = 0.;
+        weights[14*i+ 3] = 0.;
+        weights[14*i+ 1] = 0.;
+        weights[14*i+ 4] = 0.;
+        weights[14*i+12] = 0.;
+        weights[14*i+11] = 0.;
+        weights[14*i+ 9] = 0.;
+        weights[14*i+10] = 0.;
+        weights[14*i+13] = 1.;
+      }
+      else {
 
-      weights[14*i+ 8] = e1*e2*( ((2*e1/(1-e5) - 1) * (2*e2/(1-e5) - 1)) - e5/(1-e5) );
-      weights[14*i+ 6] = e2*e3*( ((2*e2/(1-e5) - 1) * (2*e3/(1-e5) - 1)) - e5/(1-e5) );
-      weights[14*i+ 0] = e3*e4*( ((2*e3/(1-e5) - 1) * (2*e4/(1-e5) - 1)) - e5/(1-e5) );
-      weights[14*i+ 2] = e4*e1*( ((2*e4/(1-e5) - 1) * (2*e1/(1-e5) - 1)) - e5/(1-e5) );
+        double e3 = 1 - e1 - e5;
+        double e4 = 1 - e2 - e5;
 
-      weights[14*i+ 5] = 4*(e2*e4/(1-e5))*e1*( (2*e1/(1-e5)) - 1 );
-      weights[14*i+ 7] = 4*(e3*e1/(1-e5))*e2*( (2*e2/(1-e5)) - 1 );
-      weights[14*i+ 3] = 4*(e4*e2/(1-e5))*e3*( (2*e3/(1-e5)) - 1 );
-      weights[14*i+ 1] = 4*(e1*e3/(1-e5))*e4*( (2*e4/(1-e5)) - 1 );
+        weights[14*i+ 8] = e1*e2*( ((2*e1/(1-e5) - 1) * (2*e2/(1-e5) - 1)) - e5/(1-e5) );
+        weights[14*i+ 6] = e2*e3*( ((2*e2/(1-e5) - 1) * (2*e3/(1-e5) - 1)) - e5/(1-e5) );
+        weights[14*i+ 0] = e3*e4*( ((2*e3/(1-e5) - 1) * (2*e4/(1-e5) - 1)) - e5/(1-e5) );
+        weights[14*i+ 2] = e4*e1*( ((2*e4/(1-e5) - 1) * (2*e1/(1-e5) - 1)) - e5/(1-e5) );
 
-      weights[14*i+ 4] = 16*e1*e2*e3*e4/((1-e5)*(1-e5));
+        weights[14*i+ 5] = 4*(e2*e4/(1-e5))*e1*( (2*e1/(1-e5)) - 1 );
+        weights[14*i+ 7] = 4*(e3*e1/(1-e5))*e2*( (2*e2/(1-e5)) - 1 );
+        weights[14*i+ 3] = 4*(e4*e2/(1-e5))*e3*( (2*e3/(1-e5)) - 1 );
+        weights[14*i+ 1] = 4*(e1*e3/(1-e5))*e4*( (2*e4/(1-e5)) - 1 );
 
-      weights[14*i+12] = 4*e1*e2*e5/(1-e5);
-      weights[14*i+11] = 4*e2*e3*e5/(1-e5);
-      weights[14*i+ 9] = 4*e3*e4*e5/(1-e5);
-      weights[14*i+10] = 4*e4*e1*e5/(1-e5);
+        weights[14*i+ 4] = 16*e1*e2*e3*e4/((1-e5)*(1-e5));
 
-      weights[14*i+13] = e5*(2*e5-1);
+        weights[14*i+12] = 4*e1*e2*e5/(1-e5);
+        weights[14*i+11] = 4*e2*e3*e5/(1-e5);
+        weights[14*i+ 9] = 4*e3*e4*e5/(1-e5);
+        weights[14*i+10] = 4*e4*e1*e5/(1-e5);
 
+        weights[14*i+13] = e5*(2*e5-1);
+      }
 
 
     }
