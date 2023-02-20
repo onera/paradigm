@@ -83,7 +83,7 @@ endif()
 
 
 set (MPIEXEC_MAX_NUMPROCS 2)
-
+set (MPIEXEC_EXECUTABLE mpirun)
 
 include(TestCreate)
 
