@@ -8,8 +8,8 @@ Help()
   echo "options:"
   echo "m                                Make test before run"
   echo "h                                Print this Help"
-  echo "mpirun                           Run with mpirun command (default is mpiexec)"
-  echo "n <number of ranks>              Number of ranks"
+  echo "mpirun                           Run with mpirun command (default : mpiexec)"
+  echo "n <number of ranks>              Number of ranks (default : 2)"
   echo "no_log_vtk                       Exit on error if test writes some log and vtk files"
   echo "t <\"test name and its options\">  Test name ans its options"
   echo
