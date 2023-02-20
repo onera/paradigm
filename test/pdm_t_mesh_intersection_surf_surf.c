@@ -686,10 +686,12 @@ char *argv[]
                                       PDM_OWNERSHIP_USER);
 
       double *volume = NULL;
-      PDM_mesh_intersection_elt_volume_get(mi,
-                                           1,
-                                           ipart,
-                                           &volume);
+      if (!nodal_b) { // en attendant le calcul des volumes en nodal...
+        PDM_mesh_intersection_elt_volume_get(mi,
+                                             1,
+                                             ipart,
+                                             &volume);
+      }
 
       double *elt_b_elt_a_weight = NULL;
       PDM_mesh_intersection_result_from_b_get(mi,
@@ -710,7 +712,9 @@ char *argv[]
             sum_w += elt_b_elt_a_weight[j];
           }
           log_trace("\n");
-          log_trace("  sum_w = %f/%f (%.1f%%)\n", sum_w, volume[faceB_id], 100*sum_w/volume[faceB_id]);
+          if (volume != NULL) {
+            log_trace("  sum_w = %f/%f (%.1f%%)\n", sum_w, volume[faceB_id], 100*sum_w/volume[faceB_id]);
+          }
         }
       }
     }
