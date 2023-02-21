@@ -28,6 +28,6 @@ file(CHMOD ${CMAKE_BINARY_DIR}/test/pdm_run
 if (PDM_ENABLE_EXTENSION_PDMA)
   configure_file(pdm_run.in "${CMAKE_BINARY_DIR}/extensions/paradigma/test/pdm_run"
                  @ONLY)
-  file(CHMOD ${CMAKE_BINARY_DIR}/extension/paradigma/test/pdm_run
+  file(CHMOD ${CMAKE_BINARY_DIR}/extensions/paradigma/test/pdm_run
        PERMISSIONS  OWNER_READ OWNER_EXECUTE)
 endif()
