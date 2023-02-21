@@ -741,7 +741,7 @@ int main(int argc, char *argv[])
              &visu);
 
   if (filename == NULL) {
-    filename = (char *) "/stck/bandrieu/Public/adaptation/projection/back_faces_P1.dat";
+    filename = (char *) "meshes/back_faces_P1.dat";
   }
 
   srand(random_seed);

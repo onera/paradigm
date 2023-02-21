@@ -794,7 +794,7 @@ int main(int argc, char *argv[])
                                     dface_cell,
                     (PDM_g_num_t**) &dual_graph_idx,
                     (PDM_g_num_t**) &dual_graph,
-                                    1,
+                                    PDM_SPLIT_DUAL_WITH_PARMETIS,
                     (int        **) &dcell_face_idx,
                     (PDM_g_num_t**) &dcell_face);
 

@@ -1626,7 +1626,7 @@ int main(int argc, char *argv[])
     char filename[999];
 
     for (int i_part = 0; i_part < n_part_tgt; i_part++) {
-      sprintf(filename, "/stck/bandrieu/Rocket/tgt_%3.3d.vtk", n_part_tgt*i_rank + i_part);
+      sprintf(filename, "tgt_%3.3d.vtk", n_part_tgt*i_rank + i_part);
       _write_point_cloud (filename,
                           "tgt",
                           n_tgt[i_part],
@@ -1636,7 +1636,7 @@ int main(int argc, char *argv[])
     }
 
     for (int i_part = 0; i_part < n_part_src; i_part++) {
-      sprintf(filename, "/stck/bandrieu/Rocket/src_mesh_%3.3d.vtk", n_part_src*i_rank + i_part);
+      sprintf(filename, "src_mesh_%3.3d.vtk", n_part_src*i_rank + i_part);
       _write_polydata (filename,
                        "src_mesh",
                        n_vtx[i_part],
