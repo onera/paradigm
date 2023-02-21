@@ -39,7 +39,7 @@ case "$1" in
     -mpirun) ExeMPI="mpiexec";;
     -no_log_vtk) ForbidVtk=1;;
     -h) Help
-        exit;;    
+        exit;;
     *) echo "Error : $1 is not an option"
         exit;;
 esac
@@ -65,11 +65,11 @@ then
   make ${TestName}
   if [ "$?" -ne "0" ]
   then
-    echo -e "${PURPLE}${TestName}: Compile${NC} - ${RED}Failed${NC}"  
+    echo -e "${PURPLE}${TestName}: Compile${NC} - ${RED}Failed${NC}"
     exit 1
-  fi  
-  echo -e "${PURPLE}${TestName}: Compile${NC} - ${GREEN}Passed${NC}"  
-fi 
+  fi
+  echo -e "${PURPLE}${TestName}: Compile${NC} - ${GREEN}Passed${NC}"
+fi
 
 echo -e "${PURPLE}${TestName}: Start${NC}"
 
@@ -88,9 +88,9 @@ rm -rf *.vtk *.log core.* *_ens $OutputFile* $ErrFile* run_test.sh
 #
 # Run test
 
-if [ ${IsIntelMPI} -gt 0 ] 
+if [ ${IsIntelMPI} -gt 0 ]
 then
-#  echo "@PDM_RUN_LSAN@ @PDM_RUN_PYTHONPATH@ /usr/bin/time  -f \"Maximum Resident Memory : %M Kb\" $Test" > run_test.sh 
+#  echo "@PDM_RUN_LSAN@ @PDM_RUN_PYTHONPATH@ /usr/bin/time  -f \"Maximum Resident Memory : %M Kb\" $Test" > run_test.sh
 #  chmod +x run_test.sh
 #  ${ExeMPI} -outfile-pattern $OutputFile.%r -errfile-pattern $ErrFile.%r -n $Nrank run_test.sh
  if [ $isPythonTest -gt 0  ]
@@ -100,23 +100,23 @@ then
    then
      Testoutput=1
    fi
- else 
+ else
    @PDM_RUN_PRELOAD@ @PDM_RUN_LSAN@ @PDM_RUN_PYTHONPATH@ ${ExeMPI} -outfile-pattern $OutputFile.%r -errfile-pattern $ErrFile.%r -n $Nrank  /usr/bin/time  -f "Maximum Resident Memory : %M Kb" $Test 2>/dev/null
    if [ "$?" -ne "0" ]
    then
      Testoutput=1
    fi
-  fi 
+  fi
 else
   echo -e "${RED}Error${NC}: OpenMPI is not available for pdm_run script"
-  echo -e "${PURPLE}${TestName}: ${RED}Failed${NC}"  
+  echo -e "${PURPLE}${TestName}: ${RED}Failed${NC}"
   exit 1
-  @PDM_RUN_PRELOAD@ @PDM_RUN_LSAN@ @PDM_RUN_PYTHONPATH@ ${ExeMPI} -output-filename $OutputFile -n $Nrank /usr/bin/time -f "Maximum Resident Memory : %M Kb" $Test 
+  @PDM_RUN_PRELOAD@ @PDM_RUN_LSAN@ @PDM_RUN_PYTHONPATH@ ${ExeMPI} -output-filename $OutputFile -n $Nrank /usr/bin/time -f "Maximum Resident Memory : %M Kb" $Test
   if [ "$?" -ne "0" ]
   then
     Testoutput=1
   fi
-fi    
+fi
 
 end=$(($(date +%s%N)/1000000))
 
@@ -126,7 +126,7 @@ end=$(($(date +%s%N)/1000000))
 elapsed=$(echo "scale=2; ($end-$start)/1000" | bc)
 
 #
-# Check Maximum Resident memory 
+# Check Maximum Resident memory
 
 max="-1"
 min="10000000"
@@ -135,7 +135,7 @@ minRank=-1
 maxRank=-1
 rank=0
 
-if [ ${IsIntelMPI} -gt 0 ] 
+if [ ${IsIntelMPI} -gt 0 ]
 then
   listErrFile=$(ls $ErrFile*)
 else
@@ -159,11 +159,11 @@ echo "Maximum of Maximum Resident Memory: ${maxM} Mb on rank ${maxRank}"
 echo "Minimum of Maximum Resident Memory: ${minM} Mb on rank ${minRank}"
 
 #
-# Check *vtk and *log file 
+# Check *vtk and *log file
 
 val_vtk=`ls -l *.vtk  2> /dev/null | wc -l`;
 val_log=`ls -l *.log  2> /dev/null | wc -l`;
- 
+
 if [ $val_vtk -gt 0 ] || [ $val_log -gt 0 ]
 then
   echo "Number of vtk files = ${val_vtk}"
@@ -178,29 +178,28 @@ then
   if [ ${val_vtk} -gt 0 ] || [ ${val_log} -gt 0 ]
   then
     if [ "${Testoutput}" -gt "0" ]
-    then    
+    then
       echo -e "${NC}Error${NC}: Test exited on Error"
-    fi   
+    fi
     echo -e "${RED}Error${NC}: *vtk and *log files are not allowed"
-    echo -e "${PURPLE}${TestName}${NC}: ${RED}Failed${NC}"  
+    echo -e "${PURPLE}${TestName}${NC}: ${RED}Failed${NC}"
     exit 1
-  else 
+  else
     if [ "${Testoutput}" -eq "0" ]
     then
-      echo "${PURPLE}${TestName}${NC}: ${GREEN}Passed${NC} $elapsed s"  
-    else  
-      echo -e "${RED}Error${NC}: Test exited on Error"  
-      echo -e "${PURPLE}${TestName}${NC}: ${RED}Failed${NC}"  
+      echo "${PURPLE}${TestName}${NC}: ${GREEN}Passed${NC} $elapsed s"
+    else
+      echo -e "${RED}Error${NC}: Test exited on Error"
+      echo -e "${PURPLE}${TestName}${NC}: ${RED}Failed${NC}"
     fi
     exit ${Testoutput}
-  fi    
+  fi
 else
   if [ "${Testoutput}" -eq "0" ]
   then
-    echo -e "${PURPLE}${TestName}${NC}: ${GREEN}Passed${NC} ${PURPLE}${elapsed} s${NC}"  
-  else  
-    echo -e "${PURPLE}${TestName}${NC}: ${RED}Failed${NC}"  
+    echo -e "${PURPLE}${TestName}${NC}: ${GREEN}Passed${NC} ${PURPLE}${elapsed} s${NC}"
+  else
+    echo -e "${PURPLE}${TestName}${NC}: ${RED}Failed${NC}"
   fi
   exit ${Testoutput}
-fi    
-
+fi
