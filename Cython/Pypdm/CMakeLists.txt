@@ -36,7 +36,7 @@ set_source_files_properties(${_pyx_file} PROPERTIES CYTHON_IS_CXX TRUE)
 cython_add_module (Pypdm
                    PYX_SOURCES "${_pyx_file}"
                    INCLUDE_DIRECTORIES ${include_dirs}
-                   DEPENDS ${SOURCE_PXI})
+                   DEPENDS ${SOURCE_PXI} pdm_shared)
 
 set_target_properties(Pypdm PROPERTIES PREFIX "") # do not prefix by lib
 
