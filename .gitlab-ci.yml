@@ -48,7 +48,7 @@ build:
     - cd $CUSTOM_CI_DIR
     - mkdir -p build$MATRIX_KEY && cd build$MATRIX_KEY
     - which gcc
-    - cmake -DCMAKE_BUILD_TYPE=Sanitize -DPDM_ENABLE_STATIC=OFF -DPDM_ENABLE_SHARED=ON -DPDM_ENABLE_Fortran=OFF -DPDM_ENABLE_EXTENSION_PDMA=ON  ../
+    - cmake -DCMAKE_BUILD_TYPE=Sanitize -DPDM_ENABLE_STATIC=OFF -DPDM_ENABLE_SHARED=ON -DPDM_ENABLE_Fortran=OFF -DPDM_ENABLE_EXTENSION_PDMA=ON  -DMPIEXEC_EXECUTABLE=/opt/tools/intel/oneapi/mpi/2021.6.0/bin/mpirun ../
     - make -j
 
 unit_test:
