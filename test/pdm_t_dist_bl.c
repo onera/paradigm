@@ -211,6 +211,114 @@ _generate_volume_mesh
 
 }
 
+
+static
+void
+_cell_center_3d
+(
+  int      pn_cell,
+  int     *pcell_face_idx,
+  int     *pcell_face,
+  int     *pface_edge_idx,
+  int     *pface_edge,
+  int     *pface_vtx_idx,
+  int     *pface_vtx,
+  int     *pedge_vtx,
+  double  *pvtx_coord,
+  double **cell_center
+)
+{
+  int from_edge = 0;
+  int from_face = 0;
+  if(pface_edge     != NULL) {
+    from_edge = 1;
+  }
+  if(pface_vtx     != NULL) {
+    from_face = 1;
+  }
+  assert(pvtx_coord     != NULL);
+
+  double* entity_center = malloc(3 * pn_cell * sizeof(double ));
+
+  if(from_face == 1) {
+    for(int i_cell = 0; i_cell < pn_cell; ++i_cell) {
+
+      entity_center[3*i_cell  ] = 0.;
+      entity_center[3*i_cell+1] = 0.;
+      entity_center[3*i_cell+2] = 0.;
+
+      double inv = 1./((double) pcell_face_idx[i_cell+1] - pcell_face_idx[i_cell]);
+
+      for(int idx_face = pcell_face_idx[i_cell]; idx_face < pcell_face_idx[i_cell+1]; ++idx_face) {
+        int i_face = PDM_ABS(pcell_face[idx_face])-1;
+
+        double inv2 = 1./((double)  pface_vtx_idx[i_face+1] - pface_vtx_idx[i_face]);
+
+        double fcx = 0;
+        double fcy = 0;
+        double fcz = 0;
+        for(int idx_vtx = pface_vtx_idx[i_face]; idx_vtx < pface_vtx_idx[i_face+1]; ++idx_vtx) {
+          int i_vtx = pface_vtx[idx_vtx]-1;
+          fcx += pvtx_coord[3*i_vtx  ];
+          fcy += pvtx_coord[3*i_vtx+1];
+          fcz += pvtx_coord[3*i_vtx+2];
+        }
+        fcx = fcx * inv2;
+        fcy = fcy * inv2;
+        fcz = fcz * inv2;
+
+        entity_center[3*i_cell  ] += fcx;
+        entity_center[3*i_cell+1] += fcy;
+        entity_center[3*i_cell+2] += fcz;
+      }
+
+      entity_center[3*i_cell  ] = entity_center[3*i_cell  ] * inv;
+      entity_center[3*i_cell+1] = entity_center[3*i_cell+1] * inv;
+      entity_center[3*i_cell+2] = entity_center[3*i_cell+2] * inv;
+    } /* End cell */
+  } else if( from_edge == 1) {
+    for(int i_cell = 0; i_cell < pn_cell; ++i_cell) {
+
+      entity_center[3*i_cell  ] = 0.;
+      entity_center[3*i_cell+1] = 0.;
+      entity_center[3*i_cell+2] = 0.;
+
+      double inv = 1./((double)  pcell_face_idx[i_cell+1] - pcell_face_idx[i_cell]);
+
+      double fcx = 0;
+      double fcy = 0;
+      double fcz = 0;
+      for(int idx_face = pcell_face_idx[i_cell]; idx_face < pcell_face_idx[i_cell+1]; ++idx_face) {
+        int i_face = PDM_ABS(pcell_face[idx_face])-1;
+
+        double inv2 = 1./((double)  pface_edge_idx[i_face+1] - pface_edge_idx[i_face]);
+
+        for(int idx_edge = pface_edge_idx[i_face]; idx_edge < pface_edge_idx[i_face+1]; ++idx_edge) {
+          int i_edge = PDM_ABS(pface_edge[idx_edge])-1;
+          int i_vtx1 = pedge_vtx[2*i_edge  ] - 1;
+          int i_vtx2 = pedge_vtx[2*i_edge+1] - 1;
+          fcx += 0.5 * (pvtx_coord[3*i_vtx1  ] + pvtx_coord[3*i_vtx2  ]);
+          fcy += 0.5 * (pvtx_coord[3*i_vtx1+1] + pvtx_coord[3*i_vtx2+1]);
+          fcz += 0.5 * (pvtx_coord[3*i_vtx1+2] + pvtx_coord[3*i_vtx2+2]);
+        }
+        fcx = fcx * inv2;
+        fcy = fcy * inv2;
+        fcz = fcz * inv2;
+
+        entity_center[3*i_cell  ] += fcx;
+        entity_center[3*i_cell+1] += fcy;
+        entity_center[3*i_cell+2] += fcz;
+      }
+
+      entity_center[3*i_cell  ] = entity_center[3*i_cell  ] * inv;
+      entity_center[3*i_cell+1] = entity_center[3*i_cell+1] * inv;
+      entity_center[3*i_cell+2] = entity_center[3*i_cell+2] * inv;
+    } /* End cell */
+  }
+
+  *cell_center = entity_center;
+}
+
 static
 void
 _create_wall_surf
@@ -218,11 +326,14 @@ _create_wall_surf
  const PDM_MPI_Comm           comm,
  const int                    n_part,
        PDM_multipart_t       *mpart,
+       int                  **n_surf_vtx_out,
+       int                  **n_surf_face_out,
        double              ***psurf_vtx_coord_out,
        int                 ***psurf_face_vtx_idx_out,
        int                 ***psurf_face_vtx_out,
        PDM_g_num_t         ***psurf_face_ln_to_gn_out,
-       PDM_g_num_t         ***psurf_vtx_ln_to_gn_out
+       PDM_g_num_t         ***psurf_vtx_ln_to_gn_out,
+       double              ***cell_center_out
 )
 {
   int i_rank;
@@ -234,6 +345,7 @@ _create_wall_surf
   int          *n_surf_vtx           = malloc(n_part * sizeof(int          ));
   int          *n_surf_face          = malloc(n_part * sizeof(int          ));
 
+  double      **cell_center          = malloc(n_part * sizeof(double      *));
   double      **psurf_vtx_coord      = malloc(n_part * sizeof(double      *));
   int         **psurf_face_vtx_idx   = malloc(n_part * sizeof(int         *));
   int         **psurf_face_vtx       = malloc(n_part * sizeof(int         *));
@@ -313,6 +425,16 @@ _create_wall_surf
                                     &vtx_ln_to_gn,
                                     PDM_OWNERSHIP_KEEP);
 
+    int *pcell_face     = NULL;
+    int *pcell_face_idx = NULL;
+    int n_cell =   PDM_multipart_part_connectivity_get(mpart,
+                                                       0,
+                                                       i_part,
+                                                       PDM_CONNECTIVITY_TYPE_CELL_FACE,
+                                                       &pcell_face,
+                                                       &pcell_face_idx,
+                                                       PDM_OWNERSHIP_KEEP);
+
     n_face = PDM_multipart_part_connectivity_get(mpart,
                                                  0,
                                                  i_part,
@@ -346,10 +468,20 @@ _create_wall_surf
     int *face_vtx_idx = face_edge_idx;
     PDM_compute_face_vtx_from_face_and_edge(n_face, face_edge_idx, face_edge, edge_vtx, &face_vtx);
 
+    _cell_center_3d(n_cell,
+                    pcell_face_idx,
+                    pcell_face,
+                    NULL,
+                    NULL,
+                    face_vtx_idx,
+                    face_vtx,
+                    NULL,
+                    vtx_coord,
+                    &cell_center[i_part]);
     /*
      * Nez de la plaque en x = 0
      */
-    int i_group = 0;
+    int i_group = 4;
     n_surf_face[i_part] = 0;
     int n_surf_face_vtx = 0;
     int n_face_in_group = group_face_idx[i_group+1] - group_face_idx[i_group];
@@ -467,8 +599,9 @@ _create_wall_surf
 
   }
 
-
-
+  *cell_center_out = cell_center;
+  *n_surf_vtx_out  = n_surf_vtx;
+  *n_surf_face_out = n_surf_face;
 
   *psurf_vtx_coord_out      = psurf_vtx_coord;
   *psurf_face_vtx_idx_out   = psurf_face_vtx_idx;
@@ -530,7 +663,7 @@ char *argv[]
                          n_vtx_a,
                          elt_type,
                          rotate_a,
-                         0.,
+                         -0.2,
                          0.,
                          0.,
                          lenght_a,
@@ -552,21 +685,43 @@ char *argv[]
   /*
    * Extract boundary wall
    */
+  int          *psurf_vtx            = NULL;
+  int          *psurf_face           = NULL;
   double      **psurf_vtx_coord      = NULL;
   int         **psurf_face_vtx_idx   = NULL;
   int         **psurf_face_vtx       = NULL;
   PDM_g_num_t **psurf_face_ln_to_gn  = NULL;
   PDM_g_num_t **psurf_vtx_ln_to_gn   = NULL;
+  double      **cell_center          = NULL;
   _create_wall_surf(comm,
                     n_part,
                     mpart_vol_a,
+                    &psurf_vtx,
+                    &psurf_face,
                     &psurf_vtx_coord,
                     &psurf_face_vtx_idx,
                     &psurf_face_vtx,
                     &psurf_face_ln_to_gn,
-                    &psurf_vtx_ln_to_gn );
+                    &psurf_vtx_ln_to_gn,
+                    &cell_center);
 
 
+  for(int i_part = 0; i_part < n_part; ++i_part) {
+    free(psurf_vtx_coord    [i_part]);
+    free(psurf_face_vtx_idx [i_part]);
+    free(psurf_face_vtx     [i_part]);
+    free(psurf_face_ln_to_gn[i_part]);
+    free(psurf_vtx_ln_to_gn [i_part]);
+    free(cell_center        [i_part]);
+  }
+  free(psurf_vtx );
+  free(psurf_face);
+  free(psurf_vtx_coord);
+  free(psurf_face_vtx_idx);
+  free(psurf_face_vtx);
+  free(psurf_face_ln_to_gn);
+  free(psurf_vtx_ln_to_gn);
+  free(cell_center);
 
   PDM_DMesh_nodal_free(dmn_vol_a);
   PDM_multipart_free(mpart_vol_a);
