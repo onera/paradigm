@@ -827,9 +827,56 @@ char *argv[]
                                          0,
                                          NULL,
                                          NULL );
+  }
 
+  /* Create field of speed */
+  double **velocity = malloc(n_part * sizeof(double));
+  for (int i_part = 0; i_part < n_part; i_part++) {
+
+    double      *distance;
+    double      *projected;
+    PDM_g_num_t *closest_elt_gnum;
+
+    PDM_dist_cloud_surf_get (dist,
+                             0,
+                             i_part,
+                             &distance,
+                             &projected,
+                             &closest_elt_gnum);
+
+    velocity[i_part] = malloc(pn_cell[i_part] * sizeof(double));
+
+    for(int i_cell = 0; i_cell < pn_cell[i_part]; ++i_cell) {
+      if(cell_center   [i_part][3*i_cell+1] < 0.1 * cell_center   [i_part][3*i_cell]) {
+        velocity[i_part][i_cell] = tanh(6*distance[i_cell]);
+      } else {
+        velocity[i_part][i_cell] = 1.;
+      }
+    }
+
+    char filename[999];
+    sprintf(filename, "velocity_%3.3d_%3.3d.vtk", i_part, i_rank);
+
+    const char   *vector_field_name[1] = {"velocity"};
+    const double *vector_field     [1] = {velocity[i_part]};
+    PDM_vtk_write_point_cloud_with_field(filename,
+                                         pn_cell       [i_part],
+                                         cell_center   [i_part],
+                                         pcell_ln_to_gn[i_part],
+                                         NULL,
+                                         1,
+                                         vector_field_name,
+                                         vector_field,
+                                         0,
+                                         NULL,
+                                         NULL,
+                                         0,
+                                         NULL,
+                                         NULL );
 
   }
+
+
   PDM_dist_cloud_surf_free(dist);
 
   for(int i_part = 0; i_part < n_part; ++i_part) {
@@ -839,6 +886,7 @@ char *argv[]
     free(psurf_face_ln_to_gn[i_part]);
     free(psurf_vtx_ln_to_gn [i_part]);
     free(cell_center        [i_part]);
+    free(velocity           [i_part]);
   }
   free(psurf_vtx );
   free(psurf_face);
@@ -850,6 +898,7 @@ char *argv[]
   free(cell_center);
   free(pcell_ln_to_gn);
   free(pn_cell);
+  free(velocity);
 
   PDM_DMesh_nodal_free(dmn_vol_a);
   PDM_multipart_free(mpart_vol_a);
