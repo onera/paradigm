@@ -873,8 +873,116 @@ char *argv[]
                                          0,
                                          NULL,
                                          NULL );
-
   }
+
+  /*
+   * Compute extents of all cell
+   */
+  double **box_extents = malloc(n_part * sizeof(double *));
+  for(int i_part = 0; i_part < n_part; ++i_part) {
+
+    int *pcell_face     = NULL;
+    int *pcell_face_idx = NULL;
+    int *pface_edge      = NULL;
+    int *pface_edge_idx  = NULL;
+    int *pedge_vtx      = NULL;
+    int *pedge_vtx_idx  = NULL;
+
+    double *vtx_coord;
+    int n_vtx = PDM_multipart_part_vtx_coord_get(mpart_vol_a,
+                                                 0,
+                                                 i_part,
+                                                 &vtx_coord,
+                                                 PDM_OWNERSHIP_KEEP);
+
+    int n_edge = PDM_multipart_part_connectivity_get(mpart_vol_a,
+                                                     0,
+                                                     i_part,
+                                                     PDM_CONNECTIVITY_TYPE_EDGE_VTX,
+                                                     &pedge_vtx,
+                                                     &pedge_vtx_idx,
+                                                     PDM_OWNERSHIP_KEEP);
+
+    int n_face = PDM_multipart_part_connectivity_get(mpart_vol_a,
+                                                     0,
+                                                     i_part,
+                                                     PDM_CONNECTIVITY_TYPE_FACE_EDGE,
+                                                     &pface_edge,
+                                                     &pface_edge_idx,
+                                                     PDM_OWNERSHIP_KEEP);
+
+    int n_cell =   PDM_multipart_part_connectivity_get(mpart_vol_a,
+                                                       0,
+                                                       i_part,
+                                                       PDM_CONNECTIVITY_TYPE_CELL_FACE,
+                                                       &pcell_face,
+                                                       &pcell_face_idx,
+                                                       PDM_OWNERSHIP_KEEP);
+
+    int *pface_vtx     = NULL;
+    int *pface_vtx_idx = pface_edge_idx;
+    PDM_compute_face_vtx_from_face_and_edge(n_face,
+                                            pface_edge_idx,
+                                            pface_edge,
+                                            pedge_vtx,
+                                            &pface_vtx);
+
+    box_extents[i_part] = malloc(6 * n_cell * sizeof(double));
+
+    for(int i_cell = 0; i_cell < n_cell; ++i_cell) {
+      double *_extents = box_extents[i_part] + 6 * i_cell;
+      for(int k = 0; k < 3; ++k) {
+        _extents[k  ] =  HUGE_VAL;
+        _extents[k+3] = -HUGE_VAL;
+      }
+      for(int idx_face = pcell_face_idx[i_cell]; idx_face < pcell_face_idx[i_cell+1]; ++idx_face) {
+        int i_face = PDM_ABS(pcell_face[idx_face])-1;
+        for(int idx_vtx = pface_vtx_idx[i_face]; idx_vtx < pface_vtx_idx[i_face+1]; ++idx_vtx) {
+          int i_vtx = PDM_ABS(pface_vtx[idx_vtx])-1;
+
+          for (int i_dim = 0; i_dim < 3; i_dim++) {
+            double x = vtx_coord[3*i_vtx + i_dim];
+
+            if (x < _extents[i_dim]) {
+              _extents[i_dim] = x;
+            }
+            if (x > _extents[3+i_dim]) {
+              _extents[3+i_dim] = x;
+            }
+          }
+        }
+      }
+    }
+
+    free(pface_vtx);
+  }
+
+
+  const int dim = 3;
+  double l_extents[6] = { HUGE_VAL,  HUGE_VAL,  HUGE_VAL,
+                         -HUGE_VAL, -HUGE_VAL, -HUGE_VAL};
+
+  for(int i_part = 0; i_part < n_part; ++i_part) {
+    for (int i = 0; i < pn_cell[i_part]; i++) {
+      for (int k = 0; k < 3; k++) {
+        l_extents[k    ] = PDM_MIN (l_extents[k    ], box_extents[i_part][6*i + k    ]);
+        l_extents[k + 3] = PDM_MAX (l_extents[k + 3], box_extents[i_part][6*i + k + 3]);
+      }
+    }
+  }
+
+  double g_extents[6];
+  PDM_MPI_Allreduce (l_extents,   g_extents,   3, PDM_MPI_DOUBLE, PDM_MPI_MIN, comm);
+  PDM_MPI_Allreduce (l_extents+3, g_extents+3, 3, PDM_MPI_DOUBLE, PDM_MPI_MAX, comm);
+
+
+  PDM_dbbtree_t* dbbt = PDM_dbbtree_create(comm, 3, global_extents);
+
+
+
+
+
+
 
 
   PDM_dist_cloud_surf_free(dist);
