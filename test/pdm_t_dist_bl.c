@@ -22,6 +22,7 @@
 #include "pdm_multipart.h"
 #include "pdm_dcube_nodal_gen.h"
 #include "pdm_sphere_surf_gen.h"
+#include "pdm_dist_cloud_surf.h"
 #include "pdm_gnum.h"
 #include "pdm_part_connectivity_transform.h"
 
@@ -148,7 +149,7 @@ _generate_volume_mesh
   PDM_dcube_nodal_t *dcube = PDM_dcube_nodal_gen_create (comm,
                                                          n_vtx_seg,
                                                          n_vtx_seg,
-                                                         n_vtx_seg,
+                                                         6,
                                                          lenght,
                                                          xmin,
                                                          ymin,
@@ -160,6 +161,41 @@ _generate_volume_mesh
   PDM_dmesh_nodal_t *dmn = PDM_dcube_nodal_gen_dmesh_nodal_get(dcube);
   PDM_dmesh_nodal_generate_distribution(dmn);
   PDM_dcube_nodal_gen_free(dcube);
+
+
+  PDM_g_num_t *vtx_distrib = PDM_dmesh_nodal_vtx_distrib_get(dmn);
+  double      *dvtx_coord  = PDM_DMesh_nodal_vtx_get(dmn);
+  int dn_vtx = vtx_distrib[i_rank+1] - vtx_distrib[i_rank];
+
+  double pi = 4 * atan(1.);
+  for(int i_vtx = 0; i_vtx < dn_vtx; ++i_vtx) {
+
+    double x = dvtx_coord[3*i_vtx  ];
+    double y = dvtx_coord[3*i_vtx+1];
+    double z = dvtx_coord[3*i_vtx+2];
+
+    dvtx_coord[3*i_vtx+1] = tanh( y * y * y);
+    y = dvtx_coord[3*i_vtx+1];
+
+    double angle = -pi/4;
+    double Rz[3][3] = {{cos(angle), -sin(angle), 0},
+                       {sin(angle),  cos(angle), 0},
+                       {0         ,  0         , 1}};
+
+    // dvtx_coord[3*i_vtx  ] = x +
+    // dvtx_coord[3*i_vtx+1] = cos(y) - sin(x);
+
+    if( x > 0.) {
+      dvtx_coord[3*i_vtx  ] *= 4;
+    }
+    x = dvtx_coord[3*i_vtx];
+
+    for (int j = 0; j < 1; j++) {
+      dvtx_coord[3*i_vtx+j] = Rz[j][0]*x + Rz[j][1]*y + Rz[j][2]*z;
+    }
+
+
+  }
 
   PDM_UNUSED(rotate);
   // if(rotate) {
@@ -333,6 +369,8 @@ _create_wall_surf
        int                 ***psurf_face_vtx_out,
        PDM_g_num_t         ***psurf_face_ln_to_gn_out,
        PDM_g_num_t         ***psurf_vtx_ln_to_gn_out,
+       int                  **pn_cell_out,
+       PDM_g_num_t         ***pcell_ln_to_gn_out,
        double              ***cell_center_out
 )
 {
@@ -351,6 +389,9 @@ _create_wall_surf
   int         **psurf_face_vtx       = malloc(n_part * sizeof(int         *));
   PDM_g_num_t **psurf_face_ln_to_gn  = malloc(n_part * sizeof(PDM_g_num_t *));
   PDM_g_num_t **psurf_vtx_ln_to_gn   = malloc(n_part * sizeof(PDM_g_num_t *));
+
+  int          *pn_cell        = malloc(n_part * sizeof(int          ));
+  PDM_g_num_t **pcell_ln_to_gn = malloc(n_part * sizeof(PDM_g_num_t *));
 
   /* Compute gnum for vtx and faces */
   PDM_gen_gnum_t* gnum_face = PDM_gnum_create(3,
@@ -425,6 +466,13 @@ _create_wall_surf
                                     &vtx_ln_to_gn,
                                     PDM_OWNERSHIP_KEEP);
 
+    PDM_multipart_part_ln_to_gn_get(mpart,
+                                    0,
+                                    i_part,
+                                    PDM_MESH_ENTITY_CELL,
+                                    &pcell_ln_to_gn[i_part],
+                                    PDM_OWNERSHIP_KEEP);
+
     int *pcell_face     = NULL;
     int *pcell_face_idx = NULL;
     int n_cell =   PDM_multipart_part_connectivity_get(mpart,
@@ -468,6 +516,7 @@ _create_wall_surf
     int *face_vtx_idx = face_edge_idx;
     PDM_compute_face_vtx_from_face_and_edge(n_face, face_edge_idx, face_edge, edge_vtx, &face_vtx);
 
+    pn_cell[i_part] = n_cell;
     _cell_center_3d(n_cell,
                     pcell_face_idx,
                     pcell_face,
@@ -559,7 +608,7 @@ _create_wall_surf
     psurf_vtx_ln_to_gn [i_part] = realloc(psurf_vtx_ln_to_gn [i_part],     n_surf_vtx[i_part] * sizeof(PDM_g_num_t));
 
     PDM_gnum_set_from_parents(gnum_face, i_part, n_surf_face[i_part], _psurf_face_ln_to_gn);
-    PDM_gnum_set_from_parents(gnum_vtx , i_part, n_surf_vtx [i_part], _psurf_vtx_ln_to_gn );
+    PDM_gnum_set_from_parents(gnum_vtx , i_part, n_surf_vtx [i_part], psurf_vtx_ln_to_gn [i_part] );
 
     free(vtx_flags);
     free(face_bnd);
@@ -599,9 +648,12 @@ _create_wall_surf
 
   }
 
-  *cell_center_out = cell_center;
-  *n_surf_vtx_out  = n_surf_vtx;
-  *n_surf_face_out = n_surf_face;
+
+  *pn_cell_out        = pn_cell;
+  *pcell_ln_to_gn_out = pcell_ln_to_gn;
+  *cell_center_out    = cell_center;
+  *n_surf_vtx_out     = n_surf_vtx;
+  *n_surf_face_out    = n_surf_face;
 
   *psurf_vtx_coord_out      = psurf_vtx_coord;
   *psurf_face_vtx_idx_out   = psurf_face_vtx_idx;
@@ -685,6 +737,8 @@ char *argv[]
   /*
    * Extract boundary wall
    */
+  int          *pn_cell              = NULL;
+  PDM_g_num_t **pcell_ln_to_gn       = NULL;
   int          *psurf_vtx            = NULL;
   int          *psurf_face           = NULL;
   double      **psurf_vtx_coord      = NULL;
@@ -703,8 +757,80 @@ char *argv[]
                     &psurf_face_vtx,
                     &psurf_face_ln_to_gn,
                     &psurf_vtx_ln_to_gn,
+                    &pn_cell,
+                    &pcell_ln_to_gn,
                     &cell_center);
 
+  /* Wall distance */
+  int n_point_cloud = 1;
+  PDM_dist_cloud_surf_t* dist = PDM_dist_cloud_surf_create (PDM_MESH_NATURE_MESH_SETTED,
+                                                            n_point_cloud,
+                                                            comm,
+                                                            PDM_OWNERSHIP_KEEP);
+
+  PDM_dist_cloud_surf_surf_mesh_global_data_set (dist,
+                                                 n_part);
+
+  PDM_dist_cloud_surf_n_part_cloud_set (dist, 0, n_part);
+
+  for (int i_part = 0; i_part < n_part; i_part++) {
+
+    PDM_dist_cloud_surf_surf_mesh_part_set (dist,
+                                            i_part,
+                                            psurf_face         [i_part],
+                                            psurf_face_vtx_idx [i_part],
+                                            psurf_face_vtx     [i_part],
+                                            psurf_face_ln_to_gn[i_part],
+                                            psurf_vtx          [i_part],
+                                            psurf_vtx_coord    [i_part],
+                                            psurf_vtx_ln_to_gn [i_part]);
+
+    PDM_dist_cloud_surf_cloud_set (dist,
+                                   0,
+                                   i_part,
+                                   pn_cell       [i_part],
+                                   cell_center   [i_part],
+                                   pcell_ln_to_gn[i_part]);
+  }
+
+  PDM_dist_cloud_surf_compute(dist);
+
+  for (int i_part = 0; i_part < n_part; i_part++) {
+
+    double      *distance;
+    double      *projected;
+    PDM_g_num_t *closest_elt_gnum;
+
+    PDM_dist_cloud_surf_get (dist,
+                             0,
+                             i_part,
+                             &distance,
+                             &projected,
+                             &closest_elt_gnum);
+
+    char filename[999];
+    sprintf(filename, "distance_%3.3d_%3.3d.vtk", i_part, i_rank);
+
+    const char   *vector_field_name[1] = {"distance"};
+    const double *vector_field     [1] = {distance};
+    PDM_vtk_write_point_cloud_with_field(filename,
+                                         pn_cell       [i_part],
+                                         cell_center   [i_part],
+                                         pcell_ln_to_gn[i_part],
+                                         NULL,
+                                         1,
+                                         vector_field_name,
+                                         vector_field,
+                                         0,
+                                         NULL,
+                                         NULL,
+                                         0,
+                                         NULL,
+                                         NULL );
+
+
+  }
+  PDM_dist_cloud_surf_free(dist);
 
   for(int i_part = 0; i_part < n_part; ++i_part) {
     free(psurf_vtx_coord    [i_part]);
@@ -722,6 +848,8 @@ char *argv[]
   free(psurf_face_ln_to_gn);
   free(psurf_vtx_ln_to_gn);
   free(cell_center);
+  free(pcell_ln_to_gn);
+  free(pn_cell);
 
   PDM_DMesh_nodal_free(dmn_vol_a);
   PDM_multipart_free(mpart_vol_a);
