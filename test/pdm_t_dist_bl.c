@@ -22,6 +22,8 @@
 #include "pdm_multipart.h"
 #include "pdm_dcube_nodal_gen.h"
 #include "pdm_sphere_surf_gen.h"
+#include "pdm_gnum.h"
+#include "pdm_part_connectivity_transform.h"
 
 /*============================================================================
  * Macro definitions
@@ -75,7 +77,6 @@ _read_args
  int                    argc,
  char                 **argv,
  PDM_g_num_t           *n_vtx_a,
- PDM_g_num_t           *n_vtx_b,
  int                   *n_part,
  PDM_Mesh_nodal_elt_t  *elt_type
 )
@@ -224,12 +225,35 @@ _create_wall_surf
        PDM_g_num_t         ***psurf_vtx_ln_to_gn_out
 )
 {
+  int i_rank;
+  PDM_MPI_Comm_rank (comm, &i_rank);
 
-  double      **psurf_vtx_coord      = NULL;
-  int         **psurf_face_vtx_idx   = NULL;
-  int         **psurf_face_vtx       = NULL;
-  PDM_g_num_t **psurf_face_ln_to_gn  = NULL;
-  PDM_g_num_t **psurf_vtx_ln_to_gn   = NULL;
+  int n_rank;
+  PDM_MPI_Comm_size (comm, &n_rank);
+
+  int          *n_surf_vtx           = malloc(n_part * sizeof(int          ));
+  int          *n_surf_face          = malloc(n_part * sizeof(int          ));
+
+  double      **psurf_vtx_coord      = malloc(n_part * sizeof(double      *));
+  int         **psurf_face_vtx_idx   = malloc(n_part * sizeof(int         *));
+  int         **psurf_face_vtx       = malloc(n_part * sizeof(int         *));
+  PDM_g_num_t **psurf_face_ln_to_gn  = malloc(n_part * sizeof(PDM_g_num_t *));
+  PDM_g_num_t **psurf_vtx_ln_to_gn   = malloc(n_part * sizeof(PDM_g_num_t *));
+
+  /* Compute gnum for vtx and faces */
+  PDM_gen_gnum_t* gnum_face = PDM_gnum_create(3,
+                                              n_part,
+                                              PDM_FALSE,
+                                              1.e-6,
+                                              comm,
+                                              PDM_OWNERSHIP_USER);
+
+  PDM_gen_gnum_t* gnum_vtx = PDM_gnum_create(3,
+                                             n_part,
+                                             PDM_FALSE,
+                                             1.e-6,
+                                             comm,
+                                             PDM_OWNERSHIP_USER);
 
   for (int i_part = 0; i_part < n_part; i_part++) {
 
@@ -318,6 +342,128 @@ _create_wall_surf
                             &group_face,
                             &face_group_ln_to_gn);
 
+    int *face_vtx = NULL;
+    int *face_vtx_idx = face_edge_idx;
+    PDM_compute_face_vtx_from_face_and_edge(n_face, face_edge_idx, face_edge, edge_vtx, &face_vtx);
+
+    /*
+     * Nez de la plaque en x = 0
+     */
+    int i_group = 0;
+    n_surf_face[i_part] = 0;
+    int n_surf_face_vtx = 0;
+    int n_face_in_group = group_face_idx[i_group+1] - group_face_idx[i_group];
+    int* face_bnd = malloc(n_face_in_group * sizeof(int));
+    for(int idx_face = group_face_idx[i_group]; idx_face < group_face_idx[i_group+1]; ++idx_face) {
+      int i_face = group_face[idx_face]-1;
+
+      int is_in_plate = 1;
+      for(int idx_vtx = face_vtx_idx[i_face]; idx_vtx < face_vtx_idx[i_face+1]; ++idx_vtx) {
+        int i_vtx = face_vtx[idx_vtx]-1;
+        if(vtx_coord[3*i_vtx] < 0.) {
+          is_in_plate = 0;
+        }
+      }
+
+      if(is_in_plate == 0) {
+        continue;
+      }
+
+      face_bnd[n_surf_face[i_part]++] = i_face;
+
+      n_surf_face_vtx += face_vtx_idx[i_face+1] - face_vtx_idx[i_face];
+
+    }
+
+
+    psurf_vtx_coord    [i_part] = malloc(3 * n_surf_face_vtx          * sizeof(double     ));
+    psurf_face_vtx_idx [i_part] = malloc(   ( n_surf_face[i_part] +1) * sizeof(int        ));
+    psurf_face_vtx     [i_part] = malloc(    n_surf_face_vtx          * sizeof(int        ));
+    psurf_face_ln_to_gn[i_part] = malloc(    n_surf_face[i_part]      * sizeof(PDM_g_num_t));
+    psurf_vtx_ln_to_gn [i_part] = malloc(    n_surf_face_vtx          * sizeof(PDM_g_num_t));
+
+    double      *_psurf_vtx_coord     = psurf_vtx_coord    [i_part];
+    int         *_psurf_face_vtx_idx  = psurf_face_vtx_idx [i_part];
+    int         *_psurf_face_vtx      = psurf_face_vtx     [i_part];
+    PDM_g_num_t *_psurf_face_ln_to_gn = psurf_face_ln_to_gn[i_part];
+    PDM_g_num_t *_psurf_vtx_ln_to_gn  = psurf_vtx_ln_to_gn [i_part];
+
+    int *vtx_flags = malloc(n_vtx * sizeof(int));
+    for(int i_vtx = 0; i_vtx < n_vtx; ++i_vtx) {
+      vtx_flags[i_vtx] = -100;
+    }
+    n_surf_vtx[i_part] = 0;
+
+    _psurf_face_vtx_idx[0] = 0;
+    for(int idx_face = 0; idx_face < n_surf_face[i_part]; ++idx_face) {
+      int i_face = face_bnd[idx_face];
+
+      _psurf_face_vtx_idx[idx_face+1] = _psurf_face_vtx_idx[idx_face];
+      _psurf_face_ln_to_gn[idx_face] = face_ln_to_gn[i_face];
+
+      for(int idx_vtx = face_vtx_idx[i_face]; idx_vtx < face_vtx_idx[i_face+1]; ++idx_vtx) {
+        int i_vtx = face_vtx[idx_vtx]-1;
+
+        if(vtx_flags[i_vtx] == -100) {
+          vtx_flags[i_vtx] = n_surf_vtx[i_part];
+          _psurf_vtx_coord[3*n_surf_vtx[i_part]  ] = vtx_coord[3*i_vtx  ];
+          _psurf_vtx_coord[3*n_surf_vtx[i_part]+1] = vtx_coord[3*i_vtx+1];
+          _psurf_vtx_coord[3*n_surf_vtx[i_part]+2] = vtx_coord[3*i_vtx+2];
+
+          _psurf_vtx_ln_to_gn[n_surf_vtx[i_part]] = vtx_ln_to_gn[i_vtx];
+
+          n_surf_vtx[i_part]++;
+        }
+
+        _psurf_face_vtx[_psurf_face_vtx_idx[idx_face+1]++] = vtx_flags[i_vtx]+1;
+      }
+
+    }
+
+    printf("n_surf_face = %i \n", n_surf_face[i_part]);
+    printf("n_surf_vtx  = %i \n", n_surf_vtx [i_part]);
+
+    psurf_vtx_coord    [i_part] = realloc(psurf_vtx_coord    [i_part], 3 * n_surf_vtx[i_part] * sizeof(double     ));
+    psurf_vtx_ln_to_gn [i_part] = realloc(psurf_vtx_ln_to_gn [i_part],     n_surf_vtx[i_part] * sizeof(PDM_g_num_t));
+
+    PDM_gnum_set_from_parents(gnum_face, i_part, n_surf_face[i_part], _psurf_face_ln_to_gn);
+    PDM_gnum_set_from_parents(gnum_vtx , i_part, n_surf_vtx [i_part], _psurf_vtx_ln_to_gn );
+
+    free(vtx_flags);
+    free(face_bnd);
+    free(face_vtx);
+
+  }
+
+  PDM_gnum_compute(gnum_face);
+  PDM_gnum_compute(gnum_vtx );
+
+  for(int i_part = 0; i_part < n_part; ++i_part) {
+    free(psurf_face_ln_to_gn[i_part]);
+    free(psurf_vtx_ln_to_gn [i_part]);
+    psurf_face_ln_to_gn[i_part] = PDM_gnum_get(gnum_face, 0);
+    psurf_vtx_ln_to_gn [i_part] = PDM_gnum_get(gnum_vtx , 0);
+  }
+
+  PDM_gnum_free(gnum_face);
+  PDM_gnum_free(gnum_vtx);
+
+
+  /* Vtk en légende */
+  if(1 == 1) {
+    for(int i_part = 0; i_part < n_part; ++i_part) {
+      char filename[999];
+      sprintf(filename, "face_vtx_coord_%3.3d_%3.3d.vtk", i_part, i_rank);
+      PDM_vtk_write_polydata(filename,
+                             n_surf_vtx [i_part],
+                             psurf_vtx_coord    [i_part],
+                             psurf_vtx_ln_to_gn [i_part],
+                             n_surf_face        [i_part],
+                             psurf_face_vtx_idx [i_part],
+                             psurf_face_vtx     [i_part],
+                             psurf_face_ln_to_gn[i_part],
+                             NULL);
+    }
 
   }
 
@@ -360,7 +506,6 @@ char *argv[]
   PDM_MPI_Comm_size (comm, &n_rank);
 
   PDM_g_num_t n_vtx_a   = 10;
-  PDM_g_num_t n_vtx_b   = 10;
   PDM_Mesh_nodal_elt_t elt_type  = PDM_MESH_NODAL_HEXA8;
 
   PDM_split_dual_t part_method    = PDM_SPLIT_DUAL_WITH_HILBERT;
@@ -370,7 +515,6 @@ char *argv[]
   _read_args(argc,
              argv,
              &n_vtx_a,
-             &n_vtx_b,
              &n_part,
              &elt_type);
 
