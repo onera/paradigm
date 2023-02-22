@@ -179,7 +179,7 @@ int main(int argc, char *argv[])
   double      *dvtx_coord  = PDM_DMesh_nodal_vtx_get(dmn);
   int dn_vtx = vtx_distrib[i_rank+1] - vtx_distrib[i_rank];
 
-  if(0 == 1) {
+  if(1 == 1) {
     PDM_dmesh_nodal_dump_vtk(dmn, PDM_GEOMETRY_KIND_VOLUMIC , "out_volumic");
     PDM_dmesh_nodal_dump_vtk(dmn, PDM_GEOMETRY_KIND_SURFACIC, "out_surfacic");
   }
@@ -364,7 +364,7 @@ int main(int argc, char *argv[])
                             PDM_OWNERSHIP_USER);
 
 
-  if(0 == 1) {
+  if(1 == 1) {
     if(dim == 3) {
       PDM_dmesh_nodal_dump_vtk(dmn_out, PDM_GEOMETRY_KIND_VOLUMIC , "out_post_volumic");
     }

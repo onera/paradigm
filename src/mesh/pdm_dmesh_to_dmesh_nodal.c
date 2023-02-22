@@ -1552,11 +1552,11 @@ _rebuild_dmesh_nodal_3d
     int end = local_post_section_face_bnd_idx[i_section+1];
     int nl_elmt = end - beg;
 
-    PDM_g_num_t* distrib_elmt = PDM_compute_uniform_entity_distribution(comm, post_section_face_bnd_n[i_section]);
+    // PDM_g_num_t* distrib_elmt = PDM_compute_uniform_entity_distribution(comm, post_section_face_bnd_n[i_section]);
     PDM_g_num_t* ln_to_gn = malloc(nl_elmt * sizeof(PDM_g_num_t));
 
     for(int i = 0; i < nl_elmt; ++i) {
-      ln_to_gn[i] = distrib_face_bnd[i_rank] + local_post_section_face_bnd_idx[i_section] + i + 1;
+      ln_to_gn[i] = local_post_section_face_bnd_idx[i_section] + distrib_face_bnd[i_rank] + i + 1;
     }
 
     PDM_log_trace_array_long(ln_to_gn, nl_elmt, "face_bnd_ln_to_gn ::");
@@ -1572,14 +1572,24 @@ _rebuild_dmesh_nodal_3d
     }
 
     PDM_log_trace_array_long(face_vtx_gnum, nl_elmt * n_vtx_per_elmt, "face_vtx_gnum :");
-    PDM_part_to_block_t* ptb = PDM_part_to_block_create_from_distrib(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
-                                                                     PDM_PART_TO_BLOCK_POST_CLEANUP,
-                                                                     1.,
-                                                                     &ln_to_gn,
-                                                                     distrib_elmt,
-                                                                     &nl_elmt,
-                                                                     1,
-                                                                     comm);
+    // PDM_part_to_block_t* ptb = PDM_part_to_block_create_from_distrib(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
+    //                                                                  PDM_PART_TO_BLOCK_POST_CLEANUP,
+    //                                                                  1.,
+    //                                                                  &ln_to_gn,
+    //                                                                  distrib_elmt,
+    //                                                                  &nl_elmt,
+    //                                                                  1,
+    //                                                                  comm);
+    PDM_part_to_block_t* ptb = PDM_part_to_block_create(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
+                                                        PDM_PART_TO_BLOCK_POST_CLEANUP,
+                                                        1.,
+                                                        &ln_to_gn,
+                                                        NULL,
+                                                        &nl_elmt,
+                                                        1,
+                                                        comm);
+
+    // PDM_g_num_t* distrib_elmt = PDM_part_to_block_distrib_index_get(ptb);
 
     printf("n_vtx_per_elmt = %i \n", n_vtx_per_elmt);
     printf("nl_elmt = %i \n", nl_elmt);
@@ -1601,7 +1611,7 @@ _rebuild_dmesh_nodal_3d
 
 
 
-    int dn_elmt = distrib_elmt[i_rank+1] - distrib_elmt[i_rank];
+    int dn_elmt = PDM_part_to_block_n_elt_block_get(ptb); //distrib_elmt[i_rank+1] - distrib_elmt[i_rank];
     if(t_elt == PDM_MESH_NODAL_POLY_2D) {
       abort();
     } else {
@@ -1616,7 +1626,7 @@ _rebuild_dmesh_nodal_3d
 
     PDM_part_to_block_free(ptb);
     free(face_vtx_gnum);
-    free(distrib_elmt);
+    // free(distrib_elmt);
     free(ln_to_gn);
   }
 
