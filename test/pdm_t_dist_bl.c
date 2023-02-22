@@ -25,6 +25,8 @@
 #include "pdm_dist_cloud_surf.h"
 #include "pdm_gnum.h"
 #include "pdm_part_connectivity_transform.h"
+#include "pdm_dbbtree.h"
+#include "pdm_geom_elem.h"
 
 /*============================================================================
  * Macro definitions
@@ -663,6 +665,109 @@ _create_wall_surf
 }
 
 
+static
+void
+_create_wall_ray
+(
+ const PDM_MPI_Comm           comm,
+ const int                    n_part,
+       int                  *n_surf_vtx,
+       int                  *n_surf_face,
+       double              **psurf_vtx_coord,
+       int                 **psurf_face_vtx_idx,
+       int                 **psurf_face_vtx,
+       PDM_g_num_t         **psurf_face_ln_to_gn,
+       PDM_g_num_t         **psurf_vtx_ln_to_gn,
+       int                  *pn_ray_out,
+       PDM_g_num_t         **pray_ln_to_gn_out,
+       double              **pray_coord_out
+)
+{
+  int i_rank;
+  PDM_MPI_Comm_rank (comm, &i_rank);
+
+  int n_rank;
+  PDM_MPI_Comm_size (comm, &n_rank);
+
+  int pn_ray = 0;
+  for(int i_part = 0; i_part < n_part; ++i_part) {
+    pn_ray += n_surf_face[i_part];
+  }
+
+  PDM_g_num_t *pray_ln_to_gn = malloc(pn_ray * sizeof(PDM_g_num_t));
+  double      *pray_coord    = malloc(6 * pn_ray * sizeof(double     ));
+
+  pn_ray = 0;
+  for(int i_part = 0; i_part < n_part; ++i_part) {
+
+
+    double      *face_normal    = malloc(3 * n_surf_face[i_part] * sizeof(double     ));
+    double      *face_center    = malloc(3 * n_surf_face[i_part] * sizeof(double     ));
+    PDM_geom_elem_polygon_properties(n_surf_face[i_part],
+                                     psurf_face_vtx_idx[i_part],
+                                     psurf_face_vtx    [i_part],
+                                     psurf_vtx_coord   [i_part],
+                                     face_normal,
+                                     face_center,
+                                     NULL,
+                                     NULL);
+
+    double dmax = 0.5;
+    for(int i_face = 0; i_face < n_surf_face[i_part]; ++i_face) {
+
+      pray_coord[6*pn_ray  ] = face_center[3*i_face  ];
+      pray_coord[6*pn_ray+1] = face_center[3*i_face+1];
+      pray_coord[6*pn_ray+2] = face_center[3*i_face+2];
+
+      double nx = face_normal[3*i_face  ];
+      double ny = face_normal[3*i_face+1];
+      double nz = face_normal[3*i_face+2];
+
+      double sn = sqrt(nx * nx + ny * ny + nz * nz);
+      nx = - nx / sn;
+      ny = - ny / sn;
+      nz = - nz / sn;
+
+      double dnx = nx * dmax;
+      double dny = ny * dmax;
+      double dnz = nz * dmax;
+
+      double xb = pray_coord[6*pn_ray  ] + dnx;
+      double yb = pray_coord[6*pn_ray+1] + dny;
+      double zb = pray_coord[6*pn_ray+2] + dnz;
+
+      pray_coord[6*pn_ray+3] = xb;
+      pray_coord[6*pn_ray+4] = yb;
+      pray_coord[6*pn_ray+5] = zb;
+
+      pray_ln_to_gn[pn_ray++] = psurf_face_ln_to_gn[i_face];
+
+    }
+
+    free(face_normal);
+    free(face_center);
+  }
+
+
+  char filename[999];
+  sprintf(filename, "ray_%i.vtk", i_rank);
+  PDM_vtk_write_lines(filename,
+                      pn_ray,
+                      pray_coord,
+                      pray_ln_to_gn,
+                      NULL);
+
+
+  *pn_ray_out        = pn_ray;
+  *pray_ln_to_gn_out = pray_ln_to_gn;
+  *pray_coord_out    = pray_coord;
+
+}
+
+
+
+
+
 /*============================================================================
  * Public function definitions
  *============================================================================*/
@@ -975,15 +1080,41 @@ char *argv[]
   PDM_MPI_Allreduce (l_extents,   g_extents,   3, PDM_MPI_DOUBLE, PDM_MPI_MIN, comm);
   PDM_MPI_Allreduce (l_extents+3, g_extents+3, 3, PDM_MPI_DOUBLE, PDM_MPI_MAX, comm);
 
+  double max_range = 0.;
+  for (int i = 0; i < 3; i++) {
+    max_range = PDM_MAX (max_range, g_extents[i+3] - g_extents[i]);
+  }
+  for (int i = 0; i < 3; i++) {
+    g_extents[i]   -= max_range * 1.1e-3;
+    g_extents[i+3] += max_range * 1.0e-3;
+  }
 
-  PDM_dbbtree_t* dbbt = PDM_dbbtree_create(comm, 3, global_extents);
+  PDM_dbbtree_t* dbbt = PDM_dbbtree_create(comm, 3, g_extents);
+  PDM_box_set_t *box_set = PDM_dbbtree_boxes_set (dbbt,
+                                                  1,
+                                                  pn_cell,
+                                (const double **) box_extents,
+                           (const PDM_g_num_t **) pcell_ln_to_gn);
+
+  int          n_lines       = 0;
+  double      *ray_coord     = NULL;
+  PDM_g_num_t *pray_ln_to_gn = NULL;
+  _create_wall_ray(comm,
+                   n_part,
+                   psurf_vtx,
+                   psurf_face,
+                   psurf_vtx_coord,
+                   psurf_face_vtx_idx,
+                   psurf_face_vtx,
+                   psurf_face_ln_to_gn,
+                   psurf_vtx_ln_to_gn,
+                   &n_lines,
+                   &pray_ln_to_gn,
+                   &ray_coord);
 
 
-
-
-
-
-
+  PDM_dbbtree_free (dbbt);
+  PDM_box_set_destroy (&box_set);
 
   PDM_dist_cloud_surf_free(dist);
 
