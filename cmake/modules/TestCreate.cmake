@@ -6,7 +6,7 @@
 #
 ################################################################################
 
-function(test_c_create name n_proc)
+function(test_c_create name n_proc LIST_TEST LIST_NRANK)
    add_executable(${name} "${name}.c")
    if ((NOT MPI_C_COMPILER) AND MPI_C_COMPILE_FLAGS)
      set_target_properties(${name}
@@ -34,6 +34,12 @@ function(test_c_create name n_proc)
              ${CMAKE_CURRENT_BINARY_DIR}/${name}
              ${MPIEXEC_POSTFLAGS})
 
+  set (${LIST_TEST} ${${LIST_TEST}} "${name}" )
+  set (${LIST_NRANK} ${${LIST_NRANK}} "${n_proc}" )           
+
+  set (${LIST_TEST} ${${LIST_TEST}} PARENT_SCOPE )
+  set (${LIST_NRANK} ${${LIST_NRANK}} PARENT_SCOPE )           
+
   set (LIST_PYTHON_TEST_ENV "")
 
   if (CMAKE_BUILD_TYPE STREQUAL "Sanitize")
@@ -50,7 +56,7 @@ function(test_c_create name n_proc)
 
 endfunction()
 
-function(test_fortran_create name n_proc)
+function(test_fortran_create name n_proc  LIST_TEST LIST_NRANK)
    if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/${name}.f90")
      add_executable(${name} "${name}.f90")
    else ()
@@ -74,6 +80,9 @@ function(test_fortran_create name n_proc)
              ${CMAKE_CURRENT_BINARY_DIR}/${name}
              ${MPIEXEC_POSTFLAGS})
 
+  list (APPEND ${LIST_TEST} "${name}" PARENT_SCOPE)
+  list (APPEND ${LIST_NRANK} "${n_proc}" PARENT_SCOPE)           
+
   set (LIST_PYTHON_TEST_ENV "")
 
   if (CMAKE_BUILD_TYPE STREQUAL "Sanitize")
@@ -90,7 +99,7 @@ function(test_fortran_create name n_proc)
 
 endfunction()
 
-function(test_python_create name n_proc)
+function(test_python_create name n_proc  LIST_TEST LIST_NRANK)
   configure_file(${CMAKE_CURRENT_SOURCE_DIR}/${name}.py ${CMAKE_CURRENT_BINARY_DIR}/${name}.py)
 
   add_custom_target(${name}
@@ -101,6 +110,8 @@ function(test_python_create name n_proc)
             python ${CMAKE_CURRENT_BINARY_DIR}/${name}.py
             ${MPIEXEC_POSTFLAGS})
 
+  list (APPEND ${LIST_TEST} "${name}" PARENT_SCOPE)
+  list (APPEND ${LIST_NRANK} "${n_proc}" PARENT_SCOPE)           
 
   set (LIST_PYTHON_TEST_ENV "")
 
