@@ -295,7 +295,7 @@ else()
   set (PDM_RUN_PYTHONPATH "PYTHONPATH=${CMAKE_BINARY_DIR}/Cython")
 endif()
 
-configure_file(${CMAKE_SOURCE_DIR}/script/pdm_run.in "${CMAKE_BINARY_DIR}/test/pdm_run"
+configure_file(${PROJECT_SOURCE_DIR}/script/pdm_run.in "${CMAKE_BINARY_DIR}/test/pdm_run"
                @ONLY)
 file(CHMOD ${CMAKE_BINARY_DIR}/test/pdm_run
   PERMISSIONS  OWNER_READ OWNER_EXECUTE)
