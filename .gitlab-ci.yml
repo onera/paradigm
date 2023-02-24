@@ -7,7 +7,7 @@ stages:
 # Default variables and parameters
 variables:
   GIT_STRATEGY: none # don't do anything by default
-  SCHEDULER_PARAMETERS:  "-M co --qos=co_inter_std  --cpus-per-task=24  --ntasks=24 --time=00:01:00"
+  SCHEDULER_PARAMETERS:  "--qos=co_inter_std  --cpus-per-task=24  --ntasks=24 --time=00:01:00"
   #SCHEDULER_PARAMETERS:  "-M rhel8 --qos=el8_gbe --ntasks=24 --time=10:00:00"
   # CI_DEBUG_TRACE: "true" #Uncomment to debug CI
 default:
@@ -19,7 +19,7 @@ init_repo:
   variables:
     GIT_STRATEGY: clone
     GIT_SUBMODULE_STRATEGY: none
-    SCHEDULER_PARAMETERS:  "-M co --qos=co_inter_std  --cpus-per-task=24  --ntasks=1 --time=00:10:00"
+    SCHEDULER_PARAMETERS:  "--qos=co_inter_std  --cpus-per-task=24  --ntasks=1 --time=00:10:00"
     #SCHEDULER_PARAMETERS:  "-M rhel8 --qos=el8_gbe --ntasks=1 --time=00:10:00"
   stage: init
   script: # explicitly load modules one by one, so that if one fails, it will be easy to identify
