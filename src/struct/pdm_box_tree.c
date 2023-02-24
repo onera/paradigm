@@ -6344,18 +6344,25 @@ _box_tree_intersect_lines_boxes_impl
   const int two_dim = 2*dim;
   //int normalized = bt->boxes->normalized;
 
-  /* if (normalized) { */
-  double *_line_coord = malloc (sizeof(double) * two_dim * n_line);
-  /*for (int i = 0; i < 2*n_line; i++) {
-    const double *_pt_origin =  line_coord + dim * i;
-    double *_pt              = _line_coord + dim * i;
-    PDM_box_set_normalize ((PDM_box_set_t *) bt->boxes, _pt_origin, _pt);
-    }*/
+  double *_line_coord = malloc(two_dim * n_line * sizeof(double));
   PDM_box_set_normalize_robust ((PDM_box_set_t *) bt->boxes,
                                 n_line*2,
-                                (double *) line_coord,
+                     (double *) line_coord,
                                 _line_coord);
-  /* } */
+
+  if(0 == 1){
+    int i_rank;
+    PDM_MPI_Comm_rank(bt->comm, &i_rank);
+    char filename[999];
+    sprintf(filename, "box_tree_intersect_lines_boxes_impl_line_coord_%i.vtk", i_rank);
+    PDM_vtk_write_lines(filename,
+                        n_line,
+                        _line_coord,
+                        NULL,
+                        NULL);
+  }
+
+
   int n_boxes = boxes->n_boxes;
 
   *box_idx = malloc (sizeof(int) * (n_line + 1));
@@ -6390,6 +6397,16 @@ _box_tree_intersect_lines_boxes_impl
               &node_extents[i*2*dim]);
   }
 
+  if(1 == 0){
+    char filename[999];
+    int i_rank;
+    PDM_MPI_Comm_rank(bt->comm, &i_rank);
+    sprintf(filename, "box_tree_intersect_lines_boxes_impl_node_extents_%i.vtk", i_rank);
+    PDM_vtk_write_boxes(filename,
+                        box_tree_data->n_nodes,
+                        node_extents,
+                        NULL);
+  }
 
   double invdir[3];
   for (int iline = 0; iline < n_line; iline++) {
@@ -6400,7 +6417,7 @@ _box_tree_intersect_lines_boxes_impl
     for (int i = 0; i < 3; i++) {
       double d = destination[i] - origin[i];
       if (PDM_ABS(d) < 1e-15) {
-        invdir[i] = PDM_SIGN(d) * HUGE_VAL;
+         invdir[i] = copysign(1, d) * HUGE_VAL;
       } else {
         invdir[i] = 1. / d;
       }
