@@ -57,6 +57,7 @@ int exit_code
      "  Usage: \n\n"
      "  -n      <level>  Number vtx in side of mesh A (default : 10).\n\n"
      "  -n_part <level>  Number of partition                        .\n\n"
+     "  -post            Ensight outputs (only if n_part == 1). \n\n"
      "  -t               Element kind .\n\n"
      "  -h               This message.\n\n");
   exit (exit_code);
@@ -81,6 +82,7 @@ _read_args
  char                 **argv,
  PDM_g_num_t           *n_vtx_a,
  int                   *n_part,
+ int                   *post,
  PDM_Mesh_nodal_elt_t  *elt_type
 )
 {
@@ -118,6 +120,9 @@ _read_args
       else
         *elt_type = (PDM_Mesh_nodal_elt_t) atoi(argv[i]);
     }
+    else if (strcmp(argv[i], "-post") == 0) {
+      *post = 1;
+    }
     else {
       _usage(EXIT_FAILURE);
     }
@@ -151,7 +156,7 @@ _generate_volume_mesh
   PDM_dcube_nodal_t *dcube = PDM_dcube_nodal_gen_create (comm,
                                                          n_vtx_seg,
                                                          n_vtx_seg,
-                                                         6,
+                                                         2,
                                                          lenght,
                                                          xmin,
                                                          ymin,
@@ -633,7 +638,7 @@ _create_wall_surf
 
 
   /* Vtk en légende */
-  if(1 == 1) {
+  if(0 == 1) {
     for(int i_part = 0; i_part < n_part; ++i_part) {
       char filename[999];
       sprintf(filename, "face_vtx_coord_%3.3d_%3.3d.vtk", i_part, i_rank);
@@ -669,20 +674,22 @@ static
 void
 _create_wall_ray
 (
- const PDM_MPI_Comm           comm,
- const int                    n_part,
-       int                  *n_surf_vtx,
-       int                  *n_surf_face,
-       double              **psurf_vtx_coord,
-       int                 **psurf_face_vtx_idx,
-       int                 **psurf_face_vtx,
-       PDM_g_num_t         **psurf_face_ln_to_gn,
-       PDM_g_num_t         **psurf_vtx_ln_to_gn,
-       int                  *pn_ray_out,
-       PDM_g_num_t         **pray_ln_to_gn_out,
-       double              **pray_coord_out
+ const PDM_MPI_Comm     comm,
+ const int              n_part,
+       int            *n_surf_vtx,
+       int            *n_surf_face,
+       double        **psurf_vtx_coord,
+       int           **psurf_face_vtx_idx,
+       int           **psurf_face_vtx,
+       PDM_g_num_t   **psurf_face_ln_to_gn,
+       PDM_g_num_t   **psurf_vtx_ln_to_gn,
+       int            *pn_ray_out,
+       PDM_g_num_t   **pray_ln_to_gn_out,
+       double        **pray_coord_out
 )
 {
+  PDM_UNUSED(n_surf_vtx);
+  PDM_UNUSED(psurf_vtx_ln_to_gn);
   int i_rank;
   PDM_MPI_Comm_rank (comm, &i_rank);
 
@@ -694,7 +701,7 @@ _create_wall_ray
     pn_ray += n_surf_face[i_part];
   }
 
-  PDM_g_num_t *pray_ln_to_gn = malloc(pn_ray * sizeof(PDM_g_num_t));
+  PDM_g_num_t *pray_ln_to_gn = malloc(    pn_ray * sizeof(PDM_g_num_t));
   double      *pray_coord    = malloc(6 * pn_ray * sizeof(double     ));
 
   pn_ray = 0;
@@ -712,7 +719,7 @@ _create_wall_ray
                                      NULL,
                                      NULL);
 
-    double dmax = 0.5;
+    double dmax = 0.2;
     for(int i_face = 0; i_face < n_surf_face[i_part]; ++i_face) {
 
       pray_coord[6*pn_ray  ] = face_center[3*i_face  ];
@@ -724,9 +731,9 @@ _create_wall_ray
       double nz = face_normal[3*i_face+2];
 
       double sn = sqrt(nx * nx + ny * ny + nz * nz);
-      nx = - nx / sn;
-      ny = - ny / sn;
-      nz = - nz / sn;
+      nx = -nx / sn;
+      ny = -ny / sn;
+      nz = -nz / sn;
 
       double dnx = nx * dmax;
       double dny = ny * dmax;
@@ -740,7 +747,7 @@ _create_wall_ray
       pray_coord[6*pn_ray+4] = yb;
       pray_coord[6*pn_ray+5] = zb;
 
-      pray_ln_to_gn[pn_ray++] = psurf_face_ln_to_gn[i_face];
+      pray_ln_to_gn[pn_ray++] = psurf_face_ln_to_gn[i_part][i_face];
 
     }
 
@@ -748,14 +755,15 @@ _create_wall_ray
     free(face_center);
   }
 
-
-  char filename[999];
-  sprintf(filename, "ray_%i.vtk", i_rank);
-  PDM_vtk_write_lines(filename,
-                      pn_ray,
-                      pray_coord,
-                      pray_ln_to_gn,
-                      NULL);
+  if(0 == 1) {
+    char filename[999];
+    sprintf(filename, "ray_%i.vtk", i_rank);
+    PDM_vtk_write_lines(filename,
+                        pn_ray,
+                        pray_coord,
+                        pray_ln_to_gn,
+                        NULL);
+  }
 
 
   *pn_ray_out        = pn_ray;
@@ -801,10 +809,12 @@ char *argv[]
   PDM_split_dual_t part_method    = PDM_SPLIT_DUAL_WITH_HILBERT;
 
   int n_part = 1;
+  int post   = 0;
 
   _read_args(argc,
              argv,
              &n_vtx_a,
+             &post,
              &n_part,
              &elt_type);
 
@@ -829,7 +839,7 @@ char *argv[]
                          &dmn_vol_a,
                          &mpart_vol_a);
 
-  if(1 == 1) {
+  if(post) {
     PDM_dmesh_nodal_dump_vtk(dmn_vol_a,
                              PDM_GEOMETRY_KIND_VOLUMIC,
                              "dmn_vol_a_");
@@ -912,26 +922,27 @@ char *argv[]
                              &distance,
                              &projected,
                              &closest_elt_gnum);
+    if(post) {
+      char filename[999];
+      sprintf(filename, "distance_%3.3d_%3.3d.vtk", i_part, i_rank);
 
-    char filename[999];
-    sprintf(filename, "distance_%3.3d_%3.3d.vtk", i_part, i_rank);
-
-    const char   *vector_field_name[1] = {"distance"};
-    const double *vector_field     [1] = {distance};
-    PDM_vtk_write_point_cloud_with_field(filename,
-                                         pn_cell       [i_part],
-                                         cell_center   [i_part],
-                                         pcell_ln_to_gn[i_part],
-                                         NULL,
-                                         1,
-                                         vector_field_name,
-                                         vector_field,
-                                         0,
-                                         NULL,
-                                         NULL,
-                                         0,
-                                         NULL,
-                                         NULL );
+      const char   *vector_field_name[1] = {"distance"};
+      const double *vector_field     [1] = {distance};
+      PDM_vtk_write_point_cloud_with_field(filename,
+                                           pn_cell       [i_part],
+                                           cell_center   [i_part],
+                                           pcell_ln_to_gn[i_part],
+                                           NULL,
+                                           1,
+                                           vector_field_name,
+                                           vector_field,
+                                           0,
+                                           NULL,
+                                           NULL,
+                                           0,
+                                           NULL,
+                                           NULL );
+    }
   }
 
   /* Create field of speed */
@@ -959,25 +970,28 @@ char *argv[]
       }
     }
 
-    char filename[999];
-    sprintf(filename, "velocity_%3.3d_%3.3d.vtk", i_part, i_rank);
 
-    const char   *vector_field_name[1] = {"velocity"};
-    const double *vector_field     [1] = {velocity[i_part]};
-    PDM_vtk_write_point_cloud_with_field(filename,
-                                         pn_cell       [i_part],
-                                         cell_center   [i_part],
-                                         pcell_ln_to_gn[i_part],
-                                         NULL,
-                                         1,
-                                         vector_field_name,
-                                         vector_field,
-                                         0,
-                                         NULL,
-                                         NULL,
-                                         0,
-                                         NULL,
-                                         NULL );
+    if(post) {
+      char filename[999];
+      sprintf(filename, "velocity_%3.3d_%3.3d.vtk", i_part, i_rank);
+
+      const char   *vector_field_name[1] = {"velocity"};
+      const double *vector_field     [1] = {velocity[i_part]};
+      PDM_vtk_write_point_cloud_with_field(filename,
+                                           pn_cell       [i_part],
+                                           cell_center   [i_part],
+                                           pcell_ln_to_gn[i_part],
+                                           NULL,
+                                           1,
+                                           vector_field_name,
+                                           vector_field,
+                                           0,
+                                           NULL,
+                                           NULL,
+                                           0,
+                                           NULL,
+                                           NULL );
+    }
   }
 
   /*
@@ -988,12 +1002,12 @@ char *argv[]
 
     int *pcell_face     = NULL;
     int *pcell_face_idx = NULL;
-    int *pface_edge      = NULL;
-    int *pface_edge_idx  = NULL;
+    int *pface_edge     = NULL;
+    int *pface_edge_idx = NULL;
     int *pedge_vtx      = NULL;
     int *pedge_vtx_idx  = NULL;
 
-    double *vtx_coord;
+    double *vtx_coord = NULL;
     int n_vtx = PDM_multipart_part_vtx_coord_get(mpart_vol_a,
                                                  0,
                                                  i_part,
@@ -1015,6 +1029,10 @@ char *argv[]
                                                      &pface_edge,
                                                      &pface_edge_idx,
                                                      PDM_OWNERSHIP_KEEP);
+
+    PDM_UNUSED(n_edge);
+    PDM_UNUSED(n_face);
+    PDM_UNUSED(n_vtx);
 
     int n_cell =   PDM_multipart_part_connectivity_get(mpart_vol_a,
                                                        0,
@@ -1060,7 +1078,34 @@ char *argv[]
     }
 
     free(pface_vtx);
+
+    if(post) {
+      char filename[999];
+      sprintf(filename, "box_extents_%3.3d_%3.3d.vtk", i_part, i_rank);
+      PDM_vtk_write_boxes(filename,
+                          n_cell,
+                          box_extents[i_part],
+                          pcell_ln_to_gn[i_part]);
+    }
+
+
   }
+
+  int          n_lines       = 0;
+  double      *ray_coord     = NULL;
+  PDM_g_num_t *pray_ln_to_gn = NULL;
+  _create_wall_ray(comm,
+                   n_part,
+                   psurf_vtx,
+                   psurf_face,
+                   psurf_vtx_coord,
+                   psurf_face_vtx_idx,
+                   psurf_face_vtx,
+                   psurf_face_ln_to_gn,
+                   psurf_vtx_ln_to_gn,
+                   &n_lines,
+                   &pray_ln_to_gn,
+                   &ray_coord);
 
 
   const int dim = 3;
@@ -1089,28 +1134,66 @@ char *argv[]
     g_extents[i+3] += max_range * 1.0e-3;
   }
 
-  PDM_dbbtree_t* dbbt = PDM_dbbtree_create(comm, 3, g_extents);
+  PDM_dbbtree_t* dbbt = PDM_dbbtree_create(comm, dim, g_extents);
   PDM_box_set_t *box_set = PDM_dbbtree_boxes_set (dbbt,
-                                                  1,
+                                                  n_part,
                                                   pn_cell,
                                 (const double **) box_extents,
                            (const PDM_g_num_t **) pcell_ln_to_gn);
 
-  int          n_lines       = 0;
-  double      *ray_coord     = NULL;
-  PDM_g_num_t *pray_ln_to_gn = NULL;
-  _create_wall_ray(comm,
-                   n_part,
-                   psurf_vtx,
-                   psurf_face,
-                   psurf_vtx_coord,
-                   psurf_face_vtx_idx,
-                   psurf_face_vtx,
-                   psurf_face_ln_to_gn,
-                   psurf_vtx_ln_to_gn,
-                   &n_lines,
-                   &pray_ln_to_gn,
-                   &ray_coord);
+  if(0 == 1) {
+    char filename[999];
+    sprintf(filename, "box_set_%3.3d.vtk", i_rank);
+    PDM_dbbtree_box_tree_write_vtk(filename,
+                                   dbbt,
+                                   -1,
+                                   0);
+  }
+
+
+  int         *intersecting_box_idx   = NULL;
+  PDM_g_num_t *intersecting_box_g_num = NULL;
+  PDM_dbbtree_lines_intersect_boxes(dbbt,
+                                    n_lines,
+                                    pray_ln_to_gn,
+                                    ray_coord,
+                                    &intersecting_box_idx,
+                                    &intersecting_box_g_num);
+
+  if (post) {
+    for (int i = 0; i < n_lines; i++) {
+      log_trace("line "PDM_FMT_G_NUM": ", pray_ln_to_gn[i]);
+      for (int j = intersecting_box_idx[i]; j < intersecting_box_idx[i+1]; j++) {
+        log_trace(PDM_FMT_G_NUM" ", intersecting_box_g_num[j]);
+      }
+      log_trace("\n");
+    }
+  }
+
+  free(intersecting_box_idx);
+  free(intersecting_box_g_num);
+
+  // int           redistrib_n_part            = 0;
+  // int          *redistrib_n_box             = NULL;
+  // PDM_g_num_t **redistrib_box_g_num         = NULL;
+  // int         **redistrib_box_init_location = NULL;
+  // int         **box_ray_idx                 = NULL;
+  // PDM_g_num_t **box_ray_g_num               = NULL;
+  // PDM_dbbtree_lines_intersect_boxes2(dbbt,
+  //                                    n_lines,
+  //                                    pray_ln_to_gn,
+  //                                    ray_coord,
+  //                                    &redistrib_n_part,
+  //                                    &redistrib_n_box,
+  //                                    &redistrib_box_g_num,
+  //                                    &redistrib_box_init_location,
+  //                                    &box_ray_idx,
+  //                                    &box_ray_g_num);
+
+  // for (int i_part = 0; i_part < redistrib_n_part; i_part++) {
+  //   PDM_log_trace_connectivity_long(box_ray_idx[i_part], box_ray_g_num[i_part], redistrib_n_box[i_part], "box_ray ::");
+  // }
+
 
 
   PDM_dbbtree_free (dbbt);
@@ -1126,6 +1209,7 @@ char *argv[]
     free(psurf_vtx_ln_to_gn [i_part]);
     free(cell_center        [i_part]);
     free(velocity           [i_part]);
+    free(box_extents        [i_part]);
   }
   free(psurf_vtx );
   free(psurf_face);
@@ -1138,6 +1222,9 @@ char *argv[]
   free(pcell_ln_to_gn);
   free(pn_cell);
   free(velocity);
+  free(pray_ln_to_gn);
+  free(ray_coord);
+  free(box_extents);
 
   PDM_DMesh_nodal_free(dmn_vol_a);
   PDM_multipart_free(mpart_vol_a);
