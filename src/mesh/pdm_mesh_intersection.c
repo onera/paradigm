@@ -2986,6 +2986,80 @@ _mesh_intersection_vol_surf
 }
 
 
+static
+void
+_mesh_intersection_vol_line
+(
+ PDM_mesh_intersection_t *mi,
+ PDM_extract_part_t      *extrp_mesh_a,
+ PDM_extract_part_t      *extrp_mesh_b,
+ int                     *redistribute_box_a_to_box_b_idx,
+ int                     *redistribute_box_a_to_box_b
+)
+{
+  int i_rank;
+  PDM_MPI_Comm_rank(mi->comm, &i_rank);
+
+  int dbg_enabled = 0;
+
+  int *cellA_lineB_idx = redistribute_box_a_to_box_b_idx;
+  int *cellA_lineB     = redistribute_box_a_to_box_b;
+
+  /* Get connectivities and coordinates */
+  int          n_cellA = 0;
+  int          n_faceA = 0;
+  int          n_vtxA  = 0;
+  int         *cellA_faceA_idx = NULL;
+  int         *cellA_faceA     = NULL;
+  int         *faceA_vtxA_idx  = NULL;
+  int         *faceA_vtxA      = NULL;
+  double      *vtxA_coord      = NULL;
+  PDM_g_num_t *cellA_ln_to_gn  = NULL;
+  PDM_g_num_t *vtxA_ln_to_gn   = NULL;
+  PDM_ownership_t owner_face_vtxA = _get_extracted_mesh_vol(extrp_mesh_a,
+                                                            &n_cellA,
+                                                            &n_faceA,
+                                                            &n_vtxA,
+                                                            &cellA_faceA_idx,
+                                                            &cellA_faceA,
+                                                            &faceA_vtxA_idx,
+                                                            &faceA_vtxA,
+                                                            &vtxA_coord,
+                                                            &cellA_ln_to_gn,
+                                                            &vtxA_ln_to_gn);
+
+
+  if (dbg_enabled) {
+    // _export_vtk_3d("extrp_mesh_a", extrp_mesh_a);
+    // _export_vtk_3d("extrp_mesh_b", extrp_mesh_b);
+
+    _export_ensight3d(mi->comm,
+                      "vol_vol_meshA",
+                      n_cellA,
+                      n_faceA,
+                      n_vtxA,
+                      cellA_faceA_idx,
+                      cellA_faceA,
+                      faceA_vtxA_idx,
+                      faceA_vtxA,
+                      vtxA_coord,
+                      cellA_ln_to_gn,
+                      vtxA_ln_to_gn);
+    _export_vtk_1d("extrp_mesh_b", extrp_mesh_b);
+
+    PDM_log_trace_connectivity_int(cellA_lineB_idx,
+                                   cellA_lineB,
+                                   n_cellA,
+                                   "cellA_lineB : ");
+  }
+
+  if (owner_face_vtxA == PDM_OWNERSHIP_USER) {
+    free(faceA_vtxA);
+  }
+
+}
+
+
 
 static void
 _get_extracted_mesh_surf
@@ -4997,6 +5071,13 @@ PDM_mesh_intersection_compute
                                  extrp_mesh_b,
                                  redistribute_box_a_to_box_b_idx,
                                  redistribute_box_a_to_box_b);
+  } else if(mi->dim_mesh[0] == 3 && mi->dim_mesh[1] == 1) {
+    // On suppose que l'utilisateur met A = Vol et B = Surf
+    _mesh_intersection_vol_line(mi,
+                                extrp_mesh_a,
+                                extrp_mesh_b,
+                                redistribute_box_a_to_box_b_idx,
+                                redistribute_box_a_to_box_b);
   } else {
     PDM_error(__FILE__, __LINE__, 0,
               "PDM_mesh_intersection_compute error : Cannot handle meshA with dim = %i and meshB = %i \n", mi->dim_mesh[0], mi->dim_mesh[1]);
