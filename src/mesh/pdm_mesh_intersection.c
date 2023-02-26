@@ -3233,7 +3233,6 @@ _mesh_intersection_vol_line
    * Creation du part_to_part
    * may not work if multiple init locations...
    */
-  int n_elt_b = extrp_mesh_b->n_target[0];
   PDM_g_num_t *elt_b_ln_to_gn = extrp_mesh_b->target_gnum[0];
   int         *elt_b_init_loc = extrp_mesh_b->target_location[0];
 
@@ -3291,7 +3290,8 @@ _mesh_intersection_vol_line
                          &request_init_loc);
   PDM_part_to_part_iexch_wait(ptp_a, request_init_loc);
 
-
+  free(elt_a_elt_b_init_loc);
+  free(cellA_lineB_post_g_num);
 
   int  *n_ref_a = NULL;
   int **ref_a   = NULL;
@@ -3299,15 +3299,21 @@ _mesh_intersection_vol_line
                                  &n_ref_a,
                                  &ref_a);
 
-  int          *user_n_elt_a              = malloc(sizeof(int          ) * mi->n_part_mesh[0]);
-  mi->elt_a_elt_b_idx                     = malloc(sizeof(int         *) * mi->n_part_mesh[0]);
+  int          *user_n_elt_a              = malloc(mi->n_part_mesh[0] * sizeof(int          ));
+  int         **user_elt_a_b_init_loc_idx = malloc(mi->n_part_mesh[0] * sizeof(int         *));
+  PDM_g_num_t **user_elt_ln_to_gn_a       = malloc(mi->n_part_mesh[0] * sizeof(PDM_g_num_t *));
+  mi->elt_a_elt_b_idx                     = malloc(mi->n_part_mesh[0] * sizeof(int         *));
 
   for (int i_part = 0; i_part < mi->n_part_mesh[0]; i_part++) {
-    printf("n_ref_a = %i \n", n_ref_a[i_part]);
-
     user_n_elt_a[i_part] = PDM_part_mesh_n_entity_get(mi->mesh[0],
                                                       i_part,
                                                       PDM_MESH_ENTITY_CELL);
+
+    PDM_part_mesh_entity_ln_to_gn_get(mi->mesh[0],
+                                      i_part,
+                                      PDM_MESH_ENTITY_CELL,
+                                      &user_elt_ln_to_gn_a[i_part],
+                                      PDM_OWNERSHIP_USER);
 
     mi->elt_a_elt_b_idx[i_part] = PDM_array_zeros_int(user_n_elt_a[i_part]+1);
 
@@ -3315,20 +3321,66 @@ _mesh_intersection_vol_line
       int elt_a_id = ref_a[i_part][i] - 1;
       mi->elt_a_elt_b_idx[i_part][elt_a_id+1] = user_elt_a_b_n[i_part][i];
     }
+    free(user_elt_a_b_n[i_part]);
 
     for (int i = 0; i < user_n_elt_a[i_part]; i++) {
       mi->elt_a_elt_b_idx[i_part][i+1] += mi->elt_a_elt_b_idx[i_part][i];
     }
 
-    // PDM_log_trace_array_long(cellA)
+    int n_elt_a_elt_b = mi->elt_a_elt_b_idx[i_part][user_n_elt_a[i_part]];
+    user_elt_a_b_init_loc_idx[i_part] = malloc((n_elt_a_elt_b+1) * sizeof(int));
+    for(int i = 0; i < n_elt_a_elt_b+1; ++i) {
+      user_elt_a_b_init_loc_idx[i_part][i] = i;
+    }
 
-    PDM_log_trace_connectivity_long(mi->elt_a_elt_b_idx[i_part], mi->elt_a_elt_b[i_part], user_n_elt_a[i_part], "elt_a_elt_b ::");
+
+    if(0 == 1) {
+      PDM_log_trace_connectivity_long(mi->elt_a_elt_b_idx[i_part], mi->elt_a_elt_b[i_part], user_n_elt_a[i_part], "elt_a_elt_b ::");
+    }
 
     // free(user_elt_a_b_idx);
   }
+  free(user_elt_a_b_n);
 
 
 
+  int *user_n_elt_b = malloc(mi->n_part_mesh[1] * sizeof(int));
+  for (int i_part = 0; i_part < mi->n_part_mesh[1]; i_part++) {
+    if (mi->mesh_nodal[1] == NULL && mi->mesh[1] != NULL) {
+      user_n_elt_b[i_part] = PDM_part_mesh_n_entity_get(mi->mesh[1],
+                                                       i_part,
+                                                       PDM_MESH_ENTITY_EDGE);
+    } else {
+      PDM_error(__FILE__, __LINE__, 0, "invalid mesh type \n");
+      abort();
+    }
+
+  }
+
+
+  // dbg print?
+  mi->ptp = PDM_part_to_part_create_from_num2_triplet((const PDM_g_num_t **) user_elt_ln_to_gn_a,
+                                                      (const int          *) user_n_elt_a,
+                                                                             mi->n_part_mesh[0],
+                                                      (const int          *) user_n_elt_b,
+                                                                             mi->n_part_mesh[1],
+                                                      (const int         **) mi->elt_a_elt_b_idx,       // size = user_n_elt_a+1
+                                                      (const int         **) user_elt_a_b_init_loc_idx, // size = user_a_b_idx[user_n_elt_a]+1
+                                                      (const int         **) user_elt_a_b_init_loc,     // size = user_a_b_init_loc_idx[user_a_b_idx[user_n_elt_a]] (*3?)
+                                                                             mi->comm);
+
+  for (int ipart = 0; ipart < mi->n_part_mesh[0]; ipart++) {
+    free(user_elt_a_b_init_loc_idx[ipart]);
+    free(user_elt_a_b_init_loc    [ipart]);
+    if (mi->mesh_nodal[0] != NULL) {
+      free(user_elt_ln_to_gn_a[ipart]);
+    }
+  }
+  free(user_elt_a_b_init_loc_idx);
+  free(user_elt_a_b_init_loc    );
+  free(user_elt_ln_to_gn_a);
+  free(user_n_elt_a);
+  free(user_n_elt_b);
 
   free(cellA_lineB_post);
   free(cellA_lineB_post_idx);
