@@ -481,6 +481,7 @@ _create_wall_surf
                                     &pcell_ln_to_gn[i_part],
                                     PDM_OWNERSHIP_KEEP);
 
+
     int *pcell_face     = NULL;
     int *pcell_face_idx = NULL;
     int n_cell =   PDM_multipart_part_connectivity_get(mpart,
@@ -490,6 +491,7 @@ _create_wall_surf
                                                        &pcell_face,
                                                        &pcell_face_idx,
                                                        PDM_OWNERSHIP_KEEP);
+    // PDM_log_trace_array_long(pcell_ln_to_gn[i_part], n_cell, "pcell_ln_to_gn : ");
 
     n_face = PDM_multipart_part_connectivity_get(mpart,
                                                  0,
@@ -1372,9 +1374,85 @@ char *argv[]
 
   PDM_mesh_intersection_compute(mi);
 
+
+  /*
+   * Use of meshintersection for bl post-treatment
+   */
+  PDM_part_to_part_t* ptp = NULL;
+  PDM_mesh_intersection_part_to_part_get(mi,
+                                         &ptp,
+                                         PDM_OWNERSHIP_KEEP);
+
+  int n_part_cell = 0;
+  int n_part_line = 0;
+  PDM_part_to_part_n_part_get(ptp, &n_part_cell, &n_part_line);
+
+  int  *n_ref_b = NULL;
+  int **ref_b   = NULL;
+  PDM_part_to_part_ref_lnum2_get(ptp,
+                                 &n_ref_b,
+                                 &ref_b);
+
+  for(int i_part = 0; i_part < n_part_line; ++i_part) {
+    printf("n_ref_b[%i] = %i \n", i_part, n_ref_b[i_part]);
+  }
+  assert(n_part_line == 1);
+
+  /*
+   * Envoi pour chaque ligne le centre cellule
+   */
+
+  double **pline_to_cell_center = NULL;
+  int request = -1;
+  PDM_part_to_part_iexch(ptp,
+                         PDM_MPI_COMM_KIND_P2P,
+                         PDM_STRIDE_CST_INTERLACED,
+                         PDM_PART_TO_PART_DATA_DEF_ORDER_PART1,
+                         1,
+                         3 * sizeof(double),
+                         NULL,
+        (const void  **) cell_center,
+                         NULL,
+        (      void ***) &pline_to_cell_center,
+                         &request);
+  PDM_part_to_part_iexch_wait(ptp, request);
+
+
+  int         **gnum1_come_from_idx = NULL;
+  PDM_g_num_t **gnum1_come_from     = NULL;
+  PDM_part_to_part_gnum1_come_from_get(ptp,
+                                       &gnum1_come_from_idx,
+                                       &gnum1_come_from);
+  int         *_gnum1_come_from_idx  = gnum1_come_from_idx[0];
+  PDM_g_num_t *_gnum1_come_from      = gnum1_come_from    [0];
+  double      *_pline_to_cell_center = pline_to_cell_center[0];
+
+  PDM_log_trace_connectivity_long(_gnum1_come_from_idx, _gnum1_come_from, n_lines, "_gnum1_come_from ::");
+
+  for(int i_line = 0; i_line < n_lines; ++i_line) {
+
+    int n_cell_connect = _gnum1_come_from_idx[i_line+1] - _gnum1_come_from_idx[i_line];
+    PDM_g_num_t *_cell_g_num        = &_gnum1_come_from     [    _gnum1_come_from_idx[i_line]];
+    double      *_cell_center_coord = &_pline_to_cell_center[3 * _gnum1_come_from_idx[i_line]];
+
+    char filename[999];
+    sprintf(filename, "line_to_cell_vtx_coords_%i.vtk", i_line);
+    PDM_vtk_write_point_cloud(filename,
+                              n_cell_connect,
+                              _cell_center_coord,
+                              _cell_g_num,
+                              NULL);
+
+  }
+
+  for(int i_part = 0; i_part < n_part_line; ++i_part) {
+    free(pline_to_cell_center[i_part]);
+  }
+  free(pline_to_cell_center);
+
+
+
   PDM_mesh_intersection_free(mi);
-
-
 
   PDM_dist_cloud_surf_free(dist);
 

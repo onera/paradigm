@@ -3187,7 +3187,7 @@ _mesh_intersection_vol_line
                                                        ray_origin,
                                                        ray_direction,
                                                        &intersection_coord[3*lface]);
-        printf("intersection_stat[%i] = %i \n", lface, intersection_stat[lface]);
+        // printf("intersection_stat[%i] = %i \n", lface, intersection_stat[lface]);
         if (intersection_stat[lface] == PDM_POLYGON_INSIDE) {
           n_intersect++;
         }
@@ -3195,7 +3195,7 @@ _mesh_intersection_vol_line
       } /* End face_vtx loop */
 
       /* Check if ray is purely inside the cell -> localisation of vtx ? */
-      printf("i_cell = %i | i_line = %i | n_intersect = %i \n", i_cell, i_line, n_intersect);
+      // printf("i_cell = %i | i_line = %i | n_intersect = %i \n", i_cell, i_line, n_intersect);
 
       /* Post-treatment */
       lface = 0;
