@@ -3052,7 +3052,7 @@ _mesh_intersection_vol_line
   int i_rank;
   PDM_MPI_Comm_rank(mi->comm, &i_rank);
 
-  int dbg_enabled = 0;
+  int dbg_enabled = 1;
 
   int *cellA_lineB_idx = redistribute_box_a_to_box_b_idx;
   int *cellA_lineB     = redistribute_box_a_to_box_b;
@@ -3079,16 +3079,6 @@ _mesh_intersection_vol_line
                                                             &vtxA_coord,
                                                             &cellA_ln_to_gn,
                                                             &vtxA_ln_to_gn);
-
-  PDM_g_num_t *edgeB_ln_to_gn = NULL;
-  PDM_g_num_t *vtxB_ln_to_gn  = NULL;
-  int n_edge = PDM_extract_part_ln_to_gn_get(extrp_mesh_b, 0, PDM_MESH_ENTITY_EDGE  , &edgeB_ln_to_gn, PDM_OWNERSHIP_KEEP);
-  int n_vtx  = PDM_extract_part_ln_to_gn_get(extrp_mesh_b, 0, PDM_MESH_ENTITY_VERTEX, &vtxB_ln_to_gn , PDM_OWNERSHIP_KEEP);
-
-  PDM_UNUSED(n_edge);
-  PDM_UNUSED(n_vtx);
-
-  edgeB_ln_to_gn = extrp_mesh_b->target_gnum[0];
 
   double *vtx_coordB = NULL;
   PDM_extract_part_vtx_coord_get(extrp_mesh_b, 0, &vtx_coordB, PDM_OWNERSHIP_KEEP);
@@ -3152,8 +3142,9 @@ _mesh_intersection_vol_line
   double *intersection_coord = malloc(3 * n_cell_face_max * sizeof(double));
   int    *intersection_stat  = malloc(    n_cell_face_max * sizeof(int   ));
 
-  int         *cellA_lineB_post_idx = malloc((n_cellA+1)              * sizeof(int        ));
-  PDM_g_num_t *cellA_lineB_post     = malloc(cellA_lineB_idx[n_cellA] * sizeof(PDM_g_num_t));
+  int         *cellA_lineB_post_idx = malloc((n_cellA+1)              * sizeof(int));
+  int         *cellA_lineB_post_n   = malloc((n_cellA)                * sizeof(int));
+  int         *cellA_lineB_post     = malloc(cellA_lineB_idx[n_cellA] * sizeof(int));
 
   /*
    * For each cells we sseek intersection of lines with one faces
@@ -3161,6 +3152,7 @@ _mesh_intersection_vol_line
   cellA_lineB_post_idx[0] = 0;
   for(int i_cell = 0; i_cell < n_cellA; ++i_cell) {
     cellA_lineB_post_idx[i_cell+1] = cellA_lineB_post_idx[i_cell];
+    cellA_lineB_post_n  [i_cell] = 0;
     for(int idx_line = cellA_lineB_idx[i_cell]; idx_line < cellA_lineB_idx[i_cell+1]; ++idx_line) {
       int i_line = cellA_lineB[idx_line];
 
@@ -3168,15 +3160,15 @@ _mesh_intersection_vol_line
       int i_vtx2 = edgeB_vtxB[2*i_line+1]-1;
 
       double ray_direction[3] = {
-        vtx_coordB[3*i_vtx1  ] - vtx_coordB[3*i_vtx2  ],
-        vtx_coordB[3*i_vtx1+1] - vtx_coordB[3*i_vtx2+1],
-        vtx_coordB[3*i_vtx1+2] - vtx_coordB[3*i_vtx2+2],
+        vtx_coordB[3*i_vtx2  ] - vtx_coordB[3*i_vtx1  ],
+        vtx_coordB[3*i_vtx2+1] - vtx_coordB[3*i_vtx1+1],
+        vtx_coordB[3*i_vtx2+2] - vtx_coordB[3*i_vtx1+2],
       };
 
       double ray_origin[3] = {
-        0.5*(vtx_coordB[3*i_vtx1  ] + vtx_coordB[3*i_vtx2  ]),
-        0.5*(vtx_coordB[3*i_vtx1+1] + vtx_coordB[3*i_vtx2+1]),
-        0.5*(vtx_coordB[3*i_vtx1+2] + vtx_coordB[3*i_vtx2+2]),
+        vtx_coordB[3*i_vtx1  ],
+        vtx_coordB[3*i_vtx1+1],
+        vtx_coordB[3*i_vtx1+2],
       };
 
       int n_intersect = 0;
@@ -3195,23 +3187,22 @@ _mesh_intersection_vol_line
                                                        ray_origin,
                                                        ray_direction,
                                                        &intersection_coord[3*lface]);
-
+        printf("intersection_stat[%i] = %i \n", lface, intersection_stat[lface]);
         if (intersection_stat[lface] == PDM_POLYGON_INSIDE) {
-          printf("Insed ! \n");
           n_intersect++;
-        } else {
-          printf("Not inside \n");
         }
         lface++;
       } /* End face_vtx loop */
 
-      // printf("i_cell = %i | i_line = %i | n_intersect = %i \n", i_cell, i_line, n_intersect);
+      /* Check if ray is purely inside the cell -> localisation of vtx ? */
+      printf("i_cell = %i | i_line = %i | n_intersect = %i \n", i_cell, i_line, n_intersect);
 
       /* Post-treatment */
       lface = 0;
       for(int idx_face = cellA_faceA_idx[i_cell]; idx_face < cellA_faceA_idx[i_cell+1]; idx_face++) {
         if(intersection_stat[lface] == PDM_POLYGON_INSIDE) {
-          cellA_lineB_post[cellA_lineB_post_idx[i_cell+1]++] = edgeB_ln_to_gn[i_line];
+          cellA_lineB_post_n[i_cell]++;
+          cellA_lineB_post[cellA_lineB_post_idx[i_cell+1]++] = i_line;
           break;
         }
         lface++;
@@ -3222,10 +3213,10 @@ _mesh_intersection_vol_line
 
   if(1 == 1) {
     // PDM_log_trace_array_long(cellA_ln_to_gn, n_cellA, "cellA_ln_to_gn ::");
-    PDM_log_trace_connectivity_long(cellA_lineB_post_idx,
-                                    cellA_lineB_post,
-                                    n_cellA,
-                                    "cellA_lineB_post : ");
+    PDM_log_trace_connectivity_int(cellA_lineB_post_idx,
+                                   cellA_lineB_post,
+                                   n_cellA,
+                                   "cellA_lineB_post : ");
   }
 
 
@@ -3237,8 +3228,111 @@ _mesh_intersection_vol_line
   free(face_center);
   free(intersection_coord);
   free(intersection_stat);
+
+  /*
+   * Creation du part_to_part
+   * may not work if multiple init locations...
+   */
+  int n_elt_b = extrp_mesh_b->n_target[0];
+  PDM_g_num_t *elt_b_ln_to_gn = extrp_mesh_b->target_gnum[0];
+  int         *elt_b_init_loc = extrp_mesh_b->target_location[0];
+
+  int         *elt_a_elt_b_init_loc   = malloc(3 * cellA_lineB_post_idx[n_cellA] * sizeof(int        ));
+  PDM_g_num_t *cellA_lineB_post_g_num = malloc(    cellA_lineB_post_idx[n_cellA] * sizeof(PDM_g_num_t));
+  for(int i_cell = 0; i_cell < n_cellA; ++i_cell) {
+    for(int idx_line = cellA_lineB_post_idx[i_cell]; idx_line < cellA_lineB_post_idx[i_cell+1]; ++idx_line) {
+      int i_line = cellA_lineB[i_cell];
+      cellA_lineB_post_g_num[  idx_line  ] = elt_b_ln_to_gn[  i_line  ];
+      elt_a_elt_b_init_loc  [3*idx_line  ] = elt_b_init_loc[3*i_line  ];
+      elt_a_elt_b_init_loc  [3*idx_line+1] = elt_b_init_loc[3*i_line+1];
+      elt_a_elt_b_init_loc  [3*idx_line+2] = elt_b_init_loc[3*i_line+2];
+    }
+  }
+
+
+
+  /* Exchange from extracted A to user A */
+  PDM_part_to_part_t *ptp_a = NULL;
+  PDM_extract_part_part_to_part_get(extrp_mesh_a,
+                                    PDM_MESH_ENTITY_CELL,
+                                    &ptp_a,
+                                    PDM_OWNERSHIP_KEEP);
+
+
+  PDM_mpi_comm_kind_t comm_kind = PDM_MPI_COMM_KIND_P2P;//COLLECTIVE;
+  int **user_elt_a_b_n = NULL;
+  mi->elt_a_elt_b      = NULL;
+  int request_g_num = -1;
+  PDM_part_to_part_iexch(ptp_a,
+                         comm_kind,
+                         PDM_STRIDE_VAR_INTERLACED,
+                         PDM_PART_TO_PART_DATA_DEF_ORDER_PART1,
+                         1,
+                         sizeof(PDM_g_num_t),
+        (const int   **) &cellA_lineB_post_n,
+        (const void  **) &cellA_lineB_post_g_num,
+                         &user_elt_a_b_n,
+        (      void ***) &mi->elt_a_elt_b,
+                         &request_g_num);
+  PDM_part_to_part_iexch_wait(ptp_a, request_g_num);
+
+  int **user_elt_a_b_init_loc = NULL;
+  int request_init_loc = -1;
+  PDM_part_to_part_iexch(ptp_a,
+                         comm_kind,
+                         PDM_STRIDE_VAR_INTERLACED,
+                         PDM_PART_TO_PART_DATA_DEF_ORDER_PART1,
+                         1,
+                         3 * sizeof(int),
+        (const int   **) &cellA_lineB_post_n,
+        (const void  **) &elt_a_elt_b_init_loc,
+                         &user_elt_a_b_n,
+        (      void ***) &user_elt_a_b_init_loc,
+                         &request_init_loc);
+  PDM_part_to_part_iexch_wait(ptp_a, request_init_loc);
+
+
+
+  int  *n_ref_a = NULL;
+  int **ref_a   = NULL;
+  PDM_part_to_part_ref_lnum2_get(ptp_a,
+                                 &n_ref_a,
+                                 &ref_a);
+
+  int          *user_n_elt_a              = malloc(sizeof(int          ) * mi->n_part_mesh[0]);
+  mi->elt_a_elt_b_idx                     = malloc(sizeof(int         *) * mi->n_part_mesh[0]);
+
+  for (int i_part = 0; i_part < mi->n_part_mesh[0]; i_part++) {
+    printf("n_ref_a = %i \n", n_ref_a[i_part]);
+
+    user_n_elt_a[i_part] = PDM_part_mesh_n_entity_get(mi->mesh[0],
+                                                      i_part,
+                                                      PDM_MESH_ENTITY_CELL);
+
+    mi->elt_a_elt_b_idx[i_part] = PDM_array_zeros_int(user_n_elt_a[i_part]+1);
+
+    for (int i = 0; i < n_ref_a[i_part]; i++) {
+      int elt_a_id = ref_a[i_part][i] - 1;
+      mi->elt_a_elt_b_idx[i_part][elt_a_id+1] = user_elt_a_b_n[i_part][i];
+    }
+
+    for (int i = 0; i < user_n_elt_a[i_part]; i++) {
+      mi->elt_a_elt_b_idx[i_part][i+1] += mi->elt_a_elt_b_idx[i_part][i];
+    }
+
+    // PDM_log_trace_array_long(cellA)
+
+    PDM_log_trace_connectivity_long(mi->elt_a_elt_b_idx[i_part], mi->elt_a_elt_b[i_part], user_n_elt_a[i_part], "elt_a_elt_b ::");
+
+    // free(user_elt_a_b_idx);
+  }
+
+
+
+
   free(cellA_lineB_post);
   free(cellA_lineB_post_idx);
+  free(cellA_lineB_post_n);
 
 }
 
