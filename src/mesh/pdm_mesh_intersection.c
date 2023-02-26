@@ -5075,6 +5075,9 @@ PDM_mesh_intersection_compute
                                  mi->dim_mesh[imesh],
                                  mesh_global_extents[imesh],
                                  &extents_mesh[imesh]);
+      // printf("extents_mesh [%i] = (%12.5e/%12.5e/%12.5e) | (%12.5e/%12.5e/%12.5e) \n", imesh,
+      //        mesh_global_extents[imesh][0], mesh_global_extents[imesh][1], mesh_global_extents[imesh][2],
+      //        mesh_global_extents[imesh][3], mesh_global_extents[imesh][4], mesh_global_extents[imesh][5]);
     }
     else if (mi->mesh_nodal[imesh] != NULL) {
       _compute_mesh_nodal_extents(mi->mesh_nodal[imesh],
@@ -5184,7 +5187,7 @@ PDM_mesh_intersection_compute
       }
     }
 
-    if (0 == 1) {
+    if (0  == 1) {
       for(int i_part = 0; i_part < n_part[imesh]; ++i_part) {
         log_trace("n_extract_elmt[%d][%d] = %d\n", imesh, i_part, n_extract_elmt[imesh][i_part]);
         // for (int i = 0; i < n_extract_elmt[imesh][i_part]; i++) {

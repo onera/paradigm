@@ -27,6 +27,7 @@
 #include "pdm_part_connectivity_transform.h"
 #include "pdm_dbbtree.h"
 #include "pdm_geom_elem.h"
+#include "pdm_mesh_intersection.h"
 
 /*============================================================================
  * Macro definitions
@@ -672,6 +673,136 @@ _create_wall_surf
 
 static
 void
+_set_mesh
+(
+ PDM_mesh_intersection_t *mi,
+ int                      i_mesh,
+ PDM_multipart_t         *mpart,
+ int                      n_part
+)
+{
+  PDM_mesh_intersection_n_part_set(mi, i_mesh, n_part);
+
+  for (int i_part = 0; i_part < n_part; i_part++) {
+
+    int *face_edge_idx;
+    int *face_edge;
+    int *edge_vtx_idx;
+    int *edge_vtx;
+
+    int n_proc, tn_part;
+    int _n_vtx, n_bounds, n_joins, n_part_joins;
+    int sface_edge, sedge_vtx, sedge_bound, sedge_join;
+    int  n_section;
+    int* n_elt;
+
+    int n_face, n_edge;
+    PDM_multipart_part_dim_get(mpart, 0, i_part, &n_section, &n_elt,
+                               &n_face, &n_edge, &n_part_joins, &_n_vtx, &n_proc, &tn_part,
+                               &sface_edge, &sedge_vtx, &sedge_bound, &n_bounds, &sedge_join, &n_joins);
+
+    double       *_vtx;
+    int          *_edge_face;
+    int          *edge_bound_idx, *edge_bound, *edge_join_idx, *edge_join;
+    int          *edge_part_bound_proc_idx, *edge_part_bound_part_idx, *edge_part_bound;
+    PDM_g_num_t  *_face_ln_to_gn, *edge_ln_to_gn, *_vtx_ln_to_gn, *edge_bound_ln_to_gn, *edge_join_ln_to_gn;
+    int          *face_tag, *edge_tag, *vtx_tag;
+    int         **elt_vtx_idx;
+    int         **elt_vtx;
+    PDM_g_num_t **elt_section_ln_to_gn;
+
+    PDM_multipart_part_val_get(mpart, 0, i_part, &elt_vtx_idx, &elt_vtx, &elt_section_ln_to_gn,
+                               &face_tag, &face_edge_idx, &face_edge, &_face_ln_to_gn,
+                               &edge_tag, &_edge_face, &edge_vtx_idx, &edge_vtx, &edge_ln_to_gn,
+                               &edge_part_bound_proc_idx, &edge_part_bound_part_idx, &edge_part_bound,
+                               &vtx_tag, &_vtx, &_vtx_ln_to_gn, &edge_bound_idx, &edge_bound,
+                               &edge_bound_ln_to_gn, &edge_join_idx, &edge_join, &edge_join_ln_to_gn);
+
+    double *vtx_coord;
+    int n_vtx = PDM_multipart_part_vtx_coord_get(mpart,
+                                                 0,
+                                                 i_part,
+                                                 &vtx_coord,
+                                                 PDM_OWNERSHIP_KEEP);
+
+    PDM_g_num_t *cell_ln_to_gn;
+    int n_cell = PDM_multipart_part_ln_to_gn_get(mpart,
+                                                 0,
+                                                 i_part,
+                                                 PDM_MESH_ENTITY_CELL,
+                                                 &cell_ln_to_gn,
+                                                 PDM_OWNERSHIP_KEEP);
+
+    PDM_g_num_t *face_ln_to_gn;
+    PDM_multipart_part_ln_to_gn_get(mpart,
+                                    0,
+                                    i_part,
+                                    PDM_MESH_ENTITY_FACE,
+                                    &face_ln_to_gn,
+                                    PDM_OWNERSHIP_KEEP);
+
+    PDM_multipart_part_ln_to_gn_get(mpart,
+                                    0,
+                                    i_part,
+                                    PDM_MESH_ENTITY_EDGE,
+                                    &edge_ln_to_gn,
+                                    PDM_OWNERSHIP_KEEP);
+    PDM_g_num_t *vtx_ln_to_gn;
+    PDM_multipart_part_ln_to_gn_get(mpart,
+                                    0,
+                                    i_part,
+                                    PDM_MESH_ENTITY_VERTEX,
+                                    &vtx_ln_to_gn,
+                                    PDM_OWNERSHIP_KEEP);
+
+    int *cell_face_idx = NULL;
+    int *cell_face     = NULL;
+    n_cell = PDM_multipart_part_connectivity_get(mpart,
+                                                 0,
+                                                 i_part,
+                                                 PDM_CONNECTIVITY_TYPE_CELL_FACE,
+                                                 &cell_face,
+                                                 &cell_face_idx,
+                                                 PDM_OWNERSHIP_KEEP);
+    n_face = PDM_multipart_part_connectivity_get(mpart,
+                                                 0,
+                                                 i_part,
+                                                 PDM_CONNECTIVITY_TYPE_FACE_EDGE,
+                                                 &face_edge,
+                                                 &face_edge_idx,
+                                                 PDM_OWNERSHIP_KEEP);
+    n_edge = PDM_multipart_part_connectivity_get(mpart,
+                                                 0,
+                                                 i_part,
+                                                 PDM_CONNECTIVITY_TYPE_EDGE_VTX,
+                                                 &edge_vtx,
+                                                 &edge_vtx_idx,
+                                                 PDM_OWNERSHIP_KEEP);
+
+    PDM_mesh_intersection_part_set(mi,
+                                   i_mesh,
+                                   i_part,
+                                   n_cell,
+                                   n_face,
+                                   n_edge,
+                                   n_vtx,
+                                   cell_face_idx,
+                                   cell_face,
+                                   face_edge_idx,
+                                   face_edge,
+                                   edge_vtx,
+                                   NULL, // face_vtx_idx,
+                                   NULL, // face_vtx,
+                                   cell_ln_to_gn,
+                                   face_ln_to_gn,
+                                   edge_ln_to_gn,
+                                   vtx_ln_to_gn,
+                                   vtx_coord);
+  }
+}
+
+static
+void
 _create_wall_ray
 (
  const PDM_MPI_Comm     comm,
@@ -684,8 +815,10 @@ _create_wall_ray
        PDM_g_num_t   **psurf_face_ln_to_gn,
        PDM_g_num_t   **psurf_vtx_ln_to_gn,
        int            *pn_ray_out,
+       PDM_g_num_t   **pvtx_ln_to_gn_out,
        PDM_g_num_t   **pray_ln_to_gn_out,
-       double        **pray_coord_out
+       int           **pray_vtx_out,
+       double        **pvtx_coord_out
 )
 {
   PDM_UNUSED(n_surf_vtx);
@@ -702,11 +835,16 @@ _create_wall_ray
   }
 
   PDM_g_num_t *pray_ln_to_gn = malloc(    pn_ray * sizeof(PDM_g_num_t));
+  PDM_g_num_t *pvtx_ln_to_gn = malloc(2 * pn_ray * sizeof(PDM_g_num_t));
   double      *pray_coord    = malloc(6 * pn_ray * sizeof(double     ));
 
-  pn_ray = 0;
-  for(int i_part = 0; i_part < n_part; ++i_part) {
+  PDM_g_num_t *distrib_vtx = PDM_compute_entity_distribution (comm, 2 * pn_ray);
 
+  int *pray_vtx = malloc(2 * pn_ray * sizeof(int));
+
+  pn_ray = 0;
+  int pn_vtx = 0;
+  for(int i_part = 0; i_part < n_part; ++i_part) {
 
     double      *face_normal    = malloc(3 * n_surf_face[i_part] * sizeof(double     ));
     double      *face_center    = malloc(3 * n_surf_face[i_part] * sizeof(double     ));
@@ -747,7 +885,14 @@ _create_wall_ray
       pray_coord[6*pn_ray+4] = yb;
       pray_coord[6*pn_ray+5] = zb;
 
+      pray_vtx[2*pn_ray  ] = pn_vtx+1;
+      pray_vtx[2*pn_ray+1] = pn_vtx+2;
+
       pray_ln_to_gn[pn_ray++] = psurf_face_ln_to_gn[i_part][i_face];
+
+      pvtx_ln_to_gn[pn_vtx  ] = distrib_vtx[i_rank] + pn_vtx + 1;
+      pvtx_ln_to_gn[pn_vtx+1] = distrib_vtx[i_rank] + pn_vtx + 2;
+      pn_vtx += 2;
 
     }
 
@@ -755,7 +900,9 @@ _create_wall_ray
     free(face_center);
   }
 
-  if(0 == 1) {
+  free(distrib_vtx);
+
+  if(1 == 1) {
     char filename[999];
     sprintf(filename, "ray_%i.vtk", i_rank);
     PDM_vtk_write_lines(filename,
@@ -767,8 +914,10 @@ _create_wall_ray
 
 
   *pn_ray_out        = pn_ray;
+  *pvtx_ln_to_gn_out = pvtx_ln_to_gn;
   *pray_ln_to_gn_out = pray_ln_to_gn;
-  *pray_coord_out    = pray_coord;
+  *pvtx_coord_out    = pray_coord;
+  *pray_vtx_out      = pray_vtx;
 
 }
 
@@ -814,10 +963,9 @@ char *argv[]
   _read_args(argc,
              argv,
              &n_vtx_a,
-             &post,
              &n_part,
+             &post,
              &elt_type);
-
 
   /*
    * Generate meshA
@@ -1093,6 +1241,8 @@ char *argv[]
 
   int          n_lines       = 0;
   double      *ray_coord     = NULL;
+  int         *pray_vtx      = NULL;
+  PDM_g_num_t *pvtx_ln_to_gn = NULL;
   PDM_g_num_t *pray_ln_to_gn = NULL;
   _create_wall_ray(comm,
                    n_part,
@@ -1104,100 +1254,127 @@ char *argv[]
                    psurf_face_ln_to_gn,
                    psurf_vtx_ln_to_gn,
                    &n_lines,
+                   &pvtx_ln_to_gn,
                    &pray_ln_to_gn,
+                   &pray_vtx,
                    &ray_coord);
 
 
-  const int dim = 3;
-  double l_extents[6] = { HUGE_VAL,  HUGE_VAL,  HUGE_VAL,
-                         -HUGE_VAL, -HUGE_VAL, -HUGE_VAL};
+  // const int dim = 3;
+  // double l_extents[6] = { HUGE_VAL,  HUGE_VAL,  HUGE_VAL,
+  //                        -HUGE_VAL, -HUGE_VAL, -HUGE_VAL};
 
-  for(int i_part = 0; i_part < n_part; ++i_part) {
-    for (int i = 0; i < pn_cell[i_part]; i++) {
-      for (int k = 0; k < 3; k++) {
-        l_extents[k    ] = PDM_MIN (l_extents[k    ], box_extents[i_part][6*i + k    ]);
-        l_extents[k + 3] = PDM_MAX (l_extents[k + 3], box_extents[i_part][6*i + k + 3]);
-      }
-    }
-  }
+  // for(int i_part = 0; i_part < n_part; ++i_part) {
+  //   for (int i = 0; i < pn_cell[i_part]; i++) {
+  //     for (int k = 0; k < 3; k++) {
+  //       l_extents[k    ] = PDM_MIN (l_extents[k    ], box_extents[i_part][6*i + k    ]);
+  //       l_extents[k + 3] = PDM_MAX (l_extents[k + 3], box_extents[i_part][6*i + k + 3]);
+  //     }
+  //   }
+  // }
 
-  double g_extents[6];
-  PDM_MPI_Allreduce (l_extents,   g_extents,   3, PDM_MPI_DOUBLE, PDM_MPI_MIN, comm);
-  PDM_MPI_Allreduce (l_extents+3, g_extents+3, 3, PDM_MPI_DOUBLE, PDM_MPI_MAX, comm);
+  // double g_extents[6];
+  // PDM_MPI_Allreduce (l_extents,   g_extents,   3, PDM_MPI_DOUBLE, PDM_MPI_MIN, comm);
+  // PDM_MPI_Allreduce (l_extents+3, g_extents+3, 3, PDM_MPI_DOUBLE, PDM_MPI_MAX, comm);
 
-  double max_range = 0.;
-  for (int i = 0; i < 3; i++) {
-    max_range = PDM_MAX (max_range, g_extents[i+3] - g_extents[i]);
-  }
-  for (int i = 0; i < 3; i++) {
-    g_extents[i]   -= max_range * 1.1e-3;
-    g_extents[i+3] += max_range * 1.0e-3;
-  }
+  // double max_range = 0.;
+  // for (int i = 0; i < 3; i++) {
+  //   max_range = PDM_MAX (max_range, g_extents[i+3] - g_extents[i]);
+  // }
+  // for (int i = 0; i < 3; i++) {
+  //   g_extents[i]   -= max_range * 1.1e-3;
+  //   g_extents[i+3] += max_range * 1.0e-3;
+  // }
 
-  PDM_dbbtree_t* dbbt = PDM_dbbtree_create(comm, dim, g_extents);
-  PDM_box_set_t *box_set = PDM_dbbtree_boxes_set (dbbt,
-                                                  n_part,
-                                                  pn_cell,
-                                (const double **) box_extents,
-                           (const PDM_g_num_t **) pcell_ln_to_gn);
+  // PDM_dbbtree_t* dbbt = PDM_dbbtree_create(comm, dim, g_extents);
+  // PDM_box_set_t *box_set = PDM_dbbtree_boxes_set (dbbt,
+  //                                                 n_part,
+  //                                                 pn_cell,
+  //                               (const double **) box_extents,
+  //                          (const PDM_g_num_t **) pcell_ln_to_gn);
 
-  if(0 == 1) {
-    char filename[999];
-    sprintf(filename, "box_set_%3.3d.vtk", i_rank);
-    PDM_dbbtree_box_tree_write_vtk(filename,
-                                   dbbt,
-                                   -1,
-                                   0);
-  }
-
-
-  int         *intersecting_box_idx   = NULL;
-  PDM_g_num_t *intersecting_box_g_num = NULL;
-  PDM_dbbtree_lines_intersect_boxes(dbbt,
-                                    n_lines,
-                                    pray_ln_to_gn,
-                                    ray_coord,
-                                    &intersecting_box_idx,
-                                    &intersecting_box_g_num);
-
-  if (post) {
-    for (int i = 0; i < n_lines; i++) {
-      log_trace("line "PDM_FMT_G_NUM": ", pray_ln_to_gn[i]);
-      for (int j = intersecting_box_idx[i]; j < intersecting_box_idx[i+1]; j++) {
-        log_trace(PDM_FMT_G_NUM" ", intersecting_box_g_num[j]);
-      }
-      log_trace("\n");
-    }
-  }
-
-  free(intersecting_box_idx);
-  free(intersecting_box_g_num);
-
-  // int           redistrib_n_part            = 0;
-  // int          *redistrib_n_box             = NULL;
-  // PDM_g_num_t **redistrib_box_g_num         = NULL;
-  // int         **redistrib_box_init_location = NULL;
-  // int         **box_ray_idx                 = NULL;
-  // PDM_g_num_t **box_ray_g_num               = NULL;
-  // PDM_dbbtree_lines_intersect_boxes2(dbbt,
-  //                                    n_lines,
-  //                                    pray_ln_to_gn,
-  //                                    ray_coord,
-  //                                    &redistrib_n_part,
-  //                                    &redistrib_n_box,
-  //                                    &redistrib_box_g_num,
-  //                                    &redistrib_box_init_location,
-  //                                    &box_ray_idx,
-  //                                    &box_ray_g_num);
-
-  // for (int i_part = 0; i_part < redistrib_n_part; i_part++) {
-  //   PDM_log_trace_connectivity_long(box_ray_idx[i_part], box_ray_g_num[i_part], redistrib_n_box[i_part], "box_ray ::");
+  // if(0 == 1) {
+  //   char filename[999];
+  //   sprintf(filename, "box_set_%3.3d.vtk", i_rank);
+  //   PDM_dbbtree_box_tree_write_vtk(filename,
+  //                                  dbbt,
+  //                                  -1,
+  //                                  0);
   // }
 
 
+  // int         *intersecting_box_idx   = NULL;
+  // PDM_g_num_t *intersecting_box_g_num = NULL;
+  // PDM_dbbtree_lines_intersect_boxes(dbbt,
+  //                                   n_lines,
+  //                                   pray_ln_to_gn,
+  //                                   ray_coord,
+  //                                   &intersecting_box_idx,
+  //                                   &intersecting_box_g_num);
 
-  PDM_dbbtree_free (dbbt);
-  PDM_box_set_destroy (&box_set);
+  // if (post) {
+  //   for (int i = 0; i < n_lines; i++) {
+  //     log_trace("line "PDM_FMT_G_NUM": ", pray_ln_to_gn[i]);
+  //     for (int j = intersecting_box_idx[i]; j < intersecting_box_idx[i+1]; j++) {
+  //       log_trace(PDM_FMT_G_NUM" ", intersecting_box_g_num[j]);
+  //     }
+  //     log_trace("\n");
+  //   }
+  // }
+
+  // free(intersecting_box_idx);
+  // free(intersecting_box_g_num);
+
+  // PDM_dbbtree_free (dbbt);
+  // PDM_box_set_destroy (&box_set);
+
+  /*
+   * Mesh_intersection
+   */
+  int dim_mesh_a = 3;
+  int dim_mesh_b = 1;
+  PDM_mesh_intersection_t* mi = PDM_mesh_intersection_create(PDM_MESH_INTERSECTION_KIND_SOFT,
+                                                             dim_mesh_a,
+                                                             dim_mesh_b,
+                                                             1e-6,
+                                                             comm,
+                                                             PDM_OWNERSHIP_KEEP);
+
+  /*
+   * Set mesh_a and mesh_b
+   */
+  _set_mesh(mi, 0, mpart_vol_a, n_part);
+
+  /*
+   * Set line mesh
+   */
+  PDM_mesh_intersection_n_part_set(mi, 1, 1);
+
+  PDM_mesh_intersection_part_set(mi,
+                                 1, // i_mesh
+                                 0,
+                                 0,
+                                 0,
+                                 n_lines,
+                                 2 * n_lines,
+                                 NULL,
+                                 NULL,
+                                 NULL,
+                                 NULL,
+                                 pray_vtx,
+                                 NULL, // face_vtx_idx,
+                                 NULL, // face_vtx,
+                                 NULL,
+                                 NULL,
+                                 pray_ln_to_gn,
+                                 pvtx_ln_to_gn,
+                                 ray_coord);
+
+  PDM_mesh_intersection_compute(mi);
+
+  PDM_mesh_intersection_free(mi);
+
+
 
   PDM_dist_cloud_surf_free(dist);
 
@@ -1223,7 +1400,9 @@ char *argv[]
   free(pn_cell);
   free(velocity);
   free(pray_ln_to_gn);
+  free(pvtx_ln_to_gn);
   free(ray_coord);
+  free(pray_vtx);
   free(box_extents);
 
   PDM_DMesh_nodal_free(dmn_vol_a);
