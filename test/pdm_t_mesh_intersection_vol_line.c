@@ -536,8 +536,6 @@ char *argv[]
                 &pedge_vtx,
                 &pn_ray);
 
-
-
   if(post) {
     char filename[999];
     sprintf(filename, "out_ray_%i.vtk", i_rank);
@@ -600,6 +598,9 @@ char *argv[]
                                  pvtx_ln_to_gn,
                                  pvtx_coord);
 
+
+  // PDM_log_trace_array_long(pvtx_ln_to_gn, 2 * pn_ray, "pvtx_ln_to_gn :");
+  // PDM_log_trace_array_long(pedge_ln_to_gn, pn_ray, "pedge_ln_to_gn :");
 
   PDM_mesh_intersection_compute(mi);
 

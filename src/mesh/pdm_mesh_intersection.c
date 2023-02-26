@@ -2985,6 +2985,58 @@ _mesh_intersection_vol_surf
 
 }
 
+static PDM_polygon_status_t
+_intersect_ray_face
+(
+       double                  *face_center,
+       double                  *face_normal,
+       double                  *face_coord,
+       double                  *vtx_coord,
+ const int                      face_vtx_n,
+ const int                     *face_vtx,
+ const double                  *ray_origin,
+ const double                  *ray_direction,
+       double                  *intersection_coord
+ )
+{
+  double face_bound[6] = {
+    HUGE_VAL, -HUGE_VAL,
+    HUGE_VAL, -HUGE_VAL,
+    HUGE_VAL, -HUGE_VAL
+  };
+  for (int i = 0; i < face_vtx_n; i++) {
+    int vtx_id = face_vtx[i] - 1;
+    double *vc = vtx_coord + 3*vtx_id;
+    for (int j = 0; j < 3; j++) {
+      face_coord[3*i+j] = vc[j];
+      face_bound[2*j  ] = PDM_MIN(face_bound[2*j  ], vc[j]);
+      face_bound[2*j+1] = PDM_MAX(face_bound[2*j+1], vc[j]);
+    }
+  }
+
+  // Inflate the face's bounding box
+  double d = 0.;
+  for (int j = 0; j < 3; j++) {
+    d += (face_bound[2*j+1] - face_bound[2*j])*(face_bound[2*j+1] - face_bound[2*j]);
+  }
+  d = 0.1*sqrt(d);
+  for (int j = 0; j < 3; j++) {
+    face_bound[2*j  ] -= d;
+    face_bound[2*j+1] += d;
+  }
+
+  double t;
+  return PDM_polygon_ray_intersection(ray_origin,
+                                      ray_direction,
+                                      face_vtx_n,
+                                      face_coord,
+                                      face_center,
+                                      face_normal,
+                                      face_bound,
+                                      intersection_coord,
+                                      &t,
+                                      NULL);
+}
 
 static
 void
@@ -3028,6 +3080,23 @@ _mesh_intersection_vol_line
                                                             &cellA_ln_to_gn,
                                                             &vtxA_ln_to_gn);
 
+  PDM_g_num_t *edgeB_ln_to_gn = NULL;
+  PDM_g_num_t *vtxB_ln_to_gn  = NULL;
+  int n_edge = PDM_extract_part_ln_to_gn_get(extrp_mesh_b, 0, PDM_MESH_ENTITY_EDGE  , &edgeB_ln_to_gn, PDM_OWNERSHIP_KEEP);
+  int n_vtx  = PDM_extract_part_ln_to_gn_get(extrp_mesh_b, 0, PDM_MESH_ENTITY_VERTEX, &vtxB_ln_to_gn , PDM_OWNERSHIP_KEEP);
+
+  PDM_UNUSED(n_edge);
+  PDM_UNUSED(n_vtx);
+
+  edgeB_ln_to_gn = extrp_mesh_b->target_gnum[0];
+
+  double *vtx_coordB = NULL;
+  PDM_extract_part_vtx_coord_get(extrp_mesh_b, 0, &vtx_coordB, PDM_OWNERSHIP_KEEP);
+
+  int  *edgeB_vtxB      = NULL;
+  int  *edgeB_vtxB_idx  = NULL;
+  PDM_extract_part_connectivity_get(extrp_mesh_b, 0, PDM_CONNECTIVITY_TYPE_EDGE_VTX , &edgeB_vtxB , &edgeB_vtxB_idx , PDM_OWNERSHIP_KEEP);
+
 
   if (dbg_enabled) {
     // _export_vtk_3d("extrp_mesh_a", extrp_mesh_a);
@@ -3053,9 +3122,123 @@ _mesh_intersection_vol_line
                                    "cellA_lineB : ");
   }
 
+  /*
+   * Compute face normal onces
+   */
+  double *face_normal = malloc(3 * n_faceA * sizeof(double));
+  double *face_center = malloc(3 * n_faceA * sizeof(double));
+
+  PDM_geom_elem_polygon_properties(n_faceA,
+                                   faceA_vtxA_idx,
+                                   faceA_vtxA,
+                                   vtxA_coord,
+                                   face_normal,
+                                   face_center,
+                                   NULL,
+                                   NULL);
+
+  /*
+   * Get max size of vtx per face
+   */
+  int n_face_vtx_max = 0;
+  for(int i_face = 0; i_face < n_faceA; ++i_face) {
+    n_face_vtx_max = PDM_MAX(n_face_vtx_max, faceA_vtxA_idx[i_face+1] - faceA_vtxA_idx[i_face]);
+  }
+  int n_cell_face_max = 0;
+  for(int i_cell = 0; i_cell < n_cellA; ++i_cell) {
+    n_cell_face_max = PDM_MAX(n_cell_face_max, cellA_faceA_idx[i_cell+1] - cellA_faceA_idx[i_cell]);
+  }
+  double *poly_coord         = malloc(3 * n_face_vtx_max  * sizeof(double));
+  double *intersection_coord = malloc(3 * n_cell_face_max * sizeof(double));
+  int    *intersection_stat  = malloc(    n_cell_face_max * sizeof(int   ));
+
+  int         *cellA_lineB_post_idx = malloc((n_cellA+1)              * sizeof(int        ));
+  PDM_g_num_t *cellA_lineB_post     = malloc(cellA_lineB_idx[n_cellA] * sizeof(PDM_g_num_t));
+
+  /*
+   * For each cells we sseek intersection of lines with one faces
+   */
+  cellA_lineB_post_idx[0] = 0;
+  for(int i_cell = 0; i_cell < n_cellA; ++i_cell) {
+    cellA_lineB_post_idx[i_cell+1] = cellA_lineB_post_idx[i_cell];
+    for(int idx_line = cellA_lineB_idx[i_cell]; idx_line < cellA_lineB_idx[i_cell+1]; ++idx_line) {
+      int i_line = cellA_lineB[idx_line];
+
+      int i_vtx1 = edgeB_vtxB[2*i_line  ]-1;
+      int i_vtx2 = edgeB_vtxB[2*i_line+1]-1;
+
+      double ray_direction[3] = {
+        vtx_coordB[3*i_vtx1  ] - vtx_coordB[3*i_vtx2  ],
+        vtx_coordB[3*i_vtx1+1] - vtx_coordB[3*i_vtx2+1],
+        vtx_coordB[3*i_vtx1+2] - vtx_coordB[3*i_vtx2+2],
+      };
+
+      double ray_origin[3] = {
+        0.5*(vtx_coordB[3*i_vtx1  ] + vtx_coordB[3*i_vtx2  ]),
+        0.5*(vtx_coordB[3*i_vtx1+1] + vtx_coordB[3*i_vtx2+1]),
+        0.5*(vtx_coordB[3*i_vtx1+2] + vtx_coordB[3*i_vtx2+2]),
+      };
+
+      int n_intersect = 0;
+      int lface = 0;
+      for(int idx_face = cellA_faceA_idx[i_cell]; idx_face < cellA_faceA_idx[i_cell+1]; idx_face++) {
+        int i_face = PDM_ABS(cellA_faceA[idx_face])-1;
+
+        int *_face_vtx = faceA_vtxA + faceA_vtxA_idx[i_face];
+        int face_vtx_n = faceA_vtxA_idx[i_face+1] - faceA_vtxA_idx[i_face];
+        intersection_stat[lface] = _intersect_ray_face(&face_center[3*i_face],
+                                                       &face_normal[3*i_face],
+                                                       poly_coord,
+                                                       vtxA_coord,
+                                                       face_vtx_n,
+                                                       _face_vtx,
+                                                       ray_origin,
+                                                       ray_direction,
+                                                       &intersection_coord[3*lface]);
+
+        if (intersection_stat[lface] == PDM_POLYGON_INSIDE) {
+          printf("Insed ! \n");
+          n_intersect++;
+        } else {
+          printf("Not inside \n");
+        }
+        lface++;
+      } /* End face_vtx loop */
+
+      // printf("i_cell = %i | i_line = %i | n_intersect = %i \n", i_cell, i_line, n_intersect);
+
+      /* Post-treatment */
+      lface = 0;
+      for(int idx_face = cellA_faceA_idx[i_cell]; idx_face < cellA_faceA_idx[i_cell+1]; idx_face++) {
+        if(intersection_stat[lface] == PDM_POLYGON_INSIDE) {
+          cellA_lineB_post[cellA_lineB_post_idx[i_cell+1]++] = edgeB_ln_to_gn[i_line];
+          break;
+        }
+        lface++;
+      }
+
+    }
+  }
+
+  if(1 == 1) {
+    // PDM_log_trace_array_long(cellA_ln_to_gn, n_cellA, "cellA_ln_to_gn ::");
+    PDM_log_trace_connectivity_long(cellA_lineB_post_idx,
+                                    cellA_lineB_post,
+                                    n_cellA,
+                                    "cellA_lineB_post : ");
+  }
+
+
   if (owner_face_vtxA == PDM_OWNERSHIP_USER) {
     free(faceA_vtxA);
   }
+  free(poly_coord);
+  free(face_normal);
+  free(face_center);
+  free(intersection_coord);
+  free(intersection_stat);
+  free(cellA_lineB_post);
+  free(cellA_lineB_post_idx);
 
 }
 
