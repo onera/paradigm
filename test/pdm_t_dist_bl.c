@@ -1203,15 +1203,6 @@ char *argv[]
                     &pequi_surf_parent_face_ln_to_gn,
                     &pequi_surf_vtx_ln_to_gn,
                     &pequi_surf_vtx_coord);
-  free(pequi_surf_face_vtx_idx        );
-  free(pequi_surf_face_vtx            );
-  free(pequi_surf_face_ln_to_gn       );
-  free(pequi_surf_parent_face_ln_to_gn);
-  free(pequi_surf_vtx_ln_to_gn        );
-  free(pequi_surf_vtx_coord           );
-
-
-
 
   /* Wall distance */
   int n_point_cloud = 1;
@@ -1334,7 +1325,6 @@ char *argv[]
   /*
    * Compute extents of all cell
    */
-  double **box_extents = malloc(n_part * sizeof(double *));
   for(int i_part = 0; i_part < n_part; ++i_part) {
 
     int *pcell_face     = NULL;
@@ -1387,45 +1377,7 @@ char *argv[]
                                             pedge_vtx,
                                             &pface_vtx);
 
-    box_extents[i_part] = malloc(6 * n_cell * sizeof(double));
-
-    for(int i_cell = 0; i_cell < n_cell; ++i_cell) {
-      double *_extents = box_extents[i_part] + 6 * i_cell;
-      for(int k = 0; k < 3; ++k) {
-        _extents[k  ] =  HUGE_VAL;
-        _extents[k+3] = -HUGE_VAL;
-      }
-      for(int idx_face = pcell_face_idx[i_cell]; idx_face < pcell_face_idx[i_cell+1]; ++idx_face) {
-        int i_face = PDM_ABS(pcell_face[idx_face])-1;
-        for(int idx_vtx = pface_vtx_idx[i_face]; idx_vtx < pface_vtx_idx[i_face+1]; ++idx_vtx) {
-          int i_vtx = PDM_ABS(pface_vtx[idx_vtx])-1;
-
-          for (int i_dim = 0; i_dim < 3; i_dim++) {
-            double x = vtx_coord[3*i_vtx + i_dim];
-
-            if (x < _extents[i_dim]) {
-              _extents[i_dim] = x;
-            }
-            if (x > _extents[3+i_dim]) {
-              _extents[3+i_dim] = x;
-            }
-          }
-        }
-      }
-    }
-
     free(pface_vtx);
-
-    if(post) {
-      char filename[999];
-      sprintf(filename, "box_extents_%3.3d_%3.3d.vtk", i_part, i_rank);
-      PDM_vtk_write_boxes(filename,
-                          n_cell,
-                          box_extents[i_part],
-                          pcell_ln_to_gn[i_part]);
-    }
-
-
   }
 
   int          n_lines           = 0;
@@ -1451,75 +1403,6 @@ char *argv[]
                    &ray_coord,
                    &psurf_face_normal,
                    &psurf_face_center);
-
-
-  // const int dim = 3;
-  // double l_extents[6] = { HUGE_VAL,  HUGE_VAL,  HUGE_VAL,
-  //                        -HUGE_VAL, -HUGE_VAL, -HUGE_VAL};
-
-  // for(int i_part = 0; i_part < n_part; ++i_part) {
-  //   for (int i = 0; i < pn_cell[i_part]; i++) {
-  //     for (int k = 0; k < 3; k++) {
-  //       l_extents[k    ] = PDM_MIN (l_extents[k    ], box_extents[i_part][6*i + k    ]);
-  //       l_extents[k + 3] = PDM_MAX (l_extents[k + 3], box_extents[i_part][6*i + k + 3]);
-  //     }
-  //   }
-  // }
-
-  // double g_extents[6];
-  // PDM_MPI_Allreduce (l_extents,   g_extents,   3, PDM_MPI_DOUBLE, PDM_MPI_MIN, comm);
-  // PDM_MPI_Allreduce (l_extents+3, g_extents+3, 3, PDM_MPI_DOUBLE, PDM_MPI_MAX, comm);
-
-  // double max_range = 0.;
-  // for (int i = 0; i < 3; i++) {
-  //   max_range = PDM_MAX (max_range, g_extents[i+3] - g_extents[i]);
-  // }
-  // for (int i = 0; i < 3; i++) {
-  //   g_extents[i]   -= max_range * 1.1e-3;
-  //   g_extents[i+3] += max_range * 1.0e-3;
-  // }
-
-  // PDM_dbbtree_t* dbbt = PDM_dbbtree_create(comm, dim, g_extents);
-  // PDM_box_set_t *box_set = PDM_dbbtree_boxes_set (dbbt,
-  //                                                 n_part,
-  //                                                 pn_cell,
-  //                               (const double **) box_extents,
-  //                          (const PDM_g_num_t **) pcell_ln_to_gn);
-
-  // if(0 == 1) {
-  //   char filename[999];
-  //   sprintf(filename, "box_set_%3.3d.vtk", i_rank);
-  //   PDM_dbbtree_box_tree_write_vtk(filename,
-  //                                  dbbt,
-  //                                  -1,
-  //                                  0);
-  // }
-
-
-  // int         *intersecting_box_idx   = NULL;
-  // PDM_g_num_t *intersecting_box_g_num = NULL;
-  // PDM_dbbtree_lines_intersect_boxes(dbbt,
-  //                                   n_lines,
-  //                                   pray_ln_to_gn,
-  //                                   ray_coord,
-  //                                   &intersecting_box_idx,
-  //                                   &intersecting_box_g_num);
-
-  // if (post) {
-  //   for (int i = 0; i < n_lines; i++) {
-  //     log_trace("line "PDM_FMT_G_NUM": ", pray_ln_to_gn[i]);
-  //     for (int j = intersecting_box_idx[i]; j < intersecting_box_idx[i+1]; j++) {
-  //       log_trace(PDM_FMT_G_NUM" ", intersecting_box_g_num[j]);
-  //     }
-  //     log_trace("\n");
-  //   }
-  // }
-
-  // free(intersecting_box_idx);
-  // free(intersecting_box_g_num);
-
-  // PDM_dbbtree_free (dbbt);
-  // PDM_box_set_destroy (&box_set);
 
   /*
    * Mesh_intersection
@@ -1730,7 +1613,6 @@ char *argv[]
     free(psurf_vtx_ln_to_gn [i_part]);
     free(cell_center        [i_part]);
     free(velocity           [i_part]);
-    free(box_extents        [i_part]);
   }
   free(psurf_vtx );
   free(psurf_face);
@@ -1749,7 +1631,14 @@ char *argv[]
   free(psurf_face_center);
   free(ray_coord);
   free(pray_vtx);
-  free(box_extents);
+
+  free(pequi_surf_face_vtx_idx        );
+  free(pequi_surf_face_vtx            );
+  free(pequi_surf_face_ln_to_gn       );
+  free(pequi_surf_parent_face_ln_to_gn);
+  free(pequi_surf_vtx_ln_to_gn        );
+  free(pequi_surf_vtx_coord           );
+
 
   PDM_DMesh_nodal_free(dmn_vol_a);
   PDM_multipart_free(mpart_vol_a);
