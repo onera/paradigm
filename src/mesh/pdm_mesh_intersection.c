@@ -3052,7 +3052,7 @@ _mesh_intersection_vol_line
   int i_rank;
   PDM_MPI_Comm_rank(mi->comm, &i_rank);
 
-  int dbg_enabled = 1;
+  int dbg_enabled = 0;
 
   int *cellA_lineB_idx = redistribute_box_a_to_box_b_idx;
   int *cellA_lineB     = redistribute_box_a_to_box_b;
@@ -3211,7 +3211,7 @@ _mesh_intersection_vol_line
     }
   }
 
-  if(1 == 1) {
+  if(0 == 1) {
     // PDM_log_trace_array_long(cellA_ln_to_gn, n_cellA, "cellA_ln_to_gn ::");
     PDM_log_trace_connectivity_int(cellA_lineB_post_idx,
                                    cellA_lineB_post,

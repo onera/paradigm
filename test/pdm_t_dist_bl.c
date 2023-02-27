@@ -162,7 +162,7 @@ _generate_volume_mesh
   PDM_dcube_nodal_t *dcube = PDM_dcube_nodal_gen_create (comm,
                                                          n_vtx_seg,
                                                          n_vtx_seg,
-                                                         2,
+                                                         n_vtx_seg,
                                                          lenght,
                                                          xmin,
                                                          ymin,
@@ -653,15 +653,6 @@ _create_wall_surf
   PDM_gnum_compute(gnum_face);
   PDM_gnum_compute(gnum_vtx );
 
-  for(int i_part = 0; i_part < n_part; ++i_part) {
-    free(psurf_face_ln_to_gn[i_part]);
-    free(psurf_vtx_ln_to_gn [i_part]);
-    psurf_face_ln_to_gn[i_part] = PDM_gnum_get(gnum_face, 0);
-    psurf_vtx_ln_to_gn [i_part] = PDM_gnum_get(gnum_vtx , 0);
-  }
-
-  PDM_gnum_free(gnum_face);
-  PDM_gnum_free(gnum_vtx);
 
 
   /* Vtk en légende */
@@ -706,6 +697,18 @@ _create_wall_surf
 
   int dn_vtx = PDM_part_to_block_n_elt_block_get(ptb_vtx);
   PDM_g_num_t *blk_vtx_gnum = PDM_part_to_block_block_gnum_get(ptb_vtx);
+  // PDM_log_trace_array_long(blk_vtx_gnum, dn_vtx, "blk_vtx_gnum :");
+
+  /* A laisser après le ptb vu qu'on ecrase psurf_vtx_ln_to_gn */
+  for(int i_part = 0; i_part < n_part; ++i_part) {
+    free(psurf_face_ln_to_gn[i_part]);
+    free(psurf_vtx_ln_to_gn [i_part]);
+    psurf_face_ln_to_gn[i_part] = PDM_gnum_get(gnum_face, 0);
+    psurf_vtx_ln_to_gn [i_part] = PDM_gnum_get(gnum_vtx , 0);
+  }
+
+  PDM_gnum_free(gnum_face);
+  PDM_gnum_free(gnum_vtx);
 
   PDM_part_to_block_t *ptb_face = PDM_part_to_block_create(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
                                                            PDM_PART_TO_BLOCK_POST_CLEANUP,
@@ -785,7 +788,7 @@ _create_wall_surf
   int stride_one = 1;
   double **tmp_pvtx_coord = NULL;
   PDM_block_to_part_exch(btp_vtx,
-                         sizeof(double),
+                         3 * sizeof(double),
                          PDM_STRIDE_CST_INTERLACED,
                          &stride_one,
                          dvtx_coords,
@@ -816,6 +819,22 @@ _create_wall_surf
   *psurf_face_vtx_out       = psurf_face_vtx;
   *psurf_face_ln_to_gn_out  = psurf_face_ln_to_gn;
   *psurf_vtx_ln_to_gn_out   = psurf_vtx_ln_to_gn;
+
+  /* Vtk en légende */
+  if(0 == 1) {
+    char filename[999];
+    sprintf(filename, "equi_face_vtx_coord_%3.3d.vtk", i_rank);
+    PDM_vtk_write_polydata(filename,
+                           pequi_surf_nvtx,
+                           pequi_surf_vtx_coord,
+                           pequi_surf_vtx_ln_to_gn,
+                           dn_face,
+                           pequi_surf_face_vtx_idx,
+                           pequi_surf_face_vtx,
+                           dface_ln_to_gn,
+                           NULL);
+  }
+
 
   /* Equi */
   *pequi_surf_nface_out                = dn_face;
@@ -1063,7 +1082,7 @@ _create_wall_ray
 
   free(distrib_vtx);
 
-  if(1 == 1) {
+  if(0 == 1) {
     char filename[999];
     sprintf(filename, "ray_%i.vtk", i_rank);
     PDM_vtk_write_lines(filename,
@@ -1238,18 +1257,18 @@ char *argv[]
 
   PDM_dist_cloud_surf_compute(dist);
 
+  PDM_g_num_t **closest_elt_gnum = malloc(n_part * sizeof(PDM_g_num_t *));
   for (int i_part = 0; i_part < n_part; i_part++) {
 
     double      *distance;
     double      *projected;
-    PDM_g_num_t *closest_elt_gnum;
 
     PDM_dist_cloud_surf_get (dist,
                              0,
                              i_part,
                              &distance,
                              &projected,
-                             &closest_elt_gnum);
+                             &closest_elt_gnum[i_part]);
     if(post) {
       char filename[999];
       sprintf(filename, "distance_%3.3d_%3.3d.vtk", i_part, i_rank);
@@ -1279,14 +1298,13 @@ char *argv[]
 
     double      *distance;
     double      *projected;
-    PDM_g_num_t *closest_elt_gnum;
 
     PDM_dist_cloud_surf_get (dist,
                              0,
                              i_part,
                              &distance,
                              &projected,
-                             &closest_elt_gnum);
+                             &closest_elt_gnum[i_part]);
 
     velocity[i_part] = malloc(pn_cell[i_part] * sizeof(double));
 
@@ -1322,64 +1340,6 @@ char *argv[]
     }
   }
 
-  /*
-   * Compute extents of all cell
-   */
-  for(int i_part = 0; i_part < n_part; ++i_part) {
-
-    int *pcell_face     = NULL;
-    int *pcell_face_idx = NULL;
-    int *pface_edge     = NULL;
-    int *pface_edge_idx = NULL;
-    int *pedge_vtx      = NULL;
-    int *pedge_vtx_idx  = NULL;
-
-    double *vtx_coord = NULL;
-    int n_vtx = PDM_multipart_part_vtx_coord_get(mpart_vol_a,
-                                                 0,
-                                                 i_part,
-                                                 &vtx_coord,
-                                                 PDM_OWNERSHIP_KEEP);
-
-    int n_edge = PDM_multipart_part_connectivity_get(mpart_vol_a,
-                                                     0,
-                                                     i_part,
-                                                     PDM_CONNECTIVITY_TYPE_EDGE_VTX,
-                                                     &pedge_vtx,
-                                                     &pedge_vtx_idx,
-                                                     PDM_OWNERSHIP_KEEP);
-
-    int n_face = PDM_multipart_part_connectivity_get(mpart_vol_a,
-                                                     0,
-                                                     i_part,
-                                                     PDM_CONNECTIVITY_TYPE_FACE_EDGE,
-                                                     &pface_edge,
-                                                     &pface_edge_idx,
-                                                     PDM_OWNERSHIP_KEEP);
-
-    PDM_UNUSED(n_edge);
-    PDM_UNUSED(n_face);
-    PDM_UNUSED(n_vtx);
-
-    int n_cell =   PDM_multipart_part_connectivity_get(mpart_vol_a,
-                                                       0,
-                                                       i_part,
-                                                       PDM_CONNECTIVITY_TYPE_CELL_FACE,
-                                                       &pcell_face,
-                                                       &pcell_face_idx,
-                                                       PDM_OWNERSHIP_KEEP);
-
-    int *pface_vtx     = NULL;
-    int *pface_vtx_idx = pface_edge_idx;
-    PDM_compute_face_vtx_from_face_and_edge(n_face,
-                                            pface_edge_idx,
-                                            pface_edge,
-                                            pedge_vtx,
-                                            &pface_vtx);
-
-    free(pface_vtx);
-  }
-
   int          n_lines           = 0;
   double      *ray_coord         = NULL;
   int         *pray_vtx          = NULL;
@@ -1387,15 +1347,32 @@ char *argv[]
   PDM_g_num_t *pray_ln_to_gn     = NULL;
   double      *psurf_face_normal = NULL;
   double      *psurf_face_center = NULL;
+  // _create_wall_ray(comm,
+  //                  n_part,
+  //                  psurf_vtx,
+  //                  psurf_face,
+  //                  psurf_vtx_coord,
+  //                  psurf_face_vtx_idx,
+  //                  psurf_face_vtx,
+  //                  psurf_face_ln_to_gn,
+  //                  psurf_vtx_ln_to_gn,
+  //                  &n_lines,
+  //                  &pvtx_ln_to_gn,
+  //                  &pray_ln_to_gn,
+  //                  &pray_vtx,
+  //                  &ray_coord,
+  //                  &psurf_face_normal,
+  //                  &psurf_face_center);
+
   _create_wall_ray(comm,
-                   n_part,
-                   psurf_vtx,
-                   psurf_face,
-                   psurf_vtx_coord,
-                   psurf_face_vtx_idx,
-                   psurf_face_vtx,
-                   psurf_face_ln_to_gn,
-                   psurf_vtx_ln_to_gn,
+                   1,
+                   &pequi_surf_nvtx,
+                   &pequi_surf_nface,
+                   &pequi_surf_vtx_coord,
+                   &pequi_surf_face_vtx_idx,
+                   &pequi_surf_face_vtx,
+                   &pequi_surf_face_ln_to_gn,
+                   &pequi_surf_vtx_ln_to_gn,
                    &n_lines,
                    &pvtx_ln_to_gn,
                    &pray_ln_to_gn,
@@ -1482,7 +1459,14 @@ char *argv[]
    *     - A l'issu des l'intersection de maillage :
    *          - part1 = La maillage user classique
    *          - part2 = Le "singleton" paroi
+   *     - le equi surface suit des nums asbolue croissant : on peut le prendre comme un bloc
    */
+  PDM_block_to_part_t *btp = PDM_block_to_part_create_from_sparse_block(pequi_surf_parent_face_ln_to_gn,
+                                                                        pequi_surf_nface,
+                                              (const PDM_g_num_t **)    closest_elt_gnum,
+                                                                        pn_cell,
+                                                                        n_part,
+                                                                        comm);
 
 
   /*
@@ -1526,25 +1510,31 @@ char *argv[]
   PDM_part_to_part_gnum1_come_from_get(ptp,
                                        &gnum1_come_from_idx,
                                        &gnum1_come_from);
-  int         *_gnum1_come_from_idx  = gnum1_come_from_idx[0];
-  PDM_g_num_t *_gnum1_come_from      = gnum1_come_from    [0];
-  double      *_pline_to_cell_center = pline_to_cell_center[0];
+  int         *_gnum1_come_from_idx    = gnum1_come_from_idx   [0];
+  PDM_g_num_t *_gnum1_come_from        = gnum1_come_from       [0];
+  double      *_pline_to_cell_center   = pline_to_cell_center  [0];
+  double      *_pline_to_cell_velocity = pline_to_cell_velocity[0];
 
-  PDM_log_trace_connectivity_long(_gnum1_come_from_idx, _gnum1_come_from, n_ref_b[0], "_gnum1_come_from ::");
+  // PDM_log_trace_connectivity_long(_gnum1_come_from_idx, _gnum1_come_from, n_ref_b[0], "_gnum1_come_from ::");
 
   double *pseudo_distance = malloc(    _gnum1_come_from_idx[n_lines] * sizeof(double));
   double *pseudo_coords   = malloc(3 * _gnum1_come_from_idx[n_lines] * sizeof(double));
   int    *order_by_dist   = malloc(3 * _gnum1_come_from_idx[n_lines] * sizeof(int   ));
+
+  assert(n_lines == n_ref_b[0]);
+  double *dline_data = malloc(n_lines * sizeof(double));
+
   for(int idx_line = 0; idx_line < n_ref_b[0]; ++idx_line) {
     int i_line = ref_b[0][idx_line] - 1;
 
     int beg = _gnum1_come_from_idx[idx_line];
     int n_cell_connect = _gnum1_come_from_idx[idx_line+1] - beg;
-    int         *_order_by_dist     = &order_by_dist        [    beg];
-    PDM_g_num_t *_cell_g_num        = &_gnum1_come_from     [    beg];
-    double      *_cell_center_coord = &_pline_to_cell_center[3 * beg];
-    double      *_pseudo_coords     = &pseudo_coords        [3 * beg];
-    double      *_pseudo_distance   = &pseudo_distance      [    beg];
+    int         *_order_by_dist     = &order_by_dist          [    beg];
+    PDM_g_num_t *_cell_g_num        = &_gnum1_come_from       [    beg];
+    double      *_cell_center_coord = &_pline_to_cell_center  [3 * beg];
+    double      *_pseudo_coords     = &pseudo_coords          [3 * beg];
+    double      *_pseudo_distance   = &pseudo_distance        [    beg];
+    double      *_velocity          = &_pline_to_cell_velocity[    beg];
 
     /* Compute distance */
     for(int j = 0; j < n_cell_connect; ++j ) {
@@ -1579,26 +1569,83 @@ char *argv[]
      */
     PDM_sort_double(_pseudo_distance, _order_by_dist, n_cell_connect);
 
+    dline_data[i_line] = 0.; //pequi_surf_parent_face_ln_to_gn[i_line];
 
-    char filename[999];
-    sprintf(filename, "line_to_cell_vtx_coords_%i.vtk", i_line);
-    PDM_vtk_write_point_cloud(filename,
-                              n_cell_connect,
-                              _pseudo_coords,
-                              _cell_g_num,
-                              NULL);
+    /* Fake integral */
+    for(int j = 0; j < n_cell_connect; ++j ) {
+      if(_velocity[j] < 1.){
+        dline_data[i_line] += _velocity[j];
+      }
+    }
+
+    if(post) {
+      char filename[999];
+      sprintf(filename, "line_to_cell_vtx_coords_%i_%i.vtk", i_rank, i_line);
+      PDM_vtk_write_point_cloud(filename,
+                                n_cell_connect,
+                                _pseudo_coords,
+                                _cell_g_num,
+                                NULL);
+    }
 
   }
+
+
+  /*
+   * Renvoi vers les super cellules pour faire un super modele de plus
+   */
+  int stride_one = 1;
+  double **pline_data = NULL;
+  PDM_block_to_part_exch(btp,
+                         sizeof(double),
+                         PDM_STRIDE_CST_INTERLACED,
+                         &stride_one,
+                         dline_data,
+                         NULL,
+          (void ***)     &pline_data);
+  free(dline_data);
+
+
+  for(int i_part = 0; i_part < n_part_line; ++i_part) {
+    if(post) {
+      char filename[999];
+      sprintf(filename, "pline_data_%3.3d_%3.3d.vtk", i_part, i_rank);
+
+      const char   *vector_field_name[1] = {"pline_data"};
+      const double *vector_field     [1] = {pline_data[i_part]};
+      PDM_vtk_write_point_cloud_with_field(filename,
+                                           pn_cell       [i_part],
+                                           cell_center   [i_part],
+                                           pcell_ln_to_gn[i_part],
+                                           NULL,
+                                           1,
+                                           vector_field_name,
+                                           vector_field,
+                                           0,
+                                           NULL,
+                                           NULL,
+                                           0,
+                                           NULL,
+                                           NULL );
+    }
+  }
+
+
+
+  PDM_block_to_part_free(btp);
 
   for(int i_part = 0; i_part < n_part_line; ++i_part) {
     free(pline_to_cell_center  [i_part]);
     free(pline_to_cell_velocity[i_part]);
+    free(pline_data[i_part]);
   }
   free(pline_to_cell_center);
   free(pline_to_cell_velocity);
   free(pseudo_distance);
   free(pseudo_coords  );
   free(order_by_dist  );
+  free(closest_elt_gnum);
+  free(pline_data);
 
 
   PDM_mesh_intersection_free(mi);
