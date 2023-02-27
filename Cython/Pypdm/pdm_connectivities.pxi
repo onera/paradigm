@@ -350,8 +350,7 @@ def part_connectivity_to_connectity_idx(list   n_entity1,
     return l_np_entity1_entity2_idx, l_np_entity1_entity2
 
 # ------------------------------------------------------------------------
-def compute_face_vtx_from_face_and_edge(int                                n_face,
-                                        NPY.ndarray[int, mode='c', ndim=1] face_edge_idx,
+def compute_face_vtx_from_face_and_edge(NPY.ndarray[int, mode='c', ndim=1] face_edge_idx,
                                         NPY.ndarray[int, mode='c', ndim=1] face_edge,
                                         NPY.ndarray[int, mode='c', ndim=1] edge_vtx):
 
@@ -366,6 +365,7 @@ def compute_face_vtx_from_face_and_edge(int                                n_fac
     cdef int *_edge_vtx
     _edge_vtx = <int *> edge_vtx.data
 
+    cdef int n_face = len(face_edge_idx)-1
     PDM_compute_face_vtx_from_face_and_edge(n_face,
                                             _face_edge_idx,
                                             _face_edge,

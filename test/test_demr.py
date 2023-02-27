@@ -235,8 +235,7 @@ part2_stride, part2_data = ptp.wait(request)
 
 #   n_face = len(face_edge_idx)-1
 
-#   face_vtx = PDM.compute_face_vtx_from_face_and_edge(n_face,
-#                                                      face_edge_idx,
+#   face_vtx = PDM.compute_face_vtx_from_face_and_edge(face_edge_idx,
 #                                                      face_edge,
 #                                                      edge_vtx)
 

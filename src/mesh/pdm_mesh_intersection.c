@@ -5192,7 +5192,7 @@ PDM_mesh_intersection_free
     if (mi->elt_volume[imesh] != NULL) {
       if ((mi->owner == PDM_OWNERSHIP_KEEP ) ||
           (mi->owner == PDM_OWNERSHIP_UNGET_RESULT_IS_FREE && !mi->tag_elt_volume_get[imesh])) {
-        for (int ipart = 0; ipart < mi->n_part_mesh[1]; ipart++) {
+        for (int ipart = 0; ipart < mi->n_part_mesh[imesh]; ipart++) {
           if (mi->elt_volume[imesh][ipart] != NULL) {
             free(mi->elt_volume[imesh][ipart]);
           }

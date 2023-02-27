@@ -2209,10 +2209,12 @@ _create
 
   ptp->part1_to_part2_idx = malloc( ptp->n_part1 * sizeof(int *));
   for(int i_part = 0; i_part < ptp->n_part1; ++i_part) {
+    // log_trace("i_part1 %d, n_elt1 %d\n", i_part, ptp->n_elt1[i_part]);
     ptp->part1_to_part2_idx[i_part] = malloc((ptp->n_elt1[i_part] + 1) * sizeof(int));
 
     if (from_triplet != 1) {
       for(int i = 0; i < n_elt1[i_part]+1; ++i) {
+        // log_trace("  i %d\n", i);
         ptp->part1_to_part2_idx[i_part][i] = part1_to_part2_idx[i_part][i];
       }
     }
