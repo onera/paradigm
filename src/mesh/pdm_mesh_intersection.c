@@ -3238,6 +3238,9 @@ _mesh_intersection_vol_line
 
   int         *elt_a_elt_b_init_loc   = malloc(3 * cellA_lineB_post_idx[n_cellA] * sizeof(int        ));
   PDM_g_num_t *cellA_lineB_post_g_num = malloc(    cellA_lineB_post_idx[n_cellA] * sizeof(PDM_g_num_t));
+  // int         *elt_a_elt_b_init_loc_n = malloc(    cellA_lineB_post_idx[n_cellA] * sizeof(int        ));
+
+  // int n_init_loc_tot = 0;
   for(int i_cell = 0; i_cell < n_cellA; ++i_cell) {
     for(int idx_line = cellA_lineB_post_idx[i_cell]; idx_line < cellA_lineB_post_idx[i_cell+1]; ++idx_line) {
       int i_line = cellA_lineB[i_cell];
@@ -3245,10 +3248,17 @@ _mesh_intersection_vol_line
       elt_a_elt_b_init_loc  [3*idx_line  ] = elt_b_init_loc[3*i_line  ];
       elt_a_elt_b_init_loc  [3*idx_line+1] = elt_b_init_loc[3*i_line+1];
       elt_a_elt_b_init_loc  [3*idx_line+2] = elt_b_init_loc[3*i_line+2];
+
+      // for(int j = 0; j < )
     }
   }
 
+  // int         *elt_a_elt_b_init_loc_n = malloc(    cellA_lineB_post_idx[n_cellA] * sizeof(int        ));
+  // for(int i_cell = 0; i_cell < n_cellA; ++i_cell) {
+  //   for(int idx_line = cellA_lineB_post_idx[i_cell]; idx_line < cellA_lineB_post_idx[i_cell+1]; ++idx_line) {
 
+  //   }
+  // }
 
   /* Exchange from extracted A to user A */
   PDM_part_to_part_t *ptp_a = NULL;
@@ -3304,6 +3314,10 @@ _mesh_intersection_vol_line
   PDM_g_num_t **user_elt_ln_to_gn_a       = malloc(mi->n_part_mesh[0] * sizeof(PDM_g_num_t *));
   mi->elt_a_elt_b_idx                     = malloc(mi->n_part_mesh[0] * sizeof(int         *));
 
+  /*
+   * TODO : merge with init_location
+   */
+
   for (int i_part = 0; i_part < mi->n_part_mesh[0]; i_part++) {
     user_n_elt_a[i_part] = PDM_part_mesh_n_entity_get(mi->mesh[0],
                                                       i_part,
@@ -3330,9 +3344,8 @@ _mesh_intersection_vol_line
     int n_elt_a_elt_b = mi->elt_a_elt_b_idx[i_part][user_n_elt_a[i_part]];
     user_elt_a_b_init_loc_idx[i_part] = malloc((n_elt_a_elt_b+1) * sizeof(int));
     for(int i = 0; i < n_elt_a_elt_b+1; ++i) {
-      user_elt_a_b_init_loc_idx[i_part][i] = i;
+      user_elt_a_b_init_loc_idx[i_part][i] = 3*i;
     }
-
 
     if(0 == 1) {
       PDM_log_trace_connectivity_long(mi->elt_a_elt_b_idx[i_part], mi->elt_a_elt_b[i_part], user_n_elt_a[i_part], "elt_a_elt_b ::");
@@ -3341,8 +3354,6 @@ _mesh_intersection_vol_line
     // free(user_elt_a_b_idx);
   }
   free(user_elt_a_b_n);
-
-
 
   int *user_n_elt_b = malloc(mi->n_part_mesh[1] * sizeof(int));
   for (int i_part = 0; i_part < mi->n_part_mesh[1]; i_part++) {

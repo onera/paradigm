@@ -28,6 +28,7 @@
 #include "pdm_dbbtree.h"
 #include "pdm_geom_elem.h"
 #include "pdm_mesh_intersection.h"
+#include "pdm_sort.h"
 
 /*============================================================================
  * Macro definitions
@@ -820,7 +821,9 @@ _create_wall_ray
        PDM_g_num_t   **pvtx_ln_to_gn_out,
        PDM_g_num_t   **pray_ln_to_gn_out,
        int           **pray_vtx_out,
-       double        **pvtx_coord_out
+       double        **pvtx_coord_out,
+       double        **psurf_face_normal_out,
+       double        **psurf_face_center_out
 )
 {
   PDM_UNUSED(n_surf_vtx);
@@ -839,6 +842,8 @@ _create_wall_ray
   PDM_g_num_t *pray_ln_to_gn = malloc(    pn_ray * sizeof(PDM_g_num_t));
   PDM_g_num_t *pvtx_ln_to_gn = malloc(2 * pn_ray * sizeof(PDM_g_num_t));
   double      *pray_coord    = malloc(6 * pn_ray * sizeof(double     ));
+  double      *pface_normal  = malloc(3 * pn_ray * sizeof(double     ));
+  double      *pface_center  = malloc(3 * pn_ray * sizeof(double     ));
 
   PDM_g_num_t *distrib_vtx = PDM_compute_entity_distribution (comm, 2 * pn_ray);
 
@@ -848,8 +853,8 @@ _create_wall_ray
   int pn_vtx = 0;
   for(int i_part = 0; i_part < n_part; ++i_part) {
 
-    double      *face_normal    = malloc(3 * n_surf_face[i_part] * sizeof(double     ));
-    double      *face_center    = malloc(3 * n_surf_face[i_part] * sizeof(double     ));
+    double      *face_normal    = &pface_normal[pn_ray];
+    double      *face_center    = &pface_center[pn_ray];
     PDM_geom_elem_polygon_properties(n_surf_face[i_part],
                                      psurf_face_vtx_idx[i_part],
                                      psurf_face_vtx    [i_part],
@@ -897,9 +902,6 @@ _create_wall_ray
       pn_vtx += 2;
 
     }
-
-    free(face_normal);
-    free(face_center);
   }
 
   free(distrib_vtx);
@@ -915,11 +917,13 @@ _create_wall_ray
   }
 
 
-  *pn_ray_out        = pn_ray;
-  *pvtx_ln_to_gn_out = pvtx_ln_to_gn;
-  *pray_ln_to_gn_out = pray_ln_to_gn;
-  *pvtx_coord_out    = pray_coord;
-  *pray_vtx_out      = pray_vtx;
+  *pn_ray_out            = pn_ray;
+  *pvtx_ln_to_gn_out     = pvtx_ln_to_gn;
+  *pray_ln_to_gn_out     = pray_ln_to_gn;
+  *pvtx_coord_out        = pray_coord;
+  *pray_vtx_out          = pray_vtx;
+  *psurf_face_normal_out = pface_normal;
+  *psurf_face_center_out = pface_center;
 
 }
 
@@ -1241,11 +1245,13 @@ char *argv[]
 
   }
 
-  int          n_lines       = 0;
-  double      *ray_coord     = NULL;
-  int         *pray_vtx      = NULL;
-  PDM_g_num_t *pvtx_ln_to_gn = NULL;
-  PDM_g_num_t *pray_ln_to_gn = NULL;
+  int          n_lines           = 0;
+  double      *ray_coord         = NULL;
+  int         *pray_vtx          = NULL;
+  PDM_g_num_t *pvtx_ln_to_gn     = NULL;
+  PDM_g_num_t *pray_ln_to_gn     = NULL;
+  double      *psurf_face_normal = NULL;
+  double      *psurf_face_center = NULL;
   _create_wall_ray(comm,
                    n_part,
                    psurf_vtx,
@@ -1259,7 +1265,9 @@ char *argv[]
                    &pvtx_ln_to_gn,
                    &pray_ln_to_gn,
                    &pray_vtx,
-                   &ray_coord);
+                   &ray_coord,
+                   &psurf_face_normal,
+                   &psurf_face_center);
 
 
   // const int dim = 3;
@@ -1398,6 +1406,19 @@ char *argv[]
   }
   assert(n_part_line == 1);
 
+
+  /*
+   * Pour Guillaume/Lucas :
+   *     - On doit garder le lien avec la num absolu des faces
+   *     - part_to_block avec les numéros de faces de wall
+   *     - Donc il faut un block_to_part_from_sparse_block
+   *     - A partir de ce block -> on refait un block de normal
+   *     - A l'issu des l'intersection de maillage :
+   *          - part1 = La maillage user classique
+   *          - part2 = Le "singleton" paroi
+   */
+
+
   /*
    * Envoi pour chaque ligne le centre cellule
    */
@@ -1417,6 +1438,22 @@ char *argv[]
                          &request);
   PDM_part_to_part_iexch_wait(ptp, request);
 
+  double **pline_to_cell_velocity = NULL;
+  request = -1;
+  PDM_part_to_part_iexch(ptp,
+                         PDM_MPI_COMM_KIND_P2P,
+                         PDM_STRIDE_CST_INTERLACED,
+                         PDM_PART_TO_PART_DATA_DEF_ORDER_PART1,
+                         1,
+                         sizeof(double),
+                         NULL,
+        (const void  **) velocity,
+                         NULL,
+        (      void ***) &pline_to_cell_velocity,
+                         &request);
+  PDM_part_to_part_iexch_wait(ptp, request);
+
+
 
   int         **gnum1_come_from_idx = NULL;
   PDM_g_num_t **gnum1_come_from     = NULL;
@@ -1427,29 +1464,75 @@ char *argv[]
   PDM_g_num_t *_gnum1_come_from      = gnum1_come_from    [0];
   double      *_pline_to_cell_center = pline_to_cell_center[0];
 
-  PDM_log_trace_connectivity_long(_gnum1_come_from_idx, _gnum1_come_from, n_lines, "_gnum1_come_from ::");
+  PDM_log_trace_connectivity_long(_gnum1_come_from_idx, _gnum1_come_from, n_ref_b[0], "_gnum1_come_from ::");
 
-  for(int i_line = 0; i_line < n_lines; ++i_line) {
+  double *pseudo_distance = malloc(    _gnum1_come_from_idx[n_lines] * sizeof(double));
+  double *pseudo_coords   = malloc(3 * _gnum1_come_from_idx[n_lines] * sizeof(double));
+  int    *order_by_dist   = malloc(3 * _gnum1_come_from_idx[n_lines] * sizeof(int   ));
+  for(int idx_line = 0; idx_line < n_ref_b[0]; ++idx_line) {
+    int i_line = ref_b[0][idx_line] - 1;
 
-    int n_cell_connect = _gnum1_come_from_idx[i_line+1] - _gnum1_come_from_idx[i_line];
-    PDM_g_num_t *_cell_g_num        = &_gnum1_come_from     [    _gnum1_come_from_idx[i_line]];
-    double      *_cell_center_coord = &_pline_to_cell_center[3 * _gnum1_come_from_idx[i_line]];
+    int beg = _gnum1_come_from_idx[idx_line];
+    int n_cell_connect = _gnum1_come_from_idx[idx_line+1] - beg;
+    int         *_order_by_dist     = &order_by_dist        [    beg];
+    PDM_g_num_t *_cell_g_num        = &_gnum1_come_from     [    beg];
+    double      *_cell_center_coord = &_pline_to_cell_center[3 * beg];
+    double      *_pseudo_coords     = &pseudo_coords        [3 * beg];
+    double      *_pseudo_distance   = &pseudo_distance      [    beg];
+
+    /* Compute distance */
+    for(int j = 0; j < n_cell_connect; ++j ) {
+      _order_by_dist[j] = j;
+
+      double nx = psurf_face_normal[3*i_line  ];
+      double ny = psurf_face_normal[3*i_line+1];
+      double nz = psurf_face_normal[3*i_line+2];
+
+      double sn = sqrt(nx * nx + ny * ny + nz * nz);
+      nx = nx/sn;
+      ny = ny/sn;
+      nz = nz/sn;
+      double proj = nx *  _cell_center_coord[3*j  ]
+                  + ny *  _cell_center_coord[3*j+1]
+                  + nz *  _cell_center_coord[3*j+2];
+
+      _pseudo_coords[3*j  ] = psurf_face_center[3*i_line  ] + proj * nx;
+      _pseudo_coords[3*j+1] = psurf_face_center[3*i_line+1] + proj * ny;
+      _pseudo_coords[3*j+2] = psurf_face_center[3*i_line+2] + proj * nz;
+
+      double dx = psurf_face_center[3*i_line  ] - _pseudo_coords[3*j  ];
+      double dy = psurf_face_center[3*i_line+1] - _pseudo_coords[3*j+1];
+      double dz = psurf_face_center[3*i_line+2] - _pseudo_coords[3*j+2];
+
+      _pseudo_distance[j] = sqrt(dx * dx + dy * dy + dz * dz);
+
+    }
+
+    /*
+     * Indirect sort by distance
+     */
+    PDM_sort_double(_pseudo_distance, _order_by_dist, n_cell_connect);
+
 
     char filename[999];
     sprintf(filename, "line_to_cell_vtx_coords_%i.vtk", i_line);
     PDM_vtk_write_point_cloud(filename,
                               n_cell_connect,
-                              _cell_center_coord,
+                              _pseudo_coords,
                               _cell_g_num,
                               NULL);
 
   }
 
   for(int i_part = 0; i_part < n_part_line; ++i_part) {
-    free(pline_to_cell_center[i_part]);
+    free(pline_to_cell_center  [i_part]);
+    free(pline_to_cell_velocity[i_part]);
   }
   free(pline_to_cell_center);
-
+  free(pline_to_cell_velocity);
+  free(pseudo_distance);
+  free(pseudo_coords  );
+  free(order_by_dist  );
 
 
   PDM_mesh_intersection_free(mi);
@@ -1479,6 +1562,8 @@ char *argv[]
   free(velocity);
   free(pray_ln_to_gn);
   free(pvtx_ln_to_gn);
+  free(psurf_face_normal);
+  free(psurf_face_center);
   free(ray_coord);
   free(pray_vtx);
   free(box_extents);
