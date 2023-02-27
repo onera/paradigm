@@ -297,5 +297,5 @@ endif()
 
 configure_file(${PROJECT_SOURCE_DIR}/script/pdm_run.in "${CMAKE_CURRENT_BINARY_DIR}/pdm_run"
                @ONLY)
-file(CHMOD ${CMAKE_BINARY_DIR}/test/pdm_run
-  PERMISSIONS  OWNER_READ OWNER_EXECUTE)
+# file(CHMOD ${CMAKE_BINARY_DIR}/test/pdm_run
+  # PERMISSIONS  OWNER_READ OWNER_EXECUTE)
