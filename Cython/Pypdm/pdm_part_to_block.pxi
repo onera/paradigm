@@ -189,9 +189,7 @@ cdef class PartToBlock:
                                      &_block_stride,
                                      &_block_data)
 
-      dim_np = <NPY.npy_intp> c_size
-      block_data = NPY.PyArray_SimpleNewFromData(1, &dim_np, dtype_data_num, <void *> _block_data)
-      PyArray_ENABLEFLAGS(block_data, NPY.NPY_OWNDATA);
+      block_data = create_numpy(_block_data, dtype_data_num, c_size)
 
       if(_stride_t == PDM_STRIDE_VAR_INTERLACED):
         block_stride = create_numpy_i(_block_stride, PDM_part_to_block_n_elt_block_get(self.PTB))

@@ -455,16 +455,14 @@ def wait(PyPartToPart pyptp, int request_id):
       np_part2_stride = create_numpy_i(_part2_stride[i_part], strid_size)
       dim_np = np_part2_stride.sum()
 
-      np_part2_data = NPY.PyArray_SimpleNewFromData(1, &dim_np, pyptp.dict_npy_type[request_id], <void *> _part2_data[i_part])
-      PyArray_ENABLEFLAGS(np_part2_data, NPY.NPY_OWNDATA)
+      np_part2_data = create_numpy(_part2_data[i_part], pyptp.dict_npy_type[request_id], dim_np)
 
       lnp_part_strid.append(np_part2_stride)
       lnp_part_data .append(np_part2_data)
 
     else:
       dim_np  = gnum1_come_from_idx[i_part][n_ref_lnum2[i_part]] * pyptp.dict_cst_strid[request_id]
-      np_part2_data = NPY.PyArray_SimpleNewFromData(1, &dim_np, pyptp.dict_npy_type[request_id], <void *> _part2_data[i_part])
-      PyArray_ENABLEFLAGS(np_part2_data, NPY.NPY_OWNDATA)
+      np_part2_data = create_numpy(_part2_data[i_part], pyptp.dict_npy_type[request_id], dim_np)
 
       lnp_part_data .append(np_part2_data)
 
@@ -587,8 +585,7 @@ def reverse_wait(PyPartToPart pyptp, int request_id):
       # print("dim_np : ", dim_np)
       # print("np_part1_stride : ", np_part1_stride)
 
-      np_part1_data = NPY.PyArray_SimpleNewFromData(1, &dim_np, pyptp.dict_npy_type[request_id], <void *> _part1_data[i_part])
-      PyArray_ENABLEFLAGS(np_part1_data, NPY.NPY_OWNDATA)
+      np_part1_data = create_numpy(_part1_data[i_part], pyptp.dict_npy_type[request_id], dim_np)
 
       lnp_part_strid.append(np_part1_stride)
       lnp_part_data .append(np_part1_data)
@@ -598,8 +595,7 @@ def reverse_wait(PyPartToPart pyptp, int request_id):
       dim_np  = pyptp.lpart1_to_part2_idx[i_part][pyptp.n_elt1[i_part]] * pyptp.dict_cst_strid[request_id]
 
 
-      np_part1_data = NPY.PyArray_SimpleNewFromData(1, &dim_np, pyptp.dict_npy_type[request_id], <void *> _part1_data[i_part])
-      PyArray_ENABLEFLAGS(np_part1_data, NPY.NPY_OWNDATA)
+      np_part1_data = create_numpy(_part1_data[i_part], pyptp.dict_npy_type[request_id], dim_np)
 
       lnp_part_data .append(np_part1_data)
 

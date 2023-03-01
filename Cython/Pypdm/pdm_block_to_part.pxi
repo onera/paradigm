@@ -148,9 +148,7 @@ cdef class BlockToPart:
         else:
           dim_np = <NPY.npy_intp> _block_stride[0] * self.pn_elt[i_part]
 
-        data = NPY.PyArray_SimpleNewFromData(1, &dim_np, block_data.dtype.num, <void *> _part_data[i_part])
-        PyArray_ENABLEFLAGS(data, NPY.NPY_OWNDATA)
-        part_data.append(data)
+        part_data.append(create_numpy(_part_data[i_part], block_data.dtype.num, dim_np))
 
       if _stride_t == PDM_STRIDE_VAR_INTERLACED:
         free(_part_stride)

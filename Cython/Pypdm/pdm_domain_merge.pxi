@@ -197,9 +197,7 @@ cdef class MultiBlockMerge:
       dim_np = <NPY.npy_intp> dn_merged
 
     #We use first encoutered array to infer numpy type
-    merged_block_data = NPY.PyArray_SimpleNewFromData(1, &dim_np, block_data[0].dtype.num, _merged_block_data)
-    if merged_block_data is not None:
-      PyArray_ENABLEFLAGS(merged_block_data, NPY.NPY_OWNDATA);
+    merged_block_data = create_numpy(_merged_block_data, block_data[0].dtype.num, dim_np)
 
     if not var_stride:
       for i in range(self.n_zone):
@@ -274,9 +272,7 @@ cdef class MultiBlockMerge:
       dim_np = <NPY.npy_intp> dn_merged
 
     #We use first encoutered array to infer numpy type
-    merged_block_data = NPY.PyArray_SimpleNewFromData(1, &dim_np, block_data[0].dtype.num, _merged_block_data)
-    if merged_block_data is not None:
-      PyArray_ENABLEFLAGS(merged_block_data, NPY.NPY_OWNDATA);
+    merged_block_data = create_numpy(_merged_block_data, block_data[0].dtype.num, dim_np)
 
     if not var_stride:
       for i in range(self.n_zone):
