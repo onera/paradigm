@@ -75,13 +75,7 @@ def compute_entity_distribution(MPI.Comm comm,
     n_rank = comm.Get_size()
 
     cdef PDM_g_num_t* distrib = PDM_compute_entity_distribution(PDMC, dn_entity)
-    dim = <NPY.npy_intp> (n_rank + 1)
-    np_distrib = NPY.PyArray_SimpleNewFromData(1,
-                                               &dim,
-                                               PDM_G_NUM_NPY_INT,
-                                      <void *> distrib)
-    PyArray_ENABLEFLAGS(np_distrib, NPY.NPY_OWNDATA);
-    return np_distrib
+    return create_numpy_pdm_gnum(distrib, n_rank+1)
 
 
 # ===================================================================================
@@ -128,68 +122,13 @@ def dconnectivity_to_extract_dconnectivity(MPI.Comm                             
     dn_extract_entity1 = extract_entity1_distribution[i_rank+1] - extract_entity1_distribution[i_rank]
     dn_extract_entity2 = extract_entity2_distribution[i_rank+1] - extract_entity2_distribution[i_rank]
 
-    # ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-    dim = <NPY.npy_intp> (n_rank + 1)
-    np_extract_entity1_distribution = NPY.PyArray_SimpleNewFromData(1,
-                                                                    &dim,
-                                                                    PDM_G_NUM_NPY_INT,
-                                                           <void *> extract_entity1_distribution)
-    PyArray_ENABLEFLAGS(np_extract_entity1_distribution, NPY.NPY_OWNDATA);
-    # ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-
-    # ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-    dim = <NPY.npy_intp> (n_rank + 1)
-    np_extract_entity2_distribution = NPY.PyArray_SimpleNewFromData(1,
-                                                                    &dim,
-                                                                    PDM_G_NUM_NPY_INT,
-                                                           <void *> extract_entity2_distribution)
-    PyArray_ENABLEFLAGS(np_extract_entity2_distribution, NPY.NPY_OWNDATA);
-    # ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-
-    # ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-    dim = <NPY.npy_intp> (dn_extract_entity1 + 1)
-    np_dextract_entity1_entity2_idx = NPY.PyArray_SimpleNewFromData(1,
-                                                                    &dim,
-                                                                    NPY.NPY_INT32,
-                                                           <void *> dextract_entity1_entity2_idx)
-    PyArray_ENABLEFLAGS(np_dextract_entity1_entity2_idx, NPY.NPY_OWNDATA);
-    # ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-
-    # ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-    dim = <NPY.npy_intp> dextract_entity1_entity2_idx[dn_extract_entity1]
-    np_dextract_entity1_entity2 = NPY.PyArray_SimpleNewFromData(1,
-                                                                &dim,
-                                                                PDM_G_NUM_NPY_INT,
-                                                       <void *> dextract_entity1_entity2)
-    PyArray_ENABLEFLAGS(np_dextract_entity1_entity2, NPY.NPY_OWNDATA);
-    # ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-
-    # ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-    dim = <NPY.npy_intp> dn_extract_entity1
-    np_dparent_entity1_g_num = NPY.PyArray_SimpleNewFromData(1,
-                                                             &dim,
-                                                             PDM_G_NUM_NPY_INT,
-                                                    <void *> dparent_entity1_g_num)
-    PyArray_ENABLEFLAGS(np_dparent_entity1_g_num, NPY.NPY_OWNDATA);
-    # ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-
-    # ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-    dim = <NPY.npy_intp> dn_extract_entity2
-    np_dparent_entity2_g_num = NPY.PyArray_SimpleNewFromData(1,
-                                                             &dim,
-                                                             PDM_G_NUM_NPY_INT,
-                                                    <void *> dparent_entity2_g_num)
-    PyArray_ENABLEFLAGS(np_dparent_entity2_g_num, NPY.NPY_OWNDATA);
-    # ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-
-    # ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-    dim = <NPY.npy_intp> n_selected_entity1
-    np_entity1_old_to_new = NPY.PyArray_SimpleNewFromData(1,
-                                                          &dim,
-                                                          PDM_G_NUM_NPY_INT,
-                                                 <void *> entity1_old_to_new)
-    PyArray_ENABLEFLAGS(np_entity1_old_to_new, NPY.NPY_OWNDATA);
-    # ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+    np_extract_entity1_distribution = create_numpy_pdm_gnum(extract_entity1_distribution, n_rank+1)
+    np_extract_entity2_distribution = create_numpy_pdm_gnum(extract_entity2_distribution, n_rank+1)
+    np_dextract_entity1_entity2_idx = create_numpy_i(dextract_entity1_entity2_idx, dn_extract_entity1+1)
+    np_dextract_entity1_entity2 = create_numpy_pdm_gnum(dextract_entity1_entity2, dextract_entity1_entity2_idx[dn_extract_entity1])
+    np_dparent_entity1_g_num = create_numpy_pdm_gnum(dparent_entity1_g_num, dn_extract_entity1)
+    np_dparent_entity2_g_num = create_numpy_pdm_gnum(dparent_entity2_g_num, dn_extract_entity2)
+    np_entity1_old_to_new = create_numpy_pdm_gnum(entity1_old_to_new, n_selected_entity1)
 
     return (np_extract_entity1_distribution, np_extract_entity2_distribution,
             np_dextract_entity1_entity2_idx, np_dextract_entity1_entity2,

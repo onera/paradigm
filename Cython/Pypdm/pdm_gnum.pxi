@@ -146,12 +146,7 @@ cdef class GlobalNumbering:
     if (gnum_array == NULL):
       return None
     else:
-      dim = <NPY.npy_intp> self._n_elem_per_part[i_part]
-      np_gnum_array = NPY.PyArray_SimpleNewFromData(1,
-                                                    &dim,
-                                                    PDM_G_NUM_NPY_INT,
-                                                    <void *> gnum_array)
-    PyArray_ENABLEFLAGS(np_gnum_array, NPY.NPY_OWNDATA)
+      np_gnum_array = create_numpy_pdm_gnum(gnum_array, self._n_elem_per_part[i_part])
     return {'gnum' : np_gnum_array}
     # ************************************************************************
 

@@ -274,12 +274,7 @@ cdef class InterpolateFromMeshLocation:
     list_cloud_data_out = list()
     for i_part in range(n_part_out):
       n_point_cloud = self.n_points_cloud_part[i_point_cloud][i_part]
-      dim = <NPY.npy_intp> n_point_cloud
-      np_cloud_data_out = NPY.PyArray_SimpleNewFromData(1,
-                                                        &dim,
-                                                        NPY.NPY_DOUBLE,
-                                               <void *> cloud_data_out[i_part])
-      PyArray_ENABLEFLAGS(np_cloud_data_out, NPY.NPY_OWNDATA)
+      np_cloud_data_out = create_numpy_d(cloud_data_out[i_part], n_point_cloud)
       list_cloud_data_out.append(np_cloud_data_out)
 
     free(cloud_data_out) # Free the part indirection other is ok with numpy

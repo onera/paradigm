@@ -87,81 +87,15 @@ def PolyMeshSurf(double      xmin,
                     &dedge_group_idx,
                     &dedge_group)
 
-  # -> Begin
-  cdef NPY.npy_intp dim
-
-  # ::::::::::::::::::::::::::::::::::::::::::::::::::
-  dim = <NPY.npy_intp> (3 * dn_vtx)
-  np_dvtx_coord  = NPY.PyArray_SimpleNewFromData(1,
-                                                 &dim,
-                                                 NPY.NPY_DOUBLE,
-                                                 <void *> dvtx_coord)
-  PyArray_ENABLEFLAGS(np_dvtx_coord, NPY.NPY_OWNDATA);
-  # ::::::::::::::::::::::::::::::::::::::::::::::::::
-
-  # ::::::::::::::::::::::::::::::::::::::::::::::::::
-  dim = <NPY.npy_intp> dn_face + 1
-  np_dface_vtx_idx = NPY.PyArray_SimpleNewFromData(1,
-                                                   &dim,
-                                                   NPY.NPY_INT32,
-                                                   <void *> dface_vtx_idx)
-  PyArray_ENABLEFLAGS(np_dface_vtx_idx, NPY.NPY_OWNDATA);
-  # ::::::::::::::::::::::::::::::::::::::::::::::::::
-
-  # ::::::::::::::::::::::::::::::::::::::::::::::::::
-  dim = <NPY.npy_intp> np_dface_vtx_idx[np_dface_vtx_idx.shape[0]-1]
-  np_dface_vtx = NPY.PyArray_SimpleNewFromData(1,
-                                              &dim,
-                                              PDM_G_NUM_NPY_INT,
-                                              <void *> dface_vtx)
-  PyArray_ENABLEFLAGS(np_dface_vtx, NPY.NPY_OWNDATA);
-  # ::::::::::::::::::::::::::::::::::::::::::::::::::
-
-  # ::::::::::::::::::::::::::::::::::::::::::::::::::
+  np_dvtx_coord      = create_numpy_d       (dvtx_coord,      3*dn_vtx)
+  np_dface_vtx_idx   = create_numpy_i       (dface_vtx_idx,   dn_face+1)
+  np_dface_vtx       = create_numpy_pdm_gnum(dface_vtx,       np_dface_vtx_idx[np_dface_vtx_idx.shape[0]-1])
   # > In 2D cas number of vertex is the same as number of edge
-  dim = <NPY.npy_intp> np_dface_vtx_idx[np_dface_vtx_idx.shape[0]-1]
-  np_dface_edge = NPY.PyArray_SimpleNewFromData(1,
-                                                &dim,
-                                                PDM_G_NUM_NPY_INT,
-                                                <void *> dface_edge)
-  PyArray_ENABLEFLAGS(np_dface_edge, NPY.NPY_OWNDATA);
-  # ::::::::::::::::::::::::::::::::::::::::::::::::::
-
-  # ::::::::::::::::::::::::::::::::::::::::::::::::::
-  dim = <NPY.npy_intp> 2 * dn_edge
-  np_dedge_vtx= NPY.PyArray_SimpleNewFromData(1,
-                                              &dim,
-                                              PDM_G_NUM_NPY_INT,
-                                              <void *> dedge_vtx)
-  PyArray_ENABLEFLAGS(np_dedge_vtx, NPY.NPY_OWNDATA);
-  # ::::::::::::::::::::::::::::::::::::::::::::::::::
-
-  # ::::::::::::::::::::::::::::::::::::::::::::::::::
-  dim = <NPY.npy_intp> 2 * dn_edge
-  np_dedge_face= NPY.PyArray_SimpleNewFromData(1,
-                                               &dim,
-                                               PDM_G_NUM_NPY_INT,
-                                               <void *> dedge_face)
-  PyArray_ENABLEFLAGS(np_dedge_face, NPY.NPY_OWNDATA);
-  # ::::::::::::::::::::::::::::::::::::::::::::::::::
-
-  # ::::::::::::::::::::::::::::::::::::::::::::::::::
-  dim = <NPY.npy_intp> n_edge_group + 1
-  np_dedge_group_idx= NPY.PyArray_SimpleNewFromData(1,
-                                                    &dim,
-                                                    NPY.NPY_INT32,
-                                                    <void *> dedge_group_idx)
-  PyArray_ENABLEFLAGS(np_dedge_group_idx, NPY.NPY_OWNDATA);
-  # ::::::::::::::::::::::::::::::::::::::::::::::::::
-
-  # ::::::::::::::::::::::::::::::::::::::::::::::::::
-  dim = <NPY.npy_intp> np_dedge_group_idx[np_dedge_group_idx.shape[0]-1]
-  np_dedge_group= NPY.PyArray_SimpleNewFromData(1,
-                                                &dim,
-                                                PDM_G_NUM_NPY_INT,
-                                                <void *> dedge_group)
-  PyArray_ENABLEFLAGS(np_dedge_group, NPY.NPY_OWNDATA);
-  # ::::::::::::::::::::::::::::::::::::::::::::::::::
+  np_dface_edge      = create_numpy_pdm_gnum(dface_edge,      np_dface_vtx_idx[np_dface_vtx_idx.shape[0]-1])
+  np_dedge_vtx       = create_numpy_pdm_gnum(dedge_vtx,       2*dn_edge)
+  np_dedge_face      = create_numpy_pdm_gnum(dedge_face,      2*dn_edge)
+  np_dedge_group_idx = create_numpy_i       (dedge_group_idx, n_edge_group+1)
+  np_dedge_group     = create_numpy_pdm_gnum(dedge_group,     np_dedge_group_idx[np_dedge_group_idx.shape[0]-1])
 
   return {'n_face'          : n_face,
           'n_vtx'           : n_vtx,

@@ -285,86 +285,19 @@ cdef class Overlay:
                              &init_to_ol_face_idx,
                              &init_to_ol_face)
 
-    cdef NPY.npy_intp dim
-    # > Build numpy capsule
-    dim = <NPY.npy_intp> sInit_to_ol_face + 1
-    np_olFaceIniVtxIdx = NPY.PyArray_SimpleNewFromData(1,
-                                                       &dim,
-                                                       NPY.NPY_INT32,
-                                                       <void *> olFaceIniVtxIdx)
-
-    # dim = <NPY.npy_intp> olFaceIniVtxIdx[sInit_to_ol_face]
-    dim = <NPY.npy_intp> sInit_to_ol_face
-    np_olFaceIniVtx = NPY.PyArray_SimpleNewFromData(1,
-                                                    &dim,
-                                                    NPY.NPY_INT32,
-                                                    <void *> olFaceIniVtx)
-
-    dim = <NPY.npy_intp> nOlFace + 1
-    np_olface_vtx_idx = NPY.PyArray_SimpleNewFromData(1,
-                                                      &dim,
-                                                      NPY.NPY_INT32,
-                                                      <void *> olface_vtx_idx)
-
-    dim = <NPY.npy_intp> olface_vtx_idx[nOlFace]
-    np_olface_vtx = NPY.PyArray_SimpleNewFromData(1,
-                                                  &dim,
-                                                  NPY.NPY_INT32,
-                                                  <void *> olface_vtx)
-
-    dim = <NPY.npy_intp> self._size + 1
-    np_olLinkedface_procIdx = NPY.PyArray_SimpleNewFromData(1,
-                                                            &dim,
-                                                            NPY.NPY_INT32,
-                                                            <void *> olLinkedface_procIdx)
-
-    dim = <NPY.npy_intp> (4*nOlLinkedFace)
-    np_olLinkedFace = NPY.PyArray_SimpleNewFromData(1,
-                                                    &dim,
-                                                    NPY.NPY_INT32,
-                                                    <void *> olLinkedFace)
-
-    dim = <NPY.npy_intp> nOlFace
-    np_olface_ln_to_gn = NPY.PyArray_SimpleNewFromData(1,
-                                                       &dim,
-                                                       PDM_G_NUM_NPY_INT,
-                                                       <void *> olface_ln_to_gn)
-    dim = <NPY.npy_intp> 3 * nOlVtx
-    np_olCoords = NPY.PyArray_SimpleNewFromData(1,
-                                                &dim,
-                                                NPY.NPY_DOUBLE,
-                                                <void *> olCoords)
-
-    dim = <NPY.npy_intp> nOlVtx
-    np_olvtx_ln_to_gn = NPY.PyArray_SimpleNewFromData(1,
-                                                      &dim,
-                                                      PDM_G_NUM_NPY_INT,
-                                                      <void *> olvtx_ln_to_gn)
-
-    dim = <NPY.npy_intp> self._init_face[<int>mesh] + 1
-    np_init_to_ol_face_idx = NPY.PyArray_SimpleNewFromData(1,
-                                                       &dim,
-                                                       NPY.NPY_INT32,
-                                                       <void *> init_to_ol_face_idx)
-
-    dim = <NPY.npy_intp> sInit_to_ol_face
-    np_init_to_ol_face = NPY.PyArray_SimpleNewFromData(1,
-                                                       &dim,
-                                                       NPY.NPY_INT32,
-                                                       <void *> init_to_ol_face)
-
-    return {"olFaceIniVtxIdx"      : np_olFaceIniVtxIdx,
-            "olFaceIniVtx"         : np_olFaceIniVtx,
-            "olface_vtx_idx"       : np_olface_vtx_idx,
-            "olface_vtx"           : np_olface_vtx,
-            "olLinkedface_procIdx" : np_olLinkedface_procIdx,
-            "olLinkedFace"         : np_olLinkedFace,
-            "olface_ln_to_gn,"     : np_olface_ln_to_gn,
-            "olCoords"             : np_olCoords,
-            "olvtx_ln_to_gn,"      : np_olvtx_ln_to_gn,
-            "init_to_ol_face_idx"  : np_init_to_ol_face_idx,
-            "init_to_ol_face"      : np_init_to_ol_face,
-            }
+    return {
+        "olFaceIniVtxIdx"      : create_numpy_i       (olFaceIniVtxIdx,      sInit_to_ol_face+1,           flag_owndata=False),
+        "olFaceIniVtx"         : create_numpy_i       (olFaceIniVtx,         sInit_to_ol_face,             flag_owndata=False),
+        "olface_vtx_idx"       : create_numpy_i       (olface_vtx_idx,       nOlFace+1,                    flag_owndata=False),
+        "olface_vtx"           : create_numpy_i       (olface_vtx,           olface_vtx_idx[nOlFace],      flag_owndata=False),
+        "olLinkedface_procIdx" : create_numpy_i       (olLinkedface_procIdx, self._size+1,                 flag_owndata=False),
+        "olLinkedFace"         : create_numpy_i       (olLinkedFace,         4*nOlLinkedFace,              flag_owndata=False),
+        "olface_ln_to_gn,"     : create_numpy_pdm_gnum(olface_ln_to_gn,      nOlFace,                      flag_owndata=False),
+        "olCoords"             : create_numpy_d       (olCoords,             3*nOlVtx,                     flag_owndata=False),
+        "olvtx_ln_to_gn,"      : create_numpy_pdm_gnum(olvtx_ln_to_gn,       nOlVtx,                       flag_owndata=False),
+        "init_to_ol_face_idx"  : create_numpy_i       (init_to_ol_face_idx,  self._init_face[<int>mesh]+1, flag_owndata=False),
+        "init_to_ol_face"      : create_numpy_i       (init_to_ol_face,      sInit_to_ol_face,             flag_owndata=False),
+    }
 
   # ------------------------------------------------------------------------
   def __dealloc__(self):

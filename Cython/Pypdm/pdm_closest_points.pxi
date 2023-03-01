@@ -160,25 +160,10 @@ cdef class ClosestPoints:
                            &closest_src_gnum,
                            &closest_src_distance)
 
-    cdef NPY.npy_intp dim
-
-    # > Build numpy capsule
-    dim = <NPY.npy_intp> self.tgt_n_points[i_part_tgt] * self.n_closest
-    np_closest_src_gnum = NPY.PyArray_SimpleNewFromData(1,
-                                                        &dim,
-                                                        PDM_G_NUM_NPY_INT,
-                                                        <void *> closest_src_gnum)
-    PyArray_ENABLEFLAGS(np_closest_src_gnum, NPY.NPY_OWNDATA)
-
-    np_closest_src_distance = NPY.PyArray_SimpleNewFromData(1,
-                                                            &dim,
-                                                            NPY.NPY_DOUBLE,
-                                                            <void *> closest_src_distance)
-    PyArray_ENABLEFLAGS(np_closest_src_distance, NPY.NPY_OWNDATA)
-
-    return {'closest_src_gnum'  : np_closest_src_gnum,
-            'closest_src_distance' : np_closest_src_distance
-            }
+    dim = self.tgt_n_points[i_part_tgt] * self.n_closest
+    
+    return {'closest_src_gnum'     : create_numpy_pdm_gnum(closest_src_gnum, dim),
+            'closest_src_distance' : create_numpy_d(closest_src_distance, dim)}
 
   # ------------------------------------------------------------------------
   def tgt_in_src_get(self, int i_part_src):
