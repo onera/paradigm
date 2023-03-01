@@ -179,7 +179,7 @@ do
     echo -e "${RED}Error${NC}: OpenMPI is not available for pdm_run script"
     echo -e "${PURPLE}${TestName}: ${RED}Failed${NC}"
     exit 1
-    @PDM_RUN_PRELOAD@ @PDM_RUN_LSAN@ @PDM_RUN_PYTHONPATH@ ${ExeMPI} -output-filename $OutputFile -n $Nrank /usr/bin/time -f "Maximum Resident Memory : %M Kb" ${TestName} ${TestOption} 2>/dev/null
+    @PDM_RUN_PRELOAD@ @PDM_RUN_LSAN@ @PDM_RUN_PYTHONPATH@ ${ExeMPI} -output-filename $OutputFile -n $Nrank /usr/bin/time -f "Maximum Resident Memory : %M Kb" ./${TestName} ${TestOption} 2>/dev/null
     if [ "$?" -ne "0" ]
     then
       Testoutput=1
