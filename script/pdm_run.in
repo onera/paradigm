@@ -184,9 +184,12 @@ do
 
       # mpirun -n 1 ./${TestName}
       echo $LD_PRELOAD
+      echo "aaaaa "
       export @PDM_RUN_PRELOAD@
+      echo "bbbbb "
       echo $LD_PRELOAD
-      @PDM_RUN_LSAN@ ${ExeMPI} -n $Nrank ./${TestName} ${TestOption}
+      echo "ccccc "
+      ./${TestName}
 
       # @PDM_RUN_LSAN@ ${ExeMPI} -outfile-pattern $OutputFile.%r -errfile-pattern $ErrFile.%r -n $Nrank  /usr/bin/time  -f "Maximum Resident Memory : %M Kb" ./${TestName} ${TestOption} 2>/dev/null
       printf "totoooooooooo out " ${ExeMPI} ${PWD}
