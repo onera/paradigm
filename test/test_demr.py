@@ -9,7 +9,7 @@ import argparse
 
 import sys
 #sys.path.append("/stck/bandrieu/Public/adaptation/cavity_operator3_v3/")
-from mod_vtk import *
+# from mod_vtk import *
 
 
 parser = argparse.ArgumentParser()

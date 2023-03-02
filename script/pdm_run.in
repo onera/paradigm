@@ -163,40 +163,12 @@ do
   then
     if [ $isPythonTest -gt 0  ]
     then
-      @PDM_RUN_PRELOAD@ @PDM_RUN_LSAN@ @PDM_RUN_PYTHONPATH@ ${ExeMPI} -outfile-pattern $OutputFile.%r -errfile-pattern $ErrFile.%r -n $Nrank  /usr/bin/time  -f "Maximum Resident Memory : %M Kb" python ${TestName}.py ${TestOption} 2>/dev/null
+      @PDM_RUN_LSAN@ @PDM_RUN_PYTHONPATH@ ${ExeMPI} -genv @PDM_RUN_PRELOAD@ -outfile-pattern $OutputFile.%r -errfile-pattern $ErrFile.%r -n $Nrank  /usr/bin/time  -f "Maximum Resident Memory : %M Kb" python ${TestName}.py ${TestOption} 2>/dev/null
       if [ "$?" -ne "0" ]
       then
         Testoutput=1
       fi
     else
-      printf "totoooooooooo ${ExeMPI} ${PWD} \n"
-      # echo "ExeMPI" ${ExeMPI}
-      # echo "PWD" ${PWD}
-      # mpirun -n 1 ./${TestName}
-      # echo "Test2"
-      # ${ExeMPI} -n $Nrank ./${TestName}
-      # echo "Test3"
-      # @PDM_RUN_LSAN@ ${ExeMPI} -n $Nrank ./${TestName}
-      # echo "Test4"
-      # @PDM_RUN_PRELOAD@ @PDM_RUN_LSAN@ ${ExeMPI} -n $Nrank ./${TestName}
-      # echo "Test5"
-      # @PDM_RUN_PRELOAD@ @PDM_RUN_LSAN@ @PDM_RUN_PYTHONPATH@ ${ExeMPI} -n $Nrank ./${TestName}
-
-      # mpirun -n 1 ./${TestName}
-      # ulimit -a
-      ulimit -c unlimited
-      ulimit -l unlimited
-      # # ulimit -a
-      # # ulimit -l
-      # # ulimit -l
-      # # ulimit -l
-      # # echo $LD_PRELOAD
-      # # export @PDM_RUN_PRELOAD@
-      # # echo $LD_PRELOAD
-      # ./${TestName}
-
-      # ${ExeMPI} -genv @PDM_RUN_PRELOAD@ -n $Nrank ./${TestName}
-
       @PDM_RUN_LSAN@ ${ExeMPI} -genv @PDM_RUN_PRELOAD@ -outfile-pattern $OutputFile.%r -errfile-pattern $ErrFile.%r -n $Nrank  /usr/bin/time  -f "Maximum Resident Memory : %M Kb" ./${TestName} ${TestOption} 2>/dev/null
       if [ "$?" -ne "0" ]
       then
@@ -207,7 +179,7 @@ do
     echo -e "${RED}Error${NC}: OpenMPI is not available for pdm_run script"
     echo -e "${PURPLE}${TestName}: ${RED}Failed${NC}"
     exit 1
-    @PDM_RUN_PRELOAD@ @PDM_RUN_LSAN@ @PDM_RUN_PYTHONPATH@ ${ExeMPI} -output-filename $OutputFile -n $Nrank /usr/bin/time -f "Maximum Resident Memory : %M Kb" ./${TestName} ${TestOption} 2>/dev/null
+    @PDM_RUN_LSAN@ @PDM_RUN_PYTHONPATH@ ${ExeMPI} -genv @PDM_RUN_PRELOAD@ -output-filename $OutputFile -n $Nrank /usr/bin/time -f "Maximum Resident Memory : %M Kb" ./${TestName} ${TestOption} 2>/dev/null
     if [ "$?" -ne "0" ]
     then
       Testoutput=1
