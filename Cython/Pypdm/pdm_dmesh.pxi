@@ -273,10 +273,8 @@ def dmesh_connectivity_get(DMesh pydm, PDM_connectivity_type_t connectivity_type
                                          &connect,
                                          &connect_idx,
                                          PDM_OWNERSHIP_USER)
-  if (connect_idx == NULL) :
-      np_connect_idx = None
-  else :
-      np_connect_idx = create_numpy_i(connect_idx, dn_entity+1)
+
+  np_connect_idx = create_numpy_or_none_i(connect_idx, dn_entity+1)
 
   if (connect == NULL) :
       np_connect = None
@@ -299,12 +297,7 @@ def dmesh_distrib_get(DMesh pydm, PDM_mesh_entities_t entity_type):
   cdef int size
   # ************************************************************************
   size = PDM_dmesh_distrib_get(pydm._dm, entity_type, &distrib)
-
-  if (distrib == NULL) :
-      np_distrib = None
-  else :
-      np_distrib = create_numpy_pdm_gnum(distrib, size+1, flag_owndata=False)
-  return np_distrib
+  return create_numpy_or_none_g(distrib, size+1, flag_owndata=False)
 
 # ------------------------------------------------------------------------
 def dmesh_bound_get(DMesh pydm, PDM_bound_type_t bound_type):
@@ -324,10 +317,7 @@ def dmesh_bound_get(DMesh pydm, PDM_bound_type_t bound_type):
                               &connect_idx,
                               PDM_OWNERSHIP_USER)
 
-  if (connect_idx == NULL) :
-      np_connect_idx = None
-  else :
-      np_connect_idx = create_numpy_i(connect_idx, n_bnd+1)
+  np_connect_idx = create_numpy_or_none_i(connect_idx, n_bnd+1)
 
   if (connect == NULL) :
       np_connect = None

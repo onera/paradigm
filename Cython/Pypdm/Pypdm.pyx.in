@@ -412,18 +412,26 @@ cdef create_numpy(void* array, int nptype, int size, bint flag_owndata=True):
 cdef create_numpy_i(int* array, int size, bint flag_owndata=True):
     return create_numpy(<void *> array, NPY.NPY_INT32, size, flag_owndata)
 
-cdef create_numpy_l(long int* array, int size, bint flag_owndata=True):
-    return create_numpy(<void *> array, NPY.NPY_INT64, size, flag_owndata)
-
 cdef create_numpy_pdm_gnum(PDM_g_num_t* array, int size, bint flag_owndata=True):
     return create_numpy(<void *> array, PDM_G_NUM_NPY_INT, size, flag_owndata)
-
-cdef create_numpy_f(float* array, int size, bint flag_owndata=True):
-    return create_numpy(<void *> array, NPY.NPY_FLOAT, size, flag_owndata)
 
 cdef create_numpy_d(double* array, int size, bint flag_owndata=True):
     return create_numpy(<void *> array, NPY.NPY_DOUBLE, size, flag_owndata)
 
+cdef create_numpy_or_none(void* array, int nptype, int size, bint flag_owndata=True):
+    if array == NULL:
+        return None
+    else:
+        return create_numpy(array, nptype, size, flag_owndata)
+
+cdef create_numpy_or_none_i(int* array, int size, bint flag_owndata=True):
+    return create_numpy_or_none(<void *> array, NPY.NPY_INT32, size, flag_owndata)
+
+cdef create_numpy_or_none_g(PDM_g_num_t* array, int size, bint flag_owndata=True):
+    return create_numpy_or_none(<void *> array, PDM_G_NUM_NPY_INT, size, flag_owndata)
+
+cdef create_numpy_or_none_d(double* array, int size, bint flag_owndata=True):
+    return create_numpy_or_none(<void *> array, NPY.NPY_DOUBLE, size, flag_owndata)
 
 # PDM_dmesh :
 # --------------------

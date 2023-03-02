@@ -353,10 +353,7 @@ cdef class PartExtension:
 
     size = PDM_part_extension_connectivity_get(self._part_ext, i_domain, i_part, connectivity_type, &connect, &connect_idx)
 
-    if (connect_idx == NULL) :
-      np_connect_idx = None
-    else :
-      np_connect_idx = create_numpy_i(connect_idx, size+1)
+    np_connect_idx = create_numpy_or_none_i(connect_idx, size+1)
 
     if (connect == NULL) :
       np_connect = None
@@ -395,13 +392,7 @@ cdef class PartExtension:
     cdef int size
 
     size = PDM_part_extension_interface_get(self._part_ext, i_domain, i_part, mesh_ety_type, &interface_no)
-
-    if (interface_no == NULL) :
-      np_interface_no = None
-    else :
-      np_interface_no = create_numpy_i(interface_no, size)
-
-    return np_interface_no
+    return create_numpy_or_none_i(interface_no, size)
 
   # ------------------------------------------------------------------
   def get_composed_interface(self):
@@ -418,20 +409,14 @@ cdef class PartExtension:
                                                                      &composed_interface,
                                                                      &composed_ln_to_gn_sorted)
 
-    if (composed_interface_idx == NULL) :
-      np_composed_interface_idx = None
-    else :
-      np_composed_interface_idx = create_numpy_i(composed_interface_idx, n_composed_interface+1)
+    np_composed_interface_idx = create_numpy_or_none_i(composed_interface_idx, n_composed_interface+1)
 
-    if (composed_interface == NULL) :
+    if (composed_interface == NULL): #np_composed_interface_idx can be None
       np_composed_interface = None
-    else :
+    else:
       np_composed_interface = create_numpy_i(composed_interface, np_composed_interface_idx[n_composed_interface])
 
-    if (composed_ln_to_gn_sorted == NULL) :
-      np_composed_ln_to_gn_sorted = None
-    else :
-      np_composed_ln_to_gn_sorted = create_numpy_pdm_gnum(composed_ln_to_gn_sorted, n_composed_interface)
+    np_composed_ln_to_gn_sorted = create_numpy_or_none_g(composed_ln_to_gn_sorted, n_composed_interface)
 
     return (np_composed_interface_idx, np_composed_interface, np_composed_ln_to_gn_sorted)
 
@@ -458,10 +443,7 @@ cdef class PartExtension:
     else :
       np_group_ln_to_gn = create_numpy_pdm_gnum(group_ln_to_gn, entity_group_idx[n_group])
 
-    if (entity_group_idx == NULL) :
-      np_entity_group_idx = None
-    else :
-      np_entity_group_idx = create_numpy_i(entity_group_idx, n_group+1)
+    np_entity_group_idx = create_numpy_or_none_i(entity_group_idx, n_group+1)
 
     if (entity_group == NULL) :
       np_entity_group = None
@@ -478,13 +460,7 @@ cdef class PartExtension:
     cdef int size
 
     size = PDM_part_extension_coord_get(self._part_ext, i_domain, i_part, &coord)
-
-    if (coord == NULL) :
-      np_coord = None
-    else :
-      np_coord = create_numpy_d(coord, 3*size)
-
-    return np_coord
+    return create_numpy_or_none_d(coord, 3*size)
 
   # ------------------------------------------------------------------
   def __dealloc__(self):
