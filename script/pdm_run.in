@@ -176,6 +176,10 @@ do
       echo "Test2"
       ${ExeMPI} -n $Nrank ./${TestName}
       echo "Test3"
+      @PDM_RUN_LSAN@ ${ExeMPI} -n $Nrank ./${TestName}
+      echo "Test4"
+      @PDM_RUN_PRELOAD@ @PDM_RUN_LSAN@ ${ExeMPI} -n $Nrank ./${TestName}
+      echo "Test5"
       @PDM_RUN_PRELOAD@ @PDM_RUN_LSAN@ @PDM_RUN_PYTHONPATH@ ${ExeMPI} -n $Nrank ./${TestName}
 
       # mpirun -n 1 ./${TestName}
