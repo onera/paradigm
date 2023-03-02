@@ -1618,7 +1618,7 @@ _export_ensight3d
                                         PDM_WRITER_OFF,
                                         name,
                                         name,
-                                        PDM_MPI_COMM_WORLD,
+                                        comm,
                                         PDM_IO_KIND_MPI_SIMPLE,
                                         1.,
                                         NULL);

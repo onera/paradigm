@@ -462,7 +462,17 @@ PDM_dmesh_nodal_t *
 PDM_vtk_read_to_dmesh_nodal
 (
  const PDM_MPI_Comm    comm,
- const char           *filename
+ const char           *filename,
+       int            *n_vtx_field,
+       char         ***vtx_field_name,
+       PDM_data_t    **vtx_field_type,
+       int           **vtx_field_stride,
+       void         ***vtx_field_value,
+       int            *n_elt_field,
+       char         ***elt_field_name,
+       PDM_data_t    **elt_field_type,
+       int           **elt_field_stride,
+       void         ***elt_field_value
  );
 
 #ifdef __cplusplus

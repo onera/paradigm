@@ -804,14 +804,27 @@ static PDM_Mesh_nodal_elt_t _vtk_to_pdm_elt_type
 }
 
 
+typedef struct _prepa_vtk_field_t {
+
+  int           n_field;
+  char        **field_name;
+  PDM_data_t   *field_type;
+  int          *field_stride;
+  void        **field_value;
+
+} _prepa_vtk_field_t;
+
+
 typedef struct _prepa_vtk_t {
 
-  PDM_g_num_t           n_elt;
-  PDM_g_num_t           n_vtx;
-  double               *vtx_coord;
-  int                  *elt_vtx_idx;
-  PDM_g_num_t          *elt_vtx;
-  PDM_Mesh_nodal_elt_t *elt_type;
+  PDM_g_num_t            n_elt;
+  PDM_g_num_t            n_vtx;
+  double                *vtx_coord;
+  int                   *elt_vtx_idx;
+  PDM_g_num_t           *elt_vtx;
+  PDM_Mesh_nodal_elt_t  *elt_type;
+
+  _prepa_vtk_field_t     field[2];
 
 } _prepa_vtk_t;
 
@@ -902,6 +915,7 @@ _vtk_read_unstructured_grid
         fscanf(f, "%d", &vtk_elt_type);
         prepa->elt_type[i] = _vtk_to_pdm_elt_type(vtk_elt_type);
       }
+      break;
     }
   }
 }
@@ -958,11 +972,220 @@ _vtk_read_polydata
           prepa->elt_vtx[prepa->elt_vtx_idx[i+1]++] = vtx_id + 1;
         }
       }
+      break;
     }
 
   }
 }
 
+
+typedef enum {
+  POINT_DATA,
+  CELL_DATA
+} _field_location_t;
+
+
+static PDM_data_t
+_vtk_str_to_field_type
+(
+const char *s
+ )
+{
+  if (strstr(s, "int")  != NULL ||
+      strstr(s, "long") != NULL) {
+    return PDM_INT;
+  }
+  else if (strstr(s, "double")  != NULL ||
+           strstr(s, "float")   != NULL) {
+    return PDM_DOUBLE;
+  }
+  else {
+    PDM_error(__FILE__, __LINE__, 0, "Field data type '%s' is not supported\n");
+  }
+
+  return -1;
+}
+
+
+static size_t
+_pdm_data_size
+(
+ const PDM_data_t data_type
+ )
+{
+  switch (data_type) {
+  case PDM_INT:
+    return sizeof(int);
+  case PDM_DOUBLE:
+    return sizeof(double);
+  default:
+    PDM_error(__FILE__, __LINE__, 0, "Invalid data type %d\n", (int) data_type);
+  }
+
+  return 0;
+}
+
+static void
+_vtk_read_field_values
+(
+       FILE         *f,
+ const PDM_g_num_t   n,
+ const int           stride,
+ const PDM_data_t    data_type,
+       void        **values
+ )
+{
+  size_t s_data = _pdm_data_size(data_type);
+  *values = malloc(s_data * n * stride);
+
+  if (data_type == PDM_INT) {
+    int *_field_value = (int *) *values;
+    for (PDM_g_num_t j = 0; j < n; j++) {
+      for (int k = 0; k < stride; k++) {
+        fscanf(f, "%d", &_field_value[stride*j + k]);
+      }
+    }
+  }
+  else if (data_type == PDM_DOUBLE) {
+    double *_field_value = (double *) *values;
+    for (PDM_g_num_t j = 0; j < n; j++) {
+      for (int k = 0; k < stride; k++) {
+        fscanf(f, "%le", &_field_value[stride*j + k]);
+      }
+    }
+  }
+}
+
+
+
+static void
+_vtk_read_fields
+ (
+  FILE              *f,
+  _prepa_vtk_t      *prepa,
+  _field_location_t  location
+  )
+{
+  char word[999];
+
+  int n_field = 0;
+
+  char       **field_name   = NULL;
+  PDM_data_t  *field_type   = NULL;
+  int         *field_stride = NULL;
+  void       **field_value  = NULL;
+
+  PDM_g_num_t n = 0;
+  fscanf(f, PDM_FMT_G_NUM, &n);
+
+  while (1) {
+    int stat = fscanf(f, "%s", word);
+
+    if (stat == EOF) {
+      // End of file
+      break;
+    }
+
+    if (strstr(word, "FIELD") != NULL) {
+      fscanf(f, "%s", word); // FieldData
+
+      fscanf(f, "%d", &n_field);
+
+      field_name   = malloc(sizeof(char     *) * n_field);
+      field_type   = malloc(sizeof(PDM_data_t) * n_field);
+      field_stride = malloc(sizeof(int       ) * n_field);
+      field_value  = malloc(sizeof(void     *) * n_field);
+
+      for (int i = 0; i < n_field; i++) {
+        fscanf(f, "%s", word);
+
+        field_name[i] = malloc(sizeof(char) * (strlen(word) + 1));
+        strcpy(field_name[i], word);
+
+        fscanf(f, "%d", &field_stride[i]);
+
+        PDM_g_num_t n2 = 0;
+        fscanf(f, PDM_FMT_G_NUM, &n2);
+
+        assert(n2 == n);
+
+        fscanf(f, "%s", word);
+        field_type[i] = _vtk_str_to_field_type(word);
+
+        _vtk_read_field_values(f,
+                               n,
+                               field_stride[i],
+                               field_type  [i],
+                               &field_value[i]);
+      }
+
+      break; // allow FIELD + SCALARS + VECTORS...?
+    }
+
+    else if (strstr(word, "SCALARS") != NULL ||
+             strstr(word, "VECTORS") != NULL ||
+             strstr(word, "TENSORS") != NULL) {
+
+      n_field = 1;
+
+      field_name   = malloc(sizeof(char     *) * n_field);
+      field_type   = malloc(sizeof(PDM_data_t) * n_field);
+      field_stride = malloc(sizeof(int       ) * n_field);
+      field_value  = malloc(sizeof(void     *) * n_field);
+
+      if (strstr(word, "SCALARS") != NULL) {
+       field_stride[0] = 1;
+      }
+      else if (strstr(word, "VECTORS") != NULL) {
+       field_stride[0] = 3;
+      }
+      else if (strstr(word, "TENSORS") != NULL) {
+       field_stride[0] = 9;
+      }
+      else {
+        PDM_error(__FILE__, __LINE__, 0, "Invalid field type '%s'\n", word);
+      }
+
+      fscanf(f, "%s", word);
+      field_name[0] = malloc(sizeof(char) * (strlen(word) + 1));
+      strcpy(field_name[0], word);
+
+      fscanf(f, "%s", word);
+      field_type[0] = _vtk_str_to_field_type(word);
+
+      while (1) {
+        stat = fscanf(f, "%s", word);
+
+        if (stat == EOF) {
+          // End of file
+          break;
+        }
+
+        if (strstr(word, "LOOKUP_TABLE") != NULL) {
+          break;
+        }
+      }
+      fscanf(f, "%s", word);
+      assert(strstr(word, "default") != NULL);
+
+
+
+      _vtk_read_field_values(f,
+                             n,
+                             field_stride[0],
+                             field_type  [0],
+                             &field_value[0]);
+
+      break;
+    }
+  }
+
+  prepa->field[location].n_field      = n_field;
+  prepa->field[location].field_name   = field_name;
+  prepa->field[location].field_type   = field_type;
+  prepa->field[location].field_stride = field_stride;
+  prepa->field[location].field_value  = field_value;
+}
 
 /*=============================================================================
  * Public function definitions
@@ -2440,21 +2663,22 @@ PDM_vtk_lagrange_to_ijk
  *
  */
 
-// TO DO : fields, something like:
-// int    *n_vtx_field,
-// char ***vtx_field_name,
-// void  **vtx_field_value,
-// int   **vtx_field_type,
-// int    *n_elt_field,
-// char ***elt_field_name,
-// void  **elt_field_value,
-// int   **elt_field_type
 
 PDM_dmesh_nodal_t *
 PDM_vtk_read_to_dmesh_nodal
 (
  const PDM_MPI_Comm    comm,
- const char           *filename
+ const char           *filename,
+       int            *n_vtx_field,
+       char         ***vtx_field_name,
+       PDM_data_t    **vtx_field_type,
+       int           **vtx_field_stride,
+       void         ***vtx_field_value,
+       int            *n_elt_field,
+       char         ***elt_field_name,
+       PDM_data_t    **elt_field_type,
+       int           **elt_field_stride,
+       void         ***elt_field_value
  )
 {
   int dbg_enabled = 0;
@@ -2472,11 +2696,22 @@ PDM_vtk_read_to_dmesh_nodal
   prepa.elt_vtx     = NULL;
   prepa.elt_type    = NULL;
 
+  for (int i = 0; i < 2; i++) {
+    prepa.field[i].n_field = 0;
+    prepa.field[i].field_name   = NULL;
+    prepa.field[i].field_type   = NULL;
+    prepa.field[i].field_stride = NULL;
+    prepa.field[i].field_value  = NULL;
+  }
+
+  *n_vtx_field = 0;
+  *n_elt_field = 0;
+
   if (i_rank == 0) {
 
     FILE *f = fopen(filename, "r");
 
-    if (filename == NULL) {
+    if (f == NULL) {
       PDM_error(__FILE__, __LINE__, 0, "Failed to open file '%s'\n", filename);
     }
 
@@ -2501,16 +2736,26 @@ PDM_vtk_read_to_dmesh_nodal
 
         if (strstr(word, "UNSTRUCTURED_GRID") != NULL) {
           _vtk_read_unstructured_grid(f, &prepa);
-          break;
         }
-        if (strstr(word, "POLYDATA") != NULL) {
+        else if (strstr(word, "POLYDATA") != NULL) {
           _vtk_read_polydata(f, &prepa);
-          break;
         }
         else {
           PDM_error(__FILE__, __LINE__, 0, "Dataset '%s' not supported\n", word);
         }
 
+      }
+
+      else if (strstr(word, "CELL_DATA") != NULL) {
+        _vtk_read_fields(f,
+                         &prepa,
+                         CELL_DATA);
+      }
+
+      else if (strstr(word, "POINT_DATA") != NULL) {
+        _vtk_read_fields(f,
+                         &prepa,
+                         POINT_DATA);
       }
 
     }
@@ -2584,6 +2829,105 @@ PDM_vtk_read_to_dmesh_nodal
     PDM_log_trace_array_long(gn_elt, PDM_MESH_NODAL_N_ELEMENT_TYPES, "gn_elt :");
   }
 
+
+  int n_field[2] = {0};
+  if (i_rank == 0) {
+    n_field[0] = prepa.field[0].n_field;
+    n_field[1] = prepa.field[1].n_field;
+  }
+
+  PDM_MPI_Bcast(n_field, 2, PDM_MPI_INT, 0, comm);
+
+  if (dbg_enabled) {
+    PDM_log_trace_array_int(n_field, 2, "n_field : ");
+  }
+
+  for (int i = 0; i < 2; i++) {
+
+    if (n_field[i] > 0) {
+      // Bcast field name, stride and type
+      int *l_name = malloc(sizeof(int) * n_field[i]);
+      if (i_rank == 0) {
+        for (int j = 0; j < n_field[i]; j++) {
+          l_name[j] = strlen(prepa.field[i].field_name[j]) + 1;
+        }
+      }
+      else {
+        prepa.field[i].n_field = n_field[i];
+        prepa.field[i].field_name   = malloc(sizeof(char     *) * n_field[i]);
+        prepa.field[i].field_type   = malloc(sizeof(PDM_data_t) * n_field[i]);
+        prepa.field[i].field_stride = malloc(sizeof(int       ) * n_field[i]);
+        prepa.field[i].field_value  = malloc(sizeof(void     *) * n_field[i]);
+      }
+
+      PDM_MPI_Bcast(l_name, n_field[i], PDM_MPI_INT, 0, comm);
+
+      int l_char_buf = 0;
+      for (int j = 0; j < n_field[i]; j++) {
+        l_char_buf += l_name[j];
+      }
+      char *char_buf = malloc(sizeof(char *) * l_char_buf);
+      if (i_rank == 0) {
+        int idx = 0;
+        for (int j = 0; j < n_field[i]; j++) {
+          for (int k = 0; k < l_name[j]-1; k++) {
+            char_buf[idx++] = prepa.field[i].field_name[j][k];
+          }
+          char_buf[idx++] = '\0';
+        }
+      }
+
+      PDM_MPI_Bcast((void *) char_buf, l_char_buf, PDM_MPI_CHAR, 0, comm);
+
+      if (i_rank != 0) {
+        int idx = 0;
+        for (int j = 0; j < n_field[i]; j++) {
+          prepa.field[i].field_name[j] = malloc(sizeof(char) * l_name[j]);
+          for (int k = 0; k < l_name[j]; k++) {
+            prepa.field[i].field_name[j][k] = char_buf[idx++];
+          }
+        }
+      }
+      free(char_buf);
+      free(l_name);
+
+      PDM_MPI_Bcast((void *) prepa.field[i].field_type  , n_field[i], PDM_MPI_INT, 0, comm);
+      PDM_MPI_Bcast((void *) prepa.field[i].field_stride, n_field[i], PDM_MPI_INT, 0, comm);
+
+
+
+      if (dbg_enabled) {
+        log_trace("i = %d\n", i);
+        log_trace("n_field = %d\n", prepa.field[i].n_field);
+        for (int j = 0; j < prepa.field[i].n_field; j++) {
+          log_trace("  %s : type %d, stride %d\n",
+                    prepa.field[i].field_name[j],
+                    prepa.field[i].field_type[j],
+                    prepa.field[i].field_stride[j]);
+        }
+      }
+
+      if (i == 0) {
+        *n_vtx_field      = n_field[i];
+        *vtx_field_name   = prepa.field[i].field_name;
+        *vtx_field_type   = prepa.field[i].field_type;
+        *vtx_field_stride = prepa.field[i].field_stride;
+      }
+      else {
+        *n_elt_field      = n_field[i];
+        *elt_field_name   = prepa.field[i].field_name;
+        *elt_field_type   = prepa.field[i].field_type;
+        *elt_field_stride = prepa.field[i].field_stride;
+      }
+
+    }
+
+  }
+
+
+
+
+
   int mesh_dimension = -1;
   PDM_g_num_t gn_elt_dim[3] = {0};
   for (PDM_Mesh_nodal_elt_t t = 0; t < PDM_MESH_NODAL_N_ELEMENT_TYPES; t++) {
@@ -2617,6 +2961,28 @@ PDM_vtk_read_to_dmesh_nodal
   if (gvtx_coord != NULL) {
     free(gvtx_coord);
   }
+
+  if (*n_vtx_field > 0) {
+    *vtx_field_value = malloc(sizeof(void *) * (*n_vtx_field));
+
+    for (int i = 0; i < *n_vtx_field; i++) {
+      PDM_block_to_block_exch(btb_vtx,
+                              _pdm_data_size(prepa.field[0].field_type[i]),
+                              PDM_STRIDE_CST_INTERLACED,
+                              prepa.field[0].field_stride[i],
+                              NULL,
+                    (void  *) prepa.field[0].field_value[i],
+                              NULL,
+                    (void **) &(*vtx_field_value)[i]);
+
+      if (i_rank == 0) {
+        free(prepa.field[0].field_value[i]);
+      }
+    }
+    free(prepa.field[0].field_value);
+  }
+
+
   PDM_block_to_block_free(btb_vtx);
   free(init_distrib_vtx);
 
@@ -2726,7 +3092,7 @@ PDM_vtk_read_to_dmesh_nodal
                                                  delt_vtx[t],
                                                  PDM_OWNERSHIP_KEEP);
         if (dbg_enabled) {
-          log_trace("type %d\n", t);
+          log_trace("elt type %d\n", t);
           PDM_log_trace_connectivity_long(dpoly2d_vtx_idx,
                                           delt_vtx[t],
                                           dn_elt[t],
@@ -2741,7 +3107,7 @@ PDM_vtk_read_to_dmesh_nodal
                                               delt_vtx[t],
                                               PDM_OWNERSHIP_KEEP);
         if (dbg_enabled) {
-          log_trace("type %d\n", t);
+          log_trace("elt type %d\n", t);
           int *connec_idx = PDM_array_new_idx_from_const_stride_int(PDM_Mesh_nodal_n_vtx_elt_get(t, 1),
                                                                     dn_elt[t]);
           PDM_log_trace_connectivity_long(connec_idx,
