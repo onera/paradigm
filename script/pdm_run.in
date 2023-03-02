@@ -169,9 +169,16 @@ do
         Testoutput=1
       fi
     else
-      printf "totoooooooooo" ${ExeMPI} ${PWD}
-      printf "totoooooooooo" ${Nrank} ${TestName}
+      # printf "totoooooooooo ${ExeMPI} ${PWD} \n"
+      echo "ExeMPI" ${ExeMPI}
+      echo "PWD" ${PWD}
       mpirun -n 1 ./${TestName}
+      echo "Test2"
+      ${ExeMPI} -n $Nrank ./${TestName}
+      echo "Test3"
+      @PDM_RUN_PRELOAD@ @PDM_RUN_LSAN@ @PDM_RUN_PYTHONPATH@ ${ExeMPI} -n $Nrank ./${TestName}
+
+      # mpirun -n 1 ./${TestName}
       # @PDM_RUN_PRELOAD@ @PDM_RUN_LSAN@ @PDM_RUN_PYTHONPATH@ ${ExeMPI} -outfile-pattern $OutputFile.%r -errfile-pattern $ErrFile.%r -n $Nrank  /usr/bin/time  -f "Maximum Resident Memory : %M Kb" ./${TestName} ${TestOption} 2>/dev/null
       printf "totoooooooooo out " ${ExeMPI} ${PWD}
       if [ "$?" -ne "0" ]
