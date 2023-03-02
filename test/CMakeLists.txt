@@ -226,6 +226,7 @@ test_c_create (pdm_t_simultaneous_trees 1 PDM_LIST_TEST PDM_LIST_NRANK)
 test_c_create (pdm_t_point_location_nodal 1  PDM_LIST_TEST PDM_LIST_NRANK)
 test_c_create (pdm_t_projection_point_cloud_surf 1 PDM_LIST_TEST PDM_LIST_NRANK)
 test_c_create (pdm_t_reader_gamma 1 PDM_LIST_TEST PDM_LIST_NRANK)
+test_c_create (pdm_t_reader_vtk 1 PDM_LIST_TEST PDM_LIST_NRANK)
 
 test_c_create (pdm_t_icoball 1 PDM_LIST_TEST PDM_LIST_NRANK)
 test_c_create (pdm_t_hollow_ball 1 PDM_LIST_TEST PDM_LIST_NRANK)

@@ -20,6 +20,13 @@
 
 #include "pdm_logging.h"
 
+#include "pdm_mesh_nodal.h"
+#include "pdm_distrib.h"
+#include "pdm_block_to_block.h"
+#include "pdm_dmesh_nodal.h"
+#include "pdm_dmesh_nodal_priv.h"
+#include "pdm_array.h"
+
 #ifdef __cplusplus
 extern "C" {
 #if 0
@@ -764,6 +771,197 @@ static int *_vtk_lagrange_hexa_to_ijk (const int order) {
   return ijk;
 }
 
+
+
+
+static PDM_Mesh_nodal_elt_t _vtk_to_pdm_elt_type
+(
+ const int vtk_elt_type
+ )
+{
+  switch (vtk_elt_type) {
+  case 1:
+    return PDM_MESH_NODAL_POINT;
+  case 3:
+    return PDM_MESH_NODAL_BAR2;
+  case 5:
+    return PDM_MESH_NODAL_TRIA3;
+  case 9:
+    return PDM_MESH_NODAL_QUAD4;
+  case 10:
+    return PDM_MESH_NODAL_TETRA4;
+  case 14:
+    return PDM_MESH_NODAL_PYRAMID5;
+  case 13:
+    return PDM_MESH_NODAL_PRISM6;
+  case 12:
+    return PDM_MESH_NODAL_HEXA8;
+    default:
+      PDM_error(__FILE__, __LINE__, 0, "VTK type %d is not supported\n", vtk_elt_type);
+  }
+
+  return PDM_MESH_NODAL_N_ELEMENT_TYPES;
+}
+
+
+typedef struct _prepa_vtk_t {
+
+  PDM_g_num_t           n_elt;
+  PDM_g_num_t           n_vtx;
+  double               *vtx_coord;
+  int                  *elt_vtx_idx;
+  PDM_g_num_t          *elt_vtx;
+  PDM_Mesh_nodal_elt_t *elt_type;
+
+} _prepa_vtk_t;
+
+
+static void
+_vtk_read_points
+ (
+  FILE         *f,
+  PDM_g_num_t  *n_vtx,
+  double      **vtx_coord
+  )
+{
+  char word[999];
+
+  fscanf(f, PDM_FMT_G_NUM, n_vtx);
+  fscanf(f, "%s", word); // coord type
+
+  *vtx_coord = malloc(sizeof(double) * (*n_vtx) * 3);
+
+  for (int i = 0; i < 3*(*n_vtx); i++) {
+    fscanf(f, "%le", &(*vtx_coord)[i]);
+  }
+}
+
+static void
+_vtk_read_unstructured_grid
+ (
+  FILE         *f,
+  _prepa_vtk_t *prepa
+ )
+{
+  char word[999];
+  while (1) {
+    int stat = fscanf(f, "%s", word);
+
+    if (stat == EOF) {
+      // End of file
+      break;
+    }
+
+    if (strstr(word, "POINTS") != NULL) {
+      _vtk_read_points(f,
+                       &prepa->n_vtx,
+                       &prepa->vtx_coord);
+    }
+
+    if (strstr(word, "CELLS") != NULL) {
+      PDM_g_num_t gn_elt    = 0;
+      PDM_g_num_t s_elt_vtx = 0;
+      fscanf(f, PDM_FMT_G_NUM" "PDM_FMT_G_NUM, &gn_elt, &s_elt_vtx);
+      if (prepa->n_elt < 0) {
+        prepa->n_elt = gn_elt;
+      }
+      else if (prepa->n_elt != gn_elt) {
+        PDM_error(__FILE__, __LINE__, 0, "Incoherent number of cells (block CELLS)\n");
+      }
+      s_elt_vtx -= prepa->n_elt;
+
+      prepa->elt_vtx_idx = malloc(sizeof(int) * (prepa->n_elt + 1));
+      prepa->elt_vtx_idx[0] = 0;
+      prepa->elt_vtx = malloc(sizeof(PDM_g_num_t) * s_elt_vtx);
+
+      for (int i = 0; i < prepa->n_elt; i++) {
+        prepa->elt_vtx_idx[i+1] = prepa->elt_vtx_idx[i];
+        int elt_vtx_n = 0;
+        fscanf(f, "%d", &elt_vtx_n);
+        for (int j = 0; j < elt_vtx_n; j++) {
+          PDM_g_num_t vtx_id = 0;
+          fscanf(f, PDM_FMT_G_NUM, &vtx_id);
+          prepa->elt_vtx[prepa->elt_vtx_idx[i+1]++] = vtx_id + 1;
+        }
+      }
+    }
+
+    if (strstr(word, "CELL_TYPES") != NULL) {
+      PDM_g_num_t gn_elt    = 0;
+      fscanf(f, PDM_FMT_G_NUM, &gn_elt);
+      if (prepa->n_elt < 0) {
+        prepa->n_elt = gn_elt;
+      }
+      else if (prepa->n_elt != gn_elt) {
+        PDM_error(__FILE__, __LINE__, 0, "Incoherent number of cells (block CELL_TYPES)\n");
+      }
+
+      prepa->elt_type = malloc(sizeof(PDM_Mesh_nodal_elt_t) * prepa->n_elt);
+      for (int i = 0; i < prepa->n_elt; i++) {
+        int vtk_elt_type = -1;
+        fscanf(f, "%d", &vtk_elt_type);
+        prepa->elt_type[i] = _vtk_to_pdm_elt_type(vtk_elt_type);
+      }
+    }
+  }
+}
+
+
+
+static void
+_vtk_read_polydata
+ (
+  FILE         *f,
+  _prepa_vtk_t *prepa
+ )
+{
+  char word[999];
+  while (1) {
+    int stat = fscanf(f, "%s", word);
+
+    if (stat == EOF) {
+      // End of file
+      break;
+    }
+
+    if (strstr(word, "POINTS") != NULL) {
+      _vtk_read_points(f,
+                       &prepa->n_vtx,
+                       &prepa->vtx_coord);
+    }
+
+    if (strstr(word, "POLYGONS") != NULL) {
+      PDM_g_num_t gn_elt    = 0;
+      PDM_g_num_t s_elt_vtx = 0;
+      fscanf(f, PDM_FMT_G_NUM" "PDM_FMT_G_NUM, &gn_elt, &s_elt_vtx);
+      if (prepa->n_elt < 0) {
+        prepa->n_elt = gn_elt;
+      }
+      else if (prepa->n_elt != gn_elt) {
+        PDM_error(__FILE__, __LINE__, 0, "Incoherent number of cells (block CELLS)\n");
+      }
+      s_elt_vtx -= prepa->n_elt;
+
+      prepa->elt_vtx_idx = malloc(sizeof(int) * (prepa->n_elt + 1));
+      prepa->elt_vtx_idx[0] = 0;
+      prepa->elt_vtx = malloc(sizeof(PDM_g_num_t) * s_elt_vtx);
+      prepa->elt_type = malloc(sizeof(PDM_Mesh_nodal_elt_t) * prepa->n_elt);
+
+      for (int i = 0; i < prepa->n_elt; i++) {
+        prepa->elt_type[i] = PDM_MESH_NODAL_POLY_2D;
+        prepa->elt_vtx_idx[i+1] = prepa->elt_vtx_idx[i];
+        int elt_vtx_n = 0;
+        fscanf(f, "%d", &elt_vtx_n);
+        for (int j = 0; j < elt_vtx_n; j++) {
+          PDM_g_num_t vtx_id = 0;
+          fscanf(f, PDM_FMT_G_NUM, &vtx_id);
+          prepa->elt_vtx[prepa->elt_vtx_idx[i+1]++] = vtx_id + 1;
+        }
+      }
+    }
+
+  }
+}
 
 
 /*=============================================================================
@@ -2228,4 +2426,327 @@ PDM_vtk_lagrange_to_ijk
   }
 
   return NULL;
+}
+
+
+/**
+ *
+ * \brief Create a dmesh nodal from a file in ASCII VTK mesh format
+ *
+ * \param[in]  comm                MPI communicator
+ * \param[in]  filename            Filename
+ *
+ * \return Pointer to PDM_dmesh_nodal object
+ *
+ */
+
+PDM_dmesh_nodal_t *
+PDM_vtk_read_to_dmesh_nodal
+(
+ const PDM_MPI_Comm    comm,
+ const char           *filename
+ )
+{
+  int dbg_enabled = 0;
+
+  int i_rank;
+  int n_rank;
+  PDM_MPI_Comm_rank(comm, &i_rank);
+  PDM_MPI_Comm_size(comm, &n_rank);
+
+  _prepa_vtk_t prepa;
+  prepa.n_elt = -1;
+  prepa.n_vtx =  0;
+  prepa.vtx_coord   = NULL;
+  prepa.elt_vtx_idx = NULL;
+  prepa.elt_vtx     = NULL;
+  prepa.elt_type    = NULL;
+
+  if (i_rank == 0) {
+
+    FILE *f = fopen(filename, "r");
+
+    if (filename == NULL) {
+      PDM_error(__FILE__, __LINE__, 0, "Failed to open file '%s'\n", filename);
+    }
+
+    char word[999];
+    while (1) {
+
+      int stat = fscanf(f, "%s", word);
+
+      if (stat == EOF) {
+        // End of file
+        break;
+      }
+
+      // printf("%s\n", word);
+
+      if (strstr(word, "DATASET") != NULL) {
+        // Get dataset type
+        stat = fscanf(f, "%s", word);
+        printf("dataset : %s\n", word);
+
+        // UNSTRUCTURED_GRID
+        // POLYDATA
+        // STRUCTURED_GRID --> unstructured hexaedra
+
+        if (strstr(word, "UNSTRUCTURED_GRID") != NULL) {
+          _vtk_read_unstructured_grid(f, &prepa);
+          break;
+        }
+        if (strstr(word, "POLYDATA") != NULL) {
+          _vtk_read_polydata(f, &prepa);
+          break;
+        }
+        else {
+          PDM_error(__FILE__, __LINE__, 0, "Dataset '%s' not supported\n", word);
+        }
+
+      }
+
+    }
+
+    fclose(f);
+
+  }
+
+
+
+  // Redistribute and assemble dmesh nodal
+  int          dn_elt[PDM_MESH_NODAL_N_ELEMENT_TYPES] = {0};
+  PDM_g_num_t  gn_elt[PDM_MESH_NODAL_N_ELEMENT_TYPES] = {0};
+  int          dn_vtx = 0;
+  PDM_g_num_t  gn_vtx = 0;
+  double      *dvtx_coord = NULL;
+  double      *gvtx_coord = NULL;
+  PDM_g_num_t *delt_vtx[PDM_MESH_NODAL_N_ELEMENT_TYPES] = {NULL};
+  PDM_g_num_t *gelt_vtx[PDM_MESH_NODAL_N_ELEMENT_TYPES] = {NULL};
+  int         *gpoly2d_vtx_n = NULL;
+
+  if (i_rank == 0) {
+    int idx[PDM_MESH_NODAL_N_ELEMENT_TYPES] = {0};
+    for (PDM_g_num_t i = 0; i < prepa.n_elt; i++) {
+      dn_elt[prepa.elt_type[i]]++;
+      gn_elt[prepa.elt_type[i]]++;
+      idx[prepa.elt_type[i]] += prepa.elt_vtx_idx[i+1] - prepa.elt_vtx_idx[i];
+    }
+
+    for (PDM_Mesh_nodal_elt_t t = 0; t < PDM_MESH_NODAL_N_ELEMENT_TYPES; t++) {
+      if (gn_elt[t] > 0) {
+        gelt_vtx[t] = malloc(sizeof(PDM_g_num_t) * idx[t]);
+        if (t == PDM_MESH_NODAL_POLY_2D) {
+          gpoly2d_vtx_n = malloc(sizeof(int) * gn_elt[t]);
+        }
+      }
+      idx[t] = 0;
+    }
+
+    int ipoly2d = 0;
+    for (PDM_g_num_t i = 0; i < prepa.n_elt; i++) {
+      for (int j = prepa.elt_vtx_idx[i]; j < prepa.elt_vtx_idx[i+1]; j++) {
+        gelt_vtx[prepa.elt_type[i]][idx[prepa.elt_type[i]]++] = prepa.elt_vtx[j];
+      }
+      if (prepa.elt_type[i] == PDM_MESH_NODAL_POLY_2D) {
+        gpoly2d_vtx_n[ipoly2d++] = prepa.elt_vtx_idx[i+1] - prepa.elt_vtx_idx[i];
+      }
+    }
+
+    dn_vtx = (int) prepa.n_vtx;
+    gn_vtx = prepa.n_vtx;
+    gvtx_coord = prepa.vtx_coord;
+
+    if (prepa.elt_vtx_idx != NULL) {
+      free(prepa.elt_vtx_idx);
+    }
+
+    if (prepa.elt_vtx != NULL) {
+      free(prepa.elt_vtx);
+    }
+
+    if (prepa.elt_type != NULL) {
+      free(prepa.elt_type);
+    }
+  }
+
+
+  PDM_MPI_Bcast(&gn_vtx, 1, PDM__PDM_MPI_G_NUM, 0, comm);
+  PDM_MPI_Bcast(gn_elt, PDM_MESH_NODAL_N_ELEMENT_TYPES, PDM__PDM_MPI_G_NUM, 0, comm);
+  PDM_log_trace_array_long(gn_elt, PDM_MESH_NODAL_N_ELEMENT_TYPES, "gn_elt :");
+
+  int mesh_dimension = -1;
+  PDM_g_num_t gn_elt_dim[3] = {0};
+  for (PDM_Mesh_nodal_elt_t t = 0; t < PDM_MESH_NODAL_N_ELEMENT_TYPES; t++) {
+    if (gn_elt[t] > 0) {
+      int dim = PDM_Mesh_nodal_elt_dim_get(t);
+      mesh_dimension = PDM_MAX(mesh_dimension, dim);
+      gn_elt_dim[dim-1]++;
+    }
+  }
+
+  if (dbg_enabled) {
+    log_trace("mesh_dimension = %d\n", mesh_dimension);
+  }
+
+
+  /* Vertices*/
+  PDM_g_num_t *init_distrib_vtx = PDM_compute_entity_distribution        (comm, dn_vtx);
+  PDM_g_num_t *distrib_vtx      = PDM_compute_uniform_entity_distribution(comm, gn_vtx);
+  PDM_block_to_block_t *btb_vtx = PDM_block_to_block_create(init_distrib_vtx,
+                                                            distrib_vtx,
+                                                            comm);
+  PDM_block_to_block_exch(btb_vtx,
+                          3*sizeof(double),
+                          PDM_STRIDE_CST_INTERLACED,
+                          1,
+                          NULL,
+                (void  *) gvtx_coord,
+                          NULL,
+                (void **) &dvtx_coord);
+
+  if (gvtx_coord != NULL) {
+    free(gvtx_coord);
+  }
+  PDM_block_to_block_free(btb_vtx);
+  free(init_distrib_vtx);
+
+
+
+  /* Elements */
+  PDM_g_num_t *distrib_elt[PDM_MESH_NODAL_N_ELEMENT_TYPES] = {NULL};
+  int *dpoly2d_vtx_n = NULL;
+
+  for (PDM_Mesh_nodal_elt_t t = 0; t < PDM_MESH_NODAL_N_ELEMENT_TYPES; t++) {
+    if (gn_elt[t] > 0) {
+      PDM_g_num_t *init_distrib = PDM_compute_entity_distribution        (comm, dn_elt[t]);
+      distrib_elt[t]            = PDM_compute_uniform_entity_distribution(comm, gn_elt[t]);
+
+      PDM_block_to_block_t *btb = PDM_block_to_block_create(init_distrib,
+                                                            distrib_elt[t],
+                                                            comm);
+
+      if (t == PDM_MESH_NODAL_POLY_2D) {
+        dpoly2d_vtx_n = malloc(sizeof(int) * (distrib_elt[t][i_rank+1] - distrib_elt[t][i_rank]));
+        PDM_block_to_block_exch(btb,
+                                sizeof(PDM_g_num_t),
+                                PDM_STRIDE_VAR_INTERLACED,
+                                0,
+                                gpoly2d_vtx_n,
+                      (void  *) gelt_vtx[t],
+                                dpoly2d_vtx_n,
+                      (void **) &delt_vtx[t]);
+        if (gpoly2d_vtx_n != NULL) {
+          free(gpoly2d_vtx_n);
+        }
+      }
+      else if (t == PDM_MESH_NODAL_POLY_3D) {
+        PDM_error(__FILE__, __LINE__, 0, "Poly3d are not supported\n");
+      }
+      else {
+        int stride = PDM_Mesh_nodal_n_vtx_elt_get(t, 1); // high-order??
+
+        PDM_block_to_block_exch(btb,
+                                sizeof(PDM_g_num_t),
+                                PDM_STRIDE_CST_INTERLACED,
+                                stride,
+                                NULL,
+                      (void  *) gelt_vtx[t],
+                                NULL,
+                      (void **) &delt_vtx[t]);
+      }
+
+      if (gelt_vtx[t] != NULL) {
+        free(gelt_vtx[t]);
+      }
+      PDM_block_to_block_free(btb);
+      free(init_distrib);
+    }
+  }
+
+
+  PDM_dmesh_nodal_t *dmn = PDM_DMesh_nodal_create(comm,
+                                                  mesh_dimension,
+                                                  gn_vtx,
+                                                  gn_elt_dim[2],
+                                                  gn_elt_dim[1],
+                                                  gn_elt_dim[0]);
+
+
+  /* Vertices */
+  dn_vtx = (int) (distrib_vtx[i_rank+1] - distrib_vtx[i_rank]);
+  free(distrib_vtx);
+
+  PDM_DMesh_nodal_coord_set(dmn,
+                            dn_vtx,
+                            dvtx_coord,
+                            PDM_OWNERSHIP_KEEP);
+
+  /* Sections */
+  for (PDM_Mesh_nodal_elt_t t = 0; t < PDM_MESH_NODAL_N_ELEMENT_TYPES; t++) {
+    if (gn_elt[t] > 0) {
+      dn_elt[t] = (int) (distrib_elt[t][i_rank+1] - distrib_elt[t][i_rank]);
+
+      PDM_dmesh_nodal_elmts_t *dmne = NULL;
+      switch (PDM_Mesh_nodal_elt_dim_get(t)) {
+      case 0:
+        dmne = dmn->corner;
+        break;
+      case 1:
+        dmne = dmn->ridge;
+        break;
+      case 2:
+        dmne = dmn->surfacic;
+        break;
+      case 3:
+        dmne = dmn->volumic;
+        break;
+      }
+
+      int id_section = PDM_DMesh_nodal_elmts_section_add(dmne,
+                                                         t);
+
+      if (t == PDM_MESH_NODAL_POLY_2D) {
+        int *dpoly2d_vtx_idx = PDM_array_new_idx_from_sizes_int(dpoly2d_vtx_n, dn_elt[t]);
+        free(dpoly2d_vtx_n);
+
+        PDM_DMesh_nodal_elmts_section_poly2d_set(dmne,
+                                                 id_section,
+                                                 dn_elt[t],
+                                                 dpoly2d_vtx_idx,
+                                                 delt_vtx[t],
+                                                 PDM_OWNERSHIP_KEEP);
+        if (dbg_enabled) {
+          log_trace("type %d\n", t);
+          PDM_log_trace_connectivity_long(dpoly2d_vtx_idx,
+                                          delt_vtx[t],
+                                          dn_elt[t],
+                                          "delt_vtx : ");
+        }
+      }
+      else {
+        // high-order??
+        PDM_DMesh_nodal_elmts_section_std_set(dmne,
+                                              id_section,
+                                              dn_elt[t],
+                                              delt_vtx[t],
+                                              PDM_OWNERSHIP_KEEP);
+        if (dbg_enabled) {
+          log_trace("type %d\n", t);
+          int *connec_idx = PDM_array_new_idx_from_const_stride_int(PDM_Mesh_nodal_n_vtx_elt_get(t, 1),
+                                                                    dn_elt[t]);
+          PDM_log_trace_connectivity_long(connec_idx,
+                                          delt_vtx[t],
+                                          dn_elt[t],
+                                          "delt_vtx : ");
+          free(connec_idx);
+        }
+      }
+
+
+      free(distrib_elt[t]);
+    }
+  }
+
+
+  return dmn;
 }
