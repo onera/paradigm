@@ -95,6 +95,8 @@ non_regression:
     - echo "Runner directory is $PWD; move to working directory $CUSTOM_CI_DIR"
     - cd $CUSTOM_CI_DIR/build$MATRIX_KEY
     - mkdir -p reports
+    - export LSAN_OPTIONS=suppressions=$CUSTOM_CI_DIR/script/asan/asan.supp
+    - echo $LSAN_OPTIONS
     - ./script/prepare_ci/run_top_test_base.sh --log_file_name reports/output_alltest_pdm --matrix_key ${MATRIX_KEY} --output_xml $CI_PROJECT_DIR/paradigm_alltest$MATRIX_KEY.xml
   artifacts:
    when: always
