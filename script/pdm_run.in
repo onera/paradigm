@@ -183,7 +183,10 @@ do
       # @PDM_RUN_PRELOAD@ @PDM_RUN_LSAN@ @PDM_RUN_PYTHONPATH@ ${ExeMPI} -n $Nrank ./${TestName}
 
       # mpirun -n 1 ./${TestName}
-      ulimit -l
+      ulimit -a
+      ulimit -c unlimited
+      ulimit -l unlimited
+      ulimit -a
       ulimit -l
       ulimit -l
       ulimit -l
