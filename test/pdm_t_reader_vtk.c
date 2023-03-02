@@ -124,7 +124,7 @@ int main(int argc, char *argv[])
              &visu);
 
   if (filename == NULL) {
-    filename = (char *) "meshes/bunny1k.stl";
+    filename = (char *) "meshes/bunny1k.vtk";
   }
 
   /*

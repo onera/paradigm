@@ -158,6 +158,7 @@ do
   
   #
   # Run test
+  Testoutput=0
   
   if [ ${IsIntelMPI} -gt 0 ]
   then
