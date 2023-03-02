@@ -2440,6 +2440,16 @@ PDM_vtk_lagrange_to_ijk
  *
  */
 
+// TO DO : fields, something like:
+// int    *n_vtx_field,
+// char ***vtx_field_name,
+// void  **vtx_field_value,
+// int   **vtx_field_type,
+// int    *n_elt_field,
+// char ***elt_field_name,
+// void  **elt_field_value,
+// int   **elt_field_type
+
 PDM_dmesh_nodal_t *
 PDM_vtk_read_to_dmesh_nodal
 (
@@ -2480,16 +2490,14 @@ PDM_vtk_read_to_dmesh_nodal
         break;
       }
 
-      // printf("%s\n", word);
 
       if (strstr(word, "DATASET") != NULL) {
         // Get dataset type
         stat = fscanf(f, "%s", word);
-        printf("dataset : %s\n", word);
 
         // UNSTRUCTURED_GRID
         // POLYDATA
-        // STRUCTURED_GRID --> unstructured hexaedra
+        // STRUCTURED_GRID --> unstructured hexahedra (TO DO)
 
         if (strstr(word, "UNSTRUCTURED_GRID") != NULL) {
           _vtk_read_unstructured_grid(f, &prepa);
@@ -2572,7 +2580,9 @@ PDM_vtk_read_to_dmesh_nodal
 
   PDM_MPI_Bcast(&gn_vtx, 1, PDM__PDM_MPI_G_NUM, 0, comm);
   PDM_MPI_Bcast(gn_elt, PDM_MESH_NODAL_N_ELEMENT_TYPES, PDM__PDM_MPI_G_NUM, 0, comm);
-  PDM_log_trace_array_long(gn_elt, PDM_MESH_NODAL_N_ELEMENT_TYPES, "gn_elt :");
+  if (dbg_enabled) {
+    PDM_log_trace_array_long(gn_elt, PDM_MESH_NODAL_N_ELEMENT_TYPES, "gn_elt :");
+  }
 
   int mesh_dimension = -1;
   PDM_g_num_t gn_elt_dim[3] = {0};
