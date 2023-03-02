@@ -183,9 +183,10 @@ do
       # @PDM_RUN_PRELOAD@ @PDM_RUN_LSAN@ @PDM_RUN_PYTHONPATH@ ${ExeMPI} -n $Nrank ./${TestName}
 
       # mpirun -n 1 ./${TestName}
+      echo $LD_PRELOAD
       export @PDM_RUN_PRELOAD@
       echo $LD_PRELOAD
-      @PDM_RUN_LSAN@ ${ExeMPI} -outfile-pattern $OutputFile.%r -errfile-pattern $ErrFile.%r -n $Nrank ./${TestName} ${TestOption}
+      @PDM_RUN_LSAN@ ${ExeMPI} -n $Nrank ./${TestName} ${TestOption}
 
       # @PDM_RUN_LSAN@ ${ExeMPI} -outfile-pattern $OutputFile.%r -errfile-pattern $ErrFile.%r -n $Nrank  /usr/bin/time  -f "Maximum Resident Memory : %M Kb" ./${TestName} ${TestOption} 2>/dev/null
       printf "totoooooooooo out " ${ExeMPI} ${PWD}
