@@ -169,7 +169,8 @@ do
         Testoutput=1
       fi
     else
-      @PDM_RUN_PRELOAD@ @PDM_RUN_LSAN@ @PDM_RUN_PYTHONPATH@ ${ExeMPI} -outfile-pattern $OutputFile.%r -errfile-pattern $ErrFile.%r -n $Nrank  /usr/bin/time  -f "Maximum Resident Memory : %M Kb" ${TestName} ${TestOption} 2>/dev/null
+      printf "totoooooooooo" ${ExeMPI} ${PWD}
+      @PDM_RUN_PRELOAD@ @PDM_RUN_LSAN@ @PDM_RUN_PYTHONPATH@ ${ExeMPI} -outfile-pattern $OutputFile.%r -errfile-pattern $ErrFile.%r -n $Nrank  /usr/bin/time  -f "Maximum Resident Memory : %M Kb" ./${TestName} ${TestOption} 2>/dev/null
       if [ "$?" -ne "0" ]
       then
         Testoutput=1

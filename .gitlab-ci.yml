@@ -40,10 +40,7 @@ build:
     MATRIX_KEY: _${COMPILER}_${MPI_LIB}
   stage: build
   before_script:
-    - echo ">> before_script"
-    - unset _LMFILES_
-    - unset LOADEDMODULES
-    - module -s purge
+    - module purge
     - echo "compilo = $COMPILER"
     - source /scratchm/sonics/dist/spiro_el8.sh --compiler=$COMPILER --mpi=$MPI_LIB
   script:
@@ -63,9 +60,7 @@ unit_test:
     MATRIX_KEY: _${COMPILER}_${MPI_LIB}
   stage: test
   before_script:
-    - unset _LMFILES_
-    - unset LOADEDMODULES
-    - module -s purge
+    - module purge
     - source /scratchm/sonics/dist/spiro_el8.sh --compiler=$COMPILER --mpi=$MPI_LIB
   script:
     - echo "Runner directory is $PWD; move to working directory $CUSTOM_CI_DIR"
@@ -73,6 +68,7 @@ unit_test:
     - ./pdm_run
     - cd $CUSTOM_CI_DIR/build$MATRIX_KEY/extensions/paradigma/test
     - ./pdm_run
+    - ctest -V --output-junit $CI_PROJECT_DIR/paradigm_ctest$MATRIX_KEY.xml
       # Artefacts are searched in CI_PROJECT_DIR, but job was executed in CUSTOM_CI_DIR
       #- ctest -V --output-junit $CI_PROJECT_DIR/paradigm_ctest$MATRIX_KEY.xml
       # Go back to runner dir for artifact modification
@@ -93,9 +89,7 @@ non_regression:
     MATRIX_KEY: _${COMPILER}_${MPI_LIB}
   stage: test
   before_script:
-    - unset _LMFILES_
-    - unset LOADEDMODULES
-    - module -s purge
+    - module purge
     - source /scratchm/sonics/dist/spiro_el8.sh --compiler=$COMPILER --mpi=$MPI_LIB
   script:
     - echo "Runner directory is $PWD; move to working directory $CUSTOM_CI_DIR"
