@@ -28,9 +28,27 @@ function(test_c_create name n_proc LIST_TEST LIST_NRANK)
      target_link_libraries(${name} BLAS::BLAS)
    endif()
    #endif()
+
+   set (MPIEXEC_GENV_COMMAND "")
+   set (MPIEXEC_GENV_PRELOAD "")
+   set (MPIEXEC_GENV_PRELOAD_PATH "")
+   if (CMAKE_BUILD_TYPE STREQUAL "Sanitize")
+     execute_process(COMMAND gcc -print-file-name=libasan.so OUTPUT_VARIABLE PRELOAD_ASAN OUTPUT_STRIP_TRAILING_WHITESPACE)
+     # set(MPIEXEC_PREGENV_PRELOAD "-genv LD_PRELOAD ${PRELOAD_ASAN}")
+
+     set(MPIEXEC_GENV_COMMAND      "-genv")
+     set(MPIEXEC_GENV_PRELOAD      "LD_PRELOAD")
+     set(MPIEXEC_GENV_PRELOAD_PATH "${PRELOAD_ASAN}")
+
+   endif()
+
+
    install(TARGETS ${name} RUNTIME DESTINATION bin)
    add_test (${name} ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} ${n_proc}
              ${MPIEXEC_PREFLAGS}
+             ${MPIEXEC_GENV_COMMAND}
+             ${MPIEXEC_GENV_PRELOAD}
+             ${MPIEXEC_GENV_PRELOAD_PATH}
              ${CMAKE_CURRENT_BINARY_DIR}/${name}
              ${MPIEXEC_POSTFLAGS})
 
@@ -43,9 +61,9 @@ function(test_c_create name n_proc LIST_TEST LIST_NRANK)
   set (LIST_PYTHON_TEST_ENV "")
 
   if (CMAKE_BUILD_TYPE STREQUAL "Sanitize")
-    execute_process(COMMAND gcc -print-file-name=libasan.so OUTPUT_VARIABLE PYTHON_TEST_ENV1 OUTPUT_STRIP_TRAILING_WHITESPACE)
-    set(PYTHON_TEST_ENV "LD_PRELOAD=${PYTHON_TEST_ENV1} ${CMAKE_BINARY_DIR}/script/asan/fake_dlclose/libdlclose.so")
-    list(APPEND LIST_PYTHON_TEST_ENV "${PYTHON_TEST_ENV}")
+  #   execute_process(COMMAND gcc -print-file-name=libasan.so OUTPUT_VARIABLE PYTHON_TEST_ENV1 OUTPUT_STRIP_TRAILING_WHITESPACE)
+  #   set(PYTHON_TEST_ENV "LD_PRELOAD=${PYTHON_TEST_ENV1} ${CMAKE_BINARY_DIR}/script/asan/fake_dlclose/libdlclose.so")
+  #   list(APPEND LIST_PYTHON_TEST_ENV "${PYTHON_TEST_ENV}")
 
     list(APPEND LIST_PYTHON_TEST_ENV "LSAN_OPTIONS=suppressions=${CMAKE_SOURCE_DIR}/script/asan/asan.supp")
   endif()
