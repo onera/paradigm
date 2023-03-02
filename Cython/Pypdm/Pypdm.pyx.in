@@ -6,11 +6,11 @@ from mpi4py import MPI
 # Import Section (Cython) :
 # ------------------------
 from libc.stdlib       cimport malloc, free
+from libc.stdint       cimport uintptr_t
 from cpython.ref       cimport PyObject, Py_INCREF, Py_DECREF, Py_XDECREF
 from cpython.pycapsule cimport PyCapsule_New, PyCapsule_GetPointer, PyCapsule_IsValid, PyCapsule_GetName
 cimport cython
 cimport numpy as NPY
-from libcpp.map cimport map as cpp_map
 
 from mpi4py cimport MPI
 # -----------------------------------------------------------------

@@ -110,11 +110,7 @@ cdef class PartToPartCapsule:
   cdef int                         n_part1
   cdef int*                        n_elt2
   cdef int                         n_part2
-  cdef cpp_map[int, void**]        dict_part_data
-  cdef cpp_map[int, int **]        dict_part_stride
-  cdef cpp_map[int, size_t]        dict_npy_type
-  cdef cpp_map[int, PDM_stride_t]  dict_stride
-  cdef cpp_map[int, int         ]  dict_cst_strid
+  cdef dict                        request_data
   cdef MPI.Comm                    py_comm
   # --------------------------------------------------------------------
 
@@ -126,6 +122,7 @@ cdef class PartToPartCapsule:
     self.py_comm  = comm
     self.ptp      = <PDM_part_to_part_t *> PyCapsule_GetPointer(caps, NULL)
 
+    self.request_data = dict()
     PDM_part_to_part_n_part_and_n_elt_get( self.ptp    ,
                                           &self.n_part1,
                                           &self.n_part2,
@@ -211,11 +208,7 @@ cdef class PartToPart:
   cdef PDM_g_num_t               **_part2_ln_to_gn
   cdef int                       **_part1_to_part2_idx
   cdef PDM_g_num_t               **_part1_to_part2
-  cdef cpp_map[int, void**]        dict_part_data
-  cdef cpp_map[int, int **]        dict_part_stride
-  cdef cpp_map[int, size_t]        dict_npy_type
-  cdef cpp_map[int, PDM_stride_t]  dict_stride
-  cdef cpp_map[int, int         ]  dict_cst_strid
+  cdef dict                        request_data
   cdef MPI.Comm                    py_comm
   # ************************************************************************
   # ------------------------------------------------------------------------
@@ -228,6 +221,7 @@ cdef class PartToPart:
     """
     self.n_part1 = len(part1_ln_to_gn)
     self.n_part2 = len(part2_ln_to_gn)
+    self.request_data = dict()
 
     assert(len(part1_to_part2_idx) == self.n_part1)
 
@@ -406,12 +400,9 @@ def iexch(PyPartToPart                   pyptp,
                          &_part2_stride,
               <void ***> &_part2_data,
                          &request_exch)
+  pyptp.request_data[request_exch] = [<uintptr_t> _part2_stride, <uintptr_t> _part2_data, _part1_stride_cst, npy_type]
 
-  pyptp.dict_part_data  [request_exch] = _part2_data
-  pyptp.dict_part_stride[request_exch] = _part2_stride
-  pyptp.dict_npy_type   [request_exch] = npy_type
-  pyptp.dict_stride     [request_exch] = _stride_t
-  pyptp.dict_cst_strid  [request_exch] = _part1_stride_cst
+
 
   if _stride_t == PDM_STRIDE_VAR_INTERLACED:
     free(_part1_stride)
@@ -438,14 +429,18 @@ def wait(PyPartToPart pyptp, int request_id):
                                  &n_ref_lnum2,
                                  &ref_lnum2);
 
-  cdef void **_part2_data   = pyptp.dict_part_data  [request_id]
-  cdef int  **_part2_stride = pyptp.dict_part_stride[request_id]
+  requested = pyptp.request_data.pop(request_id)
+  cdef uintptr_t _part2_stride_id = requested[0]
+  cdef uintptr_t _part2_data_id   = requested[1]
+  cdef int**  _part2_stride = <int**> _part2_stride_id
+  cdef void** _part2_data = <void **> _part2_data_id
   cdef NPY.npy_intp dim_np
 
   # cdef int *__part2_stride = NULL
 
   lnp_part_strid = list()
   lnp_part_data  = list()
+  cdef size_t npy_type = requested[3]
   for i_part in range(pyptp.n_part2):
 
     if(_part2_stride != NULL):
@@ -455,25 +450,21 @@ def wait(PyPartToPart pyptp, int request_id):
       np_part2_stride = create_numpy_i(_part2_stride[i_part], strid_size)
       dim_np = np_part2_stride.sum()
 
-      np_part2_data = create_numpy(_part2_data[i_part], pyptp.dict_npy_type[request_id], dim_np)
+      np_part2_data = create_numpy(_part2_data[i_part], npy_type, dim_np)
 
       lnp_part_strid.append(np_part2_stride)
       lnp_part_data .append(np_part2_data)
 
     else:
-      dim_np  = gnum1_come_from_idx[i_part][n_ref_lnum2[i_part]] * pyptp.dict_cst_strid[request_id]
-      np_part2_data = create_numpy(_part2_data[i_part], pyptp.dict_npy_type[request_id], dim_np)
+      cst_stride = requested[2]
+      dim_np  = gnum1_come_from_idx[i_part][n_ref_lnum2[i_part]] * cst_stride
+      np_part2_data = create_numpy(_part2_data[i_part], npy_type, dim_np)
 
       lnp_part_data .append(np_part2_data)
 
-  free(pyptp.dict_part_data  [request_id])
-  free(pyptp.dict_part_stride[request_id])
+  free(_part2_stride)
+  free(_part2_data)
 
-  pyptp.dict_part_data  .erase(request_id)
-  pyptp.dict_part_stride.erase(request_id)
-  pyptp.dict_npy_type   .erase(request_id)
-  pyptp.dict_stride     .erase(request_id)
-  pyptp.dict_cst_strid  .erase(request_id)
 
   return lnp_part_strid, lnp_part_data
 
@@ -549,11 +540,7 @@ def reverse_iexch(PyPartToPart                pyptp,
                       <void ***> &_part1_data,
                                  &request_exch)
 
-  pyptp.dict_part_data  [request_exch] = _part1_data
-  pyptp.dict_part_stride[request_exch] = _part1_stride
-  pyptp.dict_npy_type   [request_exch] = npy_type
-  pyptp.dict_stride     [request_exch] = _stride_t
-  pyptp.dict_cst_strid  [request_exch] = _part2_stride_cst
+  pyptp.request_data[request_exch] = [<uintptr_t> _part1_stride, <uintptr_t> _part1_data, _part2_stride_cst, npy_type]
 
   if _stride_t == PDM_STRIDE_VAR_INTERLACED:
     free(_part2_stride)
@@ -568,12 +555,16 @@ def reverse_wait(PyPartToPart pyptp, int request_id):
   """
   PDM_part_to_part_reverse_iexch_wait(pyptp.ptp, request_id)
 
-  cdef void **_part1_data   = pyptp.dict_part_data  [request_id]
-  cdef int  **_part1_stride = pyptp.dict_part_stride[request_id]
+  requested = pyptp.request_data.pop(request_id)
+  cdef uintptr_t _part1_stride_id = requested[0]
+  cdef uintptr_t _part1_data_id   = requested[1]
+  cdef int**  _part1_stride = <int**> _part1_stride_id
+  cdef void** _part1_data = <void **> _part1_data_id
   cdef NPY.npy_intp dim_np
 
   lnp_part_strid = list()
   lnp_part_data  = list()
+  cdef size_t npy_type = requested[3]
   for i_part in range(pyptp.n_part1):
 
     if(_part1_stride != NULL):
@@ -585,30 +576,26 @@ def reverse_wait(PyPartToPart pyptp, int request_id):
       # print("dim_np : ", dim_np)
       # print("np_part1_stride : ", np_part1_stride)
 
-      np_part1_data = create_numpy(_part1_data[i_part], pyptp.dict_npy_type[request_id], dim_np)
+      np_part1_data = create_numpy(_part1_data[i_part], npy_type, dim_np)
 
       lnp_part_strid.append(np_part1_stride)
       lnp_part_data .append(np_part1_data)
 
     else:
-      dim_np  = pyptp.n_elt1[i_part] * pyptp.dict_cst_strid[request_id]
-      dim_np  = pyptp.lpart1_to_part2_idx[i_part][pyptp.n_elt1[i_part]] * pyptp.dict_cst_strid[request_id]
+      cst_stride = requested[2]
+      dim_np  = pyptp.n_elt1[i_part] * cst_stride
+      dim_np  = pyptp.lpart1_to_part2_idx[i_part][pyptp.n_elt1[i_part]] * cst_stride
 
 
-      np_part1_data = create_numpy(_part1_data[i_part], pyptp.dict_npy_type[request_id], dim_np)
+      np_part1_data = create_numpy(_part1_data[i_part], npy_type, dim_np)
 
       lnp_part_data .append(np_part1_data)
 
-      free(pyptp.dict_part_data  [request_id])
+      free(_part1_data)
 
       if(_part1_stride != NULL):
-        free(pyptp.dict_part_stride[request_id])
+        free(_part1_stride)
 
-      pyptp.dict_part_data  .erase(request_id)
-      pyptp.dict_part_stride.erase(request_id)
-      pyptp.dict_npy_type   .erase(request_id)
-      pyptp.dict_stride     .erase(request_id)
-      pyptp.dict_cst_strid  .erase(request_id)
 
   return lnp_part_strid, lnp_part_data
 
