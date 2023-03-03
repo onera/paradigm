@@ -1551,6 +1551,13 @@ PDM_part_mesh_nodal_elmts_sections_decompose_faces
                                                     &parent_num,
                                                     &parent_entity_g_num);
 
+          PDM_g_num_t *g_num = numabs;
+          if (numabs == NULL) {
+            g_num = parent_entity_g_num;
+          }
+
+          assert(g_num != NULL);
+
           PDM_part_mesh_nodal_std_decomposes_faces(t_elt,
                                                    n_elt,
                                                    1,
@@ -1559,7 +1566,7 @@ PDM_part_mesh_nodal_elmts_sections_decompose_faces
                                                    &n_face_current,
                                                    vtx_ln_to_gn[i_part],
                                                    connec,
-                                                   numabs,
+                                                   g_num,
                                                    elmt_face_vtx_idx,
                                                    elmt_face_vtx,
                                                    elmt_cell_face_idx,

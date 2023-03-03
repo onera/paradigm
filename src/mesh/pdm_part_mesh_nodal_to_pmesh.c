@@ -707,13 +707,15 @@ _generate_faces_from_part_mesh_nodal
   int         *elmt_face_kind       = malloc(n_face_elt_tot     * sizeof(int        ));
   PDM_g_num_t *elmt_face_cell       = malloc(n_face_elt_tot     * sizeof(PDM_g_num_t));
 
-  printf("n_face_elt_vol_tot     : %i\n", n_face_elt_vol_tot    );
-  printf("n_sum_vtx_vol_face_tot : %i\n", n_sum_vtx_vol_face_tot);
-  printf("n_elmt_vol_tot         : %i\n", n_elmt_vol_tot        );
+  if(0 == 1) {
+    printf("n_face_elt_vol_tot     : %i\n", n_face_elt_vol_tot    );
+    printf("n_sum_vtx_vol_face_tot : %i\n", n_sum_vtx_vol_face_tot);
+    printf("n_elmt_vol_tot         : %i\n", n_elmt_vol_tot        );
 
-  printf("n_elmt_surf_tot         : %i\n", n_elmt_surf_tot        );
-  printf("n_face_elt_surf_tot     : %i\n", n_face_elt_surf_tot    );
-  printf("n_sum_vtx_surf_face_tot : %i\n", n_sum_vtx_surf_face_tot);
+    printf("n_elmt_surf_tot         : %i\n", n_elmt_surf_tot        );
+    printf("n_face_elt_surf_tot     : %i\n", n_face_elt_surf_tot    );
+    printf("n_sum_vtx_surf_face_tot : %i\n", n_sum_vtx_surf_face_tot);
+  }
 
   elmt_face_vtx_idx [0] = 0;
   elmt_cell_face_idx[0] = 0;

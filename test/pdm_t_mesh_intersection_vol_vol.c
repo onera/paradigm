@@ -92,6 +92,8 @@ _read_args
  int                   *n_part,
  PDM_Mesh_nodal_elt_t  *elt_type_a,
  PDM_Mesh_nodal_elt_t  *elt_type_b,
+ int                   *nodal_a,
+ int                   *nodal_b,
  double                *noise_a,
  double                *noise_b,
  point_t               *tetraisation_pt_type,
@@ -161,6 +163,12 @@ _read_args
       else {
         *elt_type_b = (PDM_Mesh_nodal_elt_t) atoi(argv[i]);
       }
+    }
+    else if (strcmp(argv[i], "-nodalA") == 0) {
+      *nodal_a = 1;
+    }
+    else if (strcmp(argv[i], "-nodalB") == 0) {
+      *nodal_b = 1;
     }
     else if (strcmp(argv[i], "-noiseA") == 0) {
       i++;
@@ -587,6 +595,29 @@ _set_mesh
 
 }
 
+static
+PDM_part_mesh_nodal_t *
+_set_mesh_nodal
+(
+ PDM_mesh_intersection_t *mi,
+ int                      i_mesh,
+ PDM_multipart_t         *mpart
+)
+{
+  PDM_part_mesh_nodal_t *pmn = NULL;
+  PDM_multipart_get_part_mesh_nodal(mpart, 0, &pmn, PDM_OWNERSHIP_KEEP);
+
+  if (1 == 1) {
+    char filename[999];
+    sprintf(filename, "check_pmn_%d", i_mesh);
+    PDM_part_mesh_nodal_dump_vtk(pmn, PDM_GEOMETRY_KIND_VOLUMIC, filename);
+  }
+
+  PDM_mesh_intersection_mesh_nodal_set(mi, i_mesh, pmn);
+
+  return pmn;
+}
+
 
 /*============================================================================
  * Public function definitions
@@ -619,6 +650,8 @@ main
   PDM_g_num_t          n_vtx_b               = 10;
   PDM_Mesh_nodal_elt_t elt_type_a            = PDM_MESH_NODAL_HEXA8;
   PDM_Mesh_nodal_elt_t elt_type_b            = PDM_MESH_NODAL_HEXA8;
+  int                  nodal_a               = 0;
+  int                  nodal_b               = 0;
   double               noise_a               = 0;
   double               noise_b               = 0;
   point_t              tetraisation_pt_type  = TETRA_POINT;
@@ -637,6 +670,8 @@ main
              &n_part,
              &elt_type_a,
              &elt_type_b,
+             &nodal_a,
+             &nodal_b,
              &noise_a,
              &noise_b,
              &tetraisation_pt_type,
@@ -712,8 +747,20 @@ main
   /*
    * Set mesh_a and mesh_b
    */
-  _set_mesh(mi, 0, mpart_a, n_part);
-  _set_mesh(mi, 1, mpart_b, n_part);
+  PDM_part_mesh_nodal_t *pmn_a = NULL;
+  PDM_part_mesh_nodal_t *pmn_b = NULL;
+  if (nodal_a) {
+    pmn_a = _set_mesh_nodal(mi, 0, mpart_a);
+  }
+  else {
+    _set_mesh(mi, 0, mpart_a, n_part);
+  }
+  if (nodal_b) {
+    pmn_b = _set_mesh_nodal(mi, 1, mpart_b);
+  }
+  else {
+    _set_mesh(mi, 1, mpart_b, n_part);
+  }
 
   // tetraisation point
   PDM_mesh_intersection_tetraisation_pt_set(mi,
@@ -882,6 +929,13 @@ main
    */
 
   PDM_mesh_intersection_free(mi);
+
+  if (nodal_a) {
+    PDM_part_mesh_nodal_free(pmn_a);
+  }
+  if (nodal_b) {
+    PDM_part_mesh_nodal_free(pmn_b);
+  }
 
   PDM_DMesh_nodal_free(dmn_b);
   PDM_multipart_free(mpart_b);
