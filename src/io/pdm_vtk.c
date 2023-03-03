@@ -2684,6 +2684,8 @@ PDM_vtk_read_to_dmesh_nodal
   PDM_UNUSED(elt_field_value);
   int dbg_enabled = 0;
 
+  PDM_UNUSED(elt_field_value);
+
   int i_rank;
   int n_rank;
   PDM_MPI_Comm_rank(comm, &i_rank);
