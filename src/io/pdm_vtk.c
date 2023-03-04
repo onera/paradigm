@@ -2679,8 +2679,9 @@ PDM_vtk_read_to_dmesh_nodal
        PDM_data_t    **elt_field_type,
        int           **elt_field_stride,
        void         ***elt_field_value
- )
+)
 {
+  PDM_UNUSED(elt_field_value);
   int dbg_enabled = 0;
 
   int i_rank;

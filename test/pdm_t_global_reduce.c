@@ -225,7 +225,7 @@ int main(int argc, char *argv[])
   int n_property_face = 0;
 
   PDM_part_t *ppart = PDM_part_create(comm,
-                                      method,
+                  (PDM_part_split_t)  method,
                                       "PDM_PART_RENUM_CELL_NONE",
                                       "PDM_PART_RENUM_FACE_NONE",
                                       n_property_cell,
