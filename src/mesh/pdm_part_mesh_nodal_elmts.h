@@ -13,7 +13,6 @@
 #include "pdm_mpi.h"
 #include "pdm_io.h"
 #include "pdm_mesh_nodal.h"
-#include "pdm_mesh_nodal_priv.h"
 
 /*=============================================================================
  * Macro definition

@@ -66,6 +66,7 @@ typedef enum {
 
 
 typedef struct _PDM_Mesh_nodal_t PDM_Mesh_nodal_t;
+typedef struct PDM_Mesh_nodal_vtx_t PDM_Mesh_nodal_vtx_t;
 
 /*=============================================================================
  * Global variables

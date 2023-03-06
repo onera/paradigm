@@ -33,7 +33,6 @@ extern "C" {
  *
  */
 
-typedef struct PDM_Mesh_nodal_vtx_t PDM_Mesh_nodal_vtx_t;
 
 struct PDM_Mesh_nodal_vtx_t {
 
