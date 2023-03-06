@@ -16,6 +16,9 @@ from mpi4py cimport MPI
 # -----------------------------------------------------------------
 cdef extern from "numpy/arrayobject.h":
   void PyArray_ENABLEFLAGS(NPY.ndarray arr, int flags)
+cdef extern from "Python.h":
+  int PyTraceMalloc_Track(unsigned int domain, uintptr_t ptr, size_t size)
+  int PyTraceMalloc_Untrack(unsigned int domain, uintptr_t ptr)
 
 # MANDATORY :
 # ---------
@@ -348,6 +351,7 @@ _PDM_MPI_COMM_KIND_WIN_RMA                            = PDM_MPI_COMM_KIND_WIN_RM
 @COMMENT_NOT_PDMA@PDM_plugin_load()
 @COMMENT_NOT_PDMA@
 
+py_mem_domain = 42440
 # -----------------------------------------------------------------
 cdef assert_single_dim_np(NPY.ndarray tab, dtype, int size=-1):
   assert isinstance(tab, NPY.ndarray) and (tab.ndim == 1 or (tab.ndim == 2 and (tab.shape[0] <= 1 or tab.shape[1] <= 1))) and tab.dtype == dtype
@@ -401,12 +405,19 @@ cdef double** np_list_to_double_pointers(list datas):
     array[i] = <double *> numpy_double.data
   return array
 
+cdef void dealloc_array_capsule(object capsule):
+    data = PyCapsule_GetPointer(capsule, NULL)
+    PyTraceMalloc_Untrack(py_mem_domain, <uintptr_t> data)
+    free(data)
 
 cdef create_numpy(void* array, int nptype, int size, bint flag_owndata=True):
     dim = <NPY.npy_intp> size
     nparray = NPY.PyArray_SimpleNewFromData(1, &dim, nptype, array)
-    if flag_owndata:
-        PyArray_ENABLEFLAGS(nparray, NPY.NPY_OWNDATA)
+    if flag_owndata and array != NULL:
+        # PyArray_ENABLEFLAGS(nparray, NPY.NPY_OWNDATA)
+        capsule = PyCapsule_New(array, NULL, &dealloc_array_capsule)
+        NPY.set_array_base(nparray, capsule)
+        PyTraceMalloc_Track(py_mem_domain, <uintptr_t> array, nparray.nbytes)
     return nparray
 
 cdef create_numpy_i(int* array, int size, bint flag_owndata=True):
