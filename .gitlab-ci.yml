@@ -36,8 +36,9 @@ build:
     matrix:
         - COMPILER: ["gcc@10", "gcc@12"]
           MPI_LIB: ["impi"] #, "openmpi"]
+          GNUM64: ["ON", "OFF"]
   variables:
-    MATRIX_KEY: _${COMPILER}_${MPI_LIB}
+    MATRIX_KEY: _${COMPILER}_${MPI_LIB}_GNUM64_${GNUM64}
   stage: build
   before_script:
     - module purge
@@ -48,7 +49,7 @@ build:
     - cd $CUSTOM_CI_DIR
     - mkdir -p build$MATRIX_KEY && cd build$MATRIX_KEY
     - which gcc
-    - cmake -DCMAKE_BUILD_TYPE=Sanitize -DPDM_ENABLE_STATIC=OFF -DPDM_ENABLE_SHARED=ON -DPDM_ENABLE_Fortran=OFF -DPDM_ENABLE_EXTENSION_PDMA=ON  -DMPIEXEC_EXECUTABLE=/opt/tools/intel/oneapi/mpi/2021.6.0/bin/mpirun ../
+    - cmake -DCMAKE_BUILD_TYPE=Sanitize PDM_ENABLE_PYTHON_BINDINGS=ON -DPDM_ENABLE_STATIC=OFF -DPDM_ENABLE_SHARED=ON -DPDM_ENABLE_Fortran=ON -DPDM_ENABLE_EXTENSION_PDMA=ON -DPDM_ENABLE_LONG_G_NUM=${GNUM64} -DMPIEXEC_EXECUTABLE=/opt/tools/intel/oneapi/mpi/2021.6.0/bin/mpirun ../
     - make -j
 
 unit_test:
@@ -56,18 +57,20 @@ unit_test:
     matrix:
         - COMPILER: ["gcc@10", "gcc@12"]
           MPI_LIB: ["impi"] #, "openmpi"]
+          GNUM64: ["ON", "OFF"]
   variables:
-    MATRIX_KEY: _${COMPILER}_${MPI_LIB}
+    MATRIX_KEY: _${COMPILER}_${MPI_LIB}_GNUM64_${GNUM64}
   stage: test
   before_script:
     - module purge
     - source /scratchm/sonics/dist/spiro_el8.sh --compiler=$COMPILER --mpi=$MPI_LIB
   script:
     - echo "Runner directory is $PWD; move to working directory $CUSTOM_CI_DIR"
-    - cd $CUSTOM_CI_DIR/build$MATRIX_KEY/test
-    - ./pdm_run
-    - cd $CUSTOM_CI_DIR/build$MATRIX_KEY/extensions/paradigma/test
-    - ./pdm_run
+    - cd $CUSTOM_CI_DIR/build$MATRIX_KEY
+    - #cd $CUSTOM_CI_DIR/build$MATRIX_KEY/test
+    - #./pdm_run
+    - #cd $CUSTOM_CI_DIR/build$MATRIX_KEY/extensions/paradigma/test
+    - #./pdm_run
     - ctest -V --output-junit $CI_PROJECT_DIR/paradigm_ctest$MATRIX_KEY.xml
       # Artefacts are searched in CI_PROJECT_DIR, but job was executed in CUSTOM_CI_DIR
       #- ctest -V --output-junit $CI_PROJECT_DIR/paradigm_ctest$MATRIX_KEY.xml
