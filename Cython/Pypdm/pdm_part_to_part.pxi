@@ -499,6 +499,10 @@ def reverse_iexch(PyPartToPart                pyptp,
   cdef int  *n_ref_lnum2 = NULL;
   cdef int **ref_lnum2   = NULL;
 
+  # To check stride size (gnum_come_from case)
+  cdef int         **gnum1_come_from_idx = NULL;
+  cdef PDM_g_num_t **gnum1_come_from     = NULL;
+
   if isinstance(part2_stride, int):
     _stride_t = PDM_STRIDE_CST_INTERLACED if interlaced_str else PDM_STRIDE_CST_INTERLEAVED
     _part2_stride_cst = part2_stride
@@ -512,9 +516,13 @@ def reverse_iexch(PyPartToPart                pyptp,
                                    &ref_lnum2);
 
     for i_part in range(pyptp.n_part2):
-      if (t_part2_data_def==PDM_PART_TO_PART_DATA_DEF_ORDER_PART1_TO_PART2  )\
-      or (t_part2_data_def==PDM_PART_TO_PART_DATA_DEF_ORDER_GNUM1_COME_FROM ) :
+      if (t_part2_data_def==PDM_PART_TO_PART_DATA_DEF_ORDER_PART1_TO_PART2):
         n_elt = n_ref_lnum2[i_part]
+      elif(t_part2_data_def==PDM_PART_TO_PART_DATA_DEF_ORDER_GNUM1_COME_FROM):
+        PDM_part_to_part_gnum1_come_from_get(pyptp.ptp,
+                                            &gnum1_come_from_idx,
+                                            &gnum1_come_from);
+        n_elt = gnum1_come_from_idx[i_part][n_ref_lnum2[i_part]]
       else :
         n_elt = pyptp.n_elt2[i_part]
       assert_single_dim_np(part2_stride[i_part], NPY.int32, n_elt)
