@@ -47,6 +47,7 @@ PDM_part_mesh_nodal_tetra_decomposes_faces
        int         *n_face_current,
  const PDM_g_num_t *vtx_ln_to_gn,
  const int         *connectivity_elmt_vtx,
+ const int         *parent_num,
  const PDM_g_num_t *elmt_ln_to_gn,
        int         *elmt_face_vtx_idx,
        PDM_g_num_t *elmt_face_vtx,
@@ -83,6 +84,7 @@ PDM_part_mesh_nodal_pyra_decomposes_faces
        int         *n_face_current,
  const PDM_g_num_t *vtx_ln_to_gn,
  const int         *connectivity_elmt_vtx,
+ const int         *parent_num,
  const PDM_g_num_t *elmt_ln_to_gn,
        int         *elmt_face_vtx_idx,
        PDM_g_num_t *elmt_face_vtx,
@@ -119,6 +121,7 @@ PDM_part_mesh_nodal_prism_decomposes_faces
        int         *n_face_current,
  const PDM_g_num_t *vtx_ln_to_gn,
  const int         *connectivity_elmt_vtx,
+ const int         *parent_num,
  const PDM_g_num_t *elmt_ln_to_gn,
        int         *elmt_face_vtx_idx,
        PDM_g_num_t *elmt_face_vtx,
@@ -157,6 +160,7 @@ PDM_part_mesh_nodal_hexa_decomposes_faces
        int         *n_face_current,
  const PDM_g_num_t *vtx_ln_to_gn,
  const int         *connectivity_elmt_vtx,
+ const int         *parent_num,
  const PDM_g_num_t *elmt_ln_to_gn,
        int         *elmt_face_vtx_idx,
        PDM_g_num_t *elmt_face_vtx,
@@ -286,6 +290,7 @@ PDM_part_mesh_nodal_std_decomposes_faces
        int                  *n_face_current,
  const PDM_g_num_t          *vtx_ln_to_gn,
  const int                  *connectivity_elmt_vtx,
+ const int                  *parent_num,
  const PDM_g_num_t          *elmt_ln_to_gn,
        int                  *elmt_face_vtx_idx,
        PDM_g_num_t          *elmt_face_vtx,
@@ -332,10 +337,12 @@ PDM_part_mesh_nodal_elmts_sections_decompose_faces
 void
 PDM_part_mesh_nodal_elmts_decompose_faces_get_size
 (
- PDM_part_mesh_nodal_elmts_t *pmne,
- int                         *n_elt_tot,
- int                         *n_face_elt_tot,
- int                         *n_sum_vtx_face_tot
+ PDM_part_mesh_nodal_elmts_t  *pmne,
+ int                          *n_elt_tot,
+ int                          *n_face_elt_tot,
+ int                          *n_sum_vtx_face_tot,
+ int                         **elmt_face_vtx_idx,
+ int                         **elmt_cell_face_idx
 );
 
 

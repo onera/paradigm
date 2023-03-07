@@ -1142,7 +1142,8 @@ PDM_part_mesh_nodal_dump_vtk
       }
 
       else if (t_elt == PDM_MESH_NODAL_POLY_3D) {
-        abort();
+        printf("PDM_part_mesh_nodal_dump_vtk : poly3D not yet supported\n");
+        // abort();
       }
 
       else {
@@ -1494,6 +1495,7 @@ const int                   *cellfac_idx,
 const int                   *cellfac,
 const PDM_g_num_t           *numabs,
 const int                   *parent_num,
+const PDM_g_num_t           *parent_entity_g_num,
       PDM_ownership_t        owner
 )
 {
@@ -1519,6 +1521,7 @@ const int                   *parent_num,
                                                cellfac,
                                                numabs,
                                                parent_num,
+                                               parent_entity_g_num,
                                                owner);
 }
 

@@ -79,6 +79,7 @@ PDM_part_mesh_nodal_tetra_decomposes_faces
        int         *n_face_current,
  const PDM_g_num_t *vtx_ln_to_gn,
  const int         *connectivity_elmt_vtx,
+ const int         *parent_num,
  const PDM_g_num_t *elmt_ln_to_gn,
        int         *elmt_face_vtx_idx,
        PDM_g_num_t *elmt_face_vtx,
@@ -88,7 +89,7 @@ PDM_part_mesh_nodal_tetra_decomposes_faces
 )
 {
   const int n_face_elt        = 4;
-  const int n_sum_vtx_face    = 12;
+  // const int n_sum_vtx_face    = 12;
   int n_sum_vtx_elt           = 4;
 
   if(order > 1) {
@@ -103,42 +104,70 @@ PDM_part_mesh_nodal_tetra_decomposes_faces
     _parent_node = parent_node;
   }
 
-  int _n_face_current = *n_face_current;
-  int _n_elt_current  = *n_elt_current;
-  int         *_current_elmt_face_vtx_idx = elmt_face_vtx_idx    + _n_face_current;
-  PDM_g_num_t *_current_elmt_face_vtx     = elmt_face_vtx        + elmt_face_vtx_idx[_n_face_current];
-  int         *_parent_elmt_position      = parent_elmt_position + _n_face_current;
-  int         *_elmt_cell_face_idx        = elmt_cell_face_idx   + _n_elt_current;
-  PDM_g_num_t *_elmt_face_cell            = elmt_face_cell       + _n_face_current;
+  PDM_UNUSED(n_face_current);
+  PDM_UNUSED(n_elt_current);
+  // int _n_face_current = *n_face_current;
+  // int _n_elt_current  = *n_elt_current;
+  // int         *_current_elmt_face_vtx_idx = elmt_face_vtx_idx    + _n_face_current;
+  // PDM_g_num_t *_current_elmt_face_vtx     = elmt_face_vtx        + elmt_face_vtx_idx[_n_face_current];
+  // int         *_parent_elmt_position      = parent_elmt_position + _n_face_current;
+  // int         *_elmt_cell_face_idx        = elmt_cell_face_idx   + _n_elt_current;
+  // PDM_g_num_t *_elmt_face_cell            = elmt_face_cell       + _n_face_current;
 
   /*
    * For each element we flaten all connectivities in one array
    */
   for (int ielt = 0; ielt < n_elt; ielt++) {
 
-    for (int i_face = 0; i_face < n_face_elt; i_face++) {
-      _current_elmt_face_vtx_idx[ielt * n_face_elt + i_face + 1] = _current_elmt_face_vtx_idx[ielt * n_face_elt + i_face] + 3;
-      _parent_elmt_position     [ielt * n_face_elt + i_face    ] = i_face;
-      _elmt_face_cell           [ielt * n_face_elt + i_face    ] = elmt_ln_to_gn[ielt];
+    int icell = ielt;
+    if (parent_num != NULL) {
+      icell = parent_num[ielt];
     }
 
-    _elmt_cell_face_idx[ielt+1] = _elmt_cell_face_idx[ielt] + n_face_elt;
+    for (int i_face = 0; i_face < n_face_elt; i_face++) {
+      // _current_elmt_face_vtx_idx[ielt * n_face_elt + i_face + 1] = _current_elmt_face_vtx_idx[ielt * n_face_elt + i_face] + 3;
+      // _parent_elmt_position     [ielt * n_face_elt + i_face    ] = i_face;
+      // _elmt_face_cell           [ielt * n_face_elt + i_face    ] = elmt_ln_to_gn[ielt];
+      int idx_face = elmt_cell_face_idx[icell] + i_face;
+      parent_elmt_position[idx_face] = i_face;
+      elmt_face_cell      [idx_face] = elmt_ln_to_gn[ielt];
+    }
 
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 0]  = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[0]]-1];
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 1]  = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[2]]-1];
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 2]  = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[1]]-1];
+    // _elmt_cell_face_idx[ielt+1] = _elmt_cell_face_idx[ielt] + n_face_elt;
+    int idx = elmt_face_vtx_idx[elmt_cell_face_idx[icell]];
 
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 3]  = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[0]]-1];
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 4]  = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[1]]-1];
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 5]  = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[3]]-1];
+    elmt_face_vtx[idx + 0]  = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[0]]-1];
+    elmt_face_vtx[idx + 1]  = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[2]]-1];
+    elmt_face_vtx[idx + 2]  = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[1]]-1];
 
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 6]  = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[0]]-1];
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 7]  = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[3]]-1];
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 8]  = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[2]]-1];
+    elmt_face_vtx[idx + 3]  = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[0]]-1];
+    elmt_face_vtx[idx + 4]  = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[1]]-1];
+    elmt_face_vtx[idx + 5]  = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[3]]-1];
 
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 9]  = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[1]]-1];
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 10] = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[2]]-1];
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 11] = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[3]]-1];
+    elmt_face_vtx[idx + 6]  = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[0]]-1];
+    elmt_face_vtx[idx + 7]  = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[3]]-1];
+    elmt_face_vtx[idx + 8]  = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[2]]-1];
+
+    elmt_face_vtx[idx + 9]  = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[1]]-1];
+    elmt_face_vtx[idx + 10] = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[2]]-1];
+    elmt_face_vtx[idx + 11] = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[3]]-1];
+
+
+    // _current_elmt_face_vtx[n_sum_vtx_face * ielt + 0]  = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[0]]-1];
+    // _current_elmt_face_vtx[n_sum_vtx_face * ielt + 1]  = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[2]]-1];
+    // _current_elmt_face_vtx[n_sum_vtx_face * ielt + 2]  = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[1]]-1];
+
+    // _current_elmt_face_vtx[n_sum_vtx_face * ielt + 3]  = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[0]]-1];
+    // _current_elmt_face_vtx[n_sum_vtx_face * ielt + 4]  = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[1]]-1];
+    // _current_elmt_face_vtx[n_sum_vtx_face * ielt + 5]  = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[3]]-1];
+
+    // _current_elmt_face_vtx[n_sum_vtx_face * ielt + 6]  = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[0]]-1];
+    // _current_elmt_face_vtx[n_sum_vtx_face * ielt + 7]  = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[3]]-1];
+    // _current_elmt_face_vtx[n_sum_vtx_face * ielt + 8]  = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[2]]-1];
+
+    // _current_elmt_face_vtx[n_sum_vtx_face * ielt + 9]  = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[1]]-1];
+    // _current_elmt_face_vtx[n_sum_vtx_face * ielt + 10] = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[2]]-1];
+    // _current_elmt_face_vtx[n_sum_vtx_face * ielt + 11] = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[3]]-1];
 
   }
 
@@ -161,6 +190,7 @@ PDM_part_mesh_nodal_prism_decomposes_faces
        int         *n_face_current,
  const PDM_g_num_t *vtx_ln_to_gn,
  const int         *connectivity_elmt_vtx,
+ const int         *parent_num,
  const PDM_g_num_t *elmt_ln_to_gn,
        int         *elmt_face_vtx_idx,
        PDM_g_num_t *elmt_face_vtx,
@@ -170,7 +200,7 @@ PDM_part_mesh_nodal_prism_decomposes_faces
 )
 {
   const int n_face_elt     = 5;
-  const int n_sum_vtx_face = 3*4 + 2*3;
+  // const int n_sum_vtx_face = 3*4 + 2*3;
   int n_sum_vtx_elt        = 6;
   if(order > 1) {
     n_sum_vtx_elt     = PDM_Mesh_nodal_n_vtx_elt_get(PDM_MESH_NODAL_PRISMHO, order);
@@ -184,59 +214,94 @@ PDM_part_mesh_nodal_prism_decomposes_faces
     _parent_node = parent_node;
   }
 
-  int _n_face_current = *n_face_current;
-  int _n_elt_current  = *n_elt_current;
-  int         *_current_elmt_face_vtx_idx = elmt_face_vtx_idx    + _n_face_current;
-  PDM_g_num_t *_current_elmt_face_vtx     = elmt_face_vtx        + elmt_face_vtx_idx[_n_face_current];
-  int         *_parent_elmt_position      = parent_elmt_position + _n_face_current;
-  int         *_elmt_cell_face_idx        = elmt_cell_face_idx   + _n_elt_current;
-  PDM_g_num_t *_elmt_face_cell            = elmt_face_cell       + _n_face_current;
+  PDM_UNUSED(n_face_current);
+  PDM_UNUSED(n_elt_current);
+  // int _n_face_current = *n_face_current;
+  // int _n_elt_current  = *n_elt_current;
+  // int         *_current_elmt_face_vtx_idx = elmt_face_vtx_idx    + _n_face_current;
+  // PDM_g_num_t *_current_elmt_face_vtx     = elmt_face_vtx        + elmt_face_vtx_idx[_n_face_current];
+  // int         *_parent_elmt_position      = parent_elmt_position + _n_face_current;
+  // int         *_elmt_cell_face_idx        = elmt_cell_face_idx   + _n_elt_current;
+  // PDM_g_num_t *_elmt_face_cell            = elmt_face_cell       + _n_face_current;
 
   /*
    * For each element we flaten all connectivities in one array
    */
   for (int ielt = 0; ielt < n_elt; ielt++) {
 
-    for (int i_face = 0; i_face < n_face_elt; i_face++) {
-      _parent_elmt_position     [ielt * n_face_elt + i_face    ] = i_face;
-      _elmt_face_cell           [ielt * n_face_elt + i_face    ] = elmt_ln_to_gn[ielt];
+    int icell = ielt;
+    if (parent_num != NULL) {
+      icell = parent_num[ielt];
     }
 
-    _elmt_cell_face_idx[ielt+1] = _elmt_cell_face_idx[ielt] + n_face_elt;
+    for (int i_face = 0; i_face < n_face_elt; i_face++) {
+      // _parent_elmt_position     [ielt * n_face_elt + i_face    ] = i_face;
+      // _elmt_face_cell           [ielt * n_face_elt + i_face    ] = elmt_ln_to_gn[ielt];
+      int idx_face = elmt_cell_face_idx[icell] + i_face;
+      parent_elmt_position[idx_face] = i_face;
+      elmt_face_cell      [idx_face] = elmt_ln_to_gn[ielt];
+    }
 
-    _current_elmt_face_vtx_idx[ielt * n_face_elt + 1]  = _current_elmt_face_vtx_idx[ielt * n_face_elt    ] + 3;
-    _current_elmt_face_vtx_idx[ielt * n_face_elt + 2]  = _current_elmt_face_vtx_idx[ielt * n_face_elt + 1] + 3;
-    _current_elmt_face_vtx_idx[ielt * n_face_elt + 3]  = _current_elmt_face_vtx_idx[ielt * n_face_elt + 2] + 4;
-    _current_elmt_face_vtx_idx[ielt * n_face_elt + 4]  = _current_elmt_face_vtx_idx[ielt * n_face_elt + 3] + 4;
-    _current_elmt_face_vtx_idx[ielt * n_face_elt + 5]  = _current_elmt_face_vtx_idx[ielt * n_face_elt + 4] + 4;
+    // _elmt_cell_face_idx[ielt+1] = _elmt_cell_face_idx[ielt] + n_face_elt;
+    int idx = elmt_face_vtx_idx[elmt_cell_face_idx[icell]];
 
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 0]  = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[2]]-1];
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 1]  = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[1]]-1];
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 2]  = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[0]]-1];
+    elmt_face_vtx[idx + 0]  = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[2]]-1];
+    elmt_face_vtx[idx + 1]  = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[1]]-1];
+    elmt_face_vtx[idx + 2]  = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[0]]-1];
 
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 3]  = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[4]]-1];
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 4]  = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[5]]-1];
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 5]  = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[3]]-1];
+    elmt_face_vtx[idx + 3]  = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[4]]-1];
+    elmt_face_vtx[idx + 4]  = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[5]]-1];
+    elmt_face_vtx[idx + 5]  = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[3]]-1];
 
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 6]  = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[5]]-1];
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 7]  = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[4]]-1];
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 8]  = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[1]]-1];
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 9]  = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[2]]-1];
+    elmt_face_vtx[idx + 6]  = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[5]]-1];
+    elmt_face_vtx[idx + 7]  = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[4]]-1];
+    elmt_face_vtx[idx + 8]  = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[1]]-1];
+    elmt_face_vtx[idx + 9]  = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[2]]-1];
 
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 10] = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[4]]-1];
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 11] = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[3]]-1];
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 12] = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[0]]-1];
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 13] = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[1]]-1];
+    elmt_face_vtx[idx + 10] = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[4]]-1];
+    elmt_face_vtx[idx + 11] = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[3]]-1];
+    elmt_face_vtx[idx + 12] = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[0]]-1];
+    elmt_face_vtx[idx + 13] = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[1]]-1];
 
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 14] = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[3]]-1];
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 15] = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[5]]-1];
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 16] = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[2]]-1];
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 17] = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[0]]-1];
+    elmt_face_vtx[idx + 14] = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[3]]-1];
+    elmt_face_vtx[idx + 15] = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[5]]-1];
+    elmt_face_vtx[idx + 16] = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[2]]-1];
+    elmt_face_vtx[idx + 17] = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[0]]-1];
+
+
+    // _current_elmt_face_vtx_idx[ielt * n_face_elt + 1]  = _current_elmt_face_vtx_idx[ielt * n_face_elt    ] + 3;
+    // _current_elmt_face_vtx_idx[ielt * n_face_elt + 2]  = _current_elmt_face_vtx_idx[ielt * n_face_elt + 1] + 3;
+    // _current_elmt_face_vtx_idx[ielt * n_face_elt + 3]  = _current_elmt_face_vtx_idx[ielt * n_face_elt + 2] + 4;
+    // _current_elmt_face_vtx_idx[ielt * n_face_elt + 4]  = _current_elmt_face_vtx_idx[ielt * n_face_elt + 3] + 4;
+    // _current_elmt_face_vtx_idx[ielt * n_face_elt + 5]  = _current_elmt_face_vtx_idx[ielt * n_face_elt + 4] + 4;
+
+    // _current_elmt_face_vtx[n_sum_vtx_face * ielt + 0]  = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[2]]-1];
+    // _current_elmt_face_vtx[n_sum_vtx_face * ielt + 1]  = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[1]]-1];
+    // _current_elmt_face_vtx[n_sum_vtx_face * ielt + 2]  = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[0]]-1];
+
+    // _current_elmt_face_vtx[n_sum_vtx_face * ielt + 3]  = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[4]]-1];
+    // _current_elmt_face_vtx[n_sum_vtx_face * ielt + 4]  = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[5]]-1];
+    // _current_elmt_face_vtx[n_sum_vtx_face * ielt + 5]  = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[3]]-1];
+
+    // _current_elmt_face_vtx[n_sum_vtx_face * ielt + 6]  = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[5]]-1];
+    // _current_elmt_face_vtx[n_sum_vtx_face * ielt + 7]  = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[4]]-1];
+    // _current_elmt_face_vtx[n_sum_vtx_face * ielt + 8]  = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[1]]-1];
+    // _current_elmt_face_vtx[n_sum_vtx_face * ielt + 9]  = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[2]]-1];
+
+    // _current_elmt_face_vtx[n_sum_vtx_face * ielt + 10] = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[4]]-1];
+    // _current_elmt_face_vtx[n_sum_vtx_face * ielt + 11] = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[3]]-1];
+    // _current_elmt_face_vtx[n_sum_vtx_face * ielt + 12] = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[0]]-1];
+    // _current_elmt_face_vtx[n_sum_vtx_face * ielt + 13] = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[1]]-1];
+
+    // _current_elmt_face_vtx[n_sum_vtx_face * ielt + 14] = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[3]]-1];
+    // _current_elmt_face_vtx[n_sum_vtx_face * ielt + 15] = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[5]]-1];
+    // _current_elmt_face_vtx[n_sum_vtx_face * ielt + 16] = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[2]]-1];
+    // _current_elmt_face_vtx[n_sum_vtx_face * ielt + 17] = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[0]]-1];
 
   }
 
-  *n_elt_current  += n_elt;
-  *n_face_current += n_elt * n_face_elt;
+  // *n_elt_current  += n_elt;
+  // *n_face_current += n_elt * n_face_elt;
 
 }
 
@@ -256,6 +321,7 @@ PDM_part_mesh_nodal_pyra_decomposes_faces
        int         *n_face_current,
  const PDM_g_num_t *vtx_ln_to_gn,
  const int         *connectivity_elmt_vtx,
+ const int         *parent_num,
  const PDM_g_num_t *elmt_ln_to_gn,
        int         *elmt_face_vtx_idx,
        PDM_g_num_t *elmt_face_vtx,
@@ -266,7 +332,7 @@ PDM_part_mesh_nodal_pyra_decomposes_faces
 {
 
   const int n_face_elt     = 5;
-  const int n_sum_vtx_face = 1*4 + 4*3;
+  // const int n_sum_vtx_face = 1*4 + 4*3;
   int n_sum_vtx_elt        = 5;
   if(order > 1) {
     n_sum_vtx_elt     = PDM_Mesh_nodal_n_vtx_elt_get(PDM_MESH_NODAL_PYRAMIDHO, order);
@@ -280,56 +346,88 @@ PDM_part_mesh_nodal_pyra_decomposes_faces
     _parent_node = parent_node;
   }
 
-  int _n_face_current = *n_face_current;
-  int _n_elt_current  = *n_elt_current;
-  int         *_current_elmt_face_vtx_idx = elmt_face_vtx_idx    + _n_face_current;
-  PDM_g_num_t *_current_elmt_face_vtx     = elmt_face_vtx        + elmt_face_vtx_idx[_n_face_current];
-  int         *_parent_elmt_position      = parent_elmt_position + _n_face_current;
-  int         *_elmt_cell_face_idx        = elmt_cell_face_idx   + _n_elt_current;
-  PDM_g_num_t *_elmt_face_cell            = elmt_face_cell       + _n_face_current;
+  PDM_UNUSED(n_face_current);
+  PDM_UNUSED(n_elt_current);
+  // int _n_face_current = *n_face_current;
+  // int _n_elt_current  = *n_elt_current;
+  // int         *_current_elmt_face_vtx_idx = elmt_face_vtx_idx    + _n_face_current;
+  // PDM_g_num_t *_current_elmt_face_vtx     = elmt_face_vtx        + elmt_face_vtx_idx[_n_face_current];
+  // int         *_parent_elmt_position      = parent_elmt_position + _n_face_current;
+  // int         *_elmt_cell_face_idx        = elmt_cell_face_idx   + _n_elt_current;
+  // PDM_g_num_t *_elmt_face_cell            = elmt_face_cell       + _n_face_current;
 
   /*
    * For each element we flaten all connectivities in one array
    */
   for (int ielt = 0; ielt < n_elt; ielt++) {
 
-    for (int i_face = 0; i_face < n_face_elt; i_face++) {
-      _parent_elmt_position     [ielt * n_face_elt + i_face    ] = i_face;
-      _elmt_face_cell           [ielt * n_face_elt + i_face    ] = elmt_ln_to_gn[ielt];
+    int icell = ielt;
+    if (parent_num != NULL) {
+      icell = parent_num[ielt];
     }
 
-    _elmt_cell_face_idx[ielt+1] = _elmt_cell_face_idx[ielt] + n_face_elt;
+    for (int i_face = 0; i_face < n_face_elt; i_face++) {
+      // _parent_elmt_position     [ielt * n_face_elt + i_face    ] = i_face;
+      // _elmt_face_cell           [ielt * n_face_elt + i_face    ] = elmt_ln_to_gn[ielt];
+      int idx_face = elmt_cell_face_idx[icell] + i_face;
+      parent_elmt_position[idx_face] = i_face;
+      elmt_face_cell      [idx_face] = elmt_ln_to_gn[ielt];
+    }
 
-    _current_elmt_face_vtx_idx[ielt * n_face_elt + 1]  = _current_elmt_face_vtx_idx[ielt * n_face_elt    ] + 4;
-    _current_elmt_face_vtx_idx[ielt * n_face_elt + 2]  = _current_elmt_face_vtx_idx[ielt * n_face_elt + 1] + 3;
-    _current_elmt_face_vtx_idx[ielt * n_face_elt + 3]  = _current_elmt_face_vtx_idx[ielt * n_face_elt + 2] + 3;
-    _current_elmt_face_vtx_idx[ielt * n_face_elt + 4]  = _current_elmt_face_vtx_idx[ielt * n_face_elt + 3] + 3;
-    _current_elmt_face_vtx_idx[ielt * n_face_elt + 5]  = _current_elmt_face_vtx_idx[ielt * n_face_elt + 4] + 3;
+    // _elmt_cell_face_idx[ielt+1] = _elmt_cell_face_idx[ielt] + n_face_elt;
+    int idx = elmt_face_vtx_idx[elmt_cell_face_idx[icell]];
 
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 0]  = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[3]]-1];
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 1]  = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[2]]-1];
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 2]  = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[1]]-1];
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 3]  = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[0]]-1];
+    elmt_face_vtx[idx + 0]  = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[3]]-1];
+    elmt_face_vtx[idx + 1]  = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[2]]-1];
+    elmt_face_vtx[idx + 2]  = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[1]]-1];
+    elmt_face_vtx[idx + 3]  = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[0]]-1];
 
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 4]  = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[4]]-1];
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 5]  = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[0]]-1];
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 6]  = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[1]]-1];
+    elmt_face_vtx[idx + 4]  = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[4]]-1];
+    elmt_face_vtx[idx + 5]  = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[0]]-1];
+    elmt_face_vtx[idx + 6]  = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[1]]-1];
 
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 7]  = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[4]]-1];
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 8]  = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[1]]-1];
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 9]  = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[2]]-1];
+    elmt_face_vtx[idx + 7]  = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[4]]-1];
+    elmt_face_vtx[idx + 8]  = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[1]]-1];
+    elmt_face_vtx[idx + 9]  = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[2]]-1];
 
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 10] = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[4]]-1];
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 11] = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[2]]-1];
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 12] = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[3]]-1];
+    elmt_face_vtx[idx + 10] = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[4]]-1];
+    elmt_face_vtx[idx + 11] = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[2]]-1];
+    elmt_face_vtx[idx + 12] = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[3]]-1];
 
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 13] = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[4]]-1];
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 14] = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[3]]-1];
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 15] = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[0]]-1];
+    elmt_face_vtx[idx + 13] = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[4]]-1];
+    elmt_face_vtx[idx + 14] = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[3]]-1];
+    elmt_face_vtx[idx + 15] = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[0]]-1];
+
+    // _current_elmt_face_vtx_idx[ielt * n_face_elt + 1]  = _current_elmt_face_vtx_idx[ielt * n_face_elt    ] + 4;
+    // _current_elmt_face_vtx_idx[ielt * n_face_elt + 2]  = _current_elmt_face_vtx_idx[ielt * n_face_elt + 1] + 3;
+    // _current_elmt_face_vtx_idx[ielt * n_face_elt + 3]  = _current_elmt_face_vtx_idx[ielt * n_face_elt + 2] + 3;
+    // _current_elmt_face_vtx_idx[ielt * n_face_elt + 4]  = _current_elmt_face_vtx_idx[ielt * n_face_elt + 3] + 3;
+    // _current_elmt_face_vtx_idx[ielt * n_face_elt + 5]  = _current_elmt_face_vtx_idx[ielt * n_face_elt + 4] + 3;
+
+    // _current_elmt_face_vtx[n_sum_vtx_face * ielt + 0]  = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[3]]-1];
+    // _current_elmt_face_vtx[n_sum_vtx_face * ielt + 1]  = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[2]]-1];
+    // _current_elmt_face_vtx[n_sum_vtx_face * ielt + 2]  = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[1]]-1];
+    // _current_elmt_face_vtx[n_sum_vtx_face * ielt + 3]  = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[0]]-1];
+
+    // _current_elmt_face_vtx[n_sum_vtx_face * ielt + 4]  = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[4]]-1];
+    // _current_elmt_face_vtx[n_sum_vtx_face * ielt + 5]  = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[0]]-1];
+    // _current_elmt_face_vtx[n_sum_vtx_face * ielt + 6]  = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[1]]-1];
+
+    // _current_elmt_face_vtx[n_sum_vtx_face * ielt + 7]  = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[4]]-1];
+    // _current_elmt_face_vtx[n_sum_vtx_face * ielt + 8]  = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[1]]-1];
+    // _current_elmt_face_vtx[n_sum_vtx_face * ielt + 9]  = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[2]]-1];
+
+    // _current_elmt_face_vtx[n_sum_vtx_face * ielt + 10] = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[4]]-1];
+    // _current_elmt_face_vtx[n_sum_vtx_face * ielt + 11] = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[2]]-1];
+    // _current_elmt_face_vtx[n_sum_vtx_face * ielt + 12] = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[3]]-1];
+
+    // _current_elmt_face_vtx[n_sum_vtx_face * ielt + 13] = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[4]]-1];
+    // _current_elmt_face_vtx[n_sum_vtx_face * ielt + 14] = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[3]]-1];
+    // _current_elmt_face_vtx[n_sum_vtx_face * ielt + 15] = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[0]]-1];
   }
 
-  *n_elt_current  += n_elt;
-  *n_face_current += n_elt * n_face_elt;
+  // *n_elt_current  += n_elt;
+  // *n_face_current += n_elt * n_face_elt;
 
 }
 
@@ -343,6 +441,7 @@ PDM_part_mesh_nodal_hexa_decomposes_faces
        int         *n_face_current,
  const PDM_g_num_t *vtx_ln_to_gn,
  const int         *connectivity_elmt_vtx,
+ const int         *parent_num,
  const PDM_g_num_t *elmt_ln_to_gn,
        int         *elmt_face_vtx_idx,
        PDM_g_num_t *elmt_face_vtx,
@@ -352,7 +451,7 @@ PDM_part_mesh_nodal_hexa_decomposes_faces
 )
 {
   const int n_face_elt     = 6;
-  const int n_sum_vtx_face = 24;
+  // const int n_sum_vtx_face = 24;
   int n_sum_vtx_elt        = 8;
   if(order > 1) {
     n_sum_vtx_elt     = PDM_Mesh_nodal_n_vtx_elt_get(PDM_MESH_NODAL_HEXAHO, order);
@@ -366,13 +465,15 @@ PDM_part_mesh_nodal_hexa_decomposes_faces
     _parent_node = parent_node;
   }
 
-  int _n_face_current = *n_face_current;
-  int _n_elt_current  = *n_elt_current;
-  int         *_current_elmt_face_vtx_idx = elmt_face_vtx_idx    + _n_face_current;
-  PDM_g_num_t *_current_elmt_face_vtx     = elmt_face_vtx        + elmt_face_vtx_idx[_n_face_current];
-  int         *_parent_elmt_position      = parent_elmt_position + _n_face_current;
-  int         *_elmt_cell_face_idx        = elmt_cell_face_idx   + _n_elt_current;
-  PDM_g_num_t *_elmt_face_cell            = elmt_face_cell       + _n_face_current;
+  PDM_UNUSED(n_face_current);
+  PDM_UNUSED(n_elt_current);
+  // int _n_face_current = *n_face_current;
+  // int _n_elt_current  = *n_elt_current;
+  // int         *_current_elmt_face_vtx_idx = elmt_face_vtx_idx    + _n_face_current;
+  // PDM_g_num_t *_current_elmt_face_vtx     = elmt_face_vtx        + elmt_face_vtx_idx[_n_face_current];
+  // int         *_parent_elmt_position      = parent_elmt_position + _n_face_current;
+  // int         *_elmt_cell_face_idx        = elmt_cell_face_idx   + _n_elt_current;
+  // PDM_g_num_t *_elmt_face_cell            = elmt_face_cell       + _n_face_current;
 
   /*
    * For each element we flaten all connectivities in one array
@@ -381,44 +482,82 @@ PDM_part_mesh_nodal_hexa_decomposes_faces
 
   for (int ielt = 0; ielt < n_elt; ielt++) {
 
-    /* Store the face_cell */
-    for (int i_face = 0; i_face < n_face_elt; i_face++) {
-      _current_elmt_face_vtx_idx[ielt * n_face_elt + i_face + 1] = _current_elmt_face_vtx_idx[ielt * n_face_elt + i_face] + 4;
-      _parent_elmt_position     [ielt * n_face_elt + i_face    ] = i_face;
-      _elmt_face_cell           [ielt * n_face_elt + i_face    ] = elmt_ln_to_gn[ielt];
+    int icell = ielt;
+    if (parent_num != NULL) {
+      icell = parent_num[ielt];
     }
 
-    _elmt_cell_face_idx[ielt+1] = _elmt_cell_face_idx[ielt] + n_face_elt;
+    /* Store the face_cell */
+    for (int i_face = 0; i_face < n_face_elt; i_face++) {
+      // _current_elmt_face_vtx_idx[ielt * n_face_elt + i_face + 1] = _current_elmt_face_vtx_idx[ielt * n_face_elt + i_face] + 4;
+      // _parent_elmt_position     [ielt * n_face_elt + i_face    ] = i_face;
+      // _elmt_face_cell           [ielt * n_face_elt + i_face    ] = elmt_ln_to_gn[ielt];
+      int idx_face = elmt_cell_face_idx[icell] + i_face;
+      parent_elmt_position[idx_face] = i_face;
+      elmt_face_cell      [idx_face] = elmt_ln_to_gn[ielt];
+    }
 
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 0]  = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[3]]-1];
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 1]  = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[2]]-1];
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 2]  = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[1]]-1];
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 3]  = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[0]]-1];
+    // _elmt_cell_face_idx[ielt+1] = _elmt_cell_face_idx[ielt] + n_face_elt;
+    int idx = elmt_face_vtx_idx[elmt_cell_face_idx[icell]];
+    elmt_face_vtx[idx + 0]  = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[3]]-1];
+    elmt_face_vtx[idx + 1]  = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[2]]-1];
+    elmt_face_vtx[idx + 2]  = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[1]]-1];
+    elmt_face_vtx[idx + 3]  = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[0]]-1];
 
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 4]  = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[6]]-1];
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 5]  = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[7]]-1];
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 6]  = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[4]]-1];
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 7]  = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[5]]-1];
+    elmt_face_vtx[idx + 4]  = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[6]]-1];
+    elmt_face_vtx[idx + 5]  = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[7]]-1];
+    elmt_face_vtx[idx + 6]  = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[4]]-1];
+    elmt_face_vtx[idx + 7]  = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[5]]-1];
 
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 8]  = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[4]]-1];
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 9]  = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[7]]-1];
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 10] = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[3]]-1];
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 11] = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[0]]-1];
+    elmt_face_vtx[idx + 8]  = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[4]]-1];
+    elmt_face_vtx[idx + 9]  = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[7]]-1];
+    elmt_face_vtx[idx + 10] = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[3]]-1];
+    elmt_face_vtx[idx + 11] = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[0]]-1];
 
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 12] = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[7]]-1];
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 13] = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[6]]-1];
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 14] = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[2]]-1];
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 15] = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[3]]-1];
+    elmt_face_vtx[idx + 12] = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[7]]-1];
+    elmt_face_vtx[idx + 13] = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[6]]-1];
+    elmt_face_vtx[idx + 14] = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[2]]-1];
+    elmt_face_vtx[idx + 15] = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[3]]-1];
 
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 16] = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[2]]-1];
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 17] = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[6]]-1];
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 18] = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[5]]-1];
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 19] = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[1]]-1];
+    elmt_face_vtx[idx + 16] = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[2]]-1];
+    elmt_face_vtx[idx + 17] = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[6]]-1];
+    elmt_face_vtx[idx + 18] = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[5]]-1];
+    elmt_face_vtx[idx + 19] = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[1]]-1];
 
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 20] = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[1]]-1];
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 21] = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[5]]-1];
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 22] = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[4]]-1];
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 23] = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[0]]-1];
+    elmt_face_vtx[idx + 20] = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[1]]-1];
+    elmt_face_vtx[idx + 21] = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[5]]-1];
+    elmt_face_vtx[idx + 22] = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[4]]-1];
+    elmt_face_vtx[idx + 23] = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[0]]-1];
+
+    // _current_elmt_face_vtx[n_sum_vtx_face * ielt + 0]  = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[3]]-1];
+    // _current_elmt_face_vtx[n_sum_vtx_face * ielt + 1]  = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[2]]-1];
+    // _current_elmt_face_vtx[n_sum_vtx_face * ielt + 2]  = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[1]]-1];
+    // _current_elmt_face_vtx[n_sum_vtx_face * ielt + 3]  = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[0]]-1];
+
+    // _current_elmt_face_vtx[n_sum_vtx_face * ielt + 4]  = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[6]]-1];
+    // _current_elmt_face_vtx[n_sum_vtx_face * ielt + 5]  = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[7]]-1];
+    // _current_elmt_face_vtx[n_sum_vtx_face * ielt + 6]  = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[4]]-1];
+    // _current_elmt_face_vtx[n_sum_vtx_face * ielt + 7]  = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[5]]-1];
+
+    // _current_elmt_face_vtx[n_sum_vtx_face * ielt + 8]  = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[4]]-1];
+    // _current_elmt_face_vtx[n_sum_vtx_face * ielt + 9]  = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[7]]-1];
+    // _current_elmt_face_vtx[n_sum_vtx_face * ielt + 10] = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[3]]-1];
+    // _current_elmt_face_vtx[n_sum_vtx_face * ielt + 11] = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[0]]-1];
+
+    // _current_elmt_face_vtx[n_sum_vtx_face * ielt + 12] = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[7]]-1];
+    // _current_elmt_face_vtx[n_sum_vtx_face * ielt + 13] = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[6]]-1];
+    // _current_elmt_face_vtx[n_sum_vtx_face * ielt + 14] = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[2]]-1];
+    // _current_elmt_face_vtx[n_sum_vtx_face * ielt + 15] = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[3]]-1];
+
+    // _current_elmt_face_vtx[n_sum_vtx_face * ielt + 16] = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[2]]-1];
+    // _current_elmt_face_vtx[n_sum_vtx_face * ielt + 17] = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[6]]-1];
+    // _current_elmt_face_vtx[n_sum_vtx_face * ielt + 18] = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[5]]-1];
+    // _current_elmt_face_vtx[n_sum_vtx_face * ielt + 19] = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[1]]-1];
+
+    // _current_elmt_face_vtx[n_sum_vtx_face * ielt + 20] = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[1]]-1];
+    // _current_elmt_face_vtx[n_sum_vtx_face * ielt + 21] = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[5]]-1];
+    // _current_elmt_face_vtx[n_sum_vtx_face * ielt + 22] = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[4]]-1];
+    // _current_elmt_face_vtx[n_sum_vtx_face * ielt + 23] = vtx_ln_to_gn[connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[0]]-1];
 
   }
 
@@ -1183,6 +1322,7 @@ PDM_part_mesh_nodal_std_decomposes_faces
        int                  *n_face_current,
  const PDM_g_num_t          *vtx_ln_to_gn,
  const int                  *connectivity_elmt_vtx,
+ const int                  *parent_num,
  const PDM_g_num_t          *elmt_ln_to_gn,
        int                  *elmt_face_vtx_idx,
        PDM_g_num_t          *elmt_face_vtx,
@@ -1242,6 +1382,7 @@ PDM_part_mesh_nodal_std_decomposes_faces
                                                 n_face_current,
                                                 vtx_ln_to_gn,
                                                 connectivity_elmt_vtx,
+                                                parent_num,
                                                 elmt_ln_to_gn,
                                                 elmt_face_vtx_idx,
                                                 elmt_face_vtx,
@@ -1258,6 +1399,7 @@ PDM_part_mesh_nodal_std_decomposes_faces
                                                 n_face_current,
                                                 vtx_ln_to_gn,
                                                 connectivity_elmt_vtx,
+                                                parent_num,
                                                 elmt_ln_to_gn,
                                                 elmt_face_vtx_idx,
                                                 elmt_face_vtx,
@@ -1274,6 +1416,7 @@ PDM_part_mesh_nodal_std_decomposes_faces
                                                 n_face_current,
                                                 vtx_ln_to_gn,
                                                 connectivity_elmt_vtx,
+                                                parent_num,
                                                 elmt_ln_to_gn,
                                                 elmt_face_vtx_idx,
                                                 elmt_face_vtx,
@@ -1290,6 +1433,7 @@ PDM_part_mesh_nodal_std_decomposes_faces
                                                 n_face_current,
                                                 vtx_ln_to_gn,
                                                 connectivity_elmt_vtx,
+                                                parent_num,
                                                 elmt_ln_to_gn,
                                                 elmt_face_vtx_idx,
                                                 elmt_face_vtx,
@@ -1527,6 +1671,8 @@ PDM_part_mesh_nodal_elmts_sections_decompose_faces
       int id_section = section_id[i_section];
       PDM_Mesh_nodal_elt_t t_elt = PDM_part_mesh_nodal_elmts_section_type_get(pmne, id_section);
 
+      int n_elt = PDM_part_mesh_nodal_elmts_section_n_elt_get(pmne, id_section, i_part);
+
       switch (t_elt) {
         case PDM_MESH_NODAL_POINT:
         case PDM_MESH_NODAL_BAR2:
@@ -1537,8 +1683,6 @@ PDM_part_mesh_nodal_elmts_sections_decompose_faces
         case PDM_MESH_NODAL_PRISM6:
         case PDM_MESH_NODAL_HEXA8:
         {
-          int n_elt = PDM_part_mesh_nodal_elmts_section_n_elt_get(pmne, id_section, i_part);
-
           int         *connec              = NULL;
           PDM_g_num_t *numabs              = NULL;
           int         *parent_num          = NULL;
@@ -1551,6 +1695,14 @@ PDM_part_mesh_nodal_elmts_sections_decompose_faces
                                                     &parent_num,
                                                     &parent_entity_g_num);
 
+          log_trace("std    : numabs %p, parent_entity_g_num %p\n",
+                    (void *) numabs, (void *) parent_entity_g_num);
+
+          if (parent_num != NULL) {
+            PDM_log_trace_array_int(parent_num, n_elt, "parent_num : ");
+          }
+
+          // Is this legit??
           PDM_g_num_t *g_num = numabs;
           if (numabs == NULL) {
             g_num = parent_entity_g_num;
@@ -1566,6 +1718,7 @@ PDM_part_mesh_nodal_elmts_sections_decompose_faces
                                                    &n_face_current,
                                                    vtx_ln_to_gn[i_part],
                                                    connec,
+                                                   parent_num,
                                                    g_num,
                                                    elmt_face_vtx_idx,
                                                    elmt_face_vtx,
@@ -1585,14 +1738,12 @@ PDM_part_mesh_nodal_elmts_sections_decompose_faces
         case PDM_MESH_NODAL_PRISMHO:
         case PDM_MESH_NODAL_HEXAHO:
         {
-          int n_elt = PDM_part_mesh_nodal_elmts_section_n_elt_get(pmne, id_section, i_part);
-
           int         *connec              = NULL;
           PDM_g_num_t *numabs              = NULL;
           int         *parent_num          = NULL;
           PDM_g_num_t *parent_entity_g_num = NULL;
           int          order               = -1;
-          const char* ho_ordering          = NULL;
+          const char  *ho_ordering         = NULL;
           PDM_part_mesh_nodal_elmts_section_std_ho_get(pmne,
                                                        id_section,
                                                        i_part,
@@ -1615,6 +1766,7 @@ PDM_part_mesh_nodal_elmts_sections_decompose_faces
                                                    &n_face_current,
                                                    vtx_ln_to_gn[i_part],
                                                    connec,
+                                                   parent_num,
                                                    numabs,
                                                    elmt_face_vtx_idx,
                                                    elmt_face_vtx,
@@ -1631,7 +1783,117 @@ PDM_part_mesh_nodal_elmts_sections_decompose_faces
 
         case PDM_MESH_NODAL_POLY_3D:
         {
-          PDM_error(__FILE__, __LINE__, 0, "Error PDM_part_mesh_nodal_elmts_sections_decompose_faces : Element type is supported\n");
+          // int         *_elmt_face_vtx_idx    = elmt_face_vtx_idx    + n_face_current;
+          // PDM_g_num_t *_elmt_face_vtx        = elmt_face_vtx        + elmt_face_vtx_idx[n_face_current];
+          // int         *_parent_elmt_position = parent_elmt_position + n_face_current;
+          // int         *_elmt_cell_face_idx   = elmt_cell_face_idx   + n_elt_current;
+          // PDM_g_num_t *_elmt_face_cell       = elmt_face_cell       + n_face_current;
+
+          int          n_face              = 0;
+          PDM_g_num_t *face_ln_to_gn       = NULL;
+          int         *face_vtx_idx        = NULL;
+          int         *face_vtx            = NULL;
+          PDM_g_num_t *cell_ln_to_gn       = NULL;
+          int         *cell_face_idx       = NULL;
+          int         *cell_face           = NULL;
+          int         *parent_num          = NULL;
+          PDM_g_num_t *parent_entity_g_num = NULL;
+
+          PDM_part_mesh_nodal_elmts_section_poly3d_get(pmne,
+                                                       id_section,
+                                                       i_part,
+                                                       &n_face,
+                                                       &face_ln_to_gn,
+                                                       &face_vtx_idx,
+                                                       &face_vtx,
+                                                       &cell_ln_to_gn,
+                                                       &cell_face_idx,
+                                                       &cell_face,
+                                                       &parent_num,
+                                                       &parent_entity_g_num);
+
+          log_trace("poly3d : numabs %p, parent_entity_g_num %p\n",
+                    (void *) cell_ln_to_gn, (void *) parent_entity_g_num);
+
+          if (parent_num != NULL) {
+            PDM_log_trace_array_int(parent_num, n_elt, "parent_num : ");
+          }
+
+          // Is this legit??
+          PDM_g_num_t *g_num = cell_ln_to_gn;
+          if (cell_ln_to_gn == NULL) {
+            g_num = parent_entity_g_num;
+          }
+
+          assert(g_num != NULL);
+
+          // int idx = 0;
+          for (int ielt = 0; ielt < n_elt; ielt++) {
+            int icell = ielt;
+            if (parent_num != NULL) {
+              icell = parent_num[ielt];
+            }
+            // log_trace("ielt %d/%d : "PDM_FMT_G_NUM"\n", ielt, n_elt, g_num[ielt]);
+
+            int cell_face_n = cell_face_idx[ielt+1] - cell_face_idx[ielt];
+            int *_cell_face = cell_face + cell_face_idx[ielt];
+
+            for (int iface = 0; iface < cell_face_n; iface++) {
+
+              int idx_write_face = elmt_cell_face_idx[icell] + iface;
+
+              parent_elmt_position[idx_write_face] = iface;
+              elmt_face_cell      [idx_write_face] = g_num[ielt];
+
+              PDM_g_num_t *_elmt_face_vtx = elmt_face_vtx + elmt_face_vtx_idx[idx_write_face];
+
+              int face_id = PDM_ABS(_cell_face[iface]) - 1;
+
+              int face_vtx_n = face_vtx_idx[face_id+1] - face_vtx_idx[face_id];
+              int *_face_vtx = face_vtx + face_vtx_idx[face_id];
+
+              for (int ivtx = 0; ivtx < face_vtx_n; ivtx++) {
+                int vtx_id = -1;
+                if (_cell_face[iface] > 0) {
+                  vtx_id = _face_vtx[ivtx];
+                }
+                else {
+                  vtx_id = _face_vtx[face_vtx_n-1-ivtx];
+                }
+                _elmt_face_vtx[ivtx] = vtx_ln_to_gn[i_part][vtx_id-1];
+              }
+
+            }
+
+            // for (int iface = cell_face_idx[ielt]; iface < cell_face_idx[ielt+1]; iface++) {
+            //   int face_id = PDM_ABS(cell_face[iface]) - 1;
+            //   _elmt_face_vtx_idx   [iface+1] = _elmt_face_vtx_idx[iface] + face_vtx_idx[face_id+1] - face_vtx_idx[face_id];
+            //   _parent_elmt_position[iface  ] = iface - cell_face_idx[ielt];
+            //   _elmt_face_cell      [iface  ] = g_num[ielt];
+
+            //   if (cell_face[iface] > 0) {
+            //     for (int ivtx = face_vtx_idx[face_id]; ivtx < face_vtx_idx[face_id+1]; ivtx++) {
+            //       int vtx_id = face_vtx[ivtx] - 1;
+            //       _elmt_face_vtx[idx++] = vtx_ln_to_gn[i_part][vtx_id];
+            //     }
+            //   }
+            //   else {
+            //     for (int ivtx = face_vtx_idx[face_id+1]-1; ivtx >= face_vtx_idx[face_id]; ivtx--) {
+            //       int vtx_id = face_vtx[ivtx] - 1;
+            //       _elmt_face_vtx[idx++] = vtx_ln_to_gn[i_part][vtx_id];
+            //     }
+            //   }
+            //   n_face_current++;
+            // }
+
+            // // _elmt_cell_face_idx[ielt+1] = _elmt_cell_face_idx[ielt] + cell_face_idx[ielt+1] - cell_face_idx[ielt];
+            // n_elt_current++;
+          }
+
+
+
+
+          // PDM_error(__FILE__, __LINE__, 0, "Error PDM_part_mesh_nodal_elmts_sections_decompose_faces : Element type is supported\n");
           break;
         }
 
@@ -1814,10 +2076,12 @@ PDM_part_mesh_nodal_elmts_sections_decompose_edges
 void
 PDM_part_mesh_nodal_elmts_decompose_faces_get_size
 (
- PDM_part_mesh_nodal_elmts_t *pmne,
- int                         *n_elt_tot,
- int                         *n_face_elt_tot,
- int                         *n_sum_vtx_face_tot
+ PDM_part_mesh_nodal_elmts_t  *pmne,
+ int                          *n_elt_tot,
+ int                          *n_face_elt_tot,
+ int                          *n_sum_vtx_face_tot,
+ int                         **elmt_face_vtx_idx,
+ int                         **elmt_cell_face_idx
 )
 {
   /* Get current structure to treat */
@@ -1838,14 +2102,26 @@ PDM_part_mesh_nodal_elmts_decompose_faces_get_size
     }
 
     for (int i_section = 0; i_section < pmne->n_section_poly3d; i_section++) {
-      int _n_face      = pmne->sections_poly3d[i_section]->n_face[i_part];
-      *n_face_elt_tot += _n_face;
-      int n_face_vtx   = pmne->sections_poly3d[i_section]->_facvtx_idx[i_part][_n_face];
-      *n_sum_vtx_face_tot += n_face_vtx;
+      // int _n_face      = pmne->sections_poly3d[i_section]->n_face[i_part];
+      // *n_face_elt_tot += _n_face;
+      // int n_face_vtx   = pmne->sections_poly3d[i_section]->_facvtx_idx[i_part][_n_face];
+      // *n_sum_vtx_face_tot += n_face_vtx;
+      int n_elt = pmne->sections_poly3d[i_section]->n_elt[i_part];
+      int *cell_face_idx = pmne->sections_poly3d[i_section]->_cellfac_idx[i_part];
+      int *cell_face     = pmne->sections_poly3d[i_section]->_cellfac    [i_part];
+      int *face_vtx_idx  = pmne->sections_poly3d[i_section]->_facvtx_idx [i_part];
+      for (int i = 0; i < n_elt; i++) {
+        for (int j = cell_face_idx[i]; j < cell_face_idx[i+1]; j++) {
+          (*n_face_elt_tot)++;
+          int face_id = PDM_ABS(cell_face[j]) - 1;
+          *n_sum_vtx_face_tot += face_vtx_idx[face_id+1] - face_vtx_idx[face_id];
+        }
+      }
 
-      *n_elt_tot          += pmne->sections_poly3d[i_section]->n_elt[i_part];
+      *n_elt_tot += n_elt;
     }
 
+    // Not so sure about this...
     for (int i_section = 0; i_section < pmne->n_section_poly2d; i_section++) {
       int _n_face      = pmne->sections_poly2d[i_section]->n_elt[i_part];
       *n_face_elt_tot += _n_face;
@@ -1854,10 +2130,180 @@ PDM_part_mesh_nodal_elmts_decompose_faces_get_size
       *n_elt_tot          += pmne->sections_poly2d[i_section]->n_elt[i_part];
     }
 
-    assert(pmne->n_section_poly3d == 0); // Not implemented
-    assert(pmne->n_section_poly2d == 0); // Not implemented
   }
 
+
+  *elmt_face_vtx_idx  = PDM_array_zeros_int(*n_face_elt_tot + 1);
+  *elmt_cell_face_idx = PDM_array_zeros_int(*n_elt_tot      + 1);
+
+
+  int n_section    = PDM_part_mesh_nodal_elmts_n_section_get  (pmne);
+  int *sections_id = PDM_part_mesh_nodal_elmts_sections_id_get(pmne);
+
+  for (int i_part = 0; i_part < pmne->n_part; i_part++) {
+
+    for (int isection = 0; isection < n_section; isection++) {
+
+      int id_section = sections_id[isection];
+
+      PDM_Mesh_nodal_elt_t t_elt = PDM_part_mesh_nodal_elmts_section_type_get(pmne, id_section);
+
+      int *parent_num = PDM_part_mesh_nodal_elmts_parent_num_get(pmne,
+                                                                 id_section,
+                                                                 i_part);
+
+      int n_elt = PDM_part_mesh_nodal_elmts_section_n_elt_get(pmne,
+                                                              id_section,
+                                                              i_part);
+
+      log_trace("section %d\n", isection);
+      if (parent_num != NULL) {
+        PDM_log_trace_array_int(parent_num, n_elt, "parent_num : ");
+      }
+
+      if (t_elt == PDM_MESH_NODAL_POLY_2D) {
+        PDM_error(__FILE__, __LINE__, 0, "TODO\n");
+      }
+      else if (t_elt == PDM_MESH_NODAL_POLY_3D) {
+        int i_section = id_section - PDM_BLOCK_ID_BLOCK_POLY3D;
+        int *cell_face_idx = pmne->sections_poly3d[i_section]->_cellfac_idx[i_part];
+        for (int i = 0; i < n_elt; i++) {
+          int icell = i;
+          if (parent_num != NULL) {
+            icell = parent_num[i];
+          }
+          (*elmt_cell_face_idx)[icell+1] = cell_face_idx[i+1] - cell_face_idx[i];
+        }
+      }
+      else {
+        int cell_face_n = PDM_n_face_elt_per_elmt(pmne->sections_std[isection]->t_elt);
+
+        for (int i = 0; i < n_elt; i++) {
+          int icell = i;
+          if (parent_num != NULL) {
+            icell = parent_num[i];
+          }
+          (*elmt_cell_face_idx)[icell+1] = cell_face_n;
+        }
+      }
+
+    }
+
+  }
+
+  PDM_array_accumulate_int(*elmt_cell_face_idx + 1, *n_elt_tot);
+
+  PDM_log_trace_array_int(*elmt_cell_face_idx, *n_elt_tot + 1, "elmt_cell_face_idx : ");
+
+  int cell_face_vtx_n[6];
+
+
+  for (int i_part = 0; i_part < pmne->n_part; i_part++) {
+
+    for (int isection = 0; isection < n_section; isection++) {
+
+
+      int id_section = sections_id[isection];
+
+      PDM_Mesh_nodal_elt_t t_elt = PDM_part_mesh_nodal_elmts_section_type_get(pmne, id_section);
+
+      int *parent_num = PDM_part_mesh_nodal_elmts_parent_num_get(pmne,
+                                                                 id_section,
+                                                                 i_part);
+
+      int n_elt = PDM_part_mesh_nodal_elmts_section_n_elt_get(pmne,
+                                                              id_section,
+                                                              i_part);
+
+      if (t_elt == PDM_MESH_NODAL_POLY_2D) {
+        PDM_error(__FILE__, __LINE__, 0, "TODO\n");
+      }
+      else if (t_elt == PDM_MESH_NODAL_POLY_3D) {
+        int i_section = id_section - PDM_BLOCK_ID_BLOCK_POLY3D;
+        int *cell_face_idx = pmne->sections_poly3d[i_section]->_cellfac_idx[i_part];
+        int *cell_face     = pmne->sections_poly3d[i_section]->_cellfac    [i_part];
+        int *face_vtx_idx  = pmne->sections_poly3d[i_section]->_facvtx_idx [i_part];
+        for (int i = 0; i < n_elt; i++) {
+          int icell = i;
+          if (parent_num != NULL) {
+            icell = parent_num[i];
+          }
+          int cell_face_n = cell_face_idx[i+1] - cell_face_idx[i];
+          for (int j = 0; j < cell_face_n; j++) {
+            int face_id = PDM_ABS(cell_face[cell_face_idx[i]+j]) - 1;
+            (*elmt_face_vtx_idx)[(*elmt_cell_face_idx)[icell]+j+1] = face_vtx_idx[face_id+1] - face_vtx_idx[face_id];
+          }
+        }
+      }
+      else {
+        int cell_face_n = PDM_n_face_elt_per_elmt(pmne->sections_std[isection]->t_elt);
+
+        switch (t_elt) {
+          case PDM_MESH_NODAL_TRIA3:
+          case PDM_MESH_NODAL_TRIAHO: {
+            cell_face_vtx_n[0] = 3;
+            break;
+          }
+          case PDM_MESH_NODAL_QUAD4:
+          case PDM_MESH_NODAL_QUADHO: {
+            cell_face_vtx_n[0] = 4;
+            break;
+          }
+          case PDM_MESH_NODAL_TETRA4:
+          case PDM_MESH_NODAL_TETRAHO: {
+            for (int i = 0; i < 4; i++) {
+              cell_face_vtx_n[i] = 3;
+            }
+            break;
+          }
+          case PDM_MESH_NODAL_PYRAMID5:
+          case PDM_MESH_NODAL_PYRAMIDHO: {
+            cell_face_vtx_n[0] = 4;
+            cell_face_vtx_n[1] = 3;
+            cell_face_vtx_n[2] = 3;
+            cell_face_vtx_n[3] = 3;
+            cell_face_vtx_n[4] = 3;
+            break;
+          }
+          case PDM_MESH_NODAL_PRISM6:
+          case PDM_MESH_NODAL_PRISMHO: {
+            cell_face_vtx_n[0] = 3;
+            cell_face_vtx_n[1] = 3;
+            cell_face_vtx_n[2] = 4;
+            cell_face_vtx_n[3] = 4;
+            cell_face_vtx_n[4] = 4;
+            break;
+          }
+          case PDM_MESH_NODAL_HEXA8:
+          case PDM_MESH_NODAL_HEXAHO: {
+            for (int i = 0; i < 6; i++) {
+              cell_face_vtx_n[i] = 4;
+            }
+            break;
+          }
+          default:
+            PDM_error(__FILE__, __LINE__, 0, "Invalid elt type %d\n", (int) t_elt);
+        }
+
+        for (int i = 0; i < n_elt; i++) {
+          int icell = i;
+          if (parent_num != NULL) {
+            icell = parent_num[i];
+          }
+
+          for (int j = 0; j < cell_face_n; j++) {
+            (*elmt_face_vtx_idx)[(*elmt_cell_face_idx)[icell]+j+1] = cell_face_vtx_n[j];
+          }
+
+        }
+      }
+
+    }
+
+  }
+
+
+  PDM_array_accumulate_int(*elmt_face_vtx_idx + 1, *n_face_elt_tot);
   // printf("n_face_elt_tot     ::%i\n", *n_face_elt_tot   );
   // printf("n_sum_vtx_face_tot::%i\n" , *n_sum_vtx_face_tot);
 }

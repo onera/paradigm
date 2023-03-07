@@ -479,6 +479,18 @@ _block_poly3d_free
     _block_poly3d->_parent_num = NULL;
   }
 
+  if (_block_poly3d->_parent_entity_g_num != NULL) {
+    if (_block_poly3d->owner == PDM_OWNERSHIP_KEEP) {
+      for (int i = 0; i < _block_poly3d->n_part; i++) {
+        if (_block_poly3d->_parent_entity_g_num[i] != NULL)
+          free(_block_poly3d->_parent_entity_g_num[i]);
+        _block_poly3d->_parent_entity_g_num[i] = NULL;
+      }
+    }
+    free(_block_poly3d->_parent_entity_g_num);
+    _block_poly3d->_parent_entity_g_num = NULL;
+  }
+
   free(_block_poly3d);
   return NULL;
 }
@@ -1679,6 +1691,7 @@ const int                         *cellfac_idx,
 const int                         *cellfac,
 const PDM_g_num_t                 *numabs,
 const int                         *parent_num,
+const PDM_g_num_t                 *parent_entity_g_num,
       PDM_ownership_t              owner
 )
 {
@@ -1736,6 +1749,16 @@ const int                         *parent_num,
       }
     }
     block->_parent_num[id_part] = (int *) parent_num;
+  }
+
+  if (parent_entity_g_num != NULL) {
+    if (block->_parent_entity_g_num == NULL) {
+      block->_parent_entity_g_num = malloc (sizeof(PDM_g_num_t *) * block->n_part);
+      for (int i = 0; i < block->n_part; i++) {
+        block->_parent_entity_g_num[i] = NULL;
+      }
+    }
+    block->_parent_entity_g_num[id_part] = (PDM_g_num_t *) parent_entity_g_num;
   }
 
 }
@@ -1848,8 +1871,8 @@ const int                           id_part,
 )
 {
 
-  PDM_UNUSED(parent_num);
-  PDM_UNUSED(parent_entity_g_num);
+  // PDM_UNUSED(parent_num);
+  // PDM_UNUSED(parent_entity_g_num);
   if (pmne == NULL) {
     PDM_error (__FILE__, __LINE__, 0, "Bad pmne nodal identifier\n");
   }
@@ -1867,13 +1890,25 @@ const int                           id_part,
     PDM_error(__FILE__, __LINE__, 0, "Partition identifier too big\n");
   }
 
-  *n_face        = block->n_face      [id_part];
-  *face_vtx_idx  = block->_facvtx_idx[id_part];
-  *face_vtx      = block->_facvtx     [id_part];
-  *cell_face_idx = block->_cellfac_idx[id_part];
-  *cell_face     = block->_cellfac    [id_part];
-  *numabs        = block->_numabs[id_part];
-  *face_ln_to_gn = block->_face_ln_to_gn[id_part];
+  *n_face              = block->n_face        [id_part];
+  *face_vtx_idx        = block->_facvtx_idx   [id_part];
+  *face_vtx            = block->_facvtx       [id_part];
+  *cell_face_idx       = block->_cellfac_idx  [id_part];
+  *cell_face           = block->_cellfac      [id_part];
+  *numabs              = block->_numabs       [id_part];
+  *face_ln_to_gn       = block->_face_ln_to_gn[id_part];
+  if (block->_parent_num != NULL) {
+    *parent_num = block->_parent_num[id_part];
+  }
+  else {
+    *parent_num = NULL;
+  }
+  if (block->_parent_entity_g_num != NULL) {
+    *parent_entity_g_num = block->_parent_entity_g_num[id_part];
+  }
+  else{
+    *parent_entity_g_num = NULL;
+  }
 }
 
 
@@ -2852,18 +2887,19 @@ PDM_part_mesh_nodal_elmts_create_from_part3d
       //                                n_poly3d_part,
       //                                "cellfac_poly : ");
       PDM_part_mesh_nodal_elmts_section_poly3d_set(pmne,
-                                                 id_bloc_poly_3d,
-                                                 i_part,
-                                                 n_poly3d_part,
-                                                 n_face_poly,
-                                                 facsom_poly_idx,
-                                                 facsom_poly,
-                                                 block_face_ln_to_gn,
-                                                 cellfac_poly_idx,
-                                                 cellfac_poly,
-                                                 numabs_poly3d,
-                                                 num_parent_poly3d,
-                                                 PDM_OWNERSHIP_KEEP);
+                                                   id_bloc_poly_3d,
+                                                   i_part,
+                                                   n_poly3d_part,
+                                                   n_face_poly,
+                                                   facsom_poly_idx,
+                                                   facsom_poly,
+                                                   block_face_ln_to_gn,
+                                                   cellfac_poly_idx,
+                                                   cellfac_poly,
+                                                   numabs_poly3d,
+                                                   num_parent_poly3d,
+                                                   NULL,
+                                                   PDM_OWNERSHIP_KEEP);
 
       // PDM_log_trace_array_int(num_parent_poly3d, n_poly3d_part, "num_parent_poly3d ::");
     }
@@ -4811,6 +4847,7 @@ const PDM_ownership_t               ownership
                                                      cellfac_poly,
                                                      numabs_poly3d,
                                                      num_parent_poly3d,
+                                                     NULL,//parent_entity_g_num,
                                                      ownership);
         // PDM_log_trace_array_int(num_parent_poly3d, n_poly3d_part, "num_parent_poly3d ::");
       }
@@ -6068,6 +6105,7 @@ PDM_part_mesh_nodal_elmts_for_cwipi
                                                        ipart,
                                                        0,
                                                        0,
+                                                       NULL,
                                                        NULL,
                                                        NULL,
                                                        NULL,

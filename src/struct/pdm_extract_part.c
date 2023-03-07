@@ -2421,18 +2421,19 @@ _extract_part_and_reequilibrate_nodal_from_target
         //                                "face_vtx : ");
 
         PDM_part_mesh_nodal_elmts_section_poly3d_set(extract_pmne,
-                                                   extract_section_id,
-                                                   i_part,
-                                                   n_elmt_by_section[i_section],
-                                                   n_lextract_face,
-                                                   face_vtx_idx,
-                                                   face_vtx,
-                                                   face_ln_to_gn,
-                                                   elmt_face_idx_by_section[i_section],
-                                                   cell_face,
-                                                   NULL,
-                                                   extract_parent_num[i_section],
-                                                   PDM_OWNERSHIP_KEEP);
+                                                     extract_section_id,
+                                                     i_part,
+                                                     n_elmt_by_section[i_section],
+                                                     n_lextract_face,
+                                                     face_vtx_idx,
+                                                     face_vtx,
+                                                     face_ln_to_gn,
+                                                     elmt_face_idx_by_section[i_section],
+                                                     cell_face,
+                                                     NULL,
+                                                     extract_parent_num  [i_section],
+                                                     extract_parent_g_num[i_section],
+                                                     PDM_OWNERSHIP_KEEP);
 
         // if (1) {
         //   // Check cell-vtx connectivity
@@ -2456,7 +2457,7 @@ _extract_part_and_reequilibrate_nodal_from_target
         //   }
         // }
 
-        free(extract_parent_g_num[i_section]);// pass to extract_pmne?
+        // free(extract_parent_g_num[i_section]);// pass to extract_pmne?
       }
       else {
         if (PDM_Mesh_nodal_elmt_is_ho(t_elt)) {

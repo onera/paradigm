@@ -3126,6 +3126,15 @@ PDM_vtk_read_to_dmesh_nodal
     }
   }
 
+  if (*n_elt_field > 0) {
+    for (int i = 0; i < *n_elt_field; i++) {
+      if (i_rank == 0) {
+        free(prepa.field[1].field_value[i]);
+      }
+    }
+    free(prepa.field[1].field_value);
+  }
+
 
   return dmn;
 }

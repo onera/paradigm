@@ -784,6 +784,7 @@ const int                   *cellfac_idx,
 const int                   *cellfac,
 const PDM_g_num_t           *numabs,
 const int                   *parent_num,
+const PDM_g_num_t           *parent_entity_g_num,
       PDM_ownership_t        owner
 );
 

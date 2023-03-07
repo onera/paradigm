@@ -1641,6 +1641,13 @@ _export_ensight3d
                                           PDM_WRITER_VAR_ELEMENTS,
                                           "cell_g_num");
 
+  int id_var_vol = PDM_writer_var_create(wrt,
+                                          PDM_WRITER_OFF,
+                                          PDM_WRITER_VAR_SCALAR,
+                                          PDM_WRITER_VAR_ELEMENTS,
+                                          "cell_volume");
+
+
   PDM_writer_step_beg(wrt, 0.);
 
   // int *cell_face_n = malloc(sizeof(int) * n_cell);
@@ -1680,10 +1687,31 @@ _export_ensight3d
 
   PDM_real_t *val_rank = malloc(sizeof(PDM_real_t) * n_cell);
   PDM_real_t *val_gnum = malloc(sizeof(PDM_real_t) * n_cell);
+  PDM_real_t *val_vol  = malloc(sizeof(PDM_real_t) * n_cell);
+
+  double *volume = malloc(sizeof(double) * n_cell);
+  double *center = malloc(sizeof(double) * n_cell * 3);
+  PDM_geom_elem_polyhedra_properties_triangulated(1,
+                                                  n_cell,
+                                                  n_face,
+                                                  face_vtx_idx,
+                                                  face_vtx,
+                                                  cell_face_idx,
+                                                  cell_face,
+                                                  n_vtx,
+                                                  vtx_coord,
+                                                  volume,
+                                                  center,
+                                                  NULL,
+                                                  NULL);
+
   for (int i = 0; i < n_cell; i++) {
     val_rank[i] = (PDM_real_t) i_rank;
     val_gnum[i] = (PDM_real_t) cell_ln_to_gn[i];
+    val_vol [i] = (PDM_real_t) volume[i];
   }
+  free(volume);
+  free(center);
 
   PDM_writer_var_set(wrt,
                      id_var_rank,
@@ -1708,12 +1736,24 @@ _export_ensight3d
   PDM_writer_var_free(wrt,
                       id_var_gnum);
 
+  PDM_writer_var_set(wrt,
+                     id_var_vol,
+                     id_geom,
+                     0,
+                     val_vol);
+
+  PDM_writer_var_write(wrt,
+                       id_var_vol);
+  PDM_writer_var_free(wrt,
+                      id_var_vol);
+
   PDM_writer_step_end(wrt);
 
   PDM_writer_free(wrt);
 
-  free(val_rank   );
-  free(val_gnum   );
+  free(val_rank);
+  free(val_gnum);
+  free(val_vol );
   // free(cell_face_n);
   // free(face_vtx_n );
 
@@ -2436,19 +2476,19 @@ _mesh_intersection_vol_vol
 
   double *cellA_volume = malloc(sizeof(double) * n_cellA);
   double *cellA_center = malloc(sizeof(double) * n_cellA * 3);
-  PDM_geom_elem_polyhedra_properties(1,
-                                     n_cellA,
-                                     n_faceA,
-                                     faceA_vtxA_idx,
-                                     faceA_vtxA,
-                                     cellA_faceA_idx,
-                                     cellA_faceA,
-                                     n_vtxA,
-                                     vtxA_coord,
-                                     cellA_volume,
-                                     cellA_center,
-                                     NULL,
-                                     NULL);
+  PDM_geom_elem_polyhedra_properties_triangulated(1,
+                                                  n_cellA,
+                                                  n_faceA,
+                                                  faceA_vtxA_idx,
+                                                  faceA_vtxA,
+                                                  cellA_faceA_idx,
+                                                  cellA_faceA,
+                                                  n_vtxA,
+                                                  vtxA_coord,
+                                                  cellA_volume,
+                                                  cellA_center,
+                                                  NULL,
+                                                  NULL);
 
 
 
@@ -3014,6 +3054,7 @@ _mesh_intersection_vol_vol2
 
     if (dbg_enabled) {
       log_trace("mesh %d is nodal? %d\n", i, mi->mesh[i] == NULL);
+      PDM_log_trace_array_long(cell_ln_to_gn[i], n_cell[i], "cell_ln_to_gn : ");
     }
 
     if (mi->mesh[i] == NULL) {
@@ -3041,6 +3082,117 @@ _mesh_intersection_vol_vol2
       // Convert part_mesh_nodal to part_mesh
       if (dbg_enabled) {
         log_trace(">> PDM_part_mesh_nodal_to_part_mesh\n");
+
+        int i_rank;
+        PDM_MPI_Comm_rank(mi->comm, &i_rank);
+
+        // char name[999];
+        // sprintf(name, "extract_pmn_vol_mesh%d", i);
+        // PDM_part_mesh_nodal_dump_vtk(extract_pmn,
+        //                              PDM_GEOMETRY_KIND_VOLUMIC,
+        //                              name);
+
+        int n_section    = PDM_part_mesh_nodal_elmts_n_section_get  (extract_pmne);
+        int *sections_id = PDM_part_mesh_nodal_elmts_sections_id_get(extract_pmne);
+        for (int isection = 0; isection < n_section; isection++) {
+
+          int id_section = sections_id[isection];
+          int n_elt = PDM_part_mesh_nodal_elmts_section_n_elt_get(extract_pmne, id_section, 0);
+
+          PDM_Mesh_nodal_elt_t t_elt = PDM_part_mesh_nodal_elmts_section_type_get(extract_pmne, id_section);
+
+          char filename[999];
+          sprintf(filename, "extrp_pmne_mesh%d_section%d_rank%d.vtk", i, isection, i_rank);
+
+          if (t_elt == PDM_MESH_NODAL_POLY_3D) {
+
+            int          _n_face = 0;
+            PDM_g_num_t *_face_ln_to_gn = NULL;
+            int         *_face_vtx_idx = NULL;
+            int         *_face_vtx = NULL;
+            PDM_g_num_t *numabs = NULL;
+            int         *_cell_face_idx = NULL;
+            int         *_cell_face = NULL;
+            int         *parent_num = NULL;
+            PDM_g_num_t *parent_entity_g_num = NULL;
+
+            PDM_part_mesh_nodal_elmts_section_poly3d_get(extract_pmne,
+                                                         id_section,
+                                                         0,
+                                                         &_n_face,
+                                                         &_face_ln_to_gn,
+                                                         &_face_vtx_idx,
+                                                         &_face_vtx,
+                                                         &numabs,
+                                                         &_cell_face_idx,
+                                                         &_cell_face,
+                                                         &parent_num,
+                                                         &parent_entity_g_num);
+            int *__face_vtx_idx = malloc(sizeof(int) * (_cell_face_idx[n_elt] + 1));
+            __face_vtx_idx[0] = 0;
+            for (int k = 0; k < _cell_face_idx[n_elt]; k++) {
+              int face_id = PDM_ABS(_cell_face[k]) - 1;
+              __face_vtx_idx[k+1] = __face_vtx_idx[k] + _face_vtx_idx[face_id+1] - _face_vtx_idx[face_id];
+            }
+
+            PDM_g_num_t *__face_cell_ln_to_gn = malloc(sizeof(PDM_g_num_t) * _cell_face_idx[n_elt]);
+            int *__face_vtx = malloc(sizeof(int) * __face_vtx_idx[_cell_face_idx[n_elt]]);
+            int idx = 0;
+            for (int k = 0; k < n_elt; k++) {
+              for (int iface = _cell_face_idx[k]; iface < _cell_face_idx[k+1]; iface++) {
+                int face_id = PDM_ABS(_cell_face[iface]) - 1;
+                __face_cell_ln_to_gn[iface] = parent_entity_g_num[k];
+                if (_cell_face[iface] > 0) {
+                  for (int j = _face_vtx_idx[face_id]; j < _face_vtx_idx[face_id+1]; j++) {
+                    __face_vtx[idx++] = _face_vtx[j];
+                  }
+                }
+                else {
+                  for (int j = _face_vtx_idx[face_id+1]-1; j >= _face_vtx_idx[face_id]; j--) {
+                    __face_vtx[idx++] = _face_vtx[j];
+                  }
+                }
+              }
+            }
+
+            PDM_vtk_write_polydata(filename,
+                                   n_vtx[i],
+                                   vtx_coord[i],
+                                   vtx_ln_to_gn[i],
+                                   _cell_face_idx[n_elt],
+                                   __face_vtx_idx,
+                                   __face_vtx,
+                                   __face_cell_ln_to_gn,
+                                   NULL);
+            free(__face_vtx);
+            free(__face_vtx_idx);
+            free(__face_cell_ln_to_gn);
+
+          }
+          else {
+
+            int         *connec = NULL;
+            PDM_g_num_t *numabs = NULL;
+            int         *parent_num = NULL;
+            PDM_g_num_t *parent_entity_g_num = NULL;
+            PDM_part_mesh_nodal_elmts_section_std_get(extract_pmne,
+                                                      id_section,
+                                                      0,
+                                                      &connec,
+                                                      &numabs,
+                                                      &parent_num,
+                                                      &parent_entity_g_num);
+            PDM_vtk_write_std_elements(filename,
+                                       n_vtx[i],
+                                       vtx_coord[i],
+                                       vtx_ln_to_gn[i],
+                                       t_elt,
+                                       n_elt,
+                                       connec,
+                                       parent_entity_g_num,
+                                       0, NULL, NULL);
+          }
+        }
       }
       extract_part_mesh[i] = PDM_part_mesh_nodal_to_part_mesh(extract_pmn,
                                                               PDM_DMESH_NODAL_TO_DMESH_TRANSFORM_TO_FACE,
@@ -3048,20 +3200,32 @@ _mesh_intersection_vol_vol2
 
       PDM_part_mesh_nodal_free(extract_pmn);
 
+      PDM_g_num_t *_cell_ln_to_gn = NULL;
+      PDM_part_mesh_entity_ln_to_gn_get(extract_part_mesh[i],
+                                        0,
+                                        PDM_MESH_ENTITY_CELL,
+                                        &_cell_ln_to_gn,
+                                        PDM_OWNERSHIP_BAD_VALUE);
+      log_trace("i %d, _cell_ln_to_gn : %p\n", i, (void *) _cell_ln_to_gn);
+      if (_cell_ln_to_gn != NULL) {
+        PDM_log_trace_array_long(_cell_ln_to_gn,   n_cell[i], "_cell_ln_to_gn : ");
+        PDM_log_trace_array_long(cell_ln_to_gn[i], n_cell[i], " cell_ln_to_gn : ");
+      }
+
 
       PDM_part_mesh_connectivity_get(extract_part_mesh[i],
                                      0,
                                      PDM_CONNECTIVITY_TYPE_CELL_FACE,
-                                     &cell_face[i],
+                                     &cell_face    [i],
                                      &cell_face_idx[i],
-                                     PDM_OWNERSHIP_KEEP);
+                                     PDM_OWNERSHIP_BAD_VALUE);
 
       PDM_part_mesh_connectivity_get(extract_part_mesh[i],
                                      0,
                                      PDM_CONNECTIVITY_TYPE_FACE_VTX,
                                      &face_vtx    [i],
                                      &face_vtx_idx[i],
-                                     PDM_OWNERSHIP_KEEP);
+                                     PDM_OWNERSHIP_BAD_VALUE);
 
       n_face[i] = PDM_part_mesh_n_entity_get(extract_part_mesh[i],
                                              0,
@@ -3072,14 +3236,14 @@ _mesh_intersection_vol_vol2
       PDM_extract_part_connectivity_get(mi->extrp_mesh[i],
                                         0,
                                         PDM_CONNECTIVITY_TYPE_CELL_FACE,
-                                        &cell_face[i],
+                                        &cell_face    [i],
                                         &cell_face_idx[i],
                                         PDM_OWNERSHIP_KEEP);
 
       n_face[i] = PDM_extract_part_connectivity_get(mi->extrp_mesh[i],
                                                     0,
                                                     PDM_CONNECTIVITY_TYPE_FACE_VTX,
-                                                    &face_vtx[i],
+                                                    &face_vtx    [i],
                                                     &face_vtx_idx[i],
                                                     PDM_OWNERSHIP_KEEP);
 
@@ -3112,6 +3276,17 @@ _mesh_intersection_vol_vol2
     }
   }
 
+  if (dbg_enabled) {
+    for (int i = 0; i < n_cell[0]; i++) {
+      log_trace(PDM_FMT_G_NUM" (%d faces) -> ",
+                cell_ln_to_gn[0][i],
+                cell_face_idx[0][i+1] - cell_face_idx[0][i]);
+      for (int j = a_to_b_idx[i]; j < a_to_b_idx[i+1]; j++) {
+        log_trace(PDM_FMT_G_NUM" ", cell_ln_to_gn[1][a_to_b[j]]);
+      }
+      log_trace("\n");
+    }
+  }
 
   /*
    * Panic vtk
@@ -3204,18 +3379,30 @@ _mesh_intersection_vol_vol2
   double *cellA_volume = malloc(sizeof(double) * n_cell[0]);
   double *cellA_center = malloc(sizeof(double) * n_cell[0] * 3);
   PDM_geom_elem_polyhedra_properties_triangulated(1,
-                                     n_cell       [0],
-                                     n_face       [0],
-                                     face_vtx_idx [0],
-                                     face_vtx     [0],
-                                     cell_face_idx[0],
-                                     cell_face    [0],
-                                     n_vtx        [0],
-                                     vtx_coord    [0],
-                                     cellA_volume,
-                                     cellA_center,
-                                     NULL,
-                                     NULL);
+                                                  n_cell       [0],
+                                                  n_face       [0],
+                                                  face_vtx_idx [0],
+                                                  face_vtx     [0],
+                                                  cell_face_idx[0],
+                                                  cell_face    [0],
+                                                  n_vtx        [0],
+                                                  vtx_coord    [0],
+                                                  cellA_volume,
+                                                  cellA_center,
+                                                  NULL,
+                                                  NULL);
+
+  if (1) {
+    for (int i = 0; i < n_cell[0]; i++) {
+      if (cellA_volume[i] < 0) {
+        printf("!! cell A "PDM_FMT_G_NUM" : volume = %e\n", cell_ln_to_gn[0][i], cellA_volume[i]);
+        // log_trace("flip cellA %d (%d faces)\n", i, cell_face_idx[0][i+1] - cell_face_idx[0][i]);
+        // for (int j = cell_face_idx[0][i]; j < cell_face_idx[0][i+1]; j++) {
+        //   cell_face[0][j] = -cell_face[0][j];
+        // }
+      }
+    }
+  }
 
   double *a_to_b_volume = malloc(sizeof(double) * a_to_b_idx[n_cell[0]]);
 
@@ -3545,18 +3732,18 @@ _mesh_intersection_vol_vol2
     // double *cellA_volume = malloc(sizeof(double) * n_cellA);
     // double *cellA_center = malloc(sizeof(double) * n_cellA * 3);
     PDM_geom_elem_polyhedra_properties_triangulated(1,
-                                       n_cell       [0],
-                                       n_face       [0],
-                                       face_vtx_idx [0],
-                                       face_vtx     [0],
-                                       cell_face_idx[0],
-                                       cell_face    [0],
-                                       n_vtx        [0],
-                                       vtx_coord    [0],
-                                       cellA_volume,
-                                       cellA_center,
-                                       NULL,
-                                       NULL);
+                                                    n_cell       [0],
+                                                    n_face       [0],
+                                                    face_vtx_idx [0],
+                                                    face_vtx     [0],
+                                                    cell_face_idx[0],
+                                                    cell_face    [0],
+                                                    n_vtx        [0],
+                                                    vtx_coord    [0],
+                                                    cellA_volume,
+                                                    cellA_center,
+                                                    NULL,
+                                                    NULL);
     // free(cellA_center);
 
     for (int cellA_id = 0; cellA_id < n_cell[0]; cellA_id++) {
@@ -3577,10 +3764,10 @@ _mesh_intersection_vol_vol2
               100*g_total_volume_AB / g_total_volume_A);
 
     // cas cube, translation (0.5,0.5,0.5)
-    double exact = 0.5;
-    log_trace("error : absolute = %e, relative = %e\n",
-              PDM_ABS(g_total_volume_AB - exact),
-              PDM_ABS(g_total_volume_AB - exact)/exact);
+    // double exact = 0.5;
+    // log_trace("error : absolute = %e, relative = %e\n",
+    //           PDM_ABS(g_total_volume_AB - exact),
+    //           PDM_ABS(g_total_volume_AB - exact)/exact);
 
     // debug
     mi->local_vol_A_B  = l_total_volume_AB;
@@ -6456,19 +6643,19 @@ PDM_mesh_intersection_elt_volume_get
 
         mi->elt_volume[imesh][ipart] = malloc(sizeof(double) * n_cell);
         double *center = malloc(sizeof(double) * n_cell * 3);
-        PDM_geom_elem_polyhedra_properties(1,
-                                           n_cell,
-                                           n_face,
-                                           face_vtx_idx,
-                                           _face_vtx,
-                                           cell_face_idx,
-                                           cell_face,
-                                           n_vtx,
-                                           vtx_coord,
-                                           mi->elt_volume[imesh][ipart],
-                                           center,
-                                           NULL,
-                                           NULL);
+        PDM_geom_elem_polyhedra_properties_triangulated(1,
+                                                        n_cell,
+                                                        n_face,
+                                                        face_vtx_idx,
+                                                        _face_vtx,
+                                                        cell_face_idx,
+                                                        cell_face,
+                                                        n_vtx,
+                                                        vtx_coord,
+                                                        mi->elt_volume[imesh][ipart],
+                                                        center,
+                                                        NULL,
+                                                        NULL);
         free(center);
         break;
       }

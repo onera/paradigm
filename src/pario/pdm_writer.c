@@ -1423,6 +1423,7 @@ const PDM_l_num_t    n_face,
                                          cellfac,
                                          numabs,
                                          NULL,
+                                         NULL,
                                          geom->section_owner[id_bloc]);
 }
 
