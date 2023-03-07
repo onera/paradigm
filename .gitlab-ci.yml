@@ -38,7 +38,7 @@ build:
           GNUM64: ["ON", "OFF"]
           MPI_LIB: ["impi"] #, "openmpi"]
   variables:
-    MATRIX_KEY: _${COMPILER}_${MPI_LIB}_${GNUM64}
+    MATRIX_KEY: _${COMPILER}_${MPI_LIB}_GNUM64_${GNUM64}
   stage: build
   before_script:
     - module purge
@@ -59,7 +59,7 @@ unit_test:
           GNUM64: ["ON", "OFF"]
           MPI_LIB: ["impi"] #, "openmpi"]
   variables:
-    MATRIX_KEY: _${COMPILER}_${MPI_LIB}_${GNUM64}
+    MATRIX_KEY: _${COMPILER}_${MPI_LIB}_GNUM64_${GNUM64}
   stage: test
   before_script:
     - module purge
@@ -67,10 +67,10 @@ unit_test:
   script:
     - echo "Runner directory is $PWD; move to working directory $CUSTOM_CI_DIR"
     - cd $CUSTOM_CI_DIR/build$MATRIX_KEY
-    - #cd $CUSTOM_CI_DIR/build$MATRIX_KEY/test
-    - #./pdm_run
-    - #cd $CUSTOM_CI_DIR/build$MATRIX_KEY/extensions/paradigma/test
-    - #./pdm_run
+    #- cd $CUSTOM_CI_DIR/build$MATRIX_KEY/test
+    #- ./pdm_run
+    #- cd $CUSTOM_CI_DIR/build$MATRIX_KEY/extensions/paradigma/test
+    #- ./pdm_run
     - ctest -V --output-junit $CI_PROJECT_DIR/paradigm_ctest$MATRIX_KEY.xml
       # Artefacts are searched in CI_PROJECT_DIR, but job was executed in CUSTOM_CI_DIR
       #- ctest -V --output-junit $CI_PROJECT_DIR/paradigm_ctest$MATRIX_KEY.xml
