@@ -181,6 +181,8 @@ int main(int argc, char *argv[])
              &elt_type,
      (int *) &part_method);
 
+  assert(elt_type != PDM_MESH_NODAL_POLY_3D); // TODO: poly_vol_gen en dcube_nodal_gen
+
   /*
    *  Init
    */

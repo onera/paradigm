@@ -3200,18 +3200,6 @@ _mesh_intersection_vol_vol2
 
       PDM_part_mesh_nodal_free(extract_pmn);
 
-      PDM_g_num_t *_cell_ln_to_gn = NULL;
-      PDM_part_mesh_entity_ln_to_gn_get(extract_part_mesh[i],
-                                        0,
-                                        PDM_MESH_ENTITY_CELL,
-                                        &_cell_ln_to_gn,
-                                        PDM_OWNERSHIP_BAD_VALUE);
-      log_trace("i %d, _cell_ln_to_gn : %p\n", i, (void *) _cell_ln_to_gn);
-      if (_cell_ln_to_gn != NULL) {
-        PDM_log_trace_array_long(_cell_ln_to_gn,   n_cell[i], "_cell_ln_to_gn : ");
-        PDM_log_trace_array_long(cell_ln_to_gn[i], n_cell[i], " cell_ln_to_gn : ");
-      }
-
 
       PDM_part_mesh_connectivity_get(extract_part_mesh[i],
                                      0,

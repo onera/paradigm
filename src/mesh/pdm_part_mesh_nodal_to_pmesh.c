@@ -692,6 +692,7 @@ _generate_faces_from_part_mesh_nodal
                                                      &n_sum_vtx_vol_face_tot,
                                                      &elmt_face_vtx_idx,
                                                      &elmt_cell_face_idx);
+  // PDM_log_trace_array_int(elmt_face_vtx_idx, n_face_elt_vol_tot, "elmt_face_vtx_idx : ");
   int have_surface = 0;
   if(pmn->surfacic != NULL) {
     have_surface = 1;
@@ -701,15 +702,14 @@ _generate_faces_from_part_mesh_nodal
                                                        &n_sum_vtx_surf_face_tot,
                                                        &surf_elmt_face_vtx_idx,
                                                        &surf_elmt_cell_face_idx);
+    // PDM_log_trace_array_int(surf_elmt_face_vtx_idx, n_face_elt_surf_tot, "surf_elmt_face_vtx_idx : ");
   }
 
-  log_trace("OK! :)\n");
 
   int n_elmt_tot         = n_elmt_vol_tot         + have_surface * n_elmt_surf_tot;
   int n_face_elt_tot     = n_face_elt_vol_tot     + have_surface * n_face_elt_surf_tot;
   int n_sum_vtx_face_tot = n_sum_vtx_vol_face_tot + have_surface * n_sum_vtx_surf_face_tot;
 
-  PDM_log_trace_array_int(elmt_face_vtx_idx, n_face_elt_tot, "elmt_face_vtx_idx : ");
 
   PDM_g_num_t **vtx_ln_to_gn = malloc(sizeof(PDM_g_num_t *));
   PDM_g_num_t _max_vtx_gnum = -1;
@@ -745,8 +745,8 @@ _generate_faces_from_part_mesh_nodal
     printf("n_sum_vtx_surf_face_tot : %i\n", n_sum_vtx_surf_face_tot);
   }
 
-  elmt_face_vtx_idx [0] = 0;
-  elmt_cell_face_idx[0] = 0;
+  // elmt_face_vtx_idx [0] = 0;
+  // elmt_cell_face_idx[0] = 0;
   PDM_part_mesh_nodal_elmts_sections_decompose_faces(pmn->volumic,
                                                      vtx_ln_to_gn,
                                                      elmt_face_vtx_idx,
@@ -755,11 +755,12 @@ _generate_faces_from_part_mesh_nodal
                                                      elmt_face_cell,
                                                      parent_elmt_position);
 
-  if (1) {
-    PDM_log_trace_connectivity_long(elmt_face_vtx_idx,
-                                    elmt_face_vtx,
-                                    n_face_elt_tot,
-                                    "elmt_face_vtx : ");
+
+  if (0) {
+    // PDM_log_trace_connectivity_long(elmt_face_vtx_idx,
+    //                                 elmt_face_vtx,
+    //                                 n_face_elt_tot,
+    //                                 "elmt_face_vtx : ");
 
     int *_elmt_face_vtx = malloc(sizeof(int) * n_sum_vtx_face_tot);
     int n_vtx = PDM_part_mesh_nodal_n_vtx_get(pmn, 0);
@@ -802,8 +803,10 @@ _generate_faces_from_part_mesh_nodal
     int         *surf_elmt_face_kind       = &elmt_face_kind      [n_face_elt_vol_tot];
     PDM_g_num_t *surf_elmt_face_cell       = &elmt_face_cell      [n_face_elt_vol_tot];
 
+    elmt_face_vtx_idx  = realloc(elmt_face_vtx_idx,  (n_face_elt_tot+1) * sizeof(int));
+    elmt_cell_face_idx = realloc(elmt_cell_face_idx, (n_elmt_tot+1)     * sizeof(int));
     // int         *surf_elmt_face_vtx_idx   = malloc((n_face_elt_surf_tot+1) * sizeof(int        ));
-    surf_elmt_face_vtx_idx[0] = 0;
+    // surf_elmt_face_vtx_idx[0] = 0;
     PDM_part_mesh_nodal_elmts_sections_decompose_faces(pmn->surfacic,
                                                        vtx_ln_to_gn,
                                                        surf_elmt_face_vtx_idx,
@@ -811,6 +814,12 @@ _generate_faces_from_part_mesh_nodal
                                                        surf_elmt_cell_face_idx,
                                                        surf_elmt_face_cell,
                                                        surf_parent_elmt_position);
+
+    for(int i = 0; i < n_elmt_surf_tot; ++i) {
+      elmt_cell_face_idx[n_elmt_vol_tot+i+1] = elmt_cell_face_idx[n_elmt_vol_tot+i] + surf_elmt_cell_face_idx[i+1] - surf_elmt_cell_face_idx[i];
+    }
+    free(surf_elmt_cell_face_idx);
+
     for(int i = 0; i < n_face_elt_surf_tot; ++i) {
       elmt_face_vtx_idx[n_face_elt_vol_tot+i+1] = elmt_face_vtx_idx[n_face_elt_vol_tot+i] + surf_elmt_face_vtx_idx[i+1] - surf_elmt_face_vtx_idx[i];
     }
