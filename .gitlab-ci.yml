@@ -35,8 +35,8 @@ build:
   parallel:
     matrix:
         - COMPILER: ["gcc@10", "gcc@12"]
-          MPI_LIB: ["impi"] #, "openmpi"]
           GNUM64: ["ON", "OFF"]
+          MPI_LIB: ["impi"] #, "openmpi"]
   variables:
     MATRIX_KEY: _${COMPILER}_${MPI_LIB}_GNUM64_${GNUM64}
   stage: build
@@ -56,8 +56,8 @@ unit_test:
   parallel:
     matrix:
         - COMPILER: ["gcc@10", "gcc@12"]
-          MPI_LIB: ["impi"] #, "openmpi"]
           GNUM64: ["ON", "OFF"]
+          MPI_LIB: ["impi"] #, "openmpi"]
   variables:
     MATRIX_KEY: _${COMPILER}_${MPI_LIB}_GNUM64_${GNUM64}
   stage: test
