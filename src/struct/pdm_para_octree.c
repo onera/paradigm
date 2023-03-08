@@ -6464,6 +6464,12 @@ _export_nodes
     fprintf(f, "11\n");
   }
 
+  fprintf(f, "CELL_DATA %d\n", n_nodes);
+  fprintf(f, "SCALARS level int\n LOOKUP_TABLE default\n");
+  for (int inode = 0; inode < n_nodes; inode++) {
+    fprintf(f, "%d\n", (int) nodes[inode].L);
+  }
+
   fclose(f);
 }
 
