@@ -2974,7 +2974,7 @@ _mesh_intersection_vol_vol
   free(triaA_vtxA);
   PDM_triangulate_state_destroy(tri_state);
 
-  if (1) {//dbg_enabled) {
+  if (dbg_enabled) {
     // Crude check
     double l_total_volume_AB = 0;
     for (int i = 0; i < a_to_b_idx[n_cell[0]]; i++) {
@@ -2984,19 +2984,19 @@ _mesh_intersection_vol_vol
     double l_total_volume_A  = 0;
     // double *cellA_volume = malloc(sizeof(double) * n_cellA);
     // double *cellA_center = malloc(sizeof(double) * n_cellA * 3);
-    PDM_geom_elem_polyhedra_properties_triangulated(1,
-                                                    n_cell       [0],
-                                                    n_face       [0],
-                                                    face_vtx_idx [0],
-                                                    face_vtx     [0],
-                                                    cell_face_idx[0],
-                                                    cell_face    [0],
-                                                    n_vtx        [0],
-                                                    vtx_coord    [0],
-                                                    cellA_volume,
-                                                    cellA_center,
-                                                    NULL,
-                                                    NULL);
+    // PDM_geom_elem_polyhedra_properties_triangulated(1,
+    //                                                 n_cell       [0],
+    //                                                 n_face       [0],
+    //                                                 face_vtx_idx [0],
+    //                                                 face_vtx     [0],
+    //                                                 cell_face_idx[0],
+    //                                                 cell_face    [0],
+    //                                                 n_vtx        [0],
+    //                                                 vtx_coord    [0],
+    //                                                 cellA_volume,
+    //                                                 cellA_center,
+    //                                                 NULL,
+    //                                                 NULL);
     // free(cellA_center);
 
     for (int cellA_id = 0; cellA_id < n_cell[0]; cellA_id++) {
