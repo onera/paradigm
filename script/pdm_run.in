@@ -168,14 +168,14 @@ do
   then
     if [ $isPythonTest -gt 0  ]
     then
-      ${ExeMPI} --verbose --export=@PDM_RUN_PRELOAD_SRUN@,@PDM_RUN_LSAN@,@PDM_RUN_PYTHONPATH@  --output=$OutputFile.%t --error$ErrFile.%t --ntasks=$Nrank  --exclusive /usr/bin/time  -f "Maximum Resident Memory : %M Kb" python ${TestName}.py ${TestOption} 2>/dev/null &
+      ${ExeMPI} --verbose --export=@PDM_RUN_PRELOAD_SRUN@,@PDM_RUN_LSAN@,@PDM_RUN_PYTHONPATH@  --output=$OutputFile.%t --error$ErrFile.%t --ntasks=$Nrank  --exclusive /usr/bin/time  -f "Maximum Resident Memory : %M Kb" python ./${TestName}.py ${TestOption} 2>/dev/null &
 #      ${ExeMPI} --verbose  --output=$OutputFile.%t --error$ErrFile.%t --ntasks=$Nrank  --exclusive /usr/bin/time  -f "Maximum Resident Memory : %M Kb" python ${TestName}.py ${TestOption} 2>/dev/null &
       if [ "$?" -ne "0" ]
       then
         Testoutput=1
       fi
     else
-      ${ExeMPI} --verbose --export=@PDM_RUN_PRELOAD_SRUN@,@PDM_RUN_LSAN@ --output=$OutputFile.%t --error$ErrFile.%t --ntasks=$Nrank  --exclusive /usr/bin/time  -f "Maximum Resident Memory : %M Kb" python ${TestName} ${TestOption} 2>/dev/null &
+      ${ExeMPI} --verbose --export=@PDM_RUN_PRELOAD_SRUN@,@PDM_RUN_LSAN@ --output=$OutputFile.%t --error$ErrFile.%t --ntasks=$Nrank  --exclusive /usr/bin/time  -f "Maximum Resident Memory : %M Kb" ./${TestName} ${TestOption} &
 #      ${ExeMPI} --verbose  --output=$OutputFile.%t --error$ErrFile.%t --ntasks=$Nrank  --exclusive /usr/bin/time  -f "Maximum Resident Memory : %M Kb" python ${TestName} ${TestOption} 2>/dev/null &
       if [ "$?" -ne "0" ]
       then
@@ -305,6 +305,11 @@ do
   fi  
 
 done
+
+if [ ${IsSrunMPI} -gt 0 ]
+then
+  wait
+fi
 
 printf  "      ${PURPLE}%3.3d tests failed out of %3.3d\n${NC}" ${ifailed} ${nTest} 
 
