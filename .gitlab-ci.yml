@@ -7,7 +7,7 @@ stages:
 # Default variables and parameters
 variables:
 #  CI_BUILDS_DIR: $WORKDIR/.jacamar-ci/builds
-  CUSTOM_CI_BUILDS_DIR: $WORKDIR/.jacamar-ci
+  CUSTOM_CI_BUILDS_DIR: $WORKDIR/test
   GIT_STRATEGY: none # don't do anything by default
   # SCHEDULER_PARAMETERS:  "--qos=co_inter_std  --cpus-per-task=24  --ntasks=24 --time=00:01:00"
   SCHEDULER_PARAMETERS:  "--qos=co_inter_bigmem  --cpus-per-task=24  --ntasks=1 --time=14:00:00"
@@ -26,7 +26,7 @@ init_repo:
     #SCHEDULER_PARAMETERS:  "-M rhel8 --qos=el8_gbe --ntasks=1 --time=00:10:00"
   stage: init
   script: # explicitly load modules one by one, so that if one fails, it will be easy to identify
-    - echo "CI_PROJECT_DIR: ${CI_PROJECT_DIR}"
+    - echo "CI_PROJECT_DIR: $CI_PROJECT_DIR"
     - echo "Clone directory $PWD"
     - echo "CUSTOM_CI_DIR=$PWD" >> build.env
     - git submodule update --init extensions/paradigma
