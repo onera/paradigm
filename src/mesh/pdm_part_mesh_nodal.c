@@ -1142,7 +1142,38 @@ PDM_part_mesh_nodal_dump_vtk
       }
 
       else if (t_elt == PDM_MESH_NODAL_POLY_3D) {
-        printf("PDM_part_mesh_nodal_dump_vtk : poly3D not yet supported\n");
+        // printf("PDM_part_mesh_nodal_dump_vtk : poly3D not yet supported\n");
+        int          n_face;
+        PDM_g_num_t *face_ln_to_gn;
+        int         *face_vtx_idx;
+        int         *face_vtx;
+        PDM_g_num_t *numabs;
+        int         *cell_face_idx;
+        int         *cell_face;
+        int         *parent_num;
+        PDM_g_num_t *parent_entity_g_num;
+        PDM_part_mesh_nodal_elmts_section_poly3d_get(pmne,
+                                                     id_section,
+                                                     i_part,
+                                                     &n_face,
+                                                     &face_ln_to_gn,
+                                                     &face_vtx_idx,
+                                                     &face_vtx,
+                                                     &numabs,
+                                                     &cell_face_idx,
+                                                     &cell_face,
+                                                     &parent_num,
+                                                     &parent_entity_g_num);
+
+        PDM_vtk_write_polydata(filename,
+                               pn_vtx,
+                               pvtx_coord,
+                               pvtx_ln_to_gn,
+                               n_face,
+                               face_vtx_idx,
+                               face_vtx,
+                               face_ln_to_gn,
+                               NULL);
         // abort();
       }
 

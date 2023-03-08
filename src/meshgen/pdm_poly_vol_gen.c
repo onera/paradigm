@@ -51,12 +51,7 @@
 
 static double _rand (void)
 {
-  int sign;
-  int rsigna = rand();
-  int rsignb = rand();
-  sign = (rsigna - rsignb) / PDM_ABS(rsigna - rsignb);
-  double resultat = sign*((double)rand())/((double)RAND_MAX);
-  return resultat;
+  return 2*((double) rand() / (double) RAND_MAX) - 1;
 }
 
 /*=============================================================================
@@ -229,6 +224,8 @@ PDM_poly_vol_gen
     PDM_g_num_t i, j;
     double x, y, z;
     z = zmin + k*stepz;
+
+    srand (random_seed + g);
 
     double rx = noise * _rand();
     double ry = noise * _rand();
