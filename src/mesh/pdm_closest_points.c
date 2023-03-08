@@ -752,8 +752,6 @@ PDM_closest_points_tgt_in_src_dist_get
  * \brief Free a closest points structure
  *
  * \param [in]  cls      Pointer to \ref PDM_closest_points object
- * \param [in]  partial  if partial is equal to 0, all data are removed.
- *                       Otherwise, results are kept.
  *
  */
 

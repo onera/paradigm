@@ -687,6 +687,7 @@ void PDM_dcellface_to_dfacecell
  * \brief Compute the dual connectivty of entity1
  *
  * \param [in]   comm                  PDM_MPI communicator
+ * \param [in]   entity1_distrib       Distribution of entity1 over the procs (size=n_rank+1)
  * \param [in]   dentity1_entity2      Connectivity entity1->entity2
  * \param [in]   dentity2_entity1      Reversed connectivity of entity1->entity2
  */
