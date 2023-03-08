@@ -165,6 +165,8 @@ int main(int argc, char *argv[])
 #else
 #ifdef PDM_HAVE_PTSCOTCH
   PDM_split_dual_t part_method  = PDM_SPLIT_DUAL_WITH_PTSCOTCH;
+#else
+  PDM_split_dual_t part_method   = PDM_SPLIT_DUAL_WITH_HILBERT;
 #endif
 #endif
   PDM_Mesh_nodal_elt_t elt_type  = PDM_MESH_NODAL_HEXA8;
