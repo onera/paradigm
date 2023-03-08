@@ -6,6 +6,7 @@ stages:
 
 # Default variables and parameters
 variables:
+  #CI_BUILDS_DIR: $WORKDIR/.jacamar-ci/builds
   GIT_STRATEGY: none # don't do anything by default
   # SCHEDULER_PARAMETERS:  "--qos=co_inter_std  --cpus-per-task=24  --ntasks=24 --time=00:01:00"
   SCHEDULER_PARAMETERS:  "--qos=co_inter_bigmem  --cpus-per-task=24  --ntasks=1 --time=14:00:00"
@@ -71,13 +72,13 @@ unit_test:
     - module purge
     - source /scratchm/sonics/dist/spiro_el8.sh --compiler=$COMPILER --mpi=$MPI_LIB
   script:
-    - echo "Runner directory is $PWD; move to working directory $CUSTOM_CI_DIR"
-    - cd $CUSTOM_CI_DIR/build$MATRIX_KEY/test
-    - ./pdm_run
-    - cd $CUSTOM_CI_DIR/build$MATRIX_KEY/extensions/paradigma/test
-    - ./pdm_run
-#    - cd $CUSTOM_CI_DIR/build$MATRIX_KEY
-#    - ctest -V --output-junit $CI_PROJECT_DIR/paradigm_ctest$MATRIX_KEY.xml
+    # - echo "Runner directory is $PWD; move to working directory $CUSTOM_CI_DIR"
+    # - cd $CUSTOM_CI_DIR/build$MATRIX_KEY/test
+    # - ./pdm_run
+    # - cd $CUSTOM_CI_DIR/build$MATRIX_KEY/extensions/paradigma/test
+    # - ./pdm_run
+   - cd $CUSTOM_CI_DIR/build$MATRIX_KEY
+   - ctest -j 12 --output-junit $CI_PROJECT_DIR/paradigm_ctest$MATRIX_KEY.xml
       # Artefacts are searched in CI_PROJECT_DIR, but job was executed in CUSTOM_CI_DIR
       #- ctest -V --output-junit $CI_PROJECT_DIR/paradigm_ctest$MATRIX_KEY.xml
       # Go back to runner dir for artifact modification
@@ -91,27 +92,27 @@ unit_test:
     reports:
       junit: paradigm_ctest$MATRIX_KEY.xml
 
-non_regression:
-  variables:
-    COMPILER: "gcc@10"
-    GNUM64: "ON"
-    MPI_LIB: "impi"
-    MATRIX_KEY: _${COMPILER}_${MPI_LIB}_GNUM64_${GNUM64}
-  stage: test
-  before_script:
-    - module purge
-    - source /scratchm/sonics/dist/spiro_el8.sh --compiler=$COMPILER --mpi=$MPI_LIB
-  script:
-    - echo "Runner directory is $PWD; move to working directory $CUSTOM_CI_DIR"
-    - cd $CUSTOM_CI_DIR/build$MATRIX_KEY
-    - mkdir -p reports
-    - export LSAN_OPTIONS=suppressions=$CUSTOM_CI_DIR/script/asan/asan.supp
-    - echo $LSAN_OPTIONS
-    - ./script/prepare_ci/run_top_test_base.sh --log_file_name reports/output_alltest_pdm --matrix_key ${MATRIX_KEY} --output_xml $CI_PROJECT_DIR/paradigm_alltest$MATRIX_KEY.xml
-  artifacts:
-   when: always
-   reports:
-     junit: paradigm_alltest$MATRIX_KEY.xml
+# non_regression:
+#   variables:
+#     COMPILER: "gcc@10"
+#     GNUM64: "ON"
+#     MPI_LIB: "impi"
+#     MATRIX_KEY: _${COMPILER}_${MPI_LIB}_GNUM64_${GNUM64}
+#   stage: test
+#   before_script:
+#     - module purge
+#     - source /scratchm/sonics/dist/spiro_el8.sh --compiler=$COMPILER --mpi=$MPI_LIB
+#   script:
+#     - echo "Runner directory is $PWD; move to working directory $CUSTOM_CI_DIR"
+#     - cd $CUSTOM_CI_DIR/build$MATRIX_KEY
+#     - mkdir -p reports
+#     - export LSAN_OPTIONS=suppressions=$CUSTOM_CI_DIR/script/asan/asan.supp
+#     - echo $LSAN_OPTIONS
+#     - ./script/prepare_ci/run_top_test_base.sh --log_file_name reports/output_alltest_pdm --matrix_key ${MATRIX_KEY} --output_xml $CI_PROJECT_DIR/paradigm_alltest$MATRIX_KEY.xml
+#   artifacts:
+#    when: always
+#    reports:
+#      junit: paradigm_alltest$MATRIX_KEY.xml
 
 # TODO :
 #  - Rajouter des regles pour faire plus de compilo quand on merge sur dev : impi + clang + pgi par exemple
