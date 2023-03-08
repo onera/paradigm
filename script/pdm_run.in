@@ -17,6 +17,7 @@ Help()
   echo "m                                  Make test before run"
   echo "h                                  Print this Help"
   echo "mpiexec                            Run with mpiexec command (default : mpirun)"
+  echo "srun                               Run with mpiexec command (default : mpirun)"
   echo "n <number of ranks>                Number of ranks (default : 2)"
   echo "no_log_vtk                         Exit on error if test writes some log and vtk files"
   echo "t <\"test name and its options\">  Test name and its options "
@@ -31,6 +32,7 @@ ForbidVtk=0
 NrankUser=0
 runMake=0
 Test=""
+IsSrunMPI=0
 
 while [ -n "$1" ]
 do
@@ -40,7 +42,9 @@ case "$1" in
         shift;;
     -t) Test="$2"
         shift;;
-    -mpirun) ExeMPI="mpiexec";;
+    -mpiexec) ExeMPI="mpiexec";;
+    -srun) ExeMPI="srun"
+              IsSrunMPI=1;;
     -no_log_vtk) ForbidVtk=1;;
     -h) Help
         exit;;
@@ -160,33 +164,51 @@ do
   # Run test
   Testoutput=0
   
-  if [ ${IsIntelMPI} -gt 0 ]
+  if [ ${IsSrunMPI} -gt 0 ]
   then
     if [ $isPythonTest -gt 0  ]
     then
-      @PDM_RUN_LSAN@ @PDM_RUN_PYTHONPATH@ ${ExeMPI} -genv @PDM_RUN_PRELOAD@ -outfile-pattern $OutputFile.%r -errfile-pattern $ErrFile.%r -n $Nrank  /usr/bin/time  -f "Maximum Resident Memory : %M Kb" python ${TestName}.py ${TestOption} 2>/dev/null
+      ${ExeMPI} --export=@PDM_RUN_PRELOAD@,@PDM_RUN_LSAN@,@PDM_RUN_PYTHONPATH@  --output=$OutputFile.%t --error$ErrFile.%t --ntasks=$Nrank  --exclusive /usr/bin/time  -f "Maximum Resident Memory : %M Kb" python ${TestName}.py ${TestOption} 2>/dev/null &
       if [ "$?" -ne "0" ]
       then
         Testoutput=1
       fi
     else
-      @PDM_RUN_LSAN@ ${ExeMPI} -genv @PDM_RUN_PRELOAD@ -outfile-pattern $OutputFile.%r -errfile-pattern $ErrFile.%r -n $Nrank  /usr/bin/time  -f "Maximum Resident Memory : %M Kb" ./${TestName} ${TestOption} 2>/dev/null
+      ${ExeMPI} --export=@PDM_RUN_PRELOAD@,@PDM_RUN_LSAN@ --output=$OutputFile.%t --error$ErrFile.%t --ntasks=$Nrank  --exclusive /usr/bin/time  -f "Maximum Resident Memory : %M Kb" python ${TestName} ${TestOption} 2>/dev/null &
       if [ "$?" -ne "0" ]
       then
         Testoutput=1
       fi
     fi
-  else
-    echo -e "${RED}Error${NC}: OpenMPI is not available for pdm_run script"
-    echo -e "${PURPLE}${TestName}: ${RED}Failed${NC}"
-    exit 1
-    @PDM_RUN_LSAN@ @PDM_RUN_PYTHONPATH@ ${ExeMPI} -genv @PDM_RUN_PRELOAD@ -output-filename $OutputFile -n $Nrank /usr/bin/time -f "Maximum Resident Memory : %M Kb" ./${TestName} ${TestOption} 2>/dev/null
-    if [ "$?" -ne "0" ]
+  else  
+    if [ ${IsIntelMPI} -gt 0 ]
     then
-      Testoutput=1
+      if [ $isPythonTest -gt 0  ]
+      then
+        @PDM_RUN_LSAN@ @PDM_RUN_PYTHONPATH@ ${ExeMPI} -genv @PDM_RUN_PRELOAD@ -outfile-pattern $OutputFile.%r -errfile-pattern $ErrFile.%r -n $Nrank  /usr/bin/time  -f "Maximum Resident Memory : %M Kb" python ${TestName}.py ${TestOption} 2>/dev/null
+        if [ "$?" -ne "0" ]
+        then
+          Testoutput=1
+        fi
+      else
+        @PDM_RUN_LSAN@ ${ExeMPI} -genv @PDM_RUN_PRELOAD@ -outfile-pattern $OutputFile.%r -errfile-pattern $ErrFile.%r -n $Nrank  /usr/bin/time  -f "Maximum Resident Memory : %M Kb" ./${TestName} ${TestOption} 2>/dev/null
+        if [ "$?" -ne "0" ]
+        then
+          Testoutput=1
+        fi
+      fi
+    else
+      echo -e "${RED}Error${NC}: OpenMPI is not available for pdm_run script"
+      echo -e "${PURPLE}${TestName}: ${RED}Failed${NC}"
+      exit 1
+      @PDM_RUN_LSAN@ @PDM_RUN_PYTHONPATH@ ${ExeMPI} -genv @PDM_RUN_PRELOAD@ -output-filename $OutputFile -n $Nrank /usr/bin/time -f "Maximum Resident Memory : %M Kb" ./${TestName} ${TestOption} 2>/dev/null
+      if [ "$?" -ne "0" ]
+      then
+        Testoutput=1
+      fi
     fi
   fi
-  
+    
   end=$(($(date +%s%N)/1000000))
   
   #
