@@ -6,7 +6,8 @@ stages:
 
 # Default variables and parameters
 variables:
-  CI_BUILDS_DIR: $WORKDIR/.jacamar-ci/builds
+  CUSTOM_CI_BUILDS_DIR: $WORKDIR/.jacamar-ci
+#  CI_BUILDS_DIR: $WORKDIR/.jacamar-ci/builds
   GIT_STRATEGY: none # don't do anything by default
   # SCHEDULER_PARAMETERS:  "--qos=co_inter_std  --cpus-per-task=24  --ntasks=24 --time=00:01:00"
   SCHEDULER_PARAMETERS:  "--qos=co_inter_bigmem  --cpus-per-task=24  --ntasks=1 --time=14:00:00"
