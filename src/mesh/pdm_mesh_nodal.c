@@ -144,8 +144,6 @@ _mesh_init
 
   mesh->cell_vtx_idx             = NULL;
   mesh->cell_vtx                 = NULL;
-  mesh->cell_vtx_owner           = PDM_OWNERSHIP_KEEP;
-  mesh->is_cell_vtx_get          = 0;
 }
 
 /**
@@ -1796,12 +1794,9 @@ PDM_Mesh_nodal_t *mesh
 
     if (mesh->cell_vtx_idx != NULL) {
       for (int i = 0; i< mesh->n_part; i++) {
-        if(( mesh->cell_vtx_owner == PDM_OWNERSHIP_KEEP ) ||
-           ( mesh->cell_vtx_owner == PDM_OWNERSHIP_UNGET_RESULT_IS_FREE && !mesh->is_cell_vtx_get)) {
-          if(mesh->cell_vtx_idx[i] != NULL) {
-            free(mesh->cell_vtx[i]);
-            free(mesh->cell_vtx_idx[i]);
-          }
+        if(mesh->cell_vtx_idx[i] != NULL) {
+          free(mesh->cell_vtx[i]);
+          free(mesh->cell_vtx_idx[i]);
         }
       }
       free(mesh->cell_vtx);

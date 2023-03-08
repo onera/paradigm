@@ -237,11 +237,8 @@ struct _PDM_Mesh_nodal_t {
   int                      is_vtx_def_from_parent;              /*<! Are the points defined from parents */
   PDM_g_num_t                        **numabs;                  /*<! Global numbering per cell per partition */
 
-  PDM_l_num_t                        **cell_vtx_idx;            /*<! Index of cell vertex connectivity */
-  PDM_l_num_t                        **cell_vtx;                /*<! Cell vertex connectivity */
-  PDM_ownership_t                     cell_vtx_owner;
-  int                                 is_cell_vtx_get;
-
+  PDM_l_num_t **cell_vtx_idx;                                   /*<! Index of cell vertex connectivity */
+  PDM_l_num_t **cell_vtx;                                       /*<! Cell vertex connectivity */
 };
 
 
