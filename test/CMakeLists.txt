@@ -291,6 +291,7 @@ if (CMAKE_BUILD_TYPE STREQUAL "Sanitize")
   # set(PDM_RUN_PRELOAD "LD_PRELOAD=\"${PRELOAD_ASAN}:${CMAKE_BINARY_DIR}/script/asan/fake_dlclose/libdlclose.so\"")
   # set(PDM_RUN_PRELOAD "LD_PRELOAD=\"${PRELOAD_ASAN}\"")
   set(PDM_RUN_PRELOAD "LD_PRELOAD ${PRELOAD_ASAN}:${CMAKE_BINARY_DIR}/script/asan/fake_dlclose/libdlclose.so")
+  set(PDM_RUN_PRELOAD_SRUN "LD_PRELOAD=${PRELOAD_ASAN}:${CMAKE_BINARY_DIR}/script/asan/fake_dlclose/libdlclose.so")
   set(PDM_RUN_LSAN "LSAN_OPTIONS=suppressions=${CMAKE_SOURCE_DIR}/script/asan/asan.supp")
 endif()
 
