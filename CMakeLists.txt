@@ -149,14 +149,6 @@ else ()
     endif ()
   endif()
 
-  # Nuga (only if pdma)
-  # --------
-  if (PDM_ENABLE_EXTENSION_PDMA)
-    option(PDM_ENABLE_NUGA "Compile with support for NUGA." OFF)
-    if (PDM_ENABLE_NUGA)
-        set(PDM_HAVE_NUGA 1)
-    endif()
-  endif()
 
   # Enable long for absolute number
   # -------------------------------
