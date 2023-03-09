@@ -92,6 +92,9 @@ ifailed=0
 nTest=${#listComputedTest[@]}
 
 scriptOutput=0
+pids=()
+
+
 for x in "${listComputedTest[@]}"
 do
 
@@ -162,16 +165,15 @@ do
   #
   # Run test
   Testoutput=0
-  pids=()
 
 
   if [ ${IsSrunMPI} -gt 0 ]
   then
     if [ $isPythonTest -gt 0  ]
     then
-      ${ExeMPI} --verbose --export=@PDM_RUN_PRELOAD_SRUN@,@PDM_RUN_LSAN@,@PDM_RUN_PYTHONPATH@  --output=$OutputFile.%t --error$ErrFile.%t --ntasks=$Nrank  --exclusive /usr/bin/time  -f "Maximum Resident Memory : %M Kb" python ./${TestName}.py ${TestOption} 2>/dev/null &
+      ${ExeMPI} --verbose --export=@PDM_RUN_PRELOAD_SRUN@,@PDM_RUN_LSAN@,@PDM_RUN_PYTHONPATH@  --output=$OutputFile.%t --error=$ErrFile.%t --ntasks=$Nrank  --exclusive /usr/bin/time  -f "Maximum Resident Memory : %M Kb" python ./${TestName}.py ${TestOption} 2>/dev/null &
     else
-      ${ExeMPI} --verbose --export=@PDM_RUN_PRELOAD_SRUN@,@PDM_RUN_LSAN@ --output=$OutputFile.%t --error$ErrFile.%t --ntasks=$Nrank  --exclusive /usr/bin/time  -f "Maximum Resident Memory : %M Kb" ./${TestName} ${TestOption} &
+      ${ExeMPI} --verbose --export=@PDM_RUN_PRELOAD_SRUN@,@PDM_RUN_LSAN@ --output=$OutputFile.%t --error=$ErrFile.%t --ntasks=$Nrank  --exclusive /usr/bin/time  -f "Maximum Resident Memory : %M Kb" ./${TestName} ${TestOption}  2>/dev/null &
     fi
     pids=(${pids[@]} "$!")
   else  
@@ -290,25 +292,33 @@ do
     fi
 
     scriptOutput=$(echo "if($Testoutput>$scriptOutput) $Testoutput else $scriptOutput" | bc)
-   
-    ((i=i+1))
-
+ 
     if [ "${Testoutput}" -ne "0" ]
     then
       ((ifailed=ifailed+1))
     fi  
   fi  
+
+  ((i=i+1))
 done
 
 if [ ${IsSrunMPI} -gt 0 ]
 then
+  i=1 
   for pid in "${pids[@]}"
   do
+    Testoutput=0
     wait $pid
     if [ "$?" -ne "0" ]
     then
       Testoutput=1
+      printf  "${PURPLE}[%3.3d/%3.3d] - %s: ${RED}Failed${NC}\n" ${j} ${nTest} ${TestName} 
+      ((ifailed=ifailed+1))
+    else        
+      printf  "${PURPLE}[%3.3d/%3.3d] - %s: ${GREEN}Passed${NC} - %s s\n" ${j} ${nTest} ${TestName} ${elapsed} 
     fi
+    ((i=i+1))
+    scriptOutput=$(echo "if($Testoutput>$scriptOutput) $Testoutput else $scriptOutput" | bc)
   done  
 fi
 
