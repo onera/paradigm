@@ -74,13 +74,13 @@ unit_test:
     - module purge
     - source /scratchm/sonics/dist/spiro_el8.sh --compiler=$COMPILER --mpi=$MPI_LIB
   script:
-    - echo "Runner directory is $PWD; move to working directory $CUSTOM_CI_DIR"
-    - cd $CUSTOM_CI_DIR/build$MATRIX_KEY/test
-    - ./pdm_run -srun
-    - cd $CUSTOM_CI_DIR/build$MATRIX_KEY/extensions/paradigma/test
-    - ./pdm_run -srun
-   # - cd $CUSTOM_CI_DIR/build$MATRIX_KEY
-   # - ctest --output-junit $CI_PROJECT_DIR/paradigm_ctest$MATRIX_KEY.xml
+    # - echo "Runner directory is $PWD; move to working directory $CUSTOM_CI_DIR"
+    # - cd $CUSTOM_CI_DIR/build$MATRIX_KEY/test
+    # - ./pdm_run
+    # - cd $CUSTOM_CI_DIR/build$MATRIX_KEY/extensions/paradigma/test
+    # - ./pdm_run -srun
+    - cd $CUSTOM_CI_DIR/build$MATRIX_KEY
+    - ctest --output-junit $CI_PROJECT_DIR/paradigm_ctest$MATRIX_KEY.xml
    #    # Artefacts are searched in CI_PROJECT_DIR, but job was executed in CUSTOM_CI_DIR
    #    #- ctest -V --output-junit $CI_PROJECT_DIR/paradigm_ctest$MATRIX_KEY.xml
    #    # Go back to runner dir for artifact modification
