@@ -478,7 +478,10 @@ if (PDM_ENABLE_PYTHON_BINDINGS)
   add_subdirectory(Cython)
 endif()
 
-add_subdirectory(test)
+option(PDM_ENABLE_TESTS "Enable tests" ON)
+if (PDM_ENABLE_TESTS)
+  add_subdirectory(test)
+endif()
 
 add_subdirectory(script)
 
