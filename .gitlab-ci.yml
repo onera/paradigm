@@ -76,7 +76,7 @@ unit_test:
   script:
     - echo "Runner directory is $PWD; move to working directory $CUSTOM_CI_DIR"
     - cd $CUSTOM_CI_DIR/build$MATRIX_KEY/test
-    - ./pdm_run
+    - ./pdm_run -srun
     - cd $CUSTOM_CI_DIR/build$MATRIX_KEY/extensions/paradigma/test
     - ./pdm_run -srun
     # - cd $CUSTOM_CI_DIR/build$MATRIX_KEY
