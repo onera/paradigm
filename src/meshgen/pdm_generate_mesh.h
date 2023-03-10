@@ -20,8 +20,7 @@ extern "C" {
  * Public function prototypes
  *============================================================================*/
 
-// TO DO: dmn -> multipart -> si nodal : PDM_multipart_get_part_mesh_nodal
-//        deformation methods on partitionned data(warning for randomization, same seed)
+// TO DO: deformation methods on partitionned data(warning for randomization, same seed)
 
 /**
  *
@@ -127,7 +126,6 @@ PDM_generate_mesh_parallelepiped_simplified
  int                **elt_vtx
 );
 
-
 /**
  *
  * \brief Create a partitionned sphere mesh (2D).
@@ -224,8 +222,6 @@ PDM_generate_mesh_rectangle
  * \return PDM_part_mesh_t or PDM_part_mesh_nodal_t
  *
  */
-
-// TO DO : add option for boule creuse ?
 
 PDM_part_mesh_nodal_t *
 PDM_generate_mesh_ball
