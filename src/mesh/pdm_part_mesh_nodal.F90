@@ -263,74 +263,69 @@ module PDM_part_mesh_nodal
 
   end subroutine PDM_part_mesh_nodal_faces_facevtx_add
 
-!!> Define 2D cells by cell-edge connectivity
-!!!
-!!! @param[in]  mesh          Pointer to \ref PDM_part_mesh_nodal object
-!!! @param[in]  id_part       Partition identifier
-!!! @param[in]  n_elt         Number of polyhedra
-!!! @param[in]  n_edge        Number of edges used to describe polyhedra
-!!! @param[in]  edge_vtx_idx  Index of edge vertex connectivity
-!!! @param[in]  edge_vtx      Edge vertex connectivity
-!!! @param[in]  cell_edge_idx Index of cell edge connectivity
-!!! @param[in]  cell_edge     Cell edge connectivity
-!!! @param[in]  numabs        Global numbering
-!!! @param[in]  owner         Ownership
-!
-!  subroutine PDM_part_mesh_nodal_cell2d_celledge_add (mesh, id_part, n_elt, n_edge, edge_vtx_idx, edge_vtx, &
-!                                                      cell_edge_idx, cell_edge, numabs, owner)
-!    use iso_c_binding
-!
-!    implicit none
-!
-!    type(c_ptr), value                  :: mesh
-!    integer, intent(in)                 :: id_part
-!    integer, intent(in)                 :: n_elt
-!    integer, intent(in)                 :: n_edge
-!    integer, intent(in)                 :: owner
-!    integer (pdm_l_num_s), pointer      :: edge_vtx_idx(:)
-!    integer (pdm_l_num_s), pointer      :: edge_vtx(:)
-!    integer (pdm_l_num_s), pointer      :: cell_edge_idx(:)
-!    integer (pdm_l_num_s), pointer      :: cell_edge(:)
-!    integer (pdm_g_num_s), pointer      :: numabs(:)
-!    type(c_ptr) :: c_edge_vtx_idx = C_NULL_PTR
-!    type(c_ptr) :: c_edge_vtx = C_NULL_PTR
-!    type(c_ptr) :: c_cell_edge_idx = C_NULL_PTR
-!    type(c_ptr) :: c_cell_edge = C_NULL_PTR
-!    type(c_ptr) :: c_numabs = C_NULL_PTR
-!
-!    interface
-!      subroutine PDM_part_mesh_nodal_cell2d_celledge_add_c (mesh, id_part, n_elt, n_edge, edge_vtx_idx, edge_vtx, &
-!                                                            cell_edge_idx, cell_edge, numabs, owner) &
-!        bind(c, name='PDM_part_mesh_nodal_cell2d_celledge_add')
-!
-!        use iso_c_binding
-!        use pdm
-!
-!        implicit none
-!
-!        type(c_ptr),                 value :: mesh
-!        integer (c_int), intent(in), value :: id_part
-!        integer (c_int), intent(in), value :: n_elt
-!        integer (c_int), intent(in), value :: n_edge
-!        integer (c_int), intent(in), value :: owner
-!        type (c_ptr),                value :: edge_vtx_idx
-!        type (c_ptr),                value :: edge_vtx
-!        type (c_ptr),                value :: cell_edge_idx
-!        type (c_ptr),                value :: cell_edge
-!        type (c_ptr),                value :: numabs
-!      end subroutine PDM_part_mesh_nodal_cell2d_celledge_add_c
-!    end interface
-!
-!    c_edge_vtx_idx = c_loc (edge_vtx_idx)
-!    c_edge_vtx = c_loc (edge_vtx)
-!    c_cell_edge_idx = c_loc (cell_edge_idx)
-!    c_cell_edge = c_loc (cell_edge)
-!    c_numabs = c_loc (numabs)
-!
-!    call  PDM_part_mesh_nodal_cell2d_celledge_add_c (mesh, id_part, n_elt, n_edge, c_edge_vtx_idx, c_edge_vtx, &
-!                                                     c_cell_edge_idx, c_cell_edge, c_numabs, owner)
-!
-!  end subroutine PDM_part_mesh_nodal_cell2d_celledge_add
+!> Define 2D faces by face-edge connectivity
+!!
+!! @param[in]  mesh          Pointer to \ref PDM_part_mesh_nodal object
+!! @param[in]  id_part       Partition identifier
+!! @param[in]  n_elt         Number of polyhedra
+!! @param[in]  n_edge        Number of edges used to describe polyhedra
+!! @param[in]  edge_vtx      Edge vertex connectivity
+!! @param[in]  face_edge_idx Index of face edge connectivity
+!! @param[in]  face_edge     Face edge connectivity
+!! @param[in]  numabs        Global numbering
+!! @param[in]  owner         Ownership
+
+  subroutine PDM_part_mesh_nodal_face2d_faceedge_add (mesh, id_part, n_elt, n_edge, edge_vtx, &
+                                                      face_edge_idx, face_edge, numabs, owner)
+    use iso_c_binding
+
+    implicit none
+
+    type(c_ptr), value                  :: mesh
+    integer, intent(in)                 :: id_part
+    integer, intent(in)                 :: n_elt
+    integer, intent(in)                 :: n_edge
+    integer, intent(in)                 :: owner
+    integer (pdm_l_num_s), pointer      :: edge_vtx(:)
+    integer (pdm_l_num_s), pointer      :: face_edge_idx(:)
+    integer (pdm_l_num_s), pointer      :: face_edge(:)
+    integer (pdm_g_num_s), pointer      :: numabs(:)
+    type(c_ptr) :: c_edge_vtx = C_NULL_PTR
+    type(c_ptr) :: c_face_edge_idx = C_NULL_PTR
+    type(c_ptr) :: c_face_edge = C_NULL_PTR
+    type(c_ptr) :: c_numabs = C_NULL_PTR
+
+    interface
+      subroutine PDM_part_mesh_nodal_face2d_faceedge_add_c (mesh, id_part, n_elt, n_edge, edge_vtx, &
+                                                            face_edge_idx, face_edge, numabs, owner) &
+        bind(c, name='PDM_part_mesh_nodal_face2d_faceedge_add')
+
+        use iso_c_binding
+        use pdm
+
+        implicit none
+
+        type(c_ptr),                 value :: mesh
+        integer (c_int), intent(in), value :: id_part
+        integer (c_int), intent(in), value :: n_elt
+        integer (c_int), intent(in), value :: n_edge
+        integer (c_int), intent(in), value :: owner
+        type (c_ptr),                value :: edge_vtx
+        type (c_ptr),                value :: face_edge_idx
+        type (c_ptr),                value :: face_edge
+        type (c_ptr),                value :: numabs
+      end subroutine PDM_part_mesh_nodal_face2d_faceedge_add_c
+    end interface
+
+    c_edge_vtx = c_loc (edge_vtx)
+    c_face_edge_idx = c_loc (face_edge_idx)
+    c_face_edge = c_loc (face_edge)
+    c_numabs = c_loc (numabs)
+
+    call  PDM_part_mesh_nodal_face2d_faceedge_add_c (mesh, id_part, n_elt, n_edge, c_edge_vtx, &
+                                                     c_face_edge_idx, c_face_edge, c_numabs, owner)
+
+  end subroutine PDM_part_mesh_nodal_face2d_faceedge_add
 
 !> Define 3D cells by cell-face connectivity
 !!
