@@ -1206,6 +1206,7 @@ PDM_gnum_create
 
   gen_gnum->n_part      = n_part;
   gen_gnum->dim         = dim;
+  gen_gnum->nuplet      = 0;
   gen_gnum->merge       = merge;
   gen_gnum->tolerance   = tolerance;
   gen_gnum->n_g_elt     = -1;
@@ -1310,7 +1311,15 @@ PDM_gnum_set_from_parents
 
 }
 
-
+void
+PDM_gnum_set_parents_nuplet
+(
+       PDM_gen_gnum_t  *gen_gnum,
+ const int              nuplet
+)
+{
+  gen_gnum->nuplet = nuplet;
+}
 
 
 /**
@@ -1328,19 +1337,31 @@ PDM_gnum_compute
 )
 {
   //Detect if geometric or topologic -- works if a procs holds no partitions
-  int from_coords = (gen_gnum->coords != NULL);
-  int from_parent = (gen_gnum->parent != NULL);
-  int from_coords_g, from_parent_g;
-  PDM_MPI_Allreduce(&from_coords, &from_coords_g, 1, PDM_MPI_INT, PDM_MPI_SUM, gen_gnum->comm);
-  PDM_MPI_Allreduce(&from_parent, &from_parent_g, 1, PDM_MPI_INT, PDM_MPI_SUM, gen_gnum->comm);
+  int from_coords        = (gen_gnum->coords != NULL);
+  int from_parent        = (gen_gnum->parent != NULL);
+  int from_parent_nuplet = (gen_gnum->nuplet != 0   );
+  int from_coords_g, from_parent_g, from_parent_nuplet_g;
+  PDM_MPI_Allreduce(&from_coords       , &from_coords_g       , 1, PDM_MPI_INT, PDM_MPI_SUM, gen_gnum->comm);
+  PDM_MPI_Allreduce(&from_parent       , &from_parent_g       , 1, PDM_MPI_INT, PDM_MPI_SUM, gen_gnum->comm);
+  PDM_MPI_Allreduce(&from_parent_nuplet, &from_parent_nuplet_g, 1, PDM_MPI_INT, PDM_MPI_SUM, gen_gnum->comm);
 
   assert (from_coords_g * from_parent_g == 0);
 
   if (from_coords_g != 0) {
     _gnum_from_coords_compute (gen_gnum);
   }
-  else if (from_parent_g != 0) {
+  else if (from_parent_g != 0 && from_parent_nuplet_g == 0) {
     _gnum_from_parent_compute (gen_gnum);
+  } else {
+
+    if(gen_gnum->nuplet == 1) { // Cas from parent mais optimiser
+      printf("Cas 1 \n");
+
+    } else {
+      printf("Cas 2 \n");
+
+    }
+
   }
 
 }

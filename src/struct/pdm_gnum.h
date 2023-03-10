@@ -131,6 +131,20 @@ PDM_gnum_set_from_parents
  const PDM_g_num_t     *parent_gnum
 );
 
+/**
+ *
+ * \brief Set size of tuple for nuplet
+ *
+ * \param [in]   gen_gnum     Pointer to \ref PDM_gen_gnum object
+ * \param [in]   nuplet       Size of tuple
+ *
+ */
+void
+PDM_gnum_set_parents_nuplet
+(
+       PDM_gen_gnum_t  *gen_gnum,
+ const int              nuplet
+);
 
 /**
  *

@@ -38,6 +38,7 @@ struct _pdm_gen_gnum_t {
   PDM_bool_t       results_is_getted; /*!< Flags to indicate if result is getted      */
   int              n_part;            /*!< Number of partitions */
   int              dim;               /*!< Spatial dimension */
+  int              nuplet;            /*!< Size  of tuple in parent */
   PDM_bool_t       merge;             /*!< Merge double point status */
   double           tolerance;         /*!< Geometric tolerance */
   PDM_g_num_t      n_g_elt;           /*!< Global number of elements */
