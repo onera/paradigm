@@ -18,6 +18,9 @@
 #include "pdm_writer.h"
 #include "pdm_printf.h"
 #include "pdm_error.h"
+#include "pdm_distrib.h"
+#include "pdm_logging.h"
+#include "pdm_gnum.h"
 
 
 /*============================================================================
@@ -67,7 +70,8 @@ _read_args
  int            argc,
  char         **argv,
  PDM_g_num_t   *n_g_elmts,
- int           *nuplet
+ int           *nuplet,
+ int           *post
 )
 {
   int i = 1;
@@ -95,6 +99,9 @@ _read_args
       else
         *nuplet = atoi (argv[i]);
     }
+    else if (strcmp(argv[i], "-post") == 0) {
+      *post = 1;
+    }
     else
       _usage (EXIT_FAILURE);
     i++;
@@ -115,10 +122,11 @@ char *argv[]
 {
 
   PDM_MPI_Init (&argc, &argv);
-  int           i_rank;
-  int           n_rank;
 
   PDM_MPI_Comm comm = PDM_MPI_COMM_WORLD;
+
+  int           i_rank;
+  int           n_rank;
   PDM_MPI_Comm_rank (comm, &i_rank);
   PDM_MPI_Comm_size (comm, &n_rank);
 
@@ -128,7 +136,7 @@ char *argv[]
 
   PDM_g_num_t   n_g_elmts = 40;
   int           nuplet    = 2;
-
+  int           post      = 0;
 
   /*
    *  Read args
@@ -136,8 +144,8 @@ char *argv[]
   _read_args (argc,
               argv,
               &n_g_elmts,
-              &nuplet);
-
+              &nuplet,
+              &post);
 
   /* Generate distribution */
   PDM_g_num_t* distrib = PDM_compute_uniform_entity_distribution(comm, n_g_elmts);
@@ -152,9 +160,35 @@ char *argv[]
     srand(_seed + seed);
 
     for(int k = 0; k < nuplet; ++k) {
-      elmts_ln_to_gn[nuplet*i+k] = (PDM_g_num_t ) rand();
+      elmts_ln_to_gn[nuplet*i+k] = (PDM_g_num_t ) rand() %  (4 * n_g_elmts);
     }
   }
+
+  if(post) {
+    PDM_log_trace_array_long(elmts_ln_to_gn, dn_elmts * nuplet, "elmts_ln_to_gn ;;" );
+  }
+
+  /*
+   * Generate global  numbering
+   */
+  PDM_gen_gnum_t* gen_gnum =  PDM_gnum_create(3, 1, PDM_TRUE, 1e-6, comm, PDM_OWNERSHIP_KEEP);
+
+  PDM_gnum_set_parents_nuplet(gen_gnum, nuplet);
+  PDM_gnum_set_from_parents(gen_gnum,
+                            0,
+                            dn_elmts,
+                            elmts_ln_to_gn);
+
+  PDM_gnum_compute(gen_gnum);
+
+  PDM_g_num_t* unified_ln_to_gn = PDM_gnum_get(gen_gnum, 0);
+
+  if(post) {
+    PDM_log_trace_array_long(unified_ln_to_gn, dn_elmts, "unified_ln_to_gn ;;" );
+  }
+
+
+  PDM_gnum_free(gen_gnum);
 
   free(distrib);
   free(elmts_ln_to_gn);

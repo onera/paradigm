@@ -1455,10 +1455,6 @@ _gnum_from_parent_compute_nuplet
     }
   }
 
-  for(int i_part = 0; i_part < gen_gnum->n_part; ++i_part) {
-    free(key_ln_to_gn[i_part]);
-  }
-  free(key_ln_to_gn);
 
   PDM_MPI_Datatype mpi_entity_type;
   PDM_MPI_Type_create_contiguous(nuplet, PDM__PDM_MPI_G_NUM, &mpi_entity_type);
@@ -1553,7 +1549,8 @@ _gnum_from_parent_compute_nuplet
 
     PDM_order_gnum_s(tmp_parent, nuplet, order_parent, n_conflict_entitys);
 
-    // PDM_log_trace_array_int(order_parent, n_conflict_entitys, "order_parent  :" );
+    // PDM_log_trace_array_int (order_parent, n_conflict_entitys, "order_parent  :" );
+    // PDM_log_trace_array_long(tmp_parent, nuplet * n_conflict_entitys, "tmp_parent  :" );
 
     for(int idx_entity = 0; idx_entity < n_conflict_entitys; ++idx_entity) {
       int i_entity  = order[key_conflict_idx[i]+order_parent[idx_entity]];
@@ -1624,11 +1621,11 @@ _gnum_from_parent_compute_nuplet
   /*
    * Reverse exchange
    */
-  PDM_MPI_Alltoallv((void *) recv_key,
+  PDM_MPI_Alltoallv(recv_key,
                     recv_buff_n,
                     recv_buff_idx,
                     PDM__PDM_MPI_G_NUM,
-                    (void *) send_key,
+                    send_key,
                     send_buff_n,
                     send_buff_idx,
                     PDM__PDM_MPI_G_NUM,
@@ -1643,7 +1640,7 @@ _gnum_from_parent_compute_nuplet
     gen_gnum->g_nums[j] = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * gen_gnum->n_elts[j]);
 
     for (int k = 0; k < gen_gnum->n_elts[j]; k++) {
-      const int t_rank = PDM_binary_search_gap_long (gen_gnum->parent[j][k]-1,
+      const int t_rank = PDM_binary_search_gap_long (key_ln_to_gn[j][k]-1,
                                                      distrib,
                                                      n_rank + 1);
 
@@ -1652,6 +1649,10 @@ _gnum_from_parent_compute_nuplet
     }
   }
 
+  for(int i_part = 0; i_part < gen_gnum->n_part; ++i_part) {
+    free(key_ln_to_gn[i_part]);
+  }
+  free(key_ln_to_gn);
   free(send_key);
   free(send_elmts);
   free(recv_key);
