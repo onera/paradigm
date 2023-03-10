@@ -59,6 +59,8 @@
 #include "pdm_mpi.h"
 #include "pdm_points_merge.h"
 #include "pdm_timer.h"
+#include "pdm_distrib.h"
+#include "pdm_logging.h"
 
 /*----------------------------------------------------------------------------
  *  Header for the current file
@@ -1170,6 +1172,207 @@ _gnum_from_parent_compute
 
 }
 
+
+static void
+_gnum_from_parent_compute_opt
+(
+ PDM_gen_gnum_t *gen_gnum
+)
+{
+  int i_rank = -1;
+  int n_rank = -1;
+  PDM_MPI_Comm_rank (gen_gnum->comm, &i_rank);
+  PDM_MPI_Comm_size (gen_gnum->comm, &n_rank);
+
+  int sampling_factor = 2;
+  int n_iter_max      = 5;
+  double tol          = 0.10;
+  PDM_g_num_t* distrib = NULL;
+  PDM_distrib_weight(    sampling_factor,
+                         n_rank,
+                         gen_gnum->n_part,
+                         gen_gnum->n_elts,
+  (const PDM_g_num_t **) gen_gnum->parent,
+                         NULL,
+                         n_iter_max,
+                         tol,
+                         gen_gnum->comm,
+                         &distrib);
+
+  if(1 == 1) {
+    PDM_log_trace_array_long(distrib, n_rank+1, "distrib_key :");
+  }
+
+  free(distrib);
+
+
+
+
+}
+
+static void
+_gnum_from_parent_compute_nuplet
+(
+ PDM_gen_gnum_t *gen_gnum
+)
+{
+  int i_rank = -1;
+  int n_rank = -1;
+  PDM_MPI_Comm_rank (gen_gnum->comm, &i_rank);
+  PDM_MPI_Comm_size (gen_gnum->comm, &n_rank);
+
+  /* Generate a keys */
+  int nuplet = gen_gnum->nuplet;
+  PDM_g_num_t **key_ln_to_gn = malloc(gen_gnum->n_part * sizeof(PDM_g_num_t *));
+  for(int i_part = 0; i_part < gen_gnum->n_part; ++i_part) {
+    key_ln_to_gn[i_part] = malloc(gen_gnum->n_elts[i_part] * sizeof(PDM_g_num_t));
+    for(int i = 0; i < gen_gnum->n_elts[i_part]; ++i) {
+      key_ln_to_gn[i_part][i] = 1;
+      for(int k = 0; k < nuplet; ++k) {
+        key_ln_to_gn[i_part][i] += gen_gnum->parent[i_part][nuplet * i + k];
+      }
+    }
+  }
+
+
+
+  int sampling_factor = 2;
+  int n_iter_max      = 5;
+  double tol          = 0.10;
+  PDM_g_num_t* distrib = NULL;
+  PDM_distrib_weight(    sampling_factor,
+                         n_rank,
+                         gen_gnum->n_part,
+                         gen_gnum->n_elts,
+  (const PDM_g_num_t **) key_ln_to_gn,
+                         NULL,
+                         n_iter_max,
+                         tol,
+                         gen_gnum->comm,
+                         &distrib);
+
+  if(1 == 1) {
+    PDM_log_trace_array_long(distrib, n_rank+1, "distrib_key :");
+  }
+
+  /*
+   * Create send buffer
+   */
+  int *send_buff_n   = (int *) malloc( n_rank    * sizeof(int));
+  int *send_buff_idx = (int *) malloc((n_rank+1) * sizeof(int));
+
+  int *recv_buff_n   = (int *) malloc( n_rank    * sizeof(int));
+  int *recv_buff_idx = (int *) malloc((n_rank+1) * sizeof(int));
+
+  /* Comptage du nombre d'elements a envoyer a chaque processus */
+  for (int j = 0; j < n_rank; j++) {
+    send_buff_n  [j] = 0;
+    send_buff_idx[j] = 0;
+    recv_buff_n  [j] = 0;
+    recv_buff_idx[j] = 0;
+  }
+
+  for (int j = 0; j < gen_gnum->n_part; j++) {
+    for (int k = 0; k < gen_gnum->n_elts[j]; k++) {
+      const int t_rank = PDM_binary_search_gap_long (key_ln_to_gn[j][k]-1,
+                                                     distrib,
+                                                     n_rank + 1);
+      // log_trace("t_rank = %i | key = %i \n", t_rank, key_ln_to_gn[j][k]);
+      send_buff_n[t_rank] += 1;
+    }
+  }
+
+  send_buff_idx[0] = 0;
+  for (int j = 0; j < n_rank; j++) {
+    send_buff_idx[j+1] = send_buff_idx[j] + send_buff_n[j];
+  }
+
+  /* Determination du nombre d'elements recu de chaque processus */
+  PDM_MPI_Alltoall(send_buff_n,
+                   1,
+                   PDM_MPI_INT,
+                   recv_buff_n,
+                   1,
+                   PDM_MPI_INT,
+                   gen_gnum->comm);
+
+
+  recv_buff_idx[0] = 0;
+  for (int j = 0; j < n_rank; j++) {
+    recv_buff_idx[j+1] = recv_buff_idx[j] + recv_buff_n[j];
+    send_buff_n  [j]   = 0;
+  }
+
+  /*
+   * Exchange key and val associate
+   */
+  PDM_g_num_t *send_key   = malloc(          send_buff_idx[n_rank] * sizeof(PDM_g_num_t));
+  PDM_g_num_t *send_elmts = malloc( nuplet * send_buff_idx[n_rank] * sizeof(PDM_g_num_t));
+
+  for (int j = 0; j < gen_gnum->n_part; j++) {
+    for (int k = 0; k < gen_gnum->n_elts[j]; k++) {
+      const int t_rank = PDM_binary_search_gap_long (key_ln_to_gn[j][k]-1,
+                                                     distrib,
+                                                     n_rank + 1);
+
+      int idx_write = send_buff_idx[t_rank] + send_buff_n[t_rank]++;
+      send_key[idx_write] = key_ln_to_gn[j][k];
+      for(int p = 0; p < nuplet; ++p) {
+        send_elmts[nuplet*idx_write+p] = gen_gnum->parent[j][nuplet * k + p];
+      }
+    }
+  }
+
+  for(int i_part = 0; i_part < gen_gnum->n_part; ++i_part) {
+    free(key_ln_to_gn[i_part]);
+  }
+  free(key_ln_to_gn);
+
+  PDM_MPI_Datatype mpi_entity_type;
+  PDM_MPI_Type_create_contiguous(nuplet, PDM__PDM_MPI_G_NUM, &mpi_entity_type);
+  PDM_MPI_Type_commit(&mpi_entity_type);
+
+  PDM_g_num_t *recv_key   = malloc(          recv_buff_idx[n_rank] * sizeof(PDM_g_num_t));
+  PDM_g_num_t *recv_elmts = malloc( nuplet * recv_buff_idx[n_rank] * sizeof(PDM_g_num_t));
+  PDM_MPI_Alltoallv((void *) send_key,
+                    send_buff_n,
+                    send_buff_idx,
+                    PDM__PDM_MPI_G_NUM,
+                    (void *) recv_key,
+                    recv_buff_n,
+                    recv_buff_idx,
+                    PDM__PDM_MPI_G_NUM,
+                    gen_gnum->comm);
+
+  PDM_MPI_Alltoallv((void *) send_elmts,
+                    send_buff_n,
+                    send_buff_idx,
+                    mpi_entity_type,
+                    (void *) recv_elmts,
+                    recv_buff_n,
+                    recv_buff_idx,
+                    mpi_entity_type,
+                    gen_gnum->comm);
+
+  PDM_MPI_Type_free(&mpi_entity_type);
+
+
+
+
+
+  free(send_key);
+  free(send_elmts);
+  free(recv_key);
+  free(recv_elmts);
+
+  free(send_buff_n  );
+  free(send_buff_idx);
+  free(recv_buff_n  );
+  free(recv_buff_idx);
+
+  free(distrib);
+}
+
 /*=============================================================================
  * Public function definitions
  *============================================================================*/
@@ -1353,15 +1556,11 @@ PDM_gnum_compute
   else if (from_parent_g != 0 && from_parent_nuplet_g == 0) {
     _gnum_from_parent_compute (gen_gnum);
   } else {
-
     if(gen_gnum->nuplet == 1) { // Cas from parent mais optimiser
-      printf("Cas 1 \n");
-
+      _gnum_from_parent_compute_opt(gen_gnum);
     } else {
-      printf("Cas 2 \n");
-
+      _gnum_from_parent_compute_nuplet(gen_gnum);
     }
-
   }
 
 }
