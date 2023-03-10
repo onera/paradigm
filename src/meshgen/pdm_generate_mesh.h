@@ -20,7 +20,6 @@ extern "C" {
 
 // TO DO: dmn -> multipart -> si nodal : PDM_multipart_get_part_mesh_nodal
 //        deformation methods on partitionned data(warning for randomization, same seed)
-//        multipart output part_mesh (see PDM_mesh_intersection_part_set)
 
 /**
  *
