@@ -24,6 +24,77 @@ Help()
   echo
 }
 
+Dump_mem()
+{
+  max="-1"
+  min="10000000"
+  
+  minRank=-1
+  maxRank=-1
+  rank=0
+  
+  if [ ${IsIntelMPI} -gt 0 ]
+  then
+    listErrFile=$(ls $1.*)
+  else
+    listErrFile=$(find $2 -name stderr)
+  fi
+
+  for file in ${listErrFile}
+  do
+    v=$(grep -m 1 "Maximum Resident Memory" $file | awk '{print $5}')
+    maxRank=$(echo "if($v>$max) $rank else $maxRank" | bc)
+    minRank=$(echo "if($v<$min) $rank else $minRank" | bc)
+    max=$(echo "if($v>$max) $v else $max" | bc)
+    min=$(echo "if($v<$min) $v else $min" | bc)
+    rank=$((rank+1))
+  done
+  
+  maxM=$(echo "scale=2; $max/1000" | bc)
+  minM=$(echo "scale=2; $min/1000" | bc)
+  
+  echo "    Maximum of Maximum Resident Memory: ${maxM} Mb on rank ${maxRank}"
+  echo "    Minimum of Maximum Resident Memory: ${minM} Mb on rank ${minRank}"
+
+}
+
+Dump_time()
+{
+  max="-1"
+  
+  maxRank=-1
+  rank=0
+  
+  if [ ${IsIntelMPI} -gt 0 ]
+  then
+    listErrFile=$(ls $1.*)
+  else
+    listErrFile=$(find $2 -name stderr)
+  fi
+
+  for file in ${listErrFile}
+  do
+    v=$(grep -m 1 "Real time :" $file | awk '{print $4}')
+    max=$(echo "if($v>$max) $v else $max" | bc)
+    rank=$((rank+1))
+  done
+  
+  echo $max
+
+}
+
+Dump_nb_log_vtk_file()
+{
+  val_vtk=`ls -l *.vtk  2> /dev/null | wc -l`;
+  val_log=`ls -l *.log  2> /dev/null | wc -l`;
+
+  if [ $val_vtk -gt 0 ] || [ $val_log -gt 0 ]
+  then
+    echo "    Number of vtk files = ${val_vtk}"
+    echo "    Number of log files = ${val_log}"
+  fi
+}
+
 # Get the options 
 
 ExeMPI="mpirun"
@@ -155,7 +226,6 @@ do
   
   ((j=i+1))
   printf  "${PURPLE}[%3.3d/%3.3d] - %s: Start${NC}\n" ${j} ${nTest} ${TestName} 
-  
 
   #
   # Cleanup
@@ -164,33 +234,31 @@ do
   
   #
   # Run test
-  Testoutput=0
 
+  Testoutput=0
 
   if [ ${IsSrunMPI} -gt 0 ]
   then
     if [ $isPythonTest -gt 0  ]
     then
-      ${ExeMPI} --verbose --export=@PDM_RUN_PRELOAD_SRUN@,@PDM_RUN_LSAN@,@PDM_RUN_PYTHONPATH@  --output=$OutputFile.%t --error=$ErrFile.%t --ntasks=$Nrank  --exclusive /usr/bin/time  -f "Maximum Resident Memory : %M Kb" python ./${TestName}.py ${TestOption} 2>/dev/null &
+      ${ExeMPI} --verbose --export=@PDM_RUN_PRELOAD_SRUN@,@PDM_RUN_LSAN@,@PDM_RUN_PYTHONPATH@  --output=$OutputFile.%t --error=$ErrFile.%t --ntasks=$Nrank  --exclusive /usr/bin/time  -f "Maximum Resident Memory : %M Kb\nReal time : %e s" python ./${TestName}.py ${TestOption} 2>/dev/null &
     else
-      ${ExeMPI} --verbose --export=@PDM_RUN_PRELOAD_SRUN@,@PDM_RUN_LSAN@ --output=$OutputFile.%t --error=$ErrFile.%t --ntasks=$Nrank  --exclusive /usr/bin/time  -f "Maximum Resident Memory : %M Kb" ./${TestName} ${TestOption}  2>/dev/null &
+      ${ExeMPI} --verbose --export=@PDM_RUN_PRELOAD_SRUN@,@PDM_RUN_LSAN@ --output=$OutputFile.%t --error=$ErrFile.%t --ntasks=$Nrank  --exclusive /usr/bin/time  -f "Maximum Resident Memory : %M Kb\nReal time : %e s" ./${TestName} ${TestOption}  2>/dev/null &
     fi
     pids=(${pids[@]} "$!")
   else  
-
-    start=$(($(date +%s%N)/1000000))
 
     if [ ${IsIntelMPI} -gt 0 ]
     then
       if [ $isPythonTest -gt 0  ]
       then
-        @PDM_RUN_LSAN@ @PDM_RUN_PYTHONPATH@ ${ExeMPI} -genv @PDM_RUN_PRELOAD@ -outfile-pattern $OutputFile.%r -errfile-pattern $ErrFile.%r -n $Nrank  /usr/bin/time  -f "Maximum Resident Memory : %M Kb" python ${TestName}.py ${TestOption} 2>/dev/null
+        @PDM_RUN_LSAN@ @PDM_RUN_PYTHONPATH@ ${ExeMPI} -genv @PDM_RUN_PRELOAD@ -outfile-pattern $OutputFile.%r -errfile-pattern $ErrFile.%r -n $Nrank /usr/bin/time  -f "Maximum Resident Memory : %M Kb\nReal time : %e s" python ./${TestName}.py ${TestOption} 2>/dev/null
         if [ "$?" -ne "0" ]
         then
           Testoutput=1
         fi
       else
-        @PDM_RUN_LSAN@ ${ExeMPI} -genv @PDM_RUN_PRELOAD@ -outfile-pattern $OutputFile.%r -errfile-pattern $ErrFile.%r -n $Nrank  /usr/bin/time  -f "Maximum Resident Memory : %M Kb" ./${TestName} ${TestOption} 2>/dev/null
+        @PDM_RUN_LSAN@ ${ExeMPI} -genv @PDM_RUN_PRELOAD@ -outfile-pattern $OutputFile.%r -errfile-pattern $ErrFile.%r  -n $Nrank /usr/bin/time  -f "Maximum Resident Memory : %M Kb\nReal time : %e s" ./${TestName} ${TestOption} 2>/dev/null
         if [ "$?" -ne "0" ]
         then
           Testoutput=1
@@ -200,65 +268,28 @@ do
       echo -e "${RED}Error${NC}: OpenMPI is not available for pdm_run script"
       echo -e "${PURPLE}${TestName}: ${RED}Failed${NC}"
       exit 1
-      @PDM_RUN_LSAN@ @PDM_RUN_PYTHONPATH@ ${ExeMPI} -genv @PDM_RUN_PRELOAD@ -output-filename $OutputFile -n $Nrank /usr/bin/time -f "Maximum Resident Memory : %M Kb" ./${TestName} ${TestOption} 2>/dev/null
+      @PDM_RUN_LSAN@ @PDM_RUN_PYTHONPATH@ ${ExeMPI} -genv @PDM_RUN_PRELOAD@ -output-filename $OutputFile -n $Nrank /usr/bin/time  -f "Maximum Resident Memory : %M Kb\nReal time : %e s" ./${TestName} ${TestOption} 2>/dev/null
       if [ "$?" -ne "0" ]
       then
         Testoutput=1
       fi
     fi
     
-    end=$(($(date +%s%N)/1000000))
-  
     #
     # Compute elapsed time
     
-    elapsed=$(echo "scale=2; ($end-$start)/1000" | bc)
-    
+    elapsed=$(Dump_time $ErrFile $OutputFile)
+
     #
     # Check Maximum Resident memory
-    
-    max="-1"
-    min="10000000"
-    
-    minRank=-1
-    maxRank=-1
-    rank=0
-    
-    if [ ${IsIntelMPI} -gt 0 ]
-    then
-      listErrFile=$(ls $ErrFile.*)
-    else
-      listErrFile=$(find $OutputFile -name stderr)
-    fi
-    
-    for file in ${listErrFile}
-    do
-      v=$(grep -m 1 "Maximum Resident Memory" $file | awk '{print $5}')
-      maxRank=$(echo "if($v>$max) $rank else $maxRank" | bc)
-      minRank=$(echo "if($v<$min) $rank else $minRank" | bc)
-      max=$(echo "if($v>$max) $v else $max" | bc)
-      min=$(echo "if($v<$min) $v else $min" | bc)
-      rank=$((rank+1))
-    done
-    
-    maxM=$(echo "scale=2; $max/1000" | bc)
-    minM=$(echo "scale=2; $min/1000" | bc)
-    
-    echo "    Maximum of Maximum Resident Memory: ${maxM} Mb on rank ${maxRank}"
-    echo "    Minimum of Maximum Resident Memory: ${minM} Mb on rank ${minRank}"
-    
+
+    Dump_mem $ErrFile $OutputFile
+
     #
     # Check *vtk and *log file
     
-    val_vtk=`ls -l *.vtk  2> /dev/null | wc -l`;
-    val_log=`ls -l *.log  2> /dev/null | wc -l`;
-    
-    if [ $val_vtk -gt 0 ] || [ $val_log -gt 0 ]
-    then
-      echo "    Number of vtk files = ${val_vtk}"
-      echo "    Number of log files = ${val_log}"
-    fi
-    
+    Dump_nb_log_vtk_file
+  
     #
     # Exit
     
@@ -315,6 +346,15 @@ then
       printf  "${PURPLE}[%3.3d/%3.3d] - %s: ${RED}Failed${NC}\n" ${j} ${nTest} ${TestName} 
       ((ifailed=ifailed+1))
     else        
+      #
+      # Compute elapsed time
+      
+      elapsed=$(Dump_time $ErrFile $OutputFile)
+
+      #
+      # Check Maximum Resident memory
+
+      Dump_mem $ErrFile $OutputFile
       printf  "${PURPLE}[%3.3d/%3.3d] - %s: ${GREEN}Passed${NC} - %s s\n" ${j} ${nTest} ${TestName} ${elapsed} 
     fi
     ((i=i+1))
