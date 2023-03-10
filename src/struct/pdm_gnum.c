@@ -61,6 +61,7 @@
 #include "pdm_timer.h"
 #include "pdm_distrib.h"
 #include "pdm_logging.h"
+#include "pdm_unique.h"
 
 /*----------------------------------------------------------------------------
  *  Header for the current file
@@ -1199,14 +1200,146 @@ _gnum_from_parent_compute_opt
                          gen_gnum->comm,
                          &distrib);
 
-  if(1 == 1) {
+  if(0 == 1) {
     PDM_log_trace_array_long(distrib, n_rank+1, "distrib_key :");
   }
 
+  /*
+   * Create send buffer
+   */
+  int *send_buff_n   = (int *) malloc( n_rank    * sizeof(int));
+  int *send_buff_idx = (int *) malloc((n_rank+1) * sizeof(int));
+
+  int *recv_buff_n   = (int *) malloc( n_rank    * sizeof(int));
+  int *recv_buff_idx = (int *) malloc((n_rank+1) * sizeof(int));
+
+  /* Comptage du nombre d'elements a envoyer a chaque processus */
+  for (int j = 0; j < n_rank; j++) {
+    send_buff_n  [j] = 0;
+    send_buff_idx[j] = 0;
+    recv_buff_n  [j] = 0;
+    recv_buff_idx[j] = 0;
+  }
+
+  for (int j = 0; j < gen_gnum->n_part; j++) {
+    for (int k = 0; k < gen_gnum->n_elts[j]; k++) {
+      const int t_rank = PDM_binary_search_gap_long (gen_gnum->parent[j][k]-1,
+                                                     distrib,
+                                                     n_rank + 1);
+      // log_trace("t_rank = %i | key = %i \n", t_rank, key_ln_to_gn[j][k]);
+      send_buff_n[t_rank] += 1;
+    }
+  }
+
+  send_buff_idx[0] = 0;
+  for (int j = 0; j < n_rank; j++) {
+    send_buff_idx[j+1] = send_buff_idx[j] + send_buff_n[j];
+  }
+
+  /* Determination du nombre d'elements recu de chaque processus */
+  PDM_MPI_Alltoall(send_buff_n,
+                   1,
+                   PDM_MPI_INT,
+                   recv_buff_n,
+                   1,
+                   PDM_MPI_INT,
+                   gen_gnum->comm);
+
+
+  recv_buff_idx[0] = 0;
+  for (int j = 0; j < n_rank; j++) {
+    recv_buff_idx[j+1] = recv_buff_idx[j] + recv_buff_n[j];
+    send_buff_n  [j]   = 0;
+  }
+
+  /*
+   * Exchange key and val associate
+   */
+  PDM_g_num_t *send_gnum   = malloc(          send_buff_idx[n_rank] * sizeof(PDM_g_num_t));
+
+  for (int j = 0; j < gen_gnum->n_part; j++) {
+    for (int k = 0; k < gen_gnum->n_elts[j]; k++) {
+      const int t_rank = PDM_binary_search_gap_long (gen_gnum->parent[j][k]-1,
+                                                     distrib,
+                                                     n_rank + 1);
+
+      int idx_write = send_buff_idx[t_rank] + send_buff_n[t_rank]++;
+      send_gnum[idx_write] = gen_gnum->parent[j][k];
+    }
+  }
+
+  PDM_g_num_t *recv_gnum = malloc( recv_buff_idx[n_rank] * sizeof(PDM_g_num_t));
+  PDM_MPI_Alltoallv((void *) send_gnum,
+                    send_buff_n,
+                    send_buff_idx,
+                    PDM__PDM_MPI_G_NUM,
+                    (void *) recv_gnum,
+                    recv_buff_n,
+                    recv_buff_idx,
+                    PDM__PDM_MPI_G_NUM,
+                    gen_gnum->comm);
+
+
+  /*
+   *
+   */
+  int *unique_order = malloc(recv_buff_idx[n_rank] * sizeof(int));
+  int n_unique = PDM_inplace_unique_long2(recv_gnum, unique_order, 0, recv_buff_idx[n_rank]-1);
+
+  PDM_g_num_t current_global_num = n_unique;
+  PDM_g_num_t global_num_shift   = 0;
+  PDM_MPI_Scan(&current_global_num, &global_num_shift, 1, PDM__PDM_MPI_G_NUM,
+               PDM_MPI_SUM, gen_gnum->comm);
+  global_num_shift -= current_global_num;
+
+  for(int i = 0; i < recv_buff_idx[n_rank]; ++i) {
+    recv_gnum[i] = (PDM_g_num_t) unique_order[i] + global_num_shift + 1;
+  }
+
+  free(unique_order);
+
+  /*
+   * Reverse exchange
+   */
+  PDM_MPI_Alltoallv((void *) recv_gnum,
+                    recv_buff_n,
+                    recv_buff_idx,
+                    PDM__PDM_MPI_G_NUM,
+                    (void *) send_gnum,
+                    send_buff_n,
+                    send_buff_idx,
+                    PDM__PDM_MPI_G_NUM,
+                    gen_gnum->comm);
+
+  // PDM_log_trace_array_long(send_gnum, send_buff_idx[n_rank], "send_gnum :");
+
+  /* On Stocke l'information recue */
+  for (int j = 0; j < n_rank; j++) {
+    send_buff_n  [j]   = 0;
+  }
+  for (int j = 0; j < gen_gnum->n_part; j++) {
+
+    gen_gnum->g_nums[j] = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * gen_gnum->n_elts[j]);
+
+    for (int k = 0; k < gen_gnum->n_elts[j]; k++) {
+      const int t_rank = PDM_binary_search_gap_long (gen_gnum->parent[j][k]-1,
+                                                     distrib,
+                                                     n_rank + 1);
+
+      int idx_read = send_buff_idx[t_rank] + send_buff_n[t_rank]++;
+      gen_gnum->g_nums[j][k] = send_gnum[idx_read];
+    }
+  }
+
+  free(send_gnum);
+  free(recv_gnum);
+
+  free(send_buff_n  );
+  free(send_buff_idx);
+  free(recv_buff_n  );
+  free(recv_buff_idx);
+
   free(distrib);
-
-
-
 
 }
 
