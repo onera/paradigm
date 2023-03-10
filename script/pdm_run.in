@@ -241,9 +241,9 @@ do
   then
     if [ $isPythonTest -gt 0  ]
     then
-      ${ExeMPI} --verbose --export=@PDM_RUN_PRELOAD_SRUN@,@PDM_RUN_LSAN@,@PDM_RUN_PYTHONPATH@  --output=$OutputFile.%t --error=$ErrFile.%t --ntasks=$Nrank  --exclusive /usr/bin/time  -f "Maximum Resident Memory : %M Kb\nReal time : %e s" python ./${TestName}.py ${TestOption} 2>/dev/null &
+      ${ExeMPI} --verbose --export=@PDM_RUN_PRELOAD_SRUN@,@PDM_RUN_LSAN@,@PDM_RUN_PYTHONPATH@  --output=$OutputFile.%t --error=$ErrFile.%t --ntasks=$Nrank  /usr/bin/time  -f "Maximum Resident Memory : %M Kb\nReal time : %e s" python ./${TestName}.py ${TestOption} 2>/dev/null &
     else
-      ${ExeMPI} --verbose --export=@PDM_RUN_PRELOAD_SRUN@,@PDM_RUN_LSAN@ --output=$OutputFile.%t --error=$ErrFile.%t --ntasks=$Nrank  --exclusive /usr/bin/time  -f "Maximum Resident Memory : %M Kb\nReal time : %e s" ./${TestName} ${TestOption}   &
+      ${ExeMPI} --verbose --export=@PDM_RUN_PRELOAD_SRUN@,@PDM_RUN_LSAN@ --output=$OutputFile.%t --error=$ErrFile.%t --ntasks=$Nrank  /usr/bin/time  -f "Maximum Resident Memory : %M Kb\nReal time : %e s" ./${TestName} ${TestOption}   &
     fi
     pids=(${pids[@]} "$!")
   else  
