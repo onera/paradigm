@@ -2713,16 +2713,24 @@ PDM_ownership_t         ownership
  * \param [in]  multipart             Pointer to \ref PDM_multipart_t object
  * \param [in]  i_zone                Id of zone
  * \param [out] pmesh                 Partitionned mesh
+<<<<<<< HEAD
  *
  */
 
 // TO DO : add ownership ?
 
+=======
+ * \param [in]  ownership             Who is responsible to free retreived data ?
+ *
+ */
+
+>>>>>>> fc19b99a... [generate_mesh] begin sphere mesh
 void
 PDM_multipart_get_part_mesh
 (
        PDM_multipart_t  *multipart,
  const int               i_zone,
+<<<<<<< HEAD
        PDM_part_mesh_t **pmesh
 )
 {
@@ -2730,6 +2738,15 @@ PDM_multipart_get_part_mesh
   assert(i_zone < _multipart->n_zone);
 
   *pmesh = &(_multipart->pmeshes    [i_zone]);
+=======
+       PDM_part_mesh_t **pmesh,
+       PDM_ownership_t   ownership
+)
+{
+  assert(i_zone < _multipart->n_zone);
+
+  _part_mesh_t *pmesh = &(_multipart->pmeshes    [i_zone]);
+>>>>>>> fc19b99a... [generate_mesh] begin sphere mesh
 }
 
 /**
