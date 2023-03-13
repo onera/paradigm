@@ -323,10 +323,7 @@ do
     fi
 
     scriptOutput=$(echo "if($Testoutput>$scriptOutput) $Testoutput else $scriptOutput" | bc)
- 
-    if [ "${Testoutput}" -ne "0" ]
-    then
-      ((ifailed=ifailed+1))
+       ((ifailed=ifailed+1))
     fi  
   fi  
 
@@ -335,11 +332,17 @@ done
 
 if [ ${IsSrunMPI} -gt 0 ]
 then
-  i=1 
+  i=0
+  j=1
+  ifailed=0 
   for pid in "${pids[@]}"
   do
+
     Testoutput=0
+    TestName=$(echo listComputedTest[$i] | awk '{print $1}')
+
     wait $pid
+
     if [ "$?" -ne "0" ]
     then
       Testoutput=1
@@ -358,6 +361,7 @@ then
       printf  "${PURPLE}[%3.3d/%3.3d] - %s: ${GREEN}Passed${NC} - %s s\n" ${j} ${nTest} ${TestName} ${elapsed} 
     fi
     ((i=i+1))
+    ((j=j+1))
     scriptOutput=$(echo "if($Testoutput>$scriptOutput) $Testoutput else $scriptOutput" | bc)
   done  
 fi
