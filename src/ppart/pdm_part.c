@@ -3562,19 +3562,33 @@ const  int      i_part,
 {
   _PDM_part_t *_ppart = (_PDM_part_t *) ppart;
 
-  _part_t *mesh_part = NULL;
-  if (i_part < _ppart->n_part)
-    mesh_part  = _ppart->mesh_parts[i_part];
+  if (_ppart->use_multipart) {
+    int i_zone = 0;
+    int **face_hp_color = (int**)malloc(sizeof(int*));
+    PDM_multipart_part_color_get(ppart->multipart,
+                                 i_zone,
+                                 i_part,
+                                 cell_color,
+                                 face_color,
+                                 face_hp_color,
+                                 thread_color,
+                                 hyperplane_color);
+    free(face_hp_color);
+  } else {
+    _part_t *mesh_part = NULL;
+    if (i_part < _ppart->n_part)
+      mesh_part  = _ppart->mesh_parts[i_part];
 
-  if (mesh_part == NULL) {
-    PDM_printf("PDM_part_part_color_get error : unknown partition\n");
-    exit(1);
+    if (mesh_part == NULL) {
+      PDM_printf("PDM_part_part_color_get error : unknown partition\n");
+      exit(1);
+    }
+
+    *cell_color       = mesh_part->cell_color;
+    *face_color       = mesh_part->face_color;
+    *thread_color     = mesh_part->thread_color;
+    *hyperplane_color = mesh_part->hyperplane_color;
   }
-
-  *cell_color       = mesh_part->cell_color;
-  *face_color       = mesh_part->face_color;
-  *thread_color     = mesh_part->thread_color;
-  *hyperplane_color = mesh_part->hyperplane_color;
 }
 
 
@@ -3733,6 +3747,23 @@ int         *bound_part_faces_sum
 )
 {
   _PDM_part_t *_ppart = (_PDM_part_t *) ppart;
+  if (_ppart->use_multipart) {
+    PDM_multipart_stat_get(ppart->multipart,
+                           0, // i_zone
+                           cells_average,
+                           cells_median,
+                           cells_std_deviation,
+                           cells_min,
+                           cells_max,
+                           bound_part_faces_average,
+                           bound_part_faces_median,
+                           bound_part_faces_std_deviation,
+                           bound_part_faces_min,
+                           bound_part_faces_max,
+                           bound_part_faces_sum);
+    return;
+  }
+
   int n_rank;
   PDM_MPI_Comm_size(_ppart->comm, &n_rank);
 

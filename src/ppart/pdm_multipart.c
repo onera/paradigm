@@ -4148,6 +4148,168 @@ void PDM_multipart_bound_get
   }
 }
 
+void
+PDM_multipart_stat_get
+(
+ PDM_multipart_t  *multipart,
+ int               i_zone,
+ int              *cells_average,
+ int              *cells_median,
+ double           *cells_std_deviation,
+ int              *cells_min,
+ int              *cells_max,
+ int              *bound_part_faces_average,
+ int              *bound_part_faces_median,
+ double           *bound_part_faces_std_deviation,
+ int              *bound_part_faces_min,
+ int              *bound_part_faces_max,
+ int              *bound_part_faces_sum
+)
+{
+  _pdm_multipart_t *_multipart = (_pdm_multipart_t *) multipart;
+  int n_rank;
+  PDM_MPI_Comm_size(_multipart->comm, &n_rank);
+
+  assert(i_zone < _multipart->n_zone);
+  _part_mesh_t _pmeshes = _multipart->pmeshes[i_zone];
+
+  PDM_g_num_t* dpart_proc = (int *) malloc((n_rank + 1) * sizeof(int));
+  PDM_MPI_Allgather((void *) &_multipart->n_part[i_zone],
+                    1,
+                    PDM_MPI_INT,
+           (void *) (&dpart_proc[1]),
+                    1,
+                    PDM_MPI_INT,
+                    _multipart->comm);
+
+  dpart_proc[0] = 0;
+  for (int i = 1; i < n_rank+1; i++) {
+    dpart_proc[i] = dpart_proc[i] + dpart_proc[i-1];
+  }
+
+  int *n_loc = (int *) malloc(_multipart->n_part[i_zone]  * sizeof(int));
+  int *n_tot = (int *) malloc(dpart_proc[n_rank]          * sizeof(int));
+
+  int *s_loc = (int *) malloc(_multipart->n_part[i_zone]  * sizeof(int));
+  int *s_tot = (int *) malloc(dpart_proc[n_rank]          * sizeof(int));
+
+  for (int i = 0; i < _multipart->n_part[i_zone]; i++) {
+    n_loc[i] = 0;
+    s_loc[i] = 0;
+  }
+
+  for (int i = 0; i < dpart_proc[n_rank]; i++) {
+    n_tot[i] = 0;
+    s_tot[i] = 0;
+  }
+
+  int tn_part = dpart_proc[n_rank];
+  for (int i_part = 0; i_part < _multipart->n_part[i_zone]; i_part++) {
+    n_loc[i_part] = _pmeshes.parts[i_part]->n_cell;
+    if(_pmeshes.parts[i_part]->face_part_bound_part_idx != NULL) {
+      s_loc[i_part] = _pmeshes.parts[i_part]->face_part_bound_part_idx[tn_part];
+    }
+  }
+
+  int *n_part_proc = (int *) malloc((n_rank) * sizeof(int));
+
+  for (int i = 0; i < n_rank; i++) {
+    n_part_proc[i] = dpart_proc[i+1] - dpart_proc[i];
+  }
+
+  PDM_MPI_Allgatherv(n_loc,
+                     _multipart->n_part[i_zone],
+                     PDM_MPI_INT,
+                     n_tot,
+                     n_part_proc,
+                     dpart_proc,
+                     PDM_MPI_INT,
+                     _multipart->comm);
+
+  PDM_MPI_Allgatherv(s_loc,
+                     _multipart->n_part[i_zone],
+                     PDM_MPI_INT,
+                     s_tot,
+                     n_part_proc,
+                     dpart_proc,
+                     PDM_MPI_INT,
+                     _multipart->comm);
+
+  PDM_quick_sort_int(s_tot, 0, dpart_proc[n_rank]-1);
+  PDM_quick_sort_int(n_tot, 0, dpart_proc[n_rank]-1);
+
+  double   _cells_average;
+  double   _bound_part_faces_average;
+
+  *bound_part_faces_min = -1;
+  *bound_part_faces_max = -1;
+  *cells_min = -1;
+  *cells_max = -1;
+  _cells_average = 0;
+  _bound_part_faces_average = 0;
+
+  for (int i = 0; i < dpart_proc[n_rank]; i++) {
+    if (*bound_part_faces_min < 0)
+      *bound_part_faces_min = s_tot[i];
+    else
+      *bound_part_faces_min = PDM_MIN(*bound_part_faces_min, s_tot[i]);
+    if (*bound_part_faces_max < 0)
+      *bound_part_faces_max = s_tot[i];
+    else
+      *bound_part_faces_max = PDM_MAX(*bound_part_faces_max, s_tot[i]);
+    if (*cells_min < 0)
+      *cells_min = n_tot[i];
+    else
+      *cells_min = PDM_MIN(*cells_min, n_tot[i]);
+    if (*cells_max < 0)
+      *cells_max = n_tot[i];
+    else
+      *cells_max = PDM_MAX(*cells_max, n_tot[i]);
+
+    _cells_average += n_tot[i];
+    _bound_part_faces_average += s_tot[i];
+  }
+
+  _cells_average = (_cells_average/((double) dpart_proc[n_rank]));
+  *bound_part_faces_sum = (int) _bound_part_faces_average;
+  _bound_part_faces_average =
+    _bound_part_faces_average/((double) dpart_proc[n_rank]);
+
+  *cells_average = (int) round(_cells_average);
+  *bound_part_faces_average = (int) round(_bound_part_faces_average);
+
+  *cells_std_deviation = 0.;
+  *bound_part_faces_std_deviation = 0.;
+  for (int i = 0; i < dpart_proc[n_rank]; i++) {
+    *cells_std_deviation += (n_tot[i] - _cells_average) * (n_tot[i] - _cells_average);
+    *bound_part_faces_std_deviation += (s_tot[i] - _bound_part_faces_average) *
+                                      (s_tot[i] - _bound_part_faces_average);
+  }
+
+  *cells_std_deviation = sqrt(*cells_std_deviation/dpart_proc[n_rank]);
+  *bound_part_faces_std_deviation =
+    sqrt(*bound_part_faces_std_deviation/dpart_proc[n_rank]);
+
+  int mid = dpart_proc[n_rank]/2;
+  if (dpart_proc[n_rank] % 2 == 1) {
+    *cells_median = n_tot[mid];
+    *bound_part_faces_median = s_tot[mid];
+  }
+
+  else {
+    *cells_median =(int) round((n_tot[mid-1] + n_tot[mid])/2.);
+    *bound_part_faces_median = (int) ((s_tot[mid-1] + s_tot[mid])/2.);
+  }
+
+  free(n_part_proc);
+  free(n_tot);
+  free(s_tot);
+  free(n_loc);
+  free(s_loc);
+  free(dpart_proc);
+}
+
+
 /*----------------------------------------------------------------------------*/
 
 #ifdef __cplusplus

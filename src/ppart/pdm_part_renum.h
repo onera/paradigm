@@ -532,6 +532,20 @@ const int *old_to_new_order,
 int       *array
 );
 
+/**
+ *
+ * \brief Perform faces renumbering from a new order
+ *
+ * \param [in,out]  part        Current partition
+ * \param [in]      new_to_old_order    NewOrder
+ *
+ */
+void
+PDM_part_reorder_face_bound
+(
+ part_t *part,
+ int    *new_to_old_order
+);
 
 #ifdef	__cplusplus
 }

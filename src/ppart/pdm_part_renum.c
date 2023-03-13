@@ -2058,6 +2058,46 @@ int     *new_to_old_order
 
 }
 
+/**
+ *
+ * \brief Perform faces renumbering from a new order
+ *
+ * \param [in,out]  part        Current partition
+ * \param [in]      new_to_old_order    NewOrder
+ *
+ */
+void
+PDM_part_reorder_face_bound
+(
+_part_t *part,
+int     *new_to_old_order
+)
+{
+  if (part->face_group != NULL) {
+    PDM_order_array (part->face_group_idx[part->n_face_group],
+                     sizeof(int),
+                     new_to_old_order,
+                     part->face_group);
+
+    PDM_order_array (part->face_group_idx[part->n_face_group],
+                     sizeof(PDM_g_num_t),
+                     new_to_old_order,
+                     part->face_group_ln_to_gn);
+  }
+
+  if (part->face_bound != NULL) {
+    PDM_order_array (part->face_bound_idx[part->n_face_group],
+                     sizeof(int),
+                     new_to_old_order,
+                     part->face_bound);
+
+    PDM_order_array (part->face_bound_idx[part->n_face_group],
+                     sizeof(PDM_g_num_t),
+                     new_to_old_order,
+                     part->face_bound_ln_to_gn);
+  }
+}
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
