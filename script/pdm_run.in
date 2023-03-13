@@ -323,6 +323,9 @@ do
     fi
 
     scriptOutput=$(echo "if($Testoutput>$scriptOutput) $Testoutput else $scriptOutput" | bc)
+
+    if [ "${Testoutput}" -ne "0" ]
+    then
        ((ifailed=ifailed+1))
     fi  
   fi  
