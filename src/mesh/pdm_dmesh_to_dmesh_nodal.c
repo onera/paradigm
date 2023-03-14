@@ -111,7 +111,7 @@ _generate_sections
   PDM_MPI_Allgatherv(section_n, n_section_tot, PDM__PDM_MPI_G_NUM,
                      g_section_n, section_kind_n, section_kind_idx, PDM__PDM_MPI_G_NUM, comm);
 
-  if(0 == 1) {
+  if(1 == 0) {
     PDM_log_trace_array_long(section_n, n_section_tot, "section_n ::");
     PDM_log_trace_array_long(distrib_entity, n_rank+1, "distrib_entity ::");
     PDM_log_trace_connectivity_int (section_kind_idx, g_section_kind, n_rank, "g_section_kind : ");
@@ -148,7 +148,7 @@ _generate_sections
   free(section_kind);
 
 
-  if(0 == 1) {
+  if(1 == 0) {
     PDM_log_trace_array_int (post_section_kind, n_section_post, "post_section_kind ::");
     PDM_log_trace_array_long(post_section_n   , n_section_post, "post_section_n    ::");
   }
