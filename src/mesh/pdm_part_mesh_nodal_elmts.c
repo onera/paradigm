@@ -24,6 +24,7 @@
 #include "pdm_gnum.h"
 #include "pdm_geom_elem.h"
 #include "pdm_array.h"
+#include "pdm_lagrange_to_bezier.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -3285,6 +3286,12 @@ PDM_part_mesh_nodal_elmts_elt_extents_compute
 
   int _id_section;
 
+  double *lagrange_coord = NULL;
+  double *bezier_coord   = NULL;
+  double *matrix         = NULL;
+  PDM_Mesh_nodal_elt_t t_elt = PDM_MESH_NODAL_N_ELEMENT_TYPES;
+  int order = -1;
+
   /* Polyhedra */
   if (id_section >= PDM_BLOCK_ID_BLOCK_POLY3D) {
 
@@ -3331,10 +3338,20 @@ PDM_part_mesh_nodal_elmts_elt_extents_compute
     n_elt = block->n_elt[id_part];
     cell_vtx = block->_connec[id_part];
 
-    const int order = block->order;
+    order = block->order;
 
     // TO DO : support HO elt (-> Bézier to compute bboxes?)
     n_vtx_elt = PDM_Mesh_nodal_n_vtx_elt_get (block->t_elt, order);
+
+    if (order > 1                                   &&
+        block->t_elt != PDM_MESH_NODAL_BARHO_BEZIER &&
+        block->t_elt != PDM_MESH_NODAL_TRIAHO_BEZIER) {
+      t_elt = block->t_elt;
+      int n_nodes_quad = PDM_Mesh_nodal_n_vtx_elt_get(PDM_MESH_NODAL_QUADHO, order);
+      lagrange_coord = malloc(sizeof(double) * n_vtx_elt * 3);
+      bezier_coord   = malloc(sizeof(double) * n_vtx_elt * 3);
+      matrix         = malloc(sizeof(double) * n_nodes_quad * n_nodes_quad);
+    }
   }
 
   /* Loop on elements */
@@ -3354,11 +3371,74 @@ PDM_part_mesh_nodal_elmts_elt_extents_compute
       n_vtx_elt = cell_vtx_idx[ielt+1] - cell_vtx_idx[ielt];
     }
 
+    double *coord = NULL;
+
+    if (bezier_coord != NULL) {
+      for (int ivtx = 0; ivtx < n_vtx_elt; ivtx++) {
+        PDM_l_num_t id_vtx = cell_vtx[idx + ivtx] - 1;
+        memcpy(lagrange_coord + 3*ivtx, vtx_coord + 3*id_vtx, sizeof(double) * 3);
+      }
+
+      switch (t_elt) {
+      case PDM_MESH_NODAL_BARHO:
+        PDM_lagrange_to_bezier_bar(order,
+                                   lagrange_coord,
+                                   bezier_coord,
+                                   matrix);
+        break;
+      case PDM_MESH_NODAL_TRIAHO:
+        PDM_lagrange_to_bezier_tria(order,
+                                    lagrange_coord,
+                                    bezier_coord,
+                                    matrix);
+        break;
+      case PDM_MESH_NODAL_QUADHO:
+        PDM_lagrange_to_bezier_quad(order,
+                                    lagrange_coord,
+                                    bezier_coord,
+                                    matrix);
+        break;
+      case PDM_MESH_NODAL_TETRAHO:
+        PDM_lagrange_to_bezier_tetra(order,
+                                     lagrange_coord,
+                                     bezier_coord,
+                                     matrix);
+        break;
+      case PDM_MESH_NODAL_PYRAMIDHO:
+        PDM_lagrange_to_bezier_pyramid(order,
+                                       lagrange_coord,
+                                       bezier_coord,
+                                       matrix);
+        break;
+      case PDM_MESH_NODAL_PRISMHO:
+        PDM_lagrange_to_bezier_prism(order,
+                                     lagrange_coord,
+                                     bezier_coord,
+                                     matrix);
+        break;
+      case PDM_MESH_NODAL_HEXAHO:
+        PDM_lagrange_to_bezier_hexa(order,
+                                    lagrange_coord,
+                                    bezier_coord,
+                                    matrix);
+        break;
+      default:
+        PDM_error(__FILE__, __LINE__, 0, "Invalid elt type %d\n", t_elt);
+      }
+    }
+
     for (int ivtx = 0; ivtx < n_vtx_elt; ivtx++) {
       PDM_l_num_t id_vtx = cell_vtx[idx++] - 1;
 
+      if (bezier_coord != NULL) {
+        coord = bezier_coord + 3*ivtx;
+      }
+      else {
+        coord = vtx_coord + 3*id_vtx;
+      }
+
       for (int idim = 0; idim < 3; idim++) {
-        double x = vtx_coord[3*id_vtx + idim];
+        double x = coord[idim];
 
         if (x < _extents[idim]) {
           _extents[idim] = x;
@@ -3391,6 +3471,16 @@ PDM_part_mesh_nodal_elmts_elt_extents_compute
       _extents[3+idim] += delta;
     }
   } // End of loop on elements
+
+  if (lagrange_coord != NULL) {
+    free(lagrange_coord);
+  }
+  if (bezier_coord != NULL) {
+    free(bezier_coord);
+  }
+  if (matrix != NULL) {
+    free(matrix);
+  }
 }
 
 /**
