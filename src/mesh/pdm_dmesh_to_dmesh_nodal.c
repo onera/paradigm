@@ -1391,12 +1391,14 @@ _rebuild_dmesh_nodal_by_kind_3d
       ln_to_gn[i] = distrib_elmt[i_rank] + i + 1;
     }
 
+    int n_elt = (int) section_n[i_section];
+
     PDM_part_to_block_t* ptb = PDM_part_to_block_create_from_distrib(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
                                                                      PDM_PART_TO_BLOCK_POST_CLEANUP,
                                                                      1.,
                                                                      &ln_to_gn,
                                                                      distrib_elmt,
-                                                                     &section_n[i_section],
+                                                                     &n_elt,//&section_n[i_section],
                                                                      1,
                                                                      comm);
 

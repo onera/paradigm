@@ -4173,7 +4173,7 @@ PDM_multipart_stat_get
   assert(i_zone < _multipart->n_zone);
   _part_mesh_t _pmeshes = _multipart->pmeshes[i_zone];
 
-  PDM_g_num_t* dpart_proc = (int *) malloc((n_rank + 1) * sizeof(int));
+  int* dpart_proc = (int *) malloc((n_rank + 1) * sizeof(int));
   PDM_MPI_Allgather((void *) &_multipart->n_part[i_zone],
                     1,
                     PDM_MPI_INT,

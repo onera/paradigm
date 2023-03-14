@@ -364,7 +364,7 @@ int main(int argc, char *argv[])
                             PDM_OWNERSHIP_USER);
 
 
-  if(1 == 1) {
+  if(0 == 1) {
     if(dim == 3) {
       PDM_dmesh_nodal_dump_vtk(dmn_out, PDM_GEOMETRY_KIND_VOLUMIC , "out_post_volumic");
     }
