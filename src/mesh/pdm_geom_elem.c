@@ -2014,6 +2014,9 @@ PDM_geom_elem_polyhedra_properties
       }
 
       const int face          = abs(cellToFaceConnectivity[polyIdx + iface]) - 1;
+      if (!isOriented) {
+        cellToFaceConnectivity[polyIdx + iface] = face+1;
+      }
       const int faceIdx       = faceConnectivityIdx[face];
       const int n_faceVertices = faceConnectivityIdx[face+1] - faceIdx;
 
