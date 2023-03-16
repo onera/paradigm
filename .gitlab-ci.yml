@@ -71,13 +71,7 @@ unit_test:
     MATRIX_KEY: _${COMPILER}_${MPI_LIB}_GNUM64_${GNUM64}
   stage: test
   before_script:
-<<<<<<< HEAD
     - module purge
-=======
-    - unset _LMFILES_
-    - unset LOADEDMODULES
-    - module -s purge
->>>>>>> cf6091fc... merci Bérenger
     - source /scratchm/sonics/dist/spiro_el8.sh --compiler=$COMPILER --mpi=$MPI_LIB
   script:
     # - echo "Runner directory is $PWD; move to working directory $CUSTOM_CI_DIR"
@@ -100,7 +94,6 @@ unit_test:
     reports:
       junit: paradigm_ctest$MATRIX_KEY.xml
 
-<<<<<<< HEAD
 # non_regression:
 #   variables:
 #     COMPILER: "gcc@10"
@@ -122,28 +115,6 @@ unit_test:
 #    when: always
 #    reports:
 #      junit: paradigm_alltest$MATRIX_KEY.xml
-=======
-non_regression:
-  variables:
-    COMPILER: "gcc@10"
-    MPI_LIB: "impi"
-    MATRIX_KEY: _${COMPILER}_${MPI_LIB}
-  stage: test
-  before_script:
-    - unset _LMFILES_
-    - unset LOADEDMODULES
-    - module -s purge
-    - source /scratchm/sonics/dist/spiro_el8.sh --compiler=$COMPILER --mpi=$MPI_LIB
-  script:
-    - echo "Runner directory is $PWD; move to working directory $CUSTOM_CI_DIR"
-    - cd $CUSTOM_CI_DIR/build$MATRIX_KEY
-    - mkdir -p reports
-    - ./script/prepare_ci/run_top_test_base.sh --log_file_name reports/output_alltest_pdm --matrix_key ${MATRIX_KEY} --output_xml $CI_PROJECT_DIR/paradigm_alltest$MATRIX_KEY.xml
-  artifacts:
-   when: always
-   reports:
-     junit: paradigm_alltest$MATRIX_KEY.xml
->>>>>>> cf6091fc... merci Bérenger
 
 # TODO :
 #  - Rajouter des regles pour faire plus de compilo quand on merge sur dev : impi + clang + pgi par exemple
