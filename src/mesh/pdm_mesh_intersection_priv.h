@@ -94,6 +94,8 @@ struct _pdm_mesh_intersection_t {
   double   same_plane_tol;       /*!< Absolute tolerance used to check if 2 surfaces
                                       are the same plane surface */
 
+  double bbox_tolerance;
+
 
   PDM_MPI_Comm comm;             /*!< MPI communicator */
 

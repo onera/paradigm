@@ -322,17 +322,18 @@ static
 void
 _compute_extents_3d
 (
- int      n_cell,
- int     *cell_face_idx,
- int     *cell_face,
- int     *face_vtx_idx,
- int     *face_vtx,
- double  *vtx_coord,
- double  *box_extents,
- double  *global_extents
+       int      n_cell,
+       int     *cell_face_idx,
+       int     *cell_face,
+       int     *face_vtx_idx,
+       int     *face_vtx,
+       double  *vtx_coord,
+ const double   tolerance,
+       double  *box_extents,
+       double  *global_extents
 )
 {
-  const double tolerance   = 1.e-12;
+  // const double tolerance   = 1.e-12;
   const double eps_extents = 1.e-7;
   const int dim = 3;
 
@@ -401,15 +402,16 @@ static
 void
 _compute_extents_2d_from_face_vtx
 (
- int      n_face,
- int     *face_vtx_idx,
- int     *face_vtx,
- double  *vtx_coord,
- double  *box_extents,
- double  *global_extents
+       int      n_face,
+       int     *face_vtx_idx,
+       int     *face_vtx,
+       double  *vtx_coord,
+ const double   tolerance,
+       double  *box_extents,
+       double  *global_extents
 )
 {
-  const double tolerance   = 1.e-12;
+  // const double tolerance   = 1.e-12;
   const double eps_extents = 1.e-7;
   const int dim = 3;
 
@@ -473,10 +475,11 @@ static
 void
 _compute_mesh_nodal_extents
 (
-  PDM_part_mesh_nodal_t   *mesh_nodal,
-  int                      dim_mesh,
-  double                  *global_extents,
-  double                ***extents_out
+        PDM_part_mesh_nodal_t   *mesh_nodal,
+        int                      dim_mesh,
+  const double                   tolerance,
+        double                  *global_extents,
+        double                ***extents_out
 )
 {
   PDM_geometry_kind_t geom_kind;
@@ -547,7 +550,7 @@ _compute_mesh_nodal_extents
       PDM_part_mesh_nodal_section_elt_extents_compute(mesh_nodal,
                                                       id_section,
                                                       i_part,
-                                                      1e-8,
+                                                      tolerance,
                                                       _extents);
 
       for (int i = 0; i < n_elt; i++) {
@@ -580,6 +583,7 @@ _compute_part_mesh_extents
 (
   PDM_part_mesh_t   *mesh,
   int                dim_mesh,
+  const double       tolerance,
   double            *global_extents,
   double          ***extents_out
 )
@@ -602,20 +606,43 @@ _compute_part_mesh_extents
 
       PDM_part_mesh_vtx_coord_get(mesh, i_part, &vtx_coord, PDM_OWNERSHIP_BAD_VALUE); // Il faudrait un unchanged
 
+      int *_face_vtx = face_vtx;
       extents[i_part] = malloc(6 * n_cell * sizeof(double));
-      if(face_vtx == NULL) {
+      if (face_vtx == NULL) {
         int    *face_edge_idx  = NULL;
         int    *face_edge      = NULL;
         int    *edge_vtx_idx   = NULL;
         int    *edge_vtx       = NULL;
-        int n_face = PDM_part_mesh_n_entity_get(mesh, i_part, PDM_MESH_ENTITY_FACE);
-        PDM_part_mesh_connectivity_get(mesh, i_part, PDM_CONNECTIVITY_TYPE_FACE_EDGE , &face_edge , &face_edge_idx, PDM_OWNERSHIP_BAD_VALUE);
-        PDM_part_mesh_connectivity_get(mesh, i_part, PDM_CONNECTIVITY_TYPE_EDGE_VTX  , &edge_vtx  , &edge_vtx_idx , PDM_OWNERSHIP_BAD_VALUE);
-        PDM_compute_face_vtx_from_face_and_edge(n_face, face_edge_idx, face_edge, edge_vtx, &face_vtx);
-        _compute_extents_3d(n_cell, cell_face_idx, cell_face, face_edge_idx, face_vtx, vtx_coord, extents[i_part], global_extents);
-        free(face_vtx);
-      } else {
-        _compute_extents_3d(n_cell, cell_face_idx, cell_face, face_vtx_idx, face_vtx, vtx_coord, extents[i_part], global_extents);
+        int n_face = PDM_part_mesh_n_entity_get(mesh,
+                                                i_part,
+                                                PDM_MESH_ENTITY_FACE);
+        PDM_part_mesh_connectivity_get(mesh,
+                                       i_part,
+                                       PDM_CONNECTIVITY_TYPE_FACE_EDGE,
+                                       &face_edge,
+                                       &face_edge_idx,
+                                       PDM_OWNERSHIP_BAD_VALUE);
+        PDM_part_mesh_connectivity_get(mesh,
+                                       i_part,
+                                       PDM_CONNECTIVITY_TYPE_EDGE_VTX,
+                                       &edge_vtx,
+                                       &edge_vtx_idx,
+                                       PDM_OWNERSHIP_BAD_VALUE);
+        PDM_compute_face_vtx_from_face_and_edge(n_face,
+                                                face_edge_idx,
+                                                face_edge,
+                                                edge_vtx,
+                                                &_face_vtx);
+      }
+      _compute_extents_3d(n_cell, cell_face_idx, cell_face,
+                          face_vtx_idx,
+                          _face_vtx,
+                          vtx_coord,
+                          tolerance,
+                          extents[i_part],
+                          global_extents);
+      if (face_vtx == NULL) {
+        free(_face_vtx);
       }
     }
   } else if(dim_mesh == 2) {
@@ -638,7 +665,13 @@ _compute_part_mesh_extents
       extents[i_part] = malloc(6 * n_face * sizeof(double));
 
       if(face_vtx != NULL) {
-        _compute_extents_2d_from_face_vtx(n_face, face_vtx_idx, face_vtx, vtx_coord, extents[i_part], global_extents);
+        _compute_extents_2d_from_face_vtx(n_face,
+                                          face_vtx_idx,
+                                          face_vtx,
+                                          vtx_coord,
+                                          tolerance,
+                                          extents[i_part],
+                                          global_extents);
       } else {
         PDM_part_mesh_connectivity_get(mesh, i_part, PDM_CONNECTIVITY_TYPE_FACE_EDGE , &face_edge, &face_edge_idx, PDM_OWNERSHIP_BAD_VALUE);
         assert(face_edge != NULL);
@@ -650,8 +683,15 @@ _compute_part_mesh_extents
         for(int i_edge = 0; i_edge < n_edge+1; ++i_edge){
           edge_vtx_idx[i_edge] = 2 * i_edge;
         }
-        _compute_extents_3d(n_face, face_edge_idx, face_edge, edge_vtx_idx, edge_vtx, vtx_coord, extents[i_part], global_extents);
-        // _compute_extents_2d_from_face_edge(n_face, face_edge_idx, face_edge, edge_vtx, vtx_coord, extents[i_part], global_extents);
+        _compute_extents_3d(n_face,
+                            face_edge_idx,
+                            face_edge,
+                            edge_vtx_idx,
+                            edge_vtx,
+                            vtx_coord,
+                            tolerance,
+                            extents[i_part],
+                            global_extents);
         free(edge_vtx_idx);
       }
     }
@@ -673,7 +713,13 @@ _compute_part_mesh_extents
         edge_vtx_idx[i_edge] = 2 * i_edge;
       }
 
-      _compute_extents_2d_from_face_vtx(n_edge, edge_vtx_idx, edge_vtx, vtx_coord, extents[i_part], global_extents);
+      _compute_extents_2d_from_face_vtx(n_edge,
+                                        edge_vtx_idx,
+                                        edge_vtx,
+                                        vtx_coord,
+                                        tolerance,
+                                        extents[i_part],
+                                        global_extents);
 
       free(edge_vtx_idx);
     }
@@ -5094,6 +5140,8 @@ PDM_mesh_intersection_create
   mi->dim_mesh[1]    = dim_mesh_b;
   mi->project_coef   = project_coeff;
 
+  mi->bbox_tolerance = 1e-6;
+
   mi->mesh      [0] = NULL;
   mi->mesh      [1] = NULL;
   mi->mesh_nodal[0] = NULL;
@@ -5175,6 +5223,7 @@ PDM_mesh_intersection_compute
     if (mi->mesh_nodal[imesh] == NULL && mi->mesh[imesh] != NULL) {
       _compute_part_mesh_extents(mi->mesh[imesh],
                                  mi->dim_mesh[imesh],
+                                 mi->bbox_tolerance,
                                  mesh_global_extents[imesh],
                                  &extents_mesh[imesh]);
       // printf("extents_mesh [%i] = (%12.5e/%12.5e/%12.5e) | (%12.5e/%12.5e/%12.5e) \n", imesh,
@@ -5184,6 +5233,7 @@ PDM_mesh_intersection_compute
     else if (mi->mesh_nodal[imesh] != NULL) {
       _compute_mesh_nodal_extents(mi->mesh_nodal[imesh],
                                   mi->dim_mesh[imesh],
+                                  mi->bbox_tolerance,
                                   mesh_global_extents[imesh],
                                   &extents_mesh[imesh]);
     }
@@ -5922,6 +5972,27 @@ PDM_mesh_intersection_elt_volume_get
   *elt_volume = mi->elt_volume[imesh][ipart];
 
   mi->tag_elt_volume_get[imesh] = 1;
+}
+
+
+
+/**
+ *
+ * \brief Set the tolerance for bounding boxes
+ *
+ * \param [in]   mi              Pointer to \ref PDM_mesh_intersection object
+ * \param [in]   tol             Tolerance
+ *
+ */
+void
+PDM_mesh_intersection_tolerance_set
+(
+       PDM_mesh_intersection_t *mi,
+ const double                   tol
+)
+{
+
+  mi->bbox_tolerance = tol;
 }
 
 

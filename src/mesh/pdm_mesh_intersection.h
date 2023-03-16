@@ -181,6 +181,22 @@ PDM_mesh_intersection_elt_volume_get
        double                  **elt_volume
  );
 
+
+/**
+ *
+ * \brief Set the tolerance for bounding boxes
+ *
+ * \param [in]   mi              Pointer to \ref PDM_mesh_intersection object
+ * \param [in]   tol             Tolerance
+ *
+ */
+void
+PDM_mesh_intersection_tolerance_set
+(
+       PDM_mesh_intersection_t *mi,
+ const double                   tol
+);
+
 #ifdef  __cplusplus
 }
 #endif

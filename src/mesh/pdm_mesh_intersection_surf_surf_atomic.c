@@ -260,7 +260,7 @@ _line_vtxA_id
 
 
 
-static void
+static inline void
 _project_on_line3
 (
        double *coord,
