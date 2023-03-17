@@ -1848,7 +1848,8 @@ PDM_gnum_compute
   }
   else if (from_parent_g != 0 && from_parent_nuplet_g == 0) {
     _gnum_from_parent_compute (gen_gnum);
-  } else {
+  }
+  else if (from_parent_nuplet_g != 0) {
     if(gen_gnum->nuplet == 1) { // Cas from parent mais optimiser
       _gnum_from_parent_compute_opt(gen_gnum);
     } else {
