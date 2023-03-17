@@ -183,6 +183,30 @@ cdef class ExtractPart:
     self.keep_alive.append(vtx_ln_to_gn)
     self.keep_alive.append(coords)
 
+    cdef int * _face_edge_idx;
+    if (face_edge_idx is None):
+        _face_edge_idx = NULL
+    else:
+        _face_edge_idx = <int *> face_edge_idx.data
+
+    cdef int * _face_edge;
+    if (face_edge is None):
+        _face_edge = NULL
+    else:
+        _face_edge = <int *> face_edge.data
+
+    cdef int * _edge_vtx;
+    if (edge_vtx is None):
+        _edge_vtx = NULL
+    else:
+        _edge_vtx = <int *> edge_vtx.data
+
+    cdef PDM_g_num_t* _edge_ln_to_gn;
+    if (edge_ln_to_gn is None):
+        _edge_ln_to_gn = NULL
+    else:
+        _edge_ln_to_gn = <PDM_g_num_t *> edge_ln_to_gn.data
+
     PDM_extract_part_part_set(self._extrp,
                               i_part,
                               n_cell,
@@ -191,14 +215,14 @@ cdef class ExtractPart:
                               n_vtx,
              <int         *>  cell_face_idx.data,
              <int         *>  cell_face    .data,
-             <int         *>  face_edge_idx.data,
-             <int         *>  face_edge    .data,
-             <int         *>  edge_vtx     .data,
+                             _face_edge_idx,
+                             _face_edge,
+                             _edge_vtx,
              <int         *>  face_vtx_idx .data,
              <int         *>  face_vtx     .data,
              <PDM_g_num_t *> cell_ln_to_gn.data,
              <PDM_g_num_t *> face_ln_to_gn.data,
-             <PDM_g_num_t *> edge_ln_to_gn.data,
+                            _edge_ln_to_gn,
              <PDM_g_num_t *> vtx_ln_to_gn .data,
              <double      *> coords       .data)
 
