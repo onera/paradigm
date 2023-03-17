@@ -173,6 +173,18 @@ _store_cell_vtx
     blocks_id = PDM_part_mesh_nodal_sections_id_in_geom_kind_get(ml->mesh_nodal, geom_kind);
   }
 
+  if (1) {
+    for (int ipart = 0; ipart < n_parts; ipart++) {
+      PDM_part_mesh_nodal_cell_vtx_connect_get(ml->mesh_nodal,
+                                               geom_kind,
+                                               ipart,
+                                               &ml->cell_vtx_idx[ipart],
+                                               &ml->cell_vtx    [ipart]);
+    }
+
+    return;
+  }
+
   int **n_vtx_per_elt = malloc (sizeof(int *) * n_parts);
 
   for (int ipart = 0; ipart < n_parts; ipart++) {

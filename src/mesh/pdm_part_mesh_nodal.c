@@ -2408,6 +2408,267 @@ PDM_part_mesh_nodal_part_mesh_nodal_elmts_get
 }
 
 
+/**
+ * \brief Return the geometry kind of highest dimension
+ * for a given \ref PDM_part_mesh_nodal_t object
+ *
+ * \param [in] pmn    Pointer to \ref PDM_part_mesh_nodal_t object
+ *
+ * \return Geometry kind of highest dimension
+ *
+ */
+
+PDM_geometry_kind_t
+PDM_part_mesh_nodal_principal_geom_kind_get
+(
+ PDM_part_mesh_nodal_t  *pmn
+ )
+{
+  switch (pmn->mesh_dimension) {
+  case 3:
+    return PDM_GEOMETRY_KIND_VOLUMIC;
+    break;
+  case 2:
+    return PDM_GEOMETRY_KIND_SURFACIC;
+    break;
+  case 1:
+    return PDM_GEOMETRY_KIND_RIDGE;
+    break;
+  case 0:
+    return PDM_GEOMETRY_KIND_CORNER;
+    break;
+  default:
+    PDM_error(__FILE__, __LINE__, 0, "Invalid mesh_dimension %d\n", pmn->mesh_dimension);
+  }
+
+  return PDM_GEOMETRY_KIND_MAX;
+}
+
+
+/**
+ * \brief Return the cell->vertex connectivity
+ * The output pointers are owned by the user.
+ *
+ * \param [in]  pmn           Pointer to \ref PDM_part_mesh_nodal_t object
+ * \param [in]  geom_kind     Geometry kind (corner, ridge, surface or volume)
+ * \param [in]  i_part        Partition identifier
+ * \param [out] cell_vtx_idx  Index for the cell->vertex connectivity
+ * \param [out] cell_vtx      Cell->vertex connectivity
+ *
+ * \return Number of cells in current partition
+ *
+ */
+
+int
+PDM_part_mesh_nodal_cell_vtx_connect_get
+(
+        PDM_part_mesh_nodal_t  *pmn,
+        PDM_geometry_kind_t     geom_kind,
+  const int                     i_part,
+        int                   **cell_vtx_idx,
+        int                   **cell_vtx
+)
+{
+  if (pmn == NULL) {
+    return 0;
+  }
+
+  int n_part = PDM_part_mesh_nodal_n_part_get(pmn);
+  if (i_part >= n_part) {
+    PDM_error(__FILE__, __LINE__, 0, "Invalid i_part (%d / %d)\n", i_part, n_part);
+  }
+
+  PDM_part_mesh_nodal_elmts_t *pmne = _get_from_geometry_kind(pmn,
+                                                              geom_kind);
+
+  int  n_section   = PDM_part_mesh_nodal_elmts_n_section_get  (pmne);
+  int *sections_id = PDM_part_mesh_nodal_elmts_sections_id_get(pmne);
+
+
+  int n_cell = PDM_part_mesh_nodal_elmts_n_elmts_get(pmne,
+                                                     i_part);
+
+  *cell_vtx_idx = PDM_array_zeros_int(n_cell + 1);
+
+  for (int isection = 0; isection < n_section; isection++) {
+
+    int id_section = sections_id[isection];
+
+    PDM_Mesh_nodal_elt_t t_elt = PDM_part_mesh_nodal_elmts_section_type_get(pmne,
+                                                                            id_section);
+
+    int *parent_num = PDM_part_mesh_nodal_elmts_parent_num_get(pmne,
+                                                               id_section,
+                                                               i_part);
+
+    int n_elt = PDM_part_mesh_nodal_elmts_section_n_elt_get(pmne,
+                                                            id_section,
+                                                            i_part);
+    int *connec_idx;
+    int *connec;
+
+    if (t_elt == PDM_MESH_NODAL_POLY_2D) {
+      PDM_part_mesh_nodal_elmts_section_poly2d_get(pmne,
+                                                   id_section,
+                                                   i_part,
+                                                   &connec_idx,
+                                                   &connec);
+    }
+    else if (t_elt == PDM_MESH_NODAL_POLY_3D) {
+      PDM_part_mesh_nodal_elmts_section_poly3d_cell_vtx_connect_get(pmne,
+                                                                    id_section,
+                                                                    i_part,
+                                                                    &connec_idx,
+                                                                    &connec);
+    }
+
+    if (t_elt == PDM_MESH_NODAL_POLY_2D ||
+        t_elt == PDM_MESH_NODAL_POLY_3D) {
+
+      if (parent_num != NULL) {
+        for (int i = 0; i < n_elt; i++) {
+          (*cell_vtx_idx)[parent_num[i]+1] = connec_idx[i+1] - connec_idx[i];
+        }
+      }
+      else {
+        for (int i = 0; i < n_elt; i++) {
+          (*cell_vtx_idx)[i+1] = connec_idx[i+1] - connec_idx[i];
+        }
+      }
+
+    }
+    else {
+
+      PDM_g_num_t *numabs;
+      int         *_parent_num;
+      PDM_g_num_t *parent_entity_g_num;
+      int          order;
+      const char  *ho_ordering;
+      PDM_part_mesh_nodal_elmts_section_std_ho_get(pmne,
+                                                   id_section,
+                                                   i_part,
+                                                   &connec,
+                                                   &numabs,
+                                                   &_parent_num,
+                                                   &parent_entity_g_num,
+                                                   &order,
+                                                   &ho_ordering);
+
+      int n_vtx_elt = PDM_Mesh_nodal_n_vtx_elt_get(t_elt, order);
+
+      if (parent_num != NULL) {
+        for (int i = 0; i < n_elt; i++) {
+          (*cell_vtx_idx)[parent_num[i]+1] = n_vtx_elt;
+        }
+      }
+      else {
+        for (int i = 0; i < n_elt; i++) {
+          (*cell_vtx_idx)[i+1] = n_vtx_elt;
+        }
+      }
+
+    }
+  }
+
+  PDM_array_accumulate_int(*cell_vtx_idx, n_cell+1);
+
+
+  *cell_vtx = malloc(sizeof(int) * (*cell_vtx_idx)[n_cell]);
+
+  for (int isection = 0; isection < n_section; isection++) {
+
+    int id_section = sections_id[isection];
+
+    PDM_Mesh_nodal_elt_t t_elt = PDM_part_mesh_nodal_elmts_section_type_get(pmne,
+                                                                            id_section);
+
+    int *parent_num = PDM_part_mesh_nodal_elmts_parent_num_get(pmne,
+                                                               id_section,
+                                                               i_part);
+
+    int n_elt = PDM_part_mesh_nodal_elmts_section_n_elt_get(pmne,
+                                                            id_section,
+                                                            i_part);
+    int *connec_idx;
+    int *connec;
+
+    if (t_elt == PDM_MESH_NODAL_POLY_2D) {
+      PDM_part_mesh_nodal_elmts_section_poly2d_get(pmne,
+                                                   id_section,
+                                                   i_part,
+                                                   &connec_idx,
+                                                   &connec);
+    }
+    else if (t_elt == PDM_MESH_NODAL_POLY_3D) {
+      PDM_part_mesh_nodal_elmts_section_poly3d_cell_vtx_connect_get(pmne,
+                                                                    id_section,
+                                                                    i_part,
+                                                                    &connec_idx,
+                                                                    &connec);
+    }
+
+    if (t_elt == PDM_MESH_NODAL_POLY_2D ||
+        t_elt == PDM_MESH_NODAL_POLY_3D) {
+
+      if (parent_num != NULL) {
+        for (int i = 0; i < n_elt; i++) {
+          for (int j = 0; j < connec_idx[i+1] - connec_idx[i]; j++) {
+            (*cell_vtx)[(*cell_vtx_idx)[parent_num[i]] + j] = connec[connec_idx[i] + j];
+          }
+        }
+      }
+      else {
+        for (int i = 0; i < n_elt; i++) {
+          for (int j = 0; j < connec_idx[i+1] - connec_idx[i]; j++) {
+            (*cell_vtx)[(*cell_vtx_idx)[i] + j] = connec[connec_idx[i] + j];
+          }
+        }
+      }
+
+    }
+    else {
+
+      PDM_g_num_t *numabs;
+      int         *_parent_num;
+      PDM_g_num_t *parent_entity_g_num;
+      int          order;
+      const char  *ho_ordering;
+      PDM_part_mesh_nodal_elmts_section_std_ho_get(pmne,
+                                                   id_section,
+                                                   i_part,
+                                                   &connec,
+                                                   &numabs,
+                                                   &_parent_num,
+                                                   &parent_entity_g_num,
+                                                   &order,
+                                                   &ho_ordering);
+
+      int n_vtx_elt = PDM_Mesh_nodal_n_vtx_elt_get(t_elt, order);
+
+      if (parent_num != NULL) {
+        for (int i = 0; i < n_elt; i++) {
+          for (int j = 0; j < n_vtx_elt; j++) {
+            (*cell_vtx)[(*cell_vtx_idx)[parent_num[i]] + j] = connec[n_vtx_elt*i + j];
+          }
+        }
+      }
+      else {
+        for (int i = 0; i < n_elt; i++) {
+          for (int j = 0; j < n_vtx_elt; j++) {
+            (*cell_vtx)[(*cell_vtx_idx)[i] + j] = connec[n_vtx_elt*i + j];
+          }
+        }
+      }
+
+    }
+  }
+
+  return n_cell;
+}
+
+
+
+
 
 /*----------------------------------------------------------------------------*/
 

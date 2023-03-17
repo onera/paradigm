@@ -1280,6 +1280,47 @@ PDM_part_mesh_nodal_part_mesh_nodal_elmts_get
 );
 
 
+/**
+ * \brief Return the geometry kind of highest dimension
+ * for a given \ref PDM_part_mesh_nodal_t object
+ *
+ * \param [in] pmn    Pointer to \ref PDM_part_mesh_nodal_t object
+ *
+ * \return Geometry kind of highest dimension
+ *
+ */
+
+PDM_geometry_kind_t
+PDM_part_mesh_nodal_principal_geom_kind_get
+(
+ PDM_part_mesh_nodal_t  *pmn
+ );
+
+
+/**
+ * \brief Return the cell->vertex connectivity
+ * The output pointers are owned by the user.
+ *
+ * \param [in]  pmn           Pointer to \ref PDM_part_mesh_nodal_t object
+ * \param [in]  geom_kind     Geometry kind (corner, ridge, surface or volume)
+ * \param [in]  i_part        Partition identifier
+ * \param [out] cell_vtx_idx  Index for the cell->vertex connectivity
+ * \param [out] cell_vtx      Cell->vertex connectivity
+ *
+ * \return Number of cells in current partition
+ *
+ */
+
+int
+PDM_part_mesh_nodal_cell_vtx_connect_get
+(
+        PDM_part_mesh_nodal_t  *pmn,
+        PDM_geometry_kind_t     geom_kind,
+  const int                     i_part,
+        int                   **cell_vtx_idx,
+        int                   **cell_vtx
+);
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
