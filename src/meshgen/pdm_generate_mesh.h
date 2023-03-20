@@ -2,6 +2,8 @@
 #define __PDM_GENERATE_MESH_H__
 
 #include "pdm.h"
+#include "pdm_part_mesh.h"
+#include "pdm_part_mesh_nodal.h"
 
 /*=============================================================================
  * Macro definitions
@@ -25,6 +27,7 @@ extern "C" {
  *
  * \brief Create a simple partitionned sphere mesh (2D).
  *
+ * \param [in]   comm        MPI communicator
  * \param [in]   order       Mesh element order
  * \param [out]  n_vtx       Number of vertices
  * \param [out]  n_elt       Number of elements
@@ -34,20 +37,23 @@ extern "C" {
  *
  */
 
+void
 PDM_generate_mesh_sphere_simplified
 (
- int      order,
- int     *n_vtx,
- int     *n_elt,
- double **coords,
- int    **elt_vtx_idx,
- int    **elt_vtx
+ const PDM_MPI_Comm   comm,
+ const int            order,
+ int                 *n_vtx,
+ int                 *n_elt,
+ double             **coords,
+ int                **elt_vtx_idx,
+ int                **elt_vtx
 );
 
 /**
  *
  * \brief Create a simple partitionned rectangle mesh (2D).
  *
+ * \param [in]   comm        MPI communicator
  * \param [in]   order       Mesh element order
  * \param [out]  n_vtx       Number of vertices
  * \param [out]  n_elt       Number of elements
@@ -57,20 +63,23 @@ PDM_generate_mesh_sphere_simplified
  *
  */
 
+void
 PDM_generate_mesh_rectangle_simplified
 (
- int      order,
- int     *n_vtx,
- int     *n_elt,
- double **coords,
- int    **elt_vtx_idx,
- int    **elt_vtx
+ const PDM_MPI_Comm   comm,
+ const int            order,
+ int                 *n_vtx,
+ int                 *n_elt,
+ double             **coords,
+ int                **elt_vtx_idx,
+ int                **elt_vtx
 );
 
 /**
  *
  * \brief Create a simple partitionned ball mesh (3D).
  *
+ * \param [in]   comm        MPI communicator
  * \param [in]   order       Mesh element order
  * \param [out]  n_vtx       Number of vertices
  * \param [out]  n_elt       Number of elements
@@ -80,20 +89,23 @@ PDM_generate_mesh_rectangle_simplified
  *
  */
 
+void
 PDM_generate_mesh_ball_simplified
 (
- int      order,
- int     *n_vtx,
- int     *n_elt,
- double **coords,
- int    **elt_vtx_idx,
- int    **elt_vtx
+ const PDM_MPI_Comm   comm,
+ const int            order,
+ int                 *n_vtx,
+ int                 *n_elt,
+ double             **coords,
+ int                **elt_vtx_idx,
+ int                **elt_vtx
 );
 
 /**
  *
  * \brief Create a simple partitionned parallelepiped mesh (3D).
  *
+ * \param [in]   comm        MPI communicator
  * \param [in]   order       Mesh element order
  * \param [out]  n_vtx       Number of vertices
  * \param [out]  n_elt       Number of elements
@@ -103,20 +115,24 @@ PDM_generate_mesh_ball_simplified
  *
  */
 
+void
 PDM_generate_mesh_parallelepiped_simplified
 (
- int      order,
- int     *n_vtx,
- int     *n_elt,
- double **coords,
- int    **elt_vtx_idx,
- int    **elt_vtx
+ const PDM_MPI_Comm   comm,
+ const int            order,
+ int                 *n_vtx,
+ int                 *n_elt,
+ double             **coords,
+ int                **elt_vtx_idx,
+ int                **elt_vtx
 );
+
 
 /**
  *
  * \brief Create a partitionned sphere mesh (2D).
  *
+ * \param [in]  comm        MPI communicator
  * \param [in]  elt_type    Mesh element type
  * \param [in]  order       Mesh element order
  * \param [in]  ho_ordering ?
@@ -129,23 +145,25 @@ PDM_generate_mesh_parallelepiped_simplified
  * \param [in]  n_part      Number of mesh partitions
  * \param [in]  part_method Mesh partitionning method
  *
- * \return PDM_part_mesh_t or PDM_part_mesh_nodal_t
+ * \return PDM_part_mesh_nodal_t
  *
  */
 
+PDM_part_mesh_nodal_t *
 PDM_generate_mesh_sphere
 (
- PDM_Mesh_nodal_elt_t   elt_type,
- int                    order,
- const char           **ho_ordering,
- const double           radius,
- const double           center_x,
- const double           center_y,
- const double           center_z,
- const PDM_g_num_t      n_u,
- const PDM_g_num_t      n_v,
- const int              n_part,
- const PDM_split_dual_t part_method
+ const PDM_MPI_Comm           comm,
+ const PDM_Mesh_nodal_elt_t   elt_type,
+ const int                    order,
+ const char                 **ho_ordering,
+ const double                 radius,
+ const double                 center_x,
+ const double                 center_y,
+ const double                 center_z,
+ const PDM_g_num_t            n_u,
+ const PDM_g_num_t            n_v,
+ const int                    n_part,
+ const PDM_split_dual_t       part_method
 );
 
 /**
@@ -169,6 +187,7 @@ PDM_generate_mesh_sphere
  *
  */
 
+PDM_part_mesh_nodal_t *
 PDM_generate_mesh_rectangle
 (
  PDM_Mesh_nodal_elt_t    elt_type,
@@ -208,6 +227,7 @@ PDM_generate_mesh_rectangle
 
 // TO DO : add option for boule creuse ?
 
+PDM_part_mesh_nodal_t *
 PDM_generate_mesh_ball
 (
   PDM_Mesh_nodal_elt_t   elt_type,
@@ -247,6 +267,7 @@ PDM_generate_mesh_ball
  *
  */
 
+PDM_part_mesh_nodal_t *
 PDM_generate_mesh_parallelepiped
 (
  double                  xmin,

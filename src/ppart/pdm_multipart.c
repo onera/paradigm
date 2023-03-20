@@ -2713,22 +2713,23 @@ PDM_ownership_t         ownership
  * \param [in]  multipart             Pointer to \ref PDM_multipart_t object
  * \param [in]  i_zone                Id of zone
  * \param [out] pmesh                 Partitionned mesh
- * \param [in]  ownership             Who is responsible to free retreived data ?
  *
  */
+
+// TO DO : add ownership ?
 
 void
 PDM_multipart_get_part_mesh
 (
        PDM_multipart_t  *multipart,
  const int               i_zone,
-       PDM_part_mesh_t **pmesh,
-       PDM_ownership_t   ownership
+       PDM_part_mesh_t **pmesh
 )
 {
+  _pdm_multipart_t *_multipart = (_pdm_multipart_t *) multipart;
   assert(i_zone < _multipart->n_zone);
 
-  _part_mesh_t *pmesh = &(_multipart->pmeshes    [i_zone]);
+  *pmesh = &(_multipart->pmeshes    [i_zone]);
 }
 
 /**
