@@ -168,6 +168,7 @@ PDM_generate_mesh_sphere
  *
  * \brief Create a partitionned rectangle mesh (2D).
  *
+ * \param [in]  comm        MPI communicator
  * \param [in]  elt_type    Mesh element type
  * \param [in]  order       Mesh element order
  * \param [in]  ho_ordering ?
@@ -188,6 +189,7 @@ PDM_generate_mesh_sphere
 PDM_part_mesh_nodal_t *
 PDM_generate_mesh_rectangle
 (
+  const PDM_MPI_Comm     comm,
  PDM_Mesh_nodal_elt_t    elt_type,
  int                     order,
  const char            **ho_ordering,

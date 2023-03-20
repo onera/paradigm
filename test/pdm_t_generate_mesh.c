@@ -222,6 +222,31 @@ int main(int argc, char *argv[])
   // free
   PDM_part_mesh_nodal_free(pmn);
 
+  // Generate rectangle mesh
+  pmn = PDM_generate_mesh_rectangle(comm,
+                                    PDM_MESH_NODAL_POLY_2D,
+                                    1,
+                                    NULL,
+                                    0.,
+                                    0.,
+                                    0.,
+                                    10.,
+                                    5.,
+                                    10,
+                                    10,
+                                    1,
+                                    PDM_SPLIT_DUAL_WITH_HILBERT);
+
+  if (visu) {
+
+    PDM_part_mesh_nodal_dump_vtk(pmn,
+                                 PDM_GEOMETRY_KIND_SURFACIC,
+                                 "rectangle_mesh");
+  }
+
+  // free
+  PDM_part_mesh_nodal_free(pmn);
+
   PDM_MPI_Finalize();
 
   return 0;
