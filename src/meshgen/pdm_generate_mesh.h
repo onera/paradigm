@@ -206,18 +206,22 @@ PDM_generate_mesh_rectangle
  *
  * \brief Create a partitionned ball mesh (3D).
  *
- * \param [in]  elt_type    Mesh element type
- * \param [in]  order       Mesh element order
- * \param [in]  ho_ordering ?
- * \param [in]  radius      Radius of the ball
- * \param [in]  center_x    x-coordinate of the ball center
- * \param [in]  center_y    y-coordinate of the ball center
- * \param [in]  center_z    z-coordinate of the ball center
- * \param [in]  n_x         Number of vertices on segments in x-direction
- * \param [in]  n_y         Number of vertices on segments in y-direction
- * \param [in]  n_z         Number of vertices on segments in z-direction
- * \param [in]  n_part      Number of mesh partitions
- * \param [in]  part_method Mesh partitionning method
+ * \param [in]  comm        MPI communicator
+ * \param [in]  elt_type        Mesh element type
+ * \param [in]  order           Mesh element order
+ * \param [in]  ho_ordering     ?
+ * \param [in]  radius          Radius of the ball
+ * \param [in]  hole_radius     Radius of the hole of the ball
+ * \param [in]  center_x        x-coordinate of the ball center
+ * \param [in]  center_y        y-coordinate of the ball center
+ * \param [in]  center_z        z-coordinate of the ball center
+ * \param [in]  n_x             Number of vertices on segments in x-direction
+ * \param [in]  n_y             Number of vertices on segments in y-direction
+ * \param [in]  n_z             Number of vertices on segments in z-direction
+ * \param [in]  n_layer         Number of extrusion layers
+ * \param [in]  geometric_ratio Geometric ratio for layer thickness
+ * \param [in]  n_part          Number of mesh partitions
+ * \param [in]  part_method     Mesh partitionning method
  *
  * \return PDM_part_mesh_t or PDM_part_mesh_nodal_t
  *
@@ -226,16 +230,20 @@ PDM_generate_mesh_rectangle
 PDM_part_mesh_nodal_t *
 PDM_generate_mesh_ball
 (
-  PDM_Mesh_nodal_elt_t   elt_type,
+ const PDM_MPI_Comm      comm,
+ PDM_Mesh_nodal_elt_t    elt_type,
  int                     order,
  const char            **ho_ordering,
  const double            radius,
+ const double            hole_radius,
  const double            center_x,
  const double            center_y,
  const double            center_z,
  const PDM_g_num_t       n_x,
  const PDM_g_num_t       n_y,
  const PDM_g_num_t       n_z,
+ const PDM_g_num_t       n_layer,
+ const double            geometric_ratio,
  const int               n_part,
  const PDM_split_dual_t  part_method
 );
