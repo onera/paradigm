@@ -223,10 +223,10 @@ PDM_multipart_run_ppart
 void
 PDM_multipart_get_part_mesh_nodal
 (
-       PDM_multipart_t  *multipart,
- const int               i_zone,
-       PDM_part_mesh_t **pmesh_nodal,
-       PDM_ownership_t   ownership
+      PDM_multipart_t        *multipart,
+const int                     i_zone,
+      PDM_part_mesh_nodal_t **pmesh_nodal,
+      PDM_ownership_t         ownership
 );
 
 /**
@@ -244,8 +244,7 @@ PDM_multipart_get_part_mesh
 (
        PDM_multipart_t  *multipart,
  const int               i_zone,
-       PDM_part_mesh_t **pmesh,
-       PDM_ownership_t   ownership
+       PDM_part_mesh_t **pmesh
 );
 
 /**
