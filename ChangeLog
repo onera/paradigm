@@ -1,3 +1,46 @@
+## [2.2.0] - 2023-03-20
+### Added
+- migration to the internal gitlab server
+- CI with LeakSanitizer
+- pdm_run : script to simplify the launch of tests
+- PDM_field_cell_to_vtx : Python interface
+- PDM_global_mean : Python interface
+- PDM_inria_mesh_fmt : Python interface
+- PDM_mesh_intersection : Python interface
+- PDM_sphere_surf_gen : Python interface
+- PDM_dmesh_to_dmesh_nodal : ??
+- PDM_field_cell_to_vtx : ??
+- PDM_mesh_intersection_surf_surf_atomic : ?? 
+- PDM_mesh_intersection_vol_vol_atomic : ??
+- PDM_mesh_nodal : Fortran interface
+- PDM_part_mesh_nodal : Fortran interface
+- PDM_multipart : Fortran interface
+- 27 Tests
+### Changed
+- PDM_dist_cloud_surf : ??
+- PDM_ho_location : ??
+- PDM_mesh_intersection : ??
+- PDM_part_mesh_nodal : ??
+- PDM_part_mesh_nodal_to_pmesh : ??
+- PDM_lagrange_to_bezier : ??
+- PDM_mesh_location : ??
+- PDM_point_location : ??
+- PDM_writer : ??
+- PDM_part : ??
+- PDM_part_renum : ??
+- PDM_partitioning_algorithm : ??
+- PDM_partitioning_nodal_algorithm : ??
+- PDM_box_tree : ??
+- PDM_extract_part : ??
+- PDM_gnum : ??
+- PDM_para_octree : ??
+- PDM_part_mesh : ??
+- PDM_part_to_block : ??
+- PDM_point_tree_seq : ??
+### Deprecated
+- PDM_mesh_nodal : Replace with PDM_part_mesh_nodal
+### Removed
+### Fixed
 ## [2.1.0] - 2022-12-06
 ### Added
 - PDM_ho_bezier : Elementary functions for high-order Bezier elements
