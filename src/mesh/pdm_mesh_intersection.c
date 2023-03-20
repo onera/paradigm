@@ -606,7 +606,8 @@ _compute_part_mesh_extents
 
       PDM_part_mesh_vtx_coord_get(mesh, i_part, &vtx_coord, PDM_OWNERSHIP_BAD_VALUE); // Il faudrait un unchanged
 
-      int *_face_vtx = face_vtx;
+      int *_face_vtx     = face_vtx;
+      int *_face_vtx_idx = face_vtx_idx;
       extents[i_part] = malloc(6 * n_cell * sizeof(double));
       if (face_vtx == NULL) {
         int    *face_edge_idx  = NULL;
@@ -633,9 +634,10 @@ _compute_part_mesh_extents
                                                 face_edge,
                                                 edge_vtx,
                                                 &_face_vtx);
+        _face_vtx_idx = face_edge_idx;
       }
       _compute_extents_3d(n_cell, cell_face_idx, cell_face,
-                          face_vtx_idx,
+                          _face_vtx_idx,
                           _face_vtx,
                           vtx_coord,
                           tolerance,

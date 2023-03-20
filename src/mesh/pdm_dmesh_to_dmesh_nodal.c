@@ -111,7 +111,7 @@ _generate_sections
   PDM_MPI_Allgatherv(section_n, n_section_tot, PDM__PDM_MPI_G_NUM,
                      g_section_n, section_kind_n, section_kind_idx, PDM__PDM_MPI_G_NUM, comm);
 
-  if(0 == 0) {
+  if(0 == 1) {
     PDM_log_trace_array_long(section_n, n_section_tot, "section_n ::");
     PDM_log_trace_array_long(distrib_entity, n_rank+1, "distrib_entity ::");
     PDM_log_trace_connectivity_int (section_kind_idx, g_section_kind, n_rank, "g_section_kind : ");
@@ -148,7 +148,7 @@ _generate_sections
   free(section_kind);
 
 
-  if(0 == 0) {
+  if(0 == 1) {
     PDM_log_trace_array_int (post_section_kind, n_section_post, "post_section_kind ::");
     PDM_log_trace_array_long(post_section_n   , n_section_post, "post_section_n    ::");
   }
@@ -514,7 +514,7 @@ _rebuild_dmesh_nodal_2d
                                          out_edge_bound,
                                          PDM_OWNERSHIP_KEEP);
 
-  PDM_log_trace_connectivity_long(out_edge_bound_idx, out_edge_bound, n_edge_bound, "out_edge_bound ::");
+  // PDM_log_trace_connectivity_long(out_edge_bound_idx, out_edge_bound, n_edge_bound, "out_edge_bound ::");
 
   /*
    *  Il faut créer un table qui permet d'updater les numero de faces/edges en numero d'element
@@ -547,8 +547,8 @@ _rebuild_dmesh_nodal_2d
               (void **)  &blk_out_edge_bound);
 
 
-  PDM_log_trace_array_long(gnum_edge, n_blk_edge, "gnum_edge ::");
-  PDM_log_trace_array_long(blk_out_edge_bound, n_blk_edge, "blk_out_edge_bound ::");
+  // PDM_log_trace_array_long(gnum_edge, n_blk_edge, "gnum_edge ::");
+  // PDM_log_trace_array_long(blk_out_edge_bound, n_blk_edge, "blk_out_edge_bound ::");
 
   /* Store it */
   assert(n_blk_gnum     [PDM_BOUND_TYPE_EDGE] == 0);
@@ -1613,8 +1613,8 @@ _rebuild_dmesh_nodal_3d
                                           &post_section_kind,
                                           &local_post_section_n,
                                           &local_post_section_idx);
-  PDM_log_trace_array_int(local_post_section_n  , n_section_post, "local_post_section_n ::");
-  PDM_log_trace_array_int(local_post_section_idx, n_section_post+1, "local_post_section_idx ::");
+  // PDM_log_trace_array_int(local_post_section_n  , n_section_post, "local_post_section_n ::");
+  // PDM_log_trace_array_int(local_post_section_idx, n_section_post+1, "local_post_section_idx ::");
 
   /*
    * Requilibrate all block
@@ -1830,8 +1830,8 @@ _rebuild_dmesh_nodal_3d
                                                    &local_post_section_face_bnd_idx);
 
   // PDM_log_trace_array_long(section_face_bnd_n, n_section_face_bnd_tot, "section_face_bnd_n ::");
-  PDM_log_trace_array_int(local_post_section_face_bnd_n  , n_section_face_bnd_post, "local_post_section_face_bnd_n ::");
-  PDM_log_trace_array_int(local_post_section_face_bnd_idx, n_section_face_bnd_post+1, "local_post_section_face_bnd_idx ::");
+  // PDM_log_trace_array_int(local_post_section_face_bnd_n  , n_section_face_bnd_post, "local_post_section_face_bnd_n ::");
+  // PDM_log_trace_array_int(local_post_section_face_bnd_idx, n_section_face_bnd_post+1, "local_post_section_face_bnd_idx ::");
   /*
    * Generate and redistribute surfacique
    */
@@ -1848,7 +1848,7 @@ _rebuild_dmesh_nodal_3d
       ln_to_gn[i] = local_post_section_face_bnd_idx[i_section] + distrib_face_bnd[i_rank] + i + 1;
     }
 
-    PDM_log_trace_array_long(ln_to_gn, nl_elmt, "face_bnd_ln_to_gn ::");
+    // PDM_log_trace_array_long(ln_to_gn, nl_elmt, "face_bnd_ln_to_gn ::");
 
     int n_vtx_per_elmt = PDM_Mesh_nodal_n_vertices_element((PDM_Mesh_nodal_elt_t) post_section_face_bnd_kind[i_section], 1);
     int n_cell_vtx_tot = nl_elmt * n_vtx_per_elmt;
@@ -1860,7 +1860,7 @@ _rebuild_dmesh_nodal_3d
       }
     }
 
-    PDM_log_trace_array_long(face_vtx_gnum, nl_elmt * n_vtx_per_elmt, "face_vtx_gnum :");
+    // PDM_log_trace_array_long(face_vtx_gnum, nl_elmt * n_vtx_per_elmt, "face_vtx_gnum :");
     // PDM_part_to_block_t* ptb = PDM_part_to_block_create_from_distrib(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
     //                                                                  PDM_PART_TO_BLOCK_POST_CLEANUP,
     //                                                                  1.,
@@ -1904,7 +1904,7 @@ _rebuild_dmesh_nodal_3d
     if(t_elt == PDM_MESH_NODAL_POLY_2D) {
       abort();
     } else {
-      PDM_log_trace_array_long(blk_face_vtx, dn_elmt * n_vtx_per_elmt, "blk_face_vtx :");
+      // PDM_log_trace_array_long(blk_face_vtx, dn_elmt * n_vtx_per_elmt, "blk_face_vtx :");
       PDM_DMesh_nodal_section_std_set(dmn,
                                       PDM_GEOMETRY_KIND_SURFACIC,
                                       id_section,
