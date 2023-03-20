@@ -89,7 +89,8 @@ _read_args
  PDM_g_num_t           *n_vtx_a,
  int                   *n_part,
  int                   *post,
- PDM_Mesh_nodal_elt_t  *elt_type
+ PDM_Mesh_nodal_elt_t  *elt_type,
+ double                *tolerance
 )
 {
   int i = 1;
@@ -128,6 +129,13 @@ _read_args
     }
     else if (strcmp(argv[i], "-post") == 0) {
       *post = 1;
+    }
+    else if (strcmp(argv[i], "-tol") == 0) {
+      i++;
+      if (i >= argc)
+        _usage(EXIT_FAILURE);
+      else
+        *tolerance = atof(argv[i]);
     }
     else {
       _usage(EXIT_FAILURE);
@@ -1141,13 +1149,15 @@ char *argv[]
 
   int n_part = 1;
   int post   = 0;
+  double tolerance = 1e-6;
 
   _read_args(argc,
              argv,
              &n_vtx_a,
              &n_part,
              &post,
-             &elt_type);
+             &elt_type,
+             &tolerance);
 
   /*
    * Generate meshA
@@ -1516,12 +1526,12 @@ char *argv[]
   double      *_pline_to_cell_velocity = pline_to_cell_velocity[0];
 
   // PDM_log_trace_connectivity_long(_gnum1_come_from_idx, _gnum1_come_from, n_ref_b[0], "_gnum1_come_from ::");
+  assert(n_lines == n_ref_b[0]);
 
   double *pseudo_distance = malloc(    _gnum1_come_from_idx[n_lines] * sizeof(double));
   double *pseudo_coords   = malloc(3 * _gnum1_come_from_idx[n_lines] * sizeof(double));
   int    *order_by_dist   = malloc(3 * _gnum1_come_from_idx[n_lines] * sizeof(int   ));
 
-  assert(n_lines == n_ref_b[0]);
   double *dline_data = malloc(n_lines * sizeof(double));
 
   for(int idx_line = 0; idx_line < n_ref_b[0]; ++idx_line) {

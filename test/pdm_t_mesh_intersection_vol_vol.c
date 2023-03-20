@@ -1140,34 +1140,34 @@ main
   // compute
   PDM_mesh_intersection_compute(mi);
 
-  // debug
-  double local_vol_A_B;
-  double global_vol_A_B;
-  double global_vol_A;
+  // // debug
+  // double local_vol_A_B;
+  // double global_vol_A_B;
+  // double global_vol_A;
 
-  PDM_mesh_intersection_stat_get(mi,
-                                 &local_vol_A_B,
-                                 &global_vol_A_B,
-                                 &global_vol_A);
+  // PDM_mesh_intersection_stat_get(mi,
+  //                                &local_vol_A_B,
+  //                                &global_vol_A_B,
+  //                                &global_vol_A);
 
-  if (i_rank == 0) {
-    printf("total volume of A inter B : local = %20.16f, global = %20.16f (%3.3f%%)\n",
-           local_vol_A_B, global_vol_A_B,
-           100*global_vol_A_B / global_vol_A);
+  // if (i_rank == 0) {
+  //   printf("total volume of A inter B : local = %20.16f, global = %20.16f (%3.3f%%)\n",
+  //          local_vol_A_B, global_vol_A_B,
+  //          100*global_vol_A_B / global_vol_A);
 
-    double exact = 1;
-    for (int i = 0; i < 3; i++) {
-      if (shift_b[i] < 0) {
-        exact *= PDM_MAX(0, PDM_MIN(length_a, length_b + shift_b[i]));
-      }
-      else {
-        exact *= PDM_MAX(0, length_a - shift_b[i]);
-      }
-    }
-    printf("error : absolute = %e, relative = %e\n",
-           PDM_ABS(global_vol_A_B - exact),
-           PDM_ABS(global_vol_A_B - exact)/exact);
-  }
+  //   double exact = 1;
+  //   for (int i = 0; i < 3; i++) {
+  //     if (shift_b[i] < 0) {
+  //       exact *= PDM_MAX(0, PDM_MIN(length_a, length_b + shift_b[i]));
+  //     }
+  //     else {
+  //       exact *= PDM_MAX(0, length_a - shift_b[i]);
+  //     }
+  //   }
+  //   printf("error : absolute = %e, relative = %e\n",
+  //          PDM_ABS(global_vol_A_B - exact),
+  //          PDM_ABS(global_vol_A_B - exact)/exact);
+  // }
 
 
 
