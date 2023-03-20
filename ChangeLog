@@ -8,39 +8,41 @@
 - PDM_inria_mesh_fmt : Python interface
 - PDM_mesh_intersection : Python interface
 - PDM_sphere_surf_gen : Python interface
-- PDM_dmesh_to_dmesh_nodal : ??
-- PDM_field_cell_to_vtx : ??
-- PDM_mesh_intersection_surf_surf_atomic : ?? 
-- PDM_mesh_intersection_vol_vol_atomic : ??
+- PDM_iso_surface.pxi (ParaDiGMA) : Python interfaceq
+- PDM_field_cell_to_vtx : Transfer a cell field to a vertex field
 - PDM_mesh_nodal : Fortran interface
 - PDM_part_mesh_nodal : Fortran interface
 - PDM_multipart : Fortran interface
-- 27 Tests
+- 30 Tests (including 3 for ParaDiGMA) 
 ### Changed
-- PDM_dist_cloud_surf : ??
-- PDM_ho_location : ??
-- PDM_mesh_intersection : ??
-- PDM_part_mesh_nodal : ??
-- PDM_part_mesh_nodal_to_pmesh : ??
-- PDM_lagrange_to_bezier : ??
-- PDM_mesh_location : ??
-- PDM_point_location : ??
-- PDM_writer : ??
-- PDM_part : ??
-- PDM_part_renum : ??
-- PDM_partitioning_algorithm : ??
-- PDM_partitioning_nodal_algorithm : ??
-- PDM_box_tree : ??
-- PDM_extract_part : ??
-- PDM_gnum : ??
-- PDM_para_octree : ??
-- PDM_part_mesh : ??
-- PDM_part_to_block : ??
-- PDM_point_tree_seq : ??
+- PDM_dist_cloud_surf : PDM_part_mesh_nodal is accepted in input
+- PDM_ho_location : Implement a Newton method for all elements (for all orders) 
+- PDM_mesh_intersection : PDM_part_mesh_nodal is accepted in input  
+- PDM_part_mesh_nodal : Replace PDM_part_mesh (more general and generic structure)
+- PDM_part_mesh_nodal_to_pmesh : Compute faces and (or) edges from a PDM_part_mesh_nodal
+- PDM_lagrange_to_bezier : Implement all standard high-order elements 
+- PDM_mesh_location : Add high order elements + switch to PDM_part_mesh_nodal
+- PDM_point_location : Use the Newton method primarily 
+- PDM_writer : Switch to PDM_part_mesh_nodal structure
+- PDM_part : Call PDM_multi_part from PDM_part if the environment variable PDM_USE_MULTIPART is defined
+- PDM_part_renum : Renumbering of groups of entities (face, edge, vertex)
+- PDM_multi_part : PDM_part_mesh_nodal as output + HO  
+- PDM_partitioning_algorithm : Support HO elements
+- PDM_partitioning_nodal_algorithm : Support HO elements
+- PDM_box_tree : An user init location is accepted in input
+- PDM_extract_part : PDM_part_mesh_nodal is accepted in input
+- PDM_gnum : Build global numbering from tuple + Optimization 
+- PDM_part_mesh : Manage group (Face, edge, vertex) + boundaries
+- PDM_iso_surface (ParaDiGMA) : Transfer boundary data to iso_surface (beta)  
 ### Deprecated
 - PDM_mesh_nodal : Replace with PDM_part_mesh_nodal
 ### Removed
+- Nuga sources (ParaDiGMA)
 ### Fixed
+- PDM_para_octree (fix multiple points)
+- PDM_part_extension (fix n_part > 1) 
+- PDM_part_to_block (fix n_part > 1) 
+- PDM_point_tree_seq 
 ## [2.1.0] - 2022-12-06
 ### Added
 - PDM_ho_bezier : Elementary functions for high-order Bezier elements
