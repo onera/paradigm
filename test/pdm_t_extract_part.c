@@ -154,13 +154,7 @@ int main(int argc, char *argv[])
   double             length    = 1.;
   int                n_part    = 1;
   int                post      = 0;
-#ifdef PDM_HAVE_PARMETIS
-  PDM_split_dual_t part_method  = PDM_SPLIT_DUAL_WITH_PARMETIS;
-#else
-#ifdef PDM_HAVE_PTSCOTCH
-  PDM_split_dual_t part_method  = PDM_SPLIT_DUAL_WITH_PTSCOTCH;
-#endif
-#endif
+  PDM_split_dual_t part_method  = PDM_SPLIT_DUAL_WITH_HILBERT;
 
   /*
    *  Read args
@@ -442,7 +436,7 @@ int main(int argc, char *argv[])
   // PDM_extract_part_kind_t extract_kind = PDM_EXTRACT_PART_KIND_LOCAL;
   PDM_extract_part_kind_t extract_kind = PDM_EXTRACT_PART_KIND_REEQUILIBRATE;
   // PDM_split_dual_t        split_dual_method = PDM_SPLIT_DUAL_WITH_PTSCOTCH;
-  PDM_split_dual_t        split_dual_method = PDM_SPLIT_DUAL_WITH_PARMETIS;
+  PDM_split_dual_t        split_dual_method = PDM_SPLIT_DUAL_WITH_HILBERT;
   // PDM_split_dual_t        split_dual_method = PDM_SPLIT_DUAL_WITH_HILBERT;
   PDM_extract_part_t* extrp = PDM_extract_part_create(3,
                                                       n_part,

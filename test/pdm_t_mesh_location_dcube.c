@@ -352,6 +352,11 @@ _eval_field
  *
  */
 // mpirun -np 2 ./test/pdm_t_mesh_location_dcube -n 3 -p 115 -doctree -post
+
+// @@@param[n_proc] : 1,2,3,4
+// @@@param[n] : 30,60
+// @@@param[p] : 10000,20000
+// @@@args[tree_kind] : -octree, -dbbree
 int main(int argc, char *argv[])
 {
 
@@ -366,15 +371,7 @@ int main(int argc, char *argv[])
   double      marge     = 0.;
   int         n_part    = 1;
   int         post      = 0;
-#ifdef PDM_HAVE_PARMETIS
-  PDM_part_split_t part_method  = PDM_PART_SPLIT_PARMETIS;
-#else
-#ifdef PDM_HAVE_PTSCOTCH
-  PDM_part_split_t part_method  = PDM_PART_SPLIT_PTSCOTCH;
-#else
   PDM_part_split_t part_method  = PDM_PART_SPLIT_HILBERT;
-#endif
-#endif
 
   PDM_g_num_t n_pts = 10;
   PDM_mesh_location_method_t loc_method = PDM_MESH_LOCATION_OCTREE;

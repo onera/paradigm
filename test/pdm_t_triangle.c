@@ -7,7 +7,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <assert.h>
-
+#include <float.h>
 
 #include "pdm.h"
 #include "pdm_config.h"
@@ -326,6 +326,30 @@ _gen_config
 
 int main(int argc, char *argv[])
 {
+  double eps = DBL_EPSILON;
+
+  // printf("(1. + 1.0*eps) - 1. = %20.16e\n", (1. + 1.0*eps) - 1.);
+  // printf("(1. + 0.6*eps) - 1. = %20.16e\n", (1. + 0.6*eps) - 1.);
+  // printf("(1. + 0.5*eps) - 1. = %20.16e\n", (1. + 0.5*eps) - 1.);
+
+  double scale = 1.;
+  for (int i = 0; i < 17; i++) {
+    // printf("(%20.16f + %20.16f) - %20.16f = %20.16f\n",
+    //        scale, scale*eps, scale*eps,
+    //        (scale + scale*eps) - scale*eps);
+    // printf("(%20.16f + %20.16f) - %20.16f = %20.16f\n",
+    //        scale, scale*eps, scale,
+    //        (scale + scale*eps) - scale);
+    printf("(%20.16f + %20.16f) = %20.16f\n",
+           scale, scale*eps,
+           (scale + scale*eps));
+    scale *= 10.;
+  }
+
+  // printf("(1.e16 +1. ) - 1.e16 = %20.16e\n", (1.e16 +1. ) - 1.e16 );
+  // printf("(1.e16 +2. ) - 1.e16 = %20.16e\n", (1.e16 +2. ) - 1.e16 );
+
+  return 0;
   /*
    *  Init
    */

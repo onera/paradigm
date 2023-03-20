@@ -80,8 +80,13 @@ _get_n_sub_elt
     }
     break;
 
+    case PDM_MESH_NODAL_POLY_2D:
+    {
+      return 1;
+    }
+
     default :
-      PDM_error(__FILE__, __LINE__, 0, "Unknown element type\n");
+      PDM_error(__FILE__, __LINE__, 0, "Invalid element type %d\n", (int) t_elmt);
       break;
 
   }
@@ -1701,6 +1706,484 @@ _generate_hexa_surf
                     t_elt_face);
 }
 
+
+/* Recreate poly_surf but nodal style */
+static PDM_dmesh_nodal_t *
+_gen_poly2d
+(
+       PDM_MPI_Comm comm,
+ const PDM_g_num_t  nx,
+ const PDM_g_num_t  ny,
+ const double       xmin,
+ const double       ymin,
+ const double       zmin,
+ const double       length,
+ const int          randomize
+ )
+ {
+  int dbg = 0;
+
+  int i_rank;
+  PDM_MPI_Comm_rank(comm, &i_rank);
+
+  /* Vertices */
+  PDM_g_num_t gn_vtx = 2*nx*(ny+1) + 2*ny*(nx+1) + 4;
+
+  PDM_g_num_t *distrib_vtx = PDM_compute_uniform_entity_distribution(comm,
+                                                                     gn_vtx);
+
+  int dn_vtx = distrib_vtx[i_rank+1] - distrib_vtx[i_rank];
+
+  double *dvtx_coord = malloc(sizeof(double) * dn_vtx * 3);
+
+
+  double stepx = length / (double) (3*nx);
+  double stepy = length / (double) (3*ny);
+
+  PDM_g_num_t n_vtx1 = 2*nx;
+  PDM_g_num_t n_vtx2 = nx + 1;
+  PDM_g_num_t n_vtx3 = n_vtx1 + 2*n_vtx2;
+
+  for (int ivtx = 0; ivtx < dn_vtx; ivtx++) {
+    PDM_g_num_t g = distrib_vtx[i_rank] + ivtx;
+    PDM_g_num_t i, j;
+    double x, y;
+    double rx = 0;//noise
+    double ry = 0;//noise
+
+    if (g > gn_vtx - 5) {
+      // Corner
+      g -= (gn_vtx - 4);
+      j = g / 2;
+      i = g % 2;
+
+      x = xmin + i*length;
+      y = ymin + j*length;
+      rx = 0;
+      ry = 0;
+    }
+
+    else {
+      PDM_g_num_t jj = g / n_vtx3;
+      PDM_g_num_t s = g % n_vtx3;
+
+      if (s < n_vtx1) {
+        // row n_vtx1
+        i = 3*(s/2) + 1 + s%2;
+        j = 3*jj;
+        if (jj == 0 || jj == ny) {
+          ry = 0;
+        }
+      }
+      else {
+        // row n_vtx2
+        s -= n_vtx1;
+        j = 3*jj + s / n_vtx2 + 1;
+        i = 3*(s % n_vtx2);
+        if (i == 0 || i == 3*nx) {
+          rx = 0;
+        }
+      }
+      x = xmin + i*stepx;
+      y = ymin + j*stepy;
+    }
+
+    dvtx_coord[3*ivtx  ] = x;
+    dvtx_coord[3*ivtx+1] = y;
+    dvtx_coord[3*ivtx+2] = zmin;
+
+    if (randomize) {
+      dvtx_coord[3*ivtx  ] += rx;
+      dvtx_coord[3*ivtx+1] += ry;
+    }
+  } // End of loop on vertices
+
+
+  /*
+   *  Surface
+   */
+
+  /* Triangles */
+  PDM_g_num_t gn_tria = 4 + 2*(nx-1 + ny-1);
+  PDM_g_num_t *distrib_tria = PDM_compute_uniform_entity_distribution(comm,
+                                                                      gn_tria);
+
+  int dn_tria = distrib_tria[i_rank+1] - distrib_tria[i_rank];
+
+  PDM_g_num_t *dtria_vtx = malloc(sizeof(PDM_g_num_t) * dn_tria * 3);
+
+  for (int iface = 0; iface < dn_tria; iface++) {
+
+    PDM_g_num_t g = distrib_tria[i_rank] + iface;
+
+    PDM_g_num_t *fv = dtria_vtx + 3*iface;
+
+    if (g == gn_tria - 4) {
+      fv[0] = gn_vtx - 3;
+      fv[1] = 1;
+      fv[2] = 2*(nx+1) - 1;
+    }
+    else if (g == gn_tria - 3) {
+      fv[0] = gn_vtx - 2;
+      fv[1] = 3*(nx+1) - 2;
+      fv[2] = 2*(nx+1) - 2;
+    }
+    else if (g == gn_tria - 2) {
+      fv[0] = gn_vtx - 1;
+      fv[1] = gn_vtx - 3 - n_vtx1 - nx - 1;
+      fv[2] = gn_vtx - 3 - n_vtx1;
+    }
+    else if (g == gn_tria - 1) {
+      fv[0] = gn_vtx;
+      fv[1] = gn_vtx - 4;
+      fv[2] = gn_vtx - 3 - n_vtx1 - 1;
+    }
+    else if (g < nx - 1) {
+      int i = (int) g;
+      fv[0] = 2*(i+1);
+      fv[1] = fv[0] + 1;
+      fv[2] = n_vtx1 + i + 2;
+    }
+    else if (g < 2*(nx - 1)) {
+      int i = (int) (g - (nx - 1));
+      PDM_g_num_t h = gn_vtx - 4 - n_vtx1 - n_vtx2 + 1;
+      fv[0] = h + i + 1;
+      fv[1] = h + n_vtx2 + 2*(i+1);
+      fv[2] = fv[1] - 1;
+    }
+    else if (g < 2*(nx - 1) + (ny - 1)) {
+      int j = (int) (g - 2*(nx - 1));
+      PDM_g_num_t h = n_vtx1 + n_vtx2 + j*n_vtx3;
+      fv[0] = h + 1;
+      fv[1] = fv[0] + n_vtx2;
+      fv[2] = fv[1] + n_vtx1;
+    }
+    else {
+      int j = (int) (g - (2*(nx - 1) + (ny - 1)));
+      PDM_g_num_t h = n_vtx1 + n_vtx2 + j*n_vtx3 + nx;
+      fv[0] = h + 1;
+      fv[1] = fv[0] + n_vtx1 + n_vtx2;
+      fv[2] = fv[0] + n_vtx1;
+    }
+  }
+
+
+  /* Quads */
+  PDM_g_num_t gn_quad = (nx-1) * (ny-1);
+  PDM_g_num_t *distrib_quad = PDM_compute_uniform_entity_distribution(comm,
+                                                                      gn_quad);
+
+  int dn_quad = distrib_quad[i_rank+1] - distrib_quad[i_rank];
+
+  PDM_g_num_t *dquad_vtx = malloc(sizeof(PDM_g_num_t) * dn_quad * 4);
+
+  for (int iface = 0; iface < dn_quad; iface++) {
+
+    PDM_g_num_t g = distrib_quad[i_rank] + iface;
+
+    PDM_g_num_t *fv = dquad_vtx + 4*iface;
+
+    int j = (int) (g / (nx-1));
+    int i = (int) (g % (nx-1));
+
+    PDM_g_num_t h = n_vtx1 + n_vtx2 + j*n_vtx3 + 1;
+    fv[0] = h + i + 1;
+    fv[1] = h + n_vtx2 + 2*(i+1);
+    fv[2] = fv[0] + n_vtx1 + n_vtx2;
+    fv[3] = fv[1] - 1;
+  }
+
+
+  /* Octagons */
+  PDM_g_num_t gn_poly = nx * ny;
+
+  PDM_g_num_t *distrib_poly = PDM_compute_uniform_entity_distribution(comm,
+                                                                      gn_poly);
+
+  int dn_poly = distrib_poly[i_rank+1] - distrib_poly[i_rank];
+
+  PDM_g_num_t *dpoly_vtx = malloc(sizeof(PDM_g_num_t) * dn_poly * 8);
+
+  for (int iface = 0; iface < dn_poly; iface++) {
+
+    PDM_g_num_t g = distrib_poly[i_rank] + iface;
+
+    PDM_g_num_t *fv = dpoly_vtx + 8*iface;
+
+    int j = (int) (g / nx);
+    int i = (int) (g % nx);
+
+    PDM_g_num_t h = j*n_vtx3 + 1;
+    fv[0] = h + 2*i;
+    fv[1] = fv[0] + 1;
+    fv[2] = h + n_vtx1 + i + 1;
+    fv[3] = fv[2] + n_vtx2;
+    fv[4] = fv[1] + n_vtx3;
+    fv[5] = fv[4] - 1;
+    fv[6] = fv[3] - 1;
+    fv[7] = fv[2] - 1;
+  }
+  int *dpoly_vtx_idx = PDM_array_new_idx_from_const_stride_int(8, dn_poly);
+
+
+
+  /*
+   *  Ridges
+   */
+  int n_ridge = 4;
+  PDM_g_num_t ridge_idx[5];
+  ridge_idx[0] = 0;
+  ridge_idx[1] = ridge_idx[0] + 2*nx + 1;
+  ridge_idx[2] = ridge_idx[1] + 2*nx + 1;
+  ridge_idx[3] = ridge_idx[2] + 2*ny + 1;
+  ridge_idx[4] = ridge_idx[3] + 2*ny + 1;
+  PDM_g_num_t gn_bar = ridge_idx[4];
+
+
+  PDM_g_num_t *distrib_bar = PDM_compute_uniform_entity_distribution(comm,
+                                                                      gn_bar);
+
+  int dn_bar = distrib_bar[i_rank+1] - distrib_bar[i_rank];
+
+  PDM_g_num_t *dbar_vtx = malloc(sizeof(PDM_g_num_t) * dn_bar * 2);
+
+  for (int ibar = 0; ibar < dn_bar; ibar++) {
+
+    PDM_g_num_t g = distrib_bar[i_rank] + ibar;
+
+    PDM_g_num_t *ev = dbar_vtx + 2*ibar;
+
+    if (g < ridge_idx[1]) {
+      int i = (int) (g - ridge_idx[0]);
+      if (i == 0) {
+        ev[0] = gn_vtx - 3;
+      }
+      else {
+        ev[0] = i;
+      }
+      if (i == 2*nx) {
+        ev[1] = gn_vtx - 2;
+      }
+      else {
+        ev[1] = i+1;
+      }
+    }
+    else if (g < ridge_idx[2]) {
+      int i = (int) (g - ridge_idx[1]);
+      PDM_g_num_t h = gn_vtx - 4 - n_vtx1;
+      if (i == 0) {
+        ev[1] = gn_vtx - 1;
+      }
+      else {
+        ev[1] = h+i;
+      }
+      if (i == 2*nx) {
+        ev[0] = gn_vtx;
+      }
+      else {
+        ev[0] = h+i+1;
+      }
+    }
+    else if (g < ridge_idx[3]) {
+      int j = (int) (g - ridge_idx[2]);
+      if (j == 0) {
+        ev[1] = gn_vtx - 3;
+      }
+      else {
+        ev[1] = n_vtx1 + n_vtx1*(j-2)/2 + nx*(j%2) + n_vtx2*(j-1) + 1;
+      }
+      if (j == 2*ny) {
+        ev[0] = gn_vtx - 1;
+      }
+      else {
+        ev[0] = n_vtx1 + n_vtx1*(j-1)/2 + nx*((j+1)%2) + n_vtx2*j + 1;
+      }
+    }
+    else {
+      int j = (int) (g - ridge_idx[3]);
+      if (j == 0) {
+        ev[0] = gn_vtx - 2;
+      }
+      else {
+        ev[0] = n_vtx1 + n_vtx1*j/2 - nx*((j+1)%2) + n_vtx2*(j-1) + 1;
+      }
+      if (j == 2*ny) {
+        ev[1] = gn_vtx;
+      }
+      else {
+        ev[1] = n_vtx1 + n_vtx1*(j+1)/2 - nx*(j%2) + n_vtx2*j + 1;
+      }
+    }
+  }
+  free(distrib_bar);
+
+  /*
+   *  Corner
+   */
+  PDM_g_num_t gn_point = 4;
+
+  PDM_g_num_t *distrib_point = PDM_compute_uniform_entity_distribution(comm, gn_point);
+  int dn_point = (int) (distrib_point[i_rank+1] - distrib_point[i_rank]);
+
+  PDM_g_num_t *dpoint_vtx = malloc (sizeof(PDM_g_num_t) * dn_point);
+  for (int ipoint = 0; ipoint < dn_point; ipoint++) {
+    PDM_g_num_t g = distrib_point[i_rank] + ipoint;
+
+    int j = (int) g / 2;
+    int i = (int) g % 2;
+
+    dpoint_vtx[ipoint] = gn_vtx - 3 + 2*j + i;
+  }
+
+
+
+  /*
+   *  Build dmesh nodal
+   */
+  PDM_g_num_t gn_elt = gn_tria + gn_quad + gn_poly;
+  PDM_dmesh_nodal_t *dmesh_nodal = PDM_DMesh_nodal_create(comm,
+                                                          2,
+                                                          gn_vtx,
+                                                          0,
+                                                          gn_elt,
+                                                          0);
+
+
+  PDM_DMesh_nodal_coord_set(dmesh_nodal,
+                            dn_vtx,
+                            dvtx_coord,
+                            PDM_OWNERSHIP_KEEP);
+
+  dmesh_nodal->corner->n_g_elmts   = gn_point;
+  dmesh_nodal->ridge->n_g_elmts    = gn_bar;
+  dmesh_nodal->surfacic->n_g_elmts = gn_elt;
+
+
+  int id_section_point = PDM_DMesh_nodal_elmts_section_add(dmesh_nodal->corner,
+                                                           PDM_MESH_NODAL_POINT);
+  PDM_DMesh_nodal_elmts_section_std_set(dmesh_nodal->corner,
+                                        id_section_point,
+                                        dn_point,
+                                        dpoint_vtx,
+                                        PDM_OWNERSHIP_KEEP);
+
+
+  int id_section_bar = PDM_DMesh_nodal_elmts_section_ho_add(dmesh_nodal->ridge,
+                                                             PDM_MESH_NODAL_BAR2,
+                                                             1,
+                                                             NULL);
+  PDM_DMesh_nodal_elmts_section_std_set(dmesh_nodal->ridge,
+                                        id_section_bar,
+                                        dn_bar,
+                                        dbar_vtx,
+                                        PDM_OWNERSHIP_KEEP);
+
+
+  int id_section_tria = PDM_DMesh_nodal_elmts_section_ho_add(dmesh_nodal->surfacic,
+                                                             PDM_MESH_NODAL_TRIA3,
+                                                             1,
+                                                             NULL);
+  PDM_DMesh_nodal_elmts_section_std_set(dmesh_nodal->surfacic,
+                                        id_section_tria,
+                                        dn_tria,
+                                        dtria_vtx,
+                                        PDM_OWNERSHIP_KEEP);
+
+
+  int id_section_quad = PDM_DMesh_nodal_elmts_section_ho_add(dmesh_nodal->surfacic,
+                                                             PDM_MESH_NODAL_QUAD4,
+                                                             1,
+                                                             NULL);
+  PDM_DMesh_nodal_elmts_section_std_set(dmesh_nodal->surfacic,
+                                        id_section_quad,
+                                        dn_quad,
+                                        dquad_vtx,
+                                        PDM_OWNERSHIP_KEEP);
+
+
+  int id_section_poly = PDM_DMesh_nodal_elmts_section_add(dmesh_nodal->surfacic,
+                                                          PDM_MESH_NODAL_POLY_2D);
+  PDM_DMesh_nodal_elmts_section_poly2d_set(dmesh_nodal->surfacic,
+                                           id_section_poly,
+                                           dn_poly,
+                                           dpoly_vtx_idx,
+                                           dpoly_vtx,
+                                           PDM_OWNERSHIP_KEEP);
+
+  /*
+   *  Groups
+   */
+  /* Corners */
+  int n_corner = 1;
+  int *dcorner_elt_idx = malloc(sizeof(int) * (n_corner + 1));
+  dcorner_elt_idx[0] = 0;
+  dcorner_elt_idx[1] = distrib_point[i_rank+1] - distrib_point[i_rank];
+
+  PDM_g_num_t *dcorner_elt = malloc(sizeof(PDM_g_num_t) * dcorner_elt_idx[n_corner]);
+  assert(dcorner_elt_idx[n_corner] == dn_point);
+  for (int i = 0; i < dn_point; i++) {
+    dcorner_elt[i] = distrib_point[i_rank] + i + 1;
+  }
+
+  PDM_DMesh_nodal_elmts_group_set(dmesh_nodal->corner,
+                                  n_corner,
+                                  dcorner_elt_idx,
+                                  dcorner_elt,
+                                  PDM_OWNERSHIP_KEEP);
+  free(distrib_point);
+
+  /* Ridge */
+  PDM_g_num_t *distrib_ridge[2] = {NULL, NULL};
+  distrib_ridge[0] = PDM_compute_uniform_entity_distribution(comm,
+                                                             ridge_idx[1] - ridge_idx[0]);
+  distrib_ridge[1] = PDM_compute_uniform_entity_distribution(comm,
+                                                             ridge_idx[3] - ridge_idx[2]);
+
+  int *dridge_elt_idx = malloc(sizeof(int) * (n_ridge + 1));
+  dridge_elt_idx[0] = 0;
+  for (int i = 0; i < n_ridge; i++) {
+    int dn_ridge = distrib_ridge[i/2][i_rank+1] - distrib_ridge[i/2][i_rank];
+    dridge_elt_idx[i+1] = dridge_elt_idx[i] + dn_ridge;
+  }
+
+  PDM_g_num_t *dridge_elt = malloc(sizeof(PDM_g_num_t) * dridge_elt_idx[n_ridge]);
+  for (int i = 0; i < n_ridge; i++) {
+    int dn_ridge = dridge_elt_idx[i+1] - dridge_elt_idx[i];
+    for (int j = 0; j < dn_ridge; j++) {
+      dridge_elt[dridge_elt_idx[i]+j] = ridge_idx[i] + distrib_ridge[i/2][i_rank] + j + 1;
+    }
+  }
+  free(distrib_ridge[0]);
+  free(distrib_ridge[1]);
+
+  PDM_DMesh_nodal_elmts_group_set(dmesh_nodal->ridge,
+                                  n_ridge,
+                                  dridge_elt_idx,
+                                  dridge_elt,
+                                  PDM_OWNERSHIP_KEEP);
+
+
+  if (dbg) {
+    PDM_dmesh_nodal_dump_vtk(dmesh_nodal,
+                             PDM_GEOMETRY_KIND_SURFACIC,
+                             "poly2d_surf");
+    PDM_dmesh_nodal_dump_vtk(dmesh_nodal,
+                             PDM_GEOMETRY_KIND_RIDGE,
+                             "poly2d_ridge");
+    PDM_dmesh_nodal_dump_vtk(dmesh_nodal,
+                             PDM_GEOMETRY_KIND_CORNER,
+                             "poly2d_corner");
+  }
+
+  free(distrib_vtx);
+  free(distrib_tria);
+  free(distrib_quad);
+  free(distrib_poly);
+
+  return dmesh_nodal;
+}
+
+
 /*=============================================================================
  * Public function definitions
  *============================================================================*/
@@ -1870,15 +2353,16 @@ PDM_dcube_nodal_gen_build
   PDM_MPI_Comm_size(dcube->comm, &n_rank);
   PDM_MPI_Comm_rank(dcube->comm, &i_rank);
 
-  int dim = 3;
-  if (dcube->t_elt == PDM_MESH_NODAL_TRIA3  ||
-      dcube->t_elt == PDM_MESH_NODAL_QUAD4  ||
-      dcube->t_elt == PDM_MESH_NODAL_TRIAHO ||
-      dcube->t_elt == PDM_MESH_NODAL_QUADHO) {
-    dim = 2;
-  }
+  // int dim = 3;
+  // if (dcube->t_elt == PDM_MESH_NODAL_TRIA3  ||
+  //     dcube->t_elt == PDM_MESH_NODAL_QUAD4  ||
+  //     dcube->t_elt == PDM_MESH_NODAL_TRIAHO ||
+  //     dcube->t_elt == PDM_MESH_NODAL_QUADHO) {
+  //   dim = 2;
+  // }
+  int dim = PDM_Mesh_nodal_elt_dim_get(dcube->t_elt);
   if (dcube->t_elt == PDM_MESH_NODAL_POINT || dcube->t_elt == PDM_MESH_NODAL_BAR2){
-    PDM_error(__FILE__, __LINE__, 0, "Invalid t_elt for PDM_dcube_nodal_gen_init\n");
+    PDM_error(__FILE__, __LINE__, 0, "Invalid t_elt (%d) for PDM_dcube_nodal_gen_init\n", (int) dcube->t_elt);
   }
 
   PDM_g_num_t n_vtx_x = dcube->order*dcube->nx + 1;
@@ -1920,14 +2404,26 @@ PDM_dcube_nodal_gen_build
                                                 0,           /* n_face */
                                                 0);          /* n_edge */
   } else {
-    dcube->dmesh_nodal = PDM_DMesh_nodal_create(dcube->comm,
-                                                dim,
-                                                gn_vtx,
+    if (dcube->t_elt == PDM_MESH_NODAL_POLY_2D) {
+      dcube->dmesh_nodal = _gen_poly2d(dcube->comm,
+                                       dcube->nx,
+                                       dcube->ny,
+                                       dcube->zero_x,
+                                       dcube->zero_y,
+                                       dcube->zero_z,
+                                       dcube->length,
+                                       0);//randomize);
+      return dcube->dmesh_nodal;
+    }
+    else {
+      dcube->dmesh_nodal = PDM_DMesh_nodal_create(dcube->comm,
+                                                  dim,
+                                                  gn_vtx,
                                                 0,  /* n_cell */
                                                 gn_cell_abs,           /* n_face */
                                                 0);          /* n_edge */
-
-  }
+      }
+    }
 
   PDM_g_num_t *distrib_vtx = PDM_compute_uniform_entity_distribution (dcube->comm, gn_vtx);
   int dn_vtx = (int) (distrib_vtx[i_rank+1] - distrib_vtx[i_rank]);

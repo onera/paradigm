@@ -601,27 +601,6 @@ _ho_ordering_free
 }
 
 
-static int
-PDM_ho_ordering_id_get
-(
- const char *name
- )
-{
-  if (ho_orderings == NULL) {
-    PDM_ho_ordering_init ();
-  }
-
-  int id = -1;
-
-  for (int i = 0; i < n_ho_orderings; i++) {
-    if (strcmp(ho_orderings[i]->name, name) == 0) {
-      id = i;
-      break;
-    }
-  }
-
-  return id;
-}
 
 
 /*=============================================================================
@@ -926,7 +905,6 @@ void
 }
 
 
-
 /**
  * \brief Add a user-defined HO ordering from the locations
  * in the reference uvw-grid of a given element type of a given order
@@ -1203,8 +1181,35 @@ PDM_ho_ordering_compute_ijk_to_user
 }
 
 
+/**
+ * \brief Return the ID of an HO ordering
+ *
+ * \param[in] name         Name of the HO ordering
+ *
+ * \return   ID of the HO ordering (-1 if not found)
+ */
 
+int
+PDM_ho_ordering_id_get
+(
+ const char *name
+ )
+{
+  if (ho_orderings == NULL) {
+    PDM_ho_ordering_init ();
+  }
 
+  int id = -1;
+
+  for (int i = 0; i < n_ho_orderings; i++) {
+    if (strcmp(ho_orderings[i]->name, name) == 0) {
+      id = i;
+      break;
+    }
+  }
+
+  return id;
+}
 
 #ifdef __cplusplus
 }

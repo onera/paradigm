@@ -6464,6 +6464,12 @@ _export_nodes
     fprintf(f, "11\n");
   }
 
+  fprintf(f, "CELL_DATA %d\n", n_nodes);
+  fprintf(f, "SCALARS level int\n LOOKUP_TABLE default\n");
+  for (int inode = 0; inode < n_nodes; inode++) {
+    fprintf(f, "%d\n", (int) nodes[inode].L);
+  }
+
   fclose(f);
 }
 
@@ -7757,7 +7763,7 @@ PDM_para_octree_build
     /*
      * Dilate extents
      */
-    double max_range = 1e-12;
+    double max_range = 1e-12; // To handle case with degenerate extents
     for (int i = 0; i < dim; i++) {
       max_range = PDM_MAX (max_range,
                            _octree->global_extents[i+dim] - _octree->global_extents[i]);

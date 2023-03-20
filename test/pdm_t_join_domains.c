@@ -459,13 +459,7 @@ int main
   // 7 -> prism
   // 8 -> hexa
 
-#ifdef PDM_HAVE_PARMETIS
-  PDM_split_dual_t method  = PDM_SPLIT_DUAL_WITH_PARMETIS;
-#else
-#ifdef PDM_HAVE_PTSCOTCH
-  PDM_split_dual_t method  = PDM_SPLIT_DUAL_WITH_PTSCOTCH;
-#endif
-#endif
+  PDM_split_dual_t method  = PDM_SPLIT_DUAL_WITH_HILBERT;
 
   /*
    *  Read args
@@ -945,12 +939,12 @@ int main
                                                                                          &cell_ln_to_gn,
                                                                                          NULL);
         int id_section = 0;
-        PDM_Mesh_nodal_elt_t t_elt_loc = PDM_part_mesh_nodal_elmts_block_type_get(pmne_vol, id_section);
+        PDM_Mesh_nodal_elt_t t_elt_loc = PDM_part_mesh_nodal_elmts_section_type_get(pmne_vol, id_section);
         int         *elmt_vtx                 = NULL;
         int         *parent_num               = NULL;
         PDM_g_num_t *numabs                   = NULL;
         PDM_g_num_t *parent_entitity_ln_to_gn = NULL;
-        PDM_part_mesh_nodal_elmts_block_std_get(pmne_vol, id_section, 0, &elmt_vtx, &numabs, &parent_num, &parent_entitity_ln_to_gn);
+        PDM_part_mesh_nodal_elmts_section_std_get(pmne_vol, id_section, 0, &elmt_vtx, &numabs, &parent_num, &parent_entitity_ln_to_gn);
 
         int* cell_num = (int *) malloc(n_cell * sizeof(int));
         for(int i = 0; i < n_cell; ++i) {
@@ -1250,12 +1244,12 @@ int main
                                                                                        NULL);
 
       int id_section = 0;
-      PDM_Mesh_nodal_elt_t t_elt_loc = PDM_part_mesh_nodal_elmts_block_type_get(pmne_vol, id_section);
+      PDM_Mesh_nodal_elt_t t_elt_loc = PDM_part_mesh_nodal_elmts_section_type_get(pmne_vol, id_section);
       int         *elmt_vtx                 = NULL;
       int         *parent_num               = NULL;
       PDM_g_num_t *numabs                   = NULL;
       PDM_g_num_t *parent_entitity_ln_to_gn = NULL;
-      PDM_part_mesh_nodal_elmts_block_std_get(pmne_vol, id_section, 0, &elmt_vtx, &numabs, &parent_num, &parent_entitity_ln_to_gn);
+      PDM_part_mesh_nodal_elmts_section_std_get(pmne_vol, id_section, 0, &elmt_vtx, &numabs, &parent_num, &parent_entitity_ln_to_gn);
 
       if (post) {
         char filename[999];
@@ -1456,8 +1450,8 @@ int main
       //                                                     NULL);
 
       // id_section = 0;
-      // t_elt_loc = PDM_part_mesh_nodal_elmts_block_type_get(pmne_vol, id_section);
-      // PDM_part_mesh_nodal_elmts_block_std_get(pmne_vol, id_section, 0, &elmt_vtx, &numabs, &parent_num, &parent_entitity_ln_to_gn);
+      // t_elt_loc = PDM_part_mesh_nodal_elmts_section_type_get(pmne_vol, id_section);
+      // PDM_part_mesh_nodal_elmts_section_std_get(pmne_vol, id_section, 0, &elmt_vtx, &numabs, &parent_num, &parent_entitity_ln_to_gn);
 
       // sprintf(filename, "out_volumic_only_extended_%i_%i_%i.vtk", i_dom, i_part, i_rank);
 

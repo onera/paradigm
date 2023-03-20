@@ -458,6 +458,9 @@ _build_point_tree_seq_leaves
       for (int i = 0; i < 3; i++) {
         mid[i] = 0.5*(extents[i] + extents[3+i]);
       }
+      if (dbg_ptree) {
+        log_trace("mid = %f %f %f\n", mid[0], mid[1], mid[2]);
+      }
     }
 
 
@@ -551,26 +554,38 @@ _build_point_tree_seq_leaves
       is_leaf = 0;
 
       memcpy(sub_extents, extents, sizeof(double) * 6);
-      if (ichild == 0) {
-        if (ptree->tree_type == PDM_DOCTREE_LOCAL_TREE_KDTREE) {
+      if (ptree->tree_type == PDM_DOCTREE_LOCAL_TREE_KDTREE) {
+        if (ichild == 0) {
           sub_extents[3+split_direction] = mid[0];
         }
-        else if (ptree->tree_type == PDM_DOCTREE_LOCAL_TREE_OCTREE) {
-          sub_extents[3+0] = mid[0];
-          sub_extents[3+1] = mid[1];
-          sub_extents[3+2] = mid[2];
-        }
-      }
-      else {
-        if (ptree->tree_type == PDM_DOCTREE_LOCAL_TREE_KDTREE) {
+        else {
           sub_extents[split_direction] = mid[0];
         }
-        else if (ptree->tree_type == PDM_DOCTREE_LOCAL_TREE_OCTREE) {
-          sub_extents[0] = mid[0];
-          sub_extents[1] = mid[1];
+      }
+      else if (ptree->tree_type == PDM_DOCTREE_LOCAL_TREE_OCTREE) {
+        // log_trace("child #%d\n", ichild);
+        if (ichild%2 == 0) {
+          sub_extents[5] = mid[2];
+        }
+        else {
           sub_extents[2] = mid[2];
         }
+
+        if (ichild%4 < 2) {
+          sub_extents[4] = mid[1];
+        }
+        else {
+          sub_extents[1] = mid[1];
+        }
+
+        if (ichild < 4) {
+          sub_extents[3] = mid[0];
+        }
+        else {
+          sub_extents[0] = mid[0];
+        }
       }
+
 
       // int _is_leaf = (idx[ichild+1] - idx[ichild]) <=
       //                 ptree->points_in_leaf_max;
@@ -1154,8 +1169,8 @@ _build_point_tree
       }
     }
     n_pts_mean = n_pts_mean/n_tot_leaf;
-    log_trace("point_tree stats (n_pts = %i) : depth_max = %i / n_pts_leaf_min = %i / n_pts_leaf_max = %i / n_pts_mean = %i \n",
-              ptree->n_pts, depth_max, n_pts_leaf_min, n_pts_leaf_max, n_pts_mean );
+    // log_trace("point_tree stats (n_pts = %i) : depth_max = %i / n_pts_leaf_min = %i / n_pts_leaf_max = %i / n_pts_mean = %i \n",
+    //           ptree->n_pts, depth_max, n_pts_leaf_min, n_pts_leaf_max, n_pts_mean );
   }
 
   if (dbg_ptree) {
@@ -1327,8 +1342,8 @@ _build_point_tree_from_boxes
       }
     }
     n_pts_mean = n_pts_mean/n_tot_leaf;
-    log_trace("point_tree stats (n_pts = %i) : depth_max = %i / n_pts_leaf_min = %i / n_pts_leaf_max = %i / n_pts_mean = %i \n",
-              ptree->n_pts, depth_max, n_pts_leaf_min, n_pts_leaf_max, n_pts_mean );
+    // log_trace("point_tree stats (n_pts = %i) : depth_max = %i / n_pts_leaf_min = %i / n_pts_leaf_max = %i / n_pts_mean = %i \n",
+    //           ptree->n_pts, depth_max, n_pts_leaf_min, n_pts_leaf_max, n_pts_mean );
   }
 
   ptree->leaf_ids = realloc(ptree->leaf_ids, sizeof(int) * ptree->n_leaf);

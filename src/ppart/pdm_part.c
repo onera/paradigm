@@ -19,6 +19,7 @@
 #include "pdm_config.h"
 #include "pdm_priv.h"
 #include "pdm_part.h"
+#include "pdm_multipart.h"
 #include "pdm_part_priv.h"
 #include "pdm_timer.h"
 #include "pdm_mpi.h"
@@ -2630,8 +2631,208 @@ _part_partial_free
   part->new_to_old_order_vtx = NULL;
 }
 
+/* Wrappers of pdm_multipart for CEDRE */
 
+static PDM_multipart_t *
+_multipart_create
+(
+ const PDM_MPI_Comm           comm,
+ const PDM_part_split_t       method,
+ const char                  *renum_cell_method,
+ const char                  *renum_face_method,
+ const int                    n_property_cell,
+ const int                   *renum_properties_cell,
+ const int                    n_property_face,
+ const int                   *renum_properties_face,
+ const int                    n_part,
+ const int                    dn_cell,
+ const int                    dn_face,
+ const int                    dn_vtx,
+ const int                    n_face_group,
+ const int                   *dcell_face_idx,
+ const PDM_g_num_t           *dcell_face,
+ const int                   *dcell_tag,
+ const int                   *dcell_weight,
+ const int                    have_dcell_part,
+       int                   *dcell_part,
+ const PDM_g_num_t           *dface_cell,
+ const int                   *dface_vtx_idx,
+ const PDM_g_num_t           *dface_vtx,
+ const int                   *dface_tag,
+ const double                *dvtx_coord,
+ const int                   *dvtx_tag,
+ const int                   *dface_group_idx,
+ const PDM_g_num_t           *dface_group
+ )
+ {
 
+  // unused for multipart
+  PDM_UNUSED(n_property_cell      );
+  PDM_UNUSED(n_property_face      );
+  PDM_UNUSED(renum_properties_face);
+  PDM_UNUSED(dcell_face_idx       );
+  PDM_UNUSED(dcell_face           );
+  PDM_UNUSED(dcell_tag            );
+  PDM_UNUSED(dcell_weight         );
+  PDM_UNUSED(have_dcell_part      );
+  PDM_UNUSED(dcell_part           );
+  PDM_UNUSED(dface_tag            );
+  PDM_UNUSED(dvtx_tag             );
+
+  PDM_split_dual_t split_method = (PDM_split_dual_t) method; // TO DO: uniformise method type
+
+  // Create dmesh
+  int n_jn = 0;
+  PDM_dmesh_t* dm = PDM_dmesh_create(PDM_OWNERSHIP_KEEP,
+                                     dn_cell,
+                                     dn_face,
+                                     -1, // dn_edge
+                                     dn_vtx,
+                                     n_face_group,
+                                     n_jn,
+                                     comm);
+
+  int *dface_join_idx = (int *) malloc( (n_jn+1) * sizeof(int));
+  dface_join_idx[0] = 0;
+  PDM_dmesh_set(dm,
+                dvtx_coord,
+                dface_vtx_idx,
+                dface_vtx,
+                dface_cell,
+                dface_group_idx,
+                dface_group,
+                NULL,
+                dface_join_idx,
+                NULL);
+
+  // Partitionning
+  int n_zone = 1;
+  int n_part_zones = n_part;
+  PDM_multipart_t *multipart = PDM_multipart_create(n_zone,
+                                                    &n_part_zones,
+                                                    PDM_FALSE,
+                                                    split_method,
+                                                    PDM_PART_SIZE_HOMOGENEOUS,
+                                                    NULL,
+                                                    comm,
+                                                    PDM_OWNERSHIP_KEEP);
+
+  PDM_multipart_set_reordering_options(multipart, -1, renum_cell_method, renum_properties_cell, renum_face_method);
+  PDM_multipart_register_block(multipart, 0, dm);
+
+  // Run
+  PDM_multipart_run_ppart(multipart);
+
+  // free
+  free(dface_join_idx);
+  PDM_dmesh_free(dm);
+
+  return multipart;
+ }
+
+static void
+_dim_get
+(
+ PDM_multipart_t *multipart,
+ const  int       i_part,
+        int      *n_cell,
+        int      *n_face,
+        int      *n_face_part_bound,
+        int      *n_vtx,
+        int      *n_proc,
+        int      *n_total_part,
+        int      *scell_face,
+        int      *sface_vtx,
+        int      *sface_group,
+        int      *n_face_group
+)
+{
+  int  i_zone = 0;
+  int *n_elt  = NULL;
+  int  n_section;
+  int  s_face_join;
+  int  n_join_groups;
+
+  PDM_multipart_part_dim_get(multipart,
+                             i_zone,
+                             i_part,
+                             &n_section,
+                             &n_elt,
+                             n_cell,
+                             n_face,
+                             n_face_part_bound,
+                             n_vtx,
+                             n_proc,
+                             n_total_part,
+                             scell_face,
+                             sface_vtx,
+                             sface_group,
+                             n_face_group,
+                             &s_face_join,
+                             &n_join_groups);
+}
+
+static void
+_val_get
+(
+PDM_multipart_t   *multipart,
+const  int         i_part,
+ int             **cell_tag,
+ int             **cell_face_idx,
+ int             **cell_face,
+ PDM_g_num_t     **cell_ln_to_gn,
+ int             **face_tag,
+ int             **face_cell,
+ int             **face_vtx_idx,
+ int             **face_vtx,
+ PDM_g_num_t     **face_ln_to_gn,
+ int             **face_part_bound_proc_idx,
+ int             **face_part_bound_part_idx,
+ int             **face_part_bound,
+ int             **vtx_tag,
+ double          **vtx,
+ PDM_g_num_t     **vtx_ln_to_gn,
+ int             **face_group_idx,
+ int             **face_group,
+ PDM_g_num_t     **face_group_ln_to_gn
+)
+{
+  int           i_zone               = 0;
+  int         **elt_vtx_idx          = NULL;
+  int         **elt_vtx              = NULL;
+  PDM_g_num_t **elt_section_ln_to_gn = NULL;
+  int          *face_join_idx        = NULL;
+  int          *face_join            = NULL;
+  PDM_g_num_t  *face_join_ln_to_gn   = NULL;
+
+  PDM_multipart_part_val_get(multipart,
+                             i_zone,
+                             i_part,
+                             &elt_vtx_idx,
+                             &elt_vtx,
+                             &elt_section_ln_to_gn,
+                             cell_tag,
+                             cell_face_idx,
+                             cell_face,
+                             cell_ln_to_gn,
+                             face_tag,
+                             face_cell,
+                             face_vtx_idx,
+                             face_vtx,
+                             face_ln_to_gn,
+                             face_part_bound_proc_idx,
+                             face_part_bound_part_idx,
+                             face_part_bound,
+                             vtx_tag,
+                             vtx,
+                             vtx_ln_to_gn,
+                             face_group_idx,
+                             face_group,
+                             face_group_ln_to_gn,
+                             &face_join_idx,
+                             &face_join,
+                             &face_join_ln_to_gn);
+}
 
 /*=============================================================================
  * Public function definitions
@@ -2734,372 +2935,409 @@ PDM_part_create
 
   _PDM_part_t *_ppart = malloc(sizeof(_PDM_part_t));
 
-  /*
-   * Build ppart structure
-   */
-
-  _ppart->timer = PDM_timer_create();
-  for (int i = 0; i < 4; i++) {
-    _ppart->times_elapsed[i] = 0.;
-    _ppart->times_cpu[i] = 0.;
-    _ppart->times_cpu_u[i] = 0.;
-    _ppart->times_cpu_s[i] = 0.;
-  }
-  PDM_timer_resume(_ppart->timer);
-
-  /* Local dimensions */
-
-  _ppart->dn_vtx       = dn_vtx;
-  _ppart->dn_cell      = dn_cell;
-  _ppart->dn_face      = dn_face;
-  _ppart->n_face_group = n_face_group;
-
-  /* Cell definitions */
-
-  _ppart->_dcell_face_idx = dcell_face_idx;
-  _ppart->_dcell_face     = dcell_face;
-  _ppart->_dcell_tag      = dcell_tag;
-  _ppart->_dcell_weight   = dcell_weight;
-  _ppart->_dcell_part     = dcell_part;
-  _ppart->dcell_face_idx  = NULL;
-  _ppart->dcell_face      = NULL;
-  _ppart->dface_cell      = NULL;
-
-  /* Set up for renumbering */
-  _ppart->n_property_cell       = n_property_cell;
-  _ppart->renum_properties_cell = renum_properties_cell;
-  _ppart->n_property_face       = n_property_face;
-  _ppart->renum_properties_face = renum_properties_face;
-
-  _ppart->dcell_proc = (PDM_g_num_t *) malloc((n_rank+1) * sizeof(PDM_g_num_t));
-  PDM_g_num_t _dn_cell = (PDM_g_num_t) dn_cell;
-  PDM_MPI_Allgather((void *) &_dn_cell,
-                    1,
-                    PDM__PDM_MPI_G_NUM,
-                    (void *) (&_ppart->dcell_proc[1]),
-                    1,
-                    PDM__PDM_MPI_G_NUM,
-                    comm);
-
-  _ppart->dcell_proc[0] = 1;
-
-  for (int i = 1; i < n_rank+1; i++) {
-    _ppart->dcell_proc[i] +=  _ppart->dcell_proc[i-1];
+  char *use_multipart_var;
+  _ppart->use_multipart = 0;
+  if (( use_multipart_var = getenv( "PDM_USE_MULTIPART" )) != NULL ) {
+    _ppart->use_multipart = atoi(use_multipart_var);
   }
 
-  if (1 == 0) {
-    PDM_printf("_ppart->dcell_proc : "PDM_FMT_G_NUM,  _ppart->dcell_proc[0]);
+  if (_ppart->use_multipart) {
+    _ppart->multipart = _multipart_create(comm,
+                                          split_method,
+                                          renum_cell_method,
+                                          renum_face_method,
+                                          n_property_cell,
+                                          renum_properties_cell,
+                                          n_property_face,
+                                          renum_properties_face,
+                                          n_part,
+                                          dn_cell,
+                                          dn_face,
+                                          dn_vtx,
+                                          n_face_group,
+                                          dcell_face_idx,
+                                          dcell_face,
+                                          dcell_tag,
+                                          dcell_weight,
+                                          have_dcell_part,
+                                          dcell_part,
+                                          dface_cell,
+                                          dface_vtx_idx,
+                                          dface_vtx,
+                                          dface_tag,
+                                          dvtx_coord,
+                                          dvtx_tag,
+                                          dface_group_idx,
+                                          dface_group);
+  } else {
+
+    /*
+     * Build ppart structure
+     */
+
+    _ppart->timer = PDM_timer_create();
+    for (int i = 0; i < 4; i++) {
+      _ppart->times_elapsed[i] = 0.;
+      _ppart->times_cpu[i] = 0.;
+      _ppart->times_cpu_u[i] = 0.;
+      _ppart->times_cpu_s[i] = 0.;
+    }
+    PDM_timer_resume(_ppart->timer);
+
+    /* Local dimensions */
+
+    _ppart->dn_vtx       = dn_vtx;
+    _ppart->dn_cell      = dn_cell;
+    _ppart->dn_face      = dn_face;
+    _ppart->n_face_group = n_face_group;
+
+    /* Cell definitions */
+
+    _ppart->_dcell_face_idx = dcell_face_idx;
+    _ppart->_dcell_face     = dcell_face;
+    _ppart->_dcell_tag      = dcell_tag;
+    _ppart->_dcell_weight   = dcell_weight;
+    _ppart->_dcell_part     = dcell_part;
+    _ppart->dcell_face_idx  = NULL;
+    _ppart->dcell_face      = NULL;
+    _ppart->dface_cell      = NULL;
+
+    /* Set up for renumbering */
+    _ppart->n_property_cell       = n_property_cell;
+    _ppart->renum_properties_cell = renum_properties_cell;
+    _ppart->n_property_face       = n_property_face;
+    _ppart->renum_properties_face = renum_properties_face;
+
+    _ppart->dcell_proc = (PDM_g_num_t *) malloc((n_rank+1) * sizeof(PDM_g_num_t));
+    PDM_g_num_t _dn_cell = (PDM_g_num_t) dn_cell;
+    PDM_MPI_Allgather((void *) &_dn_cell,
+                      1,
+                      PDM__PDM_MPI_G_NUM,
+                      (void *) (&_ppart->dcell_proc[1]),
+                      1,
+                      PDM__PDM_MPI_G_NUM,
+                      comm);
+
+    _ppart->dcell_proc[0] = 1;
+
     for (int i = 1; i < n_rank+1; i++) {
-      PDM_printf(" "PDM_FMT_G_NUM, _ppart->dcell_proc[i]);
+      _ppart->dcell_proc[i] +=  _ppart->dcell_proc[i-1];
     }
-    PDM_printf("\n");
-  }
 
-  /* Face definitions */
-
-  _ppart->_dface_tag     = dface_tag;
-  _ppart->_dface_cell    = dface_cell;
-  _ppart->_dface_vtx_idx = dface_vtx_idx;
-  _ppart->_dface_vtx     = dface_vtx;
-
-  _ppart->dface_proc = (PDM_g_num_t *) malloc((n_rank+1) * sizeof(PDM_g_num_t));
-  int *dn_face_proc = (int *) malloc((n_rank) * sizeof(int));
-
-  PDM_MPI_Allgather((void *) &dn_face,
-                    1,
-                    PDM_MPI_INT,
-                    (void *) dn_face_proc,
-                    1,
-                    PDM_MPI_INT,
-                    comm);
-  _ppart->dface_proc[0] = 1;
-  for (int i = 1; i < n_rank+1; i++) {
-    _ppart->dface_proc[i] = (PDM_g_num_t) dn_face_proc[i-1] + _ppart->dface_proc[i-1];
-  }
-
-  free(dn_face_proc);
-
-  /* Vertex definitions */
-
-  _ppart->_dvtx_coord    = dvtx_coord;
-  _ppart->_dvtx_tag      = dvtx_tag;
-
-  _ppart->dvtx_proc = (PDM_g_num_t *) malloc((n_rank+1) * sizeof(PDM_g_num_t));
-  int *dn_vtx_proc = (int *) malloc((n_rank) * sizeof(int));
-
-  PDM_MPI_Allgather((void *) &dn_vtx,
-                    1,
-                    PDM_MPI_INT,
-                    (void *) dn_vtx_proc,
-                    1,
-                    PDM_MPI_INT,
-                    comm);
-  _ppart->dvtx_proc[0] = 1;
-  for (int i = 1; i < n_rank+1; i++) {
-    _ppart->dvtx_proc[i] = dn_vtx_proc[i-1] + _ppart->dvtx_proc[i-1];
-  }
-
-  free(dn_vtx_proc);
-
-  /* Boundaries definitions */
-
-  _ppart->_dface_group_idx = dface_group_idx;
-  _ppart->_dface_group     = dface_group;
-
-  /* Dual graph */
-
-  _ppart->ddual_graph_idx = NULL;
-  _ppart->ddual_graph     = NULL;
-
-  /* Partitions */
-
-  _ppart->n_part = n_part;
-
-  _ppart->mn_part = -1;
-
-  _ppart->dpart_proc = (int *) malloc((n_rank + 1) * sizeof(int));
-  PDM_MPI_Allgather((void *) &n_part,
-                    1,
-                    PDM_MPI_INT,
-                    (void *) (&_ppart->dpart_proc[1]),
-                    1,
-                    PDM_MPI_INT,
-                    comm);
-
-  _ppart->dpart_proc[0] = 0;
-  for (int i = 1; i < n_rank+1; i++) {
-    _ppart->mn_part = PDM_MAX(_ppart->mn_part, _ppart->dpart_proc[i]);
-    _ppart->dpart_proc[i] = _ppart->dpart_proc[i] + _ppart->dpart_proc[i-1];
-  }
-
-  _ppart->tn_part =  _ppart->dpart_proc[n_rank];
-
-  _ppart->gpart_to_lproc_part = (int *) malloc(2*_ppart->tn_part * sizeof(int));
-
-  for (int i = 0; i < n_rank; i++) {
-    for (int j = _ppart->dpart_proc[i]; j < _ppart->dpart_proc[i+1]; j++) {
-      _ppart->gpart_to_lproc_part[2*j    ] = i;
-      _ppart->gpart_to_lproc_part[2*j + 1] = j - _ppart->dpart_proc[i];
+    if (1 == 0) {
+      PDM_printf("_ppart->dcell_proc : "PDM_FMT_G_NUM,  _ppart->dcell_proc[0]);
+      for (int i = 1; i < n_rank+1; i++) {
+        PDM_printf(" "PDM_FMT_G_NUM, _ppart->dcell_proc[i]);
+      }
+      PDM_printf("\n");
     }
-  }
 
-  _ppart->mesh_parts = (_part_t **) malloc(_ppart->n_part * sizeof(_part_t *));
+    /* Face definitions */
 
-  for (int i = 0; i < _ppart->n_part; i++)
-    _ppart->mesh_parts[i] = NULL;
+    _ppart->_dface_tag     = dface_tag;
+    _ppart->_dface_cell    = dface_cell;
+    _ppart->_dface_vtx_idx = dface_vtx_idx;
+    _ppart->_dface_vtx     = dface_vtx;
 
-  /* Communicator */
+    _ppart->dface_proc = (PDM_g_num_t *) malloc((n_rank+1) * sizeof(PDM_g_num_t));
+    int *dn_face_proc = (int *) malloc((n_rank) * sizeof(int));
 
-  _ppart->comm = comm;
-
-  /* Method */
-
-  _ppart->split_method = split_method;
-
-  int _method = PDM_part_renum_method_cell_idx_get(renum_cell_method);
-
-  if (_method == -1) {
-    PDM_error (__FILE__, __LINE__, 0, "'%s' is an unknown renumbering cell method\n", renum_cell_method);
-  }
-
-  _ppart->renum_cell_method = _method;
-
-  _method = PDM_part_renum_method_face_idx_get(renum_face_method);
-
-  if (_method == -1) {
-    PDM_error (__FILE__, __LINE__, 0, "'%s' is an unknown renumbering face method\n", renum_face_method);
-  }
-  _ppart->renum_face_method = _method;
-
-  _ppart->dpart_bound = NULL;
-
-  /*
-   * Build dual graph
-   */
-
-  if (dcell_face != NULL)
-    _dual_graph_from_cell_face(_ppart);
-  else if (dface_cell != NULL)
-    _dual_graph_from_face_cell(_ppart);
-  else {
-    PDM_printf("PDM_part_part_create error : dcell_face and dface_cell are undefined, define one of two\n");
-    exit(1);
-  }
-
-  int itime = 1;
-  PDM_timer_hang_on(_ppart->timer);
-  _ppart->times_elapsed[itime] = PDM_timer_elapsed(_ppart->timer);
-  _ppart->times_cpu[itime]     = PDM_timer_cpu(_ppart->timer);
-  _ppart->times_cpu_u[itime]   = PDM_timer_cpu_user(_ppart->timer);
-  _ppart->times_cpu_s[itime]   = PDM_timer_cpu_sys(_ppart->timer);
-  itime += 1;
-
-  /*
-   * Graph partitioning
-   */
-
-  PDM_timer_resume(_ppart->timer);
-
-  int *cell_part;
-
-  if (have_dcell_part == 0) {
-    cell_part = (int *) malloc(dn_cell * sizeof(int));
-    _split(_ppart,
-           cell_part);
-    for (int i = 0; i < dn_cell; i++) {
-      dcell_part[i] = cell_part[i];
+    PDM_MPI_Allgather((void *) &dn_face,
+                      1,
+                      PDM_MPI_INT,
+                      (void *) dn_face_proc,
+                      1,
+                      PDM_MPI_INT,
+                      comm);
+    _ppart->dface_proc[0] = 1;
+    for (int i = 1; i < n_rank+1; i++) {
+      _ppart->dface_proc[i] = (PDM_g_num_t) dn_face_proc[i-1] + _ppart->dface_proc[i-1];
     }
+
+    free(dn_face_proc);
+
+    /* Vertex definitions */
+
+    _ppart->_dvtx_coord    = dvtx_coord;
+    _ppart->_dvtx_tag      = dvtx_tag;
+
+    _ppart->dvtx_proc = (PDM_g_num_t *) malloc((n_rank+1) * sizeof(PDM_g_num_t));
+    int *dn_vtx_proc = (int *) malloc((n_rank) * sizeof(int));
+
+    PDM_MPI_Allgather((void *) &dn_vtx,
+                      1,
+                      PDM_MPI_INT,
+                      (void *) dn_vtx_proc,
+                      1,
+                      PDM_MPI_INT,
+                      comm);
+    _ppart->dvtx_proc[0] = 1;
+    for (int i = 1; i < n_rank+1; i++) {
+      _ppart->dvtx_proc[i] = dn_vtx_proc[i-1] + _ppart->dvtx_proc[i-1];
+    }
+
+    free(dn_vtx_proc);
+
+    /* Boundaries definitions */
+
+    _ppart->_dface_group_idx = dface_group_idx;
+    _ppart->_dface_group     = dface_group;
+
+    /* Dual graph */
+
+    _ppart->ddual_graph_idx = NULL;
+    _ppart->ddual_graph     = NULL;
+
+    /* Partitions */
+
+    _ppart->n_part = n_part;
+
+    _ppart->mn_part = -1;
+
+    _ppart->dpart_proc = (int *) malloc((n_rank + 1) * sizeof(int));
+    PDM_MPI_Allgather((void *) &n_part,
+                      1,
+                      PDM_MPI_INT,
+                      (void *) (&_ppart->dpart_proc[1]),
+                      1,
+                      PDM_MPI_INT,
+                      comm);
+
+    _ppart->dpart_proc[0] = 0;
+    for (int i = 1; i < n_rank+1; i++) {
+      _ppart->mn_part = PDM_MAX(_ppart->mn_part, _ppart->dpart_proc[i]);
+      _ppart->dpart_proc[i] = _ppart->dpart_proc[i] + _ppart->dpart_proc[i-1];
+    }
+
+    _ppart->tn_part =  _ppart->dpart_proc[n_rank];
+
+    _ppart->gpart_to_lproc_part = (int *) malloc(2*_ppart->tn_part * sizeof(int));
+
+    for (int i = 0; i < n_rank; i++) {
+      for (int j = _ppart->dpart_proc[i]; j < _ppart->dpart_proc[i+1]; j++) {
+        _ppart->gpart_to_lproc_part[2*j    ] = i;
+        _ppart->gpart_to_lproc_part[2*j + 1] = j - _ppart->dpart_proc[i];
+      }
+    }
+
+    _ppart->mesh_parts = (_part_t **) malloc(_ppart->n_part * sizeof(_part_t *));
+
+    for (int i = 0; i < _ppart->n_part; i++)
+      _ppart->mesh_parts[i] = NULL;
+
+    /* Communicator */
+
+    _ppart->comm = comm;
+
+    /* Method */
+
+    _ppart->split_method = split_method;
+
+    int _method = PDM_part_renum_method_cell_idx_get(renum_cell_method);
+
+    if (_method == -1) {
+      PDM_error (__FILE__, __LINE__, 0, "'%s' is an unknown renumbering cell method\n", renum_cell_method);
+    }
+
+    _ppart->renum_cell_method = _method;
+
+    _method = PDM_part_renum_method_face_idx_get(renum_face_method);
+
+    if (_method == -1) {
+      PDM_error (__FILE__, __LINE__, 0, "'%s' is an unknown renumbering face method\n", renum_face_method);
+    }
+    _ppart->renum_face_method = _method;
+
+    _ppart->dpart_bound = NULL;
+
+    /*
+     * Build dual graph
+     */
+
+    if (dcell_face != NULL)
+      _dual_graph_from_cell_face(_ppart);
+    else if (dface_cell != NULL)
+      _dual_graph_from_face_cell(_ppart);
+    else {
+      PDM_printf("PDM_part_part_create error : dcell_face and dface_cell are undefined, define one of two\n");
+      exit(1);
+    }
+
+    int itime = 1;
+    PDM_timer_hang_on(_ppart->timer);
+    _ppart->times_elapsed[itime] = PDM_timer_elapsed(_ppart->timer);
+    _ppart->times_cpu[itime]     = PDM_timer_cpu(_ppart->timer);
+    _ppart->times_cpu_u[itime]   = PDM_timer_cpu_user(_ppart->timer);
+    _ppart->times_cpu_s[itime]   = PDM_timer_cpu_sys(_ppart->timer);
+    itime += 1;
+
+    /*
+     * Graph partitioning
+     */
+
+    PDM_timer_resume(_ppart->timer);
+
+    int *cell_part;
+
+    if (have_dcell_part == 0) {
+      cell_part = (int *) malloc(dn_cell * sizeof(int));
+      _split(_ppart,
+             cell_part);
+      for (int i = 0; i < dn_cell; i++) {
+        dcell_part[i] = cell_part[i];
+      }
+    }
+
+    else {
+      cell_part = (int *) _ppart->_dcell_part;
+    }
+
+    if (1 == 0) {
+      PDM_printf("cell_part : ");
+      for (int i = 0; i <dn_cell; i++)
+        PDM_printf(" %d", cell_part[i]);
+      PDM_printf("\n");
+    }
+
+    PDM_timer_hang_on(_ppart->timer);
+    _ppart->times_elapsed[itime] = PDM_timer_elapsed(_ppart->timer);
+    _ppart->times_cpu[itime]     = PDM_timer_cpu(_ppart->timer);
+    _ppart->times_cpu_u[itime]   = PDM_timer_cpu_user(_ppart->timer);
+    _ppart->times_cpu_s[itime]   = PDM_timer_cpu_sys(_ppart->timer);
+    itime += 1;
+
+    /*
+     * Cell distribution to build local connectivities
+     *     - cell_face_idx : ok
+     *     - gcell_face   : ok
+     *     - cell_face    : ok
+     *     - cell_ln_to_gn  : ok
+     *     - cell_tag     : ok
+     *     - face_ln_to_gn  : ok
+     */
+
+    PDM_timer_resume(_ppart->timer);
+
+    _distrib_cell(_ppart,
+                  cell_part);
+
+    if (have_dcell_part == 0) {
+      free(cell_part);
+      cell_part = NULL;
+    }
+
+    /*
+     * Face distribution to build local connectivities
+     *     - face_vtx_idx  : ok
+     *     - gface_vtx    : ok
+     *     - face_vtx     : ok
+     *     - face_tag     : ok
+     */
+
+    _distrib_face(_ppart);
+    _build_faceCell(_ppart);
+
+    /*
+     * Vertex distribution to build local connectivities
+     */
+
+    _distrib_vtx(_ppart);
+
+    /*
+     * Cell renumbering
+     */
+
+    PDM_part_renum_cell (        _ppart->mesh_parts,
+                                 _ppart->n_part,
+                                 _ppart->renum_cell_method,
+                         (void*) _ppart->renum_properties_cell);
+
+    /*
+     * Face renumbering
+     */
+    PDM_part_renum_face (         _ppart->mesh_parts,
+                                  _ppart->n_part,
+                                  _ppart->renum_face_method,
+                          (void*) _ppart->renum_properties_face);
+
+    /*
+     * Look for partitioning boundary faces
+     */
+
+    _search_part_bound_face(_ppart);
+
+    /*
+     * Face group distribution to build local connectivities
+     */
+
+    _distrib_face_groups(_ppart);
+
+    PDM_timer_hang_on(_ppart->timer);
+    _ppart->times_elapsed[itime] = PDM_timer_elapsed(_ppart->timer);
+    _ppart->times_cpu[itime]     = PDM_timer_cpu(_ppart->timer);
+    _ppart->times_cpu_u[itime]   = PDM_timer_cpu_user(_ppart->timer);
+    _ppart->times_cpu_s[itime]   = PDM_timer_cpu_sys(_ppart->timer);
+
+    _ppart->times_elapsed[0]     = _ppart->times_elapsed[itime];
+    _ppart->times_cpu[0]         = _ppart->times_cpu[itime];
+    _ppart->times_cpu_u[0]       = _ppart->times_cpu_u[itime];
+    _ppart->times_cpu_s[0]       = _ppart->times_cpu_s[itime];
+
+    for (int i = itime; i > 1; i--) {
+      _ppart->times_elapsed[i] -= _ppart->times_elapsed[i-1];
+      _ppart->times_cpu[i]     -= _ppart->times_cpu[i-1];
+      _ppart->times_cpu_u[i]   -= _ppart->times_cpu_u[i-1];
+      _ppart->times_cpu_s[i]   -= _ppart->times_cpu_s[i-1];
+    }
+
+    if (_ppart->dcell_face_idx != NULL)
+      free(_ppart->dcell_face_idx);
+    _ppart->dcell_face_idx = NULL;
+
+    if (_ppart->dcell_face != NULL)
+      free(_ppart->dcell_face);
+    _ppart->dcell_face = NULL;
+
+    if (_ppart->dcell_proc != NULL)
+      free(_ppart->dcell_proc);
+    _ppart->dcell_proc = NULL;
+
+    if (_ppart->dface_proc != NULL)
+      free(_ppart->dface_proc);
+    _ppart->dface_proc = NULL;
+
+    if (_ppart->dface_cell != NULL)
+      free(_ppart->dface_cell);
+    _ppart->dface_cell = NULL;
+
+    if (_ppart->dvtx_proc != NULL)
+      free(_ppart->dvtx_proc);
+    _ppart->dvtx_proc = NULL;
+
+    // if (_ppart->dpart_proc != NULL)
+    //   free(_ppart->dpart_proc);
+    // _ppart->dpart_proc = NULL;
+
+    if (_ppart->gpart_to_lproc_part != NULL)
+      free(_ppart->gpart_to_lproc_part);
+    _ppart->gpart_to_lproc_part = NULL;
+
+    if (_ppart->dpart_bound != NULL)
+      free(_ppart->dpart_bound);
+    _ppart->dpart_bound = NULL;
+
+    if (_ppart->ddual_graph_idx != NULL)
+      free(_ppart->ddual_graph_idx);
+    _ppart->ddual_graph_idx = NULL;
+
+    if (_ppart->ddual_graph != NULL)
+      free(_ppart->ddual_graph);
+    _ppart->ddual_graph = NULL;
+
   }
-
-  else {
-    cell_part = (int *) _ppart->_dcell_part;
-  }
-
-  if (1 == 0) {
-    PDM_printf("cell_part : ");
-    for (int i = 0; i <dn_cell; i++)
-      PDM_printf(" %d", cell_part[i]);
-    PDM_printf("\n");
-  }
-
-  PDM_timer_hang_on(_ppart->timer);
-  _ppart->times_elapsed[itime] = PDM_timer_elapsed(_ppart->timer);
-  _ppart->times_cpu[itime]     = PDM_timer_cpu(_ppart->timer);
-  _ppart->times_cpu_u[itime]   = PDM_timer_cpu_user(_ppart->timer);
-  _ppart->times_cpu_s[itime]   = PDM_timer_cpu_sys(_ppart->timer);
-  itime += 1;
-
-  /*
-   * Cell distribution to build local connectivities
-   *     - cell_face_idx : ok
-   *     - gcell_face   : ok
-   *     - cell_face    : ok
-   *     - cell_ln_to_gn  : ok
-   *     - cell_tag     : ok
-   *     - face_ln_to_gn  : ok
-   */
-
-  PDM_timer_resume(_ppart->timer);
-
-  _distrib_cell(_ppart,
-                cell_part);
-
-  if (have_dcell_part == 0) {
-    free(cell_part);
-    cell_part = NULL;
-  }
-
-  /*
-   * Face distribution to build local connectivities
-   *     - face_vtx_idx  : ok
-   *     - gface_vtx    : ok
-   *     - face_vtx     : ok
-   *     - face_tag     : ok
-   */
-
-  _distrib_face(_ppart);
-  _build_faceCell(_ppart);
-
-  /*
-   * Vertex distribution to build local connectivities
-   */
-
-  _distrib_vtx(_ppart);
-
-  /*
-   * Cell renumbering
-   */
-
-  PDM_part_renum_cell (        _ppart->mesh_parts,
-                               _ppart->n_part,
-                               _ppart->renum_cell_method,
-                       (void*) _ppart->renum_properties_cell);
-
-  /*
-   * Face renumbering
-   */
-  PDM_part_renum_face (         _ppart->mesh_parts,
-                                _ppart->n_part,
-                                _ppart->renum_face_method,
-                        (void*) _ppart->renum_properties_face);
-
-  /*
-   * Look for partitioning boundary faces
-   */
-
-  _search_part_bound_face(_ppart);
-
-  /*
-   * Face group distribution to build local connectivities
-   */
-
-  _distrib_face_groups(_ppart);
-
-  PDM_timer_hang_on(_ppart->timer);
-  _ppart->times_elapsed[itime] = PDM_timer_elapsed(_ppart->timer);
-  _ppart->times_cpu[itime]     = PDM_timer_cpu(_ppart->timer);
-  _ppart->times_cpu_u[itime]   = PDM_timer_cpu_user(_ppart->timer);
-  _ppart->times_cpu_s[itime]   = PDM_timer_cpu_sys(_ppart->timer);
-
-  _ppart->times_elapsed[0]     = _ppart->times_elapsed[itime];
-  _ppart->times_cpu[0]         = _ppart->times_cpu[itime];
-  _ppart->times_cpu_u[0]       = _ppart->times_cpu_u[itime];
-  _ppart->times_cpu_s[0]       = _ppart->times_cpu_s[itime];
-
-  for (int i = itime; i > 1; i--) {
-    _ppart->times_elapsed[i] -= _ppart->times_elapsed[i-1];
-    _ppart->times_cpu[i]     -= _ppart->times_cpu[i-1];
-    _ppart->times_cpu_u[i]   -= _ppart->times_cpu_u[i-1];
-    _ppart->times_cpu_s[i]   -= _ppart->times_cpu_s[i-1];
-  }
-
-  if (_ppart->dcell_face_idx != NULL)
-    free(_ppart->dcell_face_idx);
-  _ppart->dcell_face_idx = NULL;
-
-  if (_ppart->dcell_face != NULL)
-    free(_ppart->dcell_face);
-  _ppart->dcell_face = NULL;
-
-  if (_ppart->dcell_proc != NULL)
-    free(_ppart->dcell_proc);
-  _ppart->dcell_proc = NULL;
-
-  if (_ppart->dface_proc != NULL)
-    free(_ppart->dface_proc);
-  _ppart->dface_proc = NULL;
-
-  if (_ppart->dface_cell != NULL)
-    free(_ppart->dface_cell);
-  _ppart->dface_cell = NULL;
-
-  if (_ppart->dvtx_proc != NULL)
-    free(_ppart->dvtx_proc);
-  _ppart->dvtx_proc = NULL;
-
-  // if (_ppart->dpart_proc != NULL)
-  //   free(_ppart->dpart_proc);
-  // _ppart->dpart_proc = NULL;
-
-  if (_ppart->gpart_to_lproc_part != NULL)
-    free(_ppart->gpart_to_lproc_part);
-  _ppart->gpart_to_lproc_part = NULL;
-
-  if (_ppart->dpart_bound != NULL)
-    free(_ppart->dpart_bound);
-  _ppart->dpart_bound = NULL;
-
-  if (_ppart->ddual_graph_idx != NULL)
-    free(_ppart->ddual_graph_idx);
-  _ppart->ddual_graph_idx = NULL;
-
-  if (_ppart->ddual_graph != NULL)
-    free(_ppart->ddual_graph);
-  _ppart->ddual_graph = NULL;
 
   return (PDM_part_t *) _ppart;
 }
-
 
 
 /**
@@ -3139,34 +3377,48 @@ const   int  i_part,
         int *n_face_group
 )
 {
-  _PDM_part_t *_ppart = (_PDM_part_t *) ppart;
-  int n_rank;
-  PDM_MPI_Comm_size(_ppart->comm, &n_rank);
 
-  _part_t *mesh_part = NULL;
-  if (i_part < _ppart->n_part)
-    mesh_part  = _ppart->mesh_parts[i_part];
+  if (ppart->use_multipart) {
+    _dim_get(ppart->multipart,
+             i_part,
+             n_cell,
+             n_face,
+             n_face_part_bound,
+             n_vtx,
+             n_proc,
+             n_total_part,
+             scell_face,
+             sface_vtx,
+             sface_group,
+             n_face_group);
+  } else {
+    _PDM_part_t *_ppart = (_PDM_part_t *) ppart;
+    int n_rank;
+    PDM_MPI_Comm_size(_ppart->comm, &n_rank);
 
-  if (mesh_part == NULL) {
-    PDM_printf("PDM_part_part_get error : unknown partition\n");
-    exit(1);
+    _part_t *mesh_part = NULL;
+    if (i_part < _ppart->n_part)
+      mesh_part  = _ppart->mesh_parts[i_part];
+
+    if (mesh_part == NULL) {
+      PDM_printf("PDM_part_part_get error : unknown partition\n");
+      exit(1);
+    }
+
+    *n_cell            = mesh_part->n_cell;
+    *n_face            = mesh_part->n_face;
+    *n_face_part_bound = mesh_part->n_face_part_bound;
+    *n_proc            = n_rank;
+    *n_total_part      = _ppart->tn_part;
+    *n_vtx             = mesh_part->n_vtx;
+    *scell_face        = mesh_part->cell_face_idx[*n_cell];
+    *sface_vtx         = mesh_part->face_vtx_idx[*n_face];
+    *sface_group       = 0;
+    if (_ppart->n_face_group > 0)
+      *sface_group    = mesh_part->face_group_idx[_ppart->n_face_group];
+    *n_face_group    = _ppart->n_face_group;
   }
-
-  *n_cell            = mesh_part->n_cell;
-  *n_face            = mesh_part->n_face;
-  *n_face_part_bound = mesh_part->n_face_part_bound;
-  *n_proc            = n_rank;
-  *n_total_part      = _ppart->tn_part;
-  *n_vtx             = mesh_part->n_vtx;
-  *scell_face        = mesh_part->cell_face_idx[*n_cell];
-  *sface_vtx         = mesh_part->face_vtx_idx[*n_face];
-  *sface_group       = 0;
-  if (_ppart->n_face_group > 0)
-    *sface_group    = mesh_part->face_group_idx[_ppart->n_face_group];
-  *n_face_group    = _ppart->n_face_group;
 }
-
-
 
 /**
  *
@@ -3230,37 +3482,59 @@ const  int      i_part,
  PDM_g_num_t  **face_group_ln_to_gn
 )
 {
-  _PDM_part_t *_ppart = (_PDM_part_t *) ppart;
+  if (ppart->use_multipart) {
+    _val_get(ppart->multipart,
+             i_part,
+             cell_tag,
+             cell_face_idx,
+             cell_face,
+             cell_ln_to_gn,
+             face_tag,
+             face_cell,
+             face_vtx_idx,
+             face_vtx,
+             face_ln_to_gn,
+             face_part_bound_proc_idx,
+             face_part_bound_part_idx,
+             face_part_bound,
+             vtx_tag,
+             vtx,
+             vtx_ln_to_gn,
+             face_group_idx,
+             face_group,
+             face_group_ln_to_gn);
+  } else {
+    _PDM_part_t *_ppart = (_PDM_part_t *) ppart;
 
-  _part_t *mesh_part = NULL;
-  if (i_part < _ppart->n_part)
-    mesh_part  = _ppart->mesh_parts[i_part];
+    _part_t *mesh_part = NULL;
+    if (i_part < _ppart->n_part)
+      mesh_part  = _ppart->mesh_parts[i_part];
 
-  if (mesh_part == NULL) {
-    PDM_printf("PDM_part_part_val_get error : unknown partition\n");
-    exit(1);
+    if (mesh_part == NULL) {
+      PDM_printf("PDM_part_part_val_get error : unknown partition\n");
+      exit(1);
+    }
+
+    *cell_tag                 = mesh_part->cell_tag;
+    *cell_face_idx            = mesh_part->cell_face_idx;
+    *cell_face                = mesh_part->cell_face;
+    *cell_ln_to_gn            = mesh_part->cell_ln_to_gn;
+    *face_tag                 = mesh_part->face_tag;
+    *face_cell                = mesh_part->face_cell;
+    *face_vtx_idx             = mesh_part->face_vtx_idx;
+    *face_vtx                 = mesh_part->face_vtx;
+    *face_ln_to_gn            = mesh_part->face_ln_to_gn;
+    *face_part_bound_proc_idx = mesh_part->face_part_bound_proc_idx;
+    *face_part_bound_part_idx = mesh_part->face_part_bound_part_idx;
+    *face_part_bound          = mesh_part->face_part_bound;
+    *vtx_tag                  = mesh_part->vtx_tag;
+    *vtx                      = mesh_part->vtx;
+    *vtx_ln_to_gn             = mesh_part->vtx_ln_to_gn;
+    *face_group_idx           = mesh_part->face_group_idx;
+    *face_group               = mesh_part->face_group;
+    *face_group_ln_to_gn      = mesh_part->face_group_ln_to_gn;
   }
-
-  *cell_tag                 = mesh_part->cell_tag;
-  *cell_face_idx            = mesh_part->cell_face_idx;
-  *cell_face                = mesh_part->cell_face;
-  *cell_ln_to_gn            = mesh_part->cell_ln_to_gn;
-  *face_tag                 = mesh_part->face_tag;
-  *face_cell                = mesh_part->face_cell;
-  *face_vtx_idx             = mesh_part->face_vtx_idx;
-  *face_vtx                 = mesh_part->face_vtx;
-  *face_ln_to_gn            = mesh_part->face_ln_to_gn;
-  *face_part_bound_proc_idx = mesh_part->face_part_bound_proc_idx;
-  *face_part_bound_part_idx = mesh_part->face_part_bound_part_idx;
-  *face_part_bound          = mesh_part->face_part_bound;
-  *vtx_tag                  = mesh_part->vtx_tag;
-  *vtx                      = mesh_part->vtx;
-  *vtx_ln_to_gn             = mesh_part->vtx_ln_to_gn;
-  *face_group_idx           = mesh_part->face_group_idx;
-  *face_group               = mesh_part->face_group;
-  *face_group_ln_to_gn      = mesh_part->face_group_ln_to_gn;
 }
-
 
 
 /**
@@ -3288,19 +3562,33 @@ const  int      i_part,
 {
   _PDM_part_t *_ppart = (_PDM_part_t *) ppart;
 
-  _part_t *mesh_part = NULL;
-  if (i_part < _ppart->n_part)
-    mesh_part  = _ppart->mesh_parts[i_part];
+  if (_ppart->use_multipart) {
+    int i_zone = 0;
+    int **face_hp_color = (int**)malloc(sizeof(int*));
+    PDM_multipart_part_color_get(ppart->multipart,
+                                 i_zone,
+                                 i_part,
+                                 cell_color,
+                                 face_color,
+                                 face_hp_color,
+                                 thread_color,
+                                 hyperplane_color);
+    free(face_hp_color);
+  } else {
+    _part_t *mesh_part = NULL;
+    if (i_part < _ppart->n_part)
+      mesh_part  = _ppart->mesh_parts[i_part];
 
-  if (mesh_part == NULL) {
-    PDM_printf("PDM_part_part_color_get error : unknown partition\n");
-    exit(1);
+    if (mesh_part == NULL) {
+      PDM_printf("PDM_part_part_color_get error : unknown partition\n");
+      exit(1);
+    }
+
+    *cell_color       = mesh_part->cell_color;
+    *face_color       = mesh_part->face_color;
+    *thread_color     = mesh_part->thread_color;
+    *hyperplane_color = mesh_part->hyperplane_color;
   }
-
-  *cell_color       = mesh_part->cell_color;
-  *face_color       = mesh_part->face_color;
-  *thread_color     = mesh_part->thread_color;
-  *hyperplane_color = mesh_part->hyperplane_color;
 }
 
 
@@ -3321,61 +3609,71 @@ PDM_part_free
 {
   _PDM_part_t *_ppart = (_PDM_part_t *) ppart;
 
-  if (_ppart->dcell_face_idx != NULL)
-    free(_ppart->dcell_face_idx);
-  _ppart->dcell_face_idx = NULL;
+  if (_ppart->use_multipart) {
 
-  if (_ppart->dcell_face != NULL)
-    free(_ppart->dcell_face);
-  _ppart->dcell_face = NULL;
+    if (ppart->multipart != NULL)
+      PDM_multipart_free(ppart->multipart);
+    _ppart->multipart = NULL;
 
-  if (_ppart->dcell_proc != NULL)
-    free(_ppart->dcell_proc);
-  _ppart->dcell_proc = NULL;
+  } else {
 
-  if (_ppart->dface_proc != NULL)
-    free(_ppart->dface_proc);
-  _ppart->dface_proc = NULL;
+    if (_ppart->dcell_face_idx != NULL)
+      free(_ppart->dcell_face_idx);
+    _ppart->dcell_face_idx = NULL;
 
-  if (_ppart->dface_cell != NULL)
-    free(_ppart->dface_cell);
-  _ppart->dface_cell = NULL;
+    if (_ppart->dcell_face != NULL)
+      free(_ppart->dcell_face);
+    _ppart->dcell_face = NULL;
 
-  if (_ppart->dvtx_proc != NULL)
-    free(_ppart->dvtx_proc);
-  _ppart->dvtx_proc = NULL;
+    if (_ppart->dcell_proc != NULL)
+      free(_ppart->dcell_proc);
+    _ppart->dcell_proc = NULL;
 
-  if (_ppart->dpart_proc != NULL)
-    free(_ppart->dpart_proc);
-  _ppart->dpart_proc = NULL;
+    if (_ppart->dface_proc != NULL)
+      free(_ppart->dface_proc);
+    _ppart->dface_proc = NULL;
 
-  if (_ppart->gpart_to_lproc_part != NULL)
-    free(_ppart->gpart_to_lproc_part);
-  _ppart->gpart_to_lproc_part = NULL;
+    if (_ppart->dface_cell != NULL)
+      free(_ppart->dface_cell);
+    _ppart->dface_cell = NULL;
 
-  if (_ppart->dpart_bound != NULL)
-    free(_ppart->dpart_bound);
-  _ppart->dpart_bound = NULL;
+    if (_ppart->dvtx_proc != NULL)
+      free(_ppart->dvtx_proc);
+    _ppart->dvtx_proc = NULL;
 
-  if (_ppart->ddual_graph_idx != NULL)
-    free(_ppart->ddual_graph_idx);
-  _ppart->ddual_graph_idx = NULL;
+    if (_ppart->dpart_proc != NULL)
+      free(_ppart->dpart_proc);
+    _ppart->dpart_proc = NULL;
 
-  if (_ppart->ddual_graph != NULL)
-    free(_ppart->ddual_graph);
-  _ppart->ddual_graph = NULL;
+    if (_ppart->gpart_to_lproc_part != NULL)
+      free(_ppart->gpart_to_lproc_part);
+    _ppart->gpart_to_lproc_part = NULL;
 
-  for (int i = 0; i < _ppart->n_part; i++) {
-    _part_free(_ppart->mesh_parts[i]);
-    _ppart->mesh_parts[i] = NULL;
+    if (_ppart->dpart_bound != NULL)
+      free(_ppart->dpart_bound);
+    _ppart->dpart_bound = NULL;
+
+    if (_ppart->ddual_graph_idx != NULL)
+      free(_ppart->ddual_graph_idx);
+    _ppart->ddual_graph_idx = NULL;
+
+    if (_ppart->ddual_graph != NULL)
+      free(_ppart->ddual_graph);
+    _ppart->ddual_graph = NULL;
+
+    for (int i = 0; i < _ppart->n_part; i++) {
+      _part_free(_ppart->mesh_parts[i]);
+      _ppart->mesh_parts[i] = NULL;
+    }
+
+    PDM_timer_free(_ppart->timer);
+    _ppart->timer = NULL;
+
+    if (_ppart->mesh_parts != NULL)
+      free(_ppart->mesh_parts);
+    _ppart->mesh_parts = NULL;
+
   }
-
-  PDM_timer_free(_ppart->timer);
-  _ppart->timer = NULL;
-
-  if (_ppart->mesh_parts != NULL)
-    free(_ppart->mesh_parts);
-  _ppart->mesh_parts = NULL;
 
   free (_ppart);
 
@@ -3449,6 +3747,23 @@ int         *bound_part_faces_sum
 )
 {
   _PDM_part_t *_ppart = (_PDM_part_t *) ppart;
+  if (_ppart->use_multipart) {
+    PDM_multipart_stat_get(ppart->multipart,
+                           0, // i_zone
+                           cells_average,
+                           cells_median,
+                           cells_std_deviation,
+                           cells_min,
+                           cells_max,
+                           bound_part_faces_average,
+                           bound_part_faces_median,
+                           bound_part_faces_std_deviation,
+                           bound_part_faces_min,
+                           bound_part_faces_max,
+                           bound_part_faces_sum);
+    return;
+  }
+
   int n_rank;
   PDM_MPI_Comm_size(_ppart->comm, &n_rank);
 

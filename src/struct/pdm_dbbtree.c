@@ -8224,6 +8224,25 @@ PDM_dbbtree_box_tree_write_vtk
                          normalized);
 }
 
+
+void
+PDM_dbbtree_box_tree_write_vtk2
+(
+ const char    *filename,
+ PDM_dbbtree_t *dbbt,
+ const int      i_copied_rank
+ )
+{
+  assert (dbbt != NULL);
+  _PDM_dbbtree_t *_dbbt = (_PDM_dbbtree_t *) dbbt;
+
+  PDM_box_tree_write_vtk2(filename,
+                          _dbbt->btLoc,
+                          i_copied_rank,
+                          _dbbt->s,
+                          _dbbt->d);
+}
+
 #undef _MIN
 #undef _MAX
 

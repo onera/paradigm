@@ -519,6 +519,25 @@ PDM_geom_elem_polyhedra_properties
 );
 
 
+void
+PDM_geom_elem_polyhedra_properties_triangulated
+(
+ const int     isOriented,
+ const int     nPolyhedra,
+ const int     n_face,
+ const int    *faceConnectivityIdx,
+ const int    *faceConnectivity,
+ const int    *cellToFaceConnectivityIdx,
+       int    *cellToFaceConnectivity,
+ const int     nVertices,
+ const double *coords,
+       double *volume,
+       double *center,
+       double *characteristicLength,
+       int    *isDegenerated
+);
+
+
 /**
  *  \brief Compute downwind and updind elemt of all edges (or -1 if not found )
  *

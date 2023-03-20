@@ -51,114 +51,6 @@ extern "C" {
  * Public function definitions
  *============================================================================*/
 
-// /**
-//  *
-//  * \brief PDM_section_size_elt_faces_get
-//  *
-//  * \param [in]     mesh               Current mesh
-//  * \param [in]     id_section         Section identifier
-//  * \param [inout]  elt_face_vtx_idx   Index of element faces connectivity (preallocated)
-//  * \param [inout]  elt_face_vtx       Element faces connectivity (preallocated)
-//  *
-//  */
-// int
-// PDM_section_size_elt_faces_get
-// (
-//   PDM_dmesh_nodal_t *dmesh_nodal,
-//   int               *s_elt_face_vtx_idx,
-//   int               *s_elt_face_vtx,
-//   int               *s_elt_face_cell
-// )
-// {
-
-//   // You should do it for each level of the mesh !!!!
-//   // abort();
-//   // printf("PDM_section_size_elt_faces_get WARNING NOT WORKING \n");
-
-//   int _s_elt_face_vtx_idx = 0;
-//   int _s_elt_face_vtx     = 0;
-
-//   for (int i = 0; i < dmesh_nodal->n_section_std; i++) {
-//     int n_face_elt     = PDM_n_face_elt_per_elmt    (dmesh_nodal->sections_std[i]->t_elt);
-//     int n_sum_vtx_face = PDM_n_sum_vtx_face_per_elmt(dmesh_nodal->sections_std[i]->t_elt);
-
-//     _s_elt_face_vtx_idx += dmesh_nodal->sections_std[i]->n_elt * n_face_elt;
-//     _s_elt_face_vtx     += dmesh_nodal->sections_std[i]->n_elt * n_sum_vtx_face;
-//   }
-
-//   for (int i = 0; i < dmesh_nodal->n_section_poly3d; i++) {
-//     int _n_face = dmesh_nodal->sections_poly3d[i]->n_face;
-//     _s_elt_face_vtx_idx += _n_face;
-//     _s_elt_face_vtx     += dmesh_nodal->sections_poly3d[i]->_face_vtx[dmesh_nodal->sections_poly3d[i]->_face_vtx_idx[_n_face]];
-//   }
-
-//   for (int i = 0; i < dmesh_nodal->n_section_poly2d; i++) {
-//     _s_elt_face_vtx_idx +=     dmesh_nodal->sections_poly2d[i]->_connec_idx[dmesh_nodal->sections_poly2d[i]->n_elt];
-//     _s_elt_face_vtx     += 2 * dmesh_nodal->sections_poly2d[i]->_connec_idx[dmesh_nodal->sections_poly2d[i]->n_elt];
-//   }
-
-//   *s_elt_face_cell    = _s_elt_face_vtx_idx;
-//   *s_elt_face_vtx_idx = _s_elt_face_vtx_idx + 1;
-//   *s_elt_face_vtx     = _s_elt_face_vtx     + 1;
-
-//   return *s_elt_face_vtx - 1;
-// }
-
-
-/**
- *
- * \brief PDM_section_size_elt_edges_get
- *
- * \param [in]     mesh               Current mesh
- * \param [in]     id_section         Section identifier
- * \param [inout]  elt_edge_vtx_idx   Index of element faces connectivity (preallocated)
- * \param [inout]  elt_edge_vtx       Element faces connectivity (preallocated)
- *
- */
-// int
-// PDM_section_size_elt_edges_get
-// (
-//   PDM_dmesh_nodal_t *dmesh_nodal,
-//   int               *s_elt_edge_vtx_idx,
-//   int               *s_elt_edge_vtx,
-//   int               *s_elt_edge_cell
-// )
-// {
-//   // printf("PDM_section_size_elt_edges_get WARNING NOT WORKING \n");
-
-//   int _s_elt_edge_vtx_idx = 0;
-//   int _s_elt_edge_vtx     = 0;
-
-//   for (int i = 0; i < dmesh_nodal->n_section_std; i++) {
-//     int n_edge_elt     = PDM_n_nedge_elt_per_elmt   (dmesh_nodal->sections_std[i]->t_elt);
-//     int n_sum_vtx_edge = PDM_n_sum_vtx_edge_per_elmt(dmesh_nodal->sections_std[i]->t_elt);
-
-//     _s_elt_edge_vtx_idx += dmesh_nodal->sections_std[i]->n_elt * n_edge_elt;
-//     _s_elt_edge_vtx     += dmesh_nodal->sections_std[i]->n_elt * n_sum_vtx_edge;
-//   }
-
-//   assert(dmesh_nodal->n_section_poly3d == 0); // Not implemented to test
-//   for (int i = 0; i < dmesh_nodal->n_section_poly3d; i++) {
-//     int _n_face = dmesh_nodal->sections_poly3d[i]->n_face;
-//     _s_elt_edge_vtx_idx +=     dmesh_nodal->sections_poly3d[i]->_face_vtx_idx[_n_face];
-//     _s_elt_edge_vtx     += 2 * dmesh_nodal->sections_poly3d[i]->_face_vtx_idx[_n_face];
-//   }
-
-//   assert(dmesh_nodal->n_section_poly2d == 0); // Not implemented
-//   for (int i = 0; i < dmesh_nodal->n_section_poly2d; i++) {
-//     _s_elt_edge_vtx_idx +=     dmesh_nodal->sections_poly2d[i]->_connec_idx[dmesh_nodal->sections_poly2d[i]->n_elt];
-//     _s_elt_edge_vtx     += 2 * dmesh_nodal->sections_poly2d[i]->_connec_idx[dmesh_nodal->sections_poly2d[i]->n_elt];
-//   }
-
-//   *s_elt_edge_cell    = _s_elt_edge_vtx_idx;
-//   *s_elt_edge_vtx_idx = _s_elt_edge_vtx_idx + 1;
-//   *s_elt_edge_vtx     = _s_elt_edge_vtx     + 1;
-
-//   return *s_elt_edge_vtx - 1;
-// }
-
-
-
 /**
  * \brief Return for standard elements the number of face that build this element
  *
@@ -173,6 +65,7 @@ PDM_n_face_elt_per_elmt
   switch (t_elt) {
    case PDM_MESH_NODAL_TRIA3:
    case PDM_MESH_NODAL_TRIAHO:
+   case PDM_MESH_NODAL_TRIAHO_BEZIER:
      n_face_elt = 1;
      break;
    case PDM_MESH_NODAL_QUAD4:
@@ -197,7 +90,7 @@ PDM_n_face_elt_per_elmt
      break;
    default:
      n_face_elt = -1;
-     PDM_error(__FILE__, __LINE__, 0, "Error PDM_n_face_elt_per_elmt : Element type is not taking int account\n");
+     PDM_error(__FILE__, __LINE__, 0, "Error PDM_n_face_elt_per_elmt : Element type is supported\n");
   }
   return n_face_elt;
 }
@@ -219,10 +112,12 @@ PDM_n_nedge_elt_per_elmt
      break;
    case PDM_MESH_NODAL_BAR2:
    case PDM_MESH_NODAL_BARHO:
+   case PDM_MESH_NODAL_BARHO_BEZIER:
      n_nedge_elt = 1;
      break;
    case PDM_MESH_NODAL_TRIA3:
    case PDM_MESH_NODAL_TRIAHO:
+   case PDM_MESH_NODAL_TRIAHO_BEZIER:
      n_nedge_elt = 3;
      break;
    case PDM_MESH_NODAL_QUAD4:
@@ -247,7 +142,7 @@ PDM_n_nedge_elt_per_elmt
      break;
    default:
      n_nedge_elt = -1;
-     PDM_error(__FILE__, __LINE__, 0, "Error PDM_n_nedge_elt_per_elmt : Element type is not taking int account\n");
+     PDM_error(__FILE__, __LINE__, 0, "Error PDM_n_nedge_elt_per_elmt : Element type is not supported\n");
   }
   return n_nedge_elt;
 }
@@ -266,6 +161,7 @@ PDM_n_sum_vtx_face_per_elmt
   switch (t_elt) {
    case PDM_MESH_NODAL_TRIA3:
    case PDM_MESH_NODAL_TRIAHO:
+   case PDM_MESH_NODAL_TRIAHO_BEZIER:
      n_sum_vtx_face = 3;
      break;
    case PDM_MESH_NODAL_QUAD4:
@@ -290,7 +186,7 @@ PDM_n_sum_vtx_face_per_elmt
      break;
    default:
      n_sum_vtx_face = -1;
-     PDM_error(__FILE__, __LINE__, 0, "Error PDM_n_sum_vtx_face_per_elmt : Element type is not taking int account\n");
+     PDM_error(__FILE__, __LINE__, 0, "Error PDM_n_sum_vtx_face_per_elmt : Element type is not supported\n");
   }
   return n_sum_vtx_face;
 }
@@ -313,10 +209,12 @@ PDM_n_sum_vtx_edge_per_elmt
      break;
    case PDM_MESH_NODAL_BAR2:
    case PDM_MESH_NODAL_BARHO:
+   case PDM_MESH_NODAL_BARHO_BEZIER:
      n_sum_vtx_edge = 2;
      break;
    case PDM_MESH_NODAL_TRIA3:
    case PDM_MESH_NODAL_TRIAHO:
+   case PDM_MESH_NODAL_TRIAHO_BEZIER:
      n_sum_vtx_edge = 6;
      break;
    case PDM_MESH_NODAL_QUAD4:
@@ -341,7 +239,7 @@ PDM_n_sum_vtx_edge_per_elmt
      break;
    default:
      n_sum_vtx_edge = -1;
-     PDM_error(__FILE__, __LINE__, 0, "Error PDM_n_sum_vtx_edge_per_elmt : Element type is not taking int account\n");
+     PDM_error(__FILE__, __LINE__, 0, "Error PDM_n_sum_vtx_edge_per_elmt : Element type is supported\n");
   }
   return n_sum_vtx_edge;
 }
@@ -482,10 +380,13 @@ PDM_std_decomposes_faces
      abort();
      break;
    case PDM_MESH_NODAL_BAR2:
+   case PDM_MESH_NODAL_BARHO:
+   case PDM_MESH_NODAL_BARHO_BEZIER:
      abort();
      break;
    case PDM_MESH_NODAL_TRIA3:
    case PDM_MESH_NODAL_TRIAHO:
+    case PDM_MESH_NODAL_TRIAHO_BEZIER:
      PDM_tri_decomposes_faces(n_elt,
                               order,
                               parent_node,
@@ -587,7 +488,7 @@ PDM_std_decomposes_faces
                                parent_elmt_position);
      break;
    default:
-     PDM_error(__FILE__, __LINE__, 0, "Error PDM_sections_decompose_faces : Element type is not taking int account\n");
+     PDM_error(__FILE__, __LINE__, 0, "Error PDM_sections_decompose_faces : Element type is supported\n");
   }
 }
 
@@ -622,6 +523,7 @@ PDM_std_decomposes_edges
      break;
    case PDM_MESH_NODAL_BAR2:
    case PDM_MESH_NODAL_BARHO:
+   case PDM_MESH_NODAL_BARHO_BEZIER:
      PDM_bar_decomposes_edges(n_elt,
                               order,
                               parent_node,
@@ -639,6 +541,7 @@ PDM_std_decomposes_edges
      break;
    case PDM_MESH_NODAL_TRIA3:
    case PDM_MESH_NODAL_TRIAHO:
+   case PDM_MESH_NODAL_TRIAHO_BEZIER:
      PDM_tri_decomposes_edges(n_elt,
                               order,
                               parent_node,
@@ -740,7 +643,7 @@ PDM_std_decomposes_edges
                                parent_elmt_position);
      break;
    default:
-     PDM_error(__FILE__, __LINE__, 0, "Error PDM_sections_decompose_edges : Element type is not taking int account\n");
+     PDM_error(__FILE__, __LINE__, 0, "Error PDM_sections_decompose_edges : Element type is supported\n");
   }
 }
 
@@ -2184,7 +2087,9 @@ PDM_sections_decompose_faces
         break;
       }
       case PDM_MESH_NODAL_BARHO:
+      case PDM_MESH_NODAL_BARHO_BEZIER:
       case PDM_MESH_NODAL_TRIAHO:
+      case PDM_MESH_NODAL_TRIAHO_BEZIER:
       case PDM_MESH_NODAL_QUADHO:
       case PDM_MESH_NODAL_TETRAHO:
       case PDM_MESH_NODAL_PYRAMIDHO:
@@ -2221,18 +2126,18 @@ PDM_sections_decompose_faces
       }
       case PDM_MESH_NODAL_POLY_2D:
       {
-        PDM_error(__FILE__, __LINE__, 0, "Error PDM_sections_decompose_faces : Element type is not taking int account\n");
+        PDM_error(__FILE__, __LINE__, 0, "Error PDM_sections_decompose_faces : Element type is supported\n");
         break;
       }
 
       case PDM_MESH_NODAL_POLY_3D:
       {
-        PDM_error(__FILE__, __LINE__, 0, "Error PDM_sections_decompose_faces : Element type is not taking int account\n");
+        PDM_error(__FILE__, __LINE__, 0, "Error PDM_sections_decompose_faces : Element type is supported\n");
         break;
       }
 
       default:
-        PDM_error(__FILE__, __LINE__, 0, "Error PDM_sections_decompose_faces : Element type is not taking int account\n");
+        PDM_error(__FILE__, __LINE__, 0, "Error PDM_sections_decompose_faces : Element type is supported\n");
     }
   }
 }
@@ -2260,14 +2165,7 @@ PDM_sections_decompose_edges
   int                     *parent_elmt_position
 )
 {
-  PDM_UNUSED(dmn_elts);
-  PDM_UNUSED(elmt_edge_vtx_idx);
-  PDM_UNUSED(elmt_edge_vtx);
-  PDM_UNUSED(elmt_edge_cell);
-  PDM_UNUSED(elmt_cell_edge_idx);
-  PDM_UNUSED(elmt_cell_edge);
-
-  int n_elt_current  = 0;
+  int n_elt_current   = 0;
   int n_dedge_current = 0;
 
   if(dmn_elts == NULL) {
@@ -2295,6 +2193,7 @@ PDM_sections_decompose_edges
     PDM_g_num_t beg_edge_gnum = 0; // Useless in this context
 
     PDM_Mesh_nodal_elt_t t_elt = PDM_DMesh_nodal_elmts_section_type_get(dmn_elts, id_section);
+    int n_elt                  = PDM_DMesh_nodal_elmts_section_n_elt_get(dmn_elts, id_section);
 
     switch (t_elt) {
       case PDM_MESH_NODAL_POINT:
@@ -2306,7 +2205,6 @@ PDM_sections_decompose_edges
       case PDM_MESH_NODAL_PRISM6:
       case PDM_MESH_NODAL_HEXA8:
       {
-        int n_elt           = PDM_DMesh_nodal_elmts_section_n_elt_get(dmn_elts, id_section);
         PDM_g_num_t* connec = PDM_DMesh_nodal_elmts_section_std_get(dmn_elts, id_section);
         PDM_std_decomposes_edges(t_elt,
                                  1,
@@ -2327,14 +2225,15 @@ PDM_sections_decompose_edges
       }
 
       case PDM_MESH_NODAL_BARHO:
+      case PDM_MESH_NODAL_BARHO_BEZIER:
       case PDM_MESH_NODAL_TRIAHO:
+      case PDM_MESH_NODAL_TRIAHO_BEZIER:
       case PDM_MESH_NODAL_QUADHO:
       case PDM_MESH_NODAL_TETRAHO:
       case PDM_MESH_NODAL_PYRAMIDHO:
       case PDM_MESH_NODAL_PRISMHO:
       case PDM_MESH_NODAL_HEXAHO:
       {
-        int n_elt           = PDM_DMesh_nodal_elmts_section_n_elt_get(dmn_elts, id_section);
         PDM_g_num_t* connec = PDM_DMesh_nodal_elmts_section_std_get(dmn_elts, id_section);
 
         int order      = dmn_elts->sections_std[i_section]->order;
@@ -2364,18 +2263,37 @@ PDM_sections_decompose_edges
       }
       case PDM_MESH_NODAL_POLY_2D:
       {
-        PDM_error(__FILE__, __LINE__, 0, "Error PDM_sections_decompose_edges : Element type is not taking int account\n");
+        int         *connec_idx = NULL;
+        PDM_g_num_t *connec     = NULL;
+        PDM_DMesh_nodal_elmts_section_poly2d_get(dmn_elts,
+                                                 id_section,
+                                                 &connec_idx,
+                                                 &connec);
+
+        PDM_poly2d_decomposes_edges(n_elt,
+                                    &n_elt_current,
+                                    &n_dedge_current,
+                                    beg_elmt_gnum,
+                                    beg_edge_gnum,
+                                    connec,
+                                    connec_idx,
+                                    elmt_edge_vtx_idx,
+                                    elmt_edge_vtx,
+                                    elmt_edge_cell,
+                                    elmt_cell_edge_idx,
+                                    elmt_cell_edge,
+                                    parent_elmt_position);
         break;
       }
 
       case PDM_MESH_NODAL_POLY_3D:
       {
-        PDM_error(__FILE__, __LINE__, 0, "Error PDM_sections_decompose_edges : Element type is not taking int account\n");
+        PDM_error(__FILE__, __LINE__, 0, "Error PDM_sections_decompose_edges : Element type is supported\n");
         break;
       }
 
       default:
-        PDM_error(__FILE__, __LINE__, 0, "Error PDM_sections_decompose_edges : Element type is not taking int account\n");
+        PDM_error(__FILE__, __LINE__, 0, "Error PDM_sections_decompose_edges : Element type is supported\n");
     }
   }
 }

@@ -141,7 +141,7 @@ typedef enum {
   PDM_MPI_COMM_KIND_WIN_SHARED_AND_COLLECTIVE          = 4, /*!< Shared windows (MPI_Put, MPI_GET, ...) */
   PDM_MPI_COMM_KIND_WIN_SHARED_AND_NEIGHBOR_COLLECTIVE = 5, /*!< Shared windows (MPI_Put, MPI_GET, ...) */
   PDM_MPI_COMM_KIND_WIN_RMA                            = 6  /*!< RMA windows (MPI_Put, MPI_GET, ...) */
-  
+
 } PDM_mpi_comm_kind_t;
 
 
@@ -309,6 +309,19 @@ typedef enum {
   PDM_SPLIT_DUAL_WITH_HILBERT  = 3
 } PDM_split_dual_t;
 
+/**
+ * \enum PDM_part_split_t
+ * \brief Split method
+ *
+ */
+
+typedef enum {
+  PDM_FIELD_KIND_SCALAR     = 1,
+  PDM_FIELD_KIND_COORDS     = 2,
+  PDM_FIELD_KIND_VECTOR     = 3,
+  PDM_FIELD_KIND_TENSOR_SYM = 4
+} PDM_field_kind_t;
+
 
 /**
  * \enum PDM_iso_surface_kind_t
@@ -326,6 +339,12 @@ typedef enum {
 
 } PDM_iso_surface_kind_t;
 
+typedef enum {
+  PDM_CELL_TO_VTX_INTERP_KIND_IDW  = 0, /*!< Inverse Distance Weighting    */
+  PDM_CELL_TO_VTX_INTERP_KIND_RBF  = 1, /*!< Radial Basis Function         */
+  PDM_CELL_TO_VTX_INTERP_KIND_LSQ  = 2, /*!< Least Square                  */
+  PDM_CELL_TO_VTX_INTERP_KIND_USER = 3, /*!< User, we must define callback */
+} PDM_cell_to_vtx_interp_kind_t;
 
 
 typedef enum {
@@ -366,19 +385,6 @@ PDM_Finalize
 (
 void
 );
-
-/**
- * \brief PDM_extents_conformize
- *
- * Correction extents to manage singular cases and di-symetrizes pb
- * eps = 1.e-3 is a standard value
- *
- */
-void
-PDM_extents_conformize(int    dim,
-                       double extents[],
-                       double eps);
-
 
 
 #ifdef __cplusplus

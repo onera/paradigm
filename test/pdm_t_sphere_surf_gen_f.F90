@@ -20,8 +20,10 @@ program testf
 
   !-----------------------------------------------------------
   integer, parameter                :: comm        = MPI_COMM_WORLD
-  integer, parameter                :: n_part      = 1
-  integer, parameter                :: part_method = 1
+  character(len=99)                 :: arg
+  integer                           :: i
+  integer                           :: n_part      = 1
+  integer                           :: part_method = 3
 
   integer(pdm_g_num_s)              :: n        = 5
   double precision                  :: x_center = 1.d0
@@ -40,7 +42,6 @@ program testf
   double precision,     pointer     :: vtx_coord(:)     => null()
   double precision,     pointer     :: vtx_coord2(:,:)  => null()
   integer(pdm_g_num_s), pointer     :: vtx_ln_to_gn(:)  => null()
-  ! integer(pdm_l_num_s), pointer     :: face_vtx_idx(:)  => null()
   integer(pdm_l_num_s), pointer     :: face_vtx(:)      => null()
   integer(pdm_g_num_s), pointer     :: face_ln_to_gn(:) => null()
 
@@ -56,6 +57,33 @@ program testf
 
   integer                           :: ipart
   !-----------------------------------------------------------
+
+  ! Read command line arguments
+  i = 1
+  do while (i <= command_argument_count())
+    call get_command_argument(i, arg)
+    select case(arg)
+      case ("-n")
+        i = i+1
+        call get_command_argument(i, arg)
+        read(arg, *) n
+      case ("-n_part")
+        i = i+1
+        call get_command_argument(i, arg)
+        read(arg, *) n_part
+      case ("-parmetis")
+        part_method = PDM_SPLIT_DUAL_WITH_PARMETIS
+      case ("-pt-scotch")
+        part_method = PDM_SPLIT_DUAL_WITH_PTSCOTCH
+      case ("-hilbert")
+        part_method = PDM_SPLIT_DUAL_WITH_HILBERT
+      case default
+        print *, "Invalid command argument ", arg
+        stop
+    end select
+
+    i = i + 1
+  enddo
 
   call mpi_init(code)
   call mpi_comm_rank(comm, i_rank, code)
@@ -111,10 +139,9 @@ program testf
     call PDM_pointer_array_part_get(pvtx_coord, &
                                     ipart-1,    &
                                     vtx_coord)
-    allocate(vtx_coord2(3, pn_vtx(ipart)))
-    vtx_coord2(1,:) = vtx_coord(1:3*pn_vtx(ipart):3)
-    vtx_coord2(2,:) = vtx_coord(2:3*pn_vtx(ipart):3)
-    vtx_coord2(3,:) = vtx_coord(3:3*pn_vtx(ipart):3)
+
+    ! Reshape without copy
+    call c_f_pointer(c_loc(vtx_coord), vtx_coord2, [3, pn_vtx(ipart)])
     call PDM_pointer_array_part_get(pvtx_coord, &
                                     ipart-1,    &
                                     vtx_coord)
@@ -161,11 +188,11 @@ program testf
   !  Free memory
   call pdm_fortran_free_c(c_loc(pn_vtx))
   call pdm_fortran_free_c(c_loc(pn_face))
-  call PDM_pointer_array_free(pvtx_coord)
-  call PDM_pointer_array_free(pvtx_ln_to_gn)
-  call PDM_pointer_array_free(pface_vtx_idx)
-  call PDM_pointer_array_free(pface_vtx)
-  call PDM_pointer_array_free(pface_ln_to_gn)
+  call PDM_pointer_array_free_from_c(pvtx_coord)
+  call PDM_pointer_array_free_from_c(pvtx_ln_to_gn)
+  call PDM_pointer_array_free_from_c(pface_vtx_idx)
+  call PDM_pointer_array_free_from_c(pface_vtx)
+  call PDM_pointer_array_free_from_c(pface_ln_to_gn)
 
 
   if (i_rank .eq. 0) then

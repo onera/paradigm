@@ -1204,14 +1204,14 @@ _alltotall_stride_var_iexch
   /*
    * Compute size of send / recv data
    */
-  ptp->async_n_send_buffer[_request]        = malloc (sizeof(int) * ptp->n_rank);
-  ptp->async_i_send_buffer[_request]        = malloc (sizeof(int) * (ptp->n_rank + 1));
+  ptp->async_n_send_buffer[request_send]    = malloc (sizeof(int) * ptp->n_rank);
+  ptp->async_i_send_buffer[request_send]    = malloc (sizeof(int) * (ptp->n_rank + 1));
 
   ptp->async_n_recv_buffer[request_recv]    = malloc (sizeof(int) * ptp->n_rank);
   ptp->async_i_recv_buffer[request_recv]    = malloc (sizeof(int) * (ptp->n_rank + 1));
 
-  int* send_rank_n   = ptp->async_n_send_buffer[_request];
-  int* send_rank_idx = ptp->async_i_send_buffer[_request];
+  int* send_rank_n   = ptp->async_n_send_buffer[request_send];
+  int* send_rank_idx = ptp->async_i_send_buffer[request_send];
 
   int* recv_rank_n   = ptp->async_n_recv_buffer[request_recv];
   int* recv_rank_idx = ptp->async_i_recv_buffer[request_recv];
@@ -1246,10 +1246,10 @@ _alltotall_stride_var_iexch
     recv_rank_idx[i+1] = recv_rank_idx[i] + recv_rank_n[i];
   }
 
-  ptp->async_send_buffer[_request    ] = malloc(sizeof(unsigned char) * send_rank_idx[ptp->n_rank] * s_data);
+  ptp->async_send_buffer[request_send] = malloc(sizeof(unsigned char) * send_rank_idx[ptp->n_rank] * s_data);
   ptp->async_recv_buffer[request_recv] = malloc(sizeof(unsigned char) * recv_rank_idx[ptp->n_rank] * s_data);
 
-  unsigned char *send_buffer = ptp->async_send_buffer[_request    ];
+  unsigned char *send_buffer = ptp->async_send_buffer[request_send];
   unsigned char *recv_buffer = ptp->async_recv_buffer[request_recv];
 
   /*
@@ -2209,10 +2209,12 @@ _create
 
   ptp->part1_to_part2_idx = malloc( ptp->n_part1 * sizeof(int *));
   for(int i_part = 0; i_part < ptp->n_part1; ++i_part) {
+    // log_trace("i_part1 %d, n_elt1 %d\n", i_part, ptp->n_elt1[i_part]);
     ptp->part1_to_part2_idx[i_part] = malloc((ptp->n_elt1[i_part] + 1) * sizeof(int));
 
     if (from_triplet != 1) {
       for(int i = 0; i < n_elt1[i_part]+1; ++i) {
+        // log_trace("  i %d\n", i);
         ptp->part1_to_part2_idx[i_part][i] = part1_to_part2_idx[i_part][i];
       }
     }
@@ -2441,7 +2443,7 @@ _create
     }
   }
 
-  if (gnum_elt2 != NULL) {
+  if (from_triplet == 0) {
     PDM_gnum_location_free (gl);
   }
 

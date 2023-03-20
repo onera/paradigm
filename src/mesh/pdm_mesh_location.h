@@ -8,6 +8,7 @@
 #include "pdm.h"
 #include "pdm_mpi.h"
 #include "pdm_mesh_nodal.h"
+#include "pdm_part_mesh_nodal.h"
 #include "pdm_part_to_part.h"
 
 #ifdef	__cplusplus
@@ -218,8 +219,8 @@ PDM_mesh_location_located_get
 void
 PDM_mesh_location_shared_nodal_mesh_set
 (
- PDM_mesh_location_t *ml,
- PDM_Mesh_nodal_t    *mesh_nodal
+ PDM_mesh_location_t   *ml,
+ PDM_part_mesh_nodal_t *mesh_nodal
 );
 
 
@@ -227,11 +228,8 @@ PDM_mesh_location_shared_nodal_mesh_set
  *
  * \brief Set global data of a mesh
  *
- * \param [in]   id             Pointer to \ref PDM_mesh_location object
- * \param [in]   n_g_cell       Global number of cells
- * \param [in]   n_g_face       Global number of faces
- * \param [in]   n_g_vtx        Global number of vertices
- * \param [in]   n_part         Number of partition
+ * \param [in]   ml             Pointer to \ref PDM_mesh_location object
+ * \param [in]   n_part         Number of partitions
  *
  */
 
@@ -517,7 +515,7 @@ PDM_mesh_location_dump_times
 PDM_mesh_location_t *ml
 );
 
-PDM_Mesh_nodal_t*
+PDM_part_mesh_nodal_t*
 PDM_mesh_location_mesh_nodal_get
 (
 PDM_mesh_location_t *ml

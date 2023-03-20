@@ -8,10 +8,12 @@
 /*----------------------------------------------------------------------------
  *  Header for the current file
  *----------------------------------------------------------------------------*/
+#include <string.h>
 
 #include "pdm.h"
 #include "pdm_mpi.h"
 #include "pdm_mesh_nodal.h"
+#include "pdm_dmesh_nodal.h"
 
 /*=============================================================================
  * Macro definition
@@ -442,6 +444,35 @@ PDM_vtk_write_std_elements_ho_with_vtx_field
  const int                   n_vtx_field,
  const char                 *vtx_field_name[],
  const double               *vtx_field[]
+ );
+
+
+/**
+ *
+ * \brief Create a dmesh nodal from a file in ASCII VTK mesh format
+ *
+ * \param[in]  comm                MPI communicator
+ * \param[in]  filename            Filename
+ *
+ * \return Pointer to PDM_dmesh_nodal object
+ *
+ */
+
+PDM_dmesh_nodal_t *
+PDM_vtk_read_to_dmesh_nodal
+(
+ const PDM_MPI_Comm    comm,
+ const char           *filename,
+       int            *n_vtx_field,
+       char         ***vtx_field_name,
+       PDM_data_t    **vtx_field_type,
+       int           **vtx_field_stride,
+       void         ***vtx_field_value,
+       int            *n_elt_field,
+       char         ***elt_field_name,
+       PDM_data_t    **elt_field_type,
+       int           **elt_field_stride,
+       void         ***elt_field_value
  );
 
 #ifdef __cplusplus

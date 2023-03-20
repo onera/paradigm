@@ -218,6 +218,13 @@ module pdm_sphere_surf_gen
                                                 pn_face(ipart))
     end do
 
+
+    call pdm_fortran_free_c(cc_pvtx_coord)
+    call pdm_fortran_free_c(cc_pvtx_ln_to_gn)
+    call pdm_fortran_free_c(cc_pface_vtx_idx)
+    call pdm_fortran_free_c(cc_pface_vtx)
+    call pdm_fortran_free_c(cc_pface_ln_to_gn)
+
   end subroutine PDM_sphere_surf_icosphere_gen_part
 
 end module pdm_sphere_surf_gen

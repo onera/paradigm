@@ -39,9 +39,17 @@ struct _PDM_writer_geom_t {
   void                      *geom_fmt;           /* Description propre au format fmt */
   PDM_writer_t              *_cs;                /* Pointeur sur la structure cs parente */
   PDM_MPI_Comm               pdm_mpi_comm;       /* Communicateur MPI */
-  PDM_Mesh_nodal_t          *mesh_nodal;         /* Mesh handle */
-  PDM_Mesh_nodal_t          *_mesh_nodal;        /* Local allocated mesh handle */
+  PDM_part_mesh_nodal_t     *mesh_nodal;         /* Mesh handle */
+  PDM_part_mesh_nodal_t     *_mesh_nodal;        /* Local allocated mesh handle */
 
+  int s_section;
+  PDM_ownership_t *section_owner;
+
+  PDM_geometry_kind_t geom_kind;
+
+  int n_part;
+  int **_face_vtx_idx;
+  int **_cell_face_idx;
 };
 
 typedef struct _PDM_writer_geom_tab_t {

@@ -239,7 +239,9 @@ _newton_triangle
                                         p,
                                         xyz,
                                         NULL, NULL, NULL);
-    // log_trace("&&& %f %f %f\n", xyz[0], xyz[1], xyz[2]);
+    if (vb) {
+      PDM_log_trace_array_double(xyz, 3, "xyz = ");
+    }
 
     double vec[3] = {
       target[0] - xyz[0],
@@ -291,6 +293,7 @@ _newton_triangle
     double det = a00*a11 - a01*a01;
 
     // TODO: check if Jacobian is singular
+    assert(PDM_ABS(det) > 1.e-16);
 
     double idet = 1. / det;
 
@@ -884,6 +887,15 @@ PDM_ho_bezier_triangle_location
                                    db_du,
                                    db_dv,
                                    projected_coord);
+  if (vb && !converged) {
+    log_trace("_newton_triangle failed to convege :\n");
+    PDM_log_trace_array_double(point_coord, 3, "point_coord : ");
+    for (int i = 0; i < n_node; i++) {
+      log_trace("node #%d : ", i);
+      PDM_log_trace_array_double(node_coord+3*i, 3, "");
+    }
+  }
+
   if (vb) {
     log_trace("projected_coord : %f %f %f\n",
               projected_coord[0], projected_coord[1], projected_coord[2]);

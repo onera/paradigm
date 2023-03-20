@@ -2181,11 +2181,6 @@ _locate_in_polyhedron
   return 0;
 }
 
-
-
-
-
-
 /*============================================================================
  * Public function definitions
  *============================================================================*/
@@ -2246,7 +2241,7 @@ PDM_point_location_nodal
 
     int n_cell = 0;
     for (int isection = 0; isection < n_section; isection++) {
-      int n_elt = PDM_part_mesh_nodal_elmts_block_n_elt_get(pmne,
+      int n_elt = PDM_part_mesh_nodal_elmts_section_n_elt_get(pmne,
                                                             sections_id[isection],
                                                             ipart);
 
@@ -2266,11 +2261,11 @@ PDM_point_location_nodal
 
       int id_section = sections_id[isection];
 
-      int n_elt = PDM_part_mesh_nodal_elmts_block_n_elt_get(pmne,
+      int n_elt = PDM_part_mesh_nodal_elmts_section_n_elt_get(pmne,
                                                             id_section,
                                                             ipart);
 
-      PDM_Mesh_nodal_elt_t t_elt = PDM_part_mesh_nodal_elmts_block_type_get(pmne,
+      PDM_Mesh_nodal_elt_t t_elt = PDM_part_mesh_nodal_elmts_section_type_get(pmne,
                                                                             id_section);
 
       int *parent_num = PDM_part_mesh_nodal_elmts_parent_num_get(pmne,
@@ -2281,7 +2276,7 @@ PDM_point_location_nodal
         /* Polygonal section */
         int *connec_idx;
         int *connec;
-        PDM_part_mesh_nodal_elmts_block_poly2d_get(pmne,
+        PDM_part_mesh_nodal_elmts_section_poly2d_get(pmne,
                                                    id_section,
                                                    ipart,
                                                    &connec_idx,
@@ -2305,7 +2300,7 @@ PDM_point_location_nodal
         /* Polyhedral section */
         int *connec_idx;
         int *connec;
-        PDM_part_mesh_nodal_elmts_block_poly3d_cell_vtx_connect_get(pmne,
+        PDM_part_mesh_nodal_elmts_section_poly3d_cell_vtx_connect_get(pmne,
                                                                     id_section,
                                                                     ipart,
                                                                     &connec_idx,
@@ -2332,7 +2327,7 @@ PDM_point_location_nodal
               PDM_g_num_t *parent_entity_g_num = NULL;
               int          order               = 0;
         const char        *ho_ordering         = NULL;
-        PDM_part_mesh_nodal_elmts_block_std_ho_get(pmne,
+        PDM_part_mesh_nodal_elmts_section_std_ho_get(pmne,
                                                    id_section,
                                                    ipart,
                                                    &connec,
@@ -2383,11 +2378,11 @@ PDM_point_location_nodal
 
       int id_section = sections_id[isection];
 
-      int n_elt = PDM_part_mesh_nodal_elmts_block_n_elt_get(pmne,
+      int n_elt = PDM_part_mesh_nodal_elmts_section_n_elt_get(pmne,
                                                             id_section,
                                                             ipart);
 
-      PDM_Mesh_nodal_elt_t t_elt = PDM_part_mesh_nodal_elmts_block_type_get(pmne,
+      PDM_Mesh_nodal_elt_t t_elt = PDM_part_mesh_nodal_elmts_section_type_get(pmne,
                                                                             id_section);
 
       int *parent_num = PDM_part_mesh_nodal_elmts_parent_num_get(pmne,
@@ -2398,7 +2393,7 @@ PDM_point_location_nodal
         /* Polygonal section */
         int *connec_idx;
         int *connec;
-        PDM_part_mesh_nodal_elmts_block_poly2d_get(pmne,
+        PDM_part_mesh_nodal_elmts_section_poly2d_get(pmne,
                                                    id_section,
                                                    ipart,
                                                    &connec_idx,
@@ -2448,7 +2443,7 @@ PDM_point_location_nodal
         /* Polyhedral section */
         int *cell_vtx_idx;
         int *cell_vtx;
-        PDM_part_mesh_nodal_elmts_block_poly3d_cell_vtx_connect_get(pmne,
+        PDM_part_mesh_nodal_elmts_section_poly3d_cell_vtx_connect_get(pmne,
                                                                     id_section,
                                                                     ipart,
                                                                     &cell_vtx_idx,
@@ -2463,7 +2458,7 @@ PDM_point_location_nodal
         int         *_parent_num              = NULL;
         PDM_g_num_t *numabs                   = NULL;
         PDM_g_num_t *parent_entitity_ln_to_gn = NULL;
-        PDM_part_mesh_nodal_elmts_block_poly3d_get(pmne,
+        PDM_part_mesh_nodal_elmts_section_poly3d_get(pmne,
                                                    id_section,
                                                    ipart,
                                                    &n_face,
@@ -2585,7 +2580,7 @@ PDM_point_location_nodal
               PDM_g_num_t *parent_entity_g_num = NULL;
               int          order               = 0;
         const char        *ho_ordering         = NULL;
-        PDM_part_mesh_nodal_elmts_block_std_ho_get(pmne,
+        PDM_part_mesh_nodal_elmts_section_std_ho_get(pmne,
                                                    id_section,
                                                    ipart,
                                                    &connec,
@@ -2811,6 +2806,10 @@ PDM_point_location_nodal
                                                       order);
             double *elt_coord = malloc(sizeof(double) * n_node * 3);
 
+            int elt_dim = PDM_Mesh_nodal_elt_dim_get(t_elt);
+
+            double *work_array = malloc(sizeof(double) * n_node * (elt_dim+1));
+
             int *ijk_to_user = NULL;
             if (ho_ordering != NULL) {
               ijk_to_user = PDM_ho_ordering_ijk_to_user_get(ho_ordering,
@@ -2819,12 +2818,14 @@ PDM_point_location_nodal
               assert(ijk_to_user != NULL);
             }
 
-
+            int count           = 0;
+            int count_converged = 0;
             for (int ielt = 0; ielt < n_elt; ielt++) {
               int icell = ielt;
               if (parent_num != NULL) {
                 icell = parent_num[ielt];
               }
+              // log_trace("icell = %d\n", icell);
 
               int *_connec = connec + n_node*ielt;
               for (int idx_ijk = 0; idx_ijk < n_node; idx_ijk++) {
@@ -2837,15 +2838,48 @@ PDM_point_location_nodal
               }
 
               for (int idx_pt = pts_idx[ipart][icell]; idx_pt < pts_idx[ipart][icell+1]; idx_pt++) {
-                _distance[idx_pt] = PDM_ho_location(t_elt,
-                                                    order,
-                                                    n_node,
-                                                    elt_coord,
-                                   (const double *) pts_coord[ipart] + idx_pt * 3,
-                                                    _projected_coord + idx_pt * 3,
-                                                    _uvw             + idx_pt * 3);
+                count++;
+                // First, try Newton method
+                int converged = 0;
+                if (1) {
+                  _distance[idx_pt] = PDM_ho_location_newton(t_elt,
+                                                             order,
+                                                             n_node,
+                                                             elt_coord,
+                                            (const double *) pts_coord[ipart] + idx_pt * 3,
+                                                             tolerance,
+                                                             _projected_coord + idx_pt * 3,
+                                                             _uvw             + idx_pt * 3,
+                                                             &converged,
+                                                             work_array);
+                }
+                // log_trace("converged? %d\n", converged);
+
+                if (converged) {
+                  count_converged++;
+                  // log_trace("Newton converged :D (%f %f %f)\n",
+                  //           pts_coord[ipart][3*idx_pt+0],
+                  //           pts_coord[ipart][3*idx_pt+1],
+                  //           pts_coord[ipart][3*idx_pt+2]);
+                }
+                else {
+                  // log_trace("Newton HO failed to converge! (%f %f %f)\n",
+                  //           pts_coord[ipart][3*idx_pt+0],
+                  //           pts_coord[ipart][3*idx_pt+1],
+                  //           pts_coord[ipart][3*idx_pt+2]);
+                  // Newton failed to converge, try more robust method
+                  _distance[idx_pt] = PDM_ho_location(t_elt,
+                                                      order,
+                                                      n_node,
+                                                      elt_coord,
+                                     (const double *) pts_coord[ipart] + idx_pt * 3,
+                                                      _projected_coord + idx_pt * 3,
+                                                      _uvw             + idx_pt * 3);
+                }
+                // log_trace("dist2 = %e\n", _distance[idx_pt]);
 
               } // End of loop on current elt's points
+
 
               int idx_pt0 = pts_idx[ipart][icell];
               PDM_ho_basis(t_elt,
@@ -2856,7 +2890,9 @@ PDM_point_location_nodal
                            _bar_coord + _bar_coord_idx[idx_pt0]);
 
             } // End of loop on elt
+            // log_trace("%d converged / %d\n", count_converged, count);
             free(elt_coord);
+            free(work_array);
             break;
           } // end case HO LAGRANGE
 

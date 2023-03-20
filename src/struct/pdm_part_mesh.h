@@ -162,48 +162,79 @@ PDM_part_mesh_entity_ln_to_gn_get
  PDM_ownership_t           ownership
 );
 
+
+void
+PDM_part_mesh_n_bound_set
+(
+ PDM_part_mesh_t          *pmesh,
+ PDM_bound_type_t          bound_type,
+ int                       n_bound
+);
+
+int
+PDM_part_mesh_n_bound_get
+(
+ PDM_part_mesh_t          *pmesh,
+ PDM_bound_type_t          bound_type
+);
+
+int
+PDM_part_mesh_tn_part_get
+(
+ PDM_part_mesh_t          *pmesh
+);
+
 void
 PDM_part_mesh_bound_set
 (
  PDM_part_mesh_t          *pmesh,
+ int                       i_part,
+ int                       i_group,
  PDM_bound_type_t          bound_type,
- int                       n_bound,
- int                     **connect,
- int                     **connect_idx,
+ int                       pn_bound,
+ int                      *pbound,
+ PDM_g_num_t              *pbound_ln_to_gn,
  PDM_ownership_t           ownership
 );
 
 void
 PDM_part_mesh_bound_get
 (
- PDM_part_mesh_t           *pmesh,
- PDM_bound_type_t           bound_type,
- int                       *n_bound,
- int                     ***connect,
- int                     ***connect_idx,
+ PDM_part_mesh_t          *pmesh,
+ int                       i_part,
+ int                       i_group,
+ PDM_bound_type_t          bound_type,
+ int                      *pn_bound,
+ int                     **pbound,
+ PDM_g_num_t             **pbound_ln_to_gn,
  PDM_ownership_t           ownership
 );
 
 
+
 void
-PDM_part_mesh_bound_ln_to_gn_set
+PDM_part_mesh_part_graph_comm_get
 (
  PDM_part_mesh_t          *pmesh,
+ int                       i_part,
  PDM_bound_type_t          bound_type,
- PDM_g_num_t             **bound_ln_to_gn,
+ int                     **ppart_bound_proc_idx,
+ int                     **ppart_bound_part_idx,
+ int                     **ppart_bound,
  PDM_ownership_t           ownership
 );
-
 
 void
-PDM_part_mesh_bound_ln_to_gn_get
+PDM_part_mesh_part_graph_comm_set
 (
- PDM_part_mesh_t           *pmesh,
- PDM_bound_type_t           bound_type,
- PDM_g_num_t            ***bound_ln_to_gn,
+ PDM_part_mesh_t          *pmesh,
+ int                       i_part,
+ PDM_bound_type_t          bound_type,
+ int                      *ppart_bound_proc_idx,
+ int                      *ppart_bound_part_idx,
+ int                      *ppart_bound,
  PDM_ownership_t           ownership
 );
-
 
 /*----------------------------------------------------------------------------*/
 

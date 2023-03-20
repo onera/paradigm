@@ -52,10 +52,16 @@ def parse_one_file(filename):
   librairies = Group(library + ZeroOrMore(Literal(",").suppress() + library)).setResultsName("value", listAllMatches=True)
 
   parser = (fparam(Literal('n_proc'), numbers)          \
+          | fparam(Literal('c'), numbers)               \
+          | fparam(Literal('t'), numbers)               \
           | fparam(Literal('n'), numbers)               \
           | fparam(Literal('l'), numbers)               \
           | fparam(Literal('s'), numbers)               \
-          | fargs(Literal('part_kind'), librairies))
+          | fparam(Literal('n_part'), numbers)          \
+          | fparam(Literal('ext_type'), numbers)        \
+          | fargs(Literal('part_kind'), librairies)     \
+          | fargs(Literal('multipart'), librairies)     \
+          | fargs(Literal('tree_kind'), librairies))
 
   infos = {}
   for (token, start, end) in parser.scanString(body):

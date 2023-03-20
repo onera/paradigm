@@ -22,6 +22,8 @@
 #include "pdm_multipart.h"
 #include "pdm_extract_part.h"
 #include "pdm_dcube_nodal_gen.h"
+#include "pdm_predicate.h"
+
 
 /*============================================================================
  * Macro definitions
@@ -360,12 +362,13 @@ _set_mesh_line
 (
  PDM_MPI_Comm             comm,
  PDM_mesh_intersection_t *mi,
- PDM_ol_mesh_t            i_mesh,
+ int                      i_mesh,
  PDM_extract_part_t      *extrp_mesh,
  int                      n_part
 )
 {
-  PDM_UNUSED(n_part);
+  PDM_mesh_intersection_n_part_set(mi, i_mesh, n_part);
+
   int i_part = 0;
   PDM_g_num_t *edge_ln_to_gn = NULL;
   PDM_g_num_t *vtx_ln_to_gn  = NULL;
@@ -425,11 +428,13 @@ void
 _set_mesh
 (
  PDM_mesh_intersection_t *mi,
- PDM_ol_mesh_t            i_mesh,
+ int                      i_mesh,
  PDM_multipart_t         *mpart,
  int                      n_part
 )
 {
+  PDM_mesh_intersection_n_part_set(mi, i_mesh, n_part);
+
   for (int i_part = 0; i_part < n_part; i_part++) {
 
     int *face_edge_idx;
@@ -564,13 +569,7 @@ char *argv[]
   PDM_g_num_t n_vtx_b   = 10;
   PDM_Mesh_nodal_elt_t elt_type  = PDM_MESH_NODAL_TRIA3;
 
-#ifdef PDM_HAVE_PARMETIS
-  PDM_split_dual_t part_method    = PDM_SPLIT_DUAL_WITH_PARMETIS;
-#else
-#ifdef PDM_HAVE_PTSCOTCH
-  PDM_split_dual_t part_method    = PDM_SPLIT_DUAL_WITH_PTSCOTCH;
-#endif
-#endif
+  PDM_split_dual_t part_method    = PDM_SPLIT_DUAL_WITH_HILBERT;
 
   int n_part = 1;
 
@@ -640,16 +639,18 @@ char *argv[]
   PDM_mesh_intersection_t* mi = PDM_mesh_intersection_create(PDM_MESH_INTERSECTION_KIND_SOFT,
                                                              dim_mesh_a,
                                                              dim_mesh_b,
-                                                             n_part,
-                                                             n_part,
                                                              1e-6,
-                                                             comm);
+                                                             comm,
+                                                             PDM_OWNERSHIP_KEEP);
 
   /*
    * Set mesh_a and mesh_b
    */
-  _set_mesh     (      mi, PDM_OL_MESH_A, mpart_surf_a     , n_part);
-  _set_mesh_line(comm, mi, PDM_OL_MESH_B, extract_part_edge, 1     );
+  _set_mesh     (      mi, 0, mpart_surf_a     , n_part);
+  _set_mesh_line(comm, mi, 1, extract_part_edge, 1     );
+
+
+  PDM_predicate_exactinit();
 
   PDM_mesh_intersection_compute(mi);
 

@@ -127,11 +127,21 @@ _define_rank_distrib(const int             sampling_factor,
     g_distrib[id] = 0;
   }
 
-  for (int i = 0; i < n_part; i++) {
-    for (int j = 0; j < n_elt[i]; j++) {
-      PDM_g_num_t _gnum_elt = PDM_ABS(gnum_elt[i][j]) - 1;
-      int i_sample = PDM_binary_search_gap_long(_gnum_elt, sampling, n_samples + 1);
-      l_distrib[i_sample] += weight[i][j];
+  if(weight != NULL) {
+    for (int i = 0; i < n_part; i++) {
+      for (int j = 0; j < n_elt[i]; j++) {
+        PDM_g_num_t _gnum_elt = PDM_ABS(gnum_elt[i][j]) - 1;
+        int i_sample = PDM_binary_search_gap_long(_gnum_elt, sampling, n_samples + 1);
+        l_distrib[i_sample] += weight[i][j];
+      }
+    }
+  } else {
+    for (int i = 0; i < n_part; i++) {
+      for (int j = 0; j < n_elt[i]; j++) {
+        PDM_g_num_t _gnum_elt = PDM_ABS(gnum_elt[i][j]) - 1;
+        int i_sample = PDM_binary_search_gap_long(_gnum_elt, sampling, n_samples + 1);
+        l_distrib[i_sample] += 1.;
+      }
     }
   }
 
@@ -574,9 +584,15 @@ PDM_distrib_weight
   PDM_g_num_t *sampling = malloc(sizeof(PDM_g_num_t) * (n_samples + 1));
 
   double  lsum_weight = 0.;
-  for (int i = 0; i < n_part; i++) {
-    for (int j = 0; j < n_elmts[i]; j++) {
-      lsum_weight += weight[i][j];
+  if(weight != NULL) {
+    for (int i = 0; i < n_part; i++) {
+      for (int j = 0; j < n_elmts[i]; j++) {
+        lsum_weight += weight[i][j];
+      }
+    }
+  } else {
+    for (int i = 0; i < n_part; i++) {
+      lsum_weight += n_elmts[i];
     }
   }
 

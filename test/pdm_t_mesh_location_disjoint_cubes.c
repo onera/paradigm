@@ -349,6 +349,9 @@ _cube_mesh2
                                        NULL,
                                        "PDM_PART_RENUM_FACE_NONE");
 
+  *pface_vtx_idx = malloc(sizeof(int *) * n_part);
+  *pface_vtx     = malloc(sizeof(int *) * n_part);
+
   if (elt_type < PDM_MESH_NODAL_POLY_3D) {
     PDM_dcube_nodal_t* dcube = PDM_dcube_nodal_gen_create (comm,
                                                            n_vtx_seg,
@@ -489,6 +492,59 @@ _cube_mesh2
     }
   }
 
+  for (int i_part = 0; i_part < n_part; i_part++) {
+
+    int *face_vtx_idx = NULL;
+    int *face_vtx     = NULL;
+    int n_face = PDM_multipart_part_connectivity_get(mpart,
+                                                     0,
+                                                     i_part,
+                                                     PDM_CONNECTIVITY_TYPE_FACE_VTX,
+                                                     &face_vtx,
+                                                     &face_vtx_idx,
+                                                     PDM_OWNERSHIP_KEEP);
+
+    int *_face_vtx_idx = face_vtx_idx;
+    int *_face_vtx     = face_vtx;
+    if (face_vtx == NULL) {
+      int *_face_edge_idx = NULL;
+      int *_face_edge     = NULL;
+      PDM_multipart_part_connectivity_get(mpart,
+                                          0,
+                                          i_part,
+                                          PDM_CONNECTIVITY_TYPE_FACE_EDGE,
+                                          &_face_edge,
+                                          &_face_edge_idx,
+                                          PDM_OWNERSHIP_KEEP);
+
+      int *_edge_vtx_idx = NULL;
+      int *_edge_vtx     = NULL;
+      PDM_multipart_part_connectivity_get(mpart,
+                                          0,
+                                          i_part,
+                                          PDM_CONNECTIVITY_TYPE_EDGE_VTX,
+                                          &_edge_vtx,
+                                          &_edge_vtx_idx,
+                                          PDM_OWNERSHIP_KEEP);
+
+      _face_vtx_idx = _face_edge_idx;
+      PDM_compute_face_vtx_from_face_and_edge(n_face,
+                                              _face_edge_idx,
+                                              _face_edge,
+                                              _edge_vtx,
+                                              &_face_vtx);
+    }
+    (*pface_vtx_idx)[i_part] = malloc(sizeof(int) * (n_face + 1));
+    memcpy((*pface_vtx_idx)[i_part], _face_vtx_idx, sizeof(int) * (n_face + 1));
+
+    (*pface_vtx)[i_part] = malloc(sizeof(int) * _face_vtx_idx[n_face]);
+    memcpy((*pface_vtx)[i_part], _face_vtx, sizeof(int) * _face_vtx_idx[n_face]);
+
+    if (_face_vtx != face_vtx) {
+      free(_face_vtx);
+    }
+  }
+
 
   PDM_part_extension_t *part_ext = NULL;
   if (part_extension_depth > 0) {
@@ -599,8 +655,8 @@ _cube_mesh2
                                   face_cell,
                                   NULL, // face_edge_idx
                                   NULL, // face_edge
-                                  face_vtx_idx,
-                                  face_vtx,
+                                  (*pface_vtx_idx)[i_part],
+                                  (*pface_vtx    )[i_part],
                                   NULL, //edge_vtx
                                   face_group_idx,
                                   face_group,
@@ -629,8 +685,6 @@ _cube_mesh2
   *pn_vtx         = (int *)          malloc(sizeof(int *)          * n_part);
   *pcell_face_idx = (int **)         malloc(sizeof(int **)         * n_part);
   *pcell_face     = (int **)         malloc(sizeof(int **)         * n_part);
-  *pface_vtx_idx  = (int **)         malloc(sizeof(int **)         * n_part);
-  *pface_vtx      = (int **)         malloc(sizeof(int **)         * n_part);
   *pcell_ln_to_gn = (PDM_g_num_t **) malloc(sizeof(PDM_g_num_t **) * n_part);
   *pface_ln_to_gn = (PDM_g_num_t **) malloc(sizeof(PDM_g_num_t **) * n_part);
   *pvtx_ln_to_gn  = (PDM_g_num_t **) malloc(sizeof(PDM_g_num_t **) * n_part);
@@ -724,38 +778,6 @@ _cube_mesh2
                                 &face_join,
                                 &face_join_ln_to_gn);
 
-    int *_face_vtx = face_vtx;
-    if (face_vtx == NULL) {
-      int *_face_edge_idx = NULL;
-      int *_face_edge     = NULL;
-      PDM_multipart_part_connectivity_get(mpart,
-                                          0,
-                                          i_part,
-                                          PDM_CONNECTIVITY_TYPE_FACE_EDGE,
-                                          &_face_edge,
-                                          &_face_edge_idx,
-                                          PDM_OWNERSHIP_KEEP);
-
-      int *_edge_vtx_idx = NULL;
-      int *_edge_vtx     = NULL;
-      PDM_multipart_part_connectivity_get(mpart,
-                                          0,
-                                          i_part,
-                                          PDM_CONNECTIVITY_TYPE_EDGE_VTX,
-                                          &_edge_vtx,
-                                          &_edge_vtx_idx,
-                                          PDM_OWNERSHIP_KEEP);
-
-      face_vtx_idx = _face_edge_idx;
-      int *__face_vtx = NULL;
-      PDM_compute_face_vtx_from_face_and_edge(n_face,
-                                              _face_edge_idx,
-                                              _face_edge,
-                                              _edge_vtx,
-                                              &__face_vtx);
-      _face_vtx = __face_vtx;
-    }
-
     int n_ext_vtx  = 0;
     int n_ext_face = 0;
     int n_ext_cell = 0;
@@ -840,10 +862,9 @@ _cube_mesh2
                                       &ext_face_ln_to_gn);
     }
 
-
-    *(pn_cell)[i_part] = n_cell + n_ext_cell;
-    *(pn_face)[i_part] = n_face + n_ext_face;
-    *(pn_vtx)[i_part]  = n_vtx  + n_ext_vtx;
+    (*pn_cell)[i_part] = n_cell + n_ext_cell;
+    (*pn_face)[i_part] = n_face + n_ext_face;
+    (*pn_vtx)[i_part]  = n_vtx  + n_ext_vtx;
 
     /* Vertices */
     (*pvtx_coord)[i_part] = (double *) malloc(sizeof(double) * 3 * (n_vtx + n_ext_vtx));
@@ -869,15 +890,15 @@ _cube_mesh2
 
 
     /* Faces */
-    (*pface_vtx_idx)[i_part] = (int *) malloc(sizeof(int) * (n_face + n_ext_face + 1));
-    memcpy((*pface_vtx_idx)[i_part], face_vtx_idx, sizeof(int) * (n_face + 1));
+    // (*pface_vtx_idx)[i_part] = (int *) malloc(sizeof(int) * (n_face + n_ext_face + 1));
+    // memcpy((*pface_vtx_idx)[i_part], face_vtx_idx, sizeof(int) * (n_face + 1));
 
-    s_face_vtx = face_vtx_idx[n_face];
+    s_face_vtx = (*pface_vtx_idx)[i_part][n_face];
     if (part_extension_depth > 0) {
       s_face_vtx += ext_face_vtx_idx[n_ext_face];
     }
-    (*pface_vtx)[i_part] = (int *) malloc(sizeof(int) * s_face_vtx);
-    memcpy((*pface_vtx)[i_part], _face_vtx, sizeof(int) * face_vtx_idx[n_face]);
+    // (*pface_vtx)[i_part] = (int *) malloc(sizeof(int) * s_face_vtx);
+    // memcpy((*pface_vtx)[i_part], face_vtx, sizeof(int) * face_vtx_idx[n_face]);
 
 
     (*pface_ln_to_gn)[i_part] = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * (n_face + n_ext_face));
@@ -901,20 +922,48 @@ _cube_mesh2
       memcpy((*pcell_ln_to_gn)[i_part] + n_cell, ext_cell_ln_to_gn, sizeof(PDM_g_num_t) * n_ext_cell);
 
       /* Faces */
+      (*pface_vtx_idx)[i_part] = realloc((*pface_vtx_idx)[i_part], sizeof(int) * (n_face + n_ext_face + 1));
       for (int i = 1; i <= n_ext_face; i++) {
-        (*pface_vtx_idx)[i_part][n_face + i] = face_vtx_idx[n_face] + ext_face_vtx_idx[i];
+        (*pface_vtx_idx)[i_part][n_face + i] = (*pface_vtx_idx)[i_part][n_face] + ext_face_vtx_idx[i];
       }
 
-      memcpy((*pface_vtx)[i_part] + face_vtx_idx[n_face],
+      (*pface_vtx)[i_part] = realloc((*pface_vtx)[i_part], sizeof(int) * s_face_vtx);
+      memcpy((*pface_vtx)[i_part] + (*pface_vtx_idx)[i_part][n_face],
              ext_face_vtx,
              sizeof(int) * ext_face_vtx_idx[n_ext_face]);
 
       memcpy((*pface_ln_to_gn)[i_part] + n_face, ext_face_ln_to_gn, sizeof(PDM_g_num_t) * n_ext_face);
+
+
+      if (1) {
+        char filename[999];
+        sprintf(filename, "faces_%d.vtk", n_part*i_rank + i_part);
+
+        int *is_extended = malloc(sizeof(int) * (n_face+n_ext_face));
+        for (int i = 0; i < n_face; i++) {
+          is_extended[i] = 0;
+        }
+        for (int i = 0; i < n_ext_face; i++) {
+          is_extended[n_face+i] = 1;
+        }
+
+        PDM_vtk_write_polydata(filename,
+                               (*pn_vtx)        [i_part],
+                               (*pvtx_coord)    [i_part],
+                               (*pvtx_ln_to_gn) [i_part],
+                               (*pn_face)       [i_part],
+                               (*pface_vtx_idx) [i_part],
+                               (*pface_vtx)     [i_part],
+                               (*pface_ln_to_gn)[i_part],
+                               is_extended);
+
+        free(is_extended);
+      }
     }
 
-    if(_face_vtx != face_vtx) {
-      free(_face_vtx);
-    }
+    // if(_face_vtx != face_vtx) {
+    //   free(_face_vtx);
+    // }
   }
 
   PDM_multipart_free (mpart);
@@ -1017,15 +1066,7 @@ int main(int argc, char *argv[])
   int         post                = 0;
   int         extension_depth_tgt = 0;
   int         extension_depth_src = 0;
-#ifdef PDM_HAVE_PARMETIS
-  PDM_split_dual_t part_method  = PDM_SPLIT_DUAL_WITH_PARMETIS;
-#else
-#ifdef PDM_HAVE_PTSCOTCH
-  PDM_split_dual_t part_method  = PDM_SPLIT_DUAL_WITH_PTSCOTCH;
-#else
   PDM_split_dual_t part_method  = PDM_SPLIT_DUAL_WITH_HILBERT;
-#endif
-#endif
 
   PDM_g_num_t n_pts = 10;
   PDM_mesh_location_method_t loc_method = PDM_MESH_LOCATION_OCTREE;

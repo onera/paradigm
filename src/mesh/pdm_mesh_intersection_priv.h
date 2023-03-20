@@ -15,10 +15,12 @@
 #include "pdm_surf_part.h"
 #include "pdm_surf_part_priv.h"
 #include "pdm_timer.h"
-#include "pdm_overlay.h"
 #include "pdm_error.h"
 #include "pdm_printf.h"
 #include "pdm_part_mesh.h"
+#include "pdm_part_mesh_nodal.h"
+#include "pdm_part_to_part.h"
+#include "pdm_extract_part.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -92,17 +94,21 @@ struct _pdm_mesh_intersection_t {
   double   same_plane_tol;       /*!< Absolute tolerance used to check if 2 surfaces
                                       are the same plane surface */
 
+  double bbox_tolerance;
+
 
   PDM_MPI_Comm comm;             /*!< MPI communicator */
 
   PDM_mesh_intersection_kind_t intersect_kind;
 
-  int               n_part_mesh_a;
-  int               n_part_mesh_b;
-  int               dim_mesh_a;
-  int               dim_mesh_b;
-  PDM_part_mesh_t  *mesh_a;       /*!< Mesh A */
-  PDM_part_mesh_t  *mesh_b;       /*!< Mesh B */
+  int              n_part_mesh[2];
+  int              dim_mesh[2];
+  PDM_part_mesh_t *mesh[2];
+
+  PDM_part_mesh_nodal_t *mesh_nodal[2]; /*!< Mesh nodal A/B */
+
+
+  PDM_extract_part_t *extrp_mesh[2];
 
   // _ol_mesh_t  *olMeshA;       /*!< Overlay Mesh A */
   // _ol_mesh_t  *olMeshB;       /*!< Overlay Mesh B */
@@ -118,6 +124,33 @@ struct _pdm_mesh_intersection_t {
 
   double times_cpu_s[NTIMER];  /*!< System CPU time */
 
+
+  /* Results */
+  PDM_ownership_t owner;
+  int tag_elt_a_elt_b_get;
+  int tag_elt_b_elt_a_get;
+  int tag_elt_volume_get[2];
+  int         **elt_a_elt_b_idx;
+  PDM_g_num_t **elt_a_elt_b;
+  double      **elt_a_elt_b_volume;
+
+  double      **elt_b_elt_a_volume;
+  double      **elt_volume[2];
+
+  PDM_ownership_t     ptp_ownership;
+  PDM_part_to_part_t *ptp;
+
+
+
+
+  /* vol_vol */
+  int     tetraisation_pt_type;
+  double *tetraisation_pt_coord;
+
+  /* debug */
+  double local_vol_A_B;
+  double global_vol_A_B;
+  double global_vol_A;
 };
 
 /*=============================================================================

@@ -13,7 +13,7 @@ n_rank = comm.size
 
 assert(n_rank <= 2)
 
-fout = open("ex_part_to_part_{}.log".format(i_rank), "w")
+# fout = open("ex_part_to_part_{}.log".format(i_rank), "w")
 
 if i_rank == 0:
   g_num1 = [
@@ -48,12 +48,12 @@ part1_to_part2_idx = [
  for g in g_num1]
 # fout.write("part1_to_part2_idx = {}\n".format(part1_to_part2_idx))
 
-for i, g in enumerate(g_num1):
-  fout.write("part1 {}: gnums {}\n".format(i, g))
-for i, g in enumerate(g_num2):
-  fout.write("part2 {}: gnums {}\n".format(i, g))
+# for i, g in enumerate(g_num1):
+#   fout.write("part1 {}: gnums {}\n".format(i, g))
+# for i, g in enumerate(g_num2):
+#   fout.write("part2 {}: gnums {}\n".format(i, g))
 
-fout.write("\n\n=== part_to_part ===\n")
+# fout.write("\n\n=== part_to_part ===\n")
 
 
 ptp = PDM.PartToPart(comm,
@@ -91,17 +91,17 @@ else:
     np.array([[i+(j+1)*0.1 for i in g] for j in range(stride)]).flatten() for g in g_num1
   ]
 
-fout.write("part1_data = {}\n".format(part1_data))
+# fout.write("part1_data = {}\n".format(part1_data))
 for i, p1d in enumerate(part1_data):
-  fout.write("part1 {}\n".format(i))
+  # fout.write("part1 {}\n".format(i))
   for j, g in enumerate(g_num1[i]):
     if is_interlaced:
       data = p1d[stride*j:stride*(j+1)]
     else:
       data = p1d[j::len(g_num1[i])]
-    fout.write("  gnum1 {}: send {} to {}\n".format(g,
-                                                    data,
-                                                    part1_to_part2[i][part1_to_part2_idx[i][j]:part1_to_part2_idx[i][j+1]]))
+    # fout.write("  gnum1 {}: send {} to {}\n".format(g,
+    #                                                 data,
+    #                                                 part1_to_part2[i][part1_to_part2_idx[i][j]:part1_to_part2_idx[i][j+1]]))
 
 request = ptp.iexch(PDM._PDM_MPI_COMM_KIND_P2P,
                     PDM._PDM_PART_TO_PART_DATA_DEF_ORDER_PART1,
@@ -111,11 +111,11 @@ request = ptp.iexch(PDM._PDM_MPI_COMM_KIND_P2P,
 
 part2_stride, part2_data = ptp.wait(request)
 # fout.write("part2_stride = {}\n".format(part2_stride))
-fout.write("part2_data   = {}\n".format(part2_data))
-fout.write("\n")
+# fout.write("part2_data   = {}\n".format(part2_data))
+# fout.write("\n")
 
 for i, g in enumerate(g_num2):
-  fout.write("part2 {}\n".format(i))
+  # fout.write("part2 {}\n".format(i))
   idx = come_from[i]["come_from_idx"]
   for j, k in enumerate(ref_lnum2[i]):
     cf = come_from[i]["come_from"][idx[j]:idx[j+1]]
@@ -123,13 +123,13 @@ for i, g in enumerate(g_num2):
       data = part2_data[i][stride*idx[j]:stride*idx[j+1]]
     else:
       data = part2_data[i][idx[j]::len(ref_lnum2[i])]
-    fout.write("  gnum2 {} recv {} from {}\n".format(g[k-1],
-                                                     data,
-                                                     cf))
+    # fout.write("  gnum2 {} recv {} from {}\n".format(g[k-1],
+    #                                                  data,
+    #                                                  cf))
 
 
 
-fout.write("\n\n=== gnum_location ===\n")
+# fout.write("\n\n=== gnum_location ===\n")
 
 gnum_loc = PDM.GlobalNumberingLocation(len(g_num2),
                                        len(part1_to_part2),
@@ -146,17 +146,17 @@ for i, g in enumerate(part1_to_part2):
                                                 g)
 gnum_loc.gnum_location_compute()
 
-for i, p1p2 in enumerate(part1_to_part2):
-  fout.write("part2 {}\n".format(i))
-  location_idx, location = gnum_loc.gnum_location_get(i)
-  for j, g in enumerate(p1p2):
-    fout.write("  gnum2 {}: location(s) : ".format(g))
-    for k in range(location_idx[j],location_idx[j+1],3):
-      fout.write("{} ".format(location[k:k+3]))
-    fout.write("\n")
+# for i, p1p2 in enumerate(part1_to_part2):
+#   fout.write("part2 {}\n".format(i))
+#   location_idx, location = gnum_loc.gnum_location_get(i)
+#   for j, g in enumerate(p1p2):
+#     fout.write("  gnum2 {}: location(s) : ".format(g))
+#     for k in range(location_idx[j],location_idx[j+1],3):
+#       fout.write("{} ".format(location[k:k+3]))
+#     fout.write("\n")
 
 
-fout.close()
+# fout.close()
 
 
 print("[{}] -- End".format(i_rank))

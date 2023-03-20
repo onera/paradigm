@@ -215,7 +215,7 @@ char *argv[]
   }
   else {
     PDM_dmesh_nodal_t *dmn = PDM_reader_stl_dmesh_nodal(comm,
-                                                        "/stck/bandrieu/Public/CAD/dragon_fine2.stl");
+                                                        "meshes/sphere.stl");
 
     const PDM_g_num_t *distrib = PDM_DMesh_nodal_distrib_vtx_get(dmn);
 

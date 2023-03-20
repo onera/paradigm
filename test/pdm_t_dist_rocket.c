@@ -268,15 +268,9 @@ _gen_cloud_grid
   /*
    *  Create mesh partitions
    */
-#ifdef PDM_HAVE_PARMETIS
-  PDM_part_split_t part_method  = PDM_PART_SPLIT_PARMETIS;
-#else
-#ifdef PDM_HAVE_PTSCOTCH
-  PDM_part_split_t part_method  = PDM_PART_SPLIT_PTSCOTCH;
-#else
+
   PDM_part_split_t part_method  = PDM_PART_SPLIT_HILBERT;
-#endif
-#endif
+
   // int ppart_id = 0;
   int have_dcell_part = 0;
 
@@ -1200,16 +1194,7 @@ _gen_src_mesh
     /*
      *  Split mesh
      */
-#ifdef PDM_HAVE_PARMETIS
-    PDM_part_split_t part_method  = PDM_PART_SPLIT_PARMETIS;
-#else
-#ifdef PDM_HAVE_PTSCOTCH
-    PDM_part_split_t part_method  = PDM_PART_SPLIT_PTSCOTCH;
-#else
     PDM_part_split_t part_method  = PDM_PART_SPLIT_HILBERT;
-#endif
-#endif
-
 
     int n_property_face = 0;
     int *renum_properties_face = NULL;
@@ -1641,7 +1626,7 @@ int main(int argc, char *argv[])
     char filename[999];
 
     for (int i_part = 0; i_part < n_part_tgt; i_part++) {
-      sprintf(filename, "/stck/bandrieu/Rocket/tgt_%3.3d.vtk", n_part_tgt*i_rank + i_part);
+      sprintf(filename, "tgt_%3.3d.vtk", n_part_tgt*i_rank + i_part);
       _write_point_cloud (filename,
                           "tgt",
                           n_tgt[i_part],
@@ -1651,7 +1636,7 @@ int main(int argc, char *argv[])
     }
 
     for (int i_part = 0; i_part < n_part_src; i_part++) {
-      sprintf(filename, "/stck/bandrieu/Rocket/src_mesh_%3.3d.vtk", n_part_src*i_rank + i_part);
+      sprintf(filename, "src_mesh_%3.3d.vtk", n_part_src*i_rank + i_part);
       _write_polydata (filename,
                        "src_mesh",
                        n_vtx[i_part],

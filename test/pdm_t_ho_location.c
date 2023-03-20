@@ -796,6 +796,7 @@ int main(int argc, char *argv[])
                                     pts_coord  + 3*i,
                                     proj_coord + 3*i,
                                     pts_uvw    + elt_dim*i);
+      PDM_UNUSED(dist);
       // log_trace("i = %d, dist = %e\n", i, dist);
     }
   }
@@ -876,7 +877,7 @@ int main(int argc, char *argv[])
   }
   // log_trace("max field = %e\n", field_max);
 
-  // printf("err_max = %e, relative = %e\n", err_max, err_max/field_max);
+  printf("err_max = %e, relative = %e\n", err_max, err_max/field_max);
 
 
   int *connec = malloc(sizeof(int) * n_node);
@@ -961,7 +962,6 @@ int main(int argc, char *argv[])
   int *ijk_to_user = PDM_ho_ordering_ijk_to_user_get("PDM_HO_ORDERING_VTK",
                                                      t_elt,
                                                      order);
-  
   // PDM_log_trace_array_int(ijk_to_user, n_node, "ijk_to_user : ");
 
   for (int i = 0; i < n_node; i++) {

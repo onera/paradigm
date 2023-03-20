@@ -237,7 +237,7 @@ int main(int argc, char *argv[])
     part1_data[i] = malloc(sizeof(PDM_g_num_t) * s_part1_data);
     int idx = 0;
     for (int j = 0; j < n_elt1[i]; j++) {
-      int idx0 = idx;
+      // int idx0 = idx;
       for (int k = 1; k <= part1_stride[i][j]; k++) {
         part1_data[i][idx++] = k;
       }
@@ -272,7 +272,7 @@ int main(int argc, char *argv[])
                                request);
 
   // log_trace("\n\n---- Check iexch ----\n");
-  // for (int i = 0; i < n_part2; i++) { 
+  // for (int i = 0; i < n_part2; i++) {
 
   //   log_trace("\npart2 %d\n", i);
   //   PDM_log_trace_array_int(part2_stride[i], gnum1_come_from_idx[i][n_ref_num2[i]], "stride : ");
@@ -442,7 +442,7 @@ int main(int argc, char *argv[])
   for (int i = 0; i < n_part2; i++) {
     int idx = 0;
     for (int j = 0; j < n_ref_num2[i]; j++) {
-      int id2 = ref_num2[i][j] - 1;
+      // int id2 = ref_num2[i][j] - 1;
       for (int k = gnum1_come_from_idx[i][j]; k < gnum1_come_from_idx[i][j+1]; k++) {
         // log_trace("gnum2 "PDM_FMT_G_NUM", gnum1 "PDM_FMT_G_NUM", expected stride = %d, got %d\n",
         //           gnum_elt2[i][id2], gnum1_come_from[i][k], (int) (gnum1_come_from[i][k]%2) + 1,
@@ -536,9 +536,9 @@ int main(int argc, char *argv[])
     int idx = 0;
     for (int j = 0; j < n_elt1[i]; j++) {
       for (int k = part1_to_part2_idx[i][j]; k < part1_to_part2_idx[i][j+1]; k++) {
-         // log_trace("gnum1 "PDM_FMT_G_NUM", gnum2 "PDM_FMT_G_NUM", expected stride = %d, got %d\n",
-         //          gnum_elt1[i][j], part1_to_part2[i][k], (int) (part1_to_part2[i][k]%2) + 1,
-         //          part1_stride[i][k]);
+        // log_trace("gnum1 "PDM_FMT_G_NUM", gnum2 "PDM_FMT_G_NUM", expected stride = %d, got %d\n",
+        //           gnum_elt1[i][j], part1_to_part2[i][k], (int) (part1_to_part2[i][k]%2) + 1,
+        //           part1_stride[i][k]);
         for (int l = 0; l < part1_stride[i][k]; l++) {
           // log_trace("  "PDM_FMT_G_NUM" / "PDM_FMT_G_NUM"\n",
           //           part1_data2[i][idx], part1_data[i][idx]);

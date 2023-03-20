@@ -408,14 +408,14 @@ int main(int argc, char *argv[])
     PDM_ho_bezier_de_casteljau_triangle(n_node, order, uv[0], uv[1],
                                         NULL, weight2, NULL, NULL, NULL);
     // log_trace("diff weights :\n");
-    int idx = 0;
-    for (int j = 0; j <= order; j++) {
-      for (int i = 0; i <= order-j; i++) {
-        // log_trace("  i = %d, j = %d, diff = %e\n",
-        //           i, j, PDM_ABS(weight[idx] - weight2[idx]));
-        idx++;
-      }
-    }
+    // int idx = 0;
+    // for (int j = 0; j <= order; j++) {
+    //   for (int i = 0; i <= order-j; i++) {
+    //     log_trace("  i = %d, j = %d, diff = %e\n",
+    //               i, j, PDM_ABS(weight[idx] - weight2[idx]));
+    //     idx++;
+    //   }
+    // }
 
     free(weight);
     free(weight2);

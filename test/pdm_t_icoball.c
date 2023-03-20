@@ -298,12 +298,11 @@ int main(int argc, char *argv[])
     PDM_CROSS_PRODUCT(uv, u, v);
     volume[i] = PDM_DOT_PRODUCT(uv, w) / 6.;
 
-//    log_trace("i = %d, vol = %f\n", i, volume[i]);
     if (volume[i] < 0) {
       count++;
     }
   }
-//  log_trace("%d cells with negative volume / %d\n", count, dn_cell);
+  // log_trace("%d cells with negative volume / %d\n", count, dn_cell);
   free(volume);
 
   free(pvtx_ln_to_gn);

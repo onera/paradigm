@@ -267,7 +267,6 @@ int main(int argc, char *argv[])
       dfield_post[idx_write++] = blk_gnum[i];
     }
   }
-
   // PDM_log_trace_array_int (dfield_strid, n_elmt_in_block, "dfield_strid ::");
   // PDM_log_trace_array_long(dfield_post , idx_write      , "dfield_post ::");
 
@@ -293,7 +292,7 @@ int main(int argc, char *argv[])
         assert(check == pln_to_to_gn[i]);
       }
     }
-    PDM_log_trace_array_long(pfield_post, s_data, "pfield_post : ");
+    // PDM_log_trace_array_long(pfield_post, s_data, "pfield_post : ");
   }
 
 

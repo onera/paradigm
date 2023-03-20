@@ -4,7 +4,6 @@
 #include <stdio.h>
 #include "pdm.h"
 #include "pdm_mpi.h"
-
 /*=============================================================================
  * Macro definitions
  *============================================================================*/
@@ -129,7 +128,6 @@ PDM_part_create
  const int                   *dface_group_idx,
  const PDM_g_num_t           *dface_group
  );
-
 
 /**
  *

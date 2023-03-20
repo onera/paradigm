@@ -786,6 +786,15 @@ PDM_tree_intersection_point_box
  int                  **box_pts
  );
 
+void
+PDM_box_tree_write_vtk2
+(
+ const char     *filename,
+ PDM_box_tree_t *bt,
+ const int       i_copied_rank,
+ double *s,
+ double *d
+ );
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

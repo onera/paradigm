@@ -197,15 +197,7 @@ program testf
     write(*, *) "-- Split mesh"
   end if
 
-#ifdef PDM_HAVE_PARMETIS
-  part_method = PDM_PART_SPLIT_PARMETIS
-#else
-#ifdef PDM_HAVE_PTSCOTCH
-  part_method = PDM_PART_SPLIT_PTSCOTCH
-#else
   part_method = PDM_PART_SPLIT_HILBERT
-#endif
-#endif
 
   renum_properties_cell => null()
   renum_properties_face => null()

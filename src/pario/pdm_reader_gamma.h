@@ -61,6 +61,53 @@ PDM_reader_gamma_dmesh_nodal
  );
 
 
+void
+PDM_write_meshb
+(
+  const char   *filename,
+  const int     n_vtx,
+  const int     n_tetra,
+  const int     n_tri,
+  const int     n_edge,
+  const double *vtx_coords,
+  const int    *vtx_tags,
+  const int    *tetra_vtx,
+  const int    *tetra_tag,
+  const int    *tria_vtx,
+  const int    *tria_tag,
+  const int    *edge_vtx,
+  const int    *edge_tag
+);
+
+
+void
+PDM_write_gamma_sol
+(
+  const char   *filename,
+  const int     n_vtx,
+  const int     n_field,
+  const double *fields
+);
+
+void
+PDM_read_gamma_sol
+(
+  const char   *filename,
+  const int     n_vtx,
+  const int     n_field,
+        double *fields
+);
+
+
+void
+PDM_write_gamma_matsym
+(
+  const char   *filename,
+  const int     n_vtx,
+  const double *fields
+);
+
+
 #ifdef __cplusplus
 }
 #endif
