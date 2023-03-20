@@ -121,6 +121,9 @@ PDM_generate_mesh_sphere
  const PDM_split_dual_t       part_method
 )
 {
+  int dim = PDM_Mesh_nodal_elt_dim_get(elt_type);
+  assert(dim == 2);
+
   if (elt_type == PDM_MESH_NODAL_TRIA3) {
 
     assert(order == 1);
@@ -239,7 +242,7 @@ PDM_generate_mesh_sphere_simplified
  *
  * \brief Create a partitionned ball mesh (3D).
  *
- * \param [in]  comm        MPI communicator
+ * \param [in]  comm            MPI communicator
  * \param [in]  elt_type        Mesh element type
  * \param [in]  order           Mesh element order
  * \param [in]  ho_ordering     ?
@@ -281,6 +284,9 @@ PDM_generate_mesh_ball
  const PDM_split_dual_t  part_method
 )
 {
+  int dim = PDM_Mesh_nodal_elt_dim_get(elt_type);
+  assert(dim == 3);
+
   PDM_dmesh_nodal_t *dmn = NULL;
 
   // ball without a hole
@@ -468,18 +474,21 @@ PDM_generate_mesh_rectangle
  const PDM_split_dual_t  part_method
 )
 {
+  int dim = PDM_Mesh_nodal_elt_dim_get(elt_type);
+  assert(dim == 2);
+
   // generate distributed rectangle mesh
-  PDM_dcube_nodal_t *dcube = PDM_dcube_nodal_gen_create (comm,
-                                                         n_x,
-                                                         n_y,
-                                                         0.,
-                                                         lengthx,
-                                                         xmin,
-                                                         ymin,
-                                                         zmin,
-                                                         elt_type,
-                                                         order,
-                                                         PDM_OWNERSHIP_USER);
+  PDM_dcube_nodal_t *dcube = PDM_dcube_nodal_gen_create(comm,
+                                                        n_x,
+                                                        n_y,
+                                                        0.,
+                                                        lengthx,
+                                                        xmin,
+                                                        ymin,
+                                                        zmin,
+                                                        elt_type,
+                                                        order,
+                                                        PDM_OWNERSHIP_USER);
   PDM_dcube_nodal_gen_build (dcube);
 
   PDM_dmesh_nodal_t *dmn = PDM_dcube_nodal_gen_dmesh_nodal_get(dcube);
@@ -504,7 +513,7 @@ PDM_generate_mesh_rectangle
 
   }
 
-  // generate partionned ball mesh
+  // generate partionned rectangle mesh
   PDM_part_mesh_nodal_t *pmn = _dmn_to_pmn(comm,
                                            part_method,
                                            n_part,
@@ -582,6 +591,186 @@ PDM_generate_mesh_rectangle_simplified
   for (int i = 0; i < (*n_elt); i++) {
     (*elt_vtx_idx)[i+1] = (*elt_vtx_idx)[i] + 3; // because PDM_MESH_NODAL_TRIA3
   }
+}
+
+/**
+ *
+ * \brief Create a partitionned parallelepiped mesh (3D).
+ *
+ * \param [in]  comm        MPI communicator
+ * \param [in]  elt_type    Mesh element type
+ * \param [in]  order       Mesh element order
+ * \param [in]  ho_ordering ?
+ * \param [in]  xmin        x-coordinate of the rctangle minimum corner
+ * \param [in]  ymin        y-coordinate of the rctangle minimum corner
+ * \param [in]  zmin        z-coordinate of the rctangle minimum corner
+ * \param [in]  lengthx     Length of the rectangle in the x-direction
+ * \param [in]  lengthy     Length of the rectangle in the y-direction
+ * \param [in]  lengthz     Length of the rectangle in the z-direction
+ * \param [in]  n_x         Number of points in the x-direction
+ * \param [in]  n_y         Number of points in the y-direction
+ * \param [in]  n_z         Number of points in the z-direction
+ * \param [in]  n_part      Number of mesh partitions
+ * \param [in]  part_method Mesh partitionning method
+ *
+ * \return PDM_part_mesh_t or PDM_part_mesh_nodal_t
+ *
+ */
+
+PDM_part_mesh_nodal_t *
+PDM_generate_mesh_parallelepiped
+(
+ const PDM_MPI_Comm      comm,
+ PDM_Mesh_nodal_elt_t    elt_type,
+ int                     order,
+ const char            **ho_ordering,
+ double                  xmin,
+ double                  ymin,
+ double                  zmin,
+ double                  lengthx,
+ double                  lengthy,
+ double                  lengthz,
+ PDM_g_num_t             n_x,
+ PDM_g_num_t             n_y,
+ PDM_g_num_t             n_z,
+ const int               n_part,
+ const PDM_split_dual_t  part_method
+)
+{
+  int dim = PDM_Mesh_nodal_elt_dim_get(elt_type);
+  assert(dim == 3);
+
+  // generate distributed parallelepiped mesh
+  PDM_dcube_nodal_t *dcube = PDM_dcube_nodal_gen_create(comm,
+                                                        n_x,
+                                                        n_y,
+                                                        n_z,
+                                                        lengthx,
+                                                        xmin,
+                                                        ymin,
+                                                        zmin,
+                                                        elt_type,
+                                                        order,
+                                                        PDM_OWNERSHIP_USER);
+  PDM_dcube_nodal_gen_build (dcube);
+
+  PDM_dmesh_nodal_t *dmn = PDM_dcube_nodal_gen_dmesh_nodal_get(dcube);
+
+  PDM_dmesh_nodal_generate_distribution(dmn);
+
+  // free
+  PDM_dcube_nodal_gen_free(dcube);
+
+  // scale to parallelepiped is necessary
+  if (lengthx != lengthy) {
+
+    int dn_vtx = PDM_DMesh_nodal_n_vtx_get(dmn);
+
+    double* dvtx_coord = PDM_DMesh_nodal_vtx_get(dmn);
+
+    double y = 0.;
+    for (int i = 0; i < dn_vtx; i++) {
+      y = (dvtx_coord[3*i+1] - ymin) / lengthx;
+      dvtx_coord[3*i+1] = y * lengthy + ymin; // change y coordinate
+    }
+
+  }
+
+  if (lengthx != lengthz) {
+
+    int dn_vtx = PDM_DMesh_nodal_n_vtx_get(dmn);
+
+    double* dvtx_coord = PDM_DMesh_nodal_vtx_get(dmn);
+
+    double z = 0.;
+    for (int i = 0; i < dn_vtx; i++) {
+      z = (dvtx_coord[3*i+2] - zmin) / lengthx;
+      dvtx_coord[3*i+2] = z * lengthz + zmin; // change z coordinate
+    }
+
+  }
+
+  // generate partionned parallelepiped mesh
+  PDM_part_mesh_nodal_t *pmn = _dmn_to_pmn(comm,
+                                           part_method,
+                                           n_part,
+                                           dmn);
+
+  // frees
+  PDM_DMesh_nodal_free(dmn);
+
+  return pmn;
+}
+
+/**
+ *
+ * \brief Create a simple partitionned parallelepiped mesh (3D).
+ *
+ * \param [in]   comm        MPI communicator
+ * \param [in]   order       Mesh element order
+ * \param [out]  n_vtx       Number of vertices
+ * \param [out]  n_elt       Number of elements
+ * \param [out]  coords      Array of vertex coordinates
+ * \param [out]  elt_vtx_idx Index array of the element vertex connectivity
+ * \param [out]  elt_vtx     Array of the element vertex connectivity
+ *
+ */
+
+void
+PDM_generate_mesh_parallelepiped_simplified
+(
+ const PDM_MPI_Comm   comm,
+ const int            order,
+ int                 *n_vtx,
+ int                 *n_elt,
+ double             **coords,
+ int                **elt_vtx_idx,
+ int                **elt_vtx
+)
+{
+  PDM_part_mesh_nodal_t *pmn = PDM_generate_mesh_parallelepiped(comm,
+                                                                PDM_MESH_NODAL_TETRA4,
+                                                                1,
+                                                                NULL,
+                                                                0.,
+                                                                0.,
+                                                                0.,
+                                                                10.,
+                                                                10.,
+                                                                10.,
+                                                                100,
+                                                                100,
+                                                                100,
+                                                                1,
+                                                                PDM_SPLIT_DUAL_WITH_HILBERT);
+
+  *n_vtx = PDM_part_mesh_nodal_n_vtx_get(pmn,
+                                         0);
+
+  *coords = PDM_part_mesh_nodal_vtx_coord_get(pmn,
+                                              0);
+
+  PDM_g_num_t *pelt_ln_to_gn       = NULL;
+  int         *parent_num          = NULL;
+  PDM_g_num_t *parent_entity_g_num = NULL;
+  PDM_part_mesh_nodal_section_std_get(pmn,
+                                      0,
+                                      0,
+                                      elt_vtx,
+                                      &pelt_ln_to_gn,
+                                      &parent_num,
+                                      &parent_entity_g_num);
+
+  *n_elt = PDM_part_mesh_nodal_section_n_elt_get(pmn,
+                                                 0,
+                                                 0);
+
+  *elt_vtx_idx = malloc(sizeof(int) * ((*n_elt)+1));
+  (*elt_vtx_idx)[0] = 0;
+  for (int i = 0; i < (*n_elt); i++) {
+    (*elt_vtx_idx)[i+1] = (*elt_vtx_idx)[i] + 4; // because PDM_MESH_NODAL_TETRA4
+  }
+
 }
 
 #ifdef __cplusplus

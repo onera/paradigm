@@ -208,7 +208,7 @@ PDM_generate_mesh_rectangle
  *
  * \brief Create a partitionned ball mesh (3D).
  *
- * \param [in]  comm        MPI communicator
+ * \param [in]  comm            MPI communicator
  * \param [in]  elt_type        Mesh element type
  * \param [in]  order           Mesh element order
  * \param [in]  ho_ordering     ?
@@ -254,6 +254,7 @@ PDM_generate_mesh_ball
  *
  * \brief Create a partitionned parallelepiped mesh (3D).
  *
+ * \param [in]  comm        MPI communicator
  * \param [in]  elt_type    Mesh element type
  * \param [in]  order       Mesh element order
  * \param [in]  ho_ordering ?
@@ -276,6 +277,10 @@ PDM_generate_mesh_ball
 PDM_part_mesh_nodal_t *
 PDM_generate_mesh_parallelepiped
 (
+ const PDM_MPI_Comm      comm,
+ PDM_Mesh_nodal_elt_t    elt_type,
+ int                     order,
+ const char            **ho_ordering,
  double                  xmin,
  double                  ymin,
  double                  zmin,
