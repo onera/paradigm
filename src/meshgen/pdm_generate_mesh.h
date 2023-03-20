@@ -27,7 +27,6 @@ extern "C" {
  * \brief Create a simple partitionned sphere mesh (2D).
  *
  * \param [in]   comm        MPI communicator
- * \param [in]   order       Mesh element order
  * \param [out]  n_vtx       Number of vertices
  * \param [out]  n_elt       Number of elements
  * \param [out]  coords      Array of vertex coordinates
@@ -40,7 +39,6 @@ void
 PDM_generate_mesh_sphere_simplified
 (
  const PDM_MPI_Comm   comm,
- const int            order,
  int                 *n_vtx,
  int                 *n_elt,
  double             **coords,
@@ -53,7 +51,6 @@ PDM_generate_mesh_sphere_simplified
  * \brief Create a simple partitionned rectangle mesh (2D).
  *
  * \param [in]   comm        MPI communicator
- * \param [in]   order       Mesh element order
  * \param [out]  n_vtx       Number of vertices
  * \param [out]  n_elt       Number of elements
  * \param [out]  coords      Array of vertex coordinates
@@ -66,7 +63,6 @@ void
 PDM_generate_mesh_rectangle_simplified
 (
  const PDM_MPI_Comm   comm,
- const int            order,
  int                 *n_vtx,
  int                 *n_elt,
  double             **coords,
@@ -79,7 +75,6 @@ PDM_generate_mesh_rectangle_simplified
  * \brief Create a simple partitionned ball mesh (3D).
  *
  * \param [in]   comm        MPI communicator
- * \param [in]   order       Mesh element order
  * \param [out]  n_vtx       Number of vertices
  * \param [out]  n_elt       Number of elements
  * \param [out]  coords      Array of vertex coordinates
@@ -92,7 +87,6 @@ void
 PDM_generate_mesh_ball_simplified
 (
  const PDM_MPI_Comm   comm,
- const int            order,
  int                 *n_vtx,
  int                 *n_elt,
  double             **coords,
@@ -105,7 +99,6 @@ PDM_generate_mesh_ball_simplified
  * \brief Create a simple partitionned parallelepiped mesh (3D).
  *
  * \param [in]   comm        MPI communicator
- * \param [in]   order       Mesh element order
  * \param [out]  n_vtx       Number of vertices
  * \param [out]  n_elt       Number of elements
  * \param [out]  coords      Array of vertex coordinates
@@ -118,7 +111,6 @@ void
 PDM_generate_mesh_parallelepiped_simplified
 (
  const PDM_MPI_Comm   comm,
- const int            order,
  int                 *n_vtx,
  int                 *n_elt,
  double             **coords,
