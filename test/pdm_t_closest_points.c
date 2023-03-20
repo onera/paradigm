@@ -14,6 +14,7 @@
 #include "pdm_mpi.h"
 #include "pdm_config.h"
 #include "pdm_part_to_block.h"
+#include "pdm_part_to_part.h"
 #include "pdm_printf.h"
 #include "pdm_error.h"
 #include "pdm_gnum.h"
@@ -21,6 +22,8 @@
 #include "pdm_point_cloud_gen.h"
 #include "pdm_closest_points.h"
 #include "pdm_version.h"
+#include "pdm_mesh_nodal.h"
+#include "pdm_vtk.h"
 
 /*============================================================================
  * Macro definitions
@@ -84,7 +87,8 @@ _read_args
  int           *nClosest,
  PDM_g_num_t   *nSrc,
  PDM_g_num_t   *nTgt,
- double        *radius
+ double        *radius,
+ int           *visu
  )
 {
   int i = 1;
@@ -138,11 +142,36 @@ _read_args
       }
     }
 
+    else if (strcmp(argv[i], "-visu") == 0) {
+      *visu = 1;
+    }
+
     else {
       _usage(EXIT_FAILURE);
     }
     i++;
   }
+}
+
+
+
+
+static double _idw_interp
+(
+ const int     n,
+       double *values,
+       double *distances
+ )
+{
+  double v = 0;
+  double s = 0;
+  for (int i = 0; i < n; i++) {
+    double w = 1./sqrt(PDM_MAX(1e-16, distances[i]));
+    v += w*values[i];
+    s += w;
+  }
+
+  return v/s;
 }
 
 
@@ -155,7 +184,10 @@ _read_args
  * \brief  Main
  *
  */
-
+// @@@param[n_proc] : 1,2,3,4
+// @@@param[c] : 1,2,3,10
+// @@@param[s] : 10000, 20000
+// @@@param[t] : 10000, 20000
 int
 main
 (
@@ -183,13 +215,15 @@ main
   PDM_g_num_t gn_src           = 10;
   PDM_g_num_t gn_tgt           = 10;
   double      radius           = 10.;
+  int         visu             = 0;
 
   _read_args(argc,
              argv,
              &n_closest_points,
              &gn_src,
              &gn_tgt,
-             &radius);
+             &radius,
+             &visu);
 
   if (i_rank == 0) {
     PDM_printf ("%Parametres : \n");
@@ -282,6 +316,87 @@ main
 
     printf("============================\n\n");
   }
+
+
+  /* Check ptp */
+  if (1) {
+    PDM_part_to_part_t *ptp = NULL;
+    PDM_closest_points_part_to_part_get(clsp,
+                                        &ptp,
+                                        PDM_OWNERSHIP_KEEP);
+
+
+    // define field on src cloud
+    double *src_field = malloc(sizeof(double) * n_src);
+    for (int i = 0; i < n_src; i++) {
+      // src_field[i] = src_coord[3*i];
+      src_field[i] = cos(PDM_MODULE(src_coord+3*i));
+    }
+
+    // exchange to tgt cloud
+    double **recv_field = NULL;
+    int request = -1;
+    PDM_part_to_part_iexch(ptp,
+                           PDM_MPI_COMM_KIND_P2P,
+                           PDM_STRIDE_CST_INTERLACED,
+                           PDM_PART_TO_PART_DATA_DEF_ORDER_PART1,
+                           1,
+                           sizeof(double),
+                           NULL,
+          (const void  **) &src_field,
+                           NULL,
+          (      void ***) &recv_field,
+                           &request);
+
+    PDM_part_to_part_iexch_wait(ptp, request);
+
+    // interpolate tgt field from closest src points (IDW)
+    double *tgt_field = malloc(sizeof(double) * n_tgt);
+    for (int i = 0; i < n_tgt; i++) {
+      tgt_field[i] = _idw_interp(n_closest_points,
+                                 &recv_field[0]   [n_closest_points*i],
+                                 &closest_src_dist[n_closest_points*i]);
+    }
+    free(recv_field[0]);
+    free(recv_field);
+
+    if (visu) {
+      char filename[999];
+
+      int          n_pts[2] = {n_src, n_tgt};
+      double      *coord[2] = {src_coord, tgt_coord};
+      double      *field[2] = {src_field, tgt_field};
+      PDM_g_num_t *g_num[2] = {src_g_num, tgt_g_num};
+
+      const char *field_name[] = {"field"};
+
+      for (int i = 0; i < 2; i++) {
+        if (i == 0) {
+          sprintf(filename, "src_cloud_%d.vtk", i_rank);
+        }
+        else {
+          sprintf(filename, "tgt_cloud_%d.vtk", i_rank);
+        }
+
+        PDM_vtk_write_std_elements_double(filename,
+                                          n_pts[i],
+                                          coord[i],
+                                          g_num[i],
+                                          PDM_MESH_NODAL_POINT,
+                                          n_pts[i],
+                                          NULL,
+                                          g_num[i],
+                                          1,
+                                          field_name,
+                        (const double **) &field[i]);
+      }
+    }
+    free(src_field);
+    free(tgt_field);
+  }
+
+
+
 
   PDM_closest_points_free (clsp);
 

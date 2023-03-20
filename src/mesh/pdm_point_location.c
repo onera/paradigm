@@ -1092,6 +1092,21 @@ _locate_in_cell_3d
     double *_bc = bar_coord + n_vtx * ipt;
     double *_cp = proj_coord + 3 * ipt;
 
+    int dbg = (_pt[0] > 1.46 && _pt[0] < 1.47 &&
+               _pt[1] > 14.7 && _pt[1] < 14.8 &&
+               _pt[2] > 10.0 && _pt[2] < 10.1);
+    dbg = 0;
+
+    if (dbg) {
+      log_trace("cell_coord = \n");
+      for (int ivtx = 0; ivtx < n_vtx; ivtx++) {
+        log_trace("  %f %f %f\n",
+                  cell_coord[3*ivtx  ],
+                  cell_coord[3*ivtx+1],
+                  cell_coord[3*ivtx+2]);
+      }
+    }
+
     /* Check vertices (To avoid singularity with pyramids) */
     PDM_bool_t on_vtx = PDM_FALSE;
     for (int ivtx = 0; ivtx < n_vtx; ivtx++) {
@@ -1131,6 +1146,13 @@ _locate_in_cell_3d
                                         tolerance,
                                         _uvw,
                                         NULL);
+    if (dbg) {
+      log_trace("pt %f %f %f : stat_uvw = %d, _uvw = %f %f %f\n",
+                _pt[0], _pt[1], _pt[2],
+                stat_uvw,
+                _uvw[0], _uvw[1], _uvw[2]);
+    }
+
     if (stat_uvw == PDM_TRUE) {
       _compute_shapef_3d (elt_type, _uvw, _bc, NULL);
 
@@ -1237,8 +1259,14 @@ _locate_in_cell_3d
   /* Locate points outside cell (closest point on boundary) */
   if (n_pts_out > 0) {
 
-    int    *closest_face  = malloc (sizeof(int)    * n_pts_out);
-    double *closest_point = malloc (sizeof(double) * n_pts_out * 3);
+    for (int ipt = 0; ipt < n_pts_out; ipt++) {
+      int _ipt = pts_out[ipt];
+      distance[_ipt] = HUGE_VAL;
+    }
+
+    // int    *closest_face  = malloc (sizeof(int)    * n_pts_out);
+    // double *closest_point = malloc (sizeof(double) * n_pts_out * 3);
+    // int    *inside_polygon = PDM_array_zeros_int(n_pts_out);
 
     int n_face = -1;
     int face_vtx_idx[7];
@@ -1287,7 +1315,7 @@ _locate_in_cell_3d
     PDM_l_num_t n_tri;
     double tri_coord[9];
     PDM_l_num_t _tri_vtx[3], tri_vtx[6];
-    PDM_triangulate_state_t *state = PDM_triangulate_state_create (4);
+    // PDM_triangulate_state_t *state = PDM_triangulate_state_create (4);
 
     /* Find closest face/point for each point outside the cell */
     for (int iface = 0; iface < n_face; iface++) {
@@ -1329,27 +1357,81 @@ _locate_in_cell_3d
         for (int ipt = 0; ipt < n_pts_out; ipt++) {
 
           int _ipt = pts_out[ipt];
-          const double *_pt = pts_coord + 3 * _ipt;
-          double *_cp = closest_point + 3 * ipt;
+          const double *_pt = pts_coord     + 3 * _ipt;
+          // double       *_cp = closest_point + 3 *  ipt;
+          double       *_pp = proj_coord + 3 *  _ipt;
+          double       *_bc = bar_coord  + n_vtx * _ipt;
+          int dbg = (_pt[0] > 1.46 && _pt[0] < 1.47 &&
+                     _pt[1] > 14.7 && _pt[1] < 14.8 &&
+                     _pt[2] > 10.0 && _pt[2] < 10.1);
+          dbg = 0;
 
-          double min_dist2, closest[3];
+          if (dbg) {
+            setenv("DBG_TRIANGLE", "1", 1);
+          }
+          else {
+            setenv("DBG_TRIANGLE", "0", 1);
+          }
+
+          double min_dist2, closest[3], weight[3];
           PDM_triangle_status_t error = PDM_triangle_evaluate_position(_pt,
                                                                        tri_coord,
                                                                        closest,
                                                                        &min_dist2,
-                                                                       NULL);
+                                                                       weight);
+
+          if (dbg) {
+            double err[3] = {closest[0], closest[1], closest[2]};
+            for (int i = 0; i < 3; i++) {
+              for (int j = 0; j < 3; j++) {
+                err[j] -= weight[i]*tri_coord[3*i+j];
+              }
+            }
+            log_trace("  err = %e\n", PDM_MODULE(err));
+
+            log_trace("pt %20.16f %20.16f %20.16f at dist %20.16f from tri #%d of face %d\n",
+                      _pt[0], _pt[1], _pt[2], sqrt(min_dist2), itri, iface);
+            for (int i = 0; i < 3; i++) {
+              log_trace("  %20.16f %20.16f %20.16f\n",
+                        tri_coord[3*i], tri_coord[3*i+1], tri_coord[3*i+2]);
+            }
+          }
+
 
           if (error == PDM_TRIANGLE_DEGENERATED) {
             continue;
           }
 
+          // if (error == PDM_TRIANGLE_INSIDE) {
+          //   inside_polygon[ipt] = 1;
+          // }
+
           if (distance[_ipt] > min_dist2) {
             distance[_ipt] = min_dist2;
 
-            closest_face[ipt] = iface;
+            // closest_face[ipt] = iface;
             for (int idim = 0; idim < 3; idim++) {
-              _cp[idim] = closest[idim];
+              _pp[idim] = closest[idim];
             }
+
+            for (int ivtx = 0; ivtx < n_vtx; ivtx++) {
+              _bc[ivtx] = 0;
+            }
+
+            for (int ivtx = 0; ivtx < 3; ivtx++) {
+              _bc[_tri_vtx[ivtx]] = weight[ivtx];
+              if (dbg) {
+                log_trace(" += %f * (%f %f %f)\n",
+                          _bc[_tri_vtx[ivtx]],
+                          cell_coord[3*_tri_vtx[ivtx] + 0],
+                          cell_coord[3*_tri_vtx[ivtx] + 1],
+                          cell_coord[3*_tri_vtx[ivtx] + 2]);
+              }
+            }
+            if (dbg) {
+              log_trace(" pp = %f %f %f\n", _pp[0], _pp[1], _pp[2]);
+            }
+
           }
 
         } // End loop on points
@@ -1358,62 +1440,213 @@ _locate_in_cell_3d
 
     } // End loop on faces
 
-    state = PDM_triangulate_state_destroy(state);
 
-    /* Loctate closest points on closest faces */
-    double face_coord[12];
-    double bar_coord_face[4];
-    for (int ipt = 0; ipt < n_pts_out; ipt++) {
 
-      int _ipt = pts_out[ipt];
-      double *_cp = closest_point + 3 * ipt;
-      double *_bc = bar_coord + n_vtx * _ipt;
 
-      for (int ivtx = 0; ivtx < n_vtx; ivtx++) {
-        _bc[ivtx] = 0.;
-      }
 
-      int iface = closest_face[ipt];
-      n_vtx_face = face_vtx_idx[iface+1] - face_vtx_idx[iface];
+    // /* Find closest face/point for each point outside the cell */
+    // for (int iface = 0; iface < n_face; iface++) {
 
-      for (int ivtx = 0; ivtx < n_vtx_face; ivtx++) {
-        int _ivtx = face_vtx[face_vtx_idx[iface] + ivtx] - 1;
+    //   const PDM_l_num_t *_face_vtx = face_vtx + face_vtx_idx[iface];
+    //   n_vtx_face = face_vtx_idx[iface+1] - face_vtx_idx[iface];
 
-        for (int idim = 0; idim < 3; idim++) {
-          face_coord[3*ivtx + idim] = cell_coord[3*_ivtx + idim];
-        }
-      }
+    //   /* Triangular face */
+    //   if (n_vtx_face == 3) {
+    //     n_tri = 1;
+    //     for (int ivtx = 0; ivtx < 3; ivtx++) {
+    //       tri_vtx[ivtx] = _face_vtx[ivtx];
+    //     }
+    //   }
 
-      PDM_mean_values_polygon_3d (n_vtx_face,
-                                  face_coord,
-                                  1,
-                                  _cp,
-                                  bar_coord_face);
+    //   /* Quadrilateral face */
+    //   else {
+    //     n_tri = PDM_triangulate_quadrangle (3,
+    //                                         (double *) cell_coord,
+    //                                         NULL,
+    //                                         _face_vtx,
+    //                                         tri_vtx);
+    //   }
 
-      for (int ivtx = 0; ivtx < n_vtx_face; ivtx++) {
-        int _ivtx = face_vtx[face_vtx_idx[iface] + ivtx] - 1;
-        _bc[_ivtx] = bar_coord_face[ivtx];
-      }
+    //   /* Loop on face triangles */
+    //   for (int itri = 0; itri < n_tri; itri++) {
 
-      const double *_pt = pts_coord + 3 * _ipt;
-      double *_pp = proj_coord + 3 * _ipt;
-      for (int idim = 0; idim < 3; idim++) {
-        _pp[idim] = 0.;
-      }
+    //     for (int ivtx = 0; ivtx < 3; ivtx++) {
+    //       _tri_vtx[ivtx] = tri_vtx[3*itri + ivtx] - 1;
+    //     }
 
-      for (int ivtx = 0; ivtx < n_vtx_face; ivtx++) {
-        int _ivtx = face_vtx[face_vtx_idx[iface] + ivtx] - 1;
-        for (int idim = 0; idim < 3; idim++) {
-          _pp[idim] += bar_coord_face[ivtx] * cell_coord[3*_ivtx + idim];
-        }
-      }
+    //     for (int ivtx = 0; ivtx < 3; ivtx++) {
+    //       for (int idim = 0; idim < 3; idim++) {
+    //         tri_coord[3*ivtx + idim] = cell_coord[3*_tri_vtx[ivtx] + idim];
+    //       }
+    //     }
 
-      double v_p_cp[3] = {_pt[0] - _pp[0], _pt[1] - _pp[1], _pt[2] - _pp[2]};
-      distance[_ipt] = PDM_DOT_PRODUCT (v_p_cp, v_p_cp);
-    }
+    //     /* Loop on points */
+    //     for (int ipt = 0; ipt < n_pts_out; ipt++) {
 
-    free (closest_face);
-    free (closest_point);
+    //       int _ipt = pts_out[ipt];
+    //       const double *_pt = pts_coord     + 3 * _ipt;
+    //       double       *_cp = closest_point + 3 *  ipt;
+    //       int dbg = (_pt[0] > -8.323 && _pt[0] < -8.322 &&
+    //                  _pt[1] > 13.33  && _pt[1] < 13.34  &&
+    //                  _pt[2] > 3.89   && _pt[2] < 3.90);
+
+    //       if (dbg) {
+    //         setenv("DBG_TRIANGLE", "1", 1);
+    //       }
+    //       else {
+    //         setenv("DBG_TRIANGLE", "0", 1);
+    //       }
+
+    //       double min_dist2, closest[3], weight[3];
+    //       PDM_triangle_status_t error = PDM_triangle_evaluate_position(_pt,
+    //                                                                    tri_coord,
+    //                                                                    closest,
+    //                                                                    &min_dist2,
+    //                                                                    weight);
+
+    //       if (dbg) {
+    //         double err[3] = {closest[0], closest[1], closest[2]};
+    //         for (int i = 0; i < 3; i++) {
+    //           for (int j = 0; j < 3; j++) {
+    //             err[j] -= weight[i]*tri_coord[3*i+j];
+    //           }
+    //         }
+    //         log_trace("  err = %e\n", PDM_MODULE(err));
+
+    //         log_trace("pt %20.16f %20.16f %20.16f at dist %20.16f from tri #%d of face %d\n",
+    //                   _pt[0], _pt[1], _pt[2], sqrt(min_dist2), itri, iface);
+    //         for (int i = 0; i < 3; i++) {
+    //           log_trace("  %20.16f %20.16f %20.16f\n",
+    //                     tri_coord[3*i], tri_coord[3*i+1], tri_coord[3*i+2]);
+    //         }
+    //       }
+
+
+    //       if (error == PDM_TRIANGLE_DEGENERATED) {
+    //         continue;
+    //       }
+
+    //       if (error == PDM_TRIANGLE_INSIDE) {
+    //         inside_polygon[ipt] = 1;
+    //       }
+
+    //       if (distance[_ipt] > min_dist2) {
+    //         distance[_ipt] = min_dist2;
+
+    //         closest_face[ipt] = iface;
+    //         for (int idim = 0; idim < 3; idim++) {
+    //           _cp[idim] = closest[idim];
+    //         }
+    //       }
+
+    //     } // End loop on points
+
+    //   } // End loop on triangles
+
+    // } // End loop on faces
+
+    // state = PDM_triangulate_state_destroy(state);
+
+    // /* Loctate closest points on closest faces */
+    // double face_coord[12];
+    // double bar_coord_face[4];
+    // for (int ipt = 0; ipt < n_pts_out; ipt++) {
+
+    //   int _ipt = pts_out[ipt];
+
+    //   const double *_pt = pts_coord     + 3     * _ipt;
+    //   double       *_cp = closest_point + 3     *  ipt;
+    //   double       *_bc = bar_coord     + n_vtx * _ipt;
+
+    //   int dbg = (_pt[0] > -8.323 && _pt[0] < -8.322 &&
+    //              _pt[1] > 13.33  && _pt[1] < 13.34  &&
+    //              _pt[2] > 3.89   && _pt[2] < 3.90);
+
+    //   for (int ivtx = 0; ivtx < n_vtx; ivtx++) {
+    //     _bc[ivtx] = 0.;
+    //   }
+
+    //   int iface = closest_face[ipt];
+    //   n_vtx_face = face_vtx_idx[iface+1] - face_vtx_idx[iface];
+
+    //   for (int ivtx = 0; ivtx < n_vtx_face; ivtx++) {
+    //     int _ivtx = face_vtx[face_vtx_idx[iface] + ivtx] - 1;
+
+    //     for (int idim = 0; idim < 3; idim++) {
+    //       face_coord[3*ivtx + idim] = cell_coord[3*_ivtx + idim];
+    //     }
+    //   }
+
+    //   if (dbg) {
+    //     log_trace(">>> cp = %20.16e %20.16e %20.16e\n", _cp[0], _cp[1], _cp[2]);
+    //   }
+    //   if (inside_polygon[ipt]) {
+    //     PDM_mean_values_polygon_3d (n_vtx_face,
+    //                                 face_coord,
+    //                                 1,
+    //                                 _cp,
+    //                                 bar_coord_face);
+    //   }
+    //   else {
+
+    //   }
+
+    //   if (dbg) {
+    //     log_trace("pt %f %f %f : closest_face %d, dist = %f,  coord :\n",
+    //               _pt[0], _pt[1], _pt[2], iface, distance[_ipt]);
+    //     for (int i = 0; i < n_vtx_face; i++) {
+    //       log_trace("  %20.16e %20.16e %20.16e\n",
+    //                 face_coord[3*i], face_coord[3*i+1], face_coord[3*i+2]);
+    //     }
+    //     PDM_log_trace_array_double(bar_coord_face, n_vtx_face, "  mvc in face : ");
+    //   }
+
+    //   for (int ivtx = 0; ivtx < n_vtx_face; ivtx++) {
+    //     int _ivtx = face_vtx[face_vtx_idx[iface] + ivtx] - 1;
+    //     _bc[_ivtx] = bar_coord_face[ivtx];
+    //   }
+
+    //   // const double *_pt = pts_coord + 3 * _ipt;
+    //   double *_pp = proj_coord + 3 * _ipt;
+    //   // // for (int idim = 0; idim < 3; idim++) {
+    //   // //   _pp[idim] = 0.;
+    //   // // }
+
+    //   for (int ivtx = 0; ivtx < n_vtx_face; ivtx++) {
+    //     int _ivtx = face_vtx[face_vtx_idx[iface] + ivtx] - 1;
+    //     if (dbg) {
+    //       log_trace(" += %f * (%f %f %f)\n",
+    //                 bar_coord_face[ivtx],
+    //                 face_coord[3*ivtx + 0],
+    //                 face_coord[3*ivtx + 1],
+    //                 face_coord[3*ivtx + 2]);
+    //                 // cell_coord[3*_ivtx + 0],
+    //                 // cell_coord[3*_ivtx + 1],
+    //                 // cell_coord[3*_ivtx + 2]);
+    //     }
+    //     for (int idim = 0; idim < 3; idim++) {
+    //       // _pp[idim] += bar_coord_face[ivtx] * cell_coord[3*_ivtx + idim];
+    //       _pp[idim] += bar_coord_face[ivtx] * face_coord[3*ivtx + idim];
+    //     }
+    //   }
+
+    //   double err = 0;
+    //   for (int idim = 0; idim < 3; idim++) {
+    //     double delta = _cp[idim] - _pp[idim];
+    //     err += delta*delta;
+    //   }
+
+    //   if (dbg) {
+    //     log_trace(  "err = %e\n", sqrt(err));
+    //   }
+
+    //   double v_p_cp[3] = {_pt[0] - _pp[0], _pt[1] - _pp[1], _pt[2] - _pp[2]};
+    //   distance[_ipt] = PDM_DOT_PRODUCT (v_p_cp, v_p_cp);
+    // }
+
+    // free (closest_face);
+    // free (closest_point);
+    // free (inside_polygon);
   }
 
   free (pts_out);
@@ -1948,11 +2181,6 @@ _locate_in_polyhedron
   return 0;
 }
 
-
-
-
-
-
 /*============================================================================
  * Public function definitions
  *============================================================================*/
@@ -2013,7 +2241,7 @@ PDM_point_location_nodal
 
     int n_cell = 0;
     for (int isection = 0; isection < n_section; isection++) {
-      int n_elt = PDM_part_mesh_nodal_elmts_block_n_elt_get(pmne,
+      int n_elt = PDM_part_mesh_nodal_elmts_section_n_elt_get(pmne,
                                                             sections_id[isection],
                                                             ipart);
 
@@ -2033,11 +2261,11 @@ PDM_point_location_nodal
 
       int id_section = sections_id[isection];
 
-      int n_elt = PDM_part_mesh_nodal_elmts_block_n_elt_get(pmne,
+      int n_elt = PDM_part_mesh_nodal_elmts_section_n_elt_get(pmne,
                                                             id_section,
                                                             ipart);
 
-      PDM_Mesh_nodal_elt_t t_elt = PDM_part_mesh_nodal_elmts_block_type_get(pmne,
+      PDM_Mesh_nodal_elt_t t_elt = PDM_part_mesh_nodal_elmts_section_type_get(pmne,
                                                                             id_section);
 
       int *parent_num = PDM_part_mesh_nodal_elmts_parent_num_get(pmne,
@@ -2048,7 +2276,7 @@ PDM_point_location_nodal
         /* Polygonal section */
         int *connec_idx;
         int *connec;
-        PDM_part_mesh_nodal_elmts_block_poly2d_get(pmne,
+        PDM_part_mesh_nodal_elmts_section_poly2d_get(pmne,
                                                    id_section,
                                                    ipart,
                                                    &connec_idx,
@@ -2072,7 +2300,7 @@ PDM_point_location_nodal
         /* Polyhedral section */
         int *connec_idx;
         int *connec;
-        PDM_part_mesh_nodal_elmts_block_poly3d_cell_vtx_connect_get(pmne,
+        PDM_part_mesh_nodal_elmts_section_poly3d_cell_vtx_connect_get(pmne,
                                                                     id_section,
                                                                     ipart,
                                                                     &connec_idx,
@@ -2099,7 +2327,7 @@ PDM_point_location_nodal
               PDM_g_num_t *parent_entity_g_num = NULL;
               int          order               = 0;
         const char        *ho_ordering         = NULL;
-        PDM_part_mesh_nodal_elmts_block_std_ho_get(pmne,
+        PDM_part_mesh_nodal_elmts_section_std_ho_get(pmne,
                                                    id_section,
                                                    ipart,
                                                    &connec,
@@ -2150,11 +2378,11 @@ PDM_point_location_nodal
 
       int id_section = sections_id[isection];
 
-      int n_elt = PDM_part_mesh_nodal_elmts_block_n_elt_get(pmne,
+      int n_elt = PDM_part_mesh_nodal_elmts_section_n_elt_get(pmne,
                                                             id_section,
                                                             ipart);
 
-      PDM_Mesh_nodal_elt_t t_elt = PDM_part_mesh_nodal_elmts_block_type_get(pmne,
+      PDM_Mesh_nodal_elt_t t_elt = PDM_part_mesh_nodal_elmts_section_type_get(pmne,
                                                                             id_section);
 
       int *parent_num = PDM_part_mesh_nodal_elmts_parent_num_get(pmne,
@@ -2165,7 +2393,7 @@ PDM_point_location_nodal
         /* Polygonal section */
         int *connec_idx;
         int *connec;
-        PDM_part_mesh_nodal_elmts_block_poly2d_get(pmne,
+        PDM_part_mesh_nodal_elmts_section_poly2d_get(pmne,
                                                    id_section,
                                                    ipart,
                                                    &connec_idx,
@@ -2215,7 +2443,7 @@ PDM_point_location_nodal
         /* Polyhedral section */
         int *cell_vtx_idx;
         int *cell_vtx;
-        PDM_part_mesh_nodal_elmts_block_poly3d_cell_vtx_connect_get(pmne,
+        PDM_part_mesh_nodal_elmts_section_poly3d_cell_vtx_connect_get(pmne,
                                                                     id_section,
                                                                     ipart,
                                                                     &cell_vtx_idx,
@@ -2230,7 +2458,7 @@ PDM_point_location_nodal
         int         *_parent_num              = NULL;
         PDM_g_num_t *numabs                   = NULL;
         PDM_g_num_t *parent_entitity_ln_to_gn = NULL;
-        PDM_part_mesh_nodal_elmts_block_poly3d_get(pmne,
+        PDM_part_mesh_nodal_elmts_section_poly3d_get(pmne,
                                                    id_section,
                                                    ipart,
                                                    &n_face,
@@ -2352,7 +2580,7 @@ PDM_point_location_nodal
               PDM_g_num_t *parent_entity_g_num = NULL;
               int          order               = 0;
         const char        *ho_ordering         = NULL;
-        PDM_part_mesh_nodal_elmts_block_std_ho_get(pmne,
+        PDM_part_mesh_nodal_elmts_section_std_ho_get(pmne,
                                                    id_section,
                                                    ipart,
                                                    &connec,
@@ -2578,6 +2806,10 @@ PDM_point_location_nodal
                                                       order);
             double *elt_coord = malloc(sizeof(double) * n_node * 3);
 
+            int elt_dim = PDM_Mesh_nodal_elt_dim_get(t_elt);
+
+            double *work_array = malloc(sizeof(double) * n_node * (elt_dim+1));
+
             int *ijk_to_user = NULL;
             if (ho_ordering != NULL) {
               ijk_to_user = PDM_ho_ordering_ijk_to_user_get(ho_ordering,
@@ -2586,12 +2818,14 @@ PDM_point_location_nodal
               assert(ijk_to_user != NULL);
             }
 
-
+            int count           = 0;
+            int count_converged = 0;
             for (int ielt = 0; ielt < n_elt; ielt++) {
               int icell = ielt;
               if (parent_num != NULL) {
                 icell = parent_num[ielt];
               }
+              // log_trace("icell = %d\n", icell);
 
               int *_connec = connec + n_node*ielt;
               for (int idx_ijk = 0; idx_ijk < n_node; idx_ijk++) {
@@ -2604,15 +2838,48 @@ PDM_point_location_nodal
               }
 
               for (int idx_pt = pts_idx[ipart][icell]; idx_pt < pts_idx[ipart][icell+1]; idx_pt++) {
-                _distance[idx_pt] = PDM_ho_location(t_elt,
-                                                    order,
-                                                    n_node,
-                                                    elt_coord,
-                                   (const double *) pts_coord[ipart] + idx_pt * 3,
-                                                    _projected_coord + idx_pt * 3,
-                                                    _uvw             + idx_pt * 3);
+                count++;
+                // First, try Newton method
+                int converged = 0;
+                if (1) {
+                  _distance[idx_pt] = PDM_ho_location_newton(t_elt,
+                                                             order,
+                                                             n_node,
+                                                             elt_coord,
+                                            (const double *) pts_coord[ipart] + idx_pt * 3,
+                                                             tolerance,
+                                                             _projected_coord + idx_pt * 3,
+                                                             _uvw             + idx_pt * 3,
+                                                             &converged,
+                                                             work_array);
+                }
+                // log_trace("converged? %d\n", converged);
+
+                if (converged) {
+                  count_converged++;
+                  // log_trace("Newton converged :D (%f %f %f)\n",
+                  //           pts_coord[ipart][3*idx_pt+0],
+                  //           pts_coord[ipart][3*idx_pt+1],
+                  //           pts_coord[ipart][3*idx_pt+2]);
+                }
+                else {
+                  // log_trace("Newton HO failed to converge! (%f %f %f)\n",
+                  //           pts_coord[ipart][3*idx_pt+0],
+                  //           pts_coord[ipart][3*idx_pt+1],
+                  //           pts_coord[ipart][3*idx_pt+2]);
+                  // Newton failed to converge, try more robust method
+                  _distance[idx_pt] = PDM_ho_location(t_elt,
+                                                      order,
+                                                      n_node,
+                                                      elt_coord,
+                                     (const double *) pts_coord[ipart] + idx_pt * 3,
+                                                      _projected_coord + idx_pt * 3,
+                                                      _uvw             + idx_pt * 3);
+                }
+                // log_trace("dist2 = %e\n", _distance[idx_pt]);
 
               } // End of loop on current elt's points
+
 
               int idx_pt0 = pts_idx[ipart][icell];
               PDM_ho_basis(t_elt,
@@ -2623,7 +2890,9 @@ PDM_point_location_nodal
                            _bar_coord + _bar_coord_idx[idx_pt0]);
 
             } // End of loop on elt
+            // log_trace("%d converged / %d\n", count_converged, count);
             free(elt_coord);
+            free(work_array);
             break;
           } // end case HO LAGRANGE
 

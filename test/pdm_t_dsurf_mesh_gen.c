@@ -965,7 +965,7 @@ char *argv[]
   int              n_partA   = 1;
 
   int              post    = 0;
-  PDM_part_split_t method  = PDM_PART_SPLIT_PARMETIS;
+  PDM_part_split_t method  = PDM_PART_SPLIT_HILBERT;
   int              haveRandom = 1;
   int              randomTimeInit = 0;
 

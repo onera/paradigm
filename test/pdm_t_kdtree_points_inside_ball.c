@@ -215,7 +215,7 @@ char *argv[]
   }
   else {
     PDM_dmesh_nodal_t *dmn = PDM_reader_stl_dmesh_nodal(comm,
-                                                        "/stck/bandrieu/Public/CAD/dragon_fine2.stl");
+                                                        "meshes/sphere.stl");
 
     const PDM_g_num_t *distrib = PDM_DMesh_nodal_distrib_vtx_get(dmn);
 
@@ -307,18 +307,18 @@ char *argv[]
                               NULL);
   }
 
-  log_trace("> Kdtree\n");
-  for (int i = 0; i < n_tgt; i++) {
-    log_trace("point %d (%f %f %f): n_pib = %d\n",
-              i,
-              tgt_coord[3*i], tgt_coord[3*i+1], tgt_coord[3*i+2],
-              pts_inside_ball_idx[i+1] - pts_inside_ball_idx[i]);
-    for (int j = pts_inside_ball_idx[i]; j < pts_inside_ball_idx[i+1]; j++) {
-      log_trace("  l_num %d, at dist2 %f / %f\n",
-                pts_inside_ball_l_num[j],
-                pts_inside_ball_dist2[j], ball_radius2[i]);
-    }
-  }
+  // log_trace("> Kdtree\n");
+  // for (int i = 0; i < n_tgt; i++) {
+  //   log_trace("point %d (%f %f %f): n_pib = %d\n",
+  //             i,
+  //             tgt_coord[3*i], tgt_coord[3*i+1], tgt_coord[3*i+2],
+  //             pts_inside_ball_idx[i+1] - pts_inside_ball_idx[i]);
+  //   for (int j = pts_inside_ball_idx[i]; j < pts_inside_ball_idx[i+1]; j++) {
+  //     log_trace("  l_num %d, at dist2 %f / %f\n",
+  //               pts_inside_ball_l_num[j],
+  //               pts_inside_ball_dist2[j], ball_radius2[i]);
+  //   }
+  // }
   free(pts_inside_ball_idx);
   free(pts_inside_ball_l_num);
   free(pts_inside_ball_dist2);
@@ -346,20 +346,20 @@ char *argv[]
                                      &pts_inside_ball_l_num,
                                      &pts_inside_ball_dist2);
 
-  log_trace("> Octree\n");
-  for (int i = 0; i < n_tgt; i++) {
-    log_trace("point %d (%f %f %f): n_pib = %d\n",
-              i,
-              tgt_coord[3*i], tgt_coord[3*i+1], tgt_coord[3*i+2],
-              pts_inside_ball_idx[i+1] - pts_inside_ball_idx[i]);
-    for (int j = pts_inside_ball_idx[i]; j < pts_inside_ball_idx[i+1]; j++) {
-      // log_trace("  cloud %d, id %d, at dist2 %f / %f\n",
-                // pts_inside_ball_l_num[2*j], pts_inside_ball_l_num[2*j+1],
-      log_trace("  l_num %d, at dist2 %f / %f\n",
-                pts_inside_ball_l_num[2*j+1],
-                pts_inside_ball_dist2[j], ball_radius2[i]);
-    }
-  }
+  // log_trace("> Octree\n");
+  // for (int i = 0; i < n_tgt; i++) {
+  //   log_trace("point %d (%f %f %f): n_pib = %d\n",
+  //             i,
+  //             tgt_coord[3*i], tgt_coord[3*i+1], tgt_coord[3*i+2],
+  //             pts_inside_ball_idx[i+1] - pts_inside_ball_idx[i]);
+  //   for (int j = pts_inside_ball_idx[i]; j < pts_inside_ball_idx[i+1]; j++) {
+  //     // log_trace("  cloud %d, id %d, at dist2 %f / %f\n",
+  //               // pts_inside_ball_l_num[2*j], pts_inside_ball_l_num[2*j+1],
+  //     log_trace("  l_num %d, at dist2 %f / %f\n",
+  //               pts_inside_ball_l_num[2*j+1],
+  //               pts_inside_ball_dist2[j], ball_radius2[i]);
+  //   }
+  // }
 
   // /* Brute force check */
   // for (int itgt = 0; itgt < n_tgt; itgt++) {
@@ -390,13 +390,13 @@ char *argv[]
                                  closest_octree_pt_dist2);
 
 
-    for (int i = 0; i < n_tgt; i++) {
-      log_trace("%5d : %5d %5d %f / %5d %5d %f\n",
-                i,
-                // closest_kdtree_pt_id[2*i], closest_kdtree_pt_id[2*i+1], closest_kdtree_pt_dist2[i],
-                0, closest_kdtree_pt_id[i], closest_kdtree_pt_dist2[i],
-                closest_octree_pt_id[2*i], closest_octree_pt_id[2*i+1], closest_octree_pt_dist2[i]);
-    }
+    // for (int i = 0; i < n_tgt; i++) {
+    //   log_trace("%5d : %5d %5d %f / %5d %5d %f\n",
+    //             i,
+    //             // closest_kdtree_pt_id[2*i], closest_kdtree_pt_id[2*i+1], closest_kdtree_pt_dist2[i],
+    //             0, closest_kdtree_pt_id[i], closest_kdtree_pt_dist2[i],
+    //             closest_octree_pt_id[2*i], closest_octree_pt_id[2*i+1], closest_octree_pt_dist2[i]);
+    // }
 
     free(closest_kdtree_pt_id);
     free(closest_kdtree_pt_dist2);

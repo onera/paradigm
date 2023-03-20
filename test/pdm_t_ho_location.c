@@ -336,7 +336,7 @@ _compute_uvw
   double dist;
   double a[3][3], b[3], x[3];
 
-  log_trace("\ntarget: %f %f %f\n", point_coords[0], point_coords[1], point_coords[2]);
+  // log_trace("\ntarget: %f %f %f\n", point_coords[0], point_coords[1], point_coords[2]);
 
 
   /* Get number of nodes */
@@ -409,9 +409,9 @@ _compute_uvw
       }
 
     }
-    log_trace("current: %f %f %f,  res_xyz = %e\n",
-              b[0] + point_coords[0], b[1] + point_coords[1], b[2] + point_coords[2],
-              PDM_MODULE(b));
+    // log_trace("current: %f %f %f,  res_xyz = %e\n",
+    //           b[0] + point_coords[0], b[1] + point_coords[1], b[2] + point_coords[2],
+    //           PDM_MODULE(b));
 
     if (_solve_3x3(a, b, x) == PDM_FALSE) {
       printf("_compute_uvw: singular matrix\n");
@@ -425,10 +425,10 @@ _compute_uvw
       uvw[i] += x[i];
     }
 
-    log_trace("iter %d, dist = %e\n", iter, dist);
+    // log_trace("iter %d, dist = %e\n", iter, dist);
 
     if (dist <= tolerance2) {
-      log_trace("converged :) %e %e %e\n", uvw[0], uvw[1], uvw[2]);
+      // log_trace("converged :) %e %e %e\n", uvw[0], uvw[1], uvw[2]);
 
       free(weight    );
       free(dweight_du);
@@ -796,7 +796,8 @@ int main(int argc, char *argv[])
                                     pts_coord  + 3*i,
                                     proj_coord + 3*i,
                                     pts_uvw    + elt_dim*i);
-      log_trace("i = %d, dist = %e\n", i, dist);
+      PDM_UNUSED(dist);
+      // log_trace("i = %d, dist = %e\n", i, dist);
     }
   }
 
@@ -872,9 +873,9 @@ int main(int argc, char *argv[])
     field_max  = PDM_MAX(field_max, PDM_ABS(proj_field[i]));
     double err = PDM_ABS(proj_field[i] - interp_field[i]);
     err_max = PDM_MAX(err_max, err);
-    log_trace("i = %d, %f %f %f, dist = %e, err = %e\n", i, p[0], p[1], p[2], dist, err);
+    // log_trace("i = %d, %f %f %f, dist = %e, err = %e\n", i, p[0], p[1], p[2], dist, err);
   }
-  log_trace("max field = %e\n", field_max);
+  // log_trace("max field = %e\n", field_max);
 
   printf("err_max = %e, relative = %e\n", err_max, err_max/field_max);
 
@@ -961,7 +962,7 @@ int main(int argc, char *argv[])
   int *ijk_to_user = PDM_ho_ordering_ijk_to_user_get("PDM_HO_ORDERING_VTK",
                                                      t_elt,
                                                      order);
-  PDM_log_trace_array_int(ijk_to_user, n_node, "ijk_to_user : ");
+  // PDM_log_trace_array_int(ijk_to_user, n_node, "ijk_to_user : ");
 
   for (int i = 0; i < n_node; i++) {
     connec[ijk_to_user[i]] = i + 1;

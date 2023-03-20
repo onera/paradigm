@@ -240,13 +240,7 @@ int main
   // 7 -> prism
   // 8 -> hexa
 
-#ifdef PDM_HAVE_PARMETIS
-  PDM_split_dual_t method  = PDM_SPLIT_DUAL_WITH_PARMETIS;
-#else
-#ifdef PDM_HAVE_PTSCOTCH
-  PDM_split_dual_t method  = PDM_SPLIT_DUAL_WITH_PTSCOTCH;
-#endif
-#endif
+  PDM_split_dual_t method  = PDM_SPLIT_DUAL_WITH_HILBERT;
 
   /*
    *  Read args

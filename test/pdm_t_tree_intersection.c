@@ -593,10 +593,10 @@ main
   t2 = PDM_MPI_Wtime();
   double t_intersection = t2 - t1;
   printf("PDM_tree_intersection_point_box : %12.5es\n", t2 - t1);
-  PDM_log_trace_connectivity_int(box_pts_idx,
-                                 box_pts,
-                                 n_box,
-                                 "box_pts0 : ");
+  // PDM_log_trace_connectivity_int(box_pts_idx,
+  //                                box_pts,
+  //                                n_box,
+  //                                "box_pts0 : ");
 
   if (visu) {
     PDM_g_num_t *box_pts_g_num = malloc(sizeof(PDM_g_num_t) * box_pts_idx[n_box]);
@@ -730,10 +730,10 @@ main
   t2 = PDM_MPI_Wtime();
   double t_intersection2 = t2 - t1;
   printf("PDM_tree_intersection_point_box2: %12.5es\n", t2 - t1);
-  PDM_log_trace_connectivity_int(box_pts_idx3,
-                                 box_pts3,
-                                 n_box,
-                                 "box_pts3 : ");
+  // PDM_log_trace_connectivity_int(box_pts_idx3,
+  //                                box_pts3,
+  //                                n_box,
+  //                                "box_pts3 : ");
 
 
   printf("Total intersection : %12.5es\n", t_point_tree + t_box_tree + t_intersection);
@@ -744,7 +744,7 @@ main
   PDM_point_tree_seq_free(pbtree);
 
 
-  if (1) {
+  if (0) {
     // Check
     int n_err = 0;
     for (int i = 0; i < n_box; i++) {

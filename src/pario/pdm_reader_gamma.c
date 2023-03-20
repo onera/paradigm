@@ -6,7 +6,9 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdint.h>
+#include <assert.h>
 #include <sys/types.h>
+#include <limits.h>
 
 /*----------------------------------------------------------------------------
  *  Header for the current file
@@ -47,6 +49,24 @@
 /*=============================================================================
  * Private function prototypes
  *============================================================================*/
+
+static void _shift_groups
+(
+ const int  n_elt,
+       int *elt_group
+ )
+{
+  int min_group = INT_MAX;
+
+  for (int i = 0; i < n_elt; i++) {
+    min_group = PDM_MIN(min_group, elt_group[i]);
+  }
+
+  for (int i = 0; i < n_elt; i++) {
+    elt_group[i] += 1 - min_group;
+  }
+}
+
 
 /*=============================================================================
  * Public function prototypes
@@ -302,6 +322,13 @@ PDM_reader_gamma_dmesh_nodal
       }
     }
 
+    if (1) {
+      /* Shift groups */
+      _shift_groups((int) gn_edge,  gedge_group);
+      _shift_groups((int) gn_tria,  gtria_group);
+      _shift_groups((int) gn_tetra, gtetra_group);
+    }
+
     if (0) {
       log_trace("dim = %d\n", dim);
       log_trace("gn_vtx = "PDM_FMT_G_NUM"\n", gn_vtx);
@@ -383,14 +410,16 @@ PDM_reader_gamma_dmesh_nodal
                                                              distrib_edge,
                                                              comm);
   PDM_g_num_t *dedge_vtx = NULL;
-  PDM_block_to_block_exch(btb_edge,
-                          sizeof(PDM_g_num_t),
-                          PDM_STRIDE_CST_INTERLACED,
-                          2,
-                          NULL,
-                (void  *) gedge_vtx,
-                          NULL,
-                (void **) &dedge_vtx);
+  if (gn_edge > 0) {
+    PDM_block_to_block_exch(btb_edge,
+                            sizeof(PDM_g_num_t),
+                            PDM_STRIDE_CST_INTERLACED,
+                            2,
+                            NULL,
+                  (void  *) gedge_vtx,
+                            NULL,
+                  (void **) &dedge_vtx);
+  }
 
   int *dedge_group = NULL;
   PDM_block_to_block_exch(btb_edge,
@@ -410,14 +439,16 @@ PDM_reader_gamma_dmesh_nodal
                                                              comm);
 
   PDM_g_num_t *dtria_vtx = NULL;
-  PDM_block_to_block_exch(btb_tria,
-                          sizeof(PDM_g_num_t),
-                          PDM_STRIDE_CST_INTERLACED,
-                          3,
-                          NULL,
-                (void *)  gtria_vtx,
-                          NULL,
-                (void **) &dtria_vtx);
+  if (gn_tria > 0) {
+    PDM_block_to_block_exch(btb_tria,
+                            sizeof(PDM_g_num_t),
+                            PDM_STRIDE_CST_INTERLACED,
+                            3,
+                            NULL,
+                  (void *)  gtria_vtx,
+                            NULL,
+                  (void **) &dtria_vtx);
+  }
 
   int *dtria_group = NULL;
   PDM_block_to_block_exch(btb_tria,
@@ -437,14 +468,16 @@ PDM_reader_gamma_dmesh_nodal
                                                               comm);
 
   PDM_g_num_t *dtetra_vtx = NULL;
-  PDM_block_to_block_exch(btb_tetra,
-                          sizeof(PDM_g_num_t),
-                          PDM_STRIDE_CST_INTERLACED,
-                          4,
-                          NULL,
-                (void  *) gtetra_vtx,
-                          NULL,
-                (void **) &dtetra_vtx);
+  if (gn_tetra > 0) {
+    PDM_block_to_block_exch(btb_tetra,
+                            sizeof(PDM_g_num_t),
+                            PDM_STRIDE_CST_INTERLACED,
+                            4,
+                            NULL,
+                  (void  *) gtetra_vtx,
+                            NULL,
+                  (void **) &dtetra_vtx);
+  }
 
   // int *dtetra_group = NULL;
   // PDM_block_to_block_exch(btb_tetra,
@@ -465,14 +498,16 @@ PDM_reader_gamma_dmesh_nodal
                                                               comm);
 
   PDM_g_num_t *dpyra_vtx = NULL;
-  PDM_block_to_block_exch(btb_pyra,
-                          sizeof(PDM_g_num_t),
-                          PDM_STRIDE_CST_INTERLACED,
-                          5,
-                          NULL,
-                (void  *) gpyra_vtx,
-                          NULL,
-                (void **) &dpyra_vtx);
+  if (gn_pyra > 0) {
+    PDM_block_to_block_exch(btb_pyra,
+                            sizeof(PDM_g_num_t),
+                            PDM_STRIDE_CST_INTERLACED,
+                            5,
+                            NULL,
+                  (void  *) gpyra_vtx,
+                            NULL,
+                  (void **) &dpyra_vtx);
+  }
 
   // int *dpyra_group = NULL;
   // PDM_block_to_block_exch(btb_pyra,
@@ -493,14 +528,16 @@ PDM_reader_gamma_dmesh_nodal
                                                               comm);
 
   PDM_g_num_t *dprism_vtx = NULL;
-  PDM_block_to_block_exch(btb_prism,
-                          sizeof(PDM_g_num_t),
-                          PDM_STRIDE_CST_INTERLACED,
-                          6,
-                          NULL,
-                (void  *) gprism_vtx,
-                          NULL,
-                (void **) &dprism_vtx);
+  if (gn_prism > 0) {
+    PDM_block_to_block_exch(btb_prism,
+                            sizeof(PDM_g_num_t),
+                            PDM_STRIDE_CST_INTERLACED,
+                            6,
+                            NULL,
+                  (void  *) gprism_vtx,
+                            NULL,
+                  (void **) &dprism_vtx);
+  }
 
   // int *dprism_group = NULL;
   // PDM_block_to_block_exch(btb_prism,
@@ -521,14 +558,16 @@ PDM_reader_gamma_dmesh_nodal
                                                               comm);
 
   PDM_g_num_t *dhexa_vtx = NULL;
-  PDM_block_to_block_exch(btb_hexa,
-                          sizeof(PDM_g_num_t),
-                          PDM_STRIDE_CST_INTERLACED,
-                          8,
-                          NULL,
-                (void  *) ghexa_vtx,
-                          NULL,
-                (void **) &dhexa_vtx);
+  if (gn_hexa > 0) {
+    PDM_block_to_block_exch(btb_hexa,
+                            sizeof(PDM_g_num_t),
+                            PDM_STRIDE_CST_INTERLACED,
+                            8,
+                            NULL,
+                  (void  *) ghexa_vtx,
+                            NULL,
+                  (void **) &dhexa_vtx);
+  }
 
   // int *dhexa_group = NULL;
   // PDM_block_to_block_exch(btb_hexa,
@@ -605,13 +644,17 @@ PDM_reader_gamma_dmesh_nodal
 
   /* Sections */
   dmn->ridge->n_g_elmts = gn_edge;
-  int id_section_edge = PDM_DMesh_nodal_elmts_section_add(dmn->ridge,
-                                                          PDM_MESH_NODAL_BAR2);
-  PDM_DMesh_nodal_elmts_section_std_set(dmn->ridge,
-                                        id_section_edge,
-                                        dn_edge,
-                                        dedge_vtx,
-                                        PDM_OWNERSHIP_KEEP);
+  if (gn_edge > 0) {
+    int id_section_edge = PDM_DMesh_nodal_elmts_section_add(dmn->ridge,
+                                                            PDM_MESH_NODAL_BAR2);
+    PDM_DMesh_nodal_elmts_section_std_set(dmn->ridge,
+                                          id_section_edge,
+                                          dn_edge,
+                                          dedge_vtx,
+                                          PDM_OWNERSHIP_KEEP);
+  } else {
+    free(dedge_vtx);
+  }
 
 
   dmn->surfacic->n_g_elmts = gn_tria;
@@ -682,6 +725,7 @@ PDM_reader_gamma_dmesh_nodal
     _n_group_edge = PDM_MAX(_n_group_edge, dedge_group[i]);// refs are > 0 (?)
     dedge_group[i] -= 1;
   }
+  // PDM_log_trace_array_int(dedge_group, dn_edge, "dedge_group : ");
 
   int n_group_edge;
   PDM_MPI_Allreduce(&_n_group_edge, &n_group_edge, 1, PDM_MPI_INT, PDM_MPI_MAX, comm);
@@ -690,13 +734,15 @@ PDM_reader_gamma_dmesh_nodal
 
   int         *dgroup_edge_idx = NULL;
   PDM_g_num_t *dgroup_edge     = NULL;
-  PDM_dentity_group_transpose(n_group_edge,
+  if(n_group_edge > 0) {
+    PDM_dentity_group_transpose(n_group_edge,
                               dedge_group_idx,
                               dedge_group,
                               distrib_edge,
                               &dgroup_edge_idx,
                               &dgroup_edge,
                               dmn->comm);
+  }
   free(dedge_group_idx);
   free(dedge_group);
 
@@ -752,4 +798,196 @@ PDM_reader_gamma_dmesh_nodal
   free(distrib_hexa );
 
   return dmn;
+}
+
+
+
+void
+PDM_write_meshb
+(
+  const char   *filename,
+  const int     n_vtx,
+  const int     n_tetra,
+  const int     n_tri,
+  const int     n_edge,
+  const double *vtx_coords,
+  const int    *vtx_tags,
+  const int    *tetra_vtx,
+  const int    *tetra_tag,
+  const int    *tria_vtx,
+  const int    *tria_tag,
+  const int    *edge_vtx,
+  const int    *edge_tag
+)
+{
+  // Write file
+  FILE *f = fopen(filename, "w");
+
+  fprintf(f, "MeshVersionFormatted 2\n");
+  fprintf(f, "# rank %d\n\n", 0);
+  fprintf(f, "Dimension\n3\n\n");
+
+  fprintf(f, "Vertices\n%d\n", n_vtx);
+  for (int i = 0; i < n_vtx; i++) {
+    fprintf(f, "%20.16lf %20.16lf %20.16lf %i\n",
+            vtx_coords[3*i  ],
+            vtx_coords[3*i+1],
+            vtx_coords[3*i+2],
+            vtx_tags[i]);
+  }
+
+  fprintf(f, "Tetrahedra\n%d\n", n_tetra);
+  for (int i = 0; i < n_tetra; i++) {
+    fprintf(f, "%d %d %d %d %i\n",
+            tetra_vtx[4*i  ],
+            tetra_vtx[4*i+1],
+            tetra_vtx[4*i+2],
+            tetra_vtx[4*i+3],
+            tetra_tag[i]);
+  }
+
+  fprintf(f, "Triangles\n%d\n", n_tri);
+  for (int i = 0; i < n_tri; i++) {
+    fprintf(f, "%d %d %d %i\n",
+            tria_vtx[3*i    ],
+            tria_vtx[3*i + 1],
+            tria_vtx[3*i + 2],
+            tria_tag[i]);
+  }
+  fprintf(f, "End\n");
+
+  fprintf(f, "Edges\n%d\n", n_edge);
+  for (int i = 0; i < n_edge; i++) {
+    fprintf(f, "%d %d %i\n",
+            edge_vtx[2*i    ],
+            edge_vtx[2*i + 1],
+            edge_tag[i]);
+  }
+  fprintf(f, "End\n");
+  fclose(f);
+}
+
+
+
+
+void
+PDM_write_gamma_sol
+(
+  const char   *filename,
+  const int     n_vtx,
+  const int     n_field,
+  const double *fields
+)
+{
+  PDM_UNUSED(n_field);
+  // Write file
+  FILE *f = fopen(filename, "w");
+
+  fprintf(f, "MeshVersionFormatted 2\n");
+  fprintf(f, "# rank %d\n\n", 0);
+  fprintf(f, "Dimension\n3\n\n");
+  fprintf(f, "SolAtVertices\n%d\n", n_vtx);
+
+  fprintf(f, "%i ", n_field);
+  for (int i_field = 0; i_field < n_field; i_field++) {
+    fprintf(f, "1 ");
+  }
+  fprintf(f, "\n");
+  for (int i = 0; i < n_vtx; i++) {
+    for(int i_field = 0; i_field < n_field; ++i_field) {
+      fprintf(f, "%20.16lf ", fields[n_field*i+i_field]);
+    }
+    fprintf(f, " \n");
+  }
+  fprintf(f, "End\n");
+  fclose(f);
+}
+
+
+void
+PDM_write_gamma_matsym
+(
+  const char   *filename,
+  const int     n_vtx,
+  const double *fields
+)
+{
+  // Write file
+  FILE *f = fopen(filename, "w");
+
+  fprintf(f, "MeshVersionFormatted 2\n");
+  fprintf(f, "# rank %d\n\n", 0);
+  fprintf(f, "Dimension\n3\n\n");
+  fprintf(f, "SolAtVertices\n%d\n", n_vtx);
+
+  fprintf(f, "1 3 \n");
+  for (int i = 0; i < n_vtx; i++) {
+    for(int i_field = 0; i_field < 6; ++i_field) {
+      fprintf(f, "%20.16lf ", fields[6*i+i_field]);
+    }
+    fprintf(f, " \n");
+  }
+  fprintf(f, "End\n");
+  fclose(f);
+}
+
+/* https://pyamg.saclay.inria.fr/download/vizir/vizir4_user_guide.pdf*/
+void
+PDM_read_gamma_sol
+(
+  const char   *filename,
+  const int     n_vtx,
+  const int     n_field,
+        double *fields
+)
+{
+  PDM_UNUSED(n_field);
+
+  // Read file
+  FILE *f = fopen(filename, "r");
+
+  char line[999];
+
+  // double *lfield = fields[0];
+
+  while (1) {
+
+    int stat = fscanf(f, "%s", line);
+
+    if (stat == EOF) {
+      // End of file
+      break;
+    }
+
+    if (strstr(line, "SolAtVertices") != NULL) {
+      long _gn_vtx;
+      fscanf(f, "%ld", &_gn_vtx);
+      // assert(_gn_vtx == n_vtx);
+
+      long _n_field = -1;
+      long _i_kind = -1;
+      fscanf(f, "%ld", &_n_field);
+      for (int i_field = 0; i_field < n_field; i_field++) {
+        fscanf(f, "%ld", &_i_kind);
+      }
+
+      printf("n_field  = %i \n", (int)n_field);
+      printf("_n_field = %i \n", (int)_n_field);
+      printf("n_vtx    = %i \n", (int)n_vtx);
+      printf("_gn_vtx  = %i \n", (int)_gn_vtx);
+      printf("_i_kind  = %i \n", (int)_i_kind);
+
+      // assert(n_field == _n_field);
+
+
+      for (int i = 0; i < n_vtx; i++) {
+        for (int i_field = 0; i_field < n_field; i_field++) {
+          fields[n_field*i + i_field] = -(n_field*i + i_field);
+          fscanf(f, "%lf", &fields[n_field*i + i_field]);
+          // log_trace("fields[n_field*i + i_field] = %lf \n", fields[n_field*i + i_field]);
+        }
+      }
+    }
+  }
+  fclose(f);
 }

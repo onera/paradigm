@@ -11,7 +11,7 @@
  *----------------------------------------------------------------------------*/
 
 #include "pdm.h"
-#include "pdm_mesh_nodal.h"
+#include "pdm_part_mesh_nodal.h"
 #include "pdm_timer.h"
 #include "pdm_part_to_part.h"
 
@@ -93,9 +93,11 @@ struct _pdm_mesh_location_t {
 
   PDM_mesh_nature_t mesh_nature;  /*!< Nature of the mesh */
 
+  int mesh_dimension;
+
   int  shared_nodal;   /*!< 1 if mesh nodal is shared, 0 otherwise */
-  PDM_Mesh_nodal_t*  mesh_nodal;  /*!< Mesh identifier */
-  PDM_Mesh_nodal_t* _mesh_nodal;
+  PDM_part_mesh_nodal_t*  mesh_nodal;  /*!< Mesh identifier */
+  PDM_part_mesh_nodal_t* _mesh_nodal;
   PDM_l_num_t **face_vtx_n; /* Mandatory to build mesh nodal */
   PDM_l_num_t **cell_face_n; /* Mandatory to build mesh nodal */
   PDM_l_num_t **cell_vtx_idx;

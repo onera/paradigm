@@ -99,6 +99,10 @@ struct _pdm_closest_point_t {
   double times_cpu_s[NTIMER];                   /*!< System CPU time */
 
 
+  PDM_part_to_part_t *ptp; /*!< To exchange data between src and tgt point clouds (both in user frame) */
+  PDM_ownership_t     ptp_ownership;
+
+
 } ;
 
 

@@ -135,7 +135,9 @@ _read_args(int            argc,
  * \brief  Main
  *
  */
-
+// @@@param[n_proc] : 1,2,3,4
+// @@@param[n] : 30,60
+// @@@args[part_kind] : -parmetis
 int main(int argc, char *argv[])
 {
 
@@ -147,15 +149,7 @@ int main(int argc, char *argv[])
   double        length    = 1.;
   int           n_part    = 1;
   int           post      = 0;
-#ifdef PDM_HAVE_PARMETIS
-  PDM_part_split_t method  = PDM_PART_SPLIT_PARMETIS;
-#else
-#ifdef PDM_HAVE_PTSCOTCH
-  PDM_part_split_t method  = PDM_PART_SPLIT_PTSCOTCH;
-#else
   PDM_part_split_t method  = PDM_PART_SPLIT_HILBERT;
-#endif
-#endif
 
   /*
    *  Read args

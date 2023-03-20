@@ -695,12 +695,17 @@ _insertion_sort
  PDM_g_num_t       *array_g_num
  )
 {
+  for (int j = 0; j < n; j++) {
+    if (g_num == array_g_num[j]) {
+      return;
+    }
+  }
   int i = _binary_search_double (dist2,
                                  array_dist2,
                                  n);
-  if (array_g_num[i] == g_num) {
-    return;
-  }
+  // if (array_g_num[i] == g_num) {
+  //   return;
+  // }
 
   for (int j = n-1; j > i; j--) {
     array_dist2[j] = array_dist2[j-1];
@@ -4578,6 +4583,11 @@ _closest_points_explicit
     double      *_closest_pt_dist2 = closest_points_dist2 + n_closest_points*itgt;
     double *last_closest_pt_dist2 = _closest_pt_dist2 + n_closest_points - 1;
 
+    // int dbg_enabled = (point[0] < 0.6 && point[0] >  0.4 &&
+    //                    point[1] < 0.1 && point[1] > -0.1 &&
+    //                    point[2] < 1.1 && point[2] >  0.9);
+    int dbg_enabled = 0;
+
     node_inside = _box_min_dist2 (dim,
                                   nodes->pts_extents,
                                   point,
@@ -4608,7 +4618,7 @@ _closest_points_explicit
           /*
            * optimization: if n_points == 1, distance has already been computed
            */
-          if (leaves->n_points[leaf_id] == 0) {
+          if (leaves->n_points[leaf_id] == 0) {//?
             _insertion_sort (node_dist,
                              src_g_num[leaves->range[leaf_id]],
                              n_closest_points,
@@ -4623,11 +4633,28 @@ _closest_points_explicit
                                               point,
                                               src_coord + dim*j);
               if (dist2 < *last_closest_pt_dist2) {
+                if (dbg_enabled) {
+                  log_trace("insert src "PDM_FMT_G_NUM", dist2 = %20.16e\n", src_g_num[j], dist2);
+                  PDM_log_trace_array_long(_closest_pt_g_num,
+                                           n_closest_points,
+                                           "before : ");
+                  PDM_log_trace_array_double(_closest_pt_dist2,
+                                           n_closest_points,
+                                           "before : ");
+                }
                 _insertion_sort (dist2,
                                  src_g_num[j],
                                  n_closest_points,
                                  _closest_pt_dist2,
                                  _closest_pt_g_num);
+                if (dbg_enabled) {
+                  PDM_log_trace_array_long(_closest_pt_g_num,
+                                           n_closest_points,
+                                           "after  : ");
+                  PDM_log_trace_array_double(_closest_pt_dist2,
+                                           n_closest_points,
+                                           "after  : ");
+                }
               }
             }
           }
@@ -6437,6 +6464,12 @@ _export_nodes
     fprintf(f, "11\n");
   }
 
+  fprintf(f, "CELL_DATA %d\n", n_nodes);
+  fprintf(f, "SCALARS level int\n LOOKUP_TABLE default\n");
+  for (int inode = 0; inode < n_nodes; inode++) {
+    fprintf(f, "%d\n", (int) nodes[inode].L);
+  }
+
   fclose(f);
 }
 
@@ -7730,7 +7763,7 @@ PDM_para_octree_build
     /*
      * Dilate extents
      */
-    double max_range = 1e-12;
+    double max_range = 1e-12; // To handle case with degenerate extents
     for (int i = 0; i < dim; i++) {
       max_range = PDM_MAX (max_range,
                            _octree->global_extents[i+dim] - _octree->global_extents[i]);
@@ -9454,6 +9487,8 @@ PDM_para_octree_closest_points
     double *last_closest_pt_dist2 = _closest_pts_dist2 + (n_closest_points*(i+1) - 1);
     double *_coord = pts_coord1 + dim * i;
 
+    int dbg_enabled2 = (dbg_enabled && pts_g_num1[i] == 20);
+
     /* Find base leaf */
     int base = PDM_morton_binary_search (_octants->n_nodes,
                                          pts_code[i],
@@ -9466,11 +9501,28 @@ PDM_para_octree_closest_points
                                       _coord,
                                       _src_coord + dim*j);
       if (dist2 < *last_closest_pt_dist2) {
+        if (dbg_enabled2) {
+          log_trace("insert src "PDM_FMT_G_NUM", dist2 = %20.16e\n", _src_g_num[j], dist2);
+          PDM_log_trace_array_long(_closest_pts_g_num + n_closest_points*i,
+                                   n_closest_points,
+                                   "before : ");
+          PDM_log_trace_array_double(_closest_pts_dist2 + n_closest_points*i,
+                                     n_closest_points,
+                                     "before : ");
+        }
         _insertion_sort (dist2,
                          _src_g_num[j],
                          n_closest_points,
                          _closest_pts_dist2 + n_closest_points*i,
                          _closest_pts_g_num + n_closest_points*i);
+        if (dbg_enabled2) {
+          PDM_log_trace_array_long(_closest_pts_g_num + n_closest_points*i,
+                                   n_closest_points,
+                                   "after  : ");
+          PDM_log_trace_array_double(_closest_pts_dist2 + n_closest_points*i,
+                                     n_closest_points,
+                                     "after  : ");
+        }
       }
     }
   }
@@ -9584,7 +9636,15 @@ if (_octree->use_win_shared) {
 
 
   if (dbg_enabled) {
-    PDM_log_trace_array_long(_closest_pts_g_num, n_closest_points*n_pts1, "_closests_pt_g_num 1 : ");
+    // PDM_log_trace_array_long(_closest_pts_g_num, n_closest_points*n_pts1, "_closests_pt_g_num 1 : ");
+    log_trace("phase 1:\n");
+    for (int i = 0; i < n_pts1; i++) {
+      log_trace(PDM_FMT_G_NUM"  : ",
+              pts_g_num1[i]);
+      PDM_log_trace_array_long(_closest_pts_g_num + n_closest_points*i,
+                               n_closest_points,
+                               "");
+    }
   }
 
   if (n_rank == 1) {
@@ -9612,7 +9672,7 @@ if (_octree->use_win_shared) {
   int *part_stride = PDM_array_const_int(n_pts1, n_closest_points);
 
   int *block_stride = NULL;
-  double *block_closest_pts_dist2 = NULL;
+  double *tmp_block_closest_pts_dist2 = NULL;
   PDM_part_to_block_exch (ptb1,
                           sizeof(double),
                           PDM_STRIDE_VAR_INTERLACED,
@@ -9620,10 +9680,10 @@ if (_octree->use_win_shared) {
                           &part_stride,
                           (void **) &_closest_pts_dist2,
                           &block_stride,
-                          (void **) &block_closest_pts_dist2);
+                          (void **) &tmp_block_closest_pts_dist2);
   free (block_stride);
 
-  PDM_g_num_t *block_closest_pts_g_num = NULL;
+  PDM_g_num_t *tmp_block_closest_pts_g_num = NULL;
   PDM_part_to_block_exch (ptb1,
                           sizeof(PDM_g_num_t),
                           PDM_STRIDE_VAR_INTERLACED,
@@ -9631,38 +9691,120 @@ if (_octree->use_win_shared) {
                           &part_stride,
                           (void **) &_closest_pts_g_num,
                           &block_stride,
-                          (void **) &block_closest_pts_g_num);
+                          (void **) &tmp_block_closest_pts_g_num);
 
   /* Merge if multiple results */
-  int idx1 = 0, idx2 = 0;
   int n_pts_block = PDM_part_to_block_n_elt_block_get (ptb1);
+  PDM_g_num_t *block_g_num1 = PDM_part_to_block_block_gnum_get(ptb1);
+  double      *block_closest_pts_dist2 = malloc(sizeof(double     ) * n_pts_block * n_closest_points);
+  PDM_g_num_t *block_closest_pts_g_num = malloc(sizeof(PDM_g_num_t) * n_pts_block * n_closest_points);
+  // -->> A REPRENDRE
+  // int idx1 = 0, idx2 = 0;
+  // for (int i = 0; i < n_pts_block; i++) {
+  //   if (1) {//block_g_num1[i] == 20) {
+  //     log_trace("block_g_num1[%d] = "PDM_FMT_G_NUM"\n", i, block_g_num1[i]);
+  //     PDM_log_trace_array_long(block_closest_pts_g_num + idx1,
+  //                              block_stride[i],
+  //                              "before merge1 : ");
+  //     PDM_log_trace_array_double(block_closest_pts_dist2 + idx1,
+  //                                block_stride[i],
+  //                                "before merge1 : ");
+  //   }
+
+  //   if (block_stride[i] > n_closest_points) {
+  //     int *order = malloc (sizeof(int) * block_stride[i]);
+  //     for (int j = 0; j < block_stride[i]; j++) {
+  //       order[j] = j;
+  //     }
+
+  //     PDM_sort_double (block_closest_pts_dist2, order, block_stride[i]);
+
+  //     for (int j = 0; j < block_stride[i]; j++) {
+  //       block_closest_pts_dist2[idx2 + j] = block_closest_pts_dist2[idx1 + j];
+  //       block_closest_pts_g_num[idx2 + j] = block_closest_pts_g_num[idx1 + order[j]];
+  //     }
+  //     free (order);
+  //   }
+
+  //   else {
+  //     for (int j = 0; j < n_closest_points; j++) {
+  //       block_closest_pts_dist2[idx2 + j] = block_closest_pts_dist2[idx1 + j];
+  //       block_closest_pts_g_num[idx2 + j] = block_closest_pts_g_num[idx1 + j];
+  //     }
+  //   }
+
+  //   if (1) {//block_g_num1[i] == 20) {
+  //     // log_trace("block_g_num1[%d] = "PDM_FMT_G_NUM"\n", i, block_g_num1[i]);
+  //     PDM_log_trace_array_long(block_closest_pts_g_num + n_closest_points*i,
+  //                              n_closest_points,
+  //                              "after  merge1 : ");
+  //     PDM_log_trace_array_double(block_closest_pts_dist2 + n_closest_points*i,
+  //                                n_closest_points,
+  //                                "after  merge1 : ");
+  //   }
+
+  //   idx1 += block_stride[i];
+  //   idx2 += n_closest_points;
+  // }
+  // <<--
+  int idx = 0;
   for (int i = 0; i < n_pts_block; i++) {
-    if (block_stride[i] > n_closest_points) {
-      int *order = malloc (sizeof(int) * block_stride[i]);
-      for (int j = 0; j < block_stride[i]; j++) {
-        order[j] = j;
-      }
 
-      PDM_sort_double (block_closest_pts_dist2, order, block_stride[i]);
+    double      *__block_closest_pts_dist2 = block_closest_pts_dist2 + n_closest_points*i;
+    PDM_g_num_t *__block_closest_pts_g_num = block_closest_pts_g_num + n_closest_points*i;
 
-      for (int j = 0; j < block_stride[i]; j++) {
-        block_closest_pts_dist2[idx2 + j] = block_closest_pts_dist2[idx1 + j];
-        block_closest_pts_g_num[idx2 + j] = block_closest_pts_g_num[idx1 + order[j]];
-      }
-      free (order);
+    for (int j = 0; j < n_closest_points; j++) {
+      __block_closest_pts_dist2[j] = HUGE_VAL;
+      __block_closest_pts_g_num[j] = -1;
     }
 
-    else {
-      for (int j = 0; j < n_closest_points; j++) {
-        block_closest_pts_dist2[idx2 + j] = block_closest_pts_dist2[idx1 + j];
-        block_closest_pts_g_num[idx2 + j] = block_closest_pts_g_num[idx1 + j];
+    int dbg_enabled2 = 0;
+
+    for (int j = 0; j < block_stride[i]; j++) {
+      if (tmp_block_closest_pts_dist2[idx] < __block_closest_pts_dist2[n_closest_points-1]) {
+        assert (tmp_block_closest_pts_g_num[idx] > 0);//
+        if (dbg_enabled2) {
+          log_trace("insert src "PDM_FMT_G_NUM", dist2 = %20.16e\n",
+                    tmp_block_closest_pts_g_num[idx],
+                    tmp_block_closest_pts_dist2[idx]);
+          PDM_log_trace_array_long(__block_closest_pts_g_num,
+                                   n_closest_points,
+                                   "before : ");
+          PDM_log_trace_array_double(__block_closest_pts_dist2,
+                                     n_closest_points,
+                                     "before : ");
+        }
+
+        _insertion_sort (tmp_block_closest_pts_dist2[idx],
+                         tmp_block_closest_pts_g_num[idx],
+                         n_closest_points,
+                         __block_closest_pts_dist2,
+                         __block_closest_pts_g_num);
+
+        if (dbg_enabled2) {
+          PDM_log_trace_array_long(__block_closest_pts_g_num,
+                                   n_closest_points,
+                                   "after  : ");
+          PDM_log_trace_array_double(__block_closest_pts_dist2,
+                                     n_closest_points,
+                                     "after  : ");
+        }
+
       }
+      idx++;
     }
 
-    idx1 += block_stride[i];
-    idx2 += n_closest_points;
+    if (dbg_enabled2) {
+      PDM_log_trace_array_long(block_closest_pts_g_num + n_closest_points*i,
+                               n_closest_points,
+                               "after merge : ");
+      PDM_log_trace_array_double(block_closest_pts_dist2 + n_closest_points*i,
+                                 n_closest_points,
+                                 "after merge : ");
+    }
   }
-
+  free (tmp_block_closest_pts_dist2);
+  free (tmp_block_closest_pts_g_num);
   free (block_stride);
   free (part_stride);
 
@@ -10071,8 +10213,8 @@ if (_octree->use_win_shared) {
   free (send_coord);
 
   double *recv_closest_pt_dist2 = _closest_pts_dist22 + idx_pts2[1] * n_closest_points;
-  idx1 = 0;
-  idx2 = 0;
+  int idx1 = 0;
+  int idx2 = 0;
   for (int i = 0; i < n_pts_recv2; i++) {
     for (int j = 0; j < dim; j++) {
       recv_coord[idx1++] = recv_double[idx2++];
@@ -10154,7 +10296,15 @@ if (_octree->use_win_shared) {
   free (pts_coord2);
 
   if (dbg_enabled) {
-    PDM_log_trace_array_long(_closest_pts_g_num, n_closest_points*n_pts2, "_closest_pts_g_num 2 : ");
+    // PDM_log_trace_array_long(_closest_pts_g_num, n_closest_points*n_pts2, "_closest_pts_g_num 2 : ");
+    log_trace("phase 2:\n");
+    for (int i = 0; i < n_pts2; i++) {
+      log_trace(PDM_FMT_G_NUM"  : ",
+              pts_g_num2[i]);
+      PDM_log_trace_array_long(_closest_pts_g_num + n_closest_points*i,
+                               n_closest_points,
+                               "");
+    }
   }
 
   if (copied_ranks2 != NULL) {
@@ -10178,7 +10328,7 @@ if (_octree->use_win_shared) {
                                     _octree->comm);
   part_stride = PDM_array_const_int(n_pts2, n_closest_points);
 
-  double *tmp_block_closest_pts_dist2 = NULL;
+  tmp_block_closest_pts_dist2 = NULL;
   PDM_part_to_block_exch (ptb1,
                           sizeof(double),
                           PDM_STRIDE_VAR_INTERLACED,
@@ -10190,7 +10340,7 @@ if (_octree->use_win_shared) {
   free (block_stride);
   free (_closest_pts_dist22);
 
-  PDM_g_num_t *tmp_block_closest_pts_g_num = NULL;
+  tmp_block_closest_pts_g_num = NULL;
   PDM_part_to_block_exch (ptb1,
                           sizeof(PDM_g_num_t),
                           PDM_STRIDE_VAR_INTERLACED,
@@ -10203,25 +10353,66 @@ if (_octree->use_win_shared) {
   free (part_stride);
 
   /* Merge block data */
-  PDM_g_num_t *block_g_num1 = PDM_part_to_block_block_gnum_get (ptb1);
+  // PDM_g_num_t *block_g_num1 = PDM_part_to_block_block_gnum_get (ptb1);
+  block_g_num1 = PDM_part_to_block_block_gnum_get (ptb1);
   const int n_pts_block1 = PDM_part_to_block_n_elt_block_get (ptb1);
 
-  int idx = 0;
+  idx = 0;
   for (int i1 = 0; i1 < n_pts_block1; i1++) {
     int i = (int) (block_g_num1[i1] - block_distrib_idx[i_rank] - 1);
     double *last_closest_pt_dist2 = block_closest_pts_dist2 + (n_closest_points*(i+1) - 1);
+
+    int dbg_enabled2 = 0;
+
+    if (dbg_enabled2) {
+      log_trace("for pt "PDM_FMT_G_NUM" : \n", block_g_num1[i1]);
+      PDM_log_trace_array_long(tmp_block_closest_pts_g_num + idx,
+                               block_stride[i1],
+                               "closest gnum : ");
+      PDM_log_trace_array_double(tmp_block_closest_pts_dist2 + idx,
+                                 block_stride[i1],
+                                 "closest dist2 : ");
+    }
 
     // use more efficient method?
     for (int j = 0; j < block_stride[i1]; j++) {
       if (tmp_block_closest_pts_dist2[idx] < *last_closest_pt_dist2) {
         assert (tmp_block_closest_pts_g_num[idx] > 0);//
+        if (dbg_enabled2) {
+          log_trace("insert src "PDM_FMT_G_NUM", dist2 = %20.16e\n",
+                    tmp_block_closest_pts_g_num[idx],
+                    tmp_block_closest_pts_dist2[idx]);
+          PDM_log_trace_array_long(block_closest_pts_g_num + n_closest_points*i,
+                                   n_closest_points,
+                                   "before : ");
+          PDM_log_trace_array_double(block_closest_pts_dist2 + n_closest_points*i,
+                                   n_closest_points,
+                                   "before : ");
+        }
         _insertion_sort (tmp_block_closest_pts_dist2[idx],
                          tmp_block_closest_pts_g_num[idx],
                          n_closest_points,
                          block_closest_pts_dist2 + n_closest_points*i,
                          block_closest_pts_g_num + n_closest_points*i);
+        if (dbg_enabled2) {
+          PDM_log_trace_array_long(block_closest_pts_g_num + n_closest_points*i,
+                                   n_closest_points,
+                                   "after  : ");
+          PDM_log_trace_array_double(block_closest_pts_dist2 + n_closest_points*i,
+                                     n_closest_points,
+                                     "after  : ");
+        }
       }
       idx++;
+    }
+
+    if (dbg_enabled2) {
+      PDM_log_trace_array_long(block_closest_pts_g_num + n_closest_points*i,
+                               n_closest_points,
+                               "after merge : ");
+      PDM_log_trace_array_double(block_closest_pts_dist2 + n_closest_points*i,
+                                 n_closest_points,
+                                 "after merge : ");
     }
   }
   free (block_stride);

@@ -119,7 +119,11 @@ PDM_multipart_t      **_mpart
 
   double length = 1.;
   int n_part = 1;
-  PDM_split_dual_t part_method = PDM_SPLIT_DUAL_WITH_PARMETIS;
+  #ifdef PDM_HAVE_PARMETIS
+    PDM_split_dual_t part_method   = PDM_SPLIT_DUAL_WITH_PARMETIS;
+  #else
+    PDM_split_dual_t part_method   = PDM_SPLIT_DUAL_WITH_HILBERT;
+  #endif
 
   PDM_dcube_nodal_t *dcube = PDM_dcube_nodal_gen_create (comm,
                                                          n_vtx_seg,

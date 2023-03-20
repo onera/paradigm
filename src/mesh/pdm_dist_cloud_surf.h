@@ -9,7 +9,7 @@
 #include "pdm_mpi.h"
 #include "pdm_surf_mesh.h"
 #include "pdm_mesh_nodal.h"
-
+#include "pdm_part_mesh_nodal.h"
 /*----------------------------------------------------------------------------*/
 
 #ifdef	__cplusplus
@@ -112,7 +112,8 @@ void
 PDM_dist_cloud_surf_nodal_mesh_set
 (
  PDM_dist_cloud_surf_t *dist,
- PDM_Mesh_nodal_t      *mesh_nodal
+ PDM_part_mesh_nodal_t *mesh_nodal
+ // PDM_Mesh_nodal_t      *mesh_nodal
 );
 
 /**

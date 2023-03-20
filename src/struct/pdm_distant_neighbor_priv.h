@@ -56,6 +56,8 @@ struct _pdm_distant_neighbor_t {
   int           *distributed_part_idx; /*!< For each part the shift to apply on recv buffer
                                        * (size : n_partà )*/
 
+  int         **ind;
+
 };
 
 /*=============================================================================

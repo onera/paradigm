@@ -349,7 +349,7 @@ int main(int argc, char *argv[])
                             vol_radius,
                             &vol_dmn);
 
-  PDM_split_dual_t part_method = PDM_SPLIT_DUAL_WITH_PARMETIS;
+  PDM_split_dual_t part_method = PDM_SPLIT_DUAL_WITH_HILBERT;
   int n_zone                   = 1;
   int *n_part_zones            = (int *) malloc(sizeof(int) * n_zone);
   n_part_zones[0]              = n_part;

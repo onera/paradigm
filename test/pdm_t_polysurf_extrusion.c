@@ -24,6 +24,9 @@
 #include "pdm_error.h"
 #include "pdm_distrib.h"
 #include "pdm_geom_elem.h"
+#include "pdm_logging.h"
+#include "pdm_vtk.h"
+#include "pdm_dcube_gen.h"
 
 /*============================================================================
  * Type definitions
@@ -227,13 +230,7 @@ int main(int argc, char *argv[])
   int randomize   = 0;
   int random_seed = 0;
 
-#ifdef PDM_HAVE_PARMETIS
-  PDM_split_dual_t method  = PDM_SPLIT_DUAL_WITH_PARMETIS;
-#else
-#ifdef PDM_HAVE_PTSCOTCH
-  PDM_split_dual_t method  = PDM_SPLIT_DUAL_WITH_PTSCOTCH;
-#endif
-#endif
+  PDM_split_dual_t method  = PDM_SPLIT_DUAL_WITH_HILBERT;
 
   int use_multipart = 0;
 
@@ -290,33 +287,101 @@ int main(int argc, char *argv[])
   int         *dface_group_idx = NULL;
   PDM_g_num_t *dface_group     = NULL;
 
-  PDM_poly_vol_gen (comm,
-                    xmin,
-                    ymin,
-                    zmin,
-                    lengthx,
-                    lengthy,
-                    lengthz,
-                    nx,
-                    ny,
-                    nz,
-                    randomize,
-                    random_seed,
-                    &ng_cell,
-                    &ng_face,
-                    &ng_vtx,
-                    &n_face_group,
-                    &dn_cell,
-                    &dn_face,
-                    &dn_vtx,
-                    &dcell_face_idx,
-                    &dcell_face,
-                    &dface_cell,
-                    &dface_vtx_idx,
-                    &dface_vtx,
-                    &dvtx_coord,
-                    &dface_group_idx,
-                    &dface_group);
+  if (1) {
+    PDM_dcube_t *dcube = PDM_dcube_gen_init(comm,
+                                            nx,
+                                            lengthx,
+                                            xmin,
+                                            ymin,
+                                            zmin,
+                                            PDM_OWNERSHIP_USER);
+
+    int sface_vtx;
+    int sface_group;
+    PDM_dcube_gen_dim_get(dcube,
+                          &n_face_group,
+                          &dn_cell,
+                          &dn_face,
+                          &dn_vtx,
+                          &sface_vtx,
+                          &sface_group);
+
+    PDM_dcube_gen_data_get(dcube,
+                           &dface_cell,
+                           &dface_vtx_idx,
+                           &dface_vtx,
+                           &dvtx_coord,
+                           &dface_group_idx,
+                           &dface_group);
+
+    PDM_dcube_gen_free(dcube);
+  }
+  else {
+    PDM_poly_vol_gen (comm,
+                      xmin,
+                      ymin,
+                      zmin,
+                      lengthx,
+                      lengthy,
+                      lengthz,
+                      nx,
+                      ny,
+                      nz,
+                      randomize,
+                      random_seed,
+                      &ng_cell,
+                      &ng_face,
+                      &ng_vtx,
+                      &n_face_group,
+                      &dn_cell,
+                      &dn_face,
+                      &dn_vtx,
+                      &dcell_face_idx,
+                      &dcell_face,
+                      &dface_cell,
+                      &dface_vtx_idx,
+                      &dface_vtx,
+                      &dvtx_coord,
+                      &dface_group_idx,
+                      &dface_group);
+  }
+
+  if (n_rank == 1) {
+    if (dcell_face != NULL) {
+      PDM_log_trace_connectivity_long(dcell_face_idx,
+                                      dcell_face,
+                                      dn_cell,
+                                      "dcell_face : ");
+    }
+
+    if (dface_cell != NULL) {
+      int *dface_cell_idx = PDM_array_new_idx_from_const_stride_int(2, dn_face);
+      PDM_log_trace_connectivity_long(dface_cell_idx,
+                                      dface_cell,
+                                      dn_cell,
+                                      "dface_cell : ");
+      free(dface_cell_idx);
+    }
+
+    int *_face_vtx = malloc(sizeof(int) * dface_vtx_idx[dn_face]);
+    for (int i = 0; i < dface_vtx_idx[dn_face]; i++) {
+      _face_vtx[i] = (int) dface_vtx[i];
+    }
+
+
+
+    PDM_vtk_write_polydata("polyvol_gen_faces.vtk",
+                           dn_vtx,
+                           dvtx_coord,
+                           NULL,
+                           dn_face,
+                           dface_vtx_idx,
+                           _face_vtx,
+                           NULL,
+                           NULL);
+    free(_face_vtx);
+  }
+
 
   if (i_rank == 0) printf("ng_cell = "PDM_FMT_G_NUM", ng_face = "PDM_FMT_G_NUM", ng_vtx = "PDM_FMT_G_NUM"\n", ng_cell, ng_face, ng_vtx);
 

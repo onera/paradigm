@@ -169,6 +169,17 @@ void PDM_multipart_set_reordering_options
  const int       *renum_cell_properties,
  const char      *renum_face_method
 );
+
+/**
+ *
+ * \brief Set the reordering methods to be used after partitioning
+ *
+ * \param [in]   multipart             Pointer to \ref PDM_multipart_t object
+ * \param [in]   i_zone                Id of zone which parameters apply (or -1 for all zones)
+ * \param [in]   renum_vtx_method      Choice of renumbering method for vertices
+ *
+ */
+
 void PDM_multipart_set_reordering_options_vtx
 (
  PDM_multipart_t *multipart,
@@ -231,7 +242,7 @@ PDM_multipart_dn_entity_set
  * \param [in]  multipart             Pointer to \ref PDM_multipart_t object
  * \param [in]  i_zone                Id of zone
  * \param [in]  connectivity_type     Type of connectivity
- * \param [in]  connect               connectivity (size = connect_idx[dn_entity] )
+ * \param [in]  connect               Connectivity (size = connect_idx[dn_entity] )
  * \param [in]  connect_idx           Index of connectivity or NULL if face_cell for example  (size = dn_entity )
  *
  */
@@ -267,7 +278,7 @@ PDM_multipart_dgroup_set
 
 
 /**
- * \brief Set group connectivity by kind
+ * \brief Set group coordinates
  *
  * \param [in]  multipart             Pointer to \ref PDM_multipart_t object
  * \param [in]  i_zone                Id of zone
@@ -513,6 +524,42 @@ void PDM_multipart_bound_get
  PDM_g_num_t      **bound_ln_to_gn
  );
 
+
+
+/**
+ *
+ * \brief Return statistics
+ *
+ * \param [in]   ppart                          Pointer to \ref PDM_part object
+ * \param [out]  cells_average                  average of cells number
+ * \param [out]  cells_median                   median of cells number
+ * \param [out]  cells_std_deviation            standard deviation of cells number
+ * \param [out]  cells_min                      minimum of cells nummber
+ * \param [out]  cells_max                      maximum of cells nummber
+ * \param [out]  bound_part_faces_average       average of partitioning boundary faces
+ * \param [out]  bound_part_faces_median        median of partitioning boundary faces
+ * \param [out]  bound_part_faces_std_deviation standard deviation of partitioning boundary faces
+ * \param [out]  bound_part_faces_min           minimum of partitioning boundary faces
+ * \param [out]  bound_part_faces_max           maximum of partitioning boundary faces
+ *
+ */
+void
+PDM_multipart_stat_get
+(
+ PDM_multipart_t  *multipart,
+ int               i_zone,
+ int              *cells_average,
+ int              *cells_median,
+ double           *cells_std_deviation,
+ int              *cells_min,
+ int              *cells_max,
+ int              *bound_part_faces_average,
+ int              *bound_part_faces_median,
+ double           *bound_part_faces_std_deviation,
+ int              *bound_part_faces_min,
+ int              *bound_part_faces_max,
+ int              *bound_part_faces_sum
+);
 
 /*----------------------------------------------------------------------------*/
 

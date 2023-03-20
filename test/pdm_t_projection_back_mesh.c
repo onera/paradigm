@@ -373,7 +373,7 @@ _projection_on_background_mesh_get2
  double               *history_proj
 )
 {
-  const int vb = 1;
+  const int vb = 0;
 
   int stride = PDM_Mesh_nodal_n_vtx_elt_get(back_elt_type, 1);
 
@@ -741,7 +741,7 @@ int main(int argc, char *argv[])
              &visu);
 
   if (filename == NULL) {
-    filename = (char *) "/stck/bandrieu/Public/adaptation/projection/back_faces_P1.dat";
+    filename = (char *) "meshes/back_faces_P1.dat";
   }
 
   srand(random_seed);
@@ -785,7 +785,7 @@ int main(int argc, char *argv[])
     }
   }
 
-  log_trace("elt_type = %d, elt_order = %d\n", (int) elt_type, elt_order);
+  // log_trace("elt_type = %d, elt_order = %d\n", (int) elt_type, elt_order);
 
   int stride = PDM_Mesh_nodal_n_vtx_elt_get(elt_type, 1);
   int *parent_node = NULL;
@@ -850,7 +850,7 @@ int main(int argc, char *argv[])
   /*
    *  Projection
    */
-  PDM_log_trace_array_double(pt_coord, 3, "pt_coord : ");
+  // PDM_log_trace_array_double(pt_coord, 3, "pt_coord : ");
   int stride_ho = PDM_Mesh_nodal_n_vtx_elt_get(elt_type, elt_order);
   int *elt_vtx_idx = PDM_array_new_idx_from_const_stride_int(stride_ho, n_elt);
 

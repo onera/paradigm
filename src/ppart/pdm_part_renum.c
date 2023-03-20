@@ -1873,6 +1873,12 @@ int     *new_to_old_order
                           part->face_group); // OK
   }
 
+  if (part->face_bound != NULL) {
+    PDM_part_renum_array (part->face_bound_idx[part->n_face_group],
+                          old_to_new_order,
+                          part->face_bound); // OK
+  }
+
   /** face_cell Face **/
   PDM_order_face_cell (part->n_face,
                        new_to_old_order,
@@ -2050,6 +2056,46 @@ int     *new_to_old_order
   /* Free */
   free (old_to_new_order);
 
+}
+
+/**
+ *
+ * \brief Perform faces renumbering from a new order
+ *
+ * \param [in,out]  part        Current partition
+ * \param [in]      new_to_old_order    NewOrder
+ *
+ */
+void
+PDM_part_reorder_face_bound
+(
+_part_t *part,
+int     *new_to_old_order
+)
+{
+  if (part->face_group != NULL) {
+    PDM_order_array (part->face_group_idx[part->n_face_group],
+                     sizeof(int),
+                     new_to_old_order,
+                     part->face_group);
+
+    PDM_order_array (part->face_group_idx[part->n_face_group],
+                     sizeof(PDM_g_num_t),
+                     new_to_old_order,
+                     part->face_group_ln_to_gn);
+  }
+
+  if (part->face_bound != NULL) {
+    PDM_order_array (part->face_bound_idx[part->n_face_group],
+                     sizeof(int),
+                     new_to_old_order,
+                     part->face_bound);
+
+    PDM_order_array (part->face_bound_idx[part->n_face_group],
+                     sizeof(PDM_g_num_t),
+                     new_to_old_order,
+                     part->face_bound_ln_to_gn);
+  }
 }
 
 #ifdef __cplusplus

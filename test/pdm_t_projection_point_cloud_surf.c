@@ -512,15 +512,7 @@ int main(int argc, char *argv[])
   int         n_part_mesh  = 1;
   int         n_part_cloud = 1;
   int         post         = 0;
-#ifdef PDM_HAVE_PARMETIS
-  PDM_split_dual_t     part_method = PDM_SPLIT_DUAL_WITH_PARMETIS;
-#else
-#ifdef PDM_HAVE_PTSCOTCH
-  PDM_split_dual_t     part_method = PDM_SPLIT_DUAL_WITH_PTSCOTCH;
-#else
   PDM_split_dual_t     part_method = PDM_SPLIT_DUAL_WITH_HILBERT;
-#endif
-#endif
 
   PDM_mesh_location_method_t loc_method = PDM_MESH_LOCATION_OCTREE;
 
@@ -649,42 +641,32 @@ int main(int argc, char *argv[])
   }
 
   /* Set mesh */
-  // PDM_mesh_location_mesh_global_data_set(mesh_loc,
-  //                                        n_part_mesh);
+  PDM_part_mesh_nodal_t *mesh_nodal = PDM_part_mesh_nodal_create(2,
+                                                                 n_part_mesh,
+                                                                 comm);
 
-  PDM_Mesh_nodal_t *mesh_nodal = PDM_Mesh_nodal_create(n_part_mesh,
-                                                       comm);
+  int i_section = PDM_part_mesh_nodal_section_add(mesh_nodal,
+                                                  PDM_MESH_NODAL_TRIA3);//POLY_2D);
 
   for (int ipart = 0; ipart < n_part_mesh; ipart++) {
-    PDM_Mesh_nodal_coord_set(mesh_nodal,
-                             ipart,
-                             pn_vtx[ipart],
-                             pvtx_coord[ipart],
-                             pvtx_ln_to_gn[ipart],
-                             PDM_OWNERSHIP_USER);
+    PDM_part_mesh_nodal_coord_set(mesh_nodal,
+                                  ipart,
+                                  pn_vtx[ipart],
+                                  pvtx_coord[ipart],
+                                  pvtx_ln_to_gn[ipart],
+                                  PDM_OWNERSHIP_USER);
 
-    int id_block = PDM_Mesh_nodal_block_add(mesh_nodal,
-                                            PDM_MESH_NODAL_TRIA3,//POLY_2D,
-                                            PDM_OWNERSHIP_USER);
-
-    int *parent_num = NULL;
-    // PDM_Mesh_nodal_block_poly2d_set(mesh_nodal,
-    //                                 id_block,
-    //                                 ipart,
-    //                                 pn_face[ipart],
-    //                                 pface_vtx_idx[ipart],
-    //                                 pface_vtx[ipart],
-    //                                 pface_ln_to_gn[ipart],
-    //                                 parent_num);
-    PDM_Mesh_nodal_block_std_set(mesh_nodal,
-                                 id_block,
-                                 ipart,
-                                 pn_face[ipart],
-                                 pface_vtx[ipart],
-                                 pface_ln_to_gn[ipart],
-                                 parent_num);
-
-    log_trace("pn_face[%d] = %d\n", ipart, pn_face[ipart]);
+    int         *parent_num          = NULL;
+    PDM_g_num_t *parent_entity_g_num = NULL;
+    PDM_part_mesh_nodal_section_std_set(mesh_nodal,
+                                        ipart,
+                                        i_section,
+                                        pn_face[ipart],
+                                        pface_vtx[ipart],
+                                        pface_ln_to_gn[ipart],
+                                        parent_num,
+                                        parent_entity_g_num,
+                                        PDM_OWNERSHIP_USER);
   }
 
   PDM_mesh_location_shared_nodal_mesh_set(mesh_loc,
@@ -783,33 +765,33 @@ int main(int argc, char *argv[])
                                       &part1_to_part2_idx,
                                       &part1_to_part2);
 
-  for (int ipart = 0; ipart < n_part_cloud; ipart++) {
-    int _n_located = PDM_mesh_location_n_located_get(mesh_loc,
-                                                     0,
-                                                     ipart);
+  // for (int ipart = 0; ipart < n_part_cloud; ipart++) {
+  //   int _n_located = PDM_mesh_location_n_located_get(mesh_loc,
+  //                                                    0,
+  //                                                    ipart);
 
-    int _n_unlocated = PDM_mesh_location_n_unlocated_get(mesh_loc,
-                                                         0,
-                                                         ipart);
+  //   int _n_unlocated = PDM_mesh_location_n_unlocated_get(mesh_loc,
+  //                                                        0,
+  //                                                        ipart);
 
-    int *_located = PDM_mesh_location_located_get(mesh_loc,
-                                                  0,
-                                                  ipart);
+  //   int *_located = PDM_mesh_location_located_get(mesh_loc,
+  //                                                 0,
+  //                                                 ipart);
 
-    int *_unlocated = PDM_mesh_location_unlocated_get(mesh_loc,
-                                                      0,
-                                                      ipart);
+  //   int *_unlocated = PDM_mesh_location_unlocated_get(mesh_loc,
+  //                                                     0,
+  //                                                     ipart);
 
-    PDM_log_trace_array_int(located[ipart], n_located[ipart], "located (ptp) : ");
-    PDM_log_trace_array_int(_located,       _n_located,       "located (ml)  : ");
+  //   PDM_log_trace_array_int(located[ipart], n_located[ipart], "located (ptp) : ");
+  //   PDM_log_trace_array_int(_located,       _n_located,       "located (ml)  : ");
 
-    PDM_log_trace_array_int(unlocated[ipart], n_unlocated[ipart], "unlocated (ptp) : ");
-    PDM_log_trace_array_int(_unlocated,       _n_unlocated,       "unlocated (ml)  : ");
+  //   PDM_log_trace_array_int(unlocated[ipart], n_unlocated[ipart], "unlocated (ptp) : ");
+  //   PDM_log_trace_array_int(_unlocated,       _n_unlocated,       "unlocated (ml)  : ");
 
-    log_trace("n_elt1 = %d / %d\n", n_elt1[ipart], pn_face[ipart]);
-    PDM_log_trace_array_int(part1_to_part2_idx[ipart], n_elt1 [ipart], "elt_pts_idx (ptp) : ");
-    PDM_log_trace_array_int(pelt_pts_idx      [ipart], pn_face[ipart], "elt_pts_idx (ml)  : ");
-  }
+  //   log_trace("n_elt1 = %d / %d\n", n_elt1[ipart], pn_face[ipart]);
+  //   PDM_log_trace_array_int(part1_to_part2_idx[ipart], n_elt1 [ipart], "elt_pts_idx (ptp) : ");
+  //   PDM_log_trace_array_int(pelt_pts_idx      [ipart], pn_face[ipart], "elt_pts_idx (ml)  : ");
+  // }
 
 
 
@@ -1026,8 +1008,20 @@ int main(int argc, char *argv[])
                vtx_field_name,
                vtx_field_value);
 
-    const char    *field_name[] = {"field1", "field2", "field3"};
-    double **pts_field_value[3] = {ppts_field1, ppts_field2, ppts_field3};
+    double **ppts_located = malloc(sizeof(double *) * n_part_cloud);
+    for (int ipart = 0; ipart < n_part_cloud; ipart++) {
+      ppts_located[ipart] = malloc(sizeof(double) * pn_pts[ipart]);
+      for (int i = 0; i < pn_pts[ipart]; i++) {
+        ppts_located[ipart][i] = 0.;
+      }
+
+      for (int i = 0; i < n_located[ipart]; i++) {
+        ppts_located[ipart][located[ipart][i]-1] = 1.;
+      }
+    }
+
+    const char    *field_name[] = {"field1", "field2", "field3", "located"};
+    double **pts_field_value[4] = {ppts_field1, ppts_field2, ppts_field3, ppts_located};
     if (0) {
       _dump_point_cloud("proj_pt_cloud_surf__cloud",
                         comm,
@@ -1053,10 +1047,15 @@ int main(int argc, char *argv[])
                  0,
                  NULL,
                  NULL,
-                 3,
+                 4,
                  field_name,
                  pts_field_value);
     }
+
+    for (int ipart = 0; ipart < n_part_cloud; ipart++) {
+      free(ppts_located[ipart]);
+    }
+    free(ppts_located);
   }
 
   for (int ipart = 0; ipart < n_part_mesh; ipart++) {
@@ -1083,7 +1082,7 @@ int main(int argc, char *argv[])
   /* Free memory */
   PDM_part_to_part_free(ptp);
   PDM_mesh_location_free(mesh_loc);
-  PDM_Mesh_nodal_free(mesh_nodal);
+  PDM_part_mesh_nodal_free(mesh_nodal);
 
   for (int ipart = 0; ipart < n_part_mesh; ipart++) {
     free(pvtx_coord    [ipart]);

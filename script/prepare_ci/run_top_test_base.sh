@@ -91,7 +91,8 @@ if [ -n "$k" ]; then
   cat $output_test_suite >> reports/tmp_paradigm_alltest.xml
   echo '    </testsuite>' >> reports/tmp_paradigm_alltest.xml
 else
-  list=("pdm_t_dcube_nodal_gen" "pdm_t_part_to_block_geom")
+  # list=("pdm_t_dcube_nodal_gen" "pdm_t_part_to_block_geom" "pdm_t_closest_points" "pdm_t_dist" "pdm_t_dist_strip" "pdm_t_gnum" "pdm_t_global_mean" "pdm_t_gnum_location" "pdm_t_mesh_location_dcube" "pdm_t_dmesh_nodal_to_dmesh" "pdm_t_knn_cube")
+  list=("pdm_t_dcube_nodal_gen" "pdm_t_part_to_block_geom" "pdm_t_closest_points" "pdm_t_dist" "pdm_t_dist_strip" "pdm_t_gnum" "pdm_t_global_mean" "pdm_t_gnum_location" "pdm_t_dmesh_nodal_to_dmesh" "pdm_t_knn_cube" "pdm_t_part_extension" "pdm_t_part_dcube")
   n_suite=0
   for item in ${list[*]}; do
     echo $item;

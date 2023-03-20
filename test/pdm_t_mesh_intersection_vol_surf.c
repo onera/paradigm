@@ -304,11 +304,13 @@ void
 _set_mesh
 (
  PDM_mesh_intersection_t *mi,
- PDM_ol_mesh_t            i_mesh,
+ int                      i_mesh,
  PDM_multipart_t         *mpart,
  int                      n_part
 )
 {
+  PDM_mesh_intersection_n_part_set(mi, i_mesh, n_part);
+
   for (int i_part = 0; i_part < n_part; i_part++) {
 
     int *face_edge_idx;
@@ -451,22 +453,16 @@ char *argv[]
   PDM_MPI_Comm comm = PDM_MPI_COMM_WORLD;
 
   int i_rank;
-  PDM_MPI_Comm_rank (PDM_MPI_COMM_WORLD, &i_rank);
+  PDM_MPI_Comm_rank (comm, &i_rank);
 
   int n_rank;
-  PDM_MPI_Comm_size (PDM_MPI_COMM_WORLD, &n_rank);
+  PDM_MPI_Comm_size (comm, &n_rank);
 
   PDM_g_num_t n_vtx_a   = 10;
   PDM_g_num_t n_vtx_b   = 10;
   PDM_Mesh_nodal_elt_t elt_type  = PDM_MESH_NODAL_HEXA8;
 
-#ifdef PDM_HAVE_PARMETIS
-  PDM_split_dual_t part_method    = PDM_SPLIT_DUAL_WITH_PARMETIS;
-#else
-#ifdef PDM_HAVE_PTSCOTCH
-  PDM_split_dual_t part_method    = PDM_SPLIT_DUAL_WITH_PTSCOTCH;
-#endif
-#endif
+  PDM_split_dual_t part_method    = PDM_SPLIT_DUAL_WITH_HILBERT;
 
   int n_part = 1;
 
@@ -533,16 +529,15 @@ char *argv[]
   PDM_mesh_intersection_t* mi = PDM_mesh_intersection_create(PDM_MESH_INTERSECTION_KIND_SOFT,
                                                              dim_mesh_a,
                                                              dim_mesh_b,
-                                                             n_part,
-                                                             n_part,
                                                              1e-6,
-                                                             comm);
+                                                             comm,
+                                                             PDM_OWNERSHIP_KEEP);
 
   /*
    * Set mesh_a and mesh_b
    */
-  _set_mesh(mi, PDM_OL_MESH_A, mpart_vol_a , n_part);
-  _set_mesh(mi, PDM_OL_MESH_B, mpart_surf_b, n_part);
+  _set_mesh(mi, 0, mpart_vol_a , n_part);
+  _set_mesh(mi, 1, mpart_surf_b, n_part);
 
   PDM_mesh_intersection_compute(mi);
 

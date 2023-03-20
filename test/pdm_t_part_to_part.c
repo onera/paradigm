@@ -194,26 +194,26 @@ int main(int argc, char *argv[])
   PDM_part_to_part_gnum1_come_from_get (ptp,
                                         &gnum1_come_from_idx,
                                         &gnum1_come_from);
-  for (int i = 0; i < n_part2; i++) {
+  // for (int i = 0; i < n_part2; i++) {
 
-    log_trace("\npart2 %d\n", i);
-    PDM_log_trace_array_int(ref_num2[i], n_ref_num2[i], "referenced (l_num) : ");
-    log_trace("unreferenced (g_num) : ");
-    for (int j = 0; j < n_unref_num2[i]; j++) {
-      log_trace(PDM_FMT_G_NUM" ", gnum_elt2[i][unref_num2[i][j]-1]);
-    }
-    log_trace("\n");
-    log_trace("referenced (g_num) -> gnum1_come_from :\n");
-    for (int j = 0; j < n_ref_num2[i]; j++) {
-      log_trace(PDM_FMT_G_NUM" -> ", gnum_elt2[i][ref_num2[i][j]-1]);
-      for (int k = gnum1_come_from_idx[i][j]; k < gnum1_come_from_idx[i][j+1]; k++) {
-        log_trace(PDM_FMT_G_NUM" ", gnum1_come_from[i][k]);
-      }
-      log_trace("\n");
-    }
+  //   log_trace("\npart2 %d\n", i);
+  //   PDM_log_trace_array_int(ref_num2[i], n_ref_num2[i], "referenced (l_num) : ");
+  //   log_trace("unreferenced (g_num) : ");
+  //   for (int j = 0; j < n_unref_num2[i]; j++) {
+  //     log_trace(PDM_FMT_G_NUM" ", gnum_elt2[i][unref_num2[i][j]-1]);
+  //   }
+  //   log_trace("\n");
+  //   log_trace("referenced (g_num) -> gnum1_come_from :\n");
+  //   for (int j = 0; j < n_ref_num2[i]; j++) {
+  //     log_trace(PDM_FMT_G_NUM" -> ", gnum_elt2[i][ref_num2[i][j]-1]);
+  //     for (int k = gnum1_come_from_idx[i][j]; k < gnum1_come_from_idx[i][j+1]; k++) {
+  //       log_trace(PDM_FMT_G_NUM" ", gnum1_come_from[i][k]);
+  //     }
+  //     log_trace("\n");
+  //   }
 
 
-  }
+  // }
 
 
   int         **part1_stride = malloc(sizeof(int         *) * n_part1);
@@ -221,7 +221,7 @@ int main(int argc, char *argv[])
 
   for (int i = 0; i < n_part1; i++) {
 
-    log_trace("\npart1 %d\n", i);
+    // log_trace("\npart1 %d\n", i);
 
     part1_stride[i] = malloc(sizeof(int) * n_elt1[i]);
 
@@ -231,20 +231,20 @@ int main(int argc, char *argv[])
       // part1_stride[i][j] = 1;
       s_part1_data += part1_stride[i][j];
     }
-    PDM_log_trace_array_int(part1_stride[i], n_elt1[i], "part1_stride : ");
+    // PDM_log_trace_array_int(part1_stride[i], n_elt1[i], "part1_stride : ");
 
-    log_trace("g_num -> data:\n");
+    // log_trace("g_num -> data:\n");
     part1_data[i] = malloc(sizeof(PDM_g_num_t) * s_part1_data);
     int idx = 0;
     for (int j = 0; j < n_elt1[i]; j++) {
-      int idx0 = idx;
+      // int idx0 = idx;
       for (int k = 1; k <= part1_stride[i][j]; k++) {
         part1_data[i][idx++] = k;
       }
-      log_trace(PDM_FMT_G_NUM, gnum_elt1[i][j]);
-      PDM_log_trace_array_long(part1_data[i] + idx0,
-                               part1_stride[i][j],
-                               " -> ");
+      // log_trace(PDM_FMT_G_NUM, gnum_elt1[i][j]);
+      // PDM_log_trace_array_long(part1_data[i] + idx0,
+      //                          part1_stride[i][j],
+      //                          " -> ");
     }
     // for (int j = 0; j < n_elt1[i]; j++) {
     //   part1_data[i][j] = gnum_elt1[i][j];
@@ -271,27 +271,27 @@ int main(int argc, char *argv[])
   PDM_part_to_part_iexch_wait (ptp,
                                request);
 
-  log_trace("\n\n---- Check iexch ----\n");
-  for (int i = 0; i < n_part2; i++) {
+  // log_trace("\n\n---- Check iexch ----\n");
+  // for (int i = 0; i < n_part2; i++) {
 
-    log_trace("\npart2 %d\n", i);
-    PDM_log_trace_array_int(part2_stride[i], gnum1_come_from_idx[i][n_ref_num2[i]], "stride : ");
-    log_trace("referenced (g_num) -> data :\n");
-    int idx = 0;
-    for (int j = 0; j < n_ref_num2[i]; j++) {
-      log_trace(PDM_FMT_G_NUM" :\n", gnum_elt2[i][ref_num2[i][j]-1]);
-      for (int k = gnum1_come_from_idx[i][j]; k < gnum1_come_from_idx[i][j+1]; k++) {
-        log_trace("    "PDM_FMT_G_NUM" -> ", gnum1_come_from[i][k]);
-        for (int l = 0; l < part2_stride[i][k]; l++) {
-          log_trace(PDM_FMT_G_NUM" ", part2_data[i][idx++]);
-        }
-        log_trace("\n");
-      }
-      log_trace("\n");
-    }
+  //   log_trace("\npart2 %d\n", i);
+  //   PDM_log_trace_array_int(part2_stride[i], gnum1_come_from_idx[i][n_ref_num2[i]], "stride : ");
+  //   log_trace("referenced (g_num) -> data :\n");
+  //   int idx = 0;
+  //   for (int j = 0; j < n_ref_num2[i]; j++) {
+  //     log_trace(PDM_FMT_G_NUM" :\n", gnum_elt2[i][ref_num2[i][j]-1]);
+  //     for (int k = gnum1_come_from_idx[i][j]; k < gnum1_come_from_idx[i][j+1]; k++) {
+  //       log_trace("    "PDM_FMT_G_NUM" -> ", gnum1_come_from[i][k]);
+  //       for (int l = 0; l < part2_stride[i][k]; l++) {
+  //         log_trace(PDM_FMT_G_NUM" ", part2_data[i][idx++]);
+  //       }
+  //       log_trace("\n");
+  //     }
+  //     log_trace("\n");
+  //   }
 
 
-  }
+  // }
 
 
 
@@ -299,7 +299,7 @@ int main(int argc, char *argv[])
   /*
    *  Exchange an interleaved, constant-stride field
    */
-  log_trace("\n\n---- Exchange an interleaved, constant-stride field ----\n");
+  // log_trace("\n\n---- Exchange an interleaved, constant-stride field ----\n");
   PDM_g_num_t **part1_field = malloc(sizeof(PDM_g_num_t *) * n_part1);
   for (int i = 0; i < n_part1; i++) {
     // int n = part1_to_part2_idx[i][n_elt1[i]];
@@ -319,9 +319,9 @@ int main(int argc, char *argv[])
       part1_field[i][j+n] = gnum_elt1[i][j]+1;
     }
 
-    log_trace("\npart1 %d\n", i);
-    PDM_log_trace_array_long(part1_field[i],     n, "  part1_field (1st comp) : ");
-    PDM_log_trace_array_long(part1_field[i] + n, n, "  part1_field (2nd comp) : ");
+    // log_trace("\npart1 %d\n", i);
+    // PDM_log_trace_array_long(part1_field[i],     n, "  part1_field (1st comp) : ");
+    // PDM_log_trace_array_long(part1_field[i] + n, n, "  part1_field (2nd comp) : ");
   }
 
 
@@ -343,12 +343,12 @@ int main(int argc, char *argv[])
                                request);
 
 
-  for (int i = 0; i < n_part2; i++) {
-    log_trace("\npart2 %d\n", i);
-    int n = gnum1_come_from_idx[i][n_ref_num2[i]];
-    PDM_log_trace_array_long(part2_field[i],     n, "  part2_field (1st comp) : ");
-    PDM_log_trace_array_long(part2_field[i] + n, n, "  part2_field (2nd comp) : ");
-  }
+  // for (int i = 0; i < n_part2; i++) {
+  //   log_trace("\npart2 %d\n", i);
+  //   int n = gnum1_come_from_idx[i][n_ref_num2[i]];
+  //   PDM_log_trace_array_long(part2_field[i],     n, "  part2_field (1st comp) : ");
+  //   PDM_log_trace_array_long(part2_field[i] + n, n, "  part2_field (2nd comp) : ");
+  // }
 
 
 
@@ -373,16 +373,16 @@ int main(int argc, char *argv[])
   PDM_part_to_part_reverse_iexch_wait (ptp,
                                        request);
 
-  log_trace("Reverse\n");
-  for (int i = 0; i < n_part1; i++) {
-    int n = part1_to_part2_idx[i][n_elt1[i]];
-    log_trace("\npart1 %d\n", i);
-    PDM_log_trace_array_long(part1_field[i],     n, "  part1_field (1st comp) : ");
-    PDM_log_trace_array_long(part1_field[i] + n, n, "  part1_field (2nd comp) : ");
-  }
+  // log_trace("Reverse\n");
+  // for (int i = 0; i < n_part1; i++) {
+  //   int n = part1_to_part2_idx[i][n_elt1[i]];
+  //   log_trace("\npart1 %d\n", i);
+  //   PDM_log_trace_array_long(part1_field[i],     n, "  part1_field (1st comp) : ");
+  //   PDM_log_trace_array_long(part1_field[i] + n, n, "  part1_field (2nd comp) : ");
+  // }
 
 
-  log_trace("==== P1 -> P2 ====\n");
+  // log_trace("==== P1 -> P2 ====\n");
   /* 2 consecutive iexch in stride var with same stride */
   for (int ipart = 0; ipart < n_part1; ipart++) {
     int s_part1_data = 0;
@@ -442,14 +442,14 @@ int main(int argc, char *argv[])
   for (int i = 0; i < n_part2; i++) {
     int idx = 0;
     for (int j = 0; j < n_ref_num2[i]; j++) {
-      int id2 = ref_num2[i][j] - 1;
+      // int id2 = ref_num2[i][j] - 1;
       for (int k = gnum1_come_from_idx[i][j]; k < gnum1_come_from_idx[i][j+1]; k++) {
-        log_trace("gnum2 "PDM_FMT_G_NUM", gnum1 "PDM_FMT_G_NUM", expected stride = %d, got %d\n",
-                  gnum_elt2[i][id2], gnum1_come_from[i][k], (int) (gnum1_come_from[i][k]%2) + 1,
-                  part2_stride[i][k]);
+        // log_trace("gnum2 "PDM_FMT_G_NUM", gnum1 "PDM_FMT_G_NUM", expected stride = %d, got %d\n",
+        //           gnum_elt2[i][id2], gnum1_come_from[i][k], (int) (gnum1_come_from[i][k]%2) + 1,
+        //           part2_stride[i][k]);
         for (int l = 0; l < part2_stride[i][k]; l++) {
-          log_trace("  "PDM_FMT_G_NUM" / "PDM_FMT_G_NUM"\n",
-                    part2_data2[i][idx], part2_data[i][idx]);
+          // log_trace("  "PDM_FMT_G_NUM" / "PDM_FMT_G_NUM"\n",
+          //           part2_data2[i][idx], part2_data[i][idx]);
           assert(part2_data2[i][idx] == part2_data[i][idx]);
           idx++;
         }
@@ -462,7 +462,7 @@ int main(int argc, char *argv[])
 
 
 
-  log_trace("==== P1 <- P2 ====\n");
+  // log_trace("==== P1 <- P2 ====\n");
   /* 2 consecutive reverse iexch in stride var with same stride */
   for (int ipart = 0; ipart < n_part2; ipart++) {
     int s_part2_data = 0;
@@ -536,12 +536,12 @@ int main(int argc, char *argv[])
     int idx = 0;
     for (int j = 0; j < n_elt1[i]; j++) {
       for (int k = part1_to_part2_idx[i][j]; k < part1_to_part2_idx[i][j+1]; k++) {
-        log_trace("gnum1 "PDM_FMT_G_NUM", gnum2 "PDM_FMT_G_NUM", expected stride = %d, got %d\n",
-                  gnum_elt1[i][j], part1_to_part2[i][k], (int) (part1_to_part2[i][k]%2) + 1,
-                  part1_stride[i][k]);
+        // log_trace("gnum1 "PDM_FMT_G_NUM", gnum2 "PDM_FMT_G_NUM", expected stride = %d, got %d\n",
+        //           gnum_elt1[i][j], part1_to_part2[i][k], (int) (part1_to_part2[i][k]%2) + 1,
+        //           part1_stride[i][k]);
         for (int l = 0; l < part1_stride[i][k]; l++) {
-          log_trace("  "PDM_FMT_G_NUM" / "PDM_FMT_G_NUM"\n",
-                    part1_data2[i][idx], part1_data[i][idx]);
+          // log_trace("  "PDM_FMT_G_NUM" / "PDM_FMT_G_NUM"\n",
+          //           part1_data2[i][idx], part1_data[i][idx]);
           assert(part1_data2[i][idx] == part1_data[i][idx]);
           idx++;
         }

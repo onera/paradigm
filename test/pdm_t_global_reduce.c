@@ -141,15 +141,8 @@ int main(int argc, char *argv[])
   double      length    = 1.;
   int         n_part    = 1;
   int         verbose   = 0;
-#ifdef PDM_HAVE_PARMETIS
-  PDM_part_split_t method  = PDM_PART_SPLIT_PARMETIS;
-#else
-#ifdef PDM_HAVE_PTSCOTCH
-  PDM_part_split_t method  = PDM_PART_SPLIT_PTSCOTCH;
-#else
-  PDM_part_split_t method  = PDM_PART_SPLIT_HILBERT;
-#endif
-#endif
+
+  PDM_split_dual_t method  = PDM_SPLIT_DUAL_WITH_HILBERT;
 
   /*
    *  Read args
@@ -232,7 +225,7 @@ int main(int argc, char *argv[])
   int n_property_face = 0;
 
   PDM_part_t *ppart = PDM_part_create(comm,
-                                      method,
+                  (PDM_part_split_t)  method,
                                       "PDM_PART_RENUM_CELL_NONE",
                                       "PDM_PART_RENUM_FACE_NONE",
                                       n_property_cell,

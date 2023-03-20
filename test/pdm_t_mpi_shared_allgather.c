@@ -549,7 +549,7 @@ hybrid_exchange_numa(PDM_MPI_Comm comm)
   }
   PDM_MPI_Barrier(comm_shared);
 
-  if(1 == 1) {
+  if(0 == 1) {
     PDM_log_trace_array_int(shared_vals_out_n  , n_rank , "shared_vals_out_n   ::");
     PDM_log_trace_array_int(shared_vals_out_idx, n_rank , "shared_vals_out_idx ::");
   }
@@ -574,7 +574,7 @@ hybrid_exchange_numa(PDM_MPI_Comm comm)
 
   PDM_MPI_Barrier(comm_shared);
 
-  if(1 == 1) {
+  if(0 == 1) {
     PDM_log_trace_array_int(shared_vals_out, shared_vals_out_idx[n_rank], "shared_vals_out ::");
   }
 

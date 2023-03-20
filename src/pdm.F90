@@ -1,6 +1,13 @@
 module pdm
 #include "pdmf.h"
 
+integer, parameter :: PDM_FALSE = 0
+integer, parameter :: PDM_TRUE  = 1
+
+integer, parameter :: PDM_SPLIT_DUAL_WITH_PARMETIS = 1
+integer, parameter :: PDM_SPLIT_DUAL_WITH_PTSCOTCH = 2
+integer, parameter :: PDM_SPLIT_DUAL_WITH_HILBERT  = 3
+
 interface
 
 function PDM_MPI_Comm_f2c (f_comm) &

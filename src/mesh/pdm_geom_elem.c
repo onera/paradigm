@@ -2014,6 +2014,9 @@ PDM_geom_elem_polyhedra_properties
       }
 
       const int face          = abs(cellToFaceConnectivity[polyIdx + iface]) - 1;
+      if (!isOriented) {
+        cellToFaceConnectivity[polyIdx + iface] = face+1;
+      }
       const int faceIdx       = faceConnectivityIdx[face];
       const int n_faceVertices = faceConnectivityIdx[face+1] - faceIdx;
 
@@ -2383,6 +2386,161 @@ PDM_geom_elem_polyhedra_properties
 
 
 
+void
+PDM_geom_elem_polyhedra_properties_triangulated
+(
+ const int     isOriented,
+ const int     nPolyhedra,
+ const int     n_face,
+ const int    *faceConnectivityIdx,
+ const int    *faceConnectivity,
+ const int    *cellToFaceConnectivityIdx,
+       int    *cellToFaceConnectivity,
+ const int     nVertices,
+ const double *coords,
+       double *volume,
+       double *center,
+       double *characteristicLength,
+       int    *isDegenerated
+)
+{
+  PDM_UNUSED(nVertices);
+  PDM_UNUSED(characteristicLength);
+
+  /**
+   * TO DO :
+   *  - compute characteristicLength
+   *  - handle (!isOriented) case
+   */
+
+  /*
+   * Triangulate faces
+   */
+
+  int max_face_vtx_n = 0;
+  int *face_tria_idx = malloc(sizeof(int) * (n_face + 1));
+  face_tria_idx[0] = 0;
+  for (int iface = 0; iface < n_face; iface++) {
+    int face_vtx_n = faceConnectivityIdx[iface+1] - faceConnectivityIdx[iface];
+    max_face_vtx_n = PDM_MAX(max_face_vtx_n, face_vtx_n);
+    int face_tria_n = face_vtx_n - 2;
+    face_tria_idx[iface+1] = face_tria_idx[iface] + face_tria_n;
+  }
+
+  PDM_triangulate_state_t *tri_state = PDM_triangulate_state_create(max_face_vtx_n);
+
+  int *tria_vtx = malloc(sizeof(int) * face_tria_idx[n_face] * 3);
+
+  for (int iface = 0; iface < n_face; iface++) {
+
+    const int *_face_vtx = faceConnectivity + faceConnectivityIdx[iface];
+    int face_vtx_n = faceConnectivityIdx[iface+1] - faceConnectivityIdx[iface];
+
+    int *_tria_vtx = tria_vtx + 3*face_tria_idx[iface];
+
+    int n_tria;
+    if (face_vtx_n == 3) {
+      /* Triangular face */
+      n_tria = 1;
+      memcpy(_tria_vtx, _face_vtx, sizeof(int) * 3);
+    }
+    else if (face_vtx_n == 4) {
+      /* Quadrilateral face */
+      n_tria = PDM_triangulate_quadrangle(3,
+                                          coords,
+                                          NULL,
+                                          _face_vtx,
+                                          _tria_vtx);
+    }
+    else {
+      /* Polygonal face */
+      n_tria = PDM_triangulate_polygon(3,
+                                       face_vtx_n,
+                                       coords,
+                                       NULL,
+                                       _face_vtx,
+                                       PDM_TRIANGULATE_MESH_DEF,
+                                       _tria_vtx,
+                                       tri_state);
+    }
+
+    assert(n_tria == face_tria_idx[iface+1] - face_tria_idx[iface]);
+  }
+  PDM_triangulate_state_destroy(tri_state);
+
+  assert(isOriented == 1);
+
+
+  for (int ipoly = 0; ipoly < nPolyhedra; ipoly++) {
+
+    double *polyCenter = center + 3*ipoly;
+    const int polyIdx   = cellToFaceConnectivityIdx[ipoly];
+    // const int nPolyFace = cellToFaceConnectivityIdx[ipoly + 1] - polyIdx;
+
+    int ref_face = PDM_ABS(cellToFaceConnectivity[polyIdx]) - 1;
+    int ref_point = faceConnectivity[faceConnectivityIdx[ref_face]] - 1;
+
+    int connec[4];
+    connec[0] = ref_point+1;
+    for (int i = 0; i < 3; i++) {
+      polyCenter[i] = 0;
+    }
+    volume[ipoly] = 0;
+
+
+    for (int iface = cellToFaceConnectivityIdx[ipoly]; iface < cellToFaceConnectivityIdx[ipoly+1]; iface++) {
+
+      int face_id = PDM_ABS (cellToFaceConnectivity[iface]) - 1;
+      int sign    = PDM_SIGN(cellToFaceConnectivity[iface]);
+
+      for (int itria = face_tria_idx[face_id]; itria < face_tria_idx[face_id+1]; itria++) {
+
+        for (int i = 0; i < 3; i++) {
+          connec[i+1] = tria_vtx[3*itria + i];
+        }
+
+        double tetra_center[3];
+        double tetra_volume;
+        PDM_geom_elem_tetra_properties(1,
+                                       connec,
+                                       coords,
+                                       &tetra_volume,
+                                       tetra_center,
+                                       NULL,
+                                       NULL);
+
+        tetra_volume *= sign;
+
+        volume[ipoly] += tetra_volume;
+        for (int i = 0; i < 3; i++) {
+          polyCenter[i] += tetra_volume * tetra_center[i];
+        }
+
+      }
+
+    }
+
+    if (PDM_ABS(volume[ipoly]) < 1e-15) {
+      if (isDegenerated != NULL) {
+        isDegenerated[ipoly] = 1;
+      }
+    }
+    else {
+      double ivol = 1./volume[ipoly];
+      for (int i = 0; i < 3; i++) {
+        polyCenter[i] *= ivol;
+      }
+    }
+
+  }
+  // free(surface_vector);
+  free(face_tria_idx);
+  free(tria_vtx);
+}
+
+
+
+
 
 
 /**
@@ -2587,7 +2745,7 @@ PDM_geom_elem_edge_upwind_and_downwind
 
             found[idx_vtx] = 1;
 
-            if (idx_vtx == 0) {
+            if (idx_vtx == 1) {
                 upwind_cell[iedge] = cell_id;
                 upwind_face[iedge] = face_id;
                 memcpy(upwind_point + 3*iedge,

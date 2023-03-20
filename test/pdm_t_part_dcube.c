@@ -68,8 +68,9 @@ _read_args(int            argc,
            PDM_g_num_t  *n_vtx_seg,
            double        *length,
            int           *n_part,
-	   int           *post,
-	   int           *method)
+           int           *post,
+           int           *method,
+           int           *use_multipart)
 {
   int i = 1;
 
@@ -116,6 +117,12 @@ _read_args(int            argc,
     else if (strcmp(argv[i], "-parmetis") == 0) {
       *method = 1;
     }
+    else if (strcmp(argv[i], "-multipart") == 0) {
+      *use_multipart = 1;
+    }
+    else if (strcmp(argv[i], "-part") == 0) {
+      *use_multipart = 0;
+    }
     else
       _usage(EXIT_FAILURE);
     i++;
@@ -129,6 +136,13 @@ _read_args(int            argc,
  *
  */
 
+// @@@param[n_proc] : 1,2,3,4
+// @@@param[n] : 20,40
+// @@@param[l] : 1.
+// @@@param[n_part] : 1,2
+// @@@args[part_kind] : -parmetis, -pt-scotch
+// @@@args[multipart] : -part, -multipart
+
 int main(int argc, char *argv[])
 {
 
@@ -136,17 +150,12 @@ int main(int argc, char *argv[])
    *  Set default values
    */
 
-  PDM_g_num_t        n_vtx_seg = 10;
-  double             length  = 1.;
-  int                n_part   = 1;
-  int                post    = 0;
-#ifdef PDM_HAVE_PARMETIS
-  PDM_part_split_t method  = PDM_PART_SPLIT_PARMETIS;
-#else
-#ifdef PDM_HAVE_PTSCOTCH
-  PDM_part_split_t method  = PDM_PART_SPLIT_PTSCOTCH;
-#endif
-#endif
+  PDM_g_num_t        n_vtx_seg     = 10;
+  double             length        = 1.;
+  int                n_part        = 1;
+  int                post          = 0;
+  int                use_multipart = 0;
+  PDM_part_split_t method  = PDM_PART_SPLIT_HILBERT;
 
   /*
    *  Read args
@@ -158,7 +167,18 @@ int main(int argc, char *argv[])
              &length,
              &n_part,
              &post,
-             (int *) &method);
+     (int *) &method,
+             &use_multipart);
+
+  // Choose to use part or multipart
+  char *buffer = malloc(sizeof(int)*8+1);
+  sprintf(buffer, "%d", use_multipart);
+  setenv("PDM_USE_MULTIPART", buffer, 1);
+  free(buffer);
+
+  // debug
+  int dbg_part_dcube = 0;
+  int time_and_stat  = 0;
 
   /*
    *  Init
@@ -216,7 +236,7 @@ int main(int argc, char *argv[])
                           &dface_group_idx,
                           &dface_group);
 
-  if (0 == 1) {
+  if (dbg_part_dcube) {
 
     PDM_printf("[%i] n_face_group    : %i\n", i_rank, n_face_group);
     PDM_printf("[%i] dn_cell        : %i\n", i_rank, dn_cell);
@@ -256,7 +276,9 @@ int main(int argc, char *argv[])
   }
   // int ppart_id = 0;
 
-  gettimeofday(&t_elaps_debut, NULL);
+  if (time_and_stat && !use_multipart) {
+    gettimeofday(&t_elaps_debut, NULL);
+  }
 
   /*
    *  Create mesh partitions
@@ -298,49 +320,53 @@ int main(int argc, char *argv[])
                                       dface_group_idx,
                                       dface_group);
 
-  double  *elapsed  = NULL;
-  double  *cpu      = NULL;
-  double  *cpu_user = NULL;
-  double  *cpu_sys  = NULL;
+  if (time_and_stat && !use_multipart) {
 
-  PDM_part_time_get(ppart,
-                    &elapsed,
-                    &cpu,
-                    &cpu_user,
-                    &cpu_sys);
+    double  *elapsed  = NULL;
+    double  *cpu      = NULL;
+    double  *cpu_user = NULL;
+    double  *cpu_sys  = NULL;
 
-  PDM_printf("[%i]   - elapsed total                    : %12.5e\n", i_rank, elapsed[0]);
-  PDM_printf("[%i]   - elapsed building graph           : %12.5e\n", i_rank, elapsed[1]);
-  PDM_printf("[%i]   - elapsed splitting graph          : %12.5e\n", i_rank, elapsed[2]);
-  PDM_printf("[%i]   - elapsed building mesh partitions : %12.5e\n", i_rank, elapsed[3]);
+    PDM_part_time_get(ppart,
+                      &elapsed,
+                      &cpu,
+                      &cpu_user,
+                      &cpu_sys);
 
-  PDM_printf("[%i]   - cpu total                        : %12.5e\n", i_rank, cpu[0]);
-  PDM_printf("[%i]   - cpu building graph               : %12.5e\n", i_rank, cpu[1]);
-  PDM_printf("[%i]   - cpu splitting graph              : %12.5e\n", i_rank, cpu[2]);
-  PDM_printf("[%i]   - cpu building mesh partitions     : %12.5e\n", i_rank, cpu[3]);
+    PDM_printf("[%i]   - elapsed total                    : %12.5e\n", i_rank, elapsed[0]);
+    PDM_printf("[%i]   - elapsed building graph           : %12.5e\n", i_rank, elapsed[1]);
+    PDM_printf("[%i]   - elapsed splitting graph          : %12.5e\n", i_rank, elapsed[2]);
+    PDM_printf("[%i]   - elapsed building mesh partitions : %12.5e\n", i_rank, elapsed[3]);
 
-  PDM_printf("[%i]   - cpu_user total                   : %12.5e\n", i_rank, cpu_user[0]);
-  PDM_printf("[%i]   - cpu_user building graph          : %12.5e\n", i_rank, cpu_user[1]);
-  PDM_printf("[%i]   - cpu_user splitting graph         : %12.5e\n", i_rank, cpu_user[2]);
-  PDM_printf("[%i]   - cpu_user building mesh partitions: %12.5e\n", i_rank, cpu_user[3]);
+    PDM_printf("[%i]   - cpu total                        : %12.5e\n", i_rank, cpu[0]);
+    PDM_printf("[%i]   - cpu building graph               : %12.5e\n", i_rank, cpu[1]);
+    PDM_printf("[%i]   - cpu splitting graph              : %12.5e\n", i_rank, cpu[2]);
+    PDM_printf("[%i]   - cpu building mesh partitions     : %12.5e\n", i_rank, cpu[3]);
 
-  PDM_printf("[%i]   - cpu_sys total                    : %12.5e\n", i_rank, cpu_sys[0]);
-  PDM_printf("[%i]   - cpu_sys building graph           : %12.5e\n", i_rank, cpu_sys[1]);
-  PDM_printf("[%i]   - cpu_sys splitting graph          : %12.5e\n", i_rank, cpu_sys[2]);
-  PDM_printf("[%i]   - cpu_sys building mesh partitions : %12.5e\n", i_rank, cpu_sys[3]);
+    PDM_printf("[%i]   - cpu_user total                   : %12.5e\n", i_rank, cpu_user[0]);
+    PDM_printf("[%i]   - cpu_user building graph          : %12.5e\n", i_rank, cpu_user[1]);
+    PDM_printf("[%i]   - cpu_user splitting graph         : %12.5e\n", i_rank, cpu_user[2]);
+    PDM_printf("[%i]   - cpu_user building mesh partitions: %12.5e\n", i_rank, cpu_user[3]);
 
-  struct timeval t_elaps_fin;
-  gettimeofday(&t_elaps_fin, NULL);
+    PDM_printf("[%i]   - cpu_sys total                    : %12.5e\n", i_rank, cpu_sys[0]);
+    PDM_printf("[%i]   - cpu_sys building graph           : %12.5e\n", i_rank, cpu_sys[1]);
+    PDM_printf("[%i]   - cpu_sys splitting graph          : %12.5e\n", i_rank, cpu_sys[2]);
+    PDM_printf("[%i]   - cpu_sys building mesh partitions : %12.5e\n", i_rank, cpu_sys[3]);
 
-  long tranche_elapsed = (t_elaps_fin.tv_usec + 1000000 * t_elaps_fin.tv_sec) -
-                         (t_elaps_debut.tv_usec + 1000000 *
-                          t_elaps_debut.tv_sec);
-  long tranche_elapsed_max = tranche_elapsed;
-  double t_elapsed = (double) tranche_elapsed_max/1000000.;
+    struct timeval t_elaps_fin;
+    gettimeofday(&t_elaps_fin, NULL);
 
-  PDM_printf("[%i]   - TEMPS DANS PART_CUBE  : %12.5e\n", i_rank,  t_elapsed);
+    long tranche_elapsed = (t_elaps_fin.tv_usec + 1000000 * t_elaps_fin.tv_sec) -
+                           (t_elaps_debut.tv_usec + 1000000 *
+                            t_elaps_debut.tv_sec);
+    long tranche_elapsed_max = tranche_elapsed;
+    double t_elapsed = (double) tranche_elapsed_max/1000000.;
 
-  if (0 == 1) {
+    PDM_printf("[%i]   - TEMPS DANS PART_CUBE  : %12.5e\n", i_rank,  t_elapsed);
+
+  }
+
+  if (dbg_part_dcube) {
     for (int i_part = 0; i_part < n_part; i_part++) {
 
       int n_cell;
@@ -482,46 +508,49 @@ int main(int argc, char *argv[])
 
   /* Calculs statistiques */
 
-  int    cells_average;
-  int    cells_median;
-  double cells_std_deviation;
-  int    cells_min;
-  int    cells_max;
-  int    bound_part_faces_average;
-  int    bound_part_faces_median;
-  double bound_part_faces_std_deviation;
-  int    bound_part_faces_min;
-  int    bound_part_faces_max;
-  int    bound_part_faces_sum;
+  if (time_and_stat) {
 
-  PDM_part_stat_get(ppart,
-                    &cells_average,
-                    &cells_median,
-                    &cells_std_deviation,
-                    &cells_min,
-                    &cells_max,
-                    &bound_part_faces_average,
-                    &bound_part_faces_median,
-                    &bound_part_faces_std_deviation,
-                    &bound_part_faces_min,
-                    &bound_part_faces_max,
-                    &bound_part_faces_sum);
+    int    cells_average;
+    int    cells_median;
+    double cells_std_deviation;
+    int    cells_min;
+    int    cells_max;
+    int    bound_part_faces_average;
+    int    bound_part_faces_median;
+    double bound_part_faces_std_deviation;
+    int    bound_part_faces_min;
+    int    bound_part_faces_max;
+    int    bound_part_faces_sum;
 
-  if (i_rank == 0) {
-    PDM_printf("Statistics :\n");
-    PDM_printf("  - Number of cells :\n");
-    PDM_printf("       * average            : %i\n", cells_average);
-    PDM_printf("       * median             : %i\n", cells_median);
-    PDM_printf("       * standard deviation : %12.5e\n", cells_std_deviation);
-    PDM_printf("       * min                : %i\n", cells_min);
-    PDM_printf("       * max                : %i\n", cells_max);
-    PDM_printf("  - Number of faces exchanging with another partition :\n");
-    PDM_printf("       * average            : %i\n", bound_part_faces_average);
-    PDM_printf("       * median             : %i\n", bound_part_faces_median);
-    PDM_printf("       * standard deviation : %12.5e\n", bound_part_faces_std_deviation);
-    PDM_printf("       * min                : %i\n", bound_part_faces_min);
-    PDM_printf("       * max                : %i\n", bound_part_faces_max);
-    PDM_printf("       * total              : %i\n", bound_part_faces_sum);
+    PDM_part_stat_get(ppart,
+                      &cells_average,
+                      &cells_median,
+                      &cells_std_deviation,
+                      &cells_min,
+                      &cells_max,
+                      &bound_part_faces_average,
+                      &bound_part_faces_median,
+                      &bound_part_faces_std_deviation,
+                      &bound_part_faces_min,
+                      &bound_part_faces_max,
+                      &bound_part_faces_sum);
+
+    if (i_rank == 0) {
+      PDM_printf("Statistics :\n");
+      PDM_printf("  - Number of cells :\n");
+      PDM_printf("       * average            : %i\n", cells_average);
+      PDM_printf("       * median             : %i\n", cells_median);
+      PDM_printf("       * standard deviation : %12.5e\n", cells_std_deviation);
+      PDM_printf("       * min                : %i\n", cells_min);
+      PDM_printf("       * max                : %i\n", cells_max);
+      PDM_printf("  - Number of faces exchanging with another partition :\n");
+      PDM_printf("       * average            : %i\n", bound_part_faces_average);
+      PDM_printf("       * median             : %i\n", bound_part_faces_median);
+      PDM_printf("       * standard deviation : %12.5e\n", bound_part_faces_std_deviation);
+      PDM_printf("       * min                : %i\n", bound_part_faces_min);
+      PDM_printf("       * max                : %i\n", bound_part_faces_max);
+      PDM_printf("       * total              : %i\n", bound_part_faces_sum);
+    }
   }
   free(dcell_part);
   PDM_part_free(ppart);

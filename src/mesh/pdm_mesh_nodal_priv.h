@@ -33,7 +33,6 @@ extern "C" {
  *
  */
 
-typedef struct PDM_Mesh_nodal_vtx_t PDM_Mesh_nodal_vtx_t;
 
 struct PDM_Mesh_nodal_vtx_t {
 
@@ -77,7 +76,7 @@ typedef struct PDM_Mesh_nodal_block_std_t {
   int                     is_parent_num_get;
   int                     is_parent_entity_g_num_get;
   int                     order;                /*!< Element order */
-  const char             *ho_ordering;          /*!< HO node ordering */
+  char                   *ho_ordering;          /*!< HO node ordering */
 
 
 } PDM_Mesh_nodal_block_std_t;
@@ -199,6 +198,9 @@ typedef struct PDM_Mesh_nodal_prepa_blocks_t {
   PDM_l_num_t  **cell_face_idx;   /*!< Index of cell face connectivity */
   PDM_l_num_t  **cell_face_nb;    /*!< Number of faces per cell */
   PDM_l_num_t  **cell_face;       /*!< Cell face connectivity */
+  PDM_l_num_t  **cell_vtx_idx;    /*!< Index of cell vertex connectivity */
+  PDM_l_num_t  **cell_vtx_nb;     /*!< Number of vertices per cell */
+  PDM_l_num_t  **cell_vtx;        /*!< Cell vertex connectivity */
   PDM_g_num_t  **numabs;          /*!< Global numbering per cell per partition */
   PDM_g_num_t  **face_ln_to_gn;   /*!< Global numbering per face per partition */
 
@@ -214,8 +216,8 @@ typedef struct PDM_Mesh_nodal_prepa_blocks_t {
 
 struct _PDM_Mesh_nodal_t {
 
-  int                                 n_part;                   /*!< Number of partitions */
-  PDM_Mesh_nodal_vtx_t              **vtx;                      /*!< Description des sommmets de chaque partition */
+  int                                  n_part;                  /*!< Number of partitions */
+  PDM_Mesh_nodal_vtx_t               **vtx;                     /*!< Description des sommmets de chaque partition */
   PDM_l_num_t                         *n_cell;                  /*!< Nombre de blocs d'elements standard */
 
   int                                  n_block_std;
@@ -233,7 +235,10 @@ struct _PDM_Mesh_nodal_t {
   int                                 *blocks_id;               /*!< Blocks identifier */
   int                                  n_blocks;                /*!< Total number of blocks */
   int                      is_vtx_def_from_parent;              /*<! Are the points defined from parents */
-  PDM_g_num_t                          **numabs;                 /*<! Global numbering per cell per partition */
+  PDM_g_num_t                        **numabs;                  /*<! Global numbering per cell per partition */
+
+  PDM_l_num_t **cell_vtx_idx;                                   /*<! Index of cell vertex connectivity */
+  PDM_l_num_t **cell_vtx;                                       /*<! Cell vertex connectivity */
 };
 
 

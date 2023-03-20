@@ -1,0 +1,317 @@
+#!/bin/bash
+
+listTest=( @PDM_LIST_TEST@ )
+listNRank=( @PDM_LIST_NRANK@ )
+
+RED='\033[0;31m'
+NC='\033[0m' # No Color
+GREEN='\033[0;32m'
+PURPLE='\033[0;35m'
+
+Help()
+{
+  echo "Run a pdm test case. (without \"-t\" option, run all tests with default rank number)"
+  echo
+  echo "Syntax: pdm_run [-m|mpiexec|no_log_vtk|h] -n <number of ranks> -t <test name and its options>"
+  echo "options:"
+  echo "m                                  Make test before run"
+  echo "h                                  Print this Help"
+  echo "mpiexec                            Run with mpiexec command (default : mpirun)"
+  echo "srun                               Run with mpiexec command (default : mpirun)"
+  echo "n <number of ranks>                Number of ranks (default : 2)"
+  echo "no_log_vtk                         Exit on error if test writes some log and vtk files"
+  echo "t <\"test name and its options\">  Test name and its options "
+  echo
+}
+
+# Get the options 
+
+ExeMPI="mpirun"
+Testoutput=0
+ForbidVtk=0
+NrankUser=0
+runMake=0
+Test=""
+IsSrunMPI=0
+
+while [ -n "$1" ]
+do
+case "$1" in
+    -m) runMake=1;;
+    -n) NrankUser="$2"
+        shift;;
+    -t) Test="$2"
+        shift;;
+    -mpiexec) ExeMPI="mpiexec";;
+    -srun) ExeMPI="srun"
+              IsSrunMPI=1;;
+    -no_log_vtk) ForbidVtk=1;;
+    -h) Help
+        exit;;
+    *) echo "Error : $1 is not an option"
+        exit;;
+esac
+shift
+done
+
+if [[ "${Test}" == "" ]]
+then
+  listComputedTest=( "${listTest[@]}" )
+  listComputedNRank=( "${listNRank[@]}" )
+else
+  testFound=0
+  TestName1=$(echo $Test | awk '{print $1}')
+  i=0
+  for value in "${listTest[@]}" ; do    #print the new array
+    if [[ ${value} =~ ^${TestName1}$ ]]
+    then
+      listComputedTest=( "${TestName1}" ) 
+      if [[ "${Nrank}" == "0" ]]
+      then
+        listComputedNRank=( "${Nrank}" )
+      else  
+        listComputedNRank=( "${listNRank[${i}]}" )
+      fi
+      testFound=1;
+      break;
+    fi
+    ((i=i+1))
+  done
+
+  if [ ${testFound} -eq 0 ]
+  then  
+    echo -e "${RED}Error${NC}: '${TestName1}' is not a test' "
+    exit 1
+  fi
+fi 
+
+IsIntelMPI=$(echo $(${ExeMPI} --version) | grep -c Intel)
+
+i=0
+ifailed=0
+nTest=${#listComputedTest[@]}
+
+scriptOutput=0
+for x in "${listComputedTest[@]}"
+do
+
+  if [[ "${Test}" == "" ]]
+  then
+    TestName=$(echo $x | awk '{print $1}')
+    TestOption=""
+    Nrank=${listComputedNRank[$i]}
+  else
+    TestName=$(echo $Test | awk '{print $1}')
+    TestOption=$(echo $Test |  awk '!($1="")')
+    if [[ "${NrankUser}" == "0" ]]
+    then    
+      Nrank=${listComputedNRank[$i]}
+    else  
+      Nrank=${NrankUser}
+    fi  
+  fi 
+
+  # echo "TestName ${TestName}"
+  # echo "TestOption ${TestOption}"
+  # echo "Nrank ${Nrank}"  
+
+  isPythonTest=$(find . -name "${TestName}.py" | wc -l)
+  
+  postOutput="_o"
+  postErr="_e"
+  
+  OutputFile=$(echo ${TestName}${postOutput})
+  ErrFile=$(echo ${TestName}${postErr})
+  
+  if [ ${runMake} -eq 1 ]
+  then
+    if [[ "${Test}" != "" ]]
+    then  
+      echo -e "${PURPLE}${TestName}: Compile${NC}"
+      make ${TestName}
+      if [ "$?" -ne "0" ]
+      then
+        echo -e "${PURPLE}${TestName}: Compile${NC} - ${RED}Failed${NC}"
+        exit 1
+      fi
+      echo -e "${PURPLE}${TestName}: Compile${NC} - ${GREEN}Passed${NC}"
+    else
+      if [ $i -eq 0 ]
+      then
+        echo -e "${PURPLE}Compile${NC}"
+        make
+        if [ "$?" -ne "0" ]
+        then
+          echo -e "${PURPLE}Compile${NC} - ${RED}Failed${NC}"
+          exit 1
+        fi
+        echo -e "${PURPLE}Compile${NC} - ${GREEN}Passed${NC}"     
+      fi  
+    fi 
+  fi
+  
+  ((j=i+1))
+  printf  "${PURPLE}[%3.3d/%3.3d] - %s: Start${NC}\n" ${j} ${nTest} ${TestName} 
+  
+
+  #
+  # Cleanup
+  
+  rm -rf *.vtk *.log core.* *_ens ${OutputFile}* ${ErrFile}* 
+  
+  #
+  # Run test
+  Testoutput=0
+  pids=()
+
+
+  if [ ${IsSrunMPI} -gt 0 ]
+  then
+    if [ $isPythonTest -gt 0  ]
+    then
+      ${ExeMPI} --verbose --export=@PDM_RUN_PRELOAD_SRUN@,@PDM_RUN_LSAN@,@PDM_RUN_PYTHONPATH@  --output=$OutputFile.%t --error$ErrFile.%t --ntasks=$Nrank  --exclusive /usr/bin/time  -f "Maximum Resident Memory : %M Kb" python ./${TestName}.py ${TestOption} 2>/dev/null &
+    else
+      ${ExeMPI} --verbose --export=@PDM_RUN_PRELOAD_SRUN@,@PDM_RUN_LSAN@ --output=$OutputFile.%t --error$ErrFile.%t --ntasks=$Nrank  --exclusive /usr/bin/time  -f "Maximum Resident Memory : %M Kb" ./${TestName} ${TestOption} &
+    fi
+    pids=(${pids[@]} "$!")
+  else  
+
+    start=$(($(date +%s%N)/1000000))
+
+    if [ ${IsIntelMPI} -gt 0 ]
+    then
+      if [ $isPythonTest -gt 0  ]
+      then
+        @PDM_RUN_LSAN@ @PDM_RUN_PYTHONPATH@ ${ExeMPI} -genv @PDM_RUN_PRELOAD@ -outfile-pattern $OutputFile.%r -errfile-pattern $ErrFile.%r -n $Nrank  /usr/bin/time  -f "Maximum Resident Memory : %M Kb" python ${TestName}.py ${TestOption} 2>/dev/null
+        if [ "$?" -ne "0" ]
+        then
+          Testoutput=1
+        fi
+      else
+        @PDM_RUN_LSAN@ ${ExeMPI} -genv @PDM_RUN_PRELOAD@ -outfile-pattern $OutputFile.%r -errfile-pattern $ErrFile.%r -n $Nrank  /usr/bin/time  -f "Maximum Resident Memory : %M Kb" ./${TestName} ${TestOption} 2>/dev/null
+        if [ "$?" -ne "0" ]
+        then
+          Testoutput=1
+        fi
+      fi
+    else
+      echo -e "${RED}Error${NC}: OpenMPI is not available for pdm_run script"
+      echo -e "${PURPLE}${TestName}: ${RED}Failed${NC}"
+      exit 1
+      @PDM_RUN_LSAN@ @PDM_RUN_PYTHONPATH@ ${ExeMPI} -genv @PDM_RUN_PRELOAD@ -output-filename $OutputFile -n $Nrank /usr/bin/time -f "Maximum Resident Memory : %M Kb" ./${TestName} ${TestOption} 2>/dev/null
+      if [ "$?" -ne "0" ]
+      then
+        Testoutput=1
+      fi
+    fi
+    
+    end=$(($(date +%s%N)/1000000))
+  
+    #
+    # Compute elapsed time
+    
+    elapsed=$(echo "scale=2; ($end-$start)/1000" | bc)
+    
+    #
+    # Check Maximum Resident memory
+    
+    max="-1"
+    min="10000000"
+    
+    minRank=-1
+    maxRank=-1
+    rank=0
+    
+    if [ ${IsIntelMPI} -gt 0 ]
+    then
+      listErrFile=$(ls $ErrFile.*)
+    else
+      listErrFile=$(find $OutputFile -name stderr)
+    fi
+    
+    for file in ${listErrFile}
+    do
+      v=$(grep -m 1 "Maximum Resident Memory" $file | awk '{print $5}')
+      maxRank=$(echo "if($v>$max) $rank else $maxRank" | bc)
+      minRank=$(echo "if($v<$min) $rank else $minRank" | bc)
+      max=$(echo "if($v>$max) $v else $max" | bc)
+      min=$(echo "if($v<$min) $v else $min" | bc)
+      rank=$((rank+1))
+    done
+    
+    maxM=$(echo "scale=2; $max/1000" | bc)
+    minM=$(echo "scale=2; $min/1000" | bc)
+    
+    echo "    Maximum of Maximum Resident Memory: ${maxM} Mb on rank ${maxRank}"
+    echo "    Minimum of Maximum Resident Memory: ${minM} Mb on rank ${minRank}"
+    
+    #
+    # Check *vtk and *log file
+    
+    val_vtk=`ls -l *.vtk  2> /dev/null | wc -l`;
+    val_log=`ls -l *.log  2> /dev/null | wc -l`;
+    
+    if [ $val_vtk -gt 0 ] || [ $val_log -gt 0 ]
+    then
+      echo "    Number of vtk files = ${val_vtk}"
+      echo "    Number of log files = ${val_log}"
+    fi
+    
+    #
+    # Exit
+    
+    if [ "${ForbidVtk}" -eq "1" ]
+    then
+      if [ ${val_vtk} -gt 0 ] || [ ${val_log} -gt 0 ]
+      then
+        if [ "${Testoutput}" -gt "0" ]
+        then
+          echo -e "    ${NC}Error${NC}: Test exited on Error"
+        fi
+        echo -e "    ${RED}Error${NC}: *vtk and *log files are not allowed"
+        printf  "${PURPLE}[%3.3d/%3.3d] - %s: ${RED}Failed${NC}\n" ${j} ${nTest} ${TestName} 
+        Testoutput=1
+      else
+        if [ "${Testoutput}" -eq "0" ]
+        then
+          printf  "${PURPLE}[%3.3d/%3.3d] - %s: ${GREEN}Passed${NC} - %s s\n" ${j} ${nTest} ${TestName}  ${elapsed}
+        else
+          echo -e "    ${RED}Error${NC}: Test exited on Error"
+          printf  "${PURPLE}[%3.3d/%3.3d] - %s: ${RED}Failed${NC}\n" ${j} ${nTest} ${TestName} 
+        fi
+      fi
+    else
+      if [ "${Testoutput}" -eq "0" ]
+      then
+        printf  "${PURPLE}[%3.3d/%3.3d] - %s: ${GREEN}Passed${NC} - %s s\n" ${j} ${nTest} ${TestName} ${elapsed} 
+      else
+        printf  "${PURPLE}[%3.3d/%3.3d] - %s: ${RED}Failed${NC}\n" ${j} ${nTest} ${TestName} 
+      fi
+    fi
+
+    scriptOutput=$(echo "if($Testoutput>$scriptOutput) $Testoutput else $scriptOutput" | bc)
+   
+    ((i=i+1))
+
+    if [ "${Testoutput}" -ne "0" ]
+    then
+      ((ifailed=ifailed+1))
+    fi  
+  fi  
+done
+
+if [ ${IsSrunMPI} -gt 0 ]
+then
+  for pid in "${pids[@]}"
+  do
+    wait $pid
+    if [ "$?" -ne "0" ]
+    then
+      Testoutput=1
+    fi
+  done  
+fi
+
+printf  "\n      ${PURPLE}%3.3d tests failed out of %3.3d\n${NC}" ${ifailed} ${nTest} 
+
+exit ${scriptOutput}

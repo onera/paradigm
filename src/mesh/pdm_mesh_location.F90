@@ -92,7 +92,7 @@ module pdm_mesh_location
 
     function PDM_mesh_location_create_cf (mesh_nature,   &
                                           n_point_cloud, &
-                                          comm,          & 
+                                          comm,          &
                                           owner ) &
                                           result(mloc) &
       bind (c, name = 'PDM_mesh_location_create')
@@ -104,7 +104,7 @@ module pdm_mesh_location
       integer(c_int), value :: mesh_nature
       integer(c_int), value :: n_point_cloud
       integer(c_int), value :: comm
-      integer(c_int), value :: owner  
+      integer(c_int), value :: owner
 
       type(c_ptr)           :: mloc
 
@@ -224,7 +224,7 @@ module pdm_mesh_location
 
 
       type (c_ptr), value :: mloc
-      integer(c_int), value :: mesh_nodal_id
+      type (c_ptr), value :: mesh_nodal_id
 
     end subroutine PDM_mesh_location_shared_nodal_mesh_set
 

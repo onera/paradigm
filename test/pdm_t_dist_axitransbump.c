@@ -860,13 +860,7 @@ int main(int argc, char *argv[])
   double      b        = 0.5;
   int         n_part   = 1;
   int         post     = 0;
-#ifdef PDM_HAVE_PARMETIS
-  PDM_part_split_t method  = PDM_PART_SPLIT_PARMETIS;
-#else
-#ifdef PDM_HAVE_PTSCOTCH
-  PDM_part_split_t method  = PDM_PART_SPLIT_PTSCOTCH;
-#endif
-#endif
+  PDM_part_split_t method  = PDM_PART_SPLIT_HILBERT;
 
   /*
    *  Read args

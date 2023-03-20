@@ -41,6 +41,7 @@
 #include "pdm_closest_points_priv.h"
 #include "pdm_para_octree.h"
 #include "pdm_part_to_block.h"
+#include "pdm_part_to_part.h"
 #include "pdm_block_to_part.h"
 #include "pdm_array.h"
 #include "pdm_sort.h"
@@ -111,6 +112,16 @@ _closest_points_reverse_results
   PDM_g_num_t **tgt_g_num   = (PDM_g_num_t ** ) malloc( cls->tgt_cloud->n_part * sizeof(PDM_g_num_t *));
   int         **tgt_g_num_n = (int         ** ) malloc( cls->tgt_cloud->n_part * sizeof(int         *));
   for (int i_part = 0; i_part < cls->tgt_cloud->n_part; i_part++) {
+
+    // if (1) {
+    //   for (int i = 0; i < cls->tgt_cloud->n_points[i_part]; i++) {
+    //     log_trace(PDM_FMT_G_NUM" : ", cls->tgt_cloud->gnum[i_part][i]);
+    //     PDM_log_trace_array_long(cls->tgt_cloud->closest_src_gnum[i_part] + cls->n_closest*i,
+    //                              cls->n_closest,
+    //                              "");
+    //   }
+    // }
+
     n_points[i_part] = cls->tgt_cloud->n_points[i_part] * cls->n_closest;
     tgt_g_num  [i_part] = (PDM_g_num_t * ) malloc( n_points[i_part] * sizeof(PDM_g_num_t));
     tgt_g_num_n[i_part] = (int         * ) malloc( n_points[i_part] * sizeof(int        ));
@@ -305,6 +316,9 @@ PDM_closest_points_create
     closest->times_cpu_u[i] = 0.;
     closest->times_cpu_s[i] = 0.;
   }
+
+  closest->ptp = NULL;
+  closest->ptp_ownership = PDM_OWNERSHIP_KEEP;
 
   return closest;
 }
@@ -533,6 +547,17 @@ PDM_closest_point_t *cls
                                     closest_src_dist);
   }
 
+  if (0) {
+    for (int i = 0; i < n_tgt; i++) {
+      log_trace(PDM_FMT_G_NUM" (%f %f %f) : ",
+                tgt_g_num[i],
+                tgt_coord[3*i], tgt_coord[3*i+1], tgt_coord[3*i+2]);
+      PDM_log_trace_array_long(closest_src_gnum + cls->n_closest*i,
+                               cls->n_closest,
+                               "");
+    }
+  }
+
 
   // PDM_log_trace_array_long(tgt_g_num, n_tgt, "tgt_g_num:: " );
   // PDM_log_trace_array_double(tgt_coord, 3 * n_tgt, "tgt_coord:: " );
@@ -575,6 +600,19 @@ PDM_closest_point_t *cls
   //<--
 
   _closest_points_reverse_results(cls);
+
+
+  /* Create ptp object */
+  // TO DO: transport triplets to avoid costly gnum_location
+  cls->ptp = PDM_part_to_part_create((const PDM_g_num_t **) cls->src_cloud->gnum,
+                                     (const int          *) cls->src_cloud->n_points,
+                                                            cls->src_cloud->n_part,
+                                     (const PDM_g_num_t **) cls->tgt_cloud->gnum,
+                                     (const int          *) cls->tgt_cloud->n_points,
+                                                            cls->tgt_cloud->n_part,
+                                     (const int         **) cls->src_cloud->tgt_in_src_idx,
+                                     (const PDM_g_num_t **) cls->src_cloud->tgt_in_src,
+                                                            cls->comm);
 
 
   PDM_timer_hang_on(cls->timer);
@@ -748,7 +786,6 @@ PDM_closest_point_t  *cls
         }
       }
     }
-    free (cls->src_cloud->tgt_in_src_dist);
   }
   if (free_tgt_in_src_gnum && free_tgt_in_src_dist) {
     if (cls->src_cloud->tgt_in_src_idx != NULL) {
@@ -762,6 +799,7 @@ PDM_closest_point_t  *cls
 
   free (cls->src_cloud->tgt_in_src_idx);
   free (cls->src_cloud->tgt_in_src);
+  free (cls->src_cloud->tgt_in_src_dist);
 
   if (cls->tgt_cloud->gnum != NULL) {
     free (cls->tgt_cloud->gnum);
@@ -791,6 +829,11 @@ PDM_closest_point_t  *cls
   }
 
   PDM_timer_free(cls->timer);
+
+  if (cls->ptp_ownership == PDM_OWNERSHIP_KEEP) {
+    PDM_part_to_part_free(cls->ptp);
+    cls->ptp = NULL;
+  }
 
   free (cls);
 
@@ -962,6 +1005,29 @@ PDM_closest_points_n_closest_get
 )
 {
   return cls->n_closest;
+}
+
+
+/**
+ * \brief Get part_to_part object to exchange data between
+ * the source and target point clouds (both in user frame)
+ *
+ * \param [in ] cls        Pointer to \ref PDM_closest_point_t object
+ * \param [out] ptp        Pointer to \ref PDM_part_to_part_t object
+ * \param [in ] ownership  Ownership for ptp
+ *
+ */
+
+void
+PDM_closest_points_part_to_part_get
+(
+ PDM_closest_point_t  *cls,
+ PDM_part_to_part_t  **ptp,
+ PDM_ownership_t       ownership
+ )
+{
+  *ptp = cls->ptp;
+  cls->ptp_ownership = ownership;
 }
 
 #ifdef	__cplusplus

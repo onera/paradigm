@@ -33,6 +33,7 @@
 #include "pdm_partitioning_nodal_algorithm.h"
 #include "pdm_vtk.h"
 #include "pdm_ho_ordering.h"
+#include "pdm_array.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -1552,23 +1553,30 @@ PDM_dmesh_nodal_dump_vtk
   int n_section    = PDM_DMesh_nodal_n_section_get(dmn, geom_kind);
 
   for(int i_section = 0; i_section < n_section; ++i_section) {
-
     int id_section = sections_id[i_section];
     int order;
-    const char *ho_ordering = NULL;
+    const char *ho_ordering  = NULL;
+    PDM_g_num_t *dconnec     = NULL;
+    int         *dconnec_idx = NULL;
     const PDM_g_num_t    *delmt_distribution = PDM_DMesh_nodal_distrib_section_get(dmn, geom_kind, id_section);
     int                   n_elt              = PDM_DMesh_nodal_section_n_elt_get  (dmn, geom_kind, id_section);
-    // PDM_g_num_t          *dconnec            = PDM_DMesh_nodal_section_std_get    (dmn, geom_kind, id_section);
-    PDM_g_num_t          *dconnec            = PDM_DMesh_nodal_section_std_ho_get (dmn, geom_kind, id_section, &order, &ho_ordering);
     PDM_Mesh_nodal_elt_t  t_elt              = PDM_DMesh_nodal_section_type_get   (dmn, geom_kind, id_section);
+    if (t_elt == PDM_MESH_NODAL_POLY_2D) {
+      PDM_DMesh_nodal_section_poly2d_get(dmn,
+                                         geom_kind,
+                                         id_section,
+                                         &dconnec_idx,
+                                         &dconnec);
+    }
+    else {
+      assert(t_elt != PDM_MESH_NODAL_POLY_3D);
+      dconnec     = PDM_DMesh_nodal_section_std_ho_get (dmn, geom_kind, id_section, &order, &ho_ordering);
+      int strid   = PDM_Mesh_nodal_n_vtx_elt_get(t_elt, order);
+      dconnec_idx = PDM_array_new_idx_from_const_stride_int(strid, n_elt);
+    }
 
-    int         *dconnec_idx    = (int         * ) malloc( (n_elt+1) * sizeof(int        ));
     PDM_g_num_t *delmt_ln_to_gn = (PDM_g_num_t * ) malloc( (n_elt  ) * sizeof(PDM_g_num_t));
-
-    int strid = PDM_Mesh_nodal_n_vtx_elt_get(t_elt, order);
-    dconnec_idx[0] = 0;
     for(int i = 0; i < n_elt; ++i) {
-      dconnec_idx[i+1] = dconnec_idx[i] + strid;
       delmt_ln_to_gn[i] = delmt_distribution[i_rank] + i + 1;
     }
 
@@ -1609,25 +1617,39 @@ PDM_dmesh_nodal_dump_vtk
      */
     char filename[999];
     sprintf(filename, "%s_section_%2.2d_%2.2d.vtk", filename_patter, i_section, i_rank);
-    PDM_vtk_write_std_elements_ho(filename,
-                                  order,
-                                  pn_vtx,
-                                  pvtx_coord_out,
-                                  pvtx_ln_to_gn,
-                                  t_elt,
-                                  n_elt,
-                                  pcell_vtx,
-                                  delmt_ln_to_gn,
-                                  0,
-                                  NULL,
-                                  NULL);
-
+    if (t_elt == PDM_MESH_NODAL_POLY_2D) {
+      PDM_vtk_write_polydata(filename,
+                             pn_vtx,
+                             pvtx_coord_out,
+                             pvtx_ln_to_gn,
+                             n_elt,
+                             pcell_vtx_idx,
+                             pcell_vtx,
+                             delmt_ln_to_gn,
+                             NULL);
+    }
+    else {
+      PDM_vtk_write_std_elements_ho(filename,
+                                    order,
+                                    pn_vtx,
+                                    pvtx_coord_out,
+                                    pvtx_ln_to_gn,
+                                    t_elt,
+                                    n_elt,
+                                    pcell_vtx,
+                                    delmt_ln_to_gn,
+                                    0,
+                                    NULL,
+                                    NULL);
+    }
     free(tmp_pvtx_coord);
     free(pvtx_ln_to_gn);
     free(pcell_vtx_idx);
     free(pcell_vtx);
 
-    free(dconnec_idx);
+    if (t_elt != PDM_MESH_NODAL_POLY_2D) {
+      free(dconnec_idx);
+    }
     free(delmt_ln_to_gn);
 
     free(pvtx_coord_out);
@@ -1817,15 +1839,15 @@ PDM_dmesh_nodal_to_part_mesh_nodal_elmts
 //     for(int i_section = 0; i_section < n_section; ++i_section) {
 
 //       int id_section = sections_id[i_section];
-//       int  n_elmt    = PDM_part_mesh_nodal_elmts_block_n_elt_get(pmne, id_section, i_part);
-//       PDM_Mesh_nodal_elt_t t_elt = PDM_part_mesh_nodal_elmts_block_type_get(pmne, id_section);
+//       int  n_elmt    = PDM_part_mesh_nodal_elmts_section_n_elt_get(pmne, id_section, i_part);
+//       PDM_Mesh_nodal_elt_t t_elt = PDM_part_mesh_nodal_elmts_section_type_get(pmne, id_section);
 //       int order = 1;
 //       int n_vtx_per_elmt = PDM_Mesh_nodal_n_vertices_element (t_elt, order);
 
 //       int         *elmt_vtx = NULL;
 //       PDM_g_num_t *elmt_g_num = NULL;
 //       int         *parent_num = NULL;
-//       PDM_part_mesh_nodal_elmts_block_std_get(pmne, id_section, i_part, &elmt_vtx, &elmt_g_num, &parent_num);
+//       PDM_part_mesh_nodal_elmts_section_std_get(pmne, id_section, i_part, &elmt_vtx, &elmt_g_num, &parent_num);
 
 //       for(int idx_vtx = 0; idx_vtx < n_elmt * n_vtx_per_elmt; ++idx_vtx) {
 

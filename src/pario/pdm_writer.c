@@ -31,7 +31,10 @@
 #include "pdm_printf.h"
 #include "pdm_error.h"
 #include "pdm_mesh_nodal.h"
-
+#include "pdm_part_mesh_nodal.h"
+#include "pdm_part_mesh_nodal_priv.h"
+#include "pdm_array.h"
+#include "pdm_logging.h"
 
 /*----------------------------------------------------------------------------*/
 
@@ -304,12 +307,27 @@ const PDM_MPI_Comm  comm
 {
   geom->nom_geom = NULL;
 
-  geom->_mesh_nodal = PDM_Mesh_nodal_create (n_part, comm);
+  int mesh_dimension = 3; // ?
+
+  geom->_mesh_nodal = PDM_part_mesh_nodal_create(mesh_dimension, n_part, comm);
   geom->mesh_nodal = geom->_mesh_nodal; 
 
   geom->geom_fmt       = NULL;
   geom->_cs            = NULL;
   geom->pdm_mpi_comm   = comm;
+
+  geom->s_section = 10;
+  geom->section_owner = malloc(sizeof(PDM_ownership_t) * geom->s_section);
+
+  geom->n_part = n_part;
+  geom->_face_vtx_idx  = malloc(sizeof(int *) * n_part);
+  geom->_cell_face_idx = malloc(sizeof(int *) * n_part);
+  for (int i = 0; i < n_part; i++) {
+    geom->_face_vtx_idx [i] = NULL;
+    geom->_cell_face_idx[i] = NULL;
+  }
+
+  geom->geom_kind = PDM_GEOMETRY_KIND_MAX; // not yet defined
 }
 
 
@@ -856,7 +874,7 @@ PDM_writer_geom_create_from_mesh_nodal
 (
  PDM_writer_t              *cs,
  const char                *nom_geom,
- PDM_Mesh_nodal_t          *mesh
+ PDM_part_mesh_nodal_t     *mesh
 )
 {
   /* Erreur si le decoupage des polygones ou polyedres est choisi */
@@ -899,6 +917,42 @@ PDM_writer_geom_create_from_mesh_nodal
     (fmt_ptr->geom_create_fct) (geom);
   }
 
+  geom->s_section = 10;
+  geom->section_owner = malloc(sizeof(PDM_ownership_t) * geom->s_section);
+
+  geom->n_part = PDM_part_mesh_nodal_n_part_get(mesh);
+  geom->_face_vtx_idx  = NULL;
+  geom->_cell_face_idx = NULL;
+
+  /* Infer geometry kind from part mesh_nodal */
+  PDM_geometry_kind_t geom_kind_min;
+  switch (mesh->mesh_dimension) {
+  case 3:
+    geom_kind_min = PDM_GEOMETRY_KIND_VOLUMIC;
+    break;
+  case 2:
+    geom_kind_min = PDM_GEOMETRY_KIND_SURFACIC;
+    break;
+  case 1:
+    geom_kind_min = PDM_GEOMETRY_KIND_RIDGE;
+    break;
+  case 0:
+    geom_kind_min = PDM_GEOMETRY_KIND_CORNER;
+    break;
+  default:
+    PDM_error(__FILE__, __LINE__, 0, "Invalid mesh_dimension %d\n", mesh->mesh_dimension);
+  }
+
+  for (PDM_geometry_kind_t geom_kind = geom_kind_min; geom_kind < PDM_GEOMETRY_KIND_MAX; geom_kind++) {
+    int n_section = PDM_part_mesh_nodal_n_section_in_geom_kind_get(geom->mesh_nodal,
+                                                                   geom_kind);
+
+    if (n_section > 0) {
+      geom->geom_kind = geom_kind;
+      break;
+    }
+  }
+
   return id_geom;
 }
 //<<--
@@ -909,7 +963,7 @@ PDM_writer_geom_set_from_mesh_nodal
 (
  PDM_writer_t              *cs,
  const int                  id_geom,
- PDM_Mesh_nodal_t          *mesh
+ PDM_part_mesh_nodal_t     *mesh
 )
 {
   /* Erreur si le decoupage des polygones ou polyedres est choisi */
@@ -932,6 +986,42 @@ PDM_writer_geom_set_from_mesh_nodal
 
   //_geom_init(geom, n_part, cs->pdm_mpi_comm);
   geom->mesh_nodal  = mesh;
+
+  geom->s_section = 10;
+  geom->section_owner = malloc(sizeof(PDM_ownership_t) * geom->s_section);
+
+  geom->n_part = PDM_part_mesh_nodal_n_part_get(mesh);
+  geom->_face_vtx_idx  = NULL;
+  geom->_cell_face_idx = NULL;
+
+  /* Infer geometry kind from part mesh_nodal */
+  PDM_geometry_kind_t geom_kind_min;
+  switch (mesh->mesh_dimension) {
+  case 3:
+    geom_kind_min = PDM_GEOMETRY_KIND_VOLUMIC;
+    break;
+  case 2:
+    geom_kind_min = PDM_GEOMETRY_KIND_SURFACIC;
+    break;
+  case 1:
+    geom_kind_min = PDM_GEOMETRY_KIND_RIDGE;
+    break;
+  case 0:
+    geom_kind_min = PDM_GEOMETRY_KIND_CORNER;
+    break;
+  default:
+    PDM_error(__FILE__, __LINE__, 0, "Invalid mesh_dimension %d\n", mesh->mesh_dimension);
+  }
+
+  for (PDM_geometry_kind_t geom_kind = geom_kind_min; geom_kind < PDM_GEOMETRY_KIND_MAX; geom_kind++) {
+    int n_section = PDM_part_mesh_nodal_n_section_in_geom_kind_get(geom->mesh_nodal,
+                                                                   geom_kind);
+
+    if (n_section > 0) {
+      geom->geom_kind = geom_kind;
+      break;
+    }
+  }
 
 }
 
@@ -976,7 +1066,7 @@ PDM_writer_geom_coord_set
     abort();
   }
 
-  PDM_Mesh_nodal_coord_set (geom->_mesh_nodal, id_part, n_som, coords, numabs, owner);
+  PDM_part_mesh_nodal_coord_set(geom->_mesh_nodal, id_part, n_som, coords, numabs, owner);
 
   if (0 == 1) {
     printf("n_vtx : %d\n", n_som);
@@ -1035,15 +1125,15 @@ PDM_writer_geom_coord_from_parent_set
     PDM_error(__FILE__, __LINE__, 0, "Bad geom identifier\n");
   }
 
-  PDM_Mesh_nodal_coord_from_parent_set (geom->_mesh_nodal,
-                                        id_part,
-                                        n_som,
-                                        n_som_parent,
-                                        numabs,
-                                        num_parent,
-                                        coords_parent,
-                                        numabs_parent,
-                                        ownership);
+  PDM_part_mesh_nodal_coord_from_parent_set(geom->_mesh_nodal,
+                                            id_part,
+                                            n_som,
+                                            n_som_parent,
+                                            numabs,
+                                            num_parent,
+                                            coords_parent,
+                                            numabs_parent,
+                                            ownership);
 }
 
 /**
@@ -1081,8 +1171,29 @@ PDM_writer_geom_bloc_add
     abort();
   }
 
-  int id_block = PDM_Mesh_nodal_block_add (geom->_mesh_nodal, 
-                                           (PDM_Mesh_nodal_elt_t) t_elt, owner);
+  /* Check geom_kind coherence */
+  PDM_geometry_kind_t geom_kind = PDM_Mesh_nodal_geom_kind_from_elt_type((PDM_Mesh_nodal_elt_t) t_elt);
+
+  if (geom->geom_kind == PDM_GEOMETRY_KIND_MAX) {
+    geom->geom_kind = geom_kind;
+  }
+  else {
+    if (geom_kind != geom->geom_kind) {
+      PDM_error(__FILE__, __LINE__, 0,
+                "Current geometry kind (%d) cannot contain element of type %d\n",
+                (int) geom->geom_kind, (int) t_elt);
+    }
+  }
+
+  int id_block = PDM_part_mesh_nodal_section_add(geom->_mesh_nodal,
+                                                 (PDM_Mesh_nodal_elt_t) t_elt);
+
+
+  if (id_block >= geom->s_section) {
+    geom->s_section = PDM_MAX(geom->s_section, id_block);
+    geom->section_owner = realloc(geom->section_owner, sizeof(PDM_ownership_t) * geom->s_section);
+  }
+  geom->section_owner[id_block] = owner;
 
   return id_block;
 
@@ -1198,8 +1309,9 @@ PDM_writer_geom_bloc_std_set
     abort();
   }
 
-  PDM_Mesh_nodal_block_std_set (geom->_mesh_nodal, id_bloc, id_part,
-                                n_elt, connec, numabs, NULL);
+  PDM_part_mesh_nodal_section_std_set(geom->_mesh_nodal, id_bloc, id_part,
+                                      n_elt, connec, numabs, NULL,
+                                      NULL, geom->section_owner[id_bloc]);
 
 }
 
@@ -1245,8 +1357,9 @@ const PDM_l_num_t    n_elt,
     abort();
   }
 
-  PDM_Mesh_nodal_block_poly2d_set (geom->_mesh_nodal, id_bloc, id_part,
-                                n_elt, connec_idx, connec, numabs, NULL);
+  PDM_part_mesh_nodal_section_poly2d_set(geom->_mesh_nodal, id_bloc, id_part,
+                                         n_elt, connec_idx, connec, numabs, NULL,
+                                         geom->section_owner[id_bloc]);
 
 }
 
@@ -1298,18 +1411,20 @@ const PDM_l_num_t    n_face,
     abort();
   }
 
-  PDM_Mesh_nodal_block_poly3d_set(geom->_mesh_nodal,
-                                  id_bloc,
-                                  id_part,
-                                  n_elt,
-                                  n_face,
-                                  facsom_idx,
-                                  facsom,
-                                  NULL,
-                                  cellfac_idx,
-                                  cellfac,
-                                  numabs,
-                                  NULL);
+  PDM_part_mesh_nodal_section_poly3d_set(geom->_mesh_nodal,
+                                         id_bloc,
+                                         id_part,
+                                         n_elt,
+                                         n_face,
+                                         facsom_idx,
+                                         facsom,
+                                         NULL,
+                                         cellfac_idx,
+                                         cellfac,
+                                         numabs,
+                                         NULL,
+                                         NULL,
+                                         geom->section_owner[id_bloc]);
 }
 
 /**
@@ -1365,19 +1480,55 @@ PDM_writer_geom_cell3d_cellface_add
     abort();
   }
 
-  PDM_Mesh_nodal_cell3d_cellface_add(geom->_mesh_nodal,
-                                     id_part,
-                                     n_cell,
-                                     n_face,
-                                     face_som_idx,
-                                     face_som_nb,
-                                     face_som,
-                                     NULL,
-                                     cell_face_idx,
-                                     cell_face_nb,
-                                     cell_face,
-                                     numabs,
-                                     PDM_OWNERSHIP_KEEP);
+  /* Check geom_kind coherence */
+  PDM_geometry_kind_t geom_kind = PDM_GEOMETRY_KIND_VOLUMIC;
+
+  if (geom->geom_kind == PDM_GEOMETRY_KIND_MAX) {
+    geom->geom_kind = geom_kind;
+  }
+  else {
+    if (geom_kind != geom->geom_kind) {
+      PDM_error(__FILE__, __LINE__, 0,
+                "Current geometry kind (%d) cannot contain element of dimension 3\n",
+                (int) geom->geom_kind);
+    }
+  }
+
+  int *_face_som_idx = face_som_idx;
+  if (face_som_nb != NULL) {
+    _face_som_idx = PDM_array_new_idx_from_sizes_int(face_som_nb, n_face);
+  }
+
+  int *_cell_face_idx = cell_face_idx;
+  if (cell_face_nb != NULL) {
+    _cell_face_idx = PDM_array_new_idx_from_sizes_int(cell_face_nb, n_cell);
+  }
+
+  PDM_part_mesh_nodal_cell3d_cellface_add(geom->_mesh_nodal,
+                                          id_part,
+                                          n_cell,
+                                          n_face,
+                                          _face_som_idx,
+                                          face_som,
+                                          NULL,
+                                          _cell_face_idx,
+                                          cell_face,
+                                          numabs,
+                                          PDM_OWNERSHIP_KEEP);
+
+  if (face_som_nb != NULL) {
+    if (geom->_face_vtx_idx[id_part] != NULL) {
+      free(geom->_face_vtx_idx[id_part]);
+    }
+    geom->_face_vtx_idx[id_part] = _face_som_idx;
+  }
+  if (cell_face_nb != NULL) {
+    if (geom->_cell_face_idx[id_part] != NULL) {
+      free(geom->_cell_face_idx[id_part]);
+    }
+    geom->_cell_face_idx[id_part] = _cell_face_idx;
+  }
+
   if (0 == 1) {
     printf("n_cell : %d\n", n_cell);
     for (int i = 0; i < n_cell; i++) {
@@ -1453,18 +1604,40 @@ PDM_writer_geom_cell2d_cellface_add
     abort();
   }
 
-  PDM_Mesh_nodal_cell2d_celledge_add (geom->_mesh_nodal,
-                                      id_part,
-                                      n_cell,
-                                      n_face,
-                                      face_som_idx,
-                                      face_som_nb,
-                                      face_som,
-                                      cell_face_idx,
-                                      cell_face_nb,
-                                      cell_face,
-                                      numabs,
-                                      PDM_OWNERSHIP_KEEP);
+  /* Check geom_kind coherence */
+  PDM_geometry_kind_t geom_kind = PDM_GEOMETRY_KIND_SURFACIC;
+
+  if (geom->geom_kind == PDM_GEOMETRY_KIND_MAX) {
+    geom->geom_kind = geom_kind;
+  }
+  else {
+    if (geom_kind != geom->geom_kind) {
+      PDM_error(__FILE__, __LINE__, 0,
+                "Current geometry kind (%d) cannot contain element of dimension 2\n",
+                (int) geom->geom_kind);
+    }
+  }
+
+  int *_cell_face_idx = cell_face_idx;
+  if (cell_face_nb != NULL) {
+    _cell_face_idx = PDM_array_new_idx_from_sizes_int(cell_face_nb, n_cell);
+  }
+
+  PDM_UNUSED(face_som_idx);
+  PDM_UNUSED(face_som_nb );
+
+  PDM_part_mesh_nodal_face2d_faceedge_add(geom->_mesh_nodal,
+                                          id_part,
+                                          n_cell,
+                                          n_face,
+                                          face_som,
+                                          _cell_face_idx,
+                                          cell_face,
+                                          numabs,
+                                          PDM_OWNERSHIP_KEEP);
+  if (cell_face_nb != NULL) {
+    geom->_cell_face_idx[id_part] = _cell_face_idx;
+  }
 }
 
 
@@ -1514,14 +1687,35 @@ PDM_writer_geom_faces_facesom_add
     abort();
   }
 
-  PDM_Mesh_nodal_faces_facevtx_add (geom->_mesh_nodal,
-                                    id_part,
-                                    n_face,
-                                    face_som_idx,
-                                    face_som_nb,
-                                    face_som,
-                                    numabs,
-                                    PDM_OWNERSHIP_KEEP);
+  /* Check geom_kind coherence */
+  PDM_geometry_kind_t geom_kind = PDM_GEOMETRY_KIND_SURFACIC;
+
+  if (geom->geom_kind == PDM_GEOMETRY_KIND_MAX) {
+    geom->geom_kind = geom_kind;
+  }
+  else {
+    if (geom_kind != geom->geom_kind) {
+      PDM_error(__FILE__, __LINE__, 0,
+                "Current geometry kind (%d) cannot contain element of dimension 2\n",
+                (int) geom->geom_kind);
+    }
+  }
+
+  int *_face_som_idx = face_som_idx;
+  if (face_som_nb != NULL) {
+    _face_som_idx = PDM_array_new_idx_from_sizes_int(face_som_nb, n_face);
+  }
+
+  PDM_part_mesh_nodal_faces_facevtx_add(geom->_mesh_nodal,
+                                        id_part,
+                                        n_face,
+                                        _face_som_idx,
+                                        face_som,
+                                        numabs,
+                                        PDM_OWNERSHIP_KEEP);
+  if (face_som_nb != NULL) {
+    free(_face_som_idx);
+  }
 }
 
 /**
@@ -1561,13 +1755,12 @@ PDM_writer_geom_write
 
   /* Determination de la numerotation absolue interne des elements
      Independante du parallelisme */
-
-  const int n_blocks = PDM_Mesh_nodal_n_blocks_get (geom->mesh_nodal);
-  const int *blocks_id = PDM_Mesh_nodal_blocks_id_get (geom->mesh_nodal);
+  const int n_blocks   = PDM_part_mesh_nodal_n_section_get  (geom->mesh_nodal);
+  // const int *blocks_id = PDM_part_mesh_nodal_sections_id_get(geom->mesh_nodal);
 
   for (int i = 0; i < n_blocks; i++) {
-    PDM_Mesh_nodal_g_num_in_block_compute (geom->mesh_nodal, blocks_id[i],
-                                      PDM_OWNERSHIP_KEEP);
+    PDM_part_mesh_nodal_g_num_in_section_compute(geom->mesh_nodal, i,
+                                                 PDM_OWNERSHIP_KEEP);
   }
 
   /* Ecriture au format */
@@ -1622,7 +1815,7 @@ PDM_writer_geom_free
   if (geom != NULL) {
 
     if (geom->_mesh_nodal != NULL) {
-      PDM_Mesh_nodal_free (geom->_mesh_nodal);
+      PDM_part_mesh_nodal_free(geom->_mesh_nodal);
       geom->_mesh_nodal = NULL;
       geom->mesh_nodal = NULL;      
     }
@@ -1639,6 +1832,28 @@ PDM_writer_geom_free
 
     if (fmt_ptr->geom_free_fct != NULL) {
       (fmt_ptr->geom_free_fct) (geom);
+    }
+
+    if (geom->section_owner != NULL) {
+      free(geom->section_owner);
+    }
+
+    if (geom->_face_vtx_idx != NULL) {
+      for (int i = 0; i < geom->n_part; i++) {
+        if (geom->_face_vtx_idx[i] != NULL) {
+          free(geom->_face_vtx_idx[i]);
+        }
+      }
+      free(geom->_face_vtx_idx);
+    }
+
+    if (geom->_cell_face_idx != NULL) {
+      for (int i = 0; i < geom->n_part; i++) {
+        if (geom->_cell_face_idx[i] != NULL) {
+          free(geom->_cell_face_idx[i]);
+        }
+      }
+      free(geom->_cell_face_idx);
     }
 
     free(geom);
@@ -1685,7 +1900,7 @@ PDM_writer_geom_data_free
   if (geom != NULL) {
 
     if (geom->_mesh_nodal != NULL) {
-      PDM_Mesh_nodal_partial_free (geom->_mesh_nodal);
+      PDM_part_mesh_nodal_partial_free(geom->_mesh_nodal);
     }
 
   }
@@ -2014,7 +2229,7 @@ PDM_writer_var_set
     abort();
   }
 
-  int n_part = PDM_Mesh_nodal_n_part_get (geom->mesh_nodal);
+  int n_part = PDM_part_mesh_nodal_n_part_get(geom->mesh_nodal);
 
   if (var->_val[id_geom] == NULL) {
     var->_val[id_geom] = (double **) malloc(sizeof(double *) * n_part);
@@ -2029,9 +2244,16 @@ PDM_writer_var_set
     abort();
   }
 
-  int n_cell = PDM_Mesh_nodal_n_cell_get (geom->mesh_nodal, id_part);
-  int *num_cell_parent_to_local = PDM_Mesh_nodal_num_cell_parent_to_local_get (geom->mesh_nodal, id_part);
-  int n_som = PDM_Mesh_nodal_n_vertices_get(geom->mesh_nodal, id_part);
+  if (geom->geom_kind == PDM_GEOMETRY_KIND_MAX) {
+    PDM_error(__FILE__, __LINE__, 0, "Undefined geometry kind\n");
+  }
+  int n_cell = PDM_part_mesh_nodal_n_elmts_get(geom->mesh_nodal,
+                                               geom->geom_kind,
+                                               id_part);
+  int *num_cell_parent_to_local = PDM_part_mesh_nodal_num_elmt_parent_to_local_get(geom->mesh_nodal,
+                                                                                   geom->geom_kind,
+                                                                                   id_part);
+  int n_som = PDM_part_mesh_nodal_n_vtx_get(geom->mesh_nodal, id_part);
 
   if (var->loc == PDM_WRITER_VAR_ELEMENTS) {
     val_geom[id_part] = (double *) malloc(sizeof(double) * var->dim * n_cell);
@@ -2100,7 +2322,7 @@ PDM_writer_var_data_free
           abort();
         }
 
-        int n_part = PDM_Mesh_nodal_n_part_get (geom->mesh_nodal);
+        int n_part = PDM_part_mesh_nodal_n_part_get(geom->mesh_nodal);
 
         if ((geom != NULL) && (var->_val[idx] != NULL)) {
           for (int j = 0; j < n_part; j++) {
@@ -2310,7 +2532,7 @@ PDM_writer_geom_data_reset
   if (geom != NULL) {
 
     if (geom->_mesh_nodal != NULL) {
-      PDM_Mesh_nodal_reset (geom->_mesh_nodal);
+      PDM_part_mesh_nodal_reset(geom->_mesh_nodal);
     }
 
   }

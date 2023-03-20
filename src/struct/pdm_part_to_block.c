@@ -86,6 +86,24 @@ int n_ptb = 0;
  * Static function definitions
  *============================================================================*/
 
+void
+PDM_extents_conformize(int    dim,
+                       double extents[],
+                       double eps)
+{
+  double max_range = 1.e-12;
+  for (int i = 0; i < dim; i++) {
+    max_range = PDM_MAX (max_range, extents[i+dim] - extents[i]);
+  }
+
+  // eps = 1.e-3
+  const double epsilon = eps * max_range; // Add eps in cas of only one point ...
+  for (int i = 0; i < dim; i++) {
+    extents[i    ] -= 1.1 * epsilon; // On casse la symetrie !
+    extents[i+dim] +=       epsilon;
+  }
+}
+
 static
 void
 _counting_sort_long
@@ -890,7 +908,7 @@ _distrib_data_morton
   double s[3];
   PDM_morton_encode_coords(dim, max_level, extents, ptb->n_elt_proc, concat_vtx_coord, morton_codes, d, s);
 
-  if(ptb->n_part > 1 ) {
+  if(ptb->n_part != 1) {
     free(concat_vtx_coord);
   }
 
@@ -904,7 +922,7 @@ _distrib_data_morton
                               morton_codes_idx, // Is the distrib
                               ptb->comm);
 
-  if(ptb->n_part > 1 ) {
+  if(ptb->n_part != 1) {
     free(concat_weight);
   }
 
@@ -1991,15 +2009,15 @@ PDM_part_to_block_global_statistic_reset
  * \brief Get global timer in part to block
  *
  * \param [in]   comm                 MPI communicator
- * \param [out]  min_exch_rank_send   Global min part of ranks used to send 
- * \param [out]  min_exch_rank_recv   Global min part of ranks used to receive 
- * \param [out]  max_exch_rank_send   Global max part of ranks used to send 
+ * \param [out]  min_exch_rank_send   Global min part of ranks used to send
+ * \param [out]  min_exch_rank_recv   Global min part of ranks used to receive
+ * \param [out]  max_exch_rank_send   Global max part of ranks used to send
  * \param [out]  max_exch_rank_recv   Global max part of ranks used to receive
- * \param [out]  min_exch_data_send   Global min sent data for a rank 
+ * \param [out]  min_exch_data_send   Global min sent data for a rank
  * \param [out]  min_exch_data_recv   Global min received data for a rank
  * \param [out]  max_exch_data_send   Global max sent data for a rank
  * \param [out]  max_exch_data_recv   Global max received data for a rank
- * 
+ *
  */
 
 void
@@ -2021,7 +2039,7 @@ PDM_part_to_block_global_statistic_get
 
   PDM_MPI_Allreduce (exch_data, min_exch_data, 2,
                      PDM_MPI_UNSIGNED_LONG_LONG, PDM_MPI_MIN, comm);
-  
+
   PDM_MPI_Allreduce (exch_data, max_exch_data, 2,
                      PDM_MPI_UNSIGNED_LONG_LONG, PDM_MPI_MAX, comm);
 
@@ -2036,13 +2054,13 @@ PDM_part_to_block_global_statistic_get
 
   PDM_MPI_Allreduce (min_exch_rank, min_min_exch_rank, 2,
                      PDM_MPI_INT, PDM_MPI_MIN, comm);
-  
+
   PDM_MPI_Allreduce (max_exch_rank, max_max_exch_rank, 2,
                      PDM_MPI_INT, PDM_MPI_MAX, comm);
 
   *min_exch_rank_send = min_min_exch_rank[0];
-  *min_exch_rank_recv = min_min_exch_rank[1]; 
-  *max_exch_rank_send = max_max_exch_rank[0]; 
+  *min_exch_rank_recv = min_min_exch_rank[1];
+  *max_exch_rank_send = max_max_exch_rank[0];
   *max_exch_rank_recv = max_max_exch_rank[1];
 
 }
@@ -2061,7 +2079,7 @@ PDM_part_to_block_global_statistic_get
  * \param [out]  max_elaps_create  Global max elapsed for create function
  * \param [out]  min_cpu_create    Global min cpu for create function
  * \param [out]  max_cpu_create    Global max cpu for create function
- * \param [out]  min_elaps_create2 Global min elapsed for create2 function 
+ * \param [out]  min_elaps_create2 Global min elapsed for create2 function
  * \param [out]  max_elaps_create2 Global max elapsed for create2 function
  * \param [out]  min_cpu_create2   Global min cpu for create2 function
  * \param [out]  max_cpu_create2   Global max cpu for create2 function
@@ -2069,7 +2087,7 @@ PDM_part_to_block_global_statistic_get
  * \param [out]  max_elaps_exch    Global max elapsed for exch function
  * \param [out]  min_cpu_exch      Global min cpu for exch function
  * \param [out]  max_cpu_exch      Global max cpu for exch function
- * 
+ *
  */
 
 void
@@ -2098,13 +2116,13 @@ PDM_part_to_block_global_timer_get
 
   PDM_MPI_Allreduce (t_elaps, min_elaps, 3,
                      PDM_MPI_DOUBLE, PDM_MPI_MIN, comm);
-  
+
   PDM_MPI_Allreduce (t_elaps, max_elaps, 3,
                      PDM_MPI_DOUBLE, PDM_MPI_MAX, comm);
 
   PDM_MPI_Allreduce (t_cpu, min_cpu, 3,
                      PDM_MPI_DOUBLE, PDM_MPI_MIN, comm);
-  
+
   PDM_MPI_Allreduce (t_cpu, max_cpu, 3,
                      PDM_MPI_DOUBLE, PDM_MPI_MAX, comm);
 
@@ -2112,8 +2130,8 @@ PDM_part_to_block_global_timer_get
   *max_elaps_create  = max_elaps[0];
   *min_cpu_create    = min_cpu[0];
   *max_cpu_create    = max_cpu[0];
-  *min_elaps_create2 = min_elaps[1]; 
-  *max_elaps_create2 = max_elaps[1]; 
+  *min_elaps_create2 = min_elaps[1];
+  *max_elaps_create2 = max_elaps[1];
   *min_cpu_create2   = min_cpu[1];
   *max_cpu_create2   = max_cpu[1];
   *min_elaps_exch    = min_elaps[2];
@@ -2196,10 +2214,10 @@ PDM_part_to_block_create
     }
   }
 
-  max_exch_rank[0] = PDM_MAX(max_exch_rank[0], n_rank_send); 
-  max_exch_rank[1] = PDM_MAX(max_exch_rank[1], n_rank_recv); 
-  min_exch_rank[0] = PDM_MIN(min_exch_rank[0], n_rank_send); 
-  min_exch_rank[1] = PDM_MIN(min_exch_rank[1], n_rank_recv); 
+  max_exch_rank[0] = PDM_MAX(max_exch_rank[0], n_rank_send);
+  max_exch_rank[1] = PDM_MAX(max_exch_rank[1], n_rank_recv);
+  min_exch_rank[0] = PDM_MIN(min_exch_rank[0], n_rank_send);
+  min_exch_rank[1] = PDM_MIN(min_exch_rank[1], n_rank_recv);
 
   PDM_timer_hang_on(t_timer[0]);
   double t2_elaps = PDM_timer_elapsed(t_timer[0]);
@@ -2280,10 +2298,10 @@ PDM_part_to_block_create_from_distrib
     }
   }
 
-  max_exch_rank[0] = PDM_MAX(max_exch_rank[0], n_rank_send); 
-  max_exch_rank[1] = PDM_MAX(max_exch_rank[1], n_rank_recv); 
-  min_exch_rank[0] = PDM_MIN(min_exch_rank[0], n_rank_send); 
-  min_exch_rank[1] = PDM_MIN(min_exch_rank[1], n_rank_recv); 
+  max_exch_rank[0] = PDM_MAX(max_exch_rank[0], n_rank_send);
+  max_exch_rank[1] = PDM_MAX(max_exch_rank[1], n_rank_recv);
+  min_exch_rank[0] = PDM_MIN(min_exch_rank[0], n_rank_send);
+  min_exch_rank[1] = PDM_MIN(min_exch_rank[1], n_rank_recv);
 
   PDM_timer_hang_on(t_timer[1]);
   double t2_elaps = PDM_timer_elapsed(t_timer[1]);
