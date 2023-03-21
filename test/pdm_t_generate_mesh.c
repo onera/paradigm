@@ -244,6 +244,28 @@ int main(int argc, char *argv[])
                                  "rectangle_mesh");
   }
 
+  // Generate simplified rectangle mesh
+  int       n_vtx = 0;
+  int       n_elt = 0;
+  double   *coords      = NULL;
+  int      *elt_vtx_idx = NULL;
+  int      *elt_vtx     = NULL;
+  PDM_generate_mesh_rectangle_simplified(comm,
+                                         &n_vtx,
+                                         &n_elt,
+                                         &coords,
+                                         &elt_vtx_idx,
+                                         &elt_vtx);
+
+  if (visu) {
+    log_trace("n_vtx : %d\n", n_vtx);
+    log_trace("n_elt : %d\n", n_elt);
+    PDM_log_trace_array_double(coords, 3*n_vtx, "coords : ");
+    PDM_log_trace_array_int(elt_vtx_idx, n_elt + 1, "elt_vtx_idx : ");
+    PDM_log_trace_array_int(elt_vtx, elt_vtx_idx[n_elt], "elt_vtx : ");
+  }
+
+
   // free
   PDM_part_mesh_nodal_free(pmn);
 
