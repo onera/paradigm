@@ -36,16 +36,16 @@ program testf
 #endif
 
   !-----------------------------------------------------------
-  integer,                    parameter :: comm = MPI_COMM_WORLD
-  integer                               :: code
-  integer                               :: i_rank
-  integer                               :: n_rank
+  integer,                      parameter :: comm = MPI_COMM_WORLD
+  integer                                 :: code
+  integer                                 :: i_rank
+  integer                                 :: n_rank
 
-  integer                               :: n_vtx
-  integer                               :: n_elt
-  double precision,             pointer :: coords(:,:)
-  integer(kind=pdm_l_num_s),    pointer :: elt_vtx_idx(:)
-  integer(kind=pdm_l_num_s),    pointer :: elt_vtx(:)
+  integer                                 :: n_vtx
+  integer                                 :: n_elt
+  double precision, dimension(:), pointer :: coords
+  integer(kind=pdm_l_num_s),      pointer :: elt_vtx_idx(:)
+  integer(kind=pdm_l_num_s),      pointer :: elt_vtx(:)
   !-----------------------------------------------------------
 
 

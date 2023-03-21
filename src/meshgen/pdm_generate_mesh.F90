@@ -82,19 +82,19 @@ module pdm_generate_mesh
       use iso_c_binding
       implicit none
 
-      integer,                intent(in) :: comm
-      integer,               intent(out) :: n_vtx
-      integer,               intent(out) :: n_elt
-      double precision,          pointer :: coords(:,:)
-      integer(kind=pdm_l_num_s), pointer :: elt_vtx_idx(:)
-      integer(kind=pdm_l_num_s), pointer :: elt_vtx(:)
+      integer,                     intent(in) :: comm
+      integer,                    intent(out) :: n_vtx
+      integer,                    intent(out) :: n_elt
+      double precision, dimension(:), pointer :: coords
+      integer(kind=pdm_l_num_s),      pointer :: elt_vtx_idx(:)
+      integer(kind=pdm_l_num_s),      pointer :: elt_vtx(:)
 
-      integer(c_int)                     :: c_comm
-      integer(c_int)                     :: c_n_vtx
-      integer(c_int)                     :: c_n_elt
-      type(c_ptr)                        :: c_coords
-      type(c_ptr)                        :: c_elt_vtx_idx
-      type(c_ptr)                        :: c_elt_vtx
+      integer(c_int)                          :: c_comm
+      integer(c_int)                          :: c_n_vtx
+      integer(c_int)                          :: c_n_elt
+      type(c_ptr)                             :: c_coords
+      type(c_ptr)                             :: c_elt_vtx_idx
+      type(c_ptr)                             :: c_elt_vtx
 
       c_comm = PDM_MPI_Comm_f2c(comm)
 
@@ -110,7 +110,7 @@ module pdm_generate_mesh
 
       call c_f_pointer(c_coords, &
                        coords,   &
-                       [n_vtx, 3])
+                       [3 * n_vtx])
 
       call c_f_pointer(c_elt_vtx_idx, &
                        elt_vtx_idx,   &
