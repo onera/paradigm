@@ -255,6 +255,18 @@ double                  *closest_octree_pt_dist2
  */
 
 void
+PDM_para_octree_single_closest_point_block_frame
+(
+ const PDM_para_octree_t    *octree,
+ const int                   n_pts,
+       double               *pts_coord,
+       PDM_g_num_t          *pts_g_num,
+       PDM_part_to_block_t **ptb_out,
+       PDM_g_num_t         **dclosest_octree_pt_g_num,
+       double              **dclosest_octree_pt_dist2
+ );
+
+void
 PDM_para_octree_single_closest_point
 (
 const PDM_para_octree_t *octree,
