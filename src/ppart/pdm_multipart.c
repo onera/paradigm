@@ -59,6 +59,8 @@
 #include "pdm_unique.h"
 #include "pdm_partitioning_nodal_algorithm.h"
 #include "pdm_dmesh_nodal_to_dmesh.h"
+#include "pdm_part_mesh.h"
+#include "pdm_part_mesh_priv.h"
 
 /*----------------------------------------------------------------------------
  *  Header for the current file
@@ -87,6 +89,145 @@ extern "C" {
 /*=============================================================================
  * Private function definitions
  *============================================================================*/
+
+
+/**
+ *
+ * \brief Translate in _part_t structure (only mapping)
+ */
+void
+_map_part_t_with_part_mesh
+(
+  PDM_part_mesh_t* pm
+)
+{
+  int n_part = pm->n_part;
+  _part_t **pdm_part = (_part_t **) malloc(n_part * sizeof(_part_t *));
+  for(int i_part = 0; i_part < n_part; ++i_part) {
+
+    pdm_part[i_part] = _part_create();
+
+    pdm_part[i_part]->n_vtx                    = PDM_part_mesh_n_entity_get(pm, i_part, PDM_MESH_ENTITY_VERTEX);
+    pdm_part[i_part]->n_cell                   = PDM_part_mesh_n_entity_get(pm, i_part, PDM_MESH_ENTITY_CELL  );
+    pdm_part[i_part]->n_section                = 0;
+    pdm_part[i_part]->n_elt                    = NULL;
+
+    pdm_part[i_part]->n_face                   = PDM_part_mesh_n_entity_get(pm, i_part, PDM_MESH_ENTITY_FACE);
+    pdm_part[i_part]->n_edge                   = PDM_part_mesh_n_entity_get(pm, i_part, PDM_MESH_ENTITY_EDGE);
+    pdm_part[i_part]->n_face_group             = PDM_part_mesh_n_bound_get(pm, PDM_BOUND_TYPE_FACE);
+    pdm_part[i_part]->n_edge_group             = PDM_part_mesh_n_bound_get(pm, PDM_BOUND_TYPE_EDGE);
+
+    pdm_part[i_part]->n_face_part_bound        = 0;
+    pdm_part[i_part]->n_vtx_part_bound         = 0;
+
+    PDM_part_mesh_vtx_coord_get(pm, i_part, &pdm_part[i_part]->vtx, PDM_OWNERSHIP_BAD_VALUE);
+    PDM_part_mesh_connectivity_get(pm,
+                                   i_part,
+                                   PDM_CONNECTIVITY_TYPE_FACE_VTX,
+                                   &pdm_part[i_part]->face_vtx,
+                                   &pdm_part[i_part]->face_vtx_idx,
+                                   PDM_OWNERSHIP_BAD_VALUE);
+
+    PDM_part_mesh_connectivity_get(pm,
+                                   i_part,
+                                   PDM_CONNECTIVITY_TYPE_CELL_FACE,
+                                   &pdm_part[i_part]->cell_face,
+                                   &pdm_part[i_part]->cell_face_idx,
+                                   PDM_OWNERSHIP_BAD_VALUE);
+
+    PDM_part_mesh_connectivity_get(pm,
+                                   i_part,
+                                   PDM_CONNECTIVITY_TYPE_FACE_EDGE,
+                                   &pdm_part[i_part]->face_edge,
+                                   &pdm_part[i_part]->face_edge_idx,
+                                   PDM_OWNERSHIP_BAD_VALUE);
+
+    PDM_part_mesh_connectivity_get(pm,
+                                   i_part,
+                                   PDM_CONNECTIVITY_TYPE_EDGE_FACE,
+                                   &pdm_part[i_part]->edge_face,
+                                   &pdm_part[i_part]->edge_face_idx,
+                                   PDM_OWNERSHIP_BAD_VALUE);
+
+    int* face_cell_idx = NULL;
+    PDM_part_mesh_connectivity_get(pm,
+                                   i_part,
+                                   PDM_CONNECTIVITY_TYPE_FACE_CELL,
+                                   &pdm_part[i_part]->face_cell,
+                                   &face_cell_idx,
+                                   PDM_OWNERSHIP_BAD_VALUE);
+
+    int* edge_vtx_idx = NULL;
+    PDM_part_mesh_connectivity_get(pm,
+                                   i_part,
+                                   PDM_CONNECTIVITY_TYPE_FACE_CELL,
+                                   &pdm_part[i_part]->edge_vtx,
+                                   &edge_vtx_idx,
+                                   PDM_OWNERSHIP_BAD_VALUE);
+
+    pdm_part[i_part]->face_group_idx           = NULL;
+    pdm_part[i_part]->face_group               = NULL;
+
+
+    pdm_part[i_part]->face_part_bound_proc_idx = NULL;
+    pdm_part[i_part]->face_part_bound_part_idx = NULL;
+    pdm_part[i_part]->face_part_bound          = NULL;
+    pdm_part[i_part]->edge_part_bound_proc_idx = NULL;
+    pdm_part[i_part]->edge_part_bound_part_idx = NULL;
+    pdm_part[i_part]->edge_part_bound          = NULL;
+    pdm_part[i_part]->vtx_part_bound_proc_idx  = NULL;
+    pdm_part[i_part]->vtx_part_bound_part_idx  = NULL;
+    pdm_part[i_part]->vtx_part_bound           = NULL;
+
+    pdm_part[i_part]->face_bound_idx           = NULL;
+    pdm_part[i_part]->face_bound               = NULL;
+    pdm_part[i_part]->face_join_idx            = NULL;
+    pdm_part[i_part]->face_join                = NULL;
+
+    pdm_part[i_part]->edge_bound_idx           = NULL;
+    pdm_part[i_part]->edge_bound               = NULL;
+    pdm_part[i_part]->edge_join_idx            = NULL;
+    pdm_part[i_part]->edge_join                = NULL;
+    pdm_part[i_part]->elt_section_ln_to_gn     = NULL;
+
+    pdm_part[i_part]->face_ln_to_gn            = NULL;
+    pdm_part[i_part]->cell_ln_to_gn            = NULL;
+    pdm_part[i_part]->edge_ln_to_gn            = NULL;
+    pdm_part[i_part]->vtx_ln_to_gn             = NULL;
+
+    pdm_part[i_part]->face_group_ln_to_gn      = NULL;
+    pdm_part[i_part]->face_bound_ln_to_gn      = NULL;
+    pdm_part[i_part]->edge_bound_ln_to_gn      = NULL;
+    pdm_part[i_part]->face_join_ln_to_gn       = NULL;
+
+    pdm_part[i_part]->cell_tag                 = NULL;
+    pdm_part[i_part]->face_tag                 = NULL;
+    pdm_part[i_part]->edge_tag                 = NULL;
+    pdm_part[i_part]->vtx_tag                  = NULL;
+
+    pdm_part[i_part]->cell_weight              = NULL;
+    pdm_part[i_part]->face_weight              = NULL;
+
+    pdm_part[i_part]->cell_color               = NULL;
+    pdm_part[i_part]->face_color               = NULL;
+    pdm_part[i_part]->face_hp_color            = NULL;
+    pdm_part[i_part]->edge_color               = NULL;
+    pdm_part[i_part]->vtx_color                = NULL;
+    pdm_part[i_part]->thread_color             = NULL;
+    pdm_part[i_part]->hyperplane_color         = NULL;
+
+    pdm_part[i_part]->vtx_ghost_information    = NULL;
+
+    pdm_part[i_part]->new_to_old_order_cell    = NULL;
+    pdm_part[i_part]->new_to_old_order_face    = NULL;
+    pdm_part[i_part]->new_to_old_order_edge    = NULL;
+    pdm_part[i_part]->new_to_old_order_vtx     = NULL;
+
+    pdm_part[i_part]->subpartlayout            = NULL;
+  }
+
+}
+
 
 /**
  *
@@ -1929,7 +2070,7 @@ PDM_MPI_Comm       comm
 
 
   // Fill _part_t structures with temporary arrays
-  pmeshes->parts = (_part_t **) malloc(pmeshes->tn_part*sizeof(_part_t*));
+  pmeshes->parts = (_part_t **) malloc(n_part * sizeof(_part_t*));
   for (int ipart = 0; ipart < n_part; ipart++) {
     pmeshes->parts[ipart] = _part_create();
 
@@ -2669,7 +2810,7 @@ PDM_MPI_Comm      comm
                                        &pvtx_coord);
 
   // Fill _part_t structures with temporary arrays
-  pmeshes->parts = (_part_t **) malloc(pmeshes->tn_part*sizeof(_part_t*));
+  pmeshes->parts = (_part_t **) malloc(n_part * sizeof(_part_t*));
   for (int ipart = 0; ipart < n_part; ipart++) {
     pmeshes->parts[ipart] = _part_create();
 
