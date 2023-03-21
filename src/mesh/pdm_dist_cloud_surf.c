@@ -1009,6 +1009,9 @@ _dist_cloud_surf_compute_optim
 {
   int dbg_enabled = 0;
 
+  const double bbox_tolerance   = 1e-8;
+  const double newton_tolerance = 1e-6;
+
   const int n_point_cloud           = dist->n_point_cloud;
   PDM_part_mesh_nodal_t *mesh_nodal = dist->mesh_nodal;
   PDM_surf_mesh_t       *surf_mesh  = dist->_surf_mesh;
@@ -1216,7 +1219,7 @@ _dist_cloud_surf_compute_optim
         PDM_part_mesh_nodal_elmts_elt_extents_compute(pmne,
                                                       id_section,
                                                       i_part,
-                                                      1e-8,
+                                                      bbox_tolerance,
                                            (double *) vtx_coord,
                                                       _extents);
 
@@ -1233,7 +1236,7 @@ _dist_cloud_surf_compute_optim
     }
   }
   else if (surf_mesh != NULL) {
-    PDM_surf_mesh_compute_faceExtentsMesh (surf_mesh, 1e-8);
+    PDM_surf_mesh_compute_faceExtentsMesh (surf_mesh, bbox_tolerance);
     for (int i_part = 0; i_part < n_part_mesh; i_part++) {
       part_n_elt[i_part] = PDM_surf_mesh_part_n_face_get (surf_mesh, i_part);
 
@@ -2007,6 +2010,22 @@ _dist_cloud_surf_compute_optim
     PDM_g_num_t *pts_closest_face_g_num = malloc(    n_extract_pts * sizeof(PDM_g_num_t));
     // int         *pts_closest_face_init_loc = malloc(3*  n_extract_pts * sizeof(int));
 
+    double *work_array = NULL;
+    int s_work_array = 0;
+    for (int i = 0; i < n_extract_boxes; i++) {
+      if (PDM_Mesh_nodal_elmt_is_ho(elt_type[i])) {
+        int elt_dim = PDM_Mesh_nodal_elt_dim_get(elt_type[i]);
+        int n_node = PDM_Mesh_nodal_n_vtx_elt_get(elt_type[i],
+                                                  elt_order[i]);
+        s_work_array = PDM_MAX(s_work_array, n_node * (elt_dim+1));
+      }
+    }
+
+    if (s_work_array > 0) {
+      work_array = malloc(sizeof(double) * s_work_array);
+    }
+
+
     for(int i_pts = 0; i_pts < n_extract_pts; ++i_pts) {
       pts_dist2[i_pts] = HUGE_VAL;
       pts_closest_face_g_num[i_pts] = -1;
@@ -2057,13 +2076,14 @@ _dist_cloud_surf_compute_optim
         for(int idx_pts = dbox_pts_idx[i_elmt]; idx_pts < dbox_pts_idx[i_elmt+1]; ++idx_pts) {
           int i_pts = box_pts[idx_pts]-1;
           double lproj[3];
+          double lweight[3];
           double ldist;
           PDM_triangle_status_t status =
           PDM_triangle_evaluate_position(&pts_coords[3*i_pts],
                                          lvtx_coords,
                                          lproj,
                                          &ldist,
-                                         NULL);
+                                         lweight);
 
           if (status == PDM_TRIANGLE_DEGENERATED) {
             continue;
@@ -2086,6 +2106,7 @@ _dist_cloud_surf_compute_optim
           int i_pts = box_pts[idx_pts]-1;
           double lproj[3];
           double ldist;
+          // TO DO: re-use _locate_in_polygon from pdm_point_location.c (promote to public)
           PDM_polygon_status_t status =
           PDM_polygon_evaluate_position(&pts_coords[3*i_pts],
                                         n_elmt_vtx,
@@ -2122,13 +2143,27 @@ _dist_cloud_surf_compute_optim
           int i_pts = box_pts[idx_pts]-1;
           double lproj[3];
           double uvw[3];
-          double ldist = PDM_ho_location(elt_type[i_elmt],
+          double ldist = HUGE_VAL;
+          int converged = 0;
+          ldist = PDM_ho_location_newton(elt_type[i_elmt],
                                          elt_order[i_elmt],
                                          n_elmt_vtx,
                                          lvtx_coords,
                                          &pts_coords[3*i_pts],
+                                         newton_tolerance,
                                          lproj,
-                                         uvw);
+                                         uvw,
+                                         &converged,
+                                         work_array);
+          if (!converged) {
+            ldist = PDM_ho_location(elt_type[i_elmt],
+                                    elt_order[i_elmt],
+                                    n_elmt_vtx,
+                                    lvtx_coords,
+                                    &pts_coords[3*i_pts],
+                                    lproj,
+                                    uvw);
+          }
 
         if (ldist < pts_dist2[i_pts]) {
             pts_dist2[i_pts]     = ldist;
@@ -2192,6 +2227,10 @@ _dist_cloud_surf_compute_optim
     free(pts_coords);
     free(elt_order);
     free(elt_type);
+
+    if (work_array != NULL) {
+      free(work_array);
+    }
 
     if (pmne != NULL) {
       free(pextract_face_vtx    );
