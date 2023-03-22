@@ -180,13 +180,14 @@ _deformation
   double frequency = 4.;
 
   for (int i = 0; i < n_vtx; i++) {
-    double x = (vtx_coord[3*i    ] - 0.5) / length;
-    double y = (vtx_coord[3*i + 1] - 0.5) / length;
-    double z = (vtx_coord[3*i + 2] - 0.5) / length;
+    // double x = (vtx_coord[3*i    ] - 0.5) / length;
+    // double y = (vtx_coord[3*i + 1] - 0.5) / length;
+    // double z = (vtx_coord[3*i + 2] - 0.5) / length;
 
-    vtx_coord[3*i    ] += amplitude*length*cos(frequency*y);
-    vtx_coord[3*i + 1] += amplitude*length*cos(frequency*z);
-    vtx_coord[3*i + 2] += amplitude*length*cos(frequency*x);
+    // vtx_coord[3*i    ] += amplitude*length*cos(frequency*y);
+    // vtx_coord[3*i + 1] += amplitude*length*cos(frequency*z);
+    // vtx_coord[3*i + 2] += amplitude*length*cos(frequency*x);
+    vtx_coord[3*i+2] = vtx_coord[3*i]*vtx_coord[3*i];
   }
 
 }
@@ -357,8 +358,8 @@ int main(int argc, char *argv[])
                              0, // seed
                              0, // geometric_g_num
                              n_g_pts_clouds,
-                             -0.1*radius, -0.1*radius, -0.5*radius,
-                             1.1*radius, 1.1*radius, 0.5*radius,
+                             -0.5*length, -0.5*length, -0.5*length,// -0.1*radius, -0.1*radius, -0.5*radius,
+                             0.5*length, 0.5*length, 0.5*length,// 1.1*radius, 1.1*radius, 0.5*radius,
                              &n_pts_clouds,
                              &pts_coord,
                              &pts_g_num);
@@ -378,9 +379,9 @@ int main(int argc, char *argv[])
                          order,
                          elt_type,
                          n_vtx_seg,
-                         0.,
-                         0.,
-                         0.,
+                         -0.5*length,
+                         -0.5*length,
+                         -0.5*length,
                          length,
                          part_method,
                          n_part,
@@ -456,8 +457,13 @@ int main(int argc, char *argv[])
     memcpy(g_num,                pts_g_num,        sizeof(PDM_g_num_t) * n_pts_clouds);
     memcpy(g_num + n_pts_clouds, closest_elt_gnum, sizeof(PDM_g_num_t) * n_pts_clouds);
 
-    const char   *field_name []  = {"distance2"};
-    const double *field_value[1] = {distance};
+    double *_closest_elt_gnum = malloc(sizeof(double) * n_pts_clouds);
+    for (int i = 0; i < n_pts_clouds; i++) {
+      _closest_elt_gnum[i] = (double) closest_elt_gnum[i];
+    }
+
+    const char   *field_name []  = {"distance2", "closest_face"};
+    const double *field_value[2] = {distance, _closest_elt_gnum};
 
     PDM_vtk_write_std_elements_double(filename,
                                       n_pts_clouds * 2,
@@ -467,10 +473,10 @@ int main(int argc, char *argv[])
                                       n_pts_clouds,
                                       connec,
                                       pts_g_num,
-                                      1,
+                                      2,
                                       field_name,
                                       field_value);
-
+    free(_closest_elt_gnum);
     free(coord);
     free(g_num);
     free(connec);
