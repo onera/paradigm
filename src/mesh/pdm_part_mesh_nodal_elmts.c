@@ -5036,6 +5036,7 @@ const PDM_ownership_t               ownership
     pmne->prepa_blocks->n_poly2d_proc = 0;  /* Nb de poly2d par proc */
     pmne->prepa_blocks->n_cell = (PDM_l_num_t *) malloc(sizeof(PDM_l_num_t)*pmne->n_part);
     pmne->prepa_blocks->n_face = (PDM_l_num_t *) malloc(sizeof(PDM_l_num_t)*pmne->n_part);
+    pmne->prepa_blocks->n_vtx  = (PDM_l_num_t *) malloc(sizeof(PDM_l_num_t)*pmne->n_part);
     pmne->prepa_blocks->n_tria = (PDM_l_num_t *) malloc(sizeof(PDM_l_num_t)*pmne->n_part);
     pmne->prepa_blocks->n_quad = (PDM_l_num_t *) malloc(sizeof(PDM_l_num_t)*pmne->n_part);
     pmne->prepa_blocks->n_poly2d = (PDM_l_num_t *) malloc(sizeof(PDM_l_num_t)*pmne->n_part);
@@ -5078,6 +5079,8 @@ const PDM_ownership_t               ownership
   pmne->prepa_blocks->n_poly2d_proc         += n_poly2d;
   pmne->prepa_blocks->add_etat[id_part]      = 1;
   pmne->prepa_blocks->n_cell[id_part]        = n_face;
+  pmne->prepa_blocks->n_face[id_part]        = n_edge;
+  pmne->prepa_blocks->n_vtx[id_part]         = n_vtx;
   pmne->prepa_blocks->n_tria[id_part]        = n_tria;
   pmne->prepa_blocks->n_quad[id_part]        = n_quad;
   pmne->prepa_blocks->n_poly2d[id_part]      = n_poly2d;
@@ -5087,7 +5090,6 @@ const PDM_ownership_t               ownership
   pmne->prepa_blocks->cell_face[id_part]     = (PDM_l_num_t *) face_edge;
   pmne->prepa_blocks->numabs[id_part]        = (PDM_g_num_t *) face_ln_to_gn;
   pmne->prepa_blocks->add_etat[id_part]      = 1;
-  pmne->prepa_blocks->n_face[id_part]        = n_edge;
 
   /* Creation des blocs si toutes les parts sont remplies */
 
@@ -5198,13 +5200,13 @@ const PDM_ownership_t               ownership
       /* Construction de la connectivite sommet-> arrete */
 
       PDM_l_num_t *connec_som_are =
-        (PDM_l_num_t *) malloc(sizeof(PDM_l_num_t) * 2 * n_vtx);
+        (PDM_l_num_t *) malloc(sizeof(PDM_l_num_t) * 2 * pmne->prepa_blocks->n_vtx[i_part]);
 
       PDM_l_num_t idx_tria   = 0;
       PDM_l_num_t idx_quad   = n_tria;
       PDM_l_num_t idx_poly2d = idx_quad + n_quad;
 
-      for (int j = 0; j < 2 * n_vtx; j++) {
+      for (int j = 0; j < 2 * pmne->prepa_blocks->n_vtx[i_part]; j++) {
         connec_som_are[j] = -1;
       }
 

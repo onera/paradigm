@@ -195,6 +195,7 @@ typedef struct PDM_Mesh_nodal_prepa_blocks_t {
   PDM_l_num_t  **face_vtx;        /*!< Face vertex connectivity */
   PDM_l_num_t  *n_cell;           /*!< Number of cells */
   PDM_l_num_t  *n_face;           /*!< Number of faces */
+  PDM_l_num_t  *n_vtx;            /*!< Number of vertices */
   PDM_l_num_t  **cell_face_idx;   /*!< Index of cell face connectivity */
   PDM_l_num_t  **cell_face_nb;    /*!< Number of faces per cell */
   PDM_l_num_t  **cell_face;       /*!< Cell face connectivity */
