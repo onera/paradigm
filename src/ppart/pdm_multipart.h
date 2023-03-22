@@ -203,19 +203,11 @@ PDM_multipart_run_ppart
 
 
 /**
-<<<<<<< HEAD
  * \brief Retreive the partitionned mesh
  *
  * \param [in]  multipart             Pointer to \ref PDM_multipart_t object
  * \param [in]  i_zone                Id of zone
  * \param [out] pmesh                 Partitionned mesh
-=======
- * \brief Retreive the partitionned nodal mesh
- *
- * \param [in]  multipart             Pointer to \ref PDM_multipart_t object
- * \param [in]  i_zone                Id of zone
- * \param [out] pmesh_nodal           Nodal partitionned mesh
->>>>>>> fc19b99a... [generate_mesh] begin sphere mesh
  * \param [in]  ownership             Who is responsible to free retreived data ?
  *
  */
