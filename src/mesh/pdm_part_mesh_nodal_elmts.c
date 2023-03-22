@@ -5711,7 +5711,7 @@ const PDM_ownership_t               ownership
       free(pmne->prepa_blocks->n_pyramid);
       free(pmne->prepa_blocks->n_poly3d);
       free(pmne->prepa_blocks->cell_vtx_idx);
-      free(pmne->prepa_blocks->cell_vtx_nb);
+      // free(pmne->prepa_blocks->cell_vtx_nb);
       free(pmne->prepa_blocks->cell_vtx);
       free(pmne->prepa_blocks->add_etat);
       free(pmne->prepa_blocks->numabs);
