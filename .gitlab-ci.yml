@@ -76,9 +76,9 @@ unit_test:
   script:
     - echo "Runner directory is $PWD; move to working directory $CUSTOM_CI_DIR"
     - cd $CUSTOM_CI_DIR/build$MATRIX_KEY/test
-    - ./pdm_run -srun
+    - ./pdm_run
     - cd $CUSTOM_CI_DIR/build$MATRIX_KEY/extensions/paradigma/test
-    - ./pdm_run -srun
+    - ./pdm_run
     # - cd $CUSTOM_CI_DIR/build$MATRIX_KEY
     # - ctest --output-junit $CI_PROJECT_DIR/paradigm_ctest$MATRIX_KEY.xml
    #    # Artefacts are searched in CI_PROJECT_DIR, but job was executed in CUSTOM_CI_DIR
