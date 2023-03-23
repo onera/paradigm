@@ -275,7 +275,7 @@ if (PDM_ENABLE_STATIC_Fortran_INTERFACE OR PDM_ENABLE_SHARED_Fortran_INTERFACE)
   test_fortran_create (pdm_t_sphere_surf_gen_f 1 PDM_LIST_TEST PDM_LIST_NRANK)
   test_fortran_create (pdm_t_multipart_f 2 PDM_LIST_TEST PDM_LIST_NRANK)
   test_fortran_create (pdm_t_mesh_nodal_cellvtx_f 2 PDM_LIST_TEST PDM_LIST_NRANK)
-  # test_fortran_create (pdm_t_part_mesh_nodal_cellvtx_f 2 PDM_LIST_TEST PDM_LIST_NRANK)
+  test_fortran_create (pdm_t_part_mesh_nodal_cellvtx_f 2 PDM_LIST_TEST PDM_LIST_NRANK)
   # test_fortran_create (pdm_t_io  2 PDM_LIST_TEST PDM_LIST_NRANK)
 endif()
 

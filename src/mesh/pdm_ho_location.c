@@ -6419,7 +6419,12 @@ _compute_uvw_ho
     diff_weight[i] = &work_array[(i+1)*n_node];
   }
 
-  double finite_difference_dx = 1e-8;
+  /* TO DO : use smarter finite difference step
+   * - adapt to tolerance (or last Newton step size)
+   * - beware of cancellation error amplified by division
+   * - compute exact Jacobian matrix?
+   */
+  double finite_difference_dx = 1e-8; // hard-coded -_-'
   double inv_finite_difference_dx = 1./finite_difference_dx;
 
 
@@ -6453,7 +6458,7 @@ _compute_uvw_ho
     PDM_ho_basis(elt_type,
                  order,
                  n_node,
-                 4,
+                 elt_dim+1,
                  _uvw,
                  work_array);
 
@@ -6601,6 +6606,11 @@ _compute_uvw_ho
           if (dbg_enabled) {
             PDM_log_trace_array_double(child_uvw, elt_dim-1, "child_uvw  : ");
             PDM_log_trace_array_double(uvw,       elt_dim,   "parent_uvw : ");
+          }
+        }
+        else {
+          if (dbg_enabled) {
+            log_trace("child did not converged\n");
           }
         }
         return child_converged;
@@ -6811,7 +6821,7 @@ PDM_ho_location_newton
                              uvw,
                              _work_array);
 
-  *converged = (stat >= 0);
+  *converged = (stat > 0);
 
   double dist2 = HUGE_VAL;
   if (*converged) {

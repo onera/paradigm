@@ -352,6 +352,17 @@ PDM_multipart_part_graph_comm_vtx_dim_get
        int       *n_vtx_part_bound
 );
 
+
+void
+PDM_multipart_part_graph_comm_edge_dim_get
+(
+ PDM_multipart_t *multipart,
+ const int        i_zone,
+ const int        i_part,
+       int       *n_edge_part_bound
+);
+
+
 /**
  *
  * \brief Returns the data arrays of a given partition
@@ -435,6 +446,18 @@ const int            i_part,
       int          **vtx_part_bound_proc_idx,
       int          **vtx_part_bound_part_idx,
       int          **vtx_part_bound
+);
+
+
+void
+PDM_multipart_part_graph_comm_edge_data_get
+(
+PDM_multipart_t     *multipart,
+const int            i_zone,
+const int            i_part,
+      int          **edge_part_bound_proc_idx,
+      int          **edge_part_bound_part_idx,
+      int          **edge_part_bound
 );
 
 void

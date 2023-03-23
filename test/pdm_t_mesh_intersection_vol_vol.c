@@ -1140,36 +1140,6 @@ main
   // compute
   PDM_mesh_intersection_compute(mi);
 
-  // debug
-  double local_vol_A_B;
-  double global_vol_A_B;
-  double global_vol_A;
-
-  PDM_mesh_intersection_stat_get(mi,
-                                 &local_vol_A_B,
-                                 &global_vol_A_B,
-                                 &global_vol_A);
-
-  if (i_rank == 0) {
-    printf("total volume of A inter B : local = %20.16f, global = %20.16f (%3.3f%%)\n",
-           local_vol_A_B, global_vol_A_B,
-           100*global_vol_A_B / global_vol_A);
-
-    double exact = 1;
-    for (int i = 0; i < 3; i++) {
-      if (shift_b[i] < 0) {
-        exact *= PDM_MAX(0, PDM_MIN(length_a, length_b + shift_b[i]));
-      }
-      else {
-        exact *= PDM_MAX(0, length_a - shift_b[i]);
-      }
-    }
-    printf("error : absolute = %e, relative = %e\n",
-           PDM_ABS(global_vol_A_B - exact),
-           PDM_ABS(global_vol_A_B - exact)/exact);
-  }
-
-
 
 
   PDM_part_to_part_t *ptp = NULL;
@@ -1177,7 +1147,7 @@ main
                                          &ptp,
                                          PDM_OWNERSHIP_USER);
 
-
+  double l_volume_AB = 0.;
   // Check ptp
   if (ptp != NULL) {
     int  *n_ref_b = NULL;
@@ -1191,6 +1161,17 @@ main
     PDM_part_to_part_gnum1_come_from_get(ptp,
                                          &pelt_b_elt_a_idx,
                                          &pelt_b_elt_a);
+
+
+    for (int ipart = 0; ipart < n_part; ipart++) {
+      double *elt_b_elt_a_volume = NULL;
+      PDM_mesh_intersection_result_from_b_get(mi,
+                                              ipart,
+                                              &elt_b_elt_a_volume);
+      for (int i = 0; i < pelt_b_elt_a_idx[ipart][n_ref_b[ipart]]; i++) {
+        l_volume_AB += elt_b_elt_a_volume[i];
+      }
+    }
 
     if (verbose) {
       log_trace("FROM A USER POV\n");
@@ -1288,9 +1269,24 @@ main
   }
 
 
+  double g_volume_AB;
+  PDM_MPI_Allreduce(&l_volume_AB, &g_volume_AB, 1, PDM_MPI_DOUBLE, PDM_MPI_SUM, comm);
 
-
-
+  if (i_rank == 0) {
+    printf("total volume of A inter B : %20.16f\n", g_volume_AB);
+    double exact = 1;
+    for (int i = 0; i < 3; i++) {
+      if (shift_b[i] < 0) {
+        exact *= PDM_MAX(0, PDM_MIN(length_a, length_b + shift_b[i]));
+      }
+      else {
+        exact *= PDM_MAX(0, length_a - shift_b[i]);
+      }
+    }
+    printf("error : absolute = %e, relative = %e\n",
+           PDM_ABS(g_volume_AB - exact),
+           PDM_ABS(g_volume_AB - exact)/exact);
+  }
 
 
 

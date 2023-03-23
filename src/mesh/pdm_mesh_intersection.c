@@ -3165,16 +3165,23 @@ _intersect_ray_face
   }
 
   double t;
-  return PDM_polygon_ray_intersection(ray_origin,
-                                      ray_direction,
-                                      face_vtx_n,
-                                      face_coord,
-                                      face_center,
-                                      face_normal,
-                                      face_bound,
-                                      intersection_coord,
-                                      &t,
-                                      NULL);
+  PDM_polygon_status_t stat = PDM_polygon_ray_intersection(ray_origin,
+                                                           ray_direction,
+                                                           face_vtx_n,
+                                                           face_coord,
+                                                           face_center,
+                                                           face_normal,
+                                                           face_bound,
+                                                           intersection_coord,
+                                                           &t,
+                                                           NULL);
+  if (stat == PDM_POLYGON_INSIDE) {
+    if (t < 0 || t > 1) {
+      stat = PDM_POLYGON_OUTSIDE;
+    }
+  }
+
+  return stat;
 }
 
 static
@@ -3382,13 +3389,12 @@ _mesh_intersection_vol_line
   // int n_init_loc_tot = 0;
   for(int i_cell = 0; i_cell < n_cellA; ++i_cell) {
     for(int idx_line = cellA_lineB_post_idx[i_cell]; idx_line < cellA_lineB_post_idx[i_cell+1]; ++idx_line) {
-      int i_line = cellA_lineB[i_cell];
+      int i_line = cellA_lineB_post[idx_line];
       cellA_lineB_post_g_num[  idx_line  ] = elt_b_ln_to_gn[  i_line  ];
       elt_a_elt_b_init_loc  [3*idx_line  ] = elt_b_init_loc[3*i_line  ];
       elt_a_elt_b_init_loc  [3*idx_line+1] = elt_b_init_loc[3*i_line+1];
       elt_a_elt_b_init_loc  [3*idx_line+2] = elt_b_init_loc[3*i_line+2];
 
-      // for(int j = 0; j < )
     }
   }
 

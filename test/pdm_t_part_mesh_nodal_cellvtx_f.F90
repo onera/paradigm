@@ -183,7 +183,7 @@ program testf
   end if
 
   ! Récupération de la connectivité du maillage
-  call pdm_part_mesh_nodal_cell_vtx_connectivity_get & !-
+  call pdm_part_mesh_nodal_cell_vtx_connect_get & !-
   (mesh,                                        & !- IDENTIFICATEUR OBJET LOCALISATEUR
    0,                                           & !- INDICE DE PARTITION DU MAILLAGE NODAL
    tmp_cell_vtx_idx,                            & !- ADRESSES DES NUMEROS DE SOMMETS PAR CELLULE
@@ -207,6 +207,7 @@ program testf
   ! Création de l'objet "MAILLAGE NODAL"
   call pdm_part_mesh_nodal_create               & !
   (mesh,                                        & !- IDENTIFICATEUR OBJET MAILLAGE NODAL
+   3,                                           & !- DIMENSION DU MAILLAGE NODAL
    1,                                           & !- NOMBRE DE PARTITIONS DU MAILLAGE NODAL SUR LE PROCESSUS COURANT
    f_comm)                                        !- COMMUNICATEUR MPI
 
