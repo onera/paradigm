@@ -506,7 +506,7 @@ int main(int argc, char *argv[])
              &loc_method);
 
   if (filename == NULL) {
-    filename = (char *) "meshes/box.mesh";
+    filename = (char *) PDM_MESH_DIR"box.mesh";
   }
 
   PDM_dmesh_nodal_t *dmn = PDM_reader_gamma_dmesh_nodal(comm,

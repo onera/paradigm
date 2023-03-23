@@ -215,7 +215,7 @@ char *argv[]
   }
   else {
     PDM_dmesh_nodal_t *dmn = PDM_reader_stl_dmesh_nodal(comm,
-                                                        "meshes/sphere.stl");
+                                                        PDM_MESH_DIR"sphere.stl");
 
     const PDM_g_num_t *distrib = PDM_DMesh_nodal_distrib_vtx_get(dmn);
 
