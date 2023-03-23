@@ -5334,6 +5334,7 @@ const PDM_ownership_t               ownership
     if (pmne->prepa_blocks != NULL) {
       free(pmne->prepa_blocks->n_cell);
       free(pmne->prepa_blocks->n_face);
+      free(pmne->prepa_blocks->n_vtx);
       free(pmne->prepa_blocks->n_tria);
       free(pmne->prepa_blocks->n_quad);
       free(pmne->prepa_blocks->n_poly2d);
