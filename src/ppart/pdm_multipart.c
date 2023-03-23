@@ -3659,6 +3659,26 @@ PDM_multipart_part_graph_comm_vtx_dim_get
   *n_vtx_part_bound = _pmeshes.parts[i_part]->vtx_part_bound_part_idx[_pmeshes.tn_part];
 }
 
+void
+PDM_multipart_part_graph_comm_edge_dim_get
+(
+ PDM_multipart_t *multipart,
+ const int        i_zone,
+ const int        i_part,
+       int       *n_edge_part_bound
+)
+{
+  _pdm_multipart_t *_multipart = (_pdm_multipart_t *) multipart;
+
+  assert(i_zone < _multipart->n_zone && i_part < _multipart->n_part[i_zone]);
+  _part_mesh_t _pmeshes = _multipart->pmeshes[i_zone];
+
+  // printf(" n_edge_part_bound = %i \n", _pmeshes.parts[i_part]->edge_part_bound_part_idx[_pmeshes.tn_part]);
+  // printf(" _pmeshes.tn_part = %i \n", _pmeshes.tn_part);
+
+  *n_edge_part_bound = _pmeshes.parts[i_part]->edge_part_bound_part_idx[_pmeshes.tn_part];
+}
+
 /**
  *
  * \brief Returns the data arrays of a given partition
@@ -3960,6 +3980,30 @@ const int            i_part,
   *vtx_part_bound_part_idx = _pmeshes.parts[i_part]->vtx_part_bound_part_idx;
   *vtx_part_bound          = _pmeshes.parts[i_part]->vtx_part_bound;
 }
+
+void
+PDM_multipart_part_graph_comm_edge_data_get
+(
+PDM_multipart_t     *multipart,
+const int            i_zone,
+const int            i_part,
+      int          **edge_part_bound_proc_idx,
+      int          **edge_part_bound_part_idx,
+      int          **edge_part_bound
+)
+{
+   _pdm_multipart_t *_multipart = (_pdm_multipart_t *) multipart;
+
+   // table_res[] = is_getted;
+
+  assert(i_zone < _multipart->n_zone && i_part < _multipart->n_part[i_zone]);
+  _part_mesh_t _pmeshes = _multipart->pmeshes[i_zone];
+
+  *edge_part_bound_proc_idx = _pmeshes.parts[i_part]->edge_part_bound_proc_idx;
+  *edge_part_bound_part_idx = _pmeshes.parts[i_part]->edge_part_bound_part_idx;
+  *edge_part_bound          = _pmeshes.parts[i_part]->edge_part_bound;
+}
+
 
 
 void

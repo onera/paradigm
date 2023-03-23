@@ -162,23 +162,17 @@ _store_cell_vtx
   PDM_geometry_kind_t   geom_kind
 )
 {
-
-  int n_blocks   = 0;
-  int n_parts    = 0;
-  int *blocks_id = NULL;
-
   if (ml->mesh_nodal != NULL) {
-    n_blocks  = PDM_part_mesh_nodal_n_section_in_geom_kind_get(ml->mesh_nodal, geom_kind);
-    n_parts   = PDM_part_mesh_nodal_n_part_get(ml->mesh_nodal);
-    blocks_id = PDM_part_mesh_nodal_sections_id_in_geom_kind_get(ml->mesh_nodal, geom_kind);
-  }
+    int n_parts = PDM_part_mesh_nodal_n_part_get(ml->mesh_nodal);
 
-  for (int ipart = 0; ipart < n_parts; ipart++) {
-    PDM_part_mesh_nodal_cell_vtx_connect_get(ml->mesh_nodal,
-                                             geom_kind,
-                                             ipart,
-                                             &ml->cell_vtx_idx[ipart],
-                                             &ml->cell_vtx    [ipart]);
+    for (int ipart = 0; ipart < n_parts; ipart++) {
+      PDM_part_mesh_nodal_cell_vtx_connect_get(ml->mesh_nodal,
+                                               geom_kind,
+                                               ipart,
+                                               &ml->cell_vtx_idx[ipart],
+                                               &ml->cell_vtx    [ipart]);
+    }
+
   }
 }
 

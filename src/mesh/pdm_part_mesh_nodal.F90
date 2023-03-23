@@ -401,69 +401,85 @@ module PDM_part_mesh_nodal
 
   end subroutine PDM_part_mesh_nodal_cell3d_cellface_add
 
-!!> Get cell-vertex connectivity
-!!!
-!!! @param[in]  mesh          Pointer to \ref PDM_part_mesh_nodal object
-!!! @param[in]  id_part       Partition identifier
-!!! @param[out] cell_vtx_idx  Index of cell vertex connectivity
-!!! @param[out] cell_face     Cell vertex connectivity
-!
-!  subroutine PDM_part_mesh_nodal_cell_vtx_connectivity_get (mesh, id_part, cell_vtx_idx, cell_vtx)
-!    use iso_c_binding
-!
-!    implicit none
-!
-!    type(c_ptr), value             :: mesh
-!    integer, intent(in)            :: id_part
-!    integer (pdm_l_num_s), pointer :: cell_vtx_idx(:)
-!    integer (pdm_l_num_s), pointer :: cell_vtx(:)
-!    type(c_ptr)    :: c_cell_vtx_idx = C_NULL_PTR
-!    type(c_ptr)    :: c_cell_vtx = C_NULL_PTR
-!    integer(c_int) :: n_elt
-!
-!    interface
-!
-!      subroutine PDM_part_mesh_nodal_cell_vtx_connectivity_get_c (mesh, id_part, cell_vtx_idx, cell_vtx) &
-!        bind(c, name='PDM_part_mesh_nodal_cell_vtx_connectivity_get')
-!
-!        use iso_c_binding
-!        use pdm
-!
-!        implicit none
-!
-!        type(c_ptr),                 value :: mesh
-!        integer (c_int), intent(in), value :: id_part
-!        type (c_ptr)                       :: cell_vtx_idx
-!        type (c_ptr)                       :: cell_vtx
-!      end subroutine
-!
-!      function PDM_part_mesh_nodal_n_cell_get_c (mesh, id_part) result (n_elt) &
-!        bind(c, name='PDM_part_mesh_nodal_n_cell_get')
-!
-!        use iso_c_binding
-!        use pdm
-!
-!        implicit none
-!
-!        type(c_ptr),                 value :: mesh
-!        integer (c_int), intent(in), value :: id_part
-!        integer(c_int)                     :: n_elt
-!      end function
-!
-!    end interface
-!
-!    n_elt = PDM_part_mesh_nodal_n_cell_get_c(mesh, id_part)
-!
-!    call  PDM_part_mesh_nodal_cell_vtx_connectivity_get_c (mesh, id_part, c_cell_vtx_idx, c_cell_vtx)
-!
-!    call c_f_pointer(c_cell_vtx_idx,   &
-!                     cell_vtx_idx,     &
-!                     [n_elt+1])
-!
-!    call c_f_pointer(c_cell_vtx,   &
-!                     cell_vtx,     &
-!                     [cell_vtx_idx(n_elt+1)])
-!
-!  end subroutine PDM_part_mesh_nodal_cell_vtx_connectivity_get
+!> Get cell-vertex connectivity
+!!
+!! @param[in]  mesh          Pointer to \ref PDM_part_mesh_nodal object
+!! @param[in]  id_part       Partition identifier
+!! @param[out] cell_vtx_idx  Index of cell vertex connectivity
+!! @param[out] cell_vtx      Cell vertex connectivity
+
+  subroutine PDM_part_mesh_nodal_cell_vtx_connect_get (mesh, id_part, cell_vtx_idx, cell_vtx)
+    use iso_c_binding
+
+    implicit none
+
+    type(c_ptr), value             :: mesh
+    integer, intent(in)            :: id_part
+    integer (pdm_l_num_s), pointer :: cell_vtx_idx(:)
+    integer (pdm_l_num_s), pointer :: cell_vtx(:)
+    type(c_ptr)    :: c_cell_vtx_idx = C_NULL_PTR
+    type(c_ptr)    :: c_cell_vtx = C_NULL_PTR
+    integer(c_int) :: geom_kind
+    integer(c_int) :: n_elt
+
+    interface
+
+      subroutine PDM_part_mesh_nodal_cell_vtx_connect_get_c (mesh, geom_kind, id_part, cell_vtx_idx, cell_vtx) &
+        bind(c, name='PDM_part_mesh_nodal_cell_vtx_connect_get')
+
+        use iso_c_binding
+        use pdm
+
+        implicit none
+
+        type(c_ptr),                 value :: mesh
+        integer (c_int), intent(in), value :: geom_kind
+        integer (c_int), intent(in), value :: id_part
+        type (c_ptr)                       :: cell_vtx_idx
+        type (c_ptr)                       :: cell_vtx
+      end subroutine
+
+      function PDM_part_mesh_nodal_principal_geom_kind_get_c (mesh) result (geom_kind) &
+        bind(c, name='PDM_part_mesh_nodal_principal_geom_kind_get')
+
+        use iso_c_binding
+        use pdm
+
+        implicit none
+
+        type(c_ptr),    value :: mesh
+        integer (c_int)       :: geom_kind
+      end function
+
+      function PDM_part_mesh_nodal_n_elmts_get_c (mesh, geom_kind, id_part) result (n_elt) &
+        bind(c, name='PDM_part_mesh_nodal_n_elmts_get')
+
+        use iso_c_binding
+        use pdm
+
+        implicit none
+
+        type(c_ptr),                 value :: mesh
+        integer (c_int), intent(in), value :: geom_kind
+        integer (c_int), intent(in), value :: id_part
+        integer (c_int)                    :: n_elt
+      end function
+
+    end interface
+
+    geom_kind = PDM_part_mesh_nodal_principal_geom_kind_get_c (mesh)
+    n_elt = PDM_part_mesh_nodal_n_elmts_get_c (mesh, geom_kind, id_part)
+
+    call  PDM_part_mesh_nodal_cell_vtx_connect_get_c (mesh, geom_kind, id_part, c_cell_vtx_idx, c_cell_vtx)
+
+    call c_f_pointer(c_cell_vtx_idx,   &
+                     cell_vtx_idx,     &
+                     [n_elt+1])
+
+    call c_f_pointer(c_cell_vtx,   &
+                     cell_vtx,     &
+                     [cell_vtx_idx(n_elt+1)])
+
+  end subroutine PDM_part_mesh_nodal_cell_vtx_connect_get
 
 end module PDM_part_mesh_nodal
