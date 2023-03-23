@@ -85,7 +85,9 @@ program testf
   write (strnum, '(i1)') i_rank+1
   fid = fid + i_rank
   open(unit=fid, &
-    file=PDM_MESH_DIR//"mixed_elements_cellvtx."//strnum,&
+file=&
+PDM_MESH_DIR_F&
+//"/test/meshes/mixed_elements_cellvtx."//strnum,&
     action='read')
 
   do i = 1,26
