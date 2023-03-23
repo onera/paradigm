@@ -114,12 +114,26 @@ cdef extern from "pdm_multipart.h":
                                                    int               *n_vtx_part_bound)
 
     # ------------------------------------------------------------------
+    void PDM_multipart_part_graph_comm_edge_dim_get(PDM_multipart_t   *mtp,
+                                                    int                i_zone,
+                                                    int                i_part,
+                                                    int               *n_edge_part_bound)
+
+    # ------------------------------------------------------------------
     void PDM_multipart_part_graph_comm_vtx_data_get(PDM_multipart_t   *mtp,
                                                     int                i_zone,
                                                     int                i_part,
                                                     int              **vtx_part_bound_proc_idx,
                                                     int              **vtx_part_bound_part_idx,
                                                     int              **vtx_part_bound)
+
+    # ------------------------------------------------------------------
+    void PDM_multipart_part_graph_comm_edge_data_get(PDM_multipart_t   *mtp,
+                                                    int                i_zone,
+                                                    int                i_part,
+                                                    int              **edge_part_bound_proc_idx,
+                                                    int              **edge_part_bound_part_idx,
+                                                    int              **edge_part_bound)
 
     # ------------------------------------------------------------------
     void PDM_multipart_part_color_get(PDM_multipart_t   *mtp,
@@ -789,6 +803,85 @@ cdef class MultiPart:
         return {'np_vtx_part_bound_proc_idx'  : np_vtx_part_bound_proc_idx,
                 'np_vtx_part_bound_part_idx'  : np_vtx_part_bound_part_idx,
                 'np_vtx_part_bound'           : np_vtx_part_bound}
+
+    def multipart_graph_comm_edge_dim_get(self, int ipart, int zone_gid):
+        """
+           Get partition dimensions
+        """
+        # ************************************************************************
+        # > Declaration
+        cdef int n_edge_part_bound
+        # ************************************************************************
+
+        PDM_multipart_part_graph_comm_edge_dim_get(self._mtp,
+                                                  zone_gid,
+                                                  ipart,
+                                                  &n_edge_part_bound)
+
+        return {'n_edge_part_bound' : n_edge_part_bound}
+
+    # ------------------------------------------------------------------
+    def multipart_graph_comm_edge_val_get(self, int ipart, int zone_gid):
+        """
+           Get partition dimensions
+        """
+        # ************************************************************************
+        # > Declaration
+        cdef int          *edge_part_bound
+        cdef int          *edge_part_bound_proc_idx
+        cdef int          *edge_part_bound_part_idx
+        # ************************************************************************
+
+        # dims = self.part_dim_get(self._mtp, ipart)
+        dims    = self.multipart_dim_get(ipart, zone_gid)
+        dims_gc = self.multipart_graph_comm_edge_dim_get(ipart, zone_gid)
+
+        # -> Call PPART to get info
+        PDM_multipart_part_graph_comm_edge_data_get(self._mtp,
+                                                   zone_gid,
+                                                   ipart,
+                                                   &edge_part_bound_proc_idx,
+                                                   &edge_part_bound_part_idx,
+                                                   &edge_part_bound)
+        # -> Begin
+        cdef NPY.npy_intp dim
+
+        # \param [out]  edge_part_bound      Partitioning boundary edges
+        if (edge_part_bound == NULL) :
+            np_edge_part_bound = None
+        else :
+            dim = <NPY.npy_intp> (4 * dims_gc['n_edge_part_bound'])
+            np_edge_part_bound   = NPY.PyArray_SimpleNewFromData(1,
+                                                                &dim,
+                                                                NPY.NPY_INT32,
+                                                                <void *> edge_part_bound)
+            PyArray_ENABLEFLAGS(np_edge_part_bound, NPY.NPY_OWNDATA);
+
+        # \param [out]  edge_part_bound_proc_idx  Partitioning boundary edges block distribution from processus (size = n_proc + 1)
+        if (edge_part_bound_proc_idx == NULL) :
+            np_edge_part_bound_proc_idx = None
+        else :
+            dim = <NPY.npy_intp> ( dims['n_proc'] + 1)
+            np_edge_part_bound_proc_idx = NPY.PyArray_SimpleNewFromData(1,
+                                                                       &dim,
+                                                                       NPY.NPY_INT32,
+                                                                       <void *> edge_part_bound_proc_idx)
+            PyArray_ENABLEFLAGS(np_edge_part_bound_proc_idx, NPY.NPY_OWNDATA);
+
+        # \param [out]  edge_part_bound_part_idx  Partitioning boundary edges block distribution from partition (size = nt_part + 1)
+        if (edge_part_bound_part_idx == NULL) :
+            np_edge_part_bound_part_idx = None
+        else :
+            dim = <NPY.npy_intp> ( dims['nt_part'] + 1)
+            np_edge_part_bound_part_idx = NPY.PyArray_SimpleNewFromData(1,
+                                                                       &dim,
+                                                                       NPY.NPY_INT32,
+                                                                       <void *> edge_part_bound_part_idx)
+            PyArray_ENABLEFLAGS(np_edge_part_bound_part_idx, NPY.NPY_OWNDATA);
+
+        return {'np_edge_part_bound_proc_idx'  : np_edge_part_bound_proc_idx,
+                'np_edge_part_bound_part_idx'  : np_edge_part_bound_part_idx,
+                'np_edge_part_bound'           : np_edge_part_bound}
 
     # ------------------------------------------------------------------
     def multipart_color_get(self, int ipart, int zone_gid):
