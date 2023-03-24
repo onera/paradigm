@@ -211,6 +211,19 @@ PDM_part_mesh_bound_get
 );
 
 void
+PDM_part_mesh_bound_concat_set
+(
+ PDM_part_mesh_t          *pmesh,
+ int                       i_part,
+ PDM_bound_type_t          bound_type,
+ int                       n_bound,
+ int                      *pbound_idx,
+ int                      *pbound,
+ PDM_g_num_t              *pbound_ln_to_gn,
+ PDM_ownership_t           ownership
+);
+
+void
 PDM_part_mesh_bound_concat_get
 (
  PDM_part_mesh_t          *pmesh,

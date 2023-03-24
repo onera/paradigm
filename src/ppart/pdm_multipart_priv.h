@@ -43,7 +43,8 @@ typedef struct {
   int *joins_ids;        // Global id of each interface (size=n_joins)
 
   /* Partitions -- see pdm_part_priv.h for struct definition */
-  _part_t  **parts;
+  // _part_t  **parts;
+  PDM_part_mesh_t *pmesh;
   int        renum_cell_method;     // Choice of renumbering method for cells
   const int *renum_cell_properties; // Parameters used by some renumbering methods
   int        renum_face_method;     // Choice of renumbering method for faces
