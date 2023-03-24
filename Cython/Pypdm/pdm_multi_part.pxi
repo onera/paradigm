@@ -178,6 +178,7 @@ cdef class MultiPart:
     """
     # > For Ppart
     cdef PDM_multipart_t* _mtp
+    cdef int n_rank
     # ------------------------------------------------------------------
     def __cinit__(self,
                   int                                           n_zone,
@@ -198,7 +199,7 @@ cdef class MultiPart:
         # print("MultiPart::n_part -->", n_part)
         # print("MultiPart::merge_blocks -->", merge_blocks)
         # print("MultiPart::split_method -->", split_method)
-        self.n_rank = comm.Get_rank()
+        self.n_rank = comm.Get_size()
 
         if part_fraction is None:
           part_fraction_data = NULL
