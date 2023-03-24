@@ -497,7 +497,11 @@ PDM_part_mesh_nodal_sections_id_in_geom_kind_get
     PDM_error (__FILE__, __LINE__, 0, "Bad part mesh nodal identifier\n");
   }
   PDM_part_mesh_nodal_elmts_t* pmne = _get_from_geometry_kind(pmn, geom_kind);
-  return pmne->sections_id;
+  if(pmne){
+    return pmne->sections_id;
+  else {
+    return NULL;
+  }
 }
 
 
