@@ -1691,6 +1691,7 @@ PDM_multipart_create
     for(int i_part = 0; i_part < n_part[izone]; ++i_part) {
       multipart->pmeshes[izone].vtx_ghost_information[i_part] = NULL;
     }
+    multipart->pmeshes[izone].is_owner_vtx_ghost_information = PDM_TRUE;
   }
 
   return (PDM_multipart_t *) multipart;
@@ -4369,17 +4370,23 @@ const int            i_part,
 void
 PDM_multipart_part_ghost_infomation_get
 (
-PDM_multipart_t  *multipart,
-const int         i_zone,
-const int         i_part,
-      int       **vtx_ghost_information
+PDM_multipart_t        *multipart,
+const int               i_zone,
+const int               i_part,
+      int             **vtx_ghost_information,
+      PDM_ownership_t   ownership
 )
 {
 
   assert(i_zone < multipart->n_zone && i_part < multipart->n_part[i_zone]);
-  _part_mesh_t _pmeshes = multipart->pmeshes[i_zone];
+  _part_mesh_t* _pmeshes = (&multipart->pmeshes[i_zone]);
 
-  *vtx_ghost_information = _pmeshes.vtx_ghost_information[i_part];
+  *vtx_ghost_information = _pmeshes->vtx_ghost_information[i_part];
+  if(ownership == PDM_OWNERSHIP_USER || ownership == PDM_OWNERSHIP_UNGET_RESULT_IS_FREE) {
+    multipart->pmeshes[i_zone].is_owner_vtx_ghost_information = PDM_FALSE;
+  } else {
+    multipart->pmeshes[i_zone].is_owner_vtx_ghost_information = PDM_TRUE;
+  }
 }
 
 
@@ -4438,8 +4445,10 @@ PDM_multipart_free
     }
 
     for (int i_part = 0; i_part < multipart->n_part[i_zone]; i_part++) {
-      if(multipart->pmeshes[i_zone].vtx_ghost_information[i_part] != NULL ) {
-        free(multipart->pmeshes[i_zone].vtx_ghost_information[i_part]);
+      if(multipart->pmeshes[i_zone].vtx_ghost_information[i_part] != NULL) {
+        if(multipart->pmeshes[i_zone].is_owner_vtx_ghost_information == PDM_TRUE) {
+          free(multipart->pmeshes[i_zone].vtx_ghost_information[i_part]);
+        }
       }
     }
     free(multipart->pmeshes[i_zone].vtx_ghost_information);

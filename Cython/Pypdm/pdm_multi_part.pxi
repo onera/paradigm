@@ -131,7 +131,8 @@ cdef extern from "pdm_multipart.h":
     void PDM_multipart_part_ghost_infomation_get(PDM_multipart_t *mtp,
                                                  int              zone_gid,
                                                  int              ipart,
-                                                 int             **vtx_ghost_information)
+                                                 int             **vtx_ghost_information,
+                                                 PDM_ownership_t   ownership)
 
     # ------------------------------------------------------------------
     int PDM_multipart_part_connectivity_get(PDM_multipart_t          *mtp,
@@ -973,7 +974,8 @@ cdef class MultiPart:
         PDM_multipart_part_ghost_infomation_get(self._mtp,
                                                 zone_gid,
                                                 ipart,
-                                                &vtx_ghost_information)
+                                                &vtx_ghost_information,
+                                                PDM_OWNERSHIP_USER)
         # -> Begin
         cdef NPY.npy_intp dim
 

@@ -54,7 +54,8 @@ typedef struct {
   /*
    * Additional info
    */
-  int **vtx_ghost_information;
+  int        **vtx_ghost_information;
+  PDM_bool_t   is_owner_vtx_ghost_information;
 
 } _part_mesh_t;
 

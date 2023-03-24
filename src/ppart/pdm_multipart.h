@@ -453,10 +453,11 @@ const int            i_part,
 void
 PDM_multipart_part_ghost_infomation_get
 (
-PDM_multipart_t  *multipart,
-const int         i_zone,
-const int         i_part,
-      int       **vtx_ghost_information
+PDM_multipart_t        *multipart,
+const int               i_zone,
+const int               i_part,
+      int             **vtx_ghost_information,
+      PDM_ownership_t   ownership
 );
 
 
