@@ -499,7 +499,7 @@ PDM_part_mesh_nodal_sections_id_in_geom_kind_get
   PDM_part_mesh_nodal_elmts_t* pmne = _get_from_geometry_kind(pmn, geom_kind);
   if(pmne){
     return pmne->sections_id;
-  else {
+  } else {
     return NULL;
   }
 }

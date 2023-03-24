@@ -1095,6 +1095,48 @@ _compute_part_mesh_nodal_2d
   free(pridge_gnum);
   free(pridge_to_edge_g_num);
 
+  PDM_part_mesh_nodal_elmts_t* pmn_corner = NULL;
+
+  if(dmn->corner != NULL) {
+
+    PDM_g_num_t *dparent_gnum_corner = NULL;
+    PDM_g_num_t *distrib_corner      = NULL;
+    _create_dparent_num_corner(dmn->corner, &dparent_gnum_corner, &distrib_corner);
+
+    int          *pn_corner             = NULL;
+    PDM_g_num_t **pcorner_gnum          = NULL;
+    PDM_g_num_t **pcorner_to_vtx_g_num  = NULL;
+    PDM_reverse_dparent_gnum(dparent_gnum_corner,
+                             NULL, // dparent_sign
+                             distrib_corner,
+                             n_part,
+                             pn_vtx,
+                             pvtx_ln_to_gn,
+                            &pn_corner,
+                            &pcorner_gnum,
+                            &pcorner_to_vtx_g_num,
+                             NULL, // pchild_parent_sign
+                             dmn->comm);
+
+
+    pmn_corner = PDM_dmesh_nodal_elmts_to_part_mesh_nodal_elmts(dmn->corner,
+                                                                n_part,
+                                                                pn_vtx,
+                                                                pvtx_ln_to_gn,
+                                                                pn_corner,
+                                                                pcorner_gnum,
+                                                                pcorner_to_vtx_g_num);
+    free(dparent_gnum_corner);
+    free(distrib_corner);
+    for(int i_part = 0; i_part < n_part; ++i_part){
+      free(pcorner_gnum[i_part]);
+      free(pcorner_to_vtx_g_num[i_part]);
+    }
+    free(pn_corner);
+    free(pcorner_gnum);
+    free(pcorner_to_vtx_g_num);
+  }
+
   /* Create top structure */
   PDM_part_mesh_nodal_t* pmn = PDM_part_mesh_nodal_create(dmn->mesh_dimension,
                                                           n_part,
@@ -1103,6 +1145,9 @@ _compute_part_mesh_nodal_2d
   PDM_part_mesh_nodal_add_part_mesh_nodal_elmts(pmn, pmn_surf , ownership);
   if(pmn_ridge != NULL) {
     PDM_part_mesh_nodal_add_part_mesh_nodal_elmts(pmn, pmn_ridge, ownership);
+  }
+  if(pmn_corner != NULL) {
+    PDM_part_mesh_nodal_add_part_mesh_nodal_elmts(pmn, pmn_corner, ownership);
   }
   // TO DO : corners?
 
