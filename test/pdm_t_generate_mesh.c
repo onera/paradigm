@@ -244,6 +244,9 @@ int main(int argc, char *argv[])
                                  "rectangle_mesh");
   }
 
+  // free
+  PDM_part_mesh_nodal_free(pmn);
+
   // Generate simplified rectangle mesh
   int       n_vtx = 0;
   int       n_elt = 0;
@@ -267,7 +270,9 @@ int main(int argc, char *argv[])
 
 
   // free
-  PDM_part_mesh_nodal_free(pmn);
+  free(coords     );
+  free(elt_vtx_idx);
+  free(elt_vtx    );
 
   // Generate parallelepiped mesh
   pmn = PDM_generate_mesh_parallelepiped(comm,

@@ -74,7 +74,7 @@ _dmn_to_pmn
                                    PDM_OWNERSHIP_USER);
 
   // free
-  // PDM_multipart_free(mpart);
+  PDM_multipart_free(mpart);
 
  return pmn;
 
@@ -210,16 +210,19 @@ PDM_generate_mesh_sphere_simplified
   *n_vtx = PDM_part_mesh_nodal_n_vtx_get(pmn,
                                          0);
 
-  *coords = PDM_part_mesh_nodal_vtx_coord_get(pmn,
-                                              0);
+  double *tmp_coords = PDM_part_mesh_nodal_vtx_coord_get(pmn,
+                                                         0);
 
+  memcpy(*coords, tmp_coords, sizeof(double) * 3 * (*n_vtx));
+
+  int         *pelt_vtx            = NULL;
   PDM_g_num_t *pelt_ln_to_gn       = NULL;
   int         *parent_num          = NULL;
   PDM_g_num_t *parent_entity_g_num = NULL;
   PDM_part_mesh_nodal_section_std_get(pmn,
                                       0,
                                       0,
-                                      elt_vtx,
+                                      &pelt_vtx,
                                       &pelt_ln_to_gn,
                                       &parent_num,
                                       &parent_entity_g_num);
@@ -228,12 +231,16 @@ PDM_generate_mesh_sphere_simplified
                                                  0,
                                                  0);
 
+  memcpy(*elt_vtx, pelt_vtx, sizeof(int) * (*n_elt) * 3); // because PDM_MESH_NODAL_TRIA3
+
   *elt_vtx_idx = malloc(sizeof(int) * ((*n_elt)+1));
   (*elt_vtx_idx)[0] = 0;
   for (int i = 0; i < (*n_elt); i++) {
     (*elt_vtx_idx)[i+1] = (*elt_vtx_idx)[i] + 3; // because PDM_MESH_NODAL_TRIA3
   }
 
+  // free
+  PDM_part_mesh_nodal_free(pmn);
 }
 
 /**
@@ -405,16 +412,19 @@ PDM_generate_mesh_ball_simplified
   *n_vtx = PDM_part_mesh_nodal_n_vtx_get(pmn,
                                          0);
 
-  *coords = PDM_part_mesh_nodal_vtx_coord_get(pmn,
-                                              0);
+  double *tmp_coords = PDM_part_mesh_nodal_vtx_coord_get(pmn,
+                                                         0);
 
+  memcpy(*coords, tmp_coords, sizeof(double) * 3 * (*n_vtx));
+
+  int         *pelt_vtx            = NULL;
   PDM_g_num_t *pelt_ln_to_gn       = NULL;
   int         *parent_num          = NULL;
   PDM_g_num_t *parent_entity_g_num = NULL;
   PDM_part_mesh_nodal_section_std_get(pmn,
                                       0,
                                       0,
-                                      elt_vtx,
+                                      &pelt_vtx,
                                       &pelt_ln_to_gn,
                                       &parent_num,
                                       &parent_entity_g_num);
@@ -423,11 +433,16 @@ PDM_generate_mesh_ball_simplified
                                                  0,
                                                  0);
 
+  memcpy(*elt_vtx, pelt_vtx, sizeof(int) * (*n_elt) * 4); // because PDM_MESH_NODAL_TETRA4
+
   *elt_vtx_idx = malloc(sizeof(int) * ((*n_elt)+1));
   (*elt_vtx_idx)[0] = 0;
   for (int i = 0; i < (*n_elt); i++) {
     (*elt_vtx_idx)[i+1] = (*elt_vtx_idx)[i] + 4; // because PDM_MESH_NODAL_TETRA4
   }
+
+  // free
+  PDM_part_mesh_nodal_free(pmn);
 }
 
 /**
@@ -562,16 +577,19 @@ PDM_generate_mesh_rectangle_simplified
   *n_vtx = PDM_part_mesh_nodal_n_vtx_get(pmn,
                                          0);
 
-  *coords = PDM_part_mesh_nodal_vtx_coord_get(pmn,
-                                              0);
+  double *tmp_coords = PDM_part_mesh_nodal_vtx_coord_get(pmn,
+                                                         0);
 
+  memcpy(*coords, tmp_coords, sizeof(double) * 3 * (*n_vtx));
+
+  int         *pelt_vtx            = NULL;
   PDM_g_num_t *pelt_ln_to_gn       = NULL;
   int         *parent_num          = NULL;
   PDM_g_num_t *parent_entity_g_num = NULL;
   PDM_part_mesh_nodal_section_std_get(pmn,
                                       0,
                                       0,
-                                      elt_vtx,
+                                      &pelt_vtx,
                                       &pelt_ln_to_gn,
                                       &parent_num,
                                       &parent_entity_g_num);
@@ -580,11 +598,16 @@ PDM_generate_mesh_rectangle_simplified
                                                  0,
                                                  0);
 
+  memcpy(*elt_vtx, pelt_vtx, sizeof(int) * (*n_elt) * 3); // because PDM_MESH_NODAL_TRIA3
+
   *elt_vtx_idx = malloc(sizeof(int) * ((*n_elt)+1));
   (*elt_vtx_idx)[0] = 0;
   for (int i = 0; i < (*n_elt); i++) {
     (*elt_vtx_idx)[i+1] = (*elt_vtx_idx)[i] + 3; // because PDM_MESH_NODAL_TRIA3
   }
+
+  // free
+  PDM_part_mesh_nodal_free(pmn);
 }
 
 /**
@@ -739,16 +762,19 @@ PDM_generate_mesh_parallelepiped_simplified
   *n_vtx = PDM_part_mesh_nodal_n_vtx_get(pmn,
                                          0);
 
-  *coords = PDM_part_mesh_nodal_vtx_coord_get(pmn,
-                                              0);
+  double *tmp_coords = PDM_part_mesh_nodal_vtx_coord_get(pmn,
+                                                         0);
 
+  memcpy(*coords, tmp_coords, sizeof(double) * 3 * (*n_vtx));
+
+  int         *pelt_vtx            = NULL;
   PDM_g_num_t *pelt_ln_to_gn       = NULL;
   int         *parent_num          = NULL;
   PDM_g_num_t *parent_entity_g_num = NULL;
   PDM_part_mesh_nodal_section_std_get(pmn,
                                       0,
                                       0,
-                                      elt_vtx,
+                                      &pelt_vtx,
                                       &pelt_ln_to_gn,
                                       &parent_num,
                                       &parent_entity_g_num);
@@ -757,12 +783,16 @@ PDM_generate_mesh_parallelepiped_simplified
                                                  0,
                                                  0);
 
+  memcpy(*elt_vtx, pelt_vtx, sizeof(int) * (*n_elt) * 4); // because PDM_MESH_NODAL_TETRA4
+
   *elt_vtx_idx = malloc(sizeof(int) * ((*n_elt)+1));
   (*elt_vtx_idx)[0] = 0;
   for (int i = 0; i < (*n_elt); i++) {
     (*elt_vtx_idx)[i+1] = (*elt_vtx_idx)[i] + 4; // because PDM_MESH_NODAL_TETRA4
   }
 
+  // free
+  PDM_part_mesh_nodal_free(pmn);
 }
 
 #ifdef __cplusplus
