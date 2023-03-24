@@ -405,6 +405,16 @@ const int                       i_part,
       PDM_ownership_t           ownership
 );
 
+
+int
+PDM_multipart_part_n_entity_get
+(
+PDM_multipart_t            *multipart,
+const int                   i_zone,
+const int                   i_part,
+      PDM_mesh_entities_t   entity_type
+);
+
 int
 PDM_multipart_part_ln_to_gn_get
 (
@@ -426,29 +436,6 @@ const int                   i_part,
       int                 **entity_color,
       PDM_ownership_t       ownership
 );
-
-// void
-// PDM_multipart_part_graph_comm_vtx_data_get
-// (
-// PDM_multipart_t     *multipart,
-// const int            i_zone,
-// const int            i_part,
-//       int          **vtx_part_bound_proc_idx,
-//       int          **vtx_part_bound_part_idx,
-//       int          **vtx_part_bound
-// );
-
-
-// void
-// PDM_multipart_part_graph_comm_edge_data_get
-// (
-// PDM_multipart_t     *multipart,
-// const int            i_zone,
-// const int            i_part,
-//       int          **edge_part_bound_proc_idx,
-//       int          **edge_part_bound_part_idx,
-//       int          **edge_part_bound
-// );
 
 void
 PDM_multipart_part_color_get

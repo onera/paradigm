@@ -924,8 +924,9 @@ PDM_sphere_surf_icosphere_gen_part
                                                        PDM_MESH_ENTITY_VERTEX,
                                                        &_vtx_ln_to_gn,
                                                        PDM_OWNERSHIP_USER);
-    (*pvtx_ln_to_gn)[ipart] = malloc(sizeof(PDM_g_num_t) * (*pn_vtx)[ipart]);
-    memcpy((*pvtx_ln_to_gn)[ipart], _vtx_ln_to_gn, sizeof(PDM_g_num_t) * (*pn_vtx)[ipart]);
+    (*pvtx_ln_to_gn)[ipart] = _vtx_ln_to_gn;
+    // (*pvtx_ln_to_gn)[ipart] = malloc(sizeof(PDM_g_num_t) * (*pn_vtx)[ipart]);
+    // memcpy((*pvtx_ln_to_gn)[ipart], _vtx_ln_to_gn, sizeof(PDM_g_num_t) * (*pn_vtx)[ipart]);
 
     double *_vtx_coord;
     PDM_multipart_part_vtx_coord_get(mpart,
@@ -933,9 +934,9 @@ PDM_sphere_surf_icosphere_gen_part
                                      ipart,
                                      &_vtx_coord,
                                      PDM_OWNERSHIP_USER);
-    (*pvtx_coord)[ipart] = malloc(sizeof(double) * (*pn_vtx)[ipart] * 3);
-    memcpy((*pvtx_coord)[ipart], _vtx_coord, sizeof(double) * (*pn_vtx)[ipart] * 3);
-
+    (*pvtx_coord)[ipart] = _vtx_coord;
+    // (*pvtx_coord)[ipart] = malloc(sizeof(double) * (*pn_vtx)[ipart] * 3);
+    // memcpy((*pvtx_coord)[ipart], _vtx_coord, sizeof(double) * (*pn_vtx)[ipart] * 3);
 
     /* Faces */
     PDM_g_num_t *_face_ln_to_gn;
@@ -945,8 +946,9 @@ PDM_sphere_surf_icosphere_gen_part
                                                        PDM_MESH_ENTITY_FACE,
                                                        &_face_ln_to_gn,
                                                        PDM_OWNERSHIP_USER);
-    (*pface_ln_to_gn)[ipart] = malloc(sizeof(PDM_g_num_t) * (*pn_face)[ipart]);
-    memcpy((*pface_ln_to_gn)[ipart], _face_ln_to_gn, sizeof(PDM_g_num_t) * (*pn_face)[ipart]);
+    (*pface_ln_to_gn)[ipart] = _face_ln_to_gn;
+    // (*pface_ln_to_gn)[ipart] = malloc(sizeof(PDM_g_num_t) * (*pn_face)[ipart]);
+    // memcpy((*pface_ln_to_gn)[ipart], _face_ln_to_gn, sizeof(PDM_g_num_t) * (*pn_face)[ipart]);
 
     int *_face_vtx;
     int *_face_vtx_idx;
@@ -959,11 +961,13 @@ PDM_sphere_surf_icosphere_gen_part
                                         PDM_OWNERSHIP_USER);
 
     if (_face_vtx != NULL) {
-      (*pface_vtx_idx)[ipart] = malloc(sizeof(int) * ((*pn_face)[ipart]+1));
-      memcpy((*pface_vtx_idx)[ipart], _face_vtx_idx, sizeof(int) * ((*pn_face)[ipart]+1));
+      (*pface_vtx_idx)[ipart] = _face_vtx_idx;
+      // (*pface_vtx_idx)[ipart] = malloc(sizeof(int) * ((*pn_face)[ipart]+1));
+      // memcpy((*pface_vtx_idx)[ipart], _face_vtx_idx, sizeof(int) * ((*pn_face)[ipart]+1));
 
-      (*pface_vtx)[ipart] = malloc(sizeof(int) * _face_vtx_idx[(*pn_face)[ipart]]);
-      memcpy((*pface_vtx)[ipart], _face_vtx, sizeof(int) * _face_vtx_idx[(*pn_face)[ipart]]);
+      (*pface_vtx)[ipart] = _face_vtx;
+      // (*pface_vtx)[ipart] = malloc(sizeof(int) * _face_vtx_idx[(*pn_face)[ipart]]);
+      // memcpy((*pface_vtx)[ipart], _face_vtx, sizeof(int) * _face_vtx_idx[(*pn_face)[ipart]]);
     }
 
     else {
@@ -975,7 +979,7 @@ PDM_sphere_surf_icosphere_gen_part
                                           PDM_CONNECTIVITY_TYPE_FACE_EDGE,
                                           &_face_edge,
                                           &_face_edge_idx,
-                                          PDM_OWNERSHIP_KEEP);
+                                          PDM_OWNERSHIP_USER);
 
       int *_edge_vtx;
       int *_edge_vtx_idx;
@@ -987,17 +991,17 @@ PDM_sphere_surf_icosphere_gen_part
                                           &_edge_vtx_idx,
                                           PDM_OWNERSHIP_KEEP);
 
-      (*pface_vtx_idx)[ipart] = malloc(sizeof(int) * ((*pn_face)[ipart]+1));
-      memcpy((*pface_vtx_idx)[ipart], _face_edge_idx, sizeof(int) * ((*pn_face)[ipart]+1));
-
+      // (*pface_vtx_idx)[ipart] = malloc(sizeof(int) * ((*pn_face)[ipart]+1));
+      // memcpy((*pface_vtx_idx)[ipart], _face_edge_idx, sizeof(int) * ((*pn_face)[ipart]+1));
+      (*pface_vtx_idx)[ipart] = _face_edge_idx;
 
       PDM_compute_face_vtx_from_face_and_edge((*pn_face)[ipart],
                                               _face_edge_idx,
                                               _face_edge,
                                               _edge_vtx,
                                               &(*pface_vtx)[ipart]);
+      free(_face_edge);
     }
-
   }
 
   PDM_DMesh_nodal_free(dmn);
@@ -1005,22 +1009,7 @@ PDM_sphere_surf_icosphere_gen_part
 }
 
 
-
-
-
-
-
-
-
-
-
-
 #undef ij2idx
-
-
-
-
-
 
 #ifdef __cplusplus
 }

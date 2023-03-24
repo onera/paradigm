@@ -681,10 +681,10 @@ PDM_part_mesh_free
     for(int i = 0; i < PDM_CONNECTIVITY_TYPE_MAX; ++i) {
       if(pmesh->is_owner_connectivity[i] == PDM_TRUE) {
         for(int i_part = 0; i_part < pmesh->n_part; ++i_part) {
-          if(pmesh->pconnectivity[i][i_part] != NULL) {
+          if(pmesh->pconnectivity[i] != NULL && pmesh->pconnectivity[i][i_part] != NULL) {
             free(pmesh->pconnectivity[i][i_part]);
           }
-          if(pmesh->pconnectivity_idx[i][i_part] != NULL) {
+          if(pmesh->pconnectivity_idx[i] != NULL && pmesh->pconnectivity_idx[i][i_part] != NULL) {
             free(pmesh->pconnectivity_idx[i][i_part]);
           }
         }
@@ -705,7 +705,7 @@ PDM_part_mesh_free
     for(int i = 0; i < PDM_MESH_ENTITY_MAX; ++i) {
       if(pmesh->is_owner_ln_to_gn[i] == PDM_TRUE) {
         for(int i_part = 0; i_part < pmesh->n_part; ++i_part) {
-          if(pmesh->pentity_ln_to_gn[i][i_part] != NULL) {
+          if(pmesh->pentity_ln_to_gn[i] != NULL && pmesh->pentity_ln_to_gn[i][i_part] != NULL) {
             free(pmesh->pentity_ln_to_gn[i][i_part]);
           }
         }

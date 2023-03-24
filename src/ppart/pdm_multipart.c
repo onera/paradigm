@@ -4251,18 +4251,15 @@ const int                       i_part,
  * \brief Returns the data arrays of a given partition
  */
 int
-PDM_multipart_part_ln_to_gn_get
+PDM_multipart_part_n_entity_get
 (
 PDM_multipart_t            *multipart,
 const int                   i_zone,
 const int                   i_part,
-      PDM_mesh_entities_t   entity_type,
-      PDM_g_num_t         **entity_ln_to_gn,
-      PDM_ownership_t       ownership
+      PDM_mesh_entities_t   entity_type
 )
 {
   assert(i_zone < multipart->n_zone && i_part < multipart->n_part[i_zone]);
-
   _part_mesh_t _pmeshes = multipart->pmeshes[i_zone];
 
   int pn_entity = 0;
@@ -4283,6 +4280,30 @@ const int                   i_part,
       PDM_error(__FILE__, __LINE__, 0, "PDM_multipart_part_ln_to_gn_get error : Wrong entity_type \n");
       break;
   }
+
+  return pn_entity;
+}
+
+/**
+ *
+ * \brief Returns the data arrays of a given partition
+ */
+int
+PDM_multipart_part_ln_to_gn_get
+(
+PDM_multipart_t            *multipart,
+const int                   i_zone,
+const int                   i_part,
+      PDM_mesh_entities_t   entity_type,
+      PDM_g_num_t         **entity_ln_to_gn,
+      PDM_ownership_t       ownership
+)
+{
+  assert(i_zone < multipart->n_zone && i_part < multipart->n_part[i_zone]);
+
+  _part_mesh_t _pmeshes = multipart->pmeshes[i_zone];
+
+  int pn_entity = PDM_multipart_part_n_entity_get(multipart, i_zone, i_part, entity_type);
 
   PDM_part_mesh_entity_ln_to_gn_get(_pmeshes.pmesh,
                                     i_part,
@@ -4308,30 +4329,10 @@ const int                   i_part,
       PDM_ownership_t       ownership
 )
 {
-  PDM_UNUSED(ownership);
   assert(i_zone < multipart->n_zone && i_part < multipart->n_part[i_zone]);
-
   _part_mesh_t _pmeshes = multipart->pmeshes[i_zone];
 
-  int pn_entity = 0;
-  switch (entity_type) {
-    case PDM_MESH_ENTITY_CELL:
-      pn_entity = PDM_part_mesh_n_entity_get(_pmeshes.pmesh, i_part, PDM_MESH_ENTITY_CELL  );
-      break;
-    case PDM_MESH_ENTITY_FACE:
-      pn_entity = PDM_part_mesh_n_entity_get(_pmeshes.pmesh, i_part, PDM_MESH_ENTITY_FACE  );
-      break;
-    case PDM_MESH_ENTITY_EDGE:
-      pn_entity = PDM_part_mesh_n_entity_get(_pmeshes.pmesh, i_part, PDM_MESH_ENTITY_EDGE  );
-      break;
-    case PDM_MESH_ENTITY_VERTEX:
-      pn_entity = PDM_part_mesh_n_entity_get(_pmeshes.pmesh, i_part, PDM_MESH_ENTITY_VERTEX);
-      break;
-    default:
-      PDM_error(__FILE__, __LINE__, 0, "PDM_multipart_partition_color_get error : Wrong entity_type \n");
-      break;
-  }
-
+  int pn_entity = PDM_multipart_part_n_entity_get(multipart, i_zone, i_part, entity_type);
   PDM_part_mesh_entity_color_get(_pmeshes.pmesh,
                                  i_part,
                                  entity_type,
