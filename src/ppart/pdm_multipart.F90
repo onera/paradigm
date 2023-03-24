@@ -82,10 +82,6 @@ module pdm_multipart
     PDM_multipart_partition_color_get_
   end interface
 
-  interface PDM_multipart_part_graph_comm_vtx_data_get ; module procedure  &
-    PDM_multipart_part_graph_comm_vtx_data_get_
-  end interface
-
   interface PDM_multipart_part_color_get ; module procedure  &
     PDM_multipart_part_color_get_
   end interface
@@ -398,32 +394,6 @@ interface
 
   !>
   !!
-  !! \brief Returns the dimensions of a given partition
-  !!
-  !! \param [in]   multipart             Pointer to \ref PDM_multipart_t object
-  !! \param [in]   i_zone                Id of zone which parameters apply (or -1 for all zones)
-  !! \param [in]   i_part                Partition index
-  !! \param [out]  n_vtx_part_bound      Number of boundary vertices in partition
-  !!
-
-  subroutine PDM_multipart_part_graph_comm_vtx_dim_get_c (multipart, &
-                                                          i_zone, &
-                                                          i_part, &
-                                                          n_vtx_part_bound) &
-  bind (c, name='PDM_multipart_part_graph_comm_vtx_dim_get')
-
-    use iso_c_binding
-    implicit none
-
-    type(c_ptr),    value  :: multipart
-    integer(c_int), value  :: i_zone
-    integer(c_int), value  :: i_part
-    integer(c_int)         :: n_vtx_part_bound
-
-  end subroutine PDM_multipart_part_graph_comm_vtx_dim_get_c
-
-  !>
-  !!
   !! \brief Returns the data arrays of a given partition
   !!
   !! \param [in]   multipart                Pointer to \ref PDM_multipart_t object
@@ -624,38 +594,6 @@ interface
     integer(c_int)         :: pn_entity
 
   end function PDM_multipart_partition_color_get_c
-
-  !>
-  !!
-  !! \brief ??
-  !!
-  !! \param [in]   multipart               Pointer to \ref PDM_multipart_t object
-  !! \param [in]   i_zone                  Id of zone which parameters apply (or -1 for all zones)
-  !! \param [in]   i_part                  Partition index
-  !! \param [out]  vtx_part_bound_proc_idx ??
-  !! \param [out]  vtx_part_bound_part_idx ??
-  !! \param [out]  vtx_part_bound          ??
-  !!
-
-  subroutine PDM_multipart_part_graph_comm_vtx_data_get_c (multipart, &
-                                                           i_zone, &
-                                                           i_part, &
-                                                           vtx_part_bound_proc_idx, &
-                                                           vtx_part_bound_part_idx, &
-                                                           vtx_part_bound) &
-  bind (c, name='PDM_multipart_part_graph_comm_vtx_data_get')
-
-    use iso_c_binding
-    implicit none
-
-    type(c_ptr),    value  :: multipart
-    integer(c_int), value  :: i_zone
-    integer(c_int), value  :: i_part
-    type(c_ptr)            :: vtx_part_bound_proc_idx
-    type(c_ptr)            :: vtx_part_bound_part_idx
-    type(c_ptr)            :: vtx_part_bound
-
-  end subroutine PDM_multipart_part_graph_comm_vtx_data_get_c
 
   !>
   !!
@@ -933,7 +871,6 @@ private :: PDM_multipart_create_,&
            PDM_multipart_part_connectivity_get_,&
            PDM_multipart_part_ln_to_gn_get_,&
            PDM_multipart_partition_color_get_,&
-           PDM_multipart_part_graph_comm_vtx_data_get_,&
            PDM_multipart_part_color_get_,&
            PDM_multipart_part_ghost_infomation_get_,&
            PDM_multipart_part_vtx_coord_get_,&
@@ -1357,40 +1294,6 @@ contains
                      [n_section])
 
   end subroutine PDM_multipart_part_dim_get_
-
-  !>
-  !!
-  !! \brief Returns the dimensions of a given partition
-  !!
-  !! \param [in]   multipart             Pointer to \ref PDM_multipart_t object
-  !! \param [in]   i_zone                Id of zone which parameters apply (or -1 for all zones)
-  !! \param [in]   i_part                Partition index
-  !! \param [out]  n_vtx_part_bound      Number of boundary vertices in partition
-  !!
-
-  subroutine PDM_multipart_part_graph_comm_vtx_dim_get_ (multipart, &
-                                                         i_zone, &
-                                                         i_part, &
-                                                         n_vtx_part_bound)
-
-    use iso_c_binding
-    implicit none
-
-    type(c_ptr), value       :: multipart
-    integer,     intent(in)  :: i_zone
-    integer,     intent(in)  :: i_part
-    integer,     intent(out) :: n_vtx_part_bound
-
-    integer(c_int) :: c_n_vtx_part_bound
-
-    call PDM_multipart_part_graph_comm_vtx_dim_get_c(multipart, &
-                                                     i_zone, &
-                                                     i_part, &
-                                                     c_n_vtx_part_bound)
-
-    n_vtx_part_bound = c_n_vtx_part_bound
-
-  end subroutine PDM_multipart_part_graph_comm_vtx_dim_get_
 
   !>
   !!
@@ -1917,76 +1820,6 @@ contains
                      [pn_entity])
 
   end subroutine PDM_multipart_partition_color_get_
-
-  !>
-  !!
-  !! \brief ??
-  !!
-  !! \param [in]   multipart               Pointer to \ref PDM_multipart_t object
-  !! \param [in]   i_zone                  Id of zone which parameters apply (or -1 for all zones)
-  !! \param [in]   i_part                  Partition index
-  !! \param [out]  vtx_part_bound_proc_idx ??
-  !! \param [out]  vtx_part_bound_part_idx ??
-  !! \param [out]  vtx_part_bound          ??
-  !!
-
-  subroutine PDM_multipart_part_graph_comm_vtx_data_get_(multipart, &
-                                                         i_zone, &
-                                                         i_part, &
-                                                         vtx_part_bound_proc_idx, &
-                                                         vtx_part_bound_part_idx, &
-                                                         vtx_part_bound)
-
-    use pdm
-    use iso_c_binding
-    implicit none
-
-    type(c_ptr),               value   :: multipart
-    integer(c_int),            value   :: i_zone
-    integer(c_int),            value   :: i_part
-    integer(kind=PDM_l_num_s), pointer :: vtx_part_bound_proc_idx(:)
-    type(c_ptr)                        :: c_vtx_part_bound_proc_idx = C_NULL_PTR
-    integer(kind=PDM_l_num_s), pointer :: vtx_part_bound_part_idx(:)
-    type(c_ptr)                        :: c_vtx_part_bound_part_idx = C_NULL_PTR
-    integer(kind=PDM_l_num_s), pointer :: vtx_part_bound(:)
-    type(c_ptr)                        :: c_vtx_part_bound          = C_NULL_PTR
-
-    integer(c_int)  :: c_n_vtx_part_bound
-    integer :: taille, n_vtx_part_bound
-
-    call PDM_multipart_part_graph_comm_vtx_dim_get_c (multipart, &
-                                                      i_zone, &
-                                                      i_part, &
-                                                      c_n_vtx_part_bound)
-
-    n_vtx_part_bound = c_n_vtx_part_bound
-
-    c_vtx_part_bound_proc_idx = c_loc(vtx_part_bound_proc_idx)
-    c_vtx_part_bound_part_idx = c_loc(vtx_part_bound_part_idx)
-    c_vtx_part_bound          = c_loc(vtx_part_bound)
-
-    call PDM_multipart_part_graph_comm_vtx_data_get_c(multipart, &
-                                                      i_zone, &
-                                                      i_part, &
-                                                      c_vtx_part_bound_proc_idx, &
-                                                      c_vtx_part_bound_part_idx, &
-                                                      c_vtx_part_bound)
-
-    call c_f_pointer(c_vtx_part_bound_proc_idx, &
-                     vtx_part_bound_proc_idx,   &
-                     [n_vtx_part_bound + 1])
-
-    call c_f_pointer(c_vtx_part_bound_part_idx, &
-                     vtx_part_bound_part_idx,   &
-                     [n_vtx_part_bound + 1])
-
-    taille = vtx_part_bound_part_idx(n_vtx_part_bound)
-
-    call c_f_pointer(c_vtx_part_bound, &
-                     vtx_part_bound,   &
-                     [taille])
-
-  end subroutine PDM_multipart_part_graph_comm_vtx_data_get_
 
   !>
   !!

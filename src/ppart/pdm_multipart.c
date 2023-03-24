@@ -650,40 +650,6 @@ _part_free
 }
 
 
-// static inline
-// int
-// _vtx_is_in_connectivity
-// (
-//   PDM_g_num_t  vtx,
-//   PDM_g_num_t *first_vtx,
-//   int          n_vtx
-// )
-// {
-//   for (int i=0; i<n_vtx; ++i) {
-//     if (first_vtx[i]==vtx) return 1;
-//   }
-//   return 0;
-// }
-
-// static
-// int
-// _is_parent
-// (
-//   PDM_g_num_t *first_vtx,
-//   int          n_vtx,
-//   PDM_g_num_t *first_face_vtx,
-//   int          n_face_vtx
-// )
-// {
-//   // WARNING: quadratic but n_face_vtx should be 3 or 4
-//   for (int i=0; i<n_face_vtx; ++i) {
-//     if (!(_vtx_is_in_connectivity(first_face_vtx[i],first_vtx,n_vtx))) {
-//       return 0;
-//     }
-//   }
-//   return 1;
-// }
-
 static void
 _setup_ghost_information
 (
@@ -3969,6 +3935,19 @@ const int            i_part,
   *elt_vtx_idx          = NULL; // _pmeshes.parts[i_part]->elt_vtx_idx;
   *elt_vtx              = NULL; // _pmeshes.parts[i_part]->elt_vtx;
   *elt_section_ln_to_gn = NULL; // _pmeshes.parts[i_part]->elt_section_ln_to_gn;
+}
+
+
+int
+PDM_multipart_part_tn_part_get
+(
+PDM_multipart_t *multipart,
+const int        i_zone
+)
+{
+  assert(i_zone < multipart->n_zone);
+  _part_mesh_t _pmeshes = multipart->pmeshes[i_zone];
+  return PDM_part_mesh_tn_part_get(_pmeshes.pmesh);
 }
 
 /**

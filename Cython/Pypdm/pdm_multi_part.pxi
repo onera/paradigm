@@ -158,6 +158,10 @@ cdef extern from "pdm_multipart.h":
                                           PDM_ownership_t       ownership);
 
     # ------------------------------------------------------------------
+    int PDM_multipart_part_tn_part_get(PDM_multipart_t *multipart,
+                                       const int        i_zone);
+
+    # ------------------------------------------------------------------
     void PDM_multipart_time_get(PDM_multipart_t      *mtp,
                                 int                   zone_gid,
                                 double              **elapsed,
@@ -194,6 +198,7 @@ cdef class MultiPart:
         # print("MultiPart::n_part -->", n_part)
         # print("MultiPart::merge_blocks -->", merge_blocks)
         # print("MultiPart::split_method -->", split_method)
+        self.n_rank = comm.Get_rank()
 
         if part_fraction is None:
           part_fraction_data = NULL
@@ -708,164 +713,6 @@ cdef class MultiPart:
           py_caps = PyCapsule_New(pmesh_nodal, NULL, NULL);
           return PartMeshNodalCaspule(py_caps)
 
-    # def multipart_graph_comm_vtx_dim_get(self, int ipart, int zone_gid):
-    #     """
-    #        Get partition dimensions
-    #     """
-    #     # ************************************************************************
-    #     # > Declaration
-    #     cdef int n_vtx_part_bound
-    #     # ************************************************************************
-
-    #     PDM_multipart_part_graph_comm_vtx_dim_get(self._mtp,
-    #                                               zone_gid,
-    #                                               ipart,
-    #                                               &n_vtx_part_bound)
-
-    #     return {'n_vtx_part_bound' : n_vtx_part_bound}
-
-    # # ------------------------------------------------------------------
-    # def multipart_graph_comm_vtx_val_get(self, int ipart, int zone_gid):
-    #     """
-    #        Get partition dimensions
-    #     """
-    #     # ************************************************************************
-    #     # > Declaration
-    #     cdef int          *vtx_part_bound
-    #     cdef int          *vtx_part_bound_proc_idx
-    #     cdef int          *vtx_part_bound_part_idx
-    #     # ************************************************************************
-
-    #     # dims = self.part_dim_get(self._mtp, ipart)
-    #     dims    = self.multipart_dim_get(ipart, zone_gid)
-    #     dims_gc = self.multipart_graph_comm_vtx_dim_get(ipart, zone_gid)
-
-    #     # -> Call PPART to get info
-    #     PDM_multipart_part_graph_comm_vtx_data_get(self._mtp,
-    #                                                zone_gid,
-    #                                                ipart,
-    #                                                &vtx_part_bound_proc_idx,
-    #                                                &vtx_part_bound_part_idx,
-    #                                                &vtx_part_bound)
-    #     # -> Begin
-    #     cdef NPY.npy_intp dim
-
-    #     # \param [out]  vtx_part_bound      Partitioning boundary vtxs
-    #     if (vtx_part_bound == NULL) :
-    #         np_vtx_part_bound = None
-    #     else :
-    #         dim = <NPY.npy_intp> (4 * dims_gc['n_vtx_part_bound'])
-    #         np_vtx_part_bound   = NPY.PyArray_SimpleNewFromData(1,
-    #                                                             &dim,
-    #                                                             NPY.NPY_INT32,
-    #                                                             <void *> vtx_part_bound)
-    #         PyArray_ENABLEFLAGS(np_vtx_part_bound, NPY.NPY_OWNDATA);
-
-    #     # \param [out]  vtx_part_bound_proc_idx  Partitioning boundary vtxs block distribution from processus (size = n_proc + 1)
-    #     if (vtx_part_bound_proc_idx == NULL) :
-    #         np_vtx_part_bound_proc_idx = None
-    #     else :
-    #         dim = <NPY.npy_intp> ( dims['n_proc'] + 1)
-    #         np_vtx_part_bound_proc_idx = NPY.PyArray_SimpleNewFromData(1,
-    #                                                                    &dim,
-    #                                                                    NPY.NPY_INT32,
-    #                                                                    <void *> vtx_part_bound_proc_idx)
-    #         PyArray_ENABLEFLAGS(np_vtx_part_bound_proc_idx, NPY.NPY_OWNDATA);
-
-    #     # \param [out]  vtx_part_bound_part_idx  Partitioning boundary vtxs block distribution from partition (size = nt_part + 1)
-    #     if (vtx_part_bound_part_idx == NULL) :
-    #         np_vtx_part_bound_part_idx = None
-    #     else :
-    #         dim = <NPY.npy_intp> ( dims['nt_part'] + 1)
-    #         np_vtx_part_bound_part_idx = NPY.PyArray_SimpleNewFromData(1,
-    #                                                                    &dim,
-    #                                                                    NPY.NPY_INT32,
-    #                                                                    <void *> vtx_part_bound_part_idx)
-    #         PyArray_ENABLEFLAGS(np_vtx_part_bound_part_idx, NPY.NPY_OWNDATA);
-
-    #     return {'np_vtx_part_bound_proc_idx'  : np_vtx_part_bound_proc_idx,
-    #             'np_vtx_part_bound_part_idx'  : np_vtx_part_bound_part_idx,
-    #             'np_vtx_part_bound'           : np_vtx_part_bound}
-
-    # def multipart_graph_comm_edge_dim_get(self, int ipart, int zone_gid):
-    #     """
-    #        Get partition dimensions
-    #     """
-    #     # ************************************************************************
-    #     # > Declaration
-    #     cdef int n_edge_part_bound
-    #     # ************************************************************************
-
-    #     PDM_multipart_part_graph_comm_edge_dim_get(self._mtp,
-    #                                               zone_gid,
-    #                                               ipart,
-    #                                               &n_edge_part_bound)
-
-    #     return {'n_edge_part_bound' : n_edge_part_bound}
-
-    # ------------------------------------------------------------------
-    # def multipart_graph_comm_edge_val_get(self, int ipart, int zone_gid):
-    #     """
-    #        Get partition dimensions
-    #     """
-    #     # ************************************************************************
-    #     # > Declaration
-    #     cdef int          *edge_part_bound
-    #     cdef int          *edge_part_bound_proc_idx
-    #     cdef int          *edge_part_bound_part_idx
-    #     # ************************************************************************
-
-    #     # dims = self.part_dim_get(self._mtp, ipart)
-    #     dims    = self.multipart_dim_get(ipart, zone_gid)
-    #     dims_gc = self.multipart_graph_comm_edge_dim_get(ipart, zone_gid)
-
-    #     # -> Call PPART to get info
-    #     PDM_multipart_part_graph_comm_edge_data_get(self._mtp,
-    #                                                zone_gid,
-    #                                                ipart,
-    #                                                &edge_part_bound_proc_idx,
-    #                                                &edge_part_bound_part_idx,
-    #                                                &edge_part_bound)
-    #     # -> Begin
-    #     cdef NPY.npy_intp dim
-
-    #     # \param [out]  edge_part_bound      Partitioning boundary edges
-    #     if (edge_part_bound == NULL) :
-    #         np_edge_part_bound = None
-    #     else :
-    #         dim = <NPY.npy_intp> (4 * dims_gc['n_edge_part_bound'])
-    #         np_edge_part_bound   = NPY.PyArray_SimpleNewFromData(1,
-    #                                                             &dim,
-    #                                                             NPY.NPY_INT32,
-    #                                                             <void *> edge_part_bound)
-    #         PyArray_ENABLEFLAGS(np_edge_part_bound, NPY.NPY_OWNDATA);
-
-    #     # \param [out]  edge_part_bound_proc_idx  Partitioning boundary edges block distribution from processus (size = n_proc + 1)
-    #     if (edge_part_bound_proc_idx == NULL) :
-    #         np_edge_part_bound_proc_idx = None
-    #     else :
-    #         dim = <NPY.npy_intp> ( dims['n_proc'] + 1)
-    #         np_edge_part_bound_proc_idx = NPY.PyArray_SimpleNewFromData(1,
-    #                                                                    &dim,
-    #                                                                    NPY.NPY_INT32,
-    #                                                                    <void *> edge_part_bound_proc_idx)
-    #         PyArray_ENABLEFLAGS(np_edge_part_bound_proc_idx, NPY.NPY_OWNDATA);
-
-    #     # \param [out]  edge_part_bound_part_idx  Partitioning boundary edges block distribution from partition (size = nt_part + 1)
-    #     if (edge_part_bound_part_idx == NULL) :
-    #         np_edge_part_bound_part_idx = None
-    #     else :
-    #         dim = <NPY.npy_intp> ( dims['nt_part'] + 1)
-    #         np_edge_part_bound_part_idx = NPY.PyArray_SimpleNewFromData(1,
-    #                                                                    &dim,
-    #                                                                    NPY.NPY_INT32,
-    #                                                                    <void *> edge_part_bound_part_idx)
-    #         PyArray_ENABLEFLAGS(np_edge_part_bound_part_idx, NPY.NPY_OWNDATA);
-
-    #     return {'np_edge_part_bound_proc_idx'  : np_edge_part_bound_proc_idx,
-    #             'np_edge_part_bound_part_idx'  : np_edge_part_bound_part_idx,
-    #             'np_edge_part_bound'           : np_edge_part_bound}
-
     # ------------------------------------------------------------------
     def multipart_color_get(self, int ipart, int zone_gid):
         """
@@ -1130,6 +977,72 @@ cdef class MultiPart:
         return {'np_entity_color'     : np_entity_color}
 
     # ------------------------------------------------------------------
+    def multipart_graph_comm_get(self,
+                                 int ipart,
+                                 int zone_gid,
+                                 PDM_bound_type_t bound_type):
+        """
+           Get partition ghost information
+        """
+        # ************************************************************************
+        # > Declaration
+        cdef int          *entity_part_bound
+        cdef int          *entity_part_bound_proc_idx
+        cdef int          *entity_part_bound_part_idx
+        # ************************************************************************
+        # -> Call PPART to get info
+        PDM_multipart_part_graph_comm_get(self._mtp,
+                                          zone_gid,
+                                          ipart,
+                                          bound_type,
+                                          &entity_part_bound_proc_idx,
+                                          &entity_part_bound_part_idx,
+                                          &entity_part_bound,
+                                          PDM_OWNERSHIP_USER)
+
+        tn_part = PDM_multipart_part_tn_part_get(self._mtp, zone_gid)
+        n_entity_part_bound = entity_part_bound_part_idx[tn_part]
+
+        # -> Begin
+        cdef NPY.npy_intp dim
+        # \param [out]  entity_part_bound      Partitioning boundary vtxs
+        if (entity_part_bound == NULL) :
+            np_entity_part_bound = None
+        else :
+            dim = <NPY.npy_intp> (4 * n_entity_part_bound)
+            np_entity_part_bound   = NPY.PyArray_SimpleNewFromData(1,
+                                                                &dim,
+                                                                NPY.NPY_INT32,
+                                                                <void *> entity_part_bound)
+            PyArray_ENABLEFLAGS(np_entity_part_bound, NPY.NPY_OWNDATA);
+
+        # \param [out]  entity_part_bound_proc_idx  Partitioning boundary vtxs block distribution from processus (size = n_proc + 1)
+        if (entity_part_bound_proc_idx == NULL) :
+            np_entity_part_bound_proc_idx = None
+        else :
+            dim = <NPY.npy_intp> ( self.n_rank + 1)
+            np_entity_part_bound_proc_idx = NPY.PyArray_SimpleNewFromData(1,
+                                                                       &dim,
+                                                                       NPY.NPY_INT32,
+                                                                       <void *> entity_part_bound_proc_idx)
+            PyArray_ENABLEFLAGS(np_entity_part_bound_proc_idx, NPY.NPY_OWNDATA);
+
+        # \param [out]  entity_part_bound_part_idx  Partitioning boundary vtxs block distribution from partition (size = nt_part + 1)
+        if (entity_part_bound_part_idx == NULL) :
+            np_entity_part_bound_part_idx = None
+        else :
+            dim = <NPY.npy_intp> ( tn_part + 1)
+            np_entity_part_bound_part_idx = NPY.PyArray_SimpleNewFromData(1,
+                                                                       &dim,
+                                                                       NPY.NPY_INT32,
+                                                                       <void *> entity_part_bound_part_idx)
+            PyArray_ENABLEFLAGS(np_entity_part_bound_part_idx, NPY.NPY_OWNDATA);
+
+        return {'np_entity_part_bound_proc_idx'  : np_entity_part_bound_proc_idx,
+                'np_entity_part_bound_part_idx'  : np_entity_part_bound_part_idx,
+                'np_entity_part_bound'           : np_entity_part_bound}
+
+    # ------------------------------------------------------------------
     def multipart_time_get(self, int zone_gid):
         """
         Get times
@@ -1166,49 +1079,3 @@ cdef class MultiPart:
 
         return {'elapsed' : d_elapsed, 'cpu' : d_cpu, 'cpu_user' : d_cpu_user,  'cpu_sys' : d_cpu_sys}
 
-
-    # ------------------------------------------------------------------
-    # def multipart_stat_get(self, int zone_gid):
-    #     """
-    #     Get statistics
-    #     """
-    #     # ************************************************************************
-    #     # > Declaration
-    #     cdef int      cells_average,
-    #     cdef int      cells_median,
-    #     cdef double   cells_std_deviation,
-    #     cdef int      cells_min,
-    #     cdef int      cells_max,
-    #     cdef int      bound_part_faces_average,
-    #     cdef int      bound_part_faces_median,
-    #     cdef double   bound_part_faces_std_deviation,
-    #     cdef int      bound_part_faces_min,
-    #     cdef int      bound_part_faces_max,
-    #     cdef int      bound_part_faces_sum
-    #     # ************************************************************************
-
-    #     PDM_multipart_stat_get(self._mtp,
-    #                            zone_gid,
-    #                            &cells_average,
-    #                            &cells_median,
-    #                            &cells_std_deviation,
-    #                            &cells_min,
-    #                            &cells_max,
-    #                            &bound_part_faces_average,
-    #                            &bound_part_faces_median,
-    #                            &bound_part_faces_std_deviation,
-    #                            &bound_part_faces_min,
-    #                            &bound_part_faces_max,
-    #                            &bound_part_faces_sum)
-
-    #     return {'cells_average'                  : cells_average,
-    #             'cells_median'                   : cells_median,
-    #             'cells_std_deviation'            : cells_std_deviation,
-    #             'cells_min'                      : cells_min,
-    #             'cells_max'                      : cells_max,
-    #             'bound_part_faces_average'       : bound_part_faces_average,
-    #             'bound_part_faces_median'        : bound_part_faces_median,
-    #             'bound_part_faces_std_deviation' : bound_part_faces_std_deviation,
-    #             'bound_part_faces_min'           : bound_part_faces_min,
-    #             'bound_part_faces_max'           : bound_part_faces_max,
-    #             'bound_part_faces_sum'           : bound_part_faces_sum}

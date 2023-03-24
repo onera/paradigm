@@ -389,6 +389,13 @@ const int            i_part,
       PDM_g_num_t  **face_join_ln_to_gn
 );
 
+int
+PDM_multipart_part_tn_part_get
+(
+PDM_multipart_t                *multipart,
+const int                       i_zone
+);
+
 /**
  *
  * \brief Returns the data arrays of a given partition
@@ -525,7 +532,6 @@ void PDM_multipart_bound_get
  PDM_g_num_t      **bound_ln_to_gn,
  PDM_ownership_t    ownership
 );
-
 
 
 /**
