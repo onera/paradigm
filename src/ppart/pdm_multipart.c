@@ -604,221 +604,9 @@ _map_part_t_with_part_mesh
 static void
 _part_free
 (
- _part_t         *part,
- PDM_ownership_t  owner
+ _part_t         *part
 )
 {
-  // if(owner == PDM_OWNERSHIP_KEEP){
-  //   if (part->vtx != NULL)
-  //     free(part->vtx);
-  //   part->vtx = NULL;
-
-  //   if (part->face_vtx_idx != NULL)
-  //     free(part->face_vtx_idx);
-  //   part->face_vtx_idx = NULL;
-
-  //   if (part->face_vtx != NULL)
-  //     free(part->face_vtx);
-  //   part->face_vtx = NULL;
-
-  //   if (part->gface_vtx != NULL)
-  //     free(part->gface_vtx);
-  //   part->gface_vtx = NULL;
-
-  //   if (part->cell_face_idx != NULL)
-  //     free(part->cell_face_idx);
-  //   part->cell_face_idx = NULL;
-
-  //   if (part->cell_face != NULL)
-  //     free(part->cell_face);
-  //   part->cell_face = NULL;
-
-  //   if (part->gcell_face != NULL)
-  //     free(part->gcell_face);
-  //   part->gcell_face = NULL;
-
-  //   if (part->face_cell != NULL)
-  //     free(part->face_cell);
-  //   part->face_cell = NULL;
-
-  //   if (part->face_group_idx != NULL)
-  //     free(part->face_group_idx);
-  //   part->face_group_idx = NULL;
-
-  //   if (part->face_group != NULL)
-  //     free(part->face_group);
-  //   part->face_group = NULL;
-
-  //   if (part->face_part_bound_proc_idx != NULL)
-  //     free(part->face_part_bound_proc_idx);
-  //   part->face_part_bound_proc_idx = NULL;
-
-  //   if (part->face_part_bound_part_idx != NULL)
-  //     free(part->face_part_bound_part_idx);
-  //   part->face_part_bound_part_idx = NULL;
-
-  //   if (part->face_part_bound != NULL)
-  //     free(part->face_part_bound);
-  //   part->face_part_bound = NULL;
-
-  //   if (part->edge_part_bound_proc_idx != NULL)
-  //     free(part->edge_part_bound_proc_idx);
-  //   part->edge_part_bound_proc_idx = NULL;
-
-  //   if (part->edge_part_bound_part_idx != NULL)
-  //     free(part->edge_part_bound_part_idx);
-  //   part->edge_part_bound_part_idx = NULL;
-
-  //   if (part->edge_part_bound != NULL)
-  //     free(part->edge_part_bound);
-  //   part->edge_part_bound = NULL;
-
-  //   if (part->vtx_part_bound_proc_idx != NULL)
-  //     free(part->vtx_part_bound_proc_idx);
-  //   part->vtx_part_bound_proc_idx = NULL;
-
-  //   if (part->vtx_part_bound_part_idx != NULL)
-  //     free(part->vtx_part_bound_part_idx);
-  //   part->vtx_part_bound_part_idx = NULL;
-
-  //   if (part->vtx_part_bound != NULL)
-  //     free(part->vtx_part_bound);
-  //   part->vtx_part_bound = NULL;
-
-  //   if(part->vtx_ghost_information != NULL)
-  //     free(part->vtx_ghost_information);
-  //   part->vtx_ghost_information = NULL;
-
-  //   if (part->face_bound_idx != NULL)
-  //     free(part->face_bound_idx);
-  //   part->face_bound_idx = NULL;
-
-  //   if (part->face_bound != NULL)
-  //     free(part->face_bound);
-  //   part->face_bound = NULL;
-
-  //   if (part->face_join_idx != NULL)
-  //     free(part->face_join_idx);
-  //   part->face_join_idx = NULL;
-
-  //   if (part->face_join != NULL)
-  //     free(part->face_join);
-  //   part->face_join = NULL;
-
-  //   if (part->edge_bound_idx != NULL)
-  //     free(part->edge_bound_idx);
-  //   part->edge_bound_idx = NULL;
-
-  //   if (part->edge_bound != NULL)
-  //     free(part->edge_bound);
-  //   part->edge_bound = NULL;
-
-  //   if (part->edge_join_idx != NULL)
-  //     free(part->edge_join_idx);
-  //   part->edge_join_idx = NULL;
-
-  //   if (part->edge_join != NULL)
-  //     free(part->edge_join);
-  //   part->edge_join = NULL;
-
-  //   if (part->vtx_ln_to_gn != NULL)
-  //     free(part->vtx_ln_to_gn);
-  //   part->vtx_ln_to_gn = NULL;
-
-  //   if (part->face_ln_to_gn != NULL)
-  //     free(part->face_ln_to_gn);
-  //   part->face_ln_to_gn = NULL;
-
-  //   if (part->cell_ln_to_gn != NULL)
-  //     free(part->cell_ln_to_gn);
-  //   part->cell_ln_to_gn = NULL;
-
-  //   if (part->face_group_ln_to_gn != NULL)
-  //     free(part->face_group_ln_to_gn);
-  //   part->face_group_ln_to_gn = NULL;
-
-  //   if (part->face_bound_ln_to_gn != NULL)
-  //     free(part->face_bound_ln_to_gn);
-  //   part->face_bound_ln_to_gn = NULL;
-
-  //   if (part->edge_bound_ln_to_gn != NULL)
-  //     free(part->edge_bound_ln_to_gn);
-  //   part->edge_bound_ln_to_gn = NULL;
-
-  //   if (part->face_join_ln_to_gn != NULL)
-  //     free(part->face_join_ln_to_gn);
-  //   part->face_join_ln_to_gn = NULL;
-
-  //   if (part->cell_tag != NULL)
-  //     free(part->cell_tag);
-  //   part->cell_tag = NULL;
-
-  //   if (part->face_tag != NULL)
-  //   free(part->face_tag);
-  //   part->face_tag = NULL;
-
-  //   if (part->edge_ln_to_gn != NULL)
-  //     free(part->edge_ln_to_gn);
-  //   part->edge_ln_to_gn = NULL;
-
-  //   if (part->edge_tag != NULL)
-  //     free(part->edge_tag);
-  //   part->edge_tag = NULL;
-
-  //   if (part->edge_face_idx != NULL)
-  //     free(part->edge_face_idx);
-  //   part->edge_face_idx = NULL;
-
-  //   if (part->edge_face != NULL)
-  //     free(part->edge_face);
-  //   part->edge_face = NULL;
-
-  //   if (part->face_edge_idx != NULL)
-  //     free(part->face_edge_idx);
-  //   part->face_edge_idx = NULL;
-
-  //   if (part->face_edge != NULL)
-  //     free(part->face_edge);
-  //   part->face_edge = NULL;
-
-  //   if (part->edge_vtx != NULL)
-  //     free(part->edge_vtx);
-  //   part->edge_vtx = NULL;
-
-  //   if (part->vtx_tag != NULL)
-  //     free(part->vtx_tag);
-  //   part->vtx_tag = NULL;
-
-  //   if (part->cell_color != NULL)
-  //     free(part->cell_color);
-  //   part->cell_color = NULL;
-
-  //   if (part->face_color != NULL)
-  //     free(part->face_color);
-  //   part->face_color = NULL;
-
-  //   if (part->edge_color != NULL)
-  //     free(part->edge_color);
-  //   part->edge_color = NULL;
-
-  //   if (part->vtx_color != NULL)
-  //     free(part->vtx_color);
-  //   part->vtx_color = NULL;
-
-  //   if (part->vtx_ghost_information != NULL)
-  //     free(part->vtx_ghost_information);
-  //   part->vtx_ghost_information = NULL;
-
-  //   if (part->thread_color != NULL)
-  //     free(part->thread_color);
-  //   part->thread_color = NULL;
-
-  //   if (part->hyperplane_color != NULL)
-  //     free(part->hyperplane_color);
-  //   part->hyperplane_color = NULL;
-
-  // } /* End owner */
-
   /* Following is not results but internal array */
   if (part->new_to_old_order_cell != NULL)
     free(part->new_to_old_order_cell);
@@ -2456,7 +2244,7 @@ PDM_MPI_Comm       comm
                                      PDM_OWNERSHIP_KEEP);
     }
 
-    _part_free(parts[i_part], PDM_OWNERSHIP_KEEP);
+    _part_free(parts[i_part]);
   }
   free(parts);
 
@@ -3075,7 +2863,7 @@ PDM_MPI_Comm      comm
                                      PDM_OWNERSHIP_KEEP);
     }
 
-    _part_free(parts[i_part], PDM_OWNERSHIP_KEEP);
+    _part_free(parts[i_part]);
   }
   free(parts);
 
@@ -3775,11 +3563,11 @@ PDM_multipart_run_ppart
     double cum_elapsed_time = 0;
     int *starting_part_idx =  PDM_array_new_idx_from_sizes_int(multipart->n_part, multipart->n_zone);
 
-    int is_by_elt = 0;
+    // int is_by_elt = 0;
     for (int i_zone = 0; i_zone < multipart->n_zone; ++i_zone) {
       PDM_dmesh_nodal_t* dmesh_nodal = multipart->dmeshes_nodal[i_zone];
       if (dmesh_nodal != NULL) { // element representation
-        is_by_elt = 1;
+        // is_by_elt = 1;
         // PDM_printf("Partitionning elt zone %d/%d \n", i_zone+1, multipart->n_zone);
         PDM_MPI_Comm comm = multipart->comm;
         PDM_split_dual_t split_method = multipart->split_method;
@@ -4357,13 +4145,24 @@ const int            i_part,
 )
 {
 
-  assert(i_zone < multipart->n_zone && i_part < multipart->n_part[i_zone]);
-  _part_mesh_t _pmeshes = multipart->pmeshes[i_zone];
-  *cell_color       = NULL; // _pmeshes.parts[i_part]->cell_color;
-  *face_color       = NULL; // _pmeshes.parts[i_part]->face_color;
-  *face_hp_color    = NULL; // _pmeshes.parts[i_part]->face_hp_color;
-  *thread_color     = NULL; // _pmeshes.parts[i_part]->thread_color;
-  *hyperplane_color = NULL; // _pmeshes.parts[i_part]->hyperplane_color;
+  PDM_UNUSED(multipart);
+  PDM_UNUSED(i_zone);
+  PDM_UNUSED(i_part);
+  PDM_UNUSED(cell_color);
+  PDM_UNUSED(face_color);
+  PDM_UNUSED(face_hp_color);
+  PDM_UNUSED(thread_color);
+  PDM_UNUSED(hyperplane_color);
+
+
+  abort();
+  // assert(i_zone < multipart->n_zone && i_part < multipart->n_part[i_zone]);
+  // _part_mesh_t _pmeshes = multipart->pmeshes[i_zone];
+  // *cell_color       = PDM_multipart_partition_color_get()
+  // *face_color       = NULL; // _pmeshes.parts[i_part]->face_color;
+  // *face_hp_color    = NULL; // _pmeshes.parts[i_part]->face_hp_color;
+  // *thread_color     = NULL; // _pmeshes.parts[i_part]->thread_color;
+  // *hyperplane_color = NULL; // _pmeshes.parts[i_part]->hyperplane_color;
 
 }
 
