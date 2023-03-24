@@ -543,20 +543,17 @@ PDM_part_mesh_bound_concat_set
 
 }
 
+
 void
-PDM_part_mesh_bound_concat_get
+PDM_part_mesh_bound_concat_compute
 (
  PDM_part_mesh_t          *pmesh,
  int                       i_part,
  PDM_bound_type_t          bound_type,
- int                     **pbound_idx,
- int                     **pbound,
- PDM_g_num_t             **pbound_ln_to_gn,
  PDM_ownership_t           ownership
 )
 {
   if(pmesh->is_compute_concat_bound[bound_type] == PDM_FALSE) {
-
     int n_group = pmesh->n_group_bnd[bound_type];
     assert(pmesh->pconcat_bound_idx[bound_type][i_part] == NULL);
     pmesh->pconcat_bound_idx[bound_type][i_part] = malloc( (n_group+1) * sizeof(int));
@@ -579,7 +576,22 @@ PDM_part_mesh_bound_concat_get
         _pconcat_bound_ln_to_gn[idx_write+i] = pmesh->pbound_ln_to_gn[bound_type][i_part][i_group][i];
       }
     }
+    pmesh->is_compute_concat_bound[bound_type] = PDM_TRUE;
   }
+}
+
+void
+PDM_part_mesh_bound_concat_get
+(
+ PDM_part_mesh_t          *pmesh,
+ int                       i_part,
+ PDM_bound_type_t          bound_type,
+ int                     **pbound_idx,
+ int                     **pbound,
+ PDM_g_num_t             **pbound_ln_to_gn,
+ PDM_ownership_t           ownership
+)
+{
 
   *pbound_idx      = pmesh->pconcat_bound_idx     [bound_type][i_part];
   *pbound          = pmesh->pconcat_bound         [bound_type][i_part];
@@ -587,10 +599,8 @@ PDM_part_mesh_bound_concat_get
 
   if(ownership == PDM_OWNERSHIP_USER || ownership == PDM_OWNERSHIP_UNGET_RESULT_IS_FREE) {
     pmesh->is_owner_concat_bound  [bound_type] = PDM_FALSE;
-    pmesh->is_compute_concat_bound[bound_type] = PDM_FALSE;
   } else if (ownership == PDM_OWNERSHIP_KEEP) {
     pmesh->is_owner_concat_bound  [bound_type] = PDM_TRUE;
-    pmesh->is_compute_concat_bound[bound_type] = PDM_TRUE;
   }
 }
 

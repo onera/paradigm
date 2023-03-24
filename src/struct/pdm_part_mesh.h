@@ -230,6 +230,16 @@ PDM_part_mesh_bound_get
  PDM_ownership_t           ownership
 );
 
+
+void
+PDM_part_mesh_bound_concat_compute
+(
+ PDM_part_mesh_t          *pmesh,
+ int                       i_part,
+ PDM_bound_type_t          bound_type,
+ PDM_ownership_t           ownership
+);
+
 void
 PDM_part_mesh_bound_concat_set
 (

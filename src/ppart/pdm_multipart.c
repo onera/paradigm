@@ -161,7 +161,7 @@ _map_part_t_with_part_mesh
     int* edge_vtx_idx = NULL;
     PDM_part_mesh_connectivity_get(pm,
                                    i_part,
-                                   PDM_CONNECTIVITY_TYPE_FACE_CELL,
+                                   PDM_CONNECTIVITY_TYPE_EDGE_VTX,
                                    &pdm_part[i_part]->edge_vtx,
                                    &edge_vtx_idx,
                                    PDM_OWNERSHIP_BAD_VALUE);
@@ -2425,6 +2425,36 @@ PDM_MPI_Comm       comm
   free(pinternal_vtx_priority);
 
   for (int i_part = 0; i_part < n_part; i_part++) {
+
+    if(parts[i_part]->cell_color != NULL) {
+      PDM_part_mesh_entity_color_set(pmeshes->pmesh,
+                                     i_part,
+                                     PDM_MESH_ENTITY_CELL,
+                                     parts[i_part]->cell_color,
+                                     PDM_OWNERSHIP_KEEP);
+    }
+    if (parts[i_part]->face_color != NULL) {
+      PDM_part_mesh_entity_color_set(pmeshes->pmesh,
+                                     i_part,
+                                     PDM_MESH_ENTITY_FACE,
+                                     parts[i_part]->face_color,
+                                     PDM_OWNERSHIP_KEEP);
+    }
+    if (parts[i_part]->edge_color != NULL) {
+      PDM_part_mesh_entity_color_set(pmeshes->pmesh,
+                                     i_part,
+                                     PDM_MESH_ENTITY_EDGE,
+                                     parts[i_part]->edge_color,
+                                     PDM_OWNERSHIP_KEEP);
+    }
+    if (parts[i_part]->vtx_color != NULL) {
+      PDM_part_mesh_entity_color_set(pmeshes->pmesh,
+                                     i_part,
+                                     PDM_MESH_ENTITY_VERTEX,
+                                     parts[i_part]->vtx_color,
+                                     PDM_OWNERSHIP_KEEP);
+    }
+
     _part_free(parts[i_part], PDM_OWNERSHIP_KEEP);
   }
   free(parts);
@@ -2793,7 +2823,6 @@ PDM_MPI_Comm      comm
   int         **pface_cell                    = NULL;
   int         **pface_bound_idx               = NULL;
   int         **pface_bound                   = NULL;
-  int         **pface_join_idx                = NULL;
   int         **pinternal_face_bound_proc_idx = NULL;
   int         **pinternal_face_bound_part_idx = NULL;
   int         **pinternal_face_bound          = NULL;
@@ -2805,7 +2834,8 @@ PDM_MPI_Comm      comm
   PDM_g_num_t **pface_ln_to_gn                = NULL;
   PDM_g_num_t **pvtx_ln_to_gn                 = NULL;
   PDM_g_num_t **pface_bound_ln_to_gn          = NULL;
-  PDM_g_num_t **pface_join_ln_to_gn           = NULL;
+  // PDM_g_num_t **pface_join_ln_to_gn           = NULL;
+  // int         **pface_join_idx                = NULL;
 
   PDM_part_assemble_partitions(comm,
                                part_distri,
@@ -3013,19 +3043,54 @@ PDM_MPI_Comm      comm
   free(pinternal_vtx_bound);
   free(pinternal_vtx_priority);
 
+  for (int i_part = 0; i_part < n_part; i_part++) {
 
-  int **pface_join_tmp = NULL;
-  PDM_part_distgroup_to_partgroup(comm,
-                                  face_distri,
-                                  n_join,
-                                  dface_join_idx,
-                                  dface_join,
-                                  n_part,
-                                  pn_face,
-           (const PDM_g_num_t **) pface_ln_to_gn,
-                                 &pface_join_idx,
-                                 &pface_join_tmp,
-                                 &pface_join_ln_to_gn);
+    if(parts[i_part]->cell_color != NULL) {
+      PDM_part_mesh_entity_color_set(pmeshes->pmesh,
+                                     i_part,
+                                     PDM_MESH_ENTITY_CELL,
+                                     parts[i_part]->cell_color,
+                                     PDM_OWNERSHIP_KEEP);
+    }
+    if (parts[i_part]->face_color != NULL) {
+      PDM_part_mesh_entity_color_set(pmeshes->pmesh,
+                                     i_part,
+                                     PDM_MESH_ENTITY_FACE,
+                                     parts[i_part]->face_color,
+                                     PDM_OWNERSHIP_KEEP);
+    }
+    if (parts[i_part]->edge_color != NULL) {
+      PDM_part_mesh_entity_color_set(pmeshes->pmesh,
+                                     i_part,
+                                     PDM_MESH_ENTITY_EDGE,
+                                     parts[i_part]->edge_color,
+                                     PDM_OWNERSHIP_KEEP);
+    }
+    if (parts[i_part]->vtx_color != NULL) {
+      PDM_part_mesh_entity_color_set(pmeshes->pmesh,
+                                     i_part,
+                                     PDM_MESH_ENTITY_VERTEX,
+                                     parts[i_part]->vtx_color,
+                                     PDM_OWNERSHIP_KEEP);
+    }
+
+    _part_free(parts[i_part], PDM_OWNERSHIP_KEEP);
+  }
+  free(parts);
+
+
+  // int **pface_join_tmp = NULL;
+  // PDM_part_distgroup_to_partgroup(comm,
+  //                                 face_distri,
+  //                                 n_join,
+  //                                 dface_join_idx,
+  //                                 dface_join,
+  //                                 n_part,
+  //                                 pn_face,
+  //          (const PDM_g_num_t **) pface_ln_to_gn,
+  //                                &pface_join_idx,
+  //                                &pface_join_tmp,
+  //                                &pface_join_ln_to_gn);
 
   PDM_part_generate_entity_graph_comm(comm,
                                       part_distri,
@@ -3072,17 +3137,6 @@ PDM_MPI_Comm      comm
     // pmeshes->parts[i_part]->face_join_ln_to_gn = pface_join_ln_to_gn[i_part];
     // free(pface_join_tmp[i_part]);
 
-    // pmeshes->parts[i_part]->face_part_bound_proc_idx = pinternal_face_bound_proc_idx[i_part];
-    // pmeshes->parts[i_part]->face_part_bound_part_idx = pinternal_face_bound_part_idx[i_part];
-    // pmeshes->parts[i_part]->face_part_bound          = pinternal_face_bound[i_part];
-
-    // pmeshes->parts[i_part]->vtx_part_bound_proc_idx = pinternal_vtx_bound_proc_idx[i_part];
-    // pmeshes->parts[i_part]->vtx_part_bound_part_idx = pinternal_vtx_bound_part_idx[i_part];
-    // pmeshes->parts[i_part]->vtx_part_bound          = pinternal_vtx_bound[i_part];
-
-
-
-
     PDM_part_mesh_part_graph_comm_set(pmeshes->pmesh,
                                       i_part,
                                       PDM_BOUND_TYPE_FACE,
@@ -3099,8 +3153,7 @@ PDM_MPI_Comm      comm
                                       pinternal_vtx_bound[i_part],
                                       PDM_OWNERSHIP_KEEP);
 
-    parts[i_part]->vtx_ghost_information   = pinternal_vtx_priority[i_part];
-
+    pmeshes->vtx_ghost_information[i_part] = pinternal_vtx_priority[i_part];
 
   }
 
@@ -3116,7 +3169,6 @@ PDM_MPI_Comm      comm
   free(pface_cell);
   free(pface_bound_idx);
   free(pface_bound);
-  free(pface_join_idx);
   free(pinternal_face_bound_proc_idx);
   free(pinternal_face_bound_part_idx);
   free(pinternal_face_bound);
@@ -3127,9 +3179,10 @@ PDM_MPI_Comm      comm
   free(pface_ln_to_gn);
   free(pvtx_ln_to_gn);
   free(pface_bound_ln_to_gn);
-  free(pface_join_ln_to_gn);
   free(pinternal_vtx_priority);
-  free(pface_join_tmp);
+  // free(pface_join_idx);
+  // free(pface_join_ln_to_gn);
+  // free(pface_join_tmp);
   free(cell_distri);
   free(face_distri);
   free(vtx_distri);
@@ -4074,12 +4127,14 @@ const int            i_part,
                                  face_vtx_idx,
                                  PDM_OWNERSHIP_BAD_VALUE);
 
+  int *face_cell_idx = NULL;
   PDM_part_mesh_connectivity_get(_pmeshes.pmesh,
                                  i_part,
-                                 PDM_CONNECTIVITY_TYPE_FACE_VTX,
+                                 PDM_CONNECTIVITY_TYPE_FACE_CELL,
                                  face_cell,
-                                 NULL,
+                                 &face_cell_idx,
                                  PDM_OWNERSHIP_BAD_VALUE);
+  assert(face_cell_idx == NULL);
 
   PDM_part_mesh_vtx_coord_get(_pmeshes.pmesh, i_part, vtx, PDM_OWNERSHIP_BAD_VALUE);
 
@@ -4422,9 +4477,9 @@ PDM_multipart_free
 
   // free(multipart->dmeshes_ids);
   for (int i_zone = 0; i_zone < multipart->n_zone; i_zone++) {
-    // if (multipart->pmeshes[i_zone].joins_ids != NULL) {
-    //   free(multipart->pmeshes[i_zone].joins_ids);
-    // }
+    if (multipart->pmeshes[i_zone].joins_ids != NULL) {
+      free(multipart->pmeshes[i_zone].joins_ids);
+    }
 
     for (int i_part = 0; i_part < multipart->n_part[i_zone]; i_part++) {
       if(multipart->pmeshes[i_zone].vtx_ghost_information[i_part] != NULL ) {
