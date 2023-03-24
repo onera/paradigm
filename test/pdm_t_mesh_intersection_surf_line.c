@@ -283,7 +283,8 @@ _extract_part_edge_and_set_mesh
                             &n_edge_group,
                             &edge_group_idx,
                             &edge_group,
-                            &edge_bound_ln_to_gn);
+                            &edge_bound_ln_to_gn,
+                            PDM_OWNERSHIP_KEEP);
 
 
     // PDM_log_trace_connectivity_int(edge_group_idx, edge_group, n_edge_group, "edge_group ::");

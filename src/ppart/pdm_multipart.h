@@ -339,29 +339,19 @@ const int        i_part,
       int       *n_join_groups
 );
 
-/**
- *
- * \brief Returns the dimensions of a given partition
- */
-void
-PDM_multipart_part_graph_comm_vtx_dim_get
-(
- PDM_multipart_t *multipart,
- const int        i_zone,
- const int        i_part,
-       int       *n_vtx_part_bound
-);
-
 
 void
-PDM_multipart_part_graph_comm_edge_dim_get
+PDM_multipart_part_graph_comm_get
 (
- PDM_multipart_t *multipart,
- const int        i_zone,
- const int        i_part,
-       int       *n_edge_part_bound
+ PDM_multipart_t    *multipart,
+ const int           i_zone,
+ const int           i_part,
+ PDM_bound_type_t    bound_type,
+ int               **ppart_bound_proc_idx,
+ int               **ppart_bound_part_idx,
+ int               **ppart_bound,
+ PDM_ownership_t     ownership
 );
-
 
 /**
  *
@@ -437,28 +427,28 @@ const int                   i_part,
       PDM_ownership_t       ownership
 );
 
-void
-PDM_multipart_part_graph_comm_vtx_data_get
-(
-PDM_multipart_t     *multipart,
-const int            i_zone,
-const int            i_part,
-      int          **vtx_part_bound_proc_idx,
-      int          **vtx_part_bound_part_idx,
-      int          **vtx_part_bound
-);
+// void
+// PDM_multipart_part_graph_comm_vtx_data_get
+// (
+// PDM_multipart_t     *multipart,
+// const int            i_zone,
+// const int            i_part,
+//       int          **vtx_part_bound_proc_idx,
+//       int          **vtx_part_bound_part_idx,
+//       int          **vtx_part_bound
+// );
 
 
-void
-PDM_multipart_part_graph_comm_edge_data_get
-(
-PDM_multipart_t     *multipart,
-const int            i_zone,
-const int            i_part,
-      int          **edge_part_bound_proc_idx,
-      int          **edge_part_bound_part_idx,
-      int          **edge_part_bound
-);
+// void
+// PDM_multipart_part_graph_comm_edge_data_get
+// (
+// PDM_multipart_t     *multipart,
+// const int            i_zone,
+// const int            i_part,
+//       int          **edge_part_bound_proc_idx,
+//       int          **edge_part_bound_part_idx,
+//       int          **edge_part_bound
+// );
 
 void
 PDM_multipart_part_color_get
@@ -544,8 +534,9 @@ void PDM_multipart_bound_get
  int               *n_bound,
  int              **bound_idx,
  int              **bound,
- PDM_g_num_t      **bound_ln_to_gn
- );
+ PDM_g_num_t      **bound_ln_to_gn,
+ PDM_ownership_t    ownership
+);
 
 
 

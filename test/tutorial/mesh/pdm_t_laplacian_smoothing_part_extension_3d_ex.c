@@ -215,7 +215,6 @@ _get_groups_and_bounds
        int          **face_part_bound_proc_idx,
        int          **face_part_bound_part_idx,
        int          **face_part_bound,
-       int           *n_vtx_part_bound,
        int          **vtx_part_bound_proc_idx,
        int          **vtx_part_bound_part_idx,
        int          **vtx_part_bound,
@@ -300,17 +299,14 @@ _get_groups_and_bounds
                              &face_join,
                              &face_join_ln_to_gn);
 
-  PDM_multipart_part_graph_comm_vtx_data_get(multipart,
-                                             i_zone,
-                                             i_part,
-                                             vtx_part_bound_proc_idx,
-                                             vtx_part_bound_part_idx,
-                                             vtx_part_bound);
-
-  PDM_multipart_part_graph_comm_vtx_dim_get(multipart,
-                                            i_zone,
-                                            i_part,
-                                            n_vtx_part_bound);
+  PDM_multipart_part_graph_comm_get(multipart,
+                                    i_zone,
+                                    i_part,
+                                    PDM_BOUND_TYPE_VTX,
+                                    vtx_part_bound_proc_idx,
+                                    vtx_part_bound_part_idx,
+                                    vtx_part_bound,
+                                    PDM_OWNERSHIP_KEEP);
 
 }
 
@@ -521,7 +517,6 @@ int main(int argc, char *argv[])
   int *face_part_bound_proc_idx = NULL;
   int *face_part_bound_part_idx = NULL;
   int *face_part_bound          = NULL;
-  int  n_vtx_part_bound;
   int *vtx_part_bound_proc_idx  = NULL;
   int *vtx_part_bound_part_idx  = NULL;
   int *vtx_part_bound           = NULL;
@@ -535,7 +530,6 @@ int main(int argc, char *argv[])
                           &face_part_bound_proc_idx,
                           &face_part_bound_part_idx,
                           &face_part_bound,
-                          &n_vtx_part_bound,
                           &vtx_part_bound_proc_idx,
                           &vtx_part_bound_part_idx,
                           &vtx_part_bound,

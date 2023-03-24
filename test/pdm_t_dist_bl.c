@@ -544,7 +544,8 @@ _create_wall_surf
                             &n_bound,
                             &group_face_idx,
                             &group_face,
-                            &face_group_ln_to_gn);
+                            &face_group_ln_to_gn,
+                            PDM_OWNERSHIP_KEEP);
 
     int *face_vtx = NULL;
     int *face_vtx_idx = face_edge_idx;

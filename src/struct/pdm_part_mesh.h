@@ -164,6 +164,26 @@ PDM_part_mesh_entity_ln_to_gn_get
 
 
 void
+PDM_part_mesh_entity_color_set
+(
+ PDM_part_mesh_t          *pmesh,
+ int                       i_part,
+ PDM_mesh_entities_t       entity_type,
+ int                      *pentity_color,
+ PDM_ownership_t           ownership
+);
+
+void
+PDM_part_mesh_entity_color_get
+(
+ PDM_part_mesh_t          *pmesh,
+ int                       i_part,
+ PDM_mesh_entities_t       entity_type,
+ int                     **pentity_color,
+ PDM_ownership_t           ownership
+);
+
+void
 PDM_part_mesh_n_bound_set
 (
  PDM_part_mesh_t          *pmesh,

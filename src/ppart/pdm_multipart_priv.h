@@ -50,6 +50,12 @@ typedef struct {
   int        renum_face_method;     // Choice of renumbering method for faces
   int        renum_edge_method;     // Choice of renumbering method for faces
   int        renum_vtx_method;      // Choice of renumbering method for faces
+
+  /*
+   * Additional info
+   */
+  int **vtx_ghost_information;
+
 } _part_mesh_t;
 
 

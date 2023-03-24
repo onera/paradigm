@@ -830,13 +830,14 @@ int main
       int *vtx_part_bound_proc_idx = NULL;
       int *vtx_part_bound_part_idx = NULL;
       int *vtx_part_bound          = NULL;
-      PDM_multipart_part_graph_comm_vtx_data_get(mpart_id,
-                                                 i_dom,
-                                                 i_part,
-                                                 &vtx_part_bound_proc_idx,
-                                                 &vtx_part_bound_part_idx,
-                                                 &vtx_part_bound);
-
+      PDM_multipart_part_graph_comm_get(mpart_id,
+                                        i_dom,
+                                        i_part,
+                                        PDM_BOUND_TYPE_VTX,
+                                        &vtx_part_bound_proc_idx,
+                                        &vtx_part_bound_part_idx,
+                                        &vtx_part_bound,
+                                        PDM_OWNERSHIP_KEEP);
 
       int *face_edge     = NULL;
       int *face_edge_idx = NULL;

@@ -430,16 +430,6 @@ int main(int argc, char *argv[])
 
       // PDM_log_trace_connectivity_int(cell_face_idx, cell_face, n_cell, "cell_face : ");
 
-      int *vtx_part_bound_proc_idx = NULL;
-      int *vtx_part_bound_part_idx = NULL;
-      int *vtx_part_bound          = NULL;
-      PDM_multipart_part_graph_comm_vtx_data_get(mpart_id,
-                                                 i_zone,
-                                                 i_part,
-                                                 &vtx_part_bound_proc_idx,
-                                                 &vtx_part_bound_part_idx,
-                                                 &vtx_part_bound);
-
       int *face_edge     = NULL;
       int *face_edge_idx = NULL;
       int n_face2 = PDM_multipart_part_connectivity_get(mpart_id,

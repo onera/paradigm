@@ -105,11 +105,13 @@ PDM_part_mesh_create
   pmesh->pconnectivity          = (int         *** ) malloc( PDM_CONNECTIVITY_TYPE_MAX * sizeof(int         **) );
   pmesh->pconnectivity_idx      = (int         *** ) malloc( PDM_CONNECTIVITY_TYPE_MAX * sizeof(int         **) );
   pmesh->pentity_ln_to_gn       = (PDM_g_num_t *** ) malloc( PDM_MESH_ENTITY_MAX       * sizeof(PDM_g_num_t **) );
+  pmesh->pentity_color          = (int         *** ) malloc( PDM_MESH_ENTITY_MAX       * sizeof(int         **) );
 
   pmesh->pn_entity              = (int          ** ) malloc( PDM_MESH_ENTITY_MAX       * sizeof(int          *) );
 
   pmesh->is_owner_connectivity  = malloc( PDM_CONNECTIVITY_TYPE_MAX * sizeof(PDM_bool_t   ) );
   pmesh->is_owner_ln_to_gn      = malloc( PDM_MESH_ENTITY_MAX       * sizeof(PDM_bool_t   ) );
+  pmesh->is_owner_color         = malloc( PDM_MESH_ENTITY_MAX       * sizeof(PDM_bool_t   ) );
 
   for(int i = 0; i < PDM_CONNECTIVITY_TYPE_MAX; ++i) {
     pmesh->is_owner_connectivity[i] = PDM_FALSE;
@@ -119,7 +121,9 @@ PDM_part_mesh_create
 
   for(int i = 0; i < PDM_MESH_ENTITY_MAX; ++i) {
     pmesh->is_owner_ln_to_gn[i] = PDM_FALSE;
+    pmesh->is_owner_color   [i] = PDM_FALSE;
     pmesh->pentity_ln_to_gn [i] = NULL;
+    pmesh->pentity_color    [i] = NULL;
     pmesh->pn_entity        [i] = NULL;
   }
 
@@ -234,7 +238,7 @@ PDM_part_mesh_entity_ln_to_gn_set
 )
 {
   if(pmesh->pentity_ln_to_gn [entity_type] == NULL) {
-    pmesh->pentity_ln_to_gn [entity_type] = malloc(pmesh->n_part * sizeof(int *));
+    pmesh->pentity_ln_to_gn [entity_type] = malloc(pmesh->n_part * sizeof(PDM_g_num_t *));
     for(int i = 0; i < pmesh->n_part; ++i) {
       pmesh->pentity_ln_to_gn [entity_type][i] = NULL;
     }
@@ -267,6 +271,53 @@ PDM_part_mesh_entity_ln_to_gn_get
     pmesh->is_owner_ln_to_gn[entity_type] = PDM_FALSE;
   } else if (ownership == PDM_OWNERSHIP_KEEP) {
     pmesh->is_owner_ln_to_gn[entity_type] = PDM_TRUE;
+  }
+}
+
+
+void
+PDM_part_mesh_entity_color_set
+(
+ PDM_part_mesh_t          *pmesh,
+ int                       i_part,
+ PDM_mesh_entities_t       entity_type,
+ int                      *pentity_color,
+ PDM_ownership_t           ownership
+)
+{
+  if(pmesh->pentity_color [entity_type] == NULL) {
+    pmesh->pentity_color [entity_type] = malloc(pmesh->n_part * sizeof(int *));
+    for(int i = 0; i < pmesh->n_part; ++i) {
+      pmesh->pentity_color [entity_type][i] = NULL;
+    }
+  }
+  pmesh->pentity_color [entity_type][i_part] = pentity_color;
+  if(ownership == PDM_OWNERSHIP_USER || ownership == PDM_OWNERSHIP_UNGET_RESULT_IS_FREE) {
+    pmesh->is_owner_color[entity_type] = PDM_FALSE;
+  } else {
+    pmesh->is_owner_color[entity_type] = PDM_TRUE;
+  }
+}
+
+void
+PDM_part_mesh_entity_color_get
+(
+ PDM_part_mesh_t          *pmesh,
+ int                       i_part,
+ PDM_mesh_entities_t       entity_type,
+ int                     **pentity_color,
+ PDM_ownership_t           ownership
+)
+{
+  if(pmesh->pentity_color[entity_type] != NULL) {
+    *pentity_color = pmesh->pentity_color[entity_type][i_part];
+  } else {
+    *pentity_color = NULL;
+  }
+  if(ownership == PDM_OWNERSHIP_USER || ownership == PDM_OWNERSHIP_UNGET_RESULT_IS_FREE) {
+    pmesh->is_owner_color[entity_type] = PDM_FALSE;
+  } else if (ownership == PDM_OWNERSHIP_KEEP) {
+    pmesh->is_owner_color[entity_type] = PDM_TRUE;
   }
 }
 
@@ -350,7 +401,7 @@ PDM_part_mesh_connectivity_get
  PDM_ownership_t           ownership
 )
 {
-  if(pmesh->pconnectivity    [connectivity_type][i_part] != NULL) {
+  if(pmesh->pconnectivity    [connectivity_type] != NULL && pmesh->pconnectivity    [connectivity_type][i_part] != NULL) {
     *connect     = pmesh->pconnectivity    [connectivity_type][i_part];
     *connect_idx = pmesh->pconnectivity_idx[connectivity_type][i_part];
   } else {
@@ -652,6 +703,22 @@ PDM_part_mesh_free
       if(pmesh->pentity_ln_to_gn[i] != NULL) {
         free(pmesh->pentity_ln_to_gn[i]);
         pmesh->pentity_ln_to_gn[i] = NULL;
+      }
+    }
+
+    /* Free ln_to_gn */
+    for(int i = 0; i < PDM_MESH_ENTITY_MAX; ++i) {
+      if(pmesh->is_owner_color[i] == PDM_TRUE) {
+        for(int i_part = 0; i_part < pmesh->n_part; ++i_part) {
+          if(pmesh->pentity_color[i][i_part] != NULL) {
+            free(pmesh->pentity_color[i][i_part]);
+          }
+        }
+      }
+
+      if(pmesh->pentity_color[i] != NULL) {
+        free(pmesh->pentity_color[i]);
+        pmesh->pentity_color[i] = NULL;
       }
     }
 

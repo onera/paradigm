@@ -1674,6 +1674,10 @@ PDM_multipart_create
     multipart->pmeshes[izone].renum_cell_properties = NULL;
     multipart->pmeshes[izone].joins_ids = NULL;
     multipart->pmeshes[izone].pmesh     = PDM_part_mesh_create(n_part[izone], comm);
+    multipart->pmeshes[izone].vtx_ghost_information = malloc(n_part[izone] * sizeof(int *));
+    for(int i_part = 0; i_part < n_part[izone]; ++i_part) {
+      multipart->pmeshes[izone].vtx_ghost_information[i_part] = NULL;
+    }
   }
 
   return (PDM_multipart_t *) multipart;
@@ -2392,10 +2396,10 @@ PDM_MPI_Comm       comm
 
   /* MAP on _part_t to reuse ordering */
   _part_t** parts = _map_part_t_with_part_mesh(pmeshes->pmesh);
-  for (int ipart = 0; ipart < n_part; ipart++) {
-    parts[ipart]->vtx_ghost_information = pinternal_vtx_priority[ipart];
+  for (int i_part = 0; i_part < n_part; i_part++) {
+    parts[i_part]->vtx_ghost_information = pinternal_vtx_priority[i_part];
+    pmeshes->vtx_ghost_information[i_part] = pinternal_vtx_priority[i_part];
   }
-
 
   /*
    * Real re-numebering
@@ -4011,41 +4015,28 @@ const int        i_part,
 
 
 void
-PDM_multipart_part_graph_comm_vtx_dim_get
+PDM_multipart_part_graph_comm_get
 (
- PDM_multipart_t *multipart,
- const int        i_zone,
- const int        i_part,
-       int       *n_vtx_part_bound
+ PDM_multipart_t    *multipart,
+ const int           i_zone,
+ const int           i_part,
+ PDM_bound_type_t    bound_type,
+ int               **ppart_bound_proc_idx,
+ int               **ppart_bound_part_idx,
+ int               **ppart_bound,
+ PDM_ownership_t     ownership
 )
 {
-
   assert(i_zone < multipart->n_zone && i_part < multipart->n_part[i_zone]);
   _part_mesh_t _pmeshes = multipart->pmeshes[i_zone];
 
-  // printf(" n_vtx_part_bound = %i \n", _pmeshes.parts[i_part]->vtx_part_bound_part_idx[_pmeshes.tn_part]);
-  // printf(" _pmeshes.tn_part = %i \n", _pmeshes.tn_part);
-
-  *n_vtx_part_bound = _pmeshes.parts[i_part]->vtx_part_bound_part_idx[_pmeshes.tn_part];
-}
-
-void
-PDM_multipart_part_graph_comm_edge_dim_get
-(
- PDM_multipart_t *multipart,
- const int        i_zone,
- const int        i_part,
-       int       *n_edge_part_bound
-)
-{
-
-  assert(i_zone < multipart->n_zone && i_part < multipart->n_part[i_zone]);
-  _part_mesh_t _pmeshes = multipart->pmeshes[i_zone];
-
-  // printf(" n_edge_part_bound = %i \n", _pmeshes.parts[i_part]->edge_part_bound_part_idx[_pmeshes.tn_part]);
-  // printf(" _pmeshes.tn_part = %i \n", _pmeshes.tn_part);
-
-  *n_edge_part_bound = _pmeshes.parts[i_part]->edge_part_bound_part_idx[_pmeshes.tn_part];
+  PDM_part_mesh_part_graph_comm_get(_pmeshes.pmesh,
+                                    i_part,
+                                    bound_type,
+                                    ppart_bound_proc_idx,
+                                    ppart_bound_part_idx,
+                                    ppart_bound,
+                                    ownership);
 }
 
 /**
@@ -4092,39 +4083,101 @@ const int            i_part,
   *face_tag = NULL;
   *vtx_tag  = NULL;
 
-  *cell_ln_to_gn = _pmeshes.parts[i_part]->cell_ln_to_gn;
-  *face_ln_to_gn = _pmeshes.parts[i_part]->face_ln_to_gn;
-  *vtx_ln_to_gn  = _pmeshes.parts[i_part]->vtx_ln_to_gn;
-
-  *cell_face_idx = _pmeshes.parts[i_part]->cell_face_idx;
-  *cell_face     = _pmeshes.parts[i_part]->cell_face;
-  *face_cell     = _pmeshes.parts[i_part]->face_cell;
-  *face_vtx_idx  = _pmeshes.parts[i_part]->face_vtx_idx;
-  *face_vtx      = _pmeshes.parts[i_part]->face_vtx;
-
-  *vtx           = _pmeshes.parts[i_part]->vtx;
-
-  *face_part_bound_proc_idx = _pmeshes.parts[i_part]->face_part_bound_proc_idx;
-  *face_part_bound_part_idx = _pmeshes.parts[i_part]->face_part_bound_part_idx;
-  *face_part_bound          = _pmeshes.parts[i_part]->face_part_bound;
+  // *cell_ln_to_gn = _pmeshes.parts[i_part]->cell_ln_to_gn;
+  // *face_ln_to_gn = _pmeshes.parts[i_part]->face_ln_to_gn;
+  // *vtx_ln_to_gn  = _pmeshes.parts[i_part]->vtx_ln_to_gn;
 
 
-  if (_pmeshes.parts[i_part]->n_cell > 0) {
-    *face_bound_idx       = _pmeshes.parts[i_part]->face_bound_idx;
-    *face_bound           = _pmeshes.parts[i_part]->face_bound;
-    *face_bound_ln_to_gn  = _pmeshes.parts[i_part]->face_bound_ln_to_gn;
+  PDM_part_mesh_entity_ln_to_gn_get(_pmeshes.pmesh,
+                                    i_part,
+                                    PDM_MESH_ENTITY_CELL,
+                                    cell_ln_to_gn,
+                                    PDM_OWNERSHIP_BAD_VALUE);
+
+  PDM_part_mesh_entity_ln_to_gn_get(_pmeshes.pmesh,
+                                    i_part,
+                                    PDM_MESH_ENTITY_FACE,
+                                    face_ln_to_gn,
+                                    PDM_OWNERSHIP_BAD_VALUE);
+
+  PDM_part_mesh_entity_ln_to_gn_get(_pmeshes.pmesh,
+                                    i_part,
+                                    PDM_MESH_ENTITY_VERTEX,
+                                    vtx_ln_to_gn,
+                                    PDM_OWNERSHIP_BAD_VALUE);
+
+  // *cell_face_idx = _pmeshes.parts[i_part]->cell_face_idx;
+  // *cell_face     = _pmeshes.parts[i_part]->cell_face;
+  // *face_cell     = _pmeshes.parts[i_part]->face_cell;
+  // *face_vtx_idx  = _pmeshes.parts[i_part]->face_vtx_idx;
+  // *face_vtx      = _pmeshes.parts[i_part]->face_vtx;
+
+  PDM_part_mesh_connectivity_get(_pmeshes.pmesh,
+                                 i_part,
+                                 PDM_CONNECTIVITY_TYPE_CELL_FACE,
+                                 cell_face,
+                                 cell_face_idx,
+                                 PDM_OWNERSHIP_BAD_VALUE);
+
+  PDM_part_mesh_connectivity_get(_pmeshes.pmesh,
+                                 i_part,
+                                 PDM_CONNECTIVITY_TYPE_FACE_VTX,
+                                 face_vtx,
+                                 face_vtx_idx,
+                                 PDM_OWNERSHIP_BAD_VALUE);
+
+  PDM_part_mesh_connectivity_get(_pmeshes.pmesh,
+                                 i_part,
+                                 PDM_CONNECTIVITY_TYPE_FACE_VTX,
+                                 face_cell,
+                                 NULL,
+                                 PDM_OWNERSHIP_BAD_VALUE);
+
+  PDM_part_mesh_vtx_coord_get(_pmeshes.pmesh, i_part, vtx, PDM_OWNERSHIP_BAD_VALUE);
+
+  // *face_part_bound_proc_idx = _pmeshes.parts[i_part]->face_part_bound_proc_idx;
+  // *face_part_bound_part_idx = _pmeshes.parts[i_part]->face_part_bound_part_idx;
+  // *face_part_bound          = _pmeshes.parts[i_part]->face_part_bound;
+
+  PDM_part_mesh_part_graph_comm_get(_pmeshes.pmesh,
+                                    i_part,
+                                    PDM_BOUND_TYPE_FACE,
+                                    face_part_bound_proc_idx,
+                                    face_part_bound_part_idx,
+                                    face_part_bound,
+                                    PDM_OWNERSHIP_BAD_VALUE);
+
+  int n_cell = PDM_part_mesh_n_entity_get(_pmeshes.pmesh, i_part, PDM_MESH_ENTITY_CELL  );
+  if (n_cell > 0) {
+    // *face_bound_idx       = _pmeshes.parts[i_part]->face_bound_idx;
+    // *face_bound           = _pmeshes.parts[i_part]->face_bound;
+    // *face_bound_ln_to_gn  = _pmeshes.parts[i_part]->face_bound_ln_to_gn;
+    PDM_part_mesh_bound_concat_get(_pmeshes.pmesh,
+                                   i_part,
+                                   PDM_BOUND_TYPE_FACE,
+                                   face_bound_idx,
+                                   face_bound,
+                                   face_bound_ln_to_gn,
+                                   PDM_OWNERSHIP_BAD_VALUE);
   } else {
-    *face_bound_idx       = _pmeshes.parts[i_part]->edge_bound_idx;
-    *face_bound           = _pmeshes.parts[i_part]->edge_bound;
-    *face_bound_ln_to_gn  = _pmeshes.parts[i_part]->edge_bound_ln_to_gn;
+    // *face_bound_idx       = _pmeshes.parts[i_part]->edge_bound_idx;
+    // *face_bound           = _pmeshes.parts[i_part]->edge_bound;
+    // *face_bound_ln_to_gn  = _pmeshes.parts[i_part]->edge_bound_ln_to_gn;
+    PDM_part_mesh_bound_concat_get(_pmeshes.pmesh,
+                                   i_part,
+                                   PDM_BOUND_TYPE_EDGE,
+                                   face_bound_idx,
+                                   face_bound,
+                                   face_bound_ln_to_gn,
+                                   PDM_OWNERSHIP_BAD_VALUE);
   }
-  *face_join_idx        = _pmeshes.parts[i_part]->face_join_idx;
-  *face_join            = _pmeshes.parts[i_part]->face_join;
-  *face_join_ln_to_gn   = _pmeshes.parts[i_part]->face_join_ln_to_gn;
+  *face_join_idx        = NULL; // _pmeshes.parts[i_part]->face_join_idx;
+  *face_join            = NULL; // _pmeshes.parts[i_part]->face_join;
+  *face_join_ln_to_gn   = NULL; // _pmeshes.parts[i_part]->face_join_ln_to_gn;
 
-  *elt_vtx_idx = _pmeshes.parts[i_part]->elt_vtx_idx;
-  *elt_vtx     = _pmeshes.parts[i_part]->elt_vtx;
-  *elt_section_ln_to_gn = _pmeshes.parts[i_part]->elt_section_ln_to_gn;
+  *elt_vtx_idx          = NULL; // _pmeshes.parts[i_part]->elt_vtx_idx;
+  *elt_vtx              = NULL; // _pmeshes.parts[i_part]->elt_vtx;
+  *elt_section_ln_to_gn = NULL; // _pmeshes.parts[i_part]->elt_section_ln_to_gn;
 }
 
 /**
@@ -4155,61 +4208,38 @@ const int                       i_part,
       connectivity_type == PDM_CONNECTIVITY_TYPE_CELL_EDGE ||
       connectivity_type == PDM_CONNECTIVITY_TYPE_CELL_VTX)
   {
-    pn_entity = _pmeshes.parts[i_part]->n_cell;
+    pn_entity = PDM_part_mesh_n_entity_get(_pmeshes.pmesh, i_part, PDM_MESH_ENTITY_CELL  );
   } else if( connectivity_type == PDM_CONNECTIVITY_TYPE_FACE_ELMT ||
              connectivity_type == PDM_CONNECTIVITY_TYPE_FACE_CELL ||
              connectivity_type == PDM_CONNECTIVITY_TYPE_FACE_FACE ||
              connectivity_type == PDM_CONNECTIVITY_TYPE_FACE_EDGE ||
              connectivity_type == PDM_CONNECTIVITY_TYPE_FACE_VTX )
   {
-    pn_entity = _pmeshes.parts[i_part]->n_face;
+    pn_entity = PDM_part_mesh_n_entity_get(_pmeshes.pmesh, i_part, PDM_MESH_ENTITY_FACE  );
   } else if( connectivity_type == PDM_CONNECTIVITY_TYPE_EDGE_ELMT ||
              connectivity_type == PDM_CONNECTIVITY_TYPE_EDGE_CELL ||
              connectivity_type == PDM_CONNECTIVITY_TYPE_EDGE_FACE ||
              connectivity_type == PDM_CONNECTIVITY_TYPE_EDGE_EDGE ||
              connectivity_type == PDM_CONNECTIVITY_TYPE_EDGE_VTX )
   {
-    pn_entity = _pmeshes.parts[i_part]->n_edge;
+    pn_entity = PDM_part_mesh_n_entity_get(_pmeshes.pmesh, i_part, PDM_MESH_ENTITY_EDGE  );
   } else if( connectivity_type == PDM_CONNECTIVITY_TYPE_VTX_ELMT ||
              connectivity_type == PDM_CONNECTIVITY_TYPE_VTX_CELL ||
              connectivity_type == PDM_CONNECTIVITY_TYPE_VTX_FACE ||
              connectivity_type == PDM_CONNECTIVITY_TYPE_VTX_EDGE ||
              connectivity_type == PDM_CONNECTIVITY_TYPE_VTX_VTX )
   {
-    pn_entity = _pmeshes.parts[i_part]->n_vtx;
+    pn_entity = PDM_part_mesh_n_entity_get(_pmeshes.pmesh, i_part, PDM_MESH_ENTITY_VERTEX);
   } else {
     PDM_error(__FILE__, __LINE__, 0, "PDM_multipart_part_connectivity_get error : Wrong connectivity_type \n");
   }
 
-  switch (connectivity_type) {
-    case PDM_CONNECTIVITY_TYPE_CELL_FACE:
-      *connect     = _pmeshes.parts[i_part]->cell_face;
-      *connect_idx = _pmeshes.parts[i_part]->cell_face_idx;
-      break;
-    case PDM_CONNECTIVITY_TYPE_FACE_EDGE:
-      *connect     = _pmeshes.parts[i_part]->face_edge;
-      *connect_idx = _pmeshes.parts[i_part]->face_edge_idx;
-      break;
-    case PDM_CONNECTIVITY_TYPE_FACE_VTX:
-      *connect     = _pmeshes.parts[i_part]->face_vtx;
-      *connect_idx = _pmeshes.parts[i_part]->face_vtx_idx;
-      break;
-    case PDM_CONNECTIVITY_TYPE_EDGE_VTX:
-      *connect     = _pmeshes.parts[i_part]->edge_vtx;
-      *connect_idx = NULL; // _pmeshes.parts[i_part]->edge_vtx_idx;
-      break;
-    case PDM_CONNECTIVITY_TYPE_FACE_CELL:
-      *connect     = _pmeshes.parts[i_part]->face_cell;
-      *connect_idx = NULL; //_pmeshes.parts[i_part]->face_cell_idx;
-      break;
-    case PDM_CONNECTIVITY_TYPE_EDGE_FACE:
-      *connect     = _pmeshes.parts[i_part]->edge_face;
-      *connect_idx = _pmeshes.parts[i_part]->edge_face_idx;
-      break;
-    default:
-      PDM_error(__FILE__, __LINE__, 0, "PDM_multipart_part_connectivity_get error : Wrong connectivity_type \n");
-      break;
-  }
+  PDM_part_mesh_connectivity_get(_pmeshes.pmesh,
+                                 i_part,
+                                 connectivity_type,
+                                 connect,
+                                 connect_idx,
+                                 ownership);
 
   return pn_entity;
 }
@@ -4239,25 +4269,28 @@ const int                   i_part,
   int pn_entity = 0;
   switch (entity_type) {
     case PDM_MESH_ENTITY_CELL:
-       pn_entity = _pmeshes.parts[i_part]->n_cell;
-      *entity_ln_to_gn     = _pmeshes.parts[i_part]->cell_ln_to_gn;
+       pn_entity = PDM_part_mesh_n_entity_get(_pmeshes.pmesh, i_part, PDM_MESH_ENTITY_CELL  );
       break;
     case PDM_MESH_ENTITY_FACE:
-       pn_entity = _pmeshes.parts[i_part]->n_face;
-      *entity_ln_to_gn     = _pmeshes.parts[i_part]->face_ln_to_gn;
+       pn_entity = PDM_part_mesh_n_entity_get(_pmeshes.pmesh, i_part, PDM_MESH_ENTITY_FACE  );
       break;
     case PDM_MESH_ENTITY_EDGE:
-       pn_entity = _pmeshes.parts[i_part]->n_edge;
-      *entity_ln_to_gn     = _pmeshes.parts[i_part]->edge_ln_to_gn;
+       pn_entity = PDM_part_mesh_n_entity_get(_pmeshes.pmesh, i_part, PDM_MESH_ENTITY_EDGE  );
       break;
     case PDM_MESH_ENTITY_VERTEX:
-       pn_entity = _pmeshes.parts[i_part]->n_vtx;
-      *entity_ln_to_gn     = _pmeshes.parts[i_part]->vtx_ln_to_gn;
+       pn_entity = PDM_part_mesh_n_entity_get(_pmeshes.pmesh, i_part, PDM_MESH_ENTITY_VERTEX);
       break;
     default:
       PDM_error(__FILE__, __LINE__, 0, "PDM_multipart_part_ln_to_gn_get error : Wrong entity_type \n");
       break;
   }
+
+  PDM_part_mesh_entity_ln_to_gn_get(_pmeshes.pmesh,
+                                    i_part,
+                                    entity_type,
+                                    entity_ln_to_gn,
+                                    ownership);
+
   return pn_entity;
 }
 
@@ -4284,88 +4317,68 @@ const int                   i_part,
   int pn_entity = 0;
   switch (entity_type) {
     case PDM_MESH_ENTITY_CELL:
-       pn_entity = _pmeshes.parts[i_part]->n_cell;
-      *entity_color     = _pmeshes.parts[i_part]->cell_color;
+      pn_entity = PDM_part_mesh_n_entity_get(_pmeshes.pmesh, i_part, PDM_MESH_ENTITY_CELL  );
       break;
     case PDM_MESH_ENTITY_FACE:
-       pn_entity = _pmeshes.parts[i_part]->n_face;
-      *entity_color     = _pmeshes.parts[i_part]->face_color;
+      pn_entity = PDM_part_mesh_n_entity_get(_pmeshes.pmesh, i_part, PDM_MESH_ENTITY_FACE  );
       break;
     case PDM_MESH_ENTITY_EDGE:
-       pn_entity = _pmeshes.parts[i_part]->n_edge;
-      *entity_color     = _pmeshes.parts[i_part]->edge_color;
+      pn_entity = PDM_part_mesh_n_entity_get(_pmeshes.pmesh, i_part, PDM_MESH_ENTITY_EDGE  );
       break;
     case PDM_MESH_ENTITY_VERTEX:
-       pn_entity = _pmeshes.parts[i_part]->n_vtx;
-      *entity_color     = _pmeshes.parts[i_part]->vtx_color;
+      pn_entity = PDM_part_mesh_n_entity_get(_pmeshes.pmesh, i_part, PDM_MESH_ENTITY_VERTEX);
       break;
     default:
       PDM_error(__FILE__, __LINE__, 0, "PDM_multipart_partition_color_get error : Wrong entity_type \n");
       break;
   }
+
+  PDM_part_mesh_entity_color_get(_pmeshes.pmesh,
+                                 i_part,
+                                 entity_type,
+                                 entity_color,
+                                 ownership);
+
   return pn_entity;
 }
 
-// void PDM_multipart_part_get
+// void
+// PDM_multipart_part_graph_comm_vtx_data_get
 // (
-//  const int            mpart_id,
-//  const int            i_zone,
-//  const int            i_part,
-//  const result_type    res,
-//                    **vtx_part_bound
+// PDM_multipart_t     *multipart,
+// const int            i_zone,
+// const int            i_part,
+//       int          **vtx_part_bound_proc_idx,
+//       int          **vtx_part_bound_part_idx,
+//       int          **vtx_part_bound
 // )
 // {
-//   if(res == VTX_COMM_GRAPH)
-//   {
-//     *vtx_part_bound_proc_idx = _pmeshes.parts[i_part]->vtx_part_bound_proc_idx;
-//     *vtx_part_bound_part_idx = _pmeshes.parts[i_part]->vtx_part_bound_part_idx;
-//     *vtx_part_bound          = _pmeshes.parts[i_part]->vtx_part_bound;
-//   }
+//   assert(i_zone < multipart->n_zone && i_part < multipart->n_part[i_zone]);
+//   _part_mesh_t _pmeshes = multipart->pmeshes[i_zone];
+
+//   *vtx_part_bound_proc_idx = _pmeshes.parts[i_part]->vtx_part_bound_proc_idx;
+//   *vtx_part_bound_part_idx = _pmeshes.parts[i_part]->vtx_part_bound_part_idx;
+//   *vtx_part_bound          = _pmeshes.parts[i_part]->vtx_part_bound;
 // }
 
-void
-PDM_multipart_part_graph_comm_vtx_data_get
-(
-PDM_multipart_t     *multipart,
-const int            i_zone,
-const int            i_part,
-      int          **vtx_part_bound_proc_idx,
-      int          **vtx_part_bound_part_idx,
-      int          **vtx_part_bound
-)
-{
+// void
+// PDM_multipart_part_graph_comm_edge_data_get
+// (
+// PDM_multipart_t     *multipart,
+// const int            i_zone,
+// const int            i_part,
+//       int          **edge_part_bound_proc_idx,
+//       int          **edge_part_bound_part_idx,
+//       int          **edge_part_bound
+// )
+// {
+//   assert(i_zone < multipart->n_zone && i_part < multipart->n_part[i_zone]);
+//   _part_mesh_t _pmeshes = multipart->pmeshes[i_zone];
 
-   // table_res[] = is_getted;
-
-  assert(i_zone < multipart->n_zone && i_part < multipart->n_part[i_zone]);
-  _part_mesh_t _pmeshes = multipart->pmeshes[i_zone];
-
-  *vtx_part_bound_proc_idx = _pmeshes.parts[i_part]->vtx_part_bound_proc_idx;
-  *vtx_part_bound_part_idx = _pmeshes.parts[i_part]->vtx_part_bound_part_idx;
-  *vtx_part_bound          = _pmeshes.parts[i_part]->vtx_part_bound;
-}
-
-void
-PDM_multipart_part_graph_comm_edge_data_get
-(
-PDM_multipart_t     *multipart,
-const int            i_zone,
-const int            i_part,
-      int          **edge_part_bound_proc_idx,
-      int          **edge_part_bound_part_idx,
-      int          **edge_part_bound
-)
-{
-
-   // table_res[] = is_getted;
-
-  assert(i_zone < multipart->n_zone && i_part < multipart->n_part[i_zone]);
-  _part_mesh_t _pmeshes = multipart->pmeshes[i_zone];
-
-  *edge_part_bound_proc_idx = _pmeshes.parts[i_part]->edge_part_bound_proc_idx;
-  *edge_part_bound_part_idx = _pmeshes.parts[i_part]->edge_part_bound_part_idx;
-  *edge_part_bound          = _pmeshes.parts[i_part]->edge_part_bound;
-}
+//   *edge_part_bound_proc_idx = _pmeshes.parts[i_part]->edge_part_bound_proc_idx;
+//   *edge_part_bound_part_idx = _pmeshes.parts[i_part]->edge_part_bound_part_idx;
+//   *edge_part_bound          = _pmeshes.parts[i_part]->edge_part_bound;
+// }
 
 
 
@@ -4385,11 +4398,11 @@ const int            i_part,
 
   assert(i_zone < multipart->n_zone && i_part < multipart->n_part[i_zone]);
   _part_mesh_t _pmeshes = multipart->pmeshes[i_zone];
-  *cell_color       = _pmeshes.parts[i_part]->cell_color;
-  *face_color       = _pmeshes.parts[i_part]->face_color;
-  *face_hp_color    = _pmeshes.parts[i_part]->face_hp_color;
-  *thread_color     = _pmeshes.parts[i_part]->thread_color;
-  *hyperplane_color = _pmeshes.parts[i_part]->hyperplane_color;
+  *cell_color       = NULL; // _pmeshes.parts[i_part]->cell_color;
+  *face_color       = NULL; // _pmeshes.parts[i_part]->face_color;
+  *face_hp_color    = NULL; // _pmeshes.parts[i_part]->face_hp_color;
+  *thread_color     = NULL; // _pmeshes.parts[i_part]->thread_color;
+  *hyperplane_color = NULL; // _pmeshes.parts[i_part]->hyperplane_color;
 
 }
 
@@ -4406,7 +4419,7 @@ const int         i_part,
   assert(i_zone < multipart->n_zone && i_part < multipart->n_part[i_zone]);
   _part_mesh_t _pmeshes = multipart->pmeshes[i_zone];
 
-  *vtx_ghost_information = _pmeshes.parts[i_part]->vtx_ghost_information;
+  *vtx_ghost_information = _pmeshes.vtx_ghost_information[i_part];
 }
 
 
@@ -4461,14 +4474,18 @@ PDM_multipart_free
 
   // free(multipart->dmeshes_ids);
   for (int i_zone = 0; i_zone < multipart->n_zone; i_zone++) {
-    if (multipart->pmeshes[i_zone].joins_ids != NULL)
-      free(multipart->pmeshes[i_zone].joins_ids);
-    if (multipart->pmeshes[i_zone].parts != NULL){
-      for (int ipart = 0; ipart < multipart->n_part[i_zone]; ipart++) {
-        _part_free(multipart->pmeshes[i_zone].parts[ipart], multipart->owner);
-      }
-      free(multipart->pmeshes[i_zone].parts);
-    }
+    // if (multipart->pmeshes[i_zone].joins_ids != NULL) {
+    //   free(multipart->pmeshes[i_zone].joins_ids);
+    // }
+
+    // if (multipart->pmeshes[i_zone].parts != NULL) {
+    //   for (int ipart = 0; ipart < multipart->n_part[i_zone]; ipart++) {
+    //     _part_free(multipart->pmeshes[i_zone].parts[ipart], multipart->owner);
+    //   }
+    //   free(multipart->pmeshes[i_zone].parts);
+    // }
+    PDM_part_mesh_free(multipart->pmeshes[i_zone].pmesh);
+
     if(multipart->dmn_to_dm[i_zone] != NULL) {
       PDM_dmesh_nodal_to_dmesh_free(multipart->dmn_to_dm[i_zone]);
       multipart->dmn_to_dm[i_zone] = NULL;
@@ -4504,9 +4521,13 @@ const int                       i_part,
 
   _part_mesh_t _pmeshes = multipart->pmeshes[i_zone];
 
-  *vtx_coord = _pmeshes.parts[i_part]->vtx;
+  // *vtx_coord = _pmeshes.parts[i_part]->vtx;
+  PDM_part_mesh_vtx_coord_get(_pmeshes.pmesh,
+                              i_part,
+                              vtx_coord,
+                              ownership);
 
-  return _pmeshes.parts[i_part]->n_vtx;
+  return PDM_part_mesh_n_entity_get(_pmeshes.pmesh, i_part, PDM_MESH_ENTITY_VERTEX);
 }
 
 
@@ -4519,34 +4540,43 @@ void PDM_multipart_bound_get
  int               *n_bound,
  int              **bound_idx,
  int              **bound,
- PDM_g_num_t      **bound_ln_to_gn
- )
+ PDM_g_num_t      **bound_ln_to_gn,
+ PDM_ownership_t    ownership
+)
 {
 
   assert(i_zone < multipart->n_zone && i_part < multipart->n_part[i_zone]);
   _part_mesh_t _pmeshes = multipart->pmeshes[i_zone];
 
-  *n_bound = _pmeshes.n_bounds;
+  *n_bound = PDM_part_mesh_n_bound_get(_pmeshes.pmesh, bound_type);
 
-  switch (bound_type) {
-    case PDM_BOUND_TYPE_EDGE:
-    *n_bound        = _pmeshes.parts[i_part]->n_edge_group;
-    *bound_idx      = _pmeshes.parts[i_part]->edge_bound_idx;
-    *bound          = _pmeshes.parts[i_part]->edge_bound;
-    *bound_ln_to_gn = _pmeshes.parts[i_part]->edge_bound_ln_to_gn;
-    break;
+  PDM_part_mesh_bound_concat_get(_pmeshes.pmesh,
+                                 i_part,
+                                 bound_type,
+                                 bound_idx,
+                                 bound,
+                                 bound_ln_to_gn,
+                                 ownership);
 
-    case PDM_BOUND_TYPE_FACE:
-    *n_bound        = _pmeshes.parts[i_part]->n_face_group;
-    *bound_idx      = _pmeshes.parts[i_part]->face_bound_idx;
-    *bound          = _pmeshes.parts[i_part]->face_bound;
-    *bound_ln_to_gn = _pmeshes.parts[i_part]->face_bound_ln_to_gn;
-    break;
+  // switch (bound_type) {
+  //   case PDM_BOUND_TYPE_EDGE:
+  //   *n_bound        = _pmeshes.parts[i_part]->n_edge_group;
+  //   *bound_idx      = _pmeshes.parts[i_part]->edge_bound_idx;
+  //   *bound          = _pmeshes.parts[i_part]->edge_bound;
+  //   *bound_ln_to_gn = _pmeshes.parts[i_part]->edge_bound_ln_to_gn;
+  //   break;
 
-    default:
-    PDM_error(__FILE__, __LINE__, 0,
-              "PDM_multipart_bound_get : Wrong bound_type %d\n", (int) bound_type);
-  }
+  //   case PDM_BOUND_TYPE_FACE:
+  //   *n_bound        = _pmeshes.parts[i_part]->n_face_group;
+  //   *bound_idx      = _pmeshes.parts[i_part]->face_bound_idx;
+  //   *bound          = _pmeshes.parts[i_part]->face_bound;
+  //   *bound_ln_to_gn = _pmeshes.parts[i_part]->face_bound_ln_to_gn;
+  //   break;
+
+  //   default:
+  //   PDM_error(__FILE__, __LINE__, 0,
+  //             "PDM_multipart_bound_get : Wrong bound_type %d\n", (int) bound_type);
+  // }
 }
 
 void
@@ -4603,11 +4633,23 @@ PDM_multipart_stat_get
     s_tot[i] = 0;
   }
 
+
   int tn_part = dpart_proc[n_rank];
   for (int i_part = 0; i_part < multipart->n_part[i_zone]; i_part++) {
-    n_loc[i_part] = _pmeshes.parts[i_part]->n_cell;
-    if(_pmeshes.parts[i_part]->face_part_bound_part_idx != NULL) {
-      s_loc[i_part] = _pmeshes.parts[i_part]->face_part_bound_part_idx[tn_part];
+    n_loc[i_part] = PDM_part_mesh_n_entity_get(_pmeshes.pmesh, i_part, PDM_MESH_ENTITY_CELL  );
+
+    int                     *face_part_bound_proc_idx;
+    int                     *face_part_bound_part_idx;
+    int                     *face_part_bound;
+    PDM_part_mesh_part_graph_comm_get(_pmeshes.pmesh,
+                                      i_part,
+                                      PDM_BOUND_TYPE_FACE,
+                                      &face_part_bound_proc_idx,
+                                      &face_part_bound_part_idx,
+                                      &face_part_bound,
+                                      PDM_OWNERSHIP_BAD_VALUE);
+    if(face_part_bound_part_idx != NULL) {
+      s_loc[i_part] = face_part_bound_part_idx[tn_part];
     }
   }
 

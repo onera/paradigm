@@ -398,7 +398,8 @@ int main(int argc, char *argv[])
                           &pn_edge_group,
                           &pgroup_edge_idx,
                           &pgroup_edge,
-                          &edge_bound_ln_to_gn);
+                          &edge_bound_ln_to_gn,
+                          PDM_OWNERSHIP_KEEP);
 
   // _get_groups(mpart,
   //             0,

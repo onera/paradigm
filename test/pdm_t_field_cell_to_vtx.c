@@ -711,7 +711,8 @@ int main
                               &n_bound,
                               &group_face_idx,
                               &group_face,
-                              &face_group_ln_to_gn);
+                              &face_group_ln_to_gn,
+                              PDM_OWNERSHIP_KEEP);
       n_group_by_domain[i_dom] = 1;
       // printf("n_bound = %i \n", n_bound);
 
@@ -847,7 +848,8 @@ int main
                               &n_bound,
                               &group_face_idx,
                               &group_face,
-                              &face_group_ln_to_gn);
+                              &face_group_ln_to_gn,
+                              PDM_OWNERSHIP_KEEP);
 
       PDM_field_cell_to_vtx_part_group_set(mi,
                                           i_domain,
@@ -894,7 +896,8 @@ int main
                               &n_bound,
                               &group_face_idx,
                               &group_face,
-                              &face_group_ln_to_gn);
+                              &face_group_ln_to_gn,
+                              PDM_OWNERSHIP_KEEP);
 
       pfield_bound[i_domain][i_part] = malloc(n_face_group_field  * sizeof(double *));
       for(int i_group = 0; i_group < n_face_group_field; ++i_group) {
