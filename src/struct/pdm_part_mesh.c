@@ -145,6 +145,26 @@ PDM_part_mesh_create
     }
   }
 
+  pmesh->pconcat_bound_idx       = malloc( PDM_BOUND_TYPE_MAX * sizeof(int         **) );
+  pmesh->pconcat_bound           = malloc( PDM_BOUND_TYPE_MAX * sizeof(int         **) );
+  pmesh->pconcat_bound_ln_to_gn  = malloc( PDM_BOUND_TYPE_MAX * sizeof(PDM_g_num_t **) );
+  pmesh->is_owner_concat_bound   = malloc( PDM_BOUND_TYPE_MAX * sizeof(PDM_bool_t    ) );
+  pmesh->is_compute_concat_bound = malloc( PDM_BOUND_TYPE_MAX * sizeof(PDM_bool_t    ) );
+  for(int i = 0; i < PDM_BOUND_TYPE_MAX; ++i) {
+    pmesh->is_owner_concat_bound         [i] = PDM_FALSE;
+    pmesh->is_compute_concat_bound       [i] = PDM_FALSE;
+
+    pmesh->pconcat_bound_idx     [i] = malloc( pmesh->n_part * sizeof(int         *) );
+    pmesh->pconcat_bound         [i] = malloc( pmesh->n_part * sizeof(int         *) );
+    pmesh->pconcat_bound_ln_to_gn[i] = malloc( pmesh->n_part * sizeof(PDM_g_num_t *) );
+    for(int i_part = 0; i_part < n_part; ++i_part) {
+      pmesh->pconcat_bound_idx     [i][i_part] = NULL;
+      pmesh->pconcat_bound         [i][i_part] = NULL;
+      pmesh->pconcat_bound_ln_to_gn[i][i_part] = NULL;
+    }
+  }
+
+
   pmesh->vtx_coords = malloc(pmesh->n_part * sizeof(double));
   for(int i_part = 0; i_part < n_part; ++i_part) {
     pmesh->vtx_coords[i_part] = NULL;
@@ -445,6 +465,56 @@ PDM_part_mesh_bound_get
 
 
 void
+PDM_part_mesh_bound_concat_get
+(
+ PDM_part_mesh_t          *pmesh,
+ int                       i_part,
+ PDM_bound_type_t          bound_type,
+ int                     **pbound_idx,
+ int                     **pbound,
+ PDM_g_num_t             **pbound_ln_to_gn,
+ PDM_ownership_t           ownership
+)
+{
+  if(pmesh->is_compute_concat_bound[bound_type] == PDM_FALSE) {
+
+    int n_group = pmesh->n_group_bnd[bound_type];
+    pmesh->pconcat_bound_idx[bound_type][i_part] = malloc( (n_group+1) * sizeof(int));
+    int *_pconcat_bound_idx = pmesh->pconcat_bound_idx[bound_type][i_part];
+
+    _pconcat_bound_idx[0] = 0;
+    for(int i_group = 0; i_group < n_group; ++i_group) {
+      _pconcat_bound_idx[i_group+1] = _pconcat_bound_idx[i_group] + pmesh->pn_bound[bound_type][i_part][i_group];
+    }
+
+    pmesh->pconcat_bound  [bound_type][i_part] = malloc(_pconcat_bound_idx[n_group] * sizeof(int        ));
+    pmesh->pbound_ln_to_gn[bound_type][i_part] = malloc(_pconcat_bound_idx[n_group] * sizeof(PDM_g_num_t));
+    int         *_pconcat_bound          = pmesh->pconcat_bound         [bound_type][i_part];
+    PDM_g_num_t *_pconcat_bound_ln_to_gn = pmesh->pconcat_bound_ln_to_gn[bound_type][i_part];
+
+    for(int i_group = 0; i_group < n_group; ++i_group) {
+      int idx_write = _pconcat_bound_idx[i_group];
+      for(int i = 0; i < pmesh->pn_bound[bound_type][i_part][i_group]; ++i) {
+        _pconcat_bound         [idx_write+i] = pmesh->pbound         [bound_type][i_part][i_group][i];
+        _pconcat_bound_ln_to_gn[idx_write+i] = pmesh->pbound_ln_to_gn[bound_type][i_part][i_group][i];
+      }
+    }
+  }
+
+  *pbound_idx      = pmesh->pconcat_bound_idx     [bound_type][i_part];
+  *pbound          = pmesh->pconcat_bound         [bound_type][i_part];
+  *pbound_ln_to_gn = pmesh->pconcat_bound_ln_to_gn[bound_type][i_part];
+
+  if(ownership == PDM_OWNERSHIP_USER || ownership == PDM_OWNERSHIP_UNGET_RESULT_IS_FREE) {
+    pmesh->is_owner_concat_bound  [bound_type] = PDM_FALSE;
+    pmesh->is_compute_concat_bound[bound_type] = PDM_FALSE;
+  } else if (ownership == PDM_OWNERSHIP_KEEP) {
+    pmesh->is_owner_concat_bound[bound_type] = PDM_TRUE;
+  }
+}
+
+
+void
 PDM_part_mesh_part_graph_comm_set
 (
  PDM_part_mesh_t          *pmesh,
@@ -603,6 +673,39 @@ PDM_part_mesh_free
       if(pmesh->pbound_ln_to_gn[i] != NULL) {
         free(pmesh->pbound_ln_to_gn[i]);
         pmesh->pbound_ln_to_gn[i] = NULL;
+      }
+    }
+
+
+    /* Free group */
+    for(int i = 0; i < PDM_BOUND_TYPE_MAX; ++i) {
+      if(pmesh->is_owner_concat_bound[i] == PDM_TRUE) {
+        for(int i_part = 0; i_part < pmesh->n_part; ++i_part) {
+          if(pmesh->pconcat_bound_idx[i][i_part] != NULL) {
+            free(pmesh->pconcat_bound_idx[i][i_part]);
+          }
+          if(pmesh->pconcat_bound[i][i_part] != NULL) {
+            free(pmesh->pconcat_bound[i][i_part]);
+          }
+          if(pmesh->pconcat_bound_ln_to_gn[i][i_part] != NULL) {
+            free(pmesh->pconcat_bound_ln_to_gn[i][i_part]);
+          }
+        }
+      }
+
+      if(pmesh->pconcat_bound_idx[i] != NULL) {
+        free(pmesh->pconcat_bound_idx[i]);
+        pmesh->pconcat_bound_idx[i] = NULL;
+      }
+
+      if(pmesh->pconcat_bound[i] != NULL) {
+        free(pmesh->pconcat_bound[i]);
+        pmesh->pconcat_bound[i] = NULL;
+      }
+
+      if(pmesh->pconcat_bound_ln_to_gn[i] != NULL) {
+        free(pmesh->pconcat_bound_ln_to_gn[i]);
+        pmesh->pconcat_bound_ln_to_gn[i] = NULL;
       }
     }
 

@@ -165,40 +165,69 @@ _map_part_t_with_part_mesh
                                    &edge_vtx_idx,
                                    PDM_OWNERSHIP_BAD_VALUE);
 
+    PDM_part_mesh_entity_ln_to_gn_get(pm,
+                                      i_part,
+                                      PDM_MESH_ENTITY_CELL,
+                                      &pdm_part[i_part]->cell_ln_to_gn,
+                                      PDM_OWNERSHIP_BAD_VALUE);
+
+    PDM_part_mesh_entity_ln_to_gn_get(pm,
+                                      i_part,
+                                      PDM_MESH_ENTITY_FACE,
+                                      &pdm_part[i_part]->face_ln_to_gn,
+                                      PDM_OWNERSHIP_BAD_VALUE);
+
+    PDM_part_mesh_entity_ln_to_gn_get(pm,
+                                      i_part,
+                                      PDM_MESH_ENTITY_EDGE,
+                                      &pdm_part[i_part]->edge_ln_to_gn,
+                                      PDM_OWNERSHIP_BAD_VALUE);
+
+    PDM_part_mesh_entity_ln_to_gn_get(pm,
+                                      i_part,
+                                      PDM_MESH_ENTITY_VERTEX,
+                                      &pdm_part[i_part]->vtx_ln_to_gn,
+                                      PDM_OWNERSHIP_BAD_VALUE);
+
+    PDM_part_mesh_bound_concat_get(pm,
+                                   i_part,
+                                   PDM_BOUND_TYPE_FACE,
+                                   &pdm_part[i_part]->face_bound_idx,
+                                   &pdm_part[i_part]->face_bound,
+                                   &pdm_part[i_part]->face_bound_ln_to_gn,
+                                   PDM_OWNERSHIP_KEEP);
+
+    PDM_part_mesh_bound_concat_get(pm,
+                                   i_part,
+                                   PDM_BOUND_TYPE_EDGE,
+                                   &pdm_part[i_part]->edge_bound_idx,
+                                   &pdm_part[i_part]->edge_bound,
+                                   &pdm_part[i_part]->edge_bound_ln_to_gn,
+                                   PDM_OWNERSHIP_KEEP);
+
     pdm_part[i_part]->face_group_idx           = NULL;
     pdm_part[i_part]->face_group               = NULL;
-
+    pdm_part[i_part]->face_group_ln_to_gn      = NULL;
 
     pdm_part[i_part]->face_part_bound_proc_idx = NULL;
     pdm_part[i_part]->face_part_bound_part_idx = NULL;
     pdm_part[i_part]->face_part_bound          = NULL;
+
     pdm_part[i_part]->edge_part_bound_proc_idx = NULL;
     pdm_part[i_part]->edge_part_bound_part_idx = NULL;
     pdm_part[i_part]->edge_part_bound          = NULL;
+
     pdm_part[i_part]->vtx_part_bound_proc_idx  = NULL;
     pdm_part[i_part]->vtx_part_bound_part_idx  = NULL;
     pdm_part[i_part]->vtx_part_bound           = NULL;
 
-    pdm_part[i_part]->face_bound_idx           = NULL;
-    pdm_part[i_part]->face_bound               = NULL;
+    pdm_part[i_part]->face_join_ln_to_gn       = NULL;
     pdm_part[i_part]->face_join_idx            = NULL;
     pdm_part[i_part]->face_join                = NULL;
-
-    pdm_part[i_part]->edge_bound_idx           = NULL;
-    pdm_part[i_part]->edge_bound               = NULL;
     pdm_part[i_part]->edge_join_idx            = NULL;
     pdm_part[i_part]->edge_join                = NULL;
+
     pdm_part[i_part]->elt_section_ln_to_gn     = NULL;
-
-    pdm_part[i_part]->face_ln_to_gn            = NULL;
-    pdm_part[i_part]->cell_ln_to_gn            = NULL;
-    pdm_part[i_part]->edge_ln_to_gn            = NULL;
-    pdm_part[i_part]->vtx_ln_to_gn             = NULL;
-
-    pdm_part[i_part]->face_group_ln_to_gn      = NULL;
-    pdm_part[i_part]->face_bound_ln_to_gn      = NULL;
-    pdm_part[i_part]->edge_bound_ln_to_gn      = NULL;
-    pdm_part[i_part]->face_join_ln_to_gn       = NULL;
 
     pdm_part[i_part]->cell_tag                 = NULL;
     pdm_part[i_part]->face_tag                 = NULL;
@@ -244,7 +273,7 @@ _map_part_t_with_part_mesh
 static void
 _build_join_uface_distribution
 (
- _pdm_multipart_t  *_multipart,
+ PDM_multipart_t   *multipart,
  int              **join_to_ref_join,
  int              **face_in_join_distri
 )
@@ -252,11 +281,11 @@ _build_join_uface_distribution
 
   int i_rank;
   int n_rank;
-  PDM_MPI_Comm_rank(_multipart->comm, &i_rank);
-  PDM_MPI_Comm_size(_multipart->comm, &n_rank);
+  PDM_MPI_Comm_rank(multipart->comm, &i_rank);
+  PDM_MPI_Comm_size(multipart->comm, &n_rank);
 
   // PDM_printf("pdm::_build_join_uface_distribution\n");
-  int n_total_joins  = _multipart->n_total_joins;
+  int n_total_joins  = multipart->n_total_joins;
   int n_unique_joins = n_total_joins/2;
   *join_to_ref_join    = (int *) malloc(n_total_joins  * sizeof(int));
   *face_in_join_distri = (int *) malloc((n_unique_joins+1) * sizeof(int));
@@ -268,7 +297,7 @@ _build_join_uface_distribution
   int ref_join_gid = 0;
   for (int ijoin = 0; ijoin < n_total_joins; ijoin++)
   {
-    int opp_join = _multipart->join_to_opposite[ijoin];
+    int opp_join = multipart->join_to_opposite[ijoin];
     if (ijoin < opp_join)
     {
       _join_to_ref_join[ijoin] = ref_join_gid;
@@ -286,12 +315,12 @@ _build_join_uface_distribution
   //Count faces in joins
   int *nb_face_in_joins = PDM_array_zeros_int(n_unique_joins);
 
-  for (int i_zone = 0; i_zone < _multipart->n_zone; i_zone++){
-    for (int i_part = 0; i_part < _multipart->n_part[i_zone]; i_part++){
-      int *pface_join_idx = _multipart->pmeshes[i_zone].parts[i_part]->face_join_idx;
-      for (int ijoin=0; ijoin < _multipart->pmeshes[i_zone].n_joins; ijoin ++){
-        int join_gid     = _multipart->pmeshes[i_zone].joins_ids[ijoin];
-        int join_opp_gid = _multipart->join_to_opposite[join_gid];
+  for (int i_zone = 0; i_zone < multipart->n_zone; i_zone++){
+    for (int i_part = 0; i_part < multipart->n_part[i_zone]; i_part++){
+      int *pface_join_idx = multipart->pmeshes[i_zone].parts[i_part]->face_join_idx;
+      for (int ijoin=0; ijoin < multipart->pmeshes[i_zone].n_joins; ijoin ++){
+        int join_gid     = multipart->pmeshes[i_zone].joins_ids[ijoin];
+        int join_opp_gid = multipart->join_to_opposite[join_gid];
         //Paired joins must be counted only once
         if (join_gid < join_opp_gid)
           nb_face_in_joins[_join_to_ref_join[join_gid]] += pface_join_idx[ijoin+1] - pface_join_idx[ijoin];
@@ -307,7 +336,7 @@ _build_join_uface_distribution
 
   //Sum faces and build distribution
   PDM_MPI_Allreduce(nb_face_in_joins, &_face_in_join_distri[1], n_unique_joins,
-                    PDM_MPI_INT, PDM_MPI_SUM, _multipart->comm);
+                    PDM_MPI_INT, PDM_MPI_SUM, multipart->comm);
 
   _face_in_join_distri[0] = 0;
   PDM_array_accumulate_int(_face_in_join_distri, n_unique_joins+1);
@@ -333,23 +362,23 @@ _build_join_uface_distribution
 static void
 _search_matching_joins
 (
- _pdm_multipart_t *_multipart
+ PDM_multipart_t *multipart
 )
 {
   int i_rank;
   int n_rank;
-  PDM_MPI_Comm_rank(_multipart->comm, &i_rank);
-  PDM_MPI_Comm_size(_multipart->comm, &n_rank);
+  PDM_MPI_Comm_rank(multipart->comm, &i_rank);
+  PDM_MPI_Comm_size(multipart->comm, &n_rank);
 
   //Construction of (unique) join distribution
   int *join_to_ref_join;
   int *face_in_join_distri;
-  _build_join_uface_distribution(_multipart, &join_to_ref_join, &face_in_join_distri);
+  _build_join_uface_distribution(multipart, &join_to_ref_join, &face_in_join_distri);
 
   //Count total nb of join_faces
   int nb_of_joins = 0;
-  for (int izone = 0 ; izone < _multipart->n_zone; izone ++) {
-    nb_of_joins += _multipart->n_part[izone] * _multipart->pmeshes[izone].n_joins;
+  for (int izone = 0 ; izone < multipart->n_zone; izone ++) {
+    nb_of_joins += multipart->n_part[izone] * multipart->pmeshes[izone].n_joins;
   }
 
   // Prepare lntogn numbering and partitioned data
@@ -358,10 +387,10 @@ _search_matching_joins
   int        *nb_face_per_join = (int *)          malloc(nb_of_joins * sizeof(int));
 
   int ijoin_pos  = 0;
-  for (int izone = 0 ; izone < _multipart->n_zone; izone ++) {
-    int n_join            = _multipart->pmeshes[izone].n_joins;
-    _part_mesh_t _pmeshes = _multipart->pmeshes[izone];
-    for (int i_part = 0; i_part < _multipart->n_part[izone]; i_part++) {
+  for (int izone = 0 ; izone < multipart->n_zone; izone ++) {
+    int n_join            = multipart->pmeshes[izone].n_joins;
+    _part_mesh_t _pmeshes = multipart->pmeshes[izone];
+    for (int i_part = 0; i_part < multipart->n_part[izone]; i_part++) {
       int         *face_join_idx    = _pmeshes.parts[i_part]->face_join_idx;
       int         *face_join        = _pmeshes.parts[i_part]->face_join;
       PDM_g_num_t *face_join_lntogn = _pmeshes.parts[i_part]->face_join_ln_to_gn;
@@ -371,7 +400,7 @@ _search_matching_joins
         PDM_g_num_t *shifted_lntogn_loc = (PDM_g_num_t *) malloc(join_size * sizeof(PDM_g_num_t));
         int         *part_data_loc      = (int *)         malloc(3 * join_size * sizeof(int));
         //Get shift value from join unique distribution
-        int join_gid    = _multipart->pmeshes[izone].joins_ids[ijoin];
+        int join_gid    = multipart->pmeshes[izone].joins_ids[ijoin];
         int shift_value = face_in_join_distri[join_to_ref_join[join_gid]];
         int j = 0;
         //Prepare partitioned data : (PL, i_rank, i_part)
@@ -403,7 +432,7 @@ _search_matching_joins
                                                        NULL,
                                                        nb_face_per_join,
                                                        nb_of_joins,
-                                                       _multipart->comm);
+                                                       multipart->comm);
 
   PDM_g_num_t *distrib_index = PDM_part_to_block_distrib_index_get(ptb);
 
@@ -448,7 +477,7 @@ _search_matching_joins
                                (const PDM_g_num_t **) shifted_lntogn,
                                                       nb_face_per_join,
                                                       nb_of_joins,
-                                                      _multipart->comm);
+                                                      multipart->comm);
 
   int **new_part_data = (int **) malloc(nb_of_joins * sizeof(int *));
   for (int ijoin = 0; ijoin < nb_of_joins; ijoin ++){
@@ -490,10 +519,10 @@ _search_matching_joins
 
   //Process received data
   ijoin_pos = 0;
-  for (int izone = 0 ; izone < _multipart->n_zone; izone ++) {
-    int n_join = _multipart->pmeshes[izone].n_joins;
-    _part_mesh_t _pmeshes = _multipart->pmeshes[izone];
-    for (int i_part = 0; i_part < _multipart->n_part[izone]; i_part++) {
+  for (int izone = 0 ; izone < multipart->n_zone; izone ++) {
+    int n_join = multipart->pmeshes[izone].n_joins;
+    _part_mesh_t _pmeshes = multipart->pmeshes[izone];
+    for (int i_part = 0; i_part < multipart->n_part[izone]; i_part++) {
       int *face_join_idx = _pmeshes.parts[i_part]->face_join_idx;
       int *face_join     = _pmeshes.parts[i_part]->face_join;
       for (int ijoin = 0; ijoin < n_join; ijoin++) {
@@ -1639,55 +1668,53 @@ PDM_multipart_create
   // printf("PDM_multipart_create::n_zone:: %d \n", n_zone);
   // printf("PDM_multipart_create::n_part:: %d \n", n_part[0]);
   // printf("PDM_multipart_create::split_method:: %d \n", split_method);
+  PDM_multipart_t *multipart = (PDM_multipart_t *) malloc(sizeof(PDM_multipart_t));
 
+  multipart->n_zone           = n_zone;
+  multipart->n_part           = (int * ) malloc( multipart->n_zone * sizeof(int));
 
-  _pdm_multipart_t *_multipart = (_pdm_multipart_t *) malloc(sizeof(_pdm_multipart_t));
-
-  _multipart->n_zone           = n_zone;
-  _multipart->n_part           = (int * ) malloc( _multipart->n_zone * sizeof(int));
-
-  for (int i = 0; i < _multipart->n_zone; ++i) {
-    _multipart->n_part[i] = n_part[i];
+  for (int i = 0; i < multipart->n_zone; ++i) {
+    multipart->n_part[i] = n_part[i];
   }
 
-  _multipart->merge_blocks     = merge_blocks;
-  _multipart->split_method     = split_method;
-  _multipart->part_size_method = part_size_method;
-  _multipart->part_fraction    = part_fraction;
-  _multipart->comm             = comm;
-  _multipart->owner            = owner;
+  multipart->merge_blocks     = merge_blocks;
+  multipart->split_method     = split_method;
+  multipart->part_size_method = part_size_method;
+  multipart->part_fraction    = part_fraction;
+  multipart->comm             = comm;
+  multipart->owner            = owner;
 
-  _multipart->n_total_joins    = 0;
-  _multipart->join_to_opposite = NULL;
+  multipart->n_total_joins    = 0;
+  multipart->join_to_opposite = NULL;
 
-  // _multipart->dmeshes_ids = (int *) malloc(_multipart->n_zone * sizeof(int));
+  // multipart->dmeshes_ids = (int *) malloc(multipart->n_zone * sizeof(int));
 
-  _multipart->dmeshes       = (PDM_dmesh_t                **) malloc(_multipart->n_zone * sizeof(PDM_dmesh_t                *));
-  _multipart->dmeshes_nodal = (PDM_dmesh_nodal_t          **) malloc(_multipart->n_zone * sizeof(PDM_dmesh_nodal_t          *));
-  _multipart->dmn_to_dm     = (PDM_dmesh_nodal_to_dmesh_t **) malloc(_multipart->n_zone * sizeof(PDM_dmesh_nodal_to_dmesh_t *));
-  for (int i=0; i<_multipart->n_zone; ++i) {
-    _multipart->dmeshes_nodal[i] = NULL;
-    _multipart->dmeshes      [i] = NULL;
-    _multipart->dmn_to_dm    [i] = NULL;
+  multipart->dmeshes       = (PDM_dmesh_t                **) malloc(multipart->n_zone * sizeof(PDM_dmesh_t                *));
+  multipart->dmeshes_nodal = (PDM_dmesh_nodal_t          **) malloc(multipart->n_zone * sizeof(PDM_dmesh_nodal_t          *));
+  multipart->dmn_to_dm     = (PDM_dmesh_nodal_to_dmesh_t **) malloc(multipart->n_zone * sizeof(PDM_dmesh_nodal_to_dmesh_t *));
+  for (int i=0; i<multipart->n_zone; ++i) {
+    multipart->dmeshes_nodal[i] = NULL;
+    multipart->dmeshes      [i] = NULL;
+    multipart->dmn_to_dm    [i] = NULL;
   }
 
-  _multipart->pmeshes       = (_part_mesh_t                *) malloc(_multipart->n_zone * sizeof(_part_mesh_t                ));
+  multipart->pmeshes       = (_part_mesh_t                *) malloc(multipart->n_zone * sizeof(_part_mesh_t                ));
 
   int _renum_cell_method = PDM_part_renum_method_cell_idx_get("PDM_PART_RENUM_CELL_NONE");
   int _renum_face_method = PDM_part_renum_method_face_idx_get("PDM_PART_RENUM_FACE_NONE");
   int _renum_edge_method = PDM_part_renum_method_edge_idx_get("PDM_PART_RENUM_EDGE_NONE");
   int _renum_vtx_method  = PDM_part_renum_method_vtx_idx_get ("PDM_PART_RENUM_VTX_NONE" );
-  for (int izone = 0; izone < _multipart->n_zone; izone++) {
-    _multipart->pmeshes[izone].renum_cell_method = _renum_cell_method;
-    _multipart->pmeshes[izone].renum_face_method = _renum_face_method;
-    _multipart->pmeshes[izone].renum_edge_method = _renum_edge_method;
-    _multipart->pmeshes[izone].renum_vtx_method  = _renum_vtx_method;
-    _multipart->pmeshes[izone].renum_cell_properties = NULL;
-    _multipart->pmeshes[izone].joins_ids = NULL;
-    _multipart->pmeshes[izone].parts     = NULL;
+  for (int izone = 0; izone < multipart->n_zone; izone++) {
+    multipart->pmeshes[izone].renum_cell_method = _renum_cell_method;
+    multipart->pmeshes[izone].renum_face_method = _renum_face_method;
+    multipart->pmeshes[izone].renum_edge_method = _renum_edge_method;
+    multipart->pmeshes[izone].renum_vtx_method  = _renum_vtx_method;
+    multipart->pmeshes[izone].renum_cell_properties = NULL;
+    multipart->pmeshes[izone].joins_ids = NULL;
+    multipart->pmeshes[izone].parts     = NULL;
   }
 
-  return (PDM_multipart_t *) _multipart;
+  return (PDM_multipart_t *) multipart;
 }
 
 /**
@@ -1705,9 +1732,8 @@ void PDM_multipart_register_block
        PDM_dmesh_t *dmesh
 )
 {
-  _pdm_multipart_t *_multipart = (_pdm_multipart_t *) multipart;
-  assert(zone_id < _multipart->n_zone);
-  _multipart->dmeshes[zone_id] = dmesh;
+  assert(zone_id < multipart->n_zone);
+  multipart->dmeshes[zone_id] = dmesh;
 }
 
 /**
@@ -1725,10 +1751,9 @@ void PDM_multipart_register_dmesh_nodal
        PDM_dmesh_nodal_t *dmesh_nodal
 )
 {
-  _pdm_multipart_t *_multipart = (_pdm_multipart_t *) multipart;
-  assert(zone_id < _multipart->n_zone);
-  assert(_multipart->dmeshes_nodal[zone_id] == NULL);
-  _multipart->dmeshes_nodal[zone_id] = dmesh_nodal;
+  assert(zone_id < multipart->n_zone);
+  assert(multipart->dmeshes_nodal[zone_id] == NULL);
+  multipart->dmeshes_nodal[zone_id] = dmesh_nodal;
 }
 
 /**
@@ -1865,10 +1890,9 @@ void PDM_multipart_register_joins
  const int       *join_to_opposite
 )
 {
-  _pdm_multipart_t *_multipart = (_pdm_multipart_t *) multipart;
 
-  _multipart->n_total_joins    = n_total_joins;
-  _multipart->join_to_opposite = join_to_opposite;
+  multipart->n_total_joins    = n_total_joins;
+  multipart->join_to_opposite = join_to_opposite;
 }
 
 /**
@@ -1893,7 +1917,6 @@ void PDM_multipart_set_reordering_options
  const char      *renum_face_method
 )
 {
-  _pdm_multipart_t *_multipart = (_pdm_multipart_t *) multipart;
 
   int _renum_cell_method = PDM_part_renum_method_cell_idx_get(renum_cell_method);
   int _renum_face_method = PDM_part_renum_method_face_idx_get(renum_face_method);
@@ -1905,17 +1928,17 @@ void PDM_multipart_set_reordering_options
   }
 
   if(i_zone < 0) {
-    for (int izone = 0; izone < _multipart->n_zone; izone++) {
-      _multipart->pmeshes[izone].renum_cell_method = _renum_cell_method;
-      _multipart->pmeshes[izone].renum_face_method = _renum_face_method;
-      _multipart->pmeshes[izone].renum_cell_properties = renum_cell_properties;
+    for (int izone = 0; izone < multipart->n_zone; izone++) {
+      multipart->pmeshes[izone].renum_cell_method = _renum_cell_method;
+      multipart->pmeshes[izone].renum_face_method = _renum_face_method;
+      multipart->pmeshes[izone].renum_cell_properties = renum_cell_properties;
     }
   }
   else {
-    assert(i_zone < _multipart->n_zone);
-    _multipart->pmeshes[i_zone].renum_cell_method = _renum_cell_method;
-    _multipart->pmeshes[i_zone].renum_face_method = _renum_face_method;
-    _multipart->pmeshes[i_zone].renum_cell_properties = renum_cell_properties;
+    assert(i_zone < multipart->n_zone);
+    multipart->pmeshes[i_zone].renum_cell_method = _renum_cell_method;
+    multipart->pmeshes[i_zone].renum_face_method = _renum_face_method;
+    multipart->pmeshes[i_zone].renum_cell_properties = renum_cell_properties;
   }
 }
 void PDM_multipart_set_reordering_options_vtx
@@ -1925,7 +1948,6 @@ void PDM_multipart_set_reordering_options_vtx
  const char      *renum_vtx_method
 )
 {
-  _pdm_multipart_t *_multipart = (_pdm_multipart_t *) multipart;
 
   int _renum_vtx_method = PDM_part_renum_method_vtx_idx_get(renum_vtx_method);
   if (_renum_vtx_method == -1) {
@@ -1933,13 +1955,13 @@ void PDM_multipart_set_reordering_options_vtx
   }
 
   if(i_zone < 0) {
-    for (int izone = 0; izone < _multipart->n_zone; izone++) {
-      _multipart->pmeshes[izone].renum_vtx_method = _renum_vtx_method;
+    for (int izone = 0; izone < multipart->n_zone; izone++) {
+      multipart->pmeshes[izone].renum_vtx_method = _renum_vtx_method;
     }
   }
   else {
-    assert(i_zone < _multipart->n_zone);
-    _multipart->pmeshes[i_zone].renum_vtx_method = _renum_vtx_method;
+    assert(i_zone < multipart->n_zone);
+    multipart->pmeshes[i_zone].renum_vtx_method = _renum_vtx_method;
   }
 }
 
@@ -3560,11 +3582,10 @@ PDM_multipart_run_ppart
  PDM_multipart_t *multipart
 )
 {
-  _pdm_multipart_t *_multipart = (_pdm_multipart_t *) multipart;
   int i_rank;
   int n_rank;
-  PDM_MPI_Comm_rank(_multipart->comm, &i_rank);
-  PDM_MPI_Comm_size(_multipart->comm, &n_rank);
+  PDM_MPI_Comm_rank(multipart->comm, &i_rank);
+  PDM_MPI_Comm_size(multipart->comm, &n_rank);
 
 
   /*
@@ -3574,30 +3595,30 @@ PDM_multipart_run_ppart
    * Step 4 : Deduce all mesh_nodal connectivity
    */
 
-  if (_multipart->merge_blocks)
+  if (multipart->merge_blocks)
   {
     // 1. Generate global numerotation using all blocks
     // 2. Call the partitionner once on the global numbering
   } else {
     PDM_timer_t *timer = PDM_timer_create();
     double cum_elapsed_time = 0;
-    int *starting_part_idx =  PDM_array_new_idx_from_sizes_int(_multipart->n_part, _multipart->n_zone);
+    int *starting_part_idx =  PDM_array_new_idx_from_sizes_int(multipart->n_part, multipart->n_zone);
 
     int is_by_elt = 0;
-    for (int i_zone = 0; i_zone < _multipart->n_zone; ++i_zone) {
-      PDM_dmesh_nodal_t* dmesh_nodal = _multipart->dmeshes_nodal[i_zone];
+    for (int i_zone = 0; i_zone < multipart->n_zone; ++i_zone) {
+      PDM_dmesh_nodal_t* dmesh_nodal = multipart->dmeshes_nodal[i_zone];
       if (dmesh_nodal != NULL) { // element representation
         is_by_elt = 1;
-        // PDM_printf("Partitionning elt zone %d/%d \n", i_zone+1, _multipart->n_zone);
-        PDM_MPI_Comm comm = _multipart->comm;
-        PDM_split_dual_t split_method = _multipart->split_method;
-        int n_part = _multipart->n_part[i_zone];
-        _part_mesh_t* pmesh = &(_multipart->pmeshes[i_zone]);
+        // PDM_printf("Partitionning elt zone %d/%d \n", i_zone+1, multipart->n_zone);
+        PDM_MPI_Comm comm = multipart->comm;
+        PDM_split_dual_t split_method = multipart->split_method;
+        int n_part = multipart->n_part[i_zone];
+        _part_mesh_t* pmesh = &(multipart->pmeshes[i_zone]);
 
         // _run_ppart_zone_nodal(dmesh_nodal,pmesh,split_method,n_part,comm);
 
-        const double* part_fraction      = &_multipart->part_fraction[starting_part_idx[i_zone]];
-        PDM_part_size_t part_size_method = _multipart->part_size_method;
+        const double* part_fraction      = &multipart->part_fraction[starting_part_idx[i_zone]];
+        PDM_part_size_t part_size_method = multipart->part_size_method;
 
         //Convert dmesh nodal to dmesh
         PDM_dmesh_nodal_to_dmesh_t* dmn_to_dm = PDM_dmesh_nodal_to_dmesh_create(1, comm, PDM_OWNERSHIP_KEEP);
@@ -3618,24 +3639,24 @@ PDM_multipart_run_ppart
         PDM_dmesh_t  *_dmesh = NULL;
         PDM_dmesh_nodal_to_dmesh_get_dmesh(dmn_to_dm, 0, &_dmesh);
         _run_ppart_zone2(_dmesh, dmesh_nodal, pmesh, n_part, split_method, part_size_method, part_fraction, comm);
-        _multipart->dmeshes[i_zone]   = _dmesh;
-        _multipart->dmn_to_dm[i_zone] = dmn_to_dm; /* Store it - We need it for PDM_multipart_get_part_mesh_nodal */
+        multipart->dmeshes[i_zone]   = _dmesh;
+        multipart->dmn_to_dm[i_zone] = dmn_to_dm; /* Store it - We need it for PDM_multipart_get_part_mesh_nodal */
         // PDM_dmesh_nodal_to_dmesh_free(dmn_to_dm);
 
       } else { // face representation
-        // PDM_printf("Partitionning face zone %d/%d \n", i_zone+1, _multipart->n_zone);
+        // PDM_printf("Partitionning face zone %d/%d \n", i_zone+1, multipart->n_zone);
 
-        PDM_MPI_Comm comm = _multipart->comm;
+        PDM_MPI_Comm comm = multipart->comm;
 
-        PDM_split_dual_t split_method    = _multipart->split_method;
-        PDM_part_size_t part_size_method = _multipart->part_size_method;
+        PDM_split_dual_t split_method    = multipart->split_method;
+        PDM_part_size_t part_size_method = multipart->part_size_method;
 
-        const double* part_fraction = &_multipart->part_fraction[starting_part_idx[i_zone]];
+        const double* part_fraction = &multipart->part_fraction[starting_part_idx[i_zone]];
 
-        PDM_dmesh_t  *_dmeshes =   _multipart->dmeshes[i_zone];
-        _part_mesh_t *_pmeshes = &(_multipart->pmeshes[i_zone]);
+        PDM_dmesh_t  *_dmeshes =   multipart->dmeshes[i_zone];
+        _part_mesh_t *_pmeshes = &(multipart->pmeshes[i_zone]);
 
-        int n_part = _multipart->n_part[i_zone];
+        int n_part = multipart->n_part[i_zone];
 
 
         if (0 && i_rank == 0)
@@ -3653,7 +3674,7 @@ PDM_multipart_run_ppart
     free(starting_part_idx);
     // Now rebuild joins over the zones
     if (!is_by_elt) { // WARNING TODO also implement if element representation
-      _search_matching_joins(_multipart);
+      _search_matching_joins(multipart);
     }
   }
 }
@@ -3675,17 +3696,16 @@ PDM_part_mesh_nodal_t **pmesh_nodal,
 PDM_ownership_t         ownership
 )
 {
-  _pdm_multipart_t *_multipart = (_pdm_multipart_t *) multipart;
-  assert(i_zone < _multipart->n_zone);
+  assert(i_zone < multipart->n_zone);
 
 
-  _part_mesh_t      *pmesh       = &(_multipart->pmeshes    [i_zone]);
-  PDM_dmesh_nodal_t *dmesh_nodal = _multipart->dmeshes_nodal[i_zone];
+  _part_mesh_t      *pmesh       = &(multipart->pmeshes    [i_zone]);
+  PDM_dmesh_nodal_t *dmesh_nodal = multipart->dmeshes_nodal[i_zone];
   if (dmesh_nodal == NULL) {
     *pmesh_nodal = NULL;
   }
   else {
-    int n_part = _multipart->n_part[i_zone];
+    int n_part = multipart->n_part[i_zone];
     if(dmesh_nodal->mesh_dimension == 3){
       *pmesh_nodal = _compute_part_mesh_nodal_3d(dmesh_nodal, pmesh, n_part, ownership);
     } else if(dmesh_nodal->mesh_dimension == 2){
@@ -3725,16 +3745,15 @@ const int        i_part,
       int       *n_join_groups
 )
 {
-  _pdm_multipart_t *_multipart = (_pdm_multipart_t *) multipart;
 
-  assert(i_zone < _multipart->n_zone && i_part < _multipart->n_part[i_zone]);
-  _part_mesh_t _pmeshes = _multipart->pmeshes[i_zone];
+  assert(i_zone < multipart->n_zone && i_part < multipart->n_part[i_zone]);
+  _part_mesh_t _pmeshes = multipart->pmeshes[i_zone];
 
   *n_cell = _pmeshes.parts[i_part]->n_cell;
   *n_face = _pmeshes.parts[i_part]->n_face;
   *n_vtx  = _pmeshes.parts[i_part]->n_vtx;
 
-  PDM_MPI_Comm_size(_multipart->comm, n_proc);
+  PDM_MPI_Comm_size(multipart->comm, n_proc);
   *n_total_part = _pmeshes.tn_part;
 
   *n_section = _pmeshes.parts[i_part]->n_section;
@@ -3789,10 +3808,9 @@ PDM_multipart_part_graph_comm_vtx_dim_get
        int       *n_vtx_part_bound
 )
 {
-  _pdm_multipart_t *_multipart = (_pdm_multipart_t *) multipart;
 
-  assert(i_zone < _multipart->n_zone && i_part < _multipart->n_part[i_zone]);
-  _part_mesh_t _pmeshes = _multipart->pmeshes[i_zone];
+  assert(i_zone < multipart->n_zone && i_part < multipart->n_part[i_zone]);
+  _part_mesh_t _pmeshes = multipart->pmeshes[i_zone];
 
   // printf(" n_vtx_part_bound = %i \n", _pmeshes.parts[i_part]->vtx_part_bound_part_idx[_pmeshes.tn_part]);
   // printf(" _pmeshes.tn_part = %i \n", _pmeshes.tn_part);
@@ -3809,10 +3827,9 @@ PDM_multipart_part_graph_comm_edge_dim_get
        int       *n_edge_part_bound
 )
 {
-  _pdm_multipart_t *_multipart = (_pdm_multipart_t *) multipart;
 
-  assert(i_zone < _multipart->n_zone && i_part < _multipart->n_part[i_zone]);
-  _part_mesh_t _pmeshes = _multipart->pmeshes[i_zone];
+  assert(i_zone < multipart->n_zone && i_part < multipart->n_part[i_zone]);
+  _part_mesh_t _pmeshes = multipart->pmeshes[i_zone];
 
   // printf(" n_edge_part_bound = %i \n", _pmeshes.parts[i_part]->edge_part_bound_part_idx[_pmeshes.tn_part]);
   // printf(" _pmeshes.tn_part = %i \n", _pmeshes.tn_part);
@@ -3856,10 +3873,9 @@ const int            i_part,
       PDM_g_num_t  **face_join_ln_to_gn
 )
 {
-   _pdm_multipart_t *_multipart = (_pdm_multipart_t *) multipart;
 
-  assert(i_zone < _multipart->n_zone && i_part < _multipart->n_part[i_zone]);
-  _part_mesh_t _pmeshes = _multipart->pmeshes[i_zone];
+  assert(i_zone < multipart->n_zone && i_part < multipart->n_part[i_zone]);
+  _part_mesh_t _pmeshes = multipart->pmeshes[i_zone];
 
   *cell_tag = NULL;
   *face_tag = NULL;
@@ -3917,10 +3933,9 @@ const int                       i_part,
 )
 {
   PDM_UNUSED(ownership);
-  _pdm_multipart_t *_multipart = (_pdm_multipart_t *) multipart;
-  assert(i_zone < _multipart->n_zone && i_part < _multipart->n_part[i_zone]);
+  assert(i_zone < multipart->n_zone && i_part < multipart->n_part[i_zone]);
 
-  _part_mesh_t _pmeshes = _multipart->pmeshes[i_zone];
+  _part_mesh_t _pmeshes = multipart->pmeshes[i_zone];
   int pn_entity = -1;
 
   if( connectivity_type == PDM_CONNECTIVITY_TYPE_CELL_ELMT ||
@@ -4006,10 +4021,9 @@ const int                   i_part,
 )
 {
   PDM_UNUSED(ownership);
-  _pdm_multipart_t *_multipart = (_pdm_multipart_t *) multipart;
-  assert(i_zone < _multipart->n_zone && i_part < _multipart->n_part[i_zone]);
+  assert(i_zone < multipart->n_zone && i_part < multipart->n_part[i_zone]);
 
-  _part_mesh_t _pmeshes = _multipart->pmeshes[i_zone];
+  _part_mesh_t _pmeshes = multipart->pmeshes[i_zone];
 
   int pn_entity = 0;
   switch (entity_type) {
@@ -4052,10 +4066,9 @@ const int                   i_part,
 )
 {
   PDM_UNUSED(ownership);
-  _pdm_multipart_t *_multipart = (_pdm_multipart_t *) multipart;
-  assert(i_zone < _multipart->n_zone && i_part < _multipart->n_part[i_zone]);
+  assert(i_zone < multipart->n_zone && i_part < multipart->n_part[i_zone]);
 
-  _part_mesh_t _pmeshes = _multipart->pmeshes[i_zone];
+  _part_mesh_t _pmeshes = multipart->pmeshes[i_zone];
 
   int pn_entity = 0;
   switch (entity_type) {
@@ -4110,12 +4123,11 @@ const int            i_part,
       int          **vtx_part_bound
 )
 {
-   _pdm_multipart_t *_multipart = (_pdm_multipart_t *) multipart;
 
    // table_res[] = is_getted;
 
-  assert(i_zone < _multipart->n_zone && i_part < _multipart->n_part[i_zone]);
-  _part_mesh_t _pmeshes = _multipart->pmeshes[i_zone];
+  assert(i_zone < multipart->n_zone && i_part < multipart->n_part[i_zone]);
+  _part_mesh_t _pmeshes = multipart->pmeshes[i_zone];
 
   *vtx_part_bound_proc_idx = _pmeshes.parts[i_part]->vtx_part_bound_proc_idx;
   *vtx_part_bound_part_idx = _pmeshes.parts[i_part]->vtx_part_bound_part_idx;
@@ -4133,12 +4145,11 @@ const int            i_part,
       int          **edge_part_bound
 )
 {
-   _pdm_multipart_t *_multipart = (_pdm_multipart_t *) multipart;
 
    // table_res[] = is_getted;
 
-  assert(i_zone < _multipart->n_zone && i_part < _multipart->n_part[i_zone]);
-  _part_mesh_t _pmeshes = _multipart->pmeshes[i_zone];
+  assert(i_zone < multipart->n_zone && i_part < multipart->n_part[i_zone]);
+  _part_mesh_t _pmeshes = multipart->pmeshes[i_zone];
 
   *edge_part_bound_proc_idx = _pmeshes.parts[i_part]->edge_part_bound_proc_idx;
   *edge_part_bound_part_idx = _pmeshes.parts[i_part]->edge_part_bound_part_idx;
@@ -4160,10 +4171,9 @@ const int            i_part,
       int          **hyperplane_color
 )
 {
-  _pdm_multipart_t *_multipart = (_pdm_multipart_t *) multipart;
 
-  assert(i_zone < _multipart->n_zone && i_part < _multipart->n_part[i_zone]);
-  _part_mesh_t _pmeshes = _multipart->pmeshes[i_zone];
+  assert(i_zone < multipart->n_zone && i_part < multipart->n_part[i_zone]);
+  _part_mesh_t _pmeshes = multipart->pmeshes[i_zone];
   *cell_color       = _pmeshes.parts[i_part]->cell_color;
   *face_color       = _pmeshes.parts[i_part]->face_color;
   *face_hp_color    = _pmeshes.parts[i_part]->face_hp_color;
@@ -4181,10 +4191,9 @@ const int         i_part,
       int       **vtx_ghost_information
 )
 {
-  _pdm_multipart_t *_multipart = (_pdm_multipart_t *) multipart;
 
-  assert(i_zone < _multipart->n_zone && i_part < _multipart->n_part[i_zone]);
-  _part_mesh_t _pmeshes = _multipart->pmeshes[i_zone];
+  assert(i_zone < multipart->n_zone && i_part < multipart->n_part[i_zone]);
+  _part_mesh_t _pmeshes = multipart->pmeshes[i_zone];
 
   *vtx_ghost_information = _pmeshes.parts[i_part]->vtx_ghost_information;
 }
@@ -4215,8 +4224,7 @@ PDM_multipart_time_get
  double         **cpu_sys
 )
 {
-  _pdm_multipart_t *_multipart = (_pdm_multipart_t *) multipart;
-  assert(i_zone < _multipart->n_zone);
+  assert(i_zone < multipart->n_zone);
 
   // PDM_printf("PDM_multipart_time_get: Not implemented\n");
   *elapsed  = NULL;
@@ -4239,32 +4247,31 @@ PDM_multipart_free
  PDM_multipart_t *multipart
 )
 {
-  _pdm_multipart_t *_multipart = (_pdm_multipart_t *) multipart;
 
-  // free(_multipart->dmeshes_ids);
-  for (int i_zone = 0; i_zone < _multipart->n_zone; i_zone++) {
-    if (_multipart->pmeshes[i_zone].joins_ids != NULL)
-      free(_multipart->pmeshes[i_zone].joins_ids);
-    if (_multipart->pmeshes[i_zone].parts != NULL){
-      for (int ipart = 0; ipart < _multipart->n_part[i_zone]; ipart++) {
-        _part_free(_multipart->pmeshes[i_zone].parts[ipart], _multipart->owner);
+  // free(multipart->dmeshes_ids);
+  for (int i_zone = 0; i_zone < multipart->n_zone; i_zone++) {
+    if (multipart->pmeshes[i_zone].joins_ids != NULL)
+      free(multipart->pmeshes[i_zone].joins_ids);
+    if (multipart->pmeshes[i_zone].parts != NULL){
+      for (int ipart = 0; ipart < multipart->n_part[i_zone]; ipart++) {
+        _part_free(multipart->pmeshes[i_zone].parts[ipart], multipart->owner);
       }
-      free(_multipart->pmeshes[i_zone].parts);
+      free(multipart->pmeshes[i_zone].parts);
     }
-    if(_multipart->dmn_to_dm[i_zone] != NULL) {
-      PDM_dmesh_nodal_to_dmesh_free(_multipart->dmn_to_dm[i_zone]);
-      _multipart->dmn_to_dm[i_zone] = NULL;
+    if(multipart->dmn_to_dm[i_zone] != NULL) {
+      PDM_dmesh_nodal_to_dmesh_free(multipart->dmn_to_dm[i_zone]);
+      multipart->dmn_to_dm[i_zone] = NULL;
     }
   }
-  free(_multipart->pmeshes);
-  free(_multipart->dmeshes);
-  free(_multipart->dmeshes_nodal);
-  free(_multipart->dmn_to_dm);
-  free(_multipart->n_part);
+  free(multipart->pmeshes);
+  free(multipart->dmeshes);
+  free(multipart->dmeshes_nodal);
+  free(multipart->dmn_to_dm);
+  free(multipart->n_part);
 
   //PDM_part_renum_method_purge();
-  free (_multipart);
-  _multipart = NULL;
+  free (multipart);
+  multipart = NULL;
 
   // PDM_printf("Cleaned from PDM_multipart_free\n");
 }
@@ -4281,11 +4288,10 @@ const int                       i_part,
 )
 {
   PDM_UNUSED(ownership);
-  _pdm_multipart_t *_multipart = (_pdm_multipart_t *) multipart;
 
-  assert(i_zone < _multipart->n_zone && i_part < _multipart->n_part[i_zone]);
+  assert(i_zone < multipart->n_zone && i_part < multipart->n_part[i_zone]);
 
-  _part_mesh_t _pmeshes = _multipart->pmeshes[i_zone];
+  _part_mesh_t _pmeshes = multipart->pmeshes[i_zone];
 
   *vtx_coord = _pmeshes.parts[i_part]->vtx;
 
@@ -4305,10 +4311,9 @@ void PDM_multipart_bound_get
  PDM_g_num_t      **bound_ln_to_gn
  )
 {
-  _pdm_multipart_t *_multipart = (_pdm_multipart_t *) multipart;
 
-  assert(i_zone < _multipart->n_zone && i_part < _multipart->n_part[i_zone]);
-  _part_mesh_t _pmeshes = _multipart->pmeshes[i_zone];
+  assert(i_zone < multipart->n_zone && i_part < multipart->n_part[i_zone]);
+  _part_mesh_t _pmeshes = multipart->pmeshes[i_zone];
 
   *n_bound = _pmeshes.n_bounds;
 
@@ -4351,34 +4356,33 @@ PDM_multipart_stat_get
  int              *bound_part_faces_sum
 )
 {
-  _pdm_multipart_t *_multipart = (_pdm_multipart_t *) multipart;
   int n_rank;
-  PDM_MPI_Comm_size(_multipart->comm, &n_rank);
+  PDM_MPI_Comm_size(multipart->comm, &n_rank);
 
-  assert(i_zone < _multipart->n_zone);
-  _part_mesh_t _pmeshes = _multipart->pmeshes[i_zone];
+  assert(i_zone < multipart->n_zone);
+  _part_mesh_t _pmeshes = multipart->pmeshes[i_zone];
 
   int* dpart_proc = (int *) malloc((n_rank + 1) * sizeof(int));
-  PDM_MPI_Allgather((void *) &_multipart->n_part[i_zone],
+  PDM_MPI_Allgather((void *) &multipart->n_part[i_zone],
                     1,
                     PDM_MPI_INT,
            (void *) (&dpart_proc[1]),
                     1,
                     PDM_MPI_INT,
-                    _multipart->comm);
+                    multipart->comm);
 
   dpart_proc[0] = 0;
   for (int i = 1; i < n_rank+1; i++) {
     dpart_proc[i] = dpart_proc[i] + dpart_proc[i-1];
   }
 
-  int *n_loc = (int *) malloc(_multipart->n_part[i_zone]  * sizeof(int));
+  int *n_loc = (int *) malloc(multipart->n_part[i_zone]  * sizeof(int));
   int *n_tot = (int *) malloc(dpart_proc[n_rank]          * sizeof(int));
 
-  int *s_loc = (int *) malloc(_multipart->n_part[i_zone]  * sizeof(int));
+  int *s_loc = (int *) malloc(multipart->n_part[i_zone]  * sizeof(int));
   int *s_tot = (int *) malloc(dpart_proc[n_rank]          * sizeof(int));
 
-  for (int i = 0; i < _multipart->n_part[i_zone]; i++) {
+  for (int i = 0; i < multipart->n_part[i_zone]; i++) {
     n_loc[i] = 0;
     s_loc[i] = 0;
   }
@@ -4389,7 +4393,7 @@ PDM_multipart_stat_get
   }
 
   int tn_part = dpart_proc[n_rank];
-  for (int i_part = 0; i_part < _multipart->n_part[i_zone]; i_part++) {
+  for (int i_part = 0; i_part < multipart->n_part[i_zone]; i_part++) {
     n_loc[i_part] = _pmeshes.parts[i_part]->n_cell;
     if(_pmeshes.parts[i_part]->face_part_bound_part_idx != NULL) {
       s_loc[i_part] = _pmeshes.parts[i_part]->face_part_bound_part_idx[tn_part];
@@ -4403,22 +4407,22 @@ PDM_multipart_stat_get
   }
 
   PDM_MPI_Allgatherv(n_loc,
-                     _multipart->n_part[i_zone],
+                     multipart->n_part[i_zone],
                      PDM_MPI_INT,
                      n_tot,
                      n_part_proc,
                      dpart_proc,
                      PDM_MPI_INT,
-                     _multipart->comm);
+                     multipart->comm);
 
   PDM_MPI_Allgatherv(s_loc,
-                     _multipart->n_part[i_zone],
+                     multipart->n_part[i_zone],
                      PDM_MPI_INT,
                      s_tot,
                      n_part_proc,
                      dpart_proc,
                      PDM_MPI_INT,
-                     _multipart->comm);
+                     multipart->comm);
 
   PDM_quick_sort_int(s_tot, 0, dpart_proc[n_rank]-1);
   PDM_quick_sort_int(n_tot, 0, dpart_proc[n_rank]-1);

@@ -74,7 +74,14 @@ struct _pdm_part_mesh_t
   int               ***pn_bound;                        /* Array of connectivty (size = PDM_CONNECTIVITY_TYPE_MAX)            */
   PDM_g_num_t      ****pbound_ln_to_gn;                 /* Array of connectivty (size = PDM_CONNECTIVITY_TYPE_MAX)            */
   int              ****pbound;                          /* Array of connectivty_idx if any (size = PDM_CONNECTIVITY_TYPE_MAX) */
-  PDM_bool_t         *is_owner_bound;
+  PDM_bool_t          *is_owner_bound;
+
+  int               ***pconcat_bound_idx;              /* Array of connectivty (size = PDM_CONNECTIVITY_TYPE_MAX)            */
+  PDM_g_num_t       ***pconcat_bound_ln_to_gn;         /* Array of connectivty (size = PDM_CONNECTIVITY_TYPE_MAX)            */
+  int               ***pconcat_bound;                  /* Array of connectivty_idx if any (size = PDM_CONNECTIVITY_TYPE_MAX) */
+  PDM_bool_t         *is_owner_concat_bound;
+  PDM_bool_t         *is_compute_concat_bound;
+
 
   /* Comm graph */
   int               ***ppart_bound_proc_idx;            /* Array of connectivty (size = PDM_CONNECTIVITY_TYPE_MAX)            */

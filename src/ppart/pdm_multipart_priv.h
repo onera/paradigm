@@ -58,7 +58,7 @@ typedef struct {
  *         It includes distributed meshes, partioned meshes and
  *         partitioning parameters.
  */
-typedef struct  {
+struct _pdm_multipart_t {
   /* Multipart description */
   int           n_zone;              // Number of initial zones
 
@@ -85,7 +85,7 @@ typedef struct  {
   /* Partitioned meshes */
   _part_mesh_t *pmeshes;             // Partitioned meshes structures (size=n_zone)
 
-} _pdm_multipart_t;
+};
 
 
 
