@@ -1164,9 +1164,9 @@ _dist_cloud_surf_compute_optim
 
     }
 
-    PDM_part_mesh_nodal_elmts_for_cwipi(comm,
-                                        n_part_mesh,
-                                        &pmne);
+    PDM_part_mesh_nodal_elmts_extend_to_encompassing_comm(comm,
+                                                          n_part_mesh,
+                                                          &pmne);
   }
 
   if (pmne != NULL) {

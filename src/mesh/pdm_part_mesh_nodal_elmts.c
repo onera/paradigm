@@ -6043,9 +6043,20 @@ const PDM_ownership_t               ownership
 }
 
 
+/**
+ * \brief  Adapt pmne to fit operation communicator.
+ *
+ * pmne has its own communicator which might be encompassed into
+ * the operation communicator.
+ *
+ * \param [in]  comm           Operation communicator
+ * \param [in]  n_part         Number of partitions
+ * \param [in]  pmne           Part mesh nodal element
+ *
+ */
 
 void
-PDM_part_mesh_nodal_elmts_for_cwipi
+PDM_part_mesh_nodal_elmts_extend_to_encompassing_comm
 (
  const PDM_MPI_Comm                  comm,
  const int                           n_part,

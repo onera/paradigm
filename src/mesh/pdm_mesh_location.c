@@ -2066,9 +2066,9 @@ PDM_mesh_location_compute
     blocks_id = PDM_part_mesh_nodal_sections_id_in_geom_kind_get(ml->mesh_nodal, geom_kind);
   }
 
-  PDM_part_mesh_nodal_elmts_for_cwipi(ml->comm,
-                                      n_part,
-                                      &pmne);
+  PDM_part_mesh_nodal_elmts_extend_to_encompassing_comm(ml->comm,
+                                                        n_part,
+                                                        &pmne);
 
   int *req_pts_proj_coord = PDM_array_const_int(ml->n_point_cloud, -1);
   int *req_pts_dist2      = PDM_array_const_int(ml->n_point_cloud, -1);
@@ -4565,9 +4565,9 @@ PDM_mesh_location_compute2
     blocks_id = PDM_part_mesh_nodal_sections_id_in_geom_kind_get(ml->mesh_nodal, geom_kind);
   }
 
-  PDM_part_mesh_nodal_elmts_for_cwipi(ml->comm,
-                                      n_part,
-                                      &pmne);
+  PDM_part_mesh_nodal_elmts_extend_to_encompassing_comm(ml->comm,
+                                                        n_part,
+                                                        &pmne);
 
 
 
