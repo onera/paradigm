@@ -558,6 +558,7 @@ PDM_part_mesh_bound_concat_get
   if(pmesh->is_compute_concat_bound[bound_type] == PDM_FALSE) {
 
     int n_group = pmesh->n_group_bnd[bound_type];
+    assert(pmesh->pconcat_bound_idx[bound_type][i_part] == NULL);
     pmesh->pconcat_bound_idx[bound_type][i_part] = malloc( (n_group+1) * sizeof(int));
     int *_pconcat_bound_idx = pmesh->pconcat_bound_idx[bound_type][i_part];
 
@@ -566,8 +567,8 @@ PDM_part_mesh_bound_concat_get
       _pconcat_bound_idx[i_group+1] = _pconcat_bound_idx[i_group] + pmesh->pn_bound[bound_type][i_part][i_group];
     }
 
-    pmesh->pconcat_bound  [bound_type][i_part] = malloc(_pconcat_bound_idx[n_group] * sizeof(int        ));
-    pmesh->pbound_ln_to_gn[bound_type][i_part] = malloc(_pconcat_bound_idx[n_group] * sizeof(PDM_g_num_t));
+    pmesh->pconcat_bound         [bound_type][i_part] = malloc(_pconcat_bound_idx[n_group] * sizeof(int        ));
+    pmesh->pconcat_bound_ln_to_gn[bound_type][i_part] = malloc(_pconcat_bound_idx[n_group] * sizeof(PDM_g_num_t));
     int         *_pconcat_bound          = pmesh->pconcat_bound         [bound_type][i_part];
     PDM_g_num_t *_pconcat_bound_ln_to_gn = pmesh->pconcat_bound_ln_to_gn[bound_type][i_part];
 
@@ -848,13 +849,21 @@ PDM_part_mesh_free
     free(pmesh->pconnectivity);
     free(pmesh->pconnectivity_idx);
     free(pmesh->pentity_ln_to_gn);
+    free(pmesh->pentity_color);
     free(pmesh->is_owner_connectivity);
     free(pmesh->is_owner_ln_to_gn    );
+    free(pmesh->is_owner_color       );
 
     free(pmesh->pn_bound       );
     free(pmesh->pbound         );
     free(pmesh->pbound_ln_to_gn);
     free(pmesh->is_owner_bound );
+
+    free(pmesh->pconcat_bound         );
+    free(pmesh->pconcat_bound_ln_to_gn);
+    free(pmesh->pconcat_bound_idx);
+    free(pmesh->is_owner_concat_bound);
+    free(pmesh->is_compute_concat_bound);
 
     free(pmesh->ppart_bound_proc_idx);
     free(pmesh->ppart_bound_part_idx);

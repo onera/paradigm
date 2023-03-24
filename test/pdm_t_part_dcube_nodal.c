@@ -202,30 +202,30 @@ int main(int argc, char *argv[])
 
   PDM_MPI_Comm comm = PDM_MPI_COMM_WORLD;
 
-  // PDM_dcube_nodal_t* dcube = PDM_dcube_nodal_gen_create (comm,
-  //                                                          n_vtx_seg,
-  //                                                          n_vtx_seg,
-  //                                                          n_vtx_seg,
-  //                                                          length,
-  //                                                          0.,
-  //                                                          0.,
-  //                                                          0.,
-  //                                                          PDM_MESH_NODAL_TETRA4,
-  //                                                          1,
-  //                                                          PDM_OWNERSHIP_KEEP);
   PDM_dcube_nodal_t* dcube = PDM_dcube_nodal_gen_create (comm,
-                                                         n_vtx_seg,
-                                                         n_vtx_seg,
-                                                         n_vtx_seg,
-                                                         length,
-                                                         0.,
-                                                         0.,
-                                                         0.,
-                                                         PDM_MESH_NODAL_TRIAHO,//HEXAHO,
-                                                         2,
-                                                         PDM_OWNERSHIP_KEEP);
-  // PDM_dcube_nodal_gen_ordering_set(dcube, "PDM_HO_ORDERING_VTK");
-  PDM_dcube_nodal_gen_ordering_set(dcube, "PDM_HO_ORDERING_CGNS");
+                                                           n_vtx_seg,
+                                                           n_vtx_seg,
+                                                           n_vtx_seg,
+                                                           length,
+                                                           0.,
+                                                           0.,
+                                                           0.,
+                                                           PDM_MESH_NODAL_TRIA3,
+                                                           1,
+                                                           PDM_OWNERSHIP_KEEP);
+  // PDM_dcube_nodal_t* dcube = PDM_dcube_nodal_gen_create (comm,
+  //                                                        n_vtx_seg,
+  //                                                        n_vtx_seg,
+  //                                                        n_vtx_seg,
+  //                                                        length,
+  //                                                        0.,
+  //                                                        0.,
+  //                                                        0.,
+  //                                                        PDM_MESH_NODAL_TRIAHO,//HEXAHO,
+  //                                                        2,
+  //                                                        PDM_OWNERSHIP_KEEP);
+  // // PDM_dcube_nodal_gen_ordering_set(dcube, "PDM_HO_ORDERING_VTK");
+  // PDM_dcube_nodal_gen_ordering_set(dcube, "PDM_HO_ORDERING_CGNS");
   PDM_dcube_nodal_gen_build (dcube);
 
 
@@ -268,15 +268,15 @@ int main(int argc, char *argv[])
 
   free(n_part_zones);
 
-  PDM_part_mesh_nodal_t* pmsh_nodal = NULL;
-  PDM_multipart_get_part_mesh_nodal(mpart, 0, &pmsh_nodal, PDM_OWNERSHIP_KEEP); // Ownership keep is mandatory in C
+  // PDM_part_mesh_nodal_t* pmsh_nodal = NULL;
+  // PDM_multipart_get_part_mesh_nodal(mpart, 0, &pmsh_nodal, PDM_OWNERSHIP_KEEP); // Ownership keep is mandatory in C
 
-  if (post) {
-    PDM_part_mesh_nodal_dump_vtk(pmsh_nodal, PDM_GEOMETRY_KIND_VOLUMIC , "volumic_ho_" );
-    PDM_part_mesh_nodal_dump_vtk(pmsh_nodal, PDM_GEOMETRY_KIND_SURFACIC, "surfacic_ho_");
-    PDM_part_mesh_nodal_dump_vtk(pmsh_nodal, PDM_GEOMETRY_KIND_RIDGE   , "ridge_ho_"   );
-  }
-  PDM_part_mesh_nodal_free(pmsh_nodal);
+  // if (post) {
+  //   PDM_part_mesh_nodal_dump_vtk(pmsh_nodal, PDM_GEOMETRY_KIND_VOLUMIC , "volumic_ho_" );
+  //   PDM_part_mesh_nodal_dump_vtk(pmsh_nodal, PDM_GEOMETRY_KIND_SURFACIC, "surfacic_ho_");
+  //   PDM_part_mesh_nodal_dump_vtk(pmsh_nodal, PDM_GEOMETRY_KIND_RIDGE   , "ridge_ho_"   );
+  // }
+  // PDM_part_mesh_nodal_free(pmsh_nodal);
 
   gettimeofday(&t_elaps_debut, NULL);
   PDM_multipart_free(mpart);
