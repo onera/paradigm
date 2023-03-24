@@ -308,12 +308,7 @@ _gen_mesh
                                                           ipart,
                                                           &_vtx_coord,
                                                           PDM_OWNERSHIP_USER);
-      (*pvtx_coord)[ipart] = malloc(sizeof(double) * (*pn_vtx)[ipart] * 3);
-      memcpy((*pvtx_coord)[ipart], _vtx_coord, sizeof(double) * (*pn_vtx)[ipart] * 3);
-
-
-
-
+      (*pvtx_coord)[ipart] = _vtx_coord;
 
       PDM_g_num_t *_elt_ln_to_gn;
       (*pn_elt)[ipart] = PDM_multipart_part_ln_to_gn_get(mpart,
@@ -322,16 +317,14 @@ _gen_mesh
                                                          PDM_MESH_ENTITY_CELL,
                                                          &_elt_ln_to_gn,
                                                          PDM_OWNERSHIP_USER);
-      (*pelt_ln_to_gn)[ipart] = malloc(sizeof(PDM_g_num_t) * (*pn_elt)[ipart]);
-      memcpy((*pelt_ln_to_gn)[ipart], _elt_ln_to_gn, sizeof(PDM_g_num_t) * (*pn_elt)[ipart]);
-
+      (*pelt_ln_to_gn)[ipart] = _elt_ln_to_gn;
 
       PDM_multipart_part_ln_to_gn_get(mpart,
                                       0,
                                       ipart,
                                       PDM_MESH_ENTITY_FACE,
                                       &pface_ln_to_gn[ipart],
-                                      PDM_OWNERSHIP_USER);
+                                      PDM_OWNERSHIP_KEEP);
 
       int *_face_vtx;
       int *_face_vtx_idx;
@@ -341,7 +334,7 @@ _gen_mesh
                                                        PDM_CONNECTIVITY_TYPE_FACE_VTX,
                                                        &_face_vtx,
                                                        &_face_vtx_idx,
-                                                       PDM_OWNERSHIP_USER);
+                                                       PDM_OWNERSHIP_KEEP);
       pn_face[ipart] = n_face;
       int *_cell_face;
       int *_cell_face_idx;
@@ -351,7 +344,7 @@ _gen_mesh
                                           PDM_CONNECTIVITY_TYPE_CELL_FACE,
                                           &_cell_face,
                                           &_cell_face_idx,
-                                          PDM_OWNERSHIP_USER);
+                                          PDM_OWNERSHIP_KEEP);
 
       pcell_face_idx[ipart] = _cell_face_idx;
       pcell_face    [ipart] = _cell_face;
@@ -515,11 +508,7 @@ _gen_mesh
                                                           ipart,
                                                           &_vtx_coord,
                                                           PDM_OWNERSHIP_USER);
-      (*pvtx_coord)[ipart] = malloc(sizeof(double) * (*pn_vtx)[ipart] * 3);
-      memcpy((*pvtx_coord)[ipart], _vtx_coord, sizeof(double) * (*pn_vtx)[ipart] * 3);
-
-
-
+      (*pvtx_coord)[ipart] = _vtx_coord;
 
       PDM_g_num_t *_elt_ln_to_gn;
       (*pn_elt)[ipart] = PDM_multipart_part_ln_to_gn_get(mpart,
@@ -528,8 +517,7 @@ _gen_mesh
                                                          PDM_MESH_ENTITY_CELL,
                                                          &_elt_ln_to_gn,
                                                          PDM_OWNERSHIP_USER);
-      (*pelt_ln_to_gn)[ipart] = malloc(sizeof(PDM_g_num_t) * (*pn_elt)[ipart]);
-      memcpy((*pelt_ln_to_gn)[ipart], _elt_ln_to_gn, sizeof(PDM_g_num_t) * (*pn_elt)[ipart]);
+      (*pelt_ln_to_gn)[ipart] = _elt_ln_to_gn;
 
       int *_face_vtx;
       int *_face_vtx_idx;
@@ -539,7 +527,7 @@ _gen_mesh
                                           PDM_CONNECTIVITY_TYPE_FACE_VTX,
                                           &_face_vtx,
                                           &_face_vtx_idx,
-                                          PDM_OWNERSHIP_USER);
+                                          PDM_OWNERSHIP_KEEP);
 
       int *_face_edge;
       int *_face_edge_idx;
@@ -549,7 +537,7 @@ _gen_mesh
                                           PDM_CONNECTIVITY_TYPE_CELL_FACE,
                                           &_face_edge,
                                           &_face_edge_idx,
-                                          PDM_OWNERSHIP_USER);
+                                          PDM_OWNERSHIP_KEEP);
 
       pface_edge_idx[ipart] = _face_edge_idx;
       pface_edge    [ipart] = _face_edge;
@@ -564,7 +552,7 @@ _gen_mesh
                                                          PDM_CONNECTIVITY_TYPE_FACE_VTX,
                                                          &_edge_vtx,
                                                          &_edge_vtx_idx,
-                                                         PDM_OWNERSHIP_USER);
+                                                         PDM_OWNERSHIP_KEEP);
         pn_edge[ipart] = n_edge;
         pedge_vtx_idx[ipart] = _edge_vtx_idx;
         pedge_vtx    [ipart] = _edge_vtx;
@@ -650,15 +638,14 @@ _gen_mesh
                                                          entity_type,
                                                          &_elt_ln_to_gn,
                                                          PDM_OWNERSHIP_USER);
-      (*pelt_ln_to_gn)[ipart] = malloc(sizeof(PDM_g_num_t) * (*pn_elt)[ipart]);
-      memcpy((*pelt_ln_to_gn)[ipart], _elt_ln_to_gn, sizeof(PDM_g_num_t) * (*pn_elt)[ipart]);
+      (*pelt_ln_to_gn)[ipart] = _elt_ln_to_gn;
 
       (*pn_vtx)[ipart] = PDM_multipart_part_ln_to_gn_get(mpart,
                                                          0,
                                                          ipart,
                                                          PDM_MESH_ENTITY_VERTEX,
                                                          &pvtx_ln_to_gn[ipart],
-                                                         PDM_OWNERSHIP_USER);
+                                                         PDM_OWNERSHIP_KEEP);
 
       double *_vtx_coord;
       PDM_multipart_part_vtx_coord_get(mpart,
@@ -666,8 +653,7 @@ _gen_mesh
                                        ipart,
                                        &_vtx_coord,
                                        PDM_OWNERSHIP_USER);
-      (*pvtx_coord)[ipart] = malloc(sizeof(double) * (*pn_vtx)[ipart] * 3);
-      memcpy((*pvtx_coord)[ipart], _vtx_coord, sizeof(double) * (*pn_vtx)[ipart] * 3);
+      (*pvtx_coord)[ipart] = _vtx_coord;
     }
 
 
