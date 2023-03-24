@@ -4345,46 +4345,6 @@ const int                   i_part,
   return pn_entity;
 }
 
-// void
-// PDM_multipart_part_graph_comm_vtx_data_get
-// (
-// PDM_multipart_t     *multipart,
-// const int            i_zone,
-// const int            i_part,
-//       int          **vtx_part_bound_proc_idx,
-//       int          **vtx_part_bound_part_idx,
-//       int          **vtx_part_bound
-// )
-// {
-//   assert(i_zone < multipart->n_zone && i_part < multipart->n_part[i_zone]);
-//   _part_mesh_t _pmeshes = multipart->pmeshes[i_zone];
-
-//   *vtx_part_bound_proc_idx = _pmeshes.parts[i_part]->vtx_part_bound_proc_idx;
-//   *vtx_part_bound_part_idx = _pmeshes.parts[i_part]->vtx_part_bound_part_idx;
-//   *vtx_part_bound          = _pmeshes.parts[i_part]->vtx_part_bound;
-// }
-
-// void
-// PDM_multipart_part_graph_comm_edge_data_get
-// (
-// PDM_multipart_t     *multipart,
-// const int            i_zone,
-// const int            i_part,
-//       int          **edge_part_bound_proc_idx,
-//       int          **edge_part_bound_part_idx,
-//       int          **edge_part_bound
-// )
-// {
-//   assert(i_zone < multipart->n_zone && i_part < multipart->n_part[i_zone]);
-//   _part_mesh_t _pmeshes = multipart->pmeshes[i_zone];
-
-//   *edge_part_bound_proc_idx = _pmeshes.parts[i_part]->edge_part_bound_proc_idx;
-//   *edge_part_bound_part_idx = _pmeshes.parts[i_part]->edge_part_bound_part_idx;
-//   *edge_part_bound          = _pmeshes.parts[i_part]->edge_part_bound;
-// }
-
-
-
 void
 PDM_multipart_part_color_get
 (
@@ -4474,7 +4434,6 @@ PDM_multipart_free
  PDM_multipart_t *multipart
 )
 {
-
   // free(multipart->dmeshes_ids);
   for (int i_zone = 0; i_zone < multipart->n_zone; i_zone++) {
     if (multipart->pmeshes[i_zone].joins_ids != NULL) {
@@ -4567,26 +4526,6 @@ void PDM_multipart_bound_get
                                  bound,
                                  bound_ln_to_gn,
                                  ownership);
-
-  // switch (bound_type) {
-  //   case PDM_BOUND_TYPE_EDGE:
-  //   *n_bound        = _pmeshes.parts[i_part]->n_edge_group;
-  //   *bound_idx      = _pmeshes.parts[i_part]->edge_bound_idx;
-  //   *bound          = _pmeshes.parts[i_part]->edge_bound;
-  //   *bound_ln_to_gn = _pmeshes.parts[i_part]->edge_bound_ln_to_gn;
-  //   break;
-
-  //   case PDM_BOUND_TYPE_FACE:
-  //   *n_bound        = _pmeshes.parts[i_part]->n_face_group;
-  //   *bound_idx      = _pmeshes.parts[i_part]->face_bound_idx;
-  //   *bound          = _pmeshes.parts[i_part]->face_bound;
-  //   *bound_ln_to_gn = _pmeshes.parts[i_part]->face_bound_ln_to_gn;
-  //   break;
-
-  //   default:
-  //   PDM_error(__FILE__, __LINE__, 0,
-  //             "PDM_multipart_bound_get : Wrong bound_type %d\n", (int) bound_type);
-  // }
 }
 
 void

@@ -641,7 +641,7 @@ char *argv[]
                                                     ipart,
                                                     PDM_MESH_ENTITY_FACE,
                                                     &elt_a_ln_to_gn,
-                                                    PDM_OWNERSHIP_USER);
+                                                    PDM_OWNERSHIP_KEEP);
 
       pelt_a_elt_b_n[ipart] = malloc(sizeof(int) * n_elt_a);
       for (int i = 0; i < n_elt_a; i++) {
@@ -683,7 +683,7 @@ char *argv[]
                                       ipart,
                                       PDM_MESH_ENTITY_FACE,
                                       &elt_b_ln_to_gn,
-                                      PDM_OWNERSHIP_USER);
+                                      PDM_OWNERSHIP_KEEP);
 
       double *volume = NULL;
       if (!nodal_b) { // en attendant le calcul des volumes en nodal...

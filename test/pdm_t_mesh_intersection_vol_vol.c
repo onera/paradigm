@@ -1195,7 +1195,7 @@ main
                                                     ipart,
                                                     PDM_MESH_ENTITY_CELL,
                                                     &elt_a_ln_to_gn,
-                                                    PDM_OWNERSHIP_USER);
+                                                    PDM_OWNERSHIP_KEEP);
 
       pelt_a_elt_b_n[ipart] = malloc(sizeof(int) * n_elt_a);
       for (int i = 0; i < n_elt_a; i++) {
@@ -1239,7 +1239,7 @@ main
                                       ipart,
                                       PDM_MESH_ENTITY_CELL,
                                       &elt_b_ln_to_gn,
-                                      PDM_OWNERSHIP_USER);
+                                      PDM_OWNERSHIP_KEEP);
 
 
       for (int i = 0; i < n_ref_b[ipart]; i++) {
