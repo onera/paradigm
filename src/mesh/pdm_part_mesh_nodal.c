@@ -69,11 +69,15 @@ _vtx_free
       _vtx_free (vtx->parent);
     }
 
-    if (vtx->coords != NULL) {
-      free (vtx->coords);
-      vtx->coords = NULL;
+    if (vtx->_coords != NULL) {
+      free (vtx->_coords);
+      vtx->_coords = NULL;
     }
 
+    if (vtx->_numabs != NULL) {
+      free (vtx->_numabs);
+      vtx->_numabs = NULL;
+    }
   }
 }
 
@@ -1056,11 +1060,11 @@ PDM_part_mesh_nodal_free
   }
 
   if (pmn->vtx != NULL) {
-    for (int i = 0; i < pmn->n_part; i++) {
-      if(pmn->vtx[i]->owner == PDM_OWNERSHIP_KEEP){
-        _vtx_free (pmn->vtx[i]);
+    for (int i_part = 0; i_part < pmn->n_part; i_part++) {
+      if(pmn->vtx[i_part]->owner == PDM_OWNERSHIP_KEEP){
+        _vtx_free (pmn->vtx[i_part]);
       }
-      free(pmn->vtx[i]);
+      free(pmn->vtx[i_part]);
     }
 
     free(pmn->vtx);

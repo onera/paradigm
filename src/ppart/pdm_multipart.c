@@ -1069,13 +1069,6 @@ _compute_part_mesh_nodal_3d
     PDM_part_mesh_vtx_coord_get(pm->pmesh,
                                 i_part,
                                 &pvtx_coord[i_part], PDM_OWNERSHIP_BAD_VALUE);
-
-    // pcell_ln_to_gn[i_part] = pm->parts[i_part]->cell_ln_to_gn;
-    // pn_cell       [i_part] = pm->parts[i_part]->n_cell;
-
-    // pvtx_ln_to_gn[i_part] = pm->parts[i_part]->vtx_ln_to_gn;
-    // pn_vtx       [i_part] = pm->parts[i_part]->n_vtx;
-    // pvtx_coord   [i_part] = pm->parts[i_part]->vtx;
   }
 
   PDM_part_mesh_nodal_elmts_t* pmn_vol = PDM_dmesh_nodal_elmts_to_part_mesh_nodal_elmts(dmn->volumic,
@@ -1231,12 +1224,22 @@ _compute_part_mesh_nodal_3d
     PDM_part_mesh_nodal_add_part_mesh_nodal_elmts(pmn, pmn_corner, ownership);
   }
   for(int i_part = 0; i_part < n_part; ++i_part) {
+
+    // Copy coordinates because ownership between part_mesh and part_mesh_nodal is complicated
+    double      *lvtx_coords   = (double      *) malloc(3 * pn_vtx[i_part] * sizeof(double     ));
+    PDM_g_num_t *lvtx_ln_to_gn = (PDM_g_num_t *) malloc(3 * pn_vtx[i_part] * sizeof(PDM_g_num_t));
+    for(int i_vtx = 0; i_vtx < 3 * pn_vtx[i_part]; ++i_vtx) {
+      lvtx_coords[i_vtx] = pvtx_coord[i_part][i_vtx];
+    }
+    for(int i_vtx = 0; i_vtx < pn_vtx[i_part]; ++i_vtx) {
+      lvtx_ln_to_gn[i_vtx] = pvtx_ln_to_gn[i_part][i_vtx];
+    }
     PDM_part_mesh_nodal_coord_set(pmn,
                                   i_part,
                                   pn_vtx[i_part],
-                                  pvtx_coord[i_part],
-                                  pvtx_ln_to_gn[i_part],
-                                  PDM_OWNERSHIP_USER);
+                                  lvtx_coords,
+                                  lvtx_ln_to_gn,
+                                  PDM_OWNERSHIP_KEEP);
   }
 
   free(pcell_ln_to_gn);
@@ -1350,12 +1353,22 @@ _compute_part_mesh_nodal_2d
   // TO DO : corners?
 
   for(int i_part = 0; i_part < n_part; ++i_part) {
+    // Copy coordinates because ownership between part_mesh and part_mesh_nodal is complicated
+    double      *lvtx_coords   = (double      *) malloc(3 * pn_vtx[i_part] * sizeof(double     ));
+    PDM_g_num_t *lvtx_ln_to_gn = (PDM_g_num_t *) malloc(    pn_vtx[i_part] * sizeof(PDM_g_num_t));
+    for(int i_vtx = 0; i_vtx < 3 * pn_vtx[i_part]; ++i_vtx) {
+      lvtx_coords[i_vtx] = pvtx_coord[i_part][i_vtx];
+    }
+    for(int i_vtx = 0; i_vtx < pn_vtx[i_part]; ++i_vtx) {
+      lvtx_ln_to_gn[i_vtx] = pvtx_ln_to_gn[i_part][i_vtx];
+    }
     PDM_part_mesh_nodal_coord_set(pmn,
                                   i_part,
                                   pn_vtx[i_part],
-                                  pvtx_coord[i_part],
-                                  pvtx_ln_to_gn[i_part],
-                                  PDM_OWNERSHIP_USER);
+                                  lvtx_coords,
+                                  lvtx_ln_to_gn,
+                                  PDM_OWNERSHIP_KEEP);
+    // free(lvtx_ln_to_gn);
   }
 
   free(pedge_ln_to_gn);
@@ -2058,10 +2071,7 @@ PDM_MPI_Comm       comm
 
 
   // Fill _part_t structures with temporary arrays
-  // pmeshes->parts = (_part_t **) malloc(n_part * sizeof(_part_t*));
   for (int i_part = 0; i_part < n_part; i_part++) {
-    // pmeshes->parts[i_part] = _part_create();
-
     if(pn_cell != NULL) {
 
       PDM_part_mesh_n_entity_set(pmeshes->pmesh, i_part, PDM_MESH_ENTITY_CELL, pn_cell[i_part]);
@@ -2076,20 +2086,10 @@ PDM_MPI_Comm       comm
                                         PDM_MESH_ENTITY_CELL,
                                         pcell_ln_to_gn[i_part],
                                         PDM_OWNERSHIP_KEEP);
-
-      // pmeshes->parts[i_part]->n_cell        = pn_cell       [i_part];
-      // pmeshes->parts[i_part]->cell_ln_to_gn = pcell_ln_to_gn[i_part];
-      // pmeshes->parts[i_part]->cell_face_idx = pcell_face_idx[i_part];
-      // pmeshes->parts[i_part]->cell_face     = pcell_face    [i_part];
       // PDM_log_trace_array_long(pcell_ln_to_gn[i_part], pn_cell       [i_part]             , "(in part ) cell_ln_to_gn ::");
       // PDM_log_trace_array_int (pcell_face_idx[i_part], pn_cell[i_part]+1             , "(in part ) cell_face_idx ::");
       // PDM_log_trace_array_int (pcell_face    [i_part], pcell_face_idx[i_part][pn_cell[i_part]], "(in part ) cell_face ::");
     }
-    // else {
-    //   pmeshes->parts[i_part]->n_cell        = 0;
-    //   pmeshes->parts[i_part]->cell_ln_to_gn = NULL;
-    // }
-
   }
 
   // face edge
@@ -3873,7 +3873,6 @@ PDM_ownership_t         ownership
 {
   assert(i_zone < multipart->n_zone);
 
-
   _part_mesh_t      *pmesh       = &(multipart->pmeshes    [i_zone]);
   PDM_dmesh_nodal_t *dmesh_nodal = multipart->dmeshes_nodal[i_zone];
   if (dmesh_nodal == NULL) {
@@ -4247,8 +4246,6 @@ const int                       i_part,
   return pn_entity;
 }
 
-
-
 /**
  *
  * \brief Returns the data arrays of a given partition
@@ -4264,7 +4261,6 @@ const int                   i_part,
       PDM_ownership_t       ownership
 )
 {
-  PDM_UNUSED(ownership);
   assert(i_zone < multipart->n_zone && i_part < multipart->n_part[i_zone]);
 
   _part_mesh_t _pmeshes = multipart->pmeshes[i_zone];

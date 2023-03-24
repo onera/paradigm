@@ -268,18 +268,20 @@ int main(int argc, char *argv[])
 
   free(n_part_zones);
 
-  // PDM_part_mesh_nodal_t* pmsh_nodal = NULL;
-  // PDM_multipart_get_part_mesh_nodal(mpart, 0, &pmsh_nodal, PDM_OWNERSHIP_KEEP); // Ownership keep is mandatory in C
+  PDM_part_mesh_nodal_t* pmsh_nodal = NULL;
+  PDM_multipart_get_part_mesh_nodal(mpart, 0, &pmsh_nodal, PDM_OWNERSHIP_KEEP); // Ownership keep is mandatory in C
 
-  // if (post) {
-  //   PDM_part_mesh_nodal_dump_vtk(pmsh_nodal, PDM_GEOMETRY_KIND_VOLUMIC , "volumic_ho_" );
-  //   PDM_part_mesh_nodal_dump_vtk(pmsh_nodal, PDM_GEOMETRY_KIND_SURFACIC, "surfacic_ho_");
-  //   PDM_part_mesh_nodal_dump_vtk(pmsh_nodal, PDM_GEOMETRY_KIND_RIDGE   , "ridge_ho_"   );
-  // }
-  // PDM_part_mesh_nodal_free(pmsh_nodal);
+  PDM_multipart_free(mpart);
+
+
+  if (post) {
+    // PDM_part_mesh_nodal_dump_vtk(pmsh_nodal, PDM_GEOMETRY_KIND_VOLUMIC , "volumic_ho_" );
+    PDM_part_mesh_nodal_dump_vtk(pmsh_nodal, PDM_GEOMETRY_KIND_SURFACIC, "surfacic_ho_");
+    PDM_part_mesh_nodal_dump_vtk(pmsh_nodal, PDM_GEOMETRY_KIND_RIDGE   , "ridge_ho_"   );
+  }
+  PDM_part_mesh_nodal_free(pmsh_nodal);
 
   gettimeofday(&t_elaps_debut, NULL);
-  PDM_multipart_free(mpart);
   PDM_dcube_nodal_gen_free(dcube);
 
   PDM_MPI_Finalize();
