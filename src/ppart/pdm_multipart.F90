@@ -62,10 +62,6 @@ module pdm_multipart
     PDM_multipart_part_dim_get_
   end interface
 
-  interface PDM_multipart_part_graph_comm_vtx_dim_get ; module procedure  &
-    PDM_multipart_part_graph_comm_vtx_dim_get_
-  end interface
-
   interface PDM_multipart_part_val_get ; module procedure  &
     PDM_multipart_part_val_get_
   end interface
@@ -866,7 +862,6 @@ private :: PDM_multipart_create_,&
            PDM_multipart_dconnectivity_set_,&
            PDM_multipart_dvtx_coord_set_,&
            PDM_multipart_part_dim_get_,&
-           PDM_multipart_part_graph_comm_vtx_dim_get_,&
            PDM_multipart_part_val_get_,&
            PDM_multipart_part_connectivity_get_,&
            PDM_multipart_part_ln_to_gn_get_,&
