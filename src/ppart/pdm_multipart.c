@@ -1487,10 +1487,16 @@ PDM_multipart_create
     multipart->pmeshes[izone].joins_ids = NULL;
     multipart->pmeshes[izone].pmesh     = PDM_part_mesh_create(n_part[izone], comm);
     multipart->pmeshes[izone].vtx_ghost_information = malloc(n_part[izone] * sizeof(int *));
+    multipart->pmeshes[izone].hyperplane_color      = malloc(n_part[izone] * sizeof(int *));
+    multipart->pmeshes[izone].thread_color          = malloc(n_part[izone] * sizeof(int *));
     for(int i_part = 0; i_part < n_part[izone]; ++i_part) {
       multipart->pmeshes[izone].vtx_ghost_information[i_part] = NULL;
+      multipart->pmeshes[izone].hyperplane_color     [i_part] = NULL;
+      multipart->pmeshes[izone].thread_color         [i_part] = NULL;
     }
     multipart->pmeshes[izone].is_owner_vtx_ghost_information = PDM_TRUE;
+    multipart->pmeshes[izone].is_owner_hyperplane_color      = PDM_TRUE;
+    multipart->pmeshes[izone].is_owner_thread_color          = PDM_TRUE;
   }
 
   return (PDM_multipart_t *) multipart;
@@ -2254,6 +2260,9 @@ PDM_MPI_Comm       comm
                                      parts[i_part]->vtx_color,
                                      PDM_OWNERSHIP_KEEP);
     }
+
+    pmeshes->hyperplane_color[i_part] = parts[i_part]->hyperplane_color;
+    pmeshes->thread_color    [i_part] = parts[i_part]->thread_color;
 
     _part_free(parts[i_part]);
   }
@@ -4156,38 +4165,45 @@ const int                   i_part,
 }
 
 void
-PDM_multipart_part_color_get
+PDM_multipart_part_hyperplane_color_get
 (
-PDM_multipart_t     *multipart,
-const int            i_zone,
-const int            i_part,
-      int          **cell_color,
-      int          **face_color,
-      int          **face_hp_color,
-      int          **thread_color,
-      int          **hyperplane_color
+PDM_multipart_t        *multipart,
+const int               i_zone,
+const int               i_part,
+      int             **hyperplane_color,
+      PDM_ownership_t   ownership
 )
 {
+  assert(i_zone < multipart->n_zone && i_part < multipart->n_part[i_zone]);
+  _part_mesh_t* _pmeshes = (&multipart->pmeshes[i_zone]);
 
-  PDM_UNUSED(multipart);
-  PDM_UNUSED(i_zone);
-  PDM_UNUSED(i_part);
-  PDM_UNUSED(cell_color);
-  PDM_UNUSED(face_color);
-  PDM_UNUSED(face_hp_color);
-  PDM_UNUSED(thread_color);
-  PDM_UNUSED(hyperplane_color);
+  *hyperplane_color = _pmeshes->hyperplane_color[i_part];
+    if(ownership == PDM_OWNERSHIP_USER || ownership == PDM_OWNERSHIP_UNGET_RESULT_IS_FREE) {
+    multipart->pmeshes[i_zone].is_owner_hyperplane_color = PDM_FALSE;
+  } else {
+    multipart->pmeshes[i_zone].is_owner_hyperplane_color = PDM_TRUE;
+  }
+}
 
+void
+PDM_multipart_part_thread_color_get
+(
+PDM_multipart_t        *multipart,
+const int               i_zone,
+const int               i_part,
+      int             **thread_color,
+      PDM_ownership_t   ownership
+)
+{
+  assert(i_zone < multipart->n_zone && i_part < multipart->n_part[i_zone]);
+  _part_mesh_t* _pmeshes = (&multipart->pmeshes[i_zone]);
 
-  abort();
-  // assert(i_zone < multipart->n_zone && i_part < multipart->n_part[i_zone]);
-  // _part_mesh_t _pmeshes = multipart->pmeshes[i_zone];
-  // *cell_color       = PDM_multipart_partition_color_get()
-  // *face_color       = NULL; // _pmeshes.parts[i_part]->face_color;
-  // *face_hp_color    = NULL; // _pmeshes.parts[i_part]->face_hp_color;
-  // *thread_color     = NULL; // _pmeshes.parts[i_part]->thread_color;
-  // *hyperplane_color = NULL; // _pmeshes.parts[i_part]->hyperplane_color;
-
+  *thread_color = _pmeshes->thread_color[i_part];
+    if(ownership == PDM_OWNERSHIP_USER || ownership == PDM_OWNERSHIP_UNGET_RESULT_IS_FREE) {
+    multipart->pmeshes[i_zone].is_owner_thread_color = PDM_FALSE;
+  } else {
+    multipart->pmeshes[i_zone].is_owner_thread_color = PDM_TRUE;
+  }
 }
 
 void
@@ -4273,8 +4289,22 @@ PDM_multipart_free
           free(multipart->pmeshes[i_zone].vtx_ghost_information[i_part]);
         }
       }
+
+      if(multipart->pmeshes[i_zone].hyperplane_color[i_part] != NULL) {
+        if(multipart->pmeshes[i_zone].is_owner_hyperplane_color == PDM_TRUE) {
+          free(multipart->pmeshes[i_zone].hyperplane_color[i_part]);
+        }
+      }
+
+      if(multipart->pmeshes[i_zone].thread_color[i_part] != NULL) {
+        if(multipart->pmeshes[i_zone].is_owner_thread_color == PDM_TRUE) {
+          free(multipart->pmeshes[i_zone].thread_color[i_part]);
+        }
+      }
     }
     free(multipart->pmeshes[i_zone].vtx_ghost_information);
+    free(multipart->pmeshes[i_zone].hyperplane_color);
+    free(multipart->pmeshes[i_zone].thread_color);
 
     // if (multipart->pmeshes[i_zone].parts != NULL) {
     //   for (int ipart = 0; ipart < multipart->n_part[i_zone]; ipart++) {

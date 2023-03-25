@@ -116,16 +116,18 @@ cdef extern from "pdm_multipart.h":
                                            int               **ppart_bound_part_idx,
                                            int               **ppart_bound,
                                            PDM_ownership_t     ownership);
-
     # ------------------------------------------------------------------
-    void PDM_multipart_part_color_get(PDM_multipart_t   *mtp,
-                                      int                zone_gid,
-                                      int                ipart,
-                                      int              **cell_color,
-                                      int              **face_color,
-                                      int              **face_hp_color,
-                                      int              **thread_color,
-                                      int              **hyper_plane_color)
+    void PDM_multipart_part_hyperplane_color_get(PDM_multipart_t  *multipart,
+                                                 int               i_zone,
+                                                 int               i_part,
+                                                 int             **hyperplane_color,
+                                                 PDM_ownership_t   ownership);
+    # ------------------------------------------------------------------
+    void PDM_multipart_part_thread_color_get(PDM_multipart_t  *multipart,
+                                                 int               i_zone,
+                                                 int               i_part,
+                                                 int             **thread_color,
+                                                 PDM_ownership_t   ownership);
 
     # ------------------------------------------------------------------
     void PDM_multipart_part_ghost_infomation_get(PDM_multipart_t *mtp,
@@ -168,6 +170,12 @@ cdef extern from "pdm_multipart.h":
                                 double              **cpu,
                                 double              **cpu_user,
                                 double              **cpu_sys)
+
+    # ------------------------------------------------------------------
+    int PDM_multipart_part_n_entity_get(PDM_multipart_t      *multipart,
+                                        int                   i_zone,
+                                        int                   i_part,
+                                        PDM_mesh_entities_t   entity_type)
     # ------------------------------------------------------------------
     void PDM_multipart_free(PDM_multipart_t      *mtp)
 
@@ -715,94 +723,58 @@ cdef class MultiPart:
           return PartMeshNodalCaspule(py_caps)
 
     # ------------------------------------------------------------------
-    def multipart_color_get(self, int ipart, int zone_gid):
+    def multipart_hyper_plane_color_get(self, int ipart, int zone_gid):
         """
            Get partition dimensions
         """
         # ************************************************************************
         # > Declaration
-        cdef int          *cell_color,
-        cdef int          *face_color
-        cdef int          *face_hp_color
-        cdef int          *thread_color
+        cdef int           n_cell
         cdef int          *hyper_plane_color
         # ************************************************************************
 
-        # dims = self.part_dim_get(self._mtp, ipart)
-        dims = self.multipart_dim_get(ipart, zone_gid)
-
-        # -> Call PPART to get info
-        PDM_multipart_part_color_get(self._mtp,
-                                     zone_gid,
-                                     ipart,
-                                     &cell_color,
-                                     &face_color,
-                                     &face_hp_color,
-                                     &thread_color,
-                                     &hyper_plane_color)
-        # -> Begin
-        cdef NPY.npy_intp dim
-
-        # \param [out]  cell_color            Cell tag (size = n_cell)
-        if (cell_color == NULL):
-            np_cell_color = None
-        else :
-            dim = <NPY.npy_intp> dims['n_cell']
-            np_cell_color = NPY.PyArray_SimpleNewFromData(1,
-                                                        &dim,
-                                                        NPY.NPY_INT32,
-                                                        <void *> cell_color)
-            PyArray_ENABLEFLAGS(np_cell_color, NPY.NPY_OWNDATA);
-
-        # \param [out]  face_color            Cell tag (size = n_face)
-        if (face_color == NULL):
-            np_face_color = None
-        else :
-            dim = <NPY.npy_intp> dims['n_face']
-            np_face_color = NPY.PyArray_SimpleNewFromData(1,
-                                                        &dim,
-                                                        NPY.NPY_INT32,
-                                                        <void *> face_color)
-            PyArray_ENABLEFLAGS(np_face_color, NPY.NPY_OWNDATA);
-
-        # \param [out]  face_hp_color            Cell tag (size = n_face)
-        if (face_hp_color == NULL):
-            np_face_hp_color = None
-        else :
-            dim = <NPY.npy_intp> dims['n_face']
-            np_face_hp_color = NPY.PyArray_SimpleNewFromData(1,
-                                                        &dim,
-                                                        NPY.NPY_INT32,
-                                                        <void *> face_hp_color)
-            PyArray_ENABLEFLAGS(np_face_hp_color, NPY.NPY_OWNDATA);
-
-        # \param [out]  thread_color            Cell tag (size = n_cell)
-        if (thread_color == NULL):
-            np_thread_color = None
-        else :
-            dim = <NPY.npy_intp> dims['n_cell']
-            np_thread_color = NPY.PyArray_SimpleNewFromData(1,
-                                                          &dim,
-                                                          NPY.NPY_INT32,
-                                                          <void *> thread_color)
-            PyArray_ENABLEFLAGS(np_thread_color, NPY.NPY_OWNDATA);
+        n_cell = PDM_multipart_part_n_entity_get(self._mtp, zone_gid, ipart, PDM_MESH_ENTITY_CELL)
+        PDM_multipart_part_hyperplane_color_get(self._mtp, zone_gid, ipart, &hyper_plane_color, PDM_OWNERSHIP_USER);
 
         # \param [out]  hyper_plane_color            Cell tag (size = n_cell)
         if (hyper_plane_color == NULL):
             np_hyper_plane_color = None
         else :
-            dim = <NPY.npy_intp> dims['n_cell']
+            dim = <NPY.npy_intp> n_cell
             np_hyper_plane_color = NPY.PyArray_SimpleNewFromData(1,
                                                               &dim,
                                                               NPY.NPY_INT32,
                                                               <void *> hyper_plane_color)
             PyArray_ENABLEFLAGS(np_hyper_plane_color, NPY.NPY_OWNDATA);
 
-        return {'np_cell_color'        : np_cell_color,
-                'np_face_color'        : np_face_color,
-                'np_face_hp_color'     : np_face_hp_color,
-                'np_thread_color'      : np_thread_color,
-                'np_hyper_plane_color' : np_hyper_plane_color}
+        return {'np_hyper_plane_color' : np_hyper_plane_color}
+
+    # ------------------------------------------------------------------
+    def multipart_thread_color_get(self, int ipart, int zone_gid):
+        """
+           Get partition dimensions
+        """
+        # ************************************************************************
+        # > Declaration
+        cdef int           n_cell
+        cdef int          *thread_color
+        # ************************************************************************
+
+        n_cell = PDM_multipart_part_n_entity_get(self._mtp, zone_gid, ipart, PDM_MESH_ENTITY_CELL)
+        PDM_multipart_part_thread_color_get(self._mtp, zone_gid, ipart, &thread_color, PDM_OWNERSHIP_USER);
+
+        # \param [out]  thread_color            Cell tag (size = n_cell)
+        if (thread_color == NULL):
+            np_thread_color = None
+        else :
+            dim = <NPY.npy_intp> n_cell
+            np_thread_color = NPY.PyArray_SimpleNewFromData(1,
+                                                          &dim,
+                                                          NPY.NPY_INT32,
+                                                          <void *> thread_color)
+            PyArray_ENABLEFLAGS(np_thread_color, NPY.NPY_OWNDATA);
+
+        return {'np_thread_color' : np_thread_color}
 
 
     # ------------------------------------------------------------------

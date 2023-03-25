@@ -3565,14 +3565,28 @@ const  int      i_part,
   if (_ppart->use_multipart) {
     int i_zone = 0;
     int **face_hp_color = (int**)malloc(sizeof(int*));
-    PDM_multipart_part_color_get(ppart->multipart,
-                                 i_zone,
-                                 i_part,
-                                 cell_color,
-                                 face_color,
-                                 face_hp_color,
-                                 thread_color,
-                                 hyperplane_color);
+    PDM_multipart_partition_color_get(ppart->multipart,
+                                      i_zone,
+                                      i_part,
+                                      PDM_MESH_ENTITY_CELL,
+                                      cell_color,
+                                      PDM_OWNERSHIP_KEEP);
+    PDM_multipart_partition_color_get(ppart->multipart,
+                                      i_zone,
+                                      i_part,
+                                      PDM_MESH_ENTITY_FACE,
+                                      face_color,
+                                      PDM_OWNERSHIP_KEEP);
+    PDM_multipart_part_hyperplane_color_get(ppart->multipart,
+                                            i_zone,
+                                            i_part,
+                                            hyperplane_color,
+                                            PDM_OWNERSHIP_KEEP);
+    PDM_multipart_part_thread_color_get(ppart->multipart,
+                                        i_zone,
+                                        i_part,
+                                        thread_color,
+                                        PDM_OWNERSHIP_KEEP);
     free(face_hp_color);
   } else {
     _part_t *mesh_part = NULL;

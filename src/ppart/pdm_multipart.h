@@ -445,17 +445,25 @@ const int                   i_part,
 );
 
 void
-PDM_multipart_part_color_get
+PDM_multipart_part_hyperplane_color_get
 (
-PDM_multipart_t     *multipart,
-const int            i_zone,
-const int            i_part,
-      int          **cell_color,
-      int          **face_color,
-      int          **face_hp_color,
-      int          **thread_color,
-      int          **hyperplane_color
+PDM_multipart_t        *multipart,
+const int               i_zone,
+const int               i_part,
+      int             **hyperplane_color,
+      PDM_ownership_t   ownership
 );
+
+void
+PDM_multipart_part_thread_color_get
+(
+PDM_multipart_t        *multipart,
+const int               i_zone,
+const int               i_part,
+      int             **thread_color,
+      PDM_ownership_t   ownership
+);
+
 
 void
 PDM_multipart_part_ghost_infomation_get

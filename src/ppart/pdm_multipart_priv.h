@@ -57,6 +57,11 @@ typedef struct {
   int        **vtx_ghost_information;
   PDM_bool_t   is_owner_vtx_ghost_information;
 
+  int        **hyperplane_color;
+  int        **thread_color;
+  PDM_bool_t   is_owner_hyperplane_color;
+  PDM_bool_t   is_owner_thread_color;
+
 } _part_mesh_t;
 
 
