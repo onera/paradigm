@@ -549,8 +549,7 @@ PDM_part_mesh_bound_concat_compute
 (
  PDM_part_mesh_t          *pmesh,
  int                       i_part,
- PDM_bound_type_t          bound_type,
- PDM_ownership_t           ownership
+ PDM_bound_type_t          bound_type
 )
 {
   if(pmesh->is_compute_concat_bound[bound_type] == PDM_FALSE) {

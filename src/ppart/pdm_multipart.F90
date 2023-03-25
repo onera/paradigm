@@ -78,10 +78,6 @@ module pdm_multipart
     PDM_multipart_partition_color_get_
   end interface
 
-  interface PDM_multipart_part_color_get ; module procedure  &
-    PDM_multipart_part_color_get_
-  end interface
-
   interface PDM_multipart_part_ghost_infomation_get ; module procedure  &
     PDM_multipart_part_ghost_infomation_get_
   end interface
@@ -593,44 +589,6 @@ interface
 
   !>
   !!
-  !! \brief Get cache blocking data ??
-  !!
-  !! \param [in]   multipart               Pointer to \ref PDM_multipart_t object
-  !! \param [in]   i_zone                  Id of zone which parameters apply (or -1 for all zones)
-  !! \param [in]   i_part                  Partition index
-  !! \param [out]  cell_color              Cell->color connectivity
-  !! \param [out]  face_color              Face->color connectivity
-  !! \param [out]  face_hp_color           ??
-  !! \param [out]  thread_color            ??
-  !! \param [out]  hyperplane_color        ??
-  !!
-
-  subroutine PDM_multipart_part_color_get_c (multipart, &
-                                             i_zone, &
-                                             i_part, &
-                                             cell_color, &
-                                             face_color, &
-                                             face_hp_color, &
-                                             thread_color, &
-                                             hyperplane_color) &
-  bind (c, name='PDM_multipart_part_color_get')
-
-    use iso_c_binding
-    implicit none
-
-    type(c_ptr),    value  :: multipart
-    integer(c_int), value  :: i_zone
-    integer(c_int), value  :: i_part
-    type(c_ptr)            :: cell_color
-    type(c_ptr)            :: face_color
-    type(c_ptr)            :: face_hp_color
-    type(c_ptr)            :: thread_color
-    type(c_ptr)            :: hyperplane_color
-
-  end subroutine PDM_multipart_part_color_get_c
-
-  !>
-  !!
   !! \brief Get information of ghost vertices
   !!
   !! \param [in]   multipart               Pointer to \ref PDM_multipart_t object
@@ -866,7 +824,6 @@ private :: PDM_multipart_create_,&
            PDM_multipart_part_connectivity_get_,&
            PDM_multipart_part_ln_to_gn_get_,&
            PDM_multipart_partition_color_get_,&
-           PDM_multipart_part_color_get_,&
            PDM_multipart_part_ghost_infomation_get_,&
            PDM_multipart_part_vtx_coord_get_,&
            PDM_multipart_bound_get_
@@ -913,9 +870,11 @@ contains
     type(c_ptr)                        :: c_part_fraction  = C_NULL_PTR
     integer(c_int),            value   :: comm
     integer(c_int),            value   :: owner
+    integer(c_int)                     :: c_comm
 
     c_n_part        = c_loc(n_part)
     c_part_fraction = c_loc(part_fraction)
+    c_comm = PDM_MPI_Comm_f2c(comm)
 
     multipart = PDM_multipart_create_c(n_zone, &
                                        c_n_part, &
@@ -923,7 +882,7 @@ contains
                                        split_method, &
                                        part_size_method, &
                                        c_part_fraction, &
-                                       comm, &
+                                       c_comm, &
                                        owner)
 
   end subroutine PDM_multipart_create_
@@ -1815,121 +1774,6 @@ contains
                      [pn_entity])
 
   end subroutine PDM_multipart_partition_color_get_
-
-  !>
-  !!
-  !! \brief Get cache blocking data ??
-  !!
-  !! \param [in]   multipart               Pointer to \ref PDM_multipart_t object
-  !! \param [in]   i_zone                  Id of zone which parameters apply (or -1 for all zones)
-  !! \param [in]   i_part                  Partition index
-  !! \param [out]  cell_color              Cell->color connectivity
-  !! \param [out]  face_color              Face->color connectivity
-  !! \param [out]  face_hp_color           ??
-  !! \param [out]  thread_color            ??
-  !! \param [out]  hyperplane_color        ??
-  !!
-
-  subroutine PDM_multipart_part_color_get_(multipart, &
-                                           i_zone, &
-                                           i_part, &
-                                           cell_color, &
-                                           face_color, &
-                                           face_hp_color, &
-                                           thread_color, &
-                                           hyperplane_color)
-
-    use pdm
-    use iso_c_binding
-    implicit none
-
-    type(c_ptr),               value   :: multipart
-    integer(c_int),            value   :: i_zone
-    integer(c_int),            value   :: i_part
-    integer(kind=PDM_l_num_s), pointer :: cell_color(:)
-    type(c_ptr)                        :: c_cell_color = C_NULL_PTR
-    integer(kind=PDM_l_num_s), pointer :: face_color(:)
-    type(c_ptr)                        :: c_face_color = C_NULL_PTR
-    integer(kind=PDM_l_num_s), pointer :: face_hp_color(:)
-    type(c_ptr)                        :: c_face_hp_color = C_NULL_PTR
-    integer(kind=PDM_l_num_s), pointer :: thread_color(:)
-    type(c_ptr)                        :: c_thread_color = C_NULL_PTR
-    integer(kind=PDM_l_num_s), pointer :: hyperplane_color(:)
-    type(c_ptr)                        :: c_hyperplane_color = C_NULL_PTR
-
-    integer(c_int) :: c_n_section
-    integer(c_int) :: c_n_cell
-    integer(c_int) :: c_n_face
-    integer(c_int) :: c_n_face_part_bound
-    integer(c_int) :: c_n_vtx
-    integer(c_int) :: c_n_proc
-    integer(c_int) :: c_n_total_part
-    integer(c_int) :: c_s_cell_face
-    integer(c_int) :: c_s_face_vtx
-    integer(c_int) :: c_s_face_bound
-    integer(c_int) :: c_n_bound_groups
-    integer(c_int) :: c_s_face_join
-    integer(c_int) :: c_n_join_groups
-
-    integer (kind = PDM_l_num_s), pointer :: n_elt(:) => null()
-    type(c_ptr)                           :: c_n_elt
-
-    c_n_elt = c_loc(n_elt)
-
-    call PDM_multipart_part_dim_get_c(multipart, &
-                                      i_zone, &
-                                      i_part, &
-                                      c_n_section, &
-                                      c_n_elt, &
-                                      c_n_cell, &
-                                      c_n_face, &
-                                      c_n_face_part_bound, &
-                                      c_n_vtx, &
-                                      c_n_proc, &
-                                      c_n_total_part, &
-                                      c_s_cell_face, &
-                                      c_s_face_vtx, &
-                                      c_s_face_bound, &
-                                      c_n_bound_groups, &
-                                      c_s_face_join, &
-                                      c_n_join_groups)
-
-    c_cell_color       = c_loc(cell_color)
-    c_face_color       = c_loc(face_color)
-    c_face_hp_color    = c_loc(face_hp_color)
-    c_thread_color     = c_loc(thread_color)
-    c_hyperplane_color = c_loc(hyperplane_color)
-
-    call PDM_multipart_part_color_get_c(multipart, &
-                                        i_zone, &
-                                        i_part, &
-                                        c_cell_color, &
-                                        c_face_color, &
-                                        c_face_hp_color, &
-                                        c_thread_color, &
-                                        c_hyperplane_color)
-
-    call c_f_pointer(c_cell_color, &
-                     cell_color,   &
-                     [c_n_cell])
-
-    call c_f_pointer(c_face_color, &
-                     face_color,   &
-                     [c_n_face])
-
-    call c_f_pointer(c_face_hp_color, &
-                     face_hp_color,   &
-                     [c_n_face])
-
-    call c_f_pointer(c_thread_color, &
-                     thread_color,   &
-                     [c_n_cell])
-
-    call c_f_pointer(c_hyperplane_color, &
-                     hyperplane_color,   &
-                     [c_n_cell])
-
-  end subroutine PDM_multipart_part_color_get_
 
   !>
   !!
