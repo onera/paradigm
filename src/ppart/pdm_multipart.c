@@ -3712,8 +3712,6 @@ PDM_multipart_part_dim_get
 PDM_multipart_t *multipart,
 const int        i_zone,
 const int        i_part,
-      int       *n_section,
-      int      **n_elt,
       int       *n_cell,
       int       *n_face,
       int       *n_face_part_bound,
@@ -3723,9 +3721,7 @@ const int        i_part,
       int       *s_cell_face,
       int       *s_face_vtx,
       int       *s_face_bound,
-      int       *n_bound_groups,
-      int       *s_face_join,
-      int       *n_join_groups
+      int       *n_bound_groups
 )
 {
 
@@ -3739,69 +3735,50 @@ const int        i_part,
   PDM_MPI_Comm_size(multipart->comm, n_proc);
   *n_total_part = _pmeshes.tn_part;
 
-  *n_section = 0; // _pmeshes.parts[i_part]->n_section;
-  *n_elt     = 0; // _pmeshes.parts[i_part]->n_elt;
-  if (*n_section>0) {
-    *s_cell_face = -1;
-    *s_face_vtx  = -1;
+  *s_cell_face = 1;
 
-    *n_face_part_bound = -1;
+  int *cell_face     = NULL;
+  int *cell_face_idx = NULL;
+  PDM_part_mesh_connectivity_get(_pmeshes.pmesh,
+                                 i_part,
+                                 PDM_CONNECTIVITY_TYPE_CELL_FACE,
+                                 &cell_face,
+                                 &cell_face_idx,
+                                 PDM_OWNERSHIP_BAD_VALUE);
 
-    *n_join_groups  = -1;
-    *s_face_join    = -1;
+  int *face_vtx     = NULL;
+  int *face_vtx_idx = NULL;
+  PDM_part_mesh_connectivity_get(_pmeshes.pmesh,
+                                 i_part,
+                                 PDM_CONNECTIVITY_TYPE_FACE_VTX,
+                                 &face_vtx,
+                                 &face_vtx_idx,
+                                 PDM_OWNERSHIP_BAD_VALUE);
+
+  if(*n_cell > 0) {
+    *s_cell_face = cell_face_idx[*n_cell];
+  }
+  if(face_vtx_idx != NULL) {
+    *s_face_vtx  = face_vtx_idx[*n_face];
   } else {
-    *s_cell_face = 1;
+    *s_face_vtx  = 0;
+  }
 
-    int *cell_face     = NULL;
-    int *cell_face_idx = NULL;
-    PDM_part_mesh_connectivity_get(_pmeshes.pmesh,
-                                   i_part,
-                                   PDM_CONNECTIVITY_TYPE_CELL_FACE,
-                                   &cell_face,
-                                   &cell_face_idx,
-                                   PDM_OWNERSHIP_BAD_VALUE);
-
-    int *face_vtx     = NULL;
-    int *face_vtx_idx = NULL;
-    PDM_part_mesh_connectivity_get(_pmeshes.pmesh,
-                                   i_part,
-                                   PDM_CONNECTIVITY_TYPE_FACE_VTX,
-                                   &face_vtx,
-                                   &face_vtx_idx,
-                                   PDM_OWNERSHIP_BAD_VALUE);
-
-    if(*n_cell > 0) {
-      *s_cell_face = cell_face_idx[*n_cell];
-    }
-    if(face_vtx_idx != NULL) {
-      *s_face_vtx  = face_vtx_idx[*n_face];
-    } else {
-      *s_face_vtx  = 0;
-    }
-
-    int                     *face_part_bound_proc_idx;
-    int                     *face_part_bound_part_idx;
-    int                     *face_part_bound;
-    PDM_part_mesh_part_graph_comm_get(_pmeshes.pmesh,
-                                      i_part,
-                                      PDM_BOUND_TYPE_FACE,
-                                      &face_part_bound_proc_idx,
-                                      &face_part_bound_part_idx,
-                                      &face_part_bound,
-                                      PDM_OWNERSHIP_BAD_VALUE);
+  int                     *face_part_bound_proc_idx;
+  int                     *face_part_bound_part_idx;
+  int                     *face_part_bound;
+  PDM_part_mesh_part_graph_comm_get(_pmeshes.pmesh,
+                                    i_part,
+                                    PDM_BOUND_TYPE_FACE,
+                                    &face_part_bound_proc_idx,
+                                    &face_part_bound_part_idx,
+                                    &face_part_bound,
+                                    PDM_OWNERSHIP_BAD_VALUE);
 
 
-    *n_face_part_bound = 0;
-    if(face_part_bound_part_idx != NULL) {
-      *n_face_part_bound = face_part_bound_part_idx[*n_total_part];
-    }
-
-    *n_join_groups  = 0; //_pmeshes.n_joins;
-    // if(_pmeshes.parts[i_part]->face_join_idx != NULL) {
-    //   *s_face_join    = _pmeshes.parts[i_part]->face_join_idx[*n_join_groups];
-    // } else {
-      *s_face_join    = 0;
-    // }
+  *n_face_part_bound = 0;
+  if(face_part_bound_part_idx != NULL) {
+    *n_face_part_bound = face_part_bound_part_idx[*n_total_part];
   }
   *n_bound_groups = PDM_part_mesh_n_bound_get(_pmeshes.pmesh, PDM_BOUND_TYPE_FACE);
 

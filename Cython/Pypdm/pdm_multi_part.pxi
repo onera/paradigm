@@ -50,8 +50,6 @@ cdef extern from "pdm_multipart.h":
     void PDM_multipart_part_dim_get(PDM_multipart_t  *mtp,
                                     int               zone_gid,
                                     int               ipart,
-                                    int              *n_section,
-                                    int             **n_elt,
                                     int              *n_cell,
                                     int              *n_face,
                                     int              *n_face_part_bound,
@@ -61,9 +59,7 @@ cdef extern from "pdm_multipart.h":
                                     int              *scell_face,
                                     int              *sface_vtx,
                                     int              *s_face_bound,
-                                    int              *n_face_bound,
-                                    int              *s_face_join,
-                                    int              *n_face_join)
+                                    int              *n_face_bound)
 
     # ------------------------------------------------------------------
     void PDM_multipart_part_val_get(PDM_multipart_t   *mtp,
@@ -302,18 +298,11 @@ cdef class MultiPart:
         cdef int s_face_vtx
         cdef int s_face_bound
         cdef int n_face_bound
-        cdef int s_face_join
-        cdef int n_face_join
-
-        cdef int *n_elt
-        cdef int n_section
         # ************************************************************************
 
         PDM_multipart_part_dim_get(self._mtp,
                                    zone_gid,
                                    ipart,
-                                   &n_section,
-                                   &n_elt,
                                    &n_cell,
                                    &n_face,
                                    &n_face_part_bound,
@@ -323,24 +312,9 @@ cdef class MultiPart:
                                    &scell_face,
                                    &s_face_vtx,
                                    &s_face_bound,
-                                   &n_face_bound,
-                                   &s_face_join,
-                                   &n_face_join)
-
-        cdef NPY.npy_intp dim
-        if (n_elt == NULL) :
-            np_n_elt = None
-        else :
-            dim = n_section
-            np_n_elt = NPY.PyArray_SimpleNewFromData(1,
-                                                     &dim,
-                                                     NPY.NPY_INT32,
-                                                     <void *> n_elt)
-            #PyArray_ENABLEFLAGS(np_n_elt, NPY.NPY_OWNDATA); # well it should be there if PDM_multipart_part_dim_get were to be called once
+                                   &n_face_bound)
 
         return {'n_cell'            : n_cell,
-                'n_section'         : n_section,
-                'n_elt'             : np_n_elt,
                 'ipart'             : ipart,
                 'n_face'            : n_face,
                 'nt_part'           : nt_part,
@@ -350,9 +324,7 @@ cdef class MultiPart:
                 'scell_face'        : scell_face,
                 's_face_vtx'        : s_face_vtx,
                 's_face_bound'      : s_face_bound,
-                'n_face_bound'      : n_face_bound,
-                's_face_join'       : s_face_join,
-                'n_face_join'       : n_face_join}
+                'n_face_bound'      : n_face_bound}
 
     # ------------------------------------------------------------------
     def multipart_val_get(self, int ipart, int zone_gid):

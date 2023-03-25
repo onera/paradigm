@@ -332,10 +332,10 @@ int main(int argc, char *argv[])
                                      &vtx,
                                      PDM_OWNERSHIP_KEEP);
 
-    int          pn_face_group     = 0;
-    int*         group_face_idx    = NULL;
-    int*         group_face        = NULL;
-    PDM_g_num_t* group_face_lngn   = NULL;
+    int          pn_face_group       = 0;
+    int*         group_face_idx      = NULL;
+    int*         group_face          = NULL;
+    PDM_g_num_t* group_face_ln_to_gn = NULL;
     PDM_multipart_bound_get(mpart,
                             0,
                             i_part,
@@ -343,7 +343,7 @@ int main(int argc, char *argv[])
                             &pn_face_group,
                             &group_face_idx,
                             &group_face,
-                            &group_face_lngn,
+                            &group_face_ln_to_gn,
                             PDM_OWNERSHIP_KEEP);
 
     pn_cell       [i_part] = n_cell;

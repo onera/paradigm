@@ -300,19 +300,6 @@ PDM_multipart_domain_interface_shared_set
   PDM_domain_interface_t *ditrf
 );
 
-
-/**
- *
- * \brief Construct the partitioned meshes on every zones
- *
- * \param [in]   multipart      Pointer to \ref PDM_multipart_t object
- */
-// void
-// PDM_multipart_vtx_graph_comm_compute
-// (
-//  const int id
-// );
-
 /**
  *
  * \brief Returns the dimensions of a given partition
@@ -323,8 +310,6 @@ PDM_multipart_part_dim_get
 PDM_multipart_t *multipart,
 const int        i_zone,
 const int        i_part,
-      int       *n_section,
-      int      **n_elt,
       int       *n_cell,
       int       *n_face,
       int       *n_face_part_bound,
@@ -334,9 +319,7 @@ const int        i_part,
       int       *s_cell_face,
       int       *s_face_vtx,
       int       *s_face_bound,
-      int       *n_bound_groups,
-      int       *s_face_join,
-      int       *n_join_groups
+      int       *n_bound_groups
 );
 
 

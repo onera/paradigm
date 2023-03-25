@@ -9,6 +9,7 @@
 #include <math.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <assert.h>
 
 /*----------------------------------------------------------------------------
  *  Local headers
@@ -2748,16 +2749,10 @@ _dim_get
 )
 {
   int  i_zone = 0;
-  int *n_elt  = NULL;
-  int  n_section;
-  int  s_face_join;
-  int  n_join_groups;
 
   PDM_multipart_part_dim_get(multipart,
                              i_zone,
                              i_part,
-                             &n_section,
-                             &n_elt,
                              n_cell,
                              n_face,
                              n_face_part_bound,
@@ -2767,9 +2762,7 @@ _dim_get
                              scell_face,
                              sface_vtx,
                              sface_group,
-                             n_face_group,
-                             &s_face_join,
-                             &n_join_groups);
+                             n_face_group);
 }
 
 static void
@@ -2798,40 +2791,82 @@ const  int         i_part,
 )
 {
   int           i_zone               = 0;
-  int         **elt_vtx_idx          = NULL;
-  int         **elt_vtx              = NULL;
-  PDM_g_num_t **elt_section_ln_to_gn = NULL;
-  int          *face_join_idx        = NULL;
-  int          *face_join            = NULL;
-  PDM_g_num_t  *face_join_ln_to_gn   = NULL;
 
-  PDM_multipart_part_val_get(multipart,
-                             i_zone,
-                             i_part,
-                             &elt_vtx_idx,
-                             &elt_vtx,
-                             &elt_section_ln_to_gn,
-                             cell_tag,
-                             cell_face_idx,
-                             cell_face,
-                             cell_ln_to_gn,
-                             face_tag,
-                             face_cell,
-                             face_vtx_idx,
-                             face_vtx,
-                             face_ln_to_gn,
-                             face_part_bound_proc_idx,
-                             face_part_bound_part_idx,
-                             face_part_bound,
-                             vtx_tag,
-                             vtx,
-                             vtx_ln_to_gn,
-                             face_group_idx,
-                             face_group,
-                             face_group_ln_to_gn,
-                             &face_join_idx,
-                             &face_join,
-                             &face_join_ln_to_gn);
+  *cell_tag = NULL;
+  *face_tag = NULL;
+  *vtx_tag  = NULL;
+
+  PDM_multipart_part_ln_to_gn_get(multipart,
+                                  i_zone,
+                                  i_part,
+                                  PDM_MESH_ENTITY_CELL,
+                                  cell_ln_to_gn,
+                                  PDM_OWNERSHIP_KEEP);
+
+  PDM_multipart_part_connectivity_get(multipart,
+                                      i_zone,
+                                      i_part,
+                                      PDM_CONNECTIVITY_TYPE_CELL_FACE,
+                                      cell_face,
+                                      cell_face_idx,
+                                      PDM_OWNERSHIP_KEEP);
+
+  int *face_cell_idx = NULL;
+  PDM_multipart_part_connectivity_get(multipart,
+                                      i_zone,
+                                      i_part,
+                                      PDM_CONNECTIVITY_TYPE_FACE_CELL,
+                                      face_cell,
+                                      &face_cell_idx,
+                                      PDM_OWNERSHIP_KEEP);
+  assert(face_cell_idx == NULL);
+
+  PDM_multipart_part_connectivity_get(multipart,
+                                      i_zone,
+                                      i_part,
+                                      PDM_CONNECTIVITY_TYPE_FACE_VTX,
+                                      face_vtx,
+                                      face_vtx_idx,
+                                      PDM_OWNERSHIP_KEEP);
+
+  PDM_multipart_part_ln_to_gn_get(multipart,
+                                  i_zone,
+                                  i_part,
+                                  PDM_MESH_ENTITY_FACE,
+                                  face_ln_to_gn,
+                                  PDM_OWNERSHIP_KEEP);
+
+  PDM_multipart_part_ln_to_gn_get(multipart,
+                                  i_zone,
+                                  i_part,
+                                  PDM_MESH_ENTITY_VERTEX,
+                                  vtx_ln_to_gn,
+                                  PDM_OWNERSHIP_KEEP);
+  int pn_face_group = 0;
+  PDM_multipart_bound_get(multipart,
+                          i_zone,
+                          i_part,
+                          PDM_BOUND_TYPE_FACE,
+                          &pn_face_group,
+                          face_group_idx,
+                          face_group,
+                          face_group_ln_to_gn,
+                          PDM_OWNERSHIP_KEEP);
+
+  PDM_multipart_part_graph_comm_get(multipart,
+                                    i_zone,
+                                    i_part,
+                                    PDM_BOUND_TYPE_FACE,
+                                    face_part_bound_proc_idx,
+                                    face_part_bound_part_idx,
+                                    face_part_bound,
+                                    PDM_OWNERSHIP_KEEP);
+  PDM_multipart_part_vtx_coord_get(multipart,
+                                   i_zone,
+                                   i_part,
+                                   vtx,
+                                   PDM_OWNERSHIP_KEEP);
+
 }
 
 /*=============================================================================
