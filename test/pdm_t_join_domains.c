@@ -604,7 +604,7 @@ int main
   for(int i = 0; i < n_domain; ++i) {
     n_part_by_domain[i] = n_part;
   }
-  PDM_multipart_t *mpart_id = PDM_multipart_create(n_domain,
+  PDM_multipart_t *mpart = PDM_multipart_create(n_domain,
                                                    n_part_by_domain,
                                                    PDM_FALSE,
                                                    method,
@@ -616,22 +616,22 @@ int main
   for (int i = 0; i < n_domain; i++) {
     dmn[i] = PDM_dcube_nodal_gen_dmesh_nodal_get(dcube[i]);
     PDM_dmesh_nodal_generate_distribution(dmn[i]);
-    PDM_multipart_register_dmesh_nodal(mpart_id, i, dmn[i]);
+    PDM_multipart_register_dmesh_nodal(mpart, i, dmn[i]);
   }
 
   // const int renum_properties_cell[6] = {1024, 0, 1, 64, 3, 1};
   // const int renum_properties_cell[6] = {12, 0, 1, 64, 3, 1};
   // const int renum_properties_cell[6] = {256, 0, 1, 64, 1, 1};
   // const int renum_properties_cell[6] = {16, 0, 1, 64, 1, 1};
-  // PDM_multipart_set_reordering_options(mpart_id, -1, "PDM_PART_RENUM_CELL_HPC",
+  // PDM_multipart_set_reordering_options(mpart, -1, "PDM_PART_RENUM_CELL_HPC",
   //                                           (void * ) renum_properties_cell,
   //                                                    "PDM_PART_RENUM_FACE_NONE");
-  PDM_multipart_set_reordering_options(mpart_id,
+  PDM_multipart_set_reordering_options(mpart,
                                        -1,
                                        "PDM_PART_RENUM_CELL_NONE",
                                        NULL,
                                        "PDM_PART_RENUM_FACE_NONE");
-  PDM_multipart_run_ppart(mpart_id);
+  PDM_multipart_run_ppart(mpart);
 
 
 
@@ -724,19 +724,19 @@ int main
     pvtx_ln_to_gn [i_dom] = (PDM_g_num_t **) malloc( n_part * sizeof(PDM_g_num_t *));
     pface_vtx     [i_dom] = (int         **) malloc( n_part * sizeof(int         *));
     for (int i_part = 0; i_part < pn_n_part[i_dom]; i_part++) {
-      pn_face[i_dom][i_part] = PDM_multipart_part_ln_to_gn_get(mpart_id,
+      pn_face[i_dom][i_part] = PDM_multipart_part_ln_to_gn_get(mpart,
                                                                i_dom,
                                                                i_part,
                                                                PDM_MESH_ENTITY_FACE,
                                                                &pface_ln_to_gn[i_dom][i_part],
                                                                PDM_OWNERSHIP_KEEP);
-      pn_edge[i_dom][i_part] = PDM_multipart_part_ln_to_gn_get(mpart_id,
+      pn_edge[i_dom][i_part] = PDM_multipart_part_ln_to_gn_get(mpart,
                                                                i_dom,
                                                                i_part,
                                                                PDM_MESH_ENTITY_EDGE,
                                                                &pedge_ln_to_gn[i_dom][i_part],
                                                                PDM_OWNERSHIP_KEEP);
-      pn_vtx[i_dom][i_part] = PDM_multipart_part_ln_to_gn_get(mpart_id,
+      pn_vtx[i_dom][i_part] = PDM_multipart_part_ln_to_gn_get(mpart,
                                                               i_dom,
                                                               i_part,
                                                               PDM_MESH_ENTITY_VERTEX,
@@ -787,50 +787,62 @@ int main
   for (int i_dom = 0; i_dom < n_domain; i_dom++) {
     for (int i_part = 0; i_part < pn_n_part[i_dom]; i_part++){
 
-      int  n_proc, tn_part;
-      int  n_cell, n_face, n_vtx, n_bounds, n_joins, n_part_joins;
-      int  scell_face, sface_vtx, sface_bound, sface_join;
-      int  n_section;
-      int *n_elt;
+      PDM_g_num_t* cell_ln_to_gn = NULL;
+      PDM_multipart_part_ln_to_gn_get(mpart,
+                                      i_dom,
+                                      i_part,
+                                      PDM_MESH_ENTITY_CELL,
+                                      &cell_ln_to_gn,
+                                      PDM_OWNERSHIP_KEEP);
 
-      PDM_multipart_part_dim_get(mpart_id,
-                                 i_dom,
-                                 i_part,
-                                 &n_section,
-                                 &n_elt,
-                                 &n_cell,
-                                 &n_face,
-                                 &n_part_joins,
-                                 &n_vtx,
-                                 &n_proc,
-                                 &tn_part,
-                                 &scell_face,
-                                 &sface_vtx,
-                                 &sface_bound,
-                                 &n_bounds,
-                                 &sface_join,
-                                 &n_joins);
-      double       *vtx;
-      int          *cell_face_idx, *cell_face, *face_cell, *face_vtx_idx, *face_vtx;
-      int          *face_bound_idx, *face_bound, *face_join_idx, *face_join;
-      int          *face_part_bound_proc_idx, *face_part_bound_part_idx, *face_part_bound;
-      PDM_g_num_t  *cell_ln_to_gn, *face_ln_to_gn, *vtx_ln_to_gn, *face_bound_ln_to_gn, *face_join_ln_to_gn;
-      int          *cell_tag, *face_tag, *vtx_tag;
-      int         **elt_vtx_idx;
-      int         **elt_vtx;
-      PDM_g_num_t **elt_section_ln_to_gn;
+      int *cell_face     = NULL;
+      int *cell_face_idx = NULL;
+      int n_cell = PDM_multipart_part_connectivity_get(mpart,
+                                                       i_dom,
+                                                       i_part,
+                                                       PDM_CONNECTIVITY_TYPE_CELL_FACE,
+                                                       &cell_face,
+                                                       &cell_face_idx,
+                                                       PDM_OWNERSHIP_KEEP);
 
-      PDM_multipart_part_val_get(mpart_id, i_dom, i_part, &elt_vtx_idx, &elt_vtx, &elt_section_ln_to_gn,
-                                 &cell_tag, &cell_face_idx, &cell_face, &cell_ln_to_gn,
-                                 &face_tag, &face_cell, &face_vtx_idx, &face_vtx, &face_ln_to_gn,
-                                 &face_part_bound_proc_idx, &face_part_bound_part_idx, &face_part_bound,
-                                 &vtx_tag, &vtx, &vtx_ln_to_gn, &face_bound_idx, &face_bound,
-                                 &face_bound_ln_to_gn, &face_join_idx, &face_join, &face_join_ln_to_gn);
+      int *face_vtx     = NULL;
+      int *face_vtx_idx = NULL;
+      PDM_multipart_part_connectivity_get(mpart,
+                                          i_dom,
+                                          i_part,
+                                          PDM_CONNECTIVITY_TYPE_FACE_VTX,
+                                          &face_vtx,
+                                          &face_vtx_idx,
+                                          PDM_OWNERSHIP_KEEP);
+
+      PDM_g_num_t* face_ln_to_gn = NULL;
+      int n_face = PDM_multipart_part_ln_to_gn_get(mpart,
+                                                   i_dom,
+                                                   i_part,
+                                                   PDM_MESH_ENTITY_FACE,
+                                                   &face_ln_to_gn,
+                                                   PDM_OWNERSHIP_KEEP);
+
+      PDM_g_num_t* vtx_ln_to_gn = NULL;
+      int n_vtx = PDM_multipart_part_ln_to_gn_get(mpart,
+                                                  i_dom,
+                                                  i_part,
+                                                  PDM_MESH_ENTITY_VERTEX,
+                                                  &vtx_ln_to_gn,
+                                                  PDM_OWNERSHIP_KEEP);
+
+      double *vtx = NULL;
+      PDM_multipart_part_vtx_coord_get(mpart,
+                                       i_dom,
+                                       i_part,
+                                       &vtx,
+                                       PDM_OWNERSHIP_KEEP);
+
 
       int *vtx_part_bound_proc_idx = NULL;
       int *vtx_part_bound_part_idx = NULL;
       int *vtx_part_bound          = NULL;
-      PDM_multipart_part_graph_comm_get(mpart_id,
+      PDM_multipart_part_graph_comm_get(mpart,
                                         i_dom,
                                         i_part,
                                         PDM_BOUND_TYPE_VTX,
@@ -841,7 +853,7 @@ int main
 
       int *face_edge     = NULL;
       int *face_edge_idx = NULL;
-      int n_face2 = PDM_multipart_part_connectivity_get(mpart_id,
+      int n_face2 = PDM_multipart_part_connectivity_get(mpart,
                                                         i_dom,
                                                         i_part,
                                                         PDM_CONNECTIVITY_TYPE_FACE_EDGE,
@@ -851,7 +863,7 @@ int main
       // assert(n_face == n_face2);
       int *edge_vtx     = NULL;
       int *edge_vtx_idx = NULL;
-      int n_edge = PDM_multipart_part_connectivity_get(mpart_id,
+      int n_edge = PDM_multipart_part_connectivity_get(mpart,
                                                        i_dom,
                                                        i_part,
                                                        PDM_CONNECTIVITY_TYPE_EDGE_VTX,
@@ -859,8 +871,20 @@ int main
                                                        &edge_vtx_idx,
                                                        PDM_OWNERSHIP_KEEP);
       assert(edge_vtx_idx == NULL);
+
+      int *face_cell     = NULL;
+      int *face_cell_idx = NULL;
+      PDM_multipart_part_connectivity_get(mpart,
+                                          i_dom,
+                                          i_part,
+                                          PDM_CONNECTIVITY_TYPE_FACE_CELL,
+                                          &face_cell,
+                                          &face_cell_idx,
+                                          PDM_OWNERSHIP_KEEP);
+      assert(face_cell_idx == NULL);
+
       PDM_g_num_t* edge_ln_to_gn = NULL;
-      int n_edge2 = PDM_multipart_part_ln_to_gn_get(mpart_id,
+      int n_edge2 = PDM_multipart_part_ln_to_gn_get(mpart,
                                                     i_dom,
                                                     i_part,
                                                     PDM_MESH_ENTITY_EDGE,
@@ -869,6 +893,21 @@ int main
 
       PDM_UNUSED(n_face2);
       PDM_UNUSED(n_edge2);
+
+      int          pn_face_group       = 0;
+      int*         group_face_idx      = NULL;
+      int*         group_face          = NULL;
+      PDM_g_num_t* group_face_ln_to_gn = NULL;
+      PDM_multipart_bound_get(mpart,
+                              i_dom,
+                              i_part,
+                              PDM_BOUND_TYPE_FACE,
+                              &pn_face_group,
+                              &group_face_idx,
+                              &group_face,
+                              &group_face_ln_to_gn,
+                              PDM_OWNERSHIP_KEEP);
+
 
 
       // Concatenate face_vtx
@@ -884,12 +923,24 @@ int main
       //                   edge_vtx,
       //                   &pface_vtx[i_dom][i_part]);
 
+      int *face_part_bound_proc_idx = NULL;
+      int *face_part_bound_part_idx = NULL;
+      int *face_part_bound          = NULL;
+      PDM_multipart_part_graph_comm_get(mpart,
+                                        i_dom,
+                                        i_part,
+                                        PDM_BOUND_TYPE_FACE,
+                                        &face_part_bound_proc_idx,
+                                        &face_part_bound_part_idx,
+                                        &face_part_bound,
+                                        PDM_OWNERSHIP_KEEP);
+
       // assert(n_edge2 == n_edge);
       PDM_part_extension_set_part(part_ext, i_dom, i_part,
                                   n_cell,
                                   n_face,
-                                  n_part_joins,
-                                  n_bounds,
+                                  0, // n_part_joins,
+                                  pn_face_group,
                                   n_edge,
                                   n_vtx,
                                   cell_face_idx,
@@ -900,8 +951,8 @@ int main
                                   face_edge_idx,
                                   pface_vtx[i_dom][i_part],
                                   edge_vtx,
-                                  face_bound_idx,
-                                  face_bound,
+                                  group_face_idx,
+                                  group_face,
                                   NULL, // face_join_idx
                                   NULL, // face_join
                                   face_part_bound_proc_idx,
@@ -914,7 +965,7 @@ int main
                                   face_ln_to_gn,
                                   edge_ln_to_gn, // edge_ln_to_gn
                                   vtx_ln_to_gn,
-                                  face_bound_ln_to_gn,
+                                  group_face_ln_to_gn,
                                   vtx);
 
       // for(int i_edge = 0; i_edge < n_edge; ++i_edge) {
@@ -1007,45 +1058,28 @@ int main
   for (int i_dom = 0; i_dom < n_domain; i_dom++){
     for (int i_part = 0; i_part < pn_n_part[i_dom]; i_part++) {
 
-      int  n_proc, tn_part;
-      int  n_cell, n_face, n_vtx, n_bounds, n_joins, n_part_joins;
-      int  scell_face, sface_vtx, sface_bound, sface_join;
-      int  n_section;
-      int *n_elt;
-      PDM_multipart_part_dim_get(mpart_id,
-                                 i_dom,
-                                 i_part,
-                                 &n_section,
-                                 &n_elt,
-                                 &n_cell,
-                                 &n_face,
-                                 &n_part_joins,
-                                 &n_vtx,
-                                 &n_proc,
-                                 &tn_part,
-                                 &scell_face,
-                                 &sface_vtx,
-                                 &sface_bound,
-                                 &n_bounds,
-                                 &sface_join,
-                                 &n_joins);
-      double       *vtx;
-      int          *cell_face_idx, *cell_face, *face_cell, *face_vtx_idx, *face_vtx;
-      int          *face_bound_idx, *face_bound, *face_join_idx, *face_join;
-      int          *face_part_bound_proc_idx, *face_part_bound_part_idx, *face_part_bound;
-      PDM_g_num_t  *cell_ln_to_gn, *face_ln_to_gn, *vtx_ln_to_gn, *face_bound_ln_to_gn, *face_join_ln_to_gn;
-      int          *cell_tag, *face_tag, *vtx_tag;
-      int         **elt_vtx_idx;
-      int         **elt_vtx;
-      PDM_g_num_t **elt_section_ln_to_gn;
+      PDM_g_num_t* cell_ln_to_gn = NULL;
+      int n_cell = PDM_multipart_part_ln_to_gn_get(mpart,
+                                                   i_dom,
+                                                   i_part,
+                                                   PDM_MESH_ENTITY_CELL,
+                                                   &cell_ln_to_gn,
+                                                   PDM_OWNERSHIP_KEEP);
 
-      PDM_multipart_part_val_get(mpart_id, i_dom, i_part, &elt_vtx_idx, &elt_vtx, &elt_section_ln_to_gn,
-                                 &cell_tag, &cell_face_idx, &cell_face, &cell_ln_to_gn,
-                                 &face_tag, &face_cell, &face_vtx_idx, &face_vtx, &face_ln_to_gn,
-                                 &face_part_bound_proc_idx, &face_part_bound_part_idx, &face_part_bound,
-                                 &vtx_tag, &vtx, &vtx_ln_to_gn, &face_bound_idx, &face_bound,
-                                 &face_bound_ln_to_gn, &face_join_idx, &face_join, &face_join_ln_to_gn);
+      PDM_g_num_t* vtx_ln_to_gn = NULL;
+      int n_vtx = PDM_multipart_part_ln_to_gn_get(mpart,
+                                                   i_dom,
+                                                   i_part,
+                                                   PDM_MESH_ENTITY_VERTEX,
+                                                   &vtx_ln_to_gn,
+                                                   PDM_OWNERSHIP_KEEP);
 
+      double *vtx = NULL;
+      PDM_multipart_part_vtx_coord_get(mpart,
+                                       i_dom,
+                                       i_part,
+                                       &vtx,
+                                       PDM_OWNERSHIP_KEEP);
 
       double* vtx_coord_extended;
       PDM_g_num_t* border_vtx_ln_to_gn;
@@ -1165,7 +1199,7 @@ int main
       PDM_UNUSED(n_face_extended2);
 
       // PDM_g_num_t* edge_ln_to_gn = NULL;
-      // int n_edge = PDM_multipart_part_ln_to_gn_get(mpart_id,
+      // int n_edge = PDM_multipart_part_ln_to_gn_get(mpart,
       //                                               i_dom,
       //                                               i_part,
       //                                               PDM_MESH_ENTITY_EDGE,
@@ -1276,7 +1310,7 @@ int main
       if(extend_type == PDM_EXTEND_FROM_VTX && post) {
         int *face_edge     = NULL;
         int *face_edge_idx = NULL;
-        int n_face2 = PDM_multipart_part_connectivity_get(mpart_id,
+        int n_face2 = PDM_multipart_part_connectivity_get(mpart,
                                                           i_dom,
                                                           i_part,
                                                           PDM_CONNECTIVITY_TYPE_FACE_EDGE,
@@ -1286,7 +1320,7 @@ int main
         // assert(n_face == n_face2);
         int *edge_vtx     = NULL;
         int *edge_vtx_idx = NULL;
-        int n_edge = PDM_multipart_part_connectivity_get(mpart_id,
+        int n_edge = PDM_multipart_part_connectivity_get(mpart,
                                                          i_dom,
                                                          i_part,
                                                          PDM_CONNECTIVITY_TYPE_EDGE_VTX,
@@ -1377,7 +1411,7 @@ int main
 
         int *face_edge     = NULL;
         int *face_edge_idx = NULL;
-        int n_face2 = PDM_multipart_part_connectivity_get(mpart_id,
+        int n_face2 = PDM_multipart_part_connectivity_get(mpart,
                                                           i_dom,
                                                           i_part,
                                                           PDM_CONNECTIVITY_TYPE_FACE_EDGE,
@@ -1519,7 +1553,7 @@ int main
     PDM_dcube_nodal_gen_free(dcube[i]);
     // PDM_dcube_nodal_gen_free(dmn[i]);
   }
-  PDM_multipart_free(mpart_id);
+  PDM_multipart_free(mpart);
 
   if(pdi != NULL) {
     PDM_part_domain_interface_free(pdi);
