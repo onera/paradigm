@@ -157,6 +157,7 @@ test_c_create (pdm_t_part_domain_interface_vtx_to_edge 2 PDM_LIST_TEST PDM_LIST_
 test_c_create (pdm_t_domain_interface_vtx_translate 2 PDM_LIST_TEST PDM_LIST_NRANK)
 test_c_create (pdm_t_mesh_intersection_surf_surf 1 PDM_LIST_TEST PDM_LIST_NRANK)
 test_c_create (pdm_t_mesh_intersection_vol_surf 1 PDM_LIST_TEST PDM_LIST_NRANK)
+test_c_create (pdm_t_mesh_intersection_vol_line 1 PDM_LIST_TEST PDM_LIST_NRANK)
 test_c_create (pdm_t_mesh_intersection_vol_vol 1 PDM_LIST_TEST PDM_LIST_NRANK)
 test_c_create (pdm_t_mesh_intersection_surf_line 1 PDM_LIST_TEST PDM_LIST_NRANK)
 test_c_create (pdm_t_mixing_plane 1 PDM_LIST_TEST PDM_LIST_NRANK)
