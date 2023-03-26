@@ -64,8 +64,14 @@ cdef class MeshIntersection:
     # > Class attributes
     cdef PDM_mesh_intersection_t* _mi
     cdef MPI.Comm py_comm
-    cdef dict ptp_objects
-    cdef list keep_alive
+    cdef dict     ptp_objects
+    cdef list     keep_alive
+    cdef int      _dim_mesh_a
+    cdef int      _dim_mesh_b
+    cdef int      _n_part_mesh_a
+    cdef int      _n_part_mesh_b
+    cdef object   _n_entity_a
+    cdef object   _n_entity_b
     # ************************************************************************
     # ------------------------------------------------------------------
     def __cinit__(self,
@@ -86,13 +92,19 @@ cdef class MeshIntersection:
         cdef MPI.MPI_Comm c_comm   = self.py_comm.ob_mpi
         cdef PDM_MPI_Comm pdm_comm = PDM_MPI_mpi_2_pdm_mpi_comm(&c_comm)
 
-
         self._mi = PDM_mesh_intersection_create(intersection_kind,
                                                 dim_mesh_a,
                                                 dim_mesh_b,
                                                 project_coeff,
                                                 pdm_comm,
                                                 PDM_OWNERSHIP_UNGET_RESULT_IS_FREE);
+
+        self._dim_mesh_a    = dim_mesh_a
+        self._dim_mesh_b    = dim_mesh_b
+        self._n_part_mesh_a = n_part_mesh_a
+        self._n_part_mesh_b = n_part_mesh_b
+        self._n_entity_a    = NPY.zeros(n_part_mesh_a, dtype='int32', order='C')
+        self._n_entity_b    = NPY.zeros(n_part_mesh_b, dtype='int32', order='C')
 
         PDM_mesh_intersection_n_part_set(self._mi,
                                          0,
@@ -135,6 +147,21 @@ cdef class MeshIntersection:
       self.keep_alive.append(edge_ln_to_gn)
       self.keep_alive.append(vtx_ln_to_gn)
       self.keep_alive.append(coords)
+
+      if(i_mesh ==  0):
+        if(self._dim_mesh_a == 3):
+          self._n_entity_a[i_part] = n_cell
+        elif(self._dim_mesh_a == 2):
+          self._n_entity_a[i_part] = n_face
+        elif(self._dim_mesh_a == 1):
+          self._n_entity_a[i_part] = n_edge
+      else:
+        if(self._dim_mesh_b == 3):
+          self._n_entity_b[i_part] = n_cell
+        elif(self._dim_mesh_b == 2):
+          self._n_entity_b[i_part] = n_face
+        elif(self._dim_mesh_b == 1):
+          self._n_entity_b[i_part] = n_edge
 
       PDM_mesh_intersection_part_set(self._mi,
                     <PDM_ol_mesh_t>  i_mesh,
@@ -192,12 +219,10 @@ cdef class MeshIntersection:
                                               &a_to_b,
                                               &a_to_b_weight)
 
-      # get nb of elt_a in part #i_part
-      n_a = 0#!!!
       return {
-        "a_to_b_idx"    : create_numpy_i       (a_to_b_idx,    n_a+1),
-        "a_to_b"        : create_numpy_pdm_gnum(a_to_b,        a_to_b_idx[n_a]),
-        "a_to_b_weight" : create_numpy_d       (a_to_b_weight, a_to_b_idx[n_a])
+        "a_to_b_idx"    : create_numpy_i       (a_to_b_idx,    self._n_entity_a[i_part] +1),
+        "a_to_b"        : create_numpy_pdm_gnum(a_to_b,        a_to_b_idx[self._n_entity_a[i_part] ]),
+        "a_to_b_weight" : create_numpy_d       (a_to_b_weight, a_to_b_idx[self._n_entity_a[i_part] ])
       }
 
     # ------------------------------------------------------------------
