@@ -10,7 +10,7 @@ variables:
   CUSTOM_CI_BUILDS_DIR: $WORKDIR/test # inactif car option non activee dans la configuration du runner
   GIT_STRATEGY: none # don't do anything by default
   # SCHEDULER_PARAMETERS:  "--qos=co_inter_std  --cpus-per-task=24  --ntasks=24 --time=00:01:00 "
-  SCHEDULER_PARAMETERS:  "--qos=co_inter_bigmem  --ntasks=40 --time=00:01:00 --exclusive"
+  SCHEDULER_PARAMETERS:  "--qos=co_inter_bigmem  --ntasks=40 --time=01:00:00 --exclusive"
   #SCHEDULER_PARAMETERS:  "-M rhel8 --qos=el8_gbe --ntasks=24 --time=10:00:00"
   # CI_DEBUG_TRACE: "true" #Uncomment to debug CI
 default:
@@ -22,7 +22,7 @@ init_repo:
   variables:
     GIT_STRATEGY: clone
     GIT_SUBMODULE_STRATEGY: none
-    SCHEDULER_PARAMETERS:  "--qos=co_inter_bigmem  --cpus-per-task=24  --ntasks=1 --time=14:00:00"
+    SCHEDULER_PARAMETERS:  "--qos=co_inter_bigmem  --cpus-per-task=24  --ntasks=1 --time=01:00:00"
     #SCHEDULER_PARAMETERS:  "-M rhel8 --qos=el8_gbe --ntasks=1 --time=00:10:00"
   stage: init
   script: # explicitly load modules one by one, so that if one fails, it will be easy to identify
@@ -69,6 +69,7 @@ unit_test:
           MPI_LIB: ["impi"] #, "openmpi"]
   variables:
     MATRIX_KEY: _${COMPILER}_${MPI_LIB}_GNUM64_${GNUM64}
+    SCHEDULER_PARAMETERS:  "--qos=co_inter_bigmem  --ntasks=40 --time=01:00:00 --exclusive"
   stage: test
   before_script:
     - module purge
