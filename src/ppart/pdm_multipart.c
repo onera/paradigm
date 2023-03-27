@@ -2882,6 +2882,8 @@ PDM_MPI_Comm      comm
                                      parts[i_part]->vtx_color,
                                      PDM_OWNERSHIP_KEEP);
     }
+    pmeshes->hyperplane_color[i_part] = parts[i_part]->hyperplane_color;
+    pmeshes->thread_color    [i_part] = parts[i_part]->thread_color;
 
     _part_free(parts[i_part]);
   }
@@ -4155,7 +4157,7 @@ const int               i_part,
   _part_mesh_t* _pmeshes = (&multipart->pmeshes[i_zone]);
 
   *hyperplane_color = _pmeshes->hyperplane_color[i_part];
-    if(ownership == PDM_OWNERSHIP_USER || ownership == PDM_OWNERSHIP_UNGET_RESULT_IS_FREE) {
+  if(ownership == PDM_OWNERSHIP_USER || ownership == PDM_OWNERSHIP_UNGET_RESULT_IS_FREE) {
     multipart->pmeshes[i_zone].is_owner_hyperplane_color = PDM_FALSE;
   } else {
     multipart->pmeshes[i_zone].is_owner_hyperplane_color = PDM_TRUE;
@@ -4176,7 +4178,7 @@ const int               i_part,
   _part_mesh_t* _pmeshes = (&multipart->pmeshes[i_zone]);
 
   *thread_color = _pmeshes->thread_color[i_part];
-    if(ownership == PDM_OWNERSHIP_USER || ownership == PDM_OWNERSHIP_UNGET_RESULT_IS_FREE) {
+  if(ownership == PDM_OWNERSHIP_USER || ownership == PDM_OWNERSHIP_UNGET_RESULT_IS_FREE) {
     multipart->pmeshes[i_zone].is_owner_thread_color = PDM_FALSE;
   } else {
     multipart->pmeshes[i_zone].is_owner_thread_color = PDM_TRUE;
