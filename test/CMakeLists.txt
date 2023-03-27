@@ -102,6 +102,8 @@ if (PDM_HAVE_PARMETIS OR PDM_HAVE_PTSCOTCH)
     test_c_create (pdm_t_partitioning_dcube ${MPIEXEC_MAX_NUMPROCS} PDM_LIST_TEST PDM_LIST_NRANK)
   endif()
 endif()
+test_c_create (pdm_t_part1_to_selected_part2_from_mesh_location 4 PDM_LIST_TEST PDM_LIST_NRANK)
+test_c_create (pdm_t_distant_neighbor3 4 PDM_LIST_TEST PDM_LIST_NRANK)
 test_c_create (pdm_t_part_dcube ${MPIEXEC_MAX_NUMPROCS} PDM_LIST_TEST PDM_LIST_NRANK)
 # test_c_create (pdm_t_part_dcube_agglo ${MPIEXEC_MAX_NUMPROCS} PDM_LIST_TEST PDM_LIST_NRANK)
 test_c_create (pdm_t_gnum_nuplet ${MPIEXEC_MAX_NUMPROCS} PDM_LIST_TEST PDM_LIST_NRANK)
@@ -131,7 +133,6 @@ test_c_create (pdm_t_dist_cloud_surf_from_stl 2 PDM_LIST_TEST PDM_LIST_NRANK)
 test_c_create (pdm_t_knn_cube ${MPIEXEC_MAX_NUMPROCS} PDM_LIST_TEST PDM_LIST_NRANK)
 test_c_create (pdm_t_create_edge_gnum 1 PDM_LIST_TEST PDM_LIST_NRANK)
 test_c_create (pdm_t_mesh_location_dcube ${MPIEXEC_MAX_NUMPROCS} PDM_LIST_TEST PDM_LIST_NRANK)
-test_c_create (pdm_t_part1_to_selected_part2_from_mesh_location 4 PDM_LIST_TEST PDM_LIST_NRANK)
 test_c_create (pdm_t_mesh_location_disjoint_cubes ${MPIEXEC_MAX_NUMPROCS} PDM_LIST_TEST PDM_LIST_NRANK)
 test_c_create (pdm_t_mesh_location_poly_surf ${MPIEXEC_MAX_NUMPROCS} PDM_LIST_TEST PDM_LIST_NRANK)
 test_c_create (pdm_t_mesh_location_from_file 2 PDM_LIST_TEST PDM_LIST_NRANK)
@@ -177,7 +178,6 @@ test_c_create (pdm_t_closest_points ${MPIEXEC_MAX_NUMPROCS}  PDM_LIST_TEST PDM_L
 test_c_create (pdm_t_distant_neighbor 1 PDM_LIST_TEST PDM_LIST_NRANK)
 test_c_create (pdm_t_distant_neighbor_nomatch 1 PDM_LIST_TEST PDM_LIST_NRANK)
 test_c_create (pdm_t_distant_neighbor2 2 PDM_LIST_TEST PDM_LIST_NRANK)
-test_c_create (pdm_t_distant_neighbor3 4 PDM_LIST_TEST PDM_LIST_NRANK)
 test_c_create (pdm_t_order 1 PDM_LIST_TEST PDM_LIST_NRANK)
 test_c_create (pdm_t_gnum_from_hash_values 1 PDM_LIST_TEST PDM_LIST_NRANK)
 test_c_create (pdm_t_plane_intersect_unit 2 PDM_LIST_TEST PDM_LIST_NRANK)
@@ -307,5 +307,12 @@ endif()
 
 configure_file(${PROJECT_SOURCE_DIR}/script/pdm_run.in "${CMAKE_CURRENT_BINARY_DIR}/pdm_run"
                @ONLY)
-# file(CHMOD ${CMAKE_BINARY_DIR}/test/pdm_run
+
+configure_file(${PROJECT_SOURCE_DIR}/script/pdm_launch.in "${PROJECT_BINARY_DIR}/pdm_launch"
+               @ONLY)
+
+configure_file(${PROJECT_SOURCE_DIR}/script/pdm_launch_python.in "${PROJECT_BINARY_DIR}/pdm_launch_python"
+               @ONLY)
+
+#file(CHMOD ${CMAKE_BINARY_DIR}/test/pdm_run
   # PERMISSIONS  OWNER_READ OWNER_EXECUTE)

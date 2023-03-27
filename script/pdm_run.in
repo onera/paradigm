@@ -14,14 +14,14 @@ Help()
   echo
   echo "Syntax: pdm_run [-m|mpiexec|no_log_vtk|h|n_avail_rank] -n <number of ranks> -t <test name and its options>"
   echo "options:"
-  echo "m                                  Make test before run"
-  echo "h                                  Print this Help"
-  echo "mpiexec                            Run with mpiexec command (default : mpirun)"
-  echo "srun                               Run with mpiexec command (default : mpirun)"
-  echo "n <number of ranks>                Number of ranks (default : 2)"
-  echo "no_log_vtk                         Exit on error if test writes some log and vtk files"
-  echo "n_avail_rank                       Number of available ranks for script"
-  echo "t <\"test name and its options\">  Test name and its options "
+  echo "-m                                  Make test before run"
+  echo "-h                                  Print this Help"
+  echo "-mpiexec                            Run with mpiexec command (default : mpirun)"
+  echo "-srun                               Run with mpiexec command (default : mpirun)"
+  echo "-n <number of ranks>                Number of ranks (default : 2)"
+  echo "-no_log_vtk                         Exit on error if test writes some log and vtk files"
+  echo "-n_avail_rank                       Number of available ranks for script"
+  echo "-t <\"test name and its options\">  Test name and its options "
   echo
 }
 
@@ -35,7 +35,7 @@ Dump_mem()
   maxRank=-1
   rank=0
   
-  if [ ${IsIntelMPI} -gt 0 ]
+  if [ ${IsIntelMPI} -gt 0 ] || [ ${IsSrunMPI} -gt 0 ]
   then
     listErrFile=$(ls $1.*)
   else
@@ -64,11 +64,11 @@ Dump_time()
 {
   cd ${TestName1}_d 
   max="-1"
-  
+
   maxRank=-1
   rank=0
   
-  if [ ${IsIntelMPI} -gt 0 ]
+  if [ ${IsIntelMPI} -gt 0 ] || [ ${IsSrunMPI} -gt 0 ]
   then
     listErrFile=$(ls $1.*)
   else
@@ -333,13 +333,18 @@ do
 
   if [ ${IsSrunMPI} -gt 0 ]
   then
+    mkdir -p ${TestName}_d
+    cd ${TestName}_d 
     if [ $isPythonTest -gt 0  ]
     then
-      ${ExeMPI} --verbose --export=ALL,@PDM_RUN_PRELOAD_SRUN@,@PDM_RUN_LSAN@,@PDM_RUN_PYTHONPATH@  --output=$OutputFile.%t --error=$ErrFile.%t -n$Nrank  /usr/bin/time  -f "Maximum Resident Memory : %M Kb\nReal time : %e s" python ./${TestName}.py ${TestOption} 2>/dev/null &
+      ${ExeMPI}  --output=$OutputFile.%t --error=$ErrFile.%t -N 1 -n ${Nrank} --exact /usr/bin/time  -f "Maximum Resident Memory : %M Kb\nReal time : %e s" @PROJECT_BINARY_DIR@/pdm_launch_python ../${TestName}.py ${TestOption} 2>/dev/null &
+#      ${ExeMPI}  --output=$OutputFile.%t --error=$ErrFile.%t -N 1 -n ${Nrank} -c ${Nrank} -O /usr/bin/time  -f "Maximum Resident Memory : %M Kb\nReal time : %e s" @PROJECT_BINARY_DIR@/pdm_launch_python ../${TestName}.py ${TestOption} 2>/dev/null &
     else
-      ${ExeMPI} --verbose --export=ALL,@PDM_RUN_PRELOAD_SRUN@,@PDM_RUN_LSAN@ --output=$OutputFile.%t --error=$ErrFile.%t -n$Nrank  /usr/bin/time  -f "Maximum Resident Memory : %M Kb\nReal time : %e s" ./${TestName} ${TestOption}   &
+      ${ExeMPI}  --output=$OutputFile.%t --error=$ErrFile.%t -N 1 -n ${Nrank} --exact /usr/bin/time  -f "Maximum Resident Memory : %M Kb\nReal time : %e s" @PROJECT_BINARY_DIR@/pdm_launch ../${TestName} ${TestOption} 2>/dev/null &
+#      ${ExeMPI}  --output=$OutputFile.%t --error=$ErrFile.%t -N 1 -n ${Nrank} -c ${Nrank} -O /usr/bin/time  -f "Maximum Resident Memory : %M Kb\nReal time : %e s" @PROJECT_BINARY_DIR@/pdm_launch ../${TestName} ${TestOption} 2>/dev/null &
     fi
     pids=(${pids[@]} "$!")
+    cd ..
   else  
 
     if [ $Nrank -gt $NAvailRank ]
@@ -384,42 +389,11 @@ done
 
 if [ ${IsSrunMPI} -gt 0 ]
 then
-  i=0
-  j=1
+  Indextest=0
   ifailed=0 
-  for pid in "${pids[@]}"
-  do
-
-    Testoutput=0
-    TestName=$(echo listComputedTest[$i] | awk '{print $1}')
-
-    wait $pid
-
-    if [ "$?" -ne "0" ]
-    then
-      Testoutput=1
-      printf  "${PURPLE}[%3.3d/%3.3d] - %s: ${RED}Failed${NC}\n" ${j} ${nTest} ${TestName} 
-      ((ifailed=ifailed+1))
-    else        
-      #
-      # Compute elapsed time
-      
-      elapsed=$(Dump_time $ErrFile $OutputFile)
-
-      #
-      # Check Maximum Resident memory
-
-      Dump_mem $ErrFile $OutputFile
-      printf  "${PURPLE}[%3.3d/%3.3d] - %s: ${GREEN}Passed${NC} - %s s\n" ${j} ${nTest} ${TestName} ${elapsed} 
-    fi
-    ((i=i+1))
-    ((j=j+1))
-    scriptOutput=$(echo "if($Testoutput>$scriptOutput) $Testoutput else $scriptOutput" | bc)
-  done 
-
-else 
-  Wait_job
 fi
+
+Wait_job
 
 printf  "\n      ${PURPLE}%3.3d tests failed out of %3.3d : \n${NC}" ${ifailed} ${nTest} 
 for i in "${failedTest[@]}"

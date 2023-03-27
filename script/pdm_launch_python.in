@@ -1,0 +1,6 @@
+#!/bin/bash
+
+ulimit -s
+
+@PDM_RUN_PRELOAD_SRUN@ @PDM_RUN_LSAN@ @PDM_RUN_PYTHONPATH@ python $@
+
