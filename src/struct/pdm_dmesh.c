@@ -107,37 +107,17 @@ PDM_dmesh_create
   dmesh->dn_face           = dn_face;
   dmesh->dn_edge           = dn_edge;
   dmesh->dn_vtx            = dn_vtx;
-  dmesh->n_bnd             = n_bnd;
-  dmesh->n_join            = n_join;
 
-  dmesh->_dface_cell       = NULL;
-  dmesh->_dface_vtx_idx    = NULL;
-  dmesh->_dface_vtx        = NULL;
-  dmesh->_dvtx_coord       = NULL;
+  dmesh->cell_distrib      = NULL;
+  dmesh->face_distrib      = NULL;
+  dmesh->edge_distrib      = NULL;
+  dmesh->vtx_distrib       = NULL;
 
-  dmesh->_dedge_vtx_idx    = NULL;
-  dmesh->_dedge_vtx        = NULL;
+  dmesh->is_owner_vtx_coord  = PDM_TRUE;
 
-  dmesh->_dedge_face_idx   = NULL;
-  dmesh->_dedge_face       = NULL;
-
-  dmesh->_dedge_bound_idx  = NULL;
-  dmesh->_dedge_bound      = NULL;
-
-  dmesh->_dface_bound_idx  = NULL;
-  dmesh->_dface_bound      = NULL;
-  dmesh->_joins_glob_id    = NULL;
-  dmesh->_dface_join_idx   = NULL;
-  dmesh->_dface_join       = NULL;
-
-  dmesh->cell_distrib       = NULL;
-  dmesh->face_distrib       = NULL;
-  dmesh->edge_distrib       = NULL;
-  dmesh->vtx_distrib        = NULL;
-
-  dmesh->dconnectivity          = malloc( PDM_CONNECTIVITY_TYPE_MAX * sizeof(PDM_g_num_t *) );
-  dmesh->dconnectivity_idx      = malloc( PDM_CONNECTIVITY_TYPE_MAX * sizeof(int         *) );
-  dmesh->is_owner_connectivity  = malloc( PDM_CONNECTIVITY_TYPE_MAX * sizeof(PDM_bool_t   ) );
+  dmesh->dconnectivity         = malloc( PDM_CONNECTIVITY_TYPE_MAX * sizeof(PDM_g_num_t *) );
+  dmesh->dconnectivity_idx     = malloc( PDM_CONNECTIVITY_TYPE_MAX * sizeof(int         *) );
+  dmesh->is_owner_connectivity = malloc( PDM_CONNECTIVITY_TYPE_MAX * sizeof(PDM_bool_t   ) );
 
   for(int i = 0; i < PDM_CONNECTIVITY_TYPE_MAX; ++i) {
     dmesh->is_owner_connectivity[i] = PDM_FALSE;
@@ -203,15 +183,15 @@ PDM_dmesh_set
  const PDM_g_num_t  *dface_join
 )
 {
-  dmesh->_dvtx_coord      = (double      *) dvtx_coord;
-  dmesh->_dface_vtx_idx   = (int         *) dface_vtx_idx;
-  dmesh->_dface_vtx       = (PDM_g_num_t *) dface_vtx;
-  dmesh->_dface_cell      = (PDM_g_num_t *) dface_cell;
-  dmesh->_dface_bound_idx = (int         *) dface_bound_idx;
-  dmesh->_dface_bound     = (PDM_g_num_t *) dface_bound;
-  dmesh->_joins_glob_id   = (int         *) joins_glob_id;
-  dmesh->_dface_join_idx  = (int         *) dface_join_idx;
-  dmesh->_dface_join      = (PDM_g_num_t *) dface_join;
+  // dmesh->_dvtx_coord      = (double      *) dvtx_coord;
+  // dmesh->_dface_vtx_idx   = (int         *) dface_vtx_idx;
+  // dmesh->_dface_vtx       = (PDM_g_num_t *) dface_vtx;
+  // dmesh->_dface_cell      = (PDM_g_num_t *) dface_cell;
+  // dmesh->_dface_bound_idx = (int         *) dface_bound_idx;
+  // dmesh->_dface_bound     = (PDM_g_num_t *) dface_bound;
+  // dmesh->_joins_glob_id   = (int         *) joins_glob_id;
+  // dmesh->_dface_join_idx  = (int         *) dface_join_idx;
+  // dmesh->_dface_join      = (PDM_g_num_t *) dface_join;
 
 }
 
@@ -234,18 +214,71 @@ PDM_dmesh_dims_get
  int         *dn_cell,
  int         *dn_face,
  int         *dn_edge,
- int         *dn_vtx,
- int         *n_bnd,
- int         *n_join
+ int         *dn_vtx
 )
 {
   *dn_cell = dmesh->dn_cell;
   *dn_face = dmesh->dn_face;
   *dn_edge = dmesh->dn_edge;
   *dn_vtx  = dmesh->dn_vtx;
-  *n_bnd   = dmesh->n_bnd;
-  *n_join  = dmesh->n_join;
 }
+
+
+/**
+ *
+ * \brief Get the dimensions of the distributed mesh
+ *
+ * \param [in]    id                id of the dmesh requested
+ * \param [in]    entity_type       Kind of entity
+ * \param [in]    dn_cell           Number of distributed cells
+ */
+void
+PDM_dmesh_dn_entity_set
+(
+ PDM_dmesh_t         *dmesh,
+ PDM_mesh_entities_t  entity_type,
+ int                  dn_entity
+)
+{
+  if(entity_type == PDM_MESH_ENTITY_CELL) {
+    dmesh->dn_cell = dn_entity;
+  } else if(entity_type == PDM_MESH_ENTITY_FACE) {
+    dmesh->dn_face = dn_entity;
+  } else if(entity_type == PDM_MESH_ENTITY_EDGE) {
+    dmesh->dn_edge = dn_entity;
+  } else if(entity_type == PDM_MESH_ENTITY_VERTEX) {
+    dmesh->dn_vtx = dn_entity;
+  }
+}
+
+/**
+ *
+ * \brief Get the dimensions of the distributed mesh
+ *
+ * \param [in]    id                id of the dmesh requested
+ * \param [in]    entity_type       Kind of entity
+ * \param [in]    dn_cell           Number of distributed cells
+ */
+int
+PDM_dmesh_dn_entity_get
+(
+ PDM_dmesh_t         *dmesh,
+ PDM_mesh_entities_t  entity_type
+)
+{
+  if(entity_type == PDM_MESH_ENTITY_CELL) {
+    return dmesh->dn_cell;
+  } else if(entity_type == PDM_MESH_ENTITY_FACE) {
+    return dmesh->dn_face;
+  } else if(entity_type == PDM_MESH_ENTITY_EDGE) {
+    return dmesh->dn_edge;
+  } else if(entity_type == PDM_MESH_ENTITY_VERTEX) {
+    return dmesh->dn_vtx;
+  } else {
+    return -1;
+  }
+}
+
 
 /**
  *
@@ -278,27 +311,70 @@ PDM_dmesh_data_get
  const PDM_g_num_t  **dface_join
 )
 {
-  *dvtx_coord      = dmesh->_dvtx_coord;
-  *dface_vtx_idx   = dmesh->_dface_vtx_idx;
-  *dface_vtx       = dmesh->_dface_vtx;
-  *dface_cell      = dmesh->_dface_cell;
-  *dface_bound_idx = dmesh->_dface_bound_idx;
-  *dface_bound     = dmesh->_dface_bound;
-  *joins_glob_id   = dmesh->_joins_glob_id;
-  *dface_join_idx  = dmesh->_dface_join_idx;
-  *dface_join      = dmesh->_dface_join;
+  // *dvtx_coord      = dmesh->_dvtx_coord;
+  // *dface_vtx_idx   = dmesh->_dface_vtx_idx;
+  // *dface_vtx       = dmesh->_dface_vtx;
+  // *dface_cell      = dmesh->_dface_cell;
+  // *dface_bound_idx = dmesh->_dface_bound_idx;
+  // *dface_bound     = dmesh->_dface_bound;
+  // *joins_glob_id   = dmesh->_joins_glob_id;
+  // *dface_join_idx  = dmesh->_dface_join_idx;
+  // *dface_join      = dmesh->_dface_join;
 }
 
 void
 PDM_dmesh_vtx_coord_get
 (
-       PDM_dmesh_t   *dmesh,
- const double       **dvtx_coord
+ PDM_dmesh_t      *dmesh,
+ double          **dvtx_coord,
+ PDM_ownership_t   ownership
 )
 {
   *dvtx_coord      = dmesh->_dvtx_coord;
+  if(ownership == PDM_OWNERSHIP_USER || ownership == PDM_OWNERSHIP_UNGET_RESULT_IS_FREE) {
+    dmesh->is_owner_vtx_coord = PDM_FALSE;
+  } else if(ownership == PDM_OWNERSHIP_KEEP) {
+    dmesh->is_owner_vtx_coord = PDM_TRUE;
+  }
 }
 
+void
+PDM_dmesh_vtx_coord_set
+(
+ PDM_dmesh_t      *dmesh,
+ double           *dvtx_coord,
+ PDM_ownership_t   ownership
+)
+{
+  dmesh->_dvtx_coord = dvtx_coord;
+  if(ownership == PDM_OWNERSHIP_USER || ownership == PDM_OWNERSHIP_UNGET_RESULT_IS_FREE) {
+    dmesh->is_owner_vtx_coord = PDM_FALSE;
+  } else if(ownership == PDM_OWNERSHIP_KEEP) {
+    dmesh->is_owner_vtx_coord = PDM_TRUE;
+  }
+}
+
+
+void
+PDM_dmesh_connectivity_set
+(
+ PDM_dmesh_t              *dmesh,
+ PDM_connectivity_type_t   connectivity_type,
+ PDM_g_num_t              *connect,
+ int                      *connect_idx,
+ PDM_ownership_t           ownership
+)
+{
+  assert(dmesh != NULL);
+  dmesh->dconnectivity    [connectivity_type] = connect;
+  dmesh->dconnectivity_idx[connectivity_type] = connect_idx;
+
+  if(ownership == PDM_OWNERSHIP_USER || ownership == PDM_OWNERSHIP_UNGET_RESULT_IS_FREE) {
+    dmesh->is_owner_connectivity[connectivity_type] = PDM_FALSE;
+  } else if(ownership == PDM_OWNERSHIP_KEEP) {
+    dmesh->is_owner_connectivity[connectivity_type] = PDM_TRUE;
+  }
+}
 
 int
 PDM_dmesh_connectivity_get
@@ -310,16 +386,15 @@ PDM_dmesh_connectivity_get
  PDM_ownership_t           ownership
 )
 {
-  PDM_UNUSED(ownership);
   assert(dmesh != NULL);
-
-  // assert(dmesh->dconnectivity[connectivity_type] != NULL);
 
   *connect     = dmesh->dconnectivity    [connectivity_type];
   *connect_idx = dmesh->dconnectivity_idx[connectivity_type];
 
   if(ownership == PDM_OWNERSHIP_USER || ownership == PDM_OWNERSHIP_UNGET_RESULT_IS_FREE) {
     dmesh->is_owner_connectivity[connectivity_type] = PDM_FALSE;
+  } else if(ownership == PDM_OWNERSHIP_KEEP) {
+    dmesh->is_owner_connectivity[connectivity_type] = PDM_TRUE;
   }
 
   int dn_entity = -1;
@@ -437,22 +512,13 @@ PDM_dmesh_free
   dmesh->dn_face           = 0;
   dmesh->dn_edge           = 0;
   dmesh->dn_vtx            = 0;
-  dmesh->n_bnd             = 0;
-  dmesh->n_join            = 0;
 
-  dmesh->_dface_cell       = NULL;
-  dmesh->_dface_vtx_idx    = NULL;
-  dmesh->_dface_vtx        = NULL;
+  if(dmesh->is_owner_vtx_coord ==  PDM_TRUE) {
+    if(dmesh->_dvtx_coord != NULL) {
+      free(dmesh->_dvtx_coord);
+    }
+  }
   dmesh->_dvtx_coord       = NULL;
-  dmesh->_dface_bound_idx  = NULL;
-  dmesh->_dface_bound      = NULL;
-
-  dmesh->_dedge_bound_idx  = NULL;
-  dmesh->_dedge_bound      = NULL;
-
-  dmesh->_joins_glob_id    = NULL;
-  dmesh->_dface_join_idx   = NULL;
-  dmesh->_dface_join       = NULL;
 
   // On doit gérer les cas ou la structure est partagé en python et auquel cas
   // On est owner des resultats et il faut free le reste
@@ -558,7 +624,6 @@ PDM_dmesh_global_extents_get
 }
 
 
-
 void
 PDM_dmesh_bound_set
 (
@@ -566,16 +631,20 @@ PDM_dmesh_bound_set
  PDM_bound_type_t  bound_type,
  int               n_bound,
  PDM_g_num_t      *connect,
- int              *connect_idx
+ int              *connect_idx,
+ PDM_ownership_t   ownership
 )
 {
   assert(dmesh != NULL);
 
   dmesh->n_group_bnd[bound_type] = n_bound;
-  dmesh->dbound[bound_type]      = connect;
-  dmesh->dbound_idx[bound_type]  = connect_idx;
-}
+  dmesh->dbound     [bound_type] = connect;
+  dmesh->dbound_idx [bound_type] = connect_idx;
 
+  if(ownership == PDM_OWNERSHIP_USER || ownership == PDM_OWNERSHIP_UNGET_RESULT_IS_FREE) {
+    dmesh->is_owner_bound[bound_type] = PDM_FALSE;
+  }
+}
 
 #ifdef __cplusplus
 }

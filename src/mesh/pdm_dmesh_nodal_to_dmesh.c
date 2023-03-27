@@ -1060,7 +1060,15 @@ _generate_faces_from_dmesh_nodal
                                      dmesh_nodal->comm);
 
   /* Juste a view */
-  dm->_dvtx_coord = dmesh_nodal->vtx->_coords;
+  // int dn_vtx = PDM_DMesh_nodal_n_vtx_get(dmesh_nodal);
+  // double *dvtx_coords = malloc(3 * dn_vtx * sizeof(double));
+  // for(int i_vtx = 0; i_vtx < 3 * n_vtx; ++i_vtx) {
+  //   dvtx_coords[i_vtx] = dmesh_nodal->vtx->_coords[i_vtx];
+  // }
+  // PDM_dmesh_vtx_coord_set(dm, dmesh_nodal->vtx->_coords, PDM_OWNERSHIP_KEEP);
+  // dm->_dvtx_coord = dmesh_nodal->vtx->_coords;
+
+  PDM_dmesh_vtx_coord_set(dm, dmesh_nodal->vtx->_coords, PDM_OWNERSHIP_USER);
 
   assert(link->dmesh == NULL);
   link->dmesh = dm;
@@ -1552,7 +1560,8 @@ _generate_edges_from_dmesh_nodal
                                      dmesh_nodal->comm);
 
   /* Juste a view */
-  dm->_dvtx_coord = dmesh_nodal->vtx->_coords;
+  // dm->_dvtx_coord = dmesh_nodal->vtx->_coords;
+  PDM_dmesh_vtx_coord_set(dm, dmesh_nodal->vtx->_coords, PDM_OWNERSHIP_USER);
 
   assert(link->dmesh == NULL);
   link->dmesh = dm;
@@ -1883,14 +1892,14 @@ _translate_element_group_to_faces
     dm->is_owner_bound[PDM_BOUND_TYPE_FACE] = PDM_TRUE;
     dm->dbound_idx    [PDM_BOUND_TYPE_FACE] = dface_bound_idx;
     dm->dbound        [PDM_BOUND_TYPE_FACE] = dface_bound;
-    dm->n_bnd                               = dmesh_nodal->surfacic->n_group_elmt; // TODO : TO REMOVE
+    // dm->n_bnd                               = dmesh_nodal->surfacic->n_group_elmt; // TODO : TO REMOVE
     dm->n_group_bnd   [PDM_BOUND_TYPE_FACE] = dmesh_nodal->surfacic->n_group_elmt;
   }
   else {
     dm->is_owner_bound[PDM_BOUND_TYPE_FACE] = PDM_TRUE;
     dm->dbound_idx    [PDM_BOUND_TYPE_FACE] = PDM_array_zeros_int(1);
     dm->dbound        [PDM_BOUND_TYPE_FACE] = NULL;
-    dm->n_bnd                               = 0;
+    // dm->n_bnd                               = 0;
     dm->n_group_bnd   [PDM_BOUND_TYPE_FACE] = 0;
   }
 

@@ -279,6 +279,30 @@ int main(int argc, char *argv[])
                                      n_bnd,
                                      n_jn,
                                      comm);
+
+    PDM_dmesh_vtx_coord_set(dmesh[i_zone],
+                            dvtx_coord[i_zone],
+                            PDM_OWNERSHIP_USER);
+
+    PDM_dmesh_connectivity_set(dmesh[i_zone],
+                               PDM_CONNECTIVITY_TYPE_FACE_VTX,
+                               dface_vtx[i_zone],
+                               dface_vtx_idx[i_zone],
+                               PDM_OWNERSHIP_USER);
+
+    PDM_dmesh_connectivity_set(dmesh[i_zone],
+                               PDM_CONNECTIVITY_TYPE_FACE_CELL,
+                               dface_cell[i_zone],
+                               NULL,
+                               PDM_OWNERSHIP_USER);
+
+    PDM_dmesh_bound_set(dmesh[i_zone],
+                        PDM_BOUND_TYPE_FACE,
+                        n_bnd,
+                        dface_bnd[i_zone],
+                        dface_bnd_idx[i_zone],
+                        PDM_OWNERSHIP_USER);
+
     PDM_dmesh_set(dmesh[i_zone],
                   dvtx_coord[i_zone],
                   dface_vtx_idx[i_zone],

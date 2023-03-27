@@ -139,10 +139,40 @@ PDM_dmesh_dims_get
  int         *dn_cell,
  int         *dn_face,
  int         *dn_edge,
- int         *dn_vtx,
- int         *dn_bnd,
- int         *n_joins
+ int         *dn_vtx
 );
+
+/**
+ *
+ * \brief Get the dimensions of the distributed mesh
+ *
+ * \param [in]    id                id of the dmesh requested
+ * \param [in]    entity_type       Kind of entity
+ * \param [in]    dn_cell           Number of distributed cells
+ */
+void
+PDM_dmesh_dn_entity_set
+(
+ PDM_dmesh_t         *dmesh,
+ PDM_mesh_entities_t  entity_type,
+ int                  dn_entity
+);
+
+/**
+ *
+ * \brief Get the dimensions of the distributed mesh
+ *
+ * \param [in]    id                id of the dmesh requested
+ * \param [in]    entity_type       Kind of entity
+ */
+int
+PDM_dmesh_dn_entity_get
+(
+ PDM_dmesh_t         *dmesh,
+ PDM_mesh_entities_t  entity_type
+);
+
+
 
 /**
  *
@@ -179,8 +209,27 @@ PDM_dmesh_data_get
 void
 PDM_dmesh_vtx_coord_get
 (
-       PDM_dmesh_t   *dmesh,
- const double       **dvtx_coord
+ PDM_dmesh_t      *dmesh,
+ double          **dvtx_coord,
+ PDM_ownership_t   ownership
+);
+
+void
+PDM_dmesh_vtx_coord_set
+(
+ PDM_dmesh_t      *dmesh,
+ double           *dvtx_coord,
+ PDM_ownership_t   ownership
+);
+
+void
+PDM_dmesh_connectivity_set
+(
+ PDM_dmesh_t              *dmesh,
+ PDM_connectivity_type_t   connectivity_type,
+ PDM_g_num_t              *connect,
+ int                      *connect_idx,
+ PDM_ownership_t           ownership
 );
 
 int
@@ -240,7 +289,8 @@ PDM_dmesh_bound_set
  PDM_bound_type_t  bound_type,
  int               n_bound,
  PDM_g_num_t      *connect,
- int              *connect_idx
+ int              *connect_idx,
+ PDM_ownership_t   ownership
 );
 
 /*----------------------------------------------------------------------------*/

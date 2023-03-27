@@ -62,59 +62,15 @@ struct _pdm_dmesh_t
   int          dn_face;                         /*!< Number of distributed faces         */
   int          dn_edge;                         /*!< Number of distributed edges         */
   int          dn_vtx;                          /*!< Number of distributed vertices      */
-  int          n_bnd;                           /*!< Number of boundaries                */
-  int          n_join;                          /*!< Number of interfaces with other zone*/
 
   PDM_g_num_t *cell_distrib;
   PDM_g_num_t *face_distrib;
   PDM_g_num_t *edge_distrib;
   PDM_g_num_t *vtx_distrib;
 
-  PDM_g_num_t *_dface_cell;                     /*!< Face-cell connectivity of distributed
-                                                  faces (size = 2 * dn_face)
-                                                  if iface is a boundary face,
-                                                  _dface_cell[2*iface + 1] = 0           */
   double      *_dvtx_coord;                     /*!< Coordinates of ditributed vertices
                                                   (size = 3 * dn_vtx)                    */
-  int         *_dface_vtx_idx;                   /*!< Face-vertex connectivity index of
-                                                  distributed faces (size = dn_face + 1) */
-  PDM_g_num_t *_dface_vtx;                      /*!< Face-vertex connectivity of
-                                                  distributed faces (size = dface_vtx_idx[
-                                                  dn_face])                              */
-
-  int         *_dedge_vtx_idx;                   /*!< Face-vertex connectivity index of
-                                                  distributed edges (size = dn_edge + 1) */
-  PDM_g_num_t *_dedge_vtx;                      /*!< Face-vertex connectivity of
-                                                  distributed edges (size = dedge_vtx_idx[
-                                                  dn_edge])                              */
-
-  int         *_dedge_face_idx;                   /*!< Face-vertex connectivity index of
-                                                  distributed edges (size = dn_edge + 1) */
-  PDM_g_num_t *_dedge_face;                      /*!< Face-vertex connectivity of
-                                                  distributed edges (size = dedge_vtx_idx[
-                                                  dn_edge])                              */
-
-
-  int         *_dface_bound_idx;                 /*!< Index of distributed faces list of
-                                                  each boundary (size = n_bnd + 1)
-                                                  or NULL                               */
-  PDM_g_num_t *_dface_bound;                    /*!< Distributed faces list of each
-                                                 boundary (size = dface_bound_idx[n_bnd])
-                                                  or NULL                               */
-  int         *_dedge_bound_idx;                 /*!< Index of distributed edges list of
-                                                  each boundary (size = n_bnd + 1)
-                                                  or NULL                               */
-  PDM_g_num_t *_dedge_bound;                    /*!< Distributed edges list of each
-                                                 boundary (size = dedge_bound_idx[n_bnd])
-                                                  or NULL                               */
-  int         *_joins_glob_id;                  /*!< Global id of each joi (size=n_join)
-                                                     or NULL. Same data for all procs   */
-  int         *_dface_join_idx;                  /*!< Index of distributed faces list of
-                                                  each join (size = n_join + 1)
-                                                  or NULL                               */
-  PDM_g_num_t *_dface_join;                     /*!< Distributed faces list of each
-                                                 join (size = dface_join_idx[n_join])
-                                                  or NULL                               */
+  int          is_owner_vtx_coord;
 
   int           n_group_bnd[PDM_BOUND_TYPE_MAX]; /*!< Number of group by elememnt type            */
   PDM_g_num_t **dconnectivity;                   /* Array of connectivty (size = PDM_CONNECTIVITY_TYPE_MAX) */
@@ -127,9 +83,54 @@ struct _pdm_dmesh_t
 
   PDM_bool_t   *is_owner_bound;
 
-
   PDM_bool_t   is_computed_g_extents;
   double       g_extents[6];
+
+  // int          n_bnd;                           /*!< Number of boundaries                */
+  // int          n_join;                          /*!< Number of interfaces with other zone*/
+  // PDM_g_num_t *_dface_cell;                     /*!< Face-cell connectivity of distributed
+  //                                                 faces (size = 2 * dn_face)
+  //                                                 if iface is a boundary face,
+  //                                                 _dface_cell[2*iface + 1] = 0           */
+  // int         *_dface_vtx_idx;                   /*!< Face-vertex connectivity index of
+  //                                                 distributed faces (size = dn_face + 1) */
+  // PDM_g_num_t *_dface_vtx;                      /*!< Face-vertex connectivity of
+  //                                                 distributed faces (size = dface_vtx_idx[
+  //                                                 dn_face])                              */
+
+  // int         *_dedge_vtx_idx;                   /*!< Face-vertex connectivity index of
+  //                                                 distributed edges (size = dn_edge + 1) */
+  // PDM_g_num_t *_dedge_vtx;                      /*!< Face-vertex connectivity of
+  //                                                 distributed edges (size = dedge_vtx_idx[
+  //                                                 dn_edge])                              */
+
+  // int         *_dedge_face_idx;                   /*!< Face-vertex connectivity index of
+  //                                                 distributed edges (size = dn_edge + 1) */
+  // PDM_g_num_t *_dedge_face;                      /*!< Face-vertex connectivity of
+  //                                                 distributed edges (size = dedge_vtx_idx[
+  //                                                 dn_edge])                              */
+
+
+  // int         *_dface_bound_idx;                 /*!< Index of distributed faces list of
+  //                                                 each boundary (size = n_bnd + 1)
+  //                                                 or NULL                               */
+  // PDM_g_num_t *_dface_bound;                    /*!< Distributed faces list of each
+  //                                                boundary (size = dface_bound_idx[n_bnd])
+  //                                                 or NULL                               */
+  // int         *_dedge_bound_idx;                 /*!< Index of distributed edges list of
+  //                                                 each boundary (size = n_bnd + 1)
+  //                                                 or NULL                               */
+  // PDM_g_num_t *_dedge_bound;                    /*!< Distributed edges list of each
+  //                                                boundary (size = dedge_bound_idx[n_bnd])
+  //                                                 or NULL                               */
+  //  int         *_joins_glob_id;                  /*!< Global id of each joi (size=n_join)
+  //                                                     or NULL. Same data for all procs   */
+  //  int         *_dface_join_idx;                  /*!< Index of distributed faces list of
+  //                                                  each join (size = n_join + 1)
+  //                                                  or NULL                               */
+  //  PDM_g_num_t *_dface_join;                     /*!< Distributed faces list of each
+  //                                                 join (size = dface_join_idx[n_join])
+  //                                                  or NULL                               */
 };
 
 
