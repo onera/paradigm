@@ -789,6 +789,8 @@ _compute_part_mesh_nodal_3d
   PDM_MPI_Comm_rank(dmn->comm, &i_rank);
   PDM_MPI_Comm_size(dmn->comm, &n_rank);
 
+  PDM_UNUSED(ownership);
+
   /*
    * Rebuild the volumic part from cell
    */
@@ -969,13 +971,13 @@ _compute_part_mesh_nodal_3d
                                                           n_part,
                                                           dmn->comm);
 
-  PDM_part_mesh_nodal_add_part_mesh_nodal_elmts(pmn, pmn_vol , ownership);
-  PDM_part_mesh_nodal_add_part_mesh_nodal_elmts(pmn, pmn_surf, ownership);
+  PDM_part_mesh_nodal_add_part_mesh_nodal_elmts(pmn, pmn_vol , PDM_OWNERSHIP_KEEP);
+  PDM_part_mesh_nodal_add_part_mesh_nodal_elmts(pmn, pmn_surf, PDM_OWNERSHIP_KEEP);
   if(pmn_ridge != NULL) {
-    PDM_part_mesh_nodal_add_part_mesh_nodal_elmts(pmn, pmn_ridge, ownership);
+    PDM_part_mesh_nodal_add_part_mesh_nodal_elmts(pmn, pmn_ridge, PDM_OWNERSHIP_KEEP);
   }
   if(pmn_corner != NULL) {
-    PDM_part_mesh_nodal_add_part_mesh_nodal_elmts(pmn, pmn_corner, ownership);
+    PDM_part_mesh_nodal_add_part_mesh_nodal_elmts(pmn, pmn_corner, PDM_OWNERSHIP_KEEP);
   }
   for(int i_part = 0; i_part < n_part; ++i_part) {
 
@@ -1014,6 +1016,7 @@ _compute_part_mesh_nodal_2d
  PDM_ownership_t    ownership
 )
 {
+  PDM_UNUSED(ownership);
   int i_rank;
   int n_rank;
   PDM_MPI_Comm_rank(dmn->comm, &i_rank);
@@ -1142,12 +1145,12 @@ _compute_part_mesh_nodal_2d
                                                           n_part,
                                                           dmn->comm);
 
-  PDM_part_mesh_nodal_add_part_mesh_nodal_elmts(pmn, pmn_surf , ownership);
+  PDM_part_mesh_nodal_add_part_mesh_nodal_elmts(pmn, pmn_surf , PDM_OWNERSHIP_KEEP);
   if(pmn_ridge != NULL) {
-    PDM_part_mesh_nodal_add_part_mesh_nodal_elmts(pmn, pmn_ridge, ownership);
+    PDM_part_mesh_nodal_add_part_mesh_nodal_elmts(pmn, pmn_ridge, PDM_OWNERSHIP_KEEP);
   }
   if(pmn_corner != NULL) {
-    PDM_part_mesh_nodal_add_part_mesh_nodal_elmts(pmn, pmn_corner, ownership);
+    PDM_part_mesh_nodal_add_part_mesh_nodal_elmts(pmn, pmn_corner, PDM_OWNERSHIP_KEEP);
   }
   // TO DO : corners?
 

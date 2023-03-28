@@ -15,24 +15,24 @@ cdef extern from "pdm_dmesh.h":
                                   int             dn_vtx,
                                   PDM_MPI_Comm    comm)
 
-    void PDM_dmesh_set(PDM_dmesh_t  *dm,
-                       double       *dvtx_coord,
-                       int          *dface_vtx_idx,
-                       PDM_g_num_t  *dface_vtx,
-                       PDM_g_num_t  *dface_cell,
-                       int          *dface_bound_idx,
-                       PDM_g_num_t  *dface_bound,
-                       int          *join_g_dms,
-                       int          *dface_join_idx,
-                       PDM_g_num_t  *dface_join)
+    # void PDM_dmesh_set(PDM_dmesh_t  *dm,
+    #                    double       *dvtx_coord,
+    #                    int          *dface_vtx_idx,
+    #                    PDM_g_num_t  *dface_vtx,
+    #                    PDM_g_num_t  *dface_cell,
+    #                    int          *dface_bound_idx,
+    #                    PDM_g_num_t  *dface_bound,
+    #                    int          *join_g_dms,
+    #                    int          *dface_join_idx,
+    #                    PDM_g_num_t  *dface_join)
 
-    void PDM_dmesh_dims_get(PDM_dmesh_t *dm,
-                            int         *dn_cell,
-                            int         *dn_face,
-                            int         *dn_edge,
-                            int         *dn_vtx,
-                            int         *n_bnd,
-                            int         *n_joins)
+    # void PDM_dmesh_dims_get(PDM_dmesh_t *dm,
+    #                         int         *dn_cell,
+    #                         int         *dn_face,
+    #                         int         *dn_edge,
+    #                         int         *dn_vtx,
+    #                         int         *n_bnd,
+    #                         int         *n_joins)
 
     void PDM_dmesh_data_get(PDM_dmesh_t   *dm,
                             double       **dvtx_coord,
@@ -57,6 +57,17 @@ cdef extern from "pdm_dmesh.h":
                              PDM_g_num_t      **connect,
                              int              **connect_idx,
                              PDM_ownership_t    ownership)
+    void  PDM_dmesh_bound_set(PDM_dmesh_t       *dmesh,
+                              PDM_bound_type_t   bound_type,
+                              int               n_bound,
+                              PDM_g_num_t       *connect,
+                              int               *connect_idx,
+                              PDM_ownership_t    ownership)
+    void PDM_dmesh_connectivity_set(PDM_dmesh_t              *dmesh,
+                                    PDM_connectivity_type_t   connectivity_type,
+                                    PDM_g_num_t              *connect,
+                                    int                      *connect_idx,
+                                    PDM_ownership_t           ownership);
     void PDM_dmesh_free(PDM_dmesh_t   *dm)
     # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
@@ -83,6 +94,14 @@ cdef class DistributedMeshCaspule:
     self._dm = dm;
 
   # ------------------------------------------------------------------------
+  def dmesh_connectivity_set(self, PDM_connectivity_type_t connectivity_type,
+                             NPY.ndarray[NPY.int32_t   , mode='c', ndim=1] connect_idx,
+                             NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1] connect    not None):
+    """
+    """
+    dmesh_connectivity_set(self, connectivity_type, connect_idx, connect)
+
+  # ------------------------------------------------------------------------
   def dmesh_connectivity_get(self, PDM_connectivity_type_t connectivity_type):
     """
     """
@@ -99,6 +118,14 @@ cdef class DistributedMeshCaspule:
     """
     """
     return dmesh_bound_get(self, bound_type)
+
+  # ------------------------------------------------------------------------
+  def dmesh_bound_set(self, PDM_bound_type_t bound_type,
+                            NPY.ndarray[NPY.int32_t   , mode='c', ndim=1] connect_idx,
+                            NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1] connect    not None):
+    """
+    """
+    dmesh_bound_set(self, bound_type, connect_idx, connect)
 
   # ------------------------------------------------------------------------
   def __dealloc__(self):
@@ -141,39 +168,47 @@ cdef class DistributedMesh:
     # ::::::::::::::::::::::::::::::::::::::::::::::::::
 
   # ------------------------------------------------------------------------
-  def dmesh_set(self, NPY.ndarray[NPY.double_t  , mode='c', ndim=1] dvtx_coord   not None,
-                      NPY.ndarray[NPY.int32_t   , mode='c', ndim=1] dface_vtx_idx,
-                      NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1] dface_vtx    not None,
-                      NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1] dface_cell,
-                      NPY.ndarray[NPY.int32_t   , mode='c', ndim=1] dface_bound_idx,
-                      NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1] dface_bound,
-                      NPY.ndarray[NPY.int32_t   , mode='c', ndim=1] join_g_dms,
-                      NPY.ndarray[NPY.int32_t   , mode='c', ndim=1] dface_join_idx,
-                      NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1] dface_join):
-    """
-    """
-    # print("dvtx_coord", dvtx_coord)
-    # print("dface_vtx_idx", dface_vtx_idx)
-    # print("dface_vtx", dface_vtx)
-    # print("dface_cell", dface_cell)
-    # print("dface_bound_idx", dface_bound_idx)
-    # print("dface_bound", dface_bound)
+  # def dmesh_set(self, NPY.ndarray[NPY.double_t  , mode='c', ndim=1] dvtx_coord   not None,
+  #                     NPY.ndarray[NPY.int32_t   , mode='c', ndim=1] dface_vtx_idx,
+  #                     NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1] dface_vtx    not None,
+  #                     NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1] dface_cell,
+  #                     NPY.ndarray[NPY.int32_t   , mode='c', ndim=1] dface_bound_idx,
+  #                     NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1] dface_bound,
+  #                     NPY.ndarray[NPY.int32_t   , mode='c', ndim=1] join_g_dms,
+  #                     NPY.ndarray[NPY.int32_t   , mode='c', ndim=1] dface_join_idx,
+  #                     NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1] dface_join):
+  #   """
+  #   """
+  #   # print("dvtx_coord", dvtx_coord)
+  #   # print("dface_vtx_idx", dface_vtx_idx)
+  #   # print("dface_vtx", dface_vtx)
+  #   # print("dface_cell", dface_cell)
+  #   # print("dface_bound_idx", dface_bound_idx)
+  #   # print("dface_bound", dface_bound)
 
-    PDM_dmesh_set(self._dm,
-                  <double*>      dvtx_coord.data,
-                  <int*>         dface_vtx_idx.data,
-                  <PDM_g_num_t*> dface_vtx.data,
-                  <PDM_g_num_t*> dface_cell.data,
-                  <int*>         dface_bound_idx.data,
-                  <PDM_g_num_t*> dface_bound.data,
-                  <int*>         join_g_dms.data,
-                  <int*>         dface_join_idx.data,
-                  <PDM_g_num_t*> dface_join.data)
+  #   PDM_dmesh_set(self._dm,
+  #                 <double*>      dvtx_coord.data,
+  #                 <int*>         dface_vtx_idx.data,
+  #                 <PDM_g_num_t*> dface_vtx.data,
+  #                 <PDM_g_num_t*> dface_cell.data,
+  #                 <int*>         dface_bound_idx.data,
+  #                 <PDM_g_num_t*> dface_bound.data,
+  #                 <int*>         join_g_dms.data,
+  #                 <int*>         dface_join_idx.data,
+  #                 <PDM_g_num_t*> dface_join.data)
   # ------------------------------------------------------------------------
   def dmesh_connectivity_get(self, PDM_connectivity_type_t connectivity_type):
     """
     """
     return dmesh_connectivity_get(self, connectivity_type)
+
+  # ------------------------------------------------------------------------
+  def dmesh_connectivity_set(self, PDM_connectivity_type_t connectivity_type,
+                             NPY.ndarray[NPY.int32_t   , mode='c', ndim=1] connect_idx,
+                             NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1] connect    not None):
+    """
+    """
+    dmesh_connectivity_set(self, connectivity_type, connect_idx, connect)
 
   # ------------------------------------------------------------------------
   def dmesh_distrib_get(self, PDM_mesh_entities_t entity_type):
@@ -185,6 +220,14 @@ cdef class DistributedMesh:
     """
     """
     return dmesh_bound_get(self, bound_type)
+
+  # ------------------------------------------------------------------------
+  def dmesh_bound_set(self, PDM_bound_type_t bound_type,
+                            NPY.ndarray[NPY.int32_t   , mode='c', ndim=1] connect_idx,
+                            NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1] connect    not None):
+    """
+    """
+    dmesh_bound_set(self, bound_type, connect_idx, connect)
 
   # ------------------------------------------------------------------------
   def __dealloc__(self):
@@ -303,3 +346,45 @@ def dmesh_bound_get(DMesh pydm, PDM_bound_type_t bound_type):
                                                  <void *> connect)
   PyArray_ENABLEFLAGS(np_connect, NPY.NPY_OWNDATA);
   return (np_connect_idx, np_connect)
+
+# ------------------------------------------------------------------------
+def dmesh_bound_set(DMesh pydm,
+                    PDM_bound_type_t bound_type,
+                    NPY.ndarray[NPY.int32_t   , mode='c', ndim=1] connect_idx,
+                    NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1] connect    not None
+                    ):
+  """
+  """
+  # ************************************************************************
+  # > Declaration
+  cdef int           n_bnd
+  # ************************************************************************
+
+  n_bnd = connect_idx.shape[0]-1
+
+  PDM_dmesh_bound_set(pydm._dm,
+                      bound_type,
+                      n_bnd,
+      <PDM_g_num_t *> connect.data,
+              <int *> connect_idx.data,
+                      PDM_OWNERSHIP_USER)
+
+# ------------------------------------------------------------------------
+def dmesh_connectivity_set(DMesh pydm,
+                           PDM_connectivity_type_t entity_type,
+                           NPY.ndarray[NPY.int32_t   , mode='c', ndim=1] connect_idx,
+                           NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1] connect    not None
+                           ):
+  """
+  """
+  # ************************************************************************
+  # > Declaration
+  # ************************************************************************
+
+  n_bnd = connect_idx.shape[0]-1
+
+  PDM_dmesh_connectivity_set(pydm._dm,
+                             entity_type,
+             <PDM_g_num_t *> connect.data,
+                     <int *> connect_idx.data,
+                             PDM_OWNERSHIP_USER)

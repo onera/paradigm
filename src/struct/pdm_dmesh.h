@@ -103,20 +103,20 @@ PDM_dmesh_create
  *                                    (size = dface_join_idx[n_join])
  */
 
-void
-PDM_dmesh_set
-(
- PDM_dmesh_t        *dmeshm,
- const double       *dvtx_coord,
- const int          *dface_vtx_idx,
- const PDM_g_num_t  *dface_vtx,
- const PDM_g_num_t  *dface_cell,
- const int          *dface_bound_idx,
- const PDM_g_num_t  *dface_bound,
- const int          *joins_glob_id,
- const int          *dface_join_idx,
- const PDM_g_num_t  *dface_join
-);
+// void
+// PDM_dmesh_set
+// (
+//  PDM_dmesh_t        *dmeshm,
+//  const double       *dvtx_coord,
+//  const int          *dface_vtx_idx,
+//  const PDM_g_num_t  *dface_vtx,
+//  const PDM_g_num_t  *dface_cell,
+//  const int          *dface_bound_idx,
+//  const PDM_g_num_t  *dface_bound,
+//  const int          *joins_glob_id,
+//  const int          *dface_join_idx,
+//  const PDM_g_num_t  *dface_join
+// );
 
 /**
  *
@@ -188,20 +188,20 @@ PDM_dmesh_dn_entity_get
  * \param [out]   dface_join          Faces list of each join
  */
 
-void
-PDM_dmesh_data_get
-(
- PDM_dmesh_t         *dmeshm,
- const double       **dvtx_coord,
- const int          **dface_vtx_idx,
- const PDM_g_num_t  **dface_vtx,
- const PDM_g_num_t  **dface_cell,
- const int          **dface_bound_idx,
- const PDM_g_num_t  **dface_bound,
- const int          **joins_glob_id,
- const int          **dface_join_idx,
- const PDM_g_num_t  **dface_join
-);
+// void
+// PDM_dmesh_data_get
+// (
+//  PDM_dmesh_t         *dmeshm,
+//  const double       **dvtx_coord,
+//  const int          **dface_vtx_idx,
+//  const PDM_g_num_t  **dface_vtx,
+//  const PDM_g_num_t  **dface_cell,
+//  const int          **dface_bound_idx,
+//  const PDM_g_num_t  **dface_bound,
+//  const int          **joins_glob_id,
+//  const int          **dface_join_idx,
+//  const PDM_g_num_t  **dface_join
+// );
 
 
 void
