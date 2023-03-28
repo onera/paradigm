@@ -13,8 +13,6 @@ cdef extern from "pdm_dmesh.h":
                                   int             dn_face,
                                   int             dn_edge,
                                   int             dn_vtx,
-                                  int             n_bnd,
-                                  int             n_join,
                                   PDM_MPI_Comm    comm)
 
     void PDM_dmesh_set(PDM_dmesh_t  *dm,
@@ -124,9 +122,7 @@ cdef class DistributedMesh:
                       dn_cell,
                       dn_face,
                       dn_edge,
-                      dn_vtx,
-                      n_bnd,
-                      n_join):
+                      dn_vtx):
     """
     TODOUX
     """
@@ -141,8 +137,6 @@ cdef class DistributedMesh:
                                 dn_face,
                                 dn_edge,
                                 dn_vtx,
-                                n_bnd,
-                                n_join,
                                 PDM_MPI_mpi_2_pdm_mpi_comm (<void *> &c_comm))
     # ::::::::::::::::::::::::::::::::::::::::::::::::::
 

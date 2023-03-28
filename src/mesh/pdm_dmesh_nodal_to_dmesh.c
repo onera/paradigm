@@ -1055,8 +1055,6 @@ _generate_faces_from_dmesh_nodal
                                      0,
                                      0,
                                      dmesh_nodal->vtx->n_vtx,
-                                     0,
-                                     0,
                                      dmesh_nodal->comm);
 
   /* Juste a view */
@@ -1555,8 +1553,6 @@ _generate_edges_from_dmesh_nodal
                                      0,
                                      0,
                                      dmesh_nodal->vtx->n_vtx,
-                                     0,
-                                     0,
                                      dmesh_nodal->comm);
 
   /* Juste a view */

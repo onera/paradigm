@@ -274,10 +274,8 @@ int main(int argc, char *argv[])
     dmesh[i_zone] = PDM_dmesh_create(PDM_OWNERSHIP_KEEP,
                                      dn_cell[i_zone],
                                      dn_face[i_zone],
-                                     -1, // dn_edge
+                                     0, // dn_edge
                                      dn_vtx[i_zone],
-                                     n_bnd,
-                                     n_jn,
                                      comm);
 
     PDM_dmesh_vtx_coord_set(dmesh[i_zone],
@@ -303,16 +301,16 @@ int main(int argc, char *argv[])
                         dface_bnd_idx[i_zone],
                         PDM_OWNERSHIP_USER);
 
-    PDM_dmesh_set(dmesh[i_zone],
-                  dvtx_coord[i_zone],
-                  dface_vtx_idx[i_zone],
-                  dface_vtx[i_zone],
-                  dface_cell[i_zone],
-                  dface_bnd_idx[i_zone],
-                  dface_bnd[i_zone],
-                  djoins_ids[i_zone],
-                  dface_join_idx[i_zone],
-                  dface_join[i_zone]);
+    // PDM_dmesh_set(dmesh[i_zone],
+    //               dvtx_coord[i_zone],
+    //               dface_vtx_idx[i_zone],
+    //               dface_vtx[i_zone],
+    //               dface_cell[i_zone],
+    //               dface_bnd_idx[i_zone],
+    //               dface_bnd[i_zone],
+    //               djoins_ids[i_zone],
+    //               dface_join_idx[i_zone],
+    //               dface_join[i_zone]);
     PDM_multipart_register_block(mpart, i_zone, dmesh[i_zone]);
   }
 

@@ -219,28 +219,36 @@ int main(int argc, char *argv[])
   /*
    * Create dmesh
    */
-  int n_jn = 0;
   PDM_dmesh_t* dm = PDM_dmesh_create(PDM_OWNERSHIP_KEEP,
                                      dn_cell,
                                      dn_face,
-                                     -1, // dn_edge
+                                     0, // dn_edge
                                      dn_vtx,
-                                     n_face_group, // n_bnd
-                                     n_jn,
                                      comm);
 
-  int *dface_join_idx = (int *) malloc( (n_jn+1) * sizeof(int));
-  dface_join_idx[0] = 0;
-  PDM_dmesh_set(dm,
-                dvtx_coord,
-                dface_vtx_idx,
-                dface_vtx,
-                dface_cell,
-                dface_group_idx,
-                dface_group,
-                NULL,
-                dface_join_idx,
-                NULL);
+  PDM_dmesh_vtx_coord_set(dm,
+                          dvtx_coord,
+                          PDM_OWNERSHIP_USER);
+
+
+  PDM_dmesh_connectivity_set(dm,
+                             PDM_CONNECTIVITY_TYPE_FACE_VTX,
+                             dface_vtx,
+                             dface_vtx_idx,
+                             PDM_OWNERSHIP_USER);
+
+  PDM_dmesh_connectivity_set(dm,
+                             PDM_CONNECTIVITY_TYPE_FACE_CELL,
+                             dface_cell,
+                             NULL,
+                             PDM_OWNERSHIP_USER);
+
+  PDM_dmesh_bound_set(dm,
+                      PDM_BOUND_TYPE_FACE,
+                      n_face_group,
+                      dface_group,
+                      dface_group_idx,
+                      PDM_OWNERSHIP_USER);
 
   /*
    * Partitionnement
@@ -346,7 +354,6 @@ int main(int argc, char *argv[])
     pvtx_coord   [i_part] = vtx;
 
   }
-  free(dface_join_idx);
 
   /*
    * Compute edges

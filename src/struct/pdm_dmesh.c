@@ -93,8 +93,6 @@ PDM_dmesh_create
  const int             dn_face,
  const int             dn_edge,
  const int             dn_vtx,
- const int             n_bnd,
- const int             n_join,
        PDM_MPI_Comm    comm
 )
 {
