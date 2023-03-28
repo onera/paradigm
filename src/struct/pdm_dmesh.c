@@ -641,6 +641,8 @@ PDM_dmesh_bound_set
 
   if(ownership == PDM_OWNERSHIP_USER || ownership == PDM_OWNERSHIP_UNGET_RESULT_IS_FREE) {
     dmesh->is_owner_bound[bound_type] = PDM_FALSE;
+  } else if(ownership == PDM_OWNERSHIP_KEEP) {
+    dmesh->is_owner_bound[bound_type] = PDM_TRUE;
   }
 }
 
