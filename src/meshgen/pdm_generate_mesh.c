@@ -213,6 +213,7 @@ PDM_generate_mesh_sphere_simplified
   double *tmp_coords = PDM_part_mesh_nodal_vtx_coord_get(pmn,
                                                          0);
 
+  *coords = malloc(sizeof(double) * 3 * (*n_vtx));
   memcpy(*coords, tmp_coords, sizeof(double) * 3 * (*n_vtx));
 
   int         *pelt_vtx            = NULL;
@@ -231,6 +232,7 @@ PDM_generate_mesh_sphere_simplified
                                                  0,
                                                  0);
 
+  *elt_vtx = malloc(sizeof(int) * (*n_elt) * 3);
   memcpy(*elt_vtx, pelt_vtx, sizeof(int) * (*n_elt) * 3); // because PDM_MESH_NODAL_TRIA3
 
   *elt_vtx_idx = malloc(sizeof(int) * ((*n_elt)+1));
@@ -415,6 +417,7 @@ PDM_generate_mesh_ball_simplified
   double *tmp_coords = PDM_part_mesh_nodal_vtx_coord_get(pmn,
                                                          0);
 
+  *coords = malloc(sizeof(double) * 3 * (*n_vtx));
   memcpy(*coords, tmp_coords, sizeof(double) * 3 * (*n_vtx));
 
   int         *pelt_vtx            = NULL;
@@ -433,6 +436,7 @@ PDM_generate_mesh_ball_simplified
                                                  0,
                                                  0);
 
+  *elt_vtx = malloc(sizeof(int) * (*n_elt) * 4);
   memcpy(*elt_vtx, pelt_vtx, sizeof(int) * (*n_elt) * 4); // because PDM_MESH_NODAL_TETRA4
 
   *elt_vtx_idx = malloc(sizeof(int) * ((*n_elt)+1));
@@ -580,6 +584,7 @@ PDM_generate_mesh_rectangle_simplified
   double *tmp_coords = PDM_part_mesh_nodal_vtx_coord_get(pmn,
                                                          0);
 
+  *coords = malloc(sizeof(double) * 3 * (*n_vtx));
   memcpy(*coords, tmp_coords, sizeof(double) * 3 * (*n_vtx));
 
   int         *pelt_vtx            = NULL;
@@ -598,6 +603,7 @@ PDM_generate_mesh_rectangle_simplified
                                                  0,
                                                  0);
 
+  *elt_vtx = malloc(sizeof(int) * (*n_elt) * 3);
   memcpy(*elt_vtx, pelt_vtx, sizeof(int) * (*n_elt) * 3); // because PDM_MESH_NODAL_TRIA3
 
   *elt_vtx_idx = malloc(sizeof(int) * ((*n_elt)+1));
@@ -765,6 +771,7 @@ PDM_generate_mesh_parallelepiped_simplified
   double *tmp_coords = PDM_part_mesh_nodal_vtx_coord_get(pmn,
                                                          0);
 
+  *coords = malloc(sizeof(double) * 3 * (*n_vtx));
   memcpy(*coords, tmp_coords, sizeof(double) * 3 * (*n_vtx));
 
   int         *pelt_vtx            = NULL;
@@ -783,6 +790,7 @@ PDM_generate_mesh_parallelepiped_simplified
                                                  0,
                                                  0);
 
+  *elt_vtx = malloc(sizeof(int) * (*n_elt) * 4);
   memcpy(*elt_vtx, pelt_vtx, sizeof(int) * (*n_elt) * 4); // because PDM_MESH_NODAL_TETRA4
 
   *elt_vtx_idx = malloc(sizeof(int) * ((*n_elt)+1));

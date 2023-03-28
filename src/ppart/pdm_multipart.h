@@ -231,13 +231,13 @@ const int                     i_zone,
  *
  */
 
-void
-PDM_multipart_get_part_mesh
-(
-       PDM_multipart_t  *multipart,
- const int               i_zone,
-       PDM_part_mesh_t **pmesh
-);
+// void
+// PDM_multipart_get_part_mesh
+// (
+//        PDM_multipart_t  *multipart,
+//  const int               i_zone,
+//        PDM_part_mesh_t **pmesh
+// );
 
 /**
  * \brief Retreive the partitionned mesh

@@ -2717,19 +2717,18 @@ PDM_ownership_t         ownership
  */
 
 
-void
-PDM_multipart_get_part_mesh
-(
-       PDM_multipart_t  *multipart,
- const int               i_zone,
-       PDM_part_mesh_t **pmesh
-)
-{
-  _pdm_multipart_t *_multipart = (_pdm_multipart_t *) multipart;
-  assert(i_zone < _multipart->n_zone);
+// void
+// PDM_multipart_get_part_mesh
+// (
+//        PDM_multipart_t  *multipart,
+//  const int               i_zone,
+//        PDM_part_mesh_t **pmesh
+// )
+// {
+//   assert(i_zone < multipart->n_zone);
 
-  *pmesh = &(_multipart->pmeshes    [i_zone]);
-}
+//   *pmesh = &(multipart->pmeshes    [i_zone]);
+// }
 
 /**
  *

@@ -157,186 +157,186 @@ int main(int argc, char *argv[])
   // free
   PDM_part_mesh_nodal_free(pmn);
 
-  // Generate ball mesh
-  pmn = PDM_generate_mesh_ball(comm,
-                               PDM_MESH_NODAL_TETRA4,
-                               1,
-                               NULL,
-                               1.,
-                               0.,
-                               0.,
-                               0.,
-                               0.,
-                               10,
-                               10,
-                               10,
-                               0,
-                               0.,
-                               1,
-                               PDM_SPLIT_DUAL_WITH_HILBERT);
+  // // Generate ball mesh
+  // pmn = PDM_generate_mesh_ball(comm,
+  //                              PDM_MESH_NODAL_TETRA4,
+  //                              1,
+  //                              NULL,
+  //                              1.,
+  //                              0.,
+  //                              0.,
+  //                              0.,
+  //                              0.,
+  //                              10,
+  //                              10,
+  //                              10,
+  //                              0,
+  //                              0.,
+  //                              1,
+  //                              PDM_SPLIT_DUAL_WITH_HILBERT);
 
-    if (visu) {
+  //   if (visu) {
 
-      char filename[999];
-      sprintf(filename, "ball_mesh_%2.2d.vtk", i_rank);
+  //     char filename[999];
+  //     sprintf(filename, "ball_mesh_%2.2d.vtk", i_rank);
 
-      int pn_vtx = PDM_part_mesh_nodal_n_vtx_get(pmn,
-                                                 0);
+  //     int pn_vtx = PDM_part_mesh_nodal_n_vtx_get(pmn,
+  //                                                0);
 
-      double* pvtx_coord = PDM_part_mesh_nodal_vtx_coord_get(pmn,
-                                                             0);
+  //     double* pvtx_coord = PDM_part_mesh_nodal_vtx_coord_get(pmn,
+  //                                                            0);
 
-      PDM_g_num_t *pvtx_ln_to_gn = PDM_part_mesh_nodal_vtx_g_num_get(pmn,
-                                                                     0);
+  //     PDM_g_num_t *pvtx_ln_to_gn = PDM_part_mesh_nodal_vtx_g_num_get(pmn,
+  //                                                                    0);
 
-      int pn_elt = PDM_part_mesh_nodal_section_n_elt_get(pmn,
-                                                         0,
-                                                         0);
+  //     int pn_elt = PDM_part_mesh_nodal_section_n_elt_get(pmn,
+  //                                                        0,
+  //                                                        0);
 
-      int         *pelt_vtx            = NULL;
-      PDM_g_num_t *pelt_ln_to_gn       = NULL;
-      int         *parent_num          = NULL;
-      PDM_g_num_t *parent_entity_g_num = NULL;
-      PDM_part_mesh_nodal_section_std_get(pmn,
-                                          0,
-                                          0,
-                                          &pelt_vtx,
-                                          &pelt_ln_to_gn,
-                                          &parent_num,
-                                          &parent_entity_g_num);
+  //     int         *pelt_vtx            = NULL;
+  //     PDM_g_num_t *pelt_ln_to_gn       = NULL;
+  //     int         *parent_num          = NULL;
+  //     PDM_g_num_t *parent_entity_g_num = NULL;
+  //     PDM_part_mesh_nodal_section_std_get(pmn,
+  //                                         0,
+  //                                         0,
+  //                                         &pelt_vtx,
+  //                                         &pelt_ln_to_gn,
+  //                                         &parent_num,
+  //                                         &parent_entity_g_num);
 
-      PDM_vtk_write_std_elements(filename,
-                                 pn_vtx,
-                                 pvtx_coord,
-                                 pvtx_ln_to_gn,
-                                 PDM_MESH_NODAL_TETRA4,
-                                 pn_elt,
-                                 pelt_vtx,
-                                 pelt_ln_to_gn,
-                                 0,
-                                 NULL,
-                                 NULL);
+  //     PDM_vtk_write_std_elements(filename,
+  //                                pn_vtx,
+  //                                pvtx_coord,
+  //                                pvtx_ln_to_gn,
+  //                                PDM_MESH_NODAL_TETRA4,
+  //                                pn_elt,
+  //                                pelt_vtx,
+  //                                pelt_ln_to_gn,
+  //                                0,
+  //                                NULL,
+  //                                NULL);
 
-  }
+  // }
 
-  // free
-  PDM_part_mesh_nodal_free(pmn);
+  // // free
+  // PDM_part_mesh_nodal_free(pmn);
 
-  // Generate rectangle mesh
-  pmn = PDM_generate_mesh_rectangle(comm,
-                                    PDM_MESH_NODAL_POLY_2D,
-                                    1,
-                                    NULL,
-                                    0.,
-                                    0.,
-                                    0.,
-                                    10.,
-                                    5.,
-                                    10,
-                                    10,
-                                    1,
-                                    PDM_SPLIT_DUAL_WITH_HILBERT);
+  // // Generate rectangle mesh
+  // pmn = PDM_generate_mesh_rectangle(comm,
+  //                                   PDM_MESH_NODAL_POLY_2D,
+  //                                   1,
+  //                                   NULL,
+  //                                   0.,
+  //                                   0.,
+  //                                   0.,
+  //                                   10.,
+  //                                   5.,
+  //                                   10,
+  //                                   10,
+  //                                   1,
+  //                                   PDM_SPLIT_DUAL_WITH_HILBERT);
 
-  if (visu) {
+  // if (visu) {
 
-    PDM_part_mesh_nodal_dump_vtk(pmn,
-                                 PDM_GEOMETRY_KIND_SURFACIC,
-                                 "rectangle_mesh");
-  }
+  //   PDM_part_mesh_nodal_dump_vtk(pmn,
+  //                                PDM_GEOMETRY_KIND_SURFACIC,
+  //                                "rectangle_mesh");
+  // }
 
-  // free
-  PDM_part_mesh_nodal_free(pmn);
+  // // free
+  // PDM_part_mesh_nodal_free(pmn);
 
-  // Generate simplified rectangle mesh
-  int       n_vtx = 0;
-  int       n_elt = 0;
-  double   *coords      = NULL;
-  int      *elt_vtx_idx = NULL;
-  int      *elt_vtx     = NULL;
-  PDM_generate_mesh_rectangle_simplified(comm,
-                                         &n_vtx,
-                                         &n_elt,
-                                         &coords,
-                                         &elt_vtx_idx,
-                                         &elt_vtx);
+  // // Generate simplified rectangle mesh
+  // int       n_vtx = 0;
+  // int       n_elt = 0;
+  // double   *coords      = NULL;
+  // int      *elt_vtx_idx = NULL;
+  // int      *elt_vtx     = NULL;
+  // PDM_generate_mesh_rectangle_simplified(comm,
+  //                                        &n_vtx,
+  //                                        &n_elt,
+  //                                        &coords,
+  //                                        &elt_vtx_idx,
+  //                                        &elt_vtx);
 
-  if (visu) {
-    log_trace("n_vtx : %d\n", n_vtx);
-    log_trace("n_elt : %d\n", n_elt);
-    PDM_log_trace_array_double(coords, 3*n_vtx, "coords : ");
-    PDM_log_trace_array_int(elt_vtx_idx, n_elt + 1, "elt_vtx_idx : ");
-    PDM_log_trace_array_int(elt_vtx, elt_vtx_idx[n_elt], "elt_vtx : ");
-  }
+  // if (visu) {
+  //   log_trace("n_vtx : %d\n", n_vtx);
+  //   log_trace("n_elt : %d\n", n_elt);
+  //   PDM_log_trace_array_double(coords, 3*n_vtx, "coords : ");
+  //   PDM_log_trace_array_int(elt_vtx_idx, n_elt + 1, "elt_vtx_idx : ");
+  //   PDM_log_trace_array_int(elt_vtx, elt_vtx_idx[n_elt], "elt_vtx : ");
+  // }
 
 
-  // free
-  free(coords     );
-  free(elt_vtx_idx);
-  free(elt_vtx    );
+  // // free
+  // free(coords     );
+  // free(elt_vtx_idx);
+  // free(elt_vtx    );
 
-  // Generate parallelepiped mesh
-  pmn = PDM_generate_mesh_parallelepiped(comm,
-                                         PDM_MESH_NODAL_PYRAMID5,
-                                         1,
-                                         NULL,
-                                         0.,
-                                         0.,
-                                         0.,
-                                         10.,
-                                         1.8,
-                                         99.42,
-                                         10,
-                                         20,
-                                         5,
-                                         1,
-                                         PDM_SPLIT_DUAL_WITH_HILBERT);
+  // // Generate parallelepiped mesh
+  // pmn = PDM_generate_mesh_parallelepiped(comm,
+  //                                        PDM_MESH_NODAL_PYRAMID5,
+  //                                        1,
+  //                                        NULL,
+  //                                        0.,
+  //                                        0.,
+  //                                        0.,
+  //                                        10.,
+  //                                        1.8,
+  //                                        99.42,
+  //                                        10,
+  //                                        20,
+  //                                        5,
+  //                                        1,
+  //                                        PDM_SPLIT_DUAL_WITH_HILBERT);
 
-  if (visu) {
+  // if (visu) {
 
-    char filename[999];
-    sprintf(filename, "parallelepiped_mesh_%2.2d.vtk", i_rank);
+  //   char filename[999];
+  //   sprintf(filename, "parallelepiped_mesh_%2.2d.vtk", i_rank);
 
-    int pn_vtx = PDM_part_mesh_nodal_n_vtx_get(pmn,
-                                               0);
+  //   int pn_vtx = PDM_part_mesh_nodal_n_vtx_get(pmn,
+  //                                              0);
 
-    double* pvtx_coord = PDM_part_mesh_nodal_vtx_coord_get(pmn,
-                                                           0);
+  //   double* pvtx_coord = PDM_part_mesh_nodal_vtx_coord_get(pmn,
+  //                                                          0);
 
-    PDM_g_num_t *pvtx_ln_to_gn = PDM_part_mesh_nodal_vtx_g_num_get(pmn,
-                                                                   0);
+  //   PDM_g_num_t *pvtx_ln_to_gn = PDM_part_mesh_nodal_vtx_g_num_get(pmn,
+  //                                                                  0);
 
-    int pn_elt = PDM_part_mesh_nodal_section_n_elt_get(pmn,
-                                                       0,
-                                                       0);
+  //   int pn_elt = PDM_part_mesh_nodal_section_n_elt_get(pmn,
+  //                                                      0,
+  //                                                      0);
 
-    int         *pelt_vtx            = NULL;
-    PDM_g_num_t *pelt_ln_to_gn       = NULL;
-    int         *parent_num          = NULL;
-    PDM_g_num_t *parent_entity_g_num = NULL;
-    PDM_part_mesh_nodal_section_std_get(pmn,
-                                        0,
-                                        0,
-                                        &pelt_vtx,
-                                        &pelt_ln_to_gn,
-                                        &parent_num,
-                                        &parent_entity_g_num);
+  //   int         *pelt_vtx            = NULL;
+  //   PDM_g_num_t *pelt_ln_to_gn       = NULL;
+  //   int         *parent_num          = NULL;
+  //   PDM_g_num_t *parent_entity_g_num = NULL;
+  //   PDM_part_mesh_nodal_section_std_get(pmn,
+  //                                       0,
+  //                                       0,
+  //                                       &pelt_vtx,
+  //                                       &pelt_ln_to_gn,
+  //                                       &parent_num,
+  //                                       &parent_entity_g_num);
 
-    PDM_vtk_write_std_elements(filename,
-                               pn_vtx,
-                               pvtx_coord,
-                               pvtx_ln_to_gn,
-                               PDM_MESH_NODAL_PYRAMID5,
-                               pn_elt,
-                               pelt_vtx,
-                               pelt_ln_to_gn,
-                               0,
-                               NULL,
-                               NULL);
+  //   PDM_vtk_write_std_elements(filename,
+  //                              pn_vtx,
+  //                              pvtx_coord,
+  //                              pvtx_ln_to_gn,
+  //                              PDM_MESH_NODAL_PYRAMID5,
+  //                              pn_elt,
+  //                              pelt_vtx,
+  //                              pelt_ln_to_gn,
+  //                              0,
+  //                              NULL,
+  //                              NULL);
 
-  }
+  // }
 
-  // free
-  PDM_part_mesh_nodal_free(pmn);
+  // // free
+  // PDM_part_mesh_nodal_free(pmn);
 
   PDM_MPI_Finalize();
 
