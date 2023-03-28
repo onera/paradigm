@@ -2,6 +2,7 @@
 
 listTest=( @PDM_LIST_TEST@ )
 listNRank=( @PDM_LIST_NRANK@ )
+listDir=( @PDM_LIST_TEST_DIR@ )
 
 RED='\033[0;31m'
 NC='\033[0m' # No Color
@@ -107,7 +108,10 @@ Wait_job()
   for pid in "${pids[@]}"
   do
     Testoutput=0
-    TestName1=$(echo ${listComputedTest[$i1]} | awk '{print $1}')
+    TestPath1=$(echo ${listComputedTest[$i1]} | awk '{print $1}')
+    TestName1=$(basename ${TestPath1})
+    TestDir1=$(dirname ${TestPath1})
+
     OutputFile1=$(echo ${TestName1}${postOutput})
     ErrFile1=$(echo ${TestName1}${postErr})
 
@@ -222,10 +226,15 @@ then
   listComputedNRank=( "${listNRank[@]}" )
 else
   testFound=0
-  TestName1=$(echo $Test | awk '{print $1}')
+  TestPath=$(echo $Test | awk '{print $1}')
+  TestName1=$(basename ${TestPath})
+  TestDir=$(dirname ${TestPath})
   i=0
   for value in "${listTest[@]}" ; do    #print the new array
-    if [[ ${value} =~ ^${TestName1}$ ]]
+    valuePath=$(echo $value | awk '{print $1}')
+    valueName1=$(basename ${valuePath})
+    valueDir=$(dirname ${valuePath})
+    if [[ ${valueName1} =~ ^${TestName1}$ ]]
     then
       listComputedTest=( "${TestName1}" ) 
       if [[ "${Nrank}" == "0" ]]
@@ -262,29 +271,39 @@ cptRank=0
 
 for x in "${listComputedTest[@]}"
 do
+  isPythonTest=0
 
   if [[ "${Test}" == "" ]]
   then
-    TestName=$(echo $x | awk '{print $1}')
+    if [ -f "${x}.py" ]; then
+      isPythonTest=1
+    fi
+    TestPath=$(echo $x | awk '{print $1}')
+    TestName=$(basename ${TestPath})
+    TestDir=$(dirname ${TestPath})
     TestOption=""
     Nrank=${listComputedNRank[$i]}
   else
-    TestName=$(echo $Test | awk '{print $1}')
+    if [ -f "${Test}.py" ]; then
+      isPythonTest=1
+    fi
+    TestPath=$(echo $Test | awk '{print $1}')
+    TestName=$(basename ${TestPath})
+    TestDir=$(dirname ${TestPath})
     TestOption=$(echo $Test |  awk '!($1="")')
     if [[ "${NrankUser}" == "0" ]]
     then    
-      Nrank=${listComputedNRank[$i]}
+      Nrank=${listComputedNRank[${i}]}
     else  
       Nrank=${NrankUser}
     fi  
   fi 
 
-  # echo "TestName ${TestName}"
-  # echo "TestOption ${TestOption}"
-  # echo "Nrank ${Nrank}"  
+  #echo "TestName ${TestName}"
+  #echo "TestOption ${TestOption}"
+  #echo "TestDir ${TestDir}"
+  #echo "Nrank ${Nrank}"  
 
-  isPythonTest=$(find . -name "${TestName}.py" | wc -l)
-  
   postOutput="_o"
   postErr="_e"
   
@@ -333,18 +352,18 @@ do
 
   if [ ${IsSrunMPI} -gt 0 ]
   then
-    mkdir -p ${TestName}_d
-    cd ${TestName}_d 
+    # mkdir -p ${TestName}_d
+    # cd ${TestName}_d 
+    mkdir -p ${x}_d
+    cd ${x}_d
     if [ $isPythonTest -gt 0  ]
     then
       ${ExeMPI}  --output=$OutputFile.%t --error=$ErrFile.%t -N 1 -n ${Nrank} --exact /usr/bin/time  -f "Maximum Resident Memory : %M Kb\nReal time : %e s" @PROJECT_BINARY_DIR@/pdm_launch_python ../${TestName}.py ${TestOption} 2>/dev/null &
-#      ${ExeMPI}  --output=$OutputFile.%t --error=$ErrFile.%t -N 1 -n ${Nrank} -c ${Nrank} -O /usr/bin/time  -f "Maximum Resident Memory : %M Kb\nReal time : %e s" @PROJECT_BINARY_DIR@/pdm_launch_python ../${TestName}.py ${TestOption} 2>/dev/null &
     else
       ${ExeMPI}  --output=$OutputFile.%t --error=$ErrFile.%t -N 1 -n ${Nrank} --exact /usr/bin/time  -f "Maximum Resident Memory : %M Kb\nReal time : %e s" @PROJECT_BINARY_DIR@/pdm_launch ../${TestName} ${TestOption} 2>/dev/null &
-#      ${ExeMPI}  --output=$OutputFile.%t --error=$ErrFile.%t -N 1 -n ${Nrank} -c ${Nrank} -O /usr/bin/time  -f "Maximum Resident Memory : %M Kb\nReal time : %e s" @PROJECT_BINARY_DIR@/pdm_launch ../${TestName} ${TestOption} 2>/dev/null &
     fi
     pids=(${pids[@]} "$!")
-    cd ..
+    cd - 1>/dev/null 2>/dev/null
   else  
 
     if [ $Nrank -gt $NAvailRank ]
@@ -361,8 +380,10 @@ do
       Indextest=$i
     fi
 
-    mkdir -p ${TestName}_d
-    cd ${TestName}_d  
+    # mkdir -p ${TestName}_d
+    # cd ${TestName}_d  
+    mkdir -p ${x}_d
+    cd ${x}_d
     if [ ${IsIntelMPI} -gt 0 ]
     then
       if [ $isPythonTest -gt 0  ]
@@ -379,7 +400,7 @@ do
       @PDM_RUN_LSAN@ @PDM_RUN_PYTHONPATH@ ${ExeMPI} -genv @PDM_RUN_PRELOAD@ -output-filename $OutputFile -n $Nrank /usr/bin/time  -f "Maximum Resident Memory : %M Kb\nReal time : %e s" ../${TestName} ${TestOption} 2>/dev/null
       pids=(${pids[@]} "$!")
     fi
-    cd ..
+    cd - 1>/dev/null 2>/dev/null
     ((IndexRank=IndexRank+Nrank)) 
   
   fi  
@@ -398,11 +419,14 @@ Wait_job
 printf  "\n      ${PURPLE}%3.3d tests failed out of %3.3d : \n${NC}" ${ifailed} ${nTest} 
 for i in "${failedTest[@]}"
 do
-  TestName=$(echo ${listComputedTest[$i]} | awk '{print $1}')
-  echo "          - $TestName"
+  TestPath=$(echo ${listComputedTest[$i]} | awk '{print $1}')
+  TestName=$(basename ${TestPath})
+  TestDir=$(dirname ${TestPath})
+  printf "          - ${RED}%s\n${NC}" $TestName  
 done
 end=$(($(date +%s%N)/1000000))
 elapsed=$(echo "scale=2; ($end-$start)/1000" | bc)
-echo "elapsed job = ${elapsed} s"
+echo
+echo "    elapsed pdm_run = ${elapsed} s"
 
 exit ${scriptOutput}

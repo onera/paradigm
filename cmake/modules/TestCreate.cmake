@@ -53,7 +53,7 @@ function(test_c_create name n_proc LIST_TEST LIST_NRANK)
              ${CMAKE_CURRENT_BINARY_DIR}/${name}
              ${MPIEXEC_POSTFLAGS})
 
-  set (${LIST_TEST} ${${LIST_TEST}} "${name}" )
+  set (${LIST_TEST} ${${LIST_TEST}} "${CMAKE_CURRENT_BINARY_DIR}/${name}" )
   set (${LIST_NRANK} ${${LIST_NRANK}} "${n_proc}" )           
 
   set (${LIST_TEST} ${${LIST_TEST}} PARENT_SCOPE )
@@ -120,7 +120,7 @@ function(test_fortran_create name n_proc  LIST_TEST LIST_NRANK)
             ${CMAKE_CURRENT_BINARY_DIR}/${name}
             ${MPIEXEC_POSTFLAGS})
 
-  set (${LIST_TEST} ${${LIST_TEST}} "${name}" )
+  set (${LIST_TEST} ${${LIST_TEST}} "${CMAKE_CURRENT_BINARY_DIR}/${name}" )
   set (${LIST_NRANK} ${${LIST_NRANK}} "${n_proc}" )           
 
   set (${LIST_TEST} ${${LIST_TEST}} PARENT_SCOPE )
@@ -169,7 +169,7 @@ function(test_python_create name n_proc  LIST_TEST LIST_NRANK)
             python ${CMAKE_CURRENT_BINARY_DIR}/${name}.py
             ${MPIEXEC_POSTFLAGS})
 
-  set (${LIST_TEST} ${${LIST_TEST}} "${name}" )
+  set (${LIST_TEST} ${${LIST_TEST}} "${CMAKE_CURRENT_BINARY_DIR}/${name}" )
   set (${LIST_NRANK} ${${LIST_NRANK}} "${n_proc}" )           
 
   set (${LIST_TEST} ${${LIST_TEST}} PARENT_SCOPE )
