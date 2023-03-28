@@ -141,58 +141,6 @@ PDM_dmesh_create
 
   return dmesh;
 }
-
-/**
- *
- * \brief Set the arrays into the distributed mesh structure
- *
- * \param [in]   id                 id of the dmesh to be set
- * \param [in]   dvtx_coord          Coordinates of  vertices (size = 3 * dn_vtx)
- * \param [in]   dface_vtx_idx        Face-vertex connectivity index of
- *                                    faces (size = dn_face + 1)
- * \param [in]   dface_vtx           Face-vertex connectivity of faces
- *                                    (size = dface_vtx_idx[dn_face])
- * \param [in]   dface_cell          Face-cell connectivity of faces (size =
- *                                    2 * dn_face). If iface is a boundary face,
- *                                    dface_cell[2*iface + 1] = 0
- * \param [in]   dface_bound_idx      Index of faces list of each boundary
- *                                    (size = n_bnd + 1)
- * \param [in]   dface_bound         Faces list of each boundary
- *                                    (size = dface_bound_idx[n_bnd])
- * \param [in]   joins_glob_id       Global id of each join (size = n_join)
- * \param [in]   dface_join_idx       Index of faces list of each join
- *                                    (size = n_join + 1)
- * \param [in]   dface_join          Faces list of each join
- *                                    (size = dface_join_idx[n_join])
- */
-
-// void
-// PDM_dmesh_set
-// (
-//        PDM_dmesh_t  *dmesh,
-//  const double       *dvtx_coord,
-//  const int          *dface_vtx_idx,
-//  const PDM_g_num_t  *dface_vtx,
-//  const PDM_g_num_t  *dface_cell,
-//  const int          *dface_bound_idx,
-//  const PDM_g_num_t  *dface_bound,
-//  const int          *joins_glob_id,
-//  const int          *dface_join_idx,
-//  const PDM_g_num_t  *dface_join
-// )
-// {
-//   // dmesh->_dvtx_coord      = (double      *) dvtx_coord;
-//   // dmesh->_dface_vtx_idx   = (int         *) dface_vtx_idx;
-//   // dmesh->_dface_vtx       = (PDM_g_num_t *) dface_vtx;
-//   // dmesh->_dface_cell      = (PDM_g_num_t *) dface_cell;
-//   // dmesh->_dface_bound_idx = (int         *) dface_bound_idx;
-//   // dmesh->_dface_bound     = (PDM_g_num_t *) dface_bound;
-//   // dmesh->_joins_glob_id   = (int         *) joins_glob_id;
-//   // dmesh->_dface_join_idx  = (int         *) dface_join_idx;
-//   // dmesh->_dface_join      = (PDM_g_num_t *) dface_join;
-
-// }
-
 /**
  *
  * \brief Get the dimensions of the distributed mesh
@@ -276,49 +224,6 @@ PDM_dmesh_dn_entity_get
     return -1;
   }
 }
-
-
-/**
- *
- * \brief Get the data (arrays) of the distributed mesh
- *
- * \param [in]    id                 id of the requested dmesh
- * \param [out]   dvtx_coord          Coordinates of  vertices
- * \param [out]   dface_vtx_idx        Face-vertex connectivity indices
- * \param [out]   dface_vtx           Face-vertex connectivity
- * \param [out]   dface_cell          Face-cell connectivity of faces
- * \param [out]   dface_bound_idx      Indices of faces list of each boundary
- * \param [out]   dface_bound         Faces list of each boundary
- * \param [out]   joins_glob_id       Global Id  of each join
- * \param [out]   dface_join_idx       Indices of faces list of each join
- * \param [out]   dface_join          Faces list of each join
- */
-
-// void
-// PDM_dmesh_data_get
-// (
-//        PDM_dmesh_t   *dmesh,
-//  const double       **dvtx_coord,
-//  const int          **dface_vtx_idx,
-//  const PDM_g_num_t  **dface_vtx,
-//  const PDM_g_num_t  **dface_cell,
-//  const int          **dface_bound_idx,
-//  const PDM_g_num_t  **dface_bound,
-//  const int          **joins_glob_id,
-//  const int          **dface_join_idx,
-//  const PDM_g_num_t  **dface_join
-// )
-// {
-//   // *dvtx_coord      = dmesh->_dvtx_coord;
-//   // *dface_vtx_idx   = dmesh->_dface_vtx_idx;
-//   // *dface_vtx       = dmesh->_dface_vtx;
-//   // *dface_cell      = dmesh->_dface_cell;
-//   // *dface_bound_idx = dmesh->_dface_bound_idx;
-//   // *dface_bound     = dmesh->_dface_bound;
-//   // *joins_glob_id   = dmesh->_joins_glob_id;
-//   // *dface_join_idx  = dmesh->_dface_join_idx;
-//   // *dface_join      = dmesh->_dface_join;
-// }
 
 void
 PDM_dmesh_vtx_coord_get
