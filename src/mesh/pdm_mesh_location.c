@@ -4862,6 +4862,7 @@ PDM_mesh_location_compute2
                                             &delt_pts_n,
                                             &delt_pts_g_num,
                                             &delt_pts_coord);
+    free(dpts_coord);
 
     PDM_MPI_Barrier (ml->comm);
     PDM_timer_hang_on(ml->timer);
@@ -5181,7 +5182,7 @@ PDM_mesh_location_compute2
                            &block_pts_elt_n,
                  (void **) &block_pts_elt_id);
     free(part_stride);
-
+    free(local_pts_elt_g_num);
 
 
     /* Pick closest elt for each point in current block */
