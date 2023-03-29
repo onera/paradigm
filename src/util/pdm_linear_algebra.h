@@ -25,7 +25,9 @@
  * Local headers
  *----------------------------------------------------------------------------*/
 
-//#include "pdm.h"
+#ifdef  __cplusplus
+extern "C" {
+#endif
 
 
 /*============================================================================
@@ -101,6 +103,11 @@ PDM_linear_algebra_linsolve_svd
        double *b,
        double *x
 );
+
+
+#ifdef  __cplusplus
+}
+#endif
 
 #endif // PDM_LINEAR_ALGEBRA_H
 

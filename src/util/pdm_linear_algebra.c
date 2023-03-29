@@ -42,6 +42,14 @@
 #include "pdm_linear_algebra.h"
 
 
+#ifdef  __cplusplus
+extern "C" {
+#if 0
+} /* Fake brace to force Emacs auto-indentation back to column 0 */
+#endif
+#endif
+
+
 /*============================================================================
  * Macro definitions
  *============================================================================*/
@@ -528,6 +536,8 @@ PDM_linear_algebra_linsolve_svd
 
 PDM_GCC_SUPPRESS_WARNING_POP
 
-
+#ifdef  __cplusplus
+}
+#endif
 #undef SIGN
 #undef SQR
