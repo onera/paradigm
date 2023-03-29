@@ -19,6 +19,14 @@ cdef extern from "pdm_partitioning_algorithm.h":
                                                int            *pn_vtx,
                                                PDM_g_num_t   **pvtx_ln_to_gn,
                                                double       ***pvtx_coord)
+
+    void PDM_compute_dface_vtx_from_edges(PDM_MPI_Comm   comm,
+                                          int            dn_face,
+                                          int            dn_edge,
+                                          int           *dface_edge_idx,
+                                          PDM_g_num_t   *dface_edge,
+                                          PDM_g_num_t   *dedge_vtx,
+                                          PDM_g_num_t  **dface_vtx);
     # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 
@@ -257,3 +265,35 @@ def part_dcoordinates_to_pcoordinates(MPI.Comm                                  
     free(pvtx_ln_to_gn)
 
     return l_pvtx_coord
+
+
+# ===================================================================================
+def compute_dface_vtx_from_edges(MPI.Comm                                      comm,
+                                 NPY.ndarray[NPY.int32_t   , mode='c', ndim=1] dface_edge_idx,
+                                 NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1] dface_edge,
+                                 NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1] dedge_vtx):
+    """
+    """
+    cdef MPI.MPI_Comm c_comm = comm.ob_mpi
+    cdef PDM_MPI_Comm PDMC   = PDM_MPI_mpi_2_pdm_mpi_comm(&c_comm)
+
+    cdef int dn_face = dface_edge_idx.shape[0]-1
+    cdef int dn_edge = dedge_vtx.shape[0]//2
+    cdef PDM_g_num_t *dface_vtx
+
+    PDM_compute_dface_vtx_from_edges(PDMC,
+                                     dn_face,
+                                     dn_edge,
+                    <int *>          dface_edge_idx.data,
+                    <PDM_g_num_t *>  dface_edge.data,
+                    <PDM_g_num_t *>  dedge_vtx.data,
+                                    &dface_vtx)
+
+    dim = dface_edge.shape[0]
+    np_dface_vtx = NPY.PyArray_SimpleNewFromData(1,
+                                                 &dim,
+                                                 PDM_G_NUM_NPY_INT,
+                                         <void *> dface_vtx)
+    PyArray_ENABLEFLAGS(np_dface_vtx, NPY.NPY_OWNDATA)
+
+    return np_dface_vtx

@@ -99,6 +99,29 @@ PDM_compute_face_vtx_from_face_and_edge_unsigned
 );
 
 
+void
+PDM_compute_dface_vtx_from_edges_distrib
+(
+ PDM_MPI_Comm   comm,
+ PDM_g_num_t   *distrib_face,
+ PDM_g_num_t   *distrib_edge,
+ int           *dface_edge_idx,
+ PDM_g_num_t   *dface_edge,
+ PDM_g_num_t   *dedge_vtx,
+ PDM_g_num_t  **dface_vtx
+);
+
+void
+PDM_compute_dface_vtx_from_edges
+(
+ PDM_MPI_Comm   comm,
+ int            dn_face,
+ int            dn_edge,
+ int           *dface_edge_idx,
+ PDM_g_num_t   *dface_edge,
+ PDM_g_num_t   *dedge_vtx,
+ PDM_g_num_t  **dface_vtx
+);
 
 #ifdef  __cplusplus
 }
