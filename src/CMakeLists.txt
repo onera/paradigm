@@ -387,3 +387,7 @@ foreach(_target IN ITEMS ${_targets})
   )
   add_library(pdm::${_target} ALIAS ${_target})
 endforeach()
+
+set (PDM_LIST_TEST ${PDM_LIST_TEST} PARENT_SCOPE )
+set (PDM_LIST_NRANK ${PDM_LIST_NRANK} PARENT_SCOPE )
+

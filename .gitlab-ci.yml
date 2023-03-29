@@ -78,9 +78,7 @@ unit_test:
     - echo "Runner directory is $PWD; move to working directory $CUSTOM_CI_DIR"
     - export SLURM_EXACT=1
     - export I_MPI_PMI_LIBRARY=/usr/lib64/libpmi.so 
-    - cd $CUSTOM_CI_DIR/build$MATRIX_KEY/test
-    - ./pdm_run -srun
-    - cd $CUSTOM_CI_DIR/build$MATRIX_KEY/extensions/paradigma/test
+    - cd $CUSTOM_CI_DIR/build$MATRIX_KEY
     - ./pdm_run -srun
     # - cd $CUSTOM_CI_DIR/build$MATRIX_KEY
     # - ctest --output-junit $CI_PROJECT_DIR/paradigm_ctest$MATRIX_KEY.xml

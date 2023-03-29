@@ -1,6 +1,8 @@
 if(PDM_ENABLE_EXTENSION_PDMA)
   if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/paradigma/CMakeLists.txt)
-    add_subdirectory(paradigma)
+    add_subdirectory(paradigma)  
+    set (PDM_LIST_TEST ${PDM_LIST_TEST} PARENT_SCOPE )
+    set (PDM_LIST_NRANK ${PDM_LIST_NRANK} PARENT_SCOPE )
   else()
     message(
       FATAL_ERROR
