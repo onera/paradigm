@@ -58,10 +58,13 @@ cdef extern from "pdm_dmesh_nodal.h":
     PDM_g_num_t* PDM_DMesh_nodal_section_std_get(PDM_dmesh_nodal_t* dmn, PDM_geometry_kind_t geom_kind, int id_section)
     int PDM_DMesh_nodal_section_n_elt_get(PDM_dmesh_nodal_t* dmn, int id_section)
 
-    void PDM_DMesh_nodal_section_poly2d_set(PDM_dmesh_nodal_t* dmn, int id_section, PDM_l_num_t n_elt,
-                                            PDM_l_num_t        *connec_idx,
-                                            PDM_g_num_t        *connec,
-                                            PDM_ownership_t     owner)
+    void PDM_DMesh_nodal_section_poly2d_set(PDM_dmesh_nodal_t   *dmesh_nodal,
+                                            PDM_geometry_kind_t  geom_kind,
+                                            const int            id_section,
+                                            const PDM_l_num_t    n_elt,
+                                            PDM_l_num_t         *connec_idx,
+                                            PDM_g_num_t         *connec,
+                                            PDM_ownership_t      owner)
     void PDM_DMesh_nodal_section_group_elmt_set(PDM_dmesh_nodal_t  *dmesh_nodal,
                                                 PDM_geometry_kind_t  geom_kind,
                                                 int                 n_group_elmt,
@@ -196,6 +199,18 @@ cdef class DistributedMeshNodal:
                                           <PDM_g_num_t *> connect.data,
                                           PDM_OWNERSHIP_USER)
         # ::::::::::::::::::::::::::::::::::::::::::::::::::
+
+    def set_poly2d_section(self, 
+                           NPY.ndarray[NPY.int32_t, mode='c', ndim=1] poly_connectivity_idx, 
+                           NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1] poly_connectivity):
+        id_section = PDM_DMesh_nodal_section_add(self.dmn, _PDM_GEOMETRY_KIND_SURFACIC, _PDM_MESH_NODAL_POLY_2D)
+        PDM_DMesh_nodal_section_poly2d_set(self.dmn, 
+                                           _PDM_GEOMETRY_KIND_SURFACIC,
+                                           id_section,
+                                           poly_connectivity_idx.size-1, # n_elts local
+                          <PDM_l_num_t*>   poly_connectivity_idx.data,
+                          <PDM_g_num_t*>   poly_connectivity.data,
+                                           PDM_OWNERSHIP_USER)
 
     # ------------------------------------------------------------------------
     def set_group_elmt(self,
