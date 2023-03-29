@@ -14,6 +14,14 @@ cdef extern from "pdm_dconnectivity_transform.h":
                                                     PDM_g_num_t   **dparent_entity1_g_num,
                                                     PDM_g_num_t   **dparent_entity2_g_num,
                                                     PDM_g_num_t   **entity1_old_to_new)
+
+    void PDM_dconnectivity_dface_vtx_from_face_and_edge(const PDM_MPI_Comm    comm,
+                                                        PDM_g_num_t    *distrib_face,
+                                                        PDM_g_num_t    *distrib_edge,
+                                                        int            *dface_edge_idx,
+                                                        PDM_g_num_t    *dface_edge,
+                                                        PDM_g_num_t    *dedge_vtx,
+                                                        PDM_g_num_t   **dface_vtx)
     # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 cdef extern from "pdm_distrib.h":
@@ -186,3 +194,23 @@ def dconnectivity_to_extract_dconnectivity(MPI.Comm                             
     return (np_extract_entity1_distribution, np_extract_entity2_distribution,
             np_dextract_entity1_entity2_idx, np_dextract_entity1_entity2,
             np_dparent_entity1_g_num, np_dparent_entity2_g_num, np_entity1_old_to_new)
+
+def compute_dfacevtx_from_face_and_edge(MPI.Comm                                      comm,
+                                        NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1] distrib_face,
+                                        NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1] distrib_edge,
+                                        NPY.ndarray[NPY.int32_t   , mode='c', ndim=1] dface_edge_idx,
+                                        NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1] dface_edge,
+                                        NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1] dedge_vtx):
+
+    cdef MPI.MPI_Comm c_comm = comm.ob_mpi
+    cdef PDM_MPI_Comm PDMC   = PDM_MPI_mpi_2_pdm_mpi_comm(&c_comm)
+
+    cdef PDM_g_num_t* dface_vtx = NULL
+    PDM_dconnectivity_dface_vtx_from_face_and_edge(PDMC,
+                                 <PDM_g_num_t*>    distrib_face.data,
+                                 <PDM_g_num_t*>    distrib_edge.data,
+                                 <int        *>    dface_edge_idx.data,
+                                 <PDM_g_num_t*>    dface_edge.data,
+                                 <PDM_g_num_t*>    dedge_vtx.data,
+                                                  &dface_vtx)
+    return create_numpy_pdm_gnum(dface_vtx, dface_edge_idx[-1])
