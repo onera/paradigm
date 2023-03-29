@@ -19,6 +19,8 @@
 #include "pdm_part_to_block.h"
 #include "pdm_dconnectivity_transform.h"
 #include "pdm_para_graph_dual.h"
+#include "pdm_partitioning_algorithm.h"
+#include "pdm_part_connectivity_transform.h"
 #include "pdm_error.h"
 #include "pdm_timer.h"
 #include "pdm_unique.h"
@@ -1254,7 +1256,68 @@ PDM_dconnectivity_to_extract_dconnectivity
   PDM_part_to_block_free(ptb_entity2);
 }
 
+void
+PDM_dconnectivity_dface_vtx_from_face_and_edge
+(
+ const PDM_MPI_Comm    comm,
+       PDM_g_num_t    *distrib_face,
+       PDM_g_num_t    *distrib_edge,
+       int            *dface_edge_idx,
+       PDM_g_num_t    *dface_edge,
+       PDM_g_num_t    *dedge_vtx,
+       PDM_g_num_t   **dface_vtx
+)
+{
+  int i_rank;
+  PDM_MPI_Comm_rank(comm, &i_rank);
 
+  int dn_edge = distrib_edge[i_rank+1] - distrib_edge[i_rank];
+  int dn_face = distrib_face[i_rank+1] - distrib_face[i_rank];
+  int* dedge_vtx_idx = PDM_array_new_idx_from_const_stride_int(2, dn_edge);
+
+  int pn_edge = dface_edge_idx[dn_face];
+  PDM_g_num_t* edge_ln_to_gn = dface_edge;
+  int pn_vtx = 0;
+  PDM_g_num_t* pvtx_ln_to_gn = NULL;
+  int* pedge_vtx_idx = NULL;
+  int* pedge_vtx     = NULL;
+  PDM_part_dconnectivity_to_pconnectivity_sort_single_part(comm,
+                                                           distrib_edge,
+                                                           dedge_vtx_idx,
+                                                           dedge_vtx,
+                                                           pn_edge,
+                                                           edge_ln_to_gn,
+                                                          &pn_vtx,
+                                                          &pvtx_ln_to_gn,
+                                                          &pedge_vtx_idx,
+                                                          &pedge_vtx);
+  free(dedge_vtx_idx);
+
+
+
+  int *pface_edge = (int *) malloc(pn_edge*sizeof(int));
+  for (int i=0; i < pn_edge; ++i) {
+    pface_edge[i] = PDM_SIGN(dface_edge[i])*(i+1);
+  }
+  int *pface_vtx = NULL;
+  PDM_compute_face_vtx_from_face_and_edge(dn_face,
+                                          dface_edge_idx,
+                                          pface_edge,
+                                          pedge_vtx,
+                                          &pface_vtx);
+
+  *dface_vtx = (PDM_g_num_t*) malloc(dface_edge_idx[dn_face]*sizeof(PDM_g_num_t));
+  for (int i=0; i < dface_edge_idx[dn_face]; ++i) {
+    (*dface_vtx)[i] = pvtx_ln_to_gn[pface_vtx[i]-1];
+  }
+   
+  free(pface_edge);
+  free(pface_vtx);
+
+  free(pvtx_ln_to_gn);
+  free(pedge_vtx_idx);
+  free(pedge_vtx);
+}
 
 
 #ifdef  __cplusplus

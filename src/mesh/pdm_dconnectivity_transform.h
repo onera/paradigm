@@ -190,6 +190,17 @@ PDM_dconnectivity_to_extract_dconnectivity
        PDM_g_num_t   **entity1_old_to_new
 );
 
+void
+PDM_dconnectivity_dface_vtx_from_face_and_edge
+(
+ const PDM_MPI_Comm    comm,
+       PDM_g_num_t    *distrib_face,
+       PDM_g_num_t    *distrib_edge,
+       int            *dface_edge_idx,
+       PDM_g_num_t    *dface_edge,
+       PDM_g_num_t    *dedge_vtx,
+       PDM_g_num_t   **dface_vtx
+);
 
 #ifdef  __cplusplus
 }
