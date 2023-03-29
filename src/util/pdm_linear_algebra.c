@@ -130,7 +130,7 @@ static void svbksb
     if (w[j] > wtol) {
       double iw = 1/w[j];
       for (int i = 0; i < n_row; i++) {
-        double wuij = u[n_row*i+j] * iw;
+        double wuij = u[n_col*i+j] * iw;
         for (int k = 0; k < stride; k++) {
           y[stride*j+k] += wuij * b[stride*i+k];
         }
@@ -143,7 +143,7 @@ static void svbksb
   }
 
   for (int j = 0; j < n_col; j++) {
-    for (int i = 0; i < n_row; i++) {
+    for (int i = 0; i < n_col; i++) {
       for (int k = 0; k < stride; k++) {
         x[stride*j+k] += v[n_col*j+i] * y[stride*i+k];
       }
