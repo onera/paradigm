@@ -1972,7 +1972,6 @@ PDM_MPI_Comm       comm
   PDM_g_num_t **pvtx_ln_to_gn = NULL;
   if(from_face_edge == 1) {
 
-    PDM_log_trace_array_long(face_distrib,  n_rank+1, "face_distribb ::");
     PDM_part_dconnectivity_to_pconnectivity_sort(comm,
                                                  face_distrib,
                                                  dface_edge_idx,
@@ -2030,7 +2029,6 @@ PDM_MPI_Comm       comm
       _dedge_vtx_idx = dedge_vtx_idx;
     }
 
-    PDM_log_trace_connectivity_long(dedge_vtx_idx, dedge_vtx, dmesh->dn_edge, "dedge_vtx ::");
     PDM_part_dconnectivity_to_pconnectivity_sort(comm,
                                                  edge_distrib,
                                                  _dedge_vtx_idx,

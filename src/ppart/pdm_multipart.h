@@ -227,7 +227,6 @@ const int                     i_zone,
  * \param [in]  multipart             Pointer to \ref PDM_multipart_t object
  * \param [in]  i_zone                Id of zone
  * \param [out] pmesh                 Partitionned mesh
- * \param [in]  ownership             Who is responsible to free retreived data ?
  *
  */
 
@@ -238,23 +237,6 @@ const int                     i_zone,
 //  const int               i_zone,
 //        PDM_part_mesh_t **pmesh
 // );
-
-/**
- * \brief Retreive the partitionned mesh
- *
- * \param [in]  multipart             Pointer to \ref PDM_multipart_t object
- * \param [in]  i_zone                Id of zone
- * \param [out] pmesh                 Partitionned mesh
- *
- */
-
-void
-PDM_multipart_get_part_mesh
-(
-       PDM_multipart_t  *multipart,
- const int               i_zone,
-       PDM_part_mesh_t **pmesh
-);
 
 /**
  * \brief Set number of element in the block entity
