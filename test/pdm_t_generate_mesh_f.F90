@@ -60,11 +60,11 @@ program testf
                                               elt_vtx_idx, &
                                               elt_vtx)
 
-  write(*,*) "n_vtx       : ", n_vtx
-  write(*,*) "n_elt       : ", n_elt
-  write(*,*) "coords      : ", coords
-  write(*,*) "elt_vtx_idx : ", elt_vtx_idx
-  write(*,*) "elt_vtx     : ", elt_vtx
+  ! write(*,*) "n_vtx       : ", n_vtx
+  ! write(*,*) "n_elt       : ", n_elt
+  ! write(*,*) "coords      : ", coords
+  ! write(*,*) "elt_vtx_idx : ", elt_vtx_idx
+  ! write(*,*) "elt_vtx     : ", elt_vtx
 
   call pdm_fortran_free_c(c_loc(coords))
   call pdm_fortran_free_c(c_loc(elt_vtx_idx))
