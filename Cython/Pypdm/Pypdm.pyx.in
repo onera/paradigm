@@ -127,8 +127,10 @@ cdef extern from "pdm.h":
        PDM_BOUND_TYPE_MAX    = 5,
 
     ctypedef enum PDM_mesh_location_method_t:
-      PDM_MESH_LOCATION_OCTREE  = 0
-      PDM_MESH_LOCATION_DBBTREE = 1
+      PDM_MESH_LOCATION_OCTREE         = 0
+      PDM_MESH_LOCATION_DBBTREE        = 1
+      PDM_MESH_LOCATION_LOCATE_ALL_TGT = 2
+      PDM_MESH_LOCATION_DOCTREE        = 3
 
     ctypedef enum PDM_iso_surface_kind_t:
       PDM_ISO_SURFACE_KIND_PLANE   = 0
