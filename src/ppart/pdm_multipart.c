@@ -1259,6 +1259,10 @@ const double            *part_fraction,
   }
   assert(darc_to_elmt_idx == NULL);
 
+  for (int i = 0; i < dn_arc; i++) {
+    darc_to_elmt_tmp[2*i+1] = -darc_to_elmt_tmp[2*i+1];
+  }
+
   PDM_setup_connectivity_idx(dn_arc,
                              2,
                              darc_to_elmt_tmp,
@@ -1272,7 +1276,7 @@ const double            *part_fraction,
                                 distrib_node,
                                 darc_to_elmt_idx,
                                 darc_to_elmt,
-                                0,
+                                1,
                                 &delmt_to_arc_idx,
                                 &delmt_to_arc);
     if(dmesh->dn_cell == 0) { // Donc 2D
