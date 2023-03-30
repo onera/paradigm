@@ -25,6 +25,7 @@
 #include "pdm_sphere_surf_gen.h"
 #include "pdm_sphere_vol_gen.h"
 #include "pdm_dcube_nodal_gen.h"
+#include "pdm_part_connectivity_transform.h"
 
 #ifdef __cplusplus
 extern "C"
@@ -91,6 +92,8 @@ _generate_mesh_sphere
        PDM_multipart_t       **mpart
 )
 {
+  PDM_UNUSED(ho_ordering);
+
   int dim = PDM_Mesh_nodal_elt_dim_get(elt_type);
   assert(dim == 2);
 
@@ -160,11 +163,15 @@ _generate_mesh_ball
        PDM_multipart_t   **mpart
 )
 {
+  PDM_UNUSED(ho_ordering);
+
   int dim = PDM_Mesh_nodal_elt_dim_get(elt_type);
   assert(dim == 3);
 
   // ball without a hole
+  PDM_GCC_SUPPRESS_WARNING_WITH_PUSH("-Wfloat-equal")
   if (hole_radius == 0) {
+  PDM_GCC_SUPPRESS_WARNING_POP
 
     // generate distributed ball mesh
     if (n_x != n_y && n_x != n_z) {
@@ -254,6 +261,8 @@ _generate_mesh_rectangle
        PDM_multipart_t   **mpart
 )
 {
+  PDM_UNUSED(ho_ordering);
+
   int dim = PDM_Mesh_nodal_elt_dim_get(elt_type);
   assert(dim == 2);
 
@@ -279,7 +288,9 @@ _generate_mesh_rectangle
   PDM_dcube_nodal_gen_free(dcube);
 
   // scale to rectangle is necessary
+  PDM_GCC_SUPPRESS_WARNING_WITH_PUSH("-Wfloat-equal")
   if (lengthx != lengthy) {
+  PDM_GCC_SUPPRESS_WARNING_POP
 
     int dn_vtx = PDM_DMesh_nodal_n_vtx_get(*dmn);
 
@@ -324,6 +335,8 @@ _generate_mesh_parallelepiped
        PDM_multipart_t   **mpart
 )
 {
+  PDM_UNUSED(ho_ordering);
+
   int dim = PDM_Mesh_nodal_elt_dim_get(elt_type);
   assert(dim == 3);
 
@@ -349,7 +362,9 @@ _generate_mesh_parallelepiped
   PDM_dcube_nodal_gen_free(dcube);
 
   // scale to parallelepiped is necessary
+  PDM_GCC_SUPPRESS_WARNING_WITH_PUSH("-Wfloat-equal")
   if (lengthx != lengthy) {
+  PDM_GCC_SUPPRESS_WARNING_POP
 
     int dn_vtx = PDM_DMesh_nodal_n_vtx_get(*dmn);
 
@@ -363,7 +378,9 @@ _generate_mesh_parallelepiped
 
   }
 
+  PDM_GCC_SUPPRESS_WARNING_WITH_PUSH("-Wfloat-equal")
   if (lengthx != lengthz) {
+  PDM_GCC_SUPPRESS_WARNING_POP
 
     int dn_vtx = PDM_DMesh_nodal_n_vtx_get(*dmn);
 
