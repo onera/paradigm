@@ -57,6 +57,9 @@ cdef extern from "pdm_dmesh.h":
                              PDM_g_num_t      **connect,
                              int              **connect_idx,
                              PDM_ownership_t    ownership)
+    void PDM_dmesh_vtx_coord_set(PDM_dmesh_t      *dmesh,
+                                 double           *dvtx_coord,
+                                 PDM_ownership_t   ownership)
     void  PDM_dmesh_bound_set(PDM_dmesh_t       *dmesh,
                               PDM_bound_type_t   bound_type,
                               int               n_bound,
@@ -93,6 +96,10 @@ cdef class DistributedMeshCaspule:
     cdef PDM_dmesh_t* dm = <PDM_dmesh_t *> PyCapsule_GetPointer(caps, NULL)
     self._dm = dm;
 
+  # ------------------------------------------------------------------------
+  def dmesh_vtx_coord_set(self,
+                          NPY.ndarray[NPY.double_t, mode='c', ndim=1] dvtx_coord not None):
+      dmesh_vtx_coord_set(self, dvtx_coord)
   # ------------------------------------------------------------------------
   def dmesh_connectivity_set(self, PDM_connectivity_type_t connectivity_type,
                              NPY.ndarray[NPY.int32_t   , mode='c', ndim=1] connect_idx,
@@ -196,6 +203,11 @@ cdef class DistributedMesh:
   #                 <int*>         join_g_dms.data,
   #                 <int*>         dface_join_idx.data,
   #                 <PDM_g_num_t*> dface_join.data)
+  # ------------------------------------------------------------------------
+  def dmesh_vtx_coord_set(self,
+                          NPY.ndarray[NPY.double_t, mode='c', ndim=1] dvtx_coord not None):
+      dmesh_vtx_coord_set(self, dvtx_coord)
+
   # ------------------------------------------------------------------------
   def dmesh_connectivity_get(self, PDM_connectivity_type_t connectivity_type):
     """
@@ -381,10 +393,18 @@ def dmesh_connectivity_set(DMesh pydm,
   # > Declaration
   # ************************************************************************
 
-  n_bnd = connect_idx.shape[0]-1
-
+  cdef int* _connect_idx = NULL
+  if connect_idx is not None:
+    _connect_idx = <int *> connect_idx.data
   PDM_dmesh_connectivity_set(pydm._dm,
                              entity_type,
              <PDM_g_num_t *> connect.data,
-                     <int *> connect_idx.data,
+                             _connect_idx,
                              PDM_OWNERSHIP_USER)
+
+# ------------------------------------------------------------------------
+def dmesh_vtx_coord_set(DMesh pydm,
+                        NPY.ndarray[NPY.double_t, mode='c', ndim=1] dvtx_coord not None):
+    PDM_dmesh_vtx_coord_set(pydm._dm,
+                 <double *> dvtx_coord.data,
+                            PDM_OWNERSHIP_USER)
