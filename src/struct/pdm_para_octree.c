@@ -10476,15 +10476,17 @@ if (_octree->use_win_shared) {
  *
  */
 
+
 void
-PDM_para_octree_single_closest_point
+PDM_para_octree_single_closest_point_block_frame
 (
- const PDM_para_octree_t *octree,
- const int                n_pts,
- double                  *pts_coord,
- PDM_g_num_t             *pts_g_num,
- PDM_g_num_t             *closest_octree_pt_g_num,
- double                  *closest_octree_pt_dist2
+ const PDM_para_octree_t    *octree,
+ const int                   n_pts,
+       double               *pts_coord,
+       PDM_g_num_t          *pts_g_num,
+       PDM_part_to_block_t **ptb_out,
+       PDM_g_num_t         **dclosest_octree_pt_g_num,
+       double              **dclosest_octree_pt_dist2
  )
 {
   int dbg_enabled = 0;
@@ -10706,18 +10708,23 @@ PDM_para_octree_single_closest_point
   PDM_g_num_t *pts_g_num1 = NULL;
   double      *pts_coord1 = NULL;
 
-  if (n_rank > 1) {
+  if (1) {//n_rank > 1) {
     send_count = PDM_array_zeros_int (n_rank);
     int *rank_pt = malloc (sizeof(int) * n_pts);
 
     if (USE_SHARED_OCTREE) {
-      double *node_min_dist = (double *) malloc (sizeof(double) * n_pts);
-      PDM_box_tree_min_dist_max_box (bt_shared,
-                                     n_pts,
-                                     pts_coord,
-                                     rank_pt,
-                                     node_min_dist);
-      free (node_min_dist);
+      if (n_rank == 1) {
+        PDM_array_reset_int(rank_pt, n_pts, 0);
+      }
+      else {
+        double *node_min_dist = (double *) malloc (sizeof(double) * n_pts);
+        PDM_box_tree_min_dist_max_box (bt_shared,
+                                       n_pts,
+                                       pts_coord,
+                                       rank_pt,
+                                       node_min_dist);
+        free (node_min_dist);
+      }
 
       for (int i = 0; i < n_pts; i++) {
         int inode = rank_pt[i];
@@ -11016,9 +11023,10 @@ PDM_para_octree_single_closest_point
   double      *_closest_pt_dist2 = NULL;
   PDM_g_num_t *_closest_pt_g_num = NULL;
 
-  if (n_rank == 1) {
-    _closest_pt_g_num = closest_octree_pt_g_num;
-    _closest_pt_dist2 = closest_octree_pt_dist2;
+  if (0) {//n_rank == 1) {
+    abort();
+    // _closest_pt_g_num = closest_octree_pt_g_num;
+    // _closest_pt_dist2 = closest_octree_pt_dist2;
   }
   else {
     _closest_pt_dist2 = malloc (sizeof(double)      * n_pts1);
@@ -11276,7 +11284,7 @@ if (_octree->use_win_shared) {
     PDM_log_trace_array_long(_closest_pt_g_num, n_pts1, "_closest_pt_g_num 1 : ");
   }
 
-  if (n_rank == 1) {
+  if (0) {//n_rank == 1) {
     if (DETAIL_TIMER)
       PDM_timer_free (timer);
     return;
@@ -11402,12 +11410,19 @@ if (_octree->use_win_shared) {
 
     int *close_nodes_idx = NULL;
     int *close_nodes     = NULL;
-    PDM_box_tree_closest_upper_bound_dist_boxes_get (bt_shared,
-                                                     n_pts1,
-                                                     pts_coord1,
-                                                     _closest_pt_dist2,
-                                                     &close_nodes_idx,
-                                                     &close_nodes);
+    if (n_rank == 1) {
+      close_nodes_idx = PDM_array_zeros_int(n_pts+1);
+      close_nodes_idx[0] = 0;
+      close_nodes = malloc(sizeof(int) * 0);
+    }
+    else {
+      PDM_box_tree_closest_upper_bound_dist_boxes_get (bt_shared,
+                                                       n_pts1,
+                                                       pts_coord1,
+                                                       _closest_pt_dist2,
+                                                       &close_nodes_idx,
+                                                       &close_nodes);
+    }
     int *tag_rank = PDM_array_zeros_int (n_rank);
 
     int tmp_size = 4 * n_pts1;
@@ -11952,10 +11967,10 @@ if (_octree->use_win_shared) {
   }
 
 
-if (_octree->use_win_shared) {
-  //if (i_rank == 0) printf("_finalize_copies_win_shared 2\n");
-  _finalize_copies_win_shared (_octree);
-}
+  if (_octree->use_win_shared) {
+    //if (i_rank == 0) printf("_finalize_copies_win_shared 2\n");
+    _finalize_copies_win_shared (_octree);
+  }
 
   double *_pts_coord2 = pts_coord2 + idx_pts2[2] * dim;
   __closest_pt_dist2 = _closest_pt_dist22 + idx_pts2[2];
@@ -12023,14 +12038,14 @@ if (_octree->use_win_shared) {
    *  End of phase 2 -- Back to original partitioning
    */
   /* 1) Part-to-block */
-  ptb1 = PDM_part_to_block_create_from_distrib (PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
-                                    PDM_PART_TO_BLOCK_POST_MERGE,
-                                    1.,
-                                    &pts_g_num2,
-                                    block_distrib_idx,
-                                    &n_pts2,
-                                    1,
-                                    _octree->comm);
+  ptb1 = PDM_part_to_block_create_from_distrib(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
+                                               PDM_PART_TO_BLOCK_POST_MERGE,
+                                               1.,
+                                               &pts_g_num2,
+                                               block_distrib_idx,
+                                               &n_pts2,
+                                               1,
+                                               _octree->comm);
   part_stride = PDM_array_const_int(n_pts2, 1);
 
   double *tmp_block_closest_pt_dist2 = NULL;
@@ -12039,9 +12054,9 @@ if (_octree->use_win_shared) {
                           PDM_STRIDE_VAR_INTERLACED,
                           1,
                           &part_stride,
-                          (void **) &_closest_pt_dist22,
+                (void **) &_closest_pt_dist22,
                           &block_stride,
-                          (void **) &tmp_block_closest_pt_dist2);
+                (void **) &tmp_block_closest_pt_dist2);
   free (block_stride);
   free (_closest_pt_dist22);
 
@@ -12051,9 +12066,9 @@ if (_octree->use_win_shared) {
                           PDM_STRIDE_VAR_INTERLACED,
                           1,
                           &part_stride,
-                          (void **) &_closest_pt_g_num,
+                (void **) &_closest_pt_g_num,
                           &block_stride,
-                          (void **) &tmp_block_closest_pt_g_num);
+                (void **) &tmp_block_closest_pt_g_num);
   free (_closest_pt_g_num);
   free (part_stride);
 
@@ -12080,34 +12095,39 @@ if (_octree->use_win_shared) {
   free (tmp_block_closest_pt_g_num);
 
 
-  /* 2) Block-to-part */
-  PDM_block_to_part_t *btp = PDM_block_to_part_create (block_distrib_idx,
-                                                       (const PDM_g_num_t **) &pts_g_num,
-                                                       &n_pts,
-                                                       1,
-                                                       _octree->comm);
-  int stride = 1;
-  PDM_block_to_part_exch_in_place (btp,
-                          sizeof(double),
-                          PDM_STRIDE_CST_INTERLACED,
-                          &stride,
-                          block_closest_pt_dist2,
-                          NULL,
-                          (void **) &closest_octree_pt_dist2);
-  free (block_closest_pt_dist2);
+  *ptb_out                  = ptb1;
+  *dclosest_octree_pt_g_num = block_closest_pt_g_num;
+  *dclosest_octree_pt_dist2 = block_closest_pt_dist2;
 
-  PDM_block_to_part_exch_in_place (btp,
-                          sizeof(PDM_g_num_t),
-                          PDM_STRIDE_CST_INTERLACED,
-                          &stride,
-                          block_closest_pt_g_num,
-                          NULL,
-                          (void **) &closest_octree_pt_g_num);
-  free (block_closest_pt_g_num);
+
+  // /* 2) Block-to-part */
+  // PDM_block_to_part_t *btp = PDM_block_to_part_create (block_distrib_idx,
+  //                                                      (const PDM_g_num_t **) &pts_g_num,
+  //                                                      &n_pts,
+  //                                                      1,
+  //                                                      _octree->comm);
+  // int stride = 1;
+  // PDM_block_to_part_exch_in_place (btp,
+  //                         sizeof(double),
+  //                         PDM_STRIDE_CST_INTERLACED,
+  //                         &stride,
+  //                         block_closest_pt_dist2,
+  //                         NULL,
+  //                         (void **) &closest_octree_pt_dist2);
+  // free (block_closest_pt_dist2);
+
+  // PDM_block_to_part_exch_in_place (btp,
+  //                         sizeof(PDM_g_num_t),
+  //                         PDM_STRIDE_CST_INTERLACED,
+  //                         &stride,
+  //                         block_closest_pt_g_num,
+  //                         NULL,
+  //                         (void **) &closest_octree_pt_g_num);
+  // free (block_closest_pt_g_num);
   free (pts_g_num2);
 
-  ptb1 = PDM_part_to_block_free (ptb1);
-  btp = PDM_block_to_part_free (btp);
+  // ptb1 = PDM_part_to_block_free (ptb1);
+  // btp = PDM_block_to_part_free (btp);
   free (block_distrib_idx);
 
   if (copied_ranks1 != NULL) {
@@ -12116,7 +12136,9 @@ if (_octree->use_win_shared) {
 
   if (USE_SHARED_OCTREE) {
     PDM_box_set_destroy (&box_set);
-    PDM_MPI_Comm_free (&bt_comm);
+    if (n_rank > 1) {
+      PDM_MPI_Comm_free (&bt_comm);
+    }
     PDM_box_tree_destroy (&bt_shared);
   }
 
@@ -12144,6 +12166,64 @@ if (_octree->use_win_shared) {
   }
 }
 
+
+void
+PDM_para_octree_single_closest_point
+(
+ const PDM_para_octree_t *octree,
+ const int                n_pts,
+ double                  *pts_coord,
+ PDM_g_num_t             *pts_g_num,
+ PDM_g_num_t             *closest_octree_pt_g_num,
+ double                  *closest_octree_pt_dist2
+ )
+{
+  _pdm_para_octree_t *_octree = (_pdm_para_octree_t *) octree;
+
+
+  PDM_part_to_block_t *ptb                    = NULL;
+  PDM_g_num_t         *block_closest_pt_g_num = NULL;
+  double              *block_closest_pt_dist2 = NULL;
+  PDM_para_octree_single_closest_point_block_frame(octree,
+                                                   n_pts,
+                                                   pts_coord,
+                                                   pts_g_num,
+                                                   &ptb,
+                                                   &block_closest_pt_g_num,
+                                                   &block_closest_pt_dist2);
+
+  /*
+   *  Block to part
+   */
+  /* 2) Block-to-part */
+  PDM_g_num_t *block_distrib_idx = PDM_part_to_block_distrib_index_get(ptb);
+  PDM_block_to_part_t *btp = PDM_block_to_part_create (block_distrib_idx,
+                                (const PDM_g_num_t **) &pts_g_num,
+                                                       &n_pts,
+                                                       1,
+                                                       _octree->comm);
+  int stride = 1;
+  PDM_block_to_part_exch_in_place (btp,
+                                   sizeof(double),
+                                   PDM_STRIDE_CST_INTERLACED,
+                                   &stride,
+                                   block_closest_pt_dist2,
+                                   NULL,
+                         (void **) &closest_octree_pt_dist2);
+  free (block_closest_pt_dist2);
+
+  PDM_block_to_part_exch_in_place (btp,
+                                   sizeof(PDM_g_num_t),
+                                   PDM_STRIDE_CST_INTERLACED,
+                                   &stride,
+                                   block_closest_pt_g_num,
+                                   NULL,
+                         (void **) &closest_octree_pt_g_num);
+  free (block_closest_pt_g_num);
+
+  PDM_part_to_block_free(ptb);
+  PDM_block_to_part_free(btp);
+}
 
 /**
  *

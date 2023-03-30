@@ -462,6 +462,9 @@ set(PDM_ETC_DIR "etc")
 # En fonction des top_targets a installer
 #------------------------------------------------------------------------------
 
+set(PDM_LIST_TEST "")
+set(PDM_LIST_NRANK "")
+
 add_subdirectory(src)
 
 add_subdirectory(extensions)
@@ -475,6 +478,43 @@ add_subdirectory(test)
 add_subdirectory(script)
 
 add_subdirectory(doc)
+
+#------------------------------------------------------------------------------
+# Create PDM_run file
+#------------------------------------------------------------------------------
+
+string(REPLACE ";" " " PDM_LIST_TEST "${PDM_LIST_TEST}")
+
+string(REPLACE ";" " " PDM_LIST_NRANK "${PDM_LIST_NRANK}")
+
+set (PDM_RUN_PRELOAD "")
+set (PDM_RUN_LSAN "")
+set (PDM_RUN_PYTHONPATH "")
+
+if (CMAKE_BUILD_TYPE STREQUAL "Sanitize")
+  execute_process(COMMAND gcc -print-file-name=libasan.so OUTPUT_VARIABLE PRELOAD_ASAN OUTPUT_STRIP_TRAILING_WHITESPACE)
+  # set(PDM_RUN_PRELOAD "LD_PRELOAD=\"${PRELOAD_ASAN}:${CMAKE_BINARY_DIR}/script/asan/fake_dlclose/libdlclose.so\"")
+  # set(PDM_RUN_PRELOAD "LD_PRELOAD=\"${PRELOAD_ASAN}\"")
+  set(PDM_RUN_PRELOAD "LD_PRELOAD ${PRELOAD_ASAN}:${PROJECT_BINARY_DIR}/script/asan/fake_dlclose/libdlclose.so")
+  set(PDM_RUN_PRELOAD_SRUN "LD_PRELOAD=${PRELOAD_ASAN}:${PROJECT_BINARY_DIR}/script/asan/fake_dlclose/libdlclose.so")
+  set(PDM_RUN_LSAN "LSAN_OPTIONS=suppressions=${CMAKE_SOURCE_DIR}/script/asan/asan.supp")
+endif()
+
+if(DEFINED ENV{PYTHONPATH})
+  set (PDM_RUN_PYTHONPATH "PYTHONPATH=${CMAKE_BINARY_DIR}/Cython:$ENV{PYTHONPATH}")
+else()
+  set (PDM_RUN_PYTHONPATH "PYTHONPATH=${CMAKE_BINARY_DIR}/Cython")
+endif()
+
+configure_file(${PROJECT_SOURCE_DIR}/script/pdm_run.in "${PROJECT_BINARY_DIR}/pdm_run"
+               @ONLY)
+
+configure_file(${PROJECT_SOURCE_DIR}/script/pdm_launch.in "${PROJECT_BINARY_DIR}/pdm_launch"
+               @ONLY)
+
+configure_file(${PROJECT_SOURCE_DIR}/script/pdm_launch_python.in "${PROJECT_BINARY_DIR}/pdm_launch_python"
+               @ONLY)
+
 
 #------------------------------------------------------------------------------
 

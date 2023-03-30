@@ -1429,9 +1429,9 @@ _create_extract_part_nodal
     sections_id = PDM_part_mesh_nodal_sections_id_in_geom_kind_get(mesh_nodal, geom_kind);
   }
 
-  PDM_part_mesh_nodal_elmts_for_cwipi(comm,
-                                      n_part,
-                                      &pmne);
+  PDM_part_mesh_nodal_elmts_extend_to_encompassing_comm(comm,
+                                                        n_part,
+                                                        &pmne);
 
 
   int n_part_out = 1;

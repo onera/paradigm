@@ -218,6 +218,9 @@ _read_args(int                          argc,
     else if (strcmp(argv[i], "-doctree") == 0) {
       *loc_method = PDM_MESH_LOCATION_DOCTREE;
     }
+    else if (strcmp(argv[i], "-locate_all_tgt") == 0) {
+      *loc_method = PDM_MESH_LOCATION_LOCATE_ALL_TGT;
+    }
     else if (strcmp(argv[i], "-no_uvw") == 0) {
       *disable_uvw = 1;
     }
@@ -1397,11 +1400,9 @@ int main(int argc, char *argv[])
     fflush(stdout);
   }
 
-  // PDM_mesh_location_compute (mesh_loc);
-  // PDM_mesh_location_compute2(mesh_loc);
   PDM_mesh_location_compute(mesh_loc);
 
-  PDM_mesh_location_dump_times (mesh_loc);
+  PDM_mesh_location_dump_times(mesh_loc);
 
 
 
@@ -1469,6 +1470,9 @@ int main(int argc, char *argv[])
     if (elt_type == PDM_MESH_NODAL_HEXA8) {//!deform) {
 
       for (int k1 = 0; k1 < n_located; k1++) {
+
+        int is_wrong = 0;
+
         int ipt = located[k1] - 1;
         double *p = tgt_coord[ipart] + 3*ipt;
 
@@ -1476,9 +1480,11 @@ int main(int argc, char *argv[])
         memcpy(coord, p, sizeof(double)*3);
         if (deform) {
           _unrotate(1, coord);
+        }
           for (int i = 0; i < 3; i++) {
             coord[i] = PDM_MIN(PDM_MAX(coord[i], xyz_min[i]), xyz_max[i]);
           }
+        if (deform) {
           _rotate(1, coord);
         }
 
@@ -1489,11 +1495,12 @@ int main(int argc, char *argv[])
         }
         err = sqrt(err);
         if (err > tolerance) {
-          log_trace("pt %ld (%f %f %f) err = %e\n",
+          log_trace("pt %ld (%f %f %f) (%f %f %f) err = %e\n",
                     tgt_g_num[ipart][ipt],
                     p[0], p[1], p[2],
+                    coord[0], coord[1], coord[2],
                     err);
-          // n_wrong++;
+          is_wrong = 1;
         }
 
         int i = (int) floor (coord[0] / cell_side);
@@ -1538,9 +1545,11 @@ int main(int argc, char *argv[])
                       tgt_g_num[ipart][ipt],
                       p[0], p[1], p[2],
                       dist);
-            n_wrong++;
+            is_wrong = 1;
           }
         }
+
+        n_wrong += is_wrong;
       }
 
 

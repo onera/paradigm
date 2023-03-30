@@ -6,6 +6,17 @@
 #
 ################################################################################
 
+function (add_test_pdm_run name n_proc LIST_TEST LIST_NRANK)
+
+    set (${LIST_TEST} ${${LIST_TEST}} "${CMAKE_CURRENT_BINARY_DIR}/${name}")
+    set (${LIST_NRANK} ${${LIST_NRANK}} "${n_proc}")
+
+    set (${LIST_TEST} ${${LIST_TEST}} PARENT_SCOPE)
+    set (${LIST_NRANK} ${${LIST_NRANK}} PARENT_SCOPE)
+
+endfunction()
+
+
 function(test_c_create name n_proc LIST_TEST LIST_NRANK)
    add_executable(${name} "${name}.c")
    if ((NOT MPI_C_COMPILER) AND MPI_C_COMPILE_FLAGS)
@@ -45,6 +56,7 @@ function(test_c_create name n_proc LIST_TEST LIST_NRANK)
 
 
    install(TARGETS ${name} RUNTIME DESTINATION bin)
+
    add_test (${name} ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} ${n_proc}
              ${MPIEXEC_PREFLAGS}
              ${MPIEXEC_GENV_COMMAND}
@@ -53,11 +65,11 @@ function(test_c_create name n_proc LIST_TEST LIST_NRANK)
              ${CMAKE_CURRENT_BINARY_DIR}/${name}
              ${MPIEXEC_POSTFLAGS})
 
-  set (${LIST_TEST} ${${LIST_TEST}} "${name}" )
-  set (${LIST_NRANK} ${${LIST_NRANK}} "${n_proc}" )           
+    add_test_pdm_run (${name} ${n_proc} ${LIST_TEST} ${LIST_NRANK})
 
-  set (${LIST_TEST} ${${LIST_TEST}} PARENT_SCOPE )
-  set (${LIST_NRANK} ${${LIST_NRANK}} PARENT_SCOPE )           
+    set (${LIST_TEST} ${${LIST_TEST}} PARENT_SCOPE)
+    set (${LIST_NRANK} ${${LIST_NRANK}} PARENT_SCOPE)
+
 
   set (LIST_TEST_ENV "")
 
@@ -74,7 +86,7 @@ function(test_c_create name n_proc LIST_TEST LIST_NRANK)
 
 endfunction()
 
-function(test_fortran_create name n_proc  LIST_TEST LIST_NRANK)
+function(test_fortran_create name n_proc LIST_TEST LIST_NRANK)
 
   if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/${name}.f90")
     add_executable(${name} "${name}.f90")
@@ -120,11 +132,9 @@ function(test_fortran_create name n_proc  LIST_TEST LIST_NRANK)
             ${CMAKE_CURRENT_BINARY_DIR}/${name}
             ${MPIEXEC_POSTFLAGS})
 
-  set (${LIST_TEST} ${${LIST_TEST}} "${name}" )
-  set (${LIST_NRANK} ${${LIST_NRANK}} "${n_proc}" )           
-
-  set (${LIST_TEST} ${${LIST_TEST}} PARENT_SCOPE )
-  set (${LIST_NRANK} ${${LIST_NRANK}} PARENT_SCOPE )           
+   add_test_pdm_run (${name} ${n_proc} ${LIST_TEST} ${LIST_NRANK})
+    set (${LIST_TEST} ${${LIST_TEST}} PARENT_SCOPE)
+    set (${LIST_NRANK} ${${LIST_NRANK}} PARENT_SCOPE)
 
   set (LIST_TEST_ENV "")
 
@@ -142,7 +152,7 @@ function(test_fortran_create name n_proc  LIST_TEST LIST_NRANK)
 
 endfunction()
 
-function(test_python_create name n_proc  LIST_TEST LIST_NRANK)
+function(test_python_create name n_proc LIST_TEST LIST_NRANK)
   configure_file(${CMAKE_CURRENT_SOURCE_DIR}/${name}.py ${CMAKE_CURRENT_BINARY_DIR}/${name}.py)
 
   add_custom_target(${name}
@@ -169,11 +179,9 @@ function(test_python_create name n_proc  LIST_TEST LIST_NRANK)
             python ${CMAKE_CURRENT_BINARY_DIR}/${name}.py
             ${MPIEXEC_POSTFLAGS})
 
-  set (${LIST_TEST} ${${LIST_TEST}} "${name}" )
-  set (${LIST_NRANK} ${${LIST_NRANK}} "${n_proc}" )           
-
-  set (${LIST_TEST} ${${LIST_TEST}} PARENT_SCOPE )
-  set (${LIST_NRANK} ${${LIST_NRANK}} PARENT_SCOPE )           
+  add_test_pdm_run (${name} ${n_proc} ${LIST_TEST} ${LIST_NRANK})
+    set (${LIST_TEST} ${${LIST_TEST}} PARENT_SCOPE)
+    set (${LIST_NRANK} ${${LIST_NRANK}} PARENT_SCOPE)
 
   set (LIST_TEST_ENV "")
 
@@ -196,7 +204,7 @@ function(test_python_create name n_proc  LIST_TEST LIST_NRANK)
 
 endfunction()
 
-function(test_cpp_unit_create name n_proc)
+function(test_cpp_unit_create name n_proc LIST_TEST LIST_NRANK)
   set(options)
   set(one_value_args)
   set(multi_value_args SOURCES)
@@ -225,6 +233,11 @@ function(test_cpp_unit_create name n_proc)
              ${CMAKE_CURRENT_BINARY_DIR}/${name}
              ${MPIEXEC_POSTFLAGS})
 
+   add_test_pdm_run (${name} ${n_proc} ${LIST_TEST} ${LIST_NRANK})
+   set (${LIST_TEST} ${${LIST_TEST}} PARENT_SCOPE)
+   set (${LIST_NRANK} ${${LIST_NRANK}} PARENT_SCOPE)
+
+
   set (LIST_TEST_ENV "")
 
   if (CMAKE_BUILD_TYPE STREQUAL "Sanitize")
@@ -240,7 +253,7 @@ function(test_cpp_unit_create name n_proc)
   endif()
 endfunction()
 
-function(test_cpp_create name n_proc)
+function(test_cpp_create name n_proc LIST_TEST LIST_NRANK)
    add_executable(${name} "${name}.cpp")
    if ((NOT MPI_CXX_COMPILER) AND MPI_CXX_COMPILE_FLAGS)
      set_target_properties(${name}
@@ -257,6 +270,10 @@ function(test_cpp_create name n_proc)
              ${MPIEXEC_PREFLAGS}
              ${CMAKE_CURRENT_BINARY_DIR}/${name}
              ${MPIEXEC_POSTFLAGS})
+
+   add_test_pdm_run (${name} ${n_proc} ${LIST_TEST} ${LIST_NRANK})
+   set (${LIST_TEST} ${${LIST_TEST}} PARENT_SCOPE)
+   set (${LIST_NRANK} ${${LIST_NRANK}} PARENT_SCOPE)
 
   set (LIST_TEST_ENV "")
 

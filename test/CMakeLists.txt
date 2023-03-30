@@ -86,14 +86,10 @@ set (MPIEXEC_EXECUTABLE mpirun)
 
 include(TestCreate)
 
-set(PDM_LIST_TEST "")
-set(PDM_LIST_NRANK "")
-
-
 if(PDM_ENABLE_UNIT_TEST)
   file(GLOB_RECURSE __test_files
        CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/../src/*.test.cpp")
-  test_cpp_unit_create(pdm_t_unit_test ${MPIEXEC_MAX_NUMPROCS} SOURCES ${__test_files} )
+  test_cpp_unit_create(pdm_t_unit_test ${MPIEXEC_MAX_NUMPROCS} PDM_LIST_TEST PDM_LIST_NRANK SOURCES ${__test_files} )
 endif()
 
 if (PDM_HAVE_PARMETIS OR PDM_HAVE_PTSCOTCH)
@@ -169,7 +165,7 @@ test_c_create (pdm_t_cellface_orient_poly 1 PDM_LIST_TEST PDM_LIST_NRANK)
 test_c_create (pdm_t_mesh_adapt 1 PDM_LIST_TEST PDM_LIST_NRANK)
 test_c_create (pdm_t_ptb ${MPIEXEC_MAX_NUMPROCS} PDM_LIST_TEST PDM_LIST_NRANK)
 test_c_create (pdm_t_par_octree ${MPIEXEC_MAX_NUMPROCS} PDM_LIST_TEST PDM_LIST_NRANK)
-test_c_create (pdm_t_octree ${MPIEXEC_MAX_NUMPROCS} PDM_LIST_TEST PDM_LIST_NRANK )
+test_c_create (pdm_t_octree ${MPIEXEC_MAX_NUMPROCS}  PDM_LIST_TEST PDM_LIST_NRANK)
 test_c_create (pdm_t_doctree ${MPIEXEC_MAX_NUMPROCS} PDM_LIST_TEST PDM_LIST_NRANK)
 # test_c_create (pdm_t_doctree_cloud_sphere ${MPIEXEC_MAX_NUMPROCS} PDM_LIST_TEST PDM_LIST_NRANK)
 test_c_create (pdm_t_kdtree ${MPIEXEC_MAX_NUMPROCS} PDM_LIST_TEST PDM_LIST_NRANK)
@@ -250,6 +246,7 @@ test_c_create (pdm_t_unit_tetra_intersect_triangle 1 PDM_LIST_TEST PDM_LIST_NRAN
 test_c_create (pdm_t_mesh_intersection_surf_surf_atomic 1 PDM_LIST_TEST PDM_LIST_NRANK)
 
 test_c_create (pdm_t_newton_ho 1  PDM_LIST_TEST PDM_LIST_NRANK)
+test_c_create (pdm_t_svd 1  PDM_LIST_TEST PDM_LIST_NRANK)
 
 if (PDM_ENABLE_PYTHON_BINDINGS)
    test_python_create (pdm_t_part_to_part_p 2 PDM_LIST_TEST PDM_LIST_NRANK)
@@ -283,40 +280,7 @@ if (PDM_ENABLE_STATIC_Fortran_INTERFACE OR PDM_ENABLE_SHARED_Fortran_INTERFACE)
   # test_fortran_create (pdm_t_io  2 PDM_LIST_TEST PDM_LIST_NRANK)
 endif()
 
-
-string(REPLACE ";" " " PDM_LIST_TEST "${PDM_LIST_TEST}")
-
-string(REPLACE ";" " " PDM_LIST_NRANK "${PDM_LIST_NRANK}")
-
 add_subdirectory(tutorial)
 
-set (PDM_RUN_PRELOAD "")
-set (PDM_RUN_LSAN "")
-set (PDM_RUN_PYTHONPATH "")
-
-if (CMAKE_BUILD_TYPE STREQUAL "Sanitize")
-  execute_process(COMMAND gcc -print-file-name=libasan.so OUTPUT_VARIABLE PRELOAD_ASAN OUTPUT_STRIP_TRAILING_WHITESPACE)
-  # set(PDM_RUN_PRELOAD "LD_PRELOAD=\"${PRELOAD_ASAN}:${CMAKE_BINARY_DIR}/script/asan/fake_dlclose/libdlclose.so\"")
-  # set(PDM_RUN_PRELOAD "LD_PRELOAD=\"${PRELOAD_ASAN}\"")
-  set(PDM_RUN_PRELOAD "LD_PRELOAD ${PRELOAD_ASAN}:${CMAKE_BINARY_DIR}/script/asan/fake_dlclose/libdlclose.so")
-  set(PDM_RUN_PRELOAD_SRUN "LD_PRELOAD=${PRELOAD_ASAN}:${CMAKE_BINARY_DIR}/script/asan/fake_dlclose/libdlclose.so")
-  set(PDM_RUN_LSAN "LSAN_OPTIONS=suppressions=${CMAKE_SOURCE_DIR}/script/asan/asan.supp")
-endif()
-
-if(DEFINED ENV{PYTHONPATH})
-  set (PDM_RUN_PYTHONPATH "PYTHONPATH=${CMAKE_BINARY_DIR}/Cython:$ENV{PYTHONPATH}")
-else()
-  set (PDM_RUN_PYTHONPATH "PYTHONPATH=${CMAKE_BINARY_DIR}/Cython")
-endif()
-
-configure_file(${PROJECT_SOURCE_DIR}/script/pdm_run.in "${CMAKE_CURRENT_BINARY_DIR}/pdm_run"
-               @ONLY)
-
-configure_file(${PROJECT_SOURCE_DIR}/script/pdm_launch.in "${PROJECT_BINARY_DIR}/pdm_launch"
-               @ONLY)
-
-configure_file(${PROJECT_SOURCE_DIR}/script/pdm_launch_python.in "${PROJECT_BINARY_DIR}/pdm_launch_python"
-               @ONLY)
-
-#file(CHMOD ${CMAKE_BINARY_DIR}/test/pdm_run
-  # PERMISSIONS  OWNER_READ OWNER_EXECUTE)
+set (PDM_LIST_TEST ${PDM_LIST_TEST} PARENT_SCOPE )
+set (PDM_LIST_NRANK ${PDM_LIST_NRANK} PARENT_SCOPE )

@@ -946,7 +946,6 @@ cdef class MultiPart:
                                           PDM_OWNERSHIP_USER)
 
         tn_part = PDM_multipart_part_tn_part_get(self._mtp, zone_gid)
-        n_entity_part_bound = entity_part_bound_part_idx[tn_part]
 
         # -> Begin
         cdef NPY.npy_intp dim
@@ -954,6 +953,7 @@ cdef class MultiPart:
         if (entity_part_bound == NULL) :
             np_entity_part_bound = None
         else :
+            n_entity_part_bound = entity_part_bound_part_idx[tn_part]
             dim = <NPY.npy_intp> (4 * n_entity_part_bound)
             np_entity_part_bound   = NPY.PyArray_SimpleNewFromData(1,
                                                                 &dim,
