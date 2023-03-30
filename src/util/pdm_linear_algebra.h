@@ -105,6 +105,31 @@ PDM_linear_algebra_linsolve_svd
 );
 
 
+/**
+ * \brief Solve the square linear system Ax = b using Gaussian elimination,
+ * where A is a n*n matrix and b, x are n*stride matrices
+ * (Aij = A[n*i+j], bij = b[stride*i+j], xij = x[stride*i+j])
+ *
+ * /!\ Gaussian elimination is performed in place
+ * (A and x are used as work arrays)
+ *
+ * \param [in]    n  Number of rows and columns
+ * \param [inout] A  Matrix (overwritten) (size = n * n)
+ * \param [inout] x  Right-hand side term at input, solution at output (size = n * stride)
+ *
+ * \return 1 if A is singular, 0 else
+ */
+
+int
+PDM_linear_algebra_linsolve_gauss
+(
+ const int     n,
+ const int     stride,
+       double *A,
+       double *x
+ );
+
+
 #ifdef  __cplusplus
 }
 #endif

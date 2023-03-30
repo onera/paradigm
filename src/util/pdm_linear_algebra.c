@@ -534,6 +534,102 @@ PDM_linear_algebra_linsolve_svd
   return stat;
 }
 
+
+
+/**
+ * \brief Solve the square linear system Ax = b using Gaussian elimination,
+ * where A is a n*n matrix and b, x are n*stride matrices
+ * (Aij = A[n*i+j], bij = b[stride*i+j], xij = x[stride*i+j])
+ *
+ * /!\ Gaussian elimination is performed in place
+ * (A and x are used as work arrays)
+ *
+ * \param [in]    n  Number of rows and columns
+ * \param [inout] A  Matrix (overwritten) (size = n * n)
+ * \param [inout] x  Right-hand side term at input, solution at output (size = n * stride)
+ *
+ * \return 1 if A is singular, 0 else
+ */
+
+int
+PDM_linear_algebra_linsolve_gauss
+(
+ const int     n,
+ const int     stride,
+       double *A,
+       double *x
+ )
+{
+  const double eps = 1e-15;
+
+  for (int i = 0; i < n; i++) {
+    /* Seek best pivot */
+    double amax = PDM_ABS(A[n*i+i]);
+    int imax = i;
+    for (int k = i+1; k < n; k++) {
+      double aki = PDM_ABS(A[n*k+i]);
+      if (aki > amax) {
+        amax = aki;
+        imax = k;
+      }
+    }
+
+    if (amax <= eps) {
+      /* matrix A is singular */
+      return 1;
+    }
+
+    /* Swap rows i and imax */
+    if (i != imax) {
+      for (int j = 0; j < n; j++) {
+        double tmp = A[n*i+j];
+        A[n*i   +j] = A[n*imax+j];
+        A[n*imax+j] = tmp;
+      }
+
+      for (int j = 0; j < stride; j++) {
+        double tmp = x[stride*i + j];
+        x[stride*i    + j] = x[stride*imax + j];
+        x[stride*imax + j] = tmp;
+      }
+    }
+
+    /* Eliminate subdiagonal terms */
+    double inv_amax = 1./A[n*i+i];
+
+    for (int k = i+1; k < n; k++) {
+      double r = A[n*k+i] * inv_amax;
+      for (int j = i+1; j < n; j++) {
+        A[n*k+j] -= r * A[n*i+j];
+      }
+      A[n*k+i] = 0.;
+
+      for (int j = 0; j < stride; j++) {
+        x[stride*k + j] -= r * x[stride*i + j];
+      }
+    }
+  }
+
+  /* Solve triangular system */
+  for (int i = n-1; i >= 0; i--) {
+    for (int j = i+1; j < n; j++) {
+      for (int k = 0; k < stride; k++) {
+        x[stride*i + k] -= x[stride*j + k] * A[n*i+j];
+      }
+    }
+
+    double inv_ai = 1./A[n*i+i];
+    for (int k = 0; k < stride; k++) {
+      x[stride*i + k] *= inv_ai;
+    }
+  }
+
+  return 0;
+}
+
+
+
+
 PDM_GCC_SUPPRESS_WARNING_POP
 
 #ifdef  __cplusplus
