@@ -158,11 +158,6 @@ PDM_part_mesh_nodal_create
   pmn->ridge    = NULL;
   pmn->corner   = NULL;
 
-  pmn->is_owner_volumic  = PDM_OWNERSHIP_KEEP;//USER;
-  pmn->is_owner_surfacic = PDM_OWNERSHIP_KEEP;//USER;
-  pmn->is_owner_ridge    = PDM_OWNERSHIP_KEEP;//USER;
-  pmn->is_owner_corner   = PDM_OWNERSHIP_KEEP;//USER;
-
   pmn->s_section = 10;
   pmn->n_section = 0;
   pmn->section_kind = malloc(sizeof(PDM_geometry_kind_t) * pmn->s_section);
@@ -305,7 +300,7 @@ PDM_part_mesh_nodal_add_part_mesh_nodal_elmts
 (
  PDM_part_mesh_nodal_t       *pmn,
  PDM_part_mesh_nodal_elmts_t *pmne,
- PDM_ownership_t              owner
+ PDM_ownership_t              owner // TO DO: remove or make useful !
 )
 {
   assert(pmn->n_part == pmne->n_part);
@@ -313,19 +308,15 @@ PDM_part_mesh_nodal_add_part_mesh_nodal_elmts
   PDM_geometry_kind_t geom_kind;
   if(pmne->mesh_dimension == 3) {
     pmn->volumic          = pmne;
-    pmn->is_owner_volumic = owner;
     geom_kind             = PDM_GEOMETRY_KIND_VOLUMIC;
   } else if(pmne->mesh_dimension == 2){
     pmn->surfacic          = pmne;
-    pmn->is_owner_surfacic = owner;
     geom_kind             = PDM_GEOMETRY_KIND_SURFACIC;
   } else if(pmne->mesh_dimension == 1){
     pmn->ridge          = pmne;
-    pmn->is_owner_ridge = owner;
     geom_kind             = PDM_GEOMETRY_KIND_RIDGE;
   } else if(pmne->mesh_dimension == 0){
     pmn->corner          = pmne;
-    pmn->is_owner_corner = owner;
     geom_kind             = PDM_GEOMETRY_KIND_CORNER;
   } else {
     PDM_error (__FILE__, __LINE__, 0, "PDM_Mesh_nodal_add_dmesh_nodal_elmts bad mesh_dimension\n");
@@ -1058,19 +1049,17 @@ PDM_part_mesh_nodal_free
  PDM_part_mesh_nodal_t* pmn
 )
 {
+  // volumic
+  PDM_part_mesh_nodal_elmts_free(pmn->volumic);
 
-  if(pmn->is_owner_volumic == PDM_OWNERSHIP_KEEP) {
-    PDM_part_mesh_nodal_elmts_free(pmn->volumic);
-  }
-  if(pmn->is_owner_surfacic == PDM_OWNERSHIP_KEEP) {
-    PDM_part_mesh_nodal_elmts_free(pmn->surfacic);
-  }
-  if(pmn->is_owner_ridge == PDM_OWNERSHIP_KEEP) {
-    PDM_part_mesh_nodal_elmts_free(pmn->ridge);
-  }
-  if(pmn->is_owner_corner == PDM_OWNERSHIP_KEEP) {
-    PDM_part_mesh_nodal_elmts_free(pmn->corner);
-  }
+  // surfacic
+  PDM_part_mesh_nodal_elmts_free(pmn->surfacic);
+
+  // ridge
+  PDM_part_mesh_nodal_elmts_free(pmn->ridge);
+
+  // corner
+  PDM_part_mesh_nodal_elmts_free(pmn->corner);
 
   if (pmn->vtx != NULL) {
     for (int i_part = 0; i_part < pmn->n_part; i_part++) {
