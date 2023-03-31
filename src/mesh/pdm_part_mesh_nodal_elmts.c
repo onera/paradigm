@@ -83,7 +83,7 @@ _block_std_free_partial
 
   if (_block_std->_numabs != NULL) {
 
-    if (_block_std->owner == PDM_OWNERSHIP_KEEP) {
+    if (_block_std->numabs_owner == PDM_OWNERSHIP_KEEP) {
       for (int i = 0; i < _block_std->n_part; i++) {
         if (_block_std->_numabs[i] != NULL)
           free(_block_std->_numabs[i]);
@@ -122,27 +122,31 @@ _block_std_free
   }
 
   if (_block_std->numabs_int != NULL) {
-    for (int j = 0; j < _block_std->n_part; j++) {
-      if (_block_std->numabs_int[j] != NULL) {
-        free(_block_std->numabs_int[j]);
+    if (_block_std->numabs_int_owner == PDM_OWNERSHIP_KEEP) {
+      for (int j = 0; j < _block_std->n_part; j++) {
+        if (_block_std->numabs_int[j] != NULL) {
+          free(_block_std->numabs_int[j]);
+        }
       }
+      free(_block_std->numabs_int);
+      _block_std->numabs_int = NULL;
     }
-    free(_block_std->numabs_int);
-    _block_std->numabs_int = NULL;
   }
 
   if (_block_std->cell_centers != NULL) {
-    for (int j = 0; j < _block_std->n_part; j++) {
-      if (_block_std->cell_centers[j] != NULL) {
-        free(_block_std->cell_centers[j]);
+    if (_block_std->cell_centers_owner == PDM_OWNERSHIP_KEEP) {
+      for (int j = 0; j < _block_std->n_part; j++) {
+        if (_block_std->cell_centers[j] != NULL) {
+          free(_block_std->cell_centers[j]);
+        }
       }
+      free(_block_std->cell_centers);
+      _block_std->cell_centers = NULL;
     }
-    free(_block_std->cell_centers);
-    _block_std->cell_centers = NULL;
   }
 
   if (_block_std->_parent_num != NULL) {
-    if (_block_std->owner == PDM_OWNERSHIP_KEEP) {
+    if (_block_std->parent_num_owner == PDM_OWNERSHIP_KEEP) {
       for (int i = 0; i < _block_std->n_part; i++) {
         if (_block_std->_parent_num[i] != NULL)
           free(_block_std->_parent_num[i]);
@@ -154,7 +158,7 @@ _block_std_free
   }
 
   if (_block_std->_parent_entity_g_num != NULL) {
-    if (_block_std->owner == PDM_OWNERSHIP_KEEP) {
+    if (_block_std->parent_num_owner == PDM_OWNERSHIP_KEEP) {
       for (int i = 0; i < _block_std->n_part; i++) {
         if (_block_std->_parent_entity_g_num[i] != NULL)
           free(_block_std->_parent_entity_g_num[i]);
@@ -186,7 +190,7 @@ _block_poly2d_free_partial
 {
 
   if (_block_poly2d->_connec_idx != NULL) {
-    if (_block_poly2d->owner == PDM_OWNERSHIP_KEEP) {
+    if (_block_poly2d->elt_vtx_owner == PDM_OWNERSHIP_KEEP) {
       for (int i = 0; i < _block_poly2d->n_part; i++) {
         if (_block_poly2d->_connec_idx[i] != NULL)
           free(_block_poly2d->_connec_idx[i]);
@@ -198,7 +202,7 @@ _block_poly2d_free_partial
   }
 
   if (_block_poly2d->_connec != NULL) {
-    if (_block_poly2d->owner == PDM_OWNERSHIP_KEEP) {
+    if (_block_poly2d->elt_vtx_owner == PDM_OWNERSHIP_KEEP) {
       for (int i = 0; i < _block_poly2d->n_part; i++) {
         if (_block_poly2d->_connec[i] != NULL)
           free(_block_poly2d->_connec[i]);
@@ -210,7 +214,7 @@ _block_poly2d_free_partial
   }
 
   if (_block_poly2d->_numabs != NULL) {
-    if (_block_poly2d->owner == PDM_OWNERSHIP_KEEP) {
+    if (_block_poly2d->numabs_owner == PDM_OWNERSHIP_KEEP) {
       for (int i = 0; i < _block_poly2d->n_part; i++) {
         if (_block_poly2d->_numabs[i] != NULL)
           free(_block_poly2d->_numabs[i]);
@@ -279,7 +283,7 @@ _block_poly2d_free
   }
 
   if (_block_poly2d->_parent_num != NULL) {
-    if (_block_poly2d->is_parent_num_get == 0 || _block_poly2d->owner == PDM_OWNERSHIP_KEEP) {
+    if (_block_poly2d->parent_num_owner == PDM_OWNERSHIP_KEEP) {
       for (int i = 0; i < _block_poly2d->n_part; i++) {
         if (_block_poly2d->_parent_num[i] != NULL)
           free(_block_poly2d->_parent_num[i]);
@@ -361,7 +365,7 @@ _block_poly3d_free_partial
   }
 
   if (_block_poly3d->_cellvtx_idx != NULL) {
-    if (_block_poly3d->owner == PDM_OWNERSHIP_KEEP) {
+    if (_block_poly3d->elt_vtx_owner == PDM_OWNERSHIP_KEEP) {
       for (int i = 0; i < _block_poly3d->n_part; i++) {
         if (_block_poly3d->_cellvtx_idx[i] != NULL)
           free(_block_poly3d->_cellvtx_idx[i]);
@@ -373,7 +377,7 @@ _block_poly3d_free_partial
   }
 
   if (_block_poly3d->_cellvtx != NULL) {
-    if (_block_poly3d->owner == PDM_OWNERSHIP_KEEP) {
+    if (_block_poly3d->elt_vtx_owner == PDM_OWNERSHIP_KEEP) {
       for (int i = 0; i < _block_poly3d->n_part; i++) {
         if (_block_poly3d->_cellvtx[i] != NULL)
           free(_block_poly3d->_cellvtx[i]);
@@ -385,7 +389,7 @@ _block_poly3d_free_partial
   }
 
   if (_block_poly3d->_numabs != NULL) {
-    if (_block_poly3d->owner == PDM_OWNERSHIP_KEEP) {
+    if (_block_poly3d->numabs_owner == PDM_OWNERSHIP_KEEP) {
       for (int i = 0; i < _block_poly3d->n_part; i++) {
         if (_block_poly3d->_numabs[i] != NULL)
           free(_block_poly3d->_numabs[i]);
@@ -469,7 +473,7 @@ _block_poly3d_free
   }
 
   if (_block_poly3d->_parent_num != NULL) {
-    if (_block_poly3d->is_parent_num_get == 0 || _block_poly3d->owner == PDM_OWNERSHIP_KEEP) {
+    if (_block_poly3d->parent_num_owner == PDM_OWNERSHIP_KEEP) {
       for (int i = 0; i < _block_poly3d->n_part; i++) {
         if (_block_poly3d->_parent_num[i] != NULL)
           free(_block_poly3d->_parent_num[i]);
@@ -481,7 +485,7 @@ _block_poly3d_free
   }
 
   if (_block_poly3d->_parent_entity_g_num != NULL) {
-    if (_block_poly3d->owner == PDM_OWNERSHIP_KEEP) {
+    if (_block_poly3d->parent_num_owner == PDM_OWNERSHIP_KEEP) {
       for (int i = 0; i < _block_poly3d->n_part; i++) {
         if (_block_poly3d->_parent_entity_g_num[i] != NULL)
           free(_block_poly3d->_parent_entity_g_num[i]);
@@ -1218,6 +1222,7 @@ PDM_part_mesh_nodal_elmts_create
   pmne->numabs                   = NULL;
 
   pmne->ownership_group  = PDM_OWNERSHIP_KEEP;
+  pmne->ownership_numabs = PDM_OWNERSHIP_KEEP;
   pmne->n_group          = 0;
   pmne->n_group_elmt     = NULL;
   pmne->group_elmt       = NULL;
@@ -1559,7 +1564,9 @@ const int                           id_part,
   }
 
   // ownership
-  block->owner = ownership;
+  block->owner            = ownership;
+  block->numabs_owner     = ownership;
+  block->parent_num_owner = ownership;
 }
 
 
@@ -1607,7 +1614,9 @@ const char                        **ho_ordering,
   *ho_ordering = block->ho_ordering;
 
   // ownership
-  block->owner = ownership;
+  block->owner            = ownership;
+  block->numabs_owner     = ownership;
+  block->parent_num_owner = ownership;
 }
 
 
@@ -1813,7 +1822,7 @@ PDM_part_mesh_nodal_elmts_section_poly2d_get
   *connec     = block->_connec[id_part];
 
   // ownership
-  block->owner = ownership;
+  block->elt_vtx_owner = ownership;
 }
 
 
@@ -1862,7 +1871,7 @@ PDM_part_mesh_nodal_elmts_section_poly3d_cell_vtx_connect_get
   *cell_vtx     = block->_cellvtx[id_part];
 
   // ownership
-  block->owner = ownership;
+  block->elt_vtx_owner = ownership;
 }
 
 
@@ -1926,7 +1935,9 @@ const int                           id_part,
   }
 
   // ownership
-  block->owner = ownership;
+  block->owner            = ownership;
+  block->numabs_owner     = ownership;
+  block->parent_num_owner = ownership;
 }
 
 
@@ -2102,10 +2113,12 @@ PDM_part_mesh_nodal_elmts_free
     }
 
     if (pmne->numabs != NULL) {
-      for (int i = 0; i < pmne->n_part; i++) {
-        free (pmne->numabs[i]);
+      if(pmne->ownership_numabs == PDM_OWNERSHIP_KEEP) {
+        for (int i = 0; i < pmne->n_part; i++) {
+          free (pmne->numabs[i]);
+        }
+        free (pmne->numabs);
       }
-      free (pmne->numabs);
     }
 
     if (pmne->num_elmt_parent_to_local != NULL) {
@@ -2183,7 +2196,7 @@ const int                          id_part,
     PDM_Mesh_nodal_block_poly3d_t *block = pmne->sections_poly3d[_id_section];
 
     // ownership
-    block->owner = ownership;
+    block->parent_num_owner = ownership;
 
     if (block == NULL) {
       PDM_error (__FILE__, __LINE__, 0, "Bad standard block identifier\n");
@@ -2193,7 +2206,6 @@ const int                          id_part,
       PDM_error(__FILE__, __LINE__, 0, "Partition identifier too big\n");
     }
 
-    block->is_parent_num_get = 1;
     if (block->_parent_num != NULL) {
       _parent_num = block->_parent_num[id_part];
     }
@@ -2206,7 +2218,7 @@ const int                          id_part,
     PDM_Mesh_nodal_block_poly2d_t *block = pmne->sections_poly2d[_id_section];
 
     // ownership
-    block->owner = ownership;
+    block->parent_num_owner = ownership;
 
     if (block == NULL) {
       PDM_error (__FILE__, __LINE__, 0, "Bad standard block identifier\n");
@@ -2216,7 +2228,6 @@ const int                          id_part,
       PDM_error(__FILE__, __LINE__, 0, "Partition identifier too big\n");
     }
 
-    block->is_parent_num_get = 1;
     if (block->_parent_num != NULL) {
       _parent_num = block->_parent_num[id_part];
     }
@@ -2229,7 +2240,7 @@ const int                          id_part,
     PDM_Mesh_nodal_block_std_t *block = pmne->sections_std[_id_section];
 
     // ownership
-    block->owner = ownership;
+    block->parent_num_owner = ownership;
 
     if (block == NULL) {
       PDM_error (__FILE__, __LINE__, 0, "Bad standard block identifier\n");
@@ -2239,7 +2250,6 @@ const int                          id_part,
       PDM_error(__FILE__, __LINE__, 0, "Partition identifier too big\n");
     }
 
-    block->is_parent_num_get = 1;
     if (block->_parent_num != NULL) {
       _parent_num = block->_parent_num[id_part];
     }
@@ -2274,7 +2284,7 @@ const int                          id_part,
     PDM_Mesh_nodal_block_poly3d_t *block = pmne->sections_poly3d[_id_section];
 
     // ownership
-    block->owner = ownership;
+    block->numabs_owner = ownership;
 
     if (block == NULL) {
       PDM_error (__FILE__, __LINE__, 0, "Bad standard block identifier\n");
@@ -2284,7 +2294,6 @@ const int                          id_part,
       PDM_error(__FILE__, __LINE__, 0, "Partition identifier too big\n");
     }
 
-    // block->is_parent_num_get = 1;
     if (block->_numabs != NULL) {
       _g_num = block->_numabs[id_part];
     }
@@ -2297,7 +2306,7 @@ const int                          id_part,
     PDM_Mesh_nodal_block_poly2d_t *block = pmne->sections_poly2d[_id_section];
 
     // ownership
-    block->owner = ownership;
+    block->numabs_owner = ownership;
 
     if (block == NULL) {
       PDM_error (__FILE__, __LINE__, 0, "Bad standard block identifier\n");
@@ -2307,7 +2316,6 @@ const int                          id_part,
       PDM_error(__FILE__, __LINE__, 0, "Partition identifier too big\n");
     }
 
-    // block->is_parent_num_get = 1;
     if (block->_numabs != NULL) {
       _g_num = block->_numabs[id_part];
     }
@@ -2320,7 +2328,7 @@ const int                          id_part,
     PDM_Mesh_nodal_block_std_t *block = pmne->sections_std[_id_section];
 
     // ownership
-    block->owner = ownership;
+    block->numabs_owner = ownership;
 
     if (block == NULL) {
       PDM_error (__FILE__, __LINE__, 0, "Bad standard block identifier\n");
@@ -2330,7 +2338,6 @@ const int                          id_part,
       PDM_error(__FILE__, __LINE__, 0, "Partition identifier too big\n");
     }
 
-    // block->is_parent_num_get = 1;
     if (block->_numabs != NULL) {
       _g_num = block->_numabs[id_part];
     }
@@ -3836,7 +3843,6 @@ PDM_part_mesh_nodal_elmts_elt_center_get
       PDM_error (__FILE__, __LINE__, 0, "Bad block identifier\n");
     }
 
-    block->is_cell_centers_get = 1;
     elt_centers = block->cell_centers[id_part] ;
   }
 
@@ -3853,7 +3859,6 @@ PDM_part_mesh_nodal_elmts_elt_center_get
       PDM_error (__FILE__, __LINE__, 0, "Bad block identifier\n");
     }
 
-    block->is_cell_centers_get = 1;
     elt_centers = block->cell_centers[id_part] ;
   }
 
@@ -3865,7 +3870,6 @@ PDM_part_mesh_nodal_elmts_elt_center_get
     // ownership
     block->cell_centers_owner = ownership;
 
-    block->is_cell_centers_get = 1;
     elt_centers = block->cell_centers[id_part] ;
 
   }
@@ -4375,8 +4379,6 @@ const int                           id_part,
       PDM_error(__FILE__, __LINE__, 0, "Partition identifier too big\n");
     }
 
-
-    block->is_numabs_int_get = 1;
     return block->numabs_int[id_part];
   }
 
@@ -4397,8 +4399,6 @@ const int                           id_part,
       PDM_error(__FILE__, __LINE__, 0, "Partition identifier too big\n");
     }
 
-
-    block->is_numabs_int_get = 1;
     return block->numabs_int[id_part];
   }
 
@@ -4420,7 +4420,6 @@ const int                           id_part,
     }
     // if (block->numabs_int == NULL) printf("!!! id_section = %d\n", id_section);
 
-    block->is_numabs_int_get = 1;
     return block->numabs_int[id_part];
   }
 }
