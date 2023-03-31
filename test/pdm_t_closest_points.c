@@ -341,10 +341,10 @@ main
                                                        (const PDM_g_num_t **) &closest_src_gnum,
                                                        comm);
 
-    PDM_log_trace_connectivity_long(tgt_to_src_idx,
-                                    closest_src_gnum,
-                                    n_tgt,
-                                    "closest_src_gnum : ");
+    // PDM_log_trace_connectivity_long(tgt_to_src_idx,
+    //                                 closest_src_gnum,
+    //                                 n_tgt,
+    //                                 "closest_src_gnum : ");
 
     int         **come_from_idx;
     PDM_g_num_t **come_from;
@@ -352,10 +352,10 @@ main
                                          &come_from_idx,
                                          &come_from);
 
-    PDM_log_trace_connectivity_long(come_from_idx[0],
-                                    come_from[0],
-                                    n_tgt,
-                                    "come_from        : ");
+    // PDM_log_trace_connectivity_long(come_from_idx[0],
+    //                                 come_from[0],
+    //                                 n_tgt,
+    //                                 "come_from        : ");
 
 
     double **recv_coord = NULL;
@@ -399,14 +399,15 @@ main
         }
 
         if (PDM_ABS(dist2 - closest_src_dist[n_closest_points*i+j]) > 1e-6 * radius) {
-          log_trace("tgt "PDM_FMT_G_NUM" (%f %f %f), src "PDM_FMT_G_NUM" (%f %f %f), dist2 %e / %e\n",
-                    tgt_g_num[i],
-                    tgt_coord[3*i+0], tgt_coord[3*i+1], tgt_coord[3*i+2],
-                    closest_src_gnum[n_closest_points*i+j],
-                    recv_coord[0][3*(n_closest_points*i+j)+0],
-                    recv_coord[0][3*(n_closest_points*i+j)+1],
-                    recv_coord[0][3*(n_closest_points*i+j)+2],
-                    dist2, closest_src_dist[n_closest_points*i+j]);
+          printf("[%d] tgt "PDM_FMT_G_NUM" (%f %f %f), src "PDM_FMT_G_NUM" (%f %f %f), dist2 %e / %e\n",
+                 i_rank,
+                 tgt_g_num[i],
+                 tgt_coord[3*i+0], tgt_coord[3*i+1], tgt_coord[3*i+2],
+                 closest_src_gnum[n_closest_points*i+j],
+                 recv_coord[0][3*(n_closest_points*i+j)+0],
+                 recv_coord[0][3*(n_closest_points*i+j)+1],
+                 recv_coord[0][3*(n_closest_points*i+j)+2],
+                 dist2, closest_src_dist[n_closest_points*i+j]);
         }
       }
     }
