@@ -1454,7 +1454,10 @@ const PDM_g_num_t                 *parent_entity_g_num,
   block->n_elt  [id_part]  = n_elt;
   block->_connec[id_part]  = (int *) connec;
   block->_numabs[id_part]  = (PDM_g_num_t *) numabs;
+
   block->owner             = owner;
+  block->numabs_owner      = owner;
+  block->parent_num_owner  = owner;
 
   if (parent_num != NULL) {
     if (block->_parent_num == NULL) {
@@ -1658,7 +1661,11 @@ const int                         *parent_num,
   block->_connec_idx[id_part] = (int *) connec_idx;
   block->_connec[id_part]     = (int *) connec;
   block->_numabs[id_part]     = (PDM_g_num_t *) numabs;
-  block->owner                = owner;
+
+  block->owner             = owner;
+  block->numabs_owner      = owner;
+  block->parent_num_owner  = owner;
+  block->elt_vtx_owner     = owner;
 
   /* for (int i = 0; i < n_elt; i++) { */
   /*   n_elt_abs = PDM_MAX(n_elt_abs, numabs[i]); */
@@ -1740,8 +1747,11 @@ const PDM_g_num_t                 *parent_entity_g_num,
   block->_cellfac_idx  [id_part] = (int         *) cellfac_idx;
   block->_cellfac      [id_part] = (int         *) cellfac;
   block->_numabs       [id_part] = (PDM_g_num_t *) numabs;
-  block->owner                   = owner;
 
+  block->owner             = owner;
+  block->numabs_owner      = owner;
+  block->parent_num_owner  = owner;
+  block->elt_vtx_owner     = owner;
 
   /* Compute cell-vertex connectivity */
   _compute_cell_vtx_connectivity (n_elt,
