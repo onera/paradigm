@@ -1455,9 +1455,16 @@ const PDM_g_num_t                 *parent_entity_g_num,
   block->_connec[id_part]  = (int *) connec;
   block->_numabs[id_part]  = (PDM_g_num_t *) numabs;
 
-  block->owner             = owner;
-  block->numabs_owner      = owner;
-  block->parent_num_owner  = owner;
+  printf("set - owner : %d\n", owner);
+
+  if (owner != PDM_OWNERSHIP_BAD_VALUE) {
+    if (block->owner            != PDM_OWNERSHIP_USER) {
+      printf("changed from %d\n", block->owner);
+      block->owner             = owner;
+    }
+    if (block->numabs_owner     != PDM_OWNERSHIP_USER) block->numabs_owner      = owner;
+    if (block->parent_num_owner != PDM_OWNERSHIP_USER) block->parent_num_owner  = owner;
+  }
 
   if (parent_num != NULL) {
     if (block->_parent_num == NULL) {
@@ -1567,9 +1574,11 @@ const int                           id_part,
   }
 
   // ownership
-  block->owner            = ownership;
-  block->numabs_owner     = ownership;
-  block->parent_num_owner = ownership;
+  if (ownership != PDM_OWNERSHIP_BAD_VALUE) {
+    if (block->owner            != PDM_OWNERSHIP_USER) block->owner             = ownership;
+    if (block->numabs_owner     != PDM_OWNERSHIP_USER) block->numabs_owner      = ownership;
+    if (block->parent_num_owner != PDM_OWNERSHIP_USER) block->parent_num_owner  = ownership;
+  }
 }
 
 
@@ -1617,9 +1626,11 @@ const char                        **ho_ordering,
   *ho_ordering = block->ho_ordering;
 
   // ownership
-  block->owner            = ownership;
-  block->numabs_owner     = ownership;
-  block->parent_num_owner = ownership;
+ if (ownership != PDM_OWNERSHIP_BAD_VALUE) {
+    if (block->owner            != PDM_OWNERSHIP_USER) block->owner             = ownership;
+    if (block->numabs_owner     != PDM_OWNERSHIP_USER) block->numabs_owner      = ownership;
+    if (block->parent_num_owner != PDM_OWNERSHIP_USER) block->parent_num_owner  = ownership;
+  }
 }
 
 
@@ -1662,10 +1673,13 @@ const int                         *parent_num,
   block->_connec[id_part]     = (int *) connec;
   block->_numabs[id_part]     = (PDM_g_num_t *) numabs;
 
-  block->owner             = owner;
-  block->numabs_owner      = owner;
-  block->parent_num_owner  = owner;
-  block->elt_vtx_owner     = owner;
+  // ownership
+  if (owner != PDM_OWNERSHIP_BAD_VALUE) {
+    if (block->owner            != PDM_OWNERSHIP_USER) block->owner             = owner;
+    if (block->numabs_owner     != PDM_OWNERSHIP_USER) block->numabs_owner      = owner;
+    if (block->parent_num_owner != PDM_OWNERSHIP_USER) block->parent_num_owner  = owner;
+    if (block->elt_vtx_owner    != PDM_OWNERSHIP_USER) block->elt_vtx_owner     = owner;
+  }
 
   /* for (int i = 0; i < n_elt; i++) { */
   /*   n_elt_abs = PDM_MAX(n_elt_abs, numabs[i]); */
@@ -1748,10 +1762,13 @@ const PDM_g_num_t                 *parent_entity_g_num,
   block->_cellfac      [id_part] = (int         *) cellfac;
   block->_numabs       [id_part] = (PDM_g_num_t *) numabs;
 
-  block->owner             = owner;
-  block->numabs_owner      = owner;
-  block->parent_num_owner  = owner;
-  block->elt_vtx_owner     = owner;
+  // ownership
+  if (owner != PDM_OWNERSHIP_BAD_VALUE) {
+    if (block->owner            != PDM_OWNERSHIP_USER) block->owner             = owner;
+    if (block->numabs_owner     != PDM_OWNERSHIP_USER) block->numabs_owner      = owner;
+    if (block->parent_num_owner != PDM_OWNERSHIP_USER) block->parent_num_owner  = owner;
+    if (block->elt_vtx_owner    != PDM_OWNERSHIP_USER) block->elt_vtx_owner     = owner;
+  }
 
   /* Compute cell-vertex connectivity */
   _compute_cell_vtx_connectivity (n_elt,
@@ -1832,7 +1849,9 @@ PDM_part_mesh_nodal_elmts_section_poly2d_get
   *connec     = block->_connec[id_part];
 
   // ownership
-  block->elt_vtx_owner = ownership;
+  if (ownership != PDM_OWNERSHIP_BAD_VALUE) {
+    if (block->elt_vtx_owner != PDM_OWNERSHIP_USER) block->elt_vtx_owner = ownership;
+  }
 }
 
 
@@ -1881,7 +1900,9 @@ PDM_part_mesh_nodal_elmts_section_poly3d_cell_vtx_connect_get
   *cell_vtx     = block->_cellvtx[id_part];
 
   // ownership
-  block->elt_vtx_owner = ownership;
+  if (ownership != PDM_OWNERSHIP_BAD_VALUE) {
+    if (block->elt_vtx_owner != PDM_OWNERSHIP_USER) block->elt_vtx_owner = ownership;
+  }
 }
 
 
@@ -1945,9 +1966,11 @@ const int                           id_part,
   }
 
   // ownership
-  block->owner            = ownership;
-  block->numabs_owner     = ownership;
-  block->parent_num_owner = ownership;
+  if (ownership != PDM_OWNERSHIP_BAD_VALUE) {
+    if (block->owner            != PDM_OWNERSHIP_USER) block->owner             = ownership;
+    if (block->numabs_owner     != PDM_OWNERSHIP_USER) block->numabs_owner      = ownership;
+    if (block->parent_num_owner != PDM_OWNERSHIP_USER) block->parent_num_owner  = ownership;
+  }
 }
 
 
@@ -2206,7 +2229,9 @@ const int                          id_part,
     PDM_Mesh_nodal_block_poly3d_t *block = pmne->sections_poly3d[_id_section];
 
     // ownership
-    block->parent_num_owner = ownership;
+    if (ownership != PDM_OWNERSHIP_BAD_VALUE) {
+      if (block->parent_num_owner != PDM_OWNERSHIP_USER) block->parent_num_owner  = ownership;
+    }
 
     if (block == NULL) {
       PDM_error (__FILE__, __LINE__, 0, "Bad standard block identifier\n");
@@ -2228,7 +2253,9 @@ const int                          id_part,
     PDM_Mesh_nodal_block_poly2d_t *block = pmne->sections_poly2d[_id_section];
 
     // ownership
-    block->parent_num_owner = ownership;
+    if (ownership != PDM_OWNERSHIP_BAD_VALUE) {
+      if (block->parent_num_owner != PDM_OWNERSHIP_USER) block->parent_num_owner  = ownership;
+    }
 
     if (block == NULL) {
       PDM_error (__FILE__, __LINE__, 0, "Bad standard block identifier\n");
@@ -2250,7 +2277,9 @@ const int                          id_part,
     PDM_Mesh_nodal_block_std_t *block = pmne->sections_std[_id_section];
 
     // ownership
-    block->parent_num_owner = ownership;
+    if (ownership != PDM_OWNERSHIP_BAD_VALUE) {
+      if (block->parent_num_owner != PDM_OWNERSHIP_USER) block->parent_num_owner  = ownership;
+    }
 
     if (block == NULL) {
       PDM_error (__FILE__, __LINE__, 0, "Bad standard block identifier\n");
@@ -2294,7 +2323,9 @@ const int                          id_part,
     PDM_Mesh_nodal_block_poly3d_t *block = pmne->sections_poly3d[_id_section];
 
     // ownership
-    block->numabs_owner = ownership;
+    if (ownership != PDM_OWNERSHIP_BAD_VALUE) {
+      if (block->numabs_owner            != PDM_OWNERSHIP_USER) block->numabs_owner = ownership;
+    }
 
     if (block == NULL) {
       PDM_error (__FILE__, __LINE__, 0, "Bad standard block identifier\n");
@@ -2316,7 +2347,9 @@ const int                          id_part,
     PDM_Mesh_nodal_block_poly2d_t *block = pmne->sections_poly2d[_id_section];
 
     // ownership
-    block->numabs_owner = ownership;
+    if (ownership != PDM_OWNERSHIP_BAD_VALUE) {
+      if (block->numabs_owner            != PDM_OWNERSHIP_USER) block->numabs_owner = ownership;
+    }
 
     if (block == NULL) {
       PDM_error (__FILE__, __LINE__, 0, "Bad standard block identifier\n");
@@ -2338,7 +2371,9 @@ const int                          id_part,
     PDM_Mesh_nodal_block_std_t *block = pmne->sections_std[_id_section];
 
     // ownership
-    block->numabs_owner = ownership;
+    if (ownership != PDM_OWNERSHIP_BAD_VALUE) {
+      if (block->numabs_owner            != PDM_OWNERSHIP_USER) block->numabs_owner = ownership;
+    }
 
     if (block == NULL) {
       PDM_error (__FILE__, __LINE__, 0, "Bad standard block identifier\n");
@@ -3847,7 +3882,9 @@ PDM_part_mesh_nodal_elmts_elt_center_get
     PDM_Mesh_nodal_block_std_t *block = pmne->sections_std[_id_section];
 
     // ownership
-    block->cell_centers_owner = ownership;
+    if (ownership != PDM_OWNERSHIP_BAD_VALUE) {
+      if (block->cell_centers_owner            != PDM_OWNERSHIP_USER) block->cell_centers_owner = ownership;
+    }
 
     if (block == NULL) {
       PDM_error (__FILE__, __LINE__, 0, "Bad block identifier\n");
@@ -3863,7 +3900,9 @@ PDM_part_mesh_nodal_elmts_elt_center_get
     PDM_Mesh_nodal_block_poly2d_t *block = pmne->sections_poly2d[_id_section];
 
     // ownership
-    block->cell_centers_owner = ownership;
+    if (ownership != PDM_OWNERSHIP_BAD_VALUE) {
+      if (block->cell_centers_owner            != PDM_OWNERSHIP_USER) block->cell_centers_owner = ownership;
+    }
 
     if (block == NULL) {
       PDM_error (__FILE__, __LINE__, 0, "Bad block identifier\n");
@@ -3878,7 +3917,9 @@ PDM_part_mesh_nodal_elmts_elt_center_get
     PDM_Mesh_nodal_block_poly3d_t *block = pmne->sections_poly3d[_id_section];
 
     // ownership
-    block->cell_centers_owner = ownership;
+    if (ownership != PDM_OWNERSHIP_BAD_VALUE) {
+      if (block->cell_centers_owner            != PDM_OWNERSHIP_USER) block->cell_centers_owner = ownership;
+    }
 
     elt_centers = block->cell_centers[id_part] ;
 
@@ -4302,7 +4343,9 @@ const int                           id_part,
   }
 
   // ownership
-  pmne->ownership_numabs = ownership;
+  if (ownership != PDM_OWNERSHIP_BAD_VALUE) {
+    if (pmne->ownership_numabs != PDM_OWNERSHIP_USER) pmne->ownership_numabs = ownership;
+  }
 
   return pmne->numabs[id_part];
 }
@@ -4379,7 +4422,9 @@ const int                           id_part,
     PDM_Mesh_nodal_block_poly3d_t *block = pmne->sections_poly3d[_id_section];
 
     // ownership
-    block->numabs_int_owner = ownership;
+    if (ownership != PDM_OWNERSHIP_BAD_VALUE) {
+      if (block->numabs_int_owner != PDM_OWNERSHIP_USER) block->numabs_int_owner = ownership;
+    }
 
     if (block == NULL) {
       PDM_error (__FILE__, __LINE__, 0, "Bad standard block identifier\n");
@@ -4399,7 +4444,9 @@ const int                           id_part,
     PDM_Mesh_nodal_block_poly2d_t *block = pmne->sections_poly2d[_id_section];
 
     // ownership
-    block->numabs_int_owner = ownership;
+    if (ownership != PDM_OWNERSHIP_BAD_VALUE) {
+      if (block->numabs_int_owner != PDM_OWNERSHIP_USER) block->numabs_int_owner = ownership;
+    }
 
     if (block == NULL) {
       PDM_error (__FILE__, __LINE__, 0, "Bad standard block identifier\n");
@@ -4419,7 +4466,9 @@ const int                           id_part,
     PDM_Mesh_nodal_block_std_t *block = pmne->sections_std[_id_section];
 
     // ownership
-    block->numabs_int_owner = ownership;
+    if (ownership != PDM_OWNERSHIP_BAD_VALUE) {
+      if (block->numabs_int_owner != PDM_OWNERSHIP_USER) block->numabs_int_owner = ownership;
+    }
 
     if (block == NULL) {
       PDM_error (__FILE__, __LINE__, 0, "Bad standard block identifier\n");
