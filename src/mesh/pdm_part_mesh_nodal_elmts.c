@@ -1852,8 +1852,8 @@ PDM_part_mesh_nodal_elmts_section_poly3d_cell_vtx_connect_get
     PDM_error(__FILE__, __LINE__, 0, "Partition identifier too big\n");
   }
 
-  *cellvtx_idx = block->_cellvtx_idx[id_part];
-  *cellvtx     = block->_cellvtx[id_part];
+  *cell_vtx_idx = block->_cellvtx_idx[id_part];
+  *cell_vtx     = block->_cellvtx[id_part];
 
 }
 
@@ -4199,10 +4199,10 @@ const int                           id_part,
 {
   if (pmne->numabs == NULL) {
     pmne->numabs = malloc (sizeof(PDM_g_num_t*)*pmne->n_part);
-    int is_not_parent_num = (PDM_part_mesh_nodal_elmts_parent_num_get(pmne, pmne->sections_id[0], 0) == NULL);
+    int is_not_parent_num = (PDM_part_mesh_nodal_elmts_parent_num_get(pmne, pmne->sections_id[0], 0, PDM_OWNERSHIP_KEEP) == NULL);
     for (int i = 0; i < pmne->n_part; i++) {
       for (int i1 = 0; i1 < pmne->n_section; i1++) {
-        assert (is_not_parent_num == (PDM_part_mesh_nodal_elmts_parent_num_get(pmne, pmne->sections_id[i1], i) == NULL));
+        assert (is_not_parent_num == (PDM_part_mesh_nodal_elmts_parent_num_get(pmne, pmne->sections_id[i1], i, PDM_OWNERSHIP_KEEP) == NULL));
       }
     }
 

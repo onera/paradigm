@@ -564,7 +564,7 @@ PDM_part_mesh_nodal_section_parent_num_get
 const int                     i_section,
 const int                     id_part,
       PDM_ownership_t         ownership
-)
+);
 
 /**
  * \brief Get global element numbering of section elements

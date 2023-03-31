@@ -170,7 +170,8 @@ _store_cell_vtx
                                                geom_kind,
                                                ipart,
                                                &ml->cell_vtx_idx[ipart],
-                                               &ml->cell_vtx    [ipart]);
+                                               &ml->cell_vtx    [ipart],
+                                               PDM_OWNERSHIP_KEEP);
     }
 
   }
@@ -382,7 +383,8 @@ const int                           n_part,
 
       int *parent_num = PDM_part_mesh_nodal_elmts_parent_num_get(pmne,
                                                                  id_section,
-                                                                 ipart);
+                                                                 ipart,
+                                                                 PDM_OWNERSHIP_KEEP);
 
       // if (parent_num != NULL) {
       //   log_trace("section %d (type %d), ", isection, t_elt);
@@ -408,7 +410,8 @@ const int                           n_part,
                                                    id_section,
                                                    ipart,
                                                    &connec_idx,
-                                                   &connec);
+                                                   &connec,
+                                                   PDM_OWNERSHIP_KEEP);
 
         PDM_vtk_write_polydata(filename,
                                pn_vtx[ipart],
@@ -444,7 +447,8 @@ const int                           n_part,
                                                    &cell_face_idx,
                                                    &cell_face,
                                                    &_parent_num,
-                                                   &parent_elt_g_num);
+                                                   &parent_elt_g_num,
+                                                   PDM_OWNERSHIP_KEEP);
 
         // PDM_log_trace_connectivity_int(cell_face_idx,
         //                                cell_face,
@@ -489,7 +493,8 @@ const int                           n_part,
                                                      &_parent_num,
                                                      &parent_elmt_num,
                                                      &order,
-                                                     &ho_ordering);
+                                                     &ho_ordering,
+                                                     PDM_OWNERSHIP_KEEP);
 
         int n_vtx_per_elmt = PDM_Mesh_nodal_n_vtx_elt_get (t_elt, order);
         int *pcell_vtx_out = malloc(n_vtx_per_elmt * n_elt * sizeof(int));
@@ -2109,14 +2114,16 @@ PDM_mesh_location_compute_old
 
       PDM_g_num_t *_elt_g_num = PDM_part_mesh_nodal_g_num_get(ml->mesh_nodal,
                                                               i_section,
-                                                              ipart);
+                                                              ipart,
+                                                              PDM_OWNERSHIP_KEEP);
 
       // PDM_Mesh_nodal_elt_t t_elt = PDM_part_mesh_nodal_section_elt_type_get(ml->mesh_nodal,
       //                                                                       i_section);
 
       int *parent_num = PDM_part_mesh_nodal_section_parent_num_get(ml->mesh_nodal,
                                                                    i_section,
-                                                                   ipart);
+                                                                   ipart,
+                                                                   PDM_OWNERSHIP_KEEP);
       // log_trace("iblock %d/%d : %d elt / %d\n", iblock, n_block, n_elt_in_block, n_elt);
       // if (parent_num != NULL) {
       //   PDM_log_trace_array_int(parent_num, n_elt_in_block, "parent_num : ");
@@ -4593,11 +4600,13 @@ PDM_mesh_location_compute
 
       PDM_g_num_t *_elt_g_num = PDM_part_mesh_nodal_g_num_get(ml->mesh_nodal,
                                                               i_section,
-                                                              ipart);
+                                                              ipart,
+                                                              PDM_OWNERSHIP_KEEP);
 
       int *parent_num = PDM_part_mesh_nodal_section_parent_num_get(ml->mesh_nodal,
                                                                    i_section,
-                                                                   ipart);
+                                                                   ipart,
+                                                                   PDM_OWNERSHIP_KEEP);
 
       for (int ielt = 0; ielt < n_elt_in_block; ielt++) {
         if (parent_num != NULL) {

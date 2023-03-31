@@ -138,7 +138,8 @@ int main(int argc, char *argv[])
                                         &pelt_vtx,
                                         &pelt_ln_to_gn,
                                         &parent_num,
-                                        &parent_entity_g_num);
+                                        &parent_entity_g_num,
+                                        PDM_OWNERSHIP_KEEP);
 
     PDM_vtk_write_std_elements(filename,
                                pn_vtx,
@@ -203,7 +204,8 @@ int main(int argc, char *argv[])
                                           &pelt_vtx,
                                           &pelt_ln_to_gn,
                                           &parent_num,
-                                          &parent_entity_g_num);
+                                          &parent_entity_g_num,
+                                          PDM_OWNERSHIP_KEEP);
 
       PDM_vtk_write_std_elements(filename,
                                  pn_vtx,
@@ -344,7 +346,8 @@ int main(int argc, char *argv[])
                                         &pelt_vtx,
                                         &pelt_ln_to_gn,
                                         &parent_num,
-                                        &parent_entity_g_num);
+                                        &parent_entity_g_num,
+                                        PDM_OWNERSHIP_KEEP);
 
     PDM_vtk_write_std_elements(filename,
                                pn_vtx,

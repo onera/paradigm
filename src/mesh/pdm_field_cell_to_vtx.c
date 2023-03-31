@@ -420,7 +420,8 @@ _prepare_cell_center_nodal
                                                   &connec,
                                                   &numabs,
                                                   &parent_num,
-                                                  &parent_entity_g_num);
+                                                  &parent_entity_g_num,
+                                                  PDM_OWNERSHIP_KEEP);
 
         double pond = 1./((double) n_vtx_per_elmt);
         for(int i_elmt = 0; i_elmt < n_elmt_in_section; ++i_elmt) {
@@ -508,7 +509,8 @@ _prepare_vtx_cell_nodal
                                                   &connec,
                                                   &numabs,
                                                   &parent_num,
-                                                  &parent_entity_g_num);
+                                                  &parent_entity_g_num,
+                                                  PDM_OWNERSHIP_KEEP);
 
         for(int i_elmt = 0; i_elmt < n_elmt_in_section; ++i_elmt) {
           _cell_vtx_idx[n_elmt+1] = _cell_vtx_idx[n_elmt] + n_vtx_per_elmt;
@@ -923,7 +925,8 @@ _create_bnd_graph_nodal
                                                   &connect[i_section],
                                                   &numabs,
                                                   &parent_num,
-                                                  &parent_entity_g_num);
+                                                  &parent_entity_g_num,
+                                                  PDM_OWNERSHIP_KEEP);
       }
 
       for(int i_group = 0; i_group < n_group_part; ++i_group) {
@@ -937,7 +940,8 @@ _create_bnd_graph_nodal
                                             i_group,
                                             &n_group_elmt,
                                             &group_elmt,
-                                            &group_ln_to_gn);
+                                            &group_ln_to_gn,
+                                            PDM_OWNERSHIP_KEEP);
 
         for(int idx_elmt = 0; idx_elmt < n_group_elmt; ++idx_elmt) {
           int i_elmt    = group_elmt[idx_elmt]-1;
@@ -976,7 +980,8 @@ _create_bnd_graph_nodal
                                             i_group,
                                             &n_group_elmt,
                                             &group_elmt,
-                                            &group_ln_to_gn);
+                                            &group_ln_to_gn,
+                                            PDM_OWNERSHIP_KEEP);
 
         for(int idx_elmt = 0; idx_elmt < n_group_elmt; ++idx_elmt) {
           int i_elmt    = group_elmt[idx_elmt]-1;

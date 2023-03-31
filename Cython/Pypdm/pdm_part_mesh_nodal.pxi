@@ -69,7 +69,8 @@ cdef extern from "pdm_part_mesh_nodal.h":
                                              int                   **connec,
                                              PDM_g_num_t           **numabs,
                                              int                   **parent_num,
-                                             PDM_g_num_t           **parent_entity_g_num)
+                                             PDM_g_num_t           **parent_entity_g_num,
+                                             PDM_ownership_t         ownership)
 
     void PDM_part_mesh_nodal_add_part_mesh_nodal_elmts(PDM_part_mesh_nodal_t       *pmn,
                                                        PDM_part_mesh_nodal_elmts_t *pmne,
@@ -189,7 +190,7 @@ def part_mesh_nodal_get_sections(PMeshNodal pypmn, PDM_geometry_kind_t geom_kind
 
     n_elmt_in_section = PDM_part_mesh_nodal_section_n_elt_get(pypmn.pmn, id_section, i_part)
 
-    PDM_part_mesh_nodal_section_std_get(pypmn.pmn, id_section, i_part, &connec, &numabs, &parent_num, &parent_entity_g_num)
+    PDM_part_mesh_nodal_section_std_get(pypmn.pmn, id_section, i_part, &connec, &numabs, &parent_num, &parent_entity_g_num, PDM_OWNERSHIP_USER)
 
     n_vtx_per_elmt = PDM_Mesh_nodal_n_vertices_element(t_elmt, 1)
 

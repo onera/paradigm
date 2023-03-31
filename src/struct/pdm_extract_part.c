@@ -1186,7 +1186,8 @@ _extract_part_nodal
                                                  &_parent_num,
                                                  &parent_elt_g_num,
                                                  &order,
-                                                 &ho_ordering);
+                                                 &ho_ordering,
+                                                 PDM_OWNERSHIP_KEEP);
 
       int n_vtx_per_elmt = PDM_Mesh_nodal_n_vtx_elt_get(t_elt, order);
 
@@ -1291,7 +1292,8 @@ _extract_part_nodal
                                                  &_parent_num,
                                                  &parent_elt_g_num,
                                                  &order,
-                                                 &ho_ordering);
+                                                 &ho_ordering,
+                                                 PDM_OWNERSHIP_KEEP);
 
       int n_vtx_per_elmt = PDM_Mesh_nodal_n_vtx_elt_get(t_elt, order);
 
@@ -1414,7 +1416,14 @@ _extract_part_nodal
       int         *parent_num               = NULL;
       PDM_g_num_t *numabs                   = NULL;
       PDM_g_num_t *parent_entitity_ln_to_gn = NULL;
-      PDM_part_mesh_nodal_elmts_section_std_get(extract_pmne, id_section, i_part, &elmt_vtx, &numabs, &parent_num, &parent_entitity_ln_to_gn);
+      PDM_part_mesh_nodal_elmts_section_std_get(extract_pmne,
+                                                id_section,
+                                                i_part,
+                                                &elmt_vtx,
+                                                &numabs,
+                                                &parent_num,
+                                                &parent_entitity_ln_to_gn,
+                                                PDM_OWNERSHIP_KEEP);
 
       PDM_vtk_write_std_elements(filename,
                                  n_extract_vtx[i_part],
@@ -1561,7 +1570,8 @@ _extract_part_and_reequilibrate_nodal_from_target
 
       int *parent_num = PDM_part_mesh_nodal_elmts_parent_num_get(extrp->pmne,
                                                                  sections_id[i_section],
-                                                                 i_part);
+                                                                 i_part,
+                                                                 PDM_OWNERSHIP_KEEP);
 
       if (t_elt == PDM_MESH_NODAL_POLY_2D) {
         int *face_vtx_idx;
@@ -1570,7 +1580,8 @@ _extract_part_and_reequilibrate_nodal_from_target
                                                    sections_id[i_section],
                                                    i_part,
                                                    &face_vtx_idx,
-                                                   &face_vtx);
+                                                   &face_vtx,
+                                                   PDM_OWNERSHIP_KEEP);
 
         // int* parent_num = NULL; // Il faut adpater tout le part_mesh_nodal_elmts
 
@@ -1641,7 +1652,8 @@ _extract_part_and_reequilibrate_nodal_from_target
                                                    &cell_face_idx,
                                                    &cell_face,
                                                    &_parent_num,
-                                                   &parent_elt_g_num);
+                                                   &parent_elt_g_num,
+                                                   PDM_OWNERSHIP_KEEP);
 
         /* Selection */
         for(int i_elt = 0; i_elt < n_elt; ++i_elt) {
@@ -1679,7 +1691,8 @@ _extract_part_and_reequilibrate_nodal_from_target
                                                    &_parent_num,
                                                    &parent_elt_g_num,
                                                    &order,
-                                                   &ho_ordering);
+                                                   &ho_ordering,
+                                                   PDM_OWNERSHIP_KEEP);
 
         int n_vtx_per_elmt = PDM_Mesh_nodal_n_vtx_elt_get(t_elt , order);
         if (0) {
@@ -1722,7 +1735,8 @@ _extract_part_and_reequilibrate_nodal_from_target
 
       int *parent_num = PDM_part_mesh_nodal_elmts_parent_num_get(extrp->pmne,
                                                                  sections_id[i_section],
-                                                                 i_part);
+                                                                 i_part,
+                                                                 PDM_OWNERSHIP_KEEP);
 
       if (t_elt == PDM_MESH_NODAL_POLY_2D) {
         int *face_vtx_idx;
@@ -1731,7 +1745,8 @@ _extract_part_and_reequilibrate_nodal_from_target
                                                    sections_id[i_section],
                                                    i_part,
                                                    &face_vtx_idx,
-                                                   &face_vtx);
+                                                   &face_vtx,
+                                                   PDM_OWNERSHIP_KEEP);
 
         /* Selection */
         for(int i_elt = 0; i_elt < n_elt; ++i_elt) {
@@ -1782,7 +1797,8 @@ _extract_part_and_reequilibrate_nodal_from_target
                                                    &cell_face_idx,
                                                    &cell_face,
                                                    &_parent_num,
-                                                   &parent_elt_g_num);
+                                                   &parent_elt_g_num,
+                                                   PDM_OWNERSHIP_KEEP);
 
         /* Selection */
         for(int i_elt = 0; i_elt < n_elt; ++i_elt) {
@@ -1825,7 +1841,8 @@ _extract_part_and_reequilibrate_nodal_from_target
                                                    &_parent_num,
                                                    &parent_elt_g_num,
                                                    &order,
-                                                   &ho_ordering);
+                                                   &ho_ordering,
+                                                   PDM_OWNERSHIP_KEEP);
 
         int n_vtx_per_elmt = PDM_Mesh_nodal_n_vtx_elt_get(t_elt, order);
 
@@ -1861,7 +1878,8 @@ _extract_part_and_reequilibrate_nodal_from_target
 
       int *parent_num = PDM_part_mesh_nodal_elmts_parent_num_get(extrp->pmne,
                                                                  sections_id[i_section],
-                                                                 i_part);
+                                                                 i_part,
+                                                                 PDM_OWNERSHIP_KEEP);
 
       if (t_elt == PDM_MESH_NODAL_POLY_2D) {
         int *face_vtx_idx;
@@ -1870,7 +1888,8 @@ _extract_part_and_reequilibrate_nodal_from_target
                                                    sections_id[i_section],
                                                    i_part,
                                                    &face_vtx_idx,
-                                                   &face_vtx);
+                                                   &face_vtx,
+                                                   PDM_OWNERSHIP_KEEP);
 
         /* Selection */
         for(int i_elt = 0; i_elt < n_elt; ++i_elt) {
@@ -1922,7 +1941,8 @@ _extract_part_and_reequilibrate_nodal_from_target
                                                    &cell_face_idx,
                                                    &cell_face,
                                                    &_parent_num,
-                                                   &parent_elt_g_num);
+                                                   &parent_elt_g_num,
+                                                   PDM_OWNERSHIP_KEEP);
         // PDM_log_trace_connectivity_int(face_vtx_idx, face_vtx, n_face, "face_vtx : ");
         if (0) {
           char filename[999];
@@ -1999,7 +2019,8 @@ _extract_part_and_reequilibrate_nodal_from_target
                                                    &_parent_num,
                                                    &parent_elt_g_num,
                                                    &order,
-                                                   &ho_ordering);
+                                                   &ho_ordering,
+                                                   PDM_OWNERSHIP_KEEP);
 
         int n_vtx_per_elmt = PDM_Mesh_nodal_n_vtx_elt_get(t_elt, order);
 

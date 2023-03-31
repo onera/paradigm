@@ -800,7 +800,8 @@ _compute_cell_centers
 
       int *parent_num = PDM_part_mesh_nodal_elmts_parent_num_get(pmne,
                                                                  id_section,
-                                                                 ipart);
+                                                                 ipart,
+                                                                 PDM_OWNERSHIP_KEEP);
 
       if (t_elt == PDM_MESH_NODAL_POLY_2D) {
 
@@ -811,7 +812,8 @@ _compute_cell_centers
                                                    id_section,
                                                    ipart,
                                                    &connec_idx,
-                                                   &connec);
+                                                   &connec,
+                                                   PDM_OWNERSHIP_KEEP);
         // PDM_log_trace_connectivity_int(connec_idx,
         //                                connec,
         //                                n_elt,
@@ -853,7 +855,8 @@ _compute_cell_centers
                                                                     id_section,
                                                                     ipart,
                                                                     &connec_idx,
-                                                                    &connec);
+                                                                    &connec,
+                                                                    PDM_OWNERSHIP_KEEP);
 
 
         for (int ielt = 0; ielt < n_elt; ielt++) {
@@ -901,7 +904,8 @@ _compute_cell_centers
                                                    &_parent_num,
                                                    &parent_entity_g_num,
                                                    &order,
-                                                   &ho_ordering);
+                                                   &ho_ordering,
+                                                   PDM_OWNERSHIP_KEEP);
 
         int n_vtx = PDM_Mesh_nodal_n_vtx_elt_get(t_elt,
                                                  order);
@@ -1041,7 +1045,8 @@ int main(int argc, char *argv[])
 
         int *parent_num = PDM_part_mesh_nodal_elmts_parent_num_get(pmne,
                                                                    id_section,
-                                                                   ipart);
+                                                                   ipart,
+                                                                   PDM_OWNERSHIP_KEEP);
 
 
         PDM_g_num_t *gnum = malloc(sizeof(PDM_g_num_t) * _n_elt);
@@ -1062,7 +1067,8 @@ int main(int argc, char *argv[])
                                                      id_section,
                                                      ipart,
                                                      &connec_idx,
-                                                     &connec);
+                                                     &connec,
+                                                     PDM_OWNERSHIP_KEEP);
 
           PDM_vtk_write_polydata(filename,
                                  pn_vtx[ipart],
@@ -1098,7 +1104,8 @@ int main(int argc, char *argv[])
                                                      &cell_face_idx,
                                                      &cell_face,
                                                      &_parent_num,
-                                                     &parent_entitity_ln_to_gn);
+                                                     &parent_entitity_ln_to_gn,
+                                                     PDM_OWNERSHIP_KEEP);
 
           PDM_vtk_write_polydata(filename,
                                  pn_vtx[ipart],
@@ -1123,7 +1130,8 @@ int main(int argc, char *argv[])
                                                   &elmt_vtx,
                                                   &numabs,
                                                   &_parent_num,
-                                                  &parent_entitity_ln_to_gn);
+                                                  &parent_entitity_ln_to_gn,
+                                                  PDM_OWNERSHIP_KEEP);
 
 
           PDM_vtk_write_std_elements(filename,

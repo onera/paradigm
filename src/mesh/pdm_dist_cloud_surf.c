@@ -1206,11 +1206,13 @@ _dist_cloud_surf_compute_optim
 
         int *parent_num = PDM_part_mesh_nodal_elmts_parent_num_get(pmne,
                                                                    id_section,
-                                                                   i_part);
+                                                                   i_part,
+                                                                   PDM_OWNERSHIP_KEEP);
 
         PDM_g_num_t *_elt_g_num = PDM_part_mesh_nodal_elmts_g_num_get(pmne,
                                                                       id_section,
-                                                                      i_part);
+                                                                      i_part,
+                                                                      PDM_OWNERSHIP_KEEP);
 
         int n_elt = PDM_part_mesh_nodal_elmts_section_n_elt_get(pmne,
                                                                 id_section,
@@ -1747,7 +1749,8 @@ _dist_cloud_surf_compute_optim
 
         int *parent_num = PDM_part_mesh_nodal_elmts_parent_num_get(extract_pmne,
                                                                    id_section,
-                                                                   0);
+                                                                   0,
+                                                                   PDM_OWNERSHIP_KEEP);
 
         if (t_elt == PDM_MESH_NODAL_POLY_2D) {
           /* Polygonal section */
@@ -1757,7 +1760,8 @@ _dist_cloud_surf_compute_optim
                                                      id_section,
                                                      0,
                                                      &connec_idx,
-                                                     &connec);
+                                                     &connec,
+                                                     PDM_OWNERSHIP_KEEP);
 
           for (int ielt = 0; ielt < n_elt; ielt++) {
             int iface = ielt;
@@ -1792,7 +1796,8 @@ _dist_cloud_surf_compute_optim
                                                        &_parent_num,
                                                        &parent_entity_g_num,
                                                        &order,
-                                                       &ho_ordering);
+                                                       &ho_ordering,
+                                                       PDM_OWNERSHIP_KEEP);
 
           int n_vtx = PDM_Mesh_nodal_n_vtx_elt_get(t_elt,
                                                    order);
@@ -1830,7 +1835,8 @@ _dist_cloud_surf_compute_optim
 
         int *parent_num = PDM_part_mesh_nodal_elmts_parent_num_get(extract_pmne,
                                                                    id_section,
-                                                                   0);
+                                                                   0,
+                                                                   PDM_OWNERSHIP_KEEP);
 
         if (t_elt == PDM_MESH_NODAL_POLY_2D) {
           /* Polygonal section */
@@ -1840,7 +1846,8 @@ _dist_cloud_surf_compute_optim
                                                        id_section,
                                                        0,
                                                        &connec_idx,
-                                                       &connec);
+                                                       &connec,
+                                                       PDM_OWNERSHIP_KEEP);
 
           for (int ielt = 0; ielt < n_elt; ielt++) {
             int iface = ielt;
@@ -1874,7 +1881,8 @@ _dist_cloud_surf_compute_optim
                                                        &_parent_num,
                                                        &parent_entity_g_num,
                                                        &order,
-                                                       &ho_ordering);
+                                                       &ho_ordering,
+                                                       PDM_OWNERSHIP_KEEP);
 
           int *ijk_to_user = NULL;
           if (ho_ordering != NULL) {

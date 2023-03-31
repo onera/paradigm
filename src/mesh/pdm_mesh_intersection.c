@@ -536,7 +536,8 @@ _compute_mesh_nodal_extents
                                                                          id_section_in_geom_kind);
       int *parent_num = PDM_part_mesh_nodal_section_parent_num_get(mesh_nodal,
                                                                    id_section,
-                                                                   i_part);
+                                                                   i_part,
+                                                                   PDM_OWNERSHIP_KEEP);
 
       // PDM_g_num_t *_elt_g_num = PDM_part_mesh_nodal_section_g_num_get(mesh_nodal,
       //                                                               geom_kind,
@@ -905,11 +906,13 @@ _select_elements_by_global_bbox_nodal
 
       int *parent_num = PDM_part_mesh_nodal_section_parent_num_get(mesh_nodal,
                                                                    id_section,
-                                                                   i_part);
+                                                                   i_part,
+                                                                   PDM_OWNERSHIP_KEEP);
 
       PDM_g_num_t *entity_ln_to_gn = PDM_part_mesh_nodal_g_num_get(mesh_nodal,
                                                                    id_section,
-                                                                   i_part);
+                                                                   i_part,
+                                                                   PDM_OWNERSHIP_KEEP);
 
       for (int ielt = 0; ielt < n_elt; ielt++) {
 
@@ -2082,10 +2085,12 @@ _build_ptp
 
         PDM_g_num_t *elt_ln_to_gn = PDM_part_mesh_nodal_g_num_get(mi->mesh_nodal[0],
                                                                   id_section,
-                                                                  ipart);
+                                                                  ipart,
+                                                                  PDM_OWNERSHIP_KEEP);
         int *parent_num = PDM_part_mesh_nodal_section_parent_num_get(mi->mesh_nodal[0],
                                                                      id_section,
-                                                                     ipart);
+                                                                     ipart,
+                                                                     PDM_OWNERSHIP_KEEP);
 
         for (int ielt = 0; ielt < n_elt_section; ielt++)  {
           int i = ielt;
@@ -2440,7 +2445,8 @@ _mesh_intersection_vol_vol
                                                          &_cell_face_idx,
                                                          &_cell_face,
                                                          &parent_num,
-                                                         &parent_entity_g_num);
+                                                         &parent_entity_g_num,
+                                                         PDM_OWNERSHIP_KEEP);
             int *__face_vtx_idx = malloc(sizeof(int) * (_cell_face_idx[n_elt] + 1));
             __face_vtx_idx[0] = 0;
             for (int k = 0; k < _cell_face_idx[n_elt]; k++) {
@@ -2494,7 +2500,8 @@ _mesh_intersection_vol_vol
                                                       &connec,
                                                       &numabs,
                                                       &parent_num,
-                                                      &parent_entity_g_num);
+                                                      &parent_entity_g_num,
+                                                      PDM_OWNERSHIP_KEEP);
             PDM_vtk_write_std_elements(filename,
                                        n_vtx[i],
                                        vtx_coord[i],
@@ -4524,7 +4531,8 @@ _mesh_intersection_surf_surf
 
         int *parent_num = PDM_part_mesh_nodal_elmts_parent_num_get(extract_pmne,
                                                                    id_section,
-                                                                   0);
+                                                                   0,
+                                                                   PDM_OWNERSHIP_KEEP);
         if (t_elt == PDM_MESH_NODAL_POLY_2D) {
           /* Polygonal section */
           int *connec_idx;
@@ -4533,7 +4541,8 @@ _mesh_intersection_surf_surf
                                                      id_section,
                                                      0,
                                                      &connec_idx,
-                                                     &connec);
+                                                     &connec,
+                                                     PDM_OWNERSHIP_KEEP);
 
           for (int ielt = 0; ielt < n_elt; ielt++) {
             int iface = ielt;
@@ -4562,7 +4571,8 @@ _mesh_intersection_surf_surf
                                                      &_parent_num,
                                                      &parent_entity_g_num,
                                                      &order,
-                                                     &ho_ordering);
+                                                     &ho_ordering,
+                                                     PDM_OWNERSHIP_KEEP);
           assert(order == 1);
 
           int face_vtx_n = PDM_Mesh_nodal_n_vtx_elt_get(t_elt,
@@ -4601,7 +4611,8 @@ _mesh_intersection_surf_surf
 
         int *parent_num = PDM_part_mesh_nodal_elmts_parent_num_get(extract_pmne,
                                                                    id_section,
-                                                                   0);
+                                                                   0,
+                                                                   PDM_OWNERSHIP_KEEP);
         if (t_elt == PDM_MESH_NODAL_POLY_2D) {
           /* Polygonal section */
           int *connec_idx;
@@ -4610,7 +4621,8 @@ _mesh_intersection_surf_surf
                                                      id_section,
                                                      0,
                                                      &connec_idx,
-                                                     &connec);
+                                                     &connec,
+                                                     PDM_OWNERSHIP_KEEP);
 
           for (int ielt = 0; ielt < n_elt; ielt++) {
             int iface = ielt;
@@ -4640,7 +4652,8 @@ _mesh_intersection_surf_surf
                                                      &_parent_num,
                                                      &parent_entity_g_num,
                                                      &order,
-                                                     &ho_ordering);
+                                                     &ho_ordering,
+                                                     PDM_OWNERSHIP_KEEP);
           assert(order == 1);
 
           int face_vtx_n = PDM_Mesh_nodal_n_vtx_elt_get(t_elt,

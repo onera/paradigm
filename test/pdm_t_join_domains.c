@@ -993,7 +993,14 @@ int main
         int         *parent_num               = NULL;
         PDM_g_num_t *numabs                   = NULL;
         PDM_g_num_t *parent_entitity_ln_to_gn = NULL;
-        PDM_part_mesh_nodal_elmts_section_std_get(pmne_vol, id_section, 0, &elmt_vtx, &numabs, &parent_num, &parent_entitity_ln_to_gn);
+        PDM_part_mesh_nodal_elmts_section_std_get(pmne_vol,
+                                                  id_section,
+                                                  0,
+                                                  &elmt_vtx,
+                                                  &numabs,
+                                                  &parent_num,
+                                                  &parent_entitity_ln_to_gn,
+                                                  PDM_OWNERSHIP_KEEP);
 
         int* cell_num = (int *) malloc(n_cell * sizeof(int));
         for(int i = 0; i < n_cell; ++i) {
@@ -1281,7 +1288,14 @@ int main
       int         *parent_num               = NULL;
       PDM_g_num_t *numabs                   = NULL;
       PDM_g_num_t *parent_entitity_ln_to_gn = NULL;
-      PDM_part_mesh_nodal_elmts_section_std_get(pmne_vol, id_section, 0, &elmt_vtx, &numabs, &parent_num, &parent_entitity_ln_to_gn);
+      PDM_part_mesh_nodal_elmts_section_std_get(pmne_vol,
+                                                id_section,
+                                                0,
+                                                &elmt_vtx,
+                                                &numabs,
+                                                &parent_num,
+                                                &parent_entitity_ln_to_gn,
+                                                PDM_OWNERSHIP_KEEP);
 
       if (post) {
         char filename[999];

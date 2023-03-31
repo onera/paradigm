@@ -602,7 +602,8 @@ int main(int argc, char *argv[])
                                               &elmt_vtx,
                                               &numabs,
                                               &parent_num,
-                                              &parent_entitity_ln_to_gn);
+                                              &parent_entitity_ln_to_gn,
+                                              PDM_OWNERSHIP_KEEP);
 
       PDM_log_trace_array_long(parent_entitity_ln_to_gn, pn_extract_cell[i_part], "parent_entitity_ln_to_gn ::");
 

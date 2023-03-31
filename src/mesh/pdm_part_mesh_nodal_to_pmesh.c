@@ -975,7 +975,8 @@ _generate_faces_from_part_mesh_nodal
                                       i_group,
                                       &n_face_group,
                                       &group_elmt_face,
-                                      &group_elmt_face_ln_to_gn);
+                                      &group_elmt_face_ln_to_gn,
+                                      PDM_OWNERSHIP_KEEP);
 
         int         *group_face          = malloc(n_face_group * sizeof(int        ));
         PDM_g_num_t *group_face_ln_to_gn = malloc(n_face_group * sizeof(PDM_g_num_t));
@@ -1356,7 +1357,8 @@ _generate_edges_from_part_mesh_nodal
                                       i_group,
                                       &n_edge_group,
                                       &group_elmt_edge,
-                                      &group_elmt_edge_ln_to_gn);
+                                      &group_elmt_edge_ln_to_gn,
+                                      PDM_OWNERSHIP_KEEP);
 
         int         *group_edge          = malloc(n_edge_group * sizeof(int        ));
         PDM_g_num_t *group_edge_ln_to_gn = malloc(n_edge_group * sizeof(PDM_g_num_t));
