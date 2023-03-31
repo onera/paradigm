@@ -698,7 +698,7 @@ PDM_part_mesh_nodal_elmts_group_get
        int                           *n_group_elmt,
        int                          **group_elmt,
        PDM_g_num_t                  **group_ln_to_gn,
-       PDM_ownership_t                ownership
+       PDM_ownership_t                ownership_group
 );
 
 int*

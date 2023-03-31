@@ -1557,6 +1557,9 @@ const int                           id_part,
   if(block->_parent_entity_g_num != NULL) {
     *parent_entity_g_num = block->_parent_entity_g_num[id_part];
   }
+
+  // ownership
+  block->owner = ownership;
 }
 
 
@@ -1603,7 +1606,8 @@ const char                        **ho_ordering,
   *order       = block->order;
   *ho_ordering = block->ho_ordering;
 
-
+  // ownership
+  block->owner = ownership;
 }
 
 
@@ -1808,6 +1812,8 @@ PDM_part_mesh_nodal_elmts_section_poly2d_get
   *connec_idx = block->_connec_idx[id_part];
   *connec     = block->_connec[id_part];
 
+  // ownership
+  block->owner = ownership;
 }
 
 
@@ -1855,6 +1861,8 @@ PDM_part_mesh_nodal_elmts_section_poly3d_cell_vtx_connect_get
   *cell_vtx_idx = block->_cellvtx_idx[id_part];
   *cell_vtx     = block->_cellvtx[id_part];
 
+  // ownership
+  block->owner = ownership;
 }
 
 
@@ -1916,6 +1924,9 @@ const int                           id_part,
   else{
     *parent_entity_g_num = NULL;
   }
+
+  // ownership
+  block->owner = ownership;
 }
 
 
@@ -2171,6 +2182,8 @@ const int                          id_part,
 
     PDM_Mesh_nodal_block_poly3d_t *block = pmne->sections_poly3d[_id_section];
 
+    // ownership
+    block->owner = ownership;
 
     if (block == NULL) {
       PDM_error (__FILE__, __LINE__, 0, "Bad standard block identifier\n");
@@ -2192,6 +2205,9 @@ const int                          id_part,
 
     PDM_Mesh_nodal_block_poly2d_t *block = pmne->sections_poly2d[_id_section];
 
+    // ownership
+    block->owner = ownership;
+
     if (block == NULL) {
       PDM_error (__FILE__, __LINE__, 0, "Bad standard block identifier\n");
     }
@@ -2211,6 +2227,9 @@ const int                          id_part,
     _id_section = id_section - PDM_BLOCK_ID_BLOCK_STD;
 
     PDM_Mesh_nodal_block_std_t *block = pmne->sections_std[_id_section];
+
+    // ownership
+    block->owner = ownership;
 
     if (block == NULL) {
       PDM_error (__FILE__, __LINE__, 0, "Bad standard block identifier\n");
@@ -2254,6 +2273,8 @@ const int                          id_part,
 
     PDM_Mesh_nodal_block_poly3d_t *block = pmne->sections_poly3d[_id_section];
 
+    // ownership
+    block->owner = ownership;
 
     if (block == NULL) {
       PDM_error (__FILE__, __LINE__, 0, "Bad standard block identifier\n");
@@ -2275,6 +2296,9 @@ const int                          id_part,
 
     PDM_Mesh_nodal_block_poly2d_t *block = pmne->sections_poly2d[_id_section];
 
+    // ownership
+    block->owner = ownership;
+
     if (block == NULL) {
       PDM_error (__FILE__, __LINE__, 0, "Bad standard block identifier\n");
     }
@@ -2294,6 +2318,9 @@ const int                          id_part,
     _id_section = id_section - PDM_BLOCK_ID_BLOCK_STD;
 
     PDM_Mesh_nodal_block_std_t *block = pmne->sections_std[_id_section];
+
+    // ownership
+    block->owner = ownership;
 
     if (block == NULL) {
       PDM_error (__FILE__, __LINE__, 0, "Bad standard block identifier\n");
@@ -3802,6 +3829,9 @@ PDM_part_mesh_nodal_elmts_elt_center_get
 
     PDM_Mesh_nodal_block_std_t *block = pmne->sections_std[_id_section];
 
+    // ownership
+    block->cell_centers_owner = ownership;
+
     if (block == NULL) {
       PDM_error (__FILE__, __LINE__, 0, "Bad block identifier\n");
     }
@@ -3816,6 +3846,9 @@ PDM_part_mesh_nodal_elmts_elt_center_get
 
     PDM_Mesh_nodal_block_poly2d_t *block = pmne->sections_poly2d[_id_section];
 
+    // ownership
+    block->cell_centers_owner = ownership;
+
     if (block == NULL) {
       PDM_error (__FILE__, __LINE__, 0, "Bad block identifier\n");
     }
@@ -3828,6 +3861,9 @@ PDM_part_mesh_nodal_elmts_elt_center_get
     _id_section = id_section - PDM_BLOCK_ID_BLOCK_POLY3D;
 
     PDM_Mesh_nodal_block_poly3d_t *block = pmne->sections_poly3d[_id_section];
+
+    // ownership
+    block->cell_centers_owner = ownership;
 
     block->is_cell_centers_get = 1;
     elt_centers = block->cell_centers[id_part] ;
@@ -4250,6 +4286,10 @@ const int                           id_part,
       }
     }
   }
+
+  // ownership
+  pmne->ownership_numabs = ownership;
+
   return pmne->numabs[id_part];
 }
 
@@ -4324,6 +4364,9 @@ const int                           id_part,
 
     PDM_Mesh_nodal_block_poly3d_t *block = pmne->sections_poly3d[_id_section];
 
+    // ownership
+    block->numabs_int_owner = ownership;
+
     if (block == NULL) {
       PDM_error (__FILE__, __LINE__, 0, "Bad standard block identifier\n");
     }
@@ -4343,6 +4386,9 @@ const int                           id_part,
 
     PDM_Mesh_nodal_block_poly2d_t *block = pmne->sections_poly2d[_id_section];
 
+    // ownership
+    block->numabs_int_owner = ownership;
+
     if (block == NULL) {
       PDM_error (__FILE__, __LINE__, 0, "Bad standard block identifier\n");
     }
@@ -4361,6 +4407,9 @@ const int                           id_part,
     _id_section = id_section - PDM_BLOCK_ID_BLOCK_STD;
 
     PDM_Mesh_nodal_block_std_t *block = pmne->sections_std[_id_section];
+
+    // ownership
+    block->numabs_int_owner = ownership;
 
     if (block == NULL) {
       PDM_error (__FILE__, __LINE__, 0, "Bad standard block identifier\n");
@@ -6390,12 +6439,14 @@ PDM_part_mesh_nodal_elmts_group_get
        int                           *n_group_elmt,
        int                          **group_elmt,
        PDM_g_num_t                  **group_ln_to_gn,
-       PDM_ownership_t                ownership
+       PDM_ownership_t                ownership_group
 )
 {
   *n_group_elmt   = pmne->n_group_elmt  [i_part][i_group];
   *group_elmt     = pmne->group_elmt    [i_part][i_group];
   *group_ln_to_gn = pmne->group_ln_to_gn[i_part][i_group];
+
+  pmne->ownership_group = ownership_group;
 }
 
 int
