@@ -594,31 +594,28 @@ PDM_closest_point_t *cls
 
 
   /* Sort closest source points in ascending order of global id */
-  if (1) {
-    int    *order = malloc(sizeof(int   ) * cls->n_closest);
-    double *tmp   = malloc(sizeof(double) * cls->n_closest);
-    for (int i_part = 0; i_part < cls->tgt_cloud->n_part; i_part++) {
-      for (int i = 0; i < cls->tgt_cloud->n_points[i_part]; i++) {
-        for (int j = 0; j < cls->n_closest; j++) {
-          order[j] = j;
-        }
+  int    *order = malloc(sizeof(int   ) * cls->n_closest);
+  double *tmp   = malloc(sizeof(double) * cls->n_closest);
+  for (int i_part = 0; i_part < cls->tgt_cloud->n_part; i_part++) {
+    for (int i = 0; i < cls->tgt_cloud->n_points[i_part]; i++) {
+      for (int j = 0; j < cls->n_closest; j++) {
+        order[j] = j;
+      }
 
-        PDM_sort_long(cls->tgt_cloud->closest_src_gnum [i_part] + cls->n_closest*i,
-                      order,
-                      cls->n_closest);
+      PDM_sort_long(cls->tgt_cloud->closest_src_gnum [i_part] + cls->n_closest*i,
+                    order,
+                    cls->n_closest);
 
-        memcpy(tmp,
-               cls->tgt_cloud->closest_src_dist[i_part] + cls->n_closest*i,
-               sizeof(double) * cls->n_closest);
-        for (int j = 0; j < cls->n_closest; j++) {
-          cls->tgt_cloud->closest_src_dist[i_part][cls->n_closest*i+j] = tmp[order[j]];
-        }
+      memcpy(tmp,
+             cls->tgt_cloud->closest_src_dist[i_part] + cls->n_closest*i,
+             sizeof(double) * cls->n_closest);
+      for (int j = 0; j < cls->n_closest; j++) {
+        cls->tgt_cloud->closest_src_dist[i_part][cls->n_closest*i+j] = tmp[order[j]];
       }
     }
-
-    free(tmp);
-    free(order);
   }
+  free(tmp);
+  free(order);
 
 
   //-->GPU
