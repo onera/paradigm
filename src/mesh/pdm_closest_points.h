@@ -171,14 +171,6 @@ PDM_closest_points_get
        double              **closest_src_distance
 );
 
-void
-PDM_closest_points_local_order_get
-(
-       PDM_closest_point_t  *cls,
- const int                   i_part_tgt,
-       int                 **closest_src_order
-);
-
 
 /**
  *

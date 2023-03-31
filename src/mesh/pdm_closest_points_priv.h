@@ -44,8 +44,6 @@ typedef struct {
   double      **closest_src_dist; /*!< Distance to the n_closest source points
                                     for each point of each partition  */
 
-  int         **closest_src_order;
-
 } _tgt_point_cloud_t;
 
 
