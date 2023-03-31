@@ -5860,7 +5860,7 @@ PDM_mesh_location_compute
     PDM_g_num_t *part_elt_id = malloc(sizeof(PDM_g_num_t) * n_pts2);
     for (int ielt = 0; ielt < dn_elt2; ielt++) {
       for (int i = delt_pts_idx2[ielt]; i < delt_pts_idx2[ielt+1]; i++) {
-        part_elt_id[i] = delt_parent_g_num2[ielt];//delt_g_num_geom2[ielt];
+        part_elt_id[i] = delt_parent_g_num2[ielt];
       }
     }
 
@@ -5888,7 +5888,7 @@ PDM_mesh_location_compute
       for (int i = delt_pts_idx2[ielt]; i < delt_pts_idx2[ielt+1]; i++) {
         int pt_id = pts_unique_order[i];
         if (delt_pts_distance2[i] < local_pts_elt_dist2[pt_id]) {
-          local_pts_elt_g_num[pt_id] = delt_parent_g_num2[ielt];//delt_g_num_geom2[ielt];
+          local_pts_elt_g_num[pt_id] = delt_parent_g_num2[ielt];
           local_pts_elt_dist2[pt_id] = delt_pts_distance2[i];
         }
       }
@@ -6032,7 +6032,7 @@ PDM_mesh_location_compute
       for (int i = 0; i < n_pts; i++) {
 
         int pt_id = pts_unique_order[idx_pt+i];
-        if (part_elt_id[pt_id] == delt_parent_g_num2[ielt]) {//delt_g_num_geom2[ielt]) {
+        if (part_elt_id[pt_id] == delt_parent_g_num2[ielt]) {
 
           final_elt_pts_n[ielt]++;
           final_elt_pts_g_num_geom[idx] = _parent_g_num[i];
@@ -6054,16 +6054,17 @@ PDM_mesh_location_compute
         }
       } // End of loop on current elt's pts
     } // End of loop on elts in frame 2
-    free(delt_pts_idx2         );
-    free(delt_pts_coord2       );
-    free(delt_pts_distance2    );
-    free(delt_pts_proj_coord2  );
-    free(delt_pts_weight_idx2  );
-    free(delt_pts_weight2      );
-    free(delt_pts_uvw2         );
-    free(part_elt_id           );
-    free(delt_g_num_geom2);
-    free(delt_pts_g_num_geom);
+    free(delt_parent_g_num2  );
+    free(delt_pts_idx2       );
+    free(delt_pts_coord2     );
+    free(delt_pts_distance2  );
+    free(delt_pts_proj_coord2);
+    free(delt_pts_weight_idx2);
+    free(delt_pts_weight2    );
+    free(delt_pts_uvw2       );
+    free(part_elt_id         );
+    free(delt_g_num_geom2    );
+    free(delt_pts_g_num_geom );
 
     free(pts_unique_order);
     free(pts_ln_to_gn);
@@ -6082,7 +6083,7 @@ PDM_mesh_location_compute
      * Update results in user frame
      */
     PDM_block_to_part_t* btp_pts_gnum_geom_to_user = PDM_block_to_part_create(distrib_pts,
-                                                      (const PDM_g_num_t **)  &final_elt_pts_g_num_geom,
+                                                       (const PDM_g_num_t **) &final_elt_pts_g_num_geom,
                                                                               &final_n_pts,
                                                                               1,
                                                                               ml->comm);
@@ -6375,9 +6376,12 @@ PDM_mesh_location_compute
       if (!full_async) {
         PDM_part_to_part_iexch_wait(ptp_elt, request_pts_dist2);
         PDM_part_to_part_iexch_wait(ptp_elt, request_pts_coord);
+        free(final_elt_pts_coord);
         PDM_part_to_part_iexch_wait(ptp_elt, request_pts_proj_coord);
         PDM_part_to_part_iexch_wait(ptp_elt, request_pts_weight);
         PDM_part_to_part_iexch_wait(ptp_elt, request_pts_uvw);
+        free(final_elt_pts_uvw);
+        free(final_elt_pts_n  );
       }
 
       free(elt_pts_weight_stride);
@@ -6624,8 +6628,11 @@ PDM_mesh_location_compute
     if (ptp_elt != NULL) {
       if (full_async) {
         PDM_part_to_part_iexch_wait(ptp_elt, request_pts_uvw);
+        free(final_elt_pts_uvw);
+        free(final_elt_pts_n  );
         PDM_part_to_part_iexch_wait(ptp_elt, request_pts_weight);
         PDM_part_to_part_iexch_wait(ptp_elt, request_pts_coord);
+        free(final_elt_pts_coord);
       }
       for (int ipart = 0; ipart < n_part; ipart++) {
         free(stride_pts_weight[ipart]);
@@ -6656,16 +6663,10 @@ PDM_mesh_location_compute
     PDM_timer_resume(ml->timer);
 
     /* Free memory */
-
-    /* See if stuff can be freed earlier.... */
-    free(delt_parent_g_num2      );
-    free(final_elt_pts_coord     );
     free(final_elt_pts_distance  );
     free(final_elt_pts_proj_coord);
     free(final_elt_pts_weight_idx);
     free(final_elt_pts_weight    );
-    free(final_elt_pts_uvw       );
-    free(final_elt_pts_n         );
 
 
     if (use_extracted_pts) {
