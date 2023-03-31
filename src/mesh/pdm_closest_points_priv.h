@@ -44,6 +44,8 @@ typedef struct {
   double      **closest_src_dist; /*!< Distance to the n_closest source points
                                     for each point of each partition  */
 
+  int         **closest_src_order;
+
 } _tgt_point_cloud_t;
 
 
@@ -60,9 +62,9 @@ typedef struct {
   double      **coords;            /*!< Point coordinates points of each partition */
   PDM_g_num_t **gnum;              /*!< Point global numbering of each partition */
 
-  int         **tgt_in_src_idx;    /*!< Revsese results */
-  PDM_g_num_t **tgt_in_src;        /*!< Revsese results */
-  double      **tgt_in_src_dist;   /*!< Revsese results */
+  int         **tgt_in_src_idx;    /*!< Reverse results */
+  PDM_g_num_t **tgt_in_src;        /*!< Reverse results */
+  double      **tgt_in_src_dist;   /*!< Reverse results */
 
 } _src_point_cloud_t ;
 
