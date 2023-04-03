@@ -1309,6 +1309,13 @@ const PDM_Mesh_nodal_elt_t         t_elt
                   PDM_BLOCK_ID_BLOCK_POLY2D);
         abort();
       }
+
+      /* Ownership */
+      pmne->sections_std[id_section]->owner              = PDM_OWNERSHIP_KEEP;
+      pmne->sections_std[id_section]->cell_centers_owner = PDM_OWNERSHIP_KEEP;
+      pmne->sections_std[id_section]->numabs_int_owner   = PDM_OWNERSHIP_KEEP;
+      pmne->sections_std[id_section]->numabs_owner       = PDM_OWNERSHIP_KEEP;
+      pmne->sections_std[id_section]->parent_num_owner   = PDM_OWNERSHIP_KEEP;
     }
 
     break;
@@ -1350,6 +1357,14 @@ const PDM_Mesh_nodal_elt_t         t_elt
         PDM_error(__FILE__, __LINE__, 0, "The number of polygon blocks must be less than %d\n",
                   PDM_BLOCK_ID_BLOCK_POLY3D - PDM_BLOCK_ID_BLOCK_POLY2D);
       }
+
+      /* Ownership */
+      pmne->sections_poly2d[id_section]->owner              = PDM_OWNERSHIP_KEEP;
+      pmne->sections_poly2d[id_section]->cell_centers_owner = PDM_OWNERSHIP_KEEP;
+      pmne->sections_poly2d[id_section]->elt_vtx_owner      = PDM_OWNERSHIP_KEEP;
+      pmne->sections_poly2d[id_section]->numabs_int_owner   = PDM_OWNERSHIP_KEEP;
+      pmne->sections_poly2d[id_section]->numabs_owner       = PDM_OWNERSHIP_KEEP;
+      pmne->sections_poly2d[id_section]->parent_num_owner   = PDM_OWNERSHIP_KEEP;
     }
 
     break;
@@ -1399,6 +1414,14 @@ const PDM_Mesh_nodal_elt_t         t_elt
       }
 
       id_section += PDM_BLOCK_ID_BLOCK_POLY3D;
+
+      /* Ownership */
+      pmne->sections_poly3d[id_section]->owner              = PDM_OWNERSHIP_KEEP;
+      pmne->sections_poly3d[id_section]->cell_centers_owner = PDM_OWNERSHIP_KEEP;
+      pmne->sections_poly3d[id_section]->elt_vtx_owner      = PDM_OWNERSHIP_KEEP;
+      pmne->sections_poly3d[id_section]->numabs_int_owner   = PDM_OWNERSHIP_KEEP;
+      pmne->sections_poly3d[id_section]->numabs_owner       = PDM_OWNERSHIP_KEEP;
+      pmne->sections_poly3d[id_section]->parent_num_owner   = PDM_OWNERSHIP_KEEP;
 
     }
 
@@ -1456,9 +1479,7 @@ const PDM_g_num_t                 *parent_entity_g_num,
   block->_numabs[id_part]  = (PDM_g_num_t *) numabs;
 
   if (owner != PDM_OWNERSHIP_BAD_VALUE) {
-    if (block->owner            != PDM_OWNERSHIP_USER) {
-      block->owner             = owner;
-    }
+    if (block->owner            != PDM_OWNERSHIP_USER) block->owner             = owner;
     if (block->numabs_owner     != PDM_OWNERSHIP_USER) block->numabs_owner      = owner;
     if (block->parent_num_owner != PDM_OWNERSHIP_USER) block->parent_num_owner  = owner;
   }
@@ -2162,36 +2183,38 @@ PDM_part_mesh_nodal_elmts_free
 
     if(pmne->n_group_elmt  != NULL) {
 
-      for(int i_part = 0; i_part < pmne->n_part; ++i_part) {
+      if(pmne->ownership_group == PDM_OWNERSHIP_KEEP) {
 
-        if(pmne->ownership_group == PDM_OWNERSHIP_KEEP) {
+        for(int i_part = 0; i_part < pmne->n_part; ++i_part) {
+
           for(int i_group = 0; i_group < pmne->n_group; ++i_group) {
             free(pmne->group_elmt    [i_part][i_group]);
             free(pmne->group_ln_to_gn[i_part][i_group]);
           }
+
+          if(pmne->n_group_elmt  [i_part] != NULL) {
+            free(pmne->n_group_elmt  [i_part]);
+          }
+
+          if(pmne->group_elmt  [i_part] != NULL) {
+            free(pmne->group_elmt    [i_part]);
+          }
+
+          if(pmne->group_ln_to_gn[i_part] != NULL) {
+            free(pmne->group_ln_to_gn[i_part]);
+          }
         }
 
-        if(pmne->n_group_elmt  [i_part] != NULL) {
-          free(pmne->n_group_elmt  [i_part]);
+        if(pmne->n_group_elmt  != NULL) {
+          free(pmne->n_group_elmt  );
         }
 
-        if(pmne->group_elmt  [i_part] != NULL) {
-          free(pmne->group_elmt    [i_part]);
+        if(pmne->group_elmt != NULL) {
+          free(pmne->group_elmt    );
         }
-
-        if(pmne->group_ln_to_gn[i_part] != NULL) {
-          free(pmne->group_ln_to_gn[i_part]);
+        if(pmne->group_ln_to_gn != NULL) {
+          free(pmne->group_ln_to_gn);
         }
-      }
-
-      if(pmne->n_group_elmt  != NULL) {
-        free(pmne->n_group_elmt  );
-      }
-      if(pmne->group_elmt != NULL) {
-        free(pmne->group_elmt    );
-      }
-      if(pmne->group_ln_to_gn != NULL) {
-        free(pmne->group_ln_to_gn);
       }
     }
   }
