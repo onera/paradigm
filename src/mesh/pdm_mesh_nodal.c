@@ -2351,17 +2351,9 @@ const PDM_ownership_t       ownership
 
       id_block = mesh->n_block_std-1;
 
-      /* Ownership */
-      mesh->blocks_std[id_block]->owner              = PDM_OWNERSHIP_KEEP;
-      mesh->blocks_std[id_block]->cell_centers_owner = PDM_OWNERSHIP_KEEP;
-      mesh->blocks_std[id_block]->numabs_int_owner   = PDM_OWNERSHIP_KEEP;
-      mesh->blocks_std[id_block]->numabs_owner       = PDM_OWNERSHIP_KEEP;
-      mesh->blocks_std[id_block]->parent_num_owner   = PDM_OWNERSHIP_KEEP;
-
       /* Intialisation du bloc */
       mesh->blocks_std[id_block] = malloc( sizeof(PDM_Mesh_nodal_block_std_t) );
       mesh->blocks_std[id_block]->t_elt        = t_elt;
-      mesh->blocks_std[id_block]->owner        = ownership;
       mesh->blocks_std[id_block]->n_part       = mesh->n_part;
 
       mesh->blocks_std[id_block]->n_elt                = (PDM_l_num_t  *) malloc(sizeof(PDM_l_num_t  ) * mesh->blocks_std[id_block]->n_part);
@@ -2385,6 +2377,13 @@ const PDM_ownership_t       ownership
                   PDM_BLOCK_ID_BLOCK_POLY2D);
         abort();
       }
+
+      /* Ownership */
+      mesh->blocks_std[id_block]->owner              = ownership;
+      mesh->blocks_std[id_block]->cell_centers_owner = PDM_OWNERSHIP_KEEP;
+      mesh->blocks_std[id_block]->numabs_int_owner   = PDM_OWNERSHIP_KEEP;
+      mesh->blocks_std[id_block]->numabs_owner       = ownership;
+      mesh->blocks_std[id_block]->parent_num_owner   = PDM_OWNERSHIP_KEEP;
     }
 
     break;
@@ -2399,17 +2398,8 @@ const PDM_ownership_t       ownership
 
       id_block = mesh->n_block_poly2d-1;
 
-      /* Ownership */
-      mesh->blocks_poly2d[id_block]->owner              = PDM_OWNERSHIP_KEEP;
-      mesh->blocks_poly2d[id_block]->cell_centers_owner = PDM_OWNERSHIP_KEEP;
-      mesh->blocks_poly2d[id_block]->elt_vtx_owner      = PDM_OWNERSHIP_KEEP;
-      mesh->blocks_poly2d[id_block]->numabs_int_owner   = PDM_OWNERSHIP_KEEP;
-      mesh->blocks_poly2d[id_block]->numabs_owner       = PDM_OWNERSHIP_KEEP;
-      mesh->blocks_poly2d[id_block]->parent_num_owner   = PDM_OWNERSHIP_KEEP;
-
       /* Intialisation du bloc */
       mesh->blocks_poly2d[id_block] = malloc( sizeof(PDM_Mesh_nodal_block_poly2d_t) );
-      mesh->blocks_poly2d[id_block]->owner       = ownership;
       mesh->blocks_poly2d[id_block]->n_part      = mesh->n_part;
 
       mesh->blocks_poly2d[id_block]->n_elt       = (PDM_l_num_t *) malloc(sizeof(PDM_l_num_t ) * mesh->blocks_poly2d[id_block]->n_part);
@@ -2433,6 +2423,14 @@ const PDM_ownership_t       ownership
         PDM_error(__FILE__, __LINE__, 0, "The number of polygon blocks must be less than %d\n",
                   PDM_BLOCK_ID_BLOCK_POLY3D - PDM_BLOCK_ID_BLOCK_POLY2D);
       }
+
+      /* Ownership */
+      mesh->blocks_poly2d[id_block]->owner              = ownership;
+      mesh->blocks_poly2d[id_block]->cell_centers_owner = PDM_OWNERSHIP_KEEP;
+      mesh->blocks_poly2d[id_block]->elt_vtx_owner      = PDM_OWNERSHIP_KEEP;
+      mesh->blocks_poly2d[id_block]->numabs_int_owner   = PDM_OWNERSHIP_KEEP;
+      mesh->blocks_poly2d[id_block]->numabs_owner       = ownership;
+      mesh->blocks_poly2d[id_block]->parent_num_owner   = PDM_OWNERSHIP_KEEP;
     }
 
     break;
@@ -2445,19 +2443,10 @@ const PDM_ownership_t       ownership
 
       id_block = mesh->n_block_poly3d-1;
 
-      /* Ownership */
-      mesh->blocks_poly3d[id_block]->owner              = PDM_OWNERSHIP_KEEP;
-      mesh->blocks_poly3d[id_block]->cell_centers_owner = PDM_OWNERSHIP_KEEP;
-      mesh->blocks_poly3d[id_block]->elt_vtx_owner      = PDM_OWNERSHIP_KEEP;
-      mesh->blocks_poly3d[id_block]->numabs_int_owner   = PDM_OWNERSHIP_KEEP;
-      mesh->blocks_poly3d[id_block]->numabs_owner       = PDM_OWNERSHIP_KEEP;
-      mesh->blocks_poly3d[id_block]->parent_num_owner   = PDM_OWNERSHIP_KEEP;
-
       /* Intialisation du bloc */
 
       mesh->blocks_poly3d[id_block] = malloc( sizeof(PDM_Mesh_nodal_block_poly3d_t) );
       mesh->blocks_poly3d[id_block]->n_part       = mesh->n_part;
-      mesh->blocks_poly3d[id_block]->owner        = ownership;
 
       mesh->blocks_poly3d[id_block]->n_elt        = (PDM_l_num_t * ) malloc(sizeof(PDM_l_num_t  ) * mesh->blocks_poly3d[id_block]->n_part);
       mesh->blocks_poly3d[id_block]->n_face       = (PDM_l_num_t * ) malloc(sizeof(PDM_l_num_t  ) * mesh->blocks_poly3d[id_block]->n_part);
@@ -2488,6 +2477,14 @@ const PDM_ownership_t       ownership
       }
 
       id_block += PDM_BLOCK_ID_BLOCK_POLY3D;
+
+      /* Ownership */
+      mesh->blocks_poly3d[id_block]->owner              = ownership;
+      mesh->blocks_poly3d[id_block]->cell_centers_owner = PDM_OWNERSHIP_KEEP;
+      mesh->blocks_poly3d[id_block]->elt_vtx_owner      = PDM_OWNERSHIP_KEEP;
+      mesh->blocks_poly3d[id_block]->numabs_int_owner   = PDM_OWNERSHIP_KEEP;
+      mesh->blocks_poly3d[id_block]->numabs_owner       = ownership;
+      mesh->blocks_poly3d[id_block]->parent_num_owner   = PDM_OWNERSHIP_KEEP;
 
     }
 

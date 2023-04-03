@@ -1455,11 +1455,8 @@ const PDM_g_num_t                 *parent_entity_g_num,
   block->_connec[id_part]  = (int *) connec;
   block->_numabs[id_part]  = (PDM_g_num_t *) numabs;
 
-  printf("set - owner : %d\n", owner);
-
   if (owner != PDM_OWNERSHIP_BAD_VALUE) {
     if (block->owner            != PDM_OWNERSHIP_USER) {
-      printf("changed from %d\n", block->owner);
       block->owner             = owner;
     }
     if (block->numabs_owner     != PDM_OWNERSHIP_USER) block->numabs_owner      = owner;
