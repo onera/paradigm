@@ -2556,7 +2556,7 @@ PDM_part_mesh_nodal_cell_vtx_connect_get
     int *parent_num = PDM_part_mesh_nodal_elmts_parent_num_get(pmne,
                                                                id_section,
                                                                i_part,
-                                                               ownership);
+                                                               PDM_OWNERSHIP_BAD_VALUE);
 
     int n_elt = PDM_part_mesh_nodal_elmts_section_n_elt_get(pmne,
                                                             id_section,
@@ -2570,7 +2570,7 @@ PDM_part_mesh_nodal_cell_vtx_connect_get
                                                    i_part,
                                                    &connec_idx,
                                                    &connec,
-                                                   ownership);
+                                                   PDM_OWNERSHIP_BAD_VALUE);
     }
     else if (t_elt == PDM_MESH_NODAL_POLY_3D) {
       PDM_part_mesh_nodal_elmts_section_poly3d_cell_vtx_connect_get(pmne,
@@ -2578,7 +2578,7 @@ PDM_part_mesh_nodal_cell_vtx_connect_get
                                                                     i_part,
                                                                     &connec_idx,
                                                                     &connec,
-                                                                    ownership);
+                                                                    PDM_OWNERSHIP_BAD_VALUE);
     }
 
     if (t_elt == PDM_MESH_NODAL_POLY_2D ||
@@ -2612,7 +2612,7 @@ PDM_part_mesh_nodal_cell_vtx_connect_get
                                                    &parent_entity_g_num,
                                                    &order,
                                                    &ho_ordering,
-                                                   ownership);
+                                                   PDM_OWNERSHIP_BAD_VALUE);
 
       int n_vtx_elt = PDM_Mesh_nodal_n_vtx_elt_get(t_elt, order);
 
@@ -2645,7 +2645,7 @@ PDM_part_mesh_nodal_cell_vtx_connect_get
     int *parent_num = PDM_part_mesh_nodal_elmts_parent_num_get(pmne,
                                                                id_section,
                                                                i_part,
-                                                               ownership);
+                                                               PDM_OWNERSHIP_BAD_VALUE);
 
     int n_elt = PDM_part_mesh_nodal_elmts_section_n_elt_get(pmne,
                                                             id_section,
@@ -2659,7 +2659,7 @@ PDM_part_mesh_nodal_cell_vtx_connect_get
                                                    i_part,
                                                    &connec_idx,
                                                    &connec,
-                                                   ownership);
+                                                   PDM_OWNERSHIP_BAD_VALUE);
     }
     else if (t_elt == PDM_MESH_NODAL_POLY_3D) {
       PDM_part_mesh_nodal_elmts_section_poly3d_cell_vtx_connect_get(pmne,
@@ -2667,7 +2667,7 @@ PDM_part_mesh_nodal_cell_vtx_connect_get
                                                                     i_part,
                                                                     &connec_idx,
                                                                     &connec,
-                                                                    ownership);
+                                                                    PDM_OWNERSHIP_BAD_VALUE);
     }
 
     if (t_elt == PDM_MESH_NODAL_POLY_2D ||
@@ -2705,7 +2705,7 @@ PDM_part_mesh_nodal_cell_vtx_connect_get
                                                    &parent_entity_g_num,
                                                    &order,
                                                    &ho_ordering,
-                                                   ownership);
+                                                   PDM_OWNERSHIP_BAD_VALUE);
 
       int n_vtx_elt = PDM_Mesh_nodal_n_vtx_elt_get(t_elt, order);
 

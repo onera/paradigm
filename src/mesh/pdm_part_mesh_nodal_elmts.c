@@ -1293,7 +1293,6 @@ const PDM_Mesh_nodal_elt_t         t_elt
       pmne->sections_std[id_section]->_parent_entity_g_num  = NULL;
       pmne->sections_std[id_section]->cell_centers          = NULL;
       pmne->sections_std[id_section]->cell_centers_to_compute = NULL;
-      pmne->sections_std[id_section]->owner                 = PDM_OWNERSHIP_KEEP;
       pmne->sections_std[id_section]->order                 = 1;
       pmne->sections_std[id_section]->ho_ordering           = NULL;
 
@@ -1343,7 +1342,6 @@ const PDM_Mesh_nodal_elt_t         t_elt
       pmne->sections_poly2d[id_section]->cell_centers_to_compute = NULL;
       pmne->sections_poly2d[id_section]->_parent_num           = NULL;
       pmne->sections_poly2d[id_section]->_parent_entity_g_num  = NULL;
-      pmne->sections_poly2d[id_section]->owner                 = PDM_OWNERSHIP_KEEP;
 
       for (int i = 0; i < pmne->sections_poly2d[id_section]->n_part; i++) {
         pmne->sections_poly2d[id_section]->n_elt      [i] = 0;
@@ -1397,8 +1395,6 @@ const PDM_Mesh_nodal_elt_t         t_elt
       pmne->sections_poly3d[id_section]->cell_centers_to_compute = NULL;
       pmne->sections_poly3d[id_section]->_parent_num          = NULL;
       pmne->sections_poly3d[id_section]->_parent_entity_g_num = NULL;
-
-      pmne->sections_poly3d[id_section]->owner        = PDM_OWNERSHIP_KEEP;
 
       for (int i = 0; i < pmne->sections_poly3d[id_section]->n_part; i++) {
         pmne->sections_poly3d[id_section]->n_elt         [i] = 0;
