@@ -67,13 +67,18 @@ _usage(int exit_code)
  */
 
 static void
-_read_args(int            argc,
-           char         **argv,
-           PDM_g_num_t  *n_vtx_seg,
-           double        *length,
-           int           *n_part,
-	   int           *post,
-	   int           *method)
+_read_args
+(
+ int                    argc,
+ char                 **argv,
+ PDM_g_num_t           *n_vtx_seg,
+ double                *length,
+ int                   *n_part,
+ int                   *post,
+ PDM_Mesh_nodal_elt_t  *elt_type,
+ int                   *order,
+ int                   *method
+ )
 {
   int i = 1;
 
@@ -111,6 +116,22 @@ _read_args(int            argc,
     else if (strcmp(argv[i], "-post") == 0) {
       *post = 1;
     }
+    else if (strcmp(argv[i], "-type") == 0) {
+      i++;
+      if (i >= argc)
+        _usage(EXIT_FAILURE);
+      else {
+        *elt_type = (PDM_Mesh_nodal_elt_t) atoi(argv[i]);
+      }
+    }
+    else if (strcmp(argv[i], "-order") == 0) {
+      i++;
+      if (i >= argc)
+        _usage(EXIT_FAILURE);
+      else {
+        *order = atoi(argv[i]);
+      }
+    }
     else if (strcmp(argv[i], "-pt-scotch") == 0) {
       *method = 2;
     }
@@ -134,8 +155,8 @@ _deformation
  )
 {
   PDM_UNUSED(n_vtx_seg);
-  double amplitude = 0.1;//0.07;
-  double frequency = 4.;
+  double amplitude = 0.07;
+  double frequency = 8.;
 
   for (int i = 0; i < n_vtx; i++) {
     double x = (vtx_coord[3*i    ] - 0.5) / length;
@@ -163,11 +184,13 @@ int main(int argc, char *argv[])
    *  Set default values
    */
 
-  PDM_g_num_t        n_vtx_seg = 10;
-  double             length  = 1.;
-  int                n_part   = 1;
-  int                post    = 0;
-  PDM_part_split_t method  = PDM_PART_SPLIT_HILBERT;
+  PDM_g_num_t          n_vtx_seg   = 10;
+  double               length      = 1.;
+  int                  n_part      = 1;
+  int                  post        = 0;
+  PDM_Mesh_nodal_elt_t elt_type    = PDM_MESH_NODAL_HEXA8;
+  int                  order       = 1;
+  PDM_split_dual_t     part_method = PDM_SPLIT_DUAL_WITH_HILBERT;
 
   /*
    *  Read args
@@ -179,7 +202,9 @@ int main(int argc, char *argv[])
              &length,
              &n_part,
              &post,
-             (int *) &method);
+             &elt_type,
+             &order,
+             (int *) &part_method);
 
   /*
    *  Init
@@ -194,25 +219,23 @@ int main(int argc, char *argv[])
   PDM_MPI_Comm_rank(PDM_MPI_COMM_WORLD, &i_rank);
   PDM_MPI_Comm_size(PDM_MPI_COMM_WORLD, &n_rank);
 
-  PDM_split_dual_t part_method    = PDM_SPLIT_DUAL_WITH_HILBERT;
-
   /*
    *  Create distributed cube
    */
 
   PDM_MPI_Comm comm = PDM_MPI_COMM_WORLD;
 
-  PDM_dcube_nodal_t* dcube = PDM_dcube_nodal_gen_create (comm,
-                                                           n_vtx_seg,
-                                                           n_vtx_seg,
-                                                           n_vtx_seg,
-                                                           length,
-                                                           0.,
-                                                           0.,
-                                                           0.,
-                                                           PDM_MESH_NODAL_TRIA3,
-                                                           1,
-                                                           PDM_OWNERSHIP_KEEP);
+  PDM_dcube_nodal_t* dcube = PDM_dcube_nodal_gen_create(comm,
+                                                        n_vtx_seg,
+                                                        n_vtx_seg,
+                                                        n_vtx_seg,
+                                                        length,
+                                                        0.,
+                                                        0.,
+                                                        0.,
+                                                        elt_type,
+                                                        order,
+                                                        PDM_OWNERSHIP_KEEP);
   // PDM_dcube_nodal_t* dcube = PDM_dcube_nodal_gen_create (comm,
   //                                                        n_vtx_seg,
   //                                                        n_vtx_seg,
@@ -275,8 +298,13 @@ int main(int argc, char *argv[])
 
 
   if (post) {
-    // PDM_part_mesh_nodal_dump_vtk(pmsh_nodal, PDM_GEOMETRY_KIND_VOLUMIC , "volumic_ho_" );
-    PDM_part_mesh_nodal_dump_vtk(pmsh_nodal, PDM_GEOMETRY_KIND_SURFACIC, "surfacic_ho_");
+    int elt_dim = PDM_Mesh_nodal_elt_dim_get(elt_type);
+    if (elt_dim > 2) {
+      PDM_part_mesh_nodal_dump_vtk(pmsh_nodal, PDM_GEOMETRY_KIND_VOLUMIC , "volumic_ho_" );
+    }
+    if (elt_dim > 1) {
+      PDM_part_mesh_nodal_dump_vtk(pmsh_nodal, PDM_GEOMETRY_KIND_SURFACIC, "surfacic_ho_");
+    }
     PDM_part_mesh_nodal_dump_vtk(pmsh_nodal, PDM_GEOMETRY_KIND_RIDGE   , "ridge_ho_"   );
   }
   PDM_part_mesh_nodal_free(pmsh_nodal);
