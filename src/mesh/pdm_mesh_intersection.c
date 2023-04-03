@@ -2394,8 +2394,7 @@ _mesh_intersection_vol_vol
                                     PDM_OWNERSHIP_USER);
 
       PDM_part_mesh_nodal_add_part_mesh_nodal_elmts(extract_pmn,
-                                                    extract_pmne,
-                                                    PDM_OWNERSHIP_KEEP);
+                                                    extract_pmne);
 
       // Convert part_mesh_nodal to part_mesh
       if (dbg_enabled) {
@@ -5508,7 +5507,7 @@ PDM_mesh_intersection_compute
                                              &extract_pmne,
                                              PDM_OWNERSHIP_USER);
 
-        PDM_part_mesh_nodal_add_part_mesh_nodal_elmts(extract_pmn, extract_pmne, PDM_OWNERSHIP_KEEP);
+        PDM_part_mesh_nodal_add_part_mesh_nodal_elmts(extract_pmn, extract_pmne);
 
 
         char pattern[99];

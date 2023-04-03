@@ -299,8 +299,7 @@ void
 PDM_part_mesh_nodal_add_part_mesh_nodal_elmts
 (
  PDM_part_mesh_nodal_t       *pmn,
- PDM_part_mesh_nodal_elmts_t *pmne,
- PDM_ownership_t              owner // TO DO: remove or make useful !
+ PDM_part_mesh_nodal_elmts_t *pmne
 )
 {
   assert(pmn->n_part == pmne->n_part);
@@ -2090,7 +2089,7 @@ const PDM_ownership_t         ownership
 
   if (pmne == NULL) {
     pmne = PDM_part_mesh_nodal_elmts_create(3, pmn->n_part, pmn->comm);
-    PDM_part_mesh_nodal_add_part_mesh_nodal_elmts(pmn, pmne, PDM_OWNERSHIP_KEEP);
+    PDM_part_mesh_nodal_add_part_mesh_nodal_elmts(pmn, pmne);
   }
 
   int n_section_before = PDM_part_mesh_nodal_n_section_in_geom_kind_get(pmn,
@@ -2165,7 +2164,7 @@ const PDM_ownership_t         ownership
 
   if (pmne == NULL) {
     pmne = PDM_part_mesh_nodal_elmts_create(2, pmn->n_part, pmn->comm);
-    PDM_part_mesh_nodal_add_part_mesh_nodal_elmts(pmn, pmne, PDM_OWNERSHIP_KEEP);
+    PDM_part_mesh_nodal_add_part_mesh_nodal_elmts(pmn, pmne);
   }
 
   int n_vtx = PDM_part_mesh_nodal_n_vtx_get(pmn, id_part);
@@ -2236,7 +2235,7 @@ const PDM_ownership_t         ownership
 
   if (pmne == NULL) {
     pmne = PDM_part_mesh_nodal_elmts_create(3, pmn->n_part, pmn->comm);
-    PDM_part_mesh_nodal_add_part_mesh_nodal_elmts(pmn, pmne, PDM_OWNERSHIP_KEEP);
+    PDM_part_mesh_nodal_add_part_mesh_nodal_elmts(pmn, pmne);
   }
 
   int n_section_before = PDM_part_mesh_nodal_n_section_in_geom_kind_get(pmn,
@@ -2302,7 +2301,7 @@ const PDM_ownership_t         ownership
 
   if (pmne == NULL) {
     pmne = PDM_part_mesh_nodal_elmts_create(2, pmn->n_part, pmn->comm);
-    PDM_part_mesh_nodal_add_part_mesh_nodal_elmts(pmn, pmne, PDM_OWNERSHIP_KEEP);
+    PDM_part_mesh_nodal_add_part_mesh_nodal_elmts(pmn, pmne);
   }
 
   int n_section_before = PDM_part_mesh_nodal_n_section_in_geom_kind_get(pmn,

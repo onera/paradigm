@@ -971,13 +971,13 @@ _compute_part_mesh_nodal_3d
                                                           n_part,
                                                           dmn->comm);
 
-  PDM_part_mesh_nodal_add_part_mesh_nodal_elmts(pmn, pmn_vol , PDM_OWNERSHIP_KEEP);
-  PDM_part_mesh_nodal_add_part_mesh_nodal_elmts(pmn, pmn_surf, PDM_OWNERSHIP_KEEP);
+  PDM_part_mesh_nodal_add_part_mesh_nodal_elmts(pmn, pmn_vol);
+  PDM_part_mesh_nodal_add_part_mesh_nodal_elmts(pmn, pmn_surf);
   if(pmn_ridge != NULL) {
-    PDM_part_mesh_nodal_add_part_mesh_nodal_elmts(pmn, pmn_ridge, PDM_OWNERSHIP_KEEP);
+    PDM_part_mesh_nodal_add_part_mesh_nodal_elmts(pmn, pmn_ridge);
   }
   if(pmn_corner != NULL) {
-    PDM_part_mesh_nodal_add_part_mesh_nodal_elmts(pmn, pmn_corner, PDM_OWNERSHIP_KEEP);
+    PDM_part_mesh_nodal_add_part_mesh_nodal_elmts(pmn, pmn_corner);
   }
   for(int i_part = 0; i_part < n_part; ++i_part) {
 
@@ -1145,12 +1145,12 @@ _compute_part_mesh_nodal_2d
                                                           n_part,
                                                           dmn->comm);
 
-  PDM_part_mesh_nodal_add_part_mesh_nodal_elmts(pmn, pmn_surf , PDM_OWNERSHIP_KEEP);
+  PDM_part_mesh_nodal_add_part_mesh_nodal_elmts(pmn, pmn_surf);
   if(pmn_ridge != NULL) {
-    PDM_part_mesh_nodal_add_part_mesh_nodal_elmts(pmn, pmn_ridge, PDM_OWNERSHIP_KEEP);
+    PDM_part_mesh_nodal_add_part_mesh_nodal_elmts(pmn, pmn_ridge);
   }
   if(pmn_corner != NULL) {
-    PDM_part_mesh_nodal_add_part_mesh_nodal_elmts(pmn, pmn_corner, PDM_OWNERSHIP_KEEP);
+    PDM_part_mesh_nodal_add_part_mesh_nodal_elmts(pmn, pmn_corner);
   }
   // TO DO : corners?
 

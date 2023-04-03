@@ -72,10 +72,6 @@ cdef extern from "pdm_part_mesh_nodal.h":
                                              PDM_g_num_t           **parent_entity_g_num,
                                              PDM_ownership_t         ownership)
 
-    void PDM_part_mesh_nodal_add_part_mesh_nodal_elmts(PDM_part_mesh_nodal_t       *pmn,
-                                                       PDM_part_mesh_nodal_elmts_t *pmne,
-                                                       PDM_ownership_t              owner)
-
     int PDM_part_mesh_nodal_section_id_from_geom_kind_get(PDM_part_mesh_nodal_t  *pmn,
                                                           const PDM_geometry_kind_t     geom_kind,
                                                           const int                     id_section_in_geom_kind)

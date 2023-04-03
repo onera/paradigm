@@ -592,7 +592,6 @@ const int                     id_part,
  *
  * \param [in]  pmn          Pointer to \ref PDM_part_mesh_nodal_t object
  * \param [in]  pmne         Pointer to \ref PDM_part_mesh_nodal_elmts_t object
- * \param [in]  owner        Ownership
  *
  */
 
@@ -600,8 +599,7 @@ void
 PDM_part_mesh_nodal_add_part_mesh_nodal_elmts
 (
  PDM_part_mesh_nodal_t       *pmn,
- PDM_part_mesh_nodal_elmts_t *pmne,
- PDM_ownership_t              owner
+ PDM_part_mesh_nodal_elmts_t *pmne
 );
 
 /**
