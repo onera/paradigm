@@ -187,6 +187,23 @@ PDM_extract_part_part_nodal_set
   PDM_part_mesh_nodal_elmts_t *pmne
 );
 
+/**
+ *
+ * \brief Set entity center (ussefull for equilibrate / hilbert ordering )
+ *
+ * \param [in]   extrp            PDM_extract_part_t structure
+ * \param [in]   i_part           part identifier
+ * \param [in]   entity_center    Center of entity (relative of dim throught create)
+ *
+ */
+void
+PDM_extract_part_entity_center_set
+(
+  PDM_extract_part_t          *extrp,
+  int                          i_part,
+  double                      *entity_center
+);
+
 
 /**
  *
