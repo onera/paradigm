@@ -804,7 +804,7 @@ cdef class MultiPart:
                                                         PDM_OWNERSHIP_USER)
         cdef NPY.npy_intp dim
 
-        if (entity1_entity2_idx == NULL):
+        if (entity1_entity2_idx == NULL and entity1_entity2 != NULL):
             np_entity1_entity2_idx = None
             dim = <NPY.npy_intp> 2 * n_entity1
             np_entity1_entity2 = NPY.PyArray_SimpleNewFromData(1,
@@ -812,7 +812,7 @@ cdef class MultiPart:
                                                                NPY.NPY_INT32,
                                                       <void *> entity1_entity2)
             PyArray_ENABLEFLAGS(np_entity1_entity2, NPY.NPY_OWNDATA);
-        else :
+        elif(entity1_entity2 != NULL):
             dim = <NPY.npy_intp> n_entity1+1
             np_entity1_entity2_idx = NPY.PyArray_SimpleNewFromData(1,
                                                                    &dim,
@@ -826,6 +826,9 @@ cdef class MultiPart:
                                                                NPY.NPY_INT32,
                                                       <void *> entity1_entity2)
             PyArray_ENABLEFLAGS(np_entity1_entity2, NPY.NPY_OWNDATA);
+        else:
+          np_entity1_entity2_idx = None
+          np_entity1_entity2     = None
 
 
         return {'np_entity1_entity2'     : np_entity1_entity2,
