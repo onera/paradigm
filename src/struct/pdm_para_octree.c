@@ -15281,75 +15281,12 @@ PDM_para_octree_explicit_node_get
 )
 {
   _pdm_para_octree_t *_octree = (_pdm_para_octree_t *) octree;
-
   _l_explicit_node_t *nodes  = _octree->explicit_nodes;
 
-  const int dim = _octree->dim;
-  const int n_child = 1 << dim;
+  const int dim       = _octree->dim;
+  const int n_child   = 1 << dim;
   const int depth_max = 31;
   int s_stack = ((n_child - 1) * (depth_max - 1) + n_child);
-
-  // _l_octant_t        *leaves = _octree->octants;
-  // printf("leaves->n_nodes     = %i \n", leaves->n_nodes);
-  // printf("leaves->n_nodes_max = %i \n", leaves->n_nodes_max);
-
-  // printf("nodes->n_nodes     = %i \n", nodes->n_nodes);
-
-  // PDM_log_trace_array_int(nodes->leaf_id, nodes->n_nodes, "leaf_id  ::" );
-  // PDM_log_trace_array_int(nodes->ancestor_id, nodes->n_nodes, "ancestor_id  ::" );
-
-  // const int dim = _octree->dim;
-  // const int n_child = 1 << dim;
-  // const int depth_max = 31;
-  // int s_stack = ((n_child - 1) * (depth_max - 1) + n_child);
-  // int *stack_id = malloc (sizeof(int) * s_stack);
-
-  // int pos_stack = 0;
-  // stack_id[pos_stack++] = 0;
-
-  // int dbg_enabled = 1;
-  // while (pos_stack > 0) {
-  //   int node_id = stack_id[--pos_stack];
-  //   if (dbg_enabled) {
-  //     printf("  node %d : L=%u, X=%u %u %u, range=%d, n_points=%d, leaf_id=%d\n",
-  //            node_id,
-  //            nodes->codes[node_id].L,
-  //            nodes->codes[node_id].X[0],
-  //            nodes->codes[node_id].X[1],
-  //            nodes->codes[node_id].X[2],
-  //            nodes->range[node_id],
-  //            nodes->n_points[node_id],
-  //            nodes->leaf_id[node_id]);
-  //   }
-
-  //   if (nodes->leaf_id[node_id] >= 0) {
-  //     for (int i = 0; i < nodes->n_points[node_id]; i++) {
-  //       int ipt = nodes->range[node_id] + i;
-  //       printf("\t is leaf ipt = %i \n", ipt);
-  //     }
-  //   }  else {
-  //     for (int i = 0; i < n_child; i++) {
-  //       int child_id = nodes->children_id[n_child*node_id + i];
-  //       if (child_id < 0) {
-  //         continue;
-  //       }
-  //       if (dbg_enabled) {
-  //         printf("    child %d: id=%d, L=%u, X=%u %u %u, range=%d, n_points=%d, leaf_id=%d\n",
-  //                i,
-  //                child_id,
-  //                nodes->codes[child_id].L,
-  //                nodes->codes[child_id].X[0],
-  //                nodes->codes[child_id].X[1],
-  //                nodes->codes[child_id].X[2],
-  //                nodes->range[child_id],
-  //                nodes->n_points[child_id],
-  //                nodes->leaf_id[child_id]);
-  //       }
-  //       stack_id[pos_stack++] = child_id;
-  //     }
-  //   }
-  // }
-  // free(stack_id);
 
   *n_nodes_out     = nodes->n_nodes;
   *n_points_out    = nodes->n_points;
@@ -15359,7 +15296,21 @@ PDM_para_octree_explicit_node_get
   *ancestor_id_out = nodes->ancestor_id;
   *n_child_out     = n_child;
   *stack_size      = s_stack;
+}
 
+void
+PDM_para_octree_points_get
+(
+  PDM_para_octree_t  *octree,
+  int                *n_points,
+  double            **pts_coord,
+  PDM_g_num_t       **pts_g_num
+)
+{
+  _pdm_para_octree_t *_octree = (_pdm_para_octree_t *) octree;
+  *n_points  = _octree->n_points;
+  *pts_coord = _octree->points;
+  *pts_g_num = _octree->points_gnum;
 }
 
 #ifdef __cplusplus

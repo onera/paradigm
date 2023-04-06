@@ -450,6 +450,16 @@ PDM_para_octree_explicit_node_get
   int                *stack_size
 );
 
+
+void
+PDM_para_octree_points_get
+(
+  PDM_para_octree_t  *octree,
+  int                *n_points,
+  double            **pts_coord,
+  PDM_g_num_t       **pts_g_num
+);
+
 #ifdef	__cplusplus
 }
 #endif
