@@ -24,6 +24,7 @@
 #include "pdm_vtk.h"
 #include "pdm_para_octree.h"
 #include "pdm_box_gen.h"
+#include "pdm_part_to_part.h"
 
 /*============================================================================
  * Macro definitions
@@ -163,7 +164,8 @@ _loop_forward
     if (leaf_id[node_id] >= 0) {
       for (int i = 0; i < n_points[node_id]; i++) {
         int ipt = range[node_id] + i;
-        log_trace("\t is leaf ipt = %i \n", ipt);
+        PDM_UNUSED(ipt);
+        // log_trace("\t is leaf ipt = %i \n", ipt);
       }
     }  else {
       for (int i = 0; i < n_child; i++) {
@@ -355,7 +357,7 @@ char *argv[]
                                   src_g_num);
 
   PDM_para_octree_build(octree, NULL);
-  PDM_para_octree_dump(octree);
+  // PDM_para_octree_dump(octree);
 
   /*
    *  Creation du part_to_part pour transférer d'un nuage de point user <-> octree
@@ -428,6 +430,49 @@ char *argv[]
     }
   }
 
+  /*
+   * Echange frame octree <-> user
+   */
+  int *part_octree_to_part_user_idx = malloc((n_pts_octree+1) * sizeof(int));
+  for(int i = 0; i < n_pts_octree+1; ++i) {
+    part_octree_to_part_user_idx[i] = i;
+  }
+
+  PDM_part_to_part_t* ptp = PDM_part_to_part_create((const PDM_g_num_t **) &pts_gnum_octree,
+                                                    &n_pts_octree,
+                                                    1,
+                                                    (const PDM_g_num_t **)  &src_g_num,
+                                                    &n_src,
+                                                    1,
+                                                    (const int         **) &part_octree_to_part_user_idx,
+                                                    (const PDM_g_num_t **) &pts_gnum_octree,
+                                                    comm);
+  int request = 0;
+  PDM_g_num_t **tmp_check_gnum = NULL;
+  PDM_part_to_part_reverse_iexch(ptp,
+                                 PDM_MPI_COMM_KIND_P2P,
+                                 PDM_STRIDE_CST_INTERLACED,
+                                 PDM_PART_TO_PART_DATA_DEF_ORDER_PART2,
+                                 1,
+                                 sizeof(PDM_g_num_t),
+                                 NULL,
+               (const void **)   &src_g_num,
+                                 NULL,
+                     (void ***)  &tmp_check_gnum,
+                                 &request);
+  PDM_g_num_t *check_gnum = tmp_check_gnum[0];
+  free(tmp_check_gnum);
+  PDM_part_to_part_reverse_iexch_wait(ptp, request);
+
+
+  PDM_log_trace_array_long(check_gnum     , n_pts_octree, "check_gnum ::");
+  PDM_log_trace_array_long(pts_gnum_octree, n_pts_octree, "pts_gnum_octree ::");
+
+  free(check_gnum);
+
+  PDM_part_to_part_free(ptp);
+
+  free(part_octree_to_part_user_idx);
 
   /* Loop  descending */
   _loop_forward(n_explicit_nodes,
