@@ -3754,8 +3754,8 @@ _finalize_neighbours
                   }
                   octree->part_boundary_elt_idx[n_part_boundary_elt+1]++;
                   octree->part_boundary_elt[idx_part_boundary_elt++] = i; // rank
-                  octree->part_boundary_elt[idx_part_boundary_elt++] = recv_neighbour_rank_node_id[k2]; // neighbour's local number in rank i
                   octree->part_boundary_elt[idx_part_boundary_elt++] = recv_neighbour_rank_node_part[k2]; // neighbour's part number in rank i
+                  octree->part_boundary_elt[idx_part_boundary_elt++] = recv_neighbour_rank_node_id[k2]; // neighbour's local number in rank i
                 }
 
                 free (neighbour_neighbour_code);
@@ -3991,7 +3991,7 @@ _check_neighbours_area
             for (int l = octree->part_boundary_elt_idx[ingb];
                  l < octree->part_boundary_elt_idx[ingb+1]; l++) {
               int ngb_rank = octree->part_boundary_elt[3*l];
-              int ngb_id = octree->part_boundary_elt[3*l+1];
+              int ngb_id = octree->part_boundary_elt[3*l+2];
               int idx = rank_ngb_idx[ngb_rank] + rank_ngb_n[ngb_rank];
               rank_ngb_id_level[idx++] = ngb_id;
               rank_ngb_id_level[idx++] = (int) octants->codes[i].L;
@@ -15311,6 +15311,28 @@ PDM_para_octree_points_get
   *n_points  = _octree->n_points;
   *pts_coord = _octree->points;
   *pts_g_num = _octree->points_gnum;
+}
+
+void
+PDM_para_octree_neighbor_get
+(
+  PDM_para_octree_t  *octree,
+  int                *n_nodes,
+  int               **neighbour_idx,
+  int               **neighbour,
+  int                *n_part_boundary_elt,
+  int               **part_boundary_elt_idx,
+  int               **part_boundary_elt
+)
+{
+  _pdm_para_octree_t *_octree = (_pdm_para_octree_t *) octree;
+  *n_nodes               = _octree->octants->n_nodes;
+  *neighbour_idx         = _octree->octants->neighbour_idx;
+  *neighbour             = _octree->octants->neighbours;
+  *n_part_boundary_elt   = _octree->n_part_boundary_elt;
+  *part_boundary_elt_idx = _octree->part_boundary_elt_idx;
+  *part_boundary_elt     = _octree->part_boundary_elt;
+
 }
 
 #ifdef __cplusplus

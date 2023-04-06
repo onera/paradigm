@@ -134,7 +134,7 @@ static
 void
 _loop_forward
 (
-  int  n_nodes,
+  int  n_explicit_nodes,
   int *n_points,
   int *range,
   int *leaf_id,
@@ -144,7 +144,7 @@ _loop_forward
   int  stack_size
 )
 {
-  PDM_UNUSED(n_nodes);
+  PDM_UNUSED(n_explicit_nodes);
   PDM_UNUSED(ancestor_id);
 
   int *stack_id = malloc (sizeof(int) * stack_size);
@@ -187,7 +187,7 @@ static
 void
 _loop_backward
 (
-  int  n_nodes,
+  int  n_explicit_nodes,
   int *n_points,
   int *range,
   int *leaf_id,
@@ -197,7 +197,7 @@ _loop_backward
   int  stack_size
 )
 {
-  PDM_UNUSED(n_nodes);
+  PDM_UNUSED(n_explicit_nodes);
   PDM_UNUSED(ancestor_id);
   PDM_UNUSED(range);
   PDM_UNUSED(n_child);
@@ -205,21 +205,21 @@ _loop_backward
   PDM_UNUSED(children_id);
   PDM_UNUSED(n_points);
 
-  PDM_log_trace_array_int(leaf_id    , n_nodes, "leaf_id     :");
-  PDM_log_trace_array_int(ancestor_id, n_nodes, "ancestor_id :");
+  PDM_log_trace_array_int(leaf_id    , n_explicit_nodes, "leaf_id     :");
+  PDM_log_trace_array_int(ancestor_id, n_explicit_nodes, "ancestor_id :");
 
 
-  int *node_tag = malloc(n_nodes * sizeof(int));
+  int *node_tag = malloc(n_explicit_nodes * sizeof(int));
   int n_ancestor = 0;
-  for(int i = 0; i < n_nodes; ++i){
+  for(int i = 0; i < n_explicit_nodes; ++i){
     node_tag[i] = -1;
   }
 
   /* Recupération des leafs */
-  int *extract_leaf_id  = malloc(n_nodes * sizeof(int));
-  int *current_ancestor = malloc(n_nodes * sizeof(int));
+  int *extract_leaf_id  = malloc(n_explicit_nodes * sizeof(int));
+  int *current_ancestor = malloc(n_explicit_nodes * sizeof(int));
   int n_leaf = 0;
-  for(int i = 0; i < n_nodes; ++i) {
+  for(int i = 0; i < n_explicit_nodes; ++i) {
     if(leaf_id[i] != -1){
       extract_leaf_id[n_leaf++] = leaf_id[i];
       int i_ancestor = ancestor_id[i];
@@ -237,7 +237,7 @@ _loop_backward
 
   // PDM_log_trace_array_int(extract_leaf_id, n_leaf, "extract_leaf_id :");
   // PDM_log_trace_array_int(current_ancestor, n_ancestor, "current_ancestor :");
-  // PDM_log_trace_array_int(n_points, n_nodes, "n_points :");
+  // PDM_log_trace_array_int(n_points, n_explicit_nodes, "n_points :");
 
   while(n_ancestor > 0) {
 
@@ -262,9 +262,9 @@ _loop_backward
     n_ancestor        = n_ancestor_next;
   }
 
-  PDM_log_trace_array_int(node_tag, n_nodes, "node_tag :");
+  PDM_log_trace_array_int(node_tag, n_explicit_nodes, "node_tag :");
 
-  for(int i = 0; i < n_nodes; ++i) {
+  for(int i = 0; i < n_explicit_nodes; ++i) {
     if(leaf_id[i] == -1){
       assert(node_tag[i] == 2);
     }
@@ -363,7 +363,7 @@ char *argv[]
    */
 
   // PDM_para_octree_leaf_get(octree);
-  int  n_nodes     = 0;
+  int  n_explicit_nodes     = 0;
   int *n_points    = NULL;
   int *range       = NULL;
   int *leaf_id     = NULL;
@@ -372,7 +372,7 @@ char *argv[]
   int  n_child     = 0;
   int  stack_size  = 0;
   PDM_para_octree_explicit_node_get(octree,
-                                    &n_nodes,
+                                    &n_explicit_nodes,
                                     &n_points,
                                     &range,
                                     &leaf_id,
@@ -394,8 +394,44 @@ char *argv[]
     PDM_log_trace_array_double(pts_coord_octree, 3 * n_pts_octree, "pts_coord_octree :");
   }
 
+  int  n_nodes               = 0;
+  int *neighbour_idx         = NULL;
+  int *neighbours            = NULL;
+  int  n_part_boundary_elt   = 0;
+  int *part_boundary_elt_idx = NULL;
+  int *part_boundary_elt     = NULL;
+  PDM_para_octree_neighbor_get(octree,
+                               &n_nodes,
+                               &neighbour_idx,
+                               &neighbours,
+                               &n_part_boundary_elt,
+                               &part_boundary_elt_idx,
+                               &part_boundary_elt);
+
+
+  if(1 == 1 && part_boundary_elt_idx != NULL) {
+    PDM_log_trace_array_int(part_boundary_elt_idx, n_part_boundary_elt+1, "part_boundary_elt_idx  :");
+    PDM_log_trace_array_int(part_boundary_elt    , 3 * part_boundary_elt_idx[n_part_boundary_elt], "part_boundary_elt :");
+  }
+
+  if(1 == 1) {
+
+    log_trace("neighbours -------------------- \n");
+    for (int i = 0; i < n_nodes; i++) {
+      log_trace("i_node = %i :\n", i);
+      for (int j = 0; j < 6; j++) {
+        log_trace("    - direction %d : ", j);
+        for (int k = neighbour_idx[6*i+j]; k < neighbour_idx[6*i+j+1]; k++) {
+          log_trace(" %d",neighbours[k]);
+        }
+        log_trace("\n");
+      }
+    }
+  }
+
+
   /* Loop  descending */
-  _loop_forward(n_nodes,
+  _loop_forward(n_explicit_nodes,
                 n_points,
                 range,
                 leaf_id,
@@ -405,7 +441,7 @@ char *argv[]
                 stack_size);
 
   /* Loop backward */
-  _loop_backward(n_nodes,
+  _loop_backward(n_explicit_nodes,
                 n_points,
                 range,
                 leaf_id,
