@@ -151,7 +151,7 @@ _loop_forward
   int pos_stack = 0;
   stack_id[pos_stack++] = 0;
 
-  int dbg_enabled = 1;
+  int dbg_enabled = 0;
   while (pos_stack > 0) {
     int node_id = stack_id[--pos_stack];
 
@@ -205,8 +205,8 @@ _loop_backward
   PDM_UNUSED(children_id);
   PDM_UNUSED(n_points);
 
-  PDM_log_trace_array_int(leaf_id    , n_explicit_nodes, "leaf_id     :");
-  PDM_log_trace_array_int(ancestor_id, n_explicit_nodes, "ancestor_id :");
+  // PDM_log_trace_array_int(leaf_id    , n_explicit_nodes, "leaf_id     :");
+  // PDM_log_trace_array_int(ancestor_id, n_explicit_nodes, "ancestor_id :");
 
 
   int *node_tag = malloc(n_explicit_nodes * sizeof(int));
@@ -241,7 +241,7 @@ _loop_backward
 
   while(n_ancestor > 0) {
 
-    PDM_log_trace_array_int(current_ancestor, n_ancestor, "current_ancestor :");
+    // PDM_log_trace_array_int(current_ancestor, n_ancestor, "current_ancestor :");
 
     int n_ancestor_next = 0;
     for(int i = 0; i < n_ancestor; ++i) {
@@ -262,7 +262,7 @@ _loop_backward
     n_ancestor        = n_ancestor_next;
   }
 
-  PDM_log_trace_array_int(node_tag, n_explicit_nodes, "node_tag :");
+  // PDM_log_trace_array_int(node_tag, n_explicit_nodes, "node_tag :");
 
   for(int i = 0; i < n_explicit_nodes; ++i) {
     if(leaf_id[i] == -1){
@@ -409,13 +409,12 @@ char *argv[]
                                &part_boundary_elt);
 
 
-  if(1 == 1 && part_boundary_elt_idx != NULL) {
+  if(0 == 1 && part_boundary_elt_idx != NULL) {
     PDM_log_trace_array_int(part_boundary_elt_idx, n_part_boundary_elt+1, "part_boundary_elt_idx  :");
     PDM_log_trace_array_int(part_boundary_elt    , 3 * part_boundary_elt_idx[n_part_boundary_elt], "part_boundary_elt :");
   }
 
-  if(1 == 1) {
-
+  if(0 == 1) {
     log_trace("neighbours -------------------- \n");
     for (int i = 0; i < n_nodes; i++) {
       log_trace("i_node = %i :\n", i);
