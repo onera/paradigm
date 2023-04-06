@@ -460,6 +460,18 @@ PDM_para_octree_points_get
   PDM_g_num_t       **pts_g_num
 );
 
+void
+PDM_para_octree_neighbor_get
+(
+  PDM_para_octree_t  *octree,
+  int                *n_nodes,
+  int               **neighbour_idx,
+  int               **neighbour,
+  int                *n_part_boundary_elt,
+  int               **part_boundary_elt_idx,
+  int               **part_boundary_elt
+);
+
 #ifdef	__cplusplus
 }
 #endif
