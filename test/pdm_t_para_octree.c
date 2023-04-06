@@ -147,9 +147,7 @@ _loop_forward
   PDM_UNUSED(n_nodes);
   PDM_UNUSED(ancestor_id);
 
-
   int *stack_id = malloc (sizeof(int) * stack_size);
-
   int pos_stack = 0;
   stack_id[pos_stack++] = 0;
 
@@ -158,14 +156,14 @@ _loop_forward
     int node_id = stack_id[--pos_stack];
 
     if (dbg_enabled) {
-      printf("  node %d : range=%d, n_points=%d, leaf_id=%d\n",
+      log_trace("  node %d : range=%d, n_points=%d, leaf_id=%d\n",
              node_id, range[node_id], n_points[node_id], leaf_id[node_id]);
     }
 
     if (leaf_id[node_id] >= 0) {
       for (int i = 0; i < n_points[node_id]; i++) {
         int ipt = range[node_id] + i;
-        printf("\t is leaf ipt = %i \n", ipt);
+        log_trace("\t is leaf ipt = %i \n", ipt);
       }
     }  else {
       for (int i = 0; i < n_child; i++) {
@@ -174,21 +172,110 @@ _loop_forward
           continue;
         }
         if (dbg_enabled) {
-          printf("    child %d: id=%d, range=%d, n_points=%d, leaf_id=%d\n",
+          log_trace("    child %d: id=%d, range=%d, n_points=%d, leaf_id=%d\n",
                  i, child_id, range[child_id], n_points[child_id], leaf_id[child_id]);
         }
         stack_id[pos_stack++] = child_id;
       }
     }
   }
-
-
   free(stack_id);
-
-
 }
 
 
+static
+void
+_loop_backward
+(
+  int  n_nodes,
+  int *n_points,
+  int *range,
+  int *leaf_id,
+  int *children_id,
+  int *ancestor_id,
+  int  n_child,
+  int  stack_size
+)
+{
+  PDM_UNUSED(n_nodes);
+  PDM_UNUSED(ancestor_id);
+  PDM_UNUSED(range);
+  PDM_UNUSED(n_child);
+  PDM_UNUSED(stack_size);
+  PDM_UNUSED(children_id);
+  PDM_UNUSED(n_points);
+
+  PDM_log_trace_array_int(leaf_id    , n_nodes, "leaf_id     :");
+  PDM_log_trace_array_int(ancestor_id, n_nodes, "ancestor_id :");
+
+
+  int *node_tag = malloc(n_nodes * sizeof(int));
+  int n_ancestor = 0;
+  for(int i = 0; i < n_nodes; ++i){
+    node_tag[i] = -1;
+  }
+
+  /* Recupération des leafs */
+  int *extract_leaf_id  = malloc(n_nodes * sizeof(int));
+  int *current_ancestor = malloc(n_nodes * sizeof(int));
+  int n_leaf = 0;
+  for(int i = 0; i < n_nodes; ++i) {
+    if(leaf_id[i] != -1){
+      extract_leaf_id[n_leaf++] = leaf_id[i];
+      int i_ancestor = ancestor_id[i];
+      if(i_ancestor >= 0 && node_tag[i_ancestor] == -1){
+        node_tag[i_ancestor] = 0;  // 0  :  In stack
+        // current_ancestor[n_ancestor++] = i_ancestor;
+        current_ancestor[n_ancestor++] = i_ancestor;
+      }
+    }
+  }
+  extract_leaf_id = realloc(extract_leaf_id, n_leaf * sizeof(int));
+
+  current_ancestor   = realloc(current_ancestor, n_ancestor * sizeof(int));
+  int *next_ancestor = malloc(n_ancestor * sizeof(int));
+
+  // PDM_log_trace_array_int(extract_leaf_id, n_leaf, "extract_leaf_id :");
+  // PDM_log_trace_array_int(current_ancestor, n_ancestor, "current_ancestor :");
+  // PDM_log_trace_array_int(n_points, n_nodes, "n_points :");
+
+  while(n_ancestor > 0) {
+
+    PDM_log_trace_array_int(current_ancestor, n_ancestor, "current_ancestor :");
+
+    int n_ancestor_next = 0;
+    for(int i = 0; i < n_ancestor; ++i) {
+      int node_id = current_ancestor[i];
+      node_tag[node_id] = 2; // is treated
+
+      int i_ancestor = ancestor_id[node_id];
+      if(i_ancestor >= 0 && node_tag[i_ancestor] == -1){
+        node_tag[i_ancestor] = 0; // In stack
+        next_ancestor[n_ancestor_next++] = i_ancestor;
+      }
+    }
+
+    /* Swap and update */
+    int *tmp_ancestor = current_ancestor;
+    current_ancestor  = next_ancestor;
+    next_ancestor     = tmp_ancestor;
+    n_ancestor        = n_ancestor_next;
+  }
+
+  PDM_log_trace_array_int(node_tag, n_nodes, "node_tag :");
+
+  for(int i = 0; i < n_nodes; ++i) {
+    if(leaf_id[i] == -1){
+      assert(node_tag[i] == 2);
+    }
+  }
+
+  free(extract_leaf_id);
+  free(next_ancestor);
+  free(current_ancestor);
+  free(node_tag);
+
+}
 
 /*============================================================================
  * Public function definitions
@@ -258,7 +345,7 @@ char *argv[]
   PDM_para_octree_t *octree = PDM_para_octree_create(1,
                                                    depth_max,
                                                    points_in_leaf_max,
-                                                   0,
+                                                   1,  //Build neigbor
                                                    comm);
 
   PDM_para_octree_point_cloud_set(octree,
@@ -268,7 +355,7 @@ char *argv[]
                                   src_g_num);
 
   PDM_para_octree_build(octree, NULL);
-  // PDM_para_octree_dump(octree);
+  PDM_para_octree_dump(octree);
 
   /*
    *  Creation du part_to_part pour transférer d'un nuage de point user <-> octree
@@ -294,6 +381,19 @@ char *argv[]
                                     &n_child,
                                     &stack_size);
 
+  int          n_pts_octree     = 0;
+  double      *pts_coord_octree = NULL;
+  PDM_g_num_t *pts_gnum_octree  = NULL;
+  PDM_para_octree_points_get(octree,
+                             &n_pts_octree,
+                             &pts_coord_octree,
+                             &pts_gnum_octree);
+
+  if(0 == 1) {
+    PDM_log_trace_array_long(pts_gnum_octree   ,     n_pts_octree, "pts_gnum_octree  :");
+    PDM_log_trace_array_double(pts_coord_octree, 3 * n_pts_octree, "pts_coord_octree :");
+  }
+
   /* Loop  descending */
   _loop_forward(n_nodes,
                 n_points,
@@ -304,8 +404,18 @@ char *argv[]
                 n_child,
                 stack_size);
 
+  /* Loop backward */
+  _loop_backward(n_nodes,
+                n_points,
+                range,
+                leaf_id,
+                children_id,
+                ancestor_id,
+                n_child,
+                stack_size);
 
-  if(0 == 1) {
+
+  if(1 == 1) {
     PDM_para_octree_export_vtk(octree, "export_octree");
   }
 
