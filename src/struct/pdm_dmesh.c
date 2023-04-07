@@ -101,10 +101,26 @@ PDM_dmesh_create
   dmesh->comm              = comm;
   dmesh->owner             = owner;
   dmesh->results_is_getted = malloc( PDM_CONNECTIVITY_TYPE_MAX * sizeof(PDM_bool_t) );
+
   dmesh->dn_cell           = dn_cell;
   dmesh->dn_face           = dn_face;
   dmesh->dn_edge           = dn_edge;
   dmesh->dn_vtx            = dn_vtx;
+
+  dmesh->n_g_cell          = 0;
+  dmesh->n_g_face          = 0;
+  dmesh->n_g_edge          = 0;
+  dmesh->n_g_vtx           = 0;
+
+  PDM_g_num_t _dn_cell = dmesh->dn_cell;
+  PDM_g_num_t _dn_face = dmesh->dn_face;
+  PDM_g_num_t _dn_edge = dmesh->dn_edge;
+  PDM_g_num_t _dn_vtx  = dmesh->dn_vtx;
+
+  PDM_MPI_Allreduce(&_dn_cell, &dmesh->n_g_cell, 1, PDM__PDM_MPI_G_NUM, PDM_MPI_SUM, comm);
+  PDM_MPI_Allreduce(&_dn_face, &dmesh->n_g_face, 1, PDM__PDM_MPI_G_NUM, PDM_MPI_SUM, comm);
+  PDM_MPI_Allreduce(&_dn_edge, &dmesh->n_g_edge, 1, PDM__PDM_MPI_G_NUM, PDM_MPI_SUM, comm);
+  PDM_MPI_Allreduce(&_dn_vtx , &dmesh->n_g_vtx , 1, PDM__PDM_MPI_G_NUM, PDM_MPI_SUM, comm);
 
   dmesh->cell_distrib      = NULL;
   dmesh->face_distrib      = NULL;

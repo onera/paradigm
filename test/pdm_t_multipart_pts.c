@@ -150,6 +150,19 @@ char *argv[]
                               &distrib_pts);
   int dn_pts = distrib_pts[i_rank+1] - distrib_pts[i_rank];
 
+  /*
+   * Create dmesh
+   */
+  PDM_dmesh_t* dm = PDM_dmesh_create(PDM_OWNERSHIP_KEEP,
+                                     0,
+                                     0,
+                                     0, // dn_edge
+                                     dn_pts,
+                                     comm);
+
+  PDM_dmesh_vtx_coord_set(dm,
+                          dpts_coord,
+                          PDM_OWNERSHIP_USER);
 
   /*
    * Mulitpart
@@ -165,11 +178,12 @@ char *argv[]
                                                 comm,
                                                 PDM_OWNERSHIP_KEEP);
 
+  PDM_multipart_register_block(mpart, 0, dm);
 
   PDM_multipart_run_ppart(mpart);
 
   PDM_multipart_free(mpart);
-
+  PDM_dmesh_free(dm);
 
   free (dpts_coord);
   free (distrib_pts);
