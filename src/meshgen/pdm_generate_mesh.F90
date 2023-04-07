@@ -35,6 +35,7 @@ module pdm_generate_mesh
   interface
 
   subroutine PDM_generate_mesh_rectangle_simplified_cf(comm,        &
+                                                       n_vtx_seg,   &
                                                        n_vtx,       &
                                                        n_elt,       &
                                                        coords,      &
@@ -47,6 +48,11 @@ module pdm_generate_mesh
       implicit none
 
       integer(c_int),  value :: comm
+#ifdef PDM_LONG_G_NUM
+      integer(c_long), value :: n_vtx_seg
+#else
+      integer(c_int),  value :: n_vtx_seg
+#endif
       integer(c_int)         :: n_vtx
       integer(c_int)         :: n_elt
       type(c_ptr)            :: coords
@@ -64,6 +70,7 @@ module pdm_generate_mesh
   !! \brief Create a simple partitionned rectangle mesh (2D).
   !!
   !! \param [in]   comm        MPI communicator
+  !! \param [in]   n_vtx_seg   Number of vertices along each side of the rectangle
   !! \param [out]  n_vtx       Number of vertices
   !! \param [out]  n_elt       Number of elements
   !! \param [out]  coords      Array of vertex coordinates
@@ -73,6 +80,7 @@ module pdm_generate_mesh
   !!
 
   subroutine PDM_generate_mesh_rectangle_simplified_(comm,        &
+                                                     n_vtx_seg,   &
                                                      n_vtx,       &
                                                      n_elt,       &
                                                      coords,      &
@@ -83,6 +91,7 @@ module pdm_generate_mesh
       implicit none
 
       integer,                     intent(in) :: comm
+      integer(kind=pdm_g_num_s),   intent(in) :: n_vtx_seg
       integer,                    intent(out) :: n_vtx
       integer,                    intent(out) :: n_elt
       double precision, dimension(:), pointer :: coords
@@ -99,6 +108,7 @@ module pdm_generate_mesh
       c_comm = PDM_MPI_Comm_f2c(comm)
 
       call PDM_generate_mesh_rectangle_simplified_cf(c_comm,        &
+                                                     n_vtx_seg,     &
                                                      c_n_vtx,       &
                                                      c_n_elt,       &
                                                      c_coords,      &

@@ -836,6 +836,7 @@ PDM_generate_mesh_rectangle
  * \brief Create a simple partitionned rectangle mesh (2D).
  *
  * \param [in]   comm        MPI communicator
+ * \param [in]   n_vtx_seg   Number of vertices along each side of the rectangle
  * \param [out]  n_vtx       Number of vertices
  * \param [out]  n_elt       Number of elements
  * \param [out]  coords      Array of vertex coordinates
@@ -848,6 +849,7 @@ void
 PDM_generate_mesh_rectangle_simplified
 (
  const PDM_MPI_Comm   comm,
+ const PDM_g_num_t    n_vtx_seg,
  int                 *n_vtx,
  int                 *n_elt,
  double             **coords,
@@ -866,8 +868,8 @@ PDM_generate_mesh_rectangle_simplified
                            0.,
                            10.,
                            5.,
-                           100,
-                           100,
+                           n_vtx_seg,
+                           n_vtx_seg,
                            1,
                            PDM_SPLIT_DUAL_WITH_HILBERT,
                            &dmn,

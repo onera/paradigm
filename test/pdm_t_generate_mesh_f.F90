@@ -40,6 +40,7 @@ program testf
   integer                                 :: code
   integer                                 :: i_rank
   integer                                 :: n_rank
+  integer(kind=pdm_g_num_s),    parameter :: n_vtx_seg = 10
 
   integer                                 :: n_vtx
   integer                                 :: n_elt
@@ -54,6 +55,7 @@ program testf
   call mpi_comm_size(comm, n_rank, code)
 
   call PDM_generate_mesh_rectangle_simplified(comm,        &
+                                              n_vtx_seg,   &
                                               n_vtx,       &
                                               n_elt,       &
                                               coords,      &

@@ -282,6 +282,7 @@ int main(int argc, char *argv[])
   elt_vtx_idx = NULL;
   elt_vtx     = NULL;
   PDM_generate_mesh_rectangle_simplified(comm,
+                                         10,
                                          &n_vtx,
                                          &n_elt,
                                          &coords,
