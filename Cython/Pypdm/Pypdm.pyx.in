@@ -517,6 +517,10 @@ include "pdm_geom.pxi"
 # --------------------
 @COMMENT_NOT_PDMA@include "pdm_mesh_metric.pxi"
 
+# PDM_inside_cloud_surf :
+# --------------------
+@COMMENT_NOT_PDMA@include "pdm_inside_cloud_surf.pxi"
+
 # PDM_mesh_adaptation :
 # --------------------
 #@COMMENT_NOT_PDMA@include "pdm_mesh_adaptation.pxi"
@@ -624,3 +628,7 @@ include "pdm_sphere_surf_gen.pxi"
 # PDM_sphere_vol_gen :
 # --------------------
 include "pdm_sphere_vol_gen.pxi"
+
+# PDM_sphere_vol_gen :
+# --------------------
+include "pdm_point_cloud_gen.pxi"
