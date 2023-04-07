@@ -182,6 +182,34 @@ char *argv[]
 
   PDM_multipart_run_ppart(mpart);
 
+  if(0 == 1) {
+    for(int i_part = 0; i_part < n_part; ++i_part) {
+
+      PDM_g_num_t* pvtx_ln_to_gn = NULL;
+      PDM_multipart_part_ln_to_gn_get(mpart,
+                                      0,
+                                      i_part,
+                                      PDM_MESH_ENTITY_VERTEX,
+                                      &pvtx_ln_to_gn,
+                                      PDM_OWNERSHIP_KEEP);
+
+      double *pvtx_coord = NULL;
+      int n_vtx = PDM_multipart_part_vtx_coord_get(mpart,
+                                                   0,
+                                                   i_part,
+                                                   &pvtx_coord,
+                                                   PDM_OWNERSHIP_KEEP);
+      char filename[999];
+      sprintf(filename, "out_part_vtx_%i.vtk", i_rank);
+      PDM_vtk_write_point_cloud(filename,
+                                n_vtx,
+                                pvtx_coord,
+                                pvtx_ln_to_gn,
+                                NULL);
+    }
+  }
+
+
   PDM_multipart_free(mpart);
   PDM_dmesh_free(dm);
 
