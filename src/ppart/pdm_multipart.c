@@ -1393,18 +1393,19 @@ _warm_up_for_split
 
   } else if(dmesh->n_g_edge != 0) { // Donc 1D
 
-    dn_node = dmesh->dn_edge;
-    dn_arc  = dmesh->dn_vtx;
+    dn_node = dmesh->dn_vtx;
+    dn_arc  = dmesh->dn_edge;
 
-    PDM_dmesh_connectivity_get(dmesh, PDM_CONNECTIVITY_TYPE_VTX_EDGE,
+    PDM_dmesh_connectivity_get(dmesh, PDM_CONNECTIVITY_TYPE_EDGE_VTX,
                                &darc_to_elmt_tmp,
                                &darc_to_elmt_idx,
                                PDM_OWNERSHIP_BAD_VALUE);
 
-    PDM_dmesh_connectivity_get(dmesh, PDM_CONNECTIVITY_TYPE_EDGE_VTX,
+    PDM_dmesh_connectivity_get(dmesh, PDM_CONNECTIVITY_TYPE_VTX_EDGE,
                                &delmt_to_arc,
                                &delmt_to_arc_idx,
                                PDM_OWNERSHIP_BAD_VALUE);
+
   } else if(dmesh->n_g_vtx != 0) { // Donc 0D
     return;
   }
@@ -1425,29 +1426,56 @@ _warm_up_for_split
     darc_to_elmt_tmp[2*i+1] = -darc_to_elmt_tmp[2*i+1];
   }
 
-  PDM_g_num_t *distrib_arc  = PDM_compute_entity_distribution(comm, dn_arc );
+  PDM_g_num_t *distrib_arc  = NULL;
   if(delmt_to_arc == NULL) {
-    PDM_dconnectivity_transpose(comm,
-                                distrib_arc,
-                                distrib_node,
-                                darc_to_elmt_idx,
-                                darc_to_elmt,
-                                1,
-                                &delmt_to_arc_idx,
-                                &delmt_to_arc);
-
     if(dmesh->n_g_cell != 0) { // Donc 3D
+
+      distrib_arc  = PDM_compute_entity_distribution(comm, dn_arc );
+
+      PDM_dconnectivity_transpose(comm,
+                                  distrib_arc,
+                                  distrib_node,
+                                  darc_to_elmt_idx,
+                                  darc_to_elmt,
+                                  1,
+                                  &delmt_to_arc_idx,
+                                  &delmt_to_arc);
+
       PDM_dmesh_connectivity_set(dmesh, PDM_CONNECTIVITY_TYPE_CELL_FACE,
                                  delmt_to_arc,
                                  delmt_to_arc_idx,
                                  PDM_OWNERSHIP_KEEP);
+
     } else if(dmesh->n_g_face != 0) {
+
+      distrib_arc  = PDM_compute_entity_distribution(comm, dn_arc );
+
+      PDM_dconnectivity_transpose(comm,
+                                  distrib_arc,
+                                  distrib_node,
+                                  darc_to_elmt_idx,
+                                  darc_to_elmt,
+                                  1,
+                                  &delmt_to_arc_idx,
+                                  &delmt_to_arc);
+
       PDM_dmesh_connectivity_set(dmesh, PDM_CONNECTIVITY_TYPE_FACE_EDGE,
                                  delmt_to_arc,
                                  delmt_to_arc_idx,
                                  PDM_OWNERSHIP_KEEP);
+
     } else if(dmesh->n_g_edge != 0) {
-      PDM_dmesh_connectivity_set(dmesh, PDM_CONNECTIVITY_TYPE_EDGE_VTX,
+      distrib_arc = PDM_compute_entity_distribution(comm, dn_node );
+      PDM_dconnectivity_transpose(comm,
+                                  distrib_node,
+                                  distrib_arc,
+                                  darc_to_elmt_idx,
+                                  darc_to_elmt,
+                                  1,
+                                  &delmt_to_arc_idx,
+                                  &delmt_to_arc);
+
+      PDM_dmesh_connectivity_set(dmesh, PDM_CONNECTIVITY_TYPE_VTX_EDGE,
                                  delmt_to_arc,
                                  delmt_to_arc_idx,
                                  PDM_OWNERSHIP_KEEP);
@@ -1455,16 +1483,30 @@ _warm_up_for_split
   }
 
   if(compute_dual == 1) {
-    PDM_deduce_combine_connectivity_dual(comm,
-                                         distrib_node,
-                                         distrib_arc,
-                                         delmt_to_arc_idx,
-                                         delmt_to_arc,
-                                         darc_to_elmt_idx,
-                                         darc_to_elmt,
-                                         1, // is signed
-                                         &dual_graph_idx,
-                                         &dual_graph);
+
+    if(dmesh->n_g_edge != 0) {
+      PDM_deduce_combine_connectivity_dual(comm,
+                                           distrib_arc,
+                                           distrib_node,
+                                           delmt_to_arc_idx,
+                                           delmt_to_arc,
+                                           darc_to_elmt_idx,
+                                           darc_to_elmt,
+                                           1, // is signed
+                                           &dual_graph_idx,
+                                           &dual_graph);
+    } else {
+      PDM_deduce_combine_connectivity_dual(comm,
+                                           distrib_node,
+                                           distrib_arc,
+                                           delmt_to_arc_idx,
+                                           delmt_to_arc,
+                                           darc_to_elmt_idx,
+                                           darc_to_elmt,
+                                           1, // is signed
+                                           &dual_graph_idx,
+                                           &dual_graph);
+    }
 
     /* Shift to 0 dual */
     for(int i = 0; i < dual_graph_idx[dn_node]; ++i) {
@@ -1912,6 +1954,9 @@ _deduce_part_connectivity_1d
  PDM_g_num_t  ***out_pvtx_ln_to_gn
 )
 {
+  int i_rank;
+  PDM_MPI_Comm_rank(comm, &i_rank);
+
   /*
    * Reconstruction edge_vtx
    */
@@ -1922,6 +1967,16 @@ _deduce_part_connectivity_1d
                              &dedge_vtx,
                              &dedge_vtx_idx,
                              PDM_OWNERSHIP_BAD_VALUE);
+  int *_dedge_vtx_idx = NULL;
+  if(dedge_vtx_idx == NULL)  {
+    int dn_edge = edge_distrib[i_rank+1] - edge_distrib[i_rank];
+    _dedge_vtx_idx = malloc( (dn_edge+1) * sizeof(int));
+    for(int i_edge = 0; i_edge < dn_edge+1; ++i_edge) {
+      _dedge_vtx_idx[i_edge] = 2*i_edge;
+    }
+  } else {
+    _dedge_vtx_idx = dedge_vtx_idx;
+  }
 
   int          *pn_vtx        = NULL;
   PDM_g_num_t **pvtx_ln_to_gn = NULL;
@@ -1930,7 +1985,7 @@ _deduce_part_connectivity_1d
   int         **pedge_vtx     = NULL;
   PDM_part_dconnectivity_to_pconnectivity_sort(comm,
                                                edge_distrib,
-                                               dedge_vtx_idx,
+                                               _dedge_vtx_idx,
                                                dedge_vtx,
                                                n_part,
                                                pn_edge,
@@ -1939,7 +1994,9 @@ _deduce_part_connectivity_1d
                                                &pvtx_ln_to_gn,
                                                &pedge_vtx_idx,
                                                &pedge_vtx);
-
+  if(dedge_vtx_idx == NULL)  {
+    free(_dedge_vtx_idx);
+  }
 
   for (int i_part = 0; i_part < n_part; i_part++) {
 
@@ -1961,6 +2018,8 @@ _deduce_part_connectivity_1d
                                       pedge_ln_to_gn[i_part],
                                       PDM_OWNERSHIP_KEEP);
 
+    free(pedge_vtx_idx[i_part]);
+    pedge_vtx_idx[i_part] = NULL;
   }
 
   _deduce_part_connectivity_0d(comm,
