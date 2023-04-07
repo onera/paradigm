@@ -61,6 +61,78 @@ PDM_dcompute_cell_center
  *
  * \brief Perform geometric partitioning
  *
+ * \param [in]   method          Geometric method
+ * \param [in]   n_part          Number of partition to build on this process
+ * \param [in]   comm            Communicator
+ * \param [in]   dn_entity       Number of distributed cells
+ * \param [in]   dentity_coord   Distributed entity coordinates (size : 3*dn_entity)
+ * \param [in]   dcell_weight    Entity weight (size : dn_entity) or NULL
+ * \param [inout] dentity_part   Distributed entity partitioning (size = dn_entity)
+ */
+void
+PDM_part_entity_geom
+(
+ PDM_part_geom_t     method,
+ const int           n_part,
+ const PDM_MPI_Comm  comm,
+ const PDM_g_num_t   dn_entity,
+ const double       *dentity_coord,
+ const int          *dentity_weight,
+       int          *dentity_part
+);
+
+
+void
+PDM_part_geom_0d
+(
+ PDM_part_geom_t     method,
+ const int           n_part,
+ const PDM_MPI_Comm  comm,
+ const int           dn_vtx,
+ const double       *dvtx_coord,
+ const int          *dvtx_weight,
+       int          *dvtx_part
+);
+
+
+void
+PDM_part_geom_1d
+(
+ PDM_part_geom_t     method,
+ const int           n_part,
+ const PDM_MPI_Comm  comm,
+ const int           dn_edge,
+ const int           dn_vtx,
+ const PDM_g_num_t  *dedge_vtx,
+ const double       *dvtx_coord,
+ const int          *dedge_weight,
+       int          *dedge_part
+);
+
+
+void
+PDM_part_geom_2d
+(
+ PDM_part_geom_t     method,
+ const int           n_part,
+ const PDM_MPI_Comm  comm,
+ const int           dn_face,
+ const int           dn_edge,
+ const int           dn_vtx,
+ const int          *dface_vtx_idx,
+ const PDM_g_num_t  *dface_vtx,
+ const int          *dface_edge_idx,
+ const PDM_g_num_t  *dface_edge,
+ const PDM_g_num_t  *dedge_vtx,
+ const double       *dvtx_coord,
+ const int          *dface_weight,
+       int          *dface_part
+);
+
+/**
+ *
+ * \brief Perform geometric partitioning
+ *
  * \param [in]   method         Geometric method
  * \param [in]   n_part          Number of partition to build on this process
  * \param [in]   comm           Communicator
