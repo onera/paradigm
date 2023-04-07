@@ -1594,6 +1594,9 @@ _extrude_base_surface_mesh
        double       **dvtx_coord,
        PDM_g_num_t  **dface_vtx,
        PDM_g_num_t  **dcell_vtx,
+       int           *n_group,
+       int          **dgroup_face_idx,
+       PDM_g_num_t  **dgroup_face,
        PDM_g_num_t  **distrib_vtx,
        PDM_g_num_t  **distrib_face,
        PDM_g_num_t  **distrib_cell
@@ -1919,6 +1922,24 @@ _extrude_base_surface_mesh
     }
 
   }
+
+  /* Groups */
+  PDM_g_num_t *distrib_group = PDM_compute_uniform_entity_distribution(comm, gn_cell_layer);
+  int dn_group_face = (int) (distrib_group[i_rank+1] - distrib_group[i_rank]);
+
+  *n_group         = 2;
+  *dgroup_face_idx = malloc(sizeof(int) * 3);
+  (*dgroup_face_idx)[0] = 0;
+  (*dgroup_face_idx)[1] = dn_group_face;
+  (*dgroup_face_idx)[2] = 2*dn_group_face;
+  *dgroup_face     = malloc(sizeof(PDM_g_num_t) * dn_group_face * 2);
+
+  for (int i = 0; i < dn_group_face; i++) {
+    (*dgroup_face)[i] = distrib_group[i_rank] + i + 1;
+    (*dgroup_face)[dn_group_face+i] = gn_cell_layer + distrib_group[i_rank] + i + 1;
+  }
+
+  free(distrib_group);
 }
 
 
@@ -1932,6 +1953,9 @@ _set_dmesh_nodal
        PDM_g_num_t          *distrib_vtx,
        PDM_g_num_t          *distrib_face,
        PDM_g_num_t          *distrib_cell,
+       int                   n_group,
+       int                  *dgroup_face_idx,
+       PDM_g_num_t          *dgroup_face,
        PDM_Mesh_nodal_elt_t  cell_type
  )
 {
@@ -1973,19 +1997,24 @@ _set_dmesh_nodal
                                         dface_vtx,
                                         PDM_OWNERSHIP_KEEP);
 
-  int n_group = 1;
-  int *dgroup_face_idx = (int *) malloc(sizeof(int) * (n_group + 1));
-  dgroup_face_idx[0] = 0;
-  dgroup_face_idx[1] = dn_face;
+  int          _n_group         = n_group;
+  int         *_dgroup_face_idx = dgroup_face_idx;
+  PDM_g_num_t *_dgroup_face     = dgroup_face;
+  if (_dgroup_face == NULL) {
+    _n_group = 1;
+    _dgroup_face_idx = (int *) malloc(sizeof(int) * (_n_group + 1));
+    _dgroup_face_idx[0] = 0;
+    _dgroup_face_idx[1] = dn_face;
 
-  PDM_g_num_t *dgroup_face = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * dgroup_face_idx[n_group]);
-  for (int i = 0; i < dn_face; i++) {
-    dgroup_face[i] = distrib_face[i_rank] + i + 1;
+    _dgroup_face = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * _dgroup_face_idx[_n_group]);
+    for (int i = 0; i < dn_face; i++) {
+      _dgroup_face[i] = distrib_face[i_rank] + i + 1;
+    }
   }
   PDM_DMesh_nodal_elmts_group_set(dmn->surfacic,
-                                  n_group,
-                                  dgroup_face_idx,
-                                  dgroup_face,
+                                  _n_group,
+                                  _dgroup_face_idx,
+                                  _dgroup_face,
                                   PDM_OWNERSHIP_KEEP);
 
   /* Volume */
@@ -2560,6 +2589,9 @@ PDM_sphere_vol_icosphere_gen_nodal
                           distrib_vtx,
                           distrib_face,
                           distrib_cell,
+                          0,
+                          NULL,
+                          NULL,
                           PDM_MESH_NODAL_TETRA4);
 
   free(distrib_vtx);
@@ -2684,12 +2716,15 @@ PDM_sphere_vol_hollow_gen_nodal
   }
 
 
-  double      *dvtx_coord   = NULL;
-  PDM_g_num_t *dface_vtx    = NULL;
-  PDM_g_num_t *dcell_vtx    = NULL;
-  PDM_g_num_t *distrib_vtx  = NULL;
-  PDM_g_num_t *distrib_face = NULL;
-  PDM_g_num_t *distrib_cell = NULL;
+  double      *dvtx_coord      = NULL;
+  PDM_g_num_t *dface_vtx       = NULL;
+  PDM_g_num_t *dcell_vtx       = NULL;
+  int          n_group         = 0;
+  int         *dgroup_face_idx = NULL;
+  PDM_g_num_t *dgroup_face     = NULL;
+  PDM_g_num_t *distrib_vtx     = NULL;
+  PDM_g_num_t *distrib_face    = NULL;
+  PDM_g_num_t *distrib_cell    = NULL;
   _extrude_base_surface_mesh(comm,
                              n,
                              n_layer,
@@ -2703,6 +2738,9 @@ PDM_sphere_vol_hollow_gen_nodal
                              &dvtx_coord,
                              &dface_vtx,
                              &dcell_vtx,
+                             &n_group,
+                             &dgroup_face_idx,
+                             &dgroup_face,
                              &distrib_vtx,
                              &distrib_face,
                              &distrib_cell);
@@ -2767,6 +2805,9 @@ PDM_GCC_SUPPRESS_WARNING_POP
                           distrib_vtx,
                           distrib_face,
                           distrib_cell,
+                          n_group,
+                          dgroup_face_idx,
+                          dgroup_face,
                           PDM_MESH_NODAL_PRISM6);
 
   free(distrib_vtx);
