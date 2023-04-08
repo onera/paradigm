@@ -119,7 +119,7 @@ int main(int argc, char *argv[])
    */
   PDM_g_num_t *distrib_elmt = PDM_compute_uniform_entity_distribution(comm, n_elmt);
 
-  if(1 == 1) {
+  if(0 == 1) {
     PDM_log_trace_array_long(distrib_elmt, n_rank+1, "distrib_elmt : ");
   }
 
@@ -132,7 +132,7 @@ int main(int argc, char *argv[])
     drand_number[i] = (rand() % n_elmt) + 1;
   }
 
-  if(1 == 1) {
+  if(0 == 1) {
     PDM_log_trace_array_long(drand_number, dn_elmt, "drand_number : ");
   }
 
@@ -159,7 +159,7 @@ int main(int argc, char *argv[])
     }
   }
 
-  if(1 == 1) {
+  if(0 == 1) {
     for(int i_part = 0; i_part < n_part; ++i_part) {
       PDM_log_trace_array_long(pelmts_ln_to_gn[i_part], pn_elmts[i_part], "pelmts_ln_to_gn : ");
     }

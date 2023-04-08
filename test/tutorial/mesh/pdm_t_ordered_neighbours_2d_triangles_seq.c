@@ -568,23 +568,19 @@ int main(int argc, char *argv[])
   } // end loop on faces
 
   /* Output */
+  if(0 == 1) {
+    for (int i = 0; i < n_vtx; i++) {
+      log_trace("Sommet: %d, Vertices: ", i);
+      for (int j = vtx_ordered_vtx_neighbours_idx[i]; j < vtx_ordered_vtx_neighbours_idx[i+1]; j++) {
+        log_trace(" %d ", vtx_ordered_vtx_neighbours[j]);
+      }
 
-  for (int i = 0; i < n_vtx; i++) {
-
-    log_trace("Sommet: %d, Vertices: ", i);
-
-    for (int j = vtx_ordered_vtx_neighbours_idx[i]; j < vtx_ordered_vtx_neighbours_idx[i+1]; j++) {
-      log_trace(" %d ", vtx_ordered_vtx_neighbours[j]);
+      log_trace(", Faces: ");
+      for (int j = vtx_ordered_face_neighbours_idx[i]; j < vtx_ordered_face_neighbours_idx[i+1]; j++) {
+        log_trace(" %d ", vtx_ordered_face_neighbours[j]);
+      }
+      log_trace("\n");
     }
-
-    log_trace(", Faces: ");
-
-    for (int j = vtx_ordered_face_neighbours_idx[i]; j < vtx_ordered_face_neighbours_idx[i+1]; j++) {
-      log_trace(" %d ", vtx_ordered_face_neighbours[j]);
-    }
-
-    log_trace("\n");
-
   }
 
   /* Output mesh in vtk format TO DO change if not triangles anymore */
@@ -594,19 +590,19 @@ int main(int argc, char *argv[])
     face_vtx_idx[i] = 3*i;
   }
 
-  char filename[999];
-
-  sprintf(filename, "mesh.vtk");
-
-  PDM_vtk_write_polydata(filename,
-                         n_vtx,
-                         vtx_coord,
-                         NULL,
-                         n_face,
-                         face_vtx_idx,
-                         face_vtx,
-                         NULL,
-                         NULL);
+  if(1 == 0) {
+    char filename[999];
+    sprintf(filename, "mesh.vtk");
+    PDM_vtk_write_polydata(filename,
+                           n_vtx,
+                           vtx_coord,
+                           NULL,
+                           n_face,
+                           face_vtx_idx,
+                           face_vtx,
+                           NULL,
+                           NULL);
+  }
 
   /* Free memory */
   free(face_edge_idx );

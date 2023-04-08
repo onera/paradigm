@@ -246,8 +246,6 @@ char *argv[]
                           dvtx_coord,
                           PDM_OWNERSHIP_USER);
 
-  PDM_log_trace_array_long(dedge_vtx, 2 * dn_edge, "dedge_vtx :");
-
   /*
    * Mulitpart
    */

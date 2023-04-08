@@ -309,18 +309,20 @@ int main(int argc, char *argv[])
     /*
      *  Export current mesh to vtk format to get a nice video :D
      */
-    char filename[999];
-    sprintf(filename, "laplacian_smoothing_seq_%3.3d.vtk", i_step);
+    if(1 == 0) {
+      char filename[999];
+      sprintf(filename, "laplacian_smoothing_seq_%3.3d.vtk", i_step);
 
-    PDM_vtk_write_polydata(filename,
-                           n_vtx,
-                           vtx_coord,
-                           NULL,
-                           n_face,
-                           face_edge_idx,
-                           face_vtx,
-                           NULL,
-                           NULL);
+      PDM_vtk_write_polydata(filename,
+                             n_vtx,
+                             vtx_coord,
+                             NULL,
+                             n_face,
+                             face_edge_idx,
+                             face_vtx,
+                             NULL,
+                             NULL);
+    }
 
     /*
      *  Apply one smoothing step

@@ -1362,9 +1362,14 @@ _warm_up_for_split
   int dn_node = 0;
   int dn_arc  = 0;
 
+  PDM_g_num_t *distrib_arc  = NULL;
+
+  int is1d = 0;
+
   if(dmesh->n_g_cell != 0) { // Donc 3D
     dn_node = dmesh->dn_cell;
     dn_arc  = dmesh->dn_face;
+    distrib_arc  = PDM_compute_entity_distribution(comm, dn_arc );
 
     PDM_dmesh_connectivity_get(dmesh, PDM_CONNECTIVITY_TYPE_FACE_CELL,
                                &darc_to_elmt_tmp,
@@ -1380,6 +1385,7 @@ _warm_up_for_split
 
     dn_node = dmesh->dn_face;
     dn_arc  = dmesh->dn_edge;
+    distrib_arc  = PDM_compute_entity_distribution(comm, dn_arc );
 
     PDM_dmesh_connectivity_get(dmesh, PDM_CONNECTIVITY_TYPE_EDGE_FACE,
                                &darc_to_elmt_tmp,
@@ -1395,6 +1401,9 @@ _warm_up_for_split
 
     dn_node = dmesh->dn_vtx;
     dn_arc  = dmesh->dn_edge;
+    is1d    = 1;
+
+    distrib_arc  = PDM_compute_entity_distribution(comm, dn_node );
 
     PDM_dmesh_connectivity_get(dmesh, PDM_CONNECTIVITY_TYPE_EDGE_VTX,
                                &darc_to_elmt_tmp,
@@ -1426,12 +1435,12 @@ _warm_up_for_split
     darc_to_elmt_tmp[2*i+1] = -darc_to_elmt_tmp[2*i+1];
   }
 
-  PDM_g_num_t *distrib_arc  = NULL;
+  if(0 == 1) {
+    PDM_log_trace_connectivity_long(delmt_to_arc_idx, delmt_to_arc, dn_node, "delmt_to_arc : ");
+  }
+
   if(delmt_to_arc == NULL) {
     if(dmesh->n_g_cell != 0) { // Donc 3D
-
-      distrib_arc  = PDM_compute_entity_distribution(comm, dn_arc );
-
       PDM_dconnectivity_transpose(comm,
                                   distrib_arc,
                                   distrib_node,
@@ -1447,9 +1456,6 @@ _warm_up_for_split
                                  PDM_OWNERSHIP_KEEP);
 
     } else if(dmesh->n_g_face != 0) {
-
-      distrib_arc  = PDM_compute_entity_distribution(comm, dn_arc );
-
       PDM_dconnectivity_transpose(comm,
                                   distrib_arc,
                                   distrib_node,
@@ -1465,7 +1471,6 @@ _warm_up_for_split
                                  PDM_OWNERSHIP_KEEP);
 
     } else if(dmesh->n_g_edge != 0) {
-      distrib_arc = PDM_compute_entity_distribution(comm, dn_node );
       PDM_dconnectivity_transpose(comm,
                                   distrib_node,
                                   distrib_arc,
@@ -1483,8 +1488,7 @@ _warm_up_for_split
   }
 
   if(compute_dual == 1) {
-
-    if(dmesh->n_g_edge != 0) {
+    if(is1d == 1) {
       PDM_deduce_combine_connectivity_dual(comm,
                                            distrib_arc,
                                            distrib_node,

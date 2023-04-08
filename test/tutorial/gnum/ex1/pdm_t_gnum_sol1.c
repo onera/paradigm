@@ -173,7 +173,7 @@ int main(int argc, char *argv[])
   /*
    *  Exchange field and print it / Check !
    */
-  if(0 == 0) {
+  if(0 == 1) {
     PDM_log_trace_array_long(ppair_ln_to_gn      , pn_elmt_pair, "ppair_ln_to_gn       : ");
     PDM_log_trace_array_long(ppair_child_ln_to_gn, pn_elmt_pair, "ppair_child_ln_to_gn : ");
   }

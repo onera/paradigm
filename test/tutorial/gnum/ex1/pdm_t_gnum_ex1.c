@@ -156,7 +156,7 @@ int main(int argc, char *argv[])
     }
   }
 
-  if(1 == 1) {
+  if(0 == 1) {
     PDM_log_trace_array_long(pln_to_to_gn, pn_elmt, "pln_to_to_gn : ");
   }
 
@@ -175,7 +175,7 @@ int main(int argc, char *argv[])
   PDM_g_num_t *pln_to_to_gn_child = PDM_gnum_get(gen_gnum, 0);
   int pn_elmt_child = PDM_gnum_n_elt_get(gen_gnum, 0);
 
-  if(1 == 1) {
+  if(0 == 1) {
     PDM_log_trace_array_long(pln_to_to_gn_child, pn_elmt_child, "pln_to_to_gn_child : ");
   }
 
