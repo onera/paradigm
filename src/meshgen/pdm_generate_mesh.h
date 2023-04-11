@@ -127,7 +127,7 @@ PDM_generate_mesh_parallelepiped_simplified
  * \param [in]  comm        MPI communicator
  * \param [in]  elt_type    Mesh element type
  * \param [in]  order       Mesh element order
- * \param [in]  ho_ordering ?
+ * \param [in]  ho_ordering High order nodes ordering type
  * \param [in]  radius      Radius of the sphere
  * \param [in]  center_x    x-coordinate of the sphere center
  * \param [in]  center_y    y-coordinate of the sphere center
@@ -147,7 +147,7 @@ PDM_generate_mesh_sphere
  const PDM_MPI_Comm           comm,
  const PDM_Mesh_nodal_elt_t   elt_type,
  const int                    order,
- const char                 **ho_ordering,
+ const char                  *ho_ordering,
  const double                 radius,
  const double                 center_x,
  const double                 center_y,
@@ -165,7 +165,7 @@ PDM_generate_mesh_sphere
  * \param [in]  comm        MPI communicator
  * \param [in]  elt_type    Mesh element type
  * \param [in]  order       Mesh element order
- * \param [in]  ho_ordering ?
+ * \param [in]  ho_ordering High order nodes ordering type
  * \param [in]  xmin        x-coordinate of the rctangle minimum corner
  * \param [in]  ymin        y-coordinate of the rctangle minimum corner
  * \param [in]  zmin        z-coordinate of the rctangle minimum corner
@@ -186,7 +186,7 @@ PDM_generate_mesh_rectangle
   const PDM_MPI_Comm     comm,
  PDM_Mesh_nodal_elt_t    elt_type,
  int                     order,
- const char            **ho_ordering,
+ const char             *ho_ordering,
  double                  xmin,
  double                  ymin,
  double                  zmin,
@@ -205,7 +205,7 @@ PDM_generate_mesh_rectangle
  * \param [in]  comm            MPI communicator
  * \param [in]  elt_type        Mesh element type
  * \param [in]  order           Mesh element order
- * \param [in]  ho_ordering     ?
+ * \param [in]  ho_ordering     High order nodes ordering type
  * \param [in]  radius          Radius of the ball
  * \param [in]  hole_radius     Radius of the hole of the ball
  * \param [in]  center_x        x-coordinate of the ball center
@@ -229,7 +229,7 @@ PDM_generate_mesh_ball
  const PDM_MPI_Comm      comm,
  PDM_Mesh_nodal_elt_t    elt_type,
  int                     order,
- const char            **ho_ordering,
+ const char             *ho_ordering,
  const double            radius,
  const double            hole_radius,
  const double            center_x,
@@ -251,7 +251,7 @@ PDM_generate_mesh_ball
  * \param [in]  comm        MPI communicator
  * \param [in]  elt_type    Mesh element type
  * \param [in]  order       Mesh element order
- * \param [in]  ho_ordering ?
+ * \param [in]  ho_ordering High order nodes ordering type
  * \param [in]  xmin        x-coordinate of the rctangle minimum corner
  * \param [in]  ymin        y-coordinate of the rctangle minimum corner
  * \param [in]  zmin        z-coordinate of the rctangle minimum corner
@@ -274,7 +274,7 @@ PDM_generate_mesh_parallelepiped
  const PDM_MPI_Comm      comm,
  PDM_Mesh_nodal_elt_t    elt_type,
  int                     order,
- const char            **ho_ordering,
+ const char             *ho_ordering,
  double                  xmin,
  double                  ymin,
  double                  zmin,
