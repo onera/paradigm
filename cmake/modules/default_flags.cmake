@@ -12,6 +12,8 @@ endif()
 #
 #------------------------------------------------------------------------------
 
+cmake_host_system_information(RESULT HOSTNAME QUERY HOSTNAME)
+
 #------------------------------------------------------------------------------
 # Fortran default flags
 #------------------------------------------------------------------------------
@@ -28,6 +30,7 @@ if (CMAKE_Fortran_COMPILER_ID STREQUAL "GNU")
   set (CMAKE_Fortran_FLAGS_RELWITHDEBINFO  "-O3 -g")
   set (CMAKE_Fortran_FLAGS_MINSIZEREL      "-O2 -g")
   set (CMAKE_Fortran_FLAGS_SANITIZE        "-O0 -g -fcheck=bounds -fbacktrace -fsanitize=address -fno-omit-frame-pointer -Wall -Wextra")
+  set (CMAKE_Fortran_FLAGS_COVERAGE        "-O0 -g -fcheck=bounds -fbacktrace")
 
   set (FORTRAN_LIBRARIES                   )
   set (FORTRAN_LIBRARIES_FLAG              )
@@ -45,6 +48,7 @@ elseif (CMAKE_Fortran_COMPILER_ID STREQUAL "Intel")
   set (CMAKE_Fortran_FLAGS_RELWITHDEBINFO "${CMAKE_Fortran_FLAGS_RELEASE} -g")
   set (CMAKE_Fortran_FLAGS_MINSIZEREL     "-O2 -g")
   set (CMAKE_Fortran_FLAGS_SANITIZE       "-O0 -g -check all -check nopointer -traceback")
+  set (CMAKE_Fortran_FLAGS_COVERAGE       "-O0 -g -check all -check nopointer -traceback")
 
   find_library(FORTRAN_LIBRARIES ifcore)
   mark_as_advanced (FORTRAN_LIBRARIES)
@@ -62,6 +66,7 @@ elseif (CMAKE_Fortran_COMPILER_ID MATCHES "XL")
   set (CMAKE_Fortran_FLAGS_RELWITHDEBINFO "-O3 -qhot -g")
   set (CMAKE_Fortran_FLAGS_MINSIZEREL     "-O3")
   set (CMAKE_Fortran_FLAGS_SANITIZE       "-g -qcheck")
+  set (CMAKE_Fortran_FLAGS_COVERAGE       "-g -qcheck")
 
   set(FORTRAN_LIBRARIES xl xlf90_r xlsmp xlopt ${FORTRAN_LIBRARIES})
 
@@ -84,6 +89,7 @@ elseif (CMAKE_Fortran_COMPILER_ID STREQUAL "PGI")
   set (CMAKE_Fortran_FLAGS_RELWITHDEBINFO  "${CMAKE_Fortran_FLAGS_RELEASE} -g")
   set (CMAKE_Fortran_FLAGS_MINSIZEREL      "-O2")
   set (CMAKE_Fortran_FLAGS_SANITIZE        "-g -Mbounds")
+  set (CMAKE_Fortran_FLAGS_COVERAGE        "-g -Mbounds")
 
   set (FORTRAN_LIBRARIES                   )
   set (FORTRAN_LIBRARIES_FLAG    -pgf90libs)
@@ -98,6 +104,7 @@ elseif (CMAKE_Fortran_COMPILER_ID STREQUAL "Cray")
   set (CMAKE_Fortran_FLAGS_RELWITHDEBINFO  "${CMAKE_Fortran_FLAGS_RELEASE} -g")
   set (CMAKE_Fortran_FLAGS_MINSIZEREL      "-O2")
   set (CMAKE_Fortran_FLAGS_SANITIZE        "-g")
+  set (CMAKE_Fortran_FLAGS_COVERAGE        "-g")
 
   set (FORTRAN_LIBRARIES         )
   set (FORTRAN_LIBRARIES_FLAG    )
@@ -112,6 +119,7 @@ elseif (CMAKE_Fortran_COMPILER_ID STREQUAL "PathScale")
   set (CMAKE_Fortran_FLAGS_RELWITHDEBINFO  "${CMAKE_Fortran_FLAGS_RELEASE} -g")
   set (CMAKE_Fortran_FLAGS_MINSIZEREL      "-O")
   set (CMAKE_Fortran_FLAGS_SANITIZE        "-g  -ffortran-bounds-check")
+  set (CMAKE_Fortran_FLAGS_COVERAGE        "-g  -ffortran-bounds-check")
 
   set (FORTRAN_LIBRARIES         )
   set (FORTRAN_LIBRARIES_FLAG    )
@@ -129,6 +137,7 @@ elseif (CMAKE_Fortran_COMPILER_ID STREQUAL "IntelLLVM")
   set (CMAKE_Fortran_FLAGS_RELWITHDEBINFO "${CMAKE_Fortran_FLAGS_RELEASE} -g")
   set (CMAKE_Fortran_FLAGS_MINSIZEREL     "-O2 -g")
   set (CMAKE_Fortran_FLAGS_SANITIZE       "-O0 -g -check all -check nopointer -traceback")
+  set (CMAKE_Fortran_FLAGS_COVERAGE       "-O0 -g -check all -check nopointer -traceback")
 
   find_library(FORTRAN_LIBRARIES ifcore)
   mark_as_advanced (FORTRAN_LIBRARIES)
@@ -147,6 +156,7 @@ else ()
   set (CMAKE_Fortran_FLAGS_RELWITHDEBINFO  "${CMAKE_Fortran_FLAGS_RELEASE}")
   set (CMAKE_Fortran_FLAGS_MINSIZEREL      "-O")
   set (CMAKE_Fortran_FLAGS_SANITIZE        "-O")
+  set (CMAKE_Fortran_FLAGS_COVERAGE        "-g")
 
   set (FORTRAN_LIBRARIES                   )
   set (FORTRAN_LIBRARIES_FLAG              )
@@ -160,6 +170,7 @@ set (CMAKE_Fortran_FLAGS_PROFILING       "${CMAKE_Fortran_FLAGS_PROFILING}" CACH
 set (CMAKE_Fortran_FLAGS_RELWITHDEBINFO  "${CMAKE_Fortran_FLAGS_RELWITHDEBINFO}" CACHE STRING "Flags used by the compiler during release builds with debug info." FORCE)
 set (CMAKE_Fortran_FLAGS_MINSIZEREL      "${CMAKE_Fortran_FLAGS_MINSIZEREL}" CACHE STRING "Flags used by the compiler during release builds for minimum size" FORCE)
 set (CMAKE_Fortran_FLAGS_SANITIZE        "${CMAKE_Fortran_FLAGS_SANITIZE}" CACHE STRING "Flags used by the compiler during sanitize" FORCE)
+set (CMAKE_Fortran_FLAGS_COVERAGE        "${CMAKE_Fortran_FLAGS_COVERAGE}" CACHE STRING "Flags used by the compiler during coverage builds."  FORCE)
 
 set (FORTRAN_LIBRARIES "${FORTRAN_LIBRARIES}" CACHE STRING "Fortran libraries" FORCE)
 set (FORTRAN_LIBRARIES_FLAG "${FORTRAN_LIBRARIES_FLAG}" CACHE STRING "Fortran libraries flag" FORCE)
@@ -189,11 +200,12 @@ if (CMAKE_C_COMPILER_ID STREQUAL "GNU")
   set (CMAKE_C_FLAGS_RELWITHDEBINFO  "-O3 -g")
   set (CMAKE_C_FLAGS_MINSIZEREL      "-O2 -g")
   set (CMAKE_C_FLAGS_SANITIZE        "-O0 -g -fsanitize=address -fno-omit-frame-pointer -Wall -Wextra")
+  set (CMAKE_C_FLAGS_COVERAGE        "-O0 -g --coverage") # --coverage equivalent to -fprofile-arcs -ftest-coverage for recent compilers
 
 elseif (CMAKE_C_COMPILER_ID STREQUAL "Intel")
 
   set (CMAKE_C_FLAGS "-std=gnu99 -restrict -fpic -funsigned-char -Wall -Wcheck -Wshadow -Wpointer-arith -Wmissing-prototypes -Wuninitialized -Wunused -wd3656")
-  # set (CMAKE_C_FLAGS "-std=gnu99 -restrict -xHost -qopt-report=5 -fpic -funsigned-char -Wall -Wcheck -Wshadow -Wpointer-arith -Wmissing-prototypes -Wuninitialized -Wunused -wd869,3656")
+  # set (CMAKE_C_FLAGS "-std=gnu99 -restrict -fpic -funsigned-char -Wall -Wcheck -Wshadow -Wpointer-arith -Wmissing-prototypes -Wuninitialized -Wunused -wd869,3656,177")
   set (CMAKE_CUDA_FLAGS "--compiler-options -fpic")
 
   set (CMAKE_C_FLAGS_RELEASE "-O3")
@@ -203,6 +215,7 @@ elseif (CMAKE_C_COMPILER_ID STREQUAL "Intel")
   set (CMAKE_C_FLAGS_RELWITHDEBINFO  "${CMAKE_C_FLAGS_RELEASE} -g")
   set (CMAKE_C_FLAGS_MINSIZEREL      "-O2 -g")
   set (CMAKE_C_FLAGS_SANITIZE        "-g -O0 -traceback -w2")
+  set (CMAKE_C_FLAGS_COVERAGE        "-g -O0 -traceback -w2")
 
 elseif (CMAKE_C_COMPILER_ID STREQUAL "AppleClang")
   set (CMAKE_C_FLAGS "-std=c99 -fPIC -funsigned-char -Wall -pedantic -Wshadow -Wpointer-arith -Wmissing-prototypes -Wuninitialized -Wunused -Wno-empty-translation-unit -Wno-unused-function")
@@ -213,6 +226,7 @@ elseif (CMAKE_C_COMPILER_ID STREQUAL "AppleClang")
   set (CMAKE_C_FLAGS_RELWITHDEBINFO  "-O3 -g")
   set (CMAKE_C_FLAGS_MINSIZEREL      "-O2")
   set (CMAKE_C_FLAGS_SANITIZE        "-g -O0 -fsanitize=address -fno-omit-frame-pointer -Wall -Wextra")
+  set (CMAKE_C_FLAGS_COVERAGE        "-g -O0")
 
 elseif (CMAKE_C_COMPILER_ID STREQUAL "IntelLLVM")
 
@@ -224,6 +238,7 @@ elseif (CMAKE_C_COMPILER_ID STREQUAL "IntelLLVM")
   set (CMAKE_C_FLAGS_RELWITHDEBINFO  "-O3 -g")
   set (CMAKE_C_FLAGS_MINSIZEREL      "-O2")
   set (CMAKE_C_FLAGS_SANITIZE        "-g -O0 -fsanitize=address -fno-omit-frame-pointer -Wall -Wextra")
+  set (CMAKE_C_FLAGS_COVERAGE        "-g -O0")
 
   #SET(CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} -fuse-ld=lld")
 
@@ -248,6 +263,7 @@ elseif (CMAKE_C_COMPILER_ID STREQUAL "Clang")
   set (CMAKE_C_FLAGS_MINSIZEREL      "-O2")
   set (CMAKE_C_FLAGS_SANITIZE        "-g -O0 -fsanitize=address -fno-omit-frame-pointer -Wall -Wextra")
   SET(CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} -lm")
+  set (CMAKE_C_FLAGS_COVERAGE        "-g -O0")
 
 
 elseif (CMAKE_C_COMPILER_ID MATCHES "XL")
@@ -259,6 +275,7 @@ elseif (CMAKE_C_COMPILER_ID MATCHES "XL")
   set (CMAKE_C_FLAGS_RELWITHDEBINFO  "-O3 -g")
   set (CMAKE_C_FLAGS_MINSIZEREL      "-O2")
   set (CMAKE_C_FLAGS_SANITIZE        "-g -qfullpath")
+  set (CMAKE_C_FLAGS_COVERAGE        "-g -qfullpath")
 
 elseif (CMAKE_C_COMPILER_ID STREQUAL "PGI")
 
@@ -270,6 +287,7 @@ elseif (CMAKE_C_COMPILER_ID STREQUAL "PGI")
   set (CMAKE_C_FLAGS_RELWITHDEBINFO  "${CMAKE_C_FLAGS_RELEASE} -g")
   set (CMAKE_C_FLAGS_MINSIZEREL      "-O2")
   set (CMAKE_C_FLAGS_SANITIZE        "-g -Mbounds")
+  set (CMAKE_C_FLAGS_COVERAGE        "-g -Mbounds")
 
 elseif (CMAKE_C_COMPILER_ID STREQUAL "Cray")
 
@@ -281,6 +299,7 @@ elseif (CMAKE_C_COMPILER_ID STREQUAL "Cray")
   set (CMAKE_C_FLAGS_RELWITHDEBINFO  "${CMAKE_C_FLAGS_RELEASE} -g")
   set (CMAKE_C_FLAGS_MINSIZEREL      "-O2")
   set (CMAKE_C_FLAGS_SANITIZE        "-g")
+  set (CMAKE_C_FLAGS_COVERAGE        "-g")
 
 elseif (CMAKE_C_COMPILER_ID STREQUAL "PathScale")
 
@@ -292,6 +311,7 @@ elseif (CMAKE_C_COMPILER_ID STREQUAL "PathScale")
   set (CMAKE_C_FLAGS_RELWITHDEBINFO  "${CMAKE_C_FLAGS_RELEASE} -g")
   set (CMAKE_C_FLAGS_MINSIZEREL      "-O2")
   set (CMAKE_C_FLAGS_SANITIZE        "-g")
+  set (CMAKE_C_FLAGS_COVERAGE        "-g")
 
 else ()
 
@@ -304,6 +324,7 @@ else ()
   set (CMAKE_C_FLAGS_RELWITHDEBINFO  "${CMAKE_C_FLAGS_RELEASE}")
   set (CMAKE_C_FLAGS_MINSIZEREL      "-O")
   set (CMAKE_C_FLAGS_SANITIZE        "-g")
+  set (CMAKE_C_FLAGS_COVERAGE        "-g")
 
 endif ()
 
@@ -314,6 +335,7 @@ set (CMAKE_C_FLAGS_PROFILING       "${CMAKE_C_FLAGS_PROFILING}" CACHE STRING "Fl
 set (CMAKE_C_FLAGS_RELWITHDEBINFO  "${CMAKE_C_FLAGS_RELWITHDEBINFO}" CACHE STRING "Flags used by the compiler during release builds with debug info." FORCE)
 set (CMAKE_C_FLAGS_MINSIZEREL      "${CMAKE_C_FLAGS_MINSIZEREL}" CACHE STRING "Flags used by the compiler during release builds for minimum size" FORCE)
 set (CMAKE_C_FLAGS_SANITIZE        "${CMAKE_C_FLAGS_SANITIZE}" CACHE STRING "Flags used by the compiler during sanitize builds" FORCE)
+set (CMAKE_C_FLAGS_COVERAGE        "${CMAKE_C_FLAGS_COVERAGE}" CACHE STRING "Flags used by the compiler during coverage builds." FORCE)
 
 mark_as_advanced (CMAKE_C_FLAGS_PROFILING CMAKE_C_FLAGS_SANITIZE)
 
@@ -333,12 +355,14 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
   set (CMAKE_CXX_FLAGS_RELWITHDEBINFO  "-O3 -g")
   set (CMAKE_CXX_FLAGS_MINSIZEREL      "-O2 -g")
   set (CMAKE_CXX_FLAGS_SANITIZE        "-O0 -g -fsanitize=address -fno-omit-frame-pointer -Wall -Wextra ")
+  set (CMAKE_CXX_FLAGS_COVERAGE        "-O0 -g --coverage") # --coverage equivalent to -fprofile-arcs -ftest-coverage for recent compilers
 
   set (CXX_LIBRARIES          stdc++)
   set (CXX_LIBRARIES_FLAG        )
 
 elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Intel")
 
+  #set (CMAKE_CXX_FLAGS "-std=c++11 -fpic -funsigned-char -Wall -Wcheck -Wshadow -Wpointer-arith -Wuninitialized -Wunused -wd869,3656,177,2196")
   set (CMAKE_CXX_FLAGS "-std=c++11 -fpic -funsigned-char -Wall -Wcheck -Wshadow -Wpointer-arith -Wuninitialized -Wunused -wd2196")
 
   set (CMAKE_CXX_FLAGS_RELEASE "-O3")
@@ -348,6 +372,7 @@ elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Intel")
   set (CMAKE_CXX_FLAGS_RELWITHDEBINFO  "${CMAKE_CXX_FLAGS_RELEASE} -g")
   set (CMAKE_CXX_FLAGS_MINSIZEREL      "-O2 -g")
   set (CMAKE_CXX_FLAGS_SANITIZE        "-g -O0 -traceback -w2")
+  set (CMAKE_CXX_FLAGS_COVERAGE        "-g -O0 -traceback -w2")
 
   set (CXX_LIBRARIES          -cxxlib)
   set (CXX_LIBRARIES_FLAG        )
@@ -360,6 +385,7 @@ elseif (CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang")
   set (CMAKE_CXX_FLAGS_RELWITHDEBINFO  "-O3 -g")
   set (CMAKE_CXX_FLAGS_MINSIZEREL      "-O2")
   set (CMAKE_CXX_FLAGS_SANITIZE        "-O0 -g -fsanitize=address -fno-omit-frame-pointer")
+  set (CMAKE_CXX_FLAGS_COVERAGE        "-g -O0")
 
   set (CXX_LIBRARIES             )
   set (CXX_LIBRARIES_FLAG        )
@@ -372,6 +398,7 @@ elseif (CMAKE_CXX_COMPILER_ID STREQUAL "IntelLLVM")
   set (CMAKE_CXX_FLAGS_RELWITHDEBINFO  "-O3 -g")
   set (CMAKE_CXX_FLAGS_MINSIZEREL      "-O2")
   set (CMAKE_CXX_FLAGS_SANITIZE        "-O0 -g -fsanitize=address -fno-omit-frame-pointer")
+  set (CMAKE_CXX_FLAGS_COVERAGE "-g -O0")
 
   set (CXX_LIBRARIES             )
   set (CXX_LIBRARIES_FLAG        )
@@ -384,6 +411,7 @@ elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
   set (CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O3 -g")
   set (CMAKE_CXX_FLAGS_MINSIZEREL     "-O2")
   set (CMAKE_CXX_FLAGS_SANITIZE       "-O0 -g -fsanitize=address -fno-omit-frame-pointer")
+  set (CMAKE_CXX_FLAGS_COVERAGE       "-g -O0")
 
   set (CXX_LIBRARIES             )
   set (CXX_LIBRARIES_FLAG        )
@@ -397,6 +425,7 @@ elseif (CMAKE_CXX_COMPILER_ID MATCHES "XL")
   set (CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O3 -g")
   set (CMAKE_CXX_FLAGS_MINSIZEREL     "-O2")
   set (CMAKE_CXX_FLAGS_SANITIZE       "-g -qfullpath")
+  set (CMAKE_CXX_FLAGS_COVERAGE        "-g -qfullpath")
 
   set(CXX_LIBRARIES stdc++ ibmc++ ${CXX_LIBRARIES})
   if (${HOSTNAME} STREQUAL "tanit")
@@ -413,6 +442,7 @@ elseif (CMAKE_CXX_COMPILER_ID STREQUAL "PGI")
   set (CMAKE_CXX_FLAGS_RELWITHDEBINFO  "${CMAKE_CXX_FLAGS_RELEASE} -g")
   set (CMAKE_CXX_FLAGS_MINSIZEREL      "-O2")
   set (CMAKE_CXX_FLAGS_SANITIZE        "-g -Mbounds")
+  set (CMAKE_CXX_FLAGS_COVERAGE        "-g -Mbounds")
 
   set (CXX_LIBRARIES             )
   set (CXX_LIBRARIES_FLAG        )
@@ -427,6 +457,7 @@ elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Cray")
   set (CMAKE_CXX_FLAGS_RELWITHDEBINFO  "${CMAKE_CXX_FLAGS_RELEASE} -g")
   set (CMAKE_CXX_FLAGS_MINSIZEREL      "-O2")
   set (CMAKE_CXX_FLAGS_SANITIZE        "-g")
+  set (CMAKE_CXX_FLAGS_COVERAGE        "-g")
 
   set (CXX_LIBRARIES             )
   set (CXX_LIBRARIES_FLAG        )
@@ -441,6 +472,7 @@ elseif (CMAKE_CXX_COMPILER_ID STREQUAL "PathScale")
   set (CMAKE_CXX_FLAGS_RELWITHDEBINFO  "${CMAKE_CXX_FLAGS_RELEASE} -g")
   set (CMAKE_CXX_FLAGS_MINSIZEREL      "-O2")
   set (CMAKE_CXX_FLAGS_SANITIZE        "-g")
+  set (CMAKE_CXX_FLAGS_COVERAGE        "-g")
 
   set (CXX_LIBRARIES             )
   set (CXX_LIBRARIES_FLAG        )
@@ -456,6 +488,7 @@ else ()
   set (CMAKE_CXX_FLAGS_RELWITHDEBINFO  "${CMAKE_CXX_FLAGS_RELEASE}")
   set (CMAKE_CXX_FLAGS_MINSIZEREL      "-O")
   set (CMAKE_CXX_FLAGS_SANITIZE        "-g")
+  set (CMAKE_CXX_FLAGS_COVERAGE        "-g")
 
   set (CXX_LIBRARIES             )
   set (CXX_LIBRARIES_FLAG        )
@@ -469,6 +502,7 @@ set (CMAKE_CXX_FLAGS_PROFILING       "${CMAKE_CXX_FLAGS_PROFILING}" CACHE STRING
 set (CMAKE_CXX_FLAGS_RELWITHDEBINFO  "${CMAKE_CXX_FLAGS_RELWITHDEBINFO}" CACHE STRING "Flags used by the compiler during release builds with debug info." FORCE)
 set (CMAKE_CXX_FLAGS_MINSIZEREL      "${CMAKE_CXX_FLAGS_MINSIZEREL}" CACHE STRING "Flags used by the compiler during release builds for minimum size" FORCE)
 set (CMAKE_CXX_FLAGS_SANITIZE        "${CMAKE_CXX_FLAGS_SANITIZE}" CACHE STRING "Flags used by the compiler during sanitize builds" FORCE)
+set (CMAKE_CXX_FLAGS_COVERAGE         "${CMAKE_CXX_FLAGS_COVERAGE}" CACHE STRING "Flags used by the compiler during coverage builds." FORCE)
 
 set (CXX_LIBRARIES "${CXX_LIBRARIES}" CACHE STRING "C++ libraries" FORCE)
 set (CXX_LIBRARIES_FLAG "${CXX_LIBRARIES_FLAG}" CACHE STRING "C++ flags" FORCE)
@@ -477,10 +511,3 @@ set (PASS_DEFAULT_FLAGS 1 CACHE STRING "")
 mark_as_advanced (CMAKE_CXX_FLAGS_PROFILING CMAKE_CXX_FLAGS_SANITIZE CXX_LIBRARIES CXX_LIBRARIES_FLAG PASS_DEFAULT_FLAGS)
 endif()
 
-# > Some inf for Sanitize
-# export LSAN_OPTIONS=suppressions=suppression_file_lsan.txt
-# (Inside directory tests)
-# leak:util_buf_grow
-# leak:librxm-fi.so
-# leak:*MPI*
-# leak:*mpi*

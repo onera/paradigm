@@ -12,10 +12,10 @@ cmake_policy(VERSION 3.16)
 # Internal CMake module (shared with ParaDiGMA or CWIPI)
 #------------------------------------------------------------------------------
 
-if (NOT (PDM_IN_CWP))
+#if (NOT (PDM_IN_CWP))
   set(PDM_CMAKE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
   set(CMAKE_MODULE_PATH "${PDM_CMAKE_DIR}/modules")
-endif()
+#endif()
 
 include(${CMAKE_MODULE_PATH}/version.cmake)
 project(PDM VERSION ${PDM_DEF_VERSION_MAJOR} LANGUAGES C CXX)
