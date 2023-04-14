@@ -22,7 +22,9 @@ Help()
   echo "-n <number of ranks>                Number of ranks (default : 2)"
   echo "-no_log_vtk                         Exit on error if test writes some log and vtk files"
   echo "-n_avail_rank                       Number of available ranks for script"
+  echo "-n_avail_rank                       Number of available ranks for script"
   echo "-t <\"test name and its options\">  Test name and its options "
+  echo "-output-junit  <file>               Export to Format XML JUnit"
   echo
 }
 
@@ -35,7 +37,7 @@ Dump_mem()
   minRank=-1
   maxRank=-1
   rank=0
-  
+
   if [ ${IsIntelMPI} -gt 0 ] || [ ${IsSrunMPI} -gt 0 ]
   then
     listErrFile=$(ls $1.*)
@@ -184,6 +186,8 @@ IsSrunMPI=0
 NAvailRank=24
 failedTest=()
 testWithOutput=()
+exportjunit=1
+JUnitFile=""
 
 while [ -n "$1" ]
 do
@@ -198,6 +202,8 @@ case "$1" in
               IsSrunMPI=1;;
     -no_log_vtk) ForbidVtk=1;;
     -n_avail_rank) NAvailRank="$2"
+        shift;;
+    -exportjunit) JUnitFile="$2"
         shift;;
     -h) Help
         exit;;

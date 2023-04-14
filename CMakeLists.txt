@@ -509,6 +509,17 @@ endif()
 configure_file(${PROJECT_SOURCE_DIR}/script/pdm_run.in "${PROJECT_BINARY_DIR}/pdm_run"
                @ONLY)
 
+ #
+ # Voir comment mieux faire !
+
+configure_file(${PROJECT_SOURCE_DIR}/script/pdm_run.in "${PROJECT_BINARY_DIR}/test/pdm_run"
+               @ONLY)
+
+if(PDM_ENABLE_EXTENSION_PDMA)
+ configure_file(${PROJECT_SOURCE_DIR}/script/pdm_run.in "${PROJECT_BINARY_DIR}/extensions/paradigma/test/pdm_run"
+               @ONLY)
+endif()
+
 configure_file(${PROJECT_SOURCE_DIR}/script/pdm_launch.in "${PROJECT_BINARY_DIR}/pdm_launch"
                @ONLY)
 
