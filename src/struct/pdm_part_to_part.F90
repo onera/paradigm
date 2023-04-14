@@ -316,17 +316,22 @@ subroutine PDM_part_to_part_iexch (ptp,              &
                                     n_part1, &
                                     n_part2)
 
-  call c_f_pointer(c_part2_stride,    &
-                   part2_stride%cptr, &
-                   [n_part2])
+  if (t_stride .eq. PDM_STRIDE_VAR_INTERLACED) then
+
+    call c_f_pointer(c_part2_stride,    &
+                     part2_stride%cptr, &
+                     [n_part2])
+
+    allocate(part2_stride%length(n_part2))
+    part2_stride%type = PDM_TYPE_INT
+
+  end if
 
   call c_f_pointer(c_part2_data,    &
                    part2_data%cptr, &
                    [n_part2])
 
-  allocate(part2_stride%length(n_part2))
   allocate(part2_data%length(n_part2))
-  part2_stride%type = PDM_TYPE_INT
   part2_data%type = part1_data%type
   part2_data%s_data = part1_data%s_data
 
