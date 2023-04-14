@@ -145,6 +145,11 @@ _block_std_free
     }
   }
 
+  if (_block_std->cell_centers_to_compute != NULL) {
+    free(_block_std->cell_centers_to_compute);
+    _block_std->cell_centers_to_compute = NULL;
+  }
+
   if (_block_std->_parent_num != NULL) {
     if (_block_std->parent_num_owner == PDM_OWNERSHIP_KEEP) {
       for (int i = 0; i < _block_std->n_part; i++) {
