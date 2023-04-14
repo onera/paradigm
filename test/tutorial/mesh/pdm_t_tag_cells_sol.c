@@ -413,17 +413,19 @@ int main(int argc, char *argv[])
    *  Visualize cell tags
    */
   const char* field_name[] = {"cell_tag", 0 };
-  PDM_vtk_write_std_elements("cell_tag.vtk",
-                             n_vtx,
-                             vtx_coord,
-                             NULL,
-                             elt_type,
-                             n_cell,
-                             cell_vtx,
-                             NULL,
-                             1,
-                             field_name,
-              (const int **) &cell_tag);
+  if(0 == 1) {
+    PDM_vtk_write_std_elements("cell_tag.vtk",
+                               n_vtx,
+                               vtx_coord,
+                               NULL,
+                               elt_type,
+                               n_cell,
+                               cell_vtx,
+                               NULL,
+                               1,
+                               field_name,
+                (const int **) &cell_tag);
+  }
 
 
 
@@ -505,17 +507,19 @@ int main(int argc, char *argv[])
   /*
    *  Visualize 'expanded' cell tags
    */
-  PDM_vtk_write_std_elements("expanded_cell_tag.vtk",
-                             n_vtx,
-                             vtx_coord,
-                             NULL,
-                             elt_type,
-                             n_cell,
-                             cell_vtx,
-                             NULL,
-                             1,
-                             field_name,
-              (const int **) &cell_tag);
+  if(1 == 0) {
+    PDM_vtk_write_std_elements("expanded_cell_tag.vtk",
+                               n_vtx,
+                               vtx_coord,
+                               NULL,
+                               elt_type,
+                               n_cell,
+                               cell_vtx,
+                               NULL,
+                               1,
+                               field_name,
+                (const int **) &cell_tag);
+  }
 
 
   /* Free memory */

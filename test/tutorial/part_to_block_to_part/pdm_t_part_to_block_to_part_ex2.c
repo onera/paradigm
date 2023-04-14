@@ -140,7 +140,7 @@ int main(int argc, char *argv[])
     pstrid      [i] = 1;
   }
 
-  if(1 == 1) {
+  if(0 == 1) {
     PDM_log_trace_array_long(pln_to_to_gn, pn_elmt, "pln_to_to_gn : ");
   }
 
@@ -155,7 +155,7 @@ int main(int argc, char *argv[])
   PDM_g_num_t *pln_to_to_gn_child = PDM_gnum_get(gen_gnum, 0);
   int pn_elmt_child = PDM_gnum_n_elt_get(gen_gnum, 0);
 
-  if(1 == 1) {
+  if(0 == 1) {
     PDM_log_trace_array_long(pln_to_to_gn_child, pn_elmt_child, "pln_to_to_gn_child : ");
   }
 
@@ -195,7 +195,7 @@ int main(int argc, char *argv[])
     dstrid_counter += dstrid[i];
   }
 
-  if(1 == 1) {
+  if(0 == 1) {
     PDM_log_trace_array_long(block_gnum, nelmt_proc, "block_gnum : ");
     PDM_log_trace_array_int(dfield, dstrid_counter, "dfield : ");
   }
@@ -214,7 +214,7 @@ int main(int argc, char *argv[])
     dfield_summed[i] = partial_sum;
   }
 
-  if(1 == 1) {
+  if(0 == 1) {
     PDM_log_trace_array_int(dfield_summed, nelmt_proc, "dfield_summed : ");
   }
 
@@ -241,9 +241,11 @@ int main(int argc, char *argv[])
                        (void **) &pfield);
 
   /* Check summed values in partitions */
-  log_trace("Part vision :\n");
-  for (int i = 0; i < pn_elmt_child; i++) {
-    log_trace("elmt #"PDM_FMT_G_NUM" : sum = %d\n", pln_to_to_gn_child[i], pfield[i]);
+  if(1 == 0) {
+    log_trace("Part vision :\n");
+    for (int i = 0; i < pn_elmt_child; i++) {
+      log_trace("elmt #"PDM_FMT_G_NUM" : sum = %d\n", pln_to_to_gn_child[i], pfield[i]);
+    }
   }
 
   /* Free entities */

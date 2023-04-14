@@ -511,28 +511,29 @@ int main(int argc, char *argv[])
   PDM_UNUSED(dt_cpu_s);
 
   /* Output */
+  if(1 == 0) {
+    for (int i = 0; i < n_vtx; i++) {
 
-  for (int i = 0; i < n_vtx; i++) {
+      log_trace("Sommet: %d, Vertices: ", i);
 
-    log_trace("Sommet: %d, Vertices: ", i);
+      for (int j = vtx_ordered_vtx_neighbours_idx[i]; j < vtx_ordered_vtx_neighbours_idx[i+1]; j++) {
+        log_trace(" %d ", vtx_ordered_vtx_neighbours[j]);
+      }
 
-    for (int j = vtx_ordered_vtx_neighbours_idx[i]; j < vtx_ordered_vtx_neighbours_idx[i+1]; j++) {
-      log_trace(" %d ", vtx_ordered_vtx_neighbours[j]);
+      log_trace(", Faces: ");
+
+      for (int j = vtx_ordered_face_neighbours_idx[i]; j < vtx_ordered_face_neighbours_idx[i+1]; j++) {
+        log_trace(" %d ", vtx_ordered_face_neighbours[j]);
+      }
+
+      log_trace("\n");
+
     }
-
-    log_trace(", Faces: ");
-
-    for (int j = vtx_ordered_face_neighbours_idx[i]; j < vtx_ordered_face_neighbours_idx[i+1]; j++) {
-      log_trace(" %d ", vtx_ordered_face_neighbours[j]);
-    }
-
-    log_trace("\n");
-
   }
 
   /* Output mesh in vtk format TO DO change if not triangles anymore */
 
-  if (1 == 1) {
+  if (0 == 1) {
     char filename[999];
 
     sprintf(filename, "mesh.vtk");

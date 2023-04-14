@@ -193,9 +193,11 @@ int main(int argc, char *argv[])
   }
 
   PDM_g_num_t *block_g_num = PDM_part_to_block_block_gnum_get(ptb);
-  log_trace("Block vision :\n");
-  for (int i = 0; i < n_elt_block; i++) {
-    log_trace("elmt #"PDM_FMT_G_NUM" : sum = %d\n", block_g_num[i], summed_block_data[i]);
+  if(1 == 0) {
+    log_trace("Block vision :\n");
+    for (int i = 0; i < n_elt_block; i++) {
+      log_trace("elmt #"PDM_FMT_G_NUM" : sum = %d\n", block_g_num[i], summed_block_data[i]);
+    }
   }
 
 
@@ -203,7 +205,7 @@ int main(int argc, char *argv[])
    *  3) Send summed values back to initial partitions
    */
   /* First method (easier) */
-  log_trace("\n\n~~~ Method 1 ~~~\n");
+  // log_trace("\n\n~~~ Method 1 ~~~\n");
   PDM_block_to_part_t *btp = PDM_block_to_part_create_from_sparse_block(block_g_num,
                                                                         n_elt_block,
                                                  (const PDM_g_num_t **) &pln_to_to_gn,
@@ -224,21 +226,25 @@ int main(int argc, char *argv[])
 
 
   /* Check summed values in partitions */
-  log_trace("Part vision :\n");
-  for (int i = 0; i < pn_elmt; i++) {
-    log_trace("elmt #"PDM_FMT_G_NUM" : sum = %d\n", pln_to_to_gn[i], pfield[i]);
+  if(1 == 0) {
+    log_trace("Part vision :\n");
+    for (int i = 0; i < pn_elmt; i++) {
+      log_trace("elmt #"PDM_FMT_G_NUM" : sum = %d\n", pln_to_to_gn[i], pfield[i]);
+    }
   }
 
 
   /* Alternative method (more involved) */
-  log_trace("\n\n~~~ Method 2 ~~~\n");
+  // log_trace("\n\n~~~ Method 2 ~~~\n");
   PDM_array_reset_int(block_stride, n_elt_block, 1);
   PDM_g_num_t *distrib_full = PDM_part_to_block_adapt_partial_block_to_block(ptb,
                                                                              &block_stride,
                                                                              distrib_init_elmt[n_rank]);
-  PDM_log_trace_array_long(distrib_full, n_rank + 1, "distrib_full : ");
-  PDM_log_trace_array_int(block_stride, (int) (distrib_full[i_rank+1] - distrib_full[i_rank]), "block_stride : ");
-  PDM_log_trace_array_int(summed_block_data, n_elt_block, "summed_block_data : ");
+  if(1 == 0) {
+    PDM_log_trace_array_long(distrib_full, n_rank + 1, "distrib_full : ");
+    PDM_log_trace_array_int(block_stride, (int) (distrib_full[i_rank+1] - distrib_full[i_rank]), "block_stride : ");
+    PDM_log_trace_array_int(summed_block_data, n_elt_block, "summed_block_data : ");
+  }
 
   btp = PDM_block_to_part_create(distrib_full,
           (const PDM_g_num_t **) &pln_to_to_gn,
@@ -261,9 +267,11 @@ int main(int argc, char *argv[])
 
 
   /* Check summed values in partitions */
-  log_trace("Part vision :\n");
-  for (int i = 0; i < pn_elmt; i++) {
-    log_trace("elmt #"PDM_FMT_G_NUM" : sum = %d\n", pln_to_to_gn[i], part_data2[0][i]);
+  if(1 == 0) {
+    log_trace("Part vision :\n");
+    for (int i = 0; i < pn_elmt; i++) {
+      log_trace("elmt #"PDM_FMT_G_NUM" : sum = %d\n", pln_to_to_gn[i], part_data2[0][i]);
+    }
   }
 
   PDM_part_to_block_free(ptb);

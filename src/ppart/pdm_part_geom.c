@@ -26,6 +26,7 @@
 #include "pdm_vtk.h"
 #include "pdm_partitioning_algorithm.h"
 #include "pdm_dgeom_elem.h"
+#include "pdm_array.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -168,6 +169,80 @@ PDM_dcompute_cell_center
  * Public function definitions
  *============================================================================*/
 
+void
+PDM_part_entity_geom
+(
+ PDM_part_geom_t     method,
+ const int           n_part,
+ const PDM_MPI_Comm  comm,
+ const PDM_g_num_t   dn_entity,
+ const double       *dentity_coord,
+ const int          *dentity_weight,
+       int          *dentity_part
+)
+{
+  PDM_UNUSED(method);
+  assert (method == PDM_PART_GEOM_HILBERT);
+
+  const int dim = 3;
+
+  /** TRAITEMENT HILBERT FVM **/
+  PDM_hilbert_code_t *hilbert_codes     = (PDM_hilbert_code_t *) malloc (dn_entity * sizeof(PDM_hilbert_code_t));
+
+  /** Initialisation **/
+
+  double extents[2*dim]; /** DIM x 2**/
+
+  /** Get EXTENTS **/
+  PDM_hilbert_get_coord_extents_par(dim, dn_entity, dentity_coord, extents, comm);
+
+  /** Hilbert Coordinates Computation **/
+  PDM_hilbert_encode_coords(dim, PDM_HILBERT_CS, extents, dn_entity, dentity_coord, hilbert_codes);
+
+  int n_rank;
+  PDM_MPI_Comm_size (comm, &n_rank);
+
+  PDM_hilbert_code_t *hilbert_codes_idx = (PDM_hilbert_code_t *) malloc ((n_rank+1)*n_part * sizeof(PDM_hilbert_code_t));
+
+  int * weight = (int *) malloc (dn_entity * sizeof(int));
+  if (dentity_weight != NULL) {
+    for(int i = 0; i < dn_entity; ++i) {
+      weight [i] = dentity_weight [i];
+    }
+  }
+  else {
+    for(int i = 0; i < dn_entity; ++i) {
+      weight [i] = 1;
+    }
+  }
+
+  int n_total_part;
+  PDM_MPI_Allreduce ((void *) &n_part, &n_total_part, 1, PDM_MPI_INT, PDM_MPI_SUM, comm);
+
+  PDM_hilbert_build_rank_index (dim,
+                                n_total_part,
+                                dn_entity,
+                                hilbert_codes,
+                                weight,
+                                NULL,
+                                hilbert_codes_idx,
+                                comm);
+
+  free(weight);
+
+  /** Remplissage de cell_parts -> en fct des codes Hilbert **/
+
+  for(int i = 0; i < dn_entity; ++i) {
+    size_t quantile = PDM_hilbert_quantile_search(n_total_part,
+                                                hilbert_codes[i],
+                                                hilbert_codes_idx);
+    dentity_part[i] = (int) quantile;
+
+  }
+
+  free(hilbert_codes_idx);
+  free(hilbert_codes);
+}
 
 /**
  *
@@ -210,22 +285,14 @@ PDM_part_geom
  const PDM_g_num_t  *distrib_face,
  const double       *dvtx_coord,
  const PDM_g_num_t  *distrib_vtx,
- int                *dcell_part
+       int          *dcell_part
 )
 {
-
   assert (method == PDM_PART_GEOM_HILBERT);
-
-  const int dim = 3;
-
-  double *barycenter_coords = (double *) malloc (dn_cell * 3 * sizeof(double ));
-
-  PDM_hilbert_code_t *hilbert_codes     = (PDM_hilbert_code_t *) malloc (dn_cell * sizeof(PDM_hilbert_code_t));
-  // PDM_hilbert_code_t *tmp_hilbert_codes = (PDM_hilbert_code_t *) malloc (dn_cell * sizeof(PDM_hilbert_code_t));
-
   /*
    * cell center computation
    */
+  double *barycenter_coords = (double *) malloc (dn_cell * 3 * sizeof(double ));
   PDM_dcompute_cell_center (comm,
                             dn_cell,
                             dcell_face_idx,
@@ -238,88 +305,150 @@ PDM_part_geom
                             barycenter_coords);
 
 
-  /** TRAITEMENT HILBERT FVM **/
-
-	/** Initialisation **/
-
-  double extents[2*dim]; /** DIM x 2**/
-
-	/** Get EXTENTS **/
-  PDM_hilbert_get_coord_extents_par(dim, dn_cell, barycenter_coords, extents, comm);
-
-  // int i_rank;
-  // PDM_MPI_Comm_rank  (comm, &i_rank);
-  // char filename[999];
-  // sprintf(filename, "barycenter_coords_%2.2d.vtk", i_rank);
-  // PDM_vtk_write_point_cloud(filename,
-  //                           dn_cell,
-  //                           barycenter_coords,
-  //                           NULL,
-  //                           NULL);
-  // PDM_log_trace_array_double(extents, 6, "extents :: ");
-  // PDM_log_trace_array_double(barycenter_coords, 3*dn_cell, "barycenter_coords :: ");
-
-	/** Hilbert Coordinates Computation **/
-  PDM_hilbert_encode_coords(dim, PDM_HILBERT_CS, extents, dn_cell, barycenter_coords, hilbert_codes);
-
- //  for (int i = 0; i < dn_cell; ++i) {
- //    tmp_hilbert_codes [i] = hilbert_codes [i];
-	// }
-  ///** Calcul des index des codes Hilbert **/
-  // int * hilbert_order = (int * ) malloc (dn_cell * sizeof(int));
-  // for (int i = 0; i < dn_cell; ++i) {
-  //   hilbert_order [i] = i;
-  // }
-  // assert (sizeof(double) == sizeof(PDM_hilbert_code_t));
-  // PDM_sort_double (tmp_hilbert_codes, hilbert_order, dn_cell);
-  // free(tmp_hilbert_codes);
-
-  int n_rank;
-  PDM_MPI_Comm_size (comm, &n_rank);
-
-  PDM_hilbert_code_t *hilbert_codes_idx = (PDM_hilbert_code_t *) malloc ((n_rank+1)*n_part * sizeof(PDM_hilbert_code_t));
-
-  int * weight = (int *) malloc (dn_cell * sizeof(int));
-  if (dcell_weight != NULL) {
-    for(int i = 0; i < dn_cell; ++i) {
-		  weight [i] = dcell_weight [i];
-    }
-  }
-  else {
-    for(int i = 0; i < dn_cell; ++i) {
-		  weight [i] = 1;
-    }
-  }
-
-  int n_total_part;
-  PDM_MPI_Allreduce ((void *) &n_part, &n_total_part, 1, PDM_MPI_INT, PDM_MPI_SUM, comm);
-
-  PDM_hilbert_build_rank_index (dim,
-                                n_total_part,
-                                dn_cell,
-                                hilbert_codes,
-                                weight,
-                                NULL,
-                                hilbert_codes_idx,
-                                comm);
-
-  free(weight);
-
-  /** Remplissage de cell_parts -> en fct des codes Hilbert **/
-
-  for(int i = 0; i < dn_cell; ++i) {
-    size_t quantile = PDM_hilbert_quantile_search(n_total_part,
-                                                hilbert_codes[i],
-                                                hilbert_codes_idx);
-    dcell_part [i] = (int) quantile;
-
-  }
+  PDM_part_entity_geom(method,
+                       n_part,
+                       comm,
+                       dn_cell,
+                       barycenter_coords,
+                       dcell_weight,
+                       dcell_part);
 
   free(barycenter_coords);
-  free(hilbert_codes_idx);
-  // free(hilbert_order);
-  free(hilbert_codes);
+}
 
+
+void
+PDM_part_geom_0d
+(
+ PDM_part_geom_t     method,
+ const int           n_part,
+ const PDM_MPI_Comm  comm,
+ const int           dn_vtx,
+ const double       *dvtx_coord,
+ const int          *dvtx_weight,
+       int          *dvtx_part
+)
+{
+  PDM_part_entity_geom(method,
+                       n_part,
+                       comm,
+                       dn_vtx,
+                       dvtx_coord,
+                       dvtx_weight,
+                       dvtx_part);
+}
+
+void
+PDM_part_geom_1d
+(
+ PDM_part_geom_t     method,
+ const int           n_part,
+ const PDM_MPI_Comm  comm,
+ const int           dn_edge,
+ const int           dn_vtx,
+ const PDM_g_num_t  *dedge_vtx,
+ const double       *dvtx_coord,
+ const int          *dedge_weight,
+       int          *dedge_part
+)
+{
+  PDM_g_num_t *distrib_vtx = PDM_compute_entity_distribution(comm, dn_vtx);
+
+  int *dedge_vtx_idx = PDM_array_new_idx_from_const_stride_int(2, dn_edge);
+
+  double *dedge_center = (double *) malloc(sizeof(double) * dn_edge * 3);
+  PDM_compute_center_from_descending_connectivity(dedge_vtx_idx,
+                                                  dedge_vtx,
+                                                  dn_edge,
+                                                  distrib_vtx,
+                                                  dedge_center,
+                                  (double *)      dvtx_coord,
+                                                  comm);
+
+  PDM_part_entity_geom(method,
+                       n_part,
+                       comm,
+                       dn_edge,
+                       dedge_center,
+                       dedge_weight,
+                       dedge_part);
+
+  free(distrib_vtx);
+  free(dedge_center);
+  free(dedge_vtx_idx);
+}
+
+void
+PDM_part_geom_2d
+(
+ PDM_part_geom_t     method,
+ const int           n_part,
+ const PDM_MPI_Comm  comm,
+ const int           dn_face,
+ const int           dn_edge,
+ const int           dn_vtx,
+ const int          *dface_vtx_idx,
+ const PDM_g_num_t  *dface_vtx,
+ const int          *dface_edge_idx,
+ const PDM_g_num_t  *dface_edge,
+ const PDM_g_num_t  *dedge_vtx,
+ const double       *dvtx_coord,
+ const int          *dface_weight,
+       int          *dface_part
+)
+{
+
+  PDM_g_num_t *distrib_vtx = PDM_compute_entity_distribution(comm, dn_vtx);
+  double *dface_center = (double *) malloc(sizeof(double) * dn_face * 3);
+
+  if(dface_vtx_idx != NULL) {
+    PDM_compute_center_from_descending_connectivity(dface_vtx_idx,
+                                                    dface_vtx,
+                                                    dn_face,
+                                                    distrib_vtx,
+                                                    dface_center,
+                                    (double *)      dvtx_coord,
+                                                    comm);
+
+  } else {
+    assert(dface_edge_idx != NULL);
+    int *dedge_vtx_idx = PDM_array_new_idx_from_const_stride_int(2, dn_edge);
+
+    double *dedge_center = (double *) malloc(sizeof(double) * dn_edge * 3);
+
+    PDM_compute_center_from_descending_connectivity(dedge_vtx_idx,
+                                                    dedge_vtx,
+                                                    dn_edge,
+                                                    distrib_vtx,
+                                                    dedge_center,
+                                    (double *)      dvtx_coord,
+                                                    comm);
+
+    PDM_g_num_t *distrib_edge = PDM_compute_entity_distribution(comm, dn_edge);
+    PDM_compute_center_from_descending_connectivity(dface_edge_idx,
+                                                    dface_edge,
+                                                    dn_face,
+                                                    distrib_edge,
+                                                    dface_center,
+                                    (double *)      dedge_center,
+                                                    comm);
+
+
+    free(dedge_vtx_idx);
+    free(dedge_center);
+    free(distrib_edge);
+  }
+
+  PDM_part_entity_geom(method,
+                       n_part,
+                       comm,
+                       dn_face,
+                       dface_center,
+                       dface_weight,
+                       dface_part);
+
+  free(distrib_vtx);
+  free(dface_center);
 }
 
 

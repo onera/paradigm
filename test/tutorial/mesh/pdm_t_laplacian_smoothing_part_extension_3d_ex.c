@@ -559,13 +559,13 @@ int main(int argc, char *argv[])
 
 
 
-  for (int i = 0; i < pn_vtx; i++) {
-    log_trace("sommet d'indice %d à %d groupes qui sont:", i, (pvtx_group_idx[i+1]- pvtx_group_idx[i]));
-    for (int j = pvtx_group_idx[i]; j < pvtx_group_idx[i+1]; j++) {
-      log_trace(" %d ", pvtx_group[j]);
-    }
-  log_trace("\n");
-  }
+  // for (int i = 0; i < pn_vtx; i++) {
+  //   log_trace("sommet d'indice %d à %d groupes qui sont:", i, (pvtx_group_idx[i+1]- pvtx_group_idx[i]));
+  //   for (int j = pvtx_group_idx[i]; j < pvtx_group_idx[i+1]; j++) {
+  //     log_trace(" %d ", pvtx_group[j]);
+  //   }
+  //   log_trace("\n");
+  // }
 
 
 
@@ -756,20 +756,21 @@ int main(int argc, char *argv[])
 
 
     // Output in vtk format
+    if(0 == 1) {
+      sprintf(filename, "mesh_%2.2d_%2.2d.vtk", i_rank, i_step);
 
-    sprintf(filename, "mesh_%2.2d_%2.2d.vtk", i_rank, i_step);
-
-    PDM_vtk_write_std_elements(filename,
-                               pn_vtx,
-                               pvtx_coord,
-                               vtx_ln_to_gn,
-                               PDM_MESH_NODAL_BAR2,
-                               pn_edge,
-                               pedge_vtx,
-                               NULL,
-                               0,
-                               NULL,
-                               NULL);
+      PDM_vtk_write_std_elements(filename,
+                                 pn_vtx,
+                                 pvtx_coord,
+                                 vtx_ln_to_gn,
+                                 PDM_MESH_NODAL_BAR2,
+                                 pn_edge,
+                                 pedge_vtx,
+                                 NULL,
+                                 0,
+                                 NULL,
+                                 NULL);
+    }
 
     // Initialise pvtx_coord_new
     for (int i = 0; i < pn_vtx; i++) {

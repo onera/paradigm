@@ -135,12 +135,12 @@ int main(int argc, char *argv[])
     pfield      [i] = i_rank;
   }
 
-  if(1 == 1) {
+  if(0 == 1) {
     PDM_log_trace_array_long(pln_to_to_gn, pn_elmt, "pln_to_to_gn : ");
   }
 
 
-  if(1 == 1) {
+  if(0 == 1) {
     PDM_log_trace_array_int(pfield, pn_elmt, "pfield : ");
   }
 
@@ -161,7 +161,7 @@ int main(int argc, char *argv[])
   PDM_g_num_t* distrib_elmt   = PDM_part_to_block_distrib_index_get(ptb);
   const PDM_g_num_t* blk_gnum = PDM_part_to_block_block_gnum_get   (ptb);
 
-  if(1 == 1) {
+  if(0 == 1) {
     PDM_log_trace_array_long(distrib_elmt, n_rank+1       , "distrib_elmt : ");
     PDM_log_trace_array_long(blk_gnum    , n_elmt_in_block, "blk_gnum     : ");
   }
@@ -176,7 +176,7 @@ int main(int argc, char *argv[])
                          NULL,
               (void **)  &dfield);
 
-  if(1 == 1) {
+  if(0 == 1) {
     PDM_log_trace_array_int(dfield, n_elmt_in_block, "dfield     : ");
   }
 
@@ -194,7 +194,7 @@ int main(int argc, char *argv[])
   //                         &request_id);
   // PDM_part_to_block_iexch_wait(ptb, request_id);
 
-  // if(1 == 1) {
+  // if(0 == 1) {
   //   PDM_log_trace_array_int(dfield, n_elmt_in_block, "dfield     : ");
   // }
 

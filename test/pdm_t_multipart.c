@@ -98,6 +98,9 @@ _read_args(int            argc,
     else if (strcmp(argv[i], "-post") == 0) {
       *post = 1;
     }
+    else if (strcmp(argv[i], "-implicit") == 0) {
+      *method = 4;
+    }
     else if (strcmp(argv[i], "-hilbert") == 0) {
       *method = 3;
     }

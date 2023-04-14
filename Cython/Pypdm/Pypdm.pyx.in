@@ -176,6 +176,7 @@ cdef extern from "pdm_para_graph_dual.h":
         PDM_SPLIT_DUAL_WITH_PARMETIS = 1
         PDM_SPLIT_DUAL_WITH_PTSCOTCH = 2
         PDM_SPLIT_DUAL_WITH_HILBERT  = 3
+        PDM_SPLIT_DUAL_WITH_IMPLICIT = 4
 
 cdef extern from "pdm_part_to_part.h":
     ctypedef enum PDM_part_to_part_data_def_t:
@@ -321,6 +322,7 @@ _PDM_CELL_TO_VTX_INTERP_KIND_USER = PDM_CELL_TO_VTX_INTERP_KIND_USER
 _PDM_SPLIT_DUAL_WITH_PARMETIS = PDM_SPLIT_DUAL_WITH_PARMETIS
 _PDM_SPLIT_DUAL_WITH_PTSCOTCH = PDM_SPLIT_DUAL_WITH_PTSCOTCH
 _PDM_SPLIT_DUAL_WITH_HILBERT  = PDM_SPLIT_DUAL_WITH_HILBERT
+_PDM_SPLIT_DUAL_WITH_IMPLICIT = PDM_SPLIT_DUAL_WITH_IMPLICIT
 
 _PDM_EXTRACT_PART_KIND_LOCAL         = PDM_EXTRACT_PART_KIND_LOCAL
 _PDM_EXTRACT_PART_KIND_REEQUILIBRATE = PDM_EXTRACT_PART_KIND_REEQUILIBRATE
@@ -517,6 +519,10 @@ include "pdm_geom.pxi"
 # --------------------
 @COMMENT_NOT_PDMA@include "pdm_mesh_metric.pxi"
 
+# PDM_inside_cloud_surf :
+# --------------------
+@COMMENT_NOT_PDMA@include "pdm_inside_cloud_surf.pxi"
+
 # PDM_mesh_adaptation :
 # --------------------
 #@COMMENT_NOT_PDMA@include "pdm_mesh_adaptation.pxi"
@@ -628,3 +634,7 @@ include "pdm_sphere_vol_gen.pxi"
 # PDM_generate_mesh :
 # --------------------
 include "pdm_generate_mesh.pxi"
+
+# PDM_point_cloud_gen :
+# --------------------
+include "pdm_point_cloud_gen.pxi"

@@ -474,36 +474,38 @@ int main(int argc, char *argv[])
 
 
   /* Visualize cells */
-  char filename_cells[999] = "cells.vtk";
+  if(1 == 0) {
+    char filename_cells[999] = "cells.vtk";
 
-  PDM_vtk_write_std_elements(filename_cells,
-                             n_vtx,
-                             vtx_coord,
-                             NULL,
-                             elt_type,
-                             n_cell,
-                             cell_vtx,
-                             NULL,
-                             0,
-                             NULL,
-                             NULL);
+    PDM_vtk_write_std_elements(filename_cells,
+                               n_vtx,
+                               vtx_coord,
+                               NULL,
+                               elt_type,
+                               n_cell,
+                               cell_vtx,
+                               NULL,
+                               0,
+                               NULL,
+                               NULL);
 
-  /* Visualize bounding boxes */
-  char filename_boxes[999] = "boxes.vtk";
+    /* Visualize bounding boxes */
+    char filename_boxes[999] = "boxes.vtk";
 
-  PDM_vtk_write_boxes(filename_boxes,
-                      n_cell,
-                      cell_bouding_box,
-                      NULL);
+    PDM_vtk_write_boxes(filename_boxes,
+                        n_cell,
+                        cell_bouding_box,
+                        NULL);
 
-  /* Visualize cell centers */
-  char filename_centers[999] = "centers.vtk";
+    /* Visualize cell centers */
+    char filename_centers[999] = "centers.vtk";
 
-  PDM_vtk_write_point_cloud(filename_centers,
-                            n_cell,
-                            cell_centers,
-                            NULL,
-                            NULL);
+    PDM_vtk_write_point_cloud(filename_centers,
+                              n_cell,
+                              cell_centers,
+                              NULL,
+                              NULL);
+  }
 
   /* Free memory */
 

@@ -245,8 +245,8 @@ PDM_geom_elem_pyramid_faces
  *  @param [in]  connectivity          Connectivity
  *  @param [in]  nVertices             Number of vertices
  *  @param [in]  coords                Vertices coordinates
- *  @param [out] center                Center
  *  @param [out] length                Length
+ *  @param [out] center                Center
  *  @param [out] characteristicLength  Characteristic length (active if != NULL)
  *  @param [out] isDegenerated         Degenerated edge indicator (active if != NULL)
  */
@@ -257,8 +257,8 @@ PDM_geom_elem_edges_properties
  const int     nEdges,
  const int    *connectivity,
  const double *coords,
- double       *center,
  double       *length,
+ double       *center,
  double       *characteristicLength,
  int         *isDegenerated
  );

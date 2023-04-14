@@ -5913,8 +5913,8 @@ PDM_mesh_intersection_elt_volume_get
        PDM_geom_elem_edges_properties(n_edge,
                                       edge_vtx,
                                       vtx_coord,
-                                      center,
                                       mi->elt_volume[imesh][ipart],
+                                      center,
                                       NULL,
                                       NULL);
        free(center);
