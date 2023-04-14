@@ -12,10 +12,8 @@ cmake_policy(VERSION 3.16)
 # Internal CMake module (shared with ParaDiGMA or CWIPI)
 #------------------------------------------------------------------------------
 
-#if (NOT (PDM_IN_CWP))
-  set(PDM_CMAKE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
-  set(CMAKE_MODULE_PATH "${PDM_CMAKE_DIR}/modules")
-#endif()
+set(PDM_CMAKE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+set(CMAKE_MODULE_PATH "${PDM_CMAKE_DIR}/modules")
 
 include(${CMAKE_MODULE_PATH}/version.cmake)
 project(PDM VERSION ${PDM_DEF_VERSION_MAJOR} LANGUAGES C CXX)
@@ -44,177 +42,115 @@ set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
 # -----------------
 set(PDM_USE_MULTIPART 0)
 
-if (PDM_IN_CWP)
+# Extensions
+# ----------
 
-  # Extensions
-  # ----------
+option(PDM_ENABLE_EXTENSION_PDMA "Enable advanced functionalities extension" OFF)
 
-  set (PDM_ENABLE_EXTENSION_PDMA OFF)
+# OpenMP
+# ------
 
-  # OpenMP
-  # ------
+option(PDM_ENABLE_OPENMP "Enable OpenMP" OFF)
 
-  set(PDM_ENABLE_OPENMP ${CWP_ENABLE_OPENMP})
+# CUDA
+# ------
 
-  # Enable long for absolute number
-  # -------------------------------
-
-  set(PDM_ENABLE_LONG_G_NUM ON)
-
-  # Pt-scotch
-  # ---------
-
-  set(PDM_ENABLE_PTSCOTCH ${CWP_ENABLE_PTSCOTCH})
-
-  # ParMetis
-  # --------
-
-  set(PDM_ENABLE_PARMETIS ${CWP_ENABLE_PARMETIS})
-
-  # Shared libraries
-  # ----------------
-
-  set(PDM_ENABLE_SHARED ${CWP_ENABLE_SHARED})
-
-  # Static libraries
-  # ----------------
-
-  set(PDM_ENABLE_STATIC ${CWP_ENABLE_STATIC})
-
-  # Check MPI Wrapper
-  # -----------------
-
-  #set(PDM_ENABLE_MPI_CHECK ${CWP_ENABLE_MPI_CHECK})
-
-  # Python Bindings
-  # ---------------
-
-  #set(PDM_ENABLE_PYTHON_BINDINGS ${CWP_ENABLE_PYTHON_BINDINGS})
-
-  # Fortran interface
-  # -----------------
-
-  set(PDM_ENABLE_SHARED_Fortran ${CWP_ENABLE_Fortran})
-
-  set(PDM_ENABLE_SHARED_Fortran_INTERFACE ${CWP_ENABLE_SHARED_Fortran_LIB})
-
-  set(PDM_ENABLE_STATIC_Fortran_INTERFACE ${CWP_ENABLE_STATIC_Fortran_LIB})
-
-  set(PDM_ENABLE_Fortran_MPI_MODULE ${CWP_ENABLE_Fortran_MPI_MODULE})
-
-else ()
-
-  # Extensions
-  # ----------
-
-  option(PDM_ENABLE_EXTENSION_PDMA "Enable advanced functionalities extension" OFF)
-
-  # OpenMP
-  # ------
-
-  option(PDM_ENABLE_OPENMP "Enable OpenMP" OFF)
-
-  # CUDA
-  # ------
-
-  option(PDM_ENABLE_CUDA "Enable CUDA" OFF)
-  if (PDM_ENABLE_CUDA)
-    enable_language(CUDA)
-  endif ()
-
-  # ANISO_AGGLO (only if pdma)
-  # ------
-  if (PDM_ENABLE_EXTENSION_PDMA)
-    option(PDM_ENABLE_ANISO_AGGLO "Enable Anisotropic agglomeration for coarse mesh function" ON)
-
-    if (PDM_ENABLE_ANISO_AGGLO)
-      if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-        if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS 4.8)
-          message(FATAL_ERROR "Insufficient g++ version for Anisotropic agglomeration : set PDM_ENABLE_ANISO_AGGLO to OFF and re-run")
-        endif()
-      elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Intel")
-        if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS 15)
-          message(FATAL_ERROR "Insufficient icpc version for Anisotropic agglomeration : set PDM_ENABLE_ANISO_AGGLO to OFF and re-run")
-        endif()
-      elseif (CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang")
-        if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS 3.2)
-          message(FATAL_ERROR "Insufficient clang version for Anisotropic agglomeration : set PDM_ENABLE_ANISO_AGGLO to OFF and re-run")
-        endif()
-      elseif (CMAKE_CXX_COMPILER_ID MATCHES "XL")
-        if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS 13.1.3)
-          message(FATAL_ERROR "Insufficient xlc++ version for Anisotropic agglomeration : set PDM_ENABLE_ANISO_AGGLO to OFF and re-run")
-        endif()
-      endif ()
-      set (PDM_HAVE_ANISO_AGGLO 1)
-    endif ()
-  endif()
-
-
-  # Enable long for absolute number
-  # -------------------------------
-
-  option(PDM_ENABLE_LONG_G_NUM "Enable long for global number" OFF)
-
-  # Pt-scotch
-  # ---------
-
-  option(PDM_ENABLE_PTSCOTCH "Compile with support for SCOTCH." ON)
-
-  # ParMetis
-  # --------
-
-  option(PDM_ENABLE_PARMETIS "Compile with support for SCOTCH." ON)
-
-  # Shared libraries
-  # ----------------
-
-  option(PDM_ENABLE_SHARED "Build Shared Libraries" OFF)
-
-  # Static libraries
-  # ----------------
-
-  option(PDM_ENABLE_STATIC "Build Static Libraries" ON)
-
-  # Check MPI Wrapper
-  # -----------------
-
-  option(PDM_ENABLE_MPI_CHECK "Check MPI Wrapper" ON)
-
-  # Python Bindings
-  # ---------------
-
-  option(PDM_ENABLE_PYTHON_BINDINGS "Build Python module" OFF)
-
-  # BLAS/LAPACK
-  # -----------
-
-  option(PDM_ENABLE_BLASLAPACK "Build with BLAS/LAPACK" OFF)
-
-  # Fortran interface
-  # -----------------
-
-  option(PDM_ENABLE_Fortran "Build Fortran Interface" ON)
-
-  if (PDM_ENABLE_Fortran)
-    enable_language(Fortran)
-  endif()
-
-  if (PDM_ENABLE_STATIC AND PDM_ENABLE_Fortran)
-    set(PDM_ENABLE_STATIC_Fortran_INTERFACE ON)
-  endif ()
-
-  if (PDM_ENABLE_SHARED AND PDM_ENABLE_Fortran)
-    set(PDM_ENABLE_SHARED_Fortran_INTERFACE ON)
-  endif ()
-
-  option(PDM_ENABLE_Fortran_MPI_MODULE "Use Fortran MPI module" ON)
-
-  # Unit test mpi with doctect
-  # ------
-
-  option(PDM_ENABLE_UNIT_TEST "Enable unit test " OFF)
-
+option(PDM_ENABLE_CUDA "Enable CUDA" OFF)
+if (PDM_ENABLE_CUDA)
+  enable_language(CUDA)
 endif ()
+
+# ANISO_AGGLO (only if pdma)
+# ------
+if (PDM_ENABLE_EXTENSION_PDMA)
+  option(PDM_ENABLE_ANISO_AGGLO "Enable Anisotropic agglomeration for coarse mesh function" ON)
+
+  if (PDM_ENABLE_ANISO_AGGLO)
+    if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+      if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS 4.8)
+        message(FATAL_ERROR "Insufficient g++ version for Anisotropic agglomeration : set PDM_ENABLE_ANISO_AGGLO to OFF and re-run")
+      endif()
+    elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Intel")
+      if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS 15)
+        message(FATAL_ERROR "Insufficient icpc version for Anisotropic agglomeration : set PDM_ENABLE_ANISO_AGGLO to OFF and re-run")
+      endif()
+    elseif (CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang")
+      if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS 3.2)
+        message(FATAL_ERROR "Insufficient clang version for Anisotropic agglomeration : set PDM_ENABLE_ANISO_AGGLO to OFF and re-run")
+      endif()
+    elseif (CMAKE_CXX_COMPILER_ID MATCHES "XL")
+      if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS 13.1.3)
+        message(FATAL_ERROR "Insufficient xlc++ version for Anisotropic agglomeration : set PDM_ENABLE_ANISO_AGGLO to OFF and re-run")
+      endif()
+    endif ()
+    set (PDM_HAVE_ANISO_AGGLO 1)
+  endif ()
+endif()
+
+
+# Enable long for absolute number
+# -------------------------------
+
+option(PDM_ENABLE_LONG_G_NUM "Enable long for global number" OFF)
+
+# Pt-scotch
+# ---------
+
+option(PDM_ENABLE_PTSCOTCH "Compile with support for SCOTCH." ON)
+
+# ParMetis
+# --------
+
+option(PDM_ENABLE_PARMETIS "Compile with support for SCOTCH." ON)
+
+# Shared libraries
+# ----------------
+
+option(PDM_ENABLE_SHARED "Build Shared Libraries" OFF)
+
+# Static libraries
+# ----------------
+
+option(PDM_ENABLE_STATIC "Build Static Libraries" ON)
+
+# Check MPI Wrapper
+# -----------------
+
+option(PDM_ENABLE_MPI_CHECK "Check MPI Wrapper" ON)
+
+# Python Bindings
+# ---------------
+
+option(PDM_ENABLE_PYTHON_BINDINGS "Build Python module" OFF)
+
+# BLAS/LAPACK
+# -----------
+
+option(PDM_ENABLE_BLASLAPACK "Build with BLAS/LAPACK" OFF)
+
+# Fortran interface
+# -----------------
+
+option(PDM_ENABLE_Fortran "Build Fortran Interface" ON)
+
+if (PDM_ENABLE_Fortran)
+  enable_language(Fortran)
+endif()
+
+if (PDM_ENABLE_STATIC AND PDM_ENABLE_Fortran)
+  set(PDM_ENABLE_STATIC_Fortran_INTERFACE ON)
+endif ()
+
+if (PDM_ENABLE_SHARED AND PDM_ENABLE_Fortran)
+  set(PDM_ENABLE_SHARED_Fortran_INTERFACE ON)
+endif ()
+
+option(PDM_ENABLE_Fortran_MPI_MODULE "Use Fortran MPI module" ON)
+
+# Unit test mpi with doctect
+# ------
+
+option(PDM_ENABLE_UNIT_TEST "Enable unit test " OFF)
 
 #------------------------------------------------------------------------------
 # Default build : Release
@@ -250,148 +186,117 @@ CHECK_FUNCTION_EXISTS(gettimeofday PDM_HAVE_GETTIMEOFDAY)
 # Default compiler flags
 #------------------------------------------------------------------------------
 
-if (NOT (PDM_IN_CWP))
 
-   include(${CMAKE_MODULE_PATH}/default_flags.cmake)
-
-endif ()
+include(${CMAKE_MODULE_PATH}/default_flags.cmake)
 
 #------------------------------------------------------------------------------
 # Libraries to add to link
 #------------------------------------------------------------------------------
 
-if (NOT (PDM_IN_CWP))
-
-   set(COMMON_LIBRARIES)
-
-endif ()
+set(COMMON_LIBRARIES)
 
 #------------------------------------------------------------------------------
 # Check dependecies
 #------------------------------------------------------------------------------
 
-if (PDM_IN_CWP)
 
-  # Checck SCOTCH an ParMETIS
-  # -------------------------
+# Check MPI (TODO : check MPI wrapper function check )
+# -------------
 
-  if (PDM_ENABLE_PARMETIS)
-     if (PARMETIS_FOUND)
-        set(PDM_HAVE_PARMETIS 1)
-     endif()
-  endif()
+if (PDM_ENABLE_Fortran)
+  find_package(MPI REQUIRED COMPONENTS C Fortran)
+else()
+  find_package(MPI REQUIRED COMPONENTS C)
+endif()
 
-  if (PDM_ENABLE_PTSCOTCH)
-     if (PTSCOTCH_FOUND)
-        set(PDM_HAVE_PTSCOTCH 1)
-     endif()
-  endif()
+if (PDM_ENABLE_Fortran_MPI_MODULE)
+  set(CMAKE_Fortran_PREPROCESS ON)
+  set (PDM_HAVE_FORTRAN_MPI_MODULE 1)
+endif()
 
-  if (PDM_ENABLE_Fortran_MPI_MODULE)
-    set (PDM_HAVE_FORTRAN_MPI_MODULE 1)
-  endif()
+mark_as_advanced (MPI_EXTRA_LIBRARY MPI_LIBRARY)
 
-else ()
+# ---------------------
+# Check MPI Wrapper
+# ---------------------
 
-  # Check MPI (TODO : check MPI wrapper function check )
-  # -------------
+if (PDM_ENABLE_MPI_CHECK)
+   include(${CMAKE_MODULE_PATH}/CheckMPI.cmake)
+endif()
 
-  if (PDM_ENABLE_Fortran)
-    find_package(MPI REQUIRED COMPONENTS C Fortran)
-  else()
-    find_package(MPI REQUIRED COMPONENTS C)
-  endif()
+# Checck SCOTCH an ParMETIS
+# -------------------------
 
-  if (PDM_ENABLE_Fortran_MPI_MODULE)
-    set(CMAKE_Fortran_PREPROCESS ON)
-    set (PDM_HAVE_FORTRAN_MPI_MODULE 1)
-  endif()
+if (PDM_ENABLE_PARMETIS)
+   find_package(ParMETIS 4.0.3)
+   if (PARMETIS_FOUND)
+      set(PDM_HAVE_PARMETIS 1)
+   endif()
+endif()
 
-  mark_as_advanced (MPI_EXTRA_LIBRARY MPI_LIBRARY)
-
-  # ---------------------
-  # Check MPI Wrapper
-  # ---------------------
-
-  if (PDM_ENABLE_MPI_CHECK)
-     include(${CMAKE_MODULE_PATH}/CheckMPI.cmake)
-  endif()
-
-  # Checck SCOTCH an ParMETIS
-  # -------------------------
-
-  if (PDM_ENABLE_PARMETIS)
-     find_package(ParMETIS 4.0.3)
-     if (PARMETIS_FOUND)
-        set(PDM_HAVE_PARMETIS 1)
-     endif()
-  endif()
-
-  if (PDM_ENABLE_PTSCOTCH)
-     find_package(PTSCOTCH 6.0.0)
-     if (PTSCOTCH_FOUND)
-        set(PDM_HAVE_PTSCOTCH 1)
-     endif()
-  endif()
+if (PDM_ENABLE_PTSCOTCH)
+   find_package(PTSCOTCH 6.0.0)
+   if (PTSCOTCH_FOUND)
+      set(PDM_HAVE_PTSCOTCH 1)
+   endif()
+endif()
 
 
-  if (PDM_ENABLE_BLASLAPACK)
+if (PDM_ENABLE_BLASLAPACK)
 
-    if (CMAKE_C_COMPILER_ID STREQUAL "Intel")
-      set (BLA_VENDOR "Intel10_64lp")
-      find_package(BLAS)
-      find_package(LAPACK)
-      if (BLAS_FOUND AND LAPACK_FOUND)
-        set(PDM_HAVE_MKL 1)
-      endif()
-      unset (BLA_VENDOR)
+  if (CMAKE_C_COMPILER_ID STREQUAL "Intel")
+    set (BLA_VENDOR "Intel10_64lp")
+    find_package(BLAS)
+    find_package(LAPACK)
+    if (BLAS_FOUND AND LAPACK_FOUND)
+      set(PDM_HAVE_MKL 1)
     endif()
-
-    if (NOT BLAS_FOUND)
-      find_package(BLAS)
-    endif()
-
-    if (NOT LAPACK_FOUND)
-      find_package(LAPACK)
-    endif()
-
-    if (BLAS_FOUND)
-      set(PDM_HAVE_BLAS 1)
-    endif()
-
-    if (LAPACK_FOUND)
-      set(PDM_HAVE_LAPACK 1)
-    endif()
-
+    unset (BLA_VENDOR)
   endif()
 
-  # find_package(mmg CONFIG)
-
-  # Check OpenMP (TODO : check MPI wrapper function check )
-  # -------------------------------------------------------
-
-  if (PDM_ENABLE_OPENMP)
-    find_package(OpenMP)
-    if (OPENMP_FOUND)
-      set(PDM_HAVE_OPENMP 1)
-    endif()
+  if (NOT BLAS_FOUND)
+    find_package(BLAS)
   endif()
 
-  # Python bindings
-  # ---------------
-
-  if (PDM_ENABLE_PYTHON_BINDINGS)
-    # NB: cython module must use mpicxx to avoid "mpi.h" not found.
-    find_package(MPI REQUIRED COMPONENTS CXX)
-
-    find_package(Python REQUIRED COMPONENTS Interpreter Development NumPy)
-    find_package(Mpi4Py REQUIRED)
-
-    include(UseCython)
-
+  if (NOT LAPACK_FOUND)
+    find_package(LAPACK)
   endif()
 
-endif ()
+  if (BLAS_FOUND)
+    set(PDM_HAVE_BLAS 1)
+  endif()
+
+  if (LAPACK_FOUND)
+    set(PDM_HAVE_LAPACK 1)
+  endif()
+
+endif()
+
+# find_package(mmg CONFIG)
+
+# Check OpenMP (TODO : check MPI wrapper function check )
+# -------------------------------------------------------
+
+if (PDM_ENABLE_OPENMP)
+  find_package(OpenMP)
+  if (OPENMP_FOUND)
+    set(PDM_HAVE_OPENMP 1)
+  endif()
+endif()
+
+# Python bindings
+# ---------------
+
+if (PDM_ENABLE_PYTHON_BINDINGS)
+  # NB: cython module must use mpicxx to avoid "mpi.h" not found.
+  find_package(MPI REQUIRED COMPONENTS CXX)
+
+  find_package(Python REQUIRED COMPONENTS Interpreter Development NumPy)
+  find_package(Mpi4Py REQUIRED)
+
+  include(UseCython)
+
+endif()
 
 #------------------------------------------------------------------------------
 # Store variable in configure file
@@ -414,22 +319,16 @@ endif ()
 # Doc
 #------------------------------------------------------------------------------
 
-if (NOT (PDM_IN_CWP))
 
-  find_package(Doxygen)
-
-endif ()
+find_package(Doxygen)
 
 #------------------------------------------------------------------------------
 # Print summary of found and not found optional packages
 #------------------------------------------------------------------------------
 
-if (NOT (PDM_IN_CWP))
 
-  include(FeatureSummary)
-  FEATURE_SUMMARY(WHAT ALL)
-
-endif()
+include(FeatureSummary)
+FEATURE_SUMMARY(WHAT ALL)
 
 #------------------------------------------------------------------------------
 # Installation de PDM
@@ -568,8 +467,6 @@ install(FILES "${CMAKE_CURRENT_BINARY_DIR}/pdmConfig.cmake"
 # Affichage du message de fin d'installation
 #------------------------------------------------------------------------------
 
-if (NOT (PDM_IN_CWP))
 
 add_subdirectory(${PDM_CMAKE_DIR}/post-install)
 
-endif()
