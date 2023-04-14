@@ -624,3 +624,7 @@ include "pdm_sphere_surf_gen.pxi"
 # PDM_sphere_vol_gen :
 # --------------------
 include "pdm_sphere_vol_gen.pxi"
+
+# PDM_generate_mesh :
+# --------------------
+include "pdm_generate_mesh.pxi"
