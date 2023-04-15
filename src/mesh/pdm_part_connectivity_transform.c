@@ -246,6 +246,43 @@ const int   *n_entity2,
 
 
 void
+PDM_part_combine_connectivity
+(
+ const int    n_part,
+ int         *n_entity1,
+ int        **entity1_entity2_idx,
+ int        **entity1_entity2,
+ int        **entity2_entity3_idx,
+ int        **entity2_entity3,
+ int       ***entity1_entity3_idx,
+ int       ***entity1_entity3
+)
+{
+  *entity1_entity3_idx = (int ** ) malloc( n_part * sizeof(int *));
+  *entity1_entity3     = (int ** ) malloc( n_part * sizeof(int *));
+
+  int** _entity1_entity3_idx = *entity1_entity3_idx;
+  int** _entity1_entity3     = *entity1_entity3;
+
+  for(int i_part = 0; i_part < n_part; ++i_part) {
+
+    int* _pentity1_entity3_idx;
+    int* _pentity1_entity3;
+
+    PDM_combine_connectivity(n_entity1          [i_part],
+                             entity1_entity2_idx[i_part],
+                             entity1_entity2    [i_part],
+                             entity2_entity3_idx[i_part],
+                             entity2_entity3    [i_part],
+                             &_pentity1_entity3_idx,
+                             &_pentity1_entity3);
+
+    _entity1_entity3_idx[i_part] = _pentity1_entity3_idx;
+    _entity1_entity3[i_part]     = _pentity1_entity3;
+  }
+}
+
+void
 PDM_part_connectivity_to_connectity_idx
 (
 const int    n_part,

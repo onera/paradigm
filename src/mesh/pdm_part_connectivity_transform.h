@@ -67,6 +67,18 @@ const int   *n_entity2,
       int ***entity2_entity1
 );
 
+void
+PDM_part_combine_connectivity
+(
+ const int    n_part,
+ int         *n_entity1,
+ int        **entity1_entity2_idx,
+ int        **entity1_entity2,
+ int        **entity2_entity3_idx,
+ int        **entity2_entity3,
+ int       ***entity1_entity3_idx,
+ int       ***entity1_entity3
+);
 
 void
 PDM_part_connectivity_to_connectity_idx
