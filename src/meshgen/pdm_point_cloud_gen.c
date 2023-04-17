@@ -319,9 +319,15 @@ PDM_dpoint_cloud_gen_cartesian
 
   double      *_pts_coord    = malloc(sizeof(double)      * dn_pts * 3);
 
-  double step_x = (x_max - x_min) / (double) (nx - 1);
-  double step_y = (y_max - y_min) / (double) (ny - 1);
-  double step_z = (z_max - z_min) / (double) (nz - 1);
+  double step_x = 0;
+  double step_y = 0;
+  double step_z = 0;
+  if (nx > 1) 
+    step_x = (x_max - x_min) / (double) (nx - 1);
+  if (ny > 1)
+    step_y = (y_max - y_min) / (double) (ny - 1);
+  if (nz > 1)
+    step_z = (z_max - z_min) / (double) (nz - 1);
 
   for (int i = 0; i < dn_pts; ++i) {
 
