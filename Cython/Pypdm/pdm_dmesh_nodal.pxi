@@ -118,6 +118,7 @@ cdef class DistributedMeshNodal:
     # ************************************************************************
     # > Class attributes
     cdef PDM_dmesh_nodal_t *dmn
+    keep_alive = list()
     # cdef int idmesh
     cdef int n_rank
     # ************************************************************************
@@ -163,6 +164,10 @@ cdef class DistributedMeshNodal:
         # ************************************************************************
 
         # ::::::::::::::::::::::::::::::::::::::::::::::::::
+        self.keep_alive.append(dvtx_coord)
+        # ::::::::::::::::::::::::::::::::::::::::::::::::::
+
+        # ::::::::::::::::::::::::::::::::::::::::::::::::::
         n_vtx = dvtx_coord.shape[0]//3
         PDM_DMesh_nodal_coord_set(self.dmn, n_vtx, <double *> dvtx_coord.data, PDM_OWNERSHIP_USER)
         # ::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -188,6 +193,10 @@ cdef class DistributedMeshNodal:
         # ::::::::::::::::::::::::::::::::::::::::::::::::::
 
         # ::::::::::::::::::::::::::::::::::::::::::::::::::
+        self.keep_alive.append(elmt_list)
+        # ::::::::::::::::::::::::::::::::::::::::::::::::::
+
+        # ::::::::::::::::::::::::::::::::::::::::::::::::::
         for i_elmt, connect in enumerate(elmt_list):
           id_section = PDM_DMesh_nodal_section_add(self.dmn,
                                                    geom_kind,
@@ -204,7 +213,13 @@ cdef class DistributedMeshNodal:
                            NPY.ndarray[NPY.int32_t, mode='c', ndim=1] poly_connectivity_idx, 
                            NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1] poly_connectivity):
         id_section = PDM_DMesh_nodal_section_add(self.dmn, _PDM_GEOMETRY_KIND_SURFACIC, _PDM_MESH_NODAL_POLY_2D)
-        PDM_DMesh_nodal_section_poly2d_set(self.dmn, 
+
+        # ::::::::::::::::::::::::::::::::::::::::::::::::::
+        self.keep_alive.append(poly_connectivity_idx)
+        self.keep_alive.append(poly_connectivity)
+        # ::::::::::::::::::::::::::::::::::::::::::::::::::
+
+        PDM_DMesh_nodal_section_poly2d_set(self.dmn,
                                            _PDM_GEOMETRY_KIND_SURFACIC,
                                            id_section,
                                            poly_connectivity_idx.size-1, # n_elts local
@@ -227,6 +242,10 @@ cdef class DistributedMeshNodal:
                                                  n_group_elmt,
                                                  NULL, NULL, PDM_OWNERSHIP_USER)
         else:
+          # ::::::::::::::::::::::::::::::::::::::::::::::::::
+          self.keep_alive.append(dgroup_elmt_idx)
+          self.keep_alive.append(dgroup_elmt)
+          # ::::::::::::::::::::::::::::::::::::::::::::::::::
           PDM_DMesh_nodal_section_group_elmt_set(self.dmn,
                                                  geom_kind,
                                                  n_group_elmt,
