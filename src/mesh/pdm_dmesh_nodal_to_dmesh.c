@@ -1795,6 +1795,64 @@ _generate_edges_from_dmesh_nodal
 
 static
 void
+_generate_vtx_from_dmesh_nodal
+(
+  _pdm_link_dmesh_nodal_to_dmesh_t *link,
+  int                               post_treat_result
+)
+{
+  PDM_UNUSED(post_treat_result);
+
+  PDM_dmesh_nodal_t* dmesh_nodal = link->dmesh_nodal;
+  assert(dmesh_nodal->ridge    != NULL);
+
+  int n_edge_elt_ridge_tot     = 0;
+  int n_sum_vtx_ridge_edge_tot = 0;
+
+  PDM_dmesh_nodal_elmts_decompose_edges_get_size(dmesh_nodal->ridge, &n_edge_elt_ridge_tot, &n_sum_vtx_ridge_edge_tot);
+
+  /*
+   * Decompose ridge
+   */
+  PDM_g_num_t* delmt_ridge_edge         = (PDM_g_num_t *) malloc(  n_edge_elt_ridge_tot     * sizeof(PDM_g_num_t));
+  int*         dparent_elmt_ridge_pos   = (int         *) malloc(  n_edge_elt_ridge_tot     * sizeof(int        ));
+  int*         delmt_ridge_edge_vtx_idx = (int         *) malloc( (n_edge_elt_ridge_tot +1) * sizeof(int        ));
+  PDM_g_num_t* delmt_ridge_edge_vtx     = (PDM_g_num_t *) malloc(  n_sum_vtx_ridge_edge_tot * sizeof(PDM_g_num_t));
+
+  delmt_ridge_edge_vtx_idx[0] = 0;
+  PDM_sections_decompose_edges(dmesh_nodal->ridge,
+                               delmt_ridge_edge_vtx_idx,
+                               delmt_ridge_edge_vtx,
+                               delmt_ridge_edge,
+                               NULL, NULL,
+                               dparent_elmt_ridge_pos);
+
+  free(dparent_elmt_ridge_pos);
+  free(delmt_ridge_edge);
+  free(delmt_ridge_edge_vtx_idx);
+
+  /*
+   *  Create empty dmesh
+   */
+  PDM_dmesh_t* dm = PDM_dmesh_create(link->owner,
+                                     0,
+                                     0,
+                                     n_edge_elt_ridge_tot,
+                                     dmesh_nodal->vtx->n_vtx,
+                                     dmesh_nodal->comm);
+
+  PDM_dmesh_vtx_coord_set(dm, dmesh_nodal->vtx->_coords, PDM_OWNERSHIP_USER);
+
+  assert(link->dmesh == NULL);
+  link->dmesh = dm;
+  dm->dconnectivity_idx    [PDM_CONNECTIVITY_TYPE_EDGE_VTX] = NULL;
+  dm->dconnectivity        [PDM_CONNECTIVITY_TYPE_EDGE_VTX] = delmt_ridge_edge_vtx;
+  dm->is_owner_connectivity[PDM_CONNECTIVITY_TYPE_EDGE_VTX] = PDM_TRUE;
+
+}
+
+static
+void
 _translate_element_group_to_entity
 (
  PDM_MPI_Comm  comm,
@@ -2230,6 +2288,12 @@ PDM_dmesh_nodal_to_dmesh_compute
           _generate_edges_from_dmesh_nodal(dmesh_nodal_to_dm->link[i_mesh], dmesh_nodal_to_dm->post_treat_result );
         }
         break;
+
+      case PDM_DMESH_NODAL_TO_DMESH_TRANSFORM_TO_VTX:
+        {
+          _generate_vtx_from_dmesh_nodal(dmesh_nodal_to_dm->link[i_mesh], dmesh_nodal_to_dm->post_treat_result );
+        }
+        break;
     }
   }
 
@@ -2256,7 +2320,7 @@ PDM_dmesh_nodal_to_dmesh_compute
           break;
         case PDM_DMESH_NODAL_TO_DMESH_TRANSLATE_GROUP_TO_VTX:
           {
-            PDM_error (__FILE__, __LINE__, 0, "PDM_DMESH_NODAL_TO_DMESH_TRANSLATE_GROUP_TO_EDGE not implemented \n");
+            // Do nothing all is translationg naturally
           }
           break;
       }
