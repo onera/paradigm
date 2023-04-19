@@ -2932,10 +2932,14 @@ PDM_multipart_run_ppart
           PDM_dmesh_nodal_to_dmesh_compute(dmn_to_dm,
                                            PDM_DMESH_NODAL_TO_DMESH_TRANSFORM_TO_FACE,
                                            PDM_DMESH_NODAL_TO_DMESH_TRANSLATE_GROUP_TO_FACE);
-        } else {
+        } else if (dmesh_nodal->n_face_abs != 0) {
           PDM_dmesh_nodal_to_dmesh_compute(dmn_to_dm,
                                            PDM_DMESH_NODAL_TO_DMESH_TRANSFORM_TO_EDGE,
                                            PDM_DMESH_NODAL_TO_DMESH_TRANSLATE_GROUP_TO_EDGE);
+        } else {
+          PDM_dmesh_nodal_to_dmesh_compute(dmn_to_dm,
+                                           PDM_DMESH_NODAL_TO_DMESH_TRANSFORM_TO_VTX,
+                                           PDM_DMESH_NODAL_TO_DMESH_TRANSLATE_GROUP_TO_VTX);
         }
 
         PDM_dmesh_t  *_dmesh = NULL;
