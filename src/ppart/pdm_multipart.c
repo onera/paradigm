@@ -1045,6 +1045,21 @@ _warm_up_for_split
                                &delmt_to_arc_idx,
                                PDM_OWNERSHIP_BAD_VALUE);
 
+    if(darc_to_elmt_tmp == NULL) {
+      assert(delmt_to_arc_idx != NULL);
+      PDM_dcellface_to_dfacecell(distrib_arc,
+                                 distrib_node,
+                                 delmt_to_arc_idx,
+                                 delmt_to_arc,
+                                 &darc_to_elmt_tmp,
+                                 comm);
+
+      PDM_dmesh_connectivity_set(dmesh, PDM_CONNECTIVITY_TYPE_FACE_CELL,
+                                 darc_to_elmt_tmp,
+                                 darc_to_elmt_idx,
+                                 PDM_OWNERSHIP_KEEP);
+
+    }
   } else if(dmesh->n_g_face != 0) { // Donc 2D
 
     dn_node = dmesh->dn_face;
@@ -1060,6 +1075,22 @@ _warm_up_for_split
                                &delmt_to_arc,
                                &delmt_to_arc_idx,
                                PDM_OWNERSHIP_BAD_VALUE);
+
+    if(darc_to_elmt_tmp == NULL) {
+      assert(delmt_to_arc_idx != NULL);
+      PDM_dcellface_to_dfacecell(distrib_arc,
+                                 distrib_node,
+                                 delmt_to_arc_idx,
+                                 delmt_to_arc,
+                                 &darc_to_elmt_tmp,
+                                 comm);
+
+      PDM_dmesh_connectivity_set(dmesh, PDM_CONNECTIVITY_TYPE_EDGE_FACE,
+                                 darc_to_elmt_tmp,
+                                 darc_to_elmt_idx,
+                                 PDM_OWNERSHIP_KEEP);
+
+    }
 
   } else if(dmesh->n_g_edge != 0) { // Donc 1D
 

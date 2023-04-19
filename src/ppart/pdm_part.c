@@ -2707,6 +2707,12 @@ _multipart_create
                              NULL,
                              PDM_OWNERSHIP_USER);
 
+  PDM_dmesh_connectivity_set(dm,
+                             PDM_CONNECTIVITY_TYPE_CELL_FACE,
+             (PDM_g_num_t *) dcell_face,
+                             dcell_face_idx,
+                             PDM_OWNERSHIP_USER);
+
   PDM_dmesh_bound_set(dm,
                       PDM_BOUND_TYPE_FACE,
                       n_face_group,
