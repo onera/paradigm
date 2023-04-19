@@ -606,7 +606,7 @@ _distrib_data_hilbert
   if(ptb->n_part == 1 ) {
     concat_vtx_coord = pvtx_coords[0];
     concat_weight    = weight     [0];
-  } else {
+  } else if (ptb->n_part > 1) {
     concat_vtx_coord = malloc( 3 * ptb->n_elt_proc * sizeof(double));
     concat_weight    = malloc(     ptb->n_elt_proc * sizeof(double));
 

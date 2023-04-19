@@ -202,7 +202,9 @@ PDM_part_entity_geom
   int n_rank;
   PDM_MPI_Comm_size (comm, &n_rank);
 
-  PDM_hilbert_code_t *hilbert_codes_idx = (PDM_hilbert_code_t *) malloc ((n_rank+1)*n_part * sizeof(PDM_hilbert_code_t));
+  int n_total_part;
+  PDM_MPI_Allreduce ((void *) &n_part, &n_total_part, 1, PDM_MPI_INT, PDM_MPI_SUM, comm);
+  PDM_hilbert_code_t *hilbert_codes_idx = (PDM_hilbert_code_t *) malloc ((n_total_part+1) * sizeof(PDM_hilbert_code_t));
 
   int * weight = (int *) malloc (dn_entity * sizeof(int));
   if (dentity_weight != NULL) {
@@ -215,9 +217,6 @@ PDM_part_entity_geom
       weight [i] = 1;
     }
   }
-
-  int n_total_part;
-  PDM_MPI_Allreduce ((void *) &n_part, &n_total_part, 1, PDM_MPI_INT, PDM_MPI_SUM, comm);
 
   PDM_hilbert_build_rank_index (dim,
                                 n_total_part,

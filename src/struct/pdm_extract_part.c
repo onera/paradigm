@@ -2704,24 +2704,31 @@ _extract_part_from_target_rebuild_connectivities_3d
 )
 {
 
-  int have_cell_face = 0;
-  int have_edge_vtx  = 0;
-  int from_face_edge = 0;
-  int from_face_vtx  = 0;
+  int have_cell_face_l = 0;
+  int have_edge_vtx_l  = 0;
+  int from_face_edge_l = 0;
+  int from_face_vtx_l  = 0;
   for(int i_part = 0; i_part < extrp->n_part_in; ++i_part) {
     if(extrp->pface_edge_idx    [i_part] != NULL) {
-      from_face_edge = 1;
+      from_face_edge_l = 1;
     }
     if(extrp->pface_vtx_idx    [i_part] != NULL) {
-      from_face_vtx = 1;
+      from_face_vtx_l = 1;
     }
     if(extrp->pcell_face_idx    [i_part] != NULL) {
-      have_cell_face = 1;
+      have_cell_face_l = 1;
     }
     if(extrp->pedge_vtx[i_part] != NULL) {
-      have_edge_vtx = 1;
+      have_edge_vtx_l = 1;
     }
   }
+  // Procs can have n_part == 0 so we have to recover information
+  int have_cell_face, have_edge_vtx, from_face_edge, from_face_vtx;
+  PDM_MPI_Allreduce(&have_cell_face_l, &have_cell_face, 1, PDM_MPI_INT, PDM_MPI_MAX, extrp->comm);
+  PDM_MPI_Allreduce(&have_edge_vtx_l,  &have_edge_vtx,  1, PDM_MPI_INT, PDM_MPI_MAX, extrp->comm);
+  PDM_MPI_Allreduce(&from_face_edge_l, &from_face_edge, 1, PDM_MPI_INT, PDM_MPI_MAX, extrp->comm);
+  PDM_MPI_Allreduce(&from_face_vtx_l,  &from_face_vtx,  1, PDM_MPI_INT, PDM_MPI_MAX, extrp->comm);
+
 
   int **part2_cell_to_part1_cell_idx = (int **) malloc( extrp->n_part_out * sizeof(int * ));
   int **part2_face_to_part1_face_idx = (int **) malloc( extrp->n_part_out * sizeof(int * ));
@@ -2941,20 +2948,26 @@ _extract_part_from_target_rebuild_connectivities_2d
   int                     ***pextract_vtx_to_vtx_location_out
 )
 {
-  int have_edge_vtx  = 0;
-  int from_face_edge = 0;
-  int from_face_vtx  = 0;
+  int have_edge_vtx_l  = 0;
+  int from_face_edge_l = 0;
+  int from_face_vtx_l  = 0;
   for(int i_part = 0; i_part < extrp->n_part_in; ++i_part) {
     if(extrp->pface_edge_idx    [i_part] != NULL) {
-      from_face_edge = 1;
+      from_face_edge_l = 1;
     }
     if(extrp->pface_vtx_idx    [i_part] != NULL) {
-      from_face_vtx = 1;
+      from_face_vtx_l = 1;
     }
     if(extrp->pedge_vtx[i_part] != NULL) {
-      have_edge_vtx = 1;
+      have_edge_vtx_l = 1;
     }
   }
+
+  // Procs can have n_part == 0 so we have to recover information
+  int have_edge_vtx, from_face_edge, from_face_vtx;
+  PDM_MPI_Allreduce(&have_edge_vtx_l,  &have_edge_vtx,  1, PDM_MPI_INT, PDM_MPI_MAX, extrp->comm);
+  PDM_MPI_Allreduce(&from_face_edge_l, &from_face_edge, 1, PDM_MPI_INT, PDM_MPI_MAX, extrp->comm);
+  PDM_MPI_Allreduce(&from_face_vtx_l,  &from_face_vtx,  1, PDM_MPI_INT, PDM_MPI_MAX, extrp->comm);
 
   int **part2_face_to_part1_face_idx = (int **) malloc( extrp->n_part_out * sizeof(int * ));
   int **part2_edge_to_part1_edge_idx = (int **) malloc( extrp->n_part_out * sizeof(int * ));
