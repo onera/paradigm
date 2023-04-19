@@ -270,7 +270,7 @@ char *argv[]
 
   PDM_multipart_run_ppart(mpart);
 
-  if(1 == 1) {
+  if(0 == 1) {
     for(int i_part = 0; i_part < n_part; ++i_part) {
 
       PDM_g_num_t* pvtx_ln_to_gn = NULL;
