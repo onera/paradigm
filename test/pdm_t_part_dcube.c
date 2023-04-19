@@ -14,6 +14,7 @@
 #include "pdm_dcube_gen.h"
 #include "pdm_printf.h"
 #include "pdm_error.h"
+#include "pdm_distrib.h"
 
 /*============================================================================
  * Type definitions
@@ -280,6 +281,22 @@ int main(int argc, char *argv[])
     gettimeofday(&t_elaps_debut, NULL);
   }
 
+
+  int         *dcell_face_idx = NULL;
+  PDM_g_num_t *dcell_face     = NULL;
+
+  PDM_g_num_t* cell_distri = PDM_compute_entity_distribution(comm, dn_cell);
+  PDM_g_num_t* face_distri = PDM_compute_entity_distribution(comm, dn_face);
+
+  PDM_dfacecell_to_dcellface(face_distri,
+                             cell_distri,
+                             dface_cell,
+                             &dcell_face_idx,
+                             &dcell_face,
+                             comm);
+  free(cell_distri);
+  free(face_distri);
+
   /*
    *  Create mesh partitions
    */
@@ -305,8 +322,8 @@ int main(int argc, char *argv[])
                                       dn_face,
                                       dn_vtx,
                                       n_face_group,
-                                      NULL,
-                                      NULL,
+                                      NULL, // dcell_face_idx, // NULL,
+                                      NULL, // dcell_face, // NULL,
                                       NULL,
                                       NULL,
                                       have_dcell_part,
@@ -319,6 +336,10 @@ int main(int argc, char *argv[])
                                       NULL,
                                       dface_group_idx,
                                       dface_group);
+
+
+  free(dcell_face_idx);
+  free(dcell_face    );
 
   if (time_and_stat && !use_multipart) {
 
