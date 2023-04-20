@@ -288,6 +288,47 @@ PDM_generate_mesh_parallelepiped
  const PDM_split_dual_t  part_method
 );
 
+
+/**
+ *
+ * \brief Create a simple partitionned rectangle mesh (2D).
+ *
+ * \param [in]   comm        MPI communicator
+ * \param [in]   n_vtx_seg   Number of vertices along each side of the rectangle
+ * \param [out]  n_vtx       Number of vertices
+ * \param [out]  n_elt       Number of elements
+ * \param [out]  coords      Array of vertex coordinates
+ * \param [out]  elt_vtx_idx Index array of the element vertex connectivity
+ * \param [out]  elt_vtx     Array of the element vertex connectivity
+ *
+ */
+
+void
+PDM_generate_mesh_rectangle_ngon
+(
+ const PDM_MPI_Comm            comm,
+ const PDM_Mesh_nodal_elt_t    elt_type,
+ const double                  xmin,
+ const double                  ymin,
+ const double                  zmin,
+ const double                  lengthx,
+ const double                  lengthy,
+ const PDM_g_num_t             n_x,
+ const PDM_g_num_t             n_y,
+ const int                     n_part,
+ const PDM_split_dual_t        part_method,
+ int                         **pn_vtx,
+ int                         **pn_edge,
+ int                         **pn_face,
+ double                     ***pvtx_coord,
+ int                        ***pedge_vtx,
+ int                        ***pface_edge_idx,
+ int                        ***pface_edge,
+ PDM_g_num_t                ***pvtx_ln_to_gn,
+ PDM_g_num_t                ***pedge_ln_to_gn,
+ PDM_g_num_t                ***pface_ln_to_gn
+);
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

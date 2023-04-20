@@ -1258,10 +1258,10 @@ const double            *part_fraction,
     printf(" dn_face = %i \n", dn_face);
     printf(" dn_edge = %i \n", dn_edge);
     printf(" dn_vtx  = %i \n", dn_vtx );
-    printf(" n_g_cell = %i \n", dmesh->n_g_cell );
-    printf(" n_g_face = %i \n", dmesh->n_g_face );
-    printf(" n_g_edge = %i \n", dmesh->n_g_edge );
-    printf(" n_g_vtx  = %i \n", dmesh->n_g_vtx  );
+    printf(" n_g_cell = "PDM_FMT_G_NUM" \n", dmesh->n_g_cell );
+    printf(" n_g_face = "PDM_FMT_G_NUM" \n", dmesh->n_g_face );
+    printf(" n_g_edge = "PDM_FMT_G_NUM" \n", dmesh->n_g_edge );
+    printf(" n_g_vtx  = "PDM_FMT_G_NUM" \n", dmesh->n_g_vtx  );
   }
 
   int compute_dual = 1;

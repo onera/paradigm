@@ -243,6 +243,14 @@ PDM_part_graph_split
         }
 
 #else
+        PDM_UNUSED(method);
+        PDM_UNUSED(n_part);
+        PDM_UNUSED(part_ini);
+        PDM_UNUSED(cell_cell_idx);
+        PDM_UNUSED(cell_cell);
+        PDM_UNUSED(cell_weight);
+        PDM_UNUSED(face_weight);
+        PDM_UNUSED(cell_part);
         PDM_printf("PDM_part error : METIS unavailable\n");
         exit(1);
 
@@ -265,6 +273,14 @@ PDM_part_graph_split
                          *cell_part);
 
 #else
+        PDM_UNUSED(method);
+        PDM_UNUSED(n_part);
+        PDM_UNUSED(part_ini);
+        PDM_UNUSED(cell_cell_idx);
+        PDM_UNUSED(cell_cell);
+        PDM_UNUSED(cell_weight);
+        PDM_UNUSED(face_weight);
+        PDM_UNUSED(cell_part);
         PDM_printf("PDM_part error : Scotch unavailable\n");
         exit(1);
 #endif
