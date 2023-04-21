@@ -283,7 +283,7 @@ def dmesh_connectivity_get(DMesh pydm, PDM_connectivity_type_t connectivity_type
         dim = <NPY.npy_intp> connect_idx[dn_entity]
       else:
         dim = <NPY.npy_intp> 2 * dn_entity # Face cell
-      np_connect = create_numpy_pdm_gnum(connect, dim)
+      np_connect = create_numpy_g(connect, dim)
   return (np_connect_idx, np_connect)
 
 # ------------------------------------------------------------------------
@@ -322,7 +322,7 @@ def dmesh_bound_get(DMesh pydm, PDM_bound_type_t bound_type):
   if (connect == NULL) :
       np_connect = None
   else :
-      np_connect = create_numpy_pdm_gnum(connect, connect_idx[n_bnd])
+      np_connect = create_numpy_g(connect, connect_idx[n_bnd])
   return (np_connect_idx, np_connect)
 
 # ------------------------------------------------------------------------

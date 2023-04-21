@@ -286,17 +286,17 @@ cdef class Overlay:
                              &init_to_ol_face)
 
     return {
-        "olFaceIniVtxIdx"      : create_numpy_i       (olFaceIniVtxIdx,      sInit_to_ol_face+1,           flag_owndata=False),
-        "olFaceIniVtx"         : create_numpy_i       (olFaceIniVtx,         sInit_to_ol_face,             flag_owndata=False),
-        "olface_vtx_idx"       : create_numpy_i       (olface_vtx_idx,       nOlFace+1,                    flag_owndata=False),
-        "olface_vtx"           : create_numpy_i       (olface_vtx,           olface_vtx_idx[nOlFace],      flag_owndata=False),
-        "olLinkedface_procIdx" : create_numpy_i       (olLinkedface_procIdx, self._size+1,                 flag_owndata=False),
-        "olLinkedFace"         : create_numpy_i       (olLinkedFace,         4*nOlLinkedFace,              flag_owndata=False),
-        "olface_ln_to_gn,"     : create_numpy_pdm_gnum(olface_ln_to_gn,      nOlFace,                      flag_owndata=False),
-        "olCoords"             : create_numpy_d       (olCoords,             3*nOlVtx,                     flag_owndata=False),
-        "olvtx_ln_to_gn,"      : create_numpy_pdm_gnum(olvtx_ln_to_gn,       nOlVtx,                       flag_owndata=False),
-        "init_to_ol_face_idx"  : create_numpy_i       (init_to_ol_face_idx,  self._init_face[<int>mesh]+1, flag_owndata=False),
-        "init_to_ol_face"      : create_numpy_i       (init_to_ol_face,      sInit_to_ol_face,             flag_owndata=False),
+        "olFaceIniVtxIdx"      : create_numpy_i (olFaceIniVtxIdx,      sInit_to_ol_face+1,           flag_owndata=False),
+        "olFaceIniVtx"         : create_numpy_i (olFaceIniVtx,         sInit_to_ol_face,             flag_owndata=False),
+        "olface_vtx_idx"       : create_numpy_i (olface_vtx_idx,       nOlFace+1,                    flag_owndata=False),
+        "olface_vtx"           : create_numpy_i (olface_vtx,           olface_vtx_idx[nOlFace],      flag_owndata=False),
+        "olLinkedface_procIdx" : create_numpy_i (olLinkedface_procIdx, self._size+1,                 flag_owndata=False),
+        "olLinkedFace"         : create_numpy_i (olLinkedFace,         4*nOlLinkedFace,              flag_owndata=False),
+        "olface_ln_to_gn,"     : create_numpy_g (olface_ln_to_gn,      nOlFace,                      flag_owndata=False),
+        "olCoords"             : create_numpy_d (olCoords,             3*nOlVtx,                     flag_owndata=False),
+        "olvtx_ln_to_gn,"      : create_numpy_g (olvtx_ln_to_gn,       nOlVtx,                       flag_owndata=False),
+        "init_to_ol_face_idx"  : create_numpy_i (init_to_ol_face_idx,  self._init_face[<int>mesh]+1, flag_owndata=False),
+        "init_to_ol_face"      : create_numpy_i (init_to_ol_face,      sInit_to_ol_face,             flag_owndata=False),
     }
 
   # ------------------------------------------------------------------------

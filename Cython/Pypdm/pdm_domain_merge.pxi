@@ -124,7 +124,7 @@ cdef class MultiBlockMerge:
     Return the distribution of the merged block
     """
     cdef PDM_g_num_t* _merged_distri = PDM_multi_block_merge_get_distrib(self.m_block_merge)
-    merged_distri = create_numpy_pdm_gnum(_merged_distri, self.n_rank+1, flag_owndata=False)
+    merged_distri = create_numpy_g(_merged_distri, self.n_rank+1, flag_owndata=False)
     return NPY.copy(merged_distri)
 
   def get_blocks_distri(self):
@@ -132,7 +132,7 @@ cdef class MultiBlockMerge:
     Return the (shifted) number of entiy in each original block
     """
     cdef PDM_g_num_t* _blocks_distri = PDM_multi_block_merge_get_multi_distrib(self.m_block_merge)
-    blocks_distri = create_numpy_pdm_gnum(_blocks_distri, self.n_zone+1, flag_owndata=False)
+    blocks_distri = create_numpy_g(_blocks_distri, self.n_zone+1, flag_owndata=False)
     return NPY.copy(blocks_distri)
 
   def get_old_to_new(self):
@@ -148,10 +148,10 @@ cdef class MultiBlockMerge:
                                          &_old_distrib,
                                          &_old_to_new_idx,
                                          &_old_to_new)
-    old_distrib    = create_numpy_pdm_gnum(_old_distrib, self.n_rank+1, flag_owndata=False)
+    old_distrib    = create_numpy_g(_old_distrib, self.n_rank+1, flag_owndata=False)
     cdef int dn_olds = _old_distrib[self.i_rank+1] - _old_distrib[self.i_rank]
     old_to_new_idx = create_numpy_i(_old_to_new_idx, dn_olds+1, flag_owndata=False)
-    old_to_new     = create_numpy_pdm_gnum(_old_to_new, _old_to_new_idx[dn_olds], flag_owndata=False)
+    old_to_new     = create_numpy_g(_old_to_new, _old_to_new_idx[dn_olds], flag_owndata=False)
     return NPY.copy(old_distrib), NPY.copy(old_to_new_idx), NPY.copy(old_to_new)
 
   def merge_field(self, list block_data, list block_stride=None):

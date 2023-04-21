@@ -216,9 +216,9 @@ cdef class PartToBlock:
     # ------------------------------------------------------------------------
     def getBlockGnumCopy(self):
       """ Return a copy of the global numbers """
-      BlockGnumNPY = create_numpy_pdm_gnum(PDM_part_to_block_block_gnum_get(self.PTB),
-                                           PDM_part_to_block_n_elt_block_get(self.PTB),
-                                           flag_owndata=False)
+      BlockGnumNPY = create_numpy_g(PDM_part_to_block_block_gnum_get(self.PTB),
+                                    PDM_part_to_block_n_elt_block_get(self.PTB),
+                                    flag_owndata=False)
       return NPY.copy(BlockGnumNPY)
 
     # ------------------------------------------------------------------------
@@ -231,9 +231,9 @@ cdef class PartToBlock:
     # ------------------------------------------------------------------------
     def getDistributionCopy(self):
       """ Return a copy of the distribution array """
-      DistribNPY = create_numpy_pdm_gnum(PDM_part_to_block_distrib_index_get(self.PTB),
-                                         self.py_comm.Get_size()+1,
-                                         flag_owndata=False)
+      DistribNPY = create_numpy_g(PDM_part_to_block_distrib_index_get(self.PTB),
+                                  self.py_comm.Get_size()+1,
+                                  flag_owndata=False)
       return NPY.copy(DistribNPY)
 
     # ------------------------------------------------------------------------

@@ -398,7 +398,7 @@ cdef class MultiPart:
         cdef NPY.npy_intp dim_idx
         for i_section in range(n_section):
             np_elt_vtx_idx_i_section = create_numpy_i(elt_vtx_idx[i_section], dims['n_elt'][i_section]+1)
-            np_elt_section_ln_to_gn_i_section = create_numpy_pdm_gnum(elt_section_ln_to_gn[i_section], dims['n_elt'][i_section])
+            np_elt_section_ln_to_gn_i_section = create_numpy_g(elt_section_ln_to_gn[i_section], dims['n_elt'][i_section])
             np_elt_vtx_i_section = create_numpy_i(elt_vtx[i_section], np_elt_vtx_idx_i_section[-1])
 
 

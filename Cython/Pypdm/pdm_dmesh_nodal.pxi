@@ -356,8 +356,8 @@ def dmesh_nodal_get_vtx(DMeshNodal pydmn, MPI.Comm    comm):
   n_vtx = PDM_DMesh_nodal_n_vtx_get(pydmn.dmn);
   vtx_coord = PDM_DMesh_nodal_vtx_get(pydmn.dmn)
 
-  return {"np_vtx"         : create_numpy_d       (vtx_coord,   3*n_vtx),
-          "np_vtx_distrib" : create_numpy_pdm_gnum(vtx_distrib, comm.Get_size()+1)}
+  return {"np_vtx"         : create_numpy_d(vtx_coord,   3*n_vtx),
+          "np_vtx_distrib" : create_numpy_g(vtx_distrib, comm.Get_size()+1)}
 
 def dmesh_nodal_get_sections(DMeshNodal          pydmn,
                              PDM_geometry_kind_t geom_kind,
@@ -395,13 +395,13 @@ def dmesh_nodal_get_sections(DMeshNodal          pydmn,
     connect         = PDM_DMesh_nodal_section_std_get(pydmn.dmn, geom_kind, id_section)
 
     # > Build numpy capsule
-    np_distrib_tmp = create_numpy_pdm_gnum(section_distrib, comm.Get_size()+1, flag_owndata=False)
+    np_distrib_tmp = create_numpy_g(section_distrib, comm.Get_size()+1, flag_owndata=False)
     np_distrib = NPY.copy(np_distrib_tmp)
 
     # > Build numpy capsule
     dn_elmt = np_distrib[comm.Get_rank()+1] - np_distrib[comm.Get_rank()]
     n_vtx_per_elmt = PDM_Mesh_nodal_n_vertices_element(t_elmt, 1)
-    np_connec = create_numpy_pdm_gnum(connect, n_vtx_per_elmt*dn_elmt)
+    np_connec = create_numpy_g(connect, n_vtx_per_elmt*dn_elmt)
 
     sections.append({"pdm_type"   : t_elmt,
                      "np_distrib" : np_distrib,
@@ -431,7 +431,7 @@ def dmesh_nodal_get_group(DMeshNodal pydmn, PDM_geometry_kind_t geom_kind):
     return None
 
   np_dgroup_elmt_idx = create_numpy_i(dgroup_elmt_idx, n_group+1)
-  np_dgroup_elmt = create_numpy_pdm_gnum(dgroup_elmt, np_dgroup_elmt_idx[n_group])
+  np_dgroup_elmt = create_numpy_g(dgroup_elmt, np_dgroup_elmt_idx[n_group])
 
   return {"dgroup_elmt_idx" : np_dgroup_elmt_idx,
           "dgroup_elmt"     : np_dgroup_elmt}

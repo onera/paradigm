@@ -375,9 +375,9 @@ cdef class PartExtension:
     size = PDM_part_extension_ln_to_gn_get(self._part_ext, i_domain, i_part, mesh_ety_type, &ln_to_gn)
 
     if (ln_to_gn == NULL) :
-      np_ln_to_gn = create_numpy_pdm_gnum(NULL, 0)
+      np_ln_to_gn = create_numpy_g(NULL, 0)
     else :
-      np_ln_to_gn = create_numpy_pdm_gnum(ln_to_gn, size)
+      np_ln_to_gn = create_numpy_g(ln_to_gn, size)
 
     return np_ln_to_gn
 
@@ -441,7 +441,7 @@ cdef class PartExtension:
     if (group_ln_to_gn == NULL) :
       np_group_ln_to_gn = None
     else :
-      np_group_ln_to_gn = create_numpy_pdm_gnum(group_ln_to_gn, entity_group_idx[n_group])
+      np_group_ln_to_gn = create_numpy_g(group_ln_to_gn, entity_group_idx[n_group])
 
     np_entity_group_idx = create_numpy_or_none_i(entity_group_idx, n_group+1)
 

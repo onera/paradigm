@@ -99,7 +99,7 @@ def part_point_cloud_gen_random(MPI.Comm       comm,
                               &pts_coord,
                               &pts_ln_to_gn);
 
-   return {"np_pts_ln_to_gn" : create_numpy_pdm_gnum(pts_ln_to_gn, pn_pts),
+   return {"np_pts_ln_to_gn" : create_numpy_g(pts_ln_to_gn, pn_pts),
            "np_pts_coord"    : create_numpy_d(pts_coord, 3*pn_pts)}
 
 # ------------------------------------------------------------------------
@@ -135,7 +135,7 @@ def part_point_cloud_gen_cartesian(MPI.Comm      comm,
                                  &pts_coord,
                                  &pts_ln_to_gn);
 
-   return {"np_pts_ln_to_gn" : create_numpy_pdm_gnum(pts_ln_to_gn, pn_pts),
+   return {"np_pts_ln_to_gn" : create_numpy_g(pts_ln_to_gn, pn_pts),
            "np_pts_coord"    : create_numpy_d(pts_coord, 3*pn_pts)}
 
 
@@ -173,7 +173,7 @@ def dpoint_cloud_gen_random(MPI.Comm       comm,
 
    dn_pts  = distrib_pts [i_rank+1] - distrib_pts [i_rank]
 
-   return {"np_distrib_pts"  : create_numpy_pdm_gnum(distrib_pts, n_rank+1),
+   return {"np_distrib_pts"  : create_numpy_g(distrib_pts, n_rank+1),
            "np_dpts_coord"   : create_numpy_d(dpts_coord, 3*dn_pts)}
 
 # ------------------------------------------------------------------------
@@ -211,5 +211,5 @@ def dpoint_cloud_gen_cartesian(MPI.Comm      comm,
 
    dn_pts  = distrib_pts [i_rank+1] - distrib_pts [i_rank]
 
-   return {"np_distrib_pts" : create_numpy_pdm_gnum(distrib_pts, n_rank+1),
+   return {"np_distrib_pts" : create_numpy_g(distrib_pts, n_rank+1),
            "np_dpts_coord"  : create_numpy_d(dpts_coord, 3*dn_pts)}

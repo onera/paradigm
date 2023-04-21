@@ -162,7 +162,7 @@ cdef class ClosestPoints:
 
     dim = self.tgt_n_points[i_part_tgt] * self.n_closest
     
-    return {'closest_src_gnum'     : create_numpy_pdm_gnum(closest_src_gnum, dim),
+    return {'closest_src_gnum'     : create_numpy_g(closest_src_gnum, dim),
             'closest_src_distance' : create_numpy_d(closest_src_distance, dim)}
 
   # ------------------------------------------------------------------------
@@ -190,7 +190,7 @@ cdef class ClosestPoints:
     src_n_pts = self.src_n_points[i_part_src]
     return {
             'tgt_in_src_idx'  : create_numpy_i(tgt_in_src_idx, src_n_pts+1),
-            'tgt_in_src'      : create_numpy_pdm_gnum(tgt_in_src, tgt_in_src_idx[src_n_pts]),
+            'tgt_in_src'      : create_numpy_g(tgt_in_src, tgt_in_src_idx[src_n_pts]),
             'tgt_in_src_dist2': create_numpy_d(tgt_in_src_dist, tgt_in_src_idx[src_n_pts])
             }
 

@@ -126,9 +126,9 @@ cdef class DCubeGenerator:
                                &dface_group_idx,
                                &dface_group)
 
-        return {'dface_cell'      : create_numpy_pdm_gnum(dface_cell,      2*dims['dn_face']),
-                'dface_vtx_idx'   : create_numpy_i       (dface_vtx_idx,   dims['dn_face']+1),
-                'dface_vtx'       : create_numpy_pdm_gnum(dface_vtx,       dims['sface_vtx']),
-                'dvtx_coord'      : create_numpy_d       (dvtx_coord,      3*dims['dn_vtx']),
-                'dface_group_idx' : create_numpy_i       (dface_group_idx, dims['n_face_group']+1),
-                'dface_group'     : create_numpy_pdm_gnum(dface_group,     dims['sface_group'])}
+        return {'dface_cell'      : create_numpy_g(dface_cell,      2*dims['dn_face']),
+                'dface_vtx_idx'   : create_numpy_i(dface_vtx_idx,   dims['dn_face']+1),
+                'dface_vtx'       : create_numpy_g(dface_vtx,       dims['sface_vtx']),
+                'dvtx_coord'      : create_numpy_d(dvtx_coord,      3*dims['dn_vtx']),
+                'dface_group_idx' : create_numpy_i(dface_group_idx, dims['n_face_group']+1),
+                'dface_group'     : create_numpy_g(dface_group,     dims['sface_group'])}

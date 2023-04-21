@@ -282,7 +282,7 @@ cdef class ExtractPart:
                                              entity_type,
                                              &entity_ln_to_gn,
                                              PDM_OWNERSHIP_USER)
-    return create_numpy_pdm_gnum(entity_ln_to_gn, n_entity)
+    return create_numpy_g(entity_ln_to_gn, n_entity)
 
   # ------------------------------------------------------------------
   def parent_ln_to_gn_get(self,
@@ -298,7 +298,7 @@ cdef class ExtractPart:
                                                     entity_type,
                                                     &parent_ln_to_gn,
                                                     PDM_OWNERSHIP_USER)
-    return create_numpy_pdm_gnum(parent_ln_to_gn, n_entity)
+    return create_numpy_g(parent_ln_to_gn, n_entity)
 
   # ------------------------------------------------------------------
   def vtx_coord_get(self,

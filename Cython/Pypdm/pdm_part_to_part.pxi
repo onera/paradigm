@@ -350,8 +350,8 @@ def get_gnum1_come_from(PyPartToPart pyptp):
   for i_part in range(pyptp.n_part2):
     n_ref = n_ref_lnum2[i_part]
     # Idx array is shaped as n_ref_lnum2
-    sending_idx = create_numpy_i(gnum1_come_from_idx[i_part], n_ref+1, flag_owndata=False)
-    sending_array = create_numpy_pdm_gnum(gnum1_come_from[i_part], gnum1_come_from_idx[i_part][n_ref], flag_owndata=False)
+    sending_idx   = create_numpy_i(gnum1_come_from_idx[i_part], n_ref+1, flag_owndata=False)
+    sending_array = create_numpy_g(gnum1_come_from[i_part], gnum1_come_from_idx[i_part][n_ref], flag_owndata=False)
     come_from_l.append({'come_from_idx' : NPY.copy(sending_idx), 'come_from' : NPY.copy(sending_array)})
   return come_from_l
 

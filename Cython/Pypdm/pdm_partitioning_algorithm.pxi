@@ -123,7 +123,7 @@ def part_distgroup_to_partgroup(MPI.Comm                                      co
         if (_pgroup_ln_to_gn == NULL) :
             npgroup_ln_to_gn = None
         else :
-            npgroup_ln_to_gn = create_numpy_pdm_gnum(_pgroup_ln_to_gn[i_part], _pgroup_idx[i_part][_n_group])
+            npgroup_ln_to_gn = create_numpy_g(_pgroup_ln_to_gn[i_part], _pgroup_idx[i_part][_n_group])
 
         dict_group_part = {'npZSRGroupIdx'    : npgroup_idx,
                            'npZSRGroup'       : npgroup,
@@ -262,4 +262,4 @@ def compute_dface_vtx_from_edges(MPI.Comm                                      c
                     <PDM_g_num_t *>  dedge_vtx.data,
                                     &dface_vtx)
 
-    return create_numpy_i(dface_vtx, dface_edge.shape[0])
+    return create_numpy_g(dface_vtx, dface_edge.shape[0])

@@ -146,7 +146,7 @@ cdef class GlobalNumbering:
     if (gnum_array == NULL):
       return None
     else:
-      np_gnum_array = create_numpy_pdm_gnum(gnum_array, self._n_elem_per_part[i_part])
+      np_gnum_array = create_numpy_g(gnum_array, self._n_elem_per_part[i_part])
     return {'gnum' : np_gnum_array}
     # ************************************************************************
 

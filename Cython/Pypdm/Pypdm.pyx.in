@@ -423,7 +423,7 @@ cdef create_numpy(void* array, int nptype, int size, bint flag_owndata=True):
 cdef create_numpy_i(int* array, int size, bint flag_owndata=True):
     return create_numpy(<void *> array, NPY.NPY_INT32, size, flag_owndata)
 
-cdef create_numpy_pdm_gnum(PDM_g_num_t* array, int size, bint flag_owndata=True):
+cdef create_numpy_g(PDM_g_num_t* array, int size, bint flag_owndata=True):
     return create_numpy(<void *> array, PDM_G_NUM_NPY_INT, size, flag_owndata)
 
 cdef create_numpy_d(double* array, int size, bint flag_owndata=True):

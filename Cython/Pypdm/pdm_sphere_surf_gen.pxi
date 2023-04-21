@@ -71,11 +71,11 @@ def sphere_surf_icosphere_gen(MPI.Comm       comm,
   dn_face = distrib_face[i_rank+1] - distrib_face[i_rank]
 
   return {
-  "dvtx_coord"    : create_numpy_d       (dvtx_coord,    3*dn_vtx),
-  "dface_vtx_idx" : create_numpy_i       (dface_vtx_idx, dn_face+1),
-  "dface_vtx"     : create_numpy_i       (dface_vtx,     dface_vtx_idx[dn_face]),
-  "distrib_vtx"   : create_numpy_pdm_gnum(distrib_vtx,   n_rank+1),
-  "distrib_face"  : create_numpy_pdm_gnum(distrib_face,  n_rank+1),
+  "dvtx_coord"    : create_numpy_d(dvtx_coord,    3*dn_vtx),
+  "dface_vtx_idx" : create_numpy_i(dface_vtx_idx, dn_face+1),
+  "dface_vtx"     : create_numpy_g(dface_vtx,     dface_vtx_idx[dn_face]),
+  "distrib_vtx"   : create_numpy_g(distrib_vtx,   n_rank+1),
+  "distrib_face"  : create_numpy_g(distrib_face,  n_rank+1),
   }
 
 # ------------------------------------------------------------------------
@@ -148,11 +148,11 @@ def sphere_surf_icosphere_gen_part(MPI.Comm         comm,
   for i_part in range(n_part):
     _n_vtx  = pn_vtx[i_part]
     _n_face = pn_face[i_part]
-    pvtx_coord    .append(create_numpy_d       (_pvtx_coord[i_part],     3*_n_vtx))
-    pvtx_ln_to_gn .append(create_numpy_pdm_gnum(_pvtx_ln_to_gn[i_part],  _n_vtx))
-    pface_vtx_idx .append(create_numpy_i       (_pface_vtx_idx[i_part],  _n_face+1))
-    pface_vtx     .append(create_numpy_i       (_pface_vtx[i_part],      pface_vtx_idx[i_part][_n_face]))
-    pface_ln_to_gn.append(create_numpy_pdm_gnum(_pface_ln_to_gn[i_part], _n_face))
+    pvtx_coord    .append(create_numpy_d (_pvtx_coord[i_part],     3*_n_vtx))
+    pvtx_ln_to_gn .append(create_numpy_g (_pvtx_ln_to_gn[i_part],  _n_vtx))
+    pface_vtx_idx .append(create_numpy_i (_pface_vtx_idx[i_part],  _n_face+1))
+    pface_vtx     .append(create_numpy_i (_pface_vtx[i_part],      pface_vtx_idx[i_part][_n_face]))
+    pface_ln_to_gn.append(create_numpy_g (_pface_ln_to_gn[i_part], _n_face))
 
   return {
   "pn_vtx"         : pn_vtx,

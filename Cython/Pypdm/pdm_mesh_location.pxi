@@ -332,10 +332,10 @@ cdef class MeshLocation:
                                          &p_proj_coord)
 
     return {
-            'g_num'        : create_numpy_pdm_gnum(gnum,         n_points, flag_owndata=False),
-            'location'     : create_numpy_pdm_gnum(location,     n_located),
-            'dist2'        : create_numpy_d       (dist2,        n_located),
-            'p_proj_coord' : create_numpy_d       (p_proj_coord, 3*n_located)
+            'g_num'        : create_numpy_g (gnum,         n_points, flag_owndata=False),
+            'location'     : create_numpy_g (location,     n_located),
+            'dist2'        : create_numpy_d (dist2,        n_located),
+            'p_proj_coord' : create_numpy_d (p_proj_coord, 3*n_located)
            }
 
   def location_get(self, int i_point_cloud, int i_part):
@@ -389,14 +389,14 @@ cdef class MeshLocation:
     cdef int s_loc  = elt_pts_inside_idx[n_elts]
     cdef int s_wei  = points_weights_idx[s_loc]
 
-    return {'elt_pts_inside_idx'      : create_numpy_i       (elt_pts_inside_idx,      n_elts+1),
-            'points_gnum'             : create_numpy_pdm_gnum(points_gnum,             s_loc   ),
-            'points_coords'           : create_numpy_d       (points_coords,           3*s_loc ),
-            'points_uvw'              : create_numpy_d       (points_uvw,              3*s_loc ),
-            'points_weights_idx'      : create_numpy_i       (points_weights_idx,      s_loc+1 ),
-            'points_weights'          : create_numpy_d       (points_weights,          s_wei   ),
-            'points_dist2'            : create_numpy_d       (points_dist2,            s_loc   ),
-            'points_projected_coords' : create_numpy_d       (points_projected_coords, 3*s_loc )
+    return {'elt_pts_inside_idx'      : create_numpy_i (elt_pts_inside_idx,      n_elts+1),
+            'points_gnum'             : create_numpy_g (points_gnum,             s_loc   ),
+            'points_coords'           : create_numpy_d (points_coords,           3*s_loc ),
+            'points_uvw'              : create_numpy_d (points_uvw,              3*s_loc ),
+            'points_weights_idx'      : create_numpy_i (points_weights_idx,      s_loc+1 ),
+            'points_weights'          : create_numpy_d (points_weights,          s_wei   ),
+            'points_dist2'            : create_numpy_d (points_dist2,            s_loc   ),
+            'points_projected_coords' : create_numpy_d (points_projected_coords, 3*s_loc )
             }
 
   def points_in_elt_get(self, int i_part, int i_point_cloud):

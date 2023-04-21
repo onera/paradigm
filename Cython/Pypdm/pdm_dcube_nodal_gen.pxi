@@ -155,11 +155,11 @@ cdef class DCubeNodalGenerator:
     #     dim = <NPY.npy_intp> 8*dims['dn_cell'] # Car hexa ...
     #     dim = <NPY.npy_intp> 6*dims['dn_cell'] # Car prismes ...
     #     dim = <NPY.npy_intp> 4*dims['dn_cell'] # Car tetra  ...
-    #     np_delmt_vtx = create_numpy_pdm_gnum(delmt_vtx, dim)
+    #     np_delmt_vtx = create_numpy_g(delmt_vtx, dim)
 
     #     np_vtx_coord = create_numpy_d(dvtx_coord, 3*dims['dn_vtx'])
     #     # np_dface_group_idx = create_numpy_i(dface_group_idx, dims['n_face_group'] + 1)
-    #     # np_dface_group = create_numpy_pdm_gnum(dface_group, dims['sface_group'])
+    #     # np_dface_group = create_numpy_g(dface_group, dims['sface_group'])
 
     #     return {'delmt_vtx'       : np_delmt_vtx,
     #             'dvtx_coord'      : np_vtx_coord}

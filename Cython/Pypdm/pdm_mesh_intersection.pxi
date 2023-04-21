@@ -220,9 +220,9 @@ cdef class MeshIntersection:
                                               &a_to_b_weight)
 
       return {
-        "a_to_b_idx"    : create_numpy_i       (a_to_b_idx,    self._n_entity_a[i_part] +1),
-        "a_to_b"        : create_numpy_pdm_gnum(a_to_b,        a_to_b_idx[self._n_entity_a[i_part] ]),
-        "a_to_b_weight" : create_numpy_d       (a_to_b_weight, a_to_b_idx[self._n_entity_a[i_part] ])
+        "a_to_b_idx"    : create_numpy_i(a_to_b_idx,    self._n_entity_a[i_part] +1),
+        "a_to_b"        : create_numpy_g(a_to_b,        a_to_b_idx[self._n_entity_a[i_part] ]),
+        "a_to_b_weight" : create_numpy_d(a_to_b_weight, a_to_b_idx[self._n_entity_a[i_part] ])
       }
 
     # ------------------------------------------------------------------

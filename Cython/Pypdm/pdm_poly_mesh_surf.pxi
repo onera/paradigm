@@ -87,15 +87,15 @@ def PolyMeshSurf(double      xmin,
                     &dedge_group_idx,
                     &dedge_group)
 
-  np_dvtx_coord      = create_numpy_d       (dvtx_coord,      3*dn_vtx)
-  np_dface_vtx_idx   = create_numpy_i       (dface_vtx_idx,   dn_face+1)
-  np_dface_vtx       = create_numpy_pdm_gnum(dface_vtx,       np_dface_vtx_idx[np_dface_vtx_idx.shape[0]-1])
+  np_dvtx_coord      = create_numpy_d(dvtx_coord,      3*dn_vtx)
+  np_dface_vtx_idx   = create_numpy_i(dface_vtx_idx,   dn_face+1)
+  np_dface_vtx       = create_numpy_g(dface_vtx,       np_dface_vtx_idx[np_dface_vtx_idx.shape[0]-1])
   # > In 2D cas number of vertex is the same as number of edge
-  np_dface_edge      = create_numpy_pdm_gnum(dface_edge,      np_dface_vtx_idx[np_dface_vtx_idx.shape[0]-1])
-  np_dedge_vtx       = create_numpy_pdm_gnum(dedge_vtx,       2*dn_edge)
-  np_dedge_face      = create_numpy_pdm_gnum(dedge_face,      2*dn_edge)
-  np_dedge_group_idx = create_numpy_i       (dedge_group_idx, n_edge_group+1)
-  np_dedge_group     = create_numpy_pdm_gnum(dedge_group,     np_dedge_group_idx[np_dedge_group_idx.shape[0]-1])
+  np_dface_edge      = create_numpy_g(dface_edge,      np_dface_vtx_idx[np_dface_vtx_idx.shape[0]-1])
+  np_dedge_vtx       = create_numpy_g(dedge_vtx,       2*dn_edge)
+  np_dedge_face      = create_numpy_g(dedge_face,      2*dn_edge)
+  np_dedge_group_idx = create_numpy_i(dedge_group_idx, n_edge_group+1)
+  np_dedge_group     = create_numpy_g(dedge_group,     np_dedge_group_idx[np_dedge_group_idx.shape[0]-1])
 
   return {'n_face'          : n_face,
           'n_vtx'           : n_vtx,
