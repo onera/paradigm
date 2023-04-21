@@ -353,25 +353,12 @@ cdef class PartExtension:
 
     size = PDM_part_extension_connectivity_get(self._part_ext, i_domain, i_part, connectivity_type, &connect, &connect_idx)
 
-    if (connect_idx == NULL) :
-      np_connect_idx = None
-    else :
-      dim = <NPY.npy_intp> (size+1)
-      np_connect_idx = NPY.PyArray_SimpleNewFromData(1,
-                                                  &dim,
-                                                  NPY.NPY_INT32,
-                                                  <void *> connect_idx)
-      PyArray_ENABLEFLAGS(np_connect_idx, NPY.NPY_OWNDATA)
+    np_connect_idx = create_numpy_or_none_i(connect_idx, size+1)
 
     if (connect == NULL) :
       np_connect = None
     else :
-      dim = <NPY.npy_intp> connect_idx[size]
-      np_connect = NPY.PyArray_SimpleNewFromData(1,
-                                                  &dim,
-                                                  NPY.NPY_INT32,
-                                                  <void *> connect)
-      PyArray_ENABLEFLAGS(np_connect, NPY.NPY_OWNDATA)
+      np_connect = create_numpy_i(connect, connect_idx[size])
 
     return (np_connect, np_connect_idx)
 
@@ -388,16 +375,9 @@ cdef class PartExtension:
     size = PDM_part_extension_ln_to_gn_get(self._part_ext, i_domain, i_part, mesh_ety_type, &ln_to_gn)
 
     if (ln_to_gn == NULL) :
-      # np_ln_to_gn = None
-      dim = <NPY.npy_intp> 0
-      np_ln_to_gn = NPY.PyArray_SimpleNew(1, &dim, PDM_G_NUM_NPY_INT)
+      np_ln_to_gn = create_numpy_g(NULL, 0)
     else :
-      dim = <NPY.npy_intp> size
-      np_ln_to_gn = NPY.PyArray_SimpleNewFromData(1,
-                                                  &dim,
-                                                  PDM_G_NUM_NPY_INT,
-                                                  <void *> ln_to_gn)
-      PyArray_ENABLEFLAGS(np_ln_to_gn, NPY.NPY_OWNDATA)
+      np_ln_to_gn = create_numpy_g(ln_to_gn, size)
 
     return np_ln_to_gn
 
@@ -412,18 +392,7 @@ cdef class PartExtension:
     cdef int size
 
     size = PDM_part_extension_interface_get(self._part_ext, i_domain, i_part, mesh_ety_type, &interface_no)
-
-    if (interface_no == NULL) :
-      np_interface_no = None
-    else :
-      dim = <NPY.npy_intp> size
-      np_interface_no = NPY.PyArray_SimpleNewFromData(1,
-                                                  &dim,
-                                                  NPY.NPY_INT32,
-                                                  <void *> interface_no)
-      PyArray_ENABLEFLAGS(np_interface_no, NPY.NPY_OWNDATA)
-
-    return np_interface_no
+    return create_numpy_or_none_i(interface_no, size)
 
   # ------------------------------------------------------------------
   def get_composed_interface(self):
@@ -440,35 +409,14 @@ cdef class PartExtension:
                                                                      &composed_interface,
                                                                      &composed_ln_to_gn_sorted)
 
-    if (composed_interface_idx == NULL) :
-      np_composed_interface_idx = None
-    else :
-      dim = <NPY.npy_intp> n_composed_interface+1
-      np_composed_interface_idx = NPY.PyArray_SimpleNewFromData(1,
-                                                                &dim,
-                                                                NPY.NPY_INT32,
-                                                                <void *> composed_interface_idx)
-      PyArray_ENABLEFLAGS(np_composed_interface_idx, NPY.NPY_OWNDATA)
+    np_composed_interface_idx = create_numpy_or_none_i(composed_interface_idx, n_composed_interface+1)
 
-    if (composed_interface == NULL) :
+    if (composed_interface == NULL): #np_composed_interface_idx can be None
       np_composed_interface = None
-    else :
-      dim = <NPY.npy_intp> np_composed_interface_idx[n_composed_interface]
-      np_composed_interface = NPY.PyArray_SimpleNewFromData(1,
-                                                  &dim,
-                                                  NPY.NPY_INT32,
-                                                  <void *> composed_interface)
-      PyArray_ENABLEFLAGS(np_composed_interface, NPY.NPY_OWNDATA)
+    else:
+      np_composed_interface = create_numpy_i(composed_interface, np_composed_interface_idx[n_composed_interface])
 
-    if (composed_ln_to_gn_sorted == NULL) :
-      np_composed_ln_to_gn_sorted = None
-    else :
-      dim = <NPY.npy_intp> n_composed_interface
-      np_composed_ln_to_gn_sorted = NPY.PyArray_SimpleNewFromData(1,
-                                                  &dim,
-                                                  PDM_G_NUM_NPY_INT,
-                                                  <void *> composed_ln_to_gn_sorted)
-      PyArray_ENABLEFLAGS(np_composed_ln_to_gn_sorted, NPY.NPY_OWNDATA)
+    np_composed_ln_to_gn_sorted = create_numpy_or_none_g(composed_ln_to_gn_sorted, n_composed_interface)
 
     return (np_composed_interface_idx, np_composed_interface, np_composed_ln_to_gn_sorted)
 
@@ -493,32 +441,14 @@ cdef class PartExtension:
     if (group_ln_to_gn == NULL) :
       np_group_ln_to_gn = None
     else :
-      dim = <NPY.npy_intp> entity_group_idx[n_group]
-      np_group_ln_to_gn = NPY.PyArray_SimpleNewFromData(1,
-                                                  &dim,
-                                                  PDM_G_NUM_NPY_INT,
-                                                  <void *> group_ln_to_gn)
-      PyArray_ENABLEFLAGS(np_group_ln_to_gn, NPY.NPY_OWNDATA)
+      np_group_ln_to_gn = create_numpy_g(group_ln_to_gn, entity_group_idx[n_group])
 
-    if (entity_group_idx == NULL) :
-      np_entity_group_idx = None
-    else :
-      dim = <NPY.npy_intp> (n_group+1)
-      np_entity_group_idx = NPY.PyArray_SimpleNewFromData(1,
-                                                          &dim,
-                                                          NPY.NPY_INT32,
-                                                          <void *> entity_group_idx)
-      PyArray_ENABLEFLAGS(np_entity_group_idx, NPY.NPY_OWNDATA)
+    np_entity_group_idx = create_numpy_or_none_i(entity_group_idx, n_group+1)
 
     if (entity_group == NULL) :
       np_entity_group = None
     else :
-      dim = <NPY.npy_intp> entity_group_idx[n_group]
-      np_entity_group = NPY.PyArray_SimpleNewFromData(1,
-                                                      &dim,
-                                                      NPY.NPY_INT32,
-                                                      <void *> entity_group)
-      PyArray_ENABLEFLAGS(np_entity_group, NPY.NPY_OWNDATA)
+      np_entity_group = create_numpy_i(entity_group, entity_group_idx[n_group])
 
     return (np_entity_group_idx, np_entity_group, np_group_ln_to_gn)
 
@@ -530,18 +460,7 @@ cdef class PartExtension:
     cdef int size
 
     size = PDM_part_extension_coord_get(self._part_ext, i_domain, i_part, &coord)
-
-    if (coord == NULL) :
-      np_coord = None
-    else :
-      dim = <NPY.npy_intp> (3 * size)
-      np_coord = NPY.PyArray_SimpleNewFromData(1,
-                                                  &dim,
-                                                  NPY.NPY_DOUBLE,
-                                                  <void *> coord)
-      PyArray_ENABLEFLAGS(np_coord, NPY.NPY_OWNDATA)
-
-    return np_coord
+    return create_numpy_or_none_d(coord, 3*size)
 
   # ------------------------------------------------------------------
   def __dealloc__(self):

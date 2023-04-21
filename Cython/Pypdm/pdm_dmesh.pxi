@@ -273,15 +273,8 @@ def dmesh_connectivity_get(DMesh pydm, PDM_connectivity_type_t connectivity_type
                                          &connect,
                                          &connect_idx,
                                          PDM_OWNERSHIP_USER)
-  if (connect_idx == NULL) :
-      np_connect_idx = None
-  else :
-      dim = <NPY.npy_intp> dn_entity + 1
-      np_connect_idx = NPY.PyArray_SimpleNewFromData(1,
-                                                     &dim,
-                                                     NPY.NPY_INT32,
-                                                     <void *> connect_idx)
-  PyArray_ENABLEFLAGS(np_connect_idx, NPY.NPY_OWNDATA);
+
+  np_connect_idx = create_numpy_or_none_i(connect_idx, dn_entity+1)
 
   if (connect == NULL) :
       np_connect = None
@@ -290,11 +283,7 @@ def dmesh_connectivity_get(DMesh pydm, PDM_connectivity_type_t connectivity_type
         dim = <NPY.npy_intp> connect_idx[dn_entity]
       else:
         dim = <NPY.npy_intp> 2 * dn_entity # Face cell
-      np_connect = NPY.PyArray_SimpleNewFromData(1,
-                                                 &dim,
-                                                 PDM_G_NUM_NPY_INT,
-                                                 <void *> connect)
-  PyArray_ENABLEFLAGS(np_connect, NPY.NPY_OWNDATA);
+      np_connect = create_numpy_g(connect, dim)
   return (np_connect_idx, np_connect)
 
 # ------------------------------------------------------------------------
@@ -308,17 +297,7 @@ def dmesh_distrib_get(DMesh pydm, PDM_mesh_entities_t entity_type):
   cdef int size
   # ************************************************************************
   size = PDM_dmesh_distrib_get(pydm._dm, entity_type, &distrib)
-
-  if (distrib == NULL) :
-      np_distrib = None
-  else :
-      dim = <NPY.npy_intp> size + 1
-      np_distrib = NPY.PyArray_SimpleNewFromData(1,
-                                                 &dim,
-                                                 PDM_G_NUM_NPY_INT,
-                                                 <void *> distrib)
-  # PyArray_ENABLEFLAGS(np_distrib, NPY.NPY_OWNDATA);
-  return np_distrib
+  return create_numpy_or_none_g(distrib, size+1, flag_owndata=False)
 
 # ------------------------------------------------------------------------
 def dmesh_bound_get(DMesh pydm, PDM_bound_type_t bound_type):
@@ -338,25 +317,12 @@ def dmesh_bound_get(DMesh pydm, PDM_bound_type_t bound_type):
                               &connect_idx,
                               PDM_OWNERSHIP_USER)
 
-  if (connect_idx == NULL) :
-      np_connect_idx = None
-  else :
-      dim = <NPY.npy_intp> n_bnd + 1
-      np_connect_idx = NPY.PyArray_SimpleNewFromData(1,
-                                                     &dim,
-                                                     NPY.NPY_INT32,
-                                                     <void *> connect_idx)
-  PyArray_ENABLEFLAGS(np_connect_idx, NPY.NPY_OWNDATA);
+  np_connect_idx = create_numpy_or_none_i(connect_idx, n_bnd+1)
 
   if (connect == NULL) :
       np_connect = None
   else :
-      dim = <NPY.npy_intp> connect_idx[n_bnd]
-      np_connect = NPY.PyArray_SimpleNewFromData(1,
-                                                 &dim,
-                                                 PDM_G_NUM_NPY_INT,
-                                                 <void *> connect)
-  PyArray_ENABLEFLAGS(np_connect, NPY.NPY_OWNDATA);
+      np_connect = create_numpy_g(connect, connect_idx[n_bnd])
   return (np_connect_idx, np_connect)
 
 # ------------------------------------------------------------------------

@@ -397,290 +397,41 @@ cdef class MultiPart:
         cdef list np_elt_section_ln_to_gn = []
         cdef NPY.npy_intp dim_idx
         for i_section in range(n_section):
-            dim_idx = dims['n_elt'][i_section] + 1
-            np_elt_vtx_idx_i_section = NPY.PyArray_SimpleNewFromData(1,
-                                                     &dim_idx,
-                                                     NPY.NPY_INT32,
-                                                     <void *> elt_vtx_idx[i_section])
-            n_elt_i_section = <NPY.npy_intp> dims['n_elt'][i_section]
-            np_elt_section_ln_to_gn_i_section = NPY.PyArray_SimpleNewFromData(1,
-                                                     &n_elt_i_section,
-                                                     PDM_G_NUM_NPY_INT,
-                                                     <void *> elt_section_ln_to_gn[i_section])
-            dim_elt = <NPY.npy_intp> np_elt_vtx_idx_i_section[-1]
-            np_elt_vtx_i_section = NPY.PyArray_SimpleNewFromData(1,
-                                                     &dim_elt,
-                                                     NPY.NPY_INT32,
-                                                     <void *> elt_vtx[i_section])
+            np_elt_vtx_idx_i_section = create_numpy_i(elt_vtx_idx[i_section], dims['n_elt'][i_section]+1)
+            np_elt_section_ln_to_gn_i_section = create_numpy_g(elt_section_ln_to_gn[i_section], dims['n_elt'][i_section])
+            np_elt_vtx_i_section = create_numpy_i(elt_vtx[i_section], np_elt_vtx_idx_i_section[-1])
 
-            PyArray_ENABLEFLAGS(np_elt_vtx_idx_i_section, NPY.NPY_OWNDATA);
-            PyArray_ENABLEFLAGS(np_elt_vtx_i_section, NPY.NPY_OWNDATA);
-            PyArray_ENABLEFLAGS(np_elt_section_ln_to_gn_i_section, NPY.NPY_OWNDATA);
 
             np_elt_vtx_idx.append(np_elt_vtx_idx_i_section)
             np_elt_vtx.append(np_elt_vtx_i_section)
             np_elt_section_ln_to_gn.append(np_elt_section_ln_to_gn_i_section)
 
-        # -> Begin
-        cdef NPY.npy_intp dim
-
-        # \param [out]  cell_tag            Cell tag (size = n_cell)
-        if (cell_tag == NULL) :
-            np_cell_tag = None
-        else :
-            dim = <NPY.npy_intp> dims['n_cell']
-            np_cell_tag = NPY.PyArray_SimpleNewFromData(1,
-                                                     &dim,
-                                                     NPY.NPY_INT32,
-                                                     <void *> cell_tag)
-            PyArray_ENABLEFLAGS(np_cell_tag, NPY.NPY_OWNDATA);
-
-        # \param [out]  cell_face_idx        Cell to face connectivity index (size = n_cell + 1)
-        if (cell_face_idx == NULL) :
-            np_cell_face_idx = None
-        else :
-            dim = <NPY.npy_intp> (dims['n_cell'] + 1)
-            np_cell_face_idx = NPY.PyArray_SimpleNewFromData(1,
-                                                         &dim,
-                                                         NPY.NPY_INT32,
-                                                         <void *> cell_face_idx)
-            PyArray_ENABLEFLAGS(np_cell_face_idx, NPY.NPY_OWNDATA);
-
-        # \param [out]  cell_face           Cell to face connectivity (size = cell_face_idx[n_cell] = lcell_face)
-        if (cell_face == NULL) :
-            np_cell_face = None
-        else :
-            dim = <NPY.npy_intp> dims['scell_face']
-            np_cell_face = NPY.PyArray_SimpleNewFromData(1,
-                                                      &dim,
-                                                      NPY.NPY_INT32,
-                                                      <void *> cell_face)
-            PyArray_ENABLEFLAGS(np_cell_face, NPY.NPY_OWNDATA);
-
-        # \param [out]  cell_ln_to_gn         Cell local numbering to global numbering (size = n_cell)
-        # dim = <NPY.npy_intp> dims['n_cell']
-        if (cell_ln_to_gn == NULL) :
-            np_cell_ln_to_gn = None
-        else :
-            dim = <NPY.npy_intp> dims['n_cell']
-            np_cell_ln_to_gn = NPY.PyArray_SimpleNewFromData(1,
-                                                        &dim,
-                                                        PDM_G_NUM_NPY_INT,
-                                                        <void *> cell_ln_to_gn)
-            PyArray_ENABLEFLAGS(np_cell_ln_to_gn, NPY.NPY_OWNDATA);
-
-        # \param [out]  face_tag            Face tag (size = n_face)
-        if (face_tag == NULL) :
-            np_face_tag = None
-        else :
-            dim = <NPY.npy_intp> dims['n_face']
-            np_face_tag = NPY.PyArray_SimpleNewFromData(1,
-                                                     &dim,
-                                                     NPY.NPY_INT32,
-                                                     <void *> face_tag)
-            PyArray_ENABLEFLAGS(np_face_tag, NPY.NPY_OWNDATA);
-
-        # \param [out]  face_cell           Face to cell connectivity  (size = 2 * n_face)
-        if (face_cell == NULL) :
-            np_face_cell = None
-        else :
-            dim = <NPY.npy_intp> (2 * dims['n_face'])
-            np_face_cell = NPY.PyArray_SimpleNewFromData(1,
-                                                      &dim,
-                                                      NPY.NPY_INT32,
-                                                      <void *> face_cell)
-            PyArray_ENABLEFLAGS(np_face_cell, NPY.NPY_OWNDATA);
-
-        # \param [out]  face_vtx_idx         Face to vtx_coord connectivity index (size = n_face + 1)
-        if (face_vtx_idx == NULL) :
-            np_face_vtx_idx = None
-        else :
-            dim = <NPY.npy_intp> (dims['n_face'] + 1)
-            np_face_vtx_idx = NPY.PyArray_SimpleNewFromData(1,
-                                                           &dim,
-                                                           NPY.NPY_INT32,
-                                                           <void *> face_vtx_idx)
-            PyArray_ENABLEFLAGS(np_face_vtx_idx, NPY.NPY_OWNDATA);
-
-        # \param [out]  face_vtx            Face to vtx_coord connectivity (size = face_vtx_idx[n_face])
-        cdef NPY.ndarray[NPY.int32_t, ndim=1] np_face_vtx
-        if (face_vtx == NULL) :
-            np_face_vtx = None
-        else :
-            dim = <NPY.npy_intp> dims['s_face_vtx']
-            np_face_vtx  = NPY.PyArray_SimpleNewFromData(1,
-                                                         &dim,
-                                                         NPY.NPY_INT32,
-                                                         <void *> face_vtx)
-            PyArray_ENABLEFLAGS(np_face_vtx, NPY.NPY_OWNDATA);
-
-        # \param [out]  face_ln_to_gn         Face local numbering to global numbering (size = n_face)
-        if (face_ln_to_gn == NULL) :
-            np_face_ln_to_gn = None
-        else :
-            dim = <NPY.npy_intp> dims['n_face']
-            np_face_ln_to_gn   = NPY.PyArray_SimpleNewFromData(1,
-                                                          &dim,
-                                                          PDM_G_NUM_NPY_INT,
-                                                          <void *> face_ln_to_gn)
-            PyArray_ENABLEFLAGS(np_face_ln_to_gn, NPY.NPY_OWNDATA);
-
-        # \param [out]  face_part_bound      Partitioning boundary faces
-        if (face_part_bound == NULL) :
-            np_face_part_bound = None
-        else :
-            dim = <NPY.npy_intp> (4 * dims['n_face_part_bound'])
-            np_face_part_bound   = NPY.PyArray_SimpleNewFromData(1,
-                                                             &dim,
-                                                             NPY.NPY_INT32,
-                                                             <void *> face_part_bound)
-            PyArray_ENABLEFLAGS(np_face_part_bound, NPY.NPY_OWNDATA);
-
-        # \param [out]  face_part_bound_proc_idx  Partitioning boundary faces block distribution from processus (size = n_proc + 1)
-        if (face_part_bound_proc_idx == NULL) :
-            np_face_part_bound_proc_idx = None
-        else :
-            dim = <NPY.npy_intp> ( dims['n_proc'] + 1)
-            np_face_part_bound_proc_idx   = NPY.PyArray_SimpleNewFromData(1,
-                                                             &dim,
-                                                             NPY.NPY_INT32,
-                                                             <void *> face_part_bound_proc_idx)
-            PyArray_ENABLEFLAGS(np_face_part_bound_proc_idx, NPY.NPY_OWNDATA);
-
-        # \param [out]  face_part_bound_part_idx  Partitioning boundary faces block distribution from partition (size = nt_part + 1)
-        if (face_part_bound_part_idx == NULL) :
-            np_face_part_bound_part_idx = None
-        else :
-            dim = <NPY.npy_intp> ( dims['nt_part'] + 1)
-            np_face_part_bound_part_idx   = NPY.PyArray_SimpleNewFromData(1,
-                                                             &dim,
-                                                             NPY.NPY_INT32,
-                                                             <void *> face_part_bound_part_idx)
-            PyArray_ENABLEFLAGS(np_face_part_bound_part_idx, NPY.NPY_OWNDATA);
-
-        # \param [out]  vtx_tag             vtx_coord tag (size = nVtx)
-        if (vtx_tag == NULL) :
-            np_vtx_tag = None
-        else :
-            dim = <NPY.npy_intp> dims['n_vtx']
-            np_vtx_tag   = NPY.PyArray_SimpleNewFromData(1,
-                                                         &dim,
-                                                         NPY.NPY_INT32,
-                                                         <void *> vtx_tag)
-            PyArray_ENABLEFLAGS(np_vtx_tag, NPY.NPY_OWNDATA);
-
-        # \param [out]  vtx                vtx_coord coordinates (size = 3 * nVtx)
-        if (vtx_coord == NULL) :
-            np_vtx_coord = None
-        else :
-            dim = <NPY.npy_intp> (3 * dims['n_vtx'])
-            np_vtx_coord  = NPY.PyArray_SimpleNewFromData(1,
-                                                     &dim,
-                                                     NPY.NPY_DOUBLE,
-                                                     <void *> vtx_coord)
-            PyArray_ENABLEFLAGS(np_vtx_coord, NPY.NPY_OWNDATA);
-
-        # \param [out]  vtx_ln_to_gn          vtx_coord local numbering to global numbering (size = nVtx)
-        if (vtx_ln_to_gn == NULL) :
-            np_vtx_ln_to_gn = None
-        else :
-            dim = <NPY.npy_intp> dims['n_vtx']
-            np_vtx_ln_to_gn  = NPY.PyArray_SimpleNewFromData(1,
-                                                           &dim,
-                                                           PDM_G_NUM_NPY_INT,
-                                                           <void *> vtx_ln_to_gn)
-            PyArray_ENABLEFLAGS(np_vtx_ln_to_gn, NPY.NPY_OWNDATA);
-
-        # \param [out]  face_bound_idx       face group index (size = n_face_bound + 1)
-        if (face_bound_idx == NULL) :
-            np_face_bound_idx = None
-        else :
-            dim = <NPY.npy_intp> dims['n_face_bound'] + 1
-            np_face_bound_idx  = NPY.PyArray_SimpleNewFromData(1,
-                                                           &dim,
-                                                           NPY.NPY_INT32,
-                                                           <void *> face_bound_idx)
-            PyArray_ENABLEFLAGS(np_face_bound_idx, NPY.NPY_OWNDATA);
-
-        # \param [out]  face_bound          faces for each group (size = face_bound_idx[n_face_bound] = lFace_bound)
-        if (face_bound == NULL) :
-            np_face_bound = None
-        else :
-            dim = <NPY.npy_intp> dims['s_face_bound']
-            np_face_bound = NPY.PyArray_SimpleNewFromData(1,
-                                                       &dim,
-                                                       NPY.NPY_INT32,
-                                                       <void *> face_bound)
-            PyArray_ENABLEFLAGS(np_face_bound, NPY.NPY_OWNDATA);
-
-        # \param [out]  face_bound_ln_to_gn    faces global numbering for each group (size = face_bound_idx[n_face_bound] = lFace_bound)
-        if (face_bound_ln_to_gn == NULL) :
-            np_face_bound_ln_to_gn = None
-        else :
-            dim = <NPY.npy_intp> dims['s_face_bound']
-            np_face_bound_ln_to_gn = NPY.PyArray_SimpleNewFromData(1,
-                                                             &dim,
-                                                             PDM_G_NUM_NPY_INT,
-                                                             <void *> face_bound_ln_to_gn)
-            PyArray_ENABLEFLAGS(np_face_bound_ln_to_gn, NPY.NPY_OWNDATA);
-
-        # \param [out]  face_join_idx       face group index (size = n_face_join + 1)
-        if (face_join_idx == NULL) :
-            np_face_join_idx = None
-        else :
-            dim = <NPY.npy_intp> dims['n_face_join'] + 1
-            np_face_join_idx  = NPY.PyArray_SimpleNewFromData(1,
-                                                          &dim,
-                                                          NPY.NPY_INT32,
-                                                          <void *> face_join_idx)
-            PyArray_ENABLEFLAGS(np_face_join_idx, NPY.NPY_OWNDATA);
-
-        # \param [out]  face_join          faces for each group (size = face_join_idx[n_face_join] = lFace_join)
-        if (face_join == NULL) :
-            np_face_join = None
-        else :
-            dim = <NPY.npy_intp> (4 * dims['s_face_join'])
-            np_face_join = NPY.PyArray_SimpleNewFromData(1,
-                                                      &dim,
-                                                      NPY.NPY_INT32,
-                                                      <void *> face_join)
-            PyArray_ENABLEFLAGS(np_face_join, NPY.NPY_OWNDATA);
-
-        # \param [out]  face_join_ln_to_gn    faces global numbering for each group (size = face_join_idx[n_face_join] = lFace_join)
-        if (face_join_ln_to_gn == NULL) :
-            np_face_join_ln_to_gn = None
-        else :
-            dim = <NPY.npy_intp> dims['s_face_join']
-            np_face_join_ln_to_gn = NPY.PyArray_SimpleNewFromData(1,
-                                                             &dim,
-                                                             PDM_G_NUM_NPY_INT,
-                                                             <void *> face_join_ln_to_gn)
-            PyArray_ENABLEFLAGS(np_face_join_ln_to_gn, NPY.NPY_OWNDATA);
-
-        return {'np_cell_tag'                  : np_cell_tag,
-                'np_cell_face_idx'             : np_cell_face_idx,
-                'np_cell_face'                 : np_cell_face,
-                'np_cell_ln_to_gn'             : np_cell_ln_to_gn,
-                'np_face_tag'                  : np_face_tag,
-                'np_face_cell'                 : np_face_cell,
-                'np_elt_vtx_idx'               : np_elt_vtx_idx,
-                'np_elt_vtx'                   : np_elt_vtx,
-                'np_elt_section_ln_to_gn'      : np_elt_section_ln_to_gn,
-                'np_face_vtx_idx'              : np_face_vtx_idx,
-                'np_face_vtx'                  : np_face_vtx,
-                'np_face_ln_to_gn'             : np_face_ln_to_gn,
-                'np_face_part_bound_proc_idx'  : np_face_part_bound_proc_idx,
-                'np_face_part_bound_part_idx'  : np_face_part_bound_part_idx,
-                'np_face_part_bound'           : np_face_part_bound,
-                'np_vtx_tag'                   : np_vtx_tag,
-                'np_vtx_coord'                 : np_vtx_coord,
-                'np_vtx_ln_to_gn'              : np_vtx_ln_to_gn,
-                'np_face_bound_idx'            : np_face_bound_idx,
-                'np_face_bound'                : np_face_bound,
-                'np_face_bound_ln_to_gn'       : np_face_bound_ln_to_gn,
-                'np_face_join_idx'             : np_face_join_idx,
-                'np_face_join'                 : np_face_join,
-                'np_face_join_ln_to_gn'        : np_face_join_ln_to_gn}
+        return {
+            'np_cell_tag'                 : create_numpy_or_none_i(cell_tag,                 dims['n_cell']),
+            'np_cell_face_idx'            : create_numpy_or_none_i(cell_face_idx,            dims['n_cell']+1),
+            'np_cell_face'                : create_numpy_or_none_i(cell_face,                dims['scell_face']),
+            'np_cell_ln_to_gn'            : create_numpy_or_none_g(cell_ln_to_gn,            dims['n_cell']),
+            'np_face_tag'                 : create_numpy_or_none_i(face_tag,                 dims['n_face']),
+            'np_face_cell'                : create_numpy_or_none_i(face_cell,                2*dims['n_face']),
+            'np_elt_vtx_idx'              : np_elt_vtx_idx,
+            'np_elt_vtx'                  : np_elt_vtx,
+            'np_elt_section_ln_to_gn'     : np_elt_section_ln_to_gn,
+            'np_face_vtx_idx'             : create_numpy_or_none_i(face_vtx_idx,             dims['n_face']+1),
+            'np_face_vtx'                 : create_numpy_or_none_i(face_vtx,                 dims['s_face_vtx']),
+            'np_face_ln_to_gn'            : create_numpy_or_none_g(face_ln_to_gn,            dims['n_face']),
+            'np_face_part_bound_proc_idx' : create_numpy_or_none_i(face_part_bound_proc_idx, dims['n_proc']+1),
+            'np_face_part_bound_part_idx' : create_numpy_or_none_i(face_part_bound_part_idx, dims['nt_part']+1),
+            'np_face_part_bound'          : create_numpy_or_none_i(face_part_bound,          4*dims['n_face_part_bound']),
+            'np_vtx_tag'                  : create_numpy_or_none_i(vtx_tag,                  dims['n_vtx']),
+            'np_vtx_coord'                : create_numpy_or_none_d(vtx_coord,                3*dims['n_vtx']),
+            'np_vtx_ln_to_gn'             : create_numpy_or_none_g(vtx_ln_to_gn,             dims['n_vtx']),
+            'np_face_bound_idx'           : create_numpy_or_none_i(face_bound_idx,           dims['n_face_bound']+1),
+            'np_face_bound'               : create_numpy_or_none_i(face_bound,               dims['s_face_bound']),
+            'np_face_bound_ln_to_gn'      : create_numpy_or_none_g(face_bound_ln_to_gn,      dims['s_face_bound']),
+            'np_face_join_idx'            : create_numpy_or_none_i(face_join_idx,            dims['n_face_join']+1),
+            'np_face_join'                : create_numpy_or_none_i(face_join,                4*dims['s_face_join']),
+            'np_face_join_ln_to_gn'       : create_numpy_or_none_g(face_join_ln_to_gn,       dims['s_face_join']),
+        }
 
 
     # ------------------------------------------------------------------
@@ -708,18 +459,7 @@ cdef class MultiPart:
         n_cell = PDM_multipart_part_n_entity_get(self._mtp, zone_gid, ipart, PDM_MESH_ENTITY_CELL)
         PDM_multipart_part_hyperplane_color_get(self._mtp, zone_gid, ipart, &hyper_plane_color, PDM_OWNERSHIP_USER);
 
-        # \param [out]  hyper_plane_color            Cell tag (size = n_cell)
-        if (hyper_plane_color == NULL):
-            np_hyper_plane_color = None
-        else :
-            dim = <NPY.npy_intp> n_cell
-            np_hyper_plane_color = NPY.PyArray_SimpleNewFromData(1,
-                                                              &dim,
-                                                              NPY.NPY_INT32,
-                                                              <void *> hyper_plane_color)
-            PyArray_ENABLEFLAGS(np_hyper_plane_color, NPY.NPY_OWNDATA);
-
-        return {'np_hyper_plane_color' : np_hyper_plane_color}
+        return {'np_hyper_plane_color' : create_numpy_or_none_i(hyper_plane_color, n_cell)}
 
     # ------------------------------------------------------------------
     def multipart_thread_color_get(self, int ipart, int zone_gid):
@@ -735,18 +475,7 @@ cdef class MultiPart:
         n_cell = PDM_multipart_part_n_entity_get(self._mtp, zone_gid, ipart, PDM_MESH_ENTITY_CELL)
         PDM_multipart_part_thread_color_get(self._mtp, zone_gid, ipart, &thread_color, PDM_OWNERSHIP_USER);
 
-        # \param [out]  thread_color            Cell tag (size = n_cell)
-        if (thread_color == NULL):
-            np_thread_color = None
-        else :
-            dim = <NPY.npy_intp> n_cell
-            np_thread_color = NPY.PyArray_SimpleNewFromData(1,
-                                                          &dim,
-                                                          NPY.NPY_INT32,
-                                                          <void *> thread_color)
-            PyArray_ENABLEFLAGS(np_thread_color, NPY.NPY_OWNDATA);
-
-        return {'np_thread_color' : np_thread_color}
+        return {'np_thread_color' : create_numpy_or_none_i(thread_color, n_cell)}
 
 
     # ------------------------------------------------------------------
@@ -771,17 +500,7 @@ cdef class MultiPart:
         # -> Begin
         cdef NPY.npy_intp dim
 
-        # \param [out]  cell_color            Cell tag (size = n_cell)
-        if (vtx_ghost_information == NULL):
-            np_vtx_ghost_information = None
-        else :
-            dim = <NPY.npy_intp> dims['n_vtx']
-            np_vtx_ghost_information = NPY.PyArray_SimpleNewFromData(1,
-                                                                     &dim,
-                                                                     NPY.NPY_INT32,
-                                                                     <void *> vtx_ghost_information)
-            PyArray_ENABLEFLAGS(np_vtx_ghost_information, NPY.NPY_OWNDATA);
-        return {'np_vtx_ghost_information' : np_vtx_ghost_information}
+        return {'np_vtx_ghost_information' : create_numpy_or_none_i(vtx_ghost_information, dims['n_vtx'])}
 
     # ------------------------------------------------------------------
     def multipart_connectivity_get(self, int ipart, int zone_gid, PDM_connectivity_type_t connectivity_type):
@@ -802,30 +521,13 @@ cdef class MultiPart:
                                                         &entity1_entity2,
                                                         &entity1_entity2_idx,
                                                         PDM_OWNERSHIP_USER)
-        cdef NPY.npy_intp dim
 
         if (entity1_entity2_idx == NULL and entity1_entity2 != NULL):
             np_entity1_entity2_idx = None
-            dim = <NPY.npy_intp> 2 * n_entity1
-            np_entity1_entity2 = NPY.PyArray_SimpleNewFromData(1,
-                                                               &dim,
-                                                               NPY.NPY_INT32,
-                                                      <void *> entity1_entity2)
-            PyArray_ENABLEFLAGS(np_entity1_entity2, NPY.NPY_OWNDATA);
+            np_entity1_entity2 = create_numpy_i(entity1_entity2, 2*n_entity1)
         elif(entity1_entity2 != NULL):
-            dim = <NPY.npy_intp> n_entity1+1
-            np_entity1_entity2_idx = NPY.PyArray_SimpleNewFromData(1,
-                                                                   &dim,
-                                                                   NPY.NPY_INT32,
-                                                                   <void *> entity1_entity2_idx)
-            PyArray_ENABLEFLAGS(np_entity1_entity2_idx, NPY.NPY_OWNDATA);
-
-            dim = <NPY.npy_intp> np_entity1_entity2_idx[n_entity1]
-            np_entity1_entity2 = NPY.PyArray_SimpleNewFromData(1,
-                                                               &dim,
-                                                               NPY.NPY_INT32,
-                                                      <void *> entity1_entity2)
-            PyArray_ENABLEFLAGS(np_entity1_entity2, NPY.NPY_OWNDATA);
+            np_entity1_entity2_idx = create_numpy_i(entity1_entity2_idx, n_entity1+1)
+            np_entity1_entity2 = create_numpy_i(entity1_entity2, np_entity1_entity2_idx[n_entity1])
         else:
           np_entity1_entity2_idx = None
           np_entity1_entity2     = None
@@ -852,18 +554,8 @@ cdef class MultiPart:
                                                     entity_type,
                                                     &entity_ln_to_gn,
                                                     PDM_OWNERSHIP_USER)
-        cdef NPY.npy_intp dim
-        if (entity_ln_to_gn == NULL) :
-            np_entity_ln_to_gn = None
-        else :
-            dim = <NPY.npy_intp> n_entity1
-            np_entity_ln_to_gn   = NPY.PyArray_SimpleNewFromData(1,
-                                                                 &dim,
-                                                                 PDM_G_NUM_NPY_INT,
-                                                        <void *> entity_ln_to_gn)
-            PyArray_ENABLEFLAGS(np_entity_ln_to_gn, NPY.NPY_OWNDATA);
 
-        return {'np_entity_ln_to_gn'     : np_entity_ln_to_gn}
+        return {'np_entity_ln_to_gn' : create_numpy_or_none_g(entity_ln_to_gn, n_entity1)}
 
     # ------------------------------------------------------------------
     def multipart_vtx_coord_get(self, int ipart, int zone_gid):
@@ -881,18 +573,7 @@ cdef class MultiPart:
                                                &vtx_coord,
                                                PDM_OWNERSHIP_USER)
 
-      cdef NPY.npy_intp dim
-      if (vtx_coord == NULL) :
-        np_vtx_coord = None
-      else :
-        dim = <NPY.npy_intp> (3*n_vtx)
-        np_vtx_coord = NPY.PyArray_SimpleNewFromData(1,
-                                                     &dim,
-                                                     NPY.NPY_DOUBLE,
-                                            <void *> vtx_coord)
-        PyArray_ENABLEFLAGS(np_vtx_coord, NPY.NPY_OWNDATA);
-
-      return {'np_vtx_coord' : np_vtx_coord}
+      return {'np_vtx_coord' : create_numpy_or_none_d(vtx_coord, 3*n_vtx)}
 
     # ------------------------------------------------------------------
     def multipart_part_color_get(self, int ipart, int zone_gid, PDM_mesh_entities_t entity_type):
@@ -911,18 +592,8 @@ cdef class MultiPart:
                                                       entity_type,
                                                       &entity_color,
                                                       PDM_OWNERSHIP_USER)
-        cdef NPY.npy_intp dim
-        if (entity_color == NULL) :
-            np_entity_color = None
-        else :
-            dim = <NPY.npy_intp> n_entity1
-            np_entity_color   = NPY.PyArray_SimpleNewFromData(1,
-                                                                 &dim,
-                                                                 NPY.NPY_INT32,
-                                                        <void *> entity_color)
-            PyArray_ENABLEFLAGS(np_entity_color, NPY.NPY_OWNDATA);
 
-        return {'np_entity_color'     : np_entity_color}
+        return {'np_entity_color' : create_numpy_or_none_i(entity_color, n_entity1)}
 
     # ------------------------------------------------------------------
     def multipart_graph_comm_get(self,
@@ -950,44 +621,14 @@ cdef class MultiPart:
 
         tn_part = PDM_multipart_part_tn_part_get(self._mtp, zone_gid)
 
-        # -> Begin
-        cdef NPY.npy_intp dim
-        # \param [out]  entity_part_bound      Partitioning boundary vtxs
         if (entity_part_bound == NULL) :
             np_entity_part_bound = None
         else :
-            n_entity_part_bound = entity_part_bound_part_idx[tn_part]
-            dim = <NPY.npy_intp> (4 * n_entity_part_bound)
-            np_entity_part_bound   = NPY.PyArray_SimpleNewFromData(1,
-                                                                &dim,
-                                                                NPY.NPY_INT32,
-                                                                <void *> entity_part_bound)
-            PyArray_ENABLEFLAGS(np_entity_part_bound, NPY.NPY_OWNDATA);
+            np_entity_part_bound   = create_numpy_i(entity_part_bound, 4*entity_part_bound_part_idx[tn_part])
 
-        # \param [out]  entity_part_bound_proc_idx  Partitioning boundary vtxs block distribution from processus (size = n_proc + 1)
-        if (entity_part_bound_proc_idx == NULL) :
-            np_entity_part_bound_proc_idx = None
-        else :
-            dim = <NPY.npy_intp> ( self.n_rank + 1)
-            np_entity_part_bound_proc_idx = NPY.PyArray_SimpleNewFromData(1,
-                                                                       &dim,
-                                                                       NPY.NPY_INT32,
-                                                                       <void *> entity_part_bound_proc_idx)
-            PyArray_ENABLEFLAGS(np_entity_part_bound_proc_idx, NPY.NPY_OWNDATA);
 
-        # \param [out]  entity_part_bound_part_idx  Partitioning boundary vtxs block distribution from partition (size = nt_part + 1)
-        if (entity_part_bound_part_idx == NULL) :
-            np_entity_part_bound_part_idx = None
-        else :
-            dim = <NPY.npy_intp> ( tn_part + 1)
-            np_entity_part_bound_part_idx = NPY.PyArray_SimpleNewFromData(1,
-                                                                       &dim,
-                                                                       NPY.NPY_INT32,
-                                                                       <void *> entity_part_bound_part_idx)
-            PyArray_ENABLEFLAGS(np_entity_part_bound_part_idx, NPY.NPY_OWNDATA);
-
-        return {'np_entity_part_bound_proc_idx'  : np_entity_part_bound_proc_idx,
-                'np_entity_part_bound_part_idx'  : np_entity_part_bound_part_idx,
+        return {'np_entity_part_bound_proc_idx'  : create_numpy_or_none_i(entity_part_bound_proc_idx, self.n_rank+1),
+                'np_entity_part_bound_part_idx'  : create_numpy_or_none_i(entity_part_bound_part_idx, tn_part+1),
                 'np_entity_part_bound'           : np_entity_part_bound}
 
     # ------------------------------------------------------------------

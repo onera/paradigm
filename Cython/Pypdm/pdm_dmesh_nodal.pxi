@@ -356,22 +356,8 @@ def dmesh_nodal_get_vtx(DMeshNodal pydmn, MPI.Comm    comm):
   n_vtx = PDM_DMesh_nodal_n_vtx_get(pydmn.dmn);
   vtx_coord = PDM_DMesh_nodal_vtx_get(pydmn.dmn)
 
-  dim = <NPY.npy_intp> 3 * n_vtx
-  np_vtx = NPY.PyArray_SimpleNewFromData(1,
-                                         &dim,
-                                         NPY.NPY_DOUBLE,
-                                         <void *> vtx_coord)
-  PyArray_ENABLEFLAGS(np_vtx, NPY.NPY_OWNDATA);
-
-  dim = <NPY.npy_intp> comm.Get_size() + 1
-  np_vtx_distrib = NPY.PyArray_SimpleNewFromData(1,
-                                             &dim,
-                                             PDM_G_NUM_NPY_INT,
-                                             <void *> vtx_distrib)
-  PyArray_ENABLEFLAGS(np_vtx_distrib, NPY.NPY_OWNDATA);
-
-  return {"np_vtx"         : np_vtx,
-          "np_vtx_distrib" : np_vtx_distrib}
+  return {"np_vtx"         : create_numpy_d(vtx_coord,   3*n_vtx),
+          "np_vtx_distrib" : create_numpy_g(vtx_distrib, comm.Get_size()+1)}
 
 def dmesh_nodal_get_sections(DMeshNodal          pydmn,
                              PDM_geometry_kind_t geom_kind,
@@ -409,22 +395,13 @@ def dmesh_nodal_get_sections(DMeshNodal          pydmn,
     connect         = PDM_DMesh_nodal_section_std_get(pydmn.dmn, geom_kind, id_section)
 
     # > Build numpy capsule
-    dim = <NPY.npy_intp> comm.Get_size() + 1
-    np_distrib_tmp = NPY.PyArray_SimpleNewFromData(1,
-                                               &dim,
-                                               PDM_G_NUM_NPY_INT,
-                                       <void *> section_distrib)
+    np_distrib_tmp = create_numpy_g(section_distrib, comm.Get_size()+1, flag_owndata=False)
     np_distrib = NPY.copy(np_distrib_tmp)
 
     # > Build numpy capsule
     dn_elmt = np_distrib[comm.Get_rank()+1] - np_distrib[comm.Get_rank()]
     n_vtx_per_elmt = PDM_Mesh_nodal_n_vertices_element(t_elmt, 1)
-    dim = <NPY.npy_intp> n_vtx_per_elmt * dn_elmt
-    np_connec = NPY.PyArray_SimpleNewFromData(1,
-                                               &dim,
-                                               PDM_G_NUM_NPY_INT,
-                                               <void *> connect)
-    PyArray_ENABLEFLAGS(np_connec, NPY.NPY_OWNDATA);
+    np_connec = create_numpy_g(connect, n_vtx_per_elmt*dn_elmt)
 
     sections.append({"pdm_type"   : t_elmt,
                      "np_distrib" : np_distrib,
@@ -453,19 +430,8 @@ def dmesh_nodal_get_group(DMeshNodal pydmn, PDM_geometry_kind_t geom_kind):
   if n_group == 0:
     return None
 
-  dim = <NPY.npy_intp> n_group + 1
-  np_dgroup_elmt_idx = NPY.PyArray_SimpleNewFromData(1,
-                                                     &dim,
-                                                     NPY.NPY_INT32,
-                                                     <void *> dgroup_elmt_idx)
-  PyArray_ENABLEFLAGS(np_dgroup_elmt_idx, NPY.NPY_OWNDATA);
-
-  dim = <NPY.npy_intp> np_dgroup_elmt_idx[n_group]
-  np_dgroup_elmt = NPY.PyArray_SimpleNewFromData(1,
-                                                 &dim,
-                                                 PDM_G_NUM_NPY_INT,
-                                                 <void *> dgroup_elmt)
-  PyArray_ENABLEFLAGS(np_dgroup_elmt, NPY.NPY_OWNDATA);
+  np_dgroup_elmt_idx = create_numpy_i(dgroup_elmt_idx, n_group+1)
+  np_dgroup_elmt = create_numpy_g(dgroup_elmt, np_dgroup_elmt_idx[n_group])
 
   return {"dgroup_elmt_idx" : np_dgroup_elmt_idx,
           "dgroup_elmt"     : np_dgroup_elmt}

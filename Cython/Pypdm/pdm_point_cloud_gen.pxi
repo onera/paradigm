@@ -99,16 +99,8 @@ def part_point_cloud_gen_random(MPI.Comm       comm,
                               &pts_coord,
                               &pts_ln_to_gn);
 
-   dim = <NPY.npy_intp> (pn_pts * 3)
-   np_pts_coord = NPY.PyArray_SimpleNewFromData(1, &dim, NPY.NPY_DOUBLE, pts_coord)
-   PyArray_ENABLEFLAGS(np_pts_coord, NPY.NPY_OWNDATA)
-
-   dim = <NPY.npy_intp> (pn_pts )
-   np_pts_ln_to_gn = NPY.PyArray_SimpleNewFromData(1, &dim, PDM_G_NUM_NPY_INT, pts_ln_to_gn)
-   PyArray_ENABLEFLAGS(np_pts_ln_to_gn, NPY.NPY_OWNDATA)
-
-   return {"np_pts_ln_to_gn" : np_pts_ln_to_gn,
-   "np_pts_coord"    : np_pts_coord}
+   return {"np_pts_ln_to_gn" : create_numpy_g(pts_ln_to_gn, pn_pts),
+           "np_pts_coord"    : create_numpy_d(pts_coord, 3*pn_pts)}
 
 # ------------------------------------------------------------------------
 def part_point_cloud_gen_cartesian(MPI.Comm      comm,
@@ -143,16 +135,8 @@ def part_point_cloud_gen_cartesian(MPI.Comm      comm,
                                  &pts_coord,
                                  &pts_ln_to_gn);
 
-   dim = <NPY.npy_intp> (pn_pts * 3)
-   np_pts_coord = NPY.PyArray_SimpleNewFromData(1, &dim, NPY.NPY_DOUBLE, pts_coord)
-   PyArray_ENABLEFLAGS(np_pts_coord, NPY.NPY_OWNDATA)
-
-   dim = <NPY.npy_intp> (pn_pts )
-   np_pts_ln_to_gn = NPY.PyArray_SimpleNewFromData(1, &dim, PDM_G_NUM_NPY_INT, pts_ln_to_gn)
-   PyArray_ENABLEFLAGS(np_pts_ln_to_gn, NPY.NPY_OWNDATA)
-
-   return {"np_pts_ln_to_gn" : np_pts_ln_to_gn,
-   "np_pts_coord"    : np_pts_coord}
+   return {"np_pts_ln_to_gn" : create_numpy_g(pts_ln_to_gn, pn_pts),
+           "np_pts_coord"    : create_numpy_d(pts_coord, 3*pn_pts)}
 
 
 
@@ -188,16 +172,9 @@ def dpoint_cloud_gen_random(MPI.Comm       comm,
                                &distrib_pts);
 
    dn_pts  = distrib_pts [i_rank+1] - distrib_pts [i_rank]
-   dim = <NPY.npy_intp> (dn_pts * 3)
-   np_dpts_coord = NPY.PyArray_SimpleNewFromData(1, &dim, NPY.NPY_DOUBLE, dpts_coord)
-   PyArray_ENABLEFLAGS(np_dpts_coord, NPY.NPY_OWNDATA)
 
-   dim = <NPY.npy_intp> (n_rank + 1 )
-   np_distrib_pts = NPY.PyArray_SimpleNewFromData(1, &dim, PDM_G_NUM_NPY_INT, distrib_pts)
-   PyArray_ENABLEFLAGS(np_distrib_pts, NPY.NPY_OWNDATA)
-
-   return {"np_distrib_pts" : np_distrib_pts,
-           "np_dpts_coord"    : np_dpts_coord}
+   return {"np_distrib_pts"  : create_numpy_g(distrib_pts, n_rank+1),
+           "np_dpts_coord"   : create_numpy_d(dpts_coord, 3*dn_pts)}
 
 # ------------------------------------------------------------------------
 def dpoint_cloud_gen_cartesian(MPI.Comm      comm,
@@ -233,13 +210,6 @@ def dpoint_cloud_gen_cartesian(MPI.Comm      comm,
                                   &distrib_pts);
 
    dn_pts  = distrib_pts [i_rank+1] - distrib_pts [i_rank]
-   dim = <NPY.npy_intp> (dn_pts * 3)
-   np_dpts_coord = NPY.PyArray_SimpleNewFromData(1, &dim, NPY.NPY_DOUBLE, dpts_coord)
-   PyArray_ENABLEFLAGS(np_dpts_coord, NPY.NPY_OWNDATA)
 
-   dim = <NPY.npy_intp> (n_rank + 1 )
-   np_distrib_pts = NPY.PyArray_SimpleNewFromData(1, &dim, PDM_G_NUM_NPY_INT, distrib_pts)
-   PyArray_ENABLEFLAGS(np_distrib_pts, NPY.NPY_OWNDATA)
-
-   return {"np_distrib_pts" : np_distrib_pts,
-           "np_dpts_coord"  : np_dpts_coord}
+   return {"np_distrib_pts" : create_numpy_g(distrib_pts, n_rank+1),
+           "np_dpts_coord"  : create_numpy_d(dpts_coord, 3*dn_pts)}
