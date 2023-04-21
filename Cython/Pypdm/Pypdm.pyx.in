@@ -22,7 +22,7 @@ cdef extern from "pdm_config.h":
     cdef int _PDM_VERSION_RELEASE "PDM_RELEASE_VERSION"
     cdef char* _PDM_VERSION "PDM_VERSION"
 
-__version__ = _PDM_VERSION
+__version__ = _PDM_VERSION.decode()
 
 
 cdef extern from "numpy/arrayobject.h":
