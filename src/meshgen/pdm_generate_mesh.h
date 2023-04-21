@@ -101,6 +101,7 @@ PDM_generate_mesh_ball_simplified
  * \brief Create a simple partitionned parallelepiped mesh (3D).
  *
  * \param [in]   comm        MPI communicator
+ * \param [in]   n_vtx_seg   Number of vertices along each side of the parallelepiped
  * \param [out]  n_vtx       Number of vertices
  * \param [out]  n_elt       Number of elements
  * \param [out]  coords      Array of vertex coordinates
@@ -113,6 +114,7 @@ void
 PDM_generate_mesh_parallelepiped_simplified
 (
  const PDM_MPI_Comm   comm,
+ const PDM_g_num_t    n_vtx_seg,
  int                 *n_vtx,
  int                 *n_elt,
  double             **coords,

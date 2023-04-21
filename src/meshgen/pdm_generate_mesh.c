@@ -26,6 +26,7 @@
 #include "pdm_sphere_vol_gen.h"
 #include "pdm_dcube_nodal_gen.h"
 #include "pdm_part_connectivity_transform.h"
+#include "pdm_array.h"
 
 #ifdef __cplusplus
 extern "C"
@@ -473,7 +474,7 @@ PDM_generate_mesh_sphere
                         &mpart);
 
   // get partionned sphere mesh
-  PDM_part_mesh_nodal_t *pmn   = NULL;
+  PDM_part_mesh_nodal_t *pmn = NULL;
   PDM_multipart_get_part_mesh_nodal(mpart,
                                     0,
                                     &pmn,
@@ -702,71 +703,43 @@ PDM_generate_mesh_ball_simplified
                       &dmn,
                       &mpart);
 
+  PDM_part_mesh_nodal_t *pmn = NULL;
+  PDM_multipart_get_part_mesh_nodal(mpart,
+                                    0,
+                                    &pmn,
+                                    PDM_OWNERSHIP_KEEP);
+
+  *n_elt = PDM_part_mesh_nodal_section_n_elt_get(pmn, 0, 0);
+
+  int         *connec              = NULL;
+  PDM_g_num_t *numabs              = NULL;
+  int         *parent_num          = NULL;
+  PDM_g_num_t *parent_entity_g_num = NULL;
+  PDM_part_mesh_nodal_section_std_get(pmn,
+                                      0,
+                                      0,
+                                      &connec,
+                                      &numabs,
+                                      &parent_num,
+                                      &parent_entity_g_num,
+                                      PDM_OWNERSHIP_KEEP);
+
+  *elt_vtx_idx = PDM_array_new_idx_from_const_stride_int(4, *n_elt);
+  *elt_vtx = malloc(sizeof(int) * (*elt_vtx_idx)[*n_elt]);
+  memcpy(*elt_vtx, connec, sizeof(int) * (*elt_vtx_idx)[*n_elt]);
+
+
+
   // get coordinates
   *n_vtx = PDM_multipart_part_vtx_coord_get(mpart,
                                             0,
                                             0,
                                             coords,
                                             PDM_OWNERSHIP_USER);
-
-  // get elt-vtx connectivity
-  int  *cell_face     = NULL;
-  int  *cell_face_idx = NULL;
-  *n_elt = PDM_multipart_part_connectivity_get(mpart,
-                                               0,
-                                               0,
-                                               PDM_CONNECTIVITY_TYPE_CELL_FACE,
-                                               &cell_face,
-                                               &cell_face_idx,
-                                               PDM_OWNERSHIP_KEEP);
-
-  int  *face_edge     = NULL;
-  int  *face_edge_idx = NULL;
-  int n_face = PDM_multipart_part_connectivity_get(mpart,
-                                                   0,
-                                                   0,
-                                                   PDM_CONNECTIVITY_TYPE_FACE_EDGE,
-                                                   &face_edge,
-                                                   &face_edge_idx,
-                                                   PDM_OWNERSHIP_KEEP);
-
-  int  *edge_vtx      = NULL;
-  int  *edge_vtx_idx  = NULL;
-  PDM_multipart_part_connectivity_get(mpart,
-                                      0,
-                                      0,
-                                      PDM_CONNECTIVITY_TYPE_EDGE_VTX,
-                                      &edge_vtx,
-                                      &edge_vtx_idx,
-                                      PDM_OWNERSHIP_KEEP);
-
-  int  *face_vtx  = NULL;
-  PDM_compute_face_vtx_from_face_and_edge(n_face,
-                                          face_edge_idx,
-                                          face_edge,
-                                          edge_vtx,
-                                          &face_vtx);
-
-  int *face_vtx_idx = malloc(sizeof(int) * (n_face + 1));
-  face_vtx_idx[0] = 0;
-  for (int i = 0; i < n_face; i++) {
-    face_vtx_idx[i+1] = face_vtx_idx[i] + 3; // face of a thetrahedron is a tirangle
-  }
-
-  PDM_combine_connectivity(*n_elt,
-                           cell_face_idx,
-                           cell_face,
-                           face_vtx_idx,
-                           face_vtx,
-                           elt_vtx_idx,
-                           elt_vtx);
-
   // free
   PDM_DMesh_nodal_free(dmn);
   PDM_multipart_free(mpart);
-  free(face_vtx_idx);
-  free(face_vtx);
-
+  PDM_part_mesh_nodal_free(pmn);
 }
 
 /**
@@ -1014,6 +987,7 @@ PDM_generate_mesh_parallelepiped
  * \brief Create a simple partitionned parallelepiped mesh (3D).
  *
  * \param [in]   comm        MPI communicator
+ * \param [in]   n_vtx_seg   Number of vertices along each side of the parallelepiped
  * \param [out]  n_vtx       Number of vertices
  * \param [out]  n_elt       Number of elements
  * \param [out]  coords      Array of vertex coordinates
@@ -1026,6 +1000,7 @@ void
 PDM_generate_mesh_parallelepiped_simplified
 (
  const PDM_MPI_Comm   comm,
+ const PDM_g_num_t    n_vtx_seg,
  int                 *n_vtx,
  int                 *n_elt,
  double             **coords,
@@ -1045,13 +1020,38 @@ PDM_generate_mesh_parallelepiped_simplified
                                 10.,
                                 10.,
                                 10.,
-                                100,
-                                100,
-                                100,
+                                n_vtx_seg,
+                                n_vtx_seg,
+                                n_vtx_seg,
                                 1,
                                 PDM_SPLIT_DUAL_WITH_HILBERT,
                                 &dmn,
                                 &mpart);
+
+  PDM_part_mesh_nodal_t *pmn = NULL;
+  PDM_multipart_get_part_mesh_nodal(mpart,
+                                    0,
+                                    &pmn,
+                                    PDM_OWNERSHIP_KEEP);
+
+  *n_elt = PDM_part_mesh_nodal_section_n_elt_get(pmn, 0, 0);
+
+  int         *connec              = NULL;
+  PDM_g_num_t *numabs              = NULL;
+  int         *parent_num          = NULL;
+  PDM_g_num_t *parent_entity_g_num = NULL;
+  PDM_part_mesh_nodal_section_std_get(pmn,
+                                      0,
+                                      0,
+                                      &connec,
+                                      &numabs,
+                                      &parent_num,
+                                      &parent_entity_g_num,
+                                      PDM_OWNERSHIP_KEEP);
+
+  *elt_vtx_idx = PDM_array_new_idx_from_const_stride_int(4, *n_elt);
+  *elt_vtx = malloc(sizeof(int) * (*elt_vtx_idx)[*n_elt]);
+  memcpy(*elt_vtx, connec, sizeof(int) * (*elt_vtx_idx)[*n_elt]);
 
   // get coordinates
   *n_vtx = PDM_multipart_part_vtx_coord_get(mpart,
@@ -1060,64 +1060,10 @@ PDM_generate_mesh_parallelepiped_simplified
                                             coords,
                                             PDM_OWNERSHIP_USER);
 
-  // get elt-vtx connectivity
-  int  *cell_face     = NULL;
-  int  *cell_face_idx = NULL;
-  *n_elt = PDM_multipart_part_connectivity_get(mpart,
-                                               0,
-                                               0,
-                                               PDM_CONNECTIVITY_TYPE_CELL_FACE,
-                                               &cell_face,
-                                               &cell_face_idx,
-                                               PDM_OWNERSHIP_KEEP);
-
-  int  *face_edge     = NULL;
-  int  *face_edge_idx = NULL;
-  int n_face = PDM_multipart_part_connectivity_get(mpart,
-                                                   0,
-                                                   0,
-                                                   PDM_CONNECTIVITY_TYPE_FACE_EDGE,
-                                                   &face_edge,
-                                                   &face_edge_idx,
-                                                   PDM_OWNERSHIP_KEEP);
-
-  int  *edge_vtx      = NULL;
-  int  *edge_vtx_idx  = NULL;
-  PDM_multipart_part_connectivity_get(mpart,
-                                      0,
-                                      0,
-                                      PDM_CONNECTIVITY_TYPE_EDGE_VTX,
-                                      &edge_vtx,
-                                      &edge_vtx_idx,
-                                      PDM_OWNERSHIP_KEEP);
-
-  int  *face_vtx  = NULL;
-  PDM_compute_face_vtx_from_face_and_edge(n_face,
-                                          face_edge_idx,
-                                          face_edge,
-                                          edge_vtx,
-                                          &face_vtx);
-
-  int *face_vtx_idx = malloc(sizeof(int) * (n_face + 1));
-  face_vtx_idx[0] = 0;
-  for (int i = 0; i < n_face; i++) {
-    face_vtx_idx[i+1] = face_vtx_idx[i] + 3; // face of a thetrahedron is a tirangle
-  }
-
-  // /!\ Ca marche pas vraiment ça
-  PDM_combine_connectivity(*n_elt,
-                           cell_face_idx,
-                           cell_face,
-                           face_vtx_idx,
-                           face_vtx,
-                           elt_vtx_idx,
-                           elt_vtx);
-
   // free
   PDM_DMesh_nodal_free(dmn);
   PDM_multipart_free(mpart);
-  free(face_vtx_idx);
-  free(face_vtx);
+  PDM_part_mesh_nodal_free(pmn);
 }
 
 

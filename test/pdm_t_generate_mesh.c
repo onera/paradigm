@@ -243,6 +243,21 @@ int main(int argc, char *argv[])
     PDM_log_trace_array_double(coords, 3*n_vtx, "coords : ");
     PDM_log_trace_array_int(elt_vtx_idx, n_elt + 1, "elt_vtx_idx : ");
     PDM_log_trace_array_int(elt_vtx, elt_vtx_idx[n_elt], "elt_vtx : ");
+
+    char filename[999];
+    sprintf(filename, "ball_mesh_simplified_%2.2d.vtk", i_rank);
+
+    PDM_vtk_write_std_elements(filename,
+                               n_vtx,
+                               coords,
+                               NULL,
+                               PDM_MESH_NODAL_TETRA4,
+                               n_elt,
+                               elt_vtx,
+                               NULL,
+                               0,
+                               NULL,
+                               NULL);
   }
 
   // free
@@ -363,6 +378,49 @@ int main(int argc, char *argv[])
                                NULL);
 
   }
+
+
+  // Generate simplified parallelepiped mesh
+  n_vtx = 0;
+  n_elt = 0;
+  coords      = NULL;
+  elt_vtx_idx = NULL;
+  elt_vtx     = NULL;
+  PDM_generate_mesh_parallelepiped_simplified(comm,
+                                              10,
+                                              &n_vtx,
+                                              &n_elt,
+                                              &coords,
+                                              &elt_vtx_idx,
+                                              &elt_vtx);
+
+  if (visu) {
+    log_trace("n_vtx : %d\n", n_vtx);
+    log_trace("n_elt : %d\n", n_elt);
+    PDM_log_trace_array_double(coords, 3*n_vtx, "coords : ");
+    PDM_log_trace_array_int(elt_vtx_idx, n_elt + 1, "elt_vtx_idx : ");
+    PDM_log_trace_array_int(elt_vtx, elt_vtx_idx[n_elt], "elt_vtx : ");
+
+    char filename[999];
+    sprintf(filename, "parallelepiped_mesh_simplified_%2.2d.vtk", i_rank);
+
+    PDM_vtk_write_std_elements(filename,
+                               n_vtx,
+                               coords,
+                               NULL,
+                               PDM_MESH_NODAL_TETRA4,
+                               n_elt,
+                               elt_vtx,
+                               NULL,
+                               0,
+                               NULL,
+                               NULL);
+  }
+
+  // free
+  free(coords     );
+  free(elt_vtx_idx);
+  free(elt_vtx    );
 
   // free
   PDM_part_mesh_nodal_free(pmn);
