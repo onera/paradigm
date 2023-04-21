@@ -8,3 +8,4 @@ from .Pypdm import PartMeshNodalCaspule
 
 from .Pypdm import PartToPart
 from .Pypdm import PartToPartCapsule
+from .Pypdm import __version__

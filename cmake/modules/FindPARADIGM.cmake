@@ -9,6 +9,7 @@
 #  PARADIGMA_LIBRARIES        - libraries for ParaDiGM
 #  PARADIGMA_FORTRAN_LIBRARIES- libraries for Fortran API
 #  PARADIGM_VERSION           - version for ParaDiGM
+#  PARADIGM_BINDING_PYTHON_PATH - Path of python binding
 #
 
 include(CMakeFindDependencyMacro)
@@ -88,6 +89,23 @@ find_library(PARADIGM_IO_LIBRARY
              NAMES pdm_io
              HINTS "${ENV_PARADIGM_DIR}/lib"
 )
+   
+#find_file(PARADIGM_PYTHON_BINDING_LIBRARY_PATH
+#             NAMES Pypdm.so
+#             HINTS "${ENV_PARADIGM_DIR}"
+#             PATHS "${ENV_PARADIGM_DIR}"
+#)
+
+#message(${PARADIGM_PYTHON_BINDING_LIBRARY_PATH} ${ENV_PARADIGM_DIR})
+#message("toto=${PARADIGM_PYTHON_BINDING_LIBRARY_PATH}")                             
+
+#if (PARADIGM_PYTHON_BINDING_LIBRARY_PATH)
+#   string(REPLACE "Pypdm/" "" 
+#          PARADIGM_BINDING_PYTHON_PATH 
+#          ${PARADIGM_PYTHON_BINDING_LIBRARY_PATH})
+#   message("${PARADIGM_PYTHON_BINDING_LIBRARY_PATH}")                             
+#   message("${PARADIGM_BINDING_PYTHON_PATH}")                             
+#endif()
 
 set(PARADIGM_LIBRARIES   "")
 set(PARADIGM_NO_MPI_LIBRARIES   "")
@@ -206,10 +224,18 @@ int main() {
 endif()
 
 
+if(Python_EXECUTABLE)
+
+  # Retrieve the Py version
+  EXECUTE_PROCESS(COMMAND
+    ${Python_EXECUTABLE} -c "import Pypdm"
+    OUTPUT_VARIABLE Mpi4Py_VERSION
+    ERROR_VARIABLE  Mpi4Py_VERSION_ERROR
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
+endif()
+
 include(FindPackageHandleStandardArgs)
-#find_package_handle_standard_args (PARADIGM
-#  VERSION_VAR             PARADIGM_VERSION
-#  HANDLE_COMPONENTS       PARADIGM_LIBRARIES PARADIGM_INCLUDE_DIR PARADIGMA_LIBRARIES)
 
 find_package_handle_standard_args (PARADIGM
   DEFAULT_MSG
@@ -220,6 +246,7 @@ find_package_handle_standard_args (PARADIGM
   PARADIGMA_LIBRARIES
   PARADIGMA_FORTRAN_LIBRARIES
   PARADIGM_VERSION)
+#  PARADIGM_BINDING_PYTHON_PATH)
  
 include(FindPackageHandleStandardArgs)
 find_package_check_version(${PARADIGM_VERSION} result
