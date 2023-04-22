@@ -5654,7 +5654,7 @@ PDM_part_to_part_part1_to_part2_single_part_get
 void
 PDM_part_to_part_create_from_extension
 (
-       PDM_part_to_part_t  *ptp,
+       PDM_part_to_part_t **ptp,
  const int                  n_part,
        int                 *n_int_cell,
  const PDM_g_num_t        **int_cell_ln_to_gn,
@@ -5761,21 +5761,21 @@ PDM_part_to_part_create_from_extension
   }
   free(is_ghost_cell);
 
-  ptp = PDM_part_to_part_create((const PDM_g_num_t **) _selected_cell_to_send_ln_to_gn,
-                                                       _n_selected_cell_to_send,
-                                                       n_part,
-                                (const PDM_g_num_t **) ghost_cell_ln_to_gn,
-                                                       n_ghost_cell,
-                                                       n_part,
-                                        (const int **) _selected_cell_to_send_idx,
-                                (const PDM_g_num_t **) _selected_cell_to_send_ln_to_gn,
-                                                       comm);
+  PDM_part_to_part_t  *_ptp = PDM_part_to_part_create((const PDM_g_num_t **) _selected_cell_to_send_ln_to_gn,
+                                                                             _n_selected_cell_to_send,
+                                                                             n_part,
+                                                      (const PDM_g_num_t **) ghost_cell_ln_to_gn,
+                                                                             n_ghost_cell,
+                                                                             n_part,
+                                                              (const int **) _selected_cell_to_send_idx,
+                                                      (const PDM_g_num_t **) _selected_cell_to_send_ln_to_gn,
+                                                                             comm);
 
   *n_selected_cell_to_send        = _n_selected_cell_to_send;
   *selected_cell_to_send_idx      = _selected_cell_to_send_idx;
   *selected_cell_to_send_ln_to_gn = _selected_cell_to_send_ln_to_gn;
   *selected_cell_to_send          = _selected_cell_to_send;
-
+  *ptp = _ptp;
 }
 
 #ifdef __cplusplus

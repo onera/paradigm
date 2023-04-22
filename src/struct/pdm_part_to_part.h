@@ -903,7 +903,7 @@ PDM_part_to_part_part1_to_part2_single_part_get
 void
 PDM_part_to_part_create_from_extension
 (
-       PDM_part_to_part_t  *ptp,
+       PDM_part_to_part_t **ptp,
  const int                  n_part,
        int                 *n_int_cell,
  const PDM_g_num_t        **int_cell_ln_to_gn,
