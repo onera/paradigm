@@ -518,6 +518,7 @@ end subroutine PDM_part_extension_ln_to_gn_get
 subroutine PDM_part_extension_group_get (part_ext,      &
                                          i_domain,      &
                                          i_part,        &
+                                         entity_type,   &
                                          n_elt,         &
                                          elt_group,     &
                                          elt_group_idx, &
@@ -528,6 +529,7 @@ subroutine PDM_part_extension_group_get (part_ext,      &
   type(c_ptr), value            :: part_ext
   integer, intent(in)           :: i_domain
   integer, intent(in)           :: i_part
+  integer, intent(in)           :: entity_type
   integer, intent(out)          :: n_elt
   integer(pdm_l_num_s), pointer :: elt_group(:)
   integer(pdm_l_num_s), pointer :: elt_group_idx(:)
@@ -541,6 +543,7 @@ subroutine PDM_part_extension_group_get (part_ext,      &
     function PDM_part_extension_group_get_c (part_ext,      &
                                              i_domain,      &
                                              i_part,        &
+                                             entity_type,   &
                                              elt_group,     &
                                              elt_group_idx, &
                                              ln_to_gn)      &
@@ -552,6 +555,7 @@ subroutine PDM_part_extension_group_get (part_ext,      &
       type(c_ptr),    value :: part_ext
       integer(c_int), value :: i_domain
       integer(c_int), value :: i_part
+      integer(c_int), value :: entity_type
       type(c_ptr)           :: elt_group
       type(c_ptr)           :: elt_group_idx
       type(c_ptr)           :: ln_to_gn
@@ -563,6 +567,7 @@ subroutine PDM_part_extension_group_get (part_ext,      &
   n_elt =  PDM_part_extension_group_get_c (part_ext,        &
                                            i_domain,        &
                                            i_part,          &
+                                           entity_type,     &
                                            c_elt_group,     &
                                            c_elt_group_idx, &
                                            c_ln_to_gn)
