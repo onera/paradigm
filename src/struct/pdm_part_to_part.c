@@ -5739,9 +5739,9 @@ PDM_part_to_part_create_from_extension
     int         *__selected_cell_to_send          = (int *)         malloc(n_ghost_to_send     * sizeof(int        ));
     PDM_g_num_t *__selected_cell_to_send_ln_to_gn = (PDM_g_num_t *) malloc(n_ghost_to_send     * sizeof(PDM_g_num_t));
 
-    *_selected_cell_to_send_idx      = __selected_cell_to_send_idx;
-    *_selected_cell_to_send          = __selected_cell_to_send;
-    *_selected_cell_to_send_ln_to_gn = __selected_cell_to_send_ln_to_gn;
+    _selected_cell_to_send_idx     [i_part] = __selected_cell_to_send_idx;
+    _selected_cell_to_send         [i_part] = __selected_cell_to_send;
+    _selected_cell_to_send_ln_to_gn[i_part] = __selected_cell_to_send_ln_to_gn;
 
     int idx_write = 0;
     _selected_cell_to_send_idx[i_part][0] = 0;
