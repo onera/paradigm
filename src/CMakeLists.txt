@@ -384,6 +384,10 @@ endif()
 
 set (_targets "")
 
+list (APPEND _targets pdm)
+if (PDM_ENABLE_Fortran)
+  list (APPEND _targets pdmf)
+endif()
 if (PDM_ENABLE_SHARED)
   list (APPEND _targets pdm_shared)
 endif()

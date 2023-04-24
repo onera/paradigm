@@ -1,7 +1,14 @@
 set(PDM_ENABLE_SHARED                   @PDM_ENABLE_SHARED@)
 set(PDM_ENABLE_STATIC                   @PDM_ENABLE_STATIC@)
+set(PDM_ENABLE_Fortran                  @PDM_ENABLE_Fortran@)
+set(PDM_VERSION                         @PDM_VERSION@)
 set(PDM_ENABLE_SHARED_Fortran_INTERFACE @PDM_ENABLE_SHARED_Fortran_INTERFACE@)
 set(PDM_ENABLE_STATIC_Fortran_INTERFACE @PDM_ENABLE_STATIC_Fortran_INTERFACE@)
+
+include("${CMAKE_CURRENT_LIST_DIR}/pdmTargets.cmake")
+if(PDM_ENABLE_Fortran)
+  include("${CMAKE_CURRENT_LIST_DIR}/pdmfTargets.cmake")
+endif()
 
 if(PDM_ENABLE_SHARED)
   include("${CMAKE_CURRENT_LIST_DIR}/../pdm_io_shared/pdm_io_sharedTargets.cmake")

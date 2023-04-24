@@ -30,6 +30,13 @@ enable_testing ()
 
 # ----------------------------------------------------------------------
 # RPATH protection
+
+
+#SET(CMAKE_SKIP_BUILD_RPATH  TRUE)
+#set(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
+#set(CMAKE_INSTALL_RPATH_USE_LINK_PATH FALSE)
+
+
 set(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
 set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
@@ -139,10 +146,14 @@ endif()
 
 if (PDM_ENABLE_STATIC AND PDM_ENABLE_Fortran)
   set(PDM_ENABLE_STATIC_Fortran_INTERFACE ON)
+else ()
+  set(PDM_ENABLE_STATIC_Fortran_INTERFACE OFF)  
 endif ()
 
 if (PDM_ENABLE_SHARED AND PDM_ENABLE_Fortran)
   set(PDM_ENABLE_SHARED_Fortran_INTERFACE ON)
+else () 
+  set(PDM_ENABLE_SHARED_Fortran_INTERFACE OFF)
 endif ()
 
 option(PDM_ENABLE_Fortran_MPI_MODULE "Use Fortran MPI module" ON)
