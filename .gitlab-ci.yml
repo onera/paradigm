@@ -38,17 +38,33 @@ build:
   parallel:
     matrix:
         - COMPILER: "gcc@12"
-          - GNUM64: "ON"
-            - MPI_LIB: "impi"    
-              - BUILD_TYPE: "Sanitize"
-
-              - BUILD_TYPE: "Coverage"
-          - GNUM64: "OFF"
-            - MPI_LIB: "impi"    
+          GNUM64: 
+            - "ON"
+          MPI_LIB: 
+            - "impi"    
+          BUILD_TYPE: 
+            - "Sanitize"
+        - COMPILER: "gcc@12"
+          GNUM64: 
+            - "ON"
+          MPI_LIB: 
+            - "impi"    
+          BUILD_TYPE: 
+            - "Coverage"
+        - COMPILER: "gcc@12"
+          GNUM64: 
+            - "OFF"
+          MPI_LIB: 
+            - "impi"    
+          BUILD_TYPE: 
+            - "Sanitize"
         - COMPILER: "gcc@10"
-           - GNUM64: "ON"
-           - MPI_LIB: "impi"
-           - BUILD_TYPE: "Sanitize"
+          GNUM64: 
+            - "ON"
+          MPI_LIB: 
+            - "impi"    
+          BUILD_TYPE: 
+            - "Sanitize"
   variables:
     MATRIX_KEY: _${COMPILER}_${MPI_LIB}_GNUM64_${GNUM64}_BUILD_${BUILD_TYPE}
   stage: build
@@ -74,18 +90,35 @@ unit_test:
   parallel:
     matrix:
         - COMPILER: "gcc@12"
-          - GNUM64: "ON"
-            - MPI_LIB: "impi"    
-              - BUILD_TYPE: "Sanitize"
-              - BUILD_TYPE: "Coverage"
-          - GNUM64: "OFF"
-            - MPI_LIB: "impi"    
+          GNUM64: 
+            - "ON"
+          MPI_LIB: 
+            - "impi"    
+          BUILD_TYPE: 
+            - "Sanitize"
+        - COMPILER: "gcc@12"
+          GNUM64: 
+            - "ON"
+          MPI_LIB: 
+            - "impi"    
+          BUILD_TYPE: 
+            - "Coverage"
+        - COMPILER: "gcc@12"
+          GNUM64: 
+            - "OFF"
+          MPI_LIB: 
+            - "impi"    
+          BUILD_TYPE: 
+            - "Sanitize"
         - COMPILER: "gcc@10"
-           - GNUM64: "ON"
-           - MPI_LIB: "impi"
-           - BUILD_TYPE: "Sanitize"
+          GNUM64: 
+            - "ON"
+          MPI_LIB: 
+            - "impi"    
+          BUILD_TYPE: 
+            - "Sanitize"
   variables:
-    MATRIX_KEY: _${COMPILER}_${MPI_LIB}_GNUM64_${GNUM64}
+    MATRIX_KEY: _${COMPILER}_${MPI_LIB}_GNUM64_${GNUM64}_BUILD_${BUILD_TYPE}
     SCHEDULER_PARAMETERS:  "--qos=co_inter_bigmem  --ntasks=40 --time=01:00:00 --exclusive"
   stage: test
   before_script:
