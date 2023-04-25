@@ -1,7 +1,7 @@
 set(PDM_ENABLE_SHARED                   @PDM_ENABLE_SHARED@)
 set(PDM_ENABLE_STATIC                   @PDM_ENABLE_STATIC@)
 set(PDM_ENABLE_Fortran                  @PDM_ENABLE_Fortran@)
-set(pdm_VERSION                         @PDM_VERSION@)
+set(pdm_VERSION                         @PDM_DEF_VERSION@)
 set(PDM_ENABLE_SHARED_Fortran_INTERFACE @PDM_ENABLE_SHARED_Fortran_INTERFACE@)
 set(PDM_ENABLE_STATIC_Fortran_INTERFACE @PDM_ENABLE_STATIC_Fortran_INTERFACE@)
 
@@ -31,8 +31,3 @@ if(PDM_ENABLE_STATIC_Fortran_INTERFACE)
   include("${CMAKE_CURRENT_LIST_DIR}/../pdmf_static/pdmf_staticTargets.cmake")
 endif()
 
-#if(pdm_FOUND)
-# message("-- Found ParaDiGM : ${pdm_VERSION}")
-#else()
-# message("-- ParaDiGM : Not found")
-#endif()

@@ -477,6 +477,15 @@ install(FILES "${CMAKE_CURRENT_BINARY_DIR}/pdmConfig.cmake"
   DESTINATION lib/cmake/pdm
 )
 
+configure_file(
+  "${CMAKE_CURRENT_SOURCE_DIR}/cmake/templates/pdmConfigVersion.cmake.in"
+  pdmConfigVersion.cmake
+  @ONLY
+)
+install(FILES "${CMAKE_CURRENT_BINARY_DIR}/pdmConfigVersion.cmake"
+  DESTINATION lib/cmake/pdm
+)
+
 #------------------------------------------------------------------------------
 # Affichage du message de fin d'installation
 #------------------------------------------------------------------------------
