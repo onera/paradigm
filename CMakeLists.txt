@@ -20,6 +20,8 @@ project(PDM VERSION ${PDM_DEF_VERSION_MAJOR} LANGUAGES C CXX)
 
 set(PDM_VERSION "${PDM_VERSION_MAJOR}.${PDM_VERSION_MINOR}.${PDM_VERSION_PATCH}")
 
+set(CTEST_TEST_TIMEOUT 120)
+
 # ----------------------------------------------------------------------
 find_program( MEMORYCHECK_COMMAND valgrind )
 set( MEMORYCHECK_COMMAND_OPTIONS "--trace-children=yes --leak-check=full" )
