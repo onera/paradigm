@@ -123,7 +123,7 @@ unit_test:
   stage: test
   before_script:
     - module purge
-    - source /scratchm/sonics/dist/spiro_el8.sh --compiler=$COMPILER --mpi=$MPI_LIB
+    - source /scratchm/sonics/dist/spiro_el8.sh --compiler=$COMPILER --mpi=$MPI_LIB && module load py-gcovr-4.2-gcc-8.3.1-6lqfk6f
   script:
     - echo "Runner directory is $PWD; move to working directory $CUSTOM_CI_DIR"
     - export SLURM_EXACT=1
@@ -163,7 +163,7 @@ unit_test:
 #   stage: test
 #   before_script:
 #     - module purge
-#     - source /scratchm/sonics/dist/spiro_el8.sh --compiler=$COMPILER --mpi=$MPI_LIB
+#     - source /scratchm/sonics/dist/spiro_el8.sh --compiler=$COMPILER --mpi=$MPI_LIB && module load py-gcovr-4.2-gcc-8.3.1-6lqfk6f
 #   script:
 #     - echo "Runner directory is $PWD; move to working directory $CUSTOM_CI_DIR"
 #     - cd $CUSTOM_CI_DIR/build$MATRIX_KEY
