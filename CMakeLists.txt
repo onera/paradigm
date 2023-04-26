@@ -48,7 +48,7 @@ set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
 #------------------------------------------------------------------------------
 
 set(PDM_BINARY_DLCLOSE_DIR ${CMAKE_BINARY_DIR}/script/asan/fake_dlclose)
-set(PDM_SOURCE_DIR ${CMAKE_SOURCE_DIR})
+set(PDM_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 
 
 #------------------------------------------------------------------------------
