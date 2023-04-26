@@ -518,7 +518,6 @@ end subroutine PDM_part_extension_ln_to_gn_get
 subroutine PDM_part_extension_group_get (part_ext,      &
                                          i_domain,      &
                                          i_part,        &
-                                         entity_type,   &
                                          n_elt,         &
                                          elt_group,     &
                                          elt_group_idx, &
@@ -529,7 +528,6 @@ subroutine PDM_part_extension_group_get (part_ext,      &
   type(c_ptr), value            :: part_ext
   integer, intent(in)           :: i_domain
   integer, intent(in)           :: i_part
-  integer, intent(in)           :: entity_type
   integer, intent(out)          :: n_elt
   integer(pdm_l_num_s), pointer :: elt_group(:)
   integer(pdm_l_num_s), pointer :: elt_group_idx(:)
@@ -564,12 +562,12 @@ subroutine PDM_part_extension_group_get (part_ext,      &
     end function PDM_part_extension_group_get_c
   end interface
 
-  n_elt =  PDM_part_extension_group_get_c (part_ext,        &
-                                           i_domain,        &
-                                           i_part,          &
-                                           entity_type,     &
-                                           c_elt_group,     &
-                                           c_elt_group_idx, &
+  n_elt =  PDM_part_extension_group_get_c (part_ext,              &
+                                           i_domain,              &
+                                           i_part,                &
+                                           PDM_MESH_ENTITY_FACE,  &
+                                           c_elt_group,           &
+                                           c_elt_group_idx,       &
                                            c_ln_to_gn)
 
   call c_f_pointer(c_elt_group_idx, &
