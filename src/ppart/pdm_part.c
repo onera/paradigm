@@ -3612,7 +3612,6 @@ const  int      i_part,
 
   if (_ppart->use_multipart) {
     int i_zone = 0;
-    int **face_hp_color = (int**)malloc(sizeof(int*));
     PDM_multipart_partition_color_get(ppart->multipart,
                                       i_zone,
                                       i_part,
@@ -3635,7 +3634,6 @@ const  int      i_part,
                                         i_part,
                                         thread_color,
                                         PDM_OWNERSHIP_KEEP);
-    free(face_hp_color);
   } else {
     _part_t *mesh_part = NULL;
     if (i_part < _ppart->n_part)
