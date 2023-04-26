@@ -50,7 +50,7 @@ function(test_c_create name n_proc LIST_TEST LIST_NRANK)
 
      set(MPIEXEC_GENV_COMMAND      "-genv")
      set(MPIEXEC_GENV_PRELOAD      "LD_PRELOAD")
-     set(MPIEXEC_GENV_PRELOAD_PATH "${PRELOAD_ASAN}:${CMAKE_BINARY_DIR}/script/asan/fake_dlclose/libdlclose.so")
+     set(MPIEXEC_GENV_PRELOAD_PATH "${PRELOAD_ASAN}:${PDM_BINARY_DLCLOSE_DIR}/libdlclose.so")
 
    endif()
 
@@ -77,7 +77,7 @@ function(test_c_create name n_proc LIST_TEST LIST_NRANK)
     # execute_process(COMMAND gcc -print-file-name=libasan.so OUTPUT_VARIABLE PYTHON_TEST_ENV1 OUTPUT_STRIP_TRAILING_WHITESPACE)
     # set(PYTHON_TEST_ENV "LD_PRELOAD=${PYTHON_TEST_ENV1} ${CMAKE_BINARY_DIR}/script/asan/fake_dlclose/libdlclose.so")
     # list(APPEND LIST_TEST_ENV "${PYTHON_TEST_ENV}")
-    list(APPEND LIST_TEST_ENV "LSAN_OPTIONS=suppressions=${CMAKE_SOURCE_DIR}/script/asan/asan.supp")
+    list(APPEND LIST_TEST_ENV "LSAN_OPTIONS=suppressions=${PDM_SOURCE_DIR}/script/asan/asan.supp")
   endif()
 
   if (LIST_TEST_ENV)
@@ -117,7 +117,7 @@ function(test_fortran_create name n_proc LIST_TEST LIST_NRANK)
 
     set(MPIEXEC_GENV_COMMAND      "-genv")
     set(MPIEXEC_GENV_PRELOAD      "LD_PRELOAD")
-    set(MPIEXEC_GENV_PRELOAD_PATH "${PRELOAD_ASAN}:${CMAKE_BINARY_DIR}/script/asan/fake_dlclose/libdlclose.so")
+    set(MPIEXEC_GENV_PRELOAD_PATH "${PRELOAD_ASAN}:${PDM_BINARY_DLCLOSE_DIR}/libdlclose.so")
 
   endif()
 
@@ -143,7 +143,7 @@ function(test_fortran_create name n_proc LIST_TEST LIST_NRANK)
     # set(PYTHON_TEST_ENV "LD_PRELOAD=${PYTHON_TEST_ENV1} ${CMAKE_BINARY_DIR}/script/asan/fake_dlclose/libdlclose.so")
     # list(APPEND LIST_TEST_ENV "${PYTHON_TEST_ENV}")
 
-    list(APPEND LIST_TEST_ENV "LSAN_OPTIONS=suppressions=${CMAKE_SOURCE_DIR}/script/asan/asan.supp")
+    list(APPEND LIST_TEST_ENV "LSAN_OPTIONS=suppressions=${PDM_SOURCE_DIR}/script/asan/asan.supp")
   endif()
 
   if (LIST_TEST_ENV)
@@ -168,7 +168,7 @@ function(test_python_create name n_proc LIST_TEST LIST_NRANK)
 
     set(MPIEXEC_GENV_COMMAND      "-genv")
     set(MPIEXEC_GENV_PRELOAD      "LD_PRELOAD")
-    set(MPIEXEC_GENV_PRELOAD_PATH "${PRELOAD_ASAN}:${CMAKE_BINARY_DIR}/script/asan/fake_dlclose/libdlclose.so")
+    set(MPIEXEC_GENV_PRELOAD_PATH "${PRELOAD_ASAN}:${PDM_BINARY_DLCLOSE_DIR}/libdlclose.so")
   endif()
 
   add_test (${name} ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} ${n_proc}
@@ -189,7 +189,7 @@ function(test_python_create name n_proc LIST_TEST LIST_NRANK)
     # execute_process(COMMAND gcc -print-file-name=libasan.so OUTPUT_VARIABLE PYTHON_TEST_ENV1 OUTPUT_STRIP_TRAILING_WHITESPACE)
     # set(PYTHON_TEST_ENV "LD_PRELOAD=${PYTHON_TEST_ENV1} ${CMAKE_BINARY_DIR}/script/asan/fake_dlclose/libdlclose.so")
     # list(APPEND LIST_TEST_ENV "${PYTHON_TEST_ENV}")
-    list(APPEND LIST_TEST_ENV "LSAN_OPTIONS=suppressions=${CMAKE_SOURCE_DIR}/script/asan/asan.supp")
+    list(APPEND LIST_TEST_ENV "LSAN_OPTIONS=suppressions=${PDM_SOURCE_DIR}/script/asan/asan.supp")
   endif()
 
   if(DEFINED ENV{PYTHONPATH})
@@ -242,10 +242,10 @@ function(test_cpp_unit_create name n_proc LIST_TEST LIST_NRANK)
 
   if (CMAKE_BUILD_TYPE STREQUAL "Sanitize")
     # execute_process(COMMAND gcc -print-file-name=libasan.so OUTPUT_VARIABLE PYTHON_TEST_ENV1 OUTPUT_STRIP_TRAILING_WHITESPACE)
-    # set(PYTHON_TEST_ENV "LD_PRELOAD=${PYTHON_TEST_ENV1} ${CMAKE_BINARY_DIR}/script/asan/fake_dlclose/libdlclose.so")
+    # set(PYTHON_TEST_ENV "LD_PRELOAD=${PYTHON_TEST_ENV1} ${PDM_BINARY_DLCLOSE_DIR}/libdlclose.so")
     # list(APPEND LIST_TEST_ENV "${PYTHON_TEST_ENV}")
 
-    list(APPEND LIST_TEST_ENV "LSAN_OPTIONS=suppressions=${CMAKE_SOURCE_DIR}/script/asan/asan.supp")
+    list(APPEND LIST_TEST_ENV "LSAN_OPTIONS=suppressions=${PDM_SOURCE_DIR}/script/asan/asan.supp")
   endif()
 
   if (LIST_TEST_ENV)
@@ -281,7 +281,7 @@ function(test_cpp_create name n_proc LIST_TEST LIST_NRANK)
     # execute_process(COMMAND gcc -print-file-name=libasan.so OUTPUT_VARIABLE PYTHON_TEST_ENV1 OUTPUT_STRIP_TRAILING_WHITESPACE)
     # set(PYTHON_TEST_ENV "LD_PRELOAD=${PYTHON_TEST_ENV1} ${CMAKE_BINARY_DIR}/script/asan/fake_dlclose/libdlclose.so")
     # list(APPEND LIST_TEST_ENV "${PYTHON_TEST_ENV}")
-    list(APPEND LIST_TEST_ENV "LSAN_OPTIONS=suppressions=${CMAKE_SOURCE_DIR}/script/asan/asan.supp")
+    list(APPEND LIST_TEST_ENV "LSAN_OPTIONS=suppressions=${PDM_SOURCE_DIR}/script/asan/asan.supp")
   endif()
 
   if (LIST_TEST_ENV)

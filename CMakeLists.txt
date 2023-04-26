@@ -44,6 +44,14 @@ set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
 
 #------------------------------------------------------------------------------
+# Fake dlclose path
+#------------------------------------------------------------------------------
+
+set(PDM_BINARY_DLCLOSE_DIR ${CMAKE_BINARY_DIR}/script/asan/fake_dlclose)
+set(PDM_SOURCE_DIR ${CMAKE_SOURCE_DIR})
+
+
+#------------------------------------------------------------------------------
 # User option Definition
 #------------------------------------------------------------------------------
 
@@ -377,6 +385,8 @@ set(PDM_ETC_DIR "etc")
 set(PDM_LIST_TEST "")
 set(PDM_LIST_NRANK "")
 
+add_subdirectory(script)
+
 add_subdirectory(src)
 
 add_subdirectory(extensions)
@@ -389,8 +399,6 @@ option(PDM_ENABLE_TESTS "Enable tests" ON)
 if (PDM_ENABLE_TESTS)
   add_subdirectory(test)
 endif()
-
-add_subdirectory(script)
 
 add_subdirectory(doc)
 
