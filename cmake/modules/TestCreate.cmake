@@ -17,6 +17,96 @@ function (add_test_pdm_run name n_proc LIST_TEST LIST_NRANK)
 endfunction()
 
 
+function(test_create names n_procs LIST_TEST LIST_NRANK)
+
+  # NB: Faire le passage dans le -genv de MPI n'est pas équivalent à faire l'export avant ...
+  set (MPIEXEC_GENV_COMMAND      "")
+  set (MPIEXEC_GENV_PRELOAD      "")
+  set (MPIEXEC_GENV_PRELOAD_PATH "")
+  if (CMAKE_BUILD_TYPE STREQUAL "Sanitize")
+    execute_process(COMMAND gcc -print-file-name=libasan.so OUTPUT_VARIABLE PRELOAD_ASAN  OUTPUT_STRIP_TRAILING_WHITESPACE) 
+    # set(MPIEXEC_PREGENV_PRELOAD "-g env LD_PRELOAD ${PRELOAD_ASAN}") 
+ 
+     set(MPIEXEC_GENV_COMMAND      "-genv")
+     set(MPIEXEC_GENV_PRELOAD      "LD_PRELOAD")
+     set(MPIEXEC_GENV_PRELOAD_PATH "${PRELOAD_ASAN}:${PDM_BINARY_DLCLOSE_DIR}/libdlclose.so")
+ 
+  endif()
+
+  set (command_test "")
+
+  set (MPIEXEC_SPLIT "")
+
+  message("names : ${names}")
+  message("n_procs : ${n_procs}")
+
+  foreach(_name _n_proc IN ZIP_LISTS names n_procs)
+    message("exe : ${_name} ${_n_proc}")
+    get_filename_component(_name_base ${_name} NAME_WE)
+    get_filename_component(_name_ext ${_name} LAST_EXT)
+    
+    set (PRE_EXE "")
+    set (POST_EXE "")
+    
+    add_executable(${_name_base} ${_name})
+
+    if ("${_name_ext}" STREQUAL ".c")
+      if ((NOT MPI_C_COMPILER) AND MPI_C_COMPILE_FLAGS)
+        set_target_properties(${_name_base}
+                              PROPERTIES
+                              COMPILE_FLAGS ${MPI_C_COMPILE_FLAGS})
+      endif()
+      target_include_directories(${_name_base} PRIVATE ${CMAKE_SOURCE_DIR}
+                                         PRIVATE ${CMAKE_BINARY_DIR}
+                                         PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+      target_include_directories(${_name_base} PRIVATE ${TEST_INC})
+      target_link_libraries(${_name_base} ${LINK_LIBRARIES})
+      if(mmg_FOUND)
+       target_link_libraries(${_name_base} Mmg::libmmg2d_so)
+      endif()
+      if (LAPACK_FOUND)
+        target_link_libraries(${_name_base} LAPACK::LAPACK)
+      endif()
+      if (NOT LAPACK_FOUND AND BLAS_FOUND)
+        target_link_libraries(${_name_base} BLAS::BLAS)
+      endif()
+ 
+    elseif (("${_name_ext}" STREQUAL ".f90") OR ("${_name_ext}" STREQUAL ".F90"))
+      if ((NOT MPI_Fortran_COMPILER) AND MPI_C_COMPILE_FLAGS)
+        set_target_properties(${_name_base}
+                              PROPERTIES
+                              COMPILE_FLAGS ${MPI_Fortran_COMPILE_FLAGS})
+       target_include_directories(${_name_base} PRIVATE ${MPI_Fortran_INCLUDE_PATH})
+      endif()
+      target_include_directories(${_name_base} PRIVATE ${CMAKE_SOURCE_DIR}
+                                         PRIVATE ${CMAKE_BINARY_DIR}
+                                         PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+      target_include_directories(${_name_base} PRIVATE ${TEST_INC})
+      target_link_libraries(${_name_base} ${LINK_LIBRARIES})
+      set_target_properties(${_name_base} PROPERTIES LINKER_LANGUAGE "Fortran")
+
+    elseif ("${_name_ext}" STREQUAL ".py")
+      set (PRE_EXE "${Python_EXECUTABLE} ")
+      set (POST_EXE ".py")
+    else ()
+      message (FATAL_ERROR "unknown extension file ${_name_ext} ${_name}") 
+    endif()
+      
+    if (NOT test_name)
+      set (test_name ${_name_base})    
+    endif()
+
+    install(TARGETS ${_name_base} RUNTIME DESTINATION bin)
+
+    list (APPEND target_exe ${_name_base})
+    set (command_test "${command_test} ${MPIEXEC_SPLIT} ${MPIEXEC_NUMPROC_FLAG} ${_n_proc} ${MPIEXEC_PREFLAGS} ${MPIEXEC_GENV_COMMAND} ${MPIEXEC_GENV_PRELOAD} ${MPIEXEC_GENV_PRELOAD_PATH} ${PRE_EXE}${CMAKE_CURRENT_BINARY_DIR}/${_name_base}${POST_EXE}")
+    set (MPIEXEC_SPLIT " : ")
+  endforeach()
+  
+  add_test (${test_name} ${MPIEXEC} ${command_test} ${MPIEXEC_POSTFLAGS})
+
+endfunction()
+
 function(test_c_create name n_proc LIST_TEST LIST_NRANK)
    add_executable(${name} "${name}.c")
    if ((NOT MPI_C_COMPILER) AND MPI_C_COMPILE_FLAGS)
