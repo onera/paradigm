@@ -28,16 +28,13 @@
 #include "pdm_gnum.h"
 #include "pdm_dmesh_extract.h"
 #include "pdm_dmesh_extract_priv.h"
-#include "pdm_partitioning_algorithm.h"
 #include "pdm_dconnectivity_transform.h"
-#include "pdm_para_graph_dual.h"
 #include "pdm_vtk.h"
 #include "pdm_logging.h"
 #include "pdm_distrib.h"
 #include "pdm_gnum_location.h"
 #include "pdm_unique.h"
-#include "pdm_part_mesh_nodal_elmts_priv.h"
-#include "pdm_ho_ordering.h"
+#include "pdm_dmesh_priv.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -81,7 +78,38 @@ PDM_dmesh_extract_create
   return dme;
 }
 
+void
+PDM_dmesh_extract_compute
+(
+ PDM_dmesh_extract_t *dme
+)
+{
+  // Synchronize dmesh
+  PDM_g_num_t _dn_cell = dme->dmesh->dn_cell;
+  PDM_g_num_t _dn_face = dme->dmesh->dn_face;
+  PDM_g_num_t _dn_edge = dme->dmesh->dn_edge;
+  PDM_g_num_t _dn_vtx  = dme->dmesh->dn_vtx;
 
+  PDM_MPI_Allreduce(&_dn_cell, &dme->dmesh->n_g_cell, 1, PDM__PDM_MPI_G_NUM, PDM_MPI_SUM, dme->comm);
+  PDM_MPI_Allreduce(&_dn_face, &dme->dmesh->n_g_face, 1, PDM__PDM_MPI_G_NUM, PDM_MPI_SUM, dme->comm);
+  PDM_MPI_Allreduce(&_dn_edge, &dme->dmesh->n_g_edge, 1, PDM__PDM_MPI_G_NUM, PDM_MPI_SUM, dme->comm);
+  PDM_MPI_Allreduce(&_dn_vtx , &dme->dmesh->n_g_vtx , 1, PDM__PDM_MPI_G_NUM, PDM_MPI_SUM, dme->comm);
+
+
+}
+
+
+void
+PDM_dmesh_extract_selected_gnum_set
+(
+ PDM_dmesh_extract_t *dme,
+ PDM_mesh_entities_t  entity_type,
+ int                  dn_extract_entity,
+ PDM_g_num_t         *extract_gnum
+)
+{
+
+}
 
 void
 PDM_dmesh_extract_dn_entity_set

@@ -65,6 +65,11 @@ PDM_dmesh_extract_create
        PDM_MPI_Comm            comm
 );
 
+void
+PDM_dmesh_extract_compute
+(
+ PDM_dmesh_extract_t *dme
+);
 
 void
 PDM_dmesh_extract_dn_entity_set
