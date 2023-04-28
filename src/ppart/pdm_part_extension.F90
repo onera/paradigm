@@ -22,6 +22,7 @@
 module pdm_part_extension
 
   use pdm
+  use pdm_pointer_array
 
   implicit none
 
@@ -809,5 +810,132 @@ end subroutine PDM_part_extension_coord_get
 ! end subroutine PDM_part_extension_domain_interface_rotation_set
 
 
+!>
+!!
+!! \brief Create part_to_part from interior and ghost elements
+!!
+!! \param [in]   ptp                             Part to part structure
+!! \param [in]   n_part                          Number of partitions
+!! \param [in]   n_int_cell                      Number of interior elements
+!! \param [in]   int_cell_ln_to_gn               gnum of interior elements
+!! \param [in]   n_ghost_cell                    Number of ghost elements
+!! \param [in]   ghost_cell_ln_to_gn             gnum of ghost elements
+!! \param [out]  n_selected_cell_to_send         Number of elements selected for send
+!! \param [out]  n_selected_cell_to_send_idx     Index of elements selected for send
+!! \param [out]  selected_cell_to_send           Local numbering of elements selected for send
+!! \param [out]  selected_cell_to_send_ln_to_gn  gnum of elements selected for send
+!!
+
+subroutine PDM_part_to_part_create_from_extension (ptp,                            &
+                                                   n_part,                         &
+                                                   n_int_cell,                     &
+                                                   int_cell_ln_to_gn,              &
+                                                   n_ghost_cell,                   &
+                                                   ghost_cell_ln_to_gn,            &
+                                                   n_selected_cell_to_send,        &
+                                                   selected_cell_to_send_idx,      &
+                                                   selected_cell_to_send,          &
+                                                   selected_cell_to_send_ln_to_gn, &
+                                                   comm)
+  use iso_c_binding
+  implicit none
+
+  type(c_ptr)                       :: ptp
+  integer, intent(in)               :: n_part
+  type(PDM_pointer_array_t), target :: int_cell_ln_to_gn
+  integer(pdm_l_num_s), pointer     :: n_int_cell(:)
+  type(PDM_pointer_array_t), target :: ghost_cell_ln_to_gn
+  integer(pdm_l_num_s), pointer     :: n_ghost_cell(:)
+  type(PDM_pointer_array_t), target :: selected_cell_to_send_idx
+  type(PDM_pointer_array_t), target :: selected_cell_to_send
+  type(PDM_pointer_array_t), target :: selected_cell_to_send_ln_to_gn
+  integer(pdm_l_num_s), pointer     :: n_selected_cell_to_send(:)
+  integer, intent(in)               :: comm
+
+  integer                           :: i
+  integer(c_int)                    :: c_comm
+  type(c_ptr)                       :: c_selected_cell_to_send_idx      = C_NULL_PTR
+  type(c_ptr)                       :: c_selected_cell_to_send          = C_NULL_PTR
+  type(c_ptr)                       :: c_selected_cell_to_send_ln_to_gn = C_NULL_PTR
+  type(c_ptr)                       :: c_n_selected_cell_to_send        = C_NULL_PTR
+
+  interface
+    subroutine PDM_part_to_part_create_from_extension_c (ptp,                            &
+                                                         n_part,                         &
+                                                         n_int_cell,                     &
+                                                         int_cell_ln_to_gn,              &
+                                                         n_ghost_cell,                   &
+                                                         ghost_cell_ln_to_gn,            &
+                                                         n_selected_cell_to_send,        &
+                                                         selected_cell_to_send_idx,      &
+                                                         selected_cell_to_send,          &
+                                                         selected_cell_to_send_ln_to_gn, &
+                                                         comm)                           &
+    bind(c, name='PDM_part_to_part_create_from_extension')
+      use iso_c_binding
+      implicit none
+
+      type(c_ptr)           :: ptp
+      integer(c_int), value :: n_part
+      type(c_ptr),    value :: int_cell_ln_to_gn
+      type(c_ptr),    value :: n_int_cell
+      type(c_ptr),    value :: ghost_cell_ln_to_gn
+      type(c_ptr),    value :: n_ghost_cell
+      type(c_ptr)           :: selected_cell_to_send_idx
+      type(c_ptr)           :: selected_cell_to_send
+      type(c_ptr)           :: selected_cell_to_send_ln_to_gn
+      type(c_ptr)           :: n_selected_cell_to_send
+      integer(c_int), value :: comm
+
+    end subroutine PDM_part_to_part_create_from_extension_c
+  end interface
+
+  c_comm = PDM_MPI_Comm_f2c(comm)
+
+  call PDM_part_to_part_create_from_extension_c (ptp,                              &
+                                                 n_part,                           &
+                                                 c_loc(n_int_cell),                &
+                                                 c_loc(int_cell_ln_to_gn%cptr),    &
+                                                 c_loc(n_ghost_cell),              &
+                                                 c_loc(ghost_cell_ln_to_gn%cptr),  &
+                                                 c_n_selected_cell_to_send,        &
+                                                 c_selected_cell_to_send_idx,      &
+                                                 c_selected_cell_to_send,          &
+                                                 c_selected_cell_to_send_ln_to_gn, &
+                                                 c_comm)
+
+  call c_f_pointer(c_n_selected_cell_to_send,  &
+                   n_selected_cell_to_send,    &
+                   [n_part])
+
+  call c_f_pointer(c_selected_cell_to_send_idx,    &
+                   selected_cell_to_send_idx%cptr, &
+                   [n_part])
+
+  allocate(selected_cell_to_send_idx%length(n_part))
+  selected_cell_to_send_idx%type = PDM_TYPE_INT
+
+  call c_f_pointer(c_selected_cell_to_send,    &
+                   selected_cell_to_send%cptr, &
+                   [n_part])
+
+  allocate(selected_cell_to_send%length(n_part))
+  selected_cell_to_send%type = PDM_TYPE_INT
+
+  call c_f_pointer(c_selected_cell_to_send_ln_to_gn,    &
+                   selected_cell_to_send_ln_to_gn%cptr, &
+                   [n_part])
+
+  allocate(selected_cell_to_send_ln_to_gn%length(n_part))
+  selected_cell_to_send_ln_to_gn%type = PDM_TYPE_G_NUM
+
+  ! Compute lengths
+  do i = 1, n_part
+    selected_cell_to_send_idx%length(i)      = n_selected_cell_to_send(i) + 1
+    selected_cell_to_send%length(i)          = n_selected_cell_to_send(i)
+    selected_cell_to_send_ln_to_gn%length(i) = n_selected_cell_to_send(i)
+  end do
+
+end subroutine PDM_part_to_part_create_from_extension
 
 end module pdm_part_extension
