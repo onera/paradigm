@@ -282,6 +282,9 @@ cdef class MultiPart:
         PDM_multipart_run_ppart(self._mtp)
 
     # ------------------------------------------------------------------
+    def multipart_n_entity_get(self, i_part, i_zone, entity_type):
+        return PDM_multipart_part_n_entity_get(self._mtp, i_zone, i_part, <PDM_mesh_entities_t> entity_type)
+
     def multipart_dim_get(self, int ipart, int zone_gid):
         """
            Get partition dimensions

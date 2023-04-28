@@ -341,6 +341,24 @@ PDM_part_mesh_nodal_add_part_mesh_nodal_elmts
 
 
 /**
+ * \brief  Return the mesh dimension
+ *
+ * \param [in]  pmn       Pointer to \ref PDM_part_mesh_nodal_t object
+ *
+ * \return  mesh dimension
+ *
+ */
+
+int
+PDM_part_mesh_nodal_mesh_dimension_get
+(
+       PDM_part_mesh_nodal_t *pmn
+)
+{
+  return pmn->mesh_dimension;
+}
+
+/**
  * \brief  Return number of partitions
  *
  * \param [in]  pmn       Pointer to \ref PDM_part_mesh_nodal_t object

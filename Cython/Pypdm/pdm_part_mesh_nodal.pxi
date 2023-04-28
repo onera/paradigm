@@ -20,6 +20,7 @@ cdef extern from "pdm_part_mesh_nodal.h":
                                        PDM_ownership_t        owner)
 
     int PDM_part_mesh_nodal_n_part_get(PDM_part_mesh_nodal_t *pmn)
+    int PDM_part_mesh_nodal_mesh_dimension_get( PDM_part_mesh_nodal_t *pmn)
 
     int PDM_part_mesh_nodal_n_vtx_get(PDM_part_mesh_nodal_t *pmn,
                                       int                    id_part)
@@ -109,6 +110,9 @@ cdef class PartMeshNodal:
         self.pmn = PDM_part_mesh_nodal_create(mesh_dimension, n_part, PDMC)
         # ::::::::::::::::::::::::::::::::::::::::::::::::::
 
+    def dim_get(self):
+        return part_mesh_nodal_dim_get(self)
+
     # ------------------------------------------------------------------------
     def __dealloc__(self):
       """
@@ -132,6 +136,8 @@ cdef class PartMeshNodalCaspule:
     cdef PDM_part_mesh_nodal_t* casp_pmn = <PDM_part_mesh_nodal_t *> PyCapsule_GetPointer(caps, NULL)
     self.pmn = casp_pmn;
 
+  def dim_get(self):
+    return part_mesh_nodal_dim_get(self)
   # ------------------------------------------------------------------------
   def part_mesh_nodal_get_sections(self, PDM_geometry_kind_t geom_kind, int i_part):
     """
@@ -151,6 +157,9 @@ cdef class PartMeshNodalCaspule:
 ctypedef fused PMeshNodal:
   PartMeshNodal
   PartMeshNodalCaspule
+
+def part_mesh_nodal_dim_get(PMeshNodal pypmn):
+  return PDM_part_mesh_nodal_mesh_dimension_get(pypmn.pmn)
 
 def part_mesh_nodal_get_sections(PMeshNodal pypmn, PDM_geometry_kind_t geom_kind, int i_part):
   """
