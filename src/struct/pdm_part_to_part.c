@@ -4067,7 +4067,8 @@ PDM_part_to_part_iexch
   int tag = -10000;
   if (k_comm == PDM_MPI_COMM_KIND_P2P) {
     tag  = ptp->seed_tag;
-    tag += (ptp->next_tag++) % ptp->max_tag;
+    tag += (ptp->next_tag++);
+    tag %= ptp->max_tag;
   }
 
   PDM_UNUSED (cst_stride);
