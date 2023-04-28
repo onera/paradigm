@@ -55,6 +55,86 @@ extern "C" {
  * Private function definitions
  *============================================================================*/
 
+static
+void
+_dmesh_extract_3d
+(
+ PDM_dmesh_extract_t *dme
+)
+{
+  PDM_UNUSED(dme);
+
+}
+
+
+static
+void
+_dmesh_extract_2d
+(
+ PDM_dmesh_extract_t *dme
+)
+{
+  PDM_UNUSED(dme);
+
+  int from_face_edge = 0;
+  int from_face_vtx  = 0;
+
+  PDM_g_num_t *dface_vtx     = NULL;
+  int         *dface_vtx_idx = NULL;
+  PDM_dmesh_connectivity_get(dme->dmesh,
+                             PDM_CONNECTIVITY_TYPE_FACE_VTX,
+                             &dface_vtx,
+                             &dface_vtx_idx,
+                             PDM_OWNERSHIP_BAD_VALUE);
+
+  if(dface_vtx_idx != NULL){
+    from_face_vtx = 1;
+  }
+
+  // face edge
+  PDM_g_num_t *dface_edge     = NULL;
+  int         *dface_edge_idx = NULL;
+  PDM_dmesh_connectivity_get(dme->dmesh,
+                             PDM_CONNECTIVITY_TYPE_FACE_EDGE,
+                             &dface_edge,
+                             &dface_edge_idx,
+                             PDM_OWNERSHIP_BAD_VALUE);
+
+  if(dface_edge_idx != NULL) {
+    from_face_edge = 1;
+  }
+
+
+
+
+
+}
+
+
+static
+void
+_dmesh_extract_1d
+(
+ PDM_dmesh_extract_t *dme
+)
+{
+  PDM_UNUSED(dme);
+
+}
+
+static
+void
+_dmesh_extract_0d
+(
+ PDM_dmesh_extract_t *dme
+)
+{
+  PDM_UNUSED(dme);
+
+}
+
+
+
 /*=============================================================================
  * Public function definitions
  *============================================================================*/
@@ -94,6 +174,17 @@ PDM_dmesh_extract_compute
   PDM_MPI_Allreduce(&_dn_face, &dme->dmesh->n_g_face, 1, PDM__PDM_MPI_G_NUM, PDM_MPI_SUM, dme->comm);
   PDM_MPI_Allreduce(&_dn_edge, &dme->dmesh->n_g_edge, 1, PDM__PDM_MPI_G_NUM, PDM_MPI_SUM, dme->comm);
   PDM_MPI_Allreduce(&_dn_vtx , &dme->dmesh->n_g_vtx , 1, PDM__PDM_MPI_G_NUM, PDM_MPI_SUM, dme->comm);
+
+  if(dme->dim == 3) {
+    _dmesh_extract_3d(dme);
+  } else if(dme->dim == 2) {
+    _dmesh_extract_2d(dme);
+  } else if(dme->dim == 1) {
+    _dmesh_extract_1d(dme);
+  } else {
+    _dmesh_extract_0d(dme);
+  }
+
 
 
 }

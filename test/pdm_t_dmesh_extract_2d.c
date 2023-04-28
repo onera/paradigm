@@ -250,9 +250,17 @@ int main(int argc, char *argv[])
   PDM_dmesh_extract_t *dme = PDM_dmesh_extract_create(2, comm);
 
 
+  PDM_dmesh_extract_dn_entity_set(dme, PDM_MESH_ENTITY_FACE  , dn_face);
+  PDM_dmesh_extract_dn_entity_set(dme, PDM_MESH_ENTITY_VERTEX, dn_vtx);
+  PDM_dmesh_extract_dconnectivity_set(dme,
+                                      PDM_CONNECTIVITY_TYPE_FACE_VTX,
+                                      tmp_dface_vtx,
+                                      dface_vtx_idx);
+  PDM_dmesh_extract_vtx_coord_set(dme, dvtx_coord);
+
+  PDM_dmesh_extract_compute(dme);
+
   PDM_dmesh_extract_free(dme);
-
-
 
   PDM_dmesh_nodal_to_dmesh_free(dmntodm);
   PDM_dcube_nodal_gen_free(dcube);
