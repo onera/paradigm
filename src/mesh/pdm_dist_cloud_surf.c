@@ -2753,6 +2753,130 @@ PDM_dist_cloud_surf_get
   dist->results_is_getted = PDM_TRUE;
 }
 
+/**
+ *
+ * \brief Distribute data from surf to cloud
+ *
+ * \param [in]   dist              Pointer to \ref PDM_dist_cloud_surf object
+ * \param [in]   i_point_cloud     Current cloud
+ * \param [in]   stride            Stride
+ * \param [in]   surf_data         Data over the surface
+ * \param [out]  cloud_data        Data over the cloud
+ *
+ */
+
+void
+PDM_dist_cloud_surf_distri_data
+(
+       PDM_dist_cloud_surf_t  *dist,
+ const int                     i_point_cloud,
+ const int                     stride,
+ const void                  **surf_data,
+       void                 ***cloud_data
+)
+{
+
+  /*
+   *  Number of partitions
+   */
+
+  int n_part_surf  = PDM_surf_mesh_n_part_get(dist->surf_mesh);
+  int n_part_cloud = dist->points_cloud[i_point_cloud].n_part;
+
+  /*
+   *  Number of elements and global numbering
+   */
+
+  int *n_face_surf = malloc(n_part_surf  * sizeof(int ));
+  int *n_pts_cloud = malloc(n_part_cloud * sizeof(int ));
+
+  const PDM_g_num_t **face_ln_to_gn = (const PDM_g_num_t **) malloc(n_part_surf  * sizeof(PDM_g_num_t *));
+        PDM_g_num_t **pts_ln_to_gn  = (      PDM_g_num_t **) malloc(n_part_cloud * sizeof(PDM_g_num_t *));
+
+  int         **closest_elt_gnum_idx = (int **)         malloc(n_part_cloud * sizeof(int         *));
+  PDM_g_num_t **closest_elt_gnum     = (PDM_g_num_t **) malloc(n_part_cloud * sizeof(PDM_g_num_t *));
+
+  for (int i_part = 0; i_part < n_part_surf; i_part++) {
+
+    n_face_surf[i_part] = PDM_surf_mesh_part_n_face_get(dist->surf_mesh, i_part);
+    face_ln_to_gn[i_part] = PDM_surf_mesh_part_face_g_num_get(dist->surf_mesh, i_part);
+
+    if (1==0) {
+      PDM_log_trace_array_long(face_ln_to_gn[i_part], n_face_surf[i_part], "face");
+      PDM_log_trace_array_double(surf_data[i_part], n_face_surf[i_part], "datasurf");
+    }
+
+  }
+
+  for (int i_part = 0; i_part < n_part_cloud; i_part++) {
+
+    n_pts_cloud[i_part] = dist->points_cloud[i_point_cloud].n_points[i_part];
+    pts_ln_to_gn[i_part] = dist->points_cloud[i_point_cloud].gnum[i_part];
+
+    if (1==0) {
+      PDM_log_trace_array_long(pts_ln_to_gn[i_part], n_pts_cloud[i_part], "pts");
+    }
+
+    int *_closest_elt_gnum_idx = (int *) malloc((n_pts_cloud[i_part]+1) * sizeof(int ));
+    _closest_elt_gnum_idx[0] = 0;
+    for (int i = 0; i < n_pts_cloud[i_part]; i++) {
+      _closest_elt_gnum_idx[i+1] = _closest_elt_gnum_idx[i] + 1;
+    }
+    closest_elt_gnum_idx[i_part] = _closest_elt_gnum_idx;
+    closest_elt_gnum    [i_part] = dist->points_cloud[i_point_cloud].closest_elt_gnum[i_part];
+
+    if (1==0) {
+      PDM_log_trace_array_long(closest_elt_gnum[i_part], n_pts_cloud[i_part], "corr");
+    }
+
+  }
+
+  /*
+   *  Create part_to_part
+   */
+
+  PDM_part_to_part_t  *ptp = PDM_part_to_part_create((const PDM_g_num_t **) pts_ln_to_gn,
+                                                                            n_pts_cloud,
+                                                                            n_part_cloud,
+                                                     (const PDM_g_num_t **) face_ln_to_gn,
+                                                                            n_face_surf,
+                                                                            n_part_surf,
+                                                             (const int **) closest_elt_gnum_idx,
+                                                     (const PDM_g_num_t **) closest_elt_gnum,
+                                                                            dist->comm);
+
+  /*
+   *  Reverse exchange
+   */
+  int request_tag = -1;
+  PDM_part_to_part_reverse_iexch(ptp,
+                                 PDM_MPI_COMM_KIND_P2P,
+                                 PDM_STRIDE_CST_INTERLACED,
+                                 PDM_PART_TO_PART_DATA_DEF_ORDER_PART2,
+                                 stride,
+                                 sizeof(double),
+              (const int  **)    NULL,
+              (const void **)    surf_data,
+                                 NULL,
+                    (void ***)   cloud_data,
+                                 &request_tag);
+  PDM_part_to_part_reverse_iexch_wait(ptp,request_tag);
+
+  PDM_part_to_part_free(ptp);
+  free(n_face_surf);
+  free(n_pts_cloud);
+  free(face_ln_to_gn);
+  free(pts_ln_to_gn);
+  for (int i_part = 0; i_part < n_part_cloud; i_part++) {
+    if (1==0) {
+      PDM_log_trace_array_double(*cloud_data[i_part], n_pts_cloud[i_part], "clouddata");
+    }
+    free(closest_elt_gnum_idx[i_part]);
+  }
+  free(closest_elt_gnum_idx);
+  free(closest_elt_gnum);
+}
+
 
 /**
  *
@@ -2887,6 +3011,27 @@ PDM_dist_cloud_surf_dump_times
 }
 
 
+/**
+ *
+ * \brief Get the dimension of a point cloud
+ *
+ * \param [in]   dist            Pointer to \ref PDM_dist_cloud_surf object
+ * \param [in]   i_point_cloud   Index of point cloud
+ * \param [out]  n_part          Number of partition
+ *
+ */
+
+int
+PDM_dist_cloud_surf_cloud_n_part_get
+(
+       PDM_dist_cloud_surf_t *dist,
+ const int                    i_point_cloud
+)
+{
+  assert(dist != NULL);
+
+  return dist->points_cloud[i_point_cloud].n_part;
+}
 
 /**
  *

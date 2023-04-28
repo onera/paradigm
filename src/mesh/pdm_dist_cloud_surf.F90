@@ -22,6 +22,7 @@
 module pdm_dist_cloud_surf
 
   use pdm
+  use pdm_pointer_array
 
   implicit none
 
@@ -31,6 +32,10 @@ module pdm_dist_cloud_surf
 
   interface PDM_dist_cloud_surf_get ; module procedure &
   pdm_dist_cloud_surf_get_
+  end interface
+
+  interface PDM_dist_cloud_surf_distri_data ; module procedure &
+  pdm_dist_cloud_surf_distri_data_
   end interface
 
   interface PDM_dist_cloud_surf_cloud_set ; module procedure &
@@ -249,6 +254,34 @@ module pdm_dist_cloud_surf
 
     end subroutine pdm_dist_cloud_surf_get_cf
 
+    !> \brief Get mesh distance
+    !!
+    !! \param [in]   dcs                   Pointer to \ref PDM_dist_cloud_surf object
+    !! \param [in]   i_point_cloud         Current cloud
+    !! \param [in]   stride                Stride
+    !! \param [in]   surf_data             Data over the surface
+    !! \param [out]  cloud_data            Data over the cloud
+    !!
+
+    subroutine pdm_dist_cloud_surf_distri_data_cf (dcs,                   &
+                                                   i_point_cloud,         &
+                                                   stride,                &
+                                                   surf_data,             &
+                                                   cloud_data)            &
+      bind (c, name = 'PDM_dist_cloud_surf_distri_data')
+
+      use iso_c_binding
+
+      implicit none
+
+      type (c_ptr), value       :: dcs
+      integer(c_int), value     :: i_point_cloud
+      integer(c_int), value     :: stride
+      type(c_ptr), value        :: surf_data
+      type(c_ptr)               :: cloud_data
+
+    end subroutine pdm_dist_cloud_surf_distri_data_cf
+
     !> \brief Free a distance mesh structure
     !!
     !! \param [in]  dcs      Pointer to \ref PDM_dist_cloud_surf object
@@ -429,6 +462,88 @@ module pdm_dist_cloud_surf
 
   end subroutine pdm_dist_cloud_surf_get_
 
+
+
+  !> \brief Get mesh distance
+  !!
+  !! \param [in]   dcs                   Pointer to \ref PDM_dist_cloud_surf object
+  !! \param [in]   i_point_cloud         Current cloud
+  !! \param [in]   stride                Stride
+  !! \param [in]   surf_data             Data over the surface
+  !! \param [out]  cloud_data            Data over the cloud
+  !!
+
+  subroutine pdm_dist_cloud_surf_distri_data_ (dcs,                   &
+                                               i_point_cloud,         &
+                                               stride,                &
+                                               surf_data,             &
+                                               cloud_data)
+
+    use iso_c_binding
+
+    implicit none
+
+    type (c_ptr), value                  :: dcs
+    integer, intent(in)                  :: i_point_cloud
+    integer, intent(in)                  :: stride
+    type(PDM_pointer_array_t), target    :: surf_data
+    type(PDM_pointer_array_t), target    :: cloud_data
+
+    integer(c_int)                       :: c_i_point_cloud
+    integer(c_int)                       :: c_i_part
+    integer(c_int)                       :: c_stride
+    type(c_ptr)                          :: c_cloud_data
+    integer                              :: n_points
+    integer                              :: n_part
+    integer                              :: i_part
+
+    interface
+
+      function PDM_dist_cloud_surf_cloud_n_part_get_c (dcs, i_point_cloud) result (n_part) &
+        bind(c, name='PDM_dist_cloud_surf_cloud_n_part_get')
+
+        use iso_c_binding
+        use pdm
+
+        implicit none
+        type(c_ptr),                value :: dcs
+        integer(c_int), intent(in), value :: i_point_cloud
+        integer(c_int)                    :: n_part
+      end function
+
+    end interface
+
+    c_i_point_cloud = i_point_cloud
+    c_stride        = stride
+
+    n_part = PDM_dist_cloud_surf_cloud_n_part_get_c (dcs, i_point_cloud)
+
+    call pdm_dist_cloud_surf_distri_data_cf (dcs,                    &
+                                             c_i_point_cloud,        &
+                                             c_stride,               &
+                                             c_loc(surf_data%cptr),  &
+                                             c_cloud_data)
+
+    call c_f_pointer(c_cloud_data, &
+                     cloud_data%cptr,   &
+                     [n_part])
+
+    allocate( cloud_data%length(n_part) )
+    cloud_data%type = PDM_TYPE_DOUBLE
+
+    do i_part = 1, n_part
+
+      c_i_part = i_part-1
+
+      call PDM_dist_cloud_surf_cloud_dim_get (dcs,             &
+                                              c_i_point_cloud, &
+                                              c_i_part,        &
+                                              n_points)
+      cloud_data%length(i_part) = n_points*stride
+
+    end do
+
+  end subroutine pdm_dist_cloud_surf_distri_data_
 
 
 
