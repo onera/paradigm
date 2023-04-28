@@ -37,11 +37,8 @@ function(test_create names n_procs LIST_TEST LIST_NRANK)
 
   set (MPIEXEC_SPLIT "")
 
-  message("names : ${names}")
-  message("n_procs : ${n_procs}")
-
+ 
   foreach(_name _n_proc IN ZIP_LISTS names n_procs)
-    message("exe : ${_name} ${_n_proc}")
     get_filename_component(_name_base ${_name} NAME_WE)
     get_filename_component(_name_ext ${_name} LAST_EXT)
     
@@ -99,8 +96,8 @@ function(test_create names n_procs LIST_TEST LIST_NRANK)
     install(TARGETS ${_name_base} RUNTIME DESTINATION bin)
 
     list (APPEND target_exe ${_name_base})
-    set (command_test "${command_test} ${MPIEXEC_SPLIT} ${MPIEXEC_NUMPROC_FLAG} ${_n_proc} ${MPIEXEC_PREFLAGS} ${MPIEXEC_GENV_COMMAND} ${MPIEXEC_GENV_PRELOAD} ${MPIEXEC_GENV_PRELOAD_PATH} ${PRE_EXE}${CMAKE_CURRENT_BINARY_DIR}/${_name_base}${POST_EXE}")
-    set (MPIEXEC_SPLIT " : ")
+    list (APPEND command_test ${MPIEXEC_SPLIT} ${MPIEXEC_NUMPROC_FLAG} ${_n_proc} ${MPIEXEC_PREFLAGS} ${MPIEXEC_GENV_COMMAND} ${MPIEXEC_GENV_PRELOAD} ${MPIEXEC_GENV_PRELOAD_PATH} ${PRE_EXE}${CMAKE_CURRENT_BINARY_DIR}/${_name_base}${POST_EXE})
+    set (MPIEXEC_SPLIT ":")
   endforeach()
   
   add_test (${test_name} ${MPIEXEC} ${command_test} ${MPIEXEC_POSTFLAGS})
