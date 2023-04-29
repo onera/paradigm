@@ -11,6 +11,7 @@
 
 #include "pdm.h"
 #include "pdm_mpi.h"
+#include "pdm_block_to_part.h"
 
 /*=============================================================================
  * Macro definition
@@ -188,6 +189,23 @@ PDM_dconnectivity_to_extract_dconnectivity
        PDM_g_num_t   **dparent_entity1_g_num,
        PDM_g_num_t   **dparent_entity2_g_num,
        PDM_g_num_t   **entity1_old_to_new
+);
+
+
+void
+PDM_dconnectivity_to_extract_dconnectivity2
+(
+ const PDM_MPI_Comm          comm,
+       int                   n_selected_entity1,
+       PDM_g_num_t          *select_entity1,
+       PDM_g_num_t          *entity1_distribution,
+       int                  *dentity1_entity2_idx,
+       PDM_g_num_t          *dentity1_entity2,
+       PDM_g_num_t         **extract_entity1_distribution,
+       int                 **dextract_entity1_entity2_idx,
+       PDM_g_num_t         **dextract_entity1_entity2,
+       PDM_g_num_t         **dparent_entity1_g_num,
+       PDM_block_to_part_t **btp_entity1_to_extract_entity1
 );
 
 void

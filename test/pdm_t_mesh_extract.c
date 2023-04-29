@@ -229,6 +229,36 @@ int main(int argc, char *argv[])
   }
 
 
+  PDM_g_num_t         *extract_face_distribution2 = NULL;
+  int                 *dextract_face_vtx_idx2     = NULL;
+  PDM_g_num_t         *dextract_face_vtx2         = NULL;
+  PDM_g_num_t         *dparent_face_g_num2        = NULL;
+  PDM_block_to_part_t *btb_face_to_extract_face   = NULL;
+  PDM_dconnectivity_to_extract_dconnectivity2(comm,
+                                              dface_group_idx[n_face_group],
+                                              dface_group,
+                                              face_distribution,
+                                              dface_vtx_idx,
+                                              dface_vtx,
+                                              &extract_face_distribution2,
+                                              &dextract_face_vtx_idx2,
+                                              &dextract_face_vtx2,
+                                              &dparent_face_g_num2,
+                                              &btb_face_to_extract_face);
+
+  PDM_log_trace_array_long(extract_face_distribution2, n_rank+1, "extract_face_distribution2:: ");
+
+  PDM_log_trace_array_int(dextract_face_vtx_idx2, dn_extract_face+1                     , "dextract_face_vtx_idx2:: ");
+  PDM_log_trace_array_long(dextract_face_vtx2   , dextract_face_vtx_idx[dn_extract_face], "dextract_face_vtx2:: "    );
+  PDM_log_trace_array_long(dparent_face_g_num2  , dn_extract_face                       , "dparent_face_g_num2:: "   );
+
+  free(extract_face_distribution2);
+  free(dextract_face_vtx_idx2    );
+  free(dextract_face_vtx2        );
+  free(dparent_face_g_num2       );
+  PDM_block_to_part_free(btb_face_to_extract_face);
+
+
 
   if(post) {
     PDM_log_trace_array_long(extract_face_distribution, n_rank+1, "extract_face_distribution:: ");
