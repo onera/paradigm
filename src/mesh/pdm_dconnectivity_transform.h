@@ -193,6 +193,22 @@ PDM_dconnectivity_to_extract_dconnectivity_bis
 
 
 void
+PDM_dconnectivity_to_extract_dconnectivity_block
+(
+ const PDM_MPI_Comm          comm,
+       int                   dn_extract_entity1,
+       PDM_g_num_t          *dextract_gnum_entity1,
+       PDM_g_num_t          *entity1_distribution,
+       int                  *dentity1_entity2_idx,
+       PDM_g_num_t          *dentity1_entity2,
+       int                 **dextract_entity1_entity2_idx,
+       PDM_g_num_t         **dextract_entity1_entity2,
+       PDM_block_to_part_t **btp_entity1_to_extract_entity1,
+       PDM_g_num_t         **extract_entity2_distribution,
+       PDM_g_num_t         **dparent_entity2_g_num
+);
+
+void
 PDM_dconnectivity_to_extract_dconnectivity
 (
  const PDM_MPI_Comm          comm,

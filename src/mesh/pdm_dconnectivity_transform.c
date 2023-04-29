@@ -1224,20 +1224,15 @@ PDM_dconnectivity_to_extract_dconnectivity_bis
 }
 
 
-
-
-
 void
-PDM_dconnectivity_to_extract_dconnectivity
+PDM_dconnectivity_to_extract_dconnectivity_block
 (
  const PDM_MPI_Comm          comm,
-       int                   n_selected_entity1,
-       PDM_g_num_t          *select_entity1,
+       int                   dn_extract_entity1,
+       PDM_g_num_t          *dextract_gnum_entity1,
        PDM_g_num_t          *entity1_distribution,
        int                  *dentity1_entity2_idx,
        PDM_g_num_t          *dentity1_entity2,
-       PDM_g_num_t         **extract_entity1_distribution,
-       PDM_g_num_t         **dparent_entity1_g_num,
        int                 **dextract_entity1_entity2_idx,
        PDM_g_num_t         **dextract_entity1_entity2,
        PDM_block_to_part_t **btp_entity1_to_extract_entity1,
@@ -1246,34 +1241,7 @@ PDM_dconnectivity_to_extract_dconnectivity
 )
 {
   int i_rank;
-  int n_rank;
-
   PDM_MPI_Comm_rank(comm, &i_rank);
-  PDM_MPI_Comm_size(comm, &n_rank);
-
-  /*
-   * Create implicit global numbering
-   */
-  int dn_entity1 = entity1_distribution[i_rank+1] - entity1_distribution[i_rank];
-  PDM_part_to_block_t *ptb = PDM_part_to_block_create(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
-                                                      PDM_PART_TO_BLOCK_POST_CLEANUP,
-                                                      1.,
-                                                      &select_entity1,
-                                                      NULL,
-                                                      &n_selected_entity1,
-                                                      1,
-                                                      comm);
-
-  int          dn_extract_entity1      = PDM_part_to_block_n_elt_block_get  (ptb);
-  PDM_g_num_t *dextract_gnum_entity1   = PDM_part_to_block_block_gnum_get   (ptb);
-
-  *extract_entity1_distribution = PDM_compute_entity_distribution(comm, dn_extract_entity1);
-
-  *dparent_entity1_g_num        = malloc(dn_extract_entity1 * sizeof(PDM_g_num_t));
-  PDM_g_num_t *_dparent_entity1_g_num        = *dparent_entity1_g_num;
-  for(int i = 0; i < dn_extract_entity1; ++i) {
-    _dparent_entity1_g_num[i] = dextract_gnum_entity1[i];
-  }
 
   /*
    * Caution we need a result independant of parallelism
@@ -1285,10 +1253,10 @@ PDM_dconnectivity_to_extract_dconnectivity
                                                       comm);
   *btp_entity1_to_extract_entity1 = btp;
 
-  PDM_part_to_block_free(ptb);
   /*
    * Prepare data
    */
+  int dn_entity1 = entity1_distribution[i_rank+1] - entity1_distribution[i_rank];
   int* dentity1_entity2_n = (int *) malloc( sizeof(int) * dn_entity1);
   for(int i_elmt = 0; i_elmt < dn_entity1; ++i_elmt){
     dentity1_entity2_n[i_elmt] = dentity1_entity2_idx[i_elmt+1] - dentity1_entity2_idx[i_elmt];
@@ -1375,6 +1343,66 @@ PDM_dconnectivity_to_extract_dconnectivity
 
   *dextract_entity1_entity2_idx = _dextract_entity1_entity2_idx;
   *dextract_entity1_entity2     = _dextract_entity1_entity2;
+}
+
+
+void
+PDM_dconnectivity_to_extract_dconnectivity
+(
+ const PDM_MPI_Comm          comm,
+       int                   n_selected_entity1,
+       PDM_g_num_t          *select_entity1,
+       PDM_g_num_t          *entity1_distribution,
+       int                  *dentity1_entity2_idx,
+       PDM_g_num_t          *dentity1_entity2,
+       PDM_g_num_t         **extract_entity1_distribution,
+       PDM_g_num_t         **dparent_entity1_g_num,
+       int                 **dextract_entity1_entity2_idx,
+       PDM_g_num_t         **dextract_entity1_entity2,
+       PDM_block_to_part_t **btp_entity1_to_extract_entity1,
+       PDM_g_num_t         **extract_entity2_distribution,
+       PDM_g_num_t         **dparent_entity2_g_num
+)
+{
+  int i_rank;
+  PDM_MPI_Comm_rank(comm, &i_rank);
+
+  /*
+   * Create implicit global numbering
+   */
+  PDM_part_to_block_t *ptb = PDM_part_to_block_create(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
+                                                      PDM_PART_TO_BLOCK_POST_CLEANUP,
+                                                      1.,
+                                                      &select_entity1,
+                                                      NULL,
+                                                      &n_selected_entity1,
+                                                      1,
+                                                      comm);
+
+  int          dn_extract_entity1      = PDM_part_to_block_n_elt_block_get  (ptb);
+  PDM_g_num_t *dextract_gnum_entity1   = PDM_part_to_block_block_gnum_get   (ptb);
+
+  *extract_entity1_distribution = PDM_compute_entity_distribution(comm, dn_extract_entity1);
+
+  *dparent_entity1_g_num        = malloc(dn_extract_entity1 * sizeof(PDM_g_num_t));
+  PDM_g_num_t *_dparent_entity1_g_num        = *dparent_entity1_g_num;
+  for(int i = 0; i < dn_extract_entity1; ++i) {
+    _dparent_entity1_g_num[i] = dextract_gnum_entity1[i];
+  }
+
+  PDM_dconnectivity_to_extract_dconnectivity_block(comm,
+                                                   dn_extract_entity1,
+                                                   dextract_gnum_entity1,
+                                                   entity1_distribution,
+                                                   dentity1_entity2_idx,
+                                                   dentity1_entity2,
+                                                   dextract_entity1_entity2_idx,
+                                                   dextract_entity1_entity2,
+                                                   btp_entity1_to_extract_entity1,
+                                                   extract_entity2_distribution,
+                                                   dparent_entity2_g_num);
+
+  PDM_part_to_block_free(ptb);
 }
 
 
