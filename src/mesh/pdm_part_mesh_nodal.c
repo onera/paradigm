@@ -1203,7 +1203,7 @@ PDM_part_mesh_nodal_dump_vtk
         int is_ho = PDM_Mesh_nodal_elmt_is_ho(t_elt);
         if(is_ho) {
           int order;
-          const char  *ho_ordering     = NULL;
+          char        *ho_ordering     = NULL;
           int         *pcell_vtx       = NULL;
           PDM_g_num_t *pelmt_ln_to_gn  = NULL;
           int         *parent_num      = NULL;

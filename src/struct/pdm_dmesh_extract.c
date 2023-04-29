@@ -35,6 +35,7 @@
 #include "pdm_gnum_location.h"
 #include "pdm_unique.h"
 #include "pdm_dmesh_priv.h"
+#include "pdm_partitioning_algorithm.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -54,6 +55,104 @@ extern "C" {
 /*=============================================================================
  * Private function definitions
  *============================================================================*/
+
+static
+void
+_rebuild_group
+(
+ PDM_dmesh_extract_t *dme,
+ PDM_g_num_t         *distrib_entity,
+ PDM_mesh_entities_t  entity_type,
+ PDM_bound_type_t     bound_type
+)
+{
+
+  int         *dbound_entity_idx = NULL;
+  PDM_g_num_t *dbound_entity     = NULL;
+  int n_group_entity = PDM_dmesh_bound_get(dme->dmesh,
+                                         bound_type,
+                                         &dbound_entity,
+                                         &dbound_entity_idx,
+                                         PDM_OWNERSHIP_BAD_VALUE);
+  if(dbound_entity_idx == NULL) {
+    return;
+  }
+
+  assert(dme->btp_bound_entity_to_extract_entity[bound_type] == NULL);
+  assert(dme->btp_bound_ownership               [bound_type] == NULL);
+
+  dme->btp_bound_entity_to_extract_entity[bound_type] = malloc(n_group_entity * sizeof(PDM_block_to_part_t *));
+  dme->btp_bound_ownership               [bound_type] = malloc(n_group_entity * sizeof(PDM_ownership_t      ));
+
+  dme->n_bound[bound_type] = n_group_entity;
+
+  int i_rank;
+  PDM_MPI_Comm_rank(dme->comm, &i_rank);
+
+  int dn_entity = dme->distrib_extract[entity_type][i_rank+1] - dme->distrib_extract[entity_type][i_rank];
+
+  int         **tmp_dextract_bound_entity_idx      = NULL;
+  int         **tmp_dextract_bound_entity          = NULL;
+  PDM_g_num_t **tmp_dextract_bound_entity_ln_to_gn = NULL;
+  PDM_part_distgroup_to_partgroup(dme->comm,
+                                  distrib_entity,
+                                  n_group_entity,
+                                  dbound_entity_idx,
+                                  dbound_entity,
+                                  1,
+                                  &dn_entity,
+          (const PDM_g_num_t **)  &dme->parent_extract_gnum[entity_type],
+                                  &tmp_dextract_bound_entity_idx,
+                                  &tmp_dextract_bound_entity,
+                                  &tmp_dextract_bound_entity_ln_to_gn);
+
+  int         *dextract_bound_entity_idx      = tmp_dextract_bound_entity_idx     [0];
+  int         *dextract_bound_entity          = tmp_dextract_bound_entity         [0];
+  PDM_g_num_t *dextract_bound_entity_ln_to_gn = tmp_dextract_bound_entity_ln_to_gn[0];
+  free(tmp_dextract_bound_entity_idx     );
+  free(tmp_dextract_bound_entity         );
+  free(tmp_dextract_bound_entity_ln_to_gn);
+
+  if(0 == 1) {
+    PDM_log_trace_array_int (dextract_bound_entity         , dextract_bound_entity_idx[n_group_entity], "dextract_bound_entity ::");
+    PDM_log_trace_array_long(dextract_bound_entity_ln_to_gn, dextract_bound_entity_idx[n_group_entity], "dextract_bound_entity_ln_to_gn ::");
+  }
+
+  /*
+   * Rebuild all btp for each group
+   */
+  for(int i_group = 0; i_group < n_group_entity; ++i_group) {
+
+    int dn_group_entity = dbound_entity_idx[i_group+1] - dbound_entity_idx[i_group];
+    PDM_g_num_t* distrib_group_entity = PDM_compute_entity_distribution(dme->comm, dn_group_entity);
+
+    int beg = dextract_bound_entity_idx[i_group];
+    int dn_extract_group_entity = dextract_bound_entity_idx[i_group+1] - beg;
+    PDM_g_num_t *_lextract_bound_entity_ln_to_gn = &dextract_bound_entity_ln_to_gn[beg];
+
+    dme->btp_bound_entity_to_extract_entity[bound_type][i_group] = PDM_block_to_part_create(distrib_group_entity,
+                                                                     (const PDM_g_num_t **) &_lextract_bound_entity_ln_to_gn,
+                                                                                            &dn_extract_group_entity,
+                                                                                            1,
+                                                                                            dme->comm);
+
+
+    // dextract_bound_entity + dme->parent_extract_gnum[entity_type] => dbound_entity_extract (PDM_g_num_t)
+    // On peut également faire le transfert du gnum via le btp
+
+    dme->btp_bound_ownership[bound_type][i_group] = PDM_OWNERSHIP_KEEP;
+    free(distrib_group_entity);
+
+  }
+
+
+  free(dextract_bound_entity_idx     );
+  free(dextract_bound_entity         );
+  free(dextract_bound_entity_ln_to_gn);
+}
+
+
+
 
 static
 void
@@ -185,16 +284,20 @@ _dmesh_extract_2d
                                                &dme->parent_extract_gnum             [PDM_MESH_ENTITY_VERTEX]);
 
     dme->dmesh_extract->is_owner_connectivity[PDM_CONNECTIVITY_TYPE_FACE_VTX] = PDM_TRUE;
-    dme->dmesh_extract->dn_face = dme->distrib_extract[PDM_MESH_ENTITY_FACE][i_rank+1] - dme->distrib_extract[PDM_MESH_ENTITY_FACE][i_rank];
-  }
+ }
 
-  dme->dmesh_extract->dn_vtx = dme->distrib_extract[PDM_MESH_ENTITY_VERTEX][i_rank+1] - dme->distrib_extract[PDM_MESH_ENTITY_VERTEX][i_rank];
+  dme->dmesh_extract->dn_face = dme->distrib_extract[PDM_MESH_ENTITY_FACE  ][i_rank+1] - dme->distrib_extract[PDM_MESH_ENTITY_FACE  ][i_rank];
+  dme->dmesh_extract->dn_vtx  = dme->distrib_extract[PDM_MESH_ENTITY_VERTEX][i_rank+1] - dme->distrib_extract[PDM_MESH_ENTITY_VERTEX][i_rank];
   dme->btp_entity_to_extract_entity[PDM_MESH_ENTITY_VERTEX] = PDM_block_to_part_create(distrib_vtx,
                                                                 (const PDM_g_num_t **) &dme->parent_extract_gnum[PDM_MESH_ENTITY_VERTEX],
                                                                                        &dme->dmesh_extract->dn_vtx,
                                                                                        1,
                                                                                        dme->comm);
 
+
+  _rebuild_group(dme, distrib_face, PDM_MESH_ENTITY_FACE  , PDM_BOUND_TYPE_FACE);
+  _rebuild_group(dme, distrib_edge, PDM_MESH_ENTITY_EDGE  , PDM_BOUND_TYPE_EDGE);
+  _rebuild_group(dme, distrib_vtx , PDM_MESH_ENTITY_VERTEX, PDM_BOUND_TYPE_VTX );
 
   free(distrib_face);
   if(distrib_edge != NULL) {
@@ -258,6 +361,14 @@ PDM_dmesh_extract_create
 
     dme->distrib_extract_ownership    [i] = PDM_OWNERSHIP_KEEP;
     dme->parent_extract_gnum_ownership[i] = PDM_OWNERSHIP_KEEP;
+
+  }
+
+  for(int i = 0; i < PDM_BOUND_TYPE_MAX; ++i) {
+    dme->n_bound                           [i] = 0;
+    dme->btp_bound_entity_to_extract_entity[i] = NULL;
+    dme->btp_bound_ownership               [i] = NULL;
+
   }
 
   return dme;
@@ -430,6 +541,23 @@ PDM_dmesh_extract_free
     if(dme->parent_extract_gnum_ownership[i] == PDM_OWNERSHIP_KEEP && dme->parent_extract_gnum[i] != NULL) {
       free(dme->parent_extract_gnum[i]);
     }
+
+  }
+
+
+  for (int i = 0; i < PDM_BOUND_TYPE_MAX; ++i) {
+
+    for(int i_group = 0; i_group < dme->n_bound[i]; ++i_group) {
+      if (dme->btp_bound_ownership[i][i_group] == PDM_OWNERSHIP_KEEP && dme->btp_bound_entity_to_extract_entity[i][i_group] != NULL) {
+        PDM_block_to_part_free(dme->btp_bound_entity_to_extract_entity[i][i_group]);
+      }
+    }
+
+    if(dme->btp_bound_entity_to_extract_entity[i] != NULL) {
+      free(dme->btp_bound_entity_to_extract_entity[i]);
+      free(dme->btp_bound_ownership               [i]);
+    }
+
 
   }
 

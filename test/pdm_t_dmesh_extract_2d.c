@@ -280,6 +280,13 @@ int main(int argc, char *argv[])
   //                                     dedge_vtx_idx);
   PDM_dmesh_extract_vtx_coord_set(dme, dvtx_coord);
 
+
+  PDM_dmesh_extract_dmesh_bound_set(dme,
+                                    PDM_BOUND_TYPE_FACE,
+                                    n_group,
+                                    dbound_face,
+                                    dbound_face_idx);
+
   PDM_dmesh_extract_selected_gnum_set(dme,
                                       PDM_MESH_ENTITY_FACE,
                                       dbound_face_idx[n_group],

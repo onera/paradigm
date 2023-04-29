@@ -75,6 +75,10 @@ struct _pdm_dmesh_extract_t
   PDM_block_to_part_t    *btp_entity_to_extract_entity[PDM_MESH_ENTITY_MAX];
   PDM_ownership_t         btp_ownership               [PDM_MESH_ENTITY_MAX];
 
+  int                     n_bound                           [PDM_BOUND_TYPE_MAX];
+  PDM_block_to_part_t   **btp_bound_entity_to_extract_entity[PDM_BOUND_TYPE_MAX];
+  PDM_ownership_t        *btp_bound_ownership               [PDM_BOUND_TYPE_MAX];
+
 
 };
 
