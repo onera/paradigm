@@ -221,27 +221,34 @@ int main(int argc, char *argv[])
                                            &dcell_face_idx,
                                            PDM_OWNERSHIP_KEEP);
 
-  int         *dedge_face_idx;
-  PDM_g_num_t *dedge_face;
-  int dn_edge = PDM_dmesh_connectivity_get(dmesh, PDM_CONNECTIVITY_TYPE_EDGE_FACE,
-                                           &dedge_face,
-                                           &dedge_face_idx,
+  int         *dface_edge_idx;
+  PDM_g_num_t *dface_edge;
+  int dn_face2 = PDM_dmesh_connectivity_get(dmesh, PDM_CONNECTIVITY_TYPE_FACE_EDGE,
+                                           &dface_edge,
+                                           &dface_edge_idx,
                                            PDM_OWNERSHIP_KEEP);
 
   int         *dedge_vtx_idx;
   PDM_g_num_t *dedge_vtx;
-  int dn_edge2 = PDM_dmesh_connectivity_get(dmesh, PDM_CONNECTIVITY_TYPE_EDGE_VTX,
+  int dn_edge = PDM_dmesh_connectivity_get(dmesh, PDM_CONNECTIVITY_TYPE_EDGE_VTX,
                                            &dedge_vtx,
                                            &dedge_vtx_idx,
                                            PDM_OWNERSHIP_KEEP);
-  assert(dn_edge == dn_edge2);
 
   if(0 == 1) {
     PDM_log_trace_connectivity_long(dedge_vtx_idx , dedge_vtx , dn_edge, "dedge_vtx ::");
-    PDM_log_trace_connectivity_long(dedge_face_idx, dedge_face, dn_edge, "dedge_face ::");
+    PDM_log_trace_connectivity_long(dface_edge_idx, dface_edge, dn_edge, "dface_edge ::");
   }
 
-  PDM_UNUSED(dn_face);
+  int         *dbound_face_idx = NULL;
+  PDM_g_num_t *dbound_face     = NULL;
+  int n_group = PDM_dmesh_bound_get(dmesh,
+                                    PDM_BOUND_TYPE_FACE,
+                                    &dbound_face,
+                                    &dbound_face_idx,
+                                    PDM_OWNERSHIP_KEEP);
+
+  PDM_UNUSED(dn_face2);
   PDM_UNUSED(dn_cell);
   PDM_UNUSED(dn_vtx);
   PDM_UNUSED(dvtx_coord);
@@ -251,12 +258,26 @@ int main(int argc, char *argv[])
 
 
   PDM_dmesh_extract_dn_entity_set(dme, PDM_MESH_ENTITY_FACE  , dn_face);
+  PDM_dmesh_extract_dn_entity_set(dme, PDM_MESH_ENTITY_EDGE  , dn_edge);
   PDM_dmesh_extract_dn_entity_set(dme, PDM_MESH_ENTITY_VERTEX, dn_vtx);
   PDM_dmesh_extract_dconnectivity_set(dme,
                                       PDM_CONNECTIVITY_TYPE_FACE_VTX,
                                       tmp_dface_vtx,
                                       dface_vtx_idx);
+  PDM_dmesh_extract_dconnectivity_set(dme,
+                                      PDM_CONNECTIVITY_TYPE_FACE_EDGE,
+                                      dface_edge,
+                                      dface_edge_idx);
+  PDM_dmesh_extract_dconnectivity_set(dme,
+                                      PDM_CONNECTIVITY_TYPE_EDGE_VTX,
+                                      dedge_vtx,
+                                      dedge_vtx_idx);
   PDM_dmesh_extract_vtx_coord_set(dme, dvtx_coord);
+
+  PDM_dmesh_extract_selected_gnum_set(dme,
+                                      PDM_MESH_ENTITY_FACE,
+                                      dbound_face_idx[n_group],
+                                      dbound_face);
 
   PDM_dmesh_extract_compute(dme);
 

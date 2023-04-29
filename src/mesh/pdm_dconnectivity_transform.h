@@ -174,7 +174,7 @@ PDM_dentity_group_transpose
 );
 
 void
-PDM_dconnectivity_to_extract_dconnectivity
+PDM_dconnectivity_to_extract_dconnectivity_bis
 (
  const PDM_MPI_Comm    comm,
        int             n_selected_entity1,
@@ -193,7 +193,7 @@ PDM_dconnectivity_to_extract_dconnectivity
 
 
 void
-PDM_dconnectivity_to_extract_dconnectivity2
+PDM_dconnectivity_to_extract_dconnectivity
 (
  const PDM_MPI_Comm          comm,
        int                   n_selected_entity1,
@@ -202,10 +202,12 @@ PDM_dconnectivity_to_extract_dconnectivity2
        int                  *dentity1_entity2_idx,
        PDM_g_num_t          *dentity1_entity2,
        PDM_g_num_t         **extract_entity1_distribution,
+       PDM_g_num_t         **dparent_entity1_g_num,
        int                 **dextract_entity1_entity2_idx,
        PDM_g_num_t         **dextract_entity1_entity2,
-       PDM_g_num_t         **dparent_entity1_g_num,
-       PDM_block_to_part_t **btp_entity1_to_extract_entity1
+       PDM_block_to_part_t **btp_entity1_to_extract_entity1,
+       PDM_g_num_t         **extract_entity2_distribution,
+       PDM_g_num_t         **dparent_entity2_g_num
 );
 
 void

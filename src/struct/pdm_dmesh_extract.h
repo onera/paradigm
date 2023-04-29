@@ -71,6 +71,16 @@ PDM_dmesh_extract_compute
  PDM_dmesh_extract_t *dme
 );
 
+
+void
+PDM_dmesh_extract_selected_gnum_set
+(
+ PDM_dmesh_extract_t *dme,
+ PDM_mesh_entities_t  entity_type,
+ int                  n_selected,
+ PDM_g_num_t         *selected_gnum
+);
+
 void
 PDM_dmesh_extract_dn_entity_set
 (

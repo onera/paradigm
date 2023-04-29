@@ -28,8 +28,7 @@
 #include "pdm.h"
 #include "pdm_mpi.h"
 #include "pdm_dmesh.h"
-#include "pdm_part_to_part.h"
-#include "pdm_part_mesh_nodal_elmts.h"
+#include "pdm_block_to_part.h"
 
 /*----------------------------------------------------------------------------*/
 
@@ -60,7 +59,21 @@ struct _pdm_dmesh_extract_t
   int                     dim;
   PDM_MPI_Comm            comm;
 
+  /* Input */
+  int                     n_selected;
+  PDM_g_num_t            *selected_gnum;
+
   PDM_dmesh_t            *dmesh;
+  PDM_dmesh_t            *dmesh_extract;
+  PDM_ownership_t         dmesh_extract_ownership;
+
+  PDM_g_num_t            *distrib_extract              [PDM_MESH_ENTITY_MAX];
+  PDM_g_num_t            *parent_extract_gnum          [PDM_MESH_ENTITY_MAX];
+  PDM_ownership_t         distrib_extract_ownership    [PDM_MESH_ENTITY_MAX];
+  PDM_ownership_t         parent_extract_gnum_ownership[PDM_MESH_ENTITY_MAX];
+
+  PDM_block_to_part_t    *btp_entity_to_extract_entity[PDM_MESH_ENTITY_MAX];
+  PDM_ownership_t         btp_ownership               [PDM_MESH_ENTITY_MAX];
 
 
 };
