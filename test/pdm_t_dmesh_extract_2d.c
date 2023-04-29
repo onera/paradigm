@@ -20,6 +20,10 @@
 #include "pdm_priv.h"
 #include "pdm_part_to_block.h"
 #include "pdm_logging.h"
+#include "pdm_distrib.h"
+#include "pdm_partitioning_algorithm.h"
+#include "pdm_dconnectivity_transform.h"
+#include "pdm_vtk.h"
 
 /*============================================================================
  * Type definitions
@@ -68,7 +72,8 @@ _read_args(int                     argc,
            char                  **argv,
            PDM_g_num_t           *n_vtx_seg,
            PDM_Mesh_nodal_elt_t  *t_elt,
-           double                *length)
+           double                *length,
+           int                   *post)
 {
   int i = 1;
 
@@ -103,6 +108,9 @@ _read_args(int                     argc,
         *t_elt = atoi(argv[i]);
       }
     }
+    else if (strcmp(argv[i], "-post") == 0) {
+      *post = 1;
+    }
     else
       _usage(EXIT_FAILURE);
     i++;
@@ -115,9 +123,6 @@ _read_args(int                     argc,
  * \brief  Main
  *
  */
-// @@@param[n_proc] : 1,2,3,4
-// @@@param[n] : 10,20,30,40
-// @@@param[t] : 5,6,7,8,13,14,15,16
 int main(int argc, char *argv[])
 {
 
@@ -127,7 +132,7 @@ int main(int argc, char *argv[])
   PDM_g_num_t        n_vtx_seg = 10;
   double             length    = 1.;
   PDM_Mesh_nodal_elt_t t_elt   = PDM_MESH_NODAL_HEXA8;
-
+  int post                     = 0;
   /*
    *  Read args
    */
@@ -136,7 +141,8 @@ int main(int argc, char *argv[])
              argv,
              &n_vtx_seg,
              &t_elt,
-             &length);
+             &length,
+             &post);
 
   int order = 1;
   if(PDM_Mesh_nodal_elmt_is_ho(t_elt) == 1) {
@@ -264,14 +270,14 @@ int main(int argc, char *argv[])
                                       PDM_CONNECTIVITY_TYPE_FACE_VTX,
                                       tmp_dface_vtx,
                                       dface_vtx_idx);
-  PDM_dmesh_extract_dconnectivity_set(dme,
-                                      PDM_CONNECTIVITY_TYPE_FACE_EDGE,
-                                      dface_edge,
-                                      dface_edge_idx);
-  PDM_dmesh_extract_dconnectivity_set(dme,
-                                      PDM_CONNECTIVITY_TYPE_EDGE_VTX,
-                                      dedge_vtx,
-                                      dedge_vtx_idx);
+  // PDM_dmesh_extract_dconnectivity_set(dme,
+  //                                     PDM_CONNECTIVITY_TYPE_FACE_EDGE,
+  //                                     dface_edge,
+  //                                     dface_edge_idx);
+  // PDM_dmesh_extract_dconnectivity_set(dme,
+  //                                     PDM_CONNECTIVITY_TYPE_EDGE_VTX,
+  //                                     dedge_vtx,
+  //                                     dedge_vtx_idx);
   PDM_dmesh_extract_vtx_coord_set(dme, dvtx_coord);
 
   PDM_dmesh_extract_selected_gnum_set(dme,
@@ -280,6 +286,84 @@ int main(int argc, char *argv[])
                                       dbound_face);
 
   PDM_dmesh_extract_compute(dme);
+
+  /*
+   * Post-traitement
+   */
+  PDM_dmesh_t* dmesh_extract = NULL;
+  PDM_dmesh_extract_dmesh_get(dme,
+                              &dmesh_extract,
+                              PDM_OWNERSHIP_KEEP);
+
+  int         *dextract_face_vtx_idx = NULL;
+  PDM_g_num_t *dextract_face_vtx     = NULL;
+  int dn_extract_face = PDM_dmesh_connectivity_get(dmesh_extract, PDM_CONNECTIVITY_TYPE_FACE_VTX,
+                                                   &dextract_face_vtx,
+                                                   &dextract_face_vtx_idx,
+                                                   PDM_OWNERSHIP_KEEP);
+  double *dextract_vtx_coord = NULL;
+  PDM_dmesh_vtx_coord_get(dmesh_extract,
+                          &dextract_vtx_coord,
+                          PDM_OWNERSHIP_KEEP);
+
+  PDM_g_num_t *distrib_face_extract = PDM_compute_entity_distribution(comm, dn_extract_face);
+
+  PDM_g_num_t* extract_face_ln_to_gn = malloc(dn_extract_face * sizeof(PDM_g_num_t));
+  for(int i = 0; i < dn_extract_face; ++i) {
+    extract_face_ln_to_gn[i] = distrib_face_extract[i_rank] + i + 1;
+  }
+
+  int dn_extract_vtx  = PDM_dmesh_dn_entity_get(dmesh_extract, PDM_MESH_ENTITY_VERTEX);
+  PDM_g_num_t *extract_vtx_distribution = PDM_compute_entity_distribution(comm, dn_extract_vtx);
+
+  int pn_extract_vtx = -1;
+  PDM_g_num_t *pextract_vtx_ln_to_gn = NULL;
+  int         *pextract_face_vtx_idx = NULL;
+  int         *pextract_face_vtx     = NULL;
+  PDM_part_dconnectivity_to_pconnectivity_sort_single_part(comm,
+                                                           distrib_face_extract,
+                                                           dextract_face_vtx_idx,
+                                                           dextract_face_vtx,
+                                                           dn_extract_face,
+                                                           extract_face_ln_to_gn,
+                                                           &pn_extract_vtx,
+                                                           &pextract_vtx_ln_to_gn,
+                                                           &pextract_face_vtx_idx,
+                                                           &pextract_face_vtx);
+
+  double** tmp_pextract_vtx_coord = NULL;
+  PDM_part_dcoordinates_to_pcoordinates(comm,
+                                        1,
+                                        extract_vtx_distribution,
+                                        dextract_vtx_coord,
+                                        &pn_extract_vtx,
+                 (const PDM_g_num_t **) &pextract_vtx_ln_to_gn,
+                                        &tmp_pextract_vtx_coord);
+  double* pextract_vtx_coord = tmp_pextract_vtx_coord[0];
+  free(tmp_pextract_vtx_coord);
+  free(extract_vtx_distribution);
+
+  if (post) {
+    char filename[999];
+    sprintf(filename, "export_face_%i.vtk", i_rank);
+    PDM_vtk_write_polydata(filename,
+                           pn_extract_vtx,
+                           pextract_vtx_coord,
+                           pextract_vtx_ln_to_gn,
+                           dn_extract_face,
+                           pextract_face_vtx_idx,
+                           pextract_face_vtx,
+                           extract_face_ln_to_gn,
+                           NULL);
+  }
+
+  free(pextract_vtx_ln_to_gn);
+  free(pextract_face_vtx_idx);
+  free(pextract_face_vtx    );
+  free(pextract_vtx_coord    );
+
+  free(distrib_face_extract);
+  free(extract_face_ln_to_gn);
 
   PDM_dmesh_extract_free(dme);
 

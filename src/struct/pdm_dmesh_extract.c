@@ -149,9 +149,9 @@ _dmesh_extract_2d
     } else {
       _dedge_vtx_idx = dedge_vtx_idx;
     }
-    int dn_edge_selected = dme->distrib_extract[PDM_MESH_ENTITY_EDGE][i_rank+1] - dme->distrib_extract[PDM_MESH_ENTITY_EDGE][i_rank];
+    dme->dmesh_extract->dn_edge = dme->distrib_extract[PDM_MESH_ENTITY_EDGE][i_rank+1] - dme->distrib_extract[PDM_MESH_ENTITY_EDGE][i_rank];
     PDM_dconnectivity_to_extract_dconnectivity_block(dme->comm,
-                                                     dn_edge_selected,
+                                                     dme->dmesh_extract->dn_edge,
                                                      dme->parent_extract_gnum[PDM_MESH_ENTITY_EDGE],
                                                      distrib_edge,
                                                      _dedge_vtx_idx,
@@ -184,13 +184,14 @@ _dmesh_extract_2d
                                                &dme->distrib_extract                 [PDM_MESH_ENTITY_VERTEX],
                                                &dme->parent_extract_gnum             [PDM_MESH_ENTITY_VERTEX]);
 
-    dme->dmesh_extract->is_owner_connectivity[PDM_CONNECTIVITY_TYPE_FACE_EDGE] = PDM_TRUE;
+    dme->dmesh_extract->is_owner_connectivity[PDM_CONNECTIVITY_TYPE_FACE_VTX] = PDM_TRUE;
+    dme->dmesh_extract->dn_face = dme->distrib_extract[PDM_MESH_ENTITY_FACE][i_rank+1] - dme->distrib_extract[PDM_MESH_ENTITY_FACE][i_rank];
   }
 
-  int dn_extract_vtx = dme->distrib_extract[PDM_MESH_ENTITY_VERTEX][i_rank+1] - dme->distrib_extract[PDM_MESH_ENTITY_VERTEX][i_rank];
+  dme->dmesh_extract->dn_vtx = dme->distrib_extract[PDM_MESH_ENTITY_VERTEX][i_rank+1] - dme->distrib_extract[PDM_MESH_ENTITY_VERTEX][i_rank];
   dme->btp_entity_to_extract_entity[PDM_MESH_ENTITY_VERTEX] = PDM_block_to_part_create(distrib_vtx,
                                                                 (const PDM_g_num_t **) &dme->parent_extract_gnum[PDM_MESH_ENTITY_VERTEX],
-                                                                                       &dn_extract_vtx,
+                                                                                       &dme->dmesh_extract->dn_vtx,
                                                                                        1,
                                                                                        dme->comm);
 
@@ -387,6 +388,20 @@ PDM_dmesh_extract_dconnectivity_set
                              dconnect,
                              dconnect_idx,
                              PDM_OWNERSHIP_USER);
+}
+
+
+void
+PDM_dmesh_extract_dmesh_get
+(
+ PDM_dmesh_extract_t     *dme,
+ PDM_dmesh_t            **dmesh_extract,
+ PDM_ownership_t          ownership
+)
+{
+  *dmesh_extract = dme->dmesh_extract;
+  dme->dmesh_extract_ownership = ownership;
+
 }
 
 void

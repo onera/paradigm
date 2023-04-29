@@ -28,7 +28,7 @@
 #include "pdm.h"
 #include "pdm_mpi.h"
 #include "pdm_part_to_part.h"
-#include "pdm_part_mesh_nodal_elmts.h"
+#include "pdm_dmesh.h"
 
 /*----------------------------------------------------------------------------*/
 
@@ -114,6 +114,15 @@ PDM_dmesh_extract_dconnectivity_set
        PDM_connectivity_type_t  connectivity_type,
        PDM_g_num_t             *dconnect,
        int                     *dconnect_idx
+);
+
+
+void
+PDM_dmesh_extract_dmesh_get
+(
+ PDM_dmesh_extract_t     *dme,
+ PDM_dmesh_t            **dmesh_extract,
+ PDM_ownership_t          ownership
 );
 
 void
