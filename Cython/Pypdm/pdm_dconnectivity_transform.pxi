@@ -1,7 +1,7 @@
 
 cdef extern from "pdm_dconnectivity_transform.h":
     # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-    void PDM_dconnectivity_to_extract_dconnectivity(PDM_MPI_Comm    comm,
+    void PDM_dconnectivity_to_extract_dconnectivity_bis(PDM_MPI_Comm    comm,
                                                     int             n_selected_entity1,
                                                     PDM_g_num_t    *select_entity1,
                                                     PDM_g_num_t    *entity1_distribution,
@@ -105,19 +105,19 @@ def dconnectivity_to_extract_dconnectivity(MPI.Comm                             
     cdef PDM_g_num_t *dparent_entity2_g_num
     cdef PDM_g_num_t *entity1_old_to_new
 
-    PDM_dconnectivity_to_extract_dconnectivity(PDMC,
-                                               n_selected_entity1,
-                          <PDM_g_num_t *>      select_entity1.data,
-                          <PDM_g_num_t *>      entity1_distribution.data,
-                          <int *>              dentity1_entity2_idx.data,
-                          <PDM_g_num_t *>      dentity1_entity2.data,
-                                               &extract_entity1_distribution,
-                                               &extract_entity2_distribution,
-                                               &dextract_entity1_entity2_idx,
-                                               &dextract_entity1_entity2,
-                                               &dparent_entity1_g_num,
-                                               &dparent_entity2_g_num,
-                                               &entity1_old_to_new);
+    PDM_dconnectivity_to_extract_dconnectivity_bis(PDMC,
+                                                   n_selected_entity1,
+                          <PDM_g_num_t *>          select_entity1.data,
+                          <PDM_g_num_t *>          entity1_distribution.data,
+                          <int *>                  dentity1_entity2_idx.data,
+                          <PDM_g_num_t *>          dentity1_entity2.data,
+                                                   &extract_entity1_distribution,
+                                                   &extract_entity2_distribution,
+                                                   &dextract_entity1_entity2_idx,
+                                                   &dextract_entity1_entity2,
+                                                   &dparent_entity1_g_num,
+                                                   &dparent_entity2_g_num,
+                                                   &entity1_old_to_new);
 
     dn_extract_entity1 = extract_entity1_distribution[i_rank+1] - extract_entity1_distribution[i_rank]
     dn_extract_entity2 = extract_entity2_distribution[i_rank+1] - extract_entity2_distribution[i_rank]

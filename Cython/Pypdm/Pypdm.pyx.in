@@ -651,3 +651,7 @@ include "pdm_generate_mesh.pxi"
 # --------------------
 include "pdm_point_cloud_gen.pxi"
 
+
+# PDM_dextract_part :
+# -------------------
+include "pdm_dmesh_extract.pxi"

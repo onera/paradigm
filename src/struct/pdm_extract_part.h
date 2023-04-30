@@ -89,7 +89,7 @@ PDM_extract_part_create
 
 /**
  *
- * \brief Build an iso surface struct
+ * \brief Compute extraction
  *
  * \param [in]   extrp      PDM_extract_part_t
  *
