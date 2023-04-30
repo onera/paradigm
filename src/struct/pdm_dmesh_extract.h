@@ -27,7 +27,7 @@
 
 #include "pdm.h"
 #include "pdm_mpi.h"
-#include "pdm_part_to_part.h"
+#include "pdm_block_to_part.h"
 #include "pdm_dmesh.h"
 
 /*----------------------------------------------------------------------------*/
@@ -58,6 +58,15 @@ typedef struct _pdm_dmesh_extract_t PDM_dmesh_extract_t;
  * Public function prototypes
  *============================================================================*/
 
+/**
+ *
+ * \brief Build an extract_part struct
+ *
+ * \param [in]   dim                 Extraction dimension
+ * \param [in]   comm                MPI communicator
+ *
+ * \return   Initialized \ref PDM_extract_part_t instance
+ */
 PDM_dmesh_extract_t*
 PDM_dmesh_extract_create
 (
@@ -65,6 +74,14 @@ PDM_dmesh_extract_create
        PDM_MPI_Comm            comm
 );
 
+
+/**
+ *
+ * \brief Compute extraction
+ *
+ * \param [in]   extrp      PDM_extract_part_t
+ *
+ */
 void
 PDM_dmesh_extract_compute
 (
@@ -72,6 +89,17 @@ PDM_dmesh_extract_compute
 );
 
 
+
+/**
+ *
+ * \brief Set the extract number
+ *
+ * \param [in]   dme                  PDM_dmesh_extract_t
+ * \param [in]   PDM_mesh_entities_t  part identifier
+ * \param [in]   n_selected           Number of entity to select
+ * \param [in]   selected_gnum        List of gnum to extract
+ *
+ */
 void
 PDM_dmesh_extract_selected_gnum_set
 (
@@ -80,6 +108,7 @@ PDM_dmesh_extract_selected_gnum_set
  int                  n_selected,
  PDM_g_num_t         *selected_gnum
 );
+
 
 void
 PDM_dmesh_extract_dn_entity_set
@@ -117,6 +146,15 @@ PDM_dmesh_extract_dconnectivity_set
 );
 
 
+/**
+ *
+ * \brief Get a dmesh object correspond to extraction
+ *
+ * \param [in]   dme                  PDM_dmesh_extract_t
+ * \param [out]  dmesh_extract        Current extraction direclty inside a PDM_dmesh_t
+ * \param [in]   ownership            KEEP or USER
+ *
+ */
 void
 PDM_dmesh_extract_dmesh_get
 (
@@ -124,6 +162,71 @@ PDM_dmesh_extract_dmesh_get
  PDM_dmesh_t            **dmesh_extract,
  PDM_ownership_t          ownership
 );
+
+/**
+ *
+ * \brief Get the redistributed parent_gnum (in block frame)
+ *
+ * \param [in]   dme                  PDM_dmesh_extract_t
+ * \param [in]   entity_type          Entity type (cell, face, edge, vtx)
+ * \param [out]  dn_entity            Size of block of current entity
+ * \param [out]  parent_gnum          Parent gnum redistributed
+ * \param [in]   ownership            KEEP or USER
+ *
+ */
+void
+PDM_dmesh_extract_parent_gnum_get
+(
+ PDM_dmesh_extract_t     *dme,
+ PDM_mesh_entities_t      entity_type,
+ int                     *dn_entity,
+ PDM_g_num_t            **parent_gnum,
+ PDM_ownership_t          ownership
+);
+
+
+/**
+ *
+ * \brief Get the block_to_part associated to extraction
+ *
+ * \param [in]   dme                  PDM_dmesh_extract_t
+ * \param [in]   entity_type          Entity type (cell, face, edge, vtx)
+ * \param [out]  btp                  block_to_part to transfert data to extract block
+ * \param [in]   ownership            KEEP or USER
+ *
+ */
+void
+PDM_dmesh_extract_btp_get
+(
+ PDM_dmesh_extract_t     *dme,
+ PDM_mesh_entities_t      entity_type,
+ PDM_block_to_part_t    **btp,
+ PDM_ownership_t          ownership
+);
+
+
+/**
+ *
+ * \brief Get the block_to_part associated to extraction for each group
+ *
+ * \param [in]   dme                  PDM_dmesh_extract_t
+ * \param [in]   i_group              No of group
+ * \param [in]   bound_type           Bound type (cell, face, edge, vtx)
+ * \param [out]  btp                  block_to_part to transfert data to extract block
+ * \param [in]   ownership            KEEP or USER
+ *
+ */
+void
+PDM_dmesh_extract_btp_group_get
+(
+ PDM_dmesh_extract_t     *dme,
+ int                      i_group,
+ PDM_bound_type_t         bound_type,
+ PDM_block_to_part_t    **btp,
+ PDM_ownership_t          ownership
+);
+
+
 
 void
 PDM_dmesh_extract_free

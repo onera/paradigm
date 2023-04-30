@@ -70,10 +70,10 @@ _rebuild_group
   int         *dbound_entity_idx = NULL;
   PDM_g_num_t *dbound_entity     = NULL;
   int n_group_entity = PDM_dmesh_bound_get(dme->dmesh,
-                                         bound_type,
-                                         &dbound_entity,
-                                         &dbound_entity_idx,
-                                         PDM_OWNERSHIP_BAD_VALUE);
+                                           bound_type,
+                                           &dbound_entity,
+                                           &dbound_entity_idx,
+                                           PDM_OWNERSHIP_BAD_VALUE);
   if(dbound_entity_idx == NULL) {
     return;
   }
@@ -143,10 +143,27 @@ _rebuild_group
     dme->btp_bound_ownership[bound_type][i_group] = PDM_OWNERSHIP_KEEP;
     free(distrib_group_entity);
 
+
   }
 
 
-  free(dextract_bound_entity_idx     );
+  /*
+   * Reminder : block(view as part) is implicit
+   */
+  PDM_g_num_t *dextract_bound_entity_gnum = malloc(dextract_bound_entity_idx[n_group_entity] * sizeof(PDM_g_num_t));
+  for(int i = 0; i < dextract_bound_entity_idx[n_group_entity]; ++i) {
+    dextract_bound_entity_gnum[i] = dme->distrib_extract[entity_type][i_rank] + dextract_bound_entity[i];
+  }
+
+  PDM_dmesh_bound_set(dme->dmesh_extract,
+                      bound_type,
+                      n_group_entity,
+                      dextract_bound_entity_gnum,
+                      dextract_bound_entity_idx,
+                      PDM_OWNERSHIP_KEEP);
+
+
+  // free(dextract_bound_entity_idx     );
   free(dextract_bound_entity         );
   free(dextract_bound_entity_ln_to_gn);
 }
@@ -314,7 +331,69 @@ _dmesh_extract_1d
  PDM_dmesh_extract_t *dme
 )
 {
-  PDM_UNUSED(dme);
+  int i_rank;
+  PDM_MPI_Comm_rank(dme->comm, &i_rank);
+
+  int dn_edge = PDM_dmesh_dn_entity_get(dme->dmesh, PDM_MESH_ENTITY_EDGE  );
+  int dn_vtx  = PDM_dmesh_dn_entity_get(dme->dmesh, PDM_MESH_ENTITY_VERTEX);
+
+  PDM_g_num_t *distrib_edge = PDM_compute_entity_distribution(dme->comm, dn_edge);
+  PDM_g_num_t* distrib_vtx  = PDM_compute_entity_distribution(dme->comm, dn_vtx );
+
+  // edge_vtx
+  PDM_g_num_t *dedge_vtx     = NULL;
+  int         *dedge_vtx_idx = NULL;
+  PDM_dmesh_connectivity_get(dme->dmesh,
+                             PDM_CONNECTIVITY_TYPE_EDGE_VTX,
+                             &dedge_vtx,
+                             &dedge_vtx_idx,
+                             PDM_OWNERSHIP_BAD_VALUE);
+  int *_dedge_vtx_idx = NULL;
+  if(dedge_vtx_idx == NULL)  {
+    _dedge_vtx_idx = malloc( (dn_edge+1) * sizeof(int));
+    for(int i_edge = 0; i_edge < dn_edge+1; ++i_edge) {
+      _dedge_vtx_idx[i_edge] = 2*i_edge;
+    }
+  } else {
+    _dedge_vtx_idx = dedge_vtx_idx;
+  }
+
+
+  PDM_dconnectivity_to_extract_dconnectivity(dme->comm,
+                                             dme->n_selected,
+                                             dme->selected_gnum,
+                                             distrib_edge,
+                                             dedge_vtx_idx,
+                                             dedge_vtx,
+                                             &dme->distrib_extract                 [PDM_MESH_ENTITY_EDGE],
+                                             &dme->parent_extract_gnum             [PDM_MESH_ENTITY_EDGE],
+                                             &dme->dmesh_extract->dconnectivity_idx[PDM_CONNECTIVITY_TYPE_EDGE_VTX],
+                                             &dme->dmesh_extract->dconnectivity    [PDM_CONNECTIVITY_TYPE_EDGE_VTX],
+                                             &dme->btp_entity_to_extract_entity    [PDM_MESH_ENTITY_EDGE],
+                                             &dme->distrib_extract                 [PDM_MESH_ENTITY_VERTEX],
+                                             &dme->parent_extract_gnum             [PDM_MESH_ENTITY_VERTEX]);
+
+  dme->dmesh_extract->is_owner_connectivity[PDM_CONNECTIVITY_TYPE_EDGE_VTX] = PDM_TRUE;
+  free(dme->dmesh_extract->dconnectivity_idx[PDM_CONNECTIVITY_TYPE_EDGE_VTX]);
+  dme->dmesh_extract->dconnectivity_idx[PDM_CONNECTIVITY_TYPE_EDGE_VTX] = NULL;
+  if(dedge_vtx_idx == NULL)  {
+    free(_dedge_vtx_idx);
+  }
+
+  dme->dmesh_extract->dn_edge = dme->distrib_extract[PDM_MESH_ENTITY_EDGE  ][i_rank+1] - dme->distrib_extract[PDM_MESH_ENTITY_EDGE  ][i_rank];
+  dme->dmesh_extract->dn_vtx  = dme->distrib_extract[PDM_MESH_ENTITY_VERTEX][i_rank+1] - dme->distrib_extract[PDM_MESH_ENTITY_VERTEX][i_rank];
+
+  dme->btp_entity_to_extract_entity[PDM_MESH_ENTITY_VERTEX] = PDM_block_to_part_create(distrib_vtx,
+                                                                (const PDM_g_num_t **) &dme->parent_extract_gnum[PDM_MESH_ENTITY_VERTEX],
+                                                                                       &dme->dmesh_extract->dn_vtx,
+                                                                                       1,
+                                                                                       dme->comm);
+
+  _rebuild_group(dme, distrib_edge, PDM_MESH_ENTITY_EDGE  , PDM_BOUND_TYPE_EDGE);
+  _rebuild_group(dme, distrib_vtx , PDM_MESH_ENTITY_VERTEX, PDM_BOUND_TYPE_VTX );
+
+  free(distrib_edge);
+  free(distrib_vtx );
 
 }
 
@@ -325,8 +404,46 @@ _dmesh_extract_0d
  PDM_dmesh_extract_t *dme
 )
 {
-  PDM_UNUSED(dme);
+  int i_rank;
+  PDM_MPI_Comm_rank(dme->comm, &i_rank);
 
+  int dn_vtx  = PDM_dmesh_dn_entity_get(dme->dmesh, PDM_MESH_ENTITY_VERTEX);
+
+  PDM_g_num_t* distrib_vtx  = PDM_compute_entity_distribution(dme->comm, dn_vtx );
+
+
+
+  PDM_part_to_block_t *ptb = PDM_part_to_block_create(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
+                                                      PDM_PART_TO_BLOCK_POST_CLEANUP,
+                                                      1.,
+                                                      &dme->selected_gnum,
+                                                      NULL,
+                                                      &dme->n_selected,
+                                                      1,
+                                                      dme->comm);
+
+  int          dn_extract_vtx      = PDM_part_to_block_n_elt_block_get  (ptb);
+  PDM_g_num_t *dextract_gnum_vtx   = PDM_part_to_block_block_gnum_get   (ptb);
+
+  dme->distrib_extract[PDM_MESH_ENTITY_VERTEX] = PDM_compute_entity_distribution(dme->comm, dn_extract_vtx);
+
+  dme->dmesh_extract->dn_vtx = dme->distrib_extract[PDM_MESH_ENTITY_VERTEX][i_rank+1] - dme->distrib_extract[PDM_MESH_ENTITY_VERTEX][i_rank];
+
+  dme->parent_extract_gnum[PDM_MESH_ENTITY_VERTEX] = malloc(dme->dmesh_extract->dn_vtx * sizeof(PDM_g_num_t));
+  for(int i = 0; i < dme->dmesh_extract->dn_vtx; ++i) {
+    dme->parent_extract_gnum[PDM_MESH_ENTITY_VERTEX][i] = dextract_gnum_vtx[i];
+  }
+
+  PDM_part_to_block_free(ptb);
+
+  dme->btp_entity_to_extract_entity[PDM_MESH_ENTITY_VERTEX] = PDM_block_to_part_create(distrib_vtx,
+                                                                (const PDM_g_num_t **) &dme->parent_extract_gnum[PDM_MESH_ENTITY_VERTEX],
+                                                                                       &dme->dmesh_extract->dn_vtx,
+                                                                                       1,
+                                                                                       dme->comm);
+  _rebuild_group(dme, distrib_vtx , PDM_MESH_ENTITY_VERTEX, PDM_BOUND_TYPE_VTX );
+
+  free(distrib_vtx );
 }
 
 
@@ -415,9 +532,11 @@ PDM_dmesh_extract_compute
                (void *  )  dme->dmesh->_dvtx_coord,
                            NULL,
                (void ***)  &tmp_dvtx_coord);
+
     PDM_dmesh_vtx_coord_set(dme->dmesh_extract,
                             tmp_dvtx_coord[0],
                             PDM_OWNERSHIP_KEEP);
+
     free(tmp_dvtx_coord);
   }
 
@@ -514,6 +633,60 @@ PDM_dmesh_extract_dmesh_get
   dme->dmesh_extract_ownership = ownership;
 
 }
+
+void
+PDM_dmesh_extract_parent_gnum_get
+(
+ PDM_dmesh_extract_t     *dme,
+ PDM_mesh_entities_t      entity_type,
+ int                     *dn_entity,
+ PDM_g_num_t            **parent_gnum,
+ PDM_ownership_t          ownership
+)
+{
+  if(dme->distrib_extract[entity_type] != NULL){
+    int i_rank;
+    PDM_MPI_Comm_rank(dme->comm, &i_rank);
+    *dn_entity   = dme->distrib_extract[entity_type][i_rank+1] - dme->distrib_extract[entity_type][i_rank];
+    *parent_gnum = dme->parent_extract_gnum[entity_type];
+    dme->parent_extract_gnum_ownership[entity_type] = ownership;
+  } else {
+    *dn_entity = 0;
+    *parent_gnum = NULL;
+  }
+}
+
+
+void
+PDM_dmesh_extract_btp_get
+(
+ PDM_dmesh_extract_t     *dme,
+ PDM_mesh_entities_t      entity_type,
+ PDM_block_to_part_t    **btp,
+ PDM_ownership_t          ownership
+)
+{
+  *btp = dme->btp_entity_to_extract_entity[entity_type];
+  dme->btp_ownership[entity_type] = ownership;
+}
+
+
+void
+PDM_dmesh_extract_btp_group_get
+(
+ PDM_dmesh_extract_t     *dme,
+ int                      i_group,
+ PDM_bound_type_t         bound_type,
+ PDM_block_to_part_t    **btp,
+ PDM_ownership_t          ownership
+)
+{
+  *btp = dme->btp_bound_entity_to_extract_entity[bound_type][i_group];
+  dme->btp_bound_ownership[bound_type][i_group] = ownership;
+}
+
+
+
 
 void
 PDM_dmesh_extract_free

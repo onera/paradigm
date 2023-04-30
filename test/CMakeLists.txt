@@ -108,6 +108,7 @@ test_c_create (pdm_t_part_dcube_nodal ${MPIEXEC_MAX_NUMPROCS} PDM_LIST_TEST PDM_
 test_c_create (pdm_t_dmesh_nodal_to_dmesh 2 PDM_LIST_TEST PDM_LIST_NRANK)
 test_c_create (pdm_t_dmesh_to_dmesh_nodal 2 PDM_LIST_TEST PDM_LIST_NRANK)
 test_c_create (pdm_t_dmesh_extract_2d 2 PDM_LIST_TEST PDM_LIST_NRANK)
+test_c_create (pdm_t_dmesh_extract_1d 2 PDM_LIST_TEST PDM_LIST_NRANK)
 test_c_create (pdm_t_part_extension 2 PDM_LIST_TEST PDM_LIST_NRANK)
 test_c_create (pdm_t_partitioning_dcube_nodal 2 PDM_LIST_TEST PDM_LIST_NRANK)
 test_c_create (pdm_t_multipart ${MPIEXEC_MAX_NUMPROCS} PDM_LIST_TEST PDM_LIST_NRANK)
