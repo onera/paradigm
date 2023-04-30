@@ -73,7 +73,7 @@ cdef class DMeshExtract:
 
   # ------------------------------------------------------------------
   def __cinit__(self,
-                int                     dim
+                int                     dim,
                 MPI.Comm                comm):
     """
     Compute the distance from point clouds to a surface
