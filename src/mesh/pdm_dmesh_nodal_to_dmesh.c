@@ -1050,7 +1050,7 @@ _generate_faces_from_dmesh_nodal
   /*
    *  Create empty dmesh
    */
-  PDM_dmesh_t* dm = PDM_dmesh_create(link->owner,
+  PDM_dmesh_t* dm = PDM_dmesh_create(PDM_OWNERSHIP_KEEP,
                                      0,
                                      0,
                                      0,
@@ -1550,7 +1550,7 @@ _generate_edges_from_dmesh_nodal
   /*
    *  Create empty dmesh
    */
-  PDM_dmesh_t* dm = PDM_dmesh_create(link->owner,
+  PDM_dmesh_t* dm = PDM_dmesh_create(PDM_OWNERSHIP_KEEP,
                                      0,
                                      0,
                                      0,
