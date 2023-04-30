@@ -299,19 +299,17 @@ _dmesh_extract_3d
     }
 
   } else if(from_face_vtx == 1) {
-    PDM_dconnectivity_to_extract_dconnectivity(dme->comm,
-                                               dme->n_selected,
-                                               dme->selected_gnum,
-                                               distrib_face,
-                                               dface_vtx_idx,
-                                               dface_vtx,
-                                               &dme->distrib_extract                 [PDM_MESH_ENTITY_FACE],
-                                               &dme->parent_extract_gnum             [PDM_MESH_ENTITY_FACE],
-                                               &dme->dmesh_extract->dconnectivity_idx[PDM_CONNECTIVITY_TYPE_FACE_VTX],
-                                               &dme->dmesh_extract->dconnectivity    [PDM_CONNECTIVITY_TYPE_FACE_VTX],
-                                               &dme->btp_entity_to_extract_entity    [PDM_MESH_ENTITY_FACE],
-                                               &dme->distrib_extract                 [PDM_MESH_ENTITY_VERTEX],
-                                               &dme->parent_extract_gnum             [PDM_MESH_ENTITY_VERTEX]);
+    PDM_dconnectivity_to_extract_dconnectivity_block(dme->comm,
+                                                     dme->dmesh_extract->dn_face,
+                                                     dme->parent_extract_gnum[PDM_MESH_ENTITY_FACE],
+                                                     distrib_face,
+                                                     dface_vtx_idx,
+                                                     dface_vtx,
+                                                     &dme->dmesh_extract->dconnectivity_idx[PDM_CONNECTIVITY_TYPE_FACE_VTX],
+                                                     &dme->dmesh_extract->dconnectivity    [PDM_CONNECTIVITY_TYPE_FACE_VTX],
+                                                     &dme->btp_entity_to_extract_entity    [PDM_MESH_ENTITY_FACE],
+                                                     &dme->distrib_extract                 [PDM_MESH_ENTITY_VERTEX],
+                                                     &dme->parent_extract_gnum             [PDM_MESH_ENTITY_VERTEX]);
 
     dme->dmesh_extract->is_owner_connectivity[PDM_CONNECTIVITY_TYPE_FACE_VTX] = PDM_TRUE;
  }
@@ -671,11 +669,8 @@ PDM_dmesh_extract_compute
     PDM_MPI_Allreduce(&_dn_vtx , &dme->dmesh->n_g_vtx , 1, PDM__PDM_MPI_G_NUM, PDM_MPI_SUM, dme->comm);
 
   } else {
-    printf("Free old");
-
     PDM_dmesh_free(dme->dmesh);
     dme->dmesh = dme->dmesh_shared;
-
   }
 
   dme->dmesh_extract = PDM_dmesh_create(PDM_OWNERSHIP_KEEP, 0, 0, 0, 0, dme->comm);
@@ -884,7 +879,6 @@ PDM_dmesh_extract_free
 
 
   for (int i = 0; i < PDM_MESH_ENTITY_MAX; ++i) {
-
     if(dme->distrib_extract_ownership[i] == PDM_OWNERSHIP_KEEP && dme->distrib_extract[i] != NULL) {
       free(dme->distrib_extract[i]);
     }
@@ -892,7 +886,6 @@ PDM_dmesh_extract_free
     if(dme->parent_extract_gnum_ownership[i] == PDM_OWNERSHIP_KEEP && dme->parent_extract_gnum[i] != NULL) {
       free(dme->parent_extract_gnum[i]);
     }
-
   }
 
 
