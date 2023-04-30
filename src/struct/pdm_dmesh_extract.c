@@ -178,7 +178,167 @@ _dmesh_extract_3d
  PDM_dmesh_extract_t *dme
 )
 {
-  PDM_UNUSED(dme);
+  int i_rank;
+  PDM_MPI_Comm_rank(dme->comm, &i_rank);
+
+  PDM_g_num_t *dcell_face     = NULL;
+  int         *dcell_face_idx = NULL;
+  PDM_dmesh_connectivity_get(dme->dmesh,
+                             PDM_CONNECTIVITY_TYPE_CELL_FACE,
+                             &dcell_face,
+                             &dcell_face_idx,
+                             PDM_OWNERSHIP_BAD_VALUE);
+
+  int from_face_edge = 0;
+  int from_face_vtx  = 0;
+
+  PDM_g_num_t *dface_vtx     = NULL;
+  int         *dface_vtx_idx = NULL;
+  PDM_dmesh_connectivity_get(dme->dmesh,
+                             PDM_CONNECTIVITY_TYPE_FACE_VTX,
+                             &dface_vtx,
+                             &dface_vtx_idx,
+                             PDM_OWNERSHIP_BAD_VALUE);
+
+  if(dface_vtx_idx != NULL){
+    from_face_vtx = 1;
+  }
+
+  // face edge
+  PDM_g_num_t *dface_edge     = NULL;
+  int         *dface_edge_idx = NULL;
+  PDM_dmesh_connectivity_get(dme->dmesh,
+                             PDM_CONNECTIVITY_TYPE_FACE_EDGE,
+                             &dface_edge,
+                             &dface_edge_idx,
+                             PDM_OWNERSHIP_BAD_VALUE);
+
+  if(dface_edge_idx != NULL) {
+    from_face_edge = 1;
+  }
+
+  int dn_cell = PDM_dmesh_dn_entity_get(dme->dmesh, PDM_MESH_ENTITY_CELL  );
+  int dn_face = PDM_dmesh_dn_entity_get(dme->dmesh, PDM_MESH_ENTITY_FACE  );
+  int dn_edge = PDM_dmesh_dn_entity_get(dme->dmesh, PDM_MESH_ENTITY_EDGE  );
+  int dn_vtx  = PDM_dmesh_dn_entity_get(dme->dmesh, PDM_MESH_ENTITY_VERTEX);
+
+  PDM_g_num_t* distrib_cell = PDM_compute_entity_distribution(dme->comm, dn_cell);
+  PDM_g_num_t* distrib_face = PDM_compute_entity_distribution(dme->comm, dn_face);
+  PDM_g_num_t* distrib_vtx  = PDM_compute_entity_distribution(dme->comm, dn_vtx );
+  PDM_g_num_t* distrib_edge = NULL;
+
+  PDM_dconnectivity_to_extract_dconnectivity(dme->comm,
+                                             dme->n_selected,
+                                             dme->selected_gnum,
+                                             distrib_cell,
+                                             dcell_face_idx,
+                                             dcell_face,
+                                             &dme->distrib_extract                 [PDM_MESH_ENTITY_CELL],
+                                             &dme->parent_extract_gnum             [PDM_MESH_ENTITY_CELL],
+                                             &dme->dmesh_extract->dconnectivity_idx[PDM_CONNECTIVITY_TYPE_CELL_FACE],
+                                             &dme->dmesh_extract->dconnectivity    [PDM_CONNECTIVITY_TYPE_CELL_FACE],
+                                             &dme->btp_entity_to_extract_entity    [PDM_MESH_ENTITY_CELL],
+                                             &dme->distrib_extract                 [PDM_MESH_ENTITY_FACE],
+                                             &dme->parent_extract_gnum             [PDM_MESH_ENTITY_FACE]);
+
+  dme->dmesh_extract->is_owner_connectivity[PDM_CONNECTIVITY_TYPE_CELL_FACE] = PDM_TRUE;
+  dme->dmesh_extract->dn_face = dme->distrib_extract[PDM_MESH_ENTITY_FACE][i_rank+1] - dme->distrib_extract[PDM_MESH_ENTITY_FACE][i_rank];
+
+  if(from_face_edge == 1) {
+
+    PDM_dconnectivity_to_extract_dconnectivity_block(dme->comm,
+                                                     dme->dmesh_extract->dn_face,
+                                                     dme->parent_extract_gnum[PDM_MESH_ENTITY_FACE],
+                                                     distrib_face,
+                                                     dface_edge_idx,
+                                                     dface_edge,
+                                                     &dme->dmesh_extract->dconnectivity_idx[PDM_CONNECTIVITY_TYPE_FACE_EDGE],
+                                                     &dme->dmesh_extract->dconnectivity    [PDM_CONNECTIVITY_TYPE_FACE_EDGE],
+                                                     &dme->btp_entity_to_extract_entity    [PDM_MESH_ENTITY_FACE],
+                                                     &dme->distrib_extract                 [PDM_MESH_ENTITY_EDGE],
+                                                     &dme->parent_extract_gnum             [PDM_MESH_ENTITY_EDGE]);
+
+    dme->dmesh_extract->is_owner_connectivity[PDM_CONNECTIVITY_TYPE_FACE_EDGE] = PDM_TRUE;
+
+    // edge_vtx
+    distrib_edge = PDM_compute_entity_distribution(dme->comm, dn_edge);
+    PDM_g_num_t *dedge_vtx     = NULL;
+    int         *dedge_vtx_idx = NULL;
+    PDM_dmesh_connectivity_get(dme->dmesh,
+                               PDM_CONNECTIVITY_TYPE_EDGE_VTX,
+                               &dedge_vtx,
+                               &dedge_vtx_idx,
+                               PDM_OWNERSHIP_BAD_VALUE);
+    int *_dedge_vtx_idx = NULL;
+    if(dedge_vtx_idx == NULL)  {
+      _dedge_vtx_idx = malloc( (dn_edge+1) * sizeof(int));
+      for(int i_edge = 0; i_edge < dn_edge+1; ++i_edge) {
+        _dedge_vtx_idx[i_edge] = 2*i_edge;
+      }
+    } else {
+      _dedge_vtx_idx = dedge_vtx_idx;
+    }
+    dme->dmesh_extract->dn_edge = dme->distrib_extract[PDM_MESH_ENTITY_EDGE][i_rank+1] - dme->distrib_extract[PDM_MESH_ENTITY_EDGE][i_rank];
+    PDM_dconnectivity_to_extract_dconnectivity_block(dme->comm,
+                                                     dme->dmesh_extract->dn_edge,
+                                                     dme->parent_extract_gnum[PDM_MESH_ENTITY_EDGE],
+                                                     distrib_edge,
+                                                     _dedge_vtx_idx,
+                                                     dedge_vtx,
+                                                     &dme->dmesh_extract->dconnectivity_idx[PDM_CONNECTIVITY_TYPE_EDGE_VTX],
+                                                     &dme->dmesh_extract->dconnectivity    [PDM_CONNECTIVITY_TYPE_EDGE_VTX],
+                                                     &dme->btp_entity_to_extract_entity    [PDM_MESH_ENTITY_EDGE],
+                                                     &dme->distrib_extract                 [PDM_MESH_ENTITY_VERTEX],
+                                                     &dme->parent_extract_gnum             [PDM_MESH_ENTITY_VERTEX]);
+
+    dme->dmesh_extract->is_owner_connectivity[PDM_CONNECTIVITY_TYPE_EDGE_VTX] = PDM_TRUE;
+    free(dme->dmesh_extract->dconnectivity_idx[PDM_CONNECTIVITY_TYPE_EDGE_VTX]);
+    dme->dmesh_extract->dconnectivity_idx[PDM_CONNECTIVITY_TYPE_EDGE_VTX] = NULL;
+    if(dedge_vtx_idx == NULL)  {
+      free(_dedge_vtx_idx);
+    }
+
+  } else if(from_face_vtx == 1) {
+    PDM_dconnectivity_to_extract_dconnectivity(dme->comm,
+                                               dme->n_selected,
+                                               dme->selected_gnum,
+                                               distrib_face,
+                                               dface_vtx_idx,
+                                               dface_vtx,
+                                               &dme->distrib_extract                 [PDM_MESH_ENTITY_FACE],
+                                               &dme->parent_extract_gnum             [PDM_MESH_ENTITY_FACE],
+                                               &dme->dmesh_extract->dconnectivity_idx[PDM_CONNECTIVITY_TYPE_FACE_VTX],
+                                               &dme->dmesh_extract->dconnectivity    [PDM_CONNECTIVITY_TYPE_FACE_VTX],
+                                               &dme->btp_entity_to_extract_entity    [PDM_MESH_ENTITY_FACE],
+                                               &dme->distrib_extract                 [PDM_MESH_ENTITY_VERTEX],
+                                               &dme->parent_extract_gnum             [PDM_MESH_ENTITY_VERTEX]);
+
+    dme->dmesh_extract->is_owner_connectivity[PDM_CONNECTIVITY_TYPE_FACE_VTX] = PDM_TRUE;
+ }
+
+  dme->dmesh_extract->dn_face = dme->distrib_extract[PDM_MESH_ENTITY_FACE  ][i_rank+1] - dme->distrib_extract[PDM_MESH_ENTITY_FACE  ][i_rank];
+  dme->dmesh_extract->dn_vtx  = dme->distrib_extract[PDM_MESH_ENTITY_VERTEX][i_rank+1] - dme->distrib_extract[PDM_MESH_ENTITY_VERTEX][i_rank];
+  dme->btp_entity_to_extract_entity[PDM_MESH_ENTITY_VERTEX] = PDM_block_to_part_create(distrib_vtx,
+                                                                (const PDM_g_num_t **) &dme->parent_extract_gnum[PDM_MESH_ENTITY_VERTEX],
+                                                                                       &dme->dmesh_extract->dn_vtx,
+                                                                                       1,
+                                                                                       dme->comm);
+
+
+  _rebuild_group(dme, distrib_cell, PDM_MESH_ENTITY_CELL  , PDM_BOUND_TYPE_CELL);
+  _rebuild_group(dme, distrib_face, PDM_MESH_ENTITY_FACE  , PDM_BOUND_TYPE_FACE);
+  _rebuild_group(dme, distrib_edge, PDM_MESH_ENTITY_EDGE  , PDM_BOUND_TYPE_EDGE);
+  _rebuild_group(dme, distrib_vtx , PDM_MESH_ENTITY_VERTEX, PDM_BOUND_TYPE_VTX );
+
+  free(distrib_cell);
+  free(distrib_face);
+  if(distrib_edge != NULL) {
+    free(distrib_edge);
+  }
+  free(distrib_vtx );
+
+
+
 
 }
 
@@ -468,6 +628,7 @@ PDM_dmesh_extract_create
   dme->dmesh         = PDM_dmesh_create(PDM_OWNERSHIP_KEEP, 0, 0, 0, 0, comm);
   dme->dmesh_extract = NULL;
   dme->dmesh_extract_ownership = PDM_OWNERSHIP_KEEP;
+  dme->dmesh_shared  = NULL;
 
   for(int i = 0; i < PDM_MESH_ENTITY_MAX; ++i) {
     dme->btp_entity_to_extract_entity [i] = NULL;
@@ -497,16 +658,25 @@ PDM_dmesh_extract_compute
  PDM_dmesh_extract_t *dme
 )
 {
-  // Synchronize dmesh
-  PDM_g_num_t _dn_cell = dme->dmesh->dn_cell;
-  PDM_g_num_t _dn_face = dme->dmesh->dn_face;
-  PDM_g_num_t _dn_edge = dme->dmesh->dn_edge;
-  PDM_g_num_t _dn_vtx  = dme->dmesh->dn_vtx;
+  if(dme->dmesh_shared == NULL){
+    // Synchronize dmesh
+    PDM_g_num_t _dn_cell = dme->dmesh->dn_cell;
+    PDM_g_num_t _dn_face = dme->dmesh->dn_face;
+    PDM_g_num_t _dn_edge = dme->dmesh->dn_edge;
+    PDM_g_num_t _dn_vtx  = dme->dmesh->dn_vtx;
 
-  PDM_MPI_Allreduce(&_dn_cell, &dme->dmesh->n_g_cell, 1, PDM__PDM_MPI_G_NUM, PDM_MPI_SUM, dme->comm);
-  PDM_MPI_Allreduce(&_dn_face, &dme->dmesh->n_g_face, 1, PDM__PDM_MPI_G_NUM, PDM_MPI_SUM, dme->comm);
-  PDM_MPI_Allreduce(&_dn_edge, &dme->dmesh->n_g_edge, 1, PDM__PDM_MPI_G_NUM, PDM_MPI_SUM, dme->comm);
-  PDM_MPI_Allreduce(&_dn_vtx , &dme->dmesh->n_g_vtx , 1, PDM__PDM_MPI_G_NUM, PDM_MPI_SUM, dme->comm);
+    PDM_MPI_Allreduce(&_dn_cell, &dme->dmesh->n_g_cell, 1, PDM__PDM_MPI_G_NUM, PDM_MPI_SUM, dme->comm);
+    PDM_MPI_Allreduce(&_dn_face, &dme->dmesh->n_g_face, 1, PDM__PDM_MPI_G_NUM, PDM_MPI_SUM, dme->comm);
+    PDM_MPI_Allreduce(&_dn_edge, &dme->dmesh->n_g_edge, 1, PDM__PDM_MPI_G_NUM, PDM_MPI_SUM, dme->comm);
+    PDM_MPI_Allreduce(&_dn_vtx , &dme->dmesh->n_g_vtx , 1, PDM__PDM_MPI_G_NUM, PDM_MPI_SUM, dme->comm);
+
+  } else {
+    printf("Free old");
+
+    PDM_dmesh_free(dme->dmesh);
+    dme->dmesh = dme->dmesh_shared;
+
+  }
 
   dme->dmesh_extract = PDM_dmesh_create(PDM_OWNERSHIP_KEEP, 0, 0, 0, 0, dme->comm);
   dme->dmesh_extract->_dvtx_coord = NULL;
@@ -620,6 +790,15 @@ PDM_dmesh_extract_dconnectivity_set
                              PDM_OWNERSHIP_USER);
 }
 
+void
+PDM_dmesh_extract_dmesh_set
+(
+ PDM_dmesh_extract_t     *dme,
+ PDM_dmesh_t             *dmesh
+)
+{
+  dme->dmesh_shared = dmesh;
+}
 
 void
 PDM_dmesh_extract_dmesh_get
@@ -686,8 +865,6 @@ PDM_dmesh_extract_btp_group_get
 }
 
 
-
-
 void
 PDM_dmesh_extract_free
 (
@@ -695,8 +872,9 @@ PDM_dmesh_extract_free
 )
 {
 
-
-  PDM_dmesh_free(dme->dmesh);
+  if(dme->dmesh_shared == NULL){
+    PDM_dmesh_free(dme->dmesh);
+  }
 
   for (int i = 0; i < PDM_MESH_ENTITY_MAX; ++i) {
     if (dme->btp_ownership[i] == PDM_OWNERSHIP_KEEP && dme->btp_entity_to_extract_entity[i] != NULL) {

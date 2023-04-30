@@ -127,6 +127,7 @@ PDM_dmesh_create
   dmesh->edge_distrib      = NULL;
   dmesh->vtx_distrib       = NULL;
 
+  dmesh->_dvtx_coord       = NULL;
   dmesh->is_owner_vtx_coord  = PDM_TRUE;
 
   dmesh->dconnectivity         = malloc( PDM_CONNECTIVITY_TYPE_MAX * sizeof(PDM_g_num_t *) );

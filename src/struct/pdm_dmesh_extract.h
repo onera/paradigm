@@ -156,6 +156,22 @@ PDM_dmesh_extract_dconnectivity_set
  *
  */
 void
+PDM_dmesh_extract_dmesh_set
+(
+ PDM_dmesh_extract_t     *dme,
+ PDM_dmesh_t             *dmesh
+);
+
+/**
+ *
+ * \brief Get a dmesh object correspond to extraction
+ *
+ * \param [in]   dme                  PDM_dmesh_extract_t
+ * \param [out]  dmesh_extract        Current extraction direclty inside a PDM_dmesh_t
+ * \param [in]   ownership            KEEP or USER
+ *
+ */
+void
 PDM_dmesh_extract_dmesh_get
 (
  PDM_dmesh_extract_t     *dme,

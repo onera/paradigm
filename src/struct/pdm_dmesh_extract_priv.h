@@ -64,6 +64,7 @@ struct _pdm_dmesh_extract_t
   PDM_g_num_t            *selected_gnum;
 
   PDM_dmesh_t            *dmesh;
+  PDM_dmesh_t            *dmesh_shared;
   PDM_dmesh_t            *dmesh_extract;
   PDM_ownership_t         dmesh_extract_ownership;
 
