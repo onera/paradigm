@@ -93,11 +93,33 @@ cdef class DMeshExtract:
     PDM_dmesh_extract_compute(self._dme)
 
   # ------------------------------------------------------------------
-  def multipart_register_block(self, int zone_gid,
-                                     DMesh dm): # DMesh = DistributedMeshCaspule or DistributedMesh
+  def register_dmesh(self, DMesh dm):
     """
     """
     PDM_dmesh_extract_dmesh_set(self._dme, dm._dm)
+
+  # ------------------------------------------------------------------
+  def set_gnum_to_extract(self,
+                          entity_type, 
+                          NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1] selected_gnum):
+
+    PDM_dmesh_extract_selected_gnum_set(self._dme,
+                 <PDM_mesh_entities_t>  entity_type,
+                                        selected_gnum.size,
+                        <PDM_g_num_t*>  selected_gnum.data)
+
+  def get_extract_parent_gnum(self, entity_type):
+
+    cdef int dn_entity = -1
+    cdef PDM_g_num_t* parent_gnum = NULL
+
+    PDM_dmesh_extract_parent_gnum_get(self._dme,
+                <PDM_mesh_entities_t> entity_type,
+                                      &dn_entity,
+                                      &parent_gnum,
+                                      PDM_OWNERSHIP_USER)
+
+    return create_numpy_g(parent_gnum, dn_entity)
 
   # ------------------------------------------------------------------
   def get_dmesh(self):
