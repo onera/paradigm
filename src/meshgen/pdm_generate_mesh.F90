@@ -94,7 +94,7 @@ module pdm_generate_mesh
       integer(kind=pdm_g_num_s),   intent(in) :: n_vtx_seg
       integer,                    intent(out) :: n_vtx
       integer,                    intent(out) :: n_elt
-      double precision, dimension(:), pointer :: coords
+      double precision,               pointer :: coords(:,:)
       integer(kind=pdm_l_num_s),      pointer :: elt_vtx_idx(:)
       integer(kind=pdm_l_num_s),      pointer :: elt_vtx(:)
 
@@ -120,7 +120,7 @@ module pdm_generate_mesh
 
       call c_f_pointer(c_coords, &
                        coords,   &
-                       [3 * n_vtx])
+                       [3, n_vtx])
 
       call c_f_pointer(c_elt_vtx_idx, &
                        elt_vtx_idx,   &

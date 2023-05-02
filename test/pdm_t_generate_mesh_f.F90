@@ -44,9 +44,9 @@ program testf
 
   integer                                 :: n_vtx
   integer                                 :: n_elt
-  double precision, dimension(:), pointer :: coords
-  integer(kind=pdm_l_num_s),      pointer :: elt_vtx_idx(:)
-  integer(kind=pdm_l_num_s),      pointer :: elt_vtx(:)
+  double precision,               pointer :: coords(:,:)    => null()
+  integer(kind=pdm_l_num_s),      pointer :: elt_vtx_idx(:) => null()
+  integer(kind=pdm_l_num_s),      pointer :: elt_vtx(:)     => null()
   !-----------------------------------------------------------
 
 
