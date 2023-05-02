@@ -2710,7 +2710,7 @@ _multipart_create
   PDM_dmesh_connectivity_set(dm,
                              PDM_CONNECTIVITY_TYPE_CELL_FACE,
              (PDM_g_num_t *) dcell_face,
-                             dcell_face_idx,
+             (int         *) dcell_face_idx,
                              PDM_OWNERSHIP_USER);
 
   PDM_dmesh_bound_set(dm,
