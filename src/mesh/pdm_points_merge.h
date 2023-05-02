@@ -153,6 +153,18 @@ PDM_points_merge_candidates_size_get
        int                *n_candidates_desc
 );
 
+void
+PDM_points_merge_make_interface
+(
+  PDM_points_merge_t  *pm,
+  PDM_g_num_t        **points_gnum,
+  int                 *out_n_g_interface,
+  int                **out_interface_cloud_pair,
+  int                **out_dn_vtx_itrf,
+  PDM_g_num_t       ***out_itrf_gnum_cur,
+  PDM_g_num_t       ***out_itrf_gnum_opp
+);
+
 #ifdef	__cplusplus
 }
 #endif

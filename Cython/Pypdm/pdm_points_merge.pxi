@@ -28,7 +28,13 @@ cdef extern from "pdm_points_merge.h":
                                               int               *_n_point_cloud,
                                               int               *n_candidates_desc)
 
-
+    void PDM_points_merge_make_interface(PDM_points_merge_t  *pm,
+                                         PDM_g_num_t        **points_gnum,
+                                         int                 *out_n_g_interface,
+                                         int                **out_interface_cloud_pair,
+                                         int                **out_dn_vtx_itrf,
+                                         PDM_g_num_t       ***out_itrf_gnum_cur,
+                                         PDM_g_num_t       ***out_itrf_gnum_opp);
     # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 # ------------------------------------------------------------------
@@ -42,6 +48,7 @@ cdef class PointsMerge:
     cdef PDM_points_merge_t* _pm
     cdef int _size
     cdef int _rank
+    cdef int n_point_cloud
     # ************************************************************************
     # ------------------------------------------------------------------------
     def __init__(self, MPI.Comm    comm,
@@ -61,6 +68,7 @@ cdef class PointsMerge:
         # ::::::::::::::::::::::::::::::::::::::::::::::::::
         self._rank = comm.Get_rank()
         self._size = comm.Get_size()
+        self.n_point_cloud = n_point_cloud
         # ::::::::::::::::::::::::::::::::::::::::::::::::::
 
         # ::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -132,6 +140,46 @@ cdef class PointsMerge:
         return {'candidates_idx'  : create_numpy_i(candidates_idx, n_point_cloud+1),
                 'candidates_desc' : create_numpy_i(candidates_desc, 3*candidates_idx[n_point_cloud])
                 }
+
+    # ------------------------------------------------------------------------
+    def make_interface(self,
+                       list point_gnum):
+        """
+        """
+        # ************************************************************************
+        # > Declaration
+        cdef int             n_g_interface
+        cdef int            *interface_cloud_pair
+        cdef int            *dn_vtx_itrf
+        cdef PDM_g_num_t   **itrf_gnum_cur
+        cdef PDM_g_num_t   **itrf_gnum_opp
+        cdef NPY.npy_intp  dim
+        # ************************************************************************
+
+        cdef PDM_g_num_t** pts_gnum = np_list_to_gnum_pointers(point_gnum)
+
+        PDM_points_merge_make_interface(self._pm,
+                                        pts_gnum,
+                                        &n_g_interface,
+                                        &interface_cloud_pair,
+                                        &dn_vtx_itrf,
+                                        &itrf_gnum_cur,
+                                        &itrf_gnum_opp);
+
+        np_cloud_pair  = create_numpy_i(interface_cloud_pair, 2 * n_g_interface)
+        np_dn_vtx_itrf = create_numpy_i(dn_vtx_itrf         ,     n_g_interface)
+
+        litrf_gnum_cur = list()
+        litrf_gnum_opp = list()
+        for i_cloud in range(self.n_point_cloud):
+          litrf_gnum_cur.append(create_numpy_g(itrf_gnum_cur[i_cloud], dn_vtx_itrf[i_cloud]))
+          litrf_gnum_opp.append(create_numpy_g(itrf_gnum_opp[i_cloud], dn_vtx_itrf[i_cloud]))
+
+        return {'np_cloud_pair'  : np_cloud_pair,
+                'np_dn_vtx_itrf' : np_dn_vtx_itrf,
+                'lgnum_cur'      : litrf_gnum_cur,
+                'lgnum_opp'      : litrf_gnum_opp}
+
 
     # ------------------------------------------------------------------------
     def __dealloc__(self):
