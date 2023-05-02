@@ -20,6 +20,8 @@
 #include "pdm_plane.h"
 #include "pdm_printf.h"
 #include "pdm_error.h"
+#include "pdm_distrib.h"
+#include "pdm_dconnectivity_transform.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -165,6 +167,145 @@ PDM_compute_dface_normal
   }
   free(dface_vtx_coord);
 }
+
+
+void
+PDM_compute_vtx_characteristic_length
+(
+ PDM_MPI_Comm    comm,
+ int             dn_face,
+ int             dn_edge,
+ int             dn_vtx,
+ int            *dface_vtx_idx,
+ PDM_g_num_t    *dface_vtx,
+ PDM_g_num_t    *dedge_vtx,
+ double         *dvtx_coord,
+ double        **dchar_length_out
+)
+{
+  int i_rank;
+  PDM_MPI_Comm_rank(comm, &i_rank);
+
+  PDM_g_num_t *distrib_vtx  = PDM_compute_entity_distribution(comm, dn_vtx );
+  PDM_g_num_t *distrib_edge = PDM_compute_entity_distribution(comm, dn_edge);
+  PDM_g_num_t *distrib_face = PDM_compute_entity_distribution(comm, dn_face);
+
+  // Compute graph of vtx
+  int         *dvtx_vtx_idx = NULL;
+  PDM_g_num_t *dvtx_vtx     = NULL;
+  if(dedge_vtx == NULL) {
+    int         *dvtx_face_idx = NULL;
+    PDM_g_num_t *dvtx_face     = NULL;
+    PDM_dconnectivity_transpose(comm,
+                                distrib_face,
+                                distrib_vtx,
+                                dface_vtx_idx,
+                                dface_vtx,
+                                0,
+                                &dvtx_face_idx,
+                                &dvtx_face);
+
+    PDM_deduce_combine_connectivity_dual(comm,
+                                         distrib_vtx,
+                                         distrib_face,
+                                         dvtx_face_idx,
+                                         dvtx_face,
+                                         dface_vtx_idx,
+                                         dface_vtx,
+                                         0,
+                                         &dvtx_vtx_idx,
+                                         &dvtx_vtx);
+    free(dvtx_face_idx);
+    free(dvtx_face    );
+
+  } else {
+
+    int *dedge_vtx_idx = malloc((dn_edge+1) * sizeof(int));
+    for(int i = 0; i < dn_edge+1; ++i) {
+      dedge_vtx_idx[i] = 2 * i;
+    }
+    int         *dvtx_edge_idx = NULL;
+    PDM_g_num_t *dvtx_edge     = NULL;
+    PDM_dconnectivity_transpose(comm,
+                                distrib_edge,
+                                distrib_vtx,
+                                dedge_vtx_idx,
+                                dedge_vtx,
+                                0,
+                                &dvtx_edge_idx,
+                                &dvtx_edge);
+
+    PDM_deduce_combine_connectivity_dual(comm,
+                                         distrib_vtx,
+                                         distrib_edge,
+                                         dvtx_edge_idx,
+                                         dvtx_edge,
+                                         dedge_vtx_idx,
+                                         dedge_vtx,
+                                         0,
+                                         &dvtx_vtx_idx,
+                                         &dvtx_vtx);
+
+    free(dedge_vtx_idx);
+    free(dvtx_edge_idx);
+    free(dvtx_edge    );
+  }
+
+  /*
+   * Partitionnement du pauvre
+   */
+  PDM_block_to_part_t *btp = PDM_block_to_part_create(distrib_vtx,
+                              (const PDM_g_num_t **)  &dvtx_vtx,
+                                                      &dvtx_vtx_idx[dn_vtx],
+                                                      1,
+                                                      comm);
+
+  int stride_one = 1;
+  double **tmp_vtx_vtx_coord = NULL;
+  PDM_block_to_part_exch(btp,
+                         3 * sizeof(double),
+                         PDM_STRIDE_CST_INTERLACED,
+                         &stride_one,
+                         dvtx_coord,
+                         NULL,
+          (void ***)    &tmp_vtx_vtx_coord);
+  double *pvtx_vtx_coord = tmp_vtx_vtx_coord[0];
+  free(tmp_vtx_vtx_coord);
+  PDM_block_to_part_free(btp);
+  free(dvtx_vtx    );
+
+  double *char_length = malloc(dn_vtx * sizeof(double));
+
+  for(int i_vtx = 0; i_vtx < dn_vtx; ++i_vtx) {
+
+    char_length[i_vtx] = HUGE_VAL;
+
+    for(int idx_vtx = dvtx_vtx_idx[i_vtx]; idx_vtx < dvtx_vtx_idx[i_vtx+1]; ++idx_vtx) {
+
+      double length2 = 0.;
+      for(int k = 0; k < 3; ++k) {
+        double delta = dvtx_coord[3*i_vtx + k] - pvtx_vtx_coord[3*idx_vtx + k];
+        length2 += delta * delta;
+      }
+
+      char_length[i_vtx] = PDM_MIN(char_length[i_vtx], length2);
+    }
+
+    // char_length[i_vtx] = PDM_MAX(eps_base, tol*sqrt(char_length[i_vtx]));
+    char_length[i_vtx] = sqrt(char_length[i_vtx]);
+  }
+
+  *dchar_length_out = char_length;
+
+  free(distrib_vtx );
+  free(distrib_edge);
+  free(distrib_face);
+  free(pvtx_vtx_coord);
+  free(dvtx_vtx_idx);
+}
+
+
+
 
 
 #ifdef __cplusplus

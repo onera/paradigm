@@ -26,6 +26,7 @@
 #include "pdm_part_connectivity_transform.h"
 #include "pdm_part_to_part.h"
 #include "pdm_points_merge.h"
+#include "pdm_dgeom_elem.h"
 #include "pdm_vtk.h"
 #include "pdm_gnum.h"
 #include "pdm_order.h"
@@ -377,137 +378,137 @@ _dmesh_extract_from_group_id
 
 }
 
-static
-void
-_compute_characteristic_lenght_vtx
-(
-        PDM_MPI_Comm           comm,
-        int                    dn_face,
-        int                    dn_edge,
-        int                    dn_vtx,
-        int                   *dface_edge_idx,
-        PDM_g_num_t           *dface_edge,
-        PDM_g_num_t           *dface_vtx,
-        PDM_g_num_t           *dedge_vtx,
-        double                *dvtx_coord,
-        double               **dchar_length_out
-)
-{
- PDM_UNUSED(dn_face);
- PDM_UNUSED(dface_edge_idx);
- PDM_UNUSED(dface_edge);
- PDM_UNUSED(dface_vtx);
+// static
+// void
+// _compute_characteristic_lenght_vtx
+// (
+//         PDM_MPI_Comm           comm,
+//         int                    dn_face,
+//         int                    dn_edge,
+//         int                    dn_vtx,
+//         int                   *dface_edge_idx,
+//         PDM_g_num_t           *dface_edge,
+//         PDM_g_num_t           *dface_vtx,
+//         PDM_g_num_t           *dedge_vtx,
+//         double                *dvtx_coord,
+//         double               **dchar_length_out
+// )
+// {
+//  PDM_UNUSED(dn_face);
+//  PDM_UNUSED(dface_edge_idx);
+//  PDM_UNUSED(dface_edge);
+//  PDM_UNUSED(dface_vtx);
 
-  int i_rank;
-  PDM_MPI_Comm_rank(PDM_MPI_COMM_WORLD, &i_rank);
+//   int i_rank;
+//   PDM_MPI_Comm_rank(PDM_MPI_COMM_WORLD, &i_rank);
 
-  PDM_g_num_t *distrib_vtx = PDM_compute_entity_distribution (comm, dn_vtx);
-  PDM_g_num_t *distrib_edge = PDM_compute_entity_distribution(comm, dn_edge);
+//   PDM_g_num_t *distrib_vtx = PDM_compute_entity_distribution (comm, dn_vtx);
+//   PDM_g_num_t *distrib_edge = PDM_compute_entity_distribution(comm, dn_edge);
 
-  // Compute graph of vtx
-  int         *dvtx_vtx_idx = NULL;
-  PDM_g_num_t *dvtx_vtx     = NULL;
-  if(dedge_vtx == NULL) {
-    abort();
-  } else {
+//   // Compute graph of vtx
+//   int         *dvtx_vtx_idx = NULL;
+//   PDM_g_num_t *dvtx_vtx     = NULL;
+//   if(dedge_vtx == NULL) {
+//     abort();
+//   } else {
 
-    int *dedge_vtx_idx = malloc((dn_edge+1) * sizeof(int));
-    for(int i = 0; i < dn_edge+1; ++i) {
-      dedge_vtx_idx[i] = 2 * i;
-    }
-    int         *dvtx_edge_idx = NULL;
-    PDM_g_num_t *dvtx_edge     = NULL;
-    PDM_dconnectivity_transpose(comm,
-                                distrib_edge,
-                                distrib_vtx,
-                                dedge_vtx_idx,
-                                dedge_vtx,
-                                0,
-                                &dvtx_edge_idx,
-                                &dvtx_edge);
+//     int *dedge_vtx_idx = malloc((dn_edge+1) * sizeof(int));
+//     for(int i = 0; i < dn_edge+1; ++i) {
+//       dedge_vtx_idx[i] = 2 * i;
+//     }
+//     int         *dvtx_edge_idx = NULL;
+//     PDM_g_num_t *dvtx_edge     = NULL;
+//     PDM_dconnectivity_transpose(comm,
+//                                 distrib_edge,
+//                                 distrib_vtx,
+//                                 dedge_vtx_idx,
+//                                 dedge_vtx,
+//                                 0,
+//                                 &dvtx_edge_idx,
+//                                 &dvtx_edge);
 
-    PDM_deduce_combine_connectivity_dual(comm,
-                                         distrib_vtx,
-                                         distrib_edge,
-                                         dvtx_edge_idx,
-                                         dvtx_edge,
-                                         dedge_vtx_idx,
-                                         dedge_vtx,
-                                         0,
-                                         &dvtx_vtx_idx,
-                                         &dvtx_vtx);
+//     PDM_deduce_combine_connectivity_dual(comm,
+//                                          distrib_vtx,
+//                                          distrib_edge,
+//                                          dvtx_edge_idx,
+//                                          dvtx_edge,
+//                                          dedge_vtx_idx,
+//                                          dedge_vtx,
+//                                          0,
+//                                          &dvtx_vtx_idx,
+//                                          &dvtx_vtx);
 
-    free(dedge_vtx_idx);
-    free(dvtx_edge_idx);
-    free(dvtx_edge    );
-  }
+//     free(dedge_vtx_idx);
+//     free(dvtx_edge_idx);
+//     free(dvtx_edge    );
+//   }
 
-  // PDM_log_trace_connectivity_long(dvtx_vtx_idx, dvtx_vtx, dn_vtx, "dvtx_vtx ::");
-
-
-  /*
-   * Partitionnement du pauvre
-   */
-  PDM_block_to_part_t *btp = PDM_block_to_part_create(distrib_vtx,
-                              (const PDM_g_num_t **)  &dvtx_vtx,
-                                                      &dvtx_vtx_idx[dn_vtx],
-                                                      1,
-                                                      comm);
-
-  int stride_one = 1;
-  double **tmp_vtx_vtx_coord = NULL;
-  PDM_block_to_part_exch(btp,
-                         3 * sizeof(double),
-                         PDM_STRIDE_CST_INTERLACED,
-                         &stride_one,
-                         dvtx_coord,
-                         NULL,
-          (void ***)    &tmp_vtx_vtx_coord);
-  double *pvtx_vtx_coord = tmp_vtx_vtx_coord[0];
-  free(tmp_vtx_vtx_coord);
-  PDM_block_to_part_free(btp);
-  free(dvtx_vtx    );
-
-  double *char_length = malloc(dn_vtx * sizeof(double));
-
-  // double tol = 1e-6;
-  // const double eps_base = 1e-12;
-  for(int i_vtx = 0; i_vtx < dn_vtx; ++i_vtx) {
-
-    char_length[i_vtx] = HUGE_VAL;
-
-    for(int idx_vtx = dvtx_vtx_idx[i_vtx]; idx_vtx < dvtx_vtx_idx[i_vtx+1]; ++idx_vtx) {
-
-      double length2 = 0.;
-      for(int k = 0; k < 3; ++k) {
-        double delta = dvtx_coord[3*i_vtx + k] - pvtx_vtx_coord[3*idx_vtx + k];
-        length2 += delta * delta;
-      }
-
-      char_length[i_vtx] = PDM_MIN(char_length[i_vtx], length2);
+//   // PDM_log_trace_connectivity_long(dvtx_vtx_idx, dvtx_vtx, dn_vtx, "dvtx_vtx ::");
 
 
-    }
+//   /*
+//    * Partitionnement du pauvre
+//    */
+//   PDM_block_to_part_t *btp = PDM_block_to_part_create(distrib_vtx,
+//                               (const PDM_g_num_t **)  &dvtx_vtx,
+//                                                       &dvtx_vtx_idx[dn_vtx],
+//                                                       1,
+//                                                       comm);
 
-    // char_length[i_vtx] = PDM_MAX(eps_base, tol*sqrt(char_length[i_vtx]));
-    char_length[i_vtx] = sqrt(char_length[i_vtx]);
-  }
+//   int stride_one = 1;
+//   double **tmp_vtx_vtx_coord = NULL;
+//   PDM_block_to_part_exch(btp,
+//                          3 * sizeof(double),
+//                          PDM_STRIDE_CST_INTERLACED,
+//                          &stride_one,
+//                          dvtx_coord,
+//                          NULL,
+//           (void ***)    &tmp_vtx_vtx_coord);
+//   double *pvtx_vtx_coord = tmp_vtx_vtx_coord[0];
+//   free(tmp_vtx_vtx_coord);
+//   PDM_block_to_part_free(btp);
+//   free(dvtx_vtx    );
+
+//   double *char_length = malloc(dn_vtx * sizeof(double));
+
+//   // double tol = 1e-6;
+//   // const double eps_base = 1e-12;
+//   for(int i_vtx = 0; i_vtx < dn_vtx; ++i_vtx) {
+
+//     char_length[i_vtx] = HUGE_VAL;
+
+//     for(int idx_vtx = dvtx_vtx_idx[i_vtx]; idx_vtx < dvtx_vtx_idx[i_vtx+1]; ++idx_vtx) {
+
+//       double length2 = 0.;
+//       for(int k = 0; k < 3; ++k) {
+//         double delta = dvtx_coord[3*i_vtx + k] - pvtx_vtx_coord[3*idx_vtx + k];
+//         length2 += delta * delta;
+//       }
+
+//       char_length[i_vtx] = PDM_MIN(char_length[i_vtx], length2);
 
 
-  // PDM_log_trace_array_double(char_length, dn_vtx, "char_length ::");
+//     }
+
+//     // char_length[i_vtx] = PDM_MAX(eps_base, tol*sqrt(char_length[i_vtx]));
+//     char_length[i_vtx] = sqrt(char_length[i_vtx]);
+//   }
 
 
-  *dchar_length_out = char_length;
+//   // PDM_log_trace_array_double(char_length, dn_vtx, "char_length ::");
 
 
-  free(distrib_vtx );
-  free(distrib_edge);
-  free(pvtx_vtx_coord);
-
-  free(dvtx_vtx_idx);
+//   *dchar_length_out = char_length;
 
 
-}
+//   free(distrib_vtx );
+//   free(distrib_edge);
+//   free(pvtx_vtx_coord);
+
+//   free(dvtx_vtx_idx);
+
+
+// }
 
 /**
  *
@@ -636,29 +637,27 @@ int main(int argc, char *argv[])
 
   // Compute carateristic lenght
   double *dchar_lenght_m1 = NULL;
-  _compute_characteristic_lenght_vtx(comm,
-                                     dn_extract_face_m1,
-                                     dn_extract_edge_m1,
-                                     dn_extract_vtx_m1,
-                                     dextract_m1_face_edge_idx,
-                                     dextract_m1_face_edge,
-                                     dextract_m1_face_vtx,
-                                     dextract_m1_edge_vtx,
-                                     dextract_m1_vtx_coord,
-                                     &dchar_lenght_m1);
+  PDM_compute_vtx_characteristic_length(comm,
+                                        dn_extract_face_m1,
+                                        dn_extract_edge_m1,
+                                        dn_extract_vtx_m1,
+                                        dextract_m1_face_edge_idx,
+                                        dextract_m1_face_vtx,
+                                        dextract_m1_edge_vtx,
+                                        dextract_m1_vtx_coord,
+                                        &dchar_lenght_m1);
 
   // Compute carateristic lenght
   double *dchar_lenght_m2 = NULL;
-  _compute_characteristic_lenght_vtx(comm,
-                                     dn_extract_face_m2,
-                                     dn_extract_edge_m2,
-                                     dn_extract_vtx_m2,
-                                     dextract_m2_face_edge_idx,
-                                     dextract_m2_face_edge,
-                                     dextract_m2_face_vtx,
-                                     dextract_m2_edge_vtx,
-                                     dextract_m2_vtx_coord,
-                                     &dchar_lenght_m2);
+  PDM_compute_vtx_characteristic_length(comm,
+                                        dn_extract_face_m2,
+                                        dn_extract_edge_m2,
+                                        dn_extract_vtx_m2,
+                                        dextract_m2_face_edge_idx,
+                                        dextract_m2_face_vtx,
+                                        dextract_m2_edge_vtx,
+                                        dextract_m2_vtx_coord,
+                                        &dchar_lenght_m2);
 
   /* Point merge */
   double tolerance = 1.e-8;

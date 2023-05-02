@@ -37,6 +37,15 @@ cdef extern from "pdm_dgeom_elem.h":
                                   double       *dvtx_coord,
                                   double       *dface_normal,
                                   PDM_MPI_Comm  comm)
+    void PDM_compute_vtx_characteristic_length(PDM_MPI_Comm    comm,
+                                               int             dn_face,
+                                               int             dn_edge,
+                                               int             dn_vtx,
+                                               int            *dface_vtx_idx,
+                                               PDM_g_num_t    *dface_vtx,
+                                               PDM_g_num_t    *dedge_vtx,
+                                               double         *dvtx_coord,
+                                               double        **dchar_length_out);
     # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 
@@ -61,6 +70,34 @@ def compute_dface_normal(MPI.Comm                                      comm,
                              <double      *> dvtx_coord.data,
                              <double      *> dface_normal.data,
                              PDMC)
+
+# ===================================================================================
+def compute_vtx_characteristic_length(MPI.Comm                                      comm,
+                                      int                                           dn_face,
+                                      int                                           dn_edge,
+                                      int                                           dn_vtx,
+                                      NPY.ndarray[NPY.int32_t   , mode='c', ndim=1] dface_vtx_idx,
+                                      NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1] dface_vtx,
+                                      NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1] dedge_vtx,
+                                      NPY.ndarray[NPY.double_t  , mode='c', ndim=1] dvtx_coord):
+    # ::::::::::::::::::::::::::::::::::::::::::::::::::
+    # > Convert mpi4py -> PDM_MPI
+    cdef MPI.MPI_Comm c_comm = comm.ob_mpi
+    cdef PDM_MPI_Comm PDMC   = PDM_MPI_mpi_2_pdm_mpi_comm(&c_comm)
+    cdef double *dchar_lenght
+    # ::::::::::::::::::::::::::::::::::::::::::::::::::
+
+    PDM_compute_vtx_characteristic_length(PDMC,
+                                          dn_face,
+                                          dn_edge,
+                                          dn_vtx,
+                          <int         *> dface_vtx_idx.data,
+                          <PDM_g_num_t *> dface_vtx.data,
+                          <PDM_g_num_t *> dedge_vtx.data,
+                          <double      *> dvtx_coord.data,
+                                          &dchar_lenght)
+
+    return create_numpy_d(dchar_lenght, dn_vtx)
 
 
 # ===================================================================================
