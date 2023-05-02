@@ -773,6 +773,36 @@ module pdm_mesh_location
 
     end function PDM_mesh_location_mesh_nodal_get
 
+
+ !>
+ !! \brief Get part_to_part object to exchange data between
+ !! the source mesh and a target point cloud (both in user frame)
+ !!
+ !! \param [in ] ml         Pointer to \ref PDM_mesh_location_t object
+ !! \param [in ] icloud     Point cloud ID
+ !! \param [out] ptp        Pointer to \ref PDM_part_to_part_t object
+ !! \param [in ] ownership  Ownership for ptp
+ !!
+ !!
+
+    subroutine PDM_mesh_location_part_to_part_get (mloc, &
+                                            icloud, &
+                                            ptp, &
+                                            owner) &
+     bind (c, name = 'PDM_mesh_location_part_to_part_get')
+
+      use iso_c_binding
+
+      implicit none
+
+
+      type (c_ptr),   value :: mloc
+      integer(c_int), value :: icloud
+      type (c_ptr)          :: ptp
+      integer(c_int), value :: owner
+
+    end subroutine PDM_mesh_location_part_to_part_get
+
   end interface
 
 
