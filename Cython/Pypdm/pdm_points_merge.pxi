@@ -171,12 +171,11 @@ cdef class PointsMerge:
 
         litrf_gnum_cur = list()
         litrf_gnum_opp = list()
-        for i_cloud in range(self.n_point_cloud):
+        for i_cloud in range(n_g_interface):
           litrf_gnum_cur.append(create_numpy_g(itrf_gnum_cur[i_cloud], dn_vtx_itrf[i_cloud]))
           litrf_gnum_opp.append(create_numpy_g(itrf_gnum_opp[i_cloud], dn_vtx_itrf[i_cloud]))
 
         return {'np_cloud_pair'  : np_cloud_pair,
-                'np_dn_vtx_itrf' : np_dn_vtx_itrf,
                 'lgnum_cur'      : litrf_gnum_cur,
                 'lgnum_opp'      : litrf_gnum_opp}
 

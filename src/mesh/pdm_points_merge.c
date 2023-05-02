@@ -1342,8 +1342,8 @@ PDM_points_merge_make_interface
         PDM_g_num_t g_itrf = itrf_gnum[i_cloud][k]-1;
         if(i_cloud < i_cloud_opp) {
           int idx_write = entity_itrf_idx[g_itrf] + entity_itrf_n[g_itrf]++;
-          concat_vtx_cur[idx_write] = vtx_opp_gnum[i_cloud][k];
-          concat_vtx_opp[idx_write] = points_gnum [i_cloud][i_vtx];
+          concat_vtx_cur[idx_write] = points_gnum [i_cloud][i_vtx];
+          concat_vtx_opp[idx_write] = vtx_opp_gnum[i_cloud][k];
         }
       }
     }
