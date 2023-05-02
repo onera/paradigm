@@ -44,6 +44,9 @@ cdef extern from "pdm_dmesh.h":
                             int          **join_g_dms,
                             int          **dface_join_idx,
                             PDM_g_num_t  **dface_join)
+
+    int PDM_dmesh_dn_entity_get(PDM_dmesh_t         *dmesh,
+                                PDM_mesh_entities_t  entity_type)
     int PDM_dmesh_connectivity_get(PDM_dmesh_t              *dmesh,
                                    PDM_connectivity_type_t   connectivity_type,
                                    PDM_g_num_t             **connect,
@@ -59,6 +62,9 @@ cdef extern from "pdm_dmesh.h":
                              PDM_ownership_t    ownership)
     void PDM_dmesh_vtx_coord_set(PDM_dmesh_t      *dmesh,
                                  double           *dvtx_coord,
+                                 PDM_ownership_t   ownership)
+    void PDM_dmesh_vtx_coord_get(PDM_dmesh_t      *dmesh,
+                                 double          **dvtx_coord,
                                  PDM_ownership_t   ownership)
     void  PDM_dmesh_bound_set(PDM_dmesh_t       *dmesh,
                               PDM_bound_type_t   bound_type,
@@ -100,6 +106,8 @@ cdef class DistributedMeshCaspule:
   def dmesh_vtx_coord_set(self,
                           NPY.ndarray[NPY.double_t, mode='c', ndim=1] dvtx_coord not None):
       dmesh_vtx_coord_set(self, dvtx_coord)
+  def dmesh_vtx_coord_get(self):
+      return dmesh_vtx_coord_get(self)
   # ------------------------------------------------------------------------
   def dmesh_connectivity_set(self, PDM_connectivity_type_t connectivity_type,
                              NPY.ndarray[NPY.int32_t   , mode='c', ndim=1] connect_idx,
@@ -207,6 +215,8 @@ cdef class DistributedMesh:
   def dmesh_vtx_coord_set(self,
                           NPY.ndarray[NPY.double_t, mode='c', ndim=1] dvtx_coord not None):
       dmesh_vtx_coord_set(self, dvtx_coord)
+  def dmesh_vtx_coord_get(self):
+      return dmesh_vtx_coord_get(self)
 
   # ------------------------------------------------------------------------
   def dmesh_connectivity_get(self, PDM_connectivity_type_t connectivity_type):
@@ -374,3 +384,11 @@ def dmesh_vtx_coord_set(DMesh pydm,
     PDM_dmesh_vtx_coord_set(pydm._dm,
                  <double *> dvtx_coord.data,
                             PDM_OWNERSHIP_USER)
+
+def dmesh_vtx_coord_get(DMesh pydm):
+    dn_vtx = PDM_dmesh_dn_entity_get(pydm._dm, PDM_MESH_ENTITY_VERTEX)
+    cdef double* dvtx_coord = NULL
+    PDM_dmesh_vtx_coord_get(pydm._dm, 
+                           &dvtx_coord,
+                            PDM_OWNERSHIP_USER)
+    return create_numpy_d(dvtx_coord, 3*dn_vtx)
