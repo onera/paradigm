@@ -566,7 +566,7 @@ int main(int argc, char *argv[])
   PDM_dmesh_t       *dm2    = NULL;
   _generate_mesh(comm,
                  n_vtx_seg,
-                 length,
+                 length/2,
                  1.,
                  0.,
                  0.,
@@ -815,7 +815,7 @@ int main(int argc, char *argv[])
                                        &gnum1_come_from_idx,
                                        &gnum1_come_from);
 
-  if(1 == 0) {
+  if(1 == 1) {
     for(int i_cloud = 0; i_cloud < n_point_cloud; ++i_cloud) {
       printf("n_unref[%i] = %i \n", i_cloud, n_unref[i_cloud]);
 
@@ -825,7 +825,7 @@ int main(int argc, char *argv[])
       // vtx_opp_gnum == gnum1_come_from
       PDM_log_trace_array_long(vtx_opp_gnum   [i_cloud], n_ref [i_cloud], "vtx_opp_gnum    :");
       PDM_log_trace_array_long(part1_gnum     [i_cloud], n_elt1[i_cloud], "part1_gnum      :");
-      PDM_log_trace_array_long(gnum1_come_from[i_cloud], n_elt2[i_cloud], "gnum1_come_from :");
+      PDM_log_trace_array_long(gnum1_come_from[i_cloud], gnum1_come_from_idx[i_cloud][n_ref[i_cloud]], "gnum1_come_from :");
     }
   }
 
@@ -837,7 +837,6 @@ int main(int argc, char *argv[])
   free(part1_concat_gnum);
   free(part1_cloud);
 
-  PDM_part_to_part_free(ptp);
 
   // Generate interface_gnum
   PDM_gen_gnum_t *gnum_itrf = PDM_gnum_create(3, n_point_cloud, PDM_TRUE, 1.e-3, comm, PDM_OWNERSHIP_USER);
@@ -848,13 +847,21 @@ int main(int argc, char *argv[])
   PDM_g_num_t **itrf_gnum = malloc(n_point_cloud * sizeof(PDM_g_num_t *));
   for(int i_cloud = 0; i_cloud < n_point_cloud; ++i_cloud) {
 
-    itrf_pair[i_cloud] = malloc(2 * n_elt1[i_cloud] * sizeof(PDM_g_num_t));
-    for(int i_vtx = 0; i_vtx < n_elt1[i_cloud]; ++i_vtx) {
-      int i_cloud_opp = vtx_opp_cloud[i_cloud][i_vtx];
-      itrf_pair[i_cloud][2*i_vtx  ] = PDM_MIN(i_cloud, i_cloud_opp);
-      itrf_pair[i_cloud][2*i_vtx+1] = PDM_MAX(i_cloud, i_cloud_opp);
+    int *_gnum1_come_from_idx = gnum1_come_from_idx[i_cloud];
+    int n_come_from = _gnum1_come_from_idx[n_ref[i_cloud]];
+
+    n_itrf[i_cloud] = n_come_from;
+
+    itrf_pair[i_cloud] = malloc(2 * n_come_from * sizeof(PDM_g_num_t));
+    for(int idx_vtx = 0; idx_vtx < n_ref[i_cloud]; ++idx_vtx) {
+      // int i_vtx = ref[i_cloud][idx_vtx] - 1;
+      for(int k = _gnum1_come_from_idx[idx_vtx]; k < _gnum1_come_from_idx[idx_vtx+1]; ++k) {
+        int i_cloud_opp = vtx_opp_cloud[i_cloud][k];
+        itrf_pair[i_cloud][2*k  ] = PDM_MIN(i_cloud, i_cloud_opp);
+        itrf_pair[i_cloud][2*k+1] = PDM_MAX(i_cloud, i_cloud_opp);
+      }
     }
-    PDM_gnum_set_from_parents(gnum_itrf, i_cloud, n_elt1[i_cloud], itrf_pair[i_cloud]);
+    PDM_gnum_set_from_parents(gnum_itrf, i_cloud, n_come_from, itrf_pair[i_cloud]);
     // PDM_log_trace_array_long(itrf_pair[i_cloud], 2 * n_elt1[i_cloud], "itrf_pair (Before):");
   }
 
@@ -862,7 +869,7 @@ int main(int argc, char *argv[])
 
   for(int i_cloud = 0; i_cloud < n_point_cloud; ++i_cloud) {
     itrf_gnum[i_cloud] = PDM_gnum_get(gnum_itrf, i_cloud);
-    PDM_log_trace_array_long(itrf_gnum[i_cloud], n_elt1[i_cloud], "itrf_gnum :");
+    PDM_log_trace_array_long(itrf_gnum[i_cloud], n_itrf[i_cloud], "itrf_gnum :");
   }
   PDM_gnum_free(gnum_itrf);
 
@@ -875,7 +882,7 @@ int main(int argc, char *argv[])
                                                       1.,
                                                       itrf_gnum,
                                                       NULL,
-                                                      n_elt1,
+                                                      n_itrf,
                                                       n_point_cloud,
                                                       comm);
 
@@ -958,10 +965,15 @@ int main(int argc, char *argv[])
   int *entity_itrf_n = PDM_array_zeros_int(n_g_interface);
 
   for(int i_cloud = 0; i_cloud < n_point_cloud; ++i_cloud) {
-    for(int i_vtx = 0; i_vtx < n_elt1[i_cloud]; ++i_vtx) {
-      int i_cloud_opp = vtx_opp_cloud[i_cloud][i_vtx];
-      if(i_cloud < i_cloud_opp) {
-        entity_itrf_n[itrf_gnum[i_cloud][i_vtx]-1]++;
+
+    int *_gnum1_come_from_idx = gnum1_come_from_idx[i_cloud];
+    for(int idx_vtx = 0; idx_vtx < n_ref[i_cloud]; ++idx_vtx) {
+      // int i_vtx = ref[i_cloud][idx_vtx] - 1;
+      for(int k = _gnum1_come_from_idx[idx_vtx]; k < _gnum1_come_from_idx[idx_vtx+1]; ++k) {
+        int i_cloud_opp = vtx_opp_cloud[i_cloud][k];
+        if(i_cloud < i_cloud_opp) {
+          entity_itrf_n[itrf_gnum[i_cloud][k]-1]++;
+        }
       }
     }
   }
@@ -977,17 +989,23 @@ int main(int argc, char *argv[])
   PDM_g_num_t *concat_vtx_opp = malloc(entity_itrf_idx[n_g_interface] * sizeof(PDM_g_num_t));
 
   for(int i_cloud = 0; i_cloud < n_point_cloud; ++i_cloud) {
-
-    for(int i_vtx = 0; i_vtx < n_elt1[i_cloud]; ++i_vtx) {
-      PDM_g_num_t g_itrf = itrf_gnum[i_cloud][i_vtx]-1;
-      int i_cloud_opp = vtx_opp_cloud[i_cloud][i_vtx];
-      if(i_cloud < i_cloud_opp) {
-        int idx_write = entity_itrf_idx[g_itrf] + entity_itrf_n[g_itrf]++;
-        concat_vtx_cur[idx_write] = vtx_opp_gnum[i_cloud][i_vtx];
-        concat_vtx_opp[idx_write] = part1_gnum  [i_cloud][i_vtx];
+    int *_gnum1_come_from_idx = gnum1_come_from_idx[i_cloud];
+    for(int idx_vtx = 0; idx_vtx < n_ref[i_cloud]; ++idx_vtx) {
+      int i_vtx = ref[i_cloud][idx_vtx] - 1;
+      for(int k = _gnum1_come_from_idx[idx_vtx]; k < _gnum1_come_from_idx[idx_vtx+1]; ++k) {
+        int i_cloud_opp = vtx_opp_cloud[i_cloud][k];
+        PDM_g_num_t g_itrf = itrf_gnum[i_cloud][k]-1;
+        if(i_cloud < i_cloud_opp) {
+          int idx_write = entity_itrf_idx[g_itrf] + entity_itrf_n[g_itrf]++;
+          concat_vtx_cur[idx_write] = vtx_opp_gnum[i_cloud][k];
+          concat_vtx_opp[idx_write] = part1_gnum  [i_cloud][i_vtx];
+        }
       }
     }
   }
+
+
+  PDM_part_to_part_free(ptp);
 
   /* Let's go */
   int          *dn_vtx_itrf   = malloc(n_g_interface * sizeof(int          ));
@@ -1064,50 +1082,6 @@ int main(int argc, char *argv[])
 
   free(entity_itrf_idx);
   free(entity_itrf_n  );
-
-  // For each vtx of each cloud we kwown opposit gnum
-  for(int i_cloud = 0; i_cloud < n_point_cloud; ++i_cloud) {
-
-    // Preparation triplet (i_cloud_opp, vtx1, vtx2)
-    // PDM_g_num_t *itrf_no = malloc(3 * n_elt1[i_cloud] * sizeof(PDM_g_num_t));
-    // for(int i_vtx = 0; i_vtx < n_elt1[i_cloud]; ++i_vtx) {
-    //   itrf_no[3*i_vtx  ] = vtx_opp_cloud[i_cloud][i_vtx];
-    //   itrf_no[3*i_vtx+1] = part1_gnum   [i_cloud][i_vtx];
-    //   itrf_no[3*i_vtx+2] = vtx_opp_gnum [i_cloud][i_vtx];
-    // }
-    // int *order = malloc(n_elt1[i_cloud] * sizeof(int));
-    // PDM_order_lnum_s(vtx_opp_cloud[i_cloud], 1, order, n_elt1[i_cloud]);
-
-    // PDM_order_array(n_elt1[i_cloud], sizeof(int        ), order, vtx_opp_cloud);
-    // PDM_order_array(n_elt1[i_cloud], sizeof(PDM_g_num_t), order, part1_gnum   );
-    // PDM_order_array(n_elt1[i_cloud], sizeof(PDM_g_num_t), order, vtx_opp_gnum );
-
-    // int *cloud_opp_n = malloc(n_point_cloud * sizeof(int));
-
-
-    /*
-     * Re-create all interface
-     *
-     */
-    PDM_g_num_t *itrf_no = malloc(4 * n_elt1[i_cloud] * sizeof(PDM_g_num_t));
-    for(int i_vtx = 0; i_vtx < n_elt1[i_cloud]; ++i_vtx) {
-      int i_cloud_opp = vtx_opp_cloud[i_cloud][i_vtx];
-      if(i_cloud < i_cloud_opp) {
-        itrf_no[4*i_vtx  ] = i_cloud;
-        itrf_no[4*i_vtx+1] = i_cloud_opp;
-        itrf_no[4*i_vtx+2] = part1_gnum   [i_cloud][i_vtx];
-        itrf_no[4*i_vtx+3] = vtx_opp_gnum [i_cloud][i_vtx];
-      } else {
-        itrf_no[4*i_vtx  ] = i_cloud_opp;
-        itrf_no[4*i_vtx+1] = i_cloud;
-        itrf_no[4*i_vtx+2] = vtx_opp_gnum [i_cloud][i_vtx];
-        itrf_no[4*i_vtx+3] = part1_gnum   [i_cloud][i_vtx];
-      }
-    }
-    free(itrf_no);
-    // free(order);
-  }
-
 
   for(int i_cloud = 0; i_cloud < n_point_cloud; ++i_cloud) {
     free(vtx_opp_gnum [i_cloud]);
