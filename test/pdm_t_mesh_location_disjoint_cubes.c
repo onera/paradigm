@@ -1872,6 +1872,9 @@ int main(int argc, char *argv[])
   if (i_rank == 0) {
     printf("global max interpolation error = %e\n", gmax_err);
   }
+  if (gmax_err > 1e-12) {
+    PDM_error(__FILE__, __LINE__, 0, "Large interpolation error!\n");
+  }
 
 
 
@@ -1989,6 +1992,6 @@ int main(int argc, char *argv[])
     fflush(stdout);
   }
 
-  return g_n_wrong;
+  return g_n_wrong || gmax_err > 1e-12;
 }
 

@@ -170,8 +170,7 @@ _store_cell_vtx
                                                geom_kind,
                                                ipart,
                                                &ml->cell_vtx_idx[ipart],
-                                               &ml->cell_vtx    [ipart],
-                                               PDM_OWNERSHIP_KEEP);
+                                               &ml->cell_vtx    [ipart]);
     }
 
   }

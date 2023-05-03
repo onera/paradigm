@@ -1338,7 +1338,6 @@ PDM_part_mesh_nodal_principal_geom_kind_get
  * \param [in]  i_part        Partition identifier
  * \param [out] cell_vtx_idx  Index for the cell->vertex connectivity
  * \param [out] cell_vtx      Cell->vertex connectivity
- * \param [in]  ownership               Who owns the getted arrays?
  *
  * \return Number of cells in current partition
  *
@@ -1351,8 +1350,7 @@ PDM_part_mesh_nodal_cell_vtx_connect_get
         PDM_geometry_kind_t     geom_kind,
   const int                     i_part,
         int                   **cell_vtx_idx,
-        int                   **cell_vtx,
-        PDM_ownership_t         ownership
+        int                   **cell_vtx
 );
 
 #ifdef __cplusplus

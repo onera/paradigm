@@ -1147,13 +1147,13 @@ PDM_part_mesh_nodal_dump_vtk
                                                    i_part,
                                                    &connec_idx,
                                                    &connec,
-                                                   PDM_OWNERSHIP_USER);
+                                                   PDM_OWNERSHIP_BAD_VALUE);
 
 
         PDM_g_num_t *pelmt_ln_to_gn = PDM_part_mesh_nodal_elmts_g_num_get(pmne,
                                                                           section_id[i_section],
                                                                           i_part,
-                                                                          PDM_OWNERSHIP_USER);
+                                                                          PDM_OWNERSHIP_BAD_VALUE);
 
         PDM_vtk_write_polydata(filename,
                                pn_vtx,
@@ -1164,11 +1164,6 @@ PDM_part_mesh_nodal_dump_vtk
                                connec,
                                pelmt_ln_to_gn,
                                NULL);
-
-        // free
-        if (connec_idx     != NULL) free(connec_idx);
-        if (connec         != NULL) free(connec);
-        if (pelmt_ln_to_gn != NULL) free(pelmt_ln_to_gn);
       }
 
       else if (t_elt == PDM_MESH_NODAL_POLY_3D) {
@@ -1194,7 +1189,7 @@ PDM_part_mesh_nodal_dump_vtk
                                                      &cell_face,
                                                      &parent_num,
                                                      &parent_entity_g_num,
-                                                     PDM_OWNERSHIP_USER);
+                                                     PDM_OWNERSHIP_BAD_VALUE);
 
         PDM_vtk_write_polydata(filename,
                                pn_vtx,
@@ -1205,23 +1200,13 @@ PDM_part_mesh_nodal_dump_vtk
                                face_vtx,
                                face_ln_to_gn,
                                NULL);
-
-        // free
-        if (face_ln_to_gn       != NULL) free(face_ln_to_gn);
-        if (face_vtx_idx        != NULL) free(face_vtx_idx);
-        if (face_vtx            != NULL) free(face_vtx);
-        if (numabs              != NULL) free(numabs);
-        if (cell_face_idx       != NULL) free(cell_face_idx);
-        if (cell_face           != NULL) free(cell_face);
-        if (parent_num          != NULL) free(parent_num);
-        if (parent_entity_g_num != NULL) free(parent_entity_g_num);
       }
 
       else {
         int is_ho = PDM_Mesh_nodal_elmt_is_ho(t_elt);
         if(is_ho) {
           int order;
-          char        *ho_ordering     = NULL;
+          const char  *ho_ordering     = NULL;
           int         *pcell_vtx       = NULL;
           PDM_g_num_t *pelmt_ln_to_gn  = NULL;
           int         *parent_num      = NULL;
@@ -1235,7 +1220,7 @@ PDM_part_mesh_nodal_dump_vtk
                                                        &parent_elmt_num,
                                                        &order,
                                                        &ho_ordering,
-                                                       PDM_OWNERSHIP_USER);
+                                                       PDM_OWNERSHIP_BAD_VALUE);
 
           int n_vtx_per_elmt = PDM_Mesh_nodal_n_vtx_elt_get (t_elt, order);
           int *pcell_vtx_out = malloc(n_vtx_per_elmt * n_elt * sizeof(int));
@@ -1263,13 +1248,7 @@ PDM_part_mesh_nodal_dump_vtk
                                         0,
                                         NULL,
                                         NULL);
-          // free
           free(pcell_vtx_out);
-          if (ho_ordering     != NULL) free(ho_ordering);
-          if (pcell_vtx       != NULL) free(pcell_vtx);
-          if (pelmt_ln_to_gn  != NULL) free(pelmt_ln_to_gn);
-          if (parent_num      != NULL) free(parent_num );
-          if (parent_elmt_num != NULL) free(parent_elmt_num);
         } else {
 
           int         *pcell_vtx       = NULL;
@@ -1277,13 +1256,13 @@ PDM_part_mesh_nodal_dump_vtk
           int         *parent_num      = NULL;
           PDM_g_num_t *parent_elmt_num = NULL;
           PDM_part_mesh_nodal_elmts_section_std_get(pmne,
-                                                  section_id[i_section],
-                                                  i_part,
-                                                  &pcell_vtx,
-                                                  &pelmt_ln_to_gn,
-                                                  &parent_num,
-                                                  &parent_elmt_num,
-                                                  PDM_OWNERSHIP_USER);
+                                                    section_id[i_section],
+                                                    i_part,
+                                                    &pcell_vtx,
+                                                    &pelmt_ln_to_gn,
+                                                    &parent_num,
+                                                    &parent_elmt_num,
+                                                    PDM_OWNERSHIP_BAD_VALUE);
 
           PDM_vtk_write_std_elements(filename,
                                      pn_vtx,
@@ -1296,12 +1275,6 @@ PDM_part_mesh_nodal_dump_vtk
                                      0,
                                      NULL,
                                      NULL);
-
-          // free
-          if (pcell_vtx       != NULL) free(pcell_vtx);
-          if (pelmt_ln_to_gn  != NULL) free(pelmt_ln_to_gn);
-          if (parent_num      != NULL) free(parent_num);
-          if (parent_elmt_num != NULL) free(parent_elmt_num);
         }
       }
     }
@@ -2525,7 +2498,6 @@ PDM_part_mesh_nodal_principal_geom_kind_get
  * \param [in]  i_part        Partition identifier
  * \param [out] cell_vtx_idx  Index for the cell->vertex connectivity
  * \param [out] cell_vtx      Cell->vertex connectivity
- * \param [in]  ownership               Who owns the getted arrays?
  *
  * \return Number of cells in current partition
  *
@@ -2538,8 +2510,7 @@ PDM_part_mesh_nodal_cell_vtx_connect_get
         PDM_geometry_kind_t     geom_kind,
   const int                     i_part,
         int                   **cell_vtx_idx,
-        int                   **cell_vtx,
-        PDM_ownership_t         ownership
+        int                   **cell_vtx
 )
 {
   if (pmn == NULL) {
