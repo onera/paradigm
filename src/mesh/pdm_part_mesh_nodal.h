@@ -130,6 +130,21 @@ PDM_part_mesh_nodal_n_part_get
 );
 
 /**
+ * \brief  Return the mesh dimension
+ *
+ * \param [in]  pmn       Pointer to \ref PDM_part_mesh_nodal_t object
+ *
+ * \return  mesh dimension
+ *
+ */
+
+int
+PDM_part_mesh_nodal_mesh_dimension_get
+(
+       PDM_part_mesh_nodal_t *pmn
+);
+
+/**
  * \brief  Return number of vertices
  *
  * \param [in]  pmn       Pointer to \ref PDM_part_mesh_nodal_t object

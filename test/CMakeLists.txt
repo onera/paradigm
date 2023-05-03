@@ -195,6 +195,7 @@ test_c_create (pdm_t_connect_zone 1 PDM_LIST_TEST PDM_LIST_NRANK)
 test_c_create (pdm_t_part_to_block_geom 1 PDM_LIST_TEST PDM_LIST_NRANK)
 test_c_create (pdm_t_multipart_0d 1 PDM_LIST_TEST PDM_LIST_NRANK)
 test_c_create (pdm_t_multipart_1d 1 PDM_LIST_TEST PDM_LIST_NRANK)
+test_c_create (pdm_t_multipart_1d_nodal 1 PDM_LIST_TEST PDM_LIST_NRANK)
 
 test_c_create (pdm_t_closest_points_1_point 1 PDM_LIST_TEST PDM_LIST_NRANK)
 test_c_create (pdm_t_dist_ridge 1  PDM_LIST_TEST PDM_LIST_NRANK)
