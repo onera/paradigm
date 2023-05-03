@@ -35,6 +35,11 @@ cdef extern from "pdm_domain_interface.h":
                                                int                     *dn_face,
                                                int                    **dface_vtx_idx,
                                                PDM_g_num_t            **dface_vtx)
+  void PDM_domain_interface_translate_vtx2face(PDM_domain_interface_t  *dom_intrf,
+                                               int                     *dn_vtx,
+                                               int                     *dn_face,
+                                               int                    **dface_vtx_idx,
+                                               PDM_g_num_t            **dface_vtx)
 
   void PDM_domain_interface_free(PDM_domain_interface_t *dom_intrf)
 
@@ -145,6 +150,112 @@ def interface_face_to_vertex(int       n_interface,
       free(_interface_dom_vtx)
 
     return vtx_interface
+
+def interface_vertex_to_face(int       n_interface,
+                             int       n_zone,
+                             bint      multizone_interface,
+                             list      interface_dn_vtx,
+                             list      interface_ids_vtx,
+                             list      interface_dom_vtx,
+                             list      dn_vtx,
+                             list      dn_face,
+                             list      dface_vtx_idx,
+                             list      dface_vtx,
+                             MPI.Comm  comm):
+
+    #Some checks
+    assert (len(interface_dn_vtx) == len(interface_ids_vtx) == n_interface)
+    assert (len(dn_vtx) == len(dn_face) == len(dface_vtx_idx) == len(dface_vtx) == n_zone)
+    for i in range(n_zone):
+      assert_single_dim_np(dface_vtx_idx[i], NPY.int32)
+      assert_single_dim_np(dface_vtx[i], npy_pdm_gnum_dtype)
+    for i in range(n_interface):
+      assert_single_dim_np(interface_ids_vtx[i], npy_pdm_gnum_dtype, 2*interface_dn_vtx[i])
+      if multizone_interface:
+        assert_single_dim_np(interface_dom_vtx[i], NPY.int32,          2*interface_dn_vtx[i])
+
+    #Convert input data
+    cdef MPI.MPI_Comm c_comm = comm.ob_mpi
+    cdef PDM_MPI_Comm PDMC   = PDM_MPI_mpi_2_pdm_mpi_comm(&c_comm)
+
+    # Interfaces data
+    cdef int           *_interface_dn_vtx = list_to_int_pointer(interface_dn_vtx)
+    cdef PDM_g_num_t **_interface_ids_vtx = np_list_to_gnum_pointers(interface_ids_vtx)
+    cdef int         **_interface_dom_vtx
+    if multizone_interface:
+      _interface_dom_vtx = np_list_to_int_pointers(interface_dom_vtx)
+    else:
+      _interface_dom_vtx = <int **> malloc(n_interface*sizeof(int*));
+      for i in range(n_interface):
+        _interface_dom_vtx[i] = <int *> malloc(2*sizeof(int))
+        _interface_dom_vtx[i][0] = interface_dom_vtx[i][0]
+        _interface_dom_vtx[i][1] = interface_dom_vtx[i][1]
+
+    # Zone data
+    cdef int          *_dn_vtx        = list_to_int_pointer(dn_vtx)
+    cdef int          *_dn_face       = list_to_int_pointer(dn_face)
+    cdef int         **_dface_vtx_idx = np_list_to_int_pointers(dface_vtx_idx)
+    cdef PDM_g_num_t **_dface_vtx     = np_list_to_gnum_pointers(dface_vtx)
+
+    # Run function
+    cdef PDM_domain_interface_t *dom_intrf;
+    cdef _multizone_interface = PDM_DOMAIN_INTERFACE_MULT_YES if multizone_interface else PDM_DOMAIN_INTERFACE_MULT_NO
+    dom_intrf = PDM_domain_interface_create(n_interface,
+                                            n_zone,
+                                            _multizone_interface,
+                                            PDM_OWNERSHIP_USER,
+                                            PDMC)
+    PDM_domain_interface_set(dom_intrf,
+                             PDM_BOUND_TYPE_VTX,
+                             _interface_dn_vtx,
+                             _interface_ids_vtx,
+                             _interface_dom_vtx)
+
+    PDM_domain_interface_translate_vtx2face(dom_intrf,
+                                            _dn_vtx,
+                                            _dn_face,
+                                            _dface_vtx_idx,
+                                            _dface_vtx)
+
+    
+    # Convert output data
+    cdef int          *_interface_dn_face  = NULL;
+    cdef PDM_g_num_t **_interface_ids_face = NULL;
+    cdef int         **_interface_dom_face = NULL;
+    PDM_domain_interface_get(dom_intrf,
+                             PDM_BOUND_TYPE_FACE,
+                            &_interface_dn_face,
+                            &_interface_ids_face,
+                            &_interface_dom_face)
+
+    face_interface = list()
+    for i in range(n_interface):
+      interface_ids_face = create_numpy_g(_interface_ids_face[i], 2*_interface_dn_face[i])
+      interface_results = {'interface_dn_face' : _interface_dn_face[i], 'np_interface_ids_face' : interface_ids_face}
+      if multizone_interface: #Return domains only if we had complex interfaces
+        interface_dom_face = create_numpy_i(_interface_dom_face[i], 2*_interface_dn_face[i])
+        interface_results['np_interface_dom_face'] = interface_dom_face
+      face_interface.append(interface_results)
+
+    # Free temporary objects and return
+    PDM_domain_interface_free(dom_intrf)
+    free(_interface_dn_vtx )
+    free(_interface_ids_vtx)
+    if not multizone_interface:
+      for i in range(n_interface):
+        free(_interface_dom_vtx[i])
+
+    free(_interface_dom_face)
+    free(_dn_vtx       )
+    free(_dn_face      )
+    free(_dface_vtx_idx)
+    free(_dface_vtx    )
+    free(_interface_dn_face)
+    free(_interface_ids_face)
+    if multizone_interface: #Same than face dom if not multizone_interface
+      free(_interface_dom_face)
+
+    return face_interface
 
 def interface_to_graph(int       n_interface,
                        bint      multizone_interface,
