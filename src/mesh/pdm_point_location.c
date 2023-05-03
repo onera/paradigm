@@ -2004,16 +2004,27 @@ _locate_in_polyhedron
     for (int itri = 0; itri < n_tri; itri++) {
 
       double tri_coord[9];
-      if (face_orientation[iface] > 0) {
-        for (int idx_vtx = 0; idx_vtx < 3; idx_vtx++) {
-          int vtx_id = _tri_vtx[3*itri + idx_vtx] - 1;
-          memcpy(tri_coord + 3*idx_vtx, vtx_coord + 3*vtx_id, sizeof(double) * 3);
-        }
-      } else {
-        for (int idx_vtx = 0; idx_vtx < 3; idx_vtx++) {
-          int vtx_id = _tri_vtx[3*itri + 2-idx_vtx] - 1;
-          memcpy(tri_coord + 3*idx_vtx, vtx_coord + 3*vtx_id, sizeof(double) * 3);
-        }
+      // if (face_orientation[iface] > 0) {
+      //   for (int idx_vtx = 0; idx_vtx < 3; idx_vtx++) {
+      //     int vtx_id = _tri_vtx[3*itri + idx_vtx] - 1;
+      //     memcpy(tri_coord + 3*idx_vtx, vtx_coord + 3*vtx_id, sizeof(double) * 3);
+      //   }
+      // } else {
+      //   for (int idx_vtx = 0; idx_vtx < 3; idx_vtx++) {
+      //     int vtx_id = _tri_vtx[3*itri + 2-idx_vtx] - 1;
+      //     memcpy(tri_coord + 3*idx_vtx, vtx_coord + 3*vtx_id, sizeof(double) * 3);
+      //   }
+      // }
+      if (face_orientation[iface] < 0) {
+        int tmp = _tri_vtx[3*itri];
+        _tri_vtx[3*itri  ] = _tri_vtx[3*itri+2];
+        _tri_vtx[3*itri+2] = tmp;
+      }
+
+
+      for (int idx_vtx = 0; idx_vtx < 3; idx_vtx++) {
+        int vtx_id = _tri_vtx[3*itri + idx_vtx] - 1;
+        memcpy(tri_coord + 3*idx_vtx, vtx_coord + 3*vtx_id, sizeof(double) * 3);
       }
 
       /* Loop on points */
