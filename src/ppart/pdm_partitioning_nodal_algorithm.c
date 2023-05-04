@@ -232,12 +232,16 @@ _delmt_vtx_to_pelmt_vtx
   *pelmt_connec_out    = pelmts_connec;
   *pelmt_types_out     = pelmts_types;
 
-
-
   PDM_multi_block_to_part_free(mbtp);
 }
 
+// static
+// void
+// (
+// )
+// {
 
+// }
 
 
 /*=============================================================================
@@ -257,26 +261,6 @@ PDM_dmesh_nodal_elmts_to_part_mesh_nodal_elmts
  PDM_g_num_t                 **pparent_entitity_ln_to_gn
 )
 {
-  PDM_UNUSED(dmne);
-  // PDM_UNUSED(pmne);
-  PDM_part_mesh_nodal_elmts_t* pmne = PDM_part_mesh_nodal_elmts_create(dmne->mesh_dimension, n_part, dmne->comm);
-
-  /*
-   * A priori le vtx_ln_to_gn n'est pas trié
-   */
-  PDM_g_num_t **sorted_vtx_ln_to_gn = (PDM_g_num_t ** ) malloc( n_part * sizeof(PDM_g_num_t *));
-  int         **vtx_order           = (int         ** ) malloc( n_part * sizeof(int         *));
-  for(int i_part = 0; i_part < n_part; ++i_part) {
-    sorted_vtx_ln_to_gn[i_part] = malloc(pn_vtx[i_part] * sizeof(PDM_g_num_t));
-    vtx_order          [i_part] = malloc(pn_vtx[i_part] * sizeof(int        ));
-
-    for(int i = 0; i < pn_vtx[i_part]; ++i) {
-      sorted_vtx_ln_to_gn[i_part][i] = vtx_ln_to_gn[i_part][i];
-      vtx_order          [i_part][i] = i;
-    }
-    PDM_sort_long(sorted_vtx_ln_to_gn[i_part], vtx_order[i_part], pn_vtx[i_part]);
-    // PDM_log_trace_array_long(sorted_vtx_ln_to_gn[i_part] , pn_vtx[i_part] , "sorted_vtx_ln_to_gn :: ");
-  }
 
   int n_section = dmne->n_section;
   PDM_g_num_t          **block_elmts_disbrib_idx = (PDM_g_num_t          ** ) malloc( n_section * sizeof(PDM_g_num_t          *));
@@ -310,7 +294,7 @@ PDM_dmesh_nodal_elmts_to_part_mesh_nodal_elmts
       {
         section_order      [i_section] = 1;
         section_ho_ordering[i_section] = NULL;
-        pid_section        [i_section] = PDM_part_mesh_nodal_elmts_add(pmne, t_elt);
+        // pid_section        [i_section] = PDM_part_mesh_nodal_elmts_add(pmne, t_elt);
         int n_elt = PDM_DMesh_nodal_elmts_section_n_elt_get(dmne, id_section);
         block_elmts_n_vtx[i_section] = (int                  * ) malloc( n_elt * sizeof(int                 ));
         block_elmts_types[i_section] = (PDM_Mesh_nodal_elt_t * ) malloc( n_elt * sizeof(PDM_Mesh_nodal_elt_t));
@@ -342,7 +326,7 @@ PDM_dmesh_nodal_elmts_to_part_mesh_nodal_elmts
 
         section_order      [i_section] = order;
         section_ho_ordering[i_section] = ho_ordering;
-        pid_section        [i_section] = PDM_part_mesh_nodal_elmts_add(pmne, t_elt);
+        // pid_section        [i_section] = PDM_part_mesh_nodal_elmts_add(pmne, t_elt);
         int n_elt = PDM_DMesh_nodal_elmts_section_n_elt_get(dmne, id_section);
         block_elmts_n_vtx[i_section] = (int                  * ) malloc( n_elt * sizeof(int                 ));
         block_elmts_types[i_section] = (PDM_Mesh_nodal_elt_t * ) malloc( n_elt * sizeof(PDM_Mesh_nodal_elt_t));
@@ -357,7 +341,7 @@ PDM_dmesh_nodal_elmts_to_part_mesh_nodal_elmts
       {
         section_order      [i_section] = 1;
         section_ho_ordering[i_section] = NULL;
-        pid_section        [i_section] = PDM_part_mesh_nodal_elmts_add(pmne, t_elt);
+        // pid_section        [i_section] = PDM_part_mesh_nodal_elmts_add(pmne, t_elt);
         int n_elt = PDM_DMesh_nodal_elmts_section_n_elt_get(dmne, id_section);
 
         int         *connec_idx = NULL;
@@ -381,7 +365,7 @@ PDM_dmesh_nodal_elmts_to_part_mesh_nodal_elmts
       {
         section_order      [i_section] = 1;
         section_ho_ordering[i_section] = NULL;
-        pid_section        [i_section] = PDM_part_mesh_nodal_elmts_add(pmne, t_elt);
+        // pid_section        [i_section] = PDM_part_mesh_nodal_elmts_add(pmne, t_elt);
         PDM_error(__FILE__, __LINE__, 0, "Error PDM_dmesh_nodal_elmts_to_part_mesh_nodal_elmts : Element type %d is not supported\n", (int) t_elt);
         break;
       }
@@ -446,6 +430,75 @@ PDM_dmesh_nodal_elmts_to_part_mesh_nodal_elmts
   free(stride_one);
 
   PDM_multi_block_to_part_free(mbtp);
+
+  PDM_part_mesh_nodal_elmts_t* pmne = PDM_part_mesh_nodal_elmts_create(dmne->mesh_dimension, n_part, dmne->comm);
+
+  /* Create skeleton */
+  for (int i_section = 0; i_section < n_section; i_section++) {
+    int id_section = dmne->sections_id[i_section];
+    PDM_Mesh_nodal_elt_t t_elt = PDM_DMesh_nodal_elmts_section_type_get(dmne, id_section);
+
+    switch (t_elt) {
+      case PDM_MESH_NODAL_POINT:
+      case PDM_MESH_NODAL_BAR2:
+      case PDM_MESH_NODAL_TRIA3:
+      case PDM_MESH_NODAL_QUAD4:
+      case PDM_MESH_NODAL_TETRA4:
+      case PDM_MESH_NODAL_PYRAMID5:
+      case PDM_MESH_NODAL_PRISM6:
+      case PDM_MESH_NODAL_HEXA8:
+      {
+        pid_section        [i_section] = PDM_part_mesh_nodal_elmts_add(pmne, t_elt);
+        break;
+      }
+      case PDM_MESH_NODAL_BARHO:
+      case PDM_MESH_NODAL_BARHO_BEZIER:
+      case PDM_MESH_NODAL_TRIAHO:
+      case PDM_MESH_NODAL_TRIAHO_BEZIER:
+      case PDM_MESH_NODAL_QUADHO:
+      case PDM_MESH_NODAL_TETRAHO:
+      case PDM_MESH_NODAL_PYRAMIDHO:
+      case PDM_MESH_NODAL_PRISMHO:
+      case PDM_MESH_NODAL_HEXAHO:
+      {
+        pid_section        [i_section] = PDM_part_mesh_nodal_elmts_add(pmne, t_elt);
+        break;
+      }
+      case PDM_MESH_NODAL_POLY_2D:
+      {
+        pid_section        [i_section] = PDM_part_mesh_nodal_elmts_add(pmne, t_elt);
+        break;
+      }
+      case PDM_MESH_NODAL_POLY_3D:
+      {
+        pid_section        [i_section] = PDM_part_mesh_nodal_elmts_add(pmne, t_elt);
+        PDM_error(__FILE__, __LINE__, 0, "Error PDM_dmesh_nodal_elmts_to_part_mesh_nodal_elmts : Element type %d is not supported\n", (int) t_elt);
+        break;
+      }
+
+      default:
+        PDM_error(__FILE__, __LINE__, 0, "Error PDM_dmesh_nodal_elmts_to_part_mesh_nodal_elmts : Element type %d is not supported\n", (int) t_elt);
+    }
+
+  }
+
+
+  /*
+   * A priori le vtx_ln_to_gn n'est pas trié
+   */
+  PDM_g_num_t **sorted_vtx_ln_to_gn = (PDM_g_num_t ** ) malloc( n_part * sizeof(PDM_g_num_t *));
+  int         **vtx_order           = (int         ** ) malloc( n_part * sizeof(int         *));
+  for(int i_part = 0; i_part < n_part; ++i_part) {
+    sorted_vtx_ln_to_gn[i_part] = malloc(pn_vtx[i_part] * sizeof(PDM_g_num_t));
+    vtx_order          [i_part] = malloc(pn_vtx[i_part] * sizeof(int        ));
+
+    for(int i = 0; i < pn_vtx[i_part]; ++i) {
+      sorted_vtx_ln_to_gn[i_part][i] = vtx_ln_to_gn[i_part][i];
+      vtx_order          [i_part][i] = i;
+    }
+    PDM_sort_long(sorted_vtx_ln_to_gn[i_part], vtx_order[i_part], pn_vtx[i_part]);
+    // PDM_log_trace_array_long(sorted_vtx_ln_to_gn[i_part] , pn_vtx[i_part] , "sorted_vtx_ln_to_gn :: ");
+  }
 
   /*
    *  We don't need to exchange the section because we find it with binary search on section_distribution
@@ -1205,4 +1258,219 @@ PDM_generate_ho_vtx_ln_to_gn
   *pn_vtx_all       = nall_vtx;
   *vtx_all_ln_to_gn = all_vtx_ln_to_gn;
 
+}
+
+
+
+PDM_dmesh_nodal_elmts_t*
+PDM_dmesh_nodal_elmts_to_extract_dmesh_nodal_elmts
+(
+ PDM_dmesh_nodal_elmts_t      *dmne,
+ int                           dn_elmt,
+ PDM_g_num_t                  *delmt_selected
+)
+{
+  // Sort query gnum by section - Caution we need to keep the link with the parent in same order
+  int n_section = dmne->n_section;
+  int *dn_elmt_by_section_n = PDM_array_zeros_int(n_section);
+
+  for(int i = 0; i < dn_elmt; ++i) {
+    int i_section = PDM_binary_search_gap_long(delmt_selected[i] - 1,
+                                               dmne->section_distribution,
+                                               n_section + 1);
+    dn_elmt_by_section_n[i_section]++;
+  }
+
+  // PDM_log_trace_array_int(dn_elmt_by_section_n, n_section, "dn_elmt_by_section_n :")
+
+  int *dn_elmt_by_section_idx = malloc((n_section+1) * sizeof(int));
+  dn_elmt_by_section_idx[0] = 0;
+  for (int i = 0; i < n_section; i++) {
+    dn_elmt_by_section_idx[i+1] = dn_elmt_by_section_idx[i] + dn_elmt_by_section_n[i];
+    dn_elmt_by_section_n[i] = 0;
+  }
+
+  PDM_g_num_t *delmt_sorted_by_section = malloc(dn_elmt * sizeof(PDM_g_num_t));
+  for(int i = 0; i < dn_elmt; ++i) {
+    int i_section = PDM_binary_search_gap_long(delmt_selected[i] - 1,
+                                               dmne->section_distribution,
+                                               n_section + 1);
+    int idx_write = dn_elmt_by_section_idx[i_section] + dn_elmt_by_section_n[i_section]++;
+    delmt_sorted_by_section[idx_write] = delmt_selected[i];
+  }
+
+  /*
+   * For each section we requilibrate the data
+   */
+
+  PDM_dmesh_nodal_elmts_t* extract_dmne = PDM_DMesh_nodal_elmts_create(dmne->comm,
+                                                                       dmne->mesh_dimension,
+                                                                       0);
+
+
+  for (int i_section = 0; i_section < n_section; i_section++) {
+    int id_section = dmne->sections_id[i_section];
+
+    PDM_Mesh_nodal_elt_t t_elt = PDM_DMesh_nodal_elmts_section_type_get(dmne, id_section);
+
+    int beg                = dn_elmt_by_section_idx[i_section];
+    int dn_elmt_in_section = dn_elmt_by_section_idx[i_section+1] - beg;
+    PDM_g_num_t* _ldextract_gnum = &delmt_sorted_by_section[beg];
+
+    PDM_part_to_block_t* ptb = PDM_part_to_block_create(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
+                                                        PDM_PART_TO_BLOCK_POST_CLEANUP,
+                                                        1.,
+                                                        &_ldextract_gnum,
+                                                        NULL,
+                                                        &dn_elmt_in_section,
+                                                        1,
+                                                        dmne->comm);
+
+    // Exchange connectivity
+    int n_vtx_per_elmt = 0;
+    PDM_g_num_t *block_elmts_connec = NULL;
+
+    switch (t_elt) {
+      case PDM_MESH_NODAL_POINT:
+      case PDM_MESH_NODAL_BAR2:
+      case PDM_MESH_NODAL_TRIA3:
+      case PDM_MESH_NODAL_QUAD4:
+      case PDM_MESH_NODAL_TETRA4:
+      case PDM_MESH_NODAL_PYRAMID5:
+      case PDM_MESH_NODAL_PRISM6:
+      case PDM_MESH_NODAL_HEXA8:
+      {
+        // int n_elt          = PDM_DMesh_nodal_elmts_section_n_elt_get(dmne, id_section);
+        n_vtx_per_elmt = PDM_Mesh_nodal_n_vtx_elt_get (t_elt, 1);
+        block_elmts_connec = PDM_DMesh_nodal_elmts_section_std_get(dmne, id_section);
+        break;
+      }
+
+      case PDM_MESH_NODAL_BARHO:
+      case PDM_MESH_NODAL_BARHO_BEZIER:
+      case PDM_MESH_NODAL_TRIAHO:
+      case PDM_MESH_NODAL_TRIAHO_BEZIER:
+      case PDM_MESH_NODAL_QUADHO:
+      case PDM_MESH_NODAL_TETRAHO:
+      case PDM_MESH_NODAL_PYRAMIDHO:
+      case PDM_MESH_NODAL_PRISMHO:
+      case PDM_MESH_NODAL_HEXAHO:
+      {
+        int order = -1;
+        const char *ho_ordering = NULL;
+        block_elmts_connec = PDM_DMesh_nodal_elmts_section_std_ho_get(dmne,
+                                                                      id_section,
+                                                                      &order,
+                                                                      &ho_ordering);
+
+        n_vtx_per_elmt = PDM_Mesh_nodal_n_vtx_elt_get (t_elt, order);
+        break;
+      }
+      case PDM_MESH_NODAL_POLY_2D:
+      {
+        PDM_error(__FILE__, __LINE__, 0, "Error PDM_sections_decompose_edges : Element type is not supported\n");
+        break;
+      }
+
+      case PDM_MESH_NODAL_POLY_3D:
+      {
+        PDM_error(__FILE__, __LINE__, 0, "Error PDM_sections_decompose_edges : Element type is not supported\n");
+        break;
+      }
+
+      default:
+        PDM_error(__FILE__, __LINE__, 0, "Error PDM_sections_decompose_edges : Element type is not supported\n");
+    }
+
+    /*   */
+    PDM_g_num_t* dextract_block_elmts_gnum = NULL;
+    PDM_part_to_block_exch(ptb,
+                           sizeof(PDM_g_num_t),
+                           PDM_STRIDE_CST_INTERLACED,
+                           n_vtx_per_elmt,
+                           NULL,
+               (void **)  &block_elmts_connec,
+                           NULL,
+               (void **)  &dextract_block_elmts_gnum);
+
+    int dn_extract_elmt = PDM_part_to_block_n_elt_block_get(ptb);
+
+    PDM_part_to_block_free(ptb);
+
+
+    switch (t_elt) {
+      case PDM_MESH_NODAL_POINT:
+      case PDM_MESH_NODAL_BAR2:
+      case PDM_MESH_NODAL_TRIA3:
+      case PDM_MESH_NODAL_QUAD4:
+      case PDM_MESH_NODAL_TETRA4:
+      case PDM_MESH_NODAL_PYRAMID5:
+      case PDM_MESH_NODAL_PRISM6:
+      case PDM_MESH_NODAL_HEXA8:
+      {
+        // int n_elt          = PDM_DMesh_nodal_elmts_section_n_elt_get(dmne, id_section);
+        n_vtx_per_elmt = PDM_Mesh_nodal_n_vtx_elt_get (t_elt, 1);
+        block_elmts_connec = PDM_DMesh_nodal_elmts_section_std_get(dmne, id_section);
+
+        int id_extract_section = PDM_DMesh_nodal_elmts_section_add(extract_dmne, t_elt);
+        PDM_DMesh_nodal_elmts_section_std_set(extract_dmne,
+                                              id_extract_section,
+                                              dn_extract_elmt,
+                                              dextract_block_elmts_gnum,
+                                              PDM_OWNERSHIP_KEEP);
+        break;
+      }
+
+      case PDM_MESH_NODAL_BARHO:
+      case PDM_MESH_NODAL_BARHO_BEZIER:
+      case PDM_MESH_NODAL_TRIAHO:
+      case PDM_MESH_NODAL_TRIAHO_BEZIER:
+      case PDM_MESH_NODAL_QUADHO:
+      case PDM_MESH_NODAL_TETRAHO:
+      case PDM_MESH_NODAL_PYRAMIDHO:
+      case PDM_MESH_NODAL_PRISMHO:
+      case PDM_MESH_NODAL_HEXAHO:
+      {
+        int order = -1;
+        const char *ho_ordering = NULL;
+        block_elmts_connec = PDM_DMesh_nodal_elmts_section_std_ho_get(dmne,
+                                                                      id_section,
+                                                                      &order,
+                                                                      &ho_ordering);
+
+        n_vtx_per_elmt = PDM_Mesh_nodal_n_vtx_elt_get (t_elt, order);
+
+        int id_extract_section = PDM_DMesh_nodal_elmts_section_ho_add(extract_dmne, t_elt, order, ho_ordering);
+
+        PDM_DMesh_nodal_elmts_section_std_set(extract_dmne,
+                                              id_extract_section,
+                                              dn_extract_elmt,
+                                              dextract_block_elmts_gnum,
+                                              PDM_OWNERSHIP_KEEP);
+
+        break;
+      }
+      case PDM_MESH_NODAL_POLY_2D:
+      {
+        PDM_error(__FILE__, __LINE__, 0, "Error PDM_sections_decompose_edges : Element type is not supported\n");
+        break;
+      }
+
+      case PDM_MESH_NODAL_POLY_3D:
+      {
+        PDM_error(__FILE__, __LINE__, 0, "Error PDM_sections_decompose_edges : Element type is not supported\n");
+        break;
+      }
+
+      default:
+        PDM_error(__FILE__, __LINE__, 0, "Error PDM_sections_decompose_edges : Element type is not supported\n");
+    }
+  }
+
+
+  free(delmt_sorted_by_section);
+  free(dn_elmt_by_section_idx);
+  free(dn_elmt_by_section_n);
+
+  return extract_dmne;
 }

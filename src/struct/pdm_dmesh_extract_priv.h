@@ -28,6 +28,7 @@
 #include "pdm.h"
 #include "pdm_mpi.h"
 #include "pdm_dmesh.h"
+#include "pdm_dmesh_nodal.h"
 #include "pdm_block_to_part.h"
 
 /*----------------------------------------------------------------------------*/
@@ -65,7 +66,10 @@ struct _pdm_dmesh_extract_t
 
   PDM_dmesh_t            *dmesh;
   PDM_dmesh_t            *dmesh_shared;
+  PDM_dmesh_nodal_t      *dmesh_nodal;
+
   PDM_dmesh_t            *dmesh_extract;
+  PDM_dmesh_nodal_t      *dmesh_nodal_extract;
   PDM_ownership_t         dmesh_extract_ownership;
 
   PDM_g_num_t            *distrib_extract              [PDM_MESH_ENTITY_MAX];

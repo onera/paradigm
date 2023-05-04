@@ -27,6 +27,8 @@
 #include "pdm_array.h"
 #include "pdm_gnum.h"
 #include "pdm_dmesh_extract.h"
+#include "pdm_dmesh_nodal.h"
+#include "pdm_dmesh_nodal_priv.h"
 #include "pdm_dmesh_extract_priv.h"
 #include "pdm_dconnectivity_transform.h"
 #include "pdm_vtk.h"
@@ -36,6 +38,7 @@
 #include "pdm_unique.h"
 #include "pdm_dmesh_priv.h"
 #include "pdm_partitioning_algorithm.h"
+#include "pdm_partitioning_nodal_algorithm.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -569,8 +572,6 @@ _dmesh_extract_0d
 
   PDM_g_num_t* distrib_vtx  = PDM_compute_entity_distribution(dme->comm, dn_vtx );
 
-
-
   PDM_part_to_block_t *ptb = PDM_part_to_block_create(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
                                                       PDM_PART_TO_BLOCK_POST_CLEANUP,
                                                       1.,
@@ -605,6 +606,38 @@ _dmesh_extract_0d
 }
 
 
+static
+void
+_dmesh_extract_nodal
+(
+ PDM_dmesh_extract_t *dme
+)
+{
+  printf("_dmesh_extract_nodal = %p - %i \n", dme, dme->dim);
+
+  /* Equilibrate */
+  PDM_dmesh_nodal_elmts_t *dmn_elts = NULL;
+  if(dme->dim == 3) {
+    dmn_elts = dme->dmesh_nodal->volumic;
+  } else if(dme->dim == 2) {
+    dmn_elts = dme->dmesh_nodal->surfacic;
+  } else if(dme->dim == 1) {
+    dmn_elts = dme->dmesh_nodal->ridge;
+  } else {
+    dmn_elts = dme->dmesh_nodal->corner;
+  }
+
+  PDM_dmesh_nodal_elmts_t* dmn_elts_extract = PDM_dmesh_nodal_elmts_to_extract_dmesh_nodal_elmts(dmn_elts,
+                                                                                                 dme->n_selected,
+                                                                                                 dme->selected_gnum);
+
+
+
+  PDM_DMesh_nodal_elmts_free(dmn_elts_extract);
+
+}
+
+
 
 /*=============================================================================
  * Public function definitions
@@ -623,10 +656,12 @@ PDM_dmesh_extract_create
   dme->comm = comm;
 
   // Utilisation privé
-  dme->dmesh         = PDM_dmesh_create(PDM_OWNERSHIP_KEEP, 0, 0, 0, 0, comm);
-  dme->dmesh_extract = NULL;
+  dme->dmesh                   = PDM_dmesh_create(PDM_OWNERSHIP_KEEP, 0, 0, 0, 0, comm);
+  dme->dmesh_nodal             = NULL;
+  dme->dmesh_extract           = NULL;
+  dme->dmesh_nodal_extract     = NULL;
   dme->dmesh_extract_ownership = PDM_OWNERSHIP_KEEP;
-  dme->dmesh_shared  = NULL;
+  dme->dmesh_shared            = NULL;
 
   for(int i = 0; i < PDM_MESH_ENTITY_MAX; ++i) {
     dme->btp_entity_to_extract_entity [i] = NULL;
@@ -668,53 +703,57 @@ PDM_dmesh_extract_compute
     PDM_MPI_Allreduce(&_dn_edge, &dme->dmesh->n_g_edge, 1, PDM__PDM_MPI_G_NUM, PDM_MPI_SUM, dme->comm);
     PDM_MPI_Allreduce(&_dn_vtx , &dme->dmesh->n_g_vtx , 1, PDM__PDM_MPI_G_NUM, PDM_MPI_SUM, dme->comm);
 
-  } else {
+  } else if (dme->dmesh_nodal == NULL) {
     PDM_dmesh_free(dme->dmesh);
     dme->dmesh = dme->dmesh_shared;
   }
 
-  dme->dmesh_extract = PDM_dmesh_create(PDM_OWNERSHIP_KEEP, 0, 0, 0, 0, dme->comm);
-  dme->dmesh_extract->_dvtx_coord = NULL;
+  if(dme->dmesh_nodal == NULL) {
+    dme->dmesh_extract = PDM_dmesh_create(PDM_OWNERSHIP_KEEP, 0, 0, 0, 0, dme->comm);
+    dme->dmesh_extract->_dvtx_coord = NULL;
 
-  if(dme->dim == 3) {
-    _dmesh_extract_3d(dme);
-  } else if(dme->dim == 2) {
-    _dmesh_extract_2d(dme);
-  } else if(dme->dim == 1) {
-    _dmesh_extract_1d(dme);
+    if(dme->dim == 3) {
+      _dmesh_extract_3d(dme);
+    } else if(dme->dim == 2) {
+      _dmesh_extract_2d(dme);
+    } else if(dme->dim == 1) {
+      _dmesh_extract_1d(dme);
+    } else {
+      _dmesh_extract_0d(dme);
+    }
+
+    /* Exchange coordinates */
+    if(dme->dmesh->_dvtx_coord != NULL) {
+      double** tmp_dvtx_coord   = NULL;
+      int stride_one = 1;
+      PDM_block_to_part_exch(dme->btp_entity_to_extract_entity[PDM_MESH_ENTITY_VERTEX],
+                             3 * sizeof(double),
+                             PDM_STRIDE_CST_INTERLACED,
+                             &stride_one,
+                 (void *  )  dme->dmesh->_dvtx_coord,
+                             NULL,
+                 (void ***)  &tmp_dvtx_coord);
+
+      PDM_dmesh_vtx_coord_set(dme->dmesh_extract,
+                              tmp_dvtx_coord[0],
+                              PDM_OWNERSHIP_KEEP);
+
+      free(tmp_dvtx_coord);
+    }
+
+    PDM_g_num_t _dn_extract_cell = dme->dmesh_extract->dn_cell;
+    PDM_g_num_t _dn_extract_face = dme->dmesh_extract->dn_face;
+    PDM_g_num_t _dn_extract_edge = dme->dmesh_extract->dn_edge;
+    PDM_g_num_t _dn_extract_vtx  = dme->dmesh_extract->dn_vtx;
+
+    PDM_MPI_Allreduce(&_dn_extract_cell, &dme->dmesh_extract->n_g_cell, 1, PDM__PDM_MPI_G_NUM, PDM_MPI_SUM, dme->comm);
+    PDM_MPI_Allreduce(&_dn_extract_face, &dme->dmesh_extract->n_g_face, 1, PDM__PDM_MPI_G_NUM, PDM_MPI_SUM, dme->comm);
+    PDM_MPI_Allreduce(&_dn_extract_edge, &dme->dmesh_extract->n_g_edge, 1, PDM__PDM_MPI_G_NUM, PDM_MPI_SUM, dme->comm);
+    PDM_MPI_Allreduce(&_dn_extract_vtx , &dme->dmesh_extract->n_g_vtx , 1, PDM__PDM_MPI_G_NUM, PDM_MPI_SUM, dme->comm);
   } else {
-    _dmesh_extract_0d(dme);
+    assert(dme->dmesh_nodal != NULL);
+    _dmesh_extract_nodal(dme);
   }
-
-  /* Exchange coordinates */
-  if(dme->dmesh->_dvtx_coord != NULL) {
-    double** tmp_dvtx_coord   = NULL;
-    int stride_one = 1;
-    PDM_block_to_part_exch(dme->btp_entity_to_extract_entity[PDM_MESH_ENTITY_VERTEX],
-                           3 * sizeof(double),
-                           PDM_STRIDE_CST_INTERLACED,
-                           &stride_one,
-               (void *  )  dme->dmesh->_dvtx_coord,
-                           NULL,
-               (void ***)  &tmp_dvtx_coord);
-
-    PDM_dmesh_vtx_coord_set(dme->dmesh_extract,
-                            tmp_dvtx_coord[0],
-                            PDM_OWNERSHIP_KEEP);
-
-    free(tmp_dvtx_coord);
-  }
-
-  PDM_g_num_t _dn_extract_cell = dme->dmesh_extract->dn_cell;
-  PDM_g_num_t _dn_extract_face = dme->dmesh_extract->dn_face;
-  PDM_g_num_t _dn_extract_edge = dme->dmesh_extract->dn_edge;
-  PDM_g_num_t _dn_extract_vtx  = dme->dmesh_extract->dn_vtx;
-
-  PDM_MPI_Allreduce(&_dn_extract_cell, &dme->dmesh_extract->n_g_cell, 1, PDM__PDM_MPI_G_NUM, PDM_MPI_SUM, dme->comm);
-  PDM_MPI_Allreduce(&_dn_extract_face, &dme->dmesh_extract->n_g_face, 1, PDM__PDM_MPI_G_NUM, PDM_MPI_SUM, dme->comm);
-  PDM_MPI_Allreduce(&_dn_extract_edge, &dme->dmesh_extract->n_g_edge, 1, PDM__PDM_MPI_G_NUM, PDM_MPI_SUM, dme->comm);
-  PDM_MPI_Allreduce(&_dn_extract_vtx , &dme->dmesh_extract->n_g_vtx , 1, PDM__PDM_MPI_G_NUM, PDM_MPI_SUM, dme->comm);
-
 }
 
 
@@ -793,6 +832,17 @@ PDM_dmesh_extract_dmesh_set
 )
 {
   dme->dmesh_shared = dmesh;
+}
+
+
+void
+PDM_dmesh_extract_dmesh_nodal_set
+(
+ PDM_dmesh_extract_t     *dme,
+ PDM_dmesh_nodal_t       *dmesh_nodal
+)
+{
+  dme->dmesh_nodal = dmesh_nodal;
 }
 
 void
@@ -907,6 +957,11 @@ PDM_dmesh_extract_free
 
   if(dme->dmesh_extract_ownership == PDM_OWNERSHIP_KEEP && dme->dmesh_extract != NULL) {
     PDM_dmesh_free(dme->dmesh_extract);
+  }
+
+
+  if(dme->dmesh_extract_ownership == PDM_OWNERSHIP_KEEP && dme->dmesh_nodal_extract != NULL) {
+    PDM_DMesh_nodal_free(dme->dmesh_nodal_extract);
   }
 
   free(dme);
