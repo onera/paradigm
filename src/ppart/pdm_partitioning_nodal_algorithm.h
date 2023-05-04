@@ -50,7 +50,9 @@ PDM_dmesh_nodal_elmts_to_extract_dmesh_nodal_elmts
 (
  PDM_dmesh_nodal_elmts_t      *dmne,
  int                           dn_elmt,
- PDM_g_num_t                  *delmt_selected
+ PDM_g_num_t                  *delmt_selected,
+ PDM_g_num_t                 **extract_vtx_distribution,
+ PDM_g_num_t                 **extract_parent_gnum
 );
 
 void
