@@ -224,6 +224,15 @@ int main(int argc, char *argv[])
   free(distrib_cell);
   free(selected_cell_gnum);
 
+  PDM_dmesh_nodal_t* extract_dmn = NULL;
+  PDM_dmesh_extract_dmesh_nodal_get(dme, &extract_dmn, PDM_OWNERSHIP_KEEP);
+
+  if(0 == 1) {
+    PDM_dmesh_nodal_dump_vtk(extract_dmn, PDM_GEOMETRY_KIND_VOLUMIC , "out_extract_volumic");
+    // PDM_dmesh_nodal_dump_vtk(dmn, PDM_GEOMETRY_KIND_SURFACIC, "out_surfacic");
+  }
+
+
   PDM_dmesh_extract_free(dme);
   PDM_dcube_nodal_gen_free(dcube);
 

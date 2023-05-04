@@ -196,6 +196,24 @@ PDM_dmesh_extract_dmesh_get
 
 /**
  *
+ * \brief Get a dmesh object correspond to extraction
+ *
+ * \param [in]   dme                  PDM_dmesh_extract_t
+ * \param [out]  dmesh_nodal_extract  Current extraction direclty inside a PDM_dmesh_nodal_t
+ * \param [in]   ownership            KEEP or USER
+ *
+ */
+void
+PDM_dmesh_extract_dmesh_nodal_get
+(
+ PDM_dmesh_extract_t     *dme,
+ PDM_dmesh_nodal_t      **dmesh_nodal_extract,
+ PDM_ownership_t          ownership
+);
+
+
+/**
+ *
  * \brief Get the redistributed parent_gnum (in block frame)
  *
  * \param [in]   dme                  PDM_dmesh_extract_t
