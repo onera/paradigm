@@ -134,6 +134,7 @@ test_c_create (pdm_t_knn_cube ${MPIEXEC_MAX_NUMPROCS} PDM_LIST_TEST PDM_LIST_NRA
 test_c_create (pdm_t_create_edge_gnum 1 PDM_LIST_TEST PDM_LIST_NRANK)
 test_c_create (pdm_t_mesh_location_dcube ${MPIEXEC_MAX_NUMPROCS} PDM_LIST_TEST PDM_LIST_NRANK)
 test_c_create (pdm_t_mesh_location_disjoint_cubes ${MPIEXEC_MAX_NUMPROCS} PDM_LIST_TEST PDM_LIST_NRANK)
+test_c_create (pdm_t_mesh_location_multisection ${MPIEXEC_MAX_NUMPROCS} PDM_LIST_TEST PDM_LIST_NRANK)
 test_c_create (pdm_t_mesh_location_poly_surf ${MPIEXEC_MAX_NUMPROCS} PDM_LIST_TEST PDM_LIST_NRANK)
 test_c_create (pdm_t_mesh_location_from_file 2 PDM_LIST_TEST PDM_LIST_NRANK)
 test_c_create (pdm_t_mesh_location_ho 2 PDM_LIST_TEST PDM_LIST_NRANK)
