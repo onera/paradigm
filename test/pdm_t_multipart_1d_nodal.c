@@ -254,8 +254,8 @@ char *argv[]
   /*
    * Mulitpart
    */
-  PDM_split_dual_t part_method = PDM_SPLIT_DUAL_WITH_HILBERT;
-  // PDM_split_dual_t part_method = PDM_SPLIT_DUAL_WITH_PARMETIS;
+  // PDM_split_dual_t part_method = PDM_SPLIT_DUAL_WITH_HILBERT;
+  PDM_split_dual_t part_method = PDM_SPLIT_DUAL_WITH_PARMETIS;
   int n_part = 1;
   PDM_multipart_t* mpart = PDM_multipart_create(1,
                                                 &n_part,
