@@ -29,6 +29,7 @@
 #include "pdm_mpi.h"
 #include "pdm_block_to_part.h"
 #include "pdm_dmesh.h"
+#include "pdm_dmesh_nodal.h"
 
 /*----------------------------------------------------------------------------*/
 
@@ -148,11 +149,10 @@ PDM_dmesh_extract_dconnectivity_set
 
 /**
  *
- * \brief Get a dmesh object correspond to extraction
+ * \brief Set a dmesh object correspond to extraction
  *
  * \param [in]   dme                  PDM_dmesh_extract_t
- * \param [out]  dmesh_extract        Current extraction direclty inside a PDM_dmesh_t
- * \param [in]   ownership            KEEP or USER
+ * \param [out]  dmesh                PDM_dmesh_t who need to be extracted
  *
  */
 void
@@ -160,6 +160,21 @@ PDM_dmesh_extract_dmesh_set
 (
  PDM_dmesh_extract_t     *dme,
  PDM_dmesh_t             *dmesh
+);
+
+/**
+ *
+ * \brief Get a dmesh object correspond to extraction
+ *
+ * \param [in]   dme                  PDM_dmesh_extract_t
+ * \param [out]  dmesh_nodal          PDM_dmesh_nodal_t who need to be extracted
+ *
+ */
+void
+PDM_dmesh_extract_dmesh_nodal_set
+(
+ PDM_dmesh_extract_t     *dme,
+ PDM_dmesh_nodal_t       *dmesh_nodal
 );
 
 /**
@@ -178,6 +193,24 @@ PDM_dmesh_extract_dmesh_get
  PDM_dmesh_t            **dmesh_extract,
  PDM_ownership_t          ownership
 );
+
+/**
+ *
+ * \brief Get a dmesh object correspond to extraction
+ *
+ * \param [in]   dme                  PDM_dmesh_extract_t
+ * \param [out]  dmesh_nodal_extract  Current extraction direclty inside a PDM_dmesh_nodal_t
+ * \param [in]   ownership            KEEP or USER
+ *
+ */
+void
+PDM_dmesh_extract_dmesh_nodal_get
+(
+ PDM_dmesh_extract_t     *dme,
+ PDM_dmesh_nodal_t      **dmesh_nodal_extract,
+ PDM_ownership_t          ownership
+);
+
 
 /**
  *

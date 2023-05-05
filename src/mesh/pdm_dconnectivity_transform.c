@@ -1370,14 +1370,19 @@ PDM_dconnectivity_to_extract_dconnectivity
   /*
    * Create implicit global numbering
    */
+  double* weight = malloc(n_selected_entity1 * sizeof(double));
+  for(int i = 0; i < n_selected_entity1; ++i) {
+    weight[i] = 1.;
+  }
   PDM_part_to_block_t *ptb = PDM_part_to_block_create(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
                                                       PDM_PART_TO_BLOCK_POST_CLEANUP,
                                                       1.,
                                                       &select_entity1,
-                                                      NULL,
+                                                      &weight,
                                                       &n_selected_entity1,
                                                       1,
                                                       comm);
+  free(weight);
 
   int          dn_extract_entity1      = PDM_part_to_block_n_elt_block_get  (ptb);
   PDM_g_num_t *dextract_gnum_entity1   = PDM_part_to_block_block_gnum_get   (ptb);
