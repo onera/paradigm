@@ -1273,6 +1273,11 @@ PDM_dmesh_nodal_elmts_to_extract_dmesh_nodal_elmts
  PDM_g_num_t                 **extract_parent_gnum
 )
 {
+  int i_rank;
+  int n_rank;
+  PDM_MPI_Comm_rank(dmne->comm, &i_rank);
+  PDM_MPI_Comm_size(dmne->comm, &n_rank);
+
   // Sort query gnum by section - Caution we need to keep the link with the parent in same order
   int n_section = dmne->n_section;
   int *dn_elmt_by_section_n = PDM_array_zeros_int(n_section);
@@ -1302,6 +1307,8 @@ PDM_dmesh_nodal_elmts_to_extract_dmesh_nodal_elmts
     delmt_sorted_by_section[idx_write] = delmt_selected[i];
   }
 
+  // PDM_log_trace_array_int(delmt_sorted_by_section, dn_elmt_by_section_idx[n_section], "delmt_sorted_by_section ::");
+
   /*
    * For each section we requilibrate the data
    */
@@ -1323,14 +1330,47 @@ PDM_dmesh_nodal_elmts_to_extract_dmesh_nodal_elmts
     int dn_elmt_in_section = dn_elmt_by_section_idx[i_section+1] - beg;
     PDM_g_num_t* _ldextract_gnum = &delmt_sorted_by_section[beg];
 
+    double *weight = malloc(dn_elmt_in_section * sizeof(double));
+    for(int i = 0; i < dn_elmt_in_section; ++i) {
+      weight[i] = 1.;
+    }
+
     PDM_part_to_block_t* ptb = PDM_part_to_block_create(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
                                                         PDM_PART_TO_BLOCK_POST_CLEANUP,
                                                         1.,
                                                         &_ldextract_gnum,
-                                                        NULL,
+                                                        &weight,
                                                         &dn_elmt_in_section,
                                                         1,
                                                         dmne->comm);
+
+    free(weight);
+
+    const PDM_g_num_t* distrib_section = PDM_DMesh_nodal_elmts_distrib_section_get(dmne, id_section);
+
+    dn_extract_elmt[i_section] = PDM_part_to_block_n_elt_block_get(ptb);
+    PDM_g_num_t* extract_gnum_elmt = PDM_part_to_block_block_gnum_get(ptb);
+
+    if(0 == 1) {
+      PDM_log_trace_array_long(extract_gnum_elmt, dn_extract_elmt[i_section], "extract_gnum_elmt ::");
+    }
+
+    // Shift by global section
+    for(int i = 0; i < dn_extract_elmt[i_section]; ++i) {
+      extract_gnum_elmt[i] -= dmne->section_distribution[i_section];
+    }
+
+    if(0 == 1) {
+      PDM_log_trace_array_long(extract_gnum_elmt, dn_extract_elmt[i_section], "extract_gnum_elmt ::");
+      PDM_log_trace_array_long(distrib_section, n_rank+1, "distrib_section ::");
+    }
+
+    PDM_block_to_part_t* btp = PDM_block_to_part_create(distrib_section,
+                                (const PDM_g_num_t **)  &extract_gnum_elmt,
+                                                        &dn_extract_elmt[i_section],
+                                                        1,
+                                                        dmne->comm);
+    PDM_part_to_block_free(ptb);
 
     // Exchange connectivity
     int n_vtx_per_elmt = 0;
@@ -1389,22 +1429,26 @@ PDM_dmesh_nodal_elmts_to_extract_dmesh_nodal_elmts
     }
 
     /*   */
-    PDM_part_to_block_exch(ptb,
+    PDM_g_num_t** tmp_dextract_block_elmts_gnum = NULL;
+    PDM_block_to_part_exch(btp,
                            sizeof(PDM_g_num_t),
                            PDM_STRIDE_CST_INTERLACED,
-                           n_vtx_per_elmt,
+                           &n_vtx_per_elmt,
+               (void **)   block_elmts_connec,
                            NULL,
-               (void **)  &block_elmts_connec,
-                           NULL,
-               (void **)  &dextract_block_elmts_gnum[i_section]);
+               (void ***) &tmp_dextract_block_elmts_gnum);
+    dextract_block_elmts_gnum[i_section] = tmp_dextract_block_elmts_gnum[0];
+    free(tmp_dextract_block_elmts_gnum);
 
-    dn_extract_elmt[i_section] = PDM_part_to_block_n_elt_block_get(ptb);
+    PDM_block_to_part_free(btp);
+
+    // PDM_log_trace_array_long(dextract_block_elmts_gnum[i_section], n_vtx_per_elmt * dn_extract_elmt[i_section], "dextract_block_elmts_gnum:: ");
 
     PDM_gnum_set_from_parents (gen_gnum,
                                i_section,
                                n_vtx_per_elmt * dn_extract_elmt[i_section],
                                dextract_block_elmts_gnum[i_section]);
-    PDM_part_to_block_free(ptb);
+
   }
 
   /* Generate child gnum */
@@ -1507,6 +1551,8 @@ PDM_dmesh_nodal_elmts_to_extract_dmesh_nodal_elmts
   for(int i = 0; i < dn_extact_vtx; ++i) {
     lextract_parent_gnum[i] = ptb_dextract_vtx_gnum[i];
   }
+
+  // PDM_log_trace_array_long(lextract_parent_gnum, dn_extact_vtx, "lextract_parent_gnum ::");
 
   *extract_vtx_distribution = PDM_compute_entity_distribution(dmne->comm, dn_extact_vtx);
 
