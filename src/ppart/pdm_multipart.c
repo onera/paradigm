@@ -1260,8 +1260,8 @@ _warm_up_for_split
                                   delmt_to_arc_idx,
                                   delmt_to_arc,
                                   0,
-                                  &darc_to_elmt_tmp,
-                                  &darc_to_elmt_idx);
+                                  &darc_to_elmt_idx,
+                                  &darc_to_elmt_tmp);
 
       PDM_dmesh_connectivity_set(dmesh, PDM_CONNECTIVITY_TYPE_VTX_EDGE,
                                  darc_to_elmt_tmp,
