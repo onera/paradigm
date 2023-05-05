@@ -1763,6 +1763,7 @@ _compute_mean_value_coord_polyhedron_point_inside
   } // End of loop on vertices
 
   /* Loop on faces */
+  int on_triangle = 0;
   for (int iface = 0; iface < n_face; iface++) {
 
     const int *_face_vtx = face_vtx + face_vtx_idx[iface];
@@ -1843,9 +1844,41 @@ _compute_mean_value_coord_polyhedron_point_inside
       }
 
       /* Check if p is coplanar with current triangle to avoid division by zero */
-      int coplanar = (PDM_PI - h < eps_in_triangle);
+      on_triangle = (PDM_PI - h < eps_in_triangle);
 
-      assert(!coplanar);
+      if (on_triangle) {
+        // log_trace("!! on triangle, pt_coord = %f %f %f\n",
+        //           pt_coord[0], pt_coord[1], pt_coord[2]);
+        // log_trace("tri_coord :\n");
+        // for (int ivtx = 0; ivtx < 3; ivtx++) {
+        //   PDM_log_trace_array_double(vtx_coord + 3*__tri_vtx[ivtx], 3, "");
+        // }
+
+        double tri_coord[9];
+        for (int ivtx = 0; ivtx < 3; ivtx++) {
+          memcpy(tri_coord + 3*ivtx,
+                 vtx_coord + 3*__tri_vtx[ivtx],
+                 sizeof(double) * 3);
+        }
+
+        double tri_closest_point[3];
+        double tri_dist2;
+        double tri_weight[3];
+        PDM_triangle_status_t stat = PDM_triangle_evaluate_position(pt_coord,
+                                                                    tri_coord,
+                                                                    tri_closest_point,
+                                                                    &tri_dist2,
+                                                                    tri_weight);
+        assert(stat == PDM_TRIANGLE_INSIDE);
+        for (int ivtx = 0; ivtx < n_vtx; ivtx++) {
+          weight[ivtx] = 0;
+        }
+        for (int ivtx = 0; ivtx < 3; ivtx++) {
+          weight[__tri_vtx[ivtx]] = tri_weight[ivtx];
+        }
+
+        break;
+      }
 
       double sdet = PDM_SIGN(_determinant_3x3(tri_u[0],
                                               tri_u[1],
@@ -1858,6 +1891,8 @@ _compute_mean_value_coord_polyhedron_point_inside
       for (int ivtx = 0; ivtx < 3; ivtx++) {
         int ip = (ivtx+1)%3;
         int im = (ivtx+2)%3;
+
+        // check denominator ?
         c[ivtx] = -1 + (2 * sin_h * sin(h - theta[ivtx])) /
         (sin_theta[ip] * sin_theta[im]);
 
@@ -1882,6 +1917,8 @@ _compute_mean_value_coord_polyhedron_point_inside
       }
 
     } // End of loop on triangles
+
+    if (on_triangle) break;
 
   } // End of loop on faces
 

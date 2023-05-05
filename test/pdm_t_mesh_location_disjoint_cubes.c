@@ -1872,7 +1872,7 @@ int main(int argc, char *argv[])
   if (i_rank == 0) {
     printf("global max interpolation error = %e\n", gmax_err);
   }
-  if (gmax_err > 1e-12) {
+  if (gmax_err > tolerance) { // scaling??
     PDM_error(__FILE__, __LINE__, 0, "Large interpolation error!\n");
   }
 
