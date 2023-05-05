@@ -1224,14 +1224,25 @@ PDM_points_merge_make_interface
   /*
    * Rebuild a global interface and spread among all proc
    */
+  double **weight = (double **) malloc(pm->n_point_clouds * sizeof(double*));
+  for (int i_cloud; i_cloud < pm->n_point_clouds; i_cloud++) {
+    weight[i_cloud] = (double *) malloc(n_itrf[i_cloud] * sizeof(double));
+    for (int j = 0; j < n_itrf[i_cloud]; j++) {
+      weight[i_cloud][j] = 1.;
+    }
+  }
   PDM_part_to_block_t* ptb = PDM_part_to_block_create(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
                                                       PDM_PART_TO_BLOCK_POST_CLEANUP,
                                                       1.,
                                                       itrf_gnum,
-                                                      NULL,
+                                                      weight,
                                                       n_itrf,
                                                       pm->n_point_clouds,
                                                       pm->comm);
+  for (int i_cloud; i_cloud < pm->n_point_clouds; i_cloud++) {
+    free(weight[i_cloud]);
+  }
+  free(weight);
 
   int *ditrf_pair = NULL;
   PDM_part_to_block_exch(ptb,
@@ -1364,14 +1375,19 @@ PDM_points_merge_make_interface
     PDM_g_num_t *lconcat_vtx_cur = &concat_vtx_cur[beg];
     PDM_g_num_t *lconcat_vtx_opp = &concat_vtx_opp[beg];
 
+    double *l_weight = (double *) malloc(pn_vtx*sizeof(double));
+    for (int j = 0; j < pn_vtx; j++) {
+      l_weight[j] = 1.;
+    }
     PDM_part_to_block_t* ptb_itrf = PDM_part_to_block_create(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
                                                              PDM_PART_TO_BLOCK_POST_CLEANUP,
                                                              1.,
                                                              &lconcat_vtx_cur,
-                                                             NULL,
+                                                             &l_weight,
                                                              &pn_vtx,
                                                              1,
                                                              pm->comm);
+    free(l_weight);
 
     dn_vtx_itrf[i_itrf] = PDM_part_to_block_n_elt_block_get(ptb_itrf);
 
