@@ -245,6 +245,7 @@ test_c_create (pdm_t_hollow_ball 1 PDM_LIST_TEST PDM_LIST_NRANK)
 test_c_create (pdm_t_extrude_polyline 1 PDM_LIST_TEST PDM_LIST_NRANK)
 test_c_create (pdm_t_fill_between_polylines 1 PDM_LIST_TEST PDM_LIST_NRANK)
 test_c_create (pdm_t_morton_order 1 PDM_LIST_TEST PDM_LIST_NRANK)
+test_c_create (pdm_t_para_octree 1 PDM_LIST_TEST PDM_LIST_NRANK)
 
 test_c_create (pdm_t_triangle 1 PDM_LIST_TEST PDM_LIST_NRANK)
 test_c_create (pdm_t_bezier_triangle_location 1 PDM_LIST_TEST PDM_LIST_NRANK)

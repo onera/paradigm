@@ -436,6 +436,42 @@ PDM_para_octree_points_inside_boxes_shared_block_frame
  double                  **dbox_pts_coord
 );
 
+void
+PDM_para_octree_explicit_node_get
+(
+  PDM_para_octree_t  *octree,
+  int                *n_nodes_out,
+  int               **n_points_out,
+  int               **range_out,
+  int               **leaf_id_out,
+  int               **children_id_out,
+  int               **ancestor_id_out,
+  int                *n_child_out,
+  int                *stack_size
+);
+
+
+void
+PDM_para_octree_points_get
+(
+  PDM_para_octree_t  *octree,
+  int                *n_points,
+  double            **pts_coord,
+  PDM_g_num_t       **pts_g_num
+);
+
+void
+PDM_para_octree_neighbor_get
+(
+  PDM_para_octree_t  *octree,
+  int                *n_nodes,
+  int               **neighbour_idx,
+  int               **neighbour,
+  int                *n_part_boundary_elt,
+  int               **part_boundary_elt_idx,
+  int               **part_boundary_elt
+);
+
 #ifdef	__cplusplus
 }
 #endif
