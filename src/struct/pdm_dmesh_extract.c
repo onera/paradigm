@@ -573,14 +573,19 @@ _dmesh_extract_0d
 
   PDM_g_num_t* distrib_vtx  = PDM_compute_entity_distribution(dme->comm, dn_vtx );
 
+  double *weight = malloc(dme->n_selected * sizeof(double));
+  for(int i = 0; i < dme->n_selected; ++i) {
+    weight[i] = 1.;
+  }
   PDM_part_to_block_t *ptb = PDM_part_to_block_create(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
                                                       PDM_PART_TO_BLOCK_POST_CLEANUP,
                                                       1.,
                                                       &dme->selected_gnum,
-                                                      NULL,
+                                                      &weight,
                                                       &dme->n_selected,
                                                       1,
                                                       dme->comm);
+  free(weight);
 
   int          dn_extract_vtx      = PDM_part_to_block_n_elt_block_get  (ptb);
   PDM_g_num_t *dextract_gnum_vtx   = PDM_part_to_block_block_gnum_get   (ptb);
