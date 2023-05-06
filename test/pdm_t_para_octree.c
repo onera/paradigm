@@ -465,8 +465,8 @@ char *argv[]
   PDM_part_to_part_reverse_iexch_wait(ptp, request);
 
 
-  PDM_log_trace_array_long(check_gnum     , n_pts_octree, "check_gnum ::");
-  PDM_log_trace_array_long(pts_gnum_octree, n_pts_octree, "pts_gnum_octree ::");
+  // PDM_log_trace_array_long(check_gnum     , n_pts_octree, "check_gnum ::");
+  // PDM_log_trace_array_long(pts_gnum_octree, n_pts_octree, "pts_gnum_octree ::");
 
   free(check_gnum);
 
@@ -495,7 +495,7 @@ char *argv[]
                 stack_size);
 
 
-  if(1 == 1) {
+  if(0 == 1) {
     PDM_para_octree_export_vtk(octree, "export_octree");
   }
 
