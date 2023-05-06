@@ -569,6 +569,7 @@ PDM_geom_elem_edge_upwind_and_downwind
 (
  int       n_face,
  int       n_edge,
+ int      *cell_ln_to_gn,
  int      *cell_face_idx,
  int      *cell_face,
  int      *face_vtx_idx,
