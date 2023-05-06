@@ -2568,12 +2568,12 @@ PDM_geom_elem_polyhedra_properties_triangulated
  *  @param [out] downwind_point_out   Coordinates of downwind point                      (size = 3*n_edge)
  *
  */
-
 void
 PDM_geom_elem_edge_upwind_and_downwind
 (
  int       n_face,
  int       n_edge,
+ int      *cell_ln_to_gn,
  int      *cell_face_idx,
  int      *cell_face,
  int      *face_vtx_idx,
@@ -2681,15 +2681,62 @@ PDM_geom_elem_edge_upwind_and_downwind
 
     for (int idx_vtx = 0; idx_vtx < 2; idx_vtx++) {
 
+      // /* Reset visited faces */
+      // for (int i = 0; i< n_visited_face; i++) {
+      //   is_visited_face[visited_face[i]] = 0;
+      // }
+      // n_visited_face = 0;
+
       int vtx_id  = edge_vtx[2*iedge + idx_vtx] - 1;
 
-      for (int idx_cell = vtx_cell_idx[vtx_id]; idx_cell < vtx_cell_idx[vtx_id+1]; idx_cell++) {
+      int n_cell_per_vtx = (vtx_cell_idx[vtx_id+1]-vtx_cell_idx[vtx_id]);
+      int *order = malloc(n_cell_per_vtx * sizeof(int));
+
+      if(cell_ln_to_gn != NULL) {
+        PDM_g_num_t *vtx_cell_gnum = malloc(n_cell_per_vtx * sizeof(PDM_g_num_t));
+        int idx_write = 0;
+        for (int idx_cell = vtx_cell_idx[vtx_id]; idx_cell < vtx_cell_idx[vtx_id+1]; idx_cell++) {
+          int cell_id = PDM_ABS(vtx_cell[idx_cell]) - 1;
+          vtx_cell_gnum[idx_write++] = cell_ln_to_gn[cell_id];
+        }
+        PDM_order_gnum_s(vtx_cell_gnum, 1, order, n_cell_per_vtx);
+        free(vtx_cell_gnum);
+      } else {
+        for(int i = 0; i < n_cell_per_vtx; ++i) {
+          order[i] = i;
+        }
+      }
+
+      for (int idx_cell0 = vtx_cell_idx[vtx_id]; idx_cell0 < vtx_cell_idx[vtx_id+1]; idx_cell0++) {
+        int idx_cell = order[idx_cell0-vtx_cell_idx[vtx_id]]+vtx_cell_idx[vtx_id];
 
         int cell_id = PDM_ABS(vtx_cell[idx_cell]) - 1;
+
+        /* Check if one face has the 2 vertex, it is an adjacent cell to the edge */
+        int has_face_edge = 0;
+        for (int idx_face = cell_face_idx[cell_id]; idx_face < cell_face_idx[cell_id+1]; idx_face++) {
+
+          int face_id = PDM_ABS(cell_face[idx_face]) - 1;
+          for (int i = face_vtx_idx[face_id]; i < face_vtx_idx[face_id+1]; i++) {
+            if (face_vtx[i] - 1 == ivtx1) {
+              for (int j = face_vtx_idx[face_id]; j < face_vtx_idx[face_id+1]; j++) {
+                if ((j != i) && (face_vtx[j] - 1 == ivtx2)) {
+                  has_face_edge = 1;
+                  break;
+                }
+              }
+            }
+          }
+        }
 
         for (int idx_face = cell_face_idx[cell_id]; idx_face < cell_face_idx[cell_id+1]; idx_face++) {
 
           int face_id = PDM_ABS(cell_face[idx_face]) - 1;
+
+          if (has_face_edge == 1) {
+            is_visited_face[face_id] = 1;
+            visited_face[n_visited_face++] = face_id;
+          }
 
           if (is_visited_face[face_id]) {
             continue;
@@ -2710,10 +2757,6 @@ PDM_geom_elem_edge_upwind_and_downwind
           if (has_current_vtx) {
             continue;
           }
-
-          // if (iedge == 1879) {
-          //   log_trace("edge %d, face %d\n", iedge, face_id);
-          // }
 
           int stat;
           int *_face_vtx = face_vtx + face_vtx_idx[face_id];
@@ -2746,19 +2789,25 @@ PDM_geom_elem_edge_upwind_and_downwind
             found[idx_vtx] = 1;
 
             if (idx_vtx == 1) {
-                upwind_cell[iedge] = cell_id;
-                upwind_face[iedge] = face_id;
-                memcpy(upwind_point + 3*iedge,
-                       intersection_coord,
-                       sizeof(double) * 3);
-              }
-              else {
-                downwind_cell[iedge] = cell_id;
-                downwind_face[iedge] = face_id;
-                memcpy(downwind_point + 3*iedge,
-                       intersection_coord,
-                       sizeof(double) * 3);
-              }
+              upwind_cell[iedge] = cell_id;
+              upwind_face[iedge] = face_id;
+              memcpy(upwind_point + 3*iedge,
+                     intersection_coord,
+                     sizeof(double) * 3);
+              // if (iedge == iedge_test) {
+              //   log_trace("FOUND[1]: iedge:%d, face_id:%d, cell_id:%d\n", iedge, face_id, cell_id);
+              // }
+            }
+            else {
+              downwind_cell[iedge] = cell_id;
+              downwind_face[iedge] = face_id;
+              memcpy(downwind_point + 3*iedge,
+                     intersection_coord,
+                     sizeof(double) * 3);
+              // if (iedge == iedge_test) {
+              //   log_trace("FOUND[2]: iedge:%d, face_id:%d, cell_id:%d\n", iedge, face_id, cell_id);
+              // }
+            }
 
             break;
           }
@@ -2768,6 +2817,8 @@ PDM_geom_elem_edge_upwind_and_downwind
         if (found[idx_vtx]) break;
 
       } // End of loop on current vertex's cells
+
+      free(order);
 
       /* Reverse ray direction */
       ray_direction[0] = -ray_direction[0];
@@ -2793,6 +2844,7 @@ PDM_geom_elem_edge_upwind_and_downwind
     free(poly_coord);
   }
 }
+
 
 
 #ifdef __cplusplus

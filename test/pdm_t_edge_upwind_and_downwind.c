@@ -416,6 +416,13 @@ int main(int argc, char *argv[])
                                                        &edge_vtx_idx,
                                                        PDM_OWNERSHIP_KEEP);
       assert(edge_vtx_idx == NULL);
+      PDM_g_num_t* cell_ln_to_gn = NULL;
+      PDM_multipart_part_ln_to_gn_get(mpart,
+                                      i_zone,
+                                      i_part,
+                                      PDM_MESH_ENTITY_CELL,
+                                      &cell_ln_to_gn,
+                                      PDM_OWNERSHIP_KEEP);
       PDM_g_num_t* face_ln_to_gn = NULL;
       PDM_multipart_part_ln_to_gn_get(mpart,
                                       i_zone,
@@ -552,6 +559,7 @@ int main(int argc, char *argv[])
 
       PDM_geom_elem_edge_upwind_and_downwind(n_face,
                                              n_edge,
+                                             cell_ln_to_gn,
                                              cell_face_idx,
                                              cell_face,
                                              face_vtx_idx,
