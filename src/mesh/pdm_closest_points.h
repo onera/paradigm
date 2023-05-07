@@ -291,6 +291,25 @@ PDM_closest_points_n_tgt_get
 
 /**
  *
+ * \brief  Get the number of source points in a partition
+ *
+ * \param [in]  cls     Pointer to \ref PDM_closest_points object
+ * \param [in]  i_part  Index of partition of the target cloud
+ *
+ * \return   Number of source point in the partition \ref i_part
+ *
+ */
+
+int
+PDM_closest_points_n_src_get
+(
+  PDM_closest_point_t  *cls,
+  const int             i_part
+);
+
+
+/**
+ *
  * \brief  Get the number of closest points
  *
  * \param [in]  cls     Pointer to \ref PDM_closest_points object
