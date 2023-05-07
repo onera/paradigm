@@ -40,10 +40,15 @@ module pdm_closest_points
   pdm_closest_points_get_
   end interface
 
+  interface PDM_closest_points_tgt_in_src_get ; module procedure &
+  pdm_closest_points_tgt_in_src_get_
+  end interface
+
   private :: pdm_closest_points_create_
   private :: pdm_closest_points_tgt_cloud_set_
   private :: pdm_closest_points_src_cloud_set_
   private :: pdm_closest_points_get_
+  private :: pdm_closest_points_tgt_in_src_get_
 
   interface
 
@@ -225,6 +230,37 @@ module pdm_closest_points
 
     !>
     !!
+    !! \brief Get Get closest source points global ids and (squared) distance
+    !!
+    !! \param [in]   cls                   Pointer to \ref PDM_closest_points object
+    !! \param [in]   i_part_src            Index of partition of the cloud
+    !! \param [out]  tgt_in_src_idx        For each src point the number of target localised  (size = n_src_points )
+    !! \param [out]  tgt_in_src            For each src point the globla number of target point located (size = tgt_in_src_idx[n_src_points] )
+    !!
+    !!
+
+    subroutine PDM_closest_points_tgt_in_src_get_cf (cls, &
+                                                     i_part_src, &
+                                                     tgt_in_src_idx, &
+                                                     tgt_in_src) &
+      bind (c, name = 'PDM_closest_points_tgt_in_src_get')
+
+      use iso_c_binding
+
+      implicit none
+
+      type(c_ptr), value :: cls
+
+      integer(c_int), value :: i_part_src
+
+      type(c_ptr)      :: tgt_in_src_idx
+      type(c_ptr)      :: tgt_in_src
+
+
+    end subroutine PDM_closest_points_tgt_in_src_get_cf
+
+    !>
+    !!
     !! \brief Free a distance mesh structure
     !!
     !! \param [in]  cls      Pointer to \ref PDM_closest_points object
@@ -290,6 +326,32 @@ function PDM_closest_points_n_tgt_get (cls,     &
 
 end function PDM_closest_points_n_tgt_get
 
+
+!>
+!!
+!! \brief  Get the number of source points in a partition
+!!
+!! \param [in]  cls     Pointer to \ref PDM_closest_points_t object
+!! \param [in]  i_part  Index of partition of the target cloud
+!!
+!! \return   Number of source point in the partition \ref i_part
+!!
+!!
+
+function PDM_closest_points_n_src_get (cls,     &
+                                       i_part)  &
+  result (n_src)                                &
+
+  bind (c, name='PDM_closest_points_n_src_get')
+
+  use iso_c_binding
+  implicit none
+
+  type(c_ptr),    value :: cls
+  integer(c_int), value :: i_part
+  integer(c_int)        :: n_src
+
+end function PDM_closest_points_n_src_get
 
 
 !>
@@ -516,5 +578,55 @@ end function PDM_closest_points_n_closest_get
                      [n_tgt*n_closest])
 
   end subroutine PDM_closest_points_get_
+
+  !>
+  !!
+  !! \brief Get Get closest source points global ids and (squared) distance
+  !!
+  !! \param [in]   cls                   Pointer to \ref PDM_closest_points object
+  !! \param [in]   i_part_src            Index of partition of the cloud
+  !! \param [out]  tgt_in_src_idx        For each src point the number of target localised  (size = n_src_points )
+  !! \param [out]  tgt_in_src            For each src point the globla number of target point located (size = tgt_in_src_idx[n_src_points] )
+  !!
+  !!
+
+  subroutine PDM_closest_points_tgt_in_src_get_ (cls, &
+                                                 i_part_src, &
+                                                 tgt_in_src_idx, &
+                                                 tgt_in_src)
+
+    use iso_c_binding
+
+    implicit none
+
+    type(c_ptr),                 value :: cls
+    integer, intent(in)                :: i_part_src
+    integer(kind=pdm_l_num_s), pointer :: tgt_in_src_idx(:)
+    integer(kind=pdm_g_num_s), pointer :: tgt_in_src(:)
+
+    integer(c_int)                     :: c_i_part_src
+    type(c_ptr)                        :: c_tgt_in_src_idx = C_NULL_PTR
+    type(c_ptr)                        :: c_tgt_in_src     = C_NULL_PTR
+    integer(c_int)                     :: n_src
+
+    c_i_part_src = i_part_src
+
+    call PDM_closest_points_tgt_in_src_get_cf (cls,                  &
+                                               i_part_src,           &
+                                               c_tgt_in_src_idx,     &
+                                               c_tgt_in_src)
+
+    n_src = pdm_closest_points_n_src_get(cls,        &
+                                         i_part_src)
+
+    call c_f_pointer(c_tgt_in_src_idx, &
+                     tgt_in_src_idx,   &
+                     [n_src+1])
+
+    call c_f_pointer(c_tgt_in_src, &
+                     tgt_in_src,   &
+                     [tgt_in_src_idx(n_src+1)])
+
+  end subroutine PDM_closest_points_tgt_in_src_get_
 
 end module pdm_closest_points
