@@ -28,6 +28,15 @@ Help()
   echo
 }
 
+# IN="bla@some.com;john@home.com"
+
+# mails=$(echo $IN | tr ";" "\n")
+
+# for addr in $mails
+# do
+#     echo "> [$addr]"
+# done
+
 Dump_mem()
 {
   cd ${TestPath1}_d 

@@ -6,7 +6,8 @@
 #
 ################################################################################
 
-function (add_test_pdm_run name n_proc LIST_TEST LIST_NRANK)
+
+function (add_test_pdm_run_list name n_proc LIST_TEST LIST_NRANK)
 
     set (${LIST_TEST} ${${LIST_TEST}} "${CMAKE_CURRENT_BINARY_DIR}/${name}")
     set (${LIST_NRANK} ${${LIST_NRANK}} "${n_proc}")
@@ -15,7 +16,6 @@ function (add_test_pdm_run name n_proc LIST_TEST LIST_NRANK)
     set (${LIST_NRANK} ${${LIST_NRANK}} PARENT_SCOPE)
 
 endfunction()
-
 
 function(test_create names n_procs LIST_TEST LIST_NRANK)
 
@@ -36,18 +36,24 @@ function(test_create names n_procs LIST_TEST LIST_NRANK)
   set (command_test "")
 
   set (MPIEXEC_SPLIT "")
-
  
+  set (str_name "")
+  set (str_n_proc "")
+  set (str_sep "")
+
   foreach(_name _n_proc IN ZIP_LISTS names n_procs)
     get_filename_component(_name_base ${_name} NAME_WE)
     get_filename_component(_name_ext ${_name} LAST_EXT)
     
     set (PRE_EXE "")
     set (POST_EXE "")
-    
-    add_executable(${_name_base} ${_name})
+
+    set (str_name "${str_name}${str_sep}${_n_proc}")
+    set (str_n_proc "${str_n_proc}${str_sep}${_n_proc}")
 
     if ("${_name_ext}" STREQUAL ".c")
+      add_executable(${_name_base} ${_name})
+
       if ((NOT MPI_C_COMPILER) AND MPI_C_COMPILE_FLAGS)
         set_target_properties(${_name_base}
                               PROPERTIES
@@ -69,6 +75,7 @@ function(test_create names n_procs LIST_TEST LIST_NRANK)
       endif()
  
     elseif (("${_name_ext}" STREQUAL ".f90") OR ("${_name_ext}" STREQUAL ".F90"))
+      add_executable(${_name_base} ${_name})
       if ((NOT MPI_Fortran_COMPILER) AND MPI_C_COMPILE_FLAGS)
         set_target_properties(${_name_base}
                               PROPERTIES
@@ -83,7 +90,11 @@ function(test_create names n_procs LIST_TEST LIST_NRANK)
       set_target_properties(${_name_base} PROPERTIES LINKER_LANGUAGE "Fortran")
 
     elseif ("${_name_ext}" STREQUAL ".py")
-      set (PRE_EXE "${Python_EXECUTABLE} ")
+      configure_file(${CMAKE_CURRENT_SOURCE_DIR}/${_name} ${CMAKE_CURRENT_BINARY_DIR}/${_name})
+
+      add_custom_target(${_name}
+                          DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${_name})
+      set (PRE_EXE "${Python_EXECUTABLE}")
       set (POST_EXE ".py")
     else ()
       message (FATAL_ERROR "unknown extension file ${_name_ext} ${_name}") 
@@ -93,14 +104,28 @@ function(test_create names n_procs LIST_TEST LIST_NRANK)
       set (test_name ${_name_base})    
     endif()
 
-    install(TARGETS ${_name_base} RUNTIME DESTINATION bin)
-
     list (APPEND target_exe ${_name_base})
-    list (APPEND command_test ${MPIEXEC_SPLIT} ${MPIEXEC_NUMPROC_FLAG} ${_n_proc} ${MPIEXEC_PREFLAGS} ${MPIEXEC_GENV_COMMAND} ${MPIEXEC_GENV_PRELOAD} ${MPIEXEC_GENV_PRELOAD_PATH} ${PRE_EXE}${CMAKE_CURRENT_BINARY_DIR}/${_name_base}${POST_EXE})
+    list (APPEND command_test ${MPIEXEC_SPLIT} ${MPIEXEC_NUMPROC_FLAG} ${_n_proc} ${MPIEXEC_PREFLAGS} ${MPIEXEC_GENV_COMMAND} ${MPIEXEC_GENV_PRELOAD} ${MPIEXEC_GENV_PRELOAD_PATH} ${PRE_EXE} ${CMAKE_CURRENT_BINARY_DIR}/${_name_base}${POST_EXE})
     set (MPIEXEC_SPLIT ":")
+    set (str_sep ":")
   endforeach()
   
   add_test (${test_name} ${MPIEXEC} ${command_test} ${MPIEXEC_POSTFLAGS})
+
+  set (${LIST_TEST} ${${LIST_TEST}} PARENT_SCOPE)
+  set (${LIST_NRANK} ${${LIST_NRANK}} PARENT_SCOPE)
+
+  set (LIST_TEST_ENV "")
+
+  if (CMAKE_BUILD_TYPE STREQUAL "Sanitize")
+    list(APPEND LIST_TEST_ENV "LSAN_OPTIONS=suppressions=${PDM_SOURCE_DIR}/script/asan/asan.supp")
+  endif()
+
+  if (LIST_TEST_ENV)
+    set_property(TEST ${test_name} PROPERTY ENVIRONMENT "${LIST_TEST_ENV}")
+  endif()
+
+  add_test_pdm_run (${str_name} ${str_n_proc} ${LIST_TEST} ${LIST_NRANK})
 
 endfunction()
 
