@@ -191,7 +191,7 @@ PDM_compute_vtx_characteristic_length
   PDM_g_num_t *distrib_face = PDM_compute_entity_distribution(comm, dn_face);
 
   // Compute graph of vtx
-  int         *dvtx_vtx_idx = NULL;
+  PDM_g_num_t *dvtx_vtx_idx = NULL;
   PDM_g_num_t *dvtx_vtx     = NULL;
   if(dedge_vtx == NULL) {
     int         *dvtx_face_idx = NULL;
@@ -256,7 +256,7 @@ PDM_compute_vtx_characteristic_length
    */
   PDM_block_to_part_t *btp = PDM_block_to_part_create(distrib_vtx,
                               (const PDM_g_num_t **)  &dvtx_vtx,
-                                                      &dvtx_vtx_idx[dn_vtx],
+                              (const int *)           &dvtx_vtx_idx[dn_vtx],
                                                       1,
                                                       comm);
 

@@ -2462,7 +2462,7 @@ PDM_domain_interface_translate_entity1_entity2
   }
   free(part_stride);
 
-  int **part_data_gnum   = NULL;
+  PDM_g_num_t **part_data_gnum   = NULL;
   PDM_block_to_part_exch(btp,
                          sizeof(PDM_g_num_t),
                          PDM_STRIDE_VAR_INTERLACED,
@@ -2519,7 +2519,7 @@ PDM_domain_interface_translate_entity1_entity2
       PDM_log_trace_array_int(part_stride_idx[i_domain], n_dentity2_entity1[i_domain], "part_stride_idx");
       PDM_log_trace_array_int(part_data_sens [i_domain], part_stride_idx[i_domain][n_dentity2_entity1[i_domain]], "part_data_sens  ::");
       PDM_log_trace_array_int(part_data_intno[i_domain], part_stride_idx[i_domain][n_dentity2_entity1[i_domain]], "part_data_intno ::");
-      PDM_log_trace_array_int(part_data_gnum [i_domain], part_stride_idx[i_domain][n_dentity2_entity1[i_domain]], "part_data_gnum  ::");
+      PDM_log_trace_array_long(part_data_gnum [i_domain], part_stride_idx[i_domain][n_dentity2_entity1[i_domain]], "part_data_gnum  ::");
     }
 
     key_data_size_approx[i_domain] = 0;
@@ -2762,7 +2762,7 @@ PDM_domain_interface_translate_entity1_entity2
   free(dkey_strid);
 
   int data_size_n = PDM_part_to_block_exch(ptb_hash,
-                                         sizeof(PDM_g_num_t),
+                                         sizeof(int),
                                          PDM_STRIDE_VAR_INTERLACED,
                                          -1,
                                          stride_one,

@@ -1244,13 +1244,23 @@ PDM_points_merge_make_interface
   }
   free(weight);
 
+  // Cast here itrf_pair in int (we needed gnum before for gnum_from_parents)
+  int ** _itrf_pair = (int **) malloc(pm->n_point_clouds * sizeof(int*));
+  for(int i_cloud = 0; i_cloud < pm->n_point_clouds; ++i_cloud) {
+    int *_gnum1_come_from_idx = gnum1_come_from_idx[i_cloud];
+    int n_come_from = _gnum1_come_from_idx[n_ref[i_cloud]];
+    _itrf_pair[i_cloud] = malloc(2 * n_come_from * sizeof(int));
+    for (int j=0; j < 2*n_come_from; ++j) {
+      _itrf_pair[i_cloud][j] = itrf_pair[i_cloud][j];
+    }
+  }
   int *ditrf_pair = NULL;
   PDM_part_to_block_exch(ptb,
                          2 * sizeof(int),
                          PDM_STRIDE_CST_INTERLACED,
                          1,
                          NULL,
-           (void **)     itrf_pair,
+           (void **)     _itrf_pair,
                          NULL,
            (void **)     &ditrf_pair);
 
@@ -1258,8 +1268,10 @@ PDM_points_merge_make_interface
   free(n_itrf);
   for(int i_cloud = 0; i_cloud < pm->n_point_clouds; ++i_cloud) {
     free(itrf_pair[i_cloud]);
+    free(_itrf_pair[i_cloud]);
   }
   free(itrf_pair);
+  free(_itrf_pair);
 
   int dn_interface = PDM_part_to_block_n_elt_block_get(ptb);
   PDM_g_num_t *distrib_itrf_gnum   = PDM_compute_entity_distribution(pm->comm, dn_interface);
