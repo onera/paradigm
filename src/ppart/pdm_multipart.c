@@ -2571,7 +2571,7 @@ PDM_MPI_Comm       comm
                                   pvtx_coord   [i_part],
                                   PDM_OWNERSHIP_KEEP);
     }
-
+    free(pvtx_coord);
     free(vtx_all_ln_to_gn);
     free(pn_vtx_all);
   }
