@@ -2,7 +2,7 @@
 
 listTest=( @PDM_LIST_TEST@ )
 listNRank=( @PDM_LIST_NRANK@ )
-listDir=( @PDM_LIST_TEST_DIR@ )
+#listDir=( @PDM_LIST_TEST_DIR@ )
 
 RED='\033[0;31m'
 NC='\033[0m' # No Color
@@ -15,15 +15,17 @@ Help()
   echo
   echo "Syntax: pdm_run [-m|mpiexec|no_log_vtk|h|n_avail_rank] -n <number of ranks> -t <test name and its options>"
   echo "options:"
+  echo "TODO -u                             Print Python without buffer"                                  
+  echo "TODO -ws                            Work space directory"                                  
   echo "-m                                  Make test before run"
   echo "-h                                  Print this Help"
   echo "-mpiexec                            Run with mpiexec command (default : mpirun)"
-  echo "-srun                               Run with mpiexec command (default : mpirun)"
-  echo "-n <number of ranks>                Number of ranks (default : 2)"
+  echo "-srun                               Run with srun command (default : mpirun)"
   echo "-no_log_vtk                         Exit on error if test writes some log and vtk files"
-  echo "-n_avail_rank                       Number of available ranks for script"
-  echo "-n_avail_rank                       Number of available ranks for script"
-  echo "-t <\"test name and its options\">  Test name and its options "
+  echo "-n_avail_rank                       Number of available ranks to run cases"
+  echo "-t <\"test name and its options\">    Test name (Name of the executable) "
+  echo "-n <\"number of ranks\">            Number of ranks of executables (template : n_rannks_exe1:...:n_rannks_exen)"
+  echo "-args <\"options of executables\">    Arguments of each executable (template : arg1exe1;...;argnexe1:...:arg1exen;...;argnexen) "
   echo "-output-junit  <file>               Export to Format XML JUnit"
   echo
 }
@@ -197,6 +199,8 @@ failedTest=()
 testWithOutput=()
 exportjunit=1
 JUnitFile=""
+TestOption=""
+Ws=
 
 while [ -n "$1" ]
 do
@@ -204,7 +208,11 @@ case "$1" in
     -m) runMake=1;;
     -n) NrankUser="$2"
         shift;;
+    -ws) Ws="$2"
+        shift;;
     -t) Test="$2"
+        shift;;
+    -args) TestOption="$2"
         shift;;
     -mpiexec) ExeMPI="mpiexec";;
     -srun) ExeMPI="srun"
@@ -234,14 +242,15 @@ else
   i=0
   for value in "${listTest[@]}" ; do    #print the new array
     valuePath=$(echo $value | awk '{print $1}')
-    valueName1=$(basename ${valuePath})
+    valueName1=($(basename ${valuePath} | tr ":" " "))
+#    valueName1=$(basename ${valuePath})
     valueDir=$(dirname ${valuePath})
-    if [[ ${valueName1} =~ ^${TestName1}$ ]]
+    if [[ ${valueName1[0]} =~ ^${TestName1}$ ]]
     then
-      listComputedTest=( "${TestName1}" ) 
+      listComputedTest=( "${valuePath}" ) 
       if [[ "${Nrank}" == "0" ]]
       then
-        listComputedNRank=( "${Nrank}" )
+        listComputedNRank=( "${Nrank}" ) # 3:4:5 if
       else  
         listComputedNRank=( "${listNRank[${i}]}" )
       fi
@@ -274,26 +283,17 @@ cptRank=0
 
 for x in "${listComputedTest[@]}"
 do
-  isPythonTest=0
 
   if [[ "${Test}" == "" ]]
   then
-    if [ -f "${x}.py" ]; then
-      isPythonTest=1
-    fi
     TestPath=$(echo $x | awk '{print $1}')
     TestName=$(basename ${TestPath})
     TestDir=$(dirname ${TestPath})
-    TestOption=""
     Nrank=${listComputedNRank[$i]}
   else
-    if [ -f "${Test}.py" ]; then
-      isPythonTest=1
-    fi
     TestPath=$(echo $Test | awk '{print $1}')
     TestName=$(basename ${TestPath})
     TestDir=$(dirname ${TestPath})
-    TestOption=$(echo $Test |  awk '!($1="")')
     if [[ "${NrankUser}" == "0" ]]
     then    
       Nrank=${listComputedNRank[${i}]}
@@ -301,11 +301,6 @@ do
       Nrank=${NrankUser}
     fi  
   fi 
-
-  #echo "TestName ${TestName}"
-  #echo "TestOption ${TestOption}"
-  #echo "TestDir ${TestDir}"
-  #echo "Nrank ${Nrank}"  
 
   postOutput="_o"
   postErr="_e"
@@ -353,19 +348,49 @@ do
 
   Testoutput=0
 
+  PDM_RUN_LSAN=@PDM_RUN_LSAN@ 
+  PDM_RUN_PYTHONPATH=@PDM_RUN_PYTHONPATH@ 
+#  PDM_RUN_PRELOAD=@PDM_RUN_PRELOAD@ 
+  PROJECT_BINARY_DIR=@PROJECT_BINARY_DIR@
+
+#srun -n1 -c16 --mem-per-cpu=1gb server : -n16 --mem-per-cpu=1gb client
+   
+  TestNamel=($(echo ${TestName} | tr ":" " "))
+  TestOptionl=($(echo ${TestOption} | tr ":" " "))
+  Nrankl=($(echo ${Nrank} | tr ":" " "))
+
   if [ ${IsSrunMPI} -gt 0 ]
   then
-    # mkdir -p ${TestName}_d
-    # cd ${TestName}_d 
-    mkdir -p ${x}_d
-    cd ${x}_d
-    if [ $isPythonTest -gt 0  ]
+    if [[ "${Ws}" != "" ]]
     then
-      ${ExeMPI}  --output=$OutputFile.%t --error=$ErrFile.%t -N 1 -n ${Nrank} --exact /usr/bin/time  -f "Maximum Resident Memory : %M Kb\nReal time : %e s" @PROJECT_BINARY_DIR@/pdm_launch_python ../${TestName}.py ${TestOption} 2>/dev/null &
-    else
-      ${ExeMPI}  --output=$OutputFile.%t --error=$ErrFile.%t -N 1 -n ${Nrank} --exact /usr/bin/time  -f "Maximum Resident Memory : %M Kb\nReal time : %e s" @PROJECT_BINARY_DIR@/pdm_launch ../${TestName} ${TestOption} 2>/dev/null &
-    fi
+      wdir="${Ws}/${TestNamel[0]}_d"
+      mkdir -p ${wdir}
+      cd ${wdir}
+    else  
+      mkdir -p ${x}_d
+      cd ${x}_d
+    fi  
+    CmdLine="${ExeMPI}"
+    k=0
+    sep=""
+    for ex in "${TestNamel[@]}"
+    do
+      OptExe=$(echo ${TestOptionl[k]} | tr ";" " ")
+      CmdLine="${CmdLine} ${sep} --output=$OutputFile.%t --error=$ErrFile.%t -N 1 -n ${Nrankl[k]} --exact /usr/bin/time  -f \"Maximum Resident Memory : %M Kb\nReal time : %e s\""
+      if [ -f "${TestDir}/${ex}.py" ]; then
+        CmdLine="${CmdLine} ${PROJECT_BINARY_DIR}/pdm_launch_python ${TestDir}/$ex.py ${optExe}"
+      else
+        CmdLine="${CmdLine} ${PROJECT_BINARY_DIR}/pdm_launch ${TestDir}/$ex ${OptExe}"
+      fi
+      sep=":"
+      ((k=k+1))
+    done 
+
+    CmdLine="${CmdLine} 2>/dev/null &"
+    echo "${CmdLine}"
+    eval "${CmdLine}"
     pids=(${pids[@]} "$!")
+
     cd - 1>/dev/null 2>/dev/null
   else  
 
@@ -383,25 +408,46 @@ do
       Indextest=$i
     fi
 
-    # mkdir -p ${TestName}_d
-    # cd ${TestName}_d  
+    if [[ "${Ws}" != "" ]]
+    then
+      wdir="${Ws}/${TestNamel[0]}_d"
+      mkdir -p ${wdir}
+      cd ${wdir}
+    else  
+      mkdir -p ${x}_d
+      cd ${x}_d
+    fi  
     mkdir -p ${x}_d
-    cd ${x}_d
+
     if [ ${IsIntelMPI} -gt 0 ]
     then
-      if [ $isPythonTest -gt 0  ]
-      then
-        @PDM_RUN_LSAN@ @PDM_RUN_PYTHONPATH@ ${ExeMPI} -genv @PDM_RUN_PRELOAD@ -outfile-pattern $OutputFile.%r -errfile-pattern $ErrFile.%r -n $Nrank /usr/bin/time  -f "Maximum Resident Memory : %M Kb\nReal time : %e s" python ../${TestName}.py ${TestOption} 2>/dev/null &
-      else
-        @PDM_RUN_LSAN@ ${ExeMPI} -genv @PDM_RUN_PRELOAD@ -outfile-pattern $OutputFile.%r -errfile-pattern $ErrFile.%r  -n $Nrank /usr/bin/time  -f "Maximum Resident Memory : %M Kb\nReal time : %e s" ../${TestName} ${TestOption} 2>/dev/null &
-      fi
+      CmdLine="${ExeMPI} -outfile-pattern $OutputFile.%r -errfile-pattern $ErrFile.%r"
+      k=0
+      sep=""
+      for ex in "${TestNamel[@]}"
+      do
+        OptExe=$(echo ${TestOptionl[k]} | tr ";" " ")
+        CmdLine="${CmdLine} ${sep} -n ${Nrankl[k]} /usr/bin/time  -f \"Maximum Resident Memory : %M Kb\nReal time : %e s\""
+        if [ -f "${TestDir}/${ex}.py" ]; then
+          CmdLine="${CmdLine} ${PROJECT_BINARY_DIR}/pdm_launch_python ${TestDir}/$ex.py ${optExe}"
+        else
+          CmdLine="${CmdLine} ${PROJECT_BINARY_DIR}/pdm_launch ${TestDir}/$ex ${OptExe}"
+        fi
+        sep=":"
+        ((k=k+1))
+      done 
+
+      CmdLine="${CmdLine} 2>/dev/null &"
+      echo "${CmdLine}"
+      eval "${CmdLine}"
       pids=(${pids[@]} "$!")
+
     else
       echo -e "${RED}Error${NC}: OpenMPI is not available for pdm_run script"
       echo -e "${PURPLE}${TestName}: ${RED}Failed${NC}"
       exit 1
-      @PDM_RUN_LSAN@ @PDM_RUN_PYTHONPATH@ ${ExeMPI} -genv @PDM_RUN_PRELOAD@ -output-filename $OutputFile -n $Nrank /usr/bin/time  -f "Maximum Resident Memory : %M Kb\nReal time : %e s" ../${TestName} ${TestOption} 2>/dev/null
-      pids=(${pids[@]} "$!")
+#      @PDM_RUN_LSAN@ @PDM_RUN_PYTHONPATH@ ${ExeMPI} -genv @PDM_RUN_PRELOAD@ -output-filename $OutputFile -n $Nrank /usr/bin/time  -f "Maximum Resident Memory : %M Kb\nReal time : %e s" ../${TestName} ${TestOption} 2>/dev/null
+#      pids=(${pids[@]} "$!")
     fi
     cd - 1>/dev/null 2>/dev/null
     ((IndexRank=IndexRank+Nrank)) 

@@ -7,7 +7,7 @@
 ################################################################################
 
 
-function (add_test_pdm_run_list name n_proc LIST_TEST LIST_NRANK)
+function (add_test_pdm_run name n_proc LIST_TEST LIST_NRANK)
 
     set (${LIST_TEST} ${${LIST_TEST}} "${CMAKE_CURRENT_BINARY_DIR}/${name}")
     set (${LIST_NRANK} ${${LIST_NRANK}} "${n_proc}")
@@ -27,9 +27,9 @@ function(test_create names n_procs LIST_TEST LIST_NRANK)
     execute_process(COMMAND gcc -print-file-name=libasan.so OUTPUT_VARIABLE PRELOAD_ASAN  OUTPUT_STRIP_TRAILING_WHITESPACE) 
     # set(MPIEXEC_PREGENV_PRELOAD "-g env LD_PRELOAD ${PRELOAD_ASAN}") 
  
-     set(MPIEXEC_GENV_COMMAND      "-genv")
-     set(MPIEXEC_GENV_PRELOAD      "LD_PRELOAD")
-     set(MPIEXEC_GENV_PRELOAD_PATH "${PRELOAD_ASAN}:${PDM_BINARY_DLCLOSE_DIR}/libdlclose.so")
+    set(MPIEXEC_GENV_COMMAND      "-genv")
+    set(MPIEXEC_GENV_PRELOAD      "LD_PRELOAD")
+    set(MPIEXEC_GENV_PRELOAD_PATH "${PRELOAD_ASAN}:${PDM_BINARY_DLCLOSE_DIR}/libdlclose.so")
  
   endif()
 
@@ -48,10 +48,10 @@ function(test_create names n_procs LIST_TEST LIST_NRANK)
     set (PRE_EXE "")
     set (POST_EXE "")
 
-    set (str_name "${str_name}${str_sep}${_n_proc}")
     set (str_n_proc "${str_n_proc}${str_sep}${_n_proc}")
 
     if ("${_name_ext}" STREQUAL ".c")
+      set (str_name "${str_name}${str_sep}${_name_base}")
       add_executable(${_name_base} ${_name})
 
       if ((NOT MPI_C_COMPILER) AND MPI_C_COMPILE_FLAGS)
@@ -75,6 +75,7 @@ function(test_create names n_procs LIST_TEST LIST_NRANK)
       endif()
  
     elseif (("${_name_ext}" STREQUAL ".f90") OR ("${_name_ext}" STREQUAL ".F90"))
+      set (str_name "${str_name}${str_sep}${_name_base}")
       add_executable(${_name_base} ${_name})
       if ((NOT MPI_Fortran_COMPILER) AND MPI_C_COMPILE_FLAGS)
         set_target_properties(${_name_base}
@@ -90,6 +91,7 @@ function(test_create names n_procs LIST_TEST LIST_NRANK)
       set_target_properties(${_name_base} PROPERTIES LINKER_LANGUAGE "Fortran")
 
     elseif ("${_name_ext}" STREQUAL ".py")
+      set (str_name "${str_name}${str_sep}${_name_base}")
       configure_file(${CMAKE_CURRENT_SOURCE_DIR}/${_name} ${CMAKE_CURRENT_BINARY_DIR}/${_name})
 
       add_custom_target(${_name}
@@ -126,6 +128,9 @@ function(test_create names n_procs LIST_TEST LIST_NRANK)
   endif()
 
   add_test_pdm_run (${str_name} ${str_n_proc} ${LIST_TEST} ${LIST_NRANK})
+
+  set (${LIST_TEST} ${${LIST_TEST}} PARENT_SCOPE)
+  set (${LIST_NRANK} ${${LIST_NRANK}} PARENT_SCOPE)
 
 endfunction()
 
