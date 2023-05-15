@@ -3921,7 +3921,7 @@ PDM_part_to_part_irecv_post
       }
     }
     free(ptp->async_recv_part2_data[request]);
-
+    ptp->async_recv_part2_data[request] = NULL;
   }
 
   _free_async_recv (ptp, request);
