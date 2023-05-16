@@ -2229,6 +2229,10 @@ PDM_domain_interface_translate_entity1_entity2
  int                   ***interface_dom_entity2
 )
 {
+  // TODO :
+  //  -> reduce time by extracting dentity2_entity1_idx for only concerns interfaces
+  //  -> Pour l'insant la reduction est faite en dehors (via PDM_dmesh_extract )
+
   int i_rank = -1;
   PDM_MPI_Comm_rank(comm, &i_rank);
 
@@ -3129,9 +3133,17 @@ PDM_domain_interface_translate_entity1_entity2
                 if(sgn_opp2 != sgn_cur1) { lsens2 = -1;}
                 else {                     lsens2 =  1;}
               }
+
+              // In realease  this test is mandatory (sinon on plante dans l'assert plus bas)
+              if(lsens1 != 0 && lsens2 != 0) {
+                break; // Car on a tout trouvé, si on veut tout check il faut commenté cette ligne
+              }
+
+              // log_trace("\t\t gnum_cur1 = %i | gnum_cur2 = %i \n", gnum_cur1, gnum_cur2);
+              // log_trace("\t\t lsens1 = %i | lsens2 = %i \n", lsens1, lsens2);
             }
 
-            // log_trace("sens = %i | lsens = %i \n", sens, lsens);
+            // log_trace("--> lsens1 = %i | lsens2 = %i \n", lsens1, lsens2);
             if(sens1 != 0) {
               assert(sens1 == lsens1);
             }

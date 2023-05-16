@@ -387,11 +387,18 @@ int main
    */
   if(dim == 3) {
     // Il faut rajouter un is_implicit_order
+    // printf("dn_vtx %i \n", dn_vtx[0]);
+    // printf("dn_face %i \n", dn_face[0]);
+    // double t1 = PDM_MPI_Wtime();
+    // TODO : Extract dface_vtx concerns by interface before
     PDM_domain_interface_translate_vtx2face(dom_intrf,
                                             dn_vtx,
                                             dn_face,
                                             dface_vtx_idx,
                                             dface_vtx);
+    // double dt = PDM_MPI_Wtime() - t1;
+    // printf("PDM_domain_interface_translate_vtx2face %12.5e \n", dt);
+
   }
 
   PDM_domain_interface_translate_vtx2edge(dom_intrf,

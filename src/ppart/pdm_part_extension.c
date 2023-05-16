@@ -2667,6 +2667,11 @@ _warm_up_domain_interface
                     if(sgn_opp != sgn_cur) { lsens = -1;}
                     else                   { lsens =  1;}
                   }
+
+                  // In realease  this test is mandatory
+                  if(lsens != 0) {
+                    break;
+                  }
                 }
 
                 assert(lsens != 0);
