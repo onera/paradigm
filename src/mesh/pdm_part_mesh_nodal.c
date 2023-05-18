@@ -304,7 +304,7 @@ PDM_part_mesh_nodal_add_part_mesh_nodal_elmts
 {
   assert(pmn->n_part == pmne->n_part);
   assert(pmn->mesh_dimension >= pmne->mesh_dimension);
-  PDM_geometry_kind_t geom_kind;
+  PDM_geometry_kind_t geom_kind = PDM_GEOMETRY_KIND_MAX;
   if(pmne->mesh_dimension == 3) {
     pmn->volumic          = pmne;
     geom_kind             = PDM_GEOMETRY_KIND_VOLUMIC;

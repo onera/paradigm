@@ -357,7 +357,7 @@ PDM_linear_algebra_svd
     a[n_col*i+i] += 1;
   }
 
-  int nm;
+  int nm = -1;
   for (int k = n_col-1; k >= 0; k--) {
     for (int its = 0; its < 30; its++) {
       int flag = 1;

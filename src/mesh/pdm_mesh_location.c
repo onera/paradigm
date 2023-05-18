@@ -2025,7 +2025,7 @@ PDM_mesh_location_compute_old
   int mesh_dimension;
   PDM_MPI_Allreduce(&ml->mesh_dimension, &mesh_dimension, 1, PDM_MPI_INT, PDM_MPI_MAX, ml->comm);
 
-  PDM_geometry_kind_t geom_kind;
+  PDM_geometry_kind_t geom_kind = PDM_GEOMETRY_KIND_MAX;
   switch (mesh_dimension) {
   case 3:
     geom_kind = PDM_GEOMETRY_KIND_VOLUMIC;
@@ -4515,7 +4515,7 @@ PDM_mesh_location_compute
   int mesh_dimension;
   PDM_MPI_Allreduce(&ml->mesh_dimension, &mesh_dimension, 1, PDM_MPI_INT, PDM_MPI_MAX, ml->comm);
 
-  PDM_geometry_kind_t geom_kind;
+  PDM_geometry_kind_t geom_kind = PDM_GEOMETRY_KIND_MAX;
   switch (mesh_dimension) {
   case 3:
     geom_kind = PDM_GEOMETRY_KIND_VOLUMIC;
