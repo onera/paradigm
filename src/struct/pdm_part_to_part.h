@@ -362,6 +362,30 @@ PDM_part_to_part_issend
 
 /**
  *
+ * \brief Initialize a asynchronus issend
+ *
+ * \param [in]   ptp                 Block to part structure
+ * \param [in]   s_data              Data size
+ * \param [in]   cst_stride          Constant stride
+ * \param [in]   part1_to_part2_data Data (order given by part1_to_part2 array)
+ * \param [in]   tag                 Tag of the exchange
+ * \param [out]  request             Request
+ *
+ */
+void
+PDM_part_to_part_issend_raw
+(
+ PDM_part_to_part_t *ptp,
+ const size_t        s_data,
+ const int           cst_stride,
+ const void         *raw_buffer,
+ const int           tag,
+ int                *request
+);
+
+
+/**
+ *
  * \brief Wait an asynchronus issend (part1 to part2)
  *
  * \param [in]  ptp           part to part structure
@@ -477,6 +501,29 @@ PDM_part_to_part_irecv
  int                *request
 );
 
+/**
+ *
+ * \brief Initialize a asynchronus irecv
+ *
+ * \param [in]  ptp           Part to part structure
+ * \param [in]  s_data        Data size
+ * \param [in]  cst_stride    Constant stride
+ * \param [in]  raw_buffer    Buffer give by user
+ * \param [in]  tag           Tag of the exchange
+ * \param [out] request       Request
+ *
+ */
+
+void
+PDM_part_to_part_irecv_raw
+(
+ PDM_part_to_part_t *ptp,
+ const size_t        s_data,
+ const int           cst_stride,
+ void               *raw_buffer,
+ const int           tag,
+ int                *request
+);
 
 /**
  *
@@ -880,6 +927,75 @@ PDM_part_to_part_part1_to_part2_single_part_get
        int                 *n_elt1,
        int                **part1_to_part2_idx,
        PDM_g_num_t        **part1_to_part2
+);
+
+
+/**
+ *
+ * \brief Get indirection from part1_to_part2 to buffer send (usefull to setup buffer outside ptp )
+ *
+ * \param [in]   ptp                       Block to part structure
+ * \param [out]  gnum1_to_send_buffer_idx  Index of data to send to gnum2 from gnum1
+ *                                           (for each part size : \ref n_elt1+1)
+ * \param [out]  gnum1_to_send_buffer      For each gnum1 the position in send buffer
+ *
+ */
+void
+PDM_part_to_part_gnum1_to_send_buffer_get
+(
+ PDM_part_to_part_t    *ptp,
+ int                 ***gnum1_to_send_buffer_idx,
+ int                 ***gnum1_to_send_buffer
+);
+
+/**
+ *
+ * \brief Get indirection from ref_lnum2 to buffer recv (usefull to setup buffer outside ptp )
+ *
+ * \param [in]   ptp                       Block to part structure
+ * \param [out]  recv_buffer_to_ref_lnum2  For each gnum2 the position in recv buffer ( size = gnum1_come_from_idx[n_ref_lnum2])
+ *
+ */
+void
+PDM_part_to_part_recv_buffer_to_ref_lnum2_get
+(
+ PDM_part_to_part_t    *ptp,
+ int                 ***recv_buffer_to_ref_lnum2
+);
+
+
+/**
+ *
+ * \brief Get buffer size and stride for send
+ *
+ * \param [in]   ptp                       Block to part structure
+ * \param [out]  default_n_send_buffer     Number of entities to send (size = n_rank)
+ * \param [out]  default_i_send_buffer     Index (size = n_rank + 1)
+ *
+ */
+void
+PDM_part_to_part_default_send_buffer_get
+(
+ PDM_part_to_part_t    *ptp,
+ int                  **default_n_send_buffer,
+ int                  **default_i_send_buffer
+);
+
+/**
+ *
+ * \brief Get buffer size and stride for recv
+ *
+ * \param [in]   ptp                       Block to part structure
+ * \param [out]  default_n_recv_buffer     Number of entities to recv (size = n_rank)
+ * \param [out]  default_i_recv_buffer     Index (size = n_rank + 1)
+ *
+ */
+void
+PDM_part_to_part_default_recv_buffer_get
+(
+ PDM_part_to_part_t    *ptp,
+ int                  **default_n_recv_buffer,
+ int                  **default_i_recv_buffer
 );
 
 
