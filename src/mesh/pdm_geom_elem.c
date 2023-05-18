@@ -44,6 +44,7 @@
 #include "pdm_vtk.h"
 #include "pdm_logging.h"
 #include "pdm_array.h"
+#include "pdm_order.h"
 
 #ifdef __cplusplus
 extern "C" {

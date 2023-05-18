@@ -1278,7 +1278,7 @@ _extract_part_and_reequilibrate_nodal_from_target
 )
 {
   int          *pn_entity       = NULL;
-  PDM_mesh_entities_t entity_type;
+  PDM_mesh_entities_t entity_type = PDM_MESH_ENTITY_MAX;
   PDM_g_num_t **entity_g_num = NULL;
   if(extrp->dim == 3) {
     pn_entity    = extrp->n_cell;
@@ -1292,6 +1292,8 @@ _extract_part_and_reequilibrate_nodal_from_target
     pn_entity    = extrp->n_edge;
     entity_type = PDM_MESH_ENTITY_EDGE;
     entity_g_num = extrp->edge_ln_to_gn;
+  } else {
+    PDM_error(__FILE__, __LINE__, 0,"_extract_part_and_reequilibrate_nodal_from_target : wrong entity \n");
   }
 
   int i_rank;

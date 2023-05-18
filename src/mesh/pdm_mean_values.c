@@ -151,7 +151,7 @@ _compute_mean_value_coord_polygon
       if (stat == PDM_POLYGON_OUTSIDE) {
         /* Project on polygon boundary */
         int    imin = -1;
-        double tmin;
+        double tmin = 0.;
         double dmin = HUGE_VAL;
         double cp[3];
         for (int ivtx = 0; ivtx < n_vtx; ivtx++) {

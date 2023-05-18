@@ -925,7 +925,7 @@ PDM_writer_geom_create_from_mesh_nodal
   geom->_cell_face_idx = NULL;
 
   /* Infer geometry kind from part mesh_nodal */
-  PDM_geometry_kind_t geom_kind_min;
+  PDM_geometry_kind_t geom_kind_min = PDM_GEOMETRY_KIND_MAX;
   switch (mesh->mesh_dimension) {
   case 3:
     geom_kind_min = PDM_GEOMETRY_KIND_VOLUMIC;
@@ -995,7 +995,7 @@ PDM_writer_geom_set_from_mesh_nodal
   geom->_cell_face_idx = NULL;
 
   /* Infer geometry kind from part mesh_nodal */
-  PDM_geometry_kind_t geom_kind_min;
+  PDM_geometry_kind_t geom_kind_min = PDM_GEOMETRY_KIND_MAX;
   switch (mesh->mesh_dimension) {
   case 3:
     geom_kind_min = PDM_GEOMETRY_KIND_VOLUMIC;

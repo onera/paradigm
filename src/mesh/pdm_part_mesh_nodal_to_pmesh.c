@@ -1519,6 +1519,7 @@ _generate_vtx_from_part_mesh_nodal
 {
   PDM_UNUSED(pmn);
   PDM_error (__FILE__, __LINE__, 0, "PDM_part_mesh_nodal_to_part_mesh with PDM_DMESH_NODAL_TO_DMESH_TRANSFORM_TO_VTX not implemented \n");
+  return NULL;
 }
 
 /*=============================================================================

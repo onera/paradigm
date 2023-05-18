@@ -15,6 +15,7 @@
 #include "pdm_printf.h"
 #include "pdm_error.h"
 #include "pdm_distrib.h"
+#include "pdm_dconnectivity_transform.h"
 
 /*============================================================================
  * Type definitions

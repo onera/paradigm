@@ -271,13 +271,13 @@ int main(int argc, char *argv[])
   double ymin = 0.;
   double zmin = 0.;
 
-  PDM_g_num_t  ng_cell;
-  PDM_g_num_t  ng_face;
-  PDM_g_num_t  ng_vtx;
-  int          n_face_group;
-  int          dn_cell;
-  int          dn_face;
-  int          dn_vtx;
+  PDM_g_num_t  ng_cell      = 0;
+  PDM_g_num_t  ng_face      = 0;
+  PDM_g_num_t  ng_vtx       = 0;
+  int          n_face_group = 0;
+  int          dn_cell      = 0;
+  int          dn_face      = 0;
+  int          dn_vtx       = 0;
   int         *dcell_face_idx  = NULL;
   PDM_g_num_t *dcell_face      = NULL;
   PDM_g_num_t *dface_cell      = NULL;

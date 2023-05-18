@@ -1021,7 +1021,7 @@ _connec_hexa
   hexa_vtx[2] = quad_vtx[2];
   hexa_vtx[3] = quad_vtx[3];
 
-  PDM_l_num_t face_contact[4];
+  PDM_l_num_t face_contact[4] = {-1, -1, -1, -1};
 
   for (int i = 1; i < 6; i++) {
     int cpt = 0;

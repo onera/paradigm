@@ -473,7 +473,7 @@ int main(int argc, char *argv[])
   double              *dnew_vtx_coord        = NULL;
   int                 *dstrid_new_vtx_coord  = NULL;
   PDM_g_num_t         *distrib               = NULL;
-  PDM_g_num_t         *block_gnum            = NULL;
+  // PDM_g_num_t         *block_gnum            = NULL;
   int                  nelmt_proc            = 0;
   double              *dnormalisation_summed = NULL;
   double              *dnew_vtx_coord_summed = NULL;
@@ -575,7 +575,7 @@ int main(int argc, char *argv[])
     // Get block information
 
     distrib    = PDM_part_to_block_distrib_index_get(ptb);
-    block_gnum = PDM_part_to_block_block_gnum_get(ptb);
+    // block_gnum = PDM_part_to_block_block_gnum_get(ptb);
     nelmt_proc = PDM_part_to_block_n_elt_block_get(ptb);
 
     if (i_step ==0) {

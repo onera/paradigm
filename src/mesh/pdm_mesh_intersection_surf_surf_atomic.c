@@ -472,7 +472,7 @@ double PDM_mesh_intersection_surf_surf_atomic_compute
   int dbg_enabled = 0;
 
   double mat[3][3];
-  double rhs[3];
+  double rhs[3] = {0, 0, 0};
 
   for (int i = 0; i < 3; i++) {
     mat[i][0] = triaA_coord[3+i] - triaA_coord[i];

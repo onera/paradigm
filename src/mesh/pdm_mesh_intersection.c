@@ -482,7 +482,7 @@ _compute_mesh_nodal_extents
         double                ***extents_out
 )
 {
-  PDM_geometry_kind_t geom_kind;
+  PDM_geometry_kind_t geom_kind = PDM_GEOMETRY_KIND_MAX;
   switch (dim_mesh) {
   case 1:
     geom_kind = PDM_GEOMETRY_KIND_RIDGE;
@@ -840,7 +840,7 @@ _select_elements_by_global_bbox_nodal
   PDM_part_mesh_nodal_t *mesh_nodal = mi->mesh_nodal[i_mesh];
   const int              dim_mesh   = mi->dim_mesh[i_mesh];
 
-  PDM_geometry_kind_t geom_kind;
+  PDM_geometry_kind_t geom_kind = PDM_GEOMETRY_KIND_MAX;
   switch (dim_mesh) {
   case 1:
     geom_kind = PDM_GEOMETRY_KIND_RIDGE;
@@ -1393,7 +1393,7 @@ _create_extract_part_nodal
   PDM_part_mesh_nodal_t *mesh_nodal = mi->mesh_nodal[i_mesh];
   const int dim_mesh = mi->dim_mesh[i_mesh];
 
-  PDM_geometry_kind_t geom_kind;
+  PDM_geometry_kind_t geom_kind = PDM_GEOMETRY_KIND_MAX;
   switch (dim_mesh) {
   case 1:
     geom_kind = PDM_GEOMETRY_KIND_RIDGE;
@@ -2041,7 +2041,7 @@ _build_ptp
                                         PDM_OWNERSHIP_USER);
     }
     else if (mi->mesh_nodal[0] != NULL) {
-      PDM_geometry_kind_t geom_kind;
+      PDM_geometry_kind_t geom_kind = PDM_GEOMETRY_KIND_MAX;
       switch (mi->dim_mesh[0]) {
       case 1:
         geom_kind = PDM_GEOMETRY_KIND_RIDGE;
@@ -2155,7 +2155,7 @@ _build_ptp
                                                        entity_type[1]);
     }
     else if (mi->mesh_nodal[1] != NULL) {
-      PDM_geometry_kind_t geom_kind;
+      PDM_geometry_kind_t geom_kind = PDM_GEOMETRY_KIND_MAX;
       switch (mi->dim_mesh[1]) {
       case 1:
         geom_kind = PDM_GEOMETRY_KIND_RIDGE;
@@ -5513,7 +5513,7 @@ PDM_mesh_intersection_compute
         char pattern[99];
         sprintf(pattern, "extrp_mesh%d", imesh);
 
-        PDM_geometry_kind_t geom_kind;
+        PDM_geometry_kind_t geom_kind = PDM_GEOMETRY_KIND_MAX;
         switch (mi->dim_mesh[imesh]) {
         case 1:
           geom_kind = PDM_GEOMETRY_KIND_RIDGE;
