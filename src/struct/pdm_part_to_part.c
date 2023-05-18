@@ -3820,7 +3820,7 @@ PDM_part_to_part_irecv_raw
 
   for (int i = 0; i < ptp->n_active_rank_recv; i++) {
     int source = ptp->active_rank_recv[i];
-    unsigned char *buf = raw_buffer + ptp->async_i_recv_buffer[_request][source];
+    unsigned char *buf = (unsigned char *) raw_buffer + ptp->async_i_recv_buffer[_request][source];
     int count = ptp->async_n_recv_buffer[_request][source];
     PDM_MPI_Irecv (buf, count, PDM_MPI_UNSIGNED_CHAR, source,
                     tag, ptp->comm, &(ptp->async_recv_request[_request][i]));
