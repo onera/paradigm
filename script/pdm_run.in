@@ -1,5 +1,13 @@
 #!/bin/bash
 
+#timeout -s SIGINT 500s ./my_script &
+#bgpid=$!
+#sleep 1
+#p=$(ps -o pid= --ppid "$bgpid")
+#echo The pid you want is: "$p"
+
+
+
 listTest=( @PDM_LIST_TEST@ )
 listNRank=( @PDM_LIST_NRANK@ )
 #listDir=( @PDM_LIST_TEST_DIR@ )
@@ -16,7 +24,7 @@ Help()
   echo "Syntax: pdm_run [-m|mpiexec|no_log_vtk|h|n_avail_rank] -n <number of ranks> -t <test name and its options>"
   echo "options:"
   echo "TODO -u                             Print Python without buffer"                                  
-  echo "TODO -ws                            Work space directory"                                  
+  echo "-ws <Work directory>                Work space directory"                                  
   echo "-m                                  Make test before run"
   echo "-h                                  Print this Help"
   echo "-mpiexec                            Run with mpiexec command (default : mpirun)"
