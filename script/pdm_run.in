@@ -24,7 +24,7 @@ Help()
   echo "Syntax: pdm_run [-m|mpiexec|no_log_vtk|h|n_avail_rank] -n <number of ranks> -t <test name and its options>"
   echo "options:"
   echo "TODO -u                             Print Python without buffer"                                  
-  echo "-ws <Work directory>                Work space directory"                                  
+  echo "-ws <Work directory>                Work space directory (default : current directory)"                                  
   echo "-m                                  Make test before run"
   echo "-h                                  Print this Help"
   echo "-mpiexec                            Run with mpiexec command (default : mpirun)"
@@ -35,6 +35,7 @@ Help()
   echo "-n <\"number of ranks\">            Number of ranks of executables (template : n_rannks_exe1:...:n_rannks_exen)"
   echo "-args <\"options of executables\">    Arguments of each executable (template : arg1exe1;...;argnexe1:...:arg1exen;...;argnexen) "
   echo "-output-junit  <file>               Export to Format XML JUnit"
+  echo "-timeout       <time>               time (minute) (default 2)"
   echo
 }
 
@@ -208,7 +209,8 @@ testWithOutput=()
 exportjunit=1
 JUnitFile=""
 TestOption=""
-Ws=
+Timeout=2
+Ws=""
 
 while [ -n "$1" ]
 do
@@ -229,6 +231,8 @@ case "$1" in
     -n_avail_rank) NAvailRank="$2"
         shift;;
     -exportjunit) JUnitFile="$2"
+        shift;;
+    -timeout) Timeout="$2"
         shift;;
     -h) Help
         exit;;
@@ -255,7 +259,7 @@ else
     valueDir=$(dirname ${valuePath})
     if [[ ${valueName1[0]} =~ ^${TestName1}$ ]]
     then
-      listComputedTest=( "${valuePath}" ) 
+      listComputedTest=( "${listTest[${i}]}" ) 
       if [[ "${Nrank}" == "0" ]]
       then
         listComputedNRank=( "${Nrank}" ) # 3:4:5 if
@@ -384,7 +388,7 @@ do
     for ex in "${TestNamel[@]}"
     do
       OptExe=$(echo ${TestOptionl[k]} | tr ";" " ")
-      CmdLine="${CmdLine} ${sep} --output=$OutputFile.%t --error=$ErrFile.%t -N 1 -n ${Nrankl[k]} --exact /usr/bin/time  -f \"Maximum Resident Memory : %M Kb\nReal time : %e s\""
+      CmdLine="${CmdLine} ${sep}  --time=${Timeout} --output=$OutputFile.%t --error=$ErrFile.%t -N 1 -n ${Nrankl[k]} --exact /usr/bin/time  -f \"Maximum Resident Memory : %M Kb\nReal time : %e s\""
       if [ -f "${TestDir}/${ex}.py" ]; then
         CmdLine="${CmdLine} ${PROJECT_BINARY_DIR}/pdm_launch_python ${TestDir}/$ex.py ${optExe}"
       else
@@ -401,7 +405,7 @@ do
 
     cd - 1>/dev/null 2>/dev/null
   else  
-
+    ((TimeOutS=Timeout*60))
     if [ $Nrank -gt $NAvailRank ]
     then
       echo "Error PDM_run : Number of requested ranks is greater then the number of available ranks"
@@ -429,7 +433,7 @@ do
 
     if [ ${IsIntelMPI} -gt 0 ]
     then
-      CmdLine="${ExeMPI} -outfile-pattern $OutputFile.%r -errfile-pattern $ErrFile.%r"
+      CmdLine="I_MPI_JOB_TIMEOUT=${TimeOutS} ${ExeMPI} -outfile-pattern $OutputFile.%r -errfile-pattern $ErrFile.%r"
       k=0
       sep=""
       for ex in "${TestNamel[@]}"
