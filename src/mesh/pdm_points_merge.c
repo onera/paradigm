@@ -1236,7 +1236,7 @@ PDM_points_merge_make_interface
    * Rebuild a global interface and spread among all proc
    */
   double **weight = (double **) malloc(pm->n_point_clouds * sizeof(double*));
-  for (int i_cloud; i_cloud < pm->n_point_clouds; i_cloud++) {
+  for (int i_cloud=0; i_cloud < pm->n_point_clouds; i_cloud++) {
     weight[i_cloud] = (double *) malloc(n_itrf[i_cloud] * sizeof(double));
     for (int j = 0; j < n_itrf[i_cloud]; j++) {
       weight[i_cloud][j] = 1.;
@@ -1250,7 +1250,7 @@ PDM_points_merge_make_interface
                                                       n_itrf,
                                                       pm->n_point_clouds,
                                                       pm->comm);
-  for (int i_cloud; i_cloud < pm->n_point_clouds; i_cloud++) {
+  for (int i_cloud=0; i_cloud < pm->n_point_clouds; i_cloud++) {
     free(weight[i_cloud]);
   }
   free(weight);
