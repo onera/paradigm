@@ -1050,7 +1050,6 @@ void
 PDM_points_merge_make_interface
 (
   PDM_points_merge_t  *pm,
-  PDM_g_num_t        **points_gnum,
   int                 *out_n_g_interface,
   int                **out_interface_cloud_pair,
   int                **out_dn_vtx_itrf,
@@ -1072,6 +1071,18 @@ PDM_points_merge_make_interface
                                     i_cloud,
                                     &candidates_idx [i_cloud],
                                     &candidates_desc[i_cloud]); // (i_proc, i_cloud, i_point)
+  }
+
+  // Create a gnum view of points
+  PDM_g_num_t **points_gnum = malloc(pm->n_point_clouds * sizeof(PDM_g_num_t*));
+  for(int i_cloud = 0; i_cloud < pm->n_point_clouds; ++i_cloud) {
+    PDM_g_num_t _n_points = pm->n_points[i_cloud];
+    PDM_g_num_t *distri = PDM_compute_entity_distribution (pm->comm, _n_points);
+    points_gnum[i_cloud] = malloc(_n_points * sizeof(PDM_g_num_t));
+    for(int i = 0; i < _n_points; ++i) {
+      points_gnum[i_cloud][i] = i + distri[i_rank] + 1;
+    }
+    free(distri);
   }
 
   /*
@@ -1373,6 +1384,10 @@ PDM_points_merge_make_interface
   }
 
 
+  for(int i_cloud = 0; i_cloud < pm->n_point_clouds; ++i_cloud) {
+    free(points_gnum[i_cloud]);
+  }
+  free(points_gnum);
   PDM_part_to_part_free(ptp);
 
   /* Let's go */

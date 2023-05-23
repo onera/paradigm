@@ -704,9 +704,6 @@ int main(int argc, char *argv[])
     }
   }
 
-  // Create a new global numbering to prepare ptp
-  PDM_g_num_t  *part1_gnum        [2] = {dextract_m1_vtx_parent_gnum, dextract_m2_vtx_parent_gnum};
-
   int           n_g_interface        = 0;
   int          *interface_cloud_pair = NULL;
   int          *dn_vtx_itrf          = 0;
@@ -714,7 +711,6 @@ int main(int argc, char *argv[])
   PDM_g_num_t **itrf_gnum_opp        = NULL;
 
   PDM_points_merge_make_interface(pts_merge,
-                                  part1_gnum,
                                   &n_g_interface,
                                   &interface_cloud_pair,
                                   &dn_vtx_itrf,

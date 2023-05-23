@@ -29,7 +29,6 @@ cdef extern from "pdm_points_merge.h":
                                               int               *n_candidates_desc)
 
     void PDM_points_merge_make_interface(PDM_points_merge_t  *pm,
-                                         PDM_g_num_t        **points_gnum,
                                          int                 *out_n_g_interface,
                                          int                **out_interface_cloud_pair,
                                          int                **out_dn_vtx_itrf,
@@ -142,8 +141,7 @@ cdef class PointsMerge:
                 }
 
     # ------------------------------------------------------------------------
-    def make_interface(self,
-                       list point_gnum):
+    def make_interface(self):
         """
         """
         # ************************************************************************
@@ -156,10 +154,7 @@ cdef class PointsMerge:
         cdef NPY.npy_intp  dim
         # ************************************************************************
 
-        cdef PDM_g_num_t** pts_gnum = np_list_to_gnum_pointers(point_gnum)
-
         PDM_points_merge_make_interface(self._pm,
-                                        pts_gnum,
                                         &n_g_interface,
                                         &interface_cloud_pair,
                                         &dn_vtx_itrf,
