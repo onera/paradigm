@@ -235,9 +235,9 @@ case "$1" in
     -timeout) Timeout="$2"
         shift;;
     -h) Help
-        exit;;
+        exit 1;;
     *) echo "Error : $1 is not an option"
-        exit;;
+        exit 1;;
 esac
 shift
 done
@@ -500,3 +500,4 @@ elapsed=$(echo "scale=2; ($end-$start)/1000" | bc)
 echo
 echo "    elapsed pdm_run = ${elapsed} s"
 
+exit $scriptOutput
