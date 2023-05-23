@@ -1219,7 +1219,7 @@ PDM_part_mesh_nodal_dump_vtk
                                                        &parent_num,
                                                        &parent_elmt_num,
                                                        &order,
-                                                       &ho_ordering,
+                                  (const char **)      &ho_ordering,
                                                        PDM_OWNERSHIP_BAD_VALUE);
 
           int n_vtx_per_elmt = PDM_Mesh_nodal_n_vtx_elt_get (t_elt, order);
