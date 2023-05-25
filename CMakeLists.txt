@@ -416,17 +416,15 @@ set (PDM_RUN_PYTHONPATH "")
 
 if (CMAKE_BUILD_TYPE STREQUAL "Sanitize")
   execute_process(COMMAND gcc -print-file-name=libasan.so OUTPUT_VARIABLE PRELOAD_ASAN OUTPUT_STRIP_TRAILING_WHITESPACE)
-  # set(PDM_RUN_PRELOAD "LD_PRELOAD=\"${PRELOAD_ASAN}:${CMAKE_BINARY_DIR}/script/asan/fake_dlclose/libdlclose.so\"")
-  # set(PDM_RUN_PRELOAD "LD_PRELOAD=\"${PRELOAD_ASAN}\"")
   set(PDM_RUN_PRELOAD "LD_PRELOAD ${PRELOAD_ASAN}:${PROJECT_BINARY_DIR}/script/asan/fake_dlclose/libdlclose.so")
   set(PDM_RUN_PRELOAD_SRUN "LD_PRELOAD=${PRELOAD_ASAN}:${PROJECT_BINARY_DIR}/script/asan/fake_dlclose/libdlclose.so")
-  set(PDM_RUN_LSAN "LSAN_OPTIONS=suppressions=${CMAKE_SOURCE_DIR}/script/asan/asan.supp")
+  set(PDM_RUN_LSAN "LSAN_OPTIONS=suppressions=${PROJECT_SOURCE_DIR}/script/asan/asan.supp")
 endif()
 
 if(DEFINED ENV{PYTHONPATH})
-  set (PDM_RUN_PYTHONPATH "PYTHONPATH=${CMAKE_BINARY_DIR}/Cython:$ENV{PYTHONPATH}")
+  set (PDM_RUN_PYTHONPATH "PYTHONPATH=${PROJECT_BINARY_DIR}/Cython:$ENV{PYTHONPATH}")
 else()
-  set (PDM_RUN_PYTHONPATH "PYTHONPATH=${CMAKE_BINARY_DIR}/Cython")
+  set (PDM_RUN_PYTHONPATH "PYTHONPATH=${PROJECT_BINARY_DIR}/Cython")
 endif()
 
 configure_file(${PROJECT_SOURCE_DIR}/script/pdm_run.in "${PROJECT_BINARY_DIR}/pdm_run"
