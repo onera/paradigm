@@ -41,7 +41,6 @@ Help()
 
 Dump_mem()
 {
-  cd ${TestPath1}_d 
   max="-1"
   min="10000000"
   
@@ -71,12 +70,10 @@ Dump_mem()
   
   echo "    Maximum of Maximum Resident Memory: ${maxM} Mb on rank ${maxRank}"
   echo "    Minimum of Maximum Resident Memory: ${minM} Mb on rank ${minRank}"
-  cd - 1>/dev/null 2>/dev/null
 }
 
 Dump_time()
 {
-  cd ${TestPath1}_d 
   max="-1"
 
   maxRank=-1
@@ -97,12 +94,10 @@ Dump_time()
   done
   
   echo $max
-  cd - 1>/dev/null 2>/dev/null
 }
 
 Dump_nb_log_vtk_file()
 {
-  cd ${TestPath1}_d 
   val_vtk=`ls -l *.vtk  2> /dev/null | wc -l`;
   val_log=`ls -l *.log  2> /dev/null | wc -l`;
 
@@ -113,7 +108,6 @@ Dump_nb_log_vtk_file()
     echo "    Number of vtk files = ${val_vtk}"
     echo "    Number of log files = ${val_log}"
   fi
-  cd - 1>/dev/null 2>/dev/null
 }
 
 Wait_job()
@@ -126,23 +120,31 @@ Wait_job()
     TestPath1=$(echo ${listComputedTest[$i1]} | awk '{print $1}')
     TestName1=$(basename ${TestPath1})
     TestDir1=$(dirname ${TestPath1})
-    TestName1l=($(echo ${TestName1} | tr ":" " "))
+    TestNamel1=($(echo ${TestName1} | tr ":" " "))
 
     OutputFile1=$(echo ${TestName1}${postOutput})
     ErrFile1=$(echo ${TestName1}${postErr})
 
-    printf  "${PURPLE}[%3.3d/%3.3d] - %s: Finalize${NC}\n" ${j1} ${nTest} ${TestName1l[0]} 
+    printf  "${PURPLE}[%3.3d/%3.3d] - %s: Finalize${NC}\n" ${j1} ${nTest} ${TestNamel1[0]} 
 
     wait $pid
 
     if [ "$?" -ne "0" ]
     then
       Testoutput=1
-      printf  "${PURPLE}[%3.3d/%3.3d] - %s: ${RED}Failed${NC}\n" ${j1} ${nTest} ${TestName1l[0]}
+      printf  "${PURPLE}[%3.3d/%3.3d] - %s: ${RED}Failed${NC}\n" ${j1} ${nTest} ${TestNamel1[0]}
       failedTest=(${failedTest[@]} "$i1")
  
       ((ifailed=ifailed+1))
     else        
+
+      if [[ "${Ws}" != "" ]]
+      then
+        wdir="${Ws}/${TestNamel1[0]}_d"
+      else  
+        wdir="${TestDir1}/${TestNamel1[0]}_d"
+      fi  
+      cd ${wdir}
 
       #
       # Compute elapsed time
@@ -163,18 +165,21 @@ Wait_job()
       then
         if [ ${val_vtk} -gt 0 ] || [ ${val_log} -gt 0 ]
         then
-          printf  "${PURPLE}[%3.3d/%3.3d] - %s: ${RED}Failed due to *vtk or *log files${NC}\n" ${j1} ${nTest} ${TestName1l[0]}
+          printf  "${PURPLE}[%3.3d/%3.3d] - %s: ${RED}Failed due to *vtk or *log files${NC}\n" ${j1} ${nTest} ${TestNamel1[0]}
           Testoutput=1
         else
-          printf  "${PURPLE}[%3.3d/%3.3d] - %s: ${GREEN}Passed${NC} - %s s\n" ${j1} ${nTest} ${TestName1l[0]} ${elapsed} 
+          printf  "${PURPLE}[%3.3d/%3.3d] - %s: ${GREEN}Passed${NC} - %s s\n" ${j1} ${nTest} ${TestNamel1[0]} ${elapsed} 
         fi
       else
-        printf  "${PURPLE}[%3.3d/%3.3d] - %s: ${GREEN}Passed${NC} - %s s\n" ${j1} ${nTest} ${TestName1l[0]} ${elapsed} 
+        printf  "${PURPLE}[%3.3d/%3.3d] - %s: ${GREEN}Passed${NC} - %s s\n" ${j1} ${nTest} ${TestNamel1[0]} ${elapsed} 
       fi
 
+      cd - 1>/dev/null 2>/dev/null
+  
     fi
     ((i1=i1+1))
     ((j1=j1+1))
+  
     scriptOutput=$(echo "if($Testoutput>$scriptOutput) $Testoutput else $scriptOutput" | bc)
   done
 
@@ -182,7 +187,6 @@ Wait_job()
   pids=() 
 
 }
-
 
 start=$(($(date +%s%N)/1000000))
 
@@ -247,7 +251,6 @@ else
   for value in "${listTest[@]}" ; do    #print the new array
     valuePath=$(echo $value | awk '{print $1}')
     valueName1=($(basename ${valuePath} | tr ":" " "))
-#    valueName1=$(basename ${valuePath})
     valueDir=$(dirname ${valuePath})
     if [[ ${valueName1[0]} =~ ^${TestName1}$ ]]
     then
