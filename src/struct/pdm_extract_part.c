@@ -3877,6 +3877,16 @@ PDM_extract_part_create
     extrp->entity_center [i_part] = NULL;
   }
 
+  for(int i = 0; i < PDM_BOUND_TYPE_MAX; ++i) {
+    extrp->n_group[i] = 0;
+  }
+
+  for(int i = 0; i < PDM_BOUND_TYPE_MAX; ++i) {
+    extrp->n_group_entity       [i] = NULL;
+    extrp->group_entity         [i] = NULL;
+    extrp->group_entity_ln_to_gn[i] = NULL;
+  }
+
   extrp->from_target     = 0;
   extrp->n_target        = (int          *) malloc(n_part_out * sizeof(int          ));
   extrp->target_gnum     = (PDM_g_num_t **) malloc(n_part_out * sizeof(PDM_g_num_t *));
@@ -3989,6 +3999,55 @@ PDM_extract_part_part_set
   extrp->pface_vtx     [i_part] = face_vtx;
   extrp->pvtx_coord    [i_part] = vtx_coord;
 }
+
+void
+PDM_extract_part_n_group_set
+(
+  PDM_extract_part_t        *extrp,
+  PDM_bound_type_t           bound_type,
+  int                        n_group
+)
+{
+  extrp->n_group[bound_type] = n_group;
+
+  extrp->n_group_entity       [bound_type] = malloc(n_group * sizeof(int          * ));
+  extrp->group_entity         [bound_type] = malloc(n_group * sizeof(int         ** ));
+  extrp->group_entity_ln_to_gn[bound_type] = malloc(n_group * sizeof(PDM_g_num_t ** ));
+
+  for(int i_group = 0; i_group < n_group; ++i_group) {
+    extrp->n_group_entity       [bound_type][i_group] = malloc(extrp->n_part_in * sizeof(int           ));
+    extrp->group_entity         [bound_type][i_group] = malloc(extrp->n_part_in * sizeof(int         * ));
+    extrp->group_entity_ln_to_gn[bound_type][i_group] = malloc(extrp->n_part_in * sizeof(PDM_g_num_t * ));
+    for(int i_part = 0; i_part < extrp->n_part_in; ++i_part) {
+      extrp->n_group_entity       [bound_type][i_group][i_part] = 0;
+      extrp->group_entity         [bound_type][i_group][i_part] = NULL;
+      extrp->group_entity_ln_to_gn[bound_type][i_group][i_part] = NULL;
+    }
+  }
+}
+
+void
+PDM_extract_part_part_group_set
+(
+  PDM_extract_part_t        *extrp,
+  int                       i_part,
+  int                       i_group,
+  PDM_bound_type_t          bound_type,
+  int                       n_group_entity,
+  int                      *group_entity,
+  PDM_g_num_t              *group_entity_ln_to_gn
+)
+{
+  assert(extrp->n_group_entity       [bound_type][i_group][i_part] == 0   );
+  assert(extrp->group_entity         [bound_type][i_group][i_part] == NULL);
+  assert(extrp->group_entity_ln_to_gn[bound_type][i_group][i_part] == NULL);
+
+  extrp->n_group_entity       [bound_type][i_group][i_part] = n_group_entity;
+  extrp->group_entity         [bound_type][i_group][i_part] = group_entity;
+  extrp->group_entity_ln_to_gn[bound_type][i_group][i_part] = group_entity_ln_to_gn;
+
+}
+
 
 void
 PDM_extract_part_part_nodal_set
@@ -4257,6 +4316,28 @@ PDM_extract_part_free
     }
   }
 
+  for(int i = 0; i < PDM_BOUND_TYPE_MAX; ++i) {
+    for(int i_group = 0; i_group < extrp->n_group[i]; ++i_group) {
+      if(extrp->n_group_entity[i][i_group] != NULL) {
+        free(extrp->n_group_entity[i][i_group]);
+      }
+      if(extrp->group_entity[i][i_group] != NULL) {
+        free(extrp->group_entity[i][i_group]);
+      }
+      if(extrp->group_entity_ln_to_gn[i][i_group]) {
+        free(extrp->group_entity_ln_to_gn[i][i_group]);
+      }
+    }
+    if(extrp->n_group_entity[i] != NULL) {
+      free(extrp->n_group_entity   [i]);
+    }
+    if(extrp->group_entity[i] != NULL) {
+      free(extrp->group_entity[i]);
+    }
+    if(extrp->group_entity_ln_to_gn[i]) {
+      free(extrp->group_entity_ln_to_gn[i]);
+    }
+  }
 
   free(extrp->extract_lnum   );
   free(extrp->target_gnum    );

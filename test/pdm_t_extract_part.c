@@ -505,6 +505,35 @@ int main(int argc, char *argv[])
                                        pn_select_cell[i_part],
                                        selected_l_num[i_part]);
 
+
+    int          n_bound             = 0;
+    int         *group_face_idx      = NULL;
+    int         *group_face          = NULL;
+    PDM_g_num_t *face_group_ln_to_gn = NULL;
+    PDM_multipart_bound_get(mpart,
+                            i_zone,
+                            i_part,
+                            PDM_BOUND_TYPE_FACE,
+                            &n_bound,
+                            &group_face_idx,
+                            &group_face,
+                            &face_group_ln_to_gn,
+                            PDM_OWNERSHIP_KEEP);
+
+    PDM_extract_part_n_group_set(extrp,
+                                 PDM_BOUND_TYPE_FACE,
+                                 n_bound);
+
+    for(int i_group = 0; i_group < n_bound; ++i_group) {
+      PDM_extract_part_part_group_set(extrp,
+                                      i_part,
+                                      i_group,
+                                      PDM_BOUND_TYPE_FACE,
+                                      group_face_idx[i_group+1]-group_face_idx[i_group],
+                                      &group_face[group_face_idx[i_group]],
+                                      &face_group_ln_to_gn[group_face_idx[i_group]]);
+    }
+
     // PDM_log_trace_array_int(selected_l_num[i_part], pn_select_cell[i_part], "selected_l_num ::");
 
   }

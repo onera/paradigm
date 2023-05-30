@@ -89,6 +89,12 @@ struct _pdm_extract_part_t
   int                  have_user_entity_center;
   double             **entity_center;
 
+  int                  n_group              [PDM_BOUND_TYPE_MAX];
+  int                **n_group_entity       [PDM_BOUND_TYPE_MAX];
+  int               ***group_entity         [PDM_BOUND_TYPE_MAX];
+  PDM_g_num_t       ***group_entity_ln_to_gn[PDM_BOUND_TYPE_MAX];
+
+
   /* If partition is described by elements */
   PDM_part_mesh_nodal_elmts_t *pmne;
 
