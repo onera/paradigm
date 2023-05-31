@@ -4885,6 +4885,49 @@ PDM_extract_part_part_to_part_get
   extrp->ptp_ownership[entity_type] = ownership;
 }
 
+
+
+void
+PDM_extract_part_part_to_part_group_get
+(
+       PDM_extract_part_t   *extrp,
+ const PDM_bound_type_t      bound_type,
+       int                   i_group,
+       PDM_part_to_part_t  **ptp,
+       PDM_ownership_t       ownership
+
+)
+{
+  *ptp = extrp->ptp_group_entity[bound_type][i_group];
+
+  extrp->ptp_group_ownership[bound_type][i_group] = ownership;
+}
+
+void
+PDM_extract_part_group_get
+(
+       PDM_extract_part_t   *extrp,
+ const PDM_bound_type_t      bound_type,
+       int                   i_part,
+       int                   i_group,
+       int                  *pn_extract_group_entity,
+       int                 **pextract_group_entity,
+       PDM_g_num_t         **pextract_group_entity_ln_to_gn,
+       PDM_g_num_t         **pextract_group_entity_parent_ln_to_gn,
+       PDM_ownership_t       ownership
+)
+{
+
+  *pn_extract_group_entity               = extrp->pn_extract_group_entity              [bound_type][i_group][i_part];
+  *pextract_group_entity                 = extrp->pextract_group_entity                [bound_type][i_group][i_part];
+  *pextract_group_entity_ln_to_gn        = extrp->pextract_group_entity_ln_to_gn       [bound_type][i_group][i_part];
+  *pextract_group_entity_parent_ln_to_gn = extrp->pextract_group_entity_parent_ln_to_gn[bound_type][i_group][i_part];
+  extrp->ptp_group_ownership   [bound_type][i_group] = ownership;
+
+}
+
+
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

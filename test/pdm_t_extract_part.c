@@ -465,6 +465,7 @@ int main(int argc, char *argv[])
    * Extract
    */
   int n_part_out = 1;
+  int n_bound    = 0;
   // PDM_extract_part_kind_t extract_kind = PDM_EXTRACT_PART_KIND_LOCAL;
   PDM_extract_part_kind_t extract_kind = PDM_EXTRACT_PART_KIND_REEQUILIBRATE;
   // PDM_split_dual_t        split_dual_method = PDM_SPLIT_DUAL_WITH_PTSCOTCH;
@@ -506,7 +507,6 @@ int main(int argc, char *argv[])
                                        selected_l_num[i_part]);
 
 
-    int          n_bound             = 0;
     int         *group_face_idx      = NULL;
     int         *group_face          = NULL;
     PDM_g_num_t *face_group_ln_to_gn = NULL;
@@ -547,6 +547,7 @@ int main(int argc, char *argv[])
   int         **pextract_face_vtx_idx  = malloc(n_part_out * sizeof(int         *));
   double      **pextract_vtx           = malloc(n_part_out * sizeof(double      *));
   PDM_g_num_t **pextract_face_ln_to_gn = malloc(n_part_out * sizeof(PDM_g_num_t *));
+  int         **pextract_face_group    = malloc(n_part_out * sizeof(int         *));
   PDM_g_num_t **pextract_vtx_ln_to_gn  = malloc(n_part_out * sizeof(PDM_g_num_t *));
 
 
@@ -583,6 +584,33 @@ int main(int argc, char *argv[])
                                   PDM_MESH_ENTITY_VERTEX,
                                   &pextract_vtx_ln_to_gn[i_part],
                                   PDM_OWNERSHIP_KEEP);
+
+    pextract_face_group[i_part] = malloc(pn_extract_face[i_part] * sizeof(int));
+    for(int i_face = 0; i_face < pn_extract_face[i_part]; ++i_face) {
+      pextract_face_group[i_part][i_face] = -1;
+    }
+
+    for(int i_group = 0; i_group < n_bound; ++i_group) {
+      int          pn_extract_group_entity               = 0;
+      int         *pextract_group_entity                 = NULL;
+      PDM_g_num_t *pextract_group_entity_ln_to_gn        = NULL;
+      PDM_g_num_t *pextract_group_entity_parent_ln_to_gn = NULL;
+      PDM_extract_part_group_get(extrp,
+                                 PDM_BOUND_TYPE_FACE,
+                                 i_part,
+                                 i_group,
+                                 &pn_extract_group_entity,
+                                 &pextract_group_entity,
+                                 &pextract_group_entity_ln_to_gn,
+                                 &pextract_group_entity_parent_ln_to_gn,
+                                  PDM_OWNERSHIP_KEEP);
+
+      for(int idx_entity = 0; idx_entity < pn_extract_group_entity; ++idx_entity) {
+        int i_face = pextract_group_entity[idx_entity];
+        pextract_face_group[i_part][i_face] = i_group;
+      }
+
+    }
 
     // PDM_g_num_t *pextract_parent_cell_ln_to_gn = NULL;
     // PDM_g_num_t *pextract_cell_ln_to_gn = NULL;
@@ -623,14 +651,14 @@ int main(int argc, char *argv[])
 
       sprintf(filename, "extract_face_vtx_coord_%3.3d_%3.3d.vtk", i_part, i_rank);
       PDM_vtk_write_polydata(filename,
-                             pn_extract_vtx[i_part],
-                             pextract_vtx[i_part],
-                             pextract_vtx_ln_to_gn[i_part],
-                             pn_extract_face[i_part],
-                             pextract_face_vtx_idx[i_part],
-                             pextract_face_vtx[i_part],
+                             pn_extract_vtx        [i_part],
+                             pextract_vtx          [i_part],
+                             pextract_vtx_ln_to_gn [i_part],
+                             pn_extract_face       [i_part],
+                             pextract_face_vtx_idx [i_part],
+                             pextract_face_vtx     [i_part],
                              pextract_face_ln_to_gn[i_part],
-                             NULL);
+                             pextract_face_group   [i_part]);
     }
   }
 
@@ -646,9 +674,11 @@ int main(int argc, char *argv[])
 
 
   for (int i_part = 0; i_part < n_part_zones; i_part++){
-    free(cell_center       [i_part]);
-    free(selected_l_num    [i_part]);
+    free(cell_center        [i_part]);
+    free(selected_l_num     [i_part]);
+    free(pextract_face_group[i_part]);
   }
+  free(pextract_face_group);
   free(cell_center);
   free(selected_l_num);
   free(pn_cell);
