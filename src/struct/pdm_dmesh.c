@@ -368,8 +368,13 @@ PDM_dmesh_bound_get
  PDM_ownership_t    ownership
 )
 {
-  PDM_UNUSED(ownership);
   assert(dmesh != NULL);
+
+  if(ownership == PDM_OWNERSHIP_USER || ownership == PDM_OWNERSHIP_UNGET_RESULT_IS_FREE) {
+    dmesh->is_owner_bound[bound_type] = PDM_FALSE;
+  } else if(ownership == PDM_OWNERSHIP_KEEP) {
+    dmesh->is_owner_bound[bound_type] = PDM_TRUE;
+  }
 
   // assert(dmesh->dbound[bound_type] != NULL);
 
