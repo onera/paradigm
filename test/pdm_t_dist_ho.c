@@ -176,8 +176,9 @@ _deformation
  )
 {
   PDM_UNUSED(n_vtx_seg);
-  double amplitude = 0.1;//0.07;
-  double frequency = 4.;
+  PDM_UNUSED(length);
+  //double amplitude = 0.1;//0.07;
+  //double frequency = 4.;
 
   for (int i = 0; i < n_vtx; i++) {
     // double x = (vtx_coord[3*i    ] - 0.5) / length;
@@ -328,7 +329,7 @@ int main(int argc, char *argv[])
              &elt_type,
      (int *) &part_method);
 
-  double radius = length;//2*length;
+  //double radius = length;//2*length;
 
 
 

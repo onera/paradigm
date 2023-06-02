@@ -2572,25 +2572,25 @@ PDM_geom_elem_polyhedra_properties_triangulated
 void
 PDM_geom_elem_edge_upwind_and_downwind
 (
- int       n_face,
- int       n_edge,
- int      *cell_ln_to_gn,
- int      *cell_face_idx,
- int      *cell_face,
- int      *face_vtx_idx,
- int      *face_vtx,
- int      *vtx_cell_idx,
- int      *vtx_cell,
- int      *edge_vtx,
- double   *vtx_coord,
- double   *face_center,
- double   *face_normal,
- int     **upwind_cell_out,
- int     **downwind_cell_out,
- int     **upwind_face_out,
- int     **downwind_face_out,
- double  **upwind_point_out,
- double  **downwind_point_out
+ int         n_face,
+ int         n_edge,
+ PDM_g_num_t *cell_ln_to_gn,
+ int         *cell_face_idx,
+ int         *cell_face,
+ int         *face_vtx_idx,
+ int         *face_vtx,
+ int         *vtx_cell_idx,
+ int         *vtx_cell,
+ int         *edge_vtx,
+ double      *vtx_coord,
+ double      *face_center,
+ double      *face_normal,
+ int        **upwind_cell_out,
+ int        **downwind_cell_out,
+ int        **upwind_face_out,
+ int        **downwind_face_out,
+ double     **upwind_point_out,
+ double     **downwind_point_out
 )
 {
   /* Allocate stuff */
