@@ -397,7 +397,6 @@ do
     done 
 
     CmdLine="${CmdLine} 2>/dev/null &"
-    echo $CmdLine
     eval "${CmdLine}"
     pids=(${pids[@]} "$!")
 
@@ -436,7 +435,6 @@ do
       done 
 
       CmdLine="${CmdLine} 2>/dev/null &"
-      echo $CmdLine
       eval "${CmdLine}"
       pids=(${pids[@]} "$!")
 
