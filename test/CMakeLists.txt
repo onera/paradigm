@@ -120,6 +120,7 @@ test_c_create (pdm_t_global_mean ${MPIEXEC_MAX_NUMPROCS} PDM_LIST_TEST PDM_LIST_
 test_c_create (pdm_t_global_reduce ${MPIEXEC_MAX_NUMPROCS} PDM_LIST_TEST PDM_LIST_NRANK)
 test_c_create (pdm_t_writer_ensight_3d ${MPIEXEC_MAX_NUMPROCS} PDM_LIST_TEST PDM_LIST_NRANK)
 test_c_create (pdm_t_writer_ensight_moving_mesh_3d ${MPIEXEC_MAX_NUMPROCS} PDM_LIST_TEST PDM_LIST_NRANK)
+test_c_create (pdm_t_writer_ensight_variable_mesh_3d ${MPIEXEC_MAX_NUMPROCS} PDM_LIST_TEST PDM_LIST_NRANK)
 test_c_create (pdm_t_cellface_orient ${MPIEXEC_MAX_NUMPROCS} PDM_LIST_TEST PDM_LIST_NRANK)
 test_c_create (pdm_t_gnum 4 PDM_LIST_TEST PDM_LIST_NRANK)
 test_c_create (pdm_t_gnum_location 4 PDM_LIST_TEST PDM_LIST_NRANK)

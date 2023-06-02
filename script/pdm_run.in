@@ -14,7 +14,7 @@ Help()
   echo
   echo "Syntax: pdm_run [-m|mpiexec|no_log_vtk|h|n_avail_rank] -n <number of ranks> -t <test name and its options>"
   echo "options:"
-  echo "TODO -u                             Print Python without buffer"                                  
+  echo "-u                                  Print Python without buffer"
   echo "-ws <Work directory>                Work space directory (default : current directory)"                                  
   echo "-m                                  Make test before run"
   echo "-h                                  Print this Help"
@@ -207,6 +207,7 @@ JUnitFile=""
 TestOption=""
 Timeout=1
 Ws=""
+PythonUnbuffered=""
 
 while [ -n "$1" ]
 do
@@ -230,6 +231,7 @@ case "$1" in
         shift;;
     -timeout) Timeout="$2"
         shift;;
+    -u) PythonUnbuffered="-u";;
     -h) Help
         exit 1;;
     *) echo "Error : $1 is not an option"
@@ -386,7 +388,7 @@ do
       OptExe=$(echo ${TestOptionl[k]} | tr ";" " ")
       CmdLine="${CmdLine} ${sep}  --time=${Timeout} --output=$OutputFile.%t --error=$ErrFile.%t -N 1 -n ${Nrankl[k]} --exact /usr/bin/time  -f \"Maximum Resident Memory : %M Kb\nReal time : %e s\""
       if [ -f "${TestDir}/${ex}.py" ]; then
-        CmdLine="${CmdLine} ${PROJECT_BINARY_DIR}/pdm_launch_python ${TestDir}/$ex.py ${optExe}"
+        CmdLine="${CmdLine} ${PROJECT_BINARY_DIR}/pdm_launch_python ${PythonUnbuffered} ${TestDir}/$ex.py ${optExe}"
       else
         CmdLine="${CmdLine} ${PROJECT_BINARY_DIR}/pdm_launch ${TestDir}/$ex ${OptExe}"
       fi
@@ -395,6 +397,7 @@ do
     done 
 
     CmdLine="${CmdLine} 2>/dev/null &"
+    echo $CmdLine
     eval "${CmdLine}"
     pids=(${pids[@]} "$!")
 
@@ -424,7 +427,7 @@ do
         OptExe=$(echo ${TestOptionl[k]} | tr ";" " ")
         CmdLine="${CmdLine} ${sep} -n ${Nrankl[k]} /usr/bin/time  -f \"Maximum Resident Memory : %M Kb\nReal time : %e s\""
         if [ -f "${TestDir}/${ex}.py" ]; then
-          CmdLine="${CmdLine} ${PROJECT_BINARY_DIR}/pdm_launch_python ${TestDir}/$ex.py ${optExe}"
+          CmdLine="${CmdLine} ${PROJECT_BINARY_DIR}/pdm_launch_python ${PythonUnbuffered} ${TestDir}/$ex.py ${optExe}"
         else
           CmdLine="${CmdLine} ${PROJECT_BINARY_DIR}/pdm_launch ${TestDir}/$ex ${OptExe}"
         fi
@@ -433,6 +436,7 @@ do
       done 
 
       CmdLine="${CmdLine} 2>/dev/null &"
+      echo $CmdLine
       eval "${CmdLine}"
       pids=(${pids[@]} "$!")
 
