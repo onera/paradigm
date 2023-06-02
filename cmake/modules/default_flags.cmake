@@ -29,7 +29,7 @@ if (CMAKE_Fortran_COMPILER_ID STREQUAL "GNU")
   set (CMAKE_Fortran_FLAGS_PROFILING       "-O3 -pg")
   set (CMAKE_Fortran_FLAGS_RELWITHDEBINFO  "-O3 -g")
   set (CMAKE_Fortran_FLAGS_MINSIZEREL      "-O2 -g")
-  set (CMAKE_Fortran_FLAGS_SANITIZE        "-O0 -g -fcheck=bounds -fbacktrace -fsanitize=address -fno-omit-frame-pointer -Wall -Wextra")
+  set (CMAKE_Fortran_FLAGS_SANITIZE        "-O0 -g -fcheck=bounds -fbacktrace -fsanitize=address -fno-omit-frame-pointer")
   set (CMAKE_Fortran_FLAGS_COVERAGE        "-O0 -g -fcheck=bounds -fbacktrace")
 
   set (FORTRAN_LIBRARIES                   )
