@@ -4387,6 +4387,120 @@ PDM_extract_part_free
   free(extrp);
 }
 
+void
+PDM_extract_part_partial_free
+(
+  PDM_extract_part_t  *extrp
+)
+{
+  /*
+   * Free extracted partition if owner
+   */
+  /* Free connectivity */
+  for(int i = 0; i < PDM_CONNECTIVITY_TYPE_MAX; ++i) {
+    if(extrp->is_owner_connectivity[i] == PDM_TRUE) {
+      if(extrp->pextract_connectivity[i] != NULL) {
+        for(int i_part = 0; i_part < extrp->n_part_out; ++i_part) {
+          if(extrp->pextract_connectivity[i][i_part] != NULL) {
+            free(extrp->pextract_connectivity[i][i_part]);
+          }
+          if(extrp->pextract_connectivity_idx[i] != NULL) {
+            if(extrp->pextract_connectivity_idx[i][i_part] != NULL) {
+              free(extrp->pextract_connectivity_idx[i][i_part]);
+            }
+          }
+        }
+      }
+    }
+
+    if(extrp->pextract_connectivity[i] != NULL) {
+      free(extrp->pextract_connectivity[i]);
+      extrp->pextract_connectivity[i] = NULL;
+    }
+
+    if(extrp->pextract_connectivity_idx[i] != NULL) {
+      free(extrp->pextract_connectivity_idx[i]);
+      extrp->pextract_connectivity_idx[i] = NULL;
+    }
+  }
+
+  /* Free ln_to_gn */
+  for(int i = 0; i < PDM_MESH_ENTITY_MAX; ++i) {
+    if(extrp->is_owner_ln_to_gn[i] == PDM_TRUE) {
+      if(extrp->pextract_entity_ln_to_gn[i] != NULL) {
+        for(int i_part = 0; i_part < extrp->n_part_out; ++i_part) {
+          if(extrp->pextract_entity_ln_to_gn[i][i_part] != NULL) {
+            free(extrp->pextract_entity_ln_to_gn[i][i_part]);
+          }
+        }
+
+        free(extrp->pextract_entity_ln_to_gn[i]);
+        extrp->pextract_entity_ln_to_gn[i] = NULL;
+      }
+    }
+  }
+
+
+  /* Free parent_ln_to_gn */
+  for(int i = 0; i < PDM_MESH_ENTITY_MAX; ++i) {
+    if(extrp->is_owner_parent_ln_to_gn[i] == PDM_TRUE) {
+      if(extrp->pextract_entity_parent_ln_to_gn[i] != NULL) {
+        for(int i_part = 0; i_part < extrp->n_part_out; ++i_part) {
+          if(extrp->pextract_entity_parent_ln_to_gn[i][i_part] != NULL) {
+            free(extrp->pextract_entity_parent_ln_to_gn[i][i_part]);
+          }
+        }
+
+        free(extrp->pextract_entity_parent_ln_to_gn[i]);
+        extrp->pextract_entity_parent_ln_to_gn[i] = NULL;
+      }
+    }
+  }
+
+  /* Free parent_ln_to_gn */
+  for(int i = 0; i < PDM_MESH_ENTITY_MAX; ++i) {
+    if(extrp->is_owner_parent_lnum[i] == PDM_TRUE) {
+      if(extrp->pextract_entity_parent_lnum[i] != NULL) {
+        for(int i_part = 0; i_part < extrp->n_part_out; ++i_part) {
+          if(extrp->pextract_entity_parent_lnum[i][i_part] != NULL) {
+            free(extrp->pextract_entity_parent_lnum[i][i_part]);
+          }
+        }
+
+        free(extrp->pextract_entity_parent_lnum[i]);
+        extrp->pextract_entity_parent_lnum[i] = NULL;
+      }
+    }
+  }
+
+  if(extrp->is_owner_vtx_coord == PDM_TRUE) {
+    if(extrp->pextract_vtx_coord != NULL){
+      for(int i_part = 0; i_part < extrp->n_part_out; ++i_part) {
+        if(extrp->pextract_vtx_coord[i_part] != NULL){
+          free(extrp->pextract_vtx_coord[i_part]);
+        }
+      }
+    }
+  }
+  if(extrp->pextract_vtx_coord != NULL){
+    free(extrp->pextract_vtx_coord);
+  }
+
+  for(int i = 0; i < PDM_MESH_ENTITY_MAX; ++i) {
+    free(extrp->pextract_n_entity[i]);
+  }
+
+  if(extrp->is_owner_extract_pmne == PDM_TRUE && extrp->extract_pmne != NULL) {
+    PDM_part_mesh_nodal_elmts_free(extrp->extract_pmne);
+  }
+
+  for (int i = 0; i < PDM_MESH_ENTITY_MAX; ++i) {
+    if (extrp->ptp_ownership[i] == PDM_OWNERSHIP_KEEP) {
+      PDM_part_to_part_free(extrp->ptp_entity[i]);
+    }
+  }
+
+}
 
 void
 PDM_extract_part_part_to_part_get

@@ -56,3 +56,7 @@
   integer, parameter :: PDM_CONNECTIVITY_TYPE_ELMT_FACE = 21
   integer, parameter :: PDM_CONNECTIVITY_TYPE_ELMT_EDGE = 22
   integer, parameter :: PDM_CONNECTIVITY_TYPE_ELMT_VTX  = 23
+
+  integer, parameter :: PDM_EXTRACT_PART_KIND_LOCAL         = 0
+  integer, parameter :: PDM_EXTRACT_PART_KIND_REEQUILIBRATE = 1
+  integer, parameter :: PDM_EXTRACT_PART_KIND_FROM_TARGET   = 2
