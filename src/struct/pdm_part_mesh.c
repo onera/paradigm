@@ -829,21 +829,21 @@ PDM_part_mesh_free
             free(pmesh->ppart_bound[i][i_part]);
           }
         }
+      }
 
-        if(pmesh->ppart_bound_proc_idx[i] != NULL) {
-          free(pmesh->ppart_bound_proc_idx[i]);
-          pmesh->ppart_bound_proc_idx[i] = NULL;
-        }
+      if(pmesh->ppart_bound_proc_idx[i] != NULL) {
+        free(pmesh->ppart_bound_proc_idx[i]);
+        pmesh->ppart_bound_proc_idx[i] = NULL;
+      }
 
-        if(pmesh->ppart_bound_part_idx[i] != NULL) {
-          free(pmesh->ppart_bound_part_idx[i]);
-          pmesh->ppart_bound_part_idx[i] = NULL;
-        }
+      if(pmesh->ppart_bound_part_idx[i] != NULL) {
+        free(pmesh->ppart_bound_part_idx[i]);
+        pmesh->ppart_bound_part_idx[i] = NULL;
+      }
 
-        if(pmesh->ppart_bound[i] != NULL) {
-          free(pmesh->ppart_bound[i]);
-          pmesh->ppart_bound[i] = NULL;
-        }
+      if(pmesh->ppart_bound[i] != NULL) {
+        free(pmesh->ppart_bound[i]);
+        pmesh->ppart_bound[i] = NULL;
       }
     }
 
