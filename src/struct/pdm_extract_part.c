@@ -3173,13 +3173,15 @@ _extract_part_and_reequilibrate_from_target
   }
   // <<--
 
-  int have_init_location = 1;
+  int have_init_location_l = 1;
+  int have_init_location   = 1;
   for(int i_part = 0; i_part < extrp->n_part_out; ++i_part) {
     if(extrp->target_location[i_part] == NULL) {
       have_init_location = 0;
     }
   }
-
+  PDM_MPI_Allreduce(&have_init_location_l, &have_init_location, 1, PDM_MPI_INT, PDM_MPI_MAX, extrp->comm);
+  // log_trace("have_init_location = %i \n", have_init_location);
 
   if(have_init_location == 0) {
     PDM_gnum_location_t* gnum_loc = PDM_gnum_location_create(extrp->n_part_in,
