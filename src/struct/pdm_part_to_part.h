@@ -542,7 +542,21 @@ PDM_part_to_part_irecv_wait
  const int           request
 );
 
+/**
+ *
+ * \brief Wait a asynchronus raw irecv
+ *
+ * \param [in]  ptp           Part to part structure
+ * \param [in]  request       Request
+ *
+ */
 
+void
+PDM_part_to_part_irecv_wait_raw
+(
+ PDM_part_to_part_t *ptp,
+ const int           request
+);
 
 /**
  *
