@@ -81,6 +81,25 @@ module pdm_extract_part
 
   end subroutine PDM_extract_part_partial_free
 
+  !>
+  !!
+  !! \brief Set PDM_part_mesh_nodal_elmts_t
+  !!
+  !! \param [inout] extrp  PDM_extract_part_t instance
+  !! \param [in]    pmne   PDM_part_mesh_nodal_elmts_t instance
+  !!
+  !!
+
+  subroutine PDM_extract_part_part_nodal_set (extrp, pmne) &
+  bind (c, name='PDM_extract_part_part_nodal_set')
+    use iso_c_binding
+    implicit none
+
+    type(c_ptr), value :: extrp
+    type(c_ptr), value :: pmne
+
+  end subroutine PDM_extract_part_part_nodal_set
+
   end interface
 
   contains
@@ -287,25 +306,6 @@ module pdm_extract_part
                                       c_loc(vtx_coord))
 
   end subroutine PDM_extract_part_part_set
-
-  !>
-  !!
-  !! \brief Set PDM_part_mesh_nodal_elmts_t
-  !!
-  !! \param [inout] extrp  PDM_extract_part_t instance
-  !! \param [in]    pmne   PDM_part_mesh_nodal_elmts_t instance
-  !!
-  !!
-
-  subroutine PDM_extract_part_part_nodal_set (extrp, pmne) &
-  bind (c, name='PDM_extract_part_part_nodal_set')
-    use iso_c_binding
-    implicit none
-
-    type(c_ptr), value :: extrp
-    type(c_ptr), value :: pmne
-
-  end subroutine PDM_extract_part_part_nodal_set
 
   !>
   !!
