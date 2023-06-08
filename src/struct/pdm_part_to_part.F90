@@ -118,6 +118,49 @@ bind (c, name='PDM_part_to_part_reverse_iexch_wait')
 
 end subroutine PDM_part_to_part_reverse_iexch_wait
 
+
+!>
+!!
+!! \brief Wait a partial asynchronus send
+!!
+!! \param [in]  ptp      Part to part structure
+!! \param [in]  request  Request
+!!
+!!
+
+subroutine PDM_part_to_part_issend_wait (ptp,     &
+                                         request) &
+bind (c, name='PDM_part_to_part_issend_wait')
+  use iso_c_binding
+  implicit none
+
+  type(c_ptr),    value :: ptp
+  integer(c_int), value :: request
+
+end subroutine PDM_part_to_part_issend_wait
+
+
+!>
+!!
+!! \brief Wait a partial asynchronus recv
+!!
+!! \param [in]  ptp      Part to part structure
+!! \param [in]  request  Request
+!!
+!!
+
+subroutine PDM_part_to_part_irecv_wait_raw (ptp,     &
+                                            request) &
+bind (c, name='PDM_part_to_part_irecv_wait_raw')
+  use iso_c_binding
+  implicit none
+
+  type(c_ptr),    value :: ptp
+  integer(c_int), value :: request
+
+end subroutine PDM_part_to_part_irecv_wait_raw
+
+
 end interface
 
 
@@ -210,6 +253,126 @@ subroutine PDM_part_to_part_create (ptp,                &
                                    c_comm)
 
 end subroutine PDM_part_to_part_create
+
+
+!<
+!!
+!! \brief Initialize a asynchronus issend
+!!
+!! \param [in]   ptp                 Part to part structure
+!! \param [in]   s_data              Data size
+!! \param [in]   cst_stride          Constant stride
+!! \param [in]   part1_to_part2_data Data (order given by part1_to_part2 array)
+!! \param [in]   tag                 Tag of the exchange
+!! \param [out]  request             Request
+!!
+!!
+
+subroutine PDM_part_to_part_issend_raw (ptp,        &
+                                        s_data,     &
+                                        cst_stride, &
+                                        raw_buffer, &
+                                        tag,        &
+                                        request)
+  use iso_c_binding
+  implicit none
+
+  type(c_ptr), value                :: ptp
+  integer, intent(in)               :: cst_stride
+  integer, intent(in)               :: s_data
+  type(c_ptr), value                :: raw_buffer
+  integer, intent(in)               :: tag
+  integer, intent(out)              :: request
+
+  interface
+    subroutine PDM_part_to_part_issend_c (ptp,        &
+                                          s_data,     &
+                                          cst_stride, &
+                                          raw_buffer, &
+                                          tag,        &
+                                          request)    &
+    bind(c, name='PDM_part_to_part_issend_raw')
+      use iso_c_binding
+      implicit none
+
+      type(c_ptr),    value :: ptp
+      integer(c_int), value :: s_data
+      integer(c_int), value :: cst_stride
+      type(c_ptr),    value :: raw_buffer
+      integer(c_int), value :: tag
+      integer(c_int)        :: request
+
+    end subroutine PDM_part_to_part_issend_c
+  end interface
+
+  call PDM_part_to_part_issend_c (ptp,        &
+                                  s_data,     &
+                                  cst_stride, &
+                                  raw_buffer, &
+                                  tag,        &
+                                  request)
+
+end subroutine PDM_part_to_part_issend_raw
+
+
+!<
+!!
+!! \brief Initialize a asynchronus irecv
+!!
+!! \param [in]  ptp           Part to part structure
+!! \param [in]  s_data        Data size
+!! \param [in]  cst_stride    Constant stride
+!! \param [in]  part2_data    Partition 2 data (order given by gnum1_come_from and ref_lnum2 arrays)
+!! \param [in]  tag           Tag of the exchange
+!! \param [out] request       Request
+!!
+!!
+
+subroutine PDM_part_to_part_irecv_raw (ptp,        &
+                                       cst_stride, &
+                                       s_data,     &
+                                       raw_buffer, &
+                                       tag,        &
+                                       request)
+  use iso_c_binding
+  implicit none
+
+  type(c_ptr), value                :: ptp
+  integer, intent(in)               :: cst_stride
+  integer, intent(in)               :: s_data
+  type(c_ptr), value                :: raw_buffer
+  integer, intent(in)               :: tag
+  integer, intent(out)              :: request
+
+  interface
+    subroutine PDM_part_to_part_irecv_c (ptp,        &
+                                         s_data,     &
+                                         cst_stride, &
+                                         raw_buffer, &
+                                         tag,        &
+                                         request)    &
+    bind(c, name='PDM_part_to_part_irecv_raw')
+      use iso_c_binding
+      implicit none
+
+      type(c_ptr),    value  :: ptp
+      integer(c_int), value  :: s_data
+      integer(c_int), value  :: cst_stride
+      type(c_ptr),    value  :: raw_buffer
+      integer(c_int), value  :: tag
+      integer(c_int)         :: request
+
+    end subroutine PDM_part_to_part_irecv_c
+  end interface
+
+  call PDM_part_to_part_irecv_c (ptp,        &
+                                 s_data,     &
+                                 cst_stride, &
+                                 raw_buffer, &
+                                 tag,        &
+                                 request)
+
+end subroutine PDM_part_to_part_irecv_raw
 
 
 !>
@@ -693,6 +856,163 @@ subroutine PDM_part_to_part_gnum1_come_from_get (ptp,                 &
                    [gnum1_come_from_idx(n_ref+1)])
 
 end subroutine PDM_part_to_part_gnum1_come_from_get
+
+
+!>
+!!
+!! \brief Get indirection from part1_to_part2 to buffer send (usefull to setup buffer outside ptp )
+!!
+!! \param [in]   ptp                       Block to part structure
+!! \param [out]  gnum1_to_send_buffer_idx  Index of data to send to gnum2 from gnum1
+!!                                           (for each part size : \ref n_elt1+1)
+!! \param [out]  gnum1_to_send_buffer      For each gnum1 the position in send buffer
+!!
+!!
+
+subroutine PDM_part_to_part_gnum1_to_send_buffer_get (ptp,                      &
+                                                      gnum1_to_send_buffer_idx, &
+                                                      gnum1_to_send_buffer)
+  use iso_c_binding
+  implicit none
+
+  type(c_ptr), value                :: ptp
+  type(PDM_pointer_array_t), target :: gnum1_to_send_buffer_idx
+  type(PDM_pointer_array_t), target :: gnum1_to_send_buffer
+
+  integer                       :: i
+  integer                       :: n_part1
+  integer                       :: n_part2
+  integer                       :: n_elt1
+  integer(pdm_l_num_s), pointer :: part1_to_part2_idx(:) => null()
+  integer(pdm_g_num_s), pointer :: part1_to_part2(:)     => null()
+
+  type(c_ptr)                   :: c_gnum1_to_send_buffer_idx = C_NULL_PTR
+  type(c_ptr)                   :: c_gnum1_to_send_buffer     = C_NULL_PTR
+
+  interface
+    subroutine PDM_part_to_part_gnum1_to_send_buffer_get_c (ptp,                      &
+                                                            gnum1_to_send_buffer_idx, &
+                                                            gnum1_to_send_buffer)     &
+    bind (c, name='PDM_part_to_part_gnum1_to_send_buffer_get')
+      use iso_c_binding
+      implicit none
+
+      type(c_ptr),    value :: ptp
+      type(c_ptr)           :: gnum1_to_send_buffer_idx
+      type(c_ptr)           :: gnum1_to_send_buffer
+
+    end subroutine PDM_part_to_part_gnum1_to_send_buffer_get_c
+  end interface
+
+  call PDM_part_to_part_gnum1_to_send_buffer_get_c (ptp,                        &
+                                                    c_gnum1_to_send_buffer_idx, &
+                                                    c_gnum1_to_send_buffer)
+
+  call PDM_part_to_part_n_part_get (ptp,     &
+                                    n_part1, &
+                                    n_part2)
+
+  call c_f_pointer(c_gnum1_to_send_buffer_idx,    &
+                   gnum1_to_send_buffer_idx%cptr, &
+                   [n_part1])
+
+  call c_f_pointer(c_gnum1_to_send_buffer,    &
+                   gnum1_to_send_buffer%cptr, &
+                   [n_part1])
+
+  allocate(gnum1_to_send_buffer_idx%length(n_part1))
+  allocate(gnum1_to_send_buffer%length(n_part1))
+  gnum1_to_send_buffer_idx%type = PDM_TYPE_INT
+  gnum1_to_send_buffer%type = PDM_TYPE_INT
+
+  do i = 1, n_part1
+
+    call PDM_part_to_part_part1_to_part2_get (ptp,                &
+                                              i-1,                &
+                                              n_elt1,             &
+                                              part1_to_part2_idx, &
+                                              part1_to_part2)
+
+    gnum1_to_send_buffer_idx%length(i) = n_elt1 + 1
+    gnum1_to_send_buffer%length(i) = part1_to_part2_idx(n_elt1+1)
+
+  end do
+
+end subroutine PDM_part_to_part_gnum1_to_send_buffer_get
+
+
+!>
+!!
+!! \brief Get indirection from ref_lnum2 to buffer recv (usefull to setup buffer outside ptp )
+!!
+!! \param [in]   ptp                       Block to part structure
+!! \param [out]  recv_buffer_to_ref_lnum2  For each gnum2 the position in recv buffer ( size = gnum1_come_from_idx[n_ref_lnum2])
+!!
+!!
+
+
+subroutine PDM_part_to_part_recv_buffer_to_ref_lnum2_get (ptp,                      &
+                                                          recv_buffer_to_ref_lnum2)
+  use iso_c_binding
+  implicit none
+
+  type(c_ptr), value                :: ptp
+  type(PDM_pointer_array_t), target :: recv_buffer_to_ref_lnum2
+
+  integer                       :: i
+  integer                       :: n_part1
+  integer                       :: n_part2
+  integer                       :: n_ref
+  integer(pdm_l_num_s), pointer :: ref(:)                 => null()
+  integer(pdm_l_num_s), pointer :: gnum1_come_from_idx(:) => null()
+  integer(pdm_g_num_s), pointer :: gnum1_come_from(:)     => null()
+
+  type(c_ptr)                   :: c_recv_buffer_to_ref_lnum2 = C_NULL_PTR
+
+  interface
+    subroutine PDM_part_to_part_recv_buffer_to_ref_lnum2_get_c (ptp,                      &
+                                                                recv_buffer_to_ref_lnum2) &
+    bind (c, name='PDM_part_to_part_recv_buffer_to_ref_lnum2_get')
+      use iso_c_binding
+      implicit none
+
+      type(c_ptr),    value :: ptp
+      type(c_ptr)           :: recv_buffer_to_ref_lnum2
+
+    end subroutine PDM_part_to_part_recv_buffer_to_ref_lnum2_get_c
+  end interface
+
+  call PDM_part_to_part_recv_buffer_to_ref_lnum2_get_c (ptp,                        &
+                                                        c_recv_buffer_to_ref_lnum2)
+
+  call PDM_part_to_part_n_part_get (ptp,     &
+                                    n_part1, &
+                                    n_part2)
+
+  call c_f_pointer(c_recv_buffer_to_ref_lnum2,    &
+                   recv_buffer_to_ref_lnum2%cptr, &
+                   [n_part2])
+
+  allocate(recv_buffer_to_ref_lnum2%length(n_part2))
+  recv_buffer_to_ref_lnum2%type = PDM_TYPE_INT
+
+  do i = 1, n_part2
+
+    call PDM_part_to_part_ref_lnum2_get (ptp,   &
+                                         i-1,   &
+                                         n_ref, &
+                                         ref)
+
+    call PDM_part_to_part_gnum1_come_from_get (ptp,                 &
+                                               i-1,                 &
+                                               gnum1_come_from_idx, &
+                                               gnum1_come_from)
+
+    recv_buffer_to_ref_lnum2%length(i) = gnum1_come_from_idx(n_ref+1)
+
+  end do
+
+end subroutine PDM_part_to_part_recv_buffer_to_ref_lnum2_get
 
 
 !>

@@ -3956,6 +3956,32 @@ PDM_part_to_part_irecv_wait
 
 /**
  *
+ * \brief Wait a asynchronus raw irecv
+ *
+ * \param [in]  ptp           Part to part structure
+ * \param [in]  request       Request
+ *
+ */
+
+void
+PDM_part_to_part_irecv_wait_raw
+(
+ PDM_part_to_part_t *ptp,
+ const int           request
+)
+{
+
+  for (int i = 0; i < ptp->n_active_rank_recv; i++) {
+    PDM_MPI_Wait (&(ptp->async_recv_request[request][i]));
+  }
+
+  _free_async_recv (ptp, request);
+
+}
+
+
+/**
+ *
  * \brief Initialize a asynchronus reverse irecv (from part2)
  *
  * \param [in]  ptp           Part to part structure
