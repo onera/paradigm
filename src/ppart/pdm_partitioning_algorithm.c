@@ -201,7 +201,11 @@ PDM_part_assemble_partitions
   }
 
   int *pentity_init_location_tmp = NULL;
-  if(dentity_init_location != NULL) {
+  int have_init_location_l = (dentity_init_location != NULL);
+  int have_init_location = 0;
+  PDM_MPI_Allreduce(&have_init_location_l, &have_init_location, 1, PDM_MPI_INT, PDM_MPI_MAX, comm);
+
+  if(have_init_location == 1) {
     int *tmp_pn_entity = NULL;
     PDM_part_to_block_exch (ptb_partition,
                             3 * sizeof(int),
@@ -222,7 +226,7 @@ PDM_part_assemble_partitions
   PDM_g_num_t **_pentity_ln_to_gn = *pentity_ln_to_gn;
 
   int **_pentity_init_location = NULL;
-  if(dentity_init_location != NULL) {
+  if(have_init_location == 1) {
     *pentity_init_location = (int **) malloc( sizeof(int *) * n_part_block);
     _pentity_init_location = *pentity_init_location;
   }
@@ -237,7 +241,7 @@ PDM_part_assemble_partitions
       _pentity_ln_to_gn[i_part][i_elmt] = pentity_ln_to_gn_tmp[offset + i_elmt];
     }
 
-    if(dentity_init_location != NULL) {
+    if(have_init_location == 1) {
       _pentity_init_location[i_part] = (int *) malloc( sizeof(int) * 3 * _pn_entity);
       for(int i_elmt = 0; i_elmt < _pn_entity; ++i_elmt){
         _pentity_init_location[i_part][3*i_elmt  ] = pentity_init_location_tmp[3*(offset + i_elmt)  ];
@@ -266,7 +270,7 @@ PDM_part_assemble_partitions
   PDM_part_to_block_free (ptb_partition);
 
   free(pentity_ln_to_gn_tmp);
-  if(dentity_init_location != NULL) {
+  if(have_init_location == 1) {
     free(pentity_init_location_tmp);
   }
   free(dpart_ln_to_gn);
