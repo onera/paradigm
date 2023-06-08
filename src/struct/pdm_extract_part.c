@@ -4706,11 +4706,6 @@ PDM_extract_part_free
    */
   PDM_extract_part_partial_free(extrp);
 
-  free(extrp->is_owner_connectivity   );
-  free(extrp->is_owner_ln_to_gn       );
-  free(extrp->is_owner_parent_ln_to_gn);
-  free(extrp->is_owner_parent_lnum);
-
   free(extrp);
 }
 
