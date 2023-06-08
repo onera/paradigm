@@ -157,12 +157,12 @@ endif()
 if (PDM_ENABLE_STATIC AND PDM_ENABLE_Fortran)
   set(PDM_ENABLE_STATIC_Fortran_INTERFACE ON)
 else ()
-  set(PDM_ENABLE_STATIC_Fortran_INTERFACE OFF)  
+  set(PDM_ENABLE_STATIC_Fortran_INTERFACE OFF)
 endif ()
 
 if (PDM_ENABLE_SHARED AND PDM_ENABLE_Fortran)
   set(PDM_ENABLE_SHARED_Fortran_INTERFACE ON)
-else () 
+else ()
   set(PDM_ENABLE_SHARED_Fortran_INTERFACE OFF)
 endif ()
 
@@ -389,13 +389,14 @@ add_subdirectory(script)
 
 add_subdirectory(src)
 
+option(PDM_ENABLE_TESTS "Enable tests" ON)
+
 add_subdirectory(extensions)
 
 if (PDM_ENABLE_PYTHON_BINDINGS)
   add_subdirectory(Cython)
 endif()
 
-option(PDM_ENABLE_TESTS "Enable tests" ON)
 if (PDM_ENABLE_TESTS)
   add_subdirectory(test)
 endif()
