@@ -294,6 +294,12 @@ PDM_extract_part_free
 );
 
 void
+PDM_extract_part_partial_free
+(
+  PDM_extract_part_t  *extrp
+);
+
+void
 PDM_extract_part_part_to_part_get
 (
        PDM_extract_part_t   *extrp,

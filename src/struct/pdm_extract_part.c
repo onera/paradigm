@@ -4270,6 +4270,25 @@ PDM_extract_part_free
   free(extrp->pvtx_coord);
 
   /*
+   * Free extracted partition
+   */
+  PDM_extract_part_partial_free(extrp);
+
+  free(extrp->is_owner_connectivity   );
+  free(extrp->is_owner_ln_to_gn       );
+  free(extrp->is_owner_parent_ln_to_gn);
+  free(extrp->is_owner_parent_lnum);
+
+  free(extrp);
+}
+
+void
+PDM_extract_part_partial_free
+(
+  PDM_extract_part_t  *extrp
+)
+{
+  /*
    * Free extracted partition if owner
    */
   /* Free connectivity */
@@ -4362,17 +4381,9 @@ PDM_extract_part_free
     free(extrp->pextract_vtx_coord);
   }
 
-
-
   for(int i = 0; i < PDM_MESH_ENTITY_MAX; ++i) {
     free(extrp->pextract_n_entity[i]);
   }
-
-
-  free(extrp->is_owner_connectivity   );
-  free(extrp->is_owner_ln_to_gn       );
-  free(extrp->is_owner_parent_ln_to_gn);
-  free(extrp->is_owner_parent_lnum);
 
   if(extrp->is_owner_extract_pmne == PDM_TRUE && extrp->extract_pmne != NULL) {
     PDM_part_mesh_nodal_elmts_free(extrp->extract_pmne);
@@ -4384,9 +4395,7 @@ PDM_extract_part_free
     }
   }
 
-  free(extrp);
 }
-
 
 void
 PDM_extract_part_part_to_part_get
