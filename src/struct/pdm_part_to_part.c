@@ -1957,7 +1957,7 @@ _p2p_stride_var_reverse_iexch
   ptp->async_exch_subrequest[request][1] = recv_request_data;
 
   if (__part2_to_part1_stride != NULL) {
-    for (int i = 0; i < ptp->n_part1; i++) {
+    for (int i = 0; i < ptp->n_part2; i++) {
       free (__part2_to_part1_stride[i]);
       free (__part2_to_part1_data[i]);
     }
