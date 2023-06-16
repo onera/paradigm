@@ -271,7 +271,7 @@ PDM_part_assemble_partitions
       (*pentity_ln_to_gn)[i_part] = NULL;
     }
     if(pentity_init_location != NULL) {
-      *pentity_init_location = (PDM_g_num_t **) malloc( sizeof(int *) * dn_part);
+      *pentity_init_location = (int **) malloc( sizeof(int *) * dn_part);
       for(int i_part = 0; i_part < dn_part; ++i_part) {
         (*pentity_init_location)[i_part] = NULL;
       }
