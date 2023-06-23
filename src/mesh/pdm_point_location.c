@@ -1763,6 +1763,7 @@ _compute_mean_value_coord_polyhedron_point_inside
   } // End of loop on vertices
 
   /* Loop on faces */
+  int on_triangle = 0;
   for (int iface = 0; iface < n_face; iface++) {
 
     const int *_face_vtx = face_vtx + face_vtx_idx[iface];
@@ -1843,9 +1844,41 @@ _compute_mean_value_coord_polyhedron_point_inside
       }
 
       /* Check if p is coplanar with current triangle to avoid division by zero */
-      int coplanar = (PDM_PI - h < eps_in_triangle);
+      on_triangle = (PDM_PI - h < eps_in_triangle);
 
-      assert(!coplanar);
+      if (on_triangle) {
+        // log_trace("!! on triangle, pt_coord = %f %f %f\n",
+        //           pt_coord[0], pt_coord[1], pt_coord[2]);
+        // log_trace("tri_coord :\n");
+        // for (int ivtx = 0; ivtx < 3; ivtx++) {
+        //   PDM_log_trace_array_double(vtx_coord + 3*__tri_vtx[ivtx], 3, "");
+        // }
+
+        double tri_coord[9];
+        for (int ivtx = 0; ivtx < 3; ivtx++) {
+          memcpy(tri_coord + 3*ivtx,
+                 vtx_coord + 3*__tri_vtx[ivtx],
+                 sizeof(double) * 3);
+        }
+
+        double tri_closest_point[3];
+        double tri_dist2;
+        double tri_weight[3];
+        PDM_triangle_status_t stat = PDM_triangle_evaluate_position(pt_coord,
+                                                                    tri_coord,
+                                                                    tri_closest_point,
+                                                                    &tri_dist2,
+                                                                    tri_weight);
+        assert(stat == PDM_TRIANGLE_INSIDE);
+        for (int ivtx = 0; ivtx < n_vtx; ivtx++) {
+          weight[ivtx] = 0;
+        }
+        for (int ivtx = 0; ivtx < 3; ivtx++) {
+          weight[__tri_vtx[ivtx]] = tri_weight[ivtx];
+        }
+
+        break;
+      }
 
       double sdet = PDM_SIGN(_determinant_3x3(tri_u[0],
                                               tri_u[1],
@@ -1858,6 +1891,8 @@ _compute_mean_value_coord_polyhedron_point_inside
       for (int ivtx = 0; ivtx < 3; ivtx++) {
         int ip = (ivtx+1)%3;
         int im = (ivtx+2)%3;
+
+        // check denominator ?
         c[ivtx] = -1 + (2 * sin_h * sin(h - theta[ivtx])) /
         (sin_theta[ip] * sin_theta[im]);
 
@@ -1882,6 +1917,8 @@ _compute_mean_value_coord_polyhedron_point_inside
       }
 
     } // End of loop on triangles
+
+    if (on_triangle) break;
 
   } // End of loop on faces
 
@@ -2004,16 +2041,27 @@ _locate_in_polyhedron
     for (int itri = 0; itri < n_tri; itri++) {
 
       double tri_coord[9];
-      if (face_orientation[iface] > 0) {
-        for (int idx_vtx = 0; idx_vtx < 3; idx_vtx++) {
-          int vtx_id = _tri_vtx[3*itri + idx_vtx] - 1;
-          memcpy(tri_coord + 3*idx_vtx, vtx_coord + 3*vtx_id, sizeof(double) * 3);
-        }
-      } else {
-        for (int idx_vtx = 0; idx_vtx < 3; idx_vtx++) {
-          int vtx_id = _tri_vtx[3*itri + 2-idx_vtx] - 1;
-          memcpy(tri_coord + 3*idx_vtx, vtx_coord + 3*vtx_id, sizeof(double) * 3);
-        }
+      // if (face_orientation[iface] > 0) {
+      //   for (int idx_vtx = 0; idx_vtx < 3; idx_vtx++) {
+      //     int vtx_id = _tri_vtx[3*itri + idx_vtx] - 1;
+      //     memcpy(tri_coord + 3*idx_vtx, vtx_coord + 3*vtx_id, sizeof(double) * 3);
+      //   }
+      // } else {
+      //   for (int idx_vtx = 0; idx_vtx < 3; idx_vtx++) {
+      //     int vtx_id = _tri_vtx[3*itri + 2-idx_vtx] - 1;
+      //     memcpy(tri_coord + 3*idx_vtx, vtx_coord + 3*vtx_id, sizeof(double) * 3);
+      //   }
+      // }
+      if (face_orientation[iface] < 0) {
+        int tmp = _tri_vtx[3*itri];
+        _tri_vtx[3*itri  ] = _tri_vtx[3*itri+2];
+        _tri_vtx[3*itri+2] = tmp;
+      }
+
+
+      for (int idx_vtx = 0; idx_vtx < 3; idx_vtx++) {
+        int vtx_id = _tri_vtx[3*itri + idx_vtx] - 1;
+        memcpy(tri_coord + 3*idx_vtx, vtx_coord + 3*vtx_id, sizeof(double) * 3);
       }
 
       /* Loop on points */
@@ -2270,7 +2318,8 @@ PDM_point_location_nodal
 
       int *parent_num = PDM_part_mesh_nodal_elmts_parent_num_get(pmne,
                                                                  id_section,
-                                                                 ipart);
+                                                                 ipart,
+                                                                 PDM_OWNERSHIP_KEEP);
 
       if (t_elt == PDM_MESH_NODAL_POLY_2D) {
         /* Polygonal section */
@@ -2280,7 +2329,8 @@ PDM_point_location_nodal
                                                    id_section,
                                                    ipart,
                                                    &connec_idx,
-                                                   &connec);
+                                                   &connec,
+                                                   PDM_OWNERSHIP_KEEP);
 
         for (int ielt = 0; ielt < n_elt; ielt++) {
           int icell = ielt;
@@ -2304,7 +2354,8 @@ PDM_point_location_nodal
                                                                     id_section,
                                                                     ipart,
                                                                     &connec_idx,
-                                                                    &connec);
+                                                                    &connec,
+                                                                    PDM_OWNERSHIP_KEEP);
 
         for (int ielt = 0; ielt < n_elt; ielt++) {
           int icell = ielt;
@@ -2335,7 +2386,8 @@ PDM_point_location_nodal
                                                    &_parent_num,
                                                    &parent_entity_g_num,
                                                    &order,
-                                                   &ho_ordering);
+                                                   &ho_ordering,
+                                                   PDM_OWNERSHIP_KEEP);
 
         int n_vtx = PDM_Mesh_nodal_n_vtx_elt_get(t_elt,
                                                  order);
@@ -2387,7 +2439,8 @@ PDM_point_location_nodal
 
       int *parent_num = PDM_part_mesh_nodal_elmts_parent_num_get(pmne,
                                                                  id_section,
-                                                                 ipart);
+                                                                 ipart,
+                                                                 PDM_OWNERSHIP_KEEP);
 
       if (t_elt == PDM_MESH_NODAL_POLY_2D) {
         /* Polygonal section */
@@ -2397,7 +2450,8 @@ PDM_point_location_nodal
                                                    id_section,
                                                    ipart,
                                                    &connec_idx,
-                                                   &connec);
+                                                   &connec,
+                                                   PDM_OWNERSHIP_KEEP);
 
         int n_vtx_max = 0;
         for (int ielt = 0; ielt < n_elt; ielt++) {
@@ -2447,7 +2501,8 @@ PDM_point_location_nodal
                                                                     id_section,
                                                                     ipart,
                                                                     &cell_vtx_idx,
-                                                                    &cell_vtx);
+                                                                    &cell_vtx,
+                                                                    PDM_OWNERSHIP_KEEP);
 
         int *cell_face_idx;
         int *cell_face;
@@ -2469,7 +2524,8 @@ PDM_point_location_nodal
                                                    &cell_face_idx,
                                                    &cell_face,
                                                    &_parent_num,
-                                                   &parent_entitity_ln_to_gn);
+                                                   &parent_entitity_ln_to_gn,
+                                                   PDM_OWNERSHIP_KEEP);
 
         int pn_vtx = 0;
         for (int i = 0; i < cell_vtx_idx[n_elt]; i++) {
@@ -2588,7 +2644,8 @@ PDM_point_location_nodal
                                                    &_parent_num,
                                                    &parent_entity_g_num,
                                                    &order,
-                                                   &ho_ordering);
+                                                   &ho_ordering,
+                                                   PDM_OWNERSHIP_KEEP);
 
 
         switch (t_elt) {

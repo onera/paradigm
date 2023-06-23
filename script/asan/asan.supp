@@ -19,3 +19,7 @@ leak:resize_compact
 leak:function_code_fastcall
 leak:ofi_mem_init
 leak:HYD_getcwd
+leak:MPIR_pmi_barrier
+leak:tcpx_conn_mgr_run
+leak:open_fabric
+leak:libpsm3-fi.so

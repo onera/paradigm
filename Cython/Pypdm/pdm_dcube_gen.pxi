@@ -126,57 +126,9 @@ cdef class DCubeGenerator:
                                &dface_group_idx,
                                &dface_group)
 
-        # \param [out]  dface_cell            Face to cell connectivity (size = 2*nFace)
-        dim = <NPY.npy_intp> 2*dims['dn_face']
-        np_dface_cell = NPY.PyArray_SimpleNewFromData(1,
-                                                   &dim,
-                                                   PDM_G_NUM_NPY_INT,
-                                                   <void *> dface_cell)
-        PyArray_ENABLEFLAGS(np_dface_cell, NPY.NPY_OWNDATA);
-
-        # \param [out]  dface_vtx_idx        Face to vtx connectivity indexes (size = nFace+1)
-        dim = <NPY.npy_intp> (dims['dn_face'] + 1)
-        np_dface_vtx_idx = NPY.PyArray_SimpleNewFromData(1,
-                                                     &dim,
-                                                     NPY.NPY_INT32,
-                                                     <void *> dface_vtx_idx)
-        PyArray_ENABLEFLAGS(np_dface_vtx_idx, NPY.NPY_OWNDATA);
-
-        # \param [out]  dface_vtx            Face to vtx connectivity (size = dface_vtx_idx[nFace])
-        dim = <NPY.npy_intp> dims['sface_vtx']
-        np_dface_vtx = NPY.PyArray_SimpleNewFromData(1,
-                                                  &dim,
-                                                  PDM_G_NUM_NPY_INT,
-                                                  <void *> dface_vtx)
-        PyArray_ENABLEFLAGS(np_dface_vtx, NPY.NPY_OWNDATA);
-
-        # \param [out]  dvtx_coords          Vertices coordinates (size = 3*nVtx)
-        dim = <NPY.npy_intp> 3*dims['dn_vtx']
-        np_dtx_coord = NPY.PyArray_SimpleNewFromData(1,
-                                                   &dim,
-                                                   NPY.NPY_DOUBLE,
-                                                   <void *> dvtx_coord)
-        PyArray_ENABLEFLAGS(np_dtx_coord, NPY.NPY_OWNDATA);
-
-        # \param [out]  dface_group_idx       Face group indexes (size = n_face_group + 1)
-        dim = <NPY.npy_intp> (dims['n_face_group'] + 1)
-        np_dface_group_idx = NPY.PyArray_SimpleNewFromData(1,
-                                                       &dim,
-                                                       NPY.NPY_INT32,
-                                                       <void *> dface_group_idx)
-        PyArray_ENABLEFLAGS(np_dface_group_idx, NPY.NPY_OWNDATA);
-
-        # \param [out]  dface_group          Face group (size = dface_group_idx[n_face_group])
-        dim = <NPY.npy_intp> dims['sface_group']
-        np_dface_group = NPY.PyArray_SimpleNewFromData(1,
-                                                    &dim,
-                                                    PDM_G_NUM_NPY_INT,
-                                                    <void *> dface_group)
-        PyArray_ENABLEFLAGS(np_dface_group, NPY.NPY_OWNDATA);
-
-        return {'dface_cell'      : np_dface_cell,
-                'dface_vtx_idx'   : np_dface_vtx_idx,
-                'dface_vtx'       : np_dface_vtx,
-                'dvtx_coord'      : np_dtx_coord,
-                'dface_group_idx' : np_dface_group_idx,
-                'dface_group'     : np_dface_group}
+        return {'dface_cell'      : create_numpy_g(dface_cell,      2*dims['dn_face']),
+                'dface_vtx_idx'   : create_numpy_i(dface_vtx_idx,   dims['dn_face']+1),
+                'dface_vtx'       : create_numpy_g(dface_vtx,       dims['sface_vtx']),
+                'dvtx_coord'      : create_numpy_d(dvtx_coord,      3*dims['dn_vtx']),
+                'dface_group_idx' : create_numpy_i(dface_group_idx, dims['n_face_group']+1),
+                'dface_group'     : create_numpy_g(dface_group,     dims['sface_group'])}

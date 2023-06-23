@@ -55,15 +55,18 @@ struct _pdm_part_mesh_nodal_elmts_t {
   PDM_Mesh_nodal_block_poly3d_t      **sections_poly3d;           /*!< Polyhedron sections           */
 
   /* Group */
-  PDM_ownership_t     ownership_group;
-  int                 n_group;
-  int               **n_group_elmt; // (i_part, i_group)
-  int              ***group_elmt;
-  PDM_g_num_t      ***group_ln_to_gn;
+  int                                  n_group;
+  int                                **n_group_elmt;              // (i_part, i_group)
+  int                               ***group_elmt;
+  PDM_g_num_t                       ***group_ln_to_gn;
 
   PDM_l_num_t                        **num_elmt_parent_to_local;  /*!< Initial local numbering to local numbering
                                                                    *   imposed by blocks */
-  PDM_g_num_t                        **numabs;                  /*<! Global numbering per elmts per partition */
+  PDM_g_num_t                        **numabs;                    /*!< Global numbering per elmts per partition */
+
+  /* Ownerships */
+  PDM_ownership_t                      ownership_group;          /*!< group_elmt, group_ln_to_gn */
+  PDM_ownership_t                      ownership_numabs;         /*!< numabs */
 };
 
 #ifdef __cplusplus

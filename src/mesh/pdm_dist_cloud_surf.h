@@ -276,6 +276,49 @@ PDM_dist_cloud_surf_cloud_dim_get
        int                   *n_points
 );
 
+
+/**
+ *
+ * \brief Get the dimension of a point cloud
+ *
+ * \param [in]   dist            Pointer to \ref PDM_dist_cloud_surf object
+ * \param [in]   i_point_cloud   Index of point cloud
+ * \param [out]  n_part          Number of partition
+ *
+ */
+
+int
+PDM_dist_cloud_surf_cloud_n_part_get
+(
+       PDM_dist_cloud_surf_t *dist,
+ const int                    i_point_cloud
+);
+
+
+
+/**
+ *
+ * \brief Distribute data from surf to cloud
+ *
+ * \param [in]   dist              Pointer to \ref PDM_dist_cloud_surf object
+ * \param [in]   i_point_cloud     Current cloud
+ * \param [in]   stride            Stride
+ * \param [in]   surf_data         Data over the surface
+ * \param [out]  cloud_data        Data over the cloud
+ *
+ */
+
+void
+PDM_dist_cloud_surf_distri_data
+(
+       PDM_dist_cloud_surf_t  *dist,
+ const int                     i_point_cloud,
+ const int                     stride,
+ const void                  **surf_data,
+       void                 ***cloud_data
+);
+
+
 #ifdef	__cplusplus
 }
 #endif

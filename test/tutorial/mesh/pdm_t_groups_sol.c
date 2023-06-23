@@ -514,23 +514,22 @@ int main(int argc, char *argv[])
                            &vtx_surface_idx,
                            &vtx_surface);
 
+  if(1 == 0) {
+    PDM_log_trace_connectivity_int(edge_surface_idx,
+                                   edge_surface,
+                                   n_edge,
+                                   "edge_surface : ");
 
- PDM_log_trace_connectivity_int(edge_surface_idx,
-                                 edge_surface,
-                                 n_edge,
-                                 "edge_surface : ");
+    PDM_log_trace_connectivity_int(vtx_ridge_idx,
+                                   vtx_ridge,
+                                   n_vtx,
+                                   "vtx_ridge : ");
 
-  PDM_log_trace_connectivity_int(vtx_ridge_idx,
-                                 vtx_ridge,
-                                 n_vtx,
-                                 "vtx_ridge : ");
-
-  PDM_log_trace_connectivity_int(vtx_surface_idx,
-                                 vtx_surface,
-                                 n_vtx,
-                                 "vtx_surface : ");
-
-
+    PDM_log_trace_connectivity_int(vtx_surface_idx,
+                                   vtx_surface,
+                                   n_vtx,
+                                   "vtx_surface : ");
+  }
 
   /* Visu */
   int *face_vtx = NULL;
@@ -559,52 +558,51 @@ int main(int argc, char *argv[])
     vtx_surface_n[i] = vtx_surface_idx[i+1] - vtx_surface_idx[i];
   }
 
-  PDM_vtk_write_polydata("face_group.vtk",
-                         n_vtx,
-                         vtx_coord,
-                         NULL,
-                         n_face,
-                         face_edge_idx,
-                         face_vtx,
-                         NULL,
-                         face_group_n);
+  if(0 == 1) {
+    PDM_vtk_write_polydata("face_group.vtk",
+                           n_vtx,
+                           vtx_coord,
+                           NULL,
+                           n_face,
+                           face_edge_idx,
+                           face_vtx,
+                           NULL,
+                           face_group_n);
 
-  const char* field_name[] = {"n_ridge", "n_surface", 0 };
+    const char* field_name[] = {"n_ridge", "n_surface", 0 };
 
-  const int *edge_field[2] = {edge_group_n, edge_surface_n};
-  PDM_vtk_write_std_elements("edge_group.vtk",
-                             n_vtx,
-                             vtx_coord,
-                             NULL,
-                             PDM_MESH_NODAL_BAR2,
-                             n_edge,
-                             edge_vtx,
-                             NULL,
-                             2,
-                             field_name,
-                             edge_field);
+    const int *edge_field[2] = {edge_group_n, edge_surface_n};
+    PDM_vtk_write_std_elements("edge_group.vtk",
+                               n_vtx,
+                               vtx_coord,
+                               NULL,
+                               PDM_MESH_NODAL_BAR2,
+                               n_edge,
+                               edge_vtx,
+                               NULL,
+                               2,
+                               field_name,
+                               edge_field);
 
-  const int *vtx_field[2] = {vtx_ridge_n, vtx_surface_n};
-  PDM_vtk_write_std_elements("vtx_group.vtk",
-                             n_vtx,
-                             vtx_coord,
-                             NULL,
-                             PDM_MESH_NODAL_POINT,
-                             n_vtx,
-                             NULL,
-                             NULL,
-                             2,
-                             field_name,
-                             vtx_field);
+    const int *vtx_field[2] = {vtx_ridge_n, vtx_surface_n};
+    PDM_vtk_write_std_elements("vtx_group.vtk",
+                               n_vtx,
+                               vtx_coord,
+                               NULL,
+                               PDM_MESH_NODAL_POINT,
+                               n_vtx,
+                               NULL,
+                               NULL,
+                               2,
+                               field_name,
+                               vtx_field);
+  }
   free(face_vtx);
   free(face_group_n);
   free(edge_group_n);
   free(edge_surface_n);
   free(vtx_ridge_n);
   free(vtx_surface_n);
-
-
-
 
   free(face_group_idx);
   free(face_group);

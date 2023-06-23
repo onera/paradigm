@@ -24,6 +24,8 @@
 #include "pdm_version.h"
 #include "pdm_mesh_nodal.h"
 #include "pdm_vtk.h"
+#include "pdm_logging.h"
+#include "pdm_array.h"
 
 /*============================================================================
  * Macro definitions
@@ -262,6 +264,9 @@ main
                               &n_tgt,
                               &tgt_coord,
                               &tgt_g_num);
+  // n_tgt = n_src;
+  // tgt_coord = src_coord;
+  // tgt_g_num = src_g_num;
 
 
   PDM_closest_point_t* clsp = PDM_closest_points_create (PDM_MPI_COMM_WORLD,
@@ -325,6 +330,94 @@ main
                                         &ptp,
                                         PDM_OWNERSHIP_KEEP);
 
+    int *tgt_to_src_idx = PDM_array_new_idx_from_const_stride_int(n_closest_points, n_tgt);
+    PDM_part_to_part_t *ptp2 = PDM_part_to_part_create((const PDM_g_num_t **) &tgt_g_num,
+                                                       &n_tgt,
+                                                       1,
+                                                       (const PDM_g_num_t **) &src_g_num,
+                                                       &n_src,
+                                                       1,
+                                                       (const int         **) &tgt_to_src_idx,
+                                                       (const PDM_g_num_t **) &closest_src_gnum,
+                                                       comm);
+
+    // PDM_log_trace_connectivity_long(tgt_to_src_idx,
+    //                                 closest_src_gnum,
+    //                                 n_tgt,
+    //                                 "closest_src_gnum : ");
+
+    int         **come_from_idx;
+    PDM_g_num_t **come_from;
+    PDM_part_to_part_gnum1_come_from_get(ptp,
+                                         &come_from_idx,
+                                         &come_from);
+
+    // PDM_log_trace_connectivity_long(come_from_idx[0],
+    //                                 come_from[0],
+    //                                 n_tgt,
+    //                                 "come_from        : ");
+
+
+    double **recv_coord = NULL;
+    int request = -1;
+    if (1) {
+      PDM_part_to_part_iexch(ptp,
+                             PDM_MPI_COMM_KIND_P2P,
+                             PDM_STRIDE_CST_INTERLACED,
+                             PDM_PART_TO_PART_DATA_DEF_ORDER_PART1,
+                             3,
+                             sizeof(double),
+                             NULL,
+            (const void  **) &src_coord,
+                             NULL,
+            (      void ***) &recv_coord,
+                             &request);
+      PDM_part_to_part_iexch_wait(ptp, request);
+    }
+    else {
+      PDM_part_to_part_reverse_iexch(ptp2,
+                                     PDM_MPI_COMM_KIND_P2P,
+                                     PDM_STRIDE_CST_INTERLACED,
+                                     PDM_PART_TO_PART_DATA_DEF_ORDER_PART2,
+                                     3,
+                                     sizeof(double),
+                                     NULL,
+                    (const void  **) &src_coord,
+                                     NULL,
+                    (      void ***) &recv_coord,
+                                     &request);
+      PDM_part_to_part_reverse_iexch_wait(ptp2, request);
+    }
+
+    for (int i = 0; i < n_tgt; i++) {
+      for (int j = 0; j < n_closest_points; j++) {
+        double dist2 = 0;
+
+        for (int k = 0; k < 3; k++) {
+          double d = tgt_coord[3*i+k] - recv_coord[0][3*(n_closest_points*i+j)+k];
+          dist2 += d*d;
+        }
+
+        if (PDM_ABS(dist2 - closest_src_dist[n_closest_points*i+j]) > 1e-6 * radius) {
+          printf("[%d] tgt "PDM_FMT_G_NUM" (%f %f %f), src "PDM_FMT_G_NUM" (%f %f %f), dist2 %e / %e\n",
+                 i_rank,
+                 tgt_g_num[i],
+                 tgt_coord[3*i+0], tgt_coord[3*i+1], tgt_coord[3*i+2],
+                 closest_src_gnum[n_closest_points*i+j],
+                 recv_coord[0][3*(n_closest_points*i+j)+0],
+                 recv_coord[0][3*(n_closest_points*i+j)+1],
+                 recv_coord[0][3*(n_closest_points*i+j)+2],
+                 dist2, closest_src_dist[n_closest_points*i+j]);
+        }
+      }
+    }
+
+    free(recv_coord[0]);
+    free(recv_coord   );
+
+
+    PDM_part_to_part_free(ptp2);
+    free(tgt_to_src_idx);
 
     // define field on src cloud
     double *src_field = malloc(sizeof(double) * n_src);
@@ -335,7 +428,7 @@ main
 
     // exchange to tgt cloud
     double **recv_field = NULL;
-    int request = -1;
+    request = -1;
     PDM_part_to_part_iexch(ptp,
                            PDM_MPI_COMM_KIND_P2P,
                            PDM_STRIDE_CST_INTERLACED,

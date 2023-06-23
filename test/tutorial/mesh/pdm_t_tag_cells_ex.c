@@ -429,21 +429,23 @@ int main(int argc, char *argv[])
    *  Visualize cell tags
    */
   // Output cells and tag field
-  char filename[999];
-  sprintf(filename, "cells.vtk");
-  const char* fieldname[] = {"cell_tag", 0 };
+  if(1 == 0) {
+    char filename[999];
+    sprintf(filename, "cells.vtk");
+    const char* fieldname[] = {"cell_tag", 0 };
 
-  PDM_vtk_write_std_elements(filename,
-                             n_vtx,
-                             vtx_coord,
-                             NULL,
-                             elt_type,
-                             n_cell,
-                             cell_vtx,
-                             NULL,
-                             1,
-                             fieldname,
-             (const int **) &cell_tag);
+    PDM_vtk_write_std_elements(filename,
+                               n_vtx,
+                               vtx_coord,
+                               NULL,
+                               elt_type,
+                               n_cell,
+                               cell_vtx,
+                               NULL,
+                               1,
+                               fieldname,
+               (const int **) &cell_tag);
+  }
 
   /*
    *  2) Tag all cells
@@ -514,21 +516,23 @@ int main(int argc, char *argv[])
   /*
    *  Visualize 'expanded' cell tags
    */
-  char filename2[999];
-  sprintf(filename2, "cells_extended.vtk");
-  const char* fieldname2[] = {"cell_tag_extended", 0 };
+  if(1 == 0) {
+    char filename2[999];
+    sprintf(filename2, "cells_extended.vtk");
+    const char* fieldname2[] = {"cell_tag_extended", 0 };
 
-  PDM_vtk_write_std_elements(filename2,
-                             n_vtx,
-                             vtx_coord,
-                             NULL,
-                             elt_type,
-                             n_cell,
-                             cell_vtx,
-                             NULL,
-                             1,
-                             fieldname2,
-             (const int **) &cell_tag);
+    PDM_vtk_write_std_elements(filename2,
+                               n_vtx,
+                               vtx_coord,
+                               NULL,
+                               elt_type,
+                               n_cell,
+                               cell_vtx,
+                               NULL,
+                               1,
+                               fieldname2,
+               (const int **) &cell_tag);
+  }
 
   /* Free memory */
   free(cell_face_idx);

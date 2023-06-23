@@ -380,9 +380,15 @@ PDM_mesh_location_method_set
  */
 
 void
-PDM_mesh_location_compute
+PDM_mesh_location_compute_old
 (
 PDM_mesh_location_t        *ml
+);
+
+void
+PDM_mesh_location_compute
+(
+ PDM_mesh_location_t        *ml
 );
 
 

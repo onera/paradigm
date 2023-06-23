@@ -121,7 +121,7 @@ int main(int argc, char *argv[])
              &visu);
 
   if (filename == NULL) {
-    filename = (char *) "meshes/box.mesh";
+    filename = (char *) PDM_MESH_DIR"box.mesh";
     printf("No file specified -> exit \n");
     return 0;
   }

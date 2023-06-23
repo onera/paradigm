@@ -63,25 +63,32 @@ struct _pdm_part_mesh_t
   int               ***pconnectivity_idx;               /* Array of connectivty_idx if any (size = PDM_CONNECTIVITY_TYPE_MAX) */
 
   PDM_g_num_t       ***pentity_ln_to_gn;                /* Array of connectivty (size = PDM_MESH_ENTITY_MAX)            */
+  int               ***pentity_color;
 
   double             **vtx_coords;
 
   PDM_bool_t         *is_owner_connectivity;
   PDM_bool_t         *is_owner_ln_to_gn;
   PDM_bool_t          is_owner_vtx_coord;
+  PDM_bool_t         *is_owner_color;
 
   int                  n_group_bnd[PDM_BOUND_TYPE_MAX]; /*!< Number of group by elememnt type                                 */
   int               ***pn_bound;                        /* Array of connectivty (size = PDM_CONNECTIVITY_TYPE_MAX)            */
   PDM_g_num_t      ****pbound_ln_to_gn;                 /* Array of connectivty (size = PDM_CONNECTIVITY_TYPE_MAX)            */
   int              ****pbound;                          /* Array of connectivty_idx if any (size = PDM_CONNECTIVITY_TYPE_MAX) */
-  PDM_bool_t         *is_owner_bound;
+  PDM_bool_t          *is_owner_bound;
+
+  int               ***pconcat_bound_idx;              /* Array of connectivty (size = PDM_CONNECTIVITY_TYPE_MAX)            */
+  PDM_g_num_t       ***pconcat_bound_ln_to_gn;         /* Array of connectivty (size = PDM_CONNECTIVITY_TYPE_MAX)            */
+  int               ***pconcat_bound;                  /* Array of connectivty_idx if any (size = PDM_CONNECTIVITY_TYPE_MAX) */
+  PDM_bool_t          *is_owner_concat_bound;
+  PDM_bool_t          *is_compute_concat_bound;
 
   /* Comm graph */
   int               ***ppart_bound_proc_idx;            /* Array of connectivty (size = PDM_CONNECTIVITY_TYPE_MAX)            */
   int               ***ppart_bound_part_idx;            /* Array of connectivty_idx if any (size = PDM_CONNECTIVITY_TYPE_MAX) */
   int               ***ppart_bound;                     /* Array of connectivty_idx if any (size = PDM_CONNECTIVITY_TYPE_MAX) */
-  PDM_bool_t         *is_owner_part_bound;
-
+  PDM_bool_t          *is_owner_part_bound;
 
 };
 

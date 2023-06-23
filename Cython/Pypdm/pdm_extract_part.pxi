@@ -76,6 +76,34 @@ cdef extern from "pdm_extract_part.h":
 
   void PDM_extract_part_free(PDM_extract_part_t  *extrp);
 
+  void PDM_extract_part_n_group_set(PDM_extract_part_t        *extrp,
+                                    PDM_bound_type_t           bound_type,
+                                    int                        n_group);
+
+  void PDM_extract_part_part_group_set(PDM_extract_part_t        *extrp,
+                                       int                       i_part,
+                                       int                       i_group,
+                                       PDM_bound_type_t          bound_type,
+                                       int                       n_group_entity,
+                                       int                      *group_entity,
+                                       PDM_g_num_t              *group_entity_ln_to_gn);
+
+
+  void PDM_extract_part_part_to_part_group_get(PDM_extract_part_t   *extrp,
+                                               PDM_bound_type_t      bound_type,
+                                               int                   i_group,
+                                               PDM_part_to_part_t  **ptp,
+                                               PDM_ownership_t       ownership);
+
+  void PDM_extract_part_group_get(PDM_extract_part_t   *extrp,
+                                  PDM_bound_type_t      bound_type,
+                                  int                   i_part,
+                                  int                   i_group,
+                                  int                  *pn_extract_group_entity,
+                                  int                 **pextract_group_entity,
+                                  PDM_g_num_t         **pextract_group_entity_ln_to_gn,
+                                  PDM_g_num_t         **pextract_group_entity_parent_ln_to_gn,
+                                  PDM_ownership_t       ownership);
 # ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 # ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -89,6 +117,7 @@ cdef class ExtractPart:
   cdef PDM_extract_part_t* _extrp
   cdef MPI.Comm py_comm   
   cdef dict ptp_objects
+  cdef dict ptp_group_objects
   cdef list keep_alive
   # --------------------------------------------------------------------------
 
@@ -105,6 +134,7 @@ cdef class ExtractPart:
     Compute the distance from point clouds to a surface
     """
     self.ptp_objects = dict()
+    self.ptp_group_objects = dict()
     self.keep_alive  = list()
 
     self.py_comm = comm
@@ -227,6 +257,37 @@ cdef class ExtractPart:
              <double      *> coords       .data)
 
   # ------------------------------------------------------------------
+  def part_group_set(self,
+                     PDM_bound_type_t bound_type,
+                     int              n_group):
+    """
+    """
+    PDM_extract_part_n_group_set(self._extrp,
+                                 bound_type,
+                                 n_group)
+
+
+  # ------------------------------------------------------------------
+  def part_group_set(self,
+                     int                                           i_part,
+                     int                                           i_group,
+                     PDM_bound_type_t                              bound_type,
+                     NPY.ndarray[NPY.int32_t   , mode='c', ndim=1] np_group_entity,
+                     NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1] np_group_entity_ln_to_gn):
+    """
+    """
+    self.keep_alive.append(np_group_entity)
+    self.keep_alive.append(np_group_entity_ln_to_gn)
+    cdef int n_group_entity = np_group_entity.shape[0]
+    PDM_extract_part_part_group_set(self._extrp,
+                                    i_part,
+                                    i_group,
+                                    bound_type,
+                                    n_group_entity,
+                   <int        * >  np_group_entity.data,
+                   <PDM_g_num_t* >  np_group_entity_ln_to_gn.data);
+
+  # ------------------------------------------------------------------
   def compute(self):
     """
     """
@@ -282,7 +343,7 @@ cdef class ExtractPart:
                                              entity_type,
                                              &entity_ln_to_gn,
                                              PDM_OWNERSHIP_USER)
-    return create_numpy_pdm_gnum(entity_ln_to_gn, n_entity)
+    return create_numpy_g(entity_ln_to_gn, n_entity)
 
   # ------------------------------------------------------------------
   def parent_ln_to_gn_get(self,
@@ -298,7 +359,7 @@ cdef class ExtractPart:
                                                     entity_type,
                                                     &parent_ln_to_gn,
                                                     PDM_OWNERSHIP_USER)
-    return create_numpy_pdm_gnum(parent_ln_to_gn, n_entity)
+    return create_numpy_g(parent_ln_to_gn, n_entity)
 
   # ------------------------------------------------------------------
   def vtx_coord_get(self,
@@ -329,6 +390,49 @@ cdef class ExtractPart:
       self.ptp_objects[entity_type] = PartToPartCapsule(py_casp, self.py_comm) # The free is inside the class
       return self.ptp_objects[entity_type]
 
+  # ------------------------------------------------------------------
+  def part_to_part_group_get(                 self,
+                             PDM_bound_type_t bound_type,
+                             int              i_group):
+    """
+    """
+    cdef PDM_part_to_part_t  *ptpc
+    try:
+      return self.ptp_group_objects[(i_group, bound_type)]
+    except KeyError:
+      PDM_extract_part_part_to_part_group_get( self._extrp,
+                                               bound_type,
+                                               i_group,
+                                              &ptpc,
+                                               PDM_OWNERSHIP_USER)
+      py_casp = PyCapsule_New(ptpc, NULL, NULL);
+      self.ptp_group_objects[(i_group, bound_type)] = PartToPartCapsule(py_casp, self.py_comm) # The free is inside the class
+      return self.ptp_group_objects[(i_group, bound_type)]
+
+  # ------------------------------------------------------------------
+  def extract_part_group_get(self,
+                             int              ipart,
+                             int              i_group,
+                             PDM_bound_type_t bound_type):
+    """
+    """
+    cdef int          pn_extract_group_entity
+    cdef int         *pextract_group_entity
+    cdef PDM_g_num_t *pextract_group_entity_ln_to_gn
+    cdef PDM_g_num_t *pextract_group_entity_parent_ln_to_gn
+
+    PDM_extract_part_group_get(self._extrp,
+                               bound_type,
+                               ipart,
+                               i_group,
+                               &pn_extract_group_entity,
+                               &pextract_group_entity,
+                               &pextract_group_entity_ln_to_gn,
+                               &pextract_group_entity_parent_ln_to_gn,
+                               PDM_OWNERSHIP_USER)
+    return {'group_entity'                 : create_numpy_i(pextract_group_entity                , pn_extract_group_entity),
+            'group_entity_ln_to_gn'        : create_numpy_g(pextract_group_entity_ln_to_gn       , pn_extract_group_entity),
+            'group_entity_parent_ln_to_gn' : create_numpy_g(pextract_group_entity_parent_ln_to_gn, pn_extract_group_entity)}
 
   # ------------------------------------------------------------------
   def __dealloc__(self):

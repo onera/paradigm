@@ -20,6 +20,7 @@ cdef extern from "pdm_part_mesh_nodal.h":
                                        PDM_ownership_t        owner)
 
     int PDM_part_mesh_nodal_n_part_get(PDM_part_mesh_nodal_t *pmn)
+    int PDM_part_mesh_nodal_mesh_dimension_get( PDM_part_mesh_nodal_t *pmn)
 
     int PDM_part_mesh_nodal_n_vtx_get(PDM_part_mesh_nodal_t *pmn,
                                       int                    id_part)
@@ -69,11 +70,8 @@ cdef extern from "pdm_part_mesh_nodal.h":
                                              int                   **connec,
                                              PDM_g_num_t           **numabs,
                                              int                   **parent_num,
-                                             PDM_g_num_t           **parent_entity_g_num)
-
-    void PDM_part_mesh_nodal_add_part_mesh_nodal_elmts(PDM_part_mesh_nodal_t       *pmn,
-                                                       PDM_part_mesh_nodal_elmts_t *pmne,
-                                                       PDM_ownership_t              owner)
+                                             PDM_g_num_t           **parent_entity_g_num,
+                                             PDM_ownership_t         ownership)
 
     int PDM_part_mesh_nodal_section_id_from_geom_kind_get(PDM_part_mesh_nodal_t  *pmn,
                                                           const PDM_geometry_kind_t     geom_kind,
@@ -112,6 +110,9 @@ cdef class PartMeshNodal:
         self.pmn = PDM_part_mesh_nodal_create(mesh_dimension, n_part, PDMC)
         # ::::::::::::::::::::::::::::::::::::::::::::::::::
 
+    def dim_get(self):
+        return part_mesh_nodal_dim_get(self)
+
     # ------------------------------------------------------------------------
     def __dealloc__(self):
       """
@@ -135,6 +136,8 @@ cdef class PartMeshNodalCaspule:
     cdef PDM_part_mesh_nodal_t* casp_pmn = <PDM_part_mesh_nodal_t *> PyCapsule_GetPointer(caps, NULL)
     self.pmn = casp_pmn;
 
+  def dim_get(self):
+    return part_mesh_nodal_dim_get(self)
   # ------------------------------------------------------------------------
   def part_mesh_nodal_get_sections(self, PDM_geometry_kind_t geom_kind, int i_part):
     """
@@ -154,6 +157,9 @@ cdef class PartMeshNodalCaspule:
 ctypedef fused PMeshNodal:
   PartMeshNodal
   PartMeshNodalCaspule
+
+def part_mesh_nodal_dim_get(PMeshNodal pypmn):
+  return PDM_part_mesh_nodal_mesh_dimension_get(pypmn.pmn)
 
 def part_mesh_nodal_get_sections(PMeshNodal pypmn, PDM_geometry_kind_t geom_kind, int i_part):
   """
@@ -189,39 +195,17 @@ def part_mesh_nodal_get_sections(PMeshNodal pypmn, PDM_geometry_kind_t geom_kind
 
     n_elmt_in_section = PDM_part_mesh_nodal_section_n_elt_get(pypmn.pmn, id_section, i_part)
 
-    PDM_part_mesh_nodal_section_std_get(pypmn.pmn, id_section, i_part, &connec, &numabs, &parent_num, &parent_entity_g_num)
+    PDM_part_mesh_nodal_section_std_get(pypmn.pmn, id_section, i_part, &connec, &numabs, &parent_num, &parent_entity_g_num, PDM_OWNERSHIP_USER)
 
     n_vtx_per_elmt = PDM_Mesh_nodal_n_vertices_element(t_elmt, 1)
 
-    dim = <NPY.npy_intp> n_elmt_in_section * n_vtx_per_elmt
-    np_connec = NPY.PyArray_SimpleNewFromData(1,
-                                              &dim,
-                                              NPY.NPY_INT32,
-                                     <void *> connec)
-    PyArray_ENABLEFLAGS(np_connec, NPY.NPY_OWNDATA);
+    np_connec     = create_numpy_i(connec,     n_elmt_in_section*n_vtx_per_elmt)
+    np_parent_num = create_numpy_i(parent_num, n_elmt_in_section)
+    np_numabs     = create_numpy_g(numabs,     n_elmt_in_section)
 
-    dim = <NPY.npy_intp> n_elmt_in_section
-    np_parent_num = NPY.PyArray_SimpleNewFromData(1,
-                                              &dim,
-                                              NPY.NPY_INT32,
-                                     <void *> parent_num)
-    PyArray_ENABLEFLAGS(np_parent_num, NPY.NPY_OWNDATA);
-
-    dim = <NPY.npy_intp> n_elmt_in_section
-    np_numabs = NPY.PyArray_SimpleNewFromData(1,
-                                              &dim,
-                                              PDM_G_NUM_NPY_INT,
-                                     <void *> numabs)
-    PyArray_ENABLEFLAGS(np_numabs, NPY.NPY_OWNDATA);
-
-    dim = <NPY.npy_intp> n_elmt_in_section
     np_parent_entity_g_num = None
     if(parent_entity_g_num != NULL):
-      np_parent_entity_g_num = NPY.PyArray_SimpleNewFromData(1,
-                                                             &dim,
-                                                             PDM_G_NUM_NPY_INT,
-                                                             <void *> parent_entity_g_num)
-      PyArray_ENABLEFLAGS(np_parent_entity_g_num, NPY.NPY_OWNDATA);
+      np_parent_entity_g_num = create_numpy_g(parent_entity_g_num, n_elmt_in_section)
 
     sections.append({"pdm_type"               : t_elmt,
                      "np_connec"              : np_connec,

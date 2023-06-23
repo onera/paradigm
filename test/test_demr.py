@@ -69,10 +69,8 @@ face_edge, face_edge_idx = res_face_edge["np_entity1_entity2"],res_face_edge["np
 res_edge_face = mpart.multipart_connectivity_get(0, 0, PDM._PDM_CONNECTIVITY_TYPE_EDGE_FACE)
 edge_face, edge_face_idx = res_edge_face["np_entity1_entity2"],res_edge_face["np_entity1_entity2_idx"]
 
-part_infos = mpart.multipart_val_get(0, 0)
+# part_infos = mpart.multipart_val_get(0, 0)
 
-graph_comm_vtx  = mpart.multipart_graph_comm_vtx_val_get(0, 0)
-graph_comm_edge = mpart.multipart_graph_comm_edge_val_get(0, 0)
 ghost_info_vtx  = mpart.multipart_ghost_information_get(0, 0)
 
 # on récupère les numéros absolus des arêtes
@@ -80,14 +78,14 @@ edge_ln_to_gn = mpart.multipart_ln_to_gn_get(0, 0, PDM._PDM_MESH_ENTITY_EDGE)["n
 n_edge = len(edge_ln_to_gn)
 
 # on récupère les numéros absolus des sommets
-# vtx_ln_to_gn = mpart.multipart_ln_to_gn_get(0, 0, PDM._PDM_MESH_ENTITY_VERTEX)["np_entity_ln_to_gn"]
-vtx_ln_to_gn = part_infos["np_vtx_ln_to_gn"]
+vtx_ln_to_gn = mpart.multipart_ln_to_gn_get(0, 0, PDM._PDM_MESH_ENTITY_VERTEX)["np_entity_ln_to_gn"]
+# vtx_ln_to_gn = part_infos["np_vtx_ln_to_gn"]
 
 # on récupère les coordonnées des sommets
-# vtx_coord = mpart.multipart_vtx_coord_get(0, 0)["np_vtx_coord"]
+vtx_coord = mpart.multipart_vtx_coord_get(0, 0)["np_vtx_coord"]
 n_vtx = len(vtx_ln_to_gn)
 
-vtx_coord = part_infos["np_vtx_coord"]
+# vtx_coord = part_infos["np_vtx_coord"]
 
 # on sélectionne les arêtes dont le numéro absolu est un multiple de 'step_edge'
 step_edge = int(1./extract_fraction)

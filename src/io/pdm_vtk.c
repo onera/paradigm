@@ -1217,14 +1217,14 @@ PDM_vtk_write_boxes
   fprintf(f, "POINTS %d double\n", 8*n_box);
   for (int i = 0; i < n_box; i++) {
     const double *e = box_extents + 6*i;
-    fprintf(f, "%f %f %f\n", e[0], e[1], e[2]);
-    fprintf(f, "%f %f %f\n", e[3], e[1], e[2]);
-    fprintf(f, "%f %f %f\n", e[3], e[4], e[2]);
-    fprintf(f, "%f %f %f\n", e[0], e[4], e[2]);
-    fprintf(f, "%f %f %f\n", e[0], e[1], e[5]);
-    fprintf(f, "%f %f %f\n", e[3], e[1], e[5]);
-    fprintf(f, "%f %f %f\n", e[3], e[4], e[5]);
-    fprintf(f, "%f %f %f\n", e[0], e[4], e[5]);
+    fprintf(f, "%20.16f %20.16f %20.16f\n", e[0], e[1], e[2]);
+    fprintf(f, "%20.16f %20.16f %20.16f\n", e[3], e[1], e[2]);
+    fprintf(f, "%20.16f %20.16f %20.16f\n", e[3], e[4], e[2]);
+    fprintf(f, "%20.16f %20.16f %20.16f\n", e[0], e[4], e[2]);
+    fprintf(f, "%20.16f %20.16f %20.16f\n", e[0], e[1], e[5]);
+    fprintf(f, "%20.16f %20.16f %20.16f\n", e[3], e[1], e[5]);
+    fprintf(f, "%20.16f %20.16f %20.16f\n", e[3], e[4], e[5]);
+    fprintf(f, "%20.16f %20.16f %20.16f\n", e[0], e[4], e[5]);
   }
 
   fprintf(f, "CELLS %d %d\n", n_box, 9*n_box);
@@ -1268,14 +1268,14 @@ PDM_vtk_write_boxes_with_field
   fprintf(f, "POINTS %d double\n", 8*n_box);
   for (int i = 0; i < n_box; i++) {
     const double *e = box_extents + 6*i;
-    fprintf(f, "%f %f %f\n", e[0], e[1], e[2]);
-    fprintf(f, "%f %f %f\n", e[3], e[1], e[2]);
-    fprintf(f, "%f %f %f\n", e[3], e[4], e[2]);
-    fprintf(f, "%f %f %f\n", e[0], e[4], e[2]);
-    fprintf(f, "%f %f %f\n", e[0], e[1], e[5]);
-    fprintf(f, "%f %f %f\n", e[3], e[1], e[5]);
-    fprintf(f, "%f %f %f\n", e[3], e[4], e[5]);
-    fprintf(f, "%f %f %f\n", e[0], e[4], e[5]);
+    fprintf(f, "%20.16f %20.16f %20.16f\n", e[0], e[1], e[2]);
+    fprintf(f, "%20.16f %20.16f %20.16f\n", e[3], e[1], e[2]);
+    fprintf(f, "%20.16f %20.16f %20.16f\n", e[3], e[4], e[2]);
+    fprintf(f, "%20.16f %20.16f %20.16f\n", e[0], e[4], e[2]);
+    fprintf(f, "%20.16f %20.16f %20.16f\n", e[0], e[1], e[5]);
+    fprintf(f, "%20.16f %20.16f %20.16f\n", e[3], e[1], e[5]);
+    fprintf(f, "%20.16f %20.16f %20.16f\n", e[3], e[4], e[5]);
+    fprintf(f, "%20.16f %20.16f %20.16f\n", e[0], e[4], e[5]);
   }
 
   fprintf(f, "CELLS %d %d\n", n_box, 9*n_box);
@@ -1359,7 +1359,7 @@ PDM_vtk_write_circles
   fprintf(f, "POINTS %d double\n", n_circles * resolution);
   for (int i = 0; i < n_circles; i++) {
     for (int j = 0; j < resolution; j++) {
-      fprintf(f, "%f %f %f\n",
+      fprintf(f, "%20.16f %20.16f %20.16f\n",
               center[3*i]     + radius[i]*cos(j*step),
               center[3*i + 1] + radius[i]*sin(j*step),
               center[3*i + 2]);
@@ -1682,7 +1682,7 @@ PDM_vtk_write_polydata_field
     fprintf(f, "SCALARS %s double 1\n", vtx_field_name);
     fprintf(f, "LOOKUP_TABLE default\n");
     for (int i = 0; i < n_vtx; i++) {
-      fprintf(f, "%f\n", vtx_field[i]);
+      fprintf(f, "%20.16f\n", vtx_field[i]);
     }
   } else if (vtx_g_num != NULL && vtx_field != NULL) {
     fprintf(f, "POINT_DATA %d\n", n_vtx);
@@ -1693,7 +1693,7 @@ PDM_vtk_write_polydata_field
     }
     fprintf(f, "\n%s 1 %d double\n", vtx_field_name, n_vtx);
     for (int i = 0; i < n_vtx; i++) {
-      fprintf(f, "%f ", vtx_field[i]);
+      fprintf(f, "%20.16f ", vtx_field[i]);
     }
   }
 
@@ -1709,7 +1709,7 @@ PDM_vtk_write_polydata_field
     fprintf(f, "SCALARS %s double 1\n", face_field_name);
     fprintf(f, "LOOKUP_TABLE default\n");
     for (int i = 0; i < n_face; i++) {
-      fprintf(f, "%f\n", face_field[i]);
+      fprintf(f, "%20.16f\n", face_field[i]);
     }
   } else if (face_g_num != NULL && face_field != NULL) {
     fprintf(f, "CELL_DATA %d\n", n_face);
@@ -1720,7 +1720,7 @@ PDM_vtk_write_polydata_field
     }
     fprintf(f, "\n%s 1 %d double\n", face_field_name, n_face);
     for (int i = 0; i < n_face; i++) {
-      fprintf(f, "%f ", face_field[i]);
+      fprintf(f, "%20.16f ", face_field[i]);
     }
   }
 
@@ -2549,7 +2549,7 @@ PDM_vtk_write_ellipses
     for (int j = 0; j < resolution; j++) {
       double x = radii[2*i  ] * cos(j*step);
       double y = radii[2*i+1] * sin(j*step);
-      fprintf(f, "%f %f %f\n",
+      fprintf(f, "%20.16f %20.16f %20.16f\n",
               center[3*i    ] + x*axes[6*i  ] + y*axes[6*i+3],
               center[3*i + 1] + x*axes[6*i+1] + y*axes[6*i+4],
               center[3*i + 2] + x*axes[6*i+2] + y*axes[6*i+5]);

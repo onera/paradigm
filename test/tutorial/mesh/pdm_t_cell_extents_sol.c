@@ -422,30 +422,32 @@ int main(int argc, char *argv[])
 
 
   /* Visualize cells */
-  PDM_vtk_write_std_elements("cells.vtk",
-                             n_vtx,
-                             vtx_coord,
-                             NULL,
-                             elt_type,
-                             n_cell,
-                             cell_vtx,
-                             NULL,
-                             0,
-                             NULL,
-                             NULL);
+  if(1 == 0) {
+    PDM_vtk_write_std_elements("cells.vtk",
+                               n_vtx,
+                               vtx_coord,
+                               NULL,
+                               elt_type,
+                               n_cell,
+                               cell_vtx,
+                               NULL,
+                               0,
+                               NULL,
+                               NULL);
 
-  /* Visualize bounding boxes */
-  PDM_vtk_write_boxes("cell_extents.vtk",
-                      n_cell,
-                      cell_extents,
-                      NULL);
+    /* Visualize bounding boxes */
+    PDM_vtk_write_boxes("cell_extents.vtk",
+                        n_cell,
+                        cell_extents,
+                        NULL);
 
-  /* Visualize cell centers */
-  PDM_vtk_write_point_cloud("cell_centers.vtk",
-                            n_cell,
-                            cell_center,
-                            NULL,
-                            NULL);
+    /* Visualize cell centers */
+    PDM_vtk_write_point_cloud("cell_centers.vtk",
+                              n_cell,
+                              cell_center,
+                              NULL,
+                              NULL);
+  }
 
   free(cell_extents);
   free(cell_center);

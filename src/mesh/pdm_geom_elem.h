@@ -245,8 +245,8 @@ PDM_geom_elem_pyramid_faces
  *  @param [in]  connectivity          Connectivity
  *  @param [in]  nVertices             Number of vertices
  *  @param [in]  coords                Vertices coordinates
- *  @param [out] center                Center
  *  @param [out] length                Length
+ *  @param [out] center                Center
  *  @param [out] characteristicLength  Characteristic length (active if != NULL)
  *  @param [out] isDegenerated         Degenerated edge indicator (active if != NULL)
  */
@@ -257,8 +257,8 @@ PDM_geom_elem_edges_properties
  const int     nEdges,
  const int    *connectivity,
  const double *coords,
- double       *center,
  double       *length,
+ double       *center,
  double       *characteristicLength,
  int         *isDegenerated
  );
@@ -567,24 +567,25 @@ PDM_geom_elem_polyhedra_properties_triangulated
 void
 PDM_geom_elem_edge_upwind_and_downwind
 (
- int       n_face,
- int       n_edge,
- int      *cell_face_idx,
- int      *cell_face,
- int      *face_vtx_idx,
- int      *face_vtx,
- int      *vtx_cell_idx,
- int      *vtx_cell,
- int      *edge_vtx,
- double   *vtx_coord,
- double   *face_center,
- double   *face_normal,
- int     **upwind_cell_out,
- int     **downwind_cell_out,
- int     **upwind_face_out,
- int     **downwind_face_out,
- double  **upwind_point_out,
- double  **downwind_point_out
+ int          n_face,
+ int          n_edge,
+ PDM_g_num_t *cell_ln_to_gn,
+ int          *cell_face_idx,
+ int          *cell_face,
+ int          *face_vtx_idx,
+ int          *face_vtx,
+ int          *vtx_cell_idx,
+ int          *vtx_cell,
+ int          *edge_vtx,
+ double       *vtx_coord,
+ double       *face_center,
+ double       *face_normal,
+ int         **upwind_cell_out,
+ int         **downwind_cell_out,
+ int         **upwind_face_out,
+ int         **downwind_face_out,
+ double      **upwind_point_out,
+ double      **downwind_point_out
 );
 
 

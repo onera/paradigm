@@ -104,7 +104,7 @@ def dconnectivity_transpose(MPI.Comm comm,
 
     np_dentity2_entity1_idx = create_numpy_i(_dentity2_entity1_idx, dn_entity2 + 1)
 
-    np_dentity2_entity1 = create_numpy_pdm_gnum(_dentity2_entity1, np_dentity2_entity1_idx[dn_entity2])
+    np_dentity2_entity1 = create_numpy_g(_dentity2_entity1, np_dentity2_entity1_idx[dn_entity2])
 
     return np_dentity2_entity1_idx, np_dentity2_entity1
 
@@ -142,7 +142,7 @@ def dfacecell_to_dcellface(MPI.Comm comm,
 
     dn_cell = cell_distri[i_rank+1] - cell_distri[i_rank]
     np_dcell_face_idx = create_numpy_i(_dcell_face_idx, dn_cell + 1)
-    np_dcell_face     = create_numpy_pdm_gnum(_dcell_face, np_dcell_face_idx[dn_cell])
+    np_dcell_face     = create_numpy_g(_dcell_face, np_dcell_face_idx[dn_cell])
 
     return np_dcell_face_idx, np_dcell_face
 
@@ -178,7 +178,7 @@ def dcellface_to_dfacecell(MPI.Comm comm,
                                &_dface_cell,
                                PDMC)
 
-    np_dface_cell = create_numpy_pdm_gnum(_dface_cell, 2*dn_face)
+    np_dface_cell = create_numpy_g(_dface_cell, 2*dn_face)
     return np_dface_cell
 
 # ------------------------------------------------------------------------

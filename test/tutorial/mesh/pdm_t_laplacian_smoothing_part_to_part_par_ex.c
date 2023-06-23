@@ -398,7 +398,8 @@ int main(int argc, char *argv[])
                           &pn_edge_group,
                           &pgroup_edge_idx,
                           &pgroup_edge,
-                          &edge_bound_ln_to_gn);
+                          &edge_bound_ln_to_gn,
+                          PDM_OWNERSHIP_KEEP);
 
   // _get_groups(mpart,
   //             0,
@@ -407,7 +408,7 @@ int main(int argc, char *argv[])
   //             &pgroup_edge_idx,
   //             &pgroup_edge);
 
-  log_trace("pn_edge_group = %d\n", pn_edge_group);
+  // log_trace("pn_edge_group = %d\n", pn_edge_group);
 
   /* Create pvtx_vtx_gnum */
 
@@ -472,13 +473,15 @@ int main(int argc, char *argv[])
   //   pvtx_vtx_gnum[i] = vtx_ln_to_gn[pvtx_vtx[i]-1];
   // }
 
-  int indice1 = 0;
-  for (int i = 0; i < pn_vtx; i++) {
-    log_trace("point #"PDM_FMT_G_NUM " à pour voisins", vtx_ln_to_gn[i]);
-    for (int j = 0; j < pstrid[i]; j++) {
-      log_trace(" %d", pvtx_vtx_gnum[indice1++]);
+  if(0 == 1) {
+    int indice1 = 0;
+    for (int i = 0; i < pn_vtx; i++) {
+      log_trace("point #"PDM_FMT_G_NUM " à pour voisins", vtx_ln_to_gn[i]);
+      for (int j = 0; j < pstrid[i]; j++) {
+        log_trace(" %d", pvtx_vtx_gnum[indice1++]);
+      }
+      log_trace("\n");
     }
-  log_trace("\n");
   }
 
   // PDM_log_trace_array_long(pvtx_vtx_gnum, adapted_size, "pvtx_vtx_gnum : ");
@@ -486,19 +489,21 @@ int main(int argc, char *argv[])
 
   /* Export mesh to vtk format */
   char filename[999];
-  sprintf(filename, "mesh_%2.2d.vtk", i_rank);
+  if(0 == 1) {
+    sprintf(filename, "mesh_%2.2d.vtk", i_rank);
 
-  PDM_vtk_write_std_elements(filename,
-                             pn_vtx,
-                             pvtx_coord,
-                             vtx_ln_to_gn,
-                             PDM_MESH_NODAL_BAR2,
-                             pn_edge,
-                             pedge_vtx,
-                             NULL,
-                             0,
-                             NULL,
-                             NULL);
+    PDM_vtk_write_std_elements(filename,
+                               pn_vtx,
+                               pvtx_coord,
+                               vtx_ln_to_gn,
+                               PDM_MESH_NODAL_BAR2,
+                               pn_edge,
+                               pedge_vtx,
+                               NULL,
+                               0,
+                               NULL,
+                               NULL);
+  }
   /* part_to_block */
 
   int *dstrid_vtx_vtx_gnum  = NULL;
@@ -533,7 +538,7 @@ int main(int argc, char *argv[])
 
   int val = 0;
   int *tmp_idx = PDM_array_new_idx_from_sizes_int(dstrid_vtx_vtx_gnum, nelmt_proc);
-  PDM_log_trace_connectivity_long(tmp_idx, dvtx_vtx_gnum, nelmt_proc, "before dvtx_vtx_gnum : ");
+  // PDM_log_trace_connectivity_long(tmp_idx, dvtx_vtx_gnum, nelmt_proc, "before dvtx_vtx_gnum : ");
   free(tmp_idx);
 
   for (int i = 0; i < nelmt_proc; i++) {
@@ -552,10 +557,10 @@ int main(int argc, char *argv[])
   } // end loop on vertices
   free(dstrid_vtx_vtx_gnum);
 
-  PDM_log_trace_array_int(dstrid_vtx_vtx_gnum_sorted, nelmt_proc, "dstrid_vtx_vtx_gnum_sorted: ");
+  // PDM_log_trace_array_int(dstrid_vtx_vtx_gnum_sorted, nelmt_proc, "dstrid_vtx_vtx_gnum_sorted: ");
   // PDM_log_trace_array_long(dvtx_vtx_gnum, idx_comp, "dvtx_vtx_gnum : ");
   tmp_idx = PDM_array_new_idx_from_sizes_int(dstrid_vtx_vtx_gnum_sorted, nelmt_proc);
-  PDM_log_trace_connectivity_long(tmp_idx, dvtx_vtx_gnum, nelmt_proc, "after dvtx_vtx_gnum : ");
+  // PDM_log_trace_connectivity_long(tmp_idx, dvtx_vtx_gnum, nelmt_proc, "after dvtx_vtx_gnum : ");
   free(tmp_idx);
   free(pvtx_vtx_gnum);
 
@@ -586,14 +591,14 @@ int main(int argc, char *argv[])
   }
   PDM_UNUSED(size_neighbours);
 
-  int indice = 0;
-  for (int i = 0; i < size; i++) {
-    log_trace("point #"PDM_FMT_G_NUM " à pour voisins", vtx_ln_to_gn[i]);
-    for (int j = 0; j < pstrid_new[i_part][i]; j++) {
-      log_trace(" %d", pvtx_vtx_gnum_new[i_part][indice++]);
-    }
-  log_trace("\n");
-  }
+  // int indice = 0;
+  // for (int i = 0; i < size; i++) {
+  //   log_trace("point #"PDM_FMT_G_NUM " à pour voisins", vtx_ln_to_gn[i]);
+  //   for (int j = 0; j < pstrid_new[i_part][i]; j++) {
+  //     log_trace(" %d", pvtx_vtx_gnum_new[i_part][indice++]);
+  //   }
+  // log_trace("\n");
+  // }
 
   /* Laplacian Smoothing using part_to_part */
 
@@ -654,19 +659,20 @@ int main(int argc, char *argv[])
   for (int i_step = 0; i_step <= n_steps; i_step++) {
     // Output in vtk format
 
-    sprintf(filename, "mesh_%2.2d_%2.2d.vtk", i_rank, i_step);
-
-    PDM_vtk_write_std_elements(filename,
-                               pn_vtx,
-                               pvtx_coord,
-                               vtx_ln_to_gn,
-                               PDM_MESH_NODAL_BAR2,
-                               pn_edge,
-                               pedge_vtx,
-                               NULL,
-                               0,
-                               NULL,
-                               NULL);
+    if(0 == 1) {
+      sprintf(filename, "mesh_%2.2d_%2.2d.vtk", i_rank, i_step);
+      PDM_vtk_write_std_elements(filename,
+                                 pn_vtx,
+                                 pvtx_coord,
+                                 vtx_ln_to_gn,
+                                 PDM_MESH_NODAL_BAR2,
+                                 pn_edge,
+                                 pedge_vtx,
+                                 NULL,
+                                 0,
+                                 NULL,
+                                 NULL);
+    }
 
     // Get coordinates
 

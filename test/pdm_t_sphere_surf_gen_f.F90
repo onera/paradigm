@@ -152,7 +152,7 @@ program testf
                                    pn_vtx(ipart),      &
                                    vtx_coord2,         &
                                    vtx_ln_to_gn,       &
-                                   PDM_OWNERSHIP_KEEP)
+                                   PDM_OWNERSHIP_USER)
 
 
     call PDM_writer_geom_bloc_add(wrt,                  &

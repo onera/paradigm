@@ -18,6 +18,8 @@
 #include "pdm_block_to_part.h"
 #include "pdm_part_to_block.h"
 #include "pdm_part_connectivity_transform.h"
+#include "pdm_partitioning_algorithm.h"
+#include "pdm_distrib.h"
 #include "pdm_para_graph_dual.h"
 #include "pdm_error.h"
 #include "pdm_timer.h"
@@ -244,6 +246,43 @@ const int   *n_entity2,
 
 
 void
+PDM_part_combine_connectivity
+(
+ const int    n_part,
+ int         *n_entity1,
+ int        **entity1_entity2_idx,
+ int        **entity1_entity2,
+ int        **entity2_entity3_idx,
+ int        **entity2_entity3,
+ int       ***entity1_entity3_idx,
+ int       ***entity1_entity3
+)
+{
+  *entity1_entity3_idx = (int ** ) malloc( n_part * sizeof(int *));
+  *entity1_entity3     = (int ** ) malloc( n_part * sizeof(int *));
+
+  int** _entity1_entity3_idx = *entity1_entity3_idx;
+  int** _entity1_entity3     = *entity1_entity3;
+
+  for(int i_part = 0; i_part < n_part; ++i_part) {
+
+    int* _pentity1_entity3_idx;
+    int* _pentity1_entity3;
+
+    PDM_combine_connectivity(n_entity1          [i_part],
+                             entity1_entity2_idx[i_part],
+                             entity1_entity2    [i_part],
+                             entity2_entity3_idx[i_part],
+                             entity2_entity3    [i_part],
+                             &_pentity1_entity3_idx,
+                             &_pentity1_entity3);
+
+    _entity1_entity3_idx[i_part] = _pentity1_entity3_idx;
+    _entity1_entity3[i_part]     = _pentity1_entity3;
+  }
+}
+
+void
 PDM_part_connectivity_to_connectity_idx
 (
 const int    n_part,
@@ -303,6 +342,123 @@ const int   *n_entity1,
   // }
 
 }
+
+void
+PDM_compute_dface_vtx_from_edges_distrib
+(
+ PDM_MPI_Comm   comm,
+ PDM_g_num_t   *distrib_face,
+ PDM_g_num_t   *distrib_edge,
+ int           *dface_edge_idx,
+ PDM_g_num_t   *dface_edge,
+ PDM_g_num_t   *dedge_vtx,
+ PDM_g_num_t  **dface_vtx
+)
+{
+  int i_rank;
+  int n_rank;
+
+  PDM_MPI_Comm_rank(comm, &i_rank);
+  PDM_MPI_Comm_size(comm, &n_rank);
+
+  int dn_face = distrib_face[i_rank+1] - distrib_face[i_rank];
+  PDM_g_num_t* face_ln_to_gn = malloc(dn_face * sizeof(PDM_g_num_t));
+  for(int i_face = 0; i_face < dn_face; ++i_face) {
+    face_ln_to_gn[i_face] = distrib_face[i_rank] + i_face + 1;
+  }
+
+  int pn_edge = 0;
+  PDM_g_num_t *pedge_ln_to_gn = NULL;
+  int         *pface_edge_idx = NULL;
+  int         *pface_edge     = NULL;
+  PDM_part_dconnectivity_to_pconnectivity_sort_single_part(comm,
+                                                           distrib_face,
+                                                           dface_edge_idx,
+                                                           dface_edge,
+                                                           dn_face,
+                                                           face_ln_to_gn,
+                                                           &pn_edge,
+                                                           &pedge_ln_to_gn,
+                                                           &pface_edge_idx,
+                                                           &pface_edge);
+  free(face_ln_to_gn );
+
+  int dn_edge = distrib_edge[i_rank+1] - distrib_edge[i_rank];
+  int* dedge_vtx_idx = malloc((dn_edge+1) * sizeof(PDM_g_num_t));
+  for(int i_edge = 0; i_edge < dn_edge+1; ++i_edge) {
+    dedge_vtx_idx[i_edge] = 2 * i_edge;
+  }
+
+  int pn_vtx = 0;
+  PDM_g_num_t *pvtx_ln_to_gn = NULL;
+  int         *pedge_vtx_idx = NULL;
+  int         *pedge_vtx     = NULL;
+  PDM_part_dconnectivity_to_pconnectivity_sort_single_part(comm,
+                                                           distrib_edge,
+                                                           dedge_vtx_idx,
+                                                           dedge_vtx,
+                                                           pn_edge,
+                                                           pedge_ln_to_gn,
+                                                           &pn_vtx,
+                                                           &pvtx_ln_to_gn,
+                                                           &pedge_vtx_idx,
+                                                           &pedge_vtx);
+
+  free(pedge_ln_to_gn);
+  free(dedge_vtx_idx );
+  int         *pface_vtx     = NULL;
+  PDM_compute_face_vtx_from_face_and_edge(dn_face,
+                                          pface_edge_idx,
+                                          pface_edge,
+                                          pedge_vtx,
+                                          &pface_vtx);
+
+  free(pface_edge_idx);
+  free(pface_edge    );
+  free(pedge_vtx_idx );
+  free(pedge_vtx     );
+
+  PDM_g_num_t *_dface_vtx = malloc(dface_edge_idx[dn_face] * sizeof(PDM_g_num_t));
+  for(int idx_face = 0; idx_face < dface_edge_idx[dn_face]; ++idx_face) {
+    int i_vtx = pface_vtx[idx_face]-1;
+    _dface_vtx[idx_face] = pvtx_ln_to_gn[i_vtx];
+  }
+
+  free(pvtx_ln_to_gn);
+  free(pface_vtx);
+
+  *dface_vtx = _dface_vtx;
+}
+
+
+void
+PDM_compute_dface_vtx_from_edges
+(
+ PDM_MPI_Comm   comm,
+ int            dn_face,
+ int            dn_edge,
+ int           *dface_edge_idx,
+ PDM_g_num_t   *dface_edge,
+ PDM_g_num_t   *dedge_vtx,
+ PDM_g_num_t  **dface_vtx
+)
+{
+  PDM_g_num_t* distrib_face = PDM_compute_entity_distribution(comm, dn_face);
+  PDM_g_num_t* distrib_edge = PDM_compute_entity_distribution(comm, dn_edge);
+
+  PDM_compute_dface_vtx_from_edges_distrib(comm,
+                                           distrib_face,
+                                           distrib_edge,
+                                           dface_edge_idx,
+                                           dface_edge,
+                                           dedge_vtx,
+                                           dface_vtx);
+
+ free(distrib_face);
+ free(distrib_edge);
+
+}
+
 
 
 void

@@ -632,7 +632,7 @@ PDM_GCC_SUPPRESS_WARNING_WITH_PUSH("-Wfloat-equal")
     //printf("ha = hb = %g, hc = %g, hd = %g\n", ha, hc, hd);
     return PDM_LINE_INTERSECT_ON_LINE;
   }
-  PDM_GCC_SUPPRESS_WARNING_POP
+PDM_GCC_SUPPRESS_WARNING_POP
 
 
   *u = ha / (ha - hb);

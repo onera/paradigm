@@ -312,6 +312,19 @@ PDM_box_set_create(int                dim,
     boxes->gmax[j] = g_max[j];
   }
 
+  /* Correct box extents for planes */
+  double max_range = 1.e-12;
+  for (k = 0; k < boxes->dim; k++) {
+    max_range = PDM_MAX (max_range, g_max[k] - g_min[k]);
+  }
+
+  const double eps = 1.e-3;
+  const double epsilon = eps * max_range; // Add eps in cas of only one point ...
+  for (k = 0; k < boxes->dim; k++) {
+    g_min[k] -= 1.1 * epsilon; // On casse la symetrie !
+    g_max[k] +=       epsilon;
+  }
+
   /*//-->> fonction PDM_boxes_create
   boxes->local_boxes           = malloc(sizeotf(_PDM_boxes_t));
   boxes->local_boxes->n_boxes  = n_boxes;
@@ -2100,7 +2113,7 @@ PDM_box_copy_boxes_to_shm
   free(s_shm_data_in_all_nodes);
   // PDM_MPI_Comm_free(&boxes->comm_shared);
 }
-  
+
 void
 PDM_box_set_free_copies(PDM_box_set_t  **boxes)
 {

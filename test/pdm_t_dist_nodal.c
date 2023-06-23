@@ -404,7 +404,7 @@ int main(int argc, char *argv[])
                                   surf_pvtx_ln_to_gn[i_part],
                                   PDM_OWNERSHIP_USER);
   }
-  PDM_part_mesh_nodal_add_part_mesh_nodal_elmts(pmn, pmne_surf, PDM_OWNERSHIP_KEEP);
+  PDM_part_mesh_nodal_add_part_mesh_nodal_elmts(pmn, pmne_surf);
 
   // PDM_part_mesh_nodal_free(pmn);
 

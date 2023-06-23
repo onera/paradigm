@@ -6,16 +6,30 @@ from mpi4py import MPI
 # Import Section (Cython) :
 # ------------------------
 from libc.stdlib       cimport malloc, free
+from libc.stdint       cimport uintptr_t
 from cpython.ref       cimport PyObject, Py_INCREF, Py_DECREF, Py_XDECREF
 from cpython.pycapsule cimport PyCapsule_New, PyCapsule_GetPointer, PyCapsule_IsValid, PyCapsule_GetName
 cimport cython
 cimport numpy as NPY
-from libcpp.map cimport map as cpp_map
 
 from mpi4py cimport MPI
 # -----------------------------------------------------------------
+
+cdef extern from "pdm_config.h":
+    # trick from: https://stackoverflow.com/questions/5697479/how-can-a-defined-c-value-be-exposed-to-python-in-a-cython-module
+    cdef int _PDM_VERSION_MAKOR "PDM_VERSION_MAJOR"
+    cdef int _PDM_VERSION_MINOR "PDM_MINOR_VERSION"
+    cdef int _PDM_VERSION_RELEASE "PDM_RELEASE_VERSION"
+    cdef char* _PDM_VERSION "PDM_VERSION"
+
+__version__ = _PDM_VERSION.decode()
+
+
 cdef extern from "numpy/arrayobject.h":
   void PyArray_ENABLEFLAGS(NPY.ndarray arr, int flags)
+cdef extern from "Python.h":
+  int PyTraceMalloc_Track(unsigned int domain, uintptr_t ptr, size_t size)
+  int PyTraceMalloc_Untrack(unsigned int domain, uintptr_t ptr)
 
 # MANDATORY :
 # ---------
@@ -127,8 +141,10 @@ cdef extern from "pdm.h":
        PDM_BOUND_TYPE_MAX    = 5,
 
     ctypedef enum PDM_mesh_location_method_t:
-      PDM_MESH_LOCATION_OCTREE  = 0
-      PDM_MESH_LOCATION_DBBTREE = 1
+      PDM_MESH_LOCATION_OCTREE         = 0
+      PDM_MESH_LOCATION_DBBTREE        = 1
+      PDM_MESH_LOCATION_LOCATE_ALL_TGT = 2
+      PDM_MESH_LOCATION_DOCTREE        = 3
 
     ctypedef enum PDM_iso_surface_kind_t:
       PDM_ISO_SURFACE_KIND_PLANE   = 0
@@ -174,6 +190,7 @@ cdef extern from "pdm_para_graph_dual.h":
         PDM_SPLIT_DUAL_WITH_PARMETIS = 1
         PDM_SPLIT_DUAL_WITH_PTSCOTCH = 2
         PDM_SPLIT_DUAL_WITH_HILBERT  = 3
+        PDM_SPLIT_DUAL_WITH_IMPLICIT = 4
 
 cdef extern from "pdm_part_to_part.h":
     ctypedef enum PDM_part_to_part_data_def_t:
@@ -319,6 +336,7 @@ _PDM_CELL_TO_VTX_INTERP_KIND_USER = PDM_CELL_TO_VTX_INTERP_KIND_USER
 _PDM_SPLIT_DUAL_WITH_PARMETIS = PDM_SPLIT_DUAL_WITH_PARMETIS
 _PDM_SPLIT_DUAL_WITH_PTSCOTCH = PDM_SPLIT_DUAL_WITH_PTSCOTCH
 _PDM_SPLIT_DUAL_WITH_HILBERT  = PDM_SPLIT_DUAL_WITH_HILBERT
+_PDM_SPLIT_DUAL_WITH_IMPLICIT = PDM_SPLIT_DUAL_WITH_IMPLICIT
 
 _PDM_EXTRACT_PART_KIND_LOCAL         = PDM_EXTRACT_PART_KIND_LOCAL
 _PDM_EXTRACT_PART_KIND_REEQUILIBRATE = PDM_EXTRACT_PART_KIND_REEQUILIBRATE
@@ -344,11 +362,7 @@ _PDM_MPI_COMM_KIND_WIN_RMA                            = PDM_MPI_COMM_KIND_WIN_RM
 @COMMENT_NOT_PDMA@PDM_plugin_load()
 @COMMENT_NOT_PDMA@
 
-# -----------------------------------------------------------------
-# > Enable transfer of ownership between C and Python
-cdef extern from "numpy/arrayobject.h":
-    void PyArray_ENABLEFLAGS(NPY.ndarray arr, int flags)
-
+py_mem_domain = 42440
 # -----------------------------------------------------------------
 cdef assert_single_dim_np(NPY.ndarray tab, dtype, int size=-1):
   assert isinstance(tab, NPY.ndarray) and (tab.ndim == 1 or (tab.ndim == 2 and (tab.shape[0] <= 1 or tab.shape[1] <= 1))) and tab.dtype == dtype
@@ -402,42 +416,44 @@ cdef double** np_list_to_double_pointers(list datas):
     array[i] = <double *> numpy_double.data
   return array
 
+cdef void dealloc_array_capsule(object capsule):
+    data = PyCapsule_GetPointer(capsule, NULL)
+    PyTraceMalloc_Untrack(py_mem_domain, <uintptr_t> data)
+    free(data)
+
+cdef create_numpy(void* array, int nptype, int size, bint flag_owndata=True):
+    dim = <NPY.npy_intp> size
+    nparray = NPY.PyArray_SimpleNewFromData(1, &dim, nptype, array)
+    if flag_owndata and array != NULL:
+        # PyArray_ENABLEFLAGS(nparray, NPY.NPY_OWNDATA)
+        capsule = PyCapsule_New(array, NULL, &dealloc_array_capsule)
+        NPY.set_array_base(nparray, capsule)
+        PyTraceMalloc_Track(py_mem_domain, <uintptr_t> array, nparray.nbytes)
+    return nparray
 
 cdef create_numpy_i(int* array, int size, bint flag_owndata=True):
-    dim = <NPY.npy_intp> size
-    nparray = NPY.PyArray_SimpleNewFromData(1, &dim, NPY.NPY_INT32, <void *> array)
-    if flag_owndata:
-        PyArray_ENABLEFLAGS(nparray, NPY.NPY_OWNDATA)
-    return nparray
+    return create_numpy(<void *> array, NPY.NPY_INT32, size, flag_owndata)
 
-cdef create_numpy_l(long int* array, int size, bint flag_owndata=True):
-    dim = <NPY.npy_intp> size
-    nparray = NPY.PyArray_SimpleNewFromData(1, &dim, NPY.NPY_INT64, <void *> array)
-    if flag_owndata:
-        PyArray_ENABLEFLAGS(nparray, NPY.NPY_OWNDATA)
-    return nparray
-
-cdef create_numpy_pdm_gnum(PDM_g_num_t* array, int size, bint flag_owndata=True):
-    dim = <NPY.npy_intp> size
-    nparray = NPY.PyArray_SimpleNewFromData(1, &dim, PDM_G_NUM_NPY_INT, <void *> array)
-    if flag_owndata:
-        PyArray_ENABLEFLAGS(nparray, NPY.NPY_OWNDATA)
-    return nparray
-
-cdef create_numpy_f(float* array, int size, bint flag_owndata=True):
-    dim = <NPY.npy_intp> size
-    nparray = NPY.PyArray_SimpleNewFromData(1, &dim, NPY.NPY_FLOAT, <void *> array)
-    if flag_owndata:
-        PyArray_ENABLEFLAGS(nparray, NPY.NPY_OWNDATA)
-    return nparray
+cdef create_numpy_g(PDM_g_num_t* array, int size, bint flag_owndata=True):
+    return create_numpy(<void *> array, PDM_G_NUM_NPY_INT, size, flag_owndata)
 
 cdef create_numpy_d(double* array, int size, bint flag_owndata=True):
-    dim = <NPY.npy_intp> size
-    nparray = NPY.PyArray_SimpleNewFromData(1, &dim, NPY.NPY_DOUBLE, <void *> array)
-    if flag_owndata:
-        PyArray_ENABLEFLAGS(nparray, NPY.NPY_OWNDATA)
-    return nparray
+    return create_numpy(<void *> array, NPY.NPY_DOUBLE, size, flag_owndata)
 
+cdef create_numpy_or_none(void* array, int nptype, int size, bint flag_owndata=True):
+    if array == NULL:
+        return None
+    else:
+        return create_numpy(array, nptype, size, flag_owndata)
+
+cdef create_numpy_or_none_i(int* array, int size, bint flag_owndata=True):
+    return create_numpy_or_none(<void *> array, NPY.NPY_INT32, size, flag_owndata)
+
+cdef create_numpy_or_none_g(PDM_g_num_t* array, int size, bint flag_owndata=True):
+    return create_numpy_or_none(<void *> array, PDM_G_NUM_NPY_INT, size, flag_owndata)
+
+cdef create_numpy_or_none_d(double* array, int size, bint flag_owndata=True):
+    return create_numpy_or_none(<void *> array, NPY.NPY_DOUBLE, size, flag_owndata)
 
 # PDM_dmesh :
 # --------------------
@@ -514,6 +530,10 @@ include "pdm_geom.pxi"
 # PDM_mesh_metric :
 # --------------------
 @COMMENT_NOT_PDMA@include "pdm_mesh_metric.pxi"
+
+# PDM_inside_cloud_surf :
+# --------------------
+@COMMENT_NOT_PDMA@include "pdm_inside_cloud_surf.pxi"
 
 # PDM_mesh_adaptation :
 # --------------------
@@ -618,3 +638,20 @@ include "pdm_field_cell_to_vtx.pxi"
 # PDM_sphere_surf_gen :
 # --------------------
 include "pdm_sphere_surf_gen.pxi"
+
+# PDM_sphere_vol_gen :
+# --------------------
+include "pdm_sphere_vol_gen.pxi"
+
+# PDM_generate_mesh :
+# --------------------
+include "pdm_generate_mesh.pxi"
+
+# PDM_point_cloud_gen :
+# --------------------
+include "pdm_point_cloud_gen.pxi"
+
+
+# PDM_dextract_part :
+# -------------------
+include "pdm_dmesh_extract.pxi"

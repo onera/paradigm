@@ -34,6 +34,7 @@
 #include "pdm_vtk.h"
 #include "pdm_ho_ordering.h"
 #include "pdm_array.h"
+#include "pdm_distrib.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -1552,6 +1553,35 @@ PDM_dmesh_nodal_dump_vtk
   int* sections_id = PDM_DMesh_nodal_sections_id_get(dmn, geom_kind);
   int n_section    = PDM_DMesh_nodal_n_section_get(dmn, geom_kind);
 
+  const char *field_name = "group";
+  int n_field = 0;
+  _pdm_dmesh_nodal_elts_t *dmne = NULL;
+  int *delt_group_idx = NULL;
+  int *delt_group     = NULL;
+  double **field = NULL;
+  if (geom_kind == PDM_GEOMETRY_KIND_RIDGE) {
+    dmne = dmn->ridge;
+  } else if (geom_kind == PDM_GEOMETRY_KIND_SURFACIC && dmn->mesh_dimension == 3) {
+    dmne = dmn->surfacic;
+  } else if (geom_kind == PDM_GEOMETRY_KIND_CORNER) {
+    dmne = dmn->corner;
+  }
+
+  PDM_g_num_t *distrib_elt = NULL;
+  if (dmne != NULL) {
+    distrib_elt = PDM_compute_uniform_entity_distribution(dmn->comm,
+                                                          dmne->n_g_elmts);
+
+    PDM_dgroup_entity_transpose(dmne->n_group_elmt,
+                                dmne->dgroup_elmt_idx,
+                                dmne->dgroup_elmt,
+                (PDM_g_num_t *) distrib_elt,
+                                &delt_group_idx,
+                                &delt_group,
+                                dmn->comm);
+  }
+
+  PDM_g_num_t shift = 0;
   for(int i_section = 0; i_section < n_section; ++i_section) {
     int id_section = sections_id[i_section];
     int order;
@@ -1612,6 +1642,43 @@ PDM_dmesh_nodal_dump_vtk
                                           &tmp_pvtx_coord);
 
     double* pvtx_coord_out = tmp_pvtx_coord[0];
+
+
+    /*
+     * Groups
+     */
+    if (dmne != NULL) {
+      for(int i = 0; i < n_elt; ++i) {
+        delmt_ln_to_gn[i] += shift;
+      }
+
+      int **tmp_elt_group_idx = NULL;
+      int **tmp_elt_group     = NULL;
+      PDM_part_dentity_group_to_pentity_group(dmn->comm,
+                                              1,
+                                              distrib_elt,
+                                              delt_group_idx,
+                                              delt_group,
+                                              &n_elt,
+                      (const PDM_g_num_t **)  &delmt_ln_to_gn,
+                                              &tmp_elt_group_idx,
+                                              &tmp_elt_group);
+      int *pelt_group_idx = tmp_elt_group_idx[0];
+      int *pelt_group     = tmp_elt_group    [0];
+      free (tmp_elt_group_idx);
+      free (tmp_elt_group);
+
+      n_field = 1;
+      field = malloc (sizeof(double *) * n_field);
+      field[0] = malloc (sizeof(double) * n_elt);
+      for (int i = 0; i < n_elt; i++) {
+        assert (pelt_group_idx[i+1] == pelt_group_idx[i] + 1);
+        field[0][i] = (double) pelt_group[i];
+      }
+      free (pelt_group);
+      free (pelt_group_idx);
+    }
+
     /*
      *  Dump
      */
@@ -1638,9 +1705,9 @@ PDM_dmesh_nodal_dump_vtk
                                     n_elt,
                                     pcell_vtx,
                                     delmt_ln_to_gn,
-                                    0,
-                                    NULL,
-                                    NULL);
+                                    n_field,
+                  (const char   **) &field_name,
+                  (const double **) field);
     }
     free(tmp_pvtx_coord);
     free(pvtx_ln_to_gn);
@@ -1653,6 +1720,19 @@ PDM_dmesh_nodal_dump_vtk
     free(delmt_ln_to_gn);
 
     free(pvtx_coord_out);
+
+    shift += delmt_distribution[n_rank];
+
+    if (dmne != NULL) {
+      free (field[0]);
+      free (field);
+    }
+  }
+
+  if (dmne != NULL) {
+    free (delt_group_idx);
+    free (delt_group);
+    free (distrib_elt);
   }
 }
 
@@ -1715,167 +1795,6 @@ PDM_dmesh_nodal_to_part_mesh_nodal_elmts
   PDM_dmesh_nodal_elmts_t* dmne = _get_from_geometry_kind(dmn, geom_kind);
   return PDM_dmesh_nodal_elmts_to_part_mesh_nodal_elmts(dmne, n_part, pn_vtx, vtx_ln_to_gn, pn_elmt, elmt_ln_to_gn, pparent_entitity_ln_to_gn);
 }
-
-// TODO : remove
-// void
-// PDM_dmesh_nodal_combine_group_information_on_vtx
-// (
-//  PDM_dmesh_nodal_t     *dmn,
-//  PDM_vtx_kind         **dvtx_kind
-// )
-// {
-//   int i_rank;
-//   int n_rank;
-//   PDM_MPI_Comm_rank(dmn->comm, &i_rank);
-//   PDM_MPI_Comm_size(dmn->comm, &n_rank);
-//   /*
-//    * Par connectivité descendante
-//    *  - part_to_block avec n_part = 1 + 1 + 1 (ridges/surfacic/volumic)
-//    *  - ln_to_gn[0] = dridge_vtx
-//    *  - ln_to_gn[1] = dsurfacic_vtx
-//    *  - ln_to_gn[2] = dvolumic_vtx
-//    *
-//    *  Puis aprés on fait un écahnge en stride variable avec la clé HEXA qui va bien
-//    *   - Par block de donné, on trie (attention au tri en HEXA !!!)
-//    *   - Besoin du tri ?
-//    *   - On combine pour avoir un seul tableau vtx_kind (not more idx)
-//    */
-
-//   /*
-//    *  Comment on fait si on a 2 group de ridges et 3 de surfaces ?
-//    */
-//   // 3D = corner + ridge + surfacic + volumic
-//   // 2D = corner + ridge + surfacic
-//   // Some of them or all can be NULL ptr
-
-//   /*
-//    * Create part_vtx_ln_gn
-//    */
-//   int dn_vtx = dmn->vtx->distrib[i_rank+1] - dmn->vtx->distrib[i_rank];
-//   PDM_g_num_t *vtx_ln_to_gn = malloc( dn_vtx * sizeof(PDM_g_num_t));
-//   for(int i_vtx = 0; i_vtx < dn_vtx; ++i_vtx) {
-//     vtx_ln_to_gn[i_vtx] = dmn->vtx->distrib[i_rank] + i_vtx + 1;
-//   }
-
-//   *dvtx_kind = malloc(dn_vtx * sizeof(PDM_vtx_kind));
-//   PDM_vtx_kind *_dvtx_kind = *dvtx_kind;
-
-//   int n_part = dmn->mesh_dimension+1;
-//   // PDM_g_num_t  **part_ln_to_gn = (PDM_g_num_t  **) malloc( n_part * sizeof(PDM_g_num_t  *));
-//   // int           *n_elmts       = (int           *) malloc( n_part * sizeof(int           ));
-//   // PDM_vtx_kind **part_kind     = (PDM_vtx_kind **) malloc( n_part * sizeof(PDM_vtx_kind *));
-//   // int          **part_kind_n   = (int          **) malloc( n_part * sizeof(int          *));
-//   for(int i_dim = 0; i_dim < n_part; ++i_dim){
-//     PDM_geometry_kind_t geom_kind;
-//     PDM_vtx_kind        vtx_kind;
-//     if(i_dim == 0){
-//       geom_kind = PDM_GEOMETRY_KIND_CORNER;
-//       vtx_kind  = PDM_VTX_KIND_ON_CORNER;
-//     } else if(i_dim == 1) {
-//       geom_kind = PDM_GEOMETRY_KIND_RIDGE;
-//       vtx_kind  = PDM_VTX_KIND_ON_RIDGE;
-//     } else if(i_dim == 2) {
-//       geom_kind = PDM_GEOMETRY_KIND_SURFACIC;
-//       vtx_kind  = PDM_VTX_KIND_ON_SURFACE;
-//     } else {
-//       assert(i_dim == 3);
-//       geom_kind = PDM_GEOMETRY_KIND_VOLUMIC;
-//       vtx_kind  = PDM_VTX_KIND_ON_VOLUME;
-//     }
-//     PDM_dmesh_nodal_elmts_t* dmne_in = _get_from_geometry_kind(dmn, geom_kind);
-
-//     /*
-//      *  Rebuild a extract_vtx_ln_gn from all connectivity
-//      */
-
-
-//      *   vtx  -> (corner, ridge, surfacic)
-//      *   edge -> (ridge, surfacic)
-//      *   face -> (surfacic)
-//      *
-//      *  Dans le dmesh on a :
-//      *         dsurface_face --> transpose
-//      *         dridge_edge   --> transpose
-//      *         dcorner_vtx   --> transpose
-//      *
-//      *
-//      *    dgroup_corner_vtx
-//      *    dgroup_ridge_edge
-//      *    dgroup_surface_face
-//      *    dgroup_volume_cell
-//      *
-//      *    --> transpose
-//      *    dvtx_corner_group   + dvtx_corner_group_idx
-//      *    dedge_ridge_group   + dedge_ridge_group_idx
-//      *    dface_surface_group + dface_surface_group_idx
-//      *    dcell_volume_group  + dcell_volume_group_idx
-//      *
-//      *    --> dfield_to_pfield stride variable
-//      *    pvtx_corner_group   + pvtx_corner_group_idx
-//      *    pedge_ridge_group   + pedge_ridge_group_idx
-//      *    pface_surface_group + pface_surface_group_idx
-//      *    pcell_volume_group  + pcell_volume_group_idx
-//      *    cell_face + face_edge + edge_vtx
-//      *
-//      *      --> dmesh_nodal_to_dmesh (Attention bug de group faces / edges + géré les corners)
-//      *      --> Renversé les résultats par entité
-
-
-
-//     /*
-//      *  Transform to vtx
-//      */
-//     PDM_part_mesh_nodal_elmts_t* pmne = PDM_dmesh_nodal_elmts_to_part_mesh_nodal_elmts(dmne_in,
-//                                                                                        1,
-//                                                                                        &dn_vtx,
-//                                                                                        &vtx_ln_to_gn,
-//                                                                                        &dmne_in->dgroup_elmt_idx[dmne_in->n_group_elmt],
-//                                                                                        &dmne_in->dgroup_elmt);
-
-//     int  i_part = 0;
-//     int* sections_id = PDM_part_mesh_nodal_elmts_sections_id_get(pmne);
-//     int  n_section   = PDM_part_mesh_nodal_elmts_n_section_get  (pmne);
-
-//     for(int i_section = 0; i_section < n_section; ++i_section) {
-
-//       int id_section = sections_id[i_section];
-//       int  n_elmt    = PDM_part_mesh_nodal_elmts_section_n_elt_get(pmne, id_section, i_part);
-//       PDM_Mesh_nodal_elt_t t_elt = PDM_part_mesh_nodal_elmts_section_type_get(pmne, id_section);
-//       int order = 1;
-//       int n_vtx_per_elmt = PDM_Mesh_nodal_n_vertices_element (t_elt, order);
-
-//       int         *elmt_vtx = NULL;
-//       PDM_g_num_t *elmt_g_num = NULL;
-//       int         *parent_num = NULL;
-//       PDM_part_mesh_nodal_elmts_section_std_get(pmne, id_section, i_part, &elmt_vtx, &elmt_g_num, &parent_num);
-
-//       for(int idx_vtx = 0; idx_vtx < n_elmt * n_vtx_per_elmt; ++idx_vtx) {
-
-//         int i_vtx = elmt_vtx[idx_vtx]-1;
-//         if(_dvtx_kind[i_vtx] == PDM_VTX_KIND_NONE || !PDM_HASFLAG(_dvtx_kind[i_vtx], vtx_kind)) {
-//           PDM_SETFLAG(_dvtx_kind[i_vtx], vtx_kind);
-//         }
-//       }
-//     }
-
-//     PDM_part_mesh_nodal_elmts_free(pmne);
-//   }
-
-//   // for(int i_dim = 0; i_dim < n_part; ++i_dim){
-//   //   free(part_kind  [i_dim]);
-//   //   free(part_kind_n[i_dim]);
-//   // }
-//   // free(part_kind);
-//   // free(part_kind_n);
-//   // free(part_ln_to_gn);
-//   // free(n_elmts);
-
-//   /* Post-treatment */
-//   // int dn_vtx_check = PDM_part_to_block_n_elt_block_get(ptb);
-//   // assert(dn_vtx == dn_vtx_check);
-
-// }
-
 
 const double *
 PDM_dmesh_nodal_global_extents_get

@@ -1609,7 +1609,8 @@ PDM_part_mesh_nodal_elmts_sections_decompose_faces
                                                     &connec,
                                                     &numabs,
                                                     &parent_num,
-                                                    &parent_entity_g_num);
+                                                    &parent_entity_g_num,
+                                                    PDM_OWNERSHIP_KEEP);
 
 
           // Is this legit??
@@ -1662,7 +1663,8 @@ PDM_part_mesh_nodal_elmts_sections_decompose_faces
                                                        &parent_num,
                                                        &parent_entity_g_num,
                                                        &order,
-                                                       &ho_ordering);
+                                                       &ho_ordering,
+                                                       PDM_OWNERSHIP_KEEP);
           PDM_Mesh_nodal_ho_parent_node(t_elt,
                                         order,
                                         ho_ordering,
@@ -1714,7 +1716,8 @@ PDM_part_mesh_nodal_elmts_sections_decompose_faces
                                                        &cell_face_idx,
                                                        &cell_face,
                                                        &parent_num,
-                                                       &parent_entity_g_num);
+                                                       &parent_entity_g_num,
+                                                       PDM_OWNERSHIP_KEEP);
 
           // Is this legit??
           PDM_g_num_t *g_num = cell_ln_to_gn;
@@ -1820,7 +1823,8 @@ PDM_part_mesh_nodal_elmts_sections_decompose_edges
                                                     &connec,
                                                     &numabs,
                                                     &parent_num,
-                                                    &parent_entity_g_num);
+                                                    &parent_entity_g_num,
+                                                    PDM_OWNERSHIP_KEEP);
 
           PDM_part_mesh_nodal_std_decomposes_edges(t_elt,
                                                    n_elt,
@@ -1865,7 +1869,8 @@ PDM_part_mesh_nodal_elmts_sections_decompose_edges
                                                        &parent_num,
                                                        &parent_entity_g_num,
                                                        &order,
-                                                       &ho_ordering);
+                                                       &ho_ordering,
+                                                       PDM_OWNERSHIP_KEEP);
           PDM_Mesh_nodal_ho_parent_node(t_elt,
                                         order,
                                         ho_ordering,
@@ -1899,13 +1904,15 @@ PDM_part_mesh_nodal_elmts_sections_decompose_edges
 
           PDM_g_num_t *numabs = PDM_part_mesh_nodal_elmts_g_num_get(pmne,
                                                                     id_section,
-                                                                    i_part);
+                                                                    i_part,
+                                                                    PDM_OWNERSHIP_KEEP);
 
           PDM_part_mesh_nodal_elmts_section_poly2d_get(pmne,
                                                        id_section,
                                                        i_part,
                                                        &connec_idx,
-                                                       &connec);
+                                                       &connec,
+                                                       PDM_OWNERSHIP_KEEP);
 
           PDM_part_mesh_nodal_poly2d_decomposes_edges(n_elt,
                                                       &n_elt_current,
@@ -2016,7 +2023,8 @@ PDM_part_mesh_nodal_elmts_decompose_faces_get_size
 
       int *parent_num = PDM_part_mesh_nodal_elmts_parent_num_get(pmne,
                                                                  id_section,
-                                                                 i_part);
+                                                                 i_part,
+                                                                 PDM_OWNERSHIP_KEEP);
 
       int n_elt = PDM_part_mesh_nodal_elmts_section_n_elt_get(pmne,
                                                               id_section,
@@ -2070,7 +2078,8 @@ PDM_part_mesh_nodal_elmts_decompose_faces_get_size
 
       int *parent_num = PDM_part_mesh_nodal_elmts_parent_num_get(pmne,
                                                                  id_section,
-                                                                 i_part);
+                                                                 i_part,
+                                                                 PDM_OWNERSHIP_KEEP);
 
       int n_elt = PDM_part_mesh_nodal_elmts_section_n_elt_get(pmne,
                                                               id_section,

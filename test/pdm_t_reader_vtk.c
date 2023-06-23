@@ -124,7 +124,7 @@ int main(int argc, char *argv[])
              &visu);
 
   if (filename == NULL) {
-    filename = (char *) "meshes/bunny1k.vtk";
+    filename = (char *) PDM_MESH_DIR"bunny1k.vtk";
   }
 
   /*

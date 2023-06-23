@@ -416,7 +416,7 @@ _build_point_tree_seq_leaves
 
     /* Choose split direction */
     double max_range = -1.;
-    int split_direction;
+    int split_direction = -1;
 
     if (ptree->tree_type == PDM_DOCTREE_LOCAL_TREE_KDTREE) {
       for (int direction = 0; direction < 3; direction++) {
@@ -750,7 +750,7 @@ _build_point_tree_seq_leaves_from_boxes
 
     /* Choose split direction */
     double max_range = -1.;
-    int split_direction;
+    int split_direction = -1;
 
     if (ptree->tree_type == PDM_DOCTREE_LOCAL_TREE_KDTREE) {
       for (int direction = 0; direction < 3; direction++) {

@@ -741,7 +741,7 @@ int main(int argc, char *argv[])
              &visu);
 
   if (filename == NULL) {
-    filename = (char *) "meshes/back_faces_P1.dat";
+    filename = (char *) PDM_MESH_DIR"back_faces_P1.dat";
   }
 
   srand(random_seed);
