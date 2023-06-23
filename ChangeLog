@@ -1,3 +1,18 @@
+## [2.3.0] - 2023-06-23
+### Added
+- PDM_generate_mesh : Unique API for simple mesh generation
+- PDM_dmesh_extract : Extract mesh in distributed blocks
+### Changed
+- CI : Improvment
+- PDM_mesh_location : Add PDM_MESh_LOCATION_LOCATE_ALL_TGT mode (All points are located) 
+- PDM_multipart : Add 0D, 1D and 2D meshes
+- PDM_extract_part : Add 0D and 1D and meshes + Fix npart=0 case + groups preservation
+- PDM_part_to_part : Add API to setup a user buffer + API Fortran
+- PDM_iso_surface : Groups preservation + Fix polygon mode
+- Cython : Improvment (ownership)
+### Deprecated
+### Removed
+### Fixed
 ## [2.2.0] - 2023-03-20
 ### Added
 - migration to the internal gitlab server
