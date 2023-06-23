@@ -555,10 +555,8 @@ int main
 
   for (int i = 0; i < n_domain; i++) {
     PDM_dmesh_nodal_to_dmesh_get_dmesh(dmn_to_dm, 0, &dm[i]);
-    int _dn_cell, _dn_face, _dn_edge, _dn_vtx, _n_bnd, _n_join;
-    PDM_dmesh_dims_get(dm[i], &_dn_cell, &_dn_face, &_dn_edge, &_dn_vtx, &_n_bnd, &_n_join);
 
-    dn_vtx [i] = _dn_vtx;
+    dn_vtx [i] = PDM_dmesh_dn_entity_get(dm[i], PDM_MESH_ENTITY_VERTEX);
 
     if(dim == 3) {
       dn_face[i] = PDM_dmesh_connectivity_get(dm[i],
@@ -711,7 +709,8 @@ int main
                               &n_bound,
                               &group_face_idx,
                               &group_face,
-                              &face_group_ln_to_gn);
+                              &face_group_ln_to_gn,
+                              PDM_OWNERSHIP_KEEP);
       n_group_by_domain[i_dom] = 1;
       // printf("n_bound = %i \n", n_bound);
 
@@ -847,7 +846,8 @@ int main
                               &n_bound,
                               &group_face_idx,
                               &group_face,
-                              &face_group_ln_to_gn);
+                              &face_group_ln_to_gn,
+                              PDM_OWNERSHIP_KEEP);
 
       PDM_field_cell_to_vtx_part_group_set(mi,
                                           i_domain,
@@ -894,7 +894,8 @@ int main
                               &n_bound,
                               &group_face_idx,
                               &group_face,
-                              &face_group_ln_to_gn);
+                              &face_group_ln_to_gn,
+                              PDM_OWNERSHIP_KEEP);
 
       pfield_bound[i_domain][i_part] = malloc(n_face_group_field  * sizeof(double *));
       for(int i_group = 0; i_group < n_face_group_field; ++i_group) {

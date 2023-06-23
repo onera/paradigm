@@ -110,11 +110,7 @@ cdef class BlockToBlock:
                                        _block_stride_end,
                                       &_block_data_end)
 
-      dim_np = <NPY.npy_intp> c_size
-      block_data_end = NPY.PyArray_SimpleNewFromData(1, &dim_np, block_data.dtype.num, _block_data_end)
-      PyArray_ENABLEFLAGS(block_data_end, NPY.NPY_OWNDATA);
-
-      return block_data_end
+      return create_numpy(_block_data_end, block_data.dtype.num, c_size)
 
     # ------------------------------------------------------------------
     def BlockToBlock_Exchange(self, dict dFieldIni, 

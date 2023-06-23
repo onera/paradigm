@@ -482,7 +482,7 @@ _compute_mesh_nodal_extents
         double                ***extents_out
 )
 {
-  PDM_geometry_kind_t geom_kind;
+  PDM_geometry_kind_t geom_kind = PDM_GEOMETRY_KIND_MAX;
   switch (dim_mesh) {
   case 1:
     geom_kind = PDM_GEOMETRY_KIND_RIDGE;
@@ -536,7 +536,8 @@ _compute_mesh_nodal_extents
                                                                          id_section_in_geom_kind);
       int *parent_num = PDM_part_mesh_nodal_section_parent_num_get(mesh_nodal,
                                                                    id_section,
-                                                                   i_part);
+                                                                   i_part,
+                                                                   PDM_OWNERSHIP_KEEP);
 
       // PDM_g_num_t *_elt_g_num = PDM_part_mesh_nodal_section_g_num_get(mesh_nodal,
       //                                                               geom_kind,
@@ -839,7 +840,7 @@ _select_elements_by_global_bbox_nodal
   PDM_part_mesh_nodal_t *mesh_nodal = mi->mesh_nodal[i_mesh];
   const int              dim_mesh   = mi->dim_mesh[i_mesh];
 
-  PDM_geometry_kind_t geom_kind;
+  PDM_geometry_kind_t geom_kind = PDM_GEOMETRY_KIND_MAX;
   switch (dim_mesh) {
   case 1:
     geom_kind = PDM_GEOMETRY_KIND_RIDGE;
@@ -905,11 +906,13 @@ _select_elements_by_global_bbox_nodal
 
       int *parent_num = PDM_part_mesh_nodal_section_parent_num_get(mesh_nodal,
                                                                    id_section,
-                                                                   i_part);
+                                                                   i_part,
+                                                                   PDM_OWNERSHIP_KEEP);
 
       PDM_g_num_t *entity_ln_to_gn = PDM_part_mesh_nodal_g_num_get(mesh_nodal,
                                                                    id_section,
-                                                                   i_part);
+                                                                   i_part,
+                                                                   PDM_OWNERSHIP_KEEP);
 
       for (int ielt = 0; ielt < n_elt; ielt++) {
 
@@ -1390,7 +1393,7 @@ _create_extract_part_nodal
   PDM_part_mesh_nodal_t *mesh_nodal = mi->mesh_nodal[i_mesh];
   const int dim_mesh = mi->dim_mesh[i_mesh];
 
-  PDM_geometry_kind_t geom_kind;
+  PDM_geometry_kind_t geom_kind = PDM_GEOMETRY_KIND_MAX;
   switch (dim_mesh) {
   case 1:
     geom_kind = PDM_GEOMETRY_KIND_RIDGE;
@@ -1429,9 +1432,9 @@ _create_extract_part_nodal
     sections_id = PDM_part_mesh_nodal_sections_id_in_geom_kind_get(mesh_nodal, geom_kind);
   }
 
-  PDM_part_mesh_nodal_elmts_for_cwipi(comm,
-                                      n_part,
-                                      &pmne);
+  PDM_part_mesh_nodal_elmts_extend_to_encompassing_comm(comm,
+                                                        n_part,
+                                                        &pmne);
 
 
   int n_part_out = 1;
@@ -2038,7 +2041,7 @@ _build_ptp
                                         PDM_OWNERSHIP_USER);
     }
     else if (mi->mesh_nodal[0] != NULL) {
-      PDM_geometry_kind_t geom_kind;
+      PDM_geometry_kind_t geom_kind = PDM_GEOMETRY_KIND_MAX;
       switch (mi->dim_mesh[0]) {
       case 1:
         geom_kind = PDM_GEOMETRY_KIND_RIDGE;
@@ -2082,10 +2085,12 @@ _build_ptp
 
         PDM_g_num_t *elt_ln_to_gn = PDM_part_mesh_nodal_g_num_get(mi->mesh_nodal[0],
                                                                   id_section,
-                                                                  ipart);
+                                                                  ipart,
+                                                                  PDM_OWNERSHIP_KEEP);
         int *parent_num = PDM_part_mesh_nodal_section_parent_num_get(mi->mesh_nodal[0],
                                                                      id_section,
-                                                                     ipart);
+                                                                     ipart,
+                                                                     PDM_OWNERSHIP_KEEP);
 
         for (int ielt = 0; ielt < n_elt_section; ielt++)  {
           int i = ielt;
@@ -2150,7 +2155,7 @@ _build_ptp
                                                        entity_type[1]);
     }
     else if (mi->mesh_nodal[1] != NULL) {
-      PDM_geometry_kind_t geom_kind;
+      PDM_geometry_kind_t geom_kind = PDM_GEOMETRY_KIND_MAX;
       switch (mi->dim_mesh[1]) {
       case 1:
         geom_kind = PDM_GEOMETRY_KIND_RIDGE;
@@ -2389,8 +2394,7 @@ _mesh_intersection_vol_vol
                                     PDM_OWNERSHIP_USER);
 
       PDM_part_mesh_nodal_add_part_mesh_nodal_elmts(extract_pmn,
-                                                    extract_pmne,
-                                                    PDM_OWNERSHIP_KEEP);
+                                                    extract_pmne);
 
       // Convert part_mesh_nodal to part_mesh
       if (dbg_enabled) {
@@ -2440,7 +2444,8 @@ _mesh_intersection_vol_vol
                                                          &_cell_face_idx,
                                                          &_cell_face,
                                                          &parent_num,
-                                                         &parent_entity_g_num);
+                                                         &parent_entity_g_num,
+                                                         PDM_OWNERSHIP_KEEP);
             int *__face_vtx_idx = malloc(sizeof(int) * (_cell_face_idx[n_elt] + 1));
             __face_vtx_idx[0] = 0;
             for (int k = 0; k < _cell_face_idx[n_elt]; k++) {
@@ -2494,7 +2499,8 @@ _mesh_intersection_vol_vol
                                                       &connec,
                                                       &numabs,
                                                       &parent_num,
-                                                      &parent_entity_g_num);
+                                                      &parent_entity_g_num,
+                                                      PDM_OWNERSHIP_KEEP);
             PDM_vtk_write_std_elements(filename,
                                        n_vtx[i],
                                        vtx_coord[i],
@@ -4524,7 +4530,8 @@ _mesh_intersection_surf_surf
 
         int *parent_num = PDM_part_mesh_nodal_elmts_parent_num_get(extract_pmne,
                                                                    id_section,
-                                                                   0);
+                                                                   0,
+                                                                   PDM_OWNERSHIP_KEEP);
         if (t_elt == PDM_MESH_NODAL_POLY_2D) {
           /* Polygonal section */
           int *connec_idx;
@@ -4533,7 +4540,8 @@ _mesh_intersection_surf_surf
                                                      id_section,
                                                      0,
                                                      &connec_idx,
-                                                     &connec);
+                                                     &connec,
+                                                     PDM_OWNERSHIP_KEEP);
 
           for (int ielt = 0; ielt < n_elt; ielt++) {
             int iface = ielt;
@@ -4562,7 +4570,8 @@ _mesh_intersection_surf_surf
                                                      &_parent_num,
                                                      &parent_entity_g_num,
                                                      &order,
-                                                     &ho_ordering);
+                                                     &ho_ordering,
+                                                     PDM_OWNERSHIP_KEEP);
           assert(order == 1);
 
           int face_vtx_n = PDM_Mesh_nodal_n_vtx_elt_get(t_elt,
@@ -4601,7 +4610,8 @@ _mesh_intersection_surf_surf
 
         int *parent_num = PDM_part_mesh_nodal_elmts_parent_num_get(extract_pmne,
                                                                    id_section,
-                                                                   0);
+                                                                   0,
+                                                                   PDM_OWNERSHIP_KEEP);
         if (t_elt == PDM_MESH_NODAL_POLY_2D) {
           /* Polygonal section */
           int *connec_idx;
@@ -4610,7 +4620,8 @@ _mesh_intersection_surf_surf
                                                      id_section,
                                                      0,
                                                      &connec_idx,
-                                                     &connec);
+                                                     &connec,
+                                                     PDM_OWNERSHIP_KEEP);
 
           for (int ielt = 0; ielt < n_elt; ielt++) {
             int iface = ielt;
@@ -4640,7 +4651,8 @@ _mesh_intersection_surf_surf
                                                      &_parent_num,
                                                      &parent_entity_g_num,
                                                      &order,
-                                                     &ho_ordering);
+                                                     &ho_ordering,
+                                                     PDM_OWNERSHIP_KEEP);
           assert(order == 1);
 
           int face_vtx_n = PDM_Mesh_nodal_n_vtx_elt_get(t_elt,
@@ -5495,13 +5507,13 @@ PDM_mesh_intersection_compute
                                              &extract_pmne,
                                              PDM_OWNERSHIP_USER);
 
-        PDM_part_mesh_nodal_add_part_mesh_nodal_elmts(extract_pmn, extract_pmne, PDM_OWNERSHIP_KEEP);
+        PDM_part_mesh_nodal_add_part_mesh_nodal_elmts(extract_pmn, extract_pmne);
 
 
         char pattern[99];
         sprintf(pattern, "extrp_mesh%d", imesh);
 
-        PDM_geometry_kind_t geom_kind;
+        PDM_geometry_kind_t geom_kind = PDM_GEOMETRY_KIND_MAX;
         switch (mi->dim_mesh[imesh]) {
         case 1:
           geom_kind = PDM_GEOMETRY_KIND_RIDGE;
@@ -5901,8 +5913,8 @@ PDM_mesh_intersection_elt_volume_get
        PDM_geom_elem_edges_properties(n_edge,
                                       edge_vtx,
                                       vtx_coord,
-                                      center,
                                       mi->elt_volume[imesh][ipart],
+                                      center,
                                       NULL,
                                       NULL);
        free(center);

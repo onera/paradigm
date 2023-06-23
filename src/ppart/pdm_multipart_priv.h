@@ -43,12 +43,25 @@ typedef struct {
   int *joins_ids;        // Global id of each interface (size=n_joins)
 
   /* Partitions -- see pdm_part_priv.h for struct definition */
-  _part_t  **parts;
+  // _part_t  **parts;
+  PDM_part_mesh_t *pmesh;
   int        renum_cell_method;     // Choice of renumbering method for cells
   const int *renum_cell_properties; // Parameters used by some renumbering methods
   int        renum_face_method;     // Choice of renumbering method for faces
   int        renum_edge_method;     // Choice of renumbering method for faces
   int        renum_vtx_method;      // Choice of renumbering method for faces
+
+  /*
+   * Additional info
+   */
+  int        **vtx_ghost_information;
+  PDM_bool_t   is_owner_vtx_ghost_information;
+
+  int        **hyperplane_color;
+  int        **thread_color;
+  PDM_bool_t   is_owner_hyperplane_color;
+  PDM_bool_t   is_owner_thread_color;
+
 } _part_mesh_t;
 
 
@@ -58,7 +71,7 @@ typedef struct {
  *         It includes distributed meshes, partioned meshes and
  *         partitioning parameters.
  */
-typedef struct  {
+struct _pdm_multipart_t {
   /* Multipart description */
   int           n_zone;              // Number of initial zones
 
@@ -85,7 +98,7 @@ typedef struct  {
   /* Partitioned meshes */
   _part_mesh_t *pmeshes;             // Partitioned meshes structures (size=n_zone)
 
-} _pdm_multipart_t;
+};
 
 
 

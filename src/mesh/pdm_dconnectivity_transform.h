@@ -11,6 +11,7 @@
 
 #include "pdm.h"
 #include "pdm_mpi.h"
+#include "pdm_block_to_part.h"
 
 /*=============================================================================
  * Macro definition
@@ -173,7 +174,7 @@ PDM_dentity_group_transpose
 );
 
 void
-PDM_dconnectivity_to_extract_dconnectivity
+PDM_dconnectivity_to_extract_dconnectivity_bis
 (
  const PDM_MPI_Comm    comm,
        int             n_selected_entity1,
@@ -190,6 +191,52 @@ PDM_dconnectivity_to_extract_dconnectivity
        PDM_g_num_t   **entity1_old_to_new
 );
 
+
+void
+PDM_dconnectivity_to_extract_dconnectivity_block
+(
+ const PDM_MPI_Comm          comm,
+       int                   dn_extract_entity1,
+       PDM_g_num_t          *dextract_gnum_entity1,
+       PDM_g_num_t          *entity1_distribution,
+       int                  *dentity1_entity2_idx,
+       PDM_g_num_t          *dentity1_entity2,
+       int                 **dextract_entity1_entity2_idx,
+       PDM_g_num_t         **dextract_entity1_entity2,
+       PDM_block_to_part_t **btp_entity1_to_extract_entity1,
+       PDM_g_num_t         **extract_entity2_distribution,
+       PDM_g_num_t         **dparent_entity2_g_num
+);
+
+void
+PDM_dconnectivity_to_extract_dconnectivity
+(
+ const PDM_MPI_Comm          comm,
+       int                   n_selected_entity1,
+       PDM_g_num_t          *select_entity1,
+       PDM_g_num_t          *entity1_distribution,
+       int                  *dentity1_entity2_idx,
+       PDM_g_num_t          *dentity1_entity2,
+       PDM_g_num_t         **extract_entity1_distribution,
+       PDM_g_num_t         **dparent_entity1_g_num,
+       int                 **dextract_entity1_entity2_idx,
+       PDM_g_num_t         **dextract_entity1_entity2,
+       PDM_block_to_part_t **btp_entity1_to_extract_entity1,
+       PDM_g_num_t         **extract_entity2_distribution,
+       PDM_g_num_t         **dparent_entity2_g_num
+);
+
+void
+PDM_dconnectivity_dface_vtx_from_face_and_edge
+(
+ const PDM_MPI_Comm    comm,
+       PDM_g_num_t    *distrib_face,
+       PDM_g_num_t    *distrib_edge,
+       int            *dface_edge_idx,
+       PDM_g_num_t    *dface_edge,
+       PDM_g_num_t    *dedge_vtx,
+       PDM_g_num_t   **dface_vtx
+);
 
 #ifdef  __cplusplus
 }

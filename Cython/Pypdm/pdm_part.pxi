@@ -406,213 +406,27 @@ cdef class Part:
                               &faceGroupIdx,
                               &faceGroup,
                               &faceGroupLNToGN)
-        # -> Begin
-        cdef NPY.npy_intp dim
 
-        # \param [out]  cellTag            Cell tag (size = nCell)
-        if (cellTag == NULL) :
-            npCellTag = None
-        else :
-            dim = <NPY.npy_intp> dims['nCell']
-            npCellTag = NPY.PyArray_SimpleNewFromData(1,
-                                                     &dim,
-                                                     NPY.NPY_INT32,
-                                                     <void *> cellTag)
-
-        # \param [out]  cellFaceIdx        Cell to face connectivity index (size = nCell + 1)
-        if (cellFaceIdx == NULL) :
-            npCellFaceIdx = None
-        else :
-            dim = <NPY.npy_intp> (dims['nCell'] + 1)
-            npCellFaceIdx = NPY.PyArray_SimpleNewFromData(1,
-                                                         &dim,
-                                                         NPY.NPY_INT32,
-                                                         <void *> cellFaceIdx)
-
-        # \param [out]  cellFace           Cell to face connectivity (size = cellFaceIdx[nCell] = lCellFace)
-        if (cellFace == NULL) :
-            npCellFace = None
-        else :
-            dim = <NPY.npy_intp> dims['sCellFace']
-            npCellFace = NPY.PyArray_SimpleNewFromData(1,
-                                                      &dim,
-                                                      NPY.NPY_INT32,
-                                                      <void *> cellFace)
-
-        # \param [out]  cellLNToGN         Cell local numbering to global numbering (size = nCell)
-        # dim = <NPY.npy_intp> dims['nCell']
-        if (cellLNToGN == NULL) :
-            npCellLNToGN = None
-        else :
-            dim = <NPY.npy_intp> dims['nCell']
-            npCellLNToGN = NPY.PyArray_SimpleNewFromData(1,
-                                                        &dim,
-                                                        PDM_G_NUM_NPY_INT,
-                                                        <void *> cellLNToGN)
-
-        # \param [out]  faceTag            Face tag (size = nFace)
-        if (faceTag == NULL) :
-            npFaceTag = None
-        else :
-            dim = <NPY.npy_intp> dims['nFace']
-            npFaceTag = NPY.PyArray_SimpleNewFromData(1,
-                                                     &dim,
-                                                     NPY.NPY_INT32,
-                                                     <void *> faceTag)
-
-        # \param [out]  faceCell           Face to cell connectivity  (size = 2 * nFace)
-        if (faceCell == NULL) :
-            npFaceCell = None
-        else :
-            dim = <NPY.npy_intp> (2 * dims['nFace'])
-            npFaceCell = NPY.PyArray_SimpleNewFromData(1,
-                                                      &dim,
-                                                      NPY.NPY_INT32,
-                                                      <void *> faceCell)
-
-        # \param [out]  faceVtxIdx         Face to Vertex connectivity index (size = nFace + 1)
-        if (faceVertexIdx == NULL) :
-            npFaceVertexIdx = None
-        else :
-            dim = <NPY.npy_intp> (dims['nFace'] + 1)
-            npFaceVertexIdx = NPY.PyArray_SimpleNewFromData(1,
-                                                           &dim,
-                                                           NPY.NPY_INT32,
-                                                           <void *> faceVertexIdx)
-
-        # \param [out]  faceVtx            Face to Vertex connectivity (size = faceVtxIdx[nFace])
-        cdef NPY.ndarray[NPY.int32_t, ndim=1] npFaceVertex
-        if (faceVertex == NULL) :
-            npFaceVertex = None
-        else :
-            dim = <NPY.npy_intp> dims['sFaceVertex']
-            npFaceVertex  = NPY.PyArray_SimpleNewFromData(1,
-                                                         &dim,
-                                                         NPY.NPY_INT32,
-                                                         <void *> faceVertex)
-            # PyArray_ENABLEFLAGS(npFaceVertex, NPY.NPY_OWNDATA)
-            # print '*'*1000
-            # print 'Take ownership'
-            # print '*'*1000
-
-        # \param [out]  faceLNToGN         Face local numbering to global numbering (size = nFace)
-        if (faceLNToGN == NULL) :
-            npFaceLNToGN = None
-        else :
-            dim = <NPY.npy_intp> dims['nFace']
-            npFaceLNToGN   = NPY.PyArray_SimpleNewFromData(1,
-                                                          &dim,
-                                                          PDM_G_NUM_NPY_INT,
-                                                          <void *> faceLNToGN)
-
-        # \param [out]  facePartBound      Partitioning boundary faces
-        if (facePartBound == NULL) :
-            npFacePartBound = None
-        else :
-            dim = <NPY.npy_intp> (4 * dims['nFacePartBound'])
-            npFacePartBound   = NPY.PyArray_SimpleNewFromData(1,
-                                                             &dim,
-                                                             NPY.NPY_INT32,
-                                                             <void *> facePartBound)
-
-        # \param [out]  facePartBoundProcIdx  Partitioning boundary faces block distribution from processus (size = nProc + 1)
-        if (facePartBoundProcIdx == NULL) :
-            npfacePartBoundProcIdx = None
-        else :
-            dim = <NPY.npy_intp> ( dims['nProc'] + 1)
-            npfacePartBoundProcIdx   = NPY.PyArray_SimpleNewFromData(1,
-                                                             &dim,
-                                                             NPY.NPY_INT32,
-                                                             <void *> facePartBoundProcIdx)
-
-        # \param [out]  facePartBoundPartIdx  Partitioning boundary faces block distribution from partition (size = nTPart + 1)
-        if (facePartBoundPartIdx == NULL) :
-            npfacePartBoundPartIdx = None
-        else :
-            dim = <NPY.npy_intp> ( dims['nTPart'] + 1)
-            npfacePartBoundPartIdx   = NPY.PyArray_SimpleNewFromData(1,
-                                                             &dim,
-                                                             NPY.NPY_INT32,
-                                                             <void *> facePartBoundPartIdx)
-
-        # \param [out]  vtxTag             Vertex tag (size = nVtx)
-        if (vertexTag == NULL) :
-            npVertexTag = None
-        else :
-            dim = <NPY.npy_intp> dims['nVertex']
-            npVertexTag   = NPY.PyArray_SimpleNewFromData(1,
-                                                         &dim,
-                                                         NPY.NPY_INT32,
-                                                         <void *> vertexTag)
-
-        # \param [out]  vtx                Vertex coordinates (size = 3 * nVtx)
-        if (vertex == NULL) :
-            npVertex = None
-        else :
-            dim = <NPY.npy_intp> (3 * dims['nVertex'])
-            npVertex  = NPY.PyArray_SimpleNewFromData(1,
-                                                     &dim,
-                                                     NPY.NPY_DOUBLE,
-                                                     <void *> vertex)
-
-        # \param [out]  vtxLNToGN          Vertex local numbering to global numbering (size = nVtx)
-        if (vertexLNToGN == NULL) :
-            npVertexLNToGN = None
-        else :
-            dim = <NPY.npy_intp> dims['nVertex']
-            npVertexLNToGN  = NPY.PyArray_SimpleNewFromData(1,
-                                                           &dim,
-                                                           PDM_G_NUM_NPY_INT,
-                                                           <void *> vertexLNToGN)
-
-        # \param [out]  faceGroupIdx       face group index (size = nFaceGroup + 1)
-        if (faceGroupIdx == NULL) :
-            npFaceGroupIdx = None
-        else :
-            dim = <NPY.npy_intp> (self._nFaceGroup + 1)
-            npFaceGroupIdx  = NPY.PyArray_SimpleNewFromData(1,
-                                                           &dim,
-                                                           NPY.NPY_INT32,
-                                                           <void *> faceGroupIdx)
-
-        # \param [out]  faceGroup          faces for each group (size = faceGroupIdx[nFaceGroup] = lFaceGroup)
-        if (faceGroup == NULL) :
-            npFaceGroup = None
-        else :
-            dim = <NPY.npy_intp> dims['sFaceGroup']
-            npFaceGroup = NPY.PyArray_SimpleNewFromData(1,
-                                                       &dim,
-                                                       NPY.NPY_INT32,
-                                                       <void *> faceGroup)
-
-        # \param [out]  faceGroupLNToGN    faces global numbering for each group (size = faceGroupIdx[nFaceGroup] = lFaceGroup)
-        if (faceGroupLNToGN == NULL) :
-            npFaceGroupLNToGN = None
-        else :
-            dim = <NPY.npy_intp> dims['sFaceGroup']
-            npFaceGroupLNToGN = NPY.PyArray_SimpleNewFromData(1,
-                                                             &dim,
-                                                             PDM_G_NUM_NPY_INT,
-                                                             <void *> faceGroupLNToGN)
-
-        return {'npCellTag'                  : npCellTag,
-                'npCellFaceIdx'              : npCellFaceIdx,
-                'npCellFace'                 : npCellFace,
-                'npCellLNToGN'               : npCellLNToGN,
-                'npFaceTag'                  : npFaceTag,
-                'npFaceCell'                 : npFaceCell,
-                'npFaceVertexIdx'            : npFaceVertexIdx,
-                'npFaceVertex'               : npFaceVertex,
-                'npFaceLNToGN'               : npFaceLNToGN,
-                'npfacePartBoundProcIdx'     : npfacePartBoundProcIdx,
-                'npfacePartBoundPartIdx'     : npfacePartBoundPartIdx,
-                'npFacePartBound'            : npFacePartBound,
-                'npVertexTag'                : npVertexTag,
-                'npVertex'                   : npVertex,
-                'npVertexLNToGN'             : npVertexLNToGN,
-                'npFaceGroupIdx'             : npFaceGroupIdx,
-                'npFaceGroup'                : npFaceGroup,
-                'npFaceGroupLNToGN'          : npFaceGroupLNToGN}
+        return {
+            'npCellTag'                  : create_numpy_or_none_i(cellTag,              dims['nCell'],            flag_owndata=False),
+            'npCellFaceIdx'              : create_numpy_or_none_i(cellFaceIdx,          dims['nCell']+1,          flag_owndata=False),
+            'npCellFace'                 : create_numpy_or_none_i(cellFace,             dims['sCellFace'],        flag_owndata=False),
+            'npCellLNToGN'               : create_numpy_or_none_g(cellLNToGN,           dims['nCell'],            flag_owndata=False),
+            'npFaceTag'                  : create_numpy_or_none_i(faceTag,              dims['nFace'],            flag_owndata=False),
+            'npFaceCell'                 : create_numpy_or_none_i(faceCell,             2*dims['nFace'],          flag_owndata=False),
+            'npFaceVertexIdx'            : create_numpy_or_none_i(faceVertexIdx,        dims['nFace']+1,          flag_owndata=False),
+            'npFaceVertex'               : create_numpy_or_none_i(faceVertex,           dims['sFaceVertex'],      flag_owndata=False),
+            'npFaceLNToGN'               : create_numpy_or_none_g(faceLNToGN,           dims['nFace'],            flag_owndata=False),
+            'npfacePartBoundProcIdx'     : create_numpy_or_none_i(facePartBoundProcIdx, dims['nProc']+1,          flag_owndata=False),
+            'npfacePartBoundPartIdx'     : create_numpy_or_none_i(facePartBoundPartIdx, dims['nTPart']+1,         flag_owndata=False),
+            'npFacePartBound'            : create_numpy_or_none_i(facePartBound,        4*dims['nFacePartBound'], flag_owndata=False),
+            'npVertexTag'                : create_numpy_or_none_i(vertexTag,            dims['nVertex'],          flag_owndata=False),
+            'npVertex'                   : create_numpy_or_none_d(vertex,               3*dims['nVertex'],        flag_owndata=False),
+            'npVertexLNToGN'             : create_numpy_or_none_g(vertexLNToGN,         dims['nVertex'],          flag_owndata=False),
+            'npFaceGroupIdx'             : create_numpy_or_none_i(faceGroupIdx,         self._nFaceGroup+1,       flag_owndata=False),
+            'npFaceGroup'                : create_numpy_or_none_i(faceGroup,            dims['sFaceGroup'],       flag_owndata=False),
+            'npFaceGroupLNToGN'          : create_numpy_or_none_g(faceGroupLNToGN,      dims['sFaceGroup'],       flag_owndata=False),
+        }
 
     # ------------------------------------------------------------------
     def part_color_get(self, int ipart):
@@ -637,51 +451,12 @@ cdef class Part:
                                 &faceColor,
                                 &threadColor,
                                 &hyperPlaneColor)
-        # -> Begin
-        cdef NPY.npy_intp dim
-
-        # \param [out]  cellColor            Cell tag (size = nCell)
-        if (cellColor == NULL):
-            npCellColor = None
-        else :
-            dim = <NPY.npy_intp> dims['nCell']
-            npCellColor = NPY.PyArray_SimpleNewFromData(1,
-                                                        &dim,
-                                                        NPY.NPY_INT32,
-                                                        <void *> cellColor)
-        # \param [out]  faceColor            Cell tag (size = nFace)
-        if (faceColor == NULL):
-            npFaceColor = None
-        else :
-            dim = <NPY.npy_intp> dims['nFace']
-            npFaceColor = NPY.PyArray_SimpleNewFromData(1,
-                                                        &dim,
-                                                        NPY.NPY_INT32,
-                                                        <void *> faceColor)
-
-        # \param [out]  threadColor            Cell tag (size = nCell)
-        if (threadColor == NULL):
-            npThreadColor = None
-        else :
-            dim = <NPY.npy_intp> dims['nCell']
-            npThreadColor = NPY.PyArray_SimpleNewFromData(1,
-                                                          &dim,
-                                                          NPY.NPY_INT32,
-                                                          <void *> threadColor)
-
-        # \param [out]  hyperPlaneColor            Cell tag (size = nCell)
-        if (hyperPlaneColor == NULL):
-            npHyperPlaneColor = None
-        else :
-            dim = <NPY.npy_intp> dims['nCell']
-            npHyperPlaneColor = NPY.PyArray_SimpleNewFromData(1,
-                                                              &dim,
-                                                              NPY.NPY_INT32,
-                                                              <void *> hyperPlaneColor)
-        return {'npCellColor'       : npCellColor,
-                'npFaceColor'       : npFaceColor,
-                'npThreadColor'     : npThreadColor,
-                'npHyperPlaneColor' : npHyperPlaneColor}
+        return {
+            'npCellColor'       : create_numpy_or_none_i(cellColor,       dims['nCell'], flag_owndata=False),
+            'npFaceColor'       : create_numpy_or_none_i(faceColor,       dims['nFace'], flag_owndata=False),
+            'npThreadColor'     : create_numpy_or_none_i(threadColor,     dims['nCell'], flag_owndata=False),
+            'npHyperPlaneColor' : create_numpy_or_none_i(hyperPlaneColor, dims['nCell'], flag_owndata=False),
+        }
 
     # ------------------------------------------------------------------
     def part_time_get(self):

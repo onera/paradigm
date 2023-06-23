@@ -138,7 +138,7 @@ int main(int argc, char *argv[])
     pstrid      [i] = 1;
   }
 
-  if(1 == 1) {
+  if(0 == 1) {
     PDM_log_trace_array_long(pln_to_to_gn, pn_elmt, "pln_to_to_gn : ");
   }
 

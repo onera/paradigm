@@ -79,7 +79,7 @@ module pdm_pointer_array
   interface PDM_pointer_array_create
     module procedure PDM_pointer_array_create_type
   end interface
-  
+
   contains
 
 
@@ -109,30 +109,30 @@ module pdm_pointer_array
     pa%type = type
 
     if (type .eq. PDM_TYPE_INT) then
-      pa%s_data = 4      
+      pa%s_data = 4
 #ifdef PDM_LONG_G_NUM
     else if (type .eq. PDM_TYPE_G_NUM) then
-      pa%s_data = 8      
+      pa%s_data = 8
 #else
     else if (type .eq. PDM_TYPE_G_NUM) then
-      pa%s_data = 4      
+      pa%s_data = 4
 #endif
-    else if (type .eq. PDM_TYPE_DOUBLE) then   
-      pa%s_data = 8      
+    else if (type .eq. PDM_TYPE_DOUBLE) then
+      pa%s_data = 8
     else if (type .eq. PDM_TYPE_COMPLEX8) then
-      pa%s_data = 8      
+      pa%s_data = 8
     else if (type .eq. PDM_TYPE_COMPLEX4) then
-      pa%s_data = 4      
+      pa%s_data = 4
     else if (type .eq. PDM_TYPE_REAL4) then
-      pa%s_data = 4      
+      pa%s_data = 4
     else if (type .eq. PDM_TYPE_CPTR) then
       if (present (s_data)) then
         pa%s_data = s_data
-      else 
+      else
         print*, "Error PDM_pointer_array_create : s_data parameter is mandataroy with PDM_TYPE_CPTR type"
         call exit
-      endif      
-    endif  
+      endif
+    endif
 
     allocate(pa%cptr(n_part))
     allocate(pa%length(n_part))
@@ -297,6 +297,72 @@ module pdm_pointer_array
     pa%length(i_part+1) = size(pointer_f)
 
   end subroutine PDM_pointer_array_part_set_double
+
+  !>
+  !! \brief Set a partition from a Fortran pointer
+  !!
+  !! \param [in]  pa         Array of \ref PDM_pointer_array_t
+  !! \param [in]  i_part     Id of partition
+  !! \param [in]  pointer_f  Pointer to a double array
+  !!
+
+  subroutine PDM_pointer_array_part_set_double_2 (pa,        &
+                                                  i_part,    &
+                                                  pointer_f)
+    use iso_c_binding
+    implicit none
+
+    type(PDM_pointer_array_t), target  :: pa
+    integer, intent(in)                :: i_part
+    double precision,          pointer :: pointer_f(:,:)
+
+    if (pa%type .ne. PDM_TYPE_DOUBLE) then
+      print *, "PDM_pointer_array_part_set_double_2 : wrong type"
+      stop
+    end if
+
+    if (i_part .ge. size(pa%cptr)) then
+      print *, "PDM_pointer_array_part_set_double_2 : wrong i_part"
+      stop
+    end if
+
+    pa%cptr(i_part+1)   = c_loc(pointer_f)
+    pa%length(i_part+1) = size(pointer_f)
+
+  end subroutine PDM_pointer_array_part_set_double_2
+
+  !>
+  !! \brief Set a partition from a Fortran pointer
+  !!
+  !! \param [in]  pa         Array of \ref PDM_pointer_array_t
+  !! \param [in]  i_part     Id of partition
+  !! \param [in]  pointer_f  Pointer to a double array
+  !!
+
+  subroutine PDM_pointer_array_part_set_double_3 (pa,        &
+                                                  i_part,    &
+                                                  pointer_f)
+    use iso_c_binding
+    implicit none
+
+    type(PDM_pointer_array_t), target  :: pa
+    integer, intent(in)                :: i_part
+    double precision,          pointer :: pointer_f(:,:,:)
+
+    if (pa%type .ne. PDM_TYPE_DOUBLE) then
+      print *, "PDM_pointer_array_part_set_double_3 : wrong type"
+      stop
+    end if
+
+    if (i_part .ge. size(pa%cptr)) then
+      print *, "PDM_pointer_array_part_set_double_3 : wrong i_part"
+      stop
+    end if
+
+    pa%cptr(i_part+1)   = c_loc(pointer_f)
+    pa%length(i_part+1) = size(pointer_f)
+
+  end subroutine PDM_pointer_array_part_set_double_3
 
   !>
   !! \brief Set a partition from a Fortran pointer
@@ -544,6 +610,115 @@ module pdm_pointer_array
                      [pa%length(i_part+1)])
 
   end subroutine PDM_pointer_array_part_get_double
+
+
+  !>
+  !! \brief Get a partition
+  !!
+  !! Maps a Fortran pointer onto a C pointer
+  !!
+  !! \param [in]       pa         Array of \ref PDM_pointer_array_t
+  !! \param [in]       i_part     Id of partition
+  !! \param [in]       t_stride   Type of stride
+  !! \param [in]       stride     Stride
+  !! \param [in, out]  pointer_f  Pointer to a double array
+  !!
+
+  subroutine PDM_pointer_array_part_get_double_2 (pa,        &
+                                                  i_part,    &
+                                                  t_stride,  &
+                                                  stride,    &
+                                                  pointer_f)
+    use iso_c_binding
+    implicit none
+
+    type(PDM_pointer_array_t), target  :: pa
+    integer, intent(in)                :: i_part
+    integer, intent(in)                :: t_stride
+    integer, intent(in)                :: stride
+    double precision,          pointer :: pointer_f(:,:)
+
+    if (pa%type .ne. PDM_TYPE_DOUBLE) then
+      print *, "PDM_pointer_array_part_get_double_2 : wrong type"
+      stop
+    end if
+
+    if (i_part .ge. size(pa%cptr)) then
+      print *, "PDM_pointer_array_part_get_double_2 : wrong i_part"
+      stop
+    end if
+
+    select case (t_stride)
+    case (PDM_STRIDE_CST_INTERLACED)
+      call c_f_pointer(pa%cptr(i_part+1),     &
+                       pointer_f,             &
+                       [stride,pa%length(i_part+1)/stride])
+    case (PDM_STRIDE_CST_INTERLEAVED)
+      call c_f_pointer(pa%cptr(i_part+1),     &
+                       pointer_f,             &
+                       [pa%length(i_part+1)/stride,stride])
+    case default
+      print *, "PDM_pointer_array_part_get_double_2 : wrong stride type"
+      stop
+    end select
+
+  end subroutine PDM_pointer_array_part_get_double_2
+
+
+  !>
+  !! \brief Get a partition
+  !!
+  !! Maps a Fortran pointer onto a C pointer
+  !!
+  !! \param [in]       pa         Array of \ref PDM_pointer_array_t
+  !! \param [in]       i_part     Id of partition
+  !! \param [in]       t_stride   Type of stride
+  !! \param [in]       stride 1   Stride 1
+  !! \param [in]       stride 2   Stride 2
+  !! \param [in, out]  pointer_f  Pointer to a double array
+  !!
+
+  subroutine PDM_pointer_array_part_get_double_3 (pa,        &
+                                                  i_part,    &
+                                                  t_stride,  &
+                                                  stride1,   &
+                                                  stride2,   &
+                                                  pointer_f)
+    use iso_c_binding
+    implicit none
+
+    type(PDM_pointer_array_t), target  :: pa
+    integer, intent(in)                :: i_part
+    integer, intent(in)                :: t_stride
+    integer, intent(in)                :: stride1
+    integer, intent(in)                :: stride2
+    double precision,          pointer :: pointer_f(:,:,:)
+
+    if (pa%type .ne. PDM_TYPE_DOUBLE) then
+      print *, "PDM_pointer_array_part_get_double_3 : wrong type"
+      stop
+    end if
+
+    if (i_part .ge. size(pa%cptr)) then
+      print *, "PDM_pointer_array_part_get_double_3 : wrong i_part"
+      stop
+    end if
+
+    select case (t_stride)
+    case (PDM_STRIDE_CST_INTERLACED)
+      call c_f_pointer(pa%cptr(i_part+1),     &
+                       pointer_f,             &
+                       [stride1,stride2,pa%length(i_part+1)/(stride1*stride2)])
+    case (PDM_STRIDE_CST_INTERLEAVED)
+      call c_f_pointer(pa%cptr(i_part+1),     &
+                       pointer_f,             &
+                       [pa%length(i_part+1)/(stride1*stride2),stride1,stride2])
+    case default
+      print *, "PDM_pointer_array_part_get_double_3 : wrong stride type"
+      stop
+    end select
+
+  end subroutine PDM_pointer_array_part_get_double_3
 
 
   !>

@@ -89,7 +89,7 @@ PDM_extract_part_create
 
 /**
  *
- * \brief Build an iso surface struct
+ * \brief Compute extraction
  *
  * \param [in]   extrp      PDM_extract_part_t
  *
@@ -172,6 +172,47 @@ PDM_extract_part_part_set
   double                   *vtx_coord
 );
 
+
+
+/**
+ *
+ * \brief Set partition group (optional)
+ * \param [in]   extrp             PDM_extract_part_t
+ * \param [in]   bound_type        Kind of group
+ * \param [in]   n_group           Number of group of kind bound_type
+ */
+void
+PDM_extract_part_n_group_set
+(
+  PDM_extract_part_t        *extrp,
+  PDM_bound_type_t           bound_type,
+  int                        n_group
+);
+
+/**
+ *
+ * \brief Set partition group (optional)
+ *
+ * \param [in]   extrp             PDM_extract_part_t
+ * \param [in]   i_part            part identifier
+ * \param [in]   i_group           group identifier
+ * \param [in]   bound_type        Kind of group
+ * \param [in]   n_group_entity    Number of entity in current group
+ * \param [in]   group_entity      List of entity in group (size = n_group_entity)
+ *
+ */
+void
+PDM_extract_part_part_group_set
+(
+  PDM_extract_part_t        *extrp,
+  int                       i_part,
+  int                       i_group,
+  PDM_bound_type_t          bound_type,
+  int                       n_group_entity,
+  int                      *group_entity,
+  PDM_g_num_t              *group_entity_ln_to_gn
+);
+
 /**
  *
  * \brief Set PDM_part_mesh_nodal_elmts_t
@@ -185,6 +226,23 @@ PDM_extract_part_part_nodal_set
 (
   PDM_extract_part_t          *extrp,
   PDM_part_mesh_nodal_elmts_t *pmne
+);
+
+/**
+ *
+ * \brief Set entity center (ussefull for equilibrate / hilbert ordering )
+ *
+ * \param [in]   extrp            PDM_extract_part_t structure
+ * \param [in]   i_part           part identifier
+ * \param [in]   entity_center    Center of entity (relative of dim throught create)
+ *
+ */
+void
+PDM_extract_part_entity_center_set
+(
+  PDM_extract_part_t          *extrp,
+  int                          i_part,
+  double                      *entity_center
 );
 
 
@@ -277,6 +335,12 @@ PDM_extract_part_free
 );
 
 void
+PDM_extract_part_partial_free
+(
+  PDM_extract_part_t  *extrp
+);
+
+void
 PDM_extract_part_part_to_part_get
 (
        PDM_extract_part_t   *extrp,
@@ -284,7 +348,36 @@ PDM_extract_part_part_to_part_get
        PDM_part_to_part_t  **ptp,
        PDM_ownership_t       ownership
 
- );
+);
+
+
+void
+PDM_extract_part_part_to_part_group_get
+(
+       PDM_extract_part_t   *extrp,
+ const PDM_bound_type_t      bound_type,
+       int                   i_group,
+       PDM_part_to_part_t  **ptp,
+       PDM_ownership_t       ownership
+
+);
+
+void
+PDM_extract_part_group_get
+(
+       PDM_extract_part_t   *extrp,
+ const PDM_bound_type_t      bound_type,
+       int                   i_part,
+       int                   i_group,
+       int                  *pn_extract_group_entity,
+       int                 **pextract_group_entity,
+       PDM_g_num_t         **pextract_group_entity_ln_to_gn,
+       PDM_g_num_t         **pextract_group_entity_parent_ln_to_gn,
+       PDM_ownership_t       ownership
+);
+
+
+
 
 /*----------------------------------------------------------------------------*/
 

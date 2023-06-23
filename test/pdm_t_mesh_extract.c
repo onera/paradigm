@@ -186,19 +186,19 @@ int main(int argc, char *argv[])
   PDM_g_num_t   *dparent_vtx_g_num         = NULL;
   PDM_g_num_t   *pextract_old_to_new       = NULL;
 
-  PDM_dconnectivity_to_extract_dconnectivity(comm,
-                                             dface_group_idx[n_face_group],
-                                             dface_group,
-                                             face_distribution,
-                                             dface_vtx_idx,
-                                             dface_vtx,
-                                             &extract_face_distribution,
-                                             &extract_vtx_distribution,
-                                             &dextract_face_vtx_idx,
-                                             &dextract_face_vtx,
-                                             &dparent_face_g_num,
-                                             &dparent_vtx_g_num,
-                                             &pextract_old_to_new);
+  PDM_dconnectivity_to_extract_dconnectivity_bis(comm,
+                                                 dface_group_idx[n_face_group],
+                                                 dface_group,
+                                                 face_distribution,
+                                                 dface_vtx_idx,
+                                                 dface_vtx,
+                                                 &extract_face_distribution,
+                                                 &extract_vtx_distribution,
+                                                 &dextract_face_vtx_idx,
+                                                 &dextract_face_vtx,
+                                                 &dparent_face_g_num,
+                                                 &dparent_vtx_g_num,
+                                                 &pextract_old_to_new);
 
 
   int dn_extract_face = extract_face_distribution[i_rank+1] - extract_face_distribution[i_rank];
@@ -227,8 +227,6 @@ int main(int argc, char *argv[])
       dface_group_tag[i_face] = i_group;
     }
   }
-
-
 
   if(post) {
     PDM_log_trace_array_long(extract_face_distribution, n_rank+1, "extract_face_distribution:: ");

@@ -2229,6 +2229,10 @@ PDM_domain_interface_translate_entity1_entity2
  int                   ***interface_dom_entity2
 )
 {
+  // TODO :
+  //  -> reduce time by extracting dentity2_entity1_idx for only concerns interfaces
+  //  -> Pour l'insant la reduction est faite en dehors (via PDM_dmesh_extract )
+
   int i_rank = -1;
   PDM_MPI_Comm_rank(comm, &i_rank);
 
@@ -2245,6 +2249,15 @@ PDM_domain_interface_translate_entity1_entity2
   double      **weight                = (double      **) malloc(n_interface * sizeof(double      *));
   int         **stride_one            = (int         **) malloc(n_interface * sizeof(int         *));
   int          *dn_interface_twice    = (int          *) malloc(n_interface * sizeof(int          ));
+
+  if(n_domain > 1) {
+    for(int i_domain = 1; i_domain < n_domain; ++i_domain) {
+      for(int i = 0; i < dentity2_entity1_idx[i_domain][dn_entity2[i_domain]]; ++i) {
+        dentity2_entity1[i_domain][i] += entity1_per_block_offset[i_domain];
+      }
+    }
+  }
+
   for (int itrf = 0; itrf < n_interface; itrf++) {
     stride_one           [itrf] = (int         *) malloc( 2 * dn_interface[itrf] * sizeof(int        ));
     interface_ids_shifted[itrf] = (PDM_g_num_t *) malloc( 2 * dn_interface[itrf] * sizeof(PDM_g_num_t));
@@ -2259,13 +2272,6 @@ PDM_domain_interface_translate_entity1_entity2
       PDM_log_trace_array_long(interface_ids[itrf], 2 * dn_interface[itrf], "interface_ids:: ");
     }
 
-    if(n_domain > 1) {
-      for(int i_domain = 1; i_domain < n_domain; ++i_domain) {
-        for(int i = 0; i < dentity2_entity1_idx[i_domain][dn_entity2[i_domain]]; ++i) {
-          dentity2_entity1[i_domain][i] += entity1_per_block_offset[i_domain];
-        }
-      }
-    }
 
 
     for (int k = 0; k < dn_interface[itrf]; k++) {
@@ -2460,7 +2466,7 @@ PDM_domain_interface_translate_entity1_entity2
   }
   free(part_stride);
 
-  int **part_data_gnum   = NULL;
+  PDM_g_num_t **part_data_gnum   = NULL;
   PDM_block_to_part_exch(btp,
                          sizeof(PDM_g_num_t),
                          PDM_STRIDE_VAR_INTERLACED,
@@ -2517,7 +2523,7 @@ PDM_domain_interface_translate_entity1_entity2
       PDM_log_trace_array_int(part_stride_idx[i_domain], n_dentity2_entity1[i_domain], "part_stride_idx");
       PDM_log_trace_array_int(part_data_sens [i_domain], part_stride_idx[i_domain][n_dentity2_entity1[i_domain]], "part_data_sens  ::");
       PDM_log_trace_array_int(part_data_intno[i_domain], part_stride_idx[i_domain][n_dentity2_entity1[i_domain]], "part_data_intno ::");
-      PDM_log_trace_array_int(part_data_gnum [i_domain], part_stride_idx[i_domain][n_dentity2_entity1[i_domain]], "part_data_gnum  ::");
+      PDM_log_trace_array_long(part_data_gnum [i_domain], part_stride_idx[i_domain][n_dentity2_entity1[i_domain]], "part_data_gnum  ::");
     }
 
     key_data_size_approx[i_domain] = 0;
@@ -2760,7 +2766,7 @@ PDM_domain_interface_translate_entity1_entity2
   free(dkey_strid);
 
   int data_size_n = PDM_part_to_block_exch(ptb_hash,
-                                         sizeof(PDM_g_num_t),
+                                         sizeof(int),
                                          PDM_STRIDE_VAR_INTERLACED,
                                          -1,
                                          stride_one,
@@ -3129,9 +3135,17 @@ PDM_domain_interface_translate_entity1_entity2
                 if(sgn_opp2 != sgn_cur1) { lsens2 = -1;}
                 else {                     lsens2 =  1;}
               }
+
+              // In realease  this test is mandatory (sinon on plante dans l'assert plus bas)
+              if(lsens1 != 0 && lsens2 != 0) {
+                break; // Car on a tout trouvé, si on veut tout check il faut commenté cette ligne
+              }
+
+              // log_trace("\t\t gnum_cur1 = %i | gnum_cur2 = %i \n", gnum_cur1, gnum_cur2);
+              // log_trace("\t\t lsens1 = %i | lsens2 = %i \n", lsens1, lsens2);
             }
 
-            // log_trace("sens = %i | lsens = %i \n", sens, lsens);
+            // log_trace("--> lsens1 = %i | lsens2 = %i \n", lsens1, lsens2);
             if(sens1 != 0) {
               assert(sens1 == lsens1);
             }

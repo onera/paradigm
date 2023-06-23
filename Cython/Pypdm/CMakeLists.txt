@@ -30,8 +30,8 @@ configure_file(pdm_part_coarse.pxi.in pdm_part_coarse.pxi)
 
 include(UseCython)
 set(_pyx_file "${CMAKE_CURRENT_BINARY_DIR}/Pypdm.pyx")
-# set_source_files_properties(${_pyx_file} PROPERTIES CYTHON_IS_CXX FALSE)
-set_source_files_properties(${_pyx_file} PROPERTIES CYTHON_IS_CXX TRUE)
+set_source_files_properties(${_pyx_file} PROPERTIES CYTHON_IS_CXX FALSE)
+# set_source_files_properties(${_pyx_file} PROPERTIES CYTHON_IS_CXX TRUE)
 
 cython_add_module (Pypdm
                    PYX_SOURCES "${_pyx_file}"
@@ -44,6 +44,9 @@ set_target_properties(Pypdm PROPERTIES LIBRARY_OUTPUT_DIRECTORY "${CMAKE_CURRENT
 
 unset(LINK_LIBRARIES)
 list(APPEND LINK_LIBRARIES ${COMMON_LIBRARIES})
+if (CMAKE_C_COMPILER_ID STREQUAL "GNU")
+  list(APPEND LINK_LIBRARIES "m")
+endif()
 if (${PARMETIS_FOUND})
   list(APPEND LINK_LIBRARIES ${PARMETIS_LIBRARIES})
   list(APPEND LINK_LIBRARIES ${METIS_LIBRARIES})

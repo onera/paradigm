@@ -86,6 +86,15 @@ struct _pdm_extract_part_t
 
   double             **pvtx_coord;
 
+  int                  have_user_entity_center;
+  double             **entity_center;
+
+  int                  n_group              [PDM_BOUND_TYPE_MAX];
+  int                **n_group_entity       [PDM_BOUND_TYPE_MAX];
+  int               ***group_entity         [PDM_BOUND_TYPE_MAX];
+  PDM_g_num_t       ***group_entity_ln_to_gn[PDM_BOUND_TYPE_MAX];
+
+
   /* If partition is described by elements */
   PDM_part_mesh_nodal_elmts_t *pmne;
 
@@ -98,33 +107,6 @@ struct _pdm_extract_part_t
   int                 *n_target;
   PDM_g_num_t        **target_gnum;
   int                **target_location;
-
-  /* Extracted part (Intermediate distributed result) */
-  int                   dn_equi_cell;
-  int                   dn_equi_face;
-  int                   dn_equi_edge;
-  int                   dn_equi_vtx;
-  PDM_g_num_t          *dequi_cell_face;
-  int                  *dequi_cell_face_idx;
-  PDM_g_num_t          *dequi_face_edge;
-  int                  *dequi_face_edge_idx;
-  PDM_g_num_t          *dequi_edge_vtx;
-  int                  *dequi_edge_vtx_idx;
-  PDM_g_num_t          *dequi_face_vtx;
-  int                  *dequi_face_vtx_idx;
-
-  PDM_g_num_t          *dequi_parent_cell_ln_to_gn;
-  PDM_g_num_t          *dequi_parent_face_ln_to_gn;
-  PDM_g_num_t          *dequi_parent_edge_ln_to_gn;
-  PDM_g_num_t          *dequi_parent_vtx_ln_to_gn;
-
-  double               *dequi_vtx_coord;
-
-  PDM_part_to_block_t  *ptb_equi_cell;
-  PDM_part_to_block_t  *ptb_equi_face;
-  PDM_part_to_block_t  *ptb_equi_edge;
-  PDM_part_to_block_t  *ptb_equi_vtx;
-
 
 
   /* Extracted part */
@@ -149,8 +131,18 @@ struct _pdm_extract_part_t
   PDM_part_mesh_nodal_elmts_t *extract_pmne;
 
   /* Part-to-part objects */
-  PDM_part_to_part_t *ptp_entity[PDM_MESH_ENTITY_MAX];
+  PDM_part_to_part_t *ptp_entity   [PDM_MESH_ENTITY_MAX];
   PDM_ownership_t     ptp_ownership[PDM_MESH_ENTITY_MAX];
+
+  /* Part-to-part objects */
+  PDM_part_to_part_t  **ptp_group_entity                     [PDM_BOUND_TYPE_MAX];
+  PDM_ownership_t      *ptp_group_ownership                  [PDM_BOUND_TYPE_MAX];
+  int                 **pn_extract_group_entity              [PDM_BOUND_TYPE_MAX];
+  int                ***pextract_group_entity                [PDM_BOUND_TYPE_MAX];
+  PDM_g_num_t        ***pextract_group_entity_ln_to_gn       [PDM_BOUND_TYPE_MAX];
+  PDM_g_num_t        ***pextract_group_entity_parent_ln_to_gn[PDM_BOUND_TYPE_MAX];
+  PDM_bool_t           *is_owner_extract_group               [PDM_BOUND_TYPE_MAX];
+
 };
 
 

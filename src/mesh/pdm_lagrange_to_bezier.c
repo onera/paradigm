@@ -48,6 +48,7 @@
 #include "pdm_priv.h"
 #include "pdm_vtk.h"
 #include "pdm_mesh_nodal.h"
+#include "pdm_linear_algebra.h"
 #include "pdm_lagrange_to_bezier.h"
 
 /*----------------------------------------------------------------------------*/
@@ -62,128 +63,6 @@ extern "C" {
 /*============================================================================
  * Private function definitions
  *============================================================================*/
-
-
-/**
- * Solve the linear system Ax = b using Gaussian elimination,
- * where A is a n*n matrix and b, x are n*stride matrices
- * (Aij = A[n*i+j], bij = b[stride*i+j], xij = x[stride*i+j])
- *
- * /!\ Gaussian elimination is performed in place
- * (A and b are used as work arrays)
- *
- * return 1 if A is singular, 0 else
- */
-static int _linsolve
-(
- const int     n,
- const int     stride,
-       double *A,
-       double *x
- )
-{
-  const double eps = 1e-15;
-
-  if (0) {
-    log_trace("A = \n");
-    for (int ii = 0; ii < n; ii++) {
-      for (int jj = 0; jj < n; jj++) {
-        log_trace("%f ", A[n*ii+jj]);
-      }
-      log_trace("\n");
-    }
-
-    // log_trace("b = \n");
-    // for (int i = 0; i < n; i++) {
-    //   for (int j = 0; j < stride; j++) {
-    //     log_trace("%f ", b[stride*i+j]);
-    //   }
-    //   log_trace("\n");
-    // }
-  }
-
-  for (int i = 0; i < n; i++) {
-    /* Seek best pivot */
-    double amax = PDM_ABS(A[n*i+i]);
-    int imax = i;
-    for (int k = i+1; k < n; k++) {
-      double aki = PDM_ABS(A[n*k+i]);
-      if (aki > amax) {
-        amax = aki;
-        imax = k;
-      }
-    }
-
-    if (amax <= eps) {
-      /* matrix A is singular */
-      // log_trace("A is singular\n");
-      // for (int ii = 0; ii < n; ii++) {
-      //   for (int jj = 0; jj < n; jj++) {
-      //     log_trace("%f ", A[n*ii+jj]);
-      //   }
-      //   log_trace("\n");
-      // }
-      return 1;
-    }
-
-    /* Swap rows i and imax */
-    if (i != imax) {
-      for (int j = 0; j < n; j++) {
-        double tmp = A[n*i+j];
-        A[n*i   +j] = A[n*imax+j];
-        A[n*imax+j] = tmp;
-      }
-
-      for (int j = 0; j < stride; j++) {
-        double tmp = x[stride*i + j];
-        x[stride*i    + j] = x[stride*imax + j];
-        x[stride*imax + j] = tmp;
-      }
-    }
-
-    /* Eliminate subdiagonal terms */
-    double inv_amax = 1./A[n*i+i];
-
-    for (int k = i+1; k < n; k++) {
-      double r = A[n*k+i] * inv_amax;
-      for (int j = i+1; j < n; j++) {
-        A[n*k+j] -= r * A[n*i+j];
-      }
-      A[n*k+i] = 0.;
-
-      for (int j = 0; j < stride; j++) {
-        x[stride*k + j] -= r * x[stride*i + j];
-      }
-    }
-  }
-
-  /* Solve triangular system */
-  for (int i = n-1; i >= 0; i--) {
-    for (int j = i+1; j < n; j++) {
-      for (int k = 0; k < stride; k++) {
-        x[stride*i + k] -= x[stride*j + k] * A[n*i+j];
-      }
-    }
-
-    double inv_ai = 1./A[n*i+i];
-    for (int k = 0; k < stride; k++) {
-      x[stride*i + k] *= inv_ai;
-    }
-  }
-
-  if (0) {
-    log_trace("x = \n");
-    for (int i = 0; i < n; i++) {
-      for (int j = 0; j < stride; j++) {
-        log_trace("%f ", x[stride*i+j]);
-      }
-      log_trace("\n");
-    }
-  }
-
-  return 0;
-}
-
 
 
 static inline double _pow(const double x, const int p) {
@@ -407,7 +286,7 @@ PDM_lagrange_to_bezier_bar
     _bezier_matrix_bar(order, B);
 
     memcpy(bez, lag, sizeof(double) * n_nodes * 3);
-    _linsolve(n_nodes, 3, B, bez);
+    PDM_linear_algebra_linsolve_gauss(n_nodes, 3, B, bez);
 
     if (matrix == NULL) {
       free(B);
@@ -523,7 +402,7 @@ PDM_lagrange_to_bezier_tria
     _bezier_matrix_tria(order, B);
 
     memcpy(bez, lag, sizeof(double) * n_nodes * 3);
-    _linsolve(n_nodes, 3, B, bez);
+    PDM_linear_algebra_linsolve_gauss(n_nodes, 3, B, bez);
 
     if (matrix == NULL) {
       free(B);
@@ -679,7 +558,7 @@ PDM_lagrange_to_bezier_quad
     _bezier_matrix_quad(order, B);
 
     memcpy(bez, lag, sizeof(double) * n_nodes * 3);
-    _linsolve(n_nodes, 3, B, bez);
+    PDM_linear_algebra_linsolve_gauss(n_nodes, 3, B, bez);
 
     if (matrix == NULL) {
       free(B);
@@ -783,7 +662,7 @@ PDM_lagrange_to_bezier_tetra
       }
     }
 
-    _linsolve(n_nodes_tria, 12, B, work);
+    PDM_linear_algebra_linsolve_gauss(n_nodes_tria, 12, B, work);
 
     // face w = 0
     idx = 0;
@@ -891,7 +770,7 @@ PDM_lagrange_to_bezier_pyramid
     /* Quadrangular face */
     // face w = 0
     _bezier_matrix_quad(order, B);
-    _linsolve(n_nodes_quad, 3, B, bez);
+    PDM_linear_algebra_linsolve_gauss(n_nodes_quad, 3, B, bez);
 
 
     /* Triangular face */
@@ -945,7 +824,7 @@ PDM_lagrange_to_bezier_pyramid
       }
     }
 
-    _linsolve(n_nodes_tria, 12, B, work);
+    PDM_linear_algebra_linsolve_gauss(n_nodes_tria, 12, B, work);
 
     // face u = 0
     idx = 0;
@@ -1079,7 +958,7 @@ PDM_lagrange_to_bezier_prism
       }
     }
 
-    _linsolve(n_nodes_tria, 6, B, work);
+    PDM_linear_algebra_linsolve_gauss(n_nodes_tria, 6, B, work);
 
     // face w = 0
     idx = 0;
@@ -1144,7 +1023,7 @@ PDM_lagrange_to_bezier_prism
       }
     }
 
-    _linsolve(n_nodes_quad, 9, B, work);
+    PDM_linear_algebra_linsolve_gauss(n_nodes_quad, 9, B, work);
 
     // face u = 0
     idx = 0;
@@ -1311,7 +1190,7 @@ PDM_lagrange_to_bezier_hexa
       }
     }
 
-    _linsolve(n_nodes_quad, 18, B, work);
+    PDM_linear_algebra_linsolve_gauss(n_nodes_quad, 18, B, work);
 
     // face w = 0
     idx = 0;

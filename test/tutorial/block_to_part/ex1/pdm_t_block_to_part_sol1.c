@@ -197,7 +197,7 @@ int main(int argc, char *argv[])
   /*
    * III/ Check results in partition
    */
-  if(1 == 1) {
+  if(0 == 1) {
     for(int i_part = 0; i_part < n_part; ++i_part) {
       PDM_log_trace_array_long(prand_number[i_part], pn_elmts[i_part], "prand_number : ");
     }

@@ -56,11 +56,6 @@ struct _pdm_part_mesh_nodal_t {
   PDM_part_mesh_nodal_elmts_t       *ridge;
   PDM_part_mesh_nodal_elmts_t       *corner;
 
-  PDM_ownership_t                    is_owner_volumic;
-  PDM_ownership_t                    is_owner_surfacic;
-  PDM_ownership_t                    is_owner_ridge;
-  PDM_ownership_t                    is_owner_corner;
-
   int                                is_vtx_def_from_parent; /*<! Are the points defined from parents */
 
   int s_section;

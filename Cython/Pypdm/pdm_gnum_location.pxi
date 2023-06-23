@@ -152,21 +152,12 @@ cdef class GlobalNumberingLocation:
     if(location_idx == NULL):
       locationIdx = None
     else:
-#      dim = <NPY.npy_intp> (self._n_elmts_out_part[i_part_out] + 1)
-      locationIdx = create_numpy_i(location_idx, self._n_elmts_out_part[i_part_out] + 1)
-#      locationIdx = NPY.PyArray_SimpleNewFromData(1,
-#                                                  &dim,
-#                                                  NPY.NPY_INT32,
-#                                         <void *> location_idx)
+      locationIdx = create_numpy_i(location_idx, self._n_elmts_out_part[i_part_out]+1, flag_owndata=False)
     if(location == NULL):
       locationArr = None
     else:
-      locationArr = create_numpy_i(location, location_idx[self._n_elmts_out_part[i_part_out]])
-#      dim = <NPY.npy_intp> (location_idx[self._n_elmts_out_part[i_part_out]])
-#      locationArr = NPY.PyArray_SimpleNewFromData(1,
-#                                                  &dim,
-#                                                  NPY.NPY_INT32,
-#                                         <void *> location)
+      dim = <NPY.npy_intp> (location_idx[self._n_elmts_out_part[i_part_out]])
+      locationArr = create_numpy_i(location, dim, flag_owndata=False)
     # ************************************************************************
 
     # ************************************************************************

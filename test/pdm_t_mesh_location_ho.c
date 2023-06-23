@@ -866,7 +866,8 @@ int main(int argc, char *argv[])
                                              &parent_num,
                                              &parent_entity_g_num,
                                              &_order,
-                                             &ho_ordering);
+                                             &ho_ordering,
+                                             PDM_OWNERSHIP_KEEP);
 
       int *pcell_vtx_out = malloc(n_vtx_per_elmt * n_elt * sizeof(int));
       for(int i = 0; i < n_vtx_per_elmt * n_elt; ++i) {

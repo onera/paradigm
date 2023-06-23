@@ -57,7 +57,6 @@ extern "C" {
 #endif
 #endif
 
-
 /*============================================================================
  * Macro definitions
  *============================================================================*/
@@ -358,12 +357,12 @@ PDM_closest_points_n_part_cloud_set
   cls->src_cloud->tgt_in_src     = NULL;
   cls->src_cloud->tgt_in_src_dist= NULL;
 
-  cls->tgt_cloud->n_part           = n_part_cloud_tgt;
-  cls->tgt_cloud->coords           = malloc (sizeof(double      *) * n_part_cloud_tgt);
-  cls->tgt_cloud->gnum             = malloc (sizeof(PDM_g_num_t *) * n_part_cloud_tgt);
-  cls->tgt_cloud->n_points         = malloc (sizeof(int          ) * n_part_cloud_tgt);
-  cls->tgt_cloud->closest_src_gnum = NULL;
-  cls->tgt_cloud->closest_src_dist = NULL;
+  cls->tgt_cloud->n_part            = n_part_cloud_tgt;
+  cls->tgt_cloud->coords            = malloc (sizeof(double      *) * n_part_cloud_tgt);
+  cls->tgt_cloud->gnum              = malloc (sizeof(PDM_g_num_t *) * n_part_cloud_tgt);
+  cls->tgt_cloud->n_points          = malloc (sizeof(int          ) * n_part_cloud_tgt);
+  cls->tgt_cloud->closest_src_gnum  = NULL;
+  cls->tgt_cloud->closest_src_dist  = NULL;
 }
 
 
@@ -592,6 +591,30 @@ PDM_closest_point_t *cls
   free (closest_src_gnum);
   free (closest_src_dist);
 
+
+  /* Sort closest source points in ascending order of global id */
+  int    *order = malloc(sizeof(int   ) * cls->n_closest);
+  double *tmp   = malloc(sizeof(double) * cls->n_closest);
+  for (int i_part = 0; i_part < cls->tgt_cloud->n_part; i_part++) {
+    for (int i = 0; i < cls->tgt_cloud->n_points[i_part]; i++) {
+      for (int j = 0; j < cls->n_closest; j++) {
+        order[j] = j;
+      }
+
+      PDM_sort_long(cls->tgt_cloud->closest_src_gnum [i_part] + cls->n_closest*i,
+                    order,
+                    cls->n_closest);
+
+      memcpy(tmp,
+             cls->tgt_cloud->closest_src_dist[i_part] + cls->n_closest*i,
+             sizeof(double) * cls->n_closest);
+      for (int j = 0; j < cls->n_closest; j++) {
+        cls->tgt_cloud->closest_src_dist[i_part][cls->n_closest*i+j] = tmp[order[j]];
+      }
+    }
+  }
+  free(tmp);
+  free(order);
 
 
   //-->GPU
@@ -986,6 +1009,28 @@ PDM_closest_points_n_tgt_get
   return cls->tgt_cloud->n_points[i_part];
 }
 
+
+/**
+ *
+ * \brief  Get the number of source points in a partition
+ *
+ * \param [in]  cls     Pointer to \ref PDM_closest_points object
+ * \param [in]  i_part  Index of partition of the target cloud
+ *
+ * \return   Number of source point in the partition \ref i_part
+ *
+ */
+
+int
+PDM_closest_points_n_src_get
+(
+  PDM_closest_point_t  *cls,
+  const int             i_part
+)
+{
+  assert(cls->src_cloud != NULL);
+  return cls->src_cloud->n_points[i_part];
+}
 
 
 /**

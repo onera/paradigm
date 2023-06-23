@@ -211,88 +211,17 @@ _get_groups
        int          **face_bound
  )
 {
+  PDM_g_num_t *face_bound_ln_to_gn = NULL;
+  PDM_multipart_bound_get(multipart,
+                          0,
+                          i_part,
+                          PDM_BOUND_TYPE_FACE,
+                          n_face_group,
+                          face_bound_idx,
+                          face_bound,
+                          &face_bound_ln_to_gn,
+                          PDM_OWNERSHIP_KEEP);
 
-  int n_section;
-  int*n_elt;
-  int n_cell;
-  int n_face;
-  int n_face_part_bound;
-  int n_vtx;
-  int n_proc;
-  int n_total_part;
-  int s_cell_face;
-  int s_face_vtx;
-  int s_face_bound;
-  int s_face_join;
-  int n_join_groups;
-  PDM_multipart_part_dim_get(multipart,
-                             i_zone,
-                             i_part,
-                             &n_section,
-                             &n_elt,
-                             &n_cell,
-                             &n_face,
-                             &n_face_part_bound,
-                             &n_vtx,
-                             &n_proc,
-                             &n_total_part,
-                             &s_cell_face,
-                             &s_face_vtx,
-                             &s_face_bound,
-                             n_face_group,
-                             &s_face_join,
-                             &n_join_groups);
-
-
-  int         **elt_vtx_idx;
-  int         **elt_vtx;
-  PDM_g_num_t **elt_section_ln_to_gn;
-  int          *cell_tag;
-  int          *cell_face_idx;
-  int          *cell_face;
-  PDM_g_num_t  *cell_ln_to_gn;
-  int          *face_tag;
-  int          *face_cell;
-  int          *face_vtx_idx;
-  int          *face_vtx;
-  PDM_g_num_t  *face_ln_to_gn;
-  int          *face_part_bound_proc_idx;
-  int          *face_part_bound_part_idx;
-  int          *face_part_bound;
-  int          *vtx_tag;
-  double       *vtx;
-  PDM_g_num_t  *vtx_ln_to_gn;
-  PDM_g_num_t  *face_bound_ln_to_gn;
-  int          *face_join_idx;
-  int          *face_join;
-  PDM_g_num_t  *face_join_ln_to_gn;
-  PDM_multipart_part_val_get(multipart,
-                             i_zone,
-                             i_part,
-                             &elt_vtx_idx,
-                             &elt_vtx,
-                             &elt_section_ln_to_gn,
-                             &cell_tag,
-                             &cell_face_idx,
-                             &cell_face,
-                             &cell_ln_to_gn,
-                             &face_tag,
-                             &face_cell,
-                             &face_vtx_idx,
-                             &face_vtx,
-                             &face_ln_to_gn,
-                             &face_part_bound_proc_idx,
-                             &face_part_bound_part_idx,
-                             &face_part_bound,
-                             &vtx_tag,
-                             &vtx,
-                             &vtx_ln_to_gn,
-                             face_bound_idx,
-                             face_bound,
-                             &face_bound_ln_to_gn,
-                             &face_join_idx,
-                             &face_join,
-                             &face_join_ln_to_gn);
 }
 
 

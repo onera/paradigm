@@ -61,9 +61,9 @@ typedef struct {
   double      **coords;            /*!< Point coordinates points of each partition */
   PDM_g_num_t **gnum;              /*!< Point global numbering of each partition */
 
-  int         **tgt_in_src_idx;    /*!< Revsese results */
-  PDM_g_num_t **tgt_in_src;        /*!< Revsese results */
-  double      **tgt_in_src_dist;   /*!< Revsese results */
+  int         **tgt_in_src_idx;    /*!< Reverse results */
+  PDM_g_num_t **tgt_in_src;        /*!< Reverse results */
+  double      **tgt_in_src_dist;   /*!< Reverse results */
 
 } _src_point_cloud_t ;
 

@@ -189,9 +189,7 @@ cdef class PartToBlock:
                                      &_block_stride,
                                      &_block_data)
 
-      dim_np = <NPY.npy_intp> c_size
-      block_data = NPY.PyArray_SimpleNewFromData(1, &dim_np, dtype_data_num, <void *> _block_data)
-      PyArray_ENABLEFLAGS(block_data, NPY.NPY_OWNDATA);
+      block_data = create_numpy(_block_data, dtype_data_num, c_size)
 
       if(_stride_t == PDM_STRIDE_VAR_INTERLACED):
         block_stride = create_numpy_i(_block_stride, PDM_part_to_block_n_elt_block_get(self.PTB))
@@ -218,9 +216,9 @@ cdef class PartToBlock:
     # ------------------------------------------------------------------------
     def getBlockGnumCopy(self):
       """ Return a copy of the global numbers """
-      BlockGnumNPY = create_numpy_pdm_gnum(PDM_part_to_block_block_gnum_get(self.PTB),
-                                           PDM_part_to_block_n_elt_block_get(self.PTB),
-                                           flag_owndata=False)
+      BlockGnumNPY = create_numpy_g(PDM_part_to_block_block_gnum_get(self.PTB),
+                                    PDM_part_to_block_n_elt_block_get(self.PTB),
+                                    flag_owndata=False)
       return NPY.copy(BlockGnumNPY)
 
     # ------------------------------------------------------------------------
@@ -233,9 +231,9 @@ cdef class PartToBlock:
     # ------------------------------------------------------------------------
     def getDistributionCopy(self):
       """ Return a copy of the distribution array """
-      DistribNPY = create_numpy_pdm_gnum(PDM_part_to_block_distrib_index_get(self.PTB),
-                                         self.py_comm.Get_size()+1,
-                                         flag_owndata=False)
+      DistribNPY = create_numpy_g(PDM_part_to_block_distrib_index_get(self.PTB),
+                                  self.py_comm.Get_size()+1,
+                                  flag_owndata=False)
       return NPY.copy(DistribNPY)
 
     # ------------------------------------------------------------------------

@@ -69,11 +69,15 @@ _vtx_free
       _vtx_free (vtx->parent);
     }
 
-    if (vtx->coords != NULL) {
-      free (vtx->coords);
-      vtx->coords = NULL;
+    if (vtx->_coords != NULL) {
+      free (vtx->_coords);
+      vtx->_coords = NULL;
     }
 
+    if (vtx->_numabs != NULL) {
+      free (vtx->_numabs);
+      vtx->_numabs = NULL;
+    }
   }
 }
 
@@ -153,11 +157,6 @@ PDM_part_mesh_nodal_create
   pmn->surfacic = NULL;
   pmn->ridge    = NULL;
   pmn->corner   = NULL;
-
-  pmn->is_owner_volumic  = PDM_OWNERSHIP_KEEP;//USER;
-  pmn->is_owner_surfacic = PDM_OWNERSHIP_KEEP;//USER;
-  pmn->is_owner_ridge    = PDM_OWNERSHIP_KEEP;//USER;
-  pmn->is_owner_corner   = PDM_OWNERSHIP_KEEP;//USER;
 
   pmn->s_section = 10;
   pmn->n_section = 0;
@@ -300,28 +299,23 @@ void
 PDM_part_mesh_nodal_add_part_mesh_nodal_elmts
 (
  PDM_part_mesh_nodal_t       *pmn,
- PDM_part_mesh_nodal_elmts_t *pmne,
- PDM_ownership_t              owner
+ PDM_part_mesh_nodal_elmts_t *pmne
 )
 {
   assert(pmn->n_part == pmne->n_part);
   assert(pmn->mesh_dimension >= pmne->mesh_dimension);
-  PDM_geometry_kind_t geom_kind;
+  PDM_geometry_kind_t geom_kind = PDM_GEOMETRY_KIND_MAX;
   if(pmne->mesh_dimension == 3) {
     pmn->volumic          = pmne;
-    pmn->is_owner_volumic = owner;
     geom_kind             = PDM_GEOMETRY_KIND_VOLUMIC;
   } else if(pmne->mesh_dimension == 2){
     pmn->surfacic          = pmne;
-    pmn->is_owner_surfacic = owner;
     geom_kind             = PDM_GEOMETRY_KIND_SURFACIC;
   } else if(pmne->mesh_dimension == 1){
     pmn->ridge          = pmne;
-    pmn->is_owner_ridge = owner;
     geom_kind             = PDM_GEOMETRY_KIND_RIDGE;
   } else if(pmne->mesh_dimension == 0){
     pmn->corner          = pmne;
-    pmn->is_owner_corner = owner;
     geom_kind             = PDM_GEOMETRY_KIND_CORNER;
   } else {
     PDM_error (__FILE__, __LINE__, 0, "PDM_Mesh_nodal_add_dmesh_nodal_elmts bad mesh_dimension\n");
@@ -345,6 +339,24 @@ PDM_part_mesh_nodal_add_part_mesh_nodal_elmts
   }
 }
 
+
+/**
+ * \brief  Return the mesh dimension
+ *
+ * \param [in]  pmn       Pointer to \ref PDM_part_mesh_nodal_t object
+ *
+ * \return  mesh dimension
+ *
+ */
+
+int
+PDM_part_mesh_nodal_mesh_dimension_get
+(
+       PDM_part_mesh_nodal_t *pmn
+)
+{
+  return pmn->mesh_dimension;
+}
 
 /**
  * \brief  Return number of partitions
@@ -493,7 +505,11 @@ PDM_part_mesh_nodal_sections_id_in_geom_kind_get
     PDM_error (__FILE__, __LINE__, 0, "Bad part mesh nodal identifier\n");
   }
   PDM_part_mesh_nodal_elmts_t* pmne = _get_from_geometry_kind(pmn, geom_kind);
-  return pmne->sections_id;
+  if(pmne){
+    return pmne->sections_id;
+  } else {
+    return NULL;
+  }
 }
 
 
@@ -886,6 +902,7 @@ const int                     id_part
  * \param [out] numabs                  Global numbering
  * \param [out] parent_num              Parent numbering or NULL
  * \param [out] parent_entity_g_num     Parent global numbering or NULL
+ * \param [in]  ownership               Who owns the getted arrays?
  *
  */
 
@@ -898,7 +915,8 @@ const int                     id_part,
       int                   **connec,
       PDM_g_num_t           **numabs,
       int                   **parent_num,
-      PDM_g_num_t           **parent_entity_g_num
+      PDM_g_num_t           **parent_entity_g_num,
+      PDM_ownership_t         ownership
 )
 {
   PDM_geometry_kind_t geom_kind;
@@ -910,7 +928,7 @@ const int                     id_part,
 
   PDM_part_mesh_nodal_elmts_t* pmne = _get_from_geometry_kind(pmn, geom_kind);
   assert(pmne != NULL);
-  PDM_part_mesh_nodal_elmts_section_std_get(pmne, id_section, id_part, connec, numabs, parent_num, parent_entity_g_num);
+  PDM_part_mesh_nodal_elmts_section_std_get(pmne, id_section, id_part, connec, numabs, parent_num, parent_entity_g_num, ownership);
 }
 
 
@@ -926,6 +944,7 @@ const int                     id_part,
  * \param [out] parent_entity_g_num     Parent global numbering or NULL
  * \param [out] order                   Element order
  * \param [out] ho_ordering             HO ordering
+ * \param [in]  ownership               Who owns the getted arrays?
  *
  */
 
@@ -940,7 +959,8 @@ const int                     id_part,
       int                   **parent_num,
       PDM_g_num_t           **parent_entity_g_num,
       int                    *order,
-const char                  **ho_ordering
+const char                  **ho_ordering,
+      PDM_ownership_t         ownership
 )
 {
   PDM_geometry_kind_t geom_kind;
@@ -960,7 +980,8 @@ const char                  **ho_ordering
                                                parent_num,
                                                parent_entity_g_num,
                                                order,
-                                               ho_ordering);
+                                               ho_ordering,
+                                               ownership);
 }
 
 
@@ -970,6 +991,7 @@ const char                  **ho_ordering
  * \param [in]  pmn          Pointer to \ref PDM_part_mesh_nodal_t object
  * \param [in]  i_section    Section identifier
  * \param [in]  id_part      Partition identifier
+ * \param [in]  ownership               Who owns the getted arrays?
  *
  * \return      Return parent numbering of block elements
  *
@@ -980,7 +1002,8 @@ PDM_part_mesh_nodal_section_parent_num_get
 (
       PDM_part_mesh_nodal_t  *pmn,
 const int                     i_section,
-const int                     id_part
+const int                     id_part,
+      PDM_ownership_t         ownership
 )
 {
   PDM_geometry_kind_t geom_kind;
@@ -992,7 +1015,7 @@ const int                     id_part
 
   PDM_part_mesh_nodal_elmts_t* pmne = _get_from_geometry_kind(pmn, geom_kind);
   assert(pmne != NULL);
-  return PDM_part_mesh_nodal_elmts_parent_num_get(pmne, id_section, id_part);
+  return PDM_part_mesh_nodal_elmts_parent_num_get(pmne, id_section, id_part, ownership);
 }
 
 
@@ -1002,6 +1025,7 @@ const int                     id_part
  * \param [in]  pmn          Pointer to \ref PDM_part_mesh_nodal_t object
  * \param [in]  i_section    Section identifier
  * \param [in]  id_part      Partition identifier
+ * \param [in]  ownership    Who owns the getted arrays?
  *
  * \return      Return global element numbering of section elements
  *
@@ -1012,7 +1036,8 @@ PDM_part_mesh_nodal_g_num_get
 (
       PDM_part_mesh_nodal_t  *pmn,
 const int                     i_section,
-const int                     id_part
+const int                     id_part,
+      PDM_ownership_t         ownership
 )
 {
   PDM_geometry_kind_t geom_kind;
@@ -1024,7 +1049,7 @@ const int                     id_part
 
   PDM_part_mesh_nodal_elmts_t* pmne = _get_from_geometry_kind(pmn, geom_kind);
   assert(pmne != NULL);
-  return PDM_part_mesh_nodal_elmts_g_num_get(pmne, id_section, id_part);
+  return PDM_part_mesh_nodal_elmts_g_num_get(pmne, id_section, id_part, ownership);
 }
 
 
@@ -1041,26 +1066,24 @@ PDM_part_mesh_nodal_free
  PDM_part_mesh_nodal_t* pmn
 )
 {
+  // volumic
+  PDM_part_mesh_nodal_elmts_free(pmn->volumic);
 
-  if(pmn->is_owner_volumic == PDM_OWNERSHIP_KEEP) {
-    PDM_part_mesh_nodal_elmts_free(pmn->volumic);
-  }
-  if(pmn->is_owner_surfacic == PDM_OWNERSHIP_KEEP) {
-    PDM_part_mesh_nodal_elmts_free(pmn->surfacic);
-  }
-  if(pmn->is_owner_ridge == PDM_OWNERSHIP_KEEP) {
-    PDM_part_mesh_nodal_elmts_free(pmn->ridge);
-  }
-  if(pmn->is_owner_corner == PDM_OWNERSHIP_KEEP) {
-    PDM_part_mesh_nodal_elmts_free(pmn->corner);
-  }
+  // surfacic
+  PDM_part_mesh_nodal_elmts_free(pmn->surfacic);
+
+  // ridge
+  PDM_part_mesh_nodal_elmts_free(pmn->ridge);
+
+  // corner
+  PDM_part_mesh_nodal_elmts_free(pmn->corner);
 
   if (pmn->vtx != NULL) {
-    for (int i = 0; i < pmn->n_part; i++) {
-      if(pmn->vtx[i]->owner == PDM_OWNERSHIP_KEEP){
-        _vtx_free (pmn->vtx[i]);
+    for (int i_part = 0; i_part < pmn->n_part; i_part++) {
+      if(pmn->vtx[i_part]->owner == PDM_OWNERSHIP_KEEP){
+        _vtx_free (pmn->vtx[i_part]);
       }
-      free(pmn->vtx[i]);
+      free(pmn->vtx[i_part]);
     }
 
     free(pmn->vtx);
@@ -1123,12 +1146,14 @@ PDM_part_mesh_nodal_dump_vtk
                                                    section_id[i_section],
                                                    i_part,
                                                    &connec_idx,
-                                                   &connec);
+                                                   &connec,
+                                                   PDM_OWNERSHIP_BAD_VALUE);
 
 
         PDM_g_num_t *pelmt_ln_to_gn = PDM_part_mesh_nodal_elmts_g_num_get(pmne,
                                                                           section_id[i_section],
-                                                                          i_part);
+                                                                          i_part,
+                                                                          PDM_OWNERSHIP_BAD_VALUE);
 
         PDM_vtk_write_polydata(filename,
                                pn_vtx,
@@ -1163,7 +1188,8 @@ PDM_part_mesh_nodal_dump_vtk
                                                      &cell_face_idx,
                                                      &cell_face,
                                                      &parent_num,
-                                                     &parent_entity_g_num);
+                                                     &parent_entity_g_num,
+                                                     PDM_OWNERSHIP_BAD_VALUE);
 
         PDM_vtk_write_polydata(filename,
                                pn_vtx,
@@ -1174,14 +1200,13 @@ PDM_part_mesh_nodal_dump_vtk
                                face_vtx,
                                face_ln_to_gn,
                                NULL);
-        // abort();
       }
 
       else {
         int is_ho = PDM_Mesh_nodal_elmt_is_ho(t_elt);
         if(is_ho) {
           int order;
-          const char *ho_ordering      = NULL;
+          const char  *ho_ordering     = NULL;
           int         *pcell_vtx       = NULL;
           PDM_g_num_t *pelmt_ln_to_gn  = NULL;
           int         *parent_num      = NULL;
@@ -1194,7 +1219,8 @@ PDM_part_mesh_nodal_dump_vtk
                                                        &parent_num,
                                                        &parent_elmt_num,
                                                        &order,
-                                                       &ho_ordering);
+                                  (const char **)      &ho_ordering,
+                                                       PDM_OWNERSHIP_BAD_VALUE);
 
           int n_vtx_per_elmt = PDM_Mesh_nodal_n_vtx_elt_get (t_elt, order);
           int *pcell_vtx_out = malloc(n_vtx_per_elmt * n_elt * sizeof(int));
@@ -1230,12 +1256,13 @@ PDM_part_mesh_nodal_dump_vtk
           int         *parent_num      = NULL;
           PDM_g_num_t *parent_elmt_num = NULL;
           PDM_part_mesh_nodal_elmts_section_std_get(pmne,
-                                                  section_id[i_section],
-                                                  i_part,
-                                                  &pcell_vtx,
-                                                  &pelmt_ln_to_gn,
-                                                  &parent_num,
-                                                  &parent_elmt_num);
+                                                    section_id[i_section],
+                                                    i_part,
+                                                    &pcell_vtx,
+                                                    &pelmt_ln_to_gn,
+                                                    &parent_num,
+                                                    &parent_elmt_num,
+                                                    PDM_OWNERSHIP_BAD_VALUE);
 
           PDM_vtk_write_std_elements(filename,
                                      pn_vtx,
@@ -1345,17 +1372,19 @@ const PDM_ownership_t        ownership
  * \param [in]  pmn            Pointer to \ref PDM_part_mesh_nodal_t object
  * \param [in]  i_section      Section identifier
  * \param [in]  id_part        Partition identifier
+ * \param [in]  ownership      Who owns the getted arrays?
  *
  * \return  Return cell centers
  *
  */
-
+//---> PDM_Mesh_cell_centers_get
 const double *
 PDM_part_mesh_nodal_section_elt_center_get
 (
       PDM_part_mesh_nodal_t *pmn,
 const int                    i_section,
-const int                    i_part
+const int                    i_part,
+      PDM_ownership_t        ownership
 )
 {
   PDM_geometry_kind_t geom_kind;
@@ -1368,7 +1397,7 @@ const int                    i_part
   PDM_part_mesh_nodal_elmts_t* pmne = _get_from_geometry_kind(pmn, geom_kind);
   assert(pmne != NULL);
 
-  return PDM_part_mesh_nodal_elmts_elt_center_get(pmne, id_section, i_part);
+  return PDM_part_mesh_nodal_elmts_elt_center_get(pmne, id_section, i_part, ownership);
 }
 
 
@@ -1461,9 +1490,10 @@ const int                   *parent_num,
  * \param [in]  id_part        Partition identifier
  * \param [out] connec_idx     Connectivity index
  * \param [out] connec         Connectivity
+ * \param [in]  ownership      Who owns the getted arrays?
  *
  */
-
+//---> PDM_Mesh_nodal_block_poly2d_get
 void
 PDM_part_mesh_nodal_section_poly2d_get
 (
@@ -1471,7 +1501,8 @@ PDM_part_mesh_nodal_section_poly2d_get
 const int                     i_section,
 const int                     id_part,
       int                   **connec_idx,
-      int                   **connec
+      int                   **connec,
+      PDM_ownership_t         ownership
 )
 {
   PDM_geometry_kind_t geom_kind;
@@ -1488,7 +1519,8 @@ assert(geom_kind == PDM_GEOMETRY_KIND_SURFACIC);
                                                id_section,
                                                id_part,
                                                connec_idx,
-                                               connec);
+                                               connec,
+                                               ownership);
 }
 
 
@@ -1572,9 +1604,10 @@ const PDM_g_num_t           *parent_entity_g_num,
  * \param [out] cell_face            Cell->face connectivity
  * \param [out] parent_num           Parent numbering or NULL
  * \param [out] parent_entity_g_num  Parent global ids or NULL
+ * \param [in]  ownership             Who owns the getted arrays?
  *
  */
-
+//---> PDM_Mesh_nodal_block_poly3d_get
 void
 PDM_part_mesh_nodal_section_poly3d_get
 (
@@ -1589,7 +1622,8 @@ const int                     id_part,
       int                   **cell_face_idx,
       int                   **cell_face,
       int                   **parent_num,
-      PDM_g_num_t           **parent_entity_g_num
+      PDM_g_num_t           **parent_entity_g_num,
+      PDM_ownership_t         ownership
 )
 {
   PDM_geometry_kind_t geom_kind;
@@ -1613,7 +1647,8 @@ const int                     id_part,
                                                cell_face_idx,
                                                cell_face,
                                                parent_num,
-                                               parent_entity_g_num);
+                                               parent_entity_g_num,
+                                               ownership);
 }
 
 
@@ -1625,6 +1660,7 @@ const int                     id_part,
  * \param [in]  id_part      Partition identifier
  * \param [out] cellvtx_idx  Index of cell vertex connectivity
  * \param [out] cellvtx      Cell vertex connectivity
+ * \param [in]  ownership    Who owns the getted arrays?
  *
  */
 
@@ -1635,7 +1671,8 @@ PDM_part_mesh_nodal_section_poly3d_cell_vtx_connect_get
 const int                     i_section,
 const int                     id_part,
       int                   **cellvtx_idx,
-      int                   **cellvtx
+      int                   **cellvtx,
+      PDM_ownership_t         ownership
 )
 {
   PDM_geometry_kind_t geom_kind;
@@ -1652,7 +1689,8 @@ const int                     id_part,
                                                                 id_section,
                                                                 id_part,
                                                                 cellvtx_idx,
-                                                                cellvtx);
+                                                                cellvtx,
+                                                                ownership);
 }
 
 
@@ -1768,6 +1806,7 @@ const int                     id_part
  * \param [in]  pmn          Pointer to \ref PDM_part_mesh_nodal_t object
  * \param [in]  geom_kind    Geometry kind (corner, ridge, surface or volume)
  * \param [in]  id_part      Partition identifier
+ * \param [in]  ownership Who owns the getted arrays?
  *
  * \return  Global ids of element in current partition
  *
@@ -1779,13 +1818,14 @@ PDM_part_mesh_nodal_g_num_get_from_part
 (
       PDM_part_mesh_nodal_t  *pmn,
       PDM_geometry_kind_t     geom_kind,
-const int                     id_part
+const int                     id_part,
+      PDM_ownership_t         ownership
 )
 {
   PDM_part_mesh_nodal_elmts_t* pmne = _get_from_geometry_kind(pmn, geom_kind);
   assert(pmne != NULL);
 
-  return PDM_part_mesh_nodal_elmts_g_num_get_from_part(pmne, id_part);
+  return PDM_part_mesh_nodal_elmts_g_num_get_from_part(pmne, id_part, ownership);
 }
 
 
@@ -1845,6 +1885,7 @@ PDM_part_mesh_nodal_is_set_coord_from_parent
  * \param [in]  pmn          Pointer to \ref PDM_part_mesh_nodal_t object
  * \param [in]  i_section    Section identifier
  * \param [in]  id_part      Partition identifier
+ * \param [in]  ownership    Who owns the getted arrays?
  *
  * \return      Return global numbering of block elements inside the block
  *
@@ -1856,7 +1897,8 @@ PDM_part_mesh_nodal_section_g_num_get
 (
       PDM_part_mesh_nodal_t  *pmn,
 const int                     i_section,
-const int                     id_part
+const int                     id_part,
+      PDM_ownership_t         ownership
 )
 {
   PDM_geometry_kind_t geom_kind;
@@ -1869,7 +1911,7 @@ const int                     id_part
   PDM_part_mesh_nodal_elmts_t* pmne = _get_from_geometry_kind(pmn, geom_kind);
   assert(pmne != NULL);
 
-  return PDM_part_mesh_nodal_elmts_section_g_num_get(pmne, id_section, id_part);
+  return PDM_part_mesh_nodal_elmts_section_g_num_get(pmne, id_section, id_part, ownership);
 }
 
 
@@ -1907,7 +1949,8 @@ PDM_part_mesh_nodal_group_get
  const int                     i_group,
        int                    *n_group_elmt,
        int                   **group_elmt,
-       PDM_g_num_t           **group_ln_to_gn
+       PDM_g_num_t           **group_ln_to_gn,
+       PDM_ownership_t         ownership
 )
 {
   PDM_part_mesh_nodal_elmts_t* pmne = _get_from_geometry_kind(pmn, geom_kind);
@@ -1917,7 +1960,8 @@ PDM_part_mesh_nodal_group_get
                                       i_group,
                                       n_group_elmt,
                                       group_elmt,
-                                      group_ln_to_gn);
+                                      group_ln_to_gn,
+                                      ownership);
 }
 
 
@@ -2036,7 +2080,7 @@ const PDM_ownership_t         ownership
 
   if (pmne == NULL) {
     pmne = PDM_part_mesh_nodal_elmts_create(3, pmn->n_part, pmn->comm);
-    PDM_part_mesh_nodal_add_part_mesh_nodal_elmts(pmn, pmne, PDM_OWNERSHIP_KEEP);
+    PDM_part_mesh_nodal_add_part_mesh_nodal_elmts(pmn, pmne);
   }
 
   int n_section_before = PDM_part_mesh_nodal_n_section_in_geom_kind_get(pmn,
@@ -2111,7 +2155,7 @@ const PDM_ownership_t         ownership
 
   if (pmne == NULL) {
     pmne = PDM_part_mesh_nodal_elmts_create(2, pmn->n_part, pmn->comm);
-    PDM_part_mesh_nodal_add_part_mesh_nodal_elmts(pmn, pmne, PDM_OWNERSHIP_KEEP);
+    PDM_part_mesh_nodal_add_part_mesh_nodal_elmts(pmn, pmne);
   }
 
   int n_vtx = PDM_part_mesh_nodal_n_vtx_get(pmn, id_part);
@@ -2182,7 +2226,7 @@ const PDM_ownership_t         ownership
 
   if (pmne == NULL) {
     pmne = PDM_part_mesh_nodal_elmts_create(3, pmn->n_part, pmn->comm);
-    PDM_part_mesh_nodal_add_part_mesh_nodal_elmts(pmn, pmne, PDM_OWNERSHIP_KEEP);
+    PDM_part_mesh_nodal_add_part_mesh_nodal_elmts(pmn, pmne);
   }
 
   int n_section_before = PDM_part_mesh_nodal_n_section_in_geom_kind_get(pmn,
@@ -2248,7 +2292,7 @@ const PDM_ownership_t         ownership
 
   if (pmne == NULL) {
     pmne = PDM_part_mesh_nodal_elmts_create(2, pmn->n_part, pmn->comm);
-    PDM_part_mesh_nodal_add_part_mesh_nodal_elmts(pmn, pmne, PDM_OWNERSHIP_KEEP);
+    PDM_part_mesh_nodal_add_part_mesh_nodal_elmts(pmn, pmne);
   }
 
   int n_section_before = PDM_part_mesh_nodal_n_section_in_geom_kind_get(pmn,
@@ -2499,7 +2543,8 @@ PDM_part_mesh_nodal_cell_vtx_connect_get
 
     int *parent_num = PDM_part_mesh_nodal_elmts_parent_num_get(pmne,
                                                                id_section,
-                                                               i_part);
+                                                               i_part,
+                                                               PDM_OWNERSHIP_BAD_VALUE);
 
     int n_elt = PDM_part_mesh_nodal_elmts_section_n_elt_get(pmne,
                                                             id_section,
@@ -2512,14 +2557,16 @@ PDM_part_mesh_nodal_cell_vtx_connect_get
                                                    id_section,
                                                    i_part,
                                                    &connec_idx,
-                                                   &connec);
+                                                   &connec,
+                                                   PDM_OWNERSHIP_BAD_VALUE);
     }
     else if (t_elt == PDM_MESH_NODAL_POLY_3D) {
       PDM_part_mesh_nodal_elmts_section_poly3d_cell_vtx_connect_get(pmne,
                                                                     id_section,
                                                                     i_part,
                                                                     &connec_idx,
-                                                                    &connec);
+                                                                    &connec,
+                                                                    PDM_OWNERSHIP_BAD_VALUE);
     }
 
     if (t_elt == PDM_MESH_NODAL_POLY_2D ||
@@ -2552,7 +2599,8 @@ PDM_part_mesh_nodal_cell_vtx_connect_get
                                                    &_parent_num,
                                                    &parent_entity_g_num,
                                                    &order,
-                                                   &ho_ordering);
+                                                   &ho_ordering,
+                                                   PDM_OWNERSHIP_BAD_VALUE);
 
       int n_vtx_elt = PDM_Mesh_nodal_n_vtx_elt_get(t_elt, order);
 
@@ -2584,7 +2632,8 @@ PDM_part_mesh_nodal_cell_vtx_connect_get
 
     int *parent_num = PDM_part_mesh_nodal_elmts_parent_num_get(pmne,
                                                                id_section,
-                                                               i_part);
+                                                               i_part,
+                                                               PDM_OWNERSHIP_BAD_VALUE);
 
     int n_elt = PDM_part_mesh_nodal_elmts_section_n_elt_get(pmne,
                                                             id_section,
@@ -2597,14 +2646,16 @@ PDM_part_mesh_nodal_cell_vtx_connect_get
                                                    id_section,
                                                    i_part,
                                                    &connec_idx,
-                                                   &connec);
+                                                   &connec,
+                                                   PDM_OWNERSHIP_BAD_VALUE);
     }
     else if (t_elt == PDM_MESH_NODAL_POLY_3D) {
       PDM_part_mesh_nodal_elmts_section_poly3d_cell_vtx_connect_get(pmne,
                                                                     id_section,
                                                                     i_part,
                                                                     &connec_idx,
-                                                                    &connec);
+                                                                    &connec,
+                                                                    PDM_OWNERSHIP_BAD_VALUE);
     }
 
     if (t_elt == PDM_MESH_NODAL_POLY_2D ||
@@ -2641,7 +2692,8 @@ PDM_part_mesh_nodal_cell_vtx_connect_get
                                                    &_parent_num,
                                                    &parent_entity_g_num,
                                                    &order,
-                                                   &ho_ordering);
+                                                   &ho_ordering,
+                                                   PDM_OWNERSHIP_BAD_VALUE);
 
       int n_vtx_elt = PDM_Mesh_nodal_n_vtx_elt_get(t_elt, order);
 

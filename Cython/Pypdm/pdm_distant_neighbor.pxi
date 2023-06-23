@@ -176,17 +176,11 @@ cdef class DistantNeighbor:
             size_data = 0
             for i in xrange(self._n_entity[i_part]):
               size_data += recv_entity_stri[i_part][i]
-            ndim     = 1
-            dim_stri = <NPY.npy_intp> self._n_entity[i_part]
-            tmp_data = NPY.PyArray_SimpleNewFromData(ndim, &dim_stri, NPY.NPY_INT32, <void *> recv_entity_stri[i_part])
-            PyArray_ENABLEFLAGS(tmp_data, NPY.NPY_OWNDATA);
+            tmp_data = create_numpy_i(recv_entity_stri[i_part], self._n_entity[i_part])
             l_recv_entity_stri.append(tmp_data)
           else:
-            size_data = cst_stride * self._n_entity[i_part]
-          ndim     = 1
-          dim      = <NPY.npy_intp> size_data
-          tmp_data = NPY.PyArray_SimpleNewFromData(ndim, &dim, dtype_data, <void *> recv_entity_data[i_part])
-          PyArray_ENABLEFLAGS(tmp_data, NPY.NPY_OWNDATA);
+            size_data = cst_stride * self._neighbor_idx[i_part][self._n_entity[i_part]]
+          tmp_data = create_numpy(recv_entity_data[i_part], dtype_data, size_data)
           l_recv_entity_data.append(tmp_data)
         # ::::::::::::::::::::::::::::::::::::::::::::::::::
 

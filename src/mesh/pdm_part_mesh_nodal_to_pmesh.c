@@ -975,7 +975,8 @@ _generate_faces_from_part_mesh_nodal
                                       i_group,
                                       &n_face_group,
                                       &group_elmt_face,
-                                      &group_elmt_face_ln_to_gn);
+                                      &group_elmt_face_ln_to_gn,
+                                      PDM_OWNERSHIP_KEEP);
 
         int         *group_face          = malloc(n_face_group * sizeof(int        ));
         PDM_g_num_t *group_face_ln_to_gn = malloc(n_face_group * sizeof(PDM_g_num_t));
@@ -1177,13 +1178,15 @@ _generate_edges_from_part_mesh_nodal
   int         *elmt_edge_kind       = malloc(n_edge_elt_tot     * sizeof(int        ));
   PDM_g_num_t *elmt_edge_cell       = malloc(n_edge_elt_tot     * sizeof(PDM_g_num_t));
 
-  printf("n_edge_elt_vol_tot     : %i\n", n_edge_elt_vol_tot    );
-  printf("n_sum_vtx_vol_edge_tot : %i\n", n_sum_vtx_vol_edge_tot);
-  printf("n_elmt_vol_tot         : %i\n", n_elmt_vol_tot        );
+  if(0 == 1) {
+    printf("n_edge_elt_vol_tot     : %i\n", n_edge_elt_vol_tot    );
+    printf("n_sum_vtx_vol_edge_tot : %i\n", n_sum_vtx_vol_edge_tot);
+    printf("n_elmt_vol_tot         : %i\n", n_elmt_vol_tot        );
 
-  printf("n_elmt_surf_tot         : %i\n", n_elmt_surf_tot        );
-  printf("n_edge_elt_surf_tot     : %i\n", n_edge_elt_surf_tot    );
-  printf("n_sum_vtx_surf_edge_tot : %i\n", n_sum_vtx_surf_edge_tot);
+    printf("n_elmt_surf_tot         : %i\n", n_elmt_surf_tot        );
+    printf("n_edge_elt_surf_tot     : %i\n", n_edge_elt_surf_tot    );
+    printf("n_sum_vtx_surf_edge_tot : %i\n", n_sum_vtx_surf_edge_tot);
+  }
 
   elmt_edge_vtx_idx [0] = 0;
   elmt_cell_edge_idx[0] = 0;
@@ -1356,7 +1359,8 @@ _generate_edges_from_part_mesh_nodal
                                       i_group,
                                       &n_edge_group,
                                       &group_elmt_edge,
-                                      &group_elmt_edge_ln_to_gn);
+                                      &group_elmt_edge_ln_to_gn,
+                                      PDM_OWNERSHIP_KEEP);
 
         int         *group_edge          = malloc(n_edge_group * sizeof(int        ));
         PDM_g_num_t *group_edge_ln_to_gn = malloc(n_edge_group * sizeof(PDM_g_num_t));
@@ -1506,6 +1510,17 @@ _generate_edges_from_part_mesh_nodal
 }
 
 
+static
+PDM_part_mesh_t*
+_generate_vtx_from_part_mesh_nodal
+(
+  PDM_part_mesh_nodal_t* pmn
+)
+{
+  PDM_UNUSED(pmn);
+  PDM_error (__FILE__, __LINE__, 0, "PDM_part_mesh_nodal_to_part_mesh with PDM_DMESH_NODAL_TO_DMESH_TRANSFORM_TO_VTX not implemented \n");
+  return NULL;
+}
 
 /*=============================================================================
  * Public function definitions
@@ -1534,6 +1549,12 @@ PDM_part_mesh_nodal_to_part_mesh
     case PDM_DMESH_NODAL_TO_DMESH_TRANSFORM_TO_EDGE:
     {
       pm = _generate_edges_from_part_mesh_nodal(pmn);
+    }
+    break;
+
+    case PDM_DMESH_NODAL_TO_DMESH_TRANSFORM_TO_VTX:
+    {
+      pm = _generate_vtx_from_part_mesh_nodal(pmn);
     }
     break;
   }

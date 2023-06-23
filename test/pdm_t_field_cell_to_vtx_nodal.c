@@ -666,7 +666,8 @@ int main
                               &n_bound,
                               &group_face_idx,
                               &group_face,
-                              &face_group_ln_to_gn);
+                              &face_group_ln_to_gn,
+                              PDM_OWNERSHIP_KEEP);
       n_group_by_domain[i_dom] = 1;
       // printf("n_bound = %i \n", n_bound);
 

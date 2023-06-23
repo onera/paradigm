@@ -12,6 +12,7 @@
 #include "pdm_mpi.h"
 #include "pdm.h"
 #include "pdm_part_domain_interface.h"
+#include "pdm_part_to_part.h"
 
 /*=============================================================================
  * Macro definitions
@@ -336,6 +337,40 @@ PDM_part_extension_composed_interface_get
  int                     **composed_interface_idx,
  int                     **composed_interface,
  PDM_g_num_t             **composed_ln_to_gn_sorted
+);
+
+
+/**
+ *
+ * \brief Create part_to_part from interior and ghost elements
+ *
+ * \param [out]  ptp                             Part to part structure
+ * \param [in]   n_part                          Number of partitions
+ * \param [in]   n_int_cell                      Number of interior elements
+ * \param [in]   int_cell_ln_to_gn               gnum of interior elements
+ * \param [in]   n_ghost_cell                    Number of ghost elements
+ * \param [in]   ghost_cell_ln_to_gn             gnum of ghost elements
+ * \param [out]  n_selected_cell_to_send         Number of elements selected for send
+ * \param [out]  n_selected_cell_to_send_idx     Index of elements selected for send
+ * \param [out]  selected_cell_to_send           Local numbering of elements selected for send
+ * \param [out]  selected_cell_to_send_ln_to_gn  gnum of elements selected for send
+ *
+ */
+
+void
+PDM_part_to_part_create_from_extension
+(
+       PDM_part_to_part_t **ptp,
+ const int                  n_part,
+       int                 *n_int_cell,
+ const PDM_g_num_t        **int_cell_ln_to_gn,
+       int                 *n_ghost_cell,
+ const PDM_g_num_t        **ghost_cell_ln_to_gn,
+       int                **n_selected_cell_to_send,
+       int               ***selected_cell_to_send_idx,
+       int               ***selected_cell_to_send,
+       PDM_g_num_t       ***selected_cell_to_send_ln_to_gn,
+ const PDM_MPI_Comm         comm
 );
 
 #ifdef __cplusplus

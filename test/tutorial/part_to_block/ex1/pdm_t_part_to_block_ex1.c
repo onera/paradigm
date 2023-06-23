@@ -120,7 +120,7 @@ int main(int argc, char *argv[])
 
   PDM_g_num_t *distrib_init_elmt = PDM_compute_uniform_entity_distribution(comm, n_elmt);
 
-  if(1 == 1) {
+  if(0 == 1) {
     PDM_log_trace_array_long(distrib_init_elmt, n_rank+1, "distrib_elmt : ");
   }
   int n_part  = 1;
@@ -136,11 +136,11 @@ int main(int argc, char *argv[])
     pfield      [i] = i_rank;
   }
 
-  if(1 == 1) {
+  if(0 == 1) {
     PDM_log_trace_array_long(pln_to_to_gn, pn_elmt, "pln_to_to_gn : ");
   }
 
-  if(1 == 1) {
+  if(0 == 1) {
     PDM_log_trace_array_int(pfield, pn_elmt, "pfield : ");
   }
 
@@ -180,7 +180,7 @@ int main(int argc, char *argv[])
   PDM_g_num_t *block_gnum = PDM_part_to_block_block_gnum_get(ptb);
   PDM_g_num_t *distrib = PDM_part_to_block_distrib_index_get(ptb);
 
-  if(1 == 1) {
+  if(0 == 1) {
     PDM_log_trace_array_long(block_gnum, nelmt_proc, "block_gnum : ");
     PDM_log_trace_array_long(distrib, n_rank+1, "distrib : ");
   }
@@ -215,7 +215,7 @@ int main(int argc, char *argv[])
 
   // Print field
 
-  if(1 == 1) {
+  if(0 == 1) {
     PDM_log_trace_array_int(dfield, nelmt_proc, "dfield : ");
   }
 

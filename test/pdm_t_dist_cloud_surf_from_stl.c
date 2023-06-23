@@ -241,7 +241,7 @@ int main(int argc, char *argv[])
      (int *) &part_method);
 
   if (filename == NULL) {
-    filename = (char *) "meshes/sphere.stl";
+    filename = (char *) PDM_MESH_DIR"sphere.stl";
   }
 
   double radius = length;//2*length;

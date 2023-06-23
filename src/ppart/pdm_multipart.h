@@ -30,6 +30,7 @@
 #include "pdm_dmesh.h"
 #include "pdm_dmesh_nodal.h"
 #include "pdm_part_mesh_nodal.h"
+#include "pdm_part_mesh.h"
 #include "pdm_domain_interface.h"
 
 /*----------------------------------------------------------------------------*/
@@ -202,21 +203,40 @@ PDM_multipart_run_ppart
 
 
 /**
- * \brief ???
+ * \brief Retreive the partitionned mesh
  *
  * \param [in]  multipart             Pointer to \ref PDM_multipart_t object
  * \param [in]  i_zone                Id of zone
- * \param [out] pmesh_nodal           ?
+ * \param [out] pmesh                 Partitionned mesh
+ * \param [in]  ownership             Who is responsible to free retreived data ?
  *
  */
+
 void
 PDM_multipart_get_part_mesh_nodal
 (
-       PDM_multipart_t        *multipart,
- const int                     i_zone,
-       PDM_part_mesh_nodal_t **pmesh_nodal,
-       PDM_ownership_t         ownership
+      PDM_multipart_t        *multipart,
+const int                     i_zone,
+      PDM_part_mesh_nodal_t **pmesh_nodal,
+      PDM_ownership_t         ownership
 );
+
+/**
+ * \brief Retreive the partitionned mesh
+ *
+ * \param [in]  multipart             Pointer to \ref PDM_multipart_t object
+ * \param [in]  i_zone                Id of zone
+ * \param [out] pmesh                 Partitionned mesh
+ *
+ */
+
+// void
+// PDM_multipart_get_part_mesh
+// (
+//        PDM_multipart_t  *multipart,
+//  const int               i_zone,
+//        PDM_part_mesh_t **pmesh
+// );
 
 /**
  * \brief Set number of element in the block entity
@@ -300,19 +320,6 @@ PDM_multipart_domain_interface_shared_set
   PDM_domain_interface_t *ditrf
 );
 
-
-/**
- *
- * \brief Construct the partitioned meshes on every zones
- *
- * \param [in]   multipart      Pointer to \ref PDM_multipart_t object
- */
-// void
-// PDM_multipart_vtx_graph_comm_compute
-// (
-//  const int id
-// );
-
 /**
  *
  * \brief Returns the dimensions of a given partition
@@ -323,8 +330,6 @@ PDM_multipart_part_dim_get
 PDM_multipart_t *multipart,
 const int        i_zone,
 const int        i_part,
-      int       *n_section,
-      int      **n_elt,
       int       *n_cell,
       int       *n_face,
       int       *n_face_part_bound,
@@ -334,34 +339,22 @@ const int        i_part,
       int       *s_cell_face,
       int       *s_face_vtx,
       int       *s_face_bound,
-      int       *n_bound_groups,
-      int       *s_face_join,
-      int       *n_join_groups
-);
-
-/**
- *
- * \brief Returns the dimensions of a given partition
- */
-void
-PDM_multipart_part_graph_comm_vtx_dim_get
-(
- PDM_multipart_t *multipart,
- const int        i_zone,
- const int        i_part,
-       int       *n_vtx_part_bound
+      int       *n_bound_groups
 );
 
 
 void
-PDM_multipart_part_graph_comm_edge_dim_get
+PDM_multipart_part_graph_comm_get
 (
- PDM_multipart_t *multipart,
- const int        i_zone,
- const int        i_part,
-       int       *n_edge_part_bound
+ PDM_multipart_t    *multipart,
+ const int           i_zone,
+ const int           i_part,
+ PDM_bound_type_t    bound_type,
+ int               **ppart_bound_proc_idx,
+ int               **ppart_bound_part_idx,
+ int               **ppart_bound,
+ PDM_ownership_t     ownership
 );
-
 
 /**
  *
@@ -399,6 +392,13 @@ const int            i_part,
       PDM_g_num_t  **face_join_ln_to_gn
 );
 
+int
+PDM_multipart_part_tn_part_get
+(
+PDM_multipart_t                *multipart,
+const int                       i_zone
+);
+
 /**
  *
  * \brief Returns the data arrays of a given partition
@@ -413,6 +413,16 @@ const int                       i_part,
       int                     **connect,
       int                     **connect_idx,
       PDM_ownership_t           ownership
+);
+
+
+int
+PDM_multipart_part_n_entity_get
+(
+PDM_multipart_t            *multipart,
+const int                   i_zone,
+const int                   i_part,
+      PDM_mesh_entities_t   entity_type
 );
 
 int
@@ -438,48 +448,34 @@ const int                   i_part,
 );
 
 void
-PDM_multipart_part_graph_comm_vtx_data_get
+PDM_multipart_part_hyperplane_color_get
 (
-PDM_multipart_t     *multipart,
-const int            i_zone,
-const int            i_part,
-      int          **vtx_part_bound_proc_idx,
-      int          **vtx_part_bound_part_idx,
-      int          **vtx_part_bound
-);
-
-
-void
-PDM_multipart_part_graph_comm_edge_data_get
-(
-PDM_multipart_t     *multipart,
-const int            i_zone,
-const int            i_part,
-      int          **edge_part_bound_proc_idx,
-      int          **edge_part_bound_part_idx,
-      int          **edge_part_bound
+PDM_multipart_t        *multipart,
+const int               i_zone,
+const int               i_part,
+      int             **hyperplane_color,
+      PDM_ownership_t   ownership
 );
 
 void
-PDM_multipart_part_color_get
+PDM_multipart_part_thread_color_get
 (
-PDM_multipart_t     *multipart,
-const int            i_zone,
-const int            i_part,
-      int          **cell_color,
-      int          **face_color,
-      int          **face_hp_color,
-      int          **thread_color,
-      int          **hyperplane_color
+PDM_multipart_t        *multipart,
+const int               i_zone,
+const int               i_part,
+      int             **thread_color,
+      PDM_ownership_t   ownership
 );
+
 
 void
 PDM_multipart_part_ghost_infomation_get
 (
-PDM_multipart_t  *multipart,
-const int         i_zone,
-const int         i_part,
-      int       **vtx_ghost_information
+PDM_multipart_t        *multipart,
+const int               i_zone,
+const int               i_part,
+      int             **vtx_ghost_information,
+      PDM_ownership_t   ownership
 );
 
 
@@ -544,9 +540,9 @@ void PDM_multipart_bound_get
  int               *n_bound,
  int              **bound_idx,
  int              **bound,
- PDM_g_num_t      **bound_ln_to_gn
- );
-
+ PDM_g_num_t      **bound_ln_to_gn,
+ PDM_ownership_t    ownership
+);
 
 
 /**

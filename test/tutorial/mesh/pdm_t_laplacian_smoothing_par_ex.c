@@ -391,7 +391,8 @@ int main(int argc, char *argv[])
                           &pn_edge_group,
                           &pgroup_edge_idx,
                           &pgroup_edge,
-                          &edge_bound_ln_to_gn);
+                          &edge_bound_ln_to_gn,
+                          PDM_OWNERSHIP_KEEP);
 
   /* Transpose into edge_face */
   int   n_part          = 1;
@@ -472,7 +473,7 @@ int main(int argc, char *argv[])
   double              *dnew_vtx_coord        = NULL;
   int                 *dstrid_new_vtx_coord  = NULL;
   PDM_g_num_t         *distrib               = NULL;
-  PDM_g_num_t         *block_gnum            = NULL;
+  // PDM_g_num_t         *block_gnum            = NULL;
   int                  nelmt_proc            = 0;
   double              *dnormalisation_summed = NULL;
   double              *dnew_vtx_coord_summed = NULL;
@@ -491,23 +492,25 @@ int main(int argc, char *argv[])
   for (int i_step = 0; i_step <= n_steps; i_step++) {
 
     /* Export mesh to vtk format */
-    if (n_rank == 1) {
-      sprintf(filename, "mesh_%2.2d.vtk", i_step);
-    } else {
-      sprintf(filename, "mesh_%2.2d_%2.2d.vtk", i_rank, i_step);
-    }
+    if(1 == 0) {
+      if (n_rank == 1) {
+        sprintf(filename, "mesh_%2.2d.vtk", i_step);
+      } else {
+        sprintf(filename, "mesh_%2.2d_%2.2d.vtk", i_rank, i_step);
+      }
 
-    PDM_vtk_write_std_elements(filename,
-                               pn_vtx,
-                               pvtx_coord,
-                               vtx_ln_to_gn,
-                               PDM_MESH_NODAL_BAR2,
-                               pn_edge,
-                               pedge_vtx,
-                               NULL,
-                               0,
-                               NULL,
-                               NULL);
+      PDM_vtk_write_std_elements(filename,
+                                 pn_vtx,
+                                 pvtx_coord,
+                                 vtx_ln_to_gn,
+                                 PDM_MESH_NODAL_BAR2,
+                                 pn_edge,
+                                 pedge_vtx,
+                                 NULL,
+                                 0,
+                                 NULL,
+                                 NULL);
+    }
 
     /* Local Laplacian Smoothing on partition */
 
@@ -572,7 +575,7 @@ int main(int argc, char *argv[])
     // Get block information
 
     distrib    = PDM_part_to_block_distrib_index_get(ptb);
-    block_gnum = PDM_part_to_block_block_gnum_get(ptb);
+    // block_gnum = PDM_part_to_block_block_gnum_get(ptb);
     nelmt_proc = PDM_part_to_block_n_elt_block_get(ptb);
 
     if (i_step ==0) {
@@ -602,10 +605,10 @@ int main(int argc, char *argv[])
     for (int i = 0; i < nelmt_proc; i++) {
       partial_sum_x = 0;
       partial_sum_y = 0;
-      log_trace("point #"PDM_FMT_G_NUM" : stride = %d, normalisation = %f\n",
-                block_gnum[i], dstrid_new_vtx_coord[i], dnormalisation_summed[i]);
+      // log_trace("point #"PDM_FMT_G_NUM" : stride = %d, normalisation = %f\n",
+      //           block_gnum[i], dstrid_new_vtx_coord[i], dnormalisation_summed[i]);
       for (int j = 0; j < dstrid_new_vtx_coord[i]; j++) {
-        log_trace("  add %f %f * %d\n", dnew_vtx_coord[3*idx], dnew_vtx_coord[3*idx+1], dnormalisation[idx]);
+        // log_trace("  add %f %f * %d\n", dnew_vtx_coord[3*idx], dnew_vtx_coord[3*idx+1], dnormalisation[idx]);
         partial_sum_x += dnew_vtx_coord[3*idx];// * dnormalisation[idx];
         partial_sum_y += dnew_vtx_coord[3*idx+1];// * dnormalisation[idx];
         idx++;
@@ -613,7 +616,7 @@ int main(int argc, char *argv[])
       dnew_vtx_coord_summed[3*i]   = partial_sum_x * dnormalisation_summed[i];
       dnew_vtx_coord_summed[3*i+1] = partial_sum_y * dnormalisation_summed[i];
       dnew_vtx_coord_summed[3*i+2] = 0.;
-      log_trace("  new_coord = %f %f\n", dnew_vtx_coord_summed[3*i], dnew_vtx_coord_summed[3*i+1]);
+      // log_trace("  new_coord = %f %f\n", dnew_vtx_coord_summed[3*i], dnew_vtx_coord_summed[3*i+1]);
     }
 
     /* Back to result using block_to_part */

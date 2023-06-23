@@ -211,106 +211,42 @@ _get_groups_and_bounds
        int           *n_face_group,
        int          **face_bound_idx,
        int          **face_bound,
-       int           *n_face_part_bound,
        int          **face_part_bound_proc_idx,
        int          **face_part_bound_part_idx,
        int          **face_part_bound,
-       int           *n_vtx_part_bound,
        int          **vtx_part_bound_proc_idx,
        int          **vtx_part_bound_part_idx,
        int          **vtx_part_bound,
        PDM_g_num_t  **face_bound_ln_to_gn
- )
+)
 {
+  PDM_multipart_bound_get(multipart,
+                          0,
+                          i_part,
+                          PDM_BOUND_TYPE_FACE,
+                          n_face_group,
+                          face_bound_idx,
+                          face_bound,
+                          face_bound_ln_to_gn,
+                          PDM_OWNERSHIP_KEEP);
 
-  int n_section;
-  int*n_elt;
-  int n_cell;
-  int n_face;
-  int n_vtx;
-  int n_proc;
-  int n_total_part;
-  int s_cell_face;
-  int s_face_vtx;
-  int s_face_bound;
-  int s_face_join;
-  int n_join_groups;
-  PDM_multipart_part_dim_get(multipart,
-                             i_zone,
-                             i_part,
-                             &n_section,
-                             &n_elt,
-                             &n_cell,
-                             &n_face,
-                             n_face_part_bound,
-                             &n_vtx,
-                             &n_proc,
-                             &n_total_part,
-                             &s_cell_face,
-                             &s_face_vtx,
-                             &s_face_bound,
-                             n_face_group,
-                             &s_face_join,
-                             &n_join_groups);
+  PDM_multipart_part_graph_comm_get(multipart,
+                                    i_zone,
+                                    i_part,
+                                    PDM_BOUND_TYPE_VTX,
+                                    vtx_part_bound_proc_idx,
+                                    vtx_part_bound_part_idx,
+                                    vtx_part_bound,
+                                    PDM_OWNERSHIP_KEEP);
 
-
-  int         **elt_vtx_idx;
-  int         **elt_vtx;
-  PDM_g_num_t **elt_section_ln_to_gn;
-  int          *cell_tag;
-  int          *cell_face_idx;
-  int          *cell_face;
-  PDM_g_num_t  *cell_ln_to_gn;
-  int          *face_tag;
-  int          *face_cell;
-  int          *face_vtx_idx;
-  int          *face_vtx;
-  PDM_g_num_t  *face_ln_to_gn;
-  int          *vtx_tag;
-  double       *vtx;
-  PDM_g_num_t  *vtx_ln_to_gn;
-  int          *face_join_idx;
-  int          *face_join;
-  PDM_g_num_t  *face_join_ln_to_gn;
-  PDM_multipart_part_val_get(multipart,
-                             i_zone,
-                             i_part,
-                             &elt_vtx_idx,
-                             &elt_vtx,
-                             &elt_section_ln_to_gn,
-                             &cell_tag,
-                             &cell_face_idx,
-                             &cell_face,
-                             &cell_ln_to_gn,
-                             &face_tag,
-                             &face_cell,
-                             &face_vtx_idx,
-                             &face_vtx,
-                             &face_ln_to_gn,
-                             face_part_bound_proc_idx,
-                             face_part_bound_part_idx,
-                             face_part_bound,
-                             &vtx_tag,
-                             &vtx,
-                             &vtx_ln_to_gn,
-                             face_bound_idx,
-                             face_bound,
-                             face_bound_ln_to_gn,
-                             &face_join_idx,
-                             &face_join,
-                             &face_join_ln_to_gn);
-
-  PDM_multipart_part_graph_comm_vtx_data_get(multipart,
-                                             i_zone,
-                                             i_part,
-                                             vtx_part_bound_proc_idx,
-                                             vtx_part_bound_part_idx,
-                                             vtx_part_bound);
-
-  PDM_multipart_part_graph_comm_vtx_dim_get(multipart,
-                                            i_zone,
-                                            i_part,
-                                            n_vtx_part_bound);
+  PDM_multipart_part_graph_comm_get(multipart,
+                                    i_zone,
+                                    i_part,
+                                    PDM_BOUND_TYPE_FACE,
+                                    face_part_bound_proc_idx,
+                                    face_part_bound_part_idx,
+                                    face_part_bound,
+                                    PDM_OWNERSHIP_KEEP);
 
 }
 
@@ -517,11 +453,9 @@ int main(int argc, char *argv[])
                                   PDM_OWNERSHIP_KEEP);
 
   /* Get groups and part bounds */
-  int  n_face_part_bound;
   int *face_part_bound_proc_idx = NULL;
   int *face_part_bound_part_idx = NULL;
   int *face_part_bound          = NULL;
-  int  n_vtx_part_bound;
   int *vtx_part_bound_proc_idx  = NULL;
   int *vtx_part_bound_part_idx  = NULL;
   int *vtx_part_bound           = NULL;
@@ -531,11 +465,9 @@ int main(int argc, char *argv[])
                           &pn_face_group,
                           &pgroup_face_idx,
                           &pgroup_face,
-                          &n_face_part_bound,
                           &face_part_bound_proc_idx,
                           &face_part_bound_part_idx,
                           &face_part_bound,
-                          &n_vtx_part_bound,
                           &vtx_part_bound_proc_idx,
                           &vtx_part_bound_part_idx,
                           &vtx_part_bound,
@@ -627,13 +559,13 @@ int main(int argc, char *argv[])
 
 
 
-  for (int i = 0; i < pn_vtx; i++) {
-    log_trace("sommet d'indice %d à %d groupes qui sont:", i, (pvtx_group_idx[i+1]- pvtx_group_idx[i]));
-    for (int j = pvtx_group_idx[i]; j < pvtx_group_idx[i+1]; j++) {
-      log_trace(" %d ", pvtx_group[j]);
-    }
-  log_trace("\n");
-  }
+  // for (int i = 0; i < pn_vtx; i++) {
+  //   log_trace("sommet d'indice %d à %d groupes qui sont:", i, (pvtx_group_idx[i+1]- pvtx_group_idx[i]));
+  //   for (int j = pvtx_group_idx[i]; j < pvtx_group_idx[i+1]; j++) {
+  //     log_trace(" %d ", pvtx_group[j]);
+  //   }
+  //   log_trace("\n");
+  // }
 
 
 
@@ -673,7 +605,7 @@ int main(int argc, char *argv[])
                               i_part,
                               pn_cell,
                               pn_face,
-                              n_face_part_bound,
+                              0, // USELESS n_face_part_bound,
                               pn_face_group,
                               pn_edge,
                               pn_vtx,
@@ -824,20 +756,21 @@ int main(int argc, char *argv[])
 
 
     // Output in vtk format
+    if(0 == 1) {
+      sprintf(filename, "mesh_%2.2d_%2.2d.vtk", i_rank, i_step);
 
-    sprintf(filename, "mesh_%2.2d_%2.2d.vtk", i_rank, i_step);
-
-    PDM_vtk_write_std_elements(filename,
-                               pn_vtx,
-                               pvtx_coord,
-                               vtx_ln_to_gn,
-                               PDM_MESH_NODAL_BAR2,
-                               pn_edge,
-                               pedge_vtx,
-                               NULL,
-                               0,
-                               NULL,
-                               NULL);
+      PDM_vtk_write_std_elements(filename,
+                                 pn_vtx,
+                                 pvtx_coord,
+                                 vtx_ln_to_gn,
+                                 PDM_MESH_NODAL_BAR2,
+                                 pn_edge,
+                                 pedge_vtx,
+                                 NULL,
+                                 0,
+                                 NULL,
+                                 NULL);
+    }
 
     // Initialise pvtx_coord_new
     for (int i = 0; i < pn_vtx; i++) {

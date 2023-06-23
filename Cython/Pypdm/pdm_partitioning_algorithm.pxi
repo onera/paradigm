@@ -19,6 +19,14 @@ cdef extern from "pdm_partitioning_algorithm.h":
                                                int            *pn_vtx,
                                                PDM_g_num_t   **pvtx_ln_to_gn,
                                                double       ***pvtx_coord)
+
+    void PDM_compute_dface_vtx_from_edges(PDM_MPI_Comm   comm,
+                                          int            dn_face,
+                                          int            dn_edge,
+                                          int           *dface_edge_idx,
+                                          PDM_g_num_t   *dface_edge,
+                                          PDM_g_num_t   *dedge_vtx,
+                                          PDM_g_num_t  **dface_vtx);
     # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 
@@ -103,44 +111,23 @@ def part_distgroup_to_partgroup(MPI.Comm                                      co
     list_group_part = list()
 
     for i_part in range(_n_part):
-
-        dict_group_part    = dict()
-        # ~>  \param [out]  numpy array of pgroup_idx
         if (_pgroup_idx == NULL) :
             npgroup_idx = None
         else :
-            dim = <NPY.npy_intp> (_n_group + 1)
-            npgroup_idx = NPY.PyArray_SimpleNewFromData(1,
-                                                        &dim,
-                                                        NPY.NPY_INT32,
-                                                        <void *> _pgroup_idx[i_part])
-            PyArray_ENABLEFLAGS(npgroup_idx, NPY.NPY_OWNDATA);
-        # ~>  \param [out]  numpy array of pgroup
+            npgroup_idx = create_numpy_i(_pgroup_idx[i_part], _n_group+1)
         if (_pgroup == NULL) :
             npgroup = None
         else :
-            dim = _pgroup_idx[i_part][_n_group]
-            npgroup = NPY.PyArray_SimpleNewFromData(1,
-                                                    &dim,
-                                                    NPY.NPY_INT32,
-                                                    <void *> _pgroup[i_part])
-            PyArray_ENABLEFLAGS(npgroup, NPY.NPY_OWNDATA)
+            npgroup = create_numpy_i(_pgroup[i_part], _pgroup_idx[i_part][_n_group])
 
-        # ~>  \param [out]  numpy array of pgroup
         if (_pgroup_ln_to_gn == NULL) :
             npgroup_ln_to_gn = None
         else :
-            dim = _pgroup_idx[i_part][_n_group]
-            npgroup_ln_to_gn = NPY.PyArray_SimpleNewFromData(1,
-                                                    &dim,
-                                                    PDM_G_NUM_NPY_INT,
-                                                    <void *> _pgroup_ln_to_gn[i_part])
-            PyArray_ENABLEFLAGS(npgroup_ln_to_gn, NPY.NPY_OWNDATA)
+            npgroup_ln_to_gn = create_numpy_g(_pgroup_ln_to_gn[i_part], _pgroup_idx[i_part][_n_group])
 
-        dict_group_part['npZSRGroupIdx']    = npgroup_idx
-        dict_group_part['npZSRGroup']       = npgroup
-        dict_group_part['npZSRGroupLNToGN'] = npgroup_ln_to_gn
-
+        dict_group_part = {'npZSRGroupIdx'    : npgroup_idx,
+                           'npZSRGroup'       : npgroup,
+                           'npZSRGroupLNToGN' : npgroup_ln_to_gn}
         list_group_part.append(dict_group_part)
 
     free(_pn_entity)
@@ -244,16 +231,35 @@ def part_dcoordinates_to_pcoordinates(MPI.Comm                                  
 
     l_pvtx_coord = list()
     for i in range(n_part):
-        dim = <NPY.npy_intp> 3 * pn_vtx[i]
-        np_vtx_coord = NPY.PyArray_SimpleNewFromData(1,
-                                                   &dim,
-                                                   NPY.NPY_DOUBLE,
-                                          <void *> pvtx_coord[i])
-        PyArray_ENABLEFLAGS(np_vtx_coord, NPY.NPY_OWNDATA);
-        l_pvtx_coord.append(np_vtx_coord)
+        l_pvtx_coord.append(create_numpy_d(pvtx_coord[i], 3*pn_vtx[i]))
 
     free(pvtx_coord)
     free(pn_vtx)
     free(pvtx_ln_to_gn)
 
     return l_pvtx_coord
+
+
+# ===================================================================================
+def compute_dface_vtx_from_edges(MPI.Comm                                      comm,
+                                 NPY.ndarray[NPY.int32_t   , mode='c', ndim=1] dface_edge_idx,
+                                 NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1] dface_edge,
+                                 NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1] dedge_vtx):
+    """
+    """
+    cdef MPI.MPI_Comm c_comm = comm.ob_mpi
+    cdef PDM_MPI_Comm PDMC   = PDM_MPI_mpi_2_pdm_mpi_comm(&c_comm)
+
+    cdef int dn_face = dface_edge_idx.shape[0]-1
+    cdef int dn_edge = dedge_vtx.shape[0]//2
+    cdef PDM_g_num_t *dface_vtx
+
+    PDM_compute_dface_vtx_from_edges(PDMC,
+                                     dn_face,
+                                     dn_edge,
+                    <int *>          dface_edge_idx.data,
+                    <PDM_g_num_t *>  dface_edge.data,
+                    <PDM_g_num_t *>  dedge_vtx.data,
+                                    &dface_vtx)
+
+    return create_numpy_g(dface_vtx, dface_edge.shape[0])

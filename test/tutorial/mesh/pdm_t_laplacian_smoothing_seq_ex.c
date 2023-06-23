@@ -358,18 +358,18 @@ int main(int argc, char *argv[])
     /*
      *  Export current mesh to vtk format to get a nice video :D
      */
-
-    sprintf(filename, "out_mesh_%2.2d.vtk", i_step); // TO DO %2.2d change if more steps
-
-    PDM_vtk_write_polydata(filename,
-                           n_vtx,
-                           vtx_coord,
-                           NULL,
-                           n_face,
-                           face_vtx_idx,
-                           face_vtx,
-                           NULL,
-                           NULL);
+    if(1 == 0) {
+      sprintf(filename, "out_mesh_%2.2d.vtk", i_step); // TO DO %2.2d change if more steps
+      PDM_vtk_write_polydata(filename,
+                             n_vtx,
+                             vtx_coord,
+                             NULL,
+                             n_face,
+                             face_vtx_idx,
+                             face_vtx,
+                             NULL,
+                             NULL);
+    }
 
     /*
      *  Apply one smoothing step

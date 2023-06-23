@@ -53,6 +53,21 @@ PDM_compute_dface_normal
   PDM_MPI_Comm       comm
 );
 
+
+void
+PDM_compute_vtx_characteristic_length
+(
+ PDM_MPI_Comm    comm,
+ int             dn_face,
+ int             dn_edge,
+ int             dn_vtx,
+ int            *dface_vtx_idx,
+ PDM_g_num_t    *dface_vtx,
+ PDM_g_num_t    *dedge_vtx,
+ double         *dvtx_coord,
+ double        **dchar_length_out
+);
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

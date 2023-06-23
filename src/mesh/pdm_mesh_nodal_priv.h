@@ -68,16 +68,15 @@ typedef struct PDM_Mesh_nodal_block_std_t {
   double                   **cell_centers;         /*!< Cell center coordinates */
   int                       *cell_centers_to_compute;
 
+  /* Ownerships */
   PDM_ownership_t         owner;
   PDM_ownership_t         cell_centers_owner;   /*!< Owner of cell centers */
   PDM_ownership_t         numabs_int_owner;     /*!< Owner of internal absolute number into a block */
-  int                     is_cell_centers_get;
-  int                     is_numabs_int_get;
-  int                     is_parent_num_get;
-  int                     is_parent_entity_g_num_get;
+  PDM_ownership_t         numabs_owner;         /*!< Owner of the absolute number into a block */
+  PDM_ownership_t         parent_num_owner;     /*!< Owner of the parent absolute number into a block */
+
   int                     order;                /*!< Element order */
   char                   *ho_ordering;          /*!< HO node ordering */
-
 
 } PDM_Mesh_nodal_block_std_t;
 
@@ -103,13 +102,13 @@ typedef struct PDM_Mesh_nodal_block_poly2d_t {
   double                 **cell_centers;         /*!< Cell center coordinates */
   int                     *cell_centers_to_compute;
 
+  /* Ownerships */
   PDM_ownership_t         owner;
   PDM_ownership_t         cell_centers_owner;   /*!< Owner of cell centers */
+  PDM_ownership_t         elt_vtx_owner;        /*!< Owner of element vertex connectivity */
   PDM_ownership_t         numabs_int_owner;     /*!< Owner of internal absolute number into a block */
-  int                     is_cell_centers_get;
-  int                     is_numabs_int_get;
-  int                     is_parent_num_get;
-  int                     is_parent_entity_g_num_get;
+  PDM_ownership_t         numabs_owner;         /*!< Owner of the absolute number into a block */
+  PDM_ownership_t         parent_num_owner;     /*!< Owner of the parent absolute number into a block */
 
 } PDM_Mesh_nodal_block_poly2d_t;
 
@@ -148,14 +147,13 @@ typedef struct PDM_Mesh_nodal_block_poly3d_t{
   double                **cell_centers;         /*!< Cell center coordinates */
   int                    *cell_centers_to_compute;
 
-  PDM_ownership_t          owner;
-
+  /* Ownerships */
+  PDM_ownership_t         owner;
   PDM_ownership_t         cell_centers_owner;   /*!< Owner of cell centers */
+  PDM_ownership_t         elt_vtx_owner;        /*!< Owner of element vertex connectivity */
   PDM_ownership_t         numabs_int_owner;     /*!< Owner of internal absolute number into a block */
-  int                     is_cell_centers_get;
-  int                     is_numabs_int_get;
-  int                     is_parent_num_get;
-  int                     is_parent_entity_g_num_get;
+  PDM_ownership_t         numabs_owner;         /*!< Owner of the absolute number into a block */
+  PDM_ownership_t         parent_num_owner;     /*!< Owner of the parent absolute number into a block */
 
 } PDM_Mesh_nodal_block_poly3d_t;
 

@@ -925,7 +925,7 @@ PDM_writer_geom_create_from_mesh_nodal
   geom->_cell_face_idx = NULL;
 
   /* Infer geometry kind from part mesh_nodal */
-  PDM_geometry_kind_t geom_kind_min;
+  PDM_geometry_kind_t geom_kind_min = PDM_GEOMETRY_KIND_MAX;
   switch (mesh->mesh_dimension) {
   case 3:
     geom_kind_min = PDM_GEOMETRY_KIND_VOLUMIC;
@@ -988,6 +988,10 @@ PDM_writer_geom_set_from_mesh_nodal
   geom->mesh_nodal  = mesh;
 
   geom->s_section = 10;
+  if (geom->section_owner != NULL) {
+    free(geom->section_owner);
+    geom->section_owner = NULL;
+  }
   geom->section_owner = malloc(sizeof(PDM_ownership_t) * geom->s_section);
 
   geom->n_part = PDM_part_mesh_nodal_n_part_get(mesh);
@@ -995,7 +999,7 @@ PDM_writer_geom_set_from_mesh_nodal
   geom->_cell_face_idx = NULL;
 
   /* Infer geometry kind from part mesh_nodal */
-  PDM_geometry_kind_t geom_kind_min;
+  PDM_geometry_kind_t geom_kind_min = PDM_GEOMETRY_KIND_MAX;
   switch (mesh->mesh_dimension) {
   case 3:
     geom_kind_min = PDM_GEOMETRY_KIND_VOLUMIC;
@@ -1519,12 +1523,14 @@ PDM_writer_geom_cell3d_cellface_add
   if (face_som_nb != NULL) {
     if (geom->_face_vtx_idx[id_part] != NULL) {
       free(geom->_face_vtx_idx[id_part]);
+      geom->_face_vtx_idx[id_part] = NULL;
     }
     geom->_face_vtx_idx[id_part] = _face_som_idx;
   }
   if (cell_face_nb != NULL) {
     if (geom->_cell_face_idx[id_part] != NULL) {
       free(geom->_cell_face_idx[id_part]);
+      geom->_cell_face_idx[id_part] = NULL;
     }
     geom->_cell_face_idx[id_part] = _cell_face_idx;
   }
@@ -2229,7 +2235,7 @@ PDM_writer_var_set
     abort();
   }
 
-  int n_part = PDM_part_mesh_nodal_n_part_get(geom->mesh_nodal);
+  int n_part = geom->n_part;
 
   if (var->_val[id_geom] == NULL) {
     var->_val[id_geom] = (double **) malloc(sizeof(double *) * n_part);
@@ -2322,7 +2328,7 @@ PDM_writer_var_data_free
           abort();
         }
 
-        int n_part = PDM_part_mesh_nodal_n_part_get(geom->mesh_nodal);
+        int n_part = geom->n_part;
 
         if ((geom != NULL) && (var->_val[idx] != NULL)) {
           for (int j = 0; j < n_part; j++) {
