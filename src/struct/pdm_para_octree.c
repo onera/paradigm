@@ -6122,10 +6122,9 @@ _prepare_copies
                 n_rank);
 
   if (i_rank == 0) {
-    printf("copy threshold = %d (%g)\nmax copy = %d (%g)\n", (int) n_threshold, f_threshold, n_max_copy, f_max_copy);
-    fflush(stdout);
-
     if (dbg_enabled) {
+      printf("copy threshold = %d (%g)\nmax copy = %d (%g)\n", (int) n_threshold, f_threshold, n_max_copy, f_max_copy);
+      fflush(stdout);
       printf("avant: min = %d, max = %d (%g times mean), max-min = %d\n",
              all_n_request[0],
              all_n_request[n_rank-1],
