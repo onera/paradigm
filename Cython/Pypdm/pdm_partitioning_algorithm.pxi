@@ -27,6 +27,21 @@ cdef extern from "pdm_partitioning_algorithm.h":
                                           PDM_g_num_t   *dface_edge,
                                           PDM_g_num_t   *dedge_vtx,
                                           PDM_g_num_t  **dface_vtx);
+
+    void PDM_compute_face_edge_from_face_vtx(PDM_MPI_Comm    comm,
+                                             int             n_part,
+                                             int            *pn_face,
+                                             int            *pn_vtx,
+                                             int           **pface_vtx_idx,
+                                             int           **pface_vtx,
+                                             PDM_g_num_t   **pface_ln_to_gn,
+                                             PDM_g_num_t   **pvtx_ln_to_gn,
+                                             int          ***pface_edge_idx,
+                                             int          ***pface_edge,
+                                             int           **pn_edge,
+                                             int          ***pedge_vtx,
+                                             PDM_g_num_t  ***pedge_ln_to_gn);
+
     # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 
@@ -263,3 +278,76 @@ def compute_dface_vtx_from_edges(MPI.Comm                                      c
                                     &dface_vtx)
 
     return create_numpy_g(dface_vtx, dface_edge.shape[0])
+
+
+def compute_face_edge_from_face_vtx(MPI.Comm comm,
+                                    list pn_face,
+                                    list pn_vtx, 
+                                    list pface_vtx_idx, 
+                                    list pface_vtx,
+                                    list pface_ln_to_gn,
+                                    list pvtx_ln_to_gn):
+
+  cdef int n_part = len(pn_face)
+  assert len(pn_face) == len(pn_vtx) == len(pface_vtx_idx) == \
+         len(pface_vtx) == len(pface_ln_to_gn) == len(pvtx_ln_to_gn)
+
+  cdef MPI.MPI_Comm c_comm = comm.ob_mpi
+  cdef PDM_MPI_Comm PDMC   = PDM_MPI_mpi_2_pdm_mpi_comm(&c_comm)
+ 
+  cdef int* _pn_face = list_to_int_pointer(pn_face)
+  cdef int* _pn_vtx  = list_to_int_pointer(pn_vtx)
+
+  cdef int** _pface_vtx_idx = np_list_to_int_pointers(pface_vtx_idx)
+  cdef int** _pface_vtx     = np_list_to_int_pointers(pface_vtx)
+
+  cdef PDM_g_num_t** _pface_ln_to_gn = np_list_to_gnum_pointers(pface_ln_to_gn)
+  cdef PDM_g_num_t** _pvtx_ln_to_gn = np_list_to_gnum_pointers(pvtx_ln_to_gn)
+
+  cdef int**         _pface_edge_idx = NULL
+  cdef int**         _pface_edge     = NULL
+  cdef int*          _pn_edge        = NULL
+  cdef int**         _pedge_vtx      = NULL
+  cdef PDM_g_num_t** _pedge_ln_to_gn = NULL
+
+  PDM_compute_face_edge_from_face_vtx(PDMC,
+                                      n_part,
+                                      _pn_face, 
+                                      _pn_vtx, 
+                                      _pface_vtx_idx,
+                                      _pface_vtx,
+                                      _pface_ln_to_gn,
+                                      _pvtx_ln_to_gn,
+                                     &_pface_edge_idx,
+                                     &_pface_edge,
+                                     &_pn_edge, 
+                                     &_pedge_vtx,
+                                     &_pedge_ln_to_gn)
+
+
+  all_part_data = []
+  for i_part in range(n_part):
+    _n_face = _pn_face[i_part]
+    _n_edge = _pn_edge[i_part]
+    _s_face_edge = _pface_edge_idx[i_part][_n_face]
+
+    part_data = {'np_face_edge_idx' : create_numpy_i(_pface_edge_idx[i_part], _n_face+1),
+                 'np_face_edge'     : create_numpy_i(_pface_edge    [i_part], _s_face_edge),
+                 'np_edge_vtx'      : create_numpy_i(_pedge_vtx     [i_part], 2*_n_edge),
+                 'np_edge_ln_to_gn' : create_numpy_g(_pedge_ln_to_gn[i_part], _n_edge)}
+    all_part_data.append(part_data)
+
+  free(_pn_face)
+  free(_pn_vtx)
+  free(_pface_vtx_idx)
+  free(_pface_vtx)
+  free(_pface_ln_to_gn)
+  free(_pvtx_ln_to_gn)
+
+  free(_pface_edge_idx)
+  free(_pface_edge)
+  free(_pn_edge)
+  free(_pedge_vtx)
+  free(_pedge_ln_to_gn)
+
+  return all_part_data 
