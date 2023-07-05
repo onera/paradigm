@@ -655,3 +655,7 @@ include "pdm_point_cloud_gen.pxi"
 # PDM_dextract_part :
 # -------------------
 include "pdm_dmesh_extract.pxi"
+
+# PDM_distrib:
+# -------------------
+include "pdm_distrib.pxi"
