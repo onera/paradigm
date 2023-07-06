@@ -1709,7 +1709,7 @@ PDM_part_mesh_nodal_reset
  PDM_part_mesh_nodal_t *pmn
 )
 {
-  for (PDM_geometry_kind_t geom_kind = 0; geom_kind < PDM_GEOMETRY_KIND_MAX; geom_kind++) {
+  for (PDM_geometry_kind_t geom_kind = (PDM_geometry_kind_t) 0; geom_kind < PDM_GEOMETRY_KIND_MAX; geom_kind++) {
     PDM_part_mesh_nodal_elmts_t* pmne = _get_from_geometry_kind(pmn, geom_kind);
 
     if (pmne != NULL) {
@@ -1845,7 +1845,7 @@ PDM_part_mesh_nodal_partial_free
  PDM_part_mesh_nodal_t *pmn
 )
 {
-  for (PDM_geometry_kind_t geom_kind = 0; geom_kind < PDM_GEOMETRY_KIND_MAX; geom_kind++) {
+  for (PDM_geometry_kind_t geom_kind = (PDM_geometry_kind_t)  0; geom_kind < PDM_GEOMETRY_KIND_MAX; geom_kind++) {
     PDM_part_mesh_nodal_elmts_t* pmne = _get_from_geometry_kind(pmn, geom_kind);
 
     if (pmne != NULL) {

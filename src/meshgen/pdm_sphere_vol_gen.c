@@ -2761,7 +2761,7 @@ PDM_GCC_SUPPRESS_WARNING_WITH_PUSH("-Wfloat-equal")
   }
   else {
     idenom = 1./(1 - geometric_ratio);
-    step0 = delta_radius * (1 - geometric_ratio) / (1 - pow(geometric_ratio, n_layer));
+    step0 = delta_radius * (1 - geometric_ratio) / (1 - pow(geometric_ratio, (double) n_layer));
   }
 
   int dn_vtx = distrib_vtx[i_rank+1] - distrib_vtx[i_rank];

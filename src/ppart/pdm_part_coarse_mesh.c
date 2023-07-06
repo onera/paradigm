@@ -196,6 +196,14 @@ int            *cell_cell,
 int            *cell_part
 )
 {
+
+PDM_UNUSED (cm);
+PDM_UNUSED (i_part);
+PDM_UNUSED (n_coarse_cell_computed);
+PDM_UNUSED (cell_cell_idx);
+PDM_UNUSED (cell_cell);
+PDM_UNUSED (cell_part);
+
 #ifdef PDM_HAVE_PTSCOTCH
 
       int check = 0;

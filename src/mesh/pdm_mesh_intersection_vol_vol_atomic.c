@@ -184,7 +184,7 @@ _determine_A_outside
     // for linked lists
     current = (*cll)->head->next;
 
-    intersect_t intersect_type[2] = {-1, -1};
+    intersect_t intersect_type[2] = {(intersect_t) -1, (intersect_t) -1};
     Element *in[2]  = {cll_storage[idx++], cll_storage[idx++]};
     Element *out[2] = {cll_storage[idx++], cll_storage[idx++]};
 
@@ -767,7 +767,7 @@ _determine_A_outside2
 
   int prev[2] = {-1, -1};
 
-  intersect_t intersect_type[2] = {-1, -1};
+  intersect_t intersect_type[2] = {(intersect_t) -1, (intersect_t) -1};
 
   /* Intersect/clip with all 5 planes */
   int idx = 3;

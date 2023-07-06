@@ -107,7 +107,8 @@ typedef int PDM_l_num_t;
 typedef enum {
 
   PDM_INT    = 0,  /*!< Integer */
-  PDM_DOUBLE = 1   /*!< Double */
+  PDM_DOUBLE = 1,   /*!< Double */
+  PDM_WRONG_DATA = -1   /*!< Double */
 
 } PDM_data_t;
 

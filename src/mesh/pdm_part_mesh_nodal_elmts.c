@@ -6252,7 +6252,7 @@ PDM_part_mesh_nodal_elmts_extend_to_encompassing_comm
 
   n_block        = recv_buf[3*master+1];
   mesh_dimension = recv_buf[3*master+2];
-  int   *block_type            = malloc(sizeof(int   ) * n_block);
+  PDM_Mesh_nodal_elt_t   *block_type  = malloc(sizeof(PDM_Mesh_nodal_elt_t) * n_block);
   int   *block_order           = malloc(sizeof(int   ) * n_block);
   int   *block_len_ho_ordering = malloc(sizeof(char *) * n_block);
   char  *char_buf              = NULL;
