@@ -129,7 +129,7 @@ _generate_sections
   PDM_Mesh_nodal_elt_t first = PDM_MESH_NODAL_N_ELEMENT_TYPES;
   for(int i = 0; i < n_section_all_rank; ++i) {
     if(first != (PDM_Mesh_nodal_elt_t) g_section_kind[i]) {
-      first = g_section_kind[i];
+      first = (PDM_Mesh_nodal_elt_t) g_section_kind[i];
       post_section_kind[n_section_post] = first;
       post_section_n   [n_section_post] = g_section_n[i];
       n_section_post++;

@@ -2775,7 +2775,7 @@ _extract_part_from_target_rebuild_connectivities_3d
                                  (const int           **) extrp->pcell_face_idx,
                                  (const int           **) extrp->pcell_face,
                                  (const PDM_g_num_t   **) extrp->face_ln_to_gn, // TODO 2D
-                                 (const int             ) extrp->n_part_out,
+                                                          extrp->n_part_out,
                                  (const int            *) extrp->n_target,
                                  (const PDM_g_num_t   **) extrp->target_gnum,
                                  (const int           **) part2_cell_to_part1_cell_idx,
@@ -2812,7 +2812,7 @@ _extract_part_from_target_rebuild_connectivities_3d
                                  (const int           **) extrp->pface_edge_idx,
                                  (const int           **) extrp->pface_edge,
                                  (const PDM_g_num_t   **) extrp->edge_ln_to_gn, // TODO 2D
-                                 (const int             ) extrp->n_part_out,
+                                                          extrp->n_part_out,
                                  (const int            *) extrp->pextract_n_entity              [PDM_MESH_ENTITY_FACE],
                                  (const PDM_g_num_t   **) extrp->pextract_entity_parent_ln_to_gn[PDM_MESH_ENTITY_FACE],
                                  (const int           **) part2_face_to_part1_face_idx,
@@ -2859,7 +2859,7 @@ _extract_part_from_target_rebuild_connectivities_3d
                                    (const int           **) pedge_vtx_idx,
                                    (const int           **) extrp->pedge_vtx,
                                    (const PDM_g_num_t   **) extrp->vtx_ln_to_gn, // TODO 2D
-                                   (const int             ) extrp->n_part_out,
+                                                            extrp->n_part_out,
                                    (const int            *) extrp->pextract_n_entity              [PDM_MESH_ENTITY_EDGE],
                                    (const PDM_g_num_t   **) extrp->pextract_entity_parent_ln_to_gn[PDM_MESH_ENTITY_EDGE],
                                    (const int           **) part2_edge_to_part1_edge_idx,
@@ -2897,7 +2897,7 @@ _extract_part_from_target_rebuild_connectivities_3d
                                  (const int           **) extrp->pface_vtx_idx,
                                  (const int           **) extrp->pface_vtx,
                                  (const PDM_g_num_t   **) extrp->vtx_ln_to_gn, // TODO 2D
-                                 (const int             ) extrp->n_part_out,
+                                                          extrp->n_part_out,
                                  (const int            *) extrp->pextract_n_entity              [PDM_MESH_ENTITY_FACE],
                                  (const PDM_g_num_t   **) extrp->pextract_entity_parent_ln_to_gn[PDM_MESH_ENTITY_FACE],
                                  (const int           **) part2_face_to_part1_face_idx,
@@ -3008,7 +3008,7 @@ _extract_part_from_target_rebuild_connectivities_2d
                                  (const int           **) extrp->pface_edge_idx,
                                  (const int           **) extrp->pface_edge,
                                  (const PDM_g_num_t   **) extrp->edge_ln_to_gn, // TODO 2D
-                                 (const int             ) extrp->n_part_out,
+                                                          extrp->n_part_out,
                                  (const int            *) extrp->n_target,
                                  (const PDM_g_num_t   **) extrp->target_gnum,
                                  (const int           **) part2_face_to_part1_face_idx,
@@ -3052,7 +3052,7 @@ _extract_part_from_target_rebuild_connectivities_2d
                                    (const int           **) pedge_vtx_idx,
                                    (const int           **) extrp->pedge_vtx,
                                    (const PDM_g_num_t   **) extrp->vtx_ln_to_gn, // TODO 2D
-                                   (const int             ) extrp->n_part_out,
+                                                            extrp->n_part_out,
                                    (const int            *) extrp->pextract_n_entity              [PDM_MESH_ENTITY_EDGE],
                                    (const PDM_g_num_t   **) extrp->pextract_entity_parent_ln_to_gn[PDM_MESH_ENTITY_EDGE],
                                    (const int           **) part2_edge_to_part1_edge_idx,
@@ -3091,7 +3091,7 @@ _extract_part_from_target_rebuild_connectivities_2d
                                  (const int           **) extrp->pface_vtx_idx,
                                  (const int           **) extrp->pface_vtx,
                                  (const PDM_g_num_t   **) extrp->vtx_ln_to_gn, // TODO 2D
-                                 (const int             ) extrp->n_part_out,
+                                                          extrp->n_part_out,
                                  (const int            *) extrp->n_target,
                                  (const PDM_g_num_t   **) extrp->target_gnum,
                                  (const int           **) part2_face_to_part1_face_idx,
@@ -3618,7 +3618,7 @@ _extract_part_and_reequilibrate_from_target
                                  (const int           **) pedge_vtx_idx,
                                  (const int           **) extrp->pedge_vtx,
                                  (const PDM_g_num_t   **) extrp->vtx_ln_to_gn,
-                                 (const int             ) extrp->n_part_out,
+                                                          extrp->n_part_out,
                                  (const int            *) extrp->n_target,
                                  (const PDM_g_num_t   **) extrp->target_gnum,
                                  (const int           **) part2_edge_to_part1_edge_idx,

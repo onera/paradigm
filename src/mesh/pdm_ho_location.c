@@ -6291,18 +6291,18 @@ _init_uvw
 
 static double _epsilon_denom = 1.e-30;       /* Minimum denominator */
 
-static inline double
-_determinant_3x3
-(
- const double a[3],
- const double b[3],
- const double c[3]
- )
-{
-  return a[0] * (b[1]*c[2] - b[2]*c[1])
-    +    a[1] * (b[2]*c[0] - b[0]*c[2])
-    +    a[2] * (b[0]*c[1] - b[1]*c[0]);
-}
+// static inline double
+// _determinant_3x3
+// (
+//  const double a[3],
+//  const double b[3],
+//  const double c[3]
+//  )
+// {
+//   return a[0] * (b[1]*c[2] - b[2]*c[1])
+//     +    a[1] * (b[2]*c[0] - b[0]*c[2])
+//     +    a[2] * (b[0]*c[1] - b[1]*c[0]);
+// }
 
 /*---------------------------------------------------------------------------
  * Solve the equation "A.x = b" with Cramer's rule.

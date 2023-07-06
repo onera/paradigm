@@ -922,6 +922,11 @@ const PDM_MPI_Comm      comm
   int n_rank;
 
   PDM_UNUSED(part_fraction);
+  PDM_UNUSED(dual_graph_idx);
+  PDM_UNUSED(dual_graph);
+  PDM_UNUSED(node_weight);
+  PDM_UNUSED(arc_weight);
+  PDM_UNUSED(n_part);
 
   PDM_MPI_Comm_rank(comm, &i_rank);
   PDM_MPI_Comm_size(comm, &n_rank);

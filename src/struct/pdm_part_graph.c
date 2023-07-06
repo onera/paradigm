@@ -570,6 +570,12 @@ PDM_part_graph_split_bis
 {
   *cell_part = PDM_array_zeros_int(graph_size);
 
+  PDM_UNUSED (n_part);
+  PDM_UNUSED (cell_cell_idx);
+  PDM_UNUSED (cell_cell);
+  PDM_UNUSED (cell_weight);
+  PDM_UNUSED (face_weight);
+
   switch(method) {
   case 1:
     {
