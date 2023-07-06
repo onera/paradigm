@@ -1003,7 +1003,7 @@ const char *s
     PDM_error(__FILE__, __LINE__, 0, "Field data type '%s' is not supported\n");
   }
 
-  return -1;
+  return PDM_WRONG_DATA;
 }
 
 
@@ -2788,7 +2788,7 @@ PDM_vtk_read_to_dmesh_nodal
       idx[prepa.elt_type[i]] += prepa.elt_vtx_idx[i+1] - prepa.elt_vtx_idx[i];
     }
 
-    for (PDM_Mesh_nodal_elt_t t = 0; t < PDM_MESH_NODAL_N_ELEMENT_TYPES; t++) {
+    for (PDM_Mesh_nodal_elt_t t = (PDM_Mesh_nodal_elt_t) 0; t < PDM_MESH_NODAL_N_ELEMENT_TYPES; t++) {
       if (gn_elt[t] > 0) {
         gelt_vtx[t] = malloc(sizeof(PDM_g_num_t) * idx[t]);
         if (t == PDM_MESH_NODAL_POLY_2D) {
@@ -2933,7 +2933,7 @@ PDM_vtk_read_to_dmesh_nodal
 
   int mesh_dimension = -1;
   PDM_g_num_t gn_elt_dim[3] = {0};
-  for (PDM_Mesh_nodal_elt_t t = 0; t < PDM_MESH_NODAL_N_ELEMENT_TYPES; t++) {
+  for (PDM_Mesh_nodal_elt_t t = (PDM_Mesh_nodal_elt_t) 0; t < PDM_MESH_NODAL_N_ELEMENT_TYPES; t++) {
     if (gn_elt[t] > 0) {
       int dim = PDM_Mesh_nodal_elt_dim_get(t);
       mesh_dimension = PDM_MAX(mesh_dimension, dim);
@@ -2995,7 +2995,7 @@ PDM_vtk_read_to_dmesh_nodal
   PDM_g_num_t *distrib_elt[PDM_MESH_NODAL_N_ELEMENT_TYPES] = {NULL};
   int *dpoly2d_vtx_n = NULL;
 
-  for (PDM_Mesh_nodal_elt_t t = 0; t < PDM_MESH_NODAL_N_ELEMENT_TYPES; t++) {
+  for (PDM_Mesh_nodal_elt_t t = (PDM_Mesh_nodal_elt_t) 0; t < PDM_MESH_NODAL_N_ELEMENT_TYPES; t++) {
     if (gn_elt[t] > 0) {
       PDM_g_num_t *init_distrib = PDM_compute_entity_distribution        (comm, dn_elt[t]);
       distrib_elt[t]            = PDM_compute_uniform_entity_distribution(comm, gn_elt[t]);
@@ -3061,7 +3061,7 @@ PDM_vtk_read_to_dmesh_nodal
                             PDM_OWNERSHIP_KEEP);
 
   /* Sections */
-  for (PDM_Mesh_nodal_elt_t t = 0; t < PDM_MESH_NODAL_N_ELEMENT_TYPES; t++) {
+  for (PDM_Mesh_nodal_elt_t t = (PDM_Mesh_nodal_elt_t) 0; t < PDM_MESH_NODAL_N_ELEMENT_TYPES; t++) {
     if (gn_elt[t] > 0) {
       dn_elt[t] = (int) (distrib_elt[t][i_rank+1] - distrib_elt[t][i_rank]);
 
