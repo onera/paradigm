@@ -37,7 +37,7 @@ if (CMAKE_Fortran_COMPILER_ID STREQUAL "GNU")
 
 elseif (CMAKE_Fortran_COMPILER_ID STREQUAL "Intel")
 
-  set (CMAKE_Fortran_FLAGS "-fpp -Wp,-P -fpic -warn -diag-disable 7712")
+  set (CMAKE_Fortran_FLAGS "-fpp -Wp,-P -fpic -warn -diag-disable 7712 -diag-disable 8889")
 
   set (CMAKE_Fortran_FLAGS_RELEASE "-O3")
 
@@ -391,7 +391,7 @@ elseif (CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang")
   set (CXX_LIBRARIES_FLAG        )
 
 elseif (CMAKE_CXX_COMPILER_ID STREQUAL "IntelLLVM")
-  set (CMAKE_CXX_FLAGS "-cc=icpx -fPIC -fuse-ld=lld -std=c++11 -Wall -pedantic -Wshadow -Wpointer-arith -Wuninitialized -Wunused -Wempty-translation-unit -Wno-unused-function")
+  set (CMAKE_CXX_FLAGS "-fPIC -std=c++11 -Wall -pedantic -Wshadow -Wpointer-arith -Wuninitialized -Wunused -Wempty-translation-unit -Wno-unused-function -Wtautological-constant-compare")
   set (CMAKE_CXX_FLAGS_RELEASE "-O3")
   set (CMAKE_CXX_FLAGS_DEBUG "-g -O0")
   set (CMAKE_CXX_FLAGS_PROFILING       "${CMAKE_CXX_FLAGS_RELEASE} -p")

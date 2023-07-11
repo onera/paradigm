@@ -3280,10 +3280,9 @@ _extract_part_group
   for(int i_part = 0; i_part < extrp->n_part_out; ++i_part) {
     int n_entity_out = extrp->pextract_n_entity[entity_type][i_part];
 
-    int n_recv = 0;
-    for(int i = 0; i < n_entity_out; ++i) {
-      n_recv += pextract_entity_n[i_part][i];
-    }
+    // for(int i = 0; i < n_entity_out; ++i) {
+    //   n_recv += pextract_entity_n[i_part][i];
+    // }
 
     /* On doit trier par group */
     for(int i_group = 0; i_group < n_group; ++i_group) {

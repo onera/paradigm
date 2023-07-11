@@ -6261,7 +6261,7 @@ PDM_part_mesh_nodal_elmts_extend_to_encompassing_comm
   int s_char_buf = 0;
   if (i_rank == master) {
     for (int iblock = 0; iblock < n_block; iblock++) {
-      block_type[iblock] = (int) PDM_part_mesh_nodal_elmts_section_type_get(_pmne,
+      block_type[iblock] = (PDM_Mesh_nodal_elt_t) PDM_part_mesh_nodal_elmts_section_type_get(_pmne,
                                                                             blocks_id[iblock]);
       if (PDM_Mesh_nodal_elmt_is_ho(block_type[iblock])) {
         block_order[iblock] = _pmne->sections_std[blocks_id[iblock]]->order;
