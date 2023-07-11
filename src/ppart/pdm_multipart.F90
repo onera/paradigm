@@ -1319,9 +1319,9 @@ contains
     integer(c_int), value  :: i_zone
     integer(c_int), value  :: i_part
 
-    type(PDM_pointer_array_t), target :: elt_vtx_idx
-    type(PDM_pointer_array_t), target :: elt_vtx
-    type(PDM_pointer_array_t), target :: elt_section_ln_to_gn
+    type(PDM_pointer_array_t), pointer :: elt_vtx_idx
+    type(PDM_pointer_array_t), pointer :: elt_vtx
+    type(PDM_pointer_array_t), pointer :: elt_section_ln_to_gn
 
     type(c_ptr) :: c_elt_vtx_idx          = C_NULL_PTR
     type(c_ptr) :: c_elt_vtx              = C_NULL_PTR

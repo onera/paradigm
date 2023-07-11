@@ -32,12 +32,12 @@ program testf
   double precision                  :: radius   = 4.d0
 
   integer(pdm_l_num_s), pointer     :: pn_vtx(:)  => null()
-  type(PDM_pointer_array_t)         :: pvtx_coord
-  type(PDM_pointer_array_t)         :: pvtx_ln_to_gn
+  type(PDM_pointer_array_t), pointer:: pvtx_coord
+  type(PDM_pointer_array_t), pointer:: pvtx_ln_to_gn
   integer(pdm_l_num_s), pointer     :: pn_face(:) => null()
-  type(PDM_pointer_array_t)         :: pface_vtx_idx
-  type(PDM_pointer_array_t)         :: pface_vtx
-  type(PDM_pointer_array_t)         :: pface_ln_to_gn
+  type(PDM_pointer_array_t), pointer:: pface_vtx_idx
+  type(PDM_pointer_array_t), pointer:: pface_vtx
+  type(PDM_pointer_array_t), pointer:: pface_ln_to_gn
 
   double precision,     pointer     :: vtx_coord(:)     => null()
   double precision,     pointer     :: vtx_coord2(:,:)  => null()
@@ -188,11 +188,11 @@ program testf
   !  Free memory
   call pdm_fortran_free_c(c_loc(pn_vtx))
   call pdm_fortran_free_c(c_loc(pn_face))
-  call PDM_pointer_array_free_from_c(pvtx_coord)
-  call PDM_pointer_array_free_from_c(pvtx_ln_to_gn)
-  call PDM_pointer_array_free_from_c(pface_vtx_idx)
-  call PDM_pointer_array_free_from_c(pface_vtx)
-  call PDM_pointer_array_free_from_c(pface_ln_to_gn)
+  call PDM_pointer_array_free(pvtx_coord)
+  call PDM_pointer_array_free(pvtx_ln_to_gn)
+  call PDM_pointer_array_free(pface_vtx_idx)
+  call PDM_pointer_array_free(pface_vtx)
+  call PDM_pointer_array_free(pface_ln_to_gn)
 
 
   if (i_rank .eq. 0) then

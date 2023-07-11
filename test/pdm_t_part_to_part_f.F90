@@ -61,21 +61,21 @@ program testf
   type(my_type), allocatable            :: my_part2(:)
 
   integer(pdm_l_num_s), pointer         :: n_elt1(:) => null()
-  type(PDM_pointer_array_t)             :: gnum_elt1
-  type(PDM_pointer_array_t)             :: part1_to_part2_idx
-  type(PDM_pointer_array_t)             :: part1_to_part2
+  type(PDM_pointer_array_t), pointer    :: gnum_elt1
+  type(PDM_pointer_array_t), pointer    :: part1_to_part2_idx
+  type(PDM_pointer_array_t), pointer    :: part1_to_part2
   integer(pdm_l_num_s), pointer         :: n_elt2(:) => null()
-  type(PDM_pointer_array_t)             :: gnum_elt2
+  type(PDM_pointer_array_t), pointer    :: gnum_elt2
 
-  type(PDM_pointer_array_t)             :: part1_stride
-  type(PDM_pointer_array_t)             :: part1_data
-  type(PDM_pointer_array_t)             :: part2_stride
-  type(PDM_pointer_array_t)             :: part2_data
+  type(PDM_pointer_array_t), pointer    :: part1_stride
+  type(PDM_pointer_array_t), pointer    :: part1_data
+  type(PDM_pointer_array_t), pointer    :: part2_stride
+  type(PDM_pointer_array_t), pointer    :: part2_data
 
-  type(PDM_pointer_array_t)             :: part1_stride_r
-  type(PDM_pointer_array_t)             :: part1_data_r
-  type(PDM_pointer_array_t)             :: part2_stride_r
-  type(PDM_pointer_array_t)             :: part2_data_r
+  type(PDM_pointer_array_t), pointer    :: part1_stride_r
+  type(PDM_pointer_array_t), pointer    :: part1_data_r
+  type(PDM_pointer_array_t), pointer    :: part2_stride_r
+  type(PDM_pointer_array_t), pointer    :: part2_data_r
 
   integer                               :: n_ref_num2
   integer                               :: n_unref_num2
@@ -444,7 +444,6 @@ program testf
                                        PDM_STRIDE_VAR_INTERLACED,             & ! t_stride
                                        PDM_PART_TO_PART_DATA_DEF_ORDER_PART2, & ! t_part2_data_def
                                        1,                                     & ! cst_stride
-                                       pdm_g_num_s,                           & ! s_data
                                        part2_stride_r,                        &
                                        part2_data_r,                          &
                                        part1_stride_r,                        &
@@ -508,11 +507,11 @@ program testf
   call PDM_pointer_array_free (gnum_elt2)
   call PDM_pointer_array_free (part1_stride)
   call PDM_pointer_array_free (part1_data)
-  call PDM_pointer_array_free_from_c (part2_stride)
-  call PDM_pointer_array_free_from_c (part2_data)
+  call PDM_pointer_array_free (part2_stride)
+  call PDM_pointer_array_free (part2_data)
 
-  call PDM_pointer_array_free_from_c (part1_stride_r)
-  call PDM_pointer_array_free_from_c (part1_data_r)
+  call PDM_pointer_array_free (part1_stride_r)
+  call PDM_pointer_array_free (part1_data_r)
   call PDM_pointer_array_free (part2_stride_r)
   call PDM_pointer_array_free (part2_data_r)
 

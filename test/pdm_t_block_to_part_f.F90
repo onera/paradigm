@@ -44,15 +44,15 @@ program testf
 
   integer(pdm_g_num_s), pointer         :: block_distrib_idx(:) => null()
   integer                               :: n_part
-  type(PDM_pointer_array_t)             :: gnum_elt
+  type(PDM_pointer_array_t), pointer    :: gnum_elt
   integer(pdm_l_num_s), pointer         :: n_elt(:)        => null()
   integer(pdm_g_num_s), pointer         :: elt_ln_to_gn(:) => null()
 
   integer(pdm_l_num_s), pointer         :: block_stride(:) => null()
   double precision,     pointer         :: block_data(:)   => null()
 
-  type(PDM_pointer_array_t)             :: part_stride
-  type(PDM_pointer_array_t)             :: part_data
+  type(PDM_pointer_array_t), pointer    :: part_stride => null()
+  type(PDM_pointer_array_t), pointer    :: part_data => null()
 
   integer(pdm_l_num_s), pointer         :: stride(:) => null()
   double precision,     pointer         :: data(:)   => null()
@@ -170,12 +170,10 @@ program testf
 
   if (exch_in_place) then
     deallocate(stride, data)
-    call PDM_pointer_array_free(part_data)
-    call PDM_pointer_array_free(part_stride)
-  else
-    call PDM_pointer_array_free_from_c(part_data)
-    call PDM_pointer_array_free_from_c(part_stride)
-  end if
+  endif
+
+  call PDM_pointer_array_free(part_data)
+  call PDM_pointer_array_free(part_stride)
 
   if (i_rank .eq. 0) then
     write(*, *) "-- End"
