@@ -185,8 +185,14 @@ _determine_A_outside
     current = (*cll)->head->next;
 
     intersect_t intersect_type[2] = {(intersect_t) -1, (intersect_t) -1};
-    Element *in[2]  = {cll_storage[idx++], cll_storage[idx++]};
-    Element *out[2] = {cll_storage[idx++], cll_storage[idx++]};
+
+    Element *in[2];
+    in[0]=cll_storage[idx++];
+    in[1]=cll_storage[idx++];
+
+    Element *out[2];
+    out[0]=cll_storage[idx++];
+    out[1]=cll_storage[idx++];
 
     Element *prev_in  = NULL;
     Element *prev_out = NULL;
