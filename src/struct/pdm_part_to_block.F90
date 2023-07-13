@@ -34,7 +34,6 @@ module pdm_part_to_block
   integer, parameter :: PDM_PART_TO_BLOCK_POST_CLEANUP              = 1  ! Cleanup multi-elements
   integer, parameter :: PDM_PART_TO_BLOCK_POST_MERGE                = 2  ! Merge multi-elements
 
-
 interface
 
 !>

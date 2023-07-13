@@ -42,13 +42,13 @@ program testf
   type(c_ptr)                           :: ptb = C_NULL_PTR
 
   integer                               :: n_part
-  type(PDM_pointer_array_t)             :: gnum_elt
-  type(PDM_pointer_array_t)             :: weight
+  type(PDM_pointer_array_t), pointer    :: gnum_elt
+  type(PDM_pointer_array_t), pointer    :: weight
   integer(pdm_l_num_s), pointer         :: n_elt(:)        => null()
   integer(pdm_g_num_s), pointer         :: elt_ln_to_gn(:) => null()
 
-  type(PDM_pointer_array_t)             :: part_stride
-  type(PDM_pointer_array_t)             :: part_data
+  type(PDM_pointer_array_t), pointer    :: part_stride
+  type(PDM_pointer_array_t), pointer    :: part_data
   integer(pdm_l_num_s), pointer         :: block_stride(:) => null()
   integer(pdm_l_num_s), pointer         :: block_data(:)   => null()
 

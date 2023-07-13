@@ -439,11 +439,26 @@ do
       pids=(${pids[@]} "$!")
 
     else
-      echo -e "${RED}Error${NC}: OpenMPI is not available for pdm_run script"
-      echo -e "${PURPLE}${TestNamel[0]}: ${RED}Failed${NC}"
-      exit 1
-#      @PDM_RUN_LSAN@ @PDM_RUN_PYTHONPATH@ ${ExeMPI} -genv @PDM_RUN_PRELOAD@ -output-filename $OutputFile -n $Nrank /usr/bin/time  -f "Maximum Resident Memory : %M Kb\nReal time : %e s" ../${TestName} ${TestOption} 2>/dev/null
-#      pids=(${pids[@]} "$!")
+      CmdLine="${ExeMPI} --timeout ${TimeOutS} --output-filename $OutputFile"
+      k=0
+      sep=""
+      for ex in "${TestNamel[@]}"
+      do
+        OptExe=$(echo ${TestOptionl[k]} | tr ";" " ")
+        CmdLine="${CmdLine} ${sep} -n ${Nrankl[k]} /usr/bin/time  -f \"Maximum Resident Memory : %M Kb\nReal time : %e s\""
+        if [ -f "${TestDir}/${ex}.py" ]; then
+          CmdLine="${CmdLine} ${PROJECT_BINARY_DIR}/pdm_launch_python ${PythonUnbuffered} ${TestDir}/$ex.py ${optExe}"
+        else
+          CmdLine="${CmdLine} ${PROJECT_BINARY_DIR}/pdm_launch ${TestDir}/$ex ${OptExe}"
+        fi
+        sep=":"
+        ((k=k+1))
+      done 
+
+      CmdLine="${CmdLine} 2>/dev/null >/dev/null &"
+      eval "${CmdLine}"
+      pids=(${pids[@]} "$!")
+
     fi
     ((IndexRank=IndexRank+Nranks)) 
   

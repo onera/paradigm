@@ -1319,9 +1319,9 @@ contains
     integer(c_int), value  :: i_zone
     integer(c_int), value  :: i_part
 
-    type(PDM_pointer_array_t), target :: elt_vtx_idx
-    type(PDM_pointer_array_t), target :: elt_vtx
-    type(PDM_pointer_array_t), target :: elt_section_ln_to_gn
+    type(PDM_pointer_array_t), pointer :: elt_vtx_idx
+    type(PDM_pointer_array_t), pointer :: elt_vtx
+    type(PDM_pointer_array_t), pointer :: elt_section_ln_to_gn
 
     type(c_ptr) :: c_elt_vtx_idx          = C_NULL_PTR
     type(c_ptr) :: c_elt_vtx              = C_NULL_PTR
@@ -1398,6 +1398,12 @@ contains
 
     integer (kind = PDM_l_num_s), pointer :: n_elt(:) => null()
     type(c_ptr)                           :: c_n_elt
+
+    integer(pdm_l_num_s),      pointer :: f_ptr_elt_vtx_idx(:)
+
+    integer, pointer :: length_c_elt_vtx_idx(:)
+    integer, pointer :: length_c_elt_vtx(:)
+    integer, pointer :: length_c_elt_section_ln_to_gn(:)
 
     c_n_elt = c_loc(n_elt)
 
@@ -1482,41 +1488,47 @@ contains
                                       c_face_join, &
                                       c_face_join_ln_to_gn)
 
-    call c_f_pointer(c_elt_vtx_idx, &
-                     elt_vtx_idx%cptr, &
-                     [n_section])
-
-    call  PDM_pointer_array_create_type (elt_vtx_idx, &
-                                         n_section, &
-                                         PDM_TYPE_INT)
+    allocate (length_c_elt_vtx_idx(n_section))
+    allocate (length_c_elt_vtx(n_section))
+    allocate (length_c_elt_section_ln_to_gn(n_section))
 
     do i = 1, n_section
-      elt_vtx_idx%length(i) = n_elt(i) + 1
+      length_c_elt_vtx_idx(i) = n_elt(i) + 1
+      length_c_elt_section_ln_to_gn(i) = n_elt(i) 
     end do
 
-    call c_f_pointer(c_elt_vtx,    &
-                     elt_vtx%cptr, &
-                     [n_section])
+    call  PDM_pointer_array_create (elt_vtx_idx, &
+                                    n_section, &
+                                    PDM_TYPE_INT, &
+                                    c_elt_vtx_idx, &                                       
+                                    length_c_elt_vtx_idx, &                                       
+                                    PDM_OWNERSHIP_KEEP)
 
-    call  PDM_pointer_array_create_type (elt_vtx, &
-                                         n_section, &
-                                         PDM_TYPE_INT)
+    call  PDM_pointer_array_create(elt_section_ln_to_gn, &
+                                   n_section, &
+                                   PDM_TYPE_G_NUM, &
+                                   c_elt_section_ln_to_gn, &
+                                   length_c_elt_section_ln_to_gn, &
+                                   PDM_OWNERSHIP_KEEP)
 
-    ! do i = 1, n_section
-    !   elt_vtx%length(i) = elt_vtx_idx(i)(n_elt(i))
-    ! end do
+    do i = 0, n_section-1
+      call PDM_pointer_array_part_get (elt_vtx_idx,        &
+                                       i,                  &
+                                       f_ptr_elt_vtx_idx)
+      length_c_elt_vtx(i) = f_ptr_elt_vtx_idx(n_elt(i+1) + 1)
+    enddo
 
-    call c_f_pointer(c_elt_section_ln_to_gn,    &
-                     elt_section_ln_to_gn%cptr, &
-                     [n_section])
+    call  PDM_pointer_array_create(elt_vtx, &
+                                   n_section, &
+                                   PDM_TYPE_INT, &
+                                   c_elt_vtx, &                                       
+                                   length_c_elt_vtx, &                                       
+                                   PDM_OWNERSHIP_KEEP)
 
-    call  PDM_pointer_array_create_type (elt_section_ln_to_gn, &
-                                         n_section, &
-                                         PDM_TYPE_G_NUM)
+    deallocate (length_c_elt_vtx_idx)
+    deallocate (length_c_elt_vtx)
+    deallocate (length_c_elt_section_ln_to_gn)
 
-    do i = 1, n_section
-      elt_section_ln_to_gn%length(i) = n_elt(i)
-    end do
 
     call c_f_pointer(c_cell_tag, &
                      cell_tag,   &
