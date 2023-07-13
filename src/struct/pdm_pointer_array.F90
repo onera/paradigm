@@ -60,7 +60,7 @@ module pdm_pointer_array
     module procedure PDM_pointer_array_part_set_complex8
     module procedure PDM_pointer_array_part_set_complex4
     module procedure PDM_pointer_array_part_set_real4
-    module procedure PDM_pointer_array_part_set_from_cptr
+!    module procedure PDM_pointer_array_part_set_from_cptr
   end interface
 
   interface PDM_pointer_array_part_get
@@ -101,7 +101,7 @@ module pdm_pointer_array
              PDM_pointer_array_part_set_complex8, &
              PDM_pointer_array_part_set_complex4, &
              PDM_pointer_array_part_set_real4, &
-             PDM_pointer_array_part_set_from_cptr, &
+!             PDM_pointer_array_part_set_from_cptr, &
 #ifdef PDM_LONG_G_NUM
              PDM_pointer_array_part_set_g_num, &
 #endif
@@ -132,6 +132,11 @@ module pdm_pointer_array
     integer, intent(in), optional      :: s_data
 
     integer                            :: i
+
+    if (associated(pa)) then
+      print*, "Error PDM_pointer_array_create : pa is already associated ! "
+      call exit
+    endif
 
     allocate(pa)
 
@@ -208,6 +213,11 @@ module pdm_pointer_array
 
     integer                            :: i
 
+    if (associated(pa)) then
+      print*, "Error PDM_pointer_array_create : pa is already associated ! "
+      call exit
+    endif
+
     allocate (pa)
 
     pa%type = type
@@ -274,6 +284,11 @@ module pdm_pointer_array
     integer, intent(in)                :: i_part
     integer, intent(in)                :: length
 
+    if (.not. associated(pa)) then
+      print*, "Error DM_pointer_array_part_length_update : 'pa' pointer is not associated "
+      call exit
+    endif
+
     pa%length(i_part+1) = length
 
   end subroutine PDM_pointer_array_part_length_update_
@@ -292,6 +307,11 @@ module pdm_pointer_array
     type(PDM_pointer_array_t), pointer  :: pa
 
     integer :: i
+
+    if (.not. associated(pa)) then
+      print*, "Error PDM_pointer_array_free : 'pa' pointer is not associated "
+      call exit
+    endif
 
     if (pa%ownership .eq. PDM_OWNERSHIP_KEEP) then
       if (pa%sharec_c .eq. 0) then
@@ -314,9 +334,11 @@ module pdm_pointer_array
           deallocate(pa%length)
         end if
       endif
+
     endif  
       
     deallocate(pa)  
+    pa => null()
 
   end subroutine PDM_pointer_array_free
 
@@ -337,6 +359,11 @@ module pdm_pointer_array
     type(PDM_pointer_array_t), pointer  :: pa
     integer, intent(in)                :: i_part
     integer(pdm_l_num_s),      pointer :: pointer_f(:)
+
+    if (.not. associated(pa)) then
+      print*, "Error PDM_pointer_array_part_set : 'pa' pointer is not associated "
+      call exit
+    endif
 
     if (pa%type .ne. PDM_TYPE_INT) then
       print *, "PDM_pointer_array_part_set_int : wrong type"
@@ -372,6 +399,11 @@ module pdm_pointer_array
     integer, intent(in)                :: i_part
     integer(pdm_g_num_s),      pointer :: pointer_f(:)
 
+    if (.not. associated(pa)) then
+      print*, "Error PDM_pointer_array_part_set : 'pa' pointer is not associated "
+      call exit
+    endif
+
     if (pa%type .ne. PDM_TYPE_G_NUM) then
       print *, "PDM_pointer_array_part_set_g_num : wrong type"
       stop
@@ -406,6 +438,11 @@ module pdm_pointer_array
     integer, intent(in)                :: i_part
     double precision,          pointer :: pointer_f(:)
 
+    if (.not. associated(pa)) then
+      print*, "Error PDM_pointer_array_part_set : 'pa' pointer is not associated "
+      call exit
+    endif
+
     if (pa%type .ne. PDM_TYPE_DOUBLE) then
       print *, "PDM_pointer_array_part_set_double : wrong type"
       stop
@@ -438,6 +475,11 @@ module pdm_pointer_array
     type(PDM_pointer_array_t), pointer  :: pa
     integer, intent(in)                :: i_part
     double precision,          pointer :: pointer_f(:,:)
+
+    if (.not. associated(pa)) then
+      print*, "Error PDM_pointer_array_part_set : 'pa' pointer is not associated "
+      call exit
+    endif
 
     if (pa%type .ne. PDM_TYPE_DOUBLE) then
       print *, "PDM_pointer_array_part_set_double_2 : wrong type"
@@ -472,6 +514,11 @@ module pdm_pointer_array
     integer, intent(in)                :: i_part
     double precision,          pointer :: pointer_f(:,:,:)
 
+    if (.not. associated(pa)) then
+      print*, "Error PDM_pointer_array_part_set : 'pa' pointer is not associated "
+      call exit
+    endif
+
     if (pa%type .ne. PDM_TYPE_DOUBLE) then
       print *, "PDM_pointer_array_part_set_double_3 : wrong type"
       stop
@@ -504,6 +551,11 @@ module pdm_pointer_array
     type(PDM_pointer_array_t), pointer  :: pa
     integer, intent(in)                :: i_part
     complex (kind = 4),        pointer :: pointer_f(:)
+
+    if (.not. associated(pa)) then
+      print*, "Error PDM_pointer_array_part_set : 'pa' pointer is not associated "
+      call exit
+    endif
 
     if (pa%type .ne. PDM_TYPE_COMPLEX4) then
       print *, "PDM_pointer_array_part_set_comùplex4 : wrong type"
@@ -538,6 +590,11 @@ module pdm_pointer_array
     integer, intent(in)                :: i_part
     complex (kind = 8),        pointer :: pointer_f(:)
 
+    if (.not. associated(pa)) then
+      print*, "Error PDM_pointer_array_part_set : 'pa' pointer is not associated "
+      call exit
+    endif
+
     if (pa%type .ne. PDM_TYPE_COMPLEX8) then
       print *, "PDM_pointer_array_part_set_comùplex8 : wrong type"
       stop
@@ -571,6 +628,11 @@ module pdm_pointer_array
     type(PDM_pointer_array_t), pointer  :: pa
     integer, intent(in)                :: i_part
     real (kind = 4),                    pointer :: pointer_f(:)
+
+    if (.not. associated(pa)) then
+      print*, "Error PDM_pointer_array_part_set : 'pa' pointer is not associated "
+      call exit
+    endif
 
     if (pa%type .ne. PDM_TYPE_REAL4) then
       print *, "PDM_pointer_array_part_set_real4 : wrong type"
@@ -639,6 +701,11 @@ module pdm_pointer_array
     integer, intent(in)                :: i_part
     integer(pdm_l_num_s),      pointer :: pointer_f(:)
 
+    if (.not. associated(pa)) then
+      print*, "Error PDM_pointer_array_part_get : 'pa' pointer is not associated "
+      call exit
+    endif
+
     if (pa%type .ne. PDM_TYPE_INT) then
       print *, "PDM_pointer_array_part_get_int : wrong type"
       stop
@@ -678,6 +745,11 @@ module pdm_pointer_array
     integer, intent(in)                :: i_part
     integer(pdm_g_num_s),      pointer :: pointer_f(:)
 
+    if (.not. associated(pa)) then
+      print*, "Error PDM_pointer_array_part_get : 'pa' pointer is not associated "
+      call exit
+    endif
+
     if (pa%type .ne. PDM_TYPE_G_NUM) then
       print *, "PDM_pointer_array_part_get_g_num : wrong type"
       stop
@@ -716,6 +788,11 @@ module pdm_pointer_array
     type(PDM_pointer_array_t), pointer  :: pa
     integer, intent(in)                :: i_part
     double precision,          pointer :: pointer_f(:)
+
+    if (.not. associated(pa)) then
+      print*, "Error PDM_pointer_array_part_get : 'pa' pointer is not associated "
+      call exit
+    endif
 
     if (pa%type .ne. PDM_TYPE_DOUBLE) then
       print *, "PDM_pointer_array_part_get_double : wrong type"
@@ -760,6 +837,11 @@ module pdm_pointer_array
     integer, intent(in)                :: t_stride
     integer, intent(in)                :: stride
     double precision,          pointer :: pointer_f(:,:)
+
+    if (.not. associated(pa)) then
+      print*, "Error PDM_pointer_array_part_get : 'pa' pointer is not associated "
+      call exit
+    endif
 
     if (pa%type .ne. PDM_TYPE_DOUBLE) then
       print *, "PDM_pointer_array_part_get_double_2 : wrong type"
@@ -817,6 +899,11 @@ module pdm_pointer_array
     integer, intent(in)                :: stride2
     double precision,          pointer :: pointer_f(:,:,:)
 
+    if (.not. associated(pa)) then
+      print*, "Error PDM_pointer_array_part_get : 'pa' pointer is not associated "
+      call exit
+    endif
+
     if (pa%type .ne. PDM_TYPE_DOUBLE) then
       print *, "PDM_pointer_array_part_get_double_3 : wrong type"
       stop
@@ -864,20 +951,27 @@ module pdm_pointer_array
     integer, intent(in)                :: i_part
     real (kind=4),             pointer :: pointer_f(:)
 
-    if (pa%type .ne. PDM_TYPE_REAL4) then
-      print *, "PDM_pointer_array_part_set_double : wrong type"
-      stop
-    end if
+    if (.not. associated(pa)) then
+      print*, "Error PDM_pointer_array_part_get : 'pa' pointer is not associated "
+      call exit
+    endif
 
-    if (i_part .ge. size(pa%cptr)) then
-      print *, "PDM_pointer_array_part_set_double : wrong i_part"
-      stop
-    end if
+    if (associated(pa)) then
+      if (pa%type .ne. PDM_TYPE_REAL4) then
+        print *, "PDM_pointer_array_part_set_double : wrong type"
+        stop
+      end if
+
+      if (i_part .ge. size(pa%cptr)) then
+        print *, "PDM_pointer_array_part_set_double : wrong i_part"
+        stop
+      end if
 
 
-    call c_f_pointer(pa%cptr(i_part+1),     &
-                     pointer_f,             &
-                     [pa%length(i_part+1)])
+      call c_f_pointer(pa%cptr(i_part+1),     &
+                       pointer_f,             &
+                       [pa%length(i_part+1)])
+    endif  
 
   end subroutine PDM_pointer_array_part_get_real4
 
@@ -900,6 +994,11 @@ module pdm_pointer_array
     type(PDM_pointer_array_t), pointer  :: pa
     integer, intent(in)                :: i_part
     complex (kind=4),             pointer :: pointer_f(:)
+
+    if (.not. associated(pa)) then
+      print*, "Error PDM_pointer_array_part_get : 'pa' pointer is not associated "
+      call exit
+    endif
 
     if (pa%type .ne. PDM_TYPE_COMPLEX4) then
       print *, "PDM_pointer_array_part_get_complex4 : wrong type"
@@ -938,6 +1037,11 @@ module pdm_pointer_array
     type(PDM_pointer_array_t), pointer  :: pa
     integer, intent(in)                :: i_part
     complex (kind=8),             pointer :: pointer_f(:)
+
+    if (.not. associated(pa)) then
+      print*, "Error PDM_pointer_array_part_get : 'pa' pointer is not associated "
+      call exit
+    endif
 
     if (pa%type .ne. PDM_TYPE_COMPLEX8) then
       print *, "PDM_pointer_array_part_get_complex8 : wrong type"
@@ -979,6 +1083,11 @@ module pdm_pointer_array
     integer, intent(in)                :: i_part
     type(c_ptr)                        :: pointer_c
     integer                            :: length
+
+    if (.not. associated(pa)) then
+      print*, "Error PDM_pointer_array_part_get : 'pa' pointer is not associated "
+      call exit
+    endif
 
     if (i_part .ge. size(pa%cptr)) then
       print *, "PDM_pointer_array_part_get_complex8 : wrong i_part"

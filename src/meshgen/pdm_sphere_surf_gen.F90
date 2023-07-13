@@ -72,12 +72,6 @@ module pdm_sphere_surf_gen
     type(c_ptr)                       :: cc_pface_vtx_idx    = C_NULL_PTR
     type(c_ptr)                       :: cc_pface_vtx        = C_NULL_PTR
     type(c_ptr)                       :: cc_pface_ln_to_gn   = C_NULL_PTR
-    type(c_ptr), pointer              :: c_pvtx_coord(:)     => null()
-    type(c_ptr), pointer              :: c_pvtx_ln_to_gn(:)  => null()
-    type(c_ptr), pointer              :: c_pface_vtx_idx(:)  => null()
-    type(c_ptr), pointer              :: c_pface_vtx(:)      => null()
-    type(c_ptr), pointer              :: c_pface_ln_to_gn(:) => null()
-    integer                           :: ipart
 
     interface
 
@@ -124,6 +118,12 @@ module pdm_sphere_surf_gen
       end subroutine PDM_sphere_surf_icosphere_gen_part_c
     end interface
 
+    integer, allocatable :: length_cc_pvtx_coord(:)
+    integer, allocatable :: length_cc_pvtx_ln_to_gn(:)
+    integer, allocatable :: length_cc_pface_vtx_idx(:)
+    integer, allocatable :: length_cc_pface_vtx(:)
+    integer, allocatable :: length_cc_pface_ln_to_gn(:)
+
     c_comm = PDM_MPI_Comm_f2c(comm)
 
     call PDM_sphere_surf_icosphere_gen_part_c(c_comm,            &
@@ -150,11 +150,11 @@ module pdm_sphere_surf_gen
                      pn_face,   &
                      [n_part])
 
-    allocate (length_cc_pvtx_coord_(n_part))
-    allocate (length_cc_pvtx_ln_to_gn_(n_part))
+    allocate (length_cc_pvtx_coord(n_part))
+    allocate (length_cc_pvtx_ln_to_gn(n_part))
     allocate (length_cc_pface_vtx_idx(n_part))
-    allocate (length_cc_pface_vtx_(n_part))
-    allocate (length_cc_pface_ln_to_gn_(n_part))
+    allocate (length_cc_pface_vtx(n_part))
+    allocate (length_cc_pface_ln_to_gn(n_part))
 
     call PDM_pointer_array_create(pvtx_coord,             &
                                   n_part,                 &
@@ -191,32 +191,11 @@ module pdm_sphere_surf_gen
                                   length_cc_pface_ln_to_gn,&
                                   PDM_OWNERSHIP_KEEP)
 
-    do ipart = 1, n_part
-      call PDM_pointer_array_part_set_from_cptr(pvtx_coord,          &
-                                                ipart-1,             &
-                                                c_pvtx_coord(ipart), &
-                                                3*pn_vtx(ipart))
-
-      call PDM_pointer_array_part_set_from_cptr(pvtx_ln_to_gn,          &
-                                                ipart-1,                &
-                                                c_pvtx_ln_to_gn(ipart), &
-                                                pn_vtx(ipart))
-
-      call PDM_pointer_array_part_set_from_cptr(pface_vtx_idx,          &
-                                                ipart-1,                &
-                                                c_pface_vtx_idx(ipart), &
-                                                pn_face(ipart))
-
-      call PDM_pointer_array_part_set_from_cptr(pface_vtx,          &
-                                                ipart-1,            &
-                                                c_pface_vtx(ipart), &
-                                                pn_face(ipart))
-
-      call PDM_pointer_array_part_set_from_cptr(pface_ln_to_gn,          &
-                                                ipart-1,                 &
-                                                c_pface_ln_to_gn(ipart), &
-                                                pn_face(ipart))
-    end do
+    deallocate (length_cc_pvtx_coord)
+    deallocate (length_cc_pvtx_ln_to_gn)
+    deallocate (length_cc_pface_vtx_idx)
+    deallocate (length_cc_pface_vtx)
+    deallocate (length_cc_pface_ln_to_gn)
 
   end subroutine PDM_sphere_surf_icosphere_gen_part
 

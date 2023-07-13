@@ -61,21 +61,21 @@ program testf
   type(my_type), allocatable            :: my_part2(:)
 
   integer(pdm_l_num_s), pointer         :: n_elt1(:) => null()
-  type(PDM_pointer_array_t), pointer    :: gnum_elt1
-  type(PDM_pointer_array_t), pointer    :: part1_to_part2_idx
-  type(PDM_pointer_array_t), pointer    :: part1_to_part2
+  type(PDM_pointer_array_t), pointer    :: gnum_elt1  => null()
+  type(PDM_pointer_array_t), pointer    :: part1_to_part2_idx  => null()
+  type(PDM_pointer_array_t), pointer    :: part1_to_part2  => null()
   integer(pdm_l_num_s), pointer         :: n_elt2(:) => null()
-  type(PDM_pointer_array_t), pointer    :: gnum_elt2
+  type(PDM_pointer_array_t), pointer    :: gnum_elt2 => null()
 
-  type(PDM_pointer_array_t), pointer    :: part1_stride
-  type(PDM_pointer_array_t), pointer    :: part1_data
-  type(PDM_pointer_array_t), pointer    :: part2_stride
-  type(PDM_pointer_array_t), pointer    :: part2_data
+  type(PDM_pointer_array_t), pointer    :: part1_stride  => null()
+  type(PDM_pointer_array_t), pointer    :: part1_data  => null()
+  type(PDM_pointer_array_t), pointer    :: part2_stride  => null()
+  type(PDM_pointer_array_t), pointer    :: part2_data  => null()
 
-  type(PDM_pointer_array_t), pointer    :: part1_stride_r
-  type(PDM_pointer_array_t), pointer    :: part1_data_r
-  type(PDM_pointer_array_t), pointer    :: part2_stride_r
-  type(PDM_pointer_array_t), pointer    :: part2_data_r
+  type(PDM_pointer_array_t), pointer    :: part1_stride_r  => null()
+  type(PDM_pointer_array_t), pointer    :: part1_data_r  => null()
+  type(PDM_pointer_array_t), pointer    :: part2_stride_r  => null()
+  type(PDM_pointer_array_t), pointer    :: part2_data_r  => null()
 
   integer                               :: n_ref_num2
   integer                               :: n_unref_num2
@@ -294,8 +294,6 @@ program testf
     endif  
   end do
 
-
-
   !  Prepare exchange from 1 to 2
   call PDM_pointer_array_create (part1_stride,   &
                                  n_part1,        &
@@ -334,6 +332,9 @@ program testf
   end do
 
 
+  print *, "Step 2"
+
+
   !  Start non-blocking exchange
   call PDM_part_to_part_iexch (ptp,                                   &
                                PDM_MPI_COMM_KIND_P2P,                 & ! k_comm
@@ -346,12 +347,17 @@ program testf
                                part2_data,                            &
                                request)
 
+  print *, "Step 3"
+
+
   !  Do stuff to cover MPI communcations
   ! ...
 
   !  Wait for the exchange to finish
   call PDM_part_to_part_iexch_wait (ptp, &
                                     request)
+
+  print *, "Step 4"
 
   !  Check data received on Part2
   if (debug .eq. 1) then
@@ -398,15 +404,21 @@ program testf
     endif  
   end do
 
+  print *, "Step 5"
+
 
   !  Prepare exchange from 2 to 1
   call PDM_pointer_array_create (part2_stride_r, &
                                  n_part2,        &
                                  PDM_TYPE_INT)
 
+  print *, "Step 6"
+
   call PDM_pointer_array_create (part2_data_r,   &
                                  n_part2,        &
                                  PDM_TYPE_G_NUM)
+
+  print *, "Step 7"
 
   do i = 1, n_part2
     allocate(my_part2(i)%stride(n_elt2(i)))
@@ -438,6 +450,9 @@ program testf
   end do
 
 
+  print *, "Step 8"
+
+
   !  Start reverse non-blocking exchange
   call PDM_part_to_part_reverse_iexch (ptp,                                   &
                                        PDM_MPI_COMM_KIND_P2P,                 & ! k_comm
@@ -453,9 +468,13 @@ program testf
   !  Do stuff to cover MPI communcations
   ! ...
 
+  print *, "Step 9"
+
   !  Wait for the exchange to finish
   call PDM_part_to_part_reverse_iexch_wait (ptp, &
                                             request)
+
+  print *, "Step 10"
 
   !  Check data received on Part1
   if (debug .eq. 1) then

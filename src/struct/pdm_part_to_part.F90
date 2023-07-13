@@ -418,6 +418,7 @@ subroutine PDM_part_to_part_iexch (ptp,              &
 
   integer                           :: n_part1
   integer                           :: n_part2
+  type(c_ptr)                       :: c_part1_stride = C_NULL_PTR
   type(c_ptr)                       :: c_part2_stride = C_NULL_PTR
   type(c_ptr)                       :: c_part2_data   = C_NULL_PTR
   integer                           :: n_ref
@@ -465,13 +466,17 @@ subroutine PDM_part_to_part_iexch (ptp,              &
 
   c_s_data = part1_data%s_data
 
+  if (associated (part1_stride)) then
+    c_part1_stride = c_loc(part1_stride%cptr)
+  endif
+
   call PDM_part_to_part_iexch_c (ptp,                      &
                                  k_comm,                   &
                                  t_stride,                 &
                                  t_part1_data_def,         &
                                  cst_stride,               &
                                  c_s_data,                 &
-                                 c_loc(part1_stride%cptr), &
+                                 c_part1_stride,           &
                                  c_loc(part1_data%cptr),   &
                                  c_part2_stride,           &
                                  c_part2_data,             &
@@ -486,20 +491,46 @@ subroutine PDM_part_to_part_iexch (ptp,              &
   allocate(length_stride(n_part2))
   allocate(length_data(n_part2))
 
-  do i = 1, n_part2
-    call PDM_part_to_part_ref_lnum2_get (ptp,   &
-                                         i-1,   &
-                                         n_ref, &
-                                         ref)
+  if (t_stride .eq. PDM_STRIDE_VAR_INTERLACED) then
 
-    call PDM_part_to_part_gnum1_come_from_get (ptp,                 &
-                                               i-1,                 &
-                                               gnum1_come_from_idx, &
-                                               gnum1_come_from)
+    do i = 1, n_part2
+      call PDM_part_to_part_ref_lnum2_get (ptp,   &
+                                           i-1,   &
+                                           n_ref, &
+                                           ref)
 
-    if (t_stride .eq. PDM_STRIDE_VAR_INTERLACED) then
 
-      length_stride(i) = gnum1_come_from_idx(n_ref+1)
+      call PDM_part_to_part_gnum1_come_from_get (ptp,                 &
+                                                 i-1,                 &
+                                                 gnum1_come_from_idx, &
+                                                 gnum1_come_from)
+
+      if (t_stride .eq. PDM_STRIDE_VAR_INTERLACED) then
+
+        length_stride(i) = gnum1_come_from_idx(n_ref+1)
+
+      end if
+
+    end do
+
+    call PDM_pointer_array_create (part2_stride, &
+                                   n_part2,    &
+                                   PDM_TYPE_INT, &
+                                   c_part2_stride, &
+                                   length_stride, &
+                                   PDM_OWNERSHIP_KEEP)
+
+
+    do i = 1, n_part2
+      call PDM_part_to_part_ref_lnum2_get (ptp,   &
+                                           i-1,   &
+                                           n_ref, &
+                                           ref)
+
+      call PDM_part_to_part_gnum1_come_from_get (ptp,                 &
+                                                 i-1,                 &
+                                                 gnum1_come_from_idx, &
+                                                 gnum1_come_from)
 
       call PDM_pointer_array_part_get (part2_stride, &
                                        i-1,          &
@@ -510,23 +541,29 @@ subroutine PDM_part_to_part_iexch (ptp,              &
         s_part2_data = s_part2_data + stride(j)
       end do
 
-    else
+      length_data(i) = s_part2_data
+
+    end do
+
+  else
+
+    do i = 1, n_part2
+      call PDM_part_to_part_ref_lnum2_get (ptp,   &
+                                           i-1,   &
+                                           n_ref, &
+                                           ref)
+
+      call PDM_part_to_part_gnum1_come_from_get (ptp,                 &
+                                                 i-1,                 &
+                                                 gnum1_come_from_idx, &
+                                                 gnum1_come_from)
 
       s_part2_data = cst_stride * gnum1_come_from_idx(n_ref+1)
 
-    end if
+      length_data(i) = s_part2_data
 
-    length_data(i) = s_part2_data
+    enddo
 
-  end do
-
-  if (t_stride .eq. PDM_STRIDE_VAR_INTERLACED) then
-    call PDM_pointer_array_create (part2_stride, &
-                                   n_part2,    &
-                                   PDM_TYPE_INT, &
-                                   c_part2_stride, &
-                                   length_stride, &
-                                   PDM_OWNERSHIP_KEEP)
   endif
 
   if (part1_data%type .eq. PDM_TYPE_CPTR) then
@@ -606,6 +643,8 @@ subroutine PDM_part_to_part_reverse_iexch (ptp,              &
   integer, allocatable              :: length_stride(:) 
   integer(c_int)                    :: c_s_data
 
+  type(c_ptr)                       :: c_part2_stride   = C_NULL_PTR
+
   interface
     subroutine PDM_part_to_part_reverse_iexch_c (ptp,              &
                                                  k_comm,           &
@@ -639,13 +678,17 @@ subroutine PDM_part_to_part_reverse_iexch (ptp,              &
 
   c_s_data = part2_data%s_data
 
+  if (associated(part2_stride)) then
+    c_part2_stride = c_loc(part2_stride%cptr)
+  endif
+
   call PDM_part_to_part_reverse_iexch_c (ptp,                      &
                                          k_comm,                   &
                                          t_stride,                 &
                                          t_part2_data_def,         &
                                          cst_stride,               &
-                                         c_s_data,                   &
-                                         c_loc(part2_stride%cptr), &
+                                         c_s_data,                 &
+                                         c_part2_stride,           &
                                          c_loc(part2_data%cptr),   &
                                          c_part1_stride,           &
                                          c_part1_data,             &
@@ -658,6 +701,27 @@ subroutine PDM_part_to_part_reverse_iexch (ptp,              &
   allocate(length_stride(n_part2))
   allocate(length_data(n_part2))
 
+  if (t_stride .eq. PDM_STRIDE_VAR_INTERLACED) then
+    do i = 1, n_part1
+      call PDM_part_to_part_part1_to_part2_get (ptp,                &
+                                                i-1,                &
+                                                n_elt1,             &
+                                                part1_to_part2_idx, &
+                                                part1_to_part2)
+
+
+      length_stride(i) = part1_to_part2_idx(n_elt1+1)
+
+    end do
+
+    call PDM_pointer_array_create (part1_stride, &
+                                   n_part1,    &
+                                   PDM_TYPE_INT, &
+                                   c_part1_stride, &
+                                   length_stride, &
+                                   PDM_OWNERSHIP_KEEP)
+  endif
+
   do i = 1, n_part1
     call PDM_part_to_part_part1_to_part2_get (ptp,                &
                                               i-1,                &
@@ -666,8 +730,6 @@ subroutine PDM_part_to_part_reverse_iexch (ptp,              &
                                               part1_to_part2)
 
     if (t_stride .eq. PDM_STRIDE_VAR_INTERLACED) then
-
-      length_stride(i) = part1_to_part2_idx(n_elt1+1)
 
       call PDM_pointer_array_part_get (part1_stride, &
                                        i-1,          &
@@ -685,18 +747,10 @@ subroutine PDM_part_to_part_reverse_iexch (ptp,              &
     end if
 
     length_data(i) = s_part1_data
+
   end do
 
-  if (t_stride .eq. PDM_STRIDE_VAR_INTERLACED) then
-    call PDM_pointer_array_create (part1_stride, &
-                                   n_part1,    &
-                                   PDM_TYPE_INT, &
-                                   c_part1_stride, &
-                                   length_stride, &
-                                   PDM_OWNERSHIP_KEEP)
-  endif
-
-  if (part1_data%type .eq. PDM_TYPE_CPTR) then
+  if (part2_data%type .eq. PDM_TYPE_CPTR) then
     call PDM_pointer_array_create (part1_data,      &
                                    n_part1,         &
                                    part2_data%type, &
