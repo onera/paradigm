@@ -641,7 +641,7 @@ subroutine PDM_part_to_block_exch_real4 (ptb,          &
   end if
 
   if (associated(part_stride)) then 
-    c_part_stride = c_loc(part_stide%cptr)    
+    c_part_stride = c_loc(part_stride%cptr)    
   endif
 
   s_block_data = PDM_part_to_block_exch_c (ptb,                     &
