@@ -84,7 +84,7 @@ module pdm_pointer_array
   interface PDM_pointer_array_part_length_update
     module procedure PDM_pointer_array_part_length_update_
   end interface PDM_pointer_array_part_length_update
-  
+
   private :: &
              PDM_pointer_array_create_type, &
              PDM_pointer_array_create_type_from_c_allocated_cptr, &
@@ -195,9 +195,9 @@ module pdm_pointer_array
   subroutine PDM_pointer_array_create_type_from_c_allocated_cptr (pa,       &
                                                                   n_part,   &
                                                                   type,     &
-                                                                  c_data,   & 
+                                                                  c_data,   &
                                                                   length,   &
-                                                                  ownership, & 
+                                                                  ownership, &
                                                                   s_data)
 
     use iso_c_binding
@@ -319,9 +319,6 @@ module pdm_pointer_array
           deallocate(pa%cptr)
         end if
 
-        if (associated(pa%length)) then
-          deallocate(pa%length)
-        end if
       else if (pa%sharec_c .eq. 1) then
         if (associated(pa%cptr)) then
           do i = 1, size(pa%cptr)
@@ -330,14 +327,14 @@ module pdm_pointer_array
           call pdm_fortran_free_c(c_loc(pa%cptr))
         end if
 
-        if (associated(pa%length)) then
-          deallocate(pa%length)
-        end if
       endif
 
-    endif  
-      
-    deallocate(pa)  
+    endif
+
+    if (associated(pa%length)) then
+      deallocate(pa%length)
+    end if
+    deallocate(pa)
     pa => null()
 
   end subroutine PDM_pointer_array_free
@@ -971,7 +968,7 @@ module pdm_pointer_array
       call c_f_pointer(pa%cptr(i_part+1),     &
                        pointer_f,             &
                        [pa%length(i_part+1)])
-    endif  
+    endif
 
   end subroutine PDM_pointer_array_part_get_real4
 

@@ -1059,7 +1059,7 @@ subroutine PDM_part_to_part_recv_buffer_to_ref_lnum2_get (ptp,                  
   use iso_c_binding
   implicit none
 
-  type(c_ptr), value                :: ptp
+  type(c_ptr), value                 :: ptp
   type(PDM_pointer_array_t), pointer :: recv_buffer_to_ref_lnum2
 
   integer                       :: i
@@ -1116,7 +1116,7 @@ subroutine PDM_part_to_part_recv_buffer_to_ref_lnum2_get (ptp,                  
                                  PDM_TYPE_INT,                     &
                                  c_recv_buffer_to_ref_lnum2,       &
                                  length_recv_buffer_to_ref_lnum2,  &
-                                 PDM_OWNERSHIP_KEEP)
+                                 PDM_OWNERSHIP_USER)
 
   deallocate( length_recv_buffer_to_ref_lnum2 )
 
