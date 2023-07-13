@@ -858,6 +858,9 @@ subroutine PDM_part_to_part_create_from_extension (ptp,                         
   type(c_ptr)                       :: c_selected_cell_to_send          = C_NULL_PTR
   type(c_ptr)                       :: c_selected_cell_to_send_ln_to_gn = C_NULL_PTR
   type(c_ptr)                       :: c_n_selected_cell_to_send        = C_NULL_PTR
+  integer, allocatable              :: length_selected_cell_to_send_idx(:)
+  integer, allocatable              :: length_selected_cell_to_send(:)
+  integer, allocatable              :: length_selected_cell_to_send_ln_to_gn(:)
 
   interface
     subroutine PDM_part_to_part_create_from_extension_c (ptp,                            &
@@ -908,33 +911,41 @@ subroutine PDM_part_to_part_create_from_extension (ptp,                         
                    n_selected_cell_to_send,    &
                    [n_part])
 
-  call c_f_pointer(c_selected_cell_to_send_idx,    &
-                   selected_cell_to_send_idx%cptr, &
-                   [n_part])
-
-  allocate(selected_cell_to_send_idx%length(n_part))
-  selected_cell_to_send_idx%type = PDM_TYPE_INT
-
-  call c_f_pointer(c_selected_cell_to_send,    &
-                   selected_cell_to_send%cptr, &
-                   [n_part])
-
-  allocate(selected_cell_to_send%length(n_part))
-  selected_cell_to_send%type = PDM_TYPE_INT
-
-  call c_f_pointer(c_selected_cell_to_send_ln_to_gn,    &
-                   selected_cell_to_send_ln_to_gn%cptr, &
-                   [n_part])
-
-  allocate(selected_cell_to_send_ln_to_gn%length(n_part))
-  selected_cell_to_send_ln_to_gn%type = PDM_TYPE_G_NUM
+  allocate( length_selected_cell_to_send_idx(n_part)      )
+  allocate( length_selected_cell_to_send(n_part)          )
+  allocate( length_selected_cell_to_send_ln_to_gn(n_part) )
 
   ! Compute lengths
   do i = 1, n_part
-    selected_cell_to_send_idx%length(i)      = n_selected_cell_to_send(i) + 1
-    selected_cell_to_send%length(i)          = n_selected_cell_to_send(i)
-    selected_cell_to_send_ln_to_gn%length(i) = n_selected_cell_to_send(i)
+    length_selected_cell_to_send_idx      = n_selected_cell_to_send(i) + 1
+    length_selected_cell_to_send          = n_selected_cell_to_send(i)
+    length_selected_cell_to_send_ln_to_gn = n_selected_cell_to_send(i)
   end do
+
+  call PDM_pointer_array_create (selected_cell_to_send_idx,         &
+                                 n_part,                            &
+                                 PDM_TYPE_INT,                      &
+                                 c_selected_cell_to_send_idx,       &
+                                 length_selected_cell_to_send_idx,  &
+                                 PDM_OWNERSHIP_KEEP)
+
+  call PDM_pointer_array_create (selected_cell_to_send,             &
+                                 n_part,                            &
+                                 PDM_TYPE_INT,                      &
+                                 c_selected_cell_to_send,           &
+                                 length_selected_cell_to_send,      &
+                                 PDM_OWNERSHIP_KEEP)
+
+  call PDM_pointer_array_create (selected_cell_to_send_ln_to_gn,         &
+                                 n_part,                                 &
+                                 PDM_TYPE_G_NUM,                         &
+                                 c_selected_cell_to_send_ln_to_gn,       &
+                                 length_selected_cell_to_send_ln_to_gn,  &
+                                 PDM_OWNERSHIP_KEEP)
+
+  deallocate( length_selected_cell_to_send_idx      )
+  deallocate( length_selected_cell_to_send          )
+  deallocate( length_selected_cell_to_send_ln_to_gn )
 
 end subroutine PDM_part_to_part_create_from_extension
 
