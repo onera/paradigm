@@ -842,13 +842,13 @@ subroutine PDM_part_to_part_create_from_extension (ptp,                         
 
   type(c_ptr)                       :: ptp
   integer, intent(in)               :: n_part
-  type(PDM_pointer_array_t), target :: int_cell_ln_to_gn
+  type(PDM_pointer_array_t), pointer :: int_cell_ln_to_gn
   integer(pdm_l_num_s), pointer     :: n_int_cell(:)
-  type(PDM_pointer_array_t), target :: ghost_cell_ln_to_gn
+  type(PDM_pointer_array_t), pointer :: ghost_cell_ln_to_gn
   integer(pdm_l_num_s), pointer     :: n_ghost_cell(:)
-  type(PDM_pointer_array_t), target :: selected_cell_to_send_idx
-  type(PDM_pointer_array_t), target :: selected_cell_to_send
-  type(PDM_pointer_array_t), target :: selected_cell_to_send_ln_to_gn
+  type(PDM_pointer_array_t), pointer :: selected_cell_to_send_idx
+  type(PDM_pointer_array_t), pointer :: selected_cell_to_send
+  type(PDM_pointer_array_t), pointer :: selected_cell_to_send_ln_to_gn
   integer(pdm_l_num_s), pointer     :: n_selected_cell_to_send(:)
   integer, intent(in)               :: comm
 

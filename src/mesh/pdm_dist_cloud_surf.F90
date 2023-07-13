@@ -486,8 +486,8 @@ module pdm_dist_cloud_surf
     type (c_ptr), value                  :: dcs
     integer, intent(in)                  :: i_point_cloud
     integer, intent(in)                  :: stride
-    type(PDM_pointer_array_t), target    :: surf_data
-    type(PDM_pointer_array_t), target    :: cloud_data
+    type(PDM_pointer_array_t), pointer   :: surf_data
+    type(PDM_pointer_array_t), pointer   :: cloud_data
 
     integer(c_int)                       :: c_i_point_cloud
     integer(c_int)                       :: c_i_part

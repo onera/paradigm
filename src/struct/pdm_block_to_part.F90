@@ -191,7 +191,7 @@ subroutine PDM_block_to_part_create (btp,               &
 
   type(c_ptr)                       :: btp
   integer(pdm_g_num_s), pointer     :: block_distrib_idx(:)
-  type(PDM_pointer_array_t), target :: gnum_elt
+  type(PDM_pointer_array_t), pointer :: gnum_elt
   integer(pdm_l_num_s), pointer     :: n_elt(:)
   integer, intent(in)               :: n_part
   integer, intent(in)               :: comm
