@@ -52,8 +52,8 @@ program testf
   integer(pdm_l_num_s), pointer         :: block_stride(:) => null()
   integer(pdm_l_num_s), pointer         :: block_data(:)   => null()
 
-  integer(pdm_l_num_s), pointer         :: stride(:) => null()
-  integer(pdm_l_num_s), pointer         :: data(:)   => null()
+  integer(pdm_l_num_s), pointer      :: stride(:)
+  integer(pdm_l_num_s), pointer      :: data(:)  
 
   integer                               :: code
   integer                               :: i_rank

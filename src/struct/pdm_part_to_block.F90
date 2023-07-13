@@ -409,7 +409,7 @@ subroutine PDM_part_to_block_exch_int (ptb,          &
   end if
 
   if (associated(part_stride)) then 
-    c_part_stride = c_loc(part_data%cptr)    
+    c_part_stride = c_loc(part_stride%cptr)    
   endif
 
   s_block_data = PDM_part_to_block_exch_c (ptb,                     &
@@ -467,7 +467,7 @@ subroutine PDM_part_to_block_exch_g_num (ptb,          &
   end if
 
   if (associated(part_stride)) then 
-    c_part_stride = c_loc(part_data%cptr)    
+    c_part_stride = c_loc(part_stride%cptr)    
   endif
 
   s_block_data = PDM_part_to_block_exch_c (ptb,                     &
@@ -525,7 +525,7 @@ subroutine PDM_part_to_block_exch_double (ptb,          &
   end if
 
   if (associated(part_stride)) then 
-    c_part_stride = c_loc(part_data%cptr)    
+    c_part_stride = c_loc(part_stride%cptr)    
   endif
 
   s_block_data = PDM_part_to_block_exch_c (ptb,                     &
@@ -583,7 +583,7 @@ subroutine PDM_part_to_block_exch_complex4 (ptb,          &
   end if
 
   if (associated(part_stride)) then 
-    c_part_stride = c_loc(part_data%cptr)    
+    c_part_stride = c_loc(part_stride%cptr)    
   endif
 
   s_block_data = PDM_part_to_block_exch_c (ptb,                     &
@@ -641,7 +641,7 @@ subroutine PDM_part_to_block_exch_real4 (ptb,          &
   end if
 
   if (associated(part_stride)) then 
-    c_part_stride = c_loc(part_data%cptr)    
+    c_part_stride = c_loc(part_stide%cptr)    
   endif
 
   s_block_data = PDM_part_to_block_exch_c (ptb,                     &
@@ -698,7 +698,7 @@ subroutine PDM_part_to_block_exch_complex8 (ptb,          &
   end if
 
   if (associated(part_stride)) then 
-    c_part_stride = c_loc(part_data%cptr)    
+    c_part_stride = c_loc(part_stride%cptr)    
   endif
 
   s_block_data = PDM_part_to_block_exch_c (ptb,                     &
@@ -757,7 +757,7 @@ subroutine PDM_part_to_block_exch_cptr (ptb,          &
   end if
 
   if (associated(part_stride)) then 
-    c_part_stride = c_loc(part_data%cptr)    
+    c_part_stride = c_loc(part_stride%cptr)    
   endif
 
   s_block_data = PDM_part_to_block_exch_c (ptb,                     &
