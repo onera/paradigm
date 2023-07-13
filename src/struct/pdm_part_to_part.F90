@@ -429,8 +429,8 @@ subroutine PDM_part_to_part_iexch (ptp,              &
   integer                           :: s_part2_data
   integer                           :: i, j
 
-  integer, allocatable              :: length_data(:) 
-  integer, allocatable              :: length_stride(:) 
+  integer, allocatable              :: length_data(:)
+  integer, allocatable              :: length_stride(:)
   integer(c_int)                    :: c_s_data
 
   interface
@@ -639,8 +639,8 @@ subroutine PDM_part_to_part_reverse_iexch (ptp,              &
   integer                           :: s_part1_data
   integer                           :: i, j
 
-  integer, allocatable              :: length_data(:) 
-  integer, allocatable              :: length_stride(:) 
+  integer, allocatable              :: length_data(:)
+  integer, allocatable              :: length_stride(:)
   integer(c_int)                    :: c_s_data
 
   type(c_ptr)                       :: c_part2_stride   = C_NULL_PTR
@@ -982,9 +982,9 @@ subroutine PDM_part_to_part_gnum1_to_send_buffer_get (ptp,                      
   type(c_ptr)                   :: c_gnum1_to_send_buffer_idx = C_NULL_PTR
   type(c_ptr)                   :: c_gnum1_to_send_buffer     = C_NULL_PTR
 
-  integer, allocatable          :: length_gnum1_to_send_buffer(:) 
+  integer, allocatable          :: length_gnum1_to_send_buffer(:)
   integer, allocatable          :: length_gnum1_to_send_buffer_idx(:)
-   
+
   interface
     subroutine PDM_part_to_part_gnum1_to_send_buffer_get_c (ptp,                      &
                                                             gnum1_to_send_buffer_idx, &
@@ -1030,7 +1030,7 @@ subroutine PDM_part_to_part_gnum1_to_send_buffer_get (ptp,                      
                                  c_gnum1_to_send_buffer_idx, &
                                  length_gnum1_to_send_buffer_idx, &
                                  PDM_OWNERSHIP_USER)
- 
+
   call PDM_pointer_array_create (gnum1_to_send_buffer, &
                                  n_part1,    &
                                  PDM_TYPE_INT, &
@@ -1039,7 +1039,7 @@ subroutine PDM_part_to_part_gnum1_to_send_buffer_get (ptp,                      
                                  PDM_OWNERSHIP_USER)
 
   deallocate (length_gnum1_to_send_buffer_idx)
-  deallocate (length_gnum1_to_send_buffer) 
+  deallocate (length_gnum1_to_send_buffer)
 
 end subroutine PDM_part_to_part_gnum1_to_send_buffer_get
 
@@ -1071,6 +1071,7 @@ subroutine PDM_part_to_part_recv_buffer_to_ref_lnum2_get (ptp,                  
   integer(pdm_g_num_s), pointer :: gnum1_come_from(:)     => null()
 
   type(c_ptr)                   :: c_recv_buffer_to_ref_lnum2 = C_NULL_PTR
+  integer, allocatable          :: length_recv_buffer_to_ref_lnum2(:)
 
   interface
     subroutine PDM_part_to_part_recv_buffer_to_ref_lnum2_get_c (ptp,                      &
@@ -1092,12 +1093,7 @@ subroutine PDM_part_to_part_recv_buffer_to_ref_lnum2_get (ptp,                  
                                     n_part1, &
                                     n_part2)
 
-  call c_f_pointer(c_recv_buffer_to_ref_lnum2,    &
-                   recv_buffer_to_ref_lnum2%cptr, &
-                   [n_part2])
-
-  allocate(recv_buffer_to_ref_lnum2%length(n_part2))
-  recv_buffer_to_ref_lnum2%type = PDM_TYPE_INT
+  allocate(length_recv_buffer_to_ref_lnum2(n_part2))
 
   do i = 1, n_part2
 
@@ -1111,9 +1107,18 @@ subroutine PDM_part_to_part_recv_buffer_to_ref_lnum2_get (ptp,                  
                                                gnum1_come_from_idx, &
                                                gnum1_come_from)
 
-    recv_buffer_to_ref_lnum2%length(i) = gnum1_come_from_idx(n_ref+1)
+    length_recv_buffer_to_ref_lnum2(i) = gnum1_come_from_idx(n_ref+1)
 
   end do
+
+  call PDM_pointer_array_create (recv_buffer_to_ref_lnum2,         &
+                                 n_part2,                          &
+                                 PDM_TYPE_INT,                     &
+                                 c_recv_buffer_to_ref_lnum2,       &
+                                 length_recv_buffer_to_ref_lnum2,  &
+                                 PDM_OWNERSHIP_KEEP)
+
+  deallocate( length_recv_buffer_to_ref_lnum2 )
 
 end subroutine PDM_part_to_part_recv_buffer_to_ref_lnum2_get
 
