@@ -496,6 +496,7 @@ module pdm_dist_cloud_surf
     integer                              :: n_points
     integer                              :: n_part
     integer                              :: i_part
+    integer, allocatable                 :: length_data(:)
 
     interface
 
@@ -524,12 +525,7 @@ module pdm_dist_cloud_surf
                                              c_loc(surf_data%cptr),  &
                                              c_cloud_data)
 
-    call c_f_pointer(c_cloud_data, &
-                     cloud_data%cptr,   &
-                     [n_part])
-
-    allocate( cloud_data%length(n_part) )
-    cloud_data%type = PDM_TYPE_DOUBLE
+    allocate( length_data(n_part) )
 
     do i_part = 1, n_part
 
@@ -539,9 +535,19 @@ module pdm_dist_cloud_surf
                                               c_i_point_cloud, &
                                               c_i_part,        &
                                               n_points)
-      cloud_data%length(i_part) = n_points*stride
+      length_data(i_part) = n_points*stride
 
     end do
+
+    call PDM_pointer_array_create (cloud_data,         &
+                                   n_part,             &
+                                   surf_data%type,     &
+                                   c_cloud_data,       &
+                                   length_data,        &
+                                   PDM_OWNERSHIP_KEEP, &
+                                   surf_data%s_data)
+
+    deallocate( length_data )
 
   end subroutine pdm_dist_cloud_surf_distri_data_
 
