@@ -4705,6 +4705,11 @@ PDM_extract_part_free
    */
   PDM_extract_part_partial_free(extrp);
 
+  free(extrp->is_owner_connectivity   );
+  free(extrp->is_owner_ln_to_gn       );
+  free(extrp->is_owner_parent_ln_to_gn);
+  free(extrp->is_owner_parent_lnum);
+
   free(extrp);
 }
 
@@ -4846,11 +4851,6 @@ PDM_extract_part_partial_free
 
     }
   }
-
-  free(extrp->is_owner_connectivity   );
-  free(extrp->is_owner_ln_to_gn       );
-  free(extrp->is_owner_parent_ln_to_gn);
-  free(extrp->is_owner_parent_lnum);
 
   if(extrp->is_owner_extract_pmne == PDM_TRUE && extrp->extract_pmne != NULL) {
     PDM_part_mesh_nodal_elmts_free(extrp->extract_pmne);
