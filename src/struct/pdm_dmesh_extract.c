@@ -626,21 +626,30 @@ _dmesh_extract_nodal
 
   /* Equilibrate */
   PDM_dmesh_nodal_elmts_t *dmn_elts = NULL;
+  PDM_mesh_entities_t extracted_entity;
   if(dme->dim == 3) {
     dmn_elts = dme->dmesh_nodal->volumic;
+    extracted_entity = PDM_MESH_ENTITY_CELL;
   } else if(dme->dim == 2) {
     dmn_elts = dme->dmesh_nodal->surfacic;
+    extracted_entity = PDM_MESH_ENTITY_FACE;
   } else if(dme->dim == 1) {
     dmn_elts = dme->dmesh_nodal->ridge;
+    extracted_entity = PDM_MESH_ENTITY_EDGE;
   } else {
     dmn_elts = dme->dmesh_nodal->corner;
+    extracted_entity = PDM_MESH_ENTITY_VERTEX;
   }
 
+  // For nodal meshes, parent_extract_gnum is filled for vertices *and* for the selected dim to extract :
+  // parent gnum is ordered following *output* sections ordering in the extracted dmesh nodal
   PDM_dmesh_nodal_elmts_t* dmn_elts_extract = PDM_dmesh_nodal_elmts_to_extract_dmesh_nodal_elmts(dmn_elts,
                                                                                                  dme->n_selected,
                                                                                                  dme->selected_gnum,
                                                                                                  &dme->distrib_extract    [PDM_MESH_ENTITY_VERTEX],
-                                                                                                 &dme->parent_extract_gnum[PDM_MESH_ENTITY_VERTEX]);
+                                                                                                 &dme->parent_extract_gnum[PDM_MESH_ENTITY_VERTEX],
+                                                                                                 &dme->distrib_extract    [extracted_entity],
+                                                                                                 &dme->parent_extract_gnum[extracted_entity]);
   int dn_vtx  = dme->distrib_extract[PDM_MESH_ENTITY_VERTEX][i_rank+1] - dme->distrib_extract[PDM_MESH_ENTITY_VERTEX][i_rank];
 
   const PDM_g_num_t *distrib_vtx = PDM_DMesh_nodal_distrib_vtx_get(dme->dmesh_nodal);
