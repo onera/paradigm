@@ -2937,14 +2937,16 @@ PDM_point_location_nodal
 
               } // End of loop on current elt's points
 
-
+              /* /!\ uvw is stride-3, even for lower-dimensional elements */
               int idx_pt0 = pts_idx[ipart][icell];
-              PDM_ho_basis(t_elt,
-                           order,
-                           n_node,
-                           pts_idx[ipart][icell+1] - idx_pt0,
-                           (const double *) _uvw + idx_pt0 * 3,
-                           _bar_coord + _bar_coord_idx[idx_pt0]);
+              for (int i = idx_pt0; i < pts_idx[ipart][icell+1]; i++) {
+                PDM_ho_basis(t_elt,
+                             order,
+                             n_node,
+                             1,
+                             (const double *) _uvw + i * 3,
+                             _bar_coord + _bar_coord_idx[i]);
+              }
 
             } // End of loop on elt
             // log_trace("%d converged / %d\n", count_converged, count);
