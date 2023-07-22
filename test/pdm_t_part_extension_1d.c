@@ -17,7 +17,7 @@
 #include "pdm_printf.h"
 #include "pdm_error.h"
 #include "pdm_gnum.h"
-#include "pdm_point_cloud_gen.h"
+#include "pdm_dcube_nodal_gen.h"
 #include "pdm_octree.h"
 #include "pdm_logging.h"
 #include "pdm_distrib.h"
@@ -78,7 +78,9 @@ _read_args
 (
  int            argc,
  char         **argv,
- PDM_g_num_t   *n_g_pts
+ PDM_g_num_t   *n_g_pts,
+ int           *n_dom_i,
+ int           *periodic_i
 )
 {
   int i = 1;
@@ -100,6 +102,17 @@ _read_args
         *n_g_pts = (PDM_g_num_t) _n_g_pts;
       }
     }
+    else if (strcmp(argv[i], "-ni") == 0) {
+      i++;
+      if (i >= argc)
+        _usage(EXIT_FAILURE);
+      else {
+        *n_dom_i = atoi(argv[i]);
+      }
+    }
+    else if (strcmp(argv[i], "-pi") == 0) {
+      *periodic_i = 1;
+    }
     else {
       _usage(EXIT_FAILURE);
     }
@@ -107,71 +120,6 @@ _read_args
   }
 }
 
-static
-void
-_generate_lines
-(
-  PDM_MPI_Comm  comm,
-  double        zero_x,
-  double        zero_y,
-  double        zero_z,
-  double        length,
-  PDM_g_num_t   n_g_pts,
-  PDM_g_num_t **distrib_edge_out,
-  PDM_g_num_t **distrib_vtx_out,
-  PDM_g_num_t **dedge_vtx_out,
-  double      **dvtx_coord_out
-)
-{
-  int i_rank;
-  int n_rank;
-  PDM_MPI_Comm_rank(comm, &i_rank);
-  PDM_MPI_Comm_size(comm, &n_rank);
-
-  PDM_g_num_t gn_vtx  = (n_g_pts    );
-  PDM_g_num_t gn_edge = (n_g_pts - 1);
-
-  int dcube_nx = n_g_pts - 1;
-
-  PDM_g_num_t* distrib_edge = PDM_compute_uniform_entity_distribution(comm, gn_edge);
-  PDM_g_num_t* distrib_vtx  = PDM_compute_uniform_entity_distribution(comm, gn_vtx);
-
-  int dn_vtx  = (int) (distrib_vtx [i_rank+1] - distrib_vtx [i_rank]);
-  int dn_edge = (int) (distrib_edge[i_rank+1] - distrib_edge[i_rank]);
-
-  double *dvtx_coord = malloc(sizeof(double) * dn_vtx * 3);
-
-  double step_x = length / (double) (n_g_pts - 1);
-
-  for (int i_vtx = 0; i_vtx < dn_vtx; ++i_vtx) {
-
-    PDM_g_num_t g_vtx = distrib_vtx[i_rank] + i_vtx;
-
-    PDM_g_num_t indi = g_vtx % n_g_pts;
-
-    dvtx_coord[3 * i_vtx    ] = indi * step_x + zero_x;
-    dvtx_coord[3 * i_vtx + 1] = zero_y;
-    dvtx_coord[3 * i_vtx + 2] = zero_z;
-  }
-
-
-  PDM_g_num_t *dedge_vtx     = malloc( 2 * dn_edge * sizeof(PDM_g_num_t));
-
-  for (int i_edge = 0; i_edge < dn_edge; ++i_edge) {
-
-    PDM_g_num_t g = distrib_edge[i_rank] + i_edge;
-
-    PDM_g_num_t indi = g % dcube_nx;
-
-    dedge_vtx[2*i_edge  ] = 1 + (indi  );
-    dedge_vtx[2*i_edge+1] = 1 + (indi+1);
-  }
-
-  *dvtx_coord_out   = dvtx_coord;
-  *dedge_vtx_out    = dedge_vtx;
-  *distrib_edge_out = distrib_edge;
-  *distrib_vtx_out  = distrib_vtx;
-}
 
 
 
@@ -204,56 +152,76 @@ char *argv[]
   PDM_MPI_Comm_size (PDM_MPI_COMM_WORLD, &n_rank);
 
   PDM_g_num_t n_g_pts   = 10;
+  int         n_dom_i    = 1;
+  int         periodic_i = 0;
   _read_args(argc,
              argv,
-             &n_g_pts);
+             &n_g_pts,
+             &n_dom_i,
+             &periodic_i);
 
-  double      *dvtx_coord   = NULL;
-  PDM_g_num_t *distrib_edge = NULL;
-  PDM_g_num_t *distrib_vtx  = NULL;
-  PDM_g_num_t *dedge_vtx    = NULL;
-  _generate_lines(comm,
-                  0.,
-                  0.,
-                  0.,
-                  1.,
-                  n_g_pts,
-                  &distrib_edge,
-                  &distrib_vtx,
-                  &dedge_vtx,
-                  &dvtx_coord);
+  double      **dvtx_coord   = NULL;
+  PDM_g_num_t **distrib_edge = NULL;
+  PDM_g_num_t **distrib_vtx  = NULL;
+  PDM_g_num_t **dedge_vtx    = NULL;
 
-  int dn_edge = distrib_edge[i_rank+1] - distrib_edge[i_rank];
-  int dn_vtx  = distrib_vtx [i_rank+1] - distrib_vtx [i_rank];
+  PDM_domain_interface_t *dom_itrf = NULL;
+  PDM_generate_cart_topo_lines(comm,
+                               n_dom_i,
+                               periodic_i,
+                               0.,
+                               0.,
+                               0.,
+                               1.,
+                               n_g_pts,
+                               &distrib_edge,
+                               &distrib_vtx,
+                               &dedge_vtx,
+                               &dvtx_coord,
+                               &dom_itrf);
 
-  /*
-   * Create dmesh
-   */
-  PDM_dmesh_t* dm = PDM_dmesh_create(PDM_OWNERSHIP_KEEP,
-                                     0,
-                                     0,
-                                     dn_edge,
-                                     dn_vtx,
-                                     comm);
+  PDM_domain_interface_free(dom_itrf);
 
-  PDM_dmesh_connectivity_set(dm,
-                             PDM_CONNECTIVITY_TYPE_EDGE_VTX,
-                             dedge_vtx,
-                             NULL,
-                             PDM_OWNERSHIP_USER);
+  PDM_dmesh_t **dm = malloc(n_dom_i * sizeof(PDM_dmesh_t *));
 
-  PDM_dmesh_vtx_coord_set(dm,
-                          dvtx_coord,
-                          PDM_OWNERSHIP_USER);
+  for(int i_dom = 0; i_dom < n_dom_i; ++i_dom) {
+
+    int dn_edge = distrib_edge[i_dom][i_rank+1] - distrib_edge[i_dom][i_rank];
+    int dn_vtx  = distrib_vtx [i_dom][i_rank+1] - distrib_vtx [i_dom][i_rank];
+
+    /*
+     * Create dmesh
+     */
+    dm[i_dom] = PDM_dmesh_create(PDM_OWNERSHIP_KEEP,
+                                 0,
+                                 0,
+                                 dn_edge,
+                                 dn_vtx,
+                                 comm);
+
+    PDM_dmesh_connectivity_set(dm[i_dom],
+                               PDM_CONNECTIVITY_TYPE_EDGE_VTX,
+                               dedge_vtx[i_dom],
+                               NULL,
+                               PDM_OWNERSHIP_USER);
+
+    PDM_dmesh_vtx_coord_set(dm[i_dom],
+                            dvtx_coord[i_dom],
+                            PDM_OWNERSHIP_USER);
+  }
+
 
   /*
    * Mulitpart
    */
   PDM_split_dual_t part_method = PDM_SPLIT_DUAL_WITH_HILBERT;
   // PDM_split_dual_t part_method = PDM_SPLIT_DUAL_WITH_PARMETIS;
-  int n_part = 1;
-  PDM_multipart_t* mpart = PDM_multipart_create(1,
-                                                &n_part,
+  int* n_part = malloc(n_dom_i * sizeof(int));
+  for(int i_dom = 0; i_dom < n_dom_i; ++i_dom) {
+    n_part[i_dom] = 1;
+  }
+  PDM_multipart_t* mpart = PDM_multipart_create(n_dom_i,
+                                                n_part,
                                                 PDM_FALSE,
                                                 part_method,
                                                 PDM_PART_SIZE_HOMOGENEOUS,
@@ -261,70 +229,83 @@ char *argv[]
                                                 comm,
                                                 PDM_OWNERSHIP_KEEP);
 
-  PDM_multipart_register_block(mpart, 0, dm);
+  for(int i_dom = 0; i_dom < n_dom_i; ++i_dom) {
+    PDM_multipart_register_block(mpart, i_dom, dm[i_dom]);
+  }
 
   PDM_multipart_run_ppart(mpart);
 
   if(0 == 1) {
-    for(int i_part = 0; i_part < n_part; ++i_part) {
+    for(int i_dom = 0; i_dom < n_dom_i; ++i_dom) {
+      for(int i_part = 0; i_part < n_part[i_dom]; ++i_part) {
 
-      PDM_g_num_t* pvtx_ln_to_gn = NULL;
-      PDM_multipart_part_ln_to_gn_get(mpart,
-                                      0,
-                                      i_part,
-                                      PDM_MESH_ENTITY_VERTEX,
-                                      &pvtx_ln_to_gn,
-                                      PDM_OWNERSHIP_KEEP);
+        PDM_g_num_t* pvtx_ln_to_gn = NULL;
+        PDM_multipart_part_ln_to_gn_get(mpart,
+                                        i_dom,
+                                        i_part,
+                                        PDM_MESH_ENTITY_VERTEX,
+                                        &pvtx_ln_to_gn,
+                                        PDM_OWNERSHIP_KEEP);
 
-      PDM_g_num_t* pedge_ln_to_gn = NULL;
-      int pn_edge = PDM_multipart_part_ln_to_gn_get(mpart,
-                                                    0,
-                                                    i_part,
-                                                    PDM_MESH_ENTITY_EDGE,
-                                                    &pedge_ln_to_gn,
-                                                    PDM_OWNERSHIP_KEEP);
+        PDM_g_num_t* pedge_ln_to_gn = NULL;
+        int pn_edge = PDM_multipart_part_ln_to_gn_get(mpart,
+                                                      i_dom,
+                                                      i_part,
+                                                      PDM_MESH_ENTITY_EDGE,
+                                                      &pedge_ln_to_gn,
+                                                      PDM_OWNERSHIP_KEEP);
 
-      int *pedge_vtx     = NULL;
-      int *pedge_vtx_idx = NULL;
-      PDM_multipart_part_connectivity_get(mpart,
-                                          0,
-                                          i_part,
-                                          PDM_CONNECTIVITY_TYPE_EDGE_VTX,
-                                          &pedge_vtx,
-                                          &pedge_vtx_idx,
-                                          PDM_OWNERSHIP_KEEP);
+        int *pedge_vtx     = NULL;
+        int *pedge_vtx_idx = NULL;
+        PDM_multipart_part_connectivity_get(mpart,
+                                            i_dom,
+                                            i_part,
+                                            PDM_CONNECTIVITY_TYPE_EDGE_VTX,
+                                            &pedge_vtx,
+                                            &pedge_vtx_idx,
+                                            PDM_OWNERSHIP_KEEP);
 
-      double *pvtx_coord = NULL;
-      int n_vtx = PDM_multipart_part_vtx_coord_get(mpart,
-                                                   0,
-                                                   i_part,
-                                                   &pvtx_coord,
-                                                   PDM_OWNERSHIP_KEEP);
-      char filename[999];
-      sprintf(filename, "out_part_vtx_%i.vtk", i_rank);
-      PDM_vtk_write_std_elements (filename,
-                                  n_vtx,
-                                  pvtx_coord,
-                                  pvtx_ln_to_gn,
-                                  PDM_MESH_NODAL_BAR2,
-                                  pn_edge,
-                                  pedge_vtx,
-                                  pedge_ln_to_gn,
-                                  0,
-                                  NULL,
-                                  NULL);
+        double *pvtx_coord = NULL;
+        int n_vtx = PDM_multipart_part_vtx_coord_get(mpart,
+                                                     i_dom,
+                                                     i_part,
+                                                     &pvtx_coord,
+                                                     PDM_OWNERSHIP_KEEP);
+        char filename[999];
+        sprintf(filename, "out_part_vtx_i_dom=%i_%i.vtk", i_dom, i_rank);
+        PDM_vtk_write_std_elements (filename,
+                                    n_vtx,
+                                    pvtx_coord,
+                                    pvtx_ln_to_gn,
+                                    PDM_MESH_NODAL_BAR2,
+                                    pn_edge,
+                                    pedge_vtx,
+                                    pedge_ln_to_gn,
+                                    0,
+                                    NULL,
+                                    NULL);
 
+      }
     }
   }
 
 
   PDM_multipart_free(mpart);
-  PDM_dmesh_free(dm);
+  free(n_part);
 
+  for(int i_dom = 0; i_dom < n_dom_i; ++i_dom) {
+
+    free (dvtx_coord  [i_dom]);
+    free (distrib_vtx [i_dom]);
+    free (distrib_edge[i_dom]);
+    free (dedge_vtx   [i_dom]);
+    PDM_dmesh_free(dm[i_dom]);
+  }
   free (dvtx_coord);
   free (distrib_vtx);
   free (distrib_edge);
   free (dedge_vtx);
+  free (dm);
 
   if (i_rank == 0) {
     PDM_printf ("-- End\n");
