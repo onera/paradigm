@@ -80,7 +80,8 @@ _read_args
  char         **argv,
  PDM_g_num_t   *n_g_pts,
  int           *n_dom_i,
- int           *periodic_i
+ int           *periodic_i,
+ int           *n_depth
 )
 {
   int i = 1;
@@ -110,6 +111,14 @@ _read_args
         *n_dom_i = atoi(argv[i]);
       }
     }
+    else if (strcmp(argv[i], "-depth") == 0) {
+      i++;
+      if (i >= argc)
+        _usage(EXIT_FAILURE);
+      else {
+        *n_depth = atoi(argv[i]);
+      }
+    }
     else if (strcmp(argv[i], "-pi") == 0) {
       *periodic_i = 1;
     }
@@ -120,6 +129,53 @@ _read_args
   }
 }
 
+static
+void
+_part_extension
+(
+  int                          n_depth,
+  int                          n_domain,
+  int*                         n_part,
+  PDM_MPI_Comm                 comm,
+  PDM_multipart_t             *mpart,
+  PDM_part_domain_interface_t *pdi
+)
+{
+  PDM_UNUSED(n_depth);
+  PDM_UNUSED(mpart);
+
+  int i_rank;
+  int n_rank;
+  PDM_MPI_Comm_rank(comm, &i_rank);
+  PDM_MPI_Comm_size(comm, &n_rank);
+
+  int* n_part_g = malloc(n_domain * sizeof(int));
+  PDM_MPI_Allreduce(n_part, n_part_g, n_domain, PDM_MPI_INT, PDM_MPI_SUM, comm);
+
+
+
+  for(int i_dom = 0; i_dom < n_domain; ++i_dom) {
+    for(int i_part = 0; i_part < n_part[i_dom]; ++i_part) {
+      int *ppart_vtx_proc_idx = NULL;
+      int *ppart_vtx_part_idx = NULL;
+      int *ppart_vtx          = NULL; // (i_vtx, i_proc, i_part, i_vtx_opp)
+      PDM_multipart_part_graph_comm_get(mpart,
+                                        i_dom,
+                                        i_part,
+                                        PDM_BOUND_TYPE_VTX,
+                                        &ppart_vtx_proc_idx,
+                                        &ppart_vtx_part_idx,
+                                        &ppart_vtx,
+                                        PDM_OWNERSHIP_KEEP);
+
+      PDM_log_trace_array_int(ppart_vtx, 4 * ppart_vtx_part_idx[n_part_g[i_dom]], "ppart_vtx");
+
+    }
+  }
+
+  free(n_part_g);
+
+}
 
 
 
@@ -154,11 +210,13 @@ char *argv[]
   PDM_g_num_t n_g_pts   = 10;
   int         n_dom_i    = 1;
   int         periodic_i = 0;
+  int         n_depth    = 1;
   _read_args(argc,
              argv,
              &n_g_pts,
              &n_dom_i,
-             &periodic_i);
+             &periodic_i,
+             &n_depth);
 
   double      **dvtx_coord   = NULL;
   PDM_g_num_t **distrib_edge = NULL;
@@ -179,8 +237,6 @@ char *argv[]
                                &dedge_vtx,
                                &dvtx_coord,
                                &dom_itrf);
-
-  PDM_domain_interface_free(dom_itrf);
 
   PDM_dmesh_t **dm = malloc(n_dom_i * sizeof(PDM_dmesh_t *));
 
@@ -235,16 +291,40 @@ char *argv[]
 
   PDM_multipart_run_ppart(mpart);
 
+  int n_domain = n_dom_i;
+
+  int          **pn_vtx         = (int          **) malloc( n_domain * sizeof(int          *));
+  PDM_g_num_t ***pvtx_ln_to_gn  = (PDM_g_num_t ***) malloc( n_domain * sizeof(PDM_g_num_t **));
+
+  for(int i_dom = 0; i_dom < n_domain; ++i_dom) {
+
+    pn_vtx       [i_dom]  = (int          *) malloc( n_part[i_dom] * sizeof(int          ));
+    pvtx_ln_to_gn[i_dom]  = (PDM_g_num_t **) malloc( n_part[i_dom] * sizeof(PDM_g_num_t *));
+
+    for(int i_part = 0; i_part < n_part[i_dom]; ++i_part) {
+
+      pn_vtx[i_dom][i_part] = PDM_multipart_part_ln_to_gn_get(mpart,
+                                                              i_dom,
+                                                              i_part,
+                                                              PDM_MESH_ENTITY_VERTEX,
+                                                              &pvtx_ln_to_gn[i_dom][i_part],
+                                                              PDM_OWNERSHIP_KEEP);
+
+
+
+    }
+  }
+
   if(0 == 1) {
     for(int i_dom = 0; i_dom < n_dom_i; ++i_dom) {
       for(int i_part = 0; i_part < n_part[i_dom]; ++i_part) {
 
-        PDM_g_num_t* pvtx_ln_to_gn = NULL;
+        PDM_g_num_t* lpvtx_ln_to_gn = NULL;
         PDM_multipart_part_ln_to_gn_get(mpart,
                                         i_dom,
                                         i_part,
                                         PDM_MESH_ENTITY_VERTEX,
-                                        &pvtx_ln_to_gn,
+                                        &lpvtx_ln_to_gn,
                                         PDM_OWNERSHIP_KEEP);
 
         PDM_g_num_t* pedge_ln_to_gn = NULL;
@@ -276,7 +356,7 @@ char *argv[]
         PDM_vtk_write_std_elements (filename,
                                     n_vtx,
                                     pvtx_coord,
-                                    pvtx_ln_to_gn,
+                                    lpvtx_ln_to_gn,
                                     PDM_MESH_NODAL_BAR2,
                                     pn_edge,
                                     pedge_vtx,
@@ -288,6 +368,43 @@ char *argv[]
       }
     }
   }
+
+  PDM_part_domain_interface_t* pdi = PDM_domain_interface_to_part_domain_interface(dom_itrf,
+                                                                                   n_part,
+                                                                                   NULL,
+                                                                                   NULL,
+                                                                                   pn_vtx,
+                                                                                   NULL,
+                                                                                   NULL,
+                                                                                   pvtx_ln_to_gn);
+
+  PDM_part_domain_interface_free(pdi);
+  PDM_domain_interface_free(dom_itrf);
+
+
+  /*
+   * Extention de partition
+   */
+
+  /*
+   *  - Step 1 : n_dom = 1, n_proc = 2 + rank1
+   *  - Step 2 : n_dom = 1, n_proc = 2 + rank2
+   *  - Step 3 : n_dom = 1, n_proc = 1 + rank1 + perio
+   *  - Step 4 : n_dom = 1, n_proc = 1 + rank2 + perio
+   *  - Step 5 : n_dom = 1, n_proc = 1 + rank1 + perio mais qui se recouvre plusieurs fois (genre 2 cellules)
+   *  - Step 6 : n_dom = 2, n_proc = 1 + rank1
+   *  - Step 7 : n_dom = 2, n_proc = 2 + rank1
+   *  - Step 8 : n_dom = 2, n_proc = 2 + rank1 + perio
+   *  - Step 9 : n_dom = 2, n_proc = 2 + rank1 + perio mais qui se recouvre plusieurs fois (genre 2 cellules)
+   *
+   */
+  _part_extension(n_depth,
+                  n_dom_i,
+                  n_part,
+                  comm,
+                  mpart,
+                  pdi);
+
 
 
   PDM_multipart_free(mpart);
@@ -311,6 +428,14 @@ char *argv[]
     PDM_printf ("-- End\n");
     fflush(stdout);
   }
+
+  for(int i_dom = 0; i_dom < n_domain; ++i_dom) {
+    free(pn_vtx       [i_dom]);
+    free(pvtx_ln_to_gn[i_dom]);
+  }
+  free(pn_vtx);
+  free(pvtx_ln_to_gn);
+
 
   PDM_MPI_Barrier (PDM_MPI_COMM_WORLD);
 
