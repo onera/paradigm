@@ -28,6 +28,9 @@
 #include "pdm_extract_part.h"
 #include "pdm_partitioning_algorithm.h"
 #include "pdm_part_connectivity_transform.h"
+#include "pdm_sort.h"
+#include "pdm_binary_search.h"
+#include "pdm_unique.h"
 
 /*============================================================================
  * Macro definitions
@@ -460,6 +463,7 @@ _part_extension
     }
   }
 
+  // PDM_log_trace_array_int(pflat_n_edge, ln_part_tot, "pflat_n_edge");
 
   PDM_part_to_part_free(ptp_vtx_edge);
 
@@ -505,7 +509,9 @@ _part_extension
 
   PDM_extract_part_compute(extrp);
 
-  /* Get */
+  /*
+   * Unified all points
+   */
   for(int i_part = 0; i_part < ln_part_tot; ++i_part) {
 
     int pn_extract_vtx = PDM_extract_part_n_entity_get(extrp,
@@ -545,12 +551,106 @@ _part_extension
       PDM_log_trace_array_long(pextract_edge_parent_ln_to_gn[i_part], pn_extract_edge, "pextract_edge_parent_ln_to_gn ::");
     }
 
+    /* Check edge */
+    PDM_g_num_t* sorted_edge_ln_to_gn = malloc( pflat_n_edge[i_part] * sizeof(PDM_g_num_t));
+    PDM_g_num_t* sorted_vtx_ln_to_gn  = malloc( pflat_n_vtx [i_part] * sizeof(PDM_g_num_t));
+    for(int i_edge = 0; i_edge < pflat_n_edge[i_part]; ++i_edge) {
+      sorted_edge_ln_to_gn[i_edge] = pflat_edge_ln_to_gn[i_part][i_edge];
+    }
+    PDM_sort_long(sorted_edge_ln_to_gn, NULL, pflat_n_edge[i_part]);
+
+    int* vtx_order = malloc( pflat_n_vtx [i_part] * sizeof(int));
+    for(int i_vtx = 0; i_vtx < pflat_n_vtx[i_part]; ++i_vtx) {
+      sorted_vtx_ln_to_gn[i_vtx] = pflat_vtx_ln_to_gn[i_part][i_vtx];
+      vtx_order          [i_vtx] = i_vtx;
+    }
+    PDM_sort_long(sorted_vtx_ln_to_gn, vtx_order, pflat_n_vtx[i_part]);
+
+    // Cascade
+    int pn_extract_edge_keep     = 0;
+    int* pn_extract_edge_vtx_keep_idx = malloc((pn_extract_edge + 1) * sizeof(int));
+    int* to_keep                      = malloc((pn_extract_edge + 1) * sizeof(int));
+    pn_extract_edge_vtx_keep_idx[0] = 0;
+    for(int i_edge = 0; i_edge < pn_extract_edge; ++i_edge) {
+      int pos = PDM_binary_search_long(pextract_edge_parent_ln_to_gn[i_part][i_edge], sorted_edge_ln_to_gn, pflat_n_edge[i_part]);
+      to_keep[i_edge] = 0;
+      if(pos == -1) {
+        to_keep[i_edge] = 1;
+        pn_extract_edge_vtx_keep_idx[pn_extract_edge_keep+1] = pn_extract_edge_vtx_keep_idx[pn_extract_edge_keep];
+        pn_extract_edge_vtx_keep_idx[pn_extract_edge_keep+1] += 2;
+        pn_extract_edge_keep++;
+      }
+    }
+
+    PDM_g_num_t *pn_extract_edge_vtx_gnum_keep = malloc(pn_extract_edge_vtx_keep_idx[pn_extract_edge_keep] * sizeof(PDM_g_num_t));
+
+    pn_extract_edge_keep = 0;
+    for(int i_edge = 0; i_edge < pn_extract_edge; ++i_edge) {
+      if(to_keep[i_edge] == 1) {
+        // Copy
+        int idx_write = pn_extract_edge_vtx_keep_idx[pn_extract_edge_keep];
+        int i_vtx1 = PDM_ABS (pextract_edge_vtx[2*i_edge  ]);
+        int i_vtx2 = PDM_ABS (pextract_edge_vtx[2*i_edge+1]);
+        int sgn1   = PDM_SIGN(pextract_edge_vtx[2*i_edge  ]);
+        int sgn2   = PDM_SIGN(pextract_edge_vtx[2*i_edge+1]);
+        pn_extract_edge_vtx_gnum_keep[2*idx_write  ] = sgn1 * pextract_vtx_ln_to_gn[i_vtx1-1];
+        pn_extract_edge_vtx_gnum_keep[2*idx_write+1] = sgn2 * pextract_vtx_ln_to_gn[i_vtx2-1];
+
+        pn_extract_edge_keep++;
+      }
+    }
+
+    // PDM_log_trace_array_long(pn_extract_edge_vtx_gnum_keep , 2 * pn_extract_edge , "pn_extract_edge_vtx_gnum_keep  ::");
+
+    PDM_g_num_t *extract_vtx_sorted_ln_to_gn = malloc(pn_extract_edge_vtx_keep_idx[pn_extract_edge_keep] * sizeof(PDM_g_num_t));
+    for(int i_vtx = 0; i_vtx < pn_extract_edge_vtx_keep_idx[pn_extract_edge_keep]; ++i_vtx) {
+      extract_vtx_sorted_ln_to_gn[i_vtx] = pn_extract_edge_vtx_gnum_keep[i_vtx];
+    }
+
+    int n_extract_vtx_sorted = PDM_inplace_unique_long(extract_vtx_sorted_ln_to_gn, NULL, 0, pn_extract_edge_vtx_keep_idx[pn_extract_edge_keep]-1);
+    extract_vtx_sorted_ln_to_gn = realloc(extract_vtx_sorted_ln_to_gn, n_extract_vtx_sorted * sizeof(PDM_g_num_t));
+
+    PDM_log_trace_array_long(extract_vtx_sorted_ln_to_gn , n_extract_vtx_sorted , "extract_vtx_sorted_ln_to_gn ::");
+
+    // Reconstruct vtx
+    int *pn_extract_edge_vtx_keep = malloc(pn_extract_edge_vtx_keep_idx[pn_extract_edge_keep] * sizeof(int));
+    int pn_extract_vtx_keep = 0;
+    int *pextract_vtx_num = PDM_array_const_int(n_extract_vtx_sorted, -1);
+    for(int i_vtx = 0; i_vtx < pn_extract_edge_vtx_keep_idx[pn_extract_edge_keep]; ++i_vtx) {
+      PDM_g_num_t gnum = PDM_ABS (pn_extract_edge_vtx_gnum_keep[i_vtx]);
+      int sgn          = PDM_SIGN(pn_extract_edge_vtx_gnum_keep[i_vtx]);
+      int pos = PDM_binary_search_long(gnum, sorted_vtx_ln_to_gn, pflat_n_vtx[i_part]);
+      if(pos != -1) {
+        int old_pos = vtx_order[pos];
+        pn_extract_edge_vtx_keep[i_vtx] = sgn * ( old_pos + 1 );
+      } else {
+
+        int pos2 = PDM_binary_search_long(gnum, extract_vtx_sorted_ln_to_gn, n_extract_vtx_sorted);
+        assert(pos2 != -1);
+        if(pextract_vtx_num[pos2] == -1) {
+          pextract_vtx_num[pos2] = pflat_n_vtx[i_part] + pn_extract_vtx_keep;
+          pn_extract_vtx_keep++;
+        }
+
+        pn_extract_edge_vtx_keep[i_vtx] = sgn * ( pextract_vtx_num[pos2] + 1 );
+      }
+    }
+
+    PDM_log_trace_array_long(pn_extract_edge_vtx_keep , 2 * pn_extract_edge , "pn_extract_edge_vtx_keep  ::");
+
+    free(vtx_order);
+    free(to_keep);
+    free(extract_vtx_sorted_ln_to_gn);
+    free(pextract_vtx_num);
+    free(sorted_edge_ln_to_gn);
+    free(sorted_vtx_ln_to_gn);
+    free(pn_extract_edge_vtx_keep);
+    free(pn_extract_edge_vtx_keep_idx);
+    free(pn_extract_edge_vtx_gnum_keep);
+
   }
 
   PDM_extract_part_free(extrp);
-
-
-
 
   for(int i_part = 0; i_part < ln_part_tot; ++i_part) {
     free(pextract_vtx_edge_idx         [i_part]);
