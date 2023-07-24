@@ -68,7 +68,7 @@ Enable PTSCOTCH library (parallel graph partition) :
         - scotch, scotcherr, ptscotch, ptscotcherr libraries
 
 Enable long global numbers
-     PDM_ENABLE_LONG_G_NUM= <ON | OFF> (default : ON)
+     PDM_ENABLE_LONG_G_NUM=<ON | OFF> (default : ON)
        - ON  : PDM_g_num_t type is "long int"
        - OFF : PDM_g_num_t type is "int"
 
@@ -81,6 +81,7 @@ Enable documentation mode :
 CC=<C compiler> CXX=<CXX compiler> FC=<Fortran compiler> cmake ...
 
 or use the following CMake options
+
     CMAKE_C_COMPILER=<C compiler>
     CMAKE_CXX_COMPILER=<CXX compiler>
     CMAKE_Fortran_COMPILER=<Fortran compiler>
@@ -92,8 +93,9 @@ or use the following CMake options
     MPI_Fortran_COMPILER=<Fortran mpi wrapper>
 
 If a simple autodetection fails, you can use these options to find MPI :
-    MPI_<lang>_LIBRARIES
-    MPI_<lang>_INCLUDE_PATH
+
+    MPI_<language>_LIBRARIES
+    MPI_<language>_INCLUDE_PATH
 
 Refere to FindMPI in the CMake documentation for more informations.
 
@@ -103,4 +105,4 @@ Issues can be reported directly on [the Issues section](https://gitlab.onera.net
 
 ## License ##
 
-`CWIPI` is available under the LGPLv3 license (https://www.gnu.org/licenses/lgpl-3.0.fr.html).
+`ParaDiGM` is available under the LGPLv3 license (https://www.gnu.org/licenses/lgpl-3.0.fr.html).
