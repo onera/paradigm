@@ -240,6 +240,7 @@ _part_extension
   int         **pflat_edge_vtx      = (int          **) malloc( n_domain * sizeof(int          *));
   PDM_g_num_t **pflat_vtx_ln_to_gn  = (PDM_g_num_t  **) malloc( n_domain * sizeof(PDM_g_num_t  *));
   PDM_g_num_t **pflat_edge_ln_to_gn = (PDM_g_num_t  **) malloc( n_domain * sizeof(PDM_g_num_t  *));
+  double      **pflat_vtx_coords    = (double       **) malloc( n_domain * sizeof(double       *));
 
   int ln_part_tot = 0;
   for(int i_dom = 0; i_dom < n_domain; ++i_dom) {
@@ -280,6 +281,11 @@ _part_extension
         pflat_edge_vtx_idx[ln_part_tot+i_part][i_edge] = 2 * i_edge;
       }
 
+      PDM_multipart_part_vtx_coord_get(mpart,
+                                       i_dom,
+                                       i_part,
+                                       &pflat_vtx_coords[ln_part_tot+i_part],
+                                       PDM_OWNERSHIP_KEEP);
 
     }
     ln_part_tot += n_part[i_dom];
@@ -349,7 +355,7 @@ _part_extension
                                         &ppart_vtx,
                                         PDM_OWNERSHIP_KEEP);
 
-      PDM_log_trace_array_int(ppart_vtx, 4 * ppart_vtx_part_idx[n_part_g[i_dom]], "ppart_vtx");
+      // PDM_log_trace_array_int(ppart_vtx, 4 * ppart_vtx_part_idx[n_part_g[i_dom]], "ppart_vtx");
 
       part1_to_part2_idx[li_part] = malloc((pflat_n_vtx[li_part] + 1) *sizeof(int));
       part1_to_part2_idx[li_part][0] = 0;
@@ -363,7 +369,7 @@ _part_extension
         part1_to_part2_n[i_entity] += 1;
       }
 
-      PDM_log_trace_array_int(part1_to_part2_n, pflat_n_vtx[li_part], "part1_to_part2_n ::");
+      // PDM_log_trace_array_int(part1_to_part2_n, pflat_n_vtx[li_part], "part1_to_part2_n ::");
 
       for(int i_entity = 0; i_entity < pflat_n_vtx[li_part]; ++i_entity) {
         part1_to_part2_idx[li_part][i_entity+1] = part1_to_part2_idx[li_part][i_entity] + 3 * part1_to_part2_n[i_entity];
@@ -387,8 +393,8 @@ _part_extension
         // part1_to_part2_triplet[li_part][idx_entity+1] = part1_to_part2_triplet[li_part][idx_entity] + 3;
       }
 
-      PDM_log_trace_array_int(part1_to_part2_idx    [li_part],     pflat_n_vtx[li_part], "part1_to_part2_idx ::");
-      PDM_log_trace_array_int(part1_to_part2_triplet[li_part],     n_connect_tot       , "part1_to_part2_triplet ::");
+      // PDM_log_trace_array_int(part1_to_part2_idx    [li_part],     pflat_n_vtx[li_part], "part1_to_part2_idx ::");
+      // PDM_log_trace_array_int(part1_to_part2_triplet[li_part],     n_connect_tot       , "part1_to_part2_triplet ::");
 
       free(part1_to_part2_n);
       li_part += 1;
@@ -412,7 +418,7 @@ _part_extension
   int **ref_lnum2   = NULL;
   PDM_part_to_part_ref_lnum2_get(ptp, &n_ref_lnum2, &ref_lnum2);
 
-  if(1 == 1) {
+  if(0 == 1) {
     for(int i_part = 0; i_part < ln_part_tot; ++i_part) {
       PDM_log_trace_array_int(ref_lnum2[i_part], n_ref_lnum2[i_part], "ref_lnum2 :");
     }
@@ -446,7 +452,7 @@ _part_extension
                                                         &pextract_edge_to_edge_location,
                                                         &ptp_vtx_edge);
 
-  if(1 == 1) {
+  if(0 == 1) {
     PDM_log_trace_array_int(pextract_n_edge, ln_part_tot, "pextract_n_edge");
     for(int i_part = 0; i_part < ln_part_tot; ++i_part) {
       PDM_log_trace_array_long(pextract_edge_parent_ln_to_gn [i_part],     pextract_n_edge[i_part], "pextract_edge_parent_ln_to_gn");
@@ -456,6 +462,95 @@ _part_extension
 
 
   PDM_part_to_part_free(ptp_vtx_edge);
+
+  /*
+   * Call extract_part
+   */
+  PDM_extract_part_t* extrp = PDM_extract_part_create(1,
+                                                       ln_part_tot,
+                                                       ln_part_tot,
+                                                       PDM_EXTRACT_PART_KIND_FROM_TARGET,
+                                                       PDM_SPLIT_DUAL_WITH_HILBERT,
+                                                       PDM_TRUE,
+                                                       PDM_OWNERSHIP_KEEP,
+                                                       comm);
+
+  for(int i_part = 0; i_part < ln_part_tot; ++i_part) {
+
+    PDM_extract_part_part_set(extrp,
+                              i_part,
+                              0,
+                              0,
+                              pflat_n_edge[i_part],
+                              pflat_n_vtx [i_part],
+                              NULL,
+                              NULL,
+                              NULL,
+                              NULL,
+                              pflat_edge_vtx[i_part],
+                              NULL,
+                              NULL,
+                              NULL,
+                              NULL,
+                              pflat_edge_ln_to_gn[i_part],
+                              pflat_vtx_ln_to_gn [i_part],
+                              pflat_vtx_coords   [i_part]);
+
+    PDM_extract_part_target_set(extrp,
+                                i_part,
+                                pextract_n_edge               [i_part],
+                                pextract_edge_parent_ln_to_gn [i_part],
+                                pextract_edge_to_edge_location[i_part]);
+  }
+
+  PDM_extract_part_compute(extrp);
+
+  /* Get */
+  for(int i_part = 0; i_part < ln_part_tot; ++i_part) {
+
+    int pn_extract_vtx = PDM_extract_part_n_entity_get(extrp,
+                                                       i_part,
+                                                       PDM_MESH_ENTITY_VERTEX);
+    int pn_extract_edge = PDM_extract_part_n_entity_get(extrp,
+                                                       i_part,
+                                                       PDM_MESH_ENTITY_EDGE);
+    int* pextract_edge_vtx     = NULL;
+    int* pextract_edge_vtx_idx = NULL;
+    PDM_extract_part_connectivity_get(extrp,
+                                      i_part,
+                                      PDM_CONNECTIVITY_TYPE_EDGE_VTX,
+                                      &pextract_edge_vtx,
+                                      &pextract_edge_vtx_idx,
+                                      PDM_OWNERSHIP_KEEP);
+
+    PDM_g_num_t *pextract_vtx_ln_to_gn  = NULL;
+    PDM_extract_part_parent_ln_to_gn_get(extrp,
+                                         i_part,
+                                         PDM_MESH_ENTITY_VERTEX,
+                                         &pextract_vtx_ln_to_gn,
+                                         PDM_OWNERSHIP_KEEP);
+
+    PDM_g_num_t *pextract_edge_ln_to_gn = NULL;
+    PDM_extract_part_ln_to_gn_get(extrp,
+                                  i_part,
+                                  PDM_MESH_ENTITY_EDGE,
+                                  &pextract_edge_ln_to_gn,
+                                  PDM_OWNERSHIP_KEEP);
+
+    if(0 == 1) {
+      printf("pn_extract_vtx  = %i\n", pn_extract_vtx );
+      printf("pn_extract_edge = %i\n", pn_extract_edge);
+      PDM_log_trace_array_int (pextract_edge_vtx, 2 * pn_extract_edge, "pextract_edge_vtx ::");
+      PDM_log_trace_array_long(pextract_vtx_ln_to_gn , pn_extract_vtx , "pextract_vtx_ln_to_gn  ::");
+      PDM_log_trace_array_long(pextract_edge_parent_ln_to_gn[i_part], pn_extract_edge, "pextract_edge_parent_ln_to_gn ::");
+    }
+
+  }
+
+  PDM_extract_part_free(extrp);
+
+
+
 
   for(int i_part = 0; i_part < ln_part_tot; ++i_part) {
     free(pextract_vtx_edge_idx         [i_part]);
@@ -512,6 +607,7 @@ _part_extension
   free(pflat_n_vtx       );
   free(pflat_n_edge      );
   free(pflat_vtx_ln_to_gn);
+  free(pflat_vtx_coords);
   free(pflat_edge_ln_to_gn);
   free(pflat_edge_vtx_idx );
   free(pflat_edge_vtx     );
