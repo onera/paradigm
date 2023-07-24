@@ -198,8 +198,8 @@ unit_test:
 
 pages:
   stage: deploy
-  # rules:
-  #   - if: $CI_COMMIT_BRANCH == "master" || $CI_COMMIT_BRANCH == "dev" || $CI_COMMIT_TAG != null
+  rules:
+    - if: $CI_COMMIT_BRANCH == "master" || $CI_COMMIT_BRANCH == "dev" || $CI_COMMIT_TAG != null
   before_script:
     - ''
   script:
