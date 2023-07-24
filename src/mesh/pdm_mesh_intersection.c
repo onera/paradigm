@@ -1633,7 +1633,7 @@ _export_ensight3d
  double       *vtx_coord,
  PDM_g_num_t  *cell_ln_to_gn,
  PDM_g_num_t  *vtx_ln_to_gn
- )
+)
 {
   int i_rank;
   PDM_MPI_Comm_rank(comm, &i_rank);
@@ -1806,16 +1806,11 @@ _export_ensight3d
   free(val_gnum);
   free(val_vol );
   // free(cell_face_n);
-  // free(face_vtx_n );
+  // free(face_vtx_n);
 
   PDM_gnum_free(gnum_vtx );
   PDM_gnum_free(gnum_cell);
 }
-
-
-
-
-
 
 
 static void

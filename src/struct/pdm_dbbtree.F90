@@ -55,50 +55,61 @@ module pdm_dbbtree
   end interface
 
   interface PDM_dbbtree_create
-  	module procedure PDM_dbbtree_create_
+    module procedure PDM_dbbtree_create_
   end interface 
 
   interface PDM_dbbtree_boxes_set
-     module procedure PDM_dbbtree_boxes_set_
-     module procedure PDM_dbbtree_boxes_set_with_init_location
+    module procedure PDM_dbbtree_boxes_set_
+    module procedure PDM_dbbtree_boxes_set_with_init_location
   end interface PDM_dbbtree_boxes_set
 
-  interface PDM_dbbtree_intersect_boxes_set
-     module procedure PDM_dbbtree_intersect_boxes_set_
-     module procedure PDM_dbbtree_intersect_boxes_with_init_location_set
-  end interface PDM_dbbtree_intersect_boxes_set
+  ! interface PDM_dbbtree_intersect_boxes_set
+  !   module procedure PDM_dbbtree_intersect_boxes_set_
+  !   module procedure PDM_dbbtree_intersect_boxes_with_init_location_set
+  ! end interface PDM_dbbtree_intersect_boxes_set
+
+  type PDM_dbbtree_t
+
+    type(c_ptr) :: c_dbbtree              = C_NULL_PTR
+    type(c_ptr) :: bs_boxes_in_tree       = C_NULL_PTR
+
+    type(c_ptr) :: c_boxes_in_tree_intersected_boxes_idx = C_NULL_PTR   ! A liberer dans le free
+    type(c_ptr) :: c_boxes_in_tree_intersected_boxes_lnum = C_NULL_PTR  ! A liberer dans le free
+
+    type(c_ptr) :: bs_intersected_boxes   = C_NULL_PTR
+
+  end type PDM_dbbtree_t
 
 contains
 
-	!>
-	!! \brief Return an intialized \ref PDM_dbbtree_t structure
-	!!
-	!! This function returns an initialized \ref PDM_dbbtree_t structure
-	!!
-	!! \param [in]  comm             Associated communicator
-	!! \param [in]  dim              boxes dimension
-	!! \param [in]  global_extents   Globals of elements to storage into the tree
-	!!                               (automatic computation if NULL)
-	!!
-	!! \return      A new initialized \ref PDM_dbbtree_t structure
-	!!
-	!!
+    !>
+    !! \brief Return an intialized \ref PDM_dbbtree_t structure
+    !!
+    !! This function returns an initialized \ref PDM_dbbtree_t structure
+    !!
+    !! \param [in]  comm             Associated communicator
+    !! \param [in]  dim              boxes dimension
+    !! \param [in]  global_extents   Globals of elements to storage into the tree
+    !!                               (automatic computation if NULL)
+    !!
+    !! \return      A new initialized \ref PDM_dbbtree_t structure
+    !!
     
-  function PDM_dbbtree_create_(comm,          &
-                               dim,           & 
-                               global_extents)&
+    function  PDM_dbbtree_create_(comm,          &
+                                  dim,           & 
+                                  global_extents)&
     result (dbbt)   
+
+    use iso_c_binding
+    implicit none
 
     integer,          intent(in)  :: dim
     integer,          intent(in)  :: comm
-    double precision, intent(in)  :: global_extents
+    double precision, pointer     :: global_extents(:)
 
-    type(c_ptr)                   :: dbbt          
+    type(PDM_dbbtree_t), pointer  :: dbbt        
 
     integer(c_int)                :: c_comm
-
-    use iso_c_binding
-	  implicit none
 
     interface 
 
@@ -119,11 +130,13 @@ contains
 
       end function PDM_dbbtree_create_c    
 
-	  end interface 
+    end interface
+
+    allocate (dbbt)
 
     c_comm = PDM_MPI_Comm_f2c(comm)
 
-    dbbt = PDM_dbbtree_create_c (c_comm, dim, c_loc(global_extents))
+    dbbt%c_dbbtree = PDM_dbbtree_create_c (c_comm, dim, c_loc(global_extents))
 
   end function PDM_dbbtree_create_
 
@@ -142,64 +155,54 @@ contains
   !! the tree location
   !!
 
-  function PDM_dbbtree_boxes_set_ (dbbt,    &
-                                   n_part,  &
-                                   nElts,   &
-                                   extents, &
-                                   gNum     &
-                                   )        &
-  result (bs) 
-
+  subroutine PDM_dbbtree_boxes_set_ (dbbt,    &
+                                     n_part,  &
+                                     nElts,   &
+                                     extents, &
+                                     gNum     &
+                                     )        
     use iso_c_binding
-	  implicit none
+    implicit none
 
-    type (cptr), intent(in)             :: dbbt
+    type(PDM_dbbtree_t), pointer        :: dbbt          
     integer, intent(in)                 :: n_part
     integer(pdm_l_num_s), pointer       :: nElts(:)
     type (PDM_pointer_array_t), pointer :: extents
     type (PDM_pointer_array_t), pointer :: gNum
-      
-    type (cptr)                         :: bs
 
     interface 
-		  function PDM_dbbtree_boxes_set_c (dbbt,    &
-		                                    n_part,  &
-		                                    nElts,   &
-		                                    extents, &
-		                                    gNum     &
-		                                    )        &
-		  result (bs)                                &
+      function PDM_dbbtree_boxes_set_c (dbbt,    &
+                                        n_part,  &
+                                        nElts,   &
+                                        extents, &
+                                        gNum     &
+                                        )        &
+      result (bs)                                &
       bind (c, name='PDM_dbbtree_boxes_set')
   
         use iso_c_binding
         implicit none
-
-        type (cptr), value :: dbbt
+        type (c_ptr), value :: dbbt
         integer(c_int)     :: n_part
-        type (cptr), value :: nElts
-        type (cptr), value :: extents
-        type (cptr), value :: gNum
+        type (c_ptr), value :: nElts
+        type (c_ptr), value :: extents
+        type (c_ptr), value :: gNum
       
-        type (cptr)        :: bs
-
+        type (c_ptr)        :: bs
       end function PDM_dbbtree_boxes_set_c
-
     end interface
 
-    bs = PDM_dbbtree_boxes_set_c (dbbt, n_part, c_loc(nElts), )
+    if (.not. associated(dbbt)) then
+      print*, "Error PDM_dbbtree_create : dbb is already associated ! "
+      call exit
+    endif
 
-  end function PDM_dbbtree_boxes_set_
-
-PDM_box_set_t *
-PDM_dbbtree_boxes_set
-(
- PDM_dbbtree_t      *dbbt,
- const int           n_part,
- const int          *nElts,
- const double      **extents,
- const PDM_g_num_t **gNum
-);
-
+    dbbt%bs_boxes_in_tree = PDM_dbbtree_boxes_set_c (dbbt%c_dbbtree,      &
+                                                     n_part,              &
+                                                     c_loc(nElts),        &  
+                                                     c_loc(extents%cptr), &
+                                                     c_loc(gNum%cptr))
+  end subroutine PDM_dbbtree_boxes_set_
 
   !>
   !! \brief Assign a set of boxes to an empty \ref PDM_dbbtree_t structure.
@@ -218,16 +221,65 @@ PDM_dbbtree_boxes_set
   !!
   !!
 
-PDM_box_set_t *
-PDM_dbbtree_boxes_set_with_init_location
-(
- PDM_dbbtree_t      *dbbt,
- const int           n_part,
- const int          *nElts,
- const int         **init_location,
- const double      **extents,
- const PDM_g_num_t **gNum
-);
+  subroutine PDM_dbbtree_boxes_set_with_init_location (dbbt,    &
+                                                       n_part,  &
+                                                       nElts,   &
+                                                       init_location, &                                                         
+                                                       extents, &
+                                                       gNum     &
+                                                       )        
+
+    use iso_c_binding
+    implicit none
+
+    type(PDM_dbbtree_t), pointer        :: dbbt          
+    integer, intent(in)                 :: n_part
+    integer(pdm_l_num_s), pointer       :: nElts(:)
+    type (PDM_pointer_array_t), pointer :: init_location
+    type (PDM_pointer_array_t), pointer :: extents
+    type (PDM_pointer_array_t), pointer :: gNum
+      
+
+    interface 
+      function PDM_dbbtree_boxes_set_with_init_location_c (dbbt,          &
+                                                           n_part,        &
+                                                           nElts,         &
+                                                           init_location, &                                                         
+                                                           extents,       &
+                                                           gNum           &
+                                                           )              &
+      result (bs)                                                         &
+      bind (c, name='PDM_dbbtree_boxes_set_with_init_location')
+  
+        use iso_c_binding
+        implicit none
+
+        type (c_ptr), value :: dbbt
+        integer(c_int)      :: n_part
+        type (c_ptr), value :: nElts
+        type (c_ptr), value :: init_location
+        type (c_ptr), value :: extents
+        type (c_ptr), value :: gNum
+      
+        type (c_ptr)        :: bs
+
+      end function PDM_dbbtree_boxes_set_with_init_location_c
+
+    end interface
+
+    if (.not. associated(dbbt)) then
+      print*, "Error PDM_dbbtree_create : dbb is already associated ! "
+      call exit 
+    endif
+
+    dbbt%bs_boxes_in_tree = PDM_dbbtree_boxes_set_with_init_location_c (dbbt%c_dbbtree,            &
+                                                                        n_part,                    &
+                                                                        c_loc(nElts),              &
+                                                                        c_loc(init_location%cptr), &
+                                                                        c_loc(extents%cptr),       &
+                                                                        c_loc(gNum%cptr))
+
+  end subroutine PDM_dbbtree_boxes_set_with_init_location
 
 
   !>
@@ -235,63 +287,132 @@ PDM_dbbtree_boxes_set_with_init_location
   !!
   !! This function  assigns boxes to intersect to the tree.
   !!
-  !! \param [in]  dbbt       Pointer to a distributed bounding box tree
-  !! \param [in]  n_part     Number of partitions
-  !! \param [in]  nElts      Number of elements of each partition
-  !! \param [in]  extents    Extents of each element of each partition
-  !! \param [in]  gNum       Global number of each element of each partition
-  !! \param [out] box_index  Pointer to the index array on associated tree bounding boxeq
-  !! \param [out] box_g_num  Pointer to the list of intersecting bounding boxes
+  !! \param [in]  dbbt               Pointer to a distributed bounding box tree
+  !! \param [in]  n_part             Number of partitions
+  !! \param [in]  nElts              Number of elements of each partition
+  !! \param [in]  extents            Extents of each element of each partition
+  !! \param [in]  gNum               Global number of each element of each partition
+  !! \param [out] C_ARRAY_box_index  Index array on associated tree bounding boxes (Call pdm_fortran_free_c to free it)
+  !! \param [out] C_ARRAY_box_g_num  Array of intersecting bounding boxes (Call pdm_fortran_free_c to free it)
   !!
   !! \return associated \ref PDM_box_set_t structure distributed according
   !! to the tree intersection
   !!
   !!/
 
+  function PDM_dbbtree_intersect_boxes_set_ (dbbt,             &
+                                             n_part,           &
+                                             nElts,            &
+                                             extents,          &
+                                             gNum,             &
+                                             C_ARRAY_box_index,&
+                                             C_ARRAY_box_l_num &
+                                             )                 &
+  result (bs) 
 
-PDM_box_set_t *
-PDM_dbbtree_intersect_boxes_with_init_location_set
-(
- PDM_dbbtree_t      *dbbt,
- const int           n_part,
- const int          *nElts,
- const int         **init_location,
- const double      **extents,
- const PDM_g_num_t **gNum,
- int                *box_index[],
- int                *box_l_num[]
-);
+    use iso_c_binding
+    implicit none
 
+    type(PDM_dbbtree_t), pointer        :: dbbt          
+    integer, intent(in)                 :: n_part
+    integer(pdm_l_num_s), pointer       :: nElts(:)
+    type (PDM_pointer_array_t), pointer :: extents
+    type (PDM_pointer_array_t), pointer :: gNum
+    integer(pdm_l_num_s), pointer       :: C_ARRAY_box_index(:)
+    integer(pdm_l_num_s), pointer       :: C_ARRAY_box_l_num(:)
+      
+    type (c_ptr)                        :: bs
+
+    type(c_ptr)                         :: c_box_index
+    type(c_ptr)                         :: c_box_l_num
+
+    interface 
+      function PDM_dbbtree_intersect_boxes_set_c (dbbt,     &
+                                                  n_part,   &
+                                                  nElts,    &
+                                                  extents,  &
+                                                  gNum,     &
+                                                  box_index,&
+                                                  box_l_num &
+                                                  )         &
+      result (bs)                                           &
+      bind (c, name='PDM_dbbtree_intersect_boxes_set')
+  
+        use iso_c_binding
+        implicit none
+        type (c_ptr), value :: dbbt
+        integer(c_int)     :: n_part
+        type (c_ptr), value :: nElts
+        type (c_ptr), value :: extents
+        type (c_ptr), value :: gNum
+        type (c_ptr)        :: box_index    
+        type (c_ptr)        :: box_l_num    
+
+        type (c_ptr)        :: bs
+      end function PDM_dbbtree_intersect_boxes_set_c
+    end interface
+
+    if (.not. associated(dbbt)) then
+      print*, "Error PDM_dbbtree_create : dbb is already associated ! "
+      call exit 
+    endif
+
+    dbbt%bs_intersected_boxes = PDM_dbbtree_intersect_boxes_set (dbbt%c_dbbtree,      &
+                                                                 n_part,              &
+                                                                 c_loc(nElts),        &  
+                                                                 c_loc(extents%cptr), &
+                                                                 c_loc(gNum%cptr),    &
+                                                                 c_box_index,         &
+                                                                 c_box_l_num)
+
+!    c_f_pointer 
+
+  end function PDM_dbbtree_intersect_boxes_set_
+
+! PDM_box_set_t *
+! PDM_dbbtree_intersect_boxes_set
+! (
+!  PDM_dbbtree_t      *dbbt,
+!  const int           n_part,
+!  const int          *nElts,
+!  const double      **extents,
+!  const PDM_g_num_t **gNum,
+!  int                *box_index[],
+!  int                *box_l_num[]
+!  );
 
   !>
   !! \brief Assign boxes to intersect to the tree.
   !!
   !! This function  assigns boxes to intersect to the tree.
   !!
-  !! \param [in]  dbbt           Pointer to a distributed bounding box tree
-  !! \param [in]  n_part         Number of partitions
-  !! \param [in]  nElts          Number of elements of each partition
-  !! \param [in]  extents        Extents of each element of each partition
-  !! \param [in]  init_location  Init location of each element of each partition (triplet rank/ipart/ielt)
-  !! \param [in]  gNum           Global number of each element of each partition
-  !! \param [out] box_index      Pointer to the index array on associated tree bounding boxeq
-  !! \param [out] box_g_num      Pointer to the list of intersecting bounding boxes
+  !! \param [in]  dbbt               Pointer to a distributed bounding box tree
+  !! \param [in]  n_part             Number of partitions
+  !! \param [in]  nElts              Number of elements of each partition
+  !! \param [in]  extents            Extents of each element of each partition
+  !! \param [in]  init_location      Init location of each element of each partition (triplet rank/ipart/ielt)
+  !! \param [in]  gNum               Global number of each element of each partition
+  !! \param [out] C_ARRAY_box_index  Index array on associated tree bounding boxes (Call pdm_fortran_free_c to free it)
+  !! \param [out] C_ARRAY_box_g_num  Array of intersecting bounding boxes (Call pdm_fortran_free_c to free it)
   !!
   !! \return associated \ref PDM_box_set_t structure distributed according
   !! to the tree intersection
   !!
   !!/
 
-PDM_box_set_t *
-PDM_dbbtree_intersect_boxes_set
-(
- PDM_dbbtree_t      *dbbt,
- const int           n_part,
- const int          *nElts,
- const double      **extents,
- const PDM_g_num_t **gNum,
- int                *box_index[],
- int                *box_l_num[]
- );
+
+
+! PDM_box_set_t *
+! PDM_dbbtree_intersect_boxes_with_init_location_set
+! (
+!  PDM_dbbtree_t      *dbbt,
+!  const int           n_part,
+!  const int          *nElts,
+!  const int         **init_location,
+!  const double      **extents,
+!  const PDM_g_num_t **gNum,
+!  int                *box_index[],
+!  int                *box_l_num[]
+! );
 
 end module pdm_dbbtree
