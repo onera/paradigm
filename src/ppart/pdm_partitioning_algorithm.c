@@ -3123,15 +3123,20 @@ PDM_pconnectivity_to_pconnectivity_from_location_keep
 
     _part2_entity1_entity2_idx[i_part] = malloc( (n_part2_entity1[i_part] + 1) * sizeof(int));
 
-    // PDM_log_trace_array_int(recv_entity1_entity2_n[i_part], n_part2_entity1[i_part], "recv_entity1_entity2_n ::");
+    // PDM_log_trace_array_int(recv_entity1_entity2_n[i_part], n_connect, "recv_entity1_entity2_n ::");
     // PDM_log_trace_array_int(recv_entity1_entity2_n[i_part],
-    //                         part2_entity1_to_part1_entity1_idx[i_part][n_part2_entity1[i_part]]/3,
+    //                         part2_entity1_to_part1_entity1_idx[i_part][n_connect]/3,
     //                         "recv_entity1_entity2_n ::");
+
+    const int *_part2_entity1_to_part1_entity1_idx = part2_entity1_to_part1_entity1_idx[i_part];
 
     /* Compute recv stride */
     _part2_entity1_entity2_idx[i_part][0] = 0;
     for(int i_entity1 = 0; i_entity1 < n_part2_entity1[i_part]; ++i_entity1) {
-      _part2_entity1_entity2_idx[i_part][i_entity1+1] = _part2_entity1_entity2_idx[i_part][i_entity1] + recv_entity1_entity2_n[i_part][i_entity1];
+      _part2_entity1_entity2_idx[i_part][i_entity1+1] = _part2_entity1_entity2_idx[i_part][i_entity1];
+      for(int idx_entity1 = _part2_entity1_to_part1_entity1_idx[i_entity1]/3; idx_entity1 < _part2_entity1_to_part1_entity1_idx[i_entity1+1]/3; ++idx_entity1) {
+        _part2_entity1_entity2_idx[i_part][i_entity1+1] += recv_entity1_entity2_n[i_part][idx_entity1];
+      }
     }
     int n_recv_entity1_entity2 = _part2_entity1_entity2_idx[i_part][n_part2_entity1[i_part]];
 
@@ -3143,7 +3148,6 @@ PDM_pconnectivity_to_pconnectivity_from_location_keep
     for(int i = 0; i < n_recv_entity1_entity2; ++i) {
       _part2_entity2_ln_to_gn[i_part][i] = PDM_ABS(recv_entity1_entity2[i_part][i]);
     }
-
     int n_extract_entity2 = PDM_inplace_unique_long2(_part2_entity2_ln_to_gn[i_part],
                                                      unique_order_entity2,
                                                      0,
