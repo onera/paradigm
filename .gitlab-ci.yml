@@ -3,6 +3,7 @@ stages:
   - init
   - build
   - test
+  - deploy
 
 # Default variables and parameters
 variables:
