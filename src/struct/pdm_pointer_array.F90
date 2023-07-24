@@ -316,15 +316,15 @@ module pdm_pointer_array
     if (pa%ownership .eq. PDM_OWNERSHIP_KEEP) then
       if (pa%shared_c) then
         if (associated(pa%cptr)) then
-          deallocate(pa%cptr)
-        end if
-
-      else
-        if (associated(pa%cptr)) then
           do i = 1, size(pa%cptr)
             call pdm_fortran_free_c(pa%cptr(i))
           end do
           call pdm_fortran_free_c(c_loc(pa%cptr))
+        end if
+
+      else
+        if (associated(pa%cptr)) then
+          deallocate(pa%cptr)
         end if
 
       endif

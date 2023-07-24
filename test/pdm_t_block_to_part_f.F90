@@ -37,8 +37,9 @@ program testf
 #endif  
 
   !-----------------------------------------------------------
-  logical, parameter                    :: exch_in_place = .false.
   integer, parameter                    :: comm = MPI_COMM_WORLD
+
+  logical                               :: exch_in_place = .false.
 
   type(c_ptr)                           :: btp = C_NULL_PTR
 
@@ -63,6 +64,9 @@ program testf
   integer                               :: n_rank
   !-----------------------------------------------------------
 
+  call read_args(exch_in_place)
+
+  print *, "exch_in_place :", exch_in_place
 
   call mpi_init(code)
   call mpi_comm_rank(comm, i_rank, code)
@@ -165,7 +169,8 @@ program testf
   deallocate(n_elt)
   deallocate(block_stride)
   deallocate(block_data)
-  call PDM_pointer_array_free (gnum_elt)
+
+  call PDM_pointer_array_free(gnum_elt)
   call PDM_pointer_array_free(part_data)
   call PDM_pointer_array_free(part_stride)
 
@@ -174,5 +179,54 @@ program testf
   end if
 
   call mpi_finalize(code)
+
+
+contains
+
+  subroutine usage(code)
+
+    implicit none
+
+    integer, intent(in) :: code
+
+    write(*,*) "Usage :"
+    write(*,*) " -inplace     Perform 'in place' exchange."
+    write(*,*) " -h           This message."
+
+    stop
+
+  end subroutine usage
+
+  subroutine read_args(exch_in_place)
+
+    implicit none
+
+    logical,              intent(inout) :: exch_in_place
+    integer                             :: argc, i, error
+    character(999)                      :: arg
+
+    argc = command_argument_count()
+
+    i = 1
+    do while (i <= argc)
+      call get_command_argument(i, arg, status=error)
+      if (error .ne. 0) then
+        call usage(error)
+      endif
+      select case(arg)
+
+        case ('-h')
+          call usage(0)
+
+        case ('-inplace')
+          exch_in_place = .true.
+
+      end select
+
+      i = i + 1
+    end do
+
+  end subroutine read_args
+
 
 end program testf
