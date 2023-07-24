@@ -1,3 +1,7 @@
+/*
+ * \file
+ */
+
 #ifndef PDM_DIST_CLOUD_SURF_H
 #define PDM_DIST_CLOUD_SURF_H
 
@@ -38,9 +42,9 @@ typedef struct _pdm_dist_cloud_surf_t PDM_dist_cloud_surf_t;
  * \param [in]   mesh_nature    Nature of the mesh
  * \param [in]   n_point_cloud  Number of point cloud
  * \param [in]   comm           MPI communicator
+ * \param [in]   owner          Ownership of \ref PDM_dist_cloud_surf_t
  *
  * \return     Pointer to \ref PDM_dist_cloud_surf object
- *
  */
 
 
@@ -207,7 +211,7 @@ PDM_dist_cloud_surf_compute
  * \param [in]   i_part                Index of partition of the cloud
  * \param [out]  closest_elt_distance  Distance
  * \param [out]  closest_elt_projected Projected point coordinates
- * \param [out]  closest_elt_g_num     Global number of the closest element
+ * \param [out]  closest_elt_gnum      Global number of the closest element
  *
  */
 

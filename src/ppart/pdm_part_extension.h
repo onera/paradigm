@@ -1,3 +1,7 @@
+/*
+ * \file
+ */
+
 #ifndef __PDM_PART_EXTENSION_H__
 #define __PDM_PART_EXTENSION_H__
 

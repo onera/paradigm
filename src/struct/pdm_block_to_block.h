@@ -1,8 +1,8 @@
 /*
- * File:   pdm_block_to_block.h
- * Author: equemera
+ * \file
+ * \author equemera
  *
- * Created on January 18, 2018, 9:48 AM
+ * \date January 18, 2018, 9:48 AM
  */
 
 #ifndef PDM_BLOCK_TO_BLOCK_H

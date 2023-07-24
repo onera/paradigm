@@ -1,3 +1,7 @@
+/*
+ * \file
+ */
+
 #ifndef __PDM_HILBERT_H__
 #define __PDM_HILBERT_H__
 

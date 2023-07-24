@@ -1,3 +1,7 @@
+/*
+ * \file
+ */
+
 #ifndef __PDM_TRIANGULATE_H__
 #define __PDM_TRIANGULATE_H__
 

@@ -1,3 +1,7 @@
+/*
+ * \file
+ */
+
 #ifndef __PDM_POLY_VOL_GEN_H__
 #define __PDM_POLY_VOL_GEN_H__
 /*

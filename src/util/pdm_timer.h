@@ -1,3 +1,7 @@
+/*
+ * \file
+ */
+
 #ifndef __PDM_TIMER_H__
 #define __PDM_TIMER_H__
 

@@ -1,8 +1,8 @@
 /*
- * File:   pdm_block_to_part.h
- * Author: equemera
+ * \file
+ * \author equemera
  *
- * Created on April 14, 2016, 7:56 AM
+ * \date April 14, 2016, 7:56 AM
  */
 
 #ifndef PDM_BLOCK_TO_PART_H

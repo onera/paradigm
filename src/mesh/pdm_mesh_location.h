@@ -1,3 +1,7 @@
+/*
+ * \file
+ */
+
 #ifndef PDM_MESH_LOCATION_H
 #define PDM_MESH_LOCATION_H
 

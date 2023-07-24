@@ -1,3 +1,7 @@
+/*
+ * \file
+ */
+
 #ifndef __PDM_ARRAY_H__
 #define __PDM_ARRAY_H__
 

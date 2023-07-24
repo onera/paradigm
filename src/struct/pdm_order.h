@@ -1,3 +1,7 @@
+/*
+ * \file
+ */
+
 #ifndef __PDM_ORDER_H__
 #define __PDM_ORDER_H__
 

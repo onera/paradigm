@@ -2515,7 +2515,7 @@ PDM_vtk_write_std_elements_ho_with_vtx_field
  *                           (x0, y0, z0, x1, ...)
  * \param [in]  axes         Axes of the ellipses (size = 6 * \ref n_circles)
  *                           (xa0, ya0, za0, xb0, yb0, zb0, xa1, ...)
- * \param [in]  radius       Radii of the ellipses (size = 2 * \ref n_ellipse)
+ * \param [in]  radii       Radii of the ellipses (size = 2 * \ref n_ellipse)
  * \param [in]  g_num        Global ids of the ellipses (or NULL)
  * \param [in]  color        Integer color of the ellipses (or NULL)
  * \param [in]  resolution   Number of segments on each ellipse

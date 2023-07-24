@@ -1,3 +1,7 @@
+/*
+ * \file
+ */
+
 #ifndef __PDM_MULTIPART_H__
 #define __PDM_MULTIPART_H__
 

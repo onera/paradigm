@@ -1,3 +1,7 @@
+/*
+ * \file
+ */
+
 #ifndef __PDM_SURF_MESH_H__
 #define __PDM_SURF_MESH_H__
 

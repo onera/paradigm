@@ -1,3 +1,7 @@
+/*
+ * \file
+ */
+
 #ifndef __PDM_MEMORY_STATS_H__
 #define __PDM_MEMORY_STATS_H__
 

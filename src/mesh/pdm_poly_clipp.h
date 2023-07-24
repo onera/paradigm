@@ -1,4 +1,6 @@
 /*
+ * \file
+ *
  * This file is an implementation of Greiner & Hormann algorithm with Foster
  * Overleft extension to remove degenerate cases
  *

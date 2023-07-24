@@ -1,3 +1,7 @@
+/*
+ * \file
+ */
+
 #ifndef __PDM_ERROR_H__
 #define __PDM_ERROR_H__
 

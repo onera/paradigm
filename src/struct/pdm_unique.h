@@ -1,3 +1,7 @@
+/*
+ * \file
+ */
+
 #ifndef __PDM_UNIQUE_H__
 #define __PDM_UNIQUE_H__
 

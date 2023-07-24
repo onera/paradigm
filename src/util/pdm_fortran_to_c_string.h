@@ -1,3 +1,7 @@
+/*
+ * \file
+ */
+
 #ifndef __PDM_FORTRAN_TO_C_STRING_H__
 #define __PDM_FORTRAN_TO_C_STRING_H__
 

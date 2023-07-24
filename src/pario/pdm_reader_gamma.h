@@ -1,3 +1,7 @@
+/*
+ * \file
+ */
+
 #ifndef __PDM_READER_GAMMA_H__
 #define __PDM_READER_GAMMA_H__
 /*

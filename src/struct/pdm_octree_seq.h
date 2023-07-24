@@ -1,8 +1,8 @@
 /*
- * File:   pdm_octree.h
- * Author: equemera
+ * \file
+ * \author: equemera
  *
- * Created on November 8, 2017, 11:27 AM
+ * \date November 8, 2017, 11:27 AM
  */
 
 #ifndef PDM_OCTREE_SEQ_H

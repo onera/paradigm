@@ -1,3 +1,7 @@
+/*
+ * \file
+ */
+
 #ifndef __PDM_GLOBAL_POINT_MEAN_H__
 #define __PDM_GLOBAL_POINT_MEAN_H__
 

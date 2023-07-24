@@ -1,3 +1,7 @@
+/*
+ * \file
+ */
+
 #ifndef __PDM_BOX_H__
 #define __PDM_BOX_H__
 

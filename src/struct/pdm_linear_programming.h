@@ -1,3 +1,7 @@
+/*
+ * \file
+ */
+
 #ifndef __PDM_LINEAR_PROGRAMMING_H__
 #define __PDM_LINEAR_PROGRAMMING_H__
 

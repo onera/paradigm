@@ -1,3 +1,7 @@
+/*
+ * \file
+ */
+
 #ifndef __PDM_EDGES_INTERSECT_H__
 #define __PDM_EDGES_INTERSECT_H__
 

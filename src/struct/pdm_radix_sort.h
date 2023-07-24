@@ -1,3 +1,7 @@
+/*
+ * \file
+ */
+
 #ifndef __PDM_RADIX_SORT_H__
 #define __PDM_RADIX_SORT_H__
 

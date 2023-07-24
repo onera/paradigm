@@ -1,3 +1,7 @@
+/*
+ * \file
+ */
+
 #ifndef __PDM_ELT_PARENT_FIND_H__
 #define __PDM_ELT_PARENT_FIND_H__
 

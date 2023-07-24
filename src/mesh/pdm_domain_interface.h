@@ -1,3 +1,7 @@
+/*
+ * \file
+ */
+
 #ifndef __PDM_DOMAIN_INTERFACE_H__
 #define __PDM_DOMAIN_INTERFACE_H__
 

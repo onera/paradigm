@@ -1,3 +1,7 @@
+/*
+ * \file
+ */
+
 #ifndef PDM_PARA_OCTREE_H
 #define	PDM_PARA_OCTREE_H
 

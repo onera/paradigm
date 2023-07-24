@@ -1,3 +1,7 @@
+/*
+ * \file
+ */
+
 #ifndef __PDM_PARTITIONING_ALGORITHM_H__
 #define __PDM_PARTITIONING_ALGORITHM_H__
 

@@ -1,3 +1,7 @@
+/*
+ * \file
+ */
+
 #ifndef __PDM_TETRAHEDRON_H__
 #define __PDM_TETRAHEDRON_H__
 

@@ -3,6 +3,7 @@ stages:
   - init
   - build
   - test
+  - deploy
 
 # Default variables and parameters
 variables:
@@ -65,20 +66,26 @@ build:
             - "intel-oneapi"
           BUILD_TYPE: 
             - "Sanitize"
+        - COMPILER: "intel@2022"
+          MPI_LIB:
+            - "intel-oneapi"
+          BUILD_TYPE:
+            - "Debug"
   variables:
     MATRIX_KEY: _${COMPILER}_${MPI_LIB}_GNUM64_${GNUM64}_BUILD_${BUILD_TYPE}
   stage: build
   before_script:
     - module purge
     - echo "compilo = $COMPILER"
-    - source /scratchm/sonics/dist/source.sh --env sonics_dev --compiler $COMPILER --mpi $MPI_LIB && module load py-gcovr-4.2-gcc-8.3.1-6lqfk6f
+    - source /scratchm/sonics/dist/source.sh --env sonics_dev --compiler $COMPILER --mpi $MPI_LIB && module load py-gcovr-4.2-gcc-8.3.1-6lqfk6f py-breathe-4.21.0-gcc-8.3.1-t576gc7 doxygen-1.9.3-gcc-8.3.1-4qcntlg texlive/2021
   script:
     - echo "Runner directory is $PWD; move to working directory $CUSTOM_CI_DIR"
     - cd $CUSTOM_CI_DIR
     - mkdir -p build$MATRIX_KEY && cd build$MATRIX_KEY
-    - which gcc
     - if [ "${COMPILER}" == "gcc@12" ]; then
     -   cmake -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DPDM_ENABLE_Fortran_MPI_MODULE=OFF -DPDM_ENABLE_PYTHON_BINDINGS=ON -DPDM_ENABLE_STATIC=OFF -DPDM_ENABLE_SHARED=ON -DPDM_ENABLE_Fortran=ON -DPDM_ENABLE_EXTENSION_PDMA=ON -DPDM_ENABLE_LONG_G_NUM=${GNUM64} -DMPIEXEC_EXECUTABLE=/opt/tools/intel/oneapi/mpi/2021.6.0/bin/mpirun ../
+    - elif [ "${COMPILER}" == "intel@2022" ]; then
+    -   cmake -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DPDM_ENABLE_PYTHON_BINDINGS=ON -DPDM_ENABLE_STATIC=OFF -DPDM_ENABLE_SHARED=ON -DPDM_ENABLE_Fortran=ON -DPDM_ENABLE_EXTENSION_PDMA=ON -DPDM_ENABLE_LONG_G_NUM=${GNUM64} -DPDM_ENABLE_DOC=ON -DMPIEXEC_EXECUTABLE=/opt/tools/intel/oneapi/mpi/2021.6.0/bin/mpirun ../
     - else
     -   cmake -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DPDM_ENABLE_PYTHON_BINDINGS=ON -DPDM_ENABLE_STATIC=OFF -DPDM_ENABLE_SHARED=ON -DPDM_ENABLE_Fortran=ON -DPDM_ENABLE_EXTENSION_PDMA=ON -DPDM_ENABLE_LONG_G_NUM=${GNUM64} -DMPIEXEC_EXECUTABLE=/opt/tools/intel/oneapi/mpi/2021.6.0/bin/mpirun ../
     - fi
@@ -117,6 +124,11 @@ unit_test:
             - "intel-oneapi"
           BUILD_TYPE: 
             - "Sanitize"
+        - COMPILER: "intel@2022"
+          MPI_LIB:
+            - "intel-oneapi"
+          BUILD_TYPE:
+            - "Debug"
   variables:
     MATRIX_KEY: _${COMPILER}_${MPI_LIB}_GNUM64_${GNUM64}_BUILD_${BUILD_TYPE}
     SCHEDULER_PARAMETERS:  "--qos=co_inter_bigmem  --ntasks=40 --time=01:00:00 --exclusive"
@@ -182,3 +194,28 @@ unit_test:
 #   - if: $CI_COMMIT_BRANCH == "dev"
 # Rajouter int/long
 # Tester si paradigm se compiler seul (sans paradigma)
+
+
+pages:
+  stage: deploy
+  # rules:
+  #   - if: $CI_COMMIT_BRANCH == "master" || $CI_COMMIT_BRANCH == "dev" || $CI_COMMIT_TAG != null
+  before_script:
+    - ''
+  script:
+    - mkdir -p public
+    - echo "CI_COMMIT_TAG = ${CI_COMMIT_TAG}"
+    - if [ "${CI_COMMIT_TAG}" == "" ]; then
+    -   cp -r $CUSTOM_CI_DIR/build_intel@2022_intel-oneapi_GNUM64__BUILD_Debug/doc/sphinx/html public/$CI_COMMIT_BRANCH
+    - else
+    -   cp -r $CUSTOM_CI_DIR/build_intel@2022_intel-oneapi_GNUM64__BUILD_Debug/doc/sphinx/html public/$CI_COMMIT_TAG
+    - fi
+    # - |
+    #   cat > public/index.html << EOF
+    #   <head>
+    #     <meta http-equiv='refresh' content='0; URL=dev/index.html'>
+    #   </head>
+    #   EOF
+  artifacts:
+    paths:
+      - public

@@ -1,3 +1,7 @@
+/*
+ * \file
+ */
+
 #ifndef __PDM_gen_GNUM_H__
 #define __PDM_gen_GNUM_H__
 
