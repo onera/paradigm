@@ -73,6 +73,10 @@ module pdm_sphere_surf_gen
     type(c_ptr)                       :: cc_pface_vtx        = C_NULL_PTR
     type(c_ptr)                       :: cc_pface_ln_to_gn   = C_NULL_PTR
 
+    type(c_ptr),    pointer           :: fptr(:)         => null()
+    integer(c_int), pointer           :: face_vtx_idx(:) => null()
+    integer                           :: i
+
     interface
 
       subroutine PDM_sphere_surf_icosphere_gen_part_c(comm,           &
@@ -150,11 +154,23 @@ module pdm_sphere_surf_gen
                      pn_face,   &
                      [n_part])
 
-    allocate (length_cc_pvtx_coord(n_part))
-    allocate (length_cc_pvtx_ln_to_gn(n_part))
-    allocate (length_cc_pface_vtx_idx(n_part))
-    allocate (length_cc_pface_vtx(n_part))
-    allocate (length_cc_pface_ln_to_gn(n_part))
+    allocate(length_cc_pvtx_coord    (n_part), &
+             length_cc_pvtx_ln_to_gn (n_part), &
+             length_cc_pface_vtx_idx (n_part), &
+             length_cc_pface_vtx     (n_part), &
+             length_cc_pface_ln_to_gn(n_part))
+
+    ! fill size
+    length_cc_pvtx_coord    (:) = pn_vtx(:)
+    length_cc_pvtx_ln_to_gn (:) = pn_vtx(:) * 3
+    length_cc_pface_vtx_idx (:) = pn_face(:) + 1
+    length_cc_pface_ln_to_gn(:) = pn_face(:)
+
+    do i = 1, n_part
+      call c_f_pointer(cc_pface_vtx_idx, fptr,         [n_part])
+      call c_f_pointer(fptr(i),          face_vtx_idx, [pn_face(i) + 1])
+      length_cc_pface_vtx(i) = face_vtx_idx(pn_face(i))
+    end do
 
     call PDM_pointer_array_create(pvtx_coord,             &
                                   n_part,                 &
@@ -191,11 +207,11 @@ module pdm_sphere_surf_gen
                                   length_cc_pface_ln_to_gn,&
                                   PDM_OWNERSHIP_KEEP)
 
-    deallocate (length_cc_pvtx_coord)
-    deallocate (length_cc_pvtx_ln_to_gn)
-    deallocate (length_cc_pface_vtx_idx)
-    deallocate (length_cc_pface_vtx)
-    deallocate (length_cc_pface_ln_to_gn)
+    deallocate(length_cc_pvtx_coord,     &
+               length_cc_pvtx_ln_to_gn,  &
+               length_cc_pface_vtx_idx,  &
+               length_cc_pface_vtx,      &
+               length_cc_pface_ln_to_gn)
 
   end subroutine PDM_sphere_surf_icosphere_gen_part
 

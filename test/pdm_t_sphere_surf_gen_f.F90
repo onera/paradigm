@@ -32,12 +32,12 @@ program testf
   double precision                  :: radius   = 4.d0
 
   integer(pdm_l_num_s), pointer     :: pn_vtx(:)  => null()
-  type(PDM_pointer_array_t), pointer:: pvtx_coord
-  type(PDM_pointer_array_t), pointer:: pvtx_ln_to_gn
+  type(PDM_pointer_array_t), pointer:: pvtx_coord => null()
+  type(PDM_pointer_array_t), pointer:: pvtx_ln_to_gn => null()
   integer(pdm_l_num_s), pointer     :: pn_face(:) => null()
-  type(PDM_pointer_array_t), pointer:: pface_vtx_idx
-  type(PDM_pointer_array_t), pointer:: pface_vtx
-  type(PDM_pointer_array_t), pointer:: pface_ln_to_gn
+  type(PDM_pointer_array_t), pointer:: pface_vtx_idx => null()
+  type(PDM_pointer_array_t), pointer:: pface_vtx => null()
+  type(PDM_pointer_array_t), pointer:: pface_ln_to_gn => null()
 
   double precision,     pointer     :: vtx_coord(:)     => null()
   double precision,     pointer     :: vtx_coord2(:,:)  => null()

@@ -45,7 +45,7 @@ module pdm_pointer_array
     integer                       :: s_data = -1
     type(c_ptr),          pointer :: cptr(:)   => null()
     integer(pdm_l_num_s), pointer :: length(:) => null()
-    integer                       :: sharec_c = -1
+    logical                       :: shared_c = .false.
     integer                       :: ownership = PDM_OWNERSHIP_KEEP
 
   end type PDM_pointer_array_t
@@ -176,7 +176,7 @@ module pdm_pointer_array
       pa%length(i) = 0
     end do
 
-    pa%sharec_c = 0
+    pa%shared_c = .false.
 
   end subroutine PDM_pointer_array_create_type
 
@@ -259,7 +259,7 @@ module pdm_pointer_array
       pa%length(i) = length(i)
     end do
 
-    pa%sharec_c = 1
+    pa%shared_c = .true.
 
 
   end subroutine PDM_pointer_array_create_type_from_c_allocated_cptr
@@ -314,12 +314,12 @@ module pdm_pointer_array
     endif
 
     if (pa%ownership .eq. PDM_OWNERSHIP_KEEP) then
-      if (pa%sharec_c .eq. 0) then
+      if (pa%shared_c) then
         if (associated(pa%cptr)) then
           deallocate(pa%cptr)
         end if
 
-      else if (pa%sharec_c .eq. 1) then
+      else if (pa%shared_c) then
         if (associated(pa%cptr)) then
           do i = 1, size(pa%cptr)
             call pdm_fortran_free_c(pa%cptr(i))
