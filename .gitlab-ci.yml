@@ -66,6 +66,11 @@ build:
             - "intel-oneapi"
           BUILD_TYPE: 
             - "Sanitize"
+        - COMPILER: "intel@2022"
+          MPI_LIB:
+            - "intel-oneapi"
+          BUILD_TYPE:
+            - "Debug"
   variables:
     MATRIX_KEY: _${COMPILER}_${MPI_LIB}_GNUM64_${GNUM64}_BUILD_${BUILD_TYPE}
   stage: build
@@ -118,6 +123,11 @@ unit_test:
             - "intel-oneapi"
           BUILD_TYPE: 
             - "Sanitize"
+        - COMPILER: "intel@2022"
+          MPI_LIB:
+            - "intel-oneapi"
+          BUILD_TYPE:
+            - "Debug"
   variables:
     MATRIX_KEY: _${COMPILER}_${MPI_LIB}_GNUM64_${GNUM64}_BUILD_${BUILD_TYPE}
     SCHEDULER_PARAMETERS:  "--qos=co_inter_bigmem  --ntasks=40 --time=01:00:00 --exclusive"
