@@ -25,6 +25,9 @@
 #include "pdm_multipart.h"
 #include "pdm_array.h"
 #include "pdm_part_to_part.h"
+#include "pdm_extract_part.h"
+#include "pdm_partitioning_algorithm.h"
+#include "pdm_part_connectivity_transform.h"
 
 /*============================================================================
  * Macro definitions
@@ -232,7 +235,11 @@ _part_extension
   int          **pn_vtx             = (int          **) malloc( n_domain * sizeof(int          *));
   PDM_g_num_t ***pvtx_ln_to_gn      = (PDM_g_num_t ***) malloc( n_domain * sizeof(PDM_g_num_t **));
   int          *pflat_n_vtx         = (int           *) malloc( n_domain * sizeof(int           ));
+  int          *pflat_n_edge        = (int           *) malloc( n_domain * sizeof(int           ));
+  int         **pflat_edge_vtx_idx  = (int          **) malloc( n_domain * sizeof(int          *));
+  int         **pflat_edge_vtx      = (int          **) malloc( n_domain * sizeof(int          *));
   PDM_g_num_t **pflat_vtx_ln_to_gn  = (PDM_g_num_t  **) malloc( n_domain * sizeof(PDM_g_num_t  *));
+  PDM_g_num_t **pflat_edge_ln_to_gn = (PDM_g_num_t  **) malloc( n_domain * sizeof(PDM_g_num_t  *));
 
   int ln_part_tot = 0;
   for(int i_dom = 0; i_dom < n_domain; ++i_dom) {
@@ -252,11 +259,41 @@ _part_extension
       pflat_n_vtx       [ln_part_tot+i_part] = pn_vtx       [i_dom][i_part];
       pflat_vtx_ln_to_gn[ln_part_tot+i_part] = pvtx_ln_to_gn[i_dom][i_part];
 
+      pflat_n_edge      [ln_part_tot+i_part] = PDM_multipart_part_ln_to_gn_get(mpart,
+                                                                               i_dom,
+                                                                               i_part,
+                                                                               PDM_MESH_ENTITY_EDGE,
+                                                                               &pflat_edge_ln_to_gn[ln_part_tot+i_part],
+                                                                               PDM_OWNERSHIP_KEEP);
+
+      PDM_multipart_part_connectivity_get(mpart,
+                                          i_dom,
+                                          i_part,
+                                          PDM_CONNECTIVITY_TYPE_EDGE_VTX,
+                                          &pflat_edge_vtx    [ln_part_tot+i_part],
+                                          &pflat_edge_vtx_idx[ln_part_tot+i_part],
+                                          PDM_OWNERSHIP_KEEP);
+
+      assert(pflat_edge_vtx_idx[ln_part_tot+i_part] == NULL);
+      pflat_edge_vtx_idx[ln_part_tot+i_part] = malloc((pflat_n_edge[ln_part_tot+i_part] + 1) * sizeof(int));
+      for(int i_edge = 0; i_edge < pflat_n_edge[ln_part_tot+i_part]+1; ++i_edge) {
+        pflat_edge_vtx_idx[ln_part_tot+i_part][i_edge] = 2 * i_edge;
+      }
 
 
     }
     ln_part_tot += n_part[i_dom];
   }
+
+  int         **pflat_vtx_edge_idx = NULL;
+  int         **pflat_vtx_edge     = NULL;
+  PDM_part_connectivity_transpose(ln_part_tot,
+                                  pflat_n_edge,
+                                  pflat_n_vtx,
+                                  pflat_edge_vtx_idx,
+                                  pflat_edge_vtx,
+                                  &pflat_vtx_edge_idx,
+                                  &pflat_vtx_edge);
 
   PDM_g_num_t* shift_by_domain_vtx = _compute_offset_ln_to_gn_by_domain(n_domain,
                                                                         n_part,
@@ -383,6 +420,55 @@ _part_extension
 
   PDM_part_to_part_free(ptp);
 
+  int          *pextract_n_edge                = NULL;
+  int         **pextract_vtx_edge_idx          = NULL;
+  int         **pextract_vtx_edge              = NULL;
+  PDM_g_num_t **pextract_edge_parent_ln_to_gn  = NULL;
+  int         **pextract_edge_to_edge_location = NULL;
+  PDM_part_to_part_t* ptp_vtx_edge = NULL;
+
+
+  PDM_pconnectivity_to_pconnectivity_from_location_keep(comm,
+                                                        ln_part_tot,
+                               (const int            *) pflat_n_vtx,
+                               (const int           **) pflat_vtx_edge_idx,
+                               (const int           **) pflat_vtx_edge,
+                               (const PDM_g_num_t   **) pflat_edge_ln_to_gn,
+                                                        ln_part_tot,
+                               (const int            *) pflat_n_vtx,
+                               (const PDM_g_num_t   **) pflat_vtx_ln_to_gn,
+                               (const int           **) part1_to_part2_idx,
+                               (const int           **) part1_to_part2_triplet,
+                                                        &pextract_n_edge,
+                                                        &pextract_vtx_edge_idx,
+                                                        &pextract_vtx_edge,
+                                                        &pextract_edge_parent_ln_to_gn,
+                                                        &pextract_edge_to_edge_location,
+                                                        &ptp_vtx_edge);
+
+  if(1 == 1) {
+    PDM_log_trace_array_int(pextract_n_edge, ln_part_tot, "pextract_n_edge");
+    for(int i_part = 0; i_part < ln_part_tot; ++i_part) {
+      PDM_log_trace_array_long(pextract_edge_parent_ln_to_gn [i_part],     pextract_n_edge[i_part], "pextract_edge_parent_ln_to_gn");
+      PDM_log_trace_array_int (pextract_edge_to_edge_location[i_part], 3 * pextract_n_edge[i_part], "pextract_edge_to_edge_location");
+    }
+  }
+
+
+  PDM_part_to_part_free(ptp_vtx_edge);
+
+  for(int i_part = 0; i_part < ln_part_tot; ++i_part) {
+    free(pextract_vtx_edge_idx         [i_part]);
+    free(pextract_vtx_edge             [i_part]);
+    free(pextract_edge_parent_ln_to_gn [i_part]);
+    free(pextract_edge_to_edge_location[i_part]);
+  }
+  free(pextract_n_edge);
+  free(pextract_vtx_edge_idx);
+  free(pextract_vtx_edge);
+  free(pextract_edge_parent_ln_to_gn);
+  free(pextract_edge_to_edge_location);
+
   // Objectif :
   //   - Faire un part_to_part qui englobe les raccords entre domain et entre partition
   //   - ATTENTION au piege du shift
@@ -404,7 +490,11 @@ _part_extension
   for(int i_part = 0; i_part < ln_part_tot; ++i_part) {
     free(part1_to_part2_idx        [i_part]);
     // free(part1_to_part2_triplet_idx[i_part]);
-    // free(part1_to_part2_triplet    [i_part]);
+    free(part1_to_part2_triplet    [i_part]);
+
+    free(pflat_vtx_edge_idx[i_part] );
+    free(pflat_vtx_edge    [i_part] );
+    free(pflat_edge_vtx_idx[i_part] );
   }
   free(part1_to_part2_idx        );
   // free(part1_to_part2_triplet_idx);
@@ -420,7 +510,13 @@ _part_extension
   free(pn_vtx);
   free(pvtx_ln_to_gn);
   free(pflat_n_vtx       );
+  free(pflat_n_edge      );
   free(pflat_vtx_ln_to_gn);
+  free(pflat_edge_ln_to_gn);
+  free(pflat_edge_vtx_idx );
+  free(pflat_edge_vtx     );
+  free(pflat_vtx_edge_idx );
+  free(pflat_vtx_edge     );
 }
 
 
