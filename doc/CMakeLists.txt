@@ -1,4 +1,3 @@
-option(PDM_ENABLE_DOC "Create and install the HTML based API documentation (requires Doxygen)" ON)
 # Writing this file using:
 #   - Maia's CMake
 #   - https://devblogs.microsoft.com/cppblog/clear-functional-c-documentation-with-sphinx-breathe-doxygen-cmake/
@@ -6,6 +5,7 @@ option(PDM_ENABLE_DOC "Create and install the HTML based API documentation (requ
 if(PDM_ENABLE_DOC)
     find_package(Doxygen 1.8.9 REQUIRED)
     find_package(Sphinx 3 REQUIRED)
+    find_package(Breathe REQUIRED)
 
     #------------------------------------------------------------------------------
     # Build doxygen documentation
@@ -13,6 +13,14 @@ if(PDM_ENABLE_DOC)
 
     if(NOT DOXYGEN_FOUND)
         message(FATAL_ERROR "Doxygen is needed to build the documentation.")
+    endif()
+
+    if(NOT SPHINX_FOUND)
+        message(FATAL_ERROR "Sphinx is needed to build the documentation.")
+    endif()
+
+    if(NOT BREATHE_FOUND)
+        message(FATAL_ERROR "Breathe is needed to build the documentation.")
     endif()
 
     set(DOXYFILE_IN ${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile.in)

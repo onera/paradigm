@@ -173,6 +173,12 @@ option(PDM_ENABLE_Fortran_MPI_MODULE "Use Fortran MPI module" ON)
 
 option(PDM_ENABLE_UNIT_TEST "Enable unit test " OFF)
 
+
+# Documentation
+# -------------
+
+option(PDM_ENABLE_DOC "Create and install the HTML based API documentation (requires Doxygen)" OFF)
+
 #------------------------------------------------------------------------------
 # Default build : Release
 #------------------------------------------------------------------------------
