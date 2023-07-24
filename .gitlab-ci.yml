@@ -205,9 +205,9 @@ pages:
     - mkdir -p public
     - echo "CI_COMMIT_TAG = ${CI_COMMIT_TAG}"
     - if [ "${CI_COMMIT_TAG}" == "" ]; then
-    -   cp -r $CUSTOM_CI_DIR/build_intel@2022_intel-oneapi_BUILD_Debug/doc/sphinx/html public/$CI_COMMIT_BRANCH
+    -   cp -r $CUSTOM_CI_DIR/build_intel@2022_intel-oneapi_GNUM64__BUILD_Debug/doc/sphinx/html public/$CI_COMMIT_BRANCH
     - else
-    -   cp -r $CUSTOM_CI_DIR/build_intel@2022_intel-oneapi_BUILD_Debug/doc/sphinx/html public/$CI_COMMIT_TAG
+    -   cp -r $CUSTOM_CI_DIR/build_intel@2022_intel-oneapi_GNUM64__BUILD_Debug/doc/sphinx/html public/$CI_COMMIT_TAG
     - fi
     # - |
     #   cat > public/index.html << EOF
