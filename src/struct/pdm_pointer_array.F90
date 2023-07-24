@@ -319,7 +319,7 @@ module pdm_pointer_array
           deallocate(pa%cptr)
         end if
 
-      else if (pa%shared_c) then
+      else
         if (associated(pa%cptr)) then
           do i = 1, size(pa%cptr)
             call pdm_fortran_free_c(pa%cptr(i))

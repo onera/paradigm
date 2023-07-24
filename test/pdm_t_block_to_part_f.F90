@@ -37,14 +37,14 @@ program testf
 #endif  
 
   !-----------------------------------------------------------
-  logical, parameter                    :: exch_in_place = .true.
+  logical, parameter                    :: exch_in_place = .false.
   integer, parameter                    :: comm = MPI_COMM_WORLD
 
   type(c_ptr)                           :: btp = C_NULL_PTR
 
   integer(pdm_g_num_s), pointer         :: block_distrib_idx(:) => null()
   integer                               :: n_part
-  type(PDM_pointer_array_t), pointer    :: gnum_elt
+  type(PDM_pointer_array_t), pointer    :: gnum_elt        => null()
   integer(pdm_l_num_s), pointer         :: n_elt(:)        => null()
   integer(pdm_g_num_s), pointer         :: elt_ln_to_gn(:) => null()
 
@@ -52,7 +52,7 @@ program testf
   double precision,     pointer         :: block_data(:)   => null()
 
   type(PDM_pointer_array_t), pointer    :: part_stride => null()
-  type(PDM_pointer_array_t), pointer    :: part_data => null()
+  type(PDM_pointer_array_t), pointer    :: part_data   => null()
 
   integer(pdm_l_num_s), pointer         :: stride(:) => null()
   double precision,     pointer         :: data(:)   => null()
@@ -163,15 +163,9 @@ program testf
   !  Free memory
   deallocate(block_distrib_idx)
   deallocate(n_elt)
-  deallocate(elt_ln_to_gn)
   deallocate(block_stride)
   deallocate(block_data)
   call PDM_pointer_array_free (gnum_elt)
-
-  if (exch_in_place) then
-    deallocate(stride, data)
-  endif
-
   call PDM_pointer_array_free(part_data)
   call PDM_pointer_array_free(part_stride)
 
