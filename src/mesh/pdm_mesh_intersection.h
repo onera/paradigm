@@ -38,6 +38,22 @@ typedef struct _pdm_mesh_intersection_t PDM_mesh_intersection_t;
  * Public function definitions
  *============================================================================*/
 
+
+/**
+ *
+ * \brief Create a mesh intersection structure
+ *
+ * \param [in]   dim_mesh_a     Mesh A dimension
+ * \param [in]   dim_mesh_b     Mesh B dimension
+ * \param [in]   project_coeff  Projection coefficient
+ * \param [in]   comm           Associated communicator
+ * \param [in]   owner          Results Ownership 
+ *
+ * \return       mi             Pointer to \ref PDM_mesh_intersection object
+ *
+ */
+
+
 PDM_mesh_intersection_t*
 PDM_mesh_intersection_create
 (
@@ -48,6 +64,23 @@ PDM_mesh_intersection_create
        PDM_MPI_Comm                 comm,
  const PDM_ownership_t              owner
 );
+
+/**
+ *
+ * \brief Set the limitation of calculation to boxes intersections 
+ *
+ * \param [in]   mi             Pointer to \ref PDM_mesh_intersection object
+ * \param [in]   status         Status
+ *
+ */
+
+void
+PDM_mesh_intersection_preprocess_only_set
+(
+ PDM_mesh_intersection_t *mi,
+ const int                status
+);
+
 
 /**
  *
@@ -66,6 +99,15 @@ PDM_mesh_intersection_n_part_set
   const int                i_mesh,
   const int                n_part
 );
+
+
+/**
+ *
+ * \brief  Compute meshes intersection
+ *
+ * \param [in]   mi             Pointer to \ref PDM_mesh_intersection object
+ *
+ */
 
 void
 PDM_mesh_intersection_compute
@@ -90,6 +132,33 @@ PDM_mesh_intersection_mesh_nodal_set
  int                       i_mesh,
  PDM_part_mesh_nodal_t    *mesh
  );
+
+
+/**
+ *
+ * \brief Set a mesh partition  
+ *
+ * \param [in]   mi             Pointer to \ref PDM_mesh_intersection object
+ * \param [in]   i_mesh         Mesh identifier
+ * \param [in]   i_part         Partition identifier
+ * \param [in]   n_cell         Number of cells
+ * \param [in]   n_face         Number of faces
+ * \param [in]   n_edge         Number of edges
+ * \param [in]   n_vtx          Number of vertices
+ * \param [in]   cell_face_idx  Index in the cell -> face connectivity
+ * \param [in]   cell_face      Cell -> face connectivity
+ * \param [in]   face_edge_idx  Index in the face -> edge connectivity
+ * \param [in]   face_edge      Cell -> face connectivity
+ * \param [in]   edge_vtx       Edge -> vertex conectivity 
+ * \param [in]   face_vtx_idx   Index in the face -> vertex connectivity
+ * \param [in]   face_vtx       Face -> vertex connectivity
+ * \param [in]   cell_ln_to_gn  Local cell numbering to global cel numbering
+ * \param [in]   face_ln_to_gn  Local face numbering to global face numbering
+ * \param [in]   edge_ln_to_gn  Local edge numbering to global edge numbering
+ * \param [in]   vtx_ln_to_gn   Local vertex numbering to global vertex numbering
+ * \param [in]   vtx_coord      Vertex coordinates
+ *
+ */
 
 void
 PDM_mesh_intersection_part_set
@@ -132,6 +201,14 @@ PDM_mesh_intersection_stat_get
  double *global_vol_A
 
 );
+
+
+/**
+ *
+ * \brief A mesh intersection structure  
+ *
+ * \param [in]   mi             Pointer to \ref PDM_mesh_intersection object
+ */
 
 void
 PDM_mesh_intersection_free
