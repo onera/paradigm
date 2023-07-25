@@ -52,8 +52,8 @@ program testf
   integer(pdm_l_num_s), pointer         :: block_stride(:) => null()
   integer(pdm_l_num_s), pointer         :: block_data(:)   => null()
 
-  integer(pdm_l_num_s), pointer      :: stride(:)
-  integer(pdm_l_num_s), pointer      :: data(:)  
+  integer(pdm_l_num_s), pointer      :: stride(:) => null()
+  integer(pdm_l_num_s), pointer      :: data(:)   => null()
 
   integer                               :: code
   integer                               :: i_rank
@@ -135,7 +135,9 @@ program testf
   !  Free memory
   call PDM_part_to_block_free(ptb)
 
-  deallocate(n_elt)
+  deallocate(n_elt,  &
+             stride, &
+             data)
   call PDM_pointer_array_free(gnum_elt)
   call PDM_pointer_array_free(part_data)
   call PDM_pointer_array_free(part_stride)
