@@ -235,15 +235,15 @@ _part_extension
   int* n_part_g = malloc(n_domain * sizeof(int));
   PDM_MPI_Allreduce(n_part, n_part_g, n_domain, PDM_MPI_INT, PDM_MPI_SUM, comm);
 
-  int          **pn_vtx             = (int          **) malloc( n_domain * sizeof(int          *));
-  PDM_g_num_t ***pvtx_ln_to_gn      = (PDM_g_num_t ***) malloc( n_domain * sizeof(PDM_g_num_t **));
-  int          *pflat_n_vtx         = (int           *) malloc( n_domain * sizeof(int           ));
-  int          *pflat_n_edge        = (int           *) malloc( n_domain * sizeof(int           ));
-  int         **pflat_edge_vtx_idx  = (int          **) malloc( n_domain * sizeof(int          *));
-  int         **pflat_edge_vtx      = (int          **) malloc( n_domain * sizeof(int          *));
-  PDM_g_num_t **pflat_vtx_ln_to_gn  = (PDM_g_num_t  **) malloc( n_domain * sizeof(PDM_g_num_t  *));
-  PDM_g_num_t **pflat_edge_ln_to_gn = (PDM_g_num_t  **) malloc( n_domain * sizeof(PDM_g_num_t  *));
-  double      **pflat_vtx_coords    = (double       **) malloc( n_domain * sizeof(double       *));
+  int          **pn_vtx              = (int          **) malloc( n_domain * sizeof(int          *));
+  PDM_g_num_t ***pvtx_ln_to_gn       = (PDM_g_num_t ***) malloc( n_domain * sizeof(PDM_g_num_t **));
+  int           *pflat_n_vtx         = (int           *) malloc( n_domain * sizeof(int           ));
+  int           *pflat_n_edge        = (int           *) malloc( n_domain * sizeof(int           ));
+  int          **pflat_edge_vtx_idx  = (int          **) malloc( n_domain * sizeof(int          *));
+  int          **pflat_edge_vtx      = (int          **) malloc( n_domain * sizeof(int          *));
+  PDM_g_num_t  **pflat_vtx_ln_to_gn  = (PDM_g_num_t  **) malloc( n_domain * sizeof(PDM_g_num_t  *));
+  PDM_g_num_t  **pflat_edge_ln_to_gn = (PDM_g_num_t  **) malloc( n_domain * sizeof(PDM_g_num_t  *));
+  double       **pflat_vtx_coords    = (double       **) malloc( n_domain * sizeof(double       *));
 
   int ln_part_tot = 0;
   for(int i_dom = 0; i_dom < n_domain; ++i_dom) {
@@ -342,6 +342,18 @@ _part_extension
   int         **part1_to_part2_triplet_idx = NULL; //malloc(ln_part_tot * sizeof(int *));
   int         **part1_to_part2_triplet     = malloc(ln_part_tot * sizeof(int *));
 
+  /*
+   * Pour la recursion, il faut idéalement calculer le graphe avec les partition shifter avec
+   * PDM_part_generate_entity_graph_comm avec pentity_hint pour accelerer ou choisir
+   * Typiquement pour la deuxième passe on prends que le sommet étendu non unifié
+   */
+
+  /*
+   * Dans tout les cas il ne faut pas oublié de faire le graph de comm proprement
+   * avec les connexions entres partitions et entre domaine
+   * avec PDM_part_domain_interface_as_graph (à reimplementer)
+   */
+
   // Count
   int li_part = 0;
   for(int i_dom = 0; i_dom < n_domain; ++i_dom) {
@@ -404,30 +416,47 @@ _part_extension
     }
   }
 
+  /*
+   * Pour les periodicités il faut le geré côté part1
+   * car côté part2 on a un pb d'extraction de plusieurs gnum mais de periodicité différentes
+   * Une fois qu'on a fait le job côté part2 on génére une numérotation asbolu avec des doublés
+   * On doit également gardé le doublé existant pour faire l'unification au step d'après
+   * Exemple :
+   *    - 1 cellules periodiques par noeuds
+   *       -> On recupère (1, -1) et (1, 1)
+   *       -> On fait un gnum des extensions de partitions : donc 1, 2
+   *       -> On shift par rapport à l'interne donc 2, 3
+   *    Si on réaplique l'algo pour du rang 2 :
+   *       -> On recupère ()
+   * ATTENTION : on peut retomber sur la cellule de base
+   */
 
-  // Attention à l'histoire du x3 dans l'idx
-  PDM_part_to_part_t* ptp = PDM_part_to_part_create_from_num2_triplet((const PDM_g_num_t **) pflat_vtx_ln_to_gn,
-                                                                      (const int          *) pflat_n_vtx,
-                                                                      ln_part_tot,
-                                                                      (const int          *) pflat_n_vtx,
-                                                                      ln_part_tot,
-                                                                      (const int         **) part1_to_part2_idx,
-                                                                      (const int         **) part1_to_part2_triplet_idx,
-                                                                      (const int         **) part1_to_part2_triplet,
-                                                                      comm);
 
-
-  int  *n_ref_lnum2 = NULL;
-  int **ref_lnum2   = NULL;
-  PDM_part_to_part_ref_lnum2_get(ptp, &n_ref_lnum2, &ref_lnum2);
-
+  // ONLY to debug the ref_lnum2
   if(0 == 1) {
-    for(int i_part = 0; i_part < ln_part_tot; ++i_part) {
-      PDM_log_trace_array_int(ref_lnum2[i_part], n_ref_lnum2[i_part], "ref_lnum2 :");
-    }
-  }
+    PDM_part_to_part_t* ptp = PDM_part_to_part_create_from_num2_triplet((const PDM_g_num_t **) pflat_vtx_ln_to_gn,
+                                                                        (const int          *) pflat_n_vtx,
+                                                                        ln_part_tot,
+                                                                        (const int          *) pflat_n_vtx,
+                                                                        ln_part_tot,
+                                                                        (const int         **) part1_to_part2_idx,
+                                                                        (const int         **) part1_to_part2_triplet_idx,
+                                                                        (const int         **) part1_to_part2_triplet,
+                                                                        comm);
 
-  PDM_part_to_part_free(ptp);
+
+    int  *n_ref_lnum2 = NULL;
+    int **ref_lnum2   = NULL;
+    PDM_part_to_part_ref_lnum2_get(ptp, &n_ref_lnum2, &ref_lnum2);
+
+    if(0 == 1) {
+      for(int i_part = 0; i_part < ln_part_tot; ++i_part) {
+        PDM_log_trace_array_int(ref_lnum2[i_part], n_ref_lnum2[i_part], "ref_lnum2 :");
+      }
+    }
+
+    PDM_part_to_part_free(ptp);
+  }
 
   int          *pextract_n_edge                = NULL;
   int         **pextract_vtx_edge_idx          = NULL;
@@ -1039,15 +1068,11 @@ char *argv[]
                                                                                    NULL,
                                                                                    pvtx_ln_to_gn);
 
-  PDM_part_domain_interface_free(pdi);
   PDM_domain_interface_free(dom_itrf);
 
 
   /*
    * Extention de partition
-   */
-
-  /*
    *  - Step 1 : n_dom = 1, n_proc = 2 + rank1
    *  - Step 2 : n_dom = 1, n_proc = 2 + rank2
    *  - Step 3 : n_dom = 1, n_proc = 1 + rank1 + perio
@@ -1097,6 +1122,7 @@ char *argv[]
   free(pn_vtx);
   free(pvtx_ln_to_gn);
 
+  PDM_part_domain_interface_free(pdi);
 
   PDM_MPI_Barrier (PDM_MPI_COMM_WORLD);
 
