@@ -14,7 +14,7 @@ Basic Installation
   make
   make install
 
-If the installation fails, use the following CMake options.
+If installation fails, use the following CMake options.
 
 
 
@@ -23,7 +23,7 @@ CMake general options
 
 .. code-block:: sh
 
-    cmake -D<option1_name>=<option1_value> ... -D<option_name>=<option_value>
+    cmake -D<option1_name>=<option1_value> ... -D<option2_name>=<option2_value>
 
 Prefix : ``CMAKE_INSTALL_PREFIX=<prefix>``
 
@@ -85,7 +85,7 @@ If a simple autodetection fails, you can use these options to find MPI :
 
 .. code-block:: sh
 
-    MPI_<lang>_LIBRARIES
-    MPI_<lang>_INCLUDE_PATH
+    MPI_<language>_LIBRARIES
+    MPI_<language>_INCLUDE_PATH
 
 Refer to FindMPI in the CMake documentation for more information.

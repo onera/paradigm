@@ -7,8 +7,8 @@ API Documentation
 C API documentation
 ===================
 
-.. .. doxygenfile:: pdm_extract_part.h
-..    :project: paradigm
+.. doxygenfile:: pdm_part_to_block.h
+   :project: paradigm
 
 Fortran API documentation
 =========================
