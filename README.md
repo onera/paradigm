@@ -46,7 +46,7 @@ If a simple autodetection fails, you can use these options to find Python :
 
 Refer to [FindPython](https://cmake.org/cmake/help/latest/module/FindPython.html) in the CMake documentation for more information.
 
-:warning: *Note that shared libraries are necessary for Python interface (*`PDM_ENABLE_SHARED=ON`*).*
+:warning: *Note that a shared library is necessary for Python interface:* `PDM_ENABLE_SHARED=ON`
 
 
 
