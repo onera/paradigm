@@ -34,7 +34,7 @@ extern "C" {
 
 /**
  * \struct PDM_block_to_part_t
- * \brief  Block to partition redistribution
+ * \brief  Block-to-Partition redistribution
  *
  */
 
@@ -51,7 +51,7 @@ typedef struct _pdm_block_to_part_t PDM_block_to_part_t;
 
 /**
  *
- * \brief Reset global statistic
+ * \brief Reset global block-to-part statistics
  *
  */
 
@@ -64,7 +64,7 @@ PDM_block_to_part_global_statistic_reset
 
 /**
  *
- * \brief Get global timer in part to block
+ * \brief Get global block-to-part statistics
  *
  * \param [in]   comm                 MPI communicator
  * \param [out]  min_exch_rank_send   Global min part of ranks used to send 
@@ -94,7 +94,7 @@ PDM_block_to_part_global_statistic_get
 
 /**
  *
- * \brief Get global timer in block to part
+ * \brief Get global block-to-part timer
  *
  * \param [in]   comm              MPI communicator
  * \param [out]  min_elaps         Min elapsed time
@@ -128,12 +128,12 @@ PDM_block_to_part_global_timer_get
 
 /**
  *
- * \brief Create a block to partitions redistribution
+ * \brief Create a block-to-part redistribution
  *
- * \param [in]   block_distrib_idx Block distribution (size : \ref size of \ref comm + 1)
- * \param [in]   gnum_elt          Element global number (size : \ref n_part)
- * \param [in]   n_elt             Local number of elements (size : \ref n_part)
- * \param [in]   n_part            Number of partition
+ * \param [in]   block_distrib_idx Block distribution (size : *n_rank* + 1)
+ * \param [in]   gnum_elt          Element global numbers (size : \p n_part)
+ * \param [in]   n_elt             Local number of elements (size : \p n_part)
+ * \param [in]   n_part            Number of partitions
  * \param [in]   comm              MPI communicator
  *
  * \return   Initialized \ref PDM_block_to_part instance
@@ -152,13 +152,13 @@ PDM_block_to_part_create
 
 /**
  *
- * \brief Create a block to partitions with sparse representation
+ * \brief Create a block-to-part with sparse representation
  *
- * \param [in]   delt_gnum             Sorted list of gnum that represent the partial block, should be betwenn [1, N]
+ * \param [in]   delt_gnum             Sorted list of gnum that represent the partial block, should be between [1, N]
  * \param [in]   dn_elt                Number of element in the partial block
- * \param [in]   gnum_elt              Element global number (size : \ref n_part)
- * \param [in]   n_elt                 Local number of elements (size : \ref n_part)
- * \param [in]   n_part                Number of partition
+ * \param [in]   gnum_elt              Element global numbers (size : \p n_part)
+ * \param [in]   n_elt                 Local number of elements (size : \p n_part)
+ * \param [in]   n_part                Number of partitions
  * \param [in]   comm                  MPI communicator
  *
  * \return   Initialized \ref PDM_block_to_part instance
@@ -176,26 +176,28 @@ PDM_block_to_part_create_from_sparse_block
 );
 
 
-PDM_block_to_part_t *
-PDM_block_to_part_create_cf
-(
- const PDM_g_num_t    *block_distrib_idx,
- const PDM_g_num_t    **gnum_elt,
- const int            *n_elt,
- const int             n_part,
- const PDM_MPI_Fint    fcomm
-);
+// PDM_block_to_part_t *
+// PDM_block_to_part_create_cf
+// (
+//  const PDM_g_num_t    *block_distrib_idx,
+//  const PDM_g_num_t    **gnum_elt,
+//  const int            *n_elt,
+//  const int             n_part,
+//  const PDM_MPI_Fint    fcomm
+// );
 
 
 /**
  *
- * \brief Initialize an exchange
+ * \brief Exchange data from *block-distributed* frame to *partitioned* frame
  *
- * \param [in]   btp          Block to part structure
+ * \note \p part_stride and \p part_data are assumed to be allocated
+ *       at the correct size before hand by the user.
+ *
+ * \param [in]   btp          Block-to-Part structure
  * \param [in]   s_data       Data size
  * \param [in]   t_stride     Stride type
- * \param [in]   block_stride Stride for each block element for \ref PDM_STRIDE_VAR
- *                            Constant stride for \ref PDM_STRIDE_VAR
+ * \param [in]   block_stride Stride for each block element for \ref PDM_STRIDE_VAR, constant stride for \ref PDM_STRIDE_VAR
  * \param [in]   block_data   Block data
  * \param [out]  part_stride  Partition stride
  * \param [out]  part_data    Partition data
@@ -217,20 +219,17 @@ PDM_block_to_part_exch_in_place
 
 /**
  *
- * \brief Initialize an exchange
- * (part_stride and part_data are allocated in function)
+ * \brief Exchange data from *block-distributed* frame to *partitioned* frame
  *
- * \param [in]   btp          Block to part structure
+ * \param [in]   btp          Block-to-Part structure
  * \param [in]   s_data       Data size
  * \param [in]   t_stride     Stride type
- * \param [in]   block_stride Stride for each block element for \ref PDM_STRIDE_VAR
- *                            Constant stride for \ref PDM_STRIDE_VAR
+ * \param [in]   block_stride Stride for each block element for \ref PDM_STRIDE_VAR, constant stride for \ref PDM_STRIDE_VAR
  * \param [in]   block_data   Block data
  * \param [out]  part_stride  Partition stride
  * \param [out]  part_data    Partition data
  *
  */
-
 void
 PDM_block_to_part_exch
 (
@@ -246,11 +245,11 @@ PDM_block_to_part_exch
 
 /**
  *
- * \brief Free a block to part structure
+ * \brief Free a Block-to-Part structure
  *
- * \param [inout] btp  Block to part structure
+ * \param [inout] btp  Block-to-Part structure
  *
- * \return       NULL
+ * \return       Null pointer
  */
 
 PDM_block_to_part_t *
@@ -262,12 +261,12 @@ PDM_block_to_part_free
 
 /**
  *
- * \brief Return index in the block for a gnum
+ * \brief Return index in the block for a global id
  *
- * \param [in] ptb         Part to block structure
- * \param [in] gNum        Global number
+ * \param [in] ptb         Block-to-Part structure
+ * \param [in] gNum        Global id
  *
- * \return  Index
+ * \return  Index in local block (zero-based)
  */
 
 PDM_l_num_t
@@ -282,7 +281,7 @@ PDM_block_to_part_gnum_idx_get
  *
  * \brief Get the number of partitions
  *
- * \param [in] btp         Block to part structure
+ * \param [in] btp         Block-to-Part structure
  *
  * \return  Number of partitions
  */
@@ -298,10 +297,10 @@ PDM_block_to_part_n_part_get
  *
  * \brief Get the number of elements in a given partition
  *
- * \param [in] btp         Block to part structure
+ * \param [in] btp         Block-to-Part structure
  * \param [in] i_part      Id of current partition
  *
- * \return  Number of element in the current partition
+ * \return  Number of element in current partition
  */
 
 int

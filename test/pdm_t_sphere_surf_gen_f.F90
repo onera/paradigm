@@ -39,7 +39,7 @@ program testf
   type(PDM_pointer_array_t), pointer:: pface_vtx => null()
   type(PDM_pointer_array_t), pointer:: pface_ln_to_gn => null()
 
-  double precision,     pointer     :: vtx_coord(:)     => null()
+  ! double precision,     pointer     :: vtx_coord(:)     => null()
   double precision,     pointer     :: vtx_coord2(:,:)  => null()
   integer(pdm_g_num_s), pointer     :: vtx_ln_to_gn(:)  => null()
   integer(pdm_l_num_s), pointer     :: face_vtx(:)      => null()
@@ -136,15 +136,20 @@ program testf
     call PDM_pointer_array_part_get(pvtx_ln_to_gn, &
                                     ipart-1,       &
                                     vtx_ln_to_gn)
-    call PDM_pointer_array_part_get(pvtx_coord, &
-                                    ipart-1,    &
-                                    vtx_coord)
+    ! call PDM_pointer_array_part_get(pvtx_coord, &
+    !                                 ipart-1,    &
+    !                                 vtx_coord)
 
     ! Reshape without copy
-    call c_f_pointer(c_loc(vtx_coord), vtx_coord2, [3, pn_vtx(ipart)])
-    call PDM_pointer_array_part_get(pvtx_coord, &
-                                    ipart-1,    &
-                                    vtx_coord)
+    ! call c_f_pointer(c_loc(vtx_coord), vtx_coord2, [3, pn_vtx(ipart)])
+    ! call PDM_pointer_array_part_get(pvtx_coord, &
+    !                                 ipart-1,    &
+    !                                 vtx_coord)
+    call PDM_pointer_array_part_get_double_2(pvtx_coord,                &
+                                             ipart-1,                   &
+                                             PDM_STRIDE_CST_INTERLACED, &
+                                             3,                         &
+                                             vtx_coord2)
 
     call PDM_writer_geom_coord_set(wrt,                &
                                    id_geom,            &

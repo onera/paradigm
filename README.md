@@ -1,3 +1,5 @@
+# ParaDiGM #
+
 **ParaDiGM** (*Parallel Distributed General Mesh*) is a parallel computational geometry library under LGPL, with interfaces in C, Fortran and Python.
 
 ## Documentation  ##
@@ -5,6 +7,13 @@
 User documentation is deployed on ONERA's internal GitLab pages server: https://numerics.gitlab-pages.onera.net/mesh/paradigm/dev/index.html
 
 ## Build and install ##
+
+### Dependencies
+
+General dependencies for building **ParaDiGM** are:
+- a C compiler
+- [CMake](https://cmake.org/) (version 3.16 or higher)
+- an MPI distribution
 
 ### Basic Installation
 
@@ -37,17 +46,17 @@ If a simple autodetection fails, you can use these options to find Python :
 
 Refer to [FindPython](https://cmake.org/cmake/help/latest/module/FindPython.html) in the CMake documentation for more information.
 
-&#9888; *Note that shared libraries are necessary for Python interface (*`PDM_ENABLE_SHARED=ON`*).*
+:warning: *Note that shared libraries are necessary for Python interface (*`PDM_ENABLE_SHARED=ON`*).*
 
-:warning:
 
-#### Enable shared libraries
+
+#### Build shared library
     PDM_ENABLE_SHARED=<ON | OFF> (default : ON)
 
-#### Enable static libraries
+#### Build static library
     PDM_ENABLE_STATIC=<ON | OFF> (default : ON)
 
-#### Enable ParMETIS library (parallel graph partitioning)
+#### Enable the use of [ParMETIS](https://github.com/KarypisLab/ParMETIS) (parallel graph partitioning)
     PDM_ENABLE_PARMETIS=<ON | OFF> (default : ON)
 
 If a simple autodetection fails, you can use these options to find ParMETIS :
@@ -59,7 +68,7 @@ CMake looks for
 - `parmetis.h` and `metis.h` includes
 - `parmetis` and `metis` libraries
 
-#### Enable PT-Scotch library (parallel graph partitioning)
+#### Enable the use of [PT-Scotch](https://gitlab.inria.fr/scotch/scotch) (parallel graph partitioning)
 
     PDM_ENABLE_PTSCOTCH=<ON | OFF> (default : ON)
 
@@ -72,7 +81,10 @@ CMake looks for
 - `ptscotch.h` include file
 - `scotch`, `scotcherr`, `ptscotch`, `ptscotcherr` libraries
 
-#### Enable long global numbers
+#### Enable the use of [BLAS](https://www.netlib.org/blas/) / [LAPACK](https://www.netlib.org/lapack/) (linear algebra)
+    PDM_ENABLE_BLASLAPACK=<ON | OFF> (default : OFF)
+
+#### Enable long global IDs
     PDM_ENABLE_LONG_G_NUM=<ON | OFF> (default : ON)
 - `ON`  : `PDM_g_num_t` type is `long int`
 - `OFF` : `PDM_g_num_t` type is `int`
@@ -82,7 +94,6 @@ CMake looks for
 Once built, the documentation can be found in `build/doc/sphinx/html` and launch `index.html` file
 
 ### Compiler choice
-
     CC=<C compiler> CXX=<CXX compiler> FC=<Fortran compiler> cmake ...
 
 or use the following CMake options
@@ -92,7 +103,6 @@ or use the following CMake options
     CMAKE_Fortran_COMPILER=<Fortran compiler>
 
 ### CMake MPI options
-
     MPI_C_COMPILER=<C MPI wrapper>
     MPI_CXX_COMPILER=<CXX MPI wrapper>
     MPI_Fortran_COMPILER=<Fortran MPI wrapper>
@@ -111,3 +121,7 @@ Issues can be reported directly on the [Issues](https://gitlab.onera.net/numeric
 ## License ##
 
 **ParaDiGM** is available under the LGPL3 license (https://www.gnu.org/licenses/lgpl-3.0.fr.html).
+
+## Copyright ##
+
+Copyright 2023, ONERA The French Aerospace Lab

@@ -1,6 +1,6 @@
-**********************
-ParaDiGM documentation
-**********************
+************************************
+Welcome to ParaDiGM's documentation!
+************************************
 
 **ParaDiGM** (*Parallel Distributed General Mesh*) is a parallel computational geometry library developed at ONERA.
 It provides a progressive framework, which consists of a set of low-, mid- and high-level services usable by many developers of scientific computing software.
@@ -20,6 +20,7 @@ Documentation summary
   :maxdepth: 1
   :caption: Summary
 
+  .. self
   installation
   api/api
 
@@ -38,6 +39,7 @@ Indices and tables
 ##################
 
 * :ref:`genindex`
+* :ref:`modindex`
 * :ref:`search`
 
 

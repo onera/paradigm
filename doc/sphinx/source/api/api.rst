@@ -7,8 +7,11 @@ API Documentation
 C API documentation
 ===================
 
-.. doxygenfile:: pdm_part_to_block.h
-   :project: paradigm
+.. toctree::
+    :maxdepth: 2
+    :glob:
+
+    *
 
 Fortran API documentation
 =========================

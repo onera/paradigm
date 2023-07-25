@@ -177,7 +177,7 @@ option(PDM_ENABLE_UNIT_TEST "Enable unit test " OFF)
 # Documentation
 # -------------
 
-option(PDM_ENABLE_DOC "Create and install the HTML based API documentation (requires Doxygen)" OFF)
+option(PDM_ENABLE_DOC "Enable Sphinx documentation" OFF)
 
 #------------------------------------------------------------------------------
 # Default build : Release
@@ -426,6 +426,10 @@ if (CMAKE_BUILD_TYPE STREQUAL "Sanitize")
   set(PDM_RUN_PRELOAD "LD_PRELOAD ${PRELOAD_ASAN}:${PROJECT_BINARY_DIR}/script/asan/fake_dlclose/libdlclose.so")
   set(PDM_RUN_PRELOAD_SRUN "LD_PRELOAD=${PRELOAD_ASAN}:${PROJECT_BINARY_DIR}/script/asan/fake_dlclose/libdlclose.so")
   set(PDM_RUN_LSAN "LSAN_OPTIONS=suppressions=${PROJECT_SOURCE_DIR}/script/asan/asan.supp")
+
+  if (PDM_ENABLE_DOC)
+    message(FATAL_ERROR "Documention can not be built in Sanitize CMAKE_BUILD_TYPE")
+  endif ()
 endif()
 
 if(DEFINED ENV{PYTHONPATH})

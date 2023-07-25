@@ -3,8 +3,19 @@
 Installation
 ############
 
+Dependencies
+============
+
+General dependencies for building **ParaDiGM** are:
+
+  * a C++ compiler
+  * `CMake <https://cmake.org/>`_ (version 3.16 or higher)
+  * an MPI distribution
+
 Basic Installation
 ==================
+
+Follow these steps to build **ParaDiGM** from the sources:
 
 .. code-block:: sh
 
@@ -14,8 +25,8 @@ Basic Installation
   make
   make install
 
-If installation fails, use the following CMake options.
 
+If installation fails, use the following CMake options.
 
 
 CMake general options
@@ -25,11 +36,23 @@ CMake general options
 
     cmake -D<option1_name>=<option1_value> ... -D<option2_name>=<option2_value>
 
-Prefix : ``CMAKE_INSTALL_PREFIX=<prefix>``
+**Installation prefix**
 
-Enable Fortran interface : ``PDM_ENABLE_Fortran=<ON | OFF>`` (default : ``OFF``)
+.. code-block:: sh
 
-Enable Python interface : ``PDM_ENABLE_PYTHON_BINDINGS=<ON | OFF>`` (default : ``OFF``)
+  CMAKE_INSTALL_PREFIX=<prefix>
+
+**Enable Fortran interface**
+
+.. code-block:: sh
+
+  PDM_ENABLE_Fortran=<ON | OFF> (default : OFF)
+
+**Enable Python interface**
+
+.. code-block:: sh
+
+  PDM_ENABLE_PYTHON_BINDINGS=<ON | OFF> (default : OFF)
 
 If a simple autodetection fails, you can use these options to find Python :
 
@@ -38,23 +61,93 @@ If a simple autodetection fails, you can use these options to find Python :
     PYTHON_LIBRARY=<path>
     PYTHON_INCLUDE_DIR=<path>
 
-Refer to FindPython in the CMake documentation for more information.
+Refer to `FindPython <https://cmake.org/cmake/help/latest/module/FindPython.html>`_ in the CMake documentation for more information.
 
-Enable shared libraries : ``PDM_ENABLE_SHARED=<ON | OFF>`` (default : ``ON``)
-
-Enable static libraries : ``PDM_ENABLE_STATIC=<ON | OFF>`` (default : ``ON``)
-
-Enable the use of the library BLAS : ``PDM_ENABLE_BLAS=<ON | OFF>`` (default : ``ON``)
-
-If a simple autodetection fails, you can use these options to find BLAS :
+**Build shared library**
 
 .. code-block:: sh
 
-    BLAS_DIR=<path>     # Where to find the base directory of BLAS
-    BLAS_INCDIR=<path>  # Where to find the header files
-    BLAS_LIBDIR=<path>  # Where to find the library files
+  PDM_ENABLE_SHARED=<ON | OFF> (default : ON)
 
-To force the use of a list of libraries : ``DBLAS_LIBRARIES="<lib_1> ... <lib_n>"``
+**Build static library**
+
+.. code-block:: sh
+
+  PDM_ENABLE_STATIC=<ON | OFF> (default : ON)
+
+.. _parmetis: https://github.com/KarypisLab/ParMETIS
+.. |parmetis| replace:: **ParMETIS**
+
+**Enable the use of** |parmetis|_ **(parallel graph partitioning)**
+
+.. code-block:: sh
+
+    PDM_ENABLE_PARMETIS=<ON | OFF> (default : ON)
+
+If a simple autodetection fails, you can use these options to find ParMETIS :
+
+.. code-block:: sh
+
+    PARMETIS_DIR=<path>
+
+| To link shared libraries, ParMETIS must be compiled with the ``-fPIC`` flag.
+| CMake looks for
+
+  * ``parmetis.h`` and ``metis.h`` includes
+  * ``parmetis`` and ``metis`` libraries
+
+
+.. _ptscotch: https://gitlab.inria.fr/scotch/scotch
+.. |ptscotch| replace:: **PT-Scotch**
+
+**Enable the use of** |ptscotch|_ **(parallel graph partitioning)**
+
+.. code-block:: sh
+
+    PDM_ENABLE_PTSCOTCH=<ON | OFF> (default : ON)
+
+If a simple autodetection fails, you can use these options to find PT-Scotch :
+
+.. code-block:: sh
+
+    PTSCOTCH_DIR=<path>
+
+| To link shared libraries, PT-Scotch must be compiled with the ``-fPIC`` flag.
+| CMake looks for
+
+  * ``ptscotch.h`` include file
+  * ``scotch``, ``scotcherr``, ``ptscotch``, ``ptscotcherr`` libraries
+
+
+.. _blas: https://www.netlib.org/blas/
+.. |blas| replace:: **BLAS**
+
+.. _lapack: https://www.netlib.org/lapack/
+.. |lapack| replace:: **LAPACK**
+
+**Enable the use of** |blas|_ **/** |lapack|_ **(linear algebra)**
+
+.. code-block:: sh
+
+    PDM_ENABLE_BLASLAPACK=<ON | OFF> (default : OFF)
+
+**Enable long global IDs**
+
+.. code-block:: sh
+
+    PDM_ENABLE_LONG_G_NUM=<ON | OFF> (default : ON)
+
+* ``ON``  : ``PDM_g_num_t`` type is ``long int``
+* ``OFF`` : ``PDM_g_num_t`` type is ``int``
+
+**Enable documentation compilation**
+
+.. code-block:: sh
+
+    PDM_ENABLE_DOC=<ON | OFF> (default : OFF)
+
+Once built, the documentation can be found in ``build/doc/sphinx/html`` and launch ``index.html`` file
+
 
 Compiler choice
 ===============
@@ -88,4 +181,4 @@ If a simple autodetection fails, you can use these options to find MPI :
     MPI_<language>_LIBRARIES
     MPI_<language>_INCLUDE_PATH
 
-Refer to FindMPI in the CMake documentation for more information.
+Refer to `FindMPI <https://cmake.org/cmake/help/latest/module/FindMPI.html>`_ in the CMake documentation for more information.

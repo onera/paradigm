@@ -277,19 +277,19 @@ PDM_block_to_part_global_timer_get
  *
  */
 
-PDM_block_to_part_t *
-PDM_block_to_part_create_cf
-(
- const PDM_g_num_t     *block_distrib_idx,
- const PDM_g_num_t    **gnum_elt,
- const int            *n_elt,
- const int             n_part,
- const PDM_MPI_Fint    fcomm
- )
-{
-  const PDM_MPI_Comm _comm        = PDM_MPI_Comm_f2c(fcomm);
-  return PDM_block_to_part_create (block_distrib_idx, gnum_elt, n_elt, n_part, _comm);
-}
+// PDM_block_to_part_t *
+// PDM_block_to_part_create_cf
+// (
+//  const PDM_g_num_t     *block_distrib_idx,
+//  const PDM_g_num_t    **gnum_elt,
+//  const int            *n_elt,
+//  const int             n_part,
+//  const PDM_MPI_Fint    fcomm
+//  )
+// {
+//   const PDM_MPI_Comm _comm        = PDM_MPI_Comm_f2c(fcomm);
+//   return PDM_block_to_part_create (block_distrib_idx, gnum_elt, n_elt, n_part, _comm);
+// }
 
 
 PDM_block_to_part_t *
