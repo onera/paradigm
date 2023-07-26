@@ -116,7 +116,7 @@ Refer to [FindMPI](https://cmake.org/cmake/help/latest/module/FindMPI.html) in t
 
 ## Issues ##
 
-Issues can be reported directly on the [Issues](https://gitlab.onera.net/numerics/mesh/paradigm/-/issues) section.
+Issues can be reported directly in the [Issues](https://gitlab.onera.net/numerics/mesh/paradigm/-/issues) section.
 
 ## License ##
 

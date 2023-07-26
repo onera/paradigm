@@ -64,7 +64,7 @@ typedef struct _pdm_closest_point_t PDM_closest_point_t;
  *                              target point
  * \param [in ] owner           Ownership for \ref PDM_closest_point_t
  *
- * \return     Pointer to \ref PDM_closest_points object
+ * \return     Pointer to \ref PDM_closest_points_t object
  *
  */
 
@@ -79,9 +79,9 @@ PDM_closest_points_create
 
 /**
  *
- * \brief Set the number of partitions of a point cloud
+ * \brief Set the number of partitions of both point clouds
  *
- * \param [in]   cls               Pointer to \ref PDM_closest_points object
+ * \param [in]   cls               Pointer to \ref PDM_closest_points_t object
  * \param [in]   n_part_cloud_src  Number of partitions of the source cloud
  * \param [in]   n_part_cloud_tgt  Number of partitions od the target cloud
  *
@@ -100,11 +100,11 @@ PDM_closest_points_n_part_cloud_set
  *
  * \brief Set the target point cloud
  *
- * \param [in]   cls             Pointer to \ref PDM_closest_points object
- * \param [in]   i_part          Index of partition
+ * \param [in]   cls             Pointer to \ref PDM_closest_points_t object
+ * \param [in]   i_part          Partition identifier
  * \param [in]   n_points        Number of points
- * \param [in]   coords          Point coordinates
- * \param [in]   gnum            Point global number
+ * \param [in]   coords          Point coordinates (size : 3 * \p n_points)
+ * \param [in]   gnum            Point global ids (size : \p n_points)
  *
  */
 
@@ -123,11 +123,11 @@ PDM_closest_points_tgt_cloud_set
  *
  * \brief Set the source point cloud
  *
- * \param [in]   cls             Pointer to \ref PDM_closest_points object
- * \param [in]   i_part          Index of partition
+ * \param [in]   cls             Pointer to \ref PDM_closest_points_t object
+ * \param [in]   i_part          Partition identifier
  * \param [in]   n_points        Number of points
- * \param [in]   coords          Point coordinates
- * \param [in]   gnum            Point global number
+ * \param [in]   coords          Point coordinates (size : 3 * \p n_points)
+ * \param [in]   gnum            Point global ids (size : \p n_points)
  *
  */
 
@@ -145,7 +145,7 @@ PDM_closest_points_src_cloud_set
  *
  * \brief Look for closest points
  *
- * \param [in]   cls Pointer to \ref PDM_closest_points object
+ * \param [in]   cls Pointer to \ref PDM_closest_points_t object
  *
  */
 
@@ -158,12 +158,12 @@ PDM_closest_points_compute
 
 /**
  *
- * \brief Get Get closest source points global ids and (squared) distance
+ * \brief Get closest source points global ids and (squared) distance
  *
- * \param [in]   cls                   Pointer to \ref PDM_closest_points object
- * \param [in]   i_part_tgt            Index of partition of the cloud
- * \param [out]  closest_src_gnum      Global number of the closest element (size = n_closest * n_tgt_points)
- * \param [out]  closest_src_distance  Distance (size = n_closest * n_tgt_points)
+ * \param [in]   cls                   Pointer to \ref PDM_closest_points_t object
+ * \param [in]   i_part_tgt            Partition identifier
+ * \param [out]  closest_src_gnum      Global ids of the closest source points (size : *n_closest* * *n_tgt_points*)
+ * \param [out]  closest_src_distance  Squared distance from closest source points (size : *n_closest* * *n_tgt_points*)
  *
  */
 
@@ -179,9 +179,9 @@ PDM_closest_points_get
 
 /**
  *
- * \brief Free a distance mesh structure
+ * \brief Free a \ref PDM_closest_points_t instance
  *
- * \param [in]  cls      Pointer to \ref PDM_closest_points object
+ * \param [in]  cls      Pointer to \ref PDM_closest_points_t object
  *
  */
 
@@ -194,9 +194,9 @@ PDM_closest_points_free
 
 /**
  *
- * \brief  Dump elapsed an CPU time
+ * \brief  Dump elapsed and CPU times
  *
- * \param [in]  cls      Pointer to \ref PDM_closest_points object
+ * \param [in]  cls      Pointer to \ref PDM_closest_points_t object
  *
  */
 
@@ -208,12 +208,12 @@ PDM_closest_points_dump_times
 
 /**
  *
- * \brief Get mesh distance
+ * \brief Get source-to-target mapping
  *
- * \param [in]   cls                Pointer to \ref PDM_closest_points object
- * \param [in]   i_part_src         Index of partition of the cloud
- * \param [out]  tgt_in_src_idx     For each src point the number of target localised  (size = n_src_points )
- * \param [out]  tgt_in_src         For each src point the globla number of target point located (size = tgt_in_src_idx[n_src_points] )
+ * \param [in]   cls                Pointer to \ref PDM_closest_points_t object
+ * \param [in]   i_part_src         Partition identifier
+ * \param [out]  src_to_tgt_idx     Index for source-to-target mapping (size : *n_src_points* + 1)
+ * \param [out]  src_to_tgt         Source-to-target mapping (global ids) (size : \p src_to_tgt_idx[ *n_src_points* ] )
  *
  */
 
@@ -222,17 +222,17 @@ PDM_closest_points_tgt_in_src_get
 (
        PDM_closest_point_t  *cls,
  const int                   i_part_src,
-       int                 **tgt_in_src_idx,
-       PDM_g_num_t         **tgt_in_src
+       int                 **src_to_tgt_idx,
+       PDM_g_num_t         **src_to_tgt
 );
 /**
  *
- * \brief Get mesh distance
+ * \brief Get source-to-target distance
  *
- * \param [in]   cls                Pointer to \ref PDM_closest_points object
- * \param [in]   i_part_src         Index of partition of the cloud
- * \param [out]  tgt_in_src_idx     For each src point the number of target localised  (size = n_src_points )
- * \param [out]  tgt_in_src_dist    For each src point the distance to the target point located (size = tgt_in_src_idx[n_src_points] )
+ * \param [in]   cls                Pointer to \ref PDM_closest_points_t object
+ * \param [in]   i_part_src         Partition identifier
+ * \param [out]  src_to_tgt_idx     Index for source-to-target mapping (size : *n_src_points* + 1)
+ * \param [out]  src_to_tgt_dist    Squared source-to-target distance (size : \p src_to_tgt_idx[ *n_src_points* ] )
  *
  */
 void
@@ -240,11 +240,17 @@ PDM_closest_points_tgt_in_src_dist_get
 (
        PDM_closest_point_t  *cls,
  const int                   i_part_src,
-       int                 **tgt_in_src_idx,
-       double              **tgt_in_src_dist
+       int                 **src_to_tgt_idx,
+       double              **src_to_tgt_dist
 );
 
 
+
+/**
+ *
+ * \brief WTF?
+ *
+ */
 void
 PDM_transform_to_parent_gnum
 (
@@ -264,6 +270,8 @@ PDM_transform_to_parent_gnum
  * \brief  transfert _closest_pts var as it seems this static var is not readable
  *          when we switch to the nvcc compiler
  *
+ * **??**
+ *
  */
 
 PDM_closest_point_t*
@@ -277,10 +285,10 @@ PDM_closest_points_closest_transfert
  *
  * \brief  Get the number of target points in a partition
  *
- * \param [in]  cls     Pointer to \ref PDM_closest_points object
- * \param [in]  i_part  Index of partition of the target cloud
+ * \param [in]  cls     Pointer to \ref PDM_closest_points_t object
+ * \param [in]  i_part  Partition identifier
  *
- * \return   Number of target point in the partition \ref i_part
+ * \return   Number of target points in partition \p i_part
  *
  */
 
@@ -296,13 +304,12 @@ PDM_closest_points_n_tgt_get
  *
  * \brief  Get the number of source points in a partition
  *
- * \param [in]  cls     Pointer to \ref PDM_closest_points object
- * \param [in]  i_part  Index of partition of the target cloud
+ * \param [in]  cls     Pointer to \ref PDM_closest_points_t object
+ * \param [in]  i_part  Partition identifier
  *
- * \return   Number of source point in the partition \ref i_part
+ * \return   Number of source points in partition \p i_part
  *
  */
-
 int
 PDM_closest_points_n_src_get
 (
@@ -315,7 +322,7 @@ PDM_closest_points_n_src_get
  *
  * \brief  Get the number of closest points
  *
- * \param [in]  cls     Pointer to \ref PDM_closest_points object
+ * \param [in]  cls     Pointer to \ref PDM_closest_points_t object
  *
  * \return   Number of closest points
  *
@@ -328,12 +335,12 @@ PDM_closest_points_n_closest_get
 );
 
 /**
- * \brief Get part_to_part object to exchange data between
+ * \brief Get \ref PDM_part_to_part_t object to exchange data between
  * the source and target point clouds (both in user frame)
  *
  * \param [in ] cls        Pointer to \ref PDM_closest_point_t object
  * \param [out] ptp        Pointer to \ref PDM_part_to_part_t object
- * \param [in ] ownership  Ownership for ptp
+ * \param [in ] ownership  Ownership for \p ptp
  *
  */
 

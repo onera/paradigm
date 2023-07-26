@@ -140,13 +140,13 @@ If a simple autodetection fails, you can use these options to find PT-Scotch :
 * ``ON``  : ``PDM_g_num_t`` type is ``long int``
 * ``OFF`` : ``PDM_g_num_t`` type is ``int``
 
-.. **Enable documentation compilation**
+**Enable documentation compilation**
 
-.. .. code-block:: sh
+.. code-block:: sh
 
-..     PDM_ENABLE_DOC=<ON | OFF> (default : OFF)
+    PDM_ENABLE_DOC=<ON | OFF> (default : OFF)
 
-.. Once built, the documentation can be found in ``build/doc/sphinx/html`` and launch ``index.html`` file
+Once built, the documentation can be found in ``build/doc/sphinx/html`` and launch ``index.html`` file
 
 
 Compiler choice

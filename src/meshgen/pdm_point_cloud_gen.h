@@ -8,7 +8,7 @@
 /*
   This file is part of the ParaDiGM library.
 
-  Copyright (C) 2019       ONERA
+  Copyright (C) 2022-2023       ONERA
 
   This library is free software; you can redistribute it and/or
   modify it under the terms of the GNU Lesser General Public
@@ -56,10 +56,10 @@ extern "C" {
  *
  * \brief Generate a uniformly random point cloud inside a cuboid.
  *
- * \param [in]   comm                   MPI Communicator id
+ * \param [in]   comm                   MPI Communicator
  * \param [in]   seed                   Random seed
  * \param [in]   gn_pts                 Global number of points in the cloud
- * \param [in]   geometric_g_num        Compute global ids from coordinates
+ * \param [in]   geometric_g_num        Compute global ids from coordinates (Morton ordering)
  * \param [in]   x_min                  X-coordinate of the first cuboid corner
  * \param [in]   y_min                  Y-coordinate of the first cuboid corner
  * \param [in]   z_min                  Z-coordinate of the first cuboid corner
@@ -95,7 +95,7 @@ PDM_point_cloud_gen_random
  *
  * \brief Generate a cartesian point cloud inside a cuboid.
  *
- * \param [in]   comm                   MPI Communicator id
+ * \param [in]   comm                   MPI Communicator
  * \param [in]   nx                     Number of points in X-direction
  * \param [in]   ny                     Number of points in Y-direction
  * \param [in]   nz                     Number of points in Z-direction
@@ -135,10 +135,9 @@ PDM_point_cloud_gen_cartesian
  *
  * \brief Generate a uniformly random point cloud inside a cuboid.
  *
- * \param [in]   comm                   MPI Communicator id
+ * \param [in]   comm                   MPI Communicator
  * \param [in]   seed                   Random seed
  * \param [in]   gn_pts                 Global number of points in the cloud
- * \param [in]   geometric_g_num        Compute global ids from coordinates
  * \param [in]   x_min                  X-coordinate of the first cuboid corner
  * \param [in]   y_min                  Y-coordinate of the first cuboid corner
  * \param [in]   z_min                  Z-coordinate of the first cuboid corner
@@ -146,7 +145,7 @@ PDM_point_cloud_gen_cartesian
  * \param [in]   y_max                  Y-coordinate of the opposite cuboid corner
  * \param [in]   z_max                  Z-coordinate of the opposite cuboid corner
  * \param [out]  dpts_coord             XYZ-coordinates of the local points
- * \param [out]  distrib_pts            Distribution of pts
+ * \param [out]  distrib_pts            Distribution of points
  *
  */
 
@@ -170,7 +169,7 @@ PDM_dpoint_cloud_gen_random
  *
  * \brief Generate a cartesian point cloud inside a cuboid.
  *
- * \param [in]   comm                   MPI Communicator id
+ * \param [in]   comm                   MPI Communicator
  * \param [in]   nx                     Number of points in X-direction
  * \param [in]   ny                     Number of points in Y-direction
  * \param [in]   nz                     Number of points in Z-direction
@@ -181,7 +180,7 @@ PDM_dpoint_cloud_gen_random
  * \param [in]   y_max                  Y-coordinate of the opposite cuboid corner
  * \param [in]   z_max                  Z-coordinate of the opposite cuboid corner
  * \param [out]  dpts_coord             XYZ-coordinates of the local points
- * \param [out]  distrib_pts            Distribution of pts
+ * \param [out]  distrib_pts            Distribution of points
  *
  */
 

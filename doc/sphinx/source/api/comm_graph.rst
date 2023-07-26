@@ -1,4 +1,4 @@
-.. _api_comm_graphs:
+.. _api_comm_graph:
 
 High-level communication graphs
 ===============================

@@ -37,14 +37,14 @@ typedef struct _pdm_dist_cloud_surf_t PDM_dist_cloud_surf_t;
 
 /**
  *
- * \brief Create a structure to compute distance to a mesh nodal
+ * \brief Create a structure to compute distance between point clouds and a surface mesh
  *
  * \param [in]   mesh_nature    Nature of the mesh
- * \param [in]   n_point_cloud  Number of point cloud
+ * \param [in]   n_point_cloud  Number of point clouds
  * \param [in]   comm           MPI communicator
  * \param [in]   owner          Ownership of \ref PDM_dist_cloud_surf_t
  *
- * \return     Pointer to \ref PDM_dist_cloud_surf object
+ * \return     Pointer to \ref PDM_dist_cloud_surf_t object
  */
 
 
@@ -62,8 +62,8 @@ PDM_dist_cloud_surf_create
  *
  * \brief Set the number of partitions of a point cloud
  *
- * \param [in]   dist            Pointer to \ref PDM_dist_cloud_surf object
- * \param [in]   i_point_cloud   Index of point cloud
+ * \param [in]   dist            Pointer to \ref PDM_dist_cloud_surf_t object
+ * \param [in]   i_point_cloud   Point cloud identifier
  * \param [in]   n_part          Number of partitions
  *
  */
@@ -81,12 +81,12 @@ PDM_dist_cloud_surf_n_part_cloud_set
  *
  * \brief Set a point cloud
  *
- * \param [in]   dist            Pointer to \ref PDM_dist_cloud_surf object
- * \param [in]   i_point_cloud   Index of point cloud
- * \param [in]   i_part          Index of partition
+ * \param [in]   dist            Pointer to \ref PDM_dist_cloud_surf_t object
+ * \param [in]   i_point_cloud   Point cloud identifier
+ * \param [in]   i_part          Partition identifier
  * \param [in]   n_points        Number of points
- * \param [in]   coords          Point coordinates
- * \param [in]   gnum            Point global number
+ * \param [in]   coords          Point coordinates (size : 3 * \p n_points)
+ * \param [in]   gnum            Point global ids (size : 3 * \p n_points)
  *
  */
 
@@ -105,10 +105,10 @@ PDM_dist_cloud_surf_cloud_set
 
 /**
  *
- * \brief Set the mesh nodal
+ * \brief Set the nodal mesh
  *
- * \param [in]   dist           Pointer to \ref PDM_dist_cloud_surf object
- * \param [in]   mesh_nodal_id  Mesh nodal Pointer to \ref PDM_dist_cloud_surf object
+ * \param [in]   dist        Pointer to \ref PDM_dist_cloud_surf_t object
+ * \param [in]   mesh_nodal  Pointer to \ref PDM_part_mesh_nodal_t object
  *
  */
 
@@ -117,15 +117,14 @@ PDM_dist_cloud_surf_nodal_mesh_set
 (
  PDM_dist_cloud_surf_t *dist,
  PDM_part_mesh_nodal_t *mesh_nodal
- // PDM_Mesh_nodal_t      *mesh_nodal
 );
 
 /**
  *
  * \brief Map a surface mesh
  *
- * \param [in]   dist       Pointer to \ref PDM_dist_cloud_surf object
- * \param [in]   surf_mesh  Surface mesh pointer
+ * \param [in]   dist       Pointer to \ref PDM_dist_cloud_surf_t object
+ * \param [in]   surf_mesh  Pointer to \ref PDM_surf_mesh_t object
  *
  */
 
@@ -139,12 +138,10 @@ PDM_dist_cloud_surf_surf_mesh_map
 
 /**
  *
- * \brief Set global data of a surface mesh
+ * \brief Set the number of partitions of the mesh
  *
- * \param [in]   dist           Pointer to \ref PDM_dist_cloud_surf object
- * \param [in]   n_g_face       Global number of faces
- * \param [in]   n_g_vtx        Global number of vertices
- * \param [in]   n_part         Number of partition
+ * \param [in]   dist           Pointer to \ref PDM_dist_cloud_surf_t object
+ * \param [in]   n_part         Number of partitions
  *
  */
 
@@ -158,17 +155,17 @@ PDM_dist_cloud_surf_surf_mesh_global_data_set
 
 /**
  *
- * \brief Set a part of a surface mesh
+ * \brief Set a surface mesh partition
  *
- * \param [in]   dist          Pointer to \ref PDM_dist_cloud_surf object
- * \param [in]   i_part        Partition to define
- * \param [in]   n_face        Number of faces
- * \param [in]   face_vtx_idx  Index in the face -> vertex connectivity
- * \param [in]   face_vtx      face -> vertex connectivity
- * \param [in]   face_ln_to_gn Local face numbering to global face numbering
- * \param [in]   n_vtx         Number of vertices
- * \param [in]   coords        Coordinates
- * \param [in]   vtx_ln_to_gn  Local vertex numbering to global vertex numbering
+ * \param [in]   dist            Pointer to \ref PDM_dist_cloud_surf_t object
+ * \param [in]   i_part          Partition identifier
+ * \param [in]   n_face          Number of faces
+ * \param [in]   face_vtx_idx    Index for face -> vertex connectivity (size : \p n_face + 1)
+ * \param [in]   face_vtx        Face -> vertex connectivity (size : \p face_vtx_idx[\p n_face])
+ * \param [in]   face_ln_to_gn   Face global ids (size : \p n_face)
+ * \param [in]   n_vtx           Number of vertices
+ * \param [in]   coords          Vertex coordinates (size : 3 * \p n_vtx)
+ * \param [in]   vtx_ln_to_gn    Vertex global ids (size : \p n_vtx)
  *
  */
 
@@ -191,7 +188,7 @@ PDM_dist_cloud_surf_surf_mesh_part_set
  *
  * \brief Compute distance
  *
- * \param [in]   dist  Pointer to \ref PDM_dist_cloud_surf object
+ * \param [in]   dist  Pointer to \ref PDM_dist_cloud_surf_t object
  *
  */
 
@@ -206,12 +203,12 @@ PDM_dist_cloud_surf_compute
  *
  * \brief Get mesh distance
  *
- * \param [in]   dist                  Pointer to \ref PDM_dist_cloud_surf object
- * \param [in]   i_point_cloud         Current cloud
- * \param [in]   i_part                Index of partition of the cloud
- * \param [out]  closest_elt_distance  Distance
- * \param [out]  closest_elt_projected Projected point coordinates
- * \param [out]  closest_elt_gnum      Global number of the closest element
+ * \param [in]   dist                  Pointer to \ref PDM_dist_cloud_surf_t object
+ * \param [in]   i_point_cloud         Point cloud identifier
+ * \param [in]   i_part                Partition identifier
+ * \param [out]  closest_elt_distance  Squared distance from nearest elements
+ * \param [out]  closest_elt_projected Coordinates of projection onto the nearest elements
+ * \param [out]  closest_elt_gnum      Global ids of the nearest elements
  *
  */
 
@@ -231,9 +228,7 @@ PDM_dist_cloud_surf_get
  *
  * \brief Free a distance mesh structure
  *
- * \param [in]  dist     Pointer to \ref PDM_dist_cloud_surf object
- * \param [in]  partial  if partial is equal to 0, all data are removed.
- *                       Otherwise, results are kept.
+ * \param [in]  dist     Pointer to \ref PDM_dist_cloud_surf_t object
  *
  */
 
@@ -246,9 +241,9 @@ PDM_dist_cloud_surf_free
 
 /**
  *
- * \brief  Dump elapsed an CPU time
+ * \brief  Dump elapsed and CPU times
  *
- * \param [in]  dist     Pointer to \ref PDM_dist_cloud_surf object
+ * \param [in]  dist     Pointer to \ref PDM_dist_cloud_surf_t object
  *
  */
 
@@ -262,12 +257,12 @@ PDM_dist_cloud_surf_dump_times
 
 /**
  *
- * \brief Get the dimension of a point cloud
+ * \brief Get the dimensions of a point cloud
  *
- * \param [in]   dist            Pointer to \ref PDM_dist_cloud_surf object
- * \param [in]   i_point_cloud   Index of point cloud
- * \param [in]   i_part          Index of partition
- * \param [out]  n_points        Number of points
+ * \param [in]   dist            Pointer to \ref PDM_dist_cloud_surf_t object
+ * \param [in]   i_point_cloud   Point cloud identifier
+ * \param [in]   i_part          Partition identifier
+ * \param [out]  n_points        Number of points in current part of current cloud
  *
  */
 
@@ -283,11 +278,12 @@ PDM_dist_cloud_surf_cloud_dim_get
 
 /**
  *
- * \brief Get the dimension of a point cloud
+ * \brief Get the number of partitions in a point cloud
  *
- * \param [in]   dist            Pointer to \ref PDM_dist_cloud_surf object
- * \param [in]   i_point_cloud   Index of point cloud
- * \param [out]  n_part          Number of partition
+ * \param [in]   dist            Pointer to \ref PDM_dist_cloud_surf_t object
+ * \param [in]   i_point_cloud   Point cloud identifier
+ *
+ * \return   Number of partitions
  *
  */
 
@@ -302,13 +298,13 @@ PDM_dist_cloud_surf_cloud_n_part_get
 
 /**
  *
- * \brief Distribute data from surf to cloud
+ * \brief Distribute data from the surface mesh to a point cloud
  *
- * \param [in]   dist              Pointer to \ref PDM_dist_cloud_surf object
- * \param [in]   i_point_cloud     Current cloud
+ * \param [in]   dist              Pointer to \ref PDM_dist_cloud_surf_t object
+ * \param [in]   i_point_cloud     Point cloud identifier
  * \param [in]   stride            Stride
- * \param [in]   surf_data         Data over the surface
- * \param [out]  cloud_data        Data over the cloud
+ * \param [in]   surf_data         Surface mesh data (send)
+ * \param [out]  cloud_data        Point cloud data  (recv)
  *
  */
 

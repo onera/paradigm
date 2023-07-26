@@ -7,7 +7,7 @@
 /*
   This file is part of the CWIPI library.
 
-  Copyright (C) 2011  ONERA
+  Copyright (C) 2020-2023  ONERA
 
   This library is free software; you can redistribute it and/or
   modify it under the terms of the GNU Lesser General Public
@@ -64,14 +64,14 @@ extern "C" {
  * \param [out]  dn_cell          Local number of cells
  * \param [out]  dn_face          Local number of faces
  * \param [out]  dn_vtx           Local number of vertices
- * \param [out]  dcell_face_idx   Index of cell-face connectivity (size = \ref dn_cell + 1)
- * \param [out]  dcell_face       Distributed cell-face connectivity (size = \ref dcell_face_idx[\ref dn_cell])
- * \param [out]  dface_cell       Distributed face-cell connectivity (size = 2 * \ref dn_face)
- * \param [out]  dface_vtx_idx    Index of face-vertex connectivity (size = \ref dn_face + 1)
- * \param [out]  dface_vtx        Distributed face-vertex connectivity (size = \ref dface_vtx_idx[\ref dn_face])
- * \param [out]  dvtx_coord       Coordinates of local vertices (size = 3 * \ref dn_vtx)
- * \param [out]  dface_group_idx  Index of dface_group (size = \ref n_face_group + 1)
- * \param [out]  dface_group      Distributed lists of faces in each group (size = \ref dface_group_idx[\ref n_face_group])
+ * \param [out]  dcell_face_idx   Index of cell-face connectivity (size = \p dn_cell + 1)
+ * \param [out]  dcell_face       Distributed cell-face connectivity (size = \p dcell_face_idx[\p dn_cell])
+ * \param [out]  dface_cell       Distributed face-cell connectivity (size = 2 * \p dn_face)
+ * \param [out]  dface_vtx_idx    Index of face-vertex connectivity (size = \p dn_face + 1)
+ * \param [out]  dface_vtx        Distributed face-vertex connectivity (size = \p dface_vtx_idx[\p dn_face])
+ * \param [out]  dvtx_coord       Coordinates of local vertices (size = 3 * \p dn_vtx)
+ * \param [out]  dface_group_idx  Index of dface_group (size = \p n_face_group + 1)
+ * \param [out]  dface_group      Distributed lists of faces in each group (size = \p dface_group_idx[\p n_face_group])
  *
  */
 

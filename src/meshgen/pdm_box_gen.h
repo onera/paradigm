@@ -8,7 +8,7 @@
 /*
   This file is part of the ParaDiGM library.
 
-  Copyright (C) 2019       ONERA
+  Copyright (C) 2022-2023       ONERA
 
   This library is free software; you can redistribute it and/or
   modify it under the terms of the GNU Lesser General Public
@@ -54,7 +54,7 @@ extern "C" {
  *
  * \brief Generate a random set of boxes
  *
- * \param [in]   comm                   MPI Communicator id
+ * \param [in]   comm                   MPI Communicator
  * \param [in]   seed                   Random seed
  * \param [in]   geometric_g_num        Compute global ids from coordinates
  * \param [in]   gn_box                 Global number of boxes
@@ -67,8 +67,8 @@ extern "C" {
  * \param [in]   y_max                  Maximal Y-coordinate for box centers
  * \param [in]   z_max                  Maximal Z-coordinate for box centers
  * \param [out]  n_box                  Local number of boxes
- * \param [out]  box_extents            Extents of the local boxes
- * \param [out]  box_ln_to_gn           Global ids of the local boxes
+ * \param [out]  box_extents            Extents of the local boxes (size : 6 * \p n_box)
+ * \param [out]  box_ln_to_gn           Global ids of the local boxes (size : \p n_box)
  *
  */
 
@@ -98,7 +98,7 @@ PDM_box_gen_random
  *
  * \brief Generate a cartesian set of boxes
  *
- * \param [in]   comm                   MPI Communicator id
+ * \param [in]   comm                   MPI Communicator
  * \param [in]   nx                     Number of points in X-direction
  * \param [in]   ny                     Number of points in Y-direction
  * \param [in]   nz                     Number of points in Z-direction
@@ -109,8 +109,8 @@ PDM_box_gen_random
  * \param [in]   y_max                  Y-coordinate of the opposite cuboid corner
  * \param [in]   z_max                  Z-coordinate of the opposite cuboid corner
  * \param [out]  n_box                  Local number of boxes
- * \param [out]  box_extents            Extents of the local boxes
- * \param [out]  box_ln_to_gn           Global ids of the local boxes
+ * \param [out]  box_extents            Extents of the local boxes (size : 6 * \p n_box)
+ * \param [out]  box_ln_to_gn           Global ids of the local boxes (size : \p n_box)
  *
  */
 
