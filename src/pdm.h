@@ -362,8 +362,10 @@ typedef enum {
 } PDM_extract_part_kind_t;
 
 typedef enum {
-  PDM_MESH_INTERSECTION_KIND_SOFT = 0, /*! Resulting is only relative weight of A inside B */
-  PDM_MESH_INTERSECTION_KIND_FULL = 1, /*! Resulting is new mesh                           */
+  PDM_MESH_INTERSECTION_KIND_PREPROCESS    = 0, /*! Only candidate selection and load balancing of elementary intersection tasks */
+  PDM_MESH_INTERSECTION_KIND_WEIGHT        = 1, /*! Resulting is only relative weight of A inside B                              */
+  PDM_MESH_INTERSECTION_KIND_UNMERGED_POLY = 2, /*! Resulting is the union of disjoint intersection polyhedra                    */
+  PDM_MESH_INTERSECTION_KIND_MESH          = 3, /*! Resulting is new mesh                                                        */
 } PDM_mesh_intersection_kind_t;
 
 /*=============================================================================

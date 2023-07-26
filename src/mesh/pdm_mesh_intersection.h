@@ -65,22 +65,6 @@ PDM_mesh_intersection_create
  const PDM_ownership_t              owner
 );
 
-/**
- *
- * \brief Set the limitation of calculation to boxes intersections 
- *
- * \param [in]   mi             Pointer to \ref PDM_mesh_intersection object
- * \param [in]   status         Status
- *
- */
-
-void
-PDM_mesh_intersection_preprocess_only_set
-(
- PDM_mesh_intersection_t *mi,
- const int                status
-);
-
 
 /**
  *
@@ -235,6 +219,17 @@ PDM_mesh_intersection_part_to_part_get
  );
 
 
+/**
+ * \brief Get intersection result for the a point of view
+ *
+ * \param [in ] mi                 Pointer to \ref PDM_mesh_intersection_t object
+ * \param [out] ipart              Partition index
+ * \param [out] elt_a_elt_b_idx    Index of list of intersected B elements for each A element 
+ * \param [out] elt_a_elt_b        List of intersected B elements for each A element 
+ * \param [out] elt_a_elt_b_volume Volume of each intersection 
+ *
+ */
+
 void
 PDM_mesh_intersection_result_from_a_get
 (
@@ -245,6 +240,20 @@ PDM_mesh_intersection_result_from_a_get
        double                  **elt_a_elt_b_volume
 );
 
+
+/**
+ * \brief Get intersection result for the b point of view
+ * 
+ * TODO: Do as PDM_mesh_intersection_result_from_a_get
+ *
+ * \param [in ] mi                 Pointer to \ref PDM_mesh_intersection_t object
+ * \param [out] ipart              Partition index
+ * \param [out] elt_a_elt_b_idx    Index of list of intersected B elements for each A element 
+ * \param [out] elt_a_elt_b        List of intersected B elements for each A element 
+ * \param [out] elt_a_elt_b_volume Volume of each intersection 
+ *
+ */
+
 void
 PDM_mesh_intersection_result_from_b_get
 (
@@ -252,6 +261,20 @@ PDM_mesh_intersection_result_from_b_get
  const int                       ipart,
        double                  **elt_b_elt_a_volume
  );
+
+
+/**
+ * \brief Get intersection result for the b point of view
+ * 
+ * TODO: Do as PDM_mesh_intersection_result_from_a_get
+ *
+ * \param [in ] mi                 Pointer to \ref PDM_mesh_intersection_t object
+ * \param [out] ipart              Partition index
+ * \param [out] elt_a_elt_b_idx    Index of list of intersected B elements for each A element 
+ * \param [out] elt_a_elt_b        List of intersected B elements for each A element 
+ * \param [out] elt_a_elt_b_volume Volume of each intersection 
+ *
+ */
 
 void
 PDM_mesh_intersection_elt_volume_get
