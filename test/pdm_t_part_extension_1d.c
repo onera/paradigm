@@ -318,6 +318,26 @@ _part_extension
                              shift_by_domain_vtx,
                              1);
 
+  int  *pn_vtx_num             = NULL;
+  int **pvtx_num               = NULL;
+  int **pvtx_opp_location      = NULL;
+  int **pvtx_opp_interface_idx = NULL;
+  int **pvtx_opp_interface     = NULL;
+
+  PDM_part_domain_interface_view_by_part(pdi,
+                                         PDM_BOUND_TYPE_VTX,
+                                         &pn_vtx_num,
+                                         &pvtx_num,
+                                         &pvtx_opp_location,
+                                         &pvtx_opp_interface_idx,
+                                         &pvtx_opp_interface);
+
+  free(pn_vtx_num            );
+  free(pvtx_num              );
+  free(pvtx_opp_location     );
+  free(pvtx_opp_interface_idx);
+  free(pvtx_opp_interface    );
+
   for(int i_dom = 0; i_dom < n_domain; ++i_dom) {
     for(int i_part = 0; i_part < n_part[i_dom]; ++i_part) {
       int *ppart_vtx_proc_idx = NULL;
