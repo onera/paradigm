@@ -1681,7 +1681,8 @@ PDM_part_domain_interface_view_by_part
   int                         ***pentity_opp_location_idx_out,
   int                         ***pentity_opp_location_out,
   int                         ***pentity_opp_interface_idx_out,
-  int                         ***pentity_opp_interface_out
+  int                         ***pentity_opp_interface_out,
+  int                         ***pentity_opp_sens_out
 )
 {
 
@@ -1699,6 +1700,7 @@ PDM_part_domain_interface_view_by_part
   int **pentity_opp_location      = (int         **) malloc( n_part_loc_all_domain * sizeof(int *) );
   int **pentity_opp_interface_idx = (int         **) malloc( n_part_loc_all_domain * sizeof(int *) );
   int **pentity_opp_interface     = (int         **) malloc( n_part_loc_all_domain * sizeof(int *) );
+  int **pentity_opp_sens          = (int         **) malloc( n_part_loc_all_domain * sizeof(int *) );
 
 
   int s_part = 0;
@@ -1733,7 +1735,7 @@ PDM_part_domain_interface_view_by_part
                                       &pinterface_ids_idx,
                                       &pinterface_dom);
 
-        if(1 == 1) {
+        if(0 == 1) {
           PDM_log_trace_array_int (pinterface_sgn     ,   ln_interface, "pinterface_sgn      ::");
           PDM_log_trace_array_int (pinterface_sens    ,   ln_interface, "pinterface_sens     ::");
           PDM_log_trace_array_int (pinterface_dom     , 2*ln_interface, "pinterface_dom      ::");
@@ -1796,8 +1798,10 @@ PDM_part_domain_interface_view_by_part
       int n_location = _pentity_opp_location_idx[pn_entity_num[s_part+i_part]];
       pentity_opp_location [s_part+i_part] = malloc( 3 * n_location * sizeof(int));
       pentity_opp_interface[s_part+i_part] = malloc(     n_location * sizeof(int));
+      pentity_opp_sens     [s_part+i_part] = malloc(     n_location * sizeof(int));
       int *_pentity_opp_location  = pentity_opp_location [s_part+i_part];
       int *_pentity_opp_interface = pentity_opp_interface[s_part+i_part];
+      int *_pentity_opp_sens      = pentity_opp_sens     [s_part+i_part];
 
       /* Fill */
       for(int i_interface = 0; i_interface < pdi->n_interface; ++i_interface) {
@@ -1854,7 +1858,8 @@ PDM_part_domain_interface_view_by_part
               _pentity_opp_location [3*idx_write  ] = i_proc_opp;
               _pentity_opp_location [3*idx_write+1] = i_part_opp;
               _pentity_opp_location [3*idx_write+2] = i_entity_opp;
-              _pentity_opp_interface[  idx_write  ] = i_interface;
+              _pentity_opp_interface[  idx_write  ] = (i_interface+1)*pinterface_sgn [idx_entity];
+              _pentity_opp_sens     [  idx_write  ] = pinterface_sens[idx_entity];
             }
           }
         }
@@ -1872,13 +1877,13 @@ PDM_part_domain_interface_view_by_part
    */
 
 
-
   *pn_entity_num_out             = pn_entity_num;
   *pentity_num_out               = pentity_num;
   *pentity_opp_location_idx_out  = pentity_opp_location_idx;
   *pentity_opp_location_out      = pentity_opp_location;
   *pentity_opp_interface_idx_out = pentity_opp_interface_idx;
   *pentity_opp_interface_out     = pentity_opp_interface;
+  *pentity_opp_sens_out          = pentity_opp_sens;
 }
 
 void

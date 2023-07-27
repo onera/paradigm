@@ -324,6 +324,7 @@ _part_extension
   int **pvtx_opp_location      = NULL;
   int **pvtx_opp_interface_idx = NULL;
   int **pvtx_opp_interface     = NULL;
+  int **pvtx_opp_sens          = NULL;
 
   PDM_part_domain_interface_view_by_part(pdi,
                                          PDM_BOUND_TYPE_VTX,
@@ -333,22 +334,26 @@ _part_extension
                                          &pvtx_opp_location_idx,
                                          &pvtx_opp_location,
                                          &pvtx_opp_interface_idx,
-                                         &pvtx_opp_interface);
+                                         &pvtx_opp_interface,
+                                         &pvtx_opp_sens);
 
   for(int i_part = 0; i_part < ln_part_tot; ++i_part) {
 
-
-    PDM_log_trace_array_int(pvtx_num[i_part], pn_vtx_num[i_part], "pvtx_num ::");
-    PDM_log_trace_graph_nuplet_int(pvtx_opp_location_idx[i_part],
-                                   pvtx_opp_location    [i_part],
-                                   3,
-                                   pn_vtx_num[i_part], "pvtx_opp_location ::");
-    PDM_log_trace_array_int(pvtx_opp_interface[i_part], pvtx_opp_location_idx[i_part][pn_vtx_num[i_part]], "pvtx_opp_interface ::");
+    if(1 == 1) {
+      PDM_log_trace_array_int(pvtx_num[i_part], pn_vtx_num[i_part], "pvtx_num ::");
+      PDM_log_trace_graph_nuplet_int(pvtx_opp_location_idx[i_part],
+                                     pvtx_opp_location    [i_part],
+                                     3,
+                                     pn_vtx_num[i_part], "pvtx_opp_location ::");
+      PDM_log_trace_array_int(pvtx_opp_interface[i_part], pvtx_opp_location_idx[i_part][pn_vtx_num[i_part]], "pvtx_opp_interface ::");
+      PDM_log_trace_array_int(pvtx_opp_sens     [i_part], pvtx_opp_location_idx[i_part][pn_vtx_num[i_part]], "pvtx_opp_sens ::");
+    }
 
     free(pvtx_num             [i_part]);
     free(pvtx_opp_location_idx[i_part]);
     free(pvtx_opp_location    [i_part]);
     free(pvtx_opp_interface   [i_part]);
+    free(pvtx_opp_sens        [i_part]);
   }
 
   free(pn_vtx_num            );
@@ -357,6 +362,7 @@ _part_extension
   free(pvtx_opp_location     );
   free(pvtx_opp_interface_idx);
   free(pvtx_opp_interface    );
+  free(pvtx_opp_sens         );
 
   for(int i_dom = 0; i_dom < n_domain; ++i_dom) {
     for(int i_part = 0; i_part < n_part[i_dom]; ++i_part) {

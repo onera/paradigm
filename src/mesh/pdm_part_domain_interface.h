@@ -198,7 +198,8 @@ PDM_part_domain_interface_view_by_part
   int                         ***pentity_opp_location_idx,
   int                         ***pentity_opp_location,
   int                         ***pentity_opp_interface_idx,
-  int                         ***pentity_opp_interface
+  int                         ***pentity_opp_interface,
+  int                         ***pentity_opp_sens
 );
 
 void
