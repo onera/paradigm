@@ -388,28 +388,28 @@ do
       OptExe=$(echo ${TestOptionl[k]} | tr ";" " ")
       CmdLine="${CmdLine} ${sep}  --time=${Timeout} --output=$OutputFile.%t --error=$ErrFile.%t -N 1 -n ${Nrankl[k]} --exact /usr/bin/time  -f \"Maximum Resident Memory : %M Kb\nReal time : %e s\""
       if [ -f "${TestDir}/${ex}.py" ]; then
-        CmdLine="${CmdLine} ${PROJECT_BINARY_DIR}/pdm_launch_python ${PythonUnbuffered} ${TestDir}/$ex.py ${optExe}"
+        CmdLine="${CmdLine} ${PROJECT_BINARY_DIR}/pdm_launch_python ${PythonUnbuffered} ${TestDir}/$ex.py ${OptExe}"
       else
         CmdLine="${CmdLine} ${PROJECT_BINARY_DIR}/pdm_launch ${TestDir}/$ex ${OptExe}"
       fi
       sep=":"
       ((k=k+1))
-    done 
+    done
 
     CmdLine="${CmdLine} 2>/dev/null &"
     eval "${CmdLine}"
     pids=(${pids[@]} "$!")
 
-  else  
+  else
     ((TimeOutS=Timeout*60))
     if [ $Nranks -gt $NAvailRank ]
     then
       echo "Error PDM_run : Number of requested ranks is greater then the number of available ranks"
       exit 1
-    fi  
+    fi
 
-    ((cptRank=IndexRank+Nranks)) 
-    
+    ((cptRank=IndexRank+Nranks))
+
     if [ $cptRank -gt $NAvailRank ]
     then
       Wait_job
@@ -426,7 +426,7 @@ do
         OptExe=$(echo ${TestOptionl[k]} | tr ";" " ")
         CmdLine="${CmdLine} ${sep} -n ${Nrankl[k]} /usr/bin/time  -f \"Maximum Resident Memory : %M Kb\nReal time : %e s\""
         if [ -f "${TestDir}/${ex}.py" ]; then
-          CmdLine="${CmdLine} ${PROJECT_BINARY_DIR}/pdm_launch_python ${PythonUnbuffered} ${TestDir}/$ex.py ${optExe}"
+          CmdLine="${CmdLine} ${PROJECT_BINARY_DIR}/pdm_launch_python ${PythonUnbuffered} ${TestDir}/$ex.py ${OptExe}"
         else
           CmdLine="${CmdLine} ${PROJECT_BINARY_DIR}/pdm_launch ${TestDir}/$ex ${OptExe}"
         fi
@@ -447,7 +447,7 @@ do
         OptExe=$(echo ${TestOptionl[k]} | tr ";" " ")
         CmdLine="${CmdLine} ${sep} -n ${Nrankl[k]} /usr/bin/time  -f \"Maximum Resident Memory : %M Kb\nReal time : %e s\""
         if [ -f "${TestDir}/${ex}.py" ]; then
-          CmdLine="${CmdLine} ${PROJECT_BINARY_DIR}/pdm_launch_python ${PythonUnbuffered} ${TestDir}/$ex.py ${optExe}"
+          CmdLine="${CmdLine} ${PROJECT_BINARY_DIR}/pdm_launch_python ${PythonUnbuffered} ${TestDir}/$ex.py ${OptExe}"
         else
           CmdLine="${CmdLine} ${PROJECT_BINARY_DIR}/pdm_launch ${TestDir}/$ex ${OptExe}"
         fi
