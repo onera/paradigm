@@ -337,9 +337,9 @@ _part_extension
                                          &pvtx_opp_interface,
                                          &pvtx_opp_sens);
 
-  for(int i_part = 0; i_part < ln_part_tot; ++i_part) {
+  if(1 == 1) {
+    for(int i_part = 0; i_part < ln_part_tot; ++i_part) {
 
-    if(1 == 1) {
       PDM_log_trace_array_int(pvtx_num[i_part], pn_vtx_num[i_part], "pvtx_num ::");
       PDM_log_trace_graph_nuplet_int(pvtx_opp_location_idx[i_part],
                                      pvtx_opp_location    [i_part],
@@ -348,21 +348,7 @@ _part_extension
       PDM_log_trace_array_int(pvtx_opp_interface[i_part], pvtx_opp_location_idx[i_part][pn_vtx_num[i_part]], "pvtx_opp_interface ::");
       PDM_log_trace_array_int(pvtx_opp_sens     [i_part], pvtx_opp_location_idx[i_part][pn_vtx_num[i_part]], "pvtx_opp_sens ::");
     }
-
-    free(pvtx_num             [i_part]);
-    free(pvtx_opp_location_idx[i_part]);
-    free(pvtx_opp_location    [i_part]);
-    free(pvtx_opp_interface   [i_part]);
-    free(pvtx_opp_sens        [i_part]);
   }
-
-  free(pn_vtx_num            );
-  free(pvtx_num              );
-  free(pvtx_opp_location_idx );
-  free(pvtx_opp_location     );
-  free(pvtx_opp_interface_idx);
-  free(pvtx_opp_interface    );
-  free(pvtx_opp_sens         );
 
   for(int i_dom = 0; i_dom < n_domain; ++i_dom) {
     for(int i_part = 0; i_part < n_part[i_dom]; ++i_part) {
@@ -387,6 +373,7 @@ _part_extension
   int         **part1_to_part2_idx         = malloc(ln_part_tot * sizeof(int *));
   int         **part1_to_part2_triplet_idx = NULL; //malloc(ln_part_tot * sizeof(int *));
   int         **part1_to_part2_triplet     = malloc(ln_part_tot * sizeof(int *));
+  int         **part1_to_part2_interface   = malloc(ln_part_tot * sizeof(int *));
 
   /*
    * Pour la recursion, il faut idéalement calculer le graphe avec les partition shifter avec
@@ -430,6 +417,13 @@ _part_extension
         part1_to_part2_n[i_entity] += 1;
       }
 
+      /* From interface */
+      for(int idx_entity = 0; idx_entity < pn_vtx_num[li_part]; ++idx_entity) {
+        int i_entity = pvtx_num[li_part][idx_entity];
+        int n_opp = pvtx_opp_location_idx[li_part][idx_entity+1] - pvtx_opp_location_idx[li_part][idx_entity];
+        part1_to_part2_n[i_entity] += n_opp;
+      }
+
       // PDM_log_trace_array_int(part1_to_part2_n, pflat_n_vtx[li_part], "part1_to_part2_n ::");
 
       for(int i_entity = 0; i_entity < pflat_n_vtx[li_part]; ++i_entity) {
@@ -438,7 +432,10 @@ _part_extension
       }
 
       int n_connect_tot = part1_to_part2_idx[li_part][pflat_n_vtx[li_part]];
-      part1_to_part2_triplet[li_part] = malloc(n_connect_tot * sizeof(int));
+      part1_to_part2_triplet  [li_part] = malloc(n_connect_tot   * sizeof(int));
+      part1_to_part2_interface[li_part] = malloc(n_connect_tot/3 * sizeof(int));
+
+      printf("n_connect_tot = %i \n", n_connect_tot);
 
       for(int idx_entity = 0; idx_entity < n_entity_bound; ++idx_entity) {
         int i_entity     = ppart_vtx[4*idx_entity]-1;
@@ -446,16 +443,39 @@ _part_extension
         int i_part_opp   = ppart_vtx[4*idx_entity+2]-1; // A gere -> Le shift
         int i_entity_opp = ppart_vtx[4*idx_entity+3]-1;
 
-        int idx_write = part1_to_part2_idx[li_part][i_entity] + part1_to_part2_n[i_entity]++;
+        int idx_write = part1_to_part2_idx[li_part][i_entity] + part1_to_part2_n[i_entity];
         part1_to_part2_triplet[li_part][idx_write  ] = i_proc_opp;
         part1_to_part2_triplet[li_part][idx_write+1] = i_part_opp;
         part1_to_part2_triplet[li_part][idx_write+2] = i_entity_opp;
 
+        idx_write = part1_to_part2_idx[li_part][i_entity]/3 + part1_to_part2_n[i_entity]++;
+        part1_to_part2_interface[li_part][idx_write] = 0;
+
         // part1_to_part2_triplet[li_part][idx_entity+1] = part1_to_part2_triplet[li_part][idx_entity] + 3;
       }
 
-      // PDM_log_trace_array_int(part1_to_part2_idx    [li_part],     pflat_n_vtx[li_part], "part1_to_part2_idx ::");
-      // PDM_log_trace_array_int(part1_to_part2_triplet[li_part],     n_connect_tot       , "part1_to_part2_triplet ::");
+
+      /* From interface */
+      for(int idx_entity = 0; idx_entity < pn_vtx_num[li_part]; ++idx_entity) {
+        int i_entity = pvtx_num[li_part][idx_entity];
+        for(int idx_opp = pvtx_opp_location_idx[li_part][idx_entity  ];
+                idx_opp < pvtx_opp_location_idx[li_part][idx_entity+1]; ++idx_opp) {
+
+          int idx_write = part1_to_part2_idx[li_part][i_entity] + part1_to_part2_n[i_entity];
+          part1_to_part2_triplet  [li_part][idx_write  ] = pvtx_opp_location [li_part][3*idx_opp  ];
+          part1_to_part2_triplet  [li_part][idx_write+1] = pvtx_opp_location [li_part][3*idx_opp+1];
+          part1_to_part2_triplet  [li_part][idx_write+2] = pvtx_opp_location [li_part][3*idx_opp+2];
+
+          // Il faudra le faire en stride variable si periodicité composé
+          idx_write = part1_to_part2_idx[li_part][i_entity]/3 + part1_to_part2_n[i_entity]++;
+          part1_to_part2_interface[li_part][idx_write  ] = pvtx_opp_interface[li_part][  idx_opp  ];
+
+        }
+      }
+
+      PDM_log_trace_array_int(part1_to_part2_idx      [li_part], pflat_n_vtx[li_part], "part1_to_part2_idx       ::");
+      PDM_log_trace_array_int(part1_to_part2_triplet  [li_part], n_connect_tot       , "part1_to_part2_triplet   ::");
+      PDM_log_trace_array_int(part1_to_part2_interface[li_part], n_connect_tot/3     , "part1_to_part2_interface ::");
 
       free(part1_to_part2_n);
       li_part += 1;
@@ -495,10 +515,8 @@ _part_extension
     int **ref_lnum2   = NULL;
     PDM_part_to_part_ref_lnum2_get(ptp, &n_ref_lnum2, &ref_lnum2);
 
-    if(0 == 1) {
-      for(int i_part = 0; i_part < ln_part_tot; ++i_part) {
-        PDM_log_trace_array_int(ref_lnum2[i_part], n_ref_lnum2[i_part], "ref_lnum2 :");
-      }
+    for(int i_part = 0; i_part < ln_part_tot; ++i_part) {
+      PDM_log_trace_array_int(ref_lnum2[i_part], n_ref_lnum2[i_part], "ref_lnum2 :");
     }
 
     PDM_part_to_part_free(ptp);
@@ -530,13 +548,44 @@ _part_extension
                                                         &pextract_edge_to_edge_location,
                                                         &ptp_vtx_edge);
 
-  if(0 == 1) {
+  if(1 == 1) {
     PDM_log_trace_array_int(pextract_n_edge, ln_part_tot, "pextract_n_edge");
     for(int i_part = 0; i_part < ln_part_tot; ++i_part) {
       PDM_log_trace_array_long(pextract_edge_parent_ln_to_gn [i_part],     pextract_n_edge[i_part], "pextract_edge_parent_ln_to_gn");
       PDM_log_trace_array_int (pextract_edge_to_edge_location[i_part], 3 * pextract_n_edge[i_part], "pextract_edge_to_edge_location");
     }
   }
+
+  /*
+   * Echange des numero d'interfaces via le ptp_vtx_edge
+   */
+  int exch_request = -1;
+  int **pextract_edge_interface = NULL;
+  PDM_part_to_part_iexch(ptp_vtx_edge,
+                         PDM_MPI_COMM_KIND_P2P,
+                         PDM_STRIDE_CST_INTERLACED,
+                         PDM_PART_TO_PART_DATA_DEF_ORDER_PART1_TO_PART2,
+                         1,
+                         sizeof(int),
+                         NULL,
+        (const void **)  part1_to_part2_interface,
+                         NULL,
+            (void ***)   &pextract_edge_interface,
+                         &exch_request);
+  PDM_part_to_part_reverse_iexch_wait(ptp_vtx_edge, exch_request);
+
+  if(1 == 1) {
+    for(int i_part = 0; i_part < ln_part_tot; ++i_part) {
+      PDM_log_trace_array_int(pextract_edge_interface[i_part], pextract_n_edge[i_part], "pextract_edge_interface");
+    }
+  }
+
+  for(int i_part = 0; i_part < ln_part_tot; ++i_part) {
+    free(pextract_edge_interface[i_part]);
+  }
+  free(pextract_edge_interface);
+
+
 
   // PDM_log_trace_array_int(pflat_n_edge, ln_part_tot, "pflat_n_edge");
 
@@ -546,13 +595,13 @@ _part_extension
    * Call extract_part
    */
   PDM_extract_part_t* extrp = PDM_extract_part_create(1,
-                                                       ln_part_tot,
-                                                       ln_part_tot,
-                                                       PDM_EXTRACT_PART_KIND_FROM_TARGET,
-                                                       PDM_SPLIT_DUAL_WITH_HILBERT,
-                                                       PDM_TRUE,
-                                                       PDM_OWNERSHIP_KEEP,
-                                                       comm);
+                                                      ln_part_tot,
+                                                      ln_part_tot,
+                                                      PDM_EXTRACT_PART_KIND_FROM_TARGET,
+                                                      PDM_SPLIT_DUAL_WITH_HILBERT,
+                                                      PDM_TRUE,
+                                                      PDM_OWNERSHIP_KEEP,
+                                                      comm);
 
   for(int i_part = 0; i_part < ln_part_tot; ++i_part) {
 
@@ -583,6 +632,71 @@ _part_extension
   }
 
   PDM_extract_part_compute(extrp);
+
+  /*
+   * On doit créer une nouvelle numérotation absolu qui prend en compte les interfaces
+   * MAIS en gardant l'ancienne
+   * Donc il faut faire un pdm_gnum avec 2 x le nombre de partition pour tout unifier
+   *  A faire pour les entités principales puis descendre, mais attention il faut merger en descendant
+   */
+  PDM_gen_gnum_t* gnum_edge = PDM_gnum_create(3,
+                                              2 * ln_part_tot,
+                                              PDM_TRUE,
+                                              1.e-6,
+                                              comm,
+                                              PDM_OWNERSHIP_KEEP);
+  PDM_gnum_set_parents_nuplet(gnum_edge, 2); // Si transformation multiple on est ken
+
+  PDM_g_num_t **pflat_edge_ln_to_gn_and_interface = malloc((2 * ln_part_tot) * sizeof(PDM_g_num_t *));
+
+  for(int i_part = 0; i_part < ln_part_tot; ++i_part) {
+
+    pflat_edge_ln_to_gn_and_interface[i_part] = malloc(2 * pflat_n_edge[i_part] * sizeof(PDM_g_num_t));
+
+    for(int i = 0; i < pflat_n_edge[i_part]; ++i) {
+      pflat_edge_ln_to_gn_and_interface[i_part][2*i  ] = pflat_edge_ln_to_gn[i_part][i];
+      pflat_edge_ln_to_gn_and_interface[i_part][2*i+1] = 0;
+    }
+
+    PDM_gnum_set_from_parents(gnum_edge,
+                              i_part,
+                              pflat_n_edge[i_part],
+                              pflat_edge_ln_to_gn_and_interface[i_part]);
+
+    pflat_edge_ln_to_gn_and_interface[ln_part_tot+i_part] = malloc(2 * pextract_n_edge[i_part] * sizeof(PDM_g_num_t));
+    for(int i = 0; i < pextract_n_edge[i_part]; ++i) {
+      pflat_edge_ln_to_gn_and_interface[ln_part_tot+i_part][2*i  ] = pextract_edge_parent_ln_to_gn[i_part][i];
+      pflat_edge_ln_to_gn_and_interface[ln_part_tot+i_part][2*i+1] = pextract_edge_interface      [i_part][i];
+    }
+
+    PDM_gnum_set_from_parents(gnum_edge,
+                              ln_part_tot+i_part,
+                              pextract_n_edge[i_part],
+                              pflat_edge_ln_to_gn_and_interface[ln_part_tot+i_part]);
+
+  }
+
+  PDM_gnum_compute(gnum_edge);
+
+
+  for(int i_part = 0; i_part < ln_part_tot; ++i_part) {
+    PDM_g_num_t* ln_to_gn1 = PDM_gnum_get(gnum_edge, i_part);
+    PDM_log_trace_array_long(ln_to_gn1, pflat_n_edge[i_part], "ln_to_gn1 ::");
+
+    PDM_g_num_t* ln_to_gn2 = PDM_gnum_get(gnum_edge, i_part+ln_part_tot);
+    PDM_log_trace_array_long(ln_to_gn2, pextract_n_edge[i_part], "ln_to_gn2 ::");
+
+  }
+
+
+  for(int i_part = 0; i_part < 2 * ln_part_tot; ++i_part) {
+    free(pflat_edge_ln_to_gn_and_interface[i_part]);
+  }
+  free(pflat_edge_ln_to_gn_and_interface);
+
+
+  PDM_gnum_free(gnum_edge);
+
 
   /*
    * Unified all points
@@ -624,7 +738,7 @@ _part_extension
                                   &pextract_vtx_coord,
                                   PDM_OWNERSHIP_KEEP);
 
-    if(0 == 1) {
+    if(1 == 1) {
       printf("pn_extract_vtx  = %i\n", pn_extract_vtx );
       printf("pn_extract_edge = %i\n", pn_extract_edge);
       PDM_log_trace_array_int (pextract_edge_vtx, 2 * pn_extract_edge, "pextract_edge_vtx ::");
@@ -884,6 +998,7 @@ _part_extension
     free(part1_to_part2_idx        [i_part]);
     // free(part1_to_part2_triplet_idx[i_part]);
     free(part1_to_part2_triplet    [i_part]);
+    free(part1_to_part2_interface  [i_part]);
 
     free(pflat_vtx_edge_idx[i_part] );
     free(pflat_vtx_edge    [i_part] );
@@ -892,6 +1007,7 @@ _part_extension
   free(part1_to_part2_idx        );
   // free(part1_to_part2_triplet_idx);
   free(part1_to_part2_triplet    );
+  free(part1_to_part2_interface  );
 
   free(shift_by_domain_vtx);
   free(n_part_g);
@@ -911,6 +1027,22 @@ _part_extension
   free(pflat_edge_vtx     );
   free(pflat_vtx_edge_idx );
   free(pflat_vtx_edge     );
+
+  for(int i_part = 0; i_part < ln_part_tot; ++i_part) {
+    free(pvtx_num             [i_part]);
+    free(pvtx_opp_location_idx[i_part]);
+    free(pvtx_opp_location    [i_part]);
+    free(pvtx_opp_interface   [i_part]);
+    free(pvtx_opp_sens        [i_part]);
+  }
+  free(pn_vtx_num            );
+  free(pvtx_num              );
+  free(pvtx_opp_location_idx );
+  free(pvtx_opp_location     );
+  free(pvtx_opp_interface_idx);
+  free(pvtx_opp_interface    );
+  free(pvtx_opp_sens         );
+
 }
 
 
