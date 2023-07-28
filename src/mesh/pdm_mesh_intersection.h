@@ -13,6 +13,7 @@
 #include "pdm_mpi.h"
 #include "pdm_part_to_part.h"
 #include "pdm_part_mesh_nodal.h"
+#include "pdm_extract_part.h"
 
 /*----------------------------------------------------------------------------*/
 
@@ -300,6 +301,27 @@ PDM_mesh_intersection_tolerance_set
        PDM_mesh_intersection_t *mi,
  const double                   tol
 );
+
+
+/**
+ *
+ * \brief Get \ref PDM_extract_part 
+ *
+ * \param [in]   mi             Pointer to \ref PDM_mesh_intersection object
+ * \param [in]   i_mesh         Mesh identifier
+ * \param [in]   n_part         Number of partitions
+ *
+ */
+
+void
+PDM_mesh_intersection_extract_part_get
+(
+        PDM_mesh_intersection_t *mi,
+  const int                      i_mesh,
+        PDM_extract_part_t     **extract_part
+);
+
+
 
 #ifdef  __cplusplus
 }
