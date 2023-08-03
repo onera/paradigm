@@ -40,6 +40,24 @@ interface
 !!
 !!
 
+subroutine PDM_part_extension_compute_test (part_ext) &
+bind (c, name='PDM_part_extension_compute_test')
+  use iso_c_binding
+  implicit none
+
+  type(c_ptr), value :: part_ext
+
+end subroutine PDM_part_extension_compute_test
+
+
+!>
+!!
+!! \brief Compute a part extension structure
+!!
+!! \param [in]   part_ext          PDM_part_extension_t
+!!
+!!
+
 subroutine PDM_part_extension_compute (part_ext) &
 bind (c, name='PDM_part_extension_compute')
   use iso_c_binding
@@ -48,6 +66,26 @@ bind (c, name='PDM_part_extension_compute')
   type(c_ptr), value :: part_ext
 
 end subroutine PDM_part_extension_compute
+
+
+
+
+!>
+!!
+!! \brief Free a part extension structure
+!!
+!! \param [in]   part_ext          PDM_part_extension_t
+!!
+!!
+
+subroutine PDM_part_extension_free_test (part_ext) &
+bind (c, name='PDM_part_extension_free_test')
+  use iso_c_binding
+  implicit none
+
+  type(c_ptr), value :: part_ext
+
+end subroutine PDM_part_extension_free_test
 
 
 

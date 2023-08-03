@@ -73,6 +73,19 @@ PDM_part_extension_create
  *
  */
 void
+PDM_part_extension_compute_test
+(
+  PDM_part_extension_t *part_ext
+);
+
+/**
+ *
+ * \brief Compute a part extension structure
+ *
+ * \param [in]   part_ext          PDM_part_extension_t
+ *
+ */
+void
 PDM_part_extension_compute
 (
   PDM_part_extension_t *part_ext
@@ -123,6 +136,13 @@ PDM_part_extension_part_domain_interface_shared_set
   PDM_part_extension_t        *part_ext,
   PDM_part_domain_interface_t *pdi
 );
+
+void
+PDM_part_extension_free_test
+(
+ PDM_part_extension_t *part_ext
+);
+
 
 void
 PDM_part_extension_free
