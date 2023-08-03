@@ -608,4 +608,51 @@ module pdm_extract_part
 
   end subroutine PDM_extract_part_parent_lnum_get
 
+  subroutine PDM_extract_part_vtx_coord_get (extrp,            &
+                                             i_part_out,       &
+                                             n_entity,         &
+                                             pvtx_coord,       &
+                                             ownership)
+
+    use iso_c_binding
+    implicit none
+
+    type(c_ptr), value                   :: extrp
+    integer, intent(in)                  :: i_part_out
+    integer, intent(in)                  :: ownership
+    integer                              :: n_entity
+    double precision, pointer            :: pvtx_coord(:,:)
+
+    type(c_ptr)                          :: c_pvtx_coord = C_NULL_PTR
+
+    interface
+      function pdm_extract_part_vtx_coord_get_c (extrp,            &
+                                                 i_part_out,       &
+                                                 pvtx_coord,       &
+                                                 ownership)        &
+      result (n_entity)                                            &
+      bind (c, name='PDM_extract_part_vtx_coord_get')
+        use iso_c_binding
+        implicit none
+
+        type(c_ptr),    value :: extrp
+        integer(c_int), value :: i_part_out
+        integer(c_int), value :: ownership
+        integer(c_int)        :: n_entity
+        type(c_ptr)           :: pvtx_coord
+
+      end function pdm_extract_part_vtx_coord_get_c
+    end interface
+
+    n_entity = pdm_extract_part_vtx_coord_get_c (extrp,              &
+                                                 i_part_out,         &
+                                                 c_pvtx_coord,       &
+                                                 ownership)
+
+    call c_f_pointer(c_pvtx_coord, &
+                     pvtx_coord,   &
+                     [3,n_entity])
+
+  end subroutine PDM_extract_part_vtx_coord_get
+
 end module pdm_extract_part
