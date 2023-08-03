@@ -5843,6 +5843,26 @@ PDM_part_to_part_default_recv_buffer_get
   *default_i_recv_buffer = ptp->default_i_recv_buffer;
 }
 
+
+/**
+ *
+ * \brief Get number of MPI ranks
+ *
+ * \param [in]   ptp          Part to part structure
+ *
+ * \return  Number of MPI ranks
+ *
+ */
+
+int
+PDM_part_to_part_n_ranks_get
+(
+ PDM_part_to_part_t    *ptp
+)
+{
+  return ptp->n_rank;
+}
+
 #ifdef __cplusplus
 }
 #endif
