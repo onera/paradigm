@@ -337,6 +337,15 @@ _part_extension
                                          &pvtx_opp_interface,
                                          &pvtx_opp_sens);
 
+  /*
+   * On rajoute l'échange pour le gnum courant
+   * Et avec le part_to_part on recupère le gnum opposé
+   * Pour chaque entité d'interface
+   * Puis on utilise le ptp du extract_part pour tout transferer le gnum et les triplet et le sens
+   */
+
+
+
   if(1 == 1) {
     for(int i_part = 0; i_part < ln_part_tot; ++i_part) {
 
@@ -378,7 +387,7 @@ _part_extension
   /*
    * Pour la recursion, il faut idéalement calculer le graphe avec les partition shifter avec
    * PDM_part_generate_entity_graph_comm avec pentity_hint pour accelerer ou choisir
-   * Typiquement pour la deuxième passe on prends que le sommet étendu non unifié
+   * Typiquement pour la deuxième passe on prends que tous les sommets étendu au step d'avant non unifié
    */
 
   /*
@@ -391,6 +400,7 @@ _part_extension
   int li_part = 0;
   for(int i_dom = 0; i_dom < n_domain; ++i_dom) {
     for(int i_part = 0; i_part < n_part[i_dom]; ++i_part) {
+
       int *ppart_vtx_proc_idx = NULL;
       int *ppart_vtx_part_idx = NULL;
       int *ppart_vtx          = NULL; // (i_vtx, i_proc, i_part, i_vtx_opp)
@@ -499,7 +509,7 @@ _part_extension
 
 
   // ONLY to debug the ref_lnum2
-  if(0 == 1) {
+  if(1 == 1) {
     PDM_part_to_part_t* ptp = PDM_part_to_part_create_from_num2_triplet((const PDM_g_num_t **) pflat_vtx_ln_to_gn,
                                                                         (const int          *) pflat_n_vtx,
                                                                         ln_part_tot,
@@ -528,6 +538,11 @@ _part_extension
   PDM_g_num_t **pextract_edge_parent_ln_to_gn  = NULL;
   int         **pextract_edge_to_edge_location = NULL;
   PDM_part_to_part_t* ptp_vtx_edge = NULL;
+
+  /*
+   *  Il faudrait prendre part1 = uniquement les noeuds frontière (N. Delinger Idea)
+   *  Reduction de part1 (n_vtx) -> part (n_vtx concerné par l'extension)
+   */
 
 
   PDM_pconnectivity_to_pconnectivity_from_location_keep(comm,
@@ -579,12 +594,6 @@ _part_extension
       PDM_log_trace_array_int(pextract_edge_interface[i_part], pextract_n_edge[i_part], "pextract_edge_interface");
     }
   }
-
-  for(int i_part = 0; i_part < ln_part_tot; ++i_part) {
-    free(pextract_edge_interface[i_part]);
-  }
-  free(pextract_edge_interface);
-
 
 
   // PDM_log_trace_array_int(pflat_n_edge, ln_part_tot, "pflat_n_edge");
@@ -695,7 +704,17 @@ _part_extension
   free(pflat_edge_ln_to_gn_and_interface);
 
 
-  PDM_gnum_free(gnum_edge);
+  /*
+   * Hook le ptp des vtx du extrp_part
+   */
+  PDM_part_to_part_t* ptp_vtx = NULL;
+  PDM_extract_part_part_to_part_get(extrp,
+                                    PDM_MESH_ENTITY_VERTEX,
+                                    &ptp_vtx,
+                                    PDM_OWNERSHIP_KEEP);
+
+  // En fait on veut le parent_ln_to_gn
+
 
 
   /*
@@ -718,11 +737,11 @@ _part_extension
                                       &pextract_edge_vtx_idx,
                                       PDM_OWNERSHIP_KEEP);
 
-    PDM_g_num_t *pextract_vtx_ln_to_gn  = NULL;
+    PDM_g_num_t *pextract_vtx_parent_ln_to_gn  = NULL;
     PDM_extract_part_parent_ln_to_gn_get(extrp,
                                          i_part,
                                          PDM_MESH_ENTITY_VERTEX,
-                                         &pextract_vtx_ln_to_gn,
+                                         &pextract_vtx_parent_ln_to_gn,
                                          PDM_OWNERSHIP_KEEP);
 
     PDM_g_num_t *pextract_edge_ln_to_gn = NULL;
@@ -742,15 +761,18 @@ _part_extension
       printf("pn_extract_vtx  = %i\n", pn_extract_vtx );
       printf("pn_extract_edge = %i\n", pn_extract_edge);
       PDM_log_trace_array_int (pextract_edge_vtx, 2 * pn_extract_edge, "pextract_edge_vtx ::");
-      PDM_log_trace_array_long(pextract_vtx_ln_to_gn , pn_extract_vtx , "pextract_vtx_ln_to_gn  ::");
+      PDM_log_trace_array_long(pextract_vtx_parent_ln_to_gn , pn_extract_vtx , "pextract_vtx_parent_ln_to_gn  ::");
       PDM_log_trace_array_long(pextract_edge_parent_ln_to_gn[i_part], pn_extract_edge, "pextract_edge_parent_ln_to_gn ::");
     }
 
     /* Check edge */
     PDM_g_num_t* sorted_edge_ln_to_gn = malloc( pflat_n_edge[i_part] * sizeof(PDM_g_num_t));
     PDM_g_num_t* sorted_vtx_ln_to_gn  = malloc( pflat_n_vtx [i_part] * sizeof(PDM_g_num_t));
+
+    PDM_g_num_t* full_edge_ln_to_gn = PDM_gnum_get(gnum_edge, i_part);
     for(int i_edge = 0; i_edge < pflat_n_edge[i_part]; ++i_edge) {
-      sorted_edge_ln_to_gn[i_edge] = pflat_edge_ln_to_gn[i_part][i_edge];
+      // sorted_edge_ln_to_gn[i_edge] = pflat_edge_ln_to_gn[i_part][i_edge];
+      sorted_edge_ln_to_gn[i_edge] = full_edge_ln_to_gn[i_edge];
     }
     PDM_sort_long(sorted_edge_ln_to_gn, NULL, pflat_n_edge[i_part]);
 
@@ -764,7 +786,7 @@ _part_extension
     // Cascade
     int pn_extract_edge_keep = 0;
     int pn_extract_vtx_keep  = 0;
-    int* pextract_edge_vtx_keep_idx = malloc((pn_extract_edge + 1) * sizeof(int));
+    int* pextract_edge_vtx_keep_idx   = malloc((pn_extract_edge + 1) * sizeof(int));
     int* to_keep                      = malloc((pn_extract_edge    ) * sizeof(int));
     int* to_keep_vtx                  = malloc((pn_extract_vtx     ) * sizeof(int));
 
@@ -773,8 +795,11 @@ _part_extension
     }
 
     pextract_edge_vtx_keep_idx[0] = 0;
+
+    PDM_g_num_t* full_extract_edge_ln_to_gn = PDM_gnum_get(gnum_edge, ln_part_tot+i_part);
     for(int i_edge = 0; i_edge < pn_extract_edge; ++i_edge) {
-      int pos = PDM_binary_search_long(pextract_edge_parent_ln_to_gn[i_part][i_edge],
+      // int pos = PDM_binary_search_long(pextract_edge_parent_ln_to_gn[i_part][i_edge],
+      int pos = PDM_binary_search_long(full_extract_edge_ln_to_gn[i_edge],
                                        sorted_edge_ln_to_gn,
                                        pflat_n_edge[i_part]);
       to_keep[i_edge] = 0;
@@ -798,6 +823,8 @@ _part_extension
       }
     }
 
+    // PDM_log_trace_array_int(pextract_edge_vtx_keep_idx, pn_extract_edge_keep+1, "pextract_edge_vtx_keep_idx ::");
+
     PDM_g_num_t *pn_extract_edge_vtx_gnum_keep = malloc(pextract_edge_vtx_keep_idx[pn_extract_edge_keep] * sizeof(PDM_g_num_t));
 
     pn_extract_edge_keep = 0;
@@ -809,8 +836,8 @@ _part_extension
         int i_vtx2 = PDM_ABS (pextract_edge_vtx[2*i_edge+1]);
         int sgn1   = PDM_SIGN(pextract_edge_vtx[2*i_edge  ]);
         int sgn2   = PDM_SIGN(pextract_edge_vtx[2*i_edge+1]);
-        pn_extract_edge_vtx_gnum_keep[2*idx_write  ] = sgn1 * pextract_vtx_ln_to_gn[i_vtx1-1];
-        pn_extract_edge_vtx_gnum_keep[2*idx_write+1] = sgn2 * pextract_vtx_ln_to_gn[i_vtx2-1];
+        pn_extract_edge_vtx_gnum_keep[idx_write  ] = sgn1 * pextract_vtx_parent_ln_to_gn[i_vtx1-1];
+        pn_extract_edge_vtx_gnum_keep[idx_write+1] = sgn2 * pextract_vtx_parent_ln_to_gn[i_vtx2-1];
 
         pn_extract_edge_keep++;
       }
@@ -821,7 +848,7 @@ _part_extension
     PDM_g_num_t *extract_vtx_sorted_ln_to_gn = malloc(pn_extract_vtx_keep * sizeof(PDM_g_num_t));
     for(int idx_vtx = 0; idx_vtx < pn_extract_vtx_keep; ++idx_vtx) {
       int i_vtx = to_keep_vtx[idx_vtx];
-      extract_vtx_sorted_ln_to_gn[i_vtx] = pextract_vtx_ln_to_gn[i_vtx];
+      extract_vtx_sorted_ln_to_gn[i_vtx] = pextract_vtx_parent_ln_to_gn[i_vtx];
       // to_keep_vtx[idx_vtx] = -1;
     }
     PDM_sort_long(extract_vtx_sorted_ln_to_gn, to_keep_vtx, pn_extract_vtx_keep);
@@ -832,6 +859,15 @@ _part_extension
     // extract_vtx_sorted_ln_to_gn = realloc(extract_vtx_sorted_ln_to_gn, n_extract_vtx_sorted * sizeof(PDM_g_num_t));
 
     PDM_log_trace_array_long(extract_vtx_sorted_ln_to_gn, pn_extract_vtx_keep , "extract_vtx_sorted_ln_to_gn ::");
+
+
+    /*
+     * Tri indirect des informations recu par le ptb du extract_part
+     *  - On cherche après les couples (gnum_opp, -interface) dans l'information transferer du part_domain_interface
+     *  - A faire si interface multiple -> Hardcore
+     * Cet algo gère l'unification avec le local il faut faire pareil avec la partie étendu aussi (coin
+     */
+
 
     // Reconstruct vtx
     int *pextract_edge_vtx_keep = malloc(pextract_edge_vtx_keep_idx[pn_extract_edge_keep] * sizeof(int));
@@ -866,6 +902,7 @@ _part_extension
       printf("pn_extract_vtx_keep2 = %i \n", pn_extract_vtx_keep2);
     }
 
+
     /*
      * Hook coordinates and ln_to_gn
      */
@@ -877,7 +914,7 @@ _part_extension
 
     for(int i_vtx = 0; i_vtx < n_extended_vtx; ++i_vtx) {
       int i_keep_vtx = to_keep_vtx2[i_vtx];
-      extended_vtx_ln_to_gn[i_vtx] = pextract_vtx_ln_to_gn[i_keep_vtx];
+      extended_vtx_ln_to_gn[i_vtx] = pextract_vtx_parent_ln_to_gn[i_keep_vtx];
       extended_vtx_coord[3*i_vtx  ] = pextract_vtx_coord[3*i_keep_vtx  ];
       extended_vtx_coord[3*i_vtx+1] = pextract_vtx_coord[3*i_keep_vtx+1];
       extended_vtx_coord[3*i_vtx+2] = pextract_vtx_coord[3*i_keep_vtx+2];
@@ -962,7 +999,13 @@ _part_extension
 
   }
 
+  for(int i_part = 0; i_part < ln_part_tot; ++i_part) {
+    free(pextract_edge_interface[i_part]);
+  }
+  free(pextract_edge_interface);
+
   PDM_extract_part_free(extrp);
+  PDM_gnum_free(gnum_edge);
 
   for(int i_part = 0; i_part < ln_part_tot; ++i_part) {
     free(pextract_vtx_edge_idx         [i_part]);
@@ -1138,7 +1181,7 @@ char *argv[]
   /*
    * Mulitpart
    */
-  PDM_split_dual_t part_method = PDM_SPLIT_DUAL_WITH_HILBERT;
+  PDM_split_dual_t part_method = PDM_SPLIT_DUAL_WITH_IMPLICIT;
   // PDM_split_dual_t part_method = PDM_SPLIT_DUAL_WITH_PARMETIS;
   int* n_part = malloc(n_dom_i * sizeof(int));
   for(int i_dom = 0; i_dom < n_dom_i; ++i_dom) {
