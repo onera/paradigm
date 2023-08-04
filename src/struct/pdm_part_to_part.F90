@@ -35,6 +35,26 @@ module pdm_part_to_part
 interface
 
 !>
+!! \brief Return number of MPI ranks
+!!
+!! \param [in]   ptp          Part to part structure
+!!
+!! \return Number of MPI ranks
+!!
+
+function PDM_part_to_part_n_ranks_get (ptp) &
+result(n_ranks)                              &
+bind (c, name = 'PDM_part_to_part_n_ranks_get')
+  use iso_c_binding
+  implicit none
+
+  type(c_ptr), value :: ptp
+  integer(c_int)     :: n_ranks
+
+end function PDM_part_to_part_n_ranks_get
+
+
+!>
 !!
 !! \brief Free a part to part structure
 !!
@@ -957,8 +977,9 @@ subroutine PDM_part_to_part_gnum1_to_send_buffer_get (ptp,                      
   integer                       :: n_part1
   integer                       :: n_part2
   integer                       :: n_elt1
-  integer(pdm_l_num_s), pointer :: part1_to_part2_idx(:) => null()
-  integer(pdm_g_num_s), pointer :: part1_to_part2(:)     => null()
+  integer(pdm_l_num_s), pointer :: part1_to_part2_idx(:)             => null()
+  integer(pdm_g_num_s), pointer :: part1_to_part2(:)                 => null()
+  integer(pdm_l_num_s), pointer :: gnum1_to_send_buffer_idx_ipart(:) => null()
 
   type(c_ptr)                   :: c_gnum1_to_send_buffer_idx = C_NULL_PTR
   type(c_ptr)                   :: c_gnum1_to_send_buffer     = C_NULL_PTR
@@ -1011,6 +1032,16 @@ subroutine PDM_part_to_part_gnum1_to_send_buffer_get (ptp,                      
                                  c_gnum1_to_send_buffer_idx, &
                                  length_gnum1_to_send_buffer_idx, &
                                  PDM_OWNERSHIP_USER)
+
+  do i = 1, n_part1
+
+    call PDM_pointer_array_part_get(gnum1_to_send_buffer_idx, &
+                                    i-1,  &
+                                    gnum1_to_send_buffer_idx_ipart)
+
+    length_gnum1_to_send_buffer(i) = gnum1_to_send_buffer_idx_ipart(length_gnum1_to_send_buffer(i)+1)
+
+  end do
 
   call PDM_pointer_array_create (gnum1_to_send_buffer, &
                                  n_part1,    &
@@ -1102,6 +1133,62 @@ subroutine PDM_part_to_part_recv_buffer_to_ref_lnum2_get (ptp,                  
   deallocate( length_recv_buffer_to_ref_lnum2 )
 
 end subroutine PDM_part_to_part_recv_buffer_to_ref_lnum2_get
+
+
+!>
+!!
+!!  \brief Get buffer size and stride for recv
+!!
+!!  \param [in]   ptp                       Block to part structure
+!!  \param [out]  default_n_recv_buffer     Number of entities to recv (size = n_rank)
+!!  \param [out]  default_i_recv_buffer     Index (size = n_rank + 1)
+!!
+!!
+
+subroutine PDM_part_to_part_default_recv_buffer_get (ptp,                   &
+                                                     default_n_recv_buffer, &
+                                                     default_i_recv_buffer)
+  use iso_c_binding
+  implicit none
+
+  type(c_ptr), value            :: ptp
+  integer(pdm_l_num_s), pointer :: default_n_recv_buffer(:)
+  integer(pdm_l_num_s), pointer :: default_i_recv_buffer(:)
+
+  integer                       :: n_rank
+  type(c_ptr)                   :: c_default_n_recv_buffer = C_NULL_PTR
+  type(c_ptr)                   :: c_default_i_recv_buffer = C_NULL_PTR
+
+interface
+  subroutine PDM_part_to_part_default_recv_buffer_get_c (ptp,                   &
+                                                         default_n_recv_buffer, &
+                                                         default_i_recv_buffer) &
+  bind (c, name='PDM_part_to_part_default_recv_buffer_get')
+    use iso_c_binding
+    implicit none
+
+    type(c_ptr),    value :: ptp
+    type(c_ptr)           :: default_n_recv_buffer
+    type(c_ptr)           :: default_i_recv_buffer
+
+  end subroutine PDM_part_to_part_default_recv_buffer_get_c
+end interface
+
+  call PDM_part_to_part_default_recv_buffer_get_c (ptp,                     &
+                                                   c_default_n_recv_buffer, &
+                                                   c_default_i_recv_buffer)
+
+  n_rank = PDM_part_to_part_n_ranks_get(ptp)
+
+  call c_f_pointer(c_default_n_recv_buffer, &
+                   default_n_recv_buffer,   &
+                   [n_rank])
+
+  call c_f_pointer(c_default_i_recv_buffer, &
+                   default_i_recv_buffer,   &
+                   [n_rank+1])
+
+end subroutine PDM_part_to_part_default_recv_buffer_get
 
 
 !>
