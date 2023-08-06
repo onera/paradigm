@@ -337,6 +337,8 @@ _part_extension
                                          &pvtx_opp_interface,
                                          &pvtx_opp_sens);
 
+  free(shift_by_domain_vtx);
+
   /*
    * On rajoute l'échange pour le gnum courant
    * Et avec le part_to_part on recupère le gnum opposé
@@ -542,6 +544,12 @@ _part_extension
   /*
    *  Il faudrait prendre part1 = uniquement les noeuds frontière (N. Delinger Idea)
    *  Reduction de part1 (n_vtx) -> part (n_vtx concerné par l'extension)
+   */
+
+  /*
+   * Ici on a 1 seul edge alors qu'on aimerai en avoir 2 !!! Because same gnum for edge inside connectivty vtx_edge
+   *   On peut hack la fonction (sinon tout refaire)
+   *   Il faut se créer un  vtx_edge + edge_ln_to_gn en dedoublant
    */
 
 
@@ -1089,6 +1097,389 @@ _part_extension
 }
 
 
+static
+void
+_part_extension2
+(
+  int                          n_depth,
+  int                          n_domain,
+  int*                         n_part,
+  PDM_MPI_Comm                 comm,
+  PDM_multipart_t             *mpart,
+  PDM_part_domain_interface_t *pdi
+)
+{
+  PDM_UNUSED(n_depth);
+  PDM_UNUSED(mpart);
+  PDM_UNUSED(pdi);
+
+  int i_rank;
+  int n_rank;
+  PDM_MPI_Comm_rank(comm, &i_rank);
+  PDM_MPI_Comm_size(comm, &n_rank);
+
+  int* n_part_g = malloc(n_domain * sizeof(int));
+  PDM_MPI_Allreduce(n_part, n_part_g, n_domain, PDM_MPI_INT, PDM_MPI_SUM, comm);
+
+  int          **pn_vtx              = (int          **) malloc( n_domain * sizeof(int          *));
+  PDM_g_num_t ***pvtx_ln_to_gn       = (PDM_g_num_t ***) malloc( n_domain * sizeof(PDM_g_num_t **));
+  int           *pflat_n_vtx         = (int           *) malloc( n_domain * sizeof(int           ));
+  int           *pflat_n_edge        = (int           *) malloc( n_domain * sizeof(int           ));
+  int          **pflat_edge_vtx_idx  = (int          **) malloc( n_domain * sizeof(int          *));
+  int          **pflat_edge_vtx      = (int          **) malloc( n_domain * sizeof(int          *));
+  PDM_g_num_t  **pflat_vtx_ln_to_gn  = (PDM_g_num_t  **) malloc( n_domain * sizeof(PDM_g_num_t  *));
+  PDM_g_num_t  **pflat_edge_ln_to_gn = (PDM_g_num_t  **) malloc( n_domain * sizeof(PDM_g_num_t  *));
+  double       **pflat_vtx_coords    = (double       **) malloc( n_domain * sizeof(double       *));
+
+  int ln_part_tot = 0;
+  for(int i_dom = 0; i_dom < n_domain; ++i_dom) {
+
+    pn_vtx       [i_dom]  = (int          *) malloc( n_part[i_dom] * sizeof(int          ));
+    pvtx_ln_to_gn[i_dom]  = (PDM_g_num_t **) malloc( n_part[i_dom] * sizeof(PDM_g_num_t *));
+
+    for(int i_part = 0; i_part < n_part[i_dom]; ++i_part) {
+
+      pn_vtx[i_dom][i_part] = PDM_multipart_part_ln_to_gn_get(mpart,
+                                                              i_dom,
+                                                              i_part,
+                                                              PDM_MESH_ENTITY_VERTEX,
+                                                              &pvtx_ln_to_gn[i_dom][i_part],
+                                                              PDM_OWNERSHIP_KEEP);
+
+      pflat_n_vtx       [ln_part_tot+i_part] = pn_vtx       [i_dom][i_part];
+      pflat_vtx_ln_to_gn[ln_part_tot+i_part] = pvtx_ln_to_gn[i_dom][i_part];
+
+      pflat_n_edge      [ln_part_tot+i_part] = PDM_multipart_part_ln_to_gn_get(mpart,
+                                                                               i_dom,
+                                                                               i_part,
+                                                                               PDM_MESH_ENTITY_EDGE,
+                                                                               &pflat_edge_ln_to_gn[ln_part_tot+i_part],
+                                                                               PDM_OWNERSHIP_KEEP);
+
+      PDM_multipart_part_connectivity_get(mpart,
+                                          i_dom,
+                                          i_part,
+                                          PDM_CONNECTIVITY_TYPE_EDGE_VTX,
+                                          &pflat_edge_vtx    [ln_part_tot+i_part],
+                                          &pflat_edge_vtx_idx[ln_part_tot+i_part],
+                                          PDM_OWNERSHIP_KEEP);
+
+      assert(pflat_edge_vtx_idx[ln_part_tot+i_part] == NULL);
+      pflat_edge_vtx_idx[ln_part_tot+i_part] = malloc((pflat_n_edge[ln_part_tot+i_part] + 1) * sizeof(int));
+      for(int i_edge = 0; i_edge < pflat_n_edge[ln_part_tot+i_part]+1; ++i_edge) {
+        pflat_edge_vtx_idx[ln_part_tot+i_part][i_edge] = 2 * i_edge;
+      }
+
+      PDM_multipart_part_vtx_coord_get(mpart,
+                                       i_dom,
+                                       i_part,
+                                       &pflat_vtx_coords[ln_part_tot+i_part],
+                                       PDM_OWNERSHIP_KEEP);
+
+    }
+    ln_part_tot += n_part[i_dom];
+  }
+
+  int         **pflat_vtx_edge_idx = NULL;
+  int         **pflat_vtx_edge     = NULL;
+  PDM_part_connectivity_transpose(ln_part_tot,
+                                  pflat_n_edge,
+                                  pflat_n_vtx,
+                                  pflat_edge_vtx_idx,
+                                  pflat_edge_vtx,
+                                  &pflat_vtx_edge_idx,
+                                  &pflat_vtx_edge);
+
+  PDM_g_num_t* shift_by_domain_vtx = _compute_offset_ln_to_gn_by_domain(n_domain,
+                                                                        n_part,
+                                                                        pn_vtx,
+                                                                        pvtx_ln_to_gn,
+                                                                        comm);
+
+  /* Shift ln_to_gn */
+  _offset_ln_to_gn_by_domain(n_domain,
+                             n_part,
+                             pn_vtx,
+                             pvtx_ln_to_gn,
+                             shift_by_domain_vtx,
+                             1);
+
+  int  *pn_vtx_num             = NULL;
+  int **pvtx_num               = NULL;
+  int **pvtx_opp_location_idx  = NULL;
+  int **pvtx_opp_location      = NULL;
+  int **pvtx_opp_interface_idx = NULL;
+  int **pvtx_opp_interface     = NULL;
+  int **pvtx_opp_sens          = NULL;
+
+  PDM_part_domain_interface_view_by_part(pdi,
+                                         PDM_BOUND_TYPE_VTX,
+                                         pflat_n_vtx,
+                                         &pn_vtx_num,
+                                         &pvtx_num,
+                                         &pvtx_opp_location_idx,
+                                         &pvtx_opp_location,
+                                         &pvtx_opp_interface_idx,
+                                         &pvtx_opp_interface,
+                                         &pvtx_opp_sens);
+
+  /*
+   * On rajoute l'échange pour le gnum courant
+   * Et avec le part_to_part on recupère le gnum opposé
+   * Pour chaque entité d'interface
+   * Puis on utilise le ptp du extract_part pour tout transferer le gnum et les triplet et le sens
+   */
+
+
+
+  if(1 == 1) {
+    for(int i_part = 0; i_part < ln_part_tot; ++i_part) {
+
+      PDM_log_trace_array_int(pvtx_num[i_part], pn_vtx_num[i_part], "pvtx_num ::");
+      PDM_log_trace_graph_nuplet_int(pvtx_opp_location_idx[i_part],
+                                     pvtx_opp_location    [i_part],
+                                     3,
+                                     pn_vtx_num[i_part], "pvtx_opp_location ::");
+      PDM_log_trace_array_int(pvtx_opp_interface[i_part], pvtx_opp_location_idx[i_part][pn_vtx_num[i_part]], "pvtx_opp_interface ::");
+      PDM_log_trace_array_int(pvtx_opp_sens     [i_part], pvtx_opp_location_idx[i_part][pn_vtx_num[i_part]], "pvtx_opp_sens ::");
+    }
+  }
+
+  for(int i_dom = 0; i_dom < n_domain; ++i_dom) {
+    for(int i_part = 0; i_part < n_part[i_dom]; ++i_part) {
+      int *ppart_vtx_proc_idx = NULL;
+      int *ppart_vtx_part_idx = NULL;
+      int *ppart_vtx          = NULL; // (i_vtx, i_proc, i_part, i_vtx_opp)
+      PDM_multipart_part_graph_comm_get(mpart,
+                                        i_dom,
+                                        i_part,
+                                        PDM_BOUND_TYPE_VTX,
+                                        &ppart_vtx_proc_idx,
+                                        &ppart_vtx_part_idx,
+                                        &ppart_vtx,
+                                        PDM_OWNERSHIP_KEEP);
+
+      // PDM_log_trace_array_int(ppart_vtx, 4 * ppart_vtx_part_idx[n_part_g[i_dom]], "ppart_vtx");
+
+    }
+  }
+
+  //
+  int         **part1_to_part2_idx         = malloc(ln_part_tot * sizeof(int *));
+  int         **part1_to_part2_triplet_idx = NULL; //malloc(ln_part_tot * sizeof(int *));
+  int         **part1_to_part2_triplet     = malloc(ln_part_tot * sizeof(int *));
+  int         **part1_to_part2_interface   = malloc(ln_part_tot * sizeof(int *));
+
+  /*
+   * Pour la recursion, il faut idéalement calculer le graphe avec les partition shifter avec
+   * PDM_part_generate_entity_graph_comm avec pentity_hint pour accelerer ou choisir
+   * Typiquement pour la deuxième passe on prends que tous les sommets étendu au step d'avant non unifié
+   */
+
+  /*
+   * Dans tout les cas il ne faut pas oublié de faire le graph de comm proprement
+   * avec les connexions entres partitions et entre domaine
+   * avec PDM_part_domain_interface_as_graph (à reimplementer)
+   */
+
+  // Count
+  int li_part = 0;
+  for(int i_dom = 0; i_dom < n_domain; ++i_dom) {
+    for(int i_part = 0; i_part < n_part[i_dom]; ++i_part) {
+
+      int *ppart_vtx_proc_idx = NULL;
+      int *ppart_vtx_part_idx = NULL;
+      int *ppart_vtx          = NULL; // (i_vtx, i_proc, i_part, i_vtx_opp)
+      PDM_multipart_part_graph_comm_get(mpart,
+                                        i_dom,
+                                        i_part,
+                                        PDM_BOUND_TYPE_VTX,
+                                        &ppart_vtx_proc_idx,
+                                        &ppart_vtx_part_idx,
+                                        &ppart_vtx,
+                                        PDM_OWNERSHIP_KEEP);
+
+      // PDM_log_trace_array_int(ppart_vtx, 4 * ppart_vtx_part_idx[n_part_g[i_dom]], "ppart_vtx");
+
+      part1_to_part2_idx[li_part] = malloc((pflat_n_vtx[li_part] + 1) *sizeof(int));
+      part1_to_part2_idx[li_part][0] = 0;
+
+      int *part1_to_part2_n = PDM_array_zeros_int(pflat_n_vtx[li_part]);
+
+      int n_entity_bound = ppart_vtx_part_idx[n_part_g[i_dom]];
+
+      for(int idx_entity = 0; idx_entity < n_entity_bound; ++idx_entity) {
+        int i_entity = ppart_vtx[4*idx_entity]-1;
+        part1_to_part2_n[i_entity] += 1;
+      }
+
+      /* From interface */
+      for(int idx_entity = 0; idx_entity < pn_vtx_num[li_part]; ++idx_entity) {
+        int i_entity = pvtx_num[li_part][idx_entity];
+        int n_opp = pvtx_opp_location_idx[li_part][idx_entity+1] - pvtx_opp_location_idx[li_part][idx_entity];
+        part1_to_part2_n[i_entity] += n_opp;
+      }
+
+      // PDM_log_trace_array_int(part1_to_part2_n, pflat_n_vtx[li_part], "part1_to_part2_n ::");
+
+      for(int i_entity = 0; i_entity < pflat_n_vtx[li_part]; ++i_entity) {
+        part1_to_part2_idx[li_part][i_entity+1] = part1_to_part2_idx[li_part][i_entity] + 3 * part1_to_part2_n[i_entity];
+        part1_to_part2_n[i_entity] = 0;
+      }
+
+      int n_connect_tot = part1_to_part2_idx[li_part][pflat_n_vtx[li_part]];
+      part1_to_part2_triplet  [li_part] = malloc(n_connect_tot   * sizeof(int));
+      part1_to_part2_interface[li_part] = malloc(n_connect_tot/3 * sizeof(int));
+
+      printf("n_connect_tot = %i \n", n_connect_tot);
+
+      for(int idx_entity = 0; idx_entity < n_entity_bound; ++idx_entity) {
+        int i_entity     = ppart_vtx[4*idx_entity]-1;
+        int i_proc_opp   = ppart_vtx[4*idx_entity+1];
+        int i_part_opp   = ppart_vtx[4*idx_entity+2]-1; // A gere -> Le shift
+        int i_entity_opp = ppart_vtx[4*idx_entity+3]-1;
+
+        int idx_write = part1_to_part2_idx[li_part][i_entity] + part1_to_part2_n[i_entity];
+        part1_to_part2_triplet[li_part][idx_write  ] = i_proc_opp;
+        part1_to_part2_triplet[li_part][idx_write+1] = i_part_opp;
+        part1_to_part2_triplet[li_part][idx_write+2] = i_entity_opp;
+
+        idx_write = part1_to_part2_idx[li_part][i_entity]/3 + part1_to_part2_n[i_entity]++;
+        part1_to_part2_interface[li_part][idx_write] = 0;
+
+        // part1_to_part2_triplet[li_part][idx_entity+1] = part1_to_part2_triplet[li_part][idx_entity] + 3;
+      }
+
+
+      /* From interface */
+      for(int idx_entity = 0; idx_entity < pn_vtx_num[li_part]; ++idx_entity) {
+        int i_entity = pvtx_num[li_part][idx_entity];
+        for(int idx_opp = pvtx_opp_location_idx[li_part][idx_entity  ];
+                idx_opp < pvtx_opp_location_idx[li_part][idx_entity+1]; ++idx_opp) {
+
+          int idx_write = part1_to_part2_idx[li_part][i_entity] + part1_to_part2_n[i_entity];
+          part1_to_part2_triplet  [li_part][idx_write  ] = pvtx_opp_location [li_part][3*idx_opp  ];
+          part1_to_part2_triplet  [li_part][idx_write+1] = pvtx_opp_location [li_part][3*idx_opp+1];
+          part1_to_part2_triplet  [li_part][idx_write+2] = pvtx_opp_location [li_part][3*idx_opp+2];
+
+          // Il faudra le faire en stride variable si periodicité composé
+          idx_write = part1_to_part2_idx[li_part][i_entity]/3 + part1_to_part2_n[i_entity]++;
+          part1_to_part2_interface[li_part][idx_write  ] = pvtx_opp_interface[li_part][  idx_opp  ];
+
+        }
+      }
+
+      PDM_log_trace_array_int(part1_to_part2_idx      [li_part], pflat_n_vtx[li_part], "part1_to_part2_idx       ::");
+      PDM_log_trace_array_int(part1_to_part2_triplet  [li_part], n_connect_tot       , "part1_to_part2_triplet   ::");
+      PDM_log_trace_array_int(part1_to_part2_interface[li_part], n_connect_tot/3     , "part1_to_part2_interface ::");
+
+      free(part1_to_part2_n);
+      li_part += 1;
+    }
+  }
+
+  /*
+   * Pour les periodicités il faut le geré côté part1
+   * car côté part2 on a un pb d'extraction de plusieurs gnum mais de periodicité différentes
+   * Une fois qu'on a fait le job côté part2 on génére une numérotation asbolu avec des doublés
+   * On doit également gardé le doublé existant pour faire l'unification au step d'après
+   * Exemple :
+   *    - 1 cellules periodiques par noeuds
+   *       -> On recupère (1, -1) et (1, 1)
+   *       -> On fait un gnum des extensions de partitions : donc 1, 2
+   *       -> On shift par rapport à l'interne donc 2, 3
+   *    Si on réaplique l'algo pour du rang 2 :
+   *       -> On recupère ()
+   * ATTENTION : on peut retomber sur la cellule de base
+   */
+
+
+  // ONLY to debug the ref_lnum2
+  if(1 == 1) {
+    PDM_part_to_part_t* ptp = PDM_part_to_part_create_from_num2_triplet((const PDM_g_num_t **) pflat_vtx_ln_to_gn,
+                                                                        (const int          *) pflat_n_vtx,
+                                                                        ln_part_tot,
+                                                                        (const int          *) pflat_n_vtx,
+                                                                        ln_part_tot,
+                                                                        (const int         **) part1_to_part2_idx,
+                                                                        (const int         **) part1_to_part2_triplet_idx,
+                                                                        (const int         **) part1_to_part2_triplet,
+                                                                        comm);
+
+
+    int  *n_ref_lnum2 = NULL;
+    int **ref_lnum2   = NULL;
+    PDM_part_to_part_ref_lnum2_get(ptp, &n_ref_lnum2, &ref_lnum2);
+
+    for(int i_part = 0; i_part < ln_part_tot; ++i_part) {
+      PDM_log_trace_array_int(ref_lnum2[i_part], n_ref_lnum2[i_part], "ref_lnum2 :");
+    }
+
+    PDM_part_to_part_free(ptp);
+  }
+
+  /* Unshift ln_to_gn */
+  _offset_ln_to_gn_by_domain(n_domain,
+                             n_part,
+                             pn_vtx,
+                             pvtx_ln_to_gn,
+                             shift_by_domain_vtx,
+                             -1);
+
+  for(int i_part = 0; i_part < ln_part_tot; ++i_part) {
+    free(part1_to_part2_idx        [i_part]);
+    // free(part1_to_part2_triplet_idx[i_part]);
+    free(part1_to_part2_triplet    [i_part]);
+    free(part1_to_part2_interface  [i_part]);
+
+    free(pflat_vtx_edge_idx[i_part] );
+    free(pflat_vtx_edge    [i_part] );
+    free(pflat_edge_vtx_idx[i_part] );
+  }
+  free(part1_to_part2_idx        );
+  // free(part1_to_part2_triplet_idx);
+  free(part1_to_part2_triplet    );
+  free(part1_to_part2_interface  );
+
+  free(pflat_vtx_edge_idx );
+  free(pflat_vtx_edge     );
+
+  free(shift_by_domain_vtx);
+  free(n_part_g);
+
+  for(int i_dom = 0; i_dom < n_domain; ++i_dom) {
+
+    free(pn_vtx       [i_dom]);
+    free(pvtx_ln_to_gn[i_dom]);
+  }
+
+  free(pn_vtx             );
+  free(pvtx_ln_to_gn      );
+  free(pflat_n_vtx        );
+  free(pflat_n_edge       );
+  free(pflat_edge_vtx_idx );
+  free(pflat_edge_vtx     );
+  free(pflat_vtx_ln_to_gn );
+  free(pflat_edge_ln_to_gn);
+  free(pflat_vtx_coords   );
+  for(int i_part = 0; i_part < ln_part_tot; ++i_part) {
+    free(pvtx_num             [i_part]);
+    free(pvtx_opp_location_idx[i_part]);
+    free(pvtx_opp_location    [i_part]);
+    free(pvtx_opp_interface   [i_part]);
+    free(pvtx_opp_sens        [i_part]);
+  }
+  free(pn_vtx_num            );
+  free(pvtx_num              );
+  free(pvtx_opp_location_idx );
+  free(pvtx_opp_location     );
+  free(pvtx_opp_interface_idx);
+  free(pvtx_opp_interface    );
+  free(pvtx_opp_sens         );
+
+
+
+}
 
 
 /*============================================================================
@@ -1305,12 +1696,21 @@ char *argv[]
    *  - Step 9 : n_dom = 2, n_proc = 2 + rank1 + perio mais qui se recouvre plusieurs fois (genre 2 cellules)
    *
    */
-  _part_extension(n_depth,
-                  n_dom_i,
-                  n_part,
-                  comm,
-                  mpart,
-                  pdi);
+  if(0 == 1) {
+    _part_extension(n_depth,
+                    n_dom_i,
+                    n_part,
+                    comm,
+                    mpart,
+                    pdi);
+  }
+  _part_extension2(n_depth,
+                   n_dom_i,
+                   n_part,
+                   comm,
+                   mpart,
+                   pdi);
+
 
 
 
