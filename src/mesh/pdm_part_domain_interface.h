@@ -193,6 +193,7 @@ PDM_part_domain_interface_view_by_part
   PDM_part_domain_interface_t   *pdi,
   PDM_bound_type_t               interface_kind,
   int                           *pn_entity,
+  PDM_g_num_t                  **pentity_ln_to_gn,
   int                          **pn_entity_num,
   int                         ***pentity_num,
   int                         ***pentity_opp_location_idx,
