@@ -4658,9 +4658,9 @@ PDM_part_to_part_iexch_wait
 
     if (ptp->async_exch_k_comm[request] == PDM_MPI_COMM_KIND_P2P) {
 
-      PDM_part_to_part_irecv_wait (ptp, ptp->async_exch_subrequest[request][0]);
+      PDM_part_to_part_irecv_wait (ptp, ptp->async_exch_subrequest[request][1]);
 
-      PDM_part_to_part_issend_wait (ptp, ptp->async_exch_subrequest[request][1]);
+      PDM_part_to_part_issend_wait (ptp, ptp->async_exch_subrequest[request][0]);
 
     }
 
