@@ -102,8 +102,8 @@ MPI_TEST_CASE("[PDM_delmts_nodal_elmts_t] Constructor",1) {
   PDM_dmesh_t* dm;
   PDM_dmesh_nodal_to_dmesh_get_dmesh(dmn_to_dm, 0, &dm);
 
-  int dn_cell, dn_face, dn_vtx, dn_edge, n_bnd, n_join;
-  PDM_dmesh_dims_get(dm, &dn_cell, &dn_face, &dn_edge, &dn_vtx, &n_bnd, &n_join);
+  int dn_cell, dn_face, dn_vtx, dn_edge;
+  PDM_dmesh_dims_get(dm, &dn_cell, &dn_face, &dn_edge, &dn_vtx);
 
   MPI_CHECK(0, dn_face == 8);
   MPI_CHECK(0, dn_edge == 16);
