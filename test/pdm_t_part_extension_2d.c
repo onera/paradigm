@@ -522,13 +522,14 @@ _part_extension
                              shift_by_domain_face,
                              1);
 
-  int  *pn_vtx_num             = NULL;
-  int **pvtx_num               = NULL;
-  int **pvtx_opp_location_idx  = NULL;
-  int **pvtx_opp_location      = NULL;
-  int **pvtx_opp_interface_idx = NULL;
-  int **pvtx_opp_interface     = NULL;
-  int **pvtx_opp_sens          = NULL;
+  int          *pn_vtx_num             = NULL;
+  int         **pvtx_num               = NULL;
+  int         **pvtx_opp_location_idx  = NULL;
+  int         **pvtx_opp_location      = NULL;
+  int         **pvtx_opp_interface_idx = NULL;
+  int         **pvtx_opp_interface     = NULL;
+  int         **pvtx_opp_sens          = NULL;
+  PDM_g_num_t **pvtx_opp_gnum          = NULL;
 
   PDM_part_domain_interface_view_by_part(pdi,
                                          PDM_BOUND_TYPE_VTX,
@@ -540,7 +541,8 @@ _part_extension
                                          &pvtx_opp_location,
                                          &pvtx_opp_interface_idx,
                                          &pvtx_opp_interface,
-                                         &pvtx_opp_sens);
+                                         &pvtx_opp_sens,
+                                         &pvtx_opp_gnum);
 
 
   if(1 == 1) {
@@ -556,13 +558,14 @@ _part_extension
     }
   }
 
-  int  *pn_edge_num             = NULL;
-  int **pedge_num               = NULL;
-  int **pedge_opp_location_idx  = NULL;
-  int **pedge_opp_location      = NULL;
-  int **pedge_opp_interface_idx = NULL;
-  int **pedge_opp_interface     = NULL;
-  int **pedge_opp_sens          = NULL;
+  int          *pn_edge_num             = NULL;
+  int         **pedge_num               = NULL;
+  int         **pedge_opp_location_idx  = NULL;
+  int         **pedge_opp_location      = NULL;
+  int         **pedge_opp_interface_idx = NULL;
+  int         **pedge_opp_interface     = NULL;
+  int         **pedge_opp_sens          = NULL;
+  PDM_g_num_t **pedge_opp_gnum          = NULL;
 
   PDM_part_domain_interface_view_by_part(pdi,
                                          PDM_BOUND_TYPE_EDGE,
@@ -574,7 +577,8 @@ _part_extension
                                          &pedge_opp_location,
                                          &pedge_opp_interface_idx,
                                          &pedge_opp_interface,
-                                         &pedge_opp_sens);
+                                         &pedge_opp_sens,
+                                         &pedge_opp_gnum);
 
 
   if(1 == 1) {
@@ -626,6 +630,7 @@ _part_extension
     free(pedge_opp_location    [i_part]);
     free(pedge_opp_interface   [i_part]);
     free(pedge_opp_sens        [i_part]);
+    free(pedge_opp_gnum        [i_part]);
   }
   free(pn_edge_num            );
   free(pedge_num              );
@@ -634,6 +639,7 @@ _part_extension
   free(pedge_opp_interface_idx);
   free(pedge_opp_interface    );
   free(pedge_opp_sens         );
+  free(pedge_opp_gnum         );
 
 
   for(int i_part = 0; i_part < ln_part_tot; ++i_part) {
@@ -642,6 +648,7 @@ _part_extension
     free(pvtx_opp_location    [i_part]);
     free(pvtx_opp_interface   [i_part]);
     free(pvtx_opp_sens        [i_part]);
+    free(pvtx_opp_gnum        [i_part]);
   }
   free(pn_vtx_num            );
   free(pvtx_num              );
@@ -650,6 +657,7 @@ _part_extension
   free(pvtx_opp_interface_idx);
   free(pvtx_opp_interface    );
   free(pvtx_opp_sens         );
+  free(pvtx_opp_gnum         );
 
   free(n_part_g);
 }

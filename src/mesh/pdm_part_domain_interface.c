@@ -1684,7 +1684,8 @@ PDM_part_domain_interface_view_by_part
   int                         ***pentity_opp_location_out,
   int                         ***pentity_opp_interface_idx_out,
   int                         ***pentity_opp_interface_out,
-  int                         ***pentity_opp_sens_out
+  int                         ***pentity_opp_sens_out,
+  PDM_g_num_t                 ***pentity_opp_gnum_out
 )
 {
 
@@ -2003,14 +2004,14 @@ PDM_part_domain_interface_view_by_part
 
   for(int i_part = 0; i_part < n_part_loc_all_domain; ++i_part) {
     free(pextract_interface_opp  [i_part]);
-    free(pextract_gnum_opp       [i_part]);
+    // free(pextract_gnum_opp       [i_part]);
     free(part1_to_part2_gnum     [i_part]);
     free(part1_to_part2_idx      [i_part]);
     free(part1_to_part2_triplet  [i_part]);
     free(part1_to_part2_interface[i_part]);
   }
   free(pextract_interface_opp  );
-  free(pextract_gnum_opp       );
+  // free(pextract_gnum_opp       );
   free(part1_to_part2_gnum     );
   free(part1_to_part2_idx      );
   free(part1_to_part2_triplet  );
@@ -2027,6 +2028,7 @@ PDM_part_domain_interface_view_by_part
   *pentity_opp_interface_idx_out = pentity_opp_interface_idx;
   *pentity_opp_interface_out     = pentity_opp_interface;
   *pentity_opp_sens_out          = pentity_opp_sens;
+  *pentity_opp_gnum_out          = pextract_gnum_opp;
 }
 
 void

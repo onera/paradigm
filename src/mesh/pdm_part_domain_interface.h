@@ -200,7 +200,8 @@ PDM_part_domain_interface_view_by_part
   int                         ***pentity_opp_location,
   int                         ***pentity_opp_interface_idx,
   int                         ***pentity_opp_interface,
-  int                         ***pentity_opp_sens
+  int                         ***pentity_opp_sens,
+  PDM_g_num_t                 ***pentity_opp_gnum_out
 );
 
 void

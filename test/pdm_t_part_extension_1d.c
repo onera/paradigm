@@ -318,13 +318,14 @@ _part_extension
                              shift_by_domain_vtx,
                              1);
 
-  int  *pn_vtx_num             = NULL;
-  int **pvtx_num               = NULL;
-  int **pvtx_opp_location_idx  = NULL;
-  int **pvtx_opp_location      = NULL;
-  int **pvtx_opp_interface_idx = NULL;
-  int **pvtx_opp_interface     = NULL;
-  int **pvtx_opp_sens          = NULL;
+  int          *pn_vtx_num             = NULL;
+  int         **pvtx_num               = NULL;
+  int         **pvtx_opp_location_idx  = NULL;
+  int         **pvtx_opp_location      = NULL;
+  int         **pvtx_opp_interface_idx = NULL;
+  int         **pvtx_opp_interface     = NULL;
+  int         **pvtx_opp_sens          = NULL;
+  PDM_g_num_t **pvtx_opp_gnum          = NULL;
 
   PDM_part_domain_interface_view_by_part(pdi,
                                          PDM_BOUND_TYPE_VTX,
@@ -336,7 +337,8 @@ _part_extension
                                          &pvtx_opp_location,
                                          &pvtx_opp_interface_idx,
                                          &pvtx_opp_interface,
-                                         &pvtx_opp_sens);
+                                         &pvtx_opp_sens,
+                                         &pvtx_opp_gnum);
 
   /*
    * On rajoute l'échange pour le gnum courant
@@ -1084,6 +1086,7 @@ _part_extension
     free(pvtx_opp_location    [i_part]);
     free(pvtx_opp_interface   [i_part]);
     free(pvtx_opp_sens        [i_part]);
+    free(pvtx_opp_gnum        [i_part]);
   }
   free(pn_vtx_num            );
   free(pvtx_num              );
@@ -1092,6 +1095,7 @@ _part_extension
   free(pvtx_opp_interface_idx);
   free(pvtx_opp_interface    );
   free(pvtx_opp_sens         );
+  free(pvtx_opp_gnum         );
 
 }
 
@@ -1223,13 +1227,14 @@ _part_extension2
                              shift_by_domain_edge,
                              1);
 
-  int  *pn_vtx_num             = NULL;
-  int **pvtx_num               = NULL;
-  int **pvtx_opp_location_idx  = NULL;
-  int **pvtx_opp_location      = NULL;
-  int **pvtx_opp_interface_idx = NULL;
-  int **pvtx_opp_interface     = NULL;
-  int **pvtx_opp_sens          = NULL;
+  int          *pn_vtx_num             = NULL;
+  int         **pvtx_num               = NULL;
+  int         **pvtx_opp_location_idx  = NULL;
+  int         **pvtx_opp_location      = NULL;
+  int         **pvtx_opp_interface_idx = NULL;
+  int         **pvtx_opp_interface     = NULL;
+  int         **pvtx_opp_sens          = NULL;
+  PDM_g_num_t **pvtx_opp_gnum          = NULL;
 
   PDM_part_domain_interface_view_by_part(pdi,
                                          PDM_BOUND_TYPE_VTX,
@@ -1241,7 +1246,47 @@ _part_extension2
                                          &pvtx_opp_location,
                                          &pvtx_opp_interface_idx,
                                          &pvtx_opp_interface,
-                                         &pvtx_opp_sens);
+                                         &pvtx_opp_sens,
+                                         &pvtx_opp_gnum);
+
+  PDM_g_num_t **pvtx_opp_gnum_and_itrf = malloc(ln_part_tot * sizeof(PDM_g_num_t *));
+  for(int i_part = 0; i_part < ln_part_tot; ++i_part) {
+
+    // int *_pvtx_opp_location = pvtx_opp_location_idx[i_part];
+    int *_pvtx_opp_location_idx = pvtx_opp_location_idx[i_part];
+    int n_connect_tot = _pvtx_opp_location_idx[pn_vtx_num[i_part]];
+
+    // On garde le lien courant (indirect sort of pvtx_num) + également keep le sens_opp
+    pvtx_opp_gnum_and_itrf[i_part] = malloc(2 * n_connect_tot * sizeof(PDM_g_num_t));
+    PDM_g_num_t* _pvtx_opp_gnum_and_itrf = pvtx_opp_gnum_and_itrf[i_part];
+
+    for(int idx_entity = 0; idx_entity < pn_vtx_num[i_part]; ++idx_entity) {
+      int i_entity = pvtx_num[i_part][idx_entity];
+      for(int idx_opp = _pvtx_opp_location_idx[idx_entity]; idx_opp < _pvtx_opp_location_idx[idx_entity+1]; ++idx_opp) {
+
+        _pvtx_opp_gnum_and_itrf[2*idx_opp  ] = pvtx_opp_gnum     [i_part][idx_opp];
+        _pvtx_opp_gnum_and_itrf[2*idx_opp+1] = pvtx_opp_interface[i_part][idx_opp];
+      }
+    }
+
+    PDM_log_trace_array_long(pvtx_opp_gnum_and_itrf[i_part], 2 * n_connect_tot, "pvtx_opp_gnum_and_itrf ::");
+
+    int *order = malloc(n_connect_tot * sizeof(int));
+    PDM_order_inplace_unique_and_order_long(n_connect_tot, 2, pvtx_opp_gnum_and_itrf[i_part], order);
+
+
+    PDM_log_trace_array_int(order, n_connect_tot, "order = ");
+
+
+    free(order);
+    // for(int i = 0; i < n_unique; ++i) {
+    //   int old_order = order_unique[i];
+    // }
+
+
+  }
+
+
 
   /*
    * On rajoute l'échange pour le gnum courant
@@ -1260,8 +1305,9 @@ _part_extension2
                                      pvtx_opp_location    [i_part],
                                      3,
                                      pn_vtx_num[i_part], "pvtx_opp_location ::");
-      PDM_log_trace_array_int(pvtx_opp_interface[i_part], pvtx_opp_location_idx[i_part][pn_vtx_num[i_part]], "pvtx_opp_interface ::");
-      PDM_log_trace_array_int(pvtx_opp_sens     [i_part], pvtx_opp_location_idx[i_part][pn_vtx_num[i_part]], "pvtx_opp_sens ::");
+      PDM_log_trace_array_int (pvtx_opp_interface[i_part], pvtx_opp_location_idx[i_part][pn_vtx_num[i_part]], "pvtx_opp_interface ::");
+      PDM_log_trace_array_int (pvtx_opp_sens     [i_part], pvtx_opp_location_idx[i_part][pn_vtx_num[i_part]], "pvtx_opp_sens ::");
+      PDM_log_trace_array_long(pvtx_opp_gnum     [i_part], pvtx_opp_location_idx[i_part][pn_vtx_num[i_part]], "pvtx_opp_gnum ::");
     }
   }
 
@@ -1528,6 +1574,17 @@ _part_extension2
     PDM_log_trace_array_int(ref_lnum2[i_part], n_ref_lnum2[i_part], "ref_lnum2 :");
   }
 
+  int **pextract_edge_vtx_idx = malloc(ln_part_tot * sizeof(int *));
+  for(int i_part = 0; i_part < ln_part_tot; ++i_part) {
+    pextract_edge_vtx_idx[i_part] = malloc((n_ref_lnum2[i_part] + 1) * sizeof(int));
+
+    pextract_edge_vtx_idx[i_part][0] = 0;
+    for(int i_edge = 0; i_edge < n_ref_lnum2[i_part]; ++i_edge) {
+      pextract_edge_vtx_idx[i_part][i_edge+1] = pextract_edge_vtx_idx[i_part][i_edge] + pextract_edge_vtx_n[i_part][i_edge];
+    }
+
+  }
+
   /* Verbose all recv data */
   if(1 == 1) {
     for(int i_part = 0; i_part < ln_part_tot; ++i_part) {
@@ -1629,6 +1686,11 @@ _part_extension2
   free(pedge_ln_to_gn_only_by_interface);
 
 
+  for(int i_part = 0; i_part < ln_part_tot; ++i_part) {
+    free(pvtx_opp_gnum_and_itrf[i_part]);
+  }
+  free(pvtx_opp_gnum_and_itrf);
+
   /*
    * ATTENTION : On peut avoir 2 fois le même edge ou face (surtout au deuxieme passage )
    *   Faire un unique puis une indirection (on garde les buffers tel quel c'est plus simple je pense )
@@ -1651,19 +1713,105 @@ _part_extension2
    * Test d'arrêt par adjacence
    */
 
+  /*
+   * Creation numero absolu vtx
+   */
+  PDM_gen_gnum_t* gen_gnum_vtx = PDM_gnum_create(3,
+                                                 ln_part_tot,
+                                                 PDM_TRUE,
+                                                 1.e-6,
+                                                 comm,
+                                                 PDM_OWNERSHIP_KEEP);
 
+  PDM_gnum_set_parents_nuplet(gen_gnum_vtx, 2);
+
+  /*
+   *  Il faut mettre QUE les nouveu vertex qui ne sont pas locaux OU une translation explicit via les raccords existe
+   *    - On prends chaque couple (vtx, interface)
+   *    - Si edge interne -> Rien a faire
+   *    - Si le sommet est dans une liste d'interface tradusible -> On le traduit
+   *    - Sinon on le rajoute dans les gnum a calculer
+   */
+
+  int          *pn_vtx_only_by_interface        = malloc(ln_part_tot * sizeof(int          ));
+  PDM_g_num_t **pvtx_ln_to_gn_only_by_interface = malloc(ln_part_tot * sizeof(PDM_g_num_t *));
+  for(int i_part = 0; i_part < ln_part_tot; ++i_part) {
+
+    int         *_pextract_edge_interface = pextract_edge_interface[i_part];
+    PDM_g_num_t *_pextract_edge_gnum      = pextract_edge_gnum     [i_part];
+
+    int         *_pextract_edge_vtx_idx  = pextract_edge_vtx_idx [i_part];
+    PDM_g_num_t *_pextract_edge_vtx_gnum = pextract_edge_vtx_gnum[i_part];
+
+    for(int i_ref = 0; i_ref < n_ref_lnum2[i_part]; ++i_ref) {
+      if(_pextract_edge_interface[i_ref] != 0) {
+
+
+
+      }
+    }
+
+  }
+
+  /*
+   * Pour faire la cascade IL FAUT garder les opp_location !!!!
+   */
+
+
+  free(pn_vtx_only_by_interface       );
+  free(pvtx_ln_to_gn_only_by_interface);
+
+
+  // int          *pn_edge_only_by_interface        = malloc(ln_part_tot * sizeof(int          ));
+  // PDM_g_num_t **pedge_ln_to_gn_only_by_interface = malloc(ln_part_tot * sizeof(PDM_g_num_t *));
+
+  // for(int i_part = 0; i_part < ln_part_tot; ++i_part) {
+
+  //   int         *_pextract_edge_interface = pextract_edge_interface[i_part];
+  //   PDM_g_num_t *_pextract_edge_gnum      = pextract_edge_gnum     [i_part];
+
+  //   pn_edge_only_by_interface[i_part] = 0;
+
+  //   for(int i_ref = 0; i_ref < n_ref_lnum2[i_part]; ++i_ref) {
+  //     if(_pextract_edge_interface[i_ref] != 0) {
+  //       pn_edge_only_by_interface[i_part]++;
+  //     }
+  //   }
+
+  //   pedge_ln_to_gn_only_by_interface[i_part] = malloc(2 * pn_edge_only_by_interface[i_part] * sizeof(PDM_g_num_t));
+  //   PDM_g_num_t *_pedge_ln_to_gn_only_by_interface = pedge_ln_to_gn_only_by_interface[i_part];
+  //   pn_edge_only_by_interface[i_part] = 0;
+
+  //   for(int i_ref = 0; i_ref < n_ref_lnum2[i_part]; ++i_ref) {
+  //     if(_pextract_edge_interface[i_ref] != 0) {
+  //       int idx_write = pn_edge_only_by_interface[i_part]++;
+  //       _pedge_ln_to_gn_only_by_interface[2*idx_write  ] = _pextract_edge_gnum     [i_ref];
+  //       _pedge_ln_to_gn_only_by_interface[2*idx_write+1] = _pextract_edge_interface[i_ref];
+  //     }
+  //   }
+
+  //   PDM_gnum_set_from_parents(gen_gnum_edge,
+  //                             i_part,
+  //                             pn_edge_only_by_interface[i_part],
+  //                             pedge_ln_to_gn_only_by_interface[i_part]);
+
+  // }
+
+  PDM_gnum_free(gen_gnum_vtx);
 
 
 
   for(int i_part = 0; i_part < ln_part_tot; ++i_part) {
     free(pextract_edge_interface[i_part]);
     free(pextract_edge_vtx_n    [i_part]);
+    free(pextract_edge_vtx_idx  [i_part]);
     free(pextract_edge_vtx_gnum [i_part]);
     free(pextract_edge_n        [i_part]);
     free(pextract_edge_gnum     [i_part]);
   }
   free(pextract_edge_interface);
   free(pextract_edge_vtx_n    );
+  free(pextract_edge_vtx_idx  );
   free(pextract_edge_vtx_gnum );
   free(pextract_edge_n        );
   free(pextract_edge_gnum     );
@@ -1734,6 +1882,7 @@ _part_extension2
     free(pvtx_opp_location    [i_part]);
     free(pvtx_opp_interface   [i_part]);
     free(pvtx_opp_sens        [i_part]);
+    free(pvtx_opp_gnum        [i_part]);
   }
   free(pn_vtx_num            );
   free(pvtx_num              );
@@ -1742,6 +1891,7 @@ _part_extension2
   free(pvtx_opp_interface_idx);
   free(pvtx_opp_interface    );
   free(pvtx_opp_sens         );
+  free(pvtx_opp_gnum         );
 
 
 
