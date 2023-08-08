@@ -1752,7 +1752,7 @@ _part_extension2
           PDM_g_num_t vtx_g_num = _pextract_edge_vtx_gnum[idx_edge];
           PDM_g_num_t gnum_to_find[2] = {vtx_g_num, -_pextract_edge_interface[i_ref]};
           int pos = PDM_order_binary_search_long(gnum_to_find, _pvtx_opp_gnum_and_itrf, 2, pn_vtx_opp_gnum_and_itrf[i_part]);
-          if(pos == -1) {
+          if(pos != -1) {
             pn_vtx_only_by_interface[i_part]++;
           }
           printf("Search (%i/%i) -> pos = %i \n", vtx_g_num, _pextract_edge_interface[i_ref], pos);
@@ -1772,7 +1772,7 @@ _part_extension2
           PDM_g_num_t vtx_g_num = _pextract_edge_vtx_gnum[idx_edge];
           PDM_g_num_t gnum_to_find[2] = {vtx_g_num, -_pextract_edge_interface[i_ref]};
           int pos = PDM_order_binary_search_long(gnum_to_find, _pvtx_opp_gnum_and_itrf, 2, pn_vtx_opp_gnum_and_itrf[i_part]);
-          if(pos == -1) {
+          if(pos != -1) {
             int idx_write = pn_vtx_only_by_interface[i_part]++;
             pvtx_ln_to_gn_only_by_interface[i_part][2*idx_write  ] = vtx_g_num;
             pvtx_ln_to_gn_only_by_interface[i_part][2*idx_write+1] = -_pextract_edge_interface[i_ref];
@@ -1788,24 +1788,108 @@ _part_extension2
   }
   PDM_gnum_compute(gen_gnum_vtx);
 
+  /*
+   * Unify edge_vtx
+   */
+  int **pextract_edge_vtx = malloc(ln_part_tot * sizeof(int *));
   for(int i_part = 0; i_part < ln_part_tot; ++i_part) {
+
     PDM_g_num_t* extented_vtx_ln_to_gn = PDM_gnum_get(gen_gnum_vtx, i_part);
     PDM_log_trace_array_long(extented_vtx_ln_to_gn, pn_vtx_only_by_interface[i_part], "extented_vtx_ln_to_gn ::");
 
-    // int         *_pextract_edge_interface = pextract_edge_interface[i_part];
-    // PDM_g_num_t *_pextract_edge_gnum      = pextract_edge_gnum     [i_part];
+    /* Sort unique the new gnum to unify */
+    int         *extended_vtx_order           = malloc( pn_vtx_only_by_interface[i_part] * sizeof(int        ));
+    PDM_g_num_t *extented_vtx_ln_to_gn_sorted = malloc( pn_vtx_only_by_interface[i_part] * sizeof(PDM_g_num_t));
+    for(int i_vtx = 0; i_vtx < pn_vtx_only_by_interface[i_part]; ++i_vtx) {
+      extented_vtx_ln_to_gn_sorted[i_vtx] = extented_vtx_ln_to_gn[i_vtx];
+      extended_vtx_order          [i_vtx] = i_vtx;
+    }
 
-    // /* Update */
-    // int idx_read = 0;
-    // for(int i_ref = 0; i_ref < n_ref_lnum2[i_part]; ++i_ref) {
-    //   if(_pextract_edge_interface[i_ref] != 0) {
-    //     _pextract_edge_gnum[i_ref] = extented_edge_ln_to_gn[idx_read++] + shift_by_domain_edge[n_domain];
-    //   }
-    // }
+    PDM_sort_long(extented_vtx_ln_to_gn_sorted, extended_vtx_order, pn_vtx_only_by_interface[i_part]);
 
-    // PDM_log_trace_array_long(_pextract_edge_gnum, n_ref_lnum2[i_part], "_pextract_edge_gnum (Update) : ");
+
+    /*
+     * Sort current part vtx_ln_to_gn
+     */
+    int         *vtx_order            = malloc( pflat_n_vtx[i_part] * sizeof(int        ));
+    PDM_g_num_t *pvtx_ln_to_gn_sorted = malloc( pflat_n_vtx[i_part] * sizeof(PDM_g_num_t));
+    for(int i_vtx = 0; i_vtx < pflat_n_vtx[i_part]; ++i_vtx) {
+      pvtx_ln_to_gn_sorted[i_vtx] = pflat_vtx_ln_to_gn[i_part][i_vtx];
+      vtx_order           [i_vtx] = i_vtx;
+    }
+    PDM_sort_long(pvtx_ln_to_gn_sorted, vtx_order, pflat_n_vtx[i_part]);
+
+
+    PDM_g_num_t *_pvtx_opp_gnum_and_itrf  = pvtx_opp_gnum_and_itrf [i_part];
+    int         *_pextract_edge_interface = pextract_edge_interface[i_part];
+    PDM_g_num_t *_pextract_edge_gnum      = pextract_edge_gnum     [i_part];
+
+    int         *_pextract_edge_vtx_idx  = pextract_edge_vtx_idx [i_part];
+    PDM_g_num_t *_pextract_edge_vtx_gnum = pextract_edge_vtx_gnum[i_part];
+
+    pextract_edge_vtx[i_part] = malloc( _pextract_edge_vtx_idx[n_ref_lnum2[i_part]] * sizeof(int));
+    int         *_pextract_edge_vtx  = pextract_edge_vtx [i_part];
+
+    /* */
+    for(int i_ref = 0; i_ref < n_ref_lnum2[i_part]; ++i_ref) {
+
+      /*
+       * First case :
+       *   - Edge is move by interface
+       */
+      if(_pextract_edge_interface[i_ref] != 0) {
+        for(int idx_edge = _pextract_edge_vtx_idx[i_ref]; idx_edge < _pextract_edge_vtx_idx[i_ref+1]; ++idx_edge) {
+
+          PDM_g_num_t vtx_g_num = _pextract_edge_vtx_gnum[idx_edge];
+          PDM_g_num_t gnum_to_find[2] = {vtx_g_num, -_pextract_edge_interface[i_ref]};
+          int pos = PDM_order_binary_search_long(gnum_to_find, _pvtx_opp_gnum_and_itrf, 2, pn_vtx_opp_gnum_and_itrf[i_part]);
+          printf(" --- Search (%i/%i) -> pos = %i \n", vtx_g_num, _pextract_edge_interface[i_ref], pos);
+          if(pos != -1) {
+            _pextract_edge_vtx[idx_edge] = ( pflat_n_vtx[i_part] + pos + 1); // ATTENTION SIGN
+
+          } else {
+            int pos_int = PDM_binary_search_long(vtx_g_num, pvtx_ln_to_gn_sorted, pflat_n_vtx[i_part]);
+            assert(pos_int != -1);
+            int orig_pos = vtx_order[pos_int];
+            _pextract_edge_vtx[idx_edge] = ( orig_pos + 1);
+
+            printf("\t --- Search interior (%i) -> pos_int = %i \n", vtx_g_num, pos_int);
+
+          }
+        }
+      } else { // Second case : Interior edge
+
+        for(int idx_edge = _pextract_edge_vtx_idx[i_ref]; idx_edge < _pextract_edge_vtx_idx[i_ref+1]; ++idx_edge) {
+
+          PDM_g_num_t vtx_g_num = _pextract_edge_vtx_gnum[idx_edge];
+          int pos_int = PDM_binary_search_long(vtx_g_num, pvtx_ln_to_gn_sorted, pflat_n_vtx[i_part]);
+          assert(pos_int != -1);
+          int orig_pos = vtx_order[pos_int];
+          _pextract_edge_vtx[idx_edge] = ( orig_pos + 1);
+
+        }
+      }
+    }
+
+    PDM_log_trace_connectivity_int(_pextract_edge_vtx_idx, _pextract_edge_vtx, n_ref_lnum2[i_part], "pextract_edge_vtx ::");
+
+
+
+
+    free(extended_vtx_order          );
+    free(extented_vtx_ln_to_gn_sorted);
+
+    free(vtx_order);
+    free(pvtx_ln_to_gn_sorted);
 
   }
+
+
+
+  for(int i_part = 0; i_part < ln_part_tot; ++i_part) {
+    free(pextract_edge_vtx[i_part]);
+  }
+  free(pextract_edge_vtx);
 
 
   PDM_gnum_free(gen_gnum_vtx);
