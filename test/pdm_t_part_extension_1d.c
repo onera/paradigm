@@ -1823,27 +1823,6 @@ _part_extension2
 
     PDM_sort_long(extented_vtx_ln_to_gn_sorted, extended_vtx_order, pn_vtx_only_by_interface[i_part]);
 
-
-    /*
-     * Update with new gnum
-     */
-    pn_vtx_only_by_interface[i_part] = 0;
-    for(int i_ref = 0; i_ref < n_ref_lnum2[i_part]; ++i_ref) {
-      if(_pextract_edge_interface[i_ref] != 0) {
-        /* Blinder d'assert */
-        for(int idx_edge = _pextract_edge_vtx_idx[i_ref]; idx_edge < _pextract_edge_vtx_idx[i_ref+1]; ++idx_edge) {
-          PDM_g_num_t vtx_g_num = _pextract_edge_vtx_gnum[idx_edge];
-          PDM_g_num_t gnum_to_find[2] = {vtx_g_num, -_pextract_edge_interface[i_ref]};
-          int pos = PDM_order_binary_search_long(gnum_to_find, _pvtx_opp_gnum_and_itrf, 2, pn_vtx_opp_gnum_and_itrf[i_part]);
-          if(pos == -1) {
-            _pextract_edge_vtx_gnum[idx_edge] = extented_vtx_ln_to_gn[pn_vtx_only_by_interface[i_part]++];
-          }
-        }
-      }
-    }
-
-
-
     /*
      * Sort current part vtx_ln_to_gn
      */
@@ -1857,6 +1836,7 @@ _part_extension2
 
 
     /* */
+    int pn_vtx_only_by_interface2 = 0; // To read in extented_vtx_ln_to_gn
     for(int i_ref = 0; i_ref < n_ref_lnum2[i_part]; ++i_ref) {
 
       /*
@@ -1876,7 +1856,8 @@ _part_extension2
              * Subcase :
              *   - Vtx is not in table of interface : it's a new vtx
              */
-            int pos_new = PDM_binary_search_long(vtx_g_num, extented_vtx_ln_to_gn_sorted, pn_vtx_only_by_interface[i_part]);
+            PDM_g_num_t vtx_extended_g_num = extented_vtx_ln_to_gn[pn_vtx_only_by_interface2++];
+            int pos_new = PDM_binary_search_long(vtx_extended_g_num, extented_vtx_ln_to_gn_sorted, pn_vtx_only_by_interface[i_part]);
 
             assert(pos_new != -1);
             _pextract_edge_vtx[idx_edge] = ( pflat_n_vtx[i_part] + pos_new + 1); // ATTENTION SIGN
@@ -1886,12 +1867,12 @@ _part_extension2
              * Subcase :
              *   - Vtx is in table of interface
              */
-            int pos_int = PDM_binary_search_long(vtx_g_num, pvtx_ln_to_gn_sorted, pflat_n_vtx[i_part]);
-            assert(pos_int != -1);
-            int orig_pos = vtx_order[pos_int];
-            _pextract_edge_vtx[idx_edge] = ( orig_pos + 1);
+            int pos2  = vtx_opp_position[i_part][pos];
+            int i_vtx = pvtx_num[i_part][pos2];
 
-            printf("\t --- Search interior (%i) -> pos_int = %i \n", vtx_g_num, pos_int);
+            _pextract_edge_vtx[idx_edge] = ( i_vtx + 1);
+
+            printf("\t --- Search interior (%i) -> pos_int = %i --> new indices : %i \n", vtx_g_num, pos, _pextract_edge_vtx[idx_edge]);
 
           }
         }
@@ -1901,13 +1882,22 @@ _part_extension2
 
           PDM_g_num_t vtx_g_num = _pextract_edge_vtx_gnum[idx_edge];
           int pos_int = PDM_binary_search_long(vtx_g_num, pvtx_ln_to_gn_sorted, pflat_n_vtx[i_part]);
-          assert(pos_int != -1);
-          int orig_pos = vtx_order[pos_int];
-          _pextract_edge_vtx[idx_edge] = ( orig_pos + 1);
 
+          /*
+           * Subcase : vtx is already in current partition
+           */
+          if(pos_int != -1) {
+            assert(pos_int != -1);
+            int orig_pos = vtx_order[pos_int];
+            _pextract_edge_vtx[idx_edge] = ( orig_pos + 1);
+          } else { // Not in current partition
+
+          }
         }
       }
     }
+
+    assert(pn_vtx_only_by_interface2 == pn_vtx_only_by_interface[i_part]);
 
     PDM_log_trace_connectivity_int(_pextract_edge_vtx_idx, _pextract_edge_vtx, n_ref_lnum2[i_part], "pextract_edge_vtx ::");
 
