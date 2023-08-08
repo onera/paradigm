@@ -1696,19 +1696,6 @@ _part_extension2
    *   Attention au multidomaine !!!
    */
 
-
-  /*
-   * Echange vtx_gnum + tri indirect des doublet
-   */
-
-  /*
-   * Create relation d'interface par edge
-   */
-
-  /*
-   * Test d'arrêt par adjacence
-   */
-
   /*
    * Creation numero absolu vtx
    */
@@ -1866,8 +1853,7 @@ _part_extension2
     int         *_vtx_order              = vtx_order           [i_part];
 
     pextract_edge_vtx[i_part] = malloc( _pextract_edge_vtx_idx[n_ref_lnum2[i_part]] * sizeof(int));
-    int         *_pextract_edge_vtx  = pextract_edge_vtx [i_part];
-
+    int *_pextract_edge_vtx  = pextract_edge_vtx [i_part];
 
     PDM_g_num_t* extented_from_itrf_vtx_ln_to_gn = PDM_gnum_get(gen_gnum_vtx, i_part);
 
@@ -1906,7 +1892,6 @@ _part_extension2
           PDM_g_num_t gnum_to_find[2] = {vtx_g_num, -_pextract_edge_interface[i_ref]};
 
           int pos = PDM_order_binary_search_long(gnum_to_find, _pvtx_opp_gnum_and_itrf, 2, n_vtx_opp_position);
-          printf(" --- Search (%i/%i) -> pos = %i \n", vtx_g_num, _pextract_edge_interface[i_ref], pos);
           if(pos == -1) {
             /*
              * Subcase :
@@ -1923,12 +1908,10 @@ _part_extension2
              * Subcase :
              *   - Vtx is in table of interface
              */
-            int pos2  = vtx_opp_position[i_part][pos];
-            int i_vtx = pvtx_num[i_part][pos2];
+            int pos2  = vtx_opp_position[i_part][pos ];
+            int i_vtx = pvtx_num        [i_part][pos2];
 
             _pextract_edge_vtx[idx_edge] = ( i_vtx + 1);
-
-            printf("\t --- Search interior (%i) -> pos_int = %i --> new indices : %i \n", vtx_g_num, pos, _pextract_edge_vtx[idx_edge]);
 
           }
         }
@@ -1960,18 +1943,12 @@ _part_extension2
 
     PDM_log_trace_connectivity_int(_pextract_edge_vtx_idx, _pextract_edge_vtx, n_ref_lnum2[i_part], "pextract_edge_vtx ::");
 
-
-
-
     free(extended_from_itrf_vtx_order          );
     free(extented_from_itrf_vtx_ln_to_gn_sorted);
     free(extended_vtx_order          );
     free(extented_vtx_ln_to_gn_sorted);
 
-
   }
-
-
 
   for(int i_part = 0; i_part < ln_part_tot; ++i_part) {
     free(pextract_edge_vtx[i_part]);
@@ -1986,6 +1963,33 @@ _part_extension2
   free(pvtx_ln_to_gn_sorted);
 
   PDM_gnum_free(gen_gnum_vtx);
+
+
+  /*
+   * Reconstruction partition
+   *      - edge_ln_to_gn   -> pextract_edge_gnum
+   *      - edge_interface (il faut toute les infos qu' besoin le part_domain_interface )
+   *           -> pextract_edge_interface
+   *           -> pextract_edge_opp_gnum    (ne pas updater du coup)
+   *           -> pextract_edge_opp_triplet (ne pas updater du coup)
+   *      - vtx_ln_to_gn / vtx_triplet_opp
+   *           -> pvtx_extended_ln_to_gn puis pvtx_extended_ln_to_gn_by_interface
+   *      - pentity_hint (pour le rang 2 par exemple )
+   *      - vtx_coords
+   */
+
+
+  /*
+   * Export vtk
+   */
+  if(1 == 1) {
+
+  }
+
+
+
+
+
 
   /*
    * Pour faire la cascade IL FAUT garder les opp_location !!!!
@@ -2046,7 +2050,6 @@ _part_extension2
 
   for(int i_part = 0; i_part < ln_part_tot; ++i_part) {
     free(part1_to_part2_idx        [i_part]);
-    // free(part1_to_part2_triplet_idx[i_part]);
     free(part1_to_part2_triplet    [i_part]);
     free(part1_to_part2_interface  [i_part]);
 
@@ -2055,7 +2058,6 @@ _part_extension2
     free(pflat_edge_vtx_idx[i_part] );
   }
   free(part1_to_part2_idx        );
-  // free(part1_to_part2_triplet_idx);
   free(part1_to_part2_triplet    );
   free(part1_to_part2_interface  );
 
