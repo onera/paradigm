@@ -4110,7 +4110,7 @@ PDM_ddomain_interface_to_pdomain_interface
         pstride_one[shift+i_part] = (int *) malloc(     _ln_interface[shift+i_part] * sizeof(int));
         int* _entity_desc = entity_desc[shift+i_part];
         int beg = pn_interface_idx[shift+i_part][i_interface];
-        for(int i = 0; i < _ln_interface[i_part]; ++i) {
+        for(int i = 0; i < _ln_interface[shift+i_part]; ++i) {
           _entity_desc[3*i  ] = i_rank;
           _entity_desc[3*i+1] = i_part + shift;
           _entity_desc[3*i+2] = pinterface_triplet[shift+i_part][beg+i];
@@ -4268,7 +4268,7 @@ PDM_ddomain_interface_to_pdomain_interface
         }
 
 
-        if(1 == 1) {
+        if(0 == 1) {
           PDM_log_trace_array_int (precv_stride     [s_i_part] ,     _ln_interface[s_i_part], "precv_stride      ::");
           PDM_log_trace_array_long(_pentity_ln_to_gn           ,     _ln_interface[s_i_part], "_pentity_ln_to_gn ::");
           PDM_log_trace_array_int (precv_entity_desc[s_i_part] , 3 * n_data                 , "precv_entity_desc ::");
@@ -4291,7 +4291,7 @@ PDM_ddomain_interface_to_pdomain_interface
         int idx_read      = 0;
         int idx_read_desc = 0;
         int idx_write     = 0;
-        int shift_beg = pn_interface_idx[i_part][i_interface];
+        int shift_beg = pn_interface_idx[shift_domain+i_part][i_interface];
         for(int i = 0; i < _ln_interface[s_i_part]; ++i) {
 
           int         lnum         = pinterface_triplet[s_i_part][shift_beg+i];

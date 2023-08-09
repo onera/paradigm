@@ -1759,7 +1759,7 @@ PDM_part_domain_interface_view_by_part
             int i_part_opp   = pinterface_ids[3*j+1];
             int i_entity_opp = pinterface_ids[3*j+2];
 
-            if(i_proc_opp == i_rank && i_part_opp == i_part && found == 0) {
+            if(i_proc_opp == i_rank && i_part_opp == s_part + i_part && found == 0) {
               i_entity_cur = i_entity_opp;
               found = 1;
               int n_opp = pinterface_ids_idx[idx_entity+1] - pinterface_ids_idx[idx_entity];
@@ -1841,7 +1841,7 @@ PDM_part_domain_interface_view_by_part
             int i_part_opp   = pinterface_ids[3*j+1];
             int i_entity_opp = pinterface_ids[3*j+2];
 
-            if(i_proc_opp == i_rank && i_part_opp == i_part && found == 0) {
+            if(i_proc_opp == i_rank && i_part_opp == s_part+i_part && found == 0) {
               i_entity_cur = i_entity_opp;
               found = 1;
               idx_current  = j;
@@ -2285,7 +2285,7 @@ PDM_part_domain_interface_to_domain_interface
             int i_part_opp   = pinterface_ids[3*j+1];
             int i_entity_opp = pinterface_ids[3*j+2];
 
-            if(i_proc_opp == i_rank && i_part_opp == i_part && found == 0) {
+            if(i_proc_opp == i_rank && i_part_opp == s_part+i_part && found == 0) {
               found = 1;
               is_entity1_on_itrf         [s_part+i_part][i_entity_opp] = 1;
               _interface_entity1_ln_to_gn[idx_write] = entity1_ln_to_gn[i_dom][i_part][i_entity_opp];
