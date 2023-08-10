@@ -15,8 +15,6 @@
 
 #include "pdm_mpi.h"
 #include "pdm.h"
-#include "pdm_part_domain_interface.h"
-#include "pdm_part_to_part.h"
 
 /*=============================================================================
  * Macro definitions
@@ -42,18 +40,49 @@ extern "C" {
  *============================================================================*/
 
 
+/**
+ * \brief Shift all ln_to_gn of all current partition by the last max last domain
+ *
+ * \param [in]     n_domain             Number of domain
+ * \param [in]     n_part               Number of partition for each domain       (size : n_domain )
+ * \param [in]     pn_entity            Number of entity by domain and partition  (size : n_domaine, n_part)
+ * \param [inout]  pentity_ln_to_gn     Number of entity by domain and partition  (size : n_domaine, n_part)
+ * \param [in]     comm                 MPI Communicator
+ *
+ * \returnd        Array of shift (size : n_domain+1)
+ */
+PDM_g_num_t*
+PDM_compute_offset_ln_to_gn_by_domain
+(
+  int              n_domain,
+  int             *n_part,
+  int            **pn_entity,
+  PDM_g_num_t   ***pentity_ln_to_gn,
+  PDM_MPI_Comm     comm
+);
 
 
-// Passage de partition + domain à flat
-// offset
-// distrib
-// + faire des tests
-
-
-
-
-
-
+/**
+ * \brief Shift all ln_to_gn of all current partition by the last max last domain
+ *
+ * \param [in]     n_domain             Number of domain
+ * \param [in]     n_part               Number of partition for each domain       (size : n_domain )
+ * \param [in]     pn_entity            Number of entity by domain and partition  (size : n_domaine, n_part)
+ * \param [inout]  pentity_ln_to_gn     Number of entity by domain and partition  (size : n_domaine, n_part)
+ * \param [in]     shift_by_domain      For each domain shift to apply (can be compute by PDM_compute_offset_ln_to_gn_by_domain)
+ * \param [in]     sens                 Manage sens of shift (1 or - 1)
+ *
+ */
+void
+PDM_offset_ln_to_gn_by_domain
+(
+  int              n_domain,
+  int             *n_part,
+  int            **pn_entity,
+  PDM_g_num_t   ***pentity_ln_to_gn,
+  PDM_g_num_t     *shift_by_domain,
+  int              sens
+);
 
 
 
