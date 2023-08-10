@@ -19,6 +19,7 @@
 #include "pdm_array.h"
 #include "pdm_mesh_nodal.h"
 #include "pdm_part_extension.h"
+#include "pdm_domain_utils.h"
 #include "pdm_dmesh_nodal_elements_utils.h"
 #include "pdm_vtk.h"
 #include "pdm_dmesh_nodal.h"
@@ -305,79 +306,6 @@ _compute_face_vtx
 
 
 static
-PDM_g_num_t*
-_compute_offset_ln_to_gn_by_domain
-(
-  int              n_domain,
-  int             *n_part,
-  int            **pn_entity,
-  PDM_g_num_t   ***pentity_ln_to_gn,
-  PDM_MPI_Comm     comm
-)
-{
-
-  PDM_g_num_t *shift_by_domain_loc = PDM_array_const_gnum(n_domain, 0);
-  PDM_g_num_t *shift_by_domain     = (PDM_g_num_t *) malloc((n_domain+1) * sizeof(PDM_g_num_t));
-
-  for(int i_domain = 0; i_domain < n_domain; ++i_domain) {
-    for(int i_part = 0; i_part < n_part[i_domain]; ++i_part) {
-
-      int          _pn_entity        = pn_entity       [i_domain][i_part];
-      PDM_g_num_t *_pentity_ln_to_gn = pentity_ln_to_gn[i_domain][i_part];
-      for(int i = 0; i < _pn_entity; ++i) {
-        shift_by_domain_loc[i_domain] = PDM_MAX(shift_by_domain_loc[i_domain], _pentity_ln_to_gn[i]);
-      }
-    }
-  }
-
-  shift_by_domain[0] = 0;
-  PDM_MPI_Allreduce(shift_by_domain_loc, &shift_by_domain[1], n_domain, PDM__PDM_MPI_G_NUM, PDM_MPI_MAX, comm);
-  PDM_array_accumulate_gnum(shift_by_domain, n_domain+1);
-
-  free(shift_by_domain_loc);
-
-  return shift_by_domain;
-}
-
-// static
-// void
-// _shift_ln_to_gn
-// (
-//   int          n_entity,
-//   PDM_g_num_t *entity_ln_to_gn,
-//   PDM_g_num_t  shift,
-//   int          sens
-// )
-// {
-//   for(int i = 0; i < n_entity; ++i) {
-//     entity_ln_to_gn[i] = entity_ln_to_gn[i] + sens * shift;
-//   }
-// }
-
-static
-void
-_offset_ln_to_gn_by_domain
-(
-  int              n_domain,
-  int             *n_part,
-  int            **pn_entity,
-  PDM_g_num_t   ***pentity_ln_to_gn,
-  PDM_g_num_t     *shift_by_domain,
-  int              sens
-)
-{
-  for(int i_domain = 0; i_domain < n_domain; ++i_domain) {
-    for(int i_part = 0; i_part < n_part[i_domain]; ++i_part) {
-      int          _pn_entity        = pn_entity       [i_domain][i_part];
-      PDM_g_num_t *_pentity_ln_to_gn = pentity_ln_to_gn[i_domain][i_part];
-      for(int i = 0; i < _pn_entity; ++i) {
-        _pentity_ln_to_gn[i] = _pentity_ln_to_gn[i] + sens * shift_by_domain[i_domain];
-      }
-    }
-  }
-}
-
-static
 void
 _part_extension
 (
@@ -482,45 +410,45 @@ _part_extension
   //                                 &pflat_vtx_edge_idx,
   //                                 &pflat_vtx_edge);
 
-  PDM_g_num_t* shift_by_domain_vtx = _compute_offset_ln_to_gn_by_domain(n_domain,
-                                                                        n_part,
-                                                                        pn_vtx,
-                                                                        pvtx_ln_to_gn,
-                                                                        comm);
+  PDM_g_num_t* shift_by_domain_vtx = PDM_compute_offset_ln_to_gn_by_domain(n_domain,
+                                                                           n_part,
+                                                                           pn_vtx,
+                                                                           pvtx_ln_to_gn,
+                                                                           comm);
 
-  PDM_g_num_t* shift_by_domain_edge = _compute_offset_ln_to_gn_by_domain(n_domain,
-                                                                         n_part,
-                                                                         pn_edge,
-                                                                         pedge_ln_to_gn,
-                                                                         comm);
+  PDM_g_num_t* shift_by_domain_edge = PDM_compute_offset_ln_to_gn_by_domain(n_domain,
+                                                                            n_part,
+                                                                            pn_edge,
+                                                                            pedge_ln_to_gn,
+                                                                            comm);
 
-  PDM_g_num_t* shift_by_domain_face = _compute_offset_ln_to_gn_by_domain(n_domain,
-                                                                         n_part,
-                                                                         pn_face,
-                                                                         pface_ln_to_gn,
-                                                                         comm);
+  PDM_g_num_t* shift_by_domain_face = PDM_compute_offset_ln_to_gn_by_domain(n_domain,
+                                                                            n_part,
+                                                                            pn_face,
+                                                                            pface_ln_to_gn,
+                                                                            comm);
 
   /* Shift ln_to_gn */
-  _offset_ln_to_gn_by_domain(n_domain,
-                             n_part,
-                             pn_vtx,
-                             pvtx_ln_to_gn,
-                             shift_by_domain_vtx,
-                             1);
+  PDM_offset_ln_to_gn_by_domain(n_domain,
+                                n_part,
+                                pn_vtx,
+                                pvtx_ln_to_gn,
+                                shift_by_domain_vtx,
+                                1);
 
-  _offset_ln_to_gn_by_domain(n_domain,
-                             n_part,
-                             pn_edge,
-                             pedge_ln_to_gn,
-                             shift_by_domain_edge,
-                             1);
+  PDM_offset_ln_to_gn_by_domain(n_domain,
+                                n_part,
+                                pn_edge,
+                                pedge_ln_to_gn,
+                                shift_by_domain_edge,
+                                1);
 
-  _offset_ln_to_gn_by_domain(n_domain,
-                             n_part,
-                             pn_face,
-                             pface_ln_to_gn,
-                             shift_by_domain_face,
-                             1);
+  PDM_offset_ln_to_gn_by_domain(n_domain,
+                                n_part,
+                                pn_face,
+                                pface_ln_to_gn,
+                                shift_by_domain_face,
+                                1);
 
   int          *pn_vtx_num             = NULL;
   int         **pvtx_num               = NULL;
@@ -594,6 +522,27 @@ _part_extension
     }
   }
 
+  /* Unshift ln_to_gn */
+  PDM_offset_ln_to_gn_by_domain(n_domain,
+                                n_part,
+                                pn_vtx,
+                                pvtx_ln_to_gn,
+                                shift_by_domain_vtx,
+                                -1);
+
+  PDM_offset_ln_to_gn_by_domain(n_domain,
+                                n_part,
+                                pn_edge,
+                                pedge_ln_to_gn,
+                                shift_by_domain_edge,
+                                -1);
+
+  PDM_offset_ln_to_gn_by_domain(n_domain,
+                                n_part,
+                                pn_face,
+                                pface_ln_to_gn,
+                                shift_by_domain_face,
+                                -1);
 
   for(int i_dom = 0; i_dom < n_domain; ++i_dom) {
     free(pn_vtx        [i_dom]);
