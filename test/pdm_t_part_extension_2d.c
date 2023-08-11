@@ -331,32 +331,44 @@ _part_extension
   printf("n_domain = %i \n", n_domain);
   PDM_MPI_Allreduce(n_part, n_part_g, n_domain, PDM_MPI_INT, PDM_MPI_SUM, comm);
 
+
+  int ln_part_tot = 0;
+  for(int i_dom = 0; i_dom < n_domain; ++i_dom) {
+    for(int i_part = 0; i_part < n_part[i_dom]; ++i_part) {
+      ln_part_tot += 1;
+    }
+  }
+
   int          **pn_vtx              = (int          **) malloc( n_domain * sizeof(int          *));
   int          **pn_edge             = (int          **) malloc( n_domain * sizeof(int          *));
   int          **pn_face             = (int          **) malloc( n_domain * sizeof(int          *));
   PDM_g_num_t ***pvtx_ln_to_gn       = (PDM_g_num_t ***) malloc( n_domain * sizeof(PDM_g_num_t **));
   PDM_g_num_t ***pedge_ln_to_gn      = (PDM_g_num_t ***) malloc( n_domain * sizeof(PDM_g_num_t **));
   PDM_g_num_t ***pface_ln_to_gn      = (PDM_g_num_t ***) malloc( n_domain * sizeof(PDM_g_num_t **));
+  int         ***pface_vtx_idx       = (int         ***) malloc( n_domain * sizeof(int         **));
+  int         ***pface_vtx           = (int         ***) malloc( n_domain * sizeof(int         **));
 
-  int           *pflat_n_vtx         = (int           *) malloc( n_domain * sizeof(int           ));
-  int           *pflat_n_edge        = (int           *) malloc( n_domain * sizeof(int           ));
-  int           *pflat_n_face        = (int           *) malloc( n_domain * sizeof(int           ));
+  int           *pflat_n_vtx         = (int           *) malloc( ln_part_tot * sizeof(int           ));
+  int           *pflat_n_edge        = (int           *) malloc( ln_part_tot * sizeof(int           ));
+  int           *pflat_n_face        = (int           *) malloc( ln_part_tot * sizeof(int           ));
 
-  PDM_g_num_t  **pflat_vtx_ln_to_gn  = (PDM_g_num_t  **) malloc( n_domain * sizeof(PDM_g_num_t  *));
-  PDM_g_num_t  **pflat_edge_ln_to_gn = (PDM_g_num_t  **) malloc( n_domain * sizeof(PDM_g_num_t  *));
-  PDM_g_num_t  **pflat_face_ln_to_gn = (PDM_g_num_t  **) malloc( n_domain * sizeof(PDM_g_num_t  *));
-  double       **pflat_vtx_coords    = (double       **) malloc( n_domain * sizeof(double       *));
+  PDM_g_num_t  **pflat_vtx_ln_to_gn  = (PDM_g_num_t  **) malloc( ln_part_tot * sizeof(PDM_g_num_t  *));
+  PDM_g_num_t  **pflat_edge_ln_to_gn = (PDM_g_num_t  **) malloc( ln_part_tot * sizeof(PDM_g_num_t  *));
+  PDM_g_num_t  **pflat_face_ln_to_gn = (PDM_g_num_t  **) malloc( ln_part_tot * sizeof(PDM_g_num_t  *));
+  double       **pflat_vtx_coords    = (double       **) malloc( ln_part_tot * sizeof(double       *));
 
 
-  int ln_part_tot = 0;
+  ln_part_tot = 0;
   for(int i_dom = 0; i_dom < n_domain; ++i_dom) {
 
-    pn_vtx        [i_dom]  = (int          *) malloc( n_part[i_dom] * sizeof(int          ));
-    pn_edge       [i_dom]  = (int          *) malloc( n_part[i_dom] * sizeof(int          ));
-    pn_face       [i_dom]  = (int          *) malloc( n_part[i_dom] * sizeof(int          ));
-    pvtx_ln_to_gn [i_dom]  = (PDM_g_num_t **) malloc( n_part[i_dom] * sizeof(PDM_g_num_t *));
-    pedge_ln_to_gn[i_dom]  = (PDM_g_num_t **) malloc( n_part[i_dom] * sizeof(PDM_g_num_t *));
-    pface_ln_to_gn[i_dom]  = (PDM_g_num_t **) malloc( n_part[i_dom] * sizeof(PDM_g_num_t *));
+    pn_vtx            [i_dom]  = (int          *) malloc( n_part[i_dom] * sizeof(int          ));
+    pn_edge           [i_dom]  = (int          *) malloc( n_part[i_dom] * sizeof(int          ));
+    pn_face           [i_dom]  = (int          *) malloc( n_part[i_dom] * sizeof(int          ));
+    pvtx_ln_to_gn     [i_dom]  = (PDM_g_num_t **) malloc( n_part[i_dom] * sizeof(PDM_g_num_t *));
+    pedge_ln_to_gn    [i_dom]  = (PDM_g_num_t **) malloc( n_part[i_dom] * sizeof(PDM_g_num_t *));
+    pface_ln_to_gn    [i_dom]  = (PDM_g_num_t **) malloc( n_part[i_dom] * sizeof(PDM_g_num_t *));
+    pface_vtx_idx     [i_dom]  = (int         **) malloc( n_part[i_dom] * sizeof(int         *));
+    pface_vtx         [i_dom]  = (int         **) malloc( n_part[i_dom] * sizeof(int         *));
 
     for(int i_part = 0; i_part < n_part[i_dom]; ++i_part) {
 
@@ -395,6 +407,37 @@ _part_extension
                                        i_part,
                                        &pflat_vtx_coords[ln_part_tot+i_part],
                                        PDM_OWNERSHIP_KEEP);
+      int *face_edge     = NULL;
+      int *face_edge_idx = NULL;
+      int n_face2 = PDM_multipart_part_connectivity_get(mpart,
+                                                        i_dom,
+                                                        i_part,
+                                                        PDM_CONNECTIVITY_TYPE_FACE_EDGE,
+                                                        &face_edge,
+                                                        &face_edge_idx,
+                                                        PDM_OWNERSHIP_KEEP);
+      pface_vtx_idx[i_dom][i_part] = face_edge_idx;
+
+      // assert(n_face == n_face2);
+      int *edge_vtx     = NULL;
+      int *edge_vtx_idx = NULL;
+      int n_edge = PDM_multipart_part_connectivity_get(mpart,
+                                                       i_dom,
+                                                       i_part,
+                                                       PDM_CONNECTIVITY_TYPE_EDGE_VTX,
+                                                       &edge_vtx,
+                                                       &edge_vtx_idx,
+                                                       PDM_OWNERSHIP_KEEP);
+      PDM_UNUSED(n_edge);
+      assert(edge_vtx_idx == NULL);
+
+      // Concatenate face_vtx
+      _compute_face_vtx(n_face2,
+                        face_edge_idx,
+                        face_edge,
+                        edge_vtx,
+                        &pface_vtx[i_dom][i_part]);
+
 
     }
     ln_part_tot += n_part[i_dom];
@@ -412,8 +455,8 @@ _part_extension
                                                                   NULL, // pvtx_hint,
                                                                   pn_face,
                                                                   pface_ln_to_gn,
-                                                                  NULL, // pface_vtx_idx,
-                                                                  NULL, // pface_vtx,
+                                                                  pface_vtx_idx,
+                                                                  pface_vtx,
                                                                   comm);
 
 
@@ -602,6 +645,17 @@ _part_extension
   free(shift_by_domain_vtx);
   free(shift_by_domain_edge);
   free(shift_by_domain_face);
+
+
+  for(int i_dom = 0; i_dom < n_domain; ++i_dom) {
+    for(int i_part = 0; i_part < ln_part_tot; ++i_part) {
+      free(pface_vtx[i_dom][i_part]);
+    }
+    free(pface_vtx[i_dom]);
+    free(pface_vtx_idx[i_dom]);
+  }
+  free(pface_vtx);
+  free(pface_vtx_idx);
 
 
   for(int i_part = 0; i_part < ln_part_tot; ++i_part) {
