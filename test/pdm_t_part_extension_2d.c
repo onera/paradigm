@@ -450,6 +450,13 @@ _part_extension
                                 shift_by_domain_face,
                                 1);
 
+
+
+
+
+
+
+
   int          *pn_vtx_num             = NULL;
   int         **pvtx_num               = NULL;
   int         **pvtx_opp_location_idx  = NULL;
@@ -471,6 +478,11 @@ _part_extension
                                          &pvtx_opp_interface,
                                          &pvtx_opp_sens,
                                          &pvtx_opp_gnum);
+
+  /*
+   * Setup the first part_to_part
+   */
+
 
 
   if(1 == 1) {

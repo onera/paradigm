@@ -43,6 +43,10 @@ extern "C" {
  * Static function definitions
  *============================================================================*/
 
+
+/*============================================================================
+ * Public function definitions
+ *============================================================================*/
 /**
  * \brief Shift all ln_to_gn of all current partition by the last max last domain
  *

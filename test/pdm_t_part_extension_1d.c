@@ -441,7 +441,7 @@ _part_extension2
       part1_to_part2_triplet  [li_part] = malloc(n_connect_tot   * sizeof(int));
       part1_to_part2_interface[li_part] = malloc(n_connect_tot/3 * sizeof(int));
 
-      printf("n_connect_tot = %i \n", n_connect_tot);
+      // printf("n_connect_tot = %i \n", n_connect_tot);
 
       for(int idx_entity = 0; idx_entity < n_entity_bound; ++idx_entity) {
         int i_entity     = ppart_vtx[4*idx_entity]-1;
@@ -583,6 +583,9 @@ _part_extension2
   int  *n_ref_lnum2 = NULL;
   int **ref_lnum2   = NULL;
   PDM_part_to_part_ref_lnum2_get(ptp, &n_ref_lnum2, &ref_lnum2);
+
+  // Il faudrait idéalement refaire un lien explicite face_face / edge_edge puis faire une cascade, pour l'instant on a tout mélanger
+
 
   /*
    * Exchange edge gnum
