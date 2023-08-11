@@ -30,6 +30,7 @@
 #include "pdm_dcube_nodal_gen.h"
 #include "pdm_domain_interface.h"
 #include "pdm_dmesh_nodal_to_dmesh.h"
+#include "pdm_part_extension_algorithm.h"
 
 /*============================================================================
  * Private function definitions
@@ -398,6 +399,24 @@ _part_extension
     }
     ln_part_tot += n_part[i_dom];
   }
+
+
+
+
+  PDM_part_extension_interface_by_entity1_to_interface_by_entity2(pdi,
+                                                                  PDM_BOUND_TYPE_VTX,
+                                                                  n_domain,
+                                                                  n_part,
+                                                                  pn_vtx,
+                                                                  pvtx_ln_to_gn,
+                                                                  NULL, // pvtx_hint,
+                                                                  pn_face,
+                                                                  pface_ln_to_gn,
+                                                                  NULL, // pface_vtx_idx,
+                                                                  NULL, // pface_vtx,
+                                                                  comm);
+
+
 
 
   // int         **pflat_vtx_edge_idx = NULL;
