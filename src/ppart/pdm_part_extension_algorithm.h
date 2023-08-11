@@ -48,6 +48,7 @@ PDM_part_extension_interface_by_entity1_to_interface_by_entity2
   PDM_part_domain_interface_t  *pdi,
   PDM_bound_type_t              entity1_bound,
   int                           n_domain,
+  PDM_g_num_t                  *shift_by_domain_entity2,
   int                          *n_part,
   int                         **pn_entity1_in,
   PDM_g_num_t                ***pentity1_ln_to_gn_in,

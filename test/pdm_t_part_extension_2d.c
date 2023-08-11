@@ -446,22 +446,6 @@ _part_extension
 
 
 
-  PDM_part_extension_interface_by_entity1_to_interface_by_entity2(pdi,
-                                                                  PDM_BOUND_TYPE_VTX,
-                                                                  n_domain,
-                                                                  n_part,
-                                                                  pn_vtx,
-                                                                  pvtx_ln_to_gn,
-                                                                  NULL, // pvtx_hint,
-                                                                  pn_face,
-                                                                  pface_ln_to_gn,
-                                                                  pface_vtx_idx,
-                                                                  pface_vtx,
-                                                                  comm);
-
-
-
-
   // int         **pflat_vtx_edge_idx = NULL;
   // int         **pflat_vtx_edge     = NULL;
   // PDM_part_connectivity_transpose(ln_part_tot,
@@ -516,6 +500,23 @@ _part_extension
 
 
 
+  PDM_part_extension_interface_by_entity1_to_interface_by_entity2(pdi,
+                                                                  PDM_BOUND_TYPE_VTX,
+                                                                  n_domain,
+                                                                  shift_by_domain_face,
+                                                                  n_part,
+                                                                  pn_vtx,
+                                                                  pvtx_ln_to_gn,
+                                                                  NULL, // pvtx_hint,
+                                                                  pn_face,
+                                                                  pface_ln_to_gn,
+                                                                  pface_vtx_idx,
+                                                                  pface_vtx,
+                                                                  comm);
+
+
+
+
 
 
 
@@ -547,7 +548,7 @@ _part_extension
 
 
 
-  if(1 == 1) {
+  if(0 == 1) {
     for(int i_part = 0; i_part < ln_part_tot; ++i_part) {
 
       PDM_log_trace_array_int(pvtx_num[i_part], pn_vtx_num[i_part], "pvtx_num ::");
@@ -583,7 +584,7 @@ _part_extension
                                          &pedge_opp_gnum);
 
 
-  if(1 == 1) {
+  if(0 == 1) {
     for(int i_part = 0; i_part < ln_part_tot; ++i_part) {
 
       PDM_log_trace_array_int(pedge_num[i_part], pn_edge_num[i_part], "pedge_num ::");

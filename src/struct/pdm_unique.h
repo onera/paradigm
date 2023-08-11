@@ -75,6 +75,26 @@ PDM_inplace_unique_long
  int r
 );
 
+
+
+/**
+ *
+ * \brief Same as unique but apply unique to order to know for each element the place in original array
+ *
+ * \param [inout]   a     Array to sort
+ * \param [in]      l     First element
+ * \param [in]      r     Last  element
+ *
+ */
+int
+PDM_inplace_unique_long_and_order
+(
+ PDM_g_num_t a[],
+ int         order[],
+ int l,
+ int r
+);
+
 /**
  *
  * \brief Unique in place
