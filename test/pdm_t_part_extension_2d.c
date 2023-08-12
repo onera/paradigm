@@ -649,7 +649,7 @@ _part_extension
 
 
   for(int i_dom = 0; i_dom < n_domain; ++i_dom) {
-    for(int i_part = 0; i_part < ln_part_tot; ++i_part) {
+    for(int i_part = 0; i_part < n_part[i_dom]; ++i_part) {
       free(pface_vtx[i_dom][i_part]);
     }
     free(pface_vtx[i_dom]);
