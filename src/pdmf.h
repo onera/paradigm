@@ -60,3 +60,10 @@
   integer, parameter :: PDM_EXTRACT_PART_KIND_LOCAL         = 0
   integer, parameter :: PDM_EXTRACT_PART_KIND_REEQUILIBRATE = 1
   integer, parameter :: PDM_EXTRACT_PART_KIND_FROM_TARGET   = 2
+
+  integer, parameter :: PDM_BOUND_TYPE_ELMT = 0
+  integer, parameter :: PDM_BOUND_TYPE_CELL = 1
+  integer, parameter :: PDM_BOUND_TYPE_FACE = 2
+  integer, parameter :: PDM_BOUND_TYPE_EDGE = 3
+  integer, parameter :: PDM_BOUND_TYPE_VTX  = 4
+  integer, parameter :: PDM_BOUND_TYPE_MAX  = 5
