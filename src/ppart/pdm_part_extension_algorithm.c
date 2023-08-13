@@ -119,6 +119,11 @@ PDM_part_extension_interface_by_entity1_to_interface_by_entity2
   PDM_g_num_t                ***pentity2_ln_to_gn_in,
   int                        ***pentity2_entity1_idx_in,
   int                        ***pentity2_entity1_in,
+  int                         **pn_entity2_extented_out,
+  PDM_g_num_t                ***pentity2_extented_ln_to_gn_out,
+  int                        ***pentity2_extented_to_pentity2_idx_out,
+  int                        ***pentity2_extented_to_pentity2_triplet_out,
+  int                        ***pentity2_extented_to_pentity2_interface_out,
   PDM_MPI_Comm                  comm
 )
 {
@@ -441,19 +446,6 @@ PDM_part_extension_interface_by_entity1_to_interface_by_entity2
                          &exch_request);
   PDM_part_to_part_iexch_wait(ptp, exch_request);
 
-
-    for(int i_part = 0; i_part < ln_part_tot; ++i_part) {
-
-      int n_recv = gnum1_come_from_idx[i_part][n_ref_lnum2[i_part]];
-
-      PDM_log_trace_array_int(pextract_entity2_n        [i_part], n_recv, "pextract_entity2_n         : ");
-      int n_recv_entity2     = 0;
-      for(int i_ref = 0; i_ref < n_recv; ++i_ref) {
-        n_recv_entity2     += pextract_entity2_n    [i_part][i_ref];
-      }
-      PDM_log_trace_array_long(pextract_entity2_gnum        [i_part], n_recv_entity2        , "pextract_entity2_gnum        : ");
-    }
-
   int **pextract_entity2_triplet = NULL;
   PDM_part_to_part_iexch(ptp,
                          PDM_MPI_COMM_KIND_P2P,
@@ -611,11 +603,12 @@ PDM_part_extension_interface_by_entity1_to_interface_by_entity2
    *   - Remove duplicate
    *   - Remove same entity but wih different path
    */
-  int          *pn_extended_entity2              = malloc(ln_part_tot * sizeof(int          ));
-  int         **extended_entity2_to_part_idx     = malloc(ln_part_tot * sizeof(int         *));
-  int         **extended_entity2_to_part_triplet = malloc(ln_part_tot * sizeof(int         *));
-  PDM_g_num_t **extended_entity2_orig_gnum            = malloc(ln_part_tot * sizeof(PDM_g_num_t *));
-  int         **extended_entity2_interface       = malloc(ln_part_tot * sizeof(int         *));
+  int          *pn_entity2_extented                     = malloc(ln_part_tot * sizeof(int          ));
+  int         **pentity2_extented_to_pentity2_idx       = malloc(ln_part_tot * sizeof(int         *));
+  int         **pentity2_extented_to_pentity2_triplet   = malloc(ln_part_tot * sizeof(int         *));
+  PDM_g_num_t **pentity2_extented_ln_to_gn              = malloc(ln_part_tot * sizeof(PDM_g_num_t *));
+  PDM_g_num_t **extended_entity2_orig_gnum              = malloc(ln_part_tot * sizeof(PDM_g_num_t *));
+  int         **pentity2_extented_to_pentity2_interface = malloc(ln_part_tot * sizeof(int         *));
 
   for(int i_part = 0; i_part < ln_part_tot; ++i_part) {
 
@@ -641,38 +634,43 @@ PDM_part_extension_interface_by_entity1_to_interface_by_entity2
                                                      order,
                                                      0,
                                                      n_recv_tot-1);
-    pn_extended_entity2[i_part] = n_unique;
+    pn_entity2_extented[i_part] = n_unique;
+
+    pentity2_extented_ln_to_gn[i_part] = malloc(n_unique * sizeof(PDM_g_num_t));
+    for(int i = 0; i < n_unique; ++i) {
+      pentity2_extented_ln_to_gn[i_part][i] = _pextract_entity2_gnum[i];
+    }
 
 
     // Extract all data
-    extended_entity2_to_part_idx    [i_part] = malloc( (     n_unique + 1) * sizeof(int        ));
-    extended_entity2_to_part_triplet[i_part] = malloc( ( 3 * n_unique    ) * sizeof(int        ));
-    extended_entity2_orig_gnum      [i_part] = malloc( (     n_unique    ) * sizeof(PDM_g_num_t));
-    extended_entity2_interface      [i_part] = malloc( (     n_unique    ) * sizeof(int        ));
+    pentity2_extented_to_pentity2_idx      [i_part] = malloc( (     n_unique + 1) * sizeof(int        ));
+    pentity2_extented_to_pentity2_triplet  [i_part] = malloc( ( 3 * n_unique    ) * sizeof(int        ));
+    extended_entity2_orig_gnum             [i_part] = malloc( (     n_unique    ) * sizeof(PDM_g_num_t));
+    pentity2_extented_to_pentity2_interface[i_part] = malloc( (     n_unique    ) * sizeof(int        ));
 
     /* Count */
-    extended_entity2_to_part_idx    [i_part][0] = 0;
+    pentity2_extented_to_pentity2_idx    [i_part][0] = 0;
     for(int i_entity2 = 0; i_entity2 < n_unique; ++i_entity2) {
       int old_pos = order[i_entity2];
-      extended_entity2_to_part_idx[i_part][i_entity2+1] = extended_entity2_to_part_idx[i_part][i_entity2] + 3;
+      pentity2_extented_to_pentity2_idx[i_part][i_entity2+1] = pentity2_extented_to_pentity2_idx[i_part][i_entity2] + 3;
 
-      extended_entity2_to_part_triplet[i_part][3*i_entity2  ] = pextract_entity2_triplet[i_part][3*old_pos  ];
-      extended_entity2_to_part_triplet[i_part][3*i_entity2+1] = pextract_entity2_triplet[i_part][3*old_pos+1];
-      extended_entity2_to_part_triplet[i_part][3*i_entity2+2] = pextract_entity2_triplet[i_part][3*old_pos+2];
+      pentity2_extented_to_pentity2_triplet[i_part][3*i_entity2  ] = pextract_entity2_triplet[i_part][3*old_pos  ];
+      pentity2_extented_to_pentity2_triplet[i_part][3*i_entity2+1] = pextract_entity2_triplet[i_part][3*old_pos+1];
+      pentity2_extented_to_pentity2_triplet[i_part][3*i_entity2+2] = pextract_entity2_triplet[i_part][3*old_pos+2];
 
       // Save the link (gnum, interface)
-      extended_entity2_interface[i_part][  i_entity2  ] = pentity2_interface       [i_part][  old_pos  ];
+      pentity2_extented_to_pentity2_interface[i_part][  i_entity2  ] = pentity2_interface       [i_part][  old_pos  ];
       extended_entity2_orig_gnum[i_part][  i_entity2  ] = extract_entity2_orig_gnum[i_part][  old_pos  ]; // Because it's sorted already
     }
 
-    int n_triplet = extended_entity2_to_part_idx[i_part][n_unique];
+    int n_triplet = pentity2_extented_to_pentity2_idx[i_part][n_unique];
 
     if(1 == 1) {
       PDM_log_trace_array_long(_pextract_entity2_gnum, n_unique, "_pextract_entity2_gnum (UNIQUE) : ");
-      PDM_log_trace_array_int (extended_entity2_to_part_idx    [i_part], n_unique+1, "extended_entity2_to_part_idx      ::");
+      PDM_log_trace_array_int (pentity2_extented_to_pentity2_idx    [i_part], n_unique+1, "pentity2_extented_to_pentity2_idx      ::");
       PDM_log_trace_array_long(extended_entity2_orig_gnum      [i_part], n_triplet/3, "extended_entity2_orig_gnum            ::");
-      PDM_log_trace_array_int (extended_entity2_interface      [i_part], n_triplet/3, "extended_entity2_interface       ::");
-      PDM_log_trace_array_int (extended_entity2_to_part_triplet[i_part], n_triplet  , "extended_entity2_to_part_triplet ::");
+      PDM_log_trace_array_int (pentity2_extented_to_pentity2_interface      [i_part], n_triplet/3, "pentity2_extented_to_pentity2_interface       ::");
+      PDM_log_trace_array_int (pentity2_extented_to_pentity2_triplet[i_part], n_triplet  , "pentity2_extented_to_pentity2_triplet ::");
     }
 
     free(order);
@@ -680,18 +678,40 @@ PDM_part_extension_interface_by_entity1_to_interface_by_entity2
   }
 
 
-  for(int i_part = 0; i_part < ln_part_tot; ++i_part) {
-    free(extended_entity2_to_part_idx    [i_part]);
-    free(extended_entity2_to_part_triplet[i_part]);
-    free(extended_entity2_orig_gnum      [i_part]);
-    free(extended_entity2_interface      [i_part]);
-  }
-  free(extended_entity2_to_part_idx    );
-  free(extended_entity2_to_part_triplet);
-  free(extended_entity2_orig_gnum      );
-  free(extended_entity2_interface      );
+  /*
+   * A partir de toute ces infos on peut rajouter tout dans le PDM_part_domain_interface_set
+   *   -> A généraliser pour des cellules
+   *   -> Il manque les échanges pour les domaine
+   *   -> Faire également un PDM_part_domain_interface_set_replace pour updater avec les nouvelles infos
+   *   -> C'est cette info qu'on utilisera pour le rang 2 pour unifier les faces deja ramener
+   */
 
-  free(pn_extended_entity2);
+
+  /*
+   * Puis il faut également sortir toutes les infos pour construire le ptp pour faire la cascade
+   *  part1 = part_extended
+   *  part2 = part_current
+   */
+  *pn_entity2_extented_out                     = pn_entity2_extented;
+  *pentity2_extented_ln_to_gn_out              = pentity2_extented_ln_to_gn;
+  *pentity2_extented_to_pentity2_idx_out       = pentity2_extented_to_pentity2_idx;
+  *pentity2_extented_to_pentity2_triplet_out   = pentity2_extented_to_pentity2_triplet;
+  *pentity2_extented_to_pentity2_interface_out = pentity2_extented_to_pentity2_interface;
+
+
+
+  for(int i_part = 0; i_part < ln_part_tot; ++i_part) {
+    // free(pentity2_extented_to_pentity2_idx    [i_part]);
+    // free(pentity2_extented_to_pentity2_triplet[i_part]);
+    free(extended_entity2_orig_gnum      [i_part]);
+    // free(pentity2_extented_to_pentity2_interface      [i_part]);
+  }
+  // free(pentity2_extented_to_pentity2_idx    );
+  // free(pentity2_extented_to_pentity2_triplet);
+  free(extended_entity2_orig_gnum      );
+  // free(pentity2_extented_to_pentity2_interface      );
+
+  // free(pn_entity2_extented);
 
 
   for(int i_part = 0; i_part < ln_part_tot; ++i_part) {
@@ -793,25 +813,39 @@ PDM_part_extension_interface_by_entity1_to_interface_by_entity2
 
 
 
-// void
-// PDM_part_extension_pconnectivity_to_pconnectivity
-// (
-//   PDM_part_domain_interface_t  *pdi_entity1,
-//   PDM_part_domain_interface_t  *pdi_entity2,
-//   int                           n_domain,
-//   int                          *n_part,
-//   int                         **pn_entity1,
-//   PDM_g_num_t                 **pentity1_ln_to_gn,
-//   int                         **pn_entity2,
-//   PDM_g_num_t                 **pentity2_ln_to_gn
+void
+PDM_part_extension_pconnectivity_to_extended_pconnectivity
+(
+  PDM_part_domain_interface_t    *pdi,
+  PDM_bound_type_t                entity2_bound,
+  int                             n_domain,
+  PDM_g_num_t                    *shift_by_domain_entity2,
+  int                            *n_part,
+  int                           **pn_entity1_in,
+  PDM_g_num_t                  ***pentity1_ln_to_gn_in,
+  int                           **pn_entity2_in,
+  PDM_g_num_t                  ***pentity2_ln_to_gn_in,
+  int                          ***pentity1_entity2_idx_in,
+  int                          ***pentity1_entity2_in,
+  int                           **pn_entity1_extented,
+  PDM_g_num_t                   **pentity1_extented_ln_to_gn,
+  int                           **pentity1_extented_to_pentity1_idx,
+  int                           **pentity1_extented_to_pentity1_triplet,
+  int                          ***pn_entity2_extented,
+  PDM_g_num_t                  ***pentity2_extented_ln_to_gn,
+  int                          ***pextended_entity1_entity2_idx,
+  int                          ***pextended_entity1_entity2,
+  int                          ***pentity2_extented_to_pentity2_idx,
+  int                          ***pentity2_extented_to_pentity2_triplet,
+  PDM_MPI_Comm                    comm
+)
+{
 
-// )
-// {
+  // Maybe supoose on entry already concat domain in part and juste give shift ?
 
 
 
-
-// }
+}
 
 void
 PDM_part_extension_compute2

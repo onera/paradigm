@@ -498,7 +498,12 @@ _part_extension
 
 
 
-
+  int          *pn_entity2_extented                     = NULL;
+  int         **pentity2_extented_to_pentity2_idx       = NULL;
+  int         **pentity2_extented_to_pentity2_triplet   = NULL;
+  PDM_g_num_t **pentity2_extented_ln_to_gn              = NULL;
+  // PDM_g_num_t **extended_entity2_orig_gnum              = NULL;
+  int         **pentity2_extented_to_pentity2_interface = NULL;
 
   PDM_part_extension_interface_by_entity1_to_interface_by_entity2(pdi,
                                                                   PDM_BOUND_TYPE_VTX,
@@ -512,11 +517,36 @@ _part_extension
                                                                   pface_ln_to_gn,
                                                                   pface_vtx_idx,
                                                                   pface_vtx,
+                                                                  &pn_entity2_extented,
+                                                                  &pentity2_extented_ln_to_gn,
+                                                                  &pentity2_extented_to_pentity2_idx,
+                                                                  &pentity2_extented_to_pentity2_triplet,
+                                                                  &pentity2_extented_to_pentity2_interface,
                                                                   comm);
 
+  for(int i_part = 0; i_part < ln_part_tot; ++i_part) {
+    int n_triplet = pentity2_extented_to_pentity2_idx[i_part][ pn_entity2_extented[i_part]];
+    PDM_log_trace_array_long(pentity2_extented_ln_to_gn             [i_part], pn_entity2_extented[i_part]  , "pentity2_extented_ln_to_gn : ");
+    PDM_log_trace_array_int (pentity2_extented_to_pentity2_idx      [i_part], pn_entity2_extented[i_part]+1, "pentity2_extented_to_pentity2_idx      ::");
+    PDM_log_trace_array_int (pentity2_extented_to_pentity2_interface[i_part], n_triplet/3                  , "pentity2_extented_to_pentity2_interface       ::");
+    PDM_log_trace_array_int (pentity2_extented_to_pentity2_triplet  [i_part], n_triplet                    , "pentity2_extented_to_pentity2_triplet ::");
+  }
 
 
+  for(int i_part = 0; i_part < ln_part_tot; ++i_part) {
+    free(pentity2_extented_to_pentity2_idx      [i_part]);
+    free(pentity2_extented_to_pentity2_triplet  [i_part]);
+    free(pentity2_extented_ln_to_gn             [i_part]);
+    // free(extended_entity2_orig_gnum             [i_part]);
+    free(pentity2_extented_to_pentity2_interface[i_part]);
+  }
 
+  free(pn_entity2_extented                    );
+  free(pentity2_extented_to_pentity2_idx      );
+  free(pentity2_extented_to_pentity2_triplet  );
+  free(pentity2_extented_ln_to_gn             );
+  // free(extended_entity2_orig_gnum             );
+  free(pentity2_extented_to_pentity2_interface);
 
 
 
