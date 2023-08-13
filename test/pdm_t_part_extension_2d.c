@@ -498,12 +498,12 @@ _part_extension
 
 
 
-  int          *pn_entity2_extented                     = NULL;
-  int         **pentity2_extented_to_pentity2_idx       = NULL;
-  int         **pentity2_extented_to_pentity2_triplet   = NULL;
-  PDM_g_num_t **pentity2_extented_ln_to_gn              = NULL;
-  // PDM_g_num_t **extended_entity2_orig_gnum              = NULL;
-  int         **pentity2_extented_to_pentity2_interface = NULL;
+  int          *pn_face_extented                     = NULL;
+  int         **pface_extented_to_pface_idx       = NULL;
+  int         **pface_extented_to_pface_triplet   = NULL;
+  PDM_g_num_t **pface_extented_ln_to_gn              = NULL;
+  // PDM_g_num_t **extended_face_orig_gnum              = NULL;
+  int         **pface_extented_to_pface_interface = NULL;
 
   PDM_part_extension_interface_by_entity1_to_interface_by_entity2(pdi,
                                                                   PDM_BOUND_TYPE_VTX,
@@ -517,36 +517,74 @@ _part_extension
                                                                   pface_ln_to_gn,
                                                                   pface_vtx_idx,
                                                                   pface_vtx,
-                                                                  &pn_entity2_extented,
-                                                                  &pentity2_extented_ln_to_gn,
-                                                                  &pentity2_extented_to_pentity2_idx,
-                                                                  &pentity2_extented_to_pentity2_triplet,
-                                                                  &pentity2_extented_to_pentity2_interface,
+                                                                  &pn_face_extented,
+                                                                  &pface_extented_ln_to_gn,
+                                                                  &pface_extented_to_pface_idx,
+                                                                  &pface_extented_to_pface_triplet,
+                                                                  &pface_extented_to_pface_interface,
                                                                   comm);
 
-  for(int i_part = 0; i_part < ln_part_tot; ++i_part) {
-    int n_triplet = pentity2_extented_to_pentity2_idx[i_part][ pn_entity2_extented[i_part]];
-    PDM_log_trace_array_long(pentity2_extented_ln_to_gn             [i_part], pn_entity2_extented[i_part]  , "pentity2_extented_ln_to_gn : ");
-    PDM_log_trace_array_int (pentity2_extented_to_pentity2_idx      [i_part], pn_entity2_extented[i_part]+1, "pentity2_extented_to_pentity2_idx      ::");
-    PDM_log_trace_array_int (pentity2_extented_to_pentity2_interface[i_part], n_triplet/3                  , "pentity2_extented_to_pentity2_interface       ::");
-    PDM_log_trace_array_int (pentity2_extented_to_pentity2_triplet  [i_part], n_triplet                    , "pentity2_extented_to_pentity2_triplet ::");
+  if(1 == 1) {
+    for(int i_part = 0; i_part < ln_part_tot; ++i_part) {
+      int n_triplet = pface_extented_to_pface_idx[i_part][ pn_face_extented[i_part]];
+      PDM_log_trace_array_long(pface_extented_ln_to_gn          [i_part], pn_face_extented[i_part]  , "pface_extented_ln_to_gn : ");
+      PDM_log_trace_array_int (pface_extented_to_pface_idx      [i_part], pn_face_extented[i_part]+1, "pface_extented_to_pface_idx      ::");
+      PDM_log_trace_array_int (pface_extented_to_pface_interface[i_part], n_triplet/3               , "pface_extented_to_pface_interface       ::");
+      PDM_log_trace_array_int (pface_extented_to_pface_triplet  [i_part], n_triplet                 , "pface_extented_to_pface_triplet ::");
+    }
   }
 
+  int         **pn_vtx_extented                 = NULL;
+  PDM_g_num_t **pvtx_extented_ln_to_gn          = NULL;
+  int         **pextended_face_vtx_idx          = NULL;
+  int         **pextended_face_vtx              = NULL;
+  int         **pvtx_extented_to_pvtx_idx       = NULL;
+  int         **pvtx_extented_to_pvtx_triplet   = NULL;
+  int         **pvtx_extented_to_pvtx_interface = NULL;
+  // Rebuild face_vtx direchly (after we will do face_edge then edge_vtx)
+
+  PDM_part_extension_pconnectivity_to_extended_pconnectivity(pdi,
+                                                             PDM_BOUND_TYPE_VTX,
+                                                             n_domain,
+                                                             shift_by_domain_vtx,
+                                                             n_part,
+                                                             pn_face,
+                                                             pface_ln_to_gn,
+                                                             pn_vtx,
+                                                             pvtx_ln_to_gn,
+                                                             pface_vtx_idx,
+                                                             pface_vtx,
+                                                             pn_face_extented,
+                                                             pface_extented_ln_to_gn,
+                                                             pface_extented_to_pface_idx,
+                                                             pface_extented_to_pface_triplet,
+                                                             pface_extented_to_pface_interface,
+                                                             &pn_vtx_extented,
+                                                             &pvtx_extented_ln_to_gn,
+                                                             &pextended_face_vtx_idx,
+                                                             &pextended_face_vtx,
+                                                             &pvtx_extented_to_pvtx_idx,
+                                                             &pvtx_extented_to_pvtx_triplet,
+                                                             &pvtx_extented_to_pvtx_interface,
+                                                             comm);
+
+
+
 
   for(int i_part = 0; i_part < ln_part_tot; ++i_part) {
-    free(pentity2_extented_to_pentity2_idx      [i_part]);
-    free(pentity2_extented_to_pentity2_triplet  [i_part]);
-    free(pentity2_extented_ln_to_gn             [i_part]);
-    // free(extended_entity2_orig_gnum             [i_part]);
-    free(pentity2_extented_to_pentity2_interface[i_part]);
+    free(pface_extented_to_pface_idx      [i_part]);
+    free(pface_extented_to_pface_triplet  [i_part]);
+    free(pface_extented_ln_to_gn             [i_part]);
+    // free(extended_face_orig_gnum             [i_part]);
+    free(pface_extented_to_pface_interface[i_part]);
   }
 
-  free(pn_entity2_extented                    );
-  free(pentity2_extented_to_pentity2_idx      );
-  free(pentity2_extented_to_pentity2_triplet  );
-  free(pentity2_extented_ln_to_gn             );
-  // free(extended_entity2_orig_gnum             );
-  free(pentity2_extented_to_pentity2_interface);
+  free(pn_face_extented                    );
+  free(pface_extented_to_pface_idx      );
+  free(pface_extented_to_pface_triplet  );
+  free(pface_extented_ln_to_gn             );
+  // free(extended_face_orig_gnum             );
+  free(pface_extented_to_pface_interface);
 
 
 
