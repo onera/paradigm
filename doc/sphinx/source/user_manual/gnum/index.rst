@@ -31,9 +31,40 @@ This global numbering is achieved by encoding Cartesian coordinates along the Mo
 
 *TODO: show guided example...*
 
+Python
+^^^^^^
 
+.. autoclass:: Pypdm.Pypdm.GlobalNumbering
+  :members:
 
+The following example shows how to build a global numbering from a set of geometric coordinates.
 
+.. code:: python
+
+   import mpi4py.MPI as MPI
+   import Pypdm.Pypdm as PDM
+
+   # First, create a GlobalNumbering instance and set some parameters
+   gen_gnum = PDM.GlobalNumbering(dim,
+                                  n_part,
+                                  merge,
+                                  tolerance,
+                                  MPI.COMM_WORLD)
+
+   # Then, provide the coordinates array for each partition
+   # (coords is a list of numpy arrays of type double)
+   # (here we omit the optional char_length argument)
+   for ipart in range(n_part):
+     gen_gnum.set_from_coords(ipart,
+                              coords[ipart],
+                              None)
+
+   # Once all partitions have been set, build the global numbering
+   gen_gnum.compute()
+
+   # Finally, retrieve the computed global id arrays
+   for ipart in range(n_part):
+     gnum[ipart] = gen_gnum.get(ipart)
 
 
 .. doxygenfile:: pdm_gnum.h

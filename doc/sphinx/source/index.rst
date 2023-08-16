@@ -159,8 +159,8 @@ Developer manual
    :maxdepth: 1
    :hidden:
 
-   developer_user/api/index
-   developer_user/coding_rules
+   developer_manual/api/index
+   developer_manual/coding_rules
 
 
 

@@ -1,4 +1,4 @@
-
+# cython: c_string_type=str, c_string_encoding=ascii
 cdef extern from "pdm_mesh_nodal.h":
   int PDM_Mesh_nodal_n_vertices_element(PDM_Mesh_nodal_elt_t type,
                                         int            order)
@@ -78,6 +78,10 @@ cdef extern from "pdm_dmesh_nodal.h":
                                                                    PDM_g_num_t         **dgroup_elmt)
 
     void PDM_dmesh_nodal_generate_distribution(PDM_dmesh_nodal_t* dmn)
+
+    void PDM_dmesh_nodal_dump_vtk(PDM_dmesh_nodal_t   *dmn,
+                                  PDM_geometry_kind_t  geom_kind,
+                                  const char          *filename_patter)
     # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 cdef extern from "pdm_elt_parent_find.h":
@@ -313,6 +317,26 @@ cdef class DistributedMeshNodalCaspule:
     """
     # print("Wrap dmesh_nodal_get_g_dims")
     return dmesh_nodal_get_g_dims(self)
+
+  # ------------------------------------------------------------------------
+  def dump_vtk(self,
+               PDM_geometry_kind_t  geom_kind,
+               char                *filename_pattern):
+    """
+    dump_vtk(geom_kind, filename_pattern)
+
+    Export in VTK format (ASCII)
+
+    .. note::
+      Each rank dumps a file for each nodal section
+
+    Parameters:
+      geom_kind        (PDM_geometry_kind_t) : Geometry kind to export
+      filename_pattern (str)                 : File name pattern
+    """
+    PDM_dmesh_nodal_dump_vtk(self.dmn,
+                             geom_kind,
+                             filename_pattern)
 
   # ------------------------------------------------------------------------
   def __dealloc__(self):
