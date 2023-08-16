@@ -80,7 +80,7 @@ if(PDM_ENABLE_DOC)
 
     add_custom_command(OUTPUT ${SPHINX_INDEX_FILE}
                        COMMAND ${CMAKE_COMMAND} -E env ${DOC_PYTHONPATH} env ${DOC_PRELOAD} env ${RUN_LSAN}
-                         ${SPHINX_EXECUTABLE} -Q -b html # -Q to suppress warning output
+                         ${SPHINX_EXECUTABLE} -b html # -Q to suppress warning output
                          #-w sphinx_build_warnings.log
                          # Tell Breathe where to find the Doxygen output
                          -Dbreathe_projects.cwipi=${CMAKE_CURRENT_BINARY_DIR}/xml
