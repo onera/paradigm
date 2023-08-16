@@ -20,12 +20,14 @@ General dependencies for building **ParaDiGM** are:
 Follow these steps to build **ParaDiGM** from the sources:
 
 1. `git clone git@gitlab.onera.net:numerics/mesh/paradigm.git` (for ONERA users only)
-2. `mkdir paradigm/build`
-3. `cd paradigm/build`
-4. `cmake ..`
-5. `make`
-6. `make install`
-7. `./pdm_run` (if you want to run the test cases)
+1. `cd paradigm`
+1. `git submodule update --init extensions/paradigma` (if you want to enable [**ParaDiGMA**](https://gitlab.onera.net/numerics/mesh/paradigma))
+1. `mkdir build`
+1. `cd build`
+1. `cmake ..`
+1. `make`
+1. `make install`
+1. `./pdm_run` (if you want to run the test cases)
 
 ### CMake general options
     cmake -D<option1_name>=<option1_value> ... -D<option2_name>=<option2_value>

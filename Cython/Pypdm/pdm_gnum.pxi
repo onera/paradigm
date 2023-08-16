@@ -1,32 +1,41 @@
-# ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-# > Wrapping of functions
+
 cdef extern from "pdm_gnum.h":
+  # ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+  # > Wrapping of structure
   ctypedef struct PDM_gen_gnum_t:
     pass
-  PDM_gen_gnum_t* PDM_gnum_create(const int             dim,
-                                const int             n_part,
-                                const PDM_bool_t      merge,
-                                const double          tolerance,
-                                const PDM_MPI_Comm    comm,
-                                const PDM_ownership_t owner)
+  # ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
-  void PDM_gnum_set_from_coords(PDM_gen_gnum_t* gen_gnum,
-                                const int     i_part,
-                                const int     n_elts,
-                                const double *coords,
-                                const double *char_length)
+  # ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+  # > Wrapping of functions
+  PDM_gen_gnum_t * PDM_gnum_create(const int             dim,
+                                   const int             n_part,
+                                   const PDM_bool_t      merge,
+                                   const double          tolerance,
+                                   const PDM_MPI_Comm    comm,
+                                   const PDM_ownership_t owner)
 
-  void PDM_gnum_set_from_parents(PDM_gen_gnum_t *gen_gnum,
-                                 const int             i_part,
-                                 const int             n_elts,
-                                 const PDM_g_num_t    *parent_gnum)
+  void PDM_gnum_set_from_coords(PDM_gen_gnum_t *gen_gnum,
+                                const int       i_part,
+                                const int       n_elts,
+                                const double   *coords,
+                                const double   *char_length)
 
-  void         PDM_gnum_compute(PDM_gen_gnum_t* gen_gnum)
+  void PDM_gnum_set_from_parents(PDM_gen_gnum_t    *gen_gnum,
+                                 const int          i_part,
+                                 const int          n_elts,
+                                 const PDM_g_num_t *parent_gnum)
 
-  PDM_g_num_t*     PDM_gnum_get(PDM_gen_gnum_t* gen_gnum,
-                                const int i_part)
+  void PDM_gnum_set_parents_nuplet(PDM_gen_gnum_t  *gen_gnum,
+                                   const int        nuplet)
 
-  void            PDM_gnum_free(PDM_gen_gnum_t* gen_gnum)
+
+  void PDM_gnum_compute(PDM_gen_gnum_t *gen_gnum)
+
+  PDM_g_num_t * PDM_gnum_get(PDM_gen_gnum_t *gen_gnum,
+                             const int       i_part)
+
+  void PDM_gnum_free(PDM_gen_gnum_t *gen_gnum)
 # ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 # ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -42,8 +51,23 @@ cdef class GlobalNumbering:
   # --------------------------------------------------------------------------
 
   # --------------------------------------------------------------------------
-  def __init__(self, int dim, int n_part, PDM_bool_t merge, double tolerance, MPI.Comm comm):
-    """ Init a gnum structure """
+  def __init__(self,
+               int        dim,
+               int        n_part,
+               PDM_bool_t merge,
+               double     tolerance,
+               MPI.Comm   comm):
+    """
+    __init__(dim, n_part, merge, tolerance, comm)
+    Create a structure to build a global numbering
+
+    Parameters:
+      dim       (int)        : Spatial dimension
+      n_part    (int)        : Number of local partitions
+      merge     (PDM_bool_t) : Merge double points or not
+      tolerance (double)     : Geometric tolerance (used if ``merge`` is set to ``PDM_TRUE``)
+      comm      (MPI.Comm)   : MPI communicator
+    """
     # ************************************************************************
     # > Declaration
     cdef MPI.MPI_Comm c_comm = comm.ob_mpi
@@ -67,10 +91,24 @@ cdef class GlobalNumbering:
   # --------------------------------------------------------------------------
   def gnum_set_from_coords(self,
                            int i_part,
-                           int n_elts,
+                           int n_elts, # TODO: remove
                            NPY.ndarray[NPY.double_t  , mode='c', ndim=1] coords not None,
-                           NPY.ndarray[NPY.double_t  , mode='c', ndim=1] caracteristic_length):
+                           NPY.ndarray[NPY.double_t  , mode='c', ndim=1] char_length):
     """
+    gnum_set_from_coords(i_part, n_elts, coords, char_length)
+    Set from coordinates
+
+    Note:
+      The ordering is based on the `Morton space-filling curve <https://en.wikipedia.org/wiki/Z-order_curve>`_.
+      Elements are expected to be unique (i.e. not duplicated on 2 or more ranks).
+      If two elements share the same Morton code, their global
+      id will be determined by lexicographical ordering of coordinates.
+
+    Parameters:
+      i_part      (int)                        : Current partition
+      n_elts      (int)                        : Number of elements
+      coords      (np.ndarray[np.double_t]   ) : Coordinates (size = 3 * ``n_elts``)
+      char_length (np.ndarray[npy_pdm_gnum_t]) : Characteristic length (or *None*, used only if ``merge`` is set to ``PDM_TRUE``)
     """
     # ************************************************************************
     # > Declaration
@@ -80,10 +118,10 @@ cdef class GlobalNumbering:
 
     # ************************************************************************
     coords_data = <double *> coords.data
-    if (caracteristic_length is None):
+    if (char_length is None):
       caracteristic_length_data = NULL
     else:
-      caracteristic_length_data = <double *> caracteristic_length.data
+      caracteristic_length_data = <double *> char_length.data
     # ************************************************************************
 
     # ************************************************************************
@@ -103,9 +141,17 @@ cdef class GlobalNumbering:
   # --------------------------------------------------------------------------
   def gnum_set_from_parent(self,
                            int i_part,
-                           int n_elts,
+                           int n_elts, # TODO: remove
                            NPY.ndarray[npy_pdm_gnum_t  , mode='c', ndim=1] parent_gnum not None):
     """
+    gnum_set_from_parent(i_part, n_elts, parent_gnum)
+
+    Set parent global numbering
+
+    Parameters:
+      i_part      (int)                    : Current partition
+      n_elts      (int)                    : Number of elements
+      parent_gnum (np.ndarray[np.double_t) : Parent global ids (size = ``n_elts``)
     """
     # ************************************************************************
     # > Declaration
@@ -124,14 +170,41 @@ cdef class GlobalNumbering:
                <PDM_g_num_t*> parent_gnum.data)
     # ************************************************************************
 
+
+  # --------------------------------------------------------------------------
+  def gnum_set_parents_nuplet(self,
+                              int nuplet):
+    """
+    gnum_set_parents_nuplet(nuplet)
+
+    Set size of tuple for nuplet
+
+    Parameters:
+      nuplet (int) : Size of tuple
+    """
+    PDM_gnum_set_parents_nuplet(self._gen_gnum,
+                                nuplet)
+
   # --------------------------------------------------------------------------
   def gnum_compute(self):
-    """ Calls compute method from PDM_gnum """
+    """
+    Build global numbering
+    """
     PDM_gnum_compute(self._gen_gnum)
 
   # --------------------------------------------------------------------------
   def gnum_get(self, int i_part):
-    """ Calls the get method from PDM_gnum """
+    """
+    gnum_get(i_part)
+
+    Get global ids for a given partition
+
+    Parameters:
+      i_part (int) : Current partition
+
+    Returns:
+      Array of global ids (np.ndarray[npy_pdm_gnum_t])
+    """
     # ************************************************************************
     # > Declaration
     cdef PDM_g_num_t *gnum_array
@@ -152,7 +225,9 @@ cdef class GlobalNumbering:
 
   # --------------------------------------------------------------------------
   def __dealloc__(self):
-    """Calls the free method of PDM_gnum """
+    """
+    Free a ``GlobalNumbering`` instance
+    """
     PDM_gnum_free(self._gen_gnum);
 
 # ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::

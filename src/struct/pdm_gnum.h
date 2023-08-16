@@ -8,7 +8,7 @@
 /*
   This file is part of the ParaDiGM library.
 
-  Copyright (C) 2017       ONERA
+  Copyright (C) 2017-2023       ONERA
 
   This library is free software; you can redistribute it and/or
   modify it under the terms of the GNU Lesser General Public
@@ -61,15 +61,16 @@ typedef struct _pdm_gen_gnum_t PDM_gen_gnum_t;
 
 /**
  *
- * \brief Build a global numbering structure
+ * \brief Create a structure to build a global numbering
  *
  * \param [in]   dim          Spatial dimension
  * \param [in]   n_part       Number of local partitions
  * \param [in]   merge        Merge double points or not
- * \param [in]   tolerance    Geometric tolerance (used if merge double points is activated)
+ * \param [in]   tolerance    Geometric tolerance (used if \p merge is set to \ref PDM_TRUE)
  * \param [in]   comm         PDM_MPI communicator
+ * \param [in]   owner        Ownership of results
  *
- * \return     Pointer to PDM_gen_gnum object
+ * \return     Pointer to \ref PDM_gen_gnum_t object
  */
 
 PDM_gen_gnum_t *
@@ -89,17 +90,17 @@ PDM_gnum_create
  *
  * \brief Set from coordinates
  *
- * The ordering is based on a Morton code, and it is expected that
- * entities are unique (i.e. not duplicated on 2 or more ranks).
- * In the case that 2 entities have a same Morton code, their global
- * number will be determined by lexicographical ordering of coordinates.
+ * \note The ordering is based on the <a href="https://en.wikipedia.org/wiki/Z-order_curve">Morton space-filling curve</a>.
+ *       Elements are expected to be unique (i.e. not duplicated on 2 or more ranks).
+ *       If two elements share the same Morton code, their global
+ *       id will be determined by lexicographical ordering of coordinates.
  *
- * \param [in]   gen_gnum     Pointer to \ref PDM_gen_gnum object
+ * \param [in]   gen_gnum     Pointer to \ref PDM_gen_gnum_t object
  * \param [in]   i_part       Current partition
  * \param [in]   n_elts       Number of elements
- * \param [in]   coords       Coordinates (size = 3 * \ref n_elts)
+ * \param [in]   coords       Coordinates (size = 3 * \p n_elts)
  * \param [in]   char_length  Characteristic length (or NULL)
- *                            (used if merge double points is activated)
+ *                            (used only if \p merge is set to \ref PDM_TRUE)
  *
  */
 
@@ -117,12 +118,12 @@ PDM_gnum_set_from_coords
 
 /**
  *
- * \brief Set Parent global numbering
+ * \brief Set parent global numbering
  *
- * \param [in]   gen_gnum     Pointer to \ref PDM_gen_gnum object
+ * \param [in]   gen_gnum     Pointer to \ref PDM_gen_gnum_t object
  * \param [in]   i_part       Current partition
  * \param [in]   n_elts       Number of elements
- * \param [in]   parent_gnum  Parent global numbering (size = \ref n_elts)
+ * \param [in]   parent_gnum  Parent global ids (size = \p n_elts)
  *
  */
 
@@ -139,7 +140,7 @@ PDM_gnum_set_from_parents
  *
  * \brief Set size of tuple for nuplet
  *
- * \param [in]   gen_gnum     Pointer to \ref PDM_gen_gnum object
+ * \param [in]   gen_gnum     Pointer to \ref PDM_gen_gnum_t object
  * \param [in]   nuplet       Size of tuple
  *
  */
@@ -152,9 +153,9 @@ PDM_gnum_set_parents_nuplet
 
 /**
  *
- * \brief Compute
+ * \brief Build global numbering
  *
- * \param [in]   gen_gnum         Pointer to \ref PDM_gen_gnum object
+ * \param [in]   gen_gnum         Pointer to \ref PDM_gen_gnum_t object
  *
  */
 
@@ -169,7 +170,7 @@ PDM_gnum_compute
  *
  * \brief Get global ids for a given partition
  *
- * \param [in]   gen_gnum     Pointer to \ref PDM_gen_gnum object
+ * \param [in]   gen_gnum     Pointer to \ref PDM_gen_gnum_t object
  * \param [in]   i_part       Current partition
  *
  * \return     Array of global ids
@@ -186,9 +187,9 @@ PDM_gnum_get
 
 /**
  *
- * \brief Free
+ * \brief Free a \ref PDM_gen_gnum_t object
  *
- * \param [in]   gen_gnum         Pointer to \ref PDM_gen_gnum object
+ * \param [in]   gen_gnum         Pointer to \ref PDM_gen_gnum_t object
  *
  */
 
@@ -203,10 +204,10 @@ PDM_gen_gnum_t *gen_gnum
  *
  * \brief Get number of elements in a partition
  *
- * \param [in]   gen_gnum     Pointer to \ref PDM_gen_gnum object
+ * \param [in]   gen_gnum     Pointer to \ref PDM_gen_gnum_t object
  * \param [in]   i_part       Current partition
  *
- * \return     Number of elements
+ * \return     Number of elements in current partition
  *
  */
 
