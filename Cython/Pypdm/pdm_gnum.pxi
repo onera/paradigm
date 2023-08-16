@@ -1,3 +1,4 @@
+import sys
 
 cdef extern from "pdm_gnum.h":
   # ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -85,17 +86,16 @@ cdef class GlobalNumbering:
                                      merge,
                                      tolerance,
                                      PDM_MPI_mpi_2_pdm_mpi_comm (<void *> &c_comm),
-                                     PDM_OWNERSHIP_USER) # Python take ownership);
+                                     PDM_OWNERSHIP_USER) # Python takes ownership);
     # ************************************************************************
 
   # --------------------------------------------------------------------------
-  def gnum_set_from_coords(self,
-                           int i_part,
-                           int n_elts, # TODO: remove
-                           NPY.ndarray[NPY.double_t  , mode='c', ndim=1] coords not None,
-                           NPY.ndarray[NPY.double_t  , mode='c', ndim=1] char_length):
+  def set_from_coords(self,
+                      int i_part,
+                      NPY.ndarray[NPY.double_t  , mode='c', ndim=1] coords not None,
+                      NPY.ndarray[NPY.double_t  , mode='c', ndim=1] char_length):
     """
-    gnum_set_from_coords(i_part, n_elts, coords, char_length)
+    set_from_coords(i_part, coords, char_length)
     Set from coordinates
 
     Note:
@@ -104,10 +104,12 @@ cdef class GlobalNumbering:
       If two elements share the same Morton code, their global
       id will be determined by lexicographical ordering of coordinates.
 
+    Warning:
+      Coordinates are assumed to be 3-dimensional, even if a lower dimension was specified when creating the ``GlobalNumbering`` instance.
+
     Parameters:
       i_part      (int)                        : Current partition
-      n_elts      (int)                        : Number of elements
-      coords      (np.ndarray[np.double_t]   ) : Coordinates (size = 3 * ``n_elts``)
+      coords      (np.ndarray[np.double_t]   ) : Coordinates (size = 3 * *n_elts*)
       char_length (np.ndarray[npy_pdm_gnum_t]) : Characteristic length (or *None*, used only if ``merge`` is set to ``PDM_TRUE``)
     """
     # ************************************************************************
@@ -126,6 +128,11 @@ cdef class GlobalNumbering:
 
     # ************************************************************************
     # > Store size to use it in the get
+    if len(coords)%3 != 0:
+      print(f"gnum_set_from_coords: Error: coordinates must be provided in 3 dimensions",
+            flush=True)
+      sys.exit(1)
+    cdef int n_elts = len(coords)//3
     self._n_elem_per_part[i_part] = n_elts
     # ************************************************************************
 
@@ -139,19 +146,17 @@ cdef class GlobalNumbering:
     # ************************************************************************
 
   # --------------------------------------------------------------------------
-  def gnum_set_from_parent(self,
-                           int i_part,
-                           int n_elts, # TODO: remove
-                           NPY.ndarray[npy_pdm_gnum_t  , mode='c', ndim=1] parent_gnum not None):
+  def set_from_parent(self,
+                      int i_part,
+                      NPY.ndarray[npy_pdm_gnum_t  , mode='c', ndim=1] parent_gnum not None):
     """
-    gnum_set_from_parent(i_part, n_elts, parent_gnum)
+    set_from_parent(i_part, n_elts, parent_gnum)
 
     Set parent global numbering
 
     Parameters:
       i_part      (int)                    : Current partition
-      n_elts      (int)                    : Number of elements
-      parent_gnum (np.ndarray[np.double_t) : Parent global ids (size = ``n_elts``)
+      parent_gnum (np.ndarray[np.double_t) : Parent global ids
     """
     # ************************************************************************
     # > Declaration
@@ -159,6 +164,7 @@ cdef class GlobalNumbering:
 
     # ************************************************************************
     # > Store size to use it in the get
+    cdef int n_elts = len(parent_gnum)
     self._n_elem_per_part[i_part] = n_elts
     # ************************************************************************
 
@@ -172,10 +178,10 @@ cdef class GlobalNumbering:
 
 
   # --------------------------------------------------------------------------
-  def gnum_set_parents_nuplet(self,
-                              int nuplet):
+  def set_parents_nuplet(self,
+                         int nuplet):
     """
-    gnum_set_parents_nuplet(nuplet)
+    set_parents_nuplet(nuplet)
 
     Set size of tuple for nuplet
 
@@ -186,16 +192,16 @@ cdef class GlobalNumbering:
                                 nuplet)
 
   # --------------------------------------------------------------------------
-  def gnum_compute(self):
+  def compute(self):
     """
     Build global numbering
     """
     PDM_gnum_compute(self._gen_gnum)
 
   # --------------------------------------------------------------------------
-  def gnum_get(self, int i_part):
+  def get(self, int i_part):
     """
-    gnum_get(i_part)
+    get(i_part)
 
     Get global ids for a given partition
 
@@ -220,7 +226,7 @@ cdef class GlobalNumbering:
       return None
     else:
       np_gnum_array = create_numpy_g(gnum_array, self._n_elem_per_part[i_part])
-    return {'gnum' : np_gnum_array}
+    return np_gnum_array
     # ************************************************************************
 
   # --------------------------------------------------------------------------
