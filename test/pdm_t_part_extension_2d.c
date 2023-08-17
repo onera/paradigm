@@ -498,11 +498,11 @@ _part_extension
 
 
 
-  int          *pn_face_extented                     = NULL;
-  int         **pface_extented_to_pface_idx       = NULL;
-  int         **pface_extented_to_pface_triplet   = NULL;
-  PDM_g_num_t **pface_extented_ln_to_gn              = NULL;
-  // PDM_g_num_t **extended_face_orig_gnum              = NULL;
+  int          *pn_face_extented                = NULL;
+  int         **pface_extented_to_pface_idx     = NULL;
+  int         **pface_extented_to_pface_triplet = NULL;
+  PDM_g_num_t **pface_extented_ln_to_gn         = NULL;
+  // PDM_g_num_t **extented_face_orig_gnum              = NULL;
   int         **pface_extented_to_pface_interface = NULL;
 
   PDM_part_extension_interface_by_entity1_to_interface_by_entity2(pdi,
@@ -536,8 +536,8 @@ _part_extension
 
   int          *pn_vtx_extented                 = NULL;
   PDM_g_num_t **pvtx_extented_ln_to_gn          = NULL;
-  int         **pextended_face_vtx_idx          = NULL;
-  int         **pextended_face_vtx              = NULL;
+  int         **pextented_face_vtx_idx          = NULL;
+  int         **pextented_face_vtx              = NULL;
   int         **pvtx_extented_to_pvtx_idx       = NULL;
   int         **pvtx_extented_to_pvtx_triplet   = NULL;
   int         **pvtx_extented_to_pvtx_interface = NULL;
@@ -561,25 +561,126 @@ _part_extension
                                                              pface_extented_to_pface_interface,
                                                              &pn_vtx_extented,
                                                              &pvtx_extented_ln_to_gn,
-                                                             &pextended_face_vtx_idx,
-                                                             &pextended_face_vtx,
+                                                             &pextented_face_vtx_idx,
+                                                             &pextented_face_vtx,
                                                              &pvtx_extented_to_pvtx_idx,
                                                              &pvtx_extented_to_pvtx_triplet,
                                                              &pvtx_extented_to_pvtx_interface,
                                                              comm);
 
+  /*
+   * Hook coordinates
+   */
+  PDM_part_to_part_t* ptp_vtx = PDM_part_to_part_create_from_num2_triplet((const PDM_g_num_t **) pvtx_extented_ln_to_gn,
+                                                                          (const int          *) pn_vtx_extented,
+                                                                          ln_part_tot,
+                                                                          (const int          *) pflat_n_vtx,
+                                                                          ln_part_tot,
+                                                                          (const int         **) pvtx_extented_to_pvtx_idx,
+                                                                          (const int         **) NULL,
+                                                                          (const int         **) pvtx_extented_to_pvtx_triplet,
+                                                                          comm);
 
+  /*
+   *
+   */
+  int exch_request = -1;
+  int         **pextract_entity1_entity2_n    = NULL;
+  PDM_g_num_t **pextract_entity1_entity2_gnum = NULL;
+  double      **pextract_vtx_coords           = NULL;
+  PDM_part_to_part_reverse_iexch(ptp_vtx,
+                                 PDM_MPI_COMM_KIND_P2P,
+                                 PDM_STRIDE_CST_INTERLACED,
+                                 PDM_PART_TO_PART_DATA_DEF_ORDER_PART2,
+                                 1,
+                                 3 * sizeof(double),
+                                 NULL,
+                (const void **)  pflat_vtx_coords,
+                                 NULL,
+                    (void ***)   &pextract_vtx_coords,
+                                 &exch_request);
+  PDM_part_to_part_reverse_iexch_wait(ptp_vtx, exch_request);
+
+
+  /*
+   * Apply transformation if any
+   */
+  int n_interface = 0;
+  if(pdi != NULL) {
+    n_interface = PDM_part_domain_interface_n_interface_get(pdi);
+  }
+  double  **translation_vector = malloc(n_interface * sizeof(double *  ));
+  double ***rotation_matrix    = malloc(n_interface * sizeof(double ** ));
+  double  **rotation_direction = malloc(n_interface * sizeof(double *  ));
+  double  **rotation_center    = malloc(n_interface * sizeof(double *  ));
+  double   *rotation_angle     = malloc(n_interface * sizeof(double    ));
+  for(int i_interf = 0; i_interf < n_interface; ++i_interf) {
+    translation_vector[i_interf] = NULL;
+    PDM_part_domain_interface_translation_get(pdi, i_interf, &translation_vector[i_interf]);
+
+    rotation_matrix[i_interf] = NULL;
+    PDM_part_domain_interface_rotation_get   (pdi,
+                                              i_interf,
+                                              &rotation_direction[i_interf],
+                                              &rotation_center   [i_interf],
+                                              &rotation_angle    [i_interf]);
+
+    if(rotation_center    [i_interf] != NULL) {
+      rotation_matrix[i_interf] = malloc(3 * sizeof(double *));
+      for(int k = 0; k < 3; ++k) {
+        rotation_matrix[i_interf][k] = malloc(3 * sizeof(double));
+      }
+    }
+  }
+
+  for(int i_part = 0; i_part < ln_part_tot; ++i_part) {
+    for(int i_vtx = 0; i_vtx < pn_vtx_extented[i_part]; ++i_vtx) {
+      int i_interface   = PDM_ABS (pvtx_extented_to_pvtx_interface[i_part][i_vtx]);
+      int sgn_interface = PDM_SIGN(pvtx_extented_to_pvtx_interface[i_part][i_vtx]);
+      if(i_interface != 0 && translation_vector[PDM_ABS(i_interface)-1] != NULL) {
+        for(int k = 0; k < 3; ++k) {
+          pextract_vtx_coords[i_part][3*i_vtx+k] += sgn_interface * translation_vector[PDM_ABS(i_interface)-1][k];
+        }
+      }
+    }
+  }
+
+
+  for(int i_interf = 0; i_interf < n_interface; ++i_interf) {
+    if(translation_vector[i_interf] != NULL) {
+      free(translation_vector[i_interf]);
+    }
+    if(rotation_center    [i_interf] != NULL) {
+      for(int k = 0; k < 3; ++k) {
+        free(rotation_matrix[i_interf][k]);
+      }
+      free(rotation_matrix[i_interf]);
+    }
+  }
+  free(translation_vector);
+  free(rotation_matrix);
+  free(rotation_direction);
+  free(rotation_center);
+  free(rotation_angle);
+
+
+  PDM_part_to_part_free(ptp_vtx);
+
+  for(int i_part = 0; i_part < ln_part_tot; ++i_part) {
+    free(pextract_vtx_coords[i_part]);
+  }
+  free(pextract_vtx_coords);
 
 
   for(int i_part = 0; i_part < ln_part_tot; ++i_part) {
     free(pface_extented_to_pface_idx      [i_part]);
     free(pface_extented_to_pface_triplet  [i_part]);
     free(pface_extented_ln_to_gn             [i_part]);
-    // free(extended_face_orig_gnum             [i_part]);
+    // free(extented_face_orig_gnum             [i_part]);
     free(pface_extented_to_pface_interface[i_part]);
     free(pvtx_extented_ln_to_gn         [i_part]);
-    free(pextended_face_vtx_idx         [i_part]);
-    free(pextended_face_vtx             [i_part]);
+    free(pextented_face_vtx_idx         [i_part]);
+    free(pextented_face_vtx             [i_part]);
     free(pvtx_extented_to_pvtx_idx      [i_part]);
     free(pvtx_extented_to_pvtx_triplet  [i_part]);
     free(pvtx_extented_to_pvtx_interface[i_part]);
@@ -590,11 +691,11 @@ _part_extension
   free(pface_extented_to_pface_idx      );
   free(pface_extented_to_pface_triplet  );
   free(pface_extented_ln_to_gn          );
-  // free(extended_face_orig_gnum             );
+  // free(extented_face_orig_gnum             );
   free(pface_extented_to_pface_interface);
   free(pvtx_extented_ln_to_gn           );
-  free(pextended_face_vtx_idx           );
-  free(pextended_face_vtx               );
+  free(pextented_face_vtx_idx           );
+  free(pextented_face_vtx               );
   free(pvtx_extented_to_pvtx_idx        );
   free(pvtx_extented_to_pvtx_triplet    );
   free(pvtx_extented_to_pvtx_interface  );

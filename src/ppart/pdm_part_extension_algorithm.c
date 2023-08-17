@@ -967,7 +967,7 @@ PDM_part_extension_pconnectivity_to_extented_pconnectivity
       }
     }
 
-    if(1 == 0) {
+    if(1 == 1) {
       PDM_log_trace_array_long(pentity2_opp_gnum_and_itrf[i_part], 2 * n_connect_tot, "pentity2_opp_gnum_and_itrf ::");
     }
 
@@ -975,7 +975,7 @@ PDM_part_extension_pconnectivity_to_extented_pconnectivity
     pn_entity2_opp_gnum_and_itrf[i_part] = PDM_order_inplace_unique_and_order_long(n_connect_tot, 2, pentity2_opp_gnum_and_itrf[i_part], entity2_opp_position[i_part]);
 
 
-    if(1 == 0) {
+    if(1 == 1) {
       PDM_log_trace_array_int(entity2_opp_position[i_part], pn_entity2_opp_gnum_and_itrf[i_part], "entity2_opp_position = ");
     }
 
@@ -1183,8 +1183,9 @@ PDM_part_extension_pconnectivity_to_extented_pconnectivity
         for(int idx_entity1 = _pextract_entity1_entity2_idx[i_ref]; idx_entity1 < _pextract_entity1_entity2_idx[i_ref+1]; ++idx_entity1) {
 
           PDM_g_num_t entity2_g_num = _pextract_entity1_entity2_gnum[idx_entity1];
-          PDM_g_num_t gnum_to_find[2] = {entity2_g_num, -_pextract_entity1_interface[i_ref]};
+          PDM_g_num_t gnum_to_find[2] = {entity2_g_num, _pextract_entity1_interface[i_ref]};
           int pos = PDM_order_binary_search_long(gnum_to_find, _pentity2_opp_gnum_and_itrf, 2, pn_entity2_opp_gnum_and_itrf[i_part]);
+          printf("gnum_to_find = %i/%i --> pos = %i \n", gnum_to_find[0], gnum_to_find[1], pos);
           if(pos == -1) {
             pn_entity2_extented_by_interface[i_part]++;
           }
@@ -1221,7 +1222,7 @@ PDM_part_extension_pconnectivity_to_extented_pconnectivity
         for(int idx_entity1 = _pextract_entity1_entity2_idx[i_ref]; idx_entity1 < _pextract_entity1_entity2_idx[i_ref+1]; ++idx_entity1) {
 
           PDM_g_num_t entity2_g_num = _pextract_entity1_entity2_gnum[idx_entity1];
-          PDM_g_num_t gnum_to_find[2] = {entity2_g_num, -_pextract_entity1_interface[i_ref]};
+          PDM_g_num_t gnum_to_find[2] = {entity2_g_num, _pextract_entity1_interface[i_ref]};
           int pos = PDM_order_binary_search_long(gnum_to_find, _pentity2_opp_gnum_and_itrf, 2, pn_entity2_opp_gnum_and_itrf[i_part]);
           if(pos == -1) {
             int idx_write = pn_entity2_extented_by_interface[i_part]++;
@@ -1252,6 +1253,10 @@ PDM_part_extension_pconnectivity_to_extented_pconnectivity
         }
       }
     }
+
+    PDM_log_trace_array_long(pentity2_extented_ln_to_gn_by_interface[i_part],
+                             pn_entity2_extented_by_interface[i_part],
+                             "pentity2_extented_ln_to_gn_by_interface ::");
 
     PDM_gnum_set_from_parents(gen_gnum_entity2,
                               i_part,
@@ -1327,7 +1332,7 @@ PDM_part_extension_pconnectivity_to_extented_pconnectivity
         for(int idx_entity1 = _pextract_entity1_entity2_idx[i_ref]; idx_entity1 < _pextract_entity1_entity2_idx[i_ref+1]; ++idx_entity1) {
 
           PDM_g_num_t entity2_g_num = _pextract_entity1_entity2_gnum[idx_entity1];
-          PDM_g_num_t gnum_to_find[2] = {entity2_g_num, -_pextract_entity1_interface[i_ref]};
+          PDM_g_num_t gnum_to_find[2] = {entity2_g_num, _pextract_entity1_interface[i_ref]};
 
           int pos = PDM_order_binary_search_long(gnum_to_find, _pentity2_opp_gnum_and_itrf, 2, n_entity2_opp_position);
           if(pos == -1) {
@@ -1377,7 +1382,12 @@ PDM_part_extension_pconnectivity_to_extented_pconnectivity
 
     assert(pn_entity2_extented_by_interface2 == pn_entity2_extented_by_interface[i_part]);
 
-    PDM_log_trace_connectivity_int(_pextract_entity1_entity2_idx, _pextract_entity1_entity2, n_part1_to_part2, "pextract_entity1_entity2 ::");
+    if(0 == 1) {
+      PDM_log_trace_connectivity_int(_pextract_entity1_entity2_idx,
+                                     _pextract_entity1_entity2,
+                                     n_part1_to_part2,
+                                     "pextract_entity1_entity2 ::");
+    }
 
     free(extented_from_itrf_entity2_order          );
     free(extented_from_itrf_entity2_ln_to_gn_sorted);
