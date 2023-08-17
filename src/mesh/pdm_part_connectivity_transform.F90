@@ -169,15 +169,14 @@ module pdm_part_connectivity_transform
 
     !!>
     !!
-    !! \brief Combine entity1->entity2 with entity2->entity3 to create entity1->entity3
+    !! \brief Transpose entity1->entity2 to create entity2->entity1
     !!
     !! \param [in]   n_entity1
+    !! \param [in]   n_entity2
     !! \param [in]   entity1_entity2_idx
     !! \param [in]   entity1_entity2
-    !! \param [in]   entity2_entity3_idx
-    !! \param [in]   entity2_entity3
-    !! \param [out]  entity1_entity3_idx
-    !! \param [out]  entity1_entity3
+    !! \param [out]  entity2_entity1_idx
+    !! \param [out]  entity2_entity1
     !!
 
     subroutine PDM_connectivity_transpose_ (n_entity1,           &
