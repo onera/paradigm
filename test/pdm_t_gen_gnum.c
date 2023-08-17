@@ -184,7 +184,7 @@ int main(int argc, char *argv[])
   PDM_gnum_compute(gen_gnum);
 
   // Finally, retrieve the computed global id arrays
-  PDM_g_num_t **gnum = malloc(sizeof(PDM_g_num_t) * n_part);
+  PDM_g_num_t **gnum = malloc(sizeof(PDM_g_num_t *) * n_part);
   for (int i_part = 0; i_part < n_part; i_part++) {
     gnum[i_part] = PDM_gnum_get(gen_gnum,
                                 i_part);
