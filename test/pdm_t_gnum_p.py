@@ -61,7 +61,7 @@ def run_test():
   """
 
   # First, create a GlobalNumbering instance and set some parameters
-  gen_gnum = PDM.GlobalNumbering(3,  # dim
+  gen_gnum = PDM.GlobalNumbering(3,    # dim
                                  n_part,
                                  merge,
                                  1e-3, # tolerance

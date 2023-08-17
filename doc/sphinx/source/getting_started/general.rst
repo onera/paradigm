@@ -7,6 +7,8 @@ General presentation
 Key concepts & terminology
 ==========================
 
+.. _concept_global_id:
+
 * local/global ids
 * partitions
 * block
