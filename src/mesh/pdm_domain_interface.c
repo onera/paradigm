@@ -2233,6 +2233,13 @@ PDM_domain_interface_translate_entity1_entity2
   //  -> reduce time by extracting dentity2_entity1_idx for only concerns interfaces
   //  -> Pour l'insant la reduction est faite en dehors (via PDM_dmesh_extract )
 
+  if(0 == 1) {
+    for(int i_domain = 0; i_domain < n_domain; ++i_domain) {
+      PDM_log_trace_connectivity_long(dentity2_entity1_idx[i_domain],
+                                      dentity2_entity1[i_domain],dn_entity2[i_domain], "dentity2_entity1 ::" );
+    }
+  }
+
   int i_rank = -1;
   PDM_MPI_Comm_rank(comm, &i_rank);
 
@@ -2518,11 +2525,11 @@ PDM_domain_interface_translate_entity1_entity2
 
   for(int i_domain = 0; i_domain < n_domain; ++i_domain) {
 
-    if( 0 == 1) {
-      PDM_log_trace_array_int(part_stride    [i_domain], n_dentity2_entity1[i_domain], "part_stride"    );
-      PDM_log_trace_array_int(part_stride_idx[i_domain], n_dentity2_entity1[i_domain], "part_stride_idx");
-      PDM_log_trace_array_int(part_data_sens [i_domain], part_stride_idx[i_domain][n_dentity2_entity1[i_domain]], "part_data_sens  ::");
-      PDM_log_trace_array_int(part_data_intno[i_domain], part_stride_idx[i_domain][n_dentity2_entity1[i_domain]], "part_data_intno ::");
+    if(0 == 1) {
+      PDM_log_trace_array_int(part_stride     [i_domain], n_dentity2_entity1[i_domain], "part_stride"    );
+      PDM_log_trace_array_int(part_stride_idx [i_domain], n_dentity2_entity1[i_domain], "part_stride_idx");
+      PDM_log_trace_array_int(part_data_sens  [i_domain], part_stride_idx[i_domain][n_dentity2_entity1[i_domain]], "part_data_sens  ::");
+      PDM_log_trace_array_int(part_data_intno [i_domain], part_stride_idx[i_domain][n_dentity2_entity1[i_domain]], "part_data_intno ::");
       PDM_log_trace_array_long(part_data_gnum [i_domain], part_stride_idx[i_domain][n_dentity2_entity1[i_domain]], "part_data_gnum  ::");
     }
 
@@ -2555,6 +2562,8 @@ PDM_domain_interface_translate_entity1_entity2
           if(l_interface_sgn[itrf] == 0) {
             l_interface_sgn[itrf] = PDM_SIGN(part_data_intno[i_domain][idx+k]);
           }
+          // Ce asset peut planter pour de mauvaise raison sur le cas d'un maillage monocellule par exemple
+          // Pour corriger il suffit de dire que si tout les éléments recu sont de sign différents
           assert(l_interface_sgn[itrf] == PDM_SIGN(part_data_intno[i_domain][idx+k]));
         }
       }
@@ -3703,6 +3712,7 @@ PDM_ddomain_interface_to_pdomain_interface
 
     if (0 == 1) {
       log_trace("Interface %d\n", itrf);
+      PDM_log_trace_array_long(interface_ids[itrf], 2 * dn_interface[itrf], "shifted interface_ids    :: ");
       PDM_log_trace_array_long(interface_ids_shifted[itrf], 2*dn_interface[itrf], "shifted gnum    :: ");
       // PDM_log_trace_array_int (send_data_dom        [itrf], 2*dn_interface[itrf], "send_data_dom   :: ");
       PDM_log_trace_array_long(send_data_sens       [itrf], 2*dn_interface[itrf], "send_data_sens  :: ");
@@ -4301,6 +4311,7 @@ PDM_ddomain_interface_to_pdomain_interface
          *    - Keep sens information
          */
         int* precv_entity_desc_post = (int * ) malloc( 2 * 3 * n_data          * sizeof(int));
+        int* precv_sens_post        = (int * ) malloc( _ln_interface[s_i_part] * sizeof(int));
         int* precv_sgn              = (int * ) malloc( _ln_interface[s_i_part] * sizeof(int));
 
         int idx_read      = 0;
@@ -4348,6 +4359,7 @@ PDM_ddomain_interface_to_pdomain_interface
             }
           }
           assert(sens_cur != 0);
+          precv_sens_post[i] = sens_cur;
 
           interface_ids_idx[i+1] = interface_ids_idx[i];
 
@@ -4405,13 +4417,13 @@ PDM_ddomain_interface_to_pdomain_interface
         pres_interface_ids     [i_domain][i_part][i_interface] = precv_entity_desc_post;
         pres_interface_ids_idx [i_domain][i_part][i_interface] = interface_ids_idx;
         pres_interface_dom     [i_domain][i_part][i_interface] = precv_dom [s_i_part];
-        pres_interface_sens    [i_domain][i_part][i_interface] = precv_sens[s_i_part];
+        pres_interface_sens    [i_domain][i_part][i_interface] = precv_sens_post; //precv_sens[s_i_part];
 
         free(precv_stride     [s_i_part]);
         free(precv_stride_dom [s_i_part]);
         free(precv_stride_sens[s_i_part]);
         // free(precv_dom        [s_i_part]);
-        // free(precv_sens       [s_i_part]);
+        free(precv_sens       [s_i_part]);
         free(precv_entity_desc[s_i_part]);
         free(precv_gnum       [s_i_part]);
         free(precv_stride_gnum[s_i_part]);
