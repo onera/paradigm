@@ -1000,7 +1000,7 @@ PDM_part_extension_pconnectivity_to_extented_pconnectivity
   /*
    * Creation du part_to_part entre entity2
    */
-  PDM_part_to_part_t* ptp = PDM_part_to_part_create_from_num2_triplet((const PDM_g_num_t **) pentity1_ln_to_gn,
+  PDM_part_to_part_t* ptp = PDM_part_to_part_create_from_num2_triplet((const PDM_g_num_t **) pentity1_extented_ln_to_gn,
                                                                       (const int          *) pn_entity1_extented,
                                                                       ln_part_tot,
                                                                       (const int          *) pn_entity1,

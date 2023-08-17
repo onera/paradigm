@@ -1272,7 +1272,7 @@ _part_extension2
   /*
    * Export vtk
    */
-  if(1 == 1) {
+  if(0 == 1) {
 
     for(int i_part = 0; i_part < ln_part_tot; ++i_part) {
 
