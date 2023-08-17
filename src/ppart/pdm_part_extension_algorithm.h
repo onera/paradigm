@@ -68,7 +68,7 @@ PDM_part_extension_interface_by_entity1_to_interface_by_entity2
 
 
 void
-PDM_part_extension_pconnectivity_to_extended_pconnectivity
+PDM_part_extension_pconnectivity_to_extented_pconnectivity
 (
   PDM_part_domain_interface_t    *pdi,
   PDM_bound_type_t                entity2_bound,
@@ -86,13 +86,13 @@ PDM_part_extension_pconnectivity_to_extended_pconnectivity
   int                           **pentity1_extented_to_pentity1_idx,
   int                           **pentity1_extented_to_pentity1_triplet,
   int                           **pentity1_extented_to_pentity1_interface,
-  int                          ***pn_entity2_extented,
-  PDM_g_num_t                  ***pentity2_extented_ln_to_gn,
-  int                          ***pextended_entity1_entity2_idx,
-  int                          ***pextended_entity1_entity2,
-  int                          ***pentity2_extented_to_pentity2_idx,
-  int                          ***pentity2_extented_to_pentity2_triplet,
-  int                          ***pentity2_extented_to_pentity2_interface,
+  int                           **pn_entity2_extented_out,
+  PDM_g_num_t                  ***pentity2_extented_ln_to_gn_out,
+  int                          ***pextented_entity1_entity2_idx_out,
+  int                          ***pextented_entity1_entity2_out,
+  int                          ***pentity2_extented_to_pentity2_idx_out,
+  int                          ***pentity2_extented_to_pentity2_triplet_out,
+  int                          ***pentity2_extented_to_pentity2_interface_out,
   PDM_MPI_Comm                    comm
 );
 

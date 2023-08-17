@@ -534,7 +534,7 @@ _part_extension
     }
   }
 
-  int         **pn_vtx_extented                 = NULL;
+  int          *pn_vtx_extented                 = NULL;
   PDM_g_num_t **pvtx_extented_ln_to_gn          = NULL;
   int         **pextended_face_vtx_idx          = NULL;
   int         **pextended_face_vtx              = NULL;
@@ -543,7 +543,7 @@ _part_extension
   int         **pvtx_extented_to_pvtx_interface = NULL;
   // Rebuild face_vtx direchly (after we will do face_edge then edge_vtx)
 
-  PDM_part_extension_pconnectivity_to_extended_pconnectivity(pdi,
+  PDM_part_extension_pconnectivity_to_extented_pconnectivity(pdi,
                                                              PDM_BOUND_TYPE_VTX,
                                                              n_domain,
                                                              shift_by_domain_vtx,
@@ -577,14 +577,27 @@ _part_extension
     free(pface_extented_ln_to_gn             [i_part]);
     // free(extended_face_orig_gnum             [i_part]);
     free(pface_extented_to_pface_interface[i_part]);
+    free(pvtx_extented_ln_to_gn         [i_part]);
+    free(pextended_face_vtx_idx         [i_part]);
+    free(pextended_face_vtx             [i_part]);
+    free(pvtx_extented_to_pvtx_idx      [i_part]);
+    free(pvtx_extented_to_pvtx_triplet  [i_part]);
+    free(pvtx_extented_to_pvtx_interface[i_part]);
   }
+  free(pn_vtx_extented);
 
-  free(pn_face_extented                    );
+  free(pn_face_extented                 );
   free(pface_extented_to_pface_idx      );
   free(pface_extented_to_pface_triplet  );
-  free(pface_extented_ln_to_gn             );
+  free(pface_extented_ln_to_gn          );
   // free(extended_face_orig_gnum             );
   free(pface_extented_to_pface_interface);
+  free(pvtx_extented_ln_to_gn           );
+  free(pextended_face_vtx_idx           );
+  free(pextended_face_vtx               );
+  free(pvtx_extented_to_pvtx_idx        );
+  free(pvtx_extented_to_pvtx_triplet    );
+  free(pvtx_extented_to_pvtx_interface  );
 
 
 
