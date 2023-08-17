@@ -176,7 +176,7 @@ def sphere_surf_icosphere_gen_part(MPI.Comm         comm,
 
   Create a sphere surface mesh (icosphere)
 
-  .note: The output mesh is *partitioned*
+  :note: The output mesh is *partitioned*
 
   Parameters:
     comm        (MPI.Comm)         : MPI communicator
