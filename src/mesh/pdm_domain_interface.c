@@ -4739,6 +4739,132 @@ PDM_domain_interface_rotation_get
 }
 
 
+void
+PDM_domain_interface_make_flat_view
+(
+  PDM_domain_interface_t  *dom_intrf,
+  PDM_bound_type_t         interface_kind,
+  PDM_g_num_t             *shift_by_domain,
+  PDM_part_to_block_t   ***ptb_interface_out,
+  PDM_g_num_t           ***entity_opp_gnum_out
+)
+{
+  log_trace("PDM_domain_interface_make_flat_view --> CAUTION TO SIGN DOUBT \n");
+
+  int          *interface_dn  = NULL;
+  PDM_g_num_t **interface_ids = NULL;
+  int         **interface_dom = NULL;
+  PDM_domain_interface_get(dom_intrf,
+                           interface_kind,
+                           &interface_dn,
+                           &interface_ids,
+                           &interface_dom);
+
+  int n_interface = dom_intrf->n_interface;
+
+  PDM_g_num_t **interface_ids_shifted = (PDM_g_num_t **) malloc(n_interface * sizeof(PDM_g_num_t *));
+  PDM_g_num_t **send_data             = (PDM_g_num_t **) malloc(n_interface * sizeof(PDM_g_num_t *));
+  int         **stride_one            = (int         **) malloc(n_interface * sizeof(int         *));
+  PDM_g_num_t **entity_opp_gnum       = (PDM_g_num_t **) malloc(n_interface * sizeof(PDM_g_num_t *));
+
+  PDM_part_to_block_t  **ptb_interface = (PDM_part_to_block_t ** ) malloc(n_interface * sizeof(PDM_part_to_block_t *));
+
+  for (int itrf = 0; itrf < n_interface; itrf++) {
+    // stride_one           [itrf] = (int         *) malloc(2*interface_dn[itrf]*sizeof(int        ));
+    interface_ids_shifted[itrf] = (PDM_g_num_t *) malloc( 2 * interface_dn[itrf] * sizeof(PDM_g_num_t));
+    send_data            [itrf] = (PDM_g_num_t *) malloc( 2 * interface_dn[itrf] * sizeof(PDM_g_num_t));
+    stride_one           [itrf] = (int         *) malloc( 2 * interface_dn[itrf] * sizeof(int        ));
+
+    int dom    = -1;
+    int domopp = -1;
+    if(dom_intrf->multidomain_intrf == PDM_DOMAIN_INTERFACE_MULT_NO) {
+      dom    = interface_dom[itrf][0];
+      domopp = interface_dom[itrf][1];
+    }
+
+    for (int k = 0; k < interface_dn[itrf]; k++) {
+      if (dom_intrf->multidomain_intrf == PDM_DOMAIN_INTERFACE_MULT_YES) {
+        dom    = interface_dom[itrf][2*k  ];
+        domopp = interface_dom[itrf][2*k+1];
+      }
+
+      PDM_g_num_t gnum1 = PDM_ABS(interface_ids[itrf][2*k  ]) + shift_by_domain[dom   ];
+      PDM_g_num_t gnum2 = PDM_ABS(interface_ids[itrf][2*k+1]) + shift_by_domain[domopp];
+      int         sgn1  = PDM_SIGN(interface_ids[itrf][2*k  ]);
+      int         sgn2  = PDM_SIGN(interface_ids[itrf][2*k+1]);
+
+      interface_ids_shifted[itrf][2*k  ] = gnum1;
+      interface_ids_shifted[itrf][2*k+1] = gnum2;
+      send_data            [itrf][2*k  ] = sgn2 * gnum2;
+      send_data            [itrf][2*k+1] = sgn1 * gnum1;
+      stride_one           [itrf][2*k  ] = 1;
+      stride_one           [itrf][2*k+1] = 1;
+    }
+
+    int dn_interface_twice = 2 * interface_dn[itrf];
+
+    PDM_part_to_block_t *ptb = PDM_part_to_block_create(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
+                                                        PDM_PART_TO_BLOCK_POST_MERGE,
+                                                        1.,
+                                                        &interface_ids_shifted[itrf],
+                                                        NULL,
+                                                        &dn_interface_twice,
+                                                        1,
+                                                        dom_intrf->comm);
+
+    int         *recv_stride = NULL;
+    PDM_g_num_t *recv_data   = NULL;
+    int n_connected_l = PDM_part_to_block_exch(ptb,
+                                               sizeof(PDM_g_num_t),
+                                               PDM_STRIDE_VAR_INTERLACED,
+                                               -1,
+                                               stride_one,
+                                     (void **) send_data,
+                                               &recv_stride,
+                                     (void **) &recv_data);
+
+    int n_gnum = PDM_part_to_block_n_elt_block_get(ptb);
+
+    assert(n_gnum == n_connected_l); // ie all recv_stride == 1
+
+    if (1 == 1) {
+      PDM_log_trace_array_long(PDM_part_to_block_block_gnum_get(ptb), n_gnum, "gnum");
+      PDM_log_trace_array_int (recv_stride, n_gnum       , "recv_stride ::");
+      PDM_log_trace_array_long(recv_data  , n_connected_l, "recv_data   ::");
+    }
+
+    free(recv_stride);
+    free(send_data[itrf]);
+
+    ptb_interface  [itrf] = ptb;
+    entity_opp_gnum[itrf] = recv_data;
+
+    // PDM_part_to_block_free(ptb);
+
+  }
+
+  *ptb_interface_out   = ptb_interface;
+  *entity_opp_gnum_out = entity_opp_gnum;
+
+
+  for (int itrf = 0; itrf < n_interface; itrf++) {
+    free(interface_ids_shifted[itrf]);
+    free(stride_one           [itrf]);
+  }
+  free(interface_ids_shifted);
+  free(stride_one           );
+  free(send_data           );
+
+
+
+}
+
+
+
+
+
+
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

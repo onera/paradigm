@@ -15,6 +15,7 @@
 
 #include "pdm.h"
 #include "pdm_part_domain_interface.h"
+#include "pdm_part_to_block.h"
 
 /*=============================================================================
  * Macro definitions
@@ -217,6 +218,17 @@ PDM_part_domain_interface_to_domain_interface
   PDM_g_num_t                  ***entity1_ln_to_gn,
   PDM_domain_interface_t        **ditrf_out,
   int                          ***is_entity1_on_itrf_out
+);
+
+
+void
+PDM_domain_interface_make_flat_view
+(
+  PDM_domain_interface_t  *dom_intrf,
+  PDM_bound_type_t         interface_kind,
+  PDM_g_num_t             *shift_by_domain,
+  PDM_part_to_block_t   ***ptb_interface_out,
+  PDM_g_num_t           ***entity_opp_gnum_out
 );
 
 #ifdef __cplusplus

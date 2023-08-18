@@ -885,15 +885,54 @@ PDM_part_extension_pconnectivity_to_extented_pconnectivity
   PDM_UNUSED(pentity2_extented_to_pentity2_interface_out);
   PDM_UNUSED(comm);
 
+
+  PDM_domain_interface_t  *ditrf              = NULL;
+  int                    **is_entity2_on_itrf = NULL;
+  PDM_part_domain_interface_to_domain_interface(pdi,
+                                                entity2_bound,
+                                                n_part,
+                                                pn_entity2_in,
+                                                pentity2_ln_to_gn_in,
+                                                &ditrf,
+                                                &is_entity2_on_itrf);
+
+
+  PDM_part_to_block_t **ptb_interface_entity2      = NULL;
+  PDM_g_num_t         **interface_entity2_opp_gnum = NULL;
+  PDM_domain_interface_make_flat_view(ditrf,
+                                      entity2_bound,
+                                      shift_by_domain_entity2,
+                                      &ptb_interface_entity2,
+                                      &interface_entity2_opp_gnum);
+
   int i_rank;
   int n_rank;
   PDM_MPI_Comm_rank(comm, &i_rank);
   PDM_MPI_Comm_size(comm, &n_rank);
 
+
+  int n_interface = PDM_part_domain_interface_n_interface_get(pdi);
+
+  for(int i_itrf = 0; i_itrf < n_interface; ++i_itrf) {
+    free(interface_entity2_opp_gnum[i_itrf]);
+    PDM_part_to_block_free(ptb_interface_entity2[i_itrf]);
+  }
+
+  free(interface_entity2_opp_gnum);
+  free(ptb_interface_entity2);
+
+
   int n_part_tot = 0;
   for(int i_dom = 0; i_dom < n_domain; ++i_dom) {
     n_part_tot += n_part[i_dom];
   }
+
+  for(int i_part = 0; i_part < n_part_tot; ++i_part) {
+    free(is_entity2_on_itrf[i_part]);
+  }
+  free(is_entity2_on_itrf);
+
+  PDM_domain_interface_free(ditrf);
 
   int          *pn_entity1           = (int          * ) malloc(n_part_tot * sizeof(int          ));
   PDM_g_num_t **pentity1_ln_to_gn    = (PDM_g_num_t ** ) malloc(n_part_tot * sizeof(PDM_g_num_t *));
@@ -941,6 +980,11 @@ PDM_part_extension_pconnectivity_to_extented_pconnectivity
                                          &pentity2_opp_interface,
                                          &pentity2_opp_sens,
                                          &pentity2_opp_gnum);
+
+  /*
+   *  Il faut sortir le interface ln_to_gn + le shift puis garder un multiblock to part avec les doublé + les sens
+   *
+   */
 
   int          *pn_entity2_opp_gnum_and_itrf = malloc(ln_part_tot * sizeof(int          ));
   PDM_g_num_t **pentity2_opp_gnum_and_itrf   = malloc(ln_part_tot * sizeof(PDM_g_num_t *));
@@ -1185,7 +1229,7 @@ PDM_part_extension_pconnectivity_to_extented_pconnectivity
           PDM_g_num_t entity2_g_num = _pextract_entity1_entity2_gnum[idx_entity1];
           PDM_g_num_t gnum_to_find[2] = {entity2_g_num, _pextract_entity1_interface[i_ref]};
           int pos = PDM_order_binary_search_long(gnum_to_find, _pentity2_opp_gnum_and_itrf, 2, pn_entity2_opp_gnum_and_itrf[i_part]);
-          printf("gnum_to_find = %i/%i --> pos = %i \n", gnum_to_find[0], gnum_to_find[1], pos);
+          log_trace("gnum_to_find = %i/%i --> pos = %i \n", gnum_to_find[0], gnum_to_find[1], pos);
           if(pos == -1) {
             pn_entity2_extented_by_interface[i_part]++;
           }
@@ -1227,12 +1271,12 @@ PDM_part_extension_pconnectivity_to_extented_pconnectivity
           if(pos == -1) {
             int idx_write = pn_entity2_extented_by_interface[i_part]++;
             pentity2_extented_ln_to_gn_by_interface[i_part][2*idx_write  ] = entity2_g_num;
-            pentity2_extented_ln_to_gn_by_interface[i_part][2*idx_write+1] = -_pextract_entity1_interface[i_ref];
+            pentity2_extented_ln_to_gn_by_interface[i_part][2*idx_write+1] = _pextract_entity1_interface[i_ref];
 
             pentity2_extented_triplet_by_interface  [i_part][3*idx_write  ] = _pextract_entity1_entity2_triplet[3*idx_entity1  ];
             pentity2_extented_triplet_by_interface  [i_part][3*idx_write+1] = _pextract_entity1_entity2_triplet[3*idx_entity1+1];
             pentity2_extented_triplet_by_interface  [i_part][3*idx_write+2] = _pextract_entity1_entity2_triplet[3*idx_entity1+2];
-            pentity2_extented_interface_by_interface[i_part][  idx_write  ] = -_pextract_entity1_interface[i_ref];
+            pentity2_extented_interface_by_interface[i_part][  idx_write  ] = _pextract_entity1_interface[i_ref];
           }
         }
       } else { // Second case : Interior entity1
@@ -1255,7 +1299,7 @@ PDM_part_extension_pconnectivity_to_extented_pconnectivity
     }
 
     PDM_log_trace_array_long(pentity2_extented_ln_to_gn_by_interface[i_part],
-                             pn_entity2_extented_by_interface[i_part],
+                             2 * pn_entity2_extented_by_interface[i_part],
                              "pentity2_extented_ln_to_gn_by_interface ::");
 
     PDM_gnum_set_from_parents(gen_gnum_entity2,

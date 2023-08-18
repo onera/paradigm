@@ -642,7 +642,7 @@ _part_extension
       int sgn_interface = PDM_SIGN(pvtx_extented_to_pvtx_interface[i_part][i_vtx]);
       if(i_interface != 0 && translation_vector[PDM_ABS(i_interface)-1] != NULL) {
         for(int k = 0; k < 3; ++k) {
-          pextract_vtx_coords[i_part][3*i_vtx+k] += - sgn_interface * translation_vector[PDM_ABS(i_interface)-1][k];
+          pextract_vtx_coords[i_part][3*i_vtx+k] += sgn_interface * translation_vector[PDM_ABS(i_interface)-1][k];
         }
       }
     }
