@@ -3176,10 +3176,7 @@ _extract_part_group
 
   for(int i_part = 0; i_part < extrp->n_part_in; ++i_part) {
 
-    entity_tag          [i_part] = malloc(    n_entity[i_part] * sizeof(int        ));
     entity_send_n       [i_part] = malloc(    n_entity[i_part] * sizeof(int        ));
-    entity_init_location[i_part] = malloc(3 * n_entity[i_part] * sizeof(int        ));
-    entity_ln_to_gn     [i_part] = malloc(n_entity[i_part] * sizeof(PDM_g_num_t));
 
     for(int i_entity = 0; i_entity < n_entity[i_part]; ++i_entity) {
       entity_send_n[i_part][i_entity] = 0;
@@ -3200,6 +3197,9 @@ _extract_part_group
       entity_send_n[i_part][i_entity] = 0;
     }
 
+    entity_tag          [i_part] = malloc(    entity_send_idx[n_entity[i_part]] * sizeof(int        ));
+    entity_init_location[i_part] = malloc(3 * entity_send_idx[n_entity[i_part]] * sizeof(int        ));
+    entity_ln_to_gn     [i_part] = malloc(    entity_send_idx[n_entity[i_part]] * sizeof(PDM_g_num_t));
 
     for(int i_group = 0; i_group < n_group; ++i_group) {
       for(int idx_entity = 0; idx_entity < n_group_entity[i_group][i_part]; ++idx_entity) {
