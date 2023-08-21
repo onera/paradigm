@@ -3763,7 +3763,7 @@ _extract_part_and_reequilibrate_from_target
   /*
    * Manage group if any
    */
-  for(int i_kind = 0; i_kind < PDM_MESH_ENTITY_MAX; ++i_kind) {
+  for(int i_kind = 0; i_kind < PDM_BOUND_TYPE_MAX; ++i_kind) {
     _extract_part_group(extrp,
      (PDM_bound_type_t) i_kind);
   }
