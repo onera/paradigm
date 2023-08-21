@@ -706,7 +706,7 @@ _part_extension
         }
         concat_face_vtx_n   [pflat_n_face[i_part]+i_face] = pextented_face_vtx_idx[i_part][i_face+1] - pextented_face_vtx_idx[i_part][i_face];
         concat_face_ln_to_gn[pflat_n_face[i_part]+i_face] = pface_extented_ln_to_gn[i_part][i_face];
-        face_kind           [pflat_n_face[i_part]+i_face] = 1;
+        face_kind           [pflat_n_face[i_part]+i_face] = pface_extented_to_pface_interface[i_part][i_face];
       }
 
       concat_face_vtx_idx[0] = 0;
@@ -734,6 +734,7 @@ _part_extension
 
       PDM_log_trace_array_int(concat_face_vtx_idx, pn_concat_face+1, "concat_face_vtx_idx ::");
       // PDM_log_trace_array_int(concat_face_vtx_idx, pn_concat_face+1, "concat_face_vtx_idx ::");
+      PDM_log_trace_connectivity_int(concat_face_vtx_idx, concat_face_vtx, pn_concat_face, "concat_face_vtx ::");
 
 
       char filename[999];
