@@ -480,6 +480,7 @@ int main(int argc, char *argv[])
                                                       PDM_OWNERSHIP_KEEP,
                                                       comm);
 
+  int **group_face_lnum = (int **) malloc(n_part * sizeof(int *));
 
   for(int i_part = 0; i_part < n_part; ++i_part) {
     PDM_extract_part_part_set(extrp,
@@ -520,17 +521,22 @@ int main(int argc, char *argv[])
                             &face_group_ln_to_gn,
                             PDM_OWNERSHIP_KEEP);
 
+    group_face_lnum[i_part] = malloc(group_face_idx[n_bound] * sizeof(int));
+
     PDM_extract_part_n_group_set(extrp,
                                  PDM_BOUND_TYPE_FACE,
                                  n_bound);
 
     for(int i_group = 0; i_group < n_bound; ++i_group) {
+      for (int i_face = group_face_idx[i_group]; i_face < group_face_idx[i_group+1]; ++i_face){
+        group_face_lnum[i_part][i_face] = group_face[i_face]-1;
+      }
       PDM_extract_part_part_group_set(extrp,
                                       i_part,
                                       i_group,
                                       PDM_BOUND_TYPE_FACE,
                                       group_face_idx[i_group+1]-group_face_idx[i_group],
-                                      &group_face[group_face_idx[i_group]],
+                                      &group_face_lnum[i_part][group_face_idx[i_group]],
                                       &face_group_ln_to_gn[group_face_idx[i_group]]);
     }
 
@@ -661,6 +667,11 @@ int main(int argc, char *argv[])
                              pextract_face_group   [i_part]);
     }
   }
+
+  for(int i_part = 0; i_part < n_part; ++i_part) {
+    free(group_face_lnum[i_part]);
+  }
+  free(group_face_lnum);
 
   free(pn_extract_face);
   free(pn_extract_vtx);

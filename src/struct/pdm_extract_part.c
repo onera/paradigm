@@ -3188,7 +3188,7 @@ _extract_part_group
     /* First loop to count */
     for(int i_group = 0; i_group < n_group; ++i_group) {
       for(int idx_entity = 0; idx_entity < n_group_entity[i_group][i_part]; ++idx_entity) {
-        int i_entity = group_entity[i_group][i_part][idx_entity]-1;
+        int i_entity = group_entity[i_group][i_part][idx_entity];
         entity_send_n[i_part][i_entity]++;
       }
     }
@@ -3203,7 +3203,7 @@ _extract_part_group
 
     for(int i_group = 0; i_group < n_group; ++i_group) {
       for(int idx_entity = 0; idx_entity < n_group_entity[i_group][i_part]; ++idx_entity) {
-        int i_entity = group_entity[i_group][i_part][idx_entity]-1;
+        int i_entity = group_entity[i_group][i_part][idx_entity];
         int idx_write = entity_send_idx[i_entity] + entity_send_n[i_part][i_entity]++;
         entity_tag          [i_part][  idx_write  ] = i_group;
         entity_init_location[i_part][3*idx_write  ] = i_rank;
