@@ -997,31 +997,62 @@ PDM_part_extension_pconnectivity_to_extented_pconnectivity
     log_trace("pn_entity2_num[i_part] = %i \n", pn_entity2_num[i_part]);
     PDM_log_trace_array_int(_pentity2_opp_location_idx, pn_entity2_num[i_part]+1, "_pentity2_opp_location_idx ::");
 
+    int *tmp_opp_position = malloc(n_connect_tot * sizeof(int));
     for(int idx_entity = 0; idx_entity < pn_entity2_num[i_part]; ++idx_entity) {
-      // int i_entity = pentity2_num[i_part][idx_entity];
+      int i_entity = pentity2_num[i_part][idx_entity];
       for(int idx_opp = _pentity2_opp_location_idx[idx_entity]; idx_opp < _pentity2_opp_location_idx[idx_entity+1]; ++idx_opp) {
 
         _pentity2_opp_gnum_and_itrf[2*idx_opp  ] = pentity2_opp_gnum     [i_part][idx_opp];
         _pentity2_opp_gnum_and_itrf[2*idx_opp+1] = pentity2_opp_interface[i_part][idx_opp];
+
+        tmp_opp_position[idx_opp] = i_entity;
       }
     }
 
     if(1 == 1) {
       PDM_log_trace_array_long(pentity2_opp_gnum_and_itrf[i_part], 2 * n_connect_tot, "pentity2_opp_gnum_and_itrf ::");
+      PDM_log_trace_array_int(tmp_opp_position, n_connect_tot, "tmp_opp_position ::");
     }
 
     entity2_opp_position        [i_part] = malloc(n_connect_tot * sizeof(int));
+
+    int* order = malloc(n_connect_tot * sizeof(int));
     pn_entity2_opp_gnum_and_itrf[i_part] = PDM_order_inplace_unique_and_order_long(n_connect_tot,
                                                                                    2,
                                                                                    pentity2_opp_gnum_and_itrf[i_part],
-                                                                                   entity2_opp_position[i_part]);
+                                                                                   order);
 
+    PDM_log_trace_array_int(order, n_connect_tot, "order = ");
+
+    if(1 == 1) {
+      PDM_log_trace_array_long(pentity2_opp_gnum_and_itrf[i_part],
+                               2 * pn_entity2_opp_gnum_and_itrf[i_part], "pentity2_opp_gnum_and_itrf ::");
+    }
+    log_trace("pn_entity2_opp_gnum_and_itrf[i_part] = %i \n", pn_entity2_opp_gnum_and_itrf[i_part]);
+    log_trace("n_connect_tot = %i \n", n_connect_tot);
+
+
+    for(int idx_entity = 0; idx_entity < pn_entity2_num[i_part]; ++idx_entity) {
+      int i_entity = pentity2_num[i_part][idx_entity];
+      for(int idx_opp = _pentity2_opp_location_idx[idx_entity]; idx_opp < _pentity2_opp_location_idx[idx_entity+1]; ++idx_opp) {
+        entity2_opp_position[i_part][idx_opp] = tmp_opp_position[order[idx_opp]];
+      }
+    }
+
+    for(int i = 0; i < pn_entity2_opp_gnum_and_itrf[i_part]; ++i) {
+      entity2_opp_position[i_part][i] = tmp_opp_position[order[i]];
+    }
+
+
+    free(order);
+    free(tmp_opp_position);
 
     // Il faut transformer en vvrai pentty2_num
 
 
     if(1 == 1) {
-      PDM_log_trace_array_int(entity2_opp_position[i_part], pn_entity2_opp_gnum_and_itrf[i_part], "entity2_opp_position = ");
+      PDM_log_trace_array_int(entity2_opp_position[i_part],
+                              pn_entity2_opp_gnum_and_itrf[i_part], "entity2_opp_position = ");
       PDM_log_trace_array_int(pentity2_num[i_part], pn_entity2_num[i_part], "pentity2_num ::");
     }
   }
@@ -1589,6 +1620,8 @@ PDM_part_extension_pconnectivity_to_extented_pconnectivity
           PDM_g_num_t gnum_to_find[2] = {entity2_g_num, _pextract_entity1_interface[i_ref]};
 
           int pos = PDM_order_binary_search_long(gnum_to_find, _pentity2_opp_gnum_and_itrf, 2, n_entity2_opp_position);
+          log_trace("\t Search %i/%i in _pentity2_opp_gnum_and_itrf -> pos = %i \n", gnum_to_find[0], gnum_to_find[1], pos);
+
           if(pos == -1) {
             /*
              * Subcase :
@@ -1627,7 +1660,7 @@ PDM_part_extension_pconnectivity_to_extented_pconnectivity
             int pos2      = entity2_opp_position[i_part][pos ];
             int i_entity2 = pentity2_num        [i_part][pos2];
 
-            _pextract_entity1_entity2[idx_entity1] = ( i_entity2 + 1);
+            _pextract_entity1_entity2[idx_entity1] = ( pos2 + 1);
 
             log_trace("\t Translate cas 2 : %i  ---> (idx_entity1 = %i) --> %i (pos=%i/pos2=%i) \n", entity2_g_num, idx_entity1, _pextract_entity1_entity2[idx_entity1], pos, pos2);
 
