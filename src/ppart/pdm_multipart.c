@@ -2758,13 +2758,16 @@ PDM_multipart_create
 
   // multipart->dmeshes_ids = (int *) malloc(multipart->n_zone * sizeof(int));
 
-  multipart->dmeshes       = (PDM_dmesh_t                **) malloc(multipart->n_zone * sizeof(PDM_dmesh_t                *));
-  multipart->dmeshes_nodal = (PDM_dmesh_nodal_t          **) malloc(multipart->n_zone * sizeof(PDM_dmesh_nodal_t          *));
-  multipart->dmn_to_dm     = (PDM_dmesh_nodal_to_dmesh_t **) malloc(multipart->n_zone * sizeof(PDM_dmesh_nodal_to_dmesh_t *));
+  multipart->dmeshes          = (PDM_dmesh_t                **) malloc(multipart->n_zone * sizeof(PDM_dmesh_t                *));
+  multipart->dmeshes_nodal    = (PDM_dmesh_nodal_t          **) malloc(multipart->n_zone * sizeof(PDM_dmesh_nodal_t          *));
+  multipart->dmn_to_dm        = (PDM_dmesh_nodal_to_dmesh_t **) malloc(multipart->n_zone * sizeof(PDM_dmesh_nodal_to_dmesh_t *));
+  multipart->is_owner_dmeshes = (PDM_bool_t                  *) malloc(multipart->n_zone * sizeof(PDM_bool_t                  ));
+
   for (int izone = 0; izone < multipart->n_zone; ++izone) {
-    multipart->dmeshes_nodal[izone] = NULL;
-    multipart->dmeshes      [izone] = NULL;
-    multipart->dmn_to_dm    [izone] = NULL;
+    multipart->dmeshes_nodal   [izone] = NULL;
+    multipart->dmeshes         [izone] = NULL;
+    multipart->dmn_to_dm       [izone] = NULL;
+    multipart->is_owner_dmeshes[izone] = PDM_FALSE;
   }
 
   multipart->pmeshes       = (_part_mesh_t *) malloc(multipart->n_zone * sizeof(_part_mesh_t));
@@ -2834,6 +2837,95 @@ void PDM_multipart_register_dmesh_nodal
   assert(zone_id < multipart->n_zone);
   assert(multipart->dmeshes_nodal[zone_id] == NULL);
   multipart->dmeshes_nodal[zone_id] = dmesh_nodal;
+}
+
+/**
+ * \brief Set part
+ *
+ * \param [in]   multipart              Pointer to \ref PDM_multipart_t object
+ * \param [in]   i_zone                 Id of zone
+ * \param [in]   dn_cell                Number of distributed cells
+ * \param [in]   dn_face                Number of distributed faces
+ * \param [in]   dn_vtx                 Number of distributed vertices
+ * \param [in]   n_face_group           Number of face groups
+ * \param [in]   dcell_face_idx         Distributed cell face connectivity index or NULL
+ *                                      (size : dn_cell + 1, numbering : 0 to n-1)
+ * \param [in]   dcell_face             Distributed cell face connectivity or NULL
+ *                                      (size : dface_vtx_idx[dn_cell], numbering : 1 to n)
+ * \param [in]   dface_cell             Distributed face cell connectivity or NULL
+ *                                      (size : 2 * dn_face, numbering : 1 to n)
+ * \param [in]   dface_vtx_idx          Distributed face to vertex connectivity index
+ *                                      (size : dn_face + 1, numbering : 0 to n-1)
+ * \param [in]   dface_vtx              Distributed face to vertex connectivity
+ *                                      (size : dface_vtx_idx[dn_face], numbering : 1 to n)
+ * \param [in]   dvtx_coord             Distributed vertex coordinates
+ *                                      (size : 3*dn_vtx)
+ * \param [in]   dface_group_idx        Index of distributed faces list of each group
+ *                                      (size = n_face_group + 1) or NULL
+ * \param [in]   dface_group            Distributed faces list of each group
+ *                                      (size = dface_group[dface_group_idx[n_face_group]], numbering : 1 to n)
+ *                                      or NULL
+ *
+ */
+void
+PDM_multipart_part_set
+(
+ PDM_multipart_t             *multipart,
+ const int                    i_zone,
+ const int                    dn_cell,
+ const int                    dn_face,
+ const int                    dn_vtx,
+ const int                    n_face_group,
+ const int                   *dcell_face_idx,
+ const PDM_g_num_t           *dcell_face,
+ const PDM_g_num_t           *dface_cell,
+ const int                   *dface_vtx_idx,
+ const PDM_g_num_t           *dface_vtx,
+ const double                *dvtx_coord,
+ const int                   *dface_group_idx,
+ const PDM_g_num_t           *dface_group
+)
+{
+
+  // Create dmesh
+  PDM_dmesh_t* dm = PDM_dmesh_create(PDM_OWNERSHIP_KEEP,
+                                     dn_cell,
+                                     dn_face,
+                                     0,
+                                     dn_vtx,
+                                     multipart->comm);
+
+  PDM_dmesh_vtx_coord_set(dm,
+             (double  *)  dvtx_coord,
+                          PDM_OWNERSHIP_USER);
+
+  PDM_dmesh_connectivity_set(dm,
+                             PDM_CONNECTIVITY_TYPE_FACE_VTX,
+             (PDM_g_num_t *) dface_vtx,
+             (int         *) dface_vtx_idx,
+                             PDM_OWNERSHIP_USER);
+
+  PDM_dmesh_connectivity_set(dm,
+                             PDM_CONNECTIVITY_TYPE_FACE_CELL,
+             (PDM_g_num_t *) dface_cell,
+                             NULL,
+                             PDM_OWNERSHIP_USER);
+
+  PDM_dmesh_connectivity_set(dm,
+                             PDM_CONNECTIVITY_TYPE_CELL_FACE,
+             (PDM_g_num_t *) dcell_face,
+             (int         *) dcell_face_idx,
+                             PDM_OWNERSHIP_USER);
+
+  PDM_dmesh_bound_set(dm,
+                      PDM_BOUND_TYPE_FACE,
+                      n_face_group,
+      (PDM_g_num_t *) dface_group,
+      (int         *) dface_group_idx,
+                      PDM_OWNERSHIP_USER);
+
+  PDM_multipart_register_block(multipart, i_zone, dm);
+  multipart->is_owner_dmeshes[i_zone] = PDM_TRUE;
 }
 
 /**
@@ -3271,7 +3363,6 @@ const int        i_part,
                                  &face_vtx,
                                  &face_vtx_idx,
                                  PDM_OWNERSHIP_BAD_VALUE);
-
   if(*n_cell > 0) {
     *s_cell_face = cell_face_idx[*n_cell];
   }
@@ -3802,6 +3893,12 @@ PDM_multipart_free
 
     PDM_part_mesh_free(multipart->pmeshes[i_zone].pmesh);
 
+    if(multipart->dmeshes[i_zone] != NULL ) {
+      if(multipart->is_owner_dmeshes[i_zone] == PDM_TRUE) {
+        PDM_dmesh_free(multipart->dmeshes[i_zone]);
+      }
+    }
+
     if(multipart->dmn_to_dm[i_zone] != NULL) {
       PDM_dmesh_nodal_to_dmesh_free(multipart->dmn_to_dm[i_zone]);
       multipart->dmn_to_dm[i_zone] = NULL;
@@ -3811,6 +3908,7 @@ PDM_multipart_free
   free(multipart->dmeshes);
   free(multipart->dmeshes_nodal);
   free(multipart->dmn_to_dm);
+  free(multipart->is_owner_dmeshes);
   free(multipart->n_part);
 
   //PDM_part_renum_method_purge();

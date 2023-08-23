@@ -77,6 +77,7 @@ struct _pdm_multipart_t {
 
   PDM_dmesh_t **dmeshes;             // Ids of dmesh structure storing
                                      // distributed meshes (size = n_zone)
+  PDM_bool_t   *is_owner_dmeshes;
   PDM_dmesh_nodal_t          **dmeshes_nodal;
   PDM_dmesh_nodal_to_dmesh_t **dmn_to_dm;
 

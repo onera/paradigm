@@ -133,6 +133,52 @@ void PDM_multipart_register_dmesh_nodal
        PDM_dmesh_nodal_t *dmesh_nodal
 );
 
+/**
+ * \brief Set part
+ *
+ * \param [in]   multipart              Pointer to \ref PDM_multipart_t object
+ * \param [in]   i_zone                 Id of zone
+ * \param [in]   dn_cell                Number of distributed cells
+ * \param [in]   dn_face                Number of distributed faces
+ * \param [in]   dn_vtx                 Number of distributed vertices
+ * \param [in]   n_face_group           Number of face groups
+ * \param [in]   dcell_face_idx         Distributed cell face connectivity index or NULL
+ *                                      (size : dn_cell + 1, numbering : 0 to n-1)
+ * \param [in]   dcell_face             Distributed cell face connectivity or NULL
+ *                                      (size : dface_vtx_idx[dn_cell], numbering : 1 to n)
+ * \param [in]   dface_cell             Distributed face cell connectivity or NULL
+ *                                      (size : 2 * dn_face, numbering : 1 to n)
+ * \param [in]   dface_vtx_idx          Distributed face to vertex connectivity index
+ *                                      (size : dn_face + 1, numbering : 0 to n-1)
+ * \param [in]   dface_vtx              Distributed face to vertex connectivity
+ *                                      (size : dface_vtx_idx[dn_face], numbering : 1 to n)
+ * \param [in]   dvtx_coord             Distributed vertex coordinates
+ *                                      (size : 3*dn_vtx)
+ * \param [in]   dface_group_idx        Index of distributed faces list of each group
+ *                                      (size = n_face_group + 1) or NULL
+ * \param [in]   dface_group            Distributed faces list of each group
+ *                                      (size = dface_group[dface_group_idx[n_face_group]], numbering : 1 to n)
+ *                                      or NULL
+ *
+ */
+void
+PDM_multipart_part_set
+(
+ PDM_multipart_t             *multipart,
+ const int                    i_zone,
+ const int                    dn_cell,
+ const int                    dn_face,
+ const int                    dn_vtx,
+ const int                    n_face_group,
+ const int                   *dcell_face_idx,
+ const PDM_g_num_t           *dcell_face,
+ const PDM_g_num_t           *dface_cell,
+ const int                   *dface_vtx_idx,
+ const PDM_g_num_t           *dface_vtx,
+ const double                *dvtx_coord,
+ const int                   *dface_group_idx,
+ const PDM_g_num_t           *dface_group
+);
 
 /**
  *
