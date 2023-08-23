@@ -464,8 +464,10 @@ int main(int argc, char *argv[])
   /*
    * Extract
    */
-  int n_part_out = 1;
-  int n_bound    = 0;
+  int n_part_out       = 1;
+  int n_bound          = 0;
+  int n_fake_group_vtx = 2;
+
   // PDM_extract_part_kind_t extract_kind = PDM_EXTRACT_PART_KIND_LOCAL;
   PDM_extract_part_kind_t extract_kind = PDM_EXTRACT_PART_KIND_REEQUILIBRATE;
   // PDM_split_dual_t        split_dual_method = PDM_SPLIT_DUAL_WITH_PTSCOTCH;
@@ -480,6 +482,10 @@ int main(int argc, char *argv[])
                                                       PDM_OWNERSHIP_KEEP,
                                                       comm);
 
+  int         **fake_group_vtx           = (int         **) malloc(n_part * sizeof(int         *));
+  int         **fake_group_face          = (int         **) malloc(n_part * sizeof(int         *));
+  int         **fake_group_face_idx      = (int         **) malloc(n_part * sizeof(int         *));
+  PDM_g_num_t **fake_face_group_ln_to_gn = (PDM_g_num_t **) malloc(n_part * sizeof(PDM_g_num_t *));
 
   for(int i_part = 0; i_part < n_part; ++i_part) {
     PDM_extract_part_part_set(extrp,
@@ -520,18 +526,69 @@ int main(int argc, char *argv[])
                             &face_group_ln_to_gn,
                             PDM_OWNERSHIP_KEEP);
 
+    /** Vertex groups **/
+
+    /* Add 2 fake groups */
+    fake_group_vtx[i_part] = malloc(pn_vtx[i_part] * sizeof(int        ));
+
+    for (int i_vtx = 0; i_vtx < pn_vtx[i_part]; ++i_vtx){
+      fake_group_vtx[i_part][i_vtx] = i_vtx;
+    }
+
+    PDM_extract_part_n_group_set(extrp,
+                                 PDM_BOUND_TYPE_VTX,
+                                 n_fake_group_vtx);
+
+    for(int i_group = 0; i_group < n_fake_group_vtx; ++i_group) {
+      PDM_extract_part_part_group_set(extrp,
+                                      i_part,
+                                      i_group,
+                                      PDM_BOUND_TYPE_VTX,
+                                      pn_vtx[i_part],
+                                      fake_group_vtx[i_part],
+                                      pvtx_ln_to_gn[i_part]);
+    }
+
+    /** Face groups **/
+
+    /* Add n_bound+1 groups */
+    int fake_group_n_face = group_face_idx[n_bound]-group_face_idx[n_bound-1];
+
+    fake_group_face[i_part]          = malloc((group_face_idx[n_bound]+fake_group_n_face) * sizeof(int        ));
+    fake_group_face_idx[i_part]      = malloc((n_bound+2)                                 * sizeof(int        ));
+    fake_face_group_ln_to_gn[i_part] = malloc((group_face_idx[n_bound]+fake_group_n_face) * sizeof(PDM_g_num_t));
+
+    fake_group_face_idx[i_part][0] = 0;
+
+    /* by copying existing groups */
+    for(int i_group = 0; i_group < n_bound; ++i_group) {
+      fake_group_face_idx[i_part][i_group+1] = group_face_idx[i_group+1];
+      for (int i_face = group_face_idx[i_group]; i_face < group_face_idx[i_group+1]; ++i_face){
+        fake_group_face[i_part][i_face]          = group_face[i_face]-1;
+        fake_face_group_ln_to_gn[i_part][i_face] = face_group_ln_to_gn[i_face];
+      }
+    }
+
+    /* and duplicating the last group */
+    fake_group_face_idx[i_part][n_bound+1] = fake_group_face_idx[i_part][n_bound] + fake_group_n_face;
+    for (int i_face = fake_group_face_idx[i_part][n_bound]; i_face < fake_group_face_idx[i_part][n_bound+1]; ++i_face){
+      int j_face = i_face - fake_group_n_face;
+      fake_group_face[i_part][i_face]          = group_face[j_face]-1;
+      fake_face_group_ln_to_gn[i_part][i_face] = face_group_ln_to_gn[j_face];
+    }
+
     PDM_extract_part_n_group_set(extrp,
                                  PDM_BOUND_TYPE_FACE,
-                                 n_bound);
+                                 n_bound+1);
 
-    for(int i_group = 0; i_group < n_bound; ++i_group) {
+    for(int i_group = 0; i_group < n_bound+1; ++i_group) {
       PDM_extract_part_part_group_set(extrp,
                                       i_part,
                                       i_group,
                                       PDM_BOUND_TYPE_FACE,
-                                      group_face_idx[i_group+1]-group_face_idx[i_group],
-                                      &group_face[group_face_idx[i_group]],
-                                      &face_group_ln_to_gn[group_face_idx[i_group]]);
+                                      fake_group_face_idx[i_part][i_group+1]-fake_group_face_idx[i_part][i_group],
+                                      &fake_group_face[i_part][group_face_idx[i_group]],
+                                      &fake_face_group_ln_to_gn[i_part][group_face_idx[i_group]]);
     }
 
     // PDM_log_trace_array_int(selected_l_num[i_part], pn_select_cell[i_part], "selected_l_num ::");
@@ -590,7 +647,32 @@ int main(int argc, char *argv[])
       pextract_face_group[i_part][i_face] = -1;
     }
 
-    for(int i_group = 0; i_group < n_bound; ++i_group) {
+    for(int i_group = 0; i_group < n_fake_group_vtx; ++i_group) {
+      int          pn_extract_group_entity               = 0;
+      int         *pextract_group_entity                 = NULL;
+      PDM_g_num_t *pextract_group_entity_ln_to_gn        = NULL;
+      PDM_g_num_t *pextract_group_entity_parent_ln_to_gn = NULL;
+      PDM_extract_part_group_get(extrp,
+                                 PDM_BOUND_TYPE_VTX,
+                                 i_part,
+                                 i_group,
+                                 &pn_extract_group_entity,
+                                 &pextract_group_entity,
+                                 &pextract_group_entity_ln_to_gn,
+                                 &pextract_group_entity_parent_ln_to_gn,
+                                  PDM_OWNERSHIP_KEEP);
+
+      /* Check extraction */
+      if (i_group == 0){
+        assert(pn_extract_group_entity == 72);
+      }
+      if (i_group == 1){
+        assert(pn_extract_group_entity == 72);
+      }
+
+    }
+
+    for(int i_group = 0; i_group < n_bound+1; ++i_group) {
       int          pn_extract_group_entity               = 0;
       int         *pextract_group_entity                 = NULL;
       PDM_g_num_t *pextract_group_entity_ln_to_gn        = NULL;
@@ -608,6 +690,14 @@ int main(int argc, char *argv[])
       for(int idx_entity = 0; idx_entity < pn_extract_group_entity; ++idx_entity) {
         int i_face = pextract_group_entity[idx_entity];
         pextract_face_group[i_part][i_face] = i_group;
+      }
+
+      /* Check extraction */
+      if (i_group == n_bound-1){
+        assert(pn_extract_group_entity == 10);
+      }
+      if (i_group == n_bound){
+        assert(pn_extract_group_entity == 10);
       }
 
     }
@@ -661,6 +751,17 @@ int main(int argc, char *argv[])
                              pextract_face_group   [i_part]);
     }
   }
+
+  for(int i_part = 0; i_part < n_part; ++i_part) {
+    free(fake_group_vtx[i_part]);
+    free(fake_group_face[i_part]);
+    free(fake_group_face_idx[i_part]);
+    free(fake_face_group_ln_to_gn[i_part]);
+  }
+  free(fake_group_vtx);
+  free(fake_group_face);
+  free(fake_group_face_idx);
+  free(fake_face_group_ln_to_gn);
 
   free(pn_extract_face);
   free(pn_extract_vtx);
