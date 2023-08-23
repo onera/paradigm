@@ -885,7 +885,6 @@ PDM_part_extension_pconnectivity_to_extented_pconnectivity
   PDM_UNUSED(pentity2_extented_to_pentity2_interface_out);
   PDM_UNUSED(comm);
 
-
   PDM_domain_interface_t  *ditrf              = NULL;
   int                    **is_entity2_on_itrf = NULL;
   PDM_part_domain_interface_to_domain_interface(pdi,

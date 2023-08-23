@@ -697,7 +697,7 @@ _part_extension
         }
         concat_face_vtx_n  [i_face] = pflat_face_vtx_idx[i_part][i_face+1] - pflat_face_vtx_idx[i_part][i_face];
         concat_face_ln_to_gn[i_face] = pflat_face_ln_to_gn[i_part][i_face];
-        face_kind           [i_face] = 0;
+        face_kind           [i_face] = n_interface+4;
       }
 
       for(int i_face = 0; i_face < pn_face_extented[i_part]; ++i_face) {
@@ -1202,6 +1202,28 @@ int main
       }
 
 
+      double *pflat_vtx_coords = NULL;
+      int n_vtx = PDM_multipart_part_vtx_coord_get(mpart,
+                                                   i_dom,
+                                                   i_part,
+                                                   &pflat_vtx_coords,
+                                                   PDM_OWNERSHIP_KEEP);
+
+
+      char filename[999];
+      sprintf(filename, "out_edge_i_part=%i_%i_%i.vtk", i_part, i_dom, i_rank);
+      PDM_vtk_write_std_elements(filename,
+                                 n_vtx,
+                                 pflat_vtx_coords,
+                                 pvtx_ln_to_gn[i_dom][i_part],
+                                 PDM_MESH_NODAL_BAR2,
+                                 pn_edge[i_dom][i_part],
+                                 pedge_vtx     [i_dom][i_part],
+                                 pedge_ln_to_gn[i_dom][i_part],
+                                 0,
+                                 NULL,
+                                 NULL);
+
     }
   }
 
@@ -1224,7 +1246,6 @@ int main
                                                                                    pface_ln_to_gn,
                                                                                    pedge_ln_to_gn,
                                                                                    pvtx_ln_to_gn);
-
   PDM_part_domain_interface_add(pdi,
                                 PDM_BOUND_TYPE_VTX,
                                 PDM_BOUND_TYPE_EDGE,
