@@ -208,6 +208,12 @@ PDM_part_mesh_tn_part_get
  PDM_part_mesh_t          *pmesh
 );
 
+int
+PDM_part_mesh_n_part_get
+(
+ PDM_part_mesh_t          *pmesh
+);
+
 void
 PDM_part_mesh_bound_set
 (
