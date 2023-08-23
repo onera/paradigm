@@ -1191,6 +1191,11 @@ _alltotall_stride_var_iexch
           int idx = ptp->recv_buffer_to_ref_lnum2[i][k];
           blk_recv_stride[idx] = _part2_stride[i][k];
         }
+        for (int k = ptp->recv_buffer_to_duplicate_idx[i][j]; k < ptp->recv_buffer_to_duplicate_idx[i][j+1]; k++) {
+          int idx      = ptp->recv_buffer_to_duplicate[i][2*k  ];
+          int idx_data = ptp->recv_buffer_to_duplicate[i][2*k+1];
+          blk_recv_stride[idx] = _part2_stride[i][idx_data];
+        }
       }
     }
   }
@@ -1605,6 +1610,11 @@ _p2p_stride_var_iexch
         for (int k = ptp->gnum1_come_from_idx[i][j]; k < ptp->gnum1_come_from_idx[i][j+1]; k++) {
           int idx = ptp->recv_buffer_to_ref_lnum2[i][k];
           blk_recv_stride[idx] = _part2_stride[i][k];
+        }
+        for (int k = ptp->recv_buffer_to_duplicate_idx[i][j]; k < ptp->recv_buffer_to_duplicate_idx[i][j+1]; k++) {
+          int idx      = ptp->recv_buffer_to_duplicate[i][2*k  ];
+          int idx_data = ptp->recv_buffer_to_duplicate[i][2*k+1];
+          blk_recv_stride[idx] = _part2_stride[i][idx_data];
         }
       }
     }
@@ -4658,9 +4668,9 @@ PDM_part_to_part_iexch_wait
 
     if (ptp->async_exch_k_comm[request] == PDM_MPI_COMM_KIND_P2P) {
 
-      PDM_part_to_part_irecv_wait (ptp, ptp->async_exch_subrequest[request][0]);
+      PDM_part_to_part_irecv_wait (ptp, ptp->async_exch_subrequest[request][1]);
 
-      PDM_part_to_part_issend_wait (ptp, ptp->async_exch_subrequest[request][1]);
+      PDM_part_to_part_issend_wait (ptp, ptp->async_exch_subrequest[request][0]);
 
     }
 

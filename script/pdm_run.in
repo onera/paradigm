@@ -22,9 +22,9 @@ Help()
   echo "-srun                               Run with srun command (default : mpirun)"
   echo "-no_log_vtk                         Exit on error if test writes some log and vtk files"
   echo "-n_avail_rank                       Number of available ranks to run cases"
-  echo "-t <\"test name and its options\">    Test name (Name of the executable) "
-  echo "-n <\"number of ranks\">            Number of ranks of executables (template : n_rannks_exe1:...:n_rannks_exen)"
-  echo "-args <\"options of executables\">    Arguments of each executable (template : arg1exe1;...;argnexe1:...:arg1exen;...;argnexen) "
+  echo "-t <\"test name and its options\">  Test name (Name of the executable) "
+  echo "-n <\"number of ranks\">            Number of ranks for each executable (template : n_ranks_exe1:...:n_ranks_exen)"
+  echo "-args <\"options of executables\">  Arguments of each executable (template : arg1exe1;...;argnexe1:...:arg1exen;...;argnexen) "
   echo "-output-junit  <file>               Export to Format XML JUnit"
   echo "-timeout       <time>               time (minute) (default 2)"
   echo

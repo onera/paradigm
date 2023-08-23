@@ -84,8 +84,8 @@ PDM_mesh_location_n_part_cloud_set
  * \param [in]   i_point_cloud   Point cloud identifier
  * \param [in]   i_part          Partition identifier
  * \param [in]   n_points        Number of points
- * \param [in]   coords          Point coordinates
- * \param [in]   gnum            Point global numbers
+ * \param [in]   coords          Point coordinates (size : 3 * \p n_points)
+ * \param [in]   gnum            Point global numbers (size : \p n_points)
  *
  */
 

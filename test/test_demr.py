@@ -167,10 +167,10 @@ for i in range(n_segment):
 
 # on (re-)construit une numérotation absolue pour les segments
 gen_gnum = PDM.GlobalNumbering(3, 1, 0, 1., comm)
-gen_gnum.gnum_set_from_coords(0, n_segment, segment_base_coord, np.ones(n_segment))
-gen_gnum.gnum_compute()
+gen_gnum.set_from_coords(0, segment_base_coord, np.ones(n_segment))
+gen_gnum.compute()
 
-segment_ln_to_gn = gen_gnum.gnum_get(0)["gnum"]
+segment_ln_to_gn = gen_gnum.get(0)
 ############################################################################
 
 

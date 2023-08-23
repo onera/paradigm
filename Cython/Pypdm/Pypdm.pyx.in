@@ -659,3 +659,7 @@ include "pdm_dmesh_extract.pxi"
 # PDM_distrib:
 # -------------------
 include "pdm_distrib.pxi"
+
+# PDM_vtk:
+# -------------------
+include "pdm_vtk.pxi"

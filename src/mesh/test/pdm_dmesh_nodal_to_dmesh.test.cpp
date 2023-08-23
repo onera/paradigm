@@ -99,8 +99,8 @@ MPI_TEST_CASE("[PDM_dmesh_nodal_to_dmesh] decomposes hexa ",1) {
     PDM_dmesh_t* dm;
     PDM_dmesh_nodal_to_dmesh_get_dmesh(dmntodm, 0, &dm);
 
-    int dn_cell, dn_face, dn_vtx, dn_edge, n_bnd, n_join;
-    PDM_dmesh_dims_get(dm, &dn_cell, &dn_face, &dn_edge, &dn_vtx, &n_bnd, &n_join);
+    int dn_cell, dn_face, dn_vtx, dn_edge;
+    PDM_dmesh_dims_get(dm, &dn_cell, &dn_face, &dn_edge, &dn_vtx);
 
     CHECK( dn_cell == 4 );
     CHECK( dn_face == 20);
@@ -238,8 +238,8 @@ MPI_TEST_CASE("[PDM_dmesh_nodal_to_dmesh] decomposes tri ",1) {
   // PDM_g_num_t edge_face_expected_p0[32]    = {3, 0, 8, 0, 4, 0, 3, 0, 6, 0, 7, 3, 8, 7, 2, 0,
   //                                             4, 8, 6, 4, 5, 0, 2, 6, 1, 5, 5, 0, 1, 2, 7, 1};
 
-  int dn_cell, dn_face, dn_vtx, dn_edge, n_bnd, n_join;
-  PDM_dmesh_dims_get(dm, &dn_cell, &dn_face, &dn_edge, &dn_vtx, &n_bnd, &n_join);
+  int dn_cell, dn_face, dn_vtx, dn_edge;
+  PDM_dmesh_dims_get(dm, &dn_cell, &dn_face, &dn_edge, &dn_vtx);
 
   MPI_CHECK(0, dn_face == 8);
 
@@ -346,8 +346,8 @@ MPI_TEST_CASE("[PDM_dmesh_nodal_to_dmesh] decomposes tri 2p ",2) {
   // PDM_g_num_t edge_face_expected_p1[16]    = {4, 8, 6, 4, 5, 0, 2, 6, 1, 5, 5, 0, 1, 2, 7, 1}; // OLD
   PDM_g_num_t edge_face_expected_p1[16]    = {8, 4, 4, 6, 5, 0, 6, 2, 5, 1, 5, 0, 2, 1, 1, 7};
 
-  int dn_cell, dn_face, dn_vtx, dn_edge, n_bnd, n_join;
-  PDM_dmesh_dims_get(dm, &dn_cell, &dn_face, &dn_edge, &dn_vtx, &n_bnd, &n_join);
+  int dn_cell, dn_face, dn_vtx, dn_edge;
+  PDM_dmesh_dims_get(dm, &dn_cell, &dn_face, &dn_edge, &dn_vtx);
 
   MPI_CHECK(0, dn_face == 4);
   MPI_CHECK(1, dn_face == 4);
@@ -441,8 +441,8 @@ MPI_TEST_CASE("[PDM_dmesh_nodal_to_dmesh] find missing ridges ",2) {
   PDM_dmesh_t* dm;
   PDM_dmesh_nodal_to_dmesh_get_dmesh(dmntodm, 0, &dm);
 
-  int dn_cell, dn_face, dn_vtx, dn_edge, n_bnd, n_join;
-  PDM_dmesh_dims_get(dm, &dn_cell, &dn_face, &dn_edge, &dn_vtx, &n_bnd, &n_join);
+  int dn_cell, dn_face, dn_vtx, dn_edge;
+  PDM_dmesh_dims_get(dm, &dn_cell, &dn_face, &dn_edge, &dn_vtx);
 
   MPI_CHECK(0, dn_face == 2);
   MPI_CHECK(1, dn_face == 2);

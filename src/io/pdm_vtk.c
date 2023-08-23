@@ -38,6 +38,132 @@ extern "C" {
  * Fortran function header
  *============================================================================*/
 
+static char *
+_fortran_to_c_string (
+  const char *application_name_f,
+  const int l_application_name_f
+)
+{
+  char *application_name_c;
+  int imin = 0;
+  int imax = 0;
+
+  while (imin < l_application_name_f && application_name_f[imin] == ' ') {
+    imin++;
+  }
+  while (imax < l_application_name_f && application_name_f[l_application_name_f - imax - 1] == ' ') {
+    imax++;
+  }
+
+  imax = l_application_name_f - imax - 1;
+
+  assert(imax >= imin);
+
+  if ((imax == l_application_name_f) || (imin == l_application_name_f)) {
+    application_name_c =  (char *) malloc (sizeof(char) * (1));
+    // application_name_c = (char *) malloc(sizeof(char) * 1);
+    application_name_c[0] = '\0';
+  }
+  else {
+    int size = imax - imin + 2;
+    application_name_c =  (char *) malloc (sizeof(char) * (size));
+    // application_name_c = (char *) malloc(sizeof(char) * size);
+    int index = 0;
+    for (int k = imin ; k <= imax ; k++) {
+      application_name_c[index++] = application_name_f[k];
+    }
+    application_name_c[index] = '\0';
+  }
+
+  return application_name_c;
+}
+
+/**
+ * \brief Export a polygonal mesh to ASCII VTK format (polydata)
+ *
+ * \param [in]  filename      Output file name
+ * \param [in]  l_filename    Length of filename
+ * \param [in]  n_vtx         Number of vertices
+ * \param [in]  vtx_coord     Coordinates of the vertices (size = 3 * \ref n_vtx)
+ *                            (x0, y0, z0, x1, ...)
+ * \param [in]  vtx_g_num     Global ids of the vertices (or NULL)
+ * \param [in]  n_face        Number of faces
+ * \param [in]  face_vtx_idx  Index of the face-vertex connectivity (size = \ref n_face + 1)
+ * \param [in]  face_vtx      Face-vertex connectivity (size = \ref face_vtx_idx[\ref n_face])
+ * \param [in]  face_g_num    Global ids of the faces (or NULL)
+ * \param [in]  face_color    Integer color of the faces (or NULL)
+ *
+ */
+
+void
+PDM_vtk_write_polydata_cf
+(
+ const char         *filename,
+ const int           l_filename,
+ const int           n_vtx,
+ const double*       vtx_coord,
+ const PDM_g_num_t*  vtx_g_num,
+ const int           n_face,
+ const int*          face_vtx_idx,
+ const int*          face_vtx,
+ const PDM_g_num_t * face_g_num,
+ const int*          face_color
+)
+{
+  char *c_filename = NULL;
+
+  c_filename = _fortran_to_c_string(filename, l_filename);
+
+  PDM_vtk_write_polydata(c_filename,
+                         n_vtx,
+                         vtx_coord,
+                         vtx_g_num,
+                         n_face,
+                         face_vtx_idx,
+                         face_vtx,
+                         face_g_num,
+                         face_color);
+
+  free(c_filename);
+}
+
+/**
+ * \brief Export a point cloud to ASCII VTK format (unstructured grid of points)
+ *
+ * \param [in]  filename      Output file name
+ * \param [in]  l_filename    Length of filename
+ * \param [in]  n_vtx         Number of points
+ * \param [in]  vtx_coord     Coordinates of the points (size = 3 * \ref n_vtx)
+ *                            (x0, y0, z0, x1, ...)
+ * \param [in]  vtx_g_num     Global ids of the points (or NULL)
+ * \param [in]  color         Integer color of the points (or NULL)
+ *
+ */
+
+void
+PDM_vtk_write_point_cloud_cf
+(
+ const char        *filename,
+ const int           l_filename,
+ const int          n_vtx,
+ const double*      vtx_coord,
+ const PDM_g_num_t* vtx_g_num,
+ const int*         color
+)
+{
+  char *c_filename = NULL;
+
+  c_filename = _fortran_to_c_string(filename, l_filename);
+
+  PDM_vtk_write_point_cloud(c_filename,
+                            n_vtx,
+                            vtx_coord,
+                            vtx_g_num,
+                            color);
+
+  free(c_filename);
+}
+
 /*============================================================================
  * Local macro definitions
  *============================================================================*/

@@ -82,8 +82,8 @@ typedef struct {
 
 
 /**
- * \struct _PDM_Dist_t
- * \brief  Distance to a mesh surface structure
+ * \struct _pdm_mesh_location_t
+ * \brief  Structure to locate point clouds inside a mesh
  *
  */
 struct _pdm_mesh_location_t {

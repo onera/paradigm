@@ -34,7 +34,7 @@ extern "C" {
 
 /**
  * \struct PDM_block_to_block_t
- * \brief  Block to partition redistribution
+ * \brief  Block-to-Block redistribution
  *
  */
 
@@ -51,15 +51,13 @@ typedef struct _pdm_block_to_block_t PDM_block_to_block_t;
 
 /**
  *
- * \brief Create a block to another block redistribution
+ * \brief Create a block-to-block redistribution
  *
- * \param [in]   blockDistribIdx Block distribution (size : \ref size of \ref comm + 1)
- * \param [in]   gnum_elt        Element global number (size : \ref n_part)
- * \param [in]   n_elt           Local number of elements (size : \ref n_part)
- * \param [in]   n_part          Number of partition
- * \param [in]   comm            MPI communicator
+ * \param [in]   block_distrib_ini_idx Origin block distribution (size : *n_rank* + 1)
+ * \param [in]   block_distrib_end_idx Destination block distribution (size : *n_rank* + 1)
+ * \param [in]   comm                  MPI communicator
  *
- * \return   Initialized \ref PDM_block_to_block instance
+ * \return   Initialized \ref PDM_block_to_block_t instance
  *
  */
 
@@ -74,40 +72,42 @@ PDM_block_to_block_create
 
 /**
  *
- * \brief Initialize an exchange (Variable stride is not yet available)
+ * \brief Exchange data from origin block to destination block
  *
- * \param [in]   btb          Block to part structure
- * \param [in]   s_data       Data size
- * \param [in]   t_stride     Stride type
- * \param [in]   cst_stride   Constant stride
- * \param [in]   block_stride Stride for each block element for \ref PDM_STRIDE_VAR
- *                            Constant stride for \ref PDM_STRIDE_VAR
- * \param [in]   block_data   Block data
- * \param [out]  part_stride  Partition stride
- * \param [out]  part_data    Partition data
+ * \warning Variable stride is not yet available
+ *
+ * \param [in]   btb              Block-to-Block structure
+ * \param [in]   s_data           Data size
+ * \param [in]   t_stride         Stride type
+ * \param [in]   cst_stride       Constant stride
+ * \param [in]   block_stride_ini Origin block stride for each block element for \ref PDM_STRIDE_VAR
+ *                                Constant stride for \ref PDM_STRIDE_VAR
+ * \param [in]   block_data_ini   Origin block data
+ * \param [out]  block_stride_end Destination block stride
+ * \param [out]  block_data_end   Destination block data
  *
  */
 
 int
 PDM_block_to_block_exch
 (
- PDM_block_to_block_t *btb,
- size_t               s_data,
- PDM_stride_t         t_stride,
- int                  cst_stride,
- int                 *block_stride_ini,
- void                *block_data_ini,
- int                 *block_stride_end,
- void               **block_data_end
+ PDM_block_to_block_t  *btb,
+ size_t                 s_data,
+ PDM_stride_t           t_stride,
+ int                    cst_stride,
+ int                   *block_stride_ini,
+ void                  *block_data_ini,
+ int                   *block_stride_end,
+ void                 **block_data_end
 );
 
 /**
  *
- * \brief Free a block to part structure
+ * \brief Free a Block-to-Block structure
  *
- * \param [inout] btb  Block to part structure
+ * \param [inout] btb  Block-to-Block structure
  *
- * \return       NULL
+ * \return       NULL pointer
  */
 
 PDM_block_to_block_t *

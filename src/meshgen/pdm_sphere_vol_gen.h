@@ -87,7 +87,7 @@ PDM_sphere_vol_gen_nodal
  * \note The output mesh is *block-distributed*.
  *
  * \param[in]  comm            MPI communicator
- * \param[in]  n               Number of icosphere subdivisions
+ * \param[in]  n               Icosphere subdivision level
  * \param[in]  x_center        x-coordinate of the sphere center
  * \param[in]  y_center        y-coordinate of the sphere center
  * \param[in]  z_center        z-coordinate of the sphere center
@@ -127,7 +127,7 @@ PDM_sphere_vol_icosphere_gen
  * in the form of a \ref PDM_dmesh_nodal_t object
  *
  * \param[in]  comm            MPI communicator
- * \param[in]  n               Number of icosphere subdivisions
+ * \param[in]  n               Icosphere subdivision level
  * \param[in]  x_center        x-coordinate of the sphere center
  * \param[in]  y_center        y-coordinate of the sphere center
  * \param[in]  z_center        z-coordinate of the sphere center
@@ -157,7 +157,7 @@ PDM_sphere_vol_icosphere_gen_nodal
  * in the form of a \ref PDM_dmesh_nodal_t object
  *
  * \param[in]  comm            MPI communicator
- * \param[in]  n               Number of icosphere subdivisions
+ * \param[in]  n               Icosphere subdivision level
  * \param[in]  n_layer         Number of extrusion layers
  * \param[in]  x_center        x-coordinate of the spheres center
  * \param[in]  y_center        y-coordinate of the spheres center

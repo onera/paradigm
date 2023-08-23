@@ -208,6 +208,41 @@ PDM_dcube_nodal_cart_topo
        PDM_ownership_t           owner
 );
 
+
+void
+PDM_generate_lines
+(
+  PDM_MPI_Comm  comm,
+  double        zero_x,
+  double        zero_y,
+  double        zero_z,
+  double        length,
+  PDM_g_num_t   n_g_pts,
+  PDM_g_num_t **distrib_edge_out,
+  PDM_g_num_t **distrib_vtx_out,
+  PDM_g_num_t **dedge_vtx_out,
+  double      **dvtx_coord_out
+);
+
+
+void
+PDM_generate_cart_topo_lines
+(
+ PDM_MPI_Comm              comm,
+ int                       n_dom_i,
+ int                       periodic_i,
+ double                    zero_x,
+ double                    zero_y,
+ double                    zero_z,
+ double                    length,
+ PDM_g_num_t               n_g_pts,
+ PDM_g_num_t            ***distrib_edge_out,
+ PDM_g_num_t            ***distrib_vtx_out,
+ PDM_g_num_t            ***dedge_vtx_out,
+ double                 ***dvtx_coord_out,
+ PDM_domain_interface_t  **dom_intrf
+);
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

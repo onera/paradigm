@@ -42,7 +42,7 @@ extern "C" {
 
 /**
  *
- * \brief Create a surface mesh of a sphere (UV sphere)
+ * \brief Create a sphere surface mesh (UV sphere)
  *
  * \note The output mesh is *block-distributed*.
  *
@@ -81,7 +81,7 @@ PDM_sphere_surf_gen
 
 /**
  *
- * \brief Create a surface mesh of a sphere (UV sphere)
+ * \brief Create a sphere surface mesh (UV sphere)
  *
  * \note The output mesh is *block-distributed*,
  * in the form of a \ref PDM_dmesh_nodal_t object
@@ -113,12 +113,12 @@ PDM_sphere_surf_gen_nodal
 
 /**
  *
- * \brief Create a surface mesh of a sphere (icosphere)
+ * \brief Create a sphere surface mesh (icosphere)
  *
  * \note The output mesh is *block-distributed*.
  *
  * \param[in]  comm            MPI communicator
- * \param[in]  n               Number of icosphere subdivisions
+ * \param[in]  n               Icosphere subdivision level
  * \param[in]  x_center        x-coordinate of the sphere center
  * \param[in]  y_center        y-coordinate of the sphere center
  * \param[in]  z_center        z-coordinate of the sphere center
@@ -150,13 +150,13 @@ PDM_sphere_surf_icosphere_gen
 
 /**
  *
- * \brief Create a surface mesh of a sphere (icosphere)
+ * \brief Create a sphere surface mesh (icosphere)
  *
  * \note The output mesh is *block-distributed*,
  * in the form of a \ref PDM_dmesh_nodal_t object
  *
  * \param[in]  comm            MPI communicator
- * \param[in]  n               Number of icosphere subdivisions
+ * \param[in]  n               Icosphere subdivision level
  * \param[in]  x_center        x-coordinate of the sphere center
  * \param[in]  y_center        y-coordinate of the sphere center
  * \param[in]  z_center        z-coordinate of the sphere center
@@ -180,12 +180,12 @@ PDM_sphere_surf_icosphere_gen_nodal
 
 /**
  *
- * \brief Create a surface mesh of a sphere (icosphere)
+ * \brief Create a sphere surface mesh (icosphere)
  *
  * \note The output mesh is *partitioned*.
  *
  * \param[in]  comm            MPI communicator
- * \param[in]  n               Number of icosphere subdivisions
+ * \param[in]  n               Icosphere subdivision level
  * \param[in]  x_center        x-coordinate of the sphere center
  * \param[in]  y_center        y-coordinate of the sphere center
  * \param[in]  z_center        z-coordinate of the sphere center

@@ -463,16 +463,16 @@ configure_file(${PROJECT_SOURCE_DIR}/script/pdm_launch_python.in "${PROJECT_BINA
 
 if(PDM_ENABLE_UNIT_TEST)
   include(FetchContent)
-  # FetchContent_Declare(
-  #   doctest
-  #   GIT_REPOSITORY https://github.com/onqtam/doctest.git
-  #   GIT_TAG        2.4.1
-  # )
   FetchContent_Declare(
     doctest
-     GIT_REPOSITORY https://github.com/BerengerBerthoul/doctest.git
-     GIT_TAG        f13a00607463ce211004be23b5aa0bdf24d3ab61
+    GIT_REPOSITORY https://github.com/doctest/doctest.git
+    GIT_TAG        v2.4.11
   )
+  # FetchContent_Declare(
+  #   doctest
+  #    GIT_REPOSITORY https://github.com/BerengerBerthoul/doctest.git
+  #    GIT_TAG        f13a00607463ce211004be23b5aa0bdf24d3ab61
+  # )
   FetchContent_GetProperties(doctest)
   if(NOT doctest_POPULATED)
     FetchContent_Populate(doctest)
