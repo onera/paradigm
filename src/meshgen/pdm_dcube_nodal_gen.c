@@ -2805,7 +2805,7 @@ PDM_dcube_nodal_cart_topo
       PDM_domain_interface_translation_set(_dom_intrf,
                                            i_itrf,
                                            translation_vect);
-    } else {
+    } else if(i_period[i_itrf] == 3) {
       double translation_vect[3] = {0.,             0.,             length*n_dom_k};
       PDM_domain_interface_translation_set(_dom_intrf,
                                            i_itrf,
