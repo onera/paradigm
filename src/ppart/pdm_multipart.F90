@@ -448,14 +448,9 @@ interface
   !! \param [in]   multipart                Pointer to \ref PDM_multipart_t object
   !! \param [in]   i_zone                   Id of zone which parameters apply (or -1 for all zones)
   !! \param [in]   i_part                   Partition index
-  !! \param [out]  elt_vtx_idx              Index of element->vertex connecvitiy
-  !! \param [out]  elt_vtx                  Element->vertex connecvitiy
-  !! \param [out]  elt_section_ln_to_gn     Element local number to global number
-  !! \param [out]  cell_tag                 Cell->tag connecvitiy
   !! \param [out]  cell_face_idx            Index of cell->face connectivity
   !! \param [out]  cell_face                Cell->face connectivity
   !! \param [out]  cell_ln_to_gn            Cell local number to global number
-  !! \param [out]  face_tag                 Face->tag connecvitiy
   !! \param [out]  face_cell                Face->cell connectivity
   !! \param [out]  face_vtx_idx             Index of face->vertex connectivity
   !! \param [out]  face_vtx                 Face->vertex connectivity
@@ -463,28 +458,19 @@ interface
   !! \param [out]  face_part_bound_proc_idx ??
   !! \param [out]  face_part_bound_part_idx ??
   !! \param [out]  face_part_bound          ??
-  !! \param [out]  vtx_tag                  Vertex->tag connectivity
   !! \param [out]  vtx                      Vertices coordinates
   !! \param [out]  vtx_ln_to_gn             Vertex local number to global number
   !! \param [out]  face_bound_idx           Index of face->boundary connectivity
   !! \param [out]  face_bound               Boundary faces
   !! \param [out]  face_bound_ln_to_gn      Boundary face local number to global number
-  !! \param [out]  face_join_idx            Index of face->join connectivity
-  !! \param [out]  face_join                Face->join connectivity
-  !! \param [out]  face_join_ln_to_gn       Join face local number to global number
   !!
 
   subroutine PDM_multipart_part_val_get_c (multipart, &
                                            i_zone, &
                                            i_part, &
-                                           elt_vtx_idx, &
-                                           elt_vtx, &
-                                           elt_section_ln_to_gn, &
-                                           cell_tag, &
                                            cell_face_idx, &
                                            cell_face, &
                                            cell_ln_to_gn, &
-                                           face_tag, &
                                            face_cell, &
                                            face_vtx_idx, &
                                            face_vtx, &
@@ -492,15 +478,11 @@ interface
                                            face_part_bound_proc_idx, &
                                            face_part_bound_part_idx, &
                                            face_part_bound, &
-                                           vtx_tag, &
                                            vtx, &
                                            vtx_ln_to_gn, &
                                            face_bound_idx, &
                                            face_bound, &
-                                           face_bound_ln_to_gn, &
-                                           face_join_idx, &
-                                           face_join, &
-                                           face_join_ln_to_gn) &
+                                           face_bound_ln_to_gn) &
   bind (c, name='PDM_multipart_part_val_get')
 
     use iso_c_binding
@@ -509,14 +491,9 @@ interface
     type(c_ptr),    value  :: multipart
     integer(c_int), value  :: i_zone
     integer(c_int), value  :: i_part
-    type(c_ptr)            :: elt_vtx_idx
-    type(c_ptr)            :: elt_vtx
-    type(c_ptr)            :: elt_section_ln_to_gn
-    type(c_ptr)            :: cell_tag
     type(c_ptr)            :: cell_face_idx
     type(c_ptr)            :: cell_face
     type(c_ptr)            :: cell_ln_to_gn
-    type(c_ptr)            :: face_tag
     type(c_ptr)            :: face_cell
     type(c_ptr)            :: face_vtx_idx
     type(c_ptr)            :: face_vtx
@@ -524,15 +501,11 @@ interface
     type(c_ptr)            :: face_part_bound_proc_idx
     type(c_ptr)            :: face_part_bound_part_idx
     type(c_ptr)            :: face_part_bound
-    type(c_ptr)            :: vtx_tag
     type(c_ptr)            :: vtx
     type(c_ptr)            :: vtx_ln_to_gn
     type(c_ptr)            :: face_bound_idx
     type(c_ptr)            :: face_bound
     type(c_ptr)            :: face_bound_ln_to_gn
-    type(c_ptr)            :: face_join_idx
-    type(c_ptr)            :: face_join
-    type(c_ptr)            :: face_join_ln_to_gn
 
   end subroutine PDM_multipart_part_val_get_c
 
@@ -1396,14 +1369,9 @@ contains
   !! \param [in]   multipart                Pointer to \ref PDM_multipart_t object
   !! \param [in]   i_zone                   Id of zone which parameters apply (or -1 for all zones)
   !! \param [in]   i_part                   Partition index
-  !! \param [out]  elt_vtx_idx              not used -> removed from API
-  !! \param [out]  elt_vtx                  not used -> removed from API
-  !! \param [out]  elt_section_ln_to_gn     not used -> removed from API
-  !! \param [out]  cell_tag                 ??
   !! \param [out]  cell_face_idx            ??
   !! \param [out]  cell_face                ??
   !! \param [out]  cell_ln_to_gn            ??
-  !! \param [out]  face_tag                 ??
   !! \param [out]  face_cell                ??
   !! \param [out]  face_vtx_idx             ??
   !! \param [out]  face_vtx                 ??
@@ -1411,25 +1379,19 @@ contains
   !! \param [out]  face_part_bound_proc_idx ??
   !! \param [out]  face_part_bound_part_idx ??
   !! \param [out]  face_part_bound          ??
-  !! \param [out]  vtx_tag                  ??
   !! \param [out]  vtx                      ??
   !! \param [out]  vtx_ln_to_gn             ??
   !! \param [out]  face_bound_idx           ??
   !! \param [out]  face_bound               ??
   !! \param [out]  face_bound_ln_to_gn      ??
-  !! \param [out]  face_join_idx            not used -> removed from API
-  !! \param [out]  face_join                not used -> removed from API
-  !! \param [out]  face_join_ln_to_gn       not used -> removed from API
   !!
 
   subroutine PDM_multipart_part_val_get_(multipart, &
                                          i_zone, &
                                          i_part, &
-                                         cell_tag, &
                                          cell_face_idx, &
                                          cell_face, &
                                          cell_ln_to_gn, &
-                                         face_tag, &
                                          face_cell, &
                                          face_vtx_idx, &
                                          face_vtx, &
@@ -1437,7 +1399,6 @@ contains
                                          face_part_bound_proc_idx, &
                                          face_part_bound_part_idx, &
                                          face_part_bound, &
-                                         vtx_tag, &
                                          vtx, &
                                          vtx_ln_to_gn, &
                                          face_bound_idx, &
@@ -1453,11 +1414,9 @@ contains
     integer(c_int), value  :: i_zone
     integer(c_int), value  :: i_part
 
-    integer (kind = PDM_l_num_s), pointer :: cell_tag(:)
     integer (kind = PDM_l_num_s), pointer :: cell_face_idx(:)
     integer (kind = PDM_l_num_s), pointer :: cell_face(:)
     integer (kind = PDM_g_num_s), pointer :: cell_ln_to_gn(:)
-    integer (kind = PDM_l_num_s), pointer :: face_tag(:)
     integer (kind = PDM_l_num_s), pointer :: face_cell(:)
     integer (kind = PDM_l_num_s), pointer :: face_vtx_idx(:)
     integer (kind = PDM_l_num_s), pointer :: face_vtx(:)
@@ -1465,21 +1424,15 @@ contains
     integer (kind = PDM_l_num_s), pointer :: face_part_bound_proc_idx(:)
     integer (kind = PDM_l_num_s), pointer :: face_part_bound_part_idx(:)
     integer (kind = PDM_l_num_s), pointer :: face_part_bound(:)
-    integer (kind = PDM_l_num_s), pointer :: vtx_tag(:)
     double precision,             pointer :: vtx(:,:)
     integer (kind = PDM_g_num_s), pointer :: vtx_ln_to_gn(:)
     integer (kind = PDM_l_num_s), pointer :: face_bound_idx(:)
     integer (kind = PDM_l_num_s), pointer :: face_bound(:)
     integer (kind = PDM_g_num_s), pointer :: face_bound_ln_to_gn(:)
 
-    type(c_ptr)  :: c_elt_vtx_idx              = C_NULL_PTR
-    type(c_ptr)  :: c_elt_vtx                  = C_NULL_PTR
-    type(c_ptr)  :: c_elt_section_ln_to_gn     = C_NULL_PTR
-    type(c_ptr)  :: c_cell_tag                 = C_NULL_PTR
     type(c_ptr)  :: c_cell_face_idx            = C_NULL_PTR
     type(c_ptr)  :: c_cell_face                = C_NULL_PTR
     type(c_ptr)  :: c_cell_ln_to_gn            = C_NULL_PTR
-    type(c_ptr)  :: c_face_tag                 = C_NULL_PTR
     type(c_ptr)  :: c_face_cell                = C_NULL_PTR
     type(c_ptr)  :: c_face_vtx_idx             = C_NULL_PTR
     type(c_ptr)  :: c_face_vtx                 = C_NULL_PTR
@@ -1487,15 +1440,11 @@ contains
     type(c_ptr)  :: c_face_part_bound_proc_idx = C_NULL_PTR
     type(c_ptr)  :: c_face_part_bound_part_idx = C_NULL_PTR
     type(c_ptr)  :: c_face_part_bound          = C_NULL_PTR
-    type(c_ptr)  :: c_vtx_tag                  = C_NULL_PTR
     type(c_ptr)  :: c_vtx                      = C_NULL_PTR
     type(c_ptr)  :: c_vtx_ln_to_gn             = C_NULL_PTR
     type(c_ptr)  :: c_face_bound_idx           = C_NULL_PTR
     type(c_ptr)  :: c_face_bound               = C_NULL_PTR
     type(c_ptr)  :: c_face_bound_ln_to_gn      = C_NULL_PTR
-    type(c_ptr)  :: c_face_join_idx            = C_NULL_PTR
-    type(c_ptr)  :: c_face_join                = C_NULL_PTR
-    type(c_ptr)  :: c_face_join_ln_to_gn       = C_NULL_PTR
 
     integer(c_int) :: c_n_cell
     integer(c_int) :: c_n_face
@@ -1537,14 +1486,9 @@ contains
     call PDM_multipart_part_val_get_c(multipart, &
                                       i_zone, &
                                       i_part, &
-                                      c_elt_vtx_idx, &
-                                      c_elt_vtx, &
-                                      c_elt_section_ln_to_gn, &
-                                      c_cell_tag, &
                                       c_cell_face_idx, &
                                       c_cell_face, &
                                       c_cell_ln_to_gn, &
-                                      c_face_tag, &
                                       c_face_cell, &
                                       c_face_vtx_idx, &
                                       c_face_vtx, &
@@ -1552,19 +1496,11 @@ contains
                                       c_face_part_bound_proc_idx, &
                                       c_face_part_bound_part_idx, &
                                       c_face_part_bound, &
-                                      c_vtx_tag, &
                                       c_vtx, &
                                       c_vtx_ln_to_gn, &
                                       c_face_bound_idx, &
                                       c_face_bound, &
-                                      c_face_bound_ln_to_gn, &
-                                      c_face_join_idx, &
-                                      c_face_join, &
-                                      c_face_join_ln_to_gn)
-
-    call c_f_pointer(c_cell_tag, &
-                     cell_tag,   &
-                     [n_cell])
+                                      c_face_bound_ln_to_gn)
 
     call c_f_pointer(c_cell_face_idx, &
                      cell_face_idx,   &
@@ -1577,10 +1513,6 @@ contains
     call c_f_pointer(c_cell_ln_to_gn, &
                      cell_ln_to_gn,   &
                      [n_cell])
-
-    call c_f_pointer(c_face_tag, &
-                     face_tag,   &
-                     [n_face])
 
     call c_f_pointer(c_face_cell, &
                      face_cell,   &
@@ -1609,10 +1541,6 @@ contains
     call c_f_pointer(c_face_part_bound, &
                      face_part_bound,   &
                      [face_part_bound_part_idx(n_face_part_bound+1)])
-
-    call c_f_pointer(c_vtx_tag, &
-                     vtx_tag,   &
-                     [n_vtx])
 
     call c_f_pointer(c_vtx, &
                      vtx,   &

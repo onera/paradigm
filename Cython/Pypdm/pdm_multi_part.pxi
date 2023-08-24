@@ -65,14 +65,9 @@ cdef extern from "pdm_multipart.h":
     void PDM_multipart_part_val_get(PDM_multipart_t   *mtp,
                                     int                zone_gid,
                                     int                ipart,
-                                    int             ***elt_vtx_idx,
-                                    int             ***elt_vtx,
-                                    PDM_g_num_t     ***elt_section_ln_to_gn,
-                                    int              **cell_tag,
                                     int              **cell_face_idx,
                                     int              **cell_face,
                                     PDM_g_num_t      **cell_ln_to_gn,
-                                    int              **face_tag,
                                     int              **face_cell,
                                     int              **face_vtx_idx,
                                     int              **face_vtx,
@@ -80,15 +75,11 @@ cdef extern from "pdm_multipart.h":
                                     int              **face_part_bound_proc_idx,
                                     int              **face_part_bound_part_idx,
                                     int              **face_part_bound,
-                                    int              **vtx_tag,
                                     double           **vtx,
                                     PDM_g_num_t      **vtx_ln_to_gn,
                                     int              **face_bound_idx,
                                     int              **face_bound,
-                                    PDM_g_num_t      **face_bound_ln_to_gn,
-                                    int              **face_join_idx,
-                                    int              **face_join,
-                                    PDM_g_num_t      **face_join_ln_to_gn)
+                                    PDM_g_num_t      **face_bound_ln_to_gn)
 
     # ------------------------------------------------------------------
     int PDM_multipart_part_vtx_coord_get(PDM_multipart_t  *multipart,
@@ -336,11 +327,9 @@ cdef class MultiPart:
         """
         # ************************************************************************
         # > Declaration
-        cdef int          *cell_tag,
         cdef int          *cell_face_idx,
         cdef int          *cell_face,
         cdef PDM_g_num_t  *cell_ln_to_gn,
-        cdef int          *face_tag,
         cdef int          *face_cell,
         cdef int          *face_vtx_idx,
         cdef int          *face_vtx,
@@ -348,18 +337,11 @@ cdef class MultiPart:
         cdef int          *face_part_bound,
         cdef int          *face_part_bound_proc_idx,
         cdef int          *face_part_bound_part_idx,
-        cdef int          *vtx_tag,
         cdef double       *vtx_coord,
         cdef PDM_g_num_t  *vtx_ln_to_gn,
         cdef int          *face_bound_idx,
         cdef int          *face_bound,
-        cdef PDM_g_num_t  *face_bound_ln_to_gn,
-        cdef int          *face_join_idx,
-        cdef int          *face_join,
-        cdef PDM_g_num_t  *face_join_ln_to_gn
-        cdef int         **elt_vtx_idx
-        cdef int         **elt_vtx
-        cdef PDM_g_num_t **elt_section_ln_to_gn
+        cdef PDM_g_num_t  *face_bound_ln_to_gn
         # ************************************************************************
 
         # dims = self.part_dim_get(self._mtp, ipart)
@@ -369,14 +351,9 @@ cdef class MultiPart:
         PDM_multipart_part_val_get(self._mtp,
                                    zone_gid,
                                    ipart,
-                                   &elt_vtx_idx,
-                                   &elt_vtx,
-                                   &elt_section_ln_to_gn,
-                                   &cell_tag,
                                    &cell_face_idx,
                                    &cell_face,
                                    &cell_ln_to_gn,
-                                   &face_tag,
                                    &face_cell,
                                    &face_vtx_idx,
                                    &face_vtx,
@@ -384,56 +361,28 @@ cdef class MultiPart:
                                    &face_part_bound_proc_idx,
                                    &face_part_bound_part_idx,
                                    &face_part_bound,
-                                   &vtx_tag,
                                    &vtx_coord,
                                    &vtx_ln_to_gn,
                                    &face_bound_idx,
                                    &face_bound,
-                                   &face_bound_ln_to_gn,
-                                   &face_join_idx,
-                                   &face_join,
-                                   &face_join_ln_to_gn)
-        # elt sections
-        cdef NPY.npy_intp n_section = <NPY.npy_intp> dims['n_section']
-        cdef list np_elt_vtx_idx = []
-        cdef list np_elt_vtx = []
-        cdef list np_elt_section_ln_to_gn = []
-        cdef NPY.npy_intp dim_idx
-        for i_section in range(n_section):
-            np_elt_vtx_idx_i_section = create_numpy_i(elt_vtx_idx[i_section], dims['n_elt'][i_section]+1)
-            np_elt_section_ln_to_gn_i_section = create_numpy_g(elt_section_ln_to_gn[i_section], dims['n_elt'][i_section])
-            np_elt_vtx_i_section = create_numpy_i(elt_vtx[i_section], np_elt_vtx_idx_i_section[-1])
-
-
-            np_elt_vtx_idx.append(np_elt_vtx_idx_i_section)
-            np_elt_vtx.append(np_elt_vtx_i_section)
-            np_elt_section_ln_to_gn.append(np_elt_section_ln_to_gn_i_section)
+                                   &face_bound_ln_to_gn)
 
         return {
-            'np_cell_tag'                 : create_numpy_or_none_i(cell_tag,                 dims['n_cell']),
             'np_cell_face_idx'            : create_numpy_or_none_i(cell_face_idx,            dims['n_cell']+1),
             'np_cell_face'                : create_numpy_or_none_i(cell_face,                dims['scell_face']),
             'np_cell_ln_to_gn'            : create_numpy_or_none_g(cell_ln_to_gn,            dims['n_cell']),
-            'np_face_tag'                 : create_numpy_or_none_i(face_tag,                 dims['n_face']),
             'np_face_cell'                : create_numpy_or_none_i(face_cell,                2*dims['n_face']),
-            'np_elt_vtx_idx'              : np_elt_vtx_idx,
-            'np_elt_vtx'                  : np_elt_vtx,
-            'np_elt_section_ln_to_gn'     : np_elt_section_ln_to_gn,
             'np_face_vtx_idx'             : create_numpy_or_none_i(face_vtx_idx,             dims['n_face']+1),
             'np_face_vtx'                 : create_numpy_or_none_i(face_vtx,                 dims['s_face_vtx']),
             'np_face_ln_to_gn'            : create_numpy_or_none_g(face_ln_to_gn,            dims['n_face']),
             'np_face_part_bound_proc_idx' : create_numpy_or_none_i(face_part_bound_proc_idx, dims['n_proc']+1),
             'np_face_part_bound_part_idx' : create_numpy_or_none_i(face_part_bound_part_idx, dims['nt_part']+1),
             'np_face_part_bound'          : create_numpy_or_none_i(face_part_bound,          4*dims['n_face_part_bound']),
-            'np_vtx_tag'                  : create_numpy_or_none_i(vtx_tag,                  dims['n_vtx']),
             'np_vtx_coord'                : create_numpy_or_none_d(vtx_coord,                3*dims['n_vtx']),
             'np_vtx_ln_to_gn'             : create_numpy_or_none_g(vtx_ln_to_gn,             dims['n_vtx']),
             'np_face_bound_idx'           : create_numpy_or_none_i(face_bound_idx,           dims['n_face_bound']+1),
             'np_face_bound'               : create_numpy_or_none_i(face_bound,               dims['s_face_bound']),
-            'np_face_bound_ln_to_gn'      : create_numpy_or_none_g(face_bound_ln_to_gn,      dims['s_face_bound']),
-            'np_face_join_idx'            : create_numpy_or_none_i(face_join_idx,            dims['n_face_join']+1),
-            'np_face_join'                : create_numpy_or_none_i(face_join,                4*dims['s_face_join']),
-            'np_face_join_ln_to_gn'       : create_numpy_or_none_g(face_join_ln_to_gn,       dims['s_face_join']),
+            'np_face_bound_ln_to_gn'      : create_numpy_or_none_g(face_bound_ln_to_gn,      dims['s_face_bound'])
         }
 
 

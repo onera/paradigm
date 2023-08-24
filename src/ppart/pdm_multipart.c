@@ -3443,14 +3443,9 @@ PDM_multipart_part_val_get
 PDM_multipart_t     *multipart,
 const int            i_zone,
 const int            i_part,
-      int         ***elt_vtx_idx,
-      int         ***elt_vtx,
-      PDM_g_num_t ***elt_section_ln_to_gn,
-      int          **cell_tag,
       int          **cell_face_idx,
       int          **cell_face,
       PDM_g_num_t  **cell_ln_to_gn,
-      int          **face_tag,
       int          **face_cell,
       int          **face_vtx_idx,
       int          **face_vtx,
@@ -3458,24 +3453,20 @@ const int            i_part,
       int          **face_part_bound_proc_idx,
       int          **face_part_bound_part_idx,
       int          **face_part_bound,
-      int          **vtx_tag,
       double       **vtx,
       PDM_g_num_t  **vtx_ln_to_gn,
       int          **face_bound_idx,
       int          **face_bound,
-      PDM_g_num_t  **face_bound_ln_to_gn,
-      int          **face_join_idx,
-      int          **face_join,
-      PDM_g_num_t  **face_join_ln_to_gn
+      PDM_g_num_t  **face_bound_ln_to_gn
 )
 {
 
   assert(i_zone < multipart->n_zone && i_part < multipart->n_part[i_zone]);
   _part_mesh_t _pmeshes = multipart->pmeshes[i_zone];
 
-  *cell_tag = NULL;
-  *face_tag = NULL;
-  *vtx_tag  = NULL;
+  // *cell_tag = NULL;
+  // *face_tag = NULL;
+  // *vtx_tag  = NULL;
 
   // *cell_ln_to_gn = _pmeshes.parts[i_part]->cell_ln_to_gn;
   // *face_ln_to_gn = _pmeshes.parts[i_part]->face_ln_to_gn;
@@ -3567,13 +3558,13 @@ const int            i_part,
                                    face_bound_ln_to_gn,
                                    PDM_OWNERSHIP_BAD_VALUE);
   }
-  *face_join_idx        = NULL; // _pmeshes.parts[i_part]->face_join_idx;
-  *face_join            = NULL; // _pmeshes.parts[i_part]->face_join;
-  *face_join_ln_to_gn   = NULL; // _pmeshes.parts[i_part]->face_join_ln_to_gn;
+  // *face_join_idx        = NULL; // _pmeshes.parts[i_part]->face_join_idx;
+  // *face_join            = NULL; // _pmeshes.parts[i_part]->face_join;
+  // *face_join_ln_to_gn   = NULL; // _pmeshes.parts[i_part]->face_join_ln_to_gn;
 
-  *elt_vtx_idx          = NULL; // _pmeshes.parts[i_part]->elt_vtx_idx;
-  *elt_vtx              = NULL; // _pmeshes.parts[i_part]->elt_vtx;
-  *elt_section_ln_to_gn = NULL; // _pmeshes.parts[i_part]->elt_section_ln_to_gn;
+  // *elt_vtx_idx          = NULL; // _pmeshes.parts[i_part]->elt_vtx_idx;
+  // *elt_vtx              = NULL; // _pmeshes.parts[i_part]->elt_vtx;
+  // *elt_section_ln_to_gn = NULL; // _pmeshes.parts[i_part]->elt_section_ln_to_gn;
 }
 
 

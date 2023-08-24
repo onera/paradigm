@@ -416,14 +416,9 @@ PDM_multipart_part_val_get
 PDM_multipart_t     *multipart,
 const int            i_zone,
 const int            i_part,
-      int         ***elt_vtx_idx,
-      int         ***elt_vtx,
-      PDM_g_num_t ***elt_section_ln_to_gn,
-      int          **cell_tag,
       int          **cell_face_idx,
       int          **cell_face,
       PDM_g_num_t  **cell_ln_to_gn,
-      int          **face_tag,
       int          **face_cell,
       int          **face_vtx_idx,
       int          **face_vtx,
@@ -431,15 +426,11 @@ const int            i_part,
       int          **face_part_bound_proc_idx,
       int          **face_part_bound_part_idx,
       int          **face_part_bound,
-      int          **vtx_tag,
       double       **vtx,
       PDM_g_num_t  **vtx_ln_to_gn,
       int          **face_bound_idx,
       int          **face_bound,
-      PDM_g_num_t  **face_bound_ln_to_gn,
-      int          **face_join_idx,
-      int          **face_join,
-      PDM_g_num_t  **face_join_ln_to_gn
+      PDM_g_num_t  **face_bound_ln_to_gn
 );
 
 int
