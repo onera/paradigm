@@ -4952,7 +4952,6 @@ PDM_extract_part_group_get
   *pextract_group_entity_ln_to_gn        = extrp->pextract_group_entity_ln_to_gn       [bound_type][i_group][i_part];
   *pextract_group_entity_parent_ln_to_gn = extrp->pextract_group_entity_parent_ln_to_gn[bound_type][i_group][i_part];
   extrp->ptp_group_ownership   [bound_type][i_group] = ownership;
-  extrp->is_owner_extract_group[bound_type][i_group] = PDM_FALSE;
 
 }
 
