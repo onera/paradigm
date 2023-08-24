@@ -2696,20 +2696,20 @@ _multipart_create
 
   PDM_multipart_set_reordering_options(multipart, -1, renum_cell_method, renum_properties_cell, renum_face_method);
 
-  PDM_multipart_part_set(multipart,
-                         0,
-                         dn_cell,
-                         dn_face,
-                         dn_vtx,
-                         n_face_group,
-         (int         *) dcell_face_idx,
-         (PDM_g_num_t *) dcell_face,
-         (PDM_g_num_t *) dface_cell,
-         (int         *) dface_vtx_idx,
-         (PDM_g_num_t *) dface_vtx,
-         (double      *) dvtx_coord,
-         (int         *) dface_group_idx,
-         (PDM_g_num_t *) dface_group);
+  PDM_multipart_block_set(multipart,
+                          0,
+                          dn_cell,
+                          dn_face,
+                          dn_vtx,
+                          n_face_group,
+          (int         *) dcell_face_idx,
+          (PDM_g_num_t *) dcell_face,
+          (PDM_g_num_t *) dface_cell,
+          (int         *) dface_vtx_idx,
+          (PDM_g_num_t *) dface_vtx,
+          (double      *) dvtx_coord,
+          (int         *) dface_group_idx,
+          (PDM_g_num_t *) dface_group);
 
   // Run
   PDM_multipart_run_ppart(multipart);

@@ -134,7 +134,7 @@ void PDM_multipart_register_dmesh_nodal
 );
 
 /**
- * \brief Set part
+ * \brief Set block
  *
  * \param [in]   multipart              Pointer to \ref PDM_multipart_t object
  * \param [in]   i_zone                 Id of zone
@@ -162,7 +162,7 @@ void PDM_multipart_register_dmesh_nodal
  *
  */
 void
-PDM_multipart_part_set
+PDM_multipart_block_set
 (
  PDM_multipart_t             *multipart,
  const int                    i_zone,

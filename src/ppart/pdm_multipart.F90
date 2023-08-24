@@ -58,8 +58,8 @@ module pdm_multipart
     PDM_multipart_dvtx_coord_set_
   end interface
 
-  interface PDM_multipart_part_set ; module procedure  &
-    PDM_multipart_part_set_
+  interface PDM_multipart_block_set ; module procedure  &
+    PDM_multipart_block_set_
   end interface
 
   interface PDM_multipart_part_dim_get ; module procedure  &
@@ -324,7 +324,7 @@ interface
   end subroutine PDM_multipart_dvtx_coord_set_c
 
   !>
-  !! \brief Set part
+  !! \brief Set block
   !!
   !! \param [in]   multipart              Pointer to \ref PDM_multipart_t object
   !! \param [in]   i_zone                 Id of zone
@@ -351,21 +351,21 @@ interface
   !!                                      or NULL
   !!
 
-  subroutine PDM_multipart_part_set_c (multipart, &
-                                       i_zone, &
-                                       dn_cell, &
-                                       dn_face, &
-                                       dn_vtx, &
-                                       n_face_group, &
-                                       dcell_face_idx, &
-                                       dcell_face, &
-                                       dface_cell, &
-                                       dface_vtx_idx, &
-                                       dface_vtx, &
-                                       dvtx_coord, &
-                                       dface_group_idx, &
-                                       dface_group) &
-  bind (c, name='PDM_multipart_part_set')
+  subroutine PDM_multipart_block_set_c (multipart, &
+                                        i_zone, &
+                                        dn_cell, &
+                                        dn_face, &
+                                        dn_vtx, &
+                                        n_face_group, &
+                                        dcell_face_idx, &
+                                        dcell_face, &
+                                        dface_cell, &
+                                        dface_vtx_idx, &
+                                        dface_vtx, &
+                                        dvtx_coord, &
+                                        dface_group_idx, &
+                                        dface_group) &
+  bind (c, name='PDM_multipart_block_set')
 
     use iso_c_binding
     implicit none
@@ -385,7 +385,7 @@ interface
     type(c_ptr),    value  :: dface_group_idx
     type(c_ptr),    value  :: dface_group
 
-  end subroutine PDM_multipart_part_set_c
+  end subroutine PDM_multipart_block_set_c
 
   !>
   !!
@@ -849,7 +849,7 @@ private :: PDM_multipart_create_,&
            PDM_multipart_get_part_mesh_nodal_,&
            PDM_multipart_dconnectivity_set_,&
            PDM_multipart_dvtx_coord_set_,&
-           PDM_multipart_part_set_,&
+           PDM_multipart_block_set_,&
            PDM_multipart_part_dim_get_,&
            PDM_multipart_part_val_get_,&
            PDM_multipart_part_connectivity_get_,&
@@ -1163,7 +1163,7 @@ contains
 
 
   !>
-  !! \brief Set part
+  !! \brief Set block
   !!
   !! \param [in]   multipart              Pointer to \ref PDM_multipart_t object
   !! \param [in]   i_zone                 Id of zone
@@ -1190,20 +1190,20 @@ contains
   !!                                      or NULL
   !!
 
-  subroutine PDM_multipart_part_set_ (multipart, &
-                                      i_zone, &
-                                      dn_cell, &
-                                      dn_face, &
-                                      dn_vtx, &
-                                      n_face_group, &
-                                      dcell_face_idx, &
-                                      dcell_face, &
-                                      dface_cell, &
-                                      dface_vtx_idx, &
-                                      dface_vtx, &
-                                      dvtx_coord, &
-                                      dface_group_idx, &
-                                      dface_group)
+  subroutine PDM_multipart_block_set_ (multipart, &
+                                       i_zone, &
+                                       dn_cell, &
+                                       dn_face, &
+                                       dn_vtx, &
+                                       n_face_group, &
+                                       dcell_face_idx, &
+                                       dcell_face, &
+                                       dface_cell, &
+                                       dface_vtx_idx, &
+                                       dface_vtx, &
+                                       dvtx_coord, &
+                                       dface_group_idx, &
+                                       dface_group)
 
     use iso_c_binding
     implicit none
@@ -1255,22 +1255,22 @@ contains
       c_dface_cell = c_loc(dface_cell)
     endif
 
-    call PDM_multipart_part_set_c (multipart, &
-                                   c_i_zone, &
-                                   c_dn_cell, &
-                                   c_dn_face, &
-                                   c_dn_vtx, &
-                                   c_n_face_group, &
-                                   c_dcell_face_idx, &
-                                   c_dcell_face, &
-                                   c_dface_cell, &
-                                   c_dface_vtx_idx, &
-                                   c_dface_vtx, &
-                                   c_dvtx_coord, &
-                                   c_dface_group_idx, &
-                                   c_dface_group)
+    call PDM_multipart_block_set_c (multipart, &
+                                    c_i_zone, &
+                                    c_dn_cell, &
+                                    c_dn_face, &
+                                    c_dn_vtx, &
+                                    c_n_face_group, &
+                                    c_dcell_face_idx, &
+                                    c_dcell_face, &
+                                    c_dface_cell, &
+                                    c_dface_vtx_idx, &
+                                    c_dface_vtx, &
+                                    c_dvtx_coord, &
+                                    c_dface_group_idx, &
+                                    c_dface_group)
 
-  end subroutine PDM_multipart_part_set_
+  end subroutine PDM_multipart_block_set_
 
   !>
   !!
