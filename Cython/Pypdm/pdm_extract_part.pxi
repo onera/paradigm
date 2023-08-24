@@ -257,9 +257,9 @@ cdef class ExtractPart:
              <double      *> coords       .data)
 
   # ------------------------------------------------------------------
-  def part_group_set(self,
-                     PDM_bound_type_t bound_type,
-                     int              n_group):
+  def part_n_group_set(self,
+                       PDM_bound_type_t bound_type,
+                       int              n_group):
     """
     """
     PDM_extract_part_n_group_set(self._extrp,
