@@ -50,14 +50,6 @@ module pdm_multipart
     PDM_multipart_get_part_mesh_nodal_
   end interface
 
-  interface PDM_multipart_dconnectivity_set ; module procedure  &
-    PDM_multipart_dconnectivity_set_
-  end interface
-
-  interface PDM_multipart_dvtx_coord_set ; module procedure  &
-    PDM_multipart_dvtx_coord_set_
-  end interface
-
   interface PDM_multipart_block_set ; module procedure  &
     PDM_multipart_block_set_
   end interface
@@ -241,87 +233,6 @@ interface
     integer(c_int), value  :: ownership
 
   end subroutine PDM_multipart_get_part_mesh_nodal_c
-
-  !>
-  !!
-  !! \brief Set number connectivity for current block
-  !!
-  !! \param [in]   multipart             Pointer to \ref PDM_multipart_t object
-  !! \param [in]   i_zone                Id of zone which parameters apply (or -1 for all zones)
-  !! \param [in]   connectivity_type     Type of connectivity
-  !! \param [in]   connect               Connectivity (size = connect_idx[dn_entity])
-  !! \param [in]   connect_idx           Index of connectivity or NULL if face_cell for example  (size = dn_entity)
-  !!
-
-  subroutine PDM_multipart_dconnectivity_set_c (multipart, &
-                                                i_zone, &
-                                                connectivity_type, &
-                                                dconnect, &
-                                                dconnect_idx) &
-  bind (c, name='PDM_multipart_dconnectivity_set')
-
-    use iso_c_binding
-    implicit none
-
-    type(c_ptr),    value  :: multipart
-    integer(c_int), value  :: i_zone
-    integer(c_int), value  :: connectivity_type
-    type(c_ptr),    value  :: dconnect
-    type(c_ptr),    value  :: dconnect_idx
-
-  end subroutine PDM_multipart_dconnectivity_set_c
-
-  !>
-  !!
-  !! \brief Set group connectivity by kind
-  !!
-  !! \param [in]   multipart             Pointer to \ref PDM_multipart_t object
-  !! \param [in]   i_zone                Id of zone which parameters apply (or -1 for all zones)
-  !! \param [in]   bound_type            Type of boundary
-  !! \param [in]   connect               Connectivity (size = connect_idx[dn_entity])
-  !! \param [in]   connect_idx           Index of connectivity or NULL if face_cell for example  (size = dn_entity)
-  !!
-
-  subroutine PDM_multipart_dgroup_set_c (multipart, &
-                                         i_zone, &
-                                         bound_type, &
-                                         dconnect, &
-                                         dconnect_idx) &
-  bind (c, name='PDM_multipart_dgroup_set')
-
-    use iso_c_binding
-    implicit none
-
-    type(c_ptr),    value  :: multipart
-    integer(c_int), value  :: i_zone
-    integer(c_int), value  :: bound_type
-    type(c_ptr),    value  :: dconnect
-    type(c_ptr),    value  :: dconnect_idx
-
-  end subroutine PDM_multipart_dgroup_set_c
-
-  !>
-  !!
-  !! \brief Set coordinates
-  !!
-  !! \param [in]   multipart             Pointer to \ref PDM_multipart_t object
-  !! \param [in]   i_zone                Id of zone which parameters apply (or -1 for all zones)
-  !! \param [in]   dvtx_coord            Mesh coordinates (size = 3 * dn_vtx)
-  !!
-
-  subroutine PDM_multipart_dvtx_coord_set_c (multipart, &
-                                             i_zone, &
-                                             dvtx_coord) &
-  bind (c, name='PDM_multipart_dvtx_coord_set')
-
-    use iso_c_binding
-    implicit none
-
-    type(c_ptr),    value  :: multipart
-    integer(c_int), value  :: i_zone
-    type(c_ptr),    value  :: dvtx_coord
-
-  end subroutine PDM_multipart_dvtx_coord_set_c
 
   !>
   !! \brief Set block
@@ -779,32 +690,6 @@ interface
 
   !>
   !!
-  !! \brief Set number of element in the block entity
-  !!
-  !! \param [in]   multipart             Pointer to \ref PDM_multipart_t object
-  !! \param [in]   i_zone                Id of zone which parameters apply (or -1 for all zones)
-  !! \param [in]   entity_type           Type of entity (can be cell/face/edge/vtx)
-  !! \param [in]   dn_entity             Distributed number of entity in current process
-  !!
-
-  subroutine PDM_multipart_dn_entity_set (multipart, &
-                                          i_zone, &
-                                          entity_type, &
-                                          dn_entity) &
-  bind (c, name='PDM_multipart_dn_entity_set')
-
-    use iso_c_binding
-    implicit none
-
-    type(c_ptr),    value  :: multipart
-    integer(c_int), value  :: i_zone
-    integer(c_int), value  :: entity_type
-    integer(c_int), value  :: dn_entity
-
-  end subroutine PDM_multipart_dn_entity_set
-
-  !>
-  !!
   !! \brief Set the domain interface
   !!
   !! \param [in]   multipart             Pointer to \ref PDM_multipart_t object
@@ -847,8 +732,6 @@ private :: PDM_multipart_create_,&
            PDM_multipart_set_reordering_options_,&
            PDM_multipart_set_reordering_options_vtx_,&
            PDM_multipart_get_part_mesh_nodal_,&
-           PDM_multipart_dconnectivity_set_,&
-           PDM_multipart_dvtx_coord_set_,&
            PDM_multipart_block_set_,&
            PDM_multipart_part_dim_get_,&
            PDM_multipart_part_val_get_,&
@@ -1043,124 +926,6 @@ contains
                                              ownership)
 
   end subroutine PDM_multipart_get_part_mesh_nodal_
-
-  !>
-  !!
-  !! \brief Set number connectivity for current block
-  !!
-  !! \param [in]   multipart             Pointer to \ref PDM_multipart_t object
-  !! \param [in]   i_zone                Id of zone which parameters apply (or -1 for all zones)
-  !! \param [in]   connectivity_type     Type of connectivity
-  !! \param [in]   connect               Connectivity (size = connect_idx[dn_entity])
-  !! \param [in]   connect_idx           Index of connectivity or NULL if face_cell for example  (size = dn_entity)
-  !!
-
-  subroutine PDM_multipart_dconnectivity_set_ (multipart, &
-                                               i_zone, &
-                                               connectivity_type, &
-                                               dconnect, &
-                                               dconnect_idx)
-
-    use pdm
-    use iso_c_binding
-    implicit none
-
-    type(c_ptr),               value   :: multipart
-    integer(c_int),            value   :: i_zone
-    integer(c_int),            value   :: connectivity_type
-    integer(kind=PDM_l_num_s), pointer :: dconnect(:)
-    type(c_ptr)                        :: c_dconnect      = C_NULL_PTR
-    integer(kind=PDM_g_num_s), pointer :: dconnect_idx(:)
-    type(c_ptr)                        :: c_dconnect_idx  = C_NULL_PTR
-
-    c_dconnect_idx = c_loc(dconnect_idx)
-
-    if (associated(dconnect)) then
-      c_dconnect = c_loc(dconnect)
-    endif
-
-    call PDM_multipart_dconnectivity_set_c(multipart, &
-                                           i_zone, &
-                                           connectivity_type, &
-                                           c_dconnect, &
-                                           c_dconnect_idx)
-
-  end subroutine PDM_multipart_dconnectivity_set_
-
-  !>
-  !!
-  !! \brief Set group connectivity by kind
-  !!
-  !! \param [in]   multipart             Pointer to \ref PDM_multipart_t object
-  !! \param [in]   i_zone                Id of zone which parameters apply (or -1 for all zones)
-  !! \param [in]   bound_type            Type of bound
-  !! \param [in]   connect               Connectivity (size = connect_idx[dn_entity])
-  !! \param [in]   connect_idx           Index of connectivity or NULL if face_cell for example  (size = dn_entity)
-  !!
-
-  subroutine PDM_multipart_dgroup_set_ (multipart, &
-                                        i_zone, &
-                                        bound_type, &
-                                        dconnect, &
-                                        dconnect_idx)
-
-    use pdm
-    use iso_c_binding
-    implicit none
-
-    type(c_ptr),               value   :: multipart
-    integer(c_int),            value   :: i_zone
-    integer(c_int),            value   :: bound_type
-    integer(kind=PDM_l_num_s), pointer :: dconnect(:)
-    type(c_ptr)                        :: c_dconnect     = C_NULL_PTR
-    integer(kind=PDM_g_num_s), pointer :: dconnect_idx(:)
-    type(c_ptr)                        :: c_dconnect_idx = C_NULL_PTR
-
-    c_dconnect_idx = c_loc(dconnect_idx)
-
-    if (associated(dconnect)) then
-      c_dconnect = c_loc(dconnect)
-    endif
-
-    call PDM_multipart_dgroup_set_c(multipart, &
-                                    i_zone, &
-                                    bound_type, &
-                                    c_dconnect, &
-                                    c_dconnect_idx)
-
-  end subroutine PDM_multipart_dgroup_set_
-
-  !>
-  !!
-  !! \brief Set coordinates
-  !!
-  !! \param [in]   multipart             Pointer to \ref PDM_multipart_t object
-  !! \param [in]   i_zone                Id of zone which parameters apply (or -1 for all zones)
-  !! \param [in]   dvtx_coord            Mesh coordinates (size = 3 * dn_vtx)
-  !!
-
-  subroutine PDM_multipart_dvtx_coord_set_ (multipart, &
-                                            i_zone, &
-                                            dvtx_coord)
-
-    use iso_c_binding
-    implicit none
-
-    type(c_ptr),      value   :: multipart
-    integer(c_int),   value   :: i_zone
-    double precision, pointer :: dvtx_coord(:)
-    type(c_ptr)               :: c_dvtx_coord = C_NULL_PTR
-
-    if (associated(dvtx_coord)) then
-      c_dvtx_coord = c_loc(dvtx_coord)
-    endif
-
-    call PDM_multipart_dvtx_coord_set_c(multipart, &
-                                        i_zone, &
-                                        c_dvtx_coord)
-
-  end subroutine PDM_multipart_dvtx_coord_set_
-
 
   !>
   !! \brief Set block
