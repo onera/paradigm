@@ -538,6 +538,7 @@ _part_extension
       PDM_log_trace_array_int (pface_extented_to_pface_triplet  [i_part], n_triplet                 , "pface_extented_to_pface_triplet ::");
     }
   }
+  // exit(1);
 
   int          *pn_vtx_extented                 = NULL;
   PDM_g_num_t **pvtx_extented_ln_to_gn          = NULL;
