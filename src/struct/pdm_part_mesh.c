@@ -41,6 +41,8 @@
 #include "pdm_part_mesh.h"
 #include "pdm_part_mesh_priv.h"
 #include "pdm_priv.h"
+#include "pdm_writer.h"
+#include "pdm_part_connectivity_transform.h"
 
 /*----------------------------------------------------------------------------
  *  Header for the current file
@@ -893,3 +895,190 @@ PDM_part_mesh_free
   }
 }
 
+
+
+/**
+ * \brief Export a partitioned mesh in Ensight format
+ *
+ * \param [in] pmesh       Pointer to \ref PDM_part_mesh_t object
+ * \param [in] directory   Output directory
+ * \param [in] name        Output name
+ *
+ */
+
+void
+PDM_part_mesh_dump_ensight
+(
+ PDM_part_mesh_t *pmesh,
+ const char      *directory,
+ const char      *name
+)
+{
+  int i_rank;
+  PDM_MPI_Comm_rank(pmesh->comm, &i_rank);
+
+  int mesh_dimension = 2;
+  int tn_cell = 0;
+  if (pmesh->pn_entity[PDM_MESH_ENTITY_CELL] != NULL) {
+    for (int i = 0; i < pmesh->n_part; i++) {
+      tn_cell += pmesh->pn_entity[PDM_MESH_ENTITY_CELL][i];
+    }
+  }
+
+  int max_tn_cell = 0;
+  PDM_MPI_Allreduce(&tn_cell, &max_tn_cell, 1, PDM_MPI_INT, PDM_MPI_MAX, pmesh->comm);
+
+  if (max_tn_cell > 0) {
+    mesh_dimension = 3;
+  }
+
+  int has_face_vtx = (pmesh->pconnectivity[PDM_CONNECTIVITY_TYPE_FACE_VTX] != NULL);
+  if (!has_face_vtx) {
+    assert(pmesh->pconnectivity[PDM_CONNECTIVITY_TYPE_FACE_EDGE] != NULL);
+  }
+
+
+
+  PDM_writer_t *wrt = PDM_writer_create("Ensight",
+                                        PDM_WRITER_FMT_BIN,
+                                        PDM_WRITER_TOPO_CST,
+                                        PDM_WRITER_OFF,
+                                        directory,
+                                        name,
+                                        pmesh->comm,
+                                        PDM_IO_KIND_MPI_SIMPLE,
+                                        1.,
+                                        NULL);
+
+
+  int id_geom = PDM_writer_geom_create(wrt,
+                                       name,
+                                       pmesh->n_part);
+
+  int id_var_num_part = PDM_writer_var_create(wrt,
+                                              PDM_WRITER_OFF,
+                                              PDM_WRITER_VAR_SCALAR,
+                                              PDM_WRITER_VAR_ELEMENTS,
+                                              "num_part");
+
+  PDM_writer_step_beg(wrt, 0.);
+
+  for (int i = 0; i < pmesh->n_part; i++) {
+    PDM_writer_geom_coord_set(wrt,
+                              id_geom,
+                              0,
+                              pmesh->pn_entity[PDM_MESH_ENTITY_VERTEX][i],
+                              pmesh->vtx_coords[i],
+                              pmesh->pentity_ln_to_gn[PDM_MESH_ENTITY_VERTEX][i],
+                              PDM_OWNERSHIP_USER);
+  }
+
+
+
+  /* Compute face->vtx if missing */
+  int **pface_vtx_idx = malloc(sizeof(int *) * pmesh->n_part);
+  int **pface_vtx     = malloc(sizeof(int *) * pmesh->n_part);
+
+  if (mesh_dimension == 3) {
+    for (int i = 0; i < pmesh->n_part; i++) {
+      if (has_face_vtx) {
+        pface_vtx_idx[i] = pmesh->pconnectivity_idx[PDM_CONNECTIVITY_TYPE_FACE_VTX][i];
+        pface_vtx    [i] = pmesh->pconnectivity    [PDM_CONNECTIVITY_TYPE_FACE_VTX][i];
+      }
+      else {
+        pface_vtx_idx[i] = pmesh->pconnectivity_idx[PDM_CONNECTIVITY_TYPE_FACE_EDGE][i];
+        PDM_compute_face_vtx_from_face_and_edge(pmesh->pn_entity[PDM_MESH_ENTITY_FACE][i],
+                                                pmesh->pconnectivity_idx[PDM_CONNECTIVITY_TYPE_FACE_EDGE][i],
+                                                pmesh->pconnectivity    [PDM_CONNECTIVITY_TYPE_FACE_EDGE][i],
+                                                pmesh->pconnectivity    [PDM_CONNECTIVITY_TYPE_EDGE_VTX] [i],
+                                                &pface_vtx[i]);
+      }
+    }
+
+    for (int i = 0; i < pmesh->n_part; i++) {
+      PDM_writer_geom_cell3d_cellface_add(wrt,
+                                          id_geom,
+                                          i,
+                                          pmesh->pn_entity[PDM_MESH_ENTITY_CELL][i],
+                                          pmesh->pn_entity[PDM_MESH_ENTITY_FACE][i],
+                                          pface_vtx_idx[i],
+                                          NULL,
+                                          pface_vtx[i],
+                                          pmesh->pconnectivity_idx[PDM_CONNECTIVITY_TYPE_CELL_FACE][i],
+                                          NULL,
+                                          pmesh->pconnectivity[PDM_CONNECTIVITY_TYPE_CELL_FACE][i],
+                                          pmesh->pentity_ln_to_gn[PDM_MESH_ENTITY_CELL][i]);
+    }
+  }
+  else {
+
+    for (int i = 0; i < pmesh->n_part; i++) {
+      if (has_face_vtx) {
+        PDM_writer_geom_faces_facesom_add(wrt,
+                                          id_geom,
+                                          i,
+                                          pmesh->pn_entity[PDM_MESH_ENTITY_FACE][i],
+                                          pmesh->pconnectivity_idx[PDM_CONNECTIVITY_TYPE_FACE_VTX][i],
+                                          NULL,
+                                          pmesh->pconnectivity[PDM_CONNECTIVITY_TYPE_FACE_VTX][i],
+                                          pmesh->pentity_ln_to_gn[PDM_MESH_ENTITY_FACE][i]);
+      }
+      else {
+        PDM_writer_geom_cell2d_cellface_add(wrt,
+                                            id_geom,
+                                            i,
+                                            pmesh->pn_entity[PDM_MESH_ENTITY_FACE][i],
+                                            pmesh->pn_entity[PDM_MESH_ENTITY_EDGE][i],
+                                            NULL,
+                                            NULL,
+                                            pmesh->pconnectivity[PDM_CONNECTIVITY_TYPE_EDGE_VTX][i],
+                                            pmesh->pconnectivity_idx[PDM_CONNECTIVITY_TYPE_FACE_EDGE][i],
+                                            NULL,
+                                            pmesh->pconnectivity[PDM_CONNECTIVITY_TYPE_FACE_EDGE][i],
+                                            pmesh->pentity_ln_to_gn[PDM_MESH_ENTITY_FACE][i]);
+      }
+    }
+  }
+
+  PDM_writer_geom_write(wrt,
+                        id_geom);
+
+  PDM_real_t **val_num_part = malloc(sizeof(PDM_real_t *) * pmesh->n_part);
+  for (int i = 0; i < pmesh->n_part; i++) {
+    int n = 0;
+    if (mesh_dimension == 2) {
+      n = pmesh->pn_entity[PDM_MESH_ENTITY_FACE][i];
+    }
+    else {
+      n = pmesh->pn_entity[PDM_MESH_ENTITY_CELL][i];
+    }
+
+    val_num_part[i] = malloc(sizeof(PDM_real_t) * n);
+    for (int j = 0; j < n; j++) {
+      val_num_part[i][j] = i_rank * pmesh->n_part + i; // !! works only if each rank has the same nb of partitions
+    }
+
+    PDM_writer_var_set(wrt,
+                       id_var_num_part,
+                       id_geom,
+                       i,
+                       val_num_part[i]);
+  }
+
+  PDM_writer_var_write(wrt,
+                       id_var_num_part);
+
+  PDM_writer_step_end(wrt);
+
+  PDM_writer_free(wrt);
+
+  for (int i = 0; i < pmesh->n_part; i++) {
+    if (mesh_dimension == 3 && !has_face_vtx) {
+      free(pface_vtx[i]);
+    }
+    free(val_num_part[i]);
+  }
+  free(pface_vtx_idx);
+  free(pface_vtx    );
+  free(val_num_part );
+}

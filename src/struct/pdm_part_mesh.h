@@ -299,6 +299,23 @@ PDM_part_mesh_part_graph_comm_set
  PDM_ownership_t           ownership
 );
 
+/**
+ * \brief Export a partitioned mesh in Ensight format
+ *
+ * \param [in] pmesh       Pointer to \ref PDM_part_mesh_t object
+ * \param [in] directory   Output directory
+ * \param [in] name        Output name
+ *
+ */
+
+void
+PDM_part_mesh_dump_ensight
+(
+ PDM_part_mesh_t *pmesh,
+ const char      *directory,
+ const char      *name
+);
+
 /*----------------------------------------------------------------------------*/
 
 #ifdef __cplusplus
