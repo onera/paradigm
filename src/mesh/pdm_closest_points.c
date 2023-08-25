@@ -275,6 +275,7 @@ _closest_points_reverse_results
 
         /* Ajout du premier point */
         tgt_in_src_n[i_part][i_point] = 1;
+        cls->src_cloud->tgt_in_src     [i_part][idx_write] = cls->src_cloud->tgt_in_src[i_part][idx_read];
         cls->src_cloud->tgt_in_src_dist[i_part][idx_write] = tgt_dist[tgt_order[0]];
         idx_write++;
 
