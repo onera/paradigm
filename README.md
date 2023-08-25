@@ -58,6 +58,10 @@ Refer to [FindPython](https://cmake.org/cmake/help/latest/module/FindPython.html
 #### Build static library
     PDM_ENABLE_STATIC=<ON | OFF> (default : ON)
 
+
+#### Build tests
+    PDM_ENABLE_TESTS=<ON | OFF> (default : ON)
+
 #### Enable the use of [ParMETIS](https://github.com/KarypisLab/ParMETIS) (parallel graph partitioning)
     PDM_ENABLE_PARMETIS=<ON | OFF> (default : ON)
 

@@ -4786,50 +4786,47 @@ PDM_extract_part_partial_free
 
   /* Free ln_to_gn */
   for(int i = 0; i < PDM_MESH_ENTITY_MAX; ++i) {
-    if(extrp->is_owner_ln_to_gn[i] == PDM_TRUE) {
-      if(extrp->pextract_entity_ln_to_gn[i] != NULL) {
+    if(extrp->pextract_entity_ln_to_gn[i] != NULL) {
+      if(extrp->is_owner_ln_to_gn[i] == PDM_TRUE) {
         for(int i_part = 0; i_part < extrp->n_part_out; ++i_part) {
           if(extrp->pextract_entity_ln_to_gn[i][i_part] != NULL) {
             free(extrp->pextract_entity_ln_to_gn[i][i_part]);
           }
         }
-
-        free(extrp->pextract_entity_ln_to_gn[i]);
-        extrp->pextract_entity_ln_to_gn[i] = NULL;
       }
+      free(extrp->pextract_entity_ln_to_gn[i]);
+      extrp->pextract_entity_ln_to_gn[i] = NULL;
     }
   }
 
 
   /* Free parent_ln_to_gn */
   for(int i = 0; i < PDM_MESH_ENTITY_MAX; ++i) {
-    if(extrp->is_owner_parent_ln_to_gn[i] == PDM_TRUE) {
-      if(extrp->pextract_entity_parent_ln_to_gn[i] != NULL) {
+    if(extrp->pextract_entity_parent_ln_to_gn[i] != NULL) {
+      if(extrp->is_owner_parent_ln_to_gn[i] == PDM_TRUE) {
         for(int i_part = 0; i_part < extrp->n_part_out; ++i_part) {
           if(extrp->pextract_entity_parent_ln_to_gn[i][i_part] != NULL) {
             free(extrp->pextract_entity_parent_ln_to_gn[i][i_part]);
           }
         }
-
-        free(extrp->pextract_entity_parent_ln_to_gn[i]);
-        extrp->pextract_entity_parent_ln_to_gn[i] = NULL;
       }
+      free(extrp->pextract_entity_parent_ln_to_gn[i]);
+      extrp->pextract_entity_parent_ln_to_gn[i] = NULL;
     }
   }
 
   /* Free parent_ln_to_gn */
   for(int i = 0; i < PDM_MESH_ENTITY_MAX; ++i) {
-    if(extrp->is_owner_parent_lnum[i] == PDM_TRUE) {
-      if(extrp->pextract_entity_parent_lnum[i] != NULL) {
+    if(extrp->pextract_entity_parent_lnum[i] != NULL) {
+      if(extrp->is_owner_parent_lnum[i] == PDM_TRUE) {
         for(int i_part = 0; i_part < extrp->n_part_out; ++i_part) {
           if(extrp->pextract_entity_parent_lnum[i][i_part] != NULL) {
             free(extrp->pextract_entity_parent_lnum[i][i_part]);
           }
         }
-
-        free(extrp->pextract_entity_parent_lnum[i]);
-        extrp->pextract_entity_parent_lnum[i] = NULL;
       }
+      free(extrp->pextract_entity_parent_lnum[i]);
+      extrp->pextract_entity_parent_lnum[i] = NULL;
     }
   }
 
