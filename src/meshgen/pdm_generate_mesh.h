@@ -295,8 +295,27 @@ PDM_generate_mesh_parallelepiped
  *
  * \brief Create a partitionned rectangle mesh (2D) with descending connectivities.
  *
- * \param [in]   comm        MPI communicator
- * \param [in]   ...
+ * \param [in]   comm           MPI communicator
+ * \param [in]   elt_type       Element type
+ * \param [in]   xmin           Minimal x-coordinate
+ * \param [in]   ymin           Minimal y-coordinate
+ * \param [in]   zmin           Minimal z-coordinate
+ * \param [in]   lengthx        Length of the rectangle in the x-direction
+ * \param [in]   lengthy        Length of the rectangle in the y-direction
+ * \param [in]   n_x            Number of points in the x-direction
+ * \param [in]   n_y            Number of points in the y-direction
+ * \param [in]   n_part         Number of partitions
+ * \param [in]   part_method    Paritioning method
+ * \param [in]   pn_vtx         Number of vertices
+ * \param [in]   pn_edge        Number of edges
+ * \param [in]   pn_face        Number of faces
+ * \param [in]   pvtx_coord     Vertex coordinates
+ * \param [in]   pedge_vtx      edge->vertex connectivity
+ * \param [in]   pface_edge_idx Index of face->edge connectivity
+ * \param [in]   pface_edge     face->edge connectivity
+ * \param [in]   pvtx_ln_to_gn  Vertex global number
+ * \param [in]   pedge_ln_to_gn Edge global number
+ * \param [in]   pface_ln_to_gn Face global number
  *
  */
 
@@ -330,8 +349,28 @@ PDM_generate_mesh_rectangle_ngon
  *
  * \brief Create a partitionned sphere mesh (2D) with descending connectivities.
  *
- * \param [in]   comm        MPI communicator
- * \param [in]   ...
+ * \param [in]   comm           MPI communicator
+ * \param [in]   elt_type       Element type
+ * \param [in]   order          Element order
+ * \param [in]   ho_ordering    Ordering of nodes of the HO element
+ * \param [in]   radius         Radius of the sphere
+ * \param [in]   center_x       x-coordinate of the sphere center
+ * \param [in]   center_y       y-coordinate of the sphere center
+ * \param [in]   center_z       z-coordinate of the sphere center
+ * \param [in]   n_u            Number of vertices in the u-direction
+ * \param [in]   n_v            Number of vertices in the v-direction
+ * \param [in]   n_part         Number of partitions
+ * \param [in]   part_method    Paritioning method
+ * \param [in]   pn_vtx         Number of vertices
+ * \param [in]   pn_edge        Number of edges
+ * \param [in]   pn_face        Number of faces
+ * \param [in]   pvtx_coord     Vertex coordinates
+ * \param [in]   pedge_vtx      edge->vertex connectivity
+ * \param [in]   pface_edge_idx Index of face->edge connectivity
+ * \param [in]   pface_edge     face->edge connectivity
+ * \param [in]   pvtx_ln_to_gn  Vertex global number
+ * \param [in]   pedge_ln_to_gn Edge global number
+ * \param [in]   pface_ln_to_gn Face global number
  *
  */
 
@@ -360,6 +399,74 @@ PDM_generate_mesh_sphere_ngon
  PDM_g_num_t                ***pvtx_ln_to_gn,
  PDM_g_num_t                ***pedge_ln_to_gn,
  PDM_g_num_t                ***pface_ln_to_gn
+);
+
+/**
+ *
+ * \brief Create a partitionned ball mesh (3D) with descending connectivities.
+ *
+ * \param [in]  comm            MPI communicator
+ * \param [in]  elt_type        Mesh element type
+ * \param [in]  order           Mesh element order
+ * \param [in]  ho_ordering     High order nodes ordering type
+ * \param [in]  radius          Radius of the ball
+ * \param [in]  hole_radius     Radius of the hole of the ball
+ * \param [in]  center_x        x-coordinate of the ball center
+ * \param [in]  center_y        y-coordinate of the ball center
+ * \param [in]  center_z        z-coordinate of the ball center
+ * \param [in]  n_x             Number of vertices on segments in x-direction
+ * \param [in]  n_y             Number of vertices on segments in y-direction
+ * \param [in]  n_z             Number of vertices on segments in z-direction
+ * \param [in]  n_layer         Number of extrusion layers
+ * \param [in]  geometric_ratio Geometric ratio for layer thickness
+ * \param [in]  n_part          Number of mesh partitions
+ * \param [in]  part_method     Mesh partitionning method
+ * \param [in]   pn_vtx         Number of vertices
+ * \param [in]   pn_edge        Number of edges
+ * \param [in]   pn_face        Number of faces
+ * \param [in]   pvtx_coord     Vertex coordinates
+ * \param [in]   pedge_vtx      edge->vertex connectivity
+ * \param [in]   pface_edge_idx Index of face->edge connectivity
+ * \param [in]   pface_edge     face->edge connectivity
+ * \param [in]   pvtx_ln_to_gn  Vertex global number
+ * \param [in]   pedge_ln_to_gn Edge global number
+ * \param [in]   pface_ln_to_gn Face global number
+ *
+ */
+
+void
+PDM_generate_mesh_ball_ngon
+(
+ const PDM_MPI_Comm            comm,
+ PDM_Mesh_nodal_elt_t          elt_type,
+ int                           order,
+ const char                   *ho_ordering,
+ const double                  radius,
+ const double                  hole_radius,
+ const double                  center_x,
+ const double                  center_y,
+ const double                  center_z,
+ const PDM_g_num_t             n_x,
+ const PDM_g_num_t             n_y,
+ const PDM_g_num_t             n_z,
+ const PDM_g_num_t             n_layer,
+ const double                  geometric_ratio,
+ const int                     n_part,
+ const PDM_split_dual_t        part_method,
+ int                         **pn_vtx,
+ int                         **pn_edge,
+ int                         **pn_face,
+ int                         **pn_cell,
+ double                     ***pvtx_coord,
+ int                        ***pedge_vtx,
+ int                        ***pface_edge_idx,
+ int                        ***pface_edge,
+ int                        ***pcell_face_idx,
+ int                        ***pcell_face,
+ PDM_g_num_t                ***pvtx_ln_to_gn,
+ PDM_g_num_t                ***pedge_ln_to_gn,
+ PDM_g_num_t                ***pface_ln_to_gn,
+PDM_g_num_t                ***pcell_ln_to_gn
 );
 
 #ifdef __cplusplus
