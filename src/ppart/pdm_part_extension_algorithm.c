@@ -100,12 +100,73 @@ _recurse_and_filter
  int                 *pn_entity1,
  int                **part1_to_part2_idx,
  int                **part1_to_part2_interface,
+ int                **pentity1_entity2_idx,
+ int                **pentity1_entity2,
+ PDM_g_num_t        **pentity2_ln_to_gn,
  PDM_g_num_t        **pextract_entity2_n,
  PDM_g_num_t        **pextract_entity2_gnum,
  PDM_g_num_t        **pextract_entity2_triplet,
  PDM_MPI_Comm         comm
 )
 {
+
+  /*
+   * We wan to build the complete graphe betwenn entity1 and entity2
+   * But at each step we need to fix it with transformation
+   * We need to build :
+   *     - pentity1_entity2_gnum_and_interface_n
+   *     - pentity1_entity2_gnum_and_interface   [(n_data, gnum, intrf1, itrf(n_data-1), (n_data, gnum, ...)) sub_stride
+   */
+  int         **pentity1_entity2_gnum_and_interface_n = malloc(n_part_tot * sizeof(int         *));
+  PDM_g_num_t **pentity1_entity2_gnum_and_interface   = malloc(n_part_tot * sizeof(PDM_g_num_t *));
+
+  /* Init */
+  for(int i_part = 0; i_part < n_part_tot; ++i_part) {
+    pentity1_entity2_gnum_and_interface_n[i_part] = malloc(pn_entity1[i_part] * sizeof(int));
+
+    int         *_pentity1_entity2_idx                  = pentity1_entity2_idx                 [i_part];
+    int         *_pentity1_entity2                      = pentity1_entity2                     [i_part];
+    PDM_g_num_t *_pentity2_ln_to_gn                     = pentity2_ln_to_gn                    [i_part];
+    int         *_part1_to_part2_idx                    = part1_to_part2_idx                   [i_part];
+    int         *_pentity1_entity2_gnum_and_interface_n = pentity1_entity2_gnum_and_interface_n[i_part];
+
+    int n_entity1_entity2 = 0;
+    for(int i = 0; i < pn_entity1[i_part]; ++i) {
+      _pentity1_entity2_gnum_and_interface_n[i] = 0;
+      if(_part1_to_part2_idx[i+1] - _part1_to_part2_idx[i] > 0) { // Donc un bords dont on souhaite le dual
+        _pentity1_entity2_gnum_and_interface_n[i] += _pentity1_entity2_idx[i+1] - _pentity1_entity2_idx[i];
+      }
+      n_entity1_entity2 += _pentity1_entity2_gnum_and_interface_n[i];
+    }
+
+    pentity1_entity2_gnum_and_interface[i_part] = malloc(2 * n_entity1_entity2 * sizeof(PDM_g_num_t)); // n_data + gnum
+    PDM_g_num_t *_pentity1_entity2_gnum_and_interface = pentity1_entity2_gnum_and_interface[i_part];
+
+    n_entity1_entity2 = 0;
+    for(int i = 0; i < pn_entity1[i_part]; ++i) {
+      if(_part1_to_part2_idx[i+1] - _part1_to_part2_idx[i] > 0) { // Donc un bords dont on souhaite le dual
+        for(int j = _pentity1_entity2_idx[i]; j < _pentity1_entity2_idx[i+1]; ++j) {
+          int i_entity2 = PDM_ABS(_pentity1_entity2[j])-1;
+          _pentity1_entity2_gnum_and_interface[n_entity1_entity2++] = 1;
+          _pentity1_entity2_gnum_and_interface[n_entity1_entity2++] = _pentity2_ln_to_gn[i_entity2];
+        }
+      }
+    }
+
+    PDM_log_trace_array_long(_pentity1_entity2_gnum_and_interface_n, pn_entity1[i_part], "_pentity1_entity2_gnum_and_interface_n ::");
+    PDM_log_trace_array_long(_pentity1_entity2_gnum_and_interface, n_entity1_entity2, "_pentity1_entity2_gnum_and_interface ::");
+
+  }
+
+
+
+  for(int i_part = 0; i_part < n_part_tot; ++i_part) {
+    free(pentity1_entity2_gnum_and_interface  [i_part]);
+    free(pentity1_entity2_gnum_and_interface_n[i_part]);
+  }
+  free(pentity1_entity2_gnum_and_interface  );
+  free(pentity1_entity2_gnum_and_interface_n);
+
 
   /* Init step */
   int         **pborder_entity1_to_pentity2_n = malloc(n_part_tot * sizeof(int         *));
@@ -724,6 +785,9 @@ PDM_part_extension_interface_by_entity1_to_interface_by_entity2
                       pn_entity1,
                       part1_to_part2_idx,
                       part1_to_part2_interface,
+                      pentity1_entity2_idx,
+                      pentity1_entity2,
+                      pentity2_ln_to_gn,
                       pextract_entity2_n,
                       pextract_entity2_gnum,
                       pextract_entity2_triplet,
