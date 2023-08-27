@@ -175,7 +175,9 @@ _concatenate_part_graph
     for(int idx = part1_to_part2_idx[i]/3; idx < part1_to_part2_idx[i+1]/3; ++idx) {
 
       /* From previous in layout of part2 */
-      for(int k = 0; k < bentity1_entity2_n[i]; ++k) {
+      log_trace("i = %i | idx = %i | n = %i \n", i, idx, pnext_bentity1_entity2_n[idx]);
+      for(int k = 0; k < pnext_bentity1_entity2_n[idx]; ++k) {
+        log_trace("idx_readp = %i\n", idx_readp);
         concat_bentity1_entity2_gnum       [  n_concat_entity1_entity2  ] = pnext_bentity1_entity2_gnum       [  idx_readp  ];
         concat_bentity1_entity2_triplet    [3*n_concat_entity1_entity2  ] = pnext_bentity1_entity2_triplet    [3*idx_readp  ];
         concat_bentity1_entity2_triplet    [3*n_concat_entity1_entity2+1] = pnext_bentity1_entity2_triplet    [3*idx_readp+1];
@@ -567,13 +569,21 @@ _recurse_and_filter
    * Previous concat
    *
    */
+  int         **prev_concat_bentity1_entity2_n               = malloc(n_part_tot * sizeof(int         *));
+  PDM_g_num_t **prev_concat_bentity1_entity2_gnum            = malloc(n_part_tot * sizeof(PDM_g_num_t *));
+  int         **prev_concat_bentity1_entity2_triplet         = malloc(n_part_tot * sizeof(int         *));
+  int         **prev_concat_bentity1_entity2_interface_n     = malloc(n_part_tot * sizeof(int         *));
+  int         **prev_concat_bentity1_entity2_interface_tot_n = malloc(n_part_tot * sizeof(int         *));
+  int         **prev_concat_bentity1_entity2_interface       = malloc(n_part_tot * sizeof(int         *));
 
-  int         **prev_concat_bentity1_entity2_n               = bentity1_entity2_n;
-  PDM_g_num_t **prev_concat_bentity1_entity2_gnum            = bentity1_entity2_gnum;
-  int         **prev_concat_bentity1_entity2_triplet         = bentity1_entity2_triplet;
-  int         **prev_concat_bentity1_entity2_interface_n     = bentity1_entity2_interface_n;
-  int         **prev_concat_bentity1_entity2_interface_tot_n = bentity1_entity2_interface_tot_n;
-  int         **prev_concat_bentity1_entity2_interface       = bentity1_entity2_interface;
+  for(int i_part = 0; i_part < n_part_tot; ++i_part) {
+    prev_concat_bentity1_entity2_n              [i_part] = bentity1_entity2_n              [i_part];
+    prev_concat_bentity1_entity2_gnum           [i_part] = bentity1_entity2_gnum           [i_part];
+    prev_concat_bentity1_entity2_triplet        [i_part] = bentity1_entity2_triplet        [i_part];
+    prev_concat_bentity1_entity2_interface_n    [i_part] = bentity1_entity2_interface_n    [i_part];
+    prev_concat_bentity1_entity2_interface_tot_n[i_part] = bentity1_entity2_interface_tot_n[i_part];
+    prev_concat_bentity1_entity2_interface      [i_part] = bentity1_entity2_interface      [i_part];
+  }
 
   int         **concat_bentity1_entity2_n               = malloc(n_part_tot * sizeof(int         *));
   PDM_g_num_t **concat_bentity1_entity2_gnum            = malloc(n_part_tot * sizeof(PDM_g_num_t *));
@@ -582,9 +592,9 @@ _recurse_and_filter
   int         **concat_bentity1_entity2_interface_tot_n = malloc(n_part_tot * sizeof(int         *));
   int         **concat_bentity1_entity2_interface       = malloc(n_part_tot * sizeof(int         *));
 
+  for(int i_step = 0; i_step < 2; ++i_step)  {
 
-  for(int i_step = 0; i_step < 3; ++i_step)  {
-
+    log_trace("------- STEP %i ------- \n", i_step);
     /*
      * Il faudrait refaire l'échange qu'on fait en gnum_come_from avec ce layout pour l'appeler en part2
      * On doit avoir le même resultats
@@ -595,6 +605,11 @@ _recurse_and_filter
     int         **pnext_bentity1_entity2_interface_n     = NULL;
     int         **pnext_bentity1_entity2_interface_tot_n = NULL;
     int         **pnext_bentity1_entity2_interface       = NULL;
+
+    for(int i_part = 0; i_part < n_part_tot; ++i_part) {
+      PDM_log_trace_array_int (bentity1_entity2_n              [i_part], pn_entity1[i_part]    , "bentity1_entity2_n               ::");
+      PDM_log_trace_array_int (bentity1_entity2_interface_tot_n[i_part], pn_entity1[i_part]    , "bentity1_entity2_interface_tot_n ::");
+    }
     exchange_and_concat_part_graph(ptp,
                                    n_part_tot,
                                    pn_entity1,
@@ -653,14 +668,21 @@ _recurse_and_filter
       /*
        * Preapre for next step
        */
-      if(i_step > 0) { // Because init step point out on bentity1_entity2_*
+      // if(i_step > 0) { // Because init step point out on bentity1_entity2_*
         free(prev_concat_bentity1_entity2_n              [i_part]);
         free(prev_concat_bentity1_entity2_gnum           [i_part]);
         free(prev_concat_bentity1_entity2_triplet        [i_part]);
         free(prev_concat_bentity1_entity2_interface_n    [i_part]);
         free(prev_concat_bentity1_entity2_interface_tot_n[i_part]);
         free(prev_concat_bentity1_entity2_interface      [i_part]);
-      }
+      // } else {
+      //   free(bentity1_entity2_n              [i_part]);
+      //   free(bentity1_entity2_gnum           [i_part]);
+      //   free(bentity1_entity2_triplet        [i_part]);
+      //   free(bentity1_entity2_interface_n    [i_part]);
+      //   free(bentity1_entity2_interface_tot_n[i_part]);
+      //   free(bentity1_entity2_interface      [i_part]);
+      // }
 
       prev_concat_bentity1_entity2_n              [i_part] = concat_bentity1_entity2_n              [i_part];
       prev_concat_bentity1_entity2_gnum           [i_part] = concat_bentity1_entity2_gnum           [i_part];
@@ -669,18 +691,40 @@ _recurse_and_filter
       prev_concat_bentity1_entity2_interface_tot_n[i_part] = concat_bentity1_entity2_interface_tot_n[i_part];
       prev_concat_bentity1_entity2_interface      [i_part] = concat_bentity1_entity2_interface      [i_part];
 
+      concat_bentity1_entity2_n              [i_part] = NULL;
+      concat_bentity1_entity2_gnum           [i_part] = NULL;
+      concat_bentity1_entity2_triplet        [i_part] = NULL;
+      concat_bentity1_entity2_interface_n    [i_part] = NULL;
+      concat_bentity1_entity2_interface_tot_n[i_part] = NULL;
+      concat_bentity1_entity2_interface      [i_part] = NULL;
+
+      if(i_step > 0) {
+        free(bentity1_entity2_n              [i_part]);
+        free(bentity1_entity2_gnum           [i_part]);
+        free(bentity1_entity2_triplet        [i_part]);
+        free(bentity1_entity2_interface_n    [i_part]);
+        free(bentity1_entity2_interface_tot_n[i_part]);
+        free(bentity1_entity2_interface      [i_part]);
+      }
+
       bentity1_entity2_n              [i_part] = pnext_bentity1_entity2_n              [i_part];
       bentity1_entity2_gnum           [i_part] = pnext_bentity1_entity2_gnum           [i_part];
       bentity1_entity2_triplet        [i_part] = pnext_bentity1_entity2_triplet        [i_part];
       bentity1_entity2_interface_n    [i_part] = pnext_bentity1_entity2_interface_n    [i_part];
       bentity1_entity2_interface_tot_n[i_part] = pnext_bentity1_entity2_interface_tot_n[i_part];
       bentity1_entity2_interface      [i_part] = pnext_bentity1_entity2_interface      [i_part];
+
+      pnext_bentity1_entity2_n              [i_part] = NULL;
+      pnext_bentity1_entity2_gnum           [i_part] = NULL;
+      pnext_bentity1_entity2_triplet        [i_part] = NULL;
+      pnext_bentity1_entity2_interface_n    [i_part] = NULL;
+      pnext_bentity1_entity2_interface_tot_n[i_part] = NULL;
+      pnext_bentity1_entity2_interface      [i_part] = NULL;
     }
 
     /*
      * Swap ptr
      */
-    log_trace("------- STEP %i ------- \n", i_step);
     // _dump_();
 
     free(pnext_bentity1_entity2_n              );
@@ -690,34 +734,32 @@ _recurse_and_filter
     free(pnext_bentity1_entity2_interface_tot_n);
     free(pnext_bentity1_entity2_interface      );
 
-
   }
+
+  for(int i_part = 0; i_part < n_part_tot; ++i_part) {
+    free(prev_concat_bentity1_entity2_n              [i_part]);
+    free(prev_concat_bentity1_entity2_gnum           [i_part]);
+    free(prev_concat_bentity1_entity2_triplet        [i_part]);
+    free(prev_concat_bentity1_entity2_interface_n    [i_part]);
+    free(prev_concat_bentity1_entity2_interface_tot_n[i_part]);
+    free(prev_concat_bentity1_entity2_interface      [i_part]);
+  }
+  free(prev_concat_bentity1_entity2_n              );
+  free(prev_concat_bentity1_entity2_gnum           );
+  free(prev_concat_bentity1_entity2_triplet        );
+  free(prev_concat_bentity1_entity2_interface_n    );
+  free(prev_concat_bentity1_entity2_interface_tot_n);
+  free(prev_concat_bentity1_entity2_interface      );
 
 
   // for(int i_part = 0; i_part < n_part_tot; ++i_part) {
-  //   free(prev_concat_bentity1_entity2_n              [i_part]);
-  //   free(prev_concat_bentity1_entity2_gnum           [i_part]);
-  //   free(prev_concat_bentity1_entity2_triplet        [i_part]);
-  //   free(prev_concat_bentity1_entity2_interface_n    [i_part]);
-  //   free(prev_concat_bentity1_entity2_interface_tot_n[i_part]);
-  //   free(prev_concat_bentity1_entity2_interface      [i_part]);
+  //   free(concat_bentity1_entity2_n              [i_part]);
+  //   free(concat_bentity1_entity2_gnum           [i_part]);
+  //   free(concat_bentity1_entity2_triplet        [i_part]);
+  //   free(concat_bentity1_entity2_interface_n    [i_part]);
+  //   free(concat_bentity1_entity2_interface_tot_n[i_part]);
+  //   free(concat_bentity1_entity2_interface      [i_part]);
   // }
-  // free(prev_concat_bentity1_entity2_n              );
-  // free(prev_concat_bentity1_entity2_gnum           );
-  // free(prev_concat_bentity1_entity2_triplet        );
-  // free(prev_concat_bentity1_entity2_interface_n    );
-  // free(prev_concat_bentity1_entity2_interface_tot_n);
-  // free(prev_concat_bentity1_entity2_interface      );
-
-
-  for(int i_part = 0; i_part < n_part_tot; ++i_part) {
-    free(concat_bentity1_entity2_n              [i_part]);
-    free(concat_bentity1_entity2_gnum           [i_part]);
-    free(concat_bentity1_entity2_triplet        [i_part]);
-    free(concat_bentity1_entity2_interface_n    [i_part]);
-    free(concat_bentity1_entity2_interface_tot_n[i_part]);
-    free(concat_bentity1_entity2_interface      [i_part]);
-  }
   free(concat_bentity1_entity2_n              );
   free(concat_bentity1_entity2_gnum           );
   free(concat_bentity1_entity2_triplet        );
