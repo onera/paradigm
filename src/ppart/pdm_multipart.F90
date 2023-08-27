@@ -229,7 +229,7 @@ interface
 
     type(c_ptr),    value  :: multipart
     integer(c_int), value  :: i_zone
-    type(c_ptr),    value  :: pmesh_nodal
+    type(c_ptr)            :: pmesh_nodal
     integer(c_int), value  :: ownership
 
   end subroutine PDM_multipart_get_part_mesh_nodal_c
@@ -917,7 +917,7 @@ contains
 
     type(c_ptr),    value  :: multipart
     integer(c_int), value  :: i_zone
-    type(c_ptr),    value  :: pmesh_nodal
+    type(c_ptr)            :: pmesh_nodal
     integer(c_int), value  :: ownership
 
     call PDM_multipart_get_part_mesh_nodal_c(multipart, &
@@ -1365,12 +1365,7 @@ contains
     integer(kind=PDM_l_num_s), pointer :: connect_idx(:)
     type(c_ptr)                        :: c_connect_idx = C_NULL_PTR
     integer(c_int),            value   :: ownership
-    integer(c_int),            value   :: pn_entity
-
-    integer :: taille
-
-    c_connect     = c_loc(connect)
-    c_connect_idx = c_loc(connect_idx)
+    integer(c_int)                     :: pn_entity
 
     pn_entity = PDM_multipart_part_connectivity_get_c(multipart, &
                                                       i_zone, &
@@ -1384,11 +1379,9 @@ contains
                      connect_idx,   &
                      [pn_entity])
 
-    taille = connect_idx(pn_entity)
-
     call c_f_pointer(c_connect, &
                      connect,   &
-                     [taille])
+                     [connect_idx(pn_entity+1)])
 
   end subroutine PDM_multipart_part_connectivity_get_
 
@@ -1424,9 +1417,7 @@ contains
     integer(kind=PDM_g_num_s), pointer :: entity_ln_to_gn(:)
     type(c_ptr)                        :: c_entity_ln_to_gn = C_NULL_PTR
     integer(c_int),            value   :: ownership
-    integer(c_int),            value   :: pn_entity
-
-    c_entity_ln_to_gn = c_loc(entity_ln_to_gn)
+    integer(c_int)                     :: pn_entity
 
     pn_entity = PDM_multipart_part_ln_to_gn_get_c(multipart, &
                                                   i_zone, &
@@ -1473,9 +1464,7 @@ contains
     integer(kind=PDM_l_num_s), pointer :: entity_color(:)
     type(c_ptr)                        :: c_entity_color = C_NULL_PTR
     integer(c_int),            value   :: ownership
-    integer(c_int),            value   :: pn_entity
-
-    c_entity_color = c_loc(entity_color)
+    integer(c_int)                     :: pn_entity
 
     pn_entity = PDM_multipart_partition_color_get_c(multipart, &
                                                     i_zone, &
@@ -1540,8 +1529,6 @@ contains
                                       c_s_face_bound, &
                                       c_n_bound_groups)
 
-    c_vtx_ghost_information = c_loc(vtx_ghost_information)
-
     call PDM_multipart_part_ghost_infomation_get_c(multipart, &
                                                    i_zone, &
                                                    i_part, &
@@ -1581,7 +1568,7 @@ contains
     double precision, pointer   :: vtx_coord(:,:)
     type(c_ptr)                 :: c_vtx_coord = C_NULL_PTR
     integer(c_int),   value     :: ownership
-    integer(c_int),   value     :: n_vtx
+    integer(c_int)              :: n_vtx
 
     n_vtx = PDM_multipart_part_vtx_coord_get_c(multipart, &
                                                i_zone, &
