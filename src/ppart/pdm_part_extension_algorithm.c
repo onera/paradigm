@@ -201,6 +201,101 @@ _concatenate_part_graph
 
 }
 
+
+static
+void
+exchange_and_concat_part_graph
+(
+ PDM_part_to_part_t  *ptp,
+ int                  n_part_tot,
+ int                 *pn_entity1,
+ int                **bentity1_entity2_n,
+ PDM_g_num_t        **bentity1_entity2_gnum,
+ int                **bentity1_entity2_triplet,
+ int                **bentity1_entity2_interface_n,
+ int                **bentity1_entity2_interface_tot_n,
+ int                **bentity1_entity2_interface,
+ int               ***pnext_bentity1_entity2_n_out,
+ PDM_g_num_t       ***pnext_bentity1_entity2_gnum_out,
+ int               ***pnext_bentity1_entity2_triplet_out,
+ int               ***pnext_bentity1_entity2_interface_n_out,
+ int               ***pnext_bentity1_entity2_interface_tot_n_out,
+ int               ***pnext_bentity1_entity2_interface_out
+)
+{
+  int exch_request = 0;
+  int         **pnext_bentity1_entity2_n    = NULL;
+  PDM_g_num_t **pnext_bentity1_entity2_gnum = NULL;
+  PDM_part_to_part_reverse_iexch(ptp,
+                                 PDM_MPI_COMM_KIND_P2P,
+                                 PDM_STRIDE_VAR_INTERLACED,
+                                 PDM_PART_TO_PART_DATA_DEF_ORDER_PART2,
+                                 1,
+                                 sizeof(PDM_g_num_t),
+                (const int **)   bentity1_entity2_n,
+                (const void **)  bentity1_entity2_gnum,
+                                 &pnext_bentity1_entity2_n,
+                    (void ***)   &pnext_bentity1_entity2_gnum,
+                                 &exch_request);
+  PDM_part_to_part_reverse_iexch_wait(ptp, exch_request);
+
+  int **pnext_bentity1_entity2_triplet = NULL;
+  PDM_part_to_part_reverse_iexch(ptp,
+                                 PDM_MPI_COMM_KIND_P2P,
+                                 PDM_STRIDE_VAR_INTERLACED,
+                                 PDM_PART_TO_PART_DATA_DEF_ORDER_PART2,
+                                 1,
+                                 3 * sizeof(int),
+                (const int **)   bentity1_entity2_n,
+                (const void **)  bentity1_entity2_triplet,
+                                 &pnext_bentity1_entity2_n,
+                    (void ***)   &pnext_bentity1_entity2_triplet,
+                                 &exch_request);
+  PDM_part_to_part_reverse_iexch_wait(ptp, exch_request);
+
+  /*
+   * Exchange stride or interface
+   */
+  int **pnext_bentity1_entity2_interface_n = NULL;
+  PDM_part_to_part_reverse_iexch(ptp,
+                                 PDM_MPI_COMM_KIND_P2P,
+                                 PDM_STRIDE_VAR_INTERLACED,
+                                 PDM_PART_TO_PART_DATA_DEF_ORDER_PART2,
+                                 1,
+                                 sizeof(int),
+                (const int **)   bentity1_entity2_n,
+                (const void **)  bentity1_entity2_interface_n,
+                                 &pnext_bentity1_entity2_n,
+                    (void ***)   &pnext_bentity1_entity2_interface_n,
+                                 &exch_request);
+  PDM_part_to_part_reverse_iexch_wait(ptp, exch_request);
+
+
+  int **pnext_bentity1_entity2_interface_tot_n = NULL;
+  int **pnext_bentity1_entity2_interface       = NULL;
+  PDM_part_to_part_reverse_iexch(ptp,
+                                 PDM_MPI_COMM_KIND_P2P,
+                                 PDM_STRIDE_VAR_INTERLACED,
+                                 PDM_PART_TO_PART_DATA_DEF_ORDER_PART2,
+                                 1,
+                                 sizeof(int),
+                (const int **)   bentity1_entity2_interface_tot_n,
+                (const void **)  bentity1_entity2_interface,
+                                 &pnext_bentity1_entity2_interface_tot_n,
+                    (void ***)   &pnext_bentity1_entity2_interface,
+                                 &exch_request);
+  PDM_part_to_part_reverse_iexch_wait(ptp, exch_request);
+
+  *pnext_bentity1_entity2_n_out               = pnext_bentity1_entity2_n;
+  *pnext_bentity1_entity2_gnum_out            = pnext_bentity1_entity2_gnum;
+  *pnext_bentity1_entity2_triplet_out         = pnext_bentity1_entity2_triplet;
+  *pnext_bentity1_entity2_interface_n_out     = pnext_bentity1_entity2_interface_n;
+  *pnext_bentity1_entity2_interface_tot_n_out = pnext_bentity1_entity2_interface_tot_n;
+  *pnext_bentity1_entity2_interface_out       = pnext_bentity1_entity2_interface;
+}
+
+
+
 static
 void
 _update_in_part2_layout
@@ -472,68 +567,27 @@ _recurse_and_filter
    * Il faudrait refaire l'échange qu'on fait en gnum_come_from avec ce layout pour l'appeler en PART2
    * On doit avoir le même resultats
    */
-  int exch_request = 0;
-  int         **pnext_bentity1_entity2_n    = NULL;
-  PDM_g_num_t **pnext_bentity1_entity2_gnum = NULL;
-  PDM_part_to_part_reverse_iexch(ptp,
-                                 PDM_MPI_COMM_KIND_P2P,
-                                 PDM_STRIDE_VAR_INTERLACED,
-                                 PDM_PART_TO_PART_DATA_DEF_ORDER_PART2,
-                                 1,
-                                 sizeof(PDM_g_num_t),
-                (const int **)   bentity1_entity2_n,
-                (const void **)  bentity1_entity2_gnum,
+  int         **pnext_bentity1_entity2_n               = NULL;
+  PDM_g_num_t **pnext_bentity1_entity2_gnum            = NULL;
+  int         **pnext_bentity1_entity2_triplet         = NULL;
+  int         **pnext_bentity1_entity2_interface_n     = NULL;
+  int         **pnext_bentity1_entity2_interface_tot_n = NULL;
+  int         **pnext_bentity1_entity2_interface       = NULL;
+  exchange_and_concat_part_graph(ptp,
+                                 n_part_tot,
+                                 pn_entity1,
+                                 bentity1_entity2_n,
+                                 bentity1_entity2_gnum,
+                                 bentity1_entity2_triplet,
+                                 bentity1_entity2_interface_n,
+                                 bentity1_entity2_interface_tot_n,
+                                 bentity1_entity2_interface,
                                  &pnext_bentity1_entity2_n,
-                    (void ***)   &pnext_bentity1_entity2_gnum,
-                                 &exch_request);
-  PDM_part_to_part_reverse_iexch_wait(ptp, exch_request);
-
-  int **pnext_bentity1_entity2_triplet = NULL;
-  PDM_part_to_part_reverse_iexch(ptp,
-                                 PDM_MPI_COMM_KIND_P2P,
-                                 PDM_STRIDE_VAR_INTERLACED,
-                                 PDM_PART_TO_PART_DATA_DEF_ORDER_PART2,
-                                 1,
-                                 3 * sizeof(int),
-                (const int **)   bentity1_entity2_n,
-                (const void **)  bentity1_entity2_triplet,
-                                 &pnext_bentity1_entity2_n,
-                    (void ***)   &pnext_bentity1_entity2_triplet,
-                                 &exch_request);
-  PDM_part_to_part_reverse_iexch_wait(ptp, exch_request);
-
-  /*
-   * Exchange stride or interface
-   */
-  int **pnext_bentity1_entity2_interface_n = NULL;
-  PDM_part_to_part_reverse_iexch(ptp,
-                                 PDM_MPI_COMM_KIND_P2P,
-                                 PDM_STRIDE_VAR_INTERLACED,
-                                 PDM_PART_TO_PART_DATA_DEF_ORDER_PART2,
-                                 1,
-                                 sizeof(int),
-                (const int **)   bentity1_entity2_n,
-                (const void **)  bentity1_entity2_interface_n,
-                                 &pnext_bentity1_entity2_n,
-                    (void ***)   &pnext_bentity1_entity2_interface_n,
-                                 &exch_request);
-  PDM_part_to_part_reverse_iexch_wait(ptp, exch_request);
-
-
-  int **pnext_bentity1_entity2_interface_tot_n = NULL;
-  int **pnext_bentity1_entity2_interface       = NULL;
-  PDM_part_to_part_reverse_iexch(ptp,
-                                 PDM_MPI_COMM_KIND_P2P,
-                                 PDM_STRIDE_VAR_INTERLACED,
-                                 PDM_PART_TO_PART_DATA_DEF_ORDER_PART2,
-                                 1,
-                                 sizeof(int),
-                (const int **)   bentity1_entity2_interface_tot_n,
-                (const void **)  bentity1_entity2_interface,
+                                 &pnext_bentity1_entity2_gnum,
+                                 &pnext_bentity1_entity2_triplet,
+                                 &pnext_bentity1_entity2_interface_n,
                                  &pnext_bentity1_entity2_interface_tot_n,
-                    (void ***)   &pnext_bentity1_entity2_interface,
-                                 &exch_request);
-  PDM_part_to_part_reverse_iexch_wait(ptp, exch_request);
+                                 &pnext_bentity1_entity2_interface);
 
 
   int         **concat_bentity1_entity2_n                = malloc(n_part_tot * sizeof(int         *));
@@ -582,8 +636,18 @@ _recurse_and_filter
     pnext_bentity1_entity2_n              [i_part] = update_bentity1_entity2_n;
     pnext_bentity1_entity2_interface_tot_n[i_part] = update_bentity1_entity2_interface_tot_n;
 
-
   }
+
+
+
+
+
+
+
+
+
+
+
 
 
   for(int i_part = 0; i_part < n_part_tot; ++i_part) {
@@ -715,7 +779,7 @@ _recurse_and_filter
 
   }
 
-  exch_request = 0;
+  int exch_request = 0;
   int         **pnext_gnum_and_interface_n    = NULL;
   PDM_g_num_t **pnext_gnum_and_interface_gnum = NULL;
   PDM_part_to_part_reverse_iexch(ptp,
