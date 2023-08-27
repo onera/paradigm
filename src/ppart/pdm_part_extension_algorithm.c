@@ -201,6 +201,31 @@ _concatenate_part_graph
 
 }
 
+static
+void
+_update_in_part2_layout
+(
+ int   pn_entity1,
+ int  *part1_to_part2_idx,
+ int  *pnext_bentity1_entity2_n,
+ int  *pnext_bentity1_entity2_interface_tot_n,
+ int **update_bentity1_entity2_n_out,
+ int **update_bentity1_entity2_interface_tot_n_out
+)
+{
+  int *update_bentity1_entity2_n               = malloc(pn_entity1 * sizeof(int));
+  int *update_bentity1_entity2_interface_tot_n = malloc(pn_entity1 * sizeof(int));
+  for(int i = 0; i < pn_entity1; ++i) {
+    update_bentity1_entity2_n              [i] = 0;
+    update_bentity1_entity2_interface_tot_n[i] = 0;
+    for(int idx = part1_to_part2_idx[i]/3; idx < part1_to_part2_idx[i+1]/3; ++idx) {
+      update_bentity1_entity2_n              [i] += pnext_bentity1_entity2_n              [idx];
+      update_bentity1_entity2_interface_tot_n[i] += pnext_bentity1_entity2_interface_tot_n[idx];
+    }
+  }
+  *update_bentity1_entity2_n_out               = update_bentity1_entity2_n;
+  *update_bentity1_entity2_interface_tot_n_out = update_bentity1_entity2_interface_tot_n;
+}
 
 
 
@@ -519,6 +544,8 @@ _recurse_and_filter
   int         **concat_bentity1_entity2_interface        = malloc(n_part_tot * sizeof(int         *));
 
   for(int i_part = 0; i_part < n_part_tot; ++i_part) {
+
+    // Il faut rajouter l'interface number
     _concatenate_part_graph(pn_entity1[i_part],
                             part1_to_part2_idx                      [i_part],
                             part1_to_part2_interface                [i_part],
@@ -540,6 +567,22 @@ _recurse_and_filter
                             &concat_bentity1_entity2_interface_n    [i_part],
                             &concat_bentity1_entity2_interface_tot_n[i_part],
                             &concat_bentity1_entity2_interface      [i_part]);
+
+    int *update_bentity1_entity2_n               = NULL;
+    int *update_bentity1_entity2_interface_tot_n = NULL;
+    _update_in_part2_layout(pn_entity1                            [i_part],
+                            part1_to_part2_idx                    [i_part],
+                            pnext_bentity1_entity2_n              [i_part],
+                            pnext_bentity1_entity2_interface_tot_n[i_part],
+                            &update_bentity1_entity2_n,
+                            &update_bentity1_entity2_interface_tot_n);
+
+    free(pnext_bentity1_entity2_n              [i_part]);
+    free(pnext_bentity1_entity2_interface_tot_n[i_part]);
+    pnext_bentity1_entity2_n              [i_part] = update_bentity1_entity2_n;
+    pnext_bentity1_entity2_interface_tot_n[i_part] = update_bentity1_entity2_interface_tot_n;
+
+
   }
 
 
@@ -558,6 +601,7 @@ _recurse_and_filter
   free(concat_bentity1_entity2_interface_tot_n);
   free(concat_bentity1_entity2_interface      );
 
+  return;
 
 
 
