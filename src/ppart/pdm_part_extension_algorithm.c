@@ -90,6 +90,119 @@ _part_extension_1d
 
 }
 
+static
+void
+_concatenate_part_graph
+(
+ int           pn_entity1,
+ int          *part1_to_part2_idx,
+ int          *part1_to_part2_interface,
+ int          *bentity1_entity2_n,
+ PDM_g_num_t  *bentity1_entity2_gnum,
+ int          *bentity1_entity2_triplet,
+ int          *bentity1_entity2_interface_n,
+ int          *bentity1_entity2_interface_tot_n,
+ int          *bentity1_entity2_interface,
+ int          *pnext_bentity1_entity2_n,
+ PDM_g_num_t  *pnext_bentity1_entity2_gnum,
+ int          *pnext_bentity1_entity2_triplet,
+ int          *pnext_bentity1_entity2_interface_n,
+ int          *pnext_bentity1_entity2_interface_tot_n,
+ int          *pnext_bentity1_entity2_interface,
+ int         **concat_bentity1_entity2_n_out,
+ PDM_g_num_t **concat_bentity1_entity2_gnum_out,
+ int         **concat_bentity1_entity2_triplet_out,
+ int         **concat_bentity1_entity2_interface_n_out,
+ int         **concat_bentity1_entity2_interface_tot_n_out,
+ int         **concat_bentity1_entity2_interface_out
+)
+{
+
+  int         *concat_bentity1_entity2_n               = malloc(pn_entity1 * sizeof(int));;
+  int         *concat_bentity1_entity2_interface_tot_n = malloc(pn_entity1 * sizeof(int));;
+
+  int n_concat_entity1_entity2      = 0;
+  int n_concat_entity1_entity2_itrf = 0;
+  for(int i = 0; i < pn_entity1; ++i) {
+    concat_bentity1_entity2_n              [i] = 0;
+    concat_bentity1_entity2_interface_tot_n[i] = 0;
+
+    /* From previous in layout of part2 */
+    concat_bentity1_entity2_n              [i] += bentity1_entity2_n[i];
+    concat_bentity1_entity2_interface_tot_n[i] += bentity1_entity2_interface_tot_n[i];
+
+    /* From recv in layout part1_to_part2 */
+    for(int idx = part1_to_part2_idx[i]/3; idx < part1_to_part2_idx[i+1]/3; ++idx) {
+      concat_bentity1_entity2_n              [i] += pnext_bentity1_entity2_n              [idx];
+      concat_bentity1_entity2_interface_tot_n[i] += pnext_bentity1_entity2_interface_tot_n[idx];
+    }
+
+    // Update global count
+    n_concat_entity1_entity2      += concat_bentity1_entity2_n              [i];
+    n_concat_entity1_entity2_itrf += concat_bentity1_entity2_interface_tot_n[i];
+  }
+
+  /* Allocate */
+  PDM_g_num_t *concat_bentity1_entity2_gnum        = malloc(    n_concat_entity1_entity2      * sizeof(PDM_g_num_t));
+  int         *concat_bentity1_entity2_triplet     = malloc(3 * n_concat_entity1_entity2      * sizeof(int        ));
+  int         *concat_bentity1_entity2_interface_n = malloc(    n_concat_entity1_entity2      * sizeof(int        ));
+  int         *concat_bentity1_entity2_interface   = malloc(    n_concat_entity1_entity2_itrf * sizeof(int        ));
+
+  n_concat_entity1_entity2      = 0;
+  n_concat_entity1_entity2_itrf = 0;
+  int idx_readb      = 0;
+  int idx_readb_itrf = 0;
+  int idx_readp      = 0;
+  int idx_readp_itrf = 0;
+  for(int i = 0; i < pn_entity1; ++i) {
+
+    /* From previous in layout of part2 */
+    for(int k = 0; k < bentity1_entity2_n[i]; ++k) {
+      concat_bentity1_entity2_gnum       [  n_concat_entity1_entity2  ] = bentity1_entity2_gnum       [  idx_readb  ];
+      concat_bentity1_entity2_triplet    [3*n_concat_entity1_entity2  ] = bentity1_entity2_triplet    [3*idx_readb  ];
+      concat_bentity1_entity2_triplet    [3*n_concat_entity1_entity2+1] = bentity1_entity2_triplet    [3*idx_readb+1];
+      concat_bentity1_entity2_triplet    [3*n_concat_entity1_entity2+2] = bentity1_entity2_triplet    [3*idx_readb+2];
+      concat_bentity1_entity2_interface_n[  n_concat_entity1_entity2  ] = bentity1_entity2_interface_n[  idx_readb  ];
+
+      for(int p = 0; p <  bentity1_entity2_interface_n[  idx_readb  ]; ++p) {
+        concat_bentity1_entity2_interface[n_concat_entity1_entity2_itrf++] = bentity1_entity2_interface[idx_readb_itrf++];
+      }
+      idx_readb++;
+      n_concat_entity1_entity2++;
+    }
+
+    /* From recv in layout part1_to_part2 */
+    for(int idx = part1_to_part2_idx[i]/3; idx < part1_to_part2_idx[i+1]/3; ++idx) {
+
+      /* From previous in layout of part2 */
+      for(int k = 0; k < bentity1_entity2_n[i]; ++k) {
+        concat_bentity1_entity2_gnum       [  n_concat_entity1_entity2  ] = pnext_bentity1_entity2_gnum       [  idx_readp  ];
+        concat_bentity1_entity2_triplet    [3*n_concat_entity1_entity2  ] = pnext_bentity1_entity2_triplet    [3*idx_readp  ];
+        concat_bentity1_entity2_triplet    [3*n_concat_entity1_entity2+1] = pnext_bentity1_entity2_triplet    [3*idx_readp+1];
+        concat_bentity1_entity2_triplet    [3*n_concat_entity1_entity2+2] = pnext_bentity1_entity2_triplet    [3*idx_readp+2];
+        concat_bentity1_entity2_interface_n[  n_concat_entity1_entity2  ] = pnext_bentity1_entity2_interface_n[  idx_readp  ];
+
+        for(int p = 0; p <  pnext_bentity1_entity2_interface_n[  idx_readp  ]; ++p) {
+          concat_bentity1_entity2_interface[n_concat_entity1_entity2_itrf++] = pnext_bentity1_entity2_interface[idx_readp_itrf++];
+        }
+        idx_readp++;
+        n_concat_entity1_entity2++;
+      }
+    }
+  }
+
+
+  *concat_bentity1_entity2_n_out               = concat_bentity1_entity2_n;
+  *concat_bentity1_entity2_gnum_out            = concat_bentity1_entity2_gnum;
+  *concat_bentity1_entity2_triplet_out         = concat_bentity1_entity2_triplet;
+  *concat_bentity1_entity2_interface_n_out     = concat_bentity1_entity2_interface_n;
+  *concat_bentity1_entity2_interface_tot_n_out = concat_bentity1_entity2_interface_tot_n;
+  *concat_bentity1_entity2_interface_out       = concat_bentity1_entity2_interface;
+
+}
+
+
+
 
 static
 void
@@ -114,6 +227,20 @@ _merge_graph
  PDM_MPI_Comm         comm
 )
 {
+  /*
+   * On a trois buffers :
+   *   - Le concatener (qui comptient toutes les infos)
+   *   - Le buffer d'arrivé du ptp
+   *   - Il faut reconstruire le nouveau buffer d'envoi
+   *        - Il suffit d'assembler les strides, les buffers continue reste tel quel
+   */
+  int         **pentity1_entity2_n               = NULL;
+  PDM_g_num_t **pentity1_entity2_gnum            = NULL;
+  int         **pentity1_entity2_triplet         = NULL;
+  int         **pentity1_entity2_interface_n     = NULL;
+  int         **pentity1_entity2_interface_tot_n = NULL;
+  int         **pentity1_entity2_interface       = NULL;
+
 
   if(1 == 1) {
     for(int i_part = 0; i_part < n_part_tot; ++i_part) {
@@ -176,7 +303,9 @@ _merge_graph
     PDM_g_num_t* work_entity_gnum_and_interface = malloc(max_connect * sizeof(PDM_g_num_t));
 
 
-
+    /*
+     * Est-ce qu'on doit toujours tout renvoyé ?
+     */
 
 
     free(work_entity_gnum_and_interface);
@@ -201,7 +330,18 @@ _merge_graph
   free(bpost_entity1_entity2_interface      );
   free(bpost_entity1_entity2_interface_n    );
 
-
+  /*
+   * Refaire les part_to_part tant que qqchose bouge dans le graphe
+   * Je pense qu'il ne faut pas renvoyer un truc deja envoyé
+   * Maybe pas besoin de concatener / trier pour renvoyer
+   * C'est une propagation en fait
+   * Preparation
+   * Echange
+   * Remise sous la forme "FROM_PART2"
+   * Echange ...
+   * Condition d'arrêt = On recoit plus rien
+   * Post-traitement après
+   */
 
 
 }
@@ -238,7 +378,7 @@ _recurse_and_filter
    * But at each step we need to fix it with transformation
    * We need to build :
    *     - bentity1_entity2_n
-   *     - bentity1_entity2_gnum   [(n_data, gnum, intrf1, itrf(n_data-1), (n_data, gnum, ...)) sub_stride
+   *     - bentity1_entity2_gnum
    */
   int         **bentity1_entity2_n               = malloc(n_part_tot * sizeof(int         *));
   PDM_g_num_t **bentity1_entity2_gnum            = malloc(n_part_tot * sizeof(PDM_g_num_t *));
@@ -265,9 +405,7 @@ _recurse_and_filter
     for(int i = 0; i < pn_entity1[i_part]; ++i) {
       _bentity1_entity2_n              [i] = 0;
       _bentity1_entity2_interface_tot_n[i] = 0;
-      if(_part1_to_part2_idx[i+1] - _part1_to_part2_idx[i] > 0) { // Donc un bords dont on souhaite le dual
-        _bentity1_entity2_n[i] += _pentity1_entity2_idx[i+1] - _pentity1_entity2_idx[i];
-      }
+      _bentity1_entity2_n[i] += _pentity1_entity2_idx[i+1] - _pentity1_entity2_idx[i];
       n_entity1_entity2 += _bentity1_entity2_n[i];
     }
 
@@ -282,20 +420,18 @@ _recurse_and_filter
 
     n_entity1_entity2 = 0;
     for(int i = 0; i < pn_entity1[i_part]; ++i) {
-      if(_part1_to_part2_idx[i+1] - _part1_to_part2_idx[i] > 0) { // Donc un bords dont on souhaite le dual
-        for(int j = _pentity1_entity2_idx[i]; j < _pentity1_entity2_idx[i+1]; ++j) {
-          int i_entity2 = PDM_ABS(_pentity1_entity2[j])-1;
-          _bentity1_entity2_gnum       [n_entity1_entity2] = _pentity2_ln_to_gn[i_entity2];
-          _bentity1_entity2_interface_n[n_entity1_entity2] = 0;
+      for(int j = _pentity1_entity2_idx[i]; j < _pentity1_entity2_idx[i+1]; ++j) {
+        int i_entity2 = PDM_ABS(_pentity1_entity2[j])-1;
+        _bentity1_entity2_gnum       [n_entity1_entity2] = _pentity2_ln_to_gn[i_entity2];
+        _bentity1_entity2_interface_n[n_entity1_entity2] = 0;
 
-          _bentity1_entity2_interface_tot_n[i] += _bentity1_entity2_interface_n[n_entity1_entity2];
+        _bentity1_entity2_interface_tot_n[i] += _bentity1_entity2_interface_n[n_entity1_entity2];
 
-          _bentity1_entity2_triplet    [3*n_entity1_entity2  ] = i_rank;
-          _bentity1_entity2_triplet    [3*n_entity1_entity2+1] = i_part;
-          _bentity1_entity2_triplet    [3*n_entity1_entity2+2] = i_entity2;
+        _bentity1_entity2_triplet    [3*n_entity1_entity2  ] = i_rank;
+        _bentity1_entity2_triplet    [3*n_entity1_entity2+1] = i_part;
+        _bentity1_entity2_triplet    [3*n_entity1_entity2+2] = i_entity2;
 
-          n_entity1_entity2++;
-        }
+        n_entity1_entity2++;
       }
     }
 
@@ -373,6 +509,59 @@ _recurse_and_filter
                     (void ***)   &pnext_bentity1_entity2_interface,
                                  &exch_request);
   PDM_part_to_part_reverse_iexch_wait(ptp, exch_request);
+
+
+  int         **concat_bentity1_entity2_n                = malloc(n_part_tot * sizeof(int         *));
+  PDM_g_num_t **concat_bentity1_entity2_gnum             = malloc(n_part_tot * sizeof(PDM_g_num_t *));
+  int         **concat_bentity1_entity2_triplet          = malloc(n_part_tot * sizeof(int         *));
+  int         **concat_bentity1_entity2_interface_n      = malloc(n_part_tot * sizeof(int         *));
+  int         **concat_bentity1_entity2_interface_tot_n  = malloc(n_part_tot * sizeof(int         *));
+  int         **concat_bentity1_entity2_interface        = malloc(n_part_tot * sizeof(int         *));
+
+  for(int i_part = 0; i_part < n_part_tot; ++i_part) {
+    _concatenate_part_graph(pn_entity1[i_part],
+                            part1_to_part2_idx                      [i_part],
+                            part1_to_part2_interface                [i_part],
+                            bentity1_entity2_n                      [i_part],
+                            bentity1_entity2_gnum                   [i_part],
+                            bentity1_entity2_triplet                [i_part],
+                            bentity1_entity2_interface_n            [i_part],
+                            bentity1_entity2_interface_tot_n        [i_part],
+                            bentity1_entity2_interface              [i_part],
+                            pnext_bentity1_entity2_n                [i_part],
+                            pnext_bentity1_entity2_gnum             [i_part],
+                            pnext_bentity1_entity2_triplet          [i_part],
+                            pnext_bentity1_entity2_interface_n      [i_part],
+                            pnext_bentity1_entity2_interface_tot_n  [i_part],
+                            pnext_bentity1_entity2_interface        [i_part],
+                            &concat_bentity1_entity2_n              [i_part],
+                            &concat_bentity1_entity2_gnum           [i_part],
+                            &concat_bentity1_entity2_triplet        [i_part],
+                            &concat_bentity1_entity2_interface_n    [i_part],
+                            &concat_bentity1_entity2_interface_tot_n[i_part],
+                            &concat_bentity1_entity2_interface      [i_part]);
+  }
+
+
+  for(int i_part = 0; i_part < n_part_tot; ++i_part) {
+    free(concat_bentity1_entity2_n              [i_part]);
+    free(concat_bentity1_entity2_gnum           [i_part]);
+    free(concat_bentity1_entity2_triplet        [i_part]);
+    free(concat_bentity1_entity2_interface_n    [i_part]);
+    free(concat_bentity1_entity2_interface_tot_n[i_part]);
+    free(concat_bentity1_entity2_interface      [i_part]);
+  }
+  free(concat_bentity1_entity2_n              );
+  free(concat_bentity1_entity2_gnum           );
+  free(concat_bentity1_entity2_triplet        );
+  free(concat_bentity1_entity2_interface_n    );
+  free(concat_bentity1_entity2_interface_tot_n);
+  free(concat_bentity1_entity2_interface      );
+
+
+
+
+
 
 
   _merge_graph(ptp,
