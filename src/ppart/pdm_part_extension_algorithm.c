@@ -345,7 +345,7 @@ exchange_and_concat_part_graph
       for(int idx = part1_to_part2_idx[i_part][i]/3; idx < part1_to_part2_idx[i_part][i+1]/3; ++idx) {
         n_interface_tot += pnext_bentity1_entity2_interface_tot_n[i_part][idx];
         if(part1_to_part2_interface[i_part][idx] != 0) {
-          n_interface_tot += 1;
+          n_interface_tot += pnext_bentity1_entity2_n[i_part][idx];
         }
       }
     }
@@ -353,20 +353,28 @@ exchange_and_concat_part_graph
     int *pupdate_bentity1_entity2_interface = malloc(n_interface_tot * sizeof(int));
 
     n_interface_tot = 0;
-    int idx_read = 0;
+    int idx_read      = 0;
+    int idx_read_itrf = 0;
     for(int i = 0; i < pn_entity1[i_part]; ++i) {
       for(int idx = part1_to_part2_idx[i_part][i]/3; idx < part1_to_part2_idx[i_part][i+1]/3; ++idx) {
 
-        for(int k = 0; k < pnext_bentity1_entity2_interface_n[i_part][idx]; ++k) {
-          pupdate_bentity1_entity2_interface[n_interface_tot] = pnext_bentity1_entity2_interface[i_part][idx_read++];
-          n_interface_tot++;
+
+        for(int k = 0; k < pnext_bentity1_entity2_n[i_part][idx]; ++k) {
+
+
+          for(int p = 0; p < pnext_bentity1_entity2_interface_n[i_part][idx_read]; ++p) {
+            pupdate_bentity1_entity2_interface[n_interface_tot] = pnext_bentity1_entity2_interface[i_part][idx_read_itrf++];
+            n_interface_tot++;
+          }
+
+          if(part1_to_part2_interface[i_part][idx] != 0) {
+            pnext_bentity1_entity2_interface_tot_n[i_part][idx] += 1;
+            pnext_bentity1_entity2_interface_n    [i_part][idx_read] += 1;
+            pupdate_bentity1_entity2_interface[n_interface_tot++] = -part1_to_part2_interface[i_part][idx];
+          }
+          idx_read++;
         }
 
-        if(part1_to_part2_interface[i_part][idx] != 0) {
-          pnext_bentity1_entity2_interface_tot_n[i_part][idx] += 1;
-          pnext_bentity1_entity2_interface_n    [i_part][idx] += 1;
-          pupdate_bentity1_entity2_interface[n_interface_tot++] = -part1_to_part2_interface[i_part][idx];
-        }
       }
     }
 
