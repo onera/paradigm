@@ -2005,39 +2005,61 @@ _translate_element_group_to_edges
 }
 
 
-// static
-// void
-// _translate_element_group_to_vtx
-// (
-//  _pdm_link_dmesh_nodal_to_dmesh_t* link
-// )
-// {
-//   PDM_dmesh_nodal_t *dmesh_nodal = link->dmesh_nodal;
-//   PDM_dmesh_t       *dm          = link->dmesh;
+static
+void
+_translate_element_group_to_vtx
+(
+ _pdm_link_dmesh_nodal_to_dmesh_t* link
+)
+{
+  PDM_dmesh_nodal_t *dmesh_nodal = link->dmesh_nodal;
+  PDM_dmesh_t       *dm          = link->dmesh;
 
-//   PDM_g_num_t *dvtx_bound;
-//   int         *dvtx_bound_idx;
+  if (dmesh_nodal->corner != NULL && dmesh_nodal->corner->n_group_elmt > 0) {
+    // on a dgroup->elt et delt->vtx, on veut dgroup->vtx
+    PDM_block_to_part_t *btp = PDM_block_to_part_create(dmesh_nodal->corner->sections_std[0]->distrib,
+                                 (const PDM_g_num_t **) &dmesh_nodal->corner->dgroup_elmt,
+                                                        &dmesh_nodal->corner->dgroup_elmt_idx[dmesh_nodal->corner->n_group_elmt],
+                                                        1,
+                                                        dmesh_nodal->comm);
 
-//   abort();
-//   // Normalement rien a faire, car les vtx n'ont pas changé !!!!!
-//   // On a juste à faire une copie !!!
-//   // if(dmesh_nodal->corner->n_group_elmt > 0) {
-//   //   _translate_element_group_to_entity(dmesh_nodal->comm,
-//   //                                      dmesh_nodal->corner->delmt_child_distrib,
-//   //                                      dmesh_nodal->corner->dgroup_elmt,
-//   //                                      dmesh_nodal->corner->dgroup_elmt_idx,
-//   //                                      dmesh_nodal->corner->n_group_elmt,
-//   //                                      dmesh_nodal->corner->dparent_idx,
-//   //                                      dmesh_nodal->corner->dparent_gnum,
-//   //                                      &dvtx_bound,
-//   //                                      &dvtx_bound_idx);
-//   //   dm->is_owner_bound[PDM_BOUND_TYPE_VTX] = PDM_TRUE;
-//   //   dm->dbound_idx    [PDM_BOUND_TYPE_VTX] = dvtx_bound_idx;
-//   //   dm->dbound        [PDM_BOUND_TYPE_VTX] = dvtx_bound;
-//   //   dm->n_bnd                              = dmesh_nodal->corner->n_group_elmt; // TODO : TO REMOVE
-//   //   dm->n_group_bnd   [PDM_BOUND_TYPE_VTX] = dmesh_nodal->corner->n_group_elmt;
-//   // }
-// }
+
+    int one = 1;
+    PDM_g_num_t **tmp_dcorner_elt = NULL;
+    PDM_block_to_part_exch(btp,
+                           sizeof(PDM_g_num_t),
+                           PDM_STRIDE_CST_INTERLACED,
+                           &one,
+                (void   *) dmesh_nodal->corner->sections_std[0]->_connec,
+                           NULL,
+                (void ***) &tmp_dcorner_elt);
+
+    PDM_g_num_t *dcorner_elt = tmp_dcorner_elt[0];
+    free(tmp_dcorner_elt);
+
+    PDM_block_to_part_free(btp);
+
+    int *dcorner_elt_idx = malloc(sizeof(int) * (dmesh_nodal->corner->n_group_elmt+1));
+    memcpy(dcorner_elt_idx,
+           dmesh_nodal->corner->dgroup_elmt_idx,
+           sizeof(int) * (dmesh_nodal->corner->n_group_elmt+1));
+
+    // _translate_element_group_to_entity(dmesh_nodal->comm,
+    //                                    dmesh_nodal->corner->delmt_child_distrib,
+    //                                    dmesh_nodal->corner->dgroup_elmt,
+    //                                    dmesh_nodal->corner->dgroup_elmt_idx,
+    //                                    dmesh_nodal->corner->n_group_elmt,
+    //                                    dmesh_nodal->corner->dparent_idx,
+    //                                    dmesh_nodal->corner->dparent_gnum,
+    //                                    &dcorner_elt,
+    //                                    &dcorner_elt_idx);
+    dm->is_owner_bound[PDM_BOUND_TYPE_VTX] = PDM_TRUE;
+    dm->dbound_idx    [PDM_BOUND_TYPE_VTX] = dcorner_elt_idx;
+    dm->dbound        [PDM_BOUND_TYPE_VTX] = dcorner_elt;
+  //   dm->n_bnd                              = dmesh_nodal->corner->n_group_elmt; // TODO : TO REMOVE
+    dm->n_group_bnd   [PDM_BOUND_TYPE_VTX] = dmesh_nodal->corner->n_group_elmt;
+  }
+}
 
 
 static
@@ -2309,12 +2331,13 @@ PDM_dmesh_nodal_to_dmesh_compute
             assert(transform_kind == PDM_DMESH_NODAL_TO_DMESH_TRANSFORM_TO_FACE);
             _translate_element_group_to_faces(dmesh_nodal_to_dm->link[i_mesh]);
             _translate_element_group_to_edges(dmesh_nodal_to_dm->link[i_mesh]);
+            _translate_element_group_to_vtx  (dmesh_nodal_to_dm->link[i_mesh]);
           }
           break;
         case PDM_DMESH_NODAL_TO_DMESH_TRANSLATE_GROUP_TO_EDGE:
           {
-            // _translate_element_group_to_edges(dmesh_nodal_to_dm->link[i_mesh]);
             _translate_element_group_to_edges(dmesh_nodal_to_dm->link[i_mesh]);
+            _translate_element_group_to_vtx  (dmesh_nodal_to_dm->link[i_mesh]);
             // PDM_error (__FILE__, __LINE__, 0, "PDM_DMESH_NODAL_TO_DMESH_TRANSLATE_GROUP_TO_EDGE not implemented \n");
           }
           break;

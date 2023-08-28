@@ -1733,6 +1733,10 @@ _part_mesh_t       *pmeshes,
                                            &dentity_bound_idx,
                                            PDM_OWNERSHIP_BAD_VALUE);
 
+  if (n_entity_group == 0) {
+    return;
+  }
+
 
   int         **pentity_bound_idx               = NULL;
   int         **pentity_bound                   = NULL;
@@ -2063,6 +2067,26 @@ _deduce_part_connectivity_3d
                            face_distrib,
                            pn_face,
                            pface_ln_to_gn,
+                           comm);
+
+  if (edge_distrib != NULL) {
+    _rebuild_part_mesh_group(dmesh,
+                             pmeshes,
+                             n_part,
+                             PDM_BOUND_TYPE_EDGE,
+                             edge_distrib,
+                             pn_edge,
+                             pedge_ln_to_gn,
+                             comm);
+  }
+
+  _rebuild_part_mesh_group(dmesh,
+                           pmeshes,
+                           n_part,
+                           PDM_BOUND_TYPE_VTX,
+                           vtx_distrib,
+                           pn_vtx,
+                           pvtx_ln_to_gn,
                            comm);
 
   *out_pn_face        = pn_face;

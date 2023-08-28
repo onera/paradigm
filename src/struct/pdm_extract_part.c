@@ -2780,21 +2780,26 @@ _extract_part
   PDM_extract_part_t        *extrp
 )
 {
-  int          *pn_entity    = 0;
-  PDM_g_num_t **entity_g_num = NULL;
+  int                  *pn_entity    = 0;
+  PDM_g_num_t         **entity_g_num = NULL;
+  PDM_mesh_entities_t   entity_type;
   if (extrp->dim == 3) {
+    entity_type  = PDM_MESH_ENTITY_CELL;
     pn_entity    = extrp->n_cell;
     entity_g_num = extrp->cell_ln_to_gn;
   }
   else if (extrp->dim == 2) {
+    entity_type  = PDM_MESH_ENTITY_FACE;
     pn_entity    = extrp->n_face;
     entity_g_num = extrp->face_ln_to_gn;
   }
   else if (extrp->dim == 1) {
+    entity_type  = PDM_MESH_ENTITY_EDGE;
     pn_entity    = extrp->n_edge;
     entity_g_num = extrp->edge_ln_to_gn;
   }
   else {
+    entity_type  = PDM_MESH_ENTITY_VERTEX;
     pn_entity    = extrp->n_vtx;
     entity_g_num = extrp->vtx_ln_to_gn;
   }
@@ -2817,21 +2822,12 @@ _extract_part
                                   &entity_extract_g_num,
                                   &child_selected_g_num);
 
-  if(extrp->dim == 3) {
-    extrp->pextract_n_entity       [PDM_MESH_ENTITY_CELL] = malloc(extrp->n_part_out * sizeof(int));
-    for(int i_part = 0; i_part < extrp->n_part_in; ++i_part) {
-      extrp->pextract_n_entity[PDM_MESH_ENTITY_CELL][i_part] = extrp->n_extract[i_part];
-    }
-    extrp->pextract_entity_ln_to_gn       [PDM_MESH_ENTITY_CELL] = child_selected_g_num;
-    extrp->pextract_entity_parent_ln_to_gn[PDM_MESH_ENTITY_CELL] = entity_extract_g_num;
-  } else {
-    extrp->pextract_n_entity       [PDM_MESH_ENTITY_FACE] = malloc(extrp->n_part_out * sizeof(int));
-    for(int i_part = 0; i_part < extrp->n_part_in; ++i_part) {
-      extrp->pextract_n_entity[PDM_MESH_ENTITY_FACE][i_part] = extrp->n_extract[i_part];
-    }
-    extrp->pextract_entity_ln_to_gn       [PDM_MESH_ENTITY_FACE] = child_selected_g_num;
-    extrp->pextract_entity_parent_ln_to_gn[PDM_MESH_ENTITY_FACE] = entity_extract_g_num;
+  extrp->pextract_n_entity[entity_type] = malloc(extrp->n_part_out * sizeof(int));
+  for(int i_part = 0; i_part < extrp->n_part_in; ++i_part) {
+    extrp->pextract_n_entity[entity_type][i_part] = extrp->n_extract[i_part];
   }
+  extrp->pextract_entity_ln_to_gn       [entity_type] = child_selected_g_num;
+  extrp->pextract_entity_parent_ln_to_gn[entity_type] = entity_extract_g_num;
 
 
   /*
@@ -2848,7 +2844,7 @@ _extract_part
     }
   }
 
-  if(extrp->dim == 3) {
+  if (extrp->dim == 3) {
     extract_and_local_renum_entity1_entity2(extrp->comm,
                                             extrp->compute_child_gnum,
                                             extrp->n_part_in,
@@ -2935,7 +2931,8 @@ _extract_part
                                               &extrp->pextract_entity_parent_ln_to_gn[PDM_MESH_ENTITY_VERTEX],
                                               &extrp->pextract_entity_parent_lnum    [PDM_MESH_ENTITY_VERTEX]);
     }
-  } else {
+  }
+  else if (extrp->dim == 2) {
 
     if(from_face_edge == 1) {
       extract_and_local_renum_entity1_entity2(extrp->comm,
@@ -3003,6 +3000,68 @@ _extract_part
                                               &extrp->pextract_entity_parent_ln_to_gn[PDM_MESH_ENTITY_VERTEX],
                                               &extrp->pextract_entity_parent_lnum    [PDM_MESH_ENTITY_VERTEX]);
     }
+  }
+  else if (extrp->dim == 1) {
+    int **pedge_vtx_idx = malloc(sizeof(int *) * extrp->n_part_in);
+    for (int i = 0; i < extrp->n_part_in; i++) {
+      pedge_vtx_idx[i] = PDM_array_new_idx_from_const_stride_int(2, extrp->n_edge[i]);
+    }
+    extract_and_local_renum_entity1_entity2(extrp->comm,
+                                            extrp->compute_child_gnum,
+                                            extrp->n_part_in,
+                                            extrp->n_edge,
+                                            extrp->n_vtx,
+                                            extrp->n_extract,
+                                            extrp->extract_lnum,
+                                            pedge_vtx_idx,
+                                            extrp->pedge_vtx,
+                                            extrp->vtx_ln_to_gn,
+                                            &extrp->pextract_n_entity              [PDM_MESH_ENTITY_VERTEX],
+                                            &extrp->pextract_connectivity_idx      [PDM_CONNECTIVITY_TYPE_EDGE_VTX],
+                                            &extrp->pextract_connectivity          [PDM_CONNECTIVITY_TYPE_EDGE_VTX],
+                                            &extrp->pextract_entity_ln_to_gn       [PDM_MESH_ENTITY_VERTEX],
+                                            &extrp->pextract_entity_parent_ln_to_gn[PDM_MESH_ENTITY_VERTEX],
+                                            &extrp->pextract_entity_parent_lnum    [PDM_MESH_ENTITY_VERTEX]);
+    for (int i = 0; i < extrp->n_part_in; i++) {
+      free(pedge_vtx_idx[i]);
+    }
+    free(pedge_vtx_idx);
+  }
+  else {
+    int **pvtx_vtx_idx = malloc(sizeof(int *) * extrp->n_part_in);
+    int **pvtx_vtx     = malloc(sizeof(int *) * extrp->n_part_in);
+    for (int i = 0; i < extrp->n_part_in; i++) {
+      pvtx_vtx_idx[i] = PDM_array_new_idx_from_const_stride_int(1, extrp->n_vtx[i]);
+      pvtx_vtx    [i] = pvtx_vtx_idx[i] + 1;
+    }
+
+    int **pextract_connectivity_idx = NULL;
+    int **pextract_connectivity     = NULL;
+    extract_and_local_renum_entity1_entity2(extrp->comm,
+                                            extrp->compute_child_gnum,
+                                            extrp->n_part_in,
+                                            extrp->n_vtx,
+                                            extrp->n_vtx,
+                                            extrp->n_extract,
+                                            extrp->extract_lnum,
+                                            pvtx_vtx_idx,
+                                            pvtx_vtx,
+                                            extrp->vtx_ln_to_gn,
+                                            &extrp->pextract_n_entity              [PDM_MESH_ENTITY_VERTEX],
+                                            &pextract_connectivity_idx,// &extrp->pextract_connectivity_idx      [PDM_CONNECTIVITY_TYPE_EDGE_VTX],
+                                            &pextract_connectivity,// &extrp->pextract_connectivity          [PDM_CONNECTIVITY_TYPE_EDGE_VTX],
+                                            &extrp->pextract_entity_ln_to_gn       [PDM_MESH_ENTITY_VERTEX],
+                                            &extrp->pextract_entity_parent_ln_to_gn[PDM_MESH_ENTITY_VERTEX],
+                                            &extrp->pextract_entity_parent_lnum    [PDM_MESH_ENTITY_VERTEX]);
+    for (int i = 0; i < extrp->n_part_in; i++) {
+      free(pvtx_vtx_idx[i]);
+      free(pextract_connectivity_idx[i]);
+    }
+    free(pvtx_vtx_idx);
+    free(pvtx_vtx);
+    free(pextract_connectivity_idx);
+
+    // PDM_error(__FILE__, __LINE__, 0, "Not yet implemented for dimension %d\n", extrp->dim);
   }
 
   int  *n_extract_vtx    = extrp->pextract_n_entity          [PDM_MESH_ENTITY_VERTEX];
