@@ -1310,8 +1310,12 @@ PDM_generate_mesh_ball_ngon
  PDM_g_num_t                ***pvtx_ln_to_gn,
  PDM_g_num_t                ***pedge_ln_to_gn,
  PDM_g_num_t                ***pface_ln_to_gn,
- PDM_g_num_t                ***pcell_ln_to_gn
-)
+ PDM_g_num_t                ***pcell_ln_to_gn,
+ int                         **pn_surface,
+ int                        ***psurface_face_idx,
+ int                        ***psurface_face,
+ PDM_g_num_t                ***psurface_face_ln_to_gn
+ )
 {
   PDM_dmesh_nodal_t *dmn = NULL;
   PDM_multipart_t *mpart = NULL;
@@ -1335,20 +1339,24 @@ PDM_generate_mesh_ball_ngon
                       &mpart);
   PDM_DMesh_nodal_free(dmn);
 
-  *pn_vtx         = malloc(sizeof(int          ) * n_part);
-  *pn_edge        = malloc(sizeof(int          ) * n_part);
-  *pn_face        = malloc(sizeof(int          ) * n_part);
-  *pn_cell        = malloc(sizeof(int          ) * n_part);
-  *pvtx_coord     = malloc(sizeof(double      *) * n_part);
-  *pedge_vtx      = malloc(sizeof(int         *) * n_part);
-  *pface_edge_idx = malloc(sizeof(int         *) * n_part);
-  *pface_edge     = malloc(sizeof(int         *) * n_part);
-  *pcell_face_idx = malloc(sizeof(int         *) * n_part);
-  *pcell_face     = malloc(sizeof(int         *) * n_part);
-  *pvtx_ln_to_gn  = malloc(sizeof(PDM_g_num_t *) * n_part);
-  *pedge_ln_to_gn = malloc(sizeof(PDM_g_num_t *) * n_part);
-  *pface_ln_to_gn = malloc(sizeof(PDM_g_num_t *) * n_part);
-  *pcell_ln_to_gn = malloc(sizeof(PDM_g_num_t *) * n_part);
+  *pn_vtx                 = malloc(sizeof(int          ) * n_part);
+  *pn_edge                = malloc(sizeof(int          ) * n_part);
+  *pn_face                = malloc(sizeof(int          ) * n_part);
+  *pn_cell                = malloc(sizeof(int          ) * n_part);
+  *pvtx_coord             = malloc(sizeof(double      *) * n_part);
+  *pedge_vtx              = malloc(sizeof(int         *) * n_part);
+  *pface_edge_idx         = malloc(sizeof(int         *) * n_part);
+  *pface_edge             = malloc(sizeof(int         *) * n_part);
+  *pcell_face_idx         = malloc(sizeof(int         *) * n_part);
+  *pcell_face             = malloc(sizeof(int         *) * n_part);
+  *pvtx_ln_to_gn          = malloc(sizeof(PDM_g_num_t *) * n_part);
+  *pedge_ln_to_gn         = malloc(sizeof(PDM_g_num_t *) * n_part);
+  *pface_ln_to_gn         = malloc(sizeof(PDM_g_num_t *) * n_part);
+  *pcell_ln_to_gn         = malloc(sizeof(PDM_g_num_t *) * n_part);
+  *pn_surface             = malloc(sizeof(int          ) * n_part);
+  *psurface_face_idx      = malloc(sizeof(int         *) * n_part);
+  *psurface_face          = malloc(sizeof(int         *) * n_part);
+  *psurface_face_ln_to_gn = malloc(sizeof(PDM_g_num_t *) * n_part);
 
   for (int ipart = 0; ipart < n_part; ipart++) {
     (*pn_vtx)[ipart] = PDM_multipart_part_ln_to_gn_get(mpart,
@@ -1409,6 +1417,16 @@ PDM_generate_mesh_ball_ngon
                                         &(*pedge_vtx)[ipart],
                                         &edge_vtx_idx,
                                         PDM_OWNERSHIP_USER);
+
+    PDM_multipart_bound_get(mpart,
+                            0,
+                            ipart,
+                            PDM_BOUND_TYPE_FACE,
+                            &(*pn_surface)[ipart],
+                            &(*psurface_face_idx)[ipart],
+                            &(*psurface_face)[ipart],
+                            &(*psurface_face_ln_to_gn)[ipart],
+                            PDM_OWNERSHIP_USER);
   }
 
   PDM_multipart_free(mpart);

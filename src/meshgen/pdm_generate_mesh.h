@@ -405,32 +405,36 @@ PDM_generate_mesh_sphere_ngon
  *
  * \brief Create a partitionned ball mesh (3D) with descending connectivities.
  *
- * \param [in]  comm            MPI communicator
- * \param [in]  elt_type        Mesh element type
- * \param [in]  order           Mesh element order
- * \param [in]  ho_ordering     High order nodes ordering type
- * \param [in]  radius          Radius of the ball
- * \param [in]  hole_radius     Radius of the hole of the ball
- * \param [in]  center_x        x-coordinate of the ball center
- * \param [in]  center_y        y-coordinate of the ball center
- * \param [in]  center_z        z-coordinate of the ball center
- * \param [in]  n_x             Number of vertices on segments in x-direction
- * \param [in]  n_y             Number of vertices on segments in y-direction
- * \param [in]  n_z             Number of vertices on segments in z-direction
- * \param [in]  n_layer         Number of extrusion layers
- * \param [in]  geometric_ratio Geometric ratio for layer thickness
- * \param [in]  n_part          Number of mesh partitions
- * \param [in]  part_method     Mesh partitionning method
- * \param [in]   pn_vtx         Number of vertices
- * \param [in]   pn_edge        Number of edges
- * \param [in]   pn_face        Number of faces
- * \param [in]   pvtx_coord     Vertex coordinates
- * \param [in]   pedge_vtx      edge->vertex connectivity
- * \param [in]   pface_edge_idx Index of face->edge connectivity
- * \param [in]   pface_edge     face->edge connectivity
- * \param [in]   pvtx_ln_to_gn  Vertex global number
- * \param [in]   pedge_ln_to_gn Edge global number
- * \param [in]   pface_ln_to_gn Face global number
+ * \param [in]  comm                      MPI communicator
+ * \param [in]  elt_type                  Mesh element type
+ * \param [in]  order                     Mesh element order
+ * \param [in]  ho_ordering               High order nodes ordering type
+ * \param [in]  radius                    Radius of the ball
+ * \param [in]  hole_radius               Radius of the hole of the ball
+ * \param [in]  center_x                  x-coordinate of the ball center
+ * \param [in]  center_y                  y-coordinate of the ball center
+ * \param [in]  center_z                  z-coordinate of the ball center
+ * \param [in]  n_x                       Number of vertices on segments in x-direction
+ * \param [in]  n_y                       Number of vertices on segments in y-direction
+ * \param [in]  n_z                       Number of vertices on segments in z-direction
+ * \param [in]  n_layer                   Number of extrusion layers
+ * \param [in]  geometric_ratio           Geometric ratio for layer thickness
+ * \param [in]  n_part                    Number of mesh partitions
+ * \param [in]  part_method               Mesh partitionning method
+ * \param [out] pn_vtx                    Number of vertices
+ * \param [out] pn_edge                   Number of edges
+ * \param [out] pn_face                   Number of faces
+ * \param [out] pvtx_coord                Vertex coordinates
+ * \param [out] pedge_vtx                 edge->vertex connectivity
+ * \param [out] pface_edge_idx            Index of face->edge connectivity
+ * \param [out] pface_edge                face->edge connectivity
+ * \param [out] pvtx_ln_to_gn             Vertex global number
+ * \param [out] pedge_ln_to_gn            Edge global number
+ * \param [out] pface_ln_to_gn            Face global number
+ * \param [out] pn_surface                Number of surfaces
+ * \param [out] psurface_face_idx         surface->face connectivity index
+ * \param [out] psurface_face             surface->face connectivity
+ * \param [out] psurface_face_ln_to_gn    surface->face connectivity with global numbers
  *
  */
 
@@ -466,8 +470,12 @@ PDM_generate_mesh_ball_ngon
  PDM_g_num_t                ***pvtx_ln_to_gn,
  PDM_g_num_t                ***pedge_ln_to_gn,
  PDM_g_num_t                ***pface_ln_to_gn,
-PDM_g_num_t                ***pcell_ln_to_gn
-);
+ PDM_g_num_t                ***pcell_ln_to_gn,
+ int                         **pn_surface,
+ int                        ***psurface_face_idx,
+ int                        ***psurface_face,
+ PDM_g_num_t                ***psurface_face_ln_to_gn
+ );
 
 #ifdef __cplusplus
 }
