@@ -48,7 +48,7 @@ extern "C" {
  *
  * \param[in]  comm                MPI communicator
  * \param[in]  filename            Filename
- * \param[in]  fix_orientation_2d  Ensure positive area for 2d faces
+ * \param[in]  fix_orientation_2d  Ensure positive area for 2d faces (\warning mesh should be in (x,y) plane with pointing upward)
  * \param[in]  fix_orientation_3d  Ensure positive volume for 3d cells
  *
  * \return Pointer to PDM_dmesh_nodal object
