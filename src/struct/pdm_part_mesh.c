@@ -147,9 +147,9 @@ _build_extract_part_bound
       // selected_loc  [i_part][3*i+2] = group_entity[i_part][i] - 1;
     }
 
-    PDM_log_trace_array_int(selected_l_num[i_part],
-                            group_entity_idx[i_part][n_group],
-                            "selected_l_num : ");
+    // PDM_log_trace_array_int(selected_l_num[i_part],
+    //                         group_entity_idx[i_part][n_group],
+    //                         "selected_l_num : ");
 
 
     PDM_extract_part_selected_lnum_set(*extrp,

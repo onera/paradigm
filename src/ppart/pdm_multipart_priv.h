@@ -12,6 +12,7 @@
 #include "pdm_multipart.h"
 #include "pdm_dmesh_priv.h"
 #include "pdm_dmesh_nodal_priv.h"
+#include "pdm_dmesh_nodal_to_dmesh.h"
 #include "pdm_part_priv.h"
 
 #ifdef __cplusplus
