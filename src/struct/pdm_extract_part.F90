@@ -448,7 +448,7 @@ module pdm_extract_part
     integer, intent(in)           :: bound_type
     integer, intent(in)           :: i_part
     integer, intent(in)           :: i_group
-    integer, intent(in)           :: n_extract_group_entity
+    integer                       :: n_extract_group_entity
     integer(pdm_l_num_s), pointer :: extract_group_entity(:)
     integer(pdm_g_num_s), pointer :: extract_group_entity_ln_to_gn(:)
     integer(pdm_g_num_s), pointer :: extract_group_entity_parent_ln_to_gn(:)
