@@ -251,11 +251,58 @@ _closest_points_reverse_results
                          &useless_stride, //Same than tgt_in_src_n
               (void ***) &cls->src_cloud->tgt_in_src_dist);
 
+  /* Suppression des doublons de gnum */
+
+  for (int i_part = 0; i_part < cls->src_cloud->n_part; i_part++) {
+    int  max_tgt_in_src_n = 0;
+    for (int i_point = 0; i_point < cls->src_cloud->n_points[i_part]; i_point++){
+      max_tgt_in_src_n = PDM_MAX( max_tgt_in_src_n, tgt_in_src_n[i_part][i_point] );
+    }
+    int  idx_read  = 0;
+    int  idx_write = 0;
+    int    *tgt_order = (int    *) malloc(sizeof(int   ) * max_tgt_in_src_n);
+    double *tgt_dist  = (double *) malloc(sizeof(double) * max_tgt_in_src_n);
+    for (int i_point = 0; i_point < cls->src_cloud->n_points[i_part]; i_point++){
+      if (tgt_in_src_n[i_part][i_point] > 0){
+
+        /* Tri des gnum */
+        int n_tgt = tgt_in_src_n[i_part][i_point];
+        for (int i_tgt = 0; i_tgt < n_tgt; i_tgt++){
+          tgt_order[i_tgt] = i_tgt;
+          tgt_dist [i_tgt] = cls->src_cloud->tgt_in_src_dist[i_part][idx_read+i_tgt];
+        }
+        PDM_sort_long(&cls->src_cloud->tgt_in_src[i_part][idx_read], tgt_order, n_tgt);
+
+        /* Ajout du premier point */
+        tgt_in_src_n[i_part][i_point] = 1;
+        cls->src_cloud->tgt_in_src     [i_part][idx_write] = cls->src_cloud->tgt_in_src[i_part][idx_read];
+        cls->src_cloud->tgt_in_src_dist[i_part][idx_write] = tgt_dist[tgt_order[0]];
+        idx_write++;
+
+        /* Ajout des points suivants sans doublon */
+        for (int i_tgt = 1; i_tgt < n_tgt; i_tgt++){
+          if (cls->src_cloud->tgt_in_src[i_part][idx_read+i_tgt] > cls->src_cloud->tgt_in_src[i_part][idx_read+i_tgt-1]){
+            cls->src_cloud->tgt_in_src     [i_part][idx_write] = cls->src_cloud->tgt_in_src[i_part][idx_read+i_tgt];
+            cls->src_cloud->tgt_in_src_dist[i_part][idx_write] = tgt_dist[tgt_order[i_tgt]];
+            tgt_in_src_n[i_part][i_point]++;
+            idx_write++;
+          }
+        }
+
+        idx_read = idx_read + n_tgt;
+      }
+    }
+    free(tgt_order);
+    free(tgt_dist);
+  }
 
   cls->src_cloud->tgt_in_src_idx = (int **) malloc( cls->src_cloud->n_part * sizeof(int *));
   for (int i_part = 0; i_part < cls->src_cloud->n_part; i_part++) {
     // PDM_log_trace_array_int(tgt_in_src_n[i_part]     , cls->src_cloud->n_points[i_part], "cls->src_cloud->n_points[i_part]:: " );
     cls->src_cloud->tgt_in_src_idx[i_part] = PDM_array_new_idx_from_sizes_int(tgt_in_src_n[i_part], cls->src_cloud->n_points[i_part]);
+    /* Réallocation à la bonne taille sans doublon */
+    cls->src_cloud->tgt_in_src     [i_part] = realloc(cls->src_cloud->tgt_in_src     [i_part], sizeof(PDM_g_num_t) * cls->src_cloud->tgt_in_src_idx[i_part][cls->src_cloud->n_points[i_part]]);
+    cls->src_cloud->tgt_in_src_dist[i_part] = realloc(cls->src_cloud->tgt_in_src_dist[i_part], sizeof(double)      * cls->src_cloud->tgt_in_src_idx[i_part][cls->src_cloud->n_points[i_part]]);
     free(tgt_in_src_n[i_part]);
     free(useless_stride[i_part]);
   }
