@@ -19,7 +19,7 @@
 
 #include "pdm_configf.h"
 
-module pdm_array
+module pdm_cf_array
 
   use pdm
   use pdm_fortran
@@ -27,65 +27,65 @@ module pdm_array
 
   implicit none
 
-  type PDM_array_t
+  type PDM_cf_array_t
 
     integer               :: type      = -1
     integer               :: length    = -1
     type(c_ptr)           :: cptr   
     integer               :: ownership = PDM_OWNERSHIP_KEEP
 
-  end type PDM_array_t
+  end type PDM_cf_array_t
 
-   interface PDM_array_part_get
-     module procedure PDM_array_part_get_int_
-     module procedure PDM_array_part_get_int_2_
-     module procedure PDM_array_part_get_int_3_
+   interface PDM_cf_array_part_get
+     module procedure PDM_cf_array_part_get_int_
+     module procedure PDM_cf_array_part_get_int_2_
+     module procedure PDM_cf_array_part_get_int_3_
 #ifdef PDM_LONG_G_NUM
-     module procedure PDM_array_part_get_g_num_
-     module procedure PDM_array_part_get_g_num_2_
-     module procedure PDM_array_part_get_g_num_3_
+     module procedure PDM_cf_array_part_get_g_num_
+     module procedure PDM_cf_array_part_get_g_num_2_
+     module procedure PDM_cf_array_part_get_g_num_3_
 #endif
-     module procedure PDM_array_part_get_double_
-     module procedure PDM_array_part_get_double_2_
-     module procedure PDM_array_part_get_double_3_
-     module procedure PDM_array_part_get_complex8_
-     module procedure PDM_array_part_get_complex4_
-     module procedure PDM_array_part_get_real4_
+     module procedure PDM_cf_array_part_get_double_
+     module procedure PDM_cf_array_part_get_double_2_
+     module procedure PDM_cf_array_part_get_double_3_
+     module procedure PDM_cf_array_part_get_complex8_
+     module procedure PDM_cf_array_part_get_complex4_
+     module procedure PDM_cf_array_part_get_real4_
    end interface
 
-  interface PDM_array_create
-    module procedure PDM_array_create_
+  interface PDM_cf_array_create
+    module procedure PDM_cf_array_create_
   end interface
 
 
   private :: &
-              PDM_array_part_get_int_, &
-              PDM_array_part_get_int_2_, &
-              PDM_array_part_get_int_3_, &
+              PDM_cf_array_part_get_int_, &
+              PDM_cf_array_part_get_int_2_, &
+              PDM_cf_array_part_get_int_3_, &
 #ifdef PDM_LONG_G_NUM
-              PDM_array_part_get_g_num_, &
-              PDM_array_part_get_g_num_2_, &
-              PDM_array_part_get_g_num_3_, &
+              PDM_cf_array_part_get_g_num_, &
+              PDM_cf_array_part_get_g_num_2_, &
+              PDM_cf_array_part_get_g_num_3_, &
 #endif
-              PDM_array_part_get_double_, &
-              PDM_array_part_get_double_2_, &
-              PDM_array_part_get_double_3_, &
-              PDM_array_part_get_complex8_, &
-              PDM_array_part_get_complex4_, &
-              PDM_array_part_get_real4_, &
-              PDM_array_create_ 
+              PDM_cf_array_part_get_double_, &
+              PDM_cf_array_part_get_double_2_, &
+              PDM_cf_array_part_get_double_3_, &
+              PDM_cf_array_part_get_complex8_, &
+              PDM_cf_array_part_get_complex4_, &
+              PDM_cf_array_part_get_real4_, &
+              PDM_cf_array_create_ 
   contains
 
 
   !>
-  !! \brief Initialize a \ref PDM_array_t object
+  !! \brief Initialize a \ref PDM_cf_array_t object
   !!
-  !! \param [out]  pa      \ref PDM_array_t object
+  !! \param [out]  pa      \ref PDM_cf_array_t object
   !! \param [in]   type    Data type of pointers
   !! \param [in]   length  Length of array
   !!
 
-  subroutine PDM_array_create_ (pa,        &
+  subroutine PDM_cf_array_create_ (pa,        &
                                type,      &
                                length,    &
                                cptr,      &
@@ -93,14 +93,14 @@ module pdm_array
     use iso_c_binding
     implicit none
 
-    type(PDM_array_t), pointer :: pa
+    type(PDM_cf_array_t), pointer :: pa
     integer, intent(in)        :: type
     integer, intent(in)        :: length
     type(c_ptr), intent(in)    :: cptr
     integer, intent(in)        :: ownership
 
     if (associated(pa)) then
-      print*, "Error PDM_array_create : pa is already associated ! "
+      print*, "Error PDM_cf_array_create : pa is already associated ! "
       call exit
     endif
 
@@ -111,23 +111,23 @@ module pdm_array
     pa%cptr      = cptr
     pa%ownership = ownership
 
-  end subroutine PDM_array_create_
+  end subroutine PDM_cf_array_create_
 
 
   !>
-  !! \brief Free a \ref PDM_array_t object
+  !! \brief Free a \ref PDM_cf_array_t object
   !!
-  !! \param [in, out]  pa      \ref PDM_array_t object
+  !! \param [in, out]  pa      \ref PDM_cf_array_t object
   !!
 
-  subroutine PDM_array_free_ (pa)
+  subroutine PDM_cf_array_free_ (pa)
     use iso_c_binding
     implicit none
 
-    type(PDM_array_t), pointer  :: pa
+    type(PDM_cf_array_t), pointer  :: pa
 
     if (.not. associated(pa)) then
-      print*, "Error PDM_array_free : 'pa' pointer is not associated "
+      print*, "Error PDM_cf_array_free : 'pa' pointer is not associated "
       call exit
     endif
 
@@ -138,7 +138,7 @@ module pdm_array
     deallocate(pa)
     pa => null()
 
-  end subroutine PDM_array_free_
+  end subroutine PDM_cf_array_free_
 
 
   !>
@@ -146,28 +146,28 @@ module pdm_array
   !!
   !! Maps a Fortran pointer onto a C pointer
   !!
-  !! \param [in]       pa         Array of \ref PDM_array_t
+  !! \param [in]       pa         Array of \ref PDM_cf_array_t
   !! \param [in]       stride1    Dimension 1 of multi-dimension array: Optional
   !! \param [in]       stride2    Dimension 2 of multi-dimension array: Optional
   !! \param [in]       stride3    Dimension 3 of multi-dimension array: Optional
   !! \param [in, out]  pointer_f  Pointer to an integer array
   !!
 
-  subroutine PDM_array_part_get_int_ (pa,        &
+  subroutine PDM_cf_array_part_get_int_ (pa,        &
                                       pointer_f)
     use iso_c_binding
     implicit none
 
-    type(PDM_array_t),     pointer :: pa
+    type(PDM_cf_array_t),     pointer :: pa
     integer(pdm_l_num_s),  pointer :: pointer_f(:)
 
     if (.not. associated(pa)) then
-      print*, "Error PDM_array_part_get : 'pa' pointer is not associated "
+      print*, "Error PDM_cf_array_part_get : 'pa' pointer is not associated "
       call exit
     endif
 
     if (pa%type .ne. PDM_TYPE_INT) then
-      print *, "PDM_array_part_get : wrong type for pointer_f"
+      print *, "PDM_cf_array_part_get : wrong type for pointer_f"
       stop
     end if
 
@@ -175,26 +175,26 @@ module pdm_array
                      pointer_f,    &
                      [pa%length])
 
-  end subroutine PDM_array_part_get_int_
+  end subroutine PDM_cf_array_part_get_int_
 
 
-  subroutine PDM_array_part_get_int_2_ (pa,        &
+  subroutine PDM_cf_array_part_get_int_2_ (pa,        &
                                         stride1,   & 
                                         pointer_f)
     use iso_c_binding
     implicit none
 
-    type(PDM_array_t),     pointer :: pa
+    type(PDM_cf_array_t),     pointer :: pa
     integer, intent(in)            :: stride1
     integer(pdm_l_num_s),  pointer :: pointer_f(:,:)
 
     if (.not. associated(pa)) then
-      print*, "Error PDM_array_part_get : 'pa' pointer is not associated "
+      print*, "Error PDM_cf_array_part_get : 'pa' pointer is not associated "
       call exit
     endif
 
     if (pa%type .ne. PDM_TYPE_INT) then
-      print *, "PDM_array_part_get : wrong type for pointer_f"
+      print *, "PDM_cf_array_part_get : wrong type for pointer_f"
       stop
     end if
 
@@ -202,28 +202,28 @@ module pdm_array
                      pointer_f,    &
                      [stride1, pa%length/stride1])
 
-  end subroutine PDM_array_part_get_int_2_
+  end subroutine PDM_cf_array_part_get_int_2_
 
 
-  subroutine PDM_array_part_get_int_3_ (pa,        &
+  subroutine PDM_cf_array_part_get_int_3_ (pa,        &
                                         stride1,   & 
                                         stride2,   & 
                                         pointer_f)
     use iso_c_binding
     implicit none
 
-    type(PDM_array_t),     pointer :: pa
+    type(PDM_cf_array_t),     pointer :: pa
     integer, intent(in)            :: stride1
     integer, intent(in)            :: stride2
     integer(pdm_l_num_s),  pointer :: pointer_f(:,:,:)
 
     if (.not. associated(pa)) then
-      print*, "Error PDM_array_part_get : 'pa' pointer is not associated "
+      print*, "Error PDM_cf_array_part_get : 'pa' pointer is not associated "
       call exit
     endif
 
     if (pa%type .ne. PDM_TYPE_INT) then
-      print *, "PDM_array_part_get : wrong type for pointer_f"
+      print *, "PDM_cf_array_part_get : wrong type for pointer_f"
       stop
     end if
 
@@ -231,25 +231,25 @@ module pdm_array
                      pointer_f,    &
                      [stride1, stride2, pa%length/(stride1+stride2)])
 
-  end subroutine PDM_array_part_get_int_3_
+  end subroutine PDM_cf_array_part_get_int_3_
 
 #ifdef PDM_LONG_G_NUM
 
-  subroutine PDM_array_part_get_g_num_ (pa,        &
+  subroutine PDM_cf_array_part_get_g_num_ (pa,        &
                                       pointer_f)
     use iso_c_binding
     implicit none
 
-    type(PDM_array_t),     pointer :: pa
+    type(PDM_cf_array_t),     pointer :: pa
     integer(pdm_g_num_s),  pointer :: pointer_f(:)
 
     if (.not. associated(pa)) then
-      print*, "Error PDM_array_part_get : 'pa' pointer is not associated "
+      print*, "Error PDM_cf_array_part_get : 'pa' pointer is not associated "
       call exit
     endif
 
     if (pa%type .ne. PDM_TYPE_G_NUM) then
-      print *, "PDM_array_part_get : wrong type for pointer_f"
+      print *, "PDM_cf_array_part_get : wrong type for pointer_f"
       stop
     end if
 
@@ -257,25 +257,25 @@ module pdm_array
                      pointer_f,    &
                      [pa%length])
 
-  end subroutine PDM_array_part_get_g_num_
+  end subroutine PDM_cf_array_part_get_g_num_
 
-  subroutine PDM_array_part_get_g_num_2_ (pa,        &
+  subroutine PDM_cf_array_part_get_g_num_2_ (pa,        &
                                           stride1,   & 
                                           pointer_f)
     use iso_c_binding
     implicit none
 
-    type(PDM_array_t),     pointer :: pa
+    type(PDM_cf_array_t),     pointer :: pa
     integer, intent(in)            :: stride1
     integer(pdm_g_num_s),  pointer :: pointer_f(:,:)
 
     if (.not. associated(pa)) then
-      print*, "Error PDM_array_part_get : 'pa' pointer is not associated "
+      print*, "Error PDM_cf_array_part_get : 'pa' pointer is not associated "
       call exit
     endif
 
     if (pa%type .ne. PDM_TYPE_G_NUM) then
-      print *, "PDM_array_part_get : wrong type for pointer_f"
+      print *, "PDM_cf_array_part_get : wrong type for pointer_f"
       stop
     end if
 
@@ -283,27 +283,27 @@ module pdm_array
                      pointer_f,    &
                      [stride1, pa%length/stride1])
 
-  end subroutine PDM_array_part_get_g_num_2_
+  end subroutine PDM_cf_array_part_get_g_num_2_
 
-  subroutine PDM_array_part_get_g_num_3_ (pa,        &
+  subroutine PDM_cf_array_part_get_g_num_3_ (pa,        &
                                           stride1,   & 
                                           stride2,   & 
                                           pointer_f)
     use iso_c_binding
     implicit none
 
-    type(PDM_array_t),     pointer :: pa
+    type(PDM_cf_array_t),     pointer :: pa
     integer, intent(in)            :: stride1
     integer, intent(in)            :: stride2
     integer(pdm_g_num_s),  pointer :: pointer_f(:,:,:)
 
     if (.not. associated(pa)) then
-      print*, "Error PDM_array_part_get : 'pa' pointer is not associated "
+      print*, "Error PDM_cf_array_part_get : 'pa' pointer is not associated "
       call exit
     endif
 
     if (pa%type .ne. PDM_TYPE_G_NUM) then
-      print *, "PDM_array_part_get : wrong type for pointer_f"
+      print *, "PDM_cf_array_part_get : wrong type for pointer_f"
       stop
     end if
 
@@ -311,25 +311,25 @@ module pdm_array
                      pointer_f,    &
                      [stride1, stride2, pa%length/(stride1+stride2)])
 
-  end subroutine PDM_array_part_get_g_num_3_
+  end subroutine PDM_cf_array_part_get_g_num_3_
 
 #endif
 
-  subroutine PDM_array_part_get_double_ (pa,        &
+  subroutine PDM_cf_array_part_get_double_ (pa,        &
                                          pointer_f)
     use iso_c_binding
     implicit none
 
-    type(PDM_array_t),     pointer :: pa
+    type(PDM_cf_array_t),     pointer :: pa
     double precision,  pointer :: pointer_f(:)
 
     if (.not. associated(pa)) then
-      print*, "Error PDM_array_part_get : 'pa' pointer is not associated "
+      print*, "Error PDM_cf_array_part_get : 'pa' pointer is not associated "
       call exit
     endif
 
     if (pa%type .ne. PDM_TYPE_DOUBLE) then
-      print *, "PDM_array_part_get : wrong type for pointer_f"
+      print *, "PDM_cf_array_part_get : wrong type for pointer_f"
       stop
     end if
 
@@ -337,25 +337,25 @@ module pdm_array
                      pointer_f,    &
                      [pa%length])
 
-  end subroutine PDM_array_part_get_double_
+  end subroutine PDM_cf_array_part_get_double_
 
-  subroutine PDM_array_part_get_double_2_ (pa,        &
+  subroutine PDM_cf_array_part_get_double_2_ (pa,        &
                                            stride1,   & 
                                            pointer_f)
     use iso_c_binding
     implicit none
 
-    type(PDM_array_t),     pointer :: pa
+    type(PDM_cf_array_t),     pointer :: pa
     integer, intent(in)            :: stride1
     double precision,  pointer :: pointer_f(:,:)
 
     if (.not. associated(pa)) then
-      print*, "Error PDM_array_part_get : 'pa' pointer is not associated "
+      print*, "Error PDM_cf_array_part_get : 'pa' pointer is not associated "
       call exit
     endif
 
     if (pa%type .ne. PDM_TYPE_DOUBLE) then
-      print *, "PDM_array_part_get : wrong type for pointer_f"
+      print *, "PDM_cf_array_part_get : wrong type for pointer_f"
       stop
     end if
 
@@ -363,27 +363,27 @@ module pdm_array
                      pointer_f,    &
                      [stride1, pa%length/stride1])
 
-  end subroutine PDM_array_part_get_double_2_
+  end subroutine PDM_cf_array_part_get_double_2_
 
-  subroutine PDM_array_part_get_double_3_ (pa,        &
+  subroutine PDM_cf_array_part_get_double_3_ (pa,        &
                                            stride1,   & 
                                            stride2,   & 
                                            pointer_f)
     use iso_c_binding
     implicit none
 
-    type(PDM_array_t),     pointer :: pa
+    type(PDM_cf_array_t),     pointer :: pa
     integer, intent(in)            :: stride1
     integer, intent(in)            :: stride2
     double precision, pointer :: pointer_f(:,:,:)
 
     if (.not. associated(pa)) then
-      print*, "Error PDM_array_part_get : 'pa' pointer is not associated "
+      print*, "Error PDM_cf_array_part_get : 'pa' pointer is not associated "
       call exit
     endif
 
     if (pa%type .ne. PDM_TYPE_DOUBLE) then
-      print *, "PDM_array_part_get : wrong type for pointer_f"
+      print *, "PDM_cf_array_part_get : wrong type for pointer_f"
       stop
     end if
 
@@ -391,24 +391,24 @@ module pdm_array
                      pointer_f,    &
                      [stride1, stride2, pa%length/(stride1+stride2)])
 
-  end subroutine PDM_array_part_get_double_3_
+  end subroutine PDM_cf_array_part_get_double_3_
 
 
-  subroutine PDM_array_part_get_complex8_ (pa,        &
+  subroutine PDM_cf_array_part_get_complex8_ (pa,        &
                                            pointer_f)
     use iso_c_binding
     implicit none
 
-    type(PDM_array_t),     pointer :: pa
+    type(PDM_cf_array_t),     pointer :: pa
     complex (kind = 8),    pointer :: pointer_f(:)
 
     if (.not. associated(pa)) then
-      print*, "Error PDM_array_part_get : 'pa' pointer is not associated "
+      print*, "Error PDM_cf_array_part_get : 'pa' pointer is not associated "
       call exit
     endif
 
     if (pa%type .ne. PDM_TYPE_COMPLEX8) then
-      print *, "PDM_array_part_get : wrong type for pointer_f"
+      print *, "PDM_cf_array_part_get : wrong type for pointer_f"
       stop
     end if
 
@@ -416,26 +416,26 @@ module pdm_array
                      pointer_f,    &
                      [pa%length])
 
-  end subroutine PDM_array_part_get_complex8_
+  end subroutine PDM_cf_array_part_get_complex8_
 
 
-  subroutine PDM_array_part_get_complex8_2_ (pa,        &
+  subroutine PDM_cf_array_part_get_complex8_2_ (pa,        &
                                              stride1,   & 
                                              pointer_f)
     use iso_c_binding
     implicit none
 
-    type(PDM_array_t),     pointer :: pa
+    type(PDM_cf_array_t),     pointer :: pa
     integer, intent(in)            :: stride1
     complex (kind = 8),    pointer :: pointer_f(:,:)
 
     if (.not. associated(pa)) then
-      print *, "PDM_array_part_get : wrong type for pointer_f"
+      print *, "PDM_cf_array_part_get : wrong type for pointer_f"
       call exit
     endif
 
     if (pa%type .ne. PDM_TYPE_COMPLEX8) then
-      print *, "PDM_array_part_get : wrong type"
+      print *, "PDM_cf_array_part_get : wrong type"
       stop
     end if
 
@@ -443,27 +443,27 @@ module pdm_array
                      pointer_f,    &
                      [stride1, pa%length/stride1])
 
-  end subroutine PDM_array_part_get_complex8_2_
+  end subroutine PDM_cf_array_part_get_complex8_2_
 
-  subroutine PDM_array_part_get_complex8_3_ (pa,        &
+  subroutine PDM_cf_array_part_get_complex8_3_ (pa,        &
                                              stride1,   & 
                                              stride2,   & 
                                              pointer_f)
     use iso_c_binding
     implicit none
 
-    type(PDM_array_t),     pointer :: pa
+    type(PDM_cf_array_t),     pointer :: pa
     integer, intent(in)            :: stride1
     integer, intent(in)            :: stride2
     complex (kind = 8),    pointer :: pointer_f(:,:,:)
 
     if (.not. associated(pa)) then
-      print*, "Error PDM_array_part_get : 'pa' pointer is not associated "
+      print*, "Error PDM_cf_array_part_get : 'pa' pointer is not associated "
       call exit
     endif
 
     if (pa%type .ne. PDM_TYPE_COMPLEX8) then
-      print *, "PDM_array_part_get : wrong type for pointer_f"
+      print *, "PDM_cf_array_part_get : wrong type for pointer_f"
       stop
     end if
 
@@ -471,24 +471,24 @@ module pdm_array
                      pointer_f,    &
                      [stride1, stride2, pa%length/(stride1+stride2)])
 
-  end subroutine PDM_array_part_get_complex8_3_
+  end subroutine PDM_cf_array_part_get_complex8_3_
 
 
-  subroutine PDM_array_part_get_complex4_ (pa,        &
+  subroutine PDM_cf_array_part_get_complex4_ (pa,        &
                                            pointer_f)
     use iso_c_binding
     implicit none
 
-    type(PDM_array_t),     pointer :: pa
+    type(PDM_cf_array_t),     pointer :: pa
     complex (kind = 4),    pointer :: pointer_f(:)
 
     if (.not. associated(pa)) then
-      print*, "Error PDM_array_part_get : 'pa' pointer is not associated "
+      print*, "Error PDM_cf_array_part_get : 'pa' pointer is not associated "
       call exit
     endif
 
     if (pa%type .ne. PDM_TYPE_COMPLEX4) then
-      print *, "PDM_array_part_get : wrong type for pointer_f"
+      print *, "PDM_cf_array_part_get : wrong type for pointer_f"
       stop
     end if
 
@@ -496,26 +496,26 @@ module pdm_array
                      pointer_f,    &
                      [pa%length])
 
-  end subroutine PDM_array_part_get_complex4_
+  end subroutine PDM_cf_array_part_get_complex4_
 
 
-  subroutine PDM_array_part_get_complex4_2_ (pa,        &
+  subroutine PDM_cf_array_part_get_complex4_2_ (pa,        &
                                              stride1,   & 
                                              pointer_f)
     use iso_c_binding
     implicit none
 
-    type(PDM_array_t),     pointer :: pa
+    type(PDM_cf_array_t),     pointer :: pa
     integer, intent(in)            :: stride1
     complex (kind = 4),    pointer :: pointer_f(:,:)
 
     if (.not. associated(pa)) then
-      print *, "PDM_array_part_get : wrong type for pointer_f"
+      print *, "PDM_cf_array_part_get : wrong type for pointer_f"
       call exit
     endif
 
     if (pa%type .ne. PDM_TYPE_COMPLEX4) then
-      print *, "PDM_array_part_get : wrong type"
+      print *, "PDM_cf_array_part_get : wrong type"
       stop
     end if
 
@@ -523,27 +523,27 @@ module pdm_array
                      pointer_f,    &
                      [stride1, pa%length/stride1])
 
-  end subroutine PDM_array_part_get_complex4_2_
+  end subroutine PDM_cf_array_part_get_complex4_2_
 
-  subroutine PDM_array_part_get_complex4_3_ (pa,        &
+  subroutine PDM_cf_array_part_get_complex4_3_ (pa,        &
                                              stride1,   & 
                                              stride2,   & 
                                              pointer_f)
     use iso_c_binding
     implicit none
 
-    type(PDM_array_t),     pointer :: pa
+    type(PDM_cf_array_t),     pointer :: pa
     integer, intent(in)            :: stride1
     integer, intent(in)            :: stride2
     complex (kind = 4),    pointer :: pointer_f(:,:,:)
 
     if (.not. associated(pa)) then
-      print*, "Error PDM_array_part_get : 'pa' pointer is not associated "
+      print*, "Error PDM_cf_array_part_get : 'pa' pointer is not associated "
       call exit
     endif
 
     if (pa%type .ne. PDM_TYPE_COMPLEX4) then
-      print *, "PDM_array_part_get : wrong type for pointer_f"
+      print *, "PDM_cf_array_part_get : wrong type for pointer_f"
       stop
     end if
 
@@ -551,24 +551,24 @@ module pdm_array
                      pointer_f,    &
                      [stride1, stride2, pa%length/(stride1+stride2)])
 
-  end subroutine PDM_array_part_get_complex4_3_
+  end subroutine PDM_cf_array_part_get_complex4_3_
 
 
-  subroutine PDM_array_part_get_real4_ (pa,        &
+  subroutine PDM_cf_array_part_get_real4_ (pa,        &
                                         pointer_f)
     use iso_c_binding
     implicit none
 
-    type(PDM_array_t),     pointer :: pa
+    type(PDM_cf_array_t),     pointer :: pa
     real (kind = 4),       pointer :: pointer_f(:)
 
     if (.not. associated(pa)) then
-      print*, "Error PDM_array_part_get : 'pa' pointer is not associated "
+      print*, "Error PDM_cf_array_part_get : 'pa' pointer is not associated "
       call exit
     endif
 
     if (pa%type .ne. PDM_TYPE_REAL4) then
-      print *, "PDM_array_part_get : wrong type for pointer_f"
+      print *, "PDM_cf_array_part_get : wrong type for pointer_f"
       stop
     end if
 
@@ -576,26 +576,26 @@ module pdm_array
                      pointer_f,    &
                      [pa%length])
 
-  end subroutine PDM_array_part_get_real4_
+  end subroutine PDM_cf_array_part_get_real4_
 
 
-  subroutine PDM_array_part_get_real4_2_ (pa,        &
+  subroutine PDM_cf_array_part_get_real4_2_ (pa,        &
                                           stride1,   & 
                                           pointer_f)
     use iso_c_binding
     implicit none
 
-    type(PDM_array_t),     pointer :: pa
+    type(PDM_cf_array_t),     pointer :: pa
     integer, intent(in)            :: stride1
     real (kind = 4),       pointer :: pointer_f(:,:)
 
     if (.not. associated(pa)) then
-      print *, "PDM_array_part_get : wrong type for pointer_f"
+      print *, "PDM_cf_array_part_get : wrong type for pointer_f"
       call exit
     endif
 
     if (pa%type .ne. PDM_TYPE_REAL4) then
-      print *, "PDM_array_part_get : wrong type"
+      print *, "PDM_cf_array_part_get : wrong type"
       stop
     end if
 
@@ -603,27 +603,27 @@ module pdm_array
                      pointer_f,    &
                      [stride1, pa%length/stride1])
 
-  end subroutine PDM_array_part_get_real4_2_
+  end subroutine PDM_cf_array_part_get_real4_2_
 
-  subroutine PDM_array_part_get_real4_3_ (pa,        &
+  subroutine PDM_cf_array_part_get_real4_3_ (pa,        &
                                           stride1,   & 
                                           stride2,   & 
                                           pointer_f)
     use iso_c_binding
     implicit none
 
-    type(PDM_array_t),     pointer :: pa
+    type(PDM_cf_array_t),     pointer :: pa
     integer, intent(in)            :: stride1
     integer, intent(in)            :: stride2
     real (kind = 4),       pointer :: pointer_f(:,:,:)
 
     if (.not. associated(pa)) then
-      print*, "Error PDM_array_part_get : 'pa' pointer is not associated "
+      print*, "Error PDM_cf_array_part_get : 'pa' pointer is not associated "
       call exit
     endif
 
     if (pa%type .ne. PDM_TYPE_COMPLEX4) then
-      print *, "PDM_array_part_get : wrong type for pointer_f"
+      print *, "PDM_cf_array_part_get : wrong type for pointer_f"
       stop
     end if
 
@@ -631,6 +631,6 @@ module pdm_array
                      pointer_f,    &
                      [stride1, stride2, pa%length/(stride1+stride2)])
 
-  end subroutine PDM_array_part_get_real4_3_
+  end subroutine PDM_cf_array_part_get_real4_3_
 
-end module pdm_array
+end module pdm_cf_array

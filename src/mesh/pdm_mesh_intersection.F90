@@ -24,7 +24,7 @@ module pdm_mesh_intersection
   use pdm
   use pdm_fortran
   use iso_c_binding
-  use pdm_array
+  use pdm_cf_array
 
   implicit none
 
@@ -537,9 +537,9 @@ subroutine PDM_mesh_intersection_result_from_a_get_ (mi,                &
   implicit none
 
   type(c_ptr), intent(in) :: mi
-  type(PDM_array_t), pointer    :: elt_a_elt_b_idx     
-  type(PDM_array_t), pointer    :: elt_a_elt_b         
-  type(PDM_array_t), pointer    :: elt_a_elt_b_volume        
+  type(PDM_cf_array_t), pointer    :: elt_a_elt_b_idx     
+  type(PDM_cf_array_t), pointer    :: elt_a_elt_b         
+  type(PDM_cf_array_t), pointer    :: elt_a_elt_b_volume        
 
   type(c_ptr)             :: c_elt_a_elt_b_idx
   type(c_ptr)             :: c_elt_a_elt_b
@@ -575,10 +575,10 @@ subroutine PDM_mesh_intersection_result_from_a_get_ (mi,                &
 
 
   print *," A finir !!!!"
-  !! TODO: creation des pdm_array pour c_elt_a_elt_b_idx c_elt_a_elt_b c_elt_a_elt_b_volume
+  !! TODO: creation des pdm_cf_array pour c_elt_a_elt_b_idx c_elt_a_elt_b c_elt_a_elt_b_volume
   !!
 
-   ! call PDM_array_create_ (pa,        &
+   ! call PDM_cf_array_create_ (pa,        &
    !                            ! type,      &
    !                            ! length,    &
    !                            ! cptr,      &
