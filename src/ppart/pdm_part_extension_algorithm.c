@@ -629,21 +629,12 @@ _recurse_and_filter
       /*
        * Preapre for next step
        */
-      // if(i_step > 0) { // Because init step point out on bentity1_entity2_*
-        free(prev_concat_bentity1_entity2_n              [i_part]);
-        free(prev_concat_bentity1_entity2_gnum           [i_part]);
-        free(prev_concat_bentity1_entity2_triplet        [i_part]);
-        free(prev_concat_bentity1_entity2_interface_n    [i_part]);
-        free(prev_concat_bentity1_entity2_interface_tot_n[i_part]);
-        free(prev_concat_bentity1_entity2_interface      [i_part]);
-      // } else {
-      //   free(bentity1_entity2_n              [i_part]);
-      //   free(bentity1_entity2_gnum           [i_part]);
-      //   free(bentity1_entity2_triplet        [i_part]);
-      //   free(bentity1_entity2_interface_n    [i_part]);
-      //   free(bentity1_entity2_interface_tot_n[i_part]);
-      //   free(bentity1_entity2_interface      [i_part]);
-      // }
+      free(prev_concat_bentity1_entity2_n              [i_part]);
+      free(prev_concat_bentity1_entity2_gnum           [i_part]);
+      free(prev_concat_bentity1_entity2_triplet        [i_part]);
+      free(prev_concat_bentity1_entity2_interface_n    [i_part]);
+      free(prev_concat_bentity1_entity2_interface_tot_n[i_part]);
+      free(prev_concat_bentity1_entity2_interface      [i_part]);
 
       prev_concat_bentity1_entity2_n              [i_part] = concat_bentity1_entity2_n              [i_part];
       prev_concat_bentity1_entity2_gnum           [i_part] = concat_bentity1_entity2_gnum           [i_part];
