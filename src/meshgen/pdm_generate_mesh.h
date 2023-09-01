@@ -185,7 +185,7 @@ PDM_generate_mesh_sphere
 PDM_part_mesh_nodal_t *
 PDM_generate_mesh_rectangle
 (
-  const PDM_MPI_Comm     comm,
+ const PDM_MPI_Comm      comm,
  PDM_Mesh_nodal_elt_t    elt_type,
  int                     order,
  const char             *ho_ordering,
@@ -368,6 +368,7 @@ PDM_generate_mesh_rectangle_ngon
  * \param [in]   pedge_vtx      edge->vertex connectivity
  * \param [in]   pface_edge_idx Index of face->edge connectivity
  * \param [in]   pface_edge     face->edge connectivity
+ * \param [in]   pface_vtx      face->vtx connectivity
  * \param [in]   pvtx_ln_to_gn  Vertex global number
  * \param [in]   pedge_ln_to_gn Edge global number
  * \param [in]   pface_ln_to_gn Face global number
@@ -396,6 +397,7 @@ PDM_generate_mesh_sphere_ngon
  int                        ***pedge_vtx,
  int                        ***pface_edge_idx,
  int                        ***pface_edge,
+ int                        ***pface_vtx,
  PDM_g_num_t                ***pvtx_ln_to_gn,
  PDM_g_num_t                ***pedge_ln_to_gn,
  PDM_g_num_t                ***pface_ln_to_gn
@@ -428,6 +430,7 @@ PDM_generate_mesh_sphere_ngon
  * \param [out] pedge_vtx                 edge->vertex connectivity
  * \param [out] pface_edge_idx            Index of face->edge connectivity
  * \param [out] pface_edge                face->edge connectivity
+ * \param [out] pface_vtx                face->vtx connectivity
  * \param [out] pvtx_ln_to_gn             Vertex global number
  * \param [out] pedge_ln_to_gn            Edge global number
  * \param [out] pface_ln_to_gn            Face global number
@@ -465,6 +468,7 @@ PDM_generate_mesh_ball_ngon
  int                        ***pedge_vtx,
  int                        ***pface_edge_idx,
  int                        ***pface_edge,
+ int                        ***pface_vtx,
  int                        ***pcell_face_idx,
  int                        ***pcell_face,
  PDM_g_num_t                ***pvtx_ln_to_gn,
@@ -475,6 +479,91 @@ PDM_generate_mesh_ball_ngon
  int                        ***psurface_face_idx,
  int                        ***psurface_face,
  PDM_g_num_t                ***psurface_face_ln_to_gn
+ );
+
+/**
+ *
+ * \brief Create a partitionned parallelepiped mesh (3D) with descending connectivities.
+ *
+ * \param [in]  comm                      MPI communicator
+ * \param [in]  elt_type                  Mesh element type
+ * \param [in]  order                     Mesh element order
+ * \param [in]  ho_ordering               High order nodes ordering type
+ * \param [in]  radius                    Radius of the ball
+ * \param [in]  hole_radius               Radius of the hole of the ball
+ * \param [in]  center_x                  x-coordinate of the ball center
+ * \param [in]  center_y                  y-coordinate of the ball center
+ * \param [in]  center_z                  z-coordinate of the ball center
+ * \param [in]  n_x                       Number of vertices on segments in x-direction
+ * \param [in]  n_y                       Number of vertices on segments in y-direction
+ * \param [in]  n_z                       Number of vertices on segments in z-direction
+ * \param [in]  n_layer                   Number of extrusion layers
+ * \param [in]  geometric_ratio           Geometric ratio for layer thickness
+ * \param [in]  n_part                    Number of mesh partitions
+ * \param [in]  part_method               Mesh partitionning method
+ * \param [out] pn_vtx                    Number of vertices
+ * \param [out] pn_edge                   Number of edges
+ * \param [out] pn_face                   Number of faces
+ * \param [out] pvtx_coord                Vertex coordinates
+ * \param [out] pedge_vtx                 edge->vertex connectivity
+ * \param [out] pface_edge_idx            Index of face->edge connectivity
+ * \param [out] pface_edge                face->edge connectivity
+ * \param [out] pface_vtx                 face->vtx connectivity
+ * \param [out] pvtx_ln_to_gn             Vertex global number
+ * \param [out] pedge_ln_to_gn            Edge global number
+ * \param [out] pface_ln_to_gn            Face global number
+ * \param [out] pn_surface                Number of surfaces
+ * \param [out] psurface_face_idx         surface->face connectivity index
+ * \param [out] psurface_face             surface->face connectivity
+ * \param [out] psurface_face_ln_to_gn    surface->face connectivity with global numbers
+ * \param [out] pn_ridge                  Number of ridges
+ * \param [out] pridge_edge_idx           ridge->edge connectivity index
+ * \param [out] pridge_edge               ridge->edge connectivity
+ * \param [out] pridge_edge_ln_to_gn      ridge->edge connectivity with global numbers
+ *
+ */
+
+void
+PDM_generate_mesh_parallelepiped_ngon
+(
+ const PDM_MPI_Comm            comm,
+ PDM_Mesh_nodal_elt_t          elt_type,
+ int                           order,
+ const char                   *ho_ordering,
+ const double                  xmin,
+ const double                  ymin,
+ const double                  zmin,
+ const double                  lengthx,
+ const double                  lengthy,
+ const double                  lengthz,
+ const PDM_g_num_t             n_x,
+ const PDM_g_num_t             n_y,
+ const PDM_g_num_t             n_z,
+ const int                     n_part,
+ const PDM_split_dual_t        part_method,
+ int                         **pn_vtx,
+ int                         **pn_edge,
+ int                         **pn_face,
+ int                         **pn_cell,
+ double                     ***pvtx_coord,
+ int                        ***pedge_vtx,
+ int                        ***pface_edge_idx,
+ int                        ***pface_edge,
+ int                        ***pface_vtx,
+ int                        ***pcell_face_idx,
+ int                        ***pcell_face,
+ PDM_g_num_t                ***pvtx_ln_to_gn,
+ PDM_g_num_t                ***pedge_ln_to_gn,
+ PDM_g_num_t                ***pface_ln_to_gn,
+ PDM_g_num_t                ***pcell_ln_to_gn,
+ int                         **pn_surface,
+ int                        ***psurface_face_idx,
+ int                        ***psurface_face,
+ PDM_g_num_t                ***psurface_face_ln_to_gn,
+ int                         **pn_ridge,
+ int                        ***pridge_edge_idx,
+ int                        ***pridge_edge,
+ PDM_g_num_t                ***pridge_edge_ln_to_gn
  );
 
 #ifdef __cplusplus

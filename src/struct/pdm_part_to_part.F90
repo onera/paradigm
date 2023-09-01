@@ -526,6 +526,27 @@ subroutine PDM_part_to_part_iexch (ptp,              &
 
       length_stride(i) = gnum1_come_from_idx(n_ref+1)
 
+    end do
+
+    call PDM_pointer_array_create (part2_stride, &
+                                   n_part2,    &
+                                   PDM_TYPE_INT, &
+                                   c_part2_stride, &
+                                   length_stride, &
+                                   PDM_OWNERSHIP_KEEP)
+
+
+    do i = 1, n_part2
+      call PDM_part_to_part_ref_lnum2_get (ptp,   &
+                                           i-1,   &
+                                           n_ref, &
+                                           ref)
+
+      call PDM_part_to_part_gnum1_come_from_get (ptp,                 &
+                                                 i-1,                 &
+                                                 gnum1_come_from_idx, &
+                                                 gnum1_come_from)
+
       call PDM_pointer_array_part_get (part2_stride, &
                                        i-1,          &
                                        stride)
@@ -538,13 +559,6 @@ subroutine PDM_part_to_part_iexch (ptp,              &
       length_data(i) = s_part2_data
 
     end do
-
-    call PDM_pointer_array_create (part2_stride, &
-                                   n_part2,    &
-                                   PDM_TYPE_INT, &
-                                   c_part2_stride, &
-                                   length_stride, &
-                                   PDM_OWNERSHIP_KEEP)
 
   else
 

@@ -1064,7 +1064,7 @@ main
    */
   int dim_mesh_a = 3;
   int dim_mesh_b = 3;
-  PDM_mesh_intersection_t *mi = PDM_mesh_intersection_create(PDM_MESH_INTERSECTION_KIND_SOFT,
+  PDM_mesh_intersection_t *mi = PDM_mesh_intersection_create(PDM_MESH_INTERSECTION_KIND_WEIGHT,
                                                              dim_mesh_a,
                                                              dim_mesh_b,
                                                              1e-6,

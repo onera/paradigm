@@ -883,7 +883,7 @@ module pdm_mesh_location
     implicit none
 
 
-    type (c_ptr), value                :: mloc
+    type (c_ptr), intent(in)           :: mloc
     integer, intent(in)                :: i_point_cloud
     integer, intent(in)                :: i_part
     integer, intent(in)                :: n_points

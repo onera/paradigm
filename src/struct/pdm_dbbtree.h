@@ -172,6 +172,26 @@ PDM_dbbtree_intersect_boxes_with_init_location_set
  int                *box_l_num[]
 );
 
+
+/**
+ * \brief Assign boxes to intersect to the tree.
+ *
+ * This function  assigns boxes to intersect to the tree.
+ *
+ * \param [in]  dbbt           Pointer to a distributed bounding box tree
+ * \param [in]  n_part         Number of partitions
+ * \param [in]  nElts          Number of elements of each partition
+ * \param [in]  init_location  Init location of each element of each partition (triplet rank/ipart/ielt)
+ * \param [in]  extents        Extents of each element of each partition
+ * \param [in]  gNum           Global number of each element of each partition
+ * \param [out] box_index      Pointer to the index array on associated tree bounding boxeq
+ * \param [out] box_g_num      Pointer to the list of intersecting bounding boxes
+ *
+ * \return associated \ref PDM_box_set_t structure distributed according
+ * to the tree intersection
+ *
+ */
+
 PDM_box_set_t *
 PDM_dbbtree_intersect_boxes_set
 (

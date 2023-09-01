@@ -1633,7 +1633,7 @@ _export_ensight3d
  double       *vtx_coord,
  PDM_g_num_t  *cell_ln_to_gn,
  PDM_g_num_t  *vtx_ln_to_gn
- )
+)
 {
   int i_rank;
   PDM_MPI_Comm_rank(comm, &i_rank);
@@ -1806,16 +1806,11 @@ _export_ensight3d
   free(val_gnum);
   free(val_vol );
   // free(cell_face_n);
-  // free(face_vtx_n );
+  // free(face_vtx_n);
 
   PDM_gnum_free(gnum_vtx );
   PDM_gnum_free(gnum_cell);
 }
-
-
-
-
-
 
 
 static void
@@ -5167,6 +5162,8 @@ PDM_mesh_intersection_create
   mi->mesh_nodal[0] = NULL;
   mi->mesh_nodal[1] = NULL;
 
+  mi->extrp_mesh[0] = NULL;
+  mi->extrp_mesh[1] = NULL;
 
   /* Initialize results */
   mi->owner = owner;
@@ -5537,60 +5534,67 @@ PDM_mesh_intersection_compute
     }
   }
 
+
   PDM_MPI_Barrier(mi->comm);
 
-  // if (mi->mesh_nodal[0] != NULL ||
-  //     mi->mesh_nodal[1] != NULL) {
-  //   PDM_error(__FILE__, __LINE__, 0, "Nodal version not implemented yet\n");
-  // }
+  if (mi->intersect_kind != PDM_MESH_INTERSECTION_KIND_PREPROCESS) {
 
-  if(mi->dim_mesh[0] == 3 && mi->dim_mesh[1] == 3) {
-      _mesh_intersection_vol_vol(mi,
-                                 redistribute_box_a_to_box_b_idx,
-                                 redistribute_box_a_to_box_b);
-  } else if(mi->dim_mesh[0] == 3 && mi->dim_mesh[1] == 2) {
-    // On suppose que l'utilisateur met A = Vol et B = Surf
-    _mesh_intersection_vol_surf(mi,
-                                extrp_mesh_a,
-                                extrp_mesh_b,
-                                redistribute_box_a_to_box_b_idx,
-                                redistribute_box_a_to_box_b);
-  } else if(mi->dim_mesh[0] == 2 && mi->dim_mesh[1] == 2) {
-    _mesh_intersection_surf_surf(mi,
-                                 redistribute_box_a_to_box_b_idx,
-                                 redistribute_box_a_to_box_b);
-  } else if(mi->dim_mesh[0] == 2 && mi->dim_mesh[1] == 1) {
-    // On suppose que l'utilisateur met A = Vol et B = Surf
-    _mesh_intersection_surf_line(mi,
-                                 extrp_mesh_a,
-                                 extrp_mesh_b,
-                                 redistribute_box_a_to_box_b_idx,
-                                 redistribute_box_a_to_box_b);
-  } else if(mi->dim_mesh[0] == 3 && mi->dim_mesh[1] == 1) {
-    // On suppose que l'utilisateur met A = Vol et B = Surf
-    _mesh_intersection_vol_line(mi,
-                                extrp_mesh_a,
-                                extrp_mesh_b,
-                                redistribute_box_a_to_box_b_idx,
-                                redistribute_box_a_to_box_b);
-  } else {
-    PDM_error(__FILE__, __LINE__, 0,
-              "PDM_mesh_intersection_compute error : Cannot handle meshA with dim = %i and meshB = %i \n", mi->dim_mesh[0], mi->dim_mesh[1]);
-  }
-  PDM_box_set_destroy (&boxes_mesh[0]);
-  PDM_box_set_destroy (&boxes_mesh[1]);
+    // if (mi->mesh_nodal[0] != NULL ||
+    //     mi->mesh_nodal[1] != NULL) {
+    //   PDM_error(__FILE__, __LINE__, 0, "Nodal version not implemented yet\n");
+    // }
 
-  free(redistribute_box_a_to_box_b_idx);
-  free(redistribute_box_a_to_box_b    );
-
-  for (int imesh = 0; imesh < 2; imesh++) {
-    if (mi->mesh_nodal[imesh] == NULL && mi->mesh[imesh] == NULL) {
-      PDM_part_mesh_nodal_elmts_free(mi->extrp_mesh[imesh]->pmne);
+    if(mi->dim_mesh[0] == 3 && mi->dim_mesh[1] == 3) {
+        _mesh_intersection_vol_vol(mi,
+                                   redistribute_box_a_to_box_b_idx,
+                                   redistribute_box_a_to_box_b);
+    } else if(mi->dim_mesh[0] == 3 && mi->dim_mesh[1] == 2) {
+      // On suppose que l'utilisateur met A = Vol et B = Surf
+      _mesh_intersection_vol_surf(mi,
+                                  extrp_mesh_a,
+                                  extrp_mesh_b,
+                                  redistribute_box_a_to_box_b_idx,
+                                  redistribute_box_a_to_box_b);
+    } else if(mi->dim_mesh[0] == 2 && mi->dim_mesh[1] == 2) {
+      _mesh_intersection_surf_surf(mi,
+                                   redistribute_box_a_to_box_b_idx,
+                                   redistribute_box_a_to_box_b);
+    } else if(mi->dim_mesh[0] == 2 && mi->dim_mesh[1] == 1) {
+      // On suppose que l'utilisateur met A = Vol et B = Surf
+      _mesh_intersection_surf_line(mi,
+                                   extrp_mesh_a,
+                                   extrp_mesh_b,
+                                   redistribute_box_a_to_box_b_idx,
+                                   redistribute_box_a_to_box_b);
+    } else if(mi->dim_mesh[0] == 3 && mi->dim_mesh[1] == 1) {
+      // On suppose que l'utilisateur met A = Vol et B = Surf
+      _mesh_intersection_vol_line(mi,
+                                  extrp_mesh_a,
+                                  extrp_mesh_b,
+                                  redistribute_box_a_to_box_b_idx,
+                                  redistribute_box_a_to_box_b);
+    } else {
+      PDM_error(__FILE__, __LINE__, 0,
+                "PDM_mesh_intersection_compute error : Cannot handle meshA with dim = %i and meshB = %i \n", mi->dim_mesh[0], mi->dim_mesh[1]);
     }
-  }
+    PDM_box_set_destroy (&boxes_mesh[0]);
+    PDM_box_set_destroy (&boxes_mesh[1]);
 
-  PDM_extract_part_free(extrp_mesh_a);
-  PDM_extract_part_free(extrp_mesh_b);
+    free(redistribute_box_a_to_box_b_idx);
+    free(redistribute_box_a_to_box_b    );
+
+    for (int imesh = 0; imesh < 2; imesh++) {
+      if (mi->mesh_nodal[imesh] == NULL && mi->mesh[imesh] == NULL) {
+        PDM_part_mesh_nodal_elmts_free(mi->extrp_mesh[imesh]->pmne);
+      }
+    }
+
+    PDM_extract_part_free(extrp_mesh_a);
+    PDM_extract_part_free(extrp_mesh_b);
+
+    mi->extrp_mesh[0] = NULL; 
+    mi->extrp_mesh[1] = NULL;
+  }
 
 }
 
@@ -5711,6 +5715,12 @@ PDM_mesh_intersection_free
 
   PDM_part_mesh_free(mi->mesh[0]);
   PDM_part_mesh_free(mi->mesh[1]);
+
+  for (int imesh = 0; imesh < 2; imesh++) {
+    if (mi->extrp_mesh[imesh] != NULL) {
+      PDM_extract_part_free(mi->extrp_mesh[imesh]);
+    }
+  }
 
   if (mi->ptp != NULL && mi->ptp_ownership == PDM_OWNERSHIP_KEEP) {
     PDM_part_to_part_free(mi->ptp);
@@ -6015,6 +6025,27 @@ PDM_mesh_intersection_tolerance_set
   mi->bbox_tolerance = tol;
 }
 
+
+/**
+ *
+ * \brief Get \ref PDM_extract_part 
+ *
+ * \param [in]   mi             Pointer to \ref PDM_mesh_intersection object
+ * \param [in]   i_mesh         Mesh identifier
+ * \param [in]   n_part         Number of partitions
+ *
+ */
+
+void
+PDM_mesh_intersection_extract_part_get
+(
+        PDM_mesh_intersection_t *mi,
+  const int                      i_mesh,
+        PDM_extract_part_t     **extract_part
+)
+{
+  *extract_part = mi->extrp_mesh[i_mesh];
+}
 
 #ifdef __cplusplus
 }

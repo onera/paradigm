@@ -13,6 +13,7 @@
 #include "pdm_mpi.h"
 #include "pdm_part_to_part.h"
 #include "pdm_part_mesh_nodal.h"
+#include "pdm_extract_part.h"
 
 /*----------------------------------------------------------------------------*/
 
@@ -38,6 +39,22 @@ typedef struct _pdm_mesh_intersection_t PDM_mesh_intersection_t;
  * Public function definitions
  *============================================================================*/
 
+
+/**
+ *
+ * \brief Create a mesh intersection structure
+ *
+ * \param [in]   dim_mesh_a     Mesh A dimension
+ * \param [in]   dim_mesh_b     Mesh B dimension
+ * \param [in]   project_coeff  Projection coefficient
+ * \param [in]   comm           Associated communicator
+ * \param [in]   owner          Results Ownership 
+ *
+ * \return       mi             Pointer to \ref PDM_mesh_intersection object
+ *
+ */
+
+
 PDM_mesh_intersection_t*
 PDM_mesh_intersection_create
 (
@@ -48,6 +65,7 @@ PDM_mesh_intersection_create
        PDM_MPI_Comm                 comm,
  const PDM_ownership_t              owner
 );
+
 
 /**
  *
@@ -66,6 +84,15 @@ PDM_mesh_intersection_n_part_set
   const int                i_mesh,
   const int                n_part
 );
+
+
+/**
+ *
+ * \brief  Compute meshes intersection
+ *
+ * \param [in]   mi             Pointer to \ref PDM_mesh_intersection object
+ *
+ */
 
 void
 PDM_mesh_intersection_compute
@@ -90,6 +117,33 @@ PDM_mesh_intersection_mesh_nodal_set
  int                       i_mesh,
  PDM_part_mesh_nodal_t    *mesh
  );
+
+
+/**
+ *
+ * \brief Set a mesh partition  
+ *
+ * \param [in]   mi             Pointer to \ref PDM_mesh_intersection object
+ * \param [in]   i_mesh         Mesh identifier
+ * \param [in]   i_part         Partition identifier
+ * \param [in]   n_cell         Number of cells
+ * \param [in]   n_face         Number of faces
+ * \param [in]   n_edge         Number of edges
+ * \param [in]   n_vtx          Number of vertices
+ * \param [in]   cell_face_idx  Index in the cell -> face connectivity
+ * \param [in]   cell_face      Cell -> face connectivity
+ * \param [in]   face_edge_idx  Index in the face -> edge connectivity
+ * \param [in]   face_edge      Cell -> face connectivity
+ * \param [in]   edge_vtx       Edge -> vertex conectivity 
+ * \param [in]   face_vtx_idx   Index in the face -> vertex connectivity
+ * \param [in]   face_vtx       Face -> vertex connectivity
+ * \param [in]   cell_ln_to_gn  Local cell numbering to global cel numbering
+ * \param [in]   face_ln_to_gn  Local face numbering to global face numbering
+ * \param [in]   edge_ln_to_gn  Local edge numbering to global edge numbering
+ * \param [in]   vtx_ln_to_gn   Local vertex numbering to global vertex numbering
+ * \param [in]   vtx_coord      Vertex coordinates
+ *
+ */
 
 void
 PDM_mesh_intersection_part_set
@@ -133,6 +187,14 @@ PDM_mesh_intersection_stat_get
 
 );
 
+
+/**
+ *
+ * \brief A mesh intersection structure  
+ *
+ * \param [in]   mi             Pointer to \ref PDM_mesh_intersection object
+ */
+
 void
 PDM_mesh_intersection_free
 (
@@ -158,6 +220,17 @@ PDM_mesh_intersection_part_to_part_get
  );
 
 
+/**
+ * \brief Get intersection result for the a point of view
+ *
+ * \param [in ] mi                 Pointer to \ref PDM_mesh_intersection_t object
+ * \param [out] ipart              Partition index
+ * \param [out] elt_a_elt_b_idx    Index of list of intersected B elements for each A element 
+ * \param [out] elt_a_elt_b        List of intersected B elements for each A element 
+ * \param [out] elt_a_elt_b_volume Volume of each intersection 
+ *
+ */
+
 void
 PDM_mesh_intersection_result_from_a_get
 (
@@ -168,6 +241,20 @@ PDM_mesh_intersection_result_from_a_get
        double                  **elt_a_elt_b_volume
 );
 
+
+/**
+ * \brief Get intersection result for the b point of view
+ * 
+ * TODO: Do as PDM_mesh_intersection_result_from_a_get
+ *
+ * \param [in ] mi                 Pointer to \ref PDM_mesh_intersection_t object
+ * \param [out] ipart              Partition index
+ * \param [out] elt_a_elt_b_idx    Index of list of intersected B elements for each A element 
+ * \param [out] elt_a_elt_b        List of intersected B elements for each A element 
+ * \param [out] elt_a_elt_b_volume Volume of each intersection 
+ *
+ */
+
 void
 PDM_mesh_intersection_result_from_b_get
 (
@@ -175,6 +262,20 @@ PDM_mesh_intersection_result_from_b_get
  const int                       ipart,
        double                  **elt_b_elt_a_volume
  );
+
+
+/**
+ * \brief Get intersection result for the b point of view
+ * 
+ * TODO: Do as PDM_mesh_intersection_result_from_a_get
+ *
+ * \param [in ] mi                 Pointer to \ref PDM_mesh_intersection_t object
+ * \param [out] ipart              Partition index
+ * \param [out] elt_a_elt_b_idx    Index of list of intersected B elements for each A element 
+ * \param [out] elt_a_elt_b        List of intersected B elements for each A element 
+ * \param [out] elt_a_elt_b_volume Volume of each intersection 
+ *
+ */
 
 void
 PDM_mesh_intersection_elt_volume_get
@@ -200,6 +301,27 @@ PDM_mesh_intersection_tolerance_set
        PDM_mesh_intersection_t *mi,
  const double                   tol
 );
+
+
+/**
+ *
+ * \brief Get \ref PDM_extract_part 
+ *
+ * \param [in]   mi             Pointer to \ref PDM_mesh_intersection object
+ * \param [in]   i_mesh         Mesh identifier
+ * \param [in]   n_part         Number of partitions
+ *
+ */
+
+void
+PDM_mesh_intersection_extract_part_get
+(
+        PDM_mesh_intersection_t *mi,
+  const int                      i_mesh,
+        PDM_extract_part_t     **extract_part
+);
+
+
 
 #ifdef  __cplusplus
 }
