@@ -575,10 +575,12 @@ _extract_part_group
   assert(extrp->pextract_group_entity                [bound_type] == NULL);
   assert(extrp->pextract_group_entity_ln_to_gn       [bound_type] == NULL);
   assert(extrp->pextract_group_entity_parent_ln_to_gn[bound_type] == NULL);
+  assert(extrp->group_array_ownership                [bound_type] == NULL);
   assert(extrp->is_owner_extract_group               [bound_type] == NULL);
 
   extrp->ptp_group_entity      [bound_type] = malloc(n_group * sizeof(PDM_part_to_part_t  *));
   extrp->ptp_group_ownership   [bound_type] = malloc(n_group * sizeof(PDM_ownership_t      ));
+  extrp->group_array_ownership [bound_type] = malloc(n_group * sizeof(PDM_ownership_t      ));
   extrp->is_owner_extract_group[bound_type] = malloc(n_group * sizeof(PDM_bool_t           ));
 
   /* Create all ptp */
@@ -644,6 +646,7 @@ _extract_part_group
     // PDM_part_to_part_free(ptp_group);
 
     extrp->ptp_group_ownership   [bound_type][i_group] = PDM_OWNERSHIP_KEEP;
+    extrp->group_array_ownership [bound_type][i_group] = PDM_OWNERSHIP_KEEP;
     extrp->is_owner_extract_group[bound_type][i_group] = PDM_TRUE;
     extrp->ptp_group_entity      [bound_type][i_group] = ptp_group;
   }
@@ -4361,6 +4364,7 @@ PDM_extract_part_create
   for(int i = 0; i < PDM_BOUND_TYPE_MAX; ++i) {
     extrp->ptp_group_entity                     [i] = NULL;
     extrp->ptp_group_ownership                  [i] = NULL;
+    extrp->group_array_ownership                [i] = NULL;
     extrp->pn_extract_group_entity              [i] = NULL;
     extrp->pextract_group_entity                [i] = NULL;
     extrp->pextract_group_entity_ln_to_gn       [i] = NULL;
@@ -4919,7 +4923,7 @@ PDM_extract_part_partial_free
 
         /* Free array */
         // if(extrp->is_owner_extract_group[i][i_group] == PDM_TRUE) {
-        if(extrp->ptp_group_ownership[i][i_group] == PDM_OWNERSHIP_KEEP) {
+        if(extrp->group_array_ownership[i][i_group] == PDM_OWNERSHIP_KEEP) {
           for(int i_part = 0; i_part < extrp->n_part_out; ++i_part) {
             free(extrp->pextract_group_entity                [i][i_group][i_part]);
             free(extrp->pextract_group_entity_ln_to_gn       [i][i_group][i_part]);
@@ -4936,9 +4940,10 @@ PDM_extract_part_partial_free
       free(extrp->pextract_group_entity_ln_to_gn       [i]);
       free(extrp->pextract_group_entity_parent_ln_to_gn[i]);
 
-      free(extrp->is_owner_extract_group[i]);
-      free(extrp->ptp_group_entity      [i]);
-      free(extrp->ptp_group_ownership   [i]);
+      free(extrp->is_owner_extract_group  [i]);
+      free(extrp->ptp_group_entity        [i]);
+      free(extrp->ptp_group_ownership     [i]);
+      free(extrp->group_array_ownership   [i]);
 
     }
   }
@@ -5007,7 +5012,7 @@ PDM_extract_part_group_get
   *pextract_group_entity                 = extrp->pextract_group_entity                [bound_type][i_group][i_part];
   *pextract_group_entity_ln_to_gn        = extrp->pextract_group_entity_ln_to_gn       [bound_type][i_group][i_part];
   *pextract_group_entity_parent_ln_to_gn = extrp->pextract_group_entity_parent_ln_to_gn[bound_type][i_group][i_part];
-  extrp->ptp_group_ownership   [bound_type][i_group] = ownership;
+  extrp->group_array_ownership   [bound_type][i_group] = ownership;
 
 }
 
