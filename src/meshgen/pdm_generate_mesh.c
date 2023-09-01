@@ -1275,7 +1275,9 @@ PDM_generate_mesh_sphere_ngon
                                         &(*pedge_vtx)[ipart],
                                         &edge_vtx_idx,
                                         PDM_OWNERSHIP_USER);
-    free (edge_vtx_idx);
+    if (edge_vtx_idx != NULL) {
+      free (edge_vtx_idx);
+    }
 
     PDM_compute_face_vtx_from_face_and_edge((*pn_face)[ipart],
                                             (*pface_edge_idx)[ipart], 
@@ -1429,7 +1431,9 @@ PDM_generate_mesh_ball_ngon
                                         &(*pedge_vtx)[ipart],
                                         &edge_vtx_idx,
                                         PDM_OWNERSHIP_USER);
-    free (edge_vtx_idx);
+    if (edge_vtx_idx != NULL) {
+      free (edge_vtx_idx);
+    }
 
     PDM_compute_face_vtx_from_face_and_edge((*pn_face)[ipart],
                                             (*pface_edge_idx)[ipart], 
@@ -1603,7 +1607,9 @@ PDM_generate_mesh_parallelepiped_ngon
                                         &(*pedge_vtx)[ipart],
                                         &edge_vtx_idx,
                                         PDM_OWNERSHIP_USER);
-    free (edge_vtx_idx);
+    if (edge_vtx_idx != NULL) {
+      free (edge_vtx_idx);
+    }
 
     PDM_compute_face_vtx_from_face_and_edge((*pn_face)[ipart],
                                             (*pface_edge_idx)[ipart], 
