@@ -133,6 +133,52 @@ void PDM_multipart_register_dmesh_nodal
        PDM_dmesh_nodal_t *dmesh_nodal
 );
 
+/**
+ * \brief Set block
+ *
+ * \param [in]   multipart              Pointer to \ref PDM_multipart_t object
+ * \param [in]   i_zone                 Id of zone
+ * \param [in]   dn_cell                Number of distributed cells
+ * \param [in]   dn_face                Number of distributed faces
+ * \param [in]   dn_vtx                 Number of distributed vertices
+ * \param [in]   n_face_group           Number of face groups
+ * \param [in]   dcell_face_idx         Distributed cell face connectivity index or NULL
+ *                                      (size : dn_cell + 1, numbering : 0 to n-1)
+ * \param [in]   dcell_face             Distributed cell face connectivity or NULL
+ *                                      (size : dface_vtx_idx[dn_cell], numbering : 1 to n)
+ * \param [in]   dface_cell             Distributed face cell connectivity or NULL
+ *                                      (size : 2 * dn_face, numbering : 1 to n)
+ * \param [in]   dface_vtx_idx          Distributed face to vertex connectivity index
+ *                                      (size : dn_face + 1, numbering : 0 to n-1)
+ * \param [in]   dface_vtx              Distributed face to vertex connectivity
+ *                                      (size : dface_vtx_idx[dn_face], numbering : 1 to n)
+ * \param [in]   dvtx_coord             Distributed vertex coordinates
+ *                                      (size : 3*dn_vtx)
+ * \param [in]   dface_group_idx        Index of distributed faces list of each group
+ *                                      (size = n_face_group + 1) or NULL
+ * \param [in]   dface_group            Distributed faces list of each group
+ *                                      (size = dface_group[dface_group_idx[n_face_group]], numbering : 1 to n)
+ *                                      or NULL
+ *
+ */
+void
+PDM_multipart_block_set
+(
+ PDM_multipart_t             *multipart,
+ const int                    i_zone,
+ const int                    dn_cell,
+ const int                    dn_face,
+ const int                    dn_vtx,
+ const int                    n_face_group,
+ const int                   *dcell_face_idx,
+ const PDM_g_num_t           *dcell_face,
+ const PDM_g_num_t           *dface_cell,
+ const int                   *dface_vtx_idx,
+ const PDM_g_num_t           *dface_vtx,
+ const double                *dvtx_coord,
+ const int                   *dface_group_idx,
+ const PDM_g_num_t           *dface_group
+);
 
 /**
  *
@@ -242,81 +288,6 @@ const int                     i_zone,
 //        PDM_part_mesh_t **pmesh
 // );
 
-/**
- * \brief Set number of element in the block entity
- *
- * \param [in]  multipart             Pointer to \ref PDM_multipart_t object
- * \param [in]  i_zone                Id of zone
- * \param [in]  entity_type           Type of entity (can be cell/face/edge/vtx)
- * \param [in]  dn_entity             Distributed number of entity in current process
- *
- */
-void
-PDM_multipart_dn_entity_set
-(
-       PDM_multipart_t     *multipart,
- const int                  i_zone,
-       PDM_mesh_entities_t  entity_type,
-       int                  dn_entity
-);
-
-/**
- * \brief Set number connectivity for current block
- *
- * \param [in]  multipart             Pointer to \ref PDM_multipart_t object
- * \param [in]  i_zone                Id of zone
- * \param [in]  connectivity_type     Type of connectivity
- * \param [in]  connect               Connectivity (size = connect_idx[dn_entity] )
- * \param [in]  connect_idx           Index of connectivity or NULL if face_cell for example  (size = dn_entity )
- *
- */
-void
-PDM_multipart_dconnectivity_set
-(
-       PDM_multipart_t         *multipart,
- const int                      i_zone,
-       PDM_connectivity_type_t  connectivity_type,
-       PDM_g_num_t             *dconnect,
-       int                     *dconnect_idx
-);
-
-/**
- * \brief Set group connectivity by kind
- *
- * \param [in]  multipart             Pointer to \ref PDM_multipart_t object
- * \param [in]  i_zone                Id of zone
- * \param [in]  bound_type            Type of bound
- * \param [in]  connect               connectivity (size = connect_idx[dn_entity] )
- * \param [in]  connect_idx           Index of connectivity or NULL if face_cell for example  (size = dn_entity )
- *
- */
-void
-PDM_multipart_dgroup_set
-(
-       PDM_multipart_t          *multipart,
- const int                       i_zone,
-       PDM_bound_type_t          bound_type,
-       PDM_g_num_t              *dconnect,
-       int                      *dconnect_idx
-);
-
-
-/**
- * \brief Set group coordinates
- *
- * \param [in]  multipart             Pointer to \ref PDM_multipart_t object
- * \param [in]  i_zone                Id of zone
- * \param [in]  dvtx_coord            Mesh coordinates (size = 3 * dn_vtx)
- */
-void
-PDM_multipart_dvtx_coord_set
-(
-       PDM_multipart_t *multipart,
- const int              i_zone,
- const double          *dvtx_coord
-);
-
-
 void
 PDM_multipart_domain_interface_shared_set
 (
@@ -370,14 +341,9 @@ PDM_multipart_part_val_get
 PDM_multipart_t     *multipart,
 const int            i_zone,
 const int            i_part,
-      int         ***elt_vtx_idx,
-      int         ***elt_vtx,
-      PDM_g_num_t ***elt_section_ln_to_gn,
-      int          **cell_tag,
       int          **cell_face_idx,
       int          **cell_face,
       PDM_g_num_t  **cell_ln_to_gn,
-      int          **face_tag,
       int          **face_cell,
       int          **face_vtx_idx,
       int          **face_vtx,
@@ -385,15 +351,11 @@ const int            i_part,
       int          **face_part_bound_proc_idx,
       int          **face_part_bound_part_idx,
       int          **face_part_bound,
-      int          **vtx_tag,
       double       **vtx,
       PDM_g_num_t  **vtx_ln_to_gn,
       int          **face_bound_idx,
       int          **face_bound,
-      PDM_g_num_t  **face_bound_ln_to_gn,
-      int          **face_join_idx,
-      int          **face_join,
-      PDM_g_num_t  **face_join_ln_to_gn
+      PDM_g_num_t  **face_bound_ln_to_gn
 );
 
 int

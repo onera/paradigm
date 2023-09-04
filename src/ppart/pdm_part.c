@@ -2682,44 +2682,6 @@ _multipart_create
 
   PDM_split_dual_t split_method = (PDM_split_dual_t) method; // TO DO: uniformise method type
 
-  // Create dmesh
-  PDM_dmesh_t* dm = PDM_dmesh_create(PDM_OWNERSHIP_KEEP,
-                                     dn_cell,
-                                     dn_face,
-                                     0, // dn_edge
-                                     dn_vtx,
-                                     comm);
-
-  PDM_dmesh_vtx_coord_set(dm,
-          (double  *)     dvtx_coord,
-                          PDM_OWNERSHIP_USER);
-
-
-  PDM_dmesh_connectivity_set(dm,
-                             PDM_CONNECTIVITY_TYPE_FACE_VTX,
-             (PDM_g_num_t *) dface_vtx,
-             (int         *) dface_vtx_idx,
-                             PDM_OWNERSHIP_USER);
-
-  PDM_dmesh_connectivity_set(dm,
-                             PDM_CONNECTIVITY_TYPE_FACE_CELL,
-             (PDM_g_num_t *) dface_cell,
-                             NULL,
-                             PDM_OWNERSHIP_USER);
-
-  PDM_dmesh_connectivity_set(dm,
-                             PDM_CONNECTIVITY_TYPE_CELL_FACE,
-             (PDM_g_num_t *) dcell_face,
-             (int         *) dcell_face_idx,
-                             PDM_OWNERSHIP_USER);
-
-  PDM_dmesh_bound_set(dm,
-                      PDM_BOUND_TYPE_FACE,
-                      n_face_group,
-      (PDM_g_num_t *) dface_group,
-      (int         *) dface_group_idx,
-                      PDM_OWNERSHIP_USER);
-
   // Partitionning
   int n_zone = 1;
   int n_part_zones = n_part;
@@ -2733,13 +2695,24 @@ _multipart_create
                                                     PDM_OWNERSHIP_KEEP);
 
   PDM_multipart_set_reordering_options(multipart, -1, renum_cell_method, renum_properties_cell, renum_face_method);
-  PDM_multipart_register_block(multipart, 0, dm);
+
+  PDM_multipart_block_set(multipart,
+                          0,
+                          dn_cell,
+                          dn_face,
+                          dn_vtx,
+                          n_face_group,
+          (int         *) dcell_face_idx,
+          (PDM_g_num_t *) dcell_face,
+          (PDM_g_num_t *) dface_cell,
+          (int         *) dface_vtx_idx,
+          (PDM_g_num_t *) dface_vtx,
+          (double      *) dvtx_coord,
+          (int         *) dface_group_idx,
+          (PDM_g_num_t *) dface_group);
 
   // Run
   PDM_multipart_run_ppart(multipart);
-
-  // free
-  PDM_dmesh_free(dm);
 
   return multipart;
  }
