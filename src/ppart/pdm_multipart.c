@@ -2152,6 +2152,8 @@ _deduce_part_connectivity_3d
                            pvtx_ln_to_gn,
                            comm);
 
+  // TO DO : add cell groups
+
   *out_pn_face        = pn_face;
   *out_pface_ln_to_gn = pface_ln_to_gn;
   *out_pface_vtx_idx  = pface_vtx_idx;
@@ -2264,6 +2266,19 @@ _deduce_part_connectivity_2d
                            pn_edge,
                            pedge_ln_to_gn,
                            comm);
+
+  if (dmesh->n_group_bnd[PDM_BOUND_TYPE_FACE] > 0) {
+    _rebuild_part_mesh_group(dmesh,
+                             pmeshes,
+                             n_part,
+                             PDM_BOUND_TYPE_FACE,
+                             face_distrib,
+                             pn_face,
+                             pface_ln_to_gn,
+                             comm);
+  } // end if has surface group in 2D
+
+  // TO DO : add corners
 
 
   *out_pface_vtx_idx  = pface_vtx_idx;
