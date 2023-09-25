@@ -3689,10 +3689,8 @@ PDM_ddomain_interface_to_pdomain_interface
         dom    = interface_dom[itrf][2*k  ];
         domopp = interface_dom[itrf][2*k+1];
       }
-      interface_ids_shifted[itrf][2*k  ] =    interface_ids[itrf][2*k  ] + max_per_domain[dom   ];
-      interface_ids_shifted[itrf][2*k+1] = - (interface_ids[itrf][2*k+1] + max_per_domain[domopp]);
-      // send_data_gnum       [itrf][2*k  ] = interface_ids[itrf][2*k+1] + max_per_domain[domopp];
-      // send_data_gnum       [itrf][2*k+1] = interface_ids[itrf][2*k  ] + max_per_domain[dom   ];
+      interface_ids_shifted[itrf][2*k  ] =    PDM_ABS(interface_ids[itrf][2*k  ]) + max_per_domain[dom   ];
+      interface_ids_shifted[itrf][2*k+1] = - (PDM_ABS(interface_ids[itrf][2*k+1]) + max_per_domain[domopp]);
       send_data_gnum       [itrf][2*k  ] =    PDM_ABS(interface_ids[itrf][2*k  ]) + max_per_domain[dom   ];
       send_data_gnum       [itrf][2*k+1] = - (PDM_ABS(interface_ids[itrf][2*k+1]) + max_per_domain[domopp]);
       send_data_sens       [itrf][2*k  ] = PDM_SIGN(interface_ids[itrf][2*k+1]); // On stcoke le sens sur le deuxieme uniquement dans l'autre
@@ -4818,8 +4816,8 @@ PDM_domain_interface_make_flat_view
                                                sizeof(PDM_g_num_t),
                                                PDM_STRIDE_VAR_INTERLACED,
                                                -1,
-                                               stride_one,
-                                     (void **) send_data,
+                                               &stride_one[itrf],
+                                     (void **) &send_data[itrf],
                                                &recv_stride,
                                      (void **) &recv_data);
 
@@ -4827,7 +4825,7 @@ PDM_domain_interface_make_flat_view
 
     assert(n_gnum == n_connected_l); // ie all recv_stride == 1
 
-    if (1 == 1) {
+    if (0 == 1) {
       PDM_log_trace_array_long(PDM_part_to_block_block_gnum_get(ptb), n_gnum, "gnum");
       PDM_log_trace_array_int (recv_stride, n_gnum       , "recv_stride ::");
       PDM_log_trace_array_long(recv_data  , n_connected_l, "recv_data   ::");

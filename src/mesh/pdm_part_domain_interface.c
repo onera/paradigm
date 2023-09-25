@@ -2803,6 +2803,12 @@ PDM_part_domain_interface_add
                                                  kind2_dinterface_ids,
                                                  kind2_dinterface_dom);
 
+  if(0 == 1) {
+    for(int i = 0; i < ditrf->n_interface; ++i) {
+      PDM_log_trace_array_long((*kind2_dinterface_ids)[i], 2 *  (*kind2_interface_dn)[i], "kind2_dinterface_ids ::");
+    }
+  }
+
   ditrf->is_result[interface_kind2] = 1;
 
   PDM_ddomain_interface_to_pdomain_interface(ditrf->comm,
