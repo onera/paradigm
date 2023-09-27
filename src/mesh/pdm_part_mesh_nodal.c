@@ -57,6 +57,7 @@ extern "C" {
  * Private function definitions
  *============================================================================*/
 
+
 static
 void
 _vtx_free
@@ -70,12 +71,12 @@ _vtx_free
       vtx->parent = NULL;
     }
 
-    if (vtx->_coords != NULL) {
+    if (vtx->_coords != NULL && vtx->owner == PDM_OWNERSHIP_KEEP) {
       free (vtx->_coords);
       vtx->_coords = NULL;
     }
 
-    if (vtx->_numabs != NULL) {
+    if (vtx->_numabs != NULL && vtx->owner == PDM_OWNERSHIP_KEEP) {
       free (vtx->_numabs);
       vtx->_numabs = NULL;
     }
