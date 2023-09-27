@@ -313,6 +313,7 @@ PDM_generate_mesh_parallelepiped
  * \param [in]   pedge_vtx      edge->vertex connectivity
  * \param [in]   pface_edge_idx Index of face->edge connectivity
  * \param [in]   pface_edge     face->edge connectivity
+ * \param [in]   pface_vtx      face->vtx connectivity
  * \param [in]   pvtx_ln_to_gn  Vertex global number
  * \param [in]   pedge_ln_to_gn Edge global number
  * \param [in]   pface_ln_to_gn Face global number
@@ -340,6 +341,7 @@ PDM_generate_mesh_rectangle_ngon
  int                        ***pedge_vtx,
  int                        ***pface_edge_idx,
  int                        ***pface_edge,
+ int                        ***pface_vtx,
  PDM_g_num_t                ***pvtx_ln_to_gn,
  PDM_g_num_t                ***pedge_ln_to_gn,
  PDM_g_num_t                ***pface_ln_to_gn

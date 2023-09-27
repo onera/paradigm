@@ -25,10 +25,6 @@ module pdm_part
 
   implicit none
 
-  integer, parameter :: PDM_PART_SPLIT_PARMETIS = 1
-  integer, parameter :: PDM_PART_SPLIT_PTSCOTCH = 2
-  integer, parameter :: PDM_PART_SPLIT_HILBERT  = 3
-
   integer, parameter :: PDM_PART_RENUM_FACE_RANDOM        = 1
   integer, parameter :: PDM_PART_RENUM_FACE_NONE          = 2
   integer, parameter :: PDM_PART_RENUM_FACE_LEXICOGRAPHIC = 3

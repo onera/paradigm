@@ -1089,6 +1089,7 @@ PDM_generate_mesh_rectangle_ngon
  int                        ***pedge_vtx,
  int                        ***pface_edge_idx,
  int                        ***pface_edge,
+ int                        ***pface_vtx,
  PDM_g_num_t                ***pvtx_ln_to_gn,
  PDM_g_num_t                ***pedge_ln_to_gn,
  PDM_g_num_t                ***pface_ln_to_gn
@@ -1120,6 +1121,7 @@ PDM_generate_mesh_rectangle_ngon
   *pedge_vtx      = malloc(sizeof(int         *) * n_part);
   *pface_edge_idx = malloc(sizeof(int         *) * n_part);
   *pface_edge     = malloc(sizeof(int         *) * n_part);
+  *pface_vtx      = malloc(sizeof(int         *) * n_part);
   *pvtx_ln_to_gn  = malloc(sizeof(PDM_g_num_t *) * n_part);
   *pedge_ln_to_gn = malloc(sizeof(PDM_g_num_t *) * n_part);
   *pface_ln_to_gn = malloc(sizeof(PDM_g_num_t *) * n_part);
@@ -1168,6 +1170,18 @@ PDM_generate_mesh_rectangle_ngon
                                         &(*pedge_vtx)[ipart],
                                         &edge_vtx_idx,
                                         PDM_OWNERSHIP_USER);
+
+
+    if (edge_vtx_idx != NULL) {
+      free (edge_vtx_idx);
+    }
+
+    PDM_compute_face_vtx_from_face_and_edge((*pn_face)[ipart],
+                                            (*pface_edge_idx)[ipart], 
+                                            (*pface_edge)[ipart], 
+                                            (*pedge_vtx)[ipart],
+                                            &(*pface_vtx)[ipart]);
+
   }
 
   PDM_multipart_free(mpart);

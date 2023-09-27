@@ -922,4 +922,48 @@ module pdm_extract_part
 
   end subroutine PDM_extract_part_vtx_coord_get
 
+  subroutine PDM_extract_part_part_to_part_get (extrp,       &
+                                                entity_type, &
+                                                ptp,         &
+                                                ownership)
+    use iso_c_binding
+    implicit none
+
+    type(c_ptr)                          :: extrp
+    integer, intent(in)                  :: entity_type
+    type(c_ptr)                          :: ptp
+    integer, intent(in)                  :: ownership
+
+
+    interface
+
+      subroutine PDM_extract_part_part_to_part_get_cf (extrp,       &
+                                                       entity_type, &
+                                                       ptp,         &
+                                                       ownership)   &
+        bind (c, name='PDM_extract_part_vtx_coord_get')
+        use iso_c_binding
+        implicit none
+    
+        type(c_ptr), value           :: extrp
+        integer(c_int), value        :: entity_type
+        type(c_ptr)                  :: ptp
+        integer(c_int), value        :: ownership
+      end subroutine PDM_extract_part_part_to_part_get_cf
+
+    end interface
+
+
+!    call ()
+! (
+!        PDM_extract_part_t   *extrp,
+!  const PDM_mesh_entities_t   entity_type,
+!        PDM_part_to_part_t  **ptp,
+!        PDM_ownership_t       ownership
+   end subroutine PDM_extract_part_part_to_part_get
+! );
+
+
+
+
 end module pdm_extract_part

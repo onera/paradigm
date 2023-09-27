@@ -145,11 +145,11 @@ program testf
     ! call PDM_pointer_array_part_get(pvtx_coord, &
     !                                 ipart-1,    &
     !                                 vtx_coord)
-    call PDM_pointer_array_part_get_double_2(pvtx_coord,                &
-                                             ipart-1,                   &
-                                             PDM_STRIDE_CST_INTERLACED, &
-                                             3,                         &
-                                             vtx_coord2)
+    call PDM_pointer_array_part_get(pvtx_coord,                &
+                                    ipart-1,                   &
+                                    PDM_STRIDE_CST_INTERLACED, &
+                                    3,                         &
+                                    vtx_coord2)
 
     call PDM_writer_geom_coord_set(wrt,                &
                                    id_geom,            &
@@ -189,8 +189,8 @@ program testf
 
   call PDM_writer_free(wrt)
 
-
   !  Free memory
+
   call pdm_fortran_free_c(c_loc(pn_vtx))
   call pdm_fortran_free_c(c_loc(pn_face))
   call PDM_pointer_array_free(pvtx_coord)

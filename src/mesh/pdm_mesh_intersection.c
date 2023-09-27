@@ -5167,14 +5167,18 @@ PDM_mesh_intersection_create
 
   /* Initialize results */
   mi->owner = owner;
+  mi->tag_extrp_mesh      = 0;
   mi->tag_elt_a_elt_b_get = 0;
+  mi->tag_box_a_box_b_get = 0;
   mi->tag_elt_b_elt_a_get = 0;
-  mi->elt_a_elt_b_idx    = NULL;
-  mi->elt_a_elt_b        = NULL;
-  mi->elt_a_elt_b_volume = NULL;
-  mi->elt_b_elt_a_volume = NULL;
-  mi->ptp                = NULL;
-  mi->ptp_ownership      = PDM_OWNERSHIP_KEEP;
+  mi->elt_a_elt_b_idx     = NULL;
+  mi->elt_a_elt_b         = NULL;
+  mi->box_a_box_b_idx     = NULL;
+  mi->box_a_box_b         = NULL;
+  mi->elt_a_elt_b_volume  = NULL;
+  mi->elt_b_elt_a_volume  = NULL;
+  mi->ptp                 = NULL;
+  mi->ptp_ownership       = PDM_OWNERSHIP_KEEP;
 
   mi->tag_elt_volume_get[0] = 0;
   mi->tag_elt_volume_get[1] = 0;
@@ -5537,7 +5541,12 @@ PDM_mesh_intersection_compute
 
   PDM_MPI_Barrier(mi->comm);
 
-  if (mi->intersect_kind != PDM_MESH_INTERSECTION_KIND_PREPROCESS) {
+  if (mi->intersect_kind == PDM_MESH_INTERSECTION_KIND_PREPROCESS) {
+    mi->box_a_box_b_idx   = redistribute_box_a_to_box_b_idx;
+    mi->box_a_box_b       = redistribute_box_a_to_box_b;
+  }
+
+  else {
 
     // if (mi->mesh_nodal[0] != NULL ||
     //     mi->mesh_nodal[1] != NULL) {
@@ -5748,6 +5757,32 @@ PDM_mesh_intersection_free
       }
   }
     free(mi->elt_a_elt_b);
+  }
+
+  if (mi->box_a_box_b != NULL) {
+    if ((mi->owner == PDM_OWNERSHIP_KEEP ) ||
+        (mi->owner == PDM_OWNERSHIP_UNGET_RESULT_IS_FREE && !mi->tag_box_a_box_b_get)) {
+      free(mi->box_a_box_b);
+      mi->box_a_box_b = NULL;
+    }
+  }
+
+  if (mi->box_a_box_b_idx != NULL) {
+    if ((mi->owner == PDM_OWNERSHIP_KEEP ) ||
+        (mi->owner == PDM_OWNERSHIP_UNGET_RESULT_IS_FREE && !mi->tag_box_a_box_b_get)) {
+      free(mi->box_a_box_b_idx);
+      mi->box_a_box_b = NULL;
+    }
+  }
+
+  if ((mi->owner == PDM_OWNERSHIP_KEEP ) ||
+      (mi->owner == PDM_OWNERSHIP_UNGET_RESULT_IS_FREE && !mi->tag_extrp_mesh)) {
+    for (int imesh = 0; imesh < 2; imesh++) {
+      if (mi->extrp_mesh[imesh] != NULL) {
+        PDM_extract_part_free(mi->extrp_mesh[imesh]);
+        mi->extrp_mesh[imesh] = NULL;
+      }
+    }
   }
 
   if (mi->elt_a_elt_b_volume != NULL) {
@@ -6027,24 +6062,34 @@ PDM_mesh_intersection_tolerance_set
 
 
 /**
+ * \brief Get preprocessing results 
  *
- * \brief Get \ref PDM_extract_part 
- *
- * \param [in]   mi             Pointer to \ref PDM_mesh_intersection object
- * \param [in]   i_mesh         Mesh identifier
- * \param [in]   n_part         Number of partitions
+ * \param [in ] mi                 Pointer to \ref PDM_mesh_intersection_t object
+ * \param [out] elt_a_elt_b_idx    Index of list of intersected B element candidate for each A element
+ *                                 in the extr_mesh distribution 
+ * \param [out] elt_a_elt_b        List of intersected B element candidate for each A element in the 
+ *                                 extr_mesh distribution 
+ * \param [out]                    Redistributed mesh A with only A element candidate  
+ * \param [out]                    Redistributed mesh B with only B element candidate  
  *
  */
 
 void
-PDM_mesh_intersection_extract_part_get
+PDM_mesh_intersection_preprocessing_get
 (
-        PDM_mesh_intersection_t *mi,
-  const int                      i_mesh,
-        PDM_extract_part_t     **extract_part
+       PDM_mesh_intersection_t  *mi,
+       int                     **box_a_box_b_idx,
+       int                     **box_a_box_b,
+       PDM_extract_part_t      **extr_mesh_a,
+       PDM_extract_part_t      **extr_mesh_b
 )
 {
-  *extract_part = mi->extrp_mesh[i_mesh];
+
+  assert(mi->intersect_kind == PDM_MESH_INTERSECTION_KIND_PREPROCESS);
+  *extr_mesh_a = mi->extrp_mesh[0];
+  *extr_mesh_b = mi->extrp_mesh[1];
+  *box_a_box_b_idx = mi->box_a_box_b_idx;
+  *box_a_box_b = mi->box_a_box_b;  
 }
 
 #ifdef __cplusplus
