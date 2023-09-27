@@ -3089,7 +3089,7 @@ _extract_part
   /*
   * Extract face groups for test
   */
-  if (extrp->n_group[PDM_BOUND_TYPE_FACE] > 0){
+  /*if (extrp->n_group[PDM_BOUND_TYPE_FACE] > 0){
     int **part2_face_to_part1_face_idx = (int **) malloc( extrp->n_part_out * sizeof(int * ));
 
     for(int i_part = 0; i_part < extrp->n_part_out; ++i_part) {
@@ -3109,14 +3109,11 @@ _extract_part
     extrp->ptp_entity[PDM_MESH_ENTITY_FACE] = ptp_fac;
     free(part2_face_to_part1_face_idx);
 
-    /*
-    * Manage group if any
-    */
     for(int i_kind = 0; i_kind < PDM_BOUND_TYPE_MAX; ++i_kind) {
       _extract_part_group(extrp,
       (PDM_bound_type_t) i_kind);
     }
-  }
+  }*/
 
 }
 

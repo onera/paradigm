@@ -747,6 +747,71 @@ module pdm_extract_part
 
   !>
   !!
+  !! \brief Get parent global numbering of entity in extraction
+  !!
+  !! \param [in]  extrp                     PDM_extract_part_t instance
+  !! \param [in]  i_part_out                Number of final partition
+  !! \param [in]  entity_type               Type of entity
+  !! \param [out] n_entity                  Number of entity
+  !! \param [out] parent_entity_ln_to_gn    Parent entity global numbering
+  !! \param [in]  ownership                 Tell if you want ownership of resulting
+  !!
+  !!
+
+  subroutine PDM_extract_part_parent_ln_to_gn_get (extrp,                  &
+                                                   i_part_out,             &
+                                                   entity_type,            &
+                                                   n_entity,               &
+                                                   parent_entity_ln_to_gn, &
+                                                   ownership)
+
+    use iso_c_binding
+    implicit none
+
+    type(c_ptr), value                   :: extrp
+    integer, intent(in)                  :: i_part_out
+    integer, intent(in)                  :: entity_type
+    integer, intent(in)                  :: ownership
+    integer                              :: n_entity
+    integer(kind = PDM_g_num_s), pointer :: parent_entity_ln_to_gn(:)
+
+    type(c_ptr)                          :: c_parent_entity_ln_to_gn = C_NULL_PTR
+
+    interface
+      function pdm_extract_part_parent_ln_to_gn_get_c (extrp,                  &
+                                                       i_part_out,             &
+                                                       entity_type,            &
+                                                       parent_entity_ln_to_gn, &
+                                                       ownership)              &
+      result (n_entity)                                                        &
+      bind (c, name='PDM_extract_part_parent_ln_to_gn_get')
+        use iso_c_binding
+        implicit none
+
+        type(c_ptr),    value :: extrp
+        integer(c_int), value :: i_part_out
+        integer(c_int), value :: entity_type
+        integer(c_int), value :: ownership
+        integer(c_int)        :: n_entity
+        type(c_ptr)           :: parent_entity_ln_to_gn
+
+      end function PDM_extract_part_parent_ln_to_gn_get_c
+    end interface
+
+    n_entity = PDM_extract_part_parent_ln_to_gn_get_c (extrp,                    &
+                                                       i_part_out,               &
+                                                       entity_type,              &
+                                                       c_parent_entity_ln_to_gn, &
+                                                       ownership)
+
+    call c_f_pointer(c_parent_entity_ln_to_gn, &
+                     parent_entity_ln_to_gn,   &
+                     [n_entity])
+
+  end subroutine PDM_extract_part_parent_ln_to_gn_get
+
+  !>
+  !!
   !! \brief Get local numbering of parent entity
   !!
   !! \param [in]  extrp               PDM_extract_part_t instance
