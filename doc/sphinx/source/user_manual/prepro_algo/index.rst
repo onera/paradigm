@@ -4,7 +4,16 @@
 Pre-/co-/post-processing algorithms
 ###################################
 
-* point cloud localization inside a mesh
+
+
+Point cloud localization inside a mesh
+--------------------------------------
+
+.. f:automodule:: pdm_mesh_location
+
+
+
+
 * nearest neighbors search
 * distance from surface
 * inside cloud surf

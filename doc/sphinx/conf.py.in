@@ -37,6 +37,8 @@ extensions = [
     'sphinx.ext.autosectionlabel',
     'sphinx.ext.intersphinx',
     'breathe',
+    'sphinxfortran.fortran_domain',
+    'sphinxfortran.fortran_autodoc',
     # 'sphinx.ext.coverage',
     # 'sphinx.ext.doctest',
 ]
@@ -387,3 +389,14 @@ texinfo_documents = [
 # If true, do not generate a @detailmenu in the "Top" node's menu.
 #
 # texinfo_no_detailmenu = False
+
+
+# Fortran Doc
+# https://sphinx-fortran.readthedocs.io/en/latest/user.autodoc.html
+fortran_src = [
+    "@PROJECT_SOURCE_DIR@/src/struct/pdm_gnum.F90",
+    "@PROJECT_SOURCE_DIR@/src/mesh/pdm_mesh_location.F90",
+]
+
+fortran_indent = 2
+

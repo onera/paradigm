@@ -30,8 +30,10 @@ module pdm_mesh_location
   !! Enum type PDM_mesh_location_method_t
   !!
 
-  integer(c_int), parameter :: PDM_MESH_LOCATION_OCTREE  = 0
-  integer(c_int), parameter :: PDM_MESH_LOCATION_DBBTREE = 1
+  integer(c_int), parameter :: PDM_MESH_LOCATION_OCTREE         = 0 ! Use point octree
+  integer(c_int), parameter :: PDM_MESH_LOCATION_DBBTREE        = 1 ! Use bounding-box tree
+  integer(c_int), parameter :: PDM_MESH_LOCATION_LOCATE_ALL_TGT = 2 ! Locate all target points
+  ! integer(c_int), parameter :: PDM_MESH_LOCATION_DOCTREE        = 3 !
 
 
   interface PDM_mesh_location_create ; module procedure &
@@ -110,28 +112,19 @@ module pdm_mesh_location
 
     end function PDM_mesh_location_create_cf
 
-    !>
-    !!
-    !! \brief Set the number of partitions of a point cloud
-    !!
-    !! \param [in]   mloc            Pointer to \ref PDM_mesh_location object
-    !! \param [in]   i_point_cloud   Index of point cloud
-    !! \param [in]   n_part          Number of partitions
-    !!
-    !!
 
     subroutine PDM_mesh_location_n_part_cloud_set (mloc, &
                                                    i_point_cloud, &
                                                    n_part) &
-     bind (c, name = 'PDM_mesh_location_n_part_cloud_set')
-
+    bind (c, name = 'PDM_mesh_location_n_part_cloud_set')
+      ! Set the number of partitions of a point cloud
       use iso_c_binding
 
       implicit none
 
-      type (c_ptr), value :: mloc
-      integer(c_int), value :: i_point_cloud
-      integer(c_int), value :: n_part
+      type (c_ptr),   value :: mloc          ! Pointer to PDM_mesh_location object
+      integer(c_int), value :: i_point_cloud ! Point cloud identifier
+      integer(c_int), value :: n_part        ! Number of partitions
 
     end subroutine PDM_mesh_location_n_part_cloud_set
 
@@ -427,15 +420,15 @@ module pdm_mesh_location
 
     subroutine PDM_mesh_location_method_set (mloc, &
                                              method) &
-     bind (c, name = 'PDM_mesh_location_method_set')
-
+    bind (c, name = 'PDM_mesh_location_method_set')
+      ! Set the method for computing location (preconditioning stage)
       use iso_c_binding
 
       implicit none
 
 
-      type (c_ptr), value :: mloc
-      integer(c_int), value :: method
+      type (c_ptr),   value :: mloc   ! Pointer to PDM_mesh_location object
+      integer(c_int), value :: method ! Preconditioning method
 
     end subroutine PDM_mesh_location_method_set
 
@@ -774,32 +767,21 @@ module pdm_mesh_location
     end function PDM_mesh_location_mesh_nodal_get
 
 
- !>
- !! \brief Get part_to_part object to exchange data between
- !! the source mesh and a target point cloud (both in user frame)
- !!
- !! \param [in ] ml         Pointer to \ref PDM_mesh_location_t object
- !! \param [in ] icloud     Point cloud ID
- !! \param [out] ptp        Pointer to \ref PDM_part_to_part_t object
- !! \param [in ] ownership  Ownership for ptp
- !!
- !!
-
-    subroutine PDM_mesh_location_part_to_part_get (mloc, &
-                                            icloud, &
-                                            ptp, &
-                                            owner) &
-     bind (c, name = 'PDM_mesh_location_part_to_part_get')
-
+    subroutine PDM_mesh_location_part_to_part_get(mloc,   &
+                                                  icloud, &
+                                                  ptp,    &
+                                                  owner)  &
+    bind (c, name = 'PDM_mesh_location_part_to_part_get')
+      ! Get part_to_part object to exchange data between the source mesh and a target point cloud (both in user frame)
       use iso_c_binding
 
       implicit none
 
 
-      type (c_ptr),   value :: mloc
-      integer(c_int), value :: icloud
-      type (c_ptr)          :: ptp
-      integer(c_int), value :: owner
+      type (c_ptr),   value :: mloc   ! Pointer to PDM_mesh_location object
+      integer(c_int), value :: icloud ! Point cloud identifier
+      type (c_ptr)          :: ptp    ! Pointer to PDM_part_to_part object
+      integer(c_int), value :: owner  ! Ownership for ``ptp``
 
     end subroutine PDM_mesh_location_part_to_part_get
 
@@ -809,34 +791,22 @@ module pdm_mesh_location
   contains
 
 
-  !>
-  !!
-  !! \brief Create a structure to compute the location of point clouds inta a mesh
-  !!
-  !! \param [out]  mloc           Pointer to \ref PDM_mesh_location object
-  !! \param [in]   mesh_nature    Nature of the mesh
-  !! \param [in]   n_point_cloud  Number of point cloud
-  !! \param [in]   f_comm         MPI communicator
-  !!
-  !!
-  !!
-
   subroutine PDM_mesh_location_create_ (mloc,          &
                                         mesh_nature,   &
                                         n_point_cloud, &
                                         f_comm,        &
                                         owner)
-
+  ! Create a structure to compute the location of point clouds inside a mesh
   use iso_c_binding
 
   implicit none
 
-  integer, intent(in) :: mesh_nature
-  integer, intent(in) :: n_point_cloud
-  integer, intent(in) :: f_comm
-  integer, intent(in) :: owner
+  type(c_ptr)         :: mloc          ! Pointer to PDM_mesh_location object
+  integer, intent(in) :: mesh_nature   ! Nature of the mesh
+  integer, intent(in) :: n_point_cloud ! Number of point clouds
+  integer, intent(in) :: f_comm        ! Fortran MPI communicator
+  integer, intent(in) :: owner         ! Ownership
 
-  type(c_ptr)    :: mloc
 
   integer(c_int) :: c_mesh_nature
   integer(c_int) :: c_n_point_cloud
@@ -858,37 +828,23 @@ module pdm_mesh_location
 
 
 
-  !>
-  !!
-  !! \brief Set a point cloud
-  !!
-  !! \param [in]   mloc            Pointer to \ref PDM_mesh_location object
-  !! \param [in]   i_point_cloud   Index of point cloud
-  !! \param [in]   i_part          Index of partition
-  !! \param [in]   n_points        Number of points
-  !! \param [in]   coords          Point coordinates
-  !! \param [in]   gnum            Point global number
-  !!
-  !!
-
   subroutine PDM_mesh_location_cloud_set_ (mloc, &
                                            i_point_cloud, &
                                            i_part, &
                                            n_points, &
                                            coords, &
                                            gnum)
-
+    ! Set a point cloud
     use iso_c_binding
 
     implicit none
 
-
-    type (c_ptr), intent(in)           :: mloc
-    integer, intent(in)                :: i_point_cloud
-    integer, intent(in)                :: i_part
-    integer, intent(in)                :: n_points
-    double precision,          pointer :: coords(:,:)
-    integer(kind=pdm_g_num_s), pointer :: gnum(:)
+    type (c_ptr), intent(in)           :: mloc          ! Pointer to PDM_mesh_location object
+    integer, intent(in)                :: i_point_cloud ! Point cloud identifier
+    integer, intent(in)                :: i_part        ! Partition identifier
+    integer, intent(in)                :: n_points      ! Number of points
+    double precision,          pointer :: coords(:,:)   ! Point coordinates (size : 3 * ``n_points``)
+    integer(kind=pdm_g_num_s), pointer :: gnum(:)       ! Point global numbers (size : ``n_points``)
 
     integer(c_int)                     :: c_i_point_cloud
     integer(c_int)                     :: c_i_part
@@ -913,26 +869,6 @@ module pdm_mesh_location
   end subroutine PDM_mesh_location_cloud_set_
 
 
-  !>
-  !!
-  !! \brief Set a part of a mesh
-  !!
-  !! \param [in]   mloc          Pointer to \ref PDM_mesh_location object
-  !! \param [in]   i_part        Partition to define
-  !! \param [in]   n_cell        Number of cells
-  !! \param [in]   cell_face_idx Index in the cell -> face connectivity
-  !! \param [in]   cell_face     cell -> face connectivity
-  !! \param [in]   cell_ln_to_gn Local cell numbering to global cel numbering
-  !! \param [in]   n_face        Number of faces
-  !! \param [in]   face_vtx_idx  Index in the face -> vertex connectivity
-  !! \param [in]   face_vtx      face -> vertex connectivity
-  !! \param [in]   face_ln_to_gn Local face numbering to global face numbering
-  !! \param [in]   n_vtx         Number of vertices
-  !! \param [in]   coords        Coordinates
-  !! \param [in]   vtx_ln_to_gn  Local vertex numbering to global vertex numbering
-  !!
-  !!
-
   subroutine PDM_mesh_location_part_set_ (mloc, &
                                           i_part, &
                                           n_cell, &
@@ -946,25 +882,24 @@ module pdm_mesh_location
                                           n_vtx, &
                                           coords, &
                                           vtx_ln_to_gn)
-
+    ! Set a *volume* mesh partition
     use iso_c_binding
 
     implicit none
 
-
-    type (c_ptr), value                :: mloc
-    integer, intent(in)                :: i_part
-    integer, intent(in)                :: n_cell
-    integer(kind=pdm_l_num_s), pointer :: cell_face_idx(:)
-    integer(kind=pdm_l_num_s), pointer :: cell_face(:)
-    integer(kind=pdm_g_num_s), pointer :: cell_ln_to_gn(:)
-    integer, intent(in)                :: n_face
-    integer(kind=pdm_l_num_s), pointer :: face_vtx_idx(:)
-    integer(kind=pdm_l_num_s), pointer :: face_vtx(:)
-    integer(kind=pdm_g_num_s), pointer :: face_ln_to_gn(:)
-    integer, intent(in)                :: n_vtx
-    double precision,          pointer :: coords(:,:)
-    integer(kind=pdm_g_num_s), pointer :: vtx_ln_to_gn(:)
+    type (c_ptr), value                :: mloc             ! Pointer to PDM_mesh_location object
+    integer, intent(in)                :: i_part           ! Partition identifier
+    integer, intent(in)                :: n_cell           ! Number of cells
+    integer(kind=pdm_l_num_s), pointer :: cell_face_idx(:) ! Index for cell -> face connectivity (size : ``n_cell`` + 1)
+    integer(kind=pdm_l_num_s), pointer :: cell_face(:)     ! Cell -> face connectivity (size : ``cell_face_idx[n_cell]``)
+    integer(kind=pdm_g_num_s), pointer :: cell_ln_to_gn(:) ! Cell global ids (size : ``n_cell``)
+    integer, intent(in)                :: n_face           ! Number of faces
+    integer(kind=pdm_l_num_s), pointer :: face_vtx_idx(:)  ! Index for face -> vertex connectivity (size : ``n_face`` + 1)
+    integer(kind=pdm_l_num_s), pointer :: face_vtx(:)      ! Face -> vertex connectivity (size : ``face_vtx_idx[n_cell]``)
+    integer(kind=pdm_g_num_s), pointer :: face_ln_to_gn(:) ! Face global ids (size : ``n_face``)
+    integer, intent(in)                :: n_vtx            ! Number of vertices
+    double precision,          pointer :: coords(:,:)      ! Vertex coordinates (size : 3 * ``n_vtx``)
+    integer(kind=pdm_g_num_s), pointer :: vtx_ln_to_gn(:)  ! Vertex global ids (size : ``n_vtx``)
 
     integer(c_int)                     :: c_i_part
     integer(c_int)                     :: c_n_cell
@@ -1010,25 +945,6 @@ module pdm_mesh_location
   end subroutine PDM_mesh_location_part_set_
 
 
-  !>
-  !!
-  !! \brief Set a part of a mesh (2d version)
-  !!
-  !! \param [in]   mloc          Pointer to \ref PDM_mesh_location object
-  !! \param [in]   i_part        Partition to define
-  !! \param [in]   n_face        Number of faces
-  !! \param [in]   face_edge_idx Index in the face -> edge connectivity
-  !! \param [in]   face_edge     face -> edge connectivity
-  !! \param [in]   face_ln_to_gn Local face numbering to global cel numbering
-  !! \param [in]   n_edge        Number of edges
-  !! \param [in]   edge_vtx_idx  Index in the edge -> vertex connectivity
-  !! \param [in]   edge_vtx      edge -> vertex connectivity
-  !! \param [in]   edge_ln_to_gn Local edge numbering to global edge numbering
-  !! \param [in]   n_vtx         Number of vertices
-  !! \param [in]   coords        Coordinates
-  !! \param [in]   vtx_ln_to_gn  Local vertex numbering to global vertex numbering
-  !!
-  !!
 
   subroutine PDM_mesh_location_part_set_2d_ (mloc, &
                                              i_part, &
@@ -1043,25 +959,24 @@ module pdm_mesh_location
                                              n_vtx, &
                                              coords, &
                                              vtx_ln_to_gn)
-
+    ! Set a *surface* mesh partition
     use iso_c_binding
 
     implicit none
 
-
-    type (c_ptr), value                :: mloc
-    integer, intent(in)                :: i_part
-    integer, intent(in)                :: n_face
-    integer(kind=pdm_l_num_s), pointer :: face_edge_idx(:)
-    integer(kind=pdm_l_num_s), pointer :: face_edge(:)
-    integer(kind=pdm_g_num_s), pointer :: face_ln_to_gn(:)
-    integer, intent(in)                :: n_edge
-    integer(kind=pdm_l_num_s), pointer :: edge_vtx_idx(:)
-    integer(kind=pdm_l_num_s), pointer :: edge_vtx(:)
-    integer(kind=pdm_g_num_s), pointer :: edge_ln_to_gn(:)
-    integer, intent(in)                :: n_vtx
-    double precision,          pointer :: coords(:,:)
-    integer(kind=pdm_g_num_s), pointer :: vtx_ln_to_gn(:)
+    type (c_ptr), value                :: mloc             ! Pointer to PDM_mesh_location object
+    integer, intent(in)                :: i_part           ! Partition identifier
+    integer, intent(in)                :: n_face           ! Number of faces
+    integer(kind=pdm_l_num_s), pointer :: face_edge_idx(:) ! Index for face -> edge connectivity (size : ``n_face`` + 1)
+    integer(kind=pdm_l_num_s), pointer :: face_edge(:)     ! Face -> edge connectivity (size : ``face_edge_idx[n_cell]``)
+    integer(kind=pdm_g_num_s), pointer :: face_ln_to_gn(:) ! Face global ids (size : ``n_face``)
+    integer, intent(in)                :: n_edge           ! Number of edges
+    integer(kind=pdm_l_num_s), pointer :: edge_vtx_idx(:)  ! Index for edge -> vertex connectivity **(unused)**
+    integer(kind=pdm_l_num_s), pointer :: edge_vtx(:)      ! Edge -> vertex connectivity (size : 2 * ``n_edge``)
+    integer(kind=pdm_g_num_s), pointer :: edge_ln_to_gn(:) ! Edge global ids **(unused)**
+    integer, intent(in)                :: n_vtx            ! Number of vertices
+    double precision,          pointer :: coords(:,:)      ! Vertex coordinates (size : 3 * ``n_vtx``)
+    integer(kind=pdm_g_num_s), pointer :: vtx_ln_to_gn(:)  ! Vertex global ids (size : ``n_vtx``)
 
     integer(c_int)                     :: c_i_part
     integer(c_int)                     :: c_n_face
@@ -1108,30 +1023,19 @@ module pdm_mesh_location
 
 
 
-  !>
-  !!
-  !! \brief Get the list of located points
-  !!
-  !! \param [in]   mloc            Pointer to \ref PDM_mesh_location object
-  !! \param [in]   i_point_cloud   Index of point cloud
-  !! \param [in]   i_part          Index of partition
-  !!
-  !! \return     The list of located points
-  !!
-  !!
-
   subroutine PDM_mesh_location_located_get_ (mloc,          &
-                                               i_point_cloud, &
-                                               i_part,        &
-                                               located)
+                                             i_point_cloud, &
+                                             i_part,        &
+                                             located)
+    ! Get the list of located points
     use iso_c_binding
 
     implicit none
 
-    type (c_ptr), value :: mloc
-    integer, intent(in) :: i_point_cloud
-    integer, intent(in) :: i_part
-    integer, pointer    :: located(:)
+    type (c_ptr), value :: mloc          ! Pointer to PDM_mesh_location object
+    integer, intent(in) :: i_point_cloud ! Point cloud identifier
+    integer, intent(in) :: i_part        ! Partition identifier
+    integer, pointer    :: located(:)    ! List of located points
 
     integer(c_int)      :: c_i_point_cloud
     integer(c_int)      :: c_i_part
@@ -1157,30 +1061,19 @@ module pdm_mesh_location
 
 
 
-  !>
-  !!
-  !! \brief Get the list of unlocated points
-  !!
-  !! \param [in]   mloc            Pointer to \ref PDM_mesh_location object
-  !! \param [in]   i_point_cloud   Index of point cloud
-  !! \param [in]   i_part          Index of partition
-  !!
-  !! \return     The list of unlocated points
-  !!
-  !!
-
   subroutine PDM_mesh_location_unlocated_get_ (mloc,          &
                                                i_point_cloud, &
                                                i_part,        &
                                                unlocated)
+    ! Get the list of unlocated points
     use iso_c_binding
 
     implicit none
 
-    type (c_ptr), value :: mloc
-    integer, intent(in) :: i_point_cloud
-    integer, intent(in) :: i_part
-    integer, pointer    :: unlocated(:)
+    type (c_ptr), value :: mloc          ! Pointer to PDM_mesh_location object
+    integer, intent(in) :: i_point_cloud ! Point cloud identifier
+    integer, intent(in) :: i_part        ! Partition identifier
+    integer, pointer    :: unlocated(:)  ! List of unlocated points
 
     integer(c_int)      :: c_i_point_cloud
     integer(c_int)      :: c_i_part
@@ -1206,39 +1099,24 @@ module pdm_mesh_location
 
 
 
-  !>
-  !!
-  !! \brief Get point location for located points
-  !!
-  !! \param [in]   mloc                  Pointer to \ref PDM_mesh_location object
-  !! \param [in]   i_point_cloud         Current cloud
-  !! \param [in]   i_part                Index of partition of the cloud
-  !! \param [out]  n_points              Number of points in point cloud
-  !! \param [out]  location              The global number of the closest element for located points
-  !! \param [out]  dist2                 Distance to the located element
-  !! \param [out]  projected_coord       Projection on the located element
-  !!
-  !!
-  !!
-
   subroutine PDM_mesh_location_point_location_get_ (mloc, &
                                                     i_point_cloud, &
                                                     i_part, &
                                                     location, &
                                                     dist2, &
                                                     projected_coords)
-
+    ! Get point location
     use iso_c_binding
 
     implicit none
 
 
-    type (c_ptr), value                :: mloc
-    integer, intent(in)                :: i_point_cloud
-    integer, intent(in)                :: i_part
-    integer(kind=pdm_g_num_s), pointer :: location(:)
-    double precision,          pointer :: dist2(:)
-    double precision,          pointer :: projected_coords(:,:)
+    type (c_ptr), value                :: mloc                  ! Pointer to PDM_mesh_location object
+    integer, intent(in)                :: i_point_cloud         ! Point cloud identifier
+    integer, intent(in)                :: i_part                ! Partition identifier
+    integer(kind=pdm_g_num_s), pointer :: location(:)           ! Global id of nearest mesh element if the point is located, -1 otherwise
+    real(8),          pointer :: dist2(:)              ! Signed squared distance from nearest element (negative if the point is located inside that element)
+    real(8),          pointer :: projected_coords(:,:) ! Cartesian coordinates of projection onto the nearest element (identity if the point is located inside that element)
 
     integer(c_int)                     :: c_i_point_cloud
     integer(c_int)                     :: c_i_part
@@ -1277,23 +1155,6 @@ module pdm_mesh_location
 
 
 
-  !>
-  !!
-  !! \brief Get point list located in elements
-  !!
-  !! \param [in]   mloc                    Pointer to \ref PDM_mesh_location object
-  !! \param [in]   i_part                  Index of partition of the mesh
-  !! \param [in]   i_point_cloud           Index of cloud
-  !! \param [out]  elt_pts_inside_idx      Points index (size = n_elt + 1)
-  !! \param [out]  points_gnum             Points global number
-  !! \param [out]  points_coords           Points coordinates
-  !! \param [out]  points_uvw              Points parametric coordinates in elements
-  !! \param [out]  points_weights_idx      Interpolation weights index (size = elt_pts_inside_idx[n_elt] + 1)
-  !! \param [out]  points_weights          Interpolation weights
-  !! \param [out]  points_dist2            Distance element-points (dist < 0 if the point is inside)
-  !! \param [out]  points_projected_coords Point projection on element if the point is outside
-  !!
-
   subroutine PDM_mesh_location_points_in_elt_get_ (mloc, &
                                                    i_part, &
                                                    i_point_cloud, &
@@ -1305,23 +1166,22 @@ module pdm_mesh_location
                                                    points_weights, &
                                                    points_dist2, &
                                                    points_projected_coords)
-
+    ! Get point list located in elements
     use iso_c_binding
 
     implicit none
 
-
-    type (c_ptr), value                :: mloc
-    integer, intent(in)                :: i_part
-    integer, intent(in)                :: i_point_cloud
-    integer(kind=pdm_l_num_s), pointer :: elt_pts_inside_idx(:)
-    integer(kind=pdm_g_num_s), pointer :: points_gnum(:)
-    double precision,          pointer :: points_coords(:,:)
-    double precision,          pointer :: points_uvw(:,:)
-    integer(kind=pdm_l_num_s), pointer :: points_weights_idx(:)
-    double precision,          pointer :: points_weights(:)
-    double precision,          pointer :: points_dist2(:)
-    double precision,          pointer :: points_projected_coords(:,:)
+    type (c_ptr), value                :: mloc                         ! Pointer to PDM_mesh_location object
+    integer, intent(in)                :: i_part                       ! Partition identifier
+    integer, intent(in)                :: i_point_cloud                ! Point cloud identifier
+    integer(kind=pdm_l_num_s), pointer :: elt_pts_inside_idx(:)        ! Index for element -> points mapping (size = *n_elt* + 1)
+    integer(kind=pdm_g_num_s), pointer :: points_gnum(:)               ! Located points global ids (size : ``elt_pts_inside_idx[n_elt]``)
+    real(8),                   pointer :: points_coords(:,:)           ! Located points cartesian coordinates (size : 3 * ``elt_pts_inside_idx[n_elt]``)
+    real(8),                   pointer :: points_uvw(:,:)              ! Located points parametric coordinates (size : 3 * ``elt_pts_inside_idx[n_elt]``)
+    integer(kind=pdm_l_num_s), pointer :: points_weights_idx(:)        ! Index for interpolation weights (size : ``elt_pts_inside_idx[n_elt]`` + 1)
+    real(8),                   pointer :: points_weights(:)            ! Interpolation weights (size : ``points_weights_idx[elt_pts_inside_idx[n_elt]]``)
+    real(8),                   pointer :: points_dist2(:)              ! Signed squared distance element-points (< 0 if the point is inside) (size :``elt_pts_inside_idx[n_elt]``)
+    real(8),                   pointer :: points_projected_coords(:,:) ! Cartesian coordinates of projection on element (identity if the point is inside) (size : 3 *``elt_pts_inside_idx[n_elt]``)
 
     integer(c_int)                     :: c_i_part
     integer(c_int)                     :: c_i_point_cloud
