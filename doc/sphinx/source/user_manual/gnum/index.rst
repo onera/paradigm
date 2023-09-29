@@ -25,6 +25,8 @@ C API
 .. doxygenfile:: pdm_gnum.h
   :project: paradigm
 
+Example
+~~~~~~~
 The following example shows how to build a global numbering from a set of geometric coordinates (extract from the test case ``pdm_t_gen_gnum.c``).
 
 .. code:: c
@@ -126,7 +128,9 @@ Python API
 .. autoclass:: Pypdm.Pypdm.GlobalNumbering
   :members:
 
-The following example shows how to build a global numbering from a set of   geometric coordinates (extract from the test case ``pdm_t_gnum_p.py``).
+Example
+~~~~~~~
+The following example shows how to build a global numbering from a set of geometric coordinates (extract from the test case ``pdm_t_gnum_p.py``).
 
 
 .. literalinclude:: ../../../../../test/pdm_t_gnum_p.py
