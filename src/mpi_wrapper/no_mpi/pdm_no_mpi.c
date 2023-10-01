@@ -994,6 +994,19 @@ int PDM_MPI_Comm_split(PDM_MPI_Comm comm, int color, int key, PDM_MPI_Comm *newc
 }
 
 /*----------------------------------------------------------------------------
+ * PDM_MPI_Comm_split
+ *
+ *----------------------------------------------------------------------------*/
+
+int PDM_MPI_Comm_dup(PDM_MPI_Comm comm, PDM_MPI_Comm *newcomm)
+{
+  PDM_UNUSED(comm);
+  *newcomm = PDM_MPI_COMM_NULL;
+  return 0;
+}
+
+
+/*----------------------------------------------------------------------------
  * PDM_MPI_Test (wrapping de la fonction MPI_Test)
  *
  *----------------------------------------------------------------------------*/

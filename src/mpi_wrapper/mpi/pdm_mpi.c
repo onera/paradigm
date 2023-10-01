@@ -2502,6 +2502,19 @@ int PDM_MPI_Comm_split(PDM_MPI_Comm comm, int color, int key, PDM_MPI_Comm *newc
 }
 
 /*----------------------------------------------------------------------------
+ * PDM_MPI_Comm_dup
+ *
+ *----------------------------------------------------------------------------*/
+
+int PDM_MPI_Comm_dup(PDM_MPI_Comm comm, PDM_MPI_Comm *newcomm)
+{
+  MPI_Comm _newcomm;
+  int code = MPI_Comm_dup(_pdm_mpi_2_mpi_comm(comm), &_newcomm);
+  *newcomm = _mpi_2_pdm_mpi_comm(_newcomm);
+  return _mpi_2_pdm_mpi_err(code);
+}
+
+/*----------------------------------------------------------------------------
  * PDM_MPI_Comm_split_type_numa // Non portable mettre un ifdef
  *
  *----------------------------------------------------------------------------*/

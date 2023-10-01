@@ -700,6 +700,13 @@ int PDM_MPI_Comm_free(PDM_MPI_Comm *comm);
 int PDM_MPI_Comm_split(PDM_MPI_Comm comm, int color, int key, PDM_MPI_Comm *newcomm);
 
 /*----------------------------------------------------------------------------
+ * PDM_MPI_Comm_dup
+ *
+ *----------------------------------------------------------------------------*/
+
+int PDM_MPI_Comm_dup(PDM_MPI_Comm comm, PDM_MPI_Comm *newcomm);
+
+/*----------------------------------------------------------------------------
  * PDM_MPI_Comm_split
  *
  *----------------------------------------------------------------------------*/

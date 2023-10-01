@@ -2188,8 +2188,19 @@ _create
 {
   PDM_part_to_part_t *ptp = (PDM_part_to_part_t *) malloc (sizeof(PDM_part_to_part_t));
 
+  char *env_var = NULL;
+  env_var = getenv ("PDM_PART_TO_PART_USE_TAG");
+  ptp->use_tag = 0;
+  if (env_var != NULL) {
+    ptp->use_tag = (int) atoi(env_var);
+  }
+
   /* Init */
-  ptp->comm                     = comm;
+  if(ptp->use_tag == 1) {
+    ptp->comm                     = comm;
+  } else {
+    PDM_MPI_Comm_dup(comm, &ptp->comm);
+  }
 
   ptp->n_part1                  = n_part1;
   ptp->gnum_elt1                = gnum_elt1;
@@ -2703,10 +2714,6 @@ _create
   }
   free(gnum1_to_send_buffer_n);
 
-
-
-  fflush(stdout);
-
   free (n_elt_part);
   free (order);
 
@@ -2733,9 +2740,9 @@ _create
   }
 
   for (int i = 0; i < n_rank; i++) {
-    ptp->default_n_send_buffer[i]   *= 4;
+    ptp->default_n_send_buffer[i  ] *= 4;
     ptp->default_i_send_buffer[i+1] *= 4;
-    ptp->default_n_recv_buffer[i]   *= 4;
+    ptp->default_n_recv_buffer[i  ] *= 4;
     ptp->default_i_recv_buffer[i+1] *= 4;
   }
 
@@ -2774,9 +2781,9 @@ _create
                      comm);
 
   for (int i = 0; i < n_rank; i++) {
-    ptp->default_n_send_buffer[i]   /= 4;
+    ptp->default_n_send_buffer[i  ] /= 4;
     ptp->default_i_send_buffer[i+1] /= 4;
-    ptp->default_n_recv_buffer[i]   /= 4;
+    ptp->default_n_recv_buffer[i  ] /= 4;
     ptp->default_i_recv_buffer[i+1] /= 4;
   }
 
@@ -3041,10 +3048,19 @@ _create
   void  *max_tag_tmp;
   int    flag = 0;
 
-  PDM_MPI_Comm_get_attr_tag_ub(comm, &max_tag_tmp, &flag);
-  ptp->max_tag  = (long) (*((int *) max_tag_tmp));
-  ptp->seed_tag = PDM_MPI_Rand_tag(comm);
-  ptp->next_tag = 1;
+  if(ptp->use_tag == 1) {
+    // Mandatory to call with PDM_MPI_COMM_WORLD becuase only this one keep attributes (openMPI implemntation for exemple)
+    PDM_MPI_Comm_get_attr_tag_ub(PDM_MPI_COMM_WORLD, &max_tag_tmp, &flag);
+    ptp->max_tag  = (long) (*((int *) max_tag_tmp));
+    ptp->seed_tag = PDM_MPI_Rand_tag(comm);
+    ptp->next_tag = 1;
+  } else {
+    // Mandatory to call with PDM_MPI_COMM_WORLD becuase only this one keep attributes (openMPI implemntation for exemple)
+    PDM_MPI_Comm_get_attr_tag_ub(PDM_MPI_COMM_WORLD, &max_tag_tmp, &flag);
+    ptp->max_tag  = (long) (*((int *) max_tag_tmp));
+    ptp->seed_tag = 1;
+    ptp->next_tag = 1;
+  }
 
   return ptp;
 }
@@ -4861,7 +4877,12 @@ PDM_part_to_part_reverse_iexch
  int                               *request
 )
 {
-  int tag = PDM_MPI_Rand_tag (ptp->comm);
+  int tag = -10000;
+  if (k_comm == PDM_MPI_COMM_KIND_P2P) {
+    tag  = ptp->seed_tag;
+    tag += (ptp->next_tag++);
+    tag %= ptp->max_tag;
+  }
 
   *request = _find_open_async_exch (ptp);
 
