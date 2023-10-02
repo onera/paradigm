@@ -436,9 +436,9 @@ _recurse_and_filter
  int                **pentity1_entity2_idx,
  int                **pentity1_entity2,
  PDM_g_num_t        **pentity2_ln_to_gn,
- PDM_g_num_t        **pextract_entity2_n,
+ int                **pextract_entity2_n,
  PDM_g_num_t        **pextract_entity2_gnum,
- PDM_g_num_t        **pextract_entity2_triplet,
+ int                **pextract_entity2_triplet,
  PDM_MPI_Comm         comm
 )
 {
@@ -2008,7 +2008,7 @@ PDM_part_extension_pconnectivity_to_extented_pconnectivity
 
     int         *_gnum1_com_from_triplet_n               = gnum1_com_from_entity1_entity2_n      [i_part];
     PDM_g_num_t *_gnum1_com_from_entity1_entity2         = gnum1_com_from_entity1_entity2        [i_part];
-    PDM_g_num_t *_gnum1_com_from_entity1_entity2_triplet = gnum1_com_from_entity1_entity2_triplet[i_part];
+    int         *_gnum1_com_from_entity1_entity2_triplet = gnum1_com_from_entity1_entity2_triplet[i_part];
 
     n_send_part2 = 0;
     for(int i_ref = 0; i_ref < n_ref_lnum2[i_part]; ++i_ref) {
@@ -2170,7 +2170,7 @@ PDM_part_extension_pconnectivity_to_extented_pconnectivity
     free(send_stride);
 
     for(int i_part = 0; i_part < ln_part_tot; ++i_part) {
-      PDM_log_trace_array_long(recv_stride[i_part], query_itrf_n[i_interface][i_part], "recv_stride ::");
+      PDM_log_trace_array_int(recv_stride[i_part], query_itrf_n[i_interface][i_part], "recv_stride ::");
 
       int n_recv_tot = 0;
       for(int i = 0; i < query_itrf_n[i_interface][i_part]; ++i) {
@@ -2748,7 +2748,7 @@ PDM_part_extension_pconnectivity_to_extented_pconnectivity
 
 }
 
-void
+static void
 PDM_part_extension_compute2
 (
         PDM_part_extension_t *part_ext,

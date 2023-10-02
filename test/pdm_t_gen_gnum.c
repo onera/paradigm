@@ -9,6 +9,7 @@
 #include <assert.h>
 
 #include "pdm.h"
+#include "pdm_printf.h"
 #include "pdm_gnum.h"
 
 #include "pdm_mpi.h"
