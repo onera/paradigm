@@ -85,7 +85,7 @@ PDM_mesh_location_n_part_cloud_set
  * \param [in]   i_part          Partition identifier
  * \param [in]   n_points        Number of points
  * \param [in]   coords          Point coordinates (size : 3 * \p n_points)
- * \param [in]   gnum            Point global numbers (size : \p n_points)
+ * \param [in]   gnum            Point global ids (size : \p n_points)
  *
  */
 
@@ -110,7 +110,7 @@ PDM_mesh_location_cloud_set
  * \param [in]   i_part          Partition identifier
  * \param [out]  n_points        Number of points
  * \param [out]  coords          Point coordinates
- * \param [out]  gnum            Point global numbers
+ * \param [out]  gnum            Point global ids
  *
  */
 
@@ -257,7 +257,7 @@ PDM_mesh_location_mesh_global_data_set
  * \param [in]   cell_ln_to_gn   Cell global ids (size : \p n_cell)
  * \param [in]   n_face          Number of faces
  * \param [in]   face_vtx_idx    Index for face -> vertex connectivity (size : \p n_face + 1)
- * \param [in]   face_vtx        Face -> vertex connectivity (size : \p face_vtx_idx[\p n_cell])
+ * \param [in]   face_vtx        Face -> vertex connectivity (size : \p face_vtx_idx[\p n_face])
  * \param [in]   face_ln_to_gn   Face global ids (size : \p n_face)
  * \param [in]   n_vtx           Number of vertices
  * \param [in]   coords          Vertex coordinates (size : 3 * \p n_vtx)
@@ -310,7 +310,7 @@ PDM_mesh_location_user_extract_set
  * \param [in]   i_part         Partition identifier
  * \param [in]   n_face         Number of faces
  * \param [in]   face_edge_idx  Index for face -> edge connectivity (size : \p n_face + 1)
- * \param [in]   face_edge      Face -> edge connectivity (size : \p face_edge_idx[\p n_cell])
+ * \param [in]   face_edge      Face -> edge connectivity (size : \p face_edge_idx[\p n_face])
  * \param [in]   face_ln_to_gn  Face global ids (size : \p n_face)
  * \param [in]   n_edge         Number of edges
  * \param [in]   edge_vtx_idx   Index for edge -> vertex connectivity **(unused)**
@@ -574,10 +574,10 @@ PDM_mesh_location_t *ml
  * \brief Get \ref PDM_part_to_part_t object to exchange data between
  * the source mesh and a target point cloud (both in user frame)
  *
- * \param [in ] ml         Pointer to \ref PDM_mesh_location_t object
- * \param [in ] icloud     Point cloud identifier
- * \param [out] ptp        Pointer to \ref PDM_part_to_part_t object
- * \param [in ] ownership  Ownership for \p ptp
+ * \param [in ] ml            Pointer to \ref PDM_mesh_location_t object
+ * \param [in ] i_point_cloud Point cloud identifier
+ * \param [out] ptp           Pointer to \ref PDM_part_to_part_t object
+ * \param [in ] ownership     Ownership for \p ptp
  *
  */
 
@@ -585,7 +585,7 @@ void
 PDM_mesh_location_part_to_part_get
 (
        PDM_mesh_location_t  *ml,
- const int                   icloud,
+ const int                   i_point_cloud,
        PDM_part_to_part_t  **ptp,
        PDM_ownership_t       ownership
  );

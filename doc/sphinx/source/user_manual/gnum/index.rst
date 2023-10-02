@@ -23,7 +23,6 @@ C API
 ^^^^^
 
 .. doxygenfile:: pdm_gnum.h
-  :project: paradigm
 
 Example
 ~~~~~~~

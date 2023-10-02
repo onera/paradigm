@@ -144,10 +144,20 @@ cdef extern from "pdm_mesh_location.h":
   void PDM_mesh_location_mesh_nodal_id_get(PDM_mesh_location_t  *ml)
   # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
+  # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
   int PDM_mesh_location_n_cell_get (PDM_mesh_location_t  *ml, int i_part)
+  # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
+  # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
   void PDM_mesh_location_cell_vertex_get (PDM_mesh_location_t  *ml, int i_part, int **cell_vtx_idx, int **cell_vtx)
+  # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
+  # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+  void PDM_mesh_location_part_to_part_get(PDM_mesh_location_t  *ml,
+                                          const int             icloud,
+                                          PDM_part_to_part_t  **ptp,
+                                          PDM_ownership_t       ownership)
+  # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 # ------------------------------------------------------------------
 cdef class MeshLocation:
@@ -230,8 +240,8 @@ cdef class MeshLocation:
       i_point_cloud (int)                        : Point cloud identifier
       i_part        (int)                        : Partition identifier
       n_points      (int)                        : Number of points
-      coords        (bp.ndarray[np.double_t])    : Point coordinates
-      gnum          (bp.ndarray[npy_pdm_gnum_t]) : Point global numbers
+      coords        (np.ndarray[np.double_t])    : Point coordinates
+      gnum          (np.ndarray[npy_pdm_gnum_t]) : Point global ids
     """
     PDM_mesh_location_cloud_set(self._ml,
                                 i_point_cloud,
@@ -302,19 +312,19 @@ cdef class MeshLocation:
 
   # ------------------------------------------------------------------------
   def part_set_2d(self, int i_part,
-                     int n_face,  # TODO: remove
-                     NPY.ndarray[NPY.int32_t   , mode='c', ndim=1] face_edge_idx,
-                     NPY.ndarray[NPY.int32_t   , mode='c', ndim=1] face_edge,
-                     NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1] face_ln_to_gn,
-                     int n_edge,  # TODO: remove
-                     NPY.ndarray[NPY.int32_t   , mode='c', ndim=1] edge_vtx_idx, # TODO: remove
-                     NPY.ndarray[NPY.int32_t   , mode='c', ndim=1] edge_vtx,
-                     NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1] edge_ln_to_gn,
-                     int n_vtx,  # TODO: remove
-                     NPY.ndarray[NPY.double_t  , mode='c', ndim=1] coords,
-                     NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1] vtx_ln_to_gn):
+                  int n_face,  # TODO: remove
+                  NPY.ndarray[NPY.int32_t   , mode='c', ndim=1] face_edge_idx,
+                  NPY.ndarray[NPY.int32_t   , mode='c', ndim=1] face_edge,
+                  NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1] face_ln_to_gn,
+                  int n_edge,  # TODO: remove
+                  NPY.ndarray[NPY.int32_t   , mode='c', ndim=1] edge_vtx_idx, # TODO: remove
+                  NPY.ndarray[NPY.int32_t   , mode='c', ndim=1] edge_vtx,
+                  NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1] edge_ln_to_gn,
+                  int n_vtx,  # TODO: remove
+                  NPY.ndarray[NPY.double_t  , mode='c', ndim=1] coords,
+                  NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1] vtx_ln_to_gn):
     """
-    part_set(i_part, n_face, face_edge_idx, face_edge, face_ln_to_gn, n_edge, edge_vtx_idx, edge_vtx, edge_ln_to_gn, n_vtx, coords, vtx_ln_to_gn)
+    part_set_2d(i_part, n_face, face_edge_idx, face_edge, face_ln_to_gn, n_edge, edge_vtx_idx, edge_vtx, edge_ln_to_gn, n_vtx, coords, vtx_ln_to_gn)
 
     Set a *surface* mesh partition
 
@@ -347,16 +357,16 @@ cdef class MeshLocation:
                    <PDM_g_num_t*> vtx_ln_to_gn.data)
 
   # ------------------------------------------------------------------------
-  def tolerance_set(self, double tol):
+  def tolerance_set(self, double tolerance):
     """
-    tolerance_set(tol)
+    tolerance_set(tolerance)
 
     Set the relative tolerance for bounding boxes
 
     Parameters:
-      tol (double) : Tolerance
+      tolerance (double) : Tolerance
     """
-    PDM_mesh_location_tolerance_set(self._ml, tol)
+    PDM_mesh_location_tolerance_set(self._ml, tolerance)
 
   # ------------------------------------------------------------------------
   def method_set(self, PDM_mesh_location_method_t method):
@@ -365,8 +375,13 @@ cdef class MeshLocation:
 
     Set the method for computing location (preconditioning stage)
 
+    Available methods:
+      - 0 : Use point octree (default method)
+      - 1 : Use bounding-box tree
+      - 2 : All target points are guaranteed to be located
+
     Parameters:
-      method (PDM_mesh_location_method_t) : Preconditioning method
+      method (int) : Preconditioning method
     """
     PDM_mesh_location_method_set(self._ml, method)
 
@@ -421,10 +436,10 @@ cdef class MeshLocation:
 
     Returns:
       Dictionary
-        - ``"g_num"``        (np.ndarray[npy_pdm_gnum_t]) : Point global ids
-        - ``"location"``     (np.ndarray[npy_pdm_gnum_t]) : Global id of nearest mesh element if the point is located, -1 otherwise
-        - ``"dist2"``        (np.ndarray[np.double_t])    : Signed squared distance from nearest element (negative if the point is located inside that element)
-        - ``"p_proj_coord"`` (np.ndarray[np.double_t])    : Cartesian coordinates of projection onto the nearest element (identity if the point is located inside that element)
+        - ``"g_num"``        (`np.ndarray[npy_pdm_gnum_t]`) : Point global ids
+        - ``"location"``     (`np.ndarray[npy_pdm_gnum_t]`) : Global id of nearest mesh element if the point is located, -1 otherwise
+        - ``"dist2"``        (`np.ndarray[np.double_t]`)    : Signed squared distance from nearest element (negative if the point is located inside that element)
+        - ``"p_proj_coord"`` (`np.ndarray[np.double_t]`)    : Cartesian coordinates of projection onto the nearest element (identity if the point is located inside that element)
     """
     return self._dic_location[i_point_cloud][i_part]
 
@@ -447,15 +462,15 @@ cdef class MeshLocation:
     Get the cell->vertex connectivity used for internal computations
 
     .. note::
-      This connectivity is built by ParaDiGM and is necessary to associate the `points_weights` array (returned by :py:meth:`points_in_elt_get`) to the appropriate mesh vertices.
+      This connectivity is built by ParaDiGM and is necessary to associate the ``points_weights`` array (returned by :py:meth:`points_in_elt_get`) to the appropriate mesh vertices.
 
     Parameters:
       i_part (int) : Partition identifier
 
     Returns:
       Dictionary
-        - ``"cell_vtx_idx"`` (np.ndarray[np.int32_t]) : Index for cell -> vertex connectivity
-        - ``"cell_vtx"``     (np.ndarray[np.int32_t]) : Cell -> vertex connectivity
+        - ``"cell_vtx_idx"`` (`np.ndarray[np.int32_t]`) : Index for cell -> vertex connectivity
+        - ``"cell_vtx"``     (`np.ndarray[np.int32_t]`) : Cell -> vertex connectivity
     """
     return self._dic_cell_vertex[i_part]
 
@@ -514,14 +529,14 @@ cdef class MeshLocation:
 
     Returns:
       Dictionary
-        - ``"elt_pts_inside_idx"``      (np.ndarray[np.int32_t])     : Index for element -> points mapping
-        - ``"points_gnum"``             (np.ndarray[npy_pdm_gnum_t]) : Located points global ids
-        - ``"points_coords"``           (np.ndarray[np.double_t])    : Located points cartesian coordinates
-        - ``"points_uvw"``              (np.ndarray[np.double_t])    : Located points parametric coordinates
-        - ``"points_weights_idx"``      (np.ndarray[np.int32_t])     : Index for interpolation weights
-        - ``"points_weights"``          (np.ndarray[np.double_t])    : Interpolation weights
-        - ``"points_dist2"``            (np.ndarray[np.double_t])    : Signed squared distance element-points
-        - ``"points_projected_coords"`` (np.ndarray[np.double_t])    : Cartesian coordinates of projection on element
+        - ``"elt_pts_inside_idx"``      (`np.ndarray[np.int32_t]`)     : Index for element -> points mapping
+        - ``"points_gnum"``             (`np.ndarray[npy_pdm_gnum_t]`) : Located points global ids
+        - ``"points_coords"``           (`np.ndarray[np.double_t]`)    : Located points cartesian coordinates
+        - ``"points_uvw"``              (`np.ndarray[np.double_t]`)    : Located points parametric coordinates
+        - ``"points_weights_idx"``      (`np.ndarray[np.int32_t]`)     : Index for interpolation weights
+        - ``"points_weights"``          (`np.ndarray[np.double_t]`)    : Interpolation weights
+        - ``"points_dist2"``            (`np.ndarray[np.double_t]`)    : Signed squared distance element-points
+        - ``"points_projected_coords"`` (`np.ndarray[np.double_t]`)    : Cartesian coordinates of projection on element
     """
     return self._dic_points_in_elt[i_point_cloud][i_part]
 
@@ -590,6 +605,29 @@ cdef class MeshLocation:
       self._dic_points_in_elt.append([self.__points_in_elt_get(i_part, i_pt_cloud) for i_part in range(self._n_src_part)])
     #Source related data
     self._dic_cell_vertex = [self.__cell_vertex_get(i_part) for i_part in range(self._n_src_part)]
+
+  # ------------------------------------------------------------------------
+  def part_to_part_get(self, int i_point_cloud):
+    """
+    part_to_part_get(i_point_cloud)
+
+    Get the :py:class:`PartToPartCapsule` object to exchange data between
+    the source mesh and a target point cloud
+
+    Parameters:
+      i_point_cloud (int) : Point cloud identifier
+
+    Returns:
+      PartToPart object (:py:class:`PartToPartCapsule`)
+    """
+    cdef PDM_part_to_part_t *ptpc
+    PDM_mesh_location_part_to_part_get(self._ml,
+                                       i_point_cloud,
+                                       &ptpc,
+                                       PDM_OWNERSHIP_USER)
+
+    py_casp = PyCapsule_New(ptpc, NULL, NULL)
+    return PartToPartCapsule(py_casp, self.py_comm) # The free is inside the class
 
   # ------------------------------------------------------------------------
   def dump_times(self):
