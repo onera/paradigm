@@ -2708,7 +2708,8 @@ int PDM_MPI_Rand_tag (PDM_MPI_Comm comm)
   void  *max_tag_tmp;
   int flag;
 
-  MPI_Comm_get_attr(_pdm_mpi_2_mpi_comm(comm), MPI_TAG_UB, &max_tag_tmp, &flag);
+  // Mandatory to call with PDM_MPI_COMM_WORLD becuase only this one keep attributes (openMPI implemntation for exemple)
+  MPI_Comm_get_attr(MPI_COMM_WORLD, MPI_TAG_UB, &max_tag_tmp, &flag);
   long max_tag = (long) (*((int *) max_tag_tmp));
 
   // printf("max_tag = %li | ltag = %li \n", max_tag, ltag);
