@@ -494,6 +494,7 @@ include "pdm_part_to_block.pxi"
 # PDM_block_to_part :
 # ------------------
 include "pdm_block_to_part.pxi"
+include "pdm_mblock_to_part.pxi"
 
 # PDM_block_to_block :
 # ------------------

@@ -109,7 +109,7 @@ cdef class BlockToPart:
 
       if isinstance(block_stride, int):
         _stride_t = PDM_STRIDE_CST_INTERLACED if interlaced_str else PDM_STRIDE_CST_INTERLEAVED
-        _block_stride = <int *> malloc(1 * sizeof(int *))
+        _block_stride = <int *> malloc(1 * sizeof(int))
         _block_stride[0] = block_stride
         assert_single_dim_np(block_data, block_data.dtype, block_stride*self.dn_elt)
       elif isinstance(block_stride, NPY.ndarray):
