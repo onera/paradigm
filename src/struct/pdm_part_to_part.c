@@ -2952,7 +2952,7 @@ _create
 
     for (int j = 0; j < ptp->n_ref_lnum2[i]; j++) {
 
-      int current_val = -1;
+      PDM_g_num_t current_val = -1;
       for (int k = _old_gnum1_come_from_idx[j]; k < _old_gnum1_come_from_idx[j+1]; k++) {
         if (ptp->gnum1_come_from[i][k] != current_val) {
           current_val = ptp->gnum1_come_from[i][k];

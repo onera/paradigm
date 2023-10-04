@@ -4753,10 +4753,10 @@ _generate_extended_partition_connectivity
 
       int old_order        = border_order           [pos_first_unique];
 
-      int gopp_entity2     = border_gentity1_entity2[  old_order];
-      int opp_entity2      = border_lentity1_entity2[  old_order];
-      int opp_proc         = border_part_and_proc_id[2*old_order  ];
-      int opp_part         = border_part_and_proc_id[2*old_order+1];
+      PDM_g_num_t gopp_entity2 = border_gentity1_entity2[  old_order];
+      int         opp_entity2  = border_lentity1_entity2[  old_order];
+      int         opp_proc     = border_part_and_proc_id[2*old_order  ];
+      int         opp_part     = border_part_and_proc_id[2*old_order+1];
 
       // printf(" border_gentity1_entity2[%i] = %i for g_entity2 = %i \n", old_order, border_gentity1_entity2[old_order], g_entity2);
 
