@@ -1140,9 +1140,7 @@ int main(int argc, char *argv[])
                                    faceEdge[ipart],
                                    faceLNToGN[ipart],
                                    nEdge[ipart],
-                                   edgeVtxIdx[ipart],
                                    edgeVtx[ipart],
-                                   NULL,//edgeLNToGN[ipart],
                                    nVtx[ipart],
                                    vtxCoord[ipart],
                                    vtxLNToGN[ipart]);

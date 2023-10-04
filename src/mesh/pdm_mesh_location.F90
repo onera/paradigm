@@ -330,6 +330,34 @@ module pdm_mesh_location
 
     end subroutine PDM_mesh_location_part_set_cf
 
+
+    subroutine PDM_mesh_location_nodal_part_set_cf(mloc, &
+                                                   i_part, &
+                                                   n_cell, &
+                                                   cell_vtx_idx, &
+                                                   cell_vtx, &
+                                                   cell_ln_to_gn, &
+                                                   n_vtx, &
+                                                   coords, &
+                                                   vtx_ln_to_gn) &
+     bind (c, name = 'PDM_mesh_location_nodal_part_set')
+
+      use iso_c_binding
+
+      implicit none
+
+      type (c_ptr), value   :: mloc
+      integer(c_int), value :: i_part
+      integer(c_int), value :: n_cell
+      type(c_ptr), value    :: cell_vtx_idx
+      type(c_ptr), value    :: cell_vtx
+      type(c_ptr), value    :: cell_ln_to_gn
+      integer(c_int), value :: n_vtx
+      type(c_ptr), value    :: coords
+      type(c_ptr), value    :: vtx_ln_to_gn
+
+    end subroutine PDM_mesh_location_nodal_part_set_cf
+
     !>
     !!
     !! \brief Set a part of a mesh (2d version)
@@ -341,9 +369,7 @@ module pdm_mesh_location
     !! \param [in]   face_edge     face -> edge connectivity
     !! \param [in]   face_ln_to_gn Local face numbering to global cel numbering
     !! \param [in]   n_edge        Number of edges
-    !! \param [in]   edge_vtx_idx  Index in the edge -> vertex connectivity
     !! \param [in]   edge_vtx      edge -> vertex connectivity
-    !! \param [in]   edge_ln_to_gn Local edge numbering to global edge numbering
     !! \param [in]   n_vtx         Number of vertices
     !! \param [in]   coords        Coordinates
     !! \param [in]   vtx_ln_to_gn  Local vertex numbering to global vertex numbering
@@ -357,9 +383,7 @@ module pdm_mesh_location
                                                  face_edge, &
                                                  face_ln_to_gn, &
                                                  n_edge, &
-                                                 edge_vtx_idx, &
                                                  edge_vtx, &
-                                                 edge_ln_to_gn, &
                                                  n_vtx, &
                                                  coords, &
                                                  vtx_ln_to_gn) &
@@ -370,21 +394,46 @@ module pdm_mesh_location
       implicit none
 
 
-      type (c_ptr), value :: mloc
+      type (c_ptr), value  :: mloc
       integer(c_int), value :: i_part
       integer(c_int), value :: n_face
       type(c_ptr), value    :: face_edge_idx
       type(c_ptr), value    :: face_edge
       type(c_ptr), value    :: face_ln_to_gn
       integer(c_int), value :: n_edge
-      type(c_ptr), value    :: edge_vtx_idx
       type(c_ptr), value    :: edge_vtx
-      type(c_ptr), value    :: edge_ln_to_gn
       integer(c_int), value :: n_vtx
       type(c_ptr), value    :: coords
       type(c_ptr), value    :: vtx_ln_to_gn
 
     end subroutine PDM_mesh_location_part_set_2d_cf
+
+    subroutine PDM_mesh_location_nodal_part_set_2d_cf(mloc, &
+                                                      i_part, &
+                                                      n_face, &
+                                                      face_vtx_idx, &
+                                                      face_vtx, &
+                                                      face_ln_to_gn, &
+                                                      n_vtx, &
+                                                      coords, &
+                                                      vtx_ln_to_gn) &
+     bind (c, name = 'PDM_mesh_location_nodal_part_set_2d')
+
+      use iso_c_binding
+
+      implicit none
+
+      type (c_ptr), value   :: mloc
+      integer(c_int), value :: i_part
+      integer(c_int), value :: n_face
+      type(c_ptr), value    :: face_vtx_idx
+      type(c_ptr), value    :: face_vtx
+      type(c_ptr), value    :: face_ln_to_gn
+      integer(c_int), value :: n_vtx
+      type(c_ptr), value    :: coords
+      type(c_ptr), value    :: vtx_ln_to_gn
+
+    end subroutine PDM_mesh_location_nodal_part_set_2d_cf
 
     !>
     !!
@@ -869,19 +918,20 @@ module pdm_mesh_location
   end subroutine PDM_mesh_location_cloud_set_
 
 
-  subroutine PDM_mesh_location_part_set_ (mloc, &
-                                          i_part, &
-                                          n_cell, &
-                                          cell_face_idx, &
-                                          cell_face, &
-                                          cell_ln_to_gn, &
-                                          n_face, &
-                                          face_vtx_idx, &
-                                          face_vtx, &
-                                          face_ln_to_gn, &
-                                          n_vtx, &
-                                          coords, &
-                                          vtx_ln_to_gn)
+
+  subroutine PDM_mesh_location_part_set_(mloc,          &
+                                         i_part,        &
+                                         n_cell,        &
+                                         cell_face_idx, &
+                                         cell_face,     &
+                                         cell_ln_to_gn, &
+                                         n_face,        &
+                                         face_vtx_idx,  &
+                                         face_vtx,      &
+                                         face_ln_to_gn, &
+                                         n_vtx,         &
+                                         coords,        &
+                                         vtx_ln_to_gn)
     ! Set a *volume* mesh partition
     use iso_c_binding
 
@@ -928,37 +978,93 @@ module pdm_mesh_location
     c_coords        = c_loc(coords       )
     c_vtx_ln_to_gn  = c_loc(vtx_ln_to_gn )
 
-    call PDM_mesh_location_part_set_cf (mloc, &
-                                        c_i_part, &
-                                        c_n_cell, &
-                                        c_cell_face_idx, &
-                                        c_cell_face, &
-                                        c_cell_ln_to_gn, &
-                                        c_n_face, &
-                                        c_face_vtx_idx, &
-                                        c_face_vtx, &
-                                        c_face_ln_to_gn, &
-                                        c_n_vtx, &
-                                        c_coords, &
-                                        c_vtx_ln_to_gn)
+    call PDM_mesh_location_part_set_cf(mloc,            &
+                                       c_i_part,        &
+                                       c_n_cell,        &
+                                       c_cell_face_idx, &
+                                       c_cell_face,     &
+                                       c_cell_ln_to_gn, &
+                                       c_n_face,        &
+                                       c_face_vtx_idx,  &
+                                       c_face_vtx,      &
+                                       c_face_ln_to_gn, &
+                                       c_n_vtx,         &
+                                       c_coords,        &
+                                       c_vtx_ln_to_gn)
 
   end subroutine PDM_mesh_location_part_set_
 
 
+  subroutine PDM_mesh_location_nodal_part_set_(mloc,          &
+                                               i_part,        &
+                                               n_cell,        &
+                                               cell_vtx_idx,  &
+                                               cell_vtx,      &
+                                               cell_ln_to_gn, &
+                                               n_vtx,         &
+                                               coords,        &
+                                               vtx_ln_to_gn)
+    ! Set a *volume* mesh partition defined by nodal connectivity
+    !
+    ! The mesh is assumed to contain only standard elements
+    ! (tetrahedra, pyramids, prisms, hexahedra).
+    use iso_c_binding
 
-  subroutine PDM_mesh_location_part_set_2d_ (mloc, &
-                                             i_part, &
-                                             n_face, &
-                                             face_edge_idx, &
-                                             face_edge, &
-                                             face_ln_to_gn, &
-                                             n_edge, &
-                                             edge_vtx_idx, &
-                                             edge_vtx, &
-                                             edge_ln_to_gn, &
-                                             n_vtx, &
-                                             coords, &
-                                             vtx_ln_to_gn)
+    implicit none
+
+    type (c_ptr), value                :: mloc             ! Pointer to PDM_mesh_location object
+    integer, intent(in)                :: i_part           ! Partition identifier
+    integer, intent(in)                :: n_cell           ! Number of cells
+    integer(kind=pdm_l_num_s), pointer :: cell_vtx_idx(:)  ! Index for cell -> face connectivity (size : ``n_cell`` + 1)
+    integer(kind=pdm_l_num_s), pointer :: cell_vtx(:)      ! Cell -> face connectivity (size : ``cell_face_idx(n_cell+1)``)
+    integer(kind=pdm_g_num_s), pointer :: cell_ln_to_gn(:) ! Cell global ids (size : ``n_cell``)
+    integer, intent(in)                :: n_vtx            ! Number of vertices
+    real(8),                   pointer :: coords(:,:)      ! Vertex coordinates (size : 3 * ``n_vtx``)
+    integer(kind=pdm_g_num_s), pointer :: vtx_ln_to_gn(:)  ! Vertex global ids (size : ``n_vtx``)
+
+    integer(c_int)                     :: c_i_part
+    integer(c_int)                     :: c_n_cell
+    type(c_ptr)                        :: c_cell_vtx_idx = C_NULL_PTR
+    type(c_ptr)                        :: c_cell_vtx     = C_NULL_PTR
+    type(c_ptr)                        :: c_cell_ln_to_gn = C_NULL_PTR
+    integer(c_int)                     :: c_n_vtx
+    type(c_ptr)                        :: c_coords        = C_NULL_PTR
+    type(c_ptr)                        :: c_vtx_ln_to_gn  = C_NULL_PTR
+
+    c_i_part = i_part
+    c_n_cell = n_cell
+    c_n_vtx  = n_vtx
+
+    c_cell_vtx_idx  = c_loc(cell_vtx_idx )
+    c_cell_vtx      = c_loc(cell_vtx     )
+    c_cell_ln_to_gn = c_loc(cell_ln_to_gn)
+    c_coords        = c_loc(coords       )
+    c_vtx_ln_to_gn  = c_loc(vtx_ln_to_gn )
+
+    call PDM_mesh_location_nodal_part_set_cf(mloc,            &
+                                             c_i_part,        &
+                                             c_n_cell,        &
+                                             c_cell_vtx_idx,  &
+                                             c_cell_vtx,      &
+                                             c_cell_ln_to_gn, &
+                                             c_n_vtx,         &
+                                             c_coords,        &
+                                             c_vtx_ln_to_gn)
+
+  end subroutine PDM_mesh_location_nodal_part_set_
+
+
+  subroutine PDM_mesh_location_part_set_2d_(mloc,          &
+                                            i_part,        &
+                                            n_face,        &
+                                            face_edge_idx, &
+                                            face_edge,     &
+                                            face_ln_to_gn, &
+                                            n_edge,        &
+                                            edge_vtx,      &
+                                            n_vtx,         &
+                                            coords,        &
+                                            vtx_ln_to_gn)
     ! Set a *surface* mesh partition
     use iso_c_binding
 
@@ -971,12 +1077,11 @@ module pdm_mesh_location
     integer(kind=pdm_l_num_s), pointer :: face_edge(:)     ! Face -> edge connectivity (size : ``face_edge_idx(n_face+1)``)
     integer(kind=pdm_g_num_s), pointer :: face_ln_to_gn(:) ! Face global ids (size : ``n_face``)
     integer, intent(in)                :: n_edge           ! Number of edges
-    integer(kind=pdm_l_num_s), pointer :: edge_vtx_idx(:)  ! Index for edge -> vertex connectivity **(unused)**
     integer(kind=pdm_l_num_s), pointer :: edge_vtx(:)      ! Edge -> vertex connectivity (size : 2 * ``n_edge``)
-    integer(kind=pdm_g_num_s), pointer :: edge_ln_to_gn(:) ! Edge global ids **(unused)**
     integer, intent(in)                :: n_vtx            ! Number of vertices
     real(8),                   pointer :: coords(:,:)      ! Vertex coordinates (size : 3 * ``n_vtx``)
     integer(kind=pdm_g_num_s), pointer :: vtx_ln_to_gn(:)  ! Vertex global ids (size : ``n_vtx``)
+
 
     integer(c_int)                     :: c_i_part
     integer(c_int)                     :: c_n_face
@@ -984,9 +1089,7 @@ module pdm_mesh_location
     type(c_ptr)                        :: c_face_edge     = C_NULL_PTR
     type(c_ptr)                        :: c_face_ln_to_gn = C_NULL_PTR
     integer(c_int)                     :: c_n_edge
-    type(c_ptr)                        :: c_edge_vtx_idx  = C_NULL_PTR
     type(c_ptr)                        :: c_edge_vtx      = C_NULL_PTR
-    type(c_ptr)                        :: c_edge_ln_to_gn = C_NULL_PTR
     integer(c_int)                     :: c_n_vtx
     type(c_ptr)                        :: c_coords        = C_NULL_PTR
     type(c_ptr)                        :: c_vtx_ln_to_gn  = C_NULL_PTR
@@ -997,29 +1100,81 @@ module pdm_mesh_location
     c_n_vtx  = n_vtx
 
     c_face_edge_idx = c_loc(face_edge_idx)
-    c_face_edge     = c_loc(face_edge    )
+    c_face_edge     = c_loc(face_edge)
     c_face_ln_to_gn = c_loc(face_ln_to_gn)
-    c_edge_vtx_idx  = c_loc(edge_vtx_idx )
     c_edge_vtx      = c_loc(edge_vtx     )
-    c_edge_ln_to_gn = c_loc(edge_ln_to_gn)
     c_coords        = c_loc(coords       )
     c_vtx_ln_to_gn  = c_loc(vtx_ln_to_gn )
 
-    call PDM_mesh_location_part_set_2d_cf (mloc, &
-                                           c_i_part, &
-                                           c_n_face, &
-                                           c_face_edge_idx, &
-                                           c_face_edge, &
-                                           c_face_ln_to_gn, &
-                                           c_n_edge, &
-                                           c_edge_vtx_idx, &
-                                           c_edge_vtx, &
-                                           c_edge_ln_to_gn, &
-                                           c_n_vtx, &
-                                           c_coords, &
-                                           c_vtx_ln_to_gn)
+    call PDM_mesh_location_part_set_2d_cf(mloc, &
+                                          c_i_part, &
+                                          c_n_face, &
+                                          c_face_edge_idx, &
+                                          c_face_edge, &
+                                          c_face_ln_to_gn, &
+                                          c_n_edge, &
+                                          c_edge_vtx, &
+                                          c_n_vtx, &
+                                          c_coords, &
+                                          c_vtx_ln_to_gn)
 
   end subroutine PDM_mesh_location_part_set_2d_
+
+
+  subroutine PDM_mesh_location_nodal_part_set_2d_(mloc,          &
+                                                  i_part,        &
+                                                  n_face,        &
+                                                  face_vtx_idx,  &
+                                                  face_vtx,      &
+                                                  face_ln_to_gn, &
+                                                  n_vtx,         &
+                                                  coords,        &
+                                                  vtx_ln_to_gn)
+    ! Set a *surface* mesh partition defined by nodal connectivity
+    use iso_c_binding
+
+    implicit none
+
+    type (c_ptr), value                :: mloc             ! Pointer to PDM_mesh_location object
+    integer, intent(in)                :: i_part           ! Partition identifier
+    integer, intent(in)                :: n_face           ! Number of faces
+    integer(kind=pdm_l_num_s), pointer :: face_vtx_idx(:)  ! Index for face -> vertex connectivity (size : ``n_face`` + 1)
+    integer(kind=pdm_l_num_s), pointer :: face_vtx(:)      ! Face -> vertex connectivity (size : ``face_vtx_idx(n_face+1)``)
+    integer(kind=pdm_g_num_s), pointer :: face_ln_to_gn(:) ! Face global ids (size : ``n_face``)
+    integer, intent(in)                :: n_vtx            ! Number of vertices
+    double precision,          pointer :: coords(:,:)      ! Vertex coordinates (size : 3 * ``n_vtx``)
+    integer(kind=pdm_g_num_s), pointer :: vtx_ln_to_gn(:)  ! Vertex global ids (size : ``n_vtx``)
+
+    integer(c_int)                     :: c_i_part
+    integer(c_int)                     :: c_n_face
+    type(c_ptr)                        :: c_face_vtx_idx  = C_NULL_PTR
+    type(c_ptr)                        :: c_face_vtx      = C_NULL_PTR
+    type(c_ptr)                        :: c_face_ln_to_gn = C_NULL_PTR
+    integer(c_int)                     :: c_n_vtx
+    type(c_ptr)                        :: c_coords        = C_NULL_PTR
+    type(c_ptr)                        :: c_vtx_ln_to_gn  = C_NULL_PTR
+
+    c_i_part = i_part
+    c_n_face = n_face
+    c_n_vtx  = n_vtx
+
+    c_face_vtx_idx  = c_loc(face_vtx_idx)
+    c_face_vtx      = c_loc(face_vtx)
+    c_face_ln_to_gn = c_loc(face_ln_to_gn)
+    c_coords        = c_loc(coords       )
+    c_vtx_ln_to_gn  = c_loc(vtx_ln_to_gn )
+
+    call PDM_mesh_location_nodal_part_set_2d_cf(mloc, &
+                                                c_i_part, &
+                                                c_n_face, &
+                                                c_face_vtx_idx, &
+                                                c_face_vtx, &
+                                                c_face_ln_to_gn, &
+                                                c_n_vtx, &
+                                                c_coords, &
+                                                c_vtx_ln_to_gn)
+
+  end subroutine PDM_mesh_location_nodal_part_set_2d_
 
 
 

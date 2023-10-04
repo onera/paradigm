@@ -1273,7 +1273,7 @@ PDM_mesh_location_mesh_global_data_set
 
 /**
  *
- * \brief Set a part of a mesh
+ * \brief Set a *volume* mesh partition
  *
  * \param [in]   id            Pointer to \ref PDM_mesh_location object
  * \param [in]   i_part        Partition to define
@@ -1287,7 +1287,7 @@ PDM_mesh_location_mesh_global_data_set
  * \param [in]   face_ln_to_gn Local face numbering to global face numbering
  * \param [in]   n_vtx         Number of vertices
  * \param [in]   coords        Coordinates
- * \param [in]   vtx_ln_to_gn  Local vertex numbering to global vertex numbering
+ * \param [in]   vtx_ln_to_gn  Local vertex numbering to Vertex global numbering
  *
  */
 void
@@ -1309,8 +1309,6 @@ PDM_mesh_location_part_set
 )
 {
   ml->mesh_dimension = 3;
-
-  PDM_UNUSED(face_ln_to_gn);
 
   /*
    * Creation de mesh nodal
@@ -1351,6 +1349,57 @@ PDM_mesh_location_part_set
                                           PDM_OWNERSHIP_KEEP);
 }
 
+
+/**
+ *
+ * \brief Set a *volume* mesh partition defined by nodal connectivity
+ *
+ * The mesh is assumed to contain only standard elements
+ * (tetrahedra, pyramids, prisms, hexahedra).
+ *
+ * \param [in]   ml            Pointer to \ref PDM_mesh_location object
+ * \param [in]   i_part        Partition to define
+ * \param [in]   n_cell        Number of cells
+ * \param [in]   cell_vtx_idx  Index in the cell -> vertex connectivity
+ * \param [in]   cell_vtx      Cell -> vertex connectivity
+ * \param [in]   cell_ln_to_gn Cell global ids
+ * \param [in]   n_vtx         Number of vertices
+ * \param [in]   coords        Coordinates
+ * \param [in]   vtx_ln_to_gn  Vertex global ids
+ *
+ */
+void
+PDM_mesh_location_nodal_part_set
+(
+       PDM_mesh_location_t *ml,
+ const int                  i_part,
+ const int                  n_cell,
+ const int                 *cell_vtx_idx,
+ const int                 *cell_vtx,
+ const PDM_g_num_t         *cell_ln_to_gn,
+ const int                  n_vtx,
+ const double              *coords,
+ const PDM_g_num_t         *vtx_ln_to_gn
+)
+{
+  ml->mesh_dimension = 3;
+
+  PDM_part_mesh_nodal_coord_set(ml->mesh_nodal,
+                                i_part,
+                                n_vtx,
+                                coords,
+                                vtx_ln_to_gn,
+                                PDM_OWNERSHIP_USER);
+
+  PDM_part_mesh_nodal_cells_cellvtx_add(ml->mesh_nodal,
+                                        i_part,
+                                        n_cell,
+                                        cell_vtx_idx,
+                                        cell_vtx,
+                                        cell_ln_to_gn,
+                                        PDM_OWNERSHIP_KEEP);
+}
+
 /**
  *
  * \brief Set a part of a mesh
@@ -1374,21 +1423,19 @@ PDM_mesh_location_user_extract_set
 
 /**
  *
- * \brief Set a part of a mesh (2d version)
+ * \brief Set a *surface* mesh partition
  *
- * \param [in]   id            Pointer to \ref PDM_mesh_location object
- * \param [in]   i_part        Partition to define
- * \param [in]   n_cell        Number of cells
- * \param [in]   cell_edge_idx Index in the cell -> edge connectivity
- * \param [in]   cell_edge     cell -> edge connectivity
- * \param [in]   cell_ln_to_gn Local cell numbering to global cel numbering
- * \param [in]   n_edge        Number of edges
- * \param [in]   edge_vtx_idx  Index in the edge -> vertex connectivity
- * \param [in]   edge_vtx      edge -> vertex connectivity
- * \param [in]   edge_ln_to_gn Local edge numbering to global edge numbering
- * \param [in]   n_vtx         Number of vertices
- * \param [in]   coords        Coordinates
- * \param [in]   vtx_ln_to_gn  Local vertex numbering to global vertex numbering
+ * \param [in]   id             Pointer to \ref PDM_mesh_location object
+ * \param [in]   i_part         Partition to define
+ * \param [in]   n_face         Number of faces
+ * \param [in]   face_edge_idx  Index for face -> edge connectivity
+ * \param [in]   face_edge      Face -> edge connectivity
+ * \param [in]   face_ln_to_gn  Face global ids
+ * \param [in]   n_edge         Number of edges
+ * \param [in]   edge_vtx       Edge -> vertex connectivity
+ * \param [in]   n_vtx          Number of vertices
+ * \param [in]   coords         Coordinates
+ * \param [in]   vtx_ln_to_gn   Vertex global ids
  *
  */
 
@@ -1397,26 +1444,18 @@ PDM_mesh_location_part_set_2d
 (
        PDM_mesh_location_t *ml,
  const int                  i_part,
- const int                  n_cell,
- const int                 *cell_edge_idx,
- const int                 *cell_edge,
- const PDM_g_num_t         *cell_ln_to_gn,
+ const int                  n_face,
+ const int                 *face_edge_idx,
+ const int                 *face_edge,
+ const PDM_g_num_t         *face_ln_to_gn,
  const int                  n_edge,
- const int                 *edge_vtx_idx,
  const int                 *edge_vtx,
- const PDM_g_num_t         *edge_ln_to_gn,
  const int                  n_vtx,
  const double              *coords,
  const PDM_g_num_t         *vtx_ln_to_gn
 )
 {
   ml->mesh_dimension = 2;
-
-  PDM_UNUSED (edge_ln_to_gn);
-
-  /*
-   * Creation de mesh nodal
-   */
 
   PDM_part_mesh_nodal_coord_set(ml->mesh_nodal,
                                 i_part,
@@ -1425,35 +1464,64 @@ PDM_mesh_location_part_set_2d
                                 vtx_ln_to_gn,
                                 PDM_OWNERSHIP_USER);
 
-  PDM_UNUSED(edge_vtx_idx);
-
-  // ml->face_vtx_n[i_part]  = malloc (sizeof(PDM_l_num_t) * n_edge);
-  // ml->cell_face_n[i_part] = malloc (sizeof(PDM_l_num_t) * n_cell);
-
-  // PDM_l_num_t *edge_vtx_nb  = ml->face_vtx_n[i_part];
-  // PDM_l_num_t *cell_edge_nb = ml->cell_face_n[i_part];
-
-  // for (int i = 0; i < n_edge; i++) {
-  //   edge_vtx_nb[i] = edge_vtx_idx[i+1] - edge_vtx_idx[i];
-  // }
-
-  // for (int i = 0; i < n_cell; i++) {
-  //   cell_edge_nb[i] = cell_edge_idx[i+1] - cell_edge_idx[i];
-  // }
+    PDM_part_mesh_nodal_face2d_faceedge_add(ml->mesh_nodal,
+                                            i_part,
+                                            n_face,
+                                            n_edge,
+                                            edge_vtx,
+                                            face_edge_idx,
+                                            face_edge,
+                                            face_ln_to_gn,
+                                            PDM_OWNERSHIP_KEEP);
+}
 
 
-  PDM_part_mesh_nodal_face2d_faceedge_add(ml->mesh_nodal,
-                                          i_part,
-                                          n_cell,
-                                          n_edge,
-                                          // edge_vtx_idx,
-                                          // edge_vtx_nb,
-                                          edge_vtx,
-                                          cell_edge_idx,
-                                          // cell_edge_nb,
-                                          cell_edge,
-                                          cell_ln_to_gn,
-                                          PDM_OWNERSHIP_KEEP);
+/**
+ *
+ * \brief Set a *surface* mesh partition with nodal connectivity
+ *
+ * \param [in]   ml             Pointer to \ref PDM_mesh_location object
+ * \param [in]   i_part         Partition to define
+ * \param [in]   n_face         Number of faces
+ * \param [in]   face_vtx_idx   Index for face -> vertex connectivity
+ * \param [in]   face_vtx       Face -> vertex connectivity
+ * \param [in]   face_ln_to_gn  Face global ids
+ * \param [in]   n_vtx          Number of vertices
+ * \param [in]   coords         Coordinates
+ * \param [in]   vtx_ln_to_gn   Vertex global ids
+ *
+ */
+
+void
+PDM_mesh_location_nodal_part_set_2d
+(
+       PDM_mesh_location_t *ml,
+ const int                  i_part,
+ const int                  n_face,
+ const int                 *face_vtx_idx,
+ const int                 *face_vtx,
+ const PDM_g_num_t         *face_ln_to_gn,
+ const int                  n_vtx,
+ const double              *coords,
+ const PDM_g_num_t         *vtx_ln_to_gn
+)
+{
+  ml->mesh_dimension = 2;
+
+  PDM_part_mesh_nodal_coord_set(ml->mesh_nodal,
+                                i_part,
+                                n_vtx,
+                                coords,
+                                vtx_ln_to_gn,
+                                PDM_OWNERSHIP_USER);
+
+  PDM_part_mesh_nodal_faces_facevtx_add(ml->mesh_nodal,
+                                        i_part,
+                                        n_face,
+                                        face_vtx_idx,
+                                        face_vtx,
+                                        face_ln_to_gn,
+                                        PDM_OWNERSHIP_KEEP);
 }
 
 

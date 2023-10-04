@@ -65,19 +65,41 @@ cdef extern from "pdm_mesh_location.h":
   # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
   # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+  void PDM_mesh_location_nodal_part_set(      PDM_mesh_location_t *ml,
+                                        const int                  i_part,
+                                        const int                  n_cell,
+                                        const int                 *cell_vtx_idx,
+                                        const int                 *cell_vtx,
+                                        const PDM_g_num_t         *cell_ln_to_gn,
+                                        const int                  n_vtx,
+                                        const double              *coords,
+                                        const PDM_g_num_t         *vtx_ln_to_gn)
+  # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+  # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
   void PDM_mesh_location_part_set_2d(PDM_mesh_location_t *ml,
                                      int                  i_part,
-                                     int                  n_cell,
-                                     int                 *cell_edge_idx,
-                                     int                 *cell_edge,
-                                     PDM_g_num_t         *cell_ln_to_gn,
+                                     int                  n_face,
+                                     int                 *face_edge_idx,
+                                     int                 *face_edge,
+                                     PDM_g_num_t         *face_ln_to_gn,
                                      int                  n_edge,
-                                     int                 *edge_vtx_idx,
                                      int                 *edge_vtx,
-                                     PDM_g_num_t         *edge_ln_to_gn,
                                      int                  n_vtx,
                                      double              *coords,
                                      PDM_g_num_t         *vtx_ln_to_gn)
+  # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+  # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+  void PDM_mesh_location_nodal_part_set_2d(      PDM_mesh_location_t *ml,
+                                           const int                  i_part,
+                                           const int                  n_face,
+                                           const int                 *face_vtx_idx,
+                                           const int                 *face_vtx,
+                                           const PDM_g_num_t         *face_ln_to_gn,
+                                           const int                  n_vtx,
+                                           const double              *coords,
+                                           const PDM_g_num_t         *vtx_ln_to_gn)
   # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
   # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -167,6 +189,7 @@ cdef class MeshLocation:
   # ************************************************************************
   # > Class attributes
   cdef PDM_mesh_location_t* _ml
+  cdef MPI.Comm py_comm
   cdef int _n_point_cloud
   cdef int _n_src_part
   cdef int _reverse_enabled
@@ -192,6 +215,7 @@ cdef class MeshLocation:
     """
 
     # ::::::::::::::::::::::::::::::::::::::::::::::::::
+    self.py_comm = comm
     self._n_point_cloud = n_point_cloud
     self._n_tgt_part_per_cloud = [0 for i in range(n_point_cloud)]
     # ::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -227,7 +251,6 @@ cdef class MeshLocation:
   # ------------------------------------------------------------------------
   def cloud_set(self, int i_point_cloud,
                       int i_part,
-                      int n_points, # TODO: remove
                       NPY.ndarray[NPY.double_t  , mode='c', ndim=1] coords,
                       NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1] gnum,
                       ):
@@ -239,10 +262,10 @@ cdef class MeshLocation:
     Parameters:
       i_point_cloud (int)                        : Point cloud identifier
       i_part        (int)                        : Partition identifier
-      n_points      (int)                        : Number of points
-      coords        (np.ndarray[np.double_t])    : Point coordinates
-      gnum          (np.ndarray[npy_pdm_gnum_t]) : Point global ids
+      coords        (bp.ndarray[np.double_t])    : Point coordinates
+      gnum          (bp.ndarray[npy_pdm_gnum_t]) : Point global ids
     """
+    cdef int n_points = len(gnum)
     PDM_mesh_location_cloud_set(self._ml,
                                 i_point_cloud,
                                 i_part,
@@ -252,9 +275,9 @@ cdef class MeshLocation:
 
 
   # ------------------------------------------------------------------------
-  def mesh_global_data_set(self, int n_part):
+  def mesh_n_part_set(self, int n_part):
     """
-    mesh_global_data_set(n_part)
+    mesh_n_part_set(n_part)
 
     Set the number of partitions of the mesh
 
@@ -266,36 +289,33 @@ cdef class MeshLocation:
 
   # ------------------------------------------------------------------------
   def part_set(self, int i_part,
-                     int n_cell, # TODO: remove
                      NPY.ndarray[NPY.int32_t   , mode='c', ndim=1] cell_face_idx,
                      NPY.ndarray[NPY.int32_t   , mode='c', ndim=1] cell_face,
                      NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1] cell_ln_to_gn,
-                     int n_face, # TODO: remove
                      NPY.ndarray[NPY.int32_t   , mode='c', ndim=1] face_vtx_idx,
                      NPY.ndarray[NPY.int32_t   , mode='c', ndim=1] face_vtx,
                      NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1] face_ln_to_gn,
-                     int n_vtx, # TODO: remove
                      NPY.ndarray[NPY.double_t  , mode='c', ndim=1] coords,
                      NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1] vtx_ln_to_gn):
     """
-    part_set(i_part, n_cell, cell_face_idx, cell_face, cell_ln_to_gn, n_face, face_vtx_idx, face_vtx, face_ln_to_gn, n_vtx, coords, vtx_ln_to_gn)
+    part_set(i_part, cell_face_idx, cell_face, cell_ln_to_gn, face_vtx_idx, face_vtx, face_ln_to_gn, coords, vtx_ln_to_gn)
 
     Set a *volume* mesh partition
 
     Parameters:
       i_part        (int)                        : Partition identifier
-      n_cell        (int)                        : Number of cells
       cell_face_idx (np.ndarray[np.int32_t])     : Index for cell -> face connectivity
       cell_face     (np.ndarray[np.int32_t])     : Cell -> face connectivity
       cell_ln_to_gn (np.ndarray[npy_pdm_gnum_t]) : Cell global ids
-      n_face        (int)                        : Number of faces
       face_vtx_idx  (np.ndarray[np.int32_t])     : Index for face -> vertex connectivity
       face_vtx      (np.ndarray[np.int32_t])     : Face -> vertex connectivity
       face_ln_to_gn (np.ndarray[npy_pdm_gnum_t]) : Face global ids
-      n_vtx         (int)                        : Number of vertices
       coords        (np.ndarray[np.double_t])    : Vertex coordinates
       vtx_ln_to_gn  (np.ndarray[npy_pdm_gnum_t]) : Vertex global ids
     """
+    cdef int n_cell = len(cell_face_idx) - 1
+    cdef int n_face = len(face_vtx_idx)  - 1
+    cdef int n_vtx  = len(vtx_ln_to_gn)
     PDM_mesh_location_part_set(self._ml,
                                i_part,
                                n_cell,
@@ -311,37 +331,66 @@ cdef class MeshLocation:
                 <PDM_g_num_t*> vtx_ln_to_gn.data)
 
   # ------------------------------------------------------------------------
+  def nodal_part_set(self, int i_part,
+                     NPY.ndarray[NPY.int32_t   , mode='c', ndim=1] cell_vtx_idx,
+                     NPY.ndarray[NPY.int32_t   , mode='c', ndim=1] cell_vtx,
+                     NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1] cell_ln_to_gn,
+                     NPY.ndarray[NPY.double_t  , mode='c', ndim=1] coords,
+                     NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1] vtx_ln_to_gn):
+    """
+    nodal_part_set(i_part, cell_vtx_idx, cell_vtx, cell_ln_to_gn, coords, vtx_ln_to_gn)
+
+    Set a *volume* mesh partition defined by nodal connectivity
+
+    The mesh is assumed to contain only standard elements
+    (tetrahedra, pyramids, prisms, hexahedra).
+
+    Parameters:
+      i_part        (int)                        : Partition to define
+      cell_vtx_idx  (np.ndarray[np.int32_t])     : Index for cell -> vertex connectivity
+      cell_vtx      (np.ndarray[np.int32_t])     : Cell -> vertex connectivity
+      cell_ln_to_gn (np.ndarray[npy_pdm_gnum_t]) : Cell global ids
+      coords        (np.ndarray[np.double_t])    : Coordinates
+      vtx_ln_to_gn  (np.ndarray[npy_pdm_gnum_t]) : Vertex global ids
+    """
+    cdef int n_cell = len(cell_vtx_idx) - 1
+    cdef int n_vtx  = len(vtx_ln_to_gn)
+    PDM_mesh_location_nodal_part_set(self._ml,
+                                     i_part,
+                                     n_cell,
+                      <int*>         cell_vtx_idx.data,
+                      <int*>         cell_vtx.data,
+                      <PDM_g_num_t*> cell_ln_to_gn.data,
+                                     n_vtx,
+                      <double*>      coords.data,
+                      <PDM_g_num_t*> vtx_ln_to_gn.data)
+
+  # ------------------------------------------------------------------------
   def part_set_2d(self, int i_part,
-                  int n_face,  # TODO: remove
                   NPY.ndarray[NPY.int32_t   , mode='c', ndim=1] face_edge_idx,
                   NPY.ndarray[NPY.int32_t   , mode='c', ndim=1] face_edge,
                   NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1] face_ln_to_gn,
-                  int n_edge,  # TODO: remove
-                  NPY.ndarray[NPY.int32_t   , mode='c', ndim=1] edge_vtx_idx, # TODO: remove
                   NPY.ndarray[NPY.int32_t   , mode='c', ndim=1] edge_vtx,
-                  NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1] edge_ln_to_gn,
-                  int n_vtx,  # TODO: remove
                   NPY.ndarray[NPY.double_t  , mode='c', ndim=1] coords,
                   NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1] vtx_ln_to_gn):
     """
-    part_set_2d(i_part, n_face, face_edge_idx, face_edge, face_ln_to_gn, n_edge, edge_vtx_idx, edge_vtx, edge_ln_to_gn, n_vtx, coords, vtx_ln_to_gn)
+    part_set_2d(i_part, face_edge_idx, face_edge, face_ln_to_gn, edge_vtx, coords, vtx_ln_to_gn)
 
     Set a *surface* mesh partition
 
     Parameters:
       i_part        (int)                        : Partition identifier
-      n_face        (int)                        : Number of faces
       face_edge_idx (np.ndarray[np.int32_t])     : Index for face -> edge connectivity
       face_edge     (np.ndarray[np.int32_t])     : Face -> edge connectivity
       face_ln_to_gn (np.ndarray[npy_pdm_gnum_t]) : Face global ids
-      n_edge        (int)                        : Number of edges
-      edge_vtx_idx  (np.ndarray[np.int32_t])     : Index for edge -> vertex connectivity
       edge_vtx      (np.ndarray[np.int32_t])     : Edge -> vertex connectivity
-      edge_ln_to_gn (np.ndarray[npy_pdm_gnum_t]) : Edge global ids
-      n_vtx         (int)                        : Number of vertices
       coords        (np.ndarray[np.double_t])    : Vertex coordinates
       vtx_ln_to_gn  (np.ndarray[npy_pdm_gnum_t]) : Vertex global ids
     """
+    cdef int n_vtx  = len(vtx_ln_to_gn)
+    cdef int n_edge = len(edge_vtx)//2
+    cdef int n_face = len(face_edge_idx) - 1
+
     PDM_mesh_location_part_set_2d(self._ml,
                                   i_part,
                                   n_face,
@@ -349,12 +398,43 @@ cdef class MeshLocation:
                    <int*>         face_edge.data,
                    <PDM_g_num_t*> face_ln_to_gn.data,
                                   n_edge,
-                   <int*>         edge_vtx_idx.data,
                    <int*>         edge_vtx.data,
-                   <PDM_g_num_t*> edge_ln_to_gn.data,
                                   n_vtx,
                    <double*>      coords.data,
                    <PDM_g_num_t*> vtx_ln_to_gn.data)
+
+  # ------------------------------------------------------------------------
+  def nodal_part_set_2d(self, int i_part,
+                        NPY.ndarray[NPY.int32_t   , mode='c', ndim=1] face_vtx_idx,
+                        NPY.ndarray[NPY.int32_t   , mode='c', ndim=1] face_vtx,
+                        NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1] face_ln_to_gn,
+                        NPY.ndarray[NPY.double_t  , mode='c', ndim=1] coords,
+                        NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1] vtx_ln_to_gn):
+    """
+    nodal_part_set_2d(i_part, face_vtx_idx, face_vtx, face_ln_to_gn, coords, vtx_ln_to_gn)
+
+    Set a *surface* mesh partition with nodal connectivity
+
+    Parameters:
+      i_part        (int)                        : Partition identifier
+      face_vtx_idx  (np.ndarray[np.int32_t])     : Index for face -> vertex connectivity
+      face_vtx      (np.ndarray[np.int32_t])     : Face -> vertex connectivity
+      face_ln_to_gn (np.ndarray[npy_pdm_gnum_t]) : Face global ids
+      coords        (np.ndarray[np.double_t])    : Vertex coordinates
+      vtx_ln_to_gn  (np.ndarray[npy_pdm_gnum_t]) : Vertex global ids
+    """
+    cdef int n_vtx  = len(vtx_ln_to_gn)
+    cdef int n_face = len(face_vtx_idx) - 1
+
+    PDM_mesh_location_nodal_part_set_2d(self._ml,
+                                        i_part,
+                                        n_face,
+                         <int*>         face_vtx_idx.data,
+                         <int*>         face_vtx.data,
+                         <PDM_g_num_t*> face_ln_to_gn.data,
+                                        n_vtx,
+                         <double*>      coords.data,
+                         <PDM_g_num_t*> vtx_ln_to_gn.data)
 
   # ------------------------------------------------------------------------
   def tolerance_set(self, double tolerance):
