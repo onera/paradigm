@@ -5,24 +5,8 @@ Pre-/co-/post-processing algorithms
 ###################################
 
 
+.. include:: mesh_location.rst
 
-Point cloud localization inside a mesh
-======================================
-
-C API
------
-
-.. doxygenfile:: pdm_mesh_location.h
-
-Fortran API
------------
-.. f:automodule:: pdm_mesh_location
-
-Python API
-----------
-
-.. autoclass:: Pypdm.Pypdm.MeshLocation
-  :members:
 
 
 Other

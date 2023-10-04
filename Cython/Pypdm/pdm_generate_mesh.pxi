@@ -192,6 +192,17 @@ def generate_mesh_rectangle_ngon(MPI.Comm             comm,
     pvtx_ln_to_gn .append(create_numpy_g(_pvtx_ln_to_gn [i_part], _pn_vtx [i_part]))
     pedge_ln_to_gn.append(create_numpy_g(_pedge_ln_to_gn[i_part], _pn_edge[i_part]))
     pface_ln_to_gn.append(create_numpy_g(_pface_ln_to_gn[i_part], _pn_face[i_part]))
+  free(_pn_vtx        )
+  free(_pn_edge       )
+  free(_pn_face       )
+  free(_pvtx_coord    )
+  free(_pedge_vtx     )
+  free(_pface_edge_idx)
+  free(_pface_edge    )
+  free(_pface_vtx     )
+  free(_pvtx_ln_to_gn )
+  free(_pedge_ln_to_gn)
+  free(_pface_ln_to_gn)
 
   return {
     "pn_vtx"         : pn_vtx,
