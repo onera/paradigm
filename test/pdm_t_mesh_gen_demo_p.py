@@ -160,13 +160,13 @@ wrt = PDM.Writer("Ensight",
                  PDM._PDM_WRITER_TOPO_VARIABLE,
                  PDM._PDM_WRITER_OFF,
                  "mesh_gen_demo",
-                 "rectange_ngon",
+                 "rectangle_ngon",
                  comm,
                  PDM._PDM_IO_KIND_MPI_SIMPLE,
                  1.,
                  "")
 
-id_geom = wrt.geom_create("rectange_ngon",
+id_geom = wrt.geom_create("rectangle_ngon",
                           n_part)
 
 id_var_part = wrt.var_create(PDM._PDM_WRITER_OFF,
@@ -179,19 +179,13 @@ wrt.step_beg(0.)
 for i_part in range(n_part):
   wrt.geom_coord_set(id_geom,
                      i_part,
-                     # mesh["pn_vtx"][i_part],
                      mesh["pvtx_coord"][i_part],
                      mesh["pvtx_ln_to_gn"][i_part])
 
   wrt.geom_cell2d_cellface_add(id_geom,
                                i_part,
-                               # mesh["pn_face"][i_part],
-                               # mesh["pn_edge"][i_part],
-                               # None,
-                               # None,
                                mesh["pedge_vtx"][i_part],
                                mesh["pface_edge_idx"][i_part],
-                               # None,
                                mesh["pface_edge"][i_part],
                                mesh["pface_ln_to_gn"][i_part])
 
