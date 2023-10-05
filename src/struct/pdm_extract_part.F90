@@ -745,6 +745,73 @@ module pdm_extract_part
 
   end subroutine PDM_extract_part_ln_to_gn_get
 
+
+  !>
+  !!
+  !! \brief Get Parent global numbering of entity 
+  !!
+  !! \param [in]  extrp               PDM_extract_part_t instance
+  !! \param [in]  i_part_out          Number of final partition
+  !! \param [in]  entity_type         Type of entity
+  !! \param [out] n_entity            Number of entity
+  !! \param [out] parent_ln_to_gn     Entity global numbering
+  !! \param [in]  ownership           Tell if you want ownership of resulting
+  !!
+  !!
+
+  subroutine PDM_extract_part_parent_ln_to_gn_get (extrp,            &
+                                                   i_part_out,       &
+                                                   entity_type,      &
+                                                   n_entity,         &
+                                                   parent_ln_to_gn, &
+                                                   ownership)
+
+    use iso_c_binding
+    implicit none
+
+    type(c_ptr), value                   :: extrp
+    integer, intent(in)                  :: i_part_out
+    integer, intent(in)                  :: entity_type
+    integer, intent(in)                  :: ownership
+    integer                              :: n_entity
+    integer(kind = PDM_g_num_s), pointer :: parent_ln_to_gn(:)
+
+    type(c_ptr)                          :: c_parent_ln_to_gn = C_NULL_PTR
+
+    interface
+      function pdm_extract_part_parent_ln_to_gn_get_c (extrp,            &
+                                                       i_part_out,       &
+                                                       entity_type,      &
+                                                       parent_ln_to_gn, &
+                                                       ownership)        &
+      result (n_entity)                                                  &
+      bind (c, name='PDM_extract_part_parent_ln_to_gn_get')
+        use iso_c_binding
+        implicit none
+
+        type(c_ptr),    value :: extrp
+        integer(c_int), value :: i_part_out
+        integer(c_int), value :: entity_type
+        integer(c_int), value :: ownership
+        integer(c_int)        :: n_entity
+        type(c_ptr)           :: parent_ln_to_gn
+
+      end function pdm_extract_part_parent_ln_to_gn_get_c
+    end interface
+
+    n_entity = pdm_extract_part_parent_ln_to_gn_get_c (extrp,              &
+                                                       i_part_out,         &
+                                                       entity_type,        &
+                                                       c_parent_ln_to_gn,  &
+                                                       ownership)
+
+    call c_f_pointer(c_parent_ln_to_gn, &
+                     parent_ln_to_gn,   &
+                     [n_entity])
+
+  end subroutine PDM_extract_part_parent_ln_to_gn_get
+
+
   !>
   !!
   !! \brief Get parent global numbering of entity in extraction
@@ -875,6 +942,47 @@ module pdm_extract_part
 
   end subroutine PDM_extract_part_parent_lnum_get
 
+  subroutine PDM_extract_part_part_to_part_get (extrp,       &
+                                                entity_type, &
+                                                ptp,         &
+                                                ownership)
+    use iso_c_binding
+    implicit none
+
+    type(c_ptr)                          :: extrp
+    integer, intent(in)                  :: entity_type
+    type(c_ptr)                          :: ptp
+    integer, intent(in)                  :: ownership
+
+
+    interface
+
+      subroutine PDM_extract_part_part_to_part_get_c (extrp,       &
+                                                       entity_type, &
+                                                       ptp,         &
+                                                       ownership)   &
+        bind (c, name='PDM_extract_part_part_to_part_get')
+        use iso_c_binding
+        implicit none
+    
+        type(c_ptr), value           :: extrp
+        integer(c_int), value        :: entity_type
+        type(c_ptr)                  :: ptp
+        integer(c_int), value        :: ownership
+      end subroutine PDM_extract_part_part_to_part_get_c
+
+    end interface
+
+    integer(c_int) :: c_entity_type
+    integer(c_int) :: c_ownership
+
+    c_entity_type = entity_type 
+    c_ownership   = ownership
+
+    call PDM_extract_part_part_to_part_get_c (extrp, c_entity_type, ptp, c_ownership) 
+
+   end subroutine PDM_extract_part_part_to_part_get
+
   subroutine PDM_extract_part_vtx_coord_get (extrp,            &
                                              i_part_out,       &
                                              n_entity,         &
@@ -921,49 +1029,5 @@ module pdm_extract_part
                      [3,n_entity])
 
   end subroutine PDM_extract_part_vtx_coord_get
-
-  subroutine PDM_extract_part_part_to_part_get (extrp,       &
-                                                entity_type, &
-                                                ptp,         &
-                                                ownership)
-    use iso_c_binding
-    implicit none
-
-    type(c_ptr)                          :: extrp
-    integer, intent(in)                  :: entity_type
-    type(c_ptr)                          :: ptp
-    integer, intent(in)                  :: ownership
-
-
-    interface
-
-      subroutine PDM_extract_part_part_to_part_get_cf (extrp,       &
-                                                       entity_type, &
-                                                       ptp,         &
-                                                       ownership)   &
-        bind (c, name='PDM_extract_part_vtx_coord_get')
-        use iso_c_binding
-        implicit none
-    
-        type(c_ptr), value           :: extrp
-        integer(c_int), value        :: entity_type
-        type(c_ptr)                  :: ptp
-        integer(c_int), value        :: ownership
-      end subroutine PDM_extract_part_part_to_part_get_cf
-
-    end interface
-
-
-!    call ()
-! (
-!        PDM_extract_part_t   *extrp,
-!  const PDM_mesh_entities_t   entity_type,
-!        PDM_part_to_part_t  **ptp,
-!        PDM_ownership_t       ownership
-   end subroutine PDM_extract_part_part_to_part_get
-! );
-
-
-
 
 end module pdm_extract_part

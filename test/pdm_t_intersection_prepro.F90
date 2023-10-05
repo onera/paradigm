@@ -13,6 +13,8 @@ program testf
   use pdm_fortran
   use pdm_generate_mesh
   use pdm_mesh_intersection
+  use pdm_part_to_part
+  use pdm_pointer_array
 
   implicit none
 
@@ -23,7 +25,7 @@ program testf
   !-----------------------------------------------------------
   integer, parameter                 :: comm                           = MPI_COMM_WORLD
   character(len=99)                  :: arg
-  integer                            :: i
+  integer                            :: i, j, k, k1, idx
 
   integer                            :: order                          = 1
   type(c_ptr)                        :: ho_ordering                    = C_NULL_PTR
@@ -36,7 +38,7 @@ program testf
   double precision                   :: cube_lengthx                   = 1.
   double precision                   :: cube_lengthy                   = 1.
   double precision                   :: cube_lengthz                   = 1.
-  integer(kind=pdm_g_num_s)          :: cube_n                         = 10
+  integer(kind=pdm_g_num_s)          :: cube_n                         = 3
   integer(kind=pdm_g_num_s)          :: cube_n_x                       = -1
   integer(kind=pdm_g_num_s)          :: cube_n_y                       = -1
   integer(kind=pdm_g_num_s)          :: cube_n_z                       = -1
@@ -97,9 +99,15 @@ program testf
   integer(kind=pdm_l_num_s)          :: cube_extr_mesh_n_face            = -1
   integer(kind=pdm_l_num_s), pointer :: cube_extr_mesh_face_vtx(:)       => null()
   integer(kind=pdm_l_num_s), pointer :: cube_extr_mesh_face_vtx_idx(:)   => null()
+  integer(kind=pdm_l_num_s)          :: cube_extr_mesh_n_vtx             = -1
+  double precision, pointer          :: cube_extr_mesh_vtx_coord(:,:)    => null()
+  integer(kind=pdm_g_num_s), pointer :: cube_extr_mesh_parent_ln_to_gn(:) => null()
   integer(kind=pdm_l_num_s)          :: sphere_extr_mesh_n_face          = -1
   integer(kind=pdm_l_num_s), pointer :: sphere_extr_mesh_face_vtx(:)     => null()
   integer(kind=pdm_l_num_s), pointer :: sphere_extr_mesh_face_vtx_idx(:) => null()
+  integer(kind=pdm_l_num_s)          :: sphere_extr_mesh_n_vtx           = -1
+  double precision, pointer          :: sphere_extr_mesh_vtx_coord(:,:)  => null()
+  integer(kind=pdm_g_num_s), pointer :: sphere_extr_mesh_parent_ln_to_gn(:) => null()
 
   ! Writer
   type(c_ptr)                       :: wrt
@@ -144,6 +152,35 @@ program testf
 
   type(c_ptr)                   :: cube_extr_mesh                 = C_NULL_PTR
   type(c_ptr)                   :: sphere_extr_mesh               = C_NULL_PTR
+
+  type(c_ptr)                   :: cube_ptp_cell                  = C_NULL_PTR
+  type(c_ptr)                   :: cube_ptp_vtx                   = C_NULL_PTR
+
+  type(c_ptr)                   :: sphere_ptp_face                = C_NULL_PTR
+  type(c_ptr)                   :: sphere_ptp_vtx                 = C_NULL_PTR
+
+  type(PDM_pointer_array_t), pointer    :: null_pointer_array  => null()
+  type(PDM_pointer_array_t), pointer    :: cube_extr_mesh_vtx_coord_stride_r_pt_array => null()
+  type(PDM_pointer_array_t), pointer    :: cube_extr_mesh_vtx_coord_r_pt_array => null()
+  double precision,          pointer    :: cube_extr_mesh_vtx_coord_r(:,:) => null()
+
+  integer                               :: request
+
+  integer(pdm_l_num_s), pointer :: ipart_stride_n_face_candidates(:) => null()
+  integer(pdm_g_num_s), pointer :: ipart_list_of_face_candidates(:) => null()
+  integer(pdm_l_num_s), pointer :: ipart_stride_n_face_candidates_r(:) => null()
+  integer(pdm_g_num_s), pointer :: ipart_list_of_face_candidates_r(:) => null()
+  integer(pdm_l_num_s), pointer :: ipart_list_of_cell_candidates(:) => null()
+
+  integer(pdm_l_num_s), pointer :: ipart_gnum_cell_come_from_cube_extrac_mesh_idx(:) => null()
+  integer(pdm_g_num_s), pointer :: ipart_gnum_cell_come_from_cube_extrac_mesh(:) => null()
+
+  type(PDM_pointer_array_t), pointer :: stride_n_face_candidates      => null()
+  type(PDM_pointer_array_t), pointer :: list_of_face_candidates       => null()
+  type(PDM_pointer_array_t), pointer :: stride_n_face_candidates_r      => null()
+  type(PDM_pointer_array_t), pointer :: list_of_face_candidates_r       => null()
+
+  integer                            :: n_cell_candidates
 
   !-----------------------------------------------------------
   !                Read command line arguments
@@ -202,8 +239,6 @@ program testf
   !                Generate partitionned cube
   !-----------------------------------------------------------
 
-  print *, "*** 1 ***"
-
   call PDM_generate_mesh_parallelepiped_ngon(comm,                        &
                                              cube_elt_type,               & 
                                              order,                       &
@@ -246,7 +281,6 @@ program testf
   !-----------------------------------------------------------
   !                Generate partitionned sphere
   !-----------------------------------------------------------
-  print *, "*** 2 ***"
 
   call PDM_generate_mesh_sphere_ngon(comm,                  &
                                      sphere_elt_type,       &
@@ -276,8 +310,6 @@ program testf
   !                   Writer ensight
   !-----------------------------------------------------------
 
-  print *, "*** 3 ***"
-
   call PDM_writer_create(wrt,                    &
                          "Ensight",              &
                          PDM_WRITER_FMT_ASCII,   &
@@ -290,8 +322,6 @@ program testf
                          1.d0,                   &
                          "")
 
-  print *, "*** 4 ***"
-
   call PDM_writer_geom_create(wrt,          &
                               id_geom_cube, &
                               "cube",       &
@@ -303,9 +333,6 @@ program testf
                               sphere_n_part)
 
   call PDM_writer_step_beg(wrt, 0.d0)
-
-
-  print *, "*** 5 ***"
 
   !  Write geometry
   do ipart = 1, cube_n_part
@@ -362,8 +389,6 @@ program testf
 
   end do
 
-  print *, "*** 6 ***"
-
   call PDM_writer_geom_bloc_add(wrt,                  &
                                 id_geom_sphere,       &
                                 PDM_MESH_NODAL_TRIA3, & ! PDM_MESH_NODAL_TRIA3
@@ -412,8 +437,6 @@ program testf
 
   end do
 
-  print *, "*** 7 ***"
-
   call PDM_writer_geom_write(wrt,             &
                              id_geom_cube)
 
@@ -421,8 +444,6 @@ program testf
                              id_geom_sphere)
 
   call PDM_writer_step_end(wrt)
-
-  print *, "*** 8 ***"
 
   !-----------------------------------------------------------
   !        Search for intersection candidates
@@ -436,6 +457,8 @@ program testf
                                      project_coeff,                         &
                                      comm,                                  &
                                      PDM_OWNERSHIP_USER)
+
+  call PDM_mesh_intersection_tolerance_set (mi, 1.d-3)
 
   call PDM_mesh_intersection_n_part_set (mi,          &
                                          0,           &  ! Attention commence a 0
@@ -526,7 +549,7 @@ program testf
                                     ipart_sphere_face_vtx)
 
     call PDM_mesh_intersection_part_set (mi,                            &
-                                         0,                             &
+                                         1,                             &
                                          ipart-1,                       &
                                          0,                             &
                                          sphere_pn_face(ipart),         &
@@ -537,7 +560,7 @@ program testf
                                          cptr_int_null,                 &
                                          cptr_int_null,                 &
                                          cptr_int_null,                 &
-                                         ipart_sphere_face_edge_idx,    & ! Same as ipart_cube_face_vtx_idx
+                                         ipart_sphere_face_edge_idx,    & ! Same as ipart_sphere_face_vtx_idx
                                          ipart_sphere_face_vtx,         &
                                          cptr_gnum_null,                &
                                          ipart_sphere_face_ln_to_gn,    &
@@ -564,9 +587,9 @@ program testf
   !-----------------------------------------------------------
 
   call PDM_mesh_intersection_free(mi)
-
+  
   !-----------------------------------------------------------
-  !  Get connectivities of extract meshes             
+  !  Get connectivities and other data from extract meshes            
   !-----------------------------------------------------------
 
   call PDM_extract_part_connectivity_get (cube_extr_mesh,                  &
@@ -585,6 +608,19 @@ program testf
                                           cube_extr_mesh_face_vtx_idx,     &
                                           PDM_OWNERSHIP_KEEP)
 
+  call PDM_extract_part_parent_ln_to_gn_get (cube_extr_mesh,                 &
+                                             0,                              &
+                                             PDM_MESH_ENTITY_CELL,           &
+                                             cube_extr_mesh_n_cell,          &
+                                             cube_extr_mesh_parent_ln_to_gn, &
+                                             PDM_OWNERSHIP_KEEP)
+
+  call PDM_extract_part_vtx_coord_get (cube_extr_mesh,           &
+                                       0,                        &
+                                       cube_extr_mesh_n_vtx,     &
+                                       cube_extr_mesh_vtx_coord, &
+                                       PDM_OWNERSHIP_KEEP)
+
   call PDM_extract_part_connectivity_get (sphere_extr_mesh,                &
                                           0,                               & ! A unique partition
                                           PDM_CONNECTIVITY_TYPE_FACE_VTX,  &
@@ -593,16 +629,228 @@ program testf
                                           sphere_extr_mesh_face_vtx_idx,   &
                                           PDM_OWNERSHIP_KEEP)
 
-  !-----------------------------------------------------------
-  !    Push cube results to the initial partitionning 
-  !-----------------------------------------------------------
+  call PDM_extract_part_parent_ln_to_gn_get (sphere_extr_mesh,                 &
+                                             0,                                &
+                                             PDM_MESH_ENTITY_FACE,             &
+                                             sphere_extr_mesh_n_face,          &
+                                             sphere_extr_mesh_parent_ln_to_gn, &
+                                             PDM_OWNERSHIP_KEEP)
+
+  call PDM_extract_part_vtx_coord_get (sphere_extr_mesh,           &
+                                       0,                          &
+                                       sphere_extr_mesh_n_vtx,     &
+                                       sphere_extr_mesh_vtx_coord, &
+                                       PDM_OWNERSHIP_KEEP)
 
   !-----------------------------------------------------------
-  !    Push sphere results to the initial partitionning 
+  !  Print candidates
   !-----------------------------------------------------------
 
+  write(*, *) "For each selected cell : list of candidate faces (in extract meshes local numbering)"
+  do i = 1, cube_extr_mesh_n_cell
+    write(*, '(i4, ":")', ADVANCE='no') i
+    do j = box_cube_box_sphere_idx(i) + 1, box_cube_box_sphere_idx(i+1)
+      write(*, '(i4)', ADVANCE='no') box_cube_box_sphere(j)
+    end do
+    write(*, *)
+  end do   
+
   !-----------------------------------------------------------
-  !    Free extract meshes 
+  ! Get communication graph between extract meshes and initial meshes  
+  ! The direct communication is extract_mesh to initial mesh
+  ! For a communication from initial mesh to extract mesh, use a reverse exchange
+  !-----------------------------------------------------------
+
+  call PDM_extract_part_part_to_part_get (cube_extr_mesh,         &
+                                          PDM_MESH_ENTITY_CELL,   &
+                                          cube_ptp_cell,          &
+                                          PDM_OWNERSHIP_KEEP)
+
+  call PDM_extract_part_part_to_part_get (cube_extr_mesh,         &
+                                          PDM_MESH_ENTITY_VERTEX, &
+                                          cube_ptp_vtx,           &
+                                          PDM_OWNERSHIP_KEEP)
+
+  call PDM_extract_part_part_to_part_get (sphere_extr_mesh,       &
+                                          PDM_MESH_ENTITY_FACE,   &
+                                          sphere_ptp_face,        &
+                                          PDM_OWNERSHIP_KEEP)
+
+  call PDM_extract_part_part_to_part_get (sphere_extr_mesh,       &
+                                          PDM_MESH_ENTITY_VERTEX, &
+                                          sphere_ptp_vtx,         &
+                                          PDM_OWNERSHIP_KEEP)
+
+  !------------------------------------------------------------------------------
+  ! Exchange data from initial meshes to extract meshes before local intersection
+  !------------------------------------------------------------------------------
+
+  ! 
+  ! Example of exchange from intial mesh to extracted mesh
+  ! 
+  ! Send vertex coordinates from initial mesh and check if coodinates are the same in the extracted cube mesh
+  !   PDM_STRIDE_CST_INTERLACED is used to exchange a array with a constant stride
+  !   
+
+  call PDM_part_to_part_reverse_iexch (cube_ptp_vtx,                          &
+                                       PDM_MPI_COMM_KIND_P2P,                 & ! k_comm
+                                       PDM_STRIDE_CST_INTERLACED,             & ! t_stride
+                                       PDM_PART_TO_PART_DATA_DEF_ORDER_PART2, & ! t_part2_data_def
+                                       3,                                     & ! cst_stride
+                                       null_pointer_array,                    & ! Unused in cst stride
+                                       cube_pvtx_coord,                       &  
+                                       cube_extr_mesh_vtx_coord_stride_r_pt_array,     & ! Unused in cst stride 
+                                       cube_extr_mesh_vtx_coord_r_pt_array,            &
+                                       request)
+
+  !  Wait for the exchange to finish
+
+  call PDM_part_to_part_reverse_iexch_wait (cube_ptp_vtx, &
+                                            request)
+
+  if (associated(cube_extr_mesh_vtx_coord_stride_r_pt_array)) then
+    write(*,*) "Error : cube_extr_mesh_vtx_coord_stride_r is not a null pointer array"
+    stop
+  endif
+
+  call PDM_pointer_array_part_get(cube_extr_mesh_vtx_coord_r_pt_array,     &
+                                  0,                                       & ! Only one partition in extracted mesh
+                                  PDM_STRIDE_CST_INTERLACED,               & ! Interlaced array 
+                                  3,                                       & ! Stride (3 for coordinates)
+                                  cube_extr_mesh_vtx_coord_r)
+
+  !  Check received coordinates
+
+  do j=1, cube_extr_mesh_n_vtx
+    do i=1, 3 
+      if (cube_extr_mesh_vtx_coord_r(i,j) .ne. cube_extr_mesh_vtx_coord(i,j)) then 
+        write(*,*) "Error : error in cube_extr_mesh_vtx_coord_r array"
+        stop
+      endif
+    enddo
+  enddo
+
+  !-----------------------------------------------------------
+  !  -- Fake Elementary intersection --
+  !-----------------------------------------------------------
+
+
+  !-----------------------------------------------------------
+  ! Exchange data from extract meshes to initial meshes
+  ! Exchange results of elementary intersection
+  !-----------------------------------------------------------
+
+  ! 
+  ! Example of exchange from extracted mesh to initial with variable stride
+  !
+  ! Send for eaech cell the list candidate faces in global numbering
+
+  call PDM_pointer_array_create (stride_n_face_candidates, &
+                                 1,                        &
+                                 PDM_TYPE_INT)
+
+  call PDM_pointer_array_create (list_of_face_candidates, &
+                                 1,                       &
+                                 PDM_TYPE_G_NUM)
+
+
+  allocate(ipart_stride_n_face_candidates(cube_extr_mesh_n_cell))
+  allocate(ipart_list_of_face_candidates(box_cube_box_sphere_idx(cube_extr_mesh_n_cell+1)))
+
+  do i=1, cube_extr_mesh_n_cell
+    ipart_stride_n_face_candidates(i) = box_cube_box_sphere_idx(i+1) - box_cube_box_sphere_idx(i)
+    do j = box_cube_box_sphere_idx(i) + 1, box_cube_box_sphere_idx(i+1)
+      if (box_cube_box_sphere(j) .gt. sphere_extr_mesh_n_face) then
+        write(*,*) "Trop de faces"
+        stop  
+      endif  
+      ipart_list_of_face_candidates(j) = sphere_extr_mesh_parent_ln_to_gn(box_cube_box_sphere(j))
+      ipart_list_of_face_candidates(j) = box_cube_box_sphere(j)
+    end do
+  enddo
+
+  call PDM_pointer_array_part_set (stride_n_face_candidates,     &
+                                   0,                            & ! Only one partition in extracted mesh
+                                   ipart_stride_n_face_candidates)
+
+  call PDM_pointer_array_part_set (list_of_face_candidates,      &
+                                   0,                            & ! Only one partition in extracted mesh
+                                   ipart_list_of_face_candidates)
+
+  call PDM_part_to_part_iexch (cube_ptp_cell,                         &
+                               PDM_MPI_COMM_KIND_P2P,                 & ! k_comm
+                               PDM_STRIDE_VAR_INTERLACED,             & ! t_stride
+                               PDM_PART_TO_PART_DATA_DEF_ORDER_PART1, & ! t_part1_data_def
+                               1,                                     & ! cst_stride
+                               stride_n_face_candidates,              &
+                               list_of_face_candidates,               &
+                               stride_n_face_candidates_r,            &
+                               list_of_face_candidates_r,            &
+                               request)
+
+
+  !  Wait for the exchange to finish
+  call PDM_part_to_part_iexch_wait (cube_ptp_cell, &
+                                    request)
+
+  !
+  ! Sample of exploitation of results
+  ! 
+
+  do i = 1, cube_n_part
+
+    call PDM_pointer_array_part_get (stride_n_face_candidates_r, &
+                                     i-1,                        &
+                                     ipart_stride_n_face_candidates_r)
+
+    call PDM_pointer_array_part_get (list_of_face_candidates_r,   &
+                                     i-1,                         &
+                                     ipart_list_of_face_candidates_r)
+
+    call PDM_part_to_part_ref_lnum2_get (cube_ptp_cell,        &
+                                         i-1,                  &
+                                         n_cell_candidates,    &
+                                         ipart_list_of_cell_candidates)
+
+    call PDM_part_to_part_gnum1_come_from_get (cube_ptp_cell,       &
+                                               i-1,                 &
+                                               ipart_gnum_cell_come_from_cube_extrac_mesh_idx, & ! In this case each cell is only on one rank
+                                               ipart_gnum_cell_come_from_cube_extrac_mesh)
+
+    call PDM_pointer_array_part_get(cube_pcell_ln_to_gn,       &
+                                    i-1,                   &
+                                    ipart_cube_cell_ln_to_gn) 
+
+    idx = 0
+    do j = 1, n_cell_candidates
+#ifdef PDM_LONG_G_NUM
+      write (*, '("verif de la coherence des numabs :"," i4, i8, "/")', ADVANCE='no') i, &
+      ipart_cube_cell_ln_to_gn(ipart_list_of_cell_candidates(j))
+#else
+      write (*, '("verif de la coherence des numabs :",i4, i4, "/")', ADVANCE='no') i, & 
+      ipart_cube_cell_ln_to_gn(ipart_list_of_cell_candidates(j))
+#endif
+      do k = ipart_gnum_cell_come_from_cube_extrac_mesh_idx(j)+1, ipart_gnum_cell_come_from_cube_extrac_mesh_idx(j+1)
+#ifdef PDM_LONG_G_NUM
+        write (*, '(i8, ":")', ADVANCE='no')  ipart_gnum_cell_come_from_cube_extrac_mesh(k)
+#else
+        write (*, '(i4, ":")', ADVANCE='no')  ipart_gnum_cell_come_from_cube_extrac_mesh(k)
+#endif
+        do k1 = 1, ipart_stride_n_face_candidates_r(k)
+#ifdef PDM_LONG_G_NUM
+          write (*, '(" ", i8)', ADVANCE='no') ipart_list_of_face_candidates_r(idx+k1)
+#else
+          write (*, '(" ", i4)', ADVANCE='no') ipart_list_of_face_candidates_r(idx+k1)
+#endif
+        enddo
+        idx = idx + ipart_stride_n_face_candidates_r(k)
+      end do
+      write (*,*)
+    end do
+  end do
+
+  !-----------------------------------------------------------
+  ! Free extract meshes 
   !-----------------------------------------------------------
 
   call PDM_fortran_free_c(c_loc(box_cube_box_sphere_idx))
@@ -616,8 +864,6 @@ program testf
   !-----------------------------------------------------------
 
   call PDM_writer_free(wrt)
-
-  print *, "*** 9 ***"
 
   !-----------------------------------------------------------
   !    Free structures 
@@ -661,9 +907,14 @@ program testf
   call PDM_pointer_array_free(sphere_pedge_ln_to_gn)
   call PDM_pointer_array_free(sphere_pface_ln_to_gn)
 
-  print *, "*** 10 ***"
-
+  call PDM_pointer_array_free(cube_extr_mesh_vtx_coord_r_pt_array)
  
+  call PDM_pointer_array_free(stride_n_face_candidates)
+  call PDM_pointer_array_free(list_of_face_candidates)
+
+  call PDM_pointer_array_free(stride_n_face_candidates_r)
+  call PDM_pointer_array_free(list_of_face_candidates_r)
+
   if (i_rank .eq. 0) then
     write(*, *) "-- End"
   end if

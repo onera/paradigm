@@ -135,6 +135,7 @@ PDM_extract_part_selected_lnum_set
  * \param [in]   target_location   Init location (optional NULL pointer accepted and computed internaly)
  *
  */
+
 void
 PDM_extract_part_target_set
 (
@@ -144,6 +145,22 @@ PDM_extract_part_target_set
   PDM_g_num_t              *target_gnum,
   int                      *target_location
 );
+
+
+/**
+ *
+ * \brief Keep target_gnum data ownership inside extrp
+ *
+ * \param [in]   extrp             PDM_extract_part_t
+ * 
+ */
+
+void
+PDM_extract_part_target_gnum_keep_ownnership
+(
+  PDM_extract_part_t       *extrp
+);
+
 
 /**
  *
@@ -225,6 +242,7 @@ PDM_extract_part_part_group_set
  * \param [in]   pmne             PDM_part_mesh_nodal_elmts_t corresponding of dimenstion
  *
  */
+
 void
 PDM_extract_part_part_nodal_set
 (
@@ -241,6 +259,7 @@ PDM_extract_part_part_nodal_set
  * \param [in]   entity_center    Center of entity (relative of dim throught create)
  *
  */
+
 void
 PDM_extract_part_entity_center_set
 (

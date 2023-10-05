@@ -3155,6 +3155,30 @@ PDM_part_to_part_create_from_num2_triplet
                   comm);
 }
 
+
+/**
+ *
+ * \brief Get selected numbers of part2 index
+ *
+ * \param [in]   ptp                 Block to part structure
+ * \param [out]  n_elt1              Number of gnum1 element
+ * \param [out]  part1_to_part2_idx  Index of data to send to gnum2 from gnum1
+ *                                  (for each part size : \ref n_elt1+1)
+ */
+
+void
+PDM_part_to_part_part1_to_part2_idx_get
+(
+ PDM_part_to_part_t *ptp,
+ int               **n_elt1,
+ int              ***part1_to_part2_idx
+)
+{
+  *n_elt1             = (int          *) ptp->n_elt1;
+  *part1_to_part2_idx = (int         **) ptp->part1_to_part2_idx;
+}
+
+
 /**
  *
  * \brief Get selected numbers of part2
@@ -5735,6 +5759,35 @@ PDM_part_to_part_gnum1_come_from_single_part_get
 
   *gnum1_come_from_idx = ptp->gnum1_come_from_idx[i_part];
   *gnum1_come_from     = ptp->gnum1_come_from[i_part];
+}
+
+
+/**
+ *
+ * \brief Get selected numbers of part2 (only index)
+ *
+ * \param [in]   ptp                 Block to part structure
+ * \param [in]   i_part              Id of partition
+ * \param [out]  n_elt1              Number of gnum1 element
+ * \param [out]  part1_to_part2_idx  Index of data to send to gnum2 from gnum1
+ *                                  (for each part size : \ref n_elt1+1)
+ *
+ */
+
+void
+PDM_part_to_part_part1_to_part2_idx_single_part_get
+(
+       PDM_part_to_part_t  *ptp,
+ const int                  i_part,
+       int                 *n_elt1,
+       int                **part1_to_part2_idx
+)
+{
+  assert(ptp != NULL);
+  assert(i_part < ptp->n_part1);
+
+  *n_elt1             = (int          ) ptp->n_elt1[i_part];
+  *part1_to_part2_idx = (int         *) ptp->part1_to_part2_idx[i_part];
 }
 
 

@@ -106,8 +106,9 @@ struct _pdm_extract_part_t
   int                  from_target;
   int                 *n_target;
   PDM_g_num_t        **target_gnum;
+  PDM_ownership_t      target_ownership;
   int                **target_location;
-
+  PDM_mesh_entities_t  master_entity;
 
   /* Extracted part */
   double             **pextract_vtx_coord;

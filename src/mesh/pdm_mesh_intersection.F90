@@ -45,9 +45,9 @@ module pdm_mesh_intersection
     module procedure PDM_mesh_intersection_mesh_nodal_set_ 
   end interface 
 
-  ! interface PDM_mesh_intersection_tolerance_set
-  !   module procedure PDM_mesh_intersection_tolerance_set_
-  ! end interface
+  interface PDM_mesh_intersection_tolerance_set
+    module procedure PDM_mesh_intersection_tolerance_set_
+  end interface
     
   interface PDM_mesh_intersection_part_set
     module procedure PDM_mesh_intersection_part_set_
@@ -92,7 +92,7 @@ module pdm_mesh_intersection
     PDM_mesh_intersection_compute_,           &
     PDM_mesh_intersection_mesh_nodal_set_,    &
     PDM_mesh_intersection_free_,              &
-  !   PDM_mesh_intersection_tolerance_set_,     &
+    PDM_mesh_intersection_tolerance_set_,     &
   !   PDM_mesh_intersection_part_to_part_get_,  &
   !   PDM_mesh_intersection_result_from_a_get_, &
   !   PDM_mesh_intersection_result_from_b_get_, &
@@ -496,18 +496,18 @@ subroutine PDM_mesh_intersection_part_set_ (mi,            &
                                           n_face,               &
                                           n_edge,               &
                                           n_vtx,                &
-                                          c_loc(cell_face_idx), &
-                                          c_loc(cell_face),     &
-                                          c_loc(face_edge_idx), &
-                                          c_loc(face_edge),     &
-                                          c_loc(edge_vtx),      &
-                                          c_loc(face_vtx_idx),  &
-                                          c_loc(face_vtx),      &
-                                          c_loc(cell_ln_to_gn), &
-                                          c_loc(face_ln_to_gn), &
-                                          c_loc(edge_ln_to_gn), &
-                                          c_loc(vtx_ln_to_gn),  &
-                                          c_loc(coords))                                          
+                                          c_cell_face_idx, &
+                                          c_cell_face,     &
+                                          c_face_edge_idx, &
+                                          c_face_edge,     &
+                                          c_edge_vtx,      &
+                                          c_face_vtx_idx,  &
+                                          c_face_vtx,      &
+                                          c_cell_ln_to_gn, &
+                                          c_face_ln_to_gn, &
+                                          c_edge_ln_to_gn, &
+                                          c_vtx_ln_to_gn,  &
+                                          c_vtx_coord)                                          
 
 end subroutine PDM_mesh_intersection_part_set_   
 
@@ -719,7 +719,7 @@ end subroutine PDM_mesh_intersection_part_to_part_get_
 !! \param [in]   tol             Tolerance
 !!
 
-subroutine PDM_mesh_intersection_tolerance_set  (mi ,&
+subroutine PDM_mesh_intersection_tolerance_set_  (mi ,&
                                                  tol)
 
 
@@ -747,7 +747,7 @@ subroutine PDM_mesh_intersection_tolerance_set  (mi ,&
 
   call PDM_mesh_intersection_tolerance_set_cf (mi, tol)
 
-end subroutine PDM_mesh_intersection_tolerance_set
+end subroutine PDM_mesh_intersection_tolerance_set_
 
 !>
 !! \brief Get preprocessing results 
@@ -778,10 +778,11 @@ subroutine PDM_mesh_intersection_preprocessing_get_ (mi,             &
   type(c_ptr)             :: extr_mesh_a
   type(c_ptr)             :: extr_mesh_b
 
-  integer                 :: n_vtx_a 
+  integer                 :: n_cell_a 
   type(c_ptr)             :: c_box_a_box_b_idx
   type(c_ptr)             :: c_box_a_box_b
 
+  integer                 :: i
   interface 
     subroutine PDM_mesh_intersection_preprocessing_get_cf (mi,            &
                                                           box_a_box_b_idx,&
@@ -804,10 +805,6 @@ subroutine PDM_mesh_intersection_preprocessing_get_ (mi,             &
     end subroutine PDM_mesh_intersection_preprocessing_get_cf
   end interface 
 
-  call PDM_extract_part_n_entity_get (extr_mesh_a,            &
-                                      0,                      &  ! ipart (only one)
-                                      PDM_MESH_ENTITY_VERTEX, &
-                                      n_vtx_a)                                    
 
   call PDM_mesh_intersection_preprocessing_get_cf (mi,                &
                                                    c_box_a_box_b_idx, &
@@ -815,8 +812,21 @@ subroutine PDM_mesh_intersection_preprocessing_get_ (mi,             &
                                                    extr_mesh_a,       &
                                                    extr_mesh_b)
 
-  call c_f_pointer (c_box_a_box_b_idx, box_a_box_b_idx, [n_vtx_a + 1])
-  call c_f_pointer (c_box_a_box_b, box_a_box_b, [box_a_box_b_idx(n_vtx_a + 1)])
+
+  call PDM_extract_part_n_entity_get (extr_mesh_a,            &
+                                      0,                      &  ! ipart (only one)
+                                      PDM_MESH_ENTITY_CELL, &
+                                      n_cell_a)                                    
+
+
+  call c_f_pointer (c_box_a_box_b_idx, box_a_box_b_idx, [n_cell_a + 1])
+  call c_f_pointer (c_box_a_box_b, box_a_box_b, [box_a_box_b_idx(n_cell_a + 1)])
+
+  do i = 1, box_a_box_b_idx(n_cell_a + 1)
+    box_a_box_b(i) = box_a_box_b(i) + 1
+  enddo   
+
+  ! 0-based to 1-based !
 
 end subroutine PDM_mesh_intersection_preprocessing_get_
 

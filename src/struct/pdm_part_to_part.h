@@ -263,6 +263,24 @@ PDM_part_to_part_ineighbor_alltoall_wait
  int                 request
 );
 
+/**
+ *
+ * \brief Get selected numbers of part2 index
+ *
+ * \param [in]   ptp                 Block to part structure
+ * \param [out]  n_elt1              Number of gnum1 element
+ * \param [out]  part1_to_part2_idx  Index of data to send to gnum2 from gnum1
+ *                                  (for each part size : \ref n_elt1+1)
+ */
+
+void
+PDM_part_to_part_part1_to_part2_idx_get
+(
+ PDM_part_to_part_t *ptp,
+ int               **n_elt1,
+ int              ***part1_to_part2_idx
+);
+
 
 /**
  *
@@ -926,6 +944,26 @@ PDM_part_to_part_gnum1_come_from_single_part_get
        PDM_g_num_t        **gnum1_come_from
 );
 
+/**
+ *
+ * \brief Get selected numbers of part2 (only index)
+ *
+ * \param [in]   ptp                 Block to part structure
+ * \param [in]   i_part              Id of partition
+ * \param [out]  n_elt1              Number of gnum1 element
+ * \param [out]  part1_to_part2_idx  Index of data to send to gnum2 from gnum1
+ *                                  (for each part size : \ref n_elt1+1)
+ *
+ */
+
+void
+PDM_part_to_part_part1_to_part2_idx_single_part_get
+(
+       PDM_part_to_part_t  *ptp,
+ const int                  i_part,
+       int                 *n_elt1,
+       int                **part1_to_part2_idx
+);
 
 /**
  *

@@ -664,6 +664,7 @@ _compute_part_mesh_extents
       int n_face = PDM_part_mesh_n_entity_get(mesh, i_part, PDM_MESH_ENTITY_FACE);
       PDM_part_mesh_connectivity_get(mesh, i_part, PDM_CONNECTIVITY_TYPE_FACE_VTX , &face_vtx , &face_vtx_idx, PDM_OWNERSHIP_BAD_VALUE);
 
+
       PDM_part_mesh_vtx_coord_get(mesh, i_part, &vtx_coord, PDM_OWNERSHIP_BAD_VALUE); // Il faudrait un unchanged
       extents[i_part] = malloc(6 * n_face * sizeof(double));
 
@@ -1287,11 +1288,15 @@ static
 PDM_extract_part_t*
 _create_extract_part
 (
- PDM_part_mesh_t *mesh,
- int              dim_mesh,
- PDM_box_set_t   *boxes_meshes
+  PDM_part_mesh_t              *mesh,
+  int                           dim_mesh,
+  PDM_mesh_intersection_kind_t  intersect_kind,
+  PDM_box_set_t                *boxes_meshes
 )
 {
+  PDM_g_num_t *gnum_elt_mesh = (PDM_g_num_t *) PDM_box_set_get_g_num (boxes_meshes);
+  int n_elt_mesh = PDM_box_set_get_size (boxes_meshes);
+
   int n_part_out = 1;
   PDM_extract_part_t* extrp_mesh = PDM_extract_part_create(dim_mesh,
                                                            mesh->n_part,
@@ -1302,11 +1307,16 @@ _create_extract_part
                                                            PDM_OWNERSHIP_KEEP,
                                                            mesh->comm);
 
-  int n_elt_mesh = PDM_box_set_get_size (boxes_meshes);
+  PDM_g_num_t *target_g_num = gnum_elt_mesh;
+  if (intersect_kind == PDM_MESH_INTERSECTION_KIND_PREPROCESS) { 
+    target_g_num = malloc(sizeof(PDM_g_num_t) * n_elt_mesh);
+    memcpy(target_g_num, gnum_elt_mesh, sizeof(PDM_g_num_t) * n_elt_mesh);
+    PDM_extract_part_target_gnum_keep_ownnership(extrp_mesh);
+  }
+
 
   // printf("n_elt_mesh = %i  \n", n_elt_mesh);
 
-  PDM_g_num_t *gnum_elt_mesh = (PDM_g_num_t *) PDM_box_set_get_g_num (boxes_meshes);
 
   int *init_location_elt_mesh = (int  *) PDM_box_set_origin_get(boxes_meshes);
 
@@ -1369,10 +1379,7 @@ _create_extract_part
 
 
   /*  Setup target frame */
-  PDM_extract_part_target_set(extrp_mesh, 0, n_elt_mesh, gnum_elt_mesh, init_location_elt_mesh);
-  // PDM_g_num_t *target_g_num = malloc(sizeof(PDM_g_num_t) * n_elt_mesh);
-  // memcpy(target_g_num, gnum_elt_mesh, sizeof(PDM_g_num_t) * n_elt_mesh);
-  // PDM_extract_part_target_set(extrp_mesh, 0, n_elt_mesh, target_g_num, init_location_elt_mesh);
+  PDM_extract_part_target_set(extrp_mesh, 0, n_elt_mesh, target_g_num, init_location_elt_mesh);
 
   PDM_extract_part_compute(extrp_mesh);
 
@@ -1384,9 +1391,9 @@ static
 PDM_extract_part_t*
 _create_extract_part_nodal
 (
- PDM_mesh_intersection_t *mi,
- const int                i_mesh,
- PDM_box_set_t           *boxes_meshes
+ PDM_mesh_intersection_t      *mi,
+ const int                     i_mesh,
+ PDM_box_set_t                 *boxes_meshes
 )
 {
   PDM_MPI_Comm comm = mi->comm;
@@ -1436,6 +1443,10 @@ _create_extract_part_nodal
                                                         n_part,
                                                         &pmne);
 
+  PDM_g_num_t *gnum_elt_mesh = (PDM_g_num_t *) PDM_box_set_get_g_num (boxes_meshes);
+
+  int n_elt_mesh = PDM_box_set_get_size (boxes_meshes);
+
 
   int n_part_out = 1;
   PDM_extract_part_t* extrp_mesh = PDM_extract_part_create(dim_mesh,
@@ -1447,11 +1458,15 @@ _create_extract_part_nodal
                                                            PDM_OWNERSHIP_KEEP,
                                                            comm);
 
-  int n_elt_mesh = PDM_box_set_get_size (boxes_meshes);
+  PDM_g_num_t *target_g_num = gnum_elt_mesh;
+  if (mi->intersect_kind == PDM_MESH_INTERSECTION_KIND_PREPROCESS) { 
+    target_g_num = malloc(sizeof(PDM_g_num_t) * n_elt_mesh);
+    memcpy(target_g_num, gnum_elt_mesh, sizeof(PDM_g_num_t) * n_elt_mesh);
+    PDM_extract_part_target_gnum_keep_ownnership(extrp_mesh);
+  }
 
   // printf("n_elt_mesh = %i  \n", n_elt_mesh);
 
-  PDM_g_num_t *gnum_elt_mesh = (PDM_g_num_t *) PDM_box_set_get_g_num (boxes_meshes);
 
   int *init_location_elt_mesh = (int  *) PDM_box_set_origin_get(boxes_meshes);
 
@@ -1526,7 +1541,7 @@ _create_extract_part_nodal
   }
 
   /*  Setup target frame */
-  PDM_extract_part_target_set(extrp_mesh, 0, n_elt_mesh, gnum_elt_mesh, init_location_elt_mesh);
+  PDM_extract_part_target_set(extrp_mesh, 0, n_elt_mesh, target_g_num, init_location_elt_mesh);
   // PDM_g_num_t *target_g_num = malloc(sizeof(PDM_g_num_t) * n_elt_mesh);
   // memcpy(target_g_num, gnum_elt_mesh, sizeof(PDM_g_num_t) * n_elt_mesh);
   // PDM_extract_part_target_set(extrp_mesh, 0, n_elt_mesh, target_g_num, init_location_elt_mesh);
@@ -1637,7 +1652,6 @@ _export_ensight3d
 {
   int i_rank;
   PDM_MPI_Comm_rank(comm, &i_rank);
-
 
   PDM_gen_gnum_t *gnum_vtx = PDM_gnum_create(3, 1, PDM_FALSE, 1., comm, PDM_OWNERSHIP_KEEP);
 
@@ -5439,6 +5453,7 @@ PDM_mesh_intersection_compute
                    box_a_to_box_b,
                    &redistribute_box_a_to_box_b_idx,
                    &redistribute_box_a_to_box_b);
+  
   free(box_a_to_box_b_idx);
   free(box_a_to_box_b);
 
@@ -5456,6 +5471,7 @@ PDM_mesh_intersection_compute
     if (mi->mesh_nodal[imesh] == NULL && mi->mesh[imesh] != NULL) {
       mi->extrp_mesh[imesh] = _create_extract_part(mi->mesh[imesh],
                                                    mi->dim_mesh[imesh],
+                                                   mi->intersect_kind,
                                                    boxes_mesh[imesh]);
     }
     else {
@@ -5544,6 +5560,9 @@ PDM_mesh_intersection_compute
   if (mi->intersect_kind == PDM_MESH_INTERSECTION_KIND_PREPROCESS) {
     mi->box_a_box_b_idx   = redistribute_box_a_to_box_b_idx;
     mi->box_a_box_b       = redistribute_box_a_to_box_b;
+    PDM_box_set_destroy (&boxes_mesh[0]);
+    PDM_box_set_destroy (&boxes_mesh[1]);
+
   }
 
   else {
@@ -5725,11 +5744,6 @@ PDM_mesh_intersection_free
   PDM_part_mesh_free(mi->mesh[0]);
   PDM_part_mesh_free(mi->mesh[1]);
 
-  for (int imesh = 0; imesh < 2; imesh++) {
-    if (mi->extrp_mesh[imesh] != NULL) {
-      PDM_extract_part_free(mi->extrp_mesh[imesh]);
-    }
-  }
 
   if (mi->ptp != NULL && mi->ptp_ownership == PDM_OWNERSHIP_KEEP) {
     PDM_part_to_part_free(mi->ptp);
@@ -6088,6 +6102,7 @@ PDM_mesh_intersection_preprocessing_get
   assert(mi->intersect_kind == PDM_MESH_INTERSECTION_KIND_PREPROCESS);
   *extr_mesh_a = mi->extrp_mesh[0];
   *extr_mesh_b = mi->extrp_mesh[1];
+   mi->tag_extrp_mesh = 1;
   *box_a_box_b_idx = mi->box_a_box_b_idx;
   *box_a_box_b = mi->box_a_box_b;  
 }
