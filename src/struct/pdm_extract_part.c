@@ -4679,7 +4679,7 @@ PDM_extract_part_parent_ln_to_gn_get
 
   int n_entity = 0;
 
-  if (entity_type == extrp->master_entity && extrp->target_ownership != PDM_OWNERSHIP_KEEP) {
+  if (entity_type == extrp->master_entity && extrp->target_ownership != PDM_OWNERSHIP_KEEP && extrp->extract_kind == PDM_EXTRACT_PART_KIND_FROM_TARGET) {
     PDM_error(__FILE__, __LINE__, 0, "Error PDM_extract_part_parent_ln_to_gn_get : parent_ln_to_gn is not available for the master entity,"
                                      " call PDM_extract_part_target_gnum_keep_ownnership to get it\n");
   }
