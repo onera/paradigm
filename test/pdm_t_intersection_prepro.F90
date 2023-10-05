@@ -824,7 +824,7 @@ program testf
     idx = 0
     do j = 1, n_cell_candidates
 #ifdef PDM_LONG_G_NUM
-      write (*, '("verif de la coherence des numabs :"," i4, i8, "/")', ADVANCE='no') i, &
+      write (*, '("verif de la coherence des numabs :",i4, i8, "/")', ADVANCE='no') i, &
       ipart_cube_cell_ln_to_gn(ipart_list_of_cell_candidates(j))
 #else
       write (*, '("verif de la coherence des numabs :",i4, i4, "/")', ADVANCE='no') i, & 
