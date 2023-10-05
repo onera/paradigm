@@ -393,6 +393,32 @@ cdef class Writer:
                                         <int *> face_vtx.data,
                                         <PDM_g_num_t*> numabs.data)
 
+  def geom_block_add(self,
+                     int                   id_geom,
+                     PDM_writer_status_t   st_free_data,
+                     PDM_writer_elt_geom_t t_elt):
+    """
+    """
+    return PDM_writer_geom_bloc_add(self._wt, id_geom, st_free_data, t_elt)
+
+  def geom_block_std_set(self,
+                         int id_geom,
+                         int id_block,
+                         int i_part,
+                         NPY.ndarray[NPY.int32_t,    mode='c', ndim=1] elt_vtx,
+                         NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1] elt_ln_to_gn):
+    """
+    """
+    cdef int n_elt = len(elt_ln_to_gn)
+
+    PDM_writer_geom_bloc_std_set(self._wt,
+                                 id_geom,
+                                 id_block,
+                                 i_part,
+                                 n_elt,
+                 <int         *> elt_vtx.data,
+                 <PDM_g_num_t *> elt_ln_to_gn.data)
+
   def geom_write(self, int id_geom):
       """
       """
