@@ -110,6 +110,7 @@ PDM_reader_gamma_dmesh_nodal
   PDM_g_num_t gn_hexa  = 0;
 
   double      *gvtx_coord   = NULL;
+  int         *gvtx_group   = NULL;
   PDM_g_num_t *gedge_vtx    = NULL;
   int         *gedge_group  = NULL;
   PDM_g_num_t *gtria_vtx    = NULL;
@@ -156,6 +157,7 @@ PDM_reader_gamma_dmesh_nodal
         gn_vtx = (PDM_g_num_t) _gn_vtx;
 
         gvtx_coord = malloc(sizeof(double) * gn_vtx * 3);
+        gvtx_group = malloc(sizeof(int   ) * gn_vtx);
         for (PDM_g_num_t i = 0; i < gn_vtx; i++) {
           for (int j = 0; j < dim; j++) {
             fscanf(f, "%lf", &gvtx_coord[3*i + j]);
@@ -163,9 +165,7 @@ PDM_reader_gamma_dmesh_nodal
           for (int j = dim; j < 3; j++) {
             gvtx_coord[3*i + j] = 0.;
           }
-
-          int ref;
-          fscanf(f, "%d", &ref);
+          fscanf(f, "%d", &gvtx_group[i]);
         }
       }
 
@@ -324,6 +324,7 @@ PDM_reader_gamma_dmesh_nodal
 
     if (1) {
       /* Shift groups */
+      _shift_groups((int) gn_vtx,   gvtx_group);
       _shift_groups((int) gn_edge,  gedge_group);
       _shift_groups((int) gn_tria,  gtria_group);
       _shift_groups((int) gn_tetra, gtetra_group);
@@ -403,6 +404,17 @@ PDM_reader_gamma_dmesh_nodal
                 (void *)  gvtx_coord,
                           NULL,
                 (void **) &dvtx_coord);
+
+  int *dvtx_group = NULL;
+  PDM_block_to_block_exch(btb_vtx,
+                          sizeof(int),
+                          PDM_STRIDE_CST_INTERLACED,
+                          1,
+                          NULL,
+                (void *)  gvtx_group,
+                          NULL,
+                (void **) &dvtx_group);
+
 
   /* Edges */
   PDM_g_num_t *distrib_edge = PDM_compute_uniform_entity_distribution(comm, gn_edge);
@@ -581,6 +593,7 @@ PDM_reader_gamma_dmesh_nodal
 
 
   if (gvtx_coord   != NULL) free(gvtx_coord);
+  if (gvtx_group   != NULL) free(gvtx_group);
   if (gedge_vtx    != NULL) free(gedge_vtx);
   if (gedge_group  != NULL) free(gedge_group);
   if (gtria_vtx    != NULL) free(gtria_vtx);
@@ -658,13 +671,17 @@ PDM_reader_gamma_dmesh_nodal
 
 
   dmn->surfacic->n_g_elmts = gn_tria;
-  int id_section_tria = PDM_DMesh_nodal_elmts_section_add(dmn->surfacic,
-                                                          PDM_MESH_NODAL_TRIA3);
-  PDM_DMesh_nodal_elmts_section_std_set(dmn->surfacic,
-                                        id_section_tria,
-                                        dn_tria,
-                                        dtria_vtx,
-                                        PDM_OWNERSHIP_KEEP);
+  if (gn_tria > 0) {
+    int id_section_tria = PDM_DMesh_nodal_elmts_section_add(dmn->surfacic,
+                                                            PDM_MESH_NODAL_TRIA3);
+    PDM_DMesh_nodal_elmts_section_std_set(dmn->surfacic,
+                                          id_section_tria,
+                                          dn_tria,
+                                          dtria_vtx,
+                                          PDM_OWNERSHIP_KEEP);
+  } else {
+    free(dtria_vtx);
+  }
 
   if (mesh_dimension == 3) {
     dmn->volumic->n_g_elmts = gn_tetra + gn_pyra + gn_prism + gn_hexa;
@@ -720,6 +737,8 @@ PDM_reader_gamma_dmesh_nodal
 
 
   /* Groups */
+  PDM_DMesh_nodal_vtx_tag_set(dmn, dvtx_group);
+
   int _n_group_edge = 0;
   for (int i = 0; i < dn_edge; i++) {
     _n_group_edge = PDM_MAX(_n_group_edge, dedge_group[i]);// refs are > 0 (?)

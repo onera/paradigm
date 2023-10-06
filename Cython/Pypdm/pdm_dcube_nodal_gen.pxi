@@ -182,7 +182,7 @@ cdef class DCubeNodalGenerator:
 
       py_casp = PyCapsule_New(dmn, NULL, NULL);
 
-      return DistributedMeshNodalCaspule(py_casp) # The free is inside the class
+      return DistributedMeshNodalCapsule(py_casp) # The free is inside the class
 
 # ------------------------------------------------------------------
 cdef class DCubeNodalGeneratorCartTopo:
@@ -258,7 +258,7 @@ cdef class DCubeNodalGeneratorCartTopo:
 
       py_casp = PyCapsule_New(dmn, NULL, NULL);
 
-      return DistributedMeshNodalCaspule(py_casp) # The free is inside the class
+      return DistributedMeshNodalCapsule(py_casp) # The free is inside the class
 
     # ------------------------------------------------------------------------
     def domain_interface_get(self):

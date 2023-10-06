@@ -31,6 +31,8 @@ cdef extern from "pdm_dmesh_nodal.h":
     # PDM_g_num_t *PDM_DMesh_nodal_distrib_section_get(PDM_dmesh_nodal_t* dmn, int id_section)
 
     int                  PDM_DMesh_nodal_n_vtx_get(PDM_dmesh_nodal_t* dmn)
+    int*                 PDM_DMesh_nodal_vtx_tag_get(PDM_dmesh_nodal_t* dmn)
+
     int*                 PDM_DMesh_nodal_sections_id_get(PDM_dmesh_nodal_t* dmn, PDM_geometry_kind_t geom_kind)
 
     int                  PDM_DMesh_nodal_n_section_get(PDM_dmesh_nodal_t* dmn, PDM_geometry_kind_t geom_kind)
@@ -159,7 +161,7 @@ cdef class DistributedMeshNodal:
         # ::::::::::::::::::::::::::::::::::::::::::::::::::
 
     # ------------------------------------------------------------------------
-    def set_coordinnates(self, NPY.ndarray[NPY.double_t  , mode='c', ndim=1] dvtx_coord):
+    def set_coordinates(self, NPY.ndarray[NPY.double_t  , mode='c', ndim=1] dvtx_coord):
         """
         """
         # ************************************************************************
@@ -278,7 +280,7 @@ cdef class DistributedMeshNodal:
       PDM_DMesh_nodal_free(self.dmn)
 
 # ------------------------------------------------------------------
-cdef class DistributedMeshNodalCaspule:
+cdef class DistributedMeshNodalCapsule:
   """
   """
   # ************************************************************************
@@ -289,18 +291,18 @@ cdef class DistributedMeshNodalCaspule:
   def __cinit__(self, object caps):
     """
     """
-    # print("DistributedMeshNodalCaspule", PyCapsule_GetName(caps))
-    cdef PDM_dmesh_nodal_t* casp_dmn = <PDM_dmesh_nodal_t *> PyCapsule_GetPointer(caps, NULL)
-    self.dmn = casp_dmn;
+    # print("DistributedMeshNodalCapsule", PyCapsule_GetName(caps))
+    cdef PDM_dmesh_nodal_t* caps_dmn = <PDM_dmesh_nodal_t *> PyCapsule_GetPointer(caps, NULL)
+    self.dmn = caps_dmn;
 
   # ------------------------------------------------------------------------
-  def dmesh_nodal_get_sections(self, PDM_geometry_kind_t geom_kind, MPI.Comm    comm):
+  def dmesh_nodal_get_sections(self, PDM_geometry_kind_t geom_kind, MPI.Comm comm):
     """
     """
     return dmesh_nodal_get_sections(self, geom_kind, comm)
 
   # ------------------------------------------------------------------------
-  def dmesh_nodal_get_vtx(self, MPI.Comm    comm):
+  def dmesh_nodal_get_vtx(self, MPI.Comm comm):
     """
     """
     return dmesh_nodal_get_vtx(self, comm)
@@ -343,13 +345,13 @@ cdef class DistributedMeshNodalCaspule:
     """
        Use the free method of PDM Lib
     """
-    # print("DistributedMeshNodalCaspule::__dealloc__")
+    # print("DistributedMeshNodalCapsule::__dealloc__")
     PDM_DMesh_nodal_free(self.dmn)
-    # print("DistributedMeshNodalCaspule::__dealloc__ end z")
+    # print("DistributedMeshNodalCapsule::__dealloc__ end z")
 
 ctypedef fused DMeshNodal:
   DistributedMeshNodal
-  DistributedMeshNodalCaspule
+  DistributedMeshNodalCapsule
 
 def generate_distribution(DMeshNodal pydmn):
   """
@@ -376,6 +378,7 @@ def dmesh_nodal_get_vtx(DMeshNodal pydmn, MPI.Comm    comm):
   # ************************************************************************
   # > Declaration
   cdef double               *vtx_coord
+  cdef int                  *vtx_tag
   cdef NPY.npy_intp          dim
   # ************************************************************************
 
@@ -383,9 +386,11 @@ def dmesh_nodal_get_vtx(DMeshNodal pydmn, MPI.Comm    comm):
   vtx_distrib = PDM_dmesh_nodal_vtx_distrib_copy_get(pydmn.dmn)
   n_vtx = PDM_DMesh_nodal_n_vtx_get(pydmn.dmn);
   vtx_coord = PDM_DMesh_nodal_vtx_get(pydmn.dmn)
+  vtx_tag = PDM_DMesh_nodal_vtx_tag_get(pydmn.dmn)
 
-  return {"np_vtx"         : create_numpy_d(vtx_coord,   3*n_vtx),
-          "np_vtx_distrib" : create_numpy_g(vtx_distrib, comm.Get_size()+1)}
+  return {"np_vtx"         : create_numpy_d(vtx_coord,   3*n_vtx,           False),
+          "np_vtx_distrib" : create_numpy_g(vtx_distrib, comm.Get_size()+1, False),
+          "np_vtx_tag"     : create_numpy_i(vtx_tag,     n_vtx,             False)}
 
 def dmesh_nodal_get_sections(DMeshNodal          pydmn,
                              PDM_geometry_kind_t geom_kind,

@@ -217,7 +217,7 @@ cdef class MultiPart:
 
     # ------------------------------------------------------------------
     def multipart_register_block(self, int zone_gid,
-                                       DMesh dm): # DMesh = DistributedMeshCaspule or DistributedMesh
+                                       DMesh dm): # DMesh = DistributedMeshCapsule or DistributedMesh
         """
         """
         PDM_multipart_register_block(self._mtp,
@@ -226,7 +226,7 @@ cdef class MultiPart:
 
     # ------------------------------------------------------------------
     def multipart_register_dmesh_nodal(self, int zone_gid,
-                                       DMeshNodal dmn): # DMesh = DistributedMeshCaspule or DistributedMesh
+                                       DMeshNodal dmn): # DMesh = DistributedMeshCapsule or DistributedMesh
         """
         """
         PDM_multipart_register_dmesh_nodal(self._mtp,
@@ -395,7 +395,7 @@ cdef class MultiPart:
         else:
           #See pdm_part_mesh_nodal.pxi
           py_caps = PyCapsule_New(pmesh_nodal, NULL, NULL);
-          return PartMeshNodalCaspule(py_caps)
+          return PartMeshNodalCapsule(py_caps)
 
     # ------------------------------------------------------------------
     def multipart_hyper_plane_color_get(self, int ipart, int zone_gid):

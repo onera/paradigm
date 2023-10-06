@@ -39,7 +39,7 @@ def sphere_vol_icosphere_gen_nodal(MPI.Comm        comm,
 
   py_casp = PyCapsule_New(dmn, NULL, NULL)
 
-  return DistributedMeshNodalCaspule(py_casp)
+  return DistributedMeshNodalCapsule(py_casp)
 
 
 # ------------------------------------------------------------------------
@@ -69,4 +69,4 @@ def sphere_vol_hollow_gen_nodal(MPI.Comm        comm,
 
   py_casp = PyCapsule_New(dmn, NULL, NULL)
 
-  return DistributedMeshNodalCaspule(py_casp)
+  return DistributedMeshNodalCapsule(py_casp)

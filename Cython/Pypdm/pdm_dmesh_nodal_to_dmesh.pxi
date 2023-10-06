@@ -104,7 +104,7 @@ cdef class DMeshNodalToDMesh:
 
     py_casp = PyCapsule_New(dm, NULL, NULL);
 
-    return DistributedMeshCaspule(py_casp) # The free is inside the class
+    return DistributedMeshCapsule(py_casp) # The free is inside the class
 
   # ------------------------------------------------------------------------
   def __dealloc__(self):

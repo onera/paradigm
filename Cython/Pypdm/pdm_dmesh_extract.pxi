@@ -143,14 +143,14 @@ cdef class DMeshExtract:
 
     py_casp = PyCapsule_New(dm, NULL, NULL);
 
-    return DistributedMeshCaspule(py_casp) # The free is inside the class
+    return DistributedMeshCapsule(py_casp) # The free is inside the class
 
   def get_dmesh_nodal(self):
     cdef PDM_dmesh_nodal_t* dmn
     PDM_dmesh_extract_dmesh_nodal_get(self._dme, &dmn, PDM_OWNERSHIP_USER)
     py_casp = PyCapsule_New(dmn, NULL, NULL);
 
-    return DistributedMeshNodalCaspule(py_casp) # The free is inside the class
+    return DistributedMeshNodalCapsule(py_casp) # The free is inside the class
 
   # ------------------------------------------------------------------
   def __dealloc__(self):
