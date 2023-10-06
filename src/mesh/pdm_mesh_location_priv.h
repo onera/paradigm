@@ -91,8 +91,6 @@ struct _pdm_mesh_location_t {
   int  n_point_cloud; /*!< Number of point clouds */
   PDM_MPI_Comm comm;  /*!< MPI communicator */
 
-  PDM_mesh_nature_t mesh_nature;  /*!< Nature of the mesh */
-
   int mesh_dimension;
 
   int  shared_nodal;   /*!< 1 if mesh nodal is shared, 0 otherwise */

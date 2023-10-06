@@ -1307,12 +1307,9 @@ int main(int argc, char *argv[])
   /*
    *  Mesh location structure initialization
    */
-  PDM_mesh_location_t *mesh_loc = PDM_mesh_location_create (PDM_MESH_NATURE_MESH_SETTED,
-                                                            1,
+  PDM_mesh_location_t *mesh_loc = PDM_mesh_location_create (1,
                                                             comm,
                                                             PDM_OWNERSHIP_KEEP);
-
-  PDM_mesh_location_reverse_results_enable(mesh_loc);
 
   /* Set target point cloud */
   PDM_mesh_location_n_part_cloud_set (mesh_loc,
@@ -1616,17 +1613,17 @@ int main(int argc, char *argv[])
       double      *points_dist2;
       double      *points_projected_coords;
 
-      PDM_mesh_location_points_in_elt_get (mesh_loc,
-                                           ipart,
-                                           0,//i_point_cloud,
-                                           &elt_pts_inside_idx,
-                                           &points_gnum,
-                                           &points_coords,
-                                           &points_uvw,
-                                           &points_weights_idx,
-                                           &points_weights,
-                                           &points_dist2,
-                                           &points_projected_coords);
+      PDM_mesh_location_points_in_elt_get(mesh_loc,
+                                          0,//i_point_cloud,
+                                          ipart,
+                                          &elt_pts_inside_idx,
+                                          &points_gnum,
+                                          &points_coords,
+                                          &points_uvw,
+                                          &points_weights_idx,
+                                          &points_weights,
+                                          &points_dist2,
+                                          &points_projected_coords);
                                            
       // PDM_log_trace_connectivity_long(elt_pts_inside_idx,
       //                                 points_gnum,
@@ -1751,8 +1748,8 @@ int main(int argc, char *argv[])
     double      *elt_pts_dist2      = NULL;
     double      *elt_pts_proj_coord = NULL;
     PDM_mesh_location_points_in_elt_get(mesh_loc,
-                                        ipart,
                                         0, // i_point_cloud,
+                                        ipart,
                                         &elt_pts_idx,
                                         &elt_pts_gnum,
                                         &elt_pts_coord,

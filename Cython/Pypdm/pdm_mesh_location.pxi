@@ -14,10 +14,9 @@ cdef extern from "pdm_mesh_location.h":
   # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
   # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-  PDM_mesh_location_t* PDM_mesh_location_create(PDM_mesh_nature_t mesh_nature,
-                               int               _n_point_cloud,
-                               PDM_MPI_Comm      comm,
-                               PDM_ownership_t owner)
+  PDM_mesh_location_t* PDM_mesh_location_create(int               _n_point_cloud,
+                                                PDM_MPI_Comm      comm,
+                                                PDM_ownership_t owner)
   # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
   # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -155,10 +154,6 @@ cdef extern from "pdm_mesh_location.h":
   # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
   # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-  void PDM_mesh_location_reverse_results_enable(PDM_mesh_location_t  *ml)
-  # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-
-  # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
   void PDM_mesh_location_dump_times(PDM_mesh_location_t  *ml)
   # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
@@ -192,24 +187,20 @@ cdef class MeshLocation:
   cdef MPI.Comm py_comm
   cdef int _n_point_cloud
   cdef int _n_src_part
-  cdef int _reverse_enabled
   cdef list _n_tgt_part_per_cloud
 
   cdef list _np_located, _np_unlocated, _dic_location, _dic_points_in_elt, _dic_cell_vertex
   # ************************************************************************
 
   # ------------------------------------------------------------------------
-  def __init__(self, PDM_mesh_nature_t mesh_nature,
-                     int               n_point_cloud,
-                     MPI.Comm          comm,
-                     bint              enable_reverse=True):
+  def __init__(self, int               n_point_cloud,
+                     MPI.Comm          comm):
     """
     __init__(mesh_nature, n_point_cloud, comm)
 
     Create a structure to compute the location of point clouds inside a mesh
 
     Parameters:
-      mesh_nature   (PDM_mesh_nature_t) : Nature of the mesh
       n_point_cloud (int)               : Number of point clouds
       comm          (MPI.Comm)          : MPI communicator
     """
@@ -227,7 +218,7 @@ cdef class MeshLocation:
     # ::::::::::::::::::::::::::::::::::::::::::::::::::
 
     # ::::::::::::::::::::::::::::::::::::::::::::::::::
-    self._ml = PDM_mesh_location_create(mesh_nature, n_point_cloud, PDMC, PDM_OWNERSHIP_UNGET_RESULT_IS_FREE)
+    self._ml = PDM_mesh_location_create(n_point_cloud, PDMC, PDM_OWNERSHIP_UNGET_RESULT_IS_FREE)
 
     # ::::::::::::::::::::::::::::::::::::::::::::::::::
 
@@ -556,7 +547,7 @@ cdef class MeshLocation:
 
 
 
-  def __points_in_elt_get(self, int i_part, int i_point_cloud):
+  def __points_in_elt_get(self, int i_point_cloud, int i_part):
     """
     """
     # ************************************************************************
@@ -572,8 +563,8 @@ cdef class MeshLocation:
     # ************************************************************************
 
     PDM_mesh_location_points_in_elt_get(self._ml,
-                                        i_part,
                                         i_point_cloud,
+                                        i_part,
                                         &elt_pts_inside_idx,
                                         &points_gnum,
                                         &points_coords,
@@ -597,7 +588,7 @@ cdef class MeshLocation:
             'points_projected_coords' : create_numpy_d (points_projected_coords, 3*s_loc )
             }
 
-  def points_in_elt_get(self, int i_part, int i_point_cloud):
+  def points_in_elt_get(self, int i_point_cloud, int i_part):
     """
     points_in_elt_get(i_point_cloud, i_part)
 
@@ -682,7 +673,7 @@ cdef class MeshLocation:
       self._np_located  .append([self.__located_get  (i_pt_cloud, i_part) for i_part in range(n_tgt_part)])
       self._dic_location.append([self.__location_get (i_pt_cloud, i_part) for i_part in range(n_tgt_part)])
       #Source related data
-      self._dic_points_in_elt.append([self.__points_in_elt_get(i_part, i_pt_cloud) for i_part in range(self._n_src_part)])
+      self._dic_points_in_elt.append([self.__points_in_elt_get(i_pt_cloud, i_part) for i_part in range(self._n_src_part)])
     #Source related data
     self._dic_cell_vertex = [self.__cell_vertex_get(i_part) for i_part in range(self._n_src_part)]
 

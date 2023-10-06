@@ -92,8 +92,7 @@ module pdm_mesh_location
     !!
     !!
 
-    function PDM_mesh_location_create_cf (mesh_nature,   &
-                                          n_point_cloud, &
+    function PDM_mesh_location_create_cf (n_point_cloud, &
                                           comm,          &
                                           owner ) &
                                           result(mloc) &
@@ -103,7 +102,6 @@ module pdm_mesh_location
 
       implicit none
 
-      integer(c_int), value :: mesh_nature
       integer(c_int), value :: n_point_cloud
       integer(c_int), value :: comm
       integer(c_int), value :: owner
@@ -501,25 +499,6 @@ module pdm_mesh_location
 
     end subroutine PDM_mesh_location_compute
 
-    !>
-    !!
-    !! \brief Compute point location
-    !!
-    !! \param [in]   mlocPointer to \ref PDM_mesh_location object
-    !!
-    !!
-
-    subroutine PDM_mesh_location_reverse_results_enable (mloc) &
-      bind (c, name = 'PDM_mesh_location_reverse_results_enable')
-
-      use iso_c_binding
-
-      implicit none
-
-
-      type (c_ptr), value :: mloc
-
-    end subroutine PDM_mesh_location_reverse_results_enable
 
     !>
     !!
@@ -711,8 +690,8 @@ module pdm_mesh_location
     !! \brief Get point list located in elements
     !!
     !! \param [in]   mloc                    Pointer to \ref PDM_mesh_location object
-    !! \param [in]   i_part                  Index of partition of the mesh
     !! \param [in]   i_point_cloud           Index of cloud
+    !! \param [in]   i_part                  Index of partition of the mesh
     !! \param [out]  elt_pts_inside_idx      Points index (size = n_elt + 1)
     !! \param [out]  points_gnum             Points global number
     !! \param [out]  points_coords           Points coordinates
@@ -724,8 +703,8 @@ module pdm_mesh_location
     !!
 
     subroutine PDM_mesh_location_points_in_elt_get_cf (mloc, &
-                                                       i_part, &
                                                        i_point_cloud, &
+                                                       i_part, &
                                                        elt_pts_inside_idx, &
                                                        points_gnum, &
                                                        points_coords, &
@@ -742,9 +721,9 @@ module pdm_mesh_location
       implicit none
 
 
-      type (c_ptr), value :: mloc
-      integer(c_int), value :: i_part
+      type (c_ptr), value   :: mloc
       integer(c_int), value :: i_point_cloud
+      integer(c_int), value :: i_part
       type(c_ptr)           :: elt_pts_inside_idx
       type(c_ptr)           :: points_gnum
       type(c_ptr)           :: points_coords
@@ -841,7 +820,6 @@ module pdm_mesh_location
 
 
   subroutine PDM_mesh_location_create_ (mloc,          &
-                                        mesh_nature,   &
                                         n_point_cloud, &
                                         f_comm,        &
                                         owner)
@@ -851,25 +829,21 @@ module pdm_mesh_location
   implicit none
 
   type(c_ptr), intent(out) :: mloc          ! Pointer to PDM_mesh_location object
-  integer,     intent(in)  :: mesh_nature   ! Nature of the mesh
   integer,     intent(in)  :: n_point_cloud ! Number of point clouds
   integer,     intent(in)  :: f_comm        ! Fortran MPI communicator
   integer,     intent(in)  :: owner         ! Ownership
 
 
-  integer(c_int) :: c_mesh_nature
   integer(c_int) :: c_n_point_cloud
   integer(c_int) :: c_comm
   integer(c_int) :: c_owner
 
   c_comm = PDM_MPI_Comm_f2c(f_comm)
 
-  c_mesh_nature   = mesh_nature
   c_n_point_cloud = n_point_cloud
   c_owner         = owner
 
-  mloc = PDM_mesh_location_create_cf(c_mesh_nature,   &
-                                     c_n_point_cloud, &
+  mloc = PDM_mesh_location_create_cf(c_n_point_cloud, &
                                      c_comm,          &
                                      c_owner)
 
@@ -1311,8 +1285,8 @@ module pdm_mesh_location
 
 
   subroutine PDM_mesh_location_points_in_elt_get_ (mloc, &
-                                                   i_part, &
                                                    i_point_cloud, &
+                                                   i_part, &
                                                    elt_pts_inside_idx, &
                                                    points_gnum, &
                                                    points_coords, &
@@ -1327,8 +1301,8 @@ module pdm_mesh_location
     implicit none
 
     type (c_ptr), value                :: mloc                         ! Pointer to PDM_mesh_location object
-    integer, intent(in)                :: i_part                       ! Partition identifier
     integer, intent(in)                :: i_point_cloud                ! Point cloud identifier
+    integer, intent(in)                :: i_part                       ! Partition identifier
     integer(kind=pdm_l_num_s), pointer :: elt_pts_inside_idx(:)        ! Index for element -> points mapping (size = *n_elt* + 1)
     integer(kind=pdm_g_num_s), pointer :: points_gnum(:)               ! Located points global ids (size : ``elt_pts_inside_idx(n_elt+1)``)
     real(8),                   pointer :: points_coords(:,:)           ! Located points cartesian coordinates (size : 3 * ``elt_pts_inside_idx(n_elt+1)``)
@@ -1359,8 +1333,8 @@ module pdm_mesh_location
                                          c_i_part)
 
     call PDM_mesh_location_points_in_elt_get_cf(mloc, &
-                                                c_i_part, &
                                                 c_i_point_cloud, &
+                                                c_i_part, &
                                                 c_elt_pts_inside_idx, &
                                                 c_points_gnum, &
                                                 c_points_coords, &

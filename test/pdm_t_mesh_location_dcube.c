@@ -376,8 +376,6 @@ int main(int argc, char *argv[])
   PDM_g_num_t n_pts = 10;
   PDM_mesh_location_method_t loc_method = PDM_MESH_LOCATION_OCTREE;
 
-  int reverse = 1;
-
   /*
    *  Read args
    */
@@ -611,16 +609,11 @@ int main(int argc, char *argv[])
     fflush(stdout);
   }
 
-  PDM_mesh_location_t* mesh_loc = PDM_mesh_location_create (PDM_MESH_NATURE_MESH_SETTED,//???
-                                         1,//const int n_point_cloud,
-                                         PDM_MPI_COMM_WORLD,
-                                         PDM_OWNERSHIP_KEEP);
+  PDM_mesh_location_t* mesh_loc = PDM_mesh_location_create (1,//const int n_point_cloud,
+                                                            PDM_MPI_COMM_WORLD,
+                                                            PDM_OWNERSHIP_KEEP);
 
   /* Set point cloud(s) */
-  if (reverse) {
-    PDM_mesh_location_reverse_results_enable(mesh_loc);
-  }
-
   if (i_rank == 0) {
     printf("-- Mesh location_cloud_set\n");
     fflush(stdout);
@@ -774,7 +767,7 @@ int main(int argc, char *argv[])
 
 
 
-  if (reverse) {
+  if (1) {
     for (int ipart = 0; ipart < n_part; ipart++) {
       int n_cell;
       int n_face;
@@ -856,9 +849,9 @@ int main(int argc, char *argv[])
       double      *points_weights;
       double      *points_dist2;
       double      *points_projected_coords;
-      PDM_mesh_location_points_in_elt_get (mesh_loc,
-                                           ipart,
-                                         0,//i_point_cloud,
+      PDM_mesh_location_points_in_elt_get(mesh_loc,
+                                          0,//i_point_cloud,
+                                          ipart,
                                          &elt_pts_inside_idx,
                                          &points_gnum,
                                          &points_coords,

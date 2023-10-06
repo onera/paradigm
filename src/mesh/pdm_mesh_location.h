@@ -37,7 +37,6 @@ typedef struct _pdm_mesh_location_t PDM_mesh_location_t;
  *
  * \brief Create a structure to compute the location of point clouds inside a mesh
  *
- * \param [in]   mesh_nature    Nature of the mesh
  * \param [in]   n_point_cloud  Number of point clouds
  * \param [in]   comm           MPI communicator
  * \param [in]   owner          Ownership
@@ -49,7 +48,6 @@ typedef struct _pdm_mesh_location_t PDM_mesh_location_t;
 PDM_mesh_location_t*
 PDM_mesh_location_create
 (
- const PDM_mesh_nature_t mesh_nature,
  const int               n_point_cloud,
  const PDM_MPI_Comm      comm,
  const PDM_ownership_t   owner
@@ -434,21 +432,6 @@ PDM_mesh_location_method_set
 
 /**
  *
- * \brief Compute point location (old method)
- *
- * \param [in]   ml              Pointer to \ref PDM_mesh_location_t object
- *
- */
-
-void
-PDM_mesh_location_compute_old
-(
-PDM_mesh_location_t        *ml
-);
-
-
-/**
- *
  * \brief Compute point location
  *
  * \param [in]   ml              Pointer to \ref PDM_mesh_location_t object
@@ -517,8 +500,8 @@ PDM_mesh_location_cell_vertex_get
  * \brief Get location data for points located in elements
  *
  * \param [in]   ml                      Pointer to \ref PDM_mesh_location_t object
- * \param [in]   i_part                  Partition identifier
  * \param [in]   i_point_cloud           Point cloud identifier
+ * \param [in]   i_part                  Partition identifier
  * \param [out]  elt_pts_inside_idx      Index for element -> points mapping (size = *n_elt* + 1)
  * \param [out]  points_gnum             Located points global ids (size : \p elt_pts_inside_idx[ *n_elt* ])
  * \param [out]  points_coords           Located points cartesian coordinates (size : 3 * \p elt_pts_inside_idx[ *n_elt* ])
@@ -534,8 +517,8 @@ void
 PDM_mesh_location_points_in_elt_get
 (
        PDM_mesh_location_t  *ml,
- const int                   i_part,
  const int                   i_point_cloud,
+ const int                   i_part,
        int                 **elt_pts_inside_idx,
        PDM_g_num_t         **points_gnum,
        double              **points_coords,
@@ -607,22 +590,6 @@ PDM_mesh_location_t *ml
 
 PDM_part_mesh_nodal_t*
 PDM_mesh_location_mesh_nodal_get
-(
-PDM_mesh_location_t *ml
-);
-
-
-/**
- * \brief Enable reverse results computation (To call PDM_mesh_location_points_in_elt_get)
- *
- * \note Deprecated
- *
- * \param [in]  ml  Pointer to \ref PDM_mesh_location_t object
- *
- */
-
-void
-PDM_mesh_location_reverse_results_enable
 (
 PDM_mesh_location_t *ml
 );

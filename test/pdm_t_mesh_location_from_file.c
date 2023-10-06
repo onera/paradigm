@@ -605,8 +605,7 @@ int main(int argc, char *argv[])
   /*
    *  Mesh location
    */
-  PDM_mesh_location_t *mesh_loc = PDM_mesh_location_create(PDM_MESH_NATURE_MESH_SETTED,//???
-                                                           1,
+  PDM_mesh_location_t *mesh_loc = PDM_mesh_location_create(1,
                                                            comm,
                                                            PDM_OWNERSHIP_KEEP);
 
@@ -795,8 +794,6 @@ int main(int argc, char *argv[])
 
   PDM_mesh_location_method_set(mesh_loc,
                                loc_method);
-
-  PDM_mesh_location_reverse_results_enable(mesh_loc);
 
   /*
    * Compute location
