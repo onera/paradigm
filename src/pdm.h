@@ -204,7 +204,7 @@ typedef enum {
 typedef enum {
 
   PDM_OWNERSHIP_KEEP                 = 0, /*!< paradigm will free results */
-  PDM_OWNERSHIP_USER                 = 1, /*!< Ownership is gives         */
+  PDM_OWNERSHIP_USER                 = 1, /*!< Ownership is gives to user  */
   PDM_OWNERSHIP_UNGET_RESULT_IS_FREE = 2, /*!< Free all memory that not be getted by user */
   PDM_OWNERSHIP_BAD_VALUE            = 3  /*!< Wrong  */
 

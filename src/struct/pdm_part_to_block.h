@@ -56,10 +56,10 @@ typedef enum {
 
 typedef enum {
 
-  PDM_PART_TO_BLOCK_POST_NOTHING       = 0,  /*!< No post processing     */
-  PDM_PART_TO_BLOCK_POST_CLEANUP       = 1,  /*!< Cleanup multi-elements */
-  PDM_PART_TO_BLOCK_POST_MERGE         = 2,  /*!< Merge multi-elements   */
-  PDM_PART_TO_BLOCK_POST_MERGE_UNIFORM = 3   /*!< TMP   */
+  PDM_PART_TO_BLOCK_POST_NOTHING       = 0,  /*!< No post processing                 */
+  PDM_PART_TO_BLOCK_POST_CLEANUP       = 1,  /*!< Cleanup multi-elements             */
+  PDM_PART_TO_BLOCK_POST_MERGE         = 2,  /*!< Merge multi-elements               */
+  PDM_PART_TO_BLOCK_POST_MERGE_UNIFORM = 3   /*!< Merge but keep the original buffer */
 
 } PDM_part_to_block_post_t;
 
