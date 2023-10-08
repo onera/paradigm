@@ -58,12 +58,13 @@ typedef struct _pdm_multipart_t PDM_multipart_t;
 
 /**
  * \enum PDM_part_size_t
- * \brief Use homogeneous or heterogeneous partition sizes
+ * \brief Use homogeneous or heterogeneous partition sizes (only for ParMetis method)
  */
 typedef enum {
-  PDM_PART_SIZE_HOMOGENEOUS   = 1,
-  PDM_PART_SIZE_HETEROGENEOUS = 2,
+  PDM_PART_SIZE_HOMOGENEOUS   = 1, /*!< All requested partition have the same size */
+  PDM_PART_SIZE_HETEROGENEOUS = 2, /*!< Each requested partition can have a portion (within 0. and 1.) of the mesh */
 } PDM_part_size_t;
+
 /*=============================================================================
  * Static global variables
  *============================================================================*/
@@ -74,15 +75,15 @@ typedef enum {
 
 /**
  *
- * \brief Build a multipart structure
+ * \brief Build a multipart structure. This method allows to split multiple zone
  *
- * \param [in]   n_zone       Number of zones in the original mesh
- * \param [in]   n_part       Number of partition per proc in each zone
- * \param [in]   merge_blocks Merge or not the zones before splitting
- * \param [in]   split_method Choice of library used to split the mesh
+ * \param [in]   n_zone           Number of zones in the original mesh
+ * \param [in]   n_part           Number of partition per proc in each zone
+ * \param [in]   merge_blocks     Merge or not the zones before splitting
+ * \param [in]   split_method     Choice of library used to split the mesh
  * \param [in]   part_size_method Choice of homogeneous or heterogeneous partitions
- * \param [in]   part_weight  Weight (in %) of each partition in heterogeneous case
- * \param [in]   comm         PDM_MPI communicator
+ * \param [in]   part_weight      Weight (in %) of each partition in heterogeneous case if \ref PDM_part_size_t is set at PDM_PART_SIZE_HETEROGENEOUS
+ * \param [in]   comm             PDM_MPI communicator
  *
  * \return     Pointer to a new \ref PDM_multipart_t object
  */
@@ -107,7 +108,7 @@ PDM_multipart_create
  *
  * \param [in]   multipart      Pointer to \ref PDM_multipart_t object
  * \param [in]   zone_id        Global zone id
- * \param [in]   dmesh_id       Id of the distributed mesh structure to use
+ * \param [in]   dmesh          Pointer on \ref PDM_dmesh_t containaing all distributed connectivities
  */
 
 void PDM_multipart_register_block
@@ -119,11 +120,11 @@ void PDM_multipart_register_block
 
 /**
  *
- * \brief Set distributed mesh data for the input zone
+ * \brief Set distributed mesh data for the input zone. The mesh is describe by nodal connectiviy
  *
  * \param [in]   multipart      Pointer to \ref PDM_multipart_t object
  * \param [in]   zone_id        Global zone id
- * \param [in]   dmesh_id       Id of the distributed mesh structure to use
+ * \param [in]   dmesh_nodal    Pointer on \ref PDM_dmesh_nodal_t
  */
 
 void PDM_multipart_register_dmesh_nodal
@@ -318,6 +319,18 @@ const int        i_part,
 );
 
 
+/**
+ *
+ * \brief Returns the connexion graph between partition for the request \ref PDM_bound_type_t
+ * \param [in]  multipart             Pointer to \ref PDM_multipart_t object
+ * \param [in]  i_zone                Id of zone
+ * \param [in]  i_zone                Id of part
+ * \param [in]  bound_type            Bound type
+ * \param [out] ppart_bound_proc_idx  Partitioning boundary entities block distribution from processus (size = n_proc + 1)
+ * \param [out] ppart_bound_part_idx  Partitioning boundary entities block distribution from partition (size = n_total_part + 1)
+ * \param [out] ppart_bound           Partitioning boundary entities (size = 4 * n_entity_part_bound)
+ * \param [in]  ownership             Choice of ownership of the resulting arrays \ref PDM_ownership_t
+ */
 void
 PDM_multipart_part_graph_comm_get
 (
@@ -334,6 +347,8 @@ PDM_multipart_part_graph_comm_get
 /**
  *
  * \brief Returns the data arrays of a given partition
+ *
+ * \deprecated Use \ref PDM_multipart_part_connectivity_get instead
  */
 void
 PDM_multipart_part_val_get
@@ -358,6 +373,11 @@ const int            i_part,
       PDM_g_num_t  **face_bound_ln_to_gn
 );
 
+
+/**
+ *
+ * \brief Returns the total number of part among all process
+ */
 int
 PDM_multipart_part_tn_part_get
 (
@@ -366,8 +386,13 @@ const int                       i_zone
 );
 
 /**
- *
- * \brief Returns the data arrays of a given partition
+ * \brief Return size of leading connectivity on current partition ( n_entity )
+ * \param [in]  multipart             Pointer to \ref PDM_multipart_t object
+ * \param [in]  i_zone                Id of zone
+ * \param [in]  i_part                Id of part
+ * \param [in]  connectivity_type     Connectivity kind \ref PDM_connectivity_type_t
+ * \param [in]  connect               Connectivity array (size = connect_idx[n_entity] )
+ * \param [in]  connect_idx           Connectivity index (size = n_entity+1 )
  */
 int
 PDM_multipart_part_connectivity_get
@@ -382,6 +407,13 @@ const int                       i_part,
 );
 
 
+/**
+ * \brief Return size of leading connectivity on current partition ( n_entity )
+ * \param [in]  multipart             Pointer to \ref PDM_multipart_t object
+ * \param [in]  i_zone                Id of zone
+ * \param [in]  i_zone                Id of part
+ * \param [in]  entity_type           Entity kind \ref PDM_mesh_entities_t
+ */
 int
 PDM_multipart_part_n_entity_get
 (
@@ -391,6 +423,16 @@ const int                   i_part,
       PDM_mesh_entities_t   entity_type
 );
 
+/**
+ *
+ * \brief Return size of leading connectivity on current partition ( n_entity )
+ * \param [in]  multipart             Pointer to \ref PDM_multipart_t object
+ * \param [in]  i_zone                Id of zone
+ * \param [in]  i_part                Id of part
+ * \param [in]  entity_type           Entity kind \ref PDM_mesh_entities_t)
+ * \param [out] entity_ln_to_gn       Entity local numbering to global numbering (size = n_entity, numbering : 1 to n)
+ * \param [in]  ownership             Ownership for entity_ln_to_gn ( \ref PDM_ownership_t )
+ */
 int
 PDM_multipart_part_ln_to_gn_get
 (
@@ -402,6 +444,17 @@ const int                   i_part,
       PDM_ownership_t       ownership
 );
 
+
+/**
+ *
+ * \brief Return number of entity on current partition ( n_entity )
+ * \param [in]  multipart             Pointer to \ref PDM_multipart_t object
+ * \param [in]  i_zone                Id of zone
+ * \param [in]  i_part                Id of part
+ * \param [in]  entity_type           Entity kind \ref PDM_mesh_entities_t)
+ * \param [out] entity_color          Entity color (only for specific renumbering option )
+ * \param [in]  ownership             Ownership for color ( \ref PDM_ownership_t )
+ */
 int
 PDM_multipart_partition_color_get
 (
@@ -413,6 +466,15 @@ const int                   i_part,
       PDM_ownership_t       ownership
 );
 
+/**
+ *
+ * \brief Get array containing hyperplane color
+ * \param [in]  multipart             Pointer to \ref PDM_multipart_t object
+ * \param [in]  i_zone                Id of zone
+ * \param [in]  i_part                Id of part
+ * \param [in]  hyperplane_color      Hyperplane color
+ * \param [in]  ownership             Ownership for color ( \ref PDM_ownership_t )
+ */
 void
 PDM_multipart_part_hyperplane_color_get
 (
@@ -423,6 +485,16 @@ const int               i_part,
       PDM_ownership_t   ownership
 );
 
+/**
+ *
+ * \brief Get array containing thread color - Only if specific reordering (in paradigma plugins)
+ *
+ * \param [in]  multipart             Pointer to \ref PDM_multipart_t object
+ * \param [in]  i_zone                Id of zone
+ * \param [in]  i_part                Id of part
+ * \param [in]  thread_color          Thread color
+ * \param [in]  ownership             Ownership for color ( \ref PDM_ownership_t )
+ */
 void
 PDM_multipart_part_thread_color_get
 (
@@ -434,6 +506,16 @@ const int               i_part,
 );
 
 
+/**
+ *
+ * \brief Get array containing vtx_ghost_information, usefull to have a priority on vertex between 2 partitions
+ *
+ * \param [in]  multipart             Pointer to \ref PDM_multipart_t object
+ * \param [in]  i_zone                Id of zone
+ * \param [in]  i_part                Id of part
+ * \param [in]  vtx_ghost_information Integer that give the current priority of vertices on current partitions
+ * \param [in]  ownership             Ownership for color ( \ref PDM_ownership_t )
+ */
 void
 PDM_multipart_part_ghost_infomation_get
 (
@@ -458,7 +540,6 @@ const int               i_part,
  * \param [out]  cpu_sys        System CPU time
  *
  */
-
 void
 PDM_multipart_time_get
 (
@@ -477,14 +558,23 @@ PDM_multipart_time_get
  *
  * \param [in]   multipart      Pointer to \ref PDM_multipart_t object
  */
-
 void
 PDM_multipart_free
 (
  PDM_multipart_t *multipart
 );
 
-
+/**
+ *
+ * \brief Get the vertex coordinates on current i_zone, i_part partition and return number of vertices
+ *
+ * \param [in]   multipart      Pointer to \ref PDM_multipart_t object
+ * \param [in]   i_zone         Id of current zone
+ * \param [in]   i_part         Id of part
+ * \param [out]  vtx_coord      Vertex coordinate (size = 3 * n_vtx)
+ * \param [in]   ownership      Ownership for color ( \ref PDM_ownership_t )
+ *
+ */
 int
 PDM_multipart_part_vtx_coord_get
 (
@@ -496,7 +586,21 @@ const int                       i_part,
 );
 
 
-
+/**
+ *
+ * \brief Get the bound description for the entity
+ *
+ * \param [in]   multipart      Pointer to \ref PDM_multipart_t object
+ * \param [in]   i_zone         Id of current zone
+ * \param [in]   i_part         Id of part
+ * \param [in]   bound_type     Bound type \ref PDM_bound_type_t
+ * \param [out]  n_bound        Number of bound for bound_type
+ * \param [out]  bound_idx      Entity group index (size = n_bound )
+ * \param [out]  bound          Entity id for each group (size = bound_idx[n_bound])
+ * \param [out]  bound_ln_to_gn Entity global numbering for each group (size = bound_idx[n_bound])
+ * \param [in]   ownership      Ownership for color ( \ref PDM_ownership_t )
+ *
+ */
 void PDM_multipart_bound_get
 (
  PDM_multipart_t   *multipart,
