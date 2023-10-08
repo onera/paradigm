@@ -45,7 +45,6 @@ extern "C" {
  * \param [inout]  entity1_entity2     Connectivity between entity1 and entity2 (size = entity1_entity2_idx[n_entity1] )
  *
  */
-static
 void
 PDM_compress_connectivity
 (
