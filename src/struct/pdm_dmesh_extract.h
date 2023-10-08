@@ -96,9 +96,9 @@ PDM_dmesh_extract_compute
  * \brief Set the extract number
  *
  * \param [in]   dme                  PDM_dmesh_extract_t
- * \param [in]   PDM_mesh_entities_t  part identifier
+ * \param [in]   entity_type          Entity kind to be extracted (\ref PDM_mesh_entities_t)
  * \param [in]   n_selected           Number of entity to select
- * \param [in]   selected_gnum        List of gnum to extract
+ * \param [in]   selected_gnum        List of global id to extract
  *
  */
 void
@@ -110,7 +110,15 @@ PDM_dmesh_extract_selected_gnum_set
  PDM_g_num_t         *selected_gnum
 );
 
-
+/**
+ *
+ * \brief Set the dn_entity of entity_type
+ *
+ * \param [in]   dme                  PDM_dmesh_extract_t
+ * \param [in]   entity_type          Entity kind (\ref PDM_mesh_entities_t)
+ * \param [in]   dn_entity            Number of entity in current process
+ *
+ */
 void
 PDM_dmesh_extract_dn_entity_set
 (
@@ -119,6 +127,15 @@ PDM_dmesh_extract_dn_entity_set
  int                  dn_entity
 );
 
+
+/**
+ *
+ * \brief Set vertices coordinates
+ *
+ * \param [in]   dme           PDM_dmesh_extract_t
+ * \param [in]   dvtx_coord    Distributed vertex coordinates (size = 3 * dn_vtx )
+ *
+ */
 void
 PDM_dmesh_extract_vtx_coord_set
 (
@@ -126,6 +143,17 @@ PDM_dmesh_extract_vtx_coord_set
  double              *dvtx_coord
 );
 
+/**
+ *
+ * \brief Set mesh bound for one bound_type
+ *
+ * \param [in]   dme           PDM_dmesh_extract_t
+ * \param [in]   bound_type    Bound kind (\ref PDM_bound_type_t)
+ * \param [in]   n_bound       Number of bound in for bound_type
+ * \param [in]   connect       Connectivity between group and entity (size = connect_idx[n_bound])
+ * \param [in]   connect_idx   Connectivity index between group and entity (size = n_bound+1)
+ *
+ */
 void
 PDM_dmesh_extract_dmesh_bound_set
 (
@@ -137,6 +165,16 @@ PDM_dmesh_extract_dmesh_bound_set
 );
 
 
+/**
+ *
+ * \brief Set connectivity by kind (\ref PDM_connectivity_type_t )
+ *
+ * \param [in]   dme                  PDM_dmesh_extract_t
+ * \param [in]   connectivity_type    Connectivity kind (\ref PDM_connectivity_type_t)
+ * \param [in]   dconnect             Connectivity (size = dconnect_idx[dn_entity])
+ * \param [in]   dconnect_idx         Connectivity (size = dn_entity+1)
+ *
+ */
 void
 PDM_dmesh_extract_dconnectivity_set
 (
@@ -276,7 +314,13 @@ PDM_dmesh_extract_btp_group_get
 );
 
 
-
+/**
+ *
+ * \brief Free structure
+ *
+ * \param [in]   dme                  PDM_dmesh_extract_t
+ *
+ */
 void
 PDM_dmesh_extract_free
 (
