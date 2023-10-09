@@ -308,7 +308,7 @@ int main(int argc, char *argv[])
    */
 
   PDM_g_num_t          n_vtx_seg = 5;  // Number of vtx on each side of the cube mesh
-  PDM_Mesh_nodal_elt_t elt_type  = 2;  // Type of cells
+  PDM_Mesh_nodal_elt_t elt_type  = PDM_MESH_NODAL_TRIA3;  // Type of cells
   int                  n_steps   = 10; // Number of smoothing steps
   _read_args(argc,
              argv,
