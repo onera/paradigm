@@ -23,7 +23,7 @@ Initialization
 Source mesh definition
 """"""""""""""""""""""
 
-.. doxygenfunction:: PDM_mesh_location_mesh_global_data_set
+.. doxygenfunction:: PDM_mesh_location_mesh_n_part_set
 
 .. doxygenfunction:: PDM_mesh_location_part_set
 

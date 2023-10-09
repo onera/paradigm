@@ -44,7 +44,7 @@ cdef extern from "pdm_mesh_location.h":
 
   # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
   # void PDM_mesh_location_shared_nodal_mesh_set(int  id, PDM_Mesh_nodal_t *mesh_nodal)
-  void PDM_mesh_location_mesh_global_data_set (PDM_mesh_location_t  *ml, int  n_part)
+  void PDM_mesh_location_mesh_n_part_set (PDM_mesh_location_t  *ml, int  n_part)
   # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
   # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -276,7 +276,7 @@ cdef class MeshLocation:
       n_part (int) : Number of partitions
     """
     self._n_src_part = n_part
-    PDM_mesh_location_mesh_global_data_set(self._ml, n_part)
+    PDM_mesh_location_mesh_n_part_set(self._ml, n_part)
 
   # ------------------------------------------------------------------------
   def part_set(self, int i_part,

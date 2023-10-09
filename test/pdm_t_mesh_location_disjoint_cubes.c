@@ -1362,7 +1362,7 @@ int main(int argc, char *argv[])
 
 
   /* Set source mesh */
-  PDM_mesh_location_mesh_global_data_set (mesh_loc,
+  PDM_mesh_location_mesh_n_part_set (mesh_loc,
                                           n_part);
 
   for (int ipart = 0; ipart < n_part; ipart++) {

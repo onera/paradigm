@@ -236,7 +236,7 @@ PDM_mesh_location_shared_nodal_mesh_set
  */
 
 void
-PDM_mesh_location_mesh_global_data_set
+PDM_mesh_location_mesh_n_part_set
 (
        PDM_mesh_location_t *ml,
  const int                  n_part

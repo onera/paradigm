@@ -228,9 +228,9 @@ module pdm_mesh_location
     !!
     !!
 
-    subroutine PDM_mesh_location_mesh_global_data_set (mloc, &
+    subroutine PDM_mesh_location_mesh_n_part_set (mloc, &
                                                        n_part) &
-     bind (c, name = 'PDM_mesh_location_mesh_global_data_set')
+     bind (c, name = 'PDM_mesh_location_mesh_n_part_set')
 
       use iso_c_binding
 
@@ -240,7 +240,7 @@ module pdm_mesh_location
       type (c_ptr), value :: mloc
       integer(c_int), value :: n_part
 
-    end subroutine PDM_mesh_location_mesh_global_data_set
+    end subroutine PDM_mesh_location_mesh_n_part_set
 
     !>
     !!

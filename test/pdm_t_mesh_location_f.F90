@@ -335,7 +335,7 @@ program testf
   ! Set mesh
   !
 
-  call PDM_mesh_location_mesh_global_data_set (ml, &
+  call PDM_mesh_location_mesh_n_part_set (ml, &
                                                n_part_mesh)
 
   call PDM_mesh_location_part_set (ml, &

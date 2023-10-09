@@ -263,6 +263,9 @@ test_c_create (pdm_t_mesh_intersection_surf_surf_atomic 1 PDM_LIST_TEST PDM_LIST
 test_c_create (pdm_t_newton_ho 1  PDM_LIST_TEST PDM_LIST_NRANK)
 test_c_create (pdm_t_svd 1  PDM_LIST_TEST PDM_LIST_NRANK)
 
+
+test_c_create (tp_mesh_location 2 PDM_LIST_TEST PDM_LIST_NRANK)
+
 if (PDM_ENABLE_PYTHON_BINDINGS)
    test_python_create (pdm_t_part_to_part_p 2 PDM_LIST_TEST PDM_LIST_NRANK)
    add_dependencies (pdm_t_part_to_part_p Pypdm)
