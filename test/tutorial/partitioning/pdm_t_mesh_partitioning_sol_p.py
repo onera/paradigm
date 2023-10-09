@@ -7,7 +7,7 @@ def run_test():
   import Pypdm.Pypdm as PDM
 
   vtk = 0
-  fe  = 0
+  fe  = 1
 
   # Initialize MPI environment
   comm   = MPI.COMM_WORLD
@@ -41,11 +41,11 @@ def run_test():
 
   PDM.generate_distribution(dmn)
 
-  del dcube # facultatif
-
   # Create partitioning object
-  n_zone      = 1; # fixed
-  n_part      = 1; # fixed
+  n_zone = 1 # fixed
+  n_part = 1 # fixed
+  i_part = 0 # fixed
+  i_zone = 0 # fixed
   part_method = PDM._PDM_SPLIT_DUAL_WITH_HILBERT;
   mpart = PDM.MultiPart(n_zone,
                         np.array([n_part]).astype(np.intc),
@@ -62,24 +62,26 @@ def run_test():
                                  renum_face,
                                  None)
 
-  mpart.multipart_register_dmesh_nodal(0, dmn)
+  mpart.multipart_register_dmesh_nodal(i_zone, dmn)
 
   mpart.multipart_run_ppart()
 
-  i_part = 0 # fixed
-  i_zone = 0 # fixed
-
   # Get mesh arrrays in FE structure
   if fe:
-    pmn = mpart.multipart_part_mesh_nodal_get(i_zone)
+    output = mpart.multipart_vtx_coord_get(i_part,
+                                           i_zone)
+    coords = output["np_vtx_coord"]
 
+    pmn = mpart.multipart_part_mesh_nodal_get(i_zone)
+    i_section = 0 # fixed
     output = PDM.part_mesh_nodal_get_sections(pmn,
                                               PDM._PDM_GEOMETRY_KIND_VOLUMIC,
                                               i_part)
-
-    elt_vtx      = output["np_connec"]
-    elt_ln_to_gn = output["np_numabs"]
-    # TO DO : get n_elt, n_vtx, coords, vtx_ln_to_gn adding it to pdm_part_mesh_nodal.pxi
+    elt_vtx      = output[i_section]["np_connec"]
+    elt_ln_to_gn = output[i_section]["np_numabs"]
+    n_elt        = len(elt_ln_to_gn)
+    vtx_ln_to_gn = PDM.part_mesh_nodal_vtx_g_num_get(pmn, i_part)
+    n_vtx        = len(vtx_ln_to_gn)
 
   # Get mesh arrrays in FV structure
   else :
