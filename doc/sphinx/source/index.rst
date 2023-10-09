@@ -58,7 +58,7 @@ User manual
 
   .. container:: card
 
-    :ref:`Partitioning <partitioning>`
+    :ref:`Partitioning <api_partitioning>`
       Graph partitioning, connectivity reconstruction, partition extension and local renumbering
 
 
@@ -120,7 +120,7 @@ User manual
    :hidden:
 
    user_manual/simple_mesh_gen/index
-   user_manual/partitioning/index
+   api/partitionning.rst
    user_manual/comm_graph/index
    user_manual/gnum/index
    user_manual/prepro_algo/index

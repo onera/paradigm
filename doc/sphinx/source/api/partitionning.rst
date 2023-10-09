@@ -1,7 +1,7 @@
-.. _api_partitionning:
+.. _api_partitioning:
 
-Mesh partitionning
-==================
+Mesh partitioning
+=================
 
 .. _api_multipart:
 
