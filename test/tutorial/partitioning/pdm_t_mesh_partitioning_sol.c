@@ -164,6 +164,7 @@ int main
   PDM_multipart_run_ppart(mpart);
 
   int i_section = 0; // fixed
+  int i_zone    = 0; // fixed
   int i_part    = 0; // fixed
 
   // Get mesh arrrays in FE structure
@@ -202,7 +203,7 @@ int main
 
     double *coords = NULL;
     int n_vtx = PDM_multipart_part_vtx_coord_get(mpart,
-                                                 i_section,
+                                                 i_zone,
                                                  i_part,
                                                  &coords,
                                                  PDM_OWNERSHIP_USER);
@@ -239,7 +240,7 @@ int main
   else {
     PDM_g_num_t *vtx_ln_to_gn = NULL;
     int n_vtx = PDM_multipart_part_ln_to_gn_get(mpart,
-                                                i_section, // i_zone == i_section ?
+                                                i_zone,
                                                 i_part,
                                                 PDM_MESH_ENTITY_VERTEX,
                                                 &vtx_ln_to_gn,
@@ -247,14 +248,14 @@ int main
 
     double *coords = NULL;
     PDM_multipart_part_vtx_coord_get(mpart,
-                                     i_section,
+                                     i_zone,
                                      i_part,
                                      &coords,
                                      PDM_OWNERSHIP_USER);
 
     PDM_g_num_t *edge_ln_to_gn = NULL;
     int n_edge = PDM_multipart_part_ln_to_gn_get(mpart,
-                                                i_section,
+                                                i_zone,
                                                 i_part,
                                                 PDM_MESH_ENTITY_EDGE,
                                                 &edge_ln_to_gn,
@@ -263,7 +264,7 @@ int main
     int *edge_vtx_idx = NULL;
     int *edge_vtx     = NULL;
     PDM_multipart_part_connectivity_get(mpart,
-                                        i_section,
+                                        i_zone,
                                         i_part,
                                         PDM_CONNECTIVITY_TYPE_EDGE_VTX,
                                         &edge_vtx,
@@ -274,7 +275,7 @@ int main
 
     PDM_g_num_t *face_ln_to_gn = NULL;
     int n_face = PDM_multipart_part_ln_to_gn_get(mpart,
-                                                i_section,
+                                                i_zone,
                                                 i_part,
                                                 PDM_MESH_ENTITY_FACE,
                                                 &face_ln_to_gn,
@@ -283,7 +284,7 @@ int main
     int *face_edge_idx = NULL;
     int *face_edge     = NULL;
     PDM_multipart_part_connectivity_get(mpart,
-                                        i_section,
+                                        i_zone,
                                         i_part,
                                         PDM_CONNECTIVITY_TYPE_FACE_EDGE,
                                         &face_edge,
@@ -292,7 +293,7 @@ int main
 
     PDM_g_num_t *cell_ln_to_gn = NULL;
     int n_cell = PDM_multipart_part_ln_to_gn_get(mpart,
-                                                i_section,
+                                                i_zone,
                                                 i_part,
                                                 PDM_MESH_ENTITY_CELL,
                                                 &cell_ln_to_gn,
@@ -301,7 +302,7 @@ int main
     int *cell_face_idx = NULL;
     int *cell_face     = NULL;
     PDM_multipart_part_connectivity_get(mpart,
-                                        i_section,
+                                        i_zone,
                                         i_part,
                                         PDM_CONNECTIVITY_TYPE_CELL_FACE,
                                         &cell_face,
