@@ -18,6 +18,11 @@ program tp_mesh_location
   include "mpif.h"
 #endif
 
+  type my_field_t
+    character(99)                      :: name
+    type(PDM_pointer_array_t), pointer :: pa => null()
+  end type my_field_t
+
   !---------------------------------------------------------------
   integer,              parameter    :: comm = MPI_COMM_WORLD
 
@@ -95,6 +100,10 @@ program tp_mesh_location
   double precision,          pointer :: dist2(:)              => null()
   double precision,          pointer :: projected_coords(:,:) => null()
   double precision                   :: error(2)
+  type(my_field_t)                   :: tgt_visu_fields(3)
+  double precision,          pointer :: visu_field1(:)        => null()
+  double precision,          pointer :: visu_field2(:)        => null()
+  double precision,          pointer :: visu_field3(:)        => null()
 
 
   integer :: i_rank, ierr
@@ -438,6 +447,16 @@ program tp_mesh_location
 
   ! Finally, visualize the interpolated target fields.
   ! (Beware of unlocated points!)
+  do i = 1, 3
+    call pdm_pointer_array_create(tgt_visu_fields(i)%pa, &
+                                  tgt_n_part,            &
+                                  PDM_TYPE_DOUBLE)
+  enddo
+  tgt_visu_fields(1)%name = "field1"
+  tgt_visu_fields(2)%name = "field1"
+  tgt_visu_fields(3)%name = "is_located"
+
+
   do i_part = 1, tgt_n_part
     n_located = pdm_mesh_location_n_located_get(mesh_loc, &
                                                 0,        &
@@ -483,6 +502,17 @@ program tp_mesh_location
                                     i_part-1,        &
                                     field2)
 
+    allocate(visu_field1(tgt_n_vtx(i_part)), &
+             visu_field2(tgt_n_vtx(i_part)), &
+             visu_field3(tgt_n_vtx(i_part)))
+
+    do i = 1, n_unlocated
+      vtx_id = unlocated(i)
+      visu_field1(vtx_id) = -1.d0
+      visu_field2(vtx_id) = -1.d0
+      visu_field3(vtx_id) =  0.d0
+    enddo
+
     do i = 1, n_located
       vtx_id = located(i)
       error(1) = abs(field1(i) - location(i))
@@ -491,30 +521,65 @@ program tp_mesh_location
         print *, "!! error vtx", vtx_ln_to_gn(vtx_id), " :", error
       endif
 
+      visu_field1(vtx_id) = field1(i)
+      visu_field2(vtx_id) = field2(i)
+      visu_field3(vtx_id) = 1.d0
+
+      call pdm_pointer_array_part_set(tgt_visu_fields(1)%pa, &
+                                      i_part-1,              &
+                                      visu_field1)
+
+      call pdm_pointer_array_part_set(tgt_visu_fields(2)%pa, &
+                                      i_part-1,              &
+                                      visu_field2)
+
+      call pdm_pointer_array_part_set(tgt_visu_fields(3)%pa, &
+                                      i_part-1,              &
+                                      visu_field3)
+
     enddo
   enddo
 
+  call visu_2d(comm,                  &
+               "mesh_location_sol_f", &
+               "tgt_mesh",            &
+               tgt_n_part,            &
+               tgt_n_vtx,             &
+               tgt_vtx_coord,         &
+               tgt_vtx_ln_to_gn,      &
+               tgt_n_face,            &
+               tgt_face_edge_idx,     &
+               tgt_face_vtx,          &
+               tgt_face_ln_to_gn,     &
+               tgt_visu_fields)
 
+
+  !
+  ! Free memory
+  !
   call pdm_mesh_location_free(mesh_loc)
 
   call pdm_part_to_part_free(ptp)
+
+  ! TODO: free everything...
 
   call mpi_finalize(ierr)
 
 
 contains
 
-  subroutine visu_2d(comm,          &
-                     directory,     &
-                     name,          &
-                     n_part,        &
-                     pn_vtx,        &
-                     pvtx_coord,    &
-                     pvtx_ln_to_gn, &
-                     pn_face,       &
-                     pface_vtx_idx, &
-                     pface_vtx,     &
-                     pface_ln_to_gn)
+  subroutine visu_2d(comm,           &
+                     directory,      &
+                     name,           &
+                     n_part,         &
+                     pn_vtx,         &
+                     pvtx_coord,     &
+                     pvtx_ln_to_gn,  &
+                     pn_face,        &
+                     pface_vtx_idx,  &
+                     pface_vtx,      &
+                     pface_ln_to_gn, &
+                     vtx_fields)
 
     use iso_c_binding
     use pdm_io
@@ -533,6 +598,7 @@ contains
     type(PDM_pointer_array_t), pointer :: pface_vtx_idx
     type(PDM_pointer_array_t), pointer :: pface_vtx
     type(PDM_pointer_array_t), pointer :: pface_ln_to_gn
+    type(my_field_t), optional         :: vtx_fields(:)
 
     type(c_ptr)                        :: wrt = C_NULL_PTR
     integer                            :: id_geom, id_var_part, id_var_elt_gnum
@@ -544,7 +610,9 @@ contains
     double precision,          pointer :: val_part(:)      => null()
     double precision,          pointer :: val_gnum(:)      => null()
     double precision,          pointer :: val(:)           => null()
-    integer                            :: i_rank, err, i_part, i
+    integer, allocatable               :: id_var_vtx_field(:)
+    integer                            :: n_vtx_fields
+    integer                            :: i_rank, err, i_part, i_field
 
     call mpi_comm_rank(comm, i_rank, err)
 
@@ -580,7 +648,20 @@ contains
                                PDM_WRITER_VAR_ELEMENTS, &
                                "elt_gnum")
 
-    ! TO DO: vtx fields...
+    n_vtx_fields = 0
+    if (present(vtx_fields)) then
+      n_vtx_fields = size(vtx_fields)
+
+      allocate(id_var_vtx_field(n_vtx_fields))
+      do i_field = 1, n_vtx_fields
+        call pdm_writer_var_create(wrt,                       &
+                                   id_var_vtx_field(i_field), &
+                                   PDM_WRITER_OFF,            &
+                                   PDM_WRITER_VAR_SCALAIRE,   &
+                                   PDM_WRITER_VAR_VERTICES,   &
+                                   vtx_fields(i_field)%name)
+      enddo
+    endif
 
     call pdm_writer_step_beg(wrt, 0.d0)
 
@@ -642,10 +723,8 @@ contains
                                       i_part-1,       &
                                       face_ln_to_gn)
 
-      do i = 1, pn_face(i_part)
-        val_part(i) = i_rank*n_part + i_part
-        val_gnum(i) = face_ln_to_gn(i)
-      enddo
+      val_part(1:pn_face(i_part)) = i_rank*n_part + i_part
+      val_gnum(1:pn_face(i_part)) = face_ln_to_gn(1:pn_face(i_part))
 
       call pdm_writer_var_set(wrt,         &
                               id_var_part, &
@@ -665,7 +744,20 @@ contains
     call pdm_writer_var_write(wrt, id_var_part)
     call pdm_writer_var_write(wrt, id_var_elt_gnum)
 
-    ! TODO: vtx_fields...
+    ! Write node-based variables
+    do i_field = 1, n_vtx_fields
+      do i_part = 1, n_part
+        call pdm_pointer_array_part_get(vtx_fields(i_field)%pa, &
+                                        i_part-1,               &
+                                        val)
+        call pdm_writer_var_set(wrt,                       &
+                                id_var_vtx_field(i_field), &
+                                id_geom,                   &
+                                i_part-1,                  &
+                                val)
+      enddo
+      call pdm_writer_var_write(wrt, id_var_vtx_field(i_field))
+    enddo
 
     call pdm_writer_step_end(wrt)
 
