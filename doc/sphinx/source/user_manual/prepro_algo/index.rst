@@ -86,15 +86,15 @@ Initialization
 Source mesh definition
 """"""""""""""""""""""
 
-.. .. f:autosubroutine:: pdm_mesh_location/pdm_mesh_mesh_global_data_set_
+.. .. f:autosubroutine:: pdm_mesh_location/pdm_mesh_location_mesh_n_part_set
 
 .. f:autosubroutine:: pdm_mesh_location/pdm_mesh_location_part_set_
 
-.. f:autosubroutine:: pdm_mesh_location/pdm_mesh_location_nodal_part_set_
+.. f:autosubroutine:: pdm_mesh_location/pdm_mesh_location_nodal_part_set
 
 .. f:autosubroutine:: pdm_mesh_location/pdm_mesh_location_part_set_2d_
 
-.. f:autosubroutine:: pdm_mesh_location/pdm_mesh_location_nodal_part_set_2d_
+.. f:autosubroutine:: pdm_mesh_location/pdm_mesh_location_nodal_part_set_2d
 
 Target point clouds definition
 """"""""""""""""""""""""""""""
@@ -138,9 +138,59 @@ Finalization
 Python API
 ----------
 
+Initialization
+""""""""""""""
+
 .. autoclass:: Pypdm.Pypdm.MeshLocation
   :members:
 
+Source mesh definition
+""""""""""""""""""""""
+
+.. autofunction:: Pypdm.Pypdm.MeshLocation.mesh_n_part_set
+
+.. autofunction:: Pypdm.Pypdm.MeshLocation.part_set
+
+.. autofunction:: Pypdm.Pypdm.MeshLocation.nodal_part_set
+
+.. autofunction:: Pypdm.Pypdm.MeshLocation.part_set_2d
+
+.. autofunction:: Pypdm.Pypdm.MeshLocation.nodal_part_set_2d
+
+Target point clouds definition
+""""""""""""""""""""""""""""""
+
+.. autofunction:: Pypdm.Pypdm.MeshLocation.n_part_cloud_set
+
+.. autofunction:: Pypdm.Pypdm.MeshLocation.cloud_set
+
+Location computation
+""""""""""""""""""""
+
+.. autofunction:: Pypdm.Pypdm.MeshLocation.tolerance_set
+
+.. autofunction:: Pypdm.Pypdm.MeshLocation.method_set
+
+.. autofunction:: Pypdm.Pypdm.MeshLocation.compute
+
+Results
+"""""""
+
+.. autofunction:: Pypdm.Pypdm.MeshLocation.n_located_get
+
+.. autofunction:: Pypdm.Pypdm.MeshLocation.located_get
+
+.. autofunction:: Pypdm.Pypdm.MeshLocation.n_unlocated_get
+
+.. autofunction:: Pypdm.Pypdm.MeshLocation.unlocated_get
+
+.. autofunction:: Pypdm.Pypdm.MeshLocation.points_in_elt_get
+
+.. autofunction:: Pypdm.Pypdm.MeshLocation.point_location_get
+
+.. autofunction:: Pypdm.Pypdm.MeshLocation.cell_vertex_get
+
+.. autofunction:: Pypdm.Pypdm.MeshLocation.part_to_part_get
 
 
 Other
