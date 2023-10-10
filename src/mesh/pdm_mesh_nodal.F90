@@ -72,8 +72,8 @@ module pdm_mesh_nodal
       use iso_c_binding
       implicit none
 
-      integer, value :: elt_t, order
-      integer        :: n_vtx_per_elt
+      integer(c_int), value :: elt_t, order
+      integer(c_int)        :: n_vtx_per_elt
 
     end function PDM_Mesh_nodal_n_vtx_elt_get_cf
 

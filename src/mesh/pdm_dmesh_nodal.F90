@@ -43,6 +43,22 @@ module pdm_dmesh_nodal
       type (c_ptr), value :: dmn
     end subroutine PDM_dmesh_nodal_generate_distribution
 
+    !>
+    !!
+    !! \brief Free \ref PDM_dmesh_nodal_t object
+    !!
+    !! \param [inout]   dmn   Pointer to \ref PDM_dmesh_nodal_t object
+    !!
+
+    subroutine PDM_DMesh_nodal_free (dmn) &
+    bind(c, name='PDM_DMesh_nodal_free')
+
+      use iso_c_binding
+      implicit none
+
+      type (c_ptr), value :: dmn
+    end subroutine PDM_DMesh_nodal_free
+
   end interface
 
 end module pdm_dmesh_nodal

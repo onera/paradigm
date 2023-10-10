@@ -275,7 +275,7 @@ module PDM_part_mesh_nodal
       integer(c_int) :: c_i_section, c_i_part, c_ownership
 
       type (c_ptr)   :: c_connec = C_NULL_PTR
-      type (c_ptr)   :: c_numabs, c_parent_entity_g_num = C_NULL_PTR
+      type (c_ptr)   :: c_numabs = C_NULL_PTR, c_parent_entity_g_num = C_NULL_PTR
       type (c_ptr)   :: c_parent_num = C_NULL_PTR
 
       integer(c_int) :: c_n_elt

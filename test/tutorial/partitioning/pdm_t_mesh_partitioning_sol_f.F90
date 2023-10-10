@@ -52,7 +52,7 @@ program pdm_t_mesh_partitioning_sol_f
 
   ! PDM_dcube_nodal_gen_create
   integer                               :: n_x, n_y, n_z
-  integer                               :: elt_type, order, ownership
+  integer                               :: elt_type, order
   double precision                      :: length
   double precision                      :: xmin, ymin, zmin
   type (c_ptr)                          :: dcube
@@ -94,6 +94,22 @@ program pdm_t_mesh_partitioning_sol_f
 
   ! PDM_part_mesh_nodal_vtx_g_num_get
   integer (pdm_g_num_s), pointer      :: vtx_ln_to_gn(:)
+
+  ! FV
+  integer(kind=PDM_g_num_s), pointer :: edge_ln_to_gn(:)
+  integer(c_int)                     :: n_edge
+  integer(kind=PDM_l_num_s), pointer :: edge_vtx(:)
+  integer(kind=PDM_l_num_s), pointer :: edge_vtx_idx(:)
+
+  integer(kind=PDM_g_num_s), pointer :: face_ln_to_gn(:)
+  integer(c_int)                     :: n_face
+  integer(kind=PDM_l_num_s), pointer :: face_edge(:)
+  integer(kind=PDM_l_num_s), pointer :: face_edge_idx(:)
+
+  integer(kind=PDM_g_num_s), pointer :: cell_ln_to_gn(:)
+  integer(c_int)                     :: n_cell
+  integer(kind=PDM_l_num_s), pointer :: cell_face(:)
+  integer(kind=PDM_l_num_s), pointer :: cell_face_idx(:)
   !-----------------------------------------------------------
 
   ! Initialize MPI environment
@@ -192,15 +208,81 @@ program pdm_t_mesh_partitioning_sol_f
     call PDM_part_mesh_nodal_vtx_g_num_get(pmn,    &
                                            i_part, &
                                            vtx_ln_to_gn)
+
+    call PDM_part_mesh_nodal_free(pmn)
   end if
 
   ! Get mesh arrrays in FV structure
   if (fe .eq. 0) then
-    ! TO DO
+    call PDM_multipart_part_ln_to_gn_get(mpart,                  &
+                                         i_zone,                 &
+                                         i_part,                 &
+                                         PDM_MESH_ENTITY_VERTEX, &
+                                         vtx_ln_to_gn,           &
+                                         PDM_OWNERSHIP_USER,     &
+                                         n_vtx)
+
+    call PDM_multipart_part_vtx_coord_get(mpart,             &
+                                         i_zone,             &
+                                         i_part,             &
+                                         coords,             &
+                                         PDM_OWNERSHIP_USER, &
+                                         n_vtx)
+
+    call PDM_multipart_part_ln_to_gn_get(mpart,                &
+                                         i_zone,               &
+                                         i_part,               &
+                                         PDM_MESH_ENTITY_EDGE, &
+                                         edge_ln_to_gn,        &
+                                         PDM_OWNERSHIP_USER,   &
+                                         n_edge)
+
+    call PDM_multipart_part_connectivity_get(mpart,                          &
+                                             i_zone,                         &
+                                             i_part,                         &
+                                             PDM_CONNECTIVITY_TYPE_EDGE_VTX, &
+                                             edge_vtx,                       &
+                                             edge_vtx_idx,                   &
+                                             PDM_OWNERSHIP_USER,             &
+                                             n_edge)
+
+    call PDM_multipart_part_ln_to_gn_get(mpart,                &
+                                         i_zone,               &
+                                         i_part,               &
+                                         PDM_MESH_ENTITY_FACE, &
+                                         face_ln_to_gn,        &
+                                         PDM_OWNERSHIP_USER,   &
+                                         n_face)
+
+    call PDM_multipart_part_connectivity_get(mpart,                           &
+                                             i_zone,                          &
+                                             i_part,                          &
+                                             PDM_CONNECTIVITY_TYPE_FACE_EDGE, &
+                                             face_edge,                       &
+                                             face_edge_idx,                   &
+                                             PDM_OWNERSHIP_USER,              &
+                                             n_face)
+
+    call PDM_multipart_part_ln_to_gn_get(mpart,                &
+                                         i_zone,               &
+                                         i_part,               &
+                                         PDM_MESH_ENTITY_CELL, &
+                                         cell_ln_to_gn,        &
+                                         PDM_OWNERSHIP_USER,   &
+                                         n_cell)
+
+    call PDM_multipart_part_connectivity_get(mpart,                           &
+                                             i_zone,                          &
+                                             i_part,                          &
+                                             PDM_CONNECTIVITY_TYPE_CELL_FACE, &
+                                             cell_face,                       &
+                                             cell_face_idx,                   &
+                                             PDM_OWNERSHIP_USER,              &
+                                             n_cell)
   end if
 
   ! free
-  ! call PDM_DMesh_nodal_free(dmn)
+  call PDM_DMesh_nodal_free(dmn)
   call PDM_multipart_free(mpart)
 
   ! Finalize MPI environment
