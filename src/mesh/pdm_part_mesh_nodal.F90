@@ -1,18 +1,440 @@
+!-----------------------------------------------------------------------------
+! This file is part of the ParaDiGM library.
 !
-! File:   pdm_part_mesh_nodal.F90
-! Author: ndelling
+! Copyright (C) 2023  ONERA
 !
-! Created on March 8, 2023, 9:34 PM
+! This library is free software; you can redistribute it and/or
+! modify it under the terms of the GNU Lesser General Public
+! License as published by the Free Software Foundation; either
+! version 3 of the License, or (at your option) any later version.
 !
+! This library is distributed in the hope that it will be useful,
+! but WITHOUT ANY WARRANTY; without even the implied warranty of
+! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+! Lesser General Public License for more details.
+!
+! You should have received a copy of the GNU Lesser General Public
+! License along with this library. If not, see <http://www.gnu.org/licenses/>.
+!-----------------------------------------------------------------------------
 
 module PDM_part_mesh_nodal
 
   use pdm
+  use pdm_mesh_nodal
   use iso_c_binding
 
   implicit none
 
+  interface PDM_part_mesh_nodal_section_n_elt_get ; module procedure &
+  PDM_part_mesh_nodal_section_n_elt_get_
+  end interface
+
+  interface PDM_part_mesh_nodal_section_std_get ; module procedure &
+  PDM_part_mesh_nodal_section_std_get_
+  end interface
+
+  interface PDM_part_mesh_nodal_vtx_g_num_get ; module procedure &
+  PDM_part_mesh_nodal_vtx_g_num_get_
+  end interface
+
+  interface PDM_part_mesh_nodal_n_vtx_get ; module procedure &
+  PDM_part_mesh_nodal_n_vtx_get_
+  end interface
+
+  interface PDM_part_mesh_nodal_section_elt_type_get ; module procedure &
+  PDM_part_mesh_nodal_section_elt_type_get_
+  end interface
+
+  private :: PDM_part_mesh_nodal_section_n_elt_get_
+  private :: PDM_part_mesh_nodal_section_std_get_
+  private :: PDM_part_mesh_nodal_vtx_g_num_get_
+  private :: PDM_part_mesh_nodal_n_vtx_get_
+  private :: PDM_part_mesh_nodal_section_elt_type_get_
+
+  interface
+
+    !>
+    !!
+    !! \brief Get number of section elements
+    !!
+    !! \param [in]  pmn        Pointer to \ref PDM_part_mesh_nodal_t object
+    !! \param [in]  i_section  Section identifier
+    !! \param [in]  i_part     Partition identifier
+    !!
+    !! \return      Number of elements
+    !!
+
+    function PDM_part_mesh_nodal_section_n_elt_get_cf(pmn,       &
+                                                      i_section, &
+                                                      i_part)    &
+
+      result(n_elt) &
+      bind (c, name = 'PDM_part_mesh_nodal_section_n_elt_get')
+
+      use iso_c_binding
+      implicit none
+
+      type (c_ptr), value   :: pmn
+      integer(c_int), value :: i_section, i_part
+
+      integer(c_int)        :: n_elt
+
+    end function PDM_part_mesh_nodal_section_n_elt_get_cf
+
+    !>
+    !!
+    !! \brief Return standard section description
+    !!
+    !! \param [in]  pmn                     Pointer to \ref PDM_part_mesh_nodal_t object
+    !! \param [in]  i_section               Section identifier
+    !! \param [in]  i_part                  Partition identifier
+    !! \param [out] connec                  Connectivity
+    !! \param [out] numabs                  Global numbering
+    !! \param [out] parent_num              Parent numbering or NULL
+    !! \param [out] parent_entity_g_num     Parent global numbering or NULL
+    !!
+
+    subroutine PDM_part_mesh_nodal_section_std_get_cf(pmn,                 &
+                                                      i_section,           &
+                                                      i_part,              &
+                                                      connec,              &
+                                                      numabs,              &
+                                                      parent_num,          &
+                                                      parent_entity_g_num, &
+                                                      ownership)           &
+
+      bind (c, name = 'PDM_part_mesh_nodal_section_std_get')
+
+      use iso_c_binding
+      implicit none
+
+      type (c_ptr),   value :: pmn
+      integer(c_int), value :: i_section, i_part, ownership
+
+      type (c_ptr),   value :: numabs, parent_entity_g_num
+      type (c_ptr),   value :: connec, parent_num
+
+    end subroutine PDM_part_mesh_nodal_section_std_get_cf
+
+    !>
+    !!
+    !! \brief  Return global ids of vertices
+    !!
+    !! \param [in]  pmn       Pointer to \ref PDM_part_mesh_nodal_t object
+    !! \param [in]  id_part   Partition identifier
+    !!
+    !! \return  Golbal ids of vertices
+    !!
+
+    function PDM_part_mesh_nodal_vtx_g_num_get_cf(pmn,    &
+                                                  i_part) &
+
+      result(vtx_ln_to_gn) &
+      bind (c, name = 'PDM_part_mesh_nodal_vtx_g_num_get')
+
+      use iso_c_binding
+      implicit none
+
+      type (c_ptr),   value :: pmn
+      integer(c_int), value :: i_part
+
+      type (c_ptr)          :: vtx_ln_to_gn
+
+    end function PDM_part_mesh_nodal_vtx_g_num_get_cf
+
+    !>
+    !!
+    !! \brief  Return number of vertices
+    !!
+    !! \param [in]  pmn       Pointer to \ref PDM_part_mesh_nodal_t object
+    !! \param [in]  id_part   Partition identifier
+    !!
+    !! \return  Number of vertices
+    !!
+
+    function PDM_part_mesh_nodal_n_vtx_get_cf(pmn,    &
+                                              i_part) &
+
+      result(n_vtx) &
+      bind (c, name = 'PDM_part_mesh_nodal_n_vtx_get')
+
+      use iso_c_binding
+      implicit none
+
+      type (c_ptr),   value :: pmn
+      integer(c_int), value :: i_part
+
+      integer(c_int)        :: n_vtx
+
+    end function PDM_part_mesh_nodal_n_vtx_get_cf
+
+    !>
+    !!
+    !! \brief  Return type of section
+    !!
+    !! \param [in]  pmn          Pointer to \ref PDM_part_mesh_nodal_t object
+    !! \param [in]  i_section    Section identifier
+    !!
+    !! \return  Type of section
+    !!
+
+    function PDM_part_mesh_nodal_section_elt_type_get_cf(pmn,      &
+                                                         i_section) &
+
+      result(elt_t) &
+      bind (c, name = 'PDM_part_mesh_nodal_section_elt_type_get')
+
+      use iso_c_binding
+      implicit none
+
+      type (c_ptr),   value :: pmn
+      integer(c_int), value :: i_section
+
+      integer(c_int)        :: elt_t
+
+    end function PDM_part_mesh_nodal_section_elt_type_get_cf
+
+  end interface
+
   contains
+
+    !>
+    !!
+    !! \brief Get number of section elements
+    !!
+    !! \param [in]  pmn        Pointer to \ref PDM_part_mesh_nodal_t object
+    !! \param [in]  i_section  Section identifier
+    !! \param [in]  i_part     Partition identifier
+    !!
+    !! \param [out] n_elt      Number of elements
+    !!
+
+    subroutine PDM_part_mesh_nodal_section_n_elt_get_(pmn,       &
+                                                     i_section, &
+                                                     i_part,    &
+                                                     n_elt)
+
+      use iso_c_binding
+      implicit none
+
+      type(c_ptr), value   :: pmn
+      integer, intent(in)  :: i_section, i_part
+
+      integer, intent(out) :: n_elt
+
+      integer(c_int) :: c_i_section, c_i_part
+      integer(c_int) :: c_n_elt
+
+      c_i_section = i_section
+      c_i_part = i_part
+
+      c_n_elt = PDM_part_mesh_nodal_section_n_elt_get_cf(pmn,       &
+                                                         i_section, &
+                                                         i_part)
+
+      n_elt = c_n_elt
+
+    end subroutine PDM_part_mesh_nodal_section_n_elt_get_
+
+    !>
+    !!
+    !! \brief Return standard section description
+    !!
+    !! \param [in]  pmn                     Pointer to \ref PDM_part_mesh_nodal_t object
+    !! \param [in]  i_section               Section identifier
+    !! \param [in]  i_part                  Partition identifier
+    !! \param [out] connec                  Connectivity
+    !! \param [out] numabs                  Global numbering
+    !! \param [out] parent_num              Parent numbering or NULL
+    !! \param [out] parent_entity_g_num     Parent global numbering or NULL
+    !!
+
+    subroutine PDM_part_mesh_nodal_section_std_get_(pmn,                 &
+                                                    i_section,           &
+                                                    i_part,              &
+                                                    connec,              &
+                                                    numabs,              &
+                                                    parent_num,          &
+                                                    parent_entity_g_num, &
+                                                    ownership)
+
+      use iso_c_binding
+      implicit none
+
+      type (c_ptr),   value :: pmn
+      integer, intent(in)   :: i_section, i_part, ownership
+
+      integer(kind=PDM_l_num_s), pointer  :: connec(:)
+      integer (pdm_g_num_s), pointer      :: numabs(:)
+      integer(kind=PDM_l_num_s), pointer  :: parent_num(:)
+      integer (pdm_g_num_s), pointer      :: parent_entity_g_num(:)
+
+      integer                             :: elt_t, n_vtx_per_elt
+      integer                             :: order = 1
+
+      integer(c_int) :: c_i_section, c_i_part, c_ownership
+
+      type (c_ptr)   :: c_connec = C_NULL_PTR
+      type (c_ptr)   :: c_numabs, c_parent_entity_g_num = C_NULL_PTR
+      type (c_ptr)   :: c_parent_num = C_NULL_PTR
+
+      integer(c_int) :: c_n_elt
+
+      c_i_section = i_section
+      c_i_part    = i_part
+      c_ownership = ownership
+
+      call PDM_part_mesh_nodal_section_std_get_cf(pmn,                   &
+                                                  c_i_section,           &
+                                                  c_i_part,              &
+                                                  c_connec,              &
+                                                  c_numabs,              &
+                                                  c_parent_num,          &
+                                                  c_parent_entity_g_num, &
+                                                  c_ownership)
+
+      c_n_elt = PDM_part_mesh_nodal_section_n_elt_get_cf(pmn,       &
+                                                         c_i_section, &
+                                                         c_i_part)
+
+      call PDM_part_mesh_nodal_section_elt_type_get(pmn,       &
+                                                    c_i_section, &
+                                                    elt_t)
+
+      call  PDM_Mesh_nodal_n_vtx_elt_get(elt_t, &
+                                         order, &
+                                         n_vtx_per_elt)
+
+      call c_f_pointer(c_connec, &
+                       connec,   &
+                       [c_n_elt * n_vtx_per_elt])
+
+      call c_f_pointer(c_numabs, &
+                       numabs,   &
+                       [c_n_elt])
+
+      parent_num => null()
+      if( .not. c_associated(c_parent_num) )then
+        call c_f_pointer(c_parent_num, &
+                         parent_num,   &
+                         [c_n_elt])
+      end if
+
+      parent_entity_g_num => null()
+      if( .not. c_associated(c_parent_entity_g_num) )then
+        call c_f_pointer(c_parent_entity_g_num, &
+                         parent_entity_g_num,   &
+                         [c_n_elt])
+      end if
+
+    end subroutine PDM_part_mesh_nodal_section_std_get_
+
+    !>
+    !!
+    !! \brief  Return global ids of vertices
+    !!
+    !! \param [in]  pmn           Pointer to \ref PDM_part_mesh_nodal_t object
+    !! \param [in]  id_part       Partition identifier
+    !!
+    !! \param [out] vtx_ln_to_gn  Golbal ids of vertices
+    !!
+
+    subroutine PDM_part_mesh_nodal_vtx_g_num_get_(pmn,          &
+                                                  i_part,       &
+                                                  vtx_ln_to_gn)
+
+      use iso_c_binding
+      implicit none
+
+      type (c_ptr),   value          :: pmn
+
+      integer, intent(in)            :: i_part
+      integer (pdm_g_num_s), pointer :: vtx_ln_to_gn(:)
+
+      integer(c_int)  :: c_i_part
+      type (c_ptr)    :: c_vtx_ln_to_gn
+
+      integer(c_int) :: c_n_vtx
+
+      c_i_part = i_part
+
+      c_vtx_ln_to_gn = PDM_part_mesh_nodal_vtx_g_num_get_cf(pmn, &
+                                                            c_i_part)
+
+      c_n_vtx = PDM_part_mesh_nodal_n_vtx_get_cf(pmn, &
+                                                 c_i_part)
+
+      call c_f_pointer(c_vtx_ln_to_gn, &
+                       vtx_ln_to_gn,   &
+                       [c_n_vtx])
+
+    end subroutine PDM_part_mesh_nodal_vtx_g_num_get_
+
+    !>
+    !!
+    !! \brief  Return number of vertices
+    !!
+    !! \param [in]  pmn       Pointer to \ref PDM_part_mesh_nodal_t object
+    !! \param [in]  id_part   Partition identifier
+    !!
+    !! \param [out] n_vtx     Number of vertices
+    !!
+
+    subroutine PDM_part_mesh_nodal_n_vtx_get_(pmn,    &
+                                              i_part, &
+                                              n_vtx)
+
+      use iso_c_binding
+      implicit none
+
+      type (c_ptr),   value :: pmn
+      integer, intent(in)   :: i_part
+      integer, intent(out)  :: n_vtx
+
+      integer(c_int)        :: c_i_part
+      integer(c_int)        :: c_n_vtx
+
+      c_i_part = i_part
+
+      c_n_vtx = PDM_part_mesh_nodal_n_vtx_get_cf(pmn, &
+                                                 c_i_part)
+
+      n_vtx = c_n_vtx
+
+    end subroutine PDM_part_mesh_nodal_n_vtx_get_
+
+    !>
+    !!
+    !! \brief  Return type of section
+    !!
+    !! \param [in]  pmn          Pointer to \ref PDM_part_mesh_nodal_t object
+    !! \param [in]  i_section    Section identifier
+    !!
+    !! \param[out]  elt_t        Type of section
+    !!
+
+    subroutine PDM_part_mesh_nodal_section_elt_type_get_(pmn,       &
+                                                         i_section, &
+                                                         elt_t)
+
+      use iso_c_binding
+      implicit none
+
+      type (c_ptr),   value :: pmn
+      integer, intent(in)   :: i_section
+      integer, intent(in)   :: elt_t
+
+      integer(c_int)        :: c_i_section
+      integer(c_int)        :: c_elt_t
+
+      c_i_section = i_section
+
+      c_elt_t = PDM_part_mesh_nodal_section_elt_type_get_cf(pmn, &
+                                                            c_i_section)
+
+      c_elt_t = elt_t
+
+    end subroutine PDM_part_mesh_nodal_section_elt_type_get_
 
 !> Create a PDM_part_mesh_nodal structure
 !!

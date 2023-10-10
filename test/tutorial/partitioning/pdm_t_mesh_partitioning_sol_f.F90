@@ -28,6 +28,8 @@ program pdm_t_mesh_partitioning_sol_f
   use pdm_multipart
   use pdm_vtk
   use pdm_dcube_nodal_gen
+  use pdm_dmesh_nodal
+  use pdm_part_mesh_nodal
   use pdm_mesh_nodal
   use iso_c_binding
   use pdm_fortran
@@ -40,6 +42,7 @@ program pdm_t_mesh_partitioning_sol_f
 
   !-----------------------------------------------------------
   integer (c_int)                       :: i
+  integer (c_int)                       :: fe = 0
 
   ! MPI
   integer                               :: code
@@ -73,6 +76,24 @@ program pdm_t_mesh_partitioning_sol_f
   ! PDM_multipart_set_reordering_options
   integer(kind=PDM_l_num_s), pointer    :: renum_cell_properties(:) => null()
 
+  ! PDM_multipart_get_part_mesh_nodal
+  type (c_ptr)                          :: pmn
+
+  ! PDM_part_mesh_nodal_section_n_elt_get
+  integer (c_int)                       :: n_elt = -1
+
+  ! PDM_part_mesh_nodal_section_std_get
+  integer(kind=PDM_l_num_s), pointer  :: elt_vtx(:)
+  integer (pdm_g_num_s), pointer      :: elt_ln_to_gn(:)
+  integer(kind=PDM_l_num_s), pointer  :: parent_num(:)
+  integer (pdm_g_num_s), pointer      :: parent_entity_g_num(:)
+
+  ! PDM_multipart_part_vtx_coord_get
+  double precision, pointer           :: coords(:,:)
+  integer(c_int)                      :: n_vtx = -1
+
+  ! PDM_part_mesh_nodal_vtx_g_num_get
+  integer (pdm_g_num_s), pointer      :: vtx_ln_to_gn(:)
   !-----------------------------------------------------------
 
   ! Initialize MPI environment
@@ -88,7 +109,7 @@ program pdm_t_mesh_partitioning_sol_f
   xmin     = 0.
   ymin     = 0.
   zmin     = 0.
-  elt_type = 4 ! TO DO : how to use PDM_MESH_NODAL_TETRA4 in Fortran ?
+  elt_type = PDM_MESH_NODAL_TETRA4
   order    = 1
   call PDM_dcube_nodal_gen_create(dcube,     &
                                   comm,      &
@@ -101,14 +122,13 @@ program pdm_t_mesh_partitioning_sol_f
                                   zmin,      &
                                   elt_type,  &
                                   order,     &
-                                  ownership) ! TO DO PDM_OWNERSHIP_USER
+                                  PDM_OWNERSHIP_USER)
 
   call PDM_dcube_nodal_gen_build(dcube, dmn)
 
   call PDM_dcube_nodal_gen_dmesh_nodal_get(dcube, dmn)
 
-  ! call PDM_dmesh_nodal_generate_distribution(dmn)
-  ! TO DO : interface Fortran de dmesh_nodal
+  call PDM_dmesh_nodal_generate_distribution(dmn)
 
   call PDM_dcube_nodal_gen_free(dcube)
 
@@ -127,7 +147,7 @@ program pdm_t_mesh_partitioning_sol_f
                             part_size_method, &
                             part_fraction,    &
                             comm,             &
-                            ownership) ! TO DO PDM_OWNERSHIP_KEEP
+                            PDM_OWNERSHIP_KEEP)
 
   call PDM_multipart_set_reordering_options(mpart,                      &
                                             i_zone,                     &
@@ -142,8 +162,42 @@ program pdm_t_mesh_partitioning_sol_f
   call PDM_multipart_run_ppart(mpart)
 
   ! Get mesh arrrays in FE structure
+  if (fe .eq. 1) then
+    call PDM_multipart_get_part_mesh_nodal(mpart,  &
+                                           i_zone, &
+                                           pmn,    &
+                                           PDM_OWNERSHIP_USER)
+
+    call PDM_part_mesh_nodal_section_n_elt_get(pmn,       &
+                                               i_section, &
+                                               i_part,    &
+                                               n_elt)
+
+    call PDM_part_mesh_nodal_section_std_get(pmn,                 &
+                                             i_section,           &
+                                             i_part,              &
+                                             elt_vtx,             &
+                                             elt_ln_to_gn,        &
+                                             parent_num,          &
+                                             parent_entity_g_num, &
+                                             PDM_OWNERSHIP_KEEP)
+
+    call PDM_multipart_part_vtx_coord_get(mpart,              &
+                                          i_zone,             &
+                                          i_part,             &
+                                          coords,             &
+                                          PDM_OWNERSHIP_USER, &
+                                          n_vtx)
+
+    call PDM_part_mesh_nodal_vtx_g_num_get(pmn,    &
+                                           i_part, &
+                                           vtx_ln_to_gn)
+  end if
 
   ! Get mesh arrrays in FV structure
+  if (fe .eq. 0) then
+    ! TO DO
+  end if
 
   ! free
   ! call PDM_DMesh_nodal_free(dmn)
