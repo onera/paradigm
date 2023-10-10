@@ -64,9 +64,7 @@ program pdm_t_mesh_partitioning_sol_f
   type (c_ptr)                          :: mpart
   integer (c_int)                       :: n_zone = 1
   integer(kind=PDM_l_num_s), pointer    :: n_part(:) => null()
-  integer (c_int)                       :: merge_blocks
-  integer (c_int)                       :: split_method
-  integer (c_int)                       :: part_size_method
+  integer (c_int)                       :: part_method
   double precision,          pointer    :: part_fraction(:) => null()
 
   integer (c_int)                       :: i_zone    = 0
@@ -155,14 +153,21 @@ program pdm_t_mesh_partitioning_sol_f
     n_part(i) = 1
   end do
 
-  call PDM_multipart_create(mpart,            &
-                            n_zone,           &
-                            n_part,           &
-                            merge_blocks,     &
-                            split_method,     &
-                            part_size_method, &
-                            part_fraction,    &
-                            comm,             &
+  allocate(part_fraction(n_part(i_zone+1)))
+
+  do i = 1, n_part(i_zone+1)
+    part_fraction(i) = 1
+  end do
+
+  part_method = PDM_SPLIT_DUAL_WITH_HILBERT
+  call PDM_multipart_create(mpart,                     &
+                            n_zone,                    &
+                            n_part,                    &
+                            PDM_FALSE,                 &
+                            part_method,               &
+                            PDM_PART_SIZE_HOMOGENEOUS, &
+                            part_fraction,             &
+                            comm,                      &
                             PDM_OWNERSHIP_KEEP)
 
   call PDM_multipart_set_reordering_options(mpart,                      &
@@ -219,14 +224,14 @@ program pdm_t_mesh_partitioning_sol_f
                                          i_part,                 &
                                          PDM_MESH_ENTITY_VERTEX, &
                                          vtx_ln_to_gn,           &
-                                         PDM_OWNERSHIP_USER,     &
+                                         PDM_OWNERSHIP_KEEP,     &
                                          n_vtx)
 
     call PDM_multipart_part_vtx_coord_get(mpart,             &
                                          i_zone,             &
                                          i_part,             &
                                          coords,             &
-                                         PDM_OWNERSHIP_USER, &
+                                         PDM_OWNERSHIP_KEEP, &
                                          n_vtx)
 
     call PDM_multipart_part_ln_to_gn_get(mpart,                &
@@ -234,7 +239,7 @@ program pdm_t_mesh_partitioning_sol_f
                                          i_part,               &
                                          PDM_MESH_ENTITY_EDGE, &
                                          edge_ln_to_gn,        &
-                                         PDM_OWNERSHIP_USER,   &
+                                         PDM_OWNERSHIP_KEEP,   &
                                          n_edge)
 
     call PDM_multipart_part_connectivity_get(mpart,                          &
@@ -243,7 +248,7 @@ program pdm_t_mesh_partitioning_sol_f
                                              PDM_CONNECTIVITY_TYPE_EDGE_VTX, &
                                              edge_vtx,                       &
                                              edge_vtx_idx,                   &
-                                             PDM_OWNERSHIP_USER,             &
+                                             PDM_OWNERSHIP_KEEP,             &
                                              n_edge)
 
     call PDM_multipart_part_ln_to_gn_get(mpart,                &
@@ -251,7 +256,7 @@ program pdm_t_mesh_partitioning_sol_f
                                          i_part,               &
                                          PDM_MESH_ENTITY_FACE, &
                                          face_ln_to_gn,        &
-                                         PDM_OWNERSHIP_USER,   &
+                                         PDM_OWNERSHIP_KEEP,   &
                                          n_face)
 
     call PDM_multipart_part_connectivity_get(mpart,                           &
@@ -260,7 +265,7 @@ program pdm_t_mesh_partitioning_sol_f
                                              PDM_CONNECTIVITY_TYPE_FACE_EDGE, &
                                              face_edge,                       &
                                              face_edge_idx,                   &
-                                             PDM_OWNERSHIP_USER,              &
+                                             PDM_OWNERSHIP_KEEP,              &
                                              n_face)
 
     call PDM_multipart_part_ln_to_gn_get(mpart,                &
@@ -268,7 +273,7 @@ program pdm_t_mesh_partitioning_sol_f
                                          i_part,               &
                                          PDM_MESH_ENTITY_CELL, &
                                          cell_ln_to_gn,        &
-                                         PDM_OWNERSHIP_USER,   &
+                                         PDM_OWNERSHIP_KEEP,   &
                                          n_cell)
 
     call PDM_multipart_part_connectivity_get(mpart,                           &
@@ -277,11 +282,13 @@ program pdm_t_mesh_partitioning_sol_f
                                              PDM_CONNECTIVITY_TYPE_CELL_FACE, &
                                              cell_face,                       &
                                              cell_face_idx,                   &
-                                             PDM_OWNERSHIP_USER,              &
+                                             PDM_OWNERSHIP_KEEP,              &
                                              n_cell)
   end if
 
   ! free
+  deallocate(n_part, &
+             part_fraction)
   call PDM_DMesh_nodal_free(dmn)
   call PDM_multipart_free(mpart)
 

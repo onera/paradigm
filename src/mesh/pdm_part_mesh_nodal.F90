@@ -314,14 +314,14 @@ module PDM_part_mesh_nodal
                        [c_n_elt])
 
       parent_num => null()
-      if( .not. c_associated(c_parent_num) )then
+      if ( c_associated(c_parent_num) )then
         call c_f_pointer(c_parent_num, &
                          parent_num,   &
                          [c_n_elt])
       end if
 
       parent_entity_g_num => null()
-      if( .not. c_associated(c_parent_entity_g_num) )then
+      if ( c_associated(c_parent_entity_g_num) )then
         call c_f_pointer(c_parent_entity_g_num, &
                          parent_entity_g_num,   &
                          [c_n_elt])

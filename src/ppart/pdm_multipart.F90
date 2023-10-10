@@ -17,8 +17,6 @@
 ! License along with this library. If not, see <http://www.gnu.org/licenses/>.
 !-----------------------------------------------------------------------------
 
-! WARNING: not tested yet / need to make fortran interface of dmesh for that
-
 #include "pdm_configf.h"
 
 module pdm_multipart
@@ -1366,22 +1364,31 @@ contains
     type(c_ptr)                        :: c_connect_idx = C_NULL_PTR
     integer(c_int),            value   :: ownership
     integer(c_int)                     :: pn_entity
+    integer(c_int)                     :: connec_size
 
-    pn_entity = PDM_multipart_part_connectivity_get_c(multipart, &
-                                                      i_zone, &
-                                                      i_part, &
+    pn_entity = PDM_multipart_part_connectivity_get_c(multipart,         &
+                                                      i_zone,            &
+                                                      i_part,            &
                                                       connectivity_type, &
-                                                      c_connect, &
-                                                      c_connect_idx, &
+                                                      c_connect,         &
+                                                      c_connect_idx,     &
                                                       ownership)
 
-    call c_f_pointer(c_connect_idx, &
-                     connect_idx,   &
-                     [pn_entity])
+    connect_idx => null()
+    if ( c_associated(c_connect_idx) ) then
+      call c_f_pointer(c_connect_idx, &
+                       connect_idx,   &
+                       [pn_entity+1])
+    end if
+
+    connec_size = 2 * pn_entity ! TO DO is c_connect_idx a C_NULL_PTR in other cases than edge_vtx ?
+    if ( c_associated(c_connect_idx) ) then
+      connec_size = connect_idx(pn_entity+1)
+    end if
 
     call c_f_pointer(c_connect, &
                      connect,   &
-                     [connect_idx(pn_entity+1)])
+                     [connec_size])
 
   end subroutine PDM_multipart_part_connectivity_get_
 
