@@ -22,33 +22,31 @@ def visu_n_files(files, fields=[""], same_view=False):
     import numpy   as np
 
     n_files = len(files)
+    if n_files == 1:
+      same_view = True
 
     # pyvista options
     pv.set_plot_theme("document")
     pv.global_theme.trame.interactive_ratio = 2
     pv.global_theme.trame.still_ratio       = 2
 
+
+    # plotter
     if same_view:
-      n_col = 1
-      n_row = 1
+      p = pv.Plotter(notebook=True)
     else:
       n_col = 2 # 2 subplots per column
       n_row = n_files//n_col
+      p = pv.Plotter(notebook=True, shape=(n_row, n_col))
 
-    # plotter
-    p = pv.Plotter(notebook=True, shape=(n_row, n_col))
     p.background_color = 'w'
     p.enable_anti_aliasing()
 
     for i_file, filename in enumerate(files):
-      if same_view:
-        i_row = 0
-        i_col = 0
-      else:
+      if not same_view:
         i_col = i_file%n_col
         i_row = i_file//n_col
-
-      p.subplot(i_row, i_col)
+        p.subplot(i_row, i_col)
 
       # load mesh file
       try:
