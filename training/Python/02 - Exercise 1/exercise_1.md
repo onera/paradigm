@@ -1,12 +1,45 @@
+---
+jupytext:
+  text_representation:
+    extension: '.md'
+    format_name: myst
+    format_version: '0.7'
+    jupytext_version: 1.4.0+dev
+kernelspec:
+  display_name: Python 3
+  language: python
+  name: python3
+---
+
 # Exercise 1 : Mesh partitioning
 
-Let's get started using `ParaDiGM` by focusing on its mesh partitioning solutions.
-It is a mandatory step for parallel numerical simulations. First a mesh is generated.
-Then it is partitionned in subdomains. Those will be mapped onto the processors of a parallel machine.
+It's time for some hands on experience with `ParaDiGM`!
+Using the API referenced [here](https://numerics.gitlab-pages.onera.net/mesh/paradigm/dev_doc_pretty/user_manual/prepro_algo/index.html#python-api),
+you will have fill in the code blocks to partition a mesh, i.e. to cut it in subdomains that will be mapped onto the processors of a parallel machine.
+In the first section, we generate a block-distributed cube mesh for you. In the next section, you'll start running the partitioning algorithm.
+After that, you will be able to retrieve you the arrays describing the partitionned mesh.
 
-## Generate the initial mesh
++++
 
-In this section, `ParaDiGM` tools are used to generate the simple mesh for exercise 1 : a cube.
+*(Load custom magics)*
+
+```{code-cell}
+import os, sys
+module_path = os.path.abspath(os.path.join('../../utils'))
+if module_path not in sys.path:
+    sys.path.append(module_path)
+```
+
+```{code-cell}
+%reload_ext visu_magics
+```
+
++++
+
+
+## Generate the mesh
+
+In this section, `ParaDiGM` tools are used to generate a simple mesh for this exercise: a cube made of tetrahedra.
 
 ```{code-cell}
 %%code_block -l python -p exercise_1 -i 1
@@ -18,77 +51,81 @@ import mpi4py.MPI as MPI
 import Pypdm.Pypdm as PDM
 
  # Initialize MPI environment
- comm   = MPI.COMM_WORLD
- n_rank = MPI.COMM_WORLD.size
- i_rank = MPI.COMM_WORLD.rank
+comm   = MPI.COMM_WORLD
+n_rank = MPI.COMM_WORLD.size
+i_rank = MPI.COMM_WORLD.rank
 
-# Generate block-distributed parallelepided mesh
-  n_x      = 10
-  n_y      = 10
-  n_z      = 10
-  lengthx  = 1.
-  xmin     = 0.
-  ymin     = 0.
-  zmin     = 0.
-  elt_type = PDM._PDM_MESH_NODAL_TETRA4
-  order    = 1 # call PDM_dcube_nodal_gen_ordering_set if order > 1
-  dcube = PDM.DCubeNodalGenerator(n_x,
-                                  n_y,
-                                  n_z,
-                                  lengthx,
-                                  xmin,
-                                  ymin,
-                                  zmin,
-                                  elt_type,
-                                  order,
-                                  comm)
+# Generate block-distributed cube mesh
+n_x      = 10
+n_y      = 10
+n_z      = 10
+lengthx  = 1.
+xmin     = 0.
+ymin     = 0.
+zmin     = 0.
+elt_type = PDM._PDM_MESH_NODAL_TETRA4
+order    = 1
+dcube = PDM.DCubeNodalGenerator(n_x,
+                                n_y,
+                                n_z,
+                                lengthx,
+                                xmin,
+                                ymin,
+                                zmin,
+                                elt_type,
+                                order,
+                                comm)
 
-  dcube.compute()
+dcube.compute()
 
-  dmn = dcube.get_dmesh_nodal()
+dmn = dcube.get_dmesh_nodal()
 
-  PDM.generate_distribution(dmn)
+PDM.generate_distribution(dmn)
 ```
 
-Now, we have a block-distributed cube mesh.
+Now that we have our mesh, let's partition it !
 
 ## Mesh partitioning
 
 For mesh partitioning, as for all other `ParaDiGM` features, there are 5 main steps:
-- **create** the feature object
-- **set** the data necessary to operate with that feature
-- **compute**, operate the algorithm of the feature
-- **get**, retreive the ouput of the algorithm
-- **free** the memory allocated to operate the feature
+1. **create** the feature object
+2. **set** the data necessary to operate with that feature
+3. **compute**, operate the algorithm of the feature
+4. **get**, retrieve the ouput of the algorithm
+5. **free** the memory allocated to operate the feature
 
-Following this logic, let's start **creating** the mesh partitioning object.
+Following this logic, let's start **creating** (step 1) the mesh partitioning object for homogeneously balanced subdomains.
 
-*Note : since this is a simple example, we will not focus on the concepts of zone and part. To understand those concepts, see Annex 1.*
+*Remark : since this is a basic example, we ask you to stick with the fixed values for n_zone, n_part, i_zone, i_part and merge_zones.
+To get insight about the concepts behind those values you can have a look [here](#Annex 1)*
 
 ```{code-cell}
 %%code_block -l python -p exercise_1 -i 2
 
 # Create partitioning object
-n_zone = 1 # fixed
-n_part = 1 # fixed
-i_part = 0 # fixed
-i_zone = 0 # fixed
+n_zone = 1      # fixed
+n_part = 1      # fixed
+i_zone = 0      # fixed
+i_part = 0      # fixed
+merge_zones = 0 # fixed
 part_method = PDM._PDM_SPLIT_DUAL_WITH_HILBERT;
 mpart = PDM.MultiPart(n_zone,                             # Number of zones
                       np.array([n_part]).astype(np.intc), # Number of partitions per zone
-                      0,                                  # PDM_FALSE (do not fuse zones)
+                      merge_zones,                        # PDM_FALSE (do not fuse zones)
                       part_method,                        # Partitioning method
-                      1,                                  # PDM_PART_SIZE_HOMOGENEOUS (subdomains are equaly balanced)
+                      1,                                  # PDM_PART_SIZE_HOMOGENEOUS (subdomains are homogeneously balanced)
                       None,                               # Weight (in %) of each partition in heterogeneous case
                       comm)                               # MPI communicator
 
 ```
 
-Here, we chose the partition the cube with the Hilbert method. This method implemented in `ParaDiGM` does not ensure the subdomain to be connected.
+Here, we chose to partition the cube with the Hilbert method. This method implemented in `ParaDiGM` does not ensure the subdomain to be connected.
 This method is favored within the `ParaDiGM` algorithms since it provides quickly a good load balance. To ensure the partitions are connected use
 `PDM_SPLIT_DUAL_WITH_PARMETIS` or `PDM_SPLIT_DUAL_WITH_PTSCOTCH` which call the external libraries ParMETIS and PT-Scotch.
 
-After the partitioning, it is possible the reorder the mesh entities. In this simple example, we won't do that.
+After mapping the partitionned subdomains on the processors, it is interesting to renumber the entities
+of the mesh on each processor for performance through cache blocking but it also provides interesting properties for the application.
+You can here call the renumbering function but by telling it not to do any renumbering for a start.
 
 ```{code-cell}
 %%code_block -l python -p exercise_1 -i 3
@@ -102,7 +139,7 @@ mpart.multipart_set_reordering(-1,         # All zones
 
 ```
 
-We go on to the **set** step, in which we will provide the block-distributed cube mesh to the mesh partitioning object `mpart`.
+Now that you have created a mesh partitioning object `mpart`, you can **set** (step 2) the cube mesh to it.
 
 ```{code-cell}
 %%code_block -l python -p exercise_1 -i 4
@@ -110,7 +147,8 @@ We go on to the **set** step, in which we will provide the block-distributed cub
 mpart.multipart_register_dmesh_nodal(i_zone, dmn)
 ```
 
-Now we can run the partitioning algorithm. This is the so calle **compute** setp.
+At this point you have provided all the information necessary to run the mesh partitioning algorithm. You can call the function to
+**compute** (step 3) the subdomains that make up the partitionned cube.
 
 ```{code-cell}
 %%code_block -l python -p exercise_1 -i 5
@@ -120,16 +158,19 @@ mpart.multipart_run_ppart()
 
 ## Get the partitionned mesh
 
-The aim of this whole process is to retreive a partitionned mesh. Let's move on to the **get** step.
-Depending on the numerical method, the mesh is not described and stored in the same style. For this next part of the exercise,
-you can choose if you want to retreive the partitionned cube in nodal or decending connectivity. Now move on to the chosen sub-section.
+You can now **get** (step 4) the ouput mesh of the partitioning algorithm. Depending on the numerical method, the mesh has to be
+described in a different way. For Finite-Element methods a nodal connectivity ([option 1](#Nodal connectivity (i.e. Finite-Element style)))) usually
+suffices while for Finite-Volume methods all descending connectivities ([option 2](#Descending connectivity (i.e. Finite-Volume style))) are of interest.
+Choose which one suits you best and go further in the exercise to the associated section.
 
 ### Nodal connectivity (i.e. Finite-Element style)
 
-For nodal connectivity, we wish to get data related to the cell->vertex connectivity.
-Let's start with the vertices. What are the coordinates of the vertices in the subdomain? What is their global number? How many vertices are there?
+You choose to get the partitioned mesh in nodal connectivity, i.e. cell->vertex connectivity.
 
-*Note : The internal data structure for partitionned mesches defined in nodal connectivity is the part_mesh_nodal. Here we get that data structure from the mesh partitioning object to get certain arrays from it directly.*
+*Remark : The object in `ParaDiGM` in which partitionned nodal meshes are stored is `part_mesh_nodal`.
+Here we get this object from `mpart` to directly have access to the arrays we are interested in.*
+
+Let's start with the vertices composing the subdomain. How many vertices are there? What is their global number? What are their coordiantes?
 
 ```{code-cell}
 %%code_block -l python -p exercise_1 -i 6
@@ -144,10 +185,10 @@ n_vtx        = len(vtx_ln_to_gn)
 
 ```
 
-The cells (in this example thetrahedra) in the subdomain are defined by associating to each cell the local number of the vertices it is made of (in this example 4).
-Let's get the cell->vertex connectivity. What is their gloabal number? How many elements are there?
+Let's move on to the cells. How are the vertices connected to form cells? What is their global number? How many cells are there?
 
-*Note : since this is a simple example, we will not focus on the concept of section. To understand those concepts, see Annex 1.*
+*Remark : since this is a basic example, we ask you to stick with the fixed value for i_section.
+To get insight about the concept behind this value you can have a look [here](#Annex 1)*
 
 ```{code-cell}
 %%code_block -l python -p exercise_1 -i 7
@@ -164,10 +205,9 @@ n_elt        = len(elt_ln_to_gn)
 
 ### Descending connectivity (i.e. Finite-Volume style)
 
-For a mesh described in descending connectivity, we need information about all mesh entities since we will get the following connectivities :
-cell->face, face->edge and edge->vtx.
+You choose to get the partitioned mesh in descending connectivity, i.e. cell->face, face->edge and edge->vtx connectivities.
 
-Let's start from the top with cell data.
+Let's start from the top with cell data. How many cells are there? What is their global number? Which faces compose the cells?
 
 ```{code-cell}
 %%code_block -l python -p exercise_1 -i 8
@@ -188,7 +228,7 @@ cell_face     = output["np_entity1_entity2"]
 
 ```
 
-For the faces we proceed in a similar way.
+For the faces we proceed in a similar way. How many faces are there? What is their global number? Which edges compose the faces?
 
 ```{code-cell}
 %%code_block -l python -p exercise_1 -i 9
@@ -209,9 +249,10 @@ face_edge     = output["np_entity1_entity2"]
 
 ```
 
-Let's do the same for edges.
+Let's do the same for edges. How many edges are there? What is their global number? Which vertices compose the edges?
 
-*Note : The connectivity index is useless in the case of edge->vertex since each edge has only two vertices. Thus, it is not created in the mesh partitioning object.*
+*Remark : The edge->vertex connectivity index is not created in the `mpart` object since it is implicit. Indeed,
+each edge is only composed of two vertices*
 
 ```{code-cell}
 %%code_block -l python -p exercise_1 -i 10
@@ -252,26 +293,16 @@ coords = output["np_vtx_coord"]
 
 ## Annex 1
 
-In certain settings, the mesh is an assembly of several sub-meshes. These are called *zones*. Each zone *zone* is partitionned in subdomains which
+In certain settings, the mesh is an assembly of several sub-meshes. These are called *zones*.
+
+![alt text](mesh.png "A mesh composed of two zones")
+
+Each zone *zone* is partitionned in subdomains which
 are mapped to the processors of the parallel machine. On a processor the subdomain (of a mesh or a zone) can be sudivided in *parts*.
 
-```{figure} ../images/mesh.png
-:scale: 50 %
+![alt text](processor.png "Processor 0 with a subdomain of each zone with two parts for subdomain of zone 1")
 
-A mesh composed of two zones
-```
-
-```{figure} ../images/processor.png
-:scale: 50 %
-
-Processor 0 with a subdomain of each zone with two parts for subdomain of zone 1
-```
-
-A mesh can be composed of several element types (thetrahedra, hexahedra, prisms...). In certain settings, the mesh definition for each specific element type
+A mesh can be composed of several element types (tetrahedra, hexahedra, prisms...). In certain settings, the mesh definition for each specific element type
 is stored in a seperate *section*. So in a *section* one will find data for a specific element type.
 
-```{figure} ../images/part.png
-:scale: 50 %
-
-Part 1 of subdomain on processor 0 of zone 1 with two sections
-```
+![alt text](part.png "Part 1 of the subdomain on processor 0 of zone 1 with two sections")
