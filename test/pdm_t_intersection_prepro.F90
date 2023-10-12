@@ -505,13 +505,13 @@ program testf
                                     ipart_cube_cell_face)
 
     call PDM_mesh_intersection_part_set (mi,                            &
-                                         0,                             &
+                                         0,                             & ! indice maillage cube
                                          ipart-1,                       &
                                          cube_pn_cell(ipart),           &
                                          cube_pn_face(ipart),           &
-                                         0,                             &
+                                         0,                             & ! nombre d'edge (inutilise)
                                          cube_pn_vtx(ipart),            &
-                                         ipart_cube_cell_face_idx,      &
+                                         ipart_cube_cell_face_idx,      & ! Problème à gérer ipart_cube_cell_face_idx(1)=1 pour cedre  
                                          ipart_cube_cell_face,          &
                                          cptr_int_null,                 &
                                          cptr_int_null,                 &
@@ -577,7 +577,7 @@ program testf
   !-----------------------------------------------------------
 
   call PDM_mesh_intersection_preprocessing_get (mi,                      &
-                                                box_cube_box_sphere_idx, & 
+                                                box_cube_box_sphere_idx, &  ! 0-based
                                                 box_cube_box_sphere,     &
                                                 cube_extr_mesh,          &
                                                 sphere_extr_mesh)
@@ -746,11 +746,11 @@ program testf
   ! Send for eaech cell the list candidate faces in global numbering
 
   call PDM_pointer_array_create (stride_n_face_candidates, &
-                                 1,                        &
+                                 1,                        &  ! nb de partitions
                                  PDM_TYPE_INT)
 
   call PDM_pointer_array_create (list_of_face_candidates, &
-                                 1,                       &
+                                 1,                       &   ! nb de partitions
                                  PDM_TYPE_G_NUM)
 
 
@@ -765,7 +765,6 @@ program testf
         stop  
       endif  
       ipart_list_of_face_candidates(j) = sphere_extr_mesh_parent_ln_to_gn(box_cube_box_sphere(j))
-      ipart_list_of_face_candidates(j) = box_cube_box_sphere(j)
     end do
   enddo
 
@@ -781,7 +780,7 @@ program testf
                                PDM_MPI_COMM_KIND_P2P,                 & ! k_comm
                                PDM_STRIDE_VAR_INTERLACED,             & ! t_stride
                                PDM_PART_TO_PART_DATA_DEF_ORDER_PART1, & ! t_part1_data_def
-                               1,                                     & ! cst_stride
+                               1,                                     & ! cst_stride ignored
                                stride_n_face_candidates,              &
                                list_of_face_candidates,               &
                                stride_n_face_candidates_r,            &

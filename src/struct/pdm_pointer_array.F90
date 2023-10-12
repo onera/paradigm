@@ -78,6 +78,7 @@ module pdm_pointer_array
   end interface PDM_pointer_array_part_length_update
 
   private :: &
+             PDM_pointer_array_part_length_update_, & 
              PDM_pointer_array_create_type, &
              PDM_pointer_array_create_type_from_c_allocated_cptr, &
              PDM_pointer_array_part_get_double, &
