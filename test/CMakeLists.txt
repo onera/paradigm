@@ -202,6 +202,7 @@ test_c_create (pdm_t_part_to_block_geom 1 PDM_LIST_TEST PDM_LIST_NRANK)
 test_c_create (pdm_t_multipart_0d 1 PDM_LIST_TEST PDM_LIST_NRANK)
 test_c_create (pdm_t_multipart_1d 1 PDM_LIST_TEST PDM_LIST_NRANK)
 test_c_create (pdm_t_multipart_1d_nodal 1 PDM_LIST_TEST PDM_LIST_NRANK)
+test_c_create (pdm_t_clustering 2 PDM_LIST_TEST PDM_LIST_NRANK)
 # test_c_create (pdm_t_part_extension_1d 1 PDM_LIST_TEST PDM_LIST_NRANK)
 # test_c_create (pdm_t_part_extension_2d 2 PDM_LIST_TEST PDM_LIST_NRANK)
 
