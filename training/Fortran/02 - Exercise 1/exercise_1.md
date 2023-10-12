@@ -429,7 +429,7 @@ To finish with, we need to have the description of the vertices.
 
 ```
 
-Once the partitionned mesh retrieved we can **free** (step 5) the memory allocated for and by the partitioning algortihm.
+Once the partitionned mesh retrieved we can **free** (step 5) the memory allocated for and by the partitioning algorithm.
 
 ```{code-cell}
 %%code_block -l c -p exercise_1 -i 13

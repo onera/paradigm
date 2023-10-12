@@ -32,6 +32,7 @@ if module_path not in sys.path:
 
 ```{code-cell}
 %reload_ext visu_magics
+%reload_ext code_magics
 ```
 
 +++
@@ -43,7 +44,6 @@ In this section, `ParaDiGM` tools are used to generate a simple mesh for this ex
 
 ```{code-cell}
 %%code_block -l python -p exercise_1 -i 1
-
 #!/usr/bin/env python
 
 import numpy as np
@@ -289,6 +289,12 @@ output = mpart.multipart_vtx_coord_get(i_part,
 
 coords = output["np_vtx_coord"]
 
+```
+
+## Execute the exercise
+
+```{code-cell}
+%merge_code_blocks -l python -p exercise_1 -n 2 -v -c
 ```
 
 ## Annex 1
