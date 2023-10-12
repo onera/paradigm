@@ -1,7 +1,7 @@
 from IPython.core import magic_arguments
 from IPython.core.magic import cell_magic, line_magic, Magics, magics_class
 
-def nice_view(plotter, show_grid=False):
+def nice_view(plotter):
   import numpy as np
   p_bounds = np.asarray(plotter.bounds)
   p_range = p_bounds[1::2] - p_bounds[0::2]
@@ -14,9 +14,6 @@ def nice_view(plotter, show_grid=False):
       plotter.view_zx()
     else:
       plotter.view_xy()
-
-  if show_grid:
-    plotter.show_bounds(all_edges=True, grid="back")
 
 
 def visu_n_files(files, fields=[""], same_view=False, show_grid=False):
@@ -45,6 +42,8 @@ def visu_n_files(files, fields=[""], same_view=False, show_grid=False):
     p.background_color = 'w'
     p.enable_anti_aliasing()
 
+    meshes = []
+
     for i_file, filename in enumerate(files):
       if not same_view:
         i_col = i_file%n_col
@@ -58,6 +57,7 @@ def visu_n_files(files, fields=[""], same_view=False, show_grid=False):
           mesh = [mesh]
 
         for block in mesh:
+          meshes.append(mesh)
           if i_file < len(fields):
             if len(fields[i_file]) > 0:
               scalars = fields[i_file]
@@ -81,7 +81,7 @@ def visu_n_files(files, fields=[""], same_view=False, show_grid=False):
 
     p.link_views()
 
-    nice_view(p, show_grid)
+    nice_view(p)
 
     # show loaded meshes
     p.show(jupyter_backend='client')
@@ -99,9 +99,6 @@ class VisuMagics(Magics):
   @magic_arguments.magic_arguments()
   @magic_arguments.argument('--same_view', '-same_view',
                             help='Show all files in same view',
-                            action="store_true")
-  @magic_arguments.argument('--show_grid', '-show_grid',
-                            help='Show grid',
                             action="store_true")
   def visualize(self, line='', cell=None):
     args = magic_arguments.parse_argstring(self.visualize, line)
@@ -121,7 +118,7 @@ class VisuMagics(Magics):
         else:
           fields.append("")
 
-    visu_n_files(files, fields, args.same_view, args.show_grid)
+    visu_n_files(files, fields, args.same_view)
 
 
 def load_ipython_extension(ipython):

@@ -28,12 +28,16 @@ if module_path not in sys.path:
 %reload_ext visu_magics
 ```
 
+```{code-cell}
+%reload_ext code_magics
+```
+
 The goal of this exercise is to get used
 Your job is to fill the code blocks left blank using the API referenced [here](https://numerics.gitlab-pages.onera.net/mesh/paradigm/dev_doc_pretty/user_manual/prepro_algo/index.html#python-api).
 
 +++
 
-## Begin the exercise
+## Load the required Python modules
 
 ```{code-cell}
 %%code_block -l python -p exercise2 -i 1
@@ -42,12 +46,14 @@ import mpi4py.MPI as MPI
 import numpy as np
 import Pypdm.Pypdm as PDM
 from util_visu import visu_2d
+
 ```
 
 ## Generate a partitioned "source" mesh
 
 ```{code-cell}
 %%code_block -l python -p exercise2 -i 2
+# Generate source mesh
 src_n_vtx_seg = 10
 src_n_part    = 1
 
@@ -72,6 +78,7 @@ src_face_edge     = src_mesh["pface_edge"]     #
 src_edge_vtx      = src_mesh["pedge_vtx"]      #
 src_vtx_ln_to_gn  = src_mesh["pvtx_ln_to_gn"]  #
 src_face_ln_to_gn = src_mesh["pface_ln_to_gn"] #
+
 ```
 
 ## Generate a partitioned "target" mesh
@@ -79,6 +86,7 @@ We will use its vertices as a point cloud.
 
 ```{code-cell}
 %%code_block -l python -p exercise2 -i 3
+# Generate target mesh
 tgt_n_vtx_seg = 10
 tgt_n_part    = 1
 
@@ -100,20 +108,25 @@ tgt_face_vtx_idx  = tgt_mesh["pface_edge_idx"]
 tgt_face_vtx      = tgt_mesh["pface_vtx"]
 tgt_vtx_ln_to_gn  = tgt_mesh["pvtx_ln_to_gn"]
 tgt_face_ln_to_gn = tgt_mesh["pface_ln_to_gn"]
+
 ```
 
 ## Create the `MeshLocation` object
 
 ```{code-cell}
 %%code_block -l python -p exercise2 -i 4
+# Create MeshLocation instance
 # (...)
+
 ```
 
 ## Set the target point cloud
 
 ```{code-cell}
 %%code_block -l python -p exercise2 -i 5
+# Set target point cloud
 # (...)
+
 ```
 
 ## Set the source mesh
@@ -123,7 +136,9 @@ Here you have essentially two options :
 
 ```{code-cell}
 %%code_block -l python -p exercise2 -i 6
+# Set source mesh
 # (...)
+
 ```
 
 ## Set some optional parameters
@@ -135,20 +150,25 @@ Here you have essentially two options :
 
 # Preconditioning method
 # (...)
+
 ```
 
 ## Compute the localization
 
 ```{code-cell}
 %%code_block -l python -p exercise2 -i 8
+# Compute localization
 # (...)
+
 ```
 
 ## Dump the elapsed and CPU times
 
 ```{code-cell}
 %%code_block -l python -p exercise2 -i 9
+# Dump elapsed and CPU times
 # (...)
+
 ```
 
 ## Results
@@ -166,14 +186,18 @@ The second field interpolation is trickier as you will need the cell->vertex con
 
 ```{code-cell}
 %%code_block -l python -p exercise2 -i 10
+# Interpolate first field
 # (...)
+
 ```
 
 ### Interpolate the second field (node-based)
 
 ```{code-cell}
 %%code_block -l python -p exercise2 -i 11
+# Interpolate second field
 # (...)
+
 ```
 
 
@@ -183,7 +207,7 @@ Now, use the PartToPart object to exchange the interpolated fields from the sour
 This ParToPart object was built when computing the location and can be accessed from the MeshLocation object
 
 ```{code-cell}
-%%code_block -l python -p exercise2 -i 10
+%%code_block -l python -p exercise2 -i 12
 # Get PartToPart object
 # (...)
 
@@ -195,6 +219,7 @@ This ParToPart object was built when computing the location and can be accessed 
 
 # Finalize both exchanges
 # (...)
+
 ```
 
 ### Check the interpolated received on the target side
@@ -204,10 +229,12 @@ Finally, visualize the interpolated target fields.
 
 ```{code-cell}
 %%code_block -l python -p exercise2 -i 13
+# Check interpolated fields
 # (...)
 
 # Export for visualization
 # (...)
+
 ```
 
 Finalize?
