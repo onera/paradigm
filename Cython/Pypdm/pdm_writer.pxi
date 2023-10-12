@@ -516,3 +516,155 @@ cdef class Writer:
     # ************************************************************************
 
     PDM_writer_free(self._wt)
+
+
+def writer_ez(comm,
+              directory,
+              name,
+              vtx_coord,
+              vtx_ln_to_gn,
+              face_vtx_idx,
+              face_vtx,
+              elt_ln_to_gn,
+              cell_face_idx=None,
+              cell_face=None,
+              format="Ensight",
+              elt_fields=None,
+              vtx_fields=None):
+  """
+  writer_ez(comm, directory, name, vtx_coord, vtx_ln_to_gn, face_vtx_idx, face_vtx, elt_ln_to_gn, cell_face_idx=None, cell_face=None, format="Ensight", elt_fields=None, vtx_fields=None)
+
+  High-level wrapping for Writer
+
+  Parameters:
+    comm          (MPI.Comm)                        : MPI Communicator
+    directory     (str)                             : Output files directory
+    name          (str)                             : Output files prefix
+    vtx_coord     (np.ndarray[np.double_t] list)    : Vertex coordinates
+    vtx_ln_to_gn  (np.ndarray[npy_pdm_gnum_t] list) : Vertex global ids
+    face_vtx_idx  (np.ndarray[np.int32_t] list)     : Index for face->vertex connectivity
+    face_vtx      (np.ndarray[np.int32_t] list)     : Face->vertex connectivity
+    elt_ln_to_gn  (np.ndarray[npy_pdm_gnum_t] list) : Element global ids
+    cell_face_idx (np.ndarray[np.int32_t] list)     : Index for cell->face connectivity (only for volume meshes)
+    cell_face     (np.ndarray[np.int32_t] list)     : Cell->face connectivity (only for volume meshes)
+    format        (str)                             : Output file format (default : "Ensight")
+    elt_fields    (dict)                            : Element-based fields (optional)
+    vtx_fields    (dict)                            : Vertex-based fields (optional)
+  """
+
+  is_2d = (cell_face_idx is None) or (cell_face is None)
+
+  wrt = Writer(format,
+               _PDM_WRITER_FMT_ASCII,
+               _PDM_WRITER_TOPO_VARIABLE,
+               _PDM_WRITER_OFF,
+               directory,
+               name,
+               comm,
+               _PDM_IO_KIND_MPI_SIMPLE,
+               1.,
+               "")
+
+  n_part = len(elt_ln_to_gn)
+  n_elt = [len(g) for g in elt_ln_to_gn]
+
+  id_geom = wrt.geom_create(name,
+                            n_part)
+
+  id_var_part = wrt.var_create(_PDM_WRITER_OFF,
+                               _PDM_WRITER_VAR_SCALAR,
+                               _PDM_WRITER_VAR_ELEMENTS,
+                               "i_part")
+
+  id_var_elt_gnum = wrt.var_create(_PDM_WRITER_OFF,
+                                   _PDM_WRITER_VAR_SCALAR,
+                                   _PDM_WRITER_VAR_ELEMENTS,
+                                   "elt_gnum")
+
+  id_var_elt_fields = dict()
+  if elt_fields is not None:
+    for name in elt_fields:
+      id_var_elt_fields[name] = wrt.var_create(_PDM_WRITER_OFF,
+                                               _PDM_WRITER_VAR_SCALAR,
+                                               _PDM_WRITER_VAR_ELEMENTS,
+                                               name)
+
+  id_var_vtx_fields = dict()
+  if vtx_fields is not None:
+    for name in vtx_fields:
+      id_var_vtx_fields[name] = wrt.var_create(_PDM_WRITER_OFF,
+                                               _PDM_WRITER_VAR_SCALAR,
+                                               _PDM_WRITER_VAR_VERTICES,
+                                               name)
+
+  wrt.step_beg(0.)
+
+  for i_part in range(n_part):
+    wrt.geom_coord_set(id_geom,
+                       i_part,
+                       len(vtx_ln_to_gn[i_part]),
+                       vtx_coord   [i_part],
+                       vtx_ln_to_gn[i_part])
+
+    if is_2d:
+      wrt.geom_faces_facesom_add(id_geom,
+                                 i_part,
+                                 n_elt[i_part],
+                                 face_vtx_idx[i_part],
+                                 None,
+                                 face_vtx[i_part],
+                                 elt_ln_to_gn[i_part])
+    else:
+      wrt.geom_cell3d_cellface_add(id_geom,
+                                   i_part,
+                                   n_elt[i_part],
+                                   len(face_vtx_idx[i_part])-1,
+                                   face_vtx_idx[i_part],
+                                   None,
+                                   face_vtx[i_part],
+                                   cell_face_idx[i_part],
+                                   None,
+                                   cell_face[i_part],
+                                   elt_ln_to_gn[i_part])
+
+
+  wrt.geom_write(id_geom)
+
+  for i_part in range(n_part):
+    wrt.var_set(id_var_part,
+                id_geom,
+                i_part,
+                (comm.rank*n_part + i_part)*NPY.ones(n_elt[i_part], dtype=NPY.double))
+
+    wrt.var_set(id_var_elt_gnum,
+                id_geom,
+                i_part,
+                elt_ln_to_gn[i_part].astype(NPY.double))
+
+    if elt_fields is not None:
+      for name in elt_fields:
+        wrt.var_set(id_var_elt_fields[name],
+                    id_geom,
+                    i_part,
+                    elt_fields[name][i_part].astype(NPY.double))
+
+    if vtx_fields is not None:
+      for name in vtx_fields:
+        wrt.var_set(id_var_vtx_fields[name],
+                    id_geom,
+                    i_part,
+                    vtx_fields[name][i_part].astype(NPY.double))
+
+
+  wrt.var_write(id_var_part)
+  wrt.var_write(id_var_elt_gnum)
+
+  if elt_fields is not None:
+    for name in elt_fields:
+      wrt.var_write(id_var_elt_fields[name])
+
+  if vtx_fields is not None:
+    for name in vtx_fields:
+      wrt.var_write(id_var_vtx_fields[name])
+
+  wrt.step_end()
