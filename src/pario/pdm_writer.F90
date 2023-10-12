@@ -1166,10 +1166,14 @@ module pdm_writer
     c_n_face  = n_face
 
     c_face_som_idx  = c_loc(face_som_idx)
-    c_face_som_nb   = c_loc(face_som_nb)
+    if (associated(face_som_nb)) then
+      c_face_som_nb   = c_loc(face_som_nb)
+    endif     
     c_face_som      = c_loc(face_som)
     c_cell_face_idx = c_loc(cell_face_idx)
-    c_cell_face_nb  = c_loc(cell_face_nb)
+    if (associated(cell_face_nb)) then
+      c_cell_face_nb  = c_loc(cell_face_nb)
+    endif
     c_cell_face     = c_loc(cell_face)
     c_numabs        = c_loc(numabs)
 
@@ -1289,10 +1293,14 @@ module pdm_writer
     c_n_face  = n_face
 
     c_face_som_idx  = c_loc(face_som_idx)
-    c_face_som_nb   = c_loc(face_som_nb)
+    if (associated(face_som_nb)) then
+      c_face_som_nb   = c_loc(face_som_nb)
+    endif
     c_face_som      = c_loc(face_som)
     c_cell_face_idx = c_loc(cell_face_idx)
-    c_cell_face_nb  = c_loc(cell_face_nb)
+    if (associated(cell_face_nb)) then
+      c_cell_face_nb  = c_loc(cell_face_nb)
+    endif
     c_cell_face     = c_loc(cell_face)
     c_numabs        = c_loc(numabs)
 

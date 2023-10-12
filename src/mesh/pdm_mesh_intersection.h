@@ -242,6 +242,7 @@ PDM_mesh_intersection_result_from_a_get
 );
 
 
+
 /**
  * \brief Get intersection result for the b point of view
  * 
@@ -304,24 +305,27 @@ PDM_mesh_intersection_tolerance_set
 
 
 /**
+ * \brief Get preprocessing results 
  *
- * \brief Get \ref PDM_extract_part 
- *
- * \param [in]   mi             Pointer to \ref PDM_mesh_intersection object
- * \param [in]   i_mesh         Mesh identifier
- * \param [in]   n_part         Number of partitions
+ * \param [in ] mi                 Pointer to \ref PDM_mesh_intersection_t object
+ * \param [out] elt_a_elt_b_idx    Index of list of intersected B element candidate for each A element
+ *                                 in the extr_mesh distribution 
+ * \param [out] elt_a_elt_b        List of intersected B element candidate for each A element in the 
+ *                                 extr_mesh distribution 
+ * \param [out] extr_mesh_a        Redistributed mesh A with only A element candidate  
+ * \param [out] extr_mesh_b        Redistributed mesh B with only B element candidate  
  *
  */
 
 void
-PDM_mesh_intersection_extract_part_get
+PDM_mesh_intersection_preprocessing_get
 (
-        PDM_mesh_intersection_t *mi,
-  const int                      i_mesh,
-        PDM_extract_part_t     **extract_part
+  PDM_mesh_intersection_t  *mi,
+  int                     **box_a_box_b_idx,
+  int                     **box_a_box_b,
+  PDM_extract_part_t      **extr_mesh_a,
+  PDM_extract_part_t      **extr_mesh_b
 );
-
-
 
 #ifdef  __cplusplus
 }

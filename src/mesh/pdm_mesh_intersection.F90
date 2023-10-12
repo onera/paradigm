@@ -25,6 +25,7 @@ module pdm_mesh_intersection
   use pdm_fortran
   use iso_c_binding
   use pdm_cf_array
+  use pdm_extract_part
 
   implicit none
 
@@ -44,9 +45,9 @@ module pdm_mesh_intersection
     module procedure PDM_mesh_intersection_mesh_nodal_set_ 
   end interface 
 
-  ! interface PDM_mesh_intersection_tolerance_set
-  !   module procedure PDM_mesh_intersection_tolerance_set_
-  ! end interface
+  interface PDM_mesh_intersection_tolerance_set
+    module procedure PDM_mesh_intersection_tolerance_set_
+  end interface
     
   interface PDM_mesh_intersection_part_set
     module procedure PDM_mesh_intersection_part_set_
@@ -55,6 +56,10 @@ module pdm_mesh_intersection
   interface PDM_mesh_intersection_free
     module procedure PDM_mesh_intersection_free_
   end interface
+
+  interface PDM_mesh_intersection_preprocessing_get
+    module procedure PDM_mesh_intersection_preprocessing_get_
+  end interface  
     
   ! interface PDM_mesh_intersection_part_to_part_get
   !   module procedure PDM_mesh_intersection_part_to_part_get_
@@ -76,13 +81,18 @@ module pdm_mesh_intersection
   !   module procedure PDM_mesh_intersection_extract_part_get_
   ! end interface
 
+  integer, parameter :: PDM_MESH_INTERSECTION_KIND_PREPROCESS    = 0
+  integer, parameter :: PDM_MESH_INTERSECTION_KIND_WEIGHT        = 1
+  integer, parameter :: PDM_MESH_INTERSECTION_KIND_UNMERGED_POLY = 2
+  integer, parameter :: PDM_MESH_INTERSECTION_KIND_MESH          = 3
+
   private ::                                  &
     PDM_mesh_intersection_create_,            &
     PDM_mesh_intersection_n_part_set_,        & 
     PDM_mesh_intersection_compute_,           &
     PDM_mesh_intersection_mesh_nodal_set_,    &
     PDM_mesh_intersection_free_,              &
-  !   PDM_mesh_intersection_tolerance_set_,     &
+    PDM_mesh_intersection_tolerance_set_,     &
   !   PDM_mesh_intersection_part_to_part_get_,  &
   !   PDM_mesh_intersection_result_from_a_get_, &
   !   PDM_mesh_intersection_result_from_b_get_, &
@@ -191,8 +201,7 @@ end subroutine PDM_mesh_intersection_create_
 subroutine PDM_mesh_intersection_n_part_set_ (mi,     &
                                               i_mesh, &
                                               n_part)
-  
-  
+ 
   use iso_c_binding
 
   implicit none
@@ -370,6 +379,19 @@ subroutine PDM_mesh_intersection_part_set_ (mi,            &
   integer(kind=pdm_g_num_s), pointer :: vtx_ln_to_gn(:)
   double precision,          pointer :: coords(:,:)
 
+  type(c_ptr) :: c_cell_face_idx = C_NULL_PTR
+  type(c_ptr) :: c_cell_face = C_NULL_PTR
+  type(c_ptr) :: c_face_edge_idx = C_NULL_PTR
+  type(c_ptr) :: c_face_edge = C_NULL_PTR
+  type(c_ptr) :: c_edge_vtx = C_NULL_PTR
+  type(c_ptr) :: c_face_vtx_idx = C_NULL_PTR
+  type(c_ptr) :: c_face_vtx = C_NULL_PTR
+  type(c_ptr) :: c_cell_ln_to_gn = C_NULL_PTR
+  type(c_ptr) :: c_face_ln_to_gn = C_NULL_PTR
+  type(c_ptr) :: c_edge_ln_to_gn = C_NULL_PTR
+  type(c_ptr) :: c_vtx_ln_to_gn = C_NULL_PTR
+  type(c_ptr) :: c_vtx_coord = C_NULL_PTR
+
   interface 
     subroutine PDM_mesh_intersection_part_set_cf (mi,            &
                                                   i_mesh,        &
@@ -419,6 +441,54 @@ subroutine PDM_mesh_intersection_part_set_ (mi,            &
     end subroutine PDM_mesh_intersection_part_set_cf
   end interface 
 
+  if (associated(cell_face_idx)) then
+    c_cell_face_idx = c_loc(cell_face_idx)
+  endif
+
+  if (associated(cell_face)) then
+    c_cell_face = c_loc(cell_face)
+  endif
+
+  if (associated(face_edge_idx)) then
+    c_face_edge_idx = c_loc(face_edge_idx)
+  endif
+
+  if (associated(face_edge)) then
+    c_face_edge = c_loc(face_edge)
+  endif
+
+  if (associated(edge_vtx)) then
+    c_edge_vtx = c_loc(edge_vtx)
+  endif
+
+  if (associated(face_vtx_idx)) then
+    c_face_vtx_idx = c_loc(face_vtx_idx)
+  endif
+
+  if (associated(face_vtx)) then
+    c_face_vtx = c_loc(face_vtx)
+  endif
+
+  if (associated(cell_ln_to_gn)) then
+    c_cell_ln_to_gn = c_loc(cell_ln_to_gn)
+  endif
+
+  if (associated(face_ln_to_gn)) then
+    c_face_ln_to_gn = c_loc(face_ln_to_gn)
+  endif
+
+  if (associated(edge_ln_to_gn)) then
+    c_edge_ln_to_gn = c_loc(edge_ln_to_gn)
+  endif
+
+  if (associated(vtx_ln_to_gn)) then
+    c_vtx_ln_to_gn = c_loc(vtx_ln_to_gn)
+  endif
+
+  if (associated(coords)) then
+    c_vtx_coord = c_loc(coords)
+  endif
+
   call PDM_mesh_intersection_part_set_cf (mi,                   &
                                           i_mesh,               &
                                           i_part,               &
@@ -426,18 +496,18 @@ subroutine PDM_mesh_intersection_part_set_ (mi,            &
                                           n_face,               &
                                           n_edge,               &
                                           n_vtx,                &
-                                          c_loc(cell_face_idx), &
-                                          c_loc(cell_face),     &
-                                          c_loc(face_edge_idx), &
-                                          c_loc(face_edge),     &
-                                          c_loc(edge_vtx),      &
-                                          c_loc(face_vtx_idx),  &
-                                          c_loc(face_vtx),      &
-                                          c_loc(cell_ln_to_gn), &
-                                          c_loc(face_ln_to_gn), &
-                                          c_loc(edge_ln_to_gn), &
-                                          c_loc(vtx_ln_to_gn),  &
-                                          c_loc(coords))                                          
+                                          c_cell_face_idx, &
+                                          c_cell_face,     &
+                                          c_face_edge_idx, &
+                                          c_face_edge,     &
+                                          c_edge_vtx,      &
+                                          c_face_vtx_idx,  &
+                                          c_face_vtx,      &
+                                          c_cell_ln_to_gn, &
+                                          c_face_ln_to_gn, &
+                                          c_edge_ln_to_gn, &
+                                          c_vtx_ln_to_gn,  &
+                                          c_vtx_coord)                                          
 
 end subroutine PDM_mesh_intersection_part_set_   
 
@@ -527,65 +597,65 @@ end subroutine PDM_mesh_intersection_part_to_part_get_
 !!
 
 
-subroutine PDM_mesh_intersection_result_from_a_get_ (mi,                &
-                                                     elt_a_elt_b_idx,   &
-                                                     elt_a_elt_b,       & 
-                                                     elt_a_elt_b_volume)
+! subroutine PDM_mesh_intersection_result_from_a_get_ (mi,                &
+!                                                      elt_a_elt_b_idx,   &
+!                                                      elt_a_elt_b,       & 
+!                                                      elt_a_elt_b_volume)
   
-  use iso_c_binding
+!   use iso_c_binding
 
-  implicit none
+!   implicit none
 
-  type(c_ptr), intent(in) :: mi
-  type(PDM_cf_array_t), pointer    :: elt_a_elt_b_idx     
-  type(PDM_cf_array_t), pointer    :: elt_a_elt_b         
-  type(PDM_cf_array_t), pointer    :: elt_a_elt_b_volume        
+!   type(c_ptr), intent(in) :: mi
+!   type(PDM_cf_array_t), pointer    :: elt_a_elt_b_idx     
+!   type(PDM_cf_array_t), pointer    :: elt_a_elt_b         
+!   type(PDM_cf_array_t), pointer    :: elt_a_elt_b_volume        
 
-  type(c_ptr)             :: c_elt_a_elt_b_idx
-  type(c_ptr)             :: c_elt_a_elt_b
-  type(c_ptr)             :: c_elt_a_elt_b_volume
+!   type(c_ptr)             :: c_elt_a_elt_b_idx
+!   type(c_ptr)             :: c_elt_a_elt_b
+!   type(c_ptr)             :: c_elt_a_elt_b_volume
 
-  interface 
-    subroutine PDM_mesh_intersection_result_from_a_get_cf (mi,                &
-                                                       elt_a_elt_b_idx,   &
-                                                       elt_a_elt_b,       & 
-                                                       elt_a_elt_b_volume)  &                                                 
-      bind (c, name = "PDM_mesh_intersection_result_from_a_get")
+!   interface 
+!     subroutine PDM_mesh_intersection_result_from_a_get_cf (mi,                &
+!                                                        elt_a_elt_b_idx,   &
+!                                                        elt_a_elt_b,       & 
+!                                                        elt_a_elt_b_volume)  &                                                 
+!       bind (c, name = "PDM_mesh_intersection_result_from_a_get")
 
-      use iso_c_binding
+!       use iso_c_binding
 
-      implicit none
+!       implicit none
 
-        type(c_ptr),     value :: mi
-        type(c_ptr)            :: elt_a_elt_b_idx
-        type(c_ptr)            :: elt_a_elt_b
-        type(c_ptr)            :: elt_a_elt_b_volume        
+!         type(c_ptr),     value :: mi
+!         type(c_ptr)            :: elt_a_elt_b_idx
+!         type(c_ptr)            :: elt_a_elt_b
+!         type(c_ptr)            :: elt_a_elt_b_volume        
 
-    end subroutine PDM_mesh_intersection_result_from_a_get_cf
-  end interface 
+!     end subroutine PDM_mesh_intersection_result_from_a_get_cf
+!   end interface 
 
-  elt_a_elt_b_idx => null()
-  elt_a_elt_b => null()
-  elt_a_elt_b_volume => null()
+!   elt_a_elt_b_idx => null()
+!   elt_a_elt_b => null()
+!   elt_a_elt_b_volume => null()
 
-  call PDM_mesh_intersection_result_from_a_get_cf (mi,                  &
-                                                  c_elt_a_elt_b_idx,   &
-                                                  c_elt_a_elt_b,       &
-                                                  c_elt_a_elt_b_volume)
-
-
-  print *," A finir !!!!"
-  !! TODO: creation des pdm_cf_array pour c_elt_a_elt_b_idx c_elt_a_elt_b c_elt_a_elt_b_volume
-  !!
-
-   ! call PDM_cf_array_create_ (pa,        &
-   !                            ! type,      &
-   !                            ! length,    &
-   !                            ! cptr,      &
-   !                            ! ownership)
+!   call PDM_mesh_intersection_result_from_a_get_cf (mi,                  &
+!                                                   c_elt_a_elt_b_idx,   &
+!                                                   c_elt_a_elt_b,       &
+!                                                   c_elt_a_elt_b_volume)
 
 
-end subroutine PDM_mesh_intersection_result_from_a_get_   
+!   print *," A finir !!!!"
+!   !! TODO: creation des pdm_cf_array pour c_elt_a_elt_b_idx c_elt_a_elt_b c_elt_a_elt_b_volume
+!   !!
+
+!    ! call PDM_cf_array_create_ (pa,        &
+!    !                            ! type,      &
+!    !                            ! length,    &
+!    !                            ! cptr,      &
+!    !                            ! ownership)
+
+
+! end subroutine PDM_mesh_intersection_result_from_a_get_   
 
 ! void
 ! PDM_mesh_intersection_result_from_a_get
@@ -649,31 +719,116 @@ end subroutine PDM_mesh_intersection_result_from_a_get_
 !! \param [in]   tol             Tolerance
 !!
 
- ! void
- ! PDM_mesh_intersection_tolerance_set
- ! (
- !        PDM_mesh_intersection_t *mi,
- !  const double                   tol
- ! );
+subroutine PDM_mesh_intersection_tolerance_set_  (mi ,&
+                                                 tol)
 
 
-! /**
-!  *
-!  * \brief Get \ref PDM_extract_part 
-!  *
-!  * \param [in]   mi             Pointer to \ref PDM_mesh_intersection object
-!  * \param [in]   i_mesh         Mesh identifier
-!  * \param [in]   n_part         Number of partitions
-!  *
-!  */
+  use iso_c_binding
 
-! void
-! PDM_mesh_intersection_extract_part_get
-! (
-!         PDM_mesh_intersection_t *mi,
-!   const int                      i_mesh,
-!         PDM_extract_part_t     **extract_part
-! );
+  implicit none
+
+  type(c_ptr), intent(in)      :: mi
+  double precision, intent(in) :: tol
+
+  interface
+    subroutine PDM_mesh_intersection_tolerance_set_cf  (mi ,&
+                                                        tol) &
+      bind (c, name = "PDM_mesh_intersection_tolerance_set")
+
+      use iso_c_binding
+
+      implicit none
+
+      type(c_ptr), value      :: mi
+      real(c_double), value   :: tol
+
+    end subroutine
+  end interface
+
+  call PDM_mesh_intersection_tolerance_set_cf (mi, tol)
+
+end subroutine PDM_mesh_intersection_tolerance_set_
+
+!>
+!! \brief Get preprocessing results 
+!!
+!! \param [in ] mi                 Pointer to \ref PDM_mesh_intersection_t object
+!! \param [out] elt_a_elt_b_idx    Index of list of intersected B element candidate for each A element
+!!                                 in the extr_mesh distribution 
+!! \param [out] elt_a_elt_b        List of intersected B element candidate for each A element in the 
+!!                                 extr_mesh distribution 
+!! \param [out] extr_mesh_a        Redistributed mesh A with only A element candidate  
+!! \param [out] extr_mesh_b        Redistributed mesh B with only B element candidate  
+!!
+!!
+
+subroutine PDM_mesh_intersection_preprocessing_get_ (mi,             &
+                                                    box_a_box_b_idx, &
+                                                    box_a_box_b,     &
+                                                    extr_mesh_a,     &
+                                                    extr_mesh_b)
+
+  use iso_c_binding
+
+  implicit none
+
+  type(c_ptr), intent(in) :: mi
+  integer, pointer        :: box_a_box_b_idx(:)
+  integer, pointer        :: box_a_box_b(:)
+  type(c_ptr)             :: extr_mesh_a
+  type(c_ptr)             :: extr_mesh_b
+
+  integer                 :: n_cell_a 
+  type(c_ptr)             :: c_box_a_box_b_idx
+  type(c_ptr)             :: c_box_a_box_b
+
+  integer                 :: i
+  interface 
+    subroutine PDM_mesh_intersection_preprocessing_get_cf (mi,            &
+                                                          box_a_box_b_idx,&
+                                                          box_a_box_b,    &
+                                                          extr_mesh_a,    &
+                                                          extr_mesh_b)    &
+
+      bind (c, name = "PDM_mesh_intersection_preprocessing_get")
+
+      use iso_c_binding
+
+      implicit none
+      
+      type(c_ptr), value      :: mi
+      type(c_ptr)             :: box_a_box_b_idx
+      type(c_ptr)             :: box_a_box_b
+      type(c_ptr)             :: extr_mesh_a
+      type(c_ptr)             :: extr_mesh_b
+
+    end subroutine PDM_mesh_intersection_preprocessing_get_cf
+  end interface 
+
+
+  call PDM_mesh_intersection_preprocessing_get_cf (mi,                &
+                                                   c_box_a_box_b_idx, &
+                                                   c_box_a_box_b,     &
+                                                   extr_mesh_a,       &
+                                                   extr_mesh_b)
+
+
+  call PDM_extract_part_n_entity_get (extr_mesh_a,            &
+                                      0,                      &  ! ipart (only one)
+                                      PDM_MESH_ENTITY_CELL, &
+                                      n_cell_a)                                    
+
+
+  call c_f_pointer (c_box_a_box_b_idx, box_a_box_b_idx, [n_cell_a + 1])
+  call c_f_pointer (c_box_a_box_b, box_a_box_b, [box_a_box_b_idx(n_cell_a + 1)])
+
+  do i = 1, box_a_box_b_idx(n_cell_a + 1)
+    box_a_box_b(i) = box_a_box_b(i) + 1
+  enddo   
+
+  ! 0-based to 1-based !
+
+end subroutine PDM_mesh_intersection_preprocessing_get_
 
 end module pdm_mesh_intersection
 
