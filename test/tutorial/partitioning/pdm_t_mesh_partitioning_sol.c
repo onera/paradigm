@@ -12,6 +12,7 @@
 #include "pdm_array.h"
 #include "pdm_vtk.h"
 #include "pdm_printf.h"
+#include "pdm_part_extension.h"
 
 /*============================================================================
  * Private function definitions
@@ -326,8 +327,136 @@ int main
                                  NULL);
     }
 
-
     // Use PDM_compute_face_vtx_from_face_and_edge if you need face->vtx connectivity
+
+    // BONUS
+
+    // step 1 : create
+    PDM_extend_type_t  extend_type = PDM_EXTEND_FROM_VTX;
+    int                depth       = 1;
+    PDM_part_extension_t *part_ext = PDM_part_extension_create(n_zone,
+                                                               &n_part,
+                                                               extend_type,
+                                                               depth,
+                                                               comm,
+                                                               PDM_OWNERSHIP_KEEP);
+
+    // step 2 : set
+    int *face_group_idx = malloc(sizeof(int) * (n_face+1));
+    for (int i = 0; i < n_face + 1; i++) {
+      face_group_idx[i] = 0;
+    }
+
+    int *vtx_part_bound_part_idx = malloc(sizeof(int) * (n_part + 2)); // why ??
+    for (int i = 0; i < n_part+2; i++) { // why ??
+      vtx_part_bound_part_idx[i] = 0;
+    }
+    PDM_part_extension_set_part(part_ext,
+                                i_zone,
+                                i_part,
+                                n_cell,
+                                n_face,
+                                0, // n_face_part_bound
+                                0, // n_face_group
+                                n_edge,
+                                n_vtx,
+                                cell_face_idx,
+                                cell_face,
+                                NULL, // face_cell
+                                face_edge_idx,
+                                face_edge,
+                                NULL, // face_vtx_idx
+                                NULL, // face_vtx
+                                edge_vtx,
+                                face_group_idx,
+                                NULL, // face_group
+                                NULL, // face_join_idx
+                                NULL, // face_join
+                                NULL, // face_part_bound_proc_idx
+                                NULL, // face_part_bound_part_idx
+                                NULL, // face_part_bound
+                                NULL, // vtx_part_bound_proc_idx
+                                vtx_part_bound_part_idx,
+                                NULL, // vtx_part_bound
+                                cell_ln_to_gn,
+                                face_ln_to_gn,
+                                edge_ln_to_gn,
+                                vtx_ln_to_gn,
+                                NULL, // face_group_ln_to_gn
+                                coords);
+
+    // step 3 : compute
+    PDM_part_extension_compute(part_ext);
+
+    // step 4 : get
+    // Cell
+    PDM_g_num_t *cell_ln_to_gn_ext = NULL;
+    int n_cell_ext = PDM_part_extension_ln_to_gn_get (part_ext,
+                                                      i_zone,
+                                                      i_part,
+                                                      PDM_MESH_ENTITY_CELL,
+                                                      &cell_ln_to_gn_ext);
+
+    int *cell_face_ext     = NULL;
+    int *cell_face_ext_idx = NULL;
+    PDM_part_extension_connectivity_get (part_ext,
+                                         i_zone,
+                                         i_part,
+                                         PDM_CONNECTIVITY_TYPE_CELL_FACE,
+                                         &cell_face_ext,
+                                         &cell_face_ext_idx);
+
+    // Face
+    PDM_g_num_t *face_ln_to_gn_ext = NULL;
+    int n_face_ext = PDM_part_extension_ln_to_gn_get (part_ext,
+                                                      i_zone,
+                                                      i_part,
+                                                      PDM_MESH_ENTITY_FACE,
+                                                      &face_ln_to_gn_ext);
+
+    int *face_edge_ext     = NULL;
+    int *face_edge_ext_idx = NULL;
+    PDM_part_extension_connectivity_get (part_ext,
+                                         i_zone,
+                                         i_part,
+                                         PDM_CONNECTIVITY_TYPE_FACE_EDGE,
+                                         &face_edge_ext,
+                                         &face_edge_ext_idx);
+
+    // Edge
+    PDM_g_num_t *edge_ln_to_gn_ext = NULL;
+    int n_edge_ext = PDM_part_extension_ln_to_gn_get (part_ext,
+                                                      i_zone,
+                                                      i_part,
+                                                      PDM_MESH_ENTITY_EDGE,
+                                                      &edge_ln_to_gn_ext);
+
+    int *edge_vtx_ext     = NULL;
+    int *edge_vtx_ext_idx = NULL;
+    PDM_part_extension_connectivity_get (part_ext,
+                                         i_zone,
+                                         i_part,
+                                         PDM_CONNECTIVITY_TYPE_EDGE_VTX,
+                                         &edge_vtx_ext,
+                                         &edge_vtx_ext_idx);
+
+    // Vertices
+    PDM_g_num_t *vtx_ln_to_gn_ext = NULL;
+    int n_vtx_ext = PDM_part_extension_ln_to_gn_get (part_ext,
+                                                      i_zone,
+                                                      i_part,
+                                                      PDM_MESH_ENTITY_VERTEX,
+                                                      &vtx_ln_to_gn_ext);
+
+    double *vtx_coord_ext = NULL;
+    PDM_part_extension_coord_get(part_ext,
+                                 i_zone,
+                                 i_part,
+                                 &vtx_coord_ext);
+
+    // step 5 : free
+    PDM_part_extension_free(part_ext);
+
 
     // free
     free(vtx_ln_to_gn);
@@ -341,6 +470,9 @@ int main
     free(cell_ln_to_gn);
     free(cell_face_idx);
     free(cell_face);
+
+    free(face_group_idx);
+    free(vtx_part_bound_part_idx);
   }
 
   // free

@@ -138,5 +138,93 @@ def run_test():
     cell_face_idx = output["np_entity1_entity2_idx"]
     cell_face     = output["np_entity1_entity2"]
 
+    # BONUS
+
+    # step 1 : create
+    extend_type = PDM_EXTEND_FROM_VTX
+    depth       = 1
+    part_ext = PDM.PartExtension(n_zone,
+                                 np.array([n_part]).astype(np.intc),
+                                 extend_type,
+                                 depth,
+                                 comm)
+
+    # step 2 : set
+    face_group_idx =  np.array([0 for i in range(n_face+1)]).astype(NPY.int32_t)
+    vtx_part_bound_part_idx = np.array([0 for i in range(n_part+2)]).astype(NPY.int32_t) # why ??
+    part_ext.set_part(i_zone,
+                      i_part,
+                      n_cell,
+                      n_face,
+                      0, # n_face_part_bound
+                      0, # n_face_group
+                      n_edge,
+                      n_vtx,
+                      cell_face_idx,
+                      cell_face,
+                      None, # face_cell
+                      face_edge_idx,
+                      face_edge,
+                      None, # face_vtx_idx
+                      None, # face_vtx
+                      edge_vtx,
+                      face_group_idx,
+                      None, # face_group
+                      None, # face_join_idx
+                      None, # face_join
+                      None, # face_part_bound_proc_idx
+                      None, # face_part_bound_part_idx
+                      None, # face_part_bound
+                      None, # vtx_part_bound_proc_idx
+                      vtx_part_bound_part_idx,
+                      None, # vtx_part_bound
+                      cell_ln_to_gn,
+                      face_ln_to_gn,
+                      edge_ln_to_gn,
+                      vtx_ln_to_gn,
+                      None, # face_group_ln_to_gn
+                      coords)
+
+    # step 3 : compute
+    part_ext.compute()
+
+    # step 4 : get
+    # Cell
+    cell_ext_ln_to_gn = part_ext.get_ln_to_gn(i_zone,
+                                              i_part,
+                                              PDM._PDM_MESH_ENTITY_CELL)
+
+    cell_face_ext, cell_face_ext_idx = part_ext.get_connectivity(i_zone,
+                                                                 i_part,
+                                                                 PDM._PDM_CONNECTIVITY_TYPE_CELL_FACE)
+
+    # Face
+    face_ext_ln_to_gn = part_ext.get_ln_to_gn(i_zone,
+                                              i_part,
+                                              PDM._PDM_MESH_ENTITY_FACE)
+
+    face_edge_ext, face_edge_ext_idx = part_ext.get_connectivity(i_zone,
+                                                                 i_part,
+                                                                 PDM._PDM_CONNECTIVITY_TYPE_FACE_EDGE)
+
+    # Edge
+    edge_ext_ln_to_gn = part_ext.get_ln_to_gn(i_zone,
+                                              i_part,
+                                              PDM._PDM_MESH_ENTITY_EDGE)
+
+    edge_vtx_ext, edge_vtx_ext_idx = part_ext.get_connectivity(i_zone,
+                                                               i_part,
+                                                               PDM._PDM_CONNECTIVITY_TYPE_EDGE_VTX)
+
+    # Vertices
+    vtx_ext_ln_to_gn = part_ext.get_ln_to_gn(i_zone,
+                                             i_part,
+                                             PDM._PDM_MESH_ENTITY_VERTEX)
+
+    vtx_coord_ext = part_ext.get_coord(i_zone,
+                                       i_part)
+
+    # step 5 : free (implicit in Python)
+
 if __name__ == '__main__':
   run_test()

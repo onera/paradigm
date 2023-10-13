@@ -31,6 +31,7 @@ program pdm_t_mesh_partitioning_sol_f
   use pdm_dmesh_nodal
   use pdm_part_mesh_nodal
   use pdm_mesh_nodal
+  use pdm_part_extension
   use iso_c_binding
   use pdm_fortran
 
@@ -81,33 +82,73 @@ program pdm_t_mesh_partitioning_sol_f
   integer (c_int)                       :: n_elt = -1
 
   ! PDM_part_mesh_nodal_section_std_get
-  integer(kind=PDM_l_num_s), pointer  :: elt_vtx(:)
-  integer (pdm_g_num_s), pointer      :: elt_ln_to_gn(:)
-  integer(kind=PDM_l_num_s), pointer  :: parent_num(:)
-  integer (pdm_g_num_s), pointer      :: parent_entity_g_num(:)
+  integer(kind=PDM_l_num_s), pointer  :: elt_vtx(:) => null()
+  integer (pdm_g_num_s), pointer      :: elt_ln_to_gn(:) => null()
+  integer(kind=PDM_l_num_s), pointer  :: parent_num(:) => null()
+  integer (pdm_g_num_s), pointer      :: parent_entity_g_num(:) => null()
 
   ! PDM_multipart_part_vtx_coord_get
-  double precision, pointer           :: coords(:,:)
-  integer(c_int)                      :: n_vtx = -1
+  double precision, pointer           :: coords(:,:) => null()
+  integer(c_int)                      :: n_vtx = 0
 
   ! PDM_part_mesh_nodal_vtx_g_num_get
-  integer (pdm_g_num_s), pointer      :: vtx_ln_to_gn(:)
+  integer (pdm_g_num_s), pointer      :: vtx_ln_to_gn(:) => null()
 
   ! FV
-  integer(kind=PDM_g_num_s), pointer :: edge_ln_to_gn(:)
-  integer(c_int)                     :: n_edge
-  integer(kind=PDM_l_num_s), pointer :: edge_vtx(:)
-  integer(kind=PDM_l_num_s), pointer :: edge_vtx_idx(:)
+  integer(kind=PDM_g_num_s), pointer :: edge_ln_to_gn(:) => null()
+  integer(c_int)                     :: n_edge = 0
+  integer(kind=PDM_l_num_s), pointer :: edge_vtx(:) => null()
+  integer(kind=PDM_l_num_s), pointer :: edge_vtx_idx(:) => null()
 
-  integer(kind=PDM_g_num_s), pointer :: face_ln_to_gn(:)
-  integer(c_int)                     :: n_face
-  integer(kind=PDM_l_num_s), pointer :: face_edge(:)
-  integer(kind=PDM_l_num_s), pointer :: face_edge_idx(:)
+  integer(kind=PDM_g_num_s), pointer :: face_ln_to_gn(:) => null()
+  integer(c_int)                     :: n_face = 0
+  integer(kind=PDM_l_num_s), pointer :: face_edge(:) => null()
+  integer(kind=PDM_l_num_s), pointer :: face_edge_idx(:) => null()
 
-  integer(kind=PDM_g_num_s), pointer :: cell_ln_to_gn(:)
-  integer(c_int)                     :: n_cell
-  integer(kind=PDM_l_num_s), pointer :: cell_face(:)
-  integer(kind=PDM_l_num_s), pointer :: cell_face_idx(:)
+  integer(kind=PDM_g_num_s), pointer :: cell_ln_to_gn(:) => null()
+  integer(c_int)                     :: n_cell = 0
+  integer(kind=PDM_l_num_s), pointer :: cell_face(:) => null()
+  integer(kind=PDM_l_num_s), pointer :: cell_face_idx(:) => null()
+
+  ! BONUS
+  type(c_ptr)                     :: part_ext = C_NULL_PTR
+  integer                         :: extend_type
+  integer                         :: depth
+  integer                         :: n_face_part_bound = 0
+  integer                         :: n_face_group = 0
+  integer(PDM_l_num_s), pointer   :: face_cell(:)                => null()
+  integer(PDM_l_num_s), pointer   :: face_vtx_idx(:)             => null()
+  integer(PDM_l_num_s), pointer   :: face_vtx(:)                 => null()
+  integer(PDM_l_num_s), pointer   :: face_group_idx(:)           => null()
+  integer(PDM_l_num_s), pointer   :: face_group(:)               => null()
+  integer(PDM_g_num_s), pointer   :: face_group_ln_to_gn(:)      => null()
+  integer(PDM_l_num_s), pointer   :: face_part_bound_proc_idx(:) => null()
+  integer(PDM_l_num_s), pointer   :: face_part_bound_part_idx(:) => null()
+  integer(PDM_l_num_s), pointer   :: face_part_bound(:)          => null()
+  integer(PDM_l_num_s), pointer   :: vtx_part_bound_proc_idx(:)  => null()
+  integer(PDM_l_num_s), pointer   :: vtx_part_bound_part_idx(:)  => null()
+  integer(PDM_l_num_s), pointer   :: vtx_part_bound(:)           => null()
+  integer(PDM_l_num_s), pointer   :: face_join_idx(:)            => null()
+  integer(PDM_l_num_s), pointer   :: face_join(:)                => null()
+
+  integer                         :: n_cell_ext
+  integer(pdm_l_num_s), pointer   :: cell_face_ext(:)      => null()
+  integer(pdm_l_num_s), pointer   :: cell_face_ext_idx(:)  => null()
+  integer(PDM_g_num_s), pointer   :: cell_ln_to_gn_ext(:)  => null()
+
+  integer                         :: n_face_ext
+  integer(pdm_l_num_s), pointer   :: face_edge_ext(:)      => null()
+  integer(pdm_l_num_s), pointer   :: face_edge_ext_idx(:)  => null()
+  integer(PDM_g_num_s), pointer   :: face_ln_to_gn_ext(:)  => null()
+
+  integer                         :: n_edge_ext
+  integer(pdm_l_num_s), pointer   :: edge_vtx_ext(:)      => null()
+  integer(pdm_l_num_s), pointer   :: edge_vtx_ext_idx(:)  => null()
+  integer(PDM_g_num_s), pointer   :: edge_ln_to_gn_ext(:)  => null()
+
+  integer                         :: n_vtx_ext
+  double precision,     pointer   :: vtx_coord_ext(:,:)   => null()
+  integer(PDM_g_num_s), pointer   :: vtx_ln_to_gn_ext(:)  => null()
   !-----------------------------------------------------------
 
   ! Initialize MPI environment
@@ -286,9 +327,139 @@ program pdm_t_mesh_partitioning_sol_f
                                              n_cell)
   end if
 
+  ! BONUS
+
+  ! step 1 : create
+  extend_type = PDM_EXTEND_FROM_VTX
+  depth       = 1
+  call PDM_part_extension_create (part_ext,           &
+                                  n_zone,             &
+                                  n_part,             &
+                                  extend_type,        & ! Extend from which element
+                                  depth,              & ! Depth of the extension
+                                  comm,               &
+                                  PDM_OWNERSHIP_KEEP)
+
+  ! step 2 : set
+  allocate(face_group_idx(n_face+1), &
+           vtx_part_bound_part_idx(n_part(i_zone+1)+2)) ! why??
+
+  do i = 1, n_face+1
+    face_group_idx(i) = 0
+  end do
+
+  do i = 1, n_part(i_zone+1)+2 ! why??
+    vtx_part_bound_part_idx(i) = 0
+  end do
+
+  call PDM_part_extension_set_part (part_ext,                 &
+                                    i_zone,                   &
+                                    i_part,                   &
+                                    n_cell,                   &
+                                    n_face,                   &
+                                    n_face_part_bound,        &
+                                    n_face_group,             &
+                                    n_edge,                   &
+                                    n_vtx,                    &
+                                    cell_face_idx,            &
+                                    cell_face,                &
+                                    face_cell,                &
+                                    face_edge_idx,            &
+                                    face_edge,                &
+                                    face_vtx_idx,             &
+                                    face_vtx,                 &
+                                    edge_vtx,                 &
+                                    face_group_idx,           &
+                                    face_group,               &
+                                    face_join_idx,            &
+                                    face_join,                &
+                                    face_part_bound_proc_idx, &
+                                    face_part_bound_part_idx, &
+                                    face_part_bound,          &
+                                    vtx_part_bound_proc_idx,  &
+                                    vtx_part_bound_part_idx,  &
+                                    vtx_part_bound,           &
+                                    cell_ln_to_gn,            &
+                                    face_ln_to_gn,            &
+                                    edge_ln_to_gn,            &
+                                    vtx_ln_to_gn,             &
+                                    face_group_ln_to_gn,      &
+                                    coords)
+
+  ! step 3 : compute
+  call PDM_part_extension_compute (part_ext)
+
+  ! step 4 : get
+
+  ! Cell
+  call PDM_part_extension_ln_to_gn_get (part_ext,             &
+                                        i_zone,               &
+                                        i_part,               &
+                                        PDM_MESH_ENTITY_CELL, &
+                                        n_cell_ext,           &
+                                        cell_ln_to_gn_ext)
+
+  call PDM_part_extension_connectivity_get (part_ext,                        &
+                                            i_zone,                          &
+                                            i_part,                          &
+                                            PDM_CONNECTIVITY_TYPE_CELL_FACE, &
+                                            n_cell_ext,                      &
+                                            cell_face_ext,                   &
+                                            cell_face_ext_idx)
+
+  ! Face
+  call PDM_part_extension_ln_to_gn_get (part_ext,             &
+                                        i_zone,               &
+                                        i_part,               &
+                                        PDM_MESH_ENTITY_FACE, &
+                                        n_face_ext,           &
+                                        face_ln_to_gn_ext)
+
+  call PDM_part_extension_connectivity_get (part_ext,                        &
+                                            i_zone,                          &
+                                            i_part,                          &
+                                            PDM_CONNECTIVITY_TYPE_FACE_EDGE, &
+                                            n_face_ext,                      &
+                                            face_edge_ext,                   &
+                                            face_edge_ext_idx)
+
+  ! Edge
+  call PDM_part_extension_ln_to_gn_get (part_ext,             &
+                                        i_zone,               &
+                                        i_part,               &
+                                        PDM_MESH_ENTITY_EDGE, &
+                                        n_edge_ext,           &
+                                        edge_ln_to_gn_ext)
+
+  call PDM_part_extension_connectivity_get (part_ext,                       &
+                                            i_zone,                         &
+                                            i_part,                         &
+                                            PDM_CONNECTIVITY_TYPE_EDGE_VTX, &
+                                            n_edge_ext,                     &
+                                            edge_vtx_ext,                   &
+                                            edge_vtx_ext_idx)
+
+  ! Vertices
+  call PDM_part_extension_coord_get (part_ext,      &
+                                     i_zone,        &
+                                     i_part,        &
+                                     n_vtx_ext,     &
+                                     vtx_coord_ext)
+
+  call PDM_part_extension_ln_to_gn_get (part_ext,               &
+                                        i_zone,                 &
+                                        i_part,                 &
+                                        PDM_MESH_ENTITY_VERTEX, &
+                                        n_vtx_ext,              &
+                                        vtx_ln_to_gn_ext)
+
+  ! step 5 : free
+  call PDM_part_extension_free (part_ext)
+
   ! free
   deallocate(n_part, &
-             part_fraction)
+             part_fraction, &
+             face_group_idx)
   call PDM_DMesh_nodal_free(dmn)
   call PDM_multipart_free(mpart)
 
