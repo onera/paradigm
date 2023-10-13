@@ -24,27 +24,6 @@ module pdm_mesh_nodal
 
   implicit none
 
-  integer, parameter :: PDM_MESH_NODAL_POINT           = 0
-  integer, parameter :: PDM_MESH_NODAL_BAR2            = 1
-  integer, parameter :: PDM_MESH_NODAL_TRIA3           = 2
-  integer, parameter :: PDM_MESH_NODAL_QUAD4           = 3
-  integer, parameter :: PDM_MESH_NODAL_POLY_2D         = 4
-  integer, parameter :: PDM_MESH_NODAL_TETRA4          = 5
-  integer, parameter :: PDM_MESH_NODAL_PYRAMID5        = 6
-  integer, parameter :: PDM_MESH_NODAL_PRISM6          = 7
-  integer, parameter :: PDM_MESH_NODAL_HEXA8           = 8
-  integer, parameter :: PDM_MESH_NODAL_POLY_3D         = 9
-  integer, parameter :: PDM_MESH_NODAL_BARHO           = 10
-  integer, parameter :: PDM_MESH_NODAL_TRIAHO          = 11
-  integer, parameter :: PDM_MESH_NODAL_QUADHO          = 12
-  integer, parameter :: PDM_MESH_NODAL_TETRAHO         = 13
-  integer, parameter :: PDM_MESH_NODAL_PYRAMIDHO       = 14
-  integer, parameter :: PDM_MESH_NODAL_PRISMHO         = 15
-  integer, parameter :: PDM_MESH_NODAL_HEXAHO          = 16
-  integer, parameter :: PDM_MESH_NODAL_BARHO_BEZIER    = 17
-  integer, parameter :: PDM_MESH_NODAL_TRIAHO_BEZIER   = 18
-  integer, parameter :: PDM_MESH_NODAL_N_ELEMENT_TYPES = 19
-
   interface PDM_Mesh_nodal_n_vtx_elt_get ; module procedure &
   PDM_Mesh_nodal_n_vtx_elt_get_
   end interface
