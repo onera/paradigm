@@ -158,6 +158,17 @@ ctypedef fused PMeshNodal:
   PartMeshNodal
   PartMeshNodalCaspule
 
+def part_mesh_nodal_vtx_g_num_get(PMeshNodal pypmn, int i_part):
+  """
+  Get vertex global numbering for partition i_part
+  """
+  cdef PDM_g_num_t *vtx_ln_to_gn = NULL
+  vtx_ln_to_gn = PDM_part_mesh_nodal_vtx_g_num_get(pypmn.pmn, i_part)
+
+  n_vtx = PDM_part_mesh_nodal_n_vtx_get(pypmn.pmn, i_part)
+
+  return create_numpy_g(vtx_ln_to_gn, n_vtx, False)
+
 def part_mesh_nodal_dim_get(PMeshNodal pypmn):
   return PDM_part_mesh_nodal_mesh_dimension_get(pypmn.pmn)
 

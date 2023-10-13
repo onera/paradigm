@@ -351,6 +351,10 @@ ctypedef fused DMeshNodal:
   DistributedMeshNodal
   DistributedMeshNodalCaspule
 
+def generate_distribution(DMeshNodal pydmn):
+  """
+  """
+  PDM_dmesh_nodal_generate_distribution(pydmn.dmn)
 
 def dmesh_nodal_get_g_dims(DMeshNodal pydmn):
   """
