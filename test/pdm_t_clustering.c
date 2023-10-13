@@ -860,9 +860,6 @@ int main(int argc, char *argv[])
         for (int j_vtx = 0; j_vtx < n_layer_vtx[i_layer]; j_vtx++) {
           int_to_bnd_vtx[i_part][idx_write2++] = gnum_layer_vtx[i_layer][j_vtx];
         }
-      } else {
-        int i_bnd_vtx_min_dist = id_int_to_bnd_vtx[i_part][i_vtx] - 1;
-        int_to_bnd_vtx[i_part][idx_write2] = gnum_bnd_vtx_min_dist[i_part][i_bnd_vtx_min_dist];
       }
 
     }
@@ -886,7 +883,7 @@ int main(int argc, char *argv[])
                 comm);
 
   PDM_closest_point_t* clsp_min_dist = PDM_closest_points_create(comm,
-                                                                 n_vtx_min_dist-1,
+                                                                 n_vtx_min_dist,
                                                                  PDM_OWNERSHIP_KEEP);
 
   PDM_closest_points_n_part_cloud_set(clsp_min_dist,
@@ -924,10 +921,10 @@ int main(int argc, char *argv[])
     for (int i_vtx = 0; i_vtx < n_int_vtx[i_part]; i_vtx++) {
 
       if (id_int_to_bnd_vtx[i_part][i_vtx] > 0) {
-        int idx_write3 = int_to_bnd_vtx_idx[i_part][i_vtx] + 1;
+        int idx_write3 = int_to_bnd_vtx_idx[i_part][i_vtx];
         int i_bnd_vtx_min_dist = id_int_to_bnd_vtx[i_part][i_vtx] - 1;
-        for (int j_vtx = 0; j_vtx < n_vtx_min_dist-1; j_vtx++) {
-          int_to_bnd_vtx[i_part][idx_write3++] = closest_src_gnum[(n_vtx_min_dist-1)*i_bnd_vtx_min_dist+j_vtx];
+        for (int j_vtx = 0; j_vtx < n_vtx_min_dist; j_vtx++) {
+          int_to_bnd_vtx[i_part][idx_write3++] = closest_src_gnum[n_vtx_min_dist*i_bnd_vtx_min_dist+j_vtx];
         }
       }
 
