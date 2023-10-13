@@ -393,6 +393,7 @@ const int                       i_zone
  * \param [in]  connectivity_type     Connectivity kind \ref PDM_connectivity_type_t
  * \param [in]  connect               Connectivity array (size = connect_idx[n_entity] )
  * \param [in]  connect_idx           Connectivity index (size = n_entity+1 )
+ * \param [in]  ownership             Choice of ownership of the resulting arrays \ref PDM_ownership_t
  */
 int
 PDM_multipart_part_connectivity_get
@@ -425,7 +426,7 @@ const int                   i_part,
 
 /**
  *
- * \brief Return size of leading connectivity on current partition ( n_entity )
+ * \brief Return size of entity_type on current partition ( n_entity )
  * \param [in]  multipart             Pointer to \ref PDM_multipart_t object
  * \param [in]  i_zone                Id of zone
  * \param [in]  i_part                Id of part

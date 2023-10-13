@@ -3621,7 +3621,7 @@ const int                   i_part,
        pn_entity = PDM_part_mesh_n_entity_get(_pmeshes.pmesh, i_part, PDM_MESH_ENTITY_VERTEX);
       break;
     default:
-      PDM_error(__FILE__, __LINE__, 0, "PDM_multipart_part_ln_to_gn_get error : Wrong entity_type \n");
+      PDM_error(__FILE__, __LINE__, 0, "PDM_multipart_part_n_entity_get error : Wrong entity_type \n");
       break;
   }
 
@@ -3630,7 +3630,7 @@ const int                   i_part,
 
 /**
  *
- * \brief Return size of leading connectivity on current partition ( n_entity )
+ * \brief Return size of entity_type on current partition ( n_entity )
  * \param [in]  multipart             Pointer to \ref PDM_multipart_t object
  * \param [in]  i_zone                Id of zone
  * \param [in]  i_part                Id of part
