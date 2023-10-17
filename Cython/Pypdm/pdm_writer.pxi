@@ -297,13 +297,8 @@ cdef class Writer:
   def geom_cell2d_cellface_add(self,
                                int id_geom,
                                int id_part,
-                               # int n_face,
-                               # int n_edge,
-                               # NPY.ndarray[NPY.int32_t  , mode='c', ndim=1] edge_vtx_idx,
-                               # NPY.ndarray[NPY.int32_t  , mode='c', ndim=1] edge_vtx_nb,
                                NPY.ndarray[NPY.int32_t  , mode='c', ndim=1] edge_vtx,
                                NPY.ndarray[NPY.int32_t  , mode='c', ndim=1] face_edge_idx,
-                               # NPY.ndarray[NPY.int32_t  , mode='c', ndim=1] face_edge_nb,
                                NPY.ndarray[NPY.int32_t  , mode='c', ndim=1] face_edge,
                                NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1] numabs):
       """
@@ -327,13 +322,9 @@ cdef class Writer:
   def geom_cell3d_cellface_add(self,
                                int id_geom,
                                int id_part,
-                               # int n_cell,
-                               # int n_face,
                                NPY.ndarray[NPY.int32_t  , mode='c', ndim=1] face_vtx_idx,
-                               # NPY.ndarray[NPY.int32_t  , mode='c', ndim=1] face_vtx_nb,
                                NPY.ndarray[NPY.int32_t  , mode='c', ndim=1] face_vtx,
                                NPY.ndarray[NPY.int32_t  , mode='c', ndim=1] cell_face_idx,
-                               # NPY.ndarray[NPY.int32_t  , mode='c', ndim=1] cell_face_nb,
                                NPY.ndarray[NPY.int32_t  , mode='c', ndim=1] cell_face,
                                NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1] numabs):
       """
@@ -376,9 +367,7 @@ cdef class Writer:
   def geom_faces_facevtx_add(self,
                              int     id_geom,
                              int     id_part,
-                             #int     n_face,
                              NPY.ndarray[NPY.int32_t  , mode='c', ndim=1] face_vtx_idx,
-                             #NPY.ndarray[NPY.int32_t  , mode='c', ndim=1] face_vtx_nb,
                              NPY.ndarray[NPY.int32_t  , mode='c', ndim=1] face_vtx,
                              NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1] numabs):
       """
@@ -566,7 +555,7 @@ def writer_ez(comm,
                "")
 
   n_part = len(elt_ln_to_gn)
-  n_elt = [len(g) for g in elt_ln_to_gn]
+  n_elt  = [len(g) for g in elt_ln_to_gn]
 
   id_geom = wrt.geom_create(name,
                             n_part)
@@ -602,28 +591,21 @@ def writer_ez(comm,
   for i_part in range(n_part):
     wrt.geom_coord_set(id_geom,
                        i_part,
-                       len(vtx_ln_to_gn[i_part]),
                        vtx_coord   [i_part],
                        vtx_ln_to_gn[i_part])
 
     if is_2d:
-      wrt.geom_faces_facesom_add(id_geom,
+      wrt.geom_faces_facevtx_add(id_geom,
                                  i_part,
-                                 n_elt[i_part],
                                  face_vtx_idx[i_part],
-                                 None,
                                  face_vtx[i_part],
                                  elt_ln_to_gn[i_part])
     else:
       wrt.geom_cell3d_cellface_add(id_geom,
                                    i_part,
-                                   n_elt[i_part],
-                                   len(face_vtx_idx[i_part])-1,
                                    face_vtx_idx[i_part],
-                                   None,
                                    face_vtx[i_part],
                                    cell_face_idx[i_part],
-                                   None,
                                    cell_face[i_part],
                                    elt_ln_to_gn[i_part])
 

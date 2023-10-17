@@ -26,9 +26,6 @@ if module_path not in sys.path:
 
 ```{code-cell}
 %reload_ext visu_magics
-```
-
-```{code-cell}
 %reload_ext code_magics
 ```
 
@@ -45,7 +42,8 @@ Your job is to fill the code blocks left blank using the API referenced [here](h
 import mpi4py.MPI as MPI
 import numpy as np
 import Pypdm.Pypdm as PDM
-from util_visu import visu_2d
+
+comm = MPI.COMM_WORLD
 
 ```
 
@@ -116,7 +114,8 @@ tgt_face_ln_to_gn = tgt_mesh["pface_ln_to_gn"]
 ```{code-cell}
 %%code_block -l python -p exercise2 -i 4
 # Create MeshLocation instance
-# (...)
+mesh_loc = PDM.MeshLocation(1,
+                            comm)
 
 ```
 
@@ -125,8 +124,14 @@ tgt_face_ln_to_gn = tgt_mesh["pface_ln_to_gn"]
 ```{code-cell}
 %%code_block -l python -p exercise2 -i 5
 # Set target point cloud
-# (...)
+mesh_loc.n_part_cloud_set(0,
+                          tgt_n_part)
 
+for i_part in range(tgt_n_part):
+  mesh_loc.cloud_set(0,
+                     i_part,
+                     tgt_vtx_coord   [i_part],
+                     tgt_vtx_ln_to_gn[i_part])
 ```
 
 ## Set the source mesh
@@ -137,7 +142,24 @@ Here you have essentially two options :
 ```{code-cell}
 %%code_block -l python -p exercise2 -i 6
 # Set source mesh
-# (...)
+nodal = True
+mesh_loc.mesh_n_part_set(src_n_part)
+for i_part in range(src_n_part):
+  if nodal:
+    mesh_loc.nodal_part_set_2d(i_part,
+                               src_face_vtx_idx [i_part],
+                               src_face_vtx     [i_part],
+                               src_face_ln_to_gn[i_part],
+                               src_vtx_coord    [i_part],
+                               src_vtx_ln_to_gn [i_part])
+  else:
+    mesh_loc.part_set_2d(i_part,
+                         src_face_vtx_idx [i_part],
+                         src_face_edge    [i_part],
+                         src_face_ln_to_gn[i_part],
+                         src_edge_vtx     [i_part],
+                         src_vtx_coord    [i_part],
+                         src_vtx_ln_to_gn [i_part])
 
 ```
 
@@ -146,10 +168,10 @@ Here you have essentially two options :
 ```{code-cell}
 %%code_block -l python -p exercise2 -i 7
 # Geometric tolerance
-# (...)
+mesh_loc.tolerance_set(1e-6)
 
 # Preconditioning method
-# (...)
+mesh_loc.method_set(0)
 
 ```
 
@@ -158,16 +180,10 @@ Here you have essentially two options :
 ```{code-cell}
 %%code_block -l python -p exercise2 -i 8
 # Compute localization
-# (...)
+mesh_loc.compute()
 
-```
-
-## Dump the elapsed and CPU times
-
-```{code-cell}
-%%code_block -l python -p exercise2 -i 9
 # Dump elapsed and CPU times
-# (...)
+mesh_loc.dump_times()
 
 ```
 
@@ -187,8 +203,18 @@ The second field interpolation is trickier as you will need the cell->vertex con
 ```{code-cell}
 %%code_block -l python -p exercise2 -i 10
 # Interpolate first field
-# (...)
+src_send_field1 = []
 
+for i_part in range(src_n_part):
+  src_result = mesh_loc.points_in_elt_get(0, i_part)
+  src_to_tgt_idx = src_result["elt_pts_inside_idx"]
+  n_pts = src_to_tgt_idx[src_n_face[i_part]]
+
+  field1 = np.zeros(n_pts, dtype=np.double)
+  for i_elt in range(src_n_face[i_part]):
+    for i_pt in range(src_to_tgt_idx[i_elt], src_to_tgt_idx[i_elt+1]):
+      field1[i_pt] = src_face_ln_to_gn[i_part][i_elt]
+  src_send_field1.append(field1)
 ```
 
 ### Interpolate the second field (node-based)
@@ -196,7 +222,33 @@ The second field interpolation is trickier as you will need the cell->vertex con
 ```{code-cell}
 %%code_block -l python -p exercise2 -i 11
 # Interpolate second field
-# (...)
+src_send_field2 = []
+
+for i_part in range(src_n_part):
+  src_result = mesh_loc.points_in_elt_get(0, i_part)
+  src_to_tgt_idx = src_result["elt_pts_inside_idx"]
+  n_pts = src_to_tgt_idx[src_n_face[i_part]]
+
+  # Interpolate second field (node-based)
+  src_connect = mesh_loc.cell_vertex_get(i_part)
+  src_cell_vtx_idx = src_connect["cell_vtx_idx"]
+  src_cell_vtx     = src_connect["cell_vtx"]
+
+  weights_idx = src_result["points_weights_idx"]
+  weights     = src_result["points_weights"]
+
+  field2 = np.zeros(n_pts, dtype=np.double)
+  for i_elt in range(src_n_face[i_part]):
+    for i_pt in range(src_to_tgt_idx[i_elt], src_to_tgt_idx[i_elt+1]):
+      field2[i_pt] = 0
+
+      elt_n_vtx = src_cell_vtx_idx[i_elt+1] - src_cell_vtx_idx[i_elt]
+      assert(weights_idx[i_pt+1] - weights_idx[i_pt] == elt_n_vtx)
+      for i_vtx in range(elt_n_vtx):
+        vtx_id = src_cell_vtx[src_cell_vtx_idx[i_elt] + i_vtx] - 1
+        field2[i_pt] += src_vtx_coord[i_part][3*vtx_id] * weights[weights_idx[i_pt] + i_vtx]
+
+  src_send_field2.append(field2)
 
 ```
 
@@ -209,16 +261,26 @@ This ParToPart object was built when computing the location and can be accessed 
 ```{code-cell}
 %%code_block -l python -p exercise2 -i 12
 # Get PartToPart object
-# (...)
+ptp = mesh_loc.part_to_part_get(0)
 
 # Initiate exchange of first field
-# (...)
+src_stride = 1
+request1 = ptp.iexch(PDM._PDM_MPI_COMM_KIND_P2P,
+                     PDM._PDM_PART_TO_PART_DATA_DEF_ORDER_PART1_TO_PART2,
+                     src_send_field1,
+                     part1_stride=src_stride,
+                     interlaced_str=True)
 
 # Initiate exchange of second field
-# (...)
+request2 = ptp.iexch(PDM._PDM_MPI_COMM_KIND_P2P,
+                     PDM._PDM_PART_TO_PART_DATA_DEF_ORDER_PART1_TO_PART2,
+                     src_send_field2,
+                     part1_stride=src_stride,
+                     interlaced_str=True)
 
 # Finalize both exchanges
-# (...)
+tgt_stride, tgt_recv_field1 = ptp.wait(request1)
+tgt_stride, tgt_recv_field2 = ptp.wait(request2)
 
 ```
 
@@ -230,10 +292,50 @@ Finally, visualize the interpolated target fields.
 ```{code-cell}
 %%code_block -l python -p exercise2 -i 13
 # Check interpolated fields
-# (...)
+pis_located = []
+ptgt_field1 = []
+ptgt_field2 = []
+for i_part in range(tgt_n_part):
+  located_tgt = mesh_loc.located_get(0, i_part)
+
+  is_located =  np.zeros(tgt_n_vtx[i_part], dtype=bool)
+  tgt_field1 = -np.ones(tgt_n_vtx[i_part], dtype=np.double)
+  tgt_field2 = -np.ones(tgt_n_vtx[i_part], dtype=np.double)
+
+  for i, i_vtx in enumerate(located_tgt):
+    is_located[i_vtx-1] = True
+    tgt_field1[i_vtx-1] = tgt_recv_field1[i_part][i]
+    tgt_field2[i_vtx-1] = tgt_recv_field2[i_part][i]
+    error = abs(tgt_recv_field2[i_part][i] - tgt_vtx_coord[i_part][3*(i_vtx-1)])
+    if error > 1e-9:
+      print(f"!! error vtx {tgt_vtx_ln_to_gn[i_part][i_vtx]} : {error}")
+
+  pis_located.append(is_located)
+  ptgt_field1.append(tgt_field1)
+  ptgt_field2.append(tgt_field2)
 
 # Export for visualization
-# (...)
+PDM.writer_ez(comm,
+              "visu",
+              "src_mesh",
+              src_vtx_coord,
+              src_vtx_ln_to_gn,
+              src_face_vtx_idx,
+              src_face_vtx,
+              src_face_ln_to_gn)
+
+PDM.writer_ez(comm,
+              "visu",
+              "tgt_mesh",
+              tgt_vtx_coord,
+              tgt_vtx_ln_to_gn,
+              tgt_face_vtx_idx,
+              tgt_face_vtx,
+              tgt_face_ln_to_gn,
+              vtx_fields={
+              "is_located" : pis_located,
+              "field1"     : ptgt_field1,
+              "field2"     : ptgt_field2})
 
 ```
 
@@ -245,7 +347,7 @@ Finalize?
 Moment of truth!
 
 ```{code-cell}
-%merge_code_blocks -l python -p exercise2 -n 2 -v -c
+%merge_code_blocks -l python -p exercise2 -n 2 -c
 ```
 
 
@@ -253,6 +355,6 @@ Moment of truth!
 
 ```{code-cell}
 %%visualize
-/stck/bandrieu/workspace/formations/trainings/cwipi/cwipi_writer/exercise1_code1_code2/CHR.case : s_super~fancy~field1
-/stck/bandrieu/workspace/formations/trainings/cwipi/cwipi_writer/exercise1_code2_code1/CHR.case : r_super~fancy~field1
+visu/SRC_MESH.case
+visu/TGT_MESH.case : is_located
 ```
