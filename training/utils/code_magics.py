@@ -23,9 +23,37 @@ language_extension = {
   "python" : "py"
 }
 
-language_compiler = {
-  "c"      : "mpicc",
-  "fortran": "mpif90",
+language_compiler_o = {
+  "c"      : "/opt/tools/openmpi/4.0.5-gnu831/bin/mpicc",
+  "fortran": "/opt/tools/openmpi/4.0.5-gnu831/bin/mpif90",
+  "python" : None
+}
+
+language_compiler_e = {
+  "c"      : "/opt/tools/openmpi/4.0.5-gnu831/bin/mpicxx",
+  "fortran": "/opt/tools/openmpi/4.0.5-gnu831/bin/mpif90",
+  "python" : None
+}
+
+user = "bandrieu"
+pdm_dir   = f"/stck/{user}/workspace/paradigm/paradigm"
+build_dir = f"/stck/{user}/workspace/trainings/build/paradigm"
+
+language_linker_o = {
+  "c"      : f"-DDEBUG_CLASSE -I{pdm_dir} -I{build_dir} -I{pdm_dir}/test -I{build_dir}/extensions/paradigma/src -I{pdm_dir}/extensions/paradigma/src/../../.. -I{pdm_dir}/extensions/paradigma/src -I{pdm_dir}/extensions/paradigma/src/adapt -I{pdm_dir}/extensions/paradigma/src/mesh -I{pdm_dir}/extensions/paradigma/src/plugins -I{pdm_dir}/extensions/paradigma/src/plugins/coarse_mesh -I{pdm_dir}/extensions/paradigma/src/plugins/multicoloring -I{pdm_dir}/extensions/paradigma/src/plugins/renum -I{build_dir}/src -I{pdm_dir}/src/.. -I{pdm_dir}/src -I{pdm_dir}/src/pario -I{pdm_dir}/src/ppart -I{pdm_dir}/src/io -I{pdm_dir}/src/mpi_wrapper -I{pdm_dir}/src/ext_wrapper -I{pdm_dir}/src/mesh -I{pdm_dir}/src/meshgen -I{pdm_dir}/src/struct -I{pdm_dir}/src/util -I{pdm_dir}/src/../extensions/paradigma/src/plugins/renum -I{pdm_dir}/src/gpu -I{pdm_dir}/src/adapt -I/opt/tools/scotch/6.0.9-idx32-gnu831-ompi405/include -I/opt/tools/parmetis/4.0.3-gnu831-ompi405/include -I/opt/tools/metis/5.1.0-gnu831/include -I{build_dir}/src/io -I{build_dir}/src/mpi_wrapper/mpi -I{pdm_dir}/src/mpi_wrapper/mpi -I{pdm_dir}/src/mpi_wrapper/mpi/.. -I{pdm_dir}/src/mpi_wrapper/mpi/../.. -std=gnu99 -fPIC -funsigned-char -pedantic -W -Wall -Wshadow -Wpointer-arith -Wcast-qual -Wcast-align -Wwrite-strings -Wstrict-prototypes -Wmissing-prototypes -Wmissing-declarations -Wnested-externs -Wunused -Wfloat-equal  -Wno-unknown-pragmas -O0 -g -o",
+  "fortran": f"-DDEBUG_CLASSE -I{pdm_dir} -I{build_dir} -I{pdm_dir}/test -I{build_dir}/extensions/paradigma/src -I{pdm_dir}/extensions/paradigma/src/../../.. -I{pdm_dir}/extensions/paradigma/src/../../../src -I{pdm_dir}/extensions/paradigma/src/adapt -I{pdm_dir}/extensions/paradigma/src/mesh -I{pdm_dir}/extensions/paradigma/src/plugins -I{pdm_dir}/extensions/paradigma/src/plugins/coarse_mesh -I{pdm_dir}/extensions/paradigma/src/plugins/multicoloring -I{pdm_dir}/extensions/paradigma/src/plugins/renum -I{build_dir}/src -I{pdm_dir}/src/.. -I{pdm_dir}/src -I{pdm_dir}/src/pario -I{pdm_dir}/src/ppart -I{pdm_dir}/src/io -I{pdm_dir}/src/mpi_wrapper -I{pdm_dir}/src/ext_wrapper -I{pdm_dir}/src/mesh -I{pdm_dir}/src/meshgen -I{pdm_dir}/src/struct -I{pdm_dir}/src/util -I{pdm_dir}/src/../extensions/paradigma/src/plugins/renum -I{pdm_dir}/src/gpu -I{pdm_dir}/src/adapt -I/opt/tools/scotch/6.0.9-idx32-gnu831-ompi405/include -I/opt/tools/parmetis/4.0.3-gnu831-ompi405/include -I/opt/tools/metis/5.1.0-gnu831/include -I{build_dir}/src/io -I{build_dir}/src/mpi_wrapper/mpi -I{pdm_dir}/src/mpi_wrapper/mpi -I{pdm_dir}/src/mpi_wrapper/mpi/.. -I{pdm_dir}/src/mpi_wrapper/mpi/../.. -fallow-argument-mismatch -fPIC -cpp -Wall -std=gnu -Wno-unused-dummy-argument -Wno-maybe-uninitialized -O0 -g -fcheck=bounds -fbacktrace -o",
+  "python" : None
+}
+
+language_linker_e1 = {
+  "c"      : "-std=c++11 -fPIC -funsigned-char -W -Wall -Wshadow -Wpointer-arith -Wwrite-strings -Wunused -Wno-long-long -Wfloat-equal  -Wno-unknown-pragmas -O0 -g",
+  "fortran": "-fallow-argument-mismatch -fPIC -cpp -Wall -std=gnu -Wno-unused-dummy-argument -Wno-maybe-uninitialized -O0 -g -fcheck=bounds -fbacktrace",
+  "python" : None
+}
+
+language_linker_e2 = {
+  "c"      : f"-L/opt/tools/scotch/6.0.9-idx32-gnu831-ompi405/lib  -Wl,-rpath,/opt/tools/parmetis/4.0.3-gnu831-ompi405/lib:/opt/tools/metis/5.1.0-gnu831/lib:/opt/tools/scotch/6.0.9-idx32-gnu831-ompi405/lib:::::::::::::::::::::::::::::::::::::::::::::::::::::::: -lm {build_dir}/extensions/paradigma/src/libpdmaf.a {build_dir}/src/libpdmf.a {build_dir}/extensions/paradigma/src/libpdmaf.a {build_dir}/extensions/paradigma/src/libpdma.a {build_dir}/src/libpdm.a {build_dir}/src/mpi_wrapper/mpi/libpdm_mpi.a {build_dir}/extensions/paradigma/src/libpdma.a {build_dir}/src/libpdmf.a {build_dir}/src/libpdm.a {build_dir}/src/mpi_wrapper/mpi/libpdm_mpi.a /opt/tools/parmetis/4.0.3-gnu831-ompi405/lib/libparmetis.so /opt/tools/metis/5.1.0-gnu831/lib/libmetis.so -lptscotch -lptscotcherr -lscotch -lscotcherr {build_dir}/src/io/libpdm_io.a -lm -lgfortran -lquadmath ",
+  "fortran": f"-L/opt/tools/scotch/6.0.9-idx32-gnu831-ompi405/lib  -Wl,-rpath,/opt/tools/parmetis/4.0.3-gnu831-ompi405/lib:/opt/tools/metis/5.1.0-gnu831/lib:/opt/tools/scotch/6.0.9-idx32-gnu831-ompi405/lib:::::::::::::::::::::::::::::::::::::::::::::::::::::::: -lm {build_dir}/extensions/paradigma/src/libpdmaf.a {build_dir}/src/libpdmf.a {build_dir}/extensions/paradigma/src/libpdmaf.a {build_dir}/extensions/paradigma/src/libpdma.a {build_dir}/src/libpdm.a {build_dir}/src/mpi_wrapper/mpi/libpdm_mpi.a {build_dir}/extensions/paradigma/src/libpdma.a {build_dir}/src/libpdmf.a {build_dir}/src/libpdm.a {build_dir}/src/mpi_wrapper/mpi/libpdm_mpi.a /opt/tools/parmetis/4.0.3-gnu831-ompi405/lib/libparmetis.so /opt/tools/metis/5.1.0-gnu831/lib/libmetis.so -lptscotch -lptscotcherr -lscotch -lscotcherr {build_dir}/src/io/libpdm_io.a -lm -lstdc++ ",
   "python" : None
 }
 
@@ -146,21 +174,45 @@ class CodeMagics(Magics):
       if args.language == "python":
         exec_name = source_name
       else:
-        exec_name = os.path.join('.', os.path.basename("{:s}.{:s}".format(source_name, "exe")))
+        exec_name = args.prefix
+        o_name    = os.path.basename("{:s}.{:s}".format(args.prefix, "o"))
+
         command = []
-        command.extend([language_compiler[args.language]])
-        command.extend(["-g"])
-        command.extend(['-o', os.path.basename(exec_name), source_name])
-        # TODO: rajouter ce qui manque pour compiler
-        sys.stdout.write(" ".join(command)+"\n")
+
+        command.extend([language_compiler_o[args.language]])
+        command.extend([language_linker_o[args.language]])
+        command.extend([o_name, '-c', source_name])
 
         try:
-          proc = run(command,
+          proc = run(" ".join(command),
+                     capture_output=True,
+                     shell=True,
+                     check=True,
+                     env=self.env,
+                     encoding='utf8')
+          print("Compil OK")
+          print_out_err(proc)
+        except CalledProcessError as e:
+          sys.stderr.write(" ".join(e.cmd))
+          sys.stderr.write(e.stderr)
+          sys.stderr.write(e.stdout)
+          return
+
+        command = []
+
+        command.extend([language_compiler_e[args.language]])
+        command.extend([language_linker_e1[args.language]])
+        command.extend([o_name, '-o', os.path.basename(exec_name)])
+        command.extend([language_linker_e2[args.language]])
+
+        try:
+          proc = run(" ".join(command),
                      capture_output=True,
                      shell=False,
                      check=True,
                      env=self.env,
                      encoding='utf8')
+          print("Link OK")
           print_out_err(proc)
         except CalledProcessError as e:
           sys.stderr.write(" ".join(e.cmd))
@@ -176,7 +228,7 @@ class CodeMagics(Magics):
       if args.language == "python":
         command.extend(["python3"])
       command.extend([exec_name])
-
+      print("Run")
       sys.stdout.write(" ".join(command)+"\n")
 
       if os.path.isfile(exec_name):
