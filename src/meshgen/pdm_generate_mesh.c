@@ -1170,18 +1170,15 @@ PDM_generate_mesh_rectangle_ngon
                                         &(*pedge_vtx)[ipart],
                                         &edge_vtx_idx,
                                         PDM_OWNERSHIP_USER);
-
-
     if (edge_vtx_idx != NULL) {
       free (edge_vtx_idx);
     }
 
-    PDM_compute_face_vtx_from_face_and_edge((*pn_face)[ipart],
-                                            (*pface_edge_idx)[ipart], 
-                                            (*pface_edge)[ipart], 
-                                            (*pedge_vtx)[ipart],
-                                            &(*pface_vtx)[ipart]);
-
+    PDM_compute_face_vtx_from_face_and_edge((*pn_face)       [ipart],
+                                            (*pface_edge_idx)[ipart],
+                                            (*pface_edge)    [ipart],
+                                            (*pedge_vtx)     [ipart],
+                                            &(*pface_vtx)    [ipart]);
   }
 
   PDM_multipart_free(mpart);

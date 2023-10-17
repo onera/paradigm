@@ -576,8 +576,7 @@ int main(int argc, char *argv[])
   /*
    *  Mesh location structure initialization
    */
-  PDM_mesh_location_t *mesh_loc = PDM_mesh_location_create(PDM_MESH_NATURE_MESH_SETTED,
-                                                           1,
+  PDM_mesh_location_t *mesh_loc = PDM_mesh_location_create(1,
                                                            comm,
                                                            PDM_OWNERSHIP_KEEP);
 

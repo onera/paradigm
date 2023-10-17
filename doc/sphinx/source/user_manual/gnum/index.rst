@@ -160,22 +160,8 @@ Retrieve the location triplet *(rank, part id, local id)* of all instances of an
 
 .. _global_reduction:
 
-Global reduction operations
----------------------------
-
-.. _global_mean:
-
-Global mean
-^^^^^^^^^^^
-
-.. doxygenfile:: pdm_global_mean.h
-  :project: paradigm
-
-
-.. _global_reduce:
-
-Global reduction
-^^^^^^^^^^^^^^^^
+Reduction operations
+--------------------
 
 .. doxygenfile:: pdm_global_reduce.h
   :project: paradigm

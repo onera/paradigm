@@ -9,15 +9,19 @@ import argparse
 
 parser = argparse.ArgumentParser()
 
-parser.add_argument("-n", "--n_vtx_seg", default=3)
-parser.add_argument("-v", "--visu",      action="store_true")
+parser.add_argument("-n",      "--n_vtx_seg", default=3)
+parser.add_argument("-n_part", "--n_part",    default=1)
+parser.add_argument("-v",      "--visu",      action="store_true")
 
 args = parser.parse_args()
 
-n    = int(args.n_vtx_seg)
-visu = args.visu
+n      = int(args.n_vtx_seg)
+n_part = int(args.n_part)
+visu   = args.visu
 
 comm = MPI.COMM_WORLD
+
+i_rank = comm.rank
 
 
 """
@@ -125,6 +129,76 @@ for t in dico:
   if visu:
     dmn_capsule.dump_vtk(geom_kind,
                          f"visu_dcube_{t[16:].lower()}")
+
+
+"""
+Ngon
+"""
+mesh = PDM.generate_mesh_rectangle_ngon(comm        = comm,
+                                        elt_type    = PDM._PDM_MESH_NODAL_POLY_2D,
+                                        xmin        = 0.,
+                                        ymin        = 0.,
+                                        zmin        = 0.,
+                                        lengthx     = 1.,
+                                        lengthy     = 1.,
+                                        n_x         = n,
+                                        n_y         = n,
+                                        n_part      = n_part,
+                                        part_method = PDM._PDM_SPLIT_DUAL_WITH_HILBERT)
+
+# Randomize
+for i_part in range(n_part):
+  for i_vtx in range(mesh["pn_vtx"][i_part]):
+    np.random.seed(mesh["pvtx_ln_to_gn"][i_part][i_vtx])
+    for i in range(2):
+      x = mesh["pvtx_coord"][i_part][3*i_vtx + i]
+      if x > 1e-6 and x < 1-1e-6:
+        mesh["pvtx_coord"][i_part][3*i_vtx + i] = x + 0.1*(2*np.random.rand() - 1)/(n - 1)
+
+wrt = PDM.Writer("Ensight",
+                 PDM._PDM_WRITER_FMT_ASCII,
+                 PDM._PDM_WRITER_TOPO_VARIABLE,
+                 PDM._PDM_WRITER_OFF,
+                 "mesh_gen_demo",
+                 "rectangle_ngon",
+                 comm,
+                 PDM._PDM_IO_KIND_MPI_SIMPLE,
+                 1.,
+                 "")
+
+id_geom = wrt.geom_create("rectangle_ngon",
+                          n_part)
+
+id_var_part = wrt.var_create(PDM._PDM_WRITER_OFF,
+                             PDM._PDM_WRITER_VAR_SCALAR,
+                             PDM._PDM_WRITER_VAR_ELEMENTS,
+                             "i_part")
+
+wrt.step_beg(0.)
+
+for i_part in range(n_part):
+  wrt.geom_coord_set(id_geom,
+                     i_part,
+                     mesh["pvtx_coord"][i_part],
+                     mesh["pvtx_ln_to_gn"][i_part])
+
+  wrt.geom_cell2d_cellface_add(id_geom,
+                               i_part,
+                               mesh["pedge_vtx"][i_part],
+                               mesh["pface_edge_idx"][i_part],
+                               mesh["pface_edge"][i_part],
+                               mesh["pface_ln_to_gn"][i_part])
+
+  wrt.var_set(id_var_part,
+              id_geom,
+              i_part,
+              (n_part*i_rank + i_part)*np.ones(mesh["pn_face"][i_part], dtype=np.double))
+
+wrt.geom_write(id_geom)
+
+wrt.var_write(id_var_part)
+
+wrt.step_end()
 
 """
 Polyvol gen

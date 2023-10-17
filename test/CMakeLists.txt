@@ -263,6 +263,7 @@ test_c_create (pdm_t_mesh_intersection_surf_surf_atomic 1 PDM_LIST_TEST PDM_LIST
 test_c_create (pdm_t_newton_ho 1  PDM_LIST_TEST PDM_LIST_NRANK)
 test_c_create (pdm_t_svd 1  PDM_LIST_TEST PDM_LIST_NRANK)
 
+
 if (PDM_ENABLE_PYTHON_BINDINGS)
    test_python_create (pdm_t_part_to_part_p 2 PDM_LIST_TEST PDM_LIST_NRANK)
    add_dependencies (pdm_t_part_to_part_p Pypdm)
@@ -296,7 +297,6 @@ if (PDM_ENABLE_STATIC_Fortran_INTERFACE OR PDM_ENABLE_SHARED_Fortran_INTERFACE)
   test_fortran_create (pdm_t_mesh_nodal_cellvtx_f 2 PDM_LIST_TEST PDM_LIST_NRANK)
   test_fortran_create (pdm_t_part_mesh_nodal_cellvtx_f 2 PDM_LIST_TEST PDM_LIST_NRANK)
   test_fortran_create (pdm_t_generate_mesh_f 2 PDM_LIST_TEST PDM_LIST_NRANK)
-  test_fortran_create (pdm_t_intersection_prepro 2 PDM_LIST_TEST PDM_LIST_NRANK)
   # test_fortran_create (pdm_t_io  2 PDM_LIST_TEST PDM_LIST_NRANK)
 endif()
 

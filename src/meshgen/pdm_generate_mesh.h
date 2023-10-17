@@ -310,13 +310,13 @@ PDM_generate_mesh_parallelepiped
  * \param [in]   pn_edge        Number of edges
  * \param [in]   pn_face        Number of faces
  * \param [in]   pvtx_coord     Vertex coordinates
- * \param [in]   pedge_vtx      edge->vertex connectivity
+ * \param [in]   pedge_vtx      Edge->vertex connectivity
  * \param [in]   pface_edge_idx Index of face->edge connectivity
- * \param [in]   pface_edge     face->edge connectivity
- * \param [in]   pface_vtx      face->vtx connectivity
- * \param [in]   pvtx_ln_to_gn  Vertex global number
- * \param [in]   pedge_ln_to_gn Edge global number
- * \param [in]   pface_ln_to_gn Face global number
+ * \param [in]   pface_edge     Face->edge connectivity
+ * \param [in]   pface_vtx      Face->vertex connectivity
+ * \param [in]   pvtx_ln_to_gn  Vertex global ids
+ * \param [in]   pedge_ln_to_gn Edge global ids
+ * \param [in]   pface_ln_to_gn Face global ids
  *
  */
 

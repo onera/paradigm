@@ -4904,7 +4904,7 @@ PDM_extract_part_partial_free
 
     if ((extrp->from_target == 1) && 
         (extrp->target_ownership == PDM_OWNERSHIP_KEEP) &&
-        (extrp->master_entity == i)) {
+        ((int) extrp->master_entity == i)) {
       if(extrp->pextract_entity_parent_ln_to_gn[i] != NULL) {
         if(extrp->is_owner_parent_ln_to_gn[i] == PDM_TRUE) {
           for(int i_part = 0; i_part < extrp->n_part_out; ++i_part) {

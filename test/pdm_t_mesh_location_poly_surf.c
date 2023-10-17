@@ -1107,10 +1107,9 @@ int main(int argc, char *argv[])
     fflush(stdout);
   }
 
-  PDM_mesh_location_t* mesh_loc = PDM_mesh_location_create (PDM_MESH_NATURE_MESH_SETTED,//???
-                                         1,//const int n_point_cloud,
-                                         PDM_MPI_COMM_WORLD,
-                                         PDM_OWNERSHIP_KEEP);
+  PDM_mesh_location_t* mesh_loc = PDM_mesh_location_create (1,//const int n_point_cloud,
+                                                            PDM_MPI_COMM_WORLD,
+                                                            PDM_OWNERSHIP_KEEP);
 
   /* Set point cloud(s) */
   PDM_mesh_location_n_part_cloud_set (mesh_loc,
@@ -1124,7 +1123,7 @@ int main(int argc, char *argv[])
                                pts_coords,
                                pts_gnum);
 
-  PDM_mesh_location_mesh_global_data_set (mesh_loc,
+  PDM_mesh_location_mesh_n_part_set (mesh_loc,
                                           n_part);
 
   /* Set mesh */
@@ -1140,9 +1139,7 @@ int main(int argc, char *argv[])
                                    faceEdge[ipart],
                                    faceLNToGN[ipart],
                                    nEdge[ipart],
-                                   edgeVtxIdx[ipart],
                                    edgeVtx[ipart],
-                                   NULL,//edgeLNToGN[ipart],
                                    nVtx[ipart],
                                    vtxCoord[ipart],
                                    vtxLNToGN[ipart]);
@@ -1166,8 +1163,6 @@ int main(int argc, char *argv[])
     printf("-- Locate\n");
     fflush(stdout);
   }
-
-  PDM_mesh_location_reverse_results_enable(mesh_loc);
 
   // PDM_mesh_location_compute (mesh_loc);
   PDM_mesh_location_compute(mesh_loc);

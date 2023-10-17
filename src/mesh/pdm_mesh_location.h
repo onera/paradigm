@@ -37,7 +37,6 @@ typedef struct _pdm_mesh_location_t PDM_mesh_location_t;
  *
  * \brief Create a structure to compute the location of point clouds inside a mesh
  *
- * \param [in]   mesh_nature    Nature of the mesh
  * \param [in]   n_point_cloud  Number of point clouds
  * \param [in]   comm           MPI communicator
  * \param [in]   owner          Ownership
@@ -49,7 +48,6 @@ typedef struct _pdm_mesh_location_t PDM_mesh_location_t;
 PDM_mesh_location_t*
 PDM_mesh_location_create
 (
- const PDM_mesh_nature_t mesh_nature,
  const int               n_point_cloud,
  const PDM_MPI_Comm      comm,
  const PDM_ownership_t   owner
@@ -238,7 +236,7 @@ PDM_mesh_location_shared_nodal_mesh_set
  */
 
 void
-PDM_mesh_location_mesh_global_data_set
+PDM_mesh_location_mesh_n_part_set
 (
        PDM_mesh_location_t *ml,
  const int                  n_part
@@ -285,6 +283,38 @@ PDM_mesh_location_part_set
 
 /**
  *
+ * \brief Set a *volume* mesh partition defined by nodal connectivity
+ *
+ * The mesh is assumed to contain only standard elements
+ * (tetrahedra, pyramids, prisms, hexahedra).
+ *
+ * \param [in]   ml            Pointer to \ref PDM_mesh_location object
+ * \param [in]   i_part        Partition to define
+ * \param [in]   n_cell        Number of cells
+ * \param [in]   cell_vtx_idx  Index in the cell -> vertex connectivity
+ * \param [in]   cell_vtx      Cell -> vertex connectivity
+ * \param [in]   cell_ln_to_gn Global cell ids
+ * \param [in]   n_vtx         Number of vertices
+ * \param [in]   coords        Coordinates
+ * \param [in]   vtx_ln_to_gn  Vertex global ids
+ *
+ */
+void
+PDM_mesh_location_nodal_part_set
+(
+       PDM_mesh_location_t *ml,
+ const int                  i_part,
+ const int                  n_cell,
+ const int                 *cell_vtx_idx,
+ const int                 *cell_vtx,
+ const PDM_g_num_t         *cell_ln_to_gn,
+ const int                  n_vtx,
+ const double              *coords,
+ const PDM_g_num_t         *vtx_ln_to_gn
+);
+
+/**
+ *
  * \brief Select cells to extract before computing location
  *
  * \param [in]   ml                     Pointer to \ref PDM_mesh_location_t object
@@ -306,19 +336,17 @@ PDM_mesh_location_user_extract_set
  *
  * \brief Set a *surface* mesh partition
  *
- * \param [in]   ml             Pointer to \ref PDM_mesh_location_t object
- * \param [in]   i_part         Partition identifier
+ * \param [in]   ml             Pointer to \ref PDM_mesh_location object
+ * \param [in]   i_part         Partition to define
  * \param [in]   n_face         Number of faces
  * \param [in]   face_edge_idx  Index for face -> edge connectivity (size : \p n_face + 1)
  * \param [in]   face_edge      Face -> edge connectivity (size : \p face_edge_idx[\p n_face])
  * \param [in]   face_ln_to_gn  Face global ids (size : \p n_face)
  * \param [in]   n_edge         Number of edges
- * \param [in]   edge_vtx_idx   Index for edge -> vertex connectivity **(unused)**
- * \param [in]   edge_vtx       Edge -> vertex connectivity (size : 2 * \p n_edge)
- * \param [in]   edge_ln_to_gn  Edge global ids **(unused)**
+ * \param [in]   edge_vtx       Edge -> vertex connectivity
  * \param [in]   n_vtx          Number of vertices
- * \param [in]   coords         Vertex coordinates (size : 3 * \p n_vtx)
- * \param [in]   vtx_ln_to_gn   Vertex global ids (size : \p n_vtx)
+ * \param [in]   coords         Coordinates
+ * \param [in]   vtx_ln_to_gn   Vertex global ids
  *
  */
 
@@ -332,9 +360,37 @@ PDM_mesh_location_part_set_2d
  const int                 *face_edge,
  const PDM_g_num_t         *face_ln_to_gn,
  const int                  n_edge,
- const int                 *edge_vtx_idx,
  const int                 *edge_vtx,
- const PDM_g_num_t         *edge_ln_to_gn,
+ const int                  n_vtx,
+ const double              *coords,
+ const PDM_g_num_t         *vtx_ln_to_gn
+);
+
+/**
+ *
+ * \brief Set a *surface* mesh partition with nodal connectivity
+ *
+ * \param [in]   ml             Pointer to \ref PDM_mesh_location object
+ * \param [in]   i_part         Partition to define
+ * \param [in]   n_face         Number of faces
+ * \param [in]   face_vtx_idx   Index for face -> vertex connectivity
+ * \param [in]   face_vtx       Face -> vertex connectivity
+ * \param [in]   face_ln_to_gn  Face global ids
+ * \param [in]   n_vtx          Number of vertices
+ * \param [in]   coords         Coordinates
+ * \param [in]   vtx_ln_to_gn   Vertex global ids
+ *
+ */
+
+void
+PDM_mesh_location_nodal_part_set_2d
+(
+       PDM_mesh_location_t *ml,
+ const int                  i_part,
+ const int                  n_face,
+ const int                 *face_vtx_idx,
+ const int                 *face_vtx,
+ const PDM_g_num_t         *face_ln_to_gn,
  const int                  n_vtx,
  const double              *coords,
  const PDM_g_num_t         *vtx_ln_to_gn
@@ -371,21 +427,6 @@ PDM_mesh_location_method_set
 (
        PDM_mesh_location_t        *ml,
  const PDM_mesh_location_method_t  method
-);
-
-
-/**
- *
- * \brief Compute point location (old method)
- *
- * \param [in]   ml              Pointer to \ref PDM_mesh_location_t object
- *
- */
-
-void
-PDM_mesh_location_compute_old
-(
-PDM_mesh_location_t        *ml
 );
 
 
@@ -459,8 +500,8 @@ PDM_mesh_location_cell_vertex_get
  * \brief Get location data for points located in elements
  *
  * \param [in]   ml                      Pointer to \ref PDM_mesh_location_t object
- * \param [in]   i_part                  Partition identifier
  * \param [in]   i_point_cloud           Point cloud identifier
+ * \param [in]   i_part                  Partition identifier
  * \param [out]  elt_pts_inside_idx      Index for element -> points mapping (size = *n_elt* + 1)
  * \param [out]  points_gnum             Located points global ids (size : \p elt_pts_inside_idx[ *n_elt* ])
  * \param [out]  points_coords           Located points cartesian coordinates (size : 3 * \p elt_pts_inside_idx[ *n_elt* ])
@@ -476,8 +517,8 @@ void
 PDM_mesh_location_points_in_elt_get
 (
        PDM_mesh_location_t  *ml,
- const int                   i_part,
  const int                   i_point_cloud,
+ const int                   i_part,
        int                 **elt_pts_inside_idx,
        PDM_g_num_t         **points_gnum,
        double              **points_coords,
@@ -549,22 +590,6 @@ PDM_mesh_location_t *ml
 
 PDM_part_mesh_nodal_t*
 PDM_mesh_location_mesh_nodal_get
-(
-PDM_mesh_location_t *ml
-);
-
-
-/**
- * \brief Enable reverse results computation (To call PDM_mesh_location_points_in_elt_get)
- *
- * \note Deprecated
- *
- * \param [in]  ml  Pointer to \ref PDM_mesh_location_t object
- *
- */
-
-void
-PDM_mesh_location_reverse_results_enable
 (
 PDM_mesh_location_t *ml
 );
