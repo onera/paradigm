@@ -142,7 +142,6 @@ Initialization
 """"""""""""""
 
 .. autoclass:: Pypdm.Pypdm.MeshLocation
-  :members:
 
 Source mesh definition
 """"""""""""""""""""""
