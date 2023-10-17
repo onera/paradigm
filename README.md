@@ -4,7 +4,7 @@
 
 ## Documentation  ##
 
-User documentation is deployed on ONERA's internal GitLab pages server: https://numerics.gitlab-pages.onera.net/mesh/paradigm/dev_doc_pretty/index.html
+User documentation is deployed on ONERA's internal GitLab pages server: https://numerics.gitlab-pages.onera.net/mesh/paradigm/dev/index.html
 
 ## Build and install ##
 

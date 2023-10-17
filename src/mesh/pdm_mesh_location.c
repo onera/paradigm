@@ -105,46 +105,46 @@ typedef struct _pdm_mpi_double_int_t PDM_MPI_double_int_t;
  *============================================================================*/
 
 
-static
-void
-end_timer_and_log_from_dt(const char* msg, PDM_MPI_Comm comm, double delta_t){
+// static
+// void
+// end_timer_and_log_from_dt(const char* msg, PDM_MPI_Comm comm, double delta_t){
 
-  int n_rank;
-  int i_rank;
+//   int n_rank;
+//   int i_rank;
 
-  PDM_MPI_Comm_size(comm, &n_rank);
-  PDM_MPI_Comm_rank(comm, &i_rank);
+//   PDM_MPI_Comm_size(comm, &n_rank);
+//   PDM_MPI_Comm_rank(comm, &i_rank);
 
-  PDM_MPI_double_int_t l_info;
+//   PDM_MPI_double_int_t l_info;
 
-  l_info.val  = delta_t;
-  l_info.rank = i_rank;
+//   l_info.val  = delta_t;
+//   l_info.rank = i_rank;
 
-  PDM_MPI_double_int_t g_max_info;
-  PDM_MPI_double_int_t g_min_info;
+//   PDM_MPI_double_int_t g_max_info;
+//   PDM_MPI_double_int_t g_min_info;
 
 
-  PDM_MPI_Allreduce (&l_info,
-                     &g_max_info,
-                     1,
-                     PDM_MPI_DOUBLE_INT,
-                     PDM_MPI_MAXLOC,
-                     comm);
+//   PDM_MPI_Allreduce (&l_info,
+//                      &g_max_info,
+//                      1,
+//                      PDM_MPI_DOUBLE_INT,
+//                      PDM_MPI_MAXLOC,
+//                      comm);
 
-  PDM_MPI_Allreduce (&l_info,
-                     &g_min_info,
-                     1,
-                     PDM_MPI_DOUBLE_INT,
-                     PDM_MPI_MINLOC,
-                     comm);
+//   PDM_MPI_Allreduce (&l_info,
+//                      &g_min_info,
+//                      1,
+//                      PDM_MPI_DOUBLE_INT,
+//                      PDM_MPI_MINLOC,
+//                      comm);
 
-  log_trace("[%i] %s : duration min/max -> %12.5e [on rank = %i] %12.5e [on rank = %i] \n",
-           n_rank, msg, g_min_info.val, g_min_info.rank, g_max_info.val, g_max_info.rank);
-  if(i_rank == 0) {
-    printf("[%i] %s : duration min/max -> %12.5e [on rank = %i] %12.5e [on rank = %i] \n",
-           n_rank, msg, g_min_info.val, g_min_info.rank, g_max_info.val, g_max_info.rank);
-  }
-}
+//   log_trace("[%i] %s : duration min/max -> %12.5e [on rank = %i] %12.5e [on rank = %i] \n",
+//            n_rank, msg, g_min_info.val, g_min_info.rank, g_max_info.val, g_max_info.rank);
+//   if(i_rank == 0) {
+//     printf("[%i] %s : duration min/max -> %12.5e [on rank = %i] %12.5e [on rank = %i] \n",
+//            n_rank, msg, g_min_info.val, g_min_info.rank, g_max_info.val, g_max_info.rank);
+//   }
+// }
 
 
 /**
