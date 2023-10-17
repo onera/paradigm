@@ -3,15 +3,12 @@ import glob
 import os
 import json
 from subprocess import run, CalledProcessError
-# from tempfile import NamedTemporaryFile as tmpf
 from IPython.core import magic_arguments
 from IPython.core.magic import cell_magic, line_magic, Magics, magics_class
 
-# from nbformat import read, NO_CONVERT
-
 
 headers = {
-  "c"       : "#include <stdlib.h>\n#include <stdio.h>\n#include <mpi.h>\n\n",
+  "c"       : '#include <stdlib.h>\n#include <stdio.h>\n#include <string.h>\n#include <assert.h>\n\n#include "pdm.h"\n#include "pdm_config.h"\n#include "pdm_mpi.h"\n#include "pdm_printf.h"\n',
   "fortran" : "",
   "python"  : ""
 }
@@ -64,7 +61,10 @@ tmp_dir = "./tmp"
 
 
 def print_out_err(proc):
-  """ Print output and error of a process"""
+  """
+  Print output and error of a process
+  (adapted from IDRIS trainings material)
+  """
   stdout = proc.stdout
   stderr = proc.stderr
   if stderr:
@@ -100,7 +100,6 @@ class CodeMagics(Magics):
   def code_block(self, line="", cell=None):
     args = magic_arguments.parse_argstring(self.code_block, line)
 
-    # extension = language_extension[args.language]
     extension = "tmp"
     str_id = "%3.3d" % args.id
     self.filename = f"{tmp_dir}/{args.prefix}_{str_id}.{extension}"
@@ -158,6 +157,9 @@ class CodeMagics(Magics):
 
     # merge into a single file
     with open(source_name, "w") as outfile:
+      # writer langage header
+      outfile.write(headers[args.language])
+      # merge tmp files
       for fname in sorted(tmp_files):
         with open(fname) as infile:
           outfile.write(infile.read())
@@ -190,7 +192,6 @@ class CodeMagics(Magics):
                      check=True,
                      env=self.env,
                      encoding='utf8')
-          print("Compil OK")
           print_out_err(proc)
         except CalledProcessError as e:
           sys.stderr.write(" ".join(e.cmd))
@@ -208,11 +209,10 @@ class CodeMagics(Magics):
         try:
           proc = run(" ".join(command),
                      capture_output=True,
-                     shell=False,
+                     shell=True, # access to /d/whoami/workspace if True else only /stck/workspace
                      check=True,
                      env=self.env,
                      encoding='utf8')
-          print("Link OK")
           print_out_err(proc)
         except CalledProcessError as e:
           sys.stderr.write(" ".join(e.cmd))
@@ -228,7 +228,7 @@ class CodeMagics(Magics):
       if args.language == "python":
         command.extend(["python3"])
       command.extend([exec_name])
-      print("Run")
+
       sys.stdout.write(" ".join(command)+"\n")
 
       if os.path.isfile(exec_name):
@@ -251,6 +251,8 @@ class CodeMagics(Magics):
     # Clear generated files
     if args.clear:
       rm_files = tmp_files + [source_name]
+      if args.language != "python":
+        rm_files.append(o_name)
       if exec_name != source_name:
         rm_files += exec_name
       for fname in rm_files:

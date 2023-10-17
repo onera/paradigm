@@ -32,6 +32,7 @@ if module_path not in sys.path:
 
 ```{code-cell}
 %reload_ext visu_magics
+%reload_ext code_magics
 ```
 
 +++
@@ -200,21 +201,21 @@ Let's start with the vertices composing the subdomain. How many vertices are the
 ```{code-cell}
 %%code_block -l c -p exercise_1 -i 6
 
-  double *coords = NULL;
-  int n_vtx = PDM_multipart_part_vtx_coord_get(mpart,
-                                               i_zone,
-                                               i_part,
-                                               &coords,
-                                               PDM_OWNERSHIP_USER);
-
-  PDM_part_mesh_nodal_t *pmn  = NULL;
-  PDM_multipart_get_part_mesh_nodal(mpart,
-                                    i_zone,
-                                    &pmn,
-                                    PDM_OWNERSHIP_USER);
-
-  PDM_g_num_t *vtx_ln_to_gn = PDM_part_mesh_nodal_vtx_g_num_get(pmn,
-                                                                i_part);
+//  double *coords = NULL;
+//  int n_vtx = PDM_multipart_part_vtx_coord_get(mpart,
+//                                               i_zone,
+//                                               i_part,
+//                                               &coords,
+//                                               PDM_OWNERSHIP_USER);
+//
+//  PDM_part_mesh_nodal_t *pmn  = NULL;
+//  PDM_multipart_get_part_mesh_nodal(mpart,
+//                                    i_zone,
+//                                    &pmn,
+//                                    PDM_OWNERSHIP_USER);
+//
+//  PDM_g_num_t *vtx_ln_to_gn = PDM_part_mesh_nodal_vtx_g_num_get(pmn,
+//                                                                i_part);
 
 
 ```
@@ -227,29 +228,29 @@ To get insight about the concept behind this value you can have a look [here](#A
 ```{code-cell}
 %%code_block -l c -p exercise_1 -i 7
 
-  int i_section = 0; // fixed
-
-  int         *elt_vtx             = NULL;
-  PDM_g_num_t *elt_ln_to_gn        = NULL;
-  int         *parent_num          = NULL;
-  PDM_g_num_t *parent_entity_g_num = NULL;
-  PDM_part_mesh_nodal_section_std_get(pmn,
-                                      i_section,
-                                      i_part,
-                                      &elt_vtx,
-                                      &elt_ln_to_gn,
-                                      &parent_num,
-                                      &parent_entity_g_num,
-                                      PDM_OWNERSHIP_USER);
-
-  // free
-  free(parent_num);
-  free(parent_entity_g_num);
-
-  free(elt_vtx);
-  free(elt_ln_to_gn);
-  free(coords);
-  PDM_part_mesh_nodal_free(pmn);
+//  int i_section = 0; // fixed
+//
+//  int         *elt_vtx             = NULL;
+//  PDM_g_num_t *elt_ln_to_gn        = NULL;
+//  int         *parent_num          = NULL;
+//  PDM_g_num_t *parent_entity_g_num = NULL;
+//  PDM_part_mesh_nodal_section_std_get(pmn,
+//                                      i_section,
+//                                      i_part,
+//                                      &elt_vtx,
+//                                      &elt_ln_to_gn,
+//                                      &parent_num,
+//                                      &parent_entity_g_num,
+//                                      PDM_OWNERSHIP_USER);
+//
+//  // free
+//  free(parent_num);
+//  free(parent_entity_g_num);
+//
+//  free(elt_vtx);
+//  free(elt_ln_to_gn);
+//  free(coords);
+//  PDM_part_mesh_nodal_free(pmn);
 
 ```
 
@@ -386,8 +387,18 @@ Once the partitionned mesh retrieved we can **free** (step 5) the memory allocat
   // Finalize MPI environment
   PDM_MPI_Finalize();
 
+  if (i_rank == 0) {
+    printf("End :)\n");
+  }
+
   return 0;
 }
+```
+
+## Execute the exercise
+
+```{code-cell}
+%merge_code_blocks -l c -p exercise_1 -n 2 -c
 ```
 
 ## Annex 1

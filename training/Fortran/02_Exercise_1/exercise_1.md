@@ -280,23 +280,23 @@ Let's start with the vertices composing the subdomain. How many vertices are the
 ```{code-cell}
 %%code_block -l fortran -p exercise_1 -i 7
 
-  call PDM_multipart_part_vtx_coord_get(mpart,              &
-                                        i_zone,             &
-                                        i_part,             &
-                                        coords,             &
-                                        PDM_OWNERSHIP_USER, &
-                                        n_vtx)
+  ! call PDM_multipart_part_vtx_coord_get(mpart,              &
+  !                                       i_zone,             &
+  !                                       i_part,             &
+  !                                       coords,             &
+  !                                       PDM_OWNERSHIP_USER, &
+  !                                       n_vtx)
 
 
-  call PDM_multipart_get_part_mesh_nodal(mpart,  &
-                                         i_zone, &
-                                         pmn,    &
-                                         PDM_OWNERSHIP_USER)
+  ! call PDM_multipart_get_part_mesh_nodal(mpart,  &
+  !                                        i_zone, &
+  !                                        pmn,    &
+  !                                        PDM_OWNERSHIP_USER)
 
 
-  call PDM_part_mesh_nodal_vtx_g_num_get(pmn,    &
-                                         i_part, &
-                                         vtx_ln_to_gn)
+  ! call PDM_part_mesh_nodal_vtx_g_num_get(pmn,    &
+  !                                        i_part, &
+  !                                        vtx_ln_to_gn)
 
 
 
@@ -310,21 +310,21 @@ To get insight about the concept behind this value you can have a look [here](#A
 ```{code-cell}
 %%code_block -l fortran -p exercise_1 -i 8
 
-  call PDM_part_mesh_nodal_section_n_elt_get(pmn,       &
-                                             i_section, &
-                                             i_part,    &
-                                             n_elt)
+  ! call PDM_part_mesh_nodal_section_n_elt_get(pmn,       &
+  !                                            i_section, &
+  !                                            i_part,    &
+  !                                            n_elt)
 
-  call PDM_part_mesh_nodal_section_std_get(pmn,                 &
-                                           i_section,           &
-                                           i_part,              &
-                                           elt_vtx,             &
-                                           elt_ln_to_gn,        &
-                                           parent_num,          &
-                                           parent_entity_g_num, &
-                                           PDM_OWNERSHIP_KEEP)
+  ! call PDM_part_mesh_nodal_section_std_get(pmn,                 &
+  !                                          i_section,           &
+  !                                          i_part,              &
+  !                                          elt_vtx,             &
+  !                                          elt_ln_to_gn,        &
+  !                                          parent_num,          &
+  !                                          parent_entity_g_num, &
+  !                                          PDM_OWNERSHIP_KEEP)
 
-  call PDM_part_mesh_nodal_free(pmn)
+  ! call PDM_part_mesh_nodal_free(pmn)
 
 ```
 
