@@ -175,13 +175,13 @@ Let's start with the vertices composing the subdomain. How many vertices are the
 ```{code-cell}
 %%code_block -l python -p exercise_1 -i 6
 
-output = mpart.multipart_vtx_coord_get(i_part,
-                                       i_zone)
-coords = output["np_vtx_coord"]
-
-pmn = mpart.multipart_part_mesh_nodal_get(i_zone)
-vtx_ln_to_gn = PDM.part_mesh_nodal_vtx_g_num_get(pmn, i_part)
-n_vtx        = len(vtx_ln_to_gn)
+# output = mpart.multipart_vtx_coord_get(i_part,
+#                                        i_zone)
+# coords = output["np_vtx_coord"]
+#
+# pmn = mpart.multipart_part_mesh_nodal_get(i_zone)
+# vtx_ln_to_gn = PDM.part_mesh_nodal_vtx_g_num_get(pmn, i_part)
+# n_vtx        = len(vtx_ln_to_gn)
 
 ```
 
@@ -193,13 +193,13 @@ To get insight about the concept behind this value you can have a look [here](#A
 ```{code-cell}
 %%code_block -l python -p exercise_1 -i 7
 
-i_section = 0 # fixed
-output = PDM.part_mesh_nodal_get_sections(pmn,
-                                          PDM._PDM_GEOMETRY_KIND_VOLUMIC,
-                                          i_part)
-elt_vtx      = output[i_section]["np_connec"]
-elt_ln_to_gn = output[i_section]["np_numabs"]
-n_elt        = len(elt_ln_to_gn)
+# i_section = 0 # fixed
+# output = PDM.part_mesh_nodal_get_sections(pmn,
+#                                           PDM._PDM_GEOMETRY_KIND_VOLUMIC,
+#                                           i_part)
+# elt_vtx      = output[i_section]["np_connec"]
+# elt_ln_to_gn = output[i_section]["np_numabs"]
+# n_elt        = len(elt_ln_to_gn)
 
 ```
 
@@ -291,12 +291,39 @@ coords = output["np_vtx_coord"]
 
 ```
 
-## Execute the exercise
+## Execution and visualization
+
+Run the following cells to visualize the output mesh (available only for mesh in descending connectivity).
+
+```{code-cell}
+%%code_block -l python -p exercise_1 -i 12
+
+face_vtx = PDM.compute_face_vtx_from_face_and_edge(face_edge_idx,
+                                                   face_edge,
+                                                   edge_vtx)
+face_vtx_idx = np.array([3*i for i in range(n_face+1)]).astype(PDM.npy_pdm_gnum_dtype).astype(np.intc)
+
+PDM.writer_ez(comm,
+              "visu",
+              "pmesh",
+              [coords],
+              [vtx_ln_to_gn],
+              [face_vtx_idx],
+              [face_vtx],
+              [cell_ln_to_gn],
+              [cell_face_idx],
+              [cell_face])
+
+```
 
 ```{code-cell}
 %merge_code_blocks -l python -p exercise_1 -n 2 -v -c
 ```
 
+```{code-cell}
+%%visualize
+visu/PMESH.case
+```
 ## Annex 1
 
 In certain settings, the mesh is an assembly of several sub-meshes. These are called *zones*.
