@@ -448,7 +448,7 @@ int main(int argc, char *argv[])
 
 
 
-  /* Create the MeshLocation object */
+  /* Create the PDM_mesh_location_t object */
   PDM_mesh_location_t *mesh_loc = PDM_mesh_location_create(1,
                                                            comm,
                                                            PDM_OWNERSHIP_KEEP);

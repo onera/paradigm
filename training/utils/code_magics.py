@@ -8,7 +8,7 @@ from IPython.core.magic import cell_magic, line_magic, Magics, magics_class
 
 
 headers = {
-  "c"       : '#include <stdlib.h>\n#include <stdio.h>\n#include <string.h>\n#include <assert.h>\n\n#include "pdm.h"\n#include "pdm_config.h"\n#include "pdm_mpi.h"\n#include "pdm_printf.h"\n',
+  "c"       : '#include <stdlib.h>\n#include <stdio.h>\n#include <string.h>\n#include <assert.h>\n#include <math.h>\n\n#include "pdm.h"\n#include "pdm_config.h"\n#include "pdm_mpi.h"\n#include "pdm_printf.h"\n',
   "fortran" : "",
   "python"  : ""
 }
@@ -32,7 +32,7 @@ language_compiler_e = {
   "python" : None
 }
 
-user = "khoogvel"
+user = "bandrieu"
 pdm_dir   = f"/stck/{user}/workspace/paradigm/paradigm"
 build_dir = f"/stck/{user}/workspace/trainings/build/paradigm"
 
