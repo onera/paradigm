@@ -86,7 +86,13 @@ Initialization
 Source mesh definition
 """"""""""""""""""""""
 
-.. .. f:autosubroutine:: pdm_mesh_location/pdm_mesh_location_mesh_n_part_set
+.. f:subroutine:: pdm_mesh_location_mesh_n_part_set(mloc, n_part)
+
+  Set the number of partitions of the source mesh
+
+  :param mesh_loc: Pointer to PDM_mesh_location object
+  :param n_part:   Number of partitions
+
 
 .. f:autosubroutine:: pdm_mesh_location/pdm_mesh_location_part_set_
 

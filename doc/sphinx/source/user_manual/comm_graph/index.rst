@@ -4,6 +4,10 @@
 Communication graphs
 ####################
 
+.. role:: red
+
+Texte en :red:`rouge`
+
 :ref:`Part to Block <ptb>`
 
 :ref:`Block to Part <btp>`

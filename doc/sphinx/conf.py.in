@@ -400,3 +400,8 @@ fortran_src = [
 
 fortran_indent = 2
 
+
+
+rst_prolog = """
+.. role:: red
+"""
