@@ -206,7 +206,8 @@ Python API
 
 .. ifconfig:: enable_python_doc == 'OFF'
 
-  Unavailable (refer to the :ref:`installation guide <enable_python_interface>` to enable the Fortran API)
+  .. warning::
+    Unavailable (refer to the :ref:`installation guide <enable_python_interface>` to enable the Python API)
 
 
 Other

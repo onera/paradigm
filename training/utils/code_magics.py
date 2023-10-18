@@ -91,11 +91,6 @@ class CodeMagics(Magics):
                             help='File name prefix',
                             type=str,
                             default="tmp")
-  @magic_arguments.argument('--language', '-l',
-                            help='Language',
-                            type=str,
-                            choices=["c", "python", "fortran"],
-                            default="python")
 
   def code_block(self, line="", cell=None):
     args = magic_arguments.parse_argstring(self.code_block, line)
@@ -226,7 +221,7 @@ class CodeMagics(Magics):
       command.extend(["-np"])
       command.extend(["%d" % args.n_rank])
       if args.language == "python":
-        command.extend(["python3"])
+        command.extend(["python3", "-u"])
       command.extend([exec_name])
 
       sys.stdout.write(" ".join(command)+"\n")

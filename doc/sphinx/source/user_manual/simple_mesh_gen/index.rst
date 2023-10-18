@@ -42,12 +42,19 @@ C API
 
 Python API
 """"""""""
-.. autofunction:: Pypdm.Pypdm.sphere_surf_icosphere_gen
 
-.. autofunction:: Pypdm.Pypdm.sphere_surf_icosphere_gen_nodal
+.. ifconfig:: enable_python_doc == 'ON'
 
-.. autofunction:: Pypdm.Pypdm.sphere_surf_icosphere_gen_part
+  .. autofunction:: Pypdm.Pypdm.sphere_surf_icosphere_gen
 
+  .. autofunction:: Pypdm.Pypdm.sphere_surf_icosphere_gen_nodal
+
+  .. autofunction:: Pypdm.Pypdm.sphere_surf_icosphere_gen_part
+
+.. ifconfig:: enable_python_doc == 'OFF'
+
+  .. warning::
+    Unavailable (refer to the :ref:`installation guide <enable_python_interface>` to enable the Python API)
 
 UV Sphere
 ^^^^^^^^^
