@@ -16,7 +16,7 @@ def nice_view(plotter):
       plotter.view_xy()
 
 
-def visu_n_files(files, fields=[""], same_view=False, show_grid=False):
+def visu_n_files(files, fields=[""], same_view=False, lighting=True, show_grid=False):
   try:
     import pyvista as pv
     import numpy   as np
@@ -75,7 +75,7 @@ def visu_n_files(files, fields=[""], same_view=False, show_grid=False):
                      cmap="coolwarm",
                      color=color,
                      scalars=scalars,
-                     lighting=False)
+                     lighting=lighting)
       except:
         print(f"Output file '{filename}' not found", flush=True)
 
@@ -97,8 +97,11 @@ class VisuMagics(Magics):
   """
   @cell_magic
   @magic_arguments.magic_arguments()
-  @magic_arguments.argument('--same_view', '-same_view',
+  @magic_arguments.argument('--same_view', '-sv',
                             help='Show all files in same view',
+                            action="store_true")
+  @magic_arguments.argument('--no_lighting', '-nl',
+                            help='No lighting',
                             action="store_true")
   def visualize(self, line='', cell=None):
     args = magic_arguments.parse_argstring(self.visualize, line)
@@ -118,7 +121,7 @@ class VisuMagics(Magics):
         else:
           fields.append("")
 
-    visu_n_files(files, fields, args.same_view)
+    visu_n_files(files, fields, args.same_view, not args.no_lighting)
 
 
 def load_ipython_extension(ipython):

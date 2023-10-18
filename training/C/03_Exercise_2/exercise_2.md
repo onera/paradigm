@@ -473,6 +473,29 @@ Finally, visualize the interpolated target fields.
     "is_located"
   };
 
+  writer_wrapper(comm,
+                 "visu",
+                 "src_mesh",
+                 src_n_part,
+                 src_n_vtx,
+                 src_vtx_coord,
+                 src_vtx_ln_to_gn,
+                 src_n_face,
+                 src_face_edge_idx,
+                 src_face_vtx,
+                 src_face_ln_to_gn,
+                 -1,
+                 0,
+                 NULL,
+                 NULL,
+                 "Ensight",
+                 0,
+                 NULL,
+                 NULL,
+                 0,//3,
+                 field_name,
+                 NULL);//src_field);
+
 
   writer_wrapper(comm,
                  "visu",
@@ -497,7 +520,13 @@ Finally, visualize the interpolated target fields.
                  field_name,
                  tgt_field);
 
-  /* Free memory */
+```
+
+### Free memory
+
+```{code-cell}
+%%code_block -p exercise2 -i 14
+  // Free memory
   PDM_mesh_location_free(mesh_loc);
 
   PDM_part_to_part_free(ptp);
@@ -559,46 +588,24 @@ Finally, visualize the interpolated target fields.
   free(tgt_field[0]);
   free(tgt_field[1]);
   free(tgt_field[2]);
+```
 
+
+### Finalize
+
+```{code-cell}
+%%code_block -p exercise2 -i 15
   PDM_MPI_Finalize();
 
-
   if (i_rank == 0) {
-    printf("-- End\n");
+    printf("-- End :)\n");
     fflush(stdout);
   }
 
   return EXIT_SUCCESS;
 }
 
-// # Export for visualization
-// PDM.writer_wrapper(comm,
-//                    "visu",
-//                    "src_mesh",
-//                    src_vtx_coord,
-//                    src_vtx_ln_to_gn,
-//                    src_face_vtx_idx,
-//                    src_face_vtx,
-//                    src_face_ln_to_gn)
-//
-// PDM.writer_wrapper(comm,
-//                    "visu",
-//                    "tgt_mesh",
-//                    tgt_vtx_coord,
-//                    tgt_vtx_ln_to_gn,
-//                    tgt_face_vtx_idx,
-//                    tgt_face_vtx,
-//                    tgt_face_ln_to_gn,
-//                    vtx_fields={
-//                    "is_located" : pis_located,
-//                    "field1"     : ptgt_field1,
-//                    "field2"     : ptgt_field2})
-
 ```
-
-Finalize?
-
-
 
 ## Run the code
 Moment of truth!
@@ -611,7 +618,7 @@ Moment of truth!
 ## Visualize the results
 
 ```{code-cell}
-%%visualize
+%%visualize -nl -sv
 visu/SRC_MESH.case
 visu/TGT_MESH.case : is_located
 ```

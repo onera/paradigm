@@ -24,7 +24,7 @@ A notebook is simply a document divided into cells of different kinds:
 - Python cells : they contain basic Python instructions (essentially for loading the modules required to run the notebooks) and are protected against edition as well
 - `%%code_block` cells : they contain the pieces of code you will write during the exercises.
 - `%merge_code_blocks` cells : they let you run the code you wrote piece by piece.
-- `%visualize` cells : they will let you to visualize the fruits of your labor interactively in the notebook.
+- `%visualize` cells : they let you visualize the fruits of your labor interactively in the notebook.
 
 You will progress through the notebook step by step by running cells one after the other.
 
@@ -84,7 +84,7 @@ program exercise_0
   implicit none
   include "mpif.h"
 
-  integer ::  i_rank, err
+  integer :: i_rank, err
 
   call mpi_init(err)
 
@@ -98,7 +98,7 @@ In this second cell, each MPI rank will print a message.
 %%code_block -p exercise_0 -i 2
   call mpi_comm_rank(MPI_COMM_WORLD, i_rank, err)
 
-  print *, "Hello from rank", i_rank, "!"
+  print "(a15,1x,i0,a1)", "Hello from rank", i_rank, "!"
 
 ```
 

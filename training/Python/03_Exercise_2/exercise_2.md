@@ -354,7 +354,7 @@ Moment of truth!
 ## Visualize the results
 
 ```{code-cell}
-%%visualize
+%%visualize -nl -sv
 visu/SRC_MESH.case
 visu/TGT_MESH.case : is_located
 ```
