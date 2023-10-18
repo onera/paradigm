@@ -43,7 +43,7 @@ if module_path not in sys.path:
 In this section, `ParaDiGM` tools are used to generate a simple mesh for this exercise: a cube made of tetrahedra.
 
 ```{code-cell}
-%%code_block -l python -p exercise_1 -i 1
+%%code_block -p exercise_1 -i 1
 #!/usr/bin/env python
 
 import numpy as np
@@ -100,7 +100,7 @@ Following this logic, let's start **creating** (step 1) the mesh partitioning ob
 To get insight about the concepts behind those values you can have a look [here](#Annex 1)*
 
 ```{code-cell}
-%%code_block -l python -p exercise_1 -i 2
+%%code_block -p exercise_1 -i 2
 
 # Create partitioning object
 n_zone = 1      # fixed
@@ -128,7 +128,7 @@ of the mesh on each processor for performance through cache blocking but it also
 You can here call the renumbering function but by telling it not to do any renumbering for a start.
 
 ```{code-cell}
-%%code_block -l python -p exercise_1 -i 3
+%%code_block -p exercise_1 -i 3
 
 renum_cell = bytes("PDM_PART_RENUM_CELL_NONE", 'ascii')
 renum_face = bytes("PDM_PART_RENUM_FACE_NONE", 'ascii')
@@ -142,7 +142,7 @@ mpart.multipart_set_reordering(-1,         # All zones
 Now that you have created a mesh partitioning object `mpart`, you can **set** (step 2) the cube mesh to it.
 
 ```{code-cell}
-%%code_block -l python -p exercise_1 -i 4
+%%code_block -p exercise_1 -i 4
 
 mpart.multipart_register_dmesh_nodal(i_zone, dmn)
 ```
@@ -151,7 +151,7 @@ At this point you have provided all the information necessary to run the mesh pa
 **compute** (step 3) the subdomains that make up the partitionned cube.
 
 ```{code-cell}
-%%code_block -l python -p exercise_1 -i 5
+%%code_block -p exercise_1 -i 5
 
 mpart.multipart_run_ppart()
 ```
@@ -173,7 +173,7 @@ Here we get this object from `mpart` to directly have access to the arrays we ar
 Let's start with the vertices composing the subdomain. How many vertices are there? What is their global number? What are their coordiantes?
 
 ```{code-cell}
-%%code_block -l python -p exercise_1 -i 6
+%%code_block -p exercise_1 -i 6
 
 output = mpart.multipart_vtx_coord_get(i_part,
                                        i_zone)
@@ -191,7 +191,7 @@ Let's move on to the cells. How are the vertices connected to form cells? What i
 To get insight about the concept behind this value you can have a look [here](#Annex 1)*
 
 ```{code-cell}
-%%code_block -l python -p exercise_1 -i 7
+%%code_block -p exercise_1 -i 7
 
 i_section = 0 # fixed
 output = PDM.part_mesh_nodal_get_sections(pmn,
@@ -205,7 +205,7 @@ n_elt        = len(elt_ln_to_gn)
 Now we write the mesh that we just got to be able to visualize it later on (nothing to do).
 
 ```{code-cell}
-%%code_block -l python -p exercise_1 -i 8
+%%code_block -p exercise_1 -i 8
 
 PDM.writer_wrapper(comm,
                    "visu",
@@ -226,7 +226,7 @@ You choose to get the partitioned mesh in descending connectivity, i.e. cell->fa
 Let's start from the top with cell data. How many cells are there? What is their global number? Which faces compose the cells?
 
 ```{code-cell}
-%%code_block -l python -p exercise_1 -i 9
+%%code_block -p exercise_1 -i 9
 
 # output = mpart.multipart_ln_to_gn_get(i_part,
 #                                       i_zone,
@@ -247,7 +247,7 @@ Let's start from the top with cell data. How many cells are there? What is their
 For the faces we proceed in a similar way. How many faces are there? What is their global number? Which edges compose the faces?
 
 ```{code-cell}
-%%code_block -l python -p exercise_1 -i 10
+%%code_block -p exercise_1 -i 10
 
 # output = mpart.multipart_ln_to_gn_get(i_part,
 #                                       i_zone,
@@ -271,7 +271,7 @@ Let's do the same for edges. How many edges are there? What is their global numb
 each edge is only composed of two vertices*
 
 ```{code-cell}
-%%code_block -l python -p exercise_1 -i 11
+%%code_block -p exercise_1 -i 11
 
 # output = mpart.multipart_ln_to_gn_get(i_part,
 #                                       i_zone,
@@ -291,7 +291,7 @@ each edge is only composed of two vertices*
 To finish with, we need to have the description of the vertices.
 
 ```{code-cell}
-%%code_block -l python -p exercise_1 -i 12
+%%code_block -p exercise_1 -i 12
 
 # output = mpart.multipart_ln_to_gn_get(i_part,
 #                                       i_zone,
@@ -310,7 +310,7 @@ To finish with, we need to have the description of the vertices.
 Now we write the mesh that we just got to be able to visualize it later on (nothing to do).
 
 ```{code-cell}
-%%code_block -l python -p exercise_1 -i 13
+%%code_block -p exercise_1 -i 13
 
 # face_vtx = PDM.compute_face_vtx_from_face_and_edge(face_edge_idx,
 #                                                    face_edge,
@@ -340,7 +340,7 @@ Run the following cells to execute to program you just wrote and visualize the p
 
 ```{code-cell}
 %%visualize
-visu/PMESH.case
+visu/PMESH.case : i_part
 ```
 ## Annex 1
 

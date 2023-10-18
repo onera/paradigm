@@ -41,7 +41,7 @@ Due to Fortran language specificities, we start defining the variables needed fo
 If you think that there are too many or too little, try looking at the documentation again.
 
 ```{code-cell}
-%%code_block -l fortran -p exercise_1 -i 1
+%%code_block -p exercise_1 -i 1
 
 program pdm_t_mesh_partitioning_f
 
@@ -135,7 +135,7 @@ program pdm_t_mesh_partitioning_f
 In this section, `ParaDiGM` tools are used to generate a simple mesh for this exercise: a cube made of tetrahedra.
 
 ```{code-cell}
-%%code_block -l fortran -p exercise_1 -i 2
+%%code_block -p exercise_1 -i 2
 
   ! Initialize MPI environment
   call mpi_init(code)
@@ -192,7 +192,7 @@ Following this logic, let's start **creating** (step 1) the mesh partitioning ob
 To get insight about the concepts behind those values you can have a look [here](#Annex 1)*
 
 ```{code-cell}
-%%code_block -l fortran -p exercise_1 -i 3
+%%code_block -p exercise_1 -i 3
 
   ! Create partitioning object
   allocate(n_part(n_zone))
@@ -231,7 +231,7 @@ of the mesh on each processor for performance through cache blocking but it also
 You can here call the renumbering function but by telling it not to do any renumbering for a start.
 
 ```{code-cell}
-%%code_block -l fortran -p exercise_1 -i 4
+%%code_block -p exercise_1 -i 4
 
   call PDM_multipart_set_reordering_options(mpart,                      &
                                             i_zone,                     &
@@ -244,7 +244,7 @@ You can here call the renumbering function but by telling it not to do any renum
 Now that you have created a mesh partitioning object `mpart`, you can **set** (step 2) the cube mesh to it.
 
 ```{code-cell}
-%%code_block -l fortran -p exercise_1 -i 5
+%%code_block -p exercise_1 -i 5
 
   call PDM_multipart_register_dmesh_nodal(mpart,  &
                                           i_zone, &
@@ -256,7 +256,7 @@ At this point you have provided all the information necessary to run the mesh pa
 **compute** (step 3) the subdomains that make up the partitionned cube.
 
 ```{code-cell}
-%%code_block -l fortran -p exercise_1 -i 6
+%%code_block -p exercise_1 -i 6
 
   call PDM_multipart_run_ppart(mpart)
 ```
@@ -278,7 +278,7 @@ Here we get this object from `mpart` to directly have access to the arrays we ar
 Let's start with the vertices composing the subdomain. How many vertices are there? What is their global number? What are their coordiantes?
 
 ```{code-cell}
-%%code_block -l fortran -p exercise_1 -i 7
+%%code_block -p exercise_1 -i 7
 
   ! call PDM_multipart_part_vtx_coord_get(mpart,              &
   !                                       i_zone,             &
@@ -308,7 +308,7 @@ Let's move on to the cells. How are the vertices connected to form cells? What i
 To get insight about the concept behind this value you can have a look [here](#Annex 1)*
 
 ```{code-cell}
-%%code_block -l fortran -p exercise_1 -i 8
+%%code_block -p exercise_1 -i 8
 
   ! call PDM_part_mesh_nodal_section_n_elt_get(pmn,       &
   !                                            i_section, &
@@ -335,7 +335,7 @@ You choose to get the partitioned mesh in descending connectivity, i.e. cell->fa
 Let's start from the top with cell data. How many cells are there? What is their global number? Which faces compose the cells?
 
 ```{code-cell}
-%%code_block -l fortran -p exercise_1 -i 9
+%%code_block -p exercise_1 -i 9
 
   call PDM_multipart_part_ln_to_gn_get(mpart,                &
                                        i_zone,               &
@@ -361,7 +361,7 @@ Let's start from the top with cell data. How many cells are there? What is their
 For the faces we proceed in a similar way. How many faces are there? What is their global number? Which edges compose the faces?
 
 ```{code-cell}
-%%code_block -l fortran -p exercise_1 -i 10
+%%code_block -p exercise_1 -i 10
 
   call PDM_multipart_part_ln_to_gn_get(mpart,                &
                                        i_zone,               &
@@ -388,7 +388,7 @@ Let's do the same for edges. How many edges are there? What is their global numb
 each edge is only composed of two vertices*
 
 ```{code-cell}
-%%code_block -l fortran -p exercise_1 -i 11
+%%code_block -p exercise_1 -i 11
 
   call PDM_multipart_part_ln_to_gn_get(mpart,                &
                                        i_zone,               &
@@ -412,7 +412,7 @@ each edge is only composed of two vertices*
 To finish with, we need to have the description of the vertices.
 
 ```{code-cell}
-%%code_block -l fortran -p exercise_1 -i 12
+%%code_block -p exercise_1 -i 12
 
   call PDM_multipart_part_ln_to_gn_get(mpart,                  &
                                        i_zone,                 &
@@ -434,7 +434,7 @@ To finish with, we need to have the description of the vertices.
 Once the partitionned mesh retrieved we can **free** (step 5) the memory allocated for and by the partitioning algorithm.
 
 ```{code-cell}
-%%code_block -l fortran -p exercise_1 -i 13
+%%code_block -p exercise_1 -i 13
 
   ! free
   deallocate(n_part, &
@@ -453,10 +453,17 @@ end program pdm_t_mesh_partitioning_f
 
 ```
 
-## Execute the exercise
+## Execution and visualization
+
+Run the following cells to execute to program you just wrote and visualize the partitionned output mesh.
 
 ```{code-cell}
-%merge_code_blocks -l fortran -p exercise_1 -n 2 -c
+%merge_code_blocks -l fortran -p exercise_1 -n 2 -v -c
+```
+
+```{code-cell}
+%%visualize
+visu/PMESH.case : i_part
 ```
 
 ## Annex 1

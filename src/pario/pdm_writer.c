@@ -87,6 +87,239 @@ static       int n_fmt_tab    = 0;
  * Definition des fonctions privees
  *============================================================================*/
 
+// Wrap mesh writer for training
+
+void
+writer_wrapper
+(
+ const PDM_MPI_Comm     comm,
+ const char            *folder,
+ const char            *file,
+ int                    n_part,
+ int                   *n_vtx,
+ double               **coords,
+ PDM_g_num_t          **vtx_ln_to_gn,
+ int                   *n_elt,
+ int                  **elt_vtx_idx,
+ int                  **elt_vtx,
+ PDM_g_num_t          **elt_ln_to_gn,
+ PDM_writer_elt_geom_t  cell_t,
+ int                   *n_face,
+ int                  **cell_face_idx,
+ int                  **cell_face,
+ const char            *format,
+ int                    n_elt_field,
+ const char           **elt_field_name,
+ double              ***elt_field_values,
+ int                    n_vtx_field,
+ const char           **vtx_field_name,
+ double              ***vtx_field_values
+)
+{
+  int i_rank;
+  PDM_MPI_Comm_rank(comm, &i_rank);
+
+  int is_3d_nodal = (((int) cell_t) != -1);
+  int is_2d       = ((cell_face_idx == NULL) || (cell_face == NULL)) && (!is_3d_nodal);
+
+  PDM_writer_t *wrt = PDM_writer_create(format,
+                                        PDM_WRITER_FMT_BIN,
+                                        PDM_WRITER_TOPO_VARIABLE,
+                                        PDM_WRITER_OFF,
+                                        folder,
+                                        file,
+                                        comm,
+                                        PDM_IO_KIND_MPI_SIMPLE,
+                                        1.,
+                                        NULL);
+
+  int id_geom = PDM_writer_geom_create(wrt,
+                                       file,
+                                       n_part);
+
+  int id_var_part = PDM_writer_var_create(wrt,
+                                          PDM_WRITER_OFF,
+                                          PDM_WRITER_VAR_SCALAR,
+                                          PDM_WRITER_VAR_ELEMENTS,
+                                          "i_part");
+
+  int id_var_elt_gnum = PDM_writer_var_create(wrt,
+                                              PDM_WRITER_OFF,
+                                              PDM_WRITER_VAR_SCALAR,
+                                              PDM_WRITER_VAR_ELEMENTS,
+                                              "elt_gnum");
+
+  // elt based field
+  int *id_var_elt_field = NULL;
+  if (n_elt_field > 0) {
+    id_var_elt_field = malloc(sizeof(int) * n_elt_field);
+
+    for (int i = 0; i < n_elt_field; i++) {
+      id_var_elt_field[i] = PDM_writer_var_create(wrt,
+                                                  PDM_WRITER_OFF,
+                                                  PDM_WRITER_VAR_SCALAR,
+                                                  PDM_WRITER_VAR_VERTICES,
+                                                  elt_field_name[i]);
+    }
+  }
+
+  // node based field
+  int *id_var_vtx_field = NULL;
+  if (n_vtx_field > 0) {
+    id_var_vtx_field = malloc(sizeof(int) * n_vtx_field);
+
+    for (int i = 0; i < n_vtx_field; i++) {
+      id_var_vtx_field[i] = PDM_writer_var_create(wrt,
+                                                  PDM_WRITER_OFF,
+                                                  PDM_WRITER_VAR_SCALAR,
+                                                  PDM_WRITER_VAR_VERTICES,
+                                                  vtx_field_name[i]);
+    }
+  }
+
+  PDM_writer_step_beg(wrt, 0.);
+
+  for (int i_part = 0; i_part < n_part; i_part++) {
+    PDM_writer_geom_coord_set(wrt,
+                              id_geom,
+                              i_part,
+                              n_vtx       [i_part],
+                              coords      [i_part],
+                              vtx_ln_to_gn[i_part],
+                              PDM_OWNERSHIP_USER);
+
+    if (is_2d) {
+      PDM_writer_geom_faces_facesom_add(wrt,
+                                        id_geom,
+                                        i_part,
+                                        n_elt       [i_part],
+                                        elt_vtx_idx [i_part],
+                                        NULL,
+                                        elt_vtx     [i_part],
+                                        elt_ln_to_gn[i_part]);
+    } else {
+      if (is_3d_nodal) {
+        int id_bloc = PDM_writer_geom_bloc_add(wrt,
+                                               id_geom,
+                                               cell_t,
+                                               PDM_OWNERSHIP_USER);
+        PDM_writer_geom_bloc_std_set(wrt,
+                                     id_geom,
+                                     id_bloc,
+                                     i_part,
+                                     n_elt       [i_part],
+                                     elt_vtx     [i_part],
+                                     elt_ln_to_gn[i_part]);
+      } else {
+        PDM_writer_geom_cell3d_cellface_add(wrt,
+                                            id_geom,
+                                            i_part,
+                                            n_elt         [i_part],
+                                            n_face        [i_part],
+                                            elt_vtx_idx   [i_part],
+                                            NULL,
+                                            elt_vtx       [i_part],
+                                            cell_face_idx [i_part],
+                                            NULL,
+                                            cell_face     [i_part],
+                                            elt_ln_to_gn  [i_part]);
+
+      }
+    }
+  }
+
+  PDM_writer_geom_write(wrt, id_geom);
+
+  for (int i_part = 0; i_part < n_part; i_part++) {
+    PDM_real_t *val_part = malloc(sizeof(PDM_real_t) * n_elt[i_part]);
+    PDM_real_t *val_gnum = malloc(sizeof(PDM_real_t) * n_elt[i_part]);
+
+    for (int i_face = 0; i_face < n_elt[i_part]; i_face++) {
+      val_part[i_face] = i_rank*n_part + i_part;
+      val_gnum[i_face] = elt_ln_to_gn[i_part][i_face];
+    }
+
+    PDM_writer_var_set(wrt,
+                       id_var_part,
+                       id_geom,
+                       i_part,
+                       val_part);
+    free(val_part);
+
+    PDM_writer_var_set(wrt,
+                       id_var_elt_gnum,
+                       id_geom,
+                       i_part,
+                       val_gnum);
+    free(val_gnum);
+  }
+
+
+  PDM_writer_var_write(wrt, id_var_part);
+  PDM_writer_var_write(wrt, id_var_elt_gnum);
+
+  // elt based field
+  if (n_elt_field > 0) {
+    for (int i_part = 0; i_part < n_part; i_part++) {
+      PDM_real_t *val = malloc(sizeof(PDM_real_t) * n_elt[i_part]);
+
+      for (int i_field = 0; i_field < n_elt_field; i_field++) {
+        for (int i_elt = 0; i_elt < n_elt[i_part]; i_elt++) {
+          val[i_elt] = elt_field_values[i_field][i_part][i_elt];
+        }
+
+        PDM_writer_var_set(wrt,
+                           id_var_elt_field[i_field],
+                           id_geom,
+                           i_part,
+                           val);
+      }
+      free(val);
+    }
+
+    for (int i_field = 0; i_field < n_elt_field; i_field++) {
+      PDM_writer_var_write(wrt, id_var_elt_field[i_field]);
+    }
+  }
+
+  // vtx based field
+  if (n_vtx_field > 0) {
+    for (int i_part = 0; i_part < n_part; i_part++) {
+      PDM_real_t *val = malloc(sizeof(PDM_real_t) * n_vtx[i_part]);
+
+      for (int i_field = 0; i_field < n_vtx_field; i_field++) {
+        for (int i_vtx = 0; i_vtx < n_vtx[i_part]; i_vtx++) {
+          val[i_vtx] = vtx_field_values[i_field][i_part][i_vtx];
+        }
+
+        PDM_writer_var_set(wrt,
+                           id_var_vtx_field[i_field],
+                           id_geom,
+                           i_part,
+                           val);
+      }
+      free(val);
+    }
+
+    for (int i_field = 0; i_field < n_vtx_field; i_field++) {
+      PDM_writer_var_write(wrt, id_var_vtx_field[i_field]);
+    }
+  }
+
+  PDM_writer_step_end(wrt);
+
+  if (n_elt_field > 0) {
+    free(id_var_elt_field);
+  }
+
+  if (n_vtx_field > 0) {
+    free(id_var_vtx_field);
+  }
+
+  PDM_writer_free(wrt);
+
+}
+
 /**
  *
  * \brief Create a \ref _PDM_writer_geom_tab_t object

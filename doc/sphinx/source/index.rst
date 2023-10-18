@@ -161,6 +161,7 @@ Developer manual
 
    developer_manual/api/index
    developer_manual/coding_rules
+   developer_manual/mesh_adaptation/index
 
 
 
