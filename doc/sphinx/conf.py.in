@@ -405,3 +405,8 @@ fortran_indent = 2
 rst_prolog = """
 .. role:: red
 """
+
+
+def setup(app):
+    app.add_config_value('enable_fortran_doc', '@PDM_ENABLE_Fortran@',         'env')
+    app.add_config_value('enable_python_doc',  '@PDM_ENABLE_PYTHON_BINDINGS@', 'env')

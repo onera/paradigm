@@ -44,11 +44,15 @@ CMake general options
 
 **Enable Fortran interface**
 
+.. _enable_fortran_interface:
+
 .. code-block:: sh
 
   PDM_ENABLE_Fortran=<ON | OFF> (default : OFF)
 
 **Enable Python interface**
+
+.. _enable_python_interface:
 
 .. code-block:: sh
 
