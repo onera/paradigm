@@ -175,13 +175,13 @@ Let's start with the vertices composing the subdomain. How many vertices are the
 ```{code-cell}
 %%code_block -l python -p exercise_1 -i 6
 
-# output = mpart.multipart_vtx_coord_get(i_part,
-#                                        i_zone)
-# coords = output["np_vtx_coord"]
-#
-# pmn = mpart.multipart_part_mesh_nodal_get(i_zone)
-# vtx_ln_to_gn = PDM.part_mesh_nodal_vtx_g_num_get(pmn, i_part)
-# n_vtx        = len(vtx_ln_to_gn)
+output = mpart.multipart_vtx_coord_get(i_part,
+                                       i_zone)
+coords = output["np_vtx_coord"]
+
+pmn = mpart.multipart_part_mesh_nodal_get(i_zone)
+vtx_ln_to_gn = PDM.part_mesh_nodal_vtx_g_num_get(pmn, i_part)
+n_vtx        = len(vtx_ln_to_gn)
 
 ```
 
@@ -193,13 +193,29 @@ To get insight about the concept behind this value you can have a look [here](#A
 ```{code-cell}
 %%code_block -l python -p exercise_1 -i 7
 
-# i_section = 0 # fixed
-# output = PDM.part_mesh_nodal_get_sections(pmn,
-#                                           PDM._PDM_GEOMETRY_KIND_VOLUMIC,
-#                                           i_part)
-# elt_vtx      = output[i_section]["np_connec"]
-# elt_ln_to_gn = output[i_section]["np_numabs"]
-# n_elt        = len(elt_ln_to_gn)
+i_section = 0 # fixed
+output = PDM.part_mesh_nodal_get_sections(pmn,
+                                          PDM._PDM_GEOMETRY_KIND_VOLUMIC,
+                                          i_part)
+elt_vtx      = output[i_section]["np_connec"]
+elt_ln_to_gn = output[i_section]["np_numabs"]
+n_elt        = len(elt_ln_to_gn)
+
+```
+Now we write the mesh that we just got to be able to visualize it later on (nothing to do).
+
+```{code-cell}
+%%code_block -l python -p exercise_1 -i 8
+
+PDM.writer_wrapper(comm,
+                   "visu",
+                   "pmesh",
+                   [coords],
+                   [vtx_ln_to_gn],
+                   [None],
+                   [elt_vtx],
+                   [elt_ln_to_gn],
+                   PDM._PDM_WRITER_TETRA4)
 
 ```
 
@@ -210,42 +226,42 @@ You choose to get the partitioned mesh in descending connectivity, i.e. cell->fa
 Let's start from the top with cell data. How many cells are there? What is their global number? Which faces compose the cells?
 
 ```{code-cell}
-%%code_block -l python -p exercise_1 -i 8
+%%code_block -l python -p exercise_1 -i 9
 
-output = mpart.multipart_ln_to_gn_get(i_part,
-                                      i_zone,
-                                      PDM._PDM_MESH_ENTITY_CELL)
-
-cell_ln_to_gn = output["np_entity_ln_to_gn"]
-n_cell = len(cell_ln_to_gn)
-
-output = mpart.multipart_connectivity_get(i_part,
-                                          i_zone,
-                                          PDM._PDM_CONNECTIVITY_TYPE_CELL_FACE)
-
-cell_face_idx = output["np_entity1_entity2_idx"]
-cell_face     = output["np_entity1_entity2"]
+# output = mpart.multipart_ln_to_gn_get(i_part,
+#                                       i_zone,
+#                                       PDM._PDM_MESH_ENTITY_CELL)
+#
+# cell_ln_to_gn = output["np_entity_ln_to_gn"]
+# n_cell = len(cell_ln_to_gn)
+#
+# output = mpart.multipart_connectivity_get(i_part,
+#                                           i_zone,
+#                                           PDM._PDM_CONNECTIVITY_TYPE_CELL_FACE)
+#
+# cell_face_idx = output["np_entity1_entity2_idx"]
+# cell_face     = output["np_entity1_entity2"]
 
 ```
 
 For the faces we proceed in a similar way. How many faces are there? What is their global number? Which edges compose the faces?
 
 ```{code-cell}
-%%code_block -l python -p exercise_1 -i 9
+%%code_block -l python -p exercise_1 -i 10
 
-output = mpart.multipart_ln_to_gn_get(i_part,
-                                      i_zone,
-                                      PDM._PDM_MESH_ENTITY_FACE)
-
-face_ln_to_gn = output["np_entity_ln_to_gn"]
-n_face = len(face_ln_to_gn)
-
-output = mpart.multipart_connectivity_get(i_part,
-                                          i_zone,
-                                          PDM._PDM_CONNECTIVITY_TYPE_FACE_EDGE)
-
-face_edge_idx = output["np_entity1_entity2_idx"]
-face_edge     = output["np_entity1_entity2"]
+# output = mpart.multipart_ln_to_gn_get(i_part,
+#                                       i_zone,
+#                                       PDM._PDM_MESH_ENTITY_FACE)
+#
+# face_ln_to_gn = output["np_entity_ln_to_gn"]
+# n_face = len(face_ln_to_gn)
+#
+# output = mpart.multipart_connectivity_get(i_part,
+#                                           i_zone,
+#                                           PDM._PDM_CONNECTIVITY_TYPE_FACE_EDGE)
+#
+# face_edge_idx = output["np_entity1_entity2_idx"]
+# face_edge     = output["np_entity1_entity2"]
 
 ```
 
@@ -255,66 +271,68 @@ Let's do the same for edges. How many edges are there? What is their global numb
 each edge is only composed of two vertices*
 
 ```{code-cell}
-%%code_block -l python -p exercise_1 -i 10
+%%code_block -l python -p exercise_1 -i 11
 
-output = mpart.multipart_ln_to_gn_get(i_part,
-                                      i_zone,
-                                      PDM._PDM_MESH_ENTITY_EDGE)
-
-edge_ln_to_gn = output["np_entity_ln_to_gn"]
-n_edge = len(edge_ln_to_gn)
-
-output = mpart.multipart_connectivity_get(i_part,
-                                          i_zone,
-                                          PDM._PDM_CONNECTIVITY_TYPE_EDGE_VTX)
-
-edge_vtx = output["np_entity1_entity2"]
+# output = mpart.multipart_ln_to_gn_get(i_part,
+#                                       i_zone,
+#                                       PDM._PDM_MESH_ENTITY_EDGE)
+#
+# edge_ln_to_gn = output["np_entity_ln_to_gn"]
+# n_edge = len(edge_ln_to_gn)
+#
+# output = mpart.multipart_connectivity_get(i_part,
+#                                           i_zone,
+#                                           PDM._PDM_CONNECTIVITY_TYPE_EDGE_VTX)
+#
+# edge_vtx = output["np_entity1_entity2"]
 
 ```
 
 To finish with, we need to have the description of the vertices.
 
 ```{code-cell}
-%%code_block -l python -p exercise_1 -i 11
+%%code_block -l python -p exercise_1 -i 12
 
-output = mpart.multipart_ln_to_gn_get(i_part,
-                                      i_zone,
-                                      PDM._PDM_MESH_ENTITY_VERTEX)
+# output = mpart.multipart_ln_to_gn_get(i_part,
+#                                       i_zone,
+#                                       PDM._PDM_MESH_ENTITY_VERTEX)
+#
+# vtx_ln_to_gn = output["np_entity_ln_to_gn"]
+# n_vtx = len(vtx_ln_to_gn)
+#
+# output = mpart.multipart_vtx_coord_get(i_part,
+#                                        i_zone)
+#
+# coords = output["np_vtx_coord"]
 
-vtx_ln_to_gn = output["np_entity_ln_to_gn"]
-n_vtx = len(vtx_ln_to_gn)
+```
 
-output = mpart.multipart_vtx_coord_get(i_part,
-                                       i_zone)
+Now we write the mesh that we just got to be able to visualize it later on (nothing to do).
 
-coords = output["np_vtx_coord"]
+```{code-cell}
+%%code_block -l python -p exercise_1 -i 13
+
+# face_vtx = PDM.compute_face_vtx_from_face_and_edge(face_edge_idx,
+#                                                    face_edge,
+#                                                    edge_vtx)
+# face_vtx_idx = np.array([3*i for i in range(n_face+1)]).astype(np.intc)
+#
+# PDM.writer_wrapper(comm,
+#                    "visu",
+#                    "pmesh",
+#                    [coords],
+#                    [vtx_ln_to_gn],
+#                    [face_vtx_idx],
+#                    [face_vtx],
+#                    [cell_ln_to_gn],
+#                    [cell_face_idx],
+#                    [cell_face])
 
 ```
 
 ## Execution and visualization
 
-Run the following cells to visualize the output mesh (available only for mesh in descending connectivity).
-
-```{code-cell}
-%%code_block -l python -p exercise_1 -i 12
-
-face_vtx = PDM.compute_face_vtx_from_face_and_edge(face_edge_idx,
-                                                   face_edge,
-                                                   edge_vtx)
-face_vtx_idx = np.array([3*i for i in range(n_face+1)]).astype(PDM.npy_pdm_gnum_dtype).astype(np.intc)
-
-PDM.writer_ez(comm,
-              "visu",
-              "pmesh",
-              [coords],
-              [vtx_ln_to_gn],
-              [face_vtx_idx],
-              [face_vtx],
-              [cell_ln_to_gn],
-              [cell_face_idx],
-              [cell_face])
-
-```
+Run the following cells to execute to program you just wrote and visualize the partitionned output mesh.
 
 ```{code-cell}
 %merge_code_blocks -l python -p exercise_1 -n 2 -v -c

@@ -116,11 +116,10 @@ cdef extern from "pdm_writer.h":
                                              PDM_g_num_t  *numabs_parent)
 
 
-  int PDM_writer_geom_bloc_add(PDM_writer_t          *cs,
+  int PDM_writer_geom_bloc_add(PDM_writer_t                *cs,
                                int                    id_geom,
-                               PDM_writer_status_t    st_free_data,
-                               PDM_writer_elt_geom_t  t_elt)
-  
+                               PDM_writer_elt_geom_t  t_elt,
+                               PDM_ownership_t        owner)
 
   void PDM_writer_geom_bloc_std_set(PDM_writer_t  *cs,
                                     int      id_geom,
@@ -383,12 +382,13 @@ cdef class Writer:
                                         <PDM_g_num_t*> numabs.data)
 
   def geom_block_add(self,
-                     int                   id_geom,
-                     PDM_writer_status_t   st_free_data,
-                     PDM_writer_elt_geom_t t_elt):
+                     int                    id_geom,
+                     PDM_writer_elt_geom_t  t_elt,
+                     PDM_ownership_t        owner):
     """
     """
-    return PDM_writer_geom_bloc_add(self._wt, id_geom, st_free_data, t_elt)
+    return PDM_writer_geom_bloc_add(self._wt, id_geom, t_elt, owner)
+
 
   def geom_block_std_set(self,
                          int id_geom,
@@ -507,19 +507,20 @@ cdef class Writer:
     PDM_writer_free(self._wt)
 
 
-def writer_ez(comm,
-              directory,
-              name,
-              vtx_coord,
-              vtx_ln_to_gn,
-              face_vtx_idx,
-              face_vtx,
-              elt_ln_to_gn,
-              cell_face_idx=None,
-              cell_face=None,
-              format="Ensight",
-              elt_fields=None,
-              vtx_fields=None):
+def writer_wrapper(comm,
+                   directory,
+                   name,
+                   vtx_coord,
+                   vtx_ln_to_gn,
+                   elt_vtx_idx,
+                   elt_vtx,
+                   elt_ln_to_gn,
+                   cell_t=-1,
+                   cell_face_idx=None,
+                   cell_face=None,
+                   format="Ensight",
+                   elt_fields=None,
+                   vtx_fields=None):
   """
   writer_ez(comm, directory, name, vtx_coord, vtx_ln_to_gn, face_vtx_idx, face_vtx, elt_ln_to_gn, cell_face_idx=None, cell_face=None, format="Ensight", elt_fields=None, vtx_fields=None)
 
@@ -531,9 +532,10 @@ def writer_ez(comm,
     name          (str)                             : Output files prefix
     vtx_coord     (np.ndarray[np.double_t] list)    : Vertex coordinates
     vtx_ln_to_gn  (np.ndarray[npy_pdm_gnum_t] list) : Vertex global ids
-    face_vtx_idx  (np.ndarray[np.int32_t] list)     : Index for face->vertex connectivity
-    face_vtx      (np.ndarray[np.int32_t] list)     : Face->vertex connectivity
+    elt_vtx_idx   (np.ndarray[np.int32_t] list)     : Index for elt->vertex connectivity
+    elt_vtx       (np.ndarray[np.int32_t] list)     : Elt->vertex connectivity
     elt_ln_to_gn  (np.ndarray[npy_pdm_gnum_t] list) : Element global ids
+    cell_t        (int)                             : Type of cell
     cell_face_idx (np.ndarray[np.int32_t] list)     : Index for cell->face connectivity (only for volume meshes)
     cell_face     (np.ndarray[np.int32_t] list)     : Cell->face connectivity (only for volume meshes)
     format        (str)                             : Output file format (default : "Ensight")
@@ -541,7 +543,9 @@ def writer_ez(comm,
     vtx_fields    (dict)                            : Vertex-based fields (optional)
   """
 
-  is_2d = (cell_face_idx is None) or (cell_face is None)
+  is_3d_nodal = (cell_t != -1)
+
+  is_2d = ((cell_face_idx is None) or (cell_face is None)) and (not is_3d_nodal)
 
   wrt = Writer(format,
                _PDM_WRITER_FMT_ASCII,
@@ -597,17 +601,28 @@ def writer_ez(comm,
     if is_2d:
       wrt.geom_faces_facevtx_add(id_geom,
                                  i_part,
-                                 face_vtx_idx[i_part],
-                                 face_vtx[i_part],
+                                 elt_vtx_idx[i_part],
+                                 elt_vtx[i_part],
                                  elt_ln_to_gn[i_part])
     else:
-      wrt.geom_cell3d_cellface_add(id_geom,
-                                   i_part,
-                                   face_vtx_idx[i_part],
-                                   face_vtx[i_part],
-                                   cell_face_idx[i_part],
-                                   cell_face[i_part],
-                                   elt_ln_to_gn[i_part])
+      if is_3d_nodal:
+        # mono-section
+        id_bloc = wrt.geom_block_add(id_geom,
+                                     cell_t,
+                                     PDM_OWNERSHIP_USER)
+        wrt.geom_block_std_set(id_geom,
+                               id_bloc,
+                               i_part,
+                               elt_vtx[i_part],
+                               elt_ln_to_gn[i_part])
+      else:
+        wrt.geom_cell3d_cellface_add(id_geom,
+                                     i_part,
+                                     elt_vtx_idx[i_part],
+                                     elt_vtx[i_part],
+                                     cell_face_idx[i_part],
+                                     cell_face[i_part],
+                                     elt_ln_to_gn[i_part])
 
 
   wrt.geom_write(id_geom)

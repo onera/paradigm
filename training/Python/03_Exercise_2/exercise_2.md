@@ -315,27 +315,27 @@ for i_part in range(tgt_n_part):
   ptgt_field2.append(tgt_field2)
 
 # Export for visualization
-PDM.writer_ez(comm,
-              "visu",
-              "src_mesh",
-              src_vtx_coord,
-              src_vtx_ln_to_gn,
-              src_face_vtx_idx,
-              src_face_vtx,
-              src_face_ln_to_gn)
+PDM.writer_wrapper(comm,
+                   "visu",
+                   "src_mesh",
+                   src_vtx_coord,
+                   src_vtx_ln_to_gn,
+                   src_face_vtx_idx,
+                   src_face_vtx,
+                   src_face_ln_to_gn)
 
-PDM.writer_ez(comm,
-              "visu",
-              "tgt_mesh",
-              tgt_vtx_coord,
-              tgt_vtx_ln_to_gn,
-              tgt_face_vtx_idx,
-              tgt_face_vtx,
-              tgt_face_ln_to_gn,
-              vtx_fields={
-              "is_located" : pis_located,
-              "field1"     : ptgt_field1,
-              "field2"     : ptgt_field2})
+PDM.writer_wrapper(comm,
+                   "visu",
+                   "tgt_mesh",
+                   tgt_vtx_coord,
+                   tgt_vtx_ln_to_gn,
+                   tgt_face_vtx_idx,
+                   tgt_face_vtx,
+                   tgt_face_ln_to_gn,
+                   vtx_fields={
+                   "is_located" : pis_located,
+                   "field1"     : ptgt_field1,
+                   "field2"     : ptgt_field2})
 
 ```
 
