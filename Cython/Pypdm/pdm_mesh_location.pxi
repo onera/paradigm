@@ -253,8 +253,8 @@ cdef class MeshLocation:
     Parameters:
       i_point_cloud (int)                        : Point cloud identifier
       i_part        (int)                        : Partition identifier
-      coords        (bp.ndarray[np.double_t])    : Point coordinates
-      gnum          (bp.ndarray[npy_pdm_gnum_t]) : Point global ids
+      coords        (np.ndarray[np.double_t])    : Point coordinates
+      gnum          (np.ndarray[npy_pdm_gnum_t]) : Point global ids
     """
     cdef int n_points = len(gnum)
     PDM_mesh_location_cloud_set(self._ml,
@@ -628,6 +628,9 @@ cdef class MeshLocation:
     Parameters:
       i_point_cloud (int) : Point cloud identifier
       i_part        (int) : Partition identifier
+
+    Returns:
+      List of located target points (1-based ids) (np.ndarray[np.int32_t])
     """
     return self._np_located[i_point_cloud][i_part]
 
@@ -648,6 +651,9 @@ cdef class MeshLocation:
     Parameters:
       i_point_cloud (int) : Point cloud identifier
       i_part        (int) : Partition identifier
+
+    Returns:
+      List of unlocated target points (1-based ids) (np.ndarray[np.int32_t])
     """
     return self._np_unlocated[i_point_cloud][i_part]
 

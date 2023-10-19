@@ -29,15 +29,14 @@ if module_path not in sys.path:
 %reload_ext code_magics
 ```
 
-The goal of this exercise is to get used
-Your job is to fill the code blocks left blank using the API referenced [here](https://numerics.gitlab-pages.onera.net/mesh/paradigm/dev_doc_pretty/user_manual/prepro_algo/index.html#python-api).
+Your job is to fill the code cells left blank using the API referenced [here](https://numerics.gitlab-pages.onera.net/mesh/paradigm/dev_doc_pretty/user_manual/prepro_algo/index.html#python-api).
 
 +++
 
 ## Load the required Python modules
 
 ```{code-cell}
-%%code_block -p exercise2 -i 1
+%%code_block -p exercise_2 -i 1
 # Load modules
 import mpi4py.MPI as MPI
 import numpy as np
@@ -49,8 +48,11 @@ comm = MPI.COMM_WORLD
 
 ## Generate a partitioned "source" mesh
 
+
+By now, you know how to partition a mesh.
+
 ```{code-cell}
-%%code_block -p exercise2 -i 2
+%%code_block -p exercise_2 -i 2
 # Generate source mesh
 src_n_vtx_seg = 10
 src_n_part    = 1
@@ -83,7 +85,7 @@ src_face_ln_to_gn = src_mesh["pface_ln_to_gn"] #
 We will use its vertices as a point cloud.
 
 ```{code-cell}
-%%code_block -p exercise2 -i 3
+%%code_block -p exercise_2 -i 3
 # Generate target mesh
 tgt_n_vtx_seg = 10
 tgt_n_part    = 1
@@ -112,7 +114,7 @@ tgt_face_ln_to_gn = tgt_mesh["pface_ln_to_gn"]
 ## Create the `MeshLocation` object
 
 ```{code-cell}
-%%code_block -p exercise2 -i 4
+%%code_block -p exercise_2 -i 4
 # Create MeshLocation instance
 mesh_loc = PDM.MeshLocation(1,
                             comm)
@@ -122,7 +124,7 @@ mesh_loc = PDM.MeshLocation(1,
 ## Set the target point cloud
 
 ```{code-cell}
-%%code_block -p exercise2 -i 5
+%%code_block -p exercise_2 -i 5
 # Set target point cloud
 mesh_loc.n_part_cloud_set(0,
                           tgt_n_part)
@@ -140,7 +142,7 @@ Here you have essentially two options :
 - or with "descending" connectivity (i.e. Finite-Volume style)
 
 ```{code-cell}
-%%code_block -p exercise2 -i 6
+%%code_block -p exercise_2 -i 6
 # Set source mesh
 nodal = True
 mesh_loc.mesh_n_part_set(src_n_part)
@@ -166,7 +168,7 @@ for i_part in range(src_n_part):
 ## Set some optional parameters
 
 ```{code-cell}
-%%code_block -p exercise2 -i 7
+%%code_block -p exercise_2 -i 7
 # Geometric tolerance
 mesh_loc.tolerance_set(1e-6)
 
@@ -178,7 +180,7 @@ mesh_loc.method_set(0)
 ## Compute the localization
 
 ```{code-cell}
-%%code_block -p exercise2 -i 8
+%%code_block -p exercise_2 -i 8
 # Compute localization
 mesh_loc.compute()
 
@@ -201,7 +203,7 @@ The second field interpolation is trickier as you will need the cell->vertex con
 ### Interpolate the first field (cell-based)
 
 ```{code-cell}
-%%code_block -p exercise2 -i 10
+%%code_block -p exercise_2 -i 10
 # Interpolate first field
 src_send_field1 = []
 
@@ -220,7 +222,7 @@ for i_part in range(src_n_part):
 ### Interpolate the second field (node-based)
 
 ```{code-cell}
-%%code_block -p exercise2 -i 11
+%%code_block -p exercise_2 -i 11
 # Interpolate second field
 src_send_field2 = []
 
@@ -259,7 +261,7 @@ Now, use the PartToPart object to exchange the interpolated fields from the sour
 This ParToPart object was built when computing the location and can be accessed from the MeshLocation object
 
 ```{code-cell}
-%%code_block -p exercise2 -i 12
+%%code_block -p exercise_2 -i 12
 # Get PartToPart object
 ptp = mesh_loc.part_to_part_get(0)
 
@@ -290,7 +292,7 @@ Finally, visualize the interpolated target fields.
 (Beware of unlocated points!)
 
 ```{code-cell}
-%%code_block -p exercise2 -i 13
+%%code_block -p exercise_2 -i 13
 # Check interpolated fields
 pis_located = []
 ptgt_field1 = []
@@ -347,7 +349,7 @@ Finalize?
 Moment of truth!
 
 ```{code-cell}
-%merge_code_blocks -l python -p exercise2 -n 2 -c
+%merge_code_blocks -l python -p exercise_2 -n 2 -c
 ```
 
 

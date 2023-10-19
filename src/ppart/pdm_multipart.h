@@ -75,14 +75,14 @@ typedef enum {
 
 /**
  *
- * \brief Build a multipart structure. This method allows to split multiple zone
+ * \brief Build a multipart structure. This method allows to split multiple zones
  *
  * \param [in]   n_zone           Number of zones in the original mesh
- * \param [in]   n_part           Number of partition per proc in each zone
+ * \param [in]   n_part           Number of partition per rank in each zone
  * \param [in]   merge_blocks     Merge or not the zones before splitting
  * \param [in]   split_method     Choice of library used to split the mesh
  * \param [in]   part_size_method Choice of homogeneous or heterogeneous partitions
- * \param [in]   part_weight      Weight (in %) of each partition in heterogeneous case if \ref PDM_part_size_t is set at PDM_PART_SIZE_HETEROGENEOUS
+ * \param [in]   part_weight      Weight (in %) of each partition in heterogeneous case if \p part_size_method is set to \p PDM_PART_SIZE_HETEROGENEOUS
  * \param [in]   comm             PDM_MPI communicator
  *
  * \return     Pointer to a new \ref PDM_multipart_t object
@@ -107,8 +107,8 @@ PDM_multipart_create
  * \brief Set distributed mesh data for the input zone
  *
  * \param [in]   multipart      Pointer to \ref PDM_multipart_t object
- * \param [in]   zone_id        Global zone id
- * \param [in]   dmesh          Pointer on \ref PDM_dmesh_t containaing all distributed connectivities
+ * \param [in]   i_zone         Zone identifier
+ * \param [in]   dmesh          Pointer on \ref PDM_dmesh_t containing all distributed connectivities
  */
 
 void PDM_multipart_register_block
@@ -120,10 +120,10 @@ void PDM_multipart_register_block
 
 /**
  *
- * \brief Set distributed mesh data for the input zone. The mesh is describe by nodal connectiviy
+ * \brief Set distributed mesh data for the input zone. The mesh is described by nodal connectivity
  *
  * \param [in]   multipart      Pointer to \ref PDM_multipart_t object
- * \param [in]   zone_id        Global zone id
+ * \param [in]   i_zone         Zone identifier
  * \param [in]   dmesh_nodal    Pointer on \ref PDM_dmesh_nodal_t
  */
 
@@ -138,27 +138,27 @@ void PDM_multipart_register_dmesh_nodal
  * \brief Set block
  *
  * \param [in]   multipart              Pointer to \ref PDM_multipart_t object
- * \param [in]   i_zone                 Id of zone
+ * \param [in]   i_zone                 Zone identifier
  * \param [in]   dn_cell                Number of distributed cells
  * \param [in]   dn_face                Number of distributed faces
  * \param [in]   dn_vtx                 Number of distributed vertices
  * \param [in]   n_face_group           Number of face groups
  * \param [in]   dcell_face_idx         Distributed cell face connectivity index or NULL
- *                                      (size : dn_cell + 1, numbering : 0 to n-1)
+ *                                      (size : \p dn_cell + 1, numbering : 0 to n-1)
  * \param [in]   dcell_face             Distributed cell face connectivity or NULL
- *                                      (size : dface_vtx_idx[dn_cell], numbering : 1 to n)
+ *                                      (size : \p dface_vtx_idx[\p dn_cell], numbering : 1 to n)
  * \param [in]   dface_cell             Distributed face cell connectivity or NULL
- *                                      (size : 2 * dn_face, numbering : 1 to n)
+ *                                      (size : 2 * \p dn_face, numbering : 1 to n)
  * \param [in]   dface_vtx_idx          Distributed face to vertex connectivity index
- *                                      (size : dn_face + 1, numbering : 0 to n-1)
+ *                                      (size : \p dn_face + 1, numbering : 0 to n-1)
  * \param [in]   dface_vtx              Distributed face to vertex connectivity
- *                                      (size : dface_vtx_idx[dn_face], numbering : 1 to n)
+ *                                      (size : \p dface_vtx_idx[\p dn_face], numbering : 1 to n)
  * \param [in]   dvtx_coord             Distributed vertex coordinates
- *                                      (size : 3*dn_vtx)
+ *                                      (size : 3 * \p dn_vtx)
  * \param [in]   dface_group_idx        Index of distributed faces list of each group
- *                                      (size = n_face_group + 1) or NULL
+ *                                      (size = \p n_face_group + 1) or NULL
  * \param [in]   dface_group            Distributed faces list of each group
- *                                      (size = dface_group[dface_group_idx[n_face_group]], numbering : 1 to n)
+ *                                      (size = \p dface_group[\p dface_group_idx[\p n_face_group]], numbering : 1 to n)
  *                                      or NULL
  *
  */
@@ -188,7 +188,7 @@ PDM_multipart_block_set
  * \param [in]   multipart         Pointer to \ref PDM_multipart_t object
  * \param [in]   n_total_joins     Total number of interfaces
  * \param [in]   join_to_opposite  For each global join id, give the global id
- *                                   of the opposite join (size = n_total_joins)
+ *                                   of the opposite join (size = \p n_total_joins)
  *
  * \note Join global id numbering must start at 0 and be continuous.
  */
@@ -207,8 +207,8 @@ void PDM_multipart_register_joins
  * \param [in]   multipart             Pointer to \ref PDM_multipart_t object
  * \param [in]   i_zone                Id of zone which parameters apply (or -1 for all zones)
  * \param [in]   renum_cell_method     Choice of renumbering method for cells
- * \param [in]   renum_cell_properties Parameters used by cacheblocking method :
- *                                     [n_cell_per_cache_wanted, is_asynchrone, is_vectorisation,
+ * \param [in]   renum_cell_properties Parameters used by cache-blocking method :
+ *                                     [n_cell_per_cache_wanted, is_asynchronous, is_vectorisation,
                                         n_vect_face, split_method]
  * \param [in]   renum_face_method     Choice of renumbering method for faces
  *
@@ -224,7 +224,7 @@ void PDM_multipart_set_reordering_options
 
 /**
  *
- * \brief Set the reordering methods to be used after partitioning
+ * \brief Set the vertex reordering methods to be used after partitioning
  *
  * \param [in]   multipart             Pointer to \ref PDM_multipart_t object
  * \param [in]   i_zone                Id of zone which parameters apply (or -1 for all zones)
@@ -242,7 +242,7 @@ void PDM_multipart_set_reordering_options_vtx
 
 /**
  *
- * \brief Construct the partitioned meshes on every zones
+ * \brief Construct the partitioned meshes on all zones
  *
  * \param [in]   multipart             Pointer to \ref PDM_multipart_t object
  */
@@ -254,12 +254,12 @@ PDM_multipart_run_ppart
 
 
 /**
- * \brief Retreive the partitionned mesh
+ * \brief Retrieve the partitioned nodal mesh
  *
  * \param [in]  multipart             Pointer to \ref PDM_multipart_t object
  * \param [in]  i_zone                Id of zone
- * \param [out] pmesh                 Partitionned mesh
- * \param [in]  ownership             Who is responsible to free retreived data ?
+ * \param [out] pmesh_nodal           Partitioned nodal mesh
+ * \param [in]  ownership             Who is responsible to free retrieved data ?
  *
  */
 
@@ -273,11 +273,11 @@ const int                     i_zone,
 );
 
 /**
- * \brief Retreive the partitionned mesh
+ * \brief Retrieve the partitioned mesh
  *
  * \param [in]  multipart             Pointer to \ref PDM_multipart_t object
  * \param [in]  i_zone                Id of zone
- * \param [out] pmesh                 Partitionned mesh
+ * \param [out] pmesh                 Partitioned mesh
  *
  */
 
@@ -288,6 +288,14 @@ const int                     i_zone,
 //  const int               i_zone,
 //        PDM_part_mesh_t **pmesh
 // );
+
+/**
+ * \brief Specify interface between domain (see \ref PDM_multidomain_interface)
+ *
+ * \param [in]  multipart   Pointer to \ref PDM_multipart_t object
+ * \param [in]  ditrf       Pointer to \ref PDM_domain_interface_t object
+ *
+ */
 
 void
 PDM_multipart_domain_interface_shared_set
@@ -321,13 +329,13 @@ const int        i_part,
 
 /**
  *
- * \brief Returns the connexion graph between partition for the request \ref PDM_bound_type_t
+ * \brief Returns the connection graph between partition for the requested bound type
  * \param [in]  multipart             Pointer to \ref PDM_multipart_t object
  * \param [in]  i_zone                Id of zone
  * \param [in]  i_zone                Id of part
  * \param [in]  bound_type            Bound type
- * \param [out] ppart_bound_proc_idx  Partitioning boundary entities block distribution from processus (size = n_proc + 1)
- * \param [out] ppart_bound_part_idx  Partitioning boundary entities block distribution from partition (size = n_total_part + 1)
+ * \param [out] ppart_bound_proc_idx  Partitioning boundary entities index from process (size = n_proc + 1)
+ * \param [out] ppart_bound_part_idx  Partitioning boundary entities index from partition (size = n_total_part + 1)
  * \param [out] ppart_bound           Partitioning boundary entities (size = 4 * n_entity_part_bound)
  * \param [in]  ownership             Choice of ownership of the resulting arrays \ref PDM_ownership_t
  */
@@ -386,14 +394,17 @@ const int                       i_zone
 );
 
 /**
- * \brief Return size of leading connectivity on current partition ( n_entity )
+ * \brief Get a partitioned connectivity
+ *
  * \param [in]  multipart             Pointer to \ref PDM_multipart_t object
  * \param [in]  i_zone                Id of zone
  * \param [in]  i_part                Id of part
  * \param [in]  connectivity_type     Connectivity kind \ref PDM_connectivity_type_t
- * \param [in]  connect               Connectivity array (size = connect_idx[n_entity] )
- * \param [in]  connect_idx           Connectivity index (size = n_entity+1 )
+ * \param [in]  connect               Connectivity array (size = \p connect_idx[\p n_entity] )
+ * \param [in]  connect_idx           Connectivity index (size = n_entity + 1 )
  * \param [in]  ownership             Choice of ownership of the resulting arrays \ref PDM_ownership_t
+ *
+ * \return Number of leading entities
  */
 int
 PDM_multipart_part_connectivity_get
@@ -409,11 +420,13 @@ const int                       i_part,
 
 
 /**
- * \brief Return size of leading connectivity on current partition ( n_entity )
+ * \brief Get the number of entities with given type.
  * \param [in]  multipart             Pointer to \ref PDM_multipart_t object
  * \param [in]  i_zone                Id of zone
  * \param [in]  i_zone                Id of part
  * \param [in]  entity_type           Entity kind \ref PDM_mesh_entities_t
+ *
+ * \return Number of entities
  */
 int
 PDM_multipart_part_n_entity_get
@@ -426,13 +439,15 @@ const int                   i_part,
 
 /**
  *
- * \brief Return size of entity_type on current partition ( n_entity )
+ * \brief Get the global ids of entities with given type.
  * \param [in]  multipart             Pointer to \ref PDM_multipart_t object
  * \param [in]  i_zone                Id of zone
  * \param [in]  i_part                Id of part
- * \param [in]  entity_type           Entity kind \ref PDM_mesh_entities_t)
+ * \param [in]  entity_type           Entity kind
  * \param [out] entity_ln_to_gn       Entity local numbering to global numbering (size = n_entity, numbering : 1 to n)
- * \param [in]  ownership             Ownership for entity_ln_to_gn ( \ref PDM_ownership_t )
+ * \param [in]  ownership             Ownership for \p entity_ln_to_gn
+ *
+ * \return Number of entities
  */
 int
 PDM_multipart_part_ln_to_gn_get
@@ -448,13 +463,15 @@ const int                   i_part,
 
 /**
  *
- * \brief Return number of entity on current partition ( n_entity )
+ * \brief Get the color of entities with given type.
  * \param [in]  multipart             Pointer to \ref PDM_multipart_t object
  * \param [in]  i_zone                Id of zone
  * \param [in]  i_part                Id of part
- * \param [in]  entity_type           Entity kind \ref PDM_mesh_entities_t)
+ * \param [in]  entity_type           Entity kind
  * \param [out] entity_color          Entity color (only for specific renumbering option )
- * \param [in]  ownership             Ownership for color ( \ref PDM_ownership_t )
+ * \param [in]  ownership             Ownership for \p entity_color
+ *  *
+ * \return Number of entities
  */
 int
 PDM_multipart_partition_color_get
@@ -474,7 +491,7 @@ const int                   i_part,
  * \param [in]  i_zone                Id of zone
  * \param [in]  i_part                Id of part
  * \param [in]  hyperplane_color      Hyperplane color
- * \param [in]  ownership             Ownership for color ( \ref PDM_ownership_t )
+ * \param [in]  ownership             Ownership for \p hyperplane_color
  */
 void
 PDM_multipart_part_hyperplane_color_get
@@ -488,13 +505,13 @@ const int               i_part,
 
 /**
  *
- * \brief Get array containing thread color - Only if specific reordering (in paradigma plugins)
+ * \brief Get array containing thread color - Only if specific reordering (in ParaDiGMA plugins)
  *
  * \param [in]  multipart             Pointer to \ref PDM_multipart_t object
  * \param [in]  i_zone                Id of zone
  * \param [in]  i_part                Id of part
  * \param [in]  thread_color          Thread color
- * \param [in]  ownership             Ownership for color ( \ref PDM_ownership_t )
+ * \param [in]  ownership             Ownership for \p thread_color
  */
 void
 PDM_multipart_part_thread_color_get
@@ -509,13 +526,13 @@ const int               i_part,
 
 /**
  *
- * \brief Get array containing vtx_ghost_information, usefull to have a priority on vertex between 2 partitions
+ * \brief Get array containing vtx_ghost_information, useful to have a priority on vertex between multiple partitions
  *
  * \param [in]  multipart             Pointer to \ref PDM_multipart_t object
  * \param [in]  i_zone                Id of zone
  * \param [in]  i_part                Id of part
- * \param [in]  vtx_ghost_information Integer that give the current priority of vertices on current partitions
- * \param [in]  ownership             Ownership for color ( \ref PDM_ownership_t )
+ * \param [in]  vtx_ghost_information Integer that gives the current priority of vertices on current partitions
+ * \param [in]  ownership             Ownership for \p vtx_ghost_information
  */
 void
 PDM_multipart_part_ghost_infomation_get
@@ -573,7 +590,9 @@ PDM_multipart_free
  * \param [in]   i_zone         Id of current zone
  * \param [in]   i_part         Id of part
  * \param [out]  vtx_coord      Vertex coordinate (size = 3 * n_vtx)
- * \param [in]   ownership      Ownership for color ( \ref PDM_ownership_t )
+ * \param [in]   ownership      Ownership for \p vtx_coord
+ *
+ * \return Number of vertices
  *
  */
 int
@@ -594,12 +613,12 @@ const int                       i_part,
  * \param [in]   multipart      Pointer to \ref PDM_multipart_t object
  * \param [in]   i_zone         Id of current zone
  * \param [in]   i_part         Id of part
- * \param [in]   bound_type     Bound type \ref PDM_bound_type_t
+ * \param [in]   bound_type     Bound type
  * \param [out]  n_bound        Number of bound for bound_type
- * \param [out]  bound_idx      Entity group index (size = n_bound )
- * \param [out]  bound          Entity id for each group (size = bound_idx[n_bound])
- * \param [out]  bound_ln_to_gn Entity global numbering for each group (size = bound_idx[n_bound])
- * \param [in]   ownership      Ownership for color ( \ref PDM_ownership_t )
+ * \param [out]  bound_idx      Entity group index (size = \p n_bound )
+ * \param [out]  bound          Entity id for each group (size = \p bound_idx[\p n_bound])
+ * \param [out]  bound_ln_to_gn Entity global numbering for each group (size = \p bound_idx[\p n_bound])
+ * \param [in]   ownership      Ownership
  *
  */
 void PDM_multipart_bound_get
@@ -620,12 +639,12 @@ void PDM_multipart_bound_get
  *
  * \brief Return statistics
  *
- * \param [in]   ppart                          Pointer to \ref PDM_part object
+ * \param [in]   multipart                      Pointer to \ref PDM_part object
  * \param [out]  cells_average                  average of cells number
  * \param [out]  cells_median                   median of cells number
  * \param [out]  cells_std_deviation            standard deviation of cells number
- * \param [out]  cells_min                      minimum of cells nummber
- * \param [out]  cells_max                      maximum of cells nummber
+ * \param [out]  cells_min                      minimum of cells number
+ * \param [out]  cells_max                      maximum of cells number
  * \param [out]  bound_part_faces_average       average of partitioning boundary faces
  * \param [out]  bound_part_faces_median        median of partitioning boundary faces
  * \param [out]  bound_part_faces_std_deviation standard deviation of partitioning boundary faces

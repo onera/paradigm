@@ -188,11 +188,7 @@ Python API
   Results
   """""""
 
-  .. autofunction:: Pypdm.Pypdm.MeshLocation.n_located_get
-
   .. autofunction:: Pypdm.Pypdm.MeshLocation.located_get
-
-  .. autofunction:: Pypdm.Pypdm.MeshLocation.n_unlocated_get
 
   .. autofunction:: Pypdm.Pypdm.MeshLocation.unlocated_get
 

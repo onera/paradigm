@@ -310,10 +310,10 @@ typedef enum {
  */
 
 typedef enum {
-  PDM_SPLIT_DUAL_WITH_PARMETIS = 1,
-  PDM_SPLIT_DUAL_WITH_PTSCOTCH = 2,
-  PDM_SPLIT_DUAL_WITH_HILBERT  = 3,
-  PDM_SPLIT_DUAL_WITH_IMPLICIT = 4
+  PDM_SPLIT_DUAL_WITH_PARMETIS = 1, /*!< Use the <a href="https://github.com/KarypisLab/ParMETIS">ParMETIS</a> graph partitioning library */
+  PDM_SPLIT_DUAL_WITH_PTSCOTCH = 2, /*!< Use the <a href="https://gitlab.inria.fr/scotch/scotch">PT-Scotch</a> graph partitioning library */
+  PDM_SPLIT_DUAL_WITH_HILBERT  = 3, /*!< Use in-house method based on the <a href="https://en.wikipedia.org/wiki/Hilbert_curve">Hilbert space-filling</a> curve */
+  PDM_SPLIT_DUAL_WITH_IMPLICIT = 4  /*!< Split into contiguous chunks of global ids */
 } PDM_split_dual_t;
 
 /**

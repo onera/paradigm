@@ -8,7 +8,7 @@ from IPython.core.magic import cell_magic, line_magic, Magics, magics_class
 
 
 headers = {
-  "c"       : '#include <stdlib.h>\n#include <stdio.h>\n#include <string.h>\n#include <assert.h>\n#include <math.h>\n\n#include "pdm.h"\n#include "pdm_config.h"\n#include "pdm_mpi.h"\n#include "pdm_printf.h"\n',
+  "c"       : '#include <stdlib.h>\n#include <stdio.h>\n#include <string.h>\n#include <assert.h>\n#include <math.h>\n\n#include "pdm.h"\n#include "pdm_config.h"\n#include "pdm_mpi.h"\n#include "pdm_printf.h"\n#include "pdm_writer_priv.h"\n',
   "fortran" : "",
   "python"  : ""
 }

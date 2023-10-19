@@ -29,26 +29,24 @@ if module_path not in sys.path:
 %reload_ext code_magics
 ```
 
-The goal of this exercise is to get used
-Your job is to fill the code blocks left blank using the API referenced [here](https://numerics.gitlab-pages.onera.net/mesh/paradigm/dev_doc_pretty/user_manual/prepro_algo/index.html#python-api).
+Your job is to fill the code cells left blank using the API referenced [here](https://numerics.gitlab-pages.onera.net/mesh/paradigm/dev_doc_pretty/user_manual/prepro_algo/index.html#python-api).
 
 +++
 
 ## Include the required headers
 
 ```{code-cell}
-%%code_block -p exercise2 -i 1
+%%code_block -p exercise_2 -i 1
 // Required headers
 #include "pdm_generate_mesh.h"
 #include "pdm_mesh_location.h"
-#include "pdm_writer_priv.h"
 
 ```
 
 ## Generate a partitioned "source" mesh
 
 ```{code-cell}
-%%code_block -p exercise2 -i 2
+%%code_block -p exercise_2 -i 2
 int main(int argc, char *argv[])
 {
   PDM_g_num_t src_n_vtx_seg = 10;
@@ -108,7 +106,7 @@ int main(int argc, char *argv[])
 We will use its vertices as a point cloud.
 
 ```{code-cell}
-%%code_block -p exercise2 -i 3
+%%code_block -p exercise_2 -i 3
   int          *tgt_n_vtx         = NULL;
   int          *tgt_n_edge        = NULL;
   int          *tgt_n_face        = NULL;
@@ -149,7 +147,7 @@ We will use its vertices as a point cloud.
 ## Create the `MeshLocation` object
 
 ```{code-cell}
-%%code_block -p exercise2 -i 4
+%%code_block -p exercise_2 -i 4
   // Create the PDM_mesh_location_t object
   PDM_mesh_location_t *mesh_loc = PDM_mesh_location_create(1,
                                                            comm,
@@ -160,7 +158,7 @@ We will use its vertices as a point cloud.
 ## Set the target point cloud
 
 ```{code-cell}
-%%code_block -p exercise2 -i 5
+%%code_block -p exercise_2 -i 5
   // Set target point cloud
   PDM_mesh_location_n_part_cloud_set(mesh_loc,
                                      0,
@@ -182,7 +180,7 @@ Here you have essentially two options :
 - or with "descending" connectivity (i.e. Finite-Volume style)
 
 ```{code-cell}
-%%code_block -p exercise2 -i 6
+%%code_block -p exercise_2 -i 6
   // Set source mesh
   PDM_mesh_location_mesh_n_part_set(mesh_loc, src_n_part);
 
@@ -221,7 +219,7 @@ Here you have essentially two options :
 ## Set some optional parameters
 
 ```{code-cell}
-%%code_block -p exercise2 -i 7
+%%code_block -p exercise_2 -i 7
   // Set the geometric tolerance (optional)
   double tolerance = 1e-3;
   PDM_mesh_location_tolerance_set(mesh_loc, tolerance);
@@ -235,7 +233,7 @@ Here you have essentially two options :
 ## Compute the localization
 
 ```{code-cell}
-%%code_block -p exercise2 -i 8
+%%code_block -p exercise_2 -i 8
   // Compute location
   PDM_mesh_location_compute(mesh_loc);
 
@@ -258,7 +256,7 @@ The second field interpolation is trickier as you will need the cell->vertex con
 ### Interpolate the first field (cell-based)
 
 ```{code-cell}
-%%code_block -p exercise2 -i 10
+%%code_block -p exercise_2 -i 10
   // Interpolate first field (cell-based)
   double **src_send_field1 = malloc(sizeof(double *) * tgt_n_part);
   for (int i_part = 0; i_part < src_n_part; i_part++) {
@@ -299,7 +297,7 @@ The second field interpolation is trickier as you will need the cell->vertex con
 ### Interpolate the second field (node-based)
 
 ```{code-cell}
-%%code_block -p exercise2 -i 11
+%%code_block -p exercise_2 -i 11
   // Interpolate second field (node-based)
   double **src_send_field2 = malloc(sizeof(double *) * tgt_n_part);
   for (int i_part = 0; i_part < src_n_part; i_part++) {
@@ -360,7 +358,7 @@ Now, use the PartToPart object to exchange the interpolated fields from the sour
 This ParToPart object was built when computing the location and can be accessed from the MeshLocation object
 
 ```{code-cell}
-%%code_block -p exercise2 -i 12
+%%code_block -p exercise_2 -i 12
   // Get PartToPart object (it is now owned by the user)
   PDM_part_to_part_t *ptp = NULL;
   PDM_mesh_location_part_to_part_get(mesh_loc,
@@ -411,7 +409,7 @@ Finally, visualize the interpolated target fields.
 (Beware of unlocated points!)
 
 ```{code-cell}
-%%code_block -p exercise2 -i 13
+%%code_block -p exercise_2 -i 13
   double **tgt_field[3];
   tgt_field[0] = malloc(sizeof(double *) * tgt_n_part);
   tgt_field[1] = malloc(sizeof(double *) * tgt_n_part);
@@ -525,7 +523,7 @@ Finally, visualize the interpolated target fields.
 ### Free memory
 
 ```{code-cell}
-%%code_block -p exercise2 -i 14
+%%code_block -p exercise_2 -i 14
   // Free memory
   PDM_mesh_location_free(mesh_loc);
 
@@ -594,7 +592,7 @@ Finally, visualize the interpolated target fields.
 ### Finalize
 
 ```{code-cell}
-%%code_block -p exercise2 -i 15
+%%code_block -p exercise_2 -i 15
   PDM_MPI_Finalize();
 
   if (i_rank == 0) {
@@ -611,7 +609,7 @@ Finally, visualize the interpolated target fields.
 Moment of truth!
 
 ```{code-cell}
-%merge_code_blocks -l c -p exercise2 -n 2 -c
+%merge_code_blocks -l c -p exercise_2 -n 2 -c
 ```
 
 
