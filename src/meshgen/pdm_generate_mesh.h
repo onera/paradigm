@@ -20,11 +20,11 @@ extern "C" {
  * Public function prototypes
  *============================================================================*/
 
-// TO DO: deformation methods on partitionned data(warning for randomization, same seed)
+// TO DO: deformation methods on partitioned data(warning for randomization, same seed)
 
 /**
  *
- * \brief Create a simple partitionned sphere mesh (2D).
+ * \brief Create a simple partitioned sphere mesh (2D).
  *
  * \param [in]   comm        MPI communicator
  * \param [out]  n_vtx       Number of vertices
@@ -48,7 +48,7 @@ PDM_generate_mesh_sphere_simplified
 
 /**
  *
- * \brief Create a simple partitionned rectangle mesh (2D).
+ * \brief Create a simple partitioned rectangle mesh (2D).
  *
  * \param [in]   comm        MPI communicator
  * \param [in]   n_vtx_seg   Number of vertices along each side of the rectangle
@@ -74,7 +74,7 @@ PDM_generate_mesh_rectangle_simplified
 
 /**
  *
- * \brief Create a simple partitionned ball mesh (3D).
+ * \brief Create a simple partitioned ball mesh (3D).
  *
  * \param [in]   comm        MPI communicator
  * \param [out]  n_vtx       Number of vertices
@@ -98,7 +98,7 @@ PDM_generate_mesh_ball_simplified
 
 /**
  *
- * \brief Create a simple partitionned parallelepiped mesh (3D).
+ * \brief Create a simple partitioned parallelepiped mesh (3D).
  *
  * \param [in]   comm        MPI communicator
  * \param [in]   n_vtx_seg   Number of vertices along each side of the parallelepiped
@@ -124,7 +124,7 @@ PDM_generate_mesh_parallelepiped_simplified
 
 /**
  *
- * \brief Create a partitionned sphere mesh (2D).
+ * \brief Create a partitioned sphere mesh (2D).
  *
  * \param [in]  comm        MPI communicator
  * \param [in]  elt_type    Mesh element type
@@ -137,7 +137,7 @@ PDM_generate_mesh_parallelepiped_simplified
  * \param [in]  n_u         Number of points in longitude
  * \param [in]  n_v         Number of points in latitude
  * \param [in]  n_part      Number of mesh partitions
- * \param [in]  part_method Mesh partitionning method
+ * \param [in]  part_method Mesh partitioning method
  *
  * \return PDM_part_mesh_nodal_t
  *
@@ -162,21 +162,21 @@ PDM_generate_mesh_sphere
 
 /**
  *
- * \brief Create a partitionned rectangle mesh (2D).
+ * \brief Create a partitioned rectangle mesh (2D).
  *
  * \param [in]  comm        MPI communicator
  * \param [in]  elt_type    Mesh element type
  * \param [in]  order       Mesh element order
  * \param [in]  ho_ordering High order nodes ordering type
- * \param [in]  xmin        x-coordinate of the rctangle minimum corner
- * \param [in]  ymin        y-coordinate of the rctangle minimum corner
- * \param [in]  zmin        z-coordinate of the rctangle minimum corner
+ * \param [in]  xmin        x-coordinate of the rectangle minimum corner
+ * \param [in]  ymin        y-coordinate of the rectangle minimum corner
+ * \param [in]  zmin        z-coordinate of the rectangle minimum corner
  * \param [in]  lengthx     Length of the rectangle in the x-direction
  * \param [in]  lengthy     Length of the rectangle in the y-direction
  * \param [in]  n_x         Number of points in the x-direction
  * \param [in]  n_y         Number of points in the y-direction
  * \param [in]  n_part      Number of mesh partitions
- * \param [in]  part_method Mesh partitionning method
+ * \param [in]  part_method Mesh partitioning method
  *
  * \return PDM_part_mesh_t or PDM_part_mesh_nodal_t
  *
@@ -202,7 +202,7 @@ PDM_generate_mesh_rectangle
 
 /**
  *
- * \brief Create a partitionned ball mesh (3D).
+ * \brief Create a partitioned ball mesh (3D).
  *
  * \param [in]  comm            MPI communicator
  * \param [in]  elt_type        Mesh element type
@@ -219,7 +219,7 @@ PDM_generate_mesh_rectangle
  * \param [in]  n_layer         Number of extrusion layers
  * \param [in]  geometric_ratio Geometric ratio for layer thickness
  * \param [in]  n_part          Number of mesh partitions
- * \param [in]  part_method     Mesh partitionning method
+ * \param [in]  part_method     Mesh partitioning method
  *
  * \return PDM_part_mesh_t or PDM_part_mesh_nodal_t
  *
@@ -248,15 +248,15 @@ PDM_generate_mesh_ball
 
 /**
  *
- * \brief Create a partitionned parallelepiped mesh (3D).
+ * \brief Create a partitioned parallelepiped mesh (3D).
  *
  * \param [in]  comm        MPI communicator
  * \param [in]  elt_type    Mesh element type
  * \param [in]  order       Mesh element order
  * \param [in]  ho_ordering High order nodes ordering type
- * \param [in]  xmin        x-coordinate of the rctangle minimum corner
- * \param [in]  ymin        y-coordinate of the rctangle minimum corner
- * \param [in]  zmin        z-coordinate of the rctangle minimum corner
+ * \param [in]  xmin        x-coordinate of the rectangle minimum corner
+ * \param [in]  ymin        y-coordinate of the rectangle minimum corner
+ * \param [in]  zmin        z-coordinate of the rectangle minimum corner
  * \param [in]  lengthx     Length of the rectangle in the x-direction
  * \param [in]  lengthy     Length of the rectangle in the y-direction
  * \param [in]  lengthz     Length of the rectangle in the z-direction
@@ -264,7 +264,7 @@ PDM_generate_mesh_ball
  * \param [in]  n_y         Number of points in the y-direction
  * \param [in]  n_z         Number of points in the z-direction
  * \param [in]  n_part      Number of mesh partitions
- * \param [in]  part_method Mesh partitionning method
+ * \param [in]  part_method Mesh partitioning method
  *
  * \return PDM_part_mesh_t or PDM_part_mesh_nodal_t
  *
@@ -293,7 +293,7 @@ PDM_generate_mesh_parallelepiped
 
 /**
  *
- * \brief Create a partitionned rectangle mesh (2D) with descending connectivities.
+ * \brief Create a partitioned rectangle mesh (2D) with descending connectivities.
  *
  * \param [in]   comm           MPI communicator
  * \param [in]   elt_type       Element type
@@ -305,7 +305,7 @@ PDM_generate_mesh_parallelepiped
  * \param [in]   n_x            Number of points in the x-direction
  * \param [in]   n_y            Number of points in the y-direction
  * \param [in]   n_part         Number of partitions
- * \param [in]   part_method    Paritioning method
+ * \param [in]   part_method    Partitioning method
  * \param [in]   pn_vtx         Number of vertices
  * \param [in]   pn_edge        Number of edges
  * \param [in]   pn_face        Number of faces
@@ -349,7 +349,7 @@ PDM_generate_mesh_rectangle_ngon
 
 /**
  *
- * \brief Create a partitionned sphere mesh (2D) with descending connectivities.
+ * \brief Create a partitioned sphere mesh (2D) with descending connectivities.
  *
  * \param [in]   comm           MPI communicator
  * \param [in]   elt_type       Element type
@@ -362,7 +362,7 @@ PDM_generate_mesh_rectangle_ngon
  * \param [in]   n_u            Number of vertices in the u-direction
  * \param [in]   n_v            Number of vertices in the v-direction
  * \param [in]   n_part         Number of partitions
- * \param [in]   part_method    Paritioning method
+ * \param [in]   part_method    Partitioning method
  * \param [in]   pn_vtx         Number of vertices
  * \param [in]   pn_edge        Number of edges
  * \param [in]   pn_face        Number of faces
@@ -370,7 +370,7 @@ PDM_generate_mesh_rectangle_ngon
  * \param [in]   pedge_vtx      edge->vertex connectivity
  * \param [in]   pface_edge_idx Index of face->edge connectivity
  * \param [in]   pface_edge     face->edge connectivity
- * \param [in]   pface_vtx      face->vtx connectivity
+ * \param [in]   pface_vtx      face->vertex connectivity
  * \param [in]   pvtx_ln_to_gn  Vertex global number
  * \param [in]   pedge_ln_to_gn Edge global number
  * \param [in]   pface_ln_to_gn Face global number
@@ -407,7 +407,7 @@ PDM_generate_mesh_sphere_ngon
 
 /**
  *
- * \brief Create a partitionned ball mesh (3D) with descending connectivities.
+ * \brief Create a partitioned ball mesh (3D) with descending connectivities.
  *
  * \param [in]  comm                      MPI communicator
  * \param [in]  elt_type                  Mesh element type
@@ -424,22 +424,22 @@ PDM_generate_mesh_sphere_ngon
  * \param [in]  n_layer                   Number of extrusion layers
  * \param [in]  geometric_ratio           Geometric ratio for layer thickness
  * \param [in]  n_part                    Number of mesh partitions
- * \param [in]  part_method               Mesh partitionning method
+ * \param [in]  part_method               Mesh partitioning method
  * \param [out] pn_vtx                    Number of vertices
  * \param [out] pn_edge                   Number of edges
  * \param [out] pn_face                   Number of faces
  * \param [out] pvtx_coord                Vertex coordinates
- * \param [out] pedge_vtx                 edge->vertex connectivity
+ * \param [out] pedge_vtx                 Edge->vertex connectivity
  * \param [out] pface_edge_idx            Index of face->edge connectivity
- * \param [out] pface_edge                face->edge connectivity
- * \param [out] pface_vtx                face->vtx connectivity
+ * \param [out] pface_edge                Face->edge connectivity
+ * \param [out] pface_vtx                 Face->vertex connectivity
  * \param [out] pvtx_ln_to_gn             Vertex global number
  * \param [out] pedge_ln_to_gn            Edge global number
  * \param [out] pface_ln_to_gn            Face global number
  * \param [out] pn_surface                Number of surfaces
- * \param [out] psurface_face_idx         surface->face connectivity index
- * \param [out] psurface_face             surface->face connectivity
- * \param [out] psurface_face_ln_to_gn    surface->face connectivity with global numbers
+ * \param [out] psurface_face_idx         Surface->face connectivity index
+ * \param [out] psurface_face             Surface->face connectivity
+ * \param [out] psurface_face_ln_to_gn    Surface->face connectivity with global numbers
  *
  */
 
@@ -485,7 +485,7 @@ PDM_generate_mesh_ball_ngon
 
 /**
  *
- * \brief Create a partitionned parallelepiped mesh (3D) with descending connectivities.
+ * \brief Create a partitioned parallelepiped mesh (3D) with descending connectivities.
  *
  * \param [in]  comm                      MPI communicator
  * \param [in]  elt_type                  Mesh element type
@@ -502,26 +502,26 @@ PDM_generate_mesh_ball_ngon
  * \param [in]  n_layer                   Number of extrusion layers
  * \param [in]  geometric_ratio           Geometric ratio for layer thickness
  * \param [in]  n_part                    Number of mesh partitions
- * \param [in]  part_method               Mesh partitionning method
+ * \param [in]  part_method               Mesh partitioning method
  * \param [out] pn_vtx                    Number of vertices
  * \param [out] pn_edge                   Number of edges
  * \param [out] pn_face                   Number of faces
  * \param [out] pvtx_coord                Vertex coordinates
- * \param [out] pedge_vtx                 edge->vertex connectivity
+ * \param [out] pedge_vtx                 Edge->vertex connectivity
  * \param [out] pface_edge_idx            Index of face->edge connectivity
- * \param [out] pface_edge                face->edge connectivity
- * \param [out] pface_vtx                 face->vtx connectivity
+ * \param [out] pface_edge                Face->edge connectivity
+ * \param [out] pface_vtx                 Face->vertex connectivity
  * \param [out] pvtx_ln_to_gn             Vertex global number
  * \param [out] pedge_ln_to_gn            Edge global number
  * \param [out] pface_ln_to_gn            Face global number
  * \param [out] pn_surface                Number of surfaces
- * \param [out] psurface_face_idx         surface->face connectivity index
- * \param [out] psurface_face             surface->face connectivity
- * \param [out] psurface_face_ln_to_gn    surface->face connectivity with global numbers
+ * \param [out] psurface_face_idx         Surface->face connectivity index
+ * \param [out] psurface_face             Surface->face connectivity
+ * \param [out] psurface_face_ln_to_gn    Surface->face connectivity with global numbers
  * \param [out] pn_ridge                  Number of ridges
- * \param [out] pridge_edge_idx           ridge->edge connectivity index
- * \param [out] pridge_edge               ridge->edge connectivity
- * \param [out] pridge_edge_ln_to_gn      ridge->edge connectivity with global numbers
+ * \param [out] pridge_edge_idx           Ridge->edge connectivity index
+ * \param [out] pridge_edge               Ridge->edge connectivity
+ * \param [out] pridge_edge_ln_to_gn      Ridge->edge connectivity with global numbers
  *
  */
 

@@ -611,6 +611,19 @@ Finally, visualize the interpolated target fields.
 
   call writer_wrapper(comm,              &
                       "visu",            &
+                      "src_mesh",        &
+                      src_n_part,        &
+                      src_n_vtx,         &
+                      src_vtx_coord,     &
+                      src_vtx_ln_to_gn,  &
+                      src_n_face,        &
+                      src_face_edge_idx, &
+                      src_face_vtx,      &
+                      src_face_ln_to_gn)
+
+
+  call writer_wrapper(comm,              &
+                      "visu",            &
                       "tgt_mesh",        &
                       tgt_n_part,        &
                       tgt_n_vtx,         &
@@ -656,5 +669,6 @@ Moment of truth!
 
 ```{code-cell}
 %%visualize -nl -sv
+visu/SRC_MESH.case
 visu/TGT_MESH.case : is_located
 ```

@@ -196,7 +196,7 @@ cdef class MultiPart:
         part_fraction    (np.ndarray[np.double_t]) : Weight (in %) of each partition in heterogeneous case if ``part_size_method`` is set to ``PDM_PART_SIZE_HETEROGENEOUS``
         comm             (MPI.Comm)                : MPI communicator
       """
-
+    # ------------------------------------------------------------------
     def __cinit__(self,
                   int                                           n_zone,
                   NPY.ndarray[NPY.int32_t   , mode='c', ndim=1] n_part,

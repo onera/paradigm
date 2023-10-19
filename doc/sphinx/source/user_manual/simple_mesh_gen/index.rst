@@ -9,8 +9,32 @@ Simple mesh generation
 Distributed nodal square/cube
 -----------------------------
 
+C API
+^^^^^
+
 .. doxygenfile:: pdm_dcube_nodal_gen.h
    :project: paradigm
+
+Python API
+^^^^^^^^^^
+
+.. ifconfig:: enable_python_doc == 'ON'
+
+   .. autoclass:: Pypdm.Pypdm.DCubeNodalGenerator
+
+   .. autofunction:: Pypdm.Pypdm.DCubeNodalGenerator.set_ordering
+
+   .. autofunction:: Pypdm.Pypdm.DCubeNodalGenerator.set_random_factor
+
+   .. autofunction:: Pypdm.Pypdm.DCubeNodalGenerator.compute
+
+   .. autofunction:: Pypdm.Pypdm.DCubeNodalGenerator.get_dmesh_nodal
+
+.. ifconfig:: enable_python_doc == 'OFF'
+
+  .. warning::
+    Unavailable (refer to the :ref:`installation guide <enable_python_interface>` to enable the Python API)
+
 
 
 .. _sphere_surf_gen:
