@@ -371,7 +371,7 @@ Now we write the mesh that we just got to be able to visualize it later on (noth
   call PDM_pointer_array_part_set(pcoords, 0, coords)
   call PDM_pointer_array_part_set(pvtx_ln_to_gn, 0, vtx_ln_to_gn)
   call PDM_pointer_array_part_set(pelt_vtx, 0, elt_vtx)
-  call PDM_pointer_array_part_set(pelt_ln_to_gn, 0, cell_ln_to_gn)
+  call PDM_pointer_array_part_set(pelt_ln_to_gn, 0, elt_ln_to_gn)
 
   call writer_wrapper(comm, &
                       "visu", &
