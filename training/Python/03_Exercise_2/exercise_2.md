@@ -193,8 +193,8 @@ mesh_loc.dump_times()
 
 Now that we have located the target points in the source mesh, we can exchange data between the two.
 To complete this exercise, we will interpolate two fields from the source mesh to the target cloud:
-1. a cell-based field: we can simply use the face global ids for such a field, and check it matches the location data.
-2. a node-based field: we can use the node coordinates.
+  1. a cell-based field: we can simply use the face global ids for such a field, and check it matches the location data.
+  2. a node-based field: we can use the node coordinates.
 
 First, compute the spatially interpolated fields on the source side.
 For the first field, the interpolation is straightforward : the target value is simply the same as the host source.
@@ -257,8 +257,8 @@ for i_part in range(src_n_part):
 
 ### Exchange the interpolated fields from source to target
 
-Now, use the PartToPart object to exchange the interpolated fields from the source mesh to the target cloud.
-This ParToPart object was built when computing the location and can be accessed from the MeshLocation object
+Now, use the [`PartToPart`](https://numerics.gitlab-pages.onera.net/mesh/paradigm/dev_doc_pretty/user_manual/comm_graph/ptp.html) object to exchange the interpolated fields from the source mesh to the target cloud.
+This `PartToPart` object was built when computing the location and can be accessed from the `MeshLocation` object.
 
 ```{code-cell}
 %%code_block -p exercise_2 -i 12

@@ -144,7 +144,7 @@ We will use its vertices as a point cloud.
 
 ```
 
-## Create the `MeshLocation` object
+## Create the `PDM_mesh_location_t` object
 
 ```{code-cell}
 %%code_block -p exercise_2 -i 4
@@ -246,8 +246,8 @@ Here you have essentially two options :
 
 Now that we have located the target points in the source mesh, we can exchange data between the two.
 To complete this exercise, we will interpolate two fields from the source mesh to the target cloud:
-1. a cell-based field: we can simply use the face global ids for such a field, and check it matches the location data.
-2. a node-based field: we can use the node coordinates.
+  1. a cell-based field: we can simply use the face global ids for such a field, and check it matches the location data.
+  2. a node-based field: we can use the node coordinates.
 
 First, compute the spatially interpolated fields on the source side.
 For the first field, the interpolation is straightforward : the target value is simply the same as the host source.
@@ -354,12 +354,12 @@ The second field interpolation is trickier as you will need the cell->vertex con
 
 ### Exchange the interpolated fields from source to target
 
-Now, use the PartToPart object to exchange the interpolated fields from the source mesh to the target cloud.
-This ParToPart object was built when computing the location and can be accessed from the MeshLocation object
+Now, use the [`PDM_part_to_part_t`](https://numerics.gitlab-pages.onera.net/mesh/paradigm/dev_doc_pretty/user_manual/comm_graph/ptp.html) object to exchange the interpolated fields from the source mesh to the target cloud.
+This `PDM_part_to_part_t` object was built when computing the location and can be accessed from the `PDM_Mesh_location_t` object.
 
 ```{code-cell}
 %%code_block -p exercise_2 -i 12
-  // Get PartToPart object (it is now owned by the user)
+  // Get PDM_part_to_part_t object (it is now owned by the user)
   PDM_part_to_part_t *ptp = NULL;
   PDM_mesh_location_part_to_part_get(mesh_loc,
                                      0,
@@ -520,7 +520,7 @@ Finally, visualize the interpolated target fields.
 
 ```
 
-### Free memory
+## Free memory
 
 ```{code-cell}
 %%code_block -p exercise_2 -i 14
@@ -589,7 +589,7 @@ Finally, visualize the interpolated target fields.
 ```
 
 
-### Finalize
+## Finalize
 
 ```{code-cell}
 %%code_block -p exercise_2 -i 15

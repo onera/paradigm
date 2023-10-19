@@ -33,7 +33,7 @@ module pdm_writer_wrapper
                              n_face,         &
                              pcell_face_idx, &
                              pcell_face,     &
-                             format,         &
+                             format_opt,     &
                              elt_field,      &
                              vtx_field)
 
@@ -45,27 +45,28 @@ module pdm_writer_wrapper
     character(len = *)                           :: folder
     character(len = *)                           :: file
     integer,          intent(in)                 :: n_part
-    integer(pdm_l_num_s), pointer                :: n_vtx(:)
+    integer(pdm_l_num_s),      pointer           :: n_vtx(:)
     type(PDM_pointer_array_t), pointer           :: pcoords
-    double precision,          pointer           :: coords(:,:)   => null()
     type(PDM_pointer_array_t), pointer           :: pvtx_ln_to_gn
-    integer(pdm_g_num_s),      pointer           :: vtx_ln_to_gn(:)  => null()
-    integer(pdm_l_num_s), pointer                :: n_elt(:)
+    integer(pdm_l_num_s),      pointer           :: n_elt(:)
     type(PDM_pointer_array_t), pointer           :: pelt_vtx_idx
     type(PDM_pointer_array_t), pointer           :: pelt_vtx
-    integer(pdm_l_num_s),      pointer           :: elt_vtx_idx(:)  => null()
-    integer(pdm_l_num_s),      pointer           :: elt_vtx(:)      => null()
     type(PDM_pointer_array_t), pointer           :: pelt_ln_to_gn
-    integer(pdm_g_num_s),      pointer           :: elt_ln_to_gn(:)  => null()
-    integer,          intent(in)                 :: cell_t
-    integer(pdm_l_num_s), pointer                :: n_face(:)
+    integer,          intent(in),       optional :: cell_t
+    integer(pdm_l_num_s),      pointer, optional :: n_face(:)
     type(PDM_pointer_array_t), pointer, optional :: pcell_face_idx
     type(PDM_pointer_array_t), pointer, optional :: pcell_face
-    integer(pdm_l_num_s),      pointer           :: cell_face_idx(:)  => null()
-    integer(pdm_l_num_s),      pointer           :: cell_face(:)      => null()
-    character(len = *)                           :: format
-    type(my_field_t), optional                   :: elt_field(:)
-    type(my_field_t), optional                   :: vtx_field(:)
+    character(len = *),                 optional :: format_opt
+    type(my_field_t),                   optional :: elt_field(:)
+    type(my_field_t),                   optional :: vtx_field(:)
+
+    double precision,          pointer           :: coords(:,:)      => null()
+    integer(pdm_g_num_s),      pointer           :: vtx_ln_to_gn(:)  => null()
+    integer(pdm_l_num_s),      pointer           :: elt_vtx_idx(:)   => null()
+    integer(pdm_l_num_s),      pointer           :: elt_vtx(:)       => null()
+    integer(pdm_g_num_s),      pointer           :: elt_ln_to_gn(:)  => null()
+    integer(pdm_l_num_s),      pointer           :: cell_face_idx(:) => null()
+    integer(pdm_l_num_s),      pointer           :: cell_face(:)     => null()
 
     ! internal
     type(c_ptr)                                  :: wrt = C_NULL_PTR
@@ -79,12 +80,23 @@ module pdm_writer_wrapper
     double precision,          pointer           :: val_gnum(:)      => null()
     double precision,          pointer           :: elt_val(:)       => null()
     double precision,          pointer           :: vtx_val(:)       => null()
+    character(99)                                :: format
 
-    is_3d_nodal = cell_t .ne. -1
+    if (present(cell_t)) then
+      is_3d_nodal = cell_t .ne. -1
+    else
+      is_3d_nodal = .false.
+    endif
     is_2d       = ((.not. present(pcell_face_idx)) .or. (.not. present(pcell_face))).and. (.not. is_3d_nodal)
 
     ! MPI
     call mpi_comm_rank(comm, i_rank, ierr)
+
+    if (present(format_opt)) then
+      format(:) = format_opt(:)
+    else
+      format = "Ensight"
+    endif
 
     call pdm_writer_create(wrt,                      &
                            format,                   &
@@ -183,13 +195,13 @@ module pdm_writer_wrapper
                                          i_part-1,  &
                                          elt_vtx)
 
-         call pdm_writer_geom_faces_facesom_add(wrt,            &
-                                                id_geom,        &
-                                                i_part-1,       &
-                                                n_face(i_part), &
-                                                elt_vtx_idx,    &
-                                                null(),         &
-                                                elt_vtx,        &
+         call pdm_writer_geom_faces_facesom_add(wrt,           &
+                                                id_geom,       &
+                                                i_part-1,      &
+                                                n_elt(i_part), &
+                                                elt_vtx_idx,   &
+                                                null(),        &
+                                                elt_vtx,       &
                                                 elt_ln_to_gn)
       else
         if (is_3d_nodal) then
