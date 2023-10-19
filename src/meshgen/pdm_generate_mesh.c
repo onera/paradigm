@@ -258,6 +258,7 @@ _generate_mesh_rectangle
  PDM_g_num_t             n_y,
  const int               n_part,
  const PDM_split_dual_t  part_method,
+ const double            random_factor,
        PDM_dmesh_nodal_t **dmn,
        PDM_multipart_t   **mpart
 )
@@ -284,7 +285,9 @@ _generate_mesh_rectangle
                                      ho_ordering);
   }
 
-  PDM_dcube_nodal_gen_build (dcube);
+  PDM_dcube_nodal_gen_random_factor_set(dcube, random_factor);
+
+  PDM_dcube_nodal_gen_build(dcube);
 
   *dmn = PDM_dcube_nodal_gen_dmesh_nodal_get(dcube);
 
@@ -797,6 +800,7 @@ PDM_generate_mesh_rectangle
                            n_y,
                            n_part,
                            part_method,
+                           0.,
                            &dmn,
                            &mpart);
 
@@ -855,6 +859,7 @@ PDM_generate_mesh_rectangle_simplified
                            n_vtx_seg,
                            1,
                            PDM_SPLIT_DUAL_WITH_HILBERT,
+                           0.,
                            &dmn,
                            &mpart);
 
@@ -1082,6 +1087,7 @@ PDM_generate_mesh_rectangle_ngon
  const PDM_g_num_t             n_y,
  const int                     n_part,
  const PDM_split_dual_t        part_method,
+ const double                  random_factor,
  int                         **pn_vtx,
  int                         **pn_edge,
  int                         **pn_face,
@@ -1110,6 +1116,7 @@ PDM_generate_mesh_rectangle_ngon
                            n_y,
                            n_part,
                            part_method,
+                           random_factor,
                            &dmn,
                            &mpart);
   PDM_DMesh_nodal_free(dmn);

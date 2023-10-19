@@ -18,6 +18,7 @@ cdef extern from "pdm_generate_mesh.h":
                                         const PDM_g_num_t             n_y,
                                         const int                     n_part,
                                         const PDM_split_dual_t        part_method,
+                                        const double                  random_factor,
                                         int                         **pn_vtx,
                                         int                         **pn_edge,
                                         int                         **pn_face,
@@ -95,21 +96,23 @@ def generate_mesh_rectangle_ngon(MPI.Comm             comm,
                                  PDM_g_num_t          n_x,
                                  PDM_g_num_t          n_y,
                                  int                  n_part,
-                                 PDM_split_dual_t     part_method):
+                                 PDM_split_dual_t     part_method,
+                                 double               random_factor=0):
   """
   Parameters:
-    comm        (MPI.Comm) : MPI communicator
-    elt_type    (int)      : Element type
-    xmin        (double)   : Minimal x-coordinate
-    ymin        (double)   : Minimal y-coordinate
-    zmin        (double)   : Minimal z-coordinate
-    lengthx     (double)   : Length of the rectangle in the x-direction
-    lengthy     (double)   : Length of the rectangle in the y-direction
-    n_x         (int)      : Number of points in the x-direction
-    n_y         (int)      : Number of points in the y-direction
-    n_part      (int)      : Number of partitions
-    part_method (int)      : Paritioning method
-    n_vtx_seg   (int)      : Number of vertices along each side of the rectangle
+    comm          (MPI.Comm) : MPI communicator
+    elt_type      (int)      : Element type
+    xmin          (double)   : Minimal x-coordinate
+    ymin          (double)   : Minimal y-coordinate
+    zmin          (double)   : Minimal z-coordinate
+    lengthx       (double)   : Length of the rectangle in the x-direction
+    lengthy       (double)   : Length of the rectangle in the y-direction
+    n_x           (int)      : Number of points in the x-direction
+    n_y           (int)      : Number of points in the y-direction
+    n_part        (int)      : Number of partitions
+    part_method   (int)      : Paritioning method
+    n_vtx_seg     (int)      : Number of vertices along each side of the rectangle
+    random_factor (double)   : Randomization factor (between 0 and 1, default = 0)
 
   Returns:
     Dictionary
@@ -153,6 +156,7 @@ def generate_mesh_rectangle_ngon(MPI.Comm             comm,
                                    n_y,
                                    n_part,
                                    part_method,
+                                   random_factor,
                                    &_pn_vtx,
                                    &_pn_edge,
                                    &_pn_face,

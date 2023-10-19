@@ -57,17 +57,18 @@ By now, you know how to partition a mesh.
 src_n_vtx_seg = 10
 src_n_part    = 1
 
-src_mesh = PDM.generate_mesh_rectangle_ngon(comm        = comm,
-                                            elt_type    = PDM._PDM_MESH_NODAL_POLY_2D,
-                                            xmin        = 0.,
-                                            ymin        = 0.,
-                                            zmin        = 0.,
-                                            lengthx     = 1.,
-                                            lengthy     = 1.,
-                                            n_x         = src_n_vtx_seg,
-                                            n_y         = src_n_vtx_seg,
-                                            n_part      = src_n_part,
-                                            part_method = PDM._PDM_SPLIT_DUAL_WITH_PARMETIS)
+src_mesh = PDM.generate_mesh_rectangle_ngon(comm          = comm,
+                                            elt_type      = PDM._PDM_MESH_NODAL_POLY_2D,
+                                            xmin          = 0.,
+                                            ymin          = 0.,
+                                            zmin          = 0.,
+                                            lengthx       = 1.,
+                                            lengthy       = 1.,
+                                            n_x           = src_n_vtx_seg,
+                                            n_y           = src_n_vtx_seg,
+                                            n_part        = src_n_part,
+                                            part_method   = PDM._PDM_SPLIT_DUAL_WITH_PARMETIS,
+                                            random_factor = 0.4)
 
 src_n_vtx         = src_mesh["pn_vtx"]         # Number of vertices in each partition
 src_n_face        = src_mesh["pn_face"]        # Number of faces in each partition

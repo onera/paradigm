@@ -139,16 +139,6 @@ _eval_field
 }
 
 
-static inline double
-_rand
-(
- void
- )
-{
-  return 2 * (double) rand() / (double) RAND_MAX - 1;
-}
-
-
 static void
 _visu_2d
 (
@@ -375,6 +365,7 @@ int main(int argc, char *argv[])
                                    src_n_vtx_seg,
                                    src_n_part,
                                    PDM_SPLIT_DUAL_WITH_PARMETIS,
+                                   0.2,
                                    &src_n_vtx,
                                    &src_n_edge,
                                    &src_n_face,
@@ -386,23 +377,6 @@ int main(int argc, char *argv[])
                                    &src_vtx_ln_to_gn,
                                    &src_edge_ln_to_gn,
                                    &src_face_ln_to_gn);
-
-  // -->> TO DO: move to pdm_generate_mesh?
-  /* Randomize the coordinates just for fun */
-  for (int i_part = 0; i_part < src_n_part; i_part++) {
-    for (int i_vtx = 0; i_vtx < src_n_vtx[i_part]; i_vtx++) {
-      // make sure the deformation is consistent for vertices on partition boundaries
-      srand(src_vtx_ln_to_gn[i_part][i_vtx]);
-      for (int i = 0; i < 2; i++) {
-        double x = src_vtx_coord[i_part][3*i_vtx+i];
-        if (x > 1e-6 && x < 1-1e-6) {
-          src_vtx_coord[i_part][3*i_vtx+i] += 0.07*_rand()/(src_n_vtx_seg - 1);
-        }
-      }
-    }
-  }
-  // <<--
-
 
   /*
    * Then we need to generate and partition a target point cloud
@@ -432,6 +406,7 @@ int main(int argc, char *argv[])
                                    tgt_n_vtx_seg,
                                    tgt_n_part,
                                    PDM_SPLIT_DUAL_WITH_HILBERT,
+                                   0.,
                                    &tgt_n_vtx,
                                    &tgt_n_edge,
                                    &tgt_n_face,

@@ -306,6 +306,7 @@ PDM_generate_mesh_parallelepiped
  * \param [in]   n_y            Number of points in the y-direction
  * \param [in]   n_part         Number of partitions
  * \param [in]   part_method    Partitioning method
+ * \param [in]   random_factor  Randomization factor (between 0 and 1)
  * \param [in]   pn_vtx         Number of vertices
  * \param [in]   pn_edge        Number of edges
  * \param [in]   pn_face        Number of faces
@@ -334,6 +335,7 @@ PDM_generate_mesh_rectangle_ngon
  const PDM_g_num_t             n_y,
  const int                     n_part,
  const PDM_split_dual_t        part_method,
+ const double                  random_factor,
  int                         **pn_vtx,
  int                         **pn_edge,
  int                         **pn_face,

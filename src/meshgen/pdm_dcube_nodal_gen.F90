@@ -128,6 +128,18 @@ module pdm_dcube_nodal_gen
 
     end function PDM_dcube_nodal_gen_dmesh_nodal_get_cf
 
+
+    subroutine PDM_dcube_nodal_gen_random_factor_set(dcube, &
+                                                     random_factor) &
+    bind (c, name="PDM_dcube_nodal_gen_random_factor_set")
+      use iso_c_binding
+      implicit none
+
+      type (c_ptr),   value :: dcube
+      real(c_double), value :: random_factor
+
+    end subroutine PDM_dcube_nodal_gen_random_factor_set
+
     !>
     !!
     !! \brief Free the structure

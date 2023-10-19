@@ -184,7 +184,8 @@ program exercise_2
                                         src_face_vtx,                 &
                                         src_vtx_ln_to_gn,             &
                                         src_edge_ln_to_gn,            &
-                                        src_face_ln_to_gn)
+                                        src_face_ln_to_gn,            &
+                                        0.4d0)
 ```
 
 ## Generate a partitioned "target" mesh
