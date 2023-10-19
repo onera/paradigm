@@ -15,9 +15,9 @@ kernelspec:
 
 It's time for some hands on experience with `ParaDiGM`!
 Using the API referenced [here](https://numerics.gitlab-pages.onera.net/mesh/paradigm/dev_doc_pretty/user_manual/prepro_algo/index.html#python-api),
-you will have fill in the code blocks to partition a mesh, i.e. to cut it in subdomains that will be mapped onto the processors of a parallel machine.
+you will have to fill in the code cells to partition a mesh, i.e. to cut it in subdomains that will be mapped onto the processors of a parallel machine.
 In the first section, we generate a block-distributed cube mesh for you. In the next section, you'll start running the partitioning algorithm.
-After that, you will be able to retrieve you the arrays describing the partitionned mesh.
+After that, you will be able to retrieve the arrays describing the partitionned mesh.
 
 +++
 
@@ -51,6 +51,7 @@ In this section, `ParaDiGM` tools are used to generate a simple mesh for this ex
 #include "pdm_array.h"
 #include "pdm_writer.h"
 #include "pdm_part_connectivity_transform.h"
+#include "pdm_part_extension.h"
 
 int main
 (
@@ -427,8 +428,173 @@ Now we write the mesh that we just got to be able to visualize it later on (noth
                 0, // n_vtx_field
                 NULL, // vtx_field_name
                 NULL); // vtx_field_values
+```
+
+## Bonus : Extended partition
+
+If you are reading this, you finished quickly the partitioning exercise. Thus, it means you understood well the 5 step scheme for using `ParaDiGM` features.
+
+*Remark : To do this bonus you need to have retrieved the mesh in descending connectivity. If you haven't done that yet, please comment your
+work on nodal connectivities and get the mesh in descending connectivity first.*
+
+In this bonus, we want to get one layer of extended cells by nodes for our mesh partitions.
+
+Once the partitionned mesh retrieved we can **free** (step 5) the memory allocated for and by the partitioning algorithm.
+
+### Step 1
+
+```{code-cell}
+%%code_block -p exercise_1 -i 14
+
+  PDM_extend_type_t  extend_type = PDM_EXTEND_FROM_VTX;
+  int                depth       = 1;
+  PDM_part_extension_t *part_ext = PDM_part_extension_create(n_zone,
+                                                             &n_part,
+                                                             extend_type,
+                                                             depth,
+                                                             comm,
+                                                             PDM_OWNERSHIP_KEEP);
+```
+
+### Step 2
+
+```{code-cell}
+%%code_block -p exercise_1 -i 15
+
+  int *face_group_idx = malloc(sizeof(int) * (n_face+1));
+  for (int i = 0; i < n_face + 1; i++) {
+    face_group_idx[i] = 0;
+  }
+
+  int *vtx_part_bound_part_idx = malloc(sizeof(int) * (n_part + 2)); // why ??
+  for (int i = 0; i < n_part+2; i++) { // why ??
+    vtx_part_bound_part_idx[i] = 0;
+  }
+  PDM_part_extension_set_part(part_ext,
+                              i_zone,
+                              i_part,
+                              n_cell,
+                              n_face,
+                              0, // n_face_part_bound
+                              0, // n_face_group
+                              n_edge,
+                              n_vtx,
+                              cell_face_idx,
+                              cell_face,
+                              NULL, // face_cell
+                              face_edge_idx,
+                              face_edge,
+                              NULL, // face_vtx_idx
+                              NULL, // face_vtx
+                              edge_vtx,
+                              face_group_idx,
+                              NULL, // face_group
+                              NULL, // face_join_idx
+                              NULL, // face_join
+                              NULL, // face_part_bound_proc_idx
+                              NULL, // face_part_bound_part_idx
+                              NULL, // face_part_bound
+                              NULL, // vtx_part_bound_proc_idx
+                              vtx_part_bound_part_idx,
+                              NULL, // vtx_part_bound
+                              cell_ln_to_gn,
+                              face_ln_to_gn,
+                              edge_ln_to_gn,
+                              vtx_ln_to_gn,
+                              NULL, // face_group_ln_to_gn
+                              coords);
+```
+
+### Step 3
+
+```{code-cell}
+%%code_block -p exercise_1 -i 16
+
+  PDM_part_extension_compute(part_ext);
+```
+
+### Step 4
+
+```{code-cell}
+%%code_block -p exercise_1 -i 17
+
+  // Cell
+  PDM_g_num_t *cell_ln_to_gn_ext = NULL;
+  int n_cell_ext = PDM_part_extension_ln_to_gn_get (part_ext,
+                                                    i_zone,
+                                                    i_part,
+                                                    PDM_MESH_ENTITY_CELL,
+                                                    &cell_ln_to_gn_ext);
+
+  int *cell_face_ext     = NULL;
+  int *cell_face_ext_idx = NULL;
+  PDM_part_extension_connectivity_get (part_ext,
+                                       i_zone,
+                                       i_part,
+                                       PDM_CONNECTIVITY_TYPE_CELL_FACE,
+                                       &cell_face_ext,
+                                       &cell_face_ext_idx);
+
+  // Face
+  PDM_g_num_t *face_ln_to_gn_ext = NULL;
+  int n_face_ext = PDM_part_extension_ln_to_gn_get (part_ext,
+                                                    i_zone,
+                                                    i_part,
+                                                    PDM_MESH_ENTITY_FACE,
+                                                    &face_ln_to_gn_ext);
+
+  int *face_edge_ext     = NULL;
+  int *face_edge_ext_idx = NULL;
+  PDM_part_extension_connectivity_get (part_ext,
+                                       i_zone,
+                                       i_part,
+                                       PDM_CONNECTIVITY_TYPE_FACE_EDGE,
+                                       &face_edge_ext,
+                                       &face_edge_ext_idx);
+
+  // Edge
+  PDM_g_num_t *edge_ln_to_gn_ext = NULL;
+  int n_edge_ext = PDM_part_extension_ln_to_gn_get (part_ext,
+                                                    i_zone,
+                                                    i_part,
+                                                    PDM_MESH_ENTITY_EDGE,
+                                                    &edge_ln_to_gn_ext);
+
+  int *edge_vtx_ext     = NULL;
+  int *edge_vtx_ext_idx = NULL;
+  PDM_part_extension_connectivity_get (part_ext,
+                                       i_zone,
+                                       i_part,
+                                       PDM_CONNECTIVITY_TYPE_EDGE_VTX,
+                                       &edge_vtx_ext,
+                                       &edge_vtx_ext_idx);
+
+  // Vertices
+  PDM_g_num_t *vtx_ln_to_gn_ext = NULL;
+  int n_vtx_ext = PDM_part_extension_ln_to_gn_get (part_ext,
+                                                    i_zone,
+                                                    i_part,
+                                                    PDM_MESH_ENTITY_VERTEX,
+                                                    &vtx_ln_to_gn_ext);
+
+  double *vtx_coord_ext = NULL;
+  PDM_part_extension_coord_get(part_ext,
+                               i_zone,
+                               i_part,
+                               &vtx_coord_ext);
+```
+
+### Step 5
+
+```{code-cell}
+%%code_block -p exercise_1 -i 18
 
   // free
+  PDM_part_extension_free(part_ext);
+
+  free(face_group_idx);
+  free(vtx_part_bound_part_idx);
+
   free(face_vtx_idx);
   free(face_vtx);
   free(vtx_ln_to_gn);
@@ -442,12 +608,6 @@ Now we write the mesh that we just got to be able to visualize it later on (noth
   free(cell_ln_to_gn);
   free(cell_face_idx);
   free(cell_face);
-```
-
-Once the partitionned mesh retrieved we can **free** (step 5) the memory allocated for and by the partitioning algorithm.
-
-```{code-cell}
-%%code_block -p exercise_1 -i 14
 
   // free
   PDM_DMesh_nodal_free(dmn);

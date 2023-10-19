@@ -7,7 +7,7 @@ def run_test():
   import Pypdm.Pypdm as PDM
 
   vtk = 0
-  fe  = 1
+  fe  = 0
 
   # Initialize MPI environment
   comm   = MPI.COMM_WORLD
@@ -141,7 +141,7 @@ def run_test():
     # BONUS
 
     # step 1 : create
-    extend_type = PDM_EXTEND_FROM_VTX
+    extend_type = PDM._PDM_EXTEND_FROM_VTX
     depth       = 1
     part_ext = PDM.PartExtension(n_zone,
                                  np.array([n_part]).astype(np.intc),
@@ -150,8 +150,8 @@ def run_test():
                                  comm)
 
     # step 2 : set
-    face_group_idx =  np.array([0 for i in range(n_face+1)]).astype(NPY.int32_t)
-    vtx_part_bound_part_idx = np.array([0 for i in range(n_part+2)]).astype(NPY.int32_t) # why ??
+    face_group_idx =  np.array([0 for i in range(n_face+1)]).astype(np.intc)
+    vtx_part_bound_part_idx = np.array([0 for i in range(n_part+2)]).astype(np.intc) # why ??
     part_ext.set_part(i_zone,
                       i_part,
                       n_cell,
