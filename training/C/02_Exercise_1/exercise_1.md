@@ -50,7 +50,6 @@ In this section, `ParaDiGM` tools are used to generate a simple mesh for this ex
 #include "pdm_mesh_nodal.h"
 #include "pdm_array.h"
 #include "pdm_writer.h"
-#include "pdm_writer_priv.h"
 #include "pdm_part_connectivity_transform.h"
 
 int main

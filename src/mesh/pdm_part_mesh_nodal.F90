@@ -111,8 +111,8 @@ module PDM_part_mesh_nodal
       type (c_ptr),   value :: pmn
       integer(c_int), value :: i_section, i_part, ownership
 
-      type (c_ptr),   value :: numabs, parent_entity_g_num
-      type (c_ptr),   value :: connec, parent_num
+      type (c_ptr)          :: numabs, parent_entity_g_num
+      type (c_ptr)          :: connec, parent_num
 
     end subroutine PDM_part_mesh_nodal_section_std_get_cf
 

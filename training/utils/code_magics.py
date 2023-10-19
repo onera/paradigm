@@ -32,7 +32,7 @@ language_compiler_e = {
   "python" : None
 }
 
-user = "bandrieu"
+user = "khoogvel"
 pdm_dir   = f"/stck/{user}/workspace/paradigm/paradigm"
 build_dir = f"/stck/{user}/workspace/trainings/build/paradigm"
 

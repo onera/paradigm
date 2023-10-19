@@ -54,6 +54,8 @@ program pdm_t_mesh_partitioning_f
   use pdm_mesh_nodal
   use iso_c_binding
   use pdm_fortran
+  use pdm_writer_wrapper
+  use pdm_part_connectivity_transform
 
   implicit none
 
@@ -126,6 +128,25 @@ program pdm_t_mesh_partitioning_f
   integer(c_int)                     :: n_cell
   integer(kind=PDM_l_num_s), pointer :: cell_face(:)
   integer(kind=PDM_l_num_s), pointer :: cell_face_idx(:)
+
+  ! Visualization
+  integer(pdm_l_num_s), pointer                :: pn_vtx(:)
+  integer(pdm_l_num_s), pointer                :: pn_elt(:)
+  integer(pdm_l_num_s), pointer                :: pn_face(:)
+
+  type(PDM_pointer_array_t), pointer           :: pcoords => null()
+  type(PDM_pointer_array_t), pointer           :: pvtx_ln_to_gn => null()
+  type(PDM_pointer_array_t), pointer           :: pelt_vtx_idx => null()
+  type(PDM_pointer_array_t), pointer           :: pelt_vtx => null()
+  type(PDM_pointer_array_t), pointer           :: pelt_ln_to_gn => null()
+  type(PDM_pointer_array_t), pointer           :: pcell_face_idx => null()
+  type(PDM_pointer_array_t), pointer           :: pcell_face => null()
+
+  type(my_field_t), pointer                    :: elt_field(:) => null()
+  type(my_field_t), pointer                    :: vtx_field(:) => null()
+
+  integer(kind=PDM_l_num_s), pointer           :: face_vtx(:)
+  integer(kind=PDM_l_num_s), pointer           :: face_vtx_idx(:)
   !-----------------------------------------------------------
 
 ```
@@ -280,23 +301,23 @@ Let's start with the vertices composing the subdomain. How many vertices are the
 ```{code-cell}
 %%code_block -p exercise_1 -i 7
 
-  ! call PDM_multipart_part_vtx_coord_get(mpart,              &
-  !                                       i_zone,             &
-  !                                       i_part,             &
-  !                                       coords,             &
-  !                                       PDM_OWNERSHIP_USER, &
-  !                                       n_vtx)
+  call PDM_multipart_part_vtx_coord_get(mpart,              &
+                                        i_zone,             &
+                                        i_part,             &
+                                        coords,             &
+                                        PDM_OWNERSHIP_USER, &
+                                        n_vtx)
 
 
-  ! call PDM_multipart_get_part_mesh_nodal(mpart,  &
-  !                                        i_zone, &
-  !                                        pmn,    &
-  !                                        PDM_OWNERSHIP_USER)
+  call PDM_multipart_get_part_mesh_nodal(mpart,  &
+                                         i_zone, &
+                                         pmn,    &
+                                         PDM_OWNERSHIP_USER)
 
 
-  ! call PDM_part_mesh_nodal_vtx_g_num_get(pmn,    &
-  !                                        i_part, &
-  !                                        vtx_ln_to_gn)
+  call PDM_part_mesh_nodal_vtx_g_num_get(pmn,    &
+                                         i_part, &
+                                         vtx_ln_to_gn)
 
 
 
@@ -310,22 +331,72 @@ To get insight about the concept behind this value you can have a look [here](#A
 ```{code-cell}
 %%code_block -p exercise_1 -i 8
 
-  ! call PDM_part_mesh_nodal_section_n_elt_get(pmn,       &
-  !                                            i_section, &
-  !                                            i_part,    &
-  !                                            n_elt)
+ call PDM_part_mesh_nodal_section_n_elt_get(pmn,       &
+                                            i_section, &
+                                            i_part,    &
+                                            n_elt)
 
-  ! call PDM_part_mesh_nodal_section_std_get(pmn,                 &
-  !                                          i_section,           &
-  !                                          i_part,              &
-  !                                          elt_vtx,             &
-  !                                          elt_ln_to_gn,        &
-  !                                          parent_num,          &
-  !                                          parent_entity_g_num, &
-  !                                          PDM_OWNERSHIP_KEEP)
+ call PDM_part_mesh_nodal_section_std_get(pmn,                 &
+                                          i_section,           &
+                                          i_part,              &
+                                          elt_vtx,             &
+                                          elt_ln_to_gn,        &
+                                          parent_num,          &
+                                          parent_entity_g_num, &
+                                          PDM_OWNERSHIP_KEEP)
 
-  ! call PDM_part_mesh_nodal_free(pmn)
+```
 
+Now we write the mesh that we just got to be able to visualize it later on (nothing to do).
+
+```{code-cell}
+%%code_block -p exercise_1 -i 9
+
+  allocate(pn_vtx(1), &
+           pn_elt(1), &
+           pn_face(1))
+
+  pn_vtx(1)  = n_vtx
+  pn_elt(1)  = n_elt
+  pn_face(1) = 0
+
+  call PDM_pointer_array_create(pcoords, 1, PDM_TYPE_DOUBLE)
+  call PDM_pointer_array_create(pvtx_ln_to_gn, 1, PDM_TYPE_G_NUM)
+  call PDM_pointer_array_create(pelt_vtx_idx, 1, PDM_TYPE_INT)
+  call PDM_pointer_array_create(pelt_vtx, 1, PDM_TYPE_INT)
+  call PDM_pointer_array_create(pelt_ln_to_gn, 1, PDM_TYPE_G_NUM)
+  call PDM_pointer_array_create(pcell_face_idx, 1, PDM_TYPE_INT)
+  call PDM_pointer_array_create(pcell_face, 1, PDM_TYPE_INT)
+
+  call PDM_pointer_array_part_set(pcoords, 0, coords)
+  call PDM_pointer_array_part_set(pvtx_ln_to_gn, 0, vtx_ln_to_gn)
+  call PDM_pointer_array_part_set(pelt_vtx, 0, elt_vtx)
+  call PDM_pointer_array_part_set(pelt_ln_to_gn, 0, cell_ln_to_gn)
+
+  call writer_wrapper(comm, &
+                      "visu", &
+                      "pmesh", &
+                      1,  &
+                      pn_vtx, &
+                      pcoords, &
+                      pvtx_ln_to_gn, &
+                      pn_elt, &
+                      pelt_vtx_idx, &
+                      pelt_vtx, &
+                      pelt_ln_to_gn, &
+                      PDM_WRITER_TETRA4, &
+                      pn_face, &
+                      pcell_face_idx, &
+                      pcell_face, &
+                      "Ensight", &
+                      elt_field, &
+                      vtx_field)
+
+  deallocate(pn_vtx,  &
+             pn_elt,  &
+             pn_face)
+
+  call PDM_part_mesh_nodal_free(pmn)
 ```
 
 ### Descending connectivity (i.e. Finite-Volume style)
@@ -335,50 +406,48 @@ You choose to get the partitioned mesh in descending connectivity, i.e. cell->fa
 Let's start from the top with cell data. How many cells are there? What is their global number? Which faces compose the cells?
 
 ```{code-cell}
-%%code_block -p exercise_1 -i 9
+%%code_block -p exercise_1 -i 10
 
-  call PDM_multipart_part_ln_to_gn_get(mpart,                &
-                                       i_zone,               &
-                                       i_part,               &
-                                       PDM_MESH_ENTITY_CELL, &
-                                       cell_ln_to_gn,        &
-                                       PDM_OWNERSHIP_KEEP,   &
-                                       n_cell)
-
-  call PDM_multipart_part_connectivity_get(mpart,                           &
-                                           i_zone,                          &
-                                           i_part,                          &
-                                           PDM_CONNECTIVITY_TYPE_CELL_FACE, &
-                                           cell_face,                       &
-                                           cell_face_idx,                   &
-                                           PDM_OWNERSHIP_KEEP,              &
-                                           n_cell)
-
-
+!  call PDM_multipart_part_ln_to_gn_get(mpart,                &
+!                                       i_zone,               &
+!                                       i_part,               &
+!                                       PDM_MESH_ENTITY_CELL, &
+!                                       cell_ln_to_gn,        &
+!                                       PDM_OWNERSHIP_KEEP,   &
+!                                       n_cell)
+!
+!  call PDM_multipart_part_connectivity_get(mpart,                           &
+!                                           i_zone,                          &
+!                                           i_part,                          &
+!                                           PDM_CONNECTIVITY_TYPE_CELL_FACE, &
+!                                           cell_face,                       &
+!                                           cell_face_idx,                   &
+!                                           PDM_OWNERSHIP_KEEP,              &
+!                                           n_cell)
 
 ```
 
 For the faces we proceed in a similar way. How many faces are there? What is their global number? Which edges compose the faces?
 
 ```{code-cell}
-%%code_block -p exercise_1 -i 10
+%%code_block -p exercise_1 -i 11
 
-  call PDM_multipart_part_ln_to_gn_get(mpart,                &
-                                       i_zone,               &
-                                       i_part,               &
-                                       PDM_MESH_ENTITY_FACE, &
-                                       face_ln_to_gn,        &
-                                       PDM_OWNERSHIP_KEEP,   &
-                                       n_face)
-
-  call PDM_multipart_part_connectivity_get(mpart,                           &
-                                           i_zone,                          &
-                                           i_part,                          &
-                                           PDM_CONNECTIVITY_TYPE_FACE_EDGE, &
-                                           face_edge,                       &
-                                           face_edge_idx,                   &
-                                           PDM_OWNERSHIP_KEEP,              &
-                                           n_face)
+!  call PDM_multipart_part_ln_to_gn_get(mpart,                &
+!                                       i_zone,               &
+!                                       i_part,               &
+!                                       PDM_MESH_ENTITY_FACE, &
+!                                       face_ln_to_gn,        &
+!                                       PDM_OWNERSHIP_KEEP,   &
+!                                       n_face)
+!
+!  call PDM_multipart_part_connectivity_get(mpart,                           &
+!                                           i_zone,                          &
+!                                           i_part,                          &
+!                                           PDM_CONNECTIVITY_TYPE_FACE_EDGE, &
+!                                           face_edge,                       &
+!                                           face_edge_idx,                   &
+!                                           PDM_OWNERSHIP_KEEP,              &
+!                                           n_face)
 
 ```
 
@@ -388,53 +457,119 @@ Let's do the same for edges. How many edges are there? What is their global numb
 each edge is only composed of two vertices*
 
 ```{code-cell}
-%%code_block -p exercise_1 -i 11
+%%code_block -p exercise_1 -i 12
 
-  call PDM_multipart_part_ln_to_gn_get(mpart,                &
-                                       i_zone,               &
-                                       i_part,               &
-                                       PDM_MESH_ENTITY_EDGE, &
-                                       edge_ln_to_gn,        &
-                                       PDM_OWNERSHIP_KEEP,   &
-                                       n_edge)
-
-  call PDM_multipart_part_connectivity_get(mpart,                          &
-                                           i_zone,                         &
-                                           i_part,                         &
-                                           PDM_CONNECTIVITY_TYPE_EDGE_VTX, &
-                                           edge_vtx,                       &
-                                           edge_vtx_idx,                   &
-                                           PDM_OWNERSHIP_KEEP,             &
-                                           n_edge)
+!  call PDM_multipart_part_ln_to_gn_get(mpart,                &
+!                                       i_zone,               &
+!                                       i_part,               &
+!                                       PDM_MESH_ENTITY_EDGE, &
+!                                       edge_ln_to_gn,        &
+!                                       PDM_OWNERSHIP_KEEP,   &
+!                                       n_edge)
+!
+!  call PDM_multipart_part_connectivity_get(mpart,                          &
+!                                           i_zone,                         &
+!                                           i_part,                         &
+!                                           PDM_CONNECTIVITY_TYPE_EDGE_VTX, &
+!                                           edge_vtx,                       &
+!                                           edge_vtx_idx,                   &
+!                                           PDM_OWNERSHIP_KEEP,             &
+!                                           n_edge)
 
 ```
 
 To finish with, we need to have the description of the vertices.
 
 ```{code-cell}
-%%code_block -p exercise_1 -i 12
+%%code_block -p exercise_1 -i 13
 
-  call PDM_multipart_part_ln_to_gn_get(mpart,                  &
-                                       i_zone,                 &
-                                       i_part,                 &
-                                       PDM_MESH_ENTITY_VERTEX, &
-                                       vtx_ln_to_gn,           &
-                                       PDM_OWNERSHIP_KEEP,     &
-                                       n_vtx)
+!  call PDM_multipart_part_ln_to_gn_get(mpart,                  &
+!                                       i_zone,                 &
+!                                       i_part,                 &
+!                                       PDM_MESH_ENTITY_VERTEX, &
+!                                       vtx_ln_to_gn,           &
+!                                       PDM_OWNERSHIP_KEEP,     &
+!                                       n_vtx)
+!
+!  call PDM_multipart_part_vtx_coord_get(mpart,             &
+!                                       i_zone,             &
+!                                       i_part,             &
+!                                       coords,             &
+!                                       PDM_OWNERSHIP_KEEP, &
+!                                       n_vtx)
 
-  call PDM_multipart_part_vtx_coord_get(mpart,             &
-                                       i_zone,             &
-                                       i_part,             &
-                                       coords,             &
-                                       PDM_OWNERSHIP_KEEP, &
-                                       n_vtx)
+```
 
+Now we write the mesh that we just got to be able to visualize it later on (nothing to do).
+
+```{code-cell}
+%%code_block -p exercise_1 -i 14
+
+!  allocate(pn_vtx(1), &
+!           pn_elt(1), &
+!           pn_face(1))
+
+!  pn_vtx(1)  = n_vtx
+!  pn_elt(1)  = n_cell
+!  pn_face(1) = n_face
+
+!  call PDM_compute_face_vtx_from_face_and_edge(n_face, &
+!                                               face_edge_idx, &
+!                                               face_edge, &
+!                                               edge_vtx, &
+!                                               face_vtx)
+
+!  allocate(face_vtx_idx(n_face+1))
+
+!  do i = 1, n_face+1
+!    face_vtx_idx(i) = 3*(i-1)
+!  end do
+
+!  call PDM_pointer_array_create(pcoords, 1, PDM_TYPE_DOUBLE)
+!  call PDM_pointer_array_create(pvtx_ln_to_gn, 1, PDM_TYPE_G_NUM)
+!  call PDM_pointer_array_create(pelt_vtx_idx, 1, PDM_TYPE_INT)
+!  call PDM_pointer_array_create(pelt_vtx, 1, PDM_TYPE_INT)
+!  call PDM_pointer_array_create(pelt_ln_to_gn, 1, PDM_TYPE_G_NUM)
+!  call PDM_pointer_array_create(pcell_face_idx, 1, PDM_TYPE_INT)
+!  call PDM_pointer_array_create(pcell_face, 1, PDM_TYPE_INT)
+
+!  call PDM_pointer_array_part_set(pcoords, 0, coords)
+!  call PDM_pointer_array_part_set(pvtx_ln_to_gn, 0, vtx_ln_to_gn)
+!  call PDM_pointer_array_part_set(pelt_vtx_idx, 0, face_vtx_idx)
+!  call PDM_pointer_array_part_set(pelt_vtx, 0, face_vtx)
+!  call PDM_pointer_array_part_set(pelt_ln_to_gn, 0, cell_ln_to_gn)
+!  call PDM_pointer_array_part_set(pcell_face_idx, 0, cell_face_idx)
+!  call PDM_pointer_array_part_set(pcell_face, 0, cell_face)
+
+!  call writer_wrapper(comm, &
+!                      "visu", &
+!                      "pmesh", &
+!                      1,  &
+!                      pn_vtx, &
+!                      pcoords, &
+!                      pvtx_ln_to_gn, &
+!                      pn_elt, &
+!                      pelt_vtx_idx, &
+!                      pelt_vtx, &
+!                      pelt_ln_to_gn, &
+!                      -1, &
+!                      pn_face, &
+!                      pcell_face_idx, &
+!                      pcell_face, &
+!                      "Ensight", &
+!                      elt_field, &
+!                      vtx_field)
+
+!  deallocate(pn_vtx,  &
+!             pn_elt,  &
+!             pn_face, &
+!             face_vtx_idx)
 ```
 
 Once the partitionned mesh retrieved we can **free** (step 5) the memory allocated for and by the partitioning algorithm.
 
 ```{code-cell}
-%%code_block -p exercise_1 -i 13
+%%code_block -p exercise_1 -i 15
 
   ! free
   deallocate(n_part, &
