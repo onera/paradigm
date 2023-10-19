@@ -34,6 +34,8 @@ program pdm_t_mesh_partitioning_sol_f
   use pdm_part_extension
   use iso_c_binding
   use pdm_fortran
+  use pdm_writer_wrapper
+  use pdm_part_connectivity_transform
 
   implicit none
 
@@ -149,6 +151,22 @@ program pdm_t_mesh_partitioning_sol_f
   integer                         :: n_vtx_ext
   double precision,     pointer   :: vtx_coord_ext(:,:)   => null()
   integer(PDM_g_num_s), pointer   :: vtx_ln_to_gn_ext(:)  => null()
+
+  ! Visualization
+  integer(pdm_l_num_s), pointer                :: pn_vtx(:)
+  integer(pdm_l_num_s), pointer                :: pn_elt(:)
+  integer(pdm_l_num_s), pointer                :: pn_face(:)
+
+  type(PDM_pointer_array_t), pointer           :: pcoords => null()
+  type(PDM_pointer_array_t), pointer           :: pvtx_ln_to_gn => null()
+  type(PDM_pointer_array_t), pointer           :: pelt_vtx_idx => null()
+  type(PDM_pointer_array_t), pointer           :: pelt_vtx => null()
+  type(PDM_pointer_array_t), pointer           :: pelt_ln_to_gn => null()
+  type(PDM_pointer_array_t), pointer           :: pcell_face_idx => null()
+  type(PDM_pointer_array_t), pointer           :: pcell_face => null()
+
+  type(my_field_t), pointer                    :: elt_field(:) => null()
+  type(my_field_t), pointer                    :: vtx_field(:) => null()
   !-----------------------------------------------------------
 
   ! Initialize MPI environment
@@ -325,6 +343,69 @@ program pdm_t_mesh_partitioning_sol_f
                                              cell_face_idx,                   &
                                              PDM_OWNERSHIP_KEEP,              &
                                              n_cell)
+
+
+
+    allocate(pn_vtx(1), &
+             pn_elt(1), &
+             pn_face(1))
+
+    pn_vtx(1)  = n_vtx
+    pn_elt(1)  = n_cell
+    pn_face(1) = n_face
+
+    call PDM_compute_face_vtx_from_face_and_edge(n_face, &
+                                                 face_edge_idx, &
+                                                 face_edge, &
+                                                 edge_vtx, &
+                                                 face_vtx)
+
+    allocate(face_vtx_idx(n_face+1))
+
+    do i = 1, n_face+1
+      face_vtx_idx(i) = 3*(i-1)
+    end do
+
+    call PDM_pointer_array_create(pcoords, 1, PDM_TYPE_DOUBLE)
+    call PDM_pointer_array_create(pvtx_ln_to_gn, 1, PDM_TYPE_G_NUM)
+    call PDM_pointer_array_create(pelt_vtx_idx, 1, PDM_TYPE_INT)
+    call PDM_pointer_array_create(pelt_vtx, 1, PDM_TYPE_INT)
+    call PDM_pointer_array_create(pelt_ln_to_gn, 1, PDM_TYPE_G_NUM)
+    call PDM_pointer_array_create(pcell_face_idx, 1, PDM_TYPE_INT)
+    call PDM_pointer_array_create(pcell_face, 1, PDM_TYPE_INT)
+
+    call PDM_pointer_array_part_set(pcoords, 0, coords)
+    call PDM_pointer_array_part_set(pvtx_ln_to_gn, 0, vtx_ln_to_gn)
+    call PDM_pointer_array_part_set(pelt_vtx_idx, 0, face_vtx_idx)
+    call PDM_pointer_array_part_set(pelt_vtx, 0, face_vtx)
+    call PDM_pointer_array_part_set(pelt_ln_to_gn, 0, cell_ln_to_gn)
+    call PDM_pointer_array_part_set(pcell_face_idx, 0, cell_face_idx)
+    call PDM_pointer_array_part_set(pcell_face, 0, cell_face)
+
+    call writer_wrapper(comm, &
+                        "visu", &
+                        "pmesh", &
+                        1,  &
+                        pn_vtx, &
+                        pcoords, &
+                        pvtx_ln_to_gn, &
+                        pn_elt, &
+                        pelt_vtx_idx, &
+                        pelt_vtx, &
+                        pelt_ln_to_gn, &
+                        -1, &
+                        pn_face, &
+                        pcell_face_idx, &
+                        pcell_face, &
+                        "Ensight", &
+                        elt_field, &
+                        vtx_field)
+
+    deallocate(pn_vtx,  &
+               pn_elt,  &
+               pn_face, &
+               face_vtx_idx)
+
   end if
 
   ! BONUS
