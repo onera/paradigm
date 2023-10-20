@@ -183,7 +183,7 @@ option(PDM_ENABLE_DOC "Enable Sphinx documentation" OFF)
 # Training Notebooks
 # ------------------
 
-option(PDM_ENABLE_NOTEBOOKS "Enable training Jupyter Notebooks" OFF)
+option(PDM_ENABLE_TRAINING "Enable training Jupyter Notebooks" OFF)
 
 #------------------------------------------------------------------------------
 # Default build : Release
@@ -415,7 +415,9 @@ endif()
 
 add_subdirectory(doc)
 
-add_subdirectory(training)
+if (PDM_ENABLE_TRAINING)
+  add_subdirectory(training)
+endif()  
 
 #------------------------------------------------------------------------------
 # Create PDM_run file

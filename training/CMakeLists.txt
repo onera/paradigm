@@ -1,4 +1,12 @@
-if(PDM_ENABLE_NOTEBOOKS)
+
+  include(check_python_module)
+
+  if (PDM_ENABLE_FORTRAN)
+    check_python_module(sphinxfortran REQUIRED)
+  endif()
+
+  find_package(Jupyter REQUIRED)
+  find_package(Jupytext REQUIRED)
 
   message("Coucou!!!")
 
