@@ -26,7 +26,7 @@ Objectif paralléliser CEDRE et les IO (date?) : pas seulement solveur aussi pre
 Distance aux parois (gains quantitatifs?)
 Besoin bibliothèque géométrique efficace
 
-Eco-système : Cible de la bibliothèque : développeur de code scientifique
+Eco-système : Cible de la bibliothèque : développeur de code scientifique -> parler du man power (DAAA/DMPE)
 Nicolas avec ModeTech : modérniser existant
 Sonics : créer un nouveau code
 Maia: outil pre-post plus haut niveau
@@ -55,13 +55,23 @@ Comment générer la documentation ?
 
 Reprendre les slides de Julien Coulet
 
+### Structures de données
+
+Qu'est-ce qu'un maillage non structuré? Comment on le représente? Présenter la logique des tableaux avec index.
+
 ### Parallel distribué MPI
 
 ### Numérotation absolu
 
-ex : génération de gnum (pas un exercice mais montrer du code)
+ex : génération de gnum (pas un exercice mais montrer du code) -> exposer graph de communication
 
 ### Bloc/Partition
+
+Part_to_part essentiel pour transmettre les résultats avec les données
+-> faire un point intéractif pour bien comprendre le part_to_part : deux nuages de points : dessiner un graphe (nuage 8 et 10 points)
+ -- analogie (facteur et grand-parents)
+ -- les gens dans la salle sont des partitions qui s'échangent un ballon
+ -- exercice Python un peu manuel avec des gnums
 
 ## Eventail des fonctionalités
 
