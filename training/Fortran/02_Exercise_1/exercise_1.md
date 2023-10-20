@@ -146,9 +146,6 @@ program pdm_t_mesh_partitioning_f
   type(my_field_t), pointer                    :: elt_field(:) => null()
   type(my_field_t), pointer                    :: vtx_field(:) => null()
 
-  integer(kind=PDM_l_num_s), pointer           :: face_vtx(:)
-  integer(kind=PDM_l_num_s), pointer           :: face_vtx_idx(:)
-
   ! BONUS
   type(c_ptr)                     :: part_ext = C_NULL_PTR
   integer                         :: extend_type
