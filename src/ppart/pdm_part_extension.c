@@ -151,7 +151,10 @@ _offset_parts_by_domain
       pn_face            [i_domain][i_part] = part_ext->parts[i_domain][i_part].n_face;
       pn_edge            [i_domain][i_part] = part_ext->parts[i_domain][i_part].n_edge;
       pn_vtx             [i_domain][i_part] = part_ext->parts[i_domain][i_part].n_vtx;
-      pn_face_group      [i_domain][i_part] = part_ext->parts[i_domain][i_part].face_bound_idx[part_ext->parts[i_domain][i_part].n_face_group];
+      pn_face_group      [i_domain][i_part] = 0;
+      if (part_ext->parts[i_domain][i_part].n_face_group > 0) {
+        pn_face_group      [i_domain][i_part] = part_ext->parts[i_domain][i_part].face_bound_idx[part_ext->parts[i_domain][i_part].n_face_group];
+      }
 
       cell_ln_to_gn      [i_domain][i_part] = part_ext->parts[i_domain][i_part].cell_ln_to_gn;
       face_ln_to_gn      [i_domain][i_part] = part_ext->parts[i_domain][i_part].face_ln_to_gn;

@@ -84,6 +84,10 @@ module pdm_multipart
     PDM_multipart_bound_get_
   end interface
 
+  interface PDM_multipart_part_graph_comm_get ; module procedure  &
+    PDM_multipart_part_graph_comm_get_
+  end interface
+
 interface
 
   !>
@@ -625,6 +629,35 @@ interface
 
   !>
   !!
+  !! \brief Get the connection graph between partition for the requested bound type
+  !!
+
+  subroutine PDM_multipart_part_graph_comm_get_c (multipart,            &
+                                                  i_zone,               &
+                                                  i_part,               &
+                                                  bound_type,           &
+                                                  ppart_bound_proc_idx, &
+                                                  ppart_bound_part_idx, &
+                                                  ppart_bound,          &
+                                                  ownership)            &
+  bind (c, name='PDM_multipart_part_graph_comm_get')
+
+    use iso_c_binding
+    implicit none
+
+    type(c_ptr),    value  :: multipart
+    integer(c_int), value  :: i_zone
+    integer(c_int), value  :: i_part
+    integer(c_int), value  :: bound_type
+    type(c_ptr)            :: ppart_bound_proc_idx
+    type(c_ptr)            :: ppart_bound_part_idx
+    type(c_ptr)            :: ppart_bound
+    integer(c_int), value  :: ownership
+
+  end subroutine PDM_multipart_part_graph_comm_get_c
+
+  !>
+  !!
   !! \brief Set distributed mesh data for the input zone
   !!
   !! \param [in]   multipart      Pointer to \ref PDM_multipart_t object
@@ -738,7 +771,8 @@ private :: PDM_multipart_create_,&
            PDM_multipart_partition_color_get_,&
            PDM_multipart_part_ghost_infomation_get_,&
            PDM_multipart_part_vtx_coord_get_,&
-           PDM_multipart_bound_get_
+           PDM_multipart_bound_get_,&
+           PDM_multipart_part_graph_comm_get_
 
 contains
 
@@ -1474,5 +1508,81 @@ contains
                      [bound_idx(n_bound+1)])
 
   end subroutine PDM_multipart_bound_get_
+
+  ! Get the connection graph between partition for the requested bound type
+
+  subroutine PDM_multipart_part_graph_comm_get_(multipart,            &
+                                                i_zone,               &
+                                                i_part,               &
+                                                bound_type,           &
+                                                ppart_bound_proc_idx, &
+                                                ppart_bound_part_idx, &
+                                                ppart_bound,          &
+                                                ownership)
+
+    use pdm
+    use iso_c_binding
+    implicit none
+
+    type(c_ptr),               value   :: multipart                     ! Pointer to \ref PDM_multipart_t object
+    integer(c_int),            value   :: i_zone                        ! Id of zone which parameters apply (or -1 for all zones)
+    integer(c_int),            value   :: i_part                        ! Partition index
+    integer(c_int)                     :: bound_type                    ! Boundary type
+    integer(kind=PDM_l_num_s), pointer :: ppart_bound_proc_idx(:)       ! Partitioning boundary entities index from process (size = n_proc + 1)
+    integer(kind=PDM_l_num_s), pointer :: ppart_bound_part_idx(:)       ! Partitioning boundary entities index from partition (size = n_total_part + 1)
+    integer(kind=PDM_l_num_s), pointer :: ppart_bound(:)                ! Partitioning boundary entities (size = 4 * n_entity_part_bound)
+    integer(c_int)                     :: ownership                     ! Data ownership
+
+    type(c_ptr)                        :: c_ppart_bound_proc_idx = C_NULL_PTR
+    type(c_ptr)                        :: c_ppart_bound_part_idx = C_NULL_PTR
+    type(c_ptr)                        :: c_ppart_bound          = C_NULL_PTR
+
+    integer(c_int)                     :: n_cell
+    integer(c_int)                     :: n_face
+    integer(c_int)                     :: n_face_part_bound
+    integer(c_int)                     :: n_vtx
+    integer(c_int)                     :: n_proc
+    integer(c_int)                     :: n_total_part
+    integer(c_int)                     :: s_cell_face
+    integer(c_int)                     :: s_face_vtx
+    integer(c_int)                     :: s_face_bound
+    integer(c_int)                     :: n_bound_groups
+
+    call PDM_multipart_part_graph_comm_get_c(multipart,              &
+                                             i_zone,                 &
+                                             i_part,                 &
+                                             bound_type,             &
+                                             c_ppart_bound_proc_idx, &
+                                             c_ppart_bound_part_idx, &
+                                             c_ppart_bound,          &
+                                             ownership)
+
+    call PDM_multipart_part_dim_get_ (multipart, &
+                                      i_zone, &
+                                      i_part, &
+                                      n_cell, &
+                                      n_face, &
+                                      n_face_part_bound, &
+                                      n_vtx, &
+                                      n_proc, &
+                                      n_total_part, &
+                                      s_cell_face, &
+                                      s_face_vtx, &
+                                      s_face_bound, &
+                                      n_bound_groups)
+
+    call c_f_pointer(c_ppart_bound_proc_idx, &
+                     ppart_bound_proc_idx,   &
+                     [n_proc+1])
+
+    call c_f_pointer(c_ppart_bound_part_idx  , &
+                     ppart_bound_part_idx  ,   &
+                     [n_total_part+1])
+
+    call c_f_pointer(c_ppart_bound, &
+                     ppart_bound,   &
+                     [4 * ppart_bound_part_idx(n_total_part+1)])
+
+  end subroutine PDM_multipart_part_graph_comm_get_
 
 end module pdm_multipart

@@ -422,16 +422,14 @@ program pdm_t_mesh_partitioning_sol_f
                                   PDM_OWNERSHIP_KEEP)
 
   ! step 2 : set
-  allocate(face_group_idx(n_face+1), &
-           vtx_part_bound_part_idx(n_part(i_zone+1)+2)) ! why??
-
-  do i = 1, n_face+1
-    face_group_idx(i) = 0
-  end do
-
-  do i = 1, n_part(i_zone+1)+2 ! why??
-    vtx_part_bound_part_idx(i) = 0
-  end do
+  call PDM_multipart_part_graph_comm_get(mpart,                   &
+                                         i_zone,                  &
+                                         i_part,                  &
+                                         PDM_BOUND_TYPE_VTX,      &
+                                         vtx_part_bound_proc_idx, &
+                                         vtx_part_bound_part_idx, &
+                                         vtx_part_bound,          &
+                                         PDM_OWNERSHIP_KEEP)
 
   call PDM_part_extension_set_part (part_ext,                 &
                                     i_zone,                   &
@@ -539,8 +537,7 @@ program pdm_t_mesh_partitioning_sol_f
 
   ! free
   deallocate(n_part, &
-             part_fraction, &
-             face_group_idx)
+             part_fraction)
   call PDM_DMesh_nodal_free(dmn)
   call PDM_multipart_free(mpart)
 
