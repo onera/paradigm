@@ -292,7 +292,7 @@ cdef class MultiPart:
 
       Parameters:
         n_total_joins (int)                    : Total number of interfaces
-        matching_join (np.ndarray[np.int32_t]) :  For each global join id, give the global id of the opposite
+        matching_join (np.ndarray[np.int32_t]) : For each global join id, give the global id of the opposite
       """
       PDM_multipart_register_joins(       self._mtp,
                                           n_total_joins,
@@ -310,7 +310,7 @@ cdef class MultiPart:
       Parameters:
         i_zone                (int)                    : Id of zone which parameters apply (or -1 for all zones)
         renum_cell_method     (str)                    : Choice of renumbering method for cells
-        renum_cell_properties (np.ndarray[np.int32_t]) : Parameters used by cache-blocking method : ``(n_cell_per_cache_wanted, is_asynchronous, is_vectorisation, n_vect_face, split_method)``
+        renum_cell_properties (np.ndarray[np.int32_t]) : Parameters used by cache-blocking method : (*n_cell_per_cache_wanted*, *is_asynchronous*, *is_vectorisation*, *n_vect_face*, *split_method*)
         renum_face_method     (str)                    : Choice of renumbering method for faces
       """
       cdef int *renum_properties_cell_data
@@ -503,7 +503,7 @@ cdef class MultiPart:
         i_zone (int) : Zone identifier
 
       Returns:
-        Hyperplane color (np.ndarray[np.int32_t])
+        Hyperplane color (`np.ndarray[np.int32_t]`)
       """
       # ************************************************************************
       # > Declaration
@@ -528,7 +528,7 @@ cdef class MultiPart:
         i_zone (int) : Zone identifier
 
       Returns:
-        Thread color (np.ndarray[np.int32_t])
+        Thread color (`np.ndarray[np.int32_t]`)
       """
       # ************************************************************************
       # > Declaration
@@ -554,7 +554,7 @@ cdef class MultiPart:
         i_zone (int) : Zone identifier
 
       Returns:
-        Integer that gives the current priority of vertices on current partitions (np.ndarray[np.int32_t])
+        Integer that gives the current priority of vertices on current partitions (`np.ndarray[np.int32_t]`)
       """
       # ************************************************************************
       # > Declaration
@@ -588,9 +588,9 @@ cdef class MultiPart:
         connectivity_type (PDM_connectivity_type_t) : Connectivity type
 
       Returns:
-        Dictionary:
-          - ``"np_entity1_entity2"``     (np.ndarray[np.int32_t]) : Connectivity array
-          - ``"np_entity1_entity2_idx"`` (np.ndarray[np.int32_t]) : Connectivity index
+        Dictionary
+          - ``"np_entity1_entity2"``     (`np.ndarray[np.int32_t]`) : Connectivity array
+          - ``"np_entity1_entity2_idx"`` (`np.ndarray[np.int32_t]`) : Connectivity index
       """
       # ************************************************************************
       # > Declaration
@@ -635,7 +635,7 @@ cdef class MultiPart:
         entity_type (PDM_entity_type_t) : Entity type
 
       Returns:
-        Global ids (np.ndarray[npy_pdm_gnum_t])
+        Global ids (`np.ndarray[npy_pdm_gnum_t]`)
       """
       # ************************************************************************
       # > Declaration
@@ -664,7 +664,7 @@ cdef class MultiPart:
           i_zone (int) : Zone identifier
 
       Returns:
-        Vertex coordinates (np.ndarray[np.double_t])
+        Vertex coordinates (`np.ndarray[np.double_t]`)
       """
       # ************************************************************************
       # > Declaration
@@ -692,7 +692,7 @@ cdef class MultiPart:
         entity_type (PDM_entity_type_t) : Entity type
 
       Returns:
-        Entity color (np.ndarray[np.int32_t])
+        Entity color (`np.ndarray[np.int32_t]`)
       """
       # ************************************************************************
       # > Declaration
@@ -725,10 +725,10 @@ cdef class MultiPart:
           bound_type (PDM_bound_type_t) : Bound type
 
         Returns:
-          Dictionary:
-            - ``"np_entity_part_bound_proc_idx"`` (np.ndarray[np.int32_t]) : Partitioning boundary entities index from process
-            - ``"np_entity_part_bound_part_idx"`` (np.ndarray[np.int32_t]) : Partitioning boundary entities index from partition
-            - ``"np_entity_part_bound"``          (np.ndarray[np.int32_t]) : Partitioning boundary entities
+          Dictionary
+            - ``"np_entity_part_bound_proc_idx"`` (`np.ndarray[np.int32_t]`) : Partitioning boundary entities index from process
+            - ``"np_entity_part_bound_part_idx"`` (`np.ndarray[np.int32_t]`) : Partitioning boundary entities index from partition
+            - ``"np_entity_part_bound"``          (`np.ndarray[np.int32_t]`) : Partitioning boundary entities
         """
         # ************************************************************************
         # > Declaration

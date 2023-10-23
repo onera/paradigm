@@ -78,12 +78,12 @@ module pdm_mesh_location
   private :: pdm_mesh_location_cloud_set_
   private :: pdm_mesh_location_part_set_
   private :: pdm_mesh_location_part_set_2d_
-  private :: PDM_mesh_location_located_get_
-  private :: PDM_mesh_location_unlocated_get_
-  private :: PDM_mesh_location_point_location_get_
-  private :: PDM_mesh_location_points_in_elt_get_
-  private :: PDM_mesh_location_cell_vertex_get_cptr
-  private :: PDM_mesh_location_cell_vertex_get_f
+  private :: pdm_mesh_location_located_get_
+  private :: pdm_mesh_location_unlocated_get_
+  private :: pdm_mesh_location_point_location_get_
+  private :: pdm_mesh_location_points_in_elt_get_
+  private :: pdm_mesh_location_cell_vertex_get_cptr
+  private :: pdm_mesh_location_cell_vertex_get_f
 
   interface
 
@@ -127,7 +127,7 @@ module pdm_mesh_location
 
       implicit none
 
-      type (c_ptr),   value :: mloc          ! Pointer to PDM_mesh_location object
+      type (c_ptr),   value :: mloc          ! C pointer to PDM_mesh_location_t object
       integer(c_int), value :: i_point_cloud ! Point cloud identifier
       integer(c_int), value :: n_part        ! Number of partitions
 
@@ -480,7 +480,7 @@ module pdm_mesh_location
       implicit none
 
 
-      type (c_ptr),   value :: mloc   ! Pointer to PDM_mesh_location object
+      type (c_ptr),   value :: mloc   ! C pointer to PDM_mesh_location_t object
       integer(c_int), value :: method ! Preconditioning method
 
     end subroutine PDM_mesh_location_method_set
@@ -812,7 +812,7 @@ module pdm_mesh_location
       implicit none
 
 
-      type (c_ptr),   value :: mloc   ! Pointer to PDM_mesh_location object
+      type (c_ptr),   value :: mloc   ! C pointer to PDM_mesh_location_t object
       integer(c_int), value :: icloud ! Point cloud identifier
       type (c_ptr)          :: ptp    ! Pointer to PDM_part_to_part object
       integer(c_int), value :: owner  ! Ownership for ``ptp``
@@ -834,7 +834,7 @@ module pdm_mesh_location
 
   implicit none
 
-  type(c_ptr), intent(out) :: mloc          ! Pointer to PDM_mesh_location object
+  type(c_ptr), intent(out) :: mloc          ! C pointer to PDM_mesh_location_t object
   integer,     intent(in)  :: n_point_cloud ! Number of point clouds
   integer,     intent(in)  :: f_comm        ! Fortran MPI communicator
   integer,     intent(in)  :: owner         ! Ownership
@@ -868,7 +868,7 @@ module pdm_mesh_location
 
     implicit none
 
-    type (c_ptr), intent(in)           :: mloc          ! Pointer to PDM_mesh_location object
+    type (c_ptr), intent(in)           :: mloc          ! C pointer to PDM_mesh_location_t object
     integer, intent(in)                :: i_point_cloud ! Point cloud identifier
     integer, intent(in)                :: i_part        ! Partition identifier
     integer, intent(in)                :: n_points      ! Number of points
@@ -917,7 +917,7 @@ module pdm_mesh_location
 
     implicit none
 
-    type (c_ptr), value                :: mloc             ! Pointer to PDM_mesh_location object
+    type (c_ptr), value                :: mloc             ! C pointer to PDM_mesh_location_t object
     integer, intent(in)                :: i_part           ! Partition identifier
     integer, intent(in)                :: n_cell           ! Number of cells
     integer(kind=pdm_l_num_s), pointer :: cell_face_idx(:) ! Index for cell -> face connectivity (size = ``n_cell`` + 1)
@@ -992,7 +992,7 @@ module pdm_mesh_location
 
     implicit none
 
-    type (c_ptr), value                :: mloc             ! Pointer to PDM_mesh_location object
+    type (c_ptr), value                :: mloc             ! C pointer to PDM_mesh_location_t object
     integer, intent(in)                :: i_part           ! Partition identifier
     integer, intent(in)                :: n_cell           ! Number of cells
     integer(kind=pdm_l_num_s), pointer :: cell_vtx_idx(:)  ! Index for cell -> face connectivity (size = ``n_cell`` + 1)
@@ -1050,7 +1050,7 @@ module pdm_mesh_location
 
     implicit none
 
-    type (c_ptr), value                :: mloc             ! Pointer to PDM_mesh_location object
+    type (c_ptr), value                :: mloc             ! C pointer to PDM_mesh_location_t object
     integer, intent(in)                :: i_part           ! Partition identifier
     integer, intent(in)                :: n_face           ! Number of faces
     integer(kind=pdm_l_num_s), pointer :: face_edge_idx(:) ! Index for face -> edge connectivity (size = ``n_face`` + 1)
@@ -1115,7 +1115,7 @@ module pdm_mesh_location
 
     implicit none
 
-    type (c_ptr), value                :: mloc             ! Pointer to PDM_mesh_location object
+    type (c_ptr), value                :: mloc             ! C pointer to PDM_mesh_location_t object
     integer, intent(in)                :: i_part           ! Partition identifier
     integer, intent(in)                :: n_face           ! Number of faces
     integer(kind=pdm_l_num_s), pointer :: face_vtx_idx(:)  ! Index for face -> vertex connectivity (size = ``n_face`` + 1)
@@ -1167,7 +1167,7 @@ module pdm_mesh_location
 
     implicit none
 
-    type (c_ptr), value :: mloc          ! Pointer to PDM_mesh_location object
+    type (c_ptr), value :: mloc          ! C pointer to PDM_mesh_location_t object
     integer, intent(in) :: i_point_cloud ! Point cloud identifier
     integer, intent(in) :: i_part        ! Partition identifier
     integer, pointer    :: located(:)    ! List of located points
@@ -1205,7 +1205,7 @@ module pdm_mesh_location
 
     implicit none
 
-    type (c_ptr), value :: mloc          ! Pointer to PDM_mesh_location object
+    type (c_ptr), value :: mloc          ! C pointer to PDM_mesh_location_t object
     integer, intent(in) :: i_point_cloud ! Point cloud identifier
     integer, intent(in) :: i_part        ! Partition identifier
     integer, pointer    :: unlocated(:)  ! List of unlocated points
@@ -1246,7 +1246,7 @@ module pdm_mesh_location
     implicit none
 
 
-    type (c_ptr), value                :: mloc                  ! Pointer to PDM_mesh_location object
+    type (c_ptr), value                :: mloc                  ! C pointer to PDM_mesh_location_t object
     integer, intent(in)                :: i_point_cloud         ! Point cloud identifier
     integer, intent(in)                :: i_part                ! Partition identifier
     integer(kind=pdm_g_num_s), pointer :: location(:)           ! Global id of nearest mesh element for located points (size = *n_located*)
@@ -1306,7 +1306,7 @@ module pdm_mesh_location
 
     implicit none
 
-    type (c_ptr), value                :: mloc                         ! Pointer to PDM_mesh_location object
+    type (c_ptr), value                :: mloc                         ! C pointer to PDM_mesh_location_t object
     integer, intent(in)                :: i_point_cloud                ! Point cloud identifier
     integer, intent(in)                :: i_part                       ! Partition identifier
     integer(kind=pdm_l_num_s), pointer :: elt_pts_inside_idx(:)        ! Index for element -> points mapping (size = *n_elt* + 1)
@@ -1428,7 +1428,7 @@ module pdm_mesh_location
     implicit none
 
 
-    type (c_ptr),           value :: mloc            ! Pointer to PDM_mesh_location object
+    type (c_ptr),           value :: mloc            ! C pointer to PDM_mesh_location_t object
     integer(c_int),    intent(in) :: i_part          ! Partition identifier
     integer(pdm_l_num_s), pointer :: cell_vtx_idx(:) ! Index for cell -> vertex connectivity
     integer(pdm_l_num_s), pointer :: cell_vtx(:)     ! Cell -> vertex connectivity

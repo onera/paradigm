@@ -4,124 +4,116 @@
 Simple mesh generation
 ######################
 
-.. _dcube_nodal_gen:
+.. container:: toc-cards
 
-Distributed nodal square/cube
------------------------------
+  .. container:: card
 
-C API
-^^^^^
+    :ref:`Dcube nodal <dcube_nodal>`
+      Generate block-distributed square/cube meshes with nodal connectivity
 
-.. doxygenfile:: pdm_dcube_nodal_gen.h
-   :project: paradigm
 
-Python API
-^^^^^^^^^^
+  .. container:: card
 
-.. ifconfig:: enable_python_doc == 'ON'
-
-   .. autoclass:: Pypdm.Pypdm.DCubeNodalGenerator
-
-   .. autofunction:: Pypdm.Pypdm.DCubeNodalGenerator.set_ordering
-
-   .. autofunction:: Pypdm.Pypdm.DCubeNodalGenerator.set_random_factor
-
-   .. autofunction:: Pypdm.Pypdm.DCubeNodalGenerator.compute
-
-   .. autofunction:: Pypdm.Pypdm.DCubeNodalGenerator.get_dmesh_nodal
-
-.. ifconfig:: enable_python_doc == 'OFF'
-
-  .. warning::
-    Unavailable (refer to the :ref:`installation guide <enable_python_interface>` to enable the Python API)
+    :ref:`Simplified mesh generation <generate_mesh>`
+      Generate simple partitioned meshes in a single function call
 
 
 
-.. _sphere_surf_gen:
+.. toctree::
+  :caption: Simple mesh generation
+  :maxdepth: 1
+  :hidden:
 
-Sphere (surface)
-----------------
+  dcube_nodal
+  generate_mesh
 
-Icosphere
-^^^^^^^^^
+|
 
-.. figure:: ../../../../images/icosphere.png
-   :alt: icosphere meshes
+.. .. _sphere_surf_gen:
 
-   Icosphere meshes with increasing subdivision level (from left to right: *n* = 0, 1, 2, 3, 4).
+.. Sphere (surface)
+.. ----------------
 
+.. Icosphere
+.. ^^^^^^^^^
 
-.. _c_api_icosphere:
+.. .. figure:: ../../../../images/icosphere.png
+..    :alt: icosphere meshes
 
-C API
-"""""
-.. doxygenfunction:: PDM_sphere_surf_icosphere_gen
-
-.. doxygenfunction:: PDM_sphere_surf_icosphere_gen_nodal
-
-.. doxygenfunction:: PDM_sphere_surf_icosphere_gen_part
+..    Icosphere meshes with increasing subdivision level (from left to right: *n* = 0, 1, 2, 3, 4).
 
 
-.. _python_api_icosphere:
+.. .. _c_api_icosphere:
 
-Python API
-""""""""""
+.. C API
+.. """""
+.. .. doxygenfunction:: PDM_sphere_surf_icosphere_gen
 
-.. ifconfig:: enable_python_doc == 'ON'
+.. .. doxygenfunction:: PDM_sphere_surf_icosphere_gen_nodal
 
-  .. autofunction:: Pypdm.Pypdm.sphere_surf_icosphere_gen
+.. .. doxygenfunction:: PDM_sphere_surf_icosphere_gen_part
 
-  .. autofunction:: Pypdm.Pypdm.sphere_surf_icosphere_gen_nodal
 
-  .. autofunction:: Pypdm.Pypdm.sphere_surf_icosphere_gen_part
+.. .. _python_api_icosphere:
 
-.. ifconfig:: enable_python_doc == 'OFF'
+.. Python API
+.. """"""""""
 
-  .. warning::
-    Unavailable (refer to the :ref:`installation guide <enable_python_interface>` to enable the Python API)
+.. .. ifconfig:: enable_python_doc == 'ON'
 
-UV Sphere
-^^^^^^^^^
-.. doxygenfunction:: PDM_sphere_surf_gen
+..   .. autofunction:: Pypdm.Pypdm.sphere_surf_icosphere_gen
 
-.. doxygenfunction:: PDM_sphere_surf_gen_nodal
+..   .. autofunction:: Pypdm.Pypdm.sphere_surf_icosphere_gen_nodal
+
+..   .. autofunction:: Pypdm.Pypdm.sphere_surf_icosphere_gen_part
+
+.. .. ifconfig:: enable_python_doc == 'OFF'
+
+..   .. warning::
+..     Unavailable (refer to the :ref:`installation guide <enable_python_interface>` to enable the Python API)
+
+.. UV Sphere
+.. ^^^^^^^^^
+.. .. doxygenfunction:: PDM_sphere_surf_gen
+
+.. .. doxygenfunction:: PDM_sphere_surf_gen_nodal
 
 
 
 
-.. _sphere_vol_gen:
+.. .. _sphere_vol_gen:
 
-Ball (volume)
--------------
+.. Ball (volume)
+.. -------------
 
-.. doxygenfile:: pdm_sphere_vol_gen.h
-   :project: paradigm
-
-
-.. _poly_vol_gen:
-
-Polyhedral mesh
----------------
-
-.. doxygenfile:: pdm_poly_vol_gen.h
-   :project: paradigm
+.. .. doxygenfile:: pdm_sphere_vol_gen.h
+..    :project: paradigm
 
 
+.. .. _poly_vol_gen:
 
-.. _point_cloud_gen:
+.. Polyhedral mesh
+.. ---------------
 
-Point clouds
-------------
-
-.. doxygenfile:: pdm_point_cloud_gen.h
-   :project: paradigm
+.. .. doxygenfile:: pdm_poly_vol_gen.h
+..    :project: paradigm
 
 
 
-.. _box_gen:
+.. .. _point_cloud_gen:
 
-Box sets
---------
+.. Point clouds
+.. ------------
 
-.. doxygenfile:: pdm_box_gen.h
-   :project: paradigm
+.. .. doxygenfile:: pdm_point_cloud_gen.h
+..    :project: paradigm
+
+
+
+.. .. _box_gen:
+
+.. Box sets
+.. --------
+
+.. .. doxygenfile:: pdm_box_gen.h
+..    :project: paradigm

@@ -404,9 +404,36 @@ fortran_indent = 2
 
 rst_prolog = """
 .. role:: red
+
+.. role:: green
+
+.. role:: largered
+
+.. role:: largegreen
+
+.. |<-| unicode:: U+2190
+
+.. |->| unicode:: U+2192
+
+.. |<->| unicode:: U+2194
+
+.. |space| unicode:: U+0020
+
+.. |ok| replace:: :largegreen:`✔`
+
+.. |ko| replace:: :largered:`✘`
 """
 
 
 def setup(app):
     app.add_config_value('enable_fortran_doc', '@PDM_ENABLE_Fortran@',         'env')
     app.add_config_value('enable_python_doc',  '@PDM_ENABLE_PYTHON_BINDINGS@', 'env')
+
+
+"""
+.. raw:: html
+
+  <style> .large {font-size:110%} </style>
+
+.. role:: large
+"""

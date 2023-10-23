@@ -178,9 +178,6 @@ cdef extern from "pdm_mesh_location.h":
 
 # ------------------------------------------------------------------
 cdef class MeshLocation:
-  """
-  Structure to locate point clouds inside a mesh
-  """
   # ************************************************************************
   # > Class attributes
   cdef PDM_mesh_location_t* _ml
@@ -446,13 +443,13 @@ cdef class MeshLocation:
 
     Set the method for computing location (preconditioning stage)
 
-    Available methods:
+    Parameters:
+      method (int) : Preconditioning method
+
+    Possible values for ``method``:
       - 0 : Use point octree (default method)
       - 1 : Use bounding-box tree
       - 2 : All target points are guaranteed to be located
-
-    Parameters:
-      method (int) : Preconditioning method
     """
     PDM_mesh_location_method_set(self._ml, method)
 
@@ -688,7 +685,7 @@ cdef class MeshLocation:
     """
     part_to_part_get(i_point_cloud)
 
-    Get the :py:class:`PartToPartCapsule` object to exchange data between
+    Get the PartToPart object to exchange data between
     the source mesh and a target point cloud
 
     Parameters:

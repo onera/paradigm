@@ -1,15 +1,15 @@
 .. _gnum:
 
 
-================
+################
 Global numbering
-================
+################
 
 
 .. _gen_gnum:
 
 Global numbering generation
----------------------------
+===========================
 
 **ParaDiGM** relies heavily on the notion of :ref:`global numbering <concept_global_id>`.
 If your code does not use global ids, these can be generated from geometric data.
@@ -20,12 +20,40 @@ Such global numbering is achieved by encoding Cartesian coordinates along the `M
 
 
 C API
-^^^^^
+-----
 
-.. doxygenfile:: pdm_gnum.h
+Initialization
+""""""""""""""
+
+.. doxygenfunction:: PDM_gnum_create
+
+Set inputs
+""""""""""
+
+.. doxygenfunction:: PDM_gnum_set_from_coords
+
+.. doxygenfunction:: PDM_gnum_set_from_parents
+
+.. doxygenfunction:: PDM_gnum_set_parents_nuplet
+
+Build global numbering
+""""""""""""""""""""""
+
+.. doxygenfunction:: PDM_gnum_compute
+
+Get outputs
+"""""""""""
+
+.. doxygenfunction:: PDM_gnum_get
+
+Finalization
+""""""""""""
+
+.. doxygenfunction:: PDM_gnum_free
+
 
 Example
-~~~~~~~
+"""""""
 The following example shows how to build a global numbering from a set of geometric coordinates (extract from the test case ``pdm_t_gen_gnum.c``).
 
 .. code:: c
@@ -71,14 +99,51 @@ The following example shows how to build a global numbering from a set of geomet
 
 
 Fortran API
-^^^^^^^^^^^
+-----------
 
 .. ifconfig:: enable_fortran_doc == 'ON'
 
-  .. f:automodule:: pdm_gnum
+  .. .. f:automodule:: pdm_gnum
+
+  Initialization
+  """"""""""""""
+
+  .. f:autosubroutine:: pdm_gnum_create_
+
+  Set inputs
+  """"""""""
+
+  .. f:autosubroutine:: pdm_gnum_set_from_coords_
+
+  .. f:autosubroutine:: pdm_gnum_set_from_parents_
+
+  .. .. f:autosubroutine:: pdm_gnum_set_parents_nuplet_
+
+  Build global numbering
+  """"""""""""""""""""""
+
+  .. f:subroutine:: pdm_gnum_compute(gen_gnum)
+
+    Build global numbering
+
+    :p c_ptr gen_gnum [in]:  C pointer to PDM_gen_gnum_t object
+
+  Get outputs
+  """""""""""
+
+  .. f:autosubroutine:: pdm_gnum_get_
+
+  Finalization
+  """"""""""""
+
+  .. f:subroutine:: pdm_gnum_free(gen_gnum)
+
+    Free the Global Numbering Generation object
+
+    :p c_ptr gen_gnum [in]:  C pointer to PDM_gen_gnum_t object
 
   Example
-  ~~~~~~~
+  """""""
   The following example shows how to build a global numbering from a set of geometric coordinates.
 
   .. code:: fortran
@@ -93,7 +158,7 @@ Fortran API
     integer                       :: i_part
 
     ! First, create a PDM_gen_gnum_t instance and set some parameters
-    call PDM_gnum_create(gen_gnum,           &
+    call pdm_gnum_create(gen_gnum,           &
                          dim,                &
                          n_part,             &
                          merge,              &
@@ -107,7 +172,7 @@ Fortran API
       ! get coordinates pointer for current partition
       coords = my_data_structure(i_part)%coords
 
-      call PDM_gnum_set_from_coords(gen_gnum,       &
+      call pdm_gnum_set_from_coords(gen_gnum,       &
                                     i_part,         &
                                     n_elts(i_part), &
                                     coords,         &
@@ -115,17 +180,17 @@ Fortran API
     enddo
 
     ! Once all partitions have been set, build the global numbering
-    call PDM_gnum_compute(gen_gnum)
+    call pdm_gnum_compute(gen_gnum)
 
     ! Finally, retrieve the computed global id arrays
     do i_part = 1, n_part
-      call PDM_gnum_get(gen_gnum, &
+      call pdm_gnum_get(gen_gnum, &
                         i_part,   &
                         gnum)
     enddo
 
     ! Deallocate gen_gnum
-    call PDM_gnum_free(gen_gnum)
+    call pdm_gnum_free(gen_gnum)
 
 .. ifconfig:: enable_fortran_doc == 'OFF'
 
@@ -135,15 +200,36 @@ Fortran API
 
 
 Python API
-^^^^^^^^^^
+----------
 
 .. ifconfig:: enable_python_doc == 'ON'
 
+  Initialization
+  """"""""""""""
+
   .. autoclass:: Pypdm.Pypdm.GlobalNumbering
-    :members:
+
+  Set inputs
+  """"""""""
+
+  .. autofunction:: Pypdm.Pypdm.GlobalNumbering.set_from_coords
+
+  .. autofunction:: Pypdm.Pypdm.GlobalNumbering.set_from_parent
+
+  .. autofunction:: Pypdm.Pypdm.GlobalNumbering.set_parents_nuplet
+
+  Build global numbering
+  """"""""""""""""""""""
+
+  .. autofunction:: Pypdm.Pypdm.GlobalNumbering.compute
+
+  Get outputs
+  """""""""""
+
+  .. autofunction:: Pypdm.Pypdm.GlobalNumbering.get
 
   Example
-  ~~~~~~~
+  """""""
   The following example shows how to build a global numbering from a set of geometric coordinates (extract from the test case ``pdm_t_gnum_p.py``).
 
 
@@ -158,25 +244,3 @@ Python API
   .. warning::
     Unavailable (refer to the :ref:`installation guide <enable_python_interface>` to enable the Python API)
 
-
-
-.. _gnum_location:
-
-Location from global ids
-------------------------
-
-Retrieve the location triplet *(rank, part id, local id)* of all instances of an entity identified by its global id.
-*(schéma ?)*
-
-.. doxygenfile:: pdm_gnum_location.h
-   :project: paradigm
-
-
-
-.. _global_reduction:
-
-Reduction operations
---------------------
-
-.. doxygenfile:: pdm_global_reduce.h
-  :project: paradigm

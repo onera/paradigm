@@ -53,12 +53,12 @@ User manual
     ..   :target: user_manual/simple_mesh_gen/index.html
 
     :ref:`Simple mesh generation <simple_mesh_gen>`
-      Automatic generation of distributed meshes with simple shapes
+      Automatic generation of meshes with simple parametrable shapes
 
 
   .. container:: card
 
-    :ref:`Partitioning <api_partitioning>`
+    :ref:`Partitioning <partitioning>`
       Graph partitioning, connectivity reconstruction, partition extension and local renumbering
 
 
@@ -70,14 +70,8 @@ User manual
 
   .. container:: card
 
-    Connectivity transformation?
-      Utilities for processing unstructured mesh connectivities (partitioned and distributed)
-
-
-  .. container:: card
-
     :ref:`Global numbering <gnum>`
-      Global ID generation & reduction operations
+      Global ID generation
 
 
   .. container:: card
@@ -120,7 +114,7 @@ User manual
    :hidden:
 
    user_manual/simple_mesh_gen/index
-   api/partitionning.rst
+   user_manual/partitioning/index
    user_manual/comm_graph/index
    user_manual/gnum/index
    user_manual/prepro_algo/index

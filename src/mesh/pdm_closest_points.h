@@ -83,7 +83,7 @@ PDM_closest_points_create
  *
  * \param [in]   cls               Pointer to \ref PDM_closest_points_t object
  * \param [in]   n_part_cloud_src  Number of partitions of the source cloud
- * \param [in]   n_part_cloud_tgt  Number of partitions od the target cloud
+ * \param [in]   n_part_cloud_tgt  Number of partitions of the target cloud
  *
  */
 

@@ -510,7 +510,12 @@ module pdm_generate_mesh
                                               pedge_ln_to_gn, &
                                               pface_ln_to_gn, &
                                               random_factor_opt)
-    ! Create a partitionned rectangle mesh (2D) with descending connectivities.
+    ! Create a partitioned rectangular mesh (2D) with descending connectivities
+    !
+    ! Possible values for ``elt_type``:
+    !   - ``PDM_MESH_NODAL_TRIA3``   : triangles
+    !   - ``PDM_MESH_NODAL_QUAD4``   : quadrangles
+    !   - ``PDM_MESH_NODAL_POLY_2D`` : mixed polygons (triangles, quadrangles and octagons)
     use iso_c_binding
     implicit none
 
@@ -524,7 +529,7 @@ module pdm_generate_mesh
     integer(pdm_g_num_s), intent(in)           :: n_x               ! Number of points in the x-direction
     integer(pdm_g_num_s), intent(in)           :: n_y               ! Number of points in the y-direction
     integer(c_int),       intent(in)           :: n_part            ! Number of partitions
-    integer(c_int),       intent(in)           :: part_method       ! Paritioning method
+    integer(c_int),       intent(in)           :: part_method       ! Partitioning method
     integer(pdm_l_num_s),      pointer         :: pn_vtx(:)         ! Number of vertices
     integer(pdm_l_num_s),      pointer         :: pn_edge(:)        ! Number of edges
     integer(pdm_l_num_s),      pointer         :: pn_face(:)        ! Number of faces

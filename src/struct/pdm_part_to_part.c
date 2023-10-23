@@ -3418,11 +3418,11 @@ PDM_part_to_part_ineighbor_alltoall_wait
 
 /**
  *
- * \brief Get referenced gnum2 elements
+ * \brief Get referenced Part2 elements
  *
- * \param [in]   ptp           Block to part structure
- * \param [out]  n_ref_lnum2   Number of referenced gnum2
- * \param [out]  ref_lnum2     Referenced gnum2
+ * \param [in]   ptp           Part-to-Part structure
+ * \param [out]  n_ref_lnum2   Number of referenced Part2 elements
+ * \param [out]  ref_lnum2     Referenced Part2 elements (one-based local ids)
  *
  */
 
@@ -3441,11 +3441,11 @@ PDM_part_to_part_ref_lnum2_get
 
 /**
  *
- * \brief Get unreferenced gnum2 elements
+ * \brief Get unreferenced Part2 elements
  *
- * \param [in]   ptp           Block to part structure
- * \param [out]  n_unref_lnum2   Number of referenced gnum2
- * \param [out]  unref_lnum2     Referenced gnum2
+ * \param [in]   ptp             Part-to-Part structure
+ * \param [out]  n_unref_lnum2   Number of referenced Part2 elements
+ * \param [out]  unref_lnum2     Unreferenced Part2 elements (one-based local ids)
  *
  */
 

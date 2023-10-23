@@ -7,18 +7,21 @@ Coding rules & guidelines
 Structure
 ---------
 
-The API of each algorithm is in 5 steps :
-- create : initialize the structure associated to the feature
-- set : provide the data necessary for the algorithm to the structure
-- compute : run the algorithm
-- get : retrieve the output data
-- free : free the memory of the feature structure
+Most features in ParaDiGM are structured as the following five steps:
 
-When data needs to be exchanged at the end of the algorithm, a getter has to be provided on the ``part_to_part``
-associated to the feature. Data related to the exchange can be getted directly in the ``part_to_part``.
+  1. **create**  : initialize the structure associated to the feature
+  2. **set**     : provide the input data to the structure
+  3. **compute** : run the algorithm
+  4. **get**     : retrieve the output data
+  5. **free**    : free the memory of the feature structure
 
-In any case, a feature should take into account a mesh with several partition (``n_part > 1``). Adk J. Coulet and B. Maugars, if
-you want to know whether you should handle several zones.
+Some features consist in establishing a communication graph between entities distributed on different processes.
+This communication graph is in the form of a :ref:`Part-to-Part <ptp>` object.
+This Part-to-Part object holds everything the user needs for addressing arrays both on the sender and receive side (except from the geometric mapping data).
+Therefore, Part-to-Part accessors should always be used instead of adding redundant "src_to_tgt(_idx)_get" or "tgt_to_src(_idx)_get" functions.
+
+All features should support meshes with several partitions per MPI rank (``n_part > 1``).
+Ask J. Coulet and B. Maugars if you want to know whether you should handle several zones.
 
 Indentation
 -----------
@@ -35,13 +38,35 @@ Python class names follow the ``CamelCase`` convention.
 .. Function names should respect the following templates:
 .. ...
 
-Signature
----------
+Function signatures
+-------------------
 
-In a functions signature, always put the *something*_idx argument before the *something*.
+In functions signatures featuring a connectivity and its index, always put the index argument before the connectivity argument:
 
-Documentation
--------------
+.. list-table::
+  :widths: 50 50
+  :header-rows: 1
 
-Add with an array is 0 or 1-based in the function signature documentation. If it is 0-based, refer to it as ID rather than number.
+  * - |ok| Do
+    - |ko| Don't
+  * - .. code:: c
+
+        my_function(...,
+                    connect_idx,
+                    connect,
+                    ...);
+    - .. code:: c
+
+        my_function(...,
+                    connect,
+                    connect_idx,
+                    ...);
+
+
+0-based vs 1-based integer arrays
+---------------------------------
+
+All arrays with values that are addressable indices should be documented as being 0-based or 1-based in comments as well as in functions signatures.
+
+.. Add with an array is 0 or 1-based in the function signature documentation. If it is 0-based, refer to it as ID rather than number.
 

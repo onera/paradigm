@@ -69,10 +69,10 @@ typedef enum {
  *
  * \brief Create a Partition-to-Partition redistribution from global ids
  *
- * \param [in]   gnum_elt1          Element global numbers in Part1 (size : \p n_part1)
+ * \param [in]   gnum_elt1          Element global ids in Part1 (size : \p n_part1)
  * \param [in]   n_elt1             Local number of elements in Part1 (size : \p n_part1)
  * \param [in]   n_part1            Number of partitions in Part1
- * \param [in]   gnum_elt2          Element global numbers in Part2 (size : \p n_part2)
+ * \param [in]   gnum_elt2          Element global ids in Part2 (size : \p n_part2)
  * \param [in]   n_elt2             Local number of elements in Part2 (size : \p n_part2)
  * \param [in]   n_part2            Number of partitions in Part2
  * \param [in]   part1_to_part2_idx Index for Part1->Part2 mapping <br>
@@ -311,7 +311,7 @@ PDM_part_to_part_part1_to_part2_get
  *
  * \param [in]   ptp           Part-to-Part structure
  * \param [out]  n_ref_lnum2   Number of referenced Part2 elements
- * \param [out]  ref_lnum2     Referenced Part2 elements (zero-based local ids)
+ * \param [out]  ref_lnum2     Referenced Part2 elements (one-based local ids)
  *
  */
 
@@ -330,7 +330,7 @@ PDM_part_to_part_ref_lnum2_get
  *
  * \param [in]   ptp             Part-to-Part structure
  * \param [out]  n_unref_lnum2   Number of referenced Part2 elements
- * \param [out]  unref_lnum2     Referenced Part2 elements (zero-based local ids)
+ * \param [out]  unref_lnum2     Unreferenced Part2 elements (one-based local ids)
  *
  */
 

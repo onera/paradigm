@@ -3,6 +3,9 @@
 Part to Part
 ============
 
+C API
+-----
+
 Initialization
 """"""""""""""
 
@@ -32,24 +35,79 @@ Exchange
 
 .. doxygenfunction:: PDM_part_to_part_reverse_iexch_wait
 
-.. doxygenfunction:: PDM_part_to_part_issend
+.. .. doxygenfunction:: PDM_part_to_part_issend
 
-.. doxygenfunction:: PDM_part_to_part_issend_wait
+.. .. doxygenfunction:: PDM_part_to_part_issend_wait
 
-.. doxygenfunction:: PDM_part_to_part_reverse_issend
+.. .. doxygenfunction:: PDM_part_to_part_reverse_issend
 
-.. doxygenfunction:: PDM_part_to_part_reverse_issend_wait
+.. .. doxygenfunction:: PDM_part_to_part_reverse_issend_wait
 
-.. doxygenfunction:: PDM_part_to_part_irecv
+.. .. doxygenfunction:: PDM_part_to_part_irecv
 
-.. doxygenfunction:: PDM_part_to_part_irecv_wait
+.. .. doxygenfunction:: PDM_part_to_part_irecv_wait
 
-.. doxygenfunction:: PDM_part_to_part_reverse_irecv
+.. .. doxygenfunction:: PDM_part_to_part_reverse_irecv
 
-.. doxygenfunction:: PDM_part_to_part_reverse_irecv_wait
+.. .. doxygenfunction:: PDM_part_to_part_reverse_irecv_wait
 
 
 Finalization
 """"""""""""
 
 .. doxygenfunction:: PDM_part_to_part_free
+
+
+
+Fortran API
+-----------
+
+.. ifconfig:: enable_fortran_doc == 'ON'
+
+  .. todo::
+    ...
+
+.. ifconfig:: enable_fortran_doc == 'OFF'
+
+  .. warning::
+    Unavailable (refer to the :ref:`installation guide <enable_fortran_interface>` to enable the Fortran API)
+
+
+
+Python API
+----------
+
+.. ifconfig:: enable_python_doc == 'ON'
+
+  Initialization
+  """"""""""""""
+
+  .. autoclass:: Pypdm.Pypdm.PartToPart
+
+
+  Information on Part 2 side
+  """"""""""""""""""""""""""
+
+  .. autofunction:: Pypdm.Pypdm.PartToPart.get_referenced_lnum2
+
+  .. autofunction:: Pypdm.Pypdm.PartToPart.get_unreferenced_lnum2
+
+  .. autofunction:: Pypdm.Pypdm.PartToPart.get_gnum1_come_from
+
+
+  Exchange
+  """"""""
+
+  .. autofunction:: Pypdm.Pypdm.PartToPart.iexch
+
+  .. autofunction:: Pypdm.Pypdm.PartToPart.wait
+
+  .. autofunction:: Pypdm.Pypdm.PartToPart.reverse_iexch
+
+  .. autofunction:: Pypdm.Pypdm.PartToPart.reverse_wait
+
+
+.. ifconfig:: enable_python_doc == 'OFF'
+
+  .. warning::
+    Unavailable (refer to the :ref:`installation guide <enable_python_interface>` to enable the Python API)

@@ -50,6 +50,12 @@ cdef extern from "pdm_part_to_part.h":
                                         int                ***ref_lnum2);
     # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
+    # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+    void PDM_part_to_part_unref_lnum2_get(PDM_part_to_part_t   *ptp,
+                                          int                 **n_unref_lnum2,
+                                          int                ***unref_lnum2);
+    # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
 
     # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
     void PDM_part_to_part_reverse_iexch(PDM_part_to_part_t             *ptp,
@@ -146,6 +152,10 @@ cdef class PartToPartCapsule:
     return get_referenced_lnum2(self)
 
   # --------------------------------------------------------------------
+  def get_unreferenced_lnum2(self):
+    return get_unreferenced_lnum2(self)
+
+  # --------------------------------------------------------------------
   def get_gnum1_come_from(self):
     return get_gnum1_come_from(self)
 
@@ -192,9 +202,6 @@ cdef class PartToPartCapsule:
 # ========================================================================
 # ------------------------------------------------------------------------
 cdef class PartToPart:
-  """
-     PartToPart: Interface for block_to_part.c
-  """
   # ************************************************************************
   # > Class attributes
   cdef public:
@@ -211,6 +218,26 @@ cdef class PartToPart:
   cdef dict                        request_data
   cdef MPI.Comm                    py_comm
   # ************************************************************************
+  # ------------------------------------------------------------------
+  # Fake init (Use only for docstring)
+  def __init__(self, MPI.Comm comm,
+               list part1_ln_to_gn,
+               list part2_ln_to_gn,
+               list part1_to_part2_idx,
+               list part1_to_part2):
+    """
+    __init__(comm, part1_ln_to_gn, part2_ln_to_gn, part1_to_part2_idx, part1_to_part2)
+
+    Create a Part-to-Part redistribution from global ids
+
+    Parameters:
+      comm               (MPI.Comm)                               : MPI communicator
+      part1_ln_to_gn     (`list` of `np.ndarray[npy_pdm_gnum_t]`) : Element global ids in Part1
+      part2_ln_to_gn     (`list` of `np.ndarray[npy_pdm_gnum_t]`) : Element global ids in Part2
+      part1_to_part2_idx (`list` of `np.ndarray[np.int32_t]`)     : Index for Part1->Part2 mapping
+      part1_to_part2     (`list` of `np.ndarray[npy_pdm_gnum_t]`) : Part1->Part2 mapping (global ids)
+    """
+
   # ------------------------------------------------------------------------
   def __cinit__(self, MPI.Comm comm,
                       list part1_ln_to_gn,
@@ -255,10 +282,34 @@ cdef class PartToPart:
 
   # --------------------------------------------------------------------
   def get_referenced_lnum2(self):
+    """
+    Get referenced Part2 elements
+
+    Returns:
+      Referenced Part2 elements (one-based local ids) (`list` of `np.ndarray[np_int32_t]`)
+    """
     return get_referenced_lnum2(self)
 
   # --------------------------------------------------------------------
+  def get_unreferenced_lnum2(self):
+    """
+    Get unreferenced Part2 elements
+
+    Returns:
+      Unreferenced Part2 elements (one-based local ids) (`list` of `np.ndarray[np_int32_t]`)
+    """
+    return get_unreferenced_lnum2(self)
+
+  # --------------------------------------------------------------------
   def get_gnum1_come_from(self):
+    """
+    Get Part2->Part1 mapping for referenced Part2 elements
+
+    Returns:
+      Dictionary
+        - ``"come_from_idx"`` (`list` of `np.ndarray[np.int32_t]`)     : Index for Part2->Part1 mapping
+        - ``"come_from"``     (`list` of `np.ndarray[npy_pdm_gnum_t]`) : Part2->Part1 mapping (global ids)
+    """
     return get_gnum1_come_from(self)
 
   # --------------------------------------------------------------------
@@ -268,10 +319,48 @@ cdef class PartToPart:
             list                        part1_data,
             part1_stride=1,
             bint interlaced_str=True):
+    """
+    iexch(k_comm, t_part1_data_def, part1_data, part1_stride=1, interlaced_str=True)
+
+    Initiate a non-blocking exchange (Part1->Part2)
+
+    Parameters:
+      k_comm           (int)                       : Kind of MPI communication
+      t_part1_data_def (int)                       : Kind of Part1 data definition
+      part1_data       (list)                      : Part1 data
+      part1_stride     (`int` or `list, optional`) : Stride of Part1 data
+      interlaced_str   (bool, optional)            : Is the data interlaced? (default = **True**)
+
+    Returns:
+      Request ID (`int`)
+
+    Possible values for ``k_comm``:
+      - 0 : Peer-to-peer (``MPI_issend``/``MPI_irecv``)
+      - 1 : Collective (``MPI_Ialltoall`` and alike)
+
+    .. note::
+      Additional communication kinds will be available in the future
+
+    Possible values for ``t_part1_data_def``:
+      - 0 : Data defined according to the `part1` arrays order
+      - 1 : Data defined according to the `part1_to_part2` arrays order
+    """
     return iexch( self, k_comm, t_part1_data_def,part1_data,part1_stride,interlaced_str)
 
   # --------------------------------------------------------------------
   def wait(self, int request_id):
+    """
+    wait(request_id)
+
+    Finalize a non-blocking exchange (Part1->Part2)
+
+    Parameters:
+      request_id (int) : Request ID
+
+    Returns:
+      - Part2 stride (same dtype as ``part1_stride`` in :py:func:`iexch`)
+      - Part2 data   (`list` of same dtype as ``part1_data`` in :py:func:`iexch`)
+    """
     return wait(self,request_id)
 
   # --------------------------------------------------------------------
@@ -281,10 +370,47 @@ cdef class PartToPart:
                     list                        part2_data,
                     part2_stride=1,
                     bint interlaced_str=True):
+    """
+    reverse_iexch(k_comm, t_part2_data_def, part2_data, part2_stride=1, interlaced_str=True)
+
+    Initiate a non-blocking exchange (Part2->Part1)
+
+    Parameters:
+      k_comm           (int)                       : Kind of MPI communication
+      t_part2_data_def (int)                       : Kind of Part2 data definition
+      part2_data       (list)                      : Part2 data
+      part2_stride     (`int` or `list, optional`) : Stride of Part2 data
+      interlaced_str   (bool, optional)            : Is the data interlaced? (default = **True**)
+
+    Returns:
+      Request ID (`int`)
+
+    Possible values for ``k_comm``:
+      - 0 : Peer-to-peer (``MPI_issend``/``MPI_irecv``)
+
+    .. note::
+      Additional communication kinds will be available in the future
+
+    Possible values for ``t_part2_data_def``:
+      - 2 : Data defined according to the `part2` arrays order
+      - 3 : Data defined according to the `gnum1_come_from` arrays order
+    """
     return reverse_iexch(self, k_comm, t_part2_data_def, part2_data, part2_stride, interlaced_str)
 
   # --------------------------------------------------------------------
   def reverse_wait(self, int request_id):
+    """
+    reverse_wait(request_id)
+
+    Finalize a non-blocking exchange (Part2->Part1)
+
+    Parameters:
+      request_id (int) : Request ID
+
+    Returns:
+      - Part1 stride (same dtype as ``part2_stride`` in :py:func:`reverse_iexch`)
+      - Part1 data   (`list` of same dtype as ``part2_data`` in :py:func:`reverse_iexch`)
+    """
     return reverse_wait(self, request_id)
   
   # --------------------------------------------------------------------
@@ -330,6 +456,20 @@ def get_referenced_lnum2(PyPartToPart pyptp):
     np_ref_lnum2_id = create_numpy_i(ref_lnum2[i_part], n_ref_lnum2[i_part], flag_owndata=False)
     lnp_ref_lnum2.append(NPY.copy(np_ref_lnum2_id))
   return lnp_ref_lnum2
+
+# ------------------------------------------------------------------------
+def get_unreferenced_lnum2(PyPartToPart pyptp):
+  """ Return a copy of the local unreferenced ids for each part2 partition """
+  cdef int  *n_unref_lnum2 = NULL;
+  cdef int **unref_lnum2   = NULL;
+  PDM_part_to_part_unref_lnum2_get(pyptp.ptp,
+                                 &n_unref_lnum2,
+                                 &unref_lnum2);
+  lnp_unref_lnum2 = list()
+  for i_part in range(pyptp.n_part2):
+    np_unref_lnum2_id = create_numpy_i(unref_lnum2[i_part], n_unref_lnum2[i_part], flag_owndata=False)
+    lnp_unref_lnum2.append(NPY.copy(np_unref_lnum2_id))
+  return lnp_unref_lnum2
 
 # ------------------------------------------------------------------------
 def get_gnum1_come_from(PyPartToPart pyptp):

@@ -3,22 +3,23 @@
 Bibliography
 ============
 
-"It's not about aptitude. It's about attitude." Masayuki Yano
+*"It's not about aptitude. It's about attitude."* Masayuki Yano
 
 Generating the first mesh
 -------------------------
 
 To adapt a mesh, you need a mesh. Here are several suggested tools:
-- vizir4 : C. Peyret uses this tool from INRIA-GAMMA but mainly on Mac (Linux and Windows versions are delayed)
-- GMSH : C. Benazet and B. Maugars use the Python API of GMSH (maintaining the group information)
+
+  - vizir4 + EGADS : C. Peyret uses this tool from INRIA-GAMMA but mainly on Mac (Linux and Windows versions are delayed)
+  - GMSH : C. Benazet and B. Maugars use the Python API of GMSH (maintaining the group information)
 
 Metric
 ------
 
-The metric field is a field of (mesh dimension x mesh dimension) matrices defined at each vertex.
+The metric field is a field of (mesh dimension :math:`\times` mesh dimension) matrices defined at each vertex.
 This field will allow us to compute the edge length for that given metric and determine whether it is "too long" or "too short".
 
-The metric length in a Riemanian metric space is computed for a segment as :math:`\mathbf{ab} = [\mathbf{a}, \mathbf{b}]` as such :math:`t \in [0,1]`
+The metric length in a Riemannian metric space is computed for a segment as :math:`\mathbf{ab} = [\mathbf{a}, \mathbf{b}]` as such :math:`t \in [0,1]`
 let :math:`l_{\mathcal{M}}(\mathbf{ab}) = \int_{0}^{1} \sqrt{\mathbf{ab}^{T}\mathcal{M}(\mathbf{a}+t\mathbf{ab})\mathbf{ab}} dt`.
 
 Usual operations on metrics are interpolation (when a new point is inserted) and intersection (several metrics defined at a given point).
@@ -34,32 +35,33 @@ Metric aligned
 --------------
 
 Taking the orthogonal of the metric allows the edges to be aligned with main
-direction of the hessian. It is supposed to havec the same effect has prism
+direction of the hessian. It is supposed to have the same effect has prism
 layers in the boundary layer. According to [1] it is supposed to improve
-numerical results but according to J. Vanharen it turns out not to be that usefull in practice.
+numerical results but according to J. Vanharen it turns out not to be that useful in practice.
 
 Error Estimate
 --------------
 
-On could want the surface triangulation to be an acurate approximation of the smooth boundary of the geometry.
-To mesure that a geometric error estimates is used. [2] suggested to evaluate the Hausdorff distance between those two surfaces.
+On could want the surface triangulation to be an accurate approximation of the smooth boundary of the geometry.
+To measure that a geometric error estimates is used. [2] suggested to evaluate the Hausdorff distance between those two surfaces.
 
 To reduce the computational effort and obtain a more accurate result, we want to minimize the difference between
-the solution to the PDE (a priori estimate) and the finite element approximation (a posteriori
-estimate).  More details on a posteriori error estimats can be found in "Theory and Practice of Finite Elements" in
+the solution to the PDE (*a priori* estimate) and the finite element approximation (*a posteriori*
+estimate).  More details on *a posteriori* error estimates can be found in "Theory and Practice of Finite Elements" in
 section 10 on "A Posteriori Error Estimates and Adaptive Meshes".
 
 F. Alauzet provides more details on metric based error estimates aiming to mesure the interpolation error in [3] and [4].
-Special attention is givent to this topic in section 4 of the PhD thesis of L. Fraza [5].
+Special attention is given to this topic in section 4 of the PhD thesis of L. Fraza [5].
 
 Scheduling
 ----------
 
-A. Loseille schedules his operations as :
-- collapse (create a unit mesh)
-- split (create a unit mesh)
-- swap (improve the mesh quality)
-- smooth (improve the mesh quality)
+A. Loseille schedules his operations as:
+
+  - collapse (create a unit mesh)
+  - split (create a unit mesh)
+  - swap (improve the mesh quality)
+  - smooth (improve the mesh quality)
 
 Int his PhD thesis [6], P. Caplan suggests to interleave swaps within
 the collapse and split operators to weave out of restrictive (geometry or
@@ -68,22 +70,23 @@ visibility-related) topological configurations.
 Cavity operator
 ---------------
 
-Loseille developped a way of abstracting remeshing operations in a unique way : the cavity operator [7].
+Loseille developed a way of abstracting remeshing operations in a unique way : the cavity operator [7].
 
 Swap
 ----
 
 It is either used when the degree at a vertex is too high (output edges from that vertex) or the element quality too poor.
-[8] H. Rakotoarivelo (with F. Ledoux at CEA) decides to focus on lowering the vertex gedree since it improves numerical
+[8] H. Rakotoarivelo (with F. Ledoux at CEA) decides to focus on lowering the vertex degree since it improves numerical
 interpolation (stability and precision) and deals with element quality at the smoothing step.
-The following allows to determine the optimal degree : :math:`min_{T_{h}}R(T_{h}) = min_{T_{h}} \left\lVert d - d^{*} \right\rVert_{2} = min_{(P, M, n)} (\sum_{i=1}^{n} (d[p_{i}] - d^{*})^{\frac{1}{2}}`
+The following allows to determine the optimal degree : :math:`\min_{T_{h}}R(T_{h}) = \min_{T_{h}} \left\lVert d - d^{*} \right\rVert_{2} = \min_{(P, M, n)} \sum_{i=1}^{n} \left(d[p_{i}] - d^{*}\right)^{\frac{1}{2}}`
 
 According to [8], no method exists to find a global optimum (5-6-7 scheme, puzzle solving). He chooses operate iteratively, by swapping an edge (his tool is 2D only):
-- if the degree of the 4 vertices is in mean value reduced
-- if the quality of the worst element is improved
-- if the deviation of the elements with respect to the tangent planes is no more a given angle
 
-Instead of looping over vertices and handeling the linked edges, Rakotoarivelo loops over element pairs (ridges are ignored).
+  - if the degree of the 4 vertices is in mean value reduced
+  - if the quality of the worst element is improved
+  - if the deviation of the elements with respect to the tangent planes is no more a given angle
+
+Instead of looping over vertices and handling the linked edges, Rakotoarivelo loops over element pairs (ridges are ignored).
 
 Smoothing
 ---------
@@ -94,34 +97,34 @@ H. Rakotoarivelo, chooses to do Laplacian smoothing and upon failure solve an op
 Projection
 ----------
 
-Projections upon BREPs created by proprietary CAD sofware is prone to error since model continuity is only enforced up to a tolerance
+Projections upon BREPs created by proprietary CAD software is prone to error since model continuity is only enforced up to a tolerance
 often higher than required mesh sizes. :math:`P^{3}` meshes are the first degree for which :math:`G^{1}` continuity at vertices may be enforced.
-In [9], two methodes to construct a :math:`P^{3}` from a $P^{1}$ mesh are studied.
+In [9], two methods to construct a :math:`P^{3}` from a :math:`P^{1}` mesh are studied.
 The first is to initialize the Lagrange nodes of each element at the straight position in physical space.
 These points are then projected onto the surface using the CAD model.
 The second approach evaluates the Lagrange nodes on CAD faces directly.
 The last optional step is to apply a Lagrange-to-Bézier transformation since the Bézier representation is a more convenient and generalizable one.
-This approach does not garantee to be :math:`G^{1}` continuous contrarily to the approach chosen in MMG [10], the tangent plane method [11].
+This approach does not guarantee to be :math:`G^{1}` continuous contrarily to the approach chosen in MMG [10], the tangent plane method [11].
 Still, [9] consider :math:`G^{1}` continuity not mandatory after benchmark results. Here we talk about :math:`G^{1}` at vertices and not at edges.
-Indeed [8], higlights in his PhD thesis that the tangent plane method is compute efficient but it does not garantee the unicity of tangent planes
+Indeed [8], highlights in his PhD thesis that the tangent plane method is compute efficient but it does not guarantee the unicity of tangent planes
 of the points on the boundary of the high-order element reconstruction.
 To enforce precision and regularity (:math:`G^{1}` continuity at vertices and edges), he uses a quadratic spline patch representation.
 To interconnect patches he builds a Gregory patch by blending twists points [12].
-This is usefull for projections in the smoothing phase when point are not inserted in on a given element but moved around to the optimal position.
+This is useful for projections in the smoothing phase when point are not inserted in on a given element but moved around to the optimal position.
 
-Our idea is to use :math:`P^{3}` local reconstruction as a pre-consitionner for the projection direction on a refined background mesh.
+Our idea is to use :math:`P^{3}` local reconstruction as a pre-conditioner for the projection direction on a refined background mesh.
 This allows to remain accurate to the real world representation if in a given step the mesh is collapsed and later refined again.
 
 Gradation
 ---------
 
 To ensure gradual evolution of the edges sizes of the mesh, the metric field is smoothed (aka. gradation).
-H. Rakotoarivelo proved that the gradation mesure choice is arbitrary since they are equivalent (in pratice  h-variation is chosen out of simplicity).
+H. Rakotoarivelo proved that the gradation measure choice is arbitrary since they are equivalent (in practice  h-variation is chosen out of simplicity).
 From a continuous point of view, the mesh gradation process consists in verifying the uniform continuity of the metric field:
 
 :math:`\forall (x, y) \in \Omega^{2},  \left\lVert M(y) - M(x) \right\rVert \le \left\lVert x - y \right\rVert_{2}`
 
-where C is a constant and :math:`\left\lVert . \right\rVert` a matrix norm.
+where :math:`C` is a constant and :math:`\left\lVert . \right\rVert` a matrix norm.
 This is an algorithm of quadratic complexity. Alternative less CPU-costly algorithms have been suggested in [13].
 
 Gradation
@@ -139,23 +142,25 @@ The Unstructured Grid Adaptation Working Group is an open gathering of researche
 They have created benchmarks available here: https://github.com/UGAWG.
 
 In this section, we established a list of known mesh adaptation tools. Feel free to add other ones.
-Let's start with tool that mention a form of parallelism :
-- https://github.com/hobywan/trinity (C++, 2D surfacic shared-memory)
-- https://github.com/MmgTools (C, 2D and 3D, ParMMG MPI-partitionned)
-- https://github.com/sandialabs/omega_h/tree/main (C++, optionally MPI, OpenMP, CUDA, 2D, 3D)
-- https://github.com/AMReX-Codes/amrex (massivement parallel mais block-structured, C++)
-- CDT3D (parallel)
+Let's start with tool that mention a form of parallelism:
+
+  - https://github.com/hobywan/trinity (C++, 2D surface shared-memory)
+  - https://github.com/MmgTools (C, 2D and 3D, ParMMG MPI-partitioned)
+  - https://github.com/sandialabs/omega_h/tree/main (C++, optionally MPI, OpenMP, CUDA, 2D, 3D)
+  - https://github.com/AMReX-Codes/amrex (massively parallel but block-structured, C++)
+  - CDT3D (parallel)
+  - https://github.com/nasa/refine (C, MPI)
 
 Let's move on to other tools:
-- https://github.com/tucanos/tucanos (Airbus, Rust, 2D and 3D)
-- Yams by P. Frey
-- feflo.a by A. Loseille
-- EPIC (Boeing)
-- refine
-- Pragmatic (Imperial College London)
-- https://github.com/hpc-maths/samurai (C++)
-- http://www.p4est.org/
-- https://optimad.github.io/PABLO/
+
+  - https://github.com/tucanos/tucanos (Airbus, Rust, 2D and 3D)
+  - Yams by P. Frey
+  - feflo.a by A. Loseille
+  - EPIC (Boeing)
+  - Pragmatic (Imperial College London)
+  - https://github.com/hpc-maths/samurai (C++)
+  - http://www.p4est.org/
+  - https://optimad.github.io/PABLO/
 
 ParaDiGM's approach
 ===================
@@ -166,13 +171,13 @@ Why do we want a parallel mesh adaptation tool?
 To answer this question, we focus on the analysis by G. Puigt of the CREATE compressor (available at Ecole Centrale Lyon in the LMFA).
 The compressor is composed of 4 stator rows (an inlet guide vane and 3 stators) and 3 rotors.
 Using periodicity to simplify the geometry is not possible if one wants to simulate a rotating stall.
-Simulating coarsly (50000 nodes per blade) the full machine leads to a final mesh of 29.6 million points for the 592 blades.
+Simulating coarsely (50000 nodes per blade) the full machine leads to a final mesh of 29.6 million points for the 592 blades.
 A simulation on a single core with this coarse grid might not be possible due to insufficient memory.
 The number of control volumes proposed by GAMMA in their latest paper on turbomachinery leads to 11 millions cells for a Rotor 37 blade.
 With a simple extrapolation that means 6512 billion cells for the CREATE compressor. Taking 1 million grid cells per CPU means we need 7000 CPUs.
 
-Let us underline that the usual approach for mesh adaptation in parallel is by working with on paritions and to
-refine the parition boundaries to remove those fake ridges as shown in [7]. They considerd themselves this not to be an optimal solution.
+Let us underline that the usual approach for mesh adaptation in parallel is by working with on partitions and to
+refine the partition boundaries to remove those fake ridges as shown in [7]. They considered themselves this not to be an optimal solution.
 
 What points do we want to work on?
 ----------------------------------
@@ -182,7 +187,7 @@ What points do we want to work on?
 - provide a score to prioritize cavities
 - extract area in which mesh adaptation will be done
 - cavity prison to avoid blocking cavity (limit cavity growth) or interleave swap operations like P. Caplan suggests
-- check background mesh is coherent with the volumic mesh
+- check background mesh is coherent with the volume mesh
 - multi-section background mesh
 - Hilbert partitioning
 - try not all groups on all procs
@@ -191,7 +196,7 @@ What points do we want to work on?
 - asynchronism
 - check independent to parallelism
 - unitary tests
-- projection using P3 reconstruction for direction (local or global?)
+- projection using :math:`P^3` reconstruction for direction (local or global?)
 
 References
 ==========

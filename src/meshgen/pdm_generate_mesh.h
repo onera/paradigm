@@ -293,7 +293,7 @@ PDM_generate_mesh_parallelepiped
 
 /**
  *
- * \brief Create a partitioned rectangle mesh (2D) with descending connectivities.
+ * \brief Create a partitioned rectangular mesh (2D) with descending connectivities
  *
  * \param [in]   comm           MPI communicator
  * \param [in]   elt_type       Element type
@@ -307,17 +307,22 @@ PDM_generate_mesh_parallelepiped
  * \param [in]   n_part         Number of partitions
  * \param [in]   part_method    Partitioning method
  * \param [in]   random_factor  Randomization factor (between 0 and 1)
- * \param [in]   pn_vtx         Number of vertices
- * \param [in]   pn_edge        Number of edges
- * \param [in]   pn_face        Number of faces
- * \param [in]   pvtx_coord     Vertex coordinates
- * \param [in]   pedge_vtx      Edge->vertex connectivity
- * \param [in]   pface_edge_idx Index of face->edge connectivity
- * \param [in]   pface_edge     Face->edge connectivity
- * \param [in]   pface_vtx      Face->vertex connectivity
- * \param [in]   pvtx_ln_to_gn  Vertex global ids
- * \param [in]   pedge_ln_to_gn Edge global ids
- * \param [in]   pface_ln_to_gn Face global ids
+ * \param [out]  pn_vtx         Number of vertices (size = \p n_part)
+ * \param [out]  pn_edge        Number of edges (size = \p n_part)
+ * \param [out]  pn_face        Number of faces (size = \p n_part)
+ * \param [out]  pvtx_coord     Vertex coordinates (for each part, size = \p pn_vtx)
+ * \param [out]  pedge_vtx      Edge->vertex connectivity (for each part, size = 2 * \p pn_edge)
+ * \param [out]  pface_edge_idx Index of face->edge connectivity (for each part, size = \p pn_face + 1)
+ * \param [out]  pface_edge     Face->edge connectivity (for each part, size = \p face_edge_idx[\p pn_face])
+ * \param [out]  pface_vtx      Face->vertex connectivity (for each part, size = \p face_edge_idx[\p pn_face])
+ * \param [out]  pvtx_ln_to_gn  Vertex global ids (for each part, size = \p pn_vtx)
+ * \param [out]  pedge_ln_to_gn Edge global ids (for each part, size = \p pn_edge)
+ * \param [out]  pface_ln_to_gn Face global ids (for each part, size = \p pn_face)
+ *
+ * \note Possible values for \p elt_type:
+ *   - \p PDM_MESH_NODAL_TRIA3   : triangles
+ *   - \p PDM_MESH_NODAL_QUAD4   : quadrangles
+ *   - \p PDM_MESH_NODAL_POLY_2D : mixed polygons (triangles, quadrangles and octagons)
  *
  */
 
