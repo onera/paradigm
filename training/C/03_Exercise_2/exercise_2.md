@@ -15,6 +15,30 @@ kernelspec:
 
 +++
 
+In this second exercise we will focus on the **Mesh Location** feature.
+It consists in locating one or more partitioned point clouds (referred to as the *targets*) inside a partitioned mesh (referred to as the *source*).
+<!-- Some target points may be unlocated if they lie outside the source mesh. -->
+A mapping between the source mesh elements and the target points they contain is computed, which consists in
+  - geometric data (distances, barycentric and parametric coordinates, ...) ;
+  - an MPI communication graph as the associated entities are, in general, distributed on different processes.
+
+This mapping is typically used for interpolating data from the source mesh to the point clouds in applications such as coupling between non-matching grids, (autres exemples...)
+
+
+The aim of this exercise is to perform such an interpolation.
+
+For easier visualization, we will study a two-dimensional case but the feature is also available in three dimensions.
+
+We will start by generating two partitioned meshes.
+The vertices of one mesh will serve as the target point cloud.
+
+By now you should be capable of partitioning a mesh using **ParaDiGM** (if not you should definitely take a look at [Exercise 1](../02_Exercise_1/exercise_1.ipynb))
+
+so let us take a shortcut and use the [`PDM_generate_mesh`](https://numerics.gitlab-pages.onera.net/mesh/paradigm/dev_formation/user_manual/simple_mesh_gen/generate_mesh.html) service to generate a partitioned mesh in a single function call.
+
+
++++
+
 *(Load custom magics)*
 
 ```{code-cell} ipython3
@@ -29,7 +53,7 @@ if module_path not in sys.path:
 %reload_ext code_magics
 ```
 
-Your job is to fill the code cells left blank using the API referenced [here](https://numerics.gitlab-pages.onera.net/mesh/paradigm/dev_doc_pretty/user_manual/prepro_algo/index.html#python-api).
+Your job is to fill the code cells left blank using the API referenced [here](https://numerics.gitlab-pages.onera.net/mesh/paradigm/dev_formation/user_manual/prepro_algo/mesh_location.html#mesh-location).
 
 +++
 

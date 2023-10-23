@@ -692,7 +692,7 @@ cdef class MeshLocation:
       i_point_cloud (int) : Point cloud identifier
 
     Returns:
-      PartToPart object (:py:class:`PartToPartCapsule`)
+      PartToPart object (:py:class:`PartToPart`)
     """
     cdef PDM_part_to_part_t *ptpc
     PDM_mesh_location_part_to_part_get(self._ml,
