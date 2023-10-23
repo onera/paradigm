@@ -47,8 +47,27 @@ Fortran API
 
 .. ifconfig:: enable_fortran_doc == 'ON'
 
-  .. todo::
-    ...
+  Initialization
+  """"""""""""""
+
+  .. f:autosubroutine:: PDM_dcube_nodal_gen_create_
+
+  Options
+  """""""
+
+  .. f:autosubroutine PDM_dcube_nodal_gen_random_factor_set
+
+  Mesh generation
+  """""""""""""""
+
+  .. f:autosubroutine:: PDM_dcube_nodal_gen_build_
+
+  .. f:autosubroutine:: PDM_dcube_nodal_gen_dmesh_nodal_get_
+
+  Finalization
+  """"""""""""
+
+  .. f:autosubroutine PDM_dcube_nodal_gen_free
 
 .. ifconfig:: enable_fortran_doc == 'OFF'
 

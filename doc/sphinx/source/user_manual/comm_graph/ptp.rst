@@ -64,8 +64,43 @@ Fortran API
 
 .. ifconfig:: enable_fortran_doc == 'ON'
 
-  .. todo::
-    ...
+  Initialization
+  """"""""""""""
+
+  .. f:autosubroutine PDM_part_to_part_create
+
+  Information on Part 2 side
+  """"""""""""""""""""""""""
+
+  .. f:autosubroutine PDM_part_to_part_ref_lnum2_get
+
+  .. f:autosubroutine PDM_part_to_part_unref_lnum2_get
+
+  .. f:autosubroutine PDM_part_to_part_gnum1_come_from_get
+
+  Exchange
+  """"""""
+
+  .. f:autosubroutine PDM_part_to_part_iexch
+
+  .. f:autosubroutine PDM_part_to_part_iexch_wait
+
+  .. f:autosubroutine PDM_part_to_part_reverse_iexch
+
+  .. f:autosubroutine PDM_part_to_part_reverse_iexch_wait
+
+  .. f:autosubroutine PDM_part_to_part_issend
+
+  .. f:autosubroutine PDM_part_to_part_issend_wait
+
+  .. f:autosubroutine PDM_part_to_part_irecv_raw
+
+  .. f:autosubroutine PDM_part_to_part_irecv_wait_raw
+
+  Finalization
+  """"""""""""
+
+  .. f:autosubroutine PDM_part_to_part_free
 
 .. ifconfig:: enable_fortran_doc == 'OFF'
 

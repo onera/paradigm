@@ -84,6 +84,18 @@ Finalize
 .. doxygenfunction:: PDM_multipart_free
 
 
+Partitionned nodal mesh
+~~~~~~~~~~~~~~~~~~~~~~~
+
+Here we describe the getters of the structure retrieved using ``PDM_multipart_get_part_mesh_nodal``.
+This allows to have the arrays corresponding to the partitionned mesh described in nodal connectivity style.
+
+.. doxygenfunction:: PDM_part_mesh_nodal_section_n_elt_get
+
+.. doxygenfunction:: PDM_part_mesh_nodal_section_std_get
+
+.. doxygenfunction:: PDM_part_mesh_nodal_vtx_g_num_get
+
 
 Fortran API
 -----------
@@ -143,6 +155,18 @@ Fortran API
   ~~~~~~~~
 
   .. f:autosubroutine PDM_multipart_free
+
+  Partitionned nodal mesh
+  ~~~~~~~~~~~~~~~~~~~~~~~
+
+  Here we describe the getters of the structure retrieved using ``PDM_multipart_get_part_mesh_nodal``.
+  This allows to have the arrays corresponding to the partitionned mesh described in nodal connectivity style.
+
+  .. f:autosubroutine:: PDM_part_mesh_nodal_section_n_elt_get_
+
+  .. f:autosubroutine:: PDM_part_mesh_nodal_section_std_get_
+
+  .. f:autosubroutine:: PDM_part_mesh_nodal_vtx_g_num_get_
 
 .. ifconfig:: enable_fortran_doc == 'OFF'
 
@@ -213,6 +237,18 @@ Python API
   .. autofunction:: Pypdm.Pypdm.MultiPart.multipart_hyper_plane_color_get
 
   .. autofunction:: Pypdm.Pypdm.MultiPart.multipart_thread_color_get
+
+  Partitionned nodal mesh
+  ~~~~~~~~~~~~~~~~~~~~~~~
+
+  Here we describe the getters of the structure retrieved using ``PDM_multipart_get_part_mesh_nodal``.
+  This allows to have the arrays corresponding to the partitionned mesh described in nodal connectivity style.
+
+  .. autoclass:: PMeshNodal
+
+  .. autofunction:: Pypdm.Pypdm.PMeshNodal.part_mesh_nodal_get_sections
+
+  .. autofunction:: Pypdm.Pypdm.PMeshNodal.part_mesh_nodal_vtx_g_num_get
 
 
 .. ifconfig:: enable_python_doc == 'OFF'
