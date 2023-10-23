@@ -52,6 +52,7 @@ In this section, `ParaDiGM` tools are used to generate a simple mesh for this ex
 #include "pdm_writer.h"
 #include "pdm_part_connectivity_transform.h"
 #include "pdm_part_extension.h"
+#include "pdm_part_connectivity_transform.h"
 
 int main
 (
@@ -587,10 +588,52 @@ Once the partitionned mesh retrieved we can **free** (step 5) the memory allocat
                                &vtx_coord_ext);
 ```
 
-### Step 5
+### Step 5 (and visualisation)
 
 ```{code-cell}
 %%code_block -p exercise_1 -i 18
+
+  edge_vtx_ext_idx = malloc(sizeof(int) * n_edge_ext);
+  for (int i = 0; i < n_face_ext; i++) {
+    edge_vtx_ext_idx[i] = 3*i;
+  }
+
+  int *face_vtx_ext_idx = NULL;
+  int *face_vtx_ext     = NULL;
+  PDM_combine_connectivity(n_face_ext,
+                           face_edge_ext_idx,
+                           face_edge_ext,
+                           edge_vtx_ext_idx,
+                           edge_vtx_ext,
+                           &face_vtx_ext_idx,
+                           &face_vtx_ext);
+
+  writer_wrapper(comm,
+                "visu",
+                "pmesh",
+                1, // n_part
+                &n_vtx_ext,
+                &coords,
+                &vtx_ln_to_gn_ext,
+                &n_cell_ext,
+                &face_vtx_ext_idx,
+                &face_vtx_ext,
+                &cell_ln_to_gn_ext,
+                -1, // cell_t
+                &n_face_ext,
+                &cell_face_ext_idx,
+                &cell_face_ext,
+                "Ensight",
+                0, // n_elt_field
+                NULL, // elt_field_name
+                NULL, // elt_field_values
+                0, // n_vtx_field
+                NULL, // vtx_field_name
+                NULL); // vtx_field_values
+
+  free(edge_vtx_ext_idx);
+  free(face_vtx_ext_idx);
+  free(face_vtx_ext);
 
   // free
   PDM_part_extension_free(part_ext);

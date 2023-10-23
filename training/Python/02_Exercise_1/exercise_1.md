@@ -451,24 +451,31 @@ vtx_coord_ext = part_ext.get_coord(i_zone,
 ```
 
 ```{code-cell}
-%%code_block -p exercise_1 -i 13
+%%code_block -p exercise_1 -i 18
 
-face_vtx = PDM.compute_face_vtx_from_face_and_edge(face_edge_idx,
-                                                   face_edge,
-                                                   edge_vtx)
-face_vtx_idx = np.array([3*i for i in range(n_face+1)]).astype(np.intc)
+# face_vtx_ext = PDM.compute_face_vtx_from_face_and_edge(face_edge_ext_idx,
+#                                                        face_edge_ext,
+#                                                        edge_vtx_ext)
+
+edge_vtx_ext_idx = np.array([2*i for i in range(len(edge_ext_ln_to_gn)+1)]).astype(np.int32)
+face_vtx_ext_idx, face_vtx_ext = PDM.combine_connectivity(face_edge_ext_idx,
+                                                          face_edge_ext,
+                                                          edge_vtx_ext_idx,
+                                                          edge_vtx_ext)
+
+face_vtx_ext_idx = np.array([3*i for i in range(len(face_ext_ln_to_gn)+1)]).astype(np.intc)
 
 PDM.writer_wrapper(comm,
                    "visu",
-                   "pmesh",
-                   [coords],
-                   [vtx_ln_to_gn],
-                   [face_vtx_idx],
-                   [face_vtx],
-                   [cell_ln_to_gn],
+                   "pext",
+                   [vtx_coord_ext],
+                   [vtx_ext_ln_to_gn],
+                   [face_vtx_ext_idx],
+                   [face_vtx_ext],
+                   [cell_ext_ln_to_gn],
                    -1,
-                   [cell_face_idx],
-                   [cell_face])
+                   [cell_face_ext_idx],
+                   [cell_face_ext])
 
 ```
 
@@ -487,6 +494,7 @@ Run the following cells to execute to program you just wrote and visualize the p
 ```{code-cell}
 %%visualize
 visu/PMESH.case : i_part
+visu/PEXT.case
 ```
 ## Annex 1
 
