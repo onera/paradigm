@@ -32,39 +32,25 @@ module pdm_part_extension
 
 interface
 
-!>
-!!
-!! \brief Compute a part extension structure
-!!
-!! \param [in]   part_ext          PDM_part_extension_t
-!!
-!!
+! Compute a part extension structure
 
 subroutine PDM_part_extension_compute (part_ext) &
 bind (c, name='PDM_part_extension_compute')
   use iso_c_binding
   implicit none
 
-  type(c_ptr), value :: part_ext
+  type(c_ptr), value :: part_ext ! PDM_part_extension_t structure instance
 
 end subroutine PDM_part_extension_compute
 
-
-
-!>
-!!
-!! \brief Free a part extension structure
-!!
-!! \param [in]   part_ext          PDM_part_extension_t
-!!
-!!
+! Free a part extension structure
 
 subroutine PDM_part_extension_free (part_ext) &
 bind (c, name='PDM_part_extension_free')
   use iso_c_binding
   implicit none
 
-  type(c_ptr), value :: part_ext
+  type(c_ptr), value :: part_ext ! PDM_part_extension_t structure instance
 
 end subroutine PDM_part_extension_free
 
@@ -73,19 +59,7 @@ end interface
 
 contains
 
-
-!>
-!!
-!! \brief Initialize a part extension structure
-!!
-!! \param [out]   part_ext          Pointer to a new \ref PDM_part_extension_t object
-!! \param [in]    n_part            Number of partitions
-!! \param [in]    extend_type       Type of extension
-!! \param [in]    depth             Depth of extension
-!! \param [in]    comm              MPI communicator
-!! \param [in]    owner             Ownership
-!!
-!!
+! Initialize a part extension structure
 
 subroutine PDM_part_extension_create (part_ext,    &
                                       n_domain,    &
@@ -97,13 +71,13 @@ subroutine PDM_part_extension_create (part_ext,    &
   use iso_c_binding
   implicit none
 
-  type(c_ptr)                   :: part_ext
-  integer, intent(in)           :: n_domain
-  integer(pdm_l_num_s), pointer :: n_part(:)
-  integer, intent(in)           :: extend_type
-  integer, intent(in)           :: depth
-  integer, intent(in)           :: comm
-  integer, intent(in)           :: owner
+  type(c_ptr)                   :: part_ext    ! PDM_part_extension_t structure instance
+  integer, intent(in)           :: n_domain    ! Number of zones
+  integer(pdm_l_num_s), pointer :: n_part(:)   ! Number of partitions
+  integer, intent(in)           :: extend_type ! Type of extension
+  integer, intent(in)           :: depth       ! Depth of extension
+  integer, intent(in)           :: comm        ! MPI communicator
+  integer, intent(in)           :: owner       ! Data ownership
 
   integer(c_int)                :: c_comm
 
@@ -141,44 +115,7 @@ subroutine PDM_part_extension_create (part_ext,    &
 
 end subroutine PDM_part_extension_create
 
-
-!>
-!! \brief Set
-!!
-!! \param [in]  part_ext                  Pointer to \ref PDM_part_extension_t object
-!! \param [in]  i_domain                  Id of the domain
-!! \param [in]  i_part                    Id of the partition
-!! \param [in]  n_cell                    Number of cells
-!! \param [in]  n_face                    Number of faces
-!! \param [in]  n_face_part_bound         Number of partition boundary faces
-!! \param [in]  n_face_group              Number of face groups
-!! \param [in]  n_edge                    Number of edges
-!! \param [in]  n_vtx                     Number of vertices
-!! \param [in]  cell_face_idx             Cell-face connectivity index (size = \ref n_cell + 1)
-!! \param [in]  cell_face                 Cell-face connectivity (size = \ref cell_face_idx(\ref n_cell + 1))
-!! \param [in]  face_cell                 Face-cell connectivity (size = 2 * \ref n_face)
-!! \param [in]  face_edge_idx             Face-edge connectivity index (size = \ref n_face + 1)
-!! \param [in]  face_edge                 Face-edge connectivity (size = \ref face_edge_idx(\ref n_face + 1))
-!! \param [in]  face_vtx_idx              Face-vertex connectivity index (size = \ref n_face + 1)
-!! \param [in]  face_vtx                  Face-vertex connectivity (size = \ref face_vtx_idx(\ref n_face + 1))
-!! \param [in]  edge_vtx                  Edge-vertex connectivity (size = 2 * \ref n_edge)
-!! \param [in]  face_bound_idx
-!! \param [in]  face_bound
-!! \param [in]  face_join_idx
-!! \param [in]  face_join
-!! \param [in]  face_part_bound_proc_idx
-!! \param [in]  face_part_bound_part_idx
-!! \param [in]  face_part_bound
-!! \param [in]  vtx_part_bound_proc_idx
-!! \param [in]  vtx_part_bound_part_idx
-!! \param [in]  vtx_part_bound
-!! \param [in]  cell_ln_to_gn             Cell global ids (size = \ref n_cell)
-!! \param [in]  face_ln_to_gn             Face global ids (size = \ref n_face)
-!! \param [in]  edge_ln_to_gn             Edge global ids (size = \ref n_edge)
-!! \param [in]  vtx_ln_to_gn              Vertex global ids (size = \ref n_vtx)
-!! \param [in]  face_group_ln_to_gn
-!! \param [in]  vtx_coord                 Vertex coordinates (size = 3 * \ref n_vtx)
-!!
+! Data setter for partition extension
 
 subroutine PDM_part_extension_set_part (part_ext,                 &
                                         i_domain,                 &
@@ -216,39 +153,39 @@ subroutine PDM_part_extension_set_part (part_ext,                 &
   use iso_c_binding
   implicit none
 
-  type(c_ptr), value            :: part_ext
-  integer, intent(in)           :: i_domain
-  integer, intent(in)           :: i_part
-  integer, intent(in)           :: n_cell
-  integer, intent(in)           :: n_face
-  integer, intent(in)           :: n_face_part_bound
-  integer, intent(in)           :: n_face_group
-  integer, intent(in)           :: n_edge
-  integer, intent(in)           :: n_vtx
-  integer(pdm_l_num_s), pointer :: cell_face_idx(:)
-  integer(pdm_l_num_s), pointer :: cell_face(:)
-  integer(pdm_l_num_s), pointer :: face_cell(:)
-  integer(pdm_l_num_s), pointer :: face_edge_idx(:)
-  integer(pdm_l_num_s), pointer :: face_edge(:)
-  integer(pdm_l_num_s), pointer :: face_vtx_idx(:)
-  integer(pdm_l_num_s), pointer :: face_vtx(:)
-  integer(pdm_l_num_s), pointer :: edge_vtx(:)
-  integer(pdm_l_num_s), pointer :: face_bound_idx(:)
-  integer(pdm_l_num_s), pointer :: face_bound(:)
-  integer(pdm_l_num_s), pointer :: face_join_idx(:)
-  integer(pdm_l_num_s), pointer :: face_join(:)
-  integer(pdm_l_num_s), pointer :: face_part_bound_proc_idx(:)
-  integer(pdm_l_num_s), pointer :: face_part_bound_part_idx(:)
-  integer(pdm_l_num_s), pointer :: face_part_bound(:)
-  integer(pdm_l_num_s), pointer :: vtx_part_bound_proc_idx(:)
-  integer(pdm_l_num_s), pointer :: vtx_part_bound_part_idx(:)
-  integer(pdm_l_num_s), pointer :: vtx_part_bound(:)
-  integer(pdm_g_num_s), pointer :: cell_ln_to_gn(:)
-  integer(pdm_g_num_s), pointer :: face_ln_to_gn(:)
-  integer(pdm_g_num_s), pointer :: edge_ln_to_gn(:)
-  integer(pdm_g_num_s), pointer :: vtx_ln_to_gn(:)
-  integer(pdm_g_num_s), pointer :: face_group_ln_to_gn(:)
-  double precision,     pointer :: vtx_coord(:,:)
+  type(c_ptr), value            :: part_ext                    ! PDM_part_extension_t structure instance
+  integer, intent(in)           :: i_domain                    ! Id of the zone
+  integer, intent(in)           :: i_part                      ! Id of the partition
+  integer, intent(in)           :: n_cell                      ! Number of cells
+  integer, intent(in)           :: n_face                      ! Number of faces
+  integer, intent(in)           :: n_face_part_bound           ! Number of partition boundary faces
+  integer, intent(in)           :: n_face_group                ! Number of face groups
+  integer, intent(in)           :: n_edge                      ! Number of edges
+  integer, intent(in)           :: n_vtx                       ! Number of vertices
+  integer(pdm_l_num_s), pointer :: cell_face_idx(:)            ! Cell-face connectivity index (size = \ref n_cell + 1)
+  integer(pdm_l_num_s), pointer :: cell_face(:)                ! Cell-face connectivity (size = \ref cell_face_idx(\ref n_cell + 1))
+  integer(pdm_l_num_s), pointer :: face_cell(:)                ! Face-cell connectivity (size = 2 * \ref n_face)
+  integer(pdm_l_num_s), pointer :: face_edge_idx(:)            ! Face-edge connectivity index (size = \ref n_face + 1)
+  integer(pdm_l_num_s), pointer :: face_edge(:)                ! Face-edge connectivity (size = \ref face_edge_idx(\ref n_face + 1))
+  integer(pdm_l_num_s), pointer :: face_vtx_idx(:)             ! Face-vertex connectivity index (size = \ref n_face + 1)
+  integer(pdm_l_num_s), pointer :: face_vtx(:)                 ! Face-vertex connectivity (size = \ref face_vtx_idx(\ref n_face + 1))
+  integer(pdm_l_num_s), pointer :: edge_vtx(:)                 ! Edge-vertex connectivity (size = 2 * \ref n_edge)
+  integer(pdm_l_num_s), pointer :: face_bound_idx(:)           ! Face->group connectivity index (size = \ref n_face_group + 1)
+  integer(pdm_l_num_s), pointer :: face_bound(:)               ! Face->group connectivity (size = \ref face_edge_idx(\ref n_face_group + 1))
+  integer(pdm_l_num_s), pointer :: face_join_idx(:)            ! Faces connecting zones connectivity index
+  integer(pdm_l_num_s), pointer :: face_join(:)                ! Faces connecting zones connectivity
+  integer(pdm_l_num_s), pointer :: face_part_bound_proc_idx(:) ! Partitioning boundary faces index from process (size = n_proc + 1)
+  integer(pdm_l_num_s), pointer :: face_part_bound_part_idx(:) ! Partitioning boundary faces index from partition (size = n_total_part + 1)
+  integer(pdm_l_num_s), pointer :: face_part_bound(:)          ! Partitioning boundary faces (size = 4 * n_face_part_bound)
+  integer(pdm_l_num_s), pointer :: vtx_part_bound_proc_idx(:)  ! Partitioning boundary vertices index from process (size = n_proc + 1)
+  integer(pdm_l_num_s), pointer :: vtx_part_bound_part_idx(:)  ! Partitioning boundary vertices index from partition (size = n_total_part + 1)
+  integer(pdm_l_num_s), pointer :: vtx_part_bound(:)           ! Partitioning boundary vertices (size = 4 * n_vertex_part_bound)
+  integer(pdm_g_num_s), pointer :: cell_ln_to_gn(:)            ! Cell global ids (size = \ref n_cell)
+  integer(pdm_g_num_s), pointer :: face_ln_to_gn(:)            ! Face global ids (size = \ref n_face)
+  integer(pdm_g_num_s), pointer :: edge_ln_to_gn(:)            ! Edge global ids (size = \ref n_edge)
+  integer(pdm_g_num_s), pointer :: vtx_ln_to_gn(:)             ! Vertex global ids (size = \ref n_vtx)
+  integer(pdm_g_num_s), pointer :: face_group_ln_to_gn(:)      ! Global ids of faces with groups (size = \ref n_face_group)
+  double precision,     pointer :: vtx_coord(:,:)              ! Vertex coordinates (size = 3 * \ref n_vtx)
 
   interface
     subroutine PDM_part_extension_set_part_c (part_ext,                 &
@@ -361,20 +298,7 @@ subroutine PDM_part_extension_set_part (part_ext,                 &
 
 end subroutine PDM_part_extension_set_part
 
-
-!>
-!!
-!! \brief Get connectivity
-!!
-!! \param [in]  part_ext     Pointer to \ref PDM_part_extension_t object
-!! \param [in]  i_domain     Id of current domain
-!! \param [in]  i_part       Id of current partition
-!! \param [in]  mesh_entity  Type of mesh entity
-!! \param [out] n_elt         Number of elements
-!! \param [out] connect      Entity->group graph (size = \ref connect_idx[\ref n_elt])
-!! \param [out] connect_idx  Index for entity->group graph (size = \ref n_elt + 1)
-!!
-!!
+! Connectivity getter
 
 subroutine PDM_part_extension_connectivity_get (part_ext,          &
                                                 i_domain,          &
@@ -386,13 +310,13 @@ subroutine PDM_part_extension_connectivity_get (part_ext,          &
   use iso_c_binding
   implicit none
 
-  type(c_ptr), value            :: part_ext
-  integer, intent(in)           :: i_domain
-  integer, intent(in)           :: i_part
-  integer, intent(in)           :: connectivity_type
-  integer, intent(out)          :: n_elt
-  integer(pdm_l_num_s), pointer :: connect(:)
-  integer(pdm_l_num_s), pointer :: connect_idx(:)
+  type(c_ptr), value            :: part_ext          ! PDM_part_extension_t structure instance
+  integer, intent(in)           :: i_domain          ! Id of current zone
+  integer, intent(in)           :: i_part            ! Id of current partition
+  integer, intent(in)           :: connectivity_type ! Type of mesh entity
+  integer, intent(out)          :: n_elt             ! Number of elements
+  integer(pdm_l_num_s), pointer :: connect(:)        ! Entity->group graph (size = \ref connect_idx[\ref n_elt])
+  integer(pdm_l_num_s), pointer :: connect_idx(:)    ! Index for entity->group graph (size = \ref n_elt + 1)
 
   type(c_ptr)                   :: c_connect     = C_NULL_PTR
   type(c_ptr)                   :: c_connect_idx = C_NULL_PTR
@@ -437,18 +361,7 @@ subroutine PDM_part_extension_connectivity_get (part_ext,          &
 
 end subroutine PDM_part_extension_connectivity_get
 
-
-!>
-!!
-!! \brief Get global ids
-!!
-!! \param [in]  part_ext     Pointer to \ref PDM_part_extension_t object
-!! \param [in]  i_domain     Id of current domain
-!! \param [in]  i_part       Id of current partition
-!! \param [in]  mesh_entity  Type of mesh entity
-!! \param [out] n_elt        Number of elements
-!! \param [out] ln_to_gn     Global ids (size = \ref n_elt)
-!!
+! Get global ids
 
 subroutine PDM_part_extension_ln_to_gn_get (part_ext,    &
                                             i_domain,    &
@@ -459,12 +372,12 @@ subroutine PDM_part_extension_ln_to_gn_get (part_ext,    &
   use iso_c_binding
   implicit none
 
-  type(c_ptr), value            :: part_ext
-  integer, intent(in)           :: i_domain
-  integer, intent(in)           :: i_part
-  integer, intent(in)           :: mesh_entity
-  integer, intent(out)          :: n_elt
-  integer(pdm_g_num_s), pointer :: ln_to_gn(:)
+  type(c_ptr), value            :: part_ext    ! PDM_part_extension_t structure instance
+  integer, intent(in)           :: i_domain    ! Id of current zone
+  integer, intent(in)           :: i_part      ! Id of current partition
+  integer, intent(in)           :: mesh_entity ! Type of mesh entity
+  integer, intent(out)          :: n_elt       ! Number of elements
+  integer(pdm_g_num_s), pointer :: ln_to_gn(:) ! Global ids (size = \ref n_elt)
 
   type(c_ptr)                   :: c_ln_to_gn = C_NULL_PTR
 
@@ -501,20 +414,7 @@ subroutine PDM_part_extension_ln_to_gn_get (part_ext,    &
 
 end subroutine PDM_part_extension_ln_to_gn_get
 
-
-!>
-!!
-!! \brief Get groups
-!!
-!! \param [in]  part_ext       Pointer to \ref PDM_part_extension_t object
-!! \param [in]  i_domain       Id of current domain
-!! \param [in]  i_part         Id of current partition
-!! \param [in]  mesh_entity    Type of mesh entity
-!! \param [out] n_elt          Number of elements
-!! \param [out] elt_group      Entity->group graph (size = \ref elt_group_idx[\ref n_elt])
-!! \param [out] elt_group_idx  Index for entity->group graph (size = \ref n_elt + 1)
-!! \param [out] ln_to_gn       Global ids (size = \ref elt_group_idx[\ref n_elt])
-!!
+! Get groups
 
 subroutine PDM_part_extension_group_get (part_ext,      &
                                          i_domain,      &
@@ -526,13 +426,13 @@ subroutine PDM_part_extension_group_get (part_ext,      &
   use iso_c_binding
   implicit none
 
-  type(c_ptr), value            :: part_ext
-  integer, intent(in)           :: i_domain
-  integer, intent(in)           :: i_part
-  integer, intent(out)          :: n_elt
-  integer(pdm_l_num_s), pointer :: elt_group(:)
-  integer(pdm_l_num_s), pointer :: elt_group_idx(:)
-  integer(pdm_g_num_s), pointer :: ln_to_gn(:)
+  type(c_ptr), value            :: part_ext         ! PDM_part_extension_t structure instance
+  integer, intent(in)           :: i_domain         ! Id of current zone
+  integer, intent(in)           :: i_part           ! Id of current partition
+  integer, intent(out)          :: n_elt            ! Number of elements
+  integer(pdm_l_num_s), pointer :: elt_group(:)     ! Entity->group connectivity index (size = \ref n_elt + 1)
+  integer(pdm_l_num_s), pointer :: elt_group_idx(:) ! Entity->group connectivity (size = \ref elt_group_idx(\ref n_elt + 1))
+  integer(pdm_g_num_s), pointer :: ln_to_gn(:)      ! Global ids (size = \ref n_elt)
 
   type(c_ptr)                   :: c_elt_group     = C_NULL_PTR
   type(c_ptr)                   :: c_elt_group_idx = C_NULL_PTR
@@ -585,18 +485,7 @@ subroutine PDM_part_extension_group_get (part_ext,      &
 
 end subroutine PDM_part_extension_group_get
 
-
-
-!>
-!!
-!! \brief Get vertex coordinates
-!!
-!! \param [in]  part_ext     Pointer to \ref PDM_part_extension_t object
-!! \param [in]  i_domain     Id of current domain
-!! \param [in]  i_part       Id of current partition
-!! \param [out] n_vtx        Number of vertices
-!! \param [out] vtx_coord    Vertex coordinates (size = \ref n_vtx * 3)
-!!
+! Get vertex coordinates
 
 subroutine PDM_part_extension_coord_get (part_ext,    &
                                          i_domain,    &
@@ -606,11 +495,11 @@ subroutine PDM_part_extension_coord_get (part_ext,    &
   use iso_c_binding
   implicit none
 
-  type(c_ptr), value        :: part_ext
-  integer, intent(in)       :: i_domain
-  integer, intent(in)       :: i_part
-  integer, intent(out)      :: n_vtx
-  double precision, pointer :: vtx_coord(:,:)
+  type(c_ptr), value        :: part_ext        ! PDM_part_extension_t structure instance
+  integer, intent(in)       :: i_domain        ! Id of current zone
+  integer, intent(in)       :: i_part          ! Id of current partition
+  integer, intent(out)      :: n_vtx           ! Number of vertices
+  double precision, pointer :: vtx_coord(:,:)  ! Vertex coordinates (size = \ref n_vtx * 3)
 
   type(c_ptr)               :: c_vtx_coord = C_NULL_PTR
 
