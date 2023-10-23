@@ -108,6 +108,15 @@ cdef class PartExtension:
                 depth,
                 MPI.Comm                                      comm):
     """
+    cinit(n_domain, n_part, extend_type, depth, comm)
+    Create a part extension object.
+
+     Parameters:
+      n_domain    (int)                  : Number of zones
+      n_part      np.ndarray[np.int32_t] : Number of partitions per zone
+      extend_type (int)                  : Extension from which entity ?
+      depth       (int)                  : Extension depth
+      comm        (MPI.Comm)             : MPI communicator
     """
     cdef MPI.MPI_Comm c_comm = comm.ob_mpi
 
@@ -153,6 +162,8 @@ cdef class PartExtension:
                NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1] face_group_ln_to_gn,
                NPY.ndarray[NPY.double_t  , mode='c', ndim=1] vtx_coord):
     """
+    set_part(i_domain, i_part, n_cell, n_face, n_face_part_bound, n_face_group, n_edge, n_vtx, cell_face_idx, cell_face, face_cell, face_edge_idx, face_edge, face_vtx_idx, face_vtx, edge_vtx, face_bound_idx, face_bound, face_join_idx, face_join, face_part_bound_proc_idx, face_part_bound_part_idx, face_part_bound, vtx_part_bound_proc_idx, vtx_part_bound_part_idx, vtx_part_bound, cell_ln_to_gn, face_ln_to_gn, edge_ln_to_gn, vtx_ln_to_gn, face_group_ln_to_gn, vtx_coord)
+    Set data to perform the partitionned mesh extension
     """
 
     cdef int * cell_face_idx_data
@@ -329,12 +340,18 @@ cdef class PartExtension:
 
   # ------------------------------------------------------------------
   def compute(self):
+    """
+    compute()
+    Compute a part extension structure
+    """
     PDM_part_extension_compute(self._part_ext)
 
 
   # ------------------------------------------------------------------
   def part_domain_interface_shared_set(self, PartDomainInterface pdi):
     """
+    part_domain_interface_shared_set(pdi)
+    Use shared domain interface
     """
     self.pdi = pdi # Keep alive
     PDM_part_extension_part_domain_interface_shared_set(self._part_ext, pdi.pdi)
@@ -346,6 +363,8 @@ cdef class PartExtension:
                        int i_part,
                        PDM_connectivity_type_t   connectivity_type):
     """
+    get_connectivity(i_domain, i_part, connectivity_type)
+    Get connectivity
     """
     cdef int *connect,
     cdef int *connect_idx,
@@ -368,6 +387,8 @@ cdef class PartExtension:
                        int i_part,
                        PDM_mesh_entities_t mesh_ety_type):
     """
+    get_ln_to_gn(i_domain, i_part, mesh_ety_type)
+    Get global ids
     """
     cdef PDM_g_num_t *ln_to_gn,
     cdef int size
@@ -387,6 +408,8 @@ cdef class PartExtension:
                     int i_part,
                     PDM_mesh_entities_t mesh_ety_type):
     """
+    get_interface(i_domain, i_part, mesh_ety_type)
+    Get interface
     """
     cdef int *interface_no,
     cdef int size
@@ -397,6 +420,8 @@ cdef class PartExtension:
   # ------------------------------------------------------------------
   def get_composed_interface(self):
     """
+    get_composed_interface()
+    Get composed interface
     """
     cdef int         *composed_interface_idx,
     cdef int         *composed_interface,
@@ -426,6 +451,8 @@ cdef class PartExtension:
                 int i_part,
                 PDM_mesh_entities_t mesh_ety_type):
     """
+    get_group(i_domain, i_part, mesh_ety_type)
+    Get groups
     """
     cdef int *entity_group_idx
     cdef int *entity_group
@@ -455,6 +482,8 @@ cdef class PartExtension:
   # ------------------------------------------------------------------
   def get_coord(self, int i_domain, int i_part):
     """
+    get_coord(i_domain, i_part)
+    Get vertex coordinates
     """
     cdef double *coord
     cdef int size

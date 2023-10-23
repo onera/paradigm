@@ -53,6 +53,20 @@ typedef enum {
  * Public function prototypes
  *============================================================================*/
 
+/**
+ *
+ * \brief Create a part extension structure
+ *
+ * \param [in] n_domain      Number of zones
+ * \param [in] n_part        Number of partitions per zone
+ * \param [in] extend_type   Extension from which entity ?
+ * \param [in] depth         Extension depth
+ * \param [in] comm          MPI communicator
+ * \param [in] owner         Data ownership
+ *
+ *  \return   part_ext PDM_part_extension_t structure instance
+ *
+ */
 
 PDM_part_extension_t*
 PDM_part_extension_create
@@ -69,14 +83,55 @@ PDM_part_extension_create
  *
  * \brief Compute a part extension structure
  *
- * \param [in]   part_ext          PDM_part_extension_t
+ * \param [in]   part_ext          PDM_part_extension_t structure instance
  *
  */
+
 void
 PDM_part_extension_compute
 (
   PDM_part_extension_t *part_ext
 );
+
+/**
+ *
+ * \brief Set data to perform the partitionned mesh extension
+ *
+ * \param [in]   part_ext                  PDM_part_extension_t structure instance
+ * \param [in]   i_domain                  Id of current zone
+ * \param [in]   i_part                    Id of current partition
+ * \param [in]   n_cell                    Number of cells
+ * \param [in]   n_face                    Number of faces
+ * \param [in]   n_face_part_bound         Number of partition boundary faces
+ * \param [in]   n_face_group              Number of face groups
+ * \param [in]   n_edge                    Number of edges
+ * \param [in]   n_vtx                     Number of vertices
+ * \param [in]   cell_face_idx             Cell-face connectivity index (size = \ref n_cell + 1)
+ * \param [in]   cell_face                 Cell-face connectivity (size = \ref cell_face_idx(\ref n_cell + 1))
+ * \param [in]   face_cell                 Face-cell connectivity (size = 2 * \ref n_face)
+ * \param [in]   face_edge_idx             Face-edge connectivity index (size = \ref n_face + 1)
+ * \param [in]   face_edge                 Face-edge connectivity (size = \ref face_edge_idx[\ref n_face])
+ * \param [in]   face_vtx_idx              Face-vertex connectivity index (size = \ref n_face + 1)
+ * \param [in]   face_vtx                  Face-vertex connectivity (size = \ref face_vtx_idx[\ref n_face])
+ * \param [in]   edge_vtx                  Edge-vertex connectivity (size = 2 * \ref n_edge)
+ * \param [in]   face_bound_idx            Face->group connectivity index (size = \ref n_face_group + 1)
+ * \param [in]   face_bound                Face->group connectivity (size = \ref face_edge_idx[\ref n_face_group])
+ * \param [in]   face_join_idx             Faces connecting zones connectivity index
+ * \param [in]   face_join                 Faces connecting zones connectivity
+ * \param [in]   face_part_bound_proc_idx  Partitioning boundary faces index from process (size = n_proc + 1)
+ * \param [in]   face_part_bound_part_idx  Partitioning boundary faces index from partition (size = n_total_part + 1)
+ * \param [in]   face_part_bound           Partitioning boundary faces (size = 4 * n_face_part_bound)
+ * \param [in]   vtx_part_bound_proc_idx   Partitioning boundary vertices index from process (size = n_proc + 1)
+ * \param [in]   vtx_part_bound_part_idx   Partitioning boundary vertices index from partition (size = n_total_part + 1)
+ * \param [in]   vtx_part_bound            Partitioning boundary vertices (size = 4 * n_vertex_part_bound)
+ * \param [in]   cell_ln_to_gn             Cell global ids (size = \ref n_cell)
+ * \param [in]   face_ln_to_gn             Face global ids (size = \ref n_face)
+ * \param [in]   edge_ln_to_gn             Edge global ids (size = \ref n_edge)
+ * \param [in]   vtx_ln_to_gn              Vertex global ids (size = \ref n_vtx)
+ * \param [in]   face_group_ln_to_gn       Global ids of faces with groups (size = \ref n_face_group)
+ * \param [in]   vtx_coord                 Vertex coordinates (size = 3 * \ref n_vtx)
+ *
+ */
 
 void
 PDM_part_extension_set_part
@@ -116,6 +171,14 @@ PDM_part_extension_set_part
   double               *vtx_coord
 );
 
+/**
+ *
+ * \brief Use shared domain interface
+ *
+ * \param [in]   part_ext                    PDM_part_extension_t structure instance
+ * \param [in]   PDM_part_domain_interface_t PDM_part_domain_interface_t structure instance
+ *
+ */
 
 void
 PDM_part_extension_part_domain_interface_shared_set
@@ -123,6 +186,14 @@ PDM_part_extension_part_domain_interface_shared_set
   PDM_part_extension_t        *part_ext,
   PDM_part_domain_interface_t *pdi
 );
+
+/**
+ *
+ * \brief Free a part extension structure
+ *
+ * \param [in]   part_ext          PDM_part_extension_t structure instance
+ *
+ */
 
 void
 PDM_part_extension_free
@@ -135,8 +206,8 @@ PDM_part_extension_free
  *
  * \brief Get connectivity
  *
- * \param [in]  part_ext     Pointer to \ref PDM_part_extension_t object
- * \param [in]  i_domain     Id of current domain
+ * \param [in]  part_ext     PDM_part_extension_t structure instance
+ * \param [in]  i_domain     Id of current zone
  * \param [in]  i_part       Id of current partition
  * \param [in]  mesh_entity  Type of mesh entity
  * \param [out] connect      Entity->group graph (size = \ref connect_idx[\ref n_elt])
@@ -162,8 +233,8 @@ PDM_part_extension_connectivity_get
  *
  * \brief Get global ids
  *
- * \param [in]  part_ext     Pointer to \ref PDM_part_extension_t object
- * \param [in]  i_domain     Id of current domain
+ * \param [in]  part_ext     PDM_part_extension_t structure instance
+ * \param [in]  i_domain     Id of current zone
  * \param [in]  i_part       Id of current partition
  * \param [in]  mesh_entity  Type of mesh entity
  * \param [out] ln_to_gn     Global ids (size = \ref n_elt)
@@ -182,6 +253,20 @@ PDM_part_extension_ln_to_gn_get
  PDM_g_num_t             **ln_to_gn
 );
 
+/**
+ *
+ * \brief Get interface
+ *
+ * \param [in]  part_ext     PDM_part_extension_t structure instance
+ * \param [in]  i_domain     Id of current zone
+ * \param [in]  i_part       Id of current partition
+ * \param [in]  mesh_entity  Type of mesh entity
+ * \param [out] interface_no Interfaces
+ *
+ * \return  n_elt  Number of interfaces
+ *
+ */
+
 int
 PDM_part_extension_interface_get
 (
@@ -196,8 +281,8 @@ PDM_part_extension_interface_get
  *
  * \brief Get groups
  *
- * \param [in]  part_ext     Pointer to \ref PDM_part_extension_t object
- * \param [in]  i_domain     Id of current domain
+ * \param [in]  part_ext     PDM_part_extension_t structure instance
+ * \param [in]  i_domain     Id of current zone
  * \param [in]  i_part       Id of current partition
  * \param [in]  mesh_entity  Type of mesh entity
  * \param [out] connect      Entity->group graph (size = \ref connect_idx[\ref n_elt])
@@ -225,8 +310,8 @@ PDM_part_extension_group_get
  *
  * \brief Get vertex coordinates
  *
- * \param [in]  part_ext     Pointer to \ref PDM_part_extension_t object
- * \param [in]  i_domain     Id of current domain
+ * \param [in]  part_ext     PDM_part_extension_t structure instance
+ * \param [in]  i_domain     Id of current zone
  * \param [in]  i_part       Id of current partition
  * \param [out] vtx_coord    Vertex coordinates (size = \ref n_vtx * 3)
  *
@@ -243,6 +328,18 @@ PDM_part_extension_coord_get
  double                  **vtx_coord
 );
 
+/**
+ *
+ * \brief Get composed interface
+ *
+ * \param [in]  part_ext                 PDM_part_extension_t structure instance
+ * \param [out] composed_interface_idx   ??
+ * \param [out] composed_interface       ??
+ * \param [out] composed_ln_to_gn_sorted ??
+ *
+ * \return  something ??
+ *
+ */
 
 int
 PDM_part_extension_composed_interface_get

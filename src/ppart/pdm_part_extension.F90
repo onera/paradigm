@@ -185,7 +185,7 @@ subroutine PDM_part_extension_set_part (part_ext,                 &
   integer(pdm_g_num_s), pointer :: edge_ln_to_gn(:)            ! Edge global ids (size = \ref n_edge)
   integer(pdm_g_num_s), pointer :: vtx_ln_to_gn(:)             ! Vertex global ids (size = \ref n_vtx)
   integer(pdm_g_num_s), pointer :: face_group_ln_to_gn(:)      ! Global ids of faces with groups (size = \ref n_face_group)
-  double precision,     pointer :: vtx_coord(:,:)              ! Vertex coordinates (size = 3 * \ref n_vtx)
+  double precision,     pointer :: vtx_coord(:,:)              ! Vertex coordinates (shape = [3, n_vtx])
 
   interface
     subroutine PDM_part_extension_set_part_c (part_ext,                 &
