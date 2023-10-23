@@ -2401,6 +2401,25 @@ PDM_dcube_nodal_gen_build
 
   //log_trace("gn_vtx = "PDM_FMT_G_NUM"\n", gn_vtx);
 
+  switch (dcube->t_elt) {
+    case PDM_MESH_NODAL_TRIA3:
+    case PDM_MESH_NODAL_TRIAHO:
+    case PDM_MESH_NODAL_TRIAHO_BEZIER:
+    case PDM_MESH_NODAL_POLY_2D:
+    case PDM_MESH_NODAL_PYRAMID5:
+    case PDM_MESH_NODAL_PYRAMIDHO:
+    case PDM_MESH_NODAL_PRISM6:
+    case PDM_MESH_NODAL_PRISMHO:
+      dcube->random_factor *= 0.5*sqrt(2);
+      break;
+    case PDM_MESH_NODAL_TETRA4:
+    case PDM_MESH_NODAL_TETRAHO:
+      dcube->random_factor *= 1./sqrt(3);
+      break;
+    default:
+      break;
+  }
+
 
   /*
    * Create the dmesh_nodal that hold the resulting mesh
@@ -2452,8 +2471,6 @@ PDM_dcube_nodal_gen_build
   double step_z = dcube->length / (double) (n_vtx_z - 1);
 
   int randomize = (dcube->random_factor > 0);
-
-  dcube->random_factor *= 0.5; // safety
 
   if (dim == 2) {
     for (int i_vtx = 0; i_vtx < dn_vtx; ++i_vtx) {
