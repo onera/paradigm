@@ -88,7 +88,7 @@ int main(int argc, char *argv[])
                                    src_n_vtx_seg,
                                    src_n_part,
                                    PDM_SPLIT_DUAL_WITH_PARMETIS,
-                                   0.4,
+                                   0.8,
                                    &src_n_vtx,
                                    &src_n_edge,
                                    &src_n_face,
@@ -620,5 +620,5 @@ Moment of truth!
 ```{code-cell}
 %%visualize -nl -sv
 visu/SRC_MESH.case
-visu/TGT_MESH.case : is_located
+visu/TGT_MESH.case : is_located : points
 ```

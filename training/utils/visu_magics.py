@@ -16,7 +16,12 @@ def nice_view(plotter):
       plotter.view_xy()
 
 
-def visu_n_files(files, fields=[""], same_view=False, lighting=True, show_grid=False):
+def visu_n_files(files,
+                 fields=[""],
+                 styles=[""],
+                 same_view=False,
+                 lighting=True,
+                 show_grid=False):
   try:
     import pyvista as pv
     import numpy   as np
@@ -42,8 +47,6 @@ def visu_n_files(files, fields=[""], same_view=False, lighting=True, show_grid=F
     p.background_color = 'w'
     p.enable_anti_aliasing()
 
-    meshes = []
-
     for i_file, filename in enumerate(files):
       if not same_view:
         i_col = i_file%n_col
@@ -57,25 +60,30 @@ def visu_n_files(files, fields=[""], same_view=False, lighting=True, show_grid=F
           mesh = [mesh]
 
         for block in mesh:
-          meshes.append(mesh)
+
+          scalars = None
           if i_file < len(fields):
             if len(fields[i_file]) > 0:
               scalars = fields[i_file]
-            else:
-              scalars = None
-          else:
-            scalars = None
+
+          style = None
+          if i_file < len(styles):
+            if len(styles[i_file]) > 0:
+              style = styles[i_file]
 
           if scalars is None:
             color = [0.8]*3
           else:
             color = None
+
           p.add_mesh(block,
                      show_edges=True,
+                     style=style,
                      cmap="coolwarm",
                      color=color,
                      scalars=scalars,
-                     lighting=lighting)
+                     lighting=lighting,
+                     point_size=6)
       except:
         print(f"Output file '{filename}' not found", flush=True)
 
@@ -111,17 +119,29 @@ class VisuMagics(Magics):
     n = len(cell_lines)
     files  = []
     fields = []
+    styles = []
 
     for l in cell_lines:
       a = [k.rstrip().lstrip() for k in l.split(":")]
+
       if len(a[0]) > 0:
         files.append(a[0])
+
         if len(a) > 1:
           fields.append(a[1])
         else:
           fields.append("")
 
-    visu_n_files(files, fields, args.same_view, not args.no_lighting)
+        if len(a) > 2:
+          styles.append(a[2])
+        else:
+          styles.append("")
+
+    visu_n_files(files     = files,
+                 fields    = fields,
+                 styles    = styles,
+                 same_view = args.same_view,
+                 lighting  = not args.no_lighting)
 
 
 def load_ipython_extension(ipython):
