@@ -98,15 +98,15 @@ Fortran API
   Set inputs
   ~~~~~~~~~~
 
-  .. f:autosubroutine:: PDM_multipart_register_dmesh_nodal
+  .. f:autosubroutine PDM_multipart_register_dmesh_nodal
 
-  .. f:autosubroutine:: PDM_multipart_register_block
+  .. f:autosubroutine PDM_multipart_register_block
 
   .. f:autosubroutine:: PDM_multipart_block_set_
 
   .. f:autosubroutine:: PDM_multipart_register_joins_
 
-  .. f:autosubroutine:: PDM_multipart_domain_interface_shared_set
+  .. PDM_multipart_domain_interface_shared_set
 
   Renumbering options
   ~~~~~~~~~~~~~~~~~~~
@@ -118,7 +118,7 @@ Fortran API
   Perform partitioning
   ~~~~~~~~~~~~~~~~~~~~
 
-  .. f:autosubroutine:: PDM_multipart_run_ppart
+  .. f:autosubroutine PDM_multipart_run_ppart
 
   Get outputs
   ~~~~~~~~~~~
@@ -142,7 +142,7 @@ Fortran API
   Finalize
   ~~~~~~~~
 
-  .. f:autosubroutine:: PDM_multipart_free
+  .. f:autosubroutine PDM_multipart_free
 
 .. ifconfig:: enable_fortran_doc == 'OFF'
 
