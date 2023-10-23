@@ -13,9 +13,23 @@ kernelspec:
 
 # Inntroduction
 
-=> formation intéractive, posezzzzzz vos questions !!
+Welcome to the CWIPI library introductory day !
 
-## Historique
+The aim of the day is to give you : 
+ - An overview of functionality
+ - An understanding of ParaDiGM's advanced parallelism concepts
+ - An understanding of how ParaDiGM can be called in your software written in C/C++, Fortran or Python.
+
+This is an interactive course, so don't hesitate to interrupt us to ask your questions.
+
+The training will take place in three stages:
+- General presentation of ParaDiGM
+- Description of the abstract concept of inter-partition communication graphs
+- Focus on two functionalities through interactive exercises :
+    - Exercice 1 : Mesh partitioning
+    - Exercice 2 : Localization of a point cloud inside a mesh
+
+## Origins of ParaDiGM
 
 Développements similaires dans plusieurs codes (CEDRE, SPACE, CWIPI) : partitionnement, IO, localisation (géométrie)
 Parallèle complexe intérêt de multualiser => détails pypart, pario ...(agrégation pour centraliser)
