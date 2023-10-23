@@ -450,6 +450,28 @@ vtx_coord_ext = part_ext.get_coord(i_zone,
                                    i_part)
 ```
 
+```{code-cell}
+%%code_block -p exercise_1 -i 13
+
+face_vtx = PDM.compute_face_vtx_from_face_and_edge(face_edge_idx,
+                                                   face_edge,
+                                                   edge_vtx)
+face_vtx_idx = np.array([3*i for i in range(n_face+1)]).astype(np.intc)
+
+PDM.writer_wrapper(comm,
+                   "visu",
+                   "pmesh",
+                   [coords],
+                   [vtx_ln_to_gn],
+                   [face_vtx_idx],
+                   [face_vtx],
+                   [cell_ln_to_gn],
+                   -1,
+                   [cell_face_idx],
+                   [cell_face])
+
+```
+
 ### Step 5
 
 Well, you have nothing to do for step 5 since it is implicit in Python.

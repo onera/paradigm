@@ -50,7 +50,7 @@ Fortran API
   Initialization
   """"""""""""""
 
-  .. f:autosubroutine:: PDM_dcube_nodal_gen_create_
+  .. f:autosubroutine PDM_dcube_nodal_gen_create_
 
   Options
   """""""
@@ -60,9 +60,9 @@ Fortran API
   Mesh generation
   """""""""""""""
 
-  .. f:autosubroutine:: PDM_dcube_nodal_gen_build_
+  .. f:autosubroutine PDM_dcube_nodal_gen_build_
 
-  .. f:autosubroutine:: PDM_dcube_nodal_gen_dmesh_nodal_get_
+  .. f:autosubroutine PDM_dcube_nodal_gen_dmesh_nodal_get_
 
   Finalization
   """"""""""""

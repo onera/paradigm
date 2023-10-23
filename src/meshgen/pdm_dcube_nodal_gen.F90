@@ -160,24 +160,7 @@ module pdm_dcube_nodal_gen
 
   contains
 
-    !>
-    !!
-    !! \brief Create a distributed nodal cube mesh
-    !!
-    !! \param [in]   comm           Communicator
-    !! \param [in]   n_x            Number of elements in x-direction
-    !! \param [in]   n_y            Number of elements in y-direction
-    !! \param [in]   n_z            Number of elements in z-direction
-    !! \param [in]   length         Length of cube side
-    !! \param [in]   xmin           Minimal x-coordinate
-    !! \param [in]   ymin           Minimal y-coordinate
-    !! \param [in]   zmin           Minimal z-coordinate
-    !! \param [in]   elt_type       Element type
-    !! \param [in]   order          Element order
-    !! \param [in]   ownership      Object ownership
-    !!
-    !! \param [out] dcube           Pointer to \ref PDM_dcube_nodal_t object
-    !!
+    ! Create a distributed nodal cube mesh
 
     subroutine PDM_dcube_nodal_gen_create_(dcube,     &
                                            f_comm,    &
@@ -195,12 +178,18 @@ module pdm_dcube_nodal_gen
       use iso_c_binding
       implicit none
 
-      integer,              intent(in) :: f_comm
-      integer,              intent(in) :: n_x, n_y, n_z
-      integer,              intent(in) :: elt_type, order, ownership
+      integer,              intent(in) :: f_comm    ! Communicator
+      integer,              intent(in) :: n_x       ! Number of elements in x-direction
+      integer,              intent(in) :: n_y       ! Number of elements in y-direction
+      integer,              intent(in) :: n_z       ! Number of elements in z-direction
+      integer,              intent(in) :: elt_type  ! Element type
+      integer,              intent(in) :: order     ! Element order
+      integer,              intent(in) :: ownership ! Object ownership
 
-      double precision,     intent(in) :: length
-      double precision,     intent(in) :: xmin, ymin, zmin
+      double precision,     intent(in) :: length    ! Length of cube side
+      double precision,     intent(in) :: xmin      ! Minimal x-coordinate
+      double precision,     intent(in) :: ymin      ! Minimal y-coordinate
+      double precision,     intent(in) :: zmin      ! Minimal z-coordinate
 
       integer(c_int) :: c_comm
       integer(c_int) :: c_n_x, c_n_y, c_n_z
@@ -209,7 +198,7 @@ module pdm_dcube_nodal_gen
       real(c_double) :: c_length
       real(c_double) :: c_xmin, c_ymin, c_zmin
 
-      type (c_ptr)   :: dcube
+      type (c_ptr)   :: dcube                        ! Pointer to \ref PDM_dcube_nodal_t object
 
       c_comm = PDM_MPI_Comm_f2c(f_comm)
 
@@ -238,14 +227,7 @@ module pdm_dcube_nodal_gen
 
     end subroutine PDM_dcube_nodal_gen_create_
 
-    !>
-    !!
-    !! \brief Build a \ref PDM_dcube_nodal_t structure
-    !!
-    !! \param [in] dcube           Pointer to \ref PDM_dcube_nodal_t object
-    !!
-    !! \param [out] dmn            Pointer to \ref PDM_mesh_nodal_t object
-    !!
+    ! Build a \ref PDM_dcube_nodal_t structure
 
     subroutine PDM_dcube_nodal_gen_build_(dcube, &
                                           dmn)
@@ -253,22 +235,15 @@ module pdm_dcube_nodal_gen
       use iso_c_binding
       implicit none
 
-      type(c_ptr), value   :: dcube
+      type(c_ptr), value   :: dcube ! Pointer to \ref PDM_dcube_nodal_t object
 
-      type (c_ptr)         :: dmn
+      type (c_ptr)         :: dmn   ! Pointer to \ref PDM_mesh_nodal_t object
 
       dmn = PDM_dcube_nodal_gen_build_cf(dcube)
 
     end subroutine PDM_dcube_nodal_gen_build_
 
-    !>
-    !!
-    !! \brief Get the \ref PDM_dmesh_nodal_t associated to a \ref PDM_dcube_nodal_t
-    !!
-    !! \param [in] dcube           Pointer to \ref PDM_dcube_nodal_t object
-    !!
-    !! \param [out] dmn            Pointer to \ref PDM_mesh_nodal_t object
-    !!
+    ! Get the \ref PDM_dmesh_nodal_t associated to a \ref PDM_dcube_nodal_t
 
     subroutine PDM_dcube_nodal_gen_dmesh_nodal_get_(dcube, &
                                                     dmn)
@@ -276,9 +251,9 @@ module pdm_dcube_nodal_gen
       use iso_c_binding
       implicit none
 
-      type(c_ptr), value   :: dcube
+      type(c_ptr), value   :: dcube ! Pointer to \ref PDM_dcube_nodal_t object
 
-      type (c_ptr)         :: dmn
+      type (c_ptr)         :: dmn   ! Pointer to \ref PDM_mesh_nodal_t object
 
       dmn = PDM_dcube_nodal_gen_dmesh_nodal_get_cf(dcube)
 
