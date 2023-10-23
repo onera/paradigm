@@ -501,14 +501,22 @@ PDM_part_distgroup_to_partgroup
                                                       1,
                                                       comm);
   } else {
+
+    double* weights = malloc(dgroup_tot_size * sizeof(double));
+    for(int i = 0; i < dgroup_tot_size; ++i) {
+      weights[i] = 1.;
+    }
+
+    log_trace("PDM_part_distgroup_to_partgroup cas 2\n");
     ptb_group = PDM_part_to_block_create(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
                                          PDM_PART_TO_BLOCK_POST_MERGE,
                                          1.,
                         (PDM_g_num_t **) &dgroup,
-                                          NULL,
+                                         &weights,
                                          &dgroup_tot_size,
                                          1,
                                          comm);
+    free(weights);
   }
 
   /*

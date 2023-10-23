@@ -804,14 +804,22 @@ PDM_reverse_dparent_gnum
 
   /* First part_to_block to map in parent block the child g_num */
   int dn_child_elmt = delmt_child_distrib[i_rank+1] - delmt_child_distrib[i_rank];
+
+  double* weights = malloc(dn_child_elmt * sizeof(double));
+  for(int i = 0; i < dn_child_elmt; ++i) {
+    weights[i] = 1.;
+  }
+
+
   PDM_part_to_block_t* ptb = PDM_part_to_block_create(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
                                                       PDM_PART_TO_BLOCK_POST_MERGE,
                                                       1.,
                                                       &dparent_gnum,
-                                                      NULL,
+                                                      &weights,
                                                       &dn_child_elmt,
                                                       1,
                                                       comm);
+  free(weights);
 
   int         *pblk_child_n    = (int         *) malloc( dn_child_elmt * sizeof(int        ));
   PDM_g_num_t *pblk_child_gnum = (PDM_g_num_t *) malloc( dn_child_elmt * sizeof(PDM_g_num_t));
