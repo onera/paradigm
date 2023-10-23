@@ -590,6 +590,9 @@ Once the partitionned mesh retrieved we can **free** (step 5) the memory allocat
 
 ### Step 5 (and visualisation)
 
+Tester avec : /stck/bmaugars/dev/dev-Tools/paradigma/paradigm/extensions/paradigma/test/pdm_t_mesh_location_chimera_cubes.c
+et juste sortir un vtk sur un rang avec un champ
+
 ```{code-cell}
 %%code_block -p exercise_1 -i 18
 
