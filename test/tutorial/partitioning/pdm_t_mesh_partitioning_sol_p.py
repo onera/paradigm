@@ -150,9 +150,9 @@ def run_test():
                                  comm)
 
     # step 2 : set
-    output = PDM.multipart_graph_comm_get(i_part,
-                                          i_zone,
-                                          PDM._PDM_BOUND_TYPE_VTX)
+    output = mpart.multipart_graph_comm_get(i_part,
+                                            i_zone,
+                                            PDM._PDM_BOUND_TYPE_VTX)
 
     vtx_part_bound_proc_idx = output["np_entity_part_bound_proc_idx"]
     vtx_part_bound_part_idx = output["np_entity_part_bound_part_idx"]

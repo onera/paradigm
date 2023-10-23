@@ -359,8 +359,14 @@ part_ext = PDM.PartExtension(n_zone,
 ```{code-cell}
 %%code_block -p exercise_1 -i 15
 
-face_group_idx =  np.array([0 for i in range(n_face+1)]).astype(np.intc)
-vtx_part_bound_part_idx = np.array([0 for i in range(n_part+2)]).astype(np.intc) # why ??
+output = mpart.multipart_graph_comm_get(i_part,
+                                        i_zone,
+                                        PDM._PDM_BOUND_TYPE_VTX)
+
+vtx_part_bound_proc_idx = output["np_entity_part_bound_proc_idx"]
+vtx_part_bound_part_idx = output["np_entity_part_bound_part_idx"]
+vtx_part_bound          = output["np_entity_part_bound"]
+
 part_ext.set_part(i_zone,
                   i_part,
                   n_cell,
@@ -377,16 +383,16 @@ part_ext.set_part(i_zone,
                   None, # face_vtx_idx
                   None, # face_vtx
                   edge_vtx,
-                  face_group_idx,
+                  None, # face_group_idx
                   None, # face_group
                   None, # face_join_idx
                   None, # face_join
                   None, # face_part_bound_proc_idx
                   None, # face_part_bound_part_idx
                   None, # face_part_bound
-                  None, # vtx_part_bound_proc_idx
+                  vtx_part_bound_proc_idx,
                   vtx_part_bound_part_idx,
-                  None, # vtx_part_bound
+                  vtx_part_bound,
                   cell_ln_to_gn,
                   face_ln_to_gn,
                   edge_ln_to_gn,

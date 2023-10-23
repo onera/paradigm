@@ -461,15 +461,18 @@ Once the partitionned mesh retrieved we can **free** (step 5) the memory allocat
 ```{code-cell}
 %%code_block -p exercise_1 -i 15
 
-  int *face_group_idx = malloc(sizeof(int) * (n_face+1));
-  for (int i = 0; i < n_face + 1; i++) {
-    face_group_idx[i] = 0;
-  }
+  int *vtx_part_bound_proc_idx = NULL;
+  int *vtx_part_bound_part_idx = NULL;
+  int *vtx_part_bound          = NULL;
+  PDM_multipart_part_graph_comm_get(mpart,
+                                    i_zone,
+                                    i_part,
+                                    PDM_BOUND_TYPE_VTX,
+                                    &vtx_part_bound_proc_idx,
+                                    &vtx_part_bound_part_idx,
+                                    &vtx_part_bound,
+                                    PDM_OWNERSHIP_KEEP);
 
-  int *vtx_part_bound_part_idx = malloc(sizeof(int) * (n_part + 2)); // why ??
-  for (int i = 0; i < n_part+2; i++) { // why ??
-    vtx_part_bound_part_idx[i] = 0;
-  }
   PDM_part_extension_set_part(part_ext,
                               i_zone,
                               i_part,
@@ -487,16 +490,16 @@ Once the partitionned mesh retrieved we can **free** (step 5) the memory allocat
                               NULL, // face_vtx_idx
                               NULL, // face_vtx
                               edge_vtx,
-                              face_group_idx,
+                              NULL, // face_group_idx
                               NULL, // face_group
                               NULL, // face_join_idx
                               NULL, // face_join
                               NULL, // face_part_bound_proc_idx
                               NULL, // face_part_bound_part_idx
                               NULL, // face_part_bound
-                              NULL, // vtx_part_bound_proc_idx
+                              vtx_part_bound_proc_idx,
                               vtx_part_bound_part_idx,
-                              NULL, // vtx_part_bound
+                              vtx_part_bound,
                               cell_ln_to_gn,
                               face_ln_to_gn,
                               edge_ln_to_gn,
@@ -591,9 +594,6 @@ Once the partitionned mesh retrieved we can **free** (step 5) the memory allocat
 
   // free
   PDM_part_extension_free(part_ext);
-
-  free(face_group_idx);
-  free(vtx_part_bound_part_idx);
 
   free(face_vtx_idx);
   free(face_vtx);
