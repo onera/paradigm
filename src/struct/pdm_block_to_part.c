@@ -16,6 +16,7 @@
 #include "pdm_array.h"
 #include "pdm_priv.h"
 #include "pdm_logging.h"
+#include "pdm_distrib.h"
 #include "pdm_timer.h"
 
 #ifdef __cplusplus
@@ -338,7 +339,13 @@ PDM_block_to_part_create_from_sparse_block
   PDM_g_num_t gmax_part_g_num = 0;
   PDM_MPI_Allreduce(&max_part_g_num, &gmax_part_g_num, 1,
                     PDM__PDM_MPI_G_NUM, PDM_MPI_MAX, comm);
-  _block_distrib_idx[n_rank] = PDM_MAX(_block_distrib_idx[n_rank], gmax_part_g_num+1);
+
+  if(_block_distrib_idx[n_rank] == 0) {
+    free(_block_distrib_idx);
+    _block_distrib_idx = PDM_compute_uniform_entity_distribution(comm, gmax_part_g_num);
+  }
+
+  // _block_distrib_idx[n_rank] = PDM_MAX(_block_distrib_idx[n_rank], gmax_part_g_num+1);
 
   PDM_block_to_part_t* btp = PDM_block_to_part_create(_block_distrib_idx,
                                                       gnum_elt,

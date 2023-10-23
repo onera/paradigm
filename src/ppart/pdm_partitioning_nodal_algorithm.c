@@ -856,11 +856,28 @@ PDM_reverse_dparent_gnum
   // PDM_g_num_t n_g_parent = parent_distrib[n_rank]+1;
   // PDM_g_num_t* block_distrib_tmp_idx = PDM_part_to_block_adapt_partial_block_to_block(ptb, &blk_child_n, n_g_parent);
 
-  int dn_parent                 = PDM_part_to_block_n_elt_block_get(ptb);
-  PDM_g_num_t* blk_dparent_gnum = PDM_part_to_block_block_gnum_get(ptb);
+  int dn_parent                     = PDM_part_to_block_n_elt_block_get(ptb);
+  PDM_g_num_t* blk_dparent_gnum_ptp = PDM_part_to_block_block_gnum_get(ptb);
 
   free(pblk_child_n   );
   free(pblk_child_gnum);
+
+
+  int dn_parent_filter = 0;
+  int         *blk_child_n_filter = malloc(dn_parent * sizeof(int        ));
+  PDM_g_num_t *blk_dparent_gnum    = malloc(dn_parent * sizeof(PDM_g_num_t));
+
+  for(int i = 0; i < dn_parent; ++i) {
+    if(blk_child_n[i] > 0) {
+      blk_child_n_filter[dn_parent_filter] = blk_child_n         [i];
+      blk_dparent_gnum  [dn_parent_filter] = blk_dparent_gnum_ptp[i];
+      dn_parent_filter++;
+    }
+  }
+
+  dn_parent = dn_parent_filter;
+  free(blk_child_n);
+  blk_child_n = blk_child_n_filter;
 
   /*
    * At this stage we have in each block of parent the global number of child
@@ -920,6 +937,7 @@ PDM_reverse_dparent_gnum
   PDM_part_to_block_free(ptb);
   free(blk_child_n);
   free(blk_child_gnum);
+  free(blk_dparent_gnum);
   // free(block_distrib_tmp_idx);
 
   /*
