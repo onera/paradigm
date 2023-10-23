@@ -11,9 +11,9 @@ kernelspec:
   name: python3
 ---
 
-# Inntroduction
+# Introduction
 
-Welcome to the CWIPI library introductory day !
+Welcome to the ParaDiGM library introductory day !
 
 The aim of the day is to give you : 
  - An overview of functionality
@@ -29,16 +29,42 @@ The training will take place in three stages:
     - Exercice 1 : Mesh partitioning
     - Exercice 2 : Localization of a point cloud inside a mesh
 
+# ParaDiGM highlights
+
 ## Origins of ParaDiGM
 
-Développements similaires dans plusieurs codes (CEDRE, SPACE, CWIPI) : partitionnement, IO, localisation (géométrie)
-Parallèle complexe intérêt de multualiser => détails pypart, pario ...(agrégation pour centraliser)
+From 2009 to 2015, various HPC libraries dedicated to different themes were written. ppart for parallel graph partitioning, pario for parallel I/O as an overlay to MPI-IO, CWIPI for HPC coupling... These libraries shared many principles and structures and were complementary. The idea of merging these libraries into a single one emerged in 2016.  ParaDiGM was born!
 
-## Sucess story
+As the CWIPI library was already well used in the academic and industrial communities, it was retained, but its entire algorithmic core was replaced by ParaDiGM.
 
-Objectif paralléliser CEDRE et les IO (date?) : pas seulement solveur aussi pre-post processing (gains qualitatifs?)
-Distance aux parois (gains quantitatifs?)
-Besoin bibliothèque géométrique efficace
+## Goal
+
+Mettre l'image du workflow full parallel + l'image illustrée des fonctionnalitées 
+
+octree gros
+
+## Licence
+
+ParaDiGM is licensed under LGPL V3.0
+
+## Diffusion
+
+diffusion interne + github
+
+## Releases
+
+The latest stable version is 2.4.0, released on November ??, 2023.
+
+The first stable version 1.0.0 was released on March 22, 2017.
+
+Minor versions are released every 3 to 4 months and main versions are released every 2 to 4 years
+
+Backward compatibility is not guaranteed between two major versions. 
+
+API compatibility is guaranteed between two minor versions, except for new beta functionalities. 
+
+## Man power
+
 
 Eco-système : Cible de la bibliothèque : développeur de code scientifique -> parler du man power (DAAA/DMPE)
 Nicolas avec ModeTech : modérniser existant
@@ -55,15 +81,99 @@ Différence ParaDiGM et ParaDiGMa -> mentionner extension
 
 ## Installation
 
--> pas leur faire faire mais penser à les ajouter sur le GitLab : les faire aller sur GitLab où est-ce que c'est décrit comment faire
--> démo en direct ?
--> build.sh le montrer voir faire utiliser ?
--> mentionner les dépendances : MPI, Scotch, Metis (32 ou 64 bit peu importe)
+Installation Instructions
+*************************
 
-Installation depuis GitLab
-Comment générer la documentation ?
+Basic Installation
+==================
 
-=> pas s'éterniser, c'est standard !
+cmake .
+make
+make install
+
+CMake general options
+=====================
+
+cmake . -D<option1_name>=<option1_value> ... -D<optionn_name>=<optionn_value>
+
+Prefix :
+    CMAKE_INSTALL_PREFIX=<prefix>
+
+Enable fortran interface :
+    PDM_ENABLE_Fortran=<ON | OFF> (default : OFF)
+
+Enable python interface :
+    PDM_ENABLE_PYTHON_BINDINGS=<ON | OFF> (default : OFF)
+      If a simple autodetection fails, you can use these options to find Python :
+        Python_ROOT_DIR=<path> 
+        Python_LIBRARY=<path>
+        Python_INCLUDE_DIR=<path>
+        Python_EXECUTABLE=<path>
+        
+      Refere to FindPython in the CMake documentation for more informations.
+      shared libraries are necessary for python interface (CWP_ENABLE_SHARED=ON)
+
+Enable shared libraries :
+    PDM_ENABLE_SHARED=<ON | OFF> (default : ON)
+
+Enable static libraries :
+    PDM_ENABLE_STATIC=<ON | OFF> (default : ON)
+
+Enable ParMETIS library (parallel graph partition) :
+    PDM_ENABLE_PARMETIS=<ON | OFF> (default : ON)
+      If a simple autodetection fails, you can use these options to find ParMETIS :
+        PARMETIS_DIR=<path>
+
+     To link shared libraries, ParMETIS has to be compiled with "-fPIC" option.
+
+     CMake looks for :
+        - parmetis.h and metis.h includes
+        - parmetis and metis libraries
+
+Enable PTSCOTCH library (parallel graph partition) :
+    PDM_ENABLE_PTSCOTCH=<ON | OFF> (default : ON)
+      If a simple autodetection fails, you can use these options to find ParMETIS :
+        PARMETIS_DIR=<path>
+
+     To link shared libraries, PTSCOTCH has to be compiled with "-fPIC" option. 
+
+     CMake looks for :
+        - ptscotch.h include file
+        - scotch, scotcherr, ptscotch, ptscotcherr libraries
+
+Enable long global number
+     PDM_ENABLE_LONG_G_NUM= <ON | OFF> (default : ON)
+       - ON : PDM_g_num_t type is "long int"
+       - OFF : PDM_g_num_t type is "int"
+
+Enable Docuementation :
+     PDM_ENABLE_DOC= <ON | OFF> (default : OFF)
+
+      prerequis (sphinx, sphinx fortran, ...)
+
+CMake compiler options
+======================
+
+CC=<C compiler> CXX=<CXX compiler> FC=<Fortran compiler> cmake ...
+
+or use the following cmake options
+    CMAKE_C_COMPILER=<C compiler>
+    CMAKE_CXX_COMPILER=<CXX compiler>
+    CMAKE_Fortran_COMPILER=<Fortran compiler>
+
+
+CMake MPI options
+=================
+
+    MPI_C_COMPILER=<C mpi wrapper>
+    MPI_CXX_COMPILER=<CXX mpi wrapper>
+    MPI_Fortran_COMPILER=<Fortran mpi wrapper>
+
+If a simple autodetection fails, you can use these options to find MPI :
+    MPI_<lang>_LIBRARIES
+    MPI_<lang>_INCLUDE_PATH
+
+Refere to FindMPI in the CMake documentation for more informations.
 
 ## Technique
 
