@@ -97,7 +97,11 @@ if(PDM_ENABLE_DOC)
 
     add_custom_target(doc ALL DEPENDS ${SPHINX_INDEX_FILE})
 
-    add_dependencies(doc doxygen Pypdm)
+    add_dependencies(doc doxygen)
+
+    if(PDM_ENABLE_PYTHON_BINDINGS)
+      add_dependencies(doc Pypdm)
+    endif()
 
     add_custom_command(TARGET doc POST_BUILD
                        COMMAND ;
