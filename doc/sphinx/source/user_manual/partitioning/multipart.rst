@@ -30,6 +30,8 @@ Set inputs
 
 .. doxygenfunction:: PDM_multipart_register_joins
 
+.. doxygenfunction:: PDM_multipart_domain_interface_shared_set
+
 
 Renumbering options
 ~~~~~~~~~~~~~~~~~~~
@@ -65,8 +67,6 @@ Get outputs
 
 .. doxygenfunction:: PDM_multipart_bound_get
 
-.. doxygenfunction:: PDM_multipart_domain_interface_shared_set
-
 .. doxygenfunction:: PDM_multipart_part_ghost_infomation_get
 
 .. doxygenfunction:: PDM_multipart_partition_color_get
@@ -74,6 +74,8 @@ Get outputs
 .. doxygenfunction:: PDM_multipart_part_hyperplane_color_get
 
 .. doxygenfunction:: PDM_multipart_part_thread_color_get
+
+.. doxygenfunction:: PDM_multipart_part_graph_comm_get
 
 
 Finalize
@@ -88,8 +90,59 @@ Fortran API
 
 .. ifconfig:: enable_fortran_doc == 'ON'
 
-  .. todo::
-    TODO
+  Initialization
+  ~~~~~~~~~~~~~~
+
+  .. f:autosubroutine:: PDM_multipart_create_
+
+  Set inputs
+  ~~~~~~~~~~
+
+  .. f:autosubroutine:: PDM_multipart_register_dmesh_nodal
+
+  .. f:autosubroutine:: PDM_multipart_register_block
+
+  .. f:autosubroutine:: PDM_multipart_block_set_
+
+  .. f:autosubroutine:: PDM_multipart_register_joins_
+
+  .. f:autosubroutine:: PDM_multipart_domain_interface_shared_set
+
+  Renumbering options
+  ~~~~~~~~~~~~~~~~~~~
+
+  .. f:autosubroutine:: PDM_multipart_set_reordering_options_
+
+  .. f:autosubroutine:: PDM_multipart_set_reordering_options_vtx_
+
+  Perform partitioning
+  ~~~~~~~~~~~~~~~~~~~~
+
+  .. f:autosubroutine:: PDM_multipart_run_ppart
+
+  Get outputs
+  ~~~~~~~~~~~
+
+  .. f:autosubroutine:: PDM_multipart_part_connectivity_get_
+
+  .. f:autosubroutine:: PDM_multipart_part_ln_to_gn_get_
+
+  .. f:autosubroutine:: PDM_multipart_part_vtx_coord_get_
+
+  .. f:autosubroutine:: PDM_multipart_get_part_mesh_nodal_
+
+  .. f:autosubroutine:: PDM_multipart_bound_get_
+
+  .. f:autosubroutine:: PDM_multipart_partition_color_get_
+
+  .. f:autosubroutine:: PDM_multipart_part_ghost_infomation_get_
+
+  .. f:autosubroutine:: PDM_multipart_part_graph_comm_get_
+
+  Finalize
+  ~~~~~~~~
+
+  .. f:autosubroutine:: PDM_multipart_free
 
 .. ifconfig:: enable_fortran_doc == 'OFF'
 

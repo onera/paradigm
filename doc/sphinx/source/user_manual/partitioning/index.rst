@@ -23,9 +23,13 @@ Partitioning
     :ref:`Connectivity transformation <connec_transform>`
       Utilities for processing unstructured mesh connectivities (partitioned and distributed)
 
+  .. container:: card
+
+    :ref:`Part-Extension <part_extension>`
+      Generate partitionned mesh extension
+
 |
 
-* part_extension?
 * renumbering?
 * agglomeration?
 * domain interfaces/joints?
@@ -39,4 +43,5 @@ Partitioning
    multipart
    extract_part
    connec_transform
+   part_extension
 
