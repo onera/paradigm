@@ -1181,11 +1181,15 @@ PDM_generate_mesh_rectangle_ngon
       free (edge_vtx_idx);
     }
 
-    PDM_compute_face_vtx_from_face_and_edge((*pn_face)       [ipart],
-                                            (*pface_edge_idx)[ipart],
-                                            (*pface_edge)    [ipart],
-                                            (*pedge_vtx)     [ipart],
-                                            &(*pface_vtx)    [ipart]);
+    int *face_vtx_idx = NULL;
+    PDM_multipart_part_connectivity_get(mpart,
+                                        0,
+                                        ipart,
+                                        PDM_CONNECTIVITY_TYPE_FACE_VTX,
+                                        &(*pface_vtx)[ipart],
+                                        &face_vtx_idx,
+                                        PDM_OWNERSHIP_USER);
+    free(face_vtx_idx);
   }
 
   PDM_multipart_free(mpart);

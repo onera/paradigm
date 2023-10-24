@@ -17,6 +17,7 @@
 #include "pdm_printf.h"
 #include "pdm_logging.h"
 #include "pdm_writer.h"
+#include "pdm_writer_priv.h"
 
 #include "pdm_generate_mesh.h"
 #include "pdm_mesh_location.h"
@@ -55,7 +56,8 @@ _read_args
  int          *tgt_n_part,
  double       *tgt_xmin,
  double       *tgt_ymin,
- int          *nodal
+ int          *nodal,
+ int          *verbose
  )
 {
   int i = 1;
@@ -120,6 +122,9 @@ _read_args
     else if (strcmp(argv[i], "-nodal") == 0) {
       *nodal = 1;
     }
+    else if (strcmp(argv[i], "-v") == 0) {
+      *verbose = 1;
+    }
     else
       _usage(EXIT_FAILURE);
     i++;
@@ -127,170 +132,7 @@ _read_args
 }
 
 
-static inline double
-_eval_field
-(
- const double x,
- const double y,
- const double z
- )
-{
-  return 1 + 2*x + 3*y + 4*z;
-}
 
-
-static void
-_visu_2d
-(
- PDM_MPI_Comm    comm,
- const char     *directory,
- const char     *name,
- int             n_part,
- int            *n_vtx,
- double        **vtx_coord,
- PDM_g_num_t   **vtx_ln_to_gn,
- int            *n_face,
- int           **face_vtx_idx,
- int           **face_vtx,
- PDM_g_num_t   **face_ln_to_gn,
- int             n_vtx_field,
- const char    **vtx_field_names,
- double       ***vtx_field_values // [i_field][i_part][i_vtx]
- )
-{
-  int i_rank;
-  PDM_MPI_Comm_rank(comm, &i_rank);
-
-  PDM_writer_t *wrt = PDM_writer_create("Ensight",
-                                        PDM_WRITER_FMT_BIN,
-                                        PDM_WRITER_TOPO_CST,
-                                        PDM_WRITER_OFF,
-                                        directory,
-                                        name,
-                                        comm,
-                                        PDM_IO_KIND_MPI_SIMPLE,
-                                        1.,
-                                        NULL);
-
-  int id_geom = PDM_writer_geom_create(wrt,
-                                       name,
-                                       n_part);
-
-  /* Create variables */
-  int id_var_part = PDM_writer_var_create(wrt,
-                                          PDM_WRITER_OFF,
-                                          PDM_WRITER_VAR_SCALAR,
-                                          PDM_WRITER_VAR_ELEMENTS,
-                                          "i_part");
-
-  int id_var_elt_gnum = PDM_writer_var_create(wrt,
-                                              PDM_WRITER_OFF,
-                                              PDM_WRITER_VAR_SCALAR,
-                                              PDM_WRITER_VAR_ELEMENTS,
-                                              "elt_gnum");
-
-  int *id_var_vtx_field = NULL;
-  if (n_vtx_field > 0) {
-    id_var_vtx_field = malloc(sizeof(int) * n_vtx_field);
-
-    for (int i = 0; i < n_vtx_field; i++) {
-      id_var_vtx_field[i] = PDM_writer_var_create(wrt,
-                                                  PDM_WRITER_OFF,
-                                                  PDM_WRITER_VAR_SCALAR,
-                                                  PDM_WRITER_VAR_VERTICES,
-                                                  vtx_field_names[i]);
-    }
-  }
-
-
-  PDM_writer_step_beg(wrt, 0.);
-
-  /* Write geometry */
-  for (int i_part = 0; i_part < n_part; i_part++) {
-    PDM_writer_geom_coord_set(wrt,
-                              id_geom,
-                              i_part,
-                              n_vtx       [i_part],
-                              vtx_coord   [i_part],
-                              vtx_ln_to_gn[i_part],
-                              PDM_OWNERSHIP_USER);
-
-    PDM_writer_geom_faces_facesom_add(wrt,
-                                      id_geom,
-                                      i_part,
-                                      n_face       [i_part],
-                                      face_vtx_idx [i_part],
-                                      NULL,
-                                      face_vtx     [i_part],
-                                      face_ln_to_gn[i_part]);
-  }
-
-  PDM_writer_geom_write(wrt, id_geom);
-
-
-  /* Write "i_part" and "elt_gnum" variables */
-  for (int i_part = 0; i_part < n_part; i_part++) {
-    PDM_real_t *val_part = malloc(sizeof(PDM_real_t) * n_face[i_part]);
-    PDM_real_t *val_gnum = malloc(sizeof(PDM_real_t) * n_face[i_part]);
-
-    for (int i_face = 0; i_face < n_face[i_part]; i_face++) {
-      val_part[i_face] = i_rank*n_part + i_part;
-      val_gnum[i_face] = face_ln_to_gn[i_part][i_face];
-    }
-
-    PDM_writer_var_set(wrt,
-                       id_var_part,
-                       id_geom,
-                       i_part,
-                       val_part);
-    free(val_part);
-
-    PDM_writer_var_set(wrt,
-                       id_var_elt_gnum,
-                       id_geom,
-                       i_part,
-                       val_gnum);
-    free(val_gnum);
-  }
-
-
-  PDM_writer_var_write(wrt, id_var_part);
-  PDM_writer_var_write(wrt, id_var_elt_gnum);
-
-
-   /* Write node-based variables */
-  if (n_vtx_field > 0) {
-    for (int i_part = 0; i_part < n_part; i_part++) {
-      PDM_real_t *val = malloc(sizeof(PDM_real_t) * n_vtx[i_part]);
-
-      for (int i_field = 0; i_field < n_vtx_field; i_field++) {
-        for (int i_vtx = 0; i_vtx < n_vtx[i_part]; i_vtx++) {
-          val[i_vtx] = vtx_field_values[i_field][i_part][i_vtx];
-        }
-
-        PDM_writer_var_set(wrt,
-                           id_var_vtx_field[i_field],
-                           id_geom,
-                           i_part,
-                           val);
-      }
-      free(val);
-    }
-
-    for (int i_field = 0; i_field < n_vtx_field; i_field++) {
-      PDM_writer_var_write(wrt, id_var_vtx_field[i_field]);
-    }
-  }
-
-  PDM_writer_step_end(wrt);
-
-
-  if (n_vtx_field > 0) {
-    free(id_var_vtx_field);
-  }
-
-  PDM_writer_free(wrt);
-}
 
 
 
@@ -313,6 +155,7 @@ int main(int argc, char *argv[])
   double      tgt_xmin      = 0.;
   double      tgt_ymin      = 0.;
   int         nodal         = 0;
+  int         verbose       = 0;
 
   /*
    * Read args
@@ -326,7 +169,8 @@ int main(int argc, char *argv[])
              &tgt_n_part,
              &tgt_xmin,
              &tgt_ymin,
-             &nodal);
+             &nodal,
+             &verbose);
 
 
   /*
@@ -481,7 +325,7 @@ int main(int argc, char *argv[])
   }
 
   /* Set the geometric tolerance (optional) */
-  double tolerance = 1e-3;
+  double tolerance = 1e-6;
   PDM_mesh_location_tolerance_set(mesh_loc, tolerance);
 
   /* Set the location preconditioning method (optional) */
@@ -508,7 +352,9 @@ int main(int argc, char *argv[])
                                                  0,
                                                  i_part);
 
-    PDM_log_trace_array_int(located, n_located, "located : ");
+    if (verbose) {
+      PDM_log_trace_array_int(located, n_located, "located : ");
+    }
 
 
     int n_unlocated = PDM_mesh_location_n_unlocated_get(mesh_loc,
@@ -519,7 +365,9 @@ int main(int argc, char *argv[])
                                                      0,
                                                      i_part);
 
-    PDM_log_trace_array_int(unlocated, n_unlocated, "unlocated : ");
+    if (verbose) {
+      PDM_log_trace_array_int(unlocated, n_unlocated, "unlocated : ");
+    }
   }
 
   /*
@@ -739,36 +587,51 @@ int main(int argc, char *argv[])
     "is_located"
   };
 
-  _visu_2d(comm,
-           "mesh_location_sol",
-           "src_mesh",
-           src_n_part,
-           src_n_vtx,
-           src_vtx_coord,
-           src_vtx_ln_to_gn,
-           src_n_face,
-           src_face_edge_idx,
-           src_face_vtx,
-           src_face_ln_to_gn,
-           0,
-           NULL,
-           NULL);
+  writer_wrapper(comm,
+                 "mesh_location_sol",
+                 "src_mesh",
+                 src_n_part,
+                 src_n_vtx,
+                 src_vtx_coord,
+                 src_vtx_ln_to_gn,
+                 src_n_face,
+                 src_face_edge_idx,
+                 src_face_vtx,
+                 src_face_ln_to_gn,
+                 -1,
+                 0,
+                 NULL,
+                 NULL,
+                 "Ensight",
+                 0,
+                 NULL,
+                 NULL,
+                 0,
+                 NULL,
+                 NULL);
 
-
-  _visu_2d(comm,
-           "mesh_location_sol",
-           "tgt_mesh",
-           tgt_n_part,
-           tgt_n_vtx,
-           tgt_vtx_coord,
-           tgt_vtx_ln_to_gn,
-           tgt_n_face,
-           tgt_face_edge_idx,
-           tgt_face_vtx,
-           tgt_face_ln_to_gn,
-           3,
-           field_name,
-           tgt_field);
+  writer_wrapper(comm,
+                 "mesh_location_sol",
+                 "tgt_mesh",
+                 tgt_n_part,
+                 tgt_n_vtx,
+                 tgt_vtx_coord,
+                 tgt_vtx_ln_to_gn,
+                 tgt_n_face,
+                 tgt_face_edge_idx,
+                 tgt_face_vtx,
+                 tgt_face_ln_to_gn,
+                 -1,
+                 0,
+                 NULL,
+                 NULL,
+                 "Ensight",
+                 0,
+                 NULL,
+                 NULL,
+                 3,
+                 field_name,
+                 tgt_field);
 
 
   /* Free memory */

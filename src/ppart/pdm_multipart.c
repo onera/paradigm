@@ -29,6 +29,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
+#include <string.h>
 
 /*----------------------------------------------------------------------------
  *  Local headers
@@ -61,6 +62,7 @@
 #include "pdm_dmesh_nodal_to_dmesh.h"
 #include "pdm_part_mesh.h"
 #include "pdm_part_mesh_priv.h"
+#include "pdm_part_connectivity_transform.h"
 
 /*----------------------------------------------------------------------------
  *  Header for the current file
@@ -3584,16 +3586,53 @@ const int                       i_part,
                                  connect_idx,
                                  ownership);
 
-  if (connect == NULL) {
+  if (*connect == NULL) {
     if (connectivity_type == PDM_CONNECTIVITY_TYPE_FACE_VTX) {
-      // TODO: build face_vtx connectivity and set requested ownership
-      // PDM_compute_face_vtx_from_face_and_edge(n_face,
-      //                                         face_edge_idx,
-      //                                         face_edge,
-      //                                         edge_vtx,
-      //                                         connect);
+      // Build face_vtx connectivity and set requested ownership
+      int *face_edge_idx = NULL;
+      int *face_edge     = NULL;
+      PDM_part_mesh_connectivity_get(_pmeshes.pmesh,
+                                     i_part,
+                                     PDM_CONNECTIVITY_TYPE_FACE_EDGE,
+                                     &face_edge,
+                                     &face_edge_idx,
+                                     PDM_OWNERSHIP_BAD_VALUE);
+
+      assert(face_edge_idx != NULL);
+      assert(face_edge     != NULL);
+
+      int *edge_vtx_idx = NULL;
+      int *edge_vtx     = NULL;
+      PDM_part_mesh_connectivity_get(_pmeshes.pmesh,
+                                     i_part,
+                                     PDM_CONNECTIVITY_TYPE_EDGE_VTX,
+                                     &edge_vtx,
+                                     &edge_vtx_idx,
+                                     PDM_OWNERSHIP_BAD_VALUE);
+
+      assert(edge_vtx != NULL);
+
+      PDM_compute_face_vtx_from_face_and_edge(pn_entity,
+                                              face_edge_idx,
+                                              face_edge,
+                                              edge_vtx,
+                                              connect);
+
       // copy index?
+      *connect_idx = malloc(sizeof(int) * (pn_entity + 1));
+      memcpy(*connect_idx, face_edge_idx, sizeof(int) * (pn_entity + 1));
     }
+    else {
+      //...
+    }
+
+    // Set the connectivity we just built, with the requested ownership
+    PDM_part_mesh_connectivity_set(_pmeshes.pmesh,
+                                   i_part,
+                                   connectivity_type,
+                                   *connect,
+                                   *connect_idx,
+                                   ownership);
   }
 
   return pn_entity;
