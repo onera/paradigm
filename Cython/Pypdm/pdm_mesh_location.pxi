@@ -185,6 +185,9 @@ cdef class MeshLocation:
   cdef int _n_point_cloud
   cdef int _n_src_part
   cdef list _n_tgt_part_per_cloud
+  
+  cdef double _tolerance
+  cdef PDM_mesh_location_method_t _method
 
   cdef list _np_located, _np_unlocated, _dic_location, _dic_points_in_elt, _dic_cell_vertex
 
@@ -224,6 +227,9 @@ cdef class MeshLocation:
     self._ml = PDM_mesh_location_create(n_point_cloud, PDMC, PDM_OWNERSHIP_UNGET_RESULT_IS_FREE)
 
     # ::::::::::::::::::::::::::::::::::::::::::::::::::
+    # Set defaults to ensure consistency with doc
+    self.tolerance = 0
+    self.method = MeshLocation.OCTREE
 
   # ------------------------------------------------------------------------
   def n_part_cloud_set(self, int i_point_cloud,
@@ -448,33 +454,37 @@ cdef class MeshLocation:
                          <PDM_g_num_t*> vtx_ln_to_gn.data)
 
   # ------------------------------------------------------------------------
-  def tolerance_set(self, double tolerance):
+  @property
+  def tolerance(self):
     """
-    tolerance_set(tolerance)
-
-    Set the relative tolerance for bounding boxes
-
-    Parameters:
-      tolerance (double) : Tolerance (default is 0.)
+    Relative tolerance for bounding boxes. Default value is 0.
     """
+    return self._tolerance
+
+  @tolerance.setter
+  def tolerance(self, double tolerance):
+    """ Tolerance setter """
     PDM_mesh_location_tolerance_set(self._ml, tolerance)
+    self._tolerance = tolerance
 
   # ------------------------------------------------------------------------
-  def method_set(self, PDM_mesh_location_method_t method):
+  @property
+  def method(self):
     """
-    method_set(method)
+    Method used for the preconditioning stage of computing location
 
-    Set the method for computing location (preconditioning stage)
-
-    Parameters:
-      method (int) : Preconditioning method
-
-    Possible values for ``method``:
+    Admissible values are : 
       - :py:attr:`MeshLocation.OCTREE` : Use point octree (default method)
       - :py:attr:`MeshLocation.DBBTREE` : Use bounding-box tree
       - :py:attr:`MeshLocation.LOCATE_ALL_TGT` : All target points are guaranteed to be located
     """
+    return self._method
+
+  @method.setter
+  def method(self, PDM_mesh_location_method_t method):
+    """ Method setter """
     PDM_mesh_location_method_set(self._ml, method)
+    self._method = method
 
   # ------------------------------------------------------------------------
   def __location_get(self, int i_point_cloud, int i_part):

@@ -152,6 +152,11 @@ Python API
 
   .. autofunction:: Pypdm.Pypdm.MeshLocation.__init__
 
+  .. rubric:: Instance attributes
+
+  .. autoattribute:: Pypdm.Pypdm.MeshLocation.tolerance
+  .. autoattribute:: Pypdm.Pypdm.MeshLocation.method
+
   .. rubric:: Methods summary
   
   .. autosummary::
@@ -162,8 +167,6 @@ Python API
     ~Pypdm.Pypdm.MeshLocation.nodal_part_set_2d
     ~Pypdm.Pypdm.MeshLocation.n_part_cloud_set
     ~Pypdm.Pypdm.MeshLocation.cloud_set
-    ~Pypdm.Pypdm.MeshLocation.tolerance_set
-    ~Pypdm.Pypdm.MeshLocation.method_set
     ~Pypdm.Pypdm.MeshLocation.compute
     ~Pypdm.Pypdm.MeshLocation.located_get
     ~Pypdm.Pypdm.MeshLocation.unlocated_get
@@ -193,10 +196,6 @@ Python API
   .. autofunction:: Pypdm.Pypdm.MeshLocation.cloud_set
 
   .. rubric:: Location computation
-
-  .. autofunction:: Pypdm.Pypdm.MeshLocation.tolerance_set
-
-  .. autofunction:: Pypdm.Pypdm.MeshLocation.method_set
 
   .. autofunction:: Pypdm.Pypdm.MeshLocation.compute
 

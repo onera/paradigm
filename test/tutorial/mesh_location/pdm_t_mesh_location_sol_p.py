@@ -246,12 +246,12 @@ def run_tuto():
   """
   Set the geometric tolerance (optional)
   """
-  mesh_loc.tolerance_set(1e-6)
+  mesh_loc.tolerance = 1e-6
 
   """
   Set the location preconditioning method (optional)
   """
-  mesh_loc.method_set(0)
+  mesh_loc.method = PDM.MeshLocation.OCTREE
 
   """
   Compute location

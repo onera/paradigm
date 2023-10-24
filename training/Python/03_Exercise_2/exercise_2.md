@@ -171,10 +171,10 @@ for i_part in range(src_n_part):
 ```{code-cell}
 %%code_block -p exercise_2 -i 7
 # Geometric tolerance
-mesh_loc.tolerance_set(1e-6)
+mesh_loc.tolerance = 1e-6
 
 # Preconditioning method
-mesh_loc.method_set(0)
+mesh_loc.method = PDM.MeshLocation.OCTREE
 
 ```
 
