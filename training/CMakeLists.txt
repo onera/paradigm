@@ -1,4 +1,4 @@
-
+if(PDM_ENABLE_TRAINING)
   include(check_python_module)
 
   if (PDM_ENABLE_FORTRAN)
