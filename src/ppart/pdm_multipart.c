@@ -3597,29 +3597,35 @@ const int                       i_part,
                                      &face_edge_idx,
                                      PDM_OWNERSHIP_BAD_VALUE);
 
-      assert(face_edge_idx != NULL);
-      assert(face_edge     != NULL);
+      if (face_edge_idx != NULL) {
+        /* In some case, face_edge connectivity also does not exists (for example 1d meshes)
+        so we can not always reconstruct face_vtx connectivity (which should not be
+        asked at all, but we preserve old behaviour) */
 
-      int *edge_vtx_idx = NULL;
-      int *edge_vtx     = NULL;
-      PDM_part_mesh_connectivity_get(_pmeshes.pmesh,
-                                     i_part,
-                                     PDM_CONNECTIVITY_TYPE_EDGE_VTX,
-                                     &edge_vtx,
-                                     &edge_vtx_idx,
-                                     PDM_OWNERSHIP_BAD_VALUE);
+        assert(face_edge_idx != NULL);
+        assert(face_edge     != NULL);
 
-      assert(edge_vtx != NULL);
+        int *edge_vtx_idx = NULL;
+        int *edge_vtx     = NULL;
+        PDM_part_mesh_connectivity_get(_pmeshes.pmesh,
+                                      i_part,
+                                      PDM_CONNECTIVITY_TYPE_EDGE_VTX,
+                                      &edge_vtx,
+                                      &edge_vtx_idx,
+                                      PDM_OWNERSHIP_BAD_VALUE);
 
-      PDM_compute_face_vtx_from_face_and_edge(pn_entity,
-                                              face_edge_idx,
-                                              face_edge,
-                                              edge_vtx,
-                                              connect);
+        assert(edge_vtx != NULL);
 
-      // same index as face_edge, do we need a copy?
-      *connect_idx = malloc(sizeof(int) * (pn_entity + 1));
-      memcpy(*connect_idx, face_edge_idx, sizeof(int) * (pn_entity + 1));
+        PDM_compute_face_vtx_from_face_and_edge(pn_entity,
+                                                face_edge_idx,
+                                                face_edge,
+                                                edge_vtx,
+                                                connect);
+
+        // same index as face_edge, do we need a copy?
+        *connect_idx = malloc(sizeof(int) * (pn_entity + 1));
+        memcpy(*connect_idx, face_edge_idx, sizeof(int) * (pn_entity + 1));
+      }
     }
     else {
       // TODO: face_edge/edge_vtx ?
