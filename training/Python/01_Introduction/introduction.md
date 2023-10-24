@@ -39,9 +39,11 @@ As the CWIPI library was already well used in the academic and industrial commun
 
 ## Goal
 
-Mettre l'image du workflow full parallel + l'image illustrée des fonctionnalitées 
+An efficient parallel algorithm takes much longer to write and validate than a sequential one. A simple sequential operation can become very difficult if you want to maintain good load balancing and memory balancing during all algorithm steps.
 
-octree gros
+Mettre image de la planche des fonctionnalites illustrees ....
+
+ParaDiGM aims to offer a set of efficient services to simplify the writing of massively parallel distributed simulation software, from reading data files to writing results. Numerical codes are generally based on a discretization of the study domain which can take the form of an unstructured mesh. ParaDiGM offers some services for unstructured meshes. Most ParaDiGM services are based on unstructured mesh data.       
 
 ## Licence
 
@@ -64,7 +66,6 @@ Backward compatibility is not guaranteed between two major versions.
 API compatibility is guaranteed between two minor versions, except for new beta functionalities. 
 
 ## Man power
-
 
 Eco-système : Cible de la bibliothèque : développeur de code scientifique -> parler du man power (DAAA/DMPE)
 Nicolas avec ModeTech : modérniser existant
