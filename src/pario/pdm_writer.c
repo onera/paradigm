@@ -158,7 +158,7 @@ writer_wrapper
       id_var_elt_field[i] = PDM_writer_var_create(wrt,
                                                   PDM_WRITER_OFF,
                                                   PDM_WRITER_VAR_SCALAR,
-                                                  PDM_WRITER_VAR_VERTICES,
+                                                  PDM_WRITER_VAR_ELEMENTS,
                                                   elt_field_name[i]);
     }
   }

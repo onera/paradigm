@@ -32,9 +32,8 @@ For easier visualization, we will study a two-dimensional case but the feature i
 We will start by generating two partitioned meshes.
 The vertices of one mesh will serve as the target point cloud.
 
-By now you should be capable of partitioning a mesh using **ParaDiGM** (if not you should definitely take a look at [Exercise 1](../02_Exercise_1/exercise_1.ipynb))
-
-so let us take a shortcut and use the [`PDM_generate_mesh`](https://numerics.gitlab-pages.onera.net/mesh/paradigm/dev_formation/user_manual/simple_mesh_gen/generate_mesh.html) service to generate a partitioned mesh in a single function call.
+By now you should be capable of partitioning a mesh using **ParaDiGM** (if not, you should definitely take a look at [**Exercise 1**](../02_Exercise_1/exercise_1.ipynb)).
+To gain some time, let us use the [*PDM_generate_mesh*](https://numerics.gitlab-pages.onera.net/mesh/paradigm/dev_formation/user_manual/simple_mesh_gen/generate_mesh.html) service to generate a partitioned mesh in a single function call.
 
 
 +++
@@ -74,11 +73,11 @@ Your job is to fill the code cells left blank using the API referenced [here](ht
 int main(int argc, char *argv[])
 {
   PDM_g_num_t src_n_vtx_seg = 10;
-  PDM_g_num_t tgt_n_vtx_seg = 10;
+  PDM_g_num_t tgt_n_vtx_seg = 8;
   int         src_n_part    = 1;
   int         tgt_n_part    = 1;
-  double      tgt_xmin      = 0.3;
-  double      tgt_ymin      = 0.3;
+  double      tgt_xmin      = 0.25;
+  double      tgt_ymin      = 0.25;
 
   /*
    * Initialize MPI
@@ -247,7 +246,7 @@ Here you have essentially two options :
 ```{code-cell}
 %%code_block -p exercise_2 -i 7
   // Set the geometric tolerance (optional)
-  double tolerance = 1e-3;
+  double tolerance = 1e-6;
   PDM_mesh_location_tolerance_set(mesh_loc, tolerance);
 
   // Set the location preconditioning method (optional)
@@ -490,12 +489,28 @@ Finally, visualize the interpolated target fields.
   }
 
 
-
   const char *field_name[] = {
     "field1",
     "field2",
     "is_located"
   };
+
+
+  double **src_elt_field_values = malloc(sizeof(double *) * src_n_part);
+  for (int i_part = 0; i_part < src_n_part; i_part++) {
+    src_elt_field_values[i_part] = malloc(sizeof(double) * src_n_face[i_part]);
+    for (int i_elt = 0; i_elt < src_n_face[i_part]; i_elt++) {
+      src_elt_field_values[i_part][i_elt] = (double) src_face_ln_to_gn[i_part][i_elt];
+    }
+  }
+
+  double **src_vtx_field_values = malloc(sizeof(double *) * src_n_part);
+  for (int i_part = 0; i_part < src_n_part; i_part++) {
+    src_vtx_field_values[i_part] = malloc(sizeof(double) * src_n_vtx[i_part]);
+    for (int i_vtx = 0; i_vtx < src_n_vtx[i_part]; i_vtx++) {
+      src_vtx_field_values[i_part][i_vtx] = src_vtx_coord[i_part][3*i_vtx];
+    }
+  }
 
   writer_wrapper(comm,
                  "visu",
@@ -513,12 +528,19 @@ Finally, visualize the interpolated target fields.
                  NULL,
                  NULL,
                  "Ensight",
-                 0,
-                 NULL,
-                 NULL,
-                 0,//3,
-                 field_name,
-                 NULL);//src_field);
+                 1,
+                 &field_name[0],
+                 &src_elt_field_values,
+                 1,
+                 &field_name[1],
+                 &src_vtx_field_values);
+
+  for (int i_part = 0; i_part < src_n_part; i_part++) {
+    free(src_elt_field_values[i_part]);
+    free(src_vtx_field_values[i_part]);
+  }
+  free(src_elt_field_values);
+  free(src_vtx_field_values);
 
 
   writer_wrapper(comm,
