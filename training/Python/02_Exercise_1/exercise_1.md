@@ -453,30 +453,63 @@ vtx_coord_ext = part_ext.get_coord(i_zone,
 ```{code-cell}
 %%code_block -p exercise_1 -i 18
 
-# face_vtx_ext = PDM.compute_face_vtx_from_face_and_edge(face_edge_ext_idx,
-#                                                        face_edge_ext,
-#                                                        edge_vtx_ext)
+total_n_cell = n_cell + n_cell_ext
+total_n_face = n_face + n_face_ext
+total_n_edge = n_edge + n_edge_ext
+total_n_vtx  = n_vtx  + n_vtx_ext
 
-edge_vtx_ext_idx = np.array([2*i for i in range(len(edge_ext_ln_to_gn)+1)]).astype(np.int32)
-face_vtx_ext_idx, face_vtx_ext = PDM.combine_connectivity(face_edge_ext_idx,
-                                                          face_edge_ext,
-                                                          edge_vtx_ext_idx,
-                                                          edge_vtx_ext)
+# Cell
+total_cell_ln_to_gn = np.array(cell_ln_to_gn + cell_ln_to_gn_ext)
 
-face_vtx_ext_idx = np.array([3*i for i in range(len(face_ext_ln_to_gn)+1)]).astype(np.intc)
+total_cell_face_idx = np.zeros(total_n_cell + 1)
+for i in range(n_cell + 1):
+  total_cell_face_idx[i] = cell_face_idx[i]
+for i in range(n_cell_ext + 1):
+  total_cell_face_idx[n_cell + i] = cell_face_idx[n_cell] + cell_face_ext_idx[i]
+
+total_cell_face = np.array(cell_face + cell_face_ext)
+
+# Face
+total_face_ln_to_gn = np.array(face_ln_to_gn + face_ln_to_gn_ext)
+
+total_face_edge_idx = np.zeros(total_n_face + 1)
+for i in range(n_face + 1):
+  total_face_edge_idx[i] = face_edge_idx[i]
+for i in range(n_face_ext + 1):
+  total_face_edge_idx[n_face + i] = face_edge_idx[n_face] + face_edge_ext_idx[i]
+
+total_face_edge = np.array(face_edge + face_edge_ext)
+
+# Edge
+
+total_edge_ln_to_gn = np.array(edge_ln_to_gn + edge_ln_to_gn_ext)
+
+total_edge_vtx = np.array(edge_vtx + edge_vtx_ext)
+
+# Vertices
+
+total_vtx_ln_to_gn = np.array(vtx_ln_to_gn + vtx_ln_to_gn_ext)
+
+total_coords = np.array(coords + vtx_coord_ext)
+
+# face->vtx
+
+total_face_vtx = PDM.compute_face_vtx_from_face_and_edge(total_face_edge_idx,
+                                                         total_face_edge,
+                                                         total_edge_vtx)
+total_face_vtx_idx = np.array([3*i for i in range(total_n_face+1)]).astype(np.intc)
 
 PDM.writer_wrapper(comm,
-                   "visu",
-                   "pext",
-                   [vtx_coord_ext],
-                   [vtx_ext_ln_to_gn],
-                   [face_vtx_ext_idx],
-                   [face_vtx_ext],
-                   [cell_ext_ln_to_gn],
-                   -1,
-                   [cell_face_ext_idx],
-                   [cell_face_ext])
-
+                  "visu",
+                  "pmesh",
+                   [total_coords],
+                   [total_vtx_ln_to_gn],
+                   [total_face_vtx_idx],
+                   [total_face_vtx],
+                   [total_cell_ln_to_gn],
+                   -1, # cell_t
+                   [total_cell_face_idx],
+                   [total_cell_face])
 ```
 
 ### Step 5

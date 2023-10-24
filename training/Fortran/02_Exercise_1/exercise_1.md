@@ -185,6 +185,29 @@ program pdm_t_mesh_partitioning_f
   integer                         :: n_vtx_ext
   double precision,     pointer   :: vtx_coord_ext(:,:)   => null()
   integer(PDM_g_num_s), pointer   :: vtx_ln_to_gn_ext(:)  => null()
+
+  ! Visualisation BONUS
+  double precision, pointer          :: total_coords(:,:) => null()
+  integer(c_int)                     :: total_n_vtx
+
+  integer (pdm_g_num_s), pointer     :: total_vtx_ln_to_gn(:) => null()
+
+  integer(kind=PDM_g_num_s), pointer :: total_edge_ln_to_gn(:) => null()
+  integer(c_int)                     :: total_n_edge
+  integer(kind=PDM_l_num_s), pointer :: total_edge_vtx(:) => null()
+
+  integer(kind=PDM_g_num_s), pointer :: total_face_ln_to_gn(:) => null()
+  integer(c_int)                     :: total_n_face
+  integer(kind=PDM_l_num_s), pointer :: total_face_edge(:) => null()
+  integer(kind=PDM_l_num_s), pointer :: total_face_edge_idx(:) => null()
+
+  integer(kind=PDM_l_num_s), pointer :: total_face_vtx(:) => null()
+  integer(kind=PDM_l_num_s), pointer :: total_face_vtx_idx(:) => null()
+
+  integer(kind=PDM_g_num_s), pointer :: total_cell_ln_to_gn(:) => null()
+  integer(c_int)                     :: total_n_cell
+  integer(kind=PDM_l_num_s), pointer :: total_cell_face(:) => null()
+  integer(kind=PDM_l_num_s), pointer :: total_cell_face_idx(:) => null()
   !-----------------------------------------------------------
 
 ```
@@ -765,6 +788,151 @@ call PDM_part_extension_compute (part_ext)
 
 ```{code-cell}
 %%code_block -p exercise_1 -i 20
+
+  ! Visualisation
+  total_n_cell = n_cell + n_cell_ext
+  total_n_face = n_face + n_face_ext
+  total_n_edge = n_edge + n_edge_ext
+  total_n_vtx  = n_vtx  + n_vtx_ext
+
+  allocate(total_vtx_ln_to_gn(total_n_vtx), &
+           total_coords(3,total_n_vtx),     &
+           total_edge_ln_to_gn(total_n_edge), &
+           total_edge_vtx(2 * total_n_edge), &
+           total_face_ln_to_gn(total_n_face), &
+           total_face_edge_idx(total_n_face+1), &
+           total_cell_ln_to_gn(total_n_cell), &
+           total_cell_face_idx(total_n_cell+1))
+
+  ! Cell
+  do i = 1, n_cell+1
+    total_cell_ln_to_gn(i) = cell_ln_to_gn(i)
+  end do
+  do i = 1, n_cell_ext+1
+    total_cell_ln_to_gn(n_cell + i) = cell_ln_to_gn_ext(i)
+  end do
+
+  do i = 1, n_cell+2
+    total_cell_face_idx(i) = cell_face_idx(i)
+  end do
+  do i = 1, n_cell_ext+2
+    total_cell_face_idx(n_cell + i) = cell_face_idx(n_cell + 1) + cell_face_ext_idx(i)
+  end do
+
+  ! Face
+  do i = 1, n_face+1
+    total_face_ln_to_gn(i) = face_ln_to_gn(i)
+  end do
+  do i = 1, n_face_ext+1
+    total_face_ln_to_gn(n_face + i) = face_ln_to_gn_ext(i)
+  end do
+
+  do i = 1, n_face+2
+    total_face_edge_idx(i) = face_edge_idx(i)
+  end do
+  do i = 1, n_face_ext+2
+    total_face_edge_idx(n_face + i) = face_edge_idx(n_face + 1) + face_edge_ext_idx(i)
+  end do
+
+  ! Edge
+  do i = 1, n_edge+1
+    total_edge_ln_to_gn(i) = edge_ln_to_gn(i)
+  end do
+  do i = 1, n_edge_ext+1
+    total_edge_ln_to_gn(n_edge + i) = edge_ln_to_gn_ext(i)
+  end do
+
+  do i = 1, 2*n_edge+1
+    total_edge_vtx(i) = edge_vtx(i)
+  end do
+  do i = 1, 2*n_edge_ext+1
+    total_edge_vtx(2*n_edge + i) = edge_vtx_ext(i)
+  end do
+
+  ! Vertex
+  do i = 1, n_vtx+1
+    total_vtx_ln_to_gn(i) = vtx_ln_to_gn(i)
+  end do
+  do i = 1, n_vtx_ext+1
+    total_vtx_ln_to_gn(n_vtx + i) = vtx_ln_to_gn_ext(i)
+  end do
+
+  do i = 1, 3*n_vtx+1
+    total_coords(i) = coords(i)
+  end do
+  do i = 1, 3*n_vtx_ext+1
+    total_coords(3*n_vtx + i) = vtx_coord_ext(i)
+  end do
+
+  allocate(total_face_edge(total_face_edge_idx(total_n_face+1))
+           total_cell_face(total_cell_face_idx(total_n_cell+1)))
+
+  ! Cell
+  do i = 1, cell_face_idx(n_cell+1)
+    total_cell_face(i) = cell_face(i)
+  end do
+  do i = 1, cell_face_ext_idx(n_cell_ext+1)
+    total_cell_face(cell_face_idx(n_cell+1) + i) = cell_face_ext(i)
+  end do
+
+  ! Face
+  do i = 1, face_edge_idx(n_face+1)
+    total_face_edge(i) = face_edge(i)
+  end do
+  do i = 1, face_edge_ext_idx(n_face_ext+1)
+    total_face_edge(face_edge_idx(n_face+1) + i) = face_edge_ext(i)
+  end do
+
+  call PDM_compute_face_vtx_from_face_and_edge(total_n_face, &
+                                               total_face_edge_idx, &
+                                               total_face_edge, &
+                                               total_edge_vtx, &
+                                               total_face_vtx)
+
+  allocate(total_face_vtx_idx(total_n_face+1))
+
+  do i = 1, total_n_face+1
+    total_face_vtx_idx(i) = 3*(i-1)
+  end do
+
+  call PDM_pointer_array_part_set(pcoords, 0, total_coords)
+  call PDM_pointer_array_part_set(pvtx_ln_to_gn, 0, total_vtx_ln_to_gn)
+  call PDM_pointer_array_part_set(pelt_vtx_idx, 0, total_face_vtx_idx)
+  call PDM_pointer_array_part_set(pelt_vtx, 0, total_face_vtx)
+  call PDM_pointer_array_part_set(pelt_ln_to_gn, 0, total_cell_ln_to_gn)
+  call PDM_pointer_array_part_set(pcell_face_idx, 0, total_cell_face_idx)
+  call PDM_pointer_array_part_set(pcell_face, 0, total_cell_face)
+
+  call writer_wrapper(comm, &
+                      "visu", &
+                      "pmesh", &
+                      1,  &
+                      pn_vtx, &
+                      pcoords, &
+                      pvtx_ln_to_gn, &
+                      pn_elt, &
+                      pelt_vtx_idx, &
+                      pelt_vtx, &
+                      pelt_ln_to_gn, &
+                      -1, &
+                      pn_face, &
+                      pcell_face_idx, &
+                      pcell_face, &
+                      "Ensight", &
+                      elt_field, &
+                      vtx_field)
+
+
+  deallocate(total_vtx_ln_to_gn, &
+            total_coords,        &
+            total_edge_ln_to_gn, &
+            total_edge_vtx,      &
+            total_face_ln_to_gn, &
+            total_face_edge_idx, &
+            total_face_edge,     &
+            total_cell_ln_to_gn, &
+            total_cell_face_idx, &
+            total_cell_face)
 
   ! free
   call PDM_part_extension_free (part_ext)

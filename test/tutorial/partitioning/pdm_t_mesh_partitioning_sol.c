@@ -14,6 +14,9 @@
 #include "pdm_printf.h"
 #include "pdm_part_extension.h"
 
+#include "pdm_writer_priv.h"
+#include "pdm_part_connectivity_transform.h"
+
 /*============================================================================
  * Private function definitions
  *============================================================================*/
@@ -144,7 +147,7 @@ int main
   // Create partitioning object
   int              n_zone      = 1; // fixed
   int              n_part      = 1; // fixed
-  PDM_split_dual_t part_method = PDM_SPLIT_DUAL_WITH_HILBERT;
+  PDM_split_dual_t part_method = PDM_SPLIT_DUAL_WITH_PTSCOTCH; // PDM_SPLIT_DUAL_WITH_HILBERT;
   PDM_multipart_t *mpart = PDM_multipart_create(n_zone,
                                                 &n_part,
                                                 PDM_FALSE,
@@ -457,9 +460,113 @@ int main
                                  i_part,
                                  &vtx_coord_ext);
 
+    // Fusion partition with partition extension
+
+    int total_n_cell = n_cell + n_cell_ext;
+    int total_n_face = n_face + n_face_ext;
+    int total_n_edge = n_edge + n_edge_ext;
+    int total_n_vtx  = n_vtx  + n_vtx_ext;
+
+    // Cell
+    PDM_g_num_t *total_cell_ln_to_gn = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * total_n_cell);
+    memcpy(total_cell_ln_to_gn,          cell_ln_to_gn,     sizeof(PDM_g_num_t) * n_cell);
+    memcpy(total_cell_ln_to_gn + n_cell, cell_ln_to_gn_ext, sizeof(PDM_g_num_t) * n_cell_ext);
+
+    int *total_cell_face_idx = malloc(sizeof(int) * (total_n_cell + 1));
+    memcpy(total_cell_face_idx, cell_face_idx, sizeof(int) * (n_cell + 1));
+
+    for (int i = 0; i <= n_cell_ext; i++) {
+      total_cell_face_idx[n_cell + i] = cell_face_idx[n_cell] + cell_face_ext_idx[i];
+    } // end loop on extension cells
+
+    int *total_cell_face = malloc(sizeof(int) * total_cell_face_idx[total_n_cell]);
+    memcpy(total_cell_face,                         cell_face,     sizeof(int) * cell_face_idx[n_cell]);
+    memcpy(total_cell_face + cell_face_idx[n_cell], cell_face_ext, sizeof(int) * cell_face_ext_idx[n_cell_ext]);
+
+    // Face
+    PDM_g_num_t *total_face_ln_to_gn = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * total_n_face);
+    memcpy(total_face_ln_to_gn,          face_ln_to_gn,     sizeof(PDM_g_num_t) * n_face);
+    memcpy(total_face_ln_to_gn + n_face, face_ln_to_gn_ext, sizeof(PDM_g_num_t) * n_face_ext);
+
+    int *total_face_edge_idx = malloc(sizeof(int) * (total_n_face + 1));
+    memcpy(total_face_edge_idx, face_edge_idx, sizeof(int) * (n_face + 1));
+
+    for (int i = 0; i <= n_face_ext; i++) {
+      total_face_edge_idx[n_face + i] = face_edge_idx[n_face] + face_edge_ext_idx[i];
+    } // end loop on extension faces
+
+    int *total_face_edge = malloc(sizeof(int) * total_face_edge_idx[total_n_face]);
+    memcpy(total_face_edge,                         face_edge,     sizeof(int) * face_edge_idx[n_face]);
+    memcpy(total_face_edge + face_edge_idx[n_face], face_edge_ext, sizeof(int) * face_edge_ext_idx[n_face_ext]);
+
+    // Edge
+    PDM_g_num_t *total_edge_ln_to_gn = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * total_n_edge);
+    memcpy(total_edge_ln_to_gn,          edge_ln_to_gn,     sizeof(PDM_g_num_t) * n_edge);
+    memcpy(total_edge_ln_to_gn + n_edge, edge_ln_to_gn_ext, sizeof(PDM_g_num_t) * n_edge_ext);
+
+    int *total_edge_vtx = malloc(sizeof(int) * 2 * total_n_edge);
+    memcpy(total_edge_vtx,              edge_vtx,     sizeof(int) * 2 * n_edge);
+    memcpy(total_edge_vtx + 2 * n_edge, edge_vtx_ext, sizeof(int) * 2 * n_edge_ext);
+
+    // Vtx
+    PDM_g_num_t *total_vtx_ln_to_gn = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * total_n_vtx);
+    memcpy(total_vtx_ln_to_gn,          vtx_ln_to_gn,     sizeof(PDM_g_num_t) * n_vtx);
+    memcpy(total_vtx_ln_to_gn + n_vtx, vtx_ln_to_gn_ext, sizeof(PDM_g_num_t) * n_vtx_ext);
+
+    double *total_coords = (double *) malloc(sizeof(double) * 3 * total_n_vtx);
+    memcpy(total_coords,             coords,        sizeof(double) * 3 * n_vtx);
+    memcpy(total_coords + 3 * n_vtx, vtx_coord_ext, sizeof(double) * 3 * n_vtx_ext);
+
+    // Create face->vtx
+    int *total_face_vtx = NULL;
+    PDM_compute_face_vtx_from_face_and_edge(total_n_face,
+                                            total_face_edge_idx,
+                                            total_face_edge,
+                                            total_edge_vtx,
+                                            &total_face_vtx);
+
+    int *total_face_vtx_idx = malloc(sizeof(int) * (total_n_face+1));
+    for (int i = 0; i < total_n_face + 1; i++) {
+      total_face_vtx_idx[i] = 3 * i; // triangle
+    }
+
+    writer_wrapper(comm,
+                   "visu",
+                   "pmesh",
+                    1, // n_part
+                    &total_n_vtx,
+                    &total_coords,
+                    &total_vtx_ln_to_gn,
+                    &total_n_cell,
+                    &total_face_vtx_idx,
+                    &total_face_vtx,
+                    &total_cell_ln_to_gn,
+                    -1, // cell_t
+                    &total_n_face,
+                    &total_cell_face_idx,
+                    &total_cell_face,
+                    "Ensight",
+                    0, // n_elt_field
+                    NULL, // elt_field_name
+                    NULL, // elt_field_values
+                    0, // n_vtx_field
+                    NULL, // vtx_field_name
+                    NULL); // vtx_field_values
+
+    // free fusion
+    free(total_cell_ln_to_gn);
+    free(total_cell_face_idx);
+    free(total_cell_face);
+    free(total_face_ln_to_gn);
+    free(total_face_edge_idx);
+    free(total_face_edge);
+    free(total_edge_ln_to_gn);
+    free(total_edge_vtx);
+    free(total_vtx_ln_to_gn);
+    free(total_coords);
+
     // step 5 : free
     PDM_part_extension_free(part_ext);
-
 
     // free
     free(vtx_ln_to_gn);
