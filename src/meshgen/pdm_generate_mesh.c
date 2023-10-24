@@ -68,7 +68,7 @@ _dmn_to_multipart
 
  PDM_multipart_register_dmesh_nodal(*mpart, 0, dmn);
 
- PDM_multipart_run_ppart(*mpart);
+ PDM_multipart_compute(*mpart);
 
 }
 

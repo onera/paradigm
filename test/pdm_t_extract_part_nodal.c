@@ -218,7 +218,7 @@ int main(int argc, char *argv[])
   PDM_multipart_register_dmesh_nodal(mpart, 0, dmn);
   // PDM_multipart_register_block      (mpart, 0, dm );
 
-  PDM_multipart_run_ppart(mpart);
+  PDM_multipart_compute(mpart);
 
   PDM_g_num_t n_cell_abs;
   PDM_g_num_t n_face_abs;

@@ -3063,7 +3063,7 @@ void PDM_multipart_set_reordering_options_vtx
  * \param [in]   multipart             Pointer to \ref PDM_multipart_t object
  */
 void
-PDM_multipart_run_ppart
+PDM_multipart_compute
 (
  PDM_multipart_t *multipart
 )
@@ -3583,6 +3583,18 @@ const int                       i_part,
                                  connect,
                                  connect_idx,
                                  ownership);
+
+  if (connect == NULL) {
+    if (connectivity_type == PDM_CONNECTIVITY_TYPE_FACE_VTX) {
+      // TODO: build face_vtx connectivity and set requested ownership
+      // PDM_compute_face_vtx_from_face_and_edge(n_face,
+      //                                         face_edge_idx,
+      //                                         face_edge,
+      //                                         edge_vtx,
+      //                                         connect);
+      // copy index?
+    }
+  }
 
   return pn_entity;
 }

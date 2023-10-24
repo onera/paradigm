@@ -53,7 +53,7 @@ Renumbering options
 Perform partitioning
 ~~~~~~~~~~~~~~~~~~~~
 
-.. doxygenfunction:: PDM_multipart_run_ppart
+.. doxygenfunction:: PDM_multipart_compute
 
 .. doxygenfunction:: PDM_multipart_stat_get
 
@@ -120,13 +120,13 @@ Python API
   Set inputs
   ~~~~~~~~~~
 
-  .. autofunction:: Pypdm.Pypdm.MultiPart.multipart_register_dmesh_nodal
+  .. autofunction:: Pypdm.Pypdm.MultiPart.register_dmesh_nodal
 
-  .. autofunction:: Pypdm.Pypdm.MultiPart.multipart_register_block
+  .. autofunction:: Pypdm.Pypdm.MultiPart.register_block
 
-  .. autofunction:: Pypdm.Pypdm.MultiPart.multipart_block_set
+  .. autofunction:: Pypdm.Pypdm.MultiPart.block_set
 
-  .. autofunction:: Pypdm.Pypdm.MultiPart.multipart_register_joins
+  .. autofunction:: Pypdm.Pypdm.MultiPart.register_joins
 
 
   Renumbering options
@@ -135,39 +135,39 @@ Python API
   .. todo::
     List available renumbering methods
 
-  .. autofunction:: Pypdm.Pypdm.MultiPart.multipart_set_reordering
+  .. autofunction:: Pypdm.Pypdm.MultiPart.set_reordering
 
-  .. autofunction:: Pypdm.Pypdm.MultiPart.multipart_set_reordering_vtx
+  .. autofunction:: Pypdm.Pypdm.MultiPart.set_reordering_vtx
 
 
   Perform partitioning
   ~~~~~~~~~~~~~~~~~~~~
 
-  .. autofunction:: Pypdm.Pypdm.MultiPart.multipart_run_ppart
+  .. autofunction:: Pypdm.Pypdm.MultiPart.compute
 
 
   Get outputs
   ~~~~~~~~~~~
 
-  .. autofunction:: Pypdm.Pypdm.MultiPart.multipart_n_entity_get
+  .. autofunction:: Pypdm.Pypdm.MultiPart.n_entity_get
 
-  .. autofunction:: Pypdm.Pypdm.MultiPart.multipart_connectivity_get
+  .. autofunction:: Pypdm.Pypdm.MultiPart.connectivity_get
 
-  .. autofunction:: Pypdm.Pypdm.MultiPart.multipart_ln_to_gn_get
+  .. autofunction:: Pypdm.Pypdm.MultiPart.ln_to_gn_get
 
-  .. autofunction:: Pypdm.Pypdm.MultiPart.multipart_vtx_coord_get
+  .. autofunction:: Pypdm.Pypdm.MultiPart.vtx_coord_get
 
-  .. autofunction:: Pypdm.Pypdm.MultiPart.multipart_part_mesh_nodal_get
+  .. autofunction:: Pypdm.Pypdm.MultiPart.part_mesh_nodal_get
 
-  .. autofunction:: Pypdm.Pypdm.MultiPart.multipart_graph_comm_get
+  .. autofunction:: Pypdm.Pypdm.MultiPart.graph_comm_get
 
-  .. autofunction:: Pypdm.Pypdm.MultiPart.multipart_ghost_information_get
+  .. autofunction:: Pypdm.Pypdm.MultiPart.ghost_information_get
 
-  .. autofunction:: Pypdm.Pypdm.MultiPart.multipart_part_color_get
+  .. autofunction:: Pypdm.Pypdm.MultiPart.part_color_get
 
-  .. autofunction:: Pypdm.Pypdm.MultiPart.multipart_hyper_plane_color_get
+  .. autofunction:: Pypdm.Pypdm.MultiPart.hyper_plane_color_get
 
-  .. autofunction:: Pypdm.Pypdm.MultiPart.multipart_thread_color_get
+  .. autofunction:: Pypdm.Pypdm.MultiPart.thread_color_get
 
 
 .. ifconfig:: enable_python_doc == 'OFF'

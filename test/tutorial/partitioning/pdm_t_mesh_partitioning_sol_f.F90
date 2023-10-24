@@ -239,7 +239,7 @@ program pdm_t_mesh_partitioning_sol_f
                                           i_zone, &
                                           dmn)
 
-  call PDM_multipart_run_ppart(mpart)
+  call PDM_multipart_compute(mpart)
 
   ! Get mesh arrrays in FE structure
   if (fe .eq. 1) then

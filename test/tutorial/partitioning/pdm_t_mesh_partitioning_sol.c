@@ -165,7 +165,7 @@ int main
 
   PDM_multipart_register_dmesh_nodal(mpart, 0, dmn);
 
-  PDM_multipart_run_ppart(mpart);
+  PDM_multipart_compute(mpart);
 
   int i_section = 0; // fixed
   int i_zone    = 0; // fixed

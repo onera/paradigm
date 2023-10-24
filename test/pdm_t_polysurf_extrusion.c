@@ -432,7 +432,7 @@ int main(int argc, char *argv[])
     PDM_multipart_register_block (mpart, 0, dmesh);
 
     /* Run */
-    PDM_multipart_run_ppart (mpart);
+    PDM_multipart_compute (mpart);
 
   }
 

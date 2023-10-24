@@ -247,7 +247,7 @@ void PDM_multipart_set_reordering_options_vtx
  * \param [in]   multipart             Pointer to \ref PDM_multipart_t object
  */
 void
-PDM_multipart_run_ppart
+PDM_multipart_compute
 (
  PDM_multipart_t *multipart
 );

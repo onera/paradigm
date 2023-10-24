@@ -377,7 +377,7 @@ _cube_mesh2
      * Split mesh
      */
     PDM_multipart_register_dmesh_nodal(mpart, 0, dmn);
-    PDM_multipart_run_ppart(mpart);
+    PDM_multipart_compute(mpart);
 
     PDM_dcube_nodal_gen_free(dcube);
   }
@@ -465,7 +465,7 @@ _cube_mesh2
     PDM_multipart_register_block (mpart, 0, dmesh);
 
 
-    PDM_multipart_run_ppart(mpart);
+    PDM_multipart_compute(mpart);
 
     PDM_dmesh_free(dmesh);
     free(dvtx_coord);

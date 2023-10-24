@@ -178,7 +178,7 @@ program testf
   ! call PDM_multipart_register_joins(multipart, n_total_joins, join_to_opposite)
 
   ! Run
-  ! call PDM_multipart_run_ppart(multipart)
+  ! call PDM_multipart_compute(multipart)
 
   ! Get
   ! call PDM_multipart_part_dim_get(multipart, i_zone, i_part, n_section, n_elt, &

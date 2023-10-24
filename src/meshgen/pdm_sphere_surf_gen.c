@@ -903,7 +903,7 @@ PDM_sphere_surf_icosphere_gen_part
 
   PDM_multipart_register_dmesh_nodal(mpart, 0, dmn);
 
-  PDM_multipart_run_ppart(mpart);
+  PDM_multipart_compute(mpart);
 
 
   *pn_vtx         = malloc(sizeof(int          ) * n_part);

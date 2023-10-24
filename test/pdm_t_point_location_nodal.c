@@ -273,7 +273,7 @@ _gen_mesh
 
     PDM_multipart_register_block (mpart, 0, dmesh);
 
-    PDM_multipart_run_ppart(mpart);
+    PDM_multipart_compute(mpart);
 
     PDM_dmesh_free(dmesh);
     free(dvtx_coord);
@@ -470,7 +470,7 @@ _gen_mesh
     PDM_multipart_register_block(mpart, 0, dmesh);
 
     /* Run */
-    PDM_multipart_run_ppart(mpart);
+    PDM_multipart_compute(mpart);
 
     PDM_dmesh_free(dmesh);
     free(dedge_bnd_idx   );
@@ -619,7 +619,7 @@ _gen_mesh
 
     PDM_multipart_register_dmesh_nodal(mpart, 0, dmn);
 
-    PDM_multipart_run_ppart(mpart);
+    PDM_multipart_compute(mpart);
 
     PDM_g_num_t **pvtx_ln_to_gn  = malloc(sizeof(PDM_g_num_t *) * n_part);
     for (int ipart = 0; ipart < n_part; ipart++) {
@@ -704,7 +704,7 @@ _mesh_from_file
                                        "PDM_PART_RENUM_FACE_NONE");
 
   PDM_multipart_register_dmesh_nodal(mpart, 0, dmn);
-  PDM_multipart_run_ppart(mpart);
+  PDM_multipart_compute(mpart);
 
   *pn_elt        = malloc(sizeof(int          ) * n_part);
   *pelt_ln_to_gn = malloc(sizeof(PDM_g_num_t *) * n_part);

@@ -268,7 +268,7 @@ char *argv[]
 
   PDM_multipart_register_dmesh_nodal(mpart, 0, dmn);
 
-  PDM_multipart_run_ppart(mpart);
+  PDM_multipart_compute(mpart);
   PDM_part_mesh_nodal_t *pmn = NULL;
   PDM_multipart_get_part_mesh_nodal(mpart, 0, &pmn, PDM_OWNERSHIP_KEEP);
   PDM_part_mesh_nodal_free(pmn);

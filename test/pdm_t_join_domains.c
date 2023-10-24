@@ -631,7 +631,7 @@ int main
                                        "PDM_PART_RENUM_CELL_NONE",
                                        NULL,
                                        "PDM_PART_RENUM_FACE_NONE");
-  PDM_multipart_run_ppart(mpart);
+  PDM_multipart_compute(mpart);
 
 
 

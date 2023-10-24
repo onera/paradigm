@@ -2712,7 +2712,7 @@ _multipart_create
           (PDM_g_num_t *) dface_group);
 
   // Run
-  PDM_multipart_run_ppart(multipart);
+  PDM_multipart_compute(multipart);
 
   return multipart;
  }

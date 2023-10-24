@@ -533,7 +533,7 @@ int main
                                        "PDM_PART_RENUM_CELL_NONE",
                                        NULL,
                                        "PDM_PART_RENUM_FACE_NONE");
-  PDM_multipart_run_ppart(mpart);
+  PDM_multipart_compute(mpart);
 
   PDM_part_mesh_nodal_t **pmn = malloc(n_domain * sizeof(PDM_part_mesh_nodal_t *));
   for (int i_domain = 0; i_domain < n_domain; i_domain++) {

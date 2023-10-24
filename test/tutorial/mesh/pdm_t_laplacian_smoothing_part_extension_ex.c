@@ -188,7 +188,7 @@ PDM_multipart_t      **_mpart
 
 
   /* Run */
-  PDM_multipart_run_ppart (mpart);
+  PDM_multipart_compute (mpart);
 
   free(n_part_zones);
 

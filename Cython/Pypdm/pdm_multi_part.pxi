@@ -44,7 +44,7 @@ cdef extern from "pdm_multipart.h":
                                                   const char            *renum_vtx_method)
 
     # ------------------------------------------------------------------
-    void PDM_multipart_run_ppart(PDM_multipart_t *mtp)
+    void PDM_multipart_compute(PDM_multipart_t *mtp)
 
     # ------------------------------------------------------------------
     void PDM_multipart_part_dim_get(PDM_multipart_t  *mtp,
@@ -174,13 +174,13 @@ cdef class MultiPart:
     # ------------------------------------------------------------------
     # Fake init (Use only for docstring)
     def __init__(self,
-                  int                                           n_zone,
-                  NPY.ndarray[NPY.int32_t   , mode='c', ndim=1] n_part,
-                  int                                           merge_blocks,
-                  PDM_split_dual_t                              split_method,
-                  PDM_part_size_t                               part_size_method,
-                  NPY.ndarray[NPY.double_t  , mode='c', ndim=1] part_fraction,
-                  MPI.Comm                                      comm):
+                 int                                           n_zone,
+                 NPY.ndarray[NPY.int32_t   , mode='c', ndim=1] n_part,
+                 int                                           merge_blocks,
+                 PDM_split_dual_t                              split_method,
+                 PDM_part_size_t                               part_size_method,
+                 NPY.ndarray[NPY.double_t  , mode='c', ndim=1] part_fraction,
+                 MPI.Comm                                      comm):
 
       """
       __init__(n_zone, n_part, merge_blocks, split_method, part_size_method, part_fraction, comm)
@@ -250,10 +250,10 @@ cdef class MultiPart:
         PDM_multipart_free(self._mtp)
 
     # ------------------------------------------------------------------
-    def multipart_register_block(self, int i_zone,
+    def register_block(self, int i_zone,
                                        DMesh dmesh): # DMesh = DistributedMeshCaspule or DistributedMesh
       """
-      multipart_register_block(i_zone, dmesh)
+      register_block(i_zone, dmesh)
 
       Set distributed mesh data for the input zone
 
@@ -266,10 +266,10 @@ cdef class MultiPart:
                                    dmesh._dm)
 
     # ------------------------------------------------------------------
-    def multipart_register_dmesh_nodal(self, int i_zone,
+    def register_dmesh_nodal(self, int i_zone,
                                        DMeshNodal dmn):
       """
-      multipart_register_dmesh_nodal(i_zone, dmn)
+      register_dmesh_nodal(i_zone, dmn)
 
       Set distributed mesh data for the input zone.
       The mesh is described by nodal connectivity.
@@ -283,27 +283,26 @@ cdef class MultiPart:
                                          dmn.dmn)
 
     # ------------------------------------------------------------------
-    def multipart_register_joins(self, int n_total_joins,
-                                 NPY.ndarray[NPY.int32_t, mode='c', ndim=1] matching_join):
+    def register_joins(self, NPY.ndarray[NPY.int32_t, mode='c', ndim=1] matching_join):
       """
-      multipart_register_joins(n_total_joins, matching_join)
+      register_joins(n_total_joins, matching_join)
 
       Set connecting data between all the zones
 
       Parameters:
-        n_total_joins (int)                    : Total number of interfaces
         matching_join (np.ndarray[np.int32_t]) : For each global join id, give the global id of the opposite
       """
+      cdef int n_total_joins = len(matching_join)
       PDM_multipart_register_joins(       self._mtp,
                                           n_total_joins,
                                    <int*> matching_join.data)
     # ------------------------------------------------------------------
-    def multipart_set_reordering(self, int i_zone,
-                                 char *renum_cell_method,
-                                 char *renum_face_method,
-                                 NPY.ndarray[NPY.int32_t, mode='c', ndim=1] renum_properties_cell):
+    def set_reordering(self, int i_zone,
+                       char *renum_cell_method,
+                       NPY.ndarray[NPY.int32_t, mode='c', ndim=1] renum_properties_cell,
+                       char *renum_face_method):
       """
-      multipart_set_reordering(self, i_zone, renum_cell_method, renum_face_method, renum_properties_cell)
+      set_reordering(i_zone, renum_cell_method, renum_face_method, renum_properties_cell)
 
       Set the reordering methods to be used after partitioning
 
@@ -324,10 +323,10 @@ cdef class MultiPart:
                                            renum_properties_cell_data,
                                            renum_face_method)
     # ------------------------------------------------------------------
-    def multipart_set_reordering_vtx(self, int i_zone,
-                                     char *renum_vtx_method):
+    def set_reordering_vtx(self, int i_zone,
+                           char *renum_vtx_method):
       """
-      multipart_set_reordering_vtx(i_zone, renum_vtx_method)
+      set_reordering_vtx(i_zone, renum_vtx_method)
 
       Set the vertex reordering methods to be used after partitioning
 
@@ -339,27 +338,27 @@ cdef class MultiPart:
                                                i_zone,
                                                renum_vtx_method)
     # ------------------------------------------------------------------
-    def multipart_run_ppart(self):
+    def compute(self):
       """
       Construct the partitioned meshes on all zones
       """
-      PDM_multipart_run_ppart(self._mtp)
+      PDM_multipart_compute(self._mtp)
 
     # ------------------------------------------------------------------
-    def multipart_n_entity_get(self, int i_part, int i_zone, PDM_mesh_entities_t entity_type):
+    def n_entity_get(self, int i_zone, int i_part, PDM_mesh_entities_t entity_type):
       """
-      multipart_n_entity_get(i_part, i_zone, entity_type)
+      n_entity_get(i_zone, i_part, entity_type)
 
       Get the number of entities with given type
 
       Parameters:
-        i_part      (int)                 : Partition identifier
         i_zone      (int)                 : Zone identifier
+        i_part      (int)                 : Partition identifier
         entity_type (PDM_mesh_entities_t) : Entity type
       """
       return PDM_multipart_part_n_entity_get(self._mtp, i_zone, i_part, entity_type)
 
-    def multipart_dim_get(self, int ipart, int i_zone):
+    def dim_get(self, int i_zone, int i_part):
         """
         Get partition dimensions
         """
@@ -379,7 +378,7 @@ cdef class MultiPart:
 
         PDM_multipart_part_dim_get(self._mtp,
                                    i_zone,
-                                   ipart,
+                                   i_part,
                                    &n_cell,
                                    &n_face,
                                    &n_face_part_bound,
@@ -392,7 +391,7 @@ cdef class MultiPart:
                                    &n_face_bound)
 
         return {'n_cell'            : n_cell,
-                'ipart'             : ipart,
+                'ipart'             : i_part,
                 'n_face'            : n_face,
                 'nt_part'           : nt_part,
                 'n_proc'            : n_proc,
@@ -404,7 +403,7 @@ cdef class MultiPart:
                 'n_face_bound'      : n_face_bound}
 
     # ------------------------------------------------------------------
-    def multipart_val_get(self, int ipart, int i_zone):
+    def val_get(self, int i_zone, int i_part):
         """
            Get partition dimensions (deprecated)
         """
@@ -428,12 +427,12 @@ cdef class MultiPart:
         # ************************************************************************
 
         # dims = self.part_dim_get(self._mtp, ipart)
-        dims = self.multipart_dim_get(ipart, i_zone)
+        dims = self.dim_get(i_zone, i_part)
 
         # -> Call PPART to get info
         PDM_multipart_part_val_get(self._mtp,
                                    i_zone,
-                                   ipart,
+                                   i_part,
                                    &cell_face_idx,
                                    &cell_face,
                                    &cell_ln_to_gn,
@@ -470,9 +469,9 @@ cdef class MultiPart:
 
 
     # ------------------------------------------------------------------
-    def multipart_part_mesh_nodal_get(self, int i_zone):
+    def part_mesh_nodal_get(self, int i_zone):
       """
-      multipart_part_mesh_nodal_get(i_zone)
+      part_mesh_nodal_get(i_zone)
 
       Retrieve the partitioned nodal mesh
 
@@ -492,15 +491,15 @@ cdef class MultiPart:
         return PartMeshNodalCaspule(py_caps)
 
     # ------------------------------------------------------------------
-    def multipart_hyper_plane_color_get(self, int i_part, int i_zone):
+    def hyper_plane_color_get(self, int i_zone, int i_part):
       """
-      multipart_hyper_plane_color_get(i_part, i_zone)
+      hyper_plane_color_get(i_zone, i_part)
 
       Get array containing hyperplane color
 
       Parameters:
-        i_part (int) : Partition identifier
         i_zone (int) : Zone identifier
+        i_part (int) : Partition identifier
 
       Returns:
         Hyperplane color (`np.ndarray[np.int32_t]`)
@@ -517,15 +516,15 @@ cdef class MultiPart:
       return {'np_hyper_plane_color' : create_numpy_or_none_i(hyper_plane_color, n_cell)}
 
     # ------------------------------------------------------------------
-    def multipart_thread_color_get(self, int i_part, int i_zone):
+    def thread_color_get(self, int i_zone, int i_part):
       """
-      multipart_thread_color_get(i_part, i_zone)
+      thread_color_get(i_zone, i_part)
 
       Get partition dimensionsGet array containing thread color - Only if specific reordering (in ParaDiGMA plugins)
 
       Parameters:
-        i_part (int) : Partition identifier
         i_zone (int) : Zone identifier
+        i_part (int) : Partition identifier
 
       Returns:
         Thread color (`np.ndarray[np.int32_t]`)
@@ -543,15 +542,15 @@ cdef class MultiPart:
 
 
     # ------------------------------------------------------------------
-    def multipart_ghost_information_get(self, int i_part, int i_zone):
+    def ghost_information_get(self, int i_zone, int i_part):
       """
-      multipart_ghost_information_get(self, int i_part, int i_zone)
+      ghost_information_get(int i_zone, int i_part)
 
       Get array containing vtx_ghost_information, useful to have a priority on vertex between multiple partitions
 
       Parameters:
-        i_part (int) : Partition identifier
         i_zone (int) : Zone identifier
+        i_part (int) : Partition identifier
 
       Returns:
         Integer that gives the current priority of vertices on current partitions (`np.ndarray[np.int32_t]`)
@@ -562,7 +561,7 @@ cdef class MultiPart:
       # ************************************************************************
 
       # dims = self.part_dim_get(self._mtp, i_part)
-      dims = self.multipart_dim_get(i_part, i_zone)
+      dims = self.dim_get(i_zone, i_part)
 
       # -> Call PPART to get info
       PDM_multipart_part_ghost_infomation_get(self._mtp,
@@ -576,15 +575,15 @@ cdef class MultiPart:
       return {'np_vtx_ghost_information' : create_numpy_or_none_i(vtx_ghost_information, dims['n_vtx'])}
 
     # ------------------------------------------------------------------
-    def multipart_connectivity_get(self, int i_part, int i_zone, PDM_connectivity_type_t connectivity_type):
+    def connectivity_get(self, int i_zone, int i_part, PDM_connectivity_type_t connectivity_type):
       """
-      multipart_connectivity_get(i_part, i_zone, connectivity_type)
+      connectivity_get(i_zone, i_part, connectivity_type)
 
       Get a partitioned connectivity
 
       Parameters:
-        i_part            (int)                     : Partition identifier
         i_zone            (int)                     : Zone identifier
+        i_part            (int)                     : Partition identifier
         connectivity_type (PDM_connectivity_type_t) : Connectivity type
 
       Returns:
@@ -623,15 +622,15 @@ cdef class MultiPart:
 
 
     # ------------------------------------------------------------------
-    def multipart_ln_to_gn_get(self, int i_part, int i_zone, PDM_mesh_entities_t entity_type):
+    def ln_to_gn_get(self, int i_zone, int i_part, PDM_mesh_entities_t entity_type):
       """
-      multipart_ln_to_gn_get(i_part, i_zone, entity_type)
+      ln_to_gn_get(i_zone, i_part, entity_type)
 
       Get the global ids of entities with given type
 
       Parameters:
-        i_part      (int)               : Partition identifier
         i_zone      (int)               : Zone identifier
+        i_part      (int)               : Partition identifier
         entity_type (PDM_entity_type_t) : Entity type
 
       Returns:
@@ -653,15 +652,15 @@ cdef class MultiPart:
       return {'np_entity_ln_to_gn' : create_numpy_or_none_g(entity_ln_to_gn, n_entity1)}
 
     # ------------------------------------------------------------------
-    def multipart_vtx_coord_get(self, int i_part, int i_zone):
+    def vtx_coord_get(self, int i_zone, int i_part):
       """
-      multipart_vtx_coord_get(i_part, i_zone)
+      vtx_coord_get(i_zone, i_part)
 
       Get vertex coordinates
 
       Parameters:
-          i_part (int) : Partition identifier
           i_zone (int) : Zone identifier
+          i_part (int) : Partition identifier
 
       Returns:
         Vertex coordinates (`np.ndarray[np.double_t]`)
@@ -680,15 +679,15 @@ cdef class MultiPart:
       return {'np_vtx_coord' : create_numpy_or_none_d(vtx_coord, 3*n_vtx)}
 
     # ------------------------------------------------------------------
-    def multipart_part_color_get(self, int i_part, int i_zone, PDM_mesh_entities_t entity_type):
+    def part_color_get(self, int i_zone, int i_part, PDM_mesh_entities_t entity_type):
       """
-      multipart_part_color_get(i_part, i_zone, entity_type)
+      part_color_get(i_zone, i_part, entity_type)
 
       Get the color of entities with given type
 
       Parameters:
-        i_part      (int)               : Partition identifier
         i_zone      (int)               : Zone identifier
+        i_part      (int)               : Partition identifier
         entity_type (PDM_entity_type_t) : Entity type
 
       Returns:
@@ -710,18 +709,18 @@ cdef class MultiPart:
       return {'np_entity_color' : create_numpy_or_none_i(entity_color, n_entity1)}
 
     # ------------------------------------------------------------------
-    def multipart_graph_comm_get(self,
-                                 int i_part,
-                                 int i_zone,
-                                 PDM_bound_type_t bound_type):
+    def graph_comm_get(self,
+                       int i_zone,
+                       int i_part,
+                       PDM_bound_type_t bound_type):
         """
-        multipart_graph_comm_get(i_part, i_zone, bound_type)
+        graph_comm_get(i_zone, i_part, bound_type)
 
         Returns the connection graph between partition for the requested bound type
 
         Parameters:
-          i_part     (int)              : Partition identifier
           i_zone     (int)              : Zone identifier
+          i_part     (int)              : Partition identifier
           bound_type (PDM_bound_type_t) : Bound type
 
         Returns:
@@ -759,7 +758,7 @@ cdef class MultiPart:
                 'np_entity_part_bound'           : np_entity_part_bound}
 
     # ------------------------------------------------------------------
-    def multipart_time_get(self, int i_zone):
+    def time_get(self, int i_zone):
         """
         Get times (not implemented)
         """

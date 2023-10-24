@@ -382,7 +382,7 @@ int main(int argc, char *argv[])
                                                      "PDM_PART_RENUM_FACE_NONE");
 
   PDM_multipart_register_dmesh_nodal(mpart, 0, dmn);
-  PDM_multipart_run_ppart(mpart);
+  PDM_multipart_compute(mpart);
 
   for (int i_zone = 0; i_zone < n_zone; i_zone++){
     for (int i_part = 0; i_part < n_part; i_part++){

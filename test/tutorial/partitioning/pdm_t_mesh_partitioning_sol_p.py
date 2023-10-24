@@ -57,22 +57,22 @@ def run_test():
 
   renum_cell = bytes("PDM_PART_RENUM_CELL_NONE", 'ascii')
   renum_face = bytes("PDM_PART_RENUM_FACE_NONE", 'ascii')
-  mpart.multipart_set_reordering(-1, # i_zone
-                                 renum_cell,
-                                 renum_face,
-                                 None)
+  mpart.set_reordering(-1, # i_zone
+                       renum_cell,
+                       None,
+                       renum_face)
 
-  mpart.multipart_register_dmesh_nodal(i_zone, dmn)
+  mpart.register_dmesh_nodal(i_zone, dmn)
 
-  mpart.multipart_run_ppart()
+  mpart.compute()
 
   # Get mesh arrrays in FE structure
   if fe:
-    output = mpart.multipart_vtx_coord_get(i_part,
-                                           i_zone)
+    output = mpart.vtx_coord_get(i_zone,
+                                 i_part)
     coords = output["np_vtx_coord"]
 
-    pmn = mpart.multipart_part_mesh_nodal_get(i_zone)
+    pmn = mpart.part_mesh_nodal_get(i_zone)
     i_section = 0 # fixed
     output = PDM.part_mesh_nodal_get_sections(pmn,
                                               PDM._PDM_GEOMETRY_KIND_VOLUMIC,
@@ -85,55 +85,55 @@ def run_test():
 
   # Get mesh arrrays in FV structure
   else :
-    output = mpart.multipart_ln_to_gn_get(i_part,
-                                          i_zone,
-                                          PDM._PDM_MESH_ENTITY_VERTEX)
+    output = mpart.ln_to_gn_get(i_zone,
+                                i_part,
+                                PDM._PDM_MESH_ENTITY_VERTEX)
 
     vtx_ln_to_gn = output["np_entity_ln_to_gn"]
     n_vtx = len(vtx_ln_to_gn)
 
-    output = mpart.multipart_vtx_coord_get(i_part,
-                                           i_zone)
+    output = mpart.vtx_coord_get(i_zone,
+                                 i_part)
 
     coords = output["np_vtx_coord"]
 
-    output = mpart.multipart_ln_to_gn_get(i_part,
-                                          i_zone,
-                                          PDM._PDM_MESH_ENTITY_EDGE)
+    output = mpart.ln_to_gn_get(i_zone,
+                                i_part,
+                                PDM._PDM_MESH_ENTITY_EDGE)
 
     edge_ln_to_gn = output["np_entity_ln_to_gn"]
     n_edge = len(edge_ln_to_gn)
 
-    output = mpart.multipart_connectivity_get(i_part,
-                                              i_zone,
-                                              PDM._PDM_CONNECTIVITY_TYPE_EDGE_VTX)
+    output = mpart.connectivity_get(i_zone,
+                                    i_part,
+                                    PDM._PDM_CONNECTIVITY_TYPE_EDGE_VTX)
 
     edge_vtx = output["np_entity1_entity2"]
 
-    output = mpart.multipart_ln_to_gn_get(i_part,
-                                          i_zone,
-                                          PDM._PDM_MESH_ENTITY_FACE)
+    output = mpart.ln_to_gn_get(i_zone,
+                                i_part,
+                                PDM._PDM_MESH_ENTITY_FACE)
 
     face_ln_to_gn = output["np_entity_ln_to_gn"]
     n_face = len(face_ln_to_gn)
 
-    output = mpart.multipart_connectivity_get(i_part,
-                                              i_zone,
-                                              PDM._PDM_CONNECTIVITY_TYPE_FACE_EDGE)
+    output = mpart.connectivity_get(i_zone,
+                                    i_part,
+                                    PDM._PDM_CONNECTIVITY_TYPE_FACE_EDGE)
 
     face_edge_idx = output["np_entity1_entity2_idx"]
     face_edge     = output["np_entity1_entity2"]
 
-    output = mpart.multipart_ln_to_gn_get(i_part,
-                                          i_zone,
-                                          PDM._PDM_MESH_ENTITY_CELL)
+    output = mpart.ln_to_gn_get(i_zone,
+                                i_part,
+                                PDM._PDM_MESH_ENTITY_CELL)
 
     cell_ln_to_gn = output["np_entity_ln_to_gn"]
     n_cell = len(cell_ln_to_gn)
 
-    output = mpart.multipart_connectivity_get(i_part,
-                                              i_zone,
-                                              PDM._PDM_CONNECTIVITY_TYPE_CELL_FACE)
+    output = mpart.connectivity_get(i_zone,
+                                    i_part,
+                                    PDM._PDM_CONNECTIVITY_TYPE_CELL_FACE)
 
     cell_face_idx = output["np_entity1_entity2_idx"]
     cell_face     = output["np_entity1_entity2"]
@@ -150,9 +150,9 @@ def run_test():
                                  comm)
 
     # step 2 : set
-    output = mpart.multipart_graph_comm_get(i_part,
-                                            i_zone,
-                                            PDM._PDM_BOUND_TYPE_VTX)
+    output = mpart.graph_comm_get(i_zone,
+                                  i_part,
+                                  PDM._PDM_BOUND_TYPE_VTX)
 
     vtx_part_bound_proc_idx = output["np_entity_part_bound_proc_idx"]
     vtx_part_bound_part_idx = output["np_entity_part_bound_part_idx"]

@@ -329,7 +329,7 @@ int main(int argc, char *argv[])
   PDM_multipart_register_joins(mpart, n_total_joins, join_to_opposite);
 
   /* Run */
-  PDM_multipart_run_ppart(mpart);
+  PDM_multipart_compute(mpart);
   if (i_rank==0)
     PDM_printf("Partitioning done !\n");
 

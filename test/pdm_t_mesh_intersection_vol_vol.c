@@ -446,7 +446,7 @@ _generate_volume_mesh
     }
   }
 
-  PDM_multipart_run_ppart(mpart);
+  PDM_multipart_compute(mpart);
 
   if (elt_type == PDM_MESH_NODAL_POLY_3D) {
     PDM_dmesh_free(dmesh);
@@ -916,7 +916,7 @@ _read_volume_mesh
                                        "PDM_PART_RENUM_FACE_NONE");
 
   PDM_multipart_register_dmesh_nodal(*mpart, 0, *dmn);
-  PDM_multipart_run_ppart(*mpart);
+  PDM_multipart_compute(*mpart);
 }
 
 

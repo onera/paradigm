@@ -709,7 +709,7 @@ char *argv[]
     PDM_multipart_register_block(mpart, i_dom, dm[i_dom]);
   }
 
-  PDM_multipart_run_ppart(mpart);
+  PDM_multipart_compute(mpart);
 
   int n_domain = n_dom_i;
 

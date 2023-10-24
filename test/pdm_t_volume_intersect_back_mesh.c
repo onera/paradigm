@@ -371,7 +371,7 @@ int main(int argc, char *argv[])
 
   PDM_multipart_register_dmesh_nodal(mpart, 0, vol_dmn);
 
-  PDM_multipart_run_ppart(mpart);
+  PDM_multipart_compute(mpart);
 
   free(n_part_zones);
 

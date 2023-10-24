@@ -709,15 +709,15 @@ interface
   !! \param [in]   multipart   Pointer to \ref PDM_multipart_t object
   !!
 
-  subroutine PDM_multipart_run_ppart (multipart) &
-  bind (c, name='PDM_multipart_run_ppart')
+  subroutine PDM_multipart_compute (multipart) &
+  bind (c, name='PDM_multipart_compute')
 
     use iso_c_binding
     implicit none
 
     type(c_ptr), value  :: multipart
 
-  end subroutine PDM_multipart_run_ppart
+  end subroutine PDM_multipart_compute
 
   !>
   !!

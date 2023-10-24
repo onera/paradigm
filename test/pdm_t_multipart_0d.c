@@ -180,7 +180,7 @@ char *argv[]
 
   PDM_multipart_register_block(mpart, 0, dm);
 
-  PDM_multipart_run_ppart(mpart);
+  PDM_multipart_compute(mpart);
 
   if(0 == 1) {
     for(int i_part = 0; i_part < n_part; ++i_part) {

@@ -174,7 +174,7 @@ At this point you have provided all the information necessary to run the mesh pa
 ```{code-cell}
 %%code_block -p exercise_1 -i 5
 
-  PDM_multipart_run_ppart(mpart);
+  PDM_multipart_compute(mpart);
 ```
 
 ## Get the partitionned mesh
