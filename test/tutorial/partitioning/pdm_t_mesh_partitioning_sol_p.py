@@ -68,9 +68,8 @@ def run_test():
 
   # Get mesh arrrays in FE structure
   if fe:
-    output = mpart.vtx_coord_get(i_zone,
+    coords = mpart.vtx_coord_get(i_zone,
                                  i_part)
-    coords = output["np_vtx_coord"]
 
     pmn = mpart.part_mesh_nodal_get(i_zone)
     i_section = 0 # fixed
@@ -85,23 +84,17 @@ def run_test():
 
   # Get mesh arrrays in FV structure
   else :
-    output = mpart.ln_to_gn_get(i_zone,
-                                i_part,
-                                PDM._PDM_MESH_ENTITY_VERTEX)
-
-    vtx_ln_to_gn = output["np_entity_ln_to_gn"]
+    vtx_ln_to_gn = mpart.ln_to_gn_get(i_zone,
+                                      i_part,
+                                      PDM._PDM_MESH_ENTITY_VERTEX)
     n_vtx = len(vtx_ln_to_gn)
 
-    output = mpart.vtx_coord_get(i_zone,
+    coords = mpart.vtx_coord_get(i_zone,
                                  i_part)
 
-    coords = output["np_vtx_coord"]
-
-    output = mpart.ln_to_gn_get(i_zone,
-                                i_part,
-                                PDM._PDM_MESH_ENTITY_EDGE)
-
-    edge_ln_to_gn = output["np_entity_ln_to_gn"]
+    edge_ln_to_gn = mpart.ln_to_gn_get(i_zone,
+                                       i_part,
+                                       PDM._PDM_MESH_ENTITY_EDGE)
     n_edge = len(edge_ln_to_gn)
 
     output = mpart.connectivity_get(i_zone,
@@ -110,11 +103,9 @@ def run_test():
 
     edge_vtx = output["np_entity1_entity2"]
 
-    output = mpart.ln_to_gn_get(i_zone,
-                                i_part,
-                                PDM._PDM_MESH_ENTITY_FACE)
-
-    face_ln_to_gn = output["np_entity_ln_to_gn"]
+    face_ln_to_gn = mpart.ln_to_gn_get(i_zone,
+                                       i_part,
+                                       PDM._PDM_MESH_ENTITY_FACE)
     n_face = len(face_ln_to_gn)
 
     output = mpart.connectivity_get(i_zone,
@@ -124,11 +115,10 @@ def run_test():
     face_edge_idx = output["np_entity1_entity2_idx"]
     face_edge     = output["np_entity1_entity2"]
 
-    output = mpart.ln_to_gn_get(i_zone,
-                                i_part,
-                                PDM._PDM_MESH_ENTITY_CELL)
+    cell_ln_to_gn = mpart.ln_to_gn_get(i_zone,
+                                       i_part,
+                                       PDM._PDM_MESH_ENTITY_CELL)
 
-    cell_ln_to_gn = output["np_entity_ln_to_gn"]
     n_cell = len(cell_ln_to_gn)
 
     output = mpart.connectivity_get(i_zone,

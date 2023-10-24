@@ -74,15 +74,15 @@ edge_face, edge_face_idx = res_edge_face["np_entity1_entity2"],res_edge_face["np
 ghost_info_vtx  = mpart.ghost_information_get(0, 0)
 
 # on récupère les numéros absolus des arêtes
-edge_ln_to_gn = mpart.ln_to_gn_get(0, 0, PDM._PDM_MESH_ENTITY_EDGE)["np_entity_ln_to_gn"]
+edge_ln_to_gn = mpart.ln_to_gn_get(0, 0, PDM._PDM_MESH_ENTITY_EDGE)
 n_edge = len(edge_ln_to_gn)
 
 # on récupère les numéros absolus des sommets
-vtx_ln_to_gn = mpart.ln_to_gn_get(0, 0, PDM._PDM_MESH_ENTITY_VERTEX)["np_entity_ln_to_gn"]
+vtx_ln_to_gn = mpart.ln_to_gn_get(0, 0, PDM._PDM_MESH_ENTITY_VERTEX)
 # vtx_ln_to_gn = part_infos["np_vtx_ln_to_gn"]
 
 # on récupère les coordonnées des sommets
-vtx_coord = mpart.vtx_coord_get(0, 0)["np_vtx_coord"]
+vtx_coord = mpart.vtx_coord_get(0, 0)
 n_vtx = len(vtx_ln_to_gn)
 
 # vtx_coord = part_infos["np_vtx_coord"]

@@ -396,12 +396,14 @@ const int                       i_zone
 /**
  * \brief Get a partitioned connectivity
  *
+ * \note If the return \p connect is \p NULL, you may build the missing connectivity using the appropriate **Connectivity transformation** function.
+ *
  * \param [in]  multipart             Pointer to \ref PDM_multipart_t object
  * \param [in]  i_zone                Id of zone
  * \param [in]  i_part                Id of part
  * \param [in]  connectivity_type     Connectivity kind \ref PDM_connectivity_type_t
- * \param [in]  connect               Connectivity array (size = \p connect_idx[\p n_entity] )
- * \param [in]  connect_idx           Connectivity index (size = n_entity + 1 )
+ * \param [in]  connect               Connectivity array (size = \p connect_idx[*n_entity*] )
+ * \param [in]  connect_idx           Connectivity index (size = *n_entity* + 1 )
  * \param [in]  ownership             Choice of ownership of the resulting arrays \ref PDM_ownership_t
  *
  * \return Number of leading entities

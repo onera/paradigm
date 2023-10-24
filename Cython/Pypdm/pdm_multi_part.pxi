@@ -513,7 +513,7 @@ cdef class MultiPart:
       n_cell = PDM_multipart_part_n_entity_get(self._mtp, i_zone, i_part, PDM_MESH_ENTITY_CELL)
       PDM_multipart_part_hyperplane_color_get(self._mtp, i_zone, i_part, &hyper_plane_color, PDM_OWNERSHIP_USER);
 
-      return {'np_hyper_plane_color' : create_numpy_or_none_i(hyper_plane_color, n_cell)}
+      return create_numpy_or_none_i(hyper_plane_color, n_cell)
 
     # ------------------------------------------------------------------
     def thread_color_get(self, int i_zone, int i_part):
@@ -538,7 +538,7 @@ cdef class MultiPart:
       n_cell = PDM_multipart_part_n_entity_get(self._mtp, i_zone, i_part, PDM_MESH_ENTITY_CELL)
       PDM_multipart_part_thread_color_get(self._mtp, i_zone, i_part, &thread_color, PDM_OWNERSHIP_USER);
 
-      return {'np_thread_color' : create_numpy_or_none_i(thread_color, n_cell)}
+      return create_numpy_or_none_i(thread_color, n_cell)
 
 
     # ------------------------------------------------------------------
@@ -572,7 +572,7 @@ cdef class MultiPart:
       # -> Begin
       cdef NPY.npy_intp dim
 
-      return {'np_vtx_ghost_information' : create_numpy_or_none_i(vtx_ghost_information, dims['n_vtx'])}
+      return create_numpy_or_none_i(vtx_ghost_information, dims['n_vtx'])
 
     # ------------------------------------------------------------------
     def connectivity_get(self, int i_zone, int i_part, PDM_connectivity_type_t connectivity_type):
@@ -649,7 +649,7 @@ cdef class MultiPart:
                                                   &entity_ln_to_gn,
                                                   PDM_OWNERSHIP_USER)
 
-      return {'np_entity_ln_to_gn' : create_numpy_or_none_g(entity_ln_to_gn, n_entity1)}
+      return create_numpy_or_none_g(entity_ln_to_gn, n_entity1)
 
     # ------------------------------------------------------------------
     def vtx_coord_get(self, int i_zone, int i_part):
@@ -676,7 +676,7 @@ cdef class MultiPart:
                                                &vtx_coord,
                                                PDM_OWNERSHIP_USER)
 
-      return {'np_vtx_coord' : create_numpy_or_none_d(vtx_coord, 3*n_vtx)}
+      return create_numpy_or_none_d(vtx_coord, 3*n_vtx)
 
     # ------------------------------------------------------------------
     def part_color_get(self, int i_zone, int i_part, PDM_mesh_entities_t entity_type):
@@ -706,7 +706,7 @@ cdef class MultiPart:
                                                     &entity_color,
                                                     PDM_OWNERSHIP_USER)
 
-      return {'np_entity_color' : create_numpy_or_none_i(entity_color, n_entity1)}
+      return create_numpy_or_none_i(entity_color, n_entity1)
 
     # ------------------------------------------------------------------
     def graph_comm_get(self,

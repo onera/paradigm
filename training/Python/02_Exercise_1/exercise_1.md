@@ -177,9 +177,8 @@ Let's start with the vertices composing the subdomain. How many vertices are the
 ```{code-cell}
 %%code_block -p exercise_1 -i 6
 
-# output = mpart.vtx_coord_get(i_part,
-#                                        i_zone)
-# coords = output["np_vtx_coord"]
+# coords = mpart.vtx_coord_get(i_part,
+#                              i_zone)
 #
 # pmn = mpart.part_mesh_nodal_get(i_zone)
 # vtx_ln_to_gn = PDM.part_mesh_nodal_vtx_g_num_get(pmn, i_part)
@@ -230,11 +229,9 @@ Let's start from the top with cell data. How many cells are there? What are thei
 ```{code-cell}
 %%code_block -p exercise_1 -i 9
 
-output = mpart.ln_to_gn_get(i_zone,
-                            i_part,
-                            PDM._PDM_MESH_ENTITY_CELL)
-
-cell_ln_to_gn = output["np_entity_ln_to_gn"]
+cell_ln_to_gn = mpart.ln_to_gn_get(i_zone,
+                                   i_part,
+                                   PDM._PDM_MESH_ENTITY_CELL)
 n_cell = len(cell_ln_to_gn)
 
 output = mpart.connectivity_get(i_zone,
@@ -251,11 +248,9 @@ For the faces we proceed in a similar way. How many faces are there? What are th
 ```{code-cell}
 %%code_block -p exercise_1 -i 10
 
-output = mpart.ln_to_gn_get(i_zone,
-                            i_part,
-                            PDM._PDM_MESH_ENTITY_FACE)
-
-face_ln_to_gn = output["np_entity_ln_to_gn"]
+face_ln_to_gn = mpart.ln_to_gn_get(i_zone,
+                                   i_part,
+                                   PDM._PDM_MESH_ENTITY_FACE)
 n_face = len(face_ln_to_gn)
 
 output = mpart.connectivity_get(i_zone,
@@ -275,11 +270,9 @@ each edge is only composed of two vertices*
 ```{code-cell}
 %%code_block -p exercise_1 -i 11
 
-output = mpart.ln_to_gn_get(i_zone,
-                            i_part,
-                            PDM._PDM_MESH_ENTITY_EDGE)
-
-edge_ln_to_gn = output["np_entity_ln_to_gn"]
+edge_ln_to_gn = mpart.ln_to_gn_get(i_zone,
+                                   i_part,
+                                   PDM._PDM_MESH_ENTITY_EDGE)
 n_edge = len(edge_ln_to_gn)
 
 output = mpart.connectivity_get(i_zone,
@@ -295,11 +288,9 @@ To finish with, we need to have the description of the vertices.
 ```{code-cell}
 %%code_block -p exercise_1 -i 12
 
-output = mpart.ln_to_gn_get(i_zone,
-                            i_part,
-                            PDM._PDM_MESH_ENTITY_VERTEX)
-
-vtx_ln_to_gn = output["np_entity_ln_to_gn"]
+vtx_ln_to_gn = mpart.ln_to_gn_get(i_zone,
+                                  i_part,
+                                  PDM._PDM_MESH_ENTITY_VERTEX)
 n_vtx = len(vtx_ln_to_gn)
 
 output = mpart.vtx_coord_get(i_zone,
