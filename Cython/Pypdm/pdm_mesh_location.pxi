@@ -187,13 +187,19 @@ cdef class MeshLocation:
   cdef list _n_tgt_part_per_cloud
 
   cdef list _np_located, _np_unlocated, _dic_location, _dic_points_in_elt, _dic_cell_vertex
+
+  #PDM_mesh_location_method_t
+  OCTREE = _PDM_MESH_LOCATION_OCTREE
+  DBBTREE = _PDM_MESH_LOCATION_DBBTREE
+  LOCATE_ALL_TGT = _PDM_MESH_LOCATION_LOCATE_ALL_TGT
+
   # ************************************************************************
 
   # ------------------------------------------------------------------------
   def __init__(self, int               n_point_cloud,
                      MPI.Comm          comm):
     """
-    __init__(mesh_nature, n_point_cloud, comm)
+    __init__(n_point_cloud, comm)
 
     Create a structure to compute the location of point clouds inside a mesh
 
@@ -225,11 +231,11 @@ cdef class MeshLocation:
     """
     n_part_cloud_set(i_point_cloud, n_part)
 
-    Set the number of partitions of a point cloud
+    Set the number of partitions of the specified point cloud
 
     Parameters:
       i_point_cloud (int) : Point cloud identifier
-      n_part        (int) : Number of partitions
+      n_part        (int) : Number of partitions for this point cloud
     """
     self._n_tgt_part_per_cloud[i_point_cloud] = n_part
     PDM_mesh_location_n_part_cloud_set(self._ml,
@@ -243,9 +249,10 @@ cdef class MeshLocation:
                       NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1] gnum,
                       ):
     """
-    cloud_set(i_point_cloud, i_part, n_points, coords, gnum)
+    cloud_set(i_point_cloud, i_part, coords, gnum)
 
-    Set a point cloud
+    Set a partition of the specified point cloud by registering the
+    coordinates and global ids of its vertices.
 
     Parameters:
       i_point_cloud (int)                        : Point cloud identifier
@@ -254,6 +261,7 @@ cdef class MeshLocation:
       gnum          (np.ndarray[npy_pdm_gnum_t]) : Point global ids
     """
     cdef int n_points = len(gnum)
+    assert coords.size == 3*n_points
     PDM_mesh_location_cloud_set(self._ml,
                                 i_point_cloud,
                                 i_part,
@@ -304,6 +312,11 @@ cdef class MeshLocation:
     cdef int n_cell = len(cell_face_idx) - 1
     cdef int n_face = len(face_vtx_idx)  - 1
     cdef int n_vtx  = len(vtx_ln_to_gn)
+    
+    assert cell_ln_to_gn.size == n_cell
+    assert face_ln_to_gn.size == n_face
+    assert coords.size == 3*n_vtx
+    
     PDM_mesh_location_part_set(self._ml,
                                i_part,
                                n_cell,
@@ -334,15 +347,19 @@ cdef class MeshLocation:
     (tetrahedra, pyramids, prisms, hexahedra).
 
     Parameters:
-      i_part        (int)                        : Partition to define
+      i_part        (int)                        : Partition identifier
       cell_vtx_idx  (np.ndarray[np.int32_t])     : Index for cell -> vertex connectivity
       cell_vtx      (np.ndarray[np.int32_t])     : Cell -> vertex connectivity
       cell_ln_to_gn (np.ndarray[npy_pdm_gnum_t]) : Cell global ids
-      coords        (np.ndarray[np.double_t])    : Coordinates
+      coords        (np.ndarray[np.double_t])    : Vertex coordinates
       vtx_ln_to_gn  (np.ndarray[npy_pdm_gnum_t]) : Vertex global ids
     """
     cdef int n_cell = len(cell_vtx_idx) - 1
     cdef int n_vtx  = len(vtx_ln_to_gn)
+
+    assert cell_ln_to_gn.size == n_cell 
+    assert coords.size == 3*n_vtx
+
     PDM_mesh_location_nodal_part_set(self._ml,
                                      i_part,
                                      n_cell,
@@ -379,6 +396,9 @@ cdef class MeshLocation:
     cdef int n_edge = len(edge_vtx)//2
     cdef int n_face = len(face_edge_idx) - 1
 
+    assert face_ln_to_gn.size == n_face
+    assert coords.size == 3*n_vtx
+
     PDM_mesh_location_part_set_2d(self._ml,
                                   i_part,
                                   n_face,
@@ -414,6 +434,9 @@ cdef class MeshLocation:
     cdef int n_vtx  = len(vtx_ln_to_gn)
     cdef int n_face = len(face_vtx_idx) - 1
 
+    assert face_ln_to_gn.size == n_face
+    assert coords.size == 3*n_vtx
+
     PDM_mesh_location_nodal_part_set_2d(self._ml,
                                         i_part,
                                         n_face,
@@ -432,7 +455,7 @@ cdef class MeshLocation:
     Set the relative tolerance for bounding boxes
 
     Parameters:
-      tolerance (double) : Tolerance
+      tolerance (double) : Tolerance (default is 0.)
     """
     PDM_mesh_location_tolerance_set(self._ml, tolerance)
 
@@ -447,9 +470,9 @@ cdef class MeshLocation:
       method (int) : Preconditioning method
 
     Possible values for ``method``:
-      - 0 : Use point octree (default method)
-      - 1 : Use bounding-box tree
-      - 2 : All target points are guaranteed to be located
+      - :py:attr:`MeshLocation.OCTREE` : Use point octree (default method)
+      - :py:attr:`MeshLocation.DBBTREE` : Use bounding-box tree
+      - :py:attr:`MeshLocation.LOCATE_ALL_TGT` : All target points are guaranteed to be located
     """
     PDM_mesh_location_method_set(self._ml, method)
 
@@ -496,7 +519,12 @@ cdef class MeshLocation:
     """
     location_get(i_point_cloud, i_part)
 
-    Get point location
+    Get location data for the points that have been located in a volumic/surfacic cell,
+    for the specified point cloud and partition identifiers.
+
+    The results are related to located points only, whose ids can be get with function
+    :py:func:`located_get`.
+    
 
     Parameters:
       i_point_cloud (int) : Point cloud identifier
@@ -505,7 +533,7 @@ cdef class MeshLocation:
     Returns:
       Dictionary
         - ``"g_num"``        (`np.ndarray[npy_pdm_gnum_t]`) : Point global ids
-        - ``"location"``     (`np.ndarray[npy_pdm_gnum_t]`) : Global id of nearest mesh element if the point is located, -1 otherwise
+        - ``"location"``     (`np.ndarray[npy_pdm_gnum_t]`) : Global id of nearest mesh element
         - ``"dist2"``        (`np.ndarray[np.double_t]`)    : Signed squared distance from nearest element (negative if the point is located inside that element)
         - ``"p_proj_coord"`` (`np.ndarray[np.double_t]`)    : Cartesian coordinates of projection onto the nearest element (identity if the point is located inside that element)
     """
@@ -589,7 +617,7 @@ cdef class MeshLocation:
     """
     points_in_elt_get(i_point_cloud, i_part)
 
-    Get location data for points located in elements
+    Get location data for the mesh cells of the specified partition identifier.
 
     Parameters:
       i_point_cloud (int) : Point cloud identifier

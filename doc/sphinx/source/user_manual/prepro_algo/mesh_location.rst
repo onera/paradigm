@@ -184,6 +184,8 @@ Python API
 
   .. autofunction:: Pypdm.Pypdm.MeshLocation.unlocated_get
 
+  .. autofunction:: Pypdm.Pypdm.MeshLocation.location_get
+
   .. autofunction:: Pypdm.Pypdm.MeshLocation.points_in_elt_get
 
   .. autofunction:: Pypdm.Pypdm.MeshLocation.point_location_get
