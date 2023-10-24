@@ -160,6 +160,8 @@ Python API
   .. rubric:: Methods summary
   
   .. autosummary::
+    :nosignatures:
+
     ~Pypdm.Pypdm.MeshLocation.mesh_n_part_set
     ~Pypdm.Pypdm.MeshLocation.part_set
     ~Pypdm.Pypdm.MeshLocation.nodal_part_set
