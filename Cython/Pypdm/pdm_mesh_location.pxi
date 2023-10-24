@@ -201,7 +201,7 @@ cdef class MeshLocation:
     """
     __init__(n_point_cloud, comm)
 
-    Create a structure to compute the location of point clouds inside a mesh
+    Create the structure
 
     Parameters:
       n_point_cloud (int)               : Number of point clouds
