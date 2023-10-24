@@ -679,9 +679,9 @@ cdef class MultiPart:
       return create_numpy_or_none_d(vtx_coord, 3*n_vtx)
 
     # ------------------------------------------------------------------
-    def part_color_get(self, int i_zone, int i_part, PDM_mesh_entities_t entity_type):
+    def color_get(self, int i_zone, int i_part, PDM_mesh_entities_t entity_type):
       """
-      part_color_get(i_zone, i_part, entity_type)
+      color_get(i_zone, i_part, entity_type)
 
       Get the color of entities with given type
 

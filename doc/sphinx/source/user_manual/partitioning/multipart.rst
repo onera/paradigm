@@ -231,7 +231,7 @@ Python API
 
   .. autofunction:: Pypdm.Pypdm.MultiPart.ghost_information_get
 
-  .. autofunction:: Pypdm.Pypdm.MultiPart.part_color_get
+  .. autofunction:: Pypdm.Pypdm.MultiPart.color_get
 
   .. autofunction:: Pypdm.Pypdm.MultiPart.hyper_plane_color_get
 
