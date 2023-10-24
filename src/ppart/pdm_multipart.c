@@ -3541,7 +3541,6 @@ const int                       i_part,
       PDM_ownership_t           ownership
 )
 {
-  PDM_UNUSED(ownership);
   assert(i_zone < multipart->n_zone && i_part < multipart->n_part[i_zone]);
 
   _part_mesh_t _pmeshes = multipart->pmeshes[i_zone];
@@ -3586,9 +3585,9 @@ const int                       i_part,
                                  connect_idx,
                                  ownership);
 
+  /* Build the requested connectivity if missing */
   if (*connect == NULL) {
     if (connectivity_type == PDM_CONNECTIVITY_TYPE_FACE_VTX) {
-      // Build face_vtx connectivity and set requested ownership
       int *face_edge_idx = NULL;
       int *face_edge     = NULL;
       PDM_part_mesh_connectivity_get(_pmeshes.pmesh,
@@ -3618,15 +3617,15 @@ const int                       i_part,
                                               edge_vtx,
                                               connect);
 
-      // copy index?
+      // same index as face_edge, do we need a copy?
       *connect_idx = malloc(sizeof(int) * (pn_entity + 1));
       memcpy(*connect_idx, face_edge_idx, sizeof(int) * (pn_entity + 1));
     }
     else {
-      //...
+      // TODO: face_edge/edge_vtx ?
     }
 
-    // Set the connectivity we just built, with the requested ownership
+    // Store the connectivity we just built, with the requested ownership
     PDM_part_mesh_connectivity_set(_pmeshes.pmesh,
                                    i_part,
                                    connectivity_type,
