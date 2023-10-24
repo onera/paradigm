@@ -110,7 +110,7 @@ PDM_reader_gamma_dmesh_nodal
   PDM_g_num_t gn_hexa  = 0;
 
   double      *gvtx_coord   = NULL;
-  int         *gvtx_group   = NULL;
+  int         *gvtx_tag     = NULL;
   PDM_g_num_t *gedge_vtx    = NULL;
   int         *gedge_group  = NULL;
   PDM_g_num_t *gtria_vtx    = NULL;
@@ -157,7 +157,7 @@ PDM_reader_gamma_dmesh_nodal
         gn_vtx = (PDM_g_num_t) _gn_vtx;
 
         gvtx_coord = malloc(sizeof(double) * gn_vtx * 3);
-        gvtx_group = malloc(sizeof(int   ) * gn_vtx);
+        gvtx_tag   = malloc(sizeof(int   ) * gn_vtx);
         for (PDM_g_num_t i = 0; i < gn_vtx; i++) {
           for (int j = 0; j < dim; j++) {
             fscanf(f, "%lf", &gvtx_coord[3*i + j]);
@@ -165,7 +165,7 @@ PDM_reader_gamma_dmesh_nodal
           for (int j = dim; j < 3; j++) {
             gvtx_coord[3*i + j] = 0.;
           }
-          fscanf(f, "%d", &gvtx_group[i]);
+          fscanf(f, "%d", &gvtx_tag[i]);
         }
       }
 
@@ -324,7 +324,7 @@ PDM_reader_gamma_dmesh_nodal
 
     if (1) {
       /* Shift groups */
-      _shift_groups((int) gn_vtx,   gvtx_group);
+      // _shift_groups((int) gn_vtx,   gvtx_group); // TODO: when corners
       _shift_groups((int) gn_edge,  gedge_group);
       _shift_groups((int) gn_tria,  gtria_group);
       _shift_groups((int) gn_tetra, gtetra_group);
@@ -405,15 +405,15 @@ PDM_reader_gamma_dmesh_nodal
                           NULL,
                 (void **) &dvtx_coord);
 
-  int *dvtx_group = NULL;
+  int *dvtx_tag = NULL;
   PDM_block_to_block_exch(btb_vtx,
                           sizeof(int),
                           PDM_STRIDE_CST_INTERLACED,
                           1,
                           NULL,
-                (void *)  gvtx_group,
+                (void *)  gvtx_tag,
                           NULL,
-                (void **) &dvtx_group);
+                (void **) &dvtx_tag);
 
 
   /* Edges */
@@ -491,15 +491,15 @@ PDM_reader_gamma_dmesh_nodal
                   (void **) &dtetra_vtx);
   }
 
-  // int *dtetra_group = NULL;
-  // PDM_block_to_block_exch(btb_tetra,
-  //                         sizeof(int),
-  //                         PDM_STRIDE_CST_INTERLACED,
-  //                         1,
-  //                         NULL,
-  //               (void *)  gtetra_group,
-  //                         NULL,
-  //               (void **) &dtetra_group);
+  int *dtetra_group = NULL;
+  PDM_block_to_block_exch(btb_tetra,
+                          sizeof(int),
+                          PDM_STRIDE_CST_INTERLACED,
+                          1,
+                          NULL,
+                (void *)  gtetra_group,
+                          NULL,
+                (void **) &dtetra_group);
 
 
   /* Pyramids */
@@ -593,7 +593,7 @@ PDM_reader_gamma_dmesh_nodal
 
 
   if (gvtx_coord   != NULL) free(gvtx_coord);
-  if (gvtx_group   != NULL) free(gvtx_group);
+  if (gvtx_tag     != NULL) free(gvtx_tag  );
   if (gedge_vtx    != NULL) free(gedge_vtx);
   if (gedge_group  != NULL) free(gedge_group);
   if (gtria_vtx    != NULL) free(gtria_vtx);
@@ -624,14 +624,16 @@ PDM_reader_gamma_dmesh_nodal
   free(init_distrib_hexa );
 
   if (i_rank == 0) {
-    printf("mesh_dimension = %d\n", mesh_dimension);
-    printf("gn_vtx   = "PDM_FMT_G_NUM"\n", gn_vtx);
-    printf("gn_edge  = "PDM_FMT_G_NUM"\n", gn_edge);
-    printf("gn_tria  = "PDM_FMT_G_NUM"\n", gn_tria);
-    printf("gn_tetra = "PDM_FMT_G_NUM"\n", gn_tetra);
-    printf("gn_pyra  = "PDM_FMT_G_NUM"\n", gn_pyra);
-    printf("gn_prism = "PDM_FMT_G_NUM"\n", gn_prism);
-    printf("gn_hexa  = "PDM_FMT_G_NUM"\n", gn_hexa);
+    if (0) {
+      printf("mesh_dimension = %d\n", mesh_dimension);
+      printf("gn_vtx   = "PDM_FMT_G_NUM"\n", gn_vtx);
+      printf("gn_edge  = "PDM_FMT_G_NUM"\n", gn_edge);
+      printf("gn_tria  = "PDM_FMT_G_NUM"\n", gn_tria);
+      printf("gn_tetra = "PDM_FMT_G_NUM"\n", gn_tetra);
+      printf("gn_pyra  = "PDM_FMT_G_NUM"\n", gn_pyra);
+      printf("gn_prism = "PDM_FMT_G_NUM"\n", gn_prism);
+      printf("gn_hexa  = "PDM_FMT_G_NUM"\n", gn_hexa);
+    }
   }
 
   PDM_dmesh_nodal_t *dmn = PDM_DMesh_nodal_create(comm,
@@ -736,9 +738,10 @@ PDM_reader_gamma_dmesh_nodal
   }
 
 
-  /* Groups */
-  PDM_DMesh_nodal_vtx_tag_set(dmn, dvtx_group);
+  /* Set vtx tags */
+  PDM_DMesh_nodal_vtx_tag_set(dmn, dvtx_tag);
 
+  /* Edge groups */
   int _n_group_edge = 0;
   for (int i = 0; i < dn_edge; i++) {
     _n_group_edge = PDM_MAX(_n_group_edge, dedge_group[i]);// refs are > 0 (?)
@@ -773,6 +776,7 @@ PDM_reader_gamma_dmesh_nodal
                                   dgroup_edge,
                                   PDM_OWNERSHIP_KEEP);
 
+  /* Tria groups */
   /* !!! At this point we assume all faces are tirangles (needs some changes if there are also quads) */
   int dn_face = dn_tria;// + dn_quad;
   PDM_g_num_t *distrib_face = distrib_tria;
@@ -806,6 +810,39 @@ PDM_reader_gamma_dmesh_nodal
                                   n_group_face,
                                   dgroup_face_idx,
                                   dgroup_face,
+                                  PDM_OWNERSHIP_KEEP);
+
+
+  /* Tetra groups */
+  int _n_group_tetra = 0;
+  for (int i = 0; i < dn_tetra; i++) {
+    _n_group_tetra = PDM_MAX(_n_group_tetra, dtetra_group[i]);// refs are > 0 (?)
+    dtetra_group[i] -= 1;
+  }
+
+  int n_group_tetra;
+  PDM_MPI_Allreduce(&_n_group_tetra, &n_group_tetra, 1, PDM_MPI_INT, PDM_MPI_MAX, comm);
+
+  int *dtetra_group_idx = PDM_array_new_idx_from_const_stride_int(1, dn_tetra);
+
+  int         *dgroup_tetra_idx = NULL;
+  PDM_g_num_t *dgroup_tetra     = NULL;
+  PDM_dentity_group_transpose(n_group_tetra,
+                              dtetra_group_idx,
+                              dtetra_group,
+                              distrib_tetra,
+                              &dgroup_tetra_idx,
+                              &dgroup_tetra,
+                              dmn->comm);
+  free(dtetra_group_idx);
+  free(dtetra_group);
+
+  // PDM_log_trace_array_int(dgroup_face_idx, n_group_face+1, "dgroup_face_idx : ");
+
+  PDM_DMesh_nodal_elmts_group_set(dmn->volumic,
+                                  n_group_tetra,
+                                  dgroup_tetra_idx,
+                                  dgroup_tetra,
                                   PDM_OWNERSHIP_KEEP);
 
   free(distrib_vtx  );
@@ -990,11 +1027,11 @@ PDM_read_gamma_sol
         fscanf(f, "%ld", &_i_kind);
       }
 
-      printf("n_field  = %i \n", (int)n_field);
-      printf("_n_field = %i \n", (int)_n_field);
-      printf("n_vtx    = %i \n", (int)n_vtx);
-      printf("_gn_vtx  = %i \n", (int)_gn_vtx);
-      printf("_i_kind  = %i \n", (int)_i_kind);
+      // printf("n_field  = %i \n", (int)n_field);
+      // printf("_n_field = %i \n", (int)_n_field);
+      // printf("n_vtx    = %i \n", (int)n_vtx);
+      // printf("_gn_vtx  = %i \n", (int)_gn_vtx);
+      // printf("_i_kind  = %i \n", (int)_i_kind);
 
       // assert(n_field == _n_field);
 
