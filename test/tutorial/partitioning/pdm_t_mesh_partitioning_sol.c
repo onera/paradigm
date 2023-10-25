@@ -564,6 +564,8 @@ int main
     free(total_edge_vtx);
     free(total_vtx_ln_to_gn);
     free(total_coords);
+    free(total_face_vtx_idx);
+    free(total_face_vtx);
 
     // step 5 : free
     PDM_part_extension_free(part_ext);
