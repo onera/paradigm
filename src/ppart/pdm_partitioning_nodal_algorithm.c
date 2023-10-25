@@ -805,40 +805,39 @@ PDM_reverse_dparent_gnum
   /* First part_to_block to map in parent block the child g_num */
   int dn_child_elmt = delmt_child_distrib[i_rank+1] - delmt_child_distrib[i_rank];
 
-  int* n_elts = malloc((n_part+1) * sizeof(int));
-  PDM_g_num_t **all_lngn = malloc((n_part+1)*sizeof(PDM_g_num_t*));
-  double **all_weights = malloc((n_part+1) * sizeof(double*));
-  for (int i=0; i < n_part; i++){
-    n_elts[i] = pn_parent[i];
-    all_lngn[i] = pparent_gnum[i];
+  // Take both parent and child into account to compute suitable distribution
+  int          *n_elts_both  = malloc((n_part+1) * sizeof(int));
+  PDM_g_num_t **lngn_both    = malloc((n_part+1) * sizeof(PDM_g_num_t*));
+  double      **weights_both = malloc((n_part+1) * sizeof(double*));
+  //Parent
+  for (int i_part=0; i_part < n_part; i_part++){
+    n_elts_both[i_part] = pn_parent[i_part];
+    lngn_both[i_part] = pparent_gnum[i_part];
+    weights_both[i_part] = PDM_array_const_double(n_elts_both[i_part], 1.0);
   }
-  n_elts[n_part] = dn_child_elmt;
-  all_lngn[n_part] = dparent_gnum;
-
-  for (int i = 0; i < n_part+1; ++i) {
-    all_weights[i] = malloc (n_elts[i] * sizeof(double));
-    for (int j = 0; j < n_elts[i]; j++) {
-      all_weights[i][j] = 1.0;
-    }
-  }
+  //Child
+  n_elts_both[n_part] = dn_child_elmt;
+  lngn_both[n_part] = dparent_gnum;
+  weights_both[n_part] = PDM_array_const_double(n_elts_both[n_part], 1.0);
 
   PDM_g_num_t* distrib = NULL;
   PDM_distrib_weight (2,
                       n_rank,
                       n_part+1,
-                      n_elts,
-(const PDM_g_num_t**) all_lngn,
-    (const double**) all_weights,
+                      n_elts_both,
+(const PDM_g_num_t**) lngn_both,
+     (const double**) weights_both,
                       5,
                       0.1,
                       comm,
-  for (int i = 0; i < n_part+1; ++i) {
-    free(all_weights[i]);
                       &distrib);
+  for (int i_part = 0; i_part < n_part+1; ++i_part) {
+    free(weights_both[i_part]);
   }
-  free(all_weights);
-  free(all_lngn);
-  free(n_elts);
+  free(weights_both);
+  free(lngn_both);
+  free(n_elts_both);
+
   PDM_part_to_block_t* ptb = PDM_part_to_block_create_from_distrib(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
                                                                    PDM_PART_TO_BLOCK_POST_MERGE,
                                                                    1.,
