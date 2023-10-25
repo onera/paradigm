@@ -429,6 +429,55 @@ Now we write the mesh that we just got to be able to visualize it later on (noth
                 0, // n_vtx_field
                 NULL, // vtx_field_name
                 NULL); // vtx_field_values
+
+  // free
+  free(face_vtx_idx);
+  free(face_vtx);
+  free(vtx_ln_to_gn);
+  free(coords);
+  free(edge_ln_to_gn);
+  free(edge_vtx_idx);
+  free(edge_vtx);
+  free(face_ln_to_gn);
+  free(face_edge_idx);
+  free(face_edge);
+  free(cell_ln_to_gn);
+  free(cell_face_idx);
+  free(cell_face);
+```
+
+## Execution and visualization
+
+First, we finalize the the code you juste wrote by with the last step :  **free** (step 5).
+
+```{code-cell}
+%%code_block -p exercise_1 -i 14
+
+  // free
+  PDM_DMesh_nodal_free(dmn);
+  PDM_multipart_free(mpart);
+
+  // Finalize MPI environment
+  PDM_MPI_Finalize();
+
+  if (i_rank == 0) {
+    printf("End :)\n");
+  }
+
+  return 0;
+}
+
+```
+
+Run the following cells to execute the program you just wrote and visualize the output partitioned mesh.
+
+```{code-cell}
+%merge_code_blocks -l c -p exercise_1 -n 2 -v
+```
+
+```{code-cell}
+%%visualize
+visu/PMESH.case : i_part
 ```
 
 ## Bonus : Extended partition
@@ -445,7 +494,7 @@ Once the partitioned mesh retrieved we can **free** (step 5) the memory allocate
 ### Step 1
 
 ```{code-cell}
-%%code_block -p exercise_1 -i 14
+%%code_block -p exercise_1 -i 15
 
   PDM_extend_type_t  extend_type = PDM_EXTEND_FROM_VTX;
   int                depth       = 1;
@@ -460,7 +509,7 @@ Once the partitioned mesh retrieved we can **free** (step 5) the memory allocate
 ### Step 2
 
 ```{code-cell}
-%%code_block -p exercise_1 -i 15
+%%code_block -p exercise_1 -i 16
 
   int *vtx_part_bound_proc_idx = NULL;
   int *vtx_part_bound_part_idx = NULL;
@@ -512,7 +561,7 @@ Once the partitioned mesh retrieved we can **free** (step 5) the memory allocate
 ### Step 3
 
 ```{code-cell}
-%%code_block -p exercise_1 -i 16
+%%code_block -p exercise_1 -i 17
 
   PDM_part_extension_compute(part_ext);
 ```
@@ -520,7 +569,7 @@ Once the partitioned mesh retrieved we can **free** (step 5) the memory allocate
 ### Step 4
 
 ```{code-cell}
-%%code_block -p exercise_1 -i 17
+%%code_block -p exercise_1 -i 18
 
   // Cell
   PDM_g_num_t *cell_ln_to_gn_ext = NULL;
@@ -591,7 +640,7 @@ Once the partitioned mesh retrieved we can **free** (step 5) the memory allocate
 ### Step 5 (and visualisation)
 
 ```{code-cell}
-%%code_block -p exercise_1 -i 18
+%%code_block -p exercise_1 -i 19
 
   int total_n_cell = n_cell + n_cell_ext;
   int total_n_face = n_face + n_face_ext;
@@ -699,8 +748,6 @@ Once the partitioned mesh retrieved we can **free** (step 5) the memory allocate
   // free
   PDM_part_extension_free(part_ext);
 
-  free(face_vtx_idx);
-  free(face_vtx);
   free(vtx_ln_to_gn);
   free(coords);
   free(edge_ln_to_gn);
@@ -730,15 +777,14 @@ Once the partitioned mesh retrieved we can **free** (step 5) the memory allocate
 
 ## Execution and visualization
 
-Run the following cells to execute the program you just wrote and visualize the output partitioned mesh.
+Run the following cells to execute the program you just wrote and visualize the mesh partition extension.
 
 ```{code-cell}
-%merge_code_blocks -l c -p exercise_1 -n 2 -c
+%merge_code_blocks -l c -p exercise_1 -n 2
 ```
 
 ```{code-cell}
 %%visualize
-visu/PMESH.case : i_part
 visu/PEXT.case : i_part
 ```
 

@@ -331,6 +331,19 @@ PDM.writer_wrapper(comm,
 
 ```
 
+## Execution and visualization
+
+Run the following cells to execute the program you just wrote and visualize the output partitioned mesh.
+
+```{code-cell}
+%merge_code_blocks -l python -p exercise_1 -n 2 -v
+```
+
+```{code-cell}
+%%visualize
+visu/PMESH.case : i_part
+```
+
 ## Bonus : Extended partition
 
 If you are reading this, you finished quickly the partitioning exercise. Thus, it means you understood well the 5 step scheme for using `ParaDiGM` features.
@@ -523,15 +536,14 @@ Well, you have nothing to do for step 5 since it is implicit in Python.
 
 ## Execution and visualization
 
-Run the following cells to execute the program you just wrote and visualize the output partitioned mesh.
+Run the following cells to execute the program you just wrote and visualize the mesh partition extension.
 
 ```{code-cell}
-%merge_code_blocks -l python -p exercise_1 -n 2 -v -c
+%merge_code_blocks -l python -p exercise_1 -n 2 -v
 ```
 
 ```{code-cell}
 %%visualize
-visu/PMESH.case : i_part
 visu/PEXT.case : i_part
 ```
 ## Annex 1
