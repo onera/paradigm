@@ -6107,6 +6107,28 @@ PDM_mesh_intersection_preprocessing_get
   *box_a_box_b = mi->box_a_box_b;  
 }
 
+
+/**
+ *
+ * \brief Get mesh dimension
+ *
+ * \param [in] mi                 Pointer to \ref PDM_mesh_intersection_t object
+ * \param [in] i_mesh             Mesh identifier
+ *
+ * \return Dimension of mesh \p i_mesh
+ */
+
+int
+PDM_mesh_intersection_mesh_dimension_get
+(
+       PDM_mesh_intersection_t  *mi,
+ const int                       i_mesh
+)
+{
+  assert(i_mesh == 0 || i_mesh == 1);
+  return mi->dim_mesh[i_mesh];
+}
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
