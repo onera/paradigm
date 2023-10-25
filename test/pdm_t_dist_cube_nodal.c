@@ -225,7 +225,7 @@ int main(int argc, char *argv[])
                                                      NULL,
                                                      "PDM_PART_RENUM_FACE_NONE");
 
-  PDM_multipart_register_dmesh_nodal(mpart_id, 0, dmn);
+  PDM_multipart_dmesh_nodal_set(mpart_id, 0, dmn);
   PDM_multipart_compute(mpart_id);
 
   PDM_part_mesh_nodal_t *pmesh_nodal = NULL;

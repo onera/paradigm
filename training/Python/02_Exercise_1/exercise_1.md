@@ -133,7 +133,7 @@ You can here call the renumbering function but by telling it not to do any renum
 
 renum_cell = bytes("PDM_PART_RENUM_CELL_NONE", 'ascii')
 renum_face = bytes("PDM_PART_RENUM_FACE_NONE", 'ascii')
-mpart.set_reordering(-1,         # All zones
+mpart.reordering_set(-1,         # All zones
                      renum_cell,
                      None,
                      renum_face)
@@ -145,7 +145,7 @@ Now that you have created a mesh partitioning object `mpart`, you can **set** (s
 ```{code-cell}
 %%code_block -p exercise_1 -i 4
 
-mpart.register_dmesh_nodal(i_zone, dmn)
+mpart.dmesh_nodal_set(i_zone, dmn)
 ```
 
 At this point you have provided all the information necessary to run the mesh partitioning algorithm. You can call the function to
@@ -293,10 +293,8 @@ vtx_ln_to_gn = mpart.ln_to_gn_get(i_zone,
                                   PDM._PDM_MESH_ENTITY_VERTEX)
 n_vtx = len(vtx_ln_to_gn)
 
-output = mpart.vtx_coord_get(i_zone,
+coords = mpart.vtx_coord_get(i_zone,
                              i_part)
-
-coords = output["np_vtx_coord"]
 
 ```
 

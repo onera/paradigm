@@ -165,7 +165,7 @@ Now that you have created a mesh partitioning object `mpart`, you can **set** (s
 ```{code-cell}
 %%code_block -p exercise_1 -i 4
 
-  PDM_multipart_register_dmesh_nodal(mpart, i_zone, dmn);
+  PDM_multipart_dmesh_nodal_set(mpart, i_zone, dmn);
 ```
 
 At this point you have provided all the information necessary to run the mesh partitioning algorithm. You can call the function to

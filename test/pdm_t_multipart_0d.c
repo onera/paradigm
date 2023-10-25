@@ -178,7 +178,7 @@ char *argv[]
                                                 comm,
                                                 PDM_OWNERSHIP_KEEP);
 
-  PDM_multipart_register_block(mpart, 0, dm);
+  PDM_multipart_dmesh_set(mpart, 0, dm);
 
   PDM_multipart_compute(mpart);
 

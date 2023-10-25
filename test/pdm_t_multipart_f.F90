@@ -174,8 +174,8 @@ program testf
   !                    dface_join_idx,  &
   !                    dface_join)
 
-  ! call PDM_multipart_register_block(multipart, i_zone, dm)
-  ! call PDM_multipart_register_joins(multipart, n_total_joins, join_to_opposite)
+  ! call PDM_multipart_dmesh_set(multipart, i_zone, dm)
+  ! call PDM_multipart_joins_set(multipart, n_total_joins, join_to_opposite)
 
   ! Run
   ! call PDM_multipart_compute(multipart)

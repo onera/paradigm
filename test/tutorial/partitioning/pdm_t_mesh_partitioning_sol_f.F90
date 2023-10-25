@@ -235,9 +235,9 @@ program pdm_t_mesh_partitioning_sol_f
                                             renum_cell_properties,      &
                                             "PDM_PART_RENUM_FACE_NONE")
 
-  call PDM_multipart_register_dmesh_nodal(mpart,  &
-                                          i_zone, &
-                                          dmn)
+  call PDM_multipart_dmesh_nodal_set(mpart,  &
+                                     i_zone, &
+                                     dmn)
 
   call PDM_multipart_compute(mpart)
 

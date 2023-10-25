@@ -19,19 +19,19 @@ cdef extern from "pdm_multipart.h":
                                           PDM_ownership_t  owner)
 
     # ------------------------------------------------------------------
-    void PDM_multipart_register_block(PDM_multipart_t *mtp,
-                                      int              i_zone,
-                                      PDM_dmesh_t     *dmesh)
+    void PDM_multipart_dmesh_set(PDM_multipart_t *mtp,
+                                 int              i_zone,
+                                 PDM_dmesh_t     *dmesh)
 
     # ------------------------------------------------------------------
-    void PDM_multipart_register_dmesh_nodal(PDM_multipart_t   *mtp,
-                                            int                i_zone,
-                                            PDM_dmesh_nodal_t *dmesh)
+    void PDM_multipart_dmesh_nodal_set(PDM_multipart_t   *mtp,
+                                       int                i_zone,
+                                       PDM_dmesh_nodal_t *dmesh)
 
     # ------------------------------------------------------------------
-    void PDM_multipart_register_joins(PDM_multipart_t *mtp,
-                                      int              n_total_joins,
-                                      int*             matching_join_array)
+    void PDM_multipart_joins_set(PDM_multipart_t *mtp,
+                                 int              n_total_joins,
+                                 int*             matching_join_array)
 
     # ------------------------------------------------------------------
     void PDM_multipart_set_reordering_options(      PDM_multipart_t *mtp,
@@ -250,10 +250,10 @@ cdef class MultiPart:
         PDM_multipart_free(self._mtp)
 
     # ------------------------------------------------------------------
-    def register_block(self, int i_zone,
-                                       DMesh dmesh): # DMesh = DistributedMeshCaspule or DistributedMesh
+    def dmesh_set(self, int i_zone,
+                        DMesh dmesh): # DMesh = DistributedMeshCaspule or DistributedMesh
       """
-      register_block(i_zone, dmesh)
+      dmesh_set(i_zone, dmesh)
 
       Set distributed mesh data for the input zone
 
@@ -261,15 +261,15 @@ cdef class MultiPart:
         i_zone (int)               : Zone identifier
         dmesh  (:py:class:`DMesh`) : Distributed mesh structure
       """
-      PDM_multipart_register_block(self._mtp,
-                                   i_zone,
-                                   dmesh._dm)
+      PDM_multipart_dmesh_set(self._mtp,
+                              i_zone,
+                              dmesh._dm)
 
     # ------------------------------------------------------------------
-    def register_dmesh_nodal(self, int i_zone,
-                                       DMeshNodal dmn):
+    def dmesh_nodal_set(self, int i_zone,
+                              DMeshNodal dmn):
       """
-      register_dmesh_nodal(i_zone, dmn)
+      dmesh_nodal_set(i_zone, dmn)
 
       Set distributed mesh data for the input zone.
       The mesh is described by nodal connectivity.
@@ -278,14 +278,14 @@ cdef class MultiPart:
         i_zone (int)                    : Zone identifier
         dmn    (:py:class:`DMeshNodal`) : Distributed nodal mesh structure
       """
-      PDM_multipart_register_dmesh_nodal(self._mtp,
-                                         i_zone,
-                                         dmn.dmn)
+      PDM_multipart_dmesh_nodal_set(self._mtp,
+                                    i_zone,
+                                    dmn.dmn)
 
     # ------------------------------------------------------------------
-    def register_joins(self, NPY.ndarray[NPY.int32_t, mode='c', ndim=1] matching_join):
+    def joins_set(self, NPY.ndarray[NPY.int32_t, mode='c', ndim=1] matching_join):
       """
-      register_joins(n_total_joins, matching_join)
+      joins_set(n_total_joins, matching_join)
 
       Set connecting data between all the zones
 
@@ -293,11 +293,11 @@ cdef class MultiPart:
         matching_join (np.ndarray[np.int32_t]) : For each global join id, give the global id of the opposite
       """
       cdef int n_total_joins = len(matching_join)
-      PDM_multipart_register_joins(       self._mtp,
-                                          n_total_joins,
-                                   <int*> matching_join.data)
+      PDM_multipart_joins_set(  self._mtp,
+                                     n_total_joins,
+                              <int*> matching_join.data)
     # ------------------------------------------------------------------
-    def set_reordering(self, int i_zone,
+    def reordering_set(self, int i_zone,
                        char *renum_cell_method,
                        NPY.ndarray[NPY.int32_t, mode='c', ndim=1] renum_properties_cell,
                        char *renum_face_method):
@@ -323,7 +323,7 @@ cdef class MultiPart:
                                            renum_properties_cell_data,
                                            renum_face_method)
     # ------------------------------------------------------------------
-    def set_reordering_vtx(self, int i_zone,
+    def reordering_vtx_set(self, int i_zone,
                            char *renum_vtx_method):
       """
       set_reordering_vtx(i_zone, renum_vtx_method)

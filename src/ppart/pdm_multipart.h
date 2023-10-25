@@ -111,7 +111,7 @@ PDM_multipart_create
  * \param [in]   dmesh          Pointer on \ref PDM_dmesh_t containing all distributed connectivities
  */
 
-void PDM_multipart_register_block
+void PDM_multipart_dmesh_set
 (
  PDM_multipart_t   *multipart,
  const int          zone_id,
@@ -127,7 +127,7 @@ void PDM_multipart_register_block
  * \param [in]   dmesh_nodal    Pointer on \ref PDM_dmesh_nodal_t
  */
 
-void PDM_multipart_register_dmesh_nodal
+void PDM_multipart_dmesh_nodal_set
 (
  PDM_multipart_t         *multipart,
  const int                zone_id,
@@ -193,7 +193,7 @@ PDM_multipart_block_set
  * \note Join global id numbering must start at 0 and be continuous.
  */
 
-void PDM_multipart_register_joins
+void PDM_multipart_joins_set
 (
  PDM_multipart_t *multipart,
  const int        n_total_joins,

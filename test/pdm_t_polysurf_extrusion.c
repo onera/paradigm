@@ -429,7 +429,7 @@ int main(int argc, char *argv[])
                         dface_group_idx,
                         PDM_OWNERSHIP_USER);
 
-    PDM_multipart_register_block (mpart, 0, dmesh);
+    PDM_multipart_dmesh_set (mpart, 0, dmesh);
 
     /* Run */
     PDM_multipart_compute (mpart);

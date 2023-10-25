@@ -271,7 +271,7 @@ _gen_mesh
                         dface_group_idx,
                         PDM_OWNERSHIP_USER);
 
-    PDM_multipart_register_block (mpart, 0, dmesh);
+    PDM_multipart_dmesh_set (mpart, 0, dmesh);
 
     PDM_multipart_compute(mpart);
 
@@ -467,7 +467,7 @@ _gen_mesh
                         dedge_bnd_idx,
                         PDM_OWNERSHIP_USER);
 
-    PDM_multipart_register_block(mpart, 0, dmesh);
+    PDM_multipart_dmesh_set(mpart, 0, dmesh);
 
     /* Run */
     PDM_multipart_compute(mpart);
@@ -617,7 +617,7 @@ _gen_mesh
     }
 
 
-    PDM_multipart_register_dmesh_nodal(mpart, 0, dmn);
+    PDM_multipart_dmesh_nodal_set(mpart, 0, dmn);
 
     PDM_multipart_compute(mpart);
 
@@ -703,7 +703,7 @@ _mesh_from_file
                                        NULL,
                                        "PDM_PART_RENUM_FACE_NONE");
 
-  PDM_multipart_register_dmesh_nodal(mpart, 0, dmn);
+  PDM_multipart_dmesh_nodal_set(mpart, 0, dmn);
   PDM_multipart_compute(mpart);
 
   *pn_elt        = malloc(sizeof(int          ) * n_part);

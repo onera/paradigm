@@ -376,7 +376,7 @@ _cube_mesh2
     /*
      * Split mesh
      */
-    PDM_multipart_register_dmesh_nodal(mpart, 0, dmn);
+    PDM_multipart_dmesh_nodal_set(mpart, 0, dmn);
     PDM_multipart_compute(mpart);
 
     PDM_dcube_nodal_gen_free(dcube);
@@ -462,7 +462,7 @@ _cube_mesh2
                         PDM_OWNERSHIP_USER);
 
 
-    PDM_multipart_register_block (mpart, 0, dmesh);
+    PDM_multipart_dmesh_set (mpart, 0, dmesh);
 
 
     PDM_multipart_compute(mpart);

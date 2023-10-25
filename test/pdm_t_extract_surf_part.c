@@ -263,7 +263,7 @@ int main(int argc, char *argv[])
 						   PDM_OWNERSHIP_KEEP);
 
   PDM_multipart_set_reordering_options(mpart, -1, "PDM_PART_RENUM_CELL_NONE", NULL, "PDM_PART_RENUM_FACE_NONE");
-  PDM_multipart_register_block(mpart, 0, dm);
+  PDM_multipart_dmesh_set(mpart, 0, dm);
   PDM_multipart_compute(mpart);
 
   /*

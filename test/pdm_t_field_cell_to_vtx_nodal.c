@@ -525,7 +525,7 @@ int main
 
   for (int i = 0; i < n_domain; i++) {
     dmn[i] = PDM_dcube_nodal_gen_dmesh_nodal_get(dcube[i]);
-    PDM_multipart_register_dmesh_nodal(mpart, i, dmn[i]);
+    PDM_multipart_dmesh_nodal_set(mpart, i, dmn[i]);
   }
 
   PDM_multipart_set_reordering_options(mpart,

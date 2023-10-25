@@ -57,12 +57,12 @@ def run_test():
 
   renum_cell = bytes("PDM_PART_RENUM_CELL_NONE", 'ascii')
   renum_face = bytes("PDM_PART_RENUM_FACE_NONE", 'ascii')
-  mpart.set_reordering(-1, # i_zone
+  mpart.reordering_set(-1, # i_zone
                        renum_cell,
                        None,
                        renum_face)
 
-  mpart.register_dmesh_nodal(i_zone, dmn)
+  mpart.dmesh_nodal_set(i_zone, dmn)
 
   mpart.compute()
 

@@ -48,7 +48,7 @@ mpart = PDM.MultiPart(1,
                       np.ones(1).astype(np.double),
                       comm)
 
-mpart.register_dmesh_nodal(0, dmn_capsule)
+mpart.dmesh_nodal_set(0, dmn_capsule)
 
 mpart.compute()
 ############################################################################

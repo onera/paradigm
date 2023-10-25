@@ -13,4 +13,3 @@ if(PDM_ENABLE_TRAINING)
 
   # TODO : Run jupytext --to ipynb on all *.md notebooks
 
-endif()

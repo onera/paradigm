@@ -706,7 +706,7 @@ char *argv[]
                                                 PDM_OWNERSHIP_KEEP);
 
   for(int i_dom = 0; i_dom < n_dom_i; ++i_dom) {
-    PDM_multipart_register_block(mpart, i_dom, dm[i_dom]);
+    PDM_multipart_dmesh_set(mpart, i_dom, dm[i_dom]);
   }
 
   PDM_multipart_compute(mpart);

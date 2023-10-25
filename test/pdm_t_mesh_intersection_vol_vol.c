@@ -341,7 +341,7 @@ _generate_volume_mesh
     PDM_dmesh_nodal_generate_distribution(dmn);
     PDM_dcube_nodal_gen_free(dcube);
 
-    PDM_multipart_register_dmesh_nodal(mpart, 0, dmn);
+    PDM_multipart_dmesh_nodal_set(mpart, 0, dmn);
 
     PDM_g_num_t *distrib_vtx = PDM_dmesh_nodal_vtx_distrib_get(dmn);
     dvtx_coord = PDM_DMesh_nodal_vtx_get(dmn);
@@ -433,7 +433,7 @@ _generate_volume_mesh
                         dface_group_idx,
                         PDM_OWNERSHIP_USER);
 
-    PDM_multipart_register_block(mpart, 0, dmesh);
+    PDM_multipart_dmesh_set(mpart, 0, dmesh);
 
   }
 
@@ -915,7 +915,7 @@ _read_volume_mesh
                                        NULL,
                                        "PDM_PART_RENUM_FACE_NONE");
 
-  PDM_multipart_register_dmesh_nodal(*mpart, 0, *dmn);
+  PDM_multipart_dmesh_nodal_set(*mpart, 0, *dmn);
   PDM_multipart_compute(*mpart);
 }
 

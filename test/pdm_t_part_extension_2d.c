@@ -1125,7 +1125,7 @@ int main
   for (int i = 0; i < n_domain; i++) {
     dmn[i] = PDM_dcube_nodal_gen_dmesh_nodal_get(dcube[i]);
     PDM_dmesh_nodal_generate_distribution(dmn[i]);
-    PDM_multipart_register_dmesh_nodal(mpart, i, dmn[i]);
+    PDM_multipart_dmesh_nodal_set(mpart, i, dmn[i]);
   }
 
   // const int renum_properties_cell[6] = {1024, 0, 1, 64, 3, 1};

@@ -215,9 +215,9 @@ Now that you have created a mesh partitioning object `mpart`, you can **set** (s
 ```{code-cell}
 %%code_block -p exercise_1 -i 20
 
-  call PDM_multipart_register_dmesh_nodal(mpart,  &
-                                          i_zone, &
-                                          dmn)
+  call PDM_multipart_dmesh_nodal_set(mpart,  &
+                                     i_zone, &
+                                     dmn)
 
 ```
 

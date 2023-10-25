@@ -22,13 +22,11 @@ Initialization
 Set inputs
 ~~~~~~~~~~
 
-.. doxygenfunction:: PDM_multipart_register_dmesh_nodal
+.. doxygenfunction:: PDM_multipart_dmesh_nodal_set
 
-.. doxygenfunction:: PDM_multipart_register_block
+.. doxygenfunction:: PDM_multipart_dmesh_set
 
-.. doxygenfunction:: PDM_multipart_block_set
-
-.. doxygenfunction:: PDM_multipart_register_joins
+.. doxygenfunction:: PDM_multipart_joins_set
 
 .. doxygenfunction:: PDM_multipart_domain_interface_shared_set
 
@@ -110,13 +108,13 @@ Fortran API
   Set inputs
   ~~~~~~~~~~
 
-  .. f:autosubroutine PDM_multipart_register_dmesh_nodal
+  .. f:autosubroutine PDM_multipart_dmesh_nodal_set
 
-  .. f:autosubroutine PDM_multipart_register_block
+  .. f:autosubroutine PDM_multipart_dmesh_set
 
   .. f:autosubroutine:: PDM_multipart_block_set_
 
-  .. f:autosubroutine:: PDM_multipart_register_joins_
+  .. f:autosubroutine:: PDM_multipart_joins_set_
 
   .. PDM_multipart_domain_interface_shared_set
 

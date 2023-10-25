@@ -32,8 +32,8 @@ module pdm_multipart
     PDM_multipart_create_
   end interface
 
-  interface PDM_multipart_register_joins ; module procedure  &
-    PDM_multipart_register_joins_
+  interface PDM_multipart_joins_set ; module procedure  &
+    PDM_multipart_joins_set_
   end interface
 
   interface PDM_multipart_set_reordering_options ; module procedure  &
@@ -143,10 +143,10 @@ interface
   !!                                of the opposite join (size = n_total_joins)
   !!
 
-  subroutine PDM_multipart_register_joins_c (multipart, &
-                                             n_total_joins, &
-                                             join_to_opposite) &
-  bind (c, name='PDM_multipart_register_joins')
+  subroutine PDM_multipart_joins_set_c (multipart,        &
+                                        n_total_joins,    &
+                                        join_to_opposite) &
+  bind (c, name='PDM_multipart_joins_set')
 
     use iso_c_binding
     implicit none
@@ -155,7 +155,7 @@ interface
     integer(c_int), value  :: n_total_joins
     type(c_ptr),    value  :: join_to_opposite
 
-  end subroutine PDM_multipart_register_joins_c
+  end subroutine PDM_multipart_joins_set_c
 
   !>
   !!
@@ -665,10 +665,10 @@ interface
   !! \param [in]   dmesh          Distributed mesh structure
   !!
 
-  subroutine PDM_multipart_register_block (multipart, &
-                                           zone_id, &
-                                           dmesh) &
-  bind (c, name='PDM_multipart_register_block')
+  subroutine PDM_multipart_dmesh_set (multipart, &
+                                      zone_id,   &
+                                      dmesh)     &
+  bind (c, name='PDM_multipart_dmesh_set')
 
     use iso_c_binding
     implicit none
@@ -677,7 +677,7 @@ interface
     integer(c_int), value  :: zone_id
     type(c_ptr),    value  :: dmesh
 
-  end subroutine PDM_multipart_register_block
+  end subroutine PDM_multipart_dmesh_set
 
   !>
   !!
@@ -688,10 +688,10 @@ interface
   !! \param [in]   dmesh_nodal    Distributed nodal mesh structure
   !!
 
-  subroutine PDM_multipart_register_dmesh_nodal (multipart, &
-                                                 zone_id, &
-                                                 dmesh_nodal) &
-  bind (c, name='PDM_multipart_register_dmesh_nodal')
+  subroutine PDM_multipart_dmesh_nodal_set (multipart,   &
+                                            zone_id,     &
+                                            dmesh_nodal) &
+  bind (c, name='PDM_multipart_dmesh_nodal_set')
 
     use iso_c_binding
     implicit none
@@ -700,7 +700,7 @@ interface
     integer(c_int), value  :: zone_id
     type(c_ptr),    value  :: dmesh_nodal
 
-  end subroutine PDM_multipart_register_dmesh_nodal
+  end subroutine PDM_multipart_dmesh_nodal_set
 
   !>
   !!
@@ -759,7 +759,7 @@ interface
 end interface
 
 private :: PDM_multipart_create_,&
-           PDM_multipart_register_joins_,&
+           PDM_multipart_joins_set_,&
            PDM_multipart_set_reordering_options_,&
            PDM_multipart_set_reordering_options_vtx_,&
            PDM_multipart_get_part_mesh_nodal_,&
@@ -822,9 +822,9 @@ contains
 
   ! Set connecting data between all the zones
 
-  subroutine PDM_multipart_register_joins_ (multipart, &
-                                            n_total_joins, &
-                                            join_to_opposite)
+  subroutine PDM_multipart_joins_set_ (multipart,     &
+                                       n_total_joins, &
+                                       join_to_opposite)
 
     use pdm
     use iso_c_binding
@@ -837,11 +837,11 @@ contains
 
     c_join_to_opposite = c_loc(join_to_opposite)
 
-    call PDM_multipart_register_joins_c(multipart, &
-                                        n_total_joins, &
-                                        c_join_to_opposite)
+    call PDM_multipart_joins_set_c(multipart, &
+                                   n_total_joins, &
+                                   c_join_to_opposite)
 
-  end subroutine PDM_multipart_register_joins_
+  end subroutine PDM_multipart_joins_set_
 
   ! Set the reordering methods to be used after partitioning
 

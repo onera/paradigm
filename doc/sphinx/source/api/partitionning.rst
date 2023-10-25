@@ -30,13 +30,13 @@ Initialization
 Set inputs
 ~~~~~~~~~~
 
-.. doxygenfunction:: PDM_multipart_register_dmesh_nodal
+.. doxygenfunction:: PDM_multipart_dmesh_nodal_set
 
-.. doxygenfunction:: PDM_multipart_register_block
+.. doxygenfunction:: PDM_multipart_dmesh_set
 
 .. doxygenfunction:: PDM_multipart_block_set
 
-.. doxygenfunction:: PDM_multipart_register_joins
+.. doxygenfunction:: PDM_multipart_joins_set
 
 
 Renumbering options
@@ -120,13 +120,11 @@ Python API
   Set inputs
   ~~~~~~~~~~
 
-  .. autofunction:: Pypdm.Pypdm.MultiPart.register_dmesh_nodal
+  .. autofunction:: Pypdm.Pypdm.MultiPart.dmesh_nodal_set
 
-  .. autofunction:: Pypdm.Pypdm.MultiPart.register_block
+  .. autofunction:: Pypdm.Pypdm.MultiPart.dmesh_set
 
-  .. autofunction:: Pypdm.Pypdm.MultiPart.block_set
-
-  .. autofunction:: Pypdm.Pypdm.MultiPart.register_joins
+  .. autofunction:: Pypdm.Pypdm.MultiPart.joins_set
 
 
   Renumbering options

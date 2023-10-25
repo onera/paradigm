@@ -314,7 +314,7 @@ int main(int argc, char *argv[])
     //               djoins_ids[i_zone],
     //               dface_join_idx[i_zone],
     //               dface_join[i_zone]);
-    PDM_multipart_register_block(mpart, i_zone, dmesh[i_zone]);
+    PDM_multipart_dmesh_set(mpart, i_zone, dmesh[i_zone]);
   }
 
   /* Connection between zones */
@@ -326,7 +326,7 @@ int main(int argc, char *argv[])
     else
       join_to_opposite[ijoin] = ijoin - 1;
   }
-  PDM_multipart_register_joins(mpart, n_total_joins, join_to_opposite);
+  PDM_multipart_joins_set(mpart, n_total_joins, join_to_opposite);
 
   /* Run */
   PDM_multipart_compute(mpart);
