@@ -17,7 +17,7 @@ It's time for some hands on experience with `ParaDiGM`!
 Using the API referenced [here](https://numerics.gitlab-pages.onera.net/mesh/paradigm/dev_doc_pretty/user_manual/prepro_algo/index.html#python-api),
 you will have to fill in the code cells to partition a mesh, i.e. to cut it in subdomains that will be mapped onto the processors of a parallel machine.
 In the first section, we generate a block-distributed cube mesh for you. In the next section, you'll start running the partitioning algorithm.
-After that, you will be able to retrieve the arrays describing the partitionned mesh.
+After that, you will be able to retrieve the arrays describing the partitioned mesh.
 
 +++
 
@@ -91,7 +91,7 @@ For mesh partitioning, as for all other `ParaDiGM` features, there are 5 main st
 1. **create** the feature object
 2. **set** the data necessary to operate with that feature
 3. **compute**, operate the algorithm of the feature
-4. **get**, retrieve the ouput of the algorithm
+4. **get**, retrieve the output of the algorithm
 5. **free** the memory allocated to operate the feature
 
 Following this logic, let's start **creating** (step 1) the mesh partitioning object for homogeneously balanced subdomains.
@@ -123,7 +123,7 @@ Here, we chose to partition the cube with the Hilbert method. This method implem
 This method is favored within the `ParaDiGM` algorithms since it provides quickly a good load balance. To ensure the partitions are connected use
 `PDM_SPLIT_DUAL_WITH_PARMETIS` or `PDM_SPLIT_DUAL_WITH_PTSCOTCH` which call the external libraries ParMETIS and PT-Scotch.
 
-After mapping the partitionned subdomains on the processors, it is interesting to renumber the entities
+After mapping the partitioned subdomains on the processors, it is interesting to renumber the entities
 of the mesh on each processor for performance through cache blocking but it also provides interesting properties for the application.
 You can here call the renumbering function but by telling it not to do any renumbering for a start.
 
@@ -148,7 +148,7 @@ mpart.multipart_register_dmesh_nodal(i_zone, dmn)
 ```
 
 At this point you have provided all the information necessary to run the mesh partitioning algorithm. You can call the function to
-**compute** (step 3) the subdomains that make up the partitionned cube.
+**compute** (step 3) the subdomains that make up the partitioned cube.
 
 ```{code-cell}
 %%code_block -p exercise_1 -i 5
@@ -156,9 +156,9 @@ At this point you have provided all the information necessary to run the mesh pa
 mpart.multipart_run_ppart()
 ```
 
-## Get the partitionned mesh
+## Get the partitioned mesh
 
-You can now **get** (step 4) the ouput mesh of the partitioning algorithm. Depending on the numerical method, the mesh has to be
+You can now **get** (step 4) the output mesh of the partitioning algorithm. Depending on the numerical method, the mesh has to be
 described in a different way. For Finite-Element methods a nodal connectivity ([option 1](#Nodal-connectivity-(i.e.-Finite-Element-style)))) usually
 suffices while for Finite-Volume methods all descending connectivities ([option 2](#Descending-connectivity-(i.e.-Finite-Volume-style))) are of interest.
 Choose which one suits you best and go further in the exercise to the associated section.
@@ -167,10 +167,10 @@ Choose which one suits you best and go further in the exercise to the associated
 
 You choose to get the partitioned mesh in nodal connectivity, i.e. cell->vertex connectivity.
 
-*Remark : The object in `ParaDiGM` in which partitionned nodal meshes are stored is `part_mesh_nodal`.
+*Remark : The object in `ParaDiGM` in which partitioned nodal meshes are stored is `part_mesh_nodal`.
 Here we get this object from `mpart` to directly have access to the arrays we are interested in.*
 
-Let's start with the vertices composing the subdomain. How many vertices are there? What is their global number? What are their coordiantes?
+Let's start with the vertices composing the subdomain. How many vertices are there? What is their global number? What are their coordinates?
 
 ```{code-cell}
 %%code_block -p exercise_1 -i 6
@@ -523,7 +523,7 @@ Well, you have nothing to do for step 5 since it is implicit in Python.
 
 ## Execution and visualization
 
-Run the following cells to execute to program you just wrote and visualize the partitionned output mesh.
+Run the following cells to execute to program you just wrote and visualize the partitioned output mesh.
 
 ```{code-cell}
 %merge_code_blocks -l python -p exercise_1 -n 2 -v -c
@@ -540,12 +540,12 @@ In certain settings, the mesh is an assembly of several sub-meshes. These are ca
 
 ![alt text](mesh.png "A mesh composed of two zones")
 
-Each zone *zone* is partitionned in subdomains which
-are mapped to the processors of the parallel machine. On a processor the subdomain (of a mesh or a zone) can be sudivided in *parts*.
+Each zone *zone* is partitioned in subdomains which
+are mapped to the processors of the parallel machine. On a processor the subdomain (of a mesh or a zone) can be subdivided in *parts*.
 
 ![alt text](processor.png "Processor 0 with a subdomain of each zone with two parts for subdomain of zone 1")
 
 A mesh can be composed of several element types (tetrahedra, hexahedra, prisms...). In certain settings, the mesh definition for each specific element type
-is stored in a seperate *section*. So in a *section* one will find data for a specific element type.
+is stored in a separate *section*. So in a *section* one will find data for a specific element type.
 
 ![alt text](part.png "Part 1 of the subdomain on processor 0 of zone 1 with two sections")
