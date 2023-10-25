@@ -355,9 +355,9 @@ Choose which one suits you best and go further in the exercise to the associated
 You choose to get the partitioned mesh in nodal connectivity, i.e. cell->vertex connectivity.
 
 *Remark : The object in `ParaDiGM` in which partitioned nodal meshes are stored is `part_mesh_nodal`.
-Here we get this object from `mpart` to directly have access to the arrays we are interested in.*
+Here we get this object from `mpart` to have a direct access to the arrays we are interested in.*
 
-Let's start with the vertices composing the subdomain. How many vertices are there? What is their global number? What are their coordinates?
+Let's start with the vertices composing the subdomain. How many vertices are there? What are their global ids? What are their coordinates?
 
 ```{code-cell}
 %%code_block -p exercise_1 -i 7
@@ -382,7 +382,7 @@ Let's start with the vertices composing the subdomain. How many vertices are the
 
 ```
 
-Let's move on to the cells. How are the vertices connected to form cells? What is their global number? How many cells are there?
+Let's move on to the cells. How are the vertices connected to form cells? What are their global ids? How many cells are there?
 
 *Remark : since this is a basic example, we ask you to stick with the fixed value for i_section.
 To get insight about the concept behind this value you can have a look [here](#Annex-1)*
@@ -462,7 +462,7 @@ Now we write the mesh that we just got to be able to visualize it later on (noth
 
 You choose to get the partitioned mesh in descending connectivity, i.e. cell->face, face->edge and edge->vtx connectivities.
 
-Let's start from the top with cell data. How many cells are there? What is their global number? Which faces compose the cells?
+Let's start from the top with cell data. How many cells are there? What are their global ids? Which faces compose the cells?
 
 ```{code-cell}
 %%code_block -p exercise_1 -i 10
@@ -486,7 +486,7 @@ Let's start from the top with cell data. How many cells are there? What is their
 
 ```
 
-For the faces we proceed in a similar way. How many faces are there? What is their global number? Which edges compose the faces?
+For the faces we proceed in a similar way. How many faces are there? What are their global ids? Which edges compose the faces?
 
 ```{code-cell}
 %%code_block -p exercise_1 -i 11
@@ -510,7 +510,7 @@ For the faces we proceed in a similar way. How many faces are there? What is the
 
 ```
 
-Let's do the same for edges. How many edges are there? What is their global number? Which vertices compose the edges?
+Let's do the same for edges. How many edges are there? What are their global ids? Which vertices compose the edges?
 
 *Remark : The edge->vertex connectivity index is not created in the `mpart` object since it is implicit. Indeed,
 each edge is only composed of two vertices*
@@ -970,7 +970,7 @@ end program pdm_t_mesh_partitioning_f
 
 ## Execution and visualization
 
-Run the following cells to execute to program you just wrote and visualize the partitioned output mesh.
+Run the following cells to execute the program you just wrote and visualize the output partitioned mesh.
 
 ```{code-cell}
 %merge_code_blocks -l fortran -p exercise_1 -n 2 -v -c
