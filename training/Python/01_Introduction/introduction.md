@@ -80,99 +80,90 @@ GitHub
 Documentation Sphinx
 Différence ParaDiGM et ParaDiGMa -> mentionner extension
 
-## Installation
+## Installation Instructions
 
-Installation Instructions
-*************************
+### Basic Installation
 
-Basic Installation
-==================
+>**cmake .**
 
-cmake .
-make
-make install
+>**make**
 
-CMake general options
-=====================
+>**make install**
 
-cmake . -D<option1_name>=<option1_value> ... -D<optionn_name>=<optionn_value>
+### CMake general options
 
-Prefix :
-    CMAKE_INSTALL_PREFIX=<prefix>
+> **cmake . -D\<option1_name\>=\<option1_value\> ... -D\<optionn_name\>=\<optionn_value\>** with options :  
 
-Enable fortran interface :
-    PDM_ENABLE_Fortran=<ON | OFF> (default : OFF)
+ - **CMAKE\_INSTALL\_PREFIX=\<prefix\>** : Installation directory path
 
-Enable python interface :
-    PDM_ENABLE_PYTHON_BINDINGS=<ON | OFF> (default : OFF)
+ - **PDM_ENABLE_Fortran=<ON | OFF> (default : OFF)** : Enable fortran interface
+
+ - **PDM_ENABLE_PYTHON_BINDINGS=<ON | OFF> (default : OFF)** : Enable python interface
+      
       If a simple autodetection fails, you can use these options to find Python :
-        Python_ROOT_DIR=<path> 
-        Python_LIBRARY=<path>
-        Python_INCLUDE_DIR=<path>
-        Python_EXECUTABLE=<path>
+
+        - Python_ROOT_DIR=<path> 
+        - Python_LIBRARY=<path>
+        - Python_INCLUDE_DIR=<path>
+        - Python_EXECUTABLE=<path>
         
       Refere to FindPython in the CMake documentation for more informations.
       shared libraries are necessary for python interface (CWP_ENABLE_SHARED=ON)
 
-Enable shared libraries :
-    PDM_ENABLE_SHARED=<ON | OFF> (default : ON)
+ - **PDM_ENABLE_SHARED=<ON | OFF> (default : ON)** : Enable shared libraries
 
-Enable static libraries :
-    PDM_ENABLE_STATIC=<ON | OFF> (default : ON)
+ - **PDM_ENABLE_STATIC=<ON | OFF> (default : ON)** : Enable static libraries
 
-Enable ParMETIS library (parallel graph partition) :
-    PDM_ENABLE_PARMETIS=<ON | OFF> (default : ON)
-      If a simple autodetection fails, you can use these options to find ParMETIS :
-        PARMETIS_DIR=<path>
+ - **PDM_ENABLE_PARMETIS=<ON | OFF> (default : ON)** : Enable [ParMETIS](https://github.com/KarypisLab/ParMETIS) library (parallel graph partition)
 
-     To link shared libraries, ParMETIS has to be compiled with "-fPIC" option.
+      If a simple autodetection fails, you can use PARMETIS_DIR=\<path\> and METIS_DIR=\<path\> options       
 
-     CMake looks for :
+      To link shared libraries, ParMETIS has to be compiled with "-fPIC" option. ParaDiGM is compatible with a 32bit or 64bit version.
+
+      CMake looks for :
+
         - parmetis.h and metis.h includes
         - parmetis and metis libraries
 
-Enable PTSCOTCH library (parallel graph partition) :
-    PDM_ENABLE_PTSCOTCH=<ON | OFF> (default : ON)
-      If a simple autodetection fails, you can use these options to find ParMETIS :
-        PARMETIS_DIR=<path>
+ - **PDM_ENABLE_PTSCOTCH=<ON | OFF> (default : ON)** : Enable [PTSCOTCH](https://gitlab.inria.fr/scotch/scotch) library (parallel graph partition) :
+      If a simple autodetection fails, you can use these options to find PTSCOTCH :
+        PTSCOTCH_DIR=<path>
 
-     To link shared libraries, PTSCOTCH has to be compiled with "-fPIC" option. 
+     To link shared libraries, PTSCOTCH has to be compiled with "-fPIC" and SCOTCH_PTHREAD_MPI=OFF. ParaDiGM is compatible with a 32bit or 64bit version.
 
      CMake looks for :
+
         - ptscotch.h include file
         - scotch, scotcherr, ptscotch, ptscotcherr libraries
 
-Enable long global number
-     PDM_ENABLE_LONG_G_NUM= <ON | OFF> (default : ON)
-       - ON : PDM_g_num_t type is "long int"
-       - OFF : PDM_g_num_t type is "int"
+ - **PDM_ENABLE_LONG_G_NUM= <ON | OFF> (default : ON)** : Enable long global number
 
-Enable Docuementation :
-     PDM_ENABLE_DOC= <ON | OFF> (default : OFF)
+        - ON : PDM_g_num_t type is "long int"
+        - OFF : PDM_g_num_t type is "int"
 
-      prerequis (sphinx, sphinx fortran, ...)
+ - **PDM_ENABLE_DOC= <ON | OFF> (default : OFF)** : Enable Docuementation
 
-CMake compiler options
-======================
+     prerequis (sphinx, sphinx fortran, ...)
 
-CC=<C compiler> CXX=<CXX compiler> FC=<Fortran compiler> cmake ...
+### CMake compiler options
+
+> **CC=<C compiler> CXX=<CXX compiler> FC=<Fortran compiler> cmake ...**
 
 or use the following cmake options
     CMAKE_C_COMPILER=<C compiler>
     CMAKE_CXX_COMPILER=<CXX compiler>
     CMAKE_Fortran_COMPILER=<Fortran compiler>
 
+### CMake MPI options
 
-CMake MPI options
-=================
-
-    MPI_C_COMPILER=<C mpi wrapper>
-    MPI_CXX_COMPILER=<CXX mpi wrapper>
-    MPI_Fortran_COMPILER=<Fortran mpi wrapper>
+    - MPI_C_COMPILER=<C mpi wrapper>
+    - MPI_CXX_COMPILER=<CXX mpi wrapper>
+    - MPI_Fortran_COMPILER=<Fortran mpi wrapper>
 
 If a simple autodetection fails, you can use these options to find MPI :
-    MPI_<lang>_LIBRARIES
-    MPI_<lang>_INCLUDE_PATH
+
+    - MPI_<lang>_LIBRARIES
+    - MPI_<lang>_INCLUDE_PATH
 
 Refere to FindMPI in the CMake documentation for more informations.
 
