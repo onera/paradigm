@@ -517,6 +517,12 @@ total_face_vtx = PDM.compute_face_vtx_from_face_and_edge(total_face_edge_idx,
                                                          total_edge_vtx)
 total_face_vtx_idx = np.array([3*i for i in range(total_n_face+1)]).astype(np.intc)
 
+total_cell_color = np.empty(total_n_cell, dtype=int)
+total_cell_color[:n_cell] = i_rank
+total_cell_color[n_cell:] = n_rank + i_rank
+
+elt_fields={"extension": [total_cell_color]}
+
 PDM.writer_wrapper(comm,
                   "visu",
                   "pext",
@@ -527,7 +533,9 @@ PDM.writer_wrapper(comm,
                    [total_cell_ln_to_gn],
                    -1, # cell_t
                    [total_cell_face_idx],
-                   [total_cell_face])
+                   [total_cell_face],
+                   "Ensight",
+                   elt_fields)
 ```
 
 ### Step 5
@@ -544,7 +552,7 @@ Run the following cells to execute the program you just wrote and visualize the 
 
 ```{code-cell}
 %%visualize
-visu/PEXT.case : i_part
+visu/PEXT.case : extension
 ```
 ## Annex 1
 
