@@ -63,7 +63,7 @@ program pdm_t_mesh_partitioning_f
   include "mpif.h"
 
   !-----------------------------------------------------------
-  integer (c_int)                       :: i
+  integer (c_int)                       :: i, j
 
   ! MPI
   integer                               :: code
@@ -271,7 +271,7 @@ For mesh partitioning, as for all other `ParaDiGM` features, there are 5 main st
 Following this logic, let's start **creating** (step 1) the mesh partitioning object for homogeneously balanced subdomains.
 
 *Remark : since this is a basic example, we ask you to stick with the fixed values for n_zone, n_part, i_zone, i_part and merge_zones.
-To get insight about the concepts behind those values you can have a look [here](#Annex 1)*
+To get insight about the concepts behind those values you can have a look [here](#Annex-1)*
 
 ```{code-cell}
 %%code_block -p exercise_1 -i 3
@@ -346,8 +346,8 @@ At this point you have provided all the information necessary to run the mesh pa
 ## Get the partitionned mesh
 
 You can now **get** (step 4) the ouput mesh of the partitioning algorithm. Depending on the numerical method, the mesh has to be
-described in a different way. For Finite-Element methods a nodal connectivity ([option 1](#Nodal connectivity (i.e. Finite-Element style)))) usually
-suffices while for Finite-Volume methods all descending connectivities ([option 2](#Descending connectivity (i.e. Finite-Volume style))) are of interest.
+described in a different way. For Finite-Element methods a nodal connectivity ([option 1](#Nodal-connectivity-(i.e.-Finite-Element-style)))) usually
+suffices while for Finite-Volume methods all descending connectivities ([option 2](#Descending-connectivity-(i.e.-Finite-Volume-style))) are of interest.
 Choose which one suits you best and go further in the exercise to the associated section.
 
 ### Nodal connectivity (i.e. Finite-Element style)
@@ -385,7 +385,7 @@ Let's start with the vertices composing the subdomain. How many vertices are the
 Let's move on to the cells. How are the vertices connected to form cells? What is their global number? How many cells are there?
 
 *Remark : since this is a basic example, we ask you to stick with the fixed value for i_section.
-To get insight about the concept behind this value you can have a look [here](#Annex 1)*
+To get insight about the concept behind this value you can have a look [here](#Annex-1)*
 
 ```{code-cell}
 %%code_block -p exercise_1 -i 8
@@ -805,66 +805,70 @@ call PDM_part_extension_compute (part_ext)
            total_cell_face_idx(total_n_cell+1))
 
   ! Cell
-  do i = 1, n_cell+1
+  do i = 1, n_cell
     total_cell_ln_to_gn(i) = cell_ln_to_gn(i)
   end do
-  do i = 1, n_cell_ext+1
+  do i = 1, n_cell_ext
     total_cell_ln_to_gn(n_cell + i) = cell_ln_to_gn_ext(i)
   end do
 
-  do i = 1, n_cell+2
+  do i = 1, n_cell+1
     total_cell_face_idx(i) = cell_face_idx(i)
   end do
-  do i = 1, n_cell_ext+2
+  do i = 1, n_cell_ext+1
     total_cell_face_idx(n_cell + i) = cell_face_idx(n_cell + 1) + cell_face_ext_idx(i)
   end do
 
   ! Face
-  do i = 1, n_face+1
+  do i = 1, n_face
     total_face_ln_to_gn(i) = face_ln_to_gn(i)
   end do
-  do i = 1, n_face_ext+1
+  do i = 1, n_face_ext
     total_face_ln_to_gn(n_face + i) = face_ln_to_gn_ext(i)
   end do
 
-  do i = 1, n_face+2
+  do i = 1, n_face+1
     total_face_edge_idx(i) = face_edge_idx(i)
   end do
-  do i = 1, n_face_ext+2
+  do i = 1, n_face_ext+1
     total_face_edge_idx(n_face + i) = face_edge_idx(n_face + 1) + face_edge_ext_idx(i)
   end do
 
   ! Edge
-  do i = 1, n_edge+1
+  do i = 1, n_edge
     total_edge_ln_to_gn(i) = edge_ln_to_gn(i)
   end do
-  do i = 1, n_edge_ext+1
+  do i = 1, n_edge_ext
     total_edge_ln_to_gn(n_edge + i) = edge_ln_to_gn_ext(i)
   end do
 
-  do i = 1, 2*n_edge+1
+  do i = 1, 2*n_edge
     total_edge_vtx(i) = edge_vtx(i)
   end do
-  do i = 1, 2*n_edge_ext+1
+  do i = 1, 2*n_edge_ext
     total_edge_vtx(2*n_edge + i) = edge_vtx_ext(i)
   end do
 
   ! Vertex
-  do i = 1, n_vtx+1
+  do i = 1, n_vtx
     total_vtx_ln_to_gn(i) = vtx_ln_to_gn(i)
   end do
-  do i = 1, n_vtx_ext+1
+  do i = 1, n_vtx_ext
     total_vtx_ln_to_gn(n_vtx + i) = vtx_ln_to_gn_ext(i)
   end do
 
-  do i = 1, 3*n_vtx+1
-    total_coords(i) = coords(i)
+  do i = 1, n_vtx
+    do j = 1, 3
+      total_coords(j, i) = coords(j, i)
+    end do
   end do
-  do i = 1, 3*n_vtx_ext+1
-    total_coords(3*n_vtx + i) = vtx_coord_ext(i)
+  do i = 1, n_vtx_ext
+    do j = 1, 3
+      total_coords(j, n_vtx + i) = vtx_coord_ext(j, i)
+    end do
   end do
 
-  allocate(total_face_edge(total_face_edge_idx(total_n_face+1))
+  allocate(total_face_edge(total_face_edge_idx(total_n_face+1)), &
            total_cell_face(total_cell_face_idx(total_n_cell+1)))
 
   ! Cell
@@ -903,9 +907,17 @@ call PDM_part_extension_compute (part_ext)
   call PDM_pointer_array_part_set(pcell_face_idx, 0, total_cell_face_idx)
   call PDM_pointer_array_part_set(pcell_face, 0, total_cell_face)
 
+  allocate(pn_vtx(1), &
+           pn_elt(1), &
+           pn_face(1))
+
+  pn_vtx(1)  = total_n_vtx
+  pn_elt(1)  = total_n_cell
+  pn_face(1) = total_n_face
+
   call writer_wrapper(comm, &
                       "visu", &
-                      "pmesh", &
+                      "pext", &
                       1,  &
                       pn_vtx, &
                       pcoords, &
@@ -922,6 +934,9 @@ call PDM_part_extension_compute (part_ext)
                       elt_field, &
                       vtx_field)
 
+  deallocate(pn_vtx, &
+             pn_elt, &
+             pn_face)
 
   deallocate(total_vtx_ln_to_gn, &
             total_coords,        &
@@ -964,6 +979,7 @@ Run the following cells to execute to program you just wrote and visualize the p
 ```{code-cell}
 %%visualize
 visu/PMESH.case : i_part
+visu/PEXT.case : i_part
 ```
 
 ## Annex 1

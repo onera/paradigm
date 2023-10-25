@@ -97,7 +97,7 @@ For mesh partitioning, as for all other `ParaDiGM` features, there are 5 main st
 Following this logic, let's start **creating** (step 1) the mesh partitioning object for homogeneously balanced subdomains.
 
 *Remark : since this is a basic example, we ask you to stick with the fixed values for n_zone, n_part, i_zone, i_part and merge_zones.
-To get insight about the concepts behind those values you can have a look [here](#Annex 1)*
+To get insight about the concepts behind those values you can have a look [here](#Annex-1)*
 
 ```{code-cell}
 %%code_block -p exercise_1 -i 2
@@ -159,8 +159,8 @@ mpart.multipart_run_ppart()
 ## Get the partitionned mesh
 
 You can now **get** (step 4) the ouput mesh of the partitioning algorithm. Depending on the numerical method, the mesh has to be
-described in a different way. For Finite-Element methods a nodal connectivity ([option 1](#Nodal connectivity (i.e. Finite-Element style)))) usually
-suffices while for Finite-Volume methods all descending connectivities ([option 2](#Descending connectivity (i.e. Finite-Volume style))) are of interest.
+described in a different way. For Finite-Element methods a nodal connectivity ([option 1](#Nodal-connectivity-(i.e.-Finite-Element-style)))) usually
+suffices while for Finite-Volume methods all descending connectivities ([option 2](#Descending-connectivity-(i.e.-Finite-Volume-style))) are of interest.
 Choose which one suits you best and go further in the exercise to the associated section.
 
 ### Nodal connectivity (i.e. Finite-Element style)
@@ -188,7 +188,7 @@ Let's start with the vertices composing the subdomain. How many vertices are the
 Let's move on to the cells. How are the vertices connected to form cells? What is their global number? How many cells are there?
 
 *Remark : since this is a basic example, we ask you to stick with the fixed value for i_section.
-To get insight about the concept behind this value you can have a look [here](#Annex 1)*
+To get insight about the concept behind this value you can have a look [here](#Annex-1)*
 
 ```{code-cell}
 %%code_block -p exercise_1 -i 7
@@ -453,44 +453,49 @@ vtx_coord_ext = part_ext.get_coord(i_zone,
 ```{code-cell}
 %%code_block -p exercise_1 -i 18
 
+n_cell_ext = len(cell_ext_ln_to_gn)
+n_face_ext = len(face_ext_ln_to_gn)
+n_edge_ext = len(edge_ext_ln_to_gn)
+n_vtx_ext  = len(vtx_ext_ln_to_gn)
+
 total_n_cell = n_cell + n_cell_ext
 total_n_face = n_face + n_face_ext
 total_n_edge = n_edge + n_edge_ext
 total_n_vtx  = n_vtx  + n_vtx_ext
 
 # Cell
-total_cell_ln_to_gn = np.array(cell_ln_to_gn + cell_ln_to_gn_ext)
+total_cell_ln_to_gn = np.concatenate((cell_ln_to_gn, cell_ext_ln_to_gn), axis=0, dtype=PDM.npy_pdm_gnum_dtype)
 
-total_cell_face_idx = np.zeros(total_n_cell + 1)
+total_cell_face_idx = np.zeros(total_n_cell + 1, dtype=np.intc)
 for i in range(n_cell + 1):
   total_cell_face_idx[i] = cell_face_idx[i]
 for i in range(n_cell_ext + 1):
   total_cell_face_idx[n_cell + i] = cell_face_idx[n_cell] + cell_face_ext_idx[i]
 
-total_cell_face = np.array(cell_face + cell_face_ext)
+total_cell_face = np.concatenate((cell_face, cell_face_ext), axis=0, dtype=np.intc)
 
 # Face
-total_face_ln_to_gn = np.array(face_ln_to_gn + face_ln_to_gn_ext)
+total_face_ln_to_gn = np.concatenate((face_ln_to_gn, face_ext_ln_to_gn), axis=0, dtype=PDM.npy_pdm_gnum_dtype)
 
-total_face_edge_idx = np.zeros(total_n_face + 1)
+total_face_edge_idx = np.zeros(total_n_face + 1, dtype=np.intc)
 for i in range(n_face + 1):
   total_face_edge_idx[i] = face_edge_idx[i]
 for i in range(n_face_ext + 1):
   total_face_edge_idx[n_face + i] = face_edge_idx[n_face] + face_edge_ext_idx[i]
 
-total_face_edge = np.array(face_edge + face_edge_ext)
+total_face_edge = np.concatenate((face_edge, face_edge_ext), axis=0, dtype=np.intc)
 
 # Edge
 
-total_edge_ln_to_gn = np.array(edge_ln_to_gn + edge_ln_to_gn_ext)
+total_edge_ln_to_gn = np.concatenate((edge_ln_to_gn, edge_ext_ln_to_gn), axis=0, dtype=PDM.npy_pdm_gnum_dtype)
 
-total_edge_vtx = np.array(edge_vtx + edge_vtx_ext)
+total_edge_vtx = np.concatenate((edge_vtx, edge_vtx_ext), axis=0, dtype=np.intc)
 
 # Vertices
 
-total_vtx_ln_to_gn = np.array(vtx_ln_to_gn + vtx_ln_to_gn_ext)
+total_vtx_ln_to_gn = np.concatenate((vtx_ln_to_gn, vtx_ext_ln_to_gn), axis=0, dtype=PDM.npy_pdm_gnum_dtype)
 
-total_coords = np.array(coords + vtx_coord_ext)
+total_coords = np.concatenate((coords, vtx_coord_ext), axis=0, dtype=np.double)
 
 # face->vtx
 
@@ -501,7 +506,7 @@ total_face_vtx_idx = np.array([3*i for i in range(total_n_face+1)]).astype(np.in
 
 PDM.writer_wrapper(comm,
                   "visu",
-                  "pmesh",
+                  "pext",
                    [total_coords],
                    [total_vtx_ln_to_gn],
                    [total_face_vtx_idx],
@@ -527,7 +532,7 @@ Run the following cells to execute to program you just wrote and visualize the p
 ```{code-cell}
 %%visualize
 visu/PMESH.case : i_part
-visu/PEXT.case
+visu/PEXT.case : i_part
 ```
 ## Annex 1
 

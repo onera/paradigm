@@ -117,7 +117,7 @@ For mesh partitioning, as for all other `ParaDiGM` features, there are 5 main st
 Following this logic, let's start **creating** (step 1) the mesh partitioning object for homogeneously balanced subdomains.
 
 *Remark : since this is a basic example, we ask you to stick with the fixed values for n_zone, n_part, i_zone, i_part and merge_zones.
-To get insight about the concepts behind those values you can have a look [here](#Annex 1)*
+To get insight about the concepts behind those values you can have a look [here](#Annex-1)*
 
 ```{code-cell}
 %%code_block -p exercise_1 -i 2
@@ -179,8 +179,8 @@ At this point you have provided all the information necessary to run the mesh pa
 ## Get the partitionned mesh
 
 You can now **get** (step 4) the ouput mesh of the partitioning algorithm. Depending on the numerical method, the mesh has to be
-described in a different way. For Finite-Element methods a nodal connectivity ([option 1](#Nodal connectivity (i.e. Finite-Element style)))) usually
-suffices while for Finite-Volume methods all descending connectivities ([option 2](#Descending connectivity (i.e. Finite-Volume style))) are of interest.
+described in a different way. For Finite-Element methods a nodal connectivity ([option 1](#Nodal-connectivity-(i.e.-Finite-Element-style)))) usually
+suffices while for Finite-Volume methods all descending connectivities ([option 2](#Descending-connectivity-(i.e.-Finite-Volume-style))) are of interest.
 Choose which one suits you best and go further in the exercise to the associated section.
 
 ### Nodal connectivity (i.e. Finite-Element style)
@@ -217,7 +217,7 @@ Let's start with the vertices composing the subdomain. How many vertices are the
 Let's move on to the cells. How are the vertices connected to form cells? What is their global number? How many cells are there?
 
 *Remark : since this is a basic example, we ask you to stick with the fixed value for i_section.
-To get insight about the concept behind this value you can have a look [here](#Annex 1)*
+To get insight about the concept behind this value you can have a look [here](#Annex-1)*
 
 ```{code-cell}
 %%code_block -p exercise_1 -i 7
@@ -666,7 +666,7 @@ et juste sortir un vtk sur un rang avec un champ
 
   writer_wrapper(comm,
                  "visu",
-                 "pmesh",
+                 "pext",
                   1, // n_part
                   &total_n_vtx,
                   &total_coords,
@@ -742,6 +742,7 @@ Run the following cells to execute to program you just wrote and visualize the p
 ```{code-cell}
 %%visualize
 visu/PMESH.case : i_part
+visu/PEXT.case : i_part
 ```
 
 ## Annex 1
