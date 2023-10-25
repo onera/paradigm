@@ -37,17 +37,25 @@ From 2009 to 2015, various HPC libraries dedicated to different themes were writ
 
 As the CWIPI library was already well used in the academic and industrial communities, it was retained, but its entire algorithmic core was replaced by ParaDiGM.
 
-## Goal
+## Objectives
 
 An efficient parallel algorithm takes much longer to write and validate than a sequential one. A simple sequential operation can become very difficult if you want to maintain good load balancing and memory balancing during all algorithm steps.
 
 Mettre image de la planche des fonctionnalites illustrees ....
 
-ParaDiGM aims to offer a set of efficient services to simplify the writing of massively parallel distributed simulation software, from reading data files to writing results. Numerical codes are generally based on a discretization of the study domain which can take the form of an unstructured mesh. ParaDiGM offers some services for unstructured meshes. Most ParaDiGM services are based on unstructured mesh data.       
+ParaDiGM aims to offer a set of efficient services to simplify the writing of massively parallel distributed numerical simulation software, from reading data files to writing results. Numerical codes are generally based on a discretization of the study domain which can take the form of an unstructured mesh. ParaDiGM only offers some services for unstructured meshes. 
+
+## API
+
+The API has been designed to be as user-friendly and intuitive as possible. All functionalities are in object form. To use a feature, the user creates an object and then provides the necessary data in the form of arrays and scalars. Once all the data has been provided, the user executes the feature compute. As with data, results are retrieved in the form of arrays or ParaDiGM objects. All concrete results required by the user are obtained directly by dedicated functions, without the need for abstract intermediate structures. User manipulation of abstract ParaDiGM objects is reduced to a strict minimum. 
+
+The native API is in C and can be used in C/C++ software.
+
+Two other APIs are available. The first one is in Python/Numpy, automatically generated from Cython, and the second one is in Fortran using Fortran's iso-c-binding interfaces.These APIs are not simply direct interfaces to C functions. They have been designed to be user-friendly and intuitive in each language. The Python API reinforces the notion of objects, and results are provided in the form of dictionaries. The Fortran API takes Fortran pointers as input/output and not c_ptr types with which Fortran developers are unfamiliar. The C API contains pointer arrays. This notion is not defined in Fortran. When giving data or retrieving results in this form, the user must use the Fortran **pdm_pointer_array** intermediate structure.
 
 ## Licence
 
-ParaDiGM is licensed under LGPL V3.0
+ParaDiGM is licensed under LGPL V3.0.
 
 ## Diffusion
 
@@ -67,18 +75,23 @@ API compatibility is guaranteed between two minor versions, except for new beta 
 
 ## Man power
 
-Eco-système : Cible de la bibliothèque : développeur de code scientifique -> parler du man power (DAAA/DMPE)
-Nicolas avec ModeTech : modérniser existant
-Sonics : créer un nouveau code
-Maia: outil pre-post plus haut niveau
+Eco-système :  : développeur de code scientifique -> parler du man power (DAAA/DMPE)
 
 ## Organisation
 
-GitLab
+GitLab git extern
 Licence
 GitHub
 Documentation Sphinx
 Différence ParaDiGM et ParaDiGMa -> mentionner extension
+
+## Application examples
+
+Nicolas avec ModeTech : modérniser existant
+Sonics : créer un nouveau code
+Maia: outil pre-post plus haut niveau
+Cedre
+CWIPI
 
 ## Installation Instructions
 
@@ -118,25 +131,26 @@ Différence ParaDiGM et ParaDiGMa -> mentionner extension
 
       If a simple autodetection fails, you can use PARMETIS_DIR=\<path\> and METIS_DIR=\<path\> options       
 
-      To link shared libraries, ParMETIS has to be compiled with "-fPIC" option. ParaDiGM is compatible with a 32bit or 64bit version.
-
       CMake looks for :
 
         - parmetis.h and metis.h includes
         - parmetis and metis libraries
+  
+      To link shared libraries, ParMETIS has to be compiled with "-fPIC" option. ParaDiGM is compatible with a 32bit or 64bit installation.
 
  - **PDM_ENABLE_PTSCOTCH=<ON | OFF> (default : ON)** : Enable [PTSCOTCH](https://gitlab.inria.fr/scotch/scotch) library (parallel graph partition) :
       If a simple autodetection fails, you can use these options to find PTSCOTCH :
-        PTSCOTCH_DIR=<path>
-
-     To link shared libraries, PTSCOTCH has to be compiled with "-fPIC" and SCOTCH_PTHREAD_MPI=OFF. ParaDiGM is compatible with a 32bit or 64bit version.
+        PTSCOTCH_DIR=\<path\>
 
      CMake looks for :
 
         - ptscotch.h include file
         - scotch, scotcherr, ptscotch, ptscotcherr libraries
+  
+     To link shared libraries, PTSCOTCH has to be compiled with "-fPIC" and SCOTCH_PTHREAD_MPI=OFF. ParaDiGM is compatible with a 32bit or 64bit installation.
 
- - **PDM_ENABLE_LONG_G_NUM= <ON | OFF> (default : ON)** : Enable long global number
+
+ - **PDM_ENABLE_LONG_G_NUM= <ON | OFF> (default : ON)** : Enable long global numbering
 
         - ON : PDM_g_num_t type is "long int"
         - OFF : PDM_g_num_t type is "int"
@@ -149,39 +163,42 @@ Différence ParaDiGM et ParaDiGMa -> mentionner extension
 
 > **CC=<C compiler> CXX=<CXX compiler> FC=<Fortran compiler> cmake ...**
 
-or use the following cmake options
-    CMAKE_C_COMPILER=<C compiler>
-    CMAKE_CXX_COMPILER=<CXX compiler>
-    CMAKE_Fortran_COMPILER=<Fortran compiler>
+or 
 
-### CMake MPI options
+> use the following CMake options:
 
-    - MPI_C_COMPILER=<C mpi wrapper>
-    - MPI_CXX_COMPILER=<CXX mpi wrapper>
-    - MPI_Fortran_COMPILER=<Fortran mpi wrapper>
+ - **CMAKE_C_COMPILER=\<C compiler\>**
+ - **CMAKE_CXX_COMPILER=\<CXX compiler\>**
+ - **CMAKE_Fortran_COMPILER=\<Fortran compiler\>**
 
-If a simple autodetection fails, you can use these options to find MPI :
+### CMake MPI options:
 
-    - MPI_<lang>_LIBRARIES
-    - MPI_<lang>_INCLUDE_PATH
+ - **MPI_C_COMPILER=\<C mpi wrapper\>**
+ - **MPI_CXX_COMPILER=\<CXX mpi wrapper\>**
+ - **MPI_Fortran_COMPILER=\<Fortran mpi wrapper\>**
 
-Refere to FindMPI in the CMake documentation for more informations.
+   If a simple autodetection fails, you can use these options to find MPI:
 
-## Technique
+    - **MPI_\<lang\>_LIBRARIES**
+    - **MPI_\<lang\>_INCLUDE_PATH**
+  
+   Refere to FindMPI in the CMake documentation for more informations.
 
-Reprendre les slides de Julien Coulet
+## Concepts and definition
 
-### Structures de données
+### Mesh
 
 Qu'est-ce qu'un maillage non structuré? Comment on le représente? Présenter la logique des tableaux avec index.
 
-### Parallel distribué MPI
+### Global/absolute numbering
 
-### Numérotation absolu
+### Parallel distribué MPI
 
 ex : génération de gnum (pas un exercice mais montrer du code) -> exposer graph de communication
 
-### Bloc/Partition
+### Distributed blocks of an array in absolute numbering 
+
+### 
 
 Part_to_part essentiel pour transmettre les résultats avec les données
 -> faire un point intéractif pour bien comprendre le part_to_part : deux nuages de points : dessiner un graphe (nuage 8 et 10 points)
@@ -189,7 +206,7 @@ Part_to_part essentiel pour transmettre les résultats avec les données
  -- les gens dans la salle sont des partitions qui s'échangent un ballon
  -- exercice Python un peu manuel avec des gnums
 
-## Eventail des fonctionalités
+## Fuctionnalities overview
 
 Manière dont c'est regroupé dans la documentation
 -> dire les points sur lesquels ont va se focaliser pendant le tp : multipart, (bonus : part_extension), localisation, (bonus : part_to_part)
