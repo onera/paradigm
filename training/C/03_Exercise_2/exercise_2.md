@@ -26,6 +26,9 @@ This mapping is typically used for interpolating data from the source mesh to th
 
 
 The aim of this exercise is to perform such an interpolation.
+The exercise is structured in two parts:
+1. Compute the location
+2. Perform the interpolation
 
 Your task is to fill in the empty code cells using the API referenced [here](https://numerics.gitlab-pages.onera.net/mesh/paradigm/dev_formation/user_manual/prepro_algo/mesh_location.html#mesh-location).
 
@@ -72,21 +75,28 @@ int main(int argc, char *argv[])
   PDM_MPI_Comm_rank(comm, &i_rank);
 ```
 
-## Generate a partitioned "source" mesh
 
-We then generate the partitioned source mesh.
+## 1. Localization
+
+
+### Generate a partitioned "source" mesh
+
+We start by generating the partitioned source mesh.
 
 By now you should be capable of partitioning a mesh using **ParaDiGM** (if not, you should definitely take a look at [**Exercise 1**](../02_Exercise_1/exercise_1.ipynb)).
 To gain some time, let's use the [*PDM_generate_mesh*](https://numerics.gitlab-pages.onera.net/mesh/paradigm/dev_formation/user_manual/simple_mesh_gen/generate_mesh.html) service to generate a partitioned mesh in a single function call.
 
 Here we generate a square mesh composed of polygonal elements.
 
+*Nothing to do here, you can move on. Just don't forget to run the cell!*
+
 ```{code-cell}
 %%code_block -p exercise_2 -i 2
 
   // Generate partitioned source mesh
-  PDM_g_num_t src_n_vtx_seg = 10; // number of vertices along each side of the square
-  int         src_n_part    = 1;  // number of partitions per MPI rank
+  PDM_g_num_t src_n_vtx_seg = 10;  // number of vertices along each side of the square
+  int         src_n_part    = 1;   // number of partitions per MPI rank
+  double      src_random    = 0.8; // randomization factor
 
   int          *src_n_vtx         = NULL;
   int          *src_n_edge        = NULL;
@@ -110,7 +120,7 @@ Here we generate a square mesh composed of polygonal elements.
                                    src_n_vtx_seg,
                                    src_n_part,
                                    PDM_SPLIT_DUAL_WITH_PARMETIS,
-                                   0.8,
+                                   src_random,
                                    &src_n_vtx,
                                    &src_n_edge,
                                    &src_n_face,
@@ -124,13 +134,15 @@ Here we generate a square mesh composed of polygonal elements.
                                    &src_face_ln_to_gn);
 ```
 
-## Generate a partitioned "target" mesh
+### Generate a partitioned "target" mesh
 
 We then generate a second partitioned mesh.
 We will use its vertices as a target point cloud.
 This second mesh is deliberately offset so that some target points lie outside the source mesh.
 These points may not be located.
 We will see later how to deal with these *unlocated* points.
+
+*Nothing to do here either. However, once you've successfully completed the localization procedure, feel free to play with the parameters of the two meshes.*
 
 ```{code-cell}
 %%code_block -p exercise_2 -i 3
@@ -140,6 +152,7 @@ We will see later how to deal with these *unlocated* points.
   int         tgt_n_part    = 1;    // number of partitions per MPI rank
   double      tgt_xmin      = 0.25; // x-offset
   double      tgt_ymin      = 0.25; // y-offset
+  double      tgt_random    = 0.;   // randomization factor
 
   int          *tgt_n_vtx         = NULL;
   int          *tgt_n_edge        = NULL;
@@ -164,7 +177,7 @@ We will see later how to deal with these *unlocated* points.
                                    tgt_n_vtx_seg,
                                    tgt_n_part,
                                    PDM_SPLIT_DUAL_WITH_HILBERT,
-                                   0.,
+                                   tgt_random,
                                    &tgt_n_vtx,
                                    &tgt_n_edge,
                                    &tgt_n_face,
@@ -178,7 +191,7 @@ We will see later how to deal with these *unlocated* points.
                                    &tgt_face_ln_to_gn);
 ```
 
-## Create the `PDM_mesh_location_t` object
+### Create the `PDM_mesh_location_t` object
 
 Now that we have all the required inputs, let's create an instance of the `PDM_mesh_location_t` structure.
 
@@ -193,7 +206,7 @@ Now that we have all the required inputs, let's create an instance of the `PDM_m
 
 ```
 
-## Set the target point cloud
+### Set the target point cloud
 
 Now let's provide the target point cloud to the structure.
 
@@ -216,7 +229,7 @@ Now let's provide the target point cloud to the structure.
   }
 ```
 
-## Set the source mesh
+### Set the source mesh
 
 Now let's provide the source mesh to the structure.
 
@@ -263,7 +276,7 @@ Here you have essentially two options:
   }
 ```
 
-## Set some optional parameters
+### Set some optional parameters
 
 The location algorithm uses a preconditioning stage which consists in associating candidate elements and points before computed the exact location.
 Three preconditioning methods are available:
@@ -276,6 +289,9 @@ Theses boxes can be expanded using a **relative geometric tolerance** allowing f
 The third method uses a combination of both trees to ensure all target points are "located", i.e. associated to the nearest source element.
 
 (By default, the `PDM_MESH_LOCATION_OCTREE` method is used, with a relative tolerance equal to zero.)
+
+We recommend that you first go through the entire localization procedure before worrying about these options.
+You will still have time afterwards to play with them and see the impact they can have.
 
 ```{code-cell}
 %%code_block -p exercise_2 -i 7
@@ -292,10 +308,10 @@ The third method uses a combination of both trees to ensure all target points ar
 
 ```
 
-## Compute the localization
+### Compute the localization
 
 Now that everything is ready, we can compute the localization.
-Once the calculation is complete, we can display the elapsed time and CPU time.
+Once the calculation is complete, we can display the elapsed and CPU times.
 
 ```{code-cell}
 %%code_block -p exercise_2 -i 8
@@ -310,12 +326,19 @@ Once the calculation is complete, we can display the elapsed time and CPU time.
 
 ```
 
-## Results
+## 2. Interpolation
+
+Now that the localization has been computed, the mesh location object stores the mapping between the source mesh elements and the target points.
+This mapping consists in:
+- a set of geometric data sufficient for 1-exact interpolation of node-based fields ;
+- an MPI communication graph to exchange data between the mapped entities.
+
+In the second part of this exercise you will have to use these two pieces of information to:
+1. exchange the global ids of the source elements to the corresponding target points: this way each *located* point is supposed to receive the global id of the element it is contained in ;
+2. interpolate (and exchange) a node-based field: we choose a linear field such as the Cartesian coordinate *x* so we can easily check everything went right.
 
 
-
-
-<span style="color:red">
+<!-- <span style="color:red">
 Si vous vous rappelez, pour construire un objet Part-to-Part, on doit spécifier:
 - les partitions côté "1"
 - les partitions côté "2"
@@ -337,15 +360,22 @@ To complete this exercise, we will interpolate two fields from the source mesh t
 First, compute the spatially interpolated fields on the source side.
 For the first field, the interpolation is straightforward : the target value is simply the same as the host source.
 The second field interpolation is trickier as you will need the cell->vertex connectivity built during the location computation to link the interpolation weights to the appropriate source nodes.
-
+ -->
 ### Retrieve the `PDM_part_to_part_t` instance
 
-<span style="color:red">EXPLIQUER</span>
+The communication graph is embodied in the form of a [`PDM_part_to_part_t`](https://numerics.gitlab-pages.onera.net/mesh/paradigm/dev_formation/user_manual/comm_graph/ptp.html#ptp) instance.
+
+If you recall, a Part-to-part object is built by specifying the partitions on both sides, as well as the graph Part1 -> Part2.
+
+In this case, *Part1* represents the source mesh and *Part2* the target point cloud.
+
+The `PDM_part_to_part_t` instance was built during the localization computation and can be accessed from the `PDM_mesh_location_t` structure.
 
 ```{code-cell}
 %%code_block -p exercise_2 -i 9
 
-  // Get PDM_part_to_part_t object (it is now owned by the user)
+  // Get PDM_part_to_part_t object
+  // EXO
   PDM_part_to_part_t *ptp = NULL;
   PDM_mesh_location_part_to_part_get(mesh_loc,
                                      0,
@@ -353,9 +383,17 @@ The second field interpolation is trickier as you will need the cell->vertex con
                                      PDM_OWNERSHIP_USER);
 ```
 
-### Exchange the first field from source to target
++++
 
-<span style="color:red">EXPLIQUER</span>
+Part-to-part is able to perform non-blocking exchanges so here's how we're going to proceed:
+1. initiate the first exchange: each source element send its global id to all the target points it contains ;
+2. overlap this communication by the computation of the interpolated *x* on the source side ;
+3. initiate the second exchange ;
+4. finalize both exchanges.
+
+### First exchange
+
+Here you need to initiate the exchange of global ids from the source mesh elements to the target points.
 
 ```{code-cell}
 %%code_block -p exercise_2 -i 10
@@ -363,6 +401,7 @@ The second field interpolation is trickier as you will need the cell->vertex con
   // Initiate exchange of first field (source elements global ids)
   int request1 = -1;
   PDM_g_num_t **tgt_recv_field1 = NULL;
+  // EXO
   PDM_part_to_part_iexch(ptp,
                          PDM_MPI_COMM_KIND_P2P,
                          PDM_STRIDE_CST_INTERLACED,
@@ -379,15 +418,19 @@ The second field interpolation is trickier as you will need the cell->vertex con
 
 ### Interpolate the second field (node-based)
 
-<span style="color:red">EXPLIQUER</span>
+Now you need to compute the spatially interpolated *x* coordinate **on the source side**.
+
+<span style="color:red">
+**donner plus d'infos?**
+</span>
 
 ```{code-cell}
 %%code_block -p exercise_2 -i 11
 
   // Interpolate second field (node-based)
   double **src_send_field2 = malloc(sizeof(double *) * tgt_n_part);
+  // EXO
   for (int i_part = 0; i_part < src_n_part; i_part++) {
-
     int         *src_to_tgt_idx          = NULL;
     PDM_g_num_t *points_gnum             = NULL;
     double      *points_coords           = NULL;
@@ -440,10 +483,7 @@ The second field interpolation is trickier as you will need the cell->vertex con
 
 ### Exchange the second interpolated fields
 
-Now, use the [`PDM_part_to_p<!-- art_t`](https://numerics.gitlab-pages.onera.net/mesh/paradigm/dev_doc_pretty/user_manual/comm_graph/ptp.html) object to exchange the interpolated fields from the source mesh to the target cloud.
-This `PDM_part_to_part_t` object was built when computing the location and can be accessed from the `PDM_Mesh_location_t` object. -->
-
-<span style="color:red">EXPLIQUER</span>
+You can now initiate the exchange of the interpolated field you just computed.
 
 ```{code-cell}
 %%code_block -p exercise_2 -i 12
@@ -467,19 +507,15 @@ This `PDM_part_to_part_t` object was built when computing the location and can b
 
 ### Check the interpolated received on the target side
 
-Finally, check and visualize the received interpolated target fields.
+Finally, we can finalize both exchanges, check and visualize the received fields on the target side.
+
+#### Watch out for unlocated points ####
+Notice that you only received information relative to the *located* points.
+You must therefore use the appropriate indirection to correctly read the received arrays.
 
 <span style="color:red">
-EXPLIQUER
-- wait
-- comment adresser tableaux reçus
-
-EXO
-- wait
-- remplir tableaux pré-alloués
+  ***donner plus d'infos? Rappel Part-to-part?***
 </span>
-
-*(Watch out for unlocated points!)*
 
 ```{code-cell}
 %%code_block -p exercise_2 -i 13
@@ -502,6 +538,7 @@ EXO
     double *tgt_field2 = tgt_field[1][i_part];
     double *is_located = tgt_field[2][i_part];
 
+    // EXO
     int n_located = PDM_mesh_location_n_located_get(mesh_loc,
                                                     0,
                                                     i_part);
@@ -542,6 +579,7 @@ EXO
   }
 
 
+  // Nothing to do from here :)
   const char *field_name[] = {
     "field1",
     "field2",
@@ -621,14 +659,17 @@ EXO
 
 ```
 
-## Free memory
+### Free memory
+
+Congratulations! You've made it to the end of the exercise :)
+Now let's clean the mess we just made and free the allocated memory...
 
 ```{code-cell}
 %%code_block -p exercise_2 -i 14
   // Free memory
   PDM_mesh_location_free(mesh_loc);
 
-  PDM_part_to_part_free(ptp);
+  PDM_part_to_part_free(ptp); // /!\ Ownership
 
   for (int i_part = 0; i_part < src_n_part; i_part++) {
     free(src_vtx_coord    [i_part]);
@@ -688,7 +729,9 @@ EXO
 ```
 
 
-## Finalize
+### Finalize
+
+...and finalize MPI.
 
 ```{code-cell}
 %%code_block -p exercise_2 -i 15
@@ -705,6 +748,7 @@ EXO
 ```
 
 ## Run the code
+
 Moment of truth!
 
 ```{code-cell}
