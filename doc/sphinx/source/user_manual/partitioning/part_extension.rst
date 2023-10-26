@@ -19,6 +19,16 @@ Initialization
 Set inputs
 ~~~~~~~~~~
 
+.. doxygenfunction:: PDM_part_extension_connectivity_set
+
+.. doxygenfunction:: PDM_part_extension_vtx_coord_set
+
+.. doxygenfunction:: PDM_part_extension_part_bound_graph_set
+
+.. doxygenfunction:: PDM_part_extension_bound_set
+
+.. doxygenfunction:: PDM_part_extension_ln_to_gn_set
+
 .. doxygenfunction:: PDM_part_extension_set_part
 
 .. doxygenfunction:: PDM_part_extension_part_domain_interface_shared_set

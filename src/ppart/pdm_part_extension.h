@@ -97,6 +97,8 @@ PDM_part_extension_compute
  *
  * \brief Set data to perform the partitionned mesh extension
  *
+ * \warning Deprecated : use the separate setters instead
+ *
  * \param [in]   part_ext                  PDM_part_extension_t structure instance
  * \param [in]   i_domain                  Id of current zone
  * \param [in]   i_part                    Id of current partition
@@ -383,6 +385,132 @@ PDM_part_to_part_create_from_extension
        PDM_g_num_t       ***selected_cell_to_send_ln_to_gn,
  const PDM_MPI_Comm         comm
 );
+
+
+
+
+
+/**
+ *
+ * \brief Set connectivity
+ *
+ * \param [in]  part_ext           \p PDM_part_extension_t structure instance
+ * \param [in]  i_zone             Zone identifier
+ * \param [in]  i_part             Partition identifier
+ * \param [in]  connectivity_type  Type of connectivity
+ * \param [in]  connect_idx        Index for connectivity (can be \p NULL for \p PDM_CONNECTIVITY_TYPE_EDGE_VTX)
+ * \param [in]  connect            Connectivity
+ *
+ */
+
+void
+PDM_part_extension_connectivity_set
+(
+ PDM_part_extension_t    *part_ext,
+ int                      i_zone,
+ int                      i_part,
+ PDM_connectivity_type_t  connectivity_type,
+ int                     *connect_idx,
+ int                     *connect
+ );
+
+/**
+ *
+ * \brief Set global ids
+ *
+ * \param [in]  part_ext     \p PDM_part_extension_t structure instance
+ * \param [in]  i_zone       Zone identifier
+ * \param [in]  i_part       Partition identifier
+ * \param [in]  mesh_entity  Type of mesh entity
+ * \param [in]  n_entity     Local number of entities
+ * \param [in]  ln_to_gn     Global ids (size = \p n_entity)
+ *
+ */
+
+void
+PDM_part_extension_ln_to_gn_set
+(
+ PDM_part_extension_t     *part_ext,
+ int                       i_zone,
+ int                       i_part,
+ PDM_mesh_entities_t       mesh_entity,
+ int                       n_entity,
+ PDM_g_num_t              *ln_to_gn
+);
+
+/**
+ *
+ * \brief Set vertex coordinates
+ *
+ * \param [in]  part_ext     \p PDM_part_extension_t structure instance
+ * \param [in]  i_zone       Zone identifier
+ * \param [in]  i_part       Partition identifier
+ * \param [in]  vtx_coord    Vertex coordinates (size = 3 * *n_vtx*)
+ *
+ */
+
+void
+PDM_part_extension_vtx_coord_set
+(
+ PDM_part_extension_t     *part_ext,
+ int                       i_zone,
+ int                       i_part,
+ double                   *vtx_coord
+);
+
+/**
+ *
+ * \brief Set the connection graph between partitions for the requested bound type
+ *
+ * \param [in]  multipart             \p PDM_part_extension_t structure instance
+ * \param [in]  i_zone                Zone identifier
+ * \param [in]  i_part                Partition identifier
+ * \param [in]  bound_type            Bound type
+ * \param [in]  part_bound_proc_idx   Partitioning boundary entities index from process (size = *n_rank* + 1)
+ * \param [in]  part_bound_part_idx   Partitioning boundary entities index from partition (size = *n_total_part* + 1)
+ * \param [in]  part_bound            Partitioning boundary entities (size = 4 * *n_entity_part_bound* = \p part_bound_proc_idx[*n_rank])
+ */
+
+void
+PDM_part_extension_part_bound_graph_set
+(
+       PDM_part_extension_t *part_ext,
+ const int                   i_zone,
+ const int                   i_part,
+       PDM_bound_type_t      bound_type,
+       int                  *part_bound_proc_idx,
+       int                  *part_bound_part_idx,
+       int                  *part_bound
+);
+
+/**
+ *
+ * \brief Set bound description
+ *
+ * \param [in]  part_ext               \p PDM_part_extension_t structure instance
+ * \param [in]  i_zone                 Zone identifier
+ * \param [in]  i_part                 Partition identifier
+ * \param [in]  bound_type             Bound type
+ * \param [in]  n_bound                Number of bounds
+ * \param [in]  bound_entity_idx       Index for bound->entity connectivity (size = \p n_bound)
+ * \param [in]  bound_entity           Bound->entity connectivity (1-based local ids, size = \p bound_entity_idx[\p n_bound])
+ * \param [in]  bound_entity_ln_to_gn  Bound->entity connectivity (bound-specific global ids, size = \p bound_entity_idx[\p n_bound])
+ *
+ */
+
+void
+PDM_part_extension_bound_set
+(
+ PDM_part_extension_t     *part_ext,
+ int                       i_zone,
+ int                       i_part,
+ PDM_bound_type_t          bound_type,
+ int                       n_bound,
+ int                      *bound_entity_idx,
+ int                      *bound_entity,
+ PDM_g_num_t              *bound_entity_ln_to_gn
+);
+
 
 #ifdef __cplusplus
 }
