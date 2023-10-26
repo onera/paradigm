@@ -518,8 +518,8 @@ total_face_vtx = PDM.compute_face_vtx_from_face_and_edge(total_face_edge_idx,
 total_face_vtx_idx = np.array([3*i for i in range(total_n_face+1)]).astype(np.intc)
 
 total_cell_color = np.empty(total_n_cell, dtype=int)
-total_cell_color[:n_cell] = i_rank
-total_cell_color[n_cell:] = n_rank + i_rank
+total_cell_color[:n_cell] = 2*i_rank
+total_cell_color[n_cell:] = 2*i_rank+1
 
 elt_fields={"extension": [total_cell_color]}
 
@@ -534,8 +534,7 @@ PDM.writer_wrapper(comm,
                    -1, # cell_t
                    [total_cell_face_idx],
                    [total_cell_face],
-                   "Ensight",
-                   elt_fields)
+                   elt_fields=elt_fields)
 ```
 
 ### Step 5
@@ -556,7 +555,7 @@ visu/PEXT.case : extension
 ```
 ## Annex 1
 
-In certain settings, the mesh is an assembly of several sub-meshes. These are called *zones*.
+In some cases, the mesh is an assembly of several sub-meshes. These are called *zones*.
 
 ![alt text](mesh.png "A mesh composed of two zones")
 

@@ -659,6 +659,14 @@ Once the partitioned mesh retrieved we can **free** (step 5) the memory allocate
     total_cell_face_idx[n_cell + i] = cell_face_idx[n_cell] + cell_face_ext_idx[i];
   } // end loop on extension cells
 
+  double *total_cell_color = malloc(sizeof(double) * total_n_cell);
+  for (int i = 0; i < n_cell; i++) {
+    total_cell_color[i] = 2*i_rank;
+  }
+  for (int i = n_cell; i < total_n_cell; i++) {
+    total_cell_color[i] = 2*i_rank+1;
+  }
+
   int *total_cell_face = malloc(sizeof(int) * total_cell_face_idx[total_n_cell]);
   memcpy(total_cell_face,                         cell_face,     sizeof(int) * cell_face_idx[n_cell]);
   memcpy(total_cell_face + cell_face_idx[n_cell], cell_face_ext, sizeof(int) * cell_face_ext_idx[n_cell_ext]);
@@ -710,6 +718,9 @@ Once the partitioned mesh retrieved we can **free** (step 5) the memory allocate
     total_face_vtx_idx[i] = 3 * i; // triangle
   }
 
+  const char    *field_name[]   = {"extension"};
+  double **field_value[1] = {&total_cell_color};
+
   writer_wrapper(comm,
                  "visu",
                  "pext",
@@ -726,14 +737,15 @@ Once the partitioned mesh retrieved we can **free** (step 5) the memory allocate
                   &total_cell_face_idx,
                   &total_cell_face,
                   "Ensight",
-                  0, // n_elt_field
-                  NULL, // elt_field_name
-                  NULL, // elt_field_values
+                  1, // n_elt_field
+                  field_name, // elt_field_name
+                  field_value, // elt_field_values
                   0, // n_vtx_field
                   NULL, // vtx_field_name
                   NULL); // vtx_field_values
 
   // free fusion
+  free(total_cell_color);
   free(total_cell_ln_to_gn);
   free(total_cell_face_idx);
   free(total_cell_face);
@@ -785,12 +797,12 @@ Run the following cells to execute the program you just wrote and visualize the 
 
 ```{code-cell}
 %%visualize
-visu/PEXT.case : i_part
+visu/PEXT.case : extension
 ```
 
 ## Annex 1
 
-In certain settings, the mesh is an assembly of several sub-meshes. These are called *zones*.
+In some cases, the mesh is an assembly of several sub-meshes. These are called *zones*.
 
 ![alt text](mesh.png "A mesh composed of two zones")
 

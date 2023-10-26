@@ -17,7 +17,7 @@ kernelspec:
 
 In this second exercise we will focus on the **Mesh Location** feature.
 It consists in computing the location of one or more partitioned point clouds (referred to as the *targets*) inside a partitioned mesh (referred to as the *source*).
-<!-- Some target points may be unlocated if they lie outside the source mesh. -->
+
 A mapping between the source mesh elements and the target points they contain is computed, which consists in
   - geometric data (distances, barycentric and parametric coordinates, ...) ;
   - an MPI communication graph as the associated entities are, in general, distributed on different processes.
@@ -191,14 +191,14 @@ We will see later how to deal with these *unlocated* points.
                                    &tgt_face_ln_to_gn);
 ```
 
-### Create the `PDM_mesh_location_t` object
+### Create the `PDM_mesh_location_t` structure
 
 Now that we have all the required inputs, let's create an instance of the `PDM_mesh_location_t` structure.
 
 ```{code-cell}
 %%code_block -p exercise_2 -i 4
 
-  // Create the PDM_mesh_location_t object
+  // Create the PDM_mesh_location_t structure
   // EXO
   PDM_mesh_location_t *mesh_loc = PDM_mesh_location_create(1,
                                                            comm,
@@ -328,7 +328,7 @@ Once the calculation is complete, we can display the elapsed and CPU times.
 
 ## 2. Interpolation
 
-Now that the localization has been computed, the mesh location object stores the mapping between the source mesh elements and the target points.
+Now that the localization has been computed, the mesh location structure stores the mapping between the source mesh elements and the target points.
 This mapping consists in:
 - a set of geometric data sufficient for 1-exact interpolation of node-based fields ;
 - an MPI communication graph to exchange data between the mapped entities.
@@ -365,7 +365,7 @@ The second field interpolation is trickier as you will need the cell->vertex con
 
 The communication graph is embodied in the form of a [`PDM_part_to_part_t`](https://numerics.gitlab-pages.onera.net/mesh/paradigm/dev_formation/user_manual/comm_graph/ptp.html#ptp) instance.
 
-If you recall, a Part-to-part object is built by specifying the partitions on both sides, as well as the graph Part1 -> Part2.
+If you recall, a Part-to-part structure is built by specifying the partitions on both sides, as well as the graph Part1 -> Part2.
 
 In this case, *Part1* represents the source mesh and *Part2* the target point cloud.
 
@@ -374,7 +374,7 @@ The `PDM_part_to_part_t` instance was built during the localization computation 
 ```{code-cell}
 %%code_block -p exercise_2 -i 9
 
-  // Get PDM_part_to_part_t object
+  // Get PDM_part_to_part_t structure
   // EXO
   PDM_part_to_part_t *ptp = NULL;
   PDM_mesh_location_part_to_part_get(mesh_loc,
@@ -386,7 +386,7 @@ The `PDM_part_to_part_t` instance was built during the localization computation 
 +++
 
 Part-to-part is able to perform non-blocking exchanges so here's how we're going to proceed:
-1. initiate the first exchange: each source element send its global id to all the target points it contains ;
+1. initiate the first exchange: each source element sends its global id to all the target points it contains ;
 2. overlap this communication by the computation of the interpolated *x* on the source side ;
 3. initiate the second exchange ;
 4. finalize both exchanges.
@@ -418,7 +418,7 @@ Here you need to initiate the exchange of global ids from the source mesh elemen
 
 ### Interpolate the second field (node-based)
 
-Now you need to compute the spatially interpolated *x* coordinate **on the source side**.
+Now you need to compute the spatially interpolated *x* values **on the source side**.
 
 <span style="color:red">
 **donner plus d'infos?**
@@ -509,12 +509,12 @@ You can now initiate the exchange of the interpolated field you just computed.
 
 Finally, we can finalize both exchanges, check and visualize the received fields on the target side.
 
-#### Watch out for unlocated points ####
+#### *Watch out for unlocated points!*
 Notice that you only received information relative to the *located* points.
 You must therefore use the appropriate indirection to correctly read the received arrays.
 
 <span style="color:red">
-  ***donner plus d'infos? Rappel Part-to-part?***
+  **donner plus d'infos? Rappel Part-to-part?**
 </span>
 
 ```{code-cell}
@@ -738,7 +738,7 @@ Now let's clean the mess we just made and free the allocated memory...
   PDM_MPI_Finalize();
 
   if (i_rank == 0) {
-    printf("-- End :)\n");
+    printf("End :)\n");
     fflush(stdout);
   }
 
@@ -747,7 +747,7 @@ Now let's clean the mess we just made and free the allocated memory...
 
 ```
 
-## Run the code
+## Compile the code and run
 
 Moment of truth!
 

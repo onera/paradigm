@@ -87,7 +87,7 @@ module pdm_writer_wrapper
     else
       is_3d_nodal = .false.
     endif
-    is_2d       = ((.not. present(pcell_face_idx)) .or. (.not. present(pcell_face))).and. (.not. is_3d_nodal)
+    is_2d = ((.not. present(pcell_face_idx)) .or. (.not. present(pcell_face))) .and. (.not. is_3d_nodal)
 
     ! MPI
     call mpi_comm_rank(comm, i_rank, ierr)
@@ -136,10 +136,10 @@ module pdm_writer_wrapper
       allocate(id_var_elt_field(n_elt_field))
       do i = 1, n_elt_field
         call pdm_writer_var_create(wrt,                       &
-                                   id_var_vtx_field(i), &
+                                   id_var_elt_field(i),       &
                                    PDM_WRITER_OFF,            &
                                    PDM_WRITER_VAR_SCALAIRE,   &
-                                   PDM_WRITER_VAR_VERTICES,   &
+                                   PDM_WRITER_VAR_ELEMENTS,   &
                                    elt_field(i)%name)
       enddo
     endif
@@ -151,7 +151,7 @@ module pdm_writer_wrapper
       allocate(id_var_vtx_field(n_vtx_field))
       do i = 1, n_vtx_field
         call pdm_writer_var_create(wrt,                       &
-                                   id_var_vtx_field(i), &
+                                   id_var_vtx_field(i),       &
                                    PDM_WRITER_OFF,            &
                                    PDM_WRITER_VAR_SCALAIRE,   &
                                    PDM_WRITER_VAR_VERTICES,   &

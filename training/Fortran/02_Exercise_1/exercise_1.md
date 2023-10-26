@@ -63,7 +63,7 @@ program pdm_t_mesh_partitioning_f
   include "mpif.h"
 
   !-----------------------------------------------------------
-  integer (c_int)    :: i, j
+  integer (c_int)    :: i
 
   ! MPI
   integer            :: code
@@ -148,7 +148,6 @@ Following this logic, let's start **creating** (step 1) the mesh partitioning ob
   integer (c_int)                    :: part_method, merge_zones
   double precision,          pointer :: part_fraction(:)         => null()
   integer (c_int)                    :: i_zone    = 0
-  integer (c_int)                    :: i_section = 0
   integer (c_int)                    :: i_part    = 0
 ```
 *Remark : since this is a basic example, we ask you to stick with the fixed values for n_zone, n_part, i_zone, i_part and merge_zones.
@@ -247,7 +246,7 @@ Here we get this object from `mpart` to have a direct access to the arrays we ar
 ```{code-cell}
 %%code_block -p exercise_1 -i 4
 
-  type (c_ptr) :: pmn
+  ! type (c_ptr) :: pmn
 ```
 
 Let's start with the vertices composing the subdomain. How many vertices are there? What are their global ids? What are their coordinates?
@@ -255,31 +254,31 @@ Let's start with the vertices composing the subdomain. How many vertices are the
 ```{code-cell}
 %%code_block -p exercise_1 -i 5
 
-  double precision,      pointer :: coords(:,:)     => null()
-  integer(c_int)                 :: n_vtx
-  integer (pdm_g_num_s), pointer :: vtx_ln_to_gn(:) => null()
+  ! double precision,      pointer :: coords(:,:)     => null()
+  ! integer(c_int)                 :: n_vtx
+  ! integer (pdm_g_num_s), pointer :: vtx_ln_to_gn(:) => null()
 ```
 
 ```{code-cell}
 %%code_block -p exercise_1 -i 22
 
-  call PDM_multipart_part_vtx_coord_get(mpart,              &
-                                        i_zone,             &
-                                        i_part,             &
-                                        coords,             &
-                                        PDM_OWNERSHIP_USER, &
-                                        n_vtx)
+  ! call PDM_multipart_part_vtx_coord_get(mpart,              &
+  !                                       i_zone,             &
+  !                                       i_part,             &
+  !                                       coords,             &
+  !                                       PDM_OWNERSHIP_USER, &
+  !                                       n_vtx)
 
 
-  call PDM_multipart_get_part_mesh_nodal(mpart,  &
-                                         i_zone, &
-                                         pmn,    &
-                                         PDM_OWNERSHIP_USER)
+  ! call PDM_multipart_get_part_mesh_nodal(mpart,  &
+  !                                        i_zone, &
+  !                                        pmn,    &
+  !                                        PDM_OWNERSHIP_USER)
 
 
-  call PDM_part_mesh_nodal_vtx_g_num_get(pmn,    &
-                                         i_part, &
-                                         vtx_ln_to_gn)
+  ! call PDM_part_mesh_nodal_vtx_g_num_get(pmn,    &
+  !                                        i_part, &
+  !                                        vtx_ln_to_gn)
 
 ```
 
@@ -291,29 +290,30 @@ To get insight about the concept behind this value you can have a look [here](#A
 ```{code-cell}
 %%code_block -p exercise_1 -i 6
 
-integer (c_int)                     :: n_elt
-integer(kind=PDM_l_num_s), pointer  :: elt_vtx(:)             => null()
-integer (pdm_g_num_s),     pointer  :: elt_ln_to_gn(:)        => null()
-integer(kind=PDM_l_num_s), pointer  :: parent_num(:)          => null()
-integer (pdm_g_num_s),     pointer  :: parent_entity_g_num(:) => null()
+  ! integer (c_int)                     :: n_elt
+  ! integer(kind=PDM_l_num_s), pointer  :: elt_vtx(:)             => null()
+  ! integer (pdm_g_num_s),     pointer  :: elt_ln_to_gn(:)        => null()
+  ! integer(kind=PDM_l_num_s), pointer  :: parent_num(:)          => null()
+  ! integer (pdm_g_num_s),     pointer  :: parent_entity_g_num(:) => null()
+  ! integer (c_int)                     :: i_section = 0
 ```
 
 ```{code-cell}
 %%code_block -p exercise_1 -i 23
 
-  call PDM_part_mesh_nodal_section_n_elt_get(pmn,       &
-                                             i_section, &
-                                             i_part,    &
-                                             n_elt)
+  ! call PDM_part_mesh_nodal_section_n_elt_get(pmn,       &
+  !                                            i_section, &
+  !                                            i_part,    &
+  !                                            n_elt)
 
-  call PDM_part_mesh_nodal_section_std_get(pmn,                 &
-                                           i_section,           &
-                                           i_part,              &
-                                           elt_vtx,             &
-                                           elt_ln_to_gn,        &
-                                           parent_num,          &
-                                           parent_entity_g_num, &
-                                           PDM_OWNERSHIP_KEEP)
+  ! call PDM_part_mesh_nodal_section_std_get(pmn,                 &
+  !                                          i_section,           &
+  !                                          i_part,              &
+  !                                          elt_vtx,             &
+  !                                          elt_ln_to_gn,        &
+  !                                          parent_num,          &
+  !                                          parent_entity_g_num, &
+  !                                          PDM_OWNERSHIP_KEEP)
 
 ```
 
@@ -322,70 +322,56 @@ Now we write the mesh that we just got to be able to visualize it later on (noth
 ```{code-cell}
 %%code_block -p exercise_1 -i 7
 
-  integer(pdm_l_num_s),      pointer :: pn_vtx(:)
-  integer(pdm_l_num_s),      pointer :: pn_elt(:)
-  integer(pdm_l_num_s),      pointer :: pn_face(:)
+  ! integer(pdm_l_num_s),      pointer :: pn_vtx(:)
+  ! integer(pdm_l_num_s),      pointer :: pn_elt(:)
 
-  type(PDM_pointer_array_t), pointer :: pcoords        => null()
-  type(PDM_pointer_array_t), pointer :: pvtx_ln_to_gn  => null()
-  type(PDM_pointer_array_t), pointer :: pelt_vtx_idx   => null()
-  type(PDM_pointer_array_t), pointer :: pelt_vtx       => null()
-  type(PDM_pointer_array_t), pointer :: pelt_ln_to_gn  => null()
-  type(PDM_pointer_array_t), pointer :: pcell_face_idx => null()
-  type(PDM_pointer_array_t), pointer :: pcell_face     => null()
-
-  type(my_field_t),          pointer :: elt_field(:)    => null()
-  type(my_field_t),          pointer :: vtx_field(:)    => null()
+  ! type(PDM_pointer_array_t), pointer :: pcoords       => null()
+  ! type(PDM_pointer_array_t), pointer :: pvtx_ln_to_gn => null()
+  ! type(PDM_pointer_array_t), pointer :: pelt_vtx      => null()
+  ! type(PDM_pointer_array_t), pointer :: pelt_ln_to_gn => null()
 ```
 
 ```{code-cell}
 %%code_block -p exercise_1 -i 24
 
-  allocate(pn_vtx(1), &
-           pn_elt(1), &
-           pn_face(1))
+  ! allocate(pn_vtx(1), &
+  !          pn_elt(1))
 
-  pn_vtx(1)  = n_vtx
-  pn_elt(1)  = n_elt
-  pn_face(1) = 0
+  ! pn_vtx(1) = n_vtx
+  ! pn_elt(1) = n_elt
 
-  call PDM_pointer_array_create(pcoords, 1, PDM_TYPE_DOUBLE)
-  call PDM_pointer_array_create(pvtx_ln_to_gn, 1, PDM_TYPE_G_NUM)
-  call PDM_pointer_array_create(pelt_vtx_idx, 1, PDM_TYPE_INT)
-  call PDM_pointer_array_create(pelt_vtx, 1, PDM_TYPE_INT)
-  call PDM_pointer_array_create(pelt_ln_to_gn, 1, PDM_TYPE_G_NUM)
-  call PDM_pointer_array_create(pcell_face_idx, 1, PDM_TYPE_INT)
-  call PDM_pointer_array_create(pcell_face, 1, PDM_TYPE_INT)
+  ! call PDM_pointer_array_create(pcoords,        1, PDM_TYPE_DOUBLE)
+  ! call PDM_pointer_array_create(pvtx_ln_to_gn,  1, PDM_TYPE_G_NUM)
+  ! call PDM_pointer_array_create(pelt_vtx,       1, PDM_TYPE_INT)
+  ! call PDM_pointer_array_create(pelt_ln_to_gn,  1, PDM_TYPE_G_NUM)
 
-  call PDM_pointer_array_part_set(pcoords, 0, coords)
-  call PDM_pointer_array_part_set(pvtx_ln_to_gn, 0, vtx_ln_to_gn)
-  call PDM_pointer_array_part_set(pelt_vtx, 0, elt_vtx)
-  call PDM_pointer_array_part_set(pelt_ln_to_gn, 0, elt_ln_to_gn)
+  ! call PDM_pointer_array_part_set(pcoords,       0, coords)
+  ! call PDM_pointer_array_part_set(pvtx_ln_to_gn, 0, vtx_ln_to_gn)
+  ! call PDM_pointer_array_part_set(pelt_vtx,      0, elt_vtx)
+  ! call PDM_pointer_array_part_set(pelt_ln_to_gn, 0, elt_ln_to_gn)
 
-  call writer_wrapper(comm, &
-                      "visu", &
-                      "pmesh", &
-                      1,  &
-                      pn_vtx, &
-                      pcoords, &
-                      pvtx_ln_to_gn, &
-                      pn_elt, &
-                      pelt_vtx_idx, &
-                      pelt_vtx, &
-                      pelt_ln_to_gn, &
-                      PDM_WRITER_TETRA4, &
-                      pn_face, &
-                      pcell_face_idx, &
-                      pcell_face, &
-                      "Ensight", &
-                      elt_field, &
-                      vtx_field)
+  ! call writer_wrapper(comm,          &
+  !                     "visu",        &
+  !                     "pmesh",       &
+  !                     1,             &
+  !                     pn_vtx,        &
+  !                     pcoords,       &
+  !                     pvtx_ln_to_gn, &
+  !                     pn_elt,        &
+  !                     pelt_vtx_idx,  &
+  !                     pelt_vtx,      &
+  !                     pelt_ln_to_gn, &
+  !                     cell_t = elt_type)
 
-  deallocate(pn_vtx,  &
-             pn_elt,  &
-             pn_face)
+  ! call PDM_pointer_array_free(pcoords)
+  ! call PDM_pointer_array_free(pvtx_ln_to_gn)
+  ! call PDM_pointer_array_free(pelt_vtx)
+  ! call PDM_pointer_array_free(pelt_ln_to_gn)
 
-  call PDM_part_mesh_nodal_free(pmn)
+  ! deallocate(pn_vtx, &
+  !            pn_elt)
+
+  ! call PDM_part_mesh_nodal_free(pmn)
 ```
 
 ### Descending connectivity (i.e. Finite-Volume style)
@@ -541,11 +527,8 @@ Now we write the mesh that we just got to be able to visualize it later on (noth
   type(PDM_pointer_array_t), pointer :: pcell_face_idx => null()
   type(PDM_pointer_array_t), pointer :: pcell_face     => null()
 
-  type(my_field_t),          pointer :: elt_field(:)    => null()
-  type(my_field_t),          pointer :: vtx_field(:)    => null()
-
-  integer(PDM_l_num_s),      pointer :: face_vtx_idx(:)             => null()
-  integer(PDM_l_num_s),      pointer :: face_vtx(:)                 => null()
+  integer(PDM_l_num_s),      pointer :: face_vtx_idx(:) => null()
+  integer(PDM_l_num_s),      pointer :: face_vtx(:)     => null()
 ```
 
 ```{code-cell}
@@ -571,40 +554,44 @@ Now we write the mesh that we just got to be able to visualize it later on (noth
     face_vtx_idx(i) = 3*(i-1)
   end do
 
-  call PDM_pointer_array_create(pcoords, 1, PDM_TYPE_DOUBLE)
-  call PDM_pointer_array_create(pvtx_ln_to_gn, 1, PDM_TYPE_G_NUM)
-  call PDM_pointer_array_create(pelt_vtx_idx, 1, PDM_TYPE_INT)
-  call PDM_pointer_array_create(pelt_vtx, 1, PDM_TYPE_INT)
-  call PDM_pointer_array_create(pelt_ln_to_gn, 1, PDM_TYPE_G_NUM)
+  call PDM_pointer_array_create(pcoords,        1, PDM_TYPE_DOUBLE)
+  call PDM_pointer_array_create(pvtx_ln_to_gn,  1, PDM_TYPE_G_NUM)
+  call PDM_pointer_array_create(pelt_vtx_idx,   1, PDM_TYPE_INT)
+  call PDM_pointer_array_create(pelt_vtx,       1, PDM_TYPE_INT)
+  call PDM_pointer_array_create(pelt_ln_to_gn,  1, PDM_TYPE_G_NUM)
   call PDM_pointer_array_create(pcell_face_idx, 1, PDM_TYPE_INT)
-  call PDM_pointer_array_create(pcell_face, 1, PDM_TYPE_INT)
+  call PDM_pointer_array_create(pcell_face,     1, PDM_TYPE_INT)
 
-  call PDM_pointer_array_part_set(pcoords, 0, coords)
-  call PDM_pointer_array_part_set(pvtx_ln_to_gn, 0, vtx_ln_to_gn)
-  call PDM_pointer_array_part_set(pelt_vtx_idx, 0, face_vtx_idx)
-  call PDM_pointer_array_part_set(pelt_vtx, 0, face_vtx)
-  call PDM_pointer_array_part_set(pelt_ln_to_gn, 0, cell_ln_to_gn)
+  call PDM_pointer_array_part_set(pcoords,        0, coords)
+  call PDM_pointer_array_part_set(pvtx_ln_to_gn,  0, vtx_ln_to_gn)
+  call PDM_pointer_array_part_set(pelt_vtx_idx,   0, face_vtx_idx)
+  call PDM_pointer_array_part_set(pelt_vtx,       0, face_vtx)
+  call PDM_pointer_array_part_set(pelt_ln_to_gn,  0, cell_ln_to_gn)
   call PDM_pointer_array_part_set(pcell_face_idx, 0, cell_face_idx)
-  call PDM_pointer_array_part_set(pcell_face, 0, cell_face)
+  call PDM_pointer_array_part_set(pcell_face,     0, cell_face)
 
-  call writer_wrapper(comm, &
-                      "visu", &
-                      "pmesh", &
-                      1,  &
-                      pn_vtx, &
-                      pcoords, &
-                      pvtx_ln_to_gn, &
-                      pn_elt, &
-                      pelt_vtx_idx, &
-                      pelt_vtx, &
-                      pelt_ln_to_gn, &
-                      -1, &
-                      pn_face, &
-                      pcell_face_idx, &
-                      pcell_face, &
-                      "Ensight", &
-                      elt_field, &
-                      vtx_field)
+  call writer_wrapper(comm,                            &
+                      "visu",                          &
+                      "pmesh",                         &
+                      1,                               &
+                      pn_vtx,                          &
+                      pcoords,                         &
+                      pvtx_ln_to_gn,                   &
+                      pn_elt,                          &
+                      pelt_vtx_idx,                    &
+                      pelt_vtx,                        &
+                      pelt_ln_to_gn,                   &
+                      n_face         = pn_face,        &
+                      pcell_face_idx = pcell_face_idx, &
+                      pcell_face     = pcell_face)
+
+  call PDM_pointer_array_free(pcoords)
+  call PDM_pointer_array_free(pvtx_ln_to_gn)
+  call PDM_pointer_array_free(pelt_vtx_idx)
+  call PDM_pointer_array_free(pelt_vtx)
+  call PDM_pointer_array_free(pelt_ln_to_gn)
+  call PDM_pointer_array_free(pcell_face_idx)
+  call PDM_pointer_array_free(pcell_face)
 
   deallocate(pn_vtx,  &
              pn_elt,  &
@@ -875,23 +862,9 @@ Before handling the allocated memory, we output the mesh partition extension (no
   integer(kind=PDM_l_num_s), pointer :: total_cell_face(:)     => null()
   integer(kind=PDM_l_num_s), pointer :: total_cell_face_idx(:) => null()
 
-  integer(pdm_l_num_s),      pointer :: pn_vtx(:)
-  integer(pdm_l_num_s),      pointer :: pn_elt(:)
-  integer(pdm_l_num_s),      pointer :: pn_face(:)
+  type(my_field_t)                   :: elt_fields(1)
+  double precision, pointer          :: total_cell_color(:) => null()
 
-  type(PDM_pointer_array_t), pointer :: pcoords        => null()
-  type(PDM_pointer_array_t), pointer :: pvtx_ln_to_gn  => null()
-  type(PDM_pointer_array_t), pointer :: pelt_vtx_idx   => null()
-  type(PDM_pointer_array_t), pointer :: pelt_vtx       => null()
-  type(PDM_pointer_array_t), pointer :: pelt_ln_to_gn  => null()
-  type(PDM_pointer_array_t), pointer :: pcell_face_idx => null()
-  type(PDM_pointer_array_t), pointer :: pcell_face     => null()
-
-  type(my_field_t),          pointer :: elt_field(:)    => null()
-  type(my_field_t),          pointer :: vtx_field(:)    => null()
-
-  integer(PDM_l_num_s),      pointer :: face_vtx_idx(:)             => null()
-  integer(PDM_l_num_s),      pointer :: face_vtx(:)                 => null()
 ```
 
 ```{code-cell}
@@ -966,14 +939,10 @@ Before handling the allocated memory, we output the mesh partition extension (no
   end do
 
   do i = 1, n_vtx
-    do j = 1, 3
-      total_coords(j, i) = coords(j, i)
-    end do
+    total_coords(1:3, i) = coords(1:3, i)
   end do
   do i = 1, n_vtx_ext
-    do j = 1, 3
-      total_coords(j, n_vtx + i) = vtx_coord_ext(j, i)
-    end do
+    total_coords(1:3, n_vtx + i) = vtx_coord_ext(1:3, i)
   end do
 
   allocate(total_face_edge(total_face_edge_idx(total_n_face+1)), &
@@ -1031,39 +1000,50 @@ Before handling the allocated memory, we output the mesh partition extension (no
   pn_elt(1)  = total_n_cell
   pn_face(1) = total_n_face
 
-  call writer_wrapper(comm, &
-                      "visu", &
-                      "pext", &
-                      1,  &
-                      pn_vtx, &
-                      pcoords, &
-                      pvtx_ln_to_gn, &
-                      pn_elt, &
-                      pelt_vtx_idx, &
-                      pelt_vtx, &
-                      pelt_ln_to_gn, &
-                      -1, &
-                      pn_face, &
+
+  allocate(total_cell_color(total_n_cell))
+  total_cell_color(1:n_cell)            = 2*i_rank
+  total_cell_color(n_cell:total_n_cell) = 2*i_rank+1
+
+  call pdm_pointer_array_create(elt_fields(1)%pa, &
+                                n_part(1),        &
+                                PDM_TYPE_DOUBLE)
+  call pdm_pointer_array_part_set(elt_fields(1)%pa, &
+                                  0,                &
+                                  total_cell_color)
+  elt_fields(1)%name = "extension"
+
+  call writer_wrapper(comm,           &
+                      "visu",         &
+                      "pext",         &
+                      1,              &
+                      pn_vtx,         &
+                      pcoords,        &
+                      pvtx_ln_to_gn,  &
+                      pn_elt,         &
+                      pelt_vtx_idx,   &
+                      pelt_vtx,       &
+                      pelt_ln_to_gn,  &
+                      -1,             &
+                      pn_face,        &
                       pcell_face_idx, &
-                      pcell_face, &
-                      "Ensight", &
-                      elt_field, &
-                      vtx_field)
+                      pcell_face,     &
+                      elt_field=elt_fields)
 
   deallocate(pn_vtx, &
              pn_elt, &
              pn_face)
 
-  deallocate(total_vtx_ln_to_gn, &
-            total_coords,        &
-            total_edge_ln_to_gn, &
-            total_edge_vtx,      &
-            total_face_ln_to_gn, &
-            total_face_edge_idx, &
-            total_face_edge,     &
-            total_cell_ln_to_gn, &
-            total_cell_face_idx, &
-            total_cell_face)
+  deallocate(total_vtx_ln_to_gn,  &
+             total_coords,        &
+             total_edge_ln_to_gn, &
+             total_edge_vtx,      &
+             total_face_ln_to_gn, &
+             total_face_edge_idx, &
+             total_face_edge,     &
+             total_cell_ln_to_gn, &
+             total_cell_face_idx, &
+             total_cell_face)
 
 ```
 Now you can do step 5.
@@ -1095,17 +1075,17 @@ end program pdm_t_mesh_partitioning_f
 Run the following cells to execute the program you just wrote and visualize the mesh partition extension.
 
 ```{code-cell}
-%merge_code_blocks -l fortran -p exercise_1 -n 2 -v
+%merge_code_blocks -l fortran -p exercise_1 -n 2 -c
 ```
 
 ```{code-cell}
 %%visualize
-visu/PEXT.case : i_part
+visu/PEXT.case : extension
 ```
 
 ## Annex 1
 
-In certain settings, the mesh is an assembly of several sub-meshes. These are called *zones*.
+In some cases, the mesh is an assembly of several sub-meshes. These are called *zones*.
 
 ![alt text](mesh.png "A mesh composed of two zones")
 
