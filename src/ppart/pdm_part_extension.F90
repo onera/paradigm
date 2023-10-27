@@ -298,7 +298,6 @@ subroutine PDM_part_extension_set_part (part_ext,                 &
 
 end subroutine PDM_part_extension_set_part
 
-! Connectivity getter
 
 subroutine PDM_part_extension_connectivity_get (part_ext,          &
                                                 i_domain,          &
@@ -315,8 +314,8 @@ subroutine PDM_part_extension_connectivity_get (part_ext,          &
   integer, intent(in)           :: i_part            ! Id of current partition
   integer, intent(in)           :: connectivity_type ! Type of mesh entity
   integer, intent(out)          :: n_elt             ! Number of elements
-  integer(pdm_l_num_s), pointer :: connect(:)        ! Entity->group graph (size = \ref connect_idx[\ref n_elt])
   integer(pdm_l_num_s), pointer :: connect_idx(:)    ! Index for entity->group graph (size = \ref n_elt + 1)
+  integer(pdm_l_num_s), pointer :: connect(:)        ! Entity->group graph (size = \ref connect_idx[\ref n_elt])
 
   type(c_ptr)                   :: c_connect     = C_NULL_PTR
   type(c_ptr)                   :: c_connect_idx = C_NULL_PTR
@@ -326,8 +325,8 @@ subroutine PDM_part_extension_connectivity_get (part_ext,          &
                                                     i_domain,          &
                                                     i_part,            &
                                                     connectivity_type, &
-                                                    connect,           &
-                                                    connect_idx)       &
+                                                    connect_idx,       &
+                                                    connect)           &
     result (n_elt)                                                     &
     bind (c, name='PDM_part_extension_connectivity_get')
       use iso_c_binding
@@ -337,8 +336,8 @@ subroutine PDM_part_extension_connectivity_get (part_ext,          &
       integer(c_int), value :: i_domain
       integer(c_int), value :: i_part
       integer(c_int), value :: connectivity_type
-      type(c_ptr)           :: connect
       type(c_ptr)           :: connect_idx
+      type(c_ptr)           :: connect
       integer(c_int)        :: n_elt
 
     end function PDM_part_extension_connectivity_get_c
@@ -348,8 +347,8 @@ subroutine PDM_part_extension_connectivity_get (part_ext,          &
                                                   i_domain,          &
                                                   i_part,            &
                                                   connectivity_type, &
-                                                  c_connect,         &
-                                                  c_connect_idx)
+                                                  c_connect_idx,     &
+                                                  c_connect)
 
   call c_f_pointer(c_connect_idx, &
                    connect_idx,   &
@@ -487,11 +486,11 @@ end subroutine PDM_part_extension_group_get
 
 ! Get vertex coordinates
 
-subroutine PDM_part_extension_coord_get (part_ext,    &
-                                         i_domain,    &
-                                         i_part,      &
-                                         n_vtx,       &
-                                         vtx_coord)
+subroutine PDM_part_extension_vtx_coord_get (part_ext,    &
+                                             i_domain,    &
+                                             i_part,      &
+                                             n_vtx,       &
+                                             vtx_coord)
   use iso_c_binding
   implicit none
 
@@ -504,12 +503,12 @@ subroutine PDM_part_extension_coord_get (part_ext,    &
   type(c_ptr)               :: c_vtx_coord = C_NULL_PTR
 
   interface
-    function PDM_part_extension_coord_get_c (part_ext,    &
-                                             i_domain,    &
-                                             i_part,      &
-                                             vtx_coord)   &
-    result (n_vtx)                                        &
-    bind (c, name='PDM_part_extension_coord_get')
+    function PDM_part_extension_vtx_coord_get_c (part_ext,    &
+                                                 i_domain,    &
+                                                 i_part,      &
+                                                 vtx_coord)   &
+    result (n_vtx)                                            &
+    bind (c, name='PDM_part_extension_vtx_coord_get')
       use iso_c_binding
       implicit none
 
@@ -519,19 +518,19 @@ subroutine PDM_part_extension_coord_get (part_ext,    &
       type(c_ptr)           :: vtx_coord
       integer(c_int)        :: n_vtx
 
-    end function PDM_part_extension_coord_get_c
+    end function PDM_part_extension_vtx_coord_get_c
   end interface
 
-  n_vtx =  PDM_part_extension_coord_get_c (part_ext,    &
-                                           i_domain,    &
-                                           i_part,      &
-                                           c_vtx_coord)
+  n_vtx =  PDM_part_extension_vtx_coord_get_c (part_ext,    &
+                                               i_domain,    &
+                                               i_part,      &
+                                               c_vtx_coord)
 
   call c_f_pointer(c_vtx_coord, &
                    vtx_coord,   &
                    [3,n_vtx])
 
-end subroutine PDM_part_extension_coord_get
+end subroutine PDM_part_extension_vtx_coord_get
 
 
 !>

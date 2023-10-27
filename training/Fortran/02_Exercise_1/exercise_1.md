@@ -786,8 +786,8 @@ call PDM_part_extension_compute (part_ext)
                                             i_part,                          &
                                             PDM_CONNECTIVITY_TYPE_CELL_FACE, &
                                             n_cell_ext,                      &
-                                            cell_face_ext,                   &
-                                            cell_face_ext_idx)
+                                            cell_face_ext_idx,               &
+                                            cell_face_ext)
 
   ! Face
   call PDM_part_extension_ln_to_gn_get (part_ext,             &
@@ -802,8 +802,8 @@ call PDM_part_extension_compute (part_ext)
                                             i_part,                          &
                                             PDM_CONNECTIVITY_TYPE_FACE_EDGE, &
                                             n_face_ext,                      &
-                                            face_edge_ext,                   &
-                                            face_edge_ext_idx)
+                                            face_edge_ext_idx,               &
+                                            face_edge_ext)
 
   ! Edge
   call PDM_part_extension_ln_to_gn_get (part_ext,             &
@@ -818,15 +818,15 @@ call PDM_part_extension_compute (part_ext)
                                             i_part,                         &
                                             PDM_CONNECTIVITY_TYPE_EDGE_VTX, &
                                             n_edge_ext,                     &
-                                            edge_vtx_ext,                   &
-                                            edge_vtx_ext_idx)
+                                            edge_vtx_ext_idx,               &
+                                            edge_vtx_ext)
 
   ! Vertices
-  call PDM_part_extension_coord_get (part_ext,      &
-                                     i_zone,        &
-                                     i_part,        &
-                                     n_vtx_ext,     &
-                                     vtx_coord_ext)
+  call PDM_part_extension_vtx_coord_get (part_ext,      &
+                                         i_zone,        &
+                                         i_part,        &
+                                         n_vtx_ext,     &
+                                         vtx_coord_ext)
 
   call PDM_part_extension_ln_to_gn_get (part_ext,               &
                                         i_zone,                 &

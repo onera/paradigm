@@ -1089,7 +1089,7 @@ int main
       PDM_g_num_t* border_vtx_ln_to_gn;
       PDM_g_num_t* border_cell_ln_to_gn;
       PDM_g_num_t* border_face_ln_to_gn;
-      int n_vtx_extended  = PDM_part_extension_coord_get(part_ext, i_dom, i_part, &vtx_coord_extended);
+      int n_vtx_extended  = PDM_part_extension_vtx_coord_get(part_ext, i_dom, i_part, &vtx_coord_extended);
       int n_vtx_extended2 = PDM_part_extension_ln_to_gn_get(part_ext, i_dom, i_part, PDM_MESH_ENTITY_VERTEX, &border_vtx_ln_to_gn);
       int n_cell_extended = PDM_part_extension_ln_to_gn_get(part_ext, i_dom, i_part, PDM_MESH_ENTITY_CELL, &border_cell_ln_to_gn);
       int n_face_extended = PDM_part_extension_ln_to_gn_get(part_ext, i_dom, i_part, PDM_MESH_ENTITY_FACE, &border_face_ln_to_gn);
@@ -1186,19 +1186,19 @@ int main
       int *extend_face_vtx     = NULL;
       if(extend_type == PDM_EXTEND_FROM_VTX) {
         n_face_extended2 = PDM_part_extension_connectivity_get(part_ext, i_dom, i_part,
-                                                                   PDM_CONNECTIVITY_TYPE_FACE_EDGE,
-                                                                   &extend_face_edge,
-                                                                   &extend_face_edge_idx);
+                                                               PDM_CONNECTIVITY_TYPE_FACE_EDGE,
+                                                               &extend_face_edge_idx,
+                                                               &extend_face_edge);
 
         n_edge_extended2 = PDM_part_extension_connectivity_get(part_ext, i_dom, i_part,
-                                                                   PDM_CONNECTIVITY_TYPE_EDGE_VTX,
-                                                                   &extend_edge_vtx,
-                                                                   &extend_edge_vtx_idx);
+                                                               PDM_CONNECTIVITY_TYPE_EDGE_VTX,
+                                                               &extend_edge_vtx_idx,
+                                                               &extend_edge_vtx);
       } else {
         n_face_extended2 = PDM_part_extension_connectivity_get(part_ext, i_dom, i_part,
                                                                PDM_CONNECTIVITY_TYPE_FACE_VTX,
-                                                               &extend_face_vtx,
-                                                               &extend_face_vtx_idx);
+                                                               &extend_face_vtx_idx,
+                                                               &extend_face_vtx);
       }
       PDM_UNUSED(n_face_extended2);
 

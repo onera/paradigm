@@ -5954,6 +5954,12 @@ PDM_part_extension_create
   part_ext->n_part_g_idx[0] = 0;
   for(int i_domain = 0; i_domain < n_domain; ++i_domain) {
     part_ext->parts[i_domain] = malloc( n_part[i_domain] * sizeof(_part_t));
+
+    for (int i_part = 0; i_part < n_part[i_domain]; i_part++) {
+      part_ext->parts[i_domain][i_domain].n_face_group = 0;
+      part_ext->parts[i_domain][i_domain].n_edge_group = 0;
+    }
+
     part_ext->n_part_idx[i_domain+1] = part_ext->n_part_idx[i_domain] + part_ext->n_part[i_domain];
 
     int n_part_l = n_part[i_domain];
@@ -7198,16 +7204,16 @@ PDM_part_extension_free
 
 /**
  *
- * \brief Get connectivity
+ * \brief Get extended connectivity
  *
- * \param [in]  part_ext     Pointer to \ref PDM_part_extension_t object
- * \param [in]  i_domain     Id of current domain
- * \param [in]  i_part       Id of current partition
- * \param [in]  mesh_entity  Type of mesh entity
- * \param [out] connect      Entity->group graph (size = \ref connect_idx[\ref n_elt])
- * \param [out] connect_idx  Index for entity->group graph (size = \ref n_elt + 1)
+ * \param [in]  part_ext            \p PDM_part_extension_t structure instance
+ * \param [in]  i_domain            Domain identifier
+ * \param [in]  i_part              Partition identifier
+ * \param [in]  connectivity_type   Connectivity type
+ * \param [out] connect_idx         Connectivity index
+ * \param [out] connect             Connectivity
  *
- * \return  n_elt  Number of elements
+ * \return Number of leading entities
  *
  */
 
@@ -7218,8 +7224,8 @@ PDM_part_extension_connectivity_get
  int                       i_domain,
  int                       i_part,
  PDM_connectivity_type_t   connectivity_type,
- int                     **connect,
- int                     **connect_idx
+ int                     **connect_idx,
+ int                     **connect
 )
 {
   int n_entity = -1;
@@ -7502,7 +7508,7 @@ PDM_part_extension_group_get
  */
 
 int
-PDM_part_extension_coord_get
+PDM_part_extension_vtx_coord_get
 (
  PDM_part_extension_t     *part_ext,
  int                       i_domain,
@@ -7836,12 +7842,12 @@ PDM_part_extension_vtx_coord_set
 
 /**
  *
- * \brief Set the connection graph between partitions for the requested bound type
+ * \brief Set the connection graph between partitions for the requested entity type
  *
  * \param [in]  multipart             \p PDM_part_extension_t structure instance
  * \param [in]  i_zone                Zone identifier
  * \param [in]  i_part                Partition identifier
- * \param [in]  bound_type            Bound type
+ * \param [in]  entity_type           Type of mesh entity
  * \param [in]  part_bound_proc_idx   Partitioning boundary entities index from process (size = *n_rank* + 1)
  * \param [in]  part_bound_part_idx   Partitioning boundary entities index from partition (size = *n_total_part* + 1)
  * \param [in]  part_bound            Partitioning boundary entities (size = 4 * *n_entity_part_bound* = \p part_bound_proc_idx[*n_rank])
@@ -7850,24 +7856,25 @@ PDM_part_extension_vtx_coord_set
 void
 PDM_part_extension_part_bound_graph_set
 (
-       PDM_part_extension_t *part_ext,
- const int                   i_zone,
- const int                   i_part,
-       PDM_bound_type_t      bound_type,
-       int                  *part_bound_proc_idx,
-       int                  *part_bound_part_idx,
-       int                  *part_bound
+ PDM_part_extension_t *part_ext,
+ int                   i_zone,
+ int                   i_part,
+ PDM_mesh_entities_t   entity_type,
+ int                  *part_bound_proc_idx,
+ int                  *part_bound_part_idx,
+ int                  *part_bound
 )
 {
-  switch (bound_type) {
-    case PDM_BOUND_TYPE_VTX: {
+  switch (entity_type) {
+
+    case PDM_MESH_ENTITY_VERTEX: {
       part_ext->parts[i_zone][i_part].vtx_part_bound_proc_idx  = part_bound_proc_idx;
       part_ext->parts[i_zone][i_part].vtx_part_bound_part_idx  = part_bound_part_idx;
       part_ext->parts[i_zone][i_part].vtx_part_bound           = part_bound;
       break;
     }
 
-    case PDM_BOUND_TYPE_FACE: {
+    case PDM_MESH_ENTITY_FACE: {
       part_ext->parts[i_zone][i_part].face_part_bound_proc_idx = part_bound_proc_idx;
       part_ext->parts[i_zone][i_part].face_part_bound_part_idx = part_bound_part_idx;
       part_ext->parts[i_zone][i_part].face_part_bound          = part_bound;
@@ -7875,63 +7882,64 @@ PDM_part_extension_part_bound_graph_set
     }
 
     default: {
-      PDM_error(__FILE__, __LINE__, 0, "Bound type %d not yet supported\n",
-                bound_type);
+      PDM_error(__FILE__, __LINE__, 0, "Entity type %d not yet supported\n",
+                entity_type);
       break;
     }
+
   }
 }
 
 
 /**
  *
- * \brief Set bound description
+ * \brief Set group description
  *
  * \param [in]  part_ext               \p PDM_part_extension_t structure instance
  * \param [in]  i_zone                 Zone identifier
  * \param [in]  i_part                 Partition identifier
- * \param [in]  bound_type             Bound type
- * \param [in]  n_bound                Number of bounds
- * \param [in]  bound_entity_idx       Index for bound->entity connectivity (size = \p n_bound)
- * \param [in]  bound_entity           Bound->entity connectivity (1-based local ids, size = \p bound_entity_idx[\p n_bound])
- * \param [in]  bound_entity_ln_to_gn  Bound->entity connectivity (bound-specific global ids, size = \p bound_entity_idx[\p n_bound])
+ * \param [in]  entity_type            Type of mesh entity
+ * \param [in]  n_group                Number of groups
+ * \param [in]  group_entity_idx       Index for group->entity connectivity (size = \p n_group)
+ * \param [in]  group_entity           Group->entity connectivity (1-based local ids, size = \p group_entity_idx[\p n_group])
+ * \param [in]  group_entity_ln_to_gn  Group->entity connectivity (group-specific global ids, size = \p group_entity_idx[\p n_group])
  *
  */
 
 void
-PDM_part_extension_bound_set
+PDM_part_extension_group_set
 (
  PDM_part_extension_t     *part_ext,
  int                       i_zone,
  int                       i_part,
- PDM_bound_type_t          bound_type,
- int                       n_bound,
- int                      *bound_entity_idx,
- int                      *bound_entity,
- PDM_g_num_t              *bound_entity_ln_to_gn
+ PDM_mesh_entities_t       entity_type,
+ int                       n_group,
+ int                      *group_entity_idx,
+ int                      *group_entity,
+ PDM_g_num_t              *group_entity_ln_to_gn
 )
 {
-  switch (bound_type) {
+  switch (entity_type) {
 
-    case PDM_BOUND_TYPE_EDGE: {
-      part_ext->parts[i_zone][i_part].n_edge_group        = n_bound;
-      part_ext->parts[i_zone][i_part].edge_bound_idx      = bound_entity_idx;
-      part_ext->parts[i_zone][i_part].edge_bound          = bound_entity;
-      part_ext->parts[i_zone][i_part].edge_bound_ln_to_gn = bound_entity_ln_to_gn;
+    case PDM_MESH_ENTITY_EDGE: {
+      part_ext->parts[i_zone][i_part].n_edge_group        = n_group;
+      part_ext->parts[i_zone][i_part].edge_bound_idx      = group_entity_idx;
+      part_ext->parts[i_zone][i_part].edge_bound          = group_entity;
+      part_ext->parts[i_zone][i_part].edge_bound_ln_to_gn = group_entity_ln_to_gn;
       break;
     }
 
-    case PDM_BOUND_TYPE_FACE: {
-      part_ext->parts[i_zone][i_part].n_face_group        = n_bound;
-      part_ext->parts[i_zone][i_part].face_bound_idx      = bound_entity_idx;
-      part_ext->parts[i_zone][i_part].face_bound          = bound_entity;
-      part_ext->parts[i_zone][i_part].face_bound_ln_to_gn = bound_entity_ln_to_gn;
+    case PDM_MESH_ENTITY_FACE: {
+      part_ext->parts[i_zone][i_part].n_face_group        = n_group;
+      part_ext->parts[i_zone][i_part].face_bound_idx      = group_entity_idx;
+      part_ext->parts[i_zone][i_part].face_bound          = group_entity;
+      part_ext->parts[i_zone][i_part].face_bound_ln_to_gn = group_entity_ln_to_gn;
       break;
     }
 
     default: {
-      PDM_error(__FILE__, __LINE__, 0, "Bound type %d not yet supported\n",
-                bound_type);
+      PDM_error(__FILE__, __LINE__, 0, "Entity type %d not yet supported\n",
+                entity_type);
       break;
     }
   }

@@ -64,7 +64,7 @@ typedef enum {
  * \param [in] comm          MPI communicator
  * \param [in] owner         Data ownership
  *
- *  \return   part_ext PDM_part_extension_t structure instance
+ *  \return   \p PDM_part_extension_t structure instance
  *
  */
 
@@ -83,7 +83,7 @@ PDM_part_extension_create
  *
  * \brief Compute a part extension structure
  *
- * \param [in]   part_ext          PDM_part_extension_t structure instance
+ * \param [in]   part_ext          \p PDM_part_extension_t structure instance
  *
  */
 
@@ -99,9 +99,9 @@ PDM_part_extension_compute
  *
  * \warning Deprecated : use the separate setters instead
  *
- * \param [in]   part_ext                  PDM_part_extension_t structure instance
- * \param [in]   i_domain                  Id of current zone
- * \param [in]   i_part                    Id of current partition
+ * \param [in]   part_ext                  \p PDM_part_extension_t structure instance
+ * \param [in]   i_domain                  Domain identifier
+ * \param [in]   i_part                    Partition identifier
  * \param [in]   n_cell                    Number of cells
  * \param [in]   n_face                    Number of faces
  * \param [in]   n_face_part_bound         Number of partition boundary faces
@@ -177,8 +177,8 @@ PDM_part_extension_set_part
  *
  * \brief Use shared domain interface
  *
- * \param [in]   part_ext                    PDM_part_extension_t structure instance
- * \param [in]   PDM_part_domain_interface_t PDM_part_domain_interface_t structure instance
+ * \param [in]   part_ext                    \p PDM_part_extension_t structure instance
+ * \param [in]   PDM_part_domain_interface_t \p PDM_part_domain_interface_t structure instance
  *
  */
 
@@ -193,7 +193,7 @@ PDM_part_extension_part_domain_interface_shared_set
  *
  * \brief Free a part extension structure
  *
- * \param [in]   part_ext          PDM_part_extension_t structure instance
+ * \param [in]   part_ext          \p PDM_part_extension_t structure instance
  *
  */
 
@@ -206,16 +206,16 @@ PDM_part_extension_free
 
 /**
  *
- * \brief Get connectivity
+ * \brief Get extended connectivity
  *
- * \param [in]  part_ext     PDM_part_extension_t structure instance
- * \param [in]  i_domain     Id of current zone
- * \param [in]  i_part       Id of current partition
- * \param [in]  mesh_entity  Type of mesh entity
- * \param [out] connect      Entity->group graph (size = \ref connect_idx[\ref n_elt])
- * \param [out] connect_idx  Index for entity->group graph (size = \ref n_elt + 1)
+ * \param [in]  part_ext            \p PDM_part_extension_t structure instance
+ * \param [in]  i_domain            Domain identifier
+ * \param [in]  i_part              Partition identifier
+ * \param [in]  connectivity_type   Connectivity type
+ * \param [out] connect_idx         Connectivity index
+ * \param [out] connect             Connectivity
  *
- * \return  n_elt  Number of elements
+ * \return Number of leading entities
  *
  */
 
@@ -226,22 +226,22 @@ PDM_part_extension_connectivity_get
  int                       i_domain,
  int                       i_part,
  PDM_connectivity_type_t   connectivity_type,
- int                     **connect,
- int                     **connect_idx
+ int                     **connect_idx,
+ int                     **connect
 );
 
 
 /**
  *
- * \brief Get global ids
+ * \brief Get global ids of extended entities
  *
- * \param [in]  part_ext     PDM_part_extension_t structure instance
- * \param [in]  i_domain     Id of current zone
- * \param [in]  i_part       Id of current partition
- * \param [in]  mesh_entity  Type of mesh entity
- * \param [out] ln_to_gn     Global ids (size = \ref n_elt)
+ * \param [in]  part_ext     \p PDM_part_extension_t structure instance
+ * \param [in]  i_domain     Domain identifier
+ * \param [in]  i_part       Partition identifier
+ * \param [in]  mesh_entity  Entity type
+ * \param [out] ln_to_gn     Global ids
  *
- * \return  n_elt  Number of elements
+ * \return  Number of entities
  *
  */
 
@@ -259,9 +259,9 @@ PDM_part_extension_ln_to_gn_get
  *
  * \brief Get interface
  *
- * \param [in]  part_ext     PDM_part_extension_t structure instance
- * \param [in]  i_domain     Id of current zone
- * \param [in]  i_part       Id of current partition
+ * \param [in]  part_ext     \p PDM_part_extension_t structure instance
+ * \param [in]  i_domain     Domain identifier
+ * \param [in]  i_part       Partition identifier
  * \param [in]  mesh_entity  Type of mesh entity
  * \param [out] interface_no Interfaces
  *
@@ -281,17 +281,17 @@ PDM_part_extension_interface_get
 
 /**
  *
- * \brief Get groups
+ * \brief Get groups for extended entities with given type
  *
- * \param [in]  part_ext     PDM_part_extension_t structure instance
- * \param [in]  i_domain     Id of current zone
- * \param [in]  i_part       Id of current partition
- * \param [in]  mesh_entity  Type of mesh entity
- * \param [out] connect      Entity->group graph (size = \ref connect_idx[\ref n_elt])
- * \param [out] connect_idx  Index for entity->group graph (size = \ref n_elt + 1)
- * \param [out] ln_to_gn     Global ids (size = \ref connect_idx[\ref n_elt])
+ * \param [in]  part_ext                \p PDM_part_extension_t structure instance
+ * \param [in]  i_domain                Domain identifier
+ * \param [in]  i_part                  Partition identifier
+ * \param [in]  mesh_entity             Type of mesh entity
+ * \param [out] group_entity            Index for group->entity connectivity (size = \p n_group)
+ * \param [out] group_entity_idx        Group->entity connectivity (1-based local ids, size = \p group_entity_idx[\p n_group])
+ * \param [out] group_entity_ln_to_gn   Group->entity connectivity (group-specific global ids, size = \p group_entity_idx[\p n_group])
  *
- * \return  n_elt  Number of elements
+ * \return  Number of entities of that type
  *
  */
 
@@ -302,27 +302,27 @@ PDM_part_extension_group_get
  int                       i_domain,
  int                       i_part,
  PDM_mesh_entities_t       mesh_entity,
- int                     **connect,
- int                     **connect_idx,
- PDM_g_num_t             **ln_to_gn
+ int                     **group_entity,
+ int                     **group_entity_idx,
+ PDM_g_num_t             **group_ln_to_gn
 );
 
 
 /**
  *
- * \brief Get vertex coordinates
+ * \brief Get coordinates of extended vertices
  *
  * \param [in]  part_ext     PDM_part_extension_t structure instance
- * \param [in]  i_domain     Id of current zone
- * \param [in]  i_part       Id of current partition
+ * \param [in]  i_domain     Domain identifier
+ * \param [in]  i_part       Partition identifier
  * \param [out] vtx_coord    Vertex coordinates (size = \ref n_vtx * 3)
  *
- * \return  n_vtx  Number of vertices
+ * \return  n_vtx  Number of extended vertices
  *
  */
 
 int
-PDM_part_extension_coord_get
+PDM_part_extension_vtx_coord_get
 (
  PDM_part_extension_t     *part_ext,
  int                       i_domain,
@@ -460,55 +460,55 @@ PDM_part_extension_vtx_coord_set
 
 /**
  *
- * \brief Set the connection graph between partitions for the requested bound type
+ * \brief Set the connection graph between partitions for the requested entity type
  *
  * \param [in]  multipart             \p PDM_part_extension_t structure instance
  * \param [in]  i_zone                Zone identifier
  * \param [in]  i_part                Partition identifier
- * \param [in]  bound_type            Bound type
+ * \param [in]  entity_type           Type of mesh entity
  * \param [in]  part_bound_proc_idx   Partitioning boundary entities index from process (size = *n_rank* + 1)
  * \param [in]  part_bound_part_idx   Partitioning boundary entities index from partition (size = *n_total_part* + 1)
- * \param [in]  part_bound            Partitioning boundary entities (size = 4 * *n_entity_part_bound* = \p part_bound_proc_idx[*n_rank])
+ * \param [in]  part_bound            Partitioning boundary entities (size = 4 * \p part_bound_proc_idx[*n_rank])
  */
 
 void
 PDM_part_extension_part_bound_graph_set
 (
-       PDM_part_extension_t *part_ext,
- const int                   i_zone,
- const int                   i_part,
-       PDM_bound_type_t      bound_type,
-       int                  *part_bound_proc_idx,
-       int                  *part_bound_part_idx,
-       int                  *part_bound
+ PDM_part_extension_t *part_ext,
+ int                   i_zone,
+ int                   i_part,
+ PDM_mesh_entities_t   entity_type,
+ int                  *part_bound_proc_idx,
+ int                  *part_bound_part_idx,
+ int                  *part_bound
 );
 
 /**
  *
- * \brief Set bound description
+ * \brief Set group description
  *
  * \param [in]  part_ext               \p PDM_part_extension_t structure instance
  * \param [in]  i_zone                 Zone identifier
  * \param [in]  i_part                 Partition identifier
- * \param [in]  bound_type             Bound type
- * \param [in]  n_bound                Number of bounds
- * \param [in]  bound_entity_idx       Index for bound->entity connectivity (size = \p n_bound)
- * \param [in]  bound_entity           Bound->entity connectivity (1-based local ids, size = \p bound_entity_idx[\p n_bound])
- * \param [in]  bound_entity_ln_to_gn  Bound->entity connectivity (bound-specific global ids, size = \p bound_entity_idx[\p n_bound])
+ * \param [in]  entity_type            Type of mesh entity
+ * \param [in]  n_group                Number of groups
+ * \param [in]  group_entity_idx       Index for group->entity connectivity (size = \p n_group)
+ * \param [in]  group_entity           Group->entity connectivity (1-based local ids, size = \p group_entity_idx[\p n_group])
+ * \param [in]  group_entity_ln_to_gn  Group->entity connectivity (group-specific global ids, size = \p group_entity_idx[\p n_group])
  *
  */
 
 void
-PDM_part_extension_bound_set
+PDM_part_extension_group_set
 (
  PDM_part_extension_t     *part_ext,
  int                       i_zone,
  int                       i_part,
- PDM_bound_type_t          bound_type,
- int                       n_bound,
- int                      *bound_entity_idx,
- int                      *bound_entity,
- PDM_g_num_t              *bound_entity_ln_to_gn
+ PDM_mesh_entities_t       entity_type,
+ int                       n_group,
+ int                      *group_entity_idx,
+ int                      *group_entity,
+ PDM_g_num_t              *group_entity_ln_to_gn
 );
 
 

@@ -60,14 +60,11 @@ mpart.compute()
 extract_fraction = 0.25 # on sélectionne 25% des arêtes
 
 # on récupère la connectivité arête->sommets des partitions
-edges = mpart.connectivity_get(0, 0, PDM._PDM_CONNECTIVITY_TYPE_EDGE_VTX)
-edge_vtx = edges["np_entity1_entity2"]
+_, edge_vtx = mpart.connectivity_get(0, 0, PDM._PDM_CONNECTIVITY_TYPE_EDGE_VTX)
 
-res_face_edge = mpart.connectivity_get(0, 0, PDM._PDM_CONNECTIVITY_TYPE_FACE_EDGE)
-face_edge, face_edge_idx = res_face_edge["np_entity1_entity2"],res_face_edge["np_entity1_entity2_idx"]
+face_edge_idx, face_edge = mpart.connectivity_get(0, 0, PDM._PDM_CONNECTIVITY_TYPE_FACE_EDGE)
 
-res_edge_face = mpart.connectivity_get(0, 0, PDM._PDM_CONNECTIVITY_TYPE_EDGE_FACE)
-edge_face, edge_face_idx = res_edge_face["np_entity1_entity2"],res_edge_face["np_entity1_entity2_idx"]
+edge_face_idx, edge_face = mpart.connectivity_get(0, 0, PDM._PDM_CONNECTIVITY_TYPE_EDGE_FACE)
 
 # part_infos = mpart.val_get(0, 0)
 

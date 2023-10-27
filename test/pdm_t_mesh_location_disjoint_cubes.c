@@ -878,10 +878,10 @@ _cube_mesh2
 
     if (part_extension_depth > 0) {
       /* Vertices */
-      n_ext_vtx = PDM_part_extension_coord_get(part_ext,
-                                               0,
-                                               i_part,
-                                               &ext_vtx_coord);
+      n_ext_vtx = PDM_part_extension_vtx_coord_get(part_ext,
+                                                   0,
+                                                   i_part,
+                                                   &ext_vtx_coord);
 
       PDM_part_extension_ln_to_gn_get(part_ext,
                                       0,
@@ -895,8 +895,8 @@ _cube_mesh2
                                                        0,
                                                        i_part,
                                                        PDM_CONNECTIVITY_TYPE_CELL_FACE,
-                                                       &ext_cell_face,
-                                                       &ext_cell_face_idx);
+                                                       &ext_cell_face_idx,
+                                                       &ext_cell_face);
 
       PDM_part_extension_ln_to_gn_get(part_ext,
                                       0,
@@ -910,8 +910,8 @@ _cube_mesh2
                                                        0,
                                                        i_part,
                                                        PDM_CONNECTIVITY_TYPE_FACE_VTX,
-                                                       &ext_face_vtx,
-                                                       &ext_face_vtx_idx);
+                                                       &ext_face_vtx_idx,
+                                                       &ext_face_vtx);
 
       if (ext_face_vtx == NULL) {
         abort();

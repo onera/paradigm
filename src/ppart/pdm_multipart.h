@@ -610,30 +610,30 @@ const int                       i_part,
 
 /**
  *
- * \brief Get the bound description for the entity
+ * \brief Get the group description for a given entity
  *
- * \param [in]   multipart      Pointer to \ref PDM_multipart_t object
- * \param [in]   i_zone         Id of current zone
- * \param [in]   i_part         Id of part
- * \param [in]   bound_type     Bound type
- * \param [out]  n_bound        Number of bound for bound_type
- * \param [out]  bound_idx      Entity group index (size = \p n_bound )
- * \param [out]  bound          Entity id for each group (size = \p bound_idx[\p n_bound])
- * \param [out]  bound_ln_to_gn Entity global numbering for each group (size = \p bound_idx[\p n_bound])
- * \param [in]   ownership      Ownership
+ * \param [in]   multipart              Pointer to \ref PDM_multipart_t object
+ * \param [in]   i_zone                 Domain identifier
+ * \param [in]   i_part                 Partition identifier
+ * \param [in]   bound_type             Bound type
+ * \param [out]  n_group                Number of groups
+ * \param [out]  group_entity_idx       Index for group->entity connectivity (size = \p n_group)
+ * \param [out]  group_entity           Group->entity connectivity (1-based local ids, size = \p group_entity_idx[\p n_group])
+ * \param [out]  group_entity_ln_to_gn  Group->entity connectivity (group-specific global ids, size = \p group_entity_idx[\p n_group])
+ * \param [in]   ownership              Ownership
  *
  */
 void PDM_multipart_bound_get
 (
- PDM_multipart_t   *multipart,
- const int          i_zone,
- const int          i_part,
- PDM_bound_type_t   bound_type,
- int               *n_bound,
- int              **bound_idx,
- int              **bound,
- PDM_g_num_t      **bound_ln_to_gn,
- PDM_ownership_t    ownership
+ PDM_multipart_t      *multipart,
+ const int             i_zone,
+ const int             i_part,
+ PDM_bound_type_t      bound_type,
+ int                  *n_group_entity,
+ int                 **group_entity_idx,
+ int                 **group_entity,
+ PDM_g_num_t         **group_entity_ln_to_gn,
+ PDM_ownership_t       ownership
 );
 
 

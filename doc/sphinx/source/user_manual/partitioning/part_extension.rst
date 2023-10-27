@@ -23,15 +23,15 @@ Set inputs
 
 .. doxygenfunction:: PDM_part_extension_vtx_coord_set
 
-.. doxygenfunction:: PDM_part_extension_part_bound_graph_set
-
-.. doxygenfunction:: PDM_part_extension_bound_set
-
 .. doxygenfunction:: PDM_part_extension_ln_to_gn_set
 
-.. doxygenfunction:: PDM_part_extension_set_part
+.. doxygenfunction:: PDM_part_extension_part_bound_graph_set
 
-.. doxygenfunction:: PDM_part_extension_part_domain_interface_shared_set
+.. doxygenfunction:: PDM_part_extension_group_set
+
+.. .. doxygenfunction:: PDM_part_extension_set_part
+
+.. .. doxygenfunction:: PDM_part_extension_part_domain_interface_shared_set
 
 Perform exchange of extended partition
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -45,15 +45,14 @@ Get outputs
 
 .. doxygenfunction:: PDM_part_extension_ln_to_gn_get
 
-.. doxygenfunction:: PDM_part_extension_coord_get
+.. doxygenfunction:: PDM_part_extension_vtx_coord_get
 
 .. doxygenfunction:: PDM_part_extension_group_get
 
-.. doxygenfunction:: PDM_part_extension_interface_get
+.. .. doxygenfunction:: PDM_part_extension_interface_get
 
-.. doxygenfunction:: PDM_part_extension_composed_interface_get
+.. .. doxygenfunction:: PDM_part_extension_composed_interface_get
 
-.. doxygenfunction::
 
 Finalize
 ~~~~~~~~
@@ -87,7 +86,7 @@ Fortran API
 
   .. f:autosubroutine PDM_part_extension_ln_to_gn_get
 
-  .. f:autosubroutine PDM_part_extension_coord_get
+  .. f:autosubroutine PDM_part_extension_vtx_coord_get
 
   .. f:autosubroutine PDM_part_extension_group_get
 
@@ -114,9 +113,19 @@ Python API
   Set inputs
   ~~~~~~~~~~
 
-  .. autofunction:: Pypdm.Pypdm.PartExtension.set_part
+  .. autofunction:: Pypdm.Pypdm.PartExtension.connectivity_set
 
-  .. autofunction:: Pypdm.Pypdm.PartExtension.part_domain_interface_shared_set
+  .. autofunction:: Pypdm.Pypdm.PartExtension.vtx_coord_set
+
+  .. autofunction:: Pypdm.Pypdm.PartExtension.ln_to_gn_set
+
+  .. autofunction:: Pypdm.Pypdm.PartExtension.part_bound_graph_set
+
+  .. autofunction:: Pypdm.Pypdm.PartExtension.group_set
+
+  .. .. autofunction:: Pypdm.Pypdm.PartExtension.set_part
+
+  .. .. autofunction:: Pypdm.Pypdm.PartExtension.part_domain_interface_shared_set
 
   Perform exchange of extended partition
   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -126,17 +135,17 @@ Python API
   Get outputs
   ~~~~~~~~~~~
 
-  .. autofunction:: Pypdm.Pypdm.PartExtension.get_connectivity
+  .. autofunction:: Pypdm.Pypdm.PartExtension.connectivity_get
 
-  .. autofunction:: Pypdm.Pypdm.PartExtension.get_ln_to_gn
+  .. autofunction:: Pypdm.Pypdm.PartExtension.vtx_coord_get
 
-  .. autofunction:: Pypdm.Pypdm.PartExtension.get_coord
+  .. autofunction:: Pypdm.Pypdm.PartExtension.ln_to_gn_get
 
-  .. autofunction:: Pypdm.Pypdm.PartExtension.get_group
+  .. autofunction:: Pypdm.Pypdm.PartExtension.group_get
 
-  .. autofunction:: Pypdm.Pypdm.PartExtension.get_interface
+  .. .. autofunction:: Pypdm.Pypdm.PartExtension.get_interface
 
-  .. autofunction:: Pypdm.Pypdm.PartExtension.get_composed_interface
+  .. .. autofunction:: Pypdm.Pypdm.PartExtension.get_composed_interface
 
 .. ifconfig:: enable_python_doc == 'OFF'
 

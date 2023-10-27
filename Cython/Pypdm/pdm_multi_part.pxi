@@ -587,9 +587,9 @@ cdef class MultiPart:
         connectivity_type (PDM_connectivity_type_t) : Connectivity type
 
       Returns:
-        Dictionary
-          - ``"np_entity1_entity2"``     (`np.ndarray[np.int32_t]`) : Connectivity array
-          - ``"np_entity1_entity2_idx"`` (`np.ndarray[np.int32_t]`) : Connectivity index
+        Tuple
+          - Connectivity index (np.ndarray[np.int32_t])
+          - Connectivity       (np.ndarray[np.int32_t])
       """
       # ************************************************************************
       # > Declaration
@@ -617,8 +617,7 @@ cdef class MultiPart:
         np_entity1_entity2     = None
 
 
-      return {'np_entity1_entity2'     : np_entity1_entity2,
-              'np_entity1_entity2_idx' : np_entity1_entity2_idx}
+      return (np_entity1_entity2_idx, np_entity1_entity2)
 
 
     # ------------------------------------------------------------------

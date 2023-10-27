@@ -435,11 +435,11 @@ program testf
   do i_part = 1, n_part
 
     !  Vertices
-    call PDM_part_extension_coord_get (part_ext,      &
-                                       0,             &
-                                       i_part-1,      &
-                                       n_vtx_ext,     &
-                                       vtx_coord_ext)
+    call PDM_part_extension_vtx_coord_get (part_ext,      &
+                                           0,             &
+                                           i_part-1,      &
+                                           n_vtx_ext,     &
+                                           vtx_coord_ext)
 
     call PDM_part_extension_ln_to_gn_get (part_ext,               &
                                           0,                      &
@@ -454,8 +454,8 @@ program testf
                                               i_part-1,                        &
                                               PDM_CONNECTIVITY_TYPE_CELL_FACE, &
                                               n_cell_ext,                      &
-                                              cell_face_ext,                   &
-                                              cell_face_ext_idx)
+                                              cell_face_ext_idx,                &
+                                              cell_face_ext)
 
     call PDM_part_extension_ln_to_gn_get (part_ext,             &
                                           0,                    &
@@ -470,8 +470,8 @@ program testf
                                               i_part-1,                        &
                                               PDM_CONNECTIVITY_TYPE_FACE_VTX,  &
                                               n_face_ext,                      &
-                                              face_vtx_ext,                    &
-                                              face_vtx_ext_idx)
+                                              face_vtx_ext_idx,                &
+                                              face_vtx_ext)
     if (debug .eq. 1) then
       write (fid, *) "part #", i_part-1
       write (fid, *) "  n_cell_ext =", n_cell_ext

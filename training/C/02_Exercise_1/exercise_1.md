@@ -586,8 +586,8 @@ This bonus is not guided, so you should have a close look at the [documentation]
                                        i_zone,
                                        i_part,
                                        PDM_CONNECTIVITY_TYPE_CELL_FACE,
-                                       &cell_face_ext,
-                                       &cell_face_ext_idx);
+                                       &cell_face_ext_idx,
+                                       &cell_face_ext);
 
   // Face
   PDM_g_num_t *face_ln_to_gn_ext = NULL;
@@ -603,8 +603,8 @@ This bonus is not guided, so you should have a close look at the [documentation]
                                        i_zone,
                                        i_part,
                                        PDM_CONNECTIVITY_TYPE_FACE_EDGE,
-                                       &face_edge_ext,
-                                       &face_edge_ext_idx);
+                                       &face_edge_ext_idx,
+                                       &face_edge_ext);
 
   // Edge
   PDM_g_num_t *edge_ln_to_gn_ext = NULL;
@@ -620,8 +620,8 @@ This bonus is not guided, so you should have a close look at the [documentation]
                                        i_zone,
                                        i_part,
                                        PDM_CONNECTIVITY_TYPE_EDGE_VTX,
-                                       &edge_vtx_ext,
-                                       &edge_vtx_ext_idx);
+                                       &edge_vtx_ext_idx,
+                                       &edge_vtx_ext);
 
   // Vertices
   PDM_g_num_t *vtx_ln_to_gn_ext = NULL;
@@ -632,10 +632,10 @@ This bonus is not guided, so you should have a close look at the [documentation]
                                                     &vtx_ln_to_gn_ext);
 
   double *vtx_coord_ext = NULL;
-  PDM_part_extension_coord_get(part_ext,
-                               i_zone,
-                               i_part,
-                               &vtx_coord_ext);
+  PDM_part_extension_vtx_coord_get(part_ext,
+                                   i_zone,
+                                   i_part,
+                                   &vtx_coord_ext);
 ```
 
 ### Step 5 (and visualisation)
@@ -719,8 +719,8 @@ This bonus is not guided, so you should have a close look at the [documentation]
     total_face_vtx_idx[i] = 3 * i; // triangle
   }
 
-  const char    *field_name[]   = {"extension"};
-  double **field_value[1] = {&total_cell_color};
+  const char  *field_name[]   = {"extension"};
+  double     **field_value[1] = {&total_cell_color};
 
   writer_wrapper(comm,
                  "visu",

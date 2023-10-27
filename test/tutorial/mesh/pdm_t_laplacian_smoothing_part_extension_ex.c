@@ -385,17 +385,17 @@ int main(int argc, char *argv[])
   int *pedge_vtx_extension_idx = NULL;
 
   pn_edge_extension = PDM_part_extension_connectivity_get(pe,
-                                      0, // i_domain
-                                      i_part,
-                                      PDM_CONNECTIVITY_TYPE_EDGE_VTX,
-                                      &pedge_vtx_extension,
-                                      &pedge_vtx_extension_idx);
+                                                          0, // i_domain
+                                                          i_part,
+                                                          PDM_CONNECTIVITY_TYPE_EDGE_VTX,
+                                                          &pedge_vtx_extension_idx,
+                                                          &pedge_vtx_extension);
 
   // Get coordinates (TO DO PDM_part_extension_group_get for extension ou group)
 
   double *pvtx_coord_extension = NULL;
 
-  PDM_part_extension_coord_get(pe,
+  PDM_part_extension_vtx_coord_get(pe,
                                0, // i_domain
                                i_part,
                                &pvtx_coord_extension);
