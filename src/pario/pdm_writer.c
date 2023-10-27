@@ -119,7 +119,7 @@ writer_wrapper
   int i_rank;
   PDM_MPI_Comm_rank(comm, &i_rank);
 
-  int is_3d_nodal = (((int) cell_t) != -1);
+  int is_3d_nodal = (((int) cell_t) >= 0);
   int is_2d       = ((cell_face_idx == NULL) || (cell_face == NULL)) && (!is_3d_nodal);
 
   PDM_writer_t *wrt = PDM_writer_create(format,

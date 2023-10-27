@@ -230,7 +230,7 @@ At this point you have provided all the information necessary to run the mesh pa
   call PDM_multipart_compute(mpart)
 ```
 
-## Get the partitionned mesh
+## Get the partitioned mesh
 
 You can now **get** (step 4) the output mesh of the partitioning algorithm. Depending on the numerical method, the mesh has to be
 described in a different way. For Finite-Element methods a nodal connectivity ([option 1](#Nodal-connectivity-(i.e.-Finite-Element-style)))) usually

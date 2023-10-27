@@ -44,7 +44,7 @@ def generate_mesh_rectangle_simplified(MPI.Comm      comm,
   """
   generate_mesh_rectangle_simplified(comm, n_vtx_seg)
 
-  Create a simple partitionned rectangle mesh (2D).
+  Create a simple partitioned rectangle mesh (2D).
 
   Parameters:
     comm      (MPI.Comm) : MPI communicator

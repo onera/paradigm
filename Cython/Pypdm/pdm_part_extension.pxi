@@ -199,7 +199,7 @@ cdef class PartExtension:
                NPY.ndarray[NPY.double_t  , mode='c', ndim=1] vtx_coord):
     """
     set_part(i_domain, i_part, n_cell, n_face, n_face_part_bound, n_face_group, n_edge, n_vtx, cell_face_idx, cell_face, face_cell, face_edge_idx, face_edge, face_vtx_idx, face_vtx, edge_vtx, face_bound_idx, face_bound, face_join_idx, face_join, face_part_bound_proc_idx, face_part_bound_part_idx, face_part_bound, vtx_part_bound_proc_idx, vtx_part_bound_part_idx, vtx_part_bound, cell_ln_to_gn, face_ln_to_gn, edge_ln_to_gn, vtx_ln_to_gn, face_group_ln_to_gn, vtx_coord)
-    Set data to perform the partitionned mesh extension
+    Set data to perform the partitioned mesh extension
 
     .. warning::
       Deprecated : use the individual setters instead

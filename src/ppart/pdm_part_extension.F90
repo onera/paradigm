@@ -304,8 +304,8 @@ subroutine PDM_part_extension_connectivity_get (part_ext,          &
                                                 i_part,            &
                                                 connectivity_type, &
                                                 n_elt,             &
-                                                connect,           &
-                                                connect_idx)
+                                                connect_idx,       &
+                                                connect)
   use iso_c_binding
   implicit none
 
