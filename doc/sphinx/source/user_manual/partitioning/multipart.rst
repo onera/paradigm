@@ -63,7 +63,7 @@ Get outputs
 
 .. doxygenfunction:: PDM_multipart_get_part_mesh_nodal
 
-.. doxygenfunction:: PDM_multipart_bound_get
+.. doxygenfunction:: PDM_multipart_group_get
 
 .. doxygenfunction:: PDM_multipart_part_ghost_infomation_get
 
@@ -141,7 +141,7 @@ Fortran API
 
   .. f:autosubroutine:: PDM_multipart_get_part_mesh_nodal_
 
-  .. f:autosubroutine:: PDM_multipart_bound_get_
+  .. f:autosubroutine:: PDM_multipart_group_get_
 
   .. f:autosubroutine:: PDM_multipart_partition_color_get_
 

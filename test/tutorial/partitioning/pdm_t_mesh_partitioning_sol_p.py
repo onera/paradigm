@@ -134,7 +134,7 @@ def run_test():
     # step 2 : set
     output = mpart.graph_comm_get(i_zone,
                                   i_part,
-                                  PDM._PDM_BOUND_TYPE_VTX)
+                                  PDM._PDM_MESH_ENTITY_VERTEX)
 
     vtx_part_bound_proc_idx = output["np_entity_part_bound_proc_idx"]
     vtx_part_bound_part_idx = output["np_entity_part_bound_part_idx"]
@@ -178,39 +178,39 @@ def run_test():
 
     # step 4 : get
     # Cell
-    cell_ext_ln_to_gn = part_ext.get_ln_to_gn(i_zone,
+    cell_ext_ln_to_gn = part_ext.ln_to_gn_get(i_zone,
                                               i_part,
                                               PDM._PDM_MESH_ENTITY_CELL)
 
-    cell_face_ext, cell_face_ext_idx = part_ext.get_connectivity(i_zone,
+    cell_face_ext_idx, cell_face_ext = part_ext.connectivity_get(i_zone,
                                                                  i_part,
                                                                  PDM._PDM_CONNECTIVITY_TYPE_CELL_FACE)
 
     # Face
-    face_ext_ln_to_gn = part_ext.get_ln_to_gn(i_zone,
+    face_ext_ln_to_gn = part_ext.ln_to_gn_get(i_zone,
                                               i_part,
                                               PDM._PDM_MESH_ENTITY_FACE)
 
-    face_edge_ext, face_edge_ext_idx = part_ext.get_connectivity(i_zone,
+    face_edge_ext_idx, face_edge_ext = part_ext.connectivity_get(i_zone,
                                                                  i_part,
                                                                  PDM._PDM_CONNECTIVITY_TYPE_FACE_EDGE)
 
     # Edge
-    edge_ext_ln_to_gn = part_ext.get_ln_to_gn(i_zone,
+    edge_ext_ln_to_gn = part_ext.ln_to_gn_get(i_zone,
                                               i_part,
                                               PDM._PDM_MESH_ENTITY_EDGE)
 
-    edge_vtx_ext, edge_vtx_ext_idx = part_ext.get_connectivity(i_zone,
+    edge_vtx_ext_idx, edge_vtx_ext = part_ext.connectivity_get(i_zone,
                                                                i_part,
                                                                PDM._PDM_CONNECTIVITY_TYPE_EDGE_VTX)
 
     # Vertices
-    vtx_ext_ln_to_gn = part_ext.get_ln_to_gn(i_zone,
+    vtx_ext_ln_to_gn = part_ext.ln_to_gn_get(i_zone,
                                              i_part,
                                              PDM._PDM_MESH_ENTITY_VERTEX)
 
-    vtx_coord_ext = part_ext.get_coord(i_zone,
-                                       i_part)
+    vtx_coord_ext = part_ext.vtx_coord_get(i_zone,
+                                           i_part)
 
     # step 5 : free (implicit in Python)
 

@@ -71,7 +71,7 @@ Get outputs
 
 .. doxygenfunction:: PDM_multipart_get_part_mesh_nodal
 
-.. doxygenfunction:: PDM_multipart_bound_get
+.. doxygenfunction:: PDM_multipart_group_get
 
 .. doxygenfunction:: PDM_multipart_domain_interface_shared_set
 

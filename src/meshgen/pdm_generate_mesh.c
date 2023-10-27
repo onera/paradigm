@@ -1463,10 +1463,10 @@ PDM_generate_mesh_ball_ngon
                                             (*pedge_vtx)[ipart],
                                             &(*pface_vtx)[ipart]);
 
-    PDM_multipart_bound_get(mpart,
+    PDM_multipart_group_get(mpart,
                             0,
                             ipart,
-                            PDM_BOUND_TYPE_FACE,
+                            PDM_MESH_ENTITY_FACE,
                             &(*pn_surface)[ipart],
                             &(*psurface_face_idx)[ipart],
                             &(*psurface_face)[ipart],
@@ -1639,20 +1639,20 @@ PDM_generate_mesh_parallelepiped_ngon
                                             (*pedge_vtx)[ipart],
                                             &(*pface_vtx)[ipart]);
 
-    PDM_multipart_bound_get(mpart,
+    PDM_multipart_group_get(mpart,
                             0,
                             ipart,
-                            PDM_BOUND_TYPE_FACE,
+                            PDM_MESH_ENTITY_FACE,
                             &(*pn_surface)[ipart],
                             &(*psurface_face_idx)[ipart],
                             &(*psurface_face)[ipart],
                             &(*psurface_face_ln_to_gn)[ipart],
                             PDM_OWNERSHIP_USER);
 
-    PDM_multipart_bound_get(mpart,
+    PDM_multipart_group_get(mpart,
                             0,
                             ipart,
-                            PDM_BOUND_TYPE_EDGE,
+                            PDM_MESH_ENTITY_EDGE,
                             &(*pn_ridge)[ipart],
                             &(*pridge_edge_idx)[ipart],
                             &(*pridge_edge)[ipart],

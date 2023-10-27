@@ -842,7 +842,7 @@ int main
       PDM_multipart_part_graph_comm_get(mpart,
                                         i_dom,
                                         i_part,
-                                        PDM_BOUND_TYPE_VTX,
+                                        PDM_MESH_ENTITY_VERTEX,
                                         &vtx_part_bound_proc_idx,
                                         &vtx_part_bound_part_idx,
                                         &vtx_part_bound,
@@ -895,10 +895,10 @@ int main
       int*         group_face_idx      = NULL;
       int*         group_face          = NULL;
       PDM_g_num_t* group_face_ln_to_gn = NULL;
-      PDM_multipart_bound_get(mpart,
+      PDM_multipart_group_get(mpart,
                               i_dom,
                               i_part,
-                              PDM_BOUND_TYPE_FACE,
+                              PDM_MESH_ENTITY_FACE,
                               &pn_face_group,
                               &group_face_idx,
                               &group_face,
@@ -926,7 +926,7 @@ int main
       PDM_multipart_part_graph_comm_get(mpart,
                                         i_dom,
                                         i_part,
-                                        PDM_BOUND_TYPE_FACE,
+                                        PDM_MESH_ENTITY_FACE,
                                         &face_part_bound_proc_idx,
                                         &face_part_bound_part_idx,
                                         &face_part_bound,

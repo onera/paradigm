@@ -354,7 +354,7 @@ part_ext = PDM.PartExtension(n_zone,
 
 output = mpart.graph_comm_get(i_zone,
                               i_part,
-                              PDM._PDM_BOUND_TYPE_VTX)
+                              PDM._PDM_MESH_ENTITY_VERTEX)
 
 vtx_part_bound_proc_idx = output["np_entity_part_bound_proc_idx"]
 vtx_part_bound_part_idx = output["np_entity_part_bound_part_idx"]

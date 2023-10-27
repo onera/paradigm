@@ -425,7 +425,7 @@ program pdm_t_mesh_partitioning_sol_f
   call PDM_multipart_part_graph_comm_get(mpart,                   &
                                          i_zone,                  &
                                          i_part,                  &
-                                         PDM_BOUND_TYPE_VTX,      &
+                                         PDM_MESH_ENTITY_VERTEX,  &
                                          vtx_part_bound_proc_idx, &
                                          vtx_part_bound_part_idx, &
                                          vtx_part_bound,          &

@@ -645,10 +645,10 @@ _cube_mesh2
       int         *face_group_idx      = NULL;
       int         *face_group          = NULL;
       PDM_g_num_t *face_group_ln_to_gn = NULL;
-      PDM_multipart_bound_get(mpart,
+      PDM_multipart_group_get(mpart,
                               0,
                               i_part,
-                              PDM_BOUND_TYPE_FACE,
+                              PDM_MESH_ENTITY_FACE,
                               &pn_face_group,
                               &face_group_idx,
                               &face_group,
@@ -661,7 +661,7 @@ _cube_mesh2
       PDM_multipart_part_graph_comm_get(mpart,
                                         0,
                                         i_part,
-                                        PDM_BOUND_TYPE_VTX,
+                                        PDM_MESH_ENTITY_VERTEX,
                                         &vtx_part_bound_proc_idx,
                                         &vtx_part_bound_part_idx,
                                         &vtx_part_bound,
@@ -673,7 +673,7 @@ _cube_mesh2
       PDM_multipart_part_graph_comm_get(mpart,
                                         0,
                                         i_part,
-                                        PDM_BOUND_TYPE_FACE,
+                                        PDM_MESH_ENTITY_FACE,
                                         &face_part_bound_proc_idx,
                                         &face_part_bound_part_idx,
                                         &face_part_bound,
@@ -824,10 +824,10 @@ _cube_mesh2
     int         *face_group_idx      = NULL;
     int         *face_group          = NULL;
     PDM_g_num_t *face_group_ln_to_gn = NULL;
-    PDM_multipart_bound_get(mpart,
+    PDM_multipart_group_get(mpart,
                             0,
                             i_part,
-                            PDM_BOUND_TYPE_FACE,
+                            PDM_MESH_ENTITY_FACE,
                             &pn_face_group,
                             &face_group_idx,
                             &face_group,
@@ -840,7 +840,7 @@ _cube_mesh2
     PDM_multipart_part_graph_comm_get(mpart,
                                       0,
                                       i_part,
-                                      PDM_BOUND_TYPE_VTX,
+                                      PDM_MESH_ENTITY_VERTEX,
                                       &vtx_part_bound_proc_idx,
                                       &vtx_part_bound_part_idx,
                                       &vtx_part_bound,
@@ -852,7 +852,7 @@ _cube_mesh2
     PDM_multipart_part_graph_comm_get(mpart,
                                       0,
                                       i_part,
-                                      PDM_BOUND_TYPE_FACE,
+                                      PDM_MESH_ENTITY_FACE,
                                       &face_part_bound_proc_idx,
                                       &face_part_bound_part_idx,
                                       &face_part_bound,

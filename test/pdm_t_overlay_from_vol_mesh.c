@@ -488,10 +488,10 @@ int main(int argc, char *argv[])
     int*         group_face_idx    = NULL;
     int*         group_face        = NULL;
     PDM_g_num_t* group_face_lngn   = NULL;
-    PDM_multipart_bound_get(mpart,
+    PDM_multipart_group_get(mpart,
                             0,
                             i_part,
-                            PDM_BOUND_TYPE_FACE,
+                            PDM_MESH_ENTITY_FACE,
                             &n_group,
                             &group_face_idx,
                             &group_face,

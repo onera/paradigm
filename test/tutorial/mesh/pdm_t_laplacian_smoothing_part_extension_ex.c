@@ -212,10 +212,10 @@ _get_groups
  )
 {
   PDM_g_num_t *face_bound_ln_to_gn = NULL;
-  PDM_multipart_bound_get(multipart,
+  PDM_multipart_group_get(multipart,
                           0,
                           i_part,
-                          PDM_BOUND_TYPE_FACE,
+                          PDM_MESH_ENTITY_FACE,
                           n_face_group,
                           face_bound_idx,
                           face_bound,

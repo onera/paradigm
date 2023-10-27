@@ -394,7 +394,7 @@ int main(int argc, char *argv[])
   // int         *pedge_group_idx      = NULL;
   PDM_g_num_t *edge_bound_ln_to_gn  = NULL;
 
-  PDM_multipart_bound_get(mpart, 0, i_part, PDM_BOUND_TYPE_EDGE,
+  PDM_multipart_group_get(mpart, 0, i_part, PDM_MESH_ENTITY_EDGE,
                           &pn_edge_group,
                           &pgroup_edge_idx,
                           &pgroup_edge,

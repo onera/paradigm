@@ -276,10 +276,10 @@ _extract_part_edge_and_set_mesh
     int         *edge_group_idx      = NULL;
     PDM_g_num_t *edge_bound_ln_to_gn = NULL;
 
-    PDM_multipart_bound_get(mpart,
+    PDM_multipart_group_get(mpart,
                             0,
                             i_part,
-                            PDM_BOUND_TYPE_EDGE,
+                            PDM_MESH_ENTITY_EDGE,
                             &n_edge_group,
                             &edge_group_idx,
                             &edge_group,

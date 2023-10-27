@@ -509,10 +509,10 @@ _create_wall_surf
     int* group_face          = NULL;
     PDM_g_num_t* face_group_ln_to_gn = NULL;
 
-    PDM_multipart_bound_get(mpart,
+    PDM_multipart_group_get(mpart,
                             0,
                             i_part,
-                            PDM_BOUND_TYPE_FACE,
+                            PDM_MESH_ENTITY_FACE,
                             &n_bound,
                             &group_face_idx,
                             &group_face,

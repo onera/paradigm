@@ -92,6 +92,34 @@ extern "C" {
  * Private function definitions
  *============================================================================*/
 
+static
+PDM_bound_type_t
+_entity_type_to_bound_type
+(
+ PDM_mesh_entities_t entity_type
+ )
+{
+  PDM_bound_type_t bound_type;
+  switch (entity_type) {
+    case PDM_MESH_ENTITY_VERTEX:
+      bound_type = PDM_BOUND_TYPE_VTX;
+      break;
+
+    case PDM_MESH_ENTITY_EDGE:
+      bound_type = PDM_BOUND_TYPE_EDGE;
+      break;
+
+    case PDM_MESH_ENTITY_FACE:
+      bound_type = PDM_BOUND_TYPE_FACE;
+      break;
+
+    default:
+      PDM_error(__FILE__, __LINE__, 0, "Entity type %d has no corresponding bound type\n", entity_type);
+  }
+
+  return bound_type;
+}
+
 
 /**
  *
@@ -3336,7 +3364,7 @@ const int        i_part,
  * \param [in]  multipart             Pointer to \ref PDM_multipart_t object
  * \param [in]  i_zone                Id of zone
  * \param [in]  i_zone                Id of part
- * \param [in]  bound_type            Bound type
+ * \param [in]  entity_type           Type of mesh entity
  * \param [out] ppart_bound_proc_idx  Partitioning boundary entities block distribution from processus (size = n_proc + 1)
  * \param [out] ppart_bound_part_idx  Partitioning boundary entities block distribution from partition (size = n_total_part + 1)
  * \param [out] ppart_bound           Partitioning boundary entities (size = 4 * n_entity_part_bound)
@@ -3345,18 +3373,20 @@ const int        i_part,
 void
 PDM_multipart_part_graph_comm_get
 (
- PDM_multipart_t    *multipart,
- const int           i_zone,
- const int           i_part,
- PDM_bound_type_t    bound_type,
- int               **ppart_bound_proc_idx,
- int               **ppart_bound_part_idx,
- int               **ppart_bound,
- PDM_ownership_t     ownership
+ PDM_multipart_t      *multipart,
+ const int             i_zone,
+ const int             i_part,
+ PDM_mesh_entities_t   entity_type,
+ int                 **ppart_bound_proc_idx,
+ int                 **ppart_bound_part_idx,
+ int                 **ppart_bound,
+ PDM_ownership_t       ownership
 )
 {
   assert(i_zone < multipart->n_zone && i_part < multipart->n_part[i_zone]);
   _part_mesh_t _pmeshes = multipart->pmeshes[i_zone];
+
+  PDM_bound_type_t bound_type = _entity_type_to_bound_type(entity_type);
 
   PDM_part_mesh_part_graph_comm_get(_pmeshes.pmesh,
                                     i_part,
@@ -3991,44 +4021,46 @@ const int                       i_part,
 
 /**
  *
- * \brief Get the bound description for the entity
+ * \brief Get the group description for a given entity
  *
- * \param [in]   multipart      Pointer to \ref PDM_multipart_t object
- * \param [in]   i_zone         Id of current zone
- * \param [in]   i_part         Id of part
- * \param [in]   bound_type     Bound type \ref PDM_bound_type_t
- * \param [out]  n_bound        Number of bound for bound_type
- * \param [out]  bound_idx      Entity group index (size = n_bound )
- * \param [out]  bound          Entity id for each group (size = bound_idx[n_bound])
- * \param [out]  bound_ln_to_gn Entity global numbering for each group (size = bound_idx[n_bound])
- * \param [in]   ownership      Ownership for color ( \ref PDM_ownership_t )
+ * \param [in]   multipart              Pointer to \ref PDM_multipart_t object
+ * \param [in]   i_zone                 Domain identifier
+ * \param [in]   i_part                 Partition identifier
+ * \param [in]   entity_type            Type of mesh entity
+ * \param [out]  n_group                Number of groups
+ * \param [out]  group_entity_idx       Index for group->entity connectivity (size = \p n_group)
+ * \param [out]  group_entity           Group->entity connectivity (1-based local ids, size = \p group_entity_idx[\p n_group])
+ * \param [out]  group_entity_ln_to_gn  Group->entity connectivity (group-specific global ids, size = \p group_entity_idx[\p n_group])
+ * \param [in]   ownership              Ownership
  *
  */
-void PDM_multipart_bound_get
+void PDM_multipart_group_get
 (
- PDM_multipart_t   *multipart,
- const int          i_zone,
- const int          i_part,
- PDM_bound_type_t   bound_type,
- int               *n_bound,
- int              **bound_idx,
- int              **bound,
- PDM_g_num_t      **bound_ln_to_gn,
- PDM_ownership_t    ownership
+ PDM_multipart_t      *multipart,
+ const int             i_zone,
+ const int             i_part,
+ PDM_mesh_entities_t   entity_type,
+ int                  *n_group,
+ int                 **group_entity_idx,
+ int                 **group_entity,
+ PDM_g_num_t         **group_entity_ln_to_gn,
+ PDM_ownership_t       ownership
 )
 {
 
   assert(i_zone < multipart->n_zone && i_part < multipart->n_part[i_zone]);
   _part_mesh_t _pmeshes = multipart->pmeshes[i_zone];
 
-  *n_bound = PDM_part_mesh_n_bound_get(_pmeshes.pmesh, bound_type);
+  PDM_bound_type_t bound_type = _entity_type_to_bound_type(entity_type);
+
+  *n_group = PDM_part_mesh_n_bound_get(_pmeshes.pmesh, bound_type);
 
   PDM_part_mesh_bound_concat_get(_pmeshes.pmesh,
                                  i_part,
                                  bound_type,
-                                 bound_idx,
-                                 bound,
-                                 bound_ln_to_gn,
+                                 group_entity_idx,
+                                 group_entity,
+                                 group_entity_ln_to_gn,
                                  ownership);
 }
 

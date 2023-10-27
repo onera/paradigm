@@ -80,8 +80,8 @@ module pdm_multipart
     PDM_multipart_part_vtx_coord_get_
   end interface
 
-  interface PDM_multipart_bound_get ; module procedure  &
-    PDM_multipart_bound_get_
+  interface PDM_multipart_group_get ; module procedure  &
+    PDM_multipart_group_get_
   end interface
 
   interface PDM_multipart_part_graph_comm_get ; module procedure  &
@@ -591,27 +591,27 @@ interface
 
   !>
   !!
-  !! \brief Get boundary data
+  !! \brief Get the group description for a given entity
   !!
-  !! \param [in]   multipart               Pointer to \ref PDM_multipart_t object
-  !! \param [in]   i_zone                  Id of zone which parameters apply (or -1 for all zones)
-  !! \param [in]   i_part                  Partition index
-  !! \param [out]  bound_type              Boundary type
-  !! \param [out]  n_bound                 Number of boundaries
-  !! \param [out]  bound_idx               Boundary index
-  !! \param [out]  bound                   Boundaries
-  !! \param [out]  bound_ln_to_gn          Boundary local number to global number
-  !!
+  !! \param [in]   multipart              Pointer to \ref PDM_multipart_t object
+  !! \param [in]   i_zone                 Domain identifier
+  !! \param [in]   i_part                 Partition identifier
+  !! \param [in]   entity_type            Type of mesh entity
+  !! \param [out]  n_group                Number of groups
+  !! \param [out]  group_entity_idx       Index for group->entity connectivity (size = \p n_group)
+  !! \param [out]  group_entity           Group->entity connectivity (1-based local ids, size = \p group_entity_idx[\p n_group])
+  !! \param [out]  group_entity_ln_to_gn  Group->entity connectivity (group-specific global ids, size = \p group_entity_idx[\p n_group])
+  !! \param [in]   ownership              Ownership
 
-  subroutine PDM_multipart_bound_get_c (multipart, &
+  subroutine PDM_multipart_group_get_c (multipart, &
                                         i_zone, &
                                         i_part, &
-                                        bound_type, &
-                                        n_bound, &
-                                        bound_idx, &
-                                        bound, &
-                                        bound_ln_to_gn) &
-  bind (c, name='PDM_multipart_bound_get')
+                                        entity_type, &
+                                        n_group, &
+                                        group_entity_idx, &
+                                        group_entity, &
+                                        group_entity_ln_to_gn) &
+  bind (c, name='PDM_multipart_group_get')
 
     use iso_c_binding
     implicit none
@@ -619,23 +619,23 @@ interface
     type(c_ptr),    value  :: multipart
     integer(c_int), value  :: i_zone
     integer(c_int), value  :: i_part
-    integer(c_int), value  :: bound_type
-    integer(c_int)         :: n_bound
-    type(c_ptr)            :: bound_idx
-    type(c_ptr)            :: bound
-    type(c_ptr)            :: bound_ln_to_gn
+    integer(c_int), value  :: entity_type
+    integer(c_int)         :: n_group
+    type(c_ptr)            :: group_entity_idx
+    type(c_ptr)            :: group_entity
+    type(c_ptr)            :: group_entity_ln_to_gn
 
-  end subroutine PDM_multipart_bound_get_c
+  end subroutine PDM_multipart_group_get_c
 
   !>
   !!
-  !! \brief Get the connection graph between partition for the requested bound type
+  !! \brief Get the connection graph between partition for the requested entity type
   !!
 
   subroutine PDM_multipart_part_graph_comm_get_c (multipart,            &
                                                   i_zone,               &
                                                   i_part,               &
-                                                  bound_type,           &
+                                                  entity_type,          &
                                                   ppart_bound_proc_idx, &
                                                   ppart_bound_part_idx, &
                                                   ppart_bound,          &
@@ -648,7 +648,7 @@ interface
     type(c_ptr),    value  :: multipart
     integer(c_int), value  :: i_zone
     integer(c_int), value  :: i_part
-    integer(c_int), value  :: bound_type
+    integer(c_int), value  :: entity_type
     type(c_ptr)            :: ppart_bound_proc_idx
     type(c_ptr)            :: ppart_bound_part_idx
     type(c_ptr)            :: ppart_bound
@@ -771,7 +771,7 @@ private :: PDM_multipart_create_,&
            PDM_multipart_partition_color_get_,&
            PDM_multipart_part_ghost_infomation_get_,&
            PDM_multipart_part_vtx_coord_get_,&
-           PDM_multipart_bound_get_,&
+           PDM_multipart_group_get_,&
            PDM_multipart_part_graph_comm_get_
 
 contains
@@ -1461,60 +1461,60 @@ contains
 
   ! Get boundary information
 
-  subroutine PDM_multipart_bound_get_(multipart, &
+  subroutine PDM_multipart_group_get_(multipart, &
                                       i_zone, &
                                       i_part, &
-                                      bound_type, &
-                                      n_bound, &
-                                      bound_idx, &
-                                      bound, &
-                                      bound_ln_to_gn)
+                                      entity_type, &
+                                      n_group, &
+                                      group_entity_idx, &
+                                      group_entity, &
+                                      group_entity_ln_to_gn)
 
     use pdm
     use iso_c_binding
     implicit none
 
-    type(c_ptr),               value   :: multipart                     ! Pointer to \ref PDM_multipart_t object
-    integer(c_int),            value   :: i_zone                        ! Id of zone which parameters apply (or -1 for all zones)
-    integer(c_int),            value   :: i_part                        ! Partition index
-    integer(c_int)                     :: bound_type                    ! Boundary type
-    integer(c_int)                     :: n_bound                       ! Number of boundaries
-    integer(kind=PDM_l_num_s), pointer :: bound_idx(:)                  ! Boundary index
-    type(c_ptr)                        :: c_bound_idx = C_NULL_PTR
-    integer(kind=PDM_l_num_s), pointer :: bound(:)                      ! Boundaries
-    type(c_ptr)                        :: c_bound = C_NULL_PTR
-    integer(kind=PDM_g_num_s), pointer :: bound_ln_to_gn(:)             ! Boundary local number to global number
-    type(c_ptr)                        :: c_bound_ln_to_gn = C_NULL_PTR
+    type(c_ptr),               value   :: multipart                     ! Pointer to \p PDM_multipart_t object
+    integer(c_int),            value   :: i_zone                        ! Domain identifier
+    integer(c_int),            value   :: i_part                        ! Partition identifier
+    integer(c_int)                     :: entity_type                   ! Type of mesh entity
+    integer(c_int)                     :: n_group                       ! Number of groups
+    integer(kind=PDM_l_num_s), pointer :: group_entity_idx(:)           ! Index for group->entity connectivity (size = \p n_group)
+    integer(kind=PDM_l_num_s), pointer :: group_entity(:)               ! Group->entity connectivity (1-based local ids, size = \p group_entity_idx[\p n_group])
+    integer(kind=PDM_g_num_s), pointer :: group_entity_ln_to_gn(:)      ! Group->entity connectivity (group-specific global ids, size = \p group_entity_idx[\p n_group])
+    type(c_ptr)                        :: c_group_entity = C_NULL_PTR
+    type(c_ptr)                        :: c_group_entity_idx = C_NULL_PTR
+    type(c_ptr)                        :: c_group_entity_ln_to_gn = C_NULL_PTR
 
-    call PDM_multipart_bound_get_c(multipart, &
+    call PDM_multipart_group_get_c(multipart, &
                                    i_zone, &
                                    i_part, &
-                                   bound_type, &
-                                   n_bound, &
-                                   c_bound_idx, &
-                                   c_bound, &
-                                   c_bound_ln_to_gn)
+                                   entity_type, &
+                                   n_group, &
+                                   c_group_entity_idx, &
+                                   c_group_entity, &
+                                   c_group_entity_ln_to_gn)
 
-    call c_f_pointer(c_bound_idx, &
-                     bound_idx,   &
-                     [n_bound + 1])
+    call c_f_pointer(c_group_entity_idx, &
+                     group_entity_idx,   &
+                     [n_group + 1])
 
-    call c_f_pointer(c_bound, &
-                     bound,   &
-                     [bound_idx(n_bound+1)])
+    call c_f_pointer(c_group_entity, &
+                     group_entity,   &
+                     [group_entity_idx(n_group+1)])
 
-    call c_f_pointer(c_bound_ln_to_gn, &
-                     bound_ln_to_gn,   &
-                     [bound_idx(n_bound+1)])
+    call c_f_pointer(c_group_entity_ln_to_gn, &
+                     group_entity_ln_to_gn,   &
+                     [group_entity_idx(n_group+1)])
 
-  end subroutine PDM_multipart_bound_get_
+  end subroutine PDM_multipart_group_get_
 
-  ! Get the connection graph between partition for the requested bound type
+  ! Get the connection graph between partition for the requested entity type
 
   subroutine PDM_multipart_part_graph_comm_get_(multipart,            &
                                                 i_zone,               &
                                                 i_part,               &
-                                                bound_type,           &
+                                                entity_type,          &
                                                 ppart_bound_proc_idx, &
                                                 ppart_bound_part_idx, &
                                                 ppart_bound,          &
@@ -1527,7 +1527,7 @@ contains
     type(c_ptr),               value   :: multipart                     ! Pointer to \ref PDM_multipart_t object
     integer(c_int),            value   :: i_zone                        ! Id of zone which parameters apply (or -1 for all zones)
     integer(c_int),            value   :: i_part                        ! Partition index
-    integer(c_int)                     :: bound_type                    ! Boundary type
+    integer(c_int)                     :: entity_type                   ! Type of mesh entity
     integer(kind=PDM_l_num_s), pointer :: ppart_bound_proc_idx(:)       ! Partitioning boundary entities index from process (size = n_proc + 1)
     integer(kind=PDM_l_num_s), pointer :: ppart_bound_part_idx(:)       ! Partitioning boundary entities index from partition (size = n_total_part + 1)
     integer(kind=PDM_l_num_s), pointer :: ppart_bound(:)                ! Partitioning boundary entities (size = 4 * n_entity_part_bound)
@@ -1551,7 +1551,7 @@ contains
     call PDM_multipart_part_graph_comm_get_c(multipart,              &
                                              i_zone,                 &
                                              i_part,                 &
-                                             bound_type,             &
+                                             entity_type,            &
                                              c_ppart_bound_proc_idx, &
                                              c_ppart_bound_part_idx, &
                                              c_ppart_bound,          &

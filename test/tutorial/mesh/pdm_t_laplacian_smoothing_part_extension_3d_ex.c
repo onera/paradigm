@@ -220,10 +220,10 @@ _get_groups_and_bounds
        PDM_g_num_t  **face_bound_ln_to_gn
 )
 {
-  PDM_multipart_bound_get(multipart,
+  PDM_multipart_group_get(multipart,
                           0,
                           i_part,
-                          PDM_BOUND_TYPE_FACE,
+                          PDM_MESH_ENTITY_FACE,
                           n_face_group,
                           face_bound_idx,
                           face_bound,
@@ -233,7 +233,7 @@ _get_groups_and_bounds
   PDM_multipart_part_graph_comm_get(multipart,
                                     i_zone,
                                     i_part,
-                                    PDM_BOUND_TYPE_VTX,
+                                    PDM_MESH_ENTITY_VERTEX,
                                     vtx_part_bound_proc_idx,
                                     vtx_part_bound_part_idx,
                                     vtx_part_bound,
@@ -242,7 +242,7 @@ _get_groups_and_bounds
   PDM_multipart_part_graph_comm_get(multipart,
                                     i_zone,
                                     i_part,
-                                    PDM_BOUND_TYPE_FACE,
+                                    PDM_MESH_ENTITY_FACE,
                                     face_part_bound_proc_idx,
                                     face_part_bound_part_idx,
                                     face_part_bound,

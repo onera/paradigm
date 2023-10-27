@@ -95,14 +95,14 @@ cdef extern from "pdm_multipart.h":
                                            PDM_ownership_t         ownership)
 
     # ------------------------------------------------------------------
-    void PDM_multipart_part_graph_comm_get(PDM_multipart_t    *multipart,
-                                           const int           i_zone,
-                                           const int           i_part,
-                                           PDM_bound_type_t    bound_type,
-                                           int               **ppart_bound_proc_idx,
-                                           int               **ppart_bound_part_idx,
-                                           int               **ppart_bound,
-                                           PDM_ownership_t     ownership);
+    void PDM_multipart_part_graph_comm_get(PDM_multipart_t      *multipart,
+                                           const int             i_zone,
+                                           const int             i_part,
+                                           PDM_mesh_entities_t   entity_type,
+                                           int                 **ppart_bound_proc_idx,
+                                           int                 **ppart_bound_part_idx,
+                                           int                 **ppart_bound,
+                                           PDM_ownership_t       ownership);
     # ------------------------------------------------------------------
     void PDM_multipart_part_hyperplane_color_get(PDM_multipart_t  *multipart,
                                                  int               i_zone,
@@ -711,16 +711,16 @@ cdef class MultiPart:
     def graph_comm_get(self,
                        int i_zone,
                        int i_part,
-                       PDM_bound_type_t bound_type):
+                       PDM_mesh_entities_t entity_type):
         """
-        graph_comm_get(i_zone, i_part, bound_type)
+        graph_comm_get(i_zone, i_part, entity_type)
 
-        Returns the connection graph between partition for the requested bound type
+        Returns the connection graph between partition for the requested entity type
 
         Parameters:
-          i_zone     (int)              : Zone identifier
-          i_part     (int)              : Partition identifier
-          bound_type (PDM_bound_type_t) : Bound type
+          i_zone      (int)                 : Zone identifier
+          i_part      (int)                 : Partition identifier
+          entity_type (PDM_mesh_entities_t) : Type of mesh entity
 
         Returns:
           Dictionary
@@ -738,7 +738,7 @@ cdef class MultiPart:
         PDM_multipart_part_graph_comm_get(self._mtp,
                                           i_zone,
                                           i_part,
-                                          bound_type,
+                                          entity_type,
                                           &entity_part_bound_proc_idx,
                                           &entity_part_bound_part_idx,
                                           &entity_part_bound,

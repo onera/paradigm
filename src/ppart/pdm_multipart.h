@@ -329,11 +329,11 @@ const int        i_part,
 
 /**
  *
- * \brief Returns the connection graph between partition for the requested bound type
+ * \brief Returns the connection graph between partition for the requested entity type
  * \param [in]  multipart             Pointer to \ref PDM_multipart_t object
  * \param [in]  i_zone                Id of zone
  * \param [in]  i_zone                Id of part
- * \param [in]  bound_type            Bound type
+ * \param [in]  entity_type           Type of mesh entity
  * \param [out] ppart_bound_proc_idx  Partitioning boundary entities index from process (size = n_proc + 1)
  * \param [out] ppart_bound_part_idx  Partitioning boundary entities index from partition (size = n_total_part + 1)
  * \param [out] ppart_bound           Partitioning boundary entities (size = 4 * n_entity_part_bound)
@@ -342,14 +342,14 @@ const int        i_part,
 void
 PDM_multipart_part_graph_comm_get
 (
- PDM_multipart_t    *multipart,
- const int           i_zone,
- const int           i_part,
- PDM_bound_type_t    bound_type,
- int               **ppart_bound_proc_idx,
- int               **ppart_bound_part_idx,
- int               **ppart_bound,
- PDM_ownership_t     ownership
+ PDM_multipart_t      *multipart,
+ const int             i_zone,
+ const int             i_part,
+ PDM_mesh_entities_t   entity_type,
+ int                 **ppart_bound_proc_idx,
+ int                 **ppart_bound_part_idx,
+ int                 **ppart_bound,
+ PDM_ownership_t       ownership
 );
 
 /**
@@ -615,7 +615,7 @@ const int                       i_part,
  * \param [in]   multipart              Pointer to \ref PDM_multipart_t object
  * \param [in]   i_zone                 Domain identifier
  * \param [in]   i_part                 Partition identifier
- * \param [in]   bound_type             Bound type
+ * \param [in]   entity_type            Type of mesh entity
  * \param [out]  n_group                Number of groups
  * \param [out]  group_entity_idx       Index for group->entity connectivity (size = \p n_group)
  * \param [out]  group_entity           Group->entity connectivity (1-based local ids, size = \p group_entity_idx[\p n_group])
@@ -623,12 +623,12 @@ const int                       i_part,
  * \param [in]   ownership              Ownership
  *
  */
-void PDM_multipart_bound_get
+void PDM_multipart_group_get
 (
  PDM_multipart_t      *multipart,
  const int             i_zone,
  const int             i_part,
- PDM_bound_type_t      bound_type,
+ PDM_mesh_entities_t   entity_type,
  int                  *n_group_entity,
  int                 **group_entity_idx,
  int                 **group_entity,
