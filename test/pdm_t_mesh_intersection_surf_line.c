@@ -309,8 +309,8 @@ _extract_part_edge_and_set_mesh
                                         0,
                                         i_part,
                                         PDM_CONNECTIVITY_TYPE_EDGE_VTX,
-                                        &edge_vtx,
                                         &edge_vtx_idx,
+                                        &edge_vtx,
                                         PDM_OWNERSHIP_KEEP);
     PDM_extract_part_part_set(extrp_mesh,
                               i_part,
@@ -475,8 +475,8 @@ _set_mesh
                                                      0,
                                                      i_part,
                                                      PDM_CONNECTIVITY_TYPE_FACE_EDGE,
-                                                     &face_edge,
                                                      &face_edge_idx,
+                                                     &face_edge,
                                                      PDM_OWNERSHIP_KEEP);
 
     int *edge_vtx     = NULL;
@@ -485,8 +485,8 @@ _set_mesh
                                                      0,
                                                      i_part,
                                                      PDM_CONNECTIVITY_TYPE_EDGE_VTX,
-                                                     &edge_vtx,
                                                      &edge_vtx_idx,
+                                                     &edge_vtx,
                                                      PDM_OWNERSHIP_KEEP);
 
     PDM_mesh_intersection_part_set(mi,

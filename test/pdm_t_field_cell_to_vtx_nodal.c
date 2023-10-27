@@ -618,8 +618,8 @@ int main
                                           i_dom,
                                           i_part,
                                           PDM_CONNECTIVITY_TYPE_CELL_FACE,
-                                          &pcell_face[i_dom][i_part],
                                           &pcell_face_idx[i_dom][i_part],
+                                          &pcell_face[i_dom][i_part],
                                           PDM_OWNERSHIP_KEEP);
       int *face_edge     = NULL;
       int *face_edge_idx = NULL;
@@ -627,8 +627,8 @@ int main
                                                        i_dom,
                                                        i_part,
                                                        PDM_CONNECTIVITY_TYPE_FACE_EDGE,
-                                                       &face_edge,
                                                        &face_edge_idx,
+                                                       &face_edge,
                                                        PDM_OWNERSHIP_KEEP);
 
       int *edge_vtx     = NULL;
@@ -637,8 +637,8 @@ int main
                                           i_dom,
                                           i_part,
                                           PDM_CONNECTIVITY_TYPE_EDGE_VTX,
-                                          &edge_vtx,
                                           &edge_vtx_idx,
+                                          &edge_vtx,
                                           PDM_OWNERSHIP_KEEP);
       pface_vtx    [i_dom][i_part] = NULL;
       pface_vtx_idx[i_dom][i_part] = face_edge_idx;

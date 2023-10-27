@@ -245,12 +245,12 @@ _read_and_split_distributed_mesh
   int *_face_edge_idx = NULL;
   int *_face_edge     = NULL;
   *n_face = PDM_multipart_part_connectivity_get(mpart,
-                                      0,
-                                      i_part,
-                                      PDM_CONNECTIVITY_TYPE_FACE_EDGE,
-                                      &_face_edge,
-                                      &_face_edge_idx,
-                                      PDM_OWNERSHIP_KEEP);
+                                                0,
+                                                i_part,
+                                                PDM_CONNECTIVITY_TYPE_FACE_EDGE,
+                                                &_face_edge_idx,
+                                                &_face_edge,
+                                                PDM_OWNERSHIP_KEEP);
   *face_vtx_idx = malloc(sizeof(int) * (*n_face + 1));
   memcpy(*face_vtx_idx, _face_edge_idx, sizeof(int) * (*n_face + 1));
   // *face_vtx = malloc(sizeof(int) * _face_vtx_idx[*n_face]);
@@ -263,8 +263,8 @@ _read_and_split_distributed_mesh
                                       0,
                                       i_part,
                                       PDM_CONNECTIVITY_TYPE_EDGE_VTX,
-                                      &_edge_vtx,
                                       &_edge_vtx_idx,
+                                      &_edge_vtx,
                                       PDM_OWNERSHIP_KEEP);
 
   PDM_compute_face_vtx_from_face_and_edge(*n_face,

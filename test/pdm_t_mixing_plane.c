@@ -1027,8 +1027,8 @@ char *argv[]
                                                         0,
                                                         ipart,
                                                         PDM_CONNECTIVITY_TYPE_FACE_EDGE,
-                                                        &face_edge,
                                                         &face_edge_idx,
+                                                        &face_edge,
                                                         PDM_OWNERSHIP_KEEP);
     face_vtx_idx[ipart] = face_edge_idx;
 
@@ -1038,8 +1038,8 @@ char *argv[]
                                         0,
                                         ipart,
                                         PDM_CONNECTIVITY_TYPE_EDGE_VTX,
-                                        &edge_vtx,
                                         &edge_vtx_idx,
+                                        &edge_vtx,
                                         PDM_OWNERSHIP_KEEP);
 
     PDM_compute_face_vtx_from_face_and_edge(n_face[ipart],

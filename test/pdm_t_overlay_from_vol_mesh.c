@@ -447,8 +447,8 @@ int main(int argc, char *argv[])
                                                      i_zone,
                                                      i_part,
                                                      PDM_CONNECTIVITY_TYPE_CELL_FACE,
-                                                     &cell_face,
                                                      &cell_face_idx,
+                                                     &cell_face,
                                                      PDM_OWNERSHIP_KEEP);
 
     int *face_vtx     = NULL;
@@ -457,8 +457,8 @@ int main(int argc, char *argv[])
                                         i_zone,
                                         i_part,
                                         PDM_CONNECTIVITY_TYPE_FACE_VTX,
-                                        &face_vtx,
                                         &face_vtx_idx,
+                                        &face_vtx,
                                         PDM_OWNERSHIP_KEEP);
 
     PDM_g_num_t* face_ln_to_gn = NULL;

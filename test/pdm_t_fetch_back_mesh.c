@@ -886,8 +886,8 @@ int main(int argc, char *argv[])
                                                           0,
                                                           i_part,
                                                           PDM_CONNECTIVITY_TYPE_EDGE_VTX,
-                                                          &pwork_edge_vtx,
                                                           &pwork_edge_vtx_idx,
+                                                          &pwork_edge_vtx,
                                                           PDM_OWNERSHIP_KEEP);
 
   if (pwork_edge_vtx_idx != NULL) free(pwork_edge_vtx_idx);

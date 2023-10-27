@@ -328,8 +328,8 @@ _gen_mesh
                                                        0,
                                                        ipart,
                                                        PDM_CONNECTIVITY_TYPE_FACE_VTX,
-                                                       &_face_vtx,
                                                        &_face_vtx_idx,
+                                                       &_face_vtx,
                                                        PDM_OWNERSHIP_KEEP);
       pn_face[ipart] = n_face;
       int *_cell_face;
@@ -338,8 +338,8 @@ _gen_mesh
                                           0,
                                           ipart,
                                           PDM_CONNECTIVITY_TYPE_CELL_FACE,
-                                          &_cell_face,
                                           &_cell_face_idx,
+                                          &_cell_face,
                                           PDM_OWNERSHIP_KEEP);
 
       pcell_face_idx[ipart] = _cell_face_idx;
@@ -517,8 +517,8 @@ _gen_mesh
                                           0,
                                           ipart,
                                           PDM_CONNECTIVITY_TYPE_FACE_VTX,
-                                          &_face_vtx,
                                           &_face_vtx_idx,
+                                          &_face_vtx,
                                           PDM_OWNERSHIP_KEEP);
 
       int *_face_edge;
@@ -527,8 +527,8 @@ _gen_mesh
                                           0,
                                           ipart,
                                           PDM_CONNECTIVITY_TYPE_CELL_FACE,
-                                          &_face_edge,
                                           &_face_edge_idx,
+                                          &_face_edge,
                                           PDM_OWNERSHIP_KEEP);
 
       pface_edge_idx[ipart] = _face_edge_idx;
@@ -542,8 +542,8 @@ _gen_mesh
                                                          0,
                                                          ipart,
                                                          PDM_CONNECTIVITY_TYPE_FACE_VTX,
-                                                         &_edge_vtx,
                                                          &_edge_vtx_idx,
+                                                         &_edge_vtx,
                                                          PDM_OWNERSHIP_KEEP);
         pn_edge[ipart] = n_edge;
         pedge_vtx_idx[ipart] = _edge_vtx_idx;

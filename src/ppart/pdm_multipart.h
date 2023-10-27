@@ -402,8 +402,8 @@ const int                       i_zone
  * \param [in]  i_zone                Id of zone
  * \param [in]  i_part                Id of part
  * \param [in]  connectivity_type     Connectivity kind \ref PDM_connectivity_type_t
- * \param [in]  connect               Connectivity array (size = \p connect_idx[*n_entity*] )
  * \param [in]  connect_idx           Connectivity index (size = *n_entity* + 1 )
+ * \param [in]  connect               Connectivity array (size = \p connect_idx[*n_entity*] )
  * \param [in]  ownership             Choice of ownership of the resulting arrays \ref PDM_ownership_t
  *
  * \return Number of leading entities
@@ -415,8 +415,8 @@ PDM_multipart_t                *multipart,
 const int                       i_zone,
 const int                       i_part,
       PDM_connectivity_type_t   connectivity_type,
-      int                     **connect,
       int                     **connect_idx,
+      int                     **connect,
       PDM_ownership_t           ownership
 );
 

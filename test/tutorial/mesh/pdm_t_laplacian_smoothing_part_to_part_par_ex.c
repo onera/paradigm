@@ -356,10 +356,10 @@ int main(int argc, char *argv[])
   /* Get vertices */
   int i_part = 0;
   pn_vtx = PDM_multipart_part_vtx_coord_get(mpart,
-                                           0,
-                                           i_part,
-                                           &pvtx_coord,
-                                           PDM_OWNERSHIP_KEEP);
+                                            0,
+                                            i_part,
+                                            &pvtx_coord,
+                                            PDM_OWNERSHIP_KEEP);
 
   PDM_multipart_part_ln_to_gn_get(mpart,
                                   0,
@@ -374,8 +374,8 @@ int main(int argc, char *argv[])
                                                0,
                                                i_part,
                                                PDM_CONNECTIVITY_TYPE_EDGE_VTX,
-                                               &pedge_vtx,
                                                &tmp_pedge_vtx_idx,
+                                               &pedge_vtx,
                                                PDM_OWNERSHIP_KEEP);
 
   /* Get faces */
@@ -383,8 +383,8 @@ int main(int argc, char *argv[])
                                                0,
                                                i_part,
                                                PDM_CONNECTIVITY_TYPE_FACE_EDGE,
-                                               &pface_edge,
                                                &pface_edge_idx,
+                                               &pface_edge,
                                                PDM_OWNERSHIP_KEEP);
   PDM_UNUSED(pn_face);
 
@@ -716,7 +716,7 @@ int main(int argc, char *argv[])
   PDM_block_to_part_free(btp);
   PDM_part_to_part_free (ptp);
   PDM_multipart_free(mpart);
-    free(tmp_coord);
+  free(tmp_coord);
   free(pstrid_new[i_part]);
   free(pstrid_new);
   free(pstrid);

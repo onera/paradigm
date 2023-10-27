@@ -321,8 +321,8 @@ int main(int argc, char *argv[])
                                                                0,
                                                                i_part,
                                                                PDM_CONNECTIVITY_TYPE_FACE_EDGE,
-                                                               &surf_pface_edge[i_part],
                                                                &surf_pface_edge_idx[i_part],
+                                                               &surf_pface_edge[i_part],
                                                                PDM_OWNERSHIP_KEEP);
 
     int* tmp_pedge_vtx_idx = NULL;
@@ -330,8 +330,8 @@ int main(int argc, char *argv[])
                                                                0,
                                                                i_part,
                                                                PDM_CONNECTIVITY_TYPE_EDGE_VTX,
-                                                               &surf_pedge_vtx[i_part],
                                                                &tmp_pedge_vtx_idx,
+                                                               &surf_pedge_vtx[i_part],
                                                                PDM_OWNERSHIP_KEEP);
     assert(tmp_pedge_vtx_idx == NULL);
 

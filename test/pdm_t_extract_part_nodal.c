@@ -276,8 +276,8 @@ int main(int argc, char *argv[])
                                                      i_zone,
                                                      i_part,
                                                      PDM_CONNECTIVITY_TYPE_CELL_FACE,
-                                                     &cell_face,
                                                      &cell_face_idx,
+                                                     &cell_face,
                                                      PDM_OWNERSHIP_KEEP);
 
     int *face_vtx     = NULL;
@@ -286,8 +286,8 @@ int main(int argc, char *argv[])
                                         i_zone,
                                         i_part,
                                         PDM_CONNECTIVITY_TYPE_FACE_VTX,
-                                        &face_vtx,
                                         &face_vtx_idx,
+                                        &face_vtx,
                                         PDM_OWNERSHIP_KEEP);
 
     PDM_g_num_t* face_ln_to_gn = NULL;
@@ -328,8 +328,8 @@ int main(int argc, char *argv[])
                                                       i_zone,
                                                       i_part,
                                                       PDM_CONNECTIVITY_TYPE_FACE_EDGE,
-                                                      &pface_edge    [i_part],
                                                       &pface_edge_idx[i_part],
+                                                      &pface_edge    [i_part],
                                                       PDM_OWNERSHIP_KEEP);
     assert(n_face == n_face2);
     int *edge_vtx_idx = NULL;
@@ -337,8 +337,8 @@ int main(int argc, char *argv[])
                                                                  i_zone,
                                                                  i_part,
                                                                  PDM_CONNECTIVITY_TYPE_EDGE_VTX,
-                                                                 &pedge_vtx    [i_part],
                                                                  &edge_vtx_idx,
+                                                                 &pedge_vtx    [i_part],
                                                                  PDM_OWNERSHIP_KEEP);
 
     assert(edge_vtx_idx == NULL);

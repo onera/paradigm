@@ -2793,8 +2793,8 @@ const  int         i_part,
                                       i_zone,
                                       i_part,
                                       PDM_CONNECTIVITY_TYPE_CELL_FACE,
-                                      cell_face,
                                       cell_face_idx,
+                                      cell_face,
                                       PDM_OWNERSHIP_KEEP);
 
   int *face_cell_idx = NULL;
@@ -2802,8 +2802,8 @@ const  int         i_part,
                                       i_zone,
                                       i_part,
                                       PDM_CONNECTIVITY_TYPE_FACE_CELL,
-                                      face_cell,
                                       &face_cell_idx,
+                                      face_cell,
                                       PDM_OWNERSHIP_KEEP);
   assert(face_cell_idx == NULL);
 
@@ -2811,8 +2811,8 @@ const  int         i_part,
                                       i_zone,
                                       i_part,
                                       PDM_CONNECTIVITY_TYPE_FACE_VTX,
-                                      face_vtx,
                                       face_vtx_idx,
+                                      face_vtx,
                                       PDM_OWNERSHIP_KEEP);
 
   PDM_multipart_part_ln_to_gn_get(multipart,

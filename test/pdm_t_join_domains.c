@@ -798,8 +798,8 @@ int main
                                                        i_dom,
                                                        i_part,
                                                        PDM_CONNECTIVITY_TYPE_CELL_FACE,
-                                                       &cell_face,
                                                        &cell_face_idx,
+                                                       &cell_face,
                                                        PDM_OWNERSHIP_KEEP);
 
       int *face_vtx     = NULL;
@@ -808,8 +808,8 @@ int main
                                           i_dom,
                                           i_part,
                                           PDM_CONNECTIVITY_TYPE_FACE_VTX,
-                                          &face_vtx,
                                           &face_vtx_idx,
+                                          &face_vtx,
                                           PDM_OWNERSHIP_KEEP);
 
       PDM_g_num_t* face_ln_to_gn = NULL;
@@ -854,8 +854,8 @@ int main
                                                         i_dom,
                                                         i_part,
                                                         PDM_CONNECTIVITY_TYPE_FACE_EDGE,
-                                                        &face_edge,
                                                         &face_edge_idx,
+                                                        &face_edge,
                                                         PDM_OWNERSHIP_KEEP);
       // assert(n_face == n_face2);
       int *edge_vtx     = NULL;
@@ -864,8 +864,8 @@ int main
                                                        i_dom,
                                                        i_part,
                                                        PDM_CONNECTIVITY_TYPE_EDGE_VTX,
-                                                       &edge_vtx,
                                                        &edge_vtx_idx,
+                                                       &edge_vtx,
                                                        PDM_OWNERSHIP_KEEP);
       assert(edge_vtx_idx == NULL);
 
@@ -875,8 +875,8 @@ int main
                                           i_dom,
                                           i_part,
                                           PDM_CONNECTIVITY_TYPE_FACE_CELL,
-                                          &face_cell,
                                           &face_cell_idx,
+                                          &face_cell,
                                           PDM_OWNERSHIP_KEEP);
       assert(face_cell_idx == NULL);
 
@@ -1325,8 +1325,8 @@ int main
                                                           i_dom,
                                                           i_part,
                                                           PDM_CONNECTIVITY_TYPE_FACE_EDGE,
-                                                          &face_edge,
                                                           &face_edge_idx,
+                                                          &face_edge,
                                                           PDM_OWNERSHIP_KEEP);
         // assert(n_face == n_face2);
         int *edge_vtx     = NULL;
@@ -1335,8 +1335,8 @@ int main
                                                          i_dom,
                                                          i_part,
                                                          PDM_CONNECTIVITY_TYPE_EDGE_VTX,
-                                                         &edge_vtx,
                                                          &edge_vtx_idx,
+                                                         &edge_vtx,
                                                          PDM_OWNERSHIP_KEEP);
 
 
@@ -1426,8 +1426,8 @@ int main
                                                           i_dom,
                                                           i_part,
                                                           PDM_CONNECTIVITY_TYPE_FACE_EDGE,
-                                                          &face_edge,
                                                           &face_edge_idx,
+                                                          &face_edge,
                                                           PDM_OWNERSHIP_KEEP);
 
         assert(n_face2 == pn_face[i_dom][i_part]);

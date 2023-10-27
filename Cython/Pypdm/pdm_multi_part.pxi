@@ -128,8 +128,8 @@ cdef extern from "pdm_multipart.h":
                                             int                       i_zone,
                                             int                       i_part,
                                             PDM_connectivity_type_t   connectivity_type,
-                                            int                     **connect,
                                             int                     **connect_idx,
+                                            int                     **connect,
                                             PDM_ownership_t           ownership);
     # ------------------------------------------------------------------
     int PDM_multipart_part_ln_to_gn_get(PDM_multipart_t      *mtp,
@@ -602,8 +602,8 @@ cdef class MultiPart:
                                                       i_zone,
                                                       i_part,
                                                       connectivity_type,
-                                                      &entity1_entity2,
                                                       &entity1_entity2_idx,
+                                                      &entity1_entity2,
                                                       PDM_OWNERSHIP_USER)
 
       if (entity1_entity2_idx == NULL and entity1_entity2 != NULL):

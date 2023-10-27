@@ -221,8 +221,8 @@ char *argv[]
                                           0,
                                           i_part,
                                           PDM_CONNECTIVITY_TYPE_EDGE_VTX,
-                                          &pedge_vtx,
                                           &pedge_vtx_idx,
+                                          &pedge_vtx,
                                           PDM_OWNERSHIP_KEEP);
 
       double *pvtx_coord = NULL;

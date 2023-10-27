@@ -585,8 +585,8 @@ int main(int argc, char *argv[])
                                                      0,
                                                      i_part,
                                                      PDM_CONNECTIVITY_TYPE_CELL_FACE,
-                                                     &cell_face,
                                                      &cell_face_idx,
+                                                     &cell_face,
                                                      PDM_OWNERSHIP_KEEP);
 
 
@@ -594,8 +594,8 @@ int main(int argc, char *argv[])
                                             0,
                                             i_part,
                                             PDM_CONNECTIVITY_TYPE_FACE_CELL,
-                                            &face_cell,
                                             &face_cell_idx,
+                                            &face_cell,
                                             PDM_OWNERSHIP_KEEP);
         assert(face_cell_idx == NULL);
 
@@ -603,16 +603,16 @@ int main(int argc, char *argv[])
                                             0,
                                             i_part,
                                             PDM_CONNECTIVITY_TYPE_FACE_VTX,
-                                            &face_vtx,
                                             &face_vtx_idx,
+                                            &face_vtx,
                                             PDM_OWNERSHIP_KEEP);
 
         n_face = PDM_multipart_part_connectivity_get(mpart,
                                                      0,
                                                      i_part,
                                                      PDM_CONNECTIVITY_TYPE_FACE_EDGE,
-                                                     &face_edge,
                                                      &face_edge_idx,
+                                                     &face_edge,
                                                      PDM_OWNERSHIP_KEEP);
 
         PDM_multipart_part_ln_to_gn_get(mpart,

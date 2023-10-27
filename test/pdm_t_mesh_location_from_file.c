@@ -649,8 +649,8 @@ int main(int argc, char *argv[])
                                                      0,
                                                      ipart,
                                                      PDM_CONNECTIVITY_TYPE_CELL_FACE,
-                                                     &cell_face,
                                                      &cell_face_idx,
+                                                     &cell_face,
                                                      PDM_OWNERSHIP_KEEP);
 
     int *face_vtx_idx;
@@ -659,8 +659,8 @@ int main(int argc, char *argv[])
                                                      0,
                                                      ipart,
                                                      PDM_CONNECTIVITY_TYPE_FACE_VTX,
-                                                     &face_vtx,
                                                      &face_vtx_idx,
+                                                     &face_vtx,
                                                      PDM_OWNERSHIP_KEEP);
 
 
@@ -674,8 +674,8 @@ int main(int argc, char *argv[])
                                           0,
                                           ipart,
                                           PDM_CONNECTIVITY_TYPE_FACE_EDGE,
-                                          &face_edge,
                                           &face_edge_idx,
+                                          &face_edge,
                                           PDM_OWNERSHIP_KEEP);
 
       int *edge_vtx;
@@ -684,8 +684,8 @@ int main(int argc, char *argv[])
                                           0,
                                           ipart,
                                           PDM_CONNECTIVITY_TYPE_EDGE_VTX,
-                                          &edge_vtx,
                                           &edge_vtx_idx,
+                                          &edge_vtx,
                                           PDM_OWNERSHIP_KEEP);
 
       pface_vtx_idx[ipart] = face_edge_idx;

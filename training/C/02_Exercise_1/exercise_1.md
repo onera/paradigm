@@ -308,8 +308,8 @@ Let's start from the top with cell data. How many cells are there? What are thei
                                       i_zone,
                                       i_part,
                                       PDM_CONNECTIVITY_TYPE_CELL_FACE,
-                                      &cell_face,
                                       &cell_face_idx,
+                                      &cell_face,
                                       PDM_OWNERSHIP_USER);
 
 ```
@@ -333,8 +333,8 @@ For the faces we proceed in a similar way. How many faces are there? What are th
                                       i_zone,
                                       i_part,
                                       PDM_CONNECTIVITY_TYPE_FACE_EDGE,
-                                      &face_edge,
                                       &face_edge_idx,
+                                      &face_edge,
                                       PDM_OWNERSHIP_USER);
 
 ```
@@ -361,8 +361,8 @@ each edge is only composed of two vertices*
                                       i_zone,
                                       i_part,
                                       PDM_CONNECTIVITY_TYPE_EDGE_VTX,
-                                      &edge_vtx,
                                       &edge_vtx_idx,
+                                      &edge_vtx,
                                       PDM_OWNERSHIP_USER);
 
   if (edge_vtx_idx != NULL) free (edge_vtx_idx);

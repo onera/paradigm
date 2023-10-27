@@ -399,8 +399,8 @@ int main(int argc, char *argv[])
                                                           0,
                                                           i_part,
                                                           PDM_CONNECTIVITY_TYPE_EDGE_VTX,
-                                                          &p_vol_edge_vtx,
                                                           &p_vol_edge_vtx_idx,
+                                                          &p_vol_edge_vtx,
                                                           PDM_OWNERSHIP_KEEP);
 
   if (p_vol_edge_vtx_idx != NULL) free(p_vol_edge_vtx_idx);
@@ -420,8 +420,8 @@ int main(int argc, char *argv[])
                                                          0,
                                                          i_part,
                                                          PDM_CONNECTIVITY_TYPE_FACE_EDGE,
-                                                         &p_vol_face_edge,
                                                          &p_vol_face_edge_idx,
+                                                         &p_vol_face_edge,
                                                          PDM_OWNERSHIP_KEEP);
 
   PDM_g_num_t *vol_face_ln_to_gn = NULL;

@@ -529,22 +529,22 @@ _set_mesh
                                                  0,
                                                  i_part,
                                                  PDM_CONNECTIVITY_TYPE_CELL_FACE,
-                                                 &cell_face,
                                                  &cell_face_idx,
+                                                 &cell_face,
                                                  PDM_OWNERSHIP_KEEP);
     int n_face = PDM_multipart_part_connectivity_get(mpart,
                                                      0,
                                                      i_part,
                                                      PDM_CONNECTIVITY_TYPE_FACE_EDGE,
-                                                     &face_edge,
                                                      &face_edge_idx,
+                                                     &face_edge,
                                                      PDM_OWNERSHIP_KEEP);
     int n_edge = PDM_multipart_part_connectivity_get(mpart,
                                                      0,
                                                      i_part,
                                                      PDM_CONNECTIVITY_TYPE_EDGE_VTX,
-                                                     &edge_vtx,
                                                      &edge_vtx_idx,
+                                                     &edge_vtx,
                                                      PDM_OWNERSHIP_KEEP);
 
     int *face_vtx_idx = NULL;
@@ -642,16 +642,16 @@ _set_mesh_nodal
                                           0,
                                           ipart,
                                           PDM_CONNECTIVITY_TYPE_CELL_FACE,
-                                          &cell_face    [ipart],
                                           &cell_face_idx[ipart],
+                                          &cell_face    [ipart],
                                           PDM_OWNERSHIP_KEEP);
 
       PDM_multipart_part_connectivity_get(mpart,
                                           0,
                                           ipart,
                                           PDM_CONNECTIVITY_TYPE_FACE_VTX,
-                                          &face_vtx    [ipart],
                                           &face_vtx_idx[ipart],
+                                          &face_vtx    [ipart],
                                           PDM_OWNERSHIP_KEEP);
 
       if (face_vtx[ipart] == NULL) {
@@ -661,8 +661,8 @@ _set_mesh_nodal
                                             0,
                                             ipart,
                                             PDM_CONNECTIVITY_TYPE_EDGE_VTX,
-                                            &edge_vtx,
                                             &edge_vtx_idx,
+                                            &edge_vtx,
                                             PDM_OWNERSHIP_KEEP);
 
         int *face_edge = NULL;
@@ -670,8 +670,8 @@ _set_mesh_nodal
                                             0,
                                             ipart,
                                             PDM_CONNECTIVITY_TYPE_FACE_EDGE,
-                                            &face_edge,
                                             &face_vtx_idx[ipart],
+                                            &face_edge,
                                             PDM_OWNERSHIP_KEEP);
 
         PDM_compute_face_vtx_from_face_and_edge(n_face[ipart],

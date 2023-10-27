@@ -225,8 +225,8 @@ _part_extension
                                           i_dom,
                                           i_part,
                                           PDM_CONNECTIVITY_TYPE_EDGE_VTX,
-                                          &pedge_vtx    [i_dom][i_part],
                                           &pedge_vtx_idx[i_dom][i_part],
+                                          &pedge_vtx    [i_dom][i_part],
                                           PDM_OWNERSHIP_KEEP);
 
       assert(pedge_vtx_idx[i_dom][i_part] == NULL);
@@ -761,8 +761,8 @@ char *argv[]
                                             i_dom,
                                             i_part,
                                             PDM_CONNECTIVITY_TYPE_EDGE_VTX,
-                                            &pedge_vtx,
                                             &pedge_vtx_idx,
+                                            &pedge_vtx,
                                             PDM_OWNERSHIP_KEEP);
 
         double *pvtx_coord = NULL;

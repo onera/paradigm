@@ -305,8 +305,8 @@ program pdm_t_mesh_partitioning_sol_f
                                              i_zone,                         &
                                              i_part,                         &
                                              PDM_CONNECTIVITY_TYPE_EDGE_VTX, &
-                                             edge_vtx,                       &
                                              edge_vtx_idx,                   &
+                                             edge_vtx,                       &
                                              PDM_OWNERSHIP_KEEP,             &
                                              n_edge)
 
@@ -322,8 +322,8 @@ program pdm_t_mesh_partitioning_sol_f
                                              i_zone,                          &
                                              i_part,                          &
                                              PDM_CONNECTIVITY_TYPE_FACE_EDGE, &
-                                             face_edge,                       &
                                              face_edge_idx,                   &
+                                             face_edge,                       &
                                              PDM_OWNERSHIP_KEEP,              &
                                              n_face)
 
@@ -339,8 +339,8 @@ program pdm_t_mesh_partitioning_sol_f
                                              i_zone,                          &
                                              i_part,                          &
                                              PDM_CONNECTIVITY_TYPE_CELL_FACE, &
-                                             cell_face,                       &
                                              cell_face_idx,                   &
+                                             cell_face,                       &
                                              PDM_OWNERSHIP_KEEP,              &
                                              n_cell)
 

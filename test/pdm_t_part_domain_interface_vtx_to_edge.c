@@ -480,8 +480,8 @@ int main
                                           i_dom,
                                           i_part,
                                           PDM_CONNECTIVITY_TYPE_EDGE_VTX,
-                                          &pedge_vtx     [i_dom][i_part],
                                           &pedge_vtx_idx [i_dom][i_part],
+                                          &pedge_vtx     [i_dom][i_part],
                                           PDM_OWNERSHIP_KEEP);
       assert(pedge_vtx_idx [i_dom][i_part] == NULL);
       pedge_vtx_idx [i_dom][i_part] = malloc((pn_edge[i_dom][i_part]+1) * sizeof(int));

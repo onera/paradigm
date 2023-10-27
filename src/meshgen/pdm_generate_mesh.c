@@ -546,8 +546,8 @@ PDM_generate_mesh_sphere_simplified
                                                0,
                                                0,
                                                PDM_CONNECTIVITY_TYPE_FACE_EDGE,
-                                               &face_edge,
                                                &face_edge_idx,
+                                               &face_edge,
                                                PDM_OWNERSHIP_KEEP);
 
   int  *edge_vtx      = NULL;
@@ -556,8 +556,8 @@ PDM_generate_mesh_sphere_simplified
                                       0,
                                       0,
                                       PDM_CONNECTIVITY_TYPE_EDGE_VTX,
-                                      &edge_vtx,
                                       &edge_vtx_idx,
+                                      &edge_vtx,
                                       PDM_OWNERSHIP_KEEP);
 
   PDM_compute_face_vtx_from_face_and_edge(*n_elt,
@@ -877,8 +877,8 @@ PDM_generate_mesh_rectangle_simplified
                                                0,
                                                0,
                                                PDM_CONNECTIVITY_TYPE_FACE_EDGE,
-                                               &face_edge,
                                                &face_edge_idx,
+                                               &face_edge,
                                                PDM_OWNERSHIP_KEEP);
 
   int  *edge_vtx      = NULL;
@@ -887,8 +887,8 @@ PDM_generate_mesh_rectangle_simplified
                                       0,
                                       0,
                                       PDM_CONNECTIVITY_TYPE_EDGE_VTX,
-                                      &edge_vtx,
                                       &edge_vtx_idx,
+                                      &edge_vtx,
                                       PDM_OWNERSHIP_KEEP);
 
   PDM_compute_face_vtx_from_face_and_edge(*n_elt,
@@ -1165,8 +1165,8 @@ PDM_generate_mesh_rectangle_ngon
                                         0,
                                         ipart,
                                         PDM_CONNECTIVITY_TYPE_FACE_EDGE,
-                                        &(*pface_edge)    [ipart],
                                         &(*pface_edge_idx)[ipart],
+                                        &(*pface_edge)    [ipart],
                                         PDM_OWNERSHIP_USER);
 
     int *edge_vtx_idx = NULL;
@@ -1174,8 +1174,8 @@ PDM_generate_mesh_rectangle_ngon
                                         0,
                                         ipart,
                                         PDM_CONNECTIVITY_TYPE_EDGE_VTX,
-                                        &(*pedge_vtx)[ipart],
                                         &edge_vtx_idx,
+                                        &(*pedge_vtx)[ipart],
                                         PDM_OWNERSHIP_USER);
     if (edge_vtx_idx != NULL) {
       free (edge_vtx_idx);
@@ -1186,8 +1186,8 @@ PDM_generate_mesh_rectangle_ngon
                                         0,
                                         ipart,
                                         PDM_CONNECTIVITY_TYPE_FACE_VTX,
-                                        &(*pface_vtx)[ipart],
                                         &face_vtx_idx,
+                                        &(*pface_vtx)[ipart],
                                         PDM_OWNERSHIP_USER);
     free(face_vtx_idx);
   }
@@ -1285,8 +1285,8 @@ PDM_generate_mesh_sphere_ngon
                                         0,
                                         ipart,
                                         PDM_CONNECTIVITY_TYPE_FACE_EDGE,
-                                        &(*pface_edge)    [ipart],
                                         &(*pface_edge_idx)[ipart],
+                                        &(*pface_edge)    [ipart],
                                         PDM_OWNERSHIP_USER);
 
     int *edge_vtx_idx = NULL;
@@ -1294,8 +1294,8 @@ PDM_generate_mesh_sphere_ngon
                                         0,
                                         ipart,
                                         PDM_CONNECTIVITY_TYPE_EDGE_VTX,
-                                        &(*pedge_vtx)[ipart],
                                         &edge_vtx_idx,
+                                        &(*pedge_vtx)[ipart],
                                         PDM_OWNERSHIP_USER);
     if (edge_vtx_idx != NULL) {
       free (edge_vtx_idx);
@@ -1433,16 +1433,16 @@ PDM_generate_mesh_ball_ngon
                                         0,
                                         ipart,
                                         PDM_CONNECTIVITY_TYPE_CELL_FACE,
-                                        &(*pcell_face)    [ipart],
                                         &(*pcell_face_idx)[ipart],
+                                        &(*pcell_face)    [ipart],
                                         PDM_OWNERSHIP_USER);
 
     PDM_multipart_part_connectivity_get(mpart,
                                         0,
                                         ipart,
                                         PDM_CONNECTIVITY_TYPE_FACE_EDGE,
-                                        &(*pface_edge)    [ipart],
                                         &(*pface_edge_idx)[ipart],
+                                        &(*pface_edge)    [ipart],
                                         PDM_OWNERSHIP_USER);
 
     int *edge_vtx_idx = NULL;
@@ -1450,8 +1450,8 @@ PDM_generate_mesh_ball_ngon
                                         0,
                                         ipart,
                                         PDM_CONNECTIVITY_TYPE_EDGE_VTX,
-                                        &(*pedge_vtx)[ipart],
                                         &edge_vtx_idx,
+                                        &(*pedge_vtx)[ipart],
                                         PDM_OWNERSHIP_USER);
     if (edge_vtx_idx != NULL) {
       free (edge_vtx_idx);
@@ -1608,16 +1608,16 @@ PDM_generate_mesh_parallelepiped_ngon
                                         0,
                                         ipart,
                                         PDM_CONNECTIVITY_TYPE_CELL_FACE,
-                                        &(*pcell_face)    [ipart],
                                         &(*pcell_face_idx)[ipart],
+                                        &(*pcell_face)    [ipart],
                                         PDM_OWNERSHIP_USER);
 
     PDM_multipart_part_connectivity_get(mpart,
                                         0,
                                         ipart,
                                         PDM_CONNECTIVITY_TYPE_FACE_EDGE,
-                                        &(*pface_edge)    [ipart],
                                         &(*pface_edge_idx)[ipart],
+                                        &(*pface_edge)    [ipart],
                                         PDM_OWNERSHIP_USER);
 
 
@@ -1626,8 +1626,8 @@ PDM_generate_mesh_parallelepiped_ngon
                                         0,
                                         ipart,
                                         PDM_CONNECTIVITY_TYPE_EDGE_VTX,
-                                        &(*pedge_vtx)[ipart],
                                         &edge_vtx_idx,
+                                        &(*pedge_vtx)[ipart],
                                         PDM_OWNERSHIP_USER);
     if (edge_vtx_idx != NULL) {
       free (edge_vtx_idx);

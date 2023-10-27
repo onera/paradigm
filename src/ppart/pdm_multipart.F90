@@ -430,8 +430,8 @@ interface
   !! \param [in]   i_zone                Id of zone which parameters apply (or -1 for all zones)
   !! \param [in]   i_part                Partition index
   !! \param [out]  connectivity_type     Type of connectivity
-  !! \param [out]  connect               Connectivity
   !! \param [out]  connect_idx           Connectivity index
+  !! \param [out]  connect               Connectivity
   !! \param [out]  ownership             Data ownership
   !!
 
@@ -439,8 +439,8 @@ interface
                                                   i_zone, &
                                                   i_part, &
                                                   connectivity_type, &
-                                                  connect, &
                                                   connect_idx, &
+                                                  connect, &
                                                   ownership) &
   result (pn_entity) &
   bind (c, name='PDM_multipart_part_connectivity_get')
@@ -1255,8 +1255,8 @@ contains
                                                    i_zone, &
                                                    i_part, &
                                                    connectivity_type, &
-                                                   connect, &
                                                    connect_idx, &
+                                                   connect, &
                                                    ownership, &
                                                    pn_entity)
 
@@ -1268,20 +1268,20 @@ contains
     integer(c_int),            value   :: i_zone                     ! Id of zone which parameters apply (or -1 for all zones)
     integer(c_int),            value   :: i_part                     ! Partition index
     integer(c_int),            value   :: connectivity_type          ! Type of connectivity to be getted (enumerated type)
-    integer(kind=PDM_l_num_s), pointer :: connect(:)                 ! Connectivity
-    type(c_ptr)                        :: c_connect = C_NULL_PTR
     integer(kind=PDM_l_num_s), pointer :: connect_idx(:)             ! Connectivity index
-    type(c_ptr)                        :: c_connect_idx = C_NULL_PTR
+    integer(kind=PDM_l_num_s), pointer :: connect(:)                 ! Connectivity
     integer(c_int),            value   :: ownership                  ! Data ownership
     integer(c_int)                     :: pn_entity                  ! Number of entities
+    type(c_ptr)                        :: c_connect_idx = C_NULL_PTR
+    type(c_ptr)                        :: c_connect     = C_NULL_PTR
     integer(c_int)                     :: connec_size
 
     pn_entity = PDM_multipart_part_connectivity_get_c(multipart,         &
                                                       i_zone,            &
                                                       i_part,            &
                                                       connectivity_type, &
-                                                      c_connect,         &
                                                       c_connect_idx,     &
+                                                      c_connect,         &
                                                       ownership)
 
     connect_idx => null()
