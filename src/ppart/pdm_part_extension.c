@@ -7698,7 +7698,7 @@ PDM_part_to_part_create_from_extension
  * \brief Set connectivity
  *
  * \param [in]  part_ext           \p PDM_part_extension_t structure instance
- * \param [in]  i_zone             Zone identifier
+ * \param [in]  i_domain           Domain identifier
  * \param [in]  i_part             Partition identifier
  * \param [in]  connectivity_type  Type of connectivity
  * \param [in]  connect_idx        Index for connectivity (can be \p NULL for \p PDM_CONNECTIVITY_TYPE_EDGE_VTX)
@@ -7710,7 +7710,7 @@ void
 PDM_part_extension_connectivity_set
 (
  PDM_part_extension_t    *part_ext,
- int                      i_zone,
+ int                      i_domain,
  int                      i_part,
  PDM_connectivity_type_t  connectivity_type,
  int                     *connect_idx,
@@ -7721,30 +7721,30 @@ PDM_part_extension_connectivity_set
 
   switch (connectivity_type) {
     case PDM_CONNECTIVITY_TYPE_EDGE_VTX: {
-      part_ext->parts[i_zone][i_part].edge_vtx = connect;
+      part_ext->parts[i_domain][i_part].edge_vtx = connect;
       break;
     }
 
     case PDM_CONNECTIVITY_TYPE_FACE_VTX: {
-      part_ext->parts[i_zone][i_part].face_vtx_idx = connect_idx;
-      part_ext->parts[i_zone][i_part].face_vtx     = connect;
+      part_ext->parts[i_domain][i_part].face_vtx_idx = connect_idx;
+      part_ext->parts[i_domain][i_part].face_vtx     = connect;
       break;
     }
 
     case PDM_CONNECTIVITY_TYPE_FACE_EDGE: {
-      part_ext->parts[i_zone][i_part].face_edge_idx = connect_idx;
-      part_ext->parts[i_zone][i_part].face_edge     = connect;
+      part_ext->parts[i_domain][i_part].face_edge_idx = connect_idx;
+      part_ext->parts[i_domain][i_part].face_edge     = connect;
       break;
     }
 
     case PDM_CONNECTIVITY_TYPE_CELL_FACE: {
-      part_ext->parts[i_zone][i_part].cell_face_idx = connect_idx;
-      part_ext->parts[i_zone][i_part].cell_face     = connect;
+      part_ext->parts[i_domain][i_part].cell_face_idx = connect_idx;
+      part_ext->parts[i_domain][i_part].cell_face     = connect;
       break;
     }
 
     case PDM_CONNECTIVITY_TYPE_FACE_CELL: {
-      part_ext->parts[i_zone][i_part].face_cell = connect;
+      part_ext->parts[i_domain][i_part].face_cell = connect;
       break;
     }
 
@@ -7763,7 +7763,7 @@ PDM_part_extension_connectivity_set
  * \brief Set global ids
  *
  * \param [in]  part_ext     \p PDM_part_extension_t structure instance
- * \param [in]  i_zone       Zone identifier
+ * \param [in]  i_domain     Domain identifier
  * \param [in]  i_part       Partition identifier
  * \param [in]  mesh_entity  Type of mesh entity
  * \param [in]  n_entity     Local number of entities
@@ -7775,7 +7775,7 @@ void
 PDM_part_extension_ln_to_gn_set
 (
  PDM_part_extension_t     *part_ext,
- int                       i_zone,
+ int                       i_domain,
  int                       i_part,
  PDM_mesh_entities_t       mesh_entity,
  int                       n_entity,
@@ -7784,26 +7784,26 @@ PDM_part_extension_ln_to_gn_set
 {
   switch (mesh_entity) {
     case PDM_MESH_ENTITY_VERTEX: {
-      part_ext->parts[i_zone][i_part].n_vtx         = n_entity;
-      part_ext->parts[i_zone][i_part].vtx_ln_to_gn  = ln_to_gn;
+      part_ext->parts[i_domain][i_part].n_vtx         = n_entity;
+      part_ext->parts[i_domain][i_part].vtx_ln_to_gn  = ln_to_gn;
       break;
     }
 
     case PDM_MESH_ENTITY_EDGE: {
-      part_ext->parts[i_zone][i_part].n_edge        = n_entity;
-      part_ext->parts[i_zone][i_part].edge_ln_to_gn = ln_to_gn;
+      part_ext->parts[i_domain][i_part].n_edge        = n_entity;
+      part_ext->parts[i_domain][i_part].edge_ln_to_gn = ln_to_gn;
       break;
     }
 
     case PDM_MESH_ENTITY_FACE: {
-      part_ext->parts[i_zone][i_part].n_face        = n_entity;
-      part_ext->parts[i_zone][i_part].face_ln_to_gn = ln_to_gn;
+      part_ext->parts[i_domain][i_part].n_face        = n_entity;
+      part_ext->parts[i_domain][i_part].face_ln_to_gn = ln_to_gn;
       break;
     }
 
     case PDM_MESH_ENTITY_CELL: {
-      part_ext->parts[i_zone][i_part].n_cell        = n_entity;
-      part_ext->parts[i_zone][i_part].cell_ln_to_gn = ln_to_gn;
+      part_ext->parts[i_domain][i_part].n_cell        = n_entity;
+      part_ext->parts[i_domain][i_part].cell_ln_to_gn = ln_to_gn;
       break;
     }
 
@@ -7821,7 +7821,7 @@ PDM_part_extension_ln_to_gn_set
  * \brief Set vertex coordinates
  *
  * \param [in]  part_ext     \p PDM_part_extension_t structure instance
- * \param [in]  i_zone       Zone identifier
+ * \param [in]  i_domain     Domain identifier
  * \param [in]  i_part       Partition identifier
  * \param [in]  vtx_coord    Vertex coordinates (size = 3 * *n_vtx*)
  *
@@ -7831,12 +7831,12 @@ void
 PDM_part_extension_vtx_coord_set
 (
  PDM_part_extension_t     *part_ext,
- int                       i_zone,
+ int                       i_domain,
  int                       i_part,
  double                   *vtx_coord
 )
 {
-  part_ext->parts[i_zone][i_part].vtx = vtx_coord;
+  part_ext->parts[i_domain][i_part].vtx = vtx_coord;
 }
 
 
@@ -7845,7 +7845,7 @@ PDM_part_extension_vtx_coord_set
  * \brief Set the connection graph between partitions for the requested entity type
  *
  * \param [in]  multipart             \p PDM_part_extension_t structure instance
- * \param [in]  i_zone                Zone identifier
+ * \param [in]  i_domain              Domain identifier
  * \param [in]  i_part                Partition identifier
  * \param [in]  entity_type           Type of mesh entity
  * \param [in]  part_bound_proc_idx   Partitioning boundary entities index from process (size = *n_rank* + 1)
@@ -7857,7 +7857,7 @@ void
 PDM_part_extension_part_bound_graph_set
 (
  PDM_part_extension_t *part_ext,
- int                   i_zone,
+ int                   i_domain,
  int                   i_part,
  PDM_mesh_entities_t   entity_type,
  int                  *part_bound_proc_idx,
@@ -7868,16 +7868,16 @@ PDM_part_extension_part_bound_graph_set
   switch (entity_type) {
 
     case PDM_MESH_ENTITY_VERTEX: {
-      part_ext->parts[i_zone][i_part].vtx_part_bound_proc_idx  = part_bound_proc_idx;
-      part_ext->parts[i_zone][i_part].vtx_part_bound_part_idx  = part_bound_part_idx;
-      part_ext->parts[i_zone][i_part].vtx_part_bound           = part_bound;
+      part_ext->parts[i_domain][i_part].vtx_part_bound_proc_idx  = part_bound_proc_idx;
+      part_ext->parts[i_domain][i_part].vtx_part_bound_part_idx  = part_bound_part_idx;
+      part_ext->parts[i_domain][i_part].vtx_part_bound           = part_bound;
       break;
     }
 
     case PDM_MESH_ENTITY_FACE: {
-      part_ext->parts[i_zone][i_part].face_part_bound_proc_idx = part_bound_proc_idx;
-      part_ext->parts[i_zone][i_part].face_part_bound_part_idx = part_bound_part_idx;
-      part_ext->parts[i_zone][i_part].face_part_bound          = part_bound;
+      part_ext->parts[i_domain][i_part].face_part_bound_proc_idx = part_bound_proc_idx;
+      part_ext->parts[i_domain][i_part].face_part_bound_part_idx = part_bound_part_idx;
+      part_ext->parts[i_domain][i_part].face_part_bound          = part_bound;
       break;
     }
 
@@ -7896,7 +7896,7 @@ PDM_part_extension_part_bound_graph_set
  * \brief Set group description
  *
  * \param [in]  part_ext               \p PDM_part_extension_t structure instance
- * \param [in]  i_zone                 Zone identifier
+ * \param [in]  i_domain               Domain identifier
  * \param [in]  i_part                 Partition identifier
  * \param [in]  entity_type            Type of mesh entity
  * \param [in]  n_group                Number of groups
@@ -7910,7 +7910,7 @@ void
 PDM_part_extension_group_set
 (
  PDM_part_extension_t     *part_ext,
- int                       i_zone,
+ int                       i_domain,
  int                       i_part,
  PDM_mesh_entities_t       entity_type,
  int                       n_group,
@@ -7922,18 +7922,18 @@ PDM_part_extension_group_set
   switch (entity_type) {
 
     case PDM_MESH_ENTITY_EDGE: {
-      part_ext->parts[i_zone][i_part].n_edge_group        = n_group;
-      part_ext->parts[i_zone][i_part].edge_bound_idx      = group_entity_idx;
-      part_ext->parts[i_zone][i_part].edge_bound          = group_entity;
-      part_ext->parts[i_zone][i_part].edge_bound_ln_to_gn = group_entity_ln_to_gn;
+      part_ext->parts[i_domain][i_part].n_edge_group        = n_group;
+      part_ext->parts[i_domain][i_part].edge_bound_idx      = group_entity_idx;
+      part_ext->parts[i_domain][i_part].edge_bound          = group_entity;
+      part_ext->parts[i_domain][i_part].edge_bound_ln_to_gn = group_entity_ln_to_gn;
       break;
     }
 
     case PDM_MESH_ENTITY_FACE: {
-      part_ext->parts[i_zone][i_part].n_face_group        = n_group;
-      part_ext->parts[i_zone][i_part].face_bound_idx      = group_entity_idx;
-      part_ext->parts[i_zone][i_part].face_bound          = group_entity;
-      part_ext->parts[i_zone][i_part].face_bound_ln_to_gn = group_entity_ln_to_gn;
+      part_ext->parts[i_domain][i_part].n_face_group        = n_group;
+      part_ext->parts[i_domain][i_part].face_bound_idx      = group_entity_idx;
+      part_ext->parts[i_domain][i_part].face_bound          = group_entity;
+      part_ext->parts[i_domain][i_part].face_bound_ln_to_gn = group_entity_ln_to_gn;
       break;
     }
 

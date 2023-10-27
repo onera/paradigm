@@ -350,12 +350,12 @@ int main(int argc, char *argv[])
                             &vol_dmn);
 
   PDM_split_dual_t part_method = PDM_SPLIT_DUAL_WITH_HILBERT;
-  int n_zone                   = 1;
-  int *n_part_zones            = (int *) malloc(sizeof(int) * n_zone);
-  n_part_zones[0]              = n_part;
+  int n_domain                 = 1;
+  int *n_part_domains          = (int *) malloc(sizeof(int) * n_domain);
+  n_part_domains[0]            = n_part;
 
-  PDM_multipart_t *mpart = PDM_multipart_create(n_zone,
-                                                n_part_zones,
+  PDM_multipart_t *mpart = PDM_multipart_create(n_domain,
+                                                n_part_domains,
                                                 PDM_FALSE,
                                                 part_method,
                                                 PDM_PART_SIZE_HOMOGENEOUS,
@@ -373,7 +373,7 @@ int main(int argc, char *argv[])
 
   PDM_multipart_compute(mpart);
 
-  free(n_part_zones);
+  free(n_part_domains);
 
   // Vertices
   int     i_part          = 0;

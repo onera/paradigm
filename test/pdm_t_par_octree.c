@@ -255,9 +255,9 @@ _read_cloud_from_mesh
   }
 
 
-  int n_zone = 1;
+  int n_domain = 1;
   int n_part = 1;
-  PDM_multipart_t *mpart = PDM_multipart_create(n_zone,
+  PDM_multipart_t *mpart = PDM_multipart_create(n_domain,
                                                 &n_part,
                                                 PDM_FALSE,
                                                 part_method,

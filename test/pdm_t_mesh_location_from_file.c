@@ -539,9 +539,9 @@ int main(int argc, char *argv[])
 
 
 
-  int n_zone = 1;
+  int n_domain = 1;
   int n_part_mesh = n_part;
-  PDM_multipart_t *mpart = PDM_multipart_create(n_zone,
+  PDM_multipart_t *mpart = PDM_multipart_create(n_domain,
                                                 &n_part_mesh,
                                                 PDM_FALSE,
                                                 part_method,

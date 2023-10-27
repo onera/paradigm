@@ -28,8 +28,8 @@ Mesh generation
 .. doxygenfunction:: PDM_dcube_nodal_gen_dmesh_nodal_get
 
 
-Multi-zone mesh generation
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+Multi-domain mesh generation
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. doxygenfunction:: PDM_dcube_nodal_cart_topo
 

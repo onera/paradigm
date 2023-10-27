@@ -21,7 +21,7 @@ This Part-to-Part object holds everything the user needs for addressing arrays b
 Therefore, Part-to-Part accessors should always be used instead of adding redundant "src_to_tgt(_idx)_get" or "tgt_to_src(_idx)_get" functions.
 
 All features should support meshes with several partitions per MPI rank (``n_part > 1``).
-Ask J. Coulet and B. Maugars if you want to know whether you should handle several zones.
+Ask J. Coulet and B. Maugars if you want to know whether you should handle multiple domains.
 
 Indentation
 -----------

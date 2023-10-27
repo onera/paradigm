@@ -165,12 +165,12 @@ PDM_multipart_t      **_mpart
 
 
 
-  int n_zone = 1;
-  int *n_part_zones = (int *) malloc(sizeof(int) * n_zone);
-  n_part_zones[0] = n_part;
+  int n_domain = 1;
+  int *n_part_domains = (int *) malloc(sizeof(int) * n_domain);
+  n_part_domains[0] = n_part;
 
-  PDM_multipart_t *mpart = PDM_multipart_create(n_zone,
-                                                n_part_zones,
+  PDM_multipart_t *mpart = PDM_multipart_create(n_domain,
+                                                n_part_domains,
                                                 PDM_FALSE,
                                                 part_method,
                                                 PDM_PART_SIZE_HOMOGENEOUS,
@@ -190,7 +190,7 @@ PDM_multipart_t      **_mpart
   /* Run */
   PDM_multipart_compute (mpart);
 
-  free(n_part_zones);
+  free(n_part_domains);
 
   *_mpart = mpart;
 
@@ -204,7 +204,7 @@ static void
 _get_groups
 (
  PDM_multipart_t     *multipart,
- const int            i_zone,
+ const int            i_domain,
  const int            i_part,
        int           *n_face_group,
        int          **face_bound_idx,

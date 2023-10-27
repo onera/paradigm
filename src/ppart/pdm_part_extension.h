@@ -57,8 +57,8 @@ typedef enum {
  *
  * \brief Create a part extension structure
  *
- * \param [in] n_domain      Number of zones
- * \param [in] n_part        Number of partitions per zone
+ * \param [in] n_domain      Number of domains
+ * \param [in] n_part        Number of partitions per domain
  * \param [in] extend_type   Extension from which entity ?
  * \param [in] depth         Extension depth
  * \param [in] comm          MPI communicator
@@ -118,8 +118,8 @@ PDM_part_extension_compute
  * \param [in]   edge_vtx                  Edge-vertex connectivity (size = 2 * \ref n_edge)
  * \param [in]   face_bound_idx            Face->group connectivity index (size = \ref n_face_group + 1)
  * \param [in]   face_bound                Face->group connectivity (size = \ref face_edge_idx[\ref n_face_group])
- * \param [in]   face_join_idx             Faces connecting zones connectivity index
- * \param [in]   face_join                 Faces connecting zones connectivity
+ * \param [in]   face_join_idx             Faces connecting domains connectivity index
+ * \param [in]   face_join                 Faces connecting domains connectivity
  * \param [in]   face_part_bound_proc_idx  Partitioning boundary faces index from process (size = n_proc + 1)
  * \param [in]   face_part_bound_part_idx  Partitioning boundary faces index from partition (size = n_total_part + 1)
  * \param [in]   face_part_bound           Partitioning boundary faces (size = 4 * n_face_part_bound)
@@ -395,7 +395,7 @@ PDM_part_to_part_create_from_extension
  * \brief Set connectivity
  *
  * \param [in]  part_ext           \p PDM_part_extension_t structure instance
- * \param [in]  i_zone             Zone identifier
+ * \param [in]  i_domain           Domain identifier
  * \param [in]  i_part             Partition identifier
  * \param [in]  connectivity_type  Type of connectivity
  * \param [in]  connect_idx        Index for connectivity (can be \p NULL for \p PDM_CONNECTIVITY_TYPE_EDGE_VTX)
@@ -407,7 +407,7 @@ void
 PDM_part_extension_connectivity_set
 (
  PDM_part_extension_t    *part_ext,
- int                      i_zone,
+ int                      i_domain,
  int                      i_part,
  PDM_connectivity_type_t  connectivity_type,
  int                     *connect_idx,
@@ -419,7 +419,7 @@ PDM_part_extension_connectivity_set
  * \brief Set global ids
  *
  * \param [in]  part_ext     \p PDM_part_extension_t structure instance
- * \param [in]  i_zone       Zone identifier
+ * \param [in]  i_domain     Domain identifier
  * \param [in]  i_part       Partition identifier
  * \param [in]  mesh_entity  Type of mesh entity
  * \param [in]  n_entity     Local number of entities
@@ -431,7 +431,7 @@ void
 PDM_part_extension_ln_to_gn_set
 (
  PDM_part_extension_t     *part_ext,
- int                       i_zone,
+ int                       i_domain,
  int                       i_part,
  PDM_mesh_entities_t       mesh_entity,
  int                       n_entity,
@@ -443,7 +443,7 @@ PDM_part_extension_ln_to_gn_set
  * \brief Set vertex coordinates
  *
  * \param [in]  part_ext     \p PDM_part_extension_t structure instance
- * \param [in]  i_zone       Zone identifier
+ * \param [in]  i_domain     Domain identifier
  * \param [in]  i_part       Partition identifier
  * \param [in]  vtx_coord    Vertex coordinates (size = 3 * *n_vtx*)
  *
@@ -453,7 +453,7 @@ void
 PDM_part_extension_vtx_coord_set
 (
  PDM_part_extension_t     *part_ext,
- int                       i_zone,
+ int                       i_domain,
  int                       i_part,
  double                   *vtx_coord
 );
@@ -463,7 +463,7 @@ PDM_part_extension_vtx_coord_set
  * \brief Set the connection graph between partitions for the requested entity type
  *
  * \param [in]  multipart             \p PDM_part_extension_t structure instance
- * \param [in]  i_zone                Zone identifier
+ * \param [in]  i_domain              Domain identifier
  * \param [in]  i_part                Partition identifier
  * \param [in]  entity_type           Type of mesh entity
  * \param [in]  part_bound_proc_idx   Partitioning boundary entities index from process (size = *n_rank* + 1)
@@ -475,7 +475,7 @@ void
 PDM_part_extension_part_bound_graph_set
 (
  PDM_part_extension_t *part_ext,
- int                   i_zone,
+ int                   i_domain,
  int                   i_part,
  PDM_mesh_entities_t   entity_type,
  int                  *part_bound_proc_idx,
@@ -488,7 +488,7 @@ PDM_part_extension_part_bound_graph_set
  * \brief Set group description
  *
  * \param [in]  part_ext               \p PDM_part_extension_t structure instance
- * \param [in]  i_zone                 Zone identifier
+ * \param [in]  i_domain               Domain identifier
  * \param [in]  i_part                 Partition identifier
  * \param [in]  entity_type            Type of mesh entity
  * \param [in]  n_group                Number of groups
@@ -502,7 +502,7 @@ void
 PDM_part_extension_group_set
 (
  PDM_part_extension_t     *part_ext,
- int                       i_zone,
+ int                       i_domain,
  int                       i_part,
  PDM_mesh_entities_t       entity_type,
  int                       n_group,

@@ -65,12 +65,12 @@ program pdm_t_mesh_partitioning_sol_f
 
   ! PDM_multipart_create
   type (c_ptr)                          :: mpart
-  integer (c_int)                       :: n_zone = 1
+  integer (c_int)                       :: n_domain = 1
   integer(kind=PDM_l_num_s), pointer    :: n_part(:) => null()
   integer (c_int)                       :: part_method
   double precision,          pointer    :: part_fraction(:) => null()
 
-  integer (c_int)                       :: i_zone    = 0
+  integer (c_int)                       :: i_domain    = 0
   integer (c_int)                       :: i_section = 0
   integer (c_int)                       :: i_part    = 0
 
@@ -206,21 +206,21 @@ program pdm_t_mesh_partitioning_sol_f
   call PDM_dcube_nodal_gen_free(dcube)
 
   ! Create partitioning object
-  allocate(n_part(n_zone))
+  allocate(n_part(n_domain))
 
-  do i = 1, n_zone
+  do i = 1, n_domain
     n_part(i) = 1
   end do
 
-  allocate(part_fraction(n_part(i_zone+1)))
+  allocate(part_fraction(n_part(i_domain+1)))
 
-  do i = 1, n_part(i_zone+1)
+  do i = 1, n_part(i_domain+1)
     part_fraction(i) = 1
   end do
 
   part_method = PDM_SPLIT_DUAL_WITH_HILBERT
   call PDM_multipart_create(mpart,                     &
-                            n_zone,                    &
+                            n_domain,                  &
                             n_part,                    &
                             PDM_FALSE,                 &
                             part_method,               &
@@ -230,22 +230,22 @@ program pdm_t_mesh_partitioning_sol_f
                             PDM_OWNERSHIP_KEEP)
 
   call PDM_multipart_set_reordering_options(mpart,                      &
-                                            i_zone,                     &
+                                            i_domain,                   &
                                             "PDM_PART_RENUM_CELL_NONE", &
                                             renum_cell_properties,      &
                                             "PDM_PART_RENUM_FACE_NONE")
 
   call PDM_multipart_dmesh_nodal_set(mpart,  &
-                                     i_zone, &
+                                     i_domain, &
                                      dmn)
 
   call PDM_multipart_compute(mpart)
 
   ! Get mesh arrrays in FE structure
   if (fe .eq. 1) then
-    call PDM_multipart_get_part_mesh_nodal(mpart,  &
-                                           i_zone, &
-                                           pmn,    &
+    call PDM_multipart_get_part_mesh_nodal(mpart,    &
+                                           i_domain, &
+                                           pmn,      &
                                            PDM_OWNERSHIP_USER)
 
     call PDM_part_mesh_nodal_section_n_elt_get(pmn,       &
@@ -263,7 +263,7 @@ program pdm_t_mesh_partitioning_sol_f
                                              PDM_OWNERSHIP_KEEP)
 
     call PDM_multipart_part_vtx_coord_get(mpart,              &
-                                          i_zone,             &
+                                          i_domain,           &
                                           i_part,             &
                                           coords,             &
                                           PDM_OWNERSHIP_USER, &
@@ -279,7 +279,7 @@ program pdm_t_mesh_partitioning_sol_f
   ! Get mesh arrrays in FV structure
   if (fe .eq. 0) then
     call PDM_multipart_part_ln_to_gn_get(mpart,                  &
-                                         i_zone,                 &
+                                         i_domain,               &
                                          i_part,                 &
                                          PDM_MESH_ENTITY_VERTEX, &
                                          vtx_ln_to_gn,           &
@@ -287,14 +287,14 @@ program pdm_t_mesh_partitioning_sol_f
                                          n_vtx)
 
     call PDM_multipart_part_vtx_coord_get(mpart,             &
-                                         i_zone,             &
+                                         i_domain,           &
                                          i_part,             &
                                          coords,             &
                                          PDM_OWNERSHIP_KEEP, &
                                          n_vtx)
 
     call PDM_multipart_part_ln_to_gn_get(mpart,                &
-                                         i_zone,               &
+                                         i_domain,             &
                                          i_part,               &
                                          PDM_MESH_ENTITY_EDGE, &
                                          edge_ln_to_gn,        &
@@ -302,7 +302,7 @@ program pdm_t_mesh_partitioning_sol_f
                                          n_edge)
 
     call PDM_multipart_part_connectivity_get(mpart,                          &
-                                             i_zone,                         &
+                                             i_domain,                       &
                                              i_part,                         &
                                              PDM_CONNECTIVITY_TYPE_EDGE_VTX, &
                                              edge_vtx_idx,                   &
@@ -311,7 +311,7 @@ program pdm_t_mesh_partitioning_sol_f
                                              n_edge)
 
     call PDM_multipart_part_ln_to_gn_get(mpart,                &
-                                         i_zone,               &
+                                         i_domain,             &
                                          i_part,               &
                                          PDM_MESH_ENTITY_FACE, &
                                          face_ln_to_gn,        &
@@ -319,7 +319,7 @@ program pdm_t_mesh_partitioning_sol_f
                                          n_face)
 
     call PDM_multipart_part_connectivity_get(mpart,                           &
-                                             i_zone,                          &
+                                             i_domain,                        &
                                              i_part,                          &
                                              PDM_CONNECTIVITY_TYPE_FACE_EDGE, &
                                              face_edge_idx,                   &
@@ -328,7 +328,7 @@ program pdm_t_mesh_partitioning_sol_f
                                              n_face)
 
     call PDM_multipart_part_ln_to_gn_get(mpart,                &
-                                         i_zone,               &
+                                         i_domain,             &
                                          i_part,               &
                                          PDM_MESH_ENTITY_CELL, &
                                          cell_ln_to_gn,        &
@@ -336,7 +336,7 @@ program pdm_t_mesh_partitioning_sol_f
                                          n_cell)
 
     call PDM_multipart_part_connectivity_get(mpart,                           &
-                                             i_zone,                          &
+                                             i_domain,                        &
                                              i_part,                          &
                                              PDM_CONNECTIVITY_TYPE_CELL_FACE, &
                                              cell_face_idx,                   &
@@ -414,7 +414,7 @@ program pdm_t_mesh_partitioning_sol_f
   extend_type = PDM_EXTEND_FROM_VTX
   depth       = 1
   call PDM_part_extension_create (part_ext,           &
-                                  n_zone,             &
+                                  n_domain,           &
                                   n_part,             &
                                   extend_type,        & ! Extend from which element
                                   depth,              & ! Depth of the extension
@@ -423,7 +423,7 @@ program pdm_t_mesh_partitioning_sol_f
 
   ! step 2 : set
   call PDM_multipart_part_graph_comm_get(mpart,                   &
-                                         i_zone,                  &
+                                         i_domain,                &
                                          i_part,                  &
                                          PDM_MESH_ENTITY_VERTEX,  &
                                          vtx_part_bound_proc_idx, &
@@ -432,7 +432,7 @@ program pdm_t_mesh_partitioning_sol_f
                                          PDM_OWNERSHIP_KEEP)
 
   call PDM_part_extension_set_part (part_ext,                 &
-                                    i_zone,                   &
+                                    i_domain,                 &
                                     i_part,                   &
                                     n_cell,                   &
                                     n_face,                   &
@@ -472,14 +472,14 @@ program pdm_t_mesh_partitioning_sol_f
 
   ! Cell
   call PDM_part_extension_ln_to_gn_get (part_ext,             &
-                                        i_zone,               &
+                                        i_domain,             &
                                         i_part,               &
                                         PDM_MESH_ENTITY_CELL, &
                                         n_cell_ext,           &
                                         cell_ln_to_gn_ext)
 
   call PDM_part_extension_connectivity_get (part_ext,                        &
-                                            i_zone,                          &
+                                            i_domain,                        &
                                             i_part,                          &
                                             PDM_CONNECTIVITY_TYPE_CELL_FACE, &
                                             n_cell_ext,                      &
@@ -488,14 +488,14 @@ program pdm_t_mesh_partitioning_sol_f
 
   ! Face
   call PDM_part_extension_ln_to_gn_get (part_ext,             &
-                                        i_zone,               &
+                                        i_domain,             &
                                         i_part,               &
                                         PDM_MESH_ENTITY_FACE, &
                                         n_face_ext,           &
                                         face_ln_to_gn_ext)
 
   call PDM_part_extension_connectivity_get (part_ext,                        &
-                                            i_zone,                          &
+                                            i_domain,                        &
                                             i_part,                          &
                                             PDM_CONNECTIVITY_TYPE_FACE_EDGE, &
                                             n_face_ext,                      &
@@ -504,14 +504,14 @@ program pdm_t_mesh_partitioning_sol_f
 
   ! Edge
   call PDM_part_extension_ln_to_gn_get (part_ext,             &
-                                        i_zone,               &
+                                        i_domain,             &
                                         i_part,               &
                                         PDM_MESH_ENTITY_EDGE, &
                                         n_edge_ext,           &
                                         edge_ln_to_gn_ext)
 
   call PDM_part_extension_connectivity_get (part_ext,                       &
-                                            i_zone,                         &
+                                            i_domain,                       &
                                             i_part,                         &
                                             PDM_CONNECTIVITY_TYPE_EDGE_VTX, &
                                             n_edge_ext,                     &
@@ -520,13 +520,13 @@ program pdm_t_mesh_partitioning_sol_f
 
   ! Vertices
   call PDM_part_extension_vtx_coord_get (part_ext,      &
-                                         i_zone,        &
+                                         i_domain,      &
                                          i_part,        &
                                          n_vtx_ext,     &
                                          vtx_coord_ext)
 
   call PDM_part_extension_ln_to_gn_get (part_ext,               &
-                                        i_zone,                 &
+                                        i_domain,               &
                                         i_part,                 &
                                         PDM_MESH_ENTITY_VERTEX, &
                                         n_vtx_ext,              &

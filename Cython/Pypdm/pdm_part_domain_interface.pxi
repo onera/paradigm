@@ -79,7 +79,7 @@ cdef class PartDomainInterface:
                 int                                           n_interface,
                 int                                           n_domain,
                 NPY.ndarray[NPY.int32_t   , mode='c', ndim=1] n_part,
-                bint                                          multizone_interface,
+                bint                                          multidomain_interface,
                 MPI.Comm                                      comm):
     """
     """
@@ -87,11 +87,11 @@ cdef class PartDomainInterface:
     cdef PDM_MPI_Comm PDMC   = PDM_MPI_mpi_2_pdm_mpi_comm(<void *> &c_comm)
     self.keep_alive = list()
 
-    cdef _multizone_interface = PDM_DOMAIN_INTERFACE_MULT_YES if multizone_interface else PDM_DOMAIN_INTERFACE_MULT_NO
+    cdef _multidomain_interface = PDM_DOMAIN_INTERFACE_MULT_YES if multidomain_interface else PDM_DOMAIN_INTERFACE_MULT_NO
     self.pdi = PDM_part_domain_interface_create(n_interface,
                                                 n_domain,
                                      <int*>     n_part.data,
-                                                _multizone_interface,
+                                                _multidomain_interface,
                                                 PDM_OWNERSHIP_USER,
                                                 PDMC)
 

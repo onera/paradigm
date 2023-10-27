@@ -117,22 +117,22 @@ For mesh partitioning, as for all other `ParaDiGM` features, there are 5 main st
 
 Following this logic, let's start **creating** (step 1) the mesh partitioning object for homogeneously balanced subdomains.
 
-*Remark : since this is a basic example, we ask you to stick with the fixed values for n_zone, n_part, i_zone, i_part and merge_zones.
+*Remark : since this is a basic example, we ask you to stick with the fixed values for n_domain, n_part, i_domain, i_part and merge_domains.
 To get insight about the concepts behind those values you can have a look [here](#Annex-1)*
 
 ```{code-cell}
 %%code_block -p exercise_1 -i 2
 
   // Create partitioning object
-  int              n_zone      = 1;         // fixed
-  int              n_part      = 1;         // fixed
-  int              i_zone      = 0;         // fixed
-  int              i_part      = 0;         // fixed
-  PDM_bool_t       merge_zones = PDM_FALSE; // fixed
-  PDM_split_dual_t part_method = PDM_SPLIT_DUAL_WITH_HILBERT;
-  PDM_multipart_t *mpart = PDM_multipart_create(n_zone,                    // Number of zones
-                                                &n_part,                   // Number of partitions per zone
-                                                merge_zones,               // PDM_FALSE (do not fuse zones)
+  int              n_domain      = 1;         // fixed
+  int              n_part        = 1;         // fixed
+  int              i_domain      = 0;         // fixed
+  int              i_part        = 0;         // fixed
+  PDM_bool_t       merge_domains = PDM_FALSE; // fixed
+  PDM_split_dual_t part_method   = PDM_SPLIT_DUAL_WITH_HILBERT;
+  PDM_multipart_t *mpart = PDM_multipart_create(n_domain,                  // Number of domains
+                                                &n_part,                   // Number of partitions per domain
+                                                merge_domains,             // PDM_FALSE (do not fuse domains)
                                                 part_method,               // Partitioning method
                                                 PDM_PART_SIZE_HOMOGENEOUS, // Subdomains are homogeneously balanced
                                                 NULL,                      // Weight (in %) of each partition in heterogeneous case
@@ -165,7 +165,7 @@ Now that you have created a mesh partitioning object `mpart`, you can **set** (s
 ```{code-cell}
 %%code_block -p exercise_1 -i 4
 
-  PDM_multipart_dmesh_nodal_set(mpart, i_zone, dmn);
+  PDM_multipart_dmesh_nodal_set(mpart, i_domain, dmn);
 ```
 
 At this point you have provided all the information necessary to run the mesh partitioning algorithm. You can call the function to
@@ -199,14 +199,14 @@ Let's start with the vertices composing the subdomain. How many vertices are the
 
 //  double *coords = NULL;
 //  int n_vtx = PDM_multipart_part_vtx_coord_get(mpart,
-//                                               i_zone,
+//                                               i_domain,
 //                                               i_part,
 //                                               &coords,
 //                                               PDM_OWNERSHIP_USER);
 //
 //  PDM_part_mesh_nodal_t *pmn  = NULL;
 //  PDM_multipart_get_part_mesh_nodal(mpart,
-//                                    i_zone,
+//                                    i_domain,
 //                                    &pmn,
 //                                    PDM_OWNERSHIP_USER);
 //
@@ -296,16 +296,16 @@ Let's start from the top with cell data. How many cells are there? What are thei
 
   PDM_g_num_t *cell_ln_to_gn = NULL;
   int n_cell = PDM_multipart_part_ln_to_gn_get(mpart,
-                                              i_zone,
-                                              i_part,
-                                              PDM_MESH_ENTITY_CELL,
-                                              &cell_ln_to_gn,
-                                              PDM_OWNERSHIP_USER);
+                                               i_domain,
+                                               i_part,
+                                               PDM_MESH_ENTITY_CELL,
+                                               &cell_ln_to_gn,
+                                               PDM_OWNERSHIP_USER);
 
   int *cell_face_idx = NULL;
   int *cell_face     = NULL;
   PDM_multipart_part_connectivity_get(mpart,
-                                      i_zone,
+                                      i_domain,
                                       i_part,
                                       PDM_CONNECTIVITY_TYPE_CELL_FACE,
                                       &cell_face_idx,
@@ -321,7 +321,7 @@ For the faces we proceed in a similar way. How many faces are there? What are th
 
   PDM_g_num_t *face_ln_to_gn = NULL;
   int n_face = PDM_multipart_part_ln_to_gn_get(mpart,
-                                              i_zone,
+                                              i_domain,
                                               i_part,
                                               PDM_MESH_ENTITY_FACE,
                                               &face_ln_to_gn,
@@ -330,7 +330,7 @@ For the faces we proceed in a similar way. How many faces are there? What are th
   int *face_edge_idx = NULL;
   int *face_edge     = NULL;
   PDM_multipart_part_connectivity_get(mpart,
-                                      i_zone,
+                                      i_domain,
                                       i_part,
                                       PDM_CONNECTIVITY_TYPE_FACE_EDGE,
                                       &face_edge_idx,
@@ -349,16 +349,16 @@ each edge is only composed of two vertices*
 
   PDM_g_num_t *edge_ln_to_gn = NULL;
   int n_edge = PDM_multipart_part_ln_to_gn_get(mpart,
-                                              i_zone,
-                                              i_part,
-                                              PDM_MESH_ENTITY_EDGE,
-                                              &edge_ln_to_gn,
-                                              PDM_OWNERSHIP_USER);
+                                               i_domain,
+                                               i_part,
+                                               PDM_MESH_ENTITY_EDGE,
+                                               &edge_ln_to_gn,
+                                               PDM_OWNERSHIP_USER);
 
   int *edge_vtx_idx = NULL;
   int *edge_vtx     = NULL;
   PDM_multipart_part_connectivity_get(mpart,
-                                      i_zone,
+                                      i_domain,
                                       i_part,
                                       PDM_CONNECTIVITY_TYPE_EDGE_VTX,
                                       &edge_vtx_idx,
@@ -377,7 +377,7 @@ To finish with, we need to have the description of the vertices.
 
   PDM_g_num_t *vtx_ln_to_gn = NULL;
   int n_vtx = PDM_multipart_part_ln_to_gn_get(mpart,
-                                              i_zone,
+                                              i_domain,
                                               i_part,
                                               PDM_MESH_ENTITY_VERTEX,
                                               &vtx_ln_to_gn,
@@ -385,7 +385,7 @@ To finish with, we need to have the description of the vertices.
 
   double *coords = NULL;
   PDM_multipart_part_vtx_coord_get(mpart,
-                                   i_zone,
+                                   i_domain,
                                    i_part,
                                    &coords,
                                    PDM_OWNERSHIP_USER);
@@ -397,7 +397,7 @@ Now we write the mesh that we just got to be able to visualize it later on (noth
 ```{code-cell}
 %%code_block -p exercise_1 -i 13
 
-  int *face_vtx = NULL;
+  /*int *face_vtx = NULL;
   PDM_compute_face_vtx_from_face_and_edge(n_face,
                                           face_edge_idx,
                                           face_edge,
@@ -407,30 +407,40 @@ Now we write the mesh that we just got to be able to visualize it later on (noth
   int *face_vtx_idx = malloc(sizeof(int) * (n_face+1));
   for (int i = 0; i < n_face + 1; i++) {
     face_vtx_idx[i] = 3 * i; // triangle
-  }
+  }*/
+
+  int *face_vtx_idx = NULL;
+  int *face_vtx     = NULL;
+  PDM_multipart_part_connectivity_get(mpart,
+                                      i_domain,
+                                      i_part,
+                                      PDM_CONNECTIVITY_TYPE_FACE_VTX,
+                                      &face_vtx_idx,
+                                      &face_vtx,
+                                      PDM_OWNERSHIP_USER);
 
   writer_wrapper(comm,
-                "visu",
-                "pmesh",
-                1, // n_part
-                &n_vtx,
-                &coords,
-                &vtx_ln_to_gn,
-                &n_cell,
-                &face_vtx_idx,
-                &face_vtx,
-                &cell_ln_to_gn,
-                -1, // cell_t
-                &n_face,
-                &cell_face_idx,
-                &cell_face,
-                "Ensight",
-                0, // n_elt_field
-                NULL, // elt_field_name
-                NULL, // elt_field_values
-                0, // n_vtx_field
-                NULL, // vtx_field_name
-                NULL); // vtx_field_values
+                 "visu",
+                 "pmesh",
+                 1, // n_part
+                 &n_vtx,
+                 &coords,
+                 &vtx_ln_to_gn,
+                 &n_cell,
+                 &face_vtx_idx,
+                 &face_vtx,
+                 &cell_ln_to_gn,
+                 -1, // cell_t
+                 &n_face,
+                 &cell_face_idx,
+                 &cell_face,
+                 "Ensight",
+                 0, // n_elt_field
+                 NULL, // elt_field_name
+                 NULL, // elt_field_values
+                 0, // n_vtx_field
+                 NULL, // vtx_field_name
+                 NULL); // vtx_field_values
 
   // free
   free(face_vtx_idx);
@@ -499,7 +509,7 @@ This bonus is not guided, so you should have a close look at the [documentation]
 
   PDM_extend_type_t  extend_type = PDM_EXTEND_FROM_VTX;
   int                depth       = 1;
-  PDM_part_extension_t *part_ext = PDM_part_extension_create(n_zone,
+  PDM_part_extension_t *part_ext = PDM_part_extension_create(n_domain,
                                                              &n_part,
                                                              extend_type,
                                                              depth,
@@ -516,7 +526,7 @@ This bonus is not guided, so you should have a close look at the [documentation]
   int *vtx_part_bound_part_idx = NULL;
   int *vtx_part_bound          = NULL;
   PDM_multipart_part_graph_comm_get(mpart,
-                                    i_zone,
+                                    i_domain,
                                     i_part,
                                     PDM_MESH_ENTITY_VERTEX,
                                     &vtx_part_bound_proc_idx,
@@ -525,7 +535,7 @@ This bonus is not guided, so you should have a close look at the [documentation]
                                     PDM_OWNERSHIP_KEEP);
 
   PDM_part_extension_set_part(part_ext,
-                              i_zone,
+                              i_domain,
                               i_part,
                               n_cell,
                               n_face,
@@ -575,7 +585,7 @@ This bonus is not guided, so you should have a close look at the [documentation]
   // Cell
   PDM_g_num_t *cell_ln_to_gn_ext = NULL;
   int n_cell_ext = PDM_part_extension_ln_to_gn_get (part_ext,
-                                                    i_zone,
+                                                    i_domain,
                                                     i_part,
                                                     PDM_MESH_ENTITY_CELL,
                                                     &cell_ln_to_gn_ext);
@@ -583,7 +593,7 @@ This bonus is not guided, so you should have a close look at the [documentation]
   int *cell_face_ext     = NULL;
   int *cell_face_ext_idx = NULL;
   PDM_part_extension_connectivity_get (part_ext,
-                                       i_zone,
+                                       i_domain,
                                        i_part,
                                        PDM_CONNECTIVITY_TYPE_CELL_FACE,
                                        &cell_face_ext_idx,
@@ -592,7 +602,7 @@ This bonus is not guided, so you should have a close look at the [documentation]
   // Face
   PDM_g_num_t *face_ln_to_gn_ext = NULL;
   int n_face_ext = PDM_part_extension_ln_to_gn_get (part_ext,
-                                                    i_zone,
+                                                    i_domain,
                                                     i_part,
                                                     PDM_MESH_ENTITY_FACE,
                                                     &face_ln_to_gn_ext);
@@ -600,7 +610,7 @@ This bonus is not guided, so you should have a close look at the [documentation]
   int *face_edge_ext     = NULL;
   int *face_edge_ext_idx = NULL;
   PDM_part_extension_connectivity_get (part_ext,
-                                       i_zone,
+                                       i_domain,
                                        i_part,
                                        PDM_CONNECTIVITY_TYPE_FACE_EDGE,
                                        &face_edge_ext_idx,
@@ -609,7 +619,7 @@ This bonus is not guided, so you should have a close look at the [documentation]
   // Edge
   PDM_g_num_t *edge_ln_to_gn_ext = NULL;
   int n_edge_ext = PDM_part_extension_ln_to_gn_get (part_ext,
-                                                    i_zone,
+                                                    i_domain,
                                                     i_part,
                                                     PDM_MESH_ENTITY_EDGE,
                                                     &edge_ln_to_gn_ext);
@@ -617,7 +627,7 @@ This bonus is not guided, so you should have a close look at the [documentation]
   int *edge_vtx_ext     = NULL;
   int *edge_vtx_ext_idx = NULL;
   PDM_part_extension_connectivity_get (part_ext,
-                                       i_zone,
+                                       i_domain,
                                        i_part,
                                        PDM_CONNECTIVITY_TYPE_EDGE_VTX,
                                        &edge_vtx_ext_idx,
@@ -626,14 +636,14 @@ This bonus is not guided, so you should have a close look at the [documentation]
   // Vertices
   PDM_g_num_t *vtx_ln_to_gn_ext = NULL;
   int n_vtx_ext = PDM_part_extension_ln_to_gn_get (part_ext,
-                                                    i_zone,
+                                                    i_domain,
                                                     i_part,
                                                     PDM_MESH_ENTITY_VERTEX,
                                                     &vtx_ln_to_gn_ext);
 
   double *vtx_coord_ext = NULL;
   PDM_part_extension_vtx_coord_get(part_ext,
-                                   i_zone,
+                                   i_domain,
                                    i_part,
                                    &vtx_coord_ext);
 ```
@@ -803,16 +813,16 @@ visu/PEXT.case : extension
 
 ## Annex 1
 
-In some cases, the mesh is an assembly of several sub-meshes. These are called *zones*.
+In some cases, the mesh is an assembly of several sub-meshes. These are called *domains*.
 
-![alt text](mesh.png "A mesh composed of two zones")
+![alt text](mesh.png "A mesh composed of two domains")
 
-Each zone *zone* is partitioned in subdomains which
-are mapped to the processors of the parallel machine. On a processor the subdomain (of a mesh or a zone) can be subdivided in *parts*.
+Each domain *domain* is partitioned in subdomains which
+are mapped to the processors of the parallel machine. On a processor the subdomain (of a mesh or a domain) can be subdivided in *parts*.
 
-![alt text](processor.png "Processor 0 with a subdomain of each zone with two parts for subdomain of zone 1")
+![alt text](processor.png "Processor 0 with a subdomain of each domain with two parts for subdomain of domain 1")
 
 A mesh can be composed of several element types (tetrahedra, hexahedra, prisms...). In certain settings, the mesh definition for each specific element type
 is stored in a separate *section*. So in a *section* one will find data for a specific element type.
 
-![alt text](part.png "Part 1 of the subdomain on processor 0 of zone 1 with two sections")
+![alt text](part.png "Part 1 of the subdomain on processor 0 of domain 1 with two sections")

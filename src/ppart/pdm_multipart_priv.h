@@ -34,7 +34,7 @@ extern "C" {
 /**
  * \struct _part_mesh_t
  * \brief  This private structure stores partionned meshes obtained on a given
- *         zone.
+ *         domain.
  */
 typedef struct {
   /* Data shared between all the partitions */
@@ -74,15 +74,15 @@ typedef struct {
  */
 struct _pdm_multipart_t {
   /* Multipart description */
-  int           n_zone;              // Number of initial zones
+  int           n_domain;            // Number of initial domains
 
   PDM_dmesh_t **dmeshes;             // Ids of dmesh structure storing
-                                     // distributed meshes (size = n_zone)
+                                     // distributed meshes (size = n_domain)
   PDM_bool_t   *is_owner_dmeshes;
   PDM_dmesh_nodal_t          **dmeshes_nodal;
   PDM_dmesh_nodal_to_dmesh_t **dmn_to_dm;
 
-  int           n_total_joins;       // Total number of joins between zones (each counts twice)
+  int           n_total_joins;       // Total number of joins between domains (each counts twice)
   const int    *join_to_opposite;    // For each global joinId, give the globalId of
                                      //   the opposite join (size = n_total_joins)
 
@@ -94,11 +94,11 @@ struct _pdm_multipart_t {
   PDM_split_dual_t split_method;     // Partitioning method (Metis or Scotch)
   PDM_part_size_t  part_size_method; // Procude homogeneous or heterogeneous partitions
   int             *n_part;           // Number of wanted partitions per proc
-                                     // in each zone (size = n_zone)
-  const double    *part_fraction;    // Weight (in %) of each partition, in each zone
+                                     // in each domain (size = n_domain)
+  const double    *part_fraction;    // Weight (in %) of each partition, in each domain
                                      //   (size = sum n_part[i]), if heterogeneous
   /* Partitioned meshes */
-  _part_mesh_t *pmeshes;             // Partitioned meshes structures (size=n_zone)
+  _part_mesh_t *pmeshes;             // Partitioned meshes structures (size=n_domain)
 
 };
 
@@ -108,7 +108,7 @@ struct _pdm_multipart_t {
  * Private functions
  *============================================================================*/
 void
-_run_ppart_zone_nodal
+_run_ppart_domain_nodal
 (
   PDM_dmesh_nodal_t *dmesh_nodal,
   _part_mesh_t      *pmesh,

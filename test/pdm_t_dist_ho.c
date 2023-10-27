@@ -259,9 +259,9 @@ _generate_surface_mesh
                              "surface_mesh_");
   }
 
-  int n_zone = 1;
+  int n_domain = 1;
 
-  PDM_multipart_t *mpart = PDM_multipart_create(n_zone,
+  PDM_multipart_t *mpart = PDM_multipart_create(n_domain,
                                                 &n_part,
                                                 PDM_FALSE,
                                                 part_method,

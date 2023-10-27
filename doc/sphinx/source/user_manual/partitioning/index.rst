@@ -9,7 +9,7 @@ Partitioning
   .. container:: card
 
     :ref:`Multipart <multipart>`
-      Multi-zone mesh partitioning
+      Multi-domain mesh partitioning
 
 
   .. container:: card
@@ -25,8 +25,8 @@ Partitioning
 
   .. container:: card
 
-    :ref:`Part-Extension <part_extension>`
-      Generate partitionned mesh extension
+    :ref:`Part extension <part_extension>`
+      Generate extended mesh partitions
 
 |
 

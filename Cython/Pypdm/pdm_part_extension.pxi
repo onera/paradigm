@@ -96,26 +96,26 @@ cdef extern from "pdm_part_extension.h":
 
 
   void PDM_part_extension_connectivity_set(PDM_part_extension_t    *part_ext,
-                                           int                      i_zone,
+                                           int                      i_domain,
                                            int                      i_part,
                                            PDM_connectivity_type_t  connectivity_type,
                                            int                     *connect_idx,
                                            int                     *connect)
 
   void PDM_part_extension_ln_to_gn_set(PDM_part_extension_t     *part_ext,
-                                       int                       i_zone,
+                                       int                       i_domain,
                                        int                       i_part,
                                        PDM_mesh_entities_t       entity_type,
                                        int                       n_entity,
                                        PDM_g_num_t              *ln_to_gn)
 
   void PDM_part_extension_vtx_coord_set(PDM_part_extension_t     *part_ext,
-                                        int                       i_zone,
+                                        int                       i_domain,
                                         int                       i_part,
                                         double                   *vtx_coord)
 
   void PDM_part_extension_part_bound_graph_set(PDM_part_extension_t *part_ext,
-                                               int                   i_zone,
+                                               int                   i_domain,
                                                int                   i_part,
                                                PDM_mesh_entities_t   entity_type,
                                                int                  *part_bound_proc_idx,
@@ -123,7 +123,7 @@ cdef extern from "pdm_part_extension.h":
                                                int                  *part_bound)
 
   void PDM_part_extension_group_set(PDM_part_extension_t     *part_ext,
-                                    int                       i_zone,
+                                    int                       i_domain,
                                     int                       i_part,
                                     PDM_mesh_entities_t       entity_type,
                                     int                       n_group,
@@ -148,8 +148,8 @@ cdef class PartExtension:
     Create a part extension object.
 
      Parameters:
-      n_domain    (int)                  : Number of zones
-      n_part      np.ndarray[np.int32_t] : Number of partitions per zone
+      n_domain    (int)                  : Number of domains
+      n_part      np.ndarray[np.int32_t] : Number of partitions per domain
       extend_type (int)                  : Extension from which entity ?
       depth       (int)                  : Extension depth
       comm        (MPI.Comm)             : MPI communicator
@@ -379,18 +379,18 @@ cdef class PartExtension:
 
   # ------------------------------------------------------------------
   def connectivity_set(self,
-                       int i_zone,
+                       int i_domain,
                        int i_part,
                        PDM_connectivity_type_t connectivity_type,
                        NPY.ndarray[NPY.int32_t, mode='c', ndim=1] connect_idx,
                        NPY.ndarray[NPY.int32_t, mode='c', ndim=1] connect):
     """
-    connectivity_set(i_zone, i_part, connectivity_type, connect_idx, connect)
+    connectivity_set(i_domain, i_part, connectivity_type, connect_idx, connect)
 
     Set connectivity
 
     Parameters:
-      i_zone            (int)                     : Zone identifier
+      i_domain          (int)                     : Domain identifier
       i_part            (int)                     : Partition identifier
       connectivity_type (PDM_connectivity_type_t) : Type of connectivity
       connect_idx       (np.ndarray[np.int32_t])  : Index for connectivity
@@ -401,7 +401,7 @@ cdef class PartExtension:
       connect_idx_data = <int *> connect_idx.data
 
     PDM_part_extension_connectivity_set(self._part_ext,
-                                        i_zone,
+                                        i_domain,
                                         i_part,
                                         connectivity_type,
                                         connect_idx_data,
@@ -409,23 +409,23 @@ cdef class PartExtension:
 
   # ------------------------------------------------------------------
   def ln_to_gn_set(self,
-                   int i_zone,
+                   int i_domain,
                    int i_part,
                    PDM_mesh_entities_t entity_type,
                    NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1] ln_to_gn):
     """
-    ln_to_gn_set(i_zone, i_part, entity_type, ln_to_gn)
+    ln_to_gn_set(i_domain, i_part, entity_type, ln_to_gn)
 
     Set global ids
 
     Parameters:
-      i_zone      (int)                        : Zone identifier
+      i_domain    (int)                        : Domain identifier
       i_part      (int)                        : Partition identifier
       entity_type (PDM_mesh_entities_t)        : Type of mesh entity
       ln_to_gn    (np.ndarray[npy_pdm_gnum_t]) : Global ids
     """
     PDM_part_extension_ln_to_gn_set(self._part_ext,
-                                    i_zone,
+                                    i_domain,
                                     i_part,
                                     entity_type,
                                     ln_to_gn.size,
@@ -433,39 +433,39 @@ cdef class PartExtension:
 
   # ------------------------------------------------------------------
   def vtx_coord_set(self,
-                    int i_zone,
+                    int i_domain,
                     int i_part,
                     NPY.ndarray[NPY.double_t, mode='c', ndim=1] vtx_coord):
     """
-    vtx_coord_set(i_zone, i_part, vtx_coord)
+    vtx_coord_set(i_domain, i_part, vtx_coord)
 
     Set vertex coordinates
 
     Parameters:
-      i_zone      (int)                     : Zone identifier
+      i_domain    (int)                     : Domain identifier
       i_part      (int)                     : Partition identifier
       vtx_coord   (np.ndarray[np.double_t]) : Vertex coordinates (size = 3 * *n_vtx*)
     """
     PDM_part_extension_vtx_coord_set(self._part_ext,
-                                     i_zone,
+                                     i_domain,
                                      i_part,
                           <double *> vtx_coord.data)
 
   # ------------------------------------------------------------------
   def part_bound_graph_set(self,
-                           int i_zone,
+                           int i_domain,
                            int i_part,
                            PDM_mesh_entities_t entity_type,
                            NPY.ndarray[NPY.int32_t, mode='c', ndim=1] part_bound_proc_idx,
                            NPY.ndarray[NPY.int32_t, mode='c', ndim=1] part_bound_part_idx,
                            NPY.ndarray[NPY.int32_t, mode='c', ndim=1] part_bound):
     """
-    part_bound_graph_set(i_zone, i_part, bound_type, part_bound_proc_idx, part_bound_part_idx, part_bound)
+    part_bound_graph_set(i_domain, i_part, bound_type, part_bound_proc_idx, part_bound_part_idx, part_bound)
 
     Set the connection graph between partitions for the requested entity type
 
     Parameters:
-      i_zone              (int)                    : Zone identifier
+      i_domain            (int)                    : Domain identifier
       i_part              (int)                    : Partition identifier
       entity_type         (PDM_mesh_entities_t)    : Type of mesh entity
       part_bound_proc_idx (np.ndarray[np.int32_t]) : Partitioning boundary entities index from process (size = *n_rank* + 1)
@@ -473,7 +473,7 @@ cdef class PartExtension:
       part_bound          (np.ndarray[np.int32_t]) : Partitioning boundary entities (size = 4 * ``part_bound_proc_idx`` [ *n_rank* ])
     """
     PDM_part_extension_part_bound_graph_set(self._part_ext,
-                                            i_zone,
+                                            i_domain,
                                             i_part,
                                             entity_type,
                                     <int *> part_bound_proc_idx.data,
@@ -482,19 +482,19 @@ cdef class PartExtension:
 
   # ------------------------------------------------------------------
   def group_set(self,
-                int i_zone,
+                int i_domain,
                 int i_part,
                 PDM_mesh_entities_t entity_type,
                 NPY.ndarray[NPY.int32_t, mode='c', ndim=1] group_entity_idx,
                 NPY.ndarray[NPY.int32_t, mode='c', ndim=1] group_entity,
                 NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1] group_entity_ln_to_gn):
     """
-    group_set(i_zone, i_part, entity_type, group_entity_idx, group_entity, group_entity_ln_to_gn)
+    group_set(i_domain, i_part, entity_type, group_entity_idx, group_entity, group_entity_ln_to_gn)
 
     Set group description
 
     Parameters:
-      i_zone                (int)                        : Zone identifier
+      i_domain              (int)                        : Domain identifier
       i_part                (int)                        : Partition identifier
       entity_type           (PDM_mesh_entities_t)        : Type of mesh entity
       group_entity_idx      (np.ndarray[np.int32_t])     : Index for group->entity connectivity
@@ -503,7 +503,7 @@ cdef class PartExtension:
     """
     cdef int n_group = group_entity_idx.size - 1
     PDM_part_extension_group_set(self._part_ext,
-                                 i_zone,
+                                 i_domain,
                                  i_part,
                                  entity_type,
                                  n_group,
@@ -535,15 +535,15 @@ cdef class PartExtension:
 
   # ------------------------------------------------------------------
   def connectivity_get(self,
-                       int i_zone,
+                       int i_domain,
                        int i_part,
                        PDM_connectivity_type_t   connectivity_type):
     """
-    connectivity_get(i_zone, i_part, connectivity_type)
+    connectivity_get(i_domain, i_part, connectivity_type)
     Get extended connectivity
 
     Parameters:
-      i_zone            (int)                     : Zone identifier
+      i_domain          (int)                     : Domain identifier
       i_part            (int)                     : Partition identifier
       connectivity_type (PDM_connectivity_type_t) : Connectivity type
 
@@ -556,7 +556,7 @@ cdef class PartExtension:
     cdef int *connect_idx,
     cdef int size
 
-    size = PDM_part_extension_connectivity_get(self._part_ext, i_zone, i_part, connectivity_type, &connect_idx, &connect)
+    size = PDM_part_extension_connectivity_get(self._part_ext, i_domain, i_part, connectivity_type, &connect_idx, &connect)
 
     np_connect_idx = create_numpy_or_none_i(connect_idx, size+1)
 
@@ -569,15 +569,15 @@ cdef class PartExtension:
 
   # ------------------------------------------------------------------
   def ln_to_gn_get(self,
-                   int i_zone,
+                   int i_domain,
                    int i_part,
                    PDM_mesh_entities_t entity_type):
     """
-    ln_to_gn_get(i_zone, i_part, entity_type)
+    ln_to_gn_get(i_domain, i_part, entity_type)
     Get global ids of extended entities
 
     Parameters:
-      i_zone      (int)                 : Zone identifier
+      i_domain    (int)                 : Domain identifier
       i_part      (int)                 : Partition identifier
       entity_type (PDM_mesh_entities_t) : Entity type
 
@@ -587,7 +587,7 @@ cdef class PartExtension:
     cdef PDM_g_num_t *ln_to_gn
     cdef int size
 
-    size = PDM_part_extension_ln_to_gn_get(self._part_ext, i_zone, i_part, entity_type, &ln_to_gn)
+    size = PDM_part_extension_ln_to_gn_get(self._part_ext, i_domain, i_part, entity_type, &ln_to_gn)
 
     if (ln_to_gn == NULL) :
       np_ln_to_gn = create_numpy_g(NULL, 0)
@@ -598,15 +598,15 @@ cdef class PartExtension:
 
   # ------------------------------------------------------------------
   def get_interface(self,
-                    int i_zone,
+                    int i_domain,
                     int i_part,
                     PDM_mesh_entities_t entity_type):
     """
-    get_interface(i_zone, i_part, entity_type)
+    get_interface(i_domain, i_part, entity_type)
     Get interface
 
     Parameters:
-      i_zone      (int)                 : Zone identifier
+      i_domain    (int)                 : Domain identifier
       i_part      (int)                 : Partition identifier
       entity_type (PDM_mesh_entities_t) : Entity type
 
@@ -616,7 +616,7 @@ cdef class PartExtension:
     cdef int *interface_no,
     cdef int size
 
-    size = PDM_part_extension_interface_get(self._part_ext, i_zone, i_part, entity_type, &interface_no)
+    size = PDM_part_extension_interface_get(self._part_ext, i_domain, i_part, entity_type, &interface_no)
     return create_numpy_or_none_i(interface_no, size)
 
   # ------------------------------------------------------------------
@@ -658,7 +658,7 @@ cdef class PartExtension:
     Get groups for extended entities with given type
 
     Parameters:
-      i_zone      (int)                 : Zone identifier
+      i_domain    (int)                 : Domain identifier
       i_part      (int)                 : Partition identifier
       entity_type (PDM_mesh_entities_t) : Entity type
 

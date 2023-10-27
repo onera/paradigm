@@ -571,8 +571,8 @@ total_cell_color[n_cell:] = 2*i_rank+1
 elt_fields={"extension": [total_cell_color]}
 
 PDM.writer_wrapper(comm,
-                  "visu",
-                  "pext",
+                   "visu",
+                   "pext",
                    [total_coords],
                    [total_vtx_ln_to_gn],
                    [total_face_vtx_idx],

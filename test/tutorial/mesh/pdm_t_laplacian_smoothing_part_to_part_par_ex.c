@@ -165,12 +165,12 @@ PDM_multipart_t      **_mpart
 
 
 
-  int n_zone = 1;
-  int *n_part_zones = (int *) malloc(sizeof(int) * n_zone);
-  n_part_zones[0] = n_part;
+  int n_domain = 1;
+  int *n_part_domains = (int *) malloc(sizeof(int) * n_domain);
+  n_part_domains[0] = n_part;
 
-  PDM_multipart_t *mpart = PDM_multipart_create(n_zone,
-                                                n_part_zones,
+  PDM_multipart_t *mpart = PDM_multipart_create(n_domain,
+                                                n_part_domains,
                                                 PDM_FALSE,
                                                 part_method,
                                                 PDM_PART_SIZE_HOMOGENEOUS,
@@ -190,7 +190,7 @@ PDM_multipart_t      **_mpart
   /* Run */
   PDM_multipart_compute (mpart);
 
-  free(n_part_zones);
+  free(n_part_domains);
 
   *_mpart = mpart;
 
@@ -204,7 +204,7 @@ PDM_multipart_t      **_mpart
 // _get_groups
 // (
 //  PDM_multipart_t     *multipart,
-//  const int            i_zone,
+//  const int            i_domain,
 //  const int            i_part,
 //        int           *n_face_group,
 //        int          **face_bound_idx,
@@ -226,7 +226,7 @@ PDM_multipart_t      **_mpart
 //   int s_face_join;
 //   int n_join_groups;
 //   PDM_multipart_part_dim_get(multipart,
-//                              i_zone,
+//                              i_domain,
 //                              i_part,
 //                              &n_section,
 //                              &n_elt,
@@ -270,7 +270,7 @@ PDM_multipart_t      **_mpart
 //   int          *face_join;
 //   PDM_g_num_t  *face_join_ln_to_gn;
 //   PDM_multipart_part_val_get(multipart,
-//                              i_zone,
+//                              i_domain,
 //                              i_part,
 //                              &elt_vtx_idx,
 //                              &elt_vtx,

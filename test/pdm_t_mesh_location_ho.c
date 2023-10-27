@@ -335,8 +335,8 @@ _gen_mesh
   int i_rank;
   PDM_MPI_Comm_rank(comm, &i_rank);
 
-  int n_zone = 1;
-  *mpart = PDM_multipart_create(n_zone,
+  int n_domain = 1;
+  *mpart = PDM_multipart_create(n_domain,
                                 &n_part,
                                 PDM_FALSE,
                                 part_method,

@@ -45,12 +45,12 @@ cdef class MultiBlockMerge:
 
   # Class attributes
   cdef PDM_multi_block_merge_t* m_block_merge
-  cdef int                      n_zone
+  cdef int                      n_domain
   cdef int                      i_rank
   cdef int                      n_rank
 
   def  __cinit__(self,
-                 int n_zone,
+                 int n_domain,
                  list block_distri_l,
                  list selected_per_block,
                  dict interface_graph,
@@ -58,10 +58,10 @@ cdef class MultiBlockMerge:
     """
     Create a pdm structure multi_block_merge.
     Arguments :
-      - n_zone              -> number of zones to merge
+      - n_domain            -> number of domains to merge
       - block_distri_l      -> distribution of each block to merge
-      - selected_per_blocks -> list of ids (global to each zone) to include in the merge
-      - interface_graph     -> description of zones interfaces under graph format :
+      - selected_per_blocks -> list of ids (global to each domain) to include in the merge
+      - interface_graph     -> description of domains interfaces under graph format :
                                dict must contain graph_idx, graph_ids and graph_dom keys
       - comm                -> MPI communicator 
 
@@ -72,8 +72,8 @@ cdef class MultiBlockMerge:
     cdef NPY.ndarray[npy_pdm_gnum_t, ndim=1, mode='c'] numpy_gnum
 
     #Some checks
-    assert len(block_distri_l) == len(selected_per_block) == n_zone
-    for i in range(n_zone):
+    assert len(block_distri_l) == len(selected_per_block) == n_domain
+    for i in range(n_domain):
       assert_single_dim_np(block_distri_l[i],     npy_pdm_gnum_dtype)
       assert_single_dim_np(selected_per_block[i], npy_pdm_gnum_dtype)
     for key in ['graph_idx', 'graph_ids', 'graph_dom']:
@@ -97,15 +97,15 @@ cdef class MultiBlockMerge:
     cdef PDM_g_num_t* _graph_ids = <PDM_g_num_t *> numpy_gnum.data
 
     self.m_block_merge = PDM_multi_block_merge_create(_distri_per_block,
-                                                          n_zone,
-                                                          _n_selected,
-                                                          _selected_per_block,
-                                                    <int> interface_graph['graph_idx'].size - 1,
-                                                          _graph_idx,
-                                                          _graph_dom,
-                                                          _graph_ids,
-                                                          PDMC)
-    self.n_zone = n_zone
+                                                      n_domain,
+                                                      _n_selected,
+                                                      _selected_per_block,
+                                                <int> interface_graph['graph_idx'].size - 1,
+                                                      _graph_idx,
+                                                      _graph_dom,
+                                                      _graph_ids,
+                                                      PDMC)
+    self.n_domain = n_domain
     self.i_rank = comm.Get_rank()
     self.n_rank = comm.Get_size()
 
@@ -132,7 +132,7 @@ cdef class MultiBlockMerge:
     Return the (shifted) number of entiy in each original block
     """
     cdef PDM_g_num_t* _blocks_distri = PDM_multi_block_merge_get_multi_distrib(self.m_block_merge)
-    blocks_distri = create_numpy_g(_blocks_distri, self.n_zone+1, flag_owndata=False)
+    blocks_distri = create_numpy_g(_blocks_distri, self.n_domain+1, flag_owndata=False)
     return NPY.copy(blocks_distri)
 
   def get_old_to_new(self):
@@ -160,9 +160,9 @@ cdef class MultiBlockMerge:
     """
     var_stride = bool(block_stride is not None)
 
-    assert len(block_data) == self.n_zone
+    assert len(block_data) == self.n_domain
     if var_stride:
-      assert len(block_stride) == self.n_zone
+      assert len(block_stride) == self.n_domain
 
     cdef size_t s_data = block_data[0].dtype.itemsize
 
@@ -170,8 +170,8 @@ cdef class MultiBlockMerge:
     if var_stride:
       _blocks_stride = np_list_to_int_pointers(block_stride)
     else:
-      _blocks_stride = <int **> malloc(self.n_zone * sizeof(int *))
-      for i in range(self.n_zone):
+      _blocks_stride = <int **> malloc(self.n_domain * sizeof(int *))
+      for i in range(self.n_domain):
         _blocks_stride[i] = <int *> malloc(1*sizeof(int))
         _blocks_stride[i][0] = 1
     cdef void **_blocks_data = np_list_to_void_pointers(block_data)
@@ -200,7 +200,7 @@ cdef class MultiBlockMerge:
     merged_block_data = create_numpy(_merged_block_data, block_data[0].dtype.num, dim_np)
 
     if not var_stride:
-      for i in range(self.n_zone):
+      for i in range(self.n_domain):
         free(_blocks_stride[i])
     free(_blocks_stride)
     free(_blocks_data)
@@ -220,11 +220,11 @@ cdef class MultiBlockMerge:
     """
     var_stride = bool(block_stride is not None)
 
-    assert len(block_data) == self.n_zone
+    assert len(block_data) == self.n_domain
     if var_stride:
-      assert len(block_stride) == self.n_zone
+      assert len(block_stride) == self.n_domain
     if block_domain is not None:
-      assert len(block_domain) == self.n_zone
+      assert len(block_domain) == self.n_domain
       for i,bd in enumerate(block_domain): 
         assert_single_dim_np(bd, NPY.int32, size=block_data[i].size)
 
@@ -236,8 +236,8 @@ cdef class MultiBlockMerge:
     if var_stride:
       _blocks_stride = np_list_to_int_pointers(block_stride)
     else:
-      _blocks_stride = <int **> malloc(self.n_zone * sizeof(int *))
-      for i in range(self.n_zone):
+      _blocks_stride = <int **> malloc(self.n_domain * sizeof(int *))
+      for i in range(self.n_domain):
         _blocks_stride[i] = <int *> malloc(1*sizeof(int))
         _blocks_stride[i][0] = 1
     cdef PDM_g_num_t** _blocks_data = np_list_to_gnum_pointers(block_data)
@@ -275,7 +275,7 @@ cdef class MultiBlockMerge:
     merged_block_data = create_numpy(_merged_block_data, block_data[0].dtype.num, dim_np)
 
     if not var_stride:
-      for i in range(self.n_zone):
+      for i in range(self.n_domain):
         free(_blocks_stride[i])
     if block_domain is not None:
       free(_blocks_domain)

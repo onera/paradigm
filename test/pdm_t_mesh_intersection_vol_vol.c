@@ -294,8 +294,8 @@ _generate_volume_mesh
   PDM_MPI_Comm_size(comm, &n_rank);
 
 
-  int n_zone = 1;
-  PDM_multipart_t *mpart = PDM_multipart_create(n_zone,
+  int n_domain = 1;
+  PDM_multipart_t *mpart = PDM_multipart_create(n_domain,
                                                 &n_part,
                                                 PDM_FALSE,
                                                 part_method,
@@ -899,8 +899,8 @@ _read_volume_mesh
     }
   }
 
-  int n_zone = 1;
-  *mpart = PDM_multipart_create(n_zone,
+  int n_domain = 1;
+  *mpart = PDM_multipart_create(n_domain,
                                 &n_part,
                                 PDM_FALSE,
                                 part_method,

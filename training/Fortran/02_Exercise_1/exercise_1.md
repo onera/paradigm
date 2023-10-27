@@ -144,38 +144,38 @@ Following this logic, let's start **creating** (step 1) the mesh partitioning ob
 %%code_block -p exercise_1 -i 2
 
   type (c_ptr)                       :: mpart
-  integer (c_int)                    :: n_zone = 1
+  integer (c_int)                    :: n_domain = 1
   integer(kind=PDM_l_num_s), pointer :: n_part(:)                => null()
-  integer (c_int)                    :: part_method, merge_zones
+  integer (c_int)                    :: part_method, merge_domains
   double precision,          pointer :: part_fraction(:)         => null()
-  integer (c_int)                    :: i_zone    = 0
-  integer (c_int)                    :: i_part    = 0
+  integer (c_int)                    :: i_domain = 0
+  integer (c_int)                    :: i_part   = 0
 ```
-*Remark : since this is a basic example, we ask you to stick with the fixed values for n_zone, n_part, i_zone, i_part and merge_zones.
+*Remark : since this is a basic example, we ask you to stick with the fixed values for n_domain, n_part, i_domain, i_part and merge_domains.
 To get insight about the concepts behind those values you can have a look [here](#Annex-1)*
 
 ```{code-cell}
 %%code_block -p exercise_1 -i 18
 
   ! Create partitioning object
-  allocate(n_part(n_zone))
+  allocate(n_part(n_domain))
 
-  do i = 1, n_zone
+  do i = 1, n_domain
     n_part(i) = 1
   end do
 
-  allocate(part_fraction(n_part(i_zone+1)))
+  allocate(part_fraction(n_part(i_domain+1)))
 
-  do i = 1, n_part(i_zone+1)
+  do i = 1, n_part(i_domain+1)
     part_fraction(i) = 1
   end do
 
-  merge_zones = PDM_FALSE
+  merge_domains = PDM_FALSE
   part_method = PDM_SPLIT_DUAL_WITH_HILBERT
   call PDM_multipart_create(mpart,                     & ! Mesh partitioning object
-                            n_zone,                    & ! Number of zones
-                            n_part,                    & ! Number of partitions per zone
-                            merge_zones,               & ! PDM_FALSE (do not fuse zones)
+                            n_domain,                  & ! Number of domains
+                            n_part,                    & ! Number of partitions per domain
+                            merge_domains,             & ! PDM_FALSE (do not fuse domains)
                             part_method,               & ! Partitioning method
                             PDM_PART_SIZE_HOMOGENEOUS, & ! Subdomains are homogeneously balanced
                             part_fraction,             & ! Weight (in %) of each partition in heterogeneous case
@@ -203,7 +203,7 @@ You can here call the renumbering function but by telling it not to do any renum
 %%code_block -p exercise_1 -i 19
 
   call PDM_multipart_set_reordering_options(mpart,                      &
-                                            i_zone,                     &
+                                            i_domain,                   &
                                             "PDM_PART_RENUM_CELL_NONE", &
                                             renum_cell_properties,      &
                                             "PDM_PART_RENUM_FACE_NONE")
@@ -215,8 +215,8 @@ Now that you have created a mesh partitioning object `mpart`, you can **set** (s
 ```{code-cell}
 %%code_block -p exercise_1 -i 20
 
-  call PDM_multipart_dmesh_nodal_set(mpart,  &
-                                     i_zone, &
+  call PDM_multipart_dmesh_nodal_set(mpart,    &
+                                     i_domain, &
                                      dmn)
 
 ```
@@ -265,16 +265,16 @@ Let's start with the vertices composing the subdomain. How many vertices are the
 %%code_block -p exercise_1 -i 22
 
   ! call PDM_multipart_part_vtx_coord_get(mpart,              &
-  !                                       i_zone,             &
+  !                                       i_domain,           &
   !                                       i_part,             &
   !                                       coords,             &
   !                                       PDM_OWNERSHIP_USER, &
   !                                       n_vtx)
 
 
-  ! call PDM_multipart_get_part_mesh_nodal(mpart,  &
-  !                                        i_zone, &
-  !                                        pmn,    &
+  ! call PDM_multipart_get_part_mesh_nodal(mpart,    &
+  !                                        i_domain, &
+  !                                        pmn,      &
   !                                        PDM_OWNERSHIP_USER)
 
 
@@ -395,7 +395,7 @@ Let's start from the top with cell data. How many cells are there? What are thei
 %%code_block -p exercise_1 -i 25
 
   call PDM_multipart_part_ln_to_gn_get(mpart,                &
-                                       i_zone,               &
+                                       i_domain,             &
                                        i_part,               &
                                        PDM_MESH_ENTITY_CELL, &
                                        cell_ln_to_gn,        &
@@ -403,7 +403,7 @@ Let's start from the top with cell data. How many cells are there? What are thei
                                        n_cell)
 
   call PDM_multipart_part_connectivity_get(mpart,                           &
-                                           i_zone,                          &
+                                           i_domain,                        &
                                            i_part,                          &
                                            PDM_CONNECTIVITY_TYPE_CELL_FACE, &
                                            cell_face_idx,                   &
@@ -428,7 +428,7 @@ For the faces we proceed in a similar way. How many faces are there? What are th
 %%code_block -p exercise_1 -i 26
 
   call PDM_multipart_part_ln_to_gn_get(mpart,                &
-                                       i_zone,               &
+                                       i_domain,             &
                                        i_part,               &
                                        PDM_MESH_ENTITY_FACE, &
                                        face_ln_to_gn,        &
@@ -436,7 +436,7 @@ For the faces we proceed in a similar way. How many faces are there? What are th
                                        n_face)
 
   call PDM_multipart_part_connectivity_get(mpart,                           &
-                                           i_zone,                          &
+                                           i_domain,                        &
                                            i_part,                          &
                                            PDM_CONNECTIVITY_TYPE_FACE_EDGE, &
                                            face_edge_idx,                   &
@@ -464,7 +464,7 @@ each edge is only composed of two vertices*
 %%code_block -p exercise_1 -i 27
 
   call PDM_multipart_part_ln_to_gn_get(mpart,                &
-                                       i_zone,               &
+                                       i_domain,             &
                                        i_part,               &
                                        PDM_MESH_ENTITY_EDGE, &
                                        edge_ln_to_gn,        &
@@ -472,7 +472,7 @@ each edge is only composed of two vertices*
                                        n_edge)
 
   call PDM_multipart_part_connectivity_get(mpart,                          &
-                                           i_zone,                         &
+                                           i_domain,                       &
                                            i_part,                         &
                                            PDM_CONNECTIVITY_TYPE_EDGE_VTX, &
                                            edge_vtx_idx,                   &
@@ -496,7 +496,7 @@ To finish with, we need to have the description of the vertices.
 %%code_block -p exercise_1 -i 28
 
   call PDM_multipart_part_ln_to_gn_get(mpart,                  &
-                                       i_zone,                 &
+                                       i_domain,               &
                                        i_part,                 &
                                        PDM_MESH_ENTITY_VERTEX, &
                                        vtx_ln_to_gn,           &
@@ -504,7 +504,7 @@ To finish with, we need to have the description of the vertices.
                                        n_vtx)
 
   call PDM_multipart_part_vtx_coord_get(mpart,             &
-                                       i_zone,             &
+                                       i_domain,           &
                                        i_part,             &
                                        coords,             &
                                        PDM_OWNERSHIP_KEEP, &
@@ -661,7 +661,7 @@ This bonus is not guided, so you should have a close look at the [documentation]
   extend_type = PDM_EXTEND_FROM_VTX
   depth       = 1
   call PDM_part_extension_create (part_ext,           &
-                                  n_zone,             &
+                                  n_domain,           &
                                   n_part,             &
                                   extend_type,        & ! Extend from which element
                                   depth,              & ! Depth of the extension
@@ -694,7 +694,7 @@ This bonus is not guided, so you should have a close look at the [documentation]
 %%code_block -p exercise_1 -i 32
 
   call PDM_multipart_part_graph_comm_get(mpart,                   &
-                                         i_zone,                  &
+                                         i_domain,                &
                                          i_part,                  &
                                          PDM_MESH_ENTITY_VERTEX,  &
                                          vtx_part_bound_proc_idx, &
@@ -703,7 +703,7 @@ This bonus is not guided, so you should have a close look at the [documentation]
                                          PDM_OWNERSHIP_KEEP)
 
   call PDM_part_extension_set_part (part_ext,                 &
-                                    i_zone,                   &
+                                    i_domain,                 &
                                     i_part,                   &
                                     n_cell,                   &
                                     n_face,                   &
@@ -761,13 +761,13 @@ call PDM_part_extension_compute (part_ext)
   integer(PDM_g_num_s), pointer   :: face_ln_to_gn_ext(:)  => null()
 
   integer                         :: n_edge_ext
-  integer(pdm_l_num_s), pointer   :: edge_vtx_ext(:)      => null()
-  integer(pdm_l_num_s), pointer   :: edge_vtx_ext_idx(:)  => null()
+  integer(pdm_l_num_s), pointer   :: edge_vtx_ext(:)       => null()
+  integer(pdm_l_num_s), pointer   :: edge_vtx_ext_idx(:)   => null()
   integer(PDM_g_num_s), pointer   :: edge_ln_to_gn_ext(:)  => null()
 
   integer                         :: n_vtx_ext
-  double precision,     pointer   :: vtx_coord_ext(:,:)   => null()
-  integer(PDM_g_num_s), pointer   :: vtx_ln_to_gn_ext(:)  => null()
+  double precision,     pointer   :: vtx_coord_ext(:,:)    => null()
+  integer(PDM_g_num_s), pointer   :: vtx_ln_to_gn_ext(:)   => null()
 ```
 
 ```{code-cell}
@@ -775,14 +775,14 @@ call PDM_part_extension_compute (part_ext)
 
   ! Cell
   call PDM_part_extension_ln_to_gn_get (part_ext,             &
-                                        i_zone,               &
+                                        i_domain,             &
                                         i_part,               &
                                         PDM_MESH_ENTITY_CELL, &
                                         n_cell_ext,           &
                                         cell_ln_to_gn_ext)
 
   call PDM_part_extension_connectivity_get (part_ext,                        &
-                                            i_zone,                          &
+                                            i_domain,                        &
                                             i_part,                          &
                                             PDM_CONNECTIVITY_TYPE_CELL_FACE, &
                                             n_cell_ext,                      &
@@ -791,14 +791,14 @@ call PDM_part_extension_compute (part_ext)
 
   ! Face
   call PDM_part_extension_ln_to_gn_get (part_ext,             &
-                                        i_zone,               &
+                                        i_domain,             &
                                         i_part,               &
                                         PDM_MESH_ENTITY_FACE, &
                                         n_face_ext,           &
                                         face_ln_to_gn_ext)
 
   call PDM_part_extension_connectivity_get (part_ext,                        &
-                                            i_zone,                          &
+                                            i_domain,                        &
                                             i_part,                          &
                                             PDM_CONNECTIVITY_TYPE_FACE_EDGE, &
                                             n_face_ext,                      &
@@ -807,14 +807,14 @@ call PDM_part_extension_compute (part_ext)
 
   ! Edge
   call PDM_part_extension_ln_to_gn_get (part_ext,             &
-                                        i_zone,               &
+                                        i_domain,             &
                                         i_part,               &
                                         PDM_MESH_ENTITY_EDGE, &
                                         n_edge_ext,           &
                                         edge_ln_to_gn_ext)
 
   call PDM_part_extension_connectivity_get (part_ext,                       &
-                                            i_zone,                         &
+                                            i_domain,                       &
                                             i_part,                         &
                                             PDM_CONNECTIVITY_TYPE_EDGE_VTX, &
                                             n_edge_ext,                     &
@@ -823,13 +823,13 @@ call PDM_part_extension_compute (part_ext)
 
   ! Vertices
   call PDM_part_extension_vtx_coord_get (part_ext,      &
-                                         i_zone,        &
+                                         i_domain,      &
                                          i_part,        &
                                          n_vtx_ext,     &
                                          vtx_coord_ext)
 
   call PDM_part_extension_ln_to_gn_get (part_ext,               &
-                                        i_zone,                 &
+                                        i_domain,               &
                                         i_part,                 &
                                         PDM_MESH_ENTITY_VERTEX, &
                                         n_vtx_ext,              &
@@ -1088,16 +1088,16 @@ visu/PEXT.case : extension
 
 ## Annex 1
 
-In some cases, the mesh is an assembly of several sub-meshes. These are called *zones*.
+In some cases, the mesh is an assembly of several sub-meshes. These are called *domains*.
 
-![alt text](mesh.png "A mesh composed of two zones")
+![alt text](mesh.png "A mesh composed of two domains")
 
-Each zone *zone* is partitioned in subdomains which
-are mapped to the processors of the parallel machine. On a processor the subdomain (of a mesh or a zone) can be subdivided in *parts*.
+Each domain *domain* is partitioned in subdomains which
+are mapped to the processors of the parallel machine. On a processor the subdomain (of a mesh or a domain) can be subdivided in *parts*.
 
-![alt text](processor.png "Processor 0 with a subdomain of each zone with two parts for subdomain of zone 1")
+![alt text](processor.png "Processor 0 with a subdomain of each domain with two parts for subdomain of domain 1")
 
 A mesh can be composed of several element types (tetrahedra, hexahedra, prisms...). In certain settings, the mesh definition for each specific element type
 is stored in a separate *section*. So in a *section* one will find data for a specific element type.
 
-![alt text](part.png "Part 1 of the subdomain on processor 0 of zone 1 with two sections")
+![alt text](part.png "Part 1 of the subdomain on processor 0 of domain 1 with two sections")
