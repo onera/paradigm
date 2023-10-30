@@ -131,7 +131,7 @@ def generate_mesh_rectangle_ngon(MPI.Comm             comm,
       - ``"pedge_ln_to_gn"`` (`list` of `np.ndarray[npy_pdm_gnum_t]`) : Edge global ids
       - ``"pface_ln_to_gn"`` (`list` of `np.ndarray[npy_pdm_gnum_t]`) : Face global ids
 
-  Possible values for ``elt_type``:
+  Admissible values for ``elt_type``:
     - 2 : triangles
     - 3 : quadrangles
     - 4 : mixed polygons (triangles, quadrangles and octagons)

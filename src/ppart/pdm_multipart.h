@@ -208,8 +208,7 @@ void PDM_multipart_joins_set
  * \param [in]   i_domain              Id of domain which parameters apply (or -1 for all domains)
  * \param [in]   renum_cell_method     Choice of renumbering method for cells
  * \param [in]   renum_cell_properties Parameters used by cache-blocking method :
- *                                     [n_cell_per_cache_wanted, is_asynchronous, is_vectorisation,
-                                        n_vect_face, split_method]
+ *                                     [*n_cell_per_cache_wanted*, *is_asynchronous*, *is_vectorisation*, *n_vect_face*, *split_method*]
  * \param [in]   renum_face_method     Choice of renumbering method for faces
  *
  */
@@ -329,7 +328,7 @@ const int        i_part,
 
 /**
  *
- * \brief Returns the connection graph between partition for the requested entity type
+ * \brief Get the connection graph between partition for the requested entity type
  * \param [in]  multipart             Pointer to \ref PDM_multipart_t object
  * \param [in]  i_domain              Id of domain
  * \param [in]  i_part                Id of part

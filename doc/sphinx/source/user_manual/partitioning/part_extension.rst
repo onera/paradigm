@@ -1,6 +1,6 @@
 .. _part_extension:
 
-Part-Extension
+Part extension
 ==============
 
 C API

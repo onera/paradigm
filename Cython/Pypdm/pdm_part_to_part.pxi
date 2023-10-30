@@ -105,7 +105,7 @@ cdef extern from "pdm_part_to_part.h":
 # ------------------------------------------------------------------------
 cdef class PartToPartCapsule:
   """
-     PartToPartCapsule: Interface for block_to_part.c
+     PartToPartCapsule: Interface for part_to_part.c
   """
 
   # --- Attributes -----------------------------------------------------
@@ -118,6 +118,11 @@ cdef class PartToPartCapsule:
   cdef int                         n_part2
   cdef dict                        request_data
   cdef MPI.Comm                    py_comm
+
+  DATA_DEF_ORDER_PART1           = _PDM_PART_TO_PART_DATA_DEF_ORDER_PART1
+  DATA_DEF_ORDER_PART1_TO_PART2  = _PDM_PART_TO_PART_DATA_DEF_ORDER_PART1_TO_PART2
+  DATA_DEF_ORDER_PART2           = _PDM_PART_TO_PART_DATA_DEF_ORDER_PART2
+  DATA_DEF_ORDER_GNUM1_COME_FROM = _PDM_PART_TO_PART_DATA_DEF_ORDER_GNUM1_COME_FROM
   # --------------------------------------------------------------------
 
 
@@ -217,6 +222,11 @@ cdef class PartToPart:
   cdef PDM_g_num_t               **_part1_to_part2
   cdef dict                        request_data
   cdef MPI.Comm                    py_comm
+
+  DATA_DEF_ORDER_PART1           = _PDM_PART_TO_PART_DATA_DEF_ORDER_PART1
+  DATA_DEF_ORDER_PART1_TO_PART2  = _PDM_PART_TO_PART_DATA_DEF_ORDER_PART1_TO_PART2
+  DATA_DEF_ORDER_PART2           = _PDM_PART_TO_PART_DATA_DEF_ORDER_PART2
+  DATA_DEF_ORDER_GNUM1_COME_FROM = _PDM_PART_TO_PART_DATA_DEF_ORDER_GNUM1_COME_FROM
   # ************************************************************************
   # ------------------------------------------------------------------
   # Fake init (Use only for docstring)
@@ -234,8 +244,8 @@ cdef class PartToPart:
       comm               (MPI.Comm)                               : MPI communicator
       part1_ln_to_gn     (`list` of `np.ndarray[npy_pdm_gnum_t]`) : Element global ids in Part1
       part2_ln_to_gn     (`list` of `np.ndarray[npy_pdm_gnum_t]`) : Element global ids in Part2
-      part1_to_part2_idx (`list` of `np.ndarray[np.int32_t]`)     : Index for Part1->Part2 mapping
-      part1_to_part2     (`list` of `np.ndarray[npy_pdm_gnum_t]`) : Part1->Part2 mapping (global ids)
+      part1_to_part2_idx (`list` of `np.ndarray[np.int32_t]`)     : Index for Part1→Part2 mapping
+      part1_to_part2     (`list` of `np.ndarray[npy_pdm_gnum_t]`) : Part1→Part2 mapping (global ids)
     """
 
   # ------------------------------------------------------------------------
@@ -286,7 +296,7 @@ cdef class PartToPart:
     Get referenced Part2 elements
 
     Returns:
-      Referenced Part2 elements (one-based local ids) (`list` of `np.ndarray[np_int32_t]`)
+      Referenced Part2 elements (1-based local ids) (`list` of `np.ndarray[np_int32_t]`)
     """
     return get_referenced_lnum2(self)
 
@@ -296,19 +306,19 @@ cdef class PartToPart:
     Get unreferenced Part2 elements
 
     Returns:
-      Unreferenced Part2 elements (one-based local ids) (`list` of `np.ndarray[np_int32_t]`)
+      Unreferenced Part2 elements (1-based local ids) (`list` of `np.ndarray[np_int32_t]`)
     """
     return get_unreferenced_lnum2(self)
 
   # --------------------------------------------------------------------
   def get_gnum1_come_from(self):
     """
-    Get Part2->Part1 mapping for referenced Part2 elements
+    Get Part2→Part1 mapping for referenced Part2 elements
 
     Returns:
       Dictionary
-        - ``"come_from_idx"`` (`list` of `np.ndarray[np.int32_t]`)     : Index for Part2->Part1 mapping
-        - ``"come_from"``     (`list` of `np.ndarray[npy_pdm_gnum_t]`) : Part2->Part1 mapping (global ids)
+        - ``"come_from_idx"`` (`list` of `np.ndarray[np.int32_t]`)     : Index for Part2→Part1 mapping
+        - ``"come_from"``     (`list` of `np.ndarray[npy_pdm_gnum_t]`) : Part2→Part1 mapping (global ids)
     """
     return get_gnum1_come_from(self)
 
@@ -322,7 +332,7 @@ cdef class PartToPart:
     """
     iexch(k_comm, t_part1_data_def, part1_data, part1_stride=1, interlaced_str=True)
 
-    Initiate a non-blocking exchange (Part1->Part2)
+    Initiate a non-blocking exchange (Part1→Part2)
 
     Parameters:
       k_comm           (int)                       : Kind of MPI communication
@@ -334,16 +344,16 @@ cdef class PartToPart:
     Returns:
       Request ID (`int`)
 
-    Possible values for ``k_comm``:
+    Admissible values for ``k_comm``:
       - 0 : Peer-to-peer (``MPI_issend``/``MPI_irecv``)
       - 1 : Collective (``MPI_Ialltoall`` and alike)
 
     .. note::
       Additional communication kinds will be available in the future
 
-    Possible values for ``t_part1_data_def``:
-      - 0 : Data defined according to the `part1` arrays order
-      - 1 : Data defined according to the `part1_to_part2` arrays order
+    Admissible values for ``t_part1_data_def``:
+      - :py:attr:`PartToPart.DATA_DEF_ORDER_PART1`          : Data defined according to the `part1` arrays order
+      - :py:attr:`PartToPart.DATA_DEF_ORDER_PART1_TO_PART2` : Data defined according to the `part1_to_part2` arrays order
     """
     return iexch( self, k_comm, t_part1_data_def,part1_data,part1_stride,interlaced_str)
 
@@ -352,7 +362,7 @@ cdef class PartToPart:
     """
     wait(request_id)
 
-    Finalize a non-blocking exchange (Part1->Part2)
+    Finalize a non-blocking exchange (Part1→Part2)
 
     Parameters:
       request_id (int) : Request ID
@@ -373,7 +383,7 @@ cdef class PartToPart:
     """
     reverse_iexch(k_comm, t_part2_data_def, part2_data, part2_stride=1, interlaced_str=True)
 
-    Initiate a non-blocking exchange (Part2->Part1)
+    Initiate a non-blocking exchange (Part2→Part1)
 
     Parameters:
       k_comm           (int)                       : Kind of MPI communication
@@ -385,15 +395,15 @@ cdef class PartToPart:
     Returns:
       Request ID (`int`)
 
-    Possible values for ``k_comm``:
+    Admissible values for ``k_comm``:
       - 0 : Peer-to-peer (``MPI_issend``/``MPI_irecv``)
 
     .. note::
       Additional communication kinds will be available in the future
 
-    Possible values for ``t_part2_data_def``:
-      - 2 : Data defined according to the `part2` arrays order
-      - 3 : Data defined according to the `gnum1_come_from` arrays order
+    Admissible values for ``t_part2_data_def``:
+      - :py:attr:`PartToPart.DATA_DEF_ORDER_PART2          ` : Data defined according to the `part2` arrays order
+      - :py:attr:`PartToPart.DATA_DEF_ORDER_GNUM1_COME_FROM` : Data defined according to the `gnum1_come_from` arrays order
     """
     return reverse_iexch(self, k_comm, t_part2_data_def, part2_data, part2_stride, interlaced_str)
 
@@ -402,7 +412,7 @@ cdef class PartToPart:
     """
     reverse_wait(request_id)
 
-    Finalize a non-blocking exchange (Part2->Part1)
+    Finalize a non-blocking exchange (Part2→Part1)
 
     Parameters:
       request_id (int) : Request ID

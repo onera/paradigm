@@ -512,7 +512,7 @@ module pdm_generate_mesh
                                               random_factor_opt)
     ! Create a partitioned rectangular mesh (2D) with descending connectivities
     !
-    ! Possible values for ``elt_type``:
+    ! Admissible values for ``elt_type``:
     !   - ``PDM_MESH_NODAL_TRIA3``   : triangles
     !   - ``PDM_MESH_NODAL_QUAD4``   : quadrangles
     !   - ``PDM_MESH_NODAL_POLY_2D`` : mixed polygons (triangles, quadrangles and octagons)

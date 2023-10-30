@@ -449,6 +449,8 @@ PDM_mesh_location_compute
  *
  * \brief Get point location
  *
+ * \note The results are related to located points only
+ *
  * \param [in]   ml                    Pointer to \ref PDM_mesh_location_t object
  * \param [in]   i_point_cloud         Point cloud identifier
  * \param [in]   i_part                Partition identifier
@@ -474,7 +476,7 @@ PDM_mesh_location_point_location_get
  *
  * \brief Get the cell->vertex connectivity used for internal computations
  *
- * \note This connectivity is built by ParaDiGM and is necessary to associate
+ * \note For non-standard elements, this connectivity is built by ParaDiGM and is necessary to associate
  *       the `points_weights` array (returned by \ref PDM_mesh_location_points_in_elt_get)
  *       to the appropriate mesh vertices.
  *

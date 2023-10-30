@@ -257,8 +257,7 @@ cdef class MeshLocation:
     """
     cloud_set(i_point_cloud, i_part, coords, gnum)
 
-    Set a partition of the specified point cloud by registering the
-    coordinates and global ids of its vertices.
+    Set a partition of the specified point cloud
 
     Parameters:
       i_point_cloud (int)                        : Point cloud identifier
@@ -529,11 +528,10 @@ cdef class MeshLocation:
     """
     location_get(i_point_cloud, i_part)
 
-    Get location data for the points that have been located in a volumic/surfacic cell,
-    for the specified point cloud and partition identifiers.
+    Get location data on the target side for the specified point cloud and partition.
 
-    The results are related to located points only, whose ids can be get with function
-    :py:func:`located_get`.
+    .. note::
+      The results are related to located points only, whose ids can be accessed with function :py:func:`located_get`.
     
 
     Parameters:
@@ -568,7 +566,7 @@ cdef class MeshLocation:
     Get the cell->vertex connectivity used for internal computations
 
     .. note::
-      This connectivity is built by ParaDiGM and is necessary to associate the ``points_weights`` array (returned by :py:meth:`points_in_elt_get`) to the appropriate mesh vertices.
+      For non-standard elements, this connectivity is built by ParaDiGM and is necessary to associate the ``points_weights`` array (returned by :py:meth:`points_in_elt_get`) to the appropriate mesh vertices.
 
     Parameters:
       i_part (int) : Partition identifier
@@ -665,7 +663,7 @@ cdef class MeshLocation:
       i_part        (int) : Partition identifier
 
     Returns:
-      List of located target points (1-based ids) (np.ndarray[np.int32_t])
+      List of located target points (1-based ids) (`np.ndarray[np.int32_t]`)
     """
     return self._np_located[i_point_cloud][i_part]
 
@@ -688,7 +686,7 @@ cdef class MeshLocation:
       i_part        (int) : Partition identifier
 
     Returns:
-      List of unlocated target points (1-based ids) (np.ndarray[np.int32_t])
+      List of unlocated target points (1-based ids) (`np.ndarray[np.int32_t]`)
     """
     return self._np_unlocated[i_point_cloud][i_part]
 

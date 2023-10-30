@@ -1241,6 +1241,9 @@ module pdm_mesh_location
                                                     dist2, &
                                                     projected_coords)
     ! Get point location
+    !
+    ! .. note::
+    !   The results are related to located points only
     use iso_c_binding
 
     implicit none
@@ -1420,7 +1423,8 @@ module pdm_mesh_location
                                                  cell_vtx)
     ! Get the cell->vertex connectivity used for internal computations
     !
-    ! ..note:: This connectivity is built by ParaDiGM and is necessary to associate
+    ! ..note::
+    !   For non-standard elements, this connectivity is built by ParaDiGM and is necessary to associate
     !   the `points_weights` array (returned by \ref PDM_mesh_location_points_in_elt_get)
     !   to the appropriate mesh vertices.
     use iso_c_binding

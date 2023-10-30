@@ -161,7 +161,7 @@ Python API
     .. autoattribute:: Pypdm.Pypdm.MeshLocation.method
 
     .. rubric:: Methods summary
-   
+
     .. autosummary::
       :nosignatures:
 

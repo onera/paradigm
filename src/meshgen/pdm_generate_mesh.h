@@ -319,7 +319,7 @@ PDM_generate_mesh_parallelepiped
  * \param [out]  pedge_ln_to_gn Edge global ids (for each part, size = \p pn_edge)
  * \param [out]  pface_ln_to_gn Face global ids (for each part, size = \p pn_face)
  *
- * \note Possible values for \p elt_type:
+ * \note Admissible values for \p elt_type:
  *   - \p PDM_MESH_NODAL_TRIA3   : triangles
  *   - \p PDM_MESH_NODAL_QUAD4   : quadrangles
  *   - \p PDM_MESH_NODAL_POLY_2D : mixed polygons (triangles, quadrangles and octagons)

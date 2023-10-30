@@ -442,81 +442,14 @@ const int                     id_part
 /**
  * \brief Return standard section description
  *
- *  - PDM_MESH_NODAL_POINT :
- *
- *   1 x
- *
- *  - PDM_MESH_NODAL_BAR2 :
- *
- *   1 x-------x 2
- *
- *  - PDM_MESH_NODAL_TRIA3 :
- *
- *   1 x-------x 3
- *      \     /
- *       \   /
- *        \ /
- *         x 2
- *
- *  - PDM_MESH_NODAL_QUAD4 :
- *
- *      4 x-------x 3
- *       /       /
- *      /       /
- *   1 x-------x2
- *
- *   - PDM_MESH_NODAL_TETRA4 :
- *
- *         x 4
- *        /|\
- *       / | \
- *      /  |  \
- *   1 x- -|- -x 3
- *      \  |  /
- *       \ | /
- *        \|/
- *         x 2
- *
- *   - PDM_MESH_NODAL_PYRAMID5 :
- *
- *          5 x
- *           /|\
- *          //| \
- *         // |  \
- *      4 x/--|---x 3
- *       //   |  /
- *      //    | /
- *   1 x-------x 2
- *
- *  - PDM_MESH_NODAL_PRSIM6 :
- *
- *   4 x-------x 6
- *     |\     /|
- *     | \   / |
- *   1 x- \-/ -x 3
- *      \ 5x  /
- *       \ | /
- *        \|/
- *         x 2
- *
- *  - PDM_MESH_NODAL_HEXA8 :
- *
- *      8 x-------x 7
- *       /|      /|
- *      / |     / |
- *   5 x-------x6 |
- *     | 4x----|--x 3
- *     | /     | /
- *     |/      |/
- *   1 x-------x 2
- *
  * \param [in]  pmn                     Pointer to \ref PDM_part_mesh_nodal_t object
  * \param [in]  i_section               Section identifier
  * \param [in]  id_part                 Partition identifier
  * \param [out] connec                  Connectivity
- * \param [out] numabs                  Global numbering
- * \param [out] parent_num              Parent numbering or NULL
- * \param [out] parent_entity_g_num     Parent global numbering or NULL
+ * \param [out] numabs                  Global ids
+ * \param [out] parent_num              Parent local ids or NULL
+ * \param [out] parent_entity_g_num     Parent global ids or NULL
+ * \param [in]  ownership               Data ownership
  *
  */
 //---> PDM_Mesh_nodal_block_std_get
@@ -540,12 +473,12 @@ const int                     id_part,
  * \param [in]  i_section               Section identifier
  * \param [in]  id_part                 Partition identifier
  * \param [out] connec                  Connectivity
- * \param [out] numabs                  Global numbering
- * \param [out] parent_num              Parent numbering or NULL
- * \param [out] parent_entity_g_num     Parent global numbering or NULL
+ * \param [out] numabs                  Global ids
+ * \param [out] parent_num              Parent local ids or NULL
+ * \param [out] parent_entity_g_num     Parent global ids or NULL
  * \param [out] order                   Element order
  * \param [out] ho_ordering             HO ordering
- * \param [in]  ownership               Who owns the getted arrays?
+ * \param [in]  ownership               Data ownership
  *
  */
 
@@ -570,7 +503,7 @@ const char                  **ho_ordering,
  * \param [in]  pmn          Pointer to \ref PDM_part_mesh_nodal_t object
  * \param [in]  i_section    Section identifier
  * \param [in]  id_part      Partition identifier
- * \param [in]  ownership               Who owns the getted arrays?
+ * \param [in]  ownership    Data ownership
  *
  * \return      Return parent numbering of block elements
  *
@@ -591,7 +524,7 @@ const int                     id_part,
  * \param [in]  pmn          Pointer to \ref PDM_part_mesh_nodal_t object
  * \param [in]  i_section    Section identifier
  * \param [in]  id_part      Partition identifier
- * \param [in]  ownership    Who owns the getted arrays?
+ * \param [in]  ownership    Data ownership
  *
  * \return      Return global element numbering of section elements
  *
@@ -689,7 +622,7 @@ const PDM_ownership_t        ownership
  * \param [in]  pmn            Pointer to \ref PDM_part_mesh_nodal_t object
  * \param [in]  i_section      Section identifier
  * \param [in]  id_part        Partition identifier
- * \param [in]  ownership      Who owns the getted arrays?
+ * \param [in]  ownership      Data ownership
  *
  * \return  Return cell centers
  *
@@ -761,7 +694,7 @@ const int                   *parent_num,
  * \param [in]  id_part        Partition identifier
  * \param [out] connec_idx     Connectivity index
  * \param [out] connec         Connectivity
- * \param [in]  ownership      Who owns the getted arrays?
+ * \param [in]  ownership      Data ownership
  *
  */
 //---> PDM_Mesh_nodal_block_poly2d_get
@@ -830,7 +763,7 @@ const PDM_g_num_t           *parent_entity_g_num,
  * \param [out] cell_face            Cell->face connectivity
  * \param [out] parent_num           Parent numbering or NULL
  * \param [out] parent_entity_g_num  Parent global ids or NULL
- * \param [in]  ownership            Who owns the getted arrays?
+ * \param [in]  ownership            Data ownership
  *
  */
 //---> PDM_Mesh_nodal_block_poly3d_get
@@ -860,7 +793,7 @@ const int                     id_part,
  * \param [in]  id_part      Partition identifier
  * \param [out] cellvtx_idx  Index of cell vertex connectivity
  * \param [out] cellvtx      Cell vertex connectivity
- * \param [in]  ownership    Who owns the getted arrays?
+ * \param [in]  ownership    Data ownership
  *
  */
 
@@ -935,7 +868,7 @@ const int                     id_part
  * \param [in]  pmn          Pointer to \ref PDM_part_mesh_nodal_t object
  * \param [in]  geom_kind    Geometry kind (corner, ridge, surface or volume)
  * \param [in]  id_part      Partition identifier
- * \param [in]  ownership Who owns the getted arrays?
+ * \param [in]  ownership Data ownership
  *
  * \return  Global ids of element in current partition
  *
@@ -988,7 +921,7 @@ PDM_part_mesh_nodal_is_set_coord_from_parent
  * \param [in]  pmn          Pointer to \ref PDM_part_mesh_nodal_t object
  * \param [in]  i_section    Section identifier
  * \param [in]  id_part      Partition identifier
- * \param [in]  ownership    Who owns the getted arrays?
+ * \param [in]  ownership    Data ownership
  *
  * \return      Return global numbering of block elements inside the block
  *

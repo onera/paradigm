@@ -6,6 +6,13 @@ Part to Part
 C API
 -----
 
+Enumerators
+"""""""""""
+
+.. doxygenenum:: PDM_mpi_comm_kind_t
+
+.. doxygenenum:: PDM_part_to_part_data_def_t
+
 Initialization
 """"""""""""""
 
@@ -114,14 +121,31 @@ Python API
 
 .. ifconfig:: enable_python_doc == 'ON'
 
-  Initialization
-  """"""""""""""
+  .. py:class:: PartToPart
 
-  .. autoclass:: Pypdm.Pypdm.PartToPart
+    Python structure to perform partition-to-partition data exchanges. Once initialized, all the following
+    methods apply to a :class:`PartToPart` instance.
+
+  .. rubric:: Initialization
+
+  .. autoclass:: Pypdm.Pypdm.PartToPart.__init__
 
 
-  Information on Part 2 side
-  """"""""""""""""""""""""""
+  .. rubric:: Methods summary
+
+  .. autosummary::
+    :nosignatures:
+
+    ~Pypdm.Pypdm.PartToPart.get_referenced_lnum2
+    ~Pypdm.Pypdm.PartToPart.get_unreferenced_lnum2
+    ~Pypdm.Pypdm.PartToPart.get_gnum1_come_from
+    ~Pypdm.Pypdm.PartToPart.iexch
+    ~Pypdm.Pypdm.PartToPart.wait
+    ~Pypdm.Pypdm.PartToPart.reverse_iexch
+    ~Pypdm.Pypdm.PartToPart.reverse_wait
+
+
+  .. rubric:: Information on Part 2 side
 
   .. autofunction:: Pypdm.Pypdm.PartToPart.get_referenced_lnum2
 
@@ -130,8 +154,7 @@ Python API
   .. autofunction:: Pypdm.Pypdm.PartToPart.get_gnum1_come_from
 
 
-  Exchange
-  """"""""
+  .. rubric:: Exchange
 
   .. autofunction:: Pypdm.Pypdm.PartToPart.iexch
 

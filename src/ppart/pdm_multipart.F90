@@ -90,22 +90,6 @@ module pdm_multipart
 
 interface
 
-  !>
-  !!
-  !! \brief Build a multipart structure
-  !!
-  !! \param [in]   n_domain         Number of domains in the original mesh
-  !! \param [in]   n_part           Number of partition per proc in each domain
-  !! \param [in]   merge_blocks     Merge or not the domains before splitting
-  !! \param [in]   split_method     Choice of library used to split the mesh
-  !! \param [in]   part_size_method Choice of homogeneous or heterogeneous partitions
-  !! \param [in]   part_fraction    Weight (in %) of each partition in heterogeneous case
-  !! \param [in]   comm             PDM_MPI communicator
-  !! \param [in]   owner            Data ownership
-  !!
-  !! \return   multipart   Pointer to a new \ref PDM_multipart_t object
-  !!
-
   function PDM_multipart_create_c (n_domain, &
                                    n_part, &
                                    merge_blocks, &
@@ -133,15 +117,6 @@ interface
 
   end function PDM_multipart_create_c
 
-  !>
-  !!
-  !! \brief Set connecting data between all the domains
-  !!
-  !! \param [in]   multipart        Pointer to \ref PDM_multipart_t object
-  !! \param [in]   n_total_joins    Total number of interfaces
-  !! \param [in]   join_to_opposite For each global join id, give the global id
-  !!                                of the opposite join (size = n_total_joins)
-  !!
 
   subroutine PDM_multipart_joins_set_c (multipart,        &
                                         n_total_joins,    &
@@ -157,18 +132,6 @@ interface
 
   end subroutine PDM_multipart_joins_set_c
 
-  !>
-  !!
-  !! \brief Set the reordering methods to be used after partitioning
-  !!
-  !! \param [in]   multipart             Pointer to \ref PDM_multipart_t object
-  !! \param [in]   i_domain              Id of domain which parameters apply (or -1 for all domains)
-  !! \param [in]   renum_cell_method     Choice of renumbering method for cells
-  !! \param [in]   renum_cell_properties Parameters used by cacheblocking method :
-  !!                                     [n_cell_per_cache_wanted, is_asynchrone, is_vectorisation,
-  !!                                     n_vect_face, split_method]
-  !! \param [in]   renum_face_method     Choice of renumbering method for faces
-  !!
 
   subroutine PDM_multipart_set_reordering_options_c (multipart, &
                                                      i_domain, &
@@ -188,13 +151,6 @@ interface
 
   end subroutine PDM_multipart_set_reordering_options_c
 
-  !>
-  !!
-  !! \brief Set the reordering methods to be used after partitioning
-  !!
-  !! \param [in]   multipart             Pointer to \ref PDM_multipart_t object
-  !! \param [in]   i_domain              Id of domain which parameters apply (or -1 for all domains)
-  !! \param [in]   renum_vtx_method      Choice of renumbering method for vertices
 
   subroutine PDM_multipart_set_reordering_options_vtx_c (multipart, &
                                                          i_domain, &
@@ -210,15 +166,6 @@ interface
 
   end subroutine PDM_multipart_set_reordering_options_vtx_c
 
-  !>
-  !!
-  !! \brief ???
-  !!
-  !! \param [in]   multipart             Pointer to \ref PDM_multipart_t object
-  !! \param [in]   i_domain              Id of domain which parameters apply (or -1 for all domains)
-  !! \param [in]   pmesh_nodal           Partitionned nodal mesh
-  !! \param [in]   ownership             Data ownership
-  !!
 
   subroutine PDM_multipart_get_part_mesh_nodal_c (multipart, &
                                                   i_domain, &
@@ -236,33 +183,6 @@ interface
 
   end subroutine PDM_multipart_get_part_mesh_nodal_c
 
-  !>
-  !! \brief Set block
-  !!
-  !! \param [in]   multipart              Pointer to \ref PDM_multipart_t object
-  !! \param [in]   i_domain               Id of domain
-  !! \param [in]   dn_cell                Number of distributed cells
-  !! \param [in]   dn_face                Number of distributed faces
-  !! \param [in]   dn_vtx                 Number of distributed vertices
-  !! \param [in]   n_face_group           Number of face groups
-  !! \param [in]   dcell_face_idx         Distributed cell face connectivity index or NULL
-  !!                                      (size : dn_cell + 1, numbering : 0 to n-1)
-  !! \param [in]   dcell_face             Distributed cell face connectivity or NULL
-  !!                                      (size : dface_vtx_idx[dn_cell], numbering : 1 to n)
-  !! \param [in]   dface_cell             Distributed face cell connectivity or NULL
-  !!                                      (size : 2 * dn_face, numbering : 1 to n)
-  !! \param [in]   dface_vtx_idx          Distributed face to vertex connectivity index
-  !!                                      (size : dn_face + 1, numbering : 0 to n-1)
-  !! \param [in]   dface_vtx              Distributed face to vertex connectivity
-  !!                                      (size : dface_vtx_idx[dn_face], numbering : 1 to n)
-  !! \param [in]   dvtx_coord             Distributed vertex coordinates
-  !!                                      (size : 3*dn_vtx)
-  !! \param [in]   dface_group_idx        Index of distributed faces list of each group
-  !!                                      (size = n_face_group + 1) or NULL
-  !! \param [in]   dface_group            Distributed faces list of each group
-  !!                                      (size = dface_group[dface_group_idx[n_face_group]], numbering : 1 to n)
-  !!                                      or NULL
-  !!
 
   subroutine PDM_multipart_block_set_c (multipart, &
                                         i_domain, &
@@ -300,25 +220,6 @@ interface
 
   end subroutine PDM_multipart_block_set_c
 
-  !>
-  !!
-  !! \brief Returns the dimensions of a given partition
-  !!
-  !! \param [in]   multipart             Pointer to \ref PDM_multipart_t object
-  !! \param [in]   i_domain              Id of domain which parameters apply (or -1 for all domains)
-  !! \param [in]   i_part                Partition index
-  !! \param [out]  n_cell                Number of cells
-  !! \param [out]  n_face                Number of faces
-  !! \param [out]  n_face_part_bound     Number of boundary faces in partition
-  !! \param [out]  n_vtx                 Number of vertices
-  !! \param [out]  n_proc                Number of processes
-  !! \param [out]  n_total_part          Total number of partitions
-  !! \param [out]  s_cell_face           Size of cell->face connectivity
-  !! \param [out]  s_face_vtx            Size of face->vtx connectivity
-  !! \param [out]  s_face_bound          Size of face->boundary connectivity
-  !! \param [out]  n_bound_groups        Number of boundary groups
-  !!
-  !!
 
   subroutine PDM_multipart_part_dim_get_c (multipart, &
                                            i_domain, &
@@ -354,29 +255,6 @@ interface
 
   end subroutine PDM_multipart_part_dim_get_c
 
-  !>
-  !!
-  !! \brief Returns the data arrays of a given partition
-  !!
-  !! \param [in]   multipart                Pointer to \ref PDM_multipart_t object
-  !! \param [in]   i_domain                 Id of domain which parameters apply (or -1 for all domains)
-  !! \param [in]   i_part                   Partition index
-  !! \param [out]  cell_face_idx            Index of cell->face connectivity
-  !! \param [out]  cell_face                Cell->face connectivity
-  !! \param [out]  cell_ln_to_gn            Cell local number to global number
-  !! \param [out]  face_cell                Face->cell connectivity
-  !! \param [out]  face_vtx_idx             Index of face->vertex connectivity
-  !! \param [out]  face_vtx                 Face->vertex connectivity
-  !! \param [out]  face_ln_to_gn            Face local number to global number
-  !! \param [out]  face_part_bound_proc_idx ??
-  !! \param [out]  face_part_bound_part_idx ??
-  !! \param [out]  face_part_bound          ??
-  !! \param [out]  vtx                      Vertices coordinates
-  !! \param [out]  vtx_ln_to_gn             Vertex local number to global number
-  !! \param [out]  face_bound_idx           Index of face->boundary connectivity
-  !! \param [out]  face_bound               Boundary faces
-  !! \param [out]  face_bound_ln_to_gn      Boundary face local number to global number
-  !!
 
   subroutine PDM_multipart_part_val_get_c (multipart, &
                                            i_domain, &
@@ -422,18 +300,6 @@ interface
 
   end subroutine PDM_multipart_part_val_get_c
 
-  !>
-  !!
-  !! \brief Returns the dimensions of a given partition
-  !!
-  !! \param [in]   multipart             Pointer to \ref PDM_multipart_t object
-  !! \param [in]   i_domain              Id of domain which parameters apply (or -1 for all domains)
-  !! \param [in]   i_part                Partition index
-  !! \param [out]  connectivity_type     Type of connectivity
-  !! \param [out]  connect_idx           Connectivity index
-  !! \param [out]  connect               Connectivity
-  !! \param [out]  ownership             Data ownership
-  !!
 
   function PDM_multipart_part_connectivity_get_c (multipart, &
                                                   i_domain, &
@@ -460,17 +326,6 @@ interface
 
   end function PDM_multipart_part_connectivity_get_c
 
-  !>
-  !!
-  !! \brief Returns the dimensions of a given partition
-  !!
-  !! \param [in]   multipart             Pointer to \ref PDM_multipart_t object
-  !! \param [in]   i_domain              Id of domain which parameters apply (or -1 for all domains)
-  !! \param [in]   i_part                Partition index
-  !! \param [out]  entity_type           Type of entity
-  !! \param [out]  entity_ln_to_gn       Entity local number to global number
-  !! \param [out]  ownership             Data ownership
-  !!
 
   function PDM_multipart_part_ln_to_gn_get_c (multipart, &
                                               i_domain, &
@@ -495,17 +350,6 @@ interface
 
   end function PDM_multipart_part_ln_to_gn_get_c
 
-  !>
-  !!
-  !! \brief Returns the partitions color
-  !!
-  !! \param [in]   multipart             Pointer to \ref PDM_multipart_t object
-  !! \param [in]   i_domain              Id of domain which parameters apply (or -1 for all domains)
-  !! \param [in]   i_part                Partition index
-  !! \param [out]  entity_type           Type of entity
-  !! \param [out]  entity_color          Entity color
-  !! \param [out]  ownership             Data ownership
-  !!
 
   function PDM_multipart_partition_color_get_c (multipart, &
                                                 i_domain, &
@@ -530,15 +374,6 @@ interface
 
   end function PDM_multipart_partition_color_get_c
 
-  !>
-  !!
-  !! \brief Get information of ghost vertices
-  !!
-  !! \param [in]   multipart               Pointer to \ref PDM_multipart_t object
-  !! \param [in]   i_domain                Id of domain which parameters apply (or -1 for all domains)
-  !! \param [in]   i_part                  Partition index
-  !! \param [out]  vtx_ghost_information   Information of ghost vertices
-  !!
 
   subroutine PDM_multipart_part_ghost_infomation_get_c (multipart, &
                                                         i_domain, &
@@ -556,18 +391,6 @@ interface
 
   end subroutine PDM_multipart_part_ghost_infomation_get_c
 
-  !>
-  !!
-  !! \brief Get coordinates of vertices
-  !!
-  !! \param [in]   multipart               Pointer to \ref PDM_multipart_t object
-  !! \param [in]   i_domain                Id of domain which parameters apply (or -1 for all domains)
-  !! \param [in]   i_part                  Partition index
-  !! \param [out]  vtx_coord               Coordinates of vertices
-  !! \param [out]  ownership               Data ownership
-  !!
-  !! \return Number of vertices
-  !!
 
   function PDM_multipart_part_vtx_coord_get_c (multipart, &
                                                i_domain, &
@@ -589,19 +412,6 @@ interface
 
   end function PDM_multipart_part_vtx_coord_get_c
 
-  !>
-  !!
-  !! \brief Get the group description for a given entity
-  !!
-  !! \param [in]   multipart              Pointer to \ref PDM_multipart_t object
-  !! \param [in]   i_domain               Domain identifier
-  !! \param [in]   i_part                 Partition identifier
-  !! \param [in]   entity_type            Type of mesh entity
-  !! \param [out]  n_group                Number of groups
-  !! \param [out]  group_entity_idx       Index for group->entity connectivity (size = \p n_group)
-  !! \param [out]  group_entity           Group->entity connectivity (1-based local ids, size = \p group_entity_idx[\p n_group])
-  !! \param [out]  group_entity_ln_to_gn  Group->entity connectivity (group-specific global ids, size = \p group_entity_idx[\p n_group])
-  !! \param [in]   ownership              Ownership
 
   subroutine PDM_multipart_group_get_c (multipart, &
                                         i_domain, &
@@ -627,10 +437,6 @@ interface
 
   end subroutine PDM_multipart_group_get_c
 
-  !>
-  !!
-  !! \brief Get the connection graph between partition for the requested entity type
-  !!
 
   subroutine PDM_multipart_part_graph_comm_get_c (multipart,            &
                                                   i_domain,               &
@@ -660,7 +466,7 @@ interface
   !!
   !! \brief Set distributed mesh data for the input domain
   !!
-  !! \param [in]   multipart      Pointer to \ref PDM_multipart_t object
+  !! \param [in]   multipart      Pointer to \p PDM_multipart_t object
   !! \param [in]   domain_id      Global domain id
   !! \param [in]   dmesh          Distributed mesh structure
   !!
@@ -683,7 +489,7 @@ interface
   !!
   !! \brief Set distributed mesh data for the input domain
   !!
-  !! \param [in]   multipart      Pointer to \ref PDM_multipart_t object
+  !! \param [in]   multipart      Pointer to \p PDM_multipart_t object
   !! \param [in]   domain_id      Global domain id
   !! \param [in]   dmesh_nodal    Distributed nodal mesh structure
   !!
@@ -706,7 +512,7 @@ interface
   !!
   !! \brief Construct the partitioned meshes on every domains
   !!
-  !! \param [in]   multipart   Pointer to \ref PDM_multipart_t object
+  !! \param [in]   multipart   Pointer to \p PDM_multipart_t object
   !!
 
   subroutine PDM_multipart_compute (multipart) &
@@ -723,7 +529,7 @@ interface
   !!
   !! \brief Set the domain interface
   !!
-  !! \param [in]   multipart             Pointer to \ref PDM_multipart_t object
+  !! \param [in]   multipart             Pointer to \p PDM_multipart_t object
   !! \param [in]   ditrf                 Domain interface
   !!
 
@@ -739,20 +545,14 @@ interface
 
   end subroutine PDM_multipart_domain_interface_shared_set
 
-  !>
-  !!
-  !! \brief Free the structure
-  !!
-  !! \param [in]   multipart   Pointer to \ref PDM_multipart_t object
-  !!
 
   subroutine PDM_multipart_free (multipart) &
   bind (c, name='PDM_multipart_free')
-
+    ! Free the structure
     use iso_c_binding
     implicit none
 
-    type(c_ptr), value     :: multipart
+    type(c_ptr), value     :: multipart ! Pointer to PDM_multipart_t object
 
   end subroutine PDM_multipart_free
 
@@ -776,7 +576,6 @@ private :: PDM_multipart_create_,&
 
 contains
 
-  ! Build a multipart structure instance
 
   subroutine PDM_multipart_create_ (multipart, &
                                     n_domain, &
@@ -787,22 +586,22 @@ contains
                                     part_fraction, &
                                     comm, &
                                     owner)
-
+    ! Build a Multipart structure instance
     use pdm
     use iso_c_binding
     implicit none
 
-    type(c_ptr)                        :: multipart                     ! Pointer to a new \ref PDM_multipart_t object
+    type(c_ptr)                        :: multipart                     ! Pointer to a new PDM_multipart_t object
     integer(c_int),            value   :: n_domain                      ! Number of domains in the original mesh
-    integer(kind=PDM_l_num_s), pointer :: n_part(:)                     ! Number of partition per proc in each domain
-    type(c_ptr)                        :: c_n_part         = C_NULL_PTR
+    integer(kind=PDM_l_num_s), pointer :: n_part(:)                     ! Number of partition per proc in each domain (size = ``n_domain``)
     integer(c_int),            value   :: merge_blocks                  ! Merge or not the domains before splitting
     integer(c_int),            value   :: split_method                  ! Choice of method used to split the mesh
     integer(c_int),            value   :: part_size_method              ! Choice of homogeneous or heterogeneous partitions
     double precision,          pointer :: part_fraction(:)              ! Weight (in %) of each partition in heterogeneous case
-    type(c_ptr)                        :: c_part_fraction  = C_NULL_PTR
-    integer(c_int),            value   :: comm                          ! PDM_MPI communicator
+    integer(c_int),            value   :: comm                          ! MPI communicator
     integer(c_int),            value   :: owner                         ! Data ownership
+    type(c_ptr)                        :: c_n_part         = C_NULL_PTR
+    type(c_ptr)                        :: c_part_fraction  = C_NULL_PTR
     integer(c_int)                     :: c_comm
 
     c_n_part        = c_loc(n_part)
@@ -820,19 +619,18 @@ contains
 
   end subroutine PDM_multipart_create_
 
-  ! Set connecting data between all the domains
 
   subroutine PDM_multipart_joins_set_ (multipart,     &
                                        n_total_joins, &
                                        join_to_opposite)
-
+    ! Set connecting data between all the domains
     use pdm
     use iso_c_binding
     implicit none
 
-    type(c_ptr),               value   :: multipart                       ! Pointer to \ref PDM_multipart_t object
+    type(c_ptr),               value   :: multipart                       ! Pointer to PDM_multipart_t object
     integer(c_int),            value   :: n_total_joins                   ! Total number of interfaces
-    integer(kind=PDM_l_num_s), pointer :: join_to_opposite(:)             ! For each global join id, give the global id of the opposite join (size = n_total_joins)
+    integer(kind=PDM_l_num_s), pointer :: join_to_opposite(:)             ! For each global join id, give the global id of the opposite join (size = ``n_total_joins``)
     type(c_ptr)                        :: c_join_to_opposite = C_NULL_PTR
 
     c_join_to_opposite = c_loc(join_to_opposite)
@@ -843,24 +641,23 @@ contains
 
   end subroutine PDM_multipart_joins_set_
 
-  ! Set the reordering methods to be used after partitioning
 
   subroutine PDM_multipart_set_reordering_options_ (multipart, &
                                                     i_domain, &
                                                     renum_cell_method, &
                                                     renum_cell_properties, &
                                                     renum_face_method)
-
+    ! Set the reordering methods to be used after partitioning
     use pdm
     use iso_c_binding
     implicit none
 
-    type(c_ptr),               value   :: multipart                            ! Pointer to \ref PDM_multipart_t object
+    type(c_ptr),               value   :: multipart                            ! Pointer to PDM_multipart_t object
     integer(c_int),            value   :: i_domain                             ! Id of domain which parameters apply (or -1 for all domains)
     character (len=*)                  :: renum_cell_method                    ! Choice of renumbering method for cells
-    integer(kind=PDM_l_num_s), pointer :: renum_cell_properties(:)             ! Parameters used by cacheblocking method : [n_cell_per_cache_wanted, is_asynchrone, is_vectorisation, n_vect_face, split_method]
-    type(c_ptr)                        :: c_renum_cell_properties = C_NULL_PTR
+    integer(kind=PDM_l_num_s), pointer :: renum_cell_properties(:)             ! Parameters used by cache-blocking method : [*n_cell_per_cache_wanted*, *is_asynchronous*, *is_vectorisation*, *n_vect_face*, *split_method*]
     character (len=*)                  :: renum_face_method                    ! Choice of renumbering method for faces
+    type(c_ptr)                        :: c_renum_cell_properties = C_NULL_PTR
 
     c_renum_cell_properties = c_loc(renum_cell_properties)
 
@@ -872,16 +669,15 @@ contains
 
   end subroutine PDM_multipart_set_reordering_options_
 
-  ! Set the reordering methods to be used after partitioning
 
   subroutine PDM_multipart_set_reordering_options_vtx_ (multipart, &
                                                         i_domain, &
                                                         renum_vtx_method)
-
+    ! Set the reordering methods to be used after partitioning
     use iso_c_binding
     implicit none
 
-    type(c_ptr),      value  :: multipart        ! Pointer to \ref PDM_multipart_t object
+    type(c_ptr),      value  :: multipart        ! Pointer to PDM_multipart_t object
     integer(c_int),   value  :: i_domain         ! Id of domain which parameters apply (or -1 for all domains)
     character (len=*)        :: renum_vtx_method ! Choice of renumbering method for vertices
 
@@ -891,19 +687,18 @@ contains
 
   end subroutine PDM_multipart_set_reordering_options_vtx_
 
-  ! Get the \ref PDM_part_mesh_nodal_t object
 
   subroutine PDM_multipart_get_part_mesh_nodal_ (multipart, &
                                                  i_domain, &
                                                  pmesh_nodal, &
                                                  ownership)
-
+    ! Retrieve the partitioned nodal mesh
     use iso_c_binding
     implicit none
 
-    type(c_ptr),    value  :: multipart   ! Pointer to \ref PDM_multipart_t object
+    type(c_ptr),    value  :: multipart   ! Pointer to PDM_multipart_t object
     integer(c_int), value  :: i_domain    ! Id of domain which parameters apply (or -1 for all domains)
-    type(c_ptr)            :: pmesh_nodal ! Partitionned nodal mesh
+    type(c_ptr)            :: pmesh_nodal ! Partitioned nodal mesh
     integer(c_int), value  :: ownership   ! Data ownership
 
     call PDM_multipart_get_part_mesh_nodal_c(multipart, &
@@ -913,7 +708,6 @@ contains
 
   end subroutine PDM_multipart_get_part_mesh_nodal_
 
-  ! Set block data
 
   subroutine PDM_multipart_block_set_ (multipart, &
                                        i_domain, &
@@ -929,24 +723,24 @@ contains
                                        dvtx_coord, &
                                        dface_group_idx, &
                                        dface_group)
-
+    ! Set block data
     use iso_c_binding
     implicit none
 
-    type(c_ptr)                        :: multipart          ! Pointer to \ref PDM_multipart_t object
+    type(c_ptr)                        :: multipart          ! Pointer to PDM_multipart_t object
     integer, intent(in)                :: i_domain           ! Id of domain
     integer, intent(in)                :: dn_cell            ! Number of distributed cells
     integer, intent(in)                :: dn_face            ! Number of distributed faces
     integer, intent(in)                :: dn_vtx             ! Number of distributed vertices
     integer, intent(in)                :: n_face_group       ! Number of face groups
-    integer(kind=PDM_l_num_s), pointer :: dcell_face_idx(:)  ! Distributed cell face connectivity index or NULL (size : dn_cell + 1, numbering : 0 to n-1)
-    integer(kind=PDM_g_num_s), pointer :: dcell_face(:)      ! Distributed cell face connectivity or NULL (size : dface_vtx_idx(dn_cell+1), numbering : 1 to n)
+    integer(kind=PDM_l_num_s), pointer :: dcell_face_idx(:)  ! Distributed cell face connectivity index or *null()* (size : ``dn_cell`` + 1, numbering : 0 to n-1)
+    integer(kind=PDM_g_num_s), pointer :: dcell_face(:)      ! Distributed cell face connectivity or *null()* (size : ``dface_vtx_idx(dn_cell+1)``, numbering : 1 to n)
     integer(kind=PDM_g_num_s), pointer :: dface_cell(:)      ! Distributed face cell connectivity
-    integer(kind=PDM_l_num_s), pointer :: dface_vtx_idx(:)   ! Distributed face to vertex connectivity index (size : dn_face + 1, numbering : 0 to n-1)
-    integer(kind=PDM_g_num_s), pointer :: dface_vtx(:)       ! Distributed face to vertex connectivity (size : dface_vtx_idx(dn_face+1), numbering : 1 to n)
-    double precision,          pointer :: dvtx_coord(:,:)    ! Distributed vertex coordinates (shape = [3, n_vtx])
-    integer(kind=PDM_l_num_s), pointer :: dface_group_idx(:) ! Index of distributed faces list of each group (size = n_face_group + 1) or NULL
-    integer(kind=PDM_g_num_s), pointer :: dface_group(:)     ! Distributed faces list of each group or NULL (size = dface_group(dface_group_idx(n_face_group+1)+1), numbering : 1 to n)
+    integer(kind=PDM_l_num_s), pointer :: dface_vtx_idx(:)   ! Distributed face to vertex connectivity index (size : ``dn_face`` + 1, numbering : 0 to n-1)
+    integer(kind=PDM_g_num_s), pointer :: dface_vtx(:)       ! Distributed face to vertex connectivity (size : ``dface_vtx_idx(dn_face+1)``, numbering : 1 to n)
+    double precision,          pointer :: dvtx_coord(:,:)    ! Distributed vertex coordinates (shape = [3, ``dn_vtx``])
+    integer(kind=PDM_l_num_s), pointer :: dface_group_idx(:) ! Index of distributed faces list of each group (size = ``n_face_group`` + 1) or *null()*
+    integer(kind=PDM_g_num_s), pointer :: dface_group(:)     ! Distributed faces list of each group or *null()* (size = ``dface_group_idx(n_face_group+1)``, numbering : 1 to n)
 
     integer(kind=c_int)                :: c_i_domain
     integer(kind=c_int)                :: c_dn_cell
@@ -997,7 +791,6 @@ contains
 
   end subroutine PDM_multipart_block_set_
 
-  ! Returns the dimensions of a given partition
 
   subroutine PDM_multipart_part_dim_get_ (multipart, &
                                           i_domain, &
@@ -1012,14 +805,14 @@ contains
                                           s_face_vtx, &
                                           s_face_bound, &
                                           n_bound_groups)
-
+    ! Returns the dimensions of a given partition
     use pdm
     use iso_c_binding
     implicit none
 
-    type(c_ptr), value       :: multipart         ! Pointer to \ref PDM_multipart_t object
-    integer,     intent(in)  :: i_domain          ! Id of domain which parameters apply (or -1 for all domains)
-    integer,     intent(in)  :: i_part            ! Partition index
+    type(c_ptr), value       :: multipart         ! Pointer to PDM_multipart_t object
+    integer,     intent(in)  :: i_domain          ! Domain identifier
+    integer,     intent(in)  :: i_part            ! Partition identifier
     integer,     intent(out) :: n_cell            ! Number of cells
     integer,     intent(out) :: n_face            ! Number of faces
     integer,     intent(out) :: n_face_part_bound ! Number of boundary faces in partition
@@ -1069,7 +862,6 @@ contains
 
   end subroutine PDM_multipart_part_dim_get_
 
-  ! Returns the data arrays of a given partition (Deprecated)
 
   subroutine PDM_multipart_part_val_get_(multipart, &
                                          i_domain, &
@@ -1089,7 +881,7 @@ contains
                                          face_bound_idx, &
                                          face_bound, &
                                          face_bound_ln_to_gn)
-
+    ! Returns the data arrays of a given partition (Deprecated)
     use pdm
     use iso_c_binding
     use pdm_pointer_array
@@ -1249,7 +1041,6 @@ contains
 
   end subroutine PDM_multipart_part_val_get_
 
-  ! Returns the dimensions of a given partition
 
   subroutine PDM_multipart_part_connectivity_get_ (multipart, &
                                                    i_domain, &
@@ -1258,42 +1049,43 @@ contains
                                                    connect_idx, &
                                                    connect, &
                                                    ownership, &
-                                                   pn_entity)
-
+                                                   n_entity)
+    ! Get a partitioned connectivity
     use pdm
     use iso_c_binding
     implicit none
 
-    type(c_ptr),               value   :: multipart                  ! Pointer to \ref PDM_multipart_t object
-    integer(c_int),            value   :: i_domain                   ! Id of domain which parameters apply (or -1 for all domains)
-    integer(c_int),            value   :: i_part                     ! Partition index
-    integer(c_int),            value   :: connectivity_type          ! Type of connectivity to be getted (enumerated type)
-    integer(kind=PDM_l_num_s), pointer :: connect_idx(:)             ! Connectivity index
-    integer(kind=PDM_l_num_s), pointer :: connect(:)                 ! Connectivity
+    type(c_ptr),               value   :: multipart                  ! Pointer to PDM_multipart_t object
+    integer(c_int),            value   :: i_domain                   ! Domain identifier
+    integer(c_int),            value   :: i_part                     ! Partition identifier
+    integer(c_int),            value   :: connectivity_type          ! Connectivity type
+    integer(kind=PDM_l_num_s), pointer :: connect_idx(:)             ! Connectivity index (size = ``n_entity`` + 1)
+    integer(kind=PDM_l_num_s), pointer :: connect(:)                 ! Connectivity (size = ``connect_idx(p_entity+1)``)
     integer(c_int),            value   :: ownership                  ! Data ownership
-    integer(c_int)                     :: pn_entity                  ! Number of entities
+    integer(c_int)                     :: n_entity                   ! Number of leading entities
     type(c_ptr)                        :: c_connect_idx = C_NULL_PTR
     type(c_ptr)                        :: c_connect     = C_NULL_PTR
     integer(c_int)                     :: connec_size
 
-    pn_entity = PDM_multipart_part_connectivity_get_c(multipart,         &
-                                                      i_domain,            &
-                                                      i_part,            &
-                                                      connectivity_type, &
-                                                      c_connect_idx,     &
-                                                      c_connect,         &
-                                                      ownership)
+    n_entity = PDM_multipart_part_connectivity_get_c(multipart,         &
+                                                     i_domain,          &
+                                                     i_part,            &
+                                                     connectivity_type, &
+                                                     c_connect_idx,     &
+                                                     c_connect,         &
+                                                     ownership)
 
     connect_idx => null()
     if ( c_associated(c_connect_idx) ) then
       call c_f_pointer(c_connect_idx, &
                        connect_idx,   &
-                       [pn_entity+1])
+                       [n_entity+1])
     end if
 
-    connec_size = 2 * pn_entity ! TO DO is c_connect_idx a C_NULL_PTR in other cases than edge_vtx ?
+    ! TO DO if c_connect_idx a C_NULL_PTR in other cases than edge_vtx ?
+    connec_size = 2 * n_entity
     if ( c_associated(c_connect_idx) ) then
-      connec_size = connect_idx(pn_entity+1)
+      connec_size = connect_idx(n_entity+1)
     end if
 
     call c_f_pointer(c_connect, &
@@ -1302,7 +1094,6 @@ contains
 
   end subroutine PDM_multipart_part_connectivity_get_
 
-  ! Returns the dimensions of a given partition
 
   subroutine PDM_multipart_part_ln_to_gn_get_ (multipart, &
                                                i_domain, &
@@ -1310,35 +1101,34 @@ contains
                                                entity_type, &
                                                entity_ln_to_gn, &
                                                ownership, &
-                                               pn_entity)
-
+                                               n_entity)
+    ! Get the global ids of entities with given type
     use pdm
     use iso_c_binding
     implicit none
 
-    type(c_ptr),               value   :: multipart                      ! Pointer to \ref PDM_multipart_t object
-    integer(c_int),            value   :: i_domain                       ! Id of domain which parameters apply (or -1 for all domains)
-    integer(c_int),            value   :: i_part                         ! Partition index
-    integer(c_int),            value   :: entity_type                    ! Type of entity to be getted
-    integer(kind=PDM_g_num_s), pointer :: entity_ln_to_gn(:)             ! Entity local number to global number
-    type(c_ptr)                        :: c_entity_ln_to_gn = C_NULL_PTR
+    type(c_ptr),               value   :: multipart                      ! Pointer to PDM_multipart_t object
+    integer(c_int),            value   :: i_domain                       ! Domain identifier
+    integer(c_int),            value   :: i_part                         ! Partition identifier
+    integer(c_int),            value   :: entity_type                    ! Entity type
+    integer(kind=PDM_g_num_s), pointer :: entity_ln_to_gn(:)             ! Global ids (size = ``n_entity``)
     integer(c_int),            value   :: ownership                      ! Data ownership
-    integer(c_int)                     :: pn_entity                      ! Number of entities
+    integer(c_int)                     :: n_entity                       ! Number of entities
+    type(c_ptr)                        :: c_entity_ln_to_gn = C_NULL_PTR
 
-    pn_entity = PDM_multipart_part_ln_to_gn_get_c(multipart, &
-                                                  i_domain, &
-                                                  i_part, &
-                                                  entity_type, &
-                                                  c_entity_ln_to_gn, &
-                                                  ownership)
+    n_entity = PDM_multipart_part_ln_to_gn_get_c(multipart, &
+                                                 i_domain, &
+                                                 i_part, &
+                                                 entity_type, &
+                                                 c_entity_ln_to_gn, &
+                                                 ownership)
 
     call c_f_pointer(c_entity_ln_to_gn, &
                      entity_ln_to_gn,   &
-                     [pn_entity])
+                     [n_entity])
 
   end subroutine PDM_multipart_part_ln_to_gn_get_
 
-  ! Returns the partitions color
 
   subroutine PDM_multipart_partition_color_get_(multipart, &
                                                 i_domain, &
@@ -1346,49 +1136,48 @@ contains
                                                 entity_type, &
                                                 entity_color, &
                                                 ownership, &
-                                                pn_entity)
-
+                                                n_entity)
+    ! Get the color of entities with given type
     use pdm
     use iso_c_binding
     implicit none
 
-    type(c_ptr),               value   :: multipart                   ! Pointer to \ref PDM_multipart_t object
-    integer(c_int),            value   :: i_domain                    ! Id of domain which parameters apply (or -1 for all domains)
-    integer(c_int),            value   :: i_part                      ! Partition index
-    integer(c_int),            value   :: entity_type                 ! Type of entity to be getted
-    integer(kind=PDM_l_num_s), pointer :: entity_color(:)             ! Entity->color connectivity
-    type(c_ptr)                        :: c_entity_color = C_NULL_PTR
+    type(c_ptr),               value   :: multipart                   ! Pointer to PDM_multipart_t object
+    integer(c_int),            value   :: i_domain                    ! Domain identifier
+    integer(c_int),            value   :: i_part                      ! Partition identifier
+    integer(c_int),            value   :: entity_type                 ! Entity type
+    integer(kind=PDM_l_num_s), pointer :: entity_color(:)             ! Entity color (size = ``n_entity``)
     integer(c_int),            value   :: ownership                   ! Data ownership
-    integer(c_int)                     :: pn_entity                   ! Number of entities
+    integer(c_int)                     :: n_entity                   ! Number of entities
+    type(c_ptr)                        :: c_entity_color = C_NULL_PTR
 
-    pn_entity = PDM_multipart_partition_color_get_c(multipart, &
-                                                    i_domain, &
-                                                    i_part, &
-                                                    entity_type, &
-                                                    c_entity_color, &
-                                                    ownership)
+    n_entity = PDM_multipart_partition_color_get_c(multipart, &
+                                                   i_domain, &
+                                                   i_part, &
+                                                   entity_type, &
+                                                   c_entity_color, &
+                                                   ownership)
 
     call c_f_pointer(c_entity_color, &
                      entity_color,   &
-                     [pn_entity])
+                     [n_entity])
 
   end subroutine PDM_multipart_partition_color_get_
 
-  ! Get ghost vertex information
 
   subroutine PDM_multipart_part_ghost_infomation_get_(multipart, &
                                                       i_domain, &
                                                       i_part, &
                                                       vtx_ghost_information)
-
+    ! Get ghost vertex information
     use pdm
     use iso_c_binding
     implicit none
 
-    type(c_ptr),    value              :: multipart                            ! Pointer to \ref PDM_multipart_t object
-    integer(c_int), value              :: i_domain                             ! Id of domain which parameters apply (or -1 for all domains)
-    integer(c_int), value              :: i_part                               ! Partition index
-    integer(kind=PDM_l_num_s), pointer :: vtx_ghost_information(:)             ! An integer for each vertex to describe it's kind
+    type(c_ptr),    value              :: multipart                            ! Pointer to PDM_multipart_t object
+    integer(c_int), value              :: i_domain                             ! Domain identifier
+    integer(c_int), value              :: i_part                               ! Partition identifier
+    integer(kind=PDM_l_num_s), pointer :: vtx_ghost_information(:)             ! Integer that gives the current priority of vertices on current partitions
     type(c_ptr)                        :: c_vtx_ghost_information = C_NULL_PTR
 
     integer(c_int) :: c_n_cell
@@ -1427,7 +1216,6 @@ contains
 
   end subroutine PDM_multipart_part_ghost_infomation_get_
 
-  ! Get partitionned mesh vertices coordiantes
 
   subroutine PDM_multipart_part_vtx_coord_get_(multipart, &
                                                i_domain, &
@@ -1435,17 +1223,17 @@ contains
                                                vtx_coord, &
                                                ownership, &
                                                n_vtx)
-
+    ! Get vertex coordinates
     use iso_c_binding
     implicit none
 
-    type(c_ptr),      value     :: multipart                ! Pointer to \ref PDM_multipart_t object
-    integer(c_int),   value     :: i_domain                 ! Id of domain which parameters apply (or -1 for all domains)
-    integer(c_int),   value     :: i_part                   ! Partition index
-    double precision, pointer   :: vtx_coord(:,:)           ! Coordinates of vertices
-    type(c_ptr)                 :: c_vtx_coord = C_NULL_PTR
+    type(c_ptr),      value     :: multipart                ! Pointer to PDM_multipart_t object
+    integer(c_int),   value     :: i_domain                 ! Domain identifier
+    integer(c_int),   value     :: i_part                   ! Partition identifier
+    double precision, pointer   :: vtx_coord(:,:)           ! Vertex coordinates (shape = [3, ``n_vtx``])
     integer(c_int),   value     :: ownership                ! Data ownership
     integer(c_int)              :: n_vtx                    ! Number of vertices
+    type(c_ptr)                 :: c_vtx_coord = C_NULL_PTR
 
     n_vtx = PDM_multipart_part_vtx_coord_get_c(multipart, &
                                                i_domain, &
@@ -1459,7 +1247,6 @@ contains
 
   end subroutine PDM_multipart_part_vtx_coord_get_
 
-  ! Get boundary information
 
   subroutine PDM_multipart_group_get_(multipart, &
                                       i_domain, &
@@ -1469,19 +1256,19 @@ contains
                                       group_entity_idx, &
                                       group_entity, &
                                       group_entity_ln_to_gn)
-
+    ! Get the group description for a given entity
     use pdm
     use iso_c_binding
     implicit none
 
-    type(c_ptr),               value   :: multipart                     ! Pointer to \p PDM_multipart_t object
+    type(c_ptr),               value   :: multipart                     ! Pointer to PDM_multipart_t object
     integer(c_int),            value   :: i_domain                      ! Domain identifier
     integer(c_int),            value   :: i_part                        ! Partition identifier
     integer(c_int)                     :: entity_type                   ! Type of mesh entity
     integer(c_int)                     :: n_group                       ! Number of groups
-    integer(kind=PDM_l_num_s), pointer :: group_entity_idx(:)           ! Index for group->entity connectivity (size = \p n_group)
-    integer(kind=PDM_l_num_s), pointer :: group_entity(:)               ! Group->entity connectivity (1-based local ids, size = \p group_entity_idx[\p n_group])
-    integer(kind=PDM_g_num_s), pointer :: group_entity_ln_to_gn(:)      ! Group->entity connectivity (group-specific global ids, size = \p group_entity_idx[\p n_group])
+    integer(kind=PDM_l_num_s), pointer :: group_entity_idx(:)           ! Index for group->entity connectivity (size = ``n_group``)
+    integer(kind=PDM_l_num_s), pointer :: group_entity(:)               ! Group->entity connectivity (1-based local ids, size = ``group_entity_idx(n_group+1)``)
+    integer(kind=PDM_g_num_s), pointer :: group_entity_ln_to_gn(:)      ! Group->entity connectivity (group-specific global ids, size = ``group_entity_idx(n_group+1)``)
     type(c_ptr)                        :: c_group_entity = C_NULL_PTR
     type(c_ptr)                        :: c_group_entity_idx = C_NULL_PTR
     type(c_ptr)                        :: c_group_entity_ln_to_gn = C_NULL_PTR
@@ -1509,7 +1296,6 @@ contains
 
   end subroutine PDM_multipart_group_get_
 
-  ! Get the connection graph between partition for the requested entity type
 
   subroutine PDM_multipart_part_graph_comm_get_(multipart,            &
                                                 i_domain,               &
@@ -1519,14 +1305,14 @@ contains
                                                 ppart_bound_part_idx, &
                                                 ppart_bound,          &
                                                 ownership)
-
+    ! Get the connection graph between partition for the requested entity type
     use pdm
     use iso_c_binding
     implicit none
 
-    type(c_ptr),               value   :: multipart                     ! Pointer to \ref PDM_multipart_t object
-    integer(c_int),            value   :: i_domain                      ! Id of domain which parameters apply (or -1 for all domains)
-    integer(c_int),            value   :: i_part                        ! Partition index
+    type(c_ptr),               value   :: multipart                     ! Pointer to PDM_multipart_t object
+    integer(c_int),            value   :: i_domain                      ! Domain identifier
+    integer(c_int),            value   :: i_part                        ! Partition identifier
     integer(c_int)                     :: entity_type                   ! Type of mesh entity
     integer(kind=PDM_l_num_s), pointer :: ppart_bound_proc_idx(:)       ! Partitioning boundary entities index from process (size = n_proc + 1)
     integer(kind=PDM_l_num_s), pointer :: ppart_bound_part_idx(:)       ! Partitioning boundary entities index from partition (size = n_total_part + 1)
@@ -1549,7 +1335,7 @@ contains
     integer(c_int)                     :: n_bound_groups
 
     call PDM_multipart_part_graph_comm_get_c(multipart,              &
-                                             i_domain,                 &
+                                             i_domain,               &
                                              i_part,                 &
                                              entity_type,            &
                                              c_ppart_bound_proc_idx, &

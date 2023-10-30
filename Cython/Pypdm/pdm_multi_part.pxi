@@ -285,7 +285,7 @@ cdef class MultiPart:
     # ------------------------------------------------------------------
     def joins_set(self, NPY.ndarray[NPY.int32_t, mode='c', ndim=1] matching_join):
       """
-      joins_set(n_total_joins, matching_join)
+      joins_set(matching_join)
 
       Set connecting data between all the domains
 
@@ -520,7 +520,8 @@ cdef class MultiPart:
       """
       thread_color_get(i_domain, i_part)
 
-      Get partition dimensionsGet array containing thread color - Only if specific reordering (in ParaDiGMA plugins)
+      Get array containing thread color.
+      Only if specific reordering (in **ParaDiGMA** plugins).
 
       Parameters:
         i_domain (int) : Domain identifier
@@ -588,8 +589,8 @@ cdef class MultiPart:
 
       Returns:
         Tuple
-          - Connectivity index (np.ndarray[np.int32_t])
-          - Connectivity       (np.ndarray[np.int32_t])
+          - Connectivity index (`np.ndarray[np.int32_t]`)
+          - Connectivity       (`np.ndarray[np.int32_t]`)
       """
       # ************************************************************************
       # > Declaration
@@ -715,7 +716,7 @@ cdef class MultiPart:
         """
         graph_comm_get(i_domain, i_part, entity_type)
 
-        Returns the connection graph between partition for the requested entity type
+        Get the connection graph between partition for the requested entity type
 
         Parameters:
           i_domain    (int)                 : Domain identifier
