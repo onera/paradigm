@@ -683,7 +683,7 @@ int main(int argc, char *argv[])
   free(dface_join_idx);
   free(dface_join);
   free(djoins_ids);
-  free(join_to_opposite);
+  // free(join_to_opposite);
 
   PDM_multipart_free(mpart);
   free(dmesh);
