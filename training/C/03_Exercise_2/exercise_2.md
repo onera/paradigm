@@ -11,9 +11,11 @@ kernelspec:
   name: python3
 ---
 
++++ {"editable": false, "deletable": false}
+
 # Exercise 2 : Localization of a point cloud inside a mesh
 
-+++
++++ {"editable": false, "deletable": false}
 
 In this second exercise we will focus on the **Mesh Location** feature.
 It consists in computing the location of one or more partitioned point clouds (referred to as the *targets*) inside a partitioned mesh (referred to as the *source*).
@@ -34,12 +36,16 @@ Your task is to fill in the empty code cells using the API referenced [here](htt
 
 *Note: For easier visualization, we will study a two-dimensional case but the feature is also available in three dimensions.*
 
-+++
++++ {"editable": false, "deletable": false}
 
 ## Load magic commands
 As usual we start by loading the custom magic commands.
 
 ```{code-cell} ipython3
+---
+"editable": false
+"deletable": false
+---
 import os, sys
 module_path = os.path.abspath(os.path.join('../../utils'))
 if module_path not in sys.path:
@@ -47,19 +53,27 @@ if module_path not in sys.path:
 ```
 
 ```{code-cell}
+---
+"editable": false
+"deletable": false
+---
 %reload_ext visu_magics
 %reload_ext code_magics
 ```
 
 
 
-+++
++++ {"editable": false, "deletable": false}
 
 ## Include the required headers and initialize MPI
 
 To begin, we include the required C headers and initialize MPI.
 
 ```{code-cell}
+---
+"editable": false
+"deletable": false
+---
 %%code_block -p exercise_2 -i 1
 
 // Required headers
@@ -75,6 +89,7 @@ int main(int argc, char *argv[])
   PDM_MPI_Comm_rank(comm, &i_rank);
 ```
 
++++ {"editable": false, "deletable": false}
 
 ## 1. Localization
 
@@ -91,6 +106,9 @@ Here we generate a square mesh composed of polygonal elements.
 *Nothing to do here, you can move on. Just don't forget to run the cell!*
 
 ```{code-cell}
+---
+"deletable": false
+---
 %%code_block -p exercise_2 -i 2
 
   // Generate partitioned source mesh
@@ -134,6 +152,8 @@ Here we generate a square mesh composed of polygonal elements.
                                    &src_face_ln_to_gn);
 ```
 
++++ {"editable": false, "deletable": false}
+
 ### Generate a partitioned "target" mesh
 
 We then generate a second partitioned mesh.
@@ -147,6 +167,9 @@ We will see later how to deal with these *unlocated* points.
 *Nothing to do here either. However, once you've successfully completed the localization procedure, feel free to play with the parameters of the two meshes.*
 
 ```{code-cell}
+---
+"deletable": false
+---
 %%code_block -p exercise_2 -i 3
 
   // Generate target source mesh
@@ -193,11 +216,16 @@ We will see later how to deal with these *unlocated* points.
                                    &tgt_face_ln_to_gn);
 ```
 
++++ {"editable": false, "deletable": false}
+
 ### Create the `PDM_mesh_location_t` structure
 
 Now that we have all the required inputs, let's create an instance of the `PDM_mesh_location_t` structure.
 
 ```{code-cell}
+---
+"deletable": false
+---
 %%code_block -p exercise_2 -i 4
 
   // Create the PDM_mesh_location_t structure
@@ -208,12 +236,17 @@ Now that we have all the required inputs, let's create an instance of the `PDM_m
 
 ```
 
++++ {"editable": false, "deletable": false}
+
 ### Set the target point cloud
 
 Now let's provide the target point cloud to the structure.
 Recall that there can be more than one partition per MPI rank.
 
 ```{code-cell}
+---
+"deletable": false
+---
 %%code_block -p exercise_2 -i 5
 
   // Set target point cloud
@@ -232,6 +265,8 @@ Recall that there can be more than one partition per MPI rank.
   }
 ```
 
++++ {"editable": false, "deletable": false}
+
 ### Set the source mesh
 
 Now let's provide the source mesh to the structure.
@@ -243,6 +278,9 @@ Here you have essentially two options:
 Choose the one that suits you best, and again, recall that there can be more than one partition per MPI rank.
 
 ```{code-cell}
+---
+"deletable": false
+---
 %%code_block -p exercise_2 -i 6
 
   // Set source mesh
@@ -281,6 +319,8 @@ Choose the one that suits you best, and again, recall that there can be more tha
   }
 ```
 
++++ {"editable": false, "deletable": false}
+
 ### Set some optional parameters
 
 The location algorithm uses a preconditioning stage which consists in associating candidate elements and points before computed the exact location.
@@ -299,6 +339,9 @@ We recommend that you first go through the entire localization procedure before 
 You will still have time afterwards to play with them and see the impact they can have.
 
 ```{code-cell}
+---
+"deletable": false
+---
 %%code_block -p exercise_2 -i 7
 
   // Set the location preconditioning method (optional)
@@ -313,12 +356,17 @@ You will still have time afterwards to play with them and see the impact they ca
 
 ```
 
++++ {"editable": false, "deletable": false}
+
 ### Compute the localization
 
 Now that everything is ready, we can compute the localization.
 Once the calculation is complete, we can display the elapsed and CPU times.
 
 ```{code-cell}
+---
+"deletable": false
+---
 %%code_block -p exercise_2 -i 8
 
   // Compute location
@@ -330,6 +378,8 @@ Once the calculation is complete, we can display the elapsed and CPU times.
   PDM_mesh_location_dump_times(mesh_loc);
 
 ```
+
++++ {"editable": false, "deletable": false}
 
 ## 2. Interpolation
 
@@ -367,7 +417,7 @@ For the first field, the interpolation is straightforward : the target value is 
 The second field interpolation is trickier as you will need the cell->vertex connectivity built during the location computation to link the interpolation weights to the appropriate source nodes.
  -->
 
-+++
++++ {"editable": false, "deletable": false}
 
 ### Retrieve the `PDM_part_to_part_t` instance
 
@@ -380,6 +430,9 @@ In this case, *Part1* represents the source mesh and *Part2* the target point cl
 The `PDM_part_to_part_t` instance was built during the localization computation and can be accessed from the `PDM_mesh_location_t` structure.
 
 ```{code-cell}
+---
+"deletable": false
+---
 %%code_block -p exercise_2 -i 9
 
   // Get PDM_part_to_part_t structure
@@ -391,7 +444,7 @@ The `PDM_part_to_part_t` instance was built during the localization computation 
                                      PDM_OWNERSHIP_USER);
 ```
 
-+++
++++ {"editable": false, "deletable": false}
 
 Part-to-part is able to perform non-blocking exchanges so here's how we're going to proceed:
 1. initiate the first exchange: each source element sends its global id to all the target points it contains ;
@@ -405,13 +458,16 @@ Here you need to initiate the exchange of global ids from the source mesh elemen
 
 As each MPI ranks hosts source *and* target partitions, we will use the function `PDM_part_to_part_iexch` which allows for transparent, bilateral data exchange.
 
-+++ {"jupyter": {"source_hidden": true}}
++++ {"jupyter": {"source_hidden": true}, "editable": false, "deletable": false}
 
 Hints:
   - each cell sends a **single** value (its **global id**)
   - the **same** value is sent to each corresponding target
 
 ```{code-cell}
+---
+"deletable": false
+---
 %%code_block -p exercise_2 -i 10
 
   // Initiate exchange of first field (source elements global ids)
@@ -443,16 +499,34 @@ Hints:
   //                        ?);                    // Request
 ```
 
++++ {"editable": false, "deletable": false}
+
 ### Interpolate the second field (node-based)
+
+
+
+
+<!-- Interpolation of node-based fields is not as straightforward as cell-based ones.
+Let $f$ denote the field of interest, $T$ a target point and $S$ the source element containing $T$.
+Then the interpolated field at $T$ reads
+$$f(T) = \sum_i w_i f(v_i),$$
+where $\left\{ v_i \right\}$ is the set of vertices of $S$ and $\left\{ w_i \right\}$ the interpolation weights.
+
+In practice, to perform this interpolation, you need
+ - the element$\to$vertex connectivity
+ - the interpolation weights
+
+
+for each element: get the list of associated target points
+
+
 
 Now you need to compute the spatially interpolated *x* values **on the source side**.
 
 
 Let $T$ denote a target point and $S$ the source element containing $T$.
+ -->
 
-$f(T) = \sum_i w_i f(v_i)$,
-
-where $\left\{ v_i \right\}$ is the set of vertices of $S$ and $\left\{ w_i \right\}$ the interpolation weights.
 
 
 
@@ -461,6 +535,9 @@ where $\left\{ v_i \right\}$ is the set of vertices of $S$ and $\left\{ w_i \rig
 </span>
 
 ```{code-cell}
+---
+"deletable": false
+---
 %%code_block -p exercise_2 -i 11
 
   // Interpolate second field (node-based)
@@ -524,12 +601,16 @@ where $\left\{ v_i \right\}$ is the set of vertices of $S$ and $\left\{ w_i \rig
 
 ```
 
++++ {"editable": false, "deletable": false}
 
 ### Exchange the second interpolated field
 
 You can now initiate the exchange of the interpolated field you just computed.
 
 ```{code-cell}
+---
+"deletable": false
+---
 %%code_block -p exercise_2 -i 12
 
   // Initiate exchange of second field
@@ -560,6 +641,7 @@ You can now initiate the exchange of the interpolated field you just computed.
   //                        ?);                    // Request
 ```
 
++++ {"editable": false, "deletable": false}
 
 ### Check the interpolated received on the target side
 
@@ -574,6 +656,9 @@ You must therefore use the appropriate indirection to correctly read the receive
 </span>
 
 ```{code-cell}
+---
+"deletable": false
+---
 %%code_block -p exercise_2 -i 13
 
   // Finalize both exchanges
@@ -635,9 +720,16 @@ You must therefore use the appropriate indirection to correctly read the receive
   }
 ```
 
++++ {"editable": false, "deletable": false}
+
+*Write output files for visualization, nothing to do here.*
+
 ```{code-cell}
+---
+"deletable": false
+---
 %%code_block -p exercise_2 -i 14
-  // Nothing to do here :)
+  // Nothing to do here
   const char *field_name[] = {
     "field1",
     "field2",
@@ -707,12 +799,17 @@ You must therefore use the appropriate indirection to correctly read the receive
 
 ```
 
++++ {"editable": false, "deletable": false}
+
 ### Free memory
 
 Congratulations! You've made it to the end of the exercise :)
-Now let's clean the mess we just made and free the allocated memory...
+Now let's clean the mess we just made and free the allocated memory.
 
 ```{code-cell}
+---
+"deletable": false
+---
 %%code_block -p exercise_2 -i 15
   // Free memory
   // EXO
@@ -779,13 +876,18 @@ Now let's clean the mess we just made and free the allocated memory...
   free(tgt_field[2]);
 ```
 
++++ {"editable": false, "deletable": false}
 
 ### Finalize
 
-...and finalize MPI.
+Finalize MPI.
 
 ```{code-cell}
+---
+"deletable": false
+---
 %%code_block -p exercise_2 -i 16
+  // Nothing to do here
   PDM_MPI_Finalize();
 
   if (i_rank == 0) {
@@ -798,18 +900,27 @@ Now let's clean the mess we just made and free the allocated memory...
 
 ```
 
++++ {"editable": false, "deletable": false}
+
 ## Compile the code and run
 
 Moment of truth!
 
 ```{code-cell}
+---
+"deletable": false
+---
 %merge_code_blocks -l c -p exercise_2 -n 2 -c
 ```
 
++++ {"editable": false, "deletable": false}
 
 ## Visualize the results
 
 ```{code-cell}
+---
+"deletable": false
+---
 %%visualize -nl -sv
 visu/SRC_MESH.case
 visu/TGT_MESH.case : is_located : points
