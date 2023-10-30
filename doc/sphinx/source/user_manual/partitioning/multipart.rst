@@ -26,8 +26,6 @@ Set inputs
 
 .. doxygenfunction:: PDM_multipart_dmesh_set
 
-.. doxygenfunction:: PDM_multipart_joins_set
-
 .. doxygenfunction:: PDM_multipart_domain_interface_shared_set
 
 
@@ -116,8 +114,6 @@ Fortran API
 
   .. f:autosubroutine:: PDM_multipart_block_set_
 
-  .. f:autosubroutine:: PDM_multipart_joins_set_
-
   .. PDM_multipart_domain_interface_shared_set
 
   Renumbering options
@@ -192,8 +188,6 @@ Python API
   .. autofunction:: Pypdm.Pypdm.MultiPart.dmesh_nodal_set
 
   .. autofunction:: Pypdm.Pypdm.MultiPart.dmesh_set
-
-  .. autofunction:: Pypdm.Pypdm.MultiPart.joins_set
 
 
   Renumbering options

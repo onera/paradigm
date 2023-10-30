@@ -29,11 +29,6 @@ cdef extern from "pdm_multipart.h":
                                        PDM_dmesh_nodal_t *dmesh)
 
     # ------------------------------------------------------------------
-    void PDM_multipart_joins_set(PDM_multipart_t *mtp,
-                                 int              n_total_joins,
-                                 int*             matching_join_array)
-
-    # ------------------------------------------------------------------
     void PDM_multipart_set_reordering_options(      PDM_multipart_t *mtp,
                                               const int              i_domain,
                                               const char            *renum_cell_method,
@@ -282,20 +277,6 @@ cdef class MultiPart:
                                     i_domain,
                                     dmn.dmn)
 
-    # ------------------------------------------------------------------
-    def joins_set(self, NPY.ndarray[NPY.int32_t, mode='c', ndim=1] matching_join):
-      """
-      joins_set(matching_join)
-
-      Set connecting data between all the domains
-
-      Parameters:
-        matching_join (np.ndarray[np.int32_t]) : For each global join id, give the global id of the opposite
-      """
-      cdef int n_total_joins = len(matching_join)
-      PDM_multipart_joins_set(  self._mtp,
-                                     n_total_joins,
-                              <int*> matching_join.data)
     # ------------------------------------------------------------------
     def reordering_set(self, int i_domain,
                        char *renum_cell_method,

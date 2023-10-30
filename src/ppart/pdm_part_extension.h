@@ -265,7 +265,7 @@ PDM_part_extension_ln_to_gn_get
  * \param [in]  mesh_entity  Type of mesh entity
  * \param [out] interface_no Interfaces
  *
- * \return  n_elt  Number of interfaces
+ * \return  Number of interfaces
  *
  */
 

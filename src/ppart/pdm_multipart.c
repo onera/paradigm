@@ -2994,28 +2994,6 @@ PDM_multipart_domain_interface_shared_set
   abort();
 }
 
-/**
- *
- * \brief Set connecting data between all the domains
- *
- * \param [in]   multipart         Pointer to \ref PDM_multipart_t object
- * \param [in]   n_total_joins     Total number of interfaces
- * \param [in]   join_to_opposite  For each global join id, give the global id
- *                                   of the opposite join (size = n_total_joins)
- *
- * \note Join global id numbering must start at 0 and be continuous.
- */
-void PDM_multipart_joins_set
-(
- PDM_multipart_t *multipart,
- const int        n_total_joins,
- const int       *join_to_opposite
-)
-{
-
-  multipart->n_total_joins    = n_total_joins;
-  multipart->join_to_opposite = join_to_opposite;
-}
 
 /**
  *

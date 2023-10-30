@@ -36,8 +36,6 @@ Set inputs
 
 .. doxygenfunction:: PDM_multipart_block_set
 
-.. doxygenfunction:: PDM_multipart_joins_set
-
 
 Renumbering options
 ~~~~~~~~~~~~~~~~~~~

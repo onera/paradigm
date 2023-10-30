@@ -32,10 +32,6 @@ module pdm_multipart
     PDM_multipart_create_
   end interface
 
-  interface PDM_multipart_joins_set ; module procedure  &
-    PDM_multipart_joins_set_
-  end interface
-
   interface PDM_multipart_set_reordering_options ; module procedure  &
     PDM_multipart_set_reordering_options_
   end interface
@@ -116,22 +112,6 @@ interface
     integer(c_int), value  :: owner
 
   end function PDM_multipart_create_c
-
-
-  subroutine PDM_multipart_joins_set_c (multipart,        &
-                                        n_total_joins,    &
-                                        join_to_opposite) &
-  bind (c, name='PDM_multipart_joins_set')
-
-    use iso_c_binding
-    implicit none
-
-    type(c_ptr),    value  :: multipart
-    integer(c_int), value  :: n_total_joins
-    type(c_ptr),    value  :: join_to_opposite
-
-  end subroutine PDM_multipart_joins_set_c
-
 
   subroutine PDM_multipart_set_reordering_options_c (multipart, &
                                                      i_domain, &
@@ -559,7 +539,6 @@ interface
 end interface
 
 private :: PDM_multipart_create_,&
-           PDM_multipart_joins_set_,&
            PDM_multipart_set_reordering_options_,&
            PDM_multipart_set_reordering_options_vtx_,&
            PDM_multipart_get_part_mesh_nodal_,&
@@ -618,28 +597,6 @@ contains
                                        owner)
 
   end subroutine PDM_multipart_create_
-
-
-  subroutine PDM_multipart_joins_set_ (multipart,     &
-                                       n_total_joins, &
-                                       join_to_opposite)
-    ! Set connecting data between all the domains
-    use pdm
-    use iso_c_binding
-    implicit none
-
-    type(c_ptr),               value   :: multipart                       ! Pointer to PDM_multipart_t object
-    integer(c_int),            value   :: n_total_joins                   ! Total number of interfaces
-    integer(kind=PDM_l_num_s), pointer :: join_to_opposite(:)             ! For each global join id, give the global id of the opposite join (size = ``n_total_joins``)
-    type(c_ptr)                        :: c_join_to_opposite = C_NULL_PTR
-
-    c_join_to_opposite = c_loc(join_to_opposite)
-
-    call PDM_multipart_joins_set_c(multipart, &
-                                   n_total_joins, &
-                                   c_join_to_opposite)
-
-  end subroutine PDM_multipart_joins_set_
 
 
   subroutine PDM_multipart_set_reordering_options_ (multipart, &

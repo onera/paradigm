@@ -318,15 +318,15 @@ int main(int argc, char *argv[])
   }
 
   /* Connection between domains */
-  int n_total_joins = 2*(n_domain-1);
-  int *join_to_opposite = (int *) malloc(n_total_joins*sizeof(int));
-  for (int ijoin = 0; ijoin < n_total_joins; ijoin++){
-    if (ijoin % 2 == 0)
-      join_to_opposite[ijoin] = ijoin + 1;
-    else
-      join_to_opposite[ijoin] = ijoin - 1;
-  }
-  PDM_multipart_joins_set(mpart, n_total_joins, join_to_opposite);
+  // int n_total_joins = 2*(n_domain-1);
+  // int *join_to_opposite = (int *) malloc(n_total_joins*sizeof(int));
+  // for (int ijoin = 0; ijoin < n_total_joins; ijoin++){
+  //   if (ijoin % 2 == 0)
+  //     join_to_opposite[ijoin] = ijoin + 1;
+  //   else
+  //     join_to_opposite[ijoin] = ijoin - 1;
+  // }
+  // PDM_multipart_joins_set(mpart, n_total_joins, join_to_opposite);
 
   /* Run */
   PDM_multipart_compute(mpart);
