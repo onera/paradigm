@@ -109,13 +109,13 @@ Now that we have our mesh, let's partition it !
 ## Mesh partitioning
 
 For mesh partitioning, as for all other `ParaDiGM` features, there are 5 main steps:
-1. **create** the feature object
+1. **create** the feature structure
 2. **set** the data necessary to operate with that feature
 3. **compute**, operate the algorithm of the feature
 4. **get**, retrieve the output of the algorithm
 5. **free** the memory allocated to operate the feature
 
-Following this logic, let's start **creating** (step 1) the mesh partitioning object for homogeneously balanced subdomains.
+Following this logic, let's start **creating** (step 1) the mesh partitioning structure for homogeneously balanced subdomains.
 
 *Remark : since this is a basic example, we ask you to stick with the fixed values for n_domain, n_part, i_domain, i_part and merge_domains.
 To get insight about the concepts behind those values you can have a look [here](#Annex-1)*
@@ -123,7 +123,7 @@ To get insight about the concepts behind those values you can have a look [here]
 ```{code-cell}
 %%code_block -p exercise_1 -i 2
 
-  // Create partitioning object
+  // Create partitioning structure
   int              n_domain      = 1;         // fixed
   int              n_part        = 1;         // fixed
   int              i_domain      = 0;         // fixed
@@ -160,7 +160,7 @@ You can here call the renumbering function but by telling it not to do any renum
 
 ```
 
-Now that you have created a mesh partitioning object `mpart`, you can **set** (step 2) the cube mesh to it.
+Now that you have created a mesh partitioning structure `mpart`, you can **set** (step 2) the cube mesh to it.
 
 ```{code-cell}
 %%code_block -p exercise_1 -i 4
@@ -186,10 +186,10 @@ Choose which one suits you best and go further in the exercise to the associated
 
 ### Nodal connectivity (i.e. Finite-Element style)
 
-You choose to get the partitioned mesh in nodal connectivity, i.e. cell->vertex connectivity.
+You chose to get the partitioned mesh in nodal connectivity, i.e. cell->vertex connectivity.
 
-*Remark : The object in `ParaDiGM` in which partitioned nodal meshes are stored is `part_mesh_nodal`.
-Here we get this object from `mpart` to have a direct access to the arrays we are interested in.
+*Remark : The structure in `ParaDiGM` in which partitioned nodal meshes are stored is `part_mesh_nodal`.
+Here we get this structure from `mpart` to have a direct access to the arrays we are interested in.
 For more information about this structure, have a look [here](https://numerics.gitlab-pages.onera.net/mesh/paradigm/dev/user_manual/partitioning/multipart.html#Partitionned-nodal-mesh-1)*
 
 Let's start with the vertices composing the subdomain. How many vertices are there? What are their global ids? What are their coordinates?
@@ -287,7 +287,7 @@ Now we write the mesh that we just got to be able to visualize it later on (noth
 
 ### Descending connectivity (i.e. Finite-Volume style)
 
-You choose to get the partitioned mesh in descending connectivity, i.e. cell->face, face->edge and edge->vtx connectivities.
+You choose to get the partitioned mesh in descending connectivity, i.e. cell->face, face->vtx connectivities.
 
 Let's start from the top with cell data. How many cells are there? What are their global ids? Which faces compose the cells?
 
@@ -314,7 +314,7 @@ Let's start from the top with cell data. How many cells are there? What are thei
 
 ```
 
-For the faces we proceed in a similar way. How many faces are there? What are their global ids? Which edges compose the faces?
+For the faces we proceed in a similar way. How many faces are there? What are their global ids? Which vertices compose the faces?
 
 ```{code-cell}
 %%code_block -p exercise_1 -i 10
@@ -327,46 +327,15 @@ For the faces we proceed in a similar way. How many faces are there? What are th
                                               &face_ln_to_gn,
                                               PDM_OWNERSHIP_USER);
 
-  int *face_edge_idx = NULL;
-  int *face_edge     = NULL;
+  int *face_vtx_idx = NULL;
+  int *face_vtx     = NULL;
   PDM_multipart_part_connectivity_get(mpart,
                                       i_domain,
                                       i_part,
-                                      PDM_CONNECTIVITY_TYPE_FACE_EDGE,
-                                      &face_edge_idx,
-                                      &face_edge,
+                                      PDM_CONNECTIVITY_TYPE_FACE_VTX,
+                                      &face_vtx_idx,
+                                      &face_vtx,
                                       PDM_OWNERSHIP_USER);
-
-```
-
-Let's do the same for edges. How many edges are there? What are their global ids? Which vertices compose the edges?
-
-*Remark : The edge->vertex connectivity index is not created in the `mpart` object since it is implicit. Indeed,
-each edge is only composed of two vertices*
-
-```{code-cell}
-%%code_block -p exercise_1 -i 11
-
-  PDM_g_num_t *edge_ln_to_gn = NULL;
-  int n_edge = PDM_multipart_part_ln_to_gn_get(mpart,
-                                               i_domain,
-                                               i_part,
-                                               PDM_MESH_ENTITY_EDGE,
-                                               &edge_ln_to_gn,
-                                               PDM_OWNERSHIP_USER);
-
-  int *edge_vtx_idx = NULL;
-  int *edge_vtx     = NULL;
-  PDM_multipart_part_connectivity_get(mpart,
-                                      i_domain,
-                                      i_part,
-                                      PDM_CONNECTIVITY_TYPE_EDGE_VTX,
-                                      &edge_vtx_idx,
-                                      &edge_vtx,
-                                      PDM_OWNERSHIP_USER);
-
-  if (edge_vtx_idx != NULL) free (edge_vtx_idx);
-
 
 ```
 
@@ -397,28 +366,6 @@ Now we write the mesh that we just got to be able to visualize it later on (noth
 ```{code-cell}
 %%code_block -p exercise_1 -i 13
 
-  /*int *face_vtx = NULL;
-  PDM_compute_face_vtx_from_face_and_edge(n_face,
-                                          face_edge_idx,
-                                          face_edge,
-                                          edge_vtx,
-                                          &face_vtx);
-
-  int *face_vtx_idx = malloc(sizeof(int) * (n_face+1));
-  for (int i = 0; i < n_face + 1; i++) {
-    face_vtx_idx[i] = 3 * i; // triangle
-  }*/
-
-  int *face_vtx_idx = NULL;
-  int *face_vtx     = NULL;
-  PDM_multipart_part_connectivity_get(mpart,
-                                      i_domain,
-                                      i_part,
-                                      PDM_CONNECTIVITY_TYPE_FACE_VTX,
-                                      &face_vtx_idx,
-                                      &face_vtx,
-                                      PDM_OWNERSHIP_USER);
-
   writer_wrapper(comm,
                  "visu",
                  "pmesh",
@@ -443,16 +390,11 @@ Now we write the mesh that we just got to be able to visualize it later on (noth
                  NULL); // vtx_field_values
 
   // free
-  free(face_vtx_idx);
-  free(face_vtx);
   free(vtx_ln_to_gn);
   free(coords);
-  free(edge_ln_to_gn);
-  free(edge_vtx_idx);
-  free(edge_vtx);
   free(face_ln_to_gn);
-  free(face_edge_idx);
-  free(face_edge);
+  free(face_vtx_idx);
+  free(face_vtx);
   free(cell_ln_to_gn);
   free(cell_face_idx);
   free(cell_face);
@@ -534,39 +476,53 @@ This bonus is not guided, so you should have a close look at the [documentation]
                                     &vtx_part_bound,
                                     PDM_OWNERSHIP_KEEP);
 
-  PDM_part_extension_set_part(part_ext,
-                              i_domain,
-                              i_part,
-                              n_cell,
-                              n_face,
-                              0, // n_face_part_bound
-                              0, // n_face_group
-                              n_edge,
-                              n_vtx,
-                              cell_face_idx,
-                              cell_face,
-                              NULL, // face_cell
-                              face_edge_idx,
-                              face_edge,
-                              NULL, // face_vtx_idx
-                              NULL, // face_vtx
-                              edge_vtx,
-                              NULL, // face_group_idx
-                              NULL, // face_group
-                              NULL, // face_join_idx
-                              NULL, // face_join
-                              NULL, // face_part_bound_proc_idx
-                              NULL, // face_part_bound_part_idx
-                              NULL, // face_part_bound
-                              vtx_part_bound_proc_idx,
-                              vtx_part_bound_part_idx,
-                              vtx_part_bound,
-                              cell_ln_to_gn,
-                              face_ln_to_gn,
-                              edge_ln_to_gn,
-                              vtx_ln_to_gn,
-                              NULL, // face_group_ln_to_gn
-                              coords);
+  PDM_part_extension_connectivity_set(part_ext,
+                                      i_domain,
+                                      i_part,
+                                      PDM_CONNECTIVITY_TYPE_CELL_FACE,
+                                      cell_face_idx,
+                                      cell_face);
+
+  PDM_part_extension_connectivity_set(part_ext,
+                                      i_domain,
+                                      i_part,
+                                      PDM_CONNECTIVITY_TYPE_FACE_VTX,
+                                      face_vtx_idx,
+                                      face_vtx);
+
+  PDM_part_extension_vtx_coord_set(part_ext,
+                                   i_domain,
+                                   i_part,
+                                   coords);
+
+  PDM_part_extension_ln_to_gn_set(part_ext,
+                                  i_domain,
+                                  i_part,
+                                  PDM_MESH_ENTITY_CELL,
+                                  n_cell,
+                                  cell_ln_to_gn);
+
+  PDM_part_extension_ln_to_gn_set(part_ext,
+                                  i_domain,
+                                  i_part,
+                                  PDM_MESH_ENTITY_FACE,
+                                  n_face,
+                                  face_ln_to_gn);
+
+  PDM_part_extension_ln_to_gn_set(part_ext,
+                                  i_domain,
+                                  i_part,
+                                  PDM_MESH_ENTITY_VTX,
+                                  n_vtx,
+                                  vtx_ln_to_gn);
+
+  PDM_part_extension_part_bound_graph_set(part_ext,
+                                          i_domain,
+                                          i_part,
+                                          PDM_MESH_ENTITY_VTX,
+                                          vtx_part_bound_proc_idx,
+                                          vtx_part_bound_part_idx,
+                                          vtx_part_bound);
 ```
 
 ### Step 3
@@ -607,31 +563,14 @@ This bonus is not guided, so you should have a close look at the [documentation]
                                                     PDM_MESH_ENTITY_FACE,
                                                     &face_ln_to_gn_ext);
 
-  int *face_edge_ext     = NULL;
-  int *face_edge_ext_idx = NULL;
+  int *face_vtx_ext     = NULL;
+  int *face_vtx_ext_idx = NULL;
   PDM_part_extension_connectivity_get (part_ext,
                                        i_domain,
                                        i_part,
-                                       PDM_CONNECTIVITY_TYPE_FACE_EDGE,
-                                       &face_edge_ext_idx,
-                                       &face_edge_ext);
-
-  // Edge
-  PDM_g_num_t *edge_ln_to_gn_ext = NULL;
-  int n_edge_ext = PDM_part_extension_ln_to_gn_get (part_ext,
-                                                    i_domain,
-                                                    i_part,
-                                                    PDM_MESH_ENTITY_EDGE,
-                                                    &edge_ln_to_gn_ext);
-
-  int *edge_vtx_ext     = NULL;
-  int *edge_vtx_ext_idx = NULL;
-  PDM_part_extension_connectivity_get (part_ext,
-                                       i_domain,
-                                       i_part,
-                                       PDM_CONNECTIVITY_TYPE_EDGE_VTX,
-                                       &edge_vtx_ext_idx,
-                                       &edge_vtx_ext);
+                                       PDM_CONNECTIVITY_TYPE_FACE_VTX,
+                                       &face_vtx_ext_idx,
+                                       &face_vtx_ext);
 
   // Vertices
   PDM_g_num_t *vtx_ln_to_gn_ext = NULL;
@@ -655,7 +594,6 @@ This bonus is not guided, so you should have a close look at the [documentation]
 
   int total_n_cell = n_cell + n_cell_ext;
   int total_n_face = n_face + n_face_ext;
-  int total_n_edge = n_edge + n_edge_ext;
   int total_n_vtx  = n_vtx  + n_vtx_ext;
 
   // Cell
@@ -687,25 +625,16 @@ This bonus is not guided, so you should have a close look at the [documentation]
   memcpy(total_face_ln_to_gn,          face_ln_to_gn,     sizeof(PDM_g_num_t) * n_face);
   memcpy(total_face_ln_to_gn + n_face, face_ln_to_gn_ext, sizeof(PDM_g_num_t) * n_face_ext);
 
-  int *total_face_edge_idx = malloc(sizeof(int) * (total_n_face + 1));
-  memcpy(total_face_edge_idx, face_edge_idx, sizeof(int) * (n_face + 1));
+  int *total_face_vtx_idx = malloc(sizeof(int) * (total_n_face + 1));
+  memcpy(total_face_vtx_idx, face_vtx_idx, sizeof(int) * (n_face + 1));
 
   for (int i = 0; i <= n_face_ext; i++) {
-    total_face_edge_idx[n_face + i] = face_edge_idx[n_face] + face_edge_ext_idx[i];
+    total_face_vtx_idx[n_face + i] = face_vtx_idx[n_face] + face_vtx_ext_idx[i];
   } // end loop on extension faces
 
-  int *total_face_edge = malloc(sizeof(int) * total_face_edge_idx[total_n_face]);
-  memcpy(total_face_edge,                         face_edge,     sizeof(int) * face_edge_idx[n_face]);
-  memcpy(total_face_edge + face_edge_idx[n_face], face_edge_ext, sizeof(int) * face_edge_ext_idx[n_face_ext]);
-
-  // Edge
-  PDM_g_num_t *total_edge_ln_to_gn = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * total_n_edge);
-  memcpy(total_edge_ln_to_gn,          edge_ln_to_gn,     sizeof(PDM_g_num_t) * n_edge);
-  memcpy(total_edge_ln_to_gn + n_edge, edge_ln_to_gn_ext, sizeof(PDM_g_num_t) * n_edge_ext);
-
-  int *total_edge_vtx = malloc(sizeof(int) * 2 * total_n_edge);
-  memcpy(total_edge_vtx,              edge_vtx,     sizeof(int) * 2 * n_edge);
-  memcpy(total_edge_vtx + 2 * n_edge, edge_vtx_ext, sizeof(int) * 2 * n_edge_ext);
+  int *total_face_vtx = malloc(sizeof(int) * total_face_vtx_idx[total_n_face]);
+  memcpy(total_face_vtx,                        face_vtx,     sizeof(int) * face_vtx_idx[n_face]);
+  memcpy(total_face_vtx + face_vtx_idx[n_face], face_vtx_ext, sizeof(int) * face_vtx_ext_idx[n_face_ext]);
 
   // Vtx
   PDM_g_num_t *total_vtx_ln_to_gn = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * total_n_vtx);
@@ -716,18 +645,6 @@ This bonus is not guided, so you should have a close look at the [documentation]
   memcpy(total_coords,             coords,        sizeof(double) * 3 * n_vtx);
   memcpy(total_coords + 3 * n_vtx, vtx_coord_ext, sizeof(double) * 3 * n_vtx_ext);
 
-  // Create face->vtx
-  int *total_face_vtx = NULL;
-  PDM_compute_face_vtx_from_face_and_edge(total_n_face,
-                                          total_face_edge_idx,
-                                          total_face_edge,
-                                          total_edge_vtx,
-                                          &total_face_vtx);
-
-  int *total_face_vtx_idx = malloc(sizeof(int) * (total_n_face+1));
-  for (int i = 0; i < total_n_face + 1; i++) {
-    total_face_vtx_idx[i] = 3 * i; // triangle
-  }
 
   const char  *field_name[]   = {"extension"};
   double     **field_value[1] = {&total_cell_color};
@@ -761,10 +678,8 @@ This bonus is not guided, so you should have a close look at the [documentation]
   free(total_cell_face_idx);
   free(total_cell_face);
   free(total_face_ln_to_gn);
-  free(total_face_edge_idx);
-  free(total_face_edge);
-  free(total_edge_ln_to_gn);
-  free(total_edge_vtx);
+  free(total_face_vtx_idx);
+  free(total_face_vtx);
   free(total_vtx_ln_to_gn);
   free(total_coords);
 
@@ -773,12 +688,9 @@ This bonus is not guided, so you should have a close look at the [documentation]
 
   free(vtx_ln_to_gn);
   free(coords);
-  free(edge_ln_to_gn);
-  free(edge_vtx_idx);
-  free(edge_vtx);
   free(face_ln_to_gn);
-  free(face_edge_idx);
-  free(face_edge);
+  free(face_vtx_idx);
+  free(face_vtx);
   free(cell_ln_to_gn);
   free(cell_face_idx);
   free(cell_face);

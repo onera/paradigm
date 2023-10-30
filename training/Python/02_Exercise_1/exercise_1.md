@@ -222,7 +222,7 @@ Now we write the mesh that we just got to be able to visualize it later on (noth
 
 ### Descending connectivity (i.e. Finite-Volume style)
 
-You choose to get the partitioned mesh in descending connectivity, i.e. cell->face, face->edge and edge->vtx connectivities.
+You choose to get the partitioned mesh in descending connectivity, i.e. cell->face, face->vtx connectivities.
 
 Let's start from the top with cell data. How many cells are there? What are their global ids? Which faces compose the cells?
 
@@ -240,7 +240,7 @@ cell_face_idx, cell_face = mpart.connectivity_get(i_domain,
 
 ```
 
-For the faces we proceed in a similar way. How many faces are there? What are their global ids? Which edges compose the faces?
+For the faces we proceed in a similar way. How many faces are there? What are their global ids? Which vertices compose the faces?
 
 ```{code-cell}
 %%code_block -p exercise_1 -i 10
@@ -253,26 +253,6 @@ n_face = len(face_ln_to_gn)
 face_vtx_idx, face_vtx = mpart.connectivity_get(i_domain,
                                                 i_part,
                                                 PDM._PDM_CONNECTIVITY_TYPE_FACE_VTX)
-
-```
-
-Let's do the same for edges. How many edges are there? What are their global ids? Which vertices compose the edges?
-
-*Remark : The edge->vertex connectivity index is not created in the `mpart` object since it is implicit. Indeed,
-each edge is only composed of two vertices*
-
-```{code-cell}
-%%code_block -p exercise_1 -i 11
-
-"""edge_ln_to_gn = mpart.ln_to_gn_get(i_domain,
-                                   i_part,
-                                   PDM._PDM_MESH_ENTITY_EDGE)
-n_edge = len(edge_ln_to_gn)
-
-_, edge_vtx = mpart.connectivity_get(i_domain,
-                                     i_part,
-                                     PDM._PDM_CONNECTIVITY_TYPE_EDGE_VTX)
-"""
 
 ```
 
@@ -360,50 +340,6 @@ vtx_part_bound_proc_idx = output["np_entity_part_bound_proc_idx"]
 vtx_part_bound_part_idx = output["np_entity_part_bound_part_idx"]
 vtx_part_bound          = output["np_entity_part_bound"]
 
-"""
-edge_ln_to_gn = mpart.ln_to_gn_get(i_domain,
-                                   i_part,
-                                   PDM._PDM_MESH_ENTITY_EDGE)
-n_edge = len(edge_ln_to_gn)
-
-_, edge_vtx = mpart.connectivity_get(i_domain,
-                                     i_part,
-                                     PDM._PDM_CONNECTIVITY_TYPE_EDGE_VTX)
-"""
-
-"""part_ext.set_part(i_domain,
-                  i_part,
-                  n_cell,
-                  n_face,
-                  0, # n_face_part_bound
-                  0, # n_face_group
-                  n_edge,
-                  n_vtx,
-                  cell_face_idx,
-                  cell_face,
-                  None, # face_cell
-                  None, # face_edge_idx,
-                  None, # face_edge,
-                  face_vtx_idx,
-                  face_vtx,
-                  edge_vtx,
-                  None, # face_group_idx
-                  None, # face_group
-                  None, # face_join_idx
-                  None, # face_join
-                  None, # face_part_bound_proc_idx
-                  None, # face_part_bound_part_idx
-                  None, # face_part_bound
-                  vtx_part_bound_proc_idx,
-                  vtx_part_bound_part_idx,
-                  vtx_part_bound,
-                  cell_ln_to_gn,
-                  face_ln_to_gn,
-                  edge_ln_to_gn,
-                  vtx_ln_to_gn,
-                  None, # face_group_ln_to_gn
-                  coords)"""
-
 part_ext.connectivity_set(i_domain,
                           i_part,
                           PDM._PDM_CONNECTIVITY_TYPE_CELL_FACE,
@@ -467,24 +403,6 @@ cell_face_ext_idx, cell_face_ext = part_ext.connectivity_get(i_domain,
                                                              PDM._PDM_CONNECTIVITY_TYPE_CELL_FACE)
 
 # Face
-"""face_ext_ln_to_gn = part_ext.ln_to_gn_get(i_domain,
-                                          i_part,
-                                          PDM._PDM_MESH_ENTITY_FACE)
-
-face_edge_ext_idx, face_edge_ext = part_ext.connectivity_get(i_domain,
-                                                             i_part,
-                                                             PDM._PDM_CONNECTIVITY_TYPE_FACE_EDGE)
-
-# Edge
-edge_ext_ln_to_gn = part_ext.ln_to_gn_get(i_domain,
-                                          i_part,
-                                          PDM._PDM_MESH_ENTITY_EDGE)
-
-_, edge_vtx_ext = part_ext.connectivity_get(i_domain,
-                                            i_part,
-                                            PDM._PDM_CONNECTIVITY_TYPE_EDGE_VTX)
-"""
-
 face_ext_ln_to_gn = part_ext.ln_to_gn_get(i_domain,
                                           i_part,
                                           PDM._PDM_MESH_ENTITY_FACE)
@@ -507,12 +425,10 @@ vtx_coord_ext = part_ext.vtx_coord_get(i_domain,
 
 n_cell_ext = len(cell_ext_ln_to_gn)
 n_face_ext = len(face_ext_ln_to_gn)
-#n_edge_ext = len(edge_ext_ln_to_gn)
 n_vtx_ext  = len(vtx_ext_ln_to_gn)
 
 total_n_cell = n_cell + n_cell_ext
 total_n_face = n_face + n_face_ext
-#total_n_edge = n_edge + n_edge_ext
 total_n_vtx  = n_vtx  + n_vtx_ext
 
 # Cell
@@ -529,14 +445,6 @@ total_cell_face = np.concatenate((cell_face, cell_face_ext), axis=0, dtype=np.in
 # Face
 total_face_ln_to_gn = np.concatenate((face_ln_to_gn, face_ext_ln_to_gn), axis=0, dtype=PDM.npy_pdm_gnum_dtype)
 
-"""total_face_edge_idx = np.zeros(total_n_face + 1, dtype=np.intc)
-for i in range(n_face + 1):
-  total_face_edge_idx[i] = face_edge_idx[i]
-for i in range(n_face_ext + 1):
-  total_face_edge_idx[n_face + i] = face_edge_idx[n_face] + face_edge_ext_idx[i]
-
-total_face_edge = np.concatenate((face_edge, face_edge_ext), axis=0, dtype=np.intc)"""
-
 total_face_vtx_idx = np.zeros(total_n_face + 1, dtype=np.intc)
 for i in range(n_face + 1):
   total_face_vtx_idx[i] = face_vtx_idx[i]
@@ -545,24 +453,12 @@ for i in range(n_face_ext + 1):
 
 total_face_vtx = np.concatenate((face_vtx, face_vtx_ext), axis=0, dtype=np.intc)
 
-"""# Edge
-
-total_edge_ln_to_gn = np.concatenate((edge_ln_to_gn, edge_ext_ln_to_gn), axis=0, dtype=PDM.npy_pdm_gnum_dtype)
-
-total_edge_vtx = np.concatenate((edge_vtx, edge_vtx_ext), axis=0, dtype=np.intc)"""
-
 # Vertices
 
 total_vtx_ln_to_gn = np.concatenate((vtx_ln_to_gn, vtx_ext_ln_to_gn), axis=0, dtype=PDM.npy_pdm_gnum_dtype)
 
 total_coords = np.concatenate((coords, vtx_coord_ext), axis=0, dtype=np.double)
 
-# face->vtx
-
-"""total_face_vtx = PDM.compute_face_vtx_from_face_and_edge(total_face_edge_idx,
-                                                         total_face_edge,
-                                                         total_edge_vtx)
-total_face_vtx_idx = np.array([3*i for i in range(total_n_face+1)]).astype(np.intc)"""
 
 total_cell_color = np.empty(total_n_cell, dtype=int)
 total_cell_color[:n_cell] = 2*i_rank
