@@ -541,14 +541,20 @@ PDM_g_num_t  **dmissing_child_parent_g_num
   /*
    * Exchange in origin absolute numbering
    */
+  double* weights = malloc(i_abs_child * sizeof(double));
+  for(int i = 0; i < i_abs_child; ++i) {
+    weights[i] = 1.;
+  }
+
   PDM_part_to_block_t *ptb = PDM_part_to_block_create(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
                                                       PDM_PART_TO_BLOCK_POST_MERGE,
                                                       1.,
                                                       &_tmp_parent_ln_to_gn,
-                                                      NULL,
+                                                      &weights,
                                                       &i_abs_child,
                                                       1,
                                                       comm);
+  free(weights);
   //PDM_g_num_t* distrib = PDM_part_to_block_distrib_index_get(ptb);
   //printf(" A GERE BLOCK PARTIEL INSIDE _generate_entitiy_connectivity in pdm_dmesh_nodal_to_dmesh.c \n");
 

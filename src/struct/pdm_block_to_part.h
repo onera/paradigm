@@ -175,6 +175,17 @@ PDM_block_to_part_create_from_sparse_block
  const PDM_MPI_Comm     comm
 );
 
+PDM_block_to_part_t *
+PDM_block_to_part_create_from_sparse_block_and_distrib
+(
+ const PDM_g_num_t     *block_distrib_idx,
+ const PDM_g_num_t     *delt_gnum,  // Should be betwenn [1, N]
+ const int              dn_elt,
+ const PDM_g_num_t    **gnum_elt,
+ const int             *n_elt,
+ const int              n_part,
+ const PDM_MPI_Comm     comm
+);
 
 // PDM_block_to_part_t *
 // PDM_block_to_part_create_cf
