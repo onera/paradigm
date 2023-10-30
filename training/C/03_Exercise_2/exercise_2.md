@@ -57,7 +57,7 @@ if module_path not in sys.path:
 
 ## Include the required headers and initialize MPI
 
-To start, we include the required C headers and initialize MPI.
+To begin, we include the required C headers and initialize MPI.
 
 ```{code-cell}
 %%code_block -p exercise_2 -i 1
@@ -142,6 +142,8 @@ This second mesh is deliberately offset so that some target points lie outside t
 These points may not be located.
 We will see later how to deal with these *unlocated* points.
 
+*Note: we use a different partitioning method for the two meshes so that the source and target partitions do not match.*
+
 *Nothing to do here either. However, once you've successfully completed the localization procedure, feel free to play with the parameters of the two meshes.*
 
 ```{code-cell}
@@ -209,6 +211,7 @@ Now that we have all the required inputs, let's create an instance of the `PDM_m
 ### Set the target point cloud
 
 Now let's provide the target point cloud to the structure.
+Recall that there can be more than one partition per MPI rank.
 
 ```{code-cell}
 %%code_block -p exercise_2 -i 5
@@ -236,6 +239,8 @@ Now let's provide the source mesh to the structure.
 Here you have essentially two options:
 - you can either define the mesh with "nodal" connectivity (i.e. Finite-Element style)
 - or with "descending" connectivity (i.e. Finite-Volume style)
+
+Choose the one that suits you best, and again, recall that there can be more than one partition per MPI rank.
 
 ```{code-cell}
 %%code_block -p exercise_2 -i 6
@@ -330,7 +335,7 @@ Once the calculation is complete, we can display the elapsed and CPU times.
 
 Now that the localization has been computed, the mesh location structure stores the mapping between the source mesh elements and the target points.
 This mapping consists in:
-- a set of geometric data sufficient for 1-exact interpolation of node-based fields ;
+- a set of geometric data sufficient for P1 interpolation of node-based fields ;
 - an MPI communication graph to exchange data between the mapped entities.
 
 In the second part of this exercise you will have to use these two pieces of information to:
@@ -361,11 +366,14 @@ First, compute the spatially interpolated fields on the source side.
 For the first field, the interpolation is straightforward : the target value is simply the same as the host source.
 The second field interpolation is trickier as you will need the cell->vertex connectivity built during the location computation to link the interpolation weights to the appropriate source nodes.
  -->
+
++++
+
 ### Retrieve the `PDM_part_to_part_t` instance
 
 The communication graph is embodied in the form of a [`PDM_part_to_part_t`](https://numerics.gitlab-pages.onera.net/mesh/paradigm/dev_formation/user_manual/comm_graph/ptp.html#ptp) instance.
 
-If you recall, a Part-to-part structure is built by specifying the partitions on both sides, as well as the graph Part1 -> Part2.
+If you recall, a Part-to-part structure is built by specifying the partitions on both sides, as well as the graph Part1 $\to$ Part2.
 
 In this case, *Part1* represents the source mesh and *Part2* the target point cloud.
 
@@ -395,6 +403,14 @@ Part-to-part is able to perform non-blocking exchanges so here's how we're going
 
 Here you need to initiate the exchange of global ids from the source mesh elements to the target points.
 
+As each MPI ranks hosts source *and* target partitions, we will use the function `PDM_part_to_part_iexch` which allows for transparent, bilateral data exchange.
+
++++ {"jupyter": {"source_hidden": true}}
+
+Hints:
+  - each cell sends a **single** value (its **global id**)
+  - the **same** value is sent to each corresponding target
+
 ```{code-cell}
 %%code_block -p exercise_2 -i 10
 
@@ -414,11 +430,31 @@ Here you need to initiate the exchange of global ids from the source mesh elemen
               (void ***) &tgt_recv_field1,
                          &request1);
 
+  // PDM_part_to_part_iexch(ptp,
+  //                        PDM_MPI_COMM_KIND_P2P, // Communication kind
+  //                        ?,                     // Type of stride
+  //                        ?,                     // Data order
+  //                        ?,                     // Constant stride
+  //                        ?,                     // Size of data unit
+  //                        ?,                     // Part1 stride
+  //                        ?,                     // Part1 data
+  //                        ?,                     // Part2 stride
+  //                        ?,                     // Part2 data
+  //                        ?);                    // Request
 ```
 
 ### Interpolate the second field (node-based)
 
 Now you need to compute the spatially interpolated *x* values **on the source side**.
+
+
+Let $T$ denote a target point and $S$ the source element containing $T$.
+
+$f(T) = \sum_i w_i f(v_i)$,
+
+where $\left\{ v_i \right\}$ is the set of vertices of $S$ and $\left\{ w_i \right\}$ the interpolation weights.
+
+
 
 <span style="color:red">
 **donner plus d'infos?**
@@ -428,7 +464,15 @@ Now you need to compute the spatially interpolated *x* values **on the source si
 %%code_block -p exercise_2 -i 11
 
   // Interpolate second field (node-based)
-  double **src_send_field2 = malloc(sizeof(double *) * tgt_n_part);
+  double **src_vtx_field2 = malloc(sizeof(double *) * src_n_part);
+  for (int i_part = 0; i_part < src_n_part; i_part++) {
+    src_vtx_field2[i_part] = malloc(sizeof(double) * src_n_vtx[i_part]);
+    for (int i_vtx = 0; i_vtx < src_n_vtx[i_part]; i_vtx++) {
+      src_vtx_field2[i_part][i_vtx] = src_vtx_coord[i_part][3*i_vtx];
+    }
+  }
+
+  double **src_send_field2 = malloc(sizeof(double *) * src_n_part);
   // EXO
   for (int i_part = 0; i_part < src_n_part; i_part++) {
     int         *src_to_tgt_idx          = NULL;
@@ -471,7 +515,7 @@ Now you need to compute the spatially interpolated *x* values **on the source si
 
         for (int i_vtx = 0; i_vtx < elt_n_vtx; i_vtx++) {
           int vtx_id = cell_vtx[cell_vtx_idx[i_elt] + i_vtx] - 1;
-          src_send_field2[i_part][i_pt] += src_vtx_coord[i_part][3*vtx_id] * points_weights[points_weights_idx[i_pt] + i_vtx];
+          src_send_field2[i_part][i_pt] += points_weights[points_weights_idx[i_pt] + i_vtx] * src_vtx_field2[i_part][vtx_id];
         }
 
       }
@@ -481,7 +525,7 @@ Now you need to compute the spatially interpolated *x* values **on the source si
 ```
 
 
-### Exchange the second interpolated fields
+### Exchange the second interpolated field
 
 You can now initiate the exchange of the interpolated field you just computed.
 
@@ -502,6 +546,18 @@ You can now initiate the exchange of the interpolated field you just computed.
                          NULL,
               (void ***) &tgt_recv_field2,
                          &request2);
+
+  // PDM_part_to_part_iexch(ptp,
+  //                        PDM_MPI_COMM_KIND_P2P, // Communication kind
+  //                        ?,                     // Type of stride
+  //                        ?,                     // Data order
+  //                        ?,                     // Constant stride
+  //                        ?,                     // Size of data unit
+  //                        ?,                     // Part1 stride
+  //                        ?,                     // Part1 data
+  //                        ?,                     // Part2 stride
+  //                        ?,                     // Part2 data
+  //                        ?);                    // Request
 ```
 
 
@@ -577,9 +633,11 @@ You must therefore use the appropriate indirection to correctly read the receive
     }
 
   }
+```
 
-
-  // Nothing to do from here :)
+```{code-cell}
+%%code_block -p exercise_2 -i 14
+  // Nothing to do here :)
   const char *field_name[] = {
     "field1",
     "field2",
@@ -592,14 +650,6 @@ You must therefore use the appropriate indirection to correctly read the receive
     src_elt_field_values[i_part] = malloc(sizeof(double) * src_n_face[i_part]);
     for (int i_elt = 0; i_elt < src_n_face[i_part]; i_elt++) {
       src_elt_field_values[i_part][i_elt] = (double) src_face_ln_to_gn[i_part][i_elt];
-    }
-  }
-
-  double **src_vtx_field_values = malloc(sizeof(double *) * src_n_part);
-  for (int i_part = 0; i_part < src_n_part; i_part++) {
-    src_vtx_field_values[i_part] = malloc(sizeof(double) * src_n_vtx[i_part]);
-    for (int i_vtx = 0; i_vtx < src_n_vtx[i_part]; i_vtx++) {
-      src_vtx_field_values[i_part][i_vtx] = src_vtx_coord[i_part][3*i_vtx];
     }
   }
 
@@ -624,14 +674,12 @@ You must therefore use the appropriate indirection to correctly read the receive
                  &src_elt_field_values,
                  1,
                  &field_name[1],
-                 &src_vtx_field_values);
+                 &src_vtx_field2);
 
   for (int i_part = 0; i_part < src_n_part; i_part++) {
     free(src_elt_field_values[i_part]);
-    free(src_vtx_field_values[i_part]);
   }
   free(src_elt_field_values);
-  free(src_vtx_field_values);
 
 
   writer_wrapper(comm,
@@ -665,8 +713,9 @@ Congratulations! You've made it to the end of the exercise :)
 Now let's clean the mess we just made and free the allocated memory...
 
 ```{code-cell}
-%%code_block -p exercise_2 -i 14
+%%code_block -p exercise_2 -i 15
   // Free memory
+  // EXO
   PDM_mesh_location_free(mesh_loc);
 
   PDM_part_to_part_free(ptp); // /!\ Ownership
@@ -680,6 +729,7 @@ Now let's clean the mess we just made and free the allocated memory...
     free(src_vtx_ln_to_gn [i_part]);
     free(src_edge_ln_to_gn[i_part]);
     free(src_face_ln_to_gn[i_part]);
+    free(src_vtx_field2   [i_part]);
     free(src_send_field2  [i_part]);
   }
   free(src_n_vtx        );
@@ -693,6 +743,7 @@ Now let's clean the mess we just made and free the allocated memory...
   free(src_vtx_ln_to_gn );
   free(src_edge_ln_to_gn);
   free(src_face_ln_to_gn);
+  free(src_vtx_field2   );
   free(src_send_field2  ); // can be free'd right after PDM_part_to_part_iexch_wait(ptp, &request2);
 
   for (int i_part = 0; i_part < tgt_n_part; i_part++) {
@@ -734,7 +785,7 @@ Now let's clean the mess we just made and free the allocated memory...
 ...and finalize MPI.
 
 ```{code-cell}
-%%code_block -p exercise_2 -i 15
+%%code_block -p exercise_2 -i 16
   PDM_MPI_Finalize();
 
   if (i_rank == 0) {

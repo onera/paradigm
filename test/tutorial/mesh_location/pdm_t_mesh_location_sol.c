@@ -387,7 +387,7 @@ int main(int argc, char *argv[])
    */
 
   /* Interpolate first field (cell-based) */
-  double **src_send_field1 = malloc(sizeof(double *) * tgt_n_part);
+  double **src_send_field1 = malloc(sizeof(double *) * src_n_part);
   for (int i_part = 0; i_part < src_n_part; i_part++) {
 
     int         *src_to_tgt_idx          = NULL;
@@ -423,7 +423,15 @@ int main(int argc, char *argv[])
 
 
   /* Interpolate second field (node-based) */
-  double **src_send_field2 = malloc(sizeof(double *) * tgt_n_part);
+  double **src_vtx_field2 = malloc(sizeof(double *) * src_n_part);
+  for (int i_part = 0; i_part < src_n_part; i_part++) {
+    src_vtx_field2[i_part] = malloc(sizeof(double) * src_n_vtx[i_part]);
+    for (int i_vtx = 0; i_vtx < src_n_vtx[i_part]; i_vtx++) {
+      src_vtx_field2[i_part][i_vtx] = src_vtx_coord[i_part][3*i_vtx];
+    }
+  }
+
+  double **src_send_field2 = malloc(sizeof(double *) * src_n_part);
   for (int i_part = 0; i_part < src_n_part; i_part++) {
 
     int         *src_to_tgt_idx          = NULL;
@@ -466,7 +474,7 @@ int main(int argc, char *argv[])
 
         for (int i_vtx = 0; i_vtx < elt_n_vtx; i_vtx++) {
           int vtx_id = cell_vtx[cell_vtx_idx[i_elt] + i_vtx] - 1;
-          src_send_field2[i_part][i_pt] += src_vtx_coord[i_part][3*vtx_id] * points_weights[points_weights_idx[i_pt] + i_vtx];
+          src_send_field2[i_part][i_pt] += points_weights[points_weights_idx[i_pt] + i_vtx] * src_vtx_field2[i_part][vtx_id];
         }
 
       }
@@ -649,6 +657,7 @@ int main(int argc, char *argv[])
     free(src_edge_ln_to_gn[i_part]);
     free(src_face_ln_to_gn[i_part]);
     free(src_send_field1  [i_part]);
+    free(src_vtx_field2   [i_part]);
     free(src_send_field2  [i_part]);
   }
   free(src_n_vtx        );
@@ -663,6 +672,7 @@ int main(int argc, char *argv[])
   free(src_edge_ln_to_gn);
   free(src_face_ln_to_gn);
   free(src_send_field1  ); // can be free'd right after PDM_part_to_part_iexch_wait(ptp, &request1);
+  free(src_vtx_field2   );
   free(src_send_field2  ); // can be free'd right after PDM_part_to_part_iexch_wait(ptp, &request2);
 
   for (int i_part = 0; i_part < tgt_n_part; i_part++) {
