@@ -6,13 +6,18 @@ def run_test():
   import mpi4py.MPI as MPI
   import Pypdm.Pypdm as PDM
 
-  vtk = 0
-  fe  = 0
+  parser = argparse.ArgumentParser()
+
+  parser.add_argument("-fe", "--nodal", action="store_true")
+
+  args = parser.parse_args()
+
+  fe = args.nodal
 
   # Initialize MPI environment
   comm   = MPI.COMM_WORLD
-  n_rank = MPI.COMM_WORLD.size
-  i_rank = MPI.COMM_WORLD.rank
+  n_rank = comm.size
+  i_rank = comm.rank
 
   # Generate block-distributed parallelepided mesh
   n_x      = 10
@@ -66,7 +71,7 @@ def run_test():
 
   mpart.compute()
 
-  # Get mesh arrrays in FE structure
+  # Get mesh arrays in FE structure
   if fe:
     coords = mpart.vtx_coord_get(i_domain,
                                  i_part)
@@ -82,7 +87,7 @@ def run_test():
     vtx_ln_to_gn = PDM.part_mesh_nodal_vtx_g_num_get(pmn, i_part)
     n_vtx        = len(vtx_ln_to_gn)
 
-  # Get mesh arrrays in FV structure
+  # Get mesh arrays in FV structure
   else :
     vtx_ln_to_gn = mpart.ln_to_gn_get(i_domain,
                                       i_part,
@@ -92,23 +97,26 @@ def run_test():
     coords = mpart.vtx_coord_get(i_domain,
                                  i_part)
 
-    edge_ln_to_gn = mpart.ln_to_gn_get(i_domain,
-                                       i_part,
-                                       PDM._PDM_MESH_ENTITY_EDGE)
-    n_edge = len(edge_ln_to_gn)
+    # edge_ln_to_gn = mpart.ln_to_gn_get(i_domain,
+    #                                    i_part,
+    #                                    PDM._PDM_MESH_ENTITY_EDGE)
+    # n_edge = len(edge_ln_to_gn)
 
-    _, edge_vtx = mpart.connectivity_get(i_domain,
-                                         i_part,
-                                         PDM._PDM_CONNECTIVITY_TYPE_EDGE_VTX)
+    # _, edge_vtx = mpart.connectivity_get(i_domain,
+    #                                      i_part,
+    #                                      PDM._PDM_CONNECTIVITY_TYPE_EDGE_VTX)
 
     face_ln_to_gn = mpart.ln_to_gn_get(i_domain,
                                        i_part,
                                        PDM._PDM_MESH_ENTITY_FACE)
     n_face = len(face_ln_to_gn)
 
-    face_edge_idx, face_edge = mpart.connectivity_get(i_domain,
-                                                      i_part,
-                                                      PDM._PDM_CONNECTIVITY_TYPE_FACE_EDGE)
+    # face_edge_idx, face_edge = mpart.connectivity_get(i_domain,
+    #                                                   i_part,
+    #                                                   PDM._PDM_CONNECTIVITY_TYPE_FACE_EDGE)
+    face_vtx_idx, face_vtx = mpart.connectivity_get(i_domain,
+                                                    i_part,
+                                                    PDM._PDM_CONNECTIVITY_TYPE_FACE_VTX)
 
     cell_ln_to_gn = mpart.ln_to_gn_get(i_domain,
                                        i_part,
@@ -121,6 +129,9 @@ def run_test():
                                                       PDM._PDM_CONNECTIVITY_TYPE_CELL_FACE)
 
     # BONUS
+    if fe:
+      print("The end (FE)", flush=True)
+      return
 
     # step 1 : create
     extend_type = PDM._PDM_EXTEND_FROM_VTX
@@ -140,38 +151,76 @@ def run_test():
     vtx_part_bound_part_idx = output["np_entity_part_bound_part_idx"]
     vtx_part_bound          = output["np_entity_part_bound"]
 
-    part_ext.set_part(i_domain,
-                      i_part,
-                      n_cell,
-                      n_face,
-                      0, # n_face_part_bound
-                      0, # n_face_group
-                      n_edge,
-                      n_vtx,
-                      cell_face_idx,
-                      cell_face,
-                      None, # face_cell
-                      face_edge_idx,
-                      face_edge,
-                      None, # face_vtx_idx
-                      None, # face_vtx
-                      edge_vtx,
-                      None, # face_group_idx
-                      None, # face_group
-                      None, # face_join_idx
-                      None, # face_join
-                      None, # face_part_bound_proc_idx
-                      None, # face_part_bound_part_idx
-                      None, # face_part_bound
-                      vtx_part_bound_proc_idx,
-                      vtx_part_bound_part_idx,
-                      vtx_part_bound,
-                      cell_ln_to_gn,
-                      face_ln_to_gn,
-                      edge_ln_to_gn,
-                      vtx_ln_to_gn,
-                      None, # face_group_ln_to_gn
-                      coords)
+    # part_ext.set_part(i_domain,
+    #                   i_part,
+    #                   n_cell,
+    #                   n_face,
+    #                   0, # n_face_part_bound
+    #                   0, # n_face_group
+    #                   n_edge,
+    #                   n_vtx,
+    #                   cell_face_idx,
+    #                   cell_face,
+    #                   None, # face_cell
+    #                   face_edge_idx,
+    #                   face_edge,
+    #                   None, # face_vtx_idx
+    #                   None, # face_vtx
+    #                   edge_vtx,
+    #                   None, # face_group_idx
+    #                   None, # face_group
+    #                   None, # face_join_idx
+    #                   None, # face_join
+    #                   None, # face_part_bound_proc_idx
+    #                   None, # face_part_bound_part_idx
+    #                   None, # face_part_bound
+    #                   vtx_part_bound_proc_idx,
+    #                   vtx_part_bound_part_idx,
+    #                   vtx_part_bound,
+    #                   cell_ln_to_gn,
+    #                   face_ln_to_gn,
+    #                   edge_ln_to_gn,
+    #                   vtx_ln_to_gn,
+    #                   None, # face_group_ln_to_gn
+    #                   coords)
+
+    part_ext.connectivity_set(i_domain,
+                              i_part,
+                              PDM._PDM_CONNECTIVITY_TYPE_CELL_FACE,
+                              cell_face_idx,
+                              cell_face)
+
+    part_ext.connectivity_set(i_domain,
+                              i_part,
+                              PDM._PDM_CONNECTIVITY_TYPE_FACE_VTX,
+                              face_vtx_idx,
+                              face_vtx)
+
+    part_ext.vtx_coord_set(i_domain,
+                           i_part,
+                           coords)
+
+    part_ext.ln_to_gn_set(i_domain,
+                          i_part,
+                          PDM._PDM_MESH_ENTITY_CELL,
+                          cell_ln_to_gn)
+
+    part_ext.ln_to_gn_set(i_domain,
+                          i_part,
+                          PDM._PDM_MESH_ENTITY_FACE,
+                          face_ln_to_gn)
+
+    part_ext.ln_to_gn_set(i_domain,
+                          i_part,
+                          PDM._PDM_MESH_ENTITY_VERTEX,
+                          vtx_ln_to_gn)
+
+    part_ext.part_bound_graph_set(i_domain,
+                                  i_part,
+                                  PDM._PDM_MESH_ENTITY_VERTEX,
+                                  vtx_part_bound_proc_idx,
+                                  vtx_part_bound_part_idx,
+                                  vtx_part_bound)
 
     # step 3 : compute
     part_ext.compute()
@@ -191,18 +240,21 @@ def run_test():
                                               i_part,
                                               PDM._PDM_MESH_ENTITY_FACE)
 
-    face_edge_ext_idx, face_edge_ext = part_ext.connectivity_get(i_domain,
-                                                                 i_part,
-                                                                 PDM._PDM_CONNECTIVITY_TYPE_FACE_EDGE)
+    # face_edge_ext_idx, face_edge_ext = part_ext.connectivity_get(i_domain,
+    #                                                              i_part,
+    #                                                              PDM._PDM_CONNECTIVITY_TYPE_FACE_EDGE)
+    face_vtx_ext_idx, face_vtx_ext = part_ext.connectivity_get(i_domain,
+                                                               i_part,
+                                                               PDM._PDM_CONNECTIVITY_TYPE_FACE_VTX)
 
     # Edge
-    edge_ext_ln_to_gn = part_ext.ln_to_gn_get(i_domain,
-                                              i_part,
-                                              PDM._PDM_MESH_ENTITY_EDGE)
+    # edge_ext_ln_to_gn = part_ext.ln_to_gn_get(i_domain,
+    #                                           i_part,
+    #                                           PDM._PDM_MESH_ENTITY_EDGE)
 
-    edge_vtx_ext_idx, edge_vtx_ext = part_ext.connectivity_get(i_domain,
-                                                               i_part,
-                                                               PDM._PDM_CONNECTIVITY_TYPE_EDGE_VTX)
+    # edge_vtx_ext_idx, edge_vtx_ext = part_ext.connectivity_get(i_domain,
+    #                                                            i_part,
+    #                                                            PDM._PDM_CONNECTIVITY_TYPE_EDGE_VTX)
 
     # Vertices
     vtx_ext_ln_to_gn = part_ext.ln_to_gn_get(i_domain,
@@ -211,6 +263,26 @@ def run_test():
 
     vtx_coord_ext = part_ext.vtx_coord_get(i_domain,
                                            i_part)
+
+
+    # dummy gets to prevent leaks
+    interface_cell = part_ext.get_interface(i_domain,
+                                            i_part,
+                                            PDM._PDM_MESH_ENTITY_CELL)
+
+    interface_face = part_ext.get_interface(i_domain,
+                                            i_part,
+                                            PDM._PDM_MESH_ENTITY_FACE)
+
+    interface_vtx  = part_ext.get_interface(i_domain,
+                                            i_part,
+                                            PDM._PDM_MESH_ENTITY_VERTEX)
+
+    surfaces = part_ext.group_get(i_domain,
+                                  i_part,
+                                  PDM._PDM_MESH_ENTITY_FACE)
+
+    # part_ext.get_composed_interface()
 
     # step 5 : free (implicit in Python)
 

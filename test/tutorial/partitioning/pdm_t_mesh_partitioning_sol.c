@@ -257,25 +257,25 @@ int main
                                      &coords,
                                      PDM_OWNERSHIP_USER);
 
-    PDM_g_num_t *edge_ln_to_gn = NULL;
-    int n_edge = PDM_multipart_part_ln_to_gn_get(mpart,
-                                                i_domain,
-                                                i_part,
-                                                PDM_MESH_ENTITY_EDGE,
-                                                &edge_ln_to_gn,
-                                                PDM_OWNERSHIP_USER);
+    // PDM_g_num_t *edge_ln_to_gn = NULL;
+    // int n_edge = PDM_multipart_part_ln_to_gn_get(mpart,
+    //                                             i_domain,
+    //                                             i_part,
+    //                                             PDM_MESH_ENTITY_EDGE,
+    //                                             &edge_ln_to_gn,
+    //                                             PDM_OWNERSHIP_USER);
 
-    int *edge_vtx_idx = NULL;
-    int *edge_vtx     = NULL;
-    PDM_multipart_part_connectivity_get(mpart,
-                                        i_domain,
-                                        i_part,
-                                        PDM_CONNECTIVITY_TYPE_EDGE_VTX,
-                                        &edge_vtx_idx,
-                                        &edge_vtx,
-                                        PDM_OWNERSHIP_USER);
+    // int *edge_vtx_idx = NULL;
+    // int *edge_vtx     = NULL;
+    // PDM_multipart_part_connectivity_get(mpart,
+    //                                     i_domain,
+    //                                     i_part,
+    //                                     PDM_CONNECTIVITY_TYPE_EDGE_VTX,
+    //                                     &edge_vtx_idx,
+    //                                     &edge_vtx,
+    //                                     PDM_OWNERSHIP_USER);
 
-    if (edge_vtx_idx != NULL) free (edge_vtx_idx);
+    // if (edge_vtx_idx != NULL) free (edge_vtx_idx);
 
     PDM_g_num_t *face_ln_to_gn = NULL;
     int n_face = PDM_multipart_part_ln_to_gn_get(mpart,
@@ -285,15 +285,15 @@ int main
                                                 &face_ln_to_gn,
                                                 PDM_OWNERSHIP_USER);
 
-    int *face_edge_idx = NULL;
-    int *face_edge     = NULL;
-    PDM_multipart_part_connectivity_get(mpart,
-                                        i_domain,
-                                        i_part,
-                                        PDM_CONNECTIVITY_TYPE_FACE_EDGE,
-                                        &face_edge_idx,
-                                        &face_edge,
-                                        PDM_OWNERSHIP_USER);
+    // int *face_edge_idx = NULL;
+    // int *face_edge     = NULL;
+    // PDM_multipart_part_connectivity_get(mpart,
+    //                                     i_domain,
+    //                                     i_part,
+    //                                     PDM_CONNECTIVITY_TYPE_FACE_EDGE,
+    //                                     &face_edge_idx,
+    //                                     &face_edge,
+    //                                     PDM_OWNERSHIP_USER);
 
     int *face_vtx_idx = NULL;
     int *face_vtx     = NULL;
@@ -323,22 +323,22 @@ int main
                                         &cell_face,
                                         PDM_OWNERSHIP_USER);
 
-    // Visualisation edge->vtx
-    if (vtk) {
-      char filename[999];
-      sprintf(filename, "partitioning_FV_%3.3d.vtk", i_rank);
-      PDM_vtk_write_std_elements(filename,
-                                 n_vtx,
-                                 coords,
-                                 vtx_ln_to_gn,
-                                 PDM_MESH_NODAL_BAR2,
-                                 n_edge,
-                                 edge_vtx,
-                                 edge_ln_to_gn,
-                                 0,
-                                 NULL,
-                                 NULL);
-    }
+    // // Visualisation edge->vtx
+    // if (vtk) {
+    //   char filename[999];
+    //   sprintf(filename, "partitioning_FV_%3.3d.vtk", i_rank);
+    //   PDM_vtk_write_std_elements(filename,
+    //                              n_vtx,
+    //                              coords,
+    //                              vtx_ln_to_gn,
+    //                              PDM_MESH_NODAL_BAR2,
+    //                              n_edge,
+    //                              edge_vtx,
+    //                              edge_ln_to_gn,
+    //                              0,
+    //                              NULL,
+    //                              NULL);
+    // }
 
     // Use PDM_compute_face_vtx_from_face_and_edge if you need face->vtx connectivity
 
@@ -662,12 +662,12 @@ int main
     // free
     free(vtx_ln_to_gn);
     free(coords);
-    free(edge_ln_to_gn);
-    free(edge_vtx_idx);
-    free(edge_vtx);
+    // free(edge_ln_to_gn);
+    // free(edge_vtx_idx);
+    // free(edge_vtx);
     free(face_ln_to_gn);
-    free(face_edge_idx);
-    free(face_edge);
+    // free(face_edge_idx);
+    // free(face_edge);
     free(face_vtx_idx);
     free(face_vtx);
     free(cell_ln_to_gn);
