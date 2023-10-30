@@ -921,7 +921,7 @@ PDM_sphere_surf_icosphere_gen_part
     (*pn_vtx)[ipart] = PDM_multipart_part_ln_to_gn_get(mpart,
                                                        0,
                                                        ipart,
-                                                       PDM_MESH_ENTITY_VERTEX,
+                                                       PDM_MESH_ENTITY_VTX,
                                                        &_vtx_ln_to_gn,
                                                        PDM_OWNERSHIP_USER);
     (*pvtx_ln_to_gn)[ipart] = _vtx_ln_to_gn;

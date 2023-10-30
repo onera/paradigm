@@ -3340,7 +3340,7 @@ PDM_mesh_location_compute
 
     pextract_n_vtx = PDM_extract_part_n_entity_get(extrp,
                                                    0,
-                                                   PDM_MESH_ENTITY_VERTEX);
+                                                   PDM_MESH_ENTITY_VTX);
 
     PDM_extract_part_vtx_coord_get(extrp,
                                    0,

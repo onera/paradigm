@@ -331,7 +331,7 @@ int main(int argc, char *argv[])
     int n_vtx = PDM_multipart_part_ln_to_gn_get(mpart,
                                                 i_domain,
                                                 i_part,
-                                                PDM_MESH_ENTITY_VERTEX,
+                                                PDM_MESH_ENTITY_VTX,
                                                 &vtx_ln_to_gn,
                                                 PDM_OWNERSHIP_KEEP);
 
@@ -616,7 +616,7 @@ int main(int argc, char *argv[])
 
     pn_extract_vtx[i_part] = PDM_extract_part_n_entity_get(extrp,
                                                            i_part,
-                                                           PDM_MESH_ENTITY_VERTEX);
+                                                           PDM_MESH_ENTITY_VTX);
 
     PDM_extract_part_connectivity_get(extrp,
                                       i_part,
@@ -638,7 +638,7 @@ int main(int argc, char *argv[])
 
     PDM_extract_part_ln_to_gn_get(extrp,
                                   i_part,
-                                  PDM_MESH_ENTITY_VERTEX,
+                                  PDM_MESH_ENTITY_VTX,
                                   &pextract_vtx_ln_to_gn[i_part],
                                   PDM_OWNERSHIP_KEEP);
 

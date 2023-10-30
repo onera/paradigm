@@ -290,7 +290,7 @@ int main(int argc, char *argv[])
   PDM_multipart_part_ln_to_gn_get(mpart,
                                   0,
                                   i_part,
-                                  PDM_MESH_ENTITY_VERTEX,
+                                  PDM_MESH_ENTITY_VTX,
                                   &vtx_ln_to_gn,
                                   PDM_OWNERSHIP_KEEP);
 
@@ -408,7 +408,7 @@ int main(int argc, char *argv[])
   pn_vtx_extension = PDM_part_extension_ln_to_gn_get(pe,
                                                      0, // i_domain
                                                      i_part,
-                                                     PDM_MESH_ENTITY_VERTEX,
+                                                     PDM_MESH_ENTITY_VTX,
                                                      &extension_vtx_gnum);
 
   /* part_to_part */

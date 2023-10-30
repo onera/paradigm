@@ -379,7 +379,7 @@ To finish with, we need to have the description of the vertices.
   int n_vtx = PDM_multipart_part_ln_to_gn_get(mpart,
                                               i_domain,
                                               i_part,
-                                              PDM_MESH_ENTITY_VERTEX,
+                                              PDM_MESH_ENTITY_VTX,
                                               &vtx_ln_to_gn,
                                               PDM_OWNERSHIP_USER);
 
@@ -528,7 +528,7 @@ This bonus is not guided, so you should have a close look at the [documentation]
   PDM_multipart_part_graph_comm_get(mpart,
                                     i_domain,
                                     i_part,
-                                    PDM_MESH_ENTITY_VERTEX,
+                                    PDM_MESH_ENTITY_VTX,
                                     &vtx_part_bound_proc_idx,
                                     &vtx_part_bound_part_idx,
                                     &vtx_part_bound,
@@ -636,10 +636,10 @@ This bonus is not guided, so you should have a close look at the [documentation]
   // Vertices
   PDM_g_num_t *vtx_ln_to_gn_ext = NULL;
   int n_vtx_ext = PDM_part_extension_ln_to_gn_get (part_ext,
-                                                    i_domain,
-                                                    i_part,
-                                                    PDM_MESH_ENTITY_VERTEX,
-                                                    &vtx_ln_to_gn_ext);
+                                                   i_domain,
+                                                   i_part,
+                                                   PDM_MESH_ENTITY_VTX,
+                                                   &vtx_ln_to_gn_ext);
 
   double *vtx_coord_ext = NULL;
   PDM_part_extension_vtx_coord_get(part_ext,

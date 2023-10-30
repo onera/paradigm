@@ -2825,7 +2825,7 @@ const  int         i_part,
   PDM_multipart_part_ln_to_gn_get(multipart,
                                   i_domain,
                                   i_part,
-                                  PDM_MESH_ENTITY_VERTEX,
+                                  PDM_MESH_ENTITY_VTX,
                                   vtx_ln_to_gn,
                                   PDM_OWNERSHIP_KEEP);
   int pn_face_group = 0;

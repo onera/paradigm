@@ -7337,7 +7337,7 @@ PDM_part_extension_ln_to_gn_get
     }
     break;
 
-    case PDM_MESH_ENTITY_VERTEX:
+    case PDM_MESH_ENTITY_VTX:
     {
       int n_vtx   = part_ext->parts[i_domain][i_part].n_vtx;
       n_entity     = part_ext->vtx_vtx_extended_idx[shift_part+i_part][n_vtx];
@@ -7407,7 +7407,7 @@ PDM_part_extension_interface_get
     }
     break;
 
-    case PDM_MESH_ENTITY_VERTEX:
+    case PDM_MESH_ENTITY_VTX:
     {
       int n_vtx   =  part_ext->parts[i_domain][i_part].n_vtx;
       n_entity      = part_ext->vtx_vtx_extended_idx[shift_part+i_part][n_vtx];
@@ -7463,7 +7463,7 @@ PDM_part_extension_group_get
     }
     break;
 
-    case PDM_MESH_ENTITY_VERTEX:
+    case PDM_MESH_ENTITY_VTX:
     {
       abort();
     }
@@ -7768,7 +7768,7 @@ PDM_part_extension_ln_to_gn_set
 )
 {
   switch (mesh_entity) {
-    case PDM_MESH_ENTITY_VERTEX: {
+    case PDM_MESH_ENTITY_VTX: {
       part_ext->parts[i_domain][i_part].n_vtx         = n_entity;
       part_ext->parts[i_domain][i_part].vtx_ln_to_gn  = ln_to_gn;
       break;
@@ -7852,7 +7852,7 @@ PDM_part_extension_part_bound_graph_set
 {
   switch (entity_type) {
 
-    case PDM_MESH_ENTITY_VERTEX: {
+    case PDM_MESH_ENTITY_VTX: {
       part_ext->parts[i_domain][i_part].vtx_part_bound_proc_idx  = part_bound_proc_idx;
       part_ext->parts[i_domain][i_part].vtx_part_bound_part_idx  = part_bound_part_idx;
       part_ext->parts[i_domain][i_part].vtx_part_bound           = part_bound;

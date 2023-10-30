@@ -377,7 +377,7 @@ _part_extension
       pn_vtx[i_dom][i_part] = PDM_multipart_part_ln_to_gn_get(mpart,
                                                               i_dom,
                                                               i_part,
-                                                              PDM_MESH_ENTITY_VERTEX,
+                                                              PDM_MESH_ENTITY_VTX,
                                                               &pvtx_ln_to_gn[i_dom][i_part],
                                                               PDM_OWNERSHIP_KEEP);
 
@@ -1183,7 +1183,7 @@ int main
       pn_vtx[i_dom][i_part] = PDM_multipart_part_ln_to_gn_get(mpart,
                                                               i_dom,
                                                               i_part,
-                                                              PDM_MESH_ENTITY_VERTEX,
+                                                              PDM_MESH_ENTITY_VTX,
                                                               &pvtx_ln_to_gn[i_dom][i_part],
                                                               PDM_OWNERSHIP_KEEP);
 
@@ -1313,7 +1313,7 @@ int main
       int n_vtx = PDM_multipart_part_ln_to_gn_get(mpart,
                                                   i_dom,
                                                   i_part,
-                                                  PDM_MESH_ENTITY_VERTEX,
+                                                  PDM_MESH_ENTITY_VTX,
                                                   &vtx_ln_to_gn,
                                                   PDM_OWNERSHIP_KEEP);
       PDM_UNUSED(n_cell);
@@ -1334,7 +1334,7 @@ int main
       PDM_multipart_part_graph_comm_get(mpart,
                                         i_dom,
                                         i_part,
-                                        PDM_MESH_ENTITY_VERTEX,
+                                        PDM_MESH_ENTITY_VTX,
                                         &vtx_part_bound_proc_idx,
                                         &vtx_part_bound_part_idx,
                                         &vtx_part_bound,

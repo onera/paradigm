@@ -283,7 +283,7 @@ To finish with, we need to have the description of the vertices.
 
 vtx_ln_to_gn = mpart.ln_to_gn_get(i_domain,
                                   i_part,
-                                  PDM._PDM_MESH_ENTITY_VERTEX)
+                                  PDM._PDM_MESH_ENTITY_VTX)
 n_vtx = len(vtx_ln_to_gn)
 
 coords = mpart.vtx_coord_get(i_domain,
@@ -354,7 +354,7 @@ part_ext = PDM.PartExtension(n_domain,
 
 output = mpart.graph_comm_get(i_domain,
                               i_part,
-                              PDM._PDM_MESH_ENTITY_VERTEX)
+                              PDM._PDM_MESH_ENTITY_VTX)
 
 vtx_part_bound_proc_idx = output["np_entity_part_bound_proc_idx"]
 vtx_part_bound_part_idx = output["np_entity_part_bound_part_idx"]
@@ -432,12 +432,12 @@ part_ext.ln_to_gn_set(i_domain,
 
 part_ext.ln_to_gn_set(i_domain,
                       i_part,
-                      PDM._PDM_MESH_ENTITY_VERTEX,
+                      PDM._PDM_MESH_ENTITY_VTX,
                       vtx_ln_to_gn)
 
 part_ext.part_bound_graph_set(i_domain,
                               i_part,
-                              PDM._PDM_MESH_ENTITY_VERTEX,
+                              PDM._PDM_MESH_ENTITY_VTX,
                               vtx_part_bound_proc_idx,
                               vtx_part_bound_part_idx,
                               vtx_part_bound)
@@ -496,7 +496,7 @@ face_vtx_ext_idx, face_vtx_ext = part_ext.connectivity_get(i_domain,
 # Vertices
 vtx_ext_ln_to_gn = part_ext.ln_to_gn_get(i_domain,
                                          i_part,
-                                         PDM._PDM_MESH_ENTITY_VERTEX)
+                                         PDM._PDM_MESH_ENTITY_VTX)
 
 vtx_coord_ext = part_ext.vtx_coord_get(i_domain,
                                        i_part)

@@ -228,8 +228,8 @@ int main(int argc, char *argv[])
   PDM_dmesh_extract_t *dme = PDM_dmesh_extract_create(1, comm);
 
 
-  PDM_dmesh_extract_dn_entity_set(dme, PDM_MESH_ENTITY_EDGE  , dn_edge);
-  PDM_dmesh_extract_dn_entity_set(dme, PDM_MESH_ENTITY_VERTEX, dn_vtx);
+  PDM_dmesh_extract_dn_entity_set(dme, PDM_MESH_ENTITY_EDGE, dn_edge);
+  PDM_dmesh_extract_dn_entity_set(dme, PDM_MESH_ENTITY_VTX,  dn_vtx);
   PDM_dmesh_extract_dconnectivity_set(dme,
                                       PDM_CONNECTIVITY_TYPE_EDGE_VTX,
                                       dedge_vtx,
@@ -284,7 +284,7 @@ int main(int argc, char *argv[])
     extract_edge_ln_to_gn[i] = distrib_edge_extract[i_rank] + i + 1;
   }
 
-  int dn_extract_vtx  = PDM_dmesh_dn_entity_get(dmesh_extract, PDM_MESH_ENTITY_VERTEX);
+  int dn_extract_vtx  = PDM_dmesh_dn_entity_get(dmesh_extract, PDM_MESH_ENTITY_VTX);
   PDM_g_num_t *extract_vtx_distribution = PDM_compute_entity_distribution(comm, dn_extract_vtx);
 
   int pn_extract_vtx = -1;

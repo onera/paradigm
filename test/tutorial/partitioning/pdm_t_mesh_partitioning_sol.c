@@ -246,7 +246,7 @@ int main
     int n_vtx = PDM_multipart_part_ln_to_gn_get(mpart,
                                                 i_domain,
                                                 i_part,
-                                                PDM_MESH_ENTITY_VERTEX,
+                                                PDM_MESH_ENTITY_VTX,
                                                 &vtx_ln_to_gn,
                                                 PDM_OWNERSHIP_USER);
 
@@ -361,7 +361,7 @@ int main
     PDM_multipart_part_graph_comm_get(mpart,
                                       i_domain,
                                       i_part,
-                                      PDM_MESH_ENTITY_VERTEX,
+                                      PDM_MESH_ENTITY_VTX,
                                       &vtx_part_bound_proc_idx,
                                       &vtx_part_bound_part_idx,
                                       &vtx_part_bound,
@@ -438,14 +438,14 @@ int main
     PDM_part_extension_ln_to_gn_set(part_ext,
                                     i_domain,
                                     i_part,
-                                    PDM_MESH_ENTITY_VERTEX,
+                                    PDM_MESH_ENTITY_VTX,
                                     n_vtx,
                                     vtx_ln_to_gn);
 
     PDM_part_extension_part_bound_graph_set(part_ext,
                                             i_domain,
                                             i_part,
-                                            PDM_MESH_ENTITY_VERTEX,
+                                            PDM_MESH_ENTITY_VTX,
                                             vtx_part_bound_proc_idx,
                                             vtx_part_bound_part_idx,
                                             vtx_part_bound);
@@ -518,7 +518,7 @@ int main
     int n_vtx_ext = PDM_part_extension_ln_to_gn_get (part_ext,
                                                       i_domain,
                                                       i_part,
-                                                      PDM_MESH_ENTITY_VERTEX,
+                                                      PDM_MESH_ENTITY_VTX,
                                                       &vtx_ln_to_gn_ext);
 
     double *vtx_coord_ext = NULL;

@@ -660,7 +660,7 @@ int main
   for (int i = 0; i < n_domain; i++) {
     PDM_dmesh_nodal_to_dmesh_get_dmesh(dmn_to_dm, 0, &dm[i]);
 
-    dn_vtx [i] = PDM_dmesh_dn_entity_get(dm[i], PDM_MESH_ENTITY_VERTEX);
+    dn_vtx [i] = PDM_dmesh_dn_entity_get(dm[i], PDM_MESH_ENTITY_VTX);
     dn_face[i] = PDM_dmesh_connectivity_get(dm[i],
                                             PDM_CONNECTIVITY_TYPE_FACE_VTX,
                                             &dface_vtx[i],
@@ -736,7 +736,7 @@ int main
       pn_vtx[i_dom][i_part] = PDM_multipart_part_ln_to_gn_get(mpart,
                                                               i_dom,
                                                               i_part,
-                                                              PDM_MESH_ENTITY_VERTEX,
+                                                              PDM_MESH_ENTITY_VTX,
                                                               &pvtx_ln_to_gn[i_dom][i_part],
                                                               PDM_OWNERSHIP_KEEP);
     }
@@ -824,7 +824,7 @@ int main
       int n_vtx = PDM_multipart_part_ln_to_gn_get(mpart,
                                                   i_dom,
                                                   i_part,
-                                                  PDM_MESH_ENTITY_VERTEX,
+                                                  PDM_MESH_ENTITY_VTX,
                                                   &vtx_ln_to_gn,
                                                   PDM_OWNERSHIP_KEEP);
 
@@ -842,7 +842,7 @@ int main
       PDM_multipart_part_graph_comm_get(mpart,
                                         i_dom,
                                         i_part,
-                                        PDM_MESH_ENTITY_VERTEX,
+                                        PDM_MESH_ENTITY_VTX,
                                         &vtx_part_bound_proc_idx,
                                         &vtx_part_bound_part_idx,
                                         &vtx_part_bound,
@@ -1074,7 +1074,7 @@ int main
       int n_vtx = PDM_multipart_part_ln_to_gn_get(mpart,
                                                    i_dom,
                                                    i_part,
-                                                   PDM_MESH_ENTITY_VERTEX,
+                                                   PDM_MESH_ENTITY_VTX,
                                                    &vtx_ln_to_gn,
                                                    PDM_OWNERSHIP_KEEP);
 
@@ -1090,7 +1090,7 @@ int main
       PDM_g_num_t* border_cell_ln_to_gn;
       PDM_g_num_t* border_face_ln_to_gn;
       int n_vtx_extended  = PDM_part_extension_vtx_coord_get(part_ext, i_dom, i_part, &vtx_coord_extended);
-      int n_vtx_extended2 = PDM_part_extension_ln_to_gn_get(part_ext, i_dom, i_part, PDM_MESH_ENTITY_VERTEX, &border_vtx_ln_to_gn);
+      int n_vtx_extended2 = PDM_part_extension_ln_to_gn_get(part_ext, i_dom, i_part, PDM_MESH_ENTITY_VTX,  &border_vtx_ln_to_gn);
       int n_cell_extended = PDM_part_extension_ln_to_gn_get(part_ext, i_dom, i_part, PDM_MESH_ENTITY_CELL, &border_cell_ln_to_gn);
       int n_face_extended = PDM_part_extension_ln_to_gn_get(part_ext, i_dom, i_part, PDM_MESH_ENTITY_FACE, &border_face_ln_to_gn);
       assert(n_vtx_extended == n_vtx_extended2);
@@ -1099,9 +1099,9 @@ int main
       int *border_vtx_interface  = NULL;
       int *border_face_interface = NULL;
       int *border_cell_interface = NULL;
-      PDM_part_extension_interface_get(part_ext, i_dom, i_part, PDM_MESH_ENTITY_VERTEX, &border_vtx_interface);
-      PDM_part_extension_interface_get(part_ext, i_dom, i_part, PDM_MESH_ENTITY_FACE  , &border_face_interface);
-      PDM_part_extension_interface_get(part_ext, i_dom, i_part, PDM_MESH_ENTITY_CELL  , &border_cell_interface);
+      PDM_part_extension_interface_get(part_ext, i_dom, i_part, PDM_MESH_ENTITY_VTX,  &border_vtx_interface);
+      PDM_part_extension_interface_get(part_ext, i_dom, i_part, PDM_MESH_ENTITY_FACE, &border_face_interface);
+      PDM_part_extension_interface_get(part_ext, i_dom, i_part, PDM_MESH_ENTITY_CELL, &border_cell_interface);
 
       if(0 == 1) {
         PDM_log_trace_array_long(border_vtx_ln_to_gn , n_vtx_extended , "border_vtx_ln_to_gn :: ");

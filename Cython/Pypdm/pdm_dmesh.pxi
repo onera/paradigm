@@ -386,7 +386,7 @@ def dmesh_vtx_coord_set(DMesh pydm,
                             PDM_OWNERSHIP_USER)
 
 def dmesh_vtx_coord_get(DMesh pydm):
-    dn_vtx = PDM_dmesh_dn_entity_get(pydm._dm, PDM_MESH_ENTITY_VERTEX)
+    dn_vtx = PDM_dmesh_dn_entity_get(pydm._dm, PDM_MESH_ENTITY_VTX)
     cdef double* dvtx_coord = NULL
     PDM_dmesh_vtx_coord_get(pydm._dm, 
                            &dvtx_coord,

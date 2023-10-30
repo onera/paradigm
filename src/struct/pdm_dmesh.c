@@ -207,7 +207,7 @@ PDM_dmesh_dn_entity_set
     dmesh->dn_face = dn_entity;
   } else if(entity_type == PDM_MESH_ENTITY_EDGE) {
     dmesh->dn_edge = dn_entity;
-  } else if(entity_type == PDM_MESH_ENTITY_VERTEX) {
+  } else if(entity_type == PDM_MESH_ENTITY_VTX) {
     dmesh->dn_vtx = dn_entity;
   }
 }
@@ -232,7 +232,7 @@ PDM_dmesh_dn_entity_get
     return dmesh->dn_face;
   } else if(entity_type == PDM_MESH_ENTITY_EDGE) {
     return dmesh->dn_edge;
-  } else if(entity_type == PDM_MESH_ENTITY_VERTEX) {
+  } else if(entity_type == PDM_MESH_ENTITY_VTX) {
     return dmesh->dn_vtx;
   } else {
     return -1;
@@ -458,7 +458,7 @@ PDM_dmesh_distrib_get
    case PDM_MESH_ENTITY_EDGE:
      *distrib = dmesh->edge_distrib;
      break;
-   case PDM_MESH_ENTITY_VERTEX:
+   case PDM_MESH_ENTITY_VTX:
      *distrib = dmesh->vtx_distrib;
      break;
    default:

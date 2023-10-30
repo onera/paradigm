@@ -441,11 +441,11 @@ program testf
                                            n_vtx_ext,     &
                                            vtx_coord_ext)
 
-    call PDM_part_extension_ln_to_gn_get (part_ext,               &
-                                          0,                      &
-                                          i_part-1,               &
-                                          PDM_MESH_ENTITY_VERTEX, &
-                                          n_vtx_ext,              &
+    call PDM_part_extension_ln_to_gn_get (part_ext,            &
+                                          0,                   &
+                                          i_part-1,            &
+                                          PDM_MESH_ENTITY_VTX, &
+                                          n_vtx_ext,           &
                                           vtx_ln_to_gn_ext)
 
     !  Cell-face
@@ -454,7 +454,7 @@ program testf
                                               i_part-1,                        &
                                               PDM_CONNECTIVITY_TYPE_CELL_FACE, &
                                               n_cell_ext,                      &
-                                              cell_face_ext_idx,                &
+                                              cell_face_ext_idx,               &
                                               cell_face_ext)
 
     call PDM_part_extension_ln_to_gn_get (part_ext,             &

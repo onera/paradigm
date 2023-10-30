@@ -261,8 +261,8 @@ int main(int argc, char *argv[])
   //   PDM_g_num_t *cell_ln_to_gn = NULL;
   //   double      *vtx_coord     = NULL;
 
-  //   int n_vtx  = PDM_multipart_part_ln_to_gn_get(mpart_id, 0, i_part, PDM_MESH_ENTITY_VERTEX, &vtx_ln_to_gn , PDM_OWNERSHIP_KEEP);
-  //   int n_cell = PDM_multipart_part_ln_to_gn_get(mpart_id, 0, i_part, PDM_MESH_ENTITY_CELL  , &cell_ln_to_gn, PDM_OWNERSHIP_KEEP);
+  //   int n_vtx  = PDM_multipart_part_ln_to_gn_get(mpart_id, 0, i_part, PDM_MESH_ENTITY_VTX,  &vtx_ln_to_gn , PDM_OWNERSHIP_KEEP);
+  //   int n_cell = PDM_multipart_part_ln_to_gn_get(mpart_id, 0, i_part, PDM_MESH_ENTITY_CELL, &cell_ln_to_gn, PDM_OWNERSHIP_KEEP);
   //   PDM_multipart_part_vtx_coord_get(mpart_id, 0, i_part, &vtx_coord, PDM_OWNERSHIP_KEEP);
 
   //   PDM_extract_part_part_set(extrp,

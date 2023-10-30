@@ -610,7 +610,7 @@ int main
       pn_vtx[i_dom][i_part] = PDM_multipart_part_ln_to_gn_get(mpart,
                                                               i_dom,
                                                               i_part,
-                                                              PDM_MESH_ENTITY_VERTEX,
+                                                              PDM_MESH_ENTITY_VTX,
                                                               &pvtx_ln_to_gn[i_dom][i_part],
                                                               PDM_OWNERSHIP_KEEP);
 

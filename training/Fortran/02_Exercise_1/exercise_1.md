@@ -495,12 +495,12 @@ To finish with, we need to have the description of the vertices.
 ```{code-cell}
 %%code_block -p exercise_1 -i 28
 
-  call PDM_multipart_part_ln_to_gn_get(mpart,                  &
-                                       i_domain,               &
-                                       i_part,                 &
-                                       PDM_MESH_ENTITY_VERTEX, &
-                                       vtx_ln_to_gn,           &
-                                       PDM_OWNERSHIP_KEEP,     &
+  call PDM_multipart_part_ln_to_gn_get(mpart,               &
+                                       i_domain,            &
+                                       i_part,              &
+                                       PDM_MESH_ENTITY_VTX, &
+                                       vtx_ln_to_gn,        &
+                                       PDM_OWNERSHIP_KEEP,  &
                                        n_vtx)
 
   call PDM_multipart_part_vtx_coord_get(mpart,             &
@@ -696,7 +696,7 @@ This bonus is not guided, so you should have a close look at the [documentation]
   call PDM_multipart_part_graph_comm_get(mpart,                   &
                                          i_domain,                &
                                          i_part,                  &
-                                         PDM_MESH_ENTITY_VERTEX,  &
+                                         PDM_MESH_ENTITY_VTX,     &
                                          vtx_part_bound_proc_idx, &
                                          vtx_part_bound_part_idx, &
                                          vtx_part_bound,          &
@@ -828,11 +828,11 @@ call PDM_part_extension_compute (part_ext)
                                          n_vtx_ext,     &
                                          vtx_coord_ext)
 
-  call PDM_part_extension_ln_to_gn_get (part_ext,               &
-                                        i_domain,               &
-                                        i_part,                 &
-                                        PDM_MESH_ENTITY_VERTEX, &
-                                        n_vtx_ext,              &
+  call PDM_part_extension_ln_to_gn_get (part_ext,            &
+                                        i_domain,            &
+                                        i_part,              &
+                                        PDM_MESH_ENTITY_VTX, &
+                                        n_vtx_ext,           &
                                         vtx_ln_to_gn_ext)
 ```
 

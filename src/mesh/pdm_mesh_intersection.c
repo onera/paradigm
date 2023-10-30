@@ -88,7 +88,7 @@ _export_vtk_1d
     PDM_g_num_t *edge_ln_to_gn = NULL;
     PDM_g_num_t *vtx_ln_to_gn  = NULL;
     int n_edge = PDM_extract_part_ln_to_gn_get(extrp_mesh, i_part, PDM_MESH_ENTITY_EDGE  , &edge_ln_to_gn, PDM_OWNERSHIP_KEEP);
-    int n_vtx  = PDM_extract_part_ln_to_gn_get(extrp_mesh, i_part, PDM_MESH_ENTITY_VERTEX, &vtx_ln_to_gn , PDM_OWNERSHIP_KEEP);
+    int n_vtx  = PDM_extract_part_ln_to_gn_get(extrp_mesh, i_part, PDM_MESH_ENTITY_VTX, &vtx_ln_to_gn , PDM_OWNERSHIP_KEEP);
 
     double *vtx_coord = NULL;
     PDM_extract_part_vtx_coord_get(extrp_mesh, i_part, &vtx_coord, PDM_OWNERSHIP_KEEP);
@@ -131,7 +131,7 @@ _export_vtk_2d
     int n_face = extrp_mesh->n_target[i_part];
     face_ln_to_gn = extrp_mesh->target_gnum[i_part];
     // int n_face = PDM_extract_part_parent_ln_to_gn_get(extrp_mesh, i_part, PDM_MESH_ENTITY_FACE  , &face_ln_to_gn, PDM_OWNERSHIP_KEEP);
-    int n_vtx  = PDM_extract_part_ln_to_gn_get(extrp_mesh, i_part, PDM_MESH_ENTITY_VERTEX, &vtx_ln_to_gn , PDM_OWNERSHIP_KEEP);
+    int n_vtx  = PDM_extract_part_ln_to_gn_get(extrp_mesh, i_part, PDM_MESH_ENTITY_VTX, &vtx_ln_to_gn , PDM_OWNERSHIP_KEEP);
 
     double *vtx_coord = NULL;
     PDM_extract_part_vtx_coord_get(extrp_mesh, i_part, &vtx_coord, PDM_OWNERSHIP_KEEP);
@@ -199,7 +199,7 @@ _export_vtk_3d
 
     pn_extract_vtx[i_part] = PDM_extract_part_n_entity_get(extrp,
                                                            i_part,
-                                                           PDM_MESH_ENTITY_VERTEX);
+                                                           PDM_MESH_ENTITY_VTX);
 
     PDM_extract_part_connectivity_get(extrp,
                                       i_part,
@@ -263,7 +263,7 @@ _export_vtk_3d
 
     PDM_extract_part_ln_to_gn_get(extrp,
                                   i_part,
-                                  PDM_MESH_ENTITY_VERTEX,
+                                  PDM_MESH_ENTITY_VTX,
                                   &pextract_vtx_ln_to_gn[i_part],
                                   PDM_OWNERSHIP_KEEP);
 
@@ -1323,20 +1323,20 @@ _create_extract_part
 
   for(int i_part = 0; i_part < mesh->n_part; ++i_part) {
 
-    int n_cell = PDM_part_mesh_n_entity_get(mesh, i_part, PDM_MESH_ENTITY_CELL  );
-    int n_face = PDM_part_mesh_n_entity_get(mesh, i_part, PDM_MESH_ENTITY_FACE  );
-    int n_edge = PDM_part_mesh_n_entity_get(mesh, i_part, PDM_MESH_ENTITY_EDGE  );
-    int n_vtx  = PDM_part_mesh_n_entity_get(mesh, i_part, PDM_MESH_ENTITY_VERTEX);
+    int n_cell = PDM_part_mesh_n_entity_get(mesh, i_part, PDM_MESH_ENTITY_CELL);
+    int n_face = PDM_part_mesh_n_entity_get(mesh, i_part, PDM_MESH_ENTITY_FACE);
+    int n_edge = PDM_part_mesh_n_entity_get(mesh, i_part, PDM_MESH_ENTITY_EDGE);
+    int n_vtx  = PDM_part_mesh_n_entity_get(mesh, i_part, PDM_MESH_ENTITY_VTX);
 
     PDM_g_num_t *cell_ln_to_gn = NULL;
     PDM_g_num_t *face_ln_to_gn = NULL;
     PDM_g_num_t *edge_ln_to_gn = NULL;
     PDM_g_num_t *vtx_ln_to_gn  = NULL;
 
-    PDM_part_mesh_entity_ln_to_gn_get(mesh, i_part, PDM_MESH_ENTITY_CELL  , &cell_ln_to_gn, PDM_OWNERSHIP_BAD_VALUE);
-    PDM_part_mesh_entity_ln_to_gn_get(mesh, i_part, PDM_MESH_ENTITY_FACE  , &face_ln_to_gn, PDM_OWNERSHIP_BAD_VALUE);
-    PDM_part_mesh_entity_ln_to_gn_get(mesh, i_part, PDM_MESH_ENTITY_EDGE  , &edge_ln_to_gn, PDM_OWNERSHIP_BAD_VALUE);
-    PDM_part_mesh_entity_ln_to_gn_get(mesh, i_part, PDM_MESH_ENTITY_VERTEX, &vtx_ln_to_gn , PDM_OWNERSHIP_BAD_VALUE);
+    PDM_part_mesh_entity_ln_to_gn_get(mesh, i_part, PDM_MESH_ENTITY_CELL, &cell_ln_to_gn, PDM_OWNERSHIP_BAD_VALUE);
+    PDM_part_mesh_entity_ln_to_gn_get(mesh, i_part, PDM_MESH_ENTITY_FACE, &face_ln_to_gn, PDM_OWNERSHIP_BAD_VALUE);
+    PDM_part_mesh_entity_ln_to_gn_get(mesh, i_part, PDM_MESH_ENTITY_EDGE, &edge_ln_to_gn, PDM_OWNERSHIP_BAD_VALUE);
+    PDM_part_mesh_entity_ln_to_gn_get(mesh, i_part, PDM_MESH_ENTITY_VTX,  &vtx_ln_to_gn , PDM_OWNERSHIP_BAD_VALUE);
 
     int *cell_face     = NULL;
     int *cell_face_idx = NULL;
@@ -1625,7 +1625,7 @@ _get_extracted_mesh_vol
 
   PDM_extract_part_parent_ln_to_gn_get(extrp,
                                        0,
-                                       PDM_MESH_ENTITY_VERTEX,
+                                       PDM_MESH_ENTITY_VTX,
                                        vtx_ln_to_gn,
                                        PDM_OWNERSHIP_KEEP);
 
@@ -2363,11 +2363,11 @@ _mesh_intersection_vol_vol
   for (int i = 0; i < 2; i++) {
     n_vtx[i] = PDM_extract_part_n_entity_get(mi->extrp_mesh[i],
                                              0,
-                                             PDM_MESH_ENTITY_VERTEX);
+                                             PDM_MESH_ENTITY_VTX);
 
     PDM_extract_part_parent_ln_to_gn_get(mi->extrp_mesh[i],
                                          0,
-                                         PDM_MESH_ENTITY_VERTEX,
+                                         PDM_MESH_ENTITY_VTX,
                                          &vtx_ln_to_gn[i],
                                          PDM_OWNERSHIP_KEEP);
 
@@ -4491,7 +4491,7 @@ _mesh_intersection_surf_surf
 
     n_vtx[i] = PDM_extract_part_n_entity_get(mi->extrp_mesh[i],
                                              0,
-                                             PDM_MESH_ENTITY_VERTEX);
+                                             PDM_MESH_ENTITY_VTX);
 
     PDM_extract_part_vtx_coord_get(mi->extrp_mesh[i],
                                    0,
@@ -5508,7 +5508,7 @@ PDM_mesh_intersection_compute
         PDM_g_num_t *_vtx_ln_to_gn = NULL;
         PDM_extract_part_parent_ln_to_gn_get(mi->extrp_mesh[imesh],
                                              0,
-                                             PDM_MESH_ENTITY_VERTEX,
+                                             PDM_MESH_ENTITY_VTX,
                                              &_vtx_ln_to_gn,
                                              PDM_OWNERSHIP_KEEP);
 
@@ -5683,20 +5683,20 @@ PDM_mesh_intersection_part_set
 
   PDM_part_mesh_t* mesh = mi->mesh[i_mesh];
 
-  PDM_part_mesh_n_entity_set(mesh, i_part, PDM_MESH_ENTITY_CELL  , n_cell);
-  PDM_part_mesh_n_entity_set(mesh, i_part, PDM_MESH_ENTITY_FACE  , n_face);
-  PDM_part_mesh_n_entity_set(mesh, i_part, PDM_MESH_ENTITY_EDGE  , n_edge);
-  PDM_part_mesh_n_entity_set(mesh, i_part, PDM_MESH_ENTITY_VERTEX, n_vtx );
+  PDM_part_mesh_n_entity_set(mesh, i_part, PDM_MESH_ENTITY_CELL, n_cell);
+  PDM_part_mesh_n_entity_set(mesh, i_part, PDM_MESH_ENTITY_FACE, n_face);
+  PDM_part_mesh_n_entity_set(mesh, i_part, PDM_MESH_ENTITY_EDGE, n_edge);
+  PDM_part_mesh_n_entity_set(mesh, i_part, PDM_MESH_ENTITY_VTX,  n_vtx );
 
   PDM_part_mesh_connectivity_set(mesh, i_part, PDM_CONNECTIVITY_TYPE_CELL_FACE, cell_face, cell_face_idx, PDM_OWNERSHIP_USER);
   PDM_part_mesh_connectivity_set(mesh, i_part, PDM_CONNECTIVITY_TYPE_FACE_EDGE, face_edge, face_edge_idx, PDM_OWNERSHIP_USER);
   PDM_part_mesh_connectivity_set(mesh, i_part, PDM_CONNECTIVITY_TYPE_FACE_VTX , face_vtx , face_vtx_idx , PDM_OWNERSHIP_USER);
   PDM_part_mesh_connectivity_set(mesh, i_part, PDM_CONNECTIVITY_TYPE_EDGE_VTX , edge_vtx , NULL         , PDM_OWNERSHIP_USER);
 
-  PDM_part_mesh_entity_ln_to_gn_set(mesh, i_part, PDM_MESH_ENTITY_CELL  , cell_ln_to_gn, PDM_OWNERSHIP_USER);
-  PDM_part_mesh_entity_ln_to_gn_set(mesh, i_part, PDM_MESH_ENTITY_FACE  , face_ln_to_gn, PDM_OWNERSHIP_USER);
-  PDM_part_mesh_entity_ln_to_gn_set(mesh, i_part, PDM_MESH_ENTITY_EDGE  , edge_ln_to_gn, PDM_OWNERSHIP_USER);
-  PDM_part_mesh_entity_ln_to_gn_set(mesh, i_part, PDM_MESH_ENTITY_VERTEX, vtx_ln_to_gn , PDM_OWNERSHIP_USER);
+  PDM_part_mesh_entity_ln_to_gn_set(mesh, i_part, PDM_MESH_ENTITY_CELL, cell_ln_to_gn, PDM_OWNERSHIP_USER);
+  PDM_part_mesh_entity_ln_to_gn_set(mesh, i_part, PDM_MESH_ENTITY_FACE, face_ln_to_gn, PDM_OWNERSHIP_USER);
+  PDM_part_mesh_entity_ln_to_gn_set(mesh, i_part, PDM_MESH_ENTITY_EDGE, edge_ln_to_gn, PDM_OWNERSHIP_USER);
+  PDM_part_mesh_entity_ln_to_gn_set(mesh, i_part, PDM_MESH_ENTITY_VTX,  vtx_ln_to_gn , PDM_OWNERSHIP_USER);
 
   PDM_part_mesh_vtx_coord_set(mesh, i_part, vtx_coord, PDM_OWNERSHIP_USER);
 }
@@ -5917,7 +5917,7 @@ PDM_mesh_intersection_elt_volume_get
 
       int n_vtx = PDM_part_mesh_n_entity_get(mi->mesh[imesh],
                                              ipart,
-                                             PDM_MESH_ENTITY_VERTEX);
+                                             PDM_MESH_ENTITY_VTX);
       double *vtx_coord = NULL;
       PDM_part_mesh_vtx_coord_get(mi->mesh[imesh],
                                   ipart,

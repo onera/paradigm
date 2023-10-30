@@ -300,7 +300,7 @@ _extract_part_edge_and_set_mesh
     PDM_multipart_part_ln_to_gn_get(mpart,
                                     0,
                                     i_part,
-                                    PDM_MESH_ENTITY_VERTEX,
+                                    PDM_MESH_ENTITY_VTX,
                                     &vtx_ln_to_gn,
                                     PDM_OWNERSHIP_KEEP);
     int *edge_vtx_idx = NULL;
@@ -373,8 +373,8 @@ _set_mesh_line
   int i_part = 0;
   PDM_g_num_t *edge_ln_to_gn = NULL;
   PDM_g_num_t *vtx_ln_to_gn  = NULL;
-  int n_edge = PDM_extract_part_ln_to_gn_get(extrp_mesh, i_part, PDM_MESH_ENTITY_EDGE  , &edge_ln_to_gn, PDM_OWNERSHIP_KEEP);
-  int n_vtx  = PDM_extract_part_ln_to_gn_get(extrp_mesh, i_part, PDM_MESH_ENTITY_VERTEX, &vtx_ln_to_gn , PDM_OWNERSHIP_KEEP);
+  int n_edge = PDM_extract_part_ln_to_gn_get(extrp_mesh, i_part, PDM_MESH_ENTITY_EDGE, &edge_ln_to_gn, PDM_OWNERSHIP_KEEP);
+  int n_vtx  = PDM_extract_part_ln_to_gn_get(extrp_mesh, i_part, PDM_MESH_ENTITY_VTX,  &vtx_ln_to_gn , PDM_OWNERSHIP_KEEP);
 
   double *vtx_coord = NULL;
   PDM_extract_part_vtx_coord_get(extrp_mesh, i_part, &vtx_coord, PDM_OWNERSHIP_KEEP);
@@ -465,7 +465,7 @@ _set_mesh
     PDM_multipart_part_ln_to_gn_get(mpart,
                                     0,
                                     i_part,
-                                    PDM_MESH_ENTITY_VERTEX,
+                                    PDM_MESH_ENTITY_VTX,
                                     &vtx_ln_to_gn,
                                     PDM_OWNERSHIP_KEEP);
 

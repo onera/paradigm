@@ -638,7 +638,7 @@ _cube_mesh2
       int n_vtx = PDM_multipart_part_ln_to_gn_get(mpart,
                                                   0,
                                                   i_part,
-                                                  PDM_MESH_ENTITY_VERTEX,
+                                                  PDM_MESH_ENTITY_VTX,
                                                   &vtx_ln_to_gn,
                                                   PDM_OWNERSHIP_KEEP);
       int          pn_face_group        = 0;
@@ -661,7 +661,7 @@ _cube_mesh2
       PDM_multipart_part_graph_comm_get(mpart,
                                         0,
                                         i_part,
-                                        PDM_MESH_ENTITY_VERTEX,
+                                        PDM_MESH_ENTITY_VTX,
                                         &vtx_part_bound_proc_idx,
                                         &vtx_part_bound_part_idx,
                                         &vtx_part_bound,
@@ -817,7 +817,7 @@ _cube_mesh2
     int n_vtx = PDM_multipart_part_ln_to_gn_get(mpart,
                                                 0,
                                                 i_part,
-                                                PDM_MESH_ENTITY_VERTEX,
+                                                PDM_MESH_ENTITY_VTX,
                                                 &vtx_ln_to_gn,
                                                 PDM_OWNERSHIP_KEEP);
     int          pn_face_group        = 0;
@@ -840,7 +840,7 @@ _cube_mesh2
     PDM_multipart_part_graph_comm_get(mpart,
                                       0,
                                       i_part,
-                                      PDM_MESH_ENTITY_VERTEX,
+                                      PDM_MESH_ENTITY_VTX,
                                       &vtx_part_bound_proc_idx,
                                       &vtx_part_bound_part_idx,
                                       &vtx_part_bound,
@@ -886,7 +886,7 @@ _cube_mesh2
       PDM_part_extension_ln_to_gn_get(part_ext,
                                       0,
                                       i_part,
-                                      PDM_MESH_ENTITY_VERTEX,
+                                      PDM_MESH_ENTITY_VTX,
                                       &ext_vtx_ln_to_gn);
 
 

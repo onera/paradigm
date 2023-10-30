@@ -75,7 +75,7 @@ edge_ln_to_gn = mpart.ln_to_gn_get(0, 0, PDM._PDM_MESH_ENTITY_EDGE)
 n_edge = len(edge_ln_to_gn)
 
 # on récupère les numéros absolus des sommets
-vtx_ln_to_gn = mpart.ln_to_gn_get(0, 0, PDM._PDM_MESH_ENTITY_VERTEX)
+vtx_ln_to_gn = mpart.ln_to_gn_get(0, 0, PDM._PDM_MESH_ENTITY_VTX)
 # vtx_ln_to_gn = part_infos["np_vtx_ln_to_gn"]
 
 # on récupère les coordonnées des sommets

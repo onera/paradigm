@@ -267,10 +267,10 @@ int main(int argc, char *argv[])
   PDM_g_num_t *distrib_edge = NULL;
   // PDM_g_num_t *distrib_vtx  = NULL;
 
-  PDM_dmesh_distrib_get(dmesh, PDM_MESH_ENTITY_CELL  , &distrib_cell);
-  PDM_dmesh_distrib_get(dmesh, PDM_MESH_ENTITY_FACE  , &distrib_face);
-  PDM_dmesh_distrib_get(dmesh, PDM_MESH_ENTITY_EDGE  , &distrib_edge);
-  // PDM_dmesh_distrib_get(dmesh, PDM_MESH_ENTITY_VERTEX, &distrib_vtx );
+  PDM_dmesh_distrib_get(dmesh, PDM_MESH_ENTITY_CELL, &distrib_cell);
+  PDM_dmesh_distrib_get(dmesh, PDM_MESH_ENTITY_FACE, &distrib_face);
+  PDM_dmesh_distrib_get(dmesh, PDM_MESH_ENTITY_EDGE, &distrib_edge);
+  // PDM_dmesh_distrib_get(dmesh, PDM_MESH_ENTITY_VTX, &distrib_vtx );
 
   double *dvtx_coords = PDM_DMesh_nodal_vtx_get(dmn);
 

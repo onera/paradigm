@@ -277,7 +277,7 @@ _read_and_split_distributed_mesh
   PDM_multipart_part_ln_to_gn_get(mpart,
                                   0,
                                   i_part,
-                                  PDM_MESH_ENTITY_VERTEX,
+                                  PDM_MESH_ENTITY_VTX,
                                   &_vtx_ln_to_gn,
                                   PDM_OWNERSHIP_KEEP);
   *vtx_ln_to_gn = malloc(sizeof(PDM_g_num_t) * (*n_vtx));

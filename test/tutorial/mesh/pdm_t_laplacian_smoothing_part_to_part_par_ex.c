@@ -364,7 +364,7 @@ int main(int argc, char *argv[])
   PDM_multipart_part_ln_to_gn_get(mpart,
                                   0,
                                   i_part,
-                                  PDM_MESH_ENTITY_VERTEX,
+                                  PDM_MESH_ENTITY_VTX,
                                   &vtx_ln_to_gn,
                                   PDM_OWNERSHIP_KEEP);
 

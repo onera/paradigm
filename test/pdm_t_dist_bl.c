@@ -466,7 +466,7 @@ _create_wall_surf
     PDM_multipart_part_ln_to_gn_get(mpart,
                                     0,
                                     i_part,
-                                    PDM_MESH_ENTITY_VERTEX,
+                                    PDM_MESH_ENTITY_VTX,
                                     &vtx_ln_to_gn,
                                     PDM_OWNERSHIP_KEEP);
 
@@ -884,7 +884,7 @@ _set_mesh
     PDM_multipart_part_ln_to_gn_get(mpart,
                                     0,
                                     i_part,
-                                    PDM_MESH_ENTITY_VERTEX,
+                                    PDM_MESH_ENTITY_VTX,
                                     &vtx_ln_to_gn,
                                     PDM_OWNERSHIP_KEEP);
 

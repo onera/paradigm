@@ -467,7 +467,7 @@ int main(int argc, char *argv[])
         int n_vtx = PDM_multipart_part_ln_to_gn_get(mpart,
                                                     0,
                                                     i_part,
-                                                    PDM_MESH_ENTITY_VERTEX,
+                                                    PDM_MESH_ENTITY_VTX,
                                                     &vtx_ln_to_gn,
                                                     PDM_OWNERSHIP_KEEP);
         int          pn_face_group        = 0;
@@ -490,7 +490,7 @@ int main(int argc, char *argv[])
         PDM_multipart_part_graph_comm_get(mpart,
                                           0,
                                           i_part,
-                                          PDM_MESH_ENTITY_VERTEX,
+                                          PDM_MESH_ENTITY_VTX,
                                           &vtx_part_bound_proc_idx,
                                           &vtx_part_bound_part_idx,
                                           &vtx_part_bound,

@@ -556,7 +556,7 @@ int main
   for (int i = 0; i < n_domain; i++) {
     PDM_dmesh_nodal_to_dmesh_get_dmesh(dmn_to_dm, 0, &dm[i]);
 
-    dn_vtx [i] = PDM_dmesh_dn_entity_get(dm[i], PDM_MESH_ENTITY_VERTEX);
+    dn_vtx [i] = PDM_dmesh_dn_entity_get(dm[i], PDM_MESH_ENTITY_VTX);
 
     if(dim == 3) {
       dn_face[i] = PDM_dmesh_connectivity_get(dm[i],
@@ -652,7 +652,7 @@ int main
       pn_vtx[i_dom][i_part] = PDM_multipart_part_ln_to_gn_get(mpart_id,
                                                               i_dom,
                                                               i_part,
-                                                              PDM_MESH_ENTITY_VERTEX,
+                                                              PDM_MESH_ENTITY_VTX,
                                                               &pvtx_ln_to_gn[i_dom][i_part],
                                                               PDM_OWNERSHIP_KEEP);
 
@@ -829,7 +829,7 @@ int main
       // PDM_field_cell_to_vtx_graph_comm_set(mi,
       //                                     i_domain,
       //                                     i_part,
-      //                                     PDM_MESH_ENTITY_VERTEX,
+      //                                     PDM_MESH_ENTITY_VTX,
       //                                     vtx_part_bound_proc_idx,
       //                                     vtx_part_bound_part_idx,
       //                                     vtx_part_bound);

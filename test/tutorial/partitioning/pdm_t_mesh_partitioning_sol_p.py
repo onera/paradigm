@@ -91,7 +91,7 @@ def run_test():
   else :
     vtx_ln_to_gn = mpart.ln_to_gn_get(i_domain,
                                       i_part,
-                                      PDM._PDM_MESH_ENTITY_VERTEX)
+                                      PDM._PDM_MESH_ENTITY_VTX)
     n_vtx = len(vtx_ln_to_gn)
 
     coords = mpart.vtx_coord_get(i_domain,
@@ -145,7 +145,7 @@ def run_test():
     # step 2 : set
     output = mpart.graph_comm_get(i_domain,
                                   i_part,
-                                  PDM._PDM_MESH_ENTITY_VERTEX)
+                                  PDM._PDM_MESH_ENTITY_VTX)
 
     vtx_part_bound_proc_idx = output["np_entity_part_bound_proc_idx"]
     vtx_part_bound_part_idx = output["np_entity_part_bound_part_idx"]
@@ -212,12 +212,12 @@ def run_test():
 
     part_ext.ln_to_gn_set(i_domain,
                           i_part,
-                          PDM._PDM_MESH_ENTITY_VERTEX,
+                          PDM._PDM_MESH_ENTITY_VTX,
                           vtx_ln_to_gn)
 
     part_ext.part_bound_graph_set(i_domain,
                                   i_part,
-                                  PDM._PDM_MESH_ENTITY_VERTEX,
+                                  PDM._PDM_MESH_ENTITY_VTX,
                                   vtx_part_bound_proc_idx,
                                   vtx_part_bound_part_idx,
                                   vtx_part_bound)
@@ -259,7 +259,7 @@ def run_test():
     # Vertices
     vtx_ext_ln_to_gn = part_ext.ln_to_gn_get(i_domain,
                                              i_part,
-                                             PDM._PDM_MESH_ENTITY_VERTEX)
+                                             PDM._PDM_MESH_ENTITY_VTX)
 
     vtx_coord_ext = part_ext.vtx_coord_get(i_domain,
                                            i_part)
@@ -276,7 +276,7 @@ def run_test():
 
     interface_vtx  = part_ext.get_interface(i_domain,
                                             i_part,
-                                            PDM._PDM_MESH_ENTITY_VERTEX)
+                                            PDM._PDM_MESH_ENTITY_VTX)
 
     surfaces = part_ext.group_get(i_domain,
                                   i_part,
