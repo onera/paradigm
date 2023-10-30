@@ -61,6 +61,8 @@ Get outputs
 
 .. doxygenfunction:: PDM_multipart_part_vtx_coord_get
 
+.. _c_multipart_get_part_mesh_nodal:
+
 .. doxygenfunction:: PDM_multipart_get_part_mesh_nodal
 
 .. doxygenfunction:: PDM_multipart_group_get
@@ -85,7 +87,7 @@ Finalize
 Partitioned nodal mesh
 ~~~~~~~~~~~~~~~~~~~~~~
 
-Here we describe the getters of the structure retrieved using ``PDM_multipart_get_part_mesh_nodal``.
+Here we describe the getters of the structure retrieved using :ref:`PDM_multipart_get_part_mesh_nodal <c_multipart_get_part_mesh_nodal>`.
 This allows to have the arrays corresponding to the partitioned mesh described in nodal connectivity style.
 
 .. doxygenfunction:: PDM_part_mesh_nodal_section_n_elt_get
@@ -187,13 +189,11 @@ Python API
   Set inputs
   ~~~~~~~~~~
 
-  .. autofunction:: Pypdm.Pypdm.MultiPart.register_dmesh_nodal
+  .. autofunction:: Pypdm.Pypdm.MultiPart.dmesh_nodal_set
 
-  .. autofunction:: Pypdm.Pypdm.MultiPart.register_block
+  .. autofunction:: Pypdm.Pypdm.MultiPart.dmesh_set
 
-  .. autofunction:: Pypdm.Pypdm.MultiPart.block_set
-
-  .. autofunction:: Pypdm.Pypdm.MultiPart.register_joins
+  .. autofunction:: Pypdm.Pypdm.MultiPart.joins_set
 
 
   Renumbering options
@@ -238,14 +238,16 @@ Python API
   Partitioned nodal mesh
   ~~~~~~~~~~~~~~~~~~~~~~~
 
-  Here we describe the getters of the structure retrieved using ``PDM_multipart_get_part_mesh_nodal``.
+  Here we describe the getters of the structure retrieved using :py:func:`part_mesh_nodal_get`.
   This allows to have the arrays corresponding to the partitioned mesh described in nodal connectivity style.
 
-  .. autoclass:: PMeshNodal
+  .. .. autoclass:: Pypdm.Pypdm.PMeshNodal
 
-  .. autofunction:: Pypdm.Pypdm.PMeshNodal.part_mesh_nodal_get_sections
+  .. autoclass:: Pypdm.Pypdm.PartMeshNodalCaspule
 
-  .. autofunction:: Pypdm.Pypdm.PMeshNodal.part_mesh_nodal_vtx_g_num_get
+  .. autofunction:: Pypdm.Pypdm.PartMeshNodalCaspule.get_sections
+
+  .. .. autofunction:: Pypdm.Pypdm.PartMeshNodalCaspule.vtx_g_num_get
 
 
 .. ifconfig:: enable_python_doc == 'OFF'
