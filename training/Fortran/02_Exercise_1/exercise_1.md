@@ -1092,7 +1092,7 @@ In some cases, the mesh is an assembly of several sub-meshes. These are called *
 
 ![alt text](mesh.png "A mesh composed of two domains")
 
-Each domain *domain* is partitioned in subdomains which
+Each *domain* is partitioned in subdomains which
 are mapped to the processors of the parallel machine. On a processor the subdomain (of a mesh or a domain) can be subdivided in *parts*.
 
 ![alt text](processor.png "Processor 0 with a subdomain of each domain with two parts for subdomain of domain 1")

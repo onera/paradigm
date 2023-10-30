@@ -97,22 +97,22 @@ For mesh partitioning, as for all other `ParaDiGM` features, there are 5 main st
 
 Following this logic, let's start **creating** (step 1) the mesh partitioning object for homogeneously balanced subdomains.
 
-*Remark : since this is a basic example, we ask you to stick with the fixed values for n_zone, n_part, i_zone, i_part and merge_zones.
+*Remark : since this is a basic example, we ask you to stick with the fixed values for n_domain, n_part, i_domain, i_part and merge_domains.
 To get insight about the concepts behind those values you can have a look [here](#Annex-1)*
 
 ```{code-cell}
 %%code_block -p exercise_1 -i 2
 
 # Create partitioning object
-n_zone = 1      # fixed
-n_part = 1      # fixed
-i_zone = 0      # fixed
-i_part = 0      # fixed
-merge_zones = 0 # fixed
+n_domain = 1      # fixed
+n_part = 1        # fixed
+i_domain = 0      # fixed
+i_part = 0        # fixed
+merge_domains = 0 # fixed
 part_method = PDM._PDM_SPLIT_DUAL_WITH_HILBERT;
-mpart = PDM.MultiPart(n_zone,                             # Number of zones
-                      np.array([n_part]).astype(np.intc), # Number of partitions per zone
-                      merge_zones,                        # PDM_FALSE (do not fuse zones)
+mpart = PDM.MultiPart(n_domain,                           # Number of domains
+                      np.array([n_part]).astype(np.intc), # Number of partitions per domain
+                      merge_domains,                      # PDM_FALSE (do not fuse domains)
                       part_method,                        # Partitioning method
                       1,                                  # PDM_PART_SIZE_HOMOGENEOUS (subdomains are homogeneously balanced)
                       None,                               # Weight (in %) of each partition in heterogeneous case
@@ -133,7 +133,7 @@ You can here call the renumbering function but by telling it not to do any renum
 
 renum_cell = bytes("PDM_PART_RENUM_CELL_NONE", 'ascii')
 renum_face = bytes("PDM_PART_RENUM_FACE_NONE", 'ascii')
-mpart.reordering_set(-1,         # All zones
+mpart.reordering_set(-1,         # All domains
                      renum_cell,
                      None,
                      renum_face)
@@ -145,7 +145,7 @@ Now that you have created a mesh partitioning object `mpart`, you can **set** (s
 ```{code-cell}
 %%code_block -p exercise_1 -i 4
 
-mpart.dmesh_nodal_set(i_zone, dmn)
+mpart.dmesh_nodal_set(i_domain, dmn)
 ```
 
 At this point you have provided all the information necessary to run the mesh partitioning algorithm. You can call the function to
@@ -178,9 +178,9 @@ Let's start with the vertices composing the subdomain. How many vertices are the
 %%code_block -p exercise_1 -i 6
 
 # coords = mpart.vtx_coord_get(i_part,
-#                              i_zone)
+#                              i_domain)
 #
-# pmn = mpart.part_mesh_nodal_get(i_zone)
+# pmn = mpart.part_mesh_nodal_get(i_domain)
 # vtx_ln_to_gn = PDM.part_mesh_nodal_vtx_g_num_get(pmn, i_part)
 # n_vtx        = len(vtx_ln_to_gn)
 
@@ -229,12 +229,12 @@ Let's start from the top with cell data. How many cells are there? What are thei
 ```{code-cell}
 %%code_block -p exercise_1 -i 9
 
-cell_ln_to_gn = mpart.ln_to_gn_get(i_zone,
+cell_ln_to_gn = mpart.ln_to_gn_get(i_domain,
                                    i_part,
                                    PDM._PDM_MESH_ENTITY_CELL)
 n_cell = len(cell_ln_to_gn)
 
-cell_face_idx, cell_face = mpart.connectivity_get(i_zone,
+cell_face_idx, cell_face = mpart.connectivity_get(i_domain,
                                                   i_part,
                                                   PDM._PDM_CONNECTIVITY_TYPE_CELL_FACE)
 
@@ -245,12 +245,12 @@ For the faces we proceed in a similar way. How many faces are there? What are th
 ```{code-cell}
 %%code_block -p exercise_1 -i 10
 
-face_ln_to_gn = mpart.ln_to_gn_get(i_zone,
+face_ln_to_gn = mpart.ln_to_gn_get(i_domain,
                                    i_part,
                                    PDM._PDM_MESH_ENTITY_FACE)
 n_face = len(face_ln_to_gn)
 
-face_vtx_idx, face_vtx = mpart.connectivity_get(i_zone,
+face_vtx_idx, face_vtx = mpart.connectivity_get(i_domain,
                                                 i_part,
                                                 PDM._PDM_CONNECTIVITY_TYPE_FACE_VTX)
 
@@ -264,12 +264,12 @@ each edge is only composed of two vertices*
 ```{code-cell}
 %%code_block -p exercise_1 -i 11
 
-"""edge_ln_to_gn = mpart.ln_to_gn_get(i_zone,
+"""edge_ln_to_gn = mpart.ln_to_gn_get(i_domain,
                                    i_part,
                                    PDM._PDM_MESH_ENTITY_EDGE)
 n_edge = len(edge_ln_to_gn)
 
-_, edge_vtx = mpart.connectivity_get(i_zone,
+_, edge_vtx = mpart.connectivity_get(i_domain,
                                      i_part,
                                      PDM._PDM_CONNECTIVITY_TYPE_EDGE_VTX)
 """
@@ -281,12 +281,12 @@ To finish with, we need to have the description of the vertices.
 ```{code-cell}
 %%code_block -p exercise_1 -i 12
 
-vtx_ln_to_gn = mpart.ln_to_gn_get(i_zone,
+vtx_ln_to_gn = mpart.ln_to_gn_get(i_domain,
                                   i_part,
                                   PDM._PDM_MESH_ENTITY_VERTEX)
 n_vtx = len(vtx_ln_to_gn)
 
-coords = mpart.vtx_coord_get(i_zone,
+coords = mpart.vtx_coord_get(i_domain,
                              i_part)
 
 ```
@@ -340,7 +340,7 @@ This bonus is not guided, so you should have a close look at the [documentation]
 
 extend_type = PDM._PDM_EXTEND_FROM_VTX
 depth       = 1
-part_ext = PDM.PartExtension(n_zone,
+part_ext = PDM.PartExtension(n_domain,
                              np.array([n_part]).astype(np.intc),
                              extend_type,
                              depth,
@@ -352,7 +352,7 @@ part_ext = PDM.PartExtension(n_zone,
 ```{code-cell}
 %%code_block -p exercise_1 -i 15
 
-output = mpart.graph_comm_get(i_zone,
+output = mpart.graph_comm_get(i_domain,
                               i_part,
                               PDM._PDM_MESH_ENTITY_VERTEX)
 
@@ -361,17 +361,17 @@ vtx_part_bound_part_idx = output["np_entity_part_bound_part_idx"]
 vtx_part_bound          = output["np_entity_part_bound"]
 
 """
-edge_ln_to_gn = mpart.ln_to_gn_get(i_zone,
+edge_ln_to_gn = mpart.ln_to_gn_get(i_domain,
                                    i_part,
                                    PDM._PDM_MESH_ENTITY_EDGE)
 n_edge = len(edge_ln_to_gn)
 
-_, edge_vtx = mpart.connectivity_get(i_zone,
+_, edge_vtx = mpart.connectivity_get(i_domain,
                                      i_part,
                                      PDM._PDM_CONNECTIVITY_TYPE_EDGE_VTX)
 """
 
-"""part_ext.set_part(i_zone,
+"""part_ext.set_part(i_domain,
                   i_part,
                   n_cell,
                   n_face,
@@ -404,38 +404,38 @@ _, edge_vtx = mpart.connectivity_get(i_zone,
                   None, # face_group_ln_to_gn
                   coords)"""
 
-part_ext.connectivity_set(i_zone,
+part_ext.connectivity_set(i_domain,
                           i_part,
                           PDM._PDM_CONNECTIVITY_TYPE_CELL_FACE,
                           cell_face_idx,
                           cell_face)
 
-part_ext.connectivity_set(i_zone,
+part_ext.connectivity_set(i_domain,
                           i_part,
                           PDM._PDM_CONNECTIVITY_TYPE_FACE_VTX,
                           face_vtx_idx,
                           face_vtx)
 
-part_ext.vtx_coord_set(i_zone,
+part_ext.vtx_coord_set(i_domain,
                        i_part,
                        coords)
 
-part_ext.ln_to_gn_set(i_zone,
+part_ext.ln_to_gn_set(i_domain,
                       i_part,
                       PDM._PDM_MESH_ENTITY_CELL,
                       cell_ln_to_gn)
 
-part_ext.ln_to_gn_set(i_zone,
+part_ext.ln_to_gn_set(i_domain,
                       i_part,
                       PDM._PDM_MESH_ENTITY_FACE,
                       face_ln_to_gn)
 
-part_ext.ln_to_gn_set(i_zone,
+part_ext.ln_to_gn_set(i_domain,
                       i_part,
                       PDM._PDM_MESH_ENTITY_VERTEX,
                       vtx_ln_to_gn)
 
-part_ext.part_bound_graph_set(i_zone,
+part_ext.part_bound_graph_set(i_domain,
                               i_part,
                               PDM._PDM_MESH_ENTITY_VERTEX,
                               vtx_part_bound_proc_idx,
@@ -458,47 +458,47 @@ part_ext.compute()
 %%code_block -p exercise_1 -i 17
 
 # Cell
-cell_ext_ln_to_gn = part_ext.ln_to_gn_get(i_zone,
+cell_ext_ln_to_gn = part_ext.ln_to_gn_get(i_domain,
                                           i_part,
                                           PDM._PDM_MESH_ENTITY_CELL)
 
-cell_face_ext_idx, cell_face_ext = part_ext.connectivity_get(i_zone,
+cell_face_ext_idx, cell_face_ext = part_ext.connectivity_get(i_domain,
                                                              i_part,
                                                              PDM._PDM_CONNECTIVITY_TYPE_CELL_FACE)
 
 # Face
-"""face_ext_ln_to_gn = part_ext.ln_to_gn_get(i_zone,
+"""face_ext_ln_to_gn = part_ext.ln_to_gn_get(i_domain,
                                           i_part,
                                           PDM._PDM_MESH_ENTITY_FACE)
 
-face_edge_ext_idx, face_edge_ext = part_ext.connectivity_get(i_zone,
+face_edge_ext_idx, face_edge_ext = part_ext.connectivity_get(i_domain,
                                                              i_part,
                                                              PDM._PDM_CONNECTIVITY_TYPE_FACE_EDGE)
 
 # Edge
-edge_ext_ln_to_gn = part_ext.ln_to_gn_get(i_zone,
+edge_ext_ln_to_gn = part_ext.ln_to_gn_get(i_domain,
                                           i_part,
                                           PDM._PDM_MESH_ENTITY_EDGE)
 
-_, edge_vtx_ext = part_ext.connectivity_get(i_zone,
+_, edge_vtx_ext = part_ext.connectivity_get(i_domain,
                                             i_part,
                                             PDM._PDM_CONNECTIVITY_TYPE_EDGE_VTX)
 """
 
-face_ext_ln_to_gn = part_ext.ln_to_gn_get(i_zone,
+face_ext_ln_to_gn = part_ext.ln_to_gn_get(i_domain,
                                           i_part,
                                           PDM._PDM_MESH_ENTITY_FACE)
 
-face_vtx_ext_idx, face_vtx_ext = part_ext.connectivity_get(i_zone,
+face_vtx_ext_idx, face_vtx_ext = part_ext.connectivity_get(i_domain,
                                                            i_part,
                                                            PDM._PDM_CONNECTIVITY_TYPE_FACE_VTX)
 
 # Vertices
-vtx_ext_ln_to_gn = part_ext.ln_to_gn_get(i_zone,
+vtx_ext_ln_to_gn = part_ext.ln_to_gn_get(i_domain,
                                          i_part,
                                          PDM._PDM_MESH_ENTITY_VERTEX)
 
-vtx_coord_ext = part_ext.vtx_coord_get(i_zone,
+vtx_coord_ext = part_ext.vtx_coord_get(i_domain,
                                        i_part)
 ```
 
@@ -605,16 +605,16 @@ visu/PEXT.case : extension
 ```
 ## Annex 1
 
-In some cases, the mesh is an assembly of several sub-meshes. These are called *zones*.
+In some cases, the mesh is an assembly of several sub-meshes. These are called *domains*.
 
-![alt text](mesh.png "A mesh composed of two zones")
+![alt text](mesh.png "A mesh composed of two domains")
 
-Each zone *zone* is partitioned in subdomains which
-are mapped to the processors of the parallel machine. On a processor the subdomain (of a mesh or a zone) can be subdivided in *parts*.
+Each *domain* is partitioned in subdomains which
+are mapped to the processors of the parallel machine. On a processor the subdomain (of a mesh or a domain) can be subdivided in *parts*.
 
-![alt text](processor.png "Processor 0 with a subdomain of each zone with two parts for subdomain of zone 1")
+![alt text](processor.png "Processor 0 with a subdomain of each domain with two parts for subdomain of domain 1")
 
 A mesh can be composed of several element types (tetrahedra, hexahedra, prisms...). In certain settings, the mesh definition for each specific element type
 is stored in a separate *section*. So in a *section* one will find data for a specific element type.
 
-![alt text](part.png "Part 1 of the subdomain on processor 0 of zone 1 with two sections")
+![alt text](part.png "Part 1 of the subdomain on processor 0 of domain 1 with two sections")
