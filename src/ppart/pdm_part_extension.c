@@ -7424,21 +7424,6 @@ PDM_part_extension_interface_get
   return n_entity;
 }
 
-/**
- *
- * \brief Get groups
- *
- * \param [in]  part_ext     Pointer to \ref PDM_part_extension_t object
- * \param [in]  i_domain     Id of current domain
- * \param [in]  i_part       Id of current partition
- * \param [in]  mesh_entity  Type of mesh entity
- * \param [out] connect      Entity->group graph (size = \ref connect_idx[\ref n_elt])
- * \param [out] connect_idx  Index for entity->group graph (size = \ref n_elt + 1)
- * \param [out] ln_to_gn     Global ids (size = \ref connect_idx[\ref n_elt])
- *
- * \return  n_elt  Number of elements
- *
- */
 
 int
 PDM_part_extension_group_get
@@ -7447,12 +7432,12 @@ PDM_part_extension_group_get
  int                       i_domain,
  int                       i_part,
  PDM_mesh_entities_t       mesh_entity,
- int                     **connect,
- int                     **connect_idx,
- PDM_g_num_t             **ln_to_gn
+ int                     **group_entity_idx,
+ int                     **group_entity,
+ PDM_g_num_t             **group_entity_ln_to_gn
 )
 {
-  int n_entity = -1;
+  int n_group = -1;
   int shift_part = part_ext->n_part_idx[i_domain];
   switch(mesh_entity)
   {
@@ -7465,10 +7450,10 @@ PDM_part_extension_group_get
     case PDM_MESH_ENTITY_FACE:
     {
       int n_face_group = part_ext->parts[i_domain][i_part].n_face_group;
-      n_entity     = n_face_group;
-      *connect_idx = part_ext->border_face_group_idx[shift_part+i_part];
-      *connect     = part_ext->border_face_group    [shift_part+i_part];
-      *ln_to_gn    = part_ext->border_face_group_ln_to_gn [shift_part+i_part];
+      n_group                = n_face_group;
+      *group_entity_idx      = part_ext->border_face_group_idx     [shift_part+i_part];
+      *group_entity          = part_ext->border_face_group         [shift_part+i_part];
+      *group_entity_ln_to_gn = part_ext->border_face_group_ln_to_gn[shift_part+i_part];
     }
     break;
 
@@ -7490,7 +7475,7 @@ PDM_part_extension_group_get
 
   }
 
-  return n_entity;
+  return n_group;
 }
 
 

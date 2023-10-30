@@ -54,12 +54,101 @@ bind (c, name='PDM_part_extension_free')
 
 end subroutine PDM_part_extension_free
 
+
+
+subroutine PDM_part_extension_connectivity_set_c(part_ext, &
+                                                 i_domain, &
+                                                 i_part, &
+                                                 connectivity_type, &
+                                                 connect_idx, &
+                                                 connect) &
+bind(c, name="PDM_part_extension_connectivity_set")
+  use iso_c_binding
+  implicit none
+  type(c_ptr),    value :: part_ext
+  integer(c_int), value :: i_domain
+  integer(c_int), value :: i_part
+  integer(c_int), value :: connectivity_type
+  type(c_ptr),    value :: connect_idx
+  type(c_ptr),    value :: connect
+end subroutine PDM_part_extension_connectivity_set_c
+
+subroutine PDM_part_extension_ln_to_gn_set_c(part_ext, &
+                                             i_domain, &
+                                             i_part, &
+                                             mesh_entity, &
+                                             n_entity, &
+                                             ln_to_gn) &
+bind(c, name="PDM_part_extension_ln_to_gn_set")
+  use iso_c_binding
+  implicit none
+  type(c_ptr),    value :: part_ext
+  integer(c_int), value :: i_domain
+  integer(c_int), value :: i_part
+  integer(c_int), value :: mesh_entity
+  integer(c_int), value :: n_entity
+  type(c_ptr),    value :: ln_to_gn
+end subroutine PDM_part_extension_ln_to_gn_set_c
+
+subroutine PDM_part_extension_vtx_coord_set_c(part_ext, &
+                                              i_domain, &
+                                              i_part, &
+                                              vtx_coord) &
+  bind(c, name="PDM_part_extension_vtx_coord_set")
+  use iso_c_binding
+  implicit none
+  type(c_ptr),    value :: part_ext
+  integer(c_int), value :: i_domain
+  integer(c_int), value :: i_part
+  type(c_ptr),    value :: vtx_coord
+
+end subroutine PDM_part_extension_vtx_coord_set_c
+
+subroutine PDM_part_extension_part_bound_graph_set_c(part_ext, &
+                                                     i_domain, &
+                                                     i_part, &
+                                                     entity_type, &
+                                                     part_bound_proc_idx, &
+                                                     part_bound_part_idx, &
+                                                     part_bound) &
+bind (c, name="PDM_part_extension_part_bound_graph_set")
+  use iso_c_binding
+  implicit none
+  type(c_ptr),    value :: part_ext
+  integer(c_int), value :: i_domain
+  integer(c_int), value :: i_part
+  integer(c_int), value :: entity_type
+  type(c_ptr),    value :: part_bound_proc_idx
+  type(c_ptr),    value :: part_bound_part_idx
+  type(c_ptr),    value :: part_bound
+end subroutine PDM_part_extension_part_bound_graph_set_c
+
+subroutine PDM_part_extension_group_set_c(part_ext, &
+                                          i_domain, &
+                                          i_part, &
+                                          entity_type, &
+                                          n_group, &
+                                          group_entity_idx, &
+                                          group_entity, &
+                                          group_entity_ln_to_gn) &
+bind (c, name="PDM_part_extension_group_set")
+  use iso_c_binding
+  implicit none
+  type(c_ptr),    value :: part_ext
+  integer(c_int), value :: i_domain
+  integer(c_int), value :: i_part
+  integer(c_int), value :: entity_type
+  integer(c_int), value :: n_group
+  type(c_ptr),    value :: group_entity_idx
+  type(c_ptr),    value :: group_entity
+  type(c_ptr),    value :: group_entity_ln_to_gn
+end subroutine PDM_part_extension_group_set_c
+
 end interface
 
 
 contains
 
-! Initialize a part extension structure
 
 subroutine PDM_part_extension_create (part_ext,    &
                                       n_domain,    &
@@ -68,14 +157,15 @@ subroutine PDM_part_extension_create (part_ext,    &
                                       depth,       &
                                       comm,        &
                                       owner)
+  ! Initialize a part extension structure
   use iso_c_binding
   implicit none
 
   type(c_ptr)                   :: part_ext    ! PDM_part_extension_t structure instance
   integer, intent(in)           :: n_domain    ! Number of domains
-  integer(pdm_l_num_s), pointer :: n_part(:)   ! Number of partitions
+  integer(pdm_l_num_s), pointer :: n_part(:)   ! Number of partitions per domain (size = ``n_domain``)
   integer, intent(in)           :: extend_type ! Type of extension
-  integer, intent(in)           :: depth       ! Depth of extension
+  integer, intent(in)           :: depth       ! Extension depth
   integer, intent(in)           :: comm        ! MPI communicator
   integer, intent(in)           :: owner       ! Data ownership
 
@@ -115,7 +205,7 @@ subroutine PDM_part_extension_create (part_ext,    &
 
 end subroutine PDM_part_extension_create
 
-! Data setter for partition extension
+! Set data to perform the partitioned mesh extension
 
 subroutine PDM_part_extension_set_part (part_ext,                 &
                                         i_domain,                 &
@@ -150,6 +240,9 @@ subroutine PDM_part_extension_set_part (part_ext,                 &
                                         vtx_ln_to_gn,             &
                                         face_group_ln_to_gn,      &
                                         vtx_coord)
+  !
+  ! .. warning::
+  !   Deprecated: use the individual setters instead
   use iso_c_binding
   implicit none
 
@@ -306,6 +399,7 @@ subroutine PDM_part_extension_connectivity_get (part_ext,          &
                                                 n_elt,             &
                                                 connect_idx,       &
                                                 connect)
+  ! Get extended connectivity
   use iso_c_binding
   implicit none
 
@@ -314,8 +408,8 @@ subroutine PDM_part_extension_connectivity_get (part_ext,          &
   integer, intent(in)           :: i_part            ! Id of current partition
   integer, intent(in)           :: connectivity_type ! Type of mesh entity
   integer, intent(out)          :: n_elt             ! Number of elements
-  integer(pdm_l_num_s), pointer :: connect_idx(:)    ! Index for entity->group graph (size = \ref n_elt + 1)
-  integer(pdm_l_num_s), pointer :: connect(:)        ! Entity->group graph (size = \ref connect_idx[\ref n_elt])
+  integer(pdm_l_num_s), pointer :: connect_idx(:)    ! Index for entity->group graph (size = ``n_elt`` + 1)
+  integer(pdm_l_num_s), pointer :: connect(:)        ! Entity->group graph (size = ``connect_idx(n_elt)``)
 
   type(c_ptr)                   :: c_connect     = C_NULL_PTR
   type(c_ptr)                   :: c_connect_idx = C_NULL_PTR
@@ -360,7 +454,6 @@ subroutine PDM_part_extension_connectivity_get (part_ext,          &
 
 end subroutine PDM_part_extension_connectivity_get
 
-! Get global ids
 
 subroutine PDM_part_extension_ln_to_gn_get (part_ext,    &
                                             i_domain,    &
@@ -368,6 +461,7 @@ subroutine PDM_part_extension_ln_to_gn_get (part_ext,    &
                                             mesh_entity, &
                                             n_elt,       &
                                             ln_to_gn)
+  ! Get global ids of extended entities
   use iso_c_binding
   implicit none
 
@@ -376,7 +470,7 @@ subroutine PDM_part_extension_ln_to_gn_get (part_ext,    &
   integer, intent(in)           :: i_part      ! Id of current partition
   integer, intent(in)           :: mesh_entity ! Type of mesh entity
   integer, intent(out)          :: n_elt       ! Number of elements
-  integer(pdm_g_num_s), pointer :: ln_to_gn(:) ! Global ids (size = \ref n_elt)
+  integer(pdm_g_num_s), pointer :: ln_to_gn(:) ! Global ids (size = ``n_elt``)
 
   type(c_ptr)                   :: c_ln_to_gn = C_NULL_PTR
 
@@ -386,7 +480,7 @@ subroutine PDM_part_extension_ln_to_gn_get (part_ext,    &
                                                 i_part,      &
                                                 mesh_entity, &
                                                 ln_to_gn)    &
-    result (n_elt)                                            &
+    result (n_elt)                                           &
     bind (c, name='PDM_part_extension_ln_to_gn_get')
       use iso_c_binding
       implicit none
@@ -413,39 +507,41 @@ subroutine PDM_part_extension_ln_to_gn_get (part_ext,    &
 
 end subroutine PDM_part_extension_ln_to_gn_get
 
-! Get groups
 
-subroutine PDM_part_extension_group_get (part_ext,      &
-                                         i_domain,      &
-                                         i_part,        &
-                                         n_elt,         &
-                                         elt_group,     &
-                                         elt_group_idx, &
-                                         ln_to_gn)
+subroutine PDM_part_extension_group_get (part_ext,         &
+                                         i_domain,         &
+                                         i_part,           &
+                                         mesh_entity,      &
+                                         n_group,          &
+                                         group_entity_idx, &
+                                         group_entity,     &
+                                         group_entity_ln_to_gn)
+  ! Get groups for extended entities with given type
   use iso_c_binding
   implicit none
 
-  type(c_ptr), value            :: part_ext         ! PDM_part_extension_t structure instance
-  integer, intent(in)           :: i_domain         ! Id of current domain
-  integer, intent(in)           :: i_part           ! Id of current partition
-  integer, intent(out)          :: n_elt            ! Number of elements
-  integer(pdm_l_num_s), pointer :: elt_group(:)     ! Entity->group connectivity index (size = \ref n_elt + 1)
-  integer(pdm_l_num_s), pointer :: elt_group_idx(:) ! Entity->group connectivity (size = \ref elt_group_idx(\ref n_elt + 1))
-  integer(pdm_g_num_s), pointer :: ln_to_gn(:)      ! Global ids (size = \ref n_elt)
+  type(c_ptr), value            :: part_ext                 ! PDM_part_extension_t structure instance
+  integer, intent(in)           :: i_domain                 ! Id of current domain
+  integer, intent(in)           :: i_part                   ! Id of current partition
+  integer, intent(in)           :: mesh_entity              ! Type of mesh entity
+  integer, intent(out)          :: n_group                  ! Number of groups
+  integer(pdm_l_num_s), pointer :: group_entity_idx(:)      ! Index for group->entity connectivity (size = ``n_group``)
+  integer(pdm_l_num_s), pointer :: group_entity(:)          ! Group->entity connectivity (1-based local ids, size = ``group_entity_idx(n_group)``)
+  integer(pdm_g_num_s), pointer :: group_entity_ln_to_gn(:) ! Group->entity connectivity (group-specific global ids, size = ``group_entity_idx(n_group)``)
 
-  type(c_ptr)                   :: c_elt_group     = C_NULL_PTR
-  type(c_ptr)                   :: c_elt_group_idx = C_NULL_PTR
-  type(c_ptr)                   :: c_ln_to_gn      = C_NULL_PTR
+  type(c_ptr)                   :: c_group_entity          = C_NULL_PTR
+  type(c_ptr)                   :: c_group_entity_idx      = C_NULL_PTR
+  type(c_ptr)                   :: c_group_entity_ln_to_gn = C_NULL_PTR
 
   interface
-    function PDM_part_extension_group_get_c (part_ext,      &
-                                             i_domain,      &
-                                             i_part,        &
-                                             entity_type,   &
-                                             elt_group,     &
-                                             elt_group_idx, &
-                                             ln_to_gn)      &
-    result (n_elt)                                          &
+    function PDM_part_extension_group_get_c (part_ext,              &
+                                             i_domain,              &
+                                             i_part,                &
+                                             entity_type,           &
+                                             group_entity_idx,      &
+                                             group_entity,          &
+                                             group_entity_ln_to_gn) &
+    result (n_group)                                                &
     bind (c, name='PDM_part_extension_group_get')
       use iso_c_binding
       implicit none
@@ -454,43 +550,43 @@ subroutine PDM_part_extension_group_get (part_ext,      &
       integer(c_int), value :: i_domain
       integer(c_int), value :: i_part
       integer(c_int), value :: entity_type
-      type(c_ptr)           :: elt_group
-      type(c_ptr)           :: elt_group_idx
-      type(c_ptr)           :: ln_to_gn
-      integer(c_int)        :: n_elt
+      type(c_ptr)           :: group_entity_idx
+      type(c_ptr)           :: group_entity
+      type(c_ptr)           :: group_entity_ln_to_gn
+      integer(c_int)        :: n_group
 
     end function PDM_part_extension_group_get_c
   end interface
 
-  n_elt =  PDM_part_extension_group_get_c (part_ext,              &
-                                           i_domain,              &
-                                           i_part,                &
-                                           PDM_MESH_ENTITY_FACE,  &
-                                           c_elt_group,           &
-                                           c_elt_group_idx,       &
-                                           c_ln_to_gn)
+  n_group =  PDM_part_extension_group_get_c (part_ext,           &
+                                             i_domain,           &
+                                             i_part,             &
+                                             mesh_entity,        &
+                                             c_group_entity_idx, &
+                                             c_group_entity,     &
+                                             c_group_entity_ln_to_gn)
 
-  call c_f_pointer(c_elt_group_idx, &
-                   elt_group_idx,   &
-                   [n_elt+1])
+  call c_f_pointer(c_group_entity_idx, &
+                   group_entity_idx,   &
+                   [n_group+1])
 
-  call c_f_pointer(c_elt_group, &
-                   elt_group,   &
-                   [elt_group_idx(n_elt + 1)])
+  call c_f_pointer(c_group_entity, &
+                   group_entity,   &
+                   [group_entity_idx(n_group + 1)])
 
-  call c_f_pointer(c_ln_to_gn, &
-                   ln_to_gn,   &
-                   [elt_group_idx(n_elt + 1)])
+  call c_f_pointer(c_group_entity_ln_to_gn, &
+                   group_entity_ln_to_gn,   &
+                   [group_entity_idx(n_group + 1)])
 
 end subroutine PDM_part_extension_group_get
 
-! Get vertex coordinates
 
 subroutine PDM_part_extension_vtx_coord_get (part_ext,    &
                                              i_domain,    &
                                              i_part,      &
                                              n_vtx,       &
                                              vtx_coord)
+  ! Get coordinates of extended vertices
   use iso_c_binding
   implicit none
 
@@ -498,7 +594,7 @@ subroutine PDM_part_extension_vtx_coord_get (part_ext,    &
   integer, intent(in)       :: i_domain        ! Id of current domain
   integer, intent(in)       :: i_part          ! Id of current partition
   integer, intent(out)      :: n_vtx           ! Number of vertices
-  double precision, pointer :: vtx_coord(:,:)  ! Vertex coordinates (size = \ref n_vtx * 3)
+  double precision, pointer :: vtx_coord(:,:)  ! Vertex coordinates (shape = [3, ``n_vtx``])
 
   type(c_ptr)               :: c_vtx_coord = C_NULL_PTR
 
@@ -836,5 +932,134 @@ subroutine PDM_part_to_part_create_from_extension (ptp,                         
   deallocate( length_selected_cell_to_send_ln_to_gn )
 
 end subroutine PDM_part_to_part_create_from_extension
+
+
+
+subroutine PDM_part_extension_connectivity_set(part_ext, &
+                                               i_domain, &
+                                               i_part, &
+                                               connectivity_type, &
+                                               connect_idx, &
+                                               connect)
+  ! Set connectivity
+  use iso_c_binding
+  implicit none
+  type(c_ptr), intent(in)       :: part_ext            ! PDM_part_extension_t structure instance
+  integer,     intent(in)       :: i_domain            ! Domain identifier
+  integer,     intent(in)       :: i_part              ! Partition identifier
+  integer,     intent(in)       :: connectivity_type   ! Type of connectivity
+  integer(pdm_l_num_s), pointer :: connect_idx(:)      ! Index for connectivity (can be \p NULL for
+  integer(pdm_l_num_s), pointer :: connect(:)          ! Connectivity
+
+  call PDM_part_extension_connectivity_set_c(part_ext, &
+                                             i_domain, &
+                                             i_part, &
+                                             connectivity_type, &
+                                             c_loc(connect_idx), &
+                                             c_loc(connect))
+end subroutine PDM_part_extension_connectivity_set
+
+
+subroutine PDM_part_extension_ln_to_gn_set(part_ext, &
+                                           i_domain, &
+                                           i_part, &
+                                           mesh_entity, &
+                                           n_entity, &
+                                           ln_to_gn)
+  ! Set global ids
+  use iso_c_binding
+  implicit none
+  type(c_ptr), intent(in)       :: part_ext    ! PDM_part_extension_t structure instance
+  integer,     intent(in)       :: i_domain    ! Domain identifier
+  integer,     intent(in)       :: i_part      ! Partition identifier
+  integer,     intent(in)       :: mesh_entity ! Type of mesh entity
+  integer,     intent(in)       :: n_entity    ! Local number of entities
+  integer(pdm_g_num_s), pointer :: ln_to_gn(:) ! Global ids
+
+  call PDM_part_extension_ln_to_gn_set_c(part_ext, &
+                                         i_domain, &
+                                         i_part, &
+                                         mesh_entity, &
+                                         n_entity, &
+                                         c_loc(ln_to_gn))
+end subroutine PDM_part_extension_ln_to_gn_set
+
+
+subroutine PDM_part_extension_vtx_coord_set(part_ext, &
+                                            i_domain, &
+                                            i_part, &
+                                            vtx_coord)
+  ! Set vertex coordinates
+  use iso_c_binding
+  implicit none
+  type(c_ptr), intent(in)       :: part_ext       ! PDM_part_extension_t structure instance
+  integer,     intent(in)       :: i_domain       ! Domain identifier
+  integer,     intent(in)       :: i_part         ! Partition identifier
+  real(8),     pointer          :: vtx_coord(:,:) ! Vertex coordinates (shape = [3, *n_vtx*])
+
+  call PDM_part_extension_vtx_coord_set_c(part_ext, &
+                                          i_domain, &
+                                          i_part, &
+                                          c_loc(vtx_coord))
+end subroutine PDM_part_extension_vtx_coord_set
+
+
+subroutine PDM_part_extension_part_bound_graph_set(part_ext, &
+                                                   i_domain, &
+                                                   i_part, &
+                                                   entity_type, &
+                                                   part_bound_proc_idx, &
+                                                   part_bound_part_idx, &
+                                                   part_bound)
+  ! Set the connection graph between partitions for the requested entity type
+  use iso_c_binding
+  implicit none
+  type(c_ptr), intent(in)       :: part_ext               ! PDM_part_extension_t structure instance
+  integer,     intent(in)       :: i_domain               ! Domain identifier
+  integer,     intent(in)       :: i_part                 ! Partition identifier
+  integer,     intent(in)       :: entity_type            ! Type of mesh entity
+  integer(pdm_l_num_s), pointer :: part_bound_proc_idx(:) ! Partitioning boundary entities index from process (size = *n_rank* + 1)
+  integer(pdm_l_num_s), pointer :: part_bound_part_idx(:) ! Partitioning boundary entities index from partition (size = *n_total_part* + 1)
+  integer(pdm_l_num_s), pointer :: part_bound(:)          ! Partitioning boundary entities (size = 4 * ``part_bound_proc_idx(n_rank)``)
+
+  call PDM_part_extension_part_bound_graph_set_c(part_ext, &
+                                                 i_domain, &
+                                                 i_part, &
+                                                 entity_type, &
+                                                 c_loc(part_bound_proc_idx), &
+                                                 c_loc(part_bound_part_idx), &
+                                                 c_loc(part_bound))
+end subroutine PDM_part_extension_part_bound_graph_set
+
+
+subroutine PDM_part_extension_group_set(part_ext, &
+                                        i_domain, &
+                                        i_part, &
+                                        entity_type, &
+                                        n_group, &
+                                        group_entity_idx, &
+                                        group_entity, &
+                                        group_entity_ln_to_gn)
+  ! Set group description
+  use iso_c_binding
+  implicit none
+  type(c_ptr), intent(in)       :: part_ext                 ! PDM_part_extension_t structure instance
+  integer,     intent(in)       :: i_domain                 ! Domain identifier
+  integer,     intent(in)       :: i_part                   ! Partition identifier
+  integer,     intent(in)       :: entity_type              ! Type of mesh entity
+  integer,     intent(in)       :: n_group                  ! Number of groups
+  integer(pdm_l_num_s), pointer :: group_entity_idx(:)      ! Index for group->entity connectivity (size = ``n_group``)
+  integer(pdm_l_num_s), pointer :: group_entity(:)          ! Group->entity connectivity (1-based local ids, size = ``group_entity_idx(n_group)``)
+  integer(pdm_g_num_s), pointer :: group_entity_ln_to_gn(:) ! Group->entity connectivity (group-specific global ids, size = ``group_entity_idx(``n_group)``)
+
+  call PDM_part_extension_group_set_c(part_ext, &
+                                      i_domain, &
+                                      i_part, &
+                                      entity_type, &
+                                      n_group, &
+                                      c_loc(group_entity_idx), &
+                                      c_loc(group_entity), &
+                                      c_loc(group_entity_ln_to_gn))
+end subroutine PDM_part_extension_group_set
 
 end module pdm_part_extension

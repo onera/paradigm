@@ -95,9 +95,9 @@ PDM_part_extension_compute
 
 /**
  *
- * \brief Set data to perform the partitionned mesh extension
+ * \brief Set data to perform the partitioned mesh extension
  *
- * \warning Deprecated : use the separate setters instead
+ * \warning Deprecated: use the individual setters instead
  *
  * \param [in]   part_ext                  \p PDM_part_extension_t structure instance
  * \param [in]   i_domain                  Domain identifier
@@ -287,11 +287,11 @@ PDM_part_extension_interface_get
  * \param [in]  i_domain                Domain identifier
  * \param [in]  i_part                  Partition identifier
  * \param [in]  mesh_entity             Type of mesh entity
- * \param [out] group_entity            Index for group->entity connectivity (size = \p n_group)
  * \param [out] group_entity_idx        Group->entity connectivity (1-based local ids, size = \p group_entity_idx[\p n_group])
+ * \param [out] group_entity            Index for group->entity connectivity (size = \p n_group)
  * \param [out] group_entity_ln_to_gn   Group->entity connectivity (group-specific global ids, size = \p group_entity_idx[\p n_group])
  *
- * \return  Number of entities of that type
+ * \return  Number of groups
  *
  */
 
@@ -302,8 +302,8 @@ PDM_part_extension_group_get
  int                       i_domain,
  int                       i_part,
  PDM_mesh_entities_t       mesh_entity,
- int                     **group_entity,
  int                     **group_entity_idx,
+ int                     **group_entity,
  PDM_g_num_t             **group_ln_to_gn
 );
 
@@ -317,7 +317,7 @@ PDM_part_extension_group_get
  * \param [in]  i_part       Partition identifier
  * \param [out] vtx_coord    Vertex coordinates (size = \ref n_vtx * 3)
  *
- * \return  n_vtx  Number of extended vertices
+ * \return  Number of extended vertices
  *
  */
 
@@ -468,7 +468,7 @@ PDM_part_extension_vtx_coord_set
  * \param [in]  entity_type           Type of mesh entity
  * \param [in]  part_bound_proc_idx   Partitioning boundary entities index from process (size = *n_rank* + 1)
  * \param [in]  part_bound_part_idx   Partitioning boundary entities index from partition (size = *n_total_part* + 1)
- * \param [in]  part_bound            Partitioning boundary entities (size = 4 * \p part_bound_proc_idx[*n_rank])
+ * \param [in]  part_bound            Partitioning boundary entities (size = 4 * \p part_bound_proc_idx[*n_rank*])
  */
 
 void

@@ -81,10 +81,10 @@ cdef extern from "pdm_part_extension.h":
   int PDM_part_extension_group_get(PDM_part_extension_t     *part_ext,
                                    int                       i_domain,
                                    int                       i_part,
-                                   PDM_mesh_entities_t       entity_type,
-                                   int                     **connect,
-                                   int                     **connect_idx,
-                                   PDM_g_num_t             **ln_to_gn)
+                                   PDM_mesh_entities_t       mesh_entity,
+                                   int                     **group_entity_idx,
+                                   int                     **group_entity,
+                                   PDM_g_num_t             **group_ln_to_gn)
 
   int PDM_part_extension_vtx_coord_get(PDM_part_extension_t     *part_ext,
                                        int                       i_domain,
@@ -202,7 +202,7 @@ cdef class PartExtension:
     Set data to perform the partitioned mesh extension
 
     .. warning::
-      Deprecated : use the individual setters instead
+      Deprecated: use the individual setters instead
     """
 
     cdef int * cell_face_idx_data
@@ -675,8 +675,8 @@ cdef class PartExtension:
 
     n_group = PDM_part_extension_group_get(self._part_ext, i_domain, i_part,
                                            entity_type,
-                                           &entity_group,
                                            &entity_group_idx,
+                                           &entity_group,
                                            &group_ln_to_gn)
 
     if (group_ln_to_gn == NULL) :
