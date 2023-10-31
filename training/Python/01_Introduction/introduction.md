@@ -85,7 +85,7 @@ API compatibility is guaranteed between two minor versions, except for new beta 
 
 <br/>
 
-Eric Quémerais (PLM) : founder of ParaDiGM and CWIPI libraries
+Eric Quémerais (PLM) : founder of **ParaDiGM** and **CWIPI** libraries
 
 <br/><br/>
 
@@ -117,7 +117,7 @@ Karmijn Hoogveld (PLM)
 
 <br/>
 
-Alain Hervault (PLM) : arrived the 6th of november to work on the mesh adaptation workflow
+Alain Hervault (PLM) : arrived the 6th of November to work on the mesh adaptation workflow
 
 <br/><br/>
 
@@ -125,7 +125,7 @@ Alain Hervault (PLM) : arrived the 6th of november to work on the mesh adaptatio
 
 <br/>
 
-Robin Cazalbou (PLM) : PhD student on optimising code coupling in a massively parallel hybrid CPU-GPU environment
+Robin Cazalbou (PLM) : PhD student on optimizing code coupling in a massively parallel hybrid CPU-GPU environment
 
 <br/><br/>
 
@@ -159,10 +159,10 @@ Clément Benazet (CLEF)
 
 <img src="ecosystem.png" width="1000">
 
-## Organisation
+## Organization
 
 Work has been carried out to develop the library with a workflow that takes advantage of modern software development tools.
-ParaDiGM is available through GitLab for ONERA developers and there is a git repository available for external users.
+**ParaDiGM** is available through GitLab for ONERA developers and there is a git repository available for external users.
 We work on making the library available on GitHub.
 Using GitLab allows us to use GitLab CI which is a continuous method of software development. At each commit on the repository,
 it checks whether the library is build and passes the test base without issues.
@@ -188,13 +188,17 @@ TO DO
 
 TO DO
 
-### Modernising an existing code : MoDeTheC
+### Modernizing an existing code : MoDeTheC
 
 TO DO
 
 ### Creating a new code : SoNICS
 
 TO DO
+
+### Use in legacy codes
+
+pypart via elsA
 
 ## Installation Instructions
 
@@ -302,10 +306,18 @@ A mesh is composed of entities of different dimensions. The following terminolog
 
 A mesh can either be *structured* or *unstructured*.
 
+| Structured mesh | Unstructured mesh |
+|:---------------:|:-----------------:|
+|<img align="center" width="300" height="300" style="margin: 0px 0px 0px 0px;" src="mesh_struct.svg">|<img align="center" width="300" height="300" style="margin: 0px 0px 0px 0px;" src="mesh_unstruct.svg">|
+
+
+
 Structured meshes are typically made of blocks, each one arranged in a regular grid.
 Adjacency relations between the mesh entities are therefore implicit : cell $C_{i,j,k}$ is adjacent to cells $C_{i-1,j,k}$, $C_{i+1,j,k}$, $C_{i,j-1,k}$, and so on...
 
 Unstructured meshes, however, require an explicit description of the connectivity between mesh entities.
+
+**ParaDiGM** deals essentially with *unstructured* meshes.
 
 The entities and connectivities of interest depend on the numerical method.
 For example, Finite Element methods typically only require the cell$\to$vertex connectivity (and face$\to$vtx for boundary faces).
@@ -370,11 +382,10 @@ Coordinates are stored as rank-2 arrays with shape $[3, n_\mathrm{vtx}]$.
 
 #### Additional
 
-**ParaDiGM** features more advanced mesh-related notions which are beyond the scope of this training.
-
-##### Groups
-
-##### High-order
+**ParaDiGM** features more advanced mesh-related notions.
+Most notably, some mesh entities can be organized into **groups**, that come handy for instance to represent the different boundary conditions.
+Also, is worth mentioning that **ParaDiGM** supports high-order, curved meshes.
+These more advanced notions go beyond the scope of this training so we will not focus on them today.
 
 ### Parallel reading of meshes
 
@@ -382,7 +393,7 @@ Coordinates are stored as rank-2 arrays with shape $[3, n_\mathrm{vtx}]$.
 
 In this section we will answer this question through an interactive game.
 We placed tokens face down on the table at the front of the room. Some of you have a number on your table.
-This number symbolises the number of the MPI rank you will be playing.
+This number symbolizes the number of the MPI rank you will be playing.
 In ascending order, a representative of each rank will collect an equitably distributed number of chips.
 
 *How many tokens will each MPI rank get for the reading workload to be balanced?*
@@ -399,7 +410,7 @@ The data distribution of your mesh entities is not such that entities close geom
 
 ### Mesh partitioning
 
-For you to be able to work with the mesh we just read, it has to be partitionned.
+For you to be able to work with the mesh we just read, it has to be partitioned.
 That means that the mesh elements will be distributed over the processors such that elements that are close geometrically will end up on the same processor.
 This is what you will do in Exercise 1 of this training.
 
@@ -413,7 +424,7 @@ There is a element->vertex connectivity to know which vertices are associated to
 
 ### Global IDs
 
-Each entity in the mesh has a unique identifier. Let go back to the example of the hous studied earlier.
+Each entity in the mesh has a unique identifier. Let go back to the example of the house studied earlier.
 
 <!-- <code>
   face_vtx_idx = [0, 4, 12, 15]
@@ -438,14 +449,14 @@ Now you should proceed in the same way with the tokens on your desk.
 To do that, use the vertex global numbering array on the paper.
 
 Have a look at the vertex coordinates the others got. You will see that some of them have the same as you do.
-This is a key difference with the block-distributed vision we saw earlier. We know work with a so called partitionned vision.
+This is a key difference with the block-distributed vision we saw earlier. We know work with a so called partitioned vision.
 
 *Remark : We never asked you to discard the tokens of the block-distributed vision. This is because they will coexist in memory.*
 
 
 ### Parallel distribué MPI
 
-TO DO
+TO DO: Reprendre prez Julien
 
 ex : génération de gnum (pas un exercice mais montrer du code) -> exposer graph de communication
 
@@ -453,16 +464,16 @@ ex : génération de gnum (pas un exercice mais montrer du code) -> exposer grap
 
 ### MPI communication wrapper tools
 
-As you have seen with the game earlier, the block-distributed and partitionned point of view are key in parallel load balanced algortihms.
+As you have seen with the game earlier, the block-distributed and partitioned point of view are key in parallel load balanced algorithms.
 That for it is paramount to be able to easily switch between those two.
 `PDM_part_to_block` and `PDM_block_to_part` are low level tools to wrap the creation of MPI communication graphs.
 
 ### Parallel I/O
 
-When we talked about the reason to be of ParaDiGM earlier, we talked about **pario** for parallel I/O as a wrapping to MPI-IO.
-Naturally, this feature is retained in the code. The parallel mesh writer in ParaDiGM is available for the Ensight format.
+When we talked about the reason to be of **ParaDiGM** earlier, we talked about **pario** for parallel I/O as a wrapping to MPI-IO.
+Naturally, this feature is retained in the code. The parallel mesh writer in **ParaDiGM** is available for the Ensight format.
 It is used to write the mesh interfaces during coupling in CWIPI as well as writing output meshes in CEDRE.
 
 # Exercise 0
 
-cf autre .md
+You can now move on to [Exercise 0](./exercice_0.ipynb).
