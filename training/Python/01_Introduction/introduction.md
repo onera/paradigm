@@ -79,23 +79,122 @@ API compatibility is guaranteed between two minor versions, except for new beta 
 
 ## Man power
 
-Eco-système :  : développeur de code scientifique -> parler du man power (DAAA/DMPE)
+- DMPE :
+
+<img src="EQ.png" width="80" align="left" style="margin: 0px 30px 0px 30px;">
+
+<br/>
+
+Eric Quémerais (PLM) : founder of ParaDiGM and CWIPI libraries
+
+<br/><br/>
+
+<img src="BA.png" width="80" align="left" style="margin: 0px 30px 0px 30px;">
+
+<br/>
+
+Bastien Andrieu (PLM)
+
+<br/><br/>
+
+<img src="ND.png" width="80" align="left" style="margin: 0px 30px 0px 30px;">
+
+<br/>
+
+Nicolas Dellinger (HEAT) : MoDeTheC developer
+
+<br/><br/>
+
+<img src="KH.png" width="80" align="left" style="margin: 0px 30px 0px 30px;">
+
+<br/>
+
+Karmijn Hoogveld (PLM)
+
+<br/><br/>
+
+<img src="NAN.png" width="80" align="left" style="margin: 0px 30px 0px 30px;">
+
+<br/>
+
+Alain Hervault (PLM) : arrived the 6th of november to work on the mesh adaptation workflow
+
+<br/><br/>
+
+<img src="NAN.png" width="80" align="left" style="margin: 0px 30px 0px 30px;">
+
+<br/>
+
+Robin Cazalbou (PLM) : PhD student on optimising code coupling in a massively parallel hybrid CPU-GPU environment
+
+<br/><br/>
+
+- DAAA :
+
+<img src="BM.png" width="80" align="left" style="margin: 0px 30px 0px 30px;">
+
+<br/>
+
+Bruno Maugars (CLEF) : SoNICS developer
+
+<br/><br/>
+
+<img src="JC.png" width="80" align="left" style="margin: 0px 30px 0px 30px;">
+
+<br/>
+
+Julien Coulet (CLEF) : MAIA developer
+
+<br/><br/>
+
+<img src="CB.png" width="80" align="left" style="margin: 0px 30px 0px 30px;">
+
+<br/>
+
+Clément Benazet (CLEF)
+
+<br/><br/>
+
+## **ParaDiGM**'s ecosystem at ONERA
+
+<img src="ecosystem.png" width="1000">
 
 ## Organisation
 
-GitLab git externe
-Licence
-GitHub
-Documentation Sphinx
-Différence ParaDiGM et ParaDiGMa -> mentionner extension
+Work has been carried out to develop the library with a workflow that takes advantage of modern software development tools.
+ParaDiGM is available through GitLab for ONERA developers and there is a git repository available for external users.
+We work on making the library available on GitHub.
+Using GitLab allows us to use GitLab CI which is a continuous method of software development. At each commit on the repository,
+it checks whether the library is build and passes the test base without issues.
+
+<img src="CI.png" width="600">
+
+The recent increase in the number of developers has made it possible to devote a significant amount of time to developing documentation with Sphinx.
+It is still work in progress, so we are more then open to your feedback and contribution !
+
+<img src="documentation.png" width="600">
 
 ## Application examples
 
-Nicolas avec MoDeTheC : modérniser existant
-Sonics : créer un nouveau code
-Maia: outil pre-post plus haut niveau
-Cedre
-CWIPI
+### Geometric core for code coupling : CWIPI
+
+TO DO
+
+### Python/CGNS interface : MAIA
+
+TO DO
+
+### Use of low level features : MCC in CEDRE
+
+TO DO
+
+### Modernising an existing code : MoDeTheC
+
+TO DO
+
+### Creating a new code : SoNICS
+
+TO DO
 
 ## Installation Instructions
 
