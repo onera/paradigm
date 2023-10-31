@@ -356,10 +356,76 @@ $\left(x_0, y_0, z_0, x_1, y_1, z_1, \ldots \right)$.
 
 <span style="color:red">*TODO : expliquer notion de groupe?*</span>
 
+### Parallel reading of meshes
 
-### Global/absolute numbering
+<span style="color:blue">*How do you read a mesh in parallel?*</span>
+
+In this section we will answer this question through an interactive game.
+We placed tokens face down on the table at the front of the room. Some of you have a number on your table.
+This number symbolises the number of the MPI rank you will be playing.
+In ascending order, a representative of each rank will collect an equitably distributed number of chips.
+
+*How many tokens will each MPI rank get for the reading workload to be balanced?*
+
+Once, that question is answered, each one of you take the amount of tokens your MPI ranks is supposed to get.
+By doing this, you have as a group done a parallel read of a mesh.
+The mesh data distribution you created is what we call *block-distributed*.
+This distribution of data ensures the uniqueness of each entity across the processors.
+That turns out to be handy for parallel data sorting, a core tool for parallel algorithms.
+
+The data distribution of your mesh entities is not such that entities close geometrically are on the same processor.
+
+*How are we supposed to work with this block-distributed mesh?*
+
+### Mesh partitioning
+
+For you to be able to work with the mesh we just read, it has to be partitionned.
+That means that the mesh elements will be distributed over the processors such that elements that are close geometrically will end up on the same processor.
+This is what you will do in Exercise 1 of this training.
+
+*I need on each processor, the coordinates of the vertices of my elements. What do I do?*
+
+During the mesh reading step, the vertices are read per block as you have done for the mesh elements.
+This means that a vertex on a given rank usually is not associated to any of the elements on that rank.
+There is a element->vertex connectivity to know which vertices are associated to each element.
+
+<span style="color:blue">*How do you know where the coordinates for the vertices of your elements are?*</span>
+
+### Global IDs
+
+Each entity in the mesh has a unique identifier. Let go back to the example of the hous studied earlier.
+
+<!-- <code>
+  face_vtx_idx = [0, 4, 12, 15]
+  face_vtx     = [<span style="color:red">2, 3, 6, 5</span>, <span style="color:green;">1, 2, 5, 6, 3, 4, 8, 7</span>, <span style="color:blue">7, 8, 9</span>]
+</code> -->
+
+The first face has 4 vertices : the second, the third, the 6th and the 5th on the current MPI rank.
+The following array shows the global IDs of the vertices on the current MPI rank.
+
+<!-- <code>
+  vtx_global_ids = [12, 11, 3, 9, 2, 8, 4, 13, 10]
+</code> -->
+
+<span style="color:blue">*What are the global numbers of the vertices of the first face?*</span>
+
+They are 2->11, 3->3, 6->8 and 5->2. Now that we know their global ID, we can ask the rank that read that ID to provide coordinates associated to that vertex.
+
+Now you should proceed in the same way with the tokens on your desk.
+
+*What is the global number associated to the local number of the vertices for each element on my tokens?*
+
+To do that, use the vertex global numbering array on the paper.
+
+Have a look at the vertex coordinates the others got. You will see that some of them have the same as you do.
+This is a key difference with the block-distributed vision we saw earlier. We know work with a so called partitionned vision.
+
+*Remark : We never asked you to discard the tokens of the block-distributed vision. This is because they will coexist in memory.*
+
 
 ### Parallel distribué MPI
+
+TO DO
 
 ex : génération de gnum (pas un exercice mais montrer du code) -> exposer graph de communication
 
