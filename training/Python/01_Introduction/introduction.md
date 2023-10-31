@@ -316,15 +316,26 @@ In **ParaDiGM** all connectivities are stored as *1-based*, possibly signed, *fl
 Because each entity $A$ may be connected to a variable number of entities $B$, an **index** is necessary to access the array $\texttt{connect}$ representing the connectivity $A \to B$.
 This index is an array $\texttt{connect\_idx}$ of length $n_A + 1$ which contains the ranges, i.e. the entities $B$ connected to $A_i$ are given by $ \texttt{connect}[j]$, for $j \in \left[ \texttt{connect\_idx}[i], \texttt{connect\_idx}[i+1] \right)$.
 The first element in the index array is always zero, and the last element is the length of the connectivity array.
-<span style="color:red">*(à adapter en Fortran)*</span>
 
-Let's take a look at a simple example to illustrate this notion:
+*Note that edges can only have two endpoints, so the index for the edge$\to$vtx is useless.*
 
-<img align="left" width="120" height="120" style="margin: 0px 30px 0px 30px;" src="house.svg">
 
-<br/>
+##### **<span style="color:SlateBlue">Note to Fortran users</span>**
+*<span style="color:SlateBlue">
+Because arrays are usually indexed starting from one, you should instead read :
+the entities $B$ connected to $A_i$ are given by $ \texttt{connect}[j]$, for $j \in \left( \texttt{connect\_idx}[i], \texttt{connect\_idx}[i+1] \right]$.
+</span>*
+
+Let's take a look at a simple example to illustrate the notion we just introduced:
+
+<img width="120" height="120" style="margin: 0px 30px 20px 30px;" src="house.svg">
+
+
 Here we have a simple mesh composed of 3 faces and 9 vertices.
+Let's see if you can guess what the face$\to$vtx connectivity and index arrays look like...
 
++++ {"jupyter": {"source_hidden": true}}
+Solution:
 The face$\to$vtx connectivity and its index are
 \begin{flalign}
   \texttt{face\_vtx\_idx} & =  [0, 4, 12, 15]&&\\\nonumber
@@ -339,22 +350,31 @@ The face$\to$vtx connectivity and its index are
 <!-- $$face_vtx = [\underbrace{2, 3, 6, 5}_{face 1}, \quad \underbrace{1, 2, 5, 6, 3, 4, 8, 7}_{face 2}, \quad \underbrace{7, 8, 9}_{face 3} ]$$
  -->
 
-<br/><br/>
++++
 
 
-*Note that edges can only have two endpoints, so the index for the edge$\to$vtx is useless.*
 
 
-Vertices are described by the $3 \times n_\mathrm{vtx}$ *flat* array of the Cartesian coordinates. The coordinates are stored in an *interlaced* fashion:
+
+Vertices are described by the $3 \cdot n_\mathrm{vtx}$ *flat* array of the Cartesian coordinates. The coordinates are stored in an *interlaced* fashion:
 $\left(x_0, y_0, z_0, x_1, y_1, z_1, \ldots \right)$.
-<span style="color:red">*(à adapter en Fortran)*</span>
 
 *Note that in **ParaDiGM** coordinates are always assumed to be three-dimensional, even for 2D, planar meshes.*
 
 
-#### Groups?
+##### **<span style="color:SlateBlue">Note to Fortran users</span>**
+*<span style="color:SlateBlue">
+Coordinates are stored as rank-2 arrays with shape $[3, n_\mathrm{vtx}]$.
+</span>*
 
-<span style="color:red">*TODO : expliquer notion de groupe?*</span>
+
+#### Additional
+
+**ParaDiGM** features more advanced mesh-related notions which are beyond the scope of this training.
+
+##### Groups
+
+##### High-order
 
 ### Parallel reading of meshes
 
