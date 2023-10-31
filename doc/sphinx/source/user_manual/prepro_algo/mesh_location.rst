@@ -145,77 +145,80 @@ Python API
 
   .. py:class:: MeshLocation
 
+    .. we don't use autoclass here, because it does not render good with the autoclass_content = 'both' option.
+       If this option is removed, move class description in py file and use autoclass:: Pypdm.Pypdm.MeshLocation
+
     Python structure to perform mesh location operations. Once initialized, all the following
     methods apply to a :class:`MeshLocation` instance.
 
-  .. rubric:: Initialization
+    .. rubric:: Initialization
 
-  .. autofunction:: Pypdm.Pypdm.MeshLocation.__init__
+    .. autofunction:: Pypdm.Pypdm.MeshLocation.__init__
 
-  .. rubric:: Instance attributes
+    .. rubric:: Instance attributes
 
-  .. autoattribute:: Pypdm.Pypdm.MeshLocation.tolerance
-  .. autoattribute:: Pypdm.Pypdm.MeshLocation.method
+    .. autoattribute:: Pypdm.Pypdm.MeshLocation.tolerance
+    .. autoattribute:: Pypdm.Pypdm.MeshLocation.method
 
-  .. rubric:: Methods summary
-  
-  .. autosummary::
-    :nosignatures:
+    .. rubric:: Methods summary
+   
+    .. autosummary::
+      :nosignatures:
 
-    ~Pypdm.Pypdm.MeshLocation.mesh_n_part_set
-    ~Pypdm.Pypdm.MeshLocation.part_set
-    ~Pypdm.Pypdm.MeshLocation.nodal_part_set
-    ~Pypdm.Pypdm.MeshLocation.part_set_2d
-    ~Pypdm.Pypdm.MeshLocation.nodal_part_set_2d
-    ~Pypdm.Pypdm.MeshLocation.n_part_cloud_set
-    ~Pypdm.Pypdm.MeshLocation.cloud_set
-    ~Pypdm.Pypdm.MeshLocation.compute
-    ~Pypdm.Pypdm.MeshLocation.located_get
-    ~Pypdm.Pypdm.MeshLocation.unlocated_get
-    ~Pypdm.Pypdm.MeshLocation.location_get
-    ~Pypdm.Pypdm.MeshLocation.points_in_elt_get
-    ~Pypdm.Pypdm.MeshLocation.point_location_get
-    ~Pypdm.Pypdm.MeshLocation.cell_vertex_get
-    ~Pypdm.Pypdm.MeshLocation.part_to_part_get
+      ~Pypdm.Pypdm.MeshLocation.mesh_n_part_set
+      ~Pypdm.Pypdm.MeshLocation.part_set
+      ~Pypdm.Pypdm.MeshLocation.nodal_part_set
+      ~Pypdm.Pypdm.MeshLocation.part_set_2d
+      ~Pypdm.Pypdm.MeshLocation.nodal_part_set_2d
+      ~Pypdm.Pypdm.MeshLocation.n_part_cloud_set
+      ~Pypdm.Pypdm.MeshLocation.cloud_set
+      ~Pypdm.Pypdm.MeshLocation.compute
+      ~Pypdm.Pypdm.MeshLocation.located_get
+      ~Pypdm.Pypdm.MeshLocation.unlocated_get
+      ~Pypdm.Pypdm.MeshLocation.location_get
+      ~Pypdm.Pypdm.MeshLocation.points_in_elt_get
+      ~Pypdm.Pypdm.MeshLocation.point_location_get
+      ~Pypdm.Pypdm.MeshLocation.cell_vertex_get
+      ~Pypdm.Pypdm.MeshLocation.part_to_part_get
 
 
-  .. rubric:: Source mesh definition
+    .. rubric:: Source mesh definition
 
-  .. autofunction:: Pypdm.Pypdm.MeshLocation.mesh_n_part_set
+    .. automethod:: Pypdm.Pypdm.MeshLocation.mesh_n_part_set
 
-  .. autofunction:: Pypdm.Pypdm.MeshLocation.part_set
+    .. automethod:: Pypdm.Pypdm.MeshLocation.part_set
 
-  .. autofunction:: Pypdm.Pypdm.MeshLocation.nodal_part_set
+    .. automethod:: Pypdm.Pypdm.MeshLocation.nodal_part_set
 
-  .. autofunction:: Pypdm.Pypdm.MeshLocation.part_set_2d
+    .. automethod:: Pypdm.Pypdm.MeshLocation.part_set_2d
 
-  .. autofunction:: Pypdm.Pypdm.MeshLocation.nodal_part_set_2d
+    .. automethod:: Pypdm.Pypdm.MeshLocation.nodal_part_set_2d
 
-  .. rubric:: Target point clouds definition
+    .. rubric:: Target point clouds definition
 
-  .. autofunction:: Pypdm.Pypdm.MeshLocation.n_part_cloud_set
+    .. automethod:: Pypdm.Pypdm.MeshLocation.n_part_cloud_set
 
-  .. autofunction:: Pypdm.Pypdm.MeshLocation.cloud_set
+    .. automethod:: Pypdm.Pypdm.MeshLocation.cloud_set
 
-  .. rubric:: Location computation
+    .. rubric:: Location computation
 
-  .. autofunction:: Pypdm.Pypdm.MeshLocation.compute
+    .. automethod:: Pypdm.Pypdm.MeshLocation.compute
 
-  .. rubric:: Results
+    .. rubric:: Results
 
-  .. autofunction:: Pypdm.Pypdm.MeshLocation.located_get
+    .. automethod:: Pypdm.Pypdm.MeshLocation.located_get
 
-  .. autofunction:: Pypdm.Pypdm.MeshLocation.unlocated_get
+    .. automethod:: Pypdm.Pypdm.MeshLocation.unlocated_get
 
-  .. autofunction:: Pypdm.Pypdm.MeshLocation.location_get
+    .. automethod:: Pypdm.Pypdm.MeshLocation.location_get
 
-  .. autofunction:: Pypdm.Pypdm.MeshLocation.points_in_elt_get
+    .. automethod:: Pypdm.Pypdm.MeshLocation.points_in_elt_get
 
-  .. autofunction:: Pypdm.Pypdm.MeshLocation.point_location_get
+    .. automethod:: Pypdm.Pypdm.MeshLocation.point_location_get
 
-  .. autofunction:: Pypdm.Pypdm.MeshLocation.cell_vertex_get
+    .. automethod:: Pypdm.Pypdm.MeshLocation.cell_vertex_get
 
-  .. autofunction:: Pypdm.Pypdm.MeshLocation.part_to_part_get
+    .. automethod:: Pypdm.Pypdm.MeshLocation.part_to_part_get
 
 .. ifconfig:: enable_python_doc == 'OFF'
 
