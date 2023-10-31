@@ -429,20 +429,19 @@ TO DO
 
 ex : génération de gnum (pas un exercice mais montrer du code) -> exposer graph de communication
 
-### Distributed blocks of an array in absolute numbering 
-
-### 
-
-Part_to_part essentiel pour transmettre les résultats avec les données
--> faire un point intéractif pour bien comprendre le part_to_part : deux nuages de points : dessiner un graphe (nuage 8 et 10 points)
- -- analogie (facteur et grand-parents)
- -- les gens dans la salle sont des partitions qui s'échangent un ballon
- -- exercice Python un peu manuel avec des gnums
-
 ## Features overview
 
-Manière dont c'est regroupé dans la documentation
--> dire les points sur lesquels ont va se focaliser pendant le tp : multipart, (bonus : part_extension), localisation, (bonus : part_to_part)
+### MPI communication wrapper tools
+
+As you have seen with the game earlier, the block-distributed and partitionned point of view are key in parallel load balanced algortihms.
+That for it is paramount to be able to easily switch between those two.
+`PDM_part_to_block` and `PDM_block_to_part` are low level tools to wrap the creation of MPI communication graphs.
+
+### Parallel I/O
+
+When we talked about the reason to be of ParaDiGM earlier, we talked about **pario** for parallel I/O as a wrapping to MPI-IO.
+Naturally, this feature is retained in the code. The parallel mesh writer in ParaDiGM is available for the Ensight format.
+It is used to write the mesh interfaces during coupling in CWIPI as well as writing output meshes in CEDRE.
 
 # Exercise 0
 
