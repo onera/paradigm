@@ -43,8 +43,9 @@ An efficient parallel algorithm takes much longer to write and validate than a s
 
 Mettre image de la planche des fonctionnalites illustrees ....
 
-**ParaDiGM** aims to offer a set of efficient services to simplify the writing of massively parallel distributed numerical simulation software, from reading data files to writing results. Numerical codes are generally based on a discretization of the study domain which can take the form of an unstructured mesh.
-**ParaDiGM** only offers some services for unstructured meshes.<span style="color:red">???</span>
+**ParaDiGM** aims to offer a set of efficient services to simplify the writing of massively parallel distributed numerical simulation software, from reading data files to writing results.
+<span style="color:red">Numerical codes are generally based on a discretization of the study domain which can take the form of a mesh.
+**ParaDiGM** only offers services for unstructured meshes. (on garde partie Mesh après??)</span>
 
 ## API
 
@@ -97,19 +98,19 @@ Bastien Andrieu (PLM)
 
 <br/><br/>
 
-<img src="ND.png" width="80" align="left" style="margin: 0px 30px 0px 30px;">
-
-<br/>
-
-Nicolas Dellinger (HEAT) : MoDeTheC developer
-
-<br/><br/>
-
 <img src="KH.png" width="80" align="left" style="margin: 0px 30px 0px 30px;">
 
 <br/>
 
 Karmijn Hoogveld (PLM)
+
+<br/><br/>
+
+<img src="ND.png" width="80" align="left" style="margin: 0px 30px 0px 30px;">
+
+<br/>
+
+Nicolas Dellinger (HEAT) : MoDeTheC developer
 
 <br/><br/>
 
@@ -155,22 +156,22 @@ Clément Benazet (CLEF)
 
 <br/><br/>
 
-## **ParaDiGM**'s ecosystem at ONERA
+## **ParaDiGM**'s position within the ONERA ecosystem
 
 <img src="ecosystem.png" width="1000">
 
 ## Organization
 
 Work has been carried out to develop the library with a workflow that takes advantage of modern software development tools.
-**ParaDiGM** is available through GitLab for ONERA developers and there is a git repository available for external users.
+**ParaDiGM** is available through [GitLab](https://gitlab.onera.net/numerics/mesh/paradigm) for ONERA users/developers and there is a git repository available for external users.
 We work on making the library available on GitHub.
 Using GitLab allows us to use GitLab CI which is a continuous method of software development. At each commit on the repository,
-it checks whether the library is build and passes the test base without issues.
+it checks whether the library builds and passes the test base successfully.
 
 <img src="CI.png" width="600">
 
-The recent increase in the number of developers has made it possible to devote a significant amount of time to developing documentation with Sphinx.
-It is still work in progress, so we are more then open to your feedback and contribution !
+The recent increase in the number of developers has made it possible to devote a significant amount of time to developing [documentation](https://numerics.gitlab-pages.onera.net/mesh/paradigm/dev_formation/index.html) with Sphinx.
+This is still a work in progress, so we welcome your comments and contributions!
 
 <img src="documentation.png" width="600">
 
@@ -330,7 +331,9 @@ or
 
 ### Mesh
 
-Most computational methods rely on a mesh for the spatial discretization of partial differential equations.
+Most computational methods rely on a *mesh* for the spatial discretization of partial differential equations.
+If you are not familiar with this notion, here's a quick recap.
+
 A mesh is composed of entities of different dimensions. The following terminology is used in **ParaDiGM** :
 - **cells**: 3D entities such as tetrahedra, pyramids, prisms, hexahedra or arbitrary polyhedra ;
 - **faces**: 2D entities such as triangles, quadrangles or arbitrary (simply connected) polygons ;
@@ -345,8 +348,8 @@ A mesh can either be *structured* or *unstructured*.
 
 
 
-Structured meshes are typically made of blocks, each one arranged in a regular grid.
-Adjacency relations between the mesh entities are therefore implicit : cell $C_{i,j,k}$ is adjacent to cells $C_{i-1,j,k}$, $C_{i+1,j,k}$, $C_{i,j-1,k}$, and so on...
+In a structured mesh, all entities are arranged in a regular grid.
+Adjacency relations between these entities are therefore implicit : face $F_{i,j}$ is adjacent to faces $F_{i-1,j}$, $F_{i+1,j}$, $F_{i,j-1}$, and $F_{i,j+1}$.
 
 Unstructured meshes, however, require an explicit description of the connectivity between mesh entities.
 
@@ -413,11 +416,11 @@ Coordinates are stored as rank-2 arrays with shape $[3, n_\mathrm{vtx}]$.
 </span>*
 
 
-#### Additional
+#### You want more?
 
-**ParaDiGM** features more advanced mesh-related notions.
+**ParaDiGM** features more advanced mesh-related capabilities.
 Most notably, some mesh entities can be organized into **groups**, that come handy for instance to represent the different boundary conditions.
-Also, is worth mentioning that **ParaDiGM** supports high-order, curved meshes.
+It is also worth mentioning that **ParaDiGM** supports high-order, curved meshes.
 These more advanced notions go beyond the scope of this training so we will not focus on them today.
 
 ### Parallel reading of meshes
