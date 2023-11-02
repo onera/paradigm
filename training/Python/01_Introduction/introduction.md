@@ -449,78 +449,95 @@ Most notably, some mesh entities can be organized into **groups**, that come han
 It is also worth mentioning that **ParaDiGM** supports high-order, curved meshes.
 These more advanced notions go beyond the scope of this training so we will not focus on them today.
 
-### Parallel reading of meshes
+## MPI parallel distributed algorithms
 
-<span style="color:blue">*How do you read a mesh in parallel?*</span>
+The aim of this section is to help you understand the reason for the ParaDiGM's performance by walking you through the main concepts.
 
-In this section we will answer this question through an interactive game.
-We placed tokens face down on the table at the front of the room. Some of you have a number on your table.
-This number symbolizes the number of the MPI rank you will be playing.
-In ascending order, a representative of each rank will collect an equitably distributed number of chips.
+### Block-distributed approach
 
-*How many tokens will each MPI rank get for the reading workload to be balanced?*
+*<span style="color:olivedrab;">
+How is a mesh read in parallel?
+</span>*
 
-Once, that question is answered, each one of you take the amount of tokens your MPI ranks is supposed to get.
-By doing this, you have as a group done a parallel read of a mesh.
-The mesh data distribution you created is what we call *block-distributed*.
-This distribution of data ensures the uniqueness of each entity across the processors.
-That turns out to be handy for parallel data sorting, a core tool for parallel algorithms.
+In this section we will study the block-distributed approach will having a look at how a parallel mesh read is done.
+We will do this as an interactive game. Some of you have a number on your table.
+This number represents the identifier of an MPI rank.
+On the front table, we have laid out tokens representating mesh data stored in a file.
+In ascending order, a representative of each MPI rank will collect an equitably distributed number of tokens.
 
-The data distribution of your mesh entities is not such that entities close geometrically are on the same processor.
+*<span style="color:olivedrab;">
+How many tokens will each rank get?
+</span>*
 
-*How are we supposed to work with this block-distributed mesh?*
+Once each MPI rank has read the mesh data assigned to them, the parallel mesh read is completed.
+They way the data is distributed is what we call *block-distributed*.
+Now you can flip you tokens.
 
-### Mesh partitioning
+*<span style="color:olivedrab;">
+What particularity of the block-distributed approach can you see?
+</span>*
 
-For you to be able to work with the mesh we just read, it has to be partitioned.
-That means that the mesh elements will be distributed over the processors such that elements that are close geometrically will end up on the same processor.
-This is what you will do in Exercise 1 of this training.
+Ask the other representatives of MPI ranks which tokens they have. By doing so, you will notice that the number identifing each token appears only once.
+This *unicity* turns out to be handy for parallel data sorting, a core tool for parallel algorithms.
 
-*I need on each processor, the coordinates of the vertices of my elements. What do I do?*
+*<span style="color:olivedrab;">
+What do this numbers on your tokens represent?
+</span>*
 
-During the mesh reading step, the vertices are read per block as you have done for the mesh elements.
-This means that a vertex on a given rank usually is not associated to any of the elements on that rank.
-There is a element->vertex connectivity to know which vertices are associated to each element.
+### Global IDs and the partitionned approach
 
-<span style="color:blue">*How do you know where the coordinates for the vertices of your elements are?*</span>
+Each piece of data (here a mesh element) is asociated to a unique number representing it in the data set over all MPI ranks.
 
-### Global IDs
+To be used in a numerical simulation, the mesh we just read need to be partitionned.
+We will hand out tokens of an other color representing the elements of the partitionned mesh.
 
-Each entity in the mesh has a unique identifier. Let go back to the example of the house studied earlier.
+*<span style="color:olivedrab;">
+What is the particularity of the token distribution for a partitionned mesh?
+</span>*
 
-<!-- <code>
-  face_vtx_idx = [0, 4, 12, 15]
-  face_vtx     = [<span style="color:red">2, 3, 6, 5</span>, <span style="color:green;">1, 2, 5, 6, 3, 4, 8, 7</span>, <span style="color:blue">7, 8, 9</span>]
-</code> -->
+Ask the other representatives of MPI ranks which tokens they have. There have no elements in common.
+Now have a look at the global identifiers of the vertices on the elements on your token.
+It turns out that on the partition boundaries of the partitionned mesh there are vertices in common.
 
-The first face has 4 vertices : the second, the third, the 6th and the 5th on the current MPI rank.
-The following array shows the global IDs of the vertices on the current MPI rank.
-
-<!-- <code>
-  vtx_global_ids = [12, 11, 3, 9, 2, 8, 4, 13, 10]
-</code> -->
-
-<span style="color:blue">*What are the global numbers of the vertices of the first face?*</span>
-
-They are 2->11, 3->3, 6->8 and 5->2. Now that we know their global ID, we can ask the rank that read that ID to provide coordinates associated to that vertex.
-
-Now you should proceed in the same way with the tokens on your desk.
-
-*What is the global number associated to the local number of the vertices for each element on my tokens?*
-
-To do that, use the vertex global numbering array on the paper.
-
-Have a look at the vertex coordinates the others got. You will see that some of them have the same as you do.
-This is a key difference with the block-distributed vision we saw earlier. We know work with a so called partitioned vision.
+A mesh in the *partitionned* approach is a coherent sub-mesh on each MPI rank while in the *block-distributed* approach the vertices on a given MPI rank are most often not linked to the mesh elements on that MPI rank.
 
 *Remark : We never asked you to discard the tokens of the block-distributed vision. This is because they will coexist in memory.*
 
+### A parallel context with a multisequential algorithm
 
-### Parallel distribué MPI
+Now that the mesh is partitionned, it is time to work with it.
+The representatives of each MPI rank will compute for each the elements of the tokens in their pocession the maximum value of the vertices of that element.
 
-TO DO: Reprendre prez Julien
+*<span style="color:olivedrab;">
+Was this a parallely well balanced task?
+</span>*
 
-ex : génération de gnum (pas un exercice mais montrer du code) -> exposer graph de communication
+Yes, since the mesh partitionning allowed each MPI rank to have an equally distributed number of elements of the mesh.
+Still, this is a multisequential algorithm comparable to the one formerly done for the MCC feature.
+
+*<span style="color:olivedrab;">
+Why bother to change for a load balanced algorithm?
+</span>*
+
+### A parallel context with a load balanced algorithm
+
+Now we ask you to compute $\sum_{i=0}^{n\_element\_vertices} (\sqrt{vtx\_global\_number[i]} + \prod_{i=0}^{42} vtx\_global\_number[i]^{9})$ for each the elements of the tokens.
+This task only needs to be done the MPI ranks pocessing the elements in the lower half of the mesh.
+
+*<span style="color:olivedrab;">
+Whould you rather charge this task with representatives of other ranks or do it on your own while they have nothing to do?
+</span>*
+
+To do such a tedious task, you'd like to get your fellow MPI rank representatives to work.
+
+*<span style="color:olivedrab;">
+Is is worth to bring them the data they need to help you out rather than just to it on your own?
+</span>*
+
+It turns out that if the workload is sufficient it is worth to do this communication to speed up the computation.
+This is the setting for most geometric operations.
+Even if the partitioning were already well balanced for the operation, the overload of the load balancing is minimal.
+In most cases, this approach is a winner !
 
 ## Features overview
 
@@ -613,7 +630,7 @@ This feature is given as a bonus of the first exercise of this training.
 
 <br/>
 
-- What ? Check if the points of a point cloud are inside or outside of a given closed surface
+- What ? Locate a point cloud into a mesh
 - What for ? Spatial interpolation, coupling
 
 <br/><br/>
@@ -626,7 +643,7 @@ You will explore this feature in the last exercise of this training.
 
 <br/>
 
-- What ? Check if the points of a point cloud are inside or outside of a given closed surface
+- What ? Fin the k closest points of a target point cloud with respect to the points of a source point cloud
 - What for ? Spatial interpolation, coupling
 
 <br/><br/>
