@@ -11,7 +11,11 @@ kernelspec:
   name: python3
 ---
 
++++ {"editable": false, "deletable": false}
+
 # Exercise 1 : Mesh partitioning
+
++++ {"editable": false, "deletable": false}
 
 It's time for some hands on experience with `ParaDiGM`!
 Using the API referenced [here](https://numerics.gitlab-pages.onera.net/mesh/paradigm/dev/user_manual/partitioning/multipart.html#C-API),
@@ -19,11 +23,16 @@ you will have to fill in the code cells to partition a mesh, i.e. to cut it in s
 In the first section, we generate a block-distributed cube mesh for you. In the next section, you'll start running the partitioning algorithm.
 After that, you will be able to retrieve the arrays describing the partitioned mesh.
 
-+++
++++ {"editable": false, "deletable": false}
 
-*(Load custom magics)*
+## Load magic commands
+We start by loading the custom magic commands for the proper functioning of the Notebook.
 
 ```{code-cell}
+---
+"editable": false
+"deletable": false
+---
 import os, sys
 module_path = os.path.abspath(os.path.join('../../utils'))
 if module_path not in sys.path:
@@ -31,12 +40,15 @@ if module_path not in sys.path:
 ```
 
 ```{code-cell}
+---
+"editable": false
+"deletable": false
+---
 %reload_ext visu_magics
 %reload_ext code_magics
 ```
 
-+++
-
++++ {"editable": false, "deletable": false}
 
 ## Generate the mesh
 
@@ -44,6 +56,10 @@ In this section, `ParaDiGM` tools are used to generate a simple mesh for this ex
 You have nothing to do here. Still if you are curious about this feature, you can have a look [here](https://numerics.gitlab-pages.onera.net/mesh/paradigm/dev/user_manual/simple_mesh_gen/dcube_nodal.html#C-API).
 
 ```{code-cell}
+---
+"editable": false
+"deletable": false
+---
 %%code_block -p exercise_1 -i 1
 
 #include "pdm_multipart.h"
@@ -104,6 +120,8 @@ int main
 
 ```
 
++++ {"editable": false, "deletable": false}
+
 Now that we have our mesh, let's partition it !
 
 ## Mesh partitioning
@@ -121,6 +139,9 @@ Following this logic, let's start **creating** (step 1) the mesh partitioning st
 To get insight about the concepts behind those values you can have a look [here](#Annex-1)*
 
 ```{code-cell}
+---
+"deletable": false
+---
 %%code_block -p exercise_1 -i 2
 
   // Create partitioning structure
@@ -141,6 +162,8 @@ To get insight about the concepts behind those values you can have a look [here]
 
 ```
 
++++ {"editable": false, "deletable": false}
+
 Here, we chose to partition the cube with the Hilbert method. This method implemented in `ParaDiGM` does not ensure the subdomain to be connected.
 This method is favored within the `ParaDiGM` algorithms since it provides quickly a good load balance. To ensure the partitions are connected use
 `PDM_SPLIT_DUAL_WITH_PARMETIS` or `PDM_SPLIT_DUAL_WITH_PTSCOTCH` which call the external libraries ParMETIS and PT-Scotch.
@@ -150,6 +173,9 @@ of the mesh on each processor for performance through cache blocking but it also
 You can here call the renumbering function but by telling it not to do any renumbering for a start.
 
 ```{code-cell}
+---
+"deletable": false
+---
 %%code_block -p exercise_1 -i 3
 
   PDM_multipart_set_reordering_options(mpart,
@@ -159,23 +185,32 @@ You can here call the renumbering function but by telling it not to do any renum
                                        "PDM_PART_RENUM_FACE_NONE");
 
 ```
++++ {"editable": false, "deletable": false}
 
 Now that you have created a mesh partitioning structure `mpart`, you can **set** (step 2) the cube mesh to it.
 
 ```{code-cell}
+---
+"deletable": false
+---
 %%code_block -p exercise_1 -i 4
 
   PDM_multipart_dmesh_nodal_set(mpart, i_domain, dmn);
 ```
++++ {"editable": false, "deletable": false}
 
 At this point you have provided all the information necessary to run the mesh partitioning algorithm. You can call the function to
 **compute** (step 3) the subdomains that make up the partitioned cube.
 
 ```{code-cell}
+---
+"deletable": false
+---
 %%code_block -p exercise_1 -i 5
 
   PDM_multipart_compute(mpart);
 ```
++++ {"editable": false, "deletable": false}
 
 ## Get the partitioned mesh
 
@@ -195,7 +230,11 @@ For more information about this structure, have a look [here](https://numerics.g
 Let's start with the vertices composing the subdomain. How many vertices are there? What are their global ids? What are their coordinates?
 
 ```{code-cell}
+---
+"deletable": false
+---
 %%code_block -p exercise_1 -i 6
+
 
 //  double *coords = NULL;
 //  int n_vtx = PDM_multipart_part_vtx_coord_get(mpart,
@@ -215,6 +254,7 @@ Let's start with the vertices composing the subdomain. How many vertices are the
 
 
 ```
++++ {"editable": false, "deletable": false}
 
 Let's move on to the cells. How are the vertices connected to form cells? What are their global ids? How many cells are there?
 
@@ -222,7 +262,11 @@ Let's move on to the cells. How are the vertices connected to form cells? What a
 To get insight about the concept behind this value you can have a look [here](#Annex-1)*
 
 ```{code-cell}
+---
+"deletable": false
+---
 %%code_block -p exercise_1 -i 7
+
 
 //  int i_section = 0; // fixed
 //
@@ -248,11 +292,16 @@ To get insight about the concept behind this value you can have a look [here](#A
 //  free(parent_entity_g_num);
 
 ```
++++ {"editable": false, "deletable": false}
 
 Now we write the mesh that we just got to be able to visualize it later on (nothing to do).
 
 ```{code-cell}
+---
+"deletable": false
+---
 %%code_block -p exercise_1 -i 8
+
 
 //  writer_wrapper(comm,
 //                 "visu",
@@ -284,6 +333,7 @@ Now we write the mesh that we just got to be able to visualize it later on (noth
 //  PDM_part_mesh_nodal_free(pmn);
 
 ```
++++ {"editable": false, "deletable": false}
 
 ### Descending connectivity (i.e. Finite-Volume style)
 
@@ -292,7 +342,11 @@ You choose to get the partitioned mesh in descending connectivity, i.e. cell->fa
 Let's start from the top with cell data. How many cells are there? What are their global ids? Which faces compose the cells?
 
 ```{code-cell}
+---
+"deletable": false
+---
 %%code_block -p exercise_1 -i 9
+
 
   PDM_g_num_t *cell_ln_to_gn = NULL;
   int n_cell = PDM_multipart_part_ln_to_gn_get(mpart,
@@ -313,11 +367,16 @@ Let's start from the top with cell data. How many cells are there? What are thei
                                       PDM_OWNERSHIP_USER);
 
 ```
++++ {"editable": false, "deletable": false}
 
 For the faces we proceed in a similar way. How many faces are there? What are their global ids? Which vertices compose the faces?
 
 ```{code-cell}
+---
+"deletable": false
+---
 %%code_block -p exercise_1 -i 10
+
 
   PDM_g_num_t *face_ln_to_gn = NULL;
   int n_face = PDM_multipart_part_ln_to_gn_get(mpart,
@@ -338,11 +397,16 @@ For the faces we proceed in a similar way. How many faces are there? What are th
                                       PDM_OWNERSHIP_USER);
 
 ```
++++ {"editable": false, "deletable": false}
 
 To finish with, we need to have the description of the vertices.
 
 ```{code-cell}
+---
+"deletable": false
+---
 %%code_block -p exercise_1 -i 12
+
 
   PDM_g_num_t *vtx_ln_to_gn = NULL;
   int n_vtx = PDM_multipart_part_ln_to_gn_get(mpart,
@@ -360,11 +424,16 @@ To finish with, we need to have the description of the vertices.
                                    PDM_OWNERSHIP_USER);
 
 ```
++++ {"editable": false, "deletable": false}
 
 Now we write the mesh that we just got to be able to visualize it later on (nothing to do).
 
 ```{code-cell}
+---
+"deletable": false
+---
 %%code_block -p exercise_1 -i 13
+
 
   writer_wrapper(comm,
                  "visu",
@@ -399,13 +468,18 @@ Now we write the mesh that we just got to be able to visualize it later on (noth
   free(cell_face_idx);
   free(cell_face);
 ```
++++ {"editable": false, "deletable": false}
 
 ## Execution and visualization
 
 First, we finalize the the code you juste wrote by with the last step :  **free** (step 5).
 
 ```{code-cell}
+---
+"deletable": false
+---
 %%code_block -p exercise_1 -i 14
+
 
   // free
   PDM_DMesh_nodal_free(dmn);
@@ -422,17 +496,25 @@ First, we finalize the the code you juste wrote by with the last step :  **free*
 }
 
 ```
++++ {"editable": false, "deletable": false}
 
 Run the following cells to execute the program you just wrote and visualize the output partitioned mesh.
 
 ```{code-cell}
+---
+"deletable": false
+---
 %merge_code_blocks -l c -p exercise_1 -n 2 -v
 ```
 
 ```{code-cell}
+---
+"deletable": false
+---
 %%visualize
 visu/PMESH.case : i_part
 ```
++++ {"editable": false, "deletable": false}
 
 ## Bonus : Extended partition
 
@@ -447,6 +529,9 @@ This bonus is not guided, so you should have a close look at the [documentation]
 ### Step 1
 
 ```{code-cell}
+---
+"deletable": false
+---
 %%code_block -p exercise_1 -i 15
 
   PDM_extend_type_t  extend_type = PDM_EXTEND_FROM_VTX;
@@ -458,10 +543,14 @@ This bonus is not guided, so you should have a close look at the [documentation]
                                                              comm,
                                                              PDM_OWNERSHIP_KEEP);
 ```
++++ {"editable": false, "deletable": false}
 
 ### Step 2
 
 ```{code-cell}
+---
+"deletable": false
+---
 %%code_block -p exercise_1 -i 16
 
   int *vtx_part_bound_proc_idx = NULL;
@@ -524,19 +613,27 @@ This bonus is not guided, so you should have a close look at the [documentation]
                                           vtx_part_bound_part_idx,
                                           vtx_part_bound);
 ```
++++ {"editable": false, "deletable": false}
 
 ### Step 3
 
 ```{code-cell}
+---
+"deletable": false
+---
 %%code_block -p exercise_1 -i 17
 
   PDM_part_extension_compute(part_ext);
 ```
++++ {"editable": false, "deletable": false}
 
 ### Step 4
 
 ```{code-cell}
 %%code_block -p exercise_1 -i 18
+---
+"deletable": false
+---
 
   // Cell
   PDM_g_num_t *cell_ln_to_gn_ext = NULL;
@@ -586,10 +683,14 @@ This bonus is not guided, so you should have a close look at the [documentation]
                                    i_part,
                                    &vtx_coord_ext);
 ```
++++ {"editable": false, "deletable": false}
 
 ### Step 5 (and visualisation)
 
 ```{code-cell}
+---
+"deletable": false
+---
 %%code_block -p exercise_1 -i 19
 
   int total_n_cell = n_cell + n_cell_ext;
@@ -709,19 +810,27 @@ This bonus is not guided, so you should have a close look at the [documentation]
   return 0;
 }
 ```
++++ {"editable": false, "deletable": false}
 
 ## Execution and visualization
 
 Run the following cells to execute the program you just wrote and visualize the mesh partition extension.
 
 ```{code-cell}
+---
+"deletable": false
+---
 %merge_code_blocks -l c -p exercise_1 -n 2
 ```
 
 ```{code-cell}
+---
+"deletable": false
+---
 %%visualize
 visu/PEXT.case : extension
 ```
++++ {"editable": false, "deletable": false}
 
 ## Annex 1
 
