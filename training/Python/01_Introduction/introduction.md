@@ -467,12 +467,54 @@ ex : génération de gnum (pas un exercice mais montrer du code) -> exposer grap
 As you have seen with the game earlier, the block-distributed and partitioned point of view are key in parallel load balanced algorithms.
 That for it is paramount to be able to easily switch between those two.
 `PDM_part_to_block` and `PDM_block_to_part` are low level tools to wrap the creation of MPI communication graphs.
+Those are features aimed for developers and used internaly in ParaDiGM.
 
 ### Parallel I/O
 
 When we talked about the reason to be of **ParaDiGM** earlier, we talked about **pario** for parallel I/O as a wrapping to MPI-IO.
 Naturally, this feature is retained in the code. The parallel mesh writer in **ParaDiGM** is available for the Ensight format.
 It is used to write the mesh interfaces during coupling in CWIPI as well as writing output meshes in CEDRE.
+
+### Partitioning
+
+Extract part, multipart, part-extension
+
+### Pre-, Co- and Post- processing
+
+#### Mesh location
+
+- What ? Locate a point cloud in a mesh
+- What for ?
+
+#### Closest points
+
+- What ? Find the closest points to a point cloud
+- What for ?
+
+#### Inside cloud surf
+
+- What ?
+- What for ?
+
+#### Mesh intersection
+
+- What ? Intersection between two meshes
+- What for ?
+
+#### Iso-surfaces & slices
+
+- What ?
+- What for ?
+
+#### Overlay
+
+- What ? Intersection of meshes and reconstruct the intersected mesh
+- What for ?
+
+#### Mesh adaptation/remeshing
+
+- What ? Mesh adaptation workflow
+- What for ?
 
 # Exercise 0
 
