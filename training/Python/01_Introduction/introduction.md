@@ -464,6 +464,11 @@ ex : génération de gnum (pas un exercice mais montrer du code) -> exposer grap
 
 ### MPI communication wrapper tools
 
+##### **<span style="color:darkorange;">Note</span>**
+*<span style="color:darkorange;">
+Advanced feature. Used in ParaDiGM algorithm development.
+</span>*
+
 As you have seen with the game earlier, the block-distributed and partitioned point of view are key in parallel load balanced algorithms.
 That for it is paramount to be able to easily switch between those two.
 `PDM_part_to_block` and `PDM_block_to_part` are low level tools to wrap the creation of MPI communication graphs.
@@ -477,44 +482,132 @@ It is used to write the mesh interfaces during coupling in CWIPI as well as writ
 
 ### Partitioning
 
-Extract part, multipart, part-extension
+#### Mesh partitioning
+
+<img src="multipart.png" width="150" align="left" style="margin: 0px 30px 0px 30px;">
+
+<br/>
+
+- What ? Mesh partitioning
+- What for ? To partition an input mesh which has been read in parallel for instance
+
+<br/><br/>
+
+#### Mesh partition extraction
+
+<img src="extract_part.png" width="200" align="left" style="margin: 0px 30px 0px 30px;">
+
+<br/>
+
+- What ? Extract and partition an area of a mesh
+- What for ? To run an algorithm only on a sub-mesh or for post-processing an area of interest
+
+<br/><br/>
+
+#### Mesh partition extension
+
+##### **<span style="color:darkorange;">Note</span>**
+*<span style="color:darkorange;">
+Beta-feature. Still underconstruction. API might change.
+</span>*
+
+<img src="part_extension.png" width="150" align="left" style="margin: 0px 30px 0px 30px;">
+
+<br/>
+
+- What ? Get the neighbour cells on other processors of the cells on the partition boundary
+- What for ? To retreive gost-cells for numerical methods
+
+<br/><br/>
 
 ### Pre-, Co- and Post- processing
 
 #### Mesh location
 
-- What ? Locate a point cloud in a mesh
-- What for ?
+<img src="location.png" width="200" align="left" style="margin: 0px 30px 0px 30px;">
+
+<br/>
+
+- What ? Check if the points of a point cloud are inside or outside of a given closed surface
+- What for ? Spatial interpolation, coupling
+
+<br/><br/>
 
 #### Closest points
 
-- What ? Find the closest points to a point cloud
-- What for ?
+<img src="knn.png" width="200" align="left" style="margin: 0px 30px 0px 30px;">
 
-#### Inside cloud surf
+<br/>
 
-- What ?
-- What for ?
+- What ? Check if the points of a point cloud are inside or outside of a given closed surface
+- What for ? Spatial interpolation, coupling
 
-#### Mesh intersection
+<br/><br/>
 
-- What ? Intersection between two meshes
-- What for ?
+#### Mesh intersection & overlay
+
+<img src="overlay.png" width="200" align="left" style="margin: 0px 30px 0px 30px;">
+
+<br/>
+
+- What ? Intersection between two meshes and reconstruction of the intersected mesh (only available in 2D)
+- What for ? Spatial interpolation, coupling
+
+<br/><br/>
+
+#### Point cloud inside surface
+
+<img src="cloud.png" width="120" align="left" style="margin: 0px 30px 0px 30px;">
+
+<br/>
+
+- What ? Check if the points of a point cloud are inside or outside of a given closed surface
+- What for ? Pre/Co-processing a numerical simulation
+
+<br/><br/>
+
+#### Distance to surface
+
+<img src="wall_distance.png" width="200" align="left" style="margin: 0px 30px 0px 30px;">
+
+<br/>
+
+- What ? Compute the distance of points to a surface
+- What for ? Post-processing a numerical simulation
+
+<br/><br/>
 
 #### Iso-surfaces & slices
 
-- What ?
-- What for ?
+##### **<span style="color:darkorange;">Note</span>**
+*<span style="color:darkorange;">
+Beta-feature. Still underconstruction. API might change.
+</span>*
 
-#### Overlay
+<img src="isosurface.png" width="150" align="left" style="margin: 0px 30px 0px 30px;">
 
-- What ? Intersection of meshes and reconstruct the intersected mesh
-- What for ?
+<br/>
+
+- What ? Get the slice of a mesh on iso-lines of the field
+- What for ? Post-processing a numerical simulation
+
+<br/><br/>
 
 #### Mesh adaptation/remeshing
 
-- What ? Mesh adaptation workflow
-- What for ?
+##### **<span style="color:darkorange;">Note</span>**
+*<span style="color:darkorange;">
+Beta-feature. Still underconstruction. API might change.
+</span>*
+
+<img src="mesh_adaptation.png" width="150" align="left" style="margin: 0px 30px 0px 30px;">
+
+<br/>
+
+- What ? Parallel mesh adaptation algorithm
+- What for ? To use mesh adaptation in a fully parallel workflow
+
+<br/><br/>
 
 # Exercise 0
 
