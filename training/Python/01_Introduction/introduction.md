@@ -186,7 +186,41 @@ TO DO
 
 ### Use of low level features : MCC in CEDRE
 
-TO DO
+This work is being carried out by Philippe Grenard.
+
+- What for ?
+
+The aim of the MCC feature is to slice a background volume by the contour of a masking mesh.
+This means that the cells need to be taged whether they are hidden, cut or visible with respect to the masking mesh.
+Once that is done, a communication graph on the interface between the sliced background and the masking mesh needs to be created.
+
+- How was it formerly done ?
+
+A multisequential algorithm was implemented. Indeed, the surface mesh was duplicated on all the MPI ranks.
+Then the sequential slicing algorithm was run on all MPI ranks. Then global communications were used to bring the result on to all MPI ranks (MPI_all_gather).
+
+- Why change ?
+
+Because the memory cost exploded on large cases.
+That is why the goal was to rewrite the feature leaving most of the data on their source MPI rank and create a load balanced algorithm.
+
+- What are the hardships for legacy codes ?
+
+Since the MCC feature is still used on the fringes in CEDRE, it was easy to decide to recast it.
+This could be more difficult in much used features of legacy codes with fixed complex data structures.
+Because of the major changes induced, incrementally replacing existing building blocks while ensuring a minimum of non-regression could be complicated.
+
+- Why use ParaDiGM ?
+
+Developing parallel algorithms requires a high level of HPC expertise.
+Since the functions need to develop this algorithm we already (almost) present in ParaDiGM, it was easily available.
+
+- Which ParaDiGM features are used ?
+  - `PDM_gnum` to build the final unique global numbering
+  - `PDM_global_reduce` to estimate a characteristic mesh size at the vertices
+  - `PDM_extract_part` to extract the mesh area of interest
+  - `PDM_mesh_intersection` to operate the masking mesh intersection with the background volume mesh
+  - `PDM_part_to_part` to change data between those meshes
 
 ### Modernizing an existing code : MoDeTheC
 
