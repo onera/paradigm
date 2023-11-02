@@ -24,7 +24,7 @@ A mapping between the source mesh elements and the target points they contain is
   - geometric data (distances, barycentric and parametric coordinates, ...) ;
   - an MPI communication graph as the associated entities are, in general, distributed on different processes.
 
-This mapping is typically used for interpolating data from the source mesh to the point clouds in applications such as coupling between non-matching grids, <span style="color:red">**(autres exemples...)**</span>.
+This mapping is typically used for interpolating data from the source mesh to the point clouds in applications such as the coupling between non-matching grids.
 
 
 The aim of this exercise is to perform such an interpolation.
@@ -423,7 +423,13 @@ The second field interpolation is trickier as you will need the cell->vertex con
 
 The communication graph is embodied in the form of a [`PDM_part_to_part_t`](https://numerics.gitlab-pages.onera.net/mesh/paradigm/dev_formation/user_manual/comm_graph/ptp.html#ptp) instance.
 
-If you recall, a Part-to-part structure is built by specifying the partitions on both sides, as well as the graph Part1 $\to$ Part2.
+The Part-to-part feature has been created to exchange data between two entities partitions.
+That is why the Part-to-part structure is built by specifying the partitions on both sides, as well as the graph of the links between elements of partition 1 (*Part1*) to partition 2 (*Part2*).
+
+<img src="ptp.png" width="300">
+
+On the figure above the first partition is represented by the red set op points and the second partition by the blue set of points.
+The graph between *Part1* and *Part2* is symbolised by the gray arrows.
 
 In this case, *Part1* represents the source mesh and *Part2* the target point cloud.
 
@@ -455,6 +461,15 @@ Part-to-part is able to perform non-blocking exchanges so here's how we're going
 ### First exchange
 
 Here you need to initiate the exchange of global ids from the source mesh elements to the target points.
+
+##### **<span style="color:olivedrab;">Analogy</span>**
+*<span style="color:olivedrab;">
+Marie is part of the Dupont family. She is going to meet members of the Perez family. She already knows some of them.
+Marie is going to provide her name to the members of the Perez family she doesn't know.
+In a sens, we can link Marie with the memebers of the Perez family she doesn't know. Then communicate to them the same information,
+which is her name. This is exactly a Part-to-part exchange with the option `PDM_PART_TO_PART_DATA_DEF_ORDER_PART1`.
+In our mesh location exercise, who is the Dupont family who will provide their name and who is the Perez family?
+</span>*
 
 As each MPI ranks hosts source *and* target partitions, we will use the function `PDM_part_to_part_iexch` which allows for transparent, bilateral data exchange.
 
@@ -503,8 +518,31 @@ Hints:
 
 ### Interpolate the second field (node-based)
 
+Here you need to interpolate the node-based field from the source mesh onto the target points.
+That means for each target point computing the weighted average of the field on the vertices of the element it is located in.
 
+<img src="moyenne.png" width="200">
 
+Each color on the picture above represents the weight associated to the red point in this pentagon.
+
+*Will the weighted average be the same for the red and blue point?*
+
+This means there is a better side to do the interpolation computation.
+Depending at the side of which part (*Part1* or *Part2*) the computation is done more data will be exchanged.
+
+*What is the most efficient side in terms of amount of data to exchange to do the computation?*
+
+Doing the interpolation on *Part1* (the source side), you will send one value to the target point in *Part 2* : the interpolated field.
+Doing the interpolation on *Part2* (the target side), you will send to each target point the coordinates and the field at each vertex of the element of the source mesh it has been located in.
+
+Will will implement the first option. You can start doing the interpolation.
+
+*What is the data you have access to?*
+
+You are on the side of *Part1* (source mesh). You have access to the elements of the mesh, the face->vertex connectivity and for each
+face the points located in it.
+
+*Knowing this, how will you set up the loops over the entities to compute the interpolation?*
 
 <!-- Interpolation of node-based fields is not as straightforward as cell-based ones.
 Let $f$ denote the field of interest, $T$ a target point and $S$ the source element containing $T$.
@@ -526,13 +564,6 @@ Now you need to compute the spatially interpolated *x* values **on the source si
 
 Let $T$ denote a target point and $S$ the source element containing $T$.
  -->
-
-
-
-
-<span style="color:red">
-**donner plus d'infos?**
-</span>
 
 ```{code-cell}
 ---
@@ -605,6 +636,17 @@ Let $T$ denote a target point and $S$ the source element containing $T$.
 
 ### Exchange the second interpolated field
 
+Now that you've done the interpolation, it is time to send the interpolated field to the target points.
+
+##### **<span style="color:olivedrab;">Analogy</span>**
+*<span style="color:olivedrab;">
+Marie met the grandparents of the Perez family : Marta & Luis and Julio & Paula. She wants to send them a christmas postcard.
+She chose a card with a christmas tree for Marta & Luis and a card with Santa for Julio & Paula.
+In a sens, we can link Marie to Marta & Luis and Julio & Paula. This time she won't provide the same information to both of them.
+This is exactly a Part-to-part exchange with the option `PDM_PART_TO_PART_DATA_DEF_ORDER_PART1_TO_PART2`.
+What does the postcard represent in our location exercise?
+</span>*
+
 You can now initiate the exchange of the interpolated field you just computed.
 
 ```{code-cell}
@@ -650,10 +692,6 @@ Finally, we can finalize both exchanges, check and visualize the received fields
 #### *Watch out for unlocated points!*
 Notice that you only received information relative to the *located* points.
 You must therefore use the appropriate indirection to correctly read the received arrays.
-
-<span style="color:red">
-  **donner plus d'infos? Rappel Part-to-part?**
-</span>
 
 ```{code-cell}
 ---
