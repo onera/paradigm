@@ -202,18 +202,17 @@ Then the sequential slicing algorithm was run on all MPI ranks. Then global comm
 - Why change ?
 
 Because the memory cost exploded on large cases.
-That is why the goal was to rewrite the feature leaving most of the data on their source MPI rank and create a load balanced algorithm.
+The goal was thus to rewrite the feature leaving most of the data on their source MPI rank and create a load balanced algorithm.
 
 - What are the hardships for legacy codes ?
 
-Since the MCC feature is still used on the fringes in CEDRE, it was easy to decide to recast it.
-This could be more difficult in much used features of legacy codes with fixed complex data structures.
-Because of the major changes induced, incrementally replacing existing building blocks while ensuring a minimum of non-regression could be complicated.
+Using an external library in a legacy code to incrementally replace an existing feature while ensuring a minimum of non-regression can be complicated due to fixed complex data structures.
+Since the MCC feature is not yet widely used in CEDRE, it was easier to decide to recast it using an external library.
 
 - Why use ParaDiGM ?
 
 Developing parallel algorithms requires a high level of HPC expertise.
-Since the functions need to develop this algorithm we already (almost) present in ParaDiGM, it was easily available.
+Since the functions needed to develop this algorithm were (almost) present in ParaDiGM, it was easily available.
 
 - Which ParaDiGM features are used ?
   - `PDM_gnum` to build the final unique global numbering
@@ -510,6 +509,22 @@ That for it is paramount to be able to easily switch between those two.
 It arised that we needed a function to link partitions in order to exchange fields.
 This particularly is at stake at the end ParaDiGM algorithms to make a link between the partitionned input mesh data and the partitionned output mesh data.
 This is the `PDM_part_to_part` function. You will use it at the end of the day in the last exercise.
+
+### Preconditioning geometric algorithms using trees
+
+##### **<span style="color:darkorange;">Note</span>**
+*<span style="color:darkorange;">
+Advanced feature. Used in ParaDiGM algorithm development.
+</span>*
+
+<img src="octree.png" width="150" align="left" style="margin: 0px 30px 0px 30px;">
+
+<br/>
+
+The performance in the features in ParaDiGM comes from the use of parallel search trees.
+For search on points mainly octrees are used. The bounding box tree is used to store and to search on mesh elements.
+
+<br/><br/>
 
 ### Parallel I/O
 
