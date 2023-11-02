@@ -200,7 +200,9 @@ To expand the range of spatial interpolation algorithms available and answer use
 - Which **ParaDiGM** features are used ?
 
 The spatial interpolation algorithms available in **CWIPI** to interpolated the fields exchange at the coupling interface have been developped in **ParaDiGM**.
-Those are : `PDM_mesh_location`, `PDM_mesh_intersection` and `PDM_closest_points`. This means that if you need to do an interpolation operation out of a coupling setting you can directly call this functions from **ParaDiGM**.
+Those correspond to the following features `PDM_mesh_location`, `PDM_mesh_intersection` and `PDM_closest_points`.
+For the data exchange at the end of the spatial interpolation algorithm the `PDM_part_to_part` exchnage tool is used.
+This means that if you need to do an interpolation operation out of a coupling setting you can directly call this functions from **ParaDiGM**.
 
 - Where ?
 
@@ -578,7 +580,7 @@ For search on points mainly octrees are used. The bounding box tree is used to s
 
 When we talked about the reason to be of **ParaDiGM** earlier, we talked about **pario** for parallel I/O as a wrapping to MPI-IO.
 Naturally, this feature is retained in the code. The parallel mesh writer in **ParaDiGM** is available for the Ensight format.
-It is used to write the mesh interfaces during coupling in CWIPI as well as writing output meshes in CEDRE.
+It is used to write the mesh interfaces during coupling in **CWIPI** as well as writing output meshes in **CEDRE**.
 
 ### Partitioning
 
