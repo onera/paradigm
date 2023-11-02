@@ -472,7 +472,10 @@ Advanced feature. Used in ParaDiGM algorithm development.
 As you have seen with the game earlier, the block-distributed and partitioned point of view are key in parallel load balanced algorithms.
 That for it is paramount to be able to easily switch between those two.
 `PDM_part_to_block` and `PDM_block_to_part` are low level tools to wrap the creation of MPI communication graphs.
-Those are features aimed for developers and used internaly in ParaDiGM.
+
+It arised that we needed a function to link partitions in order to exchange fields.
+This particularly is at stake at the end ParaDiGM algorithms to make a link between the partitionned input mesh data and the partitionned output mesh data.
+This is the `PDM_part_to_part` function. You will use it at the end of the day in the last exercise.
 
 ### Parallel I/O
 
@@ -492,6 +495,8 @@ It is used to write the mesh interfaces during coupling in CWIPI as well as writ
 - What for ? To partition an input mesh which has been read in parallel for instance
 
 <br/><br/>
+
+This feature will be explored in the first exercise of this training.
 
 #### Mesh partition extraction
 
@@ -515,10 +520,12 @@ Beta-feature. Still underconstruction. API might change.
 
 <br/>
 
-- What ? Get the neighbour cells on other processors of the cells on the partition boundary
-- What for ? To retreive gost-cells for numerical methods
+- What ? To provide a topologically consistent mesh partition over an extended neighbourhood
+- What for ? Allows to parallelize numerical methods that would initially be complex parallelize (WENO/ENO, multislope, v4)
 
 <br/><br/>
+
+This feature is given as a bonus of the first exercise of this training.
 
 ### Pre-, Co- and Post- processing
 
@@ -532,6 +539,8 @@ Beta-feature. Still underconstruction. API might change.
 - What for ? Spatial interpolation, coupling
 
 <br/><br/>
+
+You will explore this feature in the last exercise of this training.
 
 #### Closest points
 
@@ -555,14 +564,14 @@ Beta-feature. Still underconstruction. API might change.
 
 <br/><br/>
 
-#### Point cloud inside surface
+#### Ray tracing
 
 <img src="cloud.png" width="120" align="left" style="margin: 0px 30px 0px 30px;">
 
 <br/>
 
 - What ? Check if the points of a point cloud are inside or outside of a given closed surface
-- What for ? Pre/Co-processing a numerical simulation
+- What for ? For chimera methods, IBC ...
 
 <br/><br/>
 
@@ -573,7 +582,7 @@ Beta-feature. Still underconstruction. API might change.
 <br/>
 
 - What ? Compute the distance of points to a surface
-- What for ? Post-processing a numerical simulation
+- What for ? Allows level-setting, computation of wall distances for turbulence models
 
 <br/><br/>
 
