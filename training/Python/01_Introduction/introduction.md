@@ -180,9 +180,9 @@ This is still a work in progress, so we welcome your comments and contributions!
 
 <img src="cwipiNew.svg" align=right style="margin: 0px 50px;" width="100">
 
-### Geometric core for code coupling : CWIPI
+### Geometric core for code coupling : **CWIPI**
 
-The CWIPI library has been created by Eric Quémerais in 2009.
+The **CWIPI** library has been created by Eric Quémerais in 2009.
 
 - What for ?
 
@@ -190,15 +190,17 @@ The purpose of this LGPL library is to couple codes in a massively parallel dist
 It provides tools to define code coupling algorithms to control each exchange between the codes.
 It does the transfer of interpolated fields through a geometric coupling interface.
 
-- Why use ParaDiGM ?
+<img src="schema_concept_field.svg" width="400">
 
-Formerly, CWIPI used the LGPL *FVM* library developed at EDF R&D for geometrical computations.
-To expand the range of spatial interpolation algorithms available and answer user feedback, CWIPI has been rewritten and relies on *ParaDiGM* since *version 1.0* (released in July 2023).
+- Why use **ParaDiGM** ?
 
-- Which ParaDiGM features are used ?
+Formerly, **CWIPI** used the LGPL **FVM** library developed at EDF R&D for geometrical computations.
+To expand the range of spatial interpolation algorithms available and answer user feedback, **CWIPI** has been rewritten and relies on **ParaDiGM** since *version 1.0* (released in July 2023).
 
-The spatial interpolation algorithms available in CWIPI to interpolated the fields exchange at the coupling interface have been developped in ParaDiGM.
-Those are : `PDM_mesh_location`, `PDM_mesh_intersection` and `PDM_closest_points`. This means that if you need to do an interpolation operation out of a coupling setting you can directly call this functions from ParaDiGM.
+- Which **ParaDiGM** features are used ?
+
+The spatial interpolation algorithms available in **CWIPI** to interpolated the fields exchange at the coupling interface have been developped in **ParaDiGM**.
+Those are : `PDM_mesh_location`, `PDM_mesh_intersection` and `PDM_closest_points`. This means that if you need to do an interpolation operation out of a coupling setting you can directly call this functions from **ParaDiGM**.
 
 - Where ?
 
@@ -206,11 +208,11 @@ Those are : `PDM_mesh_location`, `PDM_mesh_intersection` and `PDM_closest_points
   - https://w3.onera.fr/cwipi/bibliotheque-couplage-cwipi (in French)
   - on GitHub (in progress)
 
-### Python/CGNS interface : MAIA
+### Python/CGNS interface : **MAIA**
 
 TO DO
 
-### Use of low level features : MCC in CEDRE
+### Use of low level features : MCC in **CEDRE**
 
 This work is being carried out by Philippe Grenard.
 
@@ -233,14 +235,14 @@ The goal was thus to rewrite the feature leaving most of the data on their sourc
 - What are the hardships for legacy codes ?
 
 Using an external library in a legacy code to incrementally replace an existing feature while ensuring a minimum of non-regression can be complicated due to fixed complex data structures.
-Since the MCC feature is not yet widely used in CEDRE, it was easier to decide to recast it using an external library.
+Since the MCC feature is not yet widely used in **CEDRE**, it was easier to decide to recast it using an external library.
 
-- Why use ParaDiGM ?
+- Why use **ParaDiGM** ?
 
 Developing parallel algorithms requires a high level of HPC expertise.
-Since the functions needed to develop this algorithm were (almost) present in ParaDiGM, it was easily available.
+Since the functions needed to develop this algorithm were (almost) present in **ParaDiGM**, it was easily available.
 
-- Which ParaDiGM features are used ?
+- Which **ParaDiGM** features are used ?
 
   - `PDM_gnum` to build the final unique global numbering
   - `PDM_global_reduce` to estimate a characteristic mesh size at the vertices
@@ -248,11 +250,11 @@ Since the functions needed to develop this algorithm were (almost) present in Pa
   - `PDM_mesh_intersection` to operate the masking mesh intersection with the background volume mesh
   - `PDM_part_to_part` to change data between those meshes
 
-### Modernizing an existing code : MoDeTheC
+### Modernizing an existing code : **MoDeTheC**
 
 TO DO
 
-### Creating a new code : SoNICS
+### Creating a new code : **SoNICS**
 
 TO DO
 
@@ -316,7 +318,7 @@ pypart via elsA
         - ptscotch.h include file
         - scotch, scotcherr, ptscotch, ptscotcherr libraries
   
-     To link shared libraries, PTSCOTCH has to be compiled with "-fPIC" and SCOTCH_PTHREAD_MPI=OFF. *ParaDiGM* is compatible with a 32-bit or 64-bit installation.
+     To link shared libraries, PTSCOTCH has to be compiled with "-fPIC" and SCOTCH_PTHREAD_MPI=OFF. *ParaDiGM** is compatible with a 32-bit or 64-bit installation.
 
 
  - **PDM_ENABLE_LONG_G_NUM= <ON | OFF> (default : ON)** : Enable long global numbering
