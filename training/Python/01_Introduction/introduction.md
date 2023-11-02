@@ -645,7 +645,7 @@ You will explore this feature in the last exercise of this training.
 
 <br/>
 
-- What ? Fin the k closest points of a target point cloud with respect to the points of a source point cloud
+- What ? Find the k closest points of a target point cloud with respect to the points of a source point cloud
 - What for ? Spatial interpolation, coupling
 
 <br/><br/>

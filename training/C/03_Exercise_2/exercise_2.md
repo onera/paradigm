@@ -535,7 +535,7 @@ Depending at the side of which part (*Part1* or *Part2*) the computation is done
 Doing the interpolation on *Part1* (the source side), you will send one value to the target point in *Part 2* : the interpolated field.
 Doing the interpolation on *Part2* (the target side), you will send to each target point the coordinates and the field at each vertex of the element of the source mesh it has been located in.
 
-Will will implement the first option. You can start doing the interpolation.
+You will implement the first option. You can start doing the interpolation.
 
 *What is the data you have access to?*
 
