@@ -41,7 +41,7 @@ As the **CWIPI** library was already well used in the academic and industrial co
 
 An efficient parallel algorithm takes much longer to write and validate than a sequential one. A simple sequential operation can become very difficult if you want to maintain good *load* and *memory* balancing during all algorithm steps.
 
-Mettre image de la planche des fonctionnalites illustrees ....
+<img src="paradigm.png" width="1000">
 
 **ParaDiGM** aims to offer a set of efficient services to simplify the writing of massively parallel distributed numerical simulation software, from reading data files to writing results.
 <span style="color:red">Numerical codes are generally based on a discretization of the study domain which can take the form of a mesh.
@@ -54,7 +54,7 @@ The API has been designed to be as user-friendly and intuitive as possible. All 
 The native API is in C and can be used in C/C++ software.
 
 Two other APIs are available. The first one is in Python/Numpy, automatically generated from Cython, and the second one is in Fortran using Fortran's *iso-c-binding* interfaces. These APIs are not simply direct interfaces to C functions. They have been designed to be user-friendly and intuitive in each language.
-<span style="color:red">*(OK mais préciser que c'est pas encore au point, et que le retour des utilisateurs est le bienvenu pour converger vers une API optimale.)*</span>
+<span style="color:darkorange;">Feel free to give us feedback so that we can improve ourselves !</span>
 The Python API reinforces the notion of objects, and results are provided in the form of dictionaries. The Fortran API takes Fortran pointers as input/output and not `c_ptr` types with which Fortran developers are unfamiliar. The C API contains pointer arrays. This notion is not defined in Fortran. When giving data or retrieving results in this form, the user must use the Fortran **pdm_pointer_array** intermediate structure.
 
 
@@ -64,7 +64,8 @@ The Python API reinforces the notion of objects, and results are provided in the
 
 ## Diffusion
 
-diffusion interne + github
+- https://gitlab.onera.net/numerics/mesh/paradigm (ONERA users only)
+- GitHub (in progress)
 
 ## Releases
 
@@ -177,9 +178,33 @@ This is still a work in progress, so we welcome your comments and contributions!
 
 ## Application examples
 
+<img src="cwipiNew.svg" align=right style="margin: 0px 50px;" width="100">
+
 ### Geometric core for code coupling : CWIPI
 
-TO DO
+The CWIPI library has been created by Eric Quémerais in 2009.
+
+- What for ?
+
+The purpose of this LGPL library is to couple codes in a massively parallel distributed setting.
+It provides tools to define code coupling algorithms to control each exchange between the codes.
+It does the transfer of interpolated fields through a geometric coupling interface.
+
+- Why use ParaDiGM ?
+
+Formerly, CWIPI used the LGPL *FVM* library developed at EDF R&D for geometrical computations.
+To expand the range of spatial interpolation algorithms available and answer user feedback, CWIPI has been rewritten and relies on *ParaDiGM* since *version 1.0* (released in July 2023).
+
+- Which ParaDiGM features are used ?
+
+The spatial interpolation algorithms available in CWIPI to interpolated the fields exchange at the coupling interface have been developped in ParaDiGM.
+Those are : `PDM_mesh_location`, `PDM_mesh_intersection` and `PDM_closest_points`. This means that if you need to do an interpolation operation out of a coupling setting you can directly call this functions from ParaDiGM.
+
+- Where ?
+
+  - https://gitlab.onera.net/numerics/coupling/cwipi (ONERA users only)
+  - https://w3.onera.fr/cwipi/bibliotheque-couplage-cwipi (in French)
+  - on GitHub (in progress)
 
 ### Python/CGNS interface : MAIA
 
@@ -216,6 +241,7 @@ Developing parallel algorithms requires a high level of HPC expertise.
 Since the functions needed to develop this algorithm were (almost) present in ParaDiGM, it was easily available.
 
 - Which ParaDiGM features are used ?
+
   - `PDM_gnum` to build the final unique global numbering
   - `PDM_global_reduce` to estimate a characteristic mesh size at the vertices
   - `PDM_extract_part` to extract the mesh area of interest
