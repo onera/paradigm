@@ -62,7 +62,7 @@ The Python API reinforces the notion of objects, and results are provided in the
 
 **ParaDiGM** is licensed under LGPL V3.0.
 
-## Diffusion
+## Where can I find **ParaDiGM**?
 
 - https://gitlab.onera.net/numerics/mesh/paradigm (ONERA users only)
 - GitHub (in progress)
@@ -178,6 +178,10 @@ This is still a work in progress, so we welcome your comments and contributions!
 
 ## Application examples
 
+<span style="color:red">
+  maybe revoir l'agencement des sections -> cf notebook d'intro CWIPI
+</span>
+
 <img src="cwipiNew.svg" align=right style="margin: 0px 50px;" width="100">
 
 ### Geometric core for code coupling : **CWIPI**
@@ -195,13 +199,12 @@ It does the transfer of interpolated fields through a geometric coupling interfa
 - Why use **ParaDiGM** ?
 
 Formerly, **CWIPI** used the LGPL **FVM** library developed at EDF R&D for geometrical computations.
-To expand the range of spatial interpolation algorithms available and answer user feedback, **CWIPI** has been rewritten and relies on **ParaDiGM** since *version 1.0* (released in July 2023).
+To expand the range of spatial interpolation algorithms available and answer users feedback, **CWIPI** has been rewritten and relies on **ParaDiGM** since *version 1.0* (released in July 2023).
 
 - Which **ParaDiGM** features are used ?
 
-The spatial interpolation algorithms available in **CWIPI** to interpolated the fields exchange at the coupling interface have been developped in **ParaDiGM**.
-Those correspond to the following features `PDM_mesh_location`, `PDM_mesh_intersection` and `PDM_closest_points`.
-For the data exchange at the end of the spatial interpolation algorithm the `PDM_part_to_part` exchnage tool is used.
+The spatial interpolation algorithms available in **CWIPI** rely on geometric algorithms implemented in **ParaDiGM**: `PDM_mesh_location`, `PDM_mesh_intersection` and `PDM_closest_points`.
+For the data exchange of the interpolated fields algorithm the `PDM_part_to_part` exchange tool is used.
 This means that if you need to do an interpolation operation out of a coupling setting you can directly call this functions from **ParaDiGM**.
 
 - Where ?
@@ -212,46 +215,49 @@ This means that if you need to do an interpolation operation out of a coupling s
 
 ### Python/CGNS interface : **MAIA**
 
-This work is being carried out by Julien Coulet, Berenger Berthoul, Clément Bénazet and Bruno Maugars.
+This work is being carried out by Julien Coulet, Berenger Berthoul, Clément Benazet and Bruno Maugars of the DAAA/CLEF team.
 
 - What for?
 
 Pre- and Post-processing library for users in applied departments working with the Python/[CGNS](https://cgns.github.io/CGNS_docs_current/sids/index.html) framework.
-Aiming a complete parallel workflow, [**MAIA**](https://numerics.gitlab-pages.onera.net/mesh/maia/dev/index.html) proposes an extension of CGNS standard in order to manage in memory the block-distributed and partitionned approach within the parallel trees and the available features are powered by **ParaDiGM**.
+Aiming towards a complete parallel workflow, [**MAIA**](https://numerics.gitlab-pages.onera.net/mesh/maia/dev/index.html) proposes an extension of CGNS standard in order to manage in memory the block-distributed and partitioned approaches within the parallel trees and the available features are powered by **ParaDiGM**.
 
 
 <img src="maia_code.png" width="600">
 
-In this script we can see calls to **MAIA** functions to read a CGNS tree, partition a mesh, do a wall distance computation and finally compute and save a slice on an ouput field. This has been done in but 7 function calls !
+In this script we can see calls to **MAIA** functions to read a CGNS tree, partition a mesh, do a wall distance computation and finally compute and write a slice in an output file. This has been done in but 7 function calls !
 
 - A strong link with **ParaDiGM**
 
-**MAIA** developers do not only use **ParaDiGM**, they strongly contribute to it in terms of development and by providing a new range of users thus test cases to make the code more robust.
+**MAIA** developers do not only use **ParaDiGM**, they strongly contribute in terms of development and by providing a new range of users thus test cases to make the code more robust.
 
 - Where ?
 
   - Installed with in eslA software suite (ONERA users only)
   - https://gitlab.onera.net/numerics/mesh/maia (ONERA users only)
+  - https://github.com/onera/Maia
 
-### Use of low level features : MCC in **CEDRE**
+<img src="logo_cedre.png" align=right style="margin: 0px 50px;" width="180">
 
-This work is being carried out by Philippe Grenard.
+### Use of low level features : MCC in [**CEDRE**](https://cedre.onera.fr/)
+
+This work is being carried out by Philippe Grenard (DMPE/MPF).
 
 - What for ?
 
-The aim of the MCC feature is to slice a background volume by the contour of a masking mesh.
-This means that the cells need to be taged whether they are hidden, cut or visible with respect to the masking mesh.
-Once that is done, a communication graph on the interface between the sliced background and the masking mesh needs to be created.
+The aim of the MCC (Maillages Chevauchants Conservatifs) feature is to slice a background volume by the contour of a masking mesh.
+This means that the cells need to be tagged as "hidden", "cut" or "visible" with respect to the masking mesh.
+Once this is done, a communication graph on the interface between the sliced background and the masking mesh needs to be created.
 
 - How was it formerly done ?
 
-A multisequential algorithm was implemented. Indeed, the surface mesh was duplicated on all the MPI ranks.
-Then the sequential slicing algorithm was run on all MPI ranks. Then global communications were used to bring the result on to all MPI ranks (MPI_all_gather).
+A multi-sequential algorithm was implemented. Indeed, the surface mesh was duplicated on all the MPI ranks.
+Then the sequential slicing algorithm was run on all MPI ranks. Then global communications were used to bring the result on to all MPI ranks (`MPI_Allgather`).
 
 - Why change ?
 
 Because the memory cost exploded on large cases.
-The goal was thus to rewrite the feature leaving most of the data on their source MPI rank and create a load balanced algorithm.
+The goal was thus to rewrite the feature leaving most of the data on their source MPI rank and create a load-balanced algorithm.
 
 - What are the hardships for legacy codes ?
 
@@ -272,11 +278,11 @@ Since the functions needed to develop this algorithm were (almost) present in **
   - `PDM_part_to_part` to change data between those meshes
 
 
-<img src="logo_modethec.png" align=right style="margin: 0px 50px;" width="100">
+<img src="logo_modethec.png" align=right style="margin: 0px 50px;" width="180">
 
 ### Modernizing an existing code : **MoDeTheC**
 
-This work is being carried out by Nicolas Dellinger.
+This work is being carried out by Nicolas Dellinger (DMPE/HEAT).
 
 - What for?
 
@@ -288,15 +294,14 @@ Before the modernization task, it was a multi-thread (OpenMP) code.
 
 - Why use **ParaDiGM** ?
 
-Using a shared tool, allows significant time saving in the parallelization process.
+The use of a shared tool allowed a significant time saving in the parallelization process.
 
 - Which **ParaDiGM** features are used ?
 
-Incrementally features of ParaDiGM were added while ensuring a minimum of non-regression.
+Incrementally **ParaDiGM** features were added while ensuring a minimum of non-regression.
 Over the period September 2022 to April 2023, which marks the first parallel calculation, the following features have been added to the code:
   - `PDM_mesh_location`
   - `PDM_part_to_part`
-  - `PDM_mesh_nodal*`
   - `PDM_part`
   - `PDM_gnum`
   - `PDM_renum_hpc`
@@ -307,7 +312,7 @@ Later the following features have been added : `PDM_closest_points`, `PDM_extrac
 
 - A strong link with **ParaDiGM**
 
-Aware of the workload of the development team, Nicolas Dellinger did many developments to set up some missing Fortran interfaces.
+Aware of the workload of the development team, Nicolas did many developments to set up some missing Fortran interfaces.
 
 ### Creating a new code : **SoNICS**
 
@@ -315,33 +320,43 @@ This work is being carried out as a collaboration between ONERA And Safran.
 
 - What for?
 
-Software for aerodynamical finite volume (node-based and cell-centered) simulations of the Navier-Stockes equations on structured and unstructured meshes.
+Software for aerodynamic finite-volume (node-centered and cell-centered) simulations of the Navier-Stokes equations on structured and unstructured meshes.
 Successor to **elsA** based on an innovative architecture for current and future hybrid hardware.
 
 - A strong link with **ParaDiGM**
 
-**SoNICS** developers do not only use **ParaDiGM**, they strongly contribute to it. Since the aim is to share expertise and development of parallel algorithms, when new features can be used outside the context of **SoNICS**, its developers code it in a generical way in **ParaDiGM**.
+**SoNICS** developers do not only use **ParaDiGM**, they strongly contribute to it. Since the aim is to share expertise and development of parallel algorithms, when new features can be used outside the context of **SoNICS**, its developers code it in a generic way in **ParaDiGM**.
 
 - Which **ParaDiGM** features are used ?
 
   - for pre-processing : partitioning and renumbering
-  - for co-processing : computation of spatial interpolation weights  (ex: for chimera methods) and wall distance computations for specific surface torbomachinery conditions (ex: mixing plane, chorochronic)
+  - for co-processing : computation of spatial interpolation weights (e.g. for chimera method) and wall distance computations for specific surface turbomachinery conditions (e.g. mixing plane, chorochronic)
   - for post-processing : extraction of mesh partition and iso-surface computation
-  - strongly interessed in parallel mesh adaptation !
+  - strongly interested in parallel mesh adaptation !
 
 ### Use in legacy codes
 
-Let's have a look a the dependencies of a legacy code like **elsA**.
+<img src="logo_elsa.png" align=right style="margin: 0px 50px;" width="180">
+
+Let's have a look a the dependencies of a legacy code like [**elsA**](https://elsa.onera.fr/).
 
 <img src="elsA.png" width="600">
 
-On this figure, it is clear that there is a direct dependency to ParaDiGM function calls in the software itself.
-We can see that **elsA** has a dependency to **MAIA** which we mentionned earlier.
-Moreover, the tool ETC relies on ppart which itself relies on the mesh partitionning features of ParaDiGM.
+On this figure, it is clear that there is a direct dependency to **ParaDiGM** function calls in the software itself.
+We can see that **elsA** has a dependency to **MAIA** which we mentioned earlier.
+Moreover, the tool ETC relies on **ppart** which itself relies on **ParaDiGM**'s mesh partitioning features.
 
-## Installation Instructions
+## How do I install **ParaDiGM**?
 
-### Basic Installation
+Start by getting the sources of **ParaDiGM** (by cloning the [GitLab](https://gitlab.onera.net/numerics/mesh/paradigm) repository for instance).
+The library builds with [CMake](https://cmake.org/).
+If you wish another interface than the native C, use the `PDM_ENABLE_Fortran=<ON | OFF> (default : OFF)` or `PDM_ENABLE_PYTHON_BINDINGS=<ON | OFF> (default : OFF)` option.
+
+<span style="color:red">*plus de détails?*</span>
+
+For further details about the install process of **ParaDiGM**, please refer to the [documentation](https://numerics.gitlab-pages.onera.net/mesh/paradigm/dev_formation/getting_started/installation.html).
+
+<!-- ### Basic Installation
 
 <span style="color:red">*(vraiment utile de détailler, autant pointer vers doc/README, non?)*</span>
 
@@ -431,7 +446,7 @@ or
     - **MPI_\<lang\>_INCLUDE_PATH**
   
    Refer to FindMPI in the CMake documentation for more informations.
-
+ -->
 ## Concepts and definition
 
 ### Mesh
@@ -530,7 +545,7 @@ These more advanced notions go beyond the scope of this training so we will not 
 
 ## MPI parallel distributed algorithms
 
-The aim of this section is to help you understand the reason for the ParaDiGM's performance by walking you through the main concepts.
+The aim of this section is to help you understand the reason for the **ParaDiGM**'s performance by walking you through the main concepts.
 
 ### Block-distributed approach
 
@@ -541,7 +556,7 @@ How is a mesh read in parallel?
 In this section we will study the block-distributed approach will having a look at how a parallel mesh read is done.
 We will do this as an interactive game. Some of you have a number on your table.
 This number represents the identifier of an MPI rank.
-On the front table, we have laid out tokens representating mesh data stored in a file.
+On the front table, we have laid out tokens representing mesh data stored in a file.
 In ascending order, a representative of each MPI rank will collect an equitably distributed number of tokens.
 
 *<span style="color:olivedrab;">
@@ -556,7 +571,7 @@ Now you can flip you tokens.
 What particularity of the block-distributed approach can you see?
 </span>*
 
-Ask the other representatives of MPI ranks which tokens they have. By doing so, you will notice that the number identifing each token appears only once.
+Ask the other representatives of MPI ranks which tokens they have. By doing so, you will notice that the number identifying each token appears only once.
 This **unicity** turns out to be handy for parallel [data sorting](https://en.wikipedia.org/wiki/Bucket_sort), a core tool for parallel algorithms.
 You might also have noticed that the tokens are sorted in **ascending order** over the MPI ranks.
 
@@ -564,36 +579,36 @@ You might also have noticed that the tokens are sorted in **ascending order** ov
 What do this numbers on your tokens represent?
 </span>*
 
-### Global IDs and the partitionned approach
+### Global IDs and the partitioned approach
 
-Each piece of data (here a mesh element) is asociated to a unique number representing it in the data set over all MPI ranks.
+Each piece of data (here a mesh element) is associated to a unique number representing it in the data set over all MPI ranks.
 
-To be used in a numerical simulation, the mesh we just read need to be partitionned.
-We will hand out tokens of an other color representing the elements of the partitionned mesh.
+To be used in a numerical simulation, the mesh we just read need to be partitioned.
+We will hand out tokens of an other color representing the elements of the partitioned mesh.
 
 *<span style="color:olivedrab;">
-What is the particularity of the token distribution for a partitionned mesh?
+What is the particularity of the token distribution for a partitioned mesh?
 </span>*
 
 Ask the other representatives of MPI ranks which tokens they have. There have no elements in common.
 Now have a look at the global identifiers of the vertices on the elements on your token.
-It turns out that on the partition boundaries of the partitionned mesh there are vertices in common.
+It turns out that on the partition boundaries of the partitioned mesh there are vertices in common.
 
-A mesh in the **partitionned** approach is a coherent sub-mesh on each MPI rank while in the **block-distributed** approach the vertices on a given MPI rank are most often not linked to the mesh elements on that MPI rank.
+A mesh in the **partitioned** approach is a coherent sub-mesh on each MPI rank while in the **block-distributed** approach the vertices on a given MPI rank are most often not linked to the mesh elements on that MPI rank.
 
 *Remark : We never asked you to discard the tokens of the block-distributed vision. This is because they will coexist in memory.*
 
-### A parallel context with a multisequential algorithm
+### A parallel context with a multi-sequential algorithm
 
-Now that the mesh is partitionned, it is time to work with it.
-The representatives of each MPI rank will compute for each the elements of the tokens in their pocession the maximum value of the vertices of that element.
+Now that the mesh is partitioned, it is time to work with it.
+The representatives of each MPI rank will compute for each the elements of the tokens in their possession the maximum value of the vertices of that element.
 
 *<span style="color:olivedrab;">
 Was this a parallely well balanced task?
 </span>*
 
-Yes, since the mesh partitionning allowed each MPI rank to have an equally distributed number of elements of the mesh.
-Still, this is a multisequential algorithm comparable to the one formerly done for the MCC feature.
+Yes, since the mesh partitioning allowed each MPI rank to have an equally distributed number of elements of the mesh.
+Still, this is a multi-sequential algorithm comparable to the one formerly done for the MCC feature.
 
 *<span style="color:olivedrab;">
 Why bother to change for a load balanced algorithm?
@@ -601,11 +616,15 @@ Why bother to change for a load balanced algorithm?
 
 ### A parallel context with a load balanced algorithm
 
-Now we ask you to compute $\sum_{i=0}^{n\_element\_vertices} (\sqrt{vtx\_global\_number[i]} + \prod_{i=0}^{42} vtx\_global\_number[i]^{9})$ for each the elements of the tokens.
-This task only needs to be done the MPI ranks pocessing the elements in the lower half of the mesh.
+Now we ask you to compute the following quantity for each element/token $e$ in your possession:
+$$
+\sum_{i=0}^{n} \left( \sqrt{v_i} + \prod_{j=0}^{n} \left(42 + \frac{v_i}{v_j} \right) \right),
+$$
+where $n$ designates the number of vertices in $e$, and $v_i$ the global id of the $i$-th vertex of $e$.
+This task only needs to be done the MPI ranks possessing the elements in the lower half of the mesh.
 
 *<span style="color:olivedrab;">
-Whould you rather charge this task with representatives of other ranks or do it on your own while they have nothing to do?
+Would you rather charge this task with representatives of other ranks or do it on your own while they have nothing to do?
 </span>*
 
 To do such a tedious task, you'd like to get your fellow MPI rank representatives to work.
@@ -625,29 +644,29 @@ In most cases, this approach is a winner !
 
 ##### **<span style="color:darkorange;">Note</span>**
 *<span style="color:darkorange;">
-Advanced feature. Used in ParaDiGM algorithm development.
+Advanced feature. Used in **ParaDiGM** algorithm development.
 </span>*
 
 As you have seen with the game earlier, the block-distributed and partitioned point of view are key in parallel load balanced algorithms.
 That for it is paramount to be able to easily switch between those two.
 `PDM_part_to_block` and `PDM_block_to_part` are low level tools to wrap the creation of MPI communication graphs.
 
-It arised that we needed a function to link partitions in order to exchange fields.
-This particularly is at stake at the end ParaDiGM algorithms to make a link between the partitionned input mesh data and the partitionned output mesh data.
+It arose that we needed a function to link partitions in order to exchange fields.
+This particularly is at stake at the end **ParaDiGM** algorithms to make a link between the partitioned input mesh data and the partitioned output mesh data.
 This is the `PDM_part_to_part` function. You will use it at the end of the day in the last exercise.
 
 ### Preconditioning geometric algorithms using trees
 
 ##### **<span style="color:darkorange;">Note</span>**
 *<span style="color:darkorange;">
-Advanced feature. Used in ParaDiGM algorithm development.
+Advanced feature. Used in **ParaDiGM** algorithm development.
 </span>*
 
 <img src="octree.png" width="150" align="left" style="margin: 0px 30px 0px 30px;">
 
 <br/>
 
-The performance in the features in ParaDiGM comes from the use of parallel search trees.
+The performance in the features in **ParaDiGM** comes from the use of parallel search trees.
 For search on points mainly octrees are used. The bounding box tree is used to store and to search on mesh elements.
 
 <br/><br/>
@@ -688,14 +707,14 @@ This feature will be explored in the first exercise of this training.
 
 ##### **<span style="color:darkorange;">Note</span>**
 *<span style="color:darkorange;">
-Beta-feature. Still underconstruction. API might change.
+Beta-feature. Still under construction. API might change.
 </span>*
 
 <img src="part_extension.png" width="150" align="left" style="margin: 0px 30px 0px 30px;">
 
 <br/>
 
-- What ? To provide a topologically consistent mesh partition over an extended neighbourhood
+- What ? To provide a topologically consistent mesh partition over an extended neighborhood
 - What for ? Allows to parallelize numerical methods that would initially be complex parallelize (WENO/ENO, multislope, v4)
 
 <br/><br/>
@@ -765,7 +784,7 @@ You will explore this feature in the last exercise of this training.
 
 ##### **<span style="color:darkorange;">Note</span>**
 *<span style="color:darkorange;">
-Beta-feature. Still underconstruction. API might change.
+Beta-feature. Still under construction. API might change.
 </span>*
 
 <img src="isosurface.png" width="150" align="left" style="margin: 0px 30px 0px 30px;">
@@ -781,7 +800,7 @@ Beta-feature. Still underconstruction. API might change.
 
 ##### **<span style="color:darkorange;">Note</span>**
 *<span style="color:darkorange;">
-Beta-feature. Still underconstruction. API might change.
+Beta-feature. Still under construction. API might change.
 </span>*
 
 <img src="mesh_adaptation.png" width="150" align="left" style="margin: 0px 30px 0px 30px;">

@@ -521,7 +521,7 @@ Hints:
 Here you need to interpolate the node-based field from the source mesh onto the target points.
 That means for each target point computing the weighted average of the field on the vertices of the element it is located in.
 
-<img src="moyenne.png" width="200">
+<img src="04_zoom_cell.png" width="200">
 
 Each color on the picture above represents the weight associated to the red point in this pentagon.
 
@@ -963,3 +963,18 @@ Moment of truth!
 visu/SRC_MESH.case
 visu/TGT_MESH.case : is_located : points
 ```
+
+
+## <span style="color:red;">Images à intercaler?</span>
+
+partitioned source mesh
+<img src="01_part_src.png" width="400">
+
+partitioned target cloud
+<img src="02_part_tgt.png" width="400">
+
+localization
+<img src="03_localization.png" width="400">
+
+interpolated field
+<img src="05_interpolated.png" width="400">

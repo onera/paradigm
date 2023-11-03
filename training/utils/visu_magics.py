@@ -15,6 +15,92 @@ def nice_view(plotter):
     else:
       plotter.view_xy()
 
+def read_geom(filename):
+  import re
+  import numpy as np
+  coord    = None
+  face_vtx = []
+  n_elt_type = dict()
+
+  with open(filename, "r") as f:
+    while True:
+      line = f.readline()
+      if line == "": break
+
+      match = re.search("coordinates", line)
+      if match is not None:
+        n_vtx = int(f.readline())
+        points = np.empty((n_vtx, 3), dtype=float)
+        for j in range(3):
+          for i in range(n_vtx):
+            points[i,j] = float(f.readline())
+        coord = points
+
+      for kw in ["point", "tria3", "quad4"]:
+        match = re.search(kw, line)
+        if match is not None:
+          n_elt = int(f.readline())
+          n_elt_type[kw] = n_elt
+          for i in range(n_elt):
+            vertices = [int(a)-1 for a in f.readline().split()]
+            face_vtx.append(vertices)
+          break
+
+      match = re.search("nsided", line)
+      if match is not None:
+        n_elt = int(f.readline())
+        n_elt_type["nsided"] = n_elt
+        for i in range(n_elt):
+          f.readline()
+
+        for i in range(n_elt):
+          vertices = [int(a)-1 for a in f.readline().split()]
+          face_vtx.append(vertices)
+
+  return {"points": coord, "face_vtx": face_vtx, "n_elt_type": n_elt_type}
+
+
+def read_node_scalar(filename, n_node):
+  import re
+  import numpy as np
+  values = None
+  with open(filename, "r") as f:
+    while True:
+      line = f.readline()
+      if line == "": break
+      match = re.search("coordinates", line)
+      if match is not None:
+        values = np.empty(n_node, dtype=float)
+        for i in range(n_node):
+          values[i] = float(f.readline())
+
+  return values
+
+def read_element_scalar(filename, n_elt_type):
+  import re
+  import numpy as np
+  tn_elt = 0
+  for kw in n_elt_type:
+    tn_elt += n_elt_type[kw]
+  values = np.empty(tn_elt, dtype=float)
+  idx = 0
+  with open(filename, "r") as f:
+    while True:
+      line = f.readline()
+      if line == "": break
+
+      for kw in n_elt_type:
+        match = re.search(kw, line)
+        if match is not None:
+          n_elt = n_elt_type[kw]
+          for i in range(n_elt):
+            values[idx] = float(f.readline())
+            idx += 1
+
+  return values
+
+
+
 
 def visu_n_files(files,
                  fields=[""],
