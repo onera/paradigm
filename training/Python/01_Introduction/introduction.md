@@ -212,7 +212,26 @@ This means that if you need to do an interpolation operation out of a coupling s
 
 ### Python/CGNS interface : **MAIA**
 
-TO DO
+This work is being carried out Julien Coulet, Berenger Berthoul, Clément Bénazet and Bruno Maugars.
+
+- What for?
+
+Pre- and Post-processing library for users in applied departments working with the Python/[CGNS](https://cgns.github.io/CGNS_docs_current/sids/index.html) framework.
+Aiming a complete parallel workflow, [**MAIA**](https://numerics.gitlab-pages.onera.net/mesh/maia/dev/index.html) proposes an extension of CGNS standard in order to manage in memory the block-distributed and partitionned approach within the parallel trees and the available features are powered by **ParaDiGM**.
+
+
+<img src="maia_code.png" width="600">
+
+In this script we can see calls to **MAIA** functions to read a CGNS tree, partition a mesh, do a wall distance computation and finally compute and save a slice on an ouput field. This has been done in but 7 function calls !
+
+- A strong link with **ParaDiGM**
+
+**MAIA** developers do not only use **ParaDiGM**, they strongly contribute to it in terms of development and by providing a new range of users thus test cases to make the code more robust.
+
+- Where ?
+
+  - Installed with in eslA software suite (ONERA users only)
+  - https://gitlab.onera.net/numerics/mesh/maia (ONERA users only)
 
 ### Use of low level features : MCC in **CEDRE**
 
@@ -474,7 +493,7 @@ How many tokens will each rank get?
 </span>*
 
 Once each MPI rank has read the mesh data assigned to them, the parallel mesh read is completed.
-They way the data is distributed is what we call *block-distributed*.
+They way the data is distributed is what we call **block-distributed**.
 Now you can flip you tokens.
 
 *<span style="color:olivedrab;">
@@ -482,7 +501,8 @@ What particularity of the block-distributed approach can you see?
 </span>*
 
 Ask the other representatives of MPI ranks which tokens they have. By doing so, you will notice that the number identifing each token appears only once.
-This *unicity* turns out to be handy for parallel data sorting, a core tool for parallel algorithms.
+This **unicity** turns out to be handy for parallel [data sorting](https://en.wikipedia.org/wiki/Bucket_sort), a core tool for parallel algorithms.
+You might also have noticed that the tokens are sorted in **ascending order** over the MPI ranks.
 
 *<span style="color:olivedrab;">
 What do this numbers on your tokens represent?
@@ -503,7 +523,7 @@ Ask the other representatives of MPI ranks which tokens they have. There have no
 Now have a look at the global identifiers of the vertices on the elements on your token.
 It turns out that on the partition boundaries of the partitionned mesh there are vertices in common.
 
-A mesh in the *partitionned* approach is a coherent sub-mesh on each MPI rank while in the *block-distributed* approach the vertices on a given MPI rank are most often not linked to the mesh elements on that MPI rank.
+A mesh in the *partitionned* approach is a coherent sub-mesh on each MPI rank while in the **block-distributed** approach the vertices on a given MPI rank are most often not linked to the mesh elements on that MPI rank.
 
 *Remark : We never asked you to discard the tokens of the block-distributed vision. This is because they will coexist in memory.*
 
