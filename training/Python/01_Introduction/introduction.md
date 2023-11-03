@@ -271,13 +271,16 @@ Since the functions needed to develop this algorithm were (almost) present in **
   - `PDM_mesh_intersection` to operate the masking mesh intersection with the background volume mesh
   - `PDM_part_to_part` to change data between those meshes
 
+
+<img src="logo_modethec.png" align=right style="margin: 0px 50px;" width="100">
+
 ### Modernizing an existing code : **MoDeTheC**
 
 This work is being carried out by Nicolas Dellinger.
 
 - What for?
 
-**MoDeTheC**  is a software for simulating the thermal degradation of materials written in Fortran.
+**MoDeTheC** is a software for simulating heat and mass transfers in anisotropic reactive porous materials written in Fortran.
 
 - How was it formerly done ?
 
@@ -285,11 +288,11 @@ Before the modernization task, it was a multi-thread (OpenMP) code.
 
 - Why use **ParaDiGM** ?
 
-Using a shared tool, allows significant time savingin the parallelization process.
+Using a shared tool, allows significant time saving in the parallelization process.
 
 - Which **ParaDiGM** features are used ?
 
-Incrementally features of **ParaDiGM** were added while ensuring a minimum of non-regression.
+Incrementally features of ParaDiGM were added while ensuring a minimum of non-regression.
 Over the period September 2022 to April 2023, which marks the first parallel calculation, the following features have been added to the code:
   - `PDM_mesh_location`
   - `PDM_part_to_part`
@@ -300,7 +303,7 @@ Over the period September 2022 to April 2023, which marks the first parallel cal
   - `PDM_(part_)mesh_nodal*`
   - `PDM_part_extension`
   - `PDM_dist_cloud_surf`
-Later the following features have been added : `PDM_closest_points` and `PDM_extract_part`.
+Later the following features have been added : `PDM_closest_points`, `PDM_extract_part`, `PDM_multipart` and `PDM_dcube_gen`.
 
 - A strong link with **ParaDiGM**
 
