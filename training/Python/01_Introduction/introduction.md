@@ -273,15 +273,68 @@ Since the functions needed to develop this algorithm were (almost) present in **
 
 ### Modernizing an existing code : **MoDeTheC**
 
-TO DO
+This work is being carried out by Nicolas Dellinger.
+
+- What for?
+
+**MoDeTheC**  is a software for simulating the thermal degradation of materials written in Fortran.
+
+- How was it formerly done ?
+
+Before the modernization task, it was a multi-thread (OpenMP) code.
+
+- Why use **ParaDiGM** ?
+
+Using a shared tool, allows significant time savingin the parallelization process.
+
+- Which **ParaDiGM** features are used ?
+
+Incrementally features of **ParaDiGM** were added while ensuring a minimum of non-regression.
+Over the period September 2022 to April 2023, which marks the first parallel calculation, the following features have been added to the code:
+  - `PDM_mesh_location`
+  - `PDM_part_to_part`
+  - `PDM_mesh_nodal*`
+  - `PDM_part`
+  - `PDM_gnum`
+  - `PDM_renum_hpc`
+  - `PDM_(part_)mesh_nodal*`
+  - `PDM_part_extension`
+  - `PDM_dist_cloud_surf`
+Later the following features have been added : `PDM_closest_points` and `PDM_extract_part`.
+
+- A strong link with **ParaDiGM**
+
+Aware of the workload of the development team, Nicolas Dellinger did many developments to set up some missing Fortran interfaces.
 
 ### Creating a new code : **SoNICS**
 
-TO DO
+This work is being carried out as a collaboration between ONERA And Safran.
+
+- What for?
+
+Software for aerodynamical finite volume (node-based and cell-centered) simulations of the Navier-Stockes equations on structured and unstructured meshes.
+Successor to **elsA** based on an innovative architecture for current and future hybrid hardware.
+
+- A strong link with **ParaDiGM**
+
+**SoNICS** developers do not only use **ParaDiGM**, they strongly contribute to it. Since the aim is to share expertise and development of parallel algorithms, when new features can be used outside the context of **SoNICS**, its developers code it in a generical way in **ParaDiGM**.
+
+- Which **ParaDiGM** features are used ?
+
+  - for pre-processing : partitioning and renumbering
+  - for co-processing : computation of spatial interpolation weights  (ex: for chimera methods) and wall distance computations for specific surface torbomachinery conditions (ex: mixing plane, chorochronic)
+  - for post-processing : extraction of mesh partition and iso-surface computation
+  - strongly interessed in parallel mesh adaptation !
 
 ### Use in legacy codes
 
-pypart via elsA
+Let's have a look a the dependencies of a legacy code like **elsA**.
+
+<img src="elsA.png" width="600">
+
+On this figure, it is clear that there is a direct dependency to ParaDiGM function calls in the software itself.
+We can see that **elsA** has a dependency to **MAIA** which we mentionned earlier.
+Moreover, the tool ETC relies on ppart which itself relies on the mesh partitionning features of ParaDiGM.
 
 ## Installation Instructions
 
