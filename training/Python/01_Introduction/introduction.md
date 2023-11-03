@@ -212,7 +212,7 @@ This means that if you need to do an interpolation operation out of a coupling s
 
 ### Python/CGNS interface : **MAIA**
 
-This work is being carried out Julien Coulet, Berenger Berthoul, Clément Bénazet and Bruno Maugars.
+This work is being carried out by Julien Coulet, Berenger Berthoul, Clément Bénazet and Bruno Maugars.
 
 - What for?
 
@@ -523,7 +523,7 @@ Ask the other representatives of MPI ranks which tokens they have. There have no
 Now have a look at the global identifiers of the vertices on the elements on your token.
 It turns out that on the partition boundaries of the partitionned mesh there are vertices in common.
 
-A mesh in the *partitionned* approach is a coherent sub-mesh on each MPI rank while in the **block-distributed** approach the vertices on a given MPI rank are most often not linked to the mesh elements on that MPI rank.
+A mesh in the **partitionned** approach is a coherent sub-mesh on each MPI rank while in the **block-distributed** approach the vertices on a given MPI rank are most often not linked to the mesh elements on that MPI rank.
 
 *Remark : We never asked you to discard the tokens of the block-distributed vision. This is because they will coexist in memory.*
 
