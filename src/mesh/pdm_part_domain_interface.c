@@ -2187,6 +2187,9 @@ PDM_part_domain_interface_to_domain_interface
   int i_rank;
   PDM_MPI_Comm_rank(dom_intrf->comm, &i_rank);
 
+
+  log_trace("PDM_part_domain_interface_to_domain_interface \n");
+
   int n_part_loc_all_domain = 0;
   for(int i_dom = 0; i_dom < dom_intrf->n_domain; ++i_dom) {
     n_part_loc_all_domain += n_part[i_dom];
@@ -2258,7 +2261,7 @@ PDM_part_domain_interface_to_domain_interface
                                       &pinterface_ids_idx,
                                       &pinterface_dom);
 
-        if(0 == 1) {
+        if(1 == 1) {
           PDM_log_trace_array_int (pinterface_sgn     ,   ln_interface, "pinterface_sgn      ::");
           PDM_log_trace_array_int (pinterface_sens    ,   ln_interface, "pinterface_sens     ::");
           PDM_log_trace_array_int (pinterface_dom     , 2*ln_interface, "pinterface_dom      ::");
@@ -2476,7 +2479,7 @@ PDM_part_domain_interface_to_domain_interface
       n_data += dblk_strid[i];
     }
 
-    if(0 == 1) {
+    if(1 == 1) {
       PDM_log_trace_array_int (dblk_strid   , n_gnum, "dblk_strid    (unique)::");
       PDM_log_trace_array_long(dentity1_gnum, n_data, "dentity1_gnum (unique)::");
       PDM_log_trace_array_int (dentity1_sgn , n_data, "dentity1_sgn  (unique)::");
@@ -2495,7 +2498,7 @@ PDM_part_domain_interface_to_domain_interface
         int sgn2 = dentity1_sgn[idx_read+1];
 
         int sens1 = dentity1_sens[idx_read  ];
-        // int sens2 = dentity1_sens[idx_read+1];
+        int sens2 = dentity1_sens[idx_read+1];
 
         // assert(sens1 == sens2);
 
@@ -2515,15 +2518,23 @@ PDM_part_domain_interface_to_domain_interface
           dentity1_dom[idx_read  ] = dom2;
           dentity1_dom[idx_read+1] = dom1;
 
+          dentity1_sens[idx_read  ] = sens2;
+          dentity1_sens[idx_read+1] = sens1;
+
           gnum1 = dentity1_gnum[idx_read  ];
           gnum2 = dentity1_gnum[idx_read+1];
 
           dom1 = dentity1_dom[idx_read  ];
           dom2 = dentity1_dom[idx_read+1];
 
+          sens1 = dentity1_sens[idx_read  ];
+          sens2 = dentity1_sens[idx_read+1];
+
         }
-        dinterface_ids[i_interface][2*i  ] =         gnum1;
-        dinterface_ids[i_interface][2*i+1] = sens1 * gnum2;
+        // dinterface_ids[i_interface][2*i  ] =         gnum1;
+        // dinterface_ids[i_interface][2*i+1] = sens1 * gnum2;
+        dinterface_ids[i_interface][2*i  ] = sens1 * gnum1;
+        dinterface_ids[i_interface][2*i+1] = sens2 * gnum2;
         // dinterface_ids[i_interface][2*i+1] = gnum2;
 
         dinterface_dom[i_interface][2*i  ] = dom1;
@@ -2542,6 +2553,8 @@ PDM_part_domain_interface_to_domain_interface
     free(dblk_strid);
     free(stride_one);
 
+    PDM_log_trace_array_long(dinterface_ids[i_interface], 2 * dinterface_dn[i_interface], "PDM_part_domain_interface_to_domain_interface : dinterface_ids ::");
+
     PDM_part_to_block_free(ptb);
 
   }
@@ -2559,6 +2572,8 @@ PDM_part_domain_interface_to_domain_interface
   free(interface_sgn             );
   free(interface_sens            );
   free(interface_dom             );
+
+  log_trace("PDM_part_domain_interface_to_domain_interface end\n");
 
 }
 
@@ -2579,6 +2594,7 @@ PDM_part_domain_interface_add
  int                            connectivity_is_signed
 )
 {
+  log_trace("PDM_part_domain_interface_to_domain_interface %i to %i \n", interface_kind1, interface_kind2);
   int i_rank;
   PDM_MPI_Comm_rank(dom_intrf->comm, &i_rank);
 
@@ -2835,6 +2851,8 @@ PDM_part_domain_interface_add
 
 
   PDM_domain_interface_free(ditrf);
+
+  log_trace("PDM_part_domain_interface_to_domain_interface %i to %i \n", interface_kind1, interface_kind2);
 
 }
 
