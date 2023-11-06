@@ -658,6 +658,7 @@ You can now initiate the exchange of the interpolated field you just computed.
   // Initiate exchange of second field
   int request2 = -1;
   double **tgt_recv_field2 = NULL;
+  // EXO
   PDM_part_to_part_iexch(ptp,
                          PDM_MPI_COMM_KIND_P2P,
                          PDM_STRIDE_CST_INTERLACED,

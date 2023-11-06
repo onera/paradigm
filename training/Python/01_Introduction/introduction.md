@@ -553,7 +553,7 @@ The aim of this section is to help you understand the reason for the **ParaDiGM*
 How is a mesh read in parallel?
 </span>*
 
-In this section we will study the block-distributed approach will having a look at how a parallel mesh read is done.
+In this section we will study the block-distributed approach by having a look at how a mesh is read in parallel.
 We will do this as an interactive game. Some of you have a number on your table.
 This number represents the identifier of an MPI rank.
 On the front table, we have laid out tokens representing mesh data stored in a file.
@@ -564,8 +564,8 @@ How many tokens will each rank get?
 </span>*
 
 Once each MPI rank has read the mesh data assigned to them, the parallel mesh read is completed.
-They way the data is distributed is what we call **block-distributed**.
-Now you can flip you tokens.
+The way the data is distributed is what we call **block-distributed**.
+Now you can flip your tokens.
 
 *<span style="color:olivedrab;">
 What particularity of the block-distributed approach can you see?
@@ -583,16 +583,16 @@ What do this numbers on your tokens represent?
 
 Each piece of data (here a mesh element) is associated to a unique number representing it in the data set over all MPI ranks.
 
-To be used in a numerical simulation, the mesh we just read need to be partitioned.
+To be used in a numerical simulation, the mesh we just read needs to be partitioned.
 We will hand out tokens of an other color representing the elements of the partitioned mesh.
 
 *<span style="color:olivedrab;">
 What is the particularity of the token distribution for a partitioned mesh?
 </span>*
 
-Ask the other representatives of MPI ranks which tokens they have. There have no elements in common.
+Ask the other representatives of MPI ranks which tokens they have. They have no elements in common.
 Now have a look at the global identifiers of the vertices on the elements on your token.
-It turns out that on the partition boundaries of the partitioned mesh there are vertices in common.
+It turns out that on partition boundaries of the partitioned mesh there are vertices in common.
 
 A mesh in the **partitioned** approach is a coherent sub-mesh on each MPI rank while in the **block-distributed** approach the vertices on a given MPI rank are most often not linked to the mesh elements on that MPI rank.
 
@@ -601,20 +601,20 @@ A mesh in the **partitioned** approach is a coherent sub-mesh on each MPI rank w
 ### A parallel context with a multi-sequential algorithm
 
 Now that the mesh is partitioned, it is time to work with it.
-The representatives of each MPI rank will compute for each the elements of the tokens in their possession the maximum value of the vertices of that element.
+The representatives of each MPI rank will compute for each of the elements of the tokens in their possession the maximum value of the vertices of that element.
 
 *<span style="color:olivedrab;">
-Was this a parallely well balanced task?
+Was this a well-balanced parallel task?
 </span>*
 
 Yes, since the mesh partitioning allowed each MPI rank to have an equally distributed number of elements of the mesh.
 Still, this is a multi-sequential algorithm comparable to the one formerly done for the MCC feature.
 
 *<span style="color:olivedrab;">
-Why bother to change for a load balanced algorithm?
+Why bother to change for a load-balanced algorithm?
 </span>*
 
-### A parallel context with a load balanced algorithm
+### A parallel context with a load-balanced algorithm
 
 Now we ask you to compute the following quantity for each element/token $e$ in your possession:
 $$
@@ -635,7 +635,7 @@ Is is worth to bring them the data they need to help you out rather than just to
 
 It turns out that if the workload is sufficient it is worth to do this communication to speed up the computation.
 This is the setting for most geometric operations.
-Even if the partitioning were already well balanced for the operation, the overload of the load balancing is minimal.
+Even if the partitioning was already well-balanced for the operation, the overload of the load balancing is minimal.
 In most cases, this approach is a winner !
 
 ## Features overview
@@ -647,9 +647,9 @@ In most cases, this approach is a winner !
 Advanced feature. Used in **ParaDiGM** algorithm development.
 </span>*
 
-As you have seen with the game earlier, the block-distributed and partitioned point of view are key in parallel load balanced algorithms.
+As you have seen with the game earlier, the *block-distributed* and *partitioned* point-of-views are key in parallel, load-balanced algorithms.
 That for it is paramount to be able to easily switch between those two.
-`PDM_part_to_block` and `PDM_block_to_part` are low level tools to wrap the creation of MPI communication graphs.
+`PDM_part_to_block` and `PDM_block_to_part` are low-level tools to wrap the creation of MPI communication graphs.
 
 It arose that we needed a function to link partitions in order to exchange fields.
 This particularly is at stake at the end **ParaDiGM** algorithms to make a link between the partitioned input mesh data and the partitioned output mesh data.
@@ -667,15 +667,15 @@ Advanced feature. Used in **ParaDiGM** algorithm development.
 <br/>
 
 The performance in the features in **ParaDiGM** comes from the use of parallel search trees.
-For search on points mainly octrees are used. The bounding box tree is used to store and to search on mesh elements.
+For search on points mainly octrees are used. The bounding-box tree is used to store and to search on mesh elements.
 
 <br/><br/>
 
 ### Parallel I/O
 
-When we talked about the reason to be of **ParaDiGM** earlier, we talked about **pario** for parallel I/O as a wrapping to MPI-IO.
+When we talked about **ParaDiGM**'s history earlier, we mentioned **pario** as a wrapping to MPI-IO for parallel I/O.
 Naturally, this feature is retained in the code. The parallel mesh writer in **ParaDiGM** is available for the Ensight format.
-It is used to write the mesh interfaces during coupling in **CWIPI** as well as writing output meshes in **CEDRE**.
+It is used to write the interpolated fields during coupling in **CWIPI** as well as writing output meshes and solutions in **CEDRE**.
 
 ### Partitioning
 
