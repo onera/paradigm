@@ -67,13 +67,13 @@ The Python API reinforces the notion of objects, and results are provided in the
 - https://gitlab.onera.net/numerics/mesh/paradigm (ONERA users only)
 - GitHub (in progress)
 
-## Extensions
+### Extensions
 
-TODO: ParaDiGMA
+The module ParaDiGMA contains somme advanced functionnalities. These functionnalities are stored into : 
 
-## Continuous integration
+- https://gitlab.onera.net/numerics/mesh/paradigma (ONERA users only)
 
-TODO
+In ParaDiGM, ParaDiGMA is a git submodule. By default, this module is not installed
 
 ## Releases
 
@@ -186,8 +186,10 @@ This is still a work in progress, so we welcome your comments and contributions!
 
 ## Application examples
 
+
 <span style="color:red">
   maybe revoir l'agencement des sections -> cf notebook d'intro CWIPI
+  TODO: A Déplacer après la description des fonctionnalités ? On parle de fonctionnalités qu'on n'a pas décrites
 </span>
 
 <img src="cwipiNew.svg" align=right style="margin: 0px 50px;" width="100">
@@ -284,6 +286,9 @@ Since the functions needed to develop this algorithm were (almost) present in **
   - `PDM_mesh_intersection` to operate the masking mesh intersection with the background volume mesh
   - `PDM_part_to_part` to change data between those meshes
 
+<span style="color:red">
+  Mentionner rapidement la liste des autres fonctionnalités haut niveau utilisées par CEDRE même mentionner plus bas pour les I/O
+</span>
 
 <img src="logo_modethec.png" align=right style="margin: 0px 50px;" width="180">
 
@@ -424,6 +429,10 @@ For further details about the install process of **ParaDiGM**, please refer to t
 
         - ON : PDM_g_num_t type is "long int"
         - OFF : PDM_g_num_t type is "int"
+
+ - **PDM_ENABLE_PDMA= <ON | OFF> (default : OFF)** : Enable ParaDiGMA installation
+
+        This option can activated if you have access to the git repository
 
  - **PDM_ENABLE_DOC= <ON | OFF> (default : OFF)** : Enable Documentation
 
