@@ -67,6 +67,14 @@ The Python API reinforces the notion of objects, and results are provided in the
 - https://gitlab.onera.net/numerics/mesh/paradigm (ONERA users only)
 - GitHub (in progress)
 
+## Extensions
+
+TODO: ParaDiGMA
+
+## Continuous integration
+
+TODO
+
 ## Releases
 
 The latest stable version is 2.4.0, released on November ??, 2023.
@@ -221,7 +229,6 @@ This work is being carried out by Julien Coulet, Berenger Berthoul, Clément Ben
 
 Pre- and Post-processing library for users in applied departments working with the Python/[CGNS](https://cgns.github.io/CGNS_docs_current/sids/index.html) framework.
 Aiming towards a complete parallel workflow, [**MAIA**](https://numerics.gitlab-pages.onera.net/mesh/maia/dev/index.html) proposes an extension of CGNS standard in order to manage in memory the block-distributed and partitioned approaches within the parallel trees and the available features are powered by **ParaDiGM**.
-
 
 <img src="maia_code.png" width="600">
 
@@ -420,15 +427,20 @@ For further details about the install process of **ParaDiGM**, please refer to t
 
  - **PDM_ENABLE_DOC= <ON | OFF> (default : OFF)** : Enable Documentation
 
-     prerequis (sphinx, sphinx fortran, ...)
+     Requirements : 
+        - Doxygen
+        - Breathe
+        - Sphinx
+        - sphinxcontrib-tikz sphinx-rtd-theme
+        - sphinx-fortran (only if fortran is enabled)
+
+     It is recommended not to generate the documentation but to consult it on gitlab or github.     
 
 ### CMake compiler options
 
 > **CC=<C compiler> CXX=<CXX compiler> FC=<Fortran compiler> cmake ...**
 
-or 
-
-> use the following CMake options:
+or use the following CMake options:
 
  - **CMAKE_C_COMPILER=\<C compiler\>**
  - **CMAKE_CXX_COMPILER=\<CXX compiler\>**
@@ -448,6 +460,17 @@ or
    Refer to FindMPI in the CMake documentation for more informations.
  -->
 ## Concepts and definition
+
+### 0-based/1-based
+
+- **0-based** : Numbering starts at 0 
+- **1-based** : Numbering starts at 1 
+
+### MPI
+
+- **comm** : MPI communicator given at the creation of a ParaDiGM object. Please note that all ParaDiGM functions require collective MPI communications. Please note that all ParaDiGM functions require collective MPI communications. Each MPI comm row must simultaneously call the functions linked to the feature to avoid deadlock.   
+- **i_rank** or **rank** : Curent rank mpi in **comm** (0-based)
+- **n_rank** : Size of **comm**  
 
 ### Mesh
 
@@ -812,6 +835,8 @@ Beta-feature. Still under construction. API might change.
 
 <br/><br/>
 
-# Exercise 0
+# ParaDiGM git clone + installation
+
+# Exercice 0
 
 You can now move on to [Exercise 0](./exercice_0.ipynb).
