@@ -2230,7 +2230,7 @@ PDM_domain_interface_translate_entity1_entity2
  int                   ***interface_dom_entity2
 )
 {
-  log_trace("PDM_domain_interface_translate_entity1_entity2 beg \n");
+  // log_trace("PDM_domain_interface_translate_entity1_entity2 beg \n");
   // TODO :
   //  -> reduce time by extracting dentity2_entity1_idx for only concerns interfaces
   //  -> Pour l'insant la reduction est faite en dehors (via PDM_dmesh_extract )
@@ -2278,7 +2278,7 @@ PDM_domain_interface_translate_entity1_entity2
     weight               [itrf] = (double      *) malloc( 2 * dn_interface[itrf] * sizeof(double     ));
     dn_interface_twice   [itrf] = 2*dn_interface[itrf];
 
-    if (1 == 1) {
+    if (0 == 1) {
       PDM_log_trace_array_long(interface_ids[itrf], 2 * dn_interface[itrf], "interface_ids:: ");
     }
 
@@ -3274,7 +3274,7 @@ PDM_domain_interface_translate_entity1_entity2
    */
 
   PDM_g_num_t **all_entity2_distribution = (PDM_g_num_t **) malloc(n_domain * sizeof(PDM_g_num_t *));
-  int         **dentity2_entity1_n       = (PDM_g_num_t **) malloc(n_domain * sizeof(int         *));
+  int         **dentity2_entity1_n       = (int         **) malloc(n_domain * sizeof(int         *));
   for (int i_domain = 0; i_domain < n_domain; i_domain++) {
     all_entity2_distribution[i_domain] = PDM_compute_entity_distribution(comm, dn_entity2[i_domain]);
 
@@ -3296,7 +3296,7 @@ PDM_domain_interface_translate_entity1_entity2
                                                                    n_domain,
                                             (const PDM_g_num_t **) all_entity2_distribution,
                                             (const PDM_g_num_t **) _interface_ids_entity2,
-                                            (const PDM_g_num_t  *) _interface_dn_entity2_twice,
+                                            (const int          *) _interface_dn_entity2_twice,
                                                                    n_interface,
                                                                    comm);
 
@@ -3946,7 +3946,7 @@ PDM_ddomain_interface_to_pdomain_interface
   PDM_UNUSED(entity_ln_to_gn);
   PDM_UNUSED(pditrf);
 
-  log_trace("PDM_ddomain_interface_to_pdomain_interface \n");
+  // log_trace("PDM_ddomain_interface_to_pdomain_interface \n");
 
   int i_rank = -1;
   PDM_MPI_Comm_rank(comm, &i_rank);
@@ -4078,7 +4078,7 @@ PDM_ddomain_interface_to_pdomain_interface
       stride_one           [itrf][2*k+1] = 1;
     }
 
-    if (1 == 1) {
+    if (0 == 1) {
       log_trace("Interface %d\n", itrf);
       PDM_log_trace_array_long(interface_ids[itrf], 2 * dn_interface[itrf], "shifted interface_ids    :: ");
       PDM_log_trace_array_long(interface_ids_shifted[itrf], 2*dn_interface[itrf], "shifted gnum    :: ");
@@ -4567,7 +4567,7 @@ PDM_ddomain_interface_to_pdomain_interface
     free(entity_itrf_sgn);
     free(pstride_one    );
 
-    if(1 == 1) {
+    if(0 == 1) {
       PDM_log_trace_array_int(blk_strid          ,     n_gnum_interf, "blk_strid           ::");
       PDM_log_trace_array_int(blk_entity_desc    , 3 * exch_size    , "blk_entity_desc     ::");
       PDM_log_trace_array_int(blk_entity_sens    ,     exch_size    , "blk_entity_sens     ::");
@@ -4967,7 +4967,7 @@ PDM_ddomain_interface_to_pdomain_interface
 
   free(max_per_domain);
   free(max_per_domain_loc);
-  log_trace("PDM_ddomain_interface_to_pdomain_interface end \n");
+  // log_trace("PDM_ddomain_interface_to_pdomain_interface end \n");
 
 }
 
@@ -5178,7 +5178,6 @@ PDM_domain_interface_make_flat_view
   PDM_g_num_t           ***entity_opp_gnum_out
 )
 {
-  log_trace("PDM_domain_interface_make_flat_view --> CAUTION TO SIGN DOUBT \n");
 
   int          *interface_dn  = NULL;
   PDM_g_num_t **interface_ids = NULL;
