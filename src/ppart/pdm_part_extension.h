@@ -81,7 +81,7 @@ PDM_part_extension_create
 
 /**
  *
- * \brief Compute a part extension structure
+ * \brief Compute extended partitions
  *
  * \param [in]   part_ext          \p PDM_part_extension_t structure instance
  *

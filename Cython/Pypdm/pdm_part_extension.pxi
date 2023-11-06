@@ -515,7 +515,7 @@ cdef class PartExtension:
   def compute(self):
     """
     compute()
-    Compute a part extension structure
+    Compute extended partitions
     """
     PDM_part_extension_compute(self._part_ext)
 

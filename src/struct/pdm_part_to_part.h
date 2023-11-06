@@ -78,7 +78,7 @@ typedef enum {
  * \param [in]   part1_to_part2_idx Index for Part1→Part2 mapping <br>
  *                                  (for each part, size : \p n_elt1 + 1)
  * \param [in]   part1_to_part2     Part1→Part2 mapping (global ids) <br>
- *                                  (for each part, size : \p part1_to_part2_idx[\p n_elt1] + 1)
+ *                                  (for each part, size : \p part1_to_part2_idx[\p n_elt1])
  * \param [in]   comm               MPI communicator
  *
  * \return   Initialized \ref PDM_part_to_part instance
@@ -733,8 +733,8 @@ PDM_part_to_part_reverse_irecv_post
  * \param [in]   s_data           Data size
  * \param [in]   part1_stride     Stride of Part1 data (according to \p t_part1_data_def)
  * \param [in]   part1_data       Part1 data           (according to \p t_part1_data_def)
- * \param [out]  part2_stride     Stride of Part2 data (order *given by gnum1_come_from* and *ref_lnum2* arrays)
- * \param [out]  part2_data       Part2 data           (order *given by gnum1_come_from* and *ref_lnum2* arrays)
+ * \param [out]  part2_stride     Stride of Part2 data (order given by *gnum1_come_from* and *ref_lnum2* arrays)
+ * \param [out]  part2_data       Part2 data           (order given by *gnum1_come_from* and *ref_lnum2* arrays)
  * \param [out]  request          Request
  *
  */

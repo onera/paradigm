@@ -67,33 +67,55 @@ Fortran API
   Initialization
   ~~~~~~~~~~~~~~
 
-  .. f:autosubroutine PDM_part_extension_create
+  .. f:autosubroutine:: PDM_part_extension_create
 
   Set inputs
   ~~~~~~~~~~
 
   .. f:autosubroutine PDM_part_extension_set_part
 
+  .. f:autosubroutine:: PDM_part_extension_connectivity_set
+
+  .. f:autosubroutine:: PDM_part_extension_vtx_coord_set
+
+  .. f:autosubroutine:: PDM_part_extension_ln_to_gn_set
+
+  .. f:autosubroutine:: PDM_part_extension_part_bound_graph_set
+
+  .. f:autosubroutine:: PDM_part_extension_group_set
+
   Perform exchange of extended partition
   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
   .. f:autosubroutine PDM_part_extension_compute
 
+  .. f:subroutine:: pdm_part_extension_compute(part_ext)
+
+    Compute extended partitions
+
+    :p c_ptr part_ext[in]: Part Extension instance
+
   Get outputs
   ~~~~~~~~~~~
 
-  .. f:autosubroutine PDM_part_extension_connectivity_get
+  .. f:autosubroutine:: PDM_part_extension_connectivity_get
 
-  .. f:autosubroutine PDM_part_extension_ln_to_gn_get
+  .. f:autosubroutine:: PDM_part_extension_ln_to_gn_get
 
-  .. f:autosubroutine PDM_part_extension_vtx_coord_get
+  .. f:autosubroutine:: PDM_part_extension_vtx_coord_get
 
-  .. f:autosubroutine PDM_part_extension_group_get
+  .. f:autosubroutine:: PDM_part_extension_group_get
 
   Finalize
   ~~~~~~~~
 
   .. f:autosubroutine PDM_part_extension_free
+
+  .. f:subroutine:: pdm_part_extension_free
+
+    Free a Part Extension structure
+
+    :p c_ptr part_ext[inout]: Part Extension instance
 
 .. ifconfig:: enable_fortran_doc == 'OFF'
 

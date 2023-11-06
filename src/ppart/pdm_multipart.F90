@@ -532,7 +532,7 @@ interface
     use iso_c_binding
     implicit none
 
-    type(c_ptr), value     :: multipart ! Pointer to PDM_multipart_t object
+    type(c_ptr), value     :: multipart ! Multipart instance
 
   end subroutine PDM_multipart_free
 
@@ -576,7 +576,7 @@ contains
     integer(c_int),            value   :: merge_blocks                  ! Merge or not the domains before splitting
     integer(c_int),            value   :: split_method                  ! Choice of method used to split the mesh
     integer(c_int),            value   :: part_size_method              ! Choice of homogeneous or heterogeneous partitions
-    double precision,          pointer :: part_fraction(:)              ! Weight (in %) of each partition in heterogeneous case
+    real(8),                   pointer :: part_fraction(:)              ! Weight (in %) of each partition in heterogeneous case
     integer(c_int),            value   :: comm                          ! MPI communicator
     integer(c_int),            value   :: owner                         ! Data ownership
     type(c_ptr)                        :: c_n_part         = C_NULL_PTR
@@ -609,7 +609,7 @@ contains
     use iso_c_binding
     implicit none
 
-    type(c_ptr),               value   :: multipart                            ! Pointer to PDM_multipart_t object
+    type(c_ptr),               value   :: multipart                            ! Multipart instance
     integer(c_int),            value   :: i_domain                             ! Id of domain which parameters apply (or -1 for all domains)
     character (len=*)                  :: renum_cell_method                    ! Choice of renumbering method for cells
     integer(kind=PDM_l_num_s), pointer :: renum_cell_properties(:)             ! Parameters used by cache-blocking method : [*n_cell_per_cache_wanted*, *is_asynchronous*, *is_vectorisation*, *n_vect_face*, *split_method*]
@@ -634,7 +634,7 @@ contains
     use iso_c_binding
     implicit none
 
-    type(c_ptr),      value  :: multipart        ! Pointer to PDM_multipart_t object
+    type(c_ptr),      value  :: multipart        ! Multipart instance
     integer(c_int),   value  :: i_domain         ! Id of domain which parameters apply (or -1 for all domains)
     character (len=*)        :: renum_vtx_method ! Choice of renumbering method for vertices
 
@@ -653,7 +653,7 @@ contains
     use iso_c_binding
     implicit none
 
-    type(c_ptr),    value  :: multipart   ! Pointer to PDM_multipart_t object
+    type(c_ptr),    value  :: multipart   ! Multipart instance
     integer(c_int), value  :: i_domain    ! Id of domain which parameters apply (or -1 for all domains)
     type(c_ptr)            :: pmesh_nodal ! Partitioned nodal mesh
     integer(c_int), value  :: ownership   ! Data ownership
@@ -684,7 +684,7 @@ contains
     use iso_c_binding
     implicit none
 
-    type(c_ptr)                        :: multipart          ! Pointer to PDM_multipart_t object
+    type(c_ptr)                        :: multipart          ! Multipart instance
     integer, intent(in)                :: i_domain           ! Id of domain
     integer, intent(in)                :: dn_cell            ! Number of distributed cells
     integer, intent(in)                :: dn_face            ! Number of distributed faces
@@ -695,7 +695,7 @@ contains
     integer(kind=PDM_g_num_s), pointer :: dface_cell(:)      ! Distributed face cell connectivity
     integer(kind=PDM_l_num_s), pointer :: dface_vtx_idx(:)   ! Distributed face to vertex connectivity index (size : ``dn_face`` + 1, numbering : 0 to n-1)
     integer(kind=PDM_g_num_s), pointer :: dface_vtx(:)       ! Distributed face to vertex connectivity (size : ``dface_vtx_idx(dn_face+1)``, numbering : 1 to n)
-    double precision,          pointer :: dvtx_coord(:,:)    ! Distributed vertex coordinates (shape = [3, ``dn_vtx``])
+    real(8),                   pointer :: dvtx_coord(:,:)    ! Distributed vertex coordinates (shape = [3, ``dn_vtx``])
     integer(kind=PDM_l_num_s), pointer :: dface_group_idx(:) ! Index of distributed faces list of each group (size = ``n_face_group`` + 1) or *null()*
     integer(kind=PDM_g_num_s), pointer :: dface_group(:)     ! Distributed faces list of each group or *null()* (size = ``dface_group_idx(n_face_group+1)``, numbering : 1 to n)
 
@@ -767,7 +767,7 @@ contains
     use iso_c_binding
     implicit none
 
-    type(c_ptr), value       :: multipart         ! Pointer to PDM_multipart_t object
+    type(c_ptr), value       :: multipart         ! Multipart instance
     integer,     intent(in)  :: i_domain          ! Domain identifier
     integer,     intent(in)  :: i_part            ! Partition identifier
     integer,     intent(out) :: n_cell            ! Number of cells
@@ -858,7 +858,7 @@ contains
     integer (kind = PDM_l_num_s), pointer :: face_part_bound_proc_idx(:)
     integer (kind = PDM_l_num_s), pointer :: face_part_bound_part_idx(:)
     integer (kind = PDM_l_num_s), pointer :: face_part_bound(:)
-    double precision,             pointer :: vtx(:,:)
+    real(8),                      pointer :: vtx(:,:)
     integer (kind = PDM_g_num_s), pointer :: vtx_ln_to_gn(:)
     integer (kind = PDM_l_num_s), pointer :: face_bound_idx(:)
     integer (kind = PDM_l_num_s), pointer :: face_bound(:)
@@ -1012,7 +1012,7 @@ contains
     use iso_c_binding
     implicit none
 
-    type(c_ptr),               value   :: multipart                  ! Pointer to PDM_multipart_t object
+    type(c_ptr),               value   :: multipart                  ! Multipart instance
     integer(c_int),            value   :: i_domain                   ! Domain identifier
     integer(c_int),            value   :: i_part                     ! Partition identifier
     integer(c_int),            value   :: connectivity_type          ! Connectivity type
@@ -1064,7 +1064,7 @@ contains
     use iso_c_binding
     implicit none
 
-    type(c_ptr),               value   :: multipart                      ! Pointer to PDM_multipart_t object
+    type(c_ptr),               value   :: multipart                      ! Multipart instance
     integer(c_int),            value   :: i_domain                       ! Domain identifier
     integer(c_int),            value   :: i_part                         ! Partition identifier
     integer(c_int),            value   :: entity_type                    ! Entity type
@@ -1099,7 +1099,7 @@ contains
     use iso_c_binding
     implicit none
 
-    type(c_ptr),               value   :: multipart                   ! Pointer to PDM_multipart_t object
+    type(c_ptr),               value   :: multipart                   ! Multipart instance
     integer(c_int),            value   :: i_domain                    ! Domain identifier
     integer(c_int),            value   :: i_part                      ! Partition identifier
     integer(c_int),            value   :: entity_type                 ! Entity type
@@ -1131,7 +1131,7 @@ contains
     use iso_c_binding
     implicit none
 
-    type(c_ptr),    value              :: multipart                            ! Pointer to PDM_multipart_t object
+    type(c_ptr),    value              :: multipart                            ! Multipart instance
     integer(c_int), value              :: i_domain                             ! Domain identifier
     integer(c_int), value              :: i_part                               ! Partition identifier
     integer(kind=PDM_l_num_s), pointer :: vtx_ghost_information(:)             ! Integer that gives the current priority of vertices on current partitions
@@ -1184,10 +1184,10 @@ contains
     use iso_c_binding
     implicit none
 
-    type(c_ptr),      value     :: multipart                ! Pointer to PDM_multipart_t object
+    type(c_ptr),      value     :: multipart                ! Multipart instance
     integer(c_int),   value     :: i_domain                 ! Domain identifier
     integer(c_int),   value     :: i_part                   ! Partition identifier
-    double precision, pointer   :: vtx_coord(:,:)           ! Vertex coordinates (shape = [3, ``n_vtx``])
+    real(8),          pointer   :: vtx_coord(:,:)           ! Vertex coordinates (shape = [3, ``n_vtx``])
     integer(c_int),   value     :: ownership                ! Data ownership
     integer(c_int)              :: n_vtx                    ! Number of vertices
     type(c_ptr)                 :: c_vtx_coord = C_NULL_PTR
@@ -1218,7 +1218,7 @@ contains
     use iso_c_binding
     implicit none
 
-    type(c_ptr),               value   :: multipart                     ! Pointer to PDM_multipart_t object
+    type(c_ptr),               value   :: multipart                     ! Multipart instance
     integer(c_int),            value   :: i_domain                      ! Domain identifier
     integer(c_int),            value   :: i_part                        ! Partition identifier
     integer(c_int)                     :: entity_type                   ! Type of mesh entity
@@ -1267,7 +1267,7 @@ contains
     use iso_c_binding
     implicit none
 
-    type(c_ptr),               value   :: multipart                     ! Pointer to PDM_multipart_t object
+    type(c_ptr),               value   :: multipart                     ! Multipart instance
     integer(c_int),            value   :: i_domain                      ! Domain identifier
     integer(c_int),            value   :: i_part                        ! Partition identifier
     integer(c_int)                     :: entity_type                   ! Type of mesh entity

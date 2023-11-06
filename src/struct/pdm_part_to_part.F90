@@ -97,44 +97,28 @@ bind (c, name='PDM_part_to_part_n_part_get')
 end subroutine PDM_part_to_part_n_part_get
 
 
-!>
-!!
-!! \brief Wait a partial asynchronus exchange
-!!
-!! \param [in]  ptp      Part to part structure
-!! \param [in]  request  Request
-!!
-!!
-
 subroutine PDM_part_to_part_iexch_wait (ptp,     &
                                         request) &
 bind (c, name='PDM_part_to_part_iexch_wait')
+  ! Finalize a non-blocking exchange (Part1→Part2)
   use iso_c_binding
   implicit none
 
-  type(c_ptr),    value :: ptp
-  integer(c_int), value :: request
+  type(c_ptr),    value :: ptp     ! Part-to-Part instance
+  integer(c_int), value :: request ! Request
 
 end subroutine PDM_part_to_part_iexch_wait
 
 
-!>
-!!
-!! \brief Wait a partial asynchronus exchange
-!!
-!! \param [in]  ptp      Part to part structure
-!! \param [in]  request  Request
-!!
-!!
-
 subroutine PDM_part_to_part_reverse_iexch_wait (ptp,     &
                                                 request) &
 bind (c, name='PDM_part_to_part_reverse_iexch_wait')
+  ! Finalize a non-blocking exchange (Part2→Part1)
   use iso_c_binding
   implicit none
 
-  type(c_ptr),    value :: ptp
-  integer(c_int), value :: request
+  type(c_ptr),    value :: ptp     ! Part-to-Part instance
+  integer(c_int), value :: request ! Request
 
 end subroutine PDM_part_to_part_reverse_iexch_wait
 
@@ -188,23 +172,6 @@ end interface
 contains
 
 
-!>
-!!
-!! \brief Create a partitions to partitions redistribution
-!!
-!! \param [out]  ptp                Initialized \ref PDM_part_to_part instance
-!! \param [in]   gnum_elt1          Element global number (size : \ref n_part1)
-!! \param [in]   n_elt1             Local number of elements (size : \ref n_part1)
-!! \param [in]   n_part1            Number of partition
-!! \param [in]   gnum_elt2          Element global number (size : \ref n_part2)
-!! \param [in]   n_elt2             Local number of elements (size : \ref n_part2)
-!! \param [in]   n_part2            Number of partition
-!! \param [in]   part1_to_part2_idx Index of data to send to gnum2 from gnum1
-!!                                  (for each part size : \ref n_elt1+1)
-!! \param [in]   part1_to_part2     Data to send to gnum2 from gnum1
-!! \param [in]   comm               MPI communicator
-!!
-
 subroutine PDM_part_to_part_create (ptp,                &
                                     gnum_elt1,          &
                                     n_elt1,             &
@@ -215,19 +182,20 @@ subroutine PDM_part_to_part_create (ptp,                &
                                     part1_to_part2_idx, &
                                     part1_to_part2,     &
                                     comm)
+  ! Create a Partition-to-Partition redistribution from global ids
   use iso_c_binding
   implicit none
 
-  type(c_ptr)                       :: ptp
-  type(PDM_pointer_array_t), pointer:: gnum_elt1
-  integer(pdm_l_num_s), pointer     :: n_elt1(:)
-  integer, intent(in)               :: n_part1
-  type(PDM_pointer_array_t), pointer:: gnum_elt2
-  integer(pdm_l_num_s), pointer     :: n_elt2(:)
-  integer, intent(in)               :: n_part2
-  type(PDM_pointer_array_t), pointer:: part1_to_part2_idx
-  type(PDM_pointer_array_t), pointer:: part1_to_part2
-  integer, intent(in)               :: comm
+  type(c_ptr)                       :: ptp                ! Part-to-part instance
+  type(PDM_pointer_array_t), pointer:: gnum_elt1          ! Element global ids in Part1 (size : ``n_part1``)
+  integer(pdm_l_num_s), pointer     :: n_elt1(:)          ! Local number of elements in Part1 (size : ``n_part1``)
+  integer, intent(in)               :: n_part1            ! Number of partitions in Part1
+  type(PDM_pointer_array_t), pointer:: gnum_elt2          ! Element global ids in Part2 (size : ``n_part2``)
+  integer(pdm_l_num_s), pointer     :: n_elt2(:)          ! Local number of elements in Part2 (size : ``n_part2``)
+  integer, intent(in)               :: n_part2            ! Number of partitions in Part2
+  type(PDM_pointer_array_t), pointer:: part1_to_part2_idx ! Index for Part1→Part2 mapping (for each part, size : ``n_elt1`` + 1)
+  type(PDM_pointer_array_t), pointer:: part1_to_part2     ! Part1→Part2 mapping (global ids) (for each part, size : ``part1_to_part2_idx(n_elt1 + 1)``)
+  integer, intent(in)               :: comm               ! MPI communicator
 
   integer(c_int)                    :: c_comm
 
@@ -395,23 +363,6 @@ subroutine PDM_part_to_part_irecv_raw (ptp,        &
 end subroutine PDM_part_to_part_irecv_raw
 
 
-!>
-!!
-!! \brief Initialize a partial asynchronus exchange
-!!
-!! \param [in]   ptp              Part to part structure
-!! \param [in]   k_comm           Kind of MPI communication
-!! \param [in]   t_stride         Kind of stride
-!! \param [in]   t_part1_data_def Kind of part1 data definition
-!! \param [in]   cst_stride       Constant stride
-!! \param [in]   part1_stride     Stride of partition 1 data
-!! \param [in]   part1_data       Partition 1 data
-!! \param [out]  part2_stride     Stride of partition 2 data (order given by gnum1_come_from and ref_lnum2 arrays)
-!! \param [out]  part2_data       Partition 2 data (order given by gnum1_come_from and ref_lnum2 arrays)
-!! \param [out]  request          Request
-!!
-!!
-
 subroutine PDM_part_to_part_iexch (ptp,              &
                                    k_comm,           &
                                    t_stride,         &
@@ -422,19 +373,20 @@ subroutine PDM_part_to_part_iexch (ptp,              &
                                    part2_stride,     &
                                    part2_data,       &
                                    request)
+  ! Initiate a non-blocking exchange (Part1→Part2)
   use iso_c_binding
   implicit none
 
-  type(c_ptr), value                :: ptp
-  integer, intent(in)               :: k_comm
-  integer, intent(in)               :: t_stride
-  integer, intent(in)               :: t_part1_data_def
-  integer, intent(in)               :: cst_stride
-  type(PDM_pointer_array_t), pointer :: part1_stride
-  type(PDM_pointer_array_t), pointer :: part1_data
-  type(PDM_pointer_array_t), pointer :: part2_stride
-  type(PDM_pointer_array_t), pointer :: part2_data
-  integer, intent(out)              :: request
+  type(c_ptr), value                 :: ptp              ! Part-to-part instance
+  integer, intent(in)                :: k_comm           ! Kind of MPI communication
+  integer, intent(in)                :: t_stride         ! Kind of stride
+  integer, intent(in)                :: t_part1_data_def ! Kind of Part1 data definition
+  integer, intent(in)                :: cst_stride       ! Constant stride
+  type(PDM_pointer_array_t), pointer :: part1_stride     ! Stride of Part1 data
+  type(PDM_pointer_array_t), pointer :: part1_data       ! Part1 data
+  type(PDM_pointer_array_t), pointer :: part2_stride     ! Stride of Part2 data
+  type(PDM_pointer_array_t), pointer :: part2_data       ! Part2 data
+  integer, intent(out)               :: request          ! Request
 
   integer                           :: n_part1
   integer                           :: n_part2
@@ -603,21 +555,6 @@ subroutine PDM_part_to_part_iexch (ptp,              &
 
 end subroutine PDM_part_to_part_iexch
 
-!>
-!!
-!! \brief Initialize a partial reverse asynchronus exchange
-!! \param [in]   ptp              Part to part structure
-!! \param [in]   k_comm           Kind of MPI communication
-!! \param [in]   t_stride         Kind of stride
-!! \param [in]   t_part2_data_def Kind of part2 data definition
-!! \param [in]   cst_stride       Constant stride
-!! \param [in]   s_data           Data size
-!! \param [in]   part2_stride     Stride of partition 1 data (Accordding to t_part2_data_def)
-!! \param [in]   part2_data       Partition 1 data (Accordding to t_part2_data_def)
-!! \param [out]  part1_stride     Stride of partition 2 data (order given by part1_to_part2)
-!! \param [out]  part1_data       Partition 2 data (order given by part1_to_part2)
-!! \param [out]  request          Request
-!!
 
 subroutine PDM_part_to_part_reverse_iexch (ptp,              &
                                            k_comm,           &
@@ -629,19 +566,20 @@ subroutine PDM_part_to_part_reverse_iexch (ptp,              &
                                            part1_stride,     &
                                            part1_data,       &
                                            request)
+  ! Initiate a non-blocking exchange (Part2→Part1)
   use iso_c_binding
   implicit none
 
-  type(c_ptr), value                :: ptp
-  integer, intent(in)               :: k_comm
-  integer, intent(in)               :: t_stride
-  integer, intent(in)               :: t_part2_data_def
-  integer, intent(in)               :: cst_stride
-  type(PDM_pointer_array_t), pointer:: part2_stride
-  type(PDM_pointer_array_t), pointer:: part2_data
-  type(PDM_pointer_array_t), pointer:: part1_stride
-  type(PDM_pointer_array_t), pointer:: part1_data
-  integer, intent(out)              :: request
+  type(c_ptr), value                :: ptp              ! Part-to-part instance
+  integer, intent(in)               :: k_comm           ! Kind of MPI communication
+  integer, intent(in)               :: t_stride         ! Kind of stride
+  integer, intent(in)               :: t_part2_data_def ! Kind of Part2 data definition
+  integer, intent(in)               :: cst_stride       ! Constant stride
+  type(PDM_pointer_array_t), pointer:: part2_stride     ! Stride of Part1 data
+  type(PDM_pointer_array_t), pointer:: part2_data       ! Part1 data
+  type(PDM_pointer_array_t), pointer:: part1_stride     ! Stride of Part2 data
+  type(PDM_pointer_array_t), pointer:: part1_data       ! Part2 data
+  integer, intent(out)              :: request          ! Request
 
   integer                           :: n_part1
   integer                           :: n_part2
@@ -785,28 +723,18 @@ subroutine PDM_part_to_part_reverse_iexch (ptp,              &
 end subroutine PDM_part_to_part_reverse_iexch
 
 
-!>
-!!
-!! \brief Get referenced gnum2 elements
-!!
-!! \param [in]   ptp             Pointer to \ref PDM_part_to_part_t object
-!! \param [in]   i_part          Id of partition
-!! \param [out]  n_ref_lnum2     Number of referenced gnum2
-!! \param [out]  ref_lnum2       Referenced gnum2
-!!
-!!
-
 subroutine PDM_part_to_part_ref_lnum2_get (ptp,         &
                                            i_part,      &
                                            n_ref_lnum2, &
                                            ref_lnum2)
+  ! Get referenced Part2 elements
   use iso_c_binding
   implicit none
 
-  type(c_ptr), value            :: ptp
-  integer, intent(in)           :: i_part
-  integer, intent(out)          :: n_ref_lnum2
-  integer(pdm_l_num_s), pointer :: ref_lnum2(:)
+  type(c_ptr), value            :: ptp          ! Part-to-Part instance
+  integer, intent(in)           :: i_part       ! Partition identifier
+  integer, intent(out)          :: n_ref_lnum2  ! Number of referenced Part2 elements
+  integer(pdm_l_num_s), pointer :: ref_lnum2(:) ! Referenced Part2 elements (1-based local ids)
 
   type(c_ptr)                   :: c_ref_lnum2 = C_NULL_PTR
 
@@ -841,28 +769,18 @@ subroutine PDM_part_to_part_ref_lnum2_get (ptp,         &
 end subroutine PDM_part_to_part_ref_lnum2_get
 
 
-!>
-!!
-!! \brief Get unreferenced gnum2 elements
-!!
-!! \param [in]   ptp             Pointer to \ref PDM_part_to_part_t object
-!! \param [in]   i_part          Id of partition
-!! \param [out]  n_unref_lnum2   Number of unreferenced gnum2
-!! \param [out]  unref_lnum2     Unreferenced gnum2
-!!
-!!
-
 subroutine PDM_part_to_part_unref_lnum2_get (ptp,           &
                                              i_part,        &
                                              n_unref_lnum2, &
                                              unref_lnum2)
+  ! Get unreferenced Part2 elements
   use iso_c_binding
   implicit none
 
-  type(c_ptr), value            :: ptp
-  integer, intent(in)           :: i_part
-  integer, intent(out)          :: n_unref_lnum2
-  integer(pdm_l_num_s), pointer :: unref_lnum2(:)
+  type(c_ptr), value            :: ptp            ! Part-to-Part instance
+  integer, intent(in)           :: i_part         ! Partition identifier
+  integer, intent(out)          :: n_unref_lnum2  ! Number of unreferenced Part2 elements
+  integer(pdm_l_num_s), pointer :: unref_lnum2(:) ! Uneferenced Part2 elements (1-based local ids)
 
   type(c_ptr)                   :: c_unref_lnum2 = C_NULL_PTR
 
@@ -897,28 +815,18 @@ subroutine PDM_part_to_part_unref_lnum2_get (ptp,           &
 end subroutine PDM_part_to_part_unref_lnum2_get
 
 
-!>
-!!
-!! \brief Get gnum come from gnum1 for each referenced gnum2
-!!
-!! \param [in]   ptp                 Pointer to \ref PDM_part_to_part_t object
-!! \param [in]   i_part              Id of partition
-!! \param [out]  gnum1_come_from_idx Index for gnum1_come_from array
-!! \param [out]  gnum1_come_from     Gnum come from gnum1 for each referenced gnum2
-!!
-!!
-
 subroutine PDM_part_to_part_gnum1_come_from_get (ptp,                 &
                                                  i_part,              &
                                                  gnum1_come_from_idx, &
                                                  gnum1_come_from)
+  ! Get Part2→Part1 mapping for referenced Part2 elements
   use iso_c_binding
   implicit none
 
-  type(c_ptr), value            :: ptp
-  integer, intent(in)           :: i_part
-  integer(pdm_l_num_s), pointer :: gnum1_come_from_idx(:)
-  integer(pdm_g_num_s), pointer :: gnum1_come_from(:)
+  type(c_ptr), value            :: ptp                    ! Part-to-Part instance
+  integer, intent(in)           :: i_part                 ! Partition identifier
+  integer(pdm_l_num_s), pointer :: gnum1_come_from_idx(:) ! Index for Part2→Part1 mapping (size = *n_elt2* + 1)
+  integer(pdm_g_num_s), pointer :: gnum1_come_from(:)     ! Part2→Part1 mapping (global ids) (size = ``gnum1_come_from_idx(n_ref_lnum2 + 1)``)
 
   type(c_ptr)                   :: c_gnum1_come_from_idx = C_NULL_PTR
   type(c_ptr)                   :: c_gnum1_come_from     = C_NULL_PTR

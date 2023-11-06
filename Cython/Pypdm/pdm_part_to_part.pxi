@@ -402,7 +402,7 @@ cdef class PartToPart:
       Additional communication kinds will be available in the future
 
     Admissible values for ``t_part2_data_def``:
-      - :py:attr:`PartToPart.DATA_DEF_ORDER_PART2          ` : Data defined according to the `part2` arrays order
+      - :py:attr:`PartToPart.DATA_DEF_ORDER_PART2`           : Data defined according to the `part2` arrays order
       - :py:attr:`PartToPart.DATA_DEF_ORDER_GNUM1_COME_FROM` : Data defined according to the `gnum1_come_from` arrays order
     """
     return reverse_iexch(self, k_comm, t_part2_data_def, part2_data, part2_stride, interlaced_str)

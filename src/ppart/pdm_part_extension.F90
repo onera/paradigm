@@ -39,7 +39,7 @@ bind (c, name='PDM_part_extension_compute')
   use iso_c_binding
   implicit none
 
-  type(c_ptr), value :: part_ext ! PDM_part_extension_t structure instance
+  type(c_ptr), value :: part_ext ! Part Extension instance
 
 end subroutine PDM_part_extension_compute
 
@@ -50,7 +50,7 @@ bind (c, name='PDM_part_extension_free')
   use iso_c_binding
   implicit none
 
-  type(c_ptr), value :: part_ext ! PDM_part_extension_t structure instance
+  type(c_ptr), value :: part_ext ! Part Extension instance
 
 end subroutine PDM_part_extension_free
 
@@ -158,10 +158,15 @@ subroutine PDM_part_extension_create (part_ext,    &
                                       comm,        &
                                       owner)
   ! Initialize a part extension structure
+  !
+  ! Admissible values for ``extend_type``:
+  !   - ``PDM_EXTEND_FROM_FACE``
+  !   - ``PDM_EXTEND_FROM_EDGE``
+  !   - ``PDM_EXTEND_FROM_VTX``
   use iso_c_binding
   implicit none
 
-  type(c_ptr)                   :: part_ext    ! PDM_part_extension_t structure instance
+  type(c_ptr)                   :: part_ext    ! Part Extension instance
   integer, intent(in)           :: n_domain    ! Number of domains
   integer(pdm_l_num_s), pointer :: n_part(:)   ! Number of partitions per domain (size = ``n_domain``)
   integer, intent(in)           :: extend_type ! Type of extension
@@ -246,7 +251,7 @@ subroutine PDM_part_extension_set_part (part_ext,                 &
   use iso_c_binding
   implicit none
 
-  type(c_ptr), value            :: part_ext                    ! PDM_part_extension_t structure instance
+  type(c_ptr), value            :: part_ext                    ! Part Extension instance
   integer, intent(in)           :: i_domain                    ! Id of the domain
   integer, intent(in)           :: i_part                      ! Id of the partition
   integer, intent(in)           :: n_cell                      ! Number of cells
@@ -403,7 +408,7 @@ subroutine PDM_part_extension_connectivity_get (part_ext,          &
   use iso_c_binding
   implicit none
 
-  type(c_ptr), value            :: part_ext          ! PDM_part_extension_t structure instance
+  type(c_ptr), value            :: part_ext          ! Part Extension instance
   integer, intent(in)           :: i_domain          ! Id of current domain
   integer, intent(in)           :: i_part            ! Id of current partition
   integer, intent(in)           :: connectivity_type ! Type of mesh entity
@@ -465,7 +470,7 @@ subroutine PDM_part_extension_ln_to_gn_get (part_ext,    &
   use iso_c_binding
   implicit none
 
-  type(c_ptr), value            :: part_ext    ! PDM_part_extension_t structure instance
+  type(c_ptr), value            :: part_ext    ! Part Extension instance
   integer, intent(in)           :: i_domain    ! Id of current domain
   integer, intent(in)           :: i_part      ! Id of current partition
   integer, intent(in)           :: mesh_entity ! Type of mesh entity
@@ -520,7 +525,7 @@ subroutine PDM_part_extension_group_get (part_ext,         &
   use iso_c_binding
   implicit none
 
-  type(c_ptr), value            :: part_ext                 ! PDM_part_extension_t structure instance
+  type(c_ptr), value            :: part_ext                 ! Part Extension instance
   integer, intent(in)           :: i_domain                 ! Id of current domain
   integer, intent(in)           :: i_part                   ! Id of current partition
   integer, intent(in)           :: mesh_entity              ! Type of mesh entity
@@ -590,7 +595,7 @@ subroutine PDM_part_extension_vtx_coord_get (part_ext,    &
   use iso_c_binding
   implicit none
 
-  type(c_ptr), value        :: part_ext        ! PDM_part_extension_t structure instance
+  type(c_ptr), value        :: part_ext        ! Part Extension instance
   integer, intent(in)       :: i_domain        ! Id of current domain
   integer, intent(in)       :: i_part          ! Id of current partition
   integer, intent(out)      :: n_vtx           ! Number of vertices
@@ -944,7 +949,7 @@ subroutine PDM_part_extension_connectivity_set(part_ext, &
   ! Set connectivity
   use iso_c_binding
   implicit none
-  type(c_ptr), intent(in)       :: part_ext            ! PDM_part_extension_t structure instance
+  type(c_ptr), intent(in)       :: part_ext            ! Part Extension instance
   integer,     intent(in)       :: i_domain            ! Domain identifier
   integer,     intent(in)       :: i_part              ! Partition identifier
   integer,     intent(in)       :: connectivity_type   ! Type of connectivity
@@ -969,7 +974,7 @@ subroutine PDM_part_extension_ln_to_gn_set(part_ext, &
   ! Set global ids
   use iso_c_binding
   implicit none
-  type(c_ptr), intent(in)       :: part_ext    ! PDM_part_extension_t structure instance
+  type(c_ptr), intent(in)       :: part_ext    ! Part Extension instance
   integer,     intent(in)       :: i_domain    ! Domain identifier
   integer,     intent(in)       :: i_part      ! Partition identifier
   integer,     intent(in)       :: mesh_entity ! Type of mesh entity
@@ -992,7 +997,7 @@ subroutine PDM_part_extension_vtx_coord_set(part_ext, &
   ! Set vertex coordinates
   use iso_c_binding
   implicit none
-  type(c_ptr), intent(in)       :: part_ext       ! PDM_part_extension_t structure instance
+  type(c_ptr), intent(in)       :: part_ext       ! Part Extension instance
   integer,     intent(in)       :: i_domain       ! Domain identifier
   integer,     intent(in)       :: i_part         ! Partition identifier
   real(8),     pointer          :: vtx_coord(:,:) ! Vertex coordinates (shape = [3, *n_vtx*])
@@ -1014,7 +1019,7 @@ subroutine PDM_part_extension_part_bound_graph_set(part_ext, &
   ! Set the connection graph between partitions for the requested entity type
   use iso_c_binding
   implicit none
-  type(c_ptr), intent(in)       :: part_ext               ! PDM_part_extension_t structure instance
+  type(c_ptr), intent(in)       :: part_ext               ! Part Extension instance
   integer,     intent(in)       :: i_domain               ! Domain identifier
   integer,     intent(in)       :: i_part                 ! Partition identifier
   integer,     intent(in)       :: entity_type            ! Type of mesh entity
@@ -1043,7 +1048,7 @@ subroutine PDM_part_extension_group_set(part_ext, &
   ! Set group description
   use iso_c_binding
   implicit none
-  type(c_ptr), intent(in)       :: part_ext                 ! PDM_part_extension_t structure instance
+  type(c_ptr), intent(in)       :: part_ext                 ! Part Extension instance
   integer,     intent(in)       :: i_domain                 ! Domain identifier
   integer,     intent(in)       :: i_part                   ! Partition identifier
   integer,     intent(in)       :: entity_type              ! Type of mesh entity

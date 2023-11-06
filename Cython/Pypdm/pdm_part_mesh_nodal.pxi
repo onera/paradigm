@@ -143,7 +143,7 @@ cdef class PartMeshNodalCaspule:
     """
     get_sections(geom_kind, i_part)
 
-    ?
+    Get all standard sections (one partition)
 
     Parameters:
       geom_kind (PDM_geometry_kind_t) : Geometry kind (volume, surface, ridge or corner)
