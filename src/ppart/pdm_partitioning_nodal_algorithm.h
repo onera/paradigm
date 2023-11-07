@@ -44,6 +44,7 @@ PDM_dmesh_nodal_elmts_to_part_mesh_nodal_elmts
  int                          *pn_vtx,
  PDM_g_num_t                 **vtx_ln_to_gn,
  int                          *pn_elmt,
+ int                         **pelmt_to_entity,
  PDM_g_num_t                 **elmt_ln_to_gn,
  PDM_g_num_t                 **pparent_entitity_ln_to_gn
 );
@@ -71,6 +72,7 @@ PDM_reverse_dparent_gnum
        int            *pn_parent,
        PDM_g_num_t   **pparent_gnum,
        int           **pn_child,
+       int          ***pelmt_to_entity,
        PDM_g_num_t  ***pchild_gnum,
        PDM_g_num_t  ***pchild_parent_gnum,
        int          ***pchild_parent_sign,
