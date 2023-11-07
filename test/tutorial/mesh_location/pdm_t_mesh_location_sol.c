@@ -446,7 +446,6 @@ int main(int argc, char *argv[])
     double *tgt_field2 = tgt_field[1][i_part];
     double *is_located = tgt_field[2][i_part];
 
-    // EXO
     int n_located = PDM_mesh_location_n_located_get(mesh_loc,
                                                     0,
                                                     i_part);

@@ -32,7 +32,7 @@ The exercise is structured in two parts:
 1. Compute the location
 2. Perform the interpolation
 
-Your task is to fill in the empty code cells using the API referenced [here](https://numerics.gitlab-pages.onera.net/mesh/paradigm/dev_formation/user_manual/prepro_algo/mesh_location.html#mesh-location).
+Your task is to fill in the empty code cells using the API referenced [here](https://numerics.gitlab-pages.onera.net/mesh/paradigm/dev_formation/user_manual/prepro_algo/mesh_location.html#c-api).
 
 *Note: For easier visualization, we will study a two-dimensional case but the feature is also available in three dimensions.*
 
@@ -99,7 +99,7 @@ int main(int argc, char *argv[])
 We start by generating the partitioned source mesh.
 
 By now you should be capable of partitioning a mesh using **ParaDiGM** (if not, you should definitely take a look at [**Exercise 1**](../02_Exercise_1/exercise_1.ipynb)).
-To gain some time, let's use the [*PDM_generate_mesh*](https://numerics.gitlab-pages.onera.net/mesh/paradigm/dev_formation/user_manual/simple_mesh_gen/generate_mesh.html) service to generate a partitioned mesh in a single function call.
+To gain some time, let's use the [*PDM_generate_mesh*](https://numerics.gitlab-pages.onera.net/mesh/paradigm/dev_formation/user_manual/simple_mesh_gen/generate_mesh.html#c-api) service to generate a partitioned mesh in a single function call.
 
 Here we generate a square mesh composed of polygonal elements.
 
@@ -177,7 +177,7 @@ We will see later how to deal with these *unlocated* points.
   int         tgt_n_part    = 1;    // number of partitions per MPI rank
   double      tgt_xmin      = 0.25; // x-offset
   double      tgt_ymin      = 0.25; // y-offset
-  double      tgt_random    = 0.;   // randomization factor
+  double      tgt_random    = 0.0;  // randomization factor
 
   int          *tgt_n_vtx         = NULL;
   int          *tgt_n_edge        = NULL;
@@ -287,7 +287,7 @@ Choose the one that suits you best, and again, recall that there can be more tha
   // EXO
   PDM_mesh_location_mesh_n_part_set(mesh_loc, src_n_part);
 
-  int nodal = 1;
+  int nodal = 0;
 
   if (nodal) {
     for (int i_part = 0; i_part < src_n_part; i_part++) {
@@ -421,14 +421,14 @@ The second field interpolation is trickier as you will need the cell->vertex con
 
 ### Retrieve the `PDM_part_to_part_t` instance
 
-The communication graph is embodied in the form of a [`PDM_part_to_part_t`](https://numerics.gitlab-pages.onera.net/mesh/paradigm/dev_formation/user_manual/comm_graph/ptp.html#ptp) instance.
+The communication graph is embodied in the form of a [`PDM_part_to_part_t`](https://numerics.gitlab-pages.onera.net/mesh/paradigm/dev_formation/user_manual/comm_graph/ptp.html#c-api) instance.
 
 The Part-to-part feature has been created to exchange data between two entities partitions.
 That is why the Part-to-part structure is built by specifying the partitions on both sides, as well as the graph of the links between elements of partition 1 (*Part1*) to partition 2 (*Part2*).
 
 <img src="ptp.png" width="300">
 
-On the figure above the first partition is represented by the red set op points and the second partition by the blue set of points.
+On the figure above the first partition is represented by the red set of points and the second partition by the blue set of points.
 The graph between *Part1* and *Part2* is symbolised by the gray arrows.
 
 In this case, *Part1* represents the source mesh and *Part2* the target point cloud.
@@ -466,12 +466,12 @@ Here you need to initiate the exchange of global ids from the source mesh elemen
 *<span style="color:olivedrab;">
 Marie is part of the Dupont family. She is going to meet members of the Perez family. She already knows some of them.
 Marie is going to provide her name to the members of the Perez family she doesn't know.
-In a sens, we can link Marie with the memebers of the Perez family she doesn't know. Then communicate to them the same information,
+In a sense, we can link Marie with the members of the Perez family she doesn't know. Then communicate to them the same information,
 which is her name. This is exactly a Part-to-part exchange with the option `PDM_PART_TO_PART_DATA_DEF_ORDER_PART1`.
 In our mesh location exercise, who is the Dupont family who will provide their name and who is the Perez family?
 </span>*
 
-As each MPI ranks hosts source *and* target partitions, we will use the function `PDM_part_to_part_iexch` which allows for transparent, bilateral data exchange.
+As each MPI ranks hosts source *and* target partitions, we will use the **PDM_part_to_part_iexch** function which allows for transparent, bilateral data exchange.
 
 +++ {"jupyter": {"source_hidden": true}, "editable": false, "deletable": false}
 
@@ -485,7 +485,7 @@ Hints:
 ---
 %%code_block -p exercise_2 -i 10
 
-  // Initiate exchange of first field (source elements global ids)
+  // Initiate exchange of first field
   int request1 = -1;
   PDM_g_num_t **tgt_recv_field1 = NULL;
   // EXO
@@ -516,7 +516,7 @@ Hints:
 
 +++ {"editable": false, "deletable": false}
 
-### Interpolate the second field (node-based)
+### Interpolate the second field
 
 Here you need to interpolate the node-based field from the source mesh onto the target points.
 That means for each target point computing the weighted average of the field on the vertices of the element it is located in.
@@ -571,7 +571,7 @@ Let $T$ denote a target point and $S$ the source element containing $T$.
 ---
 %%code_block -p exercise_2 -i 11
 
-  // Interpolate second field (node-based)
+  // Interpolate second field
   double **src_vtx_field2 = malloc(sizeof(double *) * src_n_part);
   for (int i_part = 0; i_part < src_n_part; i_part++) {
     src_vtx_field2[i_part] = malloc(sizeof(double) * src_n_vtx[i_part]);
@@ -640,8 +640,8 @@ Now that you've done the interpolation, it is time to send the interpolated fiel
 
 ##### **<span style="color:olivedrab;">Analogy</span>**
 *<span style="color:olivedrab;">
-Marie met the grandparents of the Perez family : Marta & Luis and Julio & Paula. She wants to send them a christmas postcard.
-She chose a card with a christmas tree for Marta & Luis and a card with Santa for Julio & Paula.
+Marie met the grandparents of the Perez family : Marta & Luis and Julio & Paula. She wants to send them a Christmas postcard.
+She chose a card with a Christmas tree for Marta & Luis and a card with Santa for Julio & Paula.
 In a sens, we can link Marie to Marta & Luis and Julio & Paula. This time she won't provide the same information to both of them.
 This is exactly a Part-to-part exchange with the option `PDM_PART_TO_PART_DATA_DEF_ORDER_PART1_TO_PART2`.
 What does the postcard represent in our location exercise?
@@ -686,7 +686,7 @@ You can now initiate the exchange of the interpolated field you just computed.
 
 +++ {"editable": false, "deletable": false}
 
-### Check the interpolated received on the target side
+### Check the interpolated field received on the target side
 
 Finally, we can finalize both exchanges, check and visualize the received fields on the target side.
 
@@ -768,7 +768,7 @@ You must therefore use the appropriate indirection to correctly read the receive
 "deletable": false
 ---
 %%code_block -p exercise_2 -i 14
-  // Nothing to do here
+  // Export for visualization, nothing to do here
   const char *field_name[] = {
     "field1",
     "field2",
@@ -949,7 +949,7 @@ Moment of truth!
 ---
 "deletable": false
 ---
-%merge_code_blocks -l c -p exercise_2 -n 2 -c
+%merge_code_blocks -l c -p exercise_2 -n 2
 ```
 
 +++ {"editable": false, "deletable": false}

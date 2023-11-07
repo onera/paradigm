@@ -11,13 +11,41 @@ kernelspec:
   name: python3
 ---
 
++++ {"editable": false, "deletable": false}
+
 # Exercise 2 : Localization of a point cloud inside a mesh
 
-+++
++++ {"editable": false, "deletable": false}
 
-*(Load custom magics)*
+In this second exercise we will focus on the **Mesh Location** feature.
+It consists in computing the location of one or more partitioned point clouds (referred to as the *targets*) inside a partitioned mesh (referred to as the *source*).
+
+A mapping between the source mesh elements and the target points they contain is computed, which consists in
+  - geometric data (distances, barycentric and parametric coordinates, ...) ;
+  - an MPI communication graph as the associated entities are, in general, distributed on different processes.
+
+This mapping is typically used for interpolating data from the source mesh to the point clouds in applications such as the coupling between non-matching grids.
+
+
+The aim of this exercise is to perform such an interpolation.
+The exercise is structured in two parts:
+1. Compute the location
+2. Perform the interpolation
+
+Your task is to fill in the empty code cells using the API referenced [here](https://numerics.gitlab-pages.onera.net/mesh/paradigm/dev_formation/user_manual/prepro_algo/mesh_location.html#python-api).
+
+*Note: For easier visualization, we will study a two-dimensional case but the feature is also available in three dimensions.*
+
++++ {"editable": false, "deletable": false}
+
+## Load magic commands
+As usual we start by loading the custom magic commands.
 
 ```{code-cell} ipython3
+---
+"editable": false
+"deletable": false
+---
 import os, sys
 module_path = os.path.abspath(os.path.join('../../utils'))
 if module_path not in sys.path:
@@ -25,18 +53,29 @@ if module_path not in sys.path:
 ```
 
 ```{code-cell}
+---
+"editable": false
+"deletable": false
+---
 %reload_ext visu_magics
 %reload_ext code_magics
 ```
 
-Your job is to fill the code cells left blank using the API referenced [here](https://numerics.gitlab-pages.onera.net/mesh/paradigm/dev_doc_pretty/user_manual/prepro_algo/index.html#python-api).
 
-+++
+
++++ {"editable": false, "deletable": false}
 
 ## Load the required Python modules
 
+To begin, we import the required modules (**mpi4py**, **numpy** and **Pypdm**).
+
 ```{code-cell}
+---
+"editable": false
+"deletable": false
+---
 %%code_block -p exercise_2 -i 1
+
 # Load modules
 import mpi4py.MPI as MPI
 import numpy as np
@@ -46,16 +85,32 @@ comm = MPI.COMM_WORLD
 
 ```
 
-## Generate a partitioned "source" mesh
++++ {"editable": false, "deletable": false}
+
+## 1. Localization
 
 
-By now, you know how to partition a mesh.
+### Generate a partitioned "source" mesh
+
+We start by generating the partitioned source mesh.
+
+By now you should be capable of partitioning a mesh using **ParaDiGM** (if not, you should definitely take a look at [**Exercise 1**](../02_Exercise_1/exercise_1.ipynb)).
+To gain some time, let's use the [*generate_mesh*](https://numerics.gitlab-pages.onera.net/mesh/paradigm/dev_formation/user_manual/simple_mesh_gen/generate_mesh.html#python-api) service to generate a partitioned mesh in a single function call.
+
+Here we generate a square mesh composed of polygonal elements.
+
+*Nothing to do here, you can move on. Just don't forget to run the cell!*
 
 ```{code-cell}
+---
+"deletable": false
+---
 %%code_block -p exercise_2 -i 2
-# Generate source mesh
-src_n_vtx_seg = 10
-src_n_part    = 1
+
+# Generate partitioned source mesh
+src_n_vtx_seg = 10  # number of vertices along each side of the square
+src_n_part    = 1   # number of partitions per MPI rank
+src_random    = 0.8 # randomization factor
 
 src_mesh = PDM.generate_mesh_rectangle_ngon(comm          = comm,
                                             elt_type      = PDM._PDM_MESH_NODAL_POLY_2D,
@@ -68,65 +123,108 @@ src_mesh = PDM.generate_mesh_rectangle_ngon(comm          = comm,
                                             n_y           = src_n_vtx_seg,
                                             n_part        = src_n_part,
                                             part_method   = PDM._PDM_SPLIT_DUAL_WITH_PARMETIS,
-                                            random_factor = 0.4)
+                                            random_factor = src_random)
 
-src_n_vtx         = src_mesh["pn_vtx"]         # Number of vertices in each partition
-src_n_face        = src_mesh["pn_face"]        # Number of faces in each partition
-src_vtx_coord     = src_mesh["pvtx_coord"]     #
-src_face_vtx_idx  = src_mesh["pface_edge_idx"] #
-src_face_vtx      = src_mesh["pface_vtx"]      #
-src_face_edge     = src_mesh["pface_edge"]     #
-src_edge_vtx      = src_mesh["pedge_vtx"]      #
-src_vtx_ln_to_gn  = src_mesh["pvtx_ln_to_gn"]  #
-src_face_ln_to_gn = src_mesh["pface_ln_to_gn"] #
+src_n_vtx         = src_mesh["pn_vtx"]
+src_n_face        = src_mesh["pn_face"]
+src_vtx_coord     = src_mesh["pvtx_coord"]
+src_face_vtx_idx  = src_mesh["pface_edge_idx"]
+src_face_vtx      = src_mesh["pface_vtx"]
+src_face_edge     = src_mesh["pface_edge"]
+src_edge_vtx      = src_mesh["pedge_vtx"]
+src_vtx_ln_to_gn  = src_mesh["pvtx_ln_to_gn"]
+src_face_ln_to_gn = src_mesh["pface_ln_to_gn"]
 
 ```
 
-## Generate a partitioned "target" mesh
-We will use its vertices as a point cloud.
+
++++ {"editable": false, "deletable": false}
+
+### Generate a partitioned "target" mesh
+
+We then generate a second partitioned mesh.
+We will use its vertices as a target point cloud.
+This second mesh is deliberately offset so that some target points lie outside the source mesh.
+These points may not be located.
+We will see later how to deal with these *unlocated* points.
+
+*Note: we use a different partitioning method for the two meshes so that the source and target partitions do not match.*
+
+*Nothing to do here either. However, once you've successfully completed the localization procedure, feel free to play with the parameters of the two meshes.*
 
 ```{code-cell}
+---
+"deletable": false
+---
 %%code_block -p exercise_2 -i 3
-# Generate target mesh
-tgt_n_vtx_seg = 10
-tgt_n_part    = 1
 
-tgt_mesh = PDM.generate_mesh_rectangle_ngon(comm        = comm,
-                                            elt_type    = PDM._PDM_MESH_NODAL_QUAD4,
-                                            xmin        = 0.3,
-                                            ymin        = 0.3,
-                                            zmin        = 0,
-                                            lengthx     = 1.,
-                                            lengthy     = 1.,
-                                            n_x         = tgt_n_vtx_seg,
-                                            n_y         = tgt_n_vtx_seg,
-                                            n_part      = tgt_n_part,
-                                            part_method = PDM._PDM_SPLIT_DUAL_WITH_PARMETIS)
+# Generate partitioned target mesh
+tgt_n_vtx_seg = 10   # number of vertices along each side of the square
+tgt_n_part    = 1    # number of partitions per MPI rank
+tgt_xmin      = 0.25 # x-offset
+tgt_ymin      = 0.25 # y-offset
+tgt_random    = 0.0  # randomization factor
+
+tgt_mesh = PDM.generate_mesh_rectangle_ngon(comm          = comm,
+                                            elt_type      = PDM._PDM_MESH_NODAL_QUAD4,
+                                            xmin          = tgt_xmin,
+                                            ymin          = tgt_ymin,
+                                            zmin          = 0.,
+                                            lengthx       = 1.,
+                                            lengthy       = 1.,
+                                            n_x           = tgt_n_vtx_seg,
+                                            n_y           = tgt_n_vtx_seg,
+                                            n_part        = tgt_n_part,
+                                            part_method   = PDM._PDM_SPLIT_DUAL_WITH_HILBERT,
+                                            random_factor = tgt_random)
+
 tgt_n_vtx         = tgt_mesh["pn_vtx"]
 tgt_n_face        = tgt_mesh["pn_face"]
 tgt_vtx_coord     = tgt_mesh["pvtx_coord"]
 tgt_face_vtx_idx  = tgt_mesh["pface_edge_idx"]
 tgt_face_vtx      = tgt_mesh["pface_vtx"]
+tgt_face_edge     = tgt_mesh["pface_edge"]
+tgt_edge_vtx      = tgt_mesh["pedge_vtx"]
 tgt_vtx_ln_to_gn  = tgt_mesh["pvtx_ln_to_gn"]
 tgt_face_ln_to_gn = tgt_mesh["pface_ln_to_gn"]
 
 ```
 
-## Create the `MeshLocation` object
++++ {"editable": false, "deletable": false}
+
+### Create the `MeshLocation` object
+
+Now that we have all the required inputs, let's create an instance of the `MeshLocation` class.
 
 ```{code-cell}
+---
+"deletable": false
+---
 %%code_block -p exercise_2 -i 4
-# Create MeshLocation instance
+
+# Create the MeshLocation object
+# EXO
 mesh_loc = PDM.MeshLocation(1,
                             comm)
 
 ```
 
-## Set the target point cloud
+
++++ {"editable": false, "deletable": false}
+
+### Set the target point cloud
+
+Now let's provide the target point cloud to the `MeshLocation` object.
+Recall that there can be more than one partition per MPI rank.
 
 ```{code-cell}
+---
+"deletable": false
+---
 %%code_block -p exercise_2 -i 5
-# Set target point cloud
+
+# Set the target point cloud
+# EXO
 mesh_loc.n_part_cloud_set(0,
                           tgt_n_part)
 
@@ -135,27 +233,43 @@ for i_part in range(tgt_n_part):
                      i_part,
                      tgt_vtx_coord   [i_part],
                      tgt_vtx_ln_to_gn[i_part])
+
 ```
 
-## Set the source mesh
-Here you have essentially two options :
++++ {"editable": false, "deletable": false}
+
+### Set the source mesh
+
+Now let's provide the source mesh to the `MeshLocation` object.
+
+Here you have essentially two options:
 - you can either define the mesh with "nodal" connectivity (i.e. Finite-Element style)
 - or with "descending" connectivity (i.e. Finite-Volume style)
 
+Choose the one that suits you best, and again, recall that there can be more than one partition per MPI rank.
+
 ```{code-cell}
+---
+"deletable": false
+---
 %%code_block -p exercise_2 -i 6
-# Set source mesh
-nodal = True
+
+# Set the source mesh
+# EXO
 mesh_loc.mesh_n_part_set(src_n_part)
-for i_part in range(src_n_part):
-  if nodal:
+
+nodal = False
+
+if nodal:
+  for i_part in range(src_n_part):
     mesh_loc.nodal_part_set_2d(i_part,
                                src_face_vtx_idx [i_part],
                                src_face_vtx     [i_part],
                                src_face_ln_to_gn[i_part],
                                src_vtx_coord    [i_part],
                                src_vtx_ln_to_gn [i_part])
-  else:
+else:
+  for i_part in range(src_n_part):
     mesh_loc.part_set_2d(i_part,
                          src_face_vtx_idx [i_part],
                          src_face_edge    [i_part],
@@ -166,73 +280,203 @@ for i_part in range(src_n_part):
 
 ```
 
-## Set some optional parameters
+
++++ {"editable": false, "deletable": false}
+
+### Set some optional parameters
+
+The location algorithm uses a preconditioning stage which consists in associating candidate elements and points before computed the exact location.
+Three preconditioning methods are available:
+- `OCTREE`
+- `DBBTREE`
+- `LOCATE_ALL_TGT`
+
+The first two methods use bounding boxes and distributed tree data structures to find the candidate pairs efficiently.
+Theses boxes can be expanded using a **relative geometric tolerance** allowing for safer candidate detection.
+The third method uses a combination of both trees to ensure all target points are "located", i.e. associated to the nearest source element.
+
+(By default, the `OCTREE` method is used, with a relative tolerance equal to zero.)
+
+We recommend that you first go through the entire localization procedure before worrying about these options.
+You will still have time afterwards to play with them and see the impact they can have.
 
 ```{code-cell}
+---
+"deletable": false
+---
 %%code_block -p exercise_2 -i 7
-# Geometric tolerance
-mesh_loc.tolerance = 1e-6
 
-# Preconditioning method
+# Set the location preconditioning method (optional)
+# EXO
 mesh_loc.method = PDM.MeshLocation.OCTREE
+
+# Set the geometric tolerance (optional)
+# EXO
+mesh_loc.tolerance = 1e-6
 
 ```
 
-## Compute the localization
++++ {"editable": false, "deletable": false}
+
+### Compute the localization
+
+Now that everything is ready, we can compute the localization.
+Once the calculation is complete, we can display the elapsed and CPU times.
 
 ```{code-cell}
+---
+"deletable": false
+---
 %%code_block -p exercise_2 -i 8
-# Compute localization
+
+# Compute location
+# EXO
 mesh_loc.compute()
 
 # Dump elapsed and CPU times
+# EXO
 mesh_loc.dump_times()
 
 ```
 
-## Results
++++ {"editable": false, "deletable": false}
 
-Now that we have located the target points in the source mesh, we can exchange data between the two.
-To complete this exercise, we will interpolate two fields from the source mesh to the target cloud:
-  1. a cell-based field: we can simply use the face global ids for such a field, and check it matches the location data.
-  2. a node-based field: we can use the node coordinates.
+## 2. Interpolation
 
-First, compute the spatially interpolated fields on the source side.
-For the first field, the interpolation is straightforward : the target value is simply the same as the host source.
-The second field interpolation is trickier as you will need the cell->vertex connectivity built during the location computation to link the interpolation weights to the appropriate source nodes.
+Now that the localization has been computed, the mesh location object stores the mapping between the source mesh elements and the target points.
+This mapping consists in:
+- a set of geometric data sufficient for P1 interpolation of node-based fields ;
+- an MPI communication graph to exchange data between the mapped entities.
 
-### Interpolate the first field (cell-based)
+In the second part of this exercise you will have to use these two pieces of information to:
+1. exchange the global ids of the source elements to the corresponding target points: this way each *located* point is supposed to receive the global id of the element it is contained in ;
+2. interpolate (and exchange) a node-based field: we choose a linear field such as the Cartesian coordinate *x* so we can easily check everything went right.
+
+
++++ {"editable": false, "deletable": false}
+
+### Retrieve the `PartToPart` instance
+
+The communication graph is embodied in the form of a [`PartToPart`](https://numerics.gitlab-pages.onera.net/mesh/paradigm/dev_formation/user_manual/comm_graph/ptp.html#python-api) instance.
+
+The Part-to-part feature has been created to exchange data between two entities partitions.
+That is why the Part-to-part object is built by specifying the partitions on both sides, as well as the graph of the links between elements of partition 1 (*Part1*) to partition 2 (*Part2*).
+
+<img src="ptp.png" width="300">
+
+On the figure above the first partition is represented by the red set of points and the second partition by the blue set of points.
+The graph between *Part1* and *Part2* is symbolised by the gray arrows.
+
+In this case, *Part1* represents the source mesh and *Part2* the target point cloud.
+
+The `PartToPart` instance was built during the localization computation and can be accessed from the `MeshLocation` object.
 
 ```{code-cell}
-%%code_block -p exercise_2 -i 10
-# Interpolate first field
-src_send_field1 = []
+---
+"deletable": false
+---
+%%code_block -p exercise_2 -i 9
 
-for i_part in range(src_n_part):
-  src_result = mesh_loc.points_in_elt_get(0, i_part)
-  src_to_tgt_idx = src_result["elt_pts_inside_idx"]
-  n_pts = src_to_tgt_idx[src_n_face[i_part]]
+# Get PartToPart object
+# EXO
+ptp = mesh_loc.part_to_part_get(0)
 
-  field1 = np.zeros(n_pts, dtype=np.double)
-  for i_elt in range(src_n_face[i_part]):
-    for i_pt in range(src_to_tgt_idx[i_elt], src_to_tgt_idx[i_elt+1]):
-      field1[i_pt] = src_face_ln_to_gn[i_part][i_elt]
-  src_send_field1.append(field1)
 ```
 
-### Interpolate the second field (node-based)
+
++++ {"editable": false, "deletable": false}
+
+Part-to-part is able to perform non-blocking exchanges so here's how we're going to proceed:
+1. initiate the first exchange: each source element sends its global id to all the target points it contains ;
+2. overlap this communication by the computation of the interpolated *x* on the source side ;
+3. initiate the second exchange ;
+4. finalize both exchanges.
+
+### First exchange
+
+Here you need to initiate the exchange of global ids from the source mesh elements to the target points.
+
+##### **<span style="color:olivedrab;">Analogy</span>**
+*<span style="color:olivedrab;">
+Marie is part of the Dupont family. She is going to meet members of the Perez family. She already knows some of them.
+Marie is going to provide her name to the members of the Perez family she doesn't know.
+In a sense, we can link Marie with the members of the Perez family she doesn't know. Then communicate to them the same information,
+which is her name. This is exactly a Part-to-part exchange with the option `_PDM_PART_TO_PART_DATA_DEF_ORDER_PART1`.
+In our mesh location exercise, who is the Dupont family who will provide their name and who is the Perez family?
+</span>*
+
+As each MPI ranks hosts source *and* target partitions, we will use the **iexch** function which allows for transparent, bilateral data exchange.
+
++++ {"jupyter": {"source_hidden": true}, "editable": false, "deletable": false}
+
+Hints:
+  - each cell sends a **single** value (its **global id**)
+  - the **same** value is sent to each corresponding target
 
 ```{code-cell}
-%%code_block -p exercise_2 -i 11
-# Interpolate second field
-src_send_field2 = []
+---
+"deletable": false
+---
+%%code_block -p exercise_2 -i 10
 
+# Initiate exchange of first field
+# EXO
+request1 = ptp.iexch(PDM._PDM_MPI_COMM_KIND_P2P,
+                     PDM._PDM_PART_TO_PART_DATA_DEF_ORDER_PART1, # ?
+                     src_face_ln_to_gn,                          # ?
+                     part1_stride=1)                             # ?
+
+```
+
+
++++ {"editable": false, "deletable": false}
+
+### Interpolate the second field
+
+Here you need to interpolate the node-based field from the source mesh onto the target points.
+That means for each target point computing the weighted average of the field on the vertices of the element it is located in.
+
+<img src="04_zoom_cell.png" width="200">
+
+Each color on the picture above represents the weight associated to the red point in this pentagon.
+
+*Will the weighted average be the same for the red and blue point?*
+
+This means there is a better side to do the interpolation computation.
+Depending at the side of which part (*Part1* or *Part2*) the computation is done more data will be exchanged.
+
+*What is the most efficient side in terms of amount of data to exchange to do the computation?*
+
+Doing the interpolation on *Part1* (the source side), you will send one value to the target point in *Part 2* : the interpolated field.
+Doing the interpolation on *Part2* (the target side), you will send to each target point the coordinates and the field at each vertex of the element of the source mesh it has been located in.
+
+You will implement the first option. You can start doing the interpolation.
+
+*What is the data you have access to?*
+
+You are on the side of *Part1* (source mesh). You have access to the elements of the mesh, the face->vertex connectivity and for each
+face the points located in it.
+
+*Knowing this, how will you set up the loops over the entities to compute the interpolation?*
+
+```{code-cell}
+---
+"deletable": false
+---
+%%code_block -p exercise_2 -i 11
+
+# Interpolate second field
+src_vtx_field2 = []
+for i_part in range(src_n_part):
+  src_vtx_field2.append(np.array(src_vtx_coord[i_part][::3]))
+
+src_send_field2 = []
+# EXO
 for i_part in range(src_n_part):
   src_result = mesh_loc.points_in_elt_get(0, i_part)
   src_to_tgt_idx = src_result["elt_pts_inside_idx"]
   n_pts = src_to_tgt_idx[src_n_face[i_part]]
 
-  # Interpolate second field (node-based)
   src_connect = mesh_loc.cell_vertex_get(i_part)
   src_cell_vtx_idx = src_connect["cell_vtx_idx"]
   src_cell_vtx     = src_connect["cell_vtx"]
@@ -249,66 +493,87 @@ for i_part in range(src_n_part):
       assert(weights_idx[i_pt+1] - weights_idx[i_pt] == elt_n_vtx)
       for i_vtx in range(elt_n_vtx):
         vtx_id = src_cell_vtx[src_cell_vtx_idx[i_elt] + i_vtx] - 1
-        field2[i_pt] += src_vtx_coord[i_part][3*vtx_id] * weights[weights_idx[i_pt] + i_vtx]
+        field2[i_pt] += weights[weights_idx[i_pt] + i_vtx] * src_vtx_field2[i_part][vtx_id]
 
   src_send_field2.append(field2)
 
 ```
 
 
-### Exchange the interpolated fields from source to target
++++ {"editable": false, "deletable": false}
 
-Now, use the [`PartToPart`](https://numerics.gitlab-pages.onera.net/mesh/paradigm/dev_doc_pretty/user_manual/comm_graph/ptp.html) object to exchange the interpolated fields from the source mesh to the target cloud.
-This `PartToPart` object was built when computing the location and can be accessed from the `MeshLocation` object.
+### Exchange the second interpolated field
+
+Now that you've done the interpolation, it is time to send the interpolated field to the target points.
+
+##### **<span style="color:olivedrab;">Analogy</span>**
+*<span style="color:olivedrab;">
+Marie met the grandparents of the Perez family : Marta & Luis and Julio & Paula. She wants to send them a Christmas postcard.
+She chose a card with a Christmas tree for Marta & Luis and a card with Santa for Julio & Paula.
+In a sens, we can link Marie to Marta & Luis and Julio & Paula. This time she won't provide the same information to both of them.
+This is exactly a Part-to-part exchange with the option `_PDM_PART_TO_PART_DATA_DEF_ORDER_PART1_TO_PART2`.
+What does the postcard represent in our location exercise?
+</span>*
+
+You can now initiate the exchange of the interpolated field you just computed.
 
 ```{code-cell}
+---
+"deletable": false
+---
 %%code_block -p exercise_2 -i 12
-# Get PartToPart object
-ptp = mesh_loc.part_to_part_get(0)
-
-# Initiate exchange of first field
-src_stride = 1
-request1 = ptp.iexch(PDM._PDM_MPI_COMM_KIND_P2P,
-                     PDM._PDM_PART_TO_PART_DATA_DEF_ORDER_PART1_TO_PART2,
-                     src_send_field1,
-                     part1_stride=src_stride,
-                     interlaced_str=True)
 
 # Initiate exchange of second field
 request2 = ptp.iexch(PDM._PDM_MPI_COMM_KIND_P2P,
-                     PDM._PDM_PART_TO_PART_DATA_DEF_ORDER_PART1_TO_PART2,
-                     src_send_field2,
-                     part1_stride=src_stride,
-                     interlaced_str=True)
-
-# Finalize both exchanges
-tgt_stride, tgt_recv_field1 = ptp.wait(request1)
-tgt_stride, tgt_recv_field2 = ptp.wait(request2)
+                     PDM._PDM_PART_TO_PART_DATA_DEF_ORDER_PART1_TO_PART2, # ?
+                     src_send_field2,                                     # ?
+                     part1_stride=1)                                      # ?
 
 ```
 
-### Check the interpolated received on the target side
++++ {"editable": false, "deletable": false}
 
-Finally, visualize the interpolated target fields.
-(Beware of unlocated points!)
+### Check the interpolated field received on the target side
+
+Finally, we can finalize both exchanges, check and visualize the received fields on the target side.
+
+#### *Watch out for unlocated points!*
+Notice that you only received information relative to the *located* points.
+You must therefore use the appropriate indirection to correctly read the received arrays.
 
 ```{code-cell}
+---
+"deletable": false
+---
 %%code_block -p exercise_2 -i 13
-# Check interpolated fields
+
+# Finalize both exchanges
+_, tgt_recv_field1 = ptp.wait(request1)
+_, tgt_recv_field2 = ptp.wait(request2)
+
+
+# Check received fields
 pis_located = []
 ptgt_field1 = []
 ptgt_field2 = []
 for i_part in range(tgt_n_part):
-  located_tgt = mesh_loc.located_get(0, i_part)
+  located_tgt   = mesh_loc.located_get  (0, i_part)
+  unlocated_tgt = mesh_loc.unlocated_get(0, i_part)
 
-  is_located =  np.zeros(tgt_n_vtx[i_part], dtype=bool)
-  tgt_field1 = -np.ones(tgt_n_vtx[i_part], dtype=np.double)
-  tgt_field2 = -np.ones(tgt_n_vtx[i_part], dtype=np.double)
+  is_located = np.empty(tgt_n_vtx[i_part], dtype=bool)
+  tgt_field1 = np.empty(tgt_n_vtx[i_part], dtype=np.double)
+  tgt_field2 = np.empty(tgt_n_vtx[i_part], dtype=np.double)
+
+  for i, i_vtx in enumerate(unlocated_tgt):
+    is_located[i_vtx-1] = False
+    tgt_field1[i_vtx-1] = -1
+    tgt_field2[i_vtx-1] = -1
 
   for i, i_vtx in enumerate(located_tgt):
     is_located[i_vtx-1] = True
     tgt_field1[i_vtx-1] = tgt_recv_field1[i_part][i]
     tgt_field2[i_vtx-1] = tgt_recv_field2[i_part][i]
+
     error = abs(tgt_recv_field2[i_part][i] - tgt_vtx_coord[i_part][3*(i_vtx-1)])
     if error > 1e-9:
       print(f"!! error vtx {tgt_vtx_ln_to_gn[i_part][i_vtx]} : {error}")
@@ -317,18 +582,35 @@ for i_part in range(tgt_n_part):
   ptgt_field1.append(tgt_field1)
   ptgt_field2.append(tgt_field2)
 
-# Export for visualization
+```
+
+
++++ {"editable": false, "deletable": false}
+
+*Write output files for visualization, nothing to do here.*
+
+```{code-cell}
+---
+"deletable": false
+---
+%%code_block -p exercise_2 -i 14
+# Export for visualization, nothing to do here
 PDM.writer_wrapper(comm,
-                   "visu",
+                   "mesh_location_sol_p",
                    "src_mesh",
                    src_vtx_coord,
                    src_vtx_ln_to_gn,
                    src_face_vtx_idx,
                    src_face_vtx,
-                   src_face_ln_to_gn)
+                   src_face_ln_to_gn,
+                   elt_fields={
+                   "field1" : src_face_ln_to_gn
+                   },
+                   vtx_fields={
+                   "field2" : src_vtx_field2})
 
 PDM.writer_wrapper(comm,
-                   "visu",
+                   "mesh_location_sol_p",
                    "tgt_mesh",
                    tgt_vtx_coord,
                    tgt_vtx_ln_to_gn,
@@ -342,22 +624,47 @@ PDM.writer_wrapper(comm,
 
 ```
 
-Finalize?
++++ {"editable": false, "deletable": false}
 
+### Finalize
 
+Congratulations! You've made it to the end of the exercise :)
 
-## Run the code
+```{code-cell}
+---
+"deletable": false
+---
+%%code_block -p exercise_2 -i 15
+
+if comm.rank == 0:
+  print("The End :D")
+
+MPI.Finalize()
+
+```
+
++++ {"editable": false, "deletable": false}
+
+## Run
+
 Moment of truth!
 
 ```{code-cell}
-%merge_code_blocks -l python -p exercise_2 -n 2 -c
+---
+"deletable": false
+---
+%merge_code_blocks -l python -p exercise_2 -n 2
 ```
 
++++ {"editable": false, "deletable": false}
 
 ## Visualize the results
 
 ```{code-cell}
+---
+"deletable": false
+---
 %%visualize -nl -sv
 visu/SRC_MESH.case
-visu/TGT_MESH.case : is_located
+visu/TGT_MESH.case : is_located : points
 ```

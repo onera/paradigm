@@ -23,15 +23,9 @@ program tp_mesh_location
   !---------------------------------------------------------------
   integer,              parameter    :: comm = MPI_COMM_WORLD
 
+  ! src mesh generation
   integer(pdm_g_num_s), parameter    :: src_n_vtx_seg = 10
   integer(c_int),       parameter    :: src_n_part = 1
-
-  integer(pdm_g_num_s), parameter    :: tgt_n_vtx_seg = 8
-  integer(c_int),       parameter    :: tgt_n_part = 1
-  double precision,     parameter    :: tgt_xmin = 0.3d0
-  double precision,     parameter    :: tgt_ymin = 0.3d0
-
-  logical,              parameter    :: nodal = .false.
 
   integer(pdm_l_num_s),      pointer :: src_n_vtx(:)      => null()
   integer(pdm_l_num_s),      pointer :: src_n_edge(:)     => null()
@@ -45,6 +39,12 @@ program tp_mesh_location
   type(PDM_pointer_array_t), pointer :: src_edge_ln_to_gn => null()
   type(PDM_pointer_array_t), pointer :: src_face_ln_to_gn => null()
 
+  ! tgt mesh generation
+  integer(pdm_g_num_s), parameter    :: tgt_n_vtx_seg = 8
+  integer(c_int),       parameter    :: tgt_n_part = 1
+  double precision,     parameter    :: tgt_xmin = 0.3d0
+  double precision,     parameter    :: tgt_ymin = 0.3d0
+
   integer(pdm_l_num_s),      pointer :: tgt_n_vtx(:)      => null()
   integer(pdm_l_num_s),      pointer :: tgt_n_edge(:)     => null()
   integer(pdm_l_num_s),      pointer :: tgt_n_face(:)     => null()
@@ -57,10 +57,16 @@ program tp_mesh_location
   type(PDM_pointer_array_t), pointer :: tgt_edge_ln_to_gn => null()
   type(PDM_pointer_array_t), pointer :: tgt_face_ln_to_gn => null()
 
+  ! mesh location structure
   type(c_ptr)                        :: mesh_loc = C_NULL_PTR
+
+  ! tgt cloud definition
   integer(pdm_g_num_s),      pointer :: vtx_ln_to_gn(:)  => null()
-  integer(pdm_g_num_s),      pointer :: face_ln_to_gn(:) => null()
   double precision,          pointer :: vtx_coord(:,:)   => null()
+
+  ! src mesh definition
+  logical,              parameter    :: nodal = .false.
+  integer(pdm_g_num_s),      pointer :: face_ln_to_gn(:) => null()
   integer(pdm_l_num_s),      pointer :: face_edge_idx(:) => null()
   integer(pdm_l_num_s),      pointer :: face_edge(:)     => null()
   integer(pdm_l_num_s),      pointer :: face_vtx(:)      => null()
@@ -92,10 +98,7 @@ program tp_mesh_location
   integer                            :: n_unlocated
   integer(pdm_l_num_s),      pointer :: unlocated(:) => null()
 
-  integer(pdm_g_num_s),      pointer :: location(:)           => null()
-  double precision,          pointer :: dist2(:)              => null()
-  double precision,          pointer :: projected_coords(:,:) => null()
-  double precision                   :: error(2)
+  double precision                   :: error
   type(my_field_t)                   :: src_visu_field1(1)
   type(my_field_t)                   :: src_visu_field2(1)
   type(my_field_t)                   :: tgt_visu_fields(3)
@@ -118,7 +121,7 @@ program tp_mesh_location
 
   ! Generate partitioned source mesh
   call pdm_generate_mesh_rectangle_ngon(comm,                         &
-                                        4,                            &
+                                        PDM_MESH_NODAL_POLY_2D,       &
                                         0.d0,                         &
                                         0.d0,                         &
                                         0.d0,                         &
@@ -143,7 +146,7 @@ program tp_mesh_location
 
   ! Generate partitioned target mesh
   call pdm_generate_mesh_rectangle_ngon(comm,                        &
-                                        3,                           &
+                                        PDM_MESH_NODAL_QUAD4,        &
                                         tgt_xmin,                    &
                                         tgt_ymin,                    &
                                         0.d0,                        &
@@ -386,6 +389,12 @@ program tp_mesh_location
 
 
   do i_part = 1, tgt_n_part
+
+    allocate(visu_field1(tgt_n_vtx(i_part)), &
+             visu_field2(tgt_n_vtx(i_part)), &
+             visu_field3(tgt_n_vtx(i_part)))
+
+
     n_located = pdm_mesh_location_n_located_get(mesh_loc, &
                                                 0,        &
                                                 i_part-1)
@@ -404,23 +413,15 @@ program tp_mesh_location
                                          i_part-1, &
                                          unlocated)
 
-
-    call pdm_mesh_location_point_location_get(mesh_loc, &
-                                              0,        &
-                                              i_part-1, &
-                                              location, &
-                                              dist2,    &
-                                              projected_coords)
+    call pdm_pointer_array_part_get(tgt_vtx_ln_to_gn, &
+                                    i_part-1,         &
+                                    vtx_ln_to_gn)
 
     call pdm_pointer_array_part_get(tgt_vtx_coord,             &
                                     i_part-1,                  &
                                     PDM_STRIDE_CST_INTERLACED, &
                                     3,                         &
                                     vtx_coord)
-
-    call pdm_pointer_array_part_get(tgt_vtx_ln_to_gn, &
-                                    i_part-1,         &
-                                    vtx_ln_to_gn)
 
     call pdm_pointer_array_part_get(tgt_recv_field1, &
                                     i_part-1,        &
@@ -429,10 +430,6 @@ program tp_mesh_location
     call pdm_pointer_array_part_get(tgt_recv_field2, &
                                     i_part-1,        &
                                     field2)
-
-    allocate(visu_field1(tgt_n_vtx(i_part)), &
-             visu_field2(tgt_n_vtx(i_part)), &
-             visu_field3(tgt_n_vtx(i_part)))
 
     do i = 1, n_unlocated
       vtx_id = unlocated(i)
@@ -443,9 +440,8 @@ program tp_mesh_location
 
     do i = 1, n_located
       vtx_id = located(i)
-      error(1) = abs(field1(i) - location(i))
-      error(2) = abs(field2(i) - vtx_coord(1,vtx_id))
-      if (minval(error) > 1.e-9) then
+      error  = abs(field2(i) - vtx_coord(1,vtx_id))
+      if (error > 1.e-9) then
         print *, "!! error vtx", vtx_ln_to_gn(vtx_id), " :", error
       endif
 
@@ -466,6 +462,7 @@ program tp_mesh_location
                                       visu_field3)
 
     enddo
+
   enddo
 
 

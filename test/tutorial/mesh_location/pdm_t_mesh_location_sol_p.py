@@ -68,7 +68,7 @@ def run_tuto():
                                               n_x         = n,
                                               n_y         = n,
                                               n_part      = tgt_n_part,
-                                              part_method = PDM._PDM_SPLIT_DUAL_WITH_PARMETIS)
+                                              part_method = PDM._PDM_SPLIT_DUAL_WITH_HILBERT)
 
   tgt_n_vtx        = tgt_mesh["pn_vtx"]
   tgt_n_face       = tgt_mesh["pn_face"]
@@ -144,7 +144,10 @@ def run_tuto():
                        interlaced_str=True)
 
   # Interpolate second field (node-based)
-  src_send_field1 = []
+  src_vtx_field2 = []
+  for i_part in range(src_n_part):
+    src_vtx_field2.append(np.array(src_vtx_coord[i_part][::3]))
+
   src_send_field2 = []
 
   for i_part in range(src_n_part):
@@ -169,7 +172,7 @@ def run_tuto():
         assert(weights_idx[i_pt+1] - weights_idx[i_pt] == elt_n_vtx)
         for i_vtx in range(elt_n_vtx):
           vtx_id = src_cell_vtx[src_cell_vtx_idx[i_elt] + i_vtx] - 1
-          field2[i_pt] += src_vtx_coord[i_part][3*vtx_id] * weights[weights_idx[i_pt] + i_vtx]
+          field2[i_pt] += weights[weights_idx[i_pt] + i_vtx] * src_vtx_field2[i_part][vtx_id]
 
     src_send_field2.append(field2)
 
@@ -190,11 +193,18 @@ def run_tuto():
   ptgt_field1 = []
   ptgt_field2 = []
   for i_part in range(tgt_n_part):
-    located_tgt = mesh_loc.located_get(0, i_part)
+    located_tgt   = mesh_loc.located_get  (0, i_part)
+    unlocated_tgt = mesh_loc.unlocated_get(0, i_part)
 
-    is_located = np.zeros(tgt_n_vtx[i_part], dtype=bool)
-    tgt_field1 = np.zeros(tgt_n_vtx[i_part], dtype=np.double)
-    tgt_field2 = np.zeros(tgt_n_vtx[i_part], dtype=np.double)
+    is_located = np.empty(tgt_n_vtx[i_part], dtype=bool)
+    tgt_field1 = np.empty(tgt_n_vtx[i_part], dtype=np.double)
+    tgt_field2 = np.empty(tgt_n_vtx[i_part], dtype=np.double)
+
+    for i, i_vtx in enumerate(unlocated_tgt):
+      is_located[i_vtx-1] = False
+      tgt_field1[i_vtx-1] = -1
+      tgt_field2[i_vtx-1] = -1
+
     for i, i_vtx in enumerate(located_tgt):
       is_located[i_vtx-1] = True
       tgt_field1[i_vtx-1] = tgt_recv_field1[i_part][i]
@@ -209,10 +219,6 @@ def run_tuto():
     ptgt_field2.append(tgt_field2)
 
   # Export for visualization
-  src_vtx_field2 = []
-  for i_part in range(src_n_part):
-    src_vtx_field2.append(np.array(src_vtx_coord[i_part][::3]))
-
   PDM.writer_wrapper(comm,
                      "mesh_location_sol_p",
                      "src_mesh",
