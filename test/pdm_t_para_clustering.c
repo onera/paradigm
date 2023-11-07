@@ -1088,6 +1088,8 @@ int main(int argc, char *argv[])
     fflush(stdout);
   }
 
+  clock_t t = clock();
+
   int         *red_blk_int_to_bnd_vtx_idx     = malloc (sizeof(int        ) *    (blk_n_int_vtx+1)                     );
   int         *red_blk_int_to_bnd_vtx_triplet = malloc (sizeof(int        ) * 3 * blk_int_to_bnd_vtx_idx[blk_n_int_vtx]);
   PDM_g_num_t *red_blk_int_to_bnd_vtx         = malloc (sizeof(PDM_g_num_t) *     blk_int_to_bnd_vtx_idx[blk_n_int_vtx]);
@@ -1229,6 +1231,17 @@ int main(int argc, char *argv[])
 
   }
 
+  t = clock() - t;
+  double _telapsed = ((double) t)/CLOCKS_PER_SEC;
+  double  telapsed;
+
+  PDM_MPI_Allreduce(&_telapsed, &telapsed, 1, PDM_MPI_DOUBLE, PDM_MPI_MAX, comm);
+
+  if (i_rank == 0) {
+    printf("Time for data reduction : %12.5es elapsed\n", telapsed);
+    fflush(stdout);
+  }
+
   /*
    * Exchange data from boundary to interior vertices
    */
@@ -1237,6 +1250,8 @@ int main(int argc, char *argv[])
     printf("-- Exchange data from boundary to interior vertices\n");
     fflush(stdout);
   }
+
+  t = clock();
 
   PDM_part_to_part_t *ptp_int_to_bnd = NULL;
 
@@ -1270,6 +1285,18 @@ int main(int argc, char *argv[])
 
   }
 
+  t = clock() - t;
+  _telapsed = ((double) t)/CLOCKS_PER_SEC;
+
+  PDM_MPI_Allreduce(&_telapsed, &telapsed, 1, PDM_MPI_DOUBLE, PDM_MPI_MAX, comm);
+
+  if (i_rank == 0) {
+    printf("Time for ptp creation : %12.5es elapsed\n", telapsed);
+    fflush(stdout);
+  }
+
+  t = clock();
+
   int      request            = 0;
   double **data_from_bnd_vtx  = NULL;
   double **coord_from_bnd_vtx = NULL;
@@ -1301,6 +1328,16 @@ int main(int argc, char *argv[])
                                 &request);
 
   PDM_part_to_part_reverse_iexch_wait(ptp_int_to_bnd, request);
+
+  t = clock() - t;
+  _telapsed = ((double) t)/CLOCKS_PER_SEC;
+
+  PDM_MPI_Allreduce(&_telapsed, &telapsed, 1, PDM_MPI_DOUBLE, PDM_MPI_MAX, comm);
+
+  if (i_rank == 0) {
+    printf("Time for ptp reverse exchange : %12.5es elapsed\n", telapsed);
+    fflush(stdout);
+  }
 
   PDM_part_to_part_free(ptp_int_to_bnd);
 
