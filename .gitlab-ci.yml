@@ -219,3 +219,4 @@ pages:
   artifacts:
     paths:
       - public
+    expire_in: never

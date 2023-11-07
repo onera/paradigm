@@ -44,8 +44,8 @@ An efficient parallel algorithm takes much longer to write and validate than a s
 <img src="paradigm.png" width="1000">
 
 **ParaDiGM** aims to offer a set of efficient services to simplify the writing of massively parallel distributed numerical simulation software, from reading data files to writing results.
-<span style="color:red">Numerical codes are generally based on a discretization of the study domain which can take the form of a mesh.
-**ParaDiGM** only offers services for unstructured meshes. (on garde partie Mesh après??)</span>
+Numerical codes are generally based on a discretization of the study domain which can take the form of a mesh.
+**ParaDiGM** only offers services for unstructured meshes.
 
 ## API
 
@@ -184,179 +184,6 @@ This is still a work in progress, so we welcome your comments and contributions!
 
 <img src="documentation.png" width="600">
 
-## Application examples
-
-
-<span style="color:red">
-  maybe revoir l'agencement des sections -> cf notebook d'intro CWIPI
-  TODO: A Déplacer après la description des fonctionnalités ? On parle de fonctionnalités qu'on n'a pas décrites
-</span>
-
-<img src="cwipiNew.svg" align=right style="margin: 0px 50px;" width="100">
-
-### Geometric core for code coupling : **CWIPI**
-
-The **CWIPI** library has been created by Eric Quémerais in 2009.
-
-- What for ?
-
-The purpose of this LGPL library is to couple codes in a massively parallel distributed setting.
-It provides tools to define code coupling algorithms to control each exchange between the codes.
-It does the transfer of interpolated fields through a geometric coupling interface.
-
-<img src="schema_concept_field.svg" width="400">
-
-- Why use **ParaDiGM** ?
-
-Formerly, **CWIPI** used the LGPL **FVM** library developed at EDF R&D for geometrical computations.
-To expand the range of spatial interpolation algorithms available and answer users feedback, **CWIPI** has been rewritten and relies on **ParaDiGM** since *version 1.0* (released in July 2023).
-
-- Which **ParaDiGM** features are used ?
-
-The spatial interpolation algorithms available in **CWIPI** rely on geometric algorithms implemented in **ParaDiGM**: `PDM_mesh_location`, `PDM_mesh_intersection` and `PDM_closest_points`.
-For the data exchange of the interpolated fields algorithm the `PDM_part_to_part` exchange tool is used.
-This means that if you need to do an interpolation operation out of a coupling setting you can directly call this functions from **ParaDiGM**.
-
-- Where ?
-
-  - https://gitlab.onera.net/numerics/coupling/cwipi (ONERA users only)
-  - https://w3.onera.fr/cwipi/bibliotheque-couplage-cwipi (in French)
-  - on GitHub (in progress)
-
-### Python/CGNS interface : **MAIA**
-
-This work is being carried out by Julien Coulet, Berenger Berthoul, Clément Benazet and Bruno Maugars of the DAAA/CLEF team.
-
-- What for?
-
-Pre- and Post-processing library for users in applied departments working with the Python/[CGNS](https://cgns.github.io/CGNS_docs_current/sids/index.html) framework.
-Aiming towards a complete parallel workflow, [**MAIA**](https://numerics.gitlab-pages.onera.net/mesh/maia/dev/index.html) proposes an extension of CGNS standard in order to manage in memory the block-distributed and partitioned approaches within the parallel trees and the available features are powered by **ParaDiGM**.
-
-<img src="maia_code.png" width="600">
-
-In this script we can see calls to **MAIA** functions to read a CGNS tree, partition a mesh, do a wall distance computation and finally compute and write a slice in an output file. This has been done in but 7 function calls !
-
-- A strong link with **ParaDiGM**
-
-**MAIA** developers do not only use **ParaDiGM**, they strongly contribute in terms of development and by providing a new range of users thus test cases to make the code more robust.
-
-- Where ?
-
-  - Installed with in eslA software suite (ONERA users only)
-  - https://gitlab.onera.net/numerics/mesh/maia (ONERA users only)
-  - https://github.com/onera/Maia
-
-<img src="logo_cedre.png" align=right style="margin: 0px 50px;" width="180">
-
-### Use of low level features : MCC in [**CEDRE**](https://cedre.onera.fr/)
-
-This work is being carried out by Philippe Grenard (DMPE/MPF).
-
-- What for ?
-
-The aim of the MCC (Maillages Chevauchants Conservatifs) feature is to slice a background volume by the contour of a masking mesh.
-This means that the cells need to be tagged as "hidden", "cut" or "visible" with respect to the masking mesh.
-Once this is done, a communication graph on the interface between the sliced background and the masking mesh needs to be created.
-
-- How was it formerly done ?
-
-A multi-sequential algorithm was implemented. Indeed, the surface mesh was duplicated on all the MPI ranks.
-Then the sequential slicing algorithm was run on all MPI ranks. Then global communications were used to bring the result on to all MPI ranks (`MPI_Allgather`).
-
-- Why change ?
-
-Because the memory cost exploded on large cases.
-The goal was thus to rewrite the feature leaving most of the data on their source MPI rank and create a load-balanced algorithm.
-
-- What are the hardships for legacy codes ?
-
-Using an external library in a legacy code to incrementally replace an existing feature while ensuring a minimum of non-regression can be complicated due to fixed complex data structures.
-Since the MCC feature is not yet widely used in **CEDRE**, it was easier to decide to recast it using an external library.
-
-- Why use **ParaDiGM** ?
-
-Developing parallel algorithms requires a high level of HPC expertise.
-Since the functions needed to develop this algorithm were (almost) present in **ParaDiGM**, it was easily available.
-
-- Which **ParaDiGM** features are used ?
-
-  - `PDM_gnum` to build the final unique global numbering
-  - `PDM_global_reduce` to estimate a characteristic mesh size at the vertices
-  - `PDM_extract_part` to extract the mesh area of interest
-  - `PDM_mesh_intersection` to operate the masking mesh intersection with the background volume mesh
-  - `PDM_part_to_part` to change data between those meshes
-
-<span style="color:red">
-  Mentionner rapidement la liste des autres fonctionnalités haut niveau utilisées par CEDRE même mentionner plus bas pour les I/O
-</span>
-
-<img src="logo_modethec.png" align=right style="margin: 0px 50px;" width="180">
-
-### Modernizing an existing code : **MoDeTheC**
-
-This work is being carried out by Nicolas Dellinger (DMPE/HEAT).
-
-- What for?
-
-**MoDeTheC** is a software for simulating heat and mass transfers in anisotropic reactive porous materials written in Fortran.
-
-- How was it formerly done ?
-
-Before the modernization task, it was a multi-thread (OpenMP) code.
-
-- Why use **ParaDiGM** ?
-
-The use of a shared tool allowed a significant time saving in the parallelization process.
-
-- Which **ParaDiGM** features are used ?
-
-Incrementally **ParaDiGM** features were added while ensuring a minimum of non-regression.
-Over the period September 2022 to April 2023, which marks the first parallel calculation, the following features have been added to the code:
-  - `PDM_mesh_location`
-  - `PDM_part_to_part`
-  - `PDM_part`
-  - `PDM_gnum`
-  - `PDM_renum_hpc`
-  - `PDM_(part_)mesh_nodal*`
-  - `PDM_part_extension`
-  - `PDM_dist_cloud_surf`
-Later the following features have been added : `PDM_closest_points`, `PDM_extract_part`, `PDM_multipart` and `PDM_dcube_gen`.
-
-- A strong link with **ParaDiGM**
-
-Aware of the workload of the development team, Nicolas did many developments to set up some missing Fortran interfaces.
-
-### Creating a new code : **SoNICS**
-
-This work is being carried out as a collaboration between ONERA And Safran.
-
-- What for?
-
-Software for aerodynamic finite-volume (node-centered and cell-centered) simulations of the Navier-Stokes equations on structured and unstructured meshes.
-Successor to **elsA** based on an innovative architecture for current and future hybrid hardware.
-
-- A strong link with **ParaDiGM**
-
-**SoNICS** developers do not only use **ParaDiGM**, they strongly contribute to it. Since the aim is to share expertise and development of parallel algorithms, when new features can be used outside the context of **SoNICS**, its developers code it in a generic way in **ParaDiGM**.
-
-- Which **ParaDiGM** features are used ?
-
-  - for pre-processing : partitioning and renumbering
-  - for co-processing : computation of spatial interpolation weights (e.g. for chimera method) and wall distance computations for specific surface turbomachinery conditions (e.g. mixing plane, chorochronic)
-  - for post-processing : extraction of mesh partition and iso-surface computation
-  - strongly interested in parallel mesh adaptation !
-
-### Use in legacy codes
-
-<img src="logo_elsa.png" align=right style="margin: 0px 50px;" width="180">
-
-Let's have a look a the dependencies of a legacy code like [**elsA**](https://elsa.onera.fr/).
-
-<img src="elsA.png" width="600">
-
-On this figure, it is clear that there is a direct dependency to **ParaDiGM** function calls in the software itself.
-We can see that **elsA** has a dependency to **MAIA** which we mentioned earlier.
-Moreover, the tool ETC relies on **ppart** which itself relies on **ParaDiGM**'s mesh partitioning features.
 
 ## How do I install **ParaDiGM**?
 
@@ -364,13 +191,9 @@ Start by getting the sources of **ParaDiGM** (by cloning the [GitLab](https://gi
 The library builds with [CMake](https://cmake.org/).
 If you wish another interface than the native C, use the `PDM_ENABLE_Fortran=<ON | OFF> (default : OFF)` or `PDM_ENABLE_PYTHON_BINDINGS=<ON | OFF> (default : OFF)` option.
 
-<span style="color:red">*plus de détails?*</span>
-
 For further details about the install process of **ParaDiGM**, please refer to the [documentation](https://numerics.gitlab-pages.onera.net/mesh/paradigm/dev_formation/getting_started/installation.html).
 
-<!-- ### Basic Installation
-
-<span style="color:red">*(vraiment utile de détailler, autant pointer vers doc/README, non?)*</span>
+### Basic Installation
 
 >**cmake .**
 
@@ -380,94 +203,27 @@ For further details about the install process of **ParaDiGM**, please refer to t
 
 ### CMake general options
 
-> **cmake . -D\<option1_name\>=\<option1_value\> ... -D\<optionn_name\>=\<optionn_value\>** with options :  
+> **cmake . -D\<option1_name\>=\<option1_value\> ... -D\<optionN_name\>=\<optionN_value\>** with options :
 
  - **CMAKE\_INSTALL\_PREFIX=\<prefix\>** : Installation directory path
 
  - **PDM_ENABLE_Fortran=<ON | OFF> (default : OFF)** : Enable Fortran interface
 
  - **PDM_ENABLE_PYTHON_BINDINGS=<ON | OFF> (default : OFF)** : Enable python interface
-      
-      If a simple autodetection fails, you can use these options to find Python :
-
-        - Python_ROOT_DIR=<path> 
-        - Python_LIBRARY=<path>
-        - Python_INCLUDE_DIR=<path>
-        - Python_EXECUTABLE=<path>
-        
-      Refer to FindPython in the CMake documentation for more information.
-      shared libraries are necessary for python interface (CWP_ENABLE_SHARED=ON)
 
  - **PDM_ENABLE_SHARED=<ON | OFF> (default : ON)** : Enable shared libraries
 
  - **PDM_ENABLE_STATIC=<ON | OFF> (default : ON)** : Enable static libraries
 
- - **PDM_ENABLE_PARMETIS=<ON | OFF> (default : ON)** : Enable [ParMETIS](https://github.com/KarypisLab/ParMETIS) library (parallel graph partitioning)
+ - **PDM_ENABLE_PARMETIS=<ON | OFF> (default : ON)** : Enable [ParMETIS](https://github.com/KarypisLab/ParMETIS) library (parallel graph partitioning). **ParaDiGM** is compatible with a 32-bit or 64-bit installation.
 
-      If a simple autodetection fails, you can use PARMETIS_DIR=\<path\> and METIS_DIR=\<path\> options       
-
-      CMake looks for :
-
-        - parmetis.h and metis.h includes
-        - parmetis and metis libraries
-  
-      To link shared libraries, ParMETIS has to be compiled with "-fPIC" option. **ParaDiGM** is compatible with a 32-bit or 64-bit installation.
-
- - **PDM_ENABLE_PTSCOTCH=<ON | OFF> (default : ON)** : Enable [PTSCOTCH](https://gitlab.inria.fr/scotch/scotch) library (parallel graph partitioning) :
-      If a simple autodetection fails, you can use these options to find PTSCOTCH :
-        PTSCOTCH_DIR=\<path\>
-
-     CMake looks for :
-
-        - ptscotch.h include file
-        - scotch, scotcherr, ptscotch, ptscotcherr libraries
-  
-     To link shared libraries, PTSCOTCH has to be compiled with "-fPIC" and SCOTCH_PTHREAD_MPI=OFF. *ParaDiGM** is compatible with a 32-bit or 64-bit installation.
-
+ - **PDM_ENABLE_PTSCOTCH=<ON | OFF> (default : ON)** : Enable [PTSCOTCH](https://gitlab.inria.fr/scotch/scotch) library (parallel graph partitioning). **ParaDiGM** is compatible with a 32-bit or 64-bit installation.
 
  - **PDM_ENABLE_LONG_G_NUM= <ON | OFF> (default : ON)** : Enable long global numbering
 
-        - ON : PDM_g_num_t type is "long int"
-        - OFF : PDM_g_num_t type is "int"
+ - **PDM_ENABLE_PDMA= <ON | OFF> (default : OFF)** : Enable ParaDiGMA installation. *(This option can be enabled only if you have access to the git repository.)*
 
- - **PDM_ENABLE_PDMA= <ON | OFF> (default : OFF)** : Enable ParaDiGMA installation
 
-        This option can activated if you have access to the git repository
-
- - **PDM_ENABLE_DOC= <ON | OFF> (default : OFF)** : Enable Documentation
-
-     Requirements : 
-        - Doxygen
-        - Breathe
-        - Sphinx
-        - sphinxcontrib-tikz sphinx-rtd-theme
-        - sphinx-fortran (only if fortran is enabled)
-
-     It is recommended not to generate the documentation but to consult it on gitlab or github.     
-
-### CMake compiler options
-
-> **CC=<C compiler> CXX=<CXX compiler> FC=<Fortran compiler> cmake ...**
-
-or use the following CMake options:
-
- - **CMAKE_C_COMPILER=\<C compiler\>**
- - **CMAKE_CXX_COMPILER=\<CXX compiler\>**
- - **CMAKE_Fortran_COMPILER=\<Fortran compiler\>**
-
-### CMake MPI options:
-
- - **MPI_C_COMPILER=\<C mpi wrapper\>**
- - **MPI_CXX_COMPILER=\<CXX mpi wrapper\>**
- - **MPI_Fortran_COMPILER=\<Fortran mpi wrapper\>**
-
-   If a simple autodetection fails, you can use these options to find MPI:
-
-    - **MPI_\<lang\>_LIBRARIES**
-    - **MPI_\<lang\>_INCLUDE_PATH**
-  
-   Refer to FindMPI in the CMake documentation for more informations.
- -->
 ## Concepts and definition
 
 ### 0-based/1-based
@@ -477,7 +233,7 @@ or use the following CMake options:
 
 ### MPI
 
-- **comm** : MPI communicator given at the creation of a ParaDiGM object. Please note that all ParaDiGM functions require collective MPI communications. Please note that all ParaDiGM functions require collective MPI communications. Each MPI comm row must simultaneously call the functions linked to the feature to avoid deadlock.   
+- **comm** : MPI communicator given at the creation of a ParaDiGM object. Please note that all **ParaDiGM** functions require collective MPI communications. Please note that all **ParaDiGM** functions require collective MPI communications. Each MPI comm rank must simultaneously call the functions linked to the feature to avoid deadlock.
 - **i_rank** or **rank** : Curent rank mpi in **comm** (0-based)
 - **n_rank** : Size of **comm**  
 
@@ -843,6 +599,182 @@ Beta-feature. Still under construction. API might change.
 - What for ? To use mesh adaptation in a fully parallel workflow
 
 <br/><br/>
+
+## Application examples
+
+
+<span style="color:red">
+  maybe revoir l'agencement des sections -> cf notebook d'intro CWIPI
+  TODO: A Déplacer après la description des fonctionnalités ? On parle de fonctionnalités qu'on n'a pas décrites
+</span>
+
+<img src="cwipiNew.svg" align=right style="margin: 0px 50px;" width="100">
+
+### Geometric core for code coupling : **CWIPI**
+
+The **CWIPI** library has been created by Eric Quémerais in 2009.
+
+- What for ?
+
+The purpose of this LGPL library is to couple codes in a massively parallel distributed setting.
+It provides tools to define code coupling algorithms to control each exchange between the codes.
+It does the transfer of interpolated fields through a geometric coupling interface.
+
+<img src="schema_concept_field.svg" width="400">
+
+- Why use **ParaDiGM** ?
+
+Formerly, **CWIPI** used the LGPL **FVM** library developed at EDF R&D for geometrical computations.
+To expand the range of spatial interpolation algorithms available and answer users feedback, **CWIPI** has been rewritten and relies on **ParaDiGM** since *version 1.0* (released in July 2023).
+
+- Which **ParaDiGM** features are used ?
+
+The spatial interpolation algorithms available in **CWIPI** rely on geometric algorithms implemented in **ParaDiGM**: `PDM_mesh_location`, `PDM_mesh_intersection` and `PDM_closest_points`.
+For the data exchange of the interpolated fields algorithm the `PDM_part_to_part` exchange tool is used.
+This means that if you need to do an interpolation operation out of a coupling setting you can directly call this functions from **ParaDiGM**.
+
+- Where ?
+
+  - https://gitlab.onera.net/numerics/coupling/cwipi (ONERA users only)
+  - https://w3.onera.fr/cwipi/bibliotheque-couplage-cwipi (in French)
+  - on GitHub (in progress)
+
+### Python/CGNS interface : **MAIA**
+
+This work is being carried out by Julien Coulet, Berenger Berthoul, Clément Benazet and Bruno Maugars of the DAAA/CLEF team.
+
+- What for?
+
+Pre- and Post-processing library for users in applied departments working with the Python/[CGNS](https://cgns.github.io/CGNS_docs_current/sids/index.html) framework.
+Aiming towards a complete parallel workflow, [**MAIA**](https://numerics.gitlab-pages.onera.net/mesh/maia/dev/index.html) proposes an extension of CGNS standard in order to manage in memory the block-distributed and partitioned approaches within the parallel trees and the available features are powered by **ParaDiGM**.
+
+<img src="maia_code.png" width="600">
+
+In this script we can see calls to **MAIA** functions to read a CGNS tree, partition a mesh, do a wall distance computation and finally compute and write a slice in an output file. This has been done in but 7 function calls !
+
+- A strong link with **ParaDiGM**
+
+**MAIA** developers do not only use **ParaDiGM**, they strongly contribute in terms of development and by providing a new range of users thus test cases to make the code more robust.
+
+- Where ?
+
+  - Installed with in eslA software suite (ONERA users only)
+  - https://gitlab.onera.net/numerics/mesh/maia (ONERA users only)
+  - https://github.com/onera/Maia
+
+<img src="logo_cedre.png" align=right style="margin: 0px 50px;" width="180">
+
+### Use of low level features : MCC in [**CEDRE**](https://cedre.onera.fr/)
+
+This work is being carried out by Philippe Grenard (DMPE/MPF).
+
+- What for ?
+
+The aim of the MCC (Maillages Chevauchants Conservatifs) feature is to slice a background volume by the contour of a masking mesh.
+This means that the cells need to be tagged as "hidden", "cut" or "visible" with respect to the masking mesh.
+Once this is done, a communication graph on the interface between the sliced background and the masking mesh needs to be created.
+
+- How was it formerly done ?
+
+A multi-sequential algorithm was implemented. Indeed, the surface mesh was duplicated on all the MPI ranks.
+Then the sequential slicing algorithm was run on all MPI ranks. Then global communications were used to bring the result on to all MPI ranks (`MPI_Allgather`).
+
+- Why change ?
+
+Because the memory cost exploded on large cases.
+The goal was thus to rewrite the feature leaving most of the data on their source MPI rank and create a load-balanced algorithm.
+
+- What are the hardships for legacy codes ?
+
+Using an external library in a legacy code to incrementally replace an existing feature while ensuring a minimum of non-regression can be complicated due to fixed complex data structures.
+Since the MCC feature is not yet widely used in **CEDRE**, it was easier to decide to recast it using an external library.
+
+- Why use **ParaDiGM** ?
+
+Developing parallel algorithms requires a high level of HPC expertise.
+Since the functions needed to develop this algorithm were (almost) present in **ParaDiGM**, it was easily available.
+
+- Which **ParaDiGM** features are used ?
+
+  - `PDM_gnum` to build the final unique global numbering
+  - `PDM_global_reduce` to estimate a characteristic mesh size at the vertices
+  - `PDM_extract_part` to extract the mesh area of interest
+  - `PDM_mesh_intersection` to operate the masking mesh intersection with the background volume mesh
+  - `PDM_part_to_part` to change data between those meshes
+
+<span style="color:red">
+  Mentionner rapidement la liste des autres fonctionnalités haut niveau utilisées par CEDRE même mentionner plus bas pour les I/O
+</span>
+
+<img src="logo_modethec.png" align=right style="margin: 0px 50px;" width="180">
+
+### Modernizing an existing code : **MoDeTheC**
+
+This work is being carried out by Nicolas Dellinger (DMPE/HEAT).
+
+- What for?
+
+**MoDeTheC** is a software for simulating heat and mass transfers in anisotropic reactive porous materials written in Fortran.
+
+- How was it formerly done ?
+
+Before the modernization task, it was a multi-thread (OpenMP) code.
+
+- Why use **ParaDiGM** ?
+
+The use of a shared tool allowed a significant time saving in the parallelization process.
+
+- Which **ParaDiGM** features are used ?
+
+Incrementally **ParaDiGM** features were added while ensuring a minimum of non-regression.
+Over the period September 2022 to April 2023, which marks the first parallel calculation, the following features have been added to the code:
+  - `PDM_mesh_location`
+  - `PDM_part_to_part`
+  - `PDM_part`
+  - `PDM_gnum`
+  - `PDM_renum_hpc`
+  - `PDM_(part_)mesh_nodal*`
+  - `PDM_part_extension`
+  - `PDM_dist_cloud_surf`
+Later the following features have been added : `PDM_closest_points`, `PDM_extract_part`, `PDM_multipart` and `PDM_dcube_gen`.
+
+- A strong link with **ParaDiGM**
+
+Aware of the workload of the development team, Nicolas did many developments to set up some missing Fortran interfaces.
+
+### Creating a new code : **SoNICS**
+
+This work is being carried out as a collaboration between ONERA And Safran.
+
+- What for?
+
+Software for aerodynamic finite-volume (node-centered and cell-centered) simulations of the Navier-Stokes equations on structured and unstructured meshes.
+Successor to **elsA** based on an innovative architecture for current and future hybrid hardware.
+
+- A strong link with **ParaDiGM**
+
+**SoNICS** developers do not only use **ParaDiGM**, they strongly contribute to it. Since the aim is to share expertise and development of parallel algorithms, when new features can be used outside the context of **SoNICS**, its developers code it in a generic way in **ParaDiGM**.
+
+- Which **ParaDiGM** features are used ?
+
+  - for pre-processing : partitioning and renumbering
+  - for co-processing : computation of spatial interpolation weights (e.g. for chimera method) and wall distance computations for specific surface turbomachinery conditions (e.g. mixing plane, chorochronic)
+  - for post-processing : extraction of mesh partition and iso-surface computation
+  - strongly interested in parallel mesh adaptation !
+
+### Use in legacy codes
+
+<img src="logo_elsa.png" align=right style="margin: 0px 50px;" width="180">
+
+Let's have a look a the dependencies of a legacy code like [**elsA**](https://elsa.onera.fr/).
+
+<img src="elsA.png" width="600">
+
+On this figure, it is clear that there is a direct dependency to **ParaDiGM** function calls in the software itself.
+We can see that **elsA** has a dependency to **MAIA** which we mentioned earlier.
+Moreover, the tool ETC relies on **ppart** which itself relies on **ParaDiGM**'s mesh partitioning features.
+
+
 
 # ParaDiGM git clone + installation
 
