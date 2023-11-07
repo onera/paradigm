@@ -95,15 +95,21 @@ program exercise_2
 
 ## Initialize MPI
 
+### Note
+
+Fortran forces to define the variables at the top of the program.
+In this notebook, we define the variables you need for a given function call in a separate cell above the one you will fill in.
+
 ```{code-cell}
 ---
 "deletable": false
 ---
 %%code_block -p exercise_2 -i 2
 
-  ! Variables for MPI
+  ! Variables for MPI ----------------------------------------------
   integer                            :: comm = MPI_COMM_WORLD
   integer                            :: i_rank, ierr
+  ! ----------------------------------------------------------------
 
 ```
 
@@ -140,7 +146,7 @@ Here we generate a square mesh composed of polygonal elements.
 ---
 %%code_block -p exercise_2 -i 3
 
-  ! Variables for generation of source mesh
+  ! Variables for generation of source mesh ------------------------
   integer(pdm_g_num_s)               :: src_n_vtx_seg = 10    ! number of vertices along each side of the square
   integer(pdm_l_num_s)               :: src_n_part    = 1     ! number of partitions per MPI rank
   double precision                   :: src_random    = 0.8d0 ! randomization factor
@@ -156,6 +162,7 @@ Here we generate a square mesh composed of polygonal elements.
   type(PDM_pointer_array_t), pointer :: src_vtx_ln_to_gn  => null()
   type(PDM_pointer_array_t), pointer :: src_edge_ln_to_gn => null()
   type(PDM_pointer_array_t), pointer :: src_face_ln_to_gn => null()
+  ! ----------------------------------------------------------------
 
 ```
 
@@ -213,7 +220,7 @@ We will see later how to deal with these *unlocated* points.
 ---
 %%code_block -p exercise_2 -i 4
 
-  ! Variables for generation of target mesh
+  ! Variables for generation of target mesh ------------------------
   integer(pdm_g_num_s)               :: tgt_n_vtx_seg = 8     ! number of vertices along each side of the square
   integer(pdm_l_num_s)               :: tgt_n_part    = 1     ! number of partitions per MPI rank
   double precision                   :: tgt_xmin      = 0.3d0 ! x-offset
@@ -231,6 +238,7 @@ We will see later how to deal with these *unlocated* points.
   type(PDM_pointer_array_t), pointer :: tgt_vtx_ln_to_gn  => null()
   type(PDM_pointer_array_t), pointer :: tgt_edge_ln_to_gn => null()
   type(PDM_pointer_array_t), pointer :: tgt_face_ln_to_gn => null()
+  ! ----------------------------------------------------------------
 
 ```
 
@@ -280,8 +288,9 @@ Now that we have all the required inputs, let's create an instance of the Mesh L
 ---
 %%code_block -p exercise_2 -i 5
 
-  ! Variables for Mesh Location
+  ! Variables for Mesh Location ------------------------------------
   type(c_ptr)                        :: mesh_loc = C_NULL_PTR
+  ! ----------------------------------------------------------------
 
 ```
 
@@ -313,10 +322,11 @@ Recall that there can be more than one partition per MPI rank.
 ---
 %%code_block -p exercise_2 -i 6
 
-  ! Variables for setting the target point cloud
-  integer(pdm_g_num_s),      pointer :: vtx_ln_to_gn(:)  => null()
-  double precision,          pointer :: vtx_coord(:,:)   => null()
+  ! Variables for setting the target point cloud -------------------
+  integer(pdm_g_num_s),      pointer :: vtx_ln_to_gn(:) => null()
+  double precision,          pointer :: vtx_coord(:,:)  => null()
   integer                            :: i_part
+  ! ----------------------------------------------------------------
 
 ```
 
@@ -372,13 +382,14 @@ Choose the one that suits you best, and again, recall that there can be more tha
 ---
 %%code_block -p exercise_2 -i 7
 
-  ! Variables for setting the source mesh
+  ! Variables for setting the source mesh --------------------------
   logical                            :: nodal            = .false.
   integer(pdm_g_num_s),      pointer :: face_ln_to_gn(:) => null()
   integer(pdm_l_num_s),      pointer :: face_edge_idx(:) => null()
   integer(pdm_l_num_s),      pointer :: face_edge(:)     => null()
   integer(pdm_l_num_s),      pointer :: face_vtx(:)      => null()
   integer(pdm_l_num_s),      pointer :: edge_vtx(:)      => null()
+  ! ----------------------------------------------------------------
 
 ```
 
@@ -553,8 +564,9 @@ The Part-to-part instance was built during the localization computation and can 
 ---
 %%code_block -p exercise_2 -i 8
 
-  ! Variables for retrieving the Part-to-part instance
+  ! Variables for retrieving the Part-to-part instance -------------
   type(c_ptr)                        :: ptp = C_NULL_PTR
+  ! ----------------------------------------------------------------
 
 ```
 
@@ -608,9 +620,10 @@ Hints:
 ---
 %%code_block -p exercise_2 -i 9
 
-  ! Variables for first exchange
+  ! Variables for first exchange -----------------------------------
   integer(pdm_l_num_s)               :: request1
-  type(PDM_pointer_array_t), pointer :: tgt_recv_field1  => null()
+  type(PDM_pointer_array_t), pointer :: tgt_recv_field1 => null()
+  ! ----------------------------------------------------------------
 
 ```
 
@@ -673,10 +686,10 @@ face the points located in it.
 ---
 %%code_block -p exercise_2 -i 10
 
-  ! Variables for interpolation of second field
+  ! Variables for interpolation of second field --------------------
+  integer                            :: n_pts, elt_n_vtx, i_elt, i_pt, i_vtx, vtx_id
   type(PDM_pointer_array_t), pointer :: src_send_field2              => null()
   double precision,          pointer :: field_d(:)                   => null()
-  integer                            :: n_pts, elt_n_vtx, i_elt, i_pt, i_vtx, vtx_id
   integer(pdm_l_num_s),      pointer :: src_to_tgt_idx(:)            => null()
   integer(pdm_g_num_s),      pointer :: points_gnum(:)               => null()
   double precision,          pointer :: points_coords(:,:)           => null()
@@ -687,6 +700,7 @@ face the points located in it.
   double precision,          pointer :: points_projected_coords(:,:) => null()
   integer(pdm_l_num_s),      pointer :: cell_vtx_idx(:)              => null()
   integer(pdm_l_num_s),      pointer :: cell_vtx(:)                  => null()
+  ! ----------------------------------------------------------------
 
 ```
 
@@ -780,9 +794,10 @@ You can now initiate the exchange of the interpolated field you just computed.
 ---
 %%code_block -p exercise_2 -i 11
 
-  ! Variables for second exchange
+  ! Variables for second exchange ----------------------------------
   integer(pdm_l_num_s)               :: request2
-  type(PDM_pointer_array_t), pointer :: tgt_recv_field2  => null()
+  type(PDM_pointer_array_t), pointer :: tgt_recv_field2 => null()
+  ! ----------------------------------------------------------------
 
 ```
 
@@ -825,21 +840,22 @@ You must therefore use the appropriate indirection to correctly read the receive
 ---
 %%code_block -p exercise_2 -i 12
 
-  ! Variables for final check and visualization
+  ! Variables for final check and visualization --------------------
   integer                            :: n_located
   integer(pdm_l_num_s),      pointer :: located(:)   => null()
   integer                            :: n_unlocated
   integer(pdm_l_num_s),      pointer :: unlocated(:) => null()
 
   double precision                   :: error
-  integer(pdm_g_num_s),      pointer :: field_i(:)   => null()
+  integer(pdm_g_num_s),      pointer :: field_i(:) => null()
   type(my_field_t)                   :: src_visu_field1(1)
   type(my_field_t)                   :: src_visu_field2(1)
   type(my_field_t)                   :: tgt_visu_fields(3)
-  double precision,          pointer :: visu_field1(:)        => null()
-  double precision,          pointer :: visu_field2(:)        => null()
-  double precision,          pointer :: visu_field3(:)        => null()
+  double precision,          pointer :: visu_field1(:) => null()
+  double precision,          pointer :: visu_field2(:) => null()
+  double precision,          pointer :: visu_field3(:) => null()
   integer                            :: i
+  ! ----------------------------------------------------------------
 
 ```
 

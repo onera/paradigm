@@ -51,7 +51,7 @@ if module_path not in sys.path:
 +++ {"editable": false, "deletable": false}
 
 Fortran forces to define the variables at the top of the program.
-In this notebook, we define the variables you need for a given function call in a seperate cell above the one you will fill in.
+In this notebook, we define the variables you need for a given function call in a separate cell above the one you will fill in.
 
 ```{code-cell}
 ---
