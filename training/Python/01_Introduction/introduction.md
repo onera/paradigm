@@ -189,9 +189,6 @@ This is still a work in progress, so we welcome your comments and contributions!
 
 Start by getting the sources of **ParaDiGM** (by cloning the [GitLab](https://gitlab.onera.net/numerics/mesh/paradigm) repository for instance).
 The library builds with [CMake](https://cmake.org/).
-If you wish another interface than the native C, use the `PDM_ENABLE_Fortran=<ON | OFF> (default : OFF)` or `PDM_ENABLE_PYTHON_BINDINGS=<ON | OFF> (default : OFF)` option.
-
-For further details about the install process of **ParaDiGM**, please refer to the [documentation](https://numerics.gitlab-pages.onera.net/mesh/paradigm/dev_formation/getting_started/installation.html).
 
 ### Basic Installation
 
@@ -222,6 +219,8 @@ For further details about the install process of **ParaDiGM**, please refer to t
  - **PDM_ENABLE_LONG_G_NUM= <ON | OFF> (default : ON)** : Enable long global numbering
 
  - **PDM_ENABLE_PDMA= <ON | OFF> (default : OFF)** : Enable ParaDiGMA installation. *(This option can be enabled only if you have access to the git repository.)*
+
+For further details about the install process of **ParaDiGM**, please refer to the [documentation](https://numerics.gitlab-pages.onera.net/mesh/paradigm/dev_formation/getting_started/installation.html).
 
 
 ## Concepts and definition
@@ -482,6 +481,11 @@ This feature will be explored in the first exercise of this training.
 
 #### Mesh partition extraction
 
+##### **<span style="color:darkorange;">Note</span>**
+*<span style="color:darkorange;">
+Beta-feature. Still under construction. API might change.
+</span>*
+
 <img src="extract_part.png" width="200" align="left" style="margin: 0px 30px 0px 30px;">
 
 <br/>
@@ -602,11 +606,6 @@ Beta-feature. Still under construction. API might change.
 
 ## Application examples
 
-
-<span style="color:red">
-  maybe revoir l'agencement des sections -> cf notebook d'intro CWIPI
-  TODO: A Déplacer après la description des fonctionnalités ? On parle de fonctionnalités qu'on n'a pas décrites
-</span>
 
 <img src="cwipiNew.svg" align=right style="margin: 0px 50px;" width="100">
 
