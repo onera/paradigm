@@ -1172,15 +1172,18 @@ visu/PEXT.case : extension
 ## Annex 1
 
 In some cases, the mesh is an assembly of several sub-meshes. These are called *domains*.
+In the figure bellow, we can see a mesh made of two domains.
 
-![alt text](mesh.png "A mesh composed of two domains")
+<img src="mesh.png" width="180">
 
 Each *domain* is partitioned in subdomains which
 are mapped to the processors of the parallel machine. On a processor the subdomain (of a mesh or a domain) can be subdivided in *parts*.
+This figure shows rank 0 for the above mesh which has a subdomain of each domain with two parts for the subdomain of domain 1.
 
-![alt text](processor.png "Processor 0 with a subdomain of each domain with two parts for subdomain of domain 1")
+<img src="processor.png" width="180">
 
 A mesh can be composed of several element types (tetrahedra, hexahedra, prisms...). In certain settings, the mesh definition for each specific element type
 is stored in a separate *section*. So in a *section* one will find data for a specific element type.
+Here we can see part 1 of the subdomain on rank 0 of domain 1 which has two sections.
 
-![alt text](part.png "Part 1 of the subdomain on processor 0 of domain 1 with two sections")
+<img src="part.png" width="180">
