@@ -330,7 +330,7 @@ Most notably, some mesh entities can be organized into **groups**, that come han
 It is also worth mentioning that **ParaDiGM** supports high-order, curved meshes.
 These more advanced notions go beyond the scope of this training so we will not focus on them today.
 
-## MPI parallel distributed algorithms
+## ParaDiGM's approach for parallel algorithms
 
 The aim of this section is to help you understand the reason for the **ParaDiGM**'s performance by walking you through the main concepts.
 
@@ -341,10 +341,13 @@ How is a mesh read in parallel?
 </span>*
 
 In this section we will study the block-distributed approach by having a look at how a mesh is read in parallel.
-We will do this as an interactive game. Some of you have a number on your table.
-This number represents the identifier of an MPI rank.
-On the front table, we have laid out tokens representing mesh data stored in a file.
-In ascending order, a representative of each MPI rank will collect an equitably distributed number of tokens.
+We will do this as an interactive game. Some of you will be representatives of MPI ranks.
+We will provide each one of you your MPI rank number (which you would retrieve in your code doing `MPI_Comm_rank`).
+
+On the front desk we have laid out tokens with mesh elements on it.
+Each element has number on it and we sorted them in ascending order.
+
+In ascending order MPI rank order, a representative of each MPI rank will collect an equitably distributed number of tokens in ascending element number.
 
 *<span style="color:olivedrab;">
 How many tokens will each rank get?
@@ -352,66 +355,70 @@ How many tokens will each rank get?
 
 Once each MPI rank has read the mesh data assigned to them, the parallel mesh read is completed.
 The way the data is distributed is what we call **block-distributed**.
-Now you can flip your tokens.
 
-*<span style="color:olivedrab;">
-What particularity of the block-distributed approach can you see?
-</span>*
-
+You have noticed that we made you get the tokens in a certain way such that the tokens are sorted in **ascending order** over the MPI ranks.
 Ask the other representatives of MPI ranks which tokens they have. By doing so, you will notice that the number identifying each token appears only once.
 This **unicity** turns out to be handy for parallel [data sorting](https://en.wikipedia.org/wiki/Bucket_sort), a core tool for parallel algorithms.
-You might also have noticed that the tokens are sorted in **ascending order** over the MPI ranks.
 
 *<span style="color:olivedrab;">
 What do this numbers on your tokens represent?
 </span>*
 
-### Global IDs and the partitioned approach
+Thus, each piece of data (here a mesh element) is associated to a unique number representing it in the data set over all MPI ranks.
+This is what we refer to as the **global IDs**.
 
-Each piece of data (here a mesh element) is associated to a unique number representing it in the data set over all MPI ranks.
+### Partitioned approach
 
-To be used in a numerical simulation, the mesh we just read needs to be partitioned.
-We will hand out tokens of an other color representing the elements of the partitioned mesh.
-
-*<span style="color:olivedrab;">
-What is the particularity of the token distribution for a partitioned mesh?
-</span>*
-
-Ask the other representatives of MPI ranks which tokens they have. They have no elements in common.
-Now have a look at the global identifiers of the vertices on the elements on your token.
-It turns out that on partition boundaries of the partitioned mesh there are vertices in common.
-
-A mesh in the **partitioned** approach is a coherent sub-mesh on each MPI rank while in the **block-distributed** approach the vertices on a given MPI rank are most often not linked to the mesh elements on that MPI rank.
+Now, we will hand out to each MPI rank a partition of the mesh we just read.
 
 *Remark : We never asked you to discard the tokens of the block-distributed vision. This is because they will coexist in memory.*
 
-### A parallel context with a multi-sequential algorithm
-
-Now that the mesh is partitioned, it is time to work with it.
-The representatives of each MPI rank will compute for each of the elements of the tokens in their possession the maximum value of the vertices of that element.
+You can now turn around the tokens of the block-distributed approach. You will notice little drawings on the back side.
+Those represent data associated to the element (that would be a field in a real life application).
 
 *<span style="color:olivedrab;">
-Was this a well-balanced parallel task?
+What drawing is associated to the elements of partition on your MPI rank?
 </span>*
 
-Yes, since the mesh partitioning allowed each MPI rank to have an equally distributed number of elements of the mesh.
-Still, this is a multi-sequential algorithm comparable to the one formerly done for the MCC feature.
+The elements you have on your MPI rank in the block-distributed approach are most certainly not the ones you have in the partitioned approach.
+You need to ask the information of the drawing to the representatives of the other MPI ranks.
 
 *<span style="color:olivedrab;">
-Why bother to change for a load-balanced algorithm?
+How do you know who has the element in the block-distributed approach you have in the partitionned approach?
 </span>*
 
-### A parallel context with a load-balanced algorithm
+Indeed, you will have noticed that in the partitionned approach the elements are no more sorted by element number across the MPI ranks.
+But in the block-distributed approach they are.
+We ask each MPI rank representative to raise their hand with the element from the block-distributed approach with the lowest number on it.
+This way you created the data distribution array across the MPI ranks. By dichotony, you can find out whom you have to ask the drawing information for.
 
-Now we ask you to compute the following quantity for each element/token $e$ in your possession:
+During this game you actually created a **Block-to-Part** communication graph and operated the exchange. This is a core building block for the algorithms in ParaDiGM.
+
+### Multi-sequential vs load-balanced algorithm
+
+We will now try to make you understand the difference between two types of parallel algorithms : multi-sequential and load_balanced.
+
+To start, turn around the tokens in the partitioned approach. You can see values on the back side.
+These values represent the values of a field exchanged using a **Block-to-Part** communication graph.
+
+We use this partitioned mesh for a numerical simulation. The physical phenomena of interest only takes place in a given region of the mesh.
+We selected the elements of that region by putting the value on the back side of the token in a circle.
+
+Can those who have this type of elements raise their hand and tell the others how many elements from their partitionned approach have a circle around the value on the back side.
+
+It turns out that but little MPI ranks possess elements where the physical phenomema of interest takes place.
+We want do a reduction operation on the field values of the elements in that region (in real life this would be in integral computation).
+
+Now we ask you to compute the following quantity for each element/token $e$ in your possession int the partitionned approach:
 $$
-\sum_{i=0}^{n} \left( \sqrt{v_i} + \prod_{j=0}^{n} \left(42 + \frac{v_i}{v_j} \right) \right),
+\sum_{i=1}^{42}\left ( \sqrt{f_{e}} + \prod_{j = 1}^{24} \left ( f_{e}^{\frac{1}{4}} \right )\right )
 $$
-where $n$ designates the number of vertices in $e$, and $v_i$ the global id of the $i$-th vertex of $e$.
-This task only needs to be done the MPI ranks possessing the elements in the lower half of the mesh.
+where $f_e$ designates the field value of $e$.
+
+Then you will have to sum this information for all the elements in the region on MPI rank 0.
 
 *<span style="color:olivedrab;">
-Would you rather charge this task with representatives of other ranks or do it on your own while they have nothing to do?
+Would you rather share this task with representatives of other ranks or do it on your own while they have nothing to do?
 </span>*
 
 To do such a tedious task, you'd like to get your fellow MPI rank representatives to work.
@@ -423,7 +430,7 @@ Is is worth to bring them the data they need to help you out rather than just to
 It turns out that if the workload is sufficient it is worth to do this communication to speed up the computation.
 This is the setting for most geometric operations.
 Even if the partitioning was already well-balanced for the operation, the overload of the load balancing is minimal.
-In most cases, this approach is a winner !
+In most cases, this load-balancing approach is a winner !
 
 ## Features overview
 
