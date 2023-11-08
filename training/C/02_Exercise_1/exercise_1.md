@@ -55,6 +55,9 @@ if module_path not in sys.path:
 In this section, `ParaDiGM` tools are used to generate a simple mesh for this exercise: a cube made of tetrahedra.
 You have nothing to do here. Still if you are curious about this feature, you can have a look [here](https://numerics.gitlab-pages.onera.net/mesh/paradigm/dev/user_manual/simple_mesh_gen/dcube_nodal.html#C-API).
 
+In your numerical simulation software you rarely generate a mesh.
+This step actually generates a block-distributed mesh which is distributed in the same way as a mesh you would have **read in parallel**.
+
 ```{code-cell}
 ---
 "editable": false
@@ -119,6 +122,10 @@ int main
   PDM_dcube_nodal_gen_free(dcube);
 
 ```
+
+Here you can see that the mesh were stored in a Dirstibuted-Nodal-Mesh structure (`dmn`).
+This is an internal mesh structure to ParaDiGM not for user purpose.
+Each feature is made such that you can set the mesh using basic arrays.
 
 +++ {"editable": false, "deletable": false}
 
@@ -188,6 +195,8 @@ You can here call the renumbering function but by telling it not to do any renum
 +++ {"editable": false, "deletable": false}
 
 Now that you have created a mesh partitioning structure `mpart`, you can **set** (step 2) the cube mesh to it.
+For simplicity of the exercise, we here set the mesh using the Dirstibuted-Nodal-Mesh structure (`dmn`).
+This is a pratice internal to ParaDiGM algorithms. In your software you would just set the mesh using basic arrays.
 
 ```{code-cell}
 ---
