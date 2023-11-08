@@ -101,7 +101,9 @@ We start by generating the partitioned source mesh.
 By now you should be capable of partitioning a mesh using **ParaDiGM** (if not, you should definitely take a look at [**Exercise 1**](../02_Exercise_1/exercise_1.ipynb)).
 To gain some time, let's use the [*PDM_generate_mesh*](https://numerics.gitlab-pages.onera.net/mesh/paradigm/dev_formation/user_manual/simple_mesh_gen/generate_mesh.html#c-api) service to generate a partitioned mesh in a single function call.
 
-Here we generate a square mesh composed of polygonal elements.
+Here we generate a square mesh composed of polygonal elements that looks like this (here partitioned on 4 processes, each one represented by a distinct color):
+
+<img src="01_part_src.png" width="375">
 
 *Nothing to do here, you can move on. Just don't forget to run the cell!*
 
@@ -162,7 +164,11 @@ This second mesh is deliberately offset so that some target points lie outside t
 These points may not be located.
 We will see later how to deal with these *unlocated* points.
 
-*Note: we use a different partitioning method for the two meshes so that the source and target partitions do not match.*
+The partitioned cloud typically looks like this:
+
+<img src="02_part_tgt.png" width="375">
+
+Note that we use a different partitioning method for the two meshes so that the source and target partitions do not match.
 
 *Nothing to do here either. However, once you've successfully completed the localization procedure, feel free to play with the parameters of the two meshes.*
 
@@ -321,43 +327,6 @@ Choose the one that suits you best, and again, recall that there can be more tha
 
 +++ {"editable": false, "deletable": false}
 
-### Set some optional parameters
-
-The location algorithm uses a preconditioning stage which consists in associating candidate elements and points before computed the exact location.
-Three preconditioning methods are available:
-- `PDM_MESH_LOCATION_OCTREE`
-- `PDM_MESH_LOCATION_DBBTREE`
-- `PDM_MESH_LOCATION_LOCATE_ALL_TGT`
-
-The first two methods use bounding boxes and distributed tree data structures to find the candidate pairs efficiently.
-Theses boxes can be expanded using a **relative geometric tolerance** allowing for safer candidate detection.
-The third method uses a combination of both trees to ensure all target points are "located", i.e. associated to the nearest source element.
-
-(By default, the `PDM_MESH_LOCATION_OCTREE` method is used, with a relative tolerance equal to zero.)
-
-We recommend that you first go through the entire localization procedure before worrying about these options.
-You will still have time afterwards to play with them and see the impact they can have.
-
-```{code-cell}
----
-"deletable": false
----
-%%code_block -p exercise_2 -i 7
-
-  // Set the location preconditioning method (optional)
-  // EXO
-  PDM_mesh_location_method_set(mesh_loc,
-                               PDM_MESH_LOCATION_OCTREE);
-
-  // Set the geometric tolerance (optional)
-  // EXO
-  double tolerance = 1e-6;
-  PDM_mesh_location_tolerance_set(mesh_loc, tolerance);
-
-```
-
-+++ {"editable": false, "deletable": false}
-
 ### Compute the localization
 
 Now that everything is ready, we can compute the localization.
@@ -388,34 +357,17 @@ This mapping consists in:
 - a set of geometric data sufficient for P1 interpolation of node-based fields ;
 - an MPI communication graph to exchange data between the mapped entities.
 
+The figure below illustrates the mapping between source and targets.
+It is clear that MPI communication are necessary to transfer data between the two as the mapped entities are in general not hosted by the same process.
+
+<img src="03_localization.png" width="375">
+
+
 In the second part of this exercise you will have to use these two pieces of information to:
 1. exchange the global ids of the source elements to the corresponding target points: this way each *located* point is supposed to receive the global id of the element it is contained in ;
 2. interpolate (and exchange) a node-based field: we choose a linear field such as the Cartesian coordinate *x* so we can easily check everything went right.
 
 
-<!-- <span style="color:red">
-Si vous vous rappelez, pour construire un objet Part-to-Part, on doit spécifier:
-- les partitions côté "1"
-- les partitions côté "2"
-- le lien/graphe 1 -> 2 (en g_num)
-
-Ici, 1 = source et 2 = cible.
-Le lien 1->2 est donc "la liste des points cibles contenus dans chaque élement du maillage source" (pt_in_elt aka src_to_tgt)
-
-Rappel data_def_order
-
-recouvrir échange field1 par calcul src_field2
-</span>
-
-Now that we have located the target points in the source mesh, we can exchange data between the two.
-To complete this exercise, we will interpolate two fields from the source mesh to the target cloud:
-  1. a cell-based field: we can simply use the face global ids for such a field, and check it matches the location data.
-  2. a node-based field: we can use the node coordinates.
-
-First, compute the spatially interpolated fields on the source side.
-For the first field, the interpolation is straightforward : the target value is simply the same as the host source.
-The second field interpolation is trickier as you will need the cell->vertex connectivity built during the location computation to link the interpolation weights to the appropriate source nodes.
- -->
 
 +++ {"editable": false, "deletable": false}
 
@@ -423,13 +375,13 @@ The second field interpolation is trickier as you will need the cell->vertex con
 
 The communication graph is embodied in the form of a [`PDM_part_to_part_t`](https://numerics.gitlab-pages.onera.net/mesh/paradigm/dev_formation/user_manual/comm_graph/ptp.html#c-api) instance.
 
-The Part-to-part feature has been created to exchange data between two entities partitions.
-That is why the Part-to-part structure is built by specifying the partitions on both sides, as well as the graph of the links between elements of partition 1 (*Part1*) to partition 2 (*Part2*).
+The Part-to-part feature was designed as a generic means of exchanging data between two arbitrarily partitioned sets of entities.
+The Part-to-part structure is thus built by specifying the partitions of both sets, as well as the graph of the links between elements of set 1 (*Part1*) to set 2 (*Part2*).
 
 <img src="ptp.png" width="300">
 
-On the figure above the first partition is represented by the red set of points and the second partition by the blue set of points.
-The graph between *Part1* and *Part2* is symbolised by the gray arrows.
+On the figure above the first set is represented in red and the second set in blue.
+The graph between *Part1* and *Part2* is symbolized by the gray arrows.
 
 In this case, *Part1* represents the source mesh and *Part2* the target point cloud.
 
@@ -467,17 +419,17 @@ Here you need to initiate the exchange of global ids from the source mesh elemen
 Marie is part of the Dupont family. She is going to meet members of the Perez family. She already knows some of them.
 Marie is going to provide her name to the members of the Perez family she doesn't know.
 In a sense, we can link Marie with the members of the Perez family she doesn't know. Then communicate to them the same information,
-which is her name. This is exactly a Part-to-part exchange with the option `PDM_PART_TO_PART_DATA_DEF_ORDER_PART1`.
+which is her name. This is exactly a Part-to-part exchange with the mode `PDM_PART_TO_PART_DATA_DEF_ORDER_PART1`.
 In our mesh location exercise, who is the Dupont family who will provide their name and who is the Perez family?
 </span>*
 
 As each MPI ranks hosts source *and* target partitions, we will use the **PDM_part_to_part_iexch** function which allows for transparent, bilateral data exchange.
 
-+++ {"jupyter": {"source_hidden": true}, "editable": false, "deletable": false}
+<!-- +++ {"jupyter": {"source_hidden": true}, "editable": false, "deletable": false}
 
 Hints:
   - each cell sends a **single** value (its **global id**)
-  - the **same** value is sent to each corresponding target
+  - the **same** value is sent to each corresponding target -->
 
 ```{code-cell}
 ---
@@ -520,29 +472,53 @@ Hints:
 
 Here you need to interpolate the node-based field from the source mesh onto the target points.
 That means for each target point computing the weighted average of the field on the vertices of the element it is located in.
+The resulting interpolated field must be partitioned the same way as the input target point cloud.
 
-<img src="04_zoom_cell.png" width="200">
+<img align=right src="04_zoom_cell.png" width="200" style="margin: 0px 50px;">
+<br>
+Let $f$ denote the field of interest, $T$ a target point and $S$ the source element containing $T$.
+Then the interpolated field at $T$ reads
+$$f(T) = \sum_i w_i f(v_i),$$
+where $\left\{ v_i \right\}$ is the set of vertices of $S$ and $\left\{ w_i \right\}$ the interpolation weights.
 
-Each color on the picture above represents the weight associated to the red point in this pentagon.
+<br>
 
-*Will the weighted average be the same for the red and blue point?*
+The figure on the right depicts a source element $S$ with eight vertices and containing two target points.
+The iso-contours of the field continuously interpolated inside $S$ from the values at its vertices are shown in color.
+<!-- Each color on the picture above represents the weight associated to the red point in this pentagon. -->
+
+<!-- *Will the weighted average be the same for $T_1$ and $T_2$?*
 
 This means there is a better side to do the interpolation computation.
 Depending at the side of which part (*Part1* or *Part2*) the computation is done more data will be exchanged.
 
-*What is the most efficient side in terms of amount of data to exchange to do the computation?*
+*What is the most efficient side in terms of amount of data to exchange to do the computation?* -->
 
-Doing the interpolation on *Part1* (the source side), you will send one value to the target point in *Part 2* : the interpolated field.
-Doing the interpolation on *Part2* (the target side), you will send to each target point the coordinates and the field at each vertex of the element of the source mesh it has been located in.
+*How are we going to proceed to achieve this interpolation in practice?*
 
-You will implement the first option. You can start doing the interpolation.
+The interpolated values at $T_1$ and $T_2$ are different, so we need to proceed in a way different from the first exchange.
 
-*What is the data you have access to?*
+You can either:
+1. interpolate the values on the source side (*Part1*), and then send to each target point its interpolated field value ;
+2. send to each target point the field values at the vertices of the source element along with the corresponding weights, and then perform the interpolation on the target side (*Part2*).
+<!-- Doing the interpolation on *Part1* (the source side), you will send one value to the target point in *Part 2* : the interpolated field.
+Doing the interpolation on *Part2* (the target side), you will send to each target point the coordinates and the field at each vertex of the element of the source mesh it has been located in. -->
 
-You are on the side of *Part1* (source mesh). You have access to the elements of the mesh, the face->vertex connectivity and for each
-face the points located in it.
+*Which is the better option?*
 
-*Knowing this, how will you set up the loops over the entities to compute the interpolation?*
+You will implement the first option as it involves fewer data transfers. <!-- You can start doing the interpolation. -->
+
+*What data do you have access to?*
+
+You are on the side of *Part1* (source mesh).
+<!-- You have access to the elements of the mesh, the face$\to$vertex connectivity and for each face the list of target points located in it. -->
+You have access to:
+  - the field values at each vertex of the source mesh ;
+  - the face$\to$vtx connectivity, i.e. the list of vertices composing each element ;
+  - the list of target points located inside each source element ;
+  - the set of interpolation weights associated to each target point located in the source mesh.
+
+*Knowing this, how will you set up the loops in your code to compute the interpolation?*
 
 <!-- Interpolation of node-based fields is not as straightforward as cell-based ones.
 Let $f$ denote the field of interest, $T$ a target point and $S$ the source element containing $T$.
@@ -642,8 +618,8 @@ Now that you've done the interpolation, it is time to send the interpolated fiel
 *<span style="color:olivedrab;">
 Marie met the grandparents of the Perez family : Marta & Luis and Julio & Paula. She wants to send them a Christmas postcard.
 She chose a card with a Christmas tree for Marta & Luis and a card with Santa for Julio & Paula.
-In a sens, we can link Marie to Marta & Luis and Julio & Paula. This time she won't provide the same information to both of them.
-This is exactly a Part-to-part exchange with the option `PDM_PART_TO_PART_DATA_DEF_ORDER_PART1_TO_PART2`.
+In a sense, we can link Marie to Marta & Luis and Julio & Paula. This time she won't provide the same information to both of them.
+This is exactly a Part-to-part exchange with the mode `PDM_PART_TO_PART_DATA_DEF_ORDER_PART1_TO_PART2`.
 What does the postcard represent in our location exercise?
 </span>*
 
@@ -966,16 +942,75 @@ visu/TGT_MESH.case : is_located : points
 ```
 
 
-## <span style="color:red;">Images à intercaler?</span>
++++ {"editable": false, "deletable": false}
 
-partitioned source mesh
-<img src="01_part_src.png" width="400">
+# Bonus: optional parameters
 
-partitioned target cloud
-<img src="02_part_tgt.png" width="400">
+The location algorithm uses a preconditioning stage which consists in associating candidate elements and points before computed the exact location.
+Three preconditioning methods are available:
+- `PDM_MESH_LOCATION_OCTREE`
+- `PDM_MESH_LOCATION_DBBTREE`
+- `PDM_MESH_LOCATION_LOCATE_ALL_TGT`
 
-localization
-<img src="03_localization.png" width="400">
+The first two methods use bounding boxes and distributed tree data structures to find the candidate pairs efficiently.
+Theses boxes can be expanded using a **relative geometric tolerance** allowing for safer candidate detection.
+The third method uses a combination of both trees to ensure all target points are "located", i.e. associated to the nearest source element, independently of the tolerance.
 
-interpolated field
-<img src="05_interpolated.png" width="400">
+By default, the `PDM_MESH_LOCATION_OCTREE` method is used, with a relative tolerance equal to zero.
+Increasing the tolerance values allows to locate more points, at the expense of the CPU cost.
+
+
+The next cell runs an interactive widget that allows you to play with these two options and see how they can affect the localization status of some points.
+
+```{code-cell}
+---
+"deletable": false
+---
+%reload_ext figure_magics
+%localization
+```
+
+Now you can call the appropriate functions to tweak these options, and re-run your code.
+(Note that this piece of code is placed *before* the call to **PDM_mesh_location_compute**.)
+
+```{code-cell}
+---
+"deletable": false
+---
+%%code_block -p exercise_2 -i 7
+
+  // Set the location preconditioning method (optional)
+  // EXO
+  PDM_mesh_location_method_set(mesh_loc,
+                               PDM_MESH_LOCATION_OCTREE);
+
+  // Set the geometric tolerance (optional)
+  // EXO
+  double tolerance = 1e-6;
+  PDM_mesh_location_tolerance_set(mesh_loc, tolerance);
+
+```
+
++++ {"editable": false, "deletable": false}
+
+## Compile the code and run
+
+```{code-cell}
+---
+"deletable": false
+---
+%merge_code_blocks -l c -p exercise_2 -n 2
+```
+
++++ {"editable": false, "deletable": false}
+
+## Visualize the results
+
+```{code-cell}
+---
+"deletable": false
+---
+%%visualize -nl -sv
+visu/SRC_MESH.case
+visu/TGT_MESH.case : is_located : points
+```
