@@ -386,12 +386,14 @@ int main(int argc, char *argv[])
 
     PDM_sort_int(lnum_bnd_vtx[i_part], NULL, n_bnd_vtx[i_part]);
 
-    int n_vtx_tmp = n_bnd_vtx[i_part];
-    n_bnd_vtx[i_part] = 1;
+    if (n_bnd_vtx[i_part] > 0) {
+      int n_vtx_tmp = n_bnd_vtx[i_part];
+      n_bnd_vtx[i_part] = 1;
 
-    for (int i_vtx = 1; i_vtx < n_vtx_tmp; i_vtx++) {
-      if (lnum_bnd_vtx[i_part][i_vtx] > lnum_bnd_vtx[i_part][i_vtx-1]){
-        lnum_bnd_vtx[i_part][n_bnd_vtx[i_part]++] = lnum_bnd_vtx[i_part][i_vtx];
+      for (int i_vtx = 1; i_vtx < n_vtx_tmp; i_vtx++) {
+        if (lnum_bnd_vtx[i_part][i_vtx] > lnum_bnd_vtx[i_part][i_vtx-1]){
+          lnum_bnd_vtx[i_part][n_bnd_vtx[i_part]++] = lnum_bnd_vtx[i_part][i_vtx];
+        }
       }
     }
 
