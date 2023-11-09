@@ -138,7 +138,7 @@ n_part = 1        # fixed
 i_domain = 0      # fixed
 i_part = 0        # fixed
 merge_domains = 0 # fixed
-part_method = PDM._PDM_SPLIT_DUAL_WITH_HILBERT;
+part_method = PDM._PDM_SPLIT_DUAL_WITH_HILBERT
 mpart = PDM.MultiPart(n_domain,                           # Number of domains
                       np.array([n_part]).astype(np.intc), # Number of partitions per domain
                       merge_domains,                      # PDM_FALSE (do not fuse domains)
@@ -641,3 +641,8 @@ is stored in a separate *section*. So in a *section* one will find data for a sp
 Here we can see part 1 of the subdomain on rank 0 of domain 1 which has two sections.
 
 <img src="part.png" width="180">
+
+
+# Exercise 2
+
+You can now move on to [Exercise 2](./../03_Exercise_2/exercise_2.ipynb).

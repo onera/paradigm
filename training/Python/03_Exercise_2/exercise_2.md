@@ -586,7 +586,7 @@ for i_part in range(tgt_n_part):
 %%code_block -p exercise_2 -i 14
 # Export for visualization, nothing to do here
 PDM.writer_wrapper(comm,
-                   "mesh_location_sol_p",
+                   "visu",
                    "src_mesh",
                    src_vtx_coord,
                    src_vtx_ln_to_gn,
@@ -600,7 +600,7 @@ PDM.writer_wrapper(comm,
                    "field2" : src_vtx_field2})
 
 PDM.writer_wrapper(comm,
-                   "mesh_location_sol_p",
+                   "visu",
                    "tgt_mesh",
                    tgt_vtx_coord,
                    tgt_vtx_ln_to_gn,

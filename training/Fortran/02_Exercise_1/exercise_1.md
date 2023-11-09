@@ -1196,3 +1196,8 @@ is stored in a separate *section*. So in a *section* one will find data for a sp
 Here we can see part 1 of the subdomain on rank 0 of domain 1 which has two sections.
 
 <img src="part.png" width="180">
+
+
+# Exercise 2
+
+You can now move on to [Exercise 2](./../03_Exercise_2/exercise_2.ipynb).

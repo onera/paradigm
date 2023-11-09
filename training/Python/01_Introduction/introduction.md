@@ -334,84 +334,84 @@ These more advanced notions go beyond the scope of this training so we will not 
 
 The aim of this section is to help you understand the reason for the **ParaDiGM**'s performance by walking you through the main concepts.
 
-### Block-distributed approach
+### Block-distributed frame
 
 *<span style="color:olivedrab;">
 How is a mesh read in parallel?
 </span>*
 
-In this section we will study the block-distributed approach by having a look at how a mesh is read in parallel.
+In this section we will study the block-distributed frame by having a look at how a mesh is read in parallel.
 We will do this as an interactive game. Some of you will be representatives of MPI ranks.
 We will provide each one of you your MPI rank number (which you would retrieve in your code doing `MPI_Comm_rank`).
 
 On the front desk we have laid out tokens with mesh elements on it.
 Each element has number on it and we sorted them in ascending order.
 
-In ascending order MPI rank order, a representative of each MPI rank will collect an equitably distributed number of tokens in ascending element number.
+In ascending order of MPI rank, a representative of each MPI rank will collect an equitably distributed number of tokens in ascending element number.
 
 *<span style="color:olivedrab;">
 How many tokens will each rank get?
 </span>*
 
 Once each MPI rank has read the mesh data assigned to them, the parallel mesh read is completed.
-The way the data is distributed is what we call **block-distributed**.
+The way the data is distributed is what we call the **block-distributed frame**.
 
 You have noticed that we made you get the tokens in a certain way such that the tokens are sorted in **ascending order** over the MPI ranks.
 Ask the other representatives of MPI ranks which tokens they have. By doing so, you will notice that the number identifying each token appears only once.
 This **unicity** turns out to be handy for parallel [data sorting](https://en.wikipedia.org/wiki/Bucket_sort), a core tool for parallel algorithms.
 
 *<span style="color:olivedrab;">
-What do this numbers on your tokens represent?
+What do the numbers on your tokens represent?
 </span>*
 
 Thus, each piece of data (here a mesh element) is associated to a unique number representing it in the data set over all MPI ranks.
 This is what we refer to as the **global IDs**.
 
-### Partitioned approach
+### Partitioned frame
 
 Now, we will hand out to each MPI rank a partition of the mesh we just read.
 
-*Remark : We never asked you to discard the tokens of the block-distributed vision. This is because they will coexist in memory.*
+*Remark : We never asked you to discard the tokens of the block-distributed frame. This is because they will coexist in memory.*
 
-You can now turn around the tokens of the block-distributed approach. You will notice little drawings on the back side.
-Those represent data associated to the element (that would be a field in a real life application).
+You can now turn around the tokens of the block-distributed frame. You will notice little drawings on the back side.
+Those represent data associated to the element (that would be a field in a real-life application).
 
 *<span style="color:olivedrab;">
 What drawing is associated to the elements of partition on your MPI rank?
 </span>*
 
-The elements you have on your MPI rank in the block-distributed approach are most certainly not the ones you have in the partitioned approach.
+The elements you have on your MPI rank in the block-distributed frame are most certainly not the ones you have in the partitioned frame.
 You need to ask the information of the drawing to the representatives of the other MPI ranks.
 
 *<span style="color:olivedrab;">
-How do you know who has the element in the block-distributed approach you have in the partitionned approach?
+How do you know who has the element in the block-distributed frame you have in the partitioned frame?
 </span>*
 
-Indeed, you will have noticed that in the partitionned approach the elements are no more sorted by element number across the MPI ranks.
-But in the block-distributed approach they are.
-We ask each MPI rank representative to raise their hand with the element from the block-distributed approach with the lowest number on it.
-This way you created the data distribution array across the MPI ranks. By dichotony, you can find out whom you have to ask the drawing information for.
+Indeed, you will have noticed that in the partitioned frame the elements are no more sorted by element number across the MPI ranks.
+But in the block-distributed frame they are.
+We ask each MPI rank representative to raise their hand with the element from the block-distributed frame with the lowest number on it.
+This way you created the data distribution array across the MPI ranks. By dichotomy, you can find out whom you have to ask the drawing information for.
 
-During this game you actually created a **Block-to-Part** communication graph and operated the exchange. This is a core building block for the algorithms in ParaDiGM.
+During this game you actually created a **Block-to-Part** communication graph and operated the exchange. This is a core building block for the algorithms in **ParaDiGM**.
 
 ### Multi-sequential vs load-balanced algorithm
 
-We will now try to make you understand the difference between two types of parallel algorithms : multi-sequential and load_balanced.
+We will now try to make you understand the difference between two types of parallel algorithms : multi-sequential and load-balanced.
 
-To start, turn around the tokens in the partitioned approach. You can see values on the back side.
+To start, turn around the tokens in the partitioned frame. You can see values on the back side.
 These values represent the values of a field exchanged using a **Block-to-Part** communication graph.
 
-We use this partitioned mesh for a numerical simulation. The physical phenomena of interest only takes place in a given region of the mesh.
-We selected the elements of that region by putting the value on the back side of the token in a circle.
+We use this partitioned mesh for a numerical simulation. The physical phenomena of interest only take place in a specific region of the mesh.
+We marked the elements of that region by a Christmas tree shape on the back side.
 
-Can those who have this type of elements raise their hand and tell the others how many elements from their partitionned approach have a circle around the value on the back side.
+Can those who have such marked elements raise their hand and tell the others how many such elements from their partitioned frame they have?
 
-It turns out that but little MPI ranks possess elements where the physical phenomema of interest takes place.
-We want do a reduction operation on the field values of the elements in that region (in real life this would be in integral computation).
+It turns out that but little MPI ranks possess elements where the physical phenomena of interest takes place.
+We want to compute a reduction operation on the field values of the elements in that region (in real life this would be in integral computation).
 
-Now we ask you to compute the following quantity for each element/token $e$ in your possession int the partitionned approach:
+Now we ask you to compute the following quantity for each element/token $e$ in your possession in the partitioned frame:
 $$
-\sum_{i=1}^{42}\left ( \sqrt{f_{e}} + \prod_{j = 1}^{24} \left ( f_{e}^{\frac{1}{4}} \right )\right )
+\sum_{i=1}^{42}\left ( \sqrt{i f_{e}} + \prod_{j = 1}^{24} \left ( f_{e}^{\frac{j}{4}} \right )\right ),
 $$
 where $f_e$ designates the field value of $e$.
 
@@ -424,13 +424,13 @@ Would you rather share this task with representatives of other ranks or do it on
 To do such a tedious task, you'd like to get your fellow MPI rank representatives to work.
 
 *<span style="color:olivedrab;">
-Is is worth to bring them the data they need to help you out rather than just to it on your own?
+Is it worth sending them the data they need to help you out rather than just to it on your own?
 </span>*
 
 It turns out that if the workload is sufficient it is worth to do this communication to speed up the computation.
 This is the setting for most geometric operations.
 Even if the partitioning was already well-balanced for the operation, the overload of the load balancing is minimal.
-In most cases, this load-balancing approach is a winner !
+In most cases, this load-balancing strategy is a winner !
 
 ## Features overview
 
@@ -784,6 +784,6 @@ Moreover, the tool ETC relies on **ppart** which itself relies on **ParaDiGM**'s
 
 # ParaDiGM git clone + installation
 
-# Exercice 0
+# Exercise 0
 
-You can now move on to [Exercise 0](./exercice_0.ipynb).
+You can now move on to [Exercise 0](./exercise_0.ipynb).

@@ -224,7 +224,7 @@ class CodeMagics(Magics):
         command.extend(["python3", "-u"])
       command.extend([exec_name])
 
-      sys.stdout.write(" ".join(command)+"\n")
+      # sys.stdout.write(" ".join(command)+"\n")
 
       if os.path.isfile(exec_name):
         try:
