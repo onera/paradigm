@@ -511,12 +511,10 @@ PDM_dmesh_nodal_elmts_to_part_mesh_nodal_elmts
   PDM_g_num_t **numabs                    = (PDM_g_num_t **) malloc( (n_section) * sizeof(PDM_g_num_t *));
   int         **parent_num                = (int         **) malloc( (n_section) * sizeof(int         *));
   PDM_g_num_t **sparent_entitity_ln_to_gn = (PDM_g_num_t **) malloc( (n_section) * sizeof(PDM_g_num_t *));
-  int         **selmt_to_entity           = (int         **) malloc( (n_section) * sizeof(int         *));
   PDM_g_num_t **section_elmts_ln_to_gn    = (PDM_g_num_t **) malloc( (n_part   ) * sizeof(PDM_g_num_t *));
 
   for(int i_section = 0; i_section < n_section; ++i_section){
     sparent_entitity_ln_to_gn[i_section] = NULL;
-    selmt_to_entity[i_section] = NULL;
   }
 
   for(int i_part = 0; i_part < n_part; ++i_part) {
@@ -552,9 +550,6 @@ PDM_dmesh_nodal_elmts_to_part_mesh_nodal_elmts
 
       if(pparent_entitity_ln_to_gn != NULL) {
         sparent_entitity_ln_to_gn[i_section] = malloc( n_elmt_in_section * sizeof(PDM_g_num_t));
-      }
-      if(pelmt_to_entity != NULL) {
-        selmt_to_entity[i_section] = malloc( n_elmt_in_section * sizeof(int));
       }
 
     }
@@ -634,12 +629,15 @@ PDM_dmesh_nodal_elmts_to_part_mesh_nodal_elmts
       }
 
       numabs    [i_section][idx_write] = g_num+1;
-      parent_num[i_section][idx_write] = i_elmt;//+1; // 0-based to be coherent with PDM_Mesh_nodal
+      if(pelmt_to_entity != NULL) {
+        parent_num[i_section][idx_write] = pelmt_to_entity[i_part][i_elmt];
+      }
+      else {
+        parent_num[i_section][idx_write] = i_elmt;//+1; // 0-based to be coherent with PDM_Mesh_nodal
+
+      }
       if(pparent_entitity_ln_to_gn != NULL) {
         sparent_entitity_ln_to_gn[i_section][idx_write] = pparent_entitity_ln_to_gn[i_part][i_elmt];
-      }
-      if(pelmt_to_entity != NULL) {
-        selmt_to_entity[i_section][idx_write] = pelmt_to_entity[i_part][i_elmt];
       }
     }
 
@@ -650,8 +648,8 @@ PDM_dmesh_nodal_elmts_to_part_mesh_nodal_elmts
     for(int i_section = 0; i_section < n_section; ++i_section){
       int n_elmt_in_section = pelmt_by_section_n[i_section];
       for(int i_elmt = 0; i_elmt < n_elmt_in_section; ++i_elmt) {
-        int i_parent = parent_num[i_section][i_elmt];
-        section_elmts_ln_to_gn[i_part][idx_elmt++] = elmt_ln_to_gn[i_part][i_parent];
+        //int i_parent = parent_num[i_section][i_elmt];
+        section_elmts_ln_to_gn[i_part][idx_elmt++] = elmt_ln_to_gn[i_part][i_elmt];
       }
     }
     assert(idx_elmt == pn_elmt[i_part]);
@@ -696,7 +694,6 @@ PDM_dmesh_nodal_elmts_to_part_mesh_nodal_elmts
       numabs                   [i_section] = NULL;
       parent_num               [i_section] = NULL;
       sparent_entitity_ln_to_gn[i_section] = NULL;
-      selmt_to_entity          [i_section] = NULL;
     }
   }
 
@@ -762,7 +759,6 @@ PDM_dmesh_nodal_elmts_to_part_mesh_nodal_elmts
   free(parent_num               );
   free(numabs                   );
   free(sparent_entitity_ln_to_gn);
-  free(selmt_to_entity);
 
   for(int i_part = 0; i_part < n_part; ++i_part) {
     free(pelmts_connec         [i_part]);
