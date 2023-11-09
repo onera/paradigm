@@ -537,7 +537,9 @@ _compute_part_mesh_nodal_3d
   for(int i_part = 0; i_part < n_part; ++i_part){
     free(psurf_gnum         [i_part]);
     free(psurf_to_face_g_num[i_part]);
+    free(psurf_to_entity    [i_part]);
   }
+  free(psurf_to_entity);
   free(pn_surf);
   free(psurf_gnum);
   free(psurf_to_face_g_num);
@@ -587,7 +589,9 @@ _compute_part_mesh_nodal_3d
     for(int i_part = 0; i_part < n_part; ++i_part){
       free(pridge_gnum[i_part]);
       free(pridge_to_edge_g_num[i_part]);
+      free(pridge_to_entity[i_part]);
     }
+    free(pridge_to_entity);
     free(pn_ridge);
     free(pridge_gnum);
     free(pridge_to_edge_g_num);
@@ -634,7 +638,9 @@ _compute_part_mesh_nodal_3d
     for(int i_part = 0; i_part < n_part; ++i_part){
       free(pcorner_gnum[i_part]);
       free(pcorner_to_vtx_g_num[i_part]);
+      free(pcorner_to_entity[i_part]);
     }
+    free(pcorner_to_entity);
     free(pn_corner);
     free(pcorner_gnum);
     free(pcorner_to_vtx_g_num);
@@ -771,7 +777,9 @@ _compute_part_mesh_nodal_2d
   for(int i_part = 0; i_part < n_part; ++i_part){
     free(pridge_gnum[i_part]);
     free(pridge_to_edge_g_num[i_part]);
+    free(pridge_to_entity[i_part]);
   }
+  free(pridge_to_entity);
   free(pn_ridge);
   free(pridge_gnum);
   free(pridge_to_edge_g_num);
@@ -815,7 +823,9 @@ _compute_part_mesh_nodal_2d
     for(int i_part = 0; i_part < n_part; ++i_part){
       free(pcorner_gnum[i_part]);
       free(pcorner_to_vtx_g_num[i_part]);
+      free(pcorner_to_entity[i_part]);
     }
+    free(pcorner_to_entity);
     free(pn_corner);
     free(pcorner_gnum);
     free(pcorner_to_vtx_g_num);
@@ -956,7 +966,9 @@ _compute_part_mesh_nodal_1d
     for(int i_part = 0; i_part < n_part; ++i_part){
       free(pcorner_gnum[i_part]);
       free(pcorner_to_vtx_g_num[i_part]);
+      free(pcorner_to_entity[i_part]);
     }
+    free(pcorner_to_entity);
     free(pn_corner);
     free(pcorner_gnum);
     free(pcorner_to_vtx_g_num);
