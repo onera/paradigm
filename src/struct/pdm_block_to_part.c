@@ -22,6 +22,9 @@
 #include "pdm_timer.h"
 #include "pdm_size_idx_from_stride.h"
 
+#include "pdm_io.h"
+#include <string.h>
+
 #ifdef __cplusplus
 extern "C" {
 #if 0
@@ -605,6 +608,82 @@ PDM_block_to_part_create
 
   btp_t_elaps[0] += (t2_elaps - t1_elaps);
   btp_t_cpu[0] += (t2_cpu - t1_cpu);
+
+  // Output performance data
+  int output_performance = 1; // TO DO : ajouter variable d'environnement
+
+  if (output_performance == 1) {
+
+    // Write in parallel
+    PDM_io_file_t *writer = NULL;
+    PDM_l_num_t    ierr;
+
+    char filename[999] = "btp_create.txt";
+    PDM_io_open(filename,
+                PDM_IO_FMT_BIN,
+                PDM_IO_SUFF_MAN,
+                "",
+                PDM_IO_BACKUP_OFF,
+                PDM_IO_KIND_MPI_SIMPLE,
+                PDM_IO_MOD_WRITE,
+                PDM_IO_NATIVE,
+                comm,
+                -1.,
+                &writer,
+                &ierr);
+
+    // Global write n_rank
+    char buffer1[99] = {0};
+    sprintf(buffer1, "n_rank %d\n", btp->n_rank);
+
+    size_t s_buffer1 = strlen(buffer1);
+    PDM_io_global_write(writer,
+                        (PDM_l_num_t) sizeof(char),
+                        (PDM_l_num_t) s_buffer1,
+                        buffer1);
+
+    // Create a node identifier
+    PDM_MPI_Comm shared_comm = PDM_MPI_COMM_WORLD;
+
+    PDM_MPI_Comm_split_type(btp->comm, PDM_MPI_SPLIT_SHARED, &shared_comm);
+
+    int i_shared_rank = 0;
+    PDM_MPI_Comm_rank(shared_comm, &i_shared_rank);
+
+    int bcast_buffer = 0;
+    if (i_shared_rank == 0) {
+      bcast_buffer = btp->i_rank;
+    }
+    PDM_MPI_Bcast(&bcast_buffer, 1, PDM_MPI_INT32_T, 0, shared_comm);
+
+    // Block write i_rank, node, time elaps, time cpu, number of send data
+    char buffer2[9999] = {0}; // TO DO malloc and decide size
+
+    double t_btp_create_elaps = t2_elaps - t1_elaps;
+    double t_btp_create_cpu = t2_cpu - t1_cpu;
+
+    sprintf(buffer2, "i_rank %d\nnode %d\nelaps %f\ncpu %f\nn_send ", btp->i_rank, bcast_buffer, t_btp_create_elaps, t_btp_create_cpu);
+
+    for (int j_rank = 0; j_rank < btp->n_rank; j_rank++) {
+      sprintf(buffer2 + strlen(buffer2), " %d", btp->distributed_data_n[j_rank]);
+    } // end loop on n_rank
+    sprintf(buffer2 + strlen(buffer2), " \n");
+
+    int s_buffer2 = strlen(buffer2);
+    PDM_l_num_t one = 1;
+    PDM_g_num_t i_rank_gnum = (PDM_g_num_t) (btp->i_rank+1);
+    PDM_io_par_interlaced_write(writer,
+                                PDM_STRIDE_VAR_INTERLACED,
+                (PDM_l_num_t *) &s_buffer2,
+                  (PDM_l_num_t) sizeof(char),
+                                one,
+                                &i_rank_gnum,
+                 (const void *) buffer2);
+
+    PDM_io_close(writer);
+    PDM_io_free(writer);
+
+  }
 
   return (PDM_block_to_part_t *) btp;
 

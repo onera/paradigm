@@ -16,7 +16,7 @@ n_rank = comm.size
 parser = argparse.ArgumentParser()
 
 parser.add_argument("-s", "--size", default=10)
-parser.add_argument("-ssf", "--size_shift", default=3) # quasi-diagonal
+parser.add_argument("-ssf", "--size_shift", default=0) # quasi-diagonal
 parser.add_argument("-csf", "--center_shift", default=0) # circulente
 
 parser.add_argument("-r", "--randomize", action="store_true") # random partition
@@ -51,9 +51,6 @@ else:
     end = ((i_rank + center_shift)%n_rank)*size + size
   part_ln_to_gn = np.random.randint(beg, end+1, size, dtype=PDM.npy_pdm_gnum_dtype)
 
-  print(i_rank)
-  print(part_ln_to_gn)
-
 # Create BTP
 btp = PDM.BlockToPart(block_distribution,
                       comm,
@@ -62,14 +59,4 @@ btp = PDM.BlockToPart(block_distribution,
 
 # Exchange
 part_stride, part_data = btp.exchange_field(block_data)
-
-# Rank per node -> TO DO : mettre dans btp.c
-shared_comm = comm.Split_type(MPI.COMM_TYPE_SHARED)
-
-i_shared_rank = shared_comm.rank
-
-data = shared_comm.gather(i_rank,root=0)
-
-if i_shared_rank == 0:
-   print("group {} has ranks {}\n".format(i_rank, data))
 
