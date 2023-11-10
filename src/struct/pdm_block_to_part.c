@@ -610,7 +610,12 @@ PDM_block_to_part_create
   btp_t_cpu[0] += (t2_cpu - t1_cpu);
 
   // Output performance data
-  int output_performance = 1; // TO DO : ajouter variable d'environnement
+  int output_performance = 0;
+  char *env_var = NULL;
+  env_var = getenv ("PDM_BTP_PERFORMANCE");
+  if (env_var != NULL) {
+    output_performance = (int) atoi(env_var);
+  }
 
   if (output_performance == 1) {
 
