@@ -2,8 +2,7 @@
 
 import mpi4py.MPI as MPI
 import numpy as np
-import random
-import sys
+import argparse
 import Pypdm.Pypdm as PDM
 from Pypdm.Pypdm import npy_pdm_gnum_dtype
 
@@ -13,41 +12,46 @@ comm = MPI.COMM_WORLD
 i_rank = comm.rank
 n_rank = comm.size
 
-# Size
-size = 100
-size_per_rank = size // n_rank
+# Command line arguments
+parser = argparse.ArgumentParser()
 
-# Partition distribution
-diagonal = 0
-circulante = 1
-aleatoire = 0
-compact_sort = 0
+parser.add_argument("-s", "--size", default=10)
+parser.add_argument("-ssf", "--size_shift", default=3) # quasi-diagonal
+parser.add_argument("-csf", "--center_shift", default=0) # circulente
+
+parser.add_argument("-r", "--randomize", action="store_true") # random partition
+
+args = parser.parse_args()
+
+# Size
+size = int(args.size)
 
 # Block
-block_distribution = np.array([i*size_per_rank for i in range(n_rank+1)]).astype(PDM.npy_pdm_gnum_dtype)
-block_data = np.array([1 for i in range(size_per_rank)]).astype(np.intc)
+block_distribution = np.array([i*size for i in range(n_rank+1)]).astype(PDM.npy_pdm_gnum_dtype)
+block_data = np.array([1 for i in range(size)]).astype(np.intc)
 
 # Part
 n_part = 1
 
-if diagonal:
-  part_ln_to_gn = np.array([i_rank*size_per_rank + i + 1 for i in range(size_per_rank)]).astype(PDM.npy_pdm_gnum_dtype)
+size_shift   = int(args.size_shift)
+center_shift = int(args.center_shift)
 
-if circulante:
-  part_ln_to_gn = np.array([((i_rank+1)%n_rank)*size_per_rank + i + 1 for i in range(size_per_rank)]).astype(PDM.npy_pdm_gnum_dtype)
+randomize = args.randomize
 
-if aleatoire: # int not long int
-  part_ln_to_gn = np.array([random.randint(1, n_rank*size_per_rank) for i in range(size_per_rank)]).astype(PDM.npy_pdm_gnum_dtype)
+if randomize:
+  part_ln_to_gn = np.random.randint(1, size * n_rank + 1, size, dtype=PDM.npy_pdm_gnum_dtype)
+else:
 
-if compact_sort:
-  # to do
-  # rank 0 recoit les valeurs de tous les ranks
-  # fait le trie
-  # envoie aux ranks leur gnum
-  alpha = 0.4
-  part_value = i_rank + alpha * (np.random.rand(size_per_rank)* 2 - 1)
-  part_ln_to_gn = np.argsort(part_value)
-  part_ln_to_gn = i_rank*size_per_rank + part_ln_to_gn.astype(PDM.npy_pdm_gnum_dtype) + 1
+  beg = ((i_rank + center_shift)%n_rank)*size - size_shift + 1
+  if i_rank == 0:
+    beg = ((i_rank + center_shift)%n_rank)*size + 1
+
+  end = ((i_rank + center_shift)%n_rank)*size + size_shift + size
+  if i_rank == (n_rank-1):
+    end = ((i_rank + center_shift)%n_rank)*size + size
+  part_ln_to_gn = np.random.randint(beg, end+1, size, dtype=PDM.npy_pdm_gnum_dtype)
+
+  print(i_rank)
   print(part_ln_to_gn)
 
 # Create BTP
@@ -59,7 +63,7 @@ btp = PDM.BlockToPart(block_distribution,
 # Exchange
 part_stride, part_data = btp.exchange_field(block_data)
 
-# Rank per node
+# Rank per node -> TO DO : mettre dans btp.c
 shared_comm = comm.Split_type(MPI.COMM_TYPE_SHARED)
 
 i_shared_rank = shared_comm.rank
@@ -68,3 +72,4 @@ data = shared_comm.gather(i_rank,root=0)
 
 if i_shared_rank == 0:
    print("group {} has ranks {}\n".format(i_rank, data))
+
