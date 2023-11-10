@@ -236,6 +236,13 @@ For further details about the install process of **ParaDiGM**, please refer to t
 - **i_rank** or **rank** : Curent rank mpi in **comm** (0-based)
 - **n_rank** : Size of **comm**  
 
+### Ownership of results
+
+Ownership of the results is defined either when the feature is created or when the function giving the result is called, using the **ownership** argument. Two choices are possible: 
+
+- **PDM_OWNERSHIP_KEEP** : The memory of the result(s) is freed when the feature is freed.
+- **PDM_OWNERSHIP_USER** : The user becomes the owner of the result(s) accessed. It is the user's responsibility to free them. 
+
 ### Mesh
 
 Most computational methods rely on a *mesh* for the spatial discretization of partial differential equations.
