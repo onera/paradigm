@@ -469,14 +469,30 @@ PDM_reader_gamma_dmesh_nodal
 
   PDM_g_num_t *dtetra_vtx = NULL;
   if (gn_tetra > 0) {
-    PDM_block_to_block_exch(btb_tetra,
-                            sizeof(PDM_g_num_t),
-                            PDM_STRIDE_CST_INTERLACED,
-                            4,
-                            NULL,
-                  (void  *) gtetra_vtx,
-                            NULL,
-                  (void **) &dtetra_vtx);
+    // Can overflow in buffer send/recv - Two much stride
+    // PDM_block_to_block_exch(btb_tetra,
+    //                         sizeof(PDM_g_num_t),
+    //                         PDM_STRIDE_CST_INTERLACED,
+    //                         4,
+    //                         NULL,
+    //               (void  *) gtetra_vtx,
+    //                         NULL,
+    //               (void **) &dtetra_vtx);
+
+    // Economic exchange
+    PDM_MPI_Datatype mpi_tetra_type;
+    PDM_MPI_Type_create_contiguous(4, PDM__PDM_MPI_G_NUM, &mpi_tetra_type);
+    PDM_MPI_Type_commit(&mpi_tetra_type);
+
+    PDM_block_to_block_exch_with_mpi_type(btb_tetra,
+                                          PDM_STRIDE_CST_INTERLACED,
+                                          mpi_tetra_type,
+                                          NULL,
+                                (void  *) gtetra_vtx,
+                                          NULL,
+                                (void **) &dtetra_vtx);
+
+    PDM_MPI_Type_free(&mpi_tetra_type);
   }
 
   // int *dtetra_group = NULL;
