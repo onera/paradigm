@@ -113,13 +113,8 @@ MPI_TEST_CASE("[PDM_dmesh_nodal_to_dmesh] decomposes hexa ",1) {
 
     // PDM_log_trace_array_long(dface_cell, 2*dn_face, "dface_cell:: ");
 
-    // Ol version
-    // PDM_g_num_t dface_cell_expected[40] = {1,0,2,1,1,0,3,1,1,0,2,0,4,2,1,0,2,0,3,0,
-    //                                        2,0,4,3,4,0,3,0,2,0,3,0,4,0,4,0,3,0,4,0};
-    PDM_g_num_t dface_cell_expected[40] = {1,0,1,2,1,0,1,3,1,0,2,0,2,4,1,0,2,0,3,0,
-                                           2,0,3,4,4,0,3,0,2,0,3,0,4,0,4,0,3,0,4,0};
-
-
+    PDM_g_num_t dface_cell_expected[40] = {1,0,1,2,1,0,1,3,1,0,2,0,1,0,2,4,2,0,3,0,
+                                           2,0,3,4,4,0,2,0,3,0,3,0,4,0,4,0,3,0,4,0};
     CHECK_EQ_C_ARRAY(dface_cell   , dface_cell_expected   , 2*dn_face             );
 
     PDM_g_num_t *dcell_face;
@@ -128,14 +123,15 @@ MPI_TEST_CASE("[PDM_dmesh_nodal_to_dmesh] decomposes hexa ",1) {
                                &dcell_face, &dcell_face_idx, PDM_OWNERSHIP_KEEP);
 
     int         dcell_face_idx_expected[7] = {0, 6, 12, 18, 24};
-    PDM_g_num_t dcell_face_expected[24]    = {-5,-3,1,2,4,8,-6,-2,7,9,11,15,-19,-16,-14,-4,10,12,-20,-12,-7,13,17,18};
+    PDM_g_num_t dcell_face_expected[24]    = {1, 2, 3, 4, 5, 7, -2, 6, 8, 9, 11, 14, -4, 10, 12, 15, 16, 19, -12, -8, 13, 17, 18, 20};
+
+    if(0 == 1) {
+      PDM_log_trace_array_int (dcell_face_idx, dn_cell+1, "dcell_face_idx:: ");
+      PDM_log_trace_array_long(dcell_face, dcell_face_idx[dn_cell], "dcell_face:: ");
+    }
 
     CHECK_EQ_C_ARRAY(dcell_face_idx, dcell_face_idx_expected, dn_cell+1              );
     CHECK_EQ_C_ARRAY(dcell_face    , dcell_face_expected    , dcell_face_idx[dn_cell]);
-
-    // PDM_log_trace_array_int (dcell_face_idx, dn_cell+1, "dcell_face_idx:: ");
-    // PDM_log_trace_array_long(dcell_face, dcell_face_idx[dn_cell], "dcell_face:: ");
-
 
   }
 
@@ -250,7 +246,7 @@ MPI_TEST_CASE("[PDM_dmesh_nodal_to_dmesh] decomposes tri ",1) {
   PDM_dmesh_connectivity_get(dm, PDM_CONNECTIVITY_TYPE_EDGE_FACE,
                              &edge_face, &edge_face_idx, PDM_OWNERSHIP_KEEP);
 
-  PDM_log_trace_array_long (edge_face, 2 * dn_edge, "edge_face:: ");
+  // PDM_log_trace_array_long (edge_face, 2 * dn_edge, "edge_face:: ");
   // MPI_CHECK_EQ_C_ARRAY(0, edge_face, edge_face_expected_p0, 2 * dn_edge);
 
   PDM_dmesh_nodal_to_dmesh_free(dmntodm);
@@ -340,11 +336,9 @@ MPI_TEST_CASE("[PDM_dmesh_nodal_to_dmesh] decomposes tri 2p ",2) {
   PDM_dmesh_t* dm;
   PDM_dmesh_nodal_to_dmesh_get_dmesh(dmntodm, 0, &dm);
 
-  // PDM_g_num_t edge_face_expected_p0[16]    = {3, 0, 8, 0, 4, 0, 3, 0, 6, 0, 7, 3, 8, 7, 2, 0}; // OLD
-  PDM_g_num_t edge_face_expected_p0[16]    = {3,0,8,0,4,0,3,0,6,0,3,7,7,8,2,0 };
+  PDM_g_num_t edge_face_expected_p0[16]    = {3,0,8,0,4,0,6,0,3,0,3,7,2,0,7,8};
 
-  // PDM_g_num_t edge_face_expected_p1[16]    = {4, 8, 6, 4, 5, 0, 2, 6, 1, 5, 5, 0, 1, 2, 7, 1}; // OLD
-  PDM_g_num_t edge_face_expected_p1[16]    = {8, 4, 4, 6, 5, 0, 6, 2, 5, 1, 5, 0, 2, 1, 1, 7};
+  PDM_g_num_t edge_face_expected_p1[16]    = {4,8,4,6,5,0,1,5,2,6,1,2,5,0,1,7};
 
   int dn_cell, dn_face, dn_vtx, dn_edge;
   PDM_dmesh_dims_get(dm, &dn_cell, &dn_face, &dn_edge, &dn_vtx);
@@ -361,7 +355,7 @@ MPI_TEST_CASE("[PDM_dmesh_nodal_to_dmesh] decomposes tri 2p ",2) {
                              &edge_face, &edge_face_idx, PDM_OWNERSHIP_KEEP);
 
 
-  PDM_log_trace_array_long (edge_face, 2 * dn_edge, "edge_face:: ");
+  // PDM_log_trace_array_long (edge_face, 2 * dn_edge, "edge_face:: ");
   MPI_CHECK_EQ_C_ARRAY(0, edge_face, edge_face_expected_p0, 2 * dn_edge);
   MPI_CHECK_EQ_C_ARRAY(1, edge_face, edge_face_expected_p1, 2 * dn_edge);
 
@@ -463,14 +457,14 @@ MPI_TEST_CASE("[PDM_dmesh_nodal_to_dmesh] find missing ridges ",2) {
                          PDM_MESH_ENTITY_EDGE,
                          &distrib_edge);
 
-  PDM_log_trace_array_long (distrib_edge,
-                            3,
-                            "distrib_edge : ");
+  // PDM_log_trace_array_long (distrib_edge,
+  //                           3,
+  //                           "distrib_edge : ");
 
-  PDM_log_trace_connectivity_long (dedge_vtx_idx,
-                                   dedge_vtx,
-                                   dn_edge,
-                                   "dedge_vtx :");
+  // PDM_log_trace_connectivity_long (dedge_vtx_idx,
+  //                                  dedge_vtx,
+  //                                  dn_edge,
+  //                                  "dedge_vtx :");
 
   PDM_g_num_t *distrib_missing_ridge;
   PDM_g_num_t *dmissing_ridge_parent_g_num;
@@ -480,15 +474,15 @@ MPI_TEST_CASE("[PDM_dmesh_nodal_to_dmesh] find missing ridges ",2) {
                                         &distrib_missing_ridge,
                                         &dmissing_ridge_parent_g_num);
 
-  int dn_missing_ridge = (int) (distrib_missing_ridge[test_rank+1] -
-                                distrib_missing_ridge[test_rank  ]);
-  PDM_log_trace_array_long (distrib_missing_ridge,
-                            3,
-                            "distrib_missing_ridge : ");
+  // int dn_missing_ridge = (int) (distrib_missing_ridge[test_rank+1] -
+  //                               distrib_missing_ridge[test_rank  ]);
+  // PDM_log_trace_array_long (distrib_missing_ridge,
+  //                           3,
+  //                           "distrib_missing_ridge : ");
 
-  PDM_log_trace_array_long (dmissing_ridge_parent_g_num,
-                            dn_missing_ridge,
-                            "dmissing_ridge_parent_g_num : ");
+  // PDM_log_trace_array_long (dmissing_ridge_parent_g_num,
+  //                           dn_missing_ridge,
+  //                           "dmissing_ridge_parent_g_num : ");
 
   PDM_dmesh_nodal_to_dmesh_get_missing (dmntodm,
                                         0,

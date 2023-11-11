@@ -5,7 +5,7 @@
 
 
 
-MPI_TEST_CASE("[1p] block_to_part",1) {
+MPI_TEST_CASE("[pdm_block_to_part] - 1p - block_to_part",1) {
 
   PDM_MPI_Comm pdm_comm = PDM_MPI_mpi_2_pdm_mpi_comm(&test_comm);
   static const int darray_size = 6;
@@ -120,7 +120,7 @@ MPI_TEST_CASE("[1p] block_to_part",1) {
 
 
 
-MPI_TEST_CASE("[2p] block_to_part",2) {
+MPI_TEST_CASE("[pdm_block_to_part] - 2p - block_to_part",2) {
 
   PDM_MPI_Comm pdm_comm = PDM_MPI_mpi_2_pdm_mpi_comm(&test_comm);
 

@@ -9,7 +9,7 @@
  *     ./paradigm/test/pdm_t_partitioning_dcube -n 3 -n_part 1 -pt-scotch (Générateur dcube_gen sur 8 cellules)
  */
 
-MPI_TEST_CASE("[1p] pdm_connectivity_transform ",1) {
+MPI_TEST_CASE("[pdm_part_connectivity_transform] - 1p - pdm_connectivity_transform ",1) {
 
   const int n_cell = 8;
   const int n_face = 36;

@@ -8,7 +8,7 @@
 
 // #define HUGE_VAL 1.0e+30
 
-MPI_TEST_CASE("dbbtree test simple ",1) {
+MPI_TEST_CASE("[pdm_dbbtree] simple test",1) {
 
   double coord_tri_x[9] = {0.0, 0.0, 0.0, 0.5, 0.5, 0.5, 1.0, 1.0, 1.0};
   double coord_tri_y[9] = {0.0, 0.5, 1.0, 0.0, 0.5, 1.0, 0.0, 0.5, 1.0};
@@ -80,21 +80,21 @@ MPI_TEST_CASE("dbbtree test simple ",1) {
       // global_extents[dim + k] = PDM_MAX(extents[(2*i_cell+1) * dim + k], global_extents[dim+k]);
       global_extents[dim + k] = PDM_MAX(extents[6*i_cell+3+k], global_extents[dim+k]);
     }
-    printf(" i_cell = %i | extent -> [", i_cell);
-    for (int k = 0; k < dim; k++) {
-      printf("%12.5e %12.5e // ", extents[2*dim*i_cell + k], extents[6*i_cell+3+k]);
-    }
-    printf("] \n");
+    // printf(" i_cell = %i | extent -> [", i_cell);
+    // for (int k = 0; k < dim; k++) {
+    //   printf("%12.5e %12.5e // ", extents[2*dim*i_cell + k], extents[6*i_cell+3+k]);
+    // }
+    // printf("] \n");
 
     // g_global_extents[]
   }
 
   // Print the final :
-  printf(" global_extents -> [");
-  for (int k = 0; k < dim; k++) {
-    printf("%12.5e %12.5e // ", global_extents[k], global_extents[dim+k]);
-  }
-  printf("] \n");
+  // printf(" global_extents -> [");
+  // for (int k = 0; k < dim; k++) {
+  //   printf("%12.5e %12.5e // ", global_extents[k], global_extents[dim+k]);
+  // }
+  // printf("] \n");
 
   double max_range = -HUGE_VAL;
   double min_range = HUGE_VAL;
@@ -164,12 +164,12 @@ MPI_TEST_CASE("dbbtree test simple ",1) {
                                    0);
 
 
-  for(int i_box = 0; i_box < n_boxes; ++i_box) {
-    printf("i_box = %i \n", i_box);
-    for(int i = pts_idx[i_box]; i < pts_idx[i_box+1]; ++i) {
-      printf(" | " PDM_FMT_G_NUM" %12.5e %12.5e %12.5e \n", pts_g_num[i], pts_coord[3*i], pts_coord[3*i+1], pts_coord[3*i+2]);
-    }
-  }
+  // for(int i_box = 0; i_box < n_boxes; ++i_box) {
+  //   printf("i_box = %i \n", i_box);
+  //   for(int i = pts_idx[i_box]; i < pts_idx[i_box+1]; ++i) {
+  //     printf(" | " PDM_FMT_G_NUM" %12.5e %12.5e %12.5e \n", pts_g_num[i], pts_coord[3*i], pts_coord[3*i+1], pts_coord[3*i+2]);
+  //   }
+  // }
 
 
   PDM_dbbtree_free (dbbtreeA);

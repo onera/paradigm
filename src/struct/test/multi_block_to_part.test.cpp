@@ -4,7 +4,7 @@
 #include "pdm_doctest.h"
 #include "pdm_multi_block_to_part.h"
 
-MPI_TEST_CASE("[1p] multi_block_to_part",1) {
+MPI_TEST_CASE("[pdm_multi_block_to_part] - 1p - Simple ",1) {
 
   PDM_MPI_Comm pdm_comm = PDM_MPI_mpi_2_pdm_mpi_comm(&test_comm);
 
@@ -143,7 +143,7 @@ MPI_TEST_CASE("[1p] multi_block_to_part",1) {
 }
 
 
-MPI_TEST_CASE("[2p] multi_block_to_part",2) {
+MPI_TEST_CASE("[pdm_multi_block_to_part] - 2p - Simple ",2) {
 
   PDM_MPI_Comm pdm_comm = PDM_MPI_mpi_2_pdm_mpi_comm(&test_comm);
 
@@ -336,7 +336,7 @@ MPI_TEST_CASE("[2p] multi_block_to_part",2) {
 #include <vector>
 #include <algorithm>
 
-MPI_TEST_CASE("[3p] multi_block_to_part n_block=1",3) {
+MPI_TEST_CASE("[pdm_multi_block_to_part] - 3p - n_block=1",3) {
   PDM_MPI_Comm pdm_comm = PDM_MPI_mpi_2_pdm_mpi_comm(&test_comm);
 
   int n_block = 1;
@@ -398,7 +398,7 @@ MPI_TEST_CASE("[3p] multi_block_to_part n_block=1",3) {
 }
 
 
-MPI_TEST_CASE("[3p] multi_block_to_part n_block=2",3) {
+MPI_TEST_CASE("[pdm_multi_block_to_part] - 3p - n_block=2",3) {
   PDM_MPI_Comm pdm_comm = PDM_MPI_mpi_2_pdm_mpi_comm(&test_comm);
 
   int n_block = 2;
