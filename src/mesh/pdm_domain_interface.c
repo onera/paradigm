@@ -2350,6 +2350,11 @@ PDM_domain_interface_translate_entity1_entity2
   PDM_g_num_t *gnum   = PDM_part_to_block_block_gnum_get(ptb);
   // PDM_g_num_t *distri = PDM_part_to_block_distrib_index_get(ptb);
 
+  if(0 == 1) {
+    PDM_log_trace_array_long(gnum, n_gnum, "gnum ::");
+  }
+
+
   int *recv_stride   = NULL;
   int *recv_data_dom = NULL;
   int n_connected_l = PDM_part_to_block_exch(ptb,
@@ -2545,8 +2550,10 @@ PDM_domain_interface_translate_entity1_entity2
     entity2_intf_no_idx[i_domain] = (int * ) malloc( (dn_entity2[i_domain]+1) * sizeof(int));
     entity2_intf_no    [i_domain] = (int * ) malloc( (max_size              ) * sizeof(int));
 
-    n_entity2_intf[i_domain] = 0;
-    entity2_intf_no_idx[i_domain][0] = 0;    for(int i_entity2 = 0; i_entity2 < dn_entity2[i_domain]; ++i_entity2) {
+    n_entity2_intf     [i_domain] = 0;
+    entity2_intf_no_idx[i_domain][0] = 0;
+
+    for(int i_entity2 = 0; i_entity2 < dn_entity2[i_domain]; ++i_entity2) {
 
       for(int i = 0; i < n_interface; ++i) {
         l_interface_n  [i] = 0;
@@ -2967,6 +2974,7 @@ PDM_domain_interface_translate_entity1_entity2
         /*
          * Build for each interface the correct array
          */
+        // log_trace("int_no1 = %i | int_no2 = %i \n", int_no1, int_no2);
         assert(int_no1 == -int_no2);
         int int_no    = PDM_ABS(dkey_intf_no[idx_read+i_conflict])-1;
         int idx_write = _interface_dn_entity2 [int_no]++;
@@ -3189,18 +3197,22 @@ PDM_domain_interface_translate_entity1_entity2
         // assert(sens != 0);
 
         // Temporary patch - Sens are find after all
-        int sens = 1;
+        // int sens = 1;
         if(int_no1 > 0) {
-          _interface_ids_entity2[int_no][2*idx_write  ] =         gnum1 - entity2_per_block_offset[dom1];
-          _interface_ids_entity2[int_no][2*idx_write+1] = sens * (gnum2 - entity2_per_block_offset[dom2]);
-          // _interface_ids_entity2[int_no][2*idx_write+1] = sens2 * (gnum2 - entity2_per_block_offset[dom2]);
+          // _interface_ids_entity2[int_no][2*idx_write  ] =         gnum1 - entity2_per_block_offset[dom1];
+          // _interface_ids_entity2[int_no][2*idx_write+1] = sens * (gnum2 - entity2_per_block_offset[dom2]);
+
+          _interface_ids_entity2[int_no][2*idx_write  ] = gnum1;
+          _interface_ids_entity2[int_no][2*idx_write+1] = gnum2;
 
           _interface_dom_entity2[int_no][2*idx_write  ] = dom1;
           _interface_dom_entity2[int_no][2*idx_write+1] = dom2;
         } else {
-          _interface_ids_entity2[int_no][2*idx_write  ] =         gnum2 - entity2_per_block_offset[dom2];
-          _interface_ids_entity2[int_no][2*idx_write+1] = sens * (gnum1 - entity2_per_block_offset[dom1]);
-          // _interface_ids_entity2[int_no][2*idx_write+1] = sens1 * (gnum1 - entity2_per_block_offset[dom1]);
+          // _interface_ids_entity2[int_no][2*idx_write  ] =         gnum2 - entity2_per_block_offset[dom2];
+          // _interface_ids_entity2[int_no][2*idx_write+1] = sens * (gnum1 - entity2_per_block_offset[dom1]);
+
+          _interface_ids_entity2[int_no][2*idx_write  ] = gnum2;
+          _interface_ids_entity2[int_no][2*idx_write+1] = gnum1;
 
           _interface_dom_entity2[int_no][2*idx_write  ] = dom2;
           _interface_dom_entity2[int_no][2*idx_write+1] = dom1;
@@ -3394,6 +3406,7 @@ PDM_domain_interface_translate_entity1_entity2
    */
   for(int i_interface = 0; i_interface < n_interface; ++i_interface) {
 
+    int         *linterface_dom_entity2 = _interface_dom_entity2[i_interface];
     PDM_g_num_t *linterface_ids_entity2 = _interface_ids_entity2[i_interface];
 
     // Compute idx for entity2_entity1
@@ -3473,6 +3486,7 @@ PDM_domain_interface_translate_entity1_entity2
           }
         }
       }
+      // log_trace("i_data_opp = %i  | n_data_cur = %i \n", i_data_opp, n_data_cur);
       assert(i_data_opp == n_data_cur);
 
       if(0 == 1) {
@@ -3561,9 +3575,22 @@ PDM_domain_interface_translate_entity1_entity2
 
       assert(sens != 0);
 
-      linterface_ids_entity2[2*i  ] =        linterface_ids_entity2[2*i  ];
-      linterface_ids_entity2[2*i+1] = sens * linterface_ids_entity2[2*i+1];
+      // Update
+      PDM_g_num_t gnum1 = PDM_ABS(linterface_ids_entity2[2*i  ]);
+      PDM_g_num_t gnum2 = PDM_ABS(linterface_ids_entity2[2*i+1]);
 
+      // Shift
+      int dom1 = linterface_dom_entity2[2*i  ];
+      int dom2 = linterface_dom_entity2[2*i+1];
+
+      linterface_ids_entity2[2*i  ] =         gnum1 - entity2_per_block_offset[dom1];
+      linterface_ids_entity2[2*i+1] = sens * (gnum2 - entity2_per_block_offset[dom2]);
+
+    }
+
+    if(0 == 1) {
+      PDM_log_trace_array_long(linterface_ids_entity2, 2 * _interface_dn_entity2 [i_interface], "linterface_ids_entity2 ::");
+      PDM_log_trace_array_int (linterface_dom_entity2, 2 * _interface_dn_entity2 [i_interface], "linterface_dom_entity2 ::");
     }
 
     free(lentity2_entity1_cur);

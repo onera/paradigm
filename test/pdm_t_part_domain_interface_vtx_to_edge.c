@@ -387,7 +387,7 @@ int main
   // int         **dedge_vtx_idx = malloc( n_domain * sizeof(int *        ));
  
   // for (int i = 0; i < n_domain; i++) {
-  //   PDM_dmesh_nodal_to_dmesh_get_dmesh(dmn_to_dm, 0, &dm[i]);
+  //   PDM_dmesh_nodal_to_dmesh_get_dmesh(dmn_to_dm, i, &dm[i]);
 
   //   int _dn_cell, _dn_face, _dn_edge, _dn_vtx, _n_bnd, _n_join;
   //   PDM_dmesh_dims_get(dm[i], &_dn_cell, &_dn_face, &_dn_edge, &_dn_vtx, &_n_bnd, &_n_join);

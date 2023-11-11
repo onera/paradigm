@@ -351,7 +351,7 @@ int main
   int         **dedge_vtx_idx = malloc( n_domain * sizeof(int *        ));
  
   for (int i = 0; i < n_domain; i++) {
-    PDM_dmesh_nodal_to_dmesh_get_dmesh(dmn_to_dm, 0, &dm[i]);
+    PDM_dmesh_nodal_to_dmesh_get_dmesh(dmn_to_dm, i, &dm[i]);
 
     dn_vtx [i] = PDM_dmesh_dn_entity_get(dm[i], PDM_MESH_ENTITY_VERTEX);
 
@@ -387,17 +387,17 @@ int main
    */
   if(dim == 3) {
     // Il faut rajouter un is_implicit_order
-    // printf("dn_vtx %i \n", dn_vtx[0]);
-    // printf("dn_face %i \n", dn_face[0]);
-    // double t1 = PDM_MPI_Wtime();
+    printf("dn_vtx %i \n", dn_vtx[0]);
+    printf("dn_face %i \n", dn_face[0]);
+    double t1 = PDM_MPI_Wtime();
     // TODO : Extract dface_vtx concerns by interface before
     PDM_domain_interface_translate_vtx2face(dom_intrf,
                                             dn_vtx,
                                             dn_face,
                                             dface_vtx_idx,
                                             dface_vtx);
-    // double dt = PDM_MPI_Wtime() - t1;
-    // printf("PDM_domain_interface_translate_vtx2face %12.5e \n", dt);
+    double dt = PDM_MPI_Wtime() - t1;
+    printf("PDM_domain_interface_translate_vtx2face %12.5e \n", dt);
 
   }
 
