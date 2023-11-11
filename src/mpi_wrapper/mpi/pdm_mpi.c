@@ -1833,6 +1833,15 @@ int PDM_MPI_Type_commit(PDM_MPI_Datatype *datatype)
 }
 
 /*----------------------------------------------------------------------------
+ * MPI_Type_size (wrapping de la fonction MPI_Type_commit)
+ *
+ *----------------------------------------------------------------------------*/
+int PDM_MPI_Type_size(PDM_MPI_Datatype datatype, int *size)
+{
+  return MPI_Type_size(_pdm_mpi_2_mpi_datatype(datatype), size);
+}
+
+/*----------------------------------------------------------------------------
  * PDM_MPI_Type_free (wrapping de la fonction MPI_Type_free)
  *
  *----------------------------------------------------------------------------*/

@@ -87,7 +87,6 @@ PDM_block_to_block_create
  * \param [out]  block_data_end   Destination block data
  *
  */
-
 int
 PDM_block_to_block_exch
 (
@@ -100,6 +99,36 @@ PDM_block_to_block_exch
  int                   *block_stride_end,
  void                 **block_data_end
 );
+
+
+
+/**
+ *
+ * \brief Exchange data from origin block to destination block
+ *
+ * \warning Variable stride is not yet available
+ *
+ * \param [in]   btb              Block-to-Block structure
+ * \param [in]   mpi_type         Mpi kind setup by all possible MPI_type_create
+ * \param [in]   block_stride_ini Origin block stride for each block element for \ref PDM_STRIDE_VAR
+ *                                Constant stride for \ref PDM_STRIDE_VAR
+ * \param [in]   block_data_ini   Origin block data
+ * \param [out]  block_stride_end Destination block stride
+ * \param [out]  block_data_end   Destination block data
+ *
+ */
+int
+PDM_block_to_block_exch_with_mpi_type
+(
+ PDM_block_to_block_t  *btb,
+ PDM_stride_t           t_stride,
+ PDM_MPI_Datatype       mpi_type,
+ int                   *block_stride_ini,
+ void                  *block_data_ini,
+ int                   *block_stride_end,
+ void                 **block_data_end
+);
+
 
 /**
  *
