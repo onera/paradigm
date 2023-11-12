@@ -81,7 +81,7 @@ PDM_part_entity_geom
  const PDM_MPI_Comm  comm,
  const PDM_g_num_t   dn_entity,
  const double       *dentity_coord,
- const int          *dentity_weight,
+ const double       *dentity_weight,
        int          *dentity_part
 );
 
@@ -94,7 +94,7 @@ PDM_part_geom_0d
  const PDM_MPI_Comm  comm,
  const int           dn_vtx,
  const double       *dvtx_coord,
- const int          *dvtx_weight,
+ const double       *dvtx_weight,
        int          *dvtx_part
 );
 
@@ -109,7 +109,7 @@ PDM_part_geom_1d
  const int           dn_vtx,
  const PDM_g_num_t  *dedge_vtx,
  const double       *dvtx_coord,
- const int          *dedge_weight,
+ const double       *dedge_weight,
        int          *dedge_part
 );
 
@@ -129,7 +129,7 @@ PDM_part_geom_2d
  const PDM_g_num_t  *dface_edge,
  const PDM_g_num_t  *dedge_vtx,
  const double       *dvtx_coord,
- const int          *dface_weight,
+ const double       *dface_weight,
        int          *dface_part
 );
 
@@ -172,7 +172,7 @@ PDM_part_geom
  const int          *dface_vtx_idx,
  const PDM_g_num_t  *dface_vtx,
  const PDM_g_num_t  *dface_proc,
- const double        *dvtx_coord,
+ const double       *dvtx_coord,
  const PDM_g_num_t  *dvtx_proc,
  int                *dcell_part
 );

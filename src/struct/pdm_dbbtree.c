@@ -2953,7 +2953,7 @@ PDM_dbbtree_closest_upper_bound_dist_boxes_pts_shared_get
   int          *pn_boxes           = malloc (sizeof(int         *) * n_part);
   double      **pbox_center        = malloc (sizeof(double      *) * n_part);
   double      **pbox_pts_coords    = malloc (sizeof(double      *) * n_part);
-  int         **pbox_weight        = malloc (sizeof(int         *) * n_part);
+  double      **pbox_weight        = malloc (sizeof(double      *) * n_part);
   int         **pbox_init_location = malloc (sizeof(int         *) * n_part);
   int         **pstride_one        = malloc (sizeof(int         *) * n_part);
   int         **pbox_pts_n         = malloc (sizeof(int         *) * n_part);
@@ -3041,7 +3041,7 @@ PDM_dbbtree_closest_upper_bound_dist_boxes_pts_shared_get
 
       // pn_boxes[i_shm] = 0;
       pbox_center       [i_shm] = malloc (3 * pn_boxes[i_shm] * sizeof(double     ));
-      pbox_weight       [i_shm] = malloc (    pn_boxes[i_shm] * sizeof(int        ));
+      pbox_weight       [i_shm] = malloc (    pn_boxes[i_shm] * sizeof(double     ));
       pbox_init_location[i_shm] = malloc (3 * pn_boxes[i_shm] * sizeof(int        ));
       pstride_one       [i_shm] = malloc (    pn_boxes[i_shm] * sizeof(int        ));
       pbox_pts_n        [i_shm] = malloc (    pn_boxes[i_shm] * sizeof(int        ));
@@ -3133,7 +3133,7 @@ PDM_dbbtree_closest_upper_bound_dist_boxes_pts_shared_get
     }
 
     pbox_center       [0] = malloc (3 * pn_boxes[0] * sizeof(double     ));
-    pbox_weight       [0] = malloc (    pn_boxes[0] * sizeof(int        ));
+    pbox_weight       [0] = malloc (    pn_boxes[0] * sizeof(double     ));
     pbox_init_location[0] = malloc (3 * pn_boxes[0] * sizeof(int        ));
     pstride_one       [0] = malloc (    pn_boxes[0] * sizeof(int        ));
     pbox_pts_n        [0] = malloc (    pn_boxes[0] * sizeof(int        ));

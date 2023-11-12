@@ -70,11 +70,11 @@ _redistribute_pts_geom
   /*
    * Redistribute all pts and impose hilbert ordering
    */
-  int **stride_one = malloc(doct->n_part_cloud * sizeof(int *));
-  int **weight     = malloc(doct->n_part_cloud * sizeof(int *));
+  int    **stride_one = malloc(doct->n_part_cloud * sizeof(int    *));
+  double **weight     = malloc(doct->n_part_cloud * sizeof(double *));
   for(int i_part = 0; i_part < doct->n_part_cloud; ++i_part) {
-    weight    [i_part] = malloc(doct->n_point_cloud[i_part] * sizeof(int));
-    stride_one[i_part] = malloc(doct->n_point_cloud[i_part] * sizeof(int));
+    weight    [i_part] = malloc(doct->n_point_cloud[i_part] * sizeof(double));
+    stride_one[i_part] = malloc(doct->n_point_cloud[i_part] * sizeof(int   ));
     for(int i = 0; i < doct->n_point_cloud[i_part]; ++i) {
       weight    [i_part][i] = 1;
       stride_one[i_part][i] = 1;

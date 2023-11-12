@@ -433,11 +433,11 @@ _gnum_from_coords_compute
     int *send_count = NULL, *send_shift = NULL;
     int *recv_count = NULL, *recv_shift = NULL;
     double *send_coords = NULL, *recv_coords = NULL;
-    PDM_l_num_t *weight = NULL;
+    double *weight = NULL;
     PDM_g_num_t *block_global_num = NULL, *part_global_num = NULL;
     PDM_morton_code_t *morton_index = NULL;
 
-    weight = malloc (n_entities * sizeof(PDM_l_num_t));
+    weight = malloc (n_entities * sizeof(double));
     morton_index = malloc ((n_ranks + 1) * sizeof(PDM_morton_code_t));
 
     for (int i = 0; i < n_entities; i++) {

@@ -2657,7 +2657,7 @@ _build_leaf_weight(const PDM_box_tree_t    *bt,
                          int                parent_weight,
                          int               *n_leaves,
                          PDM_morton_code_t *leaf_codes,
-                         int               *weight)
+                         double            *weight)
 {
 
   PDM_UNUSED (parent_weight);
@@ -2684,12 +2684,6 @@ _build_leaf_weight(const PDM_box_tree_t    *bt,
     if (node->n_boxes > 0 ) {
       leaf_codes[_n_leaves]  = node->morton_code;
       weight    [_n_leaves]  = node->n_boxes;
-      // if(node->extra_weight != 0) {
-      //   weight    [_n_leaves] *= node->extra_weight;
-      // } else {
-      //   weight    [_n_leaves] = node->n_boxes;
-      //   // weight    [_n_leaves] = parent_weight;
-      // }
       _n_leaves += 1;
     }
   }
@@ -3886,7 +3880,8 @@ PDM_box_tree_get_distrib(PDM_box_tree_t        *bt,
   int   n_leaves = 0;
   int  *reduce_ids = NULL;
   PDM_morton_code_t  *leaf_codes = NULL, *reduce_index = NULL;
-  int   *weight = NULL, *counter = NULL;
+  double   *weight = NULL;
+  int      *counter = NULL;
 
   PDM_box_distrib_t  *distrib = NULL;
 
@@ -3904,7 +3899,7 @@ PDM_box_tree_get_distrib(PDM_box_tree_t        *bt,
     return NULL;
 
   leaf_codes = (PDM_morton_code_t *) malloc(bt->stats.n_leaves * sizeof(PDM_morton_code_t));
-  weight = (int *) malloc(bt->stats.n_leaves * sizeof(int));
+  weight = (double *) malloc(bt->stats.n_leaves * sizeof(double));
 
   /* Build index for boxes */
   int repart_weight = 0;
@@ -3920,7 +3915,7 @@ PDM_box_tree_get_distrib(PDM_box_tree_t        *bt,
   // PDM_log_trace_array_int(weight, n_leaves, "weight : ");
 
   leaf_codes = (PDM_morton_code_t *) realloc((void *) leaf_codes, n_leaves * sizeof(PDM_morton_code_t));
-  weight = (int *) realloc((void *) weight, n_leaves * sizeof(int));
+  weight = (double *) realloc((void *) weight, n_leaves * sizeof(double));
 
   /* Compute the resulting Morton index */
 
