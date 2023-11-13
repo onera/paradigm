@@ -1538,8 +1538,8 @@ _complete_octree
 
     PDM_morton_code_t *L2_morton_index = malloc(sizeof(PDM_morton_code_t) * (n_ranks + 1));
 
-    int    *order  = malloc (sizeof(int   ) * L2->n_nodes);
-    double *weight = malloc (sizeof(double) * L2->n_nodes);
+    int *order  = malloc (sizeof(int) * L2->n_nodes);
+    int *weight = malloc (sizeof(int) * L2->n_nodes);
 
     for (int i = 0; i < L2->n_nodes; i++) {
       weight[i] = 1;
@@ -2558,7 +2558,7 @@ _block_partition
 
   free (recv_shift);
 
-  double *weight = malloc(G->n_nodes * sizeof(double));
+  int *weight = malloc(G->n_nodes * sizeof(int));
 
   /* - compute weight of each cell */
 
