@@ -700,7 +700,7 @@ _define_rank_distrib(int                       dim,
 
   for (int rank_id = 0; rank_id < n_ranks; rank_id++) {
 
-    PDM_g_num_t   sum = 0;
+    double   sum = 0;
     int   shift = rank_id * sampling_factor;
 
     for (int id = 0; id < sampling_factor; id++)
