@@ -139,12 +139,10 @@ cdef class PartExtension:
   # ------------------------------------------------------------------
   # Fake init (Use only for docstring)
   def __init__(self,
-               int                                           n_domain,
+               n_domain,
                NPY.ndarray[NPY.int32_t   , mode='c', ndim=1] n_part,
-               int                                           merge_blocks,
-               PDM_split_dual_t                              split_method,
-               PDM_part_size_t                               part_size_method,
-               NPY.ndarray[NPY.double_t  , mode='c', ndim=1] part_fraction,
+               PDM_extend_type_t                             extend_type,
+               depth,
                MPI.Comm                                      comm):
 
     """
