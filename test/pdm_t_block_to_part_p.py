@@ -16,7 +16,7 @@ n_rank = comm.size
 # Command line arguments
 parser = argparse.ArgumentParser()
 
-parser.add_argument("-f", "--filename", default="/scratchm/khoogvel/workspace/build/paradigm/impi_gcc12/test/pdm_t_block_to_part_p_d/btp_create.txt") # circulente
+parser.add_argument("-f", "--filename", default="/scratchm/khoogvel/workspace/build/paradigm/impi_gcc12/test/pdm_t_block_to_part_p_d/output.txt") # circulente
 
 parser.add_argument("-n", "--n_iter", default=1)
 
@@ -84,88 +84,131 @@ PDM.time_per_step_dump(comm,
                        "output.txt")
 
 # Post-process "create"
-# if i_rank == 0:
-#   filename = args.filename
+if i_rank == 0:
+  filename = args.filename
 
-#   dico = {}
-#   with open(filename, "r") as f:
-#     for line in f:
-#       values = line.split()
+  times = {}
+  comm_graph = {}
 
-#       if values[0] == "n_rank":
-#         n_rank = int(values[1])
+  times["binary_search"]   = {}
+  times["binary_search"]["min_elaps"]  = []
+  times["binary_search"]["mean_elaps"] = []
+  times["binary_search"]["max_elaps"]  = []
+  times["binary_search"]["min_cpu"]  = []
+  times["binary_search"]["mean_cpu"] = []
+  times["binary_search"]["max_cpu"]  = []
 
-#       if values[0] == "i_rank":
-#         i_rank = int(values[1])
-#         dico[i_rank] = {}
+  times["create_exchange"] = {}
+  times["create_exchange"]["min_elaps"]  = []
+  times["create_exchange"]["mean_elaps"] = []
+  times["create_exchange"]["max_elaps"]  = []
+  times["create_exchange"]["min_cpu"]  = []
+  times["create_exchange"]["mean_cpu"] = []
+  times["create_exchange"]["max_cpu"]  = []
 
-#       if values[0] == "node":
-#         node = int(values[1])
-#         dico[i_rank]["node"] = node
+  times["data_exchange"]   = {}
+  times["data_exchange"]["min_elaps"]  = []
+  times["data_exchange"]["mean_elaps"] = []
+  times["data_exchange"]["max_elaps"]  = []
+  times["data_exchange"]["min_cpu"]  = []
+  times["data_exchange"]["mean_cpu"] = []
+  times["data_exchange"]["max_cpu"]  = []
 
-#       if values[0] == "elaps":
-#         elaps = float(values[1])
-#         dico[i_rank]["elaps"] = elaps
+  with open(filename, "r") as f:
+    for line in f:
+      values = line.split()
 
-#       if values[0] == "cpu":
-#         cpu = float(values[1])
-#         dico[i_rank]["cpu"] = cpu
+      if values[0] == "i_rank":
+        i_rank = int(values[1])
+        comm_graph[i_rank] = {}
 
-#       if values[0] == "n_send":
-#         n_send = np.zeros(n_rank)
-#         for j_rank in range(n_rank):
-#           n_send[j_rank] = int(values[j_rank + 1])
-#         dico[i_rank]["n_send"] = n_send
+      if values[0] == "node":
+        node = int(values[1])
+        comm_graph[i_rank]["node"] = node
 
-#   # Plot communication graph
-#   mat = np.zeros((n_rank, n_rank), dtype=int)
+      if values[0] == "n_send":
+        n_send = np.zeros(n_rank)
+        for j_rank in range(n_rank):
+          n_send[j_rank] = int(values[j_rank + 1])
+        comm_graph[i_rank]["n_send"] = n_send
 
-#   for j_rank in range(n_rank):
-#     mat[:,j_rank] = dico[j_rank]["n_send"][:]
+      if values[0] == "binary_search":
+        times["binary_search"]["min_elaps"].append(values[2])
+        times["binary_search"]["mean_elaps"].append(values[3])
+        times["binary_search"]["max_elaps"].append(values[4])
+        times["binary_search"]["min_cpu"].append(values[6])
+        times["binary_search"]["mean_cpu"].append(values[7])
+        times["binary_search"]["max_cpu"].append(values[8])
 
-#   fig, ax = plt.subplots(figsize=(4,4), dpi=300)
+      if values[0] == "create_exchange":
+        times["create_exchange"]["min_elaps"].append(values[2])
+        times["create_exchange"]["mean_elaps"].append(values[3])
+        times["create_exchange"]["max_elaps"].append(values[4])
+        times["create_exchange"]["min_cpu"].append(values[6])
+        times["create_exchange"]["mean_cpu"].append(values[7])
+        times["create_exchange"]["max_cpu"].append(values[8])
 
-#   ax.imshow(mat, cmap=plt.colormaps["Blues"])
 
-#   ax.set_aspect("equal")
-#   ax.set_xlabel("rank (block)")
-#   ax.set_ylabel("rank (part)")
+      if values[0] == "data_exchange":
+        times["data_exchange"]["min_elaps"].append(values[2])
+        times["data_exchange"]["mean_elaps"].append(values[3])
+        times["data_exchange"]["max_elaps"].append(values[4])
+        times["data_exchange"]["min_cpu"].append(values[6])
+        times["data_exchange"]["mean_cpu"].append(values[7])
+        times["data_exchange"]["max_cpu"].append(values[8])
 
-#   # fichier image
-#   output_name = "/stck/khoogvel/workspace/comm_graph.svg"
+  # Print
+  print(times)
 
-#   plt.savefig(output_name, bbox_inches="tight")
+  # Plot communication graph
+  mat = np.zeros((n_rank, n_rank), dtype=int)
 
-#   plt.close()
+  for j_rank in range(n_rank):
+    mat[:,j_rank] = comm_graph[j_rank]["n_send"][:]
 
-#   # Plot distance graph (TO DO: dans le bon sens?)
-#   mat = np.zeros((n_rank, n_rank), dtype=int)
+  fig, ax = plt.subplots(figsize=(4,4), dpi=300)
 
-#   for j_rank in range(n_rank):
-#     for k_rank in range(n_rank):
-#       if dico[j_rank]["n_send"][k_rank] > 0:
-#         distance = 0 # no exchange
-#         if (k_rank != j_rank):
-#           if dico[j_rank]["node"]-dico[k_rank]["node"] == 0:
-#             distance = 2 # same node
-#           else:
-#             distance = 3 # different node
-#         else:
-#           distance = 1 # same rank
-#         mat[k_rank,j_rank] = distance
+  ax.imshow(mat, cmap=plt.colormaps["Blues"])
 
-#   fig, ax = plt.subplots(figsize=(4,4), dpi=300)
+  ax.set_aspect("equal")
+  ax.set_xlabel("rank (block)")
+  ax.set_ylabel("rank (part)")
 
-#   ax.imshow(mat, cmap=plt.colormaps["Blues"])
+  # fichier image
+  output_name = "/stck/khoogvel/workspace/comm_graph.svg"
 
-#   ax.set_aspect("equal")
-#   ax.set_xlabel("rank (block)")
-#   ax.set_ylabel("rank (part)")
+  plt.savefig(output_name, bbox_inches="tight")
 
-#   # fichier image
-#   output_name = "/stck/khoogvel/workspace/distance_graph.svg"
+  plt.close()
 
-#   plt.savefig(output_name, bbox_inches="tight")
+  # Plot distance graph (TO DO: dans le bon sens?)
+  mat = np.zeros((n_rank, n_rank), dtype=int)
 
-#   plt.close()
+  for j_rank in range(n_rank):
+    for k_rank in range(n_rank):
+      if comm_graph[j_rank]["n_send"][k_rank] > 0:
+        distance = 0 # no exchange
+        if (k_rank != j_rank):
+          if comm_graph[j_rank]["node"]-comm_graph[k_rank]["node"] == 0:
+            distance = 2 # same node
+          else:
+            distance = 3 # different node
+        else:
+          distance = 1 # same rank
+        mat[k_rank,j_rank] = distance
+
+  fig, ax = plt.subplots(figsize=(4,4), dpi=300)
+
+  ax.imshow(mat, cmap=plt.colormaps["Blues"])
+
+  ax.set_aspect("equal")
+  ax.set_xlabel("rank (block)")
+  ax.set_ylabel("rank (part)")
+
+  # fichier image
+  output_name = "/stck/khoogvel/workspace/distance_graph.svg"
+
+  plt.savefig(output_name, bbox_inches="tight")
+
+  plt.close()
 
