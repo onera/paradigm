@@ -1793,7 +1793,7 @@ PDM_dmesh_nodal_to_part_mesh_nodal_elmts
 )
 {
   PDM_dmesh_nodal_elmts_t* dmne = _get_from_geometry_kind(dmn, geom_kind);
-  return PDM_dmesh_nodal_elmts_to_part_mesh_nodal_elmts(dmne, n_part, pn_vtx, vtx_ln_to_gn, pn_elmt, elmt_ln_to_gn, pparent_entitity_ln_to_gn);
+  return PDM_dmesh_nodal_elmts_to_part_mesh_nodal_elmts(dmne, n_part, pn_vtx, vtx_ln_to_gn, pn_elmt, NULL, elmt_ln_to_gn, pparent_entitity_ln_to_gn);
 }
 
 const double *

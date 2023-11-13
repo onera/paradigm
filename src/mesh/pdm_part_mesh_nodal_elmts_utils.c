@@ -592,9 +592,6 @@ PDM_part_mesh_nodal_quad_decomposes_faces
   for (int ielt = 0; ielt < n_elt; ielt++) {
 
     int icell = ielt;
-    if (parent_num != NULL) {
-      icell = parent_num[ielt];
-    }
 
     /* Store the face_cell */
     for (int i_face = 0; i_face < n_face_elt; i_face++) {
@@ -2049,11 +2046,7 @@ PDM_part_mesh_nodal_elmts_decompose_faces_get_size
         int cell_face_n = PDM_n_face_elt_per_elmt(pmne->sections_std[isection]->t_elt);
 
         for (int i = 0; i < n_elt; i++) {
-          int icell = i;
-          if (parent_num != NULL) {
-            icell = parent_num[i];
-          }
-          (*elmt_cell_face_idx)[icell+1] = cell_face_n;
+          (*elmt_cell_face_idx)[i+1] = cell_face_n;
         }
       }
 
@@ -2156,13 +2149,9 @@ PDM_part_mesh_nodal_elmts_decompose_faces_get_size
         }
 
         for (int i = 0; i < n_elt; i++) {
-          int icell = i;
-          if (parent_num != NULL) {
-            icell = parent_num[i];
-          }
 
           for (int j = 0; j < cell_face_n; j++) {
-            (*elmt_face_vtx_idx)[(*elmt_cell_face_idx)[icell]+j+1] = cell_face_vtx_n[j];
+            (*elmt_face_vtx_idx)[(*elmt_cell_face_idx)[i]+j+1] = cell_face_vtx_n[j];
           }
 
         }
