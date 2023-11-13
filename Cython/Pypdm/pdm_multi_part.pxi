@@ -283,7 +283,7 @@ cdef class MultiPart:
                        NPY.ndarray[NPY.int32_t, mode='c', ndim=1] renum_properties_cell,
                        char *renum_face_method):
       """
-      set_reordering(i_domain, renum_cell_method, renum_face_method, renum_properties_cell)
+      reordering_set(i_domain, renum_cell_method, renum_face_method, renum_properties_cell)
 
       Set the reordering methods to be used after partitioning
 
@@ -307,7 +307,7 @@ cdef class MultiPart:
     def reordering_vtx_set(self, int i_domain,
                            char *renum_vtx_method):
       """
-      set_reordering_vtx(i_domain, renum_vtx_method)
+      reordering_vtx_set(i_domain, renum_vtx_method)
 
       Set the vertex reordering methods to be used after partitioning
 

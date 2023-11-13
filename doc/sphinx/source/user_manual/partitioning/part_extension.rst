@@ -127,47 +127,56 @@ Python API
 
 .. ifconfig:: enable_python_doc == 'ON'
 
-  Initialization
-  ~~~~~~~~~~~~~~
+  .. py:class:: PartExtension
 
-  .. autoclass:: Pypdm.Pypdm.PartExtension
+    Python structure to perform partition extension.
+    Once initialized, all the following
+    methods apply to a :class:`PartExtension` instance.
 
-  Set inputs
-  ~~~~~~~~~~
+    .. rubric:: Initialization
 
-  .. autofunction:: Pypdm.Pypdm.PartExtension.connectivity_set
+    .. automethod:: Pypdm.Pypdm.PartExtension.__init__
 
-  .. autofunction:: Pypdm.Pypdm.PartExtension.vtx_coord_set
+    .. rubric:: Methods summary
 
-  .. autofunction:: Pypdm.Pypdm.PartExtension.ln_to_gn_set
+    .. autosummary::
+      :nosignatures:
 
-  .. autofunction:: Pypdm.Pypdm.PartExtension.part_bound_graph_set
+      ~Pypdm.Pypdm.PartExtension.connectivity_set
+      ~Pypdm.Pypdm.PartExtension.vtx_coord_set
+      ~Pypdm.Pypdm.PartExtension.ln_to_gn_set
+      ~Pypdm.Pypdm.PartExtension.part_bound_graph_set
+      ~Pypdm.Pypdm.PartExtension.group_set
+      ~Pypdm.Pypdm.PartExtension.compute
+      ~Pypdm.Pypdm.PartExtension.connectivity_get
+      ~Pypdm.Pypdm.PartExtension.vtx_coord_get
+      ~Pypdm.Pypdm.PartExtension.ln_to_gn_get
+      ~Pypdm.Pypdm.PartExtension.group_get
 
-  .. autofunction:: Pypdm.Pypdm.PartExtension.group_set
+    .. rubric:: Set inputs
 
-  .. .. autofunction:: Pypdm.Pypdm.PartExtension.set_part
+    .. automethod:: Pypdm.Pypdm.PartExtension.connectivity_set
+    .. automethod:: Pypdm.Pypdm.PartExtension.vtx_coord_set
+    .. automethod:: Pypdm.Pypdm.PartExtension.ln_to_gn_set
+    .. automethod:: Pypdm.Pypdm.PartExtension.part_bound_graph_set
+    .. automethod:: Pypdm.Pypdm.PartExtension.group_set
 
-  .. .. autofunction:: Pypdm.Pypdm.PartExtension.part_domain_interface_shared_set
+    ..  .. autofunction:: Pypdm.Pypdm.PartExtension.set_part
+    ..  .. autofunction:: Pypdm.Pypdm.PartExtension.part_domain_interface_shared_set
 
-  Perform exchange of extended partition
-  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    .. rubric:: Perform exchange of extended partition
 
-  .. autofunction:: Pypdm.Pypdm.PartExtension.compute
+    .. automethod:: Pypdm.Pypdm.PartExtension.compute
 
-  Get outputs
-  ~~~~~~~~~~~
+    .. rubric:: Get outputs
 
-  .. autofunction:: Pypdm.Pypdm.PartExtension.connectivity_get
+    .. automethod:: Pypdm.Pypdm.PartExtension.connectivity_get
+    .. automethod:: Pypdm.Pypdm.PartExtension.vtx_coord_get
+    .. automethod:: Pypdm.Pypdm.PartExtension.ln_to_gn_get
+    .. automethod:: Pypdm.Pypdm.PartExtension.group_get
 
-  .. autofunction:: Pypdm.Pypdm.PartExtension.vtx_coord_get
-
-  .. autofunction:: Pypdm.Pypdm.PartExtension.ln_to_gn_get
-
-  .. autofunction:: Pypdm.Pypdm.PartExtension.group_get
-
-  .. .. autofunction:: Pypdm.Pypdm.PartExtension.get_interface
-
-  .. .. autofunction:: Pypdm.Pypdm.PartExtension.get_composed_interface
+    .. .. autofunction:: Pypdm.Pypdm.PartExtension.get_interface
+    .. .. autofunction:: Pypdm.Pypdm.PartExtension.get_composed_interface
 
 .. ifconfig:: enable_python_doc == 'OFF'
 

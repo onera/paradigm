@@ -72,7 +72,7 @@ cdef class ClosestPoints:
     """
     __init__(comm, n_closest)
 
-    Create a structure to look for the closest points of a point cloud (target) in an other point cloud (source)
+    Create the structure
 
     Parameters:
       comm      (MPI.Comm) : MPI communicator
@@ -257,7 +257,7 @@ cdef class ClosestPoints:
     the source and target point clouds
 
     Returns:
-      PartToPart object (:py:class:`PartToPartCapsule`)
+      PartToPart object (:py:class:`PartToPart`)
     """
     cdef PDM_part_to_part_t *ptpc
     PDM_closest_points_part_to_part_get(self._cls,

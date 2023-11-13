@@ -177,7 +177,6 @@ Python API
       ~Pypdm.Pypdm.MeshLocation.unlocated_get
       ~Pypdm.Pypdm.MeshLocation.location_get
       ~Pypdm.Pypdm.MeshLocation.points_in_elt_get
-      ~Pypdm.Pypdm.MeshLocation.point_location_get
       ~Pypdm.Pypdm.MeshLocation.cell_vertex_get
       ~Pypdm.Pypdm.MeshLocation.part_to_part_get
 
@@ -213,8 +212,6 @@ Python API
     .. automethod:: Pypdm.Pypdm.MeshLocation.location_get
 
     .. automethod:: Pypdm.Pypdm.MeshLocation.points_in_elt_get
-
-    .. automethod:: Pypdm.Pypdm.MeshLocation.point_location_get
 
     .. automethod:: Pypdm.Pypdm.MeshLocation.cell_vertex_get
 

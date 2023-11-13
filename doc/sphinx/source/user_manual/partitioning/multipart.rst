@@ -176,70 +176,79 @@ Python API
 
 .. ifconfig:: enable_python_doc == 'ON'
 
-  Initialization
-  ~~~~~~~~~~~~~~
+  .. py:class:: MultiPart
 
-  .. autoclass:: Pypdm.Pypdm.MultiPart
+    Python structure to perform multiple domain mesh partitioning. 
+    Once initialized, all the following
+    methods apply to a :class:`MultiPart` instance.
 
+    .. rubric:: Initialization
 
-  Set inputs
-  ~~~~~~~~~~
+    .. autofunction:: Pypdm.Pypdm.MultiPart.__init__
 
-  .. autofunction:: Pypdm.Pypdm.MultiPart.dmesh_nodal_set
+    .. rubric:: Methods summary
 
-  .. autofunction:: Pypdm.Pypdm.MultiPart.dmesh_set
+    .. autosummary::
+      :nosignatures:
 
+      ~Pypdm.Pypdm.MultiPart.dmesh_nodal_set
+      ~Pypdm.Pypdm.MultiPart.dmesh_set
+      ~Pypdm.Pypdm.MultiPart.reordering_set
+      ~Pypdm.Pypdm.MultiPart.reordering_vtx_set
+      ~Pypdm.Pypdm.MultiPart.compute
+      ~Pypdm.Pypdm.MultiPart.n_entity_get
+      ~Pypdm.Pypdm.MultiPart.connectivity_get
+      ~Pypdm.Pypdm.MultiPart.ln_to_gn_get
+      ~Pypdm.Pypdm.MultiPart.vtx_coord_get
+      ~Pypdm.Pypdm.MultiPart.part_mesh_nodal_get
+      ~Pypdm.Pypdm.MultiPart.graph_comm_get
+      ~Pypdm.Pypdm.MultiPart.ghost_information_get
+      ~Pypdm.Pypdm.MultiPart.color_get
+      ~Pypdm.Pypdm.MultiPart.hyper_plane_color_get
+      ~Pypdm.Pypdm.MultiPart.thread_color_get
 
-  Renumbering options
-  ~~~~~~~~~~~~~~~~~~~
+    .. rubric:: Set inputs
+    
+    .. automethod:: Pypdm.Pypdm.MultiPart.dmesh_nodal_set
+    .. automethod:: Pypdm.Pypdm.MultiPart.dmesh_set
 
-  .. todo::
-    List available renumbering methods
+    .. rubric:: Renumbering options
 
-  .. autofunction:: Pypdm.Pypdm.MultiPart.set_reordering
+    .. todo::
+      List available renumbering methods
 
-  .. autofunction:: Pypdm.Pypdm.MultiPart.set_reordering_vtx
+    .. automethod:: Pypdm.Pypdm.MultiPart.reordering_set
+    .. automethod:: Pypdm.Pypdm.MultiPart.reordering_vtx_set
 
+    .. rubric:: Perform partitioning
 
-  Perform partitioning
-  ~~~~~~~~~~~~~~~~~~~~
+    .. automethod:: Pypdm.Pypdm.MultiPart.compute
 
-  .. autofunction:: Pypdm.Pypdm.MultiPart.compute
+    .. rubric:: Get outputs
 
-  Get outputs
-  ~~~~~~~~~~~
+    .. automethod:: Pypdm.Pypdm.MultiPart.n_entity_get
+    .. automethod:: Pypdm.Pypdm.MultiPart.connectivity_get
+    .. automethod:: Pypdm.Pypdm.MultiPart.ln_to_gn_get
+    .. automethod:: Pypdm.Pypdm.MultiPart.vtx_coord_get
+    .. automethod:: Pypdm.Pypdm.MultiPart.part_mesh_nodal_get
+    .. automethod:: Pypdm.Pypdm.MultiPart.graph_comm_get
+    .. automethod:: Pypdm.Pypdm.MultiPart.ghost_information_get
+    .. automethod:: Pypdm.Pypdm.MultiPart.color_get
+    .. automethod:: Pypdm.Pypdm.MultiPart.hyper_plane_color_get
+    .. automethod:: Pypdm.Pypdm.MultiPart.thread_color_get
 
-  .. autofunction:: Pypdm.Pypdm.MultiPart.n_entity_get
-
-  .. autofunction:: Pypdm.Pypdm.MultiPart.connectivity_get
-
-  .. autofunction:: Pypdm.Pypdm.MultiPart.ln_to_gn_get
-
-  .. autofunction:: Pypdm.Pypdm.MultiPart.vtx_coord_get
-
-  .. autofunction:: Pypdm.Pypdm.MultiPart.part_mesh_nodal_get
-
-  .. autofunction:: Pypdm.Pypdm.MultiPart.graph_comm_get
-
-  .. autofunction:: Pypdm.Pypdm.MultiPart.ghost_information_get
-
-  .. autofunction:: Pypdm.Pypdm.MultiPart.color_get
-
-  .. autofunction:: Pypdm.Pypdm.MultiPart.hyper_plane_color_get
-
-  .. autofunction:: Pypdm.Pypdm.MultiPart.thread_color_get
 
   Partitioned nodal mesh
   ~~~~~~~~~~~~~~~~~~~~~~~
 
-  Here we describe the getters of the structure retrieved using :py:func:`part_mesh_nodal_get`.
+  Here we describe the getters of the structure retrieved using :py:func:`~Pypdm.Pypdm.MultiPart.part_mesh_nodal_get`.
   This allows to have the arrays corresponding to the partitioned mesh described in nodal connectivity style.
 
   .. .. autoclass:: Pypdm.Pypdm.PMeshNodal
 
-  .. autoclass:: Pypdm.Pypdm.PartMeshNodalCaspule
+  .. py:class:: PartMeshNodalCaspule
 
-  .. autofunction:: Pypdm.Pypdm.PartMeshNodalCaspule.get_sections
+    .. automethod:: Pypdm.Pypdm.PartMeshNodalCaspule.get_sections
 
   .. .. autofunction:: Pypdm.Pypdm.PartMeshNodalCaspule.vtx_g_num_get
 

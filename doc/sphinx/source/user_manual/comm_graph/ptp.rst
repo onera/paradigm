@@ -147,43 +147,43 @@ Python API
     Python structure to perform partition-to-partition data exchanges. Once initialized, all the following
     methods apply to a :class:`PartToPart` instance.
 
-  .. rubric:: Initialization
+    .. rubric:: Initialization
 
-  .. autoclass:: Pypdm.Pypdm.PartToPart.__init__
-
-
-  .. rubric:: Methods summary
-
-  .. autosummary::
-    :nosignatures:
-
-    ~Pypdm.Pypdm.PartToPart.get_referenced_lnum2
-    ~Pypdm.Pypdm.PartToPart.get_unreferenced_lnum2
-    ~Pypdm.Pypdm.PartToPart.get_gnum1_come_from
-    ~Pypdm.Pypdm.PartToPart.iexch
-    ~Pypdm.Pypdm.PartToPart.wait
-    ~Pypdm.Pypdm.PartToPart.reverse_iexch
-    ~Pypdm.Pypdm.PartToPart.reverse_wait
+    .. autoclass:: Pypdm.Pypdm.PartToPart.__init__
 
 
-  .. rubric:: Information on Part 2 side
+    .. rubric:: Methods summary
 
-  .. autofunction:: Pypdm.Pypdm.PartToPart.get_referenced_lnum2
+    .. autosummary::
+      :nosignatures:
 
-  .. autofunction:: Pypdm.Pypdm.PartToPart.get_unreferenced_lnum2
+      ~Pypdm.Pypdm.PartToPart.get_referenced_lnum2
+      ~Pypdm.Pypdm.PartToPart.get_unreferenced_lnum2
+      ~Pypdm.Pypdm.PartToPart.get_gnum1_come_from
+      ~Pypdm.Pypdm.PartToPart.iexch
+      ~Pypdm.Pypdm.PartToPart.wait
+      ~Pypdm.Pypdm.PartToPart.reverse_iexch
+      ~Pypdm.Pypdm.PartToPart.reverse_wait
 
-  .. autofunction:: Pypdm.Pypdm.PartToPart.get_gnum1_come_from
+
+    .. rubric:: Information on Part 2 side
+
+    .. automethod:: Pypdm.Pypdm.PartToPart.get_referenced_lnum2
+
+    .. automethod:: Pypdm.Pypdm.PartToPart.get_unreferenced_lnum2
+
+    .. automethod:: Pypdm.Pypdm.PartToPart.get_gnum1_come_from
 
 
-  .. rubric:: Exchange
+    .. rubric:: Exchange
 
-  .. autofunction:: Pypdm.Pypdm.PartToPart.iexch
+    .. automethod:: Pypdm.Pypdm.PartToPart.iexch
 
-  .. autofunction:: Pypdm.Pypdm.PartToPart.wait
+    .. automethod:: Pypdm.Pypdm.PartToPart.wait
 
-  .. autofunction:: Pypdm.Pypdm.PartToPart.reverse_iexch
+    .. automethod:: Pypdm.Pypdm.PartToPart.reverse_iexch
 
-  .. autofunction:: Pypdm.Pypdm.PartToPart.reverse_wait
+    .. automethod:: Pypdm.Pypdm.PartToPart.reverse_wait
 
 
 .. ifconfig:: enable_python_doc == 'OFF'

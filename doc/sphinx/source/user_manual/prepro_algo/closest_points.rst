@@ -63,35 +63,31 @@ Python API
 
 .. ifconfig:: enable_python_doc == 'ON'
 
-  Initialization
-  """"""""""""""
 
-  .. autoclass:: Pypdm.Pypdm.ClosestPoints
+  .. py:class:: ClosestPoints
 
-  Point clouds definition
-  """""""""""""""""""""""
+      Python structure to look for the closest points of a point cloud
+      (target) in an other point cloud (source).
 
-  .. autofunction:: Pypdm.Pypdm.ClosestPoints.n_part_cloud_set
+    .. rubric:: Initialization
 
-  .. autofunction:: Pypdm.Pypdm.ClosestPoints.src_cloud_set
+    .. automethod:: Pypdm.Pypdm.ClosestPoints.__init__
 
-  .. autofunction:: Pypdm.Pypdm.ClosestPoints.tgt_cloud_set
+    .. rubric:: Point clouds definition
 
+    .. automethod:: Pypdm.Pypdm.ClosestPoints.n_part_cloud_set
+    .. automethod:: Pypdm.Pypdm.ClosestPoints.src_cloud_set
+    .. automethod:: Pypdm.Pypdm.ClosestPoints.tgt_cloud_set
 
-  Computation
-  """""""""""
+    .. rubric:: Computation
 
-  .. autofunction:: Pypdm.Pypdm.ClosestPoints.compute
+    .. automethod:: Pypdm.Pypdm.ClosestPoints.compute
+    .. automethod:: Pypdm.Pypdm.ClosestPoints.dump_times
 
-  .. autofunction:: Pypdm.Pypdm.ClosestPoints.dump_times
+    .. rubric:: Results
 
-
-  Results
-  """""""
-
-  .. autofunction:: Pypdm.Pypdm.ClosestPoints.part_to_part_get
-
-  .. autofunction:: Pypdm.Pypdm.ClosestPoints.points_get
+    .. automethod:: Pypdm.Pypdm.ClosestPoints.part_to_part_get
+    .. automethod:: Pypdm.Pypdm.ClosestPoints.points_get
 
 .. ifconfig:: enable_python_doc == 'OFF'
 

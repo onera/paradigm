@@ -137,6 +137,29 @@ cdef class PartExtension:
   cdef PDM_part_extension_t* _part_ext
   cdef object pdi
   # ------------------------------------------------------------------
+  # Fake init (Use only for docstring)
+  def __init__(self,
+               int                                           n_domain,
+               NPY.ndarray[NPY.int32_t   , mode='c', ndim=1] n_part,
+               int                                           merge_blocks,
+               PDM_split_dual_t                              split_method,
+               PDM_part_size_t                               part_size_method,
+               NPY.ndarray[NPY.double_t  , mode='c', ndim=1] part_fraction,
+               MPI.Comm                                      comm):
+
+    """
+    __init__(n_domain, n_part, extend_type, depth, comm)
+
+    Create a part extension object.
+
+    Parameters:
+      n_domain    (int)                    : Number of domains
+      n_part      (np.ndarray[np.int32_t]) : Number of partitions per domain
+      extend_type (int)                    : Extension from which entity ?
+      depth       (int)                    : Extension depth
+      comm        (MPI.Comm)               : MPI communicator
+    """
+  # ------------------------------------------------------------------
   def __cinit__(self,
                 n_domain,
                 NPY.ndarray[NPY.int32_t   , mode='c', ndim=1] n_part,
@@ -663,7 +686,7 @@ cdef class PartExtension:
       entity_type (PDM_mesh_entities_t) : Entity type
 
     Returns:
-      Tuple:
+      Tuple
         - Index for group->entity connectivity                   (`np.ndarray[np.int32_t]`)
         - Group->entity connectivity (1-based local ids)         (`np.ndarray[np.int32_t]`)
         - Group->entity connectivity (group-specific global ids) (`np.ndarray[npy_pdm_gnum_t]`)

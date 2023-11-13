@@ -82,26 +82,25 @@ Python API
 
 .. ifconfig:: enable_python_doc == 'ON'
 
-  Initialization
-  """"""""""""""
+  .. py:class:: DCubeNodalGenerator
 
-  .. autoclass:: Pypdm.Pypdm.DCubeNodalGenerator
+    Python structure to generate a distributed mesh nodal from a cartesian topology.
 
-  Options
-  """""""
+    .. rubric:: Initialization
 
-  .. autofunction:: Pypdm.Pypdm.DCubeNodalGenerator.set_random_factor
+    .. autofunction:: Pypdm.Pypdm.DCubeNodalGenerator.__init__
 
-  .. autofunction:: Pypdm.Pypdm.DCubeNodalGenerator.set_ordering
+    .. rubric:: Setting options
 
+    .. automethod:: Pypdm.Pypdm.DCubeNodalGenerator.set_random_factor
+    .. automethod:: Pypdm.Pypdm.DCubeNodalGenerator.set_ordering
 
-  Mesh generation
-  """""""""""""""
+    .. rubric:: Mesh generation
 
-  .. autofunction:: Pypdm.Pypdm.DCubeNodalGenerator.compute
+    .. automethod:: Pypdm.Pypdm.DCubeNodalGenerator.compute
 
-  .. autofunction:: Pypdm.Pypdm.DCubeNodalGenerator.get_dmesh_nodal
-
+    .. automethod:: Pypdm.Pypdm.DCubeNodalGenerator.get_dmesh_nodal
+    
 
 .. ifconfig:: enable_python_doc == 'OFF'
 

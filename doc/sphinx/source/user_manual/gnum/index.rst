@@ -204,29 +204,32 @@ Python API
 
 .. ifconfig:: enable_python_doc == 'ON'
 
-  Initialization
-  """"""""""""""
+  API reference
+  """""""""""""
 
-  .. autoclass:: Pypdm.Pypdm.GlobalNumbering
+  .. py:class:: GlobalNumbering
 
-  Set inputs
-  """"""""""
+    Python structure to create a global numbering.
+    Once initialized, all the following
+    methods apply to a :class:`GlobalNumbering` instance.
 
-  .. autofunction:: Pypdm.Pypdm.GlobalNumbering.set_from_coords
+    .. rubric:: Initialization
 
-  .. autofunction:: Pypdm.Pypdm.GlobalNumbering.set_from_parent
+    .. automethod:: Pypdm.Pypdm.GlobalNumbering.__init__
 
-  .. autofunction:: Pypdm.Pypdm.GlobalNumbering.set_parents_nuplet
+    .. rubric:: Set inputs
 
-  Build global numbering
-  """"""""""""""""""""""
+    .. automethod:: Pypdm.Pypdm.GlobalNumbering.set_from_coords
+    .. automethod:: Pypdm.Pypdm.GlobalNumbering.set_from_parent
+    .. automethod:: Pypdm.Pypdm.GlobalNumbering.set_parents_nuplet
 
-  .. autofunction:: Pypdm.Pypdm.GlobalNumbering.compute
+    .. rubric:: Build global numbering
 
-  Get outputs
-  """""""""""
+    .. automethod:: Pypdm.Pypdm.GlobalNumbering.compute
 
-  .. autofunction:: Pypdm.Pypdm.GlobalNumbering.get
+    .. rubric:: Get outputs
+
+    .. automethod:: Pypdm.Pypdm.GlobalNumbering.get
 
   Example
   """""""
