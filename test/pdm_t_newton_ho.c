@@ -114,7 +114,7 @@ _read_args
       if (i >= argc)
         _usage(EXIT_FAILURE);
       else {
-        *t_elt = atoi(argv[i]);
+        *t_elt = (PDM_Mesh_nodal_elt_t) atoi(argv[i]);
       }
     }
     else if (strcmp(argv[i], "-visu") == 0) {
