@@ -2558,7 +2558,7 @@ _block_partition
 
   free (recv_shift);
 
-  int *weight = malloc(G->n_nodes * sizeof(int));
+  int *weight = PDM_array_zeros_int(G->n_nodes);
 
   /* - compute weight of each cell */
 
@@ -7833,6 +7833,9 @@ PDM_para_octree_build
   if (n_ranks > 1) {
 
     double *weight = malloc(_octree->n_points * sizeof(double));
+    for(int i = 0; i < _octree->n_points; ++i) {
+      weight[i] = 1.;
+    }
 
     PDM_morton_code_t *morton_index =
       malloc (sizeof(PDM_morton_code_t) * (n_ranks + 1));
