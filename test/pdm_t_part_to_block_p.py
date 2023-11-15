@@ -68,13 +68,13 @@ for i in range(n_iter):
   comm.Barrier()
 
   # Create PTB
-  btp = PDM.PartToBlock(comm,
-                        part_ln_to_gn,
+  ptb = PDM.PartToBlock(comm,
+                        [part_ln_to_gn],
                         None,
                         n_part)
 
   # Exchange
-  block_stride, block_data = btp.exchange_field(part_data)
+  block_stride, block_data = ptb.exchange_field([part_data])
 
   # MPI Barrier
   comm.Barrier()
