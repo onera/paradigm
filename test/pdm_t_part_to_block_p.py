@@ -30,10 +30,6 @@ args = parser.parse_args()
 # Size (TO DO: size +/- 20% rand ?)
 size = int(args.size)
 
-# Block
-block_distribution = np.array([i*size for i in range(n_rank+1)]).astype(PDM.npy_pdm_gnum_dtype)
-block_data = np.array([1 for i in range(size)]).astype(np.intc)
-
 # Part
 n_part = 1
 
@@ -57,6 +53,11 @@ else:
     end = ((i_rank + center_shift)%n_rank)*size + size
   part_ln_to_gn = np.random.randint(beg, end+1, size, dtype=PDM.npy_pdm_gnum_dtype)
 
+part_data = np.array([1 for i in range(size)]).astype(np.intc)
+
+# Block
+block_distribution = np.array([i*size for i in range(n_rank+1)]).astype(PDM.npy_pdm_gnum_dtype)
+
 filename = args.filename
 
 # Iterations
@@ -66,23 +67,14 @@ for i in range(n_iter):
   # MPI Barrier
   comm.Barrier()
 
-  # Create BTP
-  btp = PDM.BlockToPart(block_distribution,
-                        comm,
-                        [part_ln_to_gn],
+  # Create PTB
+  btp = PDM.PartToBlock(comm,
+                        part_ln_to_gn,
+                        None,
                         n_part)
 
-  # Output communication graph
-  if i == 0:
-    btp.comm_graph_dump(filename)
-
   # Exchange
-  part_stride, part_data = btp.exchange_field(block_data)
+  block_stride, block_data = btp.exchange_field(part_data)
 
   # MPI Barrier
   comm.Barrier()
-
-# Output timings
-PDM.time_per_step_dump(comm,
-                       filename)
-

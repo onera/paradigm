@@ -434,12 +434,12 @@ PDM_block_to_part_comm_graph_dump
   PDM_MPI_Bcast(&bcast_buffer, 1, PDM_MPI_INT32_T, 0, shared_comm);
 
   // Block write i_rank, node and number of send data
-  char *buffer = malloc(btp->n_rank * 10 + 31); // TO DO : 31 = text + max 99 999 ranks + n_rank * max 9 999 999 999
+  char *buffer = malloc(btp->n_rank * 11 + 40 + 1); // (10 + 1 space) * n_rank + chaine + 1
 
-  sprintf(buffer, "i_rank %d\nnode %d\nn_send ", btp->i_rank, bcast_buffer);
+  sprintf(buffer, "i_rank %10d\nnode %10d\nn_send", btp->i_rank, bcast_buffer);
 
   for (int j_rank = 0; j_rank < btp->n_rank; j_rank++) {
-    sprintf(buffer + strlen(buffer), " %d", btp->distributed_data_n[j_rank]);
+    sprintf(buffer + strlen(buffer), " %10d", btp->distributed_data_n[j_rank]);
   } // end loop on n_rank
   sprintf(buffer + strlen(buffer), " \n");
 

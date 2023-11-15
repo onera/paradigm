@@ -276,6 +276,8 @@ if (PDM_ENABLE_PYTHON_BINDINGS)
    add_dependencies (pdm_t_gnum_p Pypdm)
    test_python_create (pdm_t_block_to_part_p 3 PDM_LIST_TEST PDM_LIST_NRANK)
    add_dependencies (pdm_t_block_to_part_p Pypdm)
+   test_python_create (pdm_t_part_to_block_p 3 PDM_LIST_TEST PDM_LIST_NRANK)
+   add_dependencies (pdm_t_part_to_block_p Pypdm)
 endif()
 
 if (PDM_ENABLE_STATIC_Fortran_INTERFACE OR PDM_ENABLE_SHARED_Fortran_INTERFACE)
