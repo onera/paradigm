@@ -73,8 +73,16 @@ for i in range(n_iter):
                         None,
                         n_part)
 
+  # Output communication graph
+  if i == 0:
+    ptb.comm_graph_dump(filename)
+
   # Exchange
   block_stride, block_data = ptb.exchange_field([part_data])
 
   # MPI Barrier
   comm.Barrier()
+
+# Output timings
+PDM.ptb_time_per_step_dump(comm,
+                           filename)

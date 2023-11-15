@@ -83,6 +83,6 @@ for i in range(n_iter):
   comm.Barrier()
 
 # Output timings
-PDM.time_per_step_dump(comm,
-                       filename)
+PDM.btp_time_per_step_dump(comm,
+                           filename)
 

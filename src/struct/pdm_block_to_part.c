@@ -391,6 +391,7 @@ PDM_block_to_part_time_per_step_dump
  *
  * \brief Write in parallel communication graph
  *
+ * \param [in]  btp             Block-to-Part structure
  * \param [in]  filename        File name
  *
  */

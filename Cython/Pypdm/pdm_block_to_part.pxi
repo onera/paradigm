@@ -42,8 +42,8 @@ cdef extern from "pdm_block_to_part.h":
     # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 # ------------------------------------------------------------------
-def time_per_step_dump(MPI.Comm  comm,
-                       char     *filename):
+def btp_time_per_step_dump(MPI.Comm  comm,
+                          char     *filename):
     """
     time_per_step_dump(comm, filename)
     Global write block-to-part step timer.
