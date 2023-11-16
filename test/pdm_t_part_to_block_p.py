@@ -24,6 +24,8 @@ parser.add_argument("-ssf", "--size_shift", default=10) # quasi-diagonal (percen
 parser.add_argument("-csf", "--center_shift", default=0) # circulente
 
 parser.add_argument("-r", "--randomize", action="store_true") # random partition
+parser.add_argument("-w", "--weight", action="store_true") # weights to one
+parser.add_argument("-d", "--distrib", action="store_true") # user distrib for true diagonal mode
 
 args = parser.parse_args()
 
@@ -43,20 +45,26 @@ randomize = args.randomize
 if randomize:
   part_ln_to_gn = np.random.randint(1, size * n_rank + 1, size, dtype=PDM.npy_pdm_gnum_dtype)
 else:
-
   beg = ((i_rank + center_shift)%n_rank)*size - size_shift + 1
-  if i_rank == 0:
-    beg = ((i_rank + center_shift)%n_rank)*size + 1
-
+  beg = max(1, min(beg, n_rank*size))
   end = ((i_rank + center_shift)%n_rank)*size + size_shift + size
-  if i_rank == (n_rank-1):
-    end = ((i_rank + center_shift)%n_rank)*size + size
+  end = max(1, min(end, n_rank*size))
   part_ln_to_gn = np.random.randint(beg, end+1, size, dtype=PDM.npy_pdm_gnum_dtype)
 
-part_data = np.array([1 for i in range(size)]).astype(np.intc)
+part_data   = np.array([1 for i in range(size)]).astype(np.intc)
+
+weight = args.weight
+
+part_weight = None
+if (weight):
+  part_weight = [np.array([1. for i in range(size)]).astype(np.double)]
 
 # Block
-block_distribution = np.array([i*size for i in range(n_rank+1)]).astype(PDM.npy_pdm_gnum_dtype)
+distrib = args.distrib
+
+block_distribution = None
+if (distrib):
+  block_distribution = np.array([i*size for i in range(n_rank+1)]).astype(PDM.npy_pdm_gnum_dtype)
 
 filename = args.filename
 
@@ -70,8 +78,11 @@ for i in range(n_iter):
   # Create PTB
   ptb = PDM.PartToBlock(comm,
                         [part_ln_to_gn],
-                        None,
-                        n_part)
+                        pWeight=part_weight,
+                        partN=n_part,
+                        t_distrib=0,
+                        t_post=0,
+                        userDistribution=block_distribution)
 
   # Output communication graph
   if i == 0:

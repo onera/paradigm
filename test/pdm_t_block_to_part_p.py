@@ -47,14 +47,10 @@ randomize = args.randomize
 if randomize:
   part_ln_to_gn = np.random.randint(1, size * n_rank + 1, size, dtype=PDM.npy_pdm_gnum_dtype)
 else:
-
   beg = ((i_rank + center_shift)%n_rank)*size - size_shift + 1
-  if i_rank == 0:
-    beg = ((i_rank + center_shift)%n_rank)*size + 1
-
+  beg = max(1, min(beg, n_rank*size))
   end = ((i_rank + center_shift)%n_rank)*size + size_shift + size
-  if i_rank == (n_rank-1):
-    end = ((i_rank + center_shift)%n_rank)*size + size
+  end = max(1, min(end, n_rank*size))
   part_ln_to_gn = np.random.randint(beg, end+1, size, dtype=PDM.npy_pdm_gnum_dtype)
 
 filename = args.filename
