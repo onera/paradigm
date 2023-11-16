@@ -2559,6 +2559,10 @@ PDM_part_to_block_comm_graph_dump
   int s_buffer = ptb->s_comm * 11 + 40 + 2 + 1; // (10 + 1 space) * n_rank + chaine + space + \n + 1
   char *buffer = malloc(s_buffer);
 
+  for (int i = 0; i < s_buffer; i++) {
+    buffer[i] = '\0';
+  }
+
   sprintf(buffer, "i_rank %10d\nnode %10d\nn_send", ptb->i_rank, bcast_buffer);
 
   for (int j_rank = 0; j_rank < ptb->s_comm; j_rank++) {
