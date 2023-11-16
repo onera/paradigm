@@ -58,13 +58,14 @@ extern "C" {
 
 typedef enum {
 
-  BINARY_SEARCH       = 0,
-  CREATE_EXCHANGE     = 1,
-  BLOCK_POST          = 2,
-  GLOBAL_WEIGHTS      = 3,
-  CREATE_FROM_DISTRIB = 4,
-  CREATE_GEOM         = 5,
-  DATA_EXCHANGE       = 6
+  GENERATE_DISTRIB    = 0,
+  BINARY_SEARCH       = 1,
+  CREATE_EXCHANGE     = 2,
+  BLOCK_POST          = 3,
+  GLOBAL_WEIGHTS      = 4,
+  CREATE_FROM_DISTRIB = 5,
+  CREATE_GEOM         = 6,
+  DATA_EXCHANGE       = 7
 
 } _ptb_timer_step_t;
 
@@ -94,11 +95,11 @@ static const int _sampling_factors[4] = {1, /* OD */
  */
 
 // Store timers
-PDM_timer_t *t_timer[NTIMER_PTB] = {NULL, NULL, NULL, NULL, NULL, NULL, NULL};
+PDM_timer_t *t_timer[NTIMER_PTB] = {NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL};
 
 // Timer step by step
-double t_elaps[NTIMER_PTB] = {0., 0., 0., 0., 0., 0., 0.};
-double t_cpu[NTIMER_PTB] = {0., 0., 0., 0., 0., 0., 0.};
+double t_elaps[NTIMER_PTB] = {0., 0., 0., 0., 0., 0., 0., 0.};
+double t_cpu[NTIMER_PTB] = {0., 0., 0., 0., 0., 0., 0., 0.};
 
 int min_exch_rank[2] = {INT_MAX, INT_MAX};
 int max_exch_rank[2] = {-1, -1};
@@ -305,9 +306,9 @@ _distrib_data
  int                  user_distrib
 )
 {
-  double t1_elaps = PDM_timer_elapsed(t_timer[BINARY_SEARCH]);
-  double t1_cpu   = PDM_timer_cpu    (t_timer[BINARY_SEARCH]);
-  PDM_timer_resume(t_timer[BINARY_SEARCH]);
+  double t1_elaps = PDM_timer_elapsed(t_timer[GENERATE_DISTRIB]);
+  double t1_cpu   = PDM_timer_cpu    (t_timer[GENERATE_DISTRIB]);
+  PDM_timer_resume(t_timer[GENERATE_DISTRIB]);
 
   PDM_g_num_t _id_max     = 0;
   PDM_g_num_t _id_max_max = 0;
@@ -425,6 +426,17 @@ _distrib_data
     }
   }
 
+  PDM_timer_hang_on(t_timer[GENERATE_DISTRIB]);
+  double t2_elaps = PDM_timer_elapsed(t_timer[GENERATE_DISTRIB]);
+  double t2_cpu   = PDM_timer_cpu    (t_timer[GENERATE_DISTRIB]);
+
+  t_elaps[GENERATE_DISTRIB] += (t2_elaps - t1_elaps);
+  t_cpu  [GENERATE_DISTRIB] += (t2_cpu   - t1_cpu  );
+
+  double t3_elaps = PDM_timer_elapsed(t_timer[BINARY_SEARCH]);
+  double t3_cpu   = PDM_timer_cpu    (t_timer[BINARY_SEARCH]);
+  PDM_timer_resume(t_timer[BINARY_SEARCH]);
+
   ptb->n_send_data = (int *) malloc (sizeof(int) * ptb->s_comm);
   ptb->n_recv_data = (int *) malloc (sizeof(int) * ptb->s_comm);
 
@@ -456,14 +468,14 @@ _distrib_data
   }
 
   PDM_timer_hang_on(t_timer[BINARY_SEARCH]);
-  double t2_elaps = PDM_timer_elapsed(t_timer[BINARY_SEARCH]);
-  double t2_cpu   = PDM_timer_cpu    (t_timer[BINARY_SEARCH]);
+  double t4_elaps = PDM_timer_elapsed(t_timer[BINARY_SEARCH]);
+  double t4_cpu   = PDM_timer_cpu    (t_timer[BINARY_SEARCH]);
 
-  t_elaps[BINARY_SEARCH] += (t2_elaps - t1_elaps);
-  t_cpu  [BINARY_SEARCH] += (t2_cpu   - t1_cpu  );
+  t_elaps[BINARY_SEARCH] += (t4_elaps - t3_elaps);
+  t_cpu  [BINARY_SEARCH] += (t4_cpu   - t3_cpu  );
 
-  double t3_elaps = PDM_timer_elapsed(t_timer[CREATE_EXCHANGE]);
-  double t3_cpu   = PDM_timer_cpu    (t_timer[CREATE_EXCHANGE]);
+  double t5_elaps = PDM_timer_elapsed(t_timer[CREATE_EXCHANGE]);
+  double t5_cpu   = PDM_timer_cpu    (t_timer[CREATE_EXCHANGE]);
   PDM_timer_resume(t_timer[CREATE_EXCHANGE]);
 
   PDM_MPI_Alltoall (ptb->n_send_data, 1, PDM_MPI_INT,
@@ -542,14 +554,14 @@ _distrib_data
   free(send_gnum);
 
   PDM_timer_hang_on(t_timer[CREATE_EXCHANGE]);
-  double t4_elaps = PDM_timer_elapsed(t_timer[CREATE_EXCHANGE]);
-  double t4_cpu   = PDM_timer_cpu    (t_timer[CREATE_EXCHANGE]);
+  double t6_elaps = PDM_timer_elapsed(t_timer[CREATE_EXCHANGE]);
+  double t6_cpu   = PDM_timer_cpu    (t_timer[CREATE_EXCHANGE]);
 
-  t_elaps[CREATE_EXCHANGE] += (t4_elaps - t3_elaps);
-  t_cpu  [CREATE_EXCHANGE] += (t4_cpu   - t3_cpu  );
+  t_elaps[CREATE_EXCHANGE] += (t6_elaps - t5_elaps);
+  t_cpu  [CREATE_EXCHANGE] += (t6_cpu   - t5_cpu  );
 
-  double t5_elaps = PDM_timer_elapsed(t_timer[BLOCK_POST]);
-  double t5_cpu   = PDM_timer_cpu    (t_timer[BLOCK_POST]);
+  double t7_elaps = PDM_timer_elapsed(t_timer[BLOCK_POST]);
+  double t7_cpu   = PDM_timer_cpu    (t_timer[BLOCK_POST]);
   PDM_timer_resume(t_timer[BLOCK_POST]);
 
   /*
@@ -659,11 +671,11 @@ _distrib_data
   }
 
   PDM_timer_hang_on(t_timer[BLOCK_POST]);
-  double t6_elaps = PDM_timer_elapsed(t_timer[BLOCK_POST]);
-  double t6_cpu   = PDM_timer_cpu    (t_timer[BLOCK_POST]);
+  double t8_elaps = PDM_timer_elapsed(t_timer[BLOCK_POST]);
+  double t8_cpu   = PDM_timer_cpu    (t_timer[BLOCK_POST]);
 
-  t_elaps[BLOCK_POST] += (t6_elaps - t5_elaps);
-  t_cpu  [BLOCK_POST] += (t6_cpu   - t5_cpu  );
+  t_elaps[BLOCK_POST] += (t8_elaps - t7_elaps);
+  t_cpu  [BLOCK_POST] += (t8_cpu   - t7_cpu  );
 }
 
 static
@@ -1399,6 +1411,7 @@ _ptb_create
 )
 {
   if (n_ptb == 0) {
+    t_timer[GENERATE_DISTRIB   ] = PDM_timer_create ();
     t_timer[BINARY_SEARCH      ] = PDM_timer_create ();
     t_timer[CREATE_EXCHANGE    ] = PDM_timer_create ();
     t_timer[BLOCK_POST         ] = PDM_timer_create ();
@@ -2376,10 +2389,10 @@ PDM_part_to_block_global_timer_get
                      PDM_MPI_DOUBLE, PDM_MPI_MAX, comm);
 
   // TO DO: output seperatly CREATE_GEOM or use BINARY_SEARCH instead of CREATE_GEOM
-  *min_elaps_create  = min_elaps[BINARY_SEARCH] + min_elaps[CREATE_EXCHANGE] + min_elaps[BLOCK_POST] + min_elaps[GLOBAL_WEIGHTS];
-  *max_elaps_create  = max_elaps[BINARY_SEARCH] + max_elaps[CREATE_EXCHANGE] + max_elaps[BLOCK_POST] + max_elaps[GLOBAL_WEIGHTS];
-  *min_cpu_create    = min_cpu[BINARY_SEARCH]   + min_cpu[CREATE_EXCHANGE]   + min_cpu[BLOCK_POST]   + min_cpu[GLOBAL_WEIGHTS]  ;
-  *max_cpu_create    = max_cpu[BINARY_SEARCH]   + max_cpu[CREATE_EXCHANGE]   + max_cpu[BLOCK_POST]   + max_cpu[GLOBAL_WEIGHTS]  ;
+  *min_elaps_create  = min_elaps[GENERATE_DISTRIB] + min_elaps[BINARY_SEARCH] + min_elaps[CREATE_EXCHANGE] + min_elaps[BLOCK_POST] + min_elaps[GLOBAL_WEIGHTS];
+  *max_elaps_create  = max_elaps[GENERATE_DISTRIB] + max_elaps[BINARY_SEARCH] + max_elaps[CREATE_EXCHANGE] + max_elaps[BLOCK_POST] + max_elaps[GLOBAL_WEIGHTS];
+  *min_cpu_create    = min_cpu[GENERATE_DISTRIB]   + min_cpu[BINARY_SEARCH]   + min_cpu[CREATE_EXCHANGE]   + min_cpu[BLOCK_POST]   + min_cpu[GLOBAL_WEIGHTS]  ;
+  *max_cpu_create    = max_cpu[GENERATE_DISTRIB]   + max_cpu[BINARY_SEARCH]   + max_cpu[CREATE_EXCHANGE]   + max_cpu[BLOCK_POST]   + max_cpu[GLOBAL_WEIGHTS]  ;
   *min_elaps_create2 = min_elaps[CREATE_FROM_DISTRIB];
   *max_elaps_create2 = max_elaps[CREATE_FROM_DISTRIB];
   *min_cpu_create2   = min_cpu[CREATE_FROM_DISTRIB];
@@ -2468,9 +2481,12 @@ PDM_part_to_block_time_per_step_dump
   } // end loop on timed steps
 
   // Global write times
-  char *buffer = malloc(361); // s_buffer+1 for %.5f
+  size_t s_buffer = 436; // buffer size for %.5f + 1
+  char *buffer = malloc(s_buffer);
 
-  sprintf(buffer, "binary_search elaps %.5f %.5f %.5f cpu %.5f %.5f %.5f\n", min_elaps[BINARY_SEARCH], mean_elaps[BINARY_SEARCH], max_elaps[BINARY_SEARCH], min_cpu[BINARY_SEARCH], mean_cpu[BINARY_SEARCH], max_cpu[BINARY_SEARCH]);
+  sprintf(buffer, "generate_distrib elaps %.5f %.5f %.5f cpu %.5f %.5f %.5f\n", min_elaps[GENERATE_DISTRIB], mean_elaps[GENERATE_DISTRIB], max_elaps[GENERATE_DISTRIB], min_cpu[GENERATE_DISTRIB], mean_cpu[GENERATE_DISTRIB], max_cpu[GENERATE_DISTRIB]);
+
+  sprintf(buffer + strlen(buffer), "binary_search elaps %.5f %.5f %.5f cpu %.5f %.5f %.5f\n", min_elaps[BINARY_SEARCH], mean_elaps[BINARY_SEARCH], max_elaps[BINARY_SEARCH], min_cpu[BINARY_SEARCH], mean_cpu[BINARY_SEARCH], max_cpu[BINARY_SEARCH]);
 
   sprintf(buffer + strlen(buffer), "create_exchange elaps %.5f %.5f %.5f cpu %.5f %.5f %.5f\n", min_elaps[CREATE_EXCHANGE], mean_elaps[CREATE_EXCHANGE], max_elaps[CREATE_EXCHANGE], min_cpu[CREATE_EXCHANGE], mean_cpu[CREATE_EXCHANGE], max_cpu[CREATE_EXCHANGE]);
 
@@ -2480,7 +2496,6 @@ PDM_part_to_block_time_per_step_dump
 
   sprintf(buffer + strlen(buffer), "data_exchange elaps %.5f %.5f %.5f cpu %.5f %.5f %.5f\n", min_elaps[DATA_EXCHANGE], mean_elaps[DATA_EXCHANGE], max_elaps[DATA_EXCHANGE], min_cpu[DATA_EXCHANGE], mean_cpu[DATA_EXCHANGE], max_cpu[DATA_EXCHANGE]);
 
-  size_t s_buffer = strlen(buffer);
   PDM_io_global_write(writer,
                       (PDM_l_num_t) sizeof(char),
                       (PDM_l_num_t) s_buffer,
@@ -2541,16 +2556,16 @@ PDM_part_to_block_comm_graph_dump
   PDM_MPI_Bcast(&bcast_buffer, 1, PDM_MPI_INT32_T, 0, shared_comm);
 
   // Block write i_rank, node and number of send data
-  char *buffer = malloc(ptb->s_comm * 11 + 40 + 1); // (10 + 1 space) * n_rank + chaine + 1
+  int s_buffer = ptb->s_comm * 11 + 40 + 2 + 1; // (10 + 1 space) * n_rank + chaine + space + \n + 1
+  char *buffer = malloc(s_buffer);
 
   sprintf(buffer, "i_rank %10d\nnode %10d\nn_send", ptb->i_rank, bcast_buffer);
 
   for (int j_rank = 0; j_rank < ptb->s_comm; j_rank++) {
-    sprintf(buffer + strlen(buffer), " %10d", ptb->n_recv_data[j_rank]); // TO DO : is this the number of items to which send?
+    sprintf(buffer + strlen(buffer), " %10d", ptb->n_send_data[j_rank]);
   } // end loop on n_rank
   sprintf(buffer + strlen(buffer), " \n");
 
-  int s_buffer = strlen(buffer);
   PDM_l_num_t one = 1;
   PDM_g_num_t i_rank_gnum = (PDM_g_num_t) (ptb->i_rank+1);
   PDM_io_par_interlaced_write(writer,
@@ -4316,6 +4331,7 @@ PDM_part_to_block_free
 
   n_ptb--;
   if (n_ptb == 0) {
+    PDM_timer_free(t_timer[GENERATE_DISTRIB   ]);
     PDM_timer_free(t_timer[BINARY_SEARCH      ]);
     PDM_timer_free(t_timer[CREATE_EXCHANGE    ]);
     PDM_timer_free(t_timer[BLOCK_POST         ]);

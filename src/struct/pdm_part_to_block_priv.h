@@ -27,7 +27,7 @@ extern "C" {
  * Type
  *============================================================================*/
 
-#define NTIMER_PTB 7
+#define NTIMER_PTB 8
 
 /**
  * \struct _pdm_part_to_block_t

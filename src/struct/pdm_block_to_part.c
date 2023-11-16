@@ -366,7 +366,8 @@ PDM_block_to_part_time_per_step_dump
   } // end loop on timed steps
 
   // Global write times
-  char *buffer = malloc(219); // s_buffer+1 for %.5f
+  size_t s_buffer = 219; // buffer size for %.5f + 1
+  char *buffer = malloc(s_buffer);
 
   sprintf(buffer, "binary_search elaps %.5f %.5f %.5f cpu %.5f %.5f %.5f\n", min_elaps[BINARY_SEARCH], mean_elaps[BINARY_SEARCH], max_elaps[BINARY_SEARCH], min_cpu[BINARY_SEARCH], mean_cpu[BINARY_SEARCH], max_cpu[BINARY_SEARCH]);
 
@@ -374,7 +375,6 @@ PDM_block_to_part_time_per_step_dump
 
   sprintf(buffer + strlen(buffer), "data_exchange elaps %.5f %.5f %.5f cpu %.5f %.5f %.5f\n", min_elaps[DATA_EXCHANGE], mean_elaps[DATA_EXCHANGE], max_elaps[DATA_EXCHANGE], min_cpu[DATA_EXCHANGE], mean_cpu[DATA_EXCHANGE], max_cpu[DATA_EXCHANGE]);
 
-  size_t s_buffer = strlen(buffer);
   PDM_io_global_write(writer,
                       (PDM_l_num_t) sizeof(char),
                       (PDM_l_num_t) s_buffer,
@@ -435,7 +435,8 @@ PDM_block_to_part_comm_graph_dump
   PDM_MPI_Bcast(&bcast_buffer, 1, PDM_MPI_INT32_T, 0, shared_comm);
 
   // Block write i_rank, node and number of send data
-  char *buffer = malloc(btp->n_rank * 11 + 40 + 1); // (10 + 1 space) * n_rank + chaine + 1
+  int s_buffer = btp->n_rank * 11 + 40 + 2 + 1; // (10 + 1 space) * n_rank + chaine + space + \n + 1
+  char *buffer = malloc(s_buffer);
 
   sprintf(buffer, "i_rank %10d\nnode %10d\nn_send", btp->i_rank, bcast_buffer);
 
@@ -444,7 +445,6 @@ PDM_block_to_part_comm_graph_dump
   } // end loop on n_rank
   sprintf(buffer + strlen(buffer), " \n");
 
-  int s_buffer = strlen(buffer);
   PDM_l_num_t one = 1;
   PDM_g_num_t i_rank_gnum = (PDM_g_num_t) (btp->i_rank+1);
   PDM_io_par_interlaced_write(writer,
