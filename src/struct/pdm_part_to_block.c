@@ -2484,6 +2484,10 @@ PDM_part_to_block_time_per_step_dump
   size_t s_buffer = 436; // buffer size for %.5f + 1
   char *buffer = malloc(s_buffer);
 
+  for (int i = 0; i < (int) s_buffer; i++) {
+    buffer[i] = '\0';
+  }
+
   sprintf(buffer, "generate_distrib elaps %.5f %.5f %.5f cpu %.5f %.5f %.5f\n", min_elaps[GENERATE_DISTRIB], mean_elaps[GENERATE_DISTRIB], max_elaps[GENERATE_DISTRIB], min_cpu[GENERATE_DISTRIB], mean_cpu[GENERATE_DISTRIB], max_cpu[GENERATE_DISTRIB]);
 
   sprintf(buffer + strlen(buffer), "binary_search elaps %.5f %.5f %.5f cpu %.5f %.5f %.5f\n", min_elaps[BINARY_SEARCH], mean_elaps[BINARY_SEARCH], max_elaps[BINARY_SEARCH], min_cpu[BINARY_SEARCH], mean_cpu[BINARY_SEARCH], max_cpu[BINARY_SEARCH]);
@@ -2559,7 +2563,7 @@ PDM_part_to_block_comm_graph_dump
   int s_buffer = ptb->s_comm * 11 + 40 + 2 + 1; // (10 + 1 space) * n_rank + chaine + space + \n + 1
   char *buffer = malloc(s_buffer);
 
-  for (int i = 0; i < s_buffer; i++) {
+  for (int i = 0; i < (int) s_buffer; i++) {
     buffer[i] = '\0';
   }
 
