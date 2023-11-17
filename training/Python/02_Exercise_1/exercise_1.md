@@ -54,7 +54,7 @@ if module_path not in sys.path:
 ## Generate the mesh
 
 In this section, **ParaDiGM** tools are used to generate a simple mesh for this exercise: a cube made of tetrahedra.
-You have nothing to do here. Still if you are curious about this feature, you can have a look [here](https://numerics.gitlab-pages.onera.net/mesh/paradigm/dev_formation/user_manual/simple_mesh_gen/dcube_nodal.html#python-api).
+You have **nothing to do here**. Still if you are curious about this feature, you can have a look [here](https://numerics.gitlab-pages.onera.net/mesh/paradigm/dev_formation/user_manual/simple_mesh_gen/dcube_nodal.html#python-api).
 
 In your numerical simulation software you rarely generate a mesh.
 This step actually generates a block-distributed mesh which is distributed in the same way as a mesh you would have **read in parallel**.
@@ -121,16 +121,18 @@ For mesh partitioning, as for all other **ParaDiGM** features, there are 5 main 
 4. **get**, retrieve the output of the algorithm
 5. **free** the memory allocated to operate the feature
 
-Following this logic, let's start **creating** (step 1) the mesh partitioning object for homogeneously balanced subdomains.
+Following this logic, let's start **creating** (step 1) the mesh partitioning object for **homogeneously** balanced subdomains.
 
 *Remark : since this is a basic example, we ask you to stick with the fixed values for n_domain, n_part, i_domain, i_part and merge_domains.
 To get insight about the concepts behind those values you can have a look [here](#Annex-1)*
 
-**ParaDiGM** offers multiple partitioning methods.
-Here, we chose to partition the cube with the Hilbert method.
-This method is favored within the **ParaDiGM** algorithms since it provides quickly a good load balance, though it does not ensure the connectedness of each subdomain.
+**ParaDiGM**offers multiple partitioning methods.
+Here, we chose to partition the cube with the **Hilbert method**.
+This method is favored within the `ParaDiGM` algorithms since it provides quickly a good load balance, though it does not ensure the connectedness of each subdomain.
 To ensure the partitions are connected, you should use either
 `PARMETIS` or `PTSCOTCH` which call the external libraries ParMETIS and PT-Scotch.
+
+*Remark : In this exercise we do not provide weights for the partitioning.*
 
 ```{code-cell}
 ---
@@ -161,7 +163,7 @@ mpart = PDM.MultiPart(n_domain,                           # Number of domains
 
 After mapping the partitioned subdomains on the processors, it is interesting to renumber the entities
 of the mesh on each processor for performance through cache blocking but it also provides interesting properties for the application.
-This is an advanced setting we won't be using here, so we just specify that no renumbering should be performed.
+This is an **advanced setting we won't be using here**, so we just specify that no renumbering should be performed.
 <!-- You can here call the renumbering function but by telling it not to do any renumbering for a start. -->
 
 ```{code-cell}
@@ -182,7 +184,7 @@ mpart.reordering_set(-1,         # All domains
 +++ {"editable": false, "deletable": false}
 
 Now that you have created a mesh partitioning object `mpart`, you can **set** (step 2) the cube mesh to it.
-For simplicity of the exercise, we here set the mesh using the Dirstibuted-Nodal-Mesh structure (`dmn`).
+For simplicity of the exercise, we here set the mesh using the **Dirstibuted-Nodal-Mesh** structure (`dmn`).
 This is a pratice internal to **ParaDiGM** algorithms. In your software you would just set the mesh using basic arrays.
 
 ```{code-cell}
@@ -225,7 +227,7 @@ You choose to get the partitioned mesh in nodal connectivity, i.e. cell->vertex 
 Here we get this object from `mpart` to have a direct access to the arrays we are interested in. Partitionned nodal mesh
 For more information about this structure, have a look [here](https://numerics.gitlab-pages.onera.net/mesh/paradigm/dev_formation/user_manual/partitioning/multipart.html#id11)*
 
-Let's start with the vertices composing the subdomain. How many vertices are there? What are their global ids? What are their coordinates?
+Let's start with the **vertices** composing the subdomain. How many vertices are there? What are their global ids? What are their coordinates?
 
 ```{code-cell}
 ---
@@ -244,7 +246,7 @@ Let's start with the vertices composing the subdomain. How many vertices are the
 
 +++ {"editable": false, "deletable": false}
 
-Let's move on to the cells. How are the vertices connected to form cells? What are their global ids? How many cells are there?
+Let's move on to the **cells**. How are the vertices connected to form cells? What are their global ids? How many cells are there?
 
 *Remark : since this is a basic example, we ask you to stick with the fixed value for i_section.
 To get insight about the concept behind this value you can have a look [here](#Annex-1)*
@@ -267,7 +269,7 @@ To get insight about the concept behind this value you can have a look [here](#A
 
 +++ {"editable": false, "deletable": false}
 
-Now we write the mesh that we just got to be able to visualize it later on (nothing to do).
+Now we write the mesh that we just got to be able to visualize it later on **(nothing to do)**.
 
 ```{code-cell}
 ---
@@ -291,9 +293,9 @@ Now we write the mesh that we just got to be able to visualize it later on (noth
 
 ### Descending connectivity (i.e. Finite-Volume style)
 
-You choose to get the partitioned mesh in descending connectivity, i.e. cell->face, face->vtx connectivities.
+You choose to get the partitioned mesh in descending connectivity, i.e. **cell->face**, **face->vtx** connectivities.
 
-Let's start from the top with cell data. How many cells are there? What are their global ids? Which faces compose the cells?
+Let's start from the top with **cell** data. How many cells are there? What are their global ids? Which faces compose the cells?
 
 ```{code-cell}
 ---
@@ -314,7 +316,7 @@ cell_face_idx, cell_face = mpart.connectivity_get(i_domain,
 
 +++ {"editable": false, "deletable": false}
 
-For the faces we proceed in a similar way. How many faces are there? What are their global ids? Which vertices compose the faces?
+For the **faces** we proceed in a similar way. How many faces are there? What are their global ids? Which vertices compose the faces?
 
 ```{code-cell}
 ---
@@ -335,7 +337,7 @@ face_vtx_idx, face_vtx = mpart.connectivity_get(i_domain,
 
 +++ {"editable": false, "deletable": false}
 
-To finish with, we need to have the description of the vertices.
+To finish with, we need to have the description of the **vertices**.
 
 ```{code-cell}
 ---
@@ -355,7 +357,7 @@ coords = mpart.vtx_coord_get(i_domain,
 
 +++ {"editable": false, "deletable": false}
 
-Now we write the mesh that we just got to be able to visualize it later on (nothing to do).
+Now we write the mesh that we just got to be able to visualize it later on **(nothing to do)**.
 
 ```{code-cell}
 ---
@@ -402,7 +404,7 @@ visu/PMESH.case : i_part
 
 ## Bonus : Extended partition
 
-If you are reading this, you finished quickly the partitioning exercise. Thus, it means you understood well the 5 step scheme for using **ParaDiGM** features.
+If you are reading this, you finished quickly the partitioning exercise. Thus, it means you understood well the **5 step scheme** for using **ParaDiGM** features.
 
 *Remark : To do this bonus you need to have retrieved the mesh in descending connectivity. If you haven't done that yet, please comment your
 work on nodal connectivities and get the mesh in descending connectivity first.*
