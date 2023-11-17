@@ -257,6 +257,11 @@ Here you have essentially two options:
 
 Choose the one that suits you best, and again, recall that there can be more than one partition per MPI rank.
 
+##### **<span style="color:darkorange;">Note</span>**
+*<span style="color:darkorange;">
+The number of edges in a 2D mesh element (a face) is equal to the number of vertices. This means that `face_edge_idx == face_vtx_idx`.
+</span>*
+
 ```{code-cell}
 ---
 "deletable": false
