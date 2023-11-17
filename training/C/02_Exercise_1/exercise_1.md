@@ -18,7 +18,7 @@ kernelspec:
 +++ {"editable": false, "deletable": false}
 
 It's time for some hands on experience with `ParaDiGM`!
-Using the API referenced [here](https://numerics.gitlab-pages.onera.net/mesh/paradigm/dev/user_manual/partitioning/multipart.html#C-API),
+Using the API referenced [here](https://numerics.gitlab-pages.onera.net/mesh/paradigm/dev_formation/user_manual/partitioning/multipart.html#c-api),
 you will have to fill in the code cells to partition a mesh, i.e. to cut it in subdomains that will be mapped onto the processors of a parallel machine.
 In the first section, we generate a block-distributed cube mesh for you. In the next section, you'll start running the partitioning algorithm.
 After that, you will be able to retrieve the arrays describing the partitioned mesh.
@@ -53,7 +53,7 @@ if module_path not in sys.path:
 ## Generate the mesh
 
 In this section, `ParaDiGM` tools are used to generate a simple mesh for this exercise: a cube made of tetrahedra.
-You have nothing to do here. Still if you are curious about this feature, you can have a look [here](https://numerics.gitlab-pages.onera.net/mesh/paradigm/dev/user_manual/simple_mesh_gen/dcube_nodal.html#C-API).
+You have nothing to do here. Still if you are curious about this feature, you can have a look [here](https://numerics.gitlab-pages.onera.net/mesh/paradigm/dev_formation/user_manual/simple_mesh_gen/dcube_nodal.html#c-api).
 
 In your numerical simulation software you rarely generate a mesh.
 This step actually generates a block-distributed mesh which is distributed in the same way as a mesh you would have **read in parallel**.
@@ -234,7 +234,7 @@ You chose to get the partitioned mesh in nodal connectivity, i.e. cell->vertex c
 
 *Remark : The structure in `ParaDiGM` in which partitioned nodal meshes are stored is `part_mesh_nodal`.
 Here we get this structure from `mpart` to have a direct access to the arrays we are interested in.
-For more information about this structure, have a look [here](https://numerics.gitlab-pages.onera.net/mesh/paradigm/dev/user_manual/partitioning/multipart.html#Partitionned-nodal-mesh-1)*
+For more information about this structure, have a look [here](https://numerics.gitlab-pages.onera.net/mesh/paradigm/dev_formation/user_manual/partitioning/multipart.html#partitioned-nodal-mesh)*
 
 Let's start with the vertices composing the subdomain. How many vertices are there? What are their global ids? What are their coordinates?
 
@@ -533,7 +533,7 @@ If you are reading this, you finished quickly the partitioning exercise. Thus, i
 work on nodal connectivities and get the mesh in descending connectivity first.*
 
 In this bonus, we want to get one layer of extended cells by nodes for our mesh partitions.
-This bonus is not guided, so you should have a close look at the [documentation](https://numerics.gitlab-pages.onera.net/mesh/paradigm/dev/user_manual/partitioning/part_extension.html#C-API).
+This bonus is not guided, so you should have a close look at the [documentation](https://numerics.gitlab-pages.onera.net/mesh/paradigm/dev_formation/user_manual/partitioning/part_extension.html#c-api).
 
 ### Step 1
 
