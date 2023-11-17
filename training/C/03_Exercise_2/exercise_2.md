@@ -249,7 +249,7 @@ Now that we have all the required inputs, let's create an instance of the `PDM_m
 The mesh location feature offers the possibility to provide several target point clouds.
 That means that you need to loop over the target points clouds to provide each one of them to the Mesh-Location structure.
 Since we handle only one target point cloud here, we didn't write a loop.
-We just use the 0 value to tell that we store this target point cloud at position 0 of the target point cloud array inside ParaDiGM.
+We just use the 0 value to tell that we store this target point cloud at position 0 of the target point cloud array inside **ParaDiGM**.
 Recall that there can be more than one partition per MPI rank.
 
 ```{code-cell}

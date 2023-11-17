@@ -17,7 +17,7 @@ kernelspec:
 
 +++ {"editable": false, "deletable": false}
 
-It's time for some hands on experience with `ParaDiGM`!
+It's time for some hands on experience with **ParaDiGM**!
 Using the API referenced [here](https://numerics.gitlab-pages.onera.net/mesh/paradigm/dev_formation/user_manual/partitioning/multipart.html#python-api),
 you will have to fill in the code cells to partition a mesh, i.e. to cut it in subdomains that will be mapped onto the processors of a parallel machine.
 In the first section, we generate a block-distributed cube mesh for you. In the next section, you'll start running the partitioning algorithm.
@@ -53,7 +53,7 @@ if module_path not in sys.path:
 
 ## Generate the mesh
 
-In this section, `ParaDiGM` tools are used to generate a simple mesh for this exercise: a cube made of tetrahedra.
+In this section, **ParaDiGM** tools are used to generate a simple mesh for this exercise: a cube made of tetrahedra.
 You have nothing to do here. Still if you are curious about this feature, you can have a look [here](https://numerics.gitlab-pages.onera.net/mesh/paradigm/dev_formation/user_manual/simple_mesh_gen/dcube_nodal.html#python-api).
 
 In your numerical simulation software you rarely generate a mesh.
@@ -105,7 +105,7 @@ PDM.generate_distribution(dmn)
 ```
 
 Here you can see that the mesh were stored in a Dirstibuted-Nodal-Mesh structure (`dmn`).
-This is an internal mesh structure to ParaDiGM not for user purpose.
+This is an internal mesh structure to **ParaDiGM** not for user purpose.
 Each feature is made such that you can set the mesh using basic arrays.
 
 +++ {"editable": false, "deletable": false}
@@ -114,7 +114,7 @@ Now that we have our mesh, let's partition it !
 
 ## Mesh partitioning
 
-For mesh partitioning, as for all other `ParaDiGM` features, there are 5 main steps:
+For mesh partitioning, as for all other **ParaDiGM** features, there are 5 main steps:
 1. **create** the feature object
 2. **set** the data necessary to operate with that feature
 3. **compute**, operate the algorithm of the feature
@@ -126,11 +126,11 @@ Following this logic, let's start **creating** (step 1) the mesh partitioning ob
 *Remark : since this is a basic example, we ask you to stick with the fixed values for n_domain, n_part, i_domain, i_part and merge_domains.
 To get insight about the concepts behind those values you can have a look [here](#Annex-1)*
 
-ParaDiGM offers multiple partitioning methods.
+**ParaDiGM** offers multiple partitioning methods.
 Here, we chose to partition the cube with the Hilbert method.
-This method is favored within the `ParaDiGM` algorithms since it provides quickly a good load balance, though it does not ensure the connectedness of each subdomain.
+This method is favored within the **ParaDiGM** algorithms since it provides quickly a good load balance, though it does not ensure the connectedness of each subdomain.
 To ensure the partitions are connected, you should use either
-`_PDM_SPLIT_DUAL_WITH_PARMETIS` or `_PDM_SPLIT_DUAL_WITH_PTSCOTCH` which call the external libraries ParMETIS and PT-Scotch.
+`PARMETIS` or `PTSCOTCH` which call the external libraries ParMETIS and PT-Scotch.
 
 ```{code-cell}
 ---
@@ -144,8 +144,8 @@ n_part = 1        # fixed
 i_domain = 0      # fixed
 i_part = 0        # fixed
 merge_domains = 0 # fixed
-part_method      = PDM._PDM_SPLIT_DUAL_WITH_HILBERT
-part_size_method = PDM.Multipart.HOMOGENEOUS
+part_method      = PDM.MultiPart.HILBERT
+part_size_method = PDM.MultiPart.HOMOGENEOUS
 part_fraction    = None # unused here since the subdomains are homogeneous
 mpart = PDM.MultiPart(n_domain,                           # Number of domains
                       np.array([n_part]).astype(np.intc), # Number of partitions per domain
@@ -183,7 +183,7 @@ mpart.reordering_set(-1,         # All domains
 
 Now that you have created a mesh partitioning object `mpart`, you can **set** (step 2) the cube mesh to it.
 For simplicity of the exercise, we here set the mesh using the Dirstibuted-Nodal-Mesh structure (`dmn`).
-This is a pratice internal to ParaDiGM algorithms. In your software you would just set the mesh using basic arrays.
+This is a pratice internal to **ParaDiGM** algorithms. In your software you would just set the mesh using basic arrays.
 
 ```{code-cell}
 ---
@@ -221,7 +221,7 @@ Choose which one suits you best and go further in the exercise to the associated
 
 You choose to get the partitioned mesh in nodal connectivity, i.e. cell->vertex connectivity.
 
-*Remark : The object in `ParaDiGM` in which partitioned nodal meshes are stored is `part_mesh_nodal`.
+*Remark : The object in **ParaDiGM** in which partitioned nodal meshes are stored is `part_mesh_nodal`.
 Here we get this object from `mpart` to have a direct access to the arrays we are interested in. Partitionned nodal mesh
 For more information about this structure, have a look [here](https://numerics.gitlab-pages.onera.net/mesh/paradigm/dev_formation/user_manual/partitioning/multipart.html#id11)*
 
@@ -402,7 +402,7 @@ visu/PMESH.case : i_part
 
 ## Bonus : Extended partition
 
-If you are reading this, you finished quickly the partitioning exercise. Thus, it means you understood well the 5 step scheme for using `ParaDiGM` features.
+If you are reading this, you finished quickly the partitioning exercise. Thus, it means you understood well the 5 step scheme for using **ParaDiGM** features.
 
 *Remark : To do this bonus you need to have retrieved the mesh in descending connectivity. If you haven't done that yet, please comment your
 work on nodal connectivities and get the mesh in descending connectivity first.*

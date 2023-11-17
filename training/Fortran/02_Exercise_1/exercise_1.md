@@ -17,7 +17,7 @@ kernelspec:
 
 +++ {"editable": false, "deletable": false}
 
-It's time for some hands on experience with `ParaDiGM`!
+It's time for some hands on experience with **ParaDiGM**!
 Using the API referenced [here](https://numerics.gitlab-pages.onera.net/mesh/paradigm/dev_formation/user_manual/partitioning/multipart.html#fortran-api),
 you will have to fill in the code cells to partition a mesh, i.e. to cut it in subdomains that will be mapped onto the processors of a parallel machine.
 In the first section, we generate a block-distributed cube mesh for you. In the next section, you'll start running the partitioning algorithm.
@@ -102,7 +102,7 @@ program pdm_t_mesh_partitioning_f
 
 ## Generate the mesh
 
-In this section, `ParaDiGM` tools are used to generate a simple mesh for this exercise: a cube made of tetrahedra.
+In this section, **ParaDiGM** tools are used to generate a simple mesh for this exercise: a cube made of tetrahedra.
 You have nothing to do here. Still if you are curious about this feature, you can have a look [here](https://numerics.gitlab-pages.onera.net/mesh/paradigm/dev_formation/user_manual/simple_mesh_gen/dcube_nodal.html#fortran-api).
 
 In your numerical simulation software you rarely generate a mesh.
@@ -154,7 +154,7 @@ This step actually generates a block-distributed mesh which is distributed in th
 ```
 
 Here you can see that the mesh were stored in a Dirstibuted-Nodal-Mesh structure (`dmn`).
-This is an internal mesh structure to ParaDiGM not for user purpose.
+This is an internal mesh structure to **ParaDiGM** not for user purpose.
 Each feature is made such that you can set the mesh using basic arrays.
 
 +++ {"editable": false, "deletable": false}
@@ -163,7 +163,7 @@ Now that we have our mesh, let's partition it !
 
 ## Mesh partitioning
 
-For mesh partitioning, as for all other `ParaDiGM` features, there are 5 main steps:
+For mesh partitioning, as for all other **ParaDiGM** features, there are 5 main steps:
 1. **create** the feature structure
 2. **set** the data necessary to operate with that feature
 3. **compute**, operate the algorithm of the feature
@@ -193,9 +193,9 @@ Following this logic, let's start **creating** (step 1) the mesh partitioning st
 *Remark : since this is a basic example, we ask you to stick with the fixed values for n_domain, n_part, i_domain, i_part and merge_domains.
 To get insight about the concepts behind those values you can have a look [here](#Annex-1)*
 
-ParaDiGM offers multiple partitioning methods.
+**ParaDiGM** offers multiple partitioning methods.
 Here, we chose to partition the cube with the Hilbert method.
-This method is favored within the `ParaDiGM` algorithms since it provides quickly a good load balance, though it does not ensure the connectedness of each subdomain.
+This method is favored within the **ParaDiGM** algorithms since it provides quickly a good load balance, though it does not ensure the connectedness of each subdomain.
 To ensure the partitions are connected, you should use either
 `PDM_SPLIT_DUAL_WITH_PARMETIS` or `PDM_SPLIT_DUAL_WITH_PTSCOTCH` which call the external libraries ParMETIS and PT-Scotch.
 
@@ -264,7 +264,7 @@ This is an advanced setting we won't be using here, so we just specify that no r
 
 Now that you have created a mesh partitioning structure `mpart`, you can **set** (step 2) the cube mesh to it.
 For simplicity of the exercise, we here set the mesh using the Dirstibuted-Nodal-Mesh structure (`dmn`).
-This is a pratice internal to ParaDiGM algorithms. In your software you would just set the mesh using basic arrays.
+This is a pratice internal to **ParaDiGM** algorithms. In your software you would just set the mesh using basic arrays.
 
 ```{code-cell}
 ---
@@ -305,7 +305,7 @@ Choose which one suits you best and go further in the exercise to the associated
 
 You choose to get the partitioned mesh in nodal connectivity, i.e. cell->vertex connectivity.
 
-*Remark : The structure in `ParaDiGM` in which partitioned nodal meshes are stored is `part_mesh_nodal`.
+*Remark : The structure in **ParaDiGM** in which partitioned nodal meshes are stored is `part_mesh_nodal`.
 Here we get this structure from `mpart` to have a direct access to the arrays we are interested in.
 For more information about this structure, have a look [here](https://numerics.gitlab-pages.onera.net/mesh/paradigm/dev_formation/user_manual/partitioning/multipart.html#id9)*
 
@@ -729,7 +729,7 @@ visu/PMESH.case : i_part
 
 ## Bonus : Extended partition
 
-If you are reading this, you finished quickly the partitioning exercise. Thus, it means you understood well the 5 step scheme for using `ParaDiGM` features.
+If you are reading this, you finished quickly the partitioning exercise. Thus, it means you understood well the 5 step scheme for using **ParaDiGM** features.
 
 *Remark : To do this bonus you need to have retrieved the mesh in descending connectivity. If you haven't done that yet, please comment your
 work on nodal connectivities and get the mesh in descending connectivity first.*

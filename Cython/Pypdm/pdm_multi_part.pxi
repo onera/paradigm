@@ -170,6 +170,10 @@ cdef class MultiPart:
 
     HOMOGENEOUS   = PDM_PART_SIZE_HOMOGENEOUS
     HETEROGENEOUS = PDM_PART_SIZE_HETEROGENEOUS
+
+    HILBERT  = _PDM_SPLIT_DUAL_WITH_HILBERT
+    PARMETIS = _PDM_SPLIT_DUAL_WITH_PARMETIS
+    PTSCOTCH = _PDM_SPLIT_DUAL_WITH_PTSCOTCH
     # ------------------------------------------------------------------
     # Fake init (Use only for docstring)
     def __init__(self,
@@ -189,11 +193,20 @@ cdef class MultiPart:
       Parameters:
         n_domain         (int)                     : Number of domains in the original mesh
         n_part           (np.ndarray[np.int32_t])  : Number of partitions per rank in each domain
-        merge_domains     (int)                    : Merge or not the domains before splitting
+        merge_domains    (int)                     : Merge or not the domains before splitting
         split_method     (PDM_split_dual_t)        : Choice of library used to split the mesh
-        part_size        (PDM_part_size_t)         : Choice of homogeneous or heterogeneous partitions
+        part_size_method (PDM_part_size_t)         : Choice of homogeneous or heterogeneous partitions
         part_fraction    (np.ndarray[np.double_t]) : Weight (in %) of each partition in heterogeneous case if ``part_size_method`` is set to ``PDM_PART_SIZE_HETEROGENEOUS``
         comm             (MPI.Comm)                : MPI communicator
+
+      Admissible values for ``split_method`` are:
+        - :py:attr:`HILBERT`
+        - :py:attr:`PARMETIS`
+        - :py:attr:`PTSCOTCH`
+
+      Admissible values for ``part_size_method`` are:
+        - :py:attr:`HOMOGENEOUS`: All requested partition have the same size
+        - :py:attr:`HETEROGENEOUS`: Each requested partition can have a portion (within 0. and 1.) of the mesh
       """
     # ------------------------------------------------------------------
     def __cinit__(self,
