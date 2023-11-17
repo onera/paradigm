@@ -213,32 +213,38 @@ typedef enum {
 
 } PDM_ownership_t;
 
+/**
+ * \enum PDM_connectivity_type_t
+ * \brief Mesh connectivity
+ *
+ */
+
 typedef enum {
-  PDM_CONNECTIVITY_TYPE_CELL_ELMT   = 0,
-  PDM_CONNECTIVITY_TYPE_CELL_CELL   = 1,
-  PDM_CONNECTIVITY_TYPE_CELL_FACE   = 2,
-  PDM_CONNECTIVITY_TYPE_CELL_EDGE   = 3,
-  PDM_CONNECTIVITY_TYPE_CELL_VTX    = 4,
-  PDM_CONNECTIVITY_TYPE_FACE_ELMT   = 5,
-  PDM_CONNECTIVITY_TYPE_FACE_CELL   = 6,
-  PDM_CONNECTIVITY_TYPE_FACE_FACE   = 7,
-  PDM_CONNECTIVITY_TYPE_FACE_EDGE   = 8,
-  PDM_CONNECTIVITY_TYPE_FACE_VTX    = 9,
-  PDM_CONNECTIVITY_TYPE_EDGE_ELMT   = 10,
-  PDM_CONNECTIVITY_TYPE_EDGE_CELL   = 11,
-  PDM_CONNECTIVITY_TYPE_EDGE_FACE   = 12,
-  PDM_CONNECTIVITY_TYPE_EDGE_EDGE   = 13,
-  PDM_CONNECTIVITY_TYPE_EDGE_VTX    = 14,
-  PDM_CONNECTIVITY_TYPE_VTX_ELMT    = 15,
-  PDM_CONNECTIVITY_TYPE_VTX_CELL    = 16,
-  PDM_CONNECTIVITY_TYPE_VTX_FACE    = 17,
-  PDM_CONNECTIVITY_TYPE_VTX_EDGE    = 18,
-  PDM_CONNECTIVITY_TYPE_VTX_VTX     = 19,
-  PDM_CONNECTIVITY_TYPE_ELMT_CELL   = 20,
-  PDM_CONNECTIVITY_TYPE_ELMT_FACE   = 21,
-  PDM_CONNECTIVITY_TYPE_ELMT_EDGE   = 22,
-  PDM_CONNECTIVITY_TYPE_ELMT_VTX    = 23,
-  PDM_CONNECTIVITY_TYPE_MAX         = 24
+  PDM_CONNECTIVITY_TYPE_CELL_ELMT   = 0,    /*!< cell->element connectivity                                     */
+  PDM_CONNECTIVITY_TYPE_CELL_CELL   = 1,    /*!< cell->cell connectivity                                        */
+  PDM_CONNECTIVITY_TYPE_CELL_FACE   = 2,    /*!< cell->face connectivity                                        */
+  PDM_CONNECTIVITY_TYPE_CELL_EDGE   = 3,    /*!< cell->edge connectivity                                        */
+  PDM_CONNECTIVITY_TYPE_CELL_VTX    = 4,    /*!< cell->vertex connectivity                                      */
+  PDM_CONNECTIVITY_TYPE_FACE_ELMT   = 5,    /*!< face->element connectivity                                     */
+  PDM_CONNECTIVITY_TYPE_FACE_CELL   = 6,    /*!< face->cell connectivity                                        */
+  PDM_CONNECTIVITY_TYPE_FACE_FACE   = 7,    /*!< face->face connectivity                                        */
+  PDM_CONNECTIVITY_TYPE_FACE_EDGE   = 8,    /*!< face->edge connectivity                                        */
+  PDM_CONNECTIVITY_TYPE_FACE_VTX    = 9,    /*!< face->vertex connectivity                                      */
+  PDM_CONNECTIVITY_TYPE_EDGE_ELMT   = 10,   /*!< edge->element connectivity                                     */
+  PDM_CONNECTIVITY_TYPE_EDGE_CELL   = 11,   /*!< edge->cell connectivity                                        */
+  PDM_CONNECTIVITY_TYPE_EDGE_FACE   = 12,   /*!< edge->face connectivity                                        */
+  PDM_CONNECTIVITY_TYPE_EDGE_EDGE   = 13,   /*!< edge->edge connectivity                                        */
+  PDM_CONNECTIVITY_TYPE_EDGE_VTX    = 14,   /*!< edge->vertex connectivity                                      */
+  PDM_CONNECTIVITY_TYPE_VTX_ELMT    = 15,   /*!< vertex->element connectivity                                   */
+  PDM_CONNECTIVITY_TYPE_VTX_CELL    = 16,   /*!< vertex->cell connectivity                                      */
+  PDM_CONNECTIVITY_TYPE_VTX_FACE    = 17,   /*!< vertex->face connectivity                                      */
+  PDM_CONNECTIVITY_TYPE_VTX_EDGE    = 18,   /*!< vertex->edge connectivity                                      */
+  PDM_CONNECTIVITY_TYPE_VTX_VTX     = 19,   /*!< vertex->vertex connectivity                                    */
+  PDM_CONNECTIVITY_TYPE_ELMT_CELL   = 20,   /*!< element->cell connectivity                                     */
+  PDM_CONNECTIVITY_TYPE_ELMT_FACE   = 21,   /*!< element->face connectivity                                     */
+  PDM_CONNECTIVITY_TYPE_ELMT_EDGE   = 22,   /*!< element->edge connectivity                                     */
+  PDM_CONNECTIVITY_TYPE_ELMT_VTX    = 23,   /*!< element->vertex connectivity                                   */
+  PDM_CONNECTIVITY_TYPE_MAX         = 24    /*!< enumerator with the maximal integer refering to a connectivity */
 } PDM_connectivity_type_t;
 
 typedef enum {

@@ -294,6 +294,14 @@ Now we write the mesh that we just got to be able to visualize it later on **(no
 ### Descending connectivity (i.e. Finite-Volume style)
 
 You choose to get the partitioned mesh in descending connectivity, i.e. **cell->face**, **face->vtx** connectivities.
+Generic getters have been implemented in **ParaDiGM** for the connectivities and global identifier arrays.
+Enumerators allow to specify which data is requested (see details in [documentation](https://numerics.gitlab-pages.onera.net/mesh/paradigm/dev_formation/user_manual//partitioning/index.html#enumerators)). Here you will need for the mesh connectivity:
+- **\_PDM_CONNECTIVITY_TYPE_CELL_FACE** : cell->face connectivity
+- **\_PDM_CONNECTIVITY_TYPE_FACE_VTX**  : face->vertex connectivity
+For the global identifier arrays you will use:
+- **\_PDM_MESH_ENTITY_CELL**  : cell entity
+- **\_PDM_MESH_ENTITY_FACE**  : face entity
+- **\_PDM_MESH_ENTITY_VTX**  : vertex entity
 
 Let's start from the top with **cell** data. How many cells are there? What are their global ids? Which faces compose the cells?
 
