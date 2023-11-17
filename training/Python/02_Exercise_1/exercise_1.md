@@ -128,7 +128,7 @@ To get insight about the concepts behind those values you can have a look [here]
 
 **ParaDiGM**offers multiple partitioning methods.
 Here, we chose to partition the cube with the **Hilbert method**.
-This method is favored within the `ParaDiGM` algorithms since it provides quickly a good load balance, though it does not ensure the connectedness of each subdomain.
+This method is favored within the **ParaDiGM** algorithms since it provides quickly a good load balance, though it does not ensure the connectedness of each subdomain.
 To ensure the partitions are connected, you should use either
 `PARMETIS` or `PTSCOTCH` which call the external libraries ParMETIS and PT-Scotch.
 
