@@ -568,13 +568,13 @@ contains
     ! Build a Multipart structure instance
     !
     ! Admissible values for ``split_method`` are:
-    !     - ``PDM_SPLIT_DUAL_WITH_HILBERT``
-    !     - ``PDM_SPLIT_DUAL_WITH_PARMETIS``
-    !     - ``PDM_SPLIT_DUAL_WITH_PTSCOTCH``
+    !   - ``PDM_SPLIT_DUAL_WITH_HILBERT``
+    !   - ``PDM_SPLIT_DUAL_WITH_PARMETIS``
+    !   - ``PDM_SPLIT_DUAL_WITH_PTSCOTCH``
     !
-    !   Admissible values for ``part_size_method`` are:
-    !     - ``PDM_PART_SIZE_HOMOGENEOUS``: All requested partition have the same size
-    !     - ``PDM_PART_SIZE_HETEROGENEOUS``: Each requested partition can have a portion (within 0. and 1.) of the mesh
+    ! Admissible values for ``part_size_method`` are:
+    !   - ``PDM_PART_SIZE_HOMOGENEOUS``: All requested partition have the same size
+    !   - ``PDM_PART_SIZE_HETEROGENEOUS``: Each requested partition can have a portion (within 0. and 1.) of the mesh
     use pdm
     use iso_c_binding
     implicit none

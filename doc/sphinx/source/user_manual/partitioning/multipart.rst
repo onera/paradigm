@@ -109,10 +109,24 @@ Fortran API
   ~~~~~~~~~~
 
   .. f:autosubroutine PDM_multipart_dmesh_nodal_set
+  .. f:subroutine:: pdm_multipart_dmesh_nodal_set(multipart, i_domain, dmesh_nodal)
+
+    Set distributed mesh data for the input domain. The mesh is described by nodal connectivity
+
+    :p c_ptr   multipart  [in]: Multipart instance
+    :p integer i_domain   [in]: Domain identifier
+    :p c_ptr   dmesh_nodal[in]: Dmesh Nodal instance
 
   .. f:autosubroutine PDM_multipart_dmesh_set
+  .. f:subroutine:: pdm_multipart_dmesh_set(multipart, i_domain, dmesh)
 
-  .. f:autosubroutine:: PDM_multipart_block_set_
+    Set distributed mesh data for the input domain
+
+    :p c_ptr   multipart[in]: Multipart instance
+    :p integer i_domain [in]: Domain identifier
+    :p c_ptr   dmesh    [in]: Dmesh instance
+
+  .. .. f:autosubroutine:: PDM_multipart_block_set_
 
   .. PDM_multipart_domain_interface_shared_set
 
@@ -127,6 +141,11 @@ Fortran API
   ~~~~~~~~~~~~~~~~~~~~
 
   .. f:autosubroutine PDM_multipart_compute
+  .. f:subroutine:: pdm_multipart_compute(multipart)
+
+    Construct the partitioned meshes on all domains
+
+    :p c_ptr multipart[in]: Multipart instance
 
   Get outputs
   ~~~~~~~~~~~
@@ -151,7 +170,6 @@ Fortran API
   ~~~~~~~~
 
   .. f:autosubroutine PDM_multipart_free
-
   .. f:subroutine:: pdm_multipart_free(mpart)
 
     Free a Multipart structure
