@@ -235,10 +235,8 @@ Now that we have all the required inputs, let's create an instance of the `PDM_m
 %%code_block -p exercise_2 -i 4
 
   // Create the PDM_mesh_location_t structure
-  // EXO
-  PDM_mesh_location_t *mesh_loc = PDM_mesh_location_create(1,
-                                                           comm,
-                                                           PDM_OWNERSHIP_KEEP);
+  PDM_mesh_location_t *mesh_loc = NULL;
+  //...
 
 ```
 
@@ -259,19 +257,8 @@ Recall that there can be more than one partition per MPI rank.
 %%code_block -p exercise_2 -i 5
 
   // Set target point cloud
-  // EXO
-  PDM_mesh_location_n_part_cloud_set(mesh_loc,
-                                     0,
-                                     tgt_n_part);
+  //...
 
-  for (int i_part = 0; i_part < tgt_n_part; i_part++) {
-    PDM_mesh_location_cloud_set(mesh_loc,
-                                0,
-                                i_part,
-                                tgt_n_vtx       [i_part],
-                                tgt_vtx_coord   [i_part],
-                                tgt_vtx_ln_to_gn[i_part]);
-  }
 ```
 
 +++ {"editable": false, "deletable": false}
@@ -298,39 +285,8 @@ The number of edges in a 2D mesh element (a face) is equal to the number of vert
 %%code_block -p exercise_2 -i 6
 
   // Set source mesh
-  // EXO
-  PDM_mesh_location_mesh_n_part_set(mesh_loc, src_n_part);
+  //...
 
-  int nodal = 0;
-
-  if (nodal) {
-    for (int i_part = 0; i_part < src_n_part; i_part++) {
-      PDM_mesh_location_nodal_part_set_2d(mesh_loc,
-                                          i_part,
-                                          src_n_face       [i_part],
-                                          src_face_edge_idx[i_part],
-                                          src_face_vtx     [i_part],
-                                          src_face_ln_to_gn[i_part],
-                                          src_n_vtx        [i_part],
-                                          src_vtx_coord    [i_part],
-                                          src_vtx_ln_to_gn [i_part]);
-    }
-  }
-  else {
-    for (int i_part = 0; i_part < src_n_part; i_part++) {
-      PDM_mesh_location_part_set_2d(mesh_loc,
-                                    i_part,
-                                    src_n_face       [i_part],
-                                    src_face_edge_idx[i_part],
-                                    src_face_edge    [i_part],
-                                    src_face_ln_to_gn[i_part],
-                                    src_n_edge       [i_part],
-                                    src_edge_vtx     [i_part],
-                                    src_n_vtx        [i_part],
-                                    src_vtx_coord    [i_part],
-                                    src_vtx_ln_to_gn [i_part]);
-    }
-  }
 ```
 
 +++ {"editable": false, "deletable": false}
@@ -347,12 +303,10 @@ Once the calculation is complete, we can display the elapsed and CPU times.
 %%code_block -p exercise_2 -i 8
 
   // Compute location
-  // EXO
-  PDM_mesh_location_compute(mesh_loc);
+  //...
 
   // Dump elapsed and CPU times
-  // EXO
-  PDM_mesh_location_dump_times(mesh_loc);
+  // PDM_mesh_location_dump_times(mesh_loc);
 
 ```
 
@@ -402,12 +356,9 @@ The `PDM_part_to_part_t` instance was built during the localization computation 
 %%code_block -p exercise_2 -i 9
 
   // Get PDM_part_to_part_t structure
-  // EXO
   PDM_part_to_part_t *ptp = NULL;
-  PDM_mesh_location_part_to_part_get(mesh_loc,
-                                     0,
-                                     &ptp,
-                                     PDM_OWNERSHIP_USER);
+  //...
+
 ```
 
 +++ {"editable": false, "deletable": false}
@@ -448,18 +399,17 @@ Hints:
   // Initiate exchange of first field
   int request1 = -1;
   PDM_g_num_t **tgt_recv_field1 = NULL;
-  // EXO
-  PDM_part_to_part_iexch(ptp,                                   //
-                         PDM_MPI_COMM_KIND_P2P,                 //
-                         PDM_STRIDE_CST_INTERLACED,             //
-                         PDM_PART_TO_PART_DATA_DEF_ORDER_PART1, //
-                         1,                                     //
-                         sizeof(PDM_g_num_t),                   //
-                         NULL,                                  //
-        (const void  **) src_face_ln_to_gn,                     // ?
-                         NULL,                                  //
-              (void ***) &tgt_recv_field1,                      // ?
-                         &request1);                            // ?
+  // PDM_part_to_part_iexch(ptp,
+  //                        PDM_MPI_COMM_KIND_P2P,
+  //                        PDM_STRIDE_CST_INTERLACED,
+  //                        PDM_PART_TO_PART_DATA_DEF_ORDER_PART1,
+  //                        1,
+  //                        sizeof(PDM_g_num_t),
+  //                        NULL,
+  //                        ?,
+  //                        NULL,
+  //                        ?,
+  //                        ?);
 
 ```
 
@@ -554,54 +504,53 @@ Let $T$ denote a target point and $S$ the source element containing $T$.
   }
 
   double **src_send_field2 = malloc(sizeof(double *) * src_n_part);
-  // EXO
-  for (int i_part = 0; i_part < src_n_part; i_part++) {
-    int         *src_to_tgt_idx          = NULL;
-    PDM_g_num_t *points_gnum             = NULL;
-    double      *points_coords           = NULL;
-    double      *points_uvw              = NULL;
-    int         *points_weights_idx      = NULL;
-    double      *points_weights          = NULL;
-    double      *points_dist2            = NULL;
-    double      *points_projected_coords = NULL;
+  //for (int i_part = 0; i_part < src_n_part; i_part++) {
+  //  int         *src_to_tgt_idx          = NULL;
+  //  PDM_g_num_t *points_gnum             = NULL;
+  //  double      *points_coords           = NULL;
+  //  double      *points_uvw              = NULL;
+  //  int         *points_weights_idx      = NULL;
+  //  double      *points_weights          = NULL;
+  //  double      *points_dist2            = NULL;
+  //  double      *points_projected_coords = NULL;
 
-    PDM_mesh_location_points_in_elt_get(mesh_loc,
-                                        0,
-                                        i_part,
-                                        &src_to_tgt_idx,
-                                        &points_gnum,
-                                        &points_coords,
-                                        &points_uvw,
-                                        &points_weights_idx,
-                                        &points_weights,
-                                        &points_dist2,
-                                        &points_projected_coords);
+  //  PDM_mesh_location_points_in_elt_get(mesh_loc,
+  //                                      0,
+  //                                      i_part,
+  //                                      &src_to_tgt_idx,
+  //                                      &points_gnum,
+  //                                      &points_coords,
+  //                                      &points_uvw,
+  //                                      &points_weights_idx,
+  //                                      &points_weights,
+  //                                      &points_dist2,
+  //                                      &points_projected_coords);
 
-    int *cell_vtx_idx = NULL;
-    int *cell_vtx     = NULL;
-    PDM_mesh_location_cell_vertex_get(mesh_loc,
-                                      i_part,
-                                      &cell_vtx_idx,
-                                      &cell_vtx);
+  //  int *cell_vtx_idx = NULL;
+  //  int *cell_vtx     = NULL;
+  //  PDM_mesh_location_cell_vertex_get(mesh_loc,
+  //                                    i_part,
+  //                                    &cell_vtx_idx,
+  //                                    &cell_vtx);
 
-    int n_pts = src_to_tgt_idx[src_n_face[i_part]];
+  //  int n_pts = src_to_tgt_idx[src_n_face[i_part]];
 
-    src_send_field2[i_part] = malloc(sizeof(double) * n_pts);
-    for (int i_elt = 0; i_elt < src_n_face[i_part]; i_elt++) {
-      for (int i_pt = src_to_tgt_idx[i_elt]; i_pt < src_to_tgt_idx[i_elt+1]; i_pt++) {
-        src_send_field2[i_part][i_pt] = 0;
+  //  src_send_field2[i_part] = malloc(sizeof(double) * n_pts);
+  //  for (int i_elt = 0; i_elt < src_n_face[i_part]; i_elt++) {
+  //    for (int i_pt = src_to_tgt_idx[i_elt]; i_pt < src_to_tgt_idx[i_elt+1]; i_pt++) {
+  //      src_send_field2[i_part][i_pt] = 0;
 
-        int elt_n_vtx = cell_vtx_idx[i_elt+1] - cell_vtx_idx[i_elt];
-        assert(points_weights_idx[i_pt+1] - points_weights_idx[i_pt] == elt_n_vtx);
+  //      int elt_n_vtx = cell_vtx_idx[i_elt+1] - cell_vtx_idx[i_elt];
+  //      assert(points_weights_idx[i_pt+1] - points_weights_idx[i_pt] == elt_n_vtx);
 
-        for (int i_vtx = 0; i_vtx < elt_n_vtx; i_vtx++) {
-          int vtx_id = cell_vtx[cell_vtx_idx[i_elt] + i_vtx] - 1;
-          src_send_field2[i_part][i_pt] += points_weights[points_weights_idx[i_pt] + i_vtx] * src_vtx_field2[i_part][vtx_id];
-        }
+  //      for (int i_vtx = 0; i_vtx < elt_n_vtx; i_vtx++) {
+  //        int vtx_id = cell_vtx[cell_vtx_idx[i_elt] + i_vtx] - 1;
+  //        src_send_field2[i_part][i_pt] += points_weights[points_weights_idx[i_pt] + i_vtx] * src_vtx_field2[i_part][vtx_id];
+  //      }
 
-      }
-    }
-  }
+  //    }
+  //  }
+  //}
 
 ```
 
@@ -631,18 +580,17 @@ You can now initiate the exchange of the interpolated field you just computed.
   // Initiate exchange of second field
   int request2 = -1;
   double **tgt_recv_field2 = NULL;
-  // EXO
-  PDM_part_to_part_iexch(ptp,                                            //
-                         PDM_MPI_COMM_KIND_P2P,                          //
-                         PDM_STRIDE_CST_INTERLACED,                      //
-                         PDM_PART_TO_PART_DATA_DEF_ORDER_PART1_TO_PART2, //
-                         1,                                              //
-                         sizeof(double),                                 //
-                         NULL,                                           //
-        (const void  **) src_send_field2,                                // ?
-                         NULL,                                           //
-              (void ***) &tgt_recv_field2,                               // ?
-                         &request2);                                     // ?
+  // PDM_part_to_part_iexch(ptp,
+  //                        PDM_MPI_COMM_KIND_P2P,
+  //                        PDM_STRIDE_CST_INTERLACED,
+  //                        PDM_PART_TO_PART_DATA_DEF_ORDER_PART1_TO_PART2,
+  //                        1,
+  //                        sizeof(double)
+  //                        NULL,
+  //                        ?,
+  //                        NULL,
+  //                        ?,
+  //                        ?);
 
 ```
 
@@ -663,8 +611,7 @@ You must therefore use the appropriate indirection to correctly read the receive
 %%code_block -p exercise_2 -i 13
 
   // Finalize both exchanges
-  PDM_part_to_part_iexch_wait(ptp, request1);
-  PDM_part_to_part_iexch_wait(ptp, request2);
+  //...
 
   double **tgt_field[3];
   tgt_field[0] = malloc(sizeof(double *) * tgt_n_part);
@@ -680,44 +627,20 @@ You must therefore use the appropriate indirection to correctly read the receive
     double *tgt_field2 = tgt_field[1][i_part];
     double *is_located = tgt_field[2][i_part];
 
-    // EXO
-    int n_located = PDM_mesh_location_n_located_get(mesh_loc,
-                                                    0,
-                                                    i_part);
+    // Get the number of (un)located and their IDs
+    int  n_located = 0;
+    int *located   = NULL;
+    //...
 
-    int *located = PDM_mesh_location_located_get(mesh_loc,
-                                                 0,
-                                                 i_part);
+    int  n_unlocated = 0;
+    int *unlocated   = NULL;
+    //...
 
-    int n_unlocated = PDM_mesh_location_n_unlocated_get(mesh_loc,
-                                                        0,
-                                                        i_part);
+    // For unlocated points, set 'is_located' to 0, 'tgt_field1' and 'tgt_field2' to -1
+    //...
 
-    int *unlocated = PDM_mesh_location_unlocated_get(mesh_loc,
-                                                     0,
-                                                     i_part);
-
-    for (int i = 0; i < n_unlocated; i++) {
-      int vtx_id = unlocated[i] - 1;
-      is_located[vtx_id] = 0;
-      tgt_field1[vtx_id] = -1;
-      tgt_field2[vtx_id] = -1;
-    }
-
-    for (int i = 0; i < n_located; i++) {
-      int vtx_id = located[i] - 1;
-      is_located[vtx_id] = 1;
-      tgt_field1[vtx_id] = tgt_recv_field1[i_part][i];
-      tgt_field2[vtx_id] = tgt_recv_field2[i_part][i];
-
-      double error = fabs(tgt_field2[vtx_id] - tgt_vtx_coord[i_part][3*vtx_id]);
-      if (error > 1e-9) {
-        printf("!! error vtx "PDM_FMT_G_NUM" : %e\n",
-               tgt_vtx_ln_to_gn[i_part][vtx_id],
-               error);
-      }
-    }
-
+    // For unlocated points, set 'is_located' to 1, 'tgt_field1' and 'tgt_field2' to the appropriate received values
+    //...
   }
 ```
 
@@ -813,68 +736,28 @@ Now let's clean the mess we just made and free the allocated memory.
 ---
 %%code_block -p exercise_2 -i 15
   // Free memory
-  // EXO
-  PDM_mesh_location_free(mesh_loc);
+  // ...
 
-  PDM_part_to_part_free(ptp); // /!\ Ownership
+  // for (int i_part = 0; i_part < src_n_part; i_part++) {
+  //   //...
+  //   free(src_vtx_field2 [i_part]);
+  //   free(src_send_field2[i_part]);
+  // }
+  // //...
+  // free(src_vtx_field2 );
+  // free(src_send_field2);
 
-  for (int i_part = 0; i_part < src_n_part; i_part++) {
-    free(src_vtx_coord    [i_part]);
-    free(src_edge_vtx     [i_part]);
-    free(src_face_edge_idx[i_part]);
-    free(src_face_edge    [i_part]);
-    free(src_face_vtx     [i_part]);
-    free(src_vtx_ln_to_gn [i_part]);
-    free(src_edge_ln_to_gn[i_part]);
-    free(src_face_ln_to_gn[i_part]);
-    free(src_vtx_field2   [i_part]);
-    free(src_send_field2  [i_part]);
-  }
-  free(src_n_vtx        );
-  free(src_n_edge       );
-  free(src_n_face       );
-  free(src_vtx_coord    );
-  free(src_edge_vtx     );
-  free(src_face_edge_idx);
-  free(src_face_edge    );
-  free(src_face_vtx     );
-  free(src_vtx_ln_to_gn );
-  free(src_edge_ln_to_gn);
-  free(src_face_ln_to_gn);
-  free(src_vtx_field2   );
-  free(src_send_field2  ); // can be free'd right after PDM_part_to_part_iexch_wait(ptp, &request2);
+  // for (int i_part = 0; i_part < tgt_n_part; i_part++) {
+  //   //...
+  //   free(tgt_field[0][i_part]);
+  //   free(tgt_field[1][i_part]);
+  //   free(tgt_field[2][i_part]);
+  // }
+  // //...
+  // free(tgt_field[0]);
+  // free(tgt_field[1]);
+  // free(tgt_field[2]);
 
-  for (int i_part = 0; i_part < tgt_n_part; i_part++) {
-    free(tgt_vtx_coord    [i_part]);
-    free(tgt_edge_vtx     [i_part]);
-    free(tgt_face_edge_idx[i_part]);
-    free(tgt_face_edge    [i_part]);
-    free(tgt_face_vtx     [i_part]);
-    free(tgt_vtx_ln_to_gn [i_part]);
-    free(tgt_edge_ln_to_gn[i_part]);
-    free(tgt_face_ln_to_gn[i_part]);
-    free(tgt_recv_field1  [i_part]);
-    free(tgt_recv_field2  [i_part]);
-    free(tgt_field[0][i_part]);
-    free(tgt_field[1][i_part]);
-    free(tgt_field[2][i_part]);
-  }
-  free(tgt_n_vtx        );
-  free(tgt_n_edge       );
-  free(tgt_n_face       );
-  free(tgt_vtx_coord    );
-  free(tgt_edge_vtx     );
-  free(tgt_face_edge_idx);
-  free(tgt_face_edge    );
-  free(tgt_face_vtx     );
-  free(tgt_vtx_ln_to_gn );
-  free(tgt_edge_ln_to_gn);
-  free(tgt_face_ln_to_gn);
-  free(tgt_recv_field1  );
-  free(tgt_recv_field2  );
-  free(tgt_field[0]);
-  free(tgt_field[1]);
-  free(tgt_field[2]);
 ```
 
 +++ {"editable": false, "deletable": false}
@@ -966,14 +849,10 @@ Now you can call the appropriate functions to tweak these options, and re-run yo
 %%code_block -p exercise_2 -i 7
 
   // Set the location preconditioning method (optional)
-  // EXO
-  PDM_mesh_location_method_set(mesh_loc,
-                               PDM_MESH_LOCATION_OCTREE);
+  //...
 
   // Set the geometric tolerance (optional)
-  // EXO
-  double tolerance = 1e-6;
-  PDM_mesh_location_tolerance_set(mesh_loc, tolerance);
+  //...
 
 ```
 

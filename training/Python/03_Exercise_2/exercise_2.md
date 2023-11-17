@@ -209,9 +209,7 @@ Now that we have all the required inputs, let's create an instance of the `MeshL
 %%code_block -p exercise_2 -i 4
 
 # Create the MeshLocation object
-# EXO
-mesh_loc = PDM.MeshLocation(1,
-                            comm)
+# mesh_loc = ...
 
 ```
 
@@ -233,15 +231,7 @@ Recall that there can be more than one partition per MPI rank.
 %%code_block -p exercise_2 -i 5
 
 # Set the target point cloud
-# EXO
-mesh_loc.n_part_cloud_set(0,
-                          tgt_n_part)
-
-for i_part in range(tgt_n_part):
-  mesh_loc.cloud_set(0,
-                     i_part,
-                     tgt_vtx_coord   [i_part],
-                     tgt_vtx_ln_to_gn[i_part])
+#...
 
 ```
 
@@ -269,28 +259,7 @@ The number of edges in a 2D mesh element (a face) is equal to the number of vert
 %%code_block -p exercise_2 -i 6
 
 # Set the source mesh
-# EXO
-mesh_loc.mesh_n_part_set(src_n_part)
-
-nodal = False
-
-if nodal:
-  for i_part in range(src_n_part):
-    mesh_loc.nodal_part_set_2d(i_part,
-                               src_face_vtx_idx [i_part],
-                               src_face_vtx     [i_part],
-                               src_face_ln_to_gn[i_part],
-                               src_vtx_coord    [i_part],
-                               src_vtx_ln_to_gn [i_part])
-else:
-  for i_part in range(src_n_part):
-    mesh_loc.part_set_2d(i_part,
-                         src_face_vtx_idx [i_part],
-                         src_face_edge    [i_part],
-                         src_face_ln_to_gn[i_part],
-                         src_edge_vtx     [i_part],
-                         src_vtx_coord    [i_part],
-                         src_vtx_ln_to_gn [i_part])
+#...
 
 ```
 
@@ -309,12 +278,10 @@ Once the calculation is complete, we can display the elapsed and CPU times.
 %%code_block -p exercise_2 -i 8
 
 # Compute location
-# EXO
-mesh_loc.compute()
+#...
 
 # Dump elapsed and CPU times
-# EXO
-mesh_loc.dump_times()
+# mesh_loc.dump_times()
 
 ```
 
@@ -363,8 +330,7 @@ The `PartToPart` instance was built during the localization computation and can 
 %%code_block -p exercise_2 -i 9
 
 # Get PartToPart object
-# EXO
-ptp = mesh_loc.part_to_part_get(0)
+# ptp = ...
 
 ```
 
@@ -405,11 +371,10 @@ Hints:
 %%code_block -p exercise_2 -i 10
 
 # Initiate exchange of first field
-# EXO
-request1 = ptp.iexch(PDM._PDM_MPI_COMM_KIND_P2P,
-                     PDM._PDM_PART_TO_PART_DATA_DEF_ORDER_PART1,
-                     src_face_ln_to_gn, # ?
-                     part1_stride=1)
+# request1 = ptp.iexch(PDM._PDM_MPI_COMM_KIND_P2P,
+#                      PDM._PDM_PART_TO_PART_DATA_DEF_ORDER_PART1,
+#                      ?,
+#                      part1_stride=1)
 
 ```
 
@@ -469,31 +434,30 @@ for i_part in range(src_n_part):
   src_vtx_field2.append(np.array(src_vtx_coord[i_part][::3]))
 
 src_send_field2 = []
-# EXO
-for i_part in range(src_n_part):
-  src_result = mesh_loc.points_in_elt_get(0, i_part)
-  src_to_tgt_idx = src_result["elt_pts_inside_idx"]
-  n_pts = src_to_tgt_idx[src_n_face[i_part]]
-
-  src_connect = mesh_loc.cell_vertex_get(i_part)
-  src_cell_vtx_idx = src_connect["cell_vtx_idx"]
-  src_cell_vtx     = src_connect["cell_vtx"]
-
-  weights_idx = src_result["points_weights_idx"]
-  weights     = src_result["points_weights"]
-
-  field2 = np.zeros(n_pts, dtype=np.double)
-  for i_elt in range(src_n_face[i_part]):
-    for i_pt in range(src_to_tgt_idx[i_elt], src_to_tgt_idx[i_elt+1]):
-      field2[i_pt] = 0
-
-      elt_n_vtx = src_cell_vtx_idx[i_elt+1] - src_cell_vtx_idx[i_elt]
-      assert(weights_idx[i_pt+1] - weights_idx[i_pt] == elt_n_vtx)
-      for i_vtx in range(elt_n_vtx):
-        vtx_id = src_cell_vtx[src_cell_vtx_idx[i_elt] + i_vtx] - 1
-        field2[i_pt] += weights[weights_idx[i_pt] + i_vtx] * src_vtx_field2[i_part][vtx_id]
-
-  src_send_field2.append(field2)
+# for i_part in range(src_n_part):
+#   src_result = mesh_loc.points_in_elt_get(0, i_part)
+#   src_to_tgt_idx = src_result["elt_pts_inside_idx"]
+#   n_pts = src_to_tgt_idx[src_n_face[i_part]]
+#
+#   src_connect = mesh_loc.cell_vertex_get(i_part)
+#   src_cell_vtx_idx = src_connect["cell_vtx_idx"]
+#   src_cell_vtx     = src_connect["cell_vtx"]
+#
+#   weights_idx = src_result["points_weights_idx"]
+#   weights     = src_result["points_weights"]
+#
+#   field2 = np.zeros(n_pts, dtype=np.double)
+#   for i_elt in range(src_n_face[i_part]):
+#     for i_pt in range(src_to_tgt_idx[i_elt], src_to_tgt_idx[i_elt+1]):
+#       field2[i_pt] = 0
+#
+#       elt_n_vtx = src_cell_vtx_idx[i_elt+1] - src_cell_vtx_idx[i_elt]
+#       assert(weights_idx[i_pt+1] - weights_idx[i_pt] == elt_n_vtx)
+#       for i_vtx in range(elt_n_vtx):
+#         vtx_id = src_cell_vtx[src_cell_vtx_idx[i_elt] + i_vtx] - 1
+#         field2[i_pt] += weights[weights_idx[i_pt] + i_vtx] * src_vtx_field2[i_part][vtx_id]
+#
+#   src_send_field2.append(field2)
 
 ```
 
@@ -522,10 +486,10 @@ You can now initiate the exchange of the interpolated field you just computed.
 %%code_block -p exercise_2 -i 12
 
 # Initiate exchange of second field
-request2 = ptp.iexch(PDM._PDM_MPI_COMM_KIND_P2P,
-                     PDM._PDM_PART_TO_PART_DATA_DEF_ORDER_PART1_TO_PART2,
-                     src_send_field2, # ?
-                     part1_stride=1)
+# request2 = ptp.iexch(PDM._PDM_MPI_COMM_KIND_P2P,
+#                      PDM._PDM_PART_TO_PART_DATA_DEF_ORDER_PART1_TO_PART2,
+#                      ?,
+#                      part1_stride=1)
 
 ```
 
@@ -546,8 +510,8 @@ You must therefore use the appropriate indirection to correctly read the receive
 %%code_block -p exercise_2 -i 13
 
 # Finalize both exchanges
-_, tgt_recv_field1 = ptp.wait(request1)
-_, tgt_recv_field2 = ptp.wait(request2)
+# _, tgt_recv_field1 = ?
+# _, tgt_recv_field2 = ?
 
 
 # Check received fields
@@ -555,26 +519,18 @@ pis_located = []
 ptgt_field1 = []
 ptgt_field2 = []
 for i_part in range(tgt_n_part):
-  located_tgt   = mesh_loc.located_get  (0, i_part)
-  unlocated_tgt = mesh_loc.unlocated_get(0, i_part)
+  # located_tgt   = ?
+  # unlocated_tgt = ?
 
   is_located = np.empty(tgt_n_vtx[i_part], dtype=bool)
   tgt_field1 = np.empty(tgt_n_vtx[i_part], dtype=np.double)
   tgt_field2 = np.empty(tgt_n_vtx[i_part], dtype=np.double)
 
-  for i, i_vtx in enumerate(unlocated_tgt):
-    is_located[i_vtx-1] = False
-    tgt_field1[i_vtx-1] = -1
-    tgt_field2[i_vtx-1] = -1
+  # For unlocated points, set 'is_located' to False, 'tgt_field1' and 'tgt_field2' to -1
+  #...
 
-  for i, i_vtx in enumerate(located_tgt):
-    is_located[i_vtx-1] = True
-    tgt_field1[i_vtx-1] = tgt_recv_field1[i_part][i]
-    tgt_field2[i_vtx-1] = tgt_recv_field2[i_part][i]
-
-    error = abs(tgt_recv_field2[i_part][i] - tgt_vtx_coord[i_part][3*(i_vtx-1)])
-    if error > 1e-9:
-      print(f"!! error vtx {tgt_vtx_ln_to_gn[i_part][i_vtx]} : {error}")
+  # For unlocated points, set 'is_located' to True, 'tgt_field1' and 'tgt_field2' to the appropriate received values
+  #...
 
   pis_located.append(is_located)
   ptgt_field1.append(tgt_field1)
@@ -707,12 +663,10 @@ Now you can call the appropriate functions to tweak these options, and re-run yo
 %%code_block -p exercise_2 -i 7
 
 # Set the location preconditioning method (optional)
-# EXO
-mesh_loc.method = PDM.MeshLocation.OCTREE
+#...
 
 # Set the geometric tolerance (optional)
-# EXO
-mesh_loc.tolerance = 1e-6
+#...
 
 ```
 

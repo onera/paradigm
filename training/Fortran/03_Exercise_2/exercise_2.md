@@ -307,11 +307,7 @@ Now that we have all the required inputs, let's create an instance of the Mesh L
 %%code_block -p exercise_2 -i 103
 
   ! Create the Mesh Location structure
-  ! EXO
-  call pdm_mesh_location_create(mesh_loc, &
-                                1,        &
-                                comm,     &
-                                PDM_OWNERSHIP_KEEP)
+  !...
 
 ```
 
@@ -346,10 +342,7 @@ Recall that there can be more than one partition per MPI rank.
 %%code_block -p exercise_2 -i 104
 
   ! Set target point cloud
-  ! EXO
-  call pdm_mesh_location_n_part_cloud_set(mesh_loc, &
-                                          0,        &
-                                          tgt_n_part)
+  !...
 
   do i_part = 1, tgt_n_part
     call pdm_pointer_array_part_get(tgt_vtx_ln_to_gn, &
@@ -362,12 +355,7 @@ Recall that there can be more than one partition per MPI rank.
                                     3,                         &
                                     vtx_coord)
 
-    call pdm_mesh_location_cloud_set(mesh_loc,          &
-                                     0,                 &
-                                     i_part-1,          &
-                                     tgt_n_vtx(i_part), &
-                                     vtx_coord,         &
-                                     vtx_ln_to_gn)
+    !...
   enddo
 
 ```
@@ -397,7 +385,6 @@ The number of edges in a 2D mesh element (a face) is equal to the number of vert
 %%code_block -p exercise_2 -i 7
 
   ! Variables for setting the source mesh --------------------------
-  logical                            :: nodal            = .false.
   integer(pdm_g_num_s),      pointer :: face_ln_to_gn(:) => null()
   integer(pdm_l_num_s),      pointer :: face_edge_idx(:) => null()
   integer(pdm_l_num_s),      pointer :: face_edge(:)     => null()
@@ -414,67 +401,13 @@ The number of edges in a 2D mesh element (a face) is equal to the number of vert
 %%code_block -p exercise_2 -i 105
 
   ! Set source mesh
-  ! EXO
-  call pdm_mesh_location_mesh_n_part_set(mesh_loc, src_n_part)
+  !...
 
   do i_part = 1, src_n_part
 
-    call pdm_pointer_array_part_get(src_vtx_ln_to_gn, &
-                                    i_part-1,         &
-                                    vtx_ln_to_gn)
+    ! use the pdm_pointer_array_* subroutine to retrieve the desired pointers
+    !...
 
-    call pdm_pointer_array_part_get(src_vtx_coord,             &
-                                    i_part-1,                  &
-                                    PDM_STRIDE_CST_INTERLACED, &
-                                    3,                         &
-                                    vtx_coord)
-
-
-    call pdm_pointer_array_part_get(src_face_ln_to_gn, &
-                                    i_part-1,          &
-                                    face_ln_to_gn)
-
-    call pdm_pointer_array_part_get(src_face_edge_idx, &
-                                    i_part-1,          &
-                                    face_edge_idx)
-
-
-    if (nodal) then
-      call pdm_pointer_array_part_get(src_face_vtx, &
-                                      i_part-1,     &
-                                      face_vtx)
-
-      call pdm_mesh_location_nodal_part_set_2d(mesh_loc,           &
-                                               i_part-1,           &
-                                               src_n_face(i_part), &
-                                               face_edge_idx,      &
-                                               face_vtx,           &
-                                               face_ln_to_gn,      &
-                                               src_n_vtx(i_part),  &
-                                               vtx_coord,          &
-                                               vtx_ln_to_gn)
-    else
-      call pdm_pointer_array_part_get(src_face_edge, &
-                                      i_part-1,      &
-                                      face_edge)
-
-      call pdm_pointer_array_part_get(src_edge_vtx, &
-                                      i_part-1,     &
-                                      edge_vtx)
-
-      call pdm_mesh_location_part_set_2d(mesh_loc,           &
-                                         i_part-1,           &
-                                         src_n_face(i_part), &
-                                         face_edge_idx,      &
-                                         face_edge,           &
-                                         face_ln_to_gn,      &
-                                         src_n_edge(i_part), &
-                                         edge_vtx,           &
-                                         src_n_vtx(i_part),  &
-                                         vtx_coord,          &
-                                         vtx_ln_to_gn)
-
-    endif
   enddo
 
 ```
@@ -494,12 +427,10 @@ Once the calculation is complete, we can display the elapsed and CPU times.
 %%code_block -p exercise_2 -i 107
 
   ! Compute location
-  ! EXO
-  call pdm_mesh_location_compute(mesh_loc)
+  !...
 
   ! Dump elapsed and CPU times
-  ! EXO
-  call pdm_mesh_location_dump_times(mesh_loc)
+  ! call pdm_mesh_location_dump_times(mesh_loc)
 
 ```
 
@@ -561,10 +492,7 @@ The Part-to-part instance was built during the localization computation and can 
 %%code_block -p exercise_2 -i 108
 
   ! Get Part-to-part structure
-  call pdm_mesh_location_part_to_part_get(mesh_loc, &
-                                          0,        &
-                                          ptp,      &
-                                          PDM_OWNERSHIP_USER)
+  !...
 
 ```
 
@@ -618,18 +546,17 @@ Hints:
 %%code_block -p exercise_2 -i 109
 
   ! Initiate exchange of first field
-  ! EXO
   request1 = -1
-  call pdm_part_to_part_iexch(ptp,                                   &
-                              PDM_MPI_COMM_KIND_P2P,                 &
-                              PDM_STRIDE_CST_INTERLACED,             &
-                              PDM_PART_TO_PART_DATA_DEF_ORDER_PART1, &
-                              1,                                     &
-                              null(),                                &
-                              src_face_ln_to_gn,                     & ! ?
-                              null(),                                &
-                              tgt_recv_field1,                       & ! ?
-                              request1)                                ! ?
+  ! call pdm_part_to_part_iexch(ptp,                                   &
+  !                             PDM_MPI_COMM_KIND_P2P,                 &
+  !                             PDM_STRIDE_CST_INTERLACED,             &
+  !                             PDM_PART_TO_PART_DATA_DEF_ORDER_PART1, &
+  !                             1,                                     &
+  !                             null(),                                &
+  !                             ?,                                     &
+  !                             null(),                                &
+  !                             ?,                                     &
+  !                             ?)
 
 ```
 
@@ -712,57 +639,57 @@ You have access to:
                                 src_n_part,      &
                                 PDM_TYPE_DOUBLE)
   ! EXO
-  do i_part = 1, src_n_part
+  ! do i_part = 1, src_n_part
 
-    call pdm_mesh_location_points_in_elt_get(mesh_loc,           &
-                                             0,                  &
-                                             i_part-1,           &
-                                             src_to_tgt_idx,     &
-                                             points_gnum,        &
-                                             points_coords,      &
-                                             points_uvw,         &
-                                             points_weights_idx, &
-                                             points_weights,     &
-                                             points_dist2,       &
-                                             points_projected_coords)
+  !   call pdm_mesh_location_points_in_elt_get(mesh_loc,           &
+  !                                            0,                  &
+  !                                            i_part-1,           &
+  !                                            src_to_tgt_idx,     &
+  !                                            points_gnum,        &
+  !                                            points_coords,      &
+  !                                            points_uvw,         &
+  !                                            points_weights_idx, &
+  !                                            points_weights,     &
+  !                                            points_dist2,       &
+  !                                            points_projected_coords)
 
-    call pdm_pointer_array_part_get(src_vtx_coord,             &
-                                    i_part-1,                  &
-                                    PDM_STRIDE_CST_INTERLACED, &
-                                    3,                         &
-                                    vtx_coord)
+  !   call pdm_pointer_array_part_get(src_vtx_coord,             &
+  !                                   i_part-1,                  &
+  !                                   PDM_STRIDE_CST_INTERLACED, &
+  !                                   3,                         &
+  !                                   vtx_coord)
 
-    call pdm_mesh_location_cell_vertex_get(mesh_loc,     &
-                                           i_part-1,     &
-                                           cell_vtx_idx, &
-                                           cell_vtx)
+  !   call pdm_mesh_location_cell_vertex_get(mesh_loc,     &
+  !                                          i_part-1,     &
+  !                                          cell_vtx_idx, &
+  !                                          cell_vtx)
 
-    n_pts = src_to_tgt_idx(src_n_face(i_part)+1)
+  !   n_pts = src_to_tgt_idx(src_n_face(i_part)+1)
 
-    allocate(field_d(n_pts))
-    do i_elt = 1, src_n_face(i_part)
-      do i_pt = src_to_tgt_idx(i_elt)+1, src_to_tgt_idx(i_elt+1)
-        field_d(i_pt) = 0.d0
+  !   allocate(field_d(n_pts))
+  !   do i_elt = 1, src_n_face(i_part)
+  !     do i_pt = src_to_tgt_idx(i_elt)+1, src_to_tgt_idx(i_elt+1)
+  !       field_d(i_pt) = 0.d0
 
-        elt_n_vtx = cell_vtx_idx(i_elt+1) - cell_vtx_idx(i_elt)
+  !       elt_n_vtx = cell_vtx_idx(i_elt+1) - cell_vtx_idx(i_elt)
 
-        if (points_weights_idx(i_pt+1) - points_weights_idx(i_pt) /= elt_n_vtx) then
-          print *, "Error elt_n_vtx"
-          stop
-        endif
+  !       if (points_weights_idx(i_pt+1) - points_weights_idx(i_pt) /= elt_n_vtx) then
+  !         print *, "Error elt_n_vtx"
+  !         stop
+  !       endif
 
-        do i_vtx = 1, elt_n_vtx
-          vtx_id = cell_vtx(cell_vtx_idx(i_elt) + i_vtx)
-          field_d(i_pt) = field_d(i_pt) + vtx_coord(1,vtx_id) * points_weights(points_weights_idx(i_pt) + i_vtx)
-        enddo
+  !       do i_vtx = 1, elt_n_vtx
+  !         vtx_id = cell_vtx(cell_vtx_idx(i_elt) + i_vtx)
+  !         field_d(i_pt) = field_d(i_pt) + vtx_coord(1,vtx_id) * points_weights(points_weights_idx(i_pt) + i_vtx)
+  !       enddo
 
-      enddo
-    enddo
+  !     enddo
+  !   enddo
 
-    call pdm_pointer_array_part_set(src_send_field2, &
-                                    i_part-1,        &
-                                    field_d)
-  enddo
+  !   call pdm_pointer_array_part_set(src_send_field2, &
+  !                                   i_part-1,        &
+  !                                   field_d)
+  ! enddo
 
 ```
 
@@ -806,16 +733,16 @@ You can now initiate the exchange of the interpolated field you just computed.
 
   ! Initiate exchange of second field
   request2 = -1
-  call pdm_part_to_part_iexch(ptp,                                            &
-                              PDM_MPI_COMM_KIND_P2P,                          &
-                              PDM_STRIDE_CST_INTERLACED,                      &
-                              PDM_PART_TO_PART_DATA_DEF_ORDER_PART1_TO_PART2, &
-                              1,                                              &
-                              null(),                                         &
-                              src_send_field2,                                & ! ?
-                              null(),                                         &
-                              tgt_recv_field2,                                & ! ?
-                              request2)                                         ! ?
+  ! call pdm_part_to_part_iexch(ptp,                                            &
+  !                             PDM_MPI_COMM_KIND_P2P,                          &
+  !                             PDM_STRIDE_CST_INTERLACED,                      &
+  !                             PDM_PART_TO_PART_DATA_DEF_ORDER_PART1_TO_PART2, &
+  !                             1,                                              &
+  !                             null(),                                         &
+  !                             ?,                                              &
+  !                             null(),                                         &
+  !                             ?,                                              &
+  !                             ?)
 
 ```
 
@@ -848,9 +775,9 @@ You must therefore use the appropriate indirection to correctly read the receive
   type(my_field_t)                   :: src_visu_field1(1)
   type(my_field_t)                   :: src_visu_field2(1)
   type(my_field_t)                   :: tgt_visu_fields(3)
-  double precision,          pointer :: visu_field1(:) => null()
-  double precision,          pointer :: visu_field2(:) => null()
-  double precision,          pointer :: visu_field3(:) => null()
+  double precision,          pointer :: tgt_field1(:) => null()
+  double precision,          pointer :: tgt_field2(:) => null()
+  double precision,          pointer :: is_located(:) => null()
   integer                            :: i
   ! ----------------------------------------------------------------
 
@@ -863,8 +790,7 @@ You must therefore use the appropriate indirection to correctly read the receive
 %%code_block -p exercise_2 -i 112
 
   ! Finalize both exchanges
-  call pdm_part_to_part_iexch_wait(ptp, request1)
-  call pdm_part_to_part_iexch_wait(ptp, request2)
+  !...
 
   ! Prepare for visualization
   do i = 1, 3
@@ -879,78 +805,48 @@ You must therefore use the appropriate indirection to correctly read the receive
   ! Check received fields
   do i_part = 1, tgt_n_part
 
-    allocate(visu_field1(tgt_n_vtx(i_part)), &
-             visu_field2(tgt_n_vtx(i_part)), &
-             visu_field3(tgt_n_vtx(i_part)))
+    allocate(tgt_field1(tgt_n_vtx(i_part)), &
+             tgt_field2(tgt_n_vtx(i_part)), &
+             is_located(tgt_n_vtx(i_part)))
 
-    ! EXO
-    n_located = pdm_mesh_location_n_located_get(mesh_loc, &
-                                                0,        &
-                                                i_part-1)
+    ! Get the number of (un)located and their IDs
+    !...
 
-    call pdm_mesh_location_located_get(mesh_loc, &
-                                       0,        &
-                                       i_part-1, &
-                                       located)
+    ! call pdm_pointer_array_part_get(tgt_vtx_ln_to_gn, &
+    !                                 i_part-1,         &
+    !                                 vtx_ln_to_gn)
 
-    n_unlocated = pdm_mesh_location_n_unlocated_get(mesh_loc, &
-                                                    0,        &
-                                                    i_part-1)
+    ! call pdm_pointer_array_part_get(tgt_vtx_coord,             &
+    !                                 i_part-1,                  &
+    !                                 PDM_STRIDE_CST_INTERLACED, &
+    !                                 3,                         &
+    !                                 vtx_coord)
 
-    call pdm_mesh_location_unlocated_get(mesh_loc, &
-                                         0,        &
-                                         i_part-1, &
-                                         unlocated)
+    ! call pdm_pointer_array_part_get(tgt_recv_field1, &
+    !                                 i_part-1,        &
+    !                                 field_i)
 
-    call pdm_pointer_array_part_get(tgt_vtx_ln_to_gn, &
-                                    i_part-1,         &
-                                    vtx_ln_to_gn)
+    ! call pdm_pointer_array_part_get(tgt_recv_field2, &
+    !                                 i_part-1,        &
+    !                                 field_d)
 
-    call pdm_pointer_array_part_get(tgt_vtx_coord,             &
-                                    i_part-1,                  &
-                                    PDM_STRIDE_CST_INTERLACED, &
-                                    3,                         &
-                                    vtx_coord)
+    ! For unlocated points, set 'is_located' to 0, 'tgt_field1' and 'tgt_field2' to -1
+    !...
 
-    call pdm_pointer_array_part_get(tgt_recv_field1, &
-                                    i_part-1,        &
-                                    field_i)
+    ! For unlocated points, set 'is_located' to 1, 'tgt_field1' and 'tgt_field2' to the appropriate received values
+    !...
 
-    call pdm_pointer_array_part_get(tgt_recv_field2, &
-                                    i_part-1,        &
-                                    field_d)
+    call pdm_pointer_array_part_set(tgt_visu_fields(1)%pa, &
+                                    i_part-1,              &
+                                    tgt_field1)
 
-    do i = 1, n_unlocated
-      vtx_id = unlocated(i)
-      visu_field1(vtx_id) = -1.d0
-      visu_field2(vtx_id) = -1.d0
-      visu_field3(vtx_id) =  0.d0
-    enddo
+    call pdm_pointer_array_part_set(tgt_visu_fields(2)%pa, &
+                                    i_part-1,              &
+                                    tgt_field2)
 
-    do i = 1, n_located
-      vtx_id = located(i)
-      error  = abs(field_d(i) - vtx_coord(1,vtx_id))
-      if (error > 1.e-9) then
-        print *, "!! error vtx", vtx_ln_to_gn(vtx_id), " :", error
-      endif
-
-      visu_field1(vtx_id) = field_i(i)
-      visu_field2(vtx_id) = field_d(i)
-      visu_field3(vtx_id) = 1.d0
-
-      call pdm_pointer_array_part_set(tgt_visu_fields(1)%pa, &
-                                      i_part-1,              &
-                                      visu_field1)
-
-      call pdm_pointer_array_part_set(tgt_visu_fields(2)%pa, &
-                                      i_part-1,              &
-                                      visu_field2)
-
-      call pdm_pointer_array_part_set(tgt_visu_fields(3)%pa, &
-                                      i_part-1,              &
-                                      visu_field3)
-
-    enddo
+    call pdm_pointer_array_part_set(tgt_visu_fields(3)%pa, &
+                                    i_part-1,              &
+                                    is_located)
 
   enddo
 ```
@@ -1042,9 +938,7 @@ Now let's clean the mess we just made and free the allocated memory.
 %%code_block -p exercise_2 -i 114
 
   ! Free memory
-  call pdm_mesh_location_free(mesh_loc)
-
-  call pdm_part_to_part_free(ptp)
+  !...
 
 ```
 
@@ -1136,12 +1030,10 @@ Now you can call the appropriate functions to tweak these options, and re-run yo
 %%code_block -p exercise_2 -i 106
 
   ! Set the location preconditioning method (optional)
-  ! EXO
-  call pdm_mesh_location_method_set(mesh_loc, PDM_MESH_LOCATION_OCTREE)
+  !...
 
   ! Set the geometric tolerance (optional)
-  ! EXO
-  call pdm_mesh_location_tolerance_set(mesh_loc, 1.d-6)
+  !...
 
 ```
 
