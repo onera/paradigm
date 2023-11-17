@@ -444,29 +444,18 @@ Hints:
   int request1 = -1;
   PDM_g_num_t **tgt_recv_field1 = NULL;
   // EXO
-  PDM_part_to_part_iexch(ptp,
-                         PDM_MPI_COMM_KIND_P2P,
-                         PDM_STRIDE_CST_INTERLACED,
-                         PDM_PART_TO_PART_DATA_DEF_ORDER_PART1,
-                         1,
-                         sizeof(PDM_g_num_t),
-                         NULL,
-        (const void  **) src_face_ln_to_gn,
-                         NULL,
-              (void ***) &tgt_recv_field1,
-                         &request1);
+  PDM_part_to_part_iexch(ptp,                                   //
+                         PDM_MPI_COMM_KIND_P2P,                 //
+                         PDM_STRIDE_CST_INTERLACED,             //
+                         PDM_PART_TO_PART_DATA_DEF_ORDER_PART1, //
+                         1,                                     //
+                         sizeof(PDM_g_num_t),                   //
+                         NULL,                                  //
+        (const void  **) src_face_ln_to_gn,                     // ?
+                         NULL,                                  //
+              (void ***) &tgt_recv_field1,                      // ?
+                         &request1);                            // ?
 
-  // PDM_part_to_part_iexch(ptp,
-  //                        PDM_MPI_COMM_KIND_P2P, // Communication kind
-  //                        ?,                     // Type of stride
-  //                        ?,                     // Data order
-  //                        ?,                     // Constant stride
-  //                        ?,                     // Size of data unit
-  //                        ?,                     // Part1 stride
-  //                        ?,                     // Part1 data
-  //                        ?,                     // Part2 stride
-  //                        ?,                     // Part2 data
-  //                        ?);                    // Request
 ```
 
 +++ {"editable": false, "deletable": false}
@@ -638,29 +627,18 @@ You can now initiate the exchange of the interpolated field you just computed.
   int request2 = -1;
   double **tgt_recv_field2 = NULL;
   // EXO
-  PDM_part_to_part_iexch(ptp,
-                         PDM_MPI_COMM_KIND_P2P,
-                         PDM_STRIDE_CST_INTERLACED,
-                         PDM_PART_TO_PART_DATA_DEF_ORDER_PART1_TO_PART2,
-                         1,
-                         sizeof(double),
-                         NULL,
-        (const void  **) src_send_field2,
-                         NULL,
-              (void ***) &tgt_recv_field2,
-                         &request2);
+  PDM_part_to_part_iexch(ptp,                                            //
+                         PDM_MPI_COMM_KIND_P2P,                          //
+                         PDM_STRIDE_CST_INTERLACED,                      //
+                         PDM_PART_TO_PART_DATA_DEF_ORDER_PART1_TO_PART2, //
+                         1,                                              //
+                         sizeof(double),                                 //
+                         NULL,                                           //
+        (const void  **) src_send_field2,                                // ?
+                         NULL,                                           //
+              (void ***) &tgt_recv_field2,                               // ?
+                         &request2);                                     // ?
 
-  // PDM_part_to_part_iexch(ptp,
-  //                        PDM_MPI_COMM_KIND_P2P, // Communication kind
-  //                        ?,                     // Type of stride
-  //                        ?,                     // Data order
-  //                        ?,                     // Constant stride
-  //                        ?,                     // Size of data unit
-  //                        ?,                     // Part1 stride
-  //                        ?,                     // Part1 data
-  //                        ?,                     // Part2 stride
-  //                        ?,                     // Part2 data
-  //                        ?);                    // Request
 ```
 
 +++ {"editable": false, "deletable": false}

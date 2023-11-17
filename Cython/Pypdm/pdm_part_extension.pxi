@@ -136,6 +136,10 @@ cdef class PartExtension:
   """
   cdef PDM_part_extension_t* _part_ext
   cdef object pdi
+
+  FACE = PDM_EXTEND_FROM_FACE
+  EDGE = PDM_EXTEND_FROM_EDGE
+  VTX  = PDM_EXTEND_FROM_VTX
   # ------------------------------------------------------------------
   # Fake init (Use only for docstring)
   def __init__(self,
@@ -156,6 +160,11 @@ cdef class PartExtension:
       extend_type (int)                    : Extension from which entity ?
       depth       (int)                    : Extension depth
       comm        (MPI.Comm)               : MPI communicator
+
+    Admissible values for ``extend_type`` are :
+      - :py:attr:`PartExtension.FACE`
+      - :py:attr:`PartExtension.EDGE`
+      - :py:attr:`PartExtension.VTX `
     """
   # ------------------------------------------------------------------
   def __cinit__(self,
@@ -168,12 +177,17 @@ cdef class PartExtension:
     cinit(n_domain, n_part, extend_type, depth, comm)
     Create a part extension object.
 
-     Parameters:
-      n_domain    (int)                  : Number of domains
-      n_part      np.ndarray[np.int32_t] : Number of partitions per domain
-      extend_type (int)                  : Extension from which entity ?
-      depth       (int)                  : Extension depth
-      comm        (MPI.Comm)             : MPI communicator
+    Parameters:
+      n_domain    (int)                    : Number of domains
+      n_part      (np.ndarray[np.int32_t]) : Number of partitions per domain
+      extend_type (int)                    : Extension from which entity ?
+      depth       (int)                    : Extension depth
+      comm        (MPI.Comm)               : MPI communicator
+
+    Admissible values for ``extend_type`` are :
+      - :py:attr:`PartExtension.FACE`
+      - :py:attr:`PartExtension.EDGE`
+      - :py:attr:`PartExtension.VTX`
     """
     cdef MPI.MPI_Comm c_comm = comm.ob_mpi
 

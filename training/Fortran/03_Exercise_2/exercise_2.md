@@ -617,12 +617,12 @@ Hints:
   request1 = -1
   call pdm_part_to_part_iexch(ptp,                                   &
                               PDM_MPI_COMM_KIND_P2P,                 &
-                              PDM_STRIDE_CST_INTERLACED,             & ! ?
-                              PDM_PART_TO_PART_DATA_DEF_ORDER_PART1, & ! ?
-                              1,                                     & ! ?
-                              null(),                                & ! ?
+                              PDM_STRIDE_CST_INTERLACED,             &
+                              PDM_PART_TO_PART_DATA_DEF_ORDER_PART1, &
+                              1,                                     &
+                              null(),                                &
                               src_face_ln_to_gn,                     & ! ?
-                              null(),                                & ! ?
+                              null(),                                &
                               tgt_recv_field1,                       & ! ?
                               request1)                                ! ?
 
@@ -803,12 +803,12 @@ You can now initiate the exchange of the interpolated field you just computed.
   request2 = -1
   call pdm_part_to_part_iexch(ptp,                                            &
                               PDM_MPI_COMM_KIND_P2P,                          &
-                              PDM_STRIDE_CST_INTERLACED,                      & ! ?
-                              PDM_PART_TO_PART_DATA_DEF_ORDER_PART1_TO_PART2, & ! ?
-                              1,                                              & ! ?
-                              null(),                                         & ! ?
+                              PDM_STRIDE_CST_INTERLACED,                      &
+                              PDM_PART_TO_PART_DATA_DEF_ORDER_PART1_TO_PART2, &
+                              1,                                              &
+                              null(),                                         &
                               src_send_field2,                                & ! ?
-                              null(),                                         & ! ?
+                              null(),                                         &
                               tgt_recv_field2,                                & ! ?
                               request2)                                         ! ?
 

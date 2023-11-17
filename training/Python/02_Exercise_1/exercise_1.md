@@ -418,7 +418,7 @@ This bonus is not guided, so you should have a close look at the [documentation]
 ---
 %%code_block -p exercise_1 -i 14
 
-extend_type = PDM._PDM_EXTEND_FROM_VTX
+extend_type = PDM.PartExtension.VTX
 depth       = 1
 part_ext = PDM.PartExtension(n_domain,
                              np.array([n_part]).astype(np.intc),

@@ -402,9 +402,9 @@ Hints:
 # Initiate exchange of first field
 # EXO
 request1 = ptp.iexch(PDM._PDM_MPI_COMM_KIND_P2P,
-                     PDM._PDM_PART_TO_PART_DATA_DEF_ORDER_PART1, # ?
-                     src_face_ln_to_gn,                          # ?
-                     part1_stride=1)                             # ?
+                     PDM._PDM_PART_TO_PART_DATA_DEF_ORDER_PART1,
+                     src_face_ln_to_gn, # ?
+                     part1_stride=1)
 
 ```
 
@@ -518,9 +518,9 @@ You can now initiate the exchange of the interpolated field you just computed.
 
 # Initiate exchange of second field
 request2 = ptp.iexch(PDM._PDM_MPI_COMM_KIND_P2P,
-                     PDM._PDM_PART_TO_PART_DATA_DEF_ORDER_PART1_TO_PART2, # ?
-                     src_send_field2,                                     # ?
-                     part1_stride=1)                                      # ?
+                     PDM._PDM_PART_TO_PART_DATA_DEF_ORDER_PART1_TO_PART2,
+                     src_send_field2, # ?
+                     part1_stride=1)
 
 ```
 
