@@ -88,7 +88,7 @@ interface
 
   function PDM_multipart_create_c (n_domain, &
                                    n_part, &
-                                   merge_blocks, &
+                                   merge_domains, &
                                    split_method, &
                                    part_size_method, &
                                    part_fraction, &
@@ -104,7 +104,7 @@ interface
     type(c_ptr)            :: multipart
     integer(c_int), value  :: n_domain
     type(c_ptr),    value  :: n_part
-    integer(c_int), value  :: merge_blocks
+    integer(c_int), value  :: merge_domains
     integer(c_int), value  :: split_method
     integer(c_int), value  :: part_size_method
     type(c_ptr),    value  :: part_fraction
@@ -559,7 +559,7 @@ contains
   subroutine PDM_multipart_create_ (multipart, &
                                     n_domain, &
                                     n_part, &
-                                    merge_blocks, &
+                                    merge_domains, &
                                     split_method, &
                                     part_size_method, &
                                     part_fraction, &
@@ -573,7 +573,7 @@ contains
     type(c_ptr)                        :: multipart                     ! Pointer to a new PDM_multipart_t object
     integer(c_int),            value   :: n_domain                      ! Number of domains in the original mesh
     integer(kind=PDM_l_num_s), pointer :: n_part(:)                     ! Number of partition per proc in each domain (size = ``n_domain``)
-    integer(c_int),            value   :: merge_blocks                  ! Merge or not the domains before splitting
+    integer(c_int),            value   :: merge_domains                 ! Merge or not the domains before splitting
     integer(c_int),            value   :: split_method                  ! Choice of method used to split the mesh
     integer(c_int),            value   :: part_size_method              ! Choice of homogeneous or heterogeneous partitions
     real(8),                   pointer :: part_fraction(:)              ! Weight (in %) of each partition in heterogeneous case
@@ -589,7 +589,7 @@ contains
 
     multipart = PDM_multipart_create_c(n_domain, &
                                        c_n_part, &
-                                       merge_blocks, &
+                                       merge_domains, &
                                        split_method, &
                                        part_size_method, &
                                        c_part_fraction, &

@@ -111,7 +111,7 @@ Fortran API
 
   .. f:autosubroutine PDM_part_extension_free
 
-  .. f:subroutine:: pdm_part_extension_free
+  .. f:subroutine:: pdm_part_extension_free(part_ext)
 
     Free a Part Extension structure
 

@@ -126,6 +126,12 @@ Following this logic, let's start **creating** (step 1) the mesh partitioning ob
 *Remark : since this is a basic example, we ask you to stick with the fixed values for n_domain, n_part, i_domain, i_part and merge_domains.
 To get insight about the concepts behind those values you can have a look [here](#Annex-1)*
 
+ParaDiGM offers multiple partitioning methods.
+Here, we chose to partition the cube with the Hilbert method.
+This method is favored within the `ParaDiGM` algorithms since it provides quickly a good load balance, though it does not ensure the connectedness of each subdomain.
+To ensure the partitions are connected, you should use either
+`_PDM_SPLIT_DUAL_WITH_PARMETIS` or `_PDM_SPLIT_DUAL_WITH_PTSCOTCH` which call the external libraries ParMETIS and PT-Scotch.
+
 ```{code-cell}
 ---
 "deletable": false
@@ -138,12 +144,14 @@ n_part = 1        # fixed
 i_domain = 0      # fixed
 i_part = 0        # fixed
 merge_domains = 0 # fixed
-part_method = PDM._PDM_SPLIT_DUAL_WITH_HILBERT
+part_method      = PDM._PDM_SPLIT_DUAL_WITH_HILBERT
+part_size_method = PDM.Multipart.HOMOGENEOUS
+part_fraction    = None # unused here since the subdomains are homogeneous
 mpart = PDM.MultiPart(n_domain,                           # Number of domains
                       np.array([n_part]).astype(np.intc), # Number of partitions per domain
-                      merge_domains,                      # PDM_FALSE (do not fuse domains)
+                      merge_domains,                      # Do not fuse domains
                       part_method,                        # Partitioning method
-                      1,                                  # PDM_PART_SIZE_HOMOGENEOUS (subdomains are homogeneously balanced)
+                      part_size_method,                   # Subdomains are homogeneously balanced
                       None,                               # Weight (in %) of each partition in heterogeneous case
                       comm)                               # MPI communicator
 
@@ -151,13 +159,10 @@ mpart = PDM.MultiPart(n_domain,                           # Number of domains
 
 +++ {"editable": false, "deletable": false}
 
-Here, we chose to partition the cube with the Hilbert method. This method implemented in `ParaDiGM` does not ensure the subdomain to be connected.
-This method is favored within the `ParaDiGM` algorithms since it provides quickly a good load balance. To ensure the partitions are connected use
-`PDM_SPLIT_DUAL_WITH_PARMETIS` or `PDM_SPLIT_DUAL_WITH_PTSCOTCH` which call the external libraries ParMETIS and PT-Scotch.
-
 After mapping the partitioned subdomains on the processors, it is interesting to renumber the entities
 of the mesh on each processor for performance through cache blocking but it also provides interesting properties for the application.
-You can here call the renumbering function but by telling it not to do any renumbering for a start.
+This is an advanced setting we won't be using here, so we just specify that no renumbering should be performed.
+<!-- You can here call the renumbering function but by telling it not to do any renumbering for a start. -->
 
 ```{code-cell}
 ---

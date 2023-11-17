@@ -26,7 +26,7 @@ Set inputs
 
 .. doxygenfunction:: PDM_multipart_dmesh_set
 
-.. doxygenfunction:: PDM_multipart_domain_interface_shared_set
+.. .. doxygenfunction:: PDM_multipart_domain_interface_shared_set
 
 
 Renumbering options
@@ -151,6 +151,12 @@ Fortran API
   ~~~~~~~~
 
   .. f:autosubroutine PDM_multipart_free
+
+  .. f:subroutine:: pdm_multipart_free(mpart)
+
+    Free a Multipart structure
+
+    :p c_ptr mpart[inout]: Multipart instance
 
   Partitioned nodal mesh
   ~~~~~~~~~~~~~~~~~~~~~~

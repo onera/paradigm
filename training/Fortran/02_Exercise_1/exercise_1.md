@@ -181,9 +181,9 @@ Following this logic, let's start **creating** (step 1) the mesh partitioning st
 
   type (c_ptr)                       :: mpart
   integer (c_int)                    :: n_domain = 1
-  integer(kind=PDM_l_num_s), pointer :: n_part(:)                => null()
-  integer (c_int)                    :: part_method, merge_domains
-  double precision,          pointer :: part_fraction(:)         => null()
+  integer(kind=PDM_l_num_s), pointer :: n_part(:)        => null()
+  integer (c_int)                    :: merge_domains, part_method, part_size_method
+  double precision,          pointer :: part_fraction(:) => null()
   integer (c_int)                    :: i_domain = 0
   integer (c_int)                    :: i_part   = 0
 ```
@@ -192,6 +192,12 @@ Following this logic, let's start **creating** (step 1) the mesh partitioning st
 
 *Remark : since this is a basic example, we ask you to stick with the fixed values for n_domain, n_part, i_domain, i_part and merge_domains.
 To get insight about the concepts behind those values you can have a look [here](#Annex-1)*
+
+ParaDiGM offers multiple partitioning methods.
+Here, we chose to partition the cube with the Hilbert method.
+This method is favored within the `ParaDiGM` algorithms since it provides quickly a good load balance, though it does not ensure the connectedness of each subdomain.
+To ensure the partitions are connected, you should use either
+`PDM_SPLIT_DUAL_WITH_PARMETIS` or `PDM_SPLIT_DUAL_WITH_PTSCOTCH` which call the external libraries ParMETIS and PT-Scotch.
 
 ```{code-cell}
 ---
@@ -206,36 +212,29 @@ To get insight about the concepts behind those values you can have a look [here]
     n_part(i) = 1
   end do
 
-  allocate(part_fraction(n_part(i_domain+1)))
-
-  do i = 1, n_part(i_domain+1)
-    part_fraction(i) = 1
-  end do
-
-  merge_domains = PDM_FALSE
-  part_method = PDM_SPLIT_DUAL_WITH_HILBERT
-  call PDM_multipart_create(mpart,                     & ! Mesh partitioning structure
-                            n_domain,                  & ! Number of domains
-                            n_part,                    & ! Number of partitions per domain
-                            merge_domains,             & ! PDM_FALSE (do not fuse domains)
-                            part_method,               & ! Partitioning method
-                            PDM_PART_SIZE_HOMOGENEOUS, & ! Subdomains are homogeneously balanced
-                            part_fraction,             & ! Weight (in %) of each partition in heterogeneous case
-                            comm,                      & ! MPI communicator
-                            PDM_OWNERSHIP_KEEP)          ! Data ownership
+  merge_domains    = PDM_FALSE
+  part_method      = PDM_SPLIT_DUAL_WITH_HILBERT
+  part_size_method = PDM_PART_SIZE_HOMOGENEOUS
+  part_fraction    => null() ! unused here since the subdomains are homogeneous
+  call PDM_multipart_create(mpart,              & ! Mesh partitioning structure
+                            n_domain,           & ! Number of domains
+                            n_part,             & ! Number of partitions per domain
+                            merge_domains,      & ! Do not fuse domains
+                            part_method,        & ! Partitioning method
+                            part_size_method,   & ! Subdomains are homogeneously balanced
+                            part_fraction,      & ! Weight (in %) of each partition in heterogeneous case
+                            comm,               & ! MPI communicator
+                            PDM_OWNERSHIP_KEEP)   ! Data ownership
 
 
 ```
 
 +++ {"editable": false, "deletable": false}
 
-Here, we chose to partition the cube with the Hilbert method. This method implemented in `ParaDiGM` does not ensure the subdomain to be connected.
-This method is favored within the `ParaDiGM` algorithms since it provides quickly a good load balance. To ensure the partitions are connected use
-`PDM_SPLIT_DUAL_WITH_PARMETIS` or `PDM_SPLIT_DUAL_WITH_PTSCOTCH` which call the external libraries ParMETIS and PT-Scotch.
-
 After mapping the partitioned subdomains on the processors, it is interesting to renumber the entities
 of the mesh on each processor for performance through cache blocking but it also provides interesting properties for the application.
-You can here call the renumbering function but by telling it not to do any renumbering for a start.
+This is an advanced setting we won't be using here, so we just specify that no renumbering should be performed.
+<!-- You can here call the renumbering function but by telling it not to do any renumbering for a start. -->
 
 ```{code-cell}
 ---
@@ -692,8 +691,7 @@ First, we finalize the the code you juste wrote by with the last step :  **free*
 ---
 %%code_block -p exercise_1 -i 30
 
-  deallocate(n_part, &
-             part_fraction)
+  deallocate(n_part)
   call PDM_DMesh_nodal_free(dmn)
   call PDM_multipart_free(mpart)
 

@@ -1,7 +1,7 @@
 
 cdef extern from "pdm_multipart.h":
     ctypedef enum PDM_part_size_t:
-        PDM_PART_SIZE_HOMONEGEOUS   = 1
+        PDM_PART_SIZE_HOMOGENEOUS   = 1
         PDM_PART_SIZE_HETEROGENEOUS = 2
     ctypedef struct PDM_multipart_t:
         pass
@@ -11,7 +11,7 @@ cdef extern from "pdm_multipart.h":
     # MPI_Comm      comm,
     PDM_multipart_t* PDM_multipart_create(int              n_domain,
                                           int*             n_part,
-                                          PDM_bool_t       merge_blocks,
+                                          PDM_bool_t       merge_domains,
                                           PDM_split_dual_t split_method,
                                           PDM_part_size_t  part_size_method,
                                           double*          part_fraction,
@@ -166,28 +166,32 @@ cdef class MultiPart:
     # > For Ppart
     cdef PDM_multipart_t* _mtp
     cdef int n_rank
+
+
+    HOMOGENEOUS   = PDM_PART_SIZE_HOMOGENEOUS
+    HETEROGENEOUS = PDM_PART_SIZE_HETEROGENEOUS
     # ------------------------------------------------------------------
     # Fake init (Use only for docstring)
     def __init__(self,
                  int                                           n_domain,
                  NPY.ndarray[NPY.int32_t   , mode='c', ndim=1] n_part,
-                 int                                           merge_blocks,
+                 int                                           merge_domains,
                  PDM_split_dual_t                              split_method,
                  PDM_part_size_t                               part_size_method,
                  NPY.ndarray[NPY.double_t  , mode='c', ndim=1] part_fraction,
                  MPI.Comm                                      comm):
 
       """
-      __init__(n_domain, n_part, merge_blocks, split_method, part_size_method, part_fraction, comm)
+      __init__(n_domain, n_part, merge_domains, split_method, part_size_method, part_fraction, comm)
 
       Build a MultiPart structure. This method allows to split multiple domains.
 
       Parameters:
         n_domain         (int)                     : Number of domains in the original mesh
         n_part           (np.ndarray[np.int32_t])  : Number of partitions per rank in each domain
-        merge_blocks     (int)                     : Merge or not the domains before splitting
+        merge_domains     (int)                    : Merge or not the domains before splitting
         split_method     (PDM_split_dual_t)        : Choice of library used to split the mesh
-        part_size_method (PDM_part_size_t)         : Choice of homogeneous or heterogeneous partitions
+        part_size        (PDM_part_size_t)         : Choice of homogeneous or heterogeneous partitions
         part_fraction    (np.ndarray[np.double_t]) : Weight (in %) of each partition in heterogeneous case if ``part_size_method`` is set to ``PDM_PART_SIZE_HETEROGENEOUS``
         comm             (MPI.Comm)                : MPI communicator
       """
@@ -195,21 +199,21 @@ cdef class MultiPart:
     def __cinit__(self,
                   int                                           n_domain,
                   NPY.ndarray[NPY.int32_t   , mode='c', ndim=1] n_part,
-                  int                                           merge_blocks,
+                  int                                           merge_domains,
                   PDM_split_dual_t                              split_method,
                   PDM_part_size_t                               part_size_method,
                   NPY.ndarray[NPY.double_t  , mode='c', ndim=1] part_fraction,
                   MPI.Comm                                      comm):
 
       """
-      __cinit__(n_domain, n_part, merge_blocks, split_method, part_size_method, part_fraction, comm)
+      __cinit__(n_domain, n_part, merge_domains, split_method, part_size_method, part_fraction, comm)
 
       Build a MultiPart structure. This method allows to split multiple domains.
 
       Parameters:
         n_domain         (int)                     : Number of domains in the original mesh
         n_part           (np.ndarray[np.int32_t])  : Number of partitions per rank in each domain
-        merge_blocks     (int)                     : Merge or not the domains before splitting
+        merge_domains     (int)                    : Merge or not the domains before splitting
         split_method     (PDM_split_dual_t)        : Choice of library used to split the mesh
         part_size_method (PDM_part_size_t)         : Choice of homogeneous or heterogeneous partitions
         part_fraction    (np.ndarray[np.double_t]) : Weight (in %) of each partition in heterogeneous case if ``part_size_method`` is set to ``PDM_PART_SIZE_HETEROGENEOUS``
@@ -221,7 +225,7 @@ cdef class MultiPart:
 
       # print("MultiPart::n_domain -->", n_domain)
       # print("MultiPart::n_part -->", n_part)
-      # print("MultiPart::merge_blocks -->", merge_blocks)
+      # print("MultiPart::merge_domains -->", merge_domains)
       # print("MultiPart::split_method -->", split_method)
       self.n_rank = comm.Get_size()
 
@@ -233,7 +237,7 @@ cdef class MultiPart:
       # -> Create PPART
       self._mtp = PDM_multipart_create(n_domain,
                           <int      *> n_part.data,
-                          <PDM_bool_t> merge_blocks,
+                          <PDM_bool_t> merge_domains,
                                        split_method,
                                        part_size_method,
                                        part_fraction_data,

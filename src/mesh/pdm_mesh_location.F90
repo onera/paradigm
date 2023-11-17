@@ -1421,9 +1421,9 @@ module pdm_mesh_location
                                                  i_part,       &
                                                  cell_vtx_idx, &
                                                  cell_vtx)
-    ! Get the cell->vertex connectivity used for internal computations
+    ! Get the cell→vertex connectivity used for internal computations
     !
-    ! ..note::
+    ! .. note::
     !   For non-standard elements, this connectivity is built by ParaDiGM and is necessary to associate
     !   the `points_weights` array (returned by \ref PDM_mesh_location_points_in_elt_get)
     !   to the appropriate mesh vertices.

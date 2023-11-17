@@ -41,6 +41,8 @@ Location computation
 
 .. doxygenfunction:: PDM_mesh_location_compute
 
+.. doxygenfunction:: PDM_mesh_location_dump_times
+
 Results
 """""""
 .. doxygenfunction:: PDM_mesh_location_n_located_get
@@ -105,17 +107,73 @@ Fortran API
   Location computation
   """"""""""""""""""""
 
-  .. .. f:autosubroutine:: pdm_mesh_location/pdm_mesh_location_method_set
+  .. f:autosubroutine pdm_mesh_location/pdm_mesh_location_method_set
+  .. f:subroutine:: pdm_mesh_location_method_set(mesh_loc, method)
 
-  .. .. f:autosubroutine:: pdm_mesh_location/pdm_mesh_location_compute
+    Set the method for computing location (preconditioning stage)
+
+    .. note::
+      This is an optional setting
+
+    Admissible values are :
+      - ``PDM_MESH_LOCATION_OCTREE``         : Use point octree (default method)
+      - ``PDM_MESH_LOCATION_DBBTREE``        : Use bounding-box tree
+      - ``PDM_MESH_LOCATION_LOCATE_ALL_TGT`` : All target points are guaranteed to be located
+
+    :p c_ptr mesh_loc[in]: Mesh location instance
+    :p integer method[in]: Preconditioning method
+
+
+
+  .. f:subroutine:: pdm_mesh_location_tolerance_set(mesh_loc, tol)
+
+    Set the relative tolerance for bounding boxes
+
+    .. note::
+      This is an optional setting. By default a relative tolerance equal to 0 is used.
+
+    :p c_ptr mesh_loc[in]: Mesh location instance
+    :p real    method[in]: Tolerance
+
+
+
+  .. f:autosubroutine pdm_mesh_location/pdm_mesh_location_compute
+  .. f:subroutine:: pdm_mesh_location_compute(mesh_loc)
+
+    Compute point location
+
+    :p c_ptr mesh_loc[in]: Mesh location instance
+
+
+  .. f:subroutine:: pdm_mesh_location_dump_times(mesh_loc)
+
+    Dump elapsed and CPU times
+
+    :p c_ptr mesh_loc[in]: Mesh location instance
 
   Results
   """""""
-  .. .. f:autosubroutine:: pdm_mesh_location/pdm_mesh_location_n_located_get
+  .. f:autosubroutine pdm_mesh_location/pdm_mesh_location_n_located_get
+  .. f:function:: pdm_mesh_location_n_located_get(mloc, i_point_cloud, i_part) result(n_located)
+
+    Get the number of located points
+
+    :p c_ptr mesh_loc[in]: Mesh location instance
+    :p integer i_point_cloud[in]: Point cloud identifier
+    :p integer i_part[in]: Partition identifier
+    :p integer n_located[out]: Number of located points
 
   .. f:autosubroutine:: pdm_mesh_location/pdm_mesh_location_located_get_
 
-  .. .. f:autosubroutine:: pdm_mesh_location/pdm_mesh_location_n_unlocated_get
+  .. f:autosubroutine pdm_mesh_location/pdm_mesh_location_n_unlocated_get
+  .. f:function:: pdm_mesh_location_n_unlocated_get(mloc, i_point_cloud, i_part) result(n_unlocated)
+
+    Get the number of unlocated points
+
+    :p c_ptr mesh_loc[in]: Mesh location instance
+    :p integer i_point_cloud[in]: Point cloud identifier
+    :p integer i_part[in]: Partition identifier
+    :p integer n_unlocated[out]: Number of unlocated points
 
   .. f:autosubroutine:: pdm_mesh_location/pdm_mesh_location_unlocated_get_
 
@@ -123,14 +181,40 @@ Fortran API
 
   .. f:autosubroutine:: pdm_mesh_location/pdm_mesh_location_point_location_get_
 
-  .. .. f:autosubroutine:: pdm_mesh_location/pdm_mesh_location_cell_vertex_get_
+  .. f:autosubroutine pdm_mesh_location/pdm_mesh_location_cell_vertex_get_
+  .. f:subroutine:: pdm_mesh_location_cell_vertex_get(mloc, i_part, cell_vtx_idx, cell_vtx)
 
-  .. .. f:autosubroutine:: pdm_mesh_location/pdm_mesh_location_part_to_part_get_
+    Get the cell→vertex connectivity used for internal computations
+
+    .. note::
+      For non-standard elements, this connectivity is built by ParaDiGM and is necessary to associate
+      the ``points_weights`` array (returned by **pdm_mesh_location_points_in_elt_get**)
+      to the appropriate mesh vertices.
+
+    :p c_ptr mesh_loc[in]:           Mesh location instance
+    :p integer i_part[in]:           Partition identifier
+    :p integer(:) cell_vtx_idx[out]: Index for cell → vertex connectivity
+    :p integer(:) cell_vtx[out]:     Cell → vertex connectivity
+
+  .. f:autosubroutine pdm_mesh_location/pdm_mesh_location_part_to_part_get_
+  .. f:subroutine:: pdm_mesh_location_part_to_part_get(mesh_loc, icloud, ptp, owner)
+
+    Get Part-to-part instance to exchange data between the source mesh and a target point cloud
+
+    :p c_ptr mesh_loc[in]: Mesh location instance
+    :p integer icloud[in]: Point cloud identifier
+    :p c_ptr ptp[out]:     Part-to-part instance
+    :p integer owner[in]:  Ownership for ``ptp``
 
   Finalization
   """"""""""""
 
-  .. .. f:autosubroutine:: pdm_mesh_location/pdm_mesh_location_free
+  .. f:autosubroutine pdm_mesh_location/pdm_mesh_location_free
+  .. f:subroutine:: pdm_mesh_location_free(mesh_loc)
+
+    Free a Mesh location structure
+
+    :p c_ptr mesh_loc[inout]: Mesh location instance
 
 .. ifconfig:: enable_fortran_doc == 'OFF'
 
@@ -173,6 +257,7 @@ Python API
       ~Pypdm.Pypdm.MeshLocation.n_part_cloud_set
       ~Pypdm.Pypdm.MeshLocation.cloud_set
       ~Pypdm.Pypdm.MeshLocation.compute
+      ~Pypdm.Pypdm.MeshLocation.dump_times
       ~Pypdm.Pypdm.MeshLocation.located_get
       ~Pypdm.Pypdm.MeshLocation.unlocated_get
       ~Pypdm.Pypdm.MeshLocation.location_get
@@ -202,6 +287,8 @@ Python API
     .. rubric:: Location computation
 
     .. automethod:: Pypdm.Pypdm.MeshLocation.compute
+
+    .. automethod:: Pypdm.Pypdm.MeshLocation.dump_times
 
     .. rubric:: Results
 

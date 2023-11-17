@@ -79,13 +79,13 @@ typedef enum {
  *
  * \param [in]   n_domain         Number of domains in the original mesh
  * \param [in]   n_part           Number of partition per rank in each domain
- * \param [in]   merge_blocks     Merge or not the domains before splitting
+ * \param [in]   merge_domains    Merge or not the domains before splitting
  * \param [in]   split_method     Choice of library used to split the mesh
  * \param [in]   part_size_method Choice of homogeneous or heterogeneous partitions
- * \param [in]   part_weight      Weight (in %) of each partition in heterogeneous case if \p part_size_method is set to \p PDM_PART_SIZE_HETEROGENEOUS
+ * \param [in]   part_fraction    Weight (in %) of each partition in heterogeneous case (i.e. if \p part_size_method is set to \p PDM_PART_SIZE_HETEROGENEOUS)
  * \param [in]   comm             PDM_MPI communicator
  *
- * \return     Pointer to a new \ref PDM_multipart_t object
+ * \return     Pointer to a new \ref PDM_multipart_t instance
  */
 
 PDM_multipart_t *
@@ -93,7 +93,7 @@ PDM_multipart_create
 (
  const int              n_domain,
  const int             *n_part,
- const PDM_bool_t       merge_blocks,
+ const PDM_bool_t       merge_domains,
  const PDM_split_dual_t split_method,
  const PDM_part_size_t  part_size_method,
  const double          *part_fraction,
@@ -106,7 +106,7 @@ PDM_multipart_create
  *
  * \brief Set distributed mesh data for the input domain
  *
- * \param [in]   multipart      Pointer to \ref PDM_multipart_t object
+ * \param [in]   multipart      Pointer to \ref PDM_multipart_t instance
  * \param [in]   i_domain       Domain identifier
  * \param [in]   dmesh          Pointer on \ref PDM_dmesh_t containing all distributed connectivities
  */
@@ -122,7 +122,7 @@ void PDM_multipart_dmesh_set
  *
  * \brief Set distributed mesh data for the input domain. The mesh is described by nodal connectivity
  *
- * \param [in]   multipart      Pointer to \ref PDM_multipart_t object
+ * \param [in]   multipart      Pointer to \ref PDM_multipart_t instance
  * \param [in]   i_domain       Domain identifier
  * \param [in]   dmesh_nodal    Pointer on \ref PDM_dmesh_nodal_t
  */
@@ -137,7 +137,7 @@ void PDM_multipart_dmesh_nodal_set
 /**
  * \brief Set block
  *
- * \param [in]   multipart              Pointer to \ref PDM_multipart_t object
+ * \param [in]   multipart              Pointer to \ref PDM_multipart_t instance
  * \param [in]   i_domain               Domain identifier
  * \param [in]   dn_cell                Number of distributed cells
  * \param [in]   dn_face                Number of distributed faces
@@ -185,7 +185,7 @@ PDM_multipart_block_set
  *
  * \brief Set the reordering methods to be used after partitioning
  *
- * \param [in]   multipart             Pointer to \ref PDM_multipart_t object
+ * \param [in]   multipart             Pointer to \ref PDM_multipart_t instance
  * \param [in]   i_domain              Id of domain which parameters apply (or -1 for all domains)
  * \param [in]   renum_cell_method     Choice of renumbering method for cells
  * \param [in]   renum_cell_properties Parameters used by cache-blocking method :
@@ -206,7 +206,7 @@ void PDM_multipart_set_reordering_options
  *
  * \brief Set the vertex reordering methods to be used after partitioning
  *
- * \param [in]   multipart             Pointer to \ref PDM_multipart_t object
+ * \param [in]   multipart             Pointer to \ref PDM_multipart_t instance
  * \param [in]   i_domain              Id of domain which parameters apply (or -1 for all domains)
  * \param [in]   renum_vtx_method      Choice of renumbering method for vertices
  *
@@ -224,7 +224,7 @@ void PDM_multipart_set_reordering_options_vtx
  *
  * \brief Construct the partitioned meshes on all domains
  *
- * \param [in]   multipart             Pointer to \ref PDM_multipart_t object
+ * \param [in]   multipart             Pointer to \ref PDM_multipart_t instance
  */
 void
 PDM_multipart_compute
@@ -236,7 +236,7 @@ PDM_multipart_compute
 /**
  * \brief Retrieve the partitioned nodal mesh
  *
- * \param [in]  multipart             Pointer to \ref PDM_multipart_t object
+ * \param [in]  multipart             Pointer to \ref PDM_multipart_t instance
  * \param [in]  i_domain              Id of domain
  * \param [out] pmesh_nodal           Partitioned nodal mesh
  * \param [in]  ownership             Who is responsible to free retrieved data ?
@@ -255,7 +255,7 @@ const int                     i_domain,
 /**
  * \brief Retrieve the partitioned mesh
  *
- * \param [in]  multipart             Pointer to \ref PDM_multipart_t object
+ * \param [in]  multipart             Pointer to \ref PDM_multipart_t instance
  * \param [in]  i_domain              Id of domain
  * \param [out] pmesh                 Partitioned mesh
  *
@@ -272,8 +272,8 @@ const int                     i_domain,
 /**
  * \brief Specify interface between domain (see \ref PDM_multidomain_interface)
  *
- * \param [in]  multipart   Pointer to \ref PDM_multipart_t object
- * \param [in]  ditrf       Pointer to \ref PDM_domain_interface_t object
+ * \param [in]  multipart   Pointer to \ref PDM_multipart_t instance
+ * \param [in]  ditrf       Pointer to \ref PDM_domain_interface_t instance
  *
  */
 
@@ -310,7 +310,7 @@ const int        i_part,
 /**
  *
  * \brief Get the connection graph between partition for the requested entity type
- * \param [in]  multipart             Pointer to \ref PDM_multipart_t object
+ * \param [in]  multipart             Pointer to \ref PDM_multipart_t instance
  * \param [in]  i_domain              Id of domain
  * \param [in]  i_part                Id of part
  * \param [in]  entity_type           Type of mesh entity
@@ -378,7 +378,7 @@ const int                       i_domain
  *
  * \note If the return \p connect is \p NULL, you may build the missing connectivity using the appropriate **Connectivity transformation** function.
  *
- * \param [in]  multipart             Pointer to \ref PDM_multipart_t object
+ * \param [in]  multipart             Pointer to \ref PDM_multipart_t instance
  * \param [in]  i_domain              Id of domain
  * \param [in]  i_part                Id of part
  * \param [in]  connectivity_type     Connectivity kind \ref PDM_connectivity_type_t
@@ -403,7 +403,7 @@ const int                       i_part,
 
 /**
  * \brief Get the number of entities with given type.
- * \param [in]  multipart             Pointer to \ref PDM_multipart_t object
+ * \param [in]  multipart             Pointer to \ref PDM_multipart_t instance
  * \param [in]  i_domain              Id of domain
  * \param [in]  i_part                Id of part
  * \param [in]  entity_type           Entity kind \ref PDM_mesh_entities_t
@@ -422,7 +422,7 @@ const int                   i_part,
 /**
  *
  * \brief Get the global ids of entities with given type.
- * \param [in]  multipart             Pointer to \ref PDM_multipart_t object
+ * \param [in]  multipart             Pointer to \ref PDM_multipart_t instance
  * \param [in]  i_domain              Id of domain
  * \param [in]  i_part                Id of part
  * \param [in]  entity_type           Entity kind
@@ -446,7 +446,7 @@ const int                   i_part,
 /**
  *
  * \brief Get the color of entities with given type.
- * \param [in]  multipart             Pointer to \ref PDM_multipart_t object
+ * \param [in]  multipart             Pointer to \ref PDM_multipart_t instance
  * \param [in]  i_domain              Id of domain
  * \param [in]  i_part                Id of part
  * \param [in]  entity_type           Entity kind
@@ -469,7 +469,7 @@ const int                   i_part,
 /**
  *
  * \brief Get array containing hyperplane color
- * \param [in]  multipart             Pointer to \ref PDM_multipart_t object
+ * \param [in]  multipart             Pointer to \ref PDM_multipart_t instance
  * \param [in]  i_domain              Id of domain
  * \param [in]  i_part                Id of part
  * \param [in]  hyperplane_color      Hyperplane color
@@ -489,7 +489,7 @@ const int               i_part,
  *
  * \brief Get array containing thread color - Only if specific reordering (in ParaDiGMA plugins)
  *
- * \param [in]  multipart             Pointer to \ref PDM_multipart_t object
+ * \param [in]  multipart             Pointer to \ref PDM_multipart_t instance
  * \param [in]  i_domain              Id of domain
  * \param [in]  i_part                Id of part
  * \param [in]  thread_color          Thread color
@@ -510,7 +510,7 @@ const int               i_part,
  *
  * \brief Get array containing vtx_ghost_information, useful to have a priority on vertex between multiple partitions
  *
- * \param [in]  multipart             Pointer to \ref PDM_multipart_t object
+ * \param [in]  multipart             Pointer to \ref PDM_multipart_t instance
  * \param [in]  i_domain              Id of domain
  * \param [in]  i_part                Id of part
  * \param [in]  vtx_ghost_information Integer that gives the current priority of vertices on current partitions
@@ -532,7 +532,7 @@ const int               i_part,
  * \brief Return times for a given domain
  * (NOT IMPLEMENTED)
  *
- * \param [in]   multipart      Pointer to \ref PDM_multipart_t object
+ * \param [in]   multipart      Pointer to \ref PDM_multipart_t instance
  * \param [in]   i_domain       Id of current domain
  * \param [out]  elapsed        Elapsed time
  * \param [out]  cpu            CPU time
@@ -556,7 +556,7 @@ PDM_multipart_time_get
  *
  * \brief Free the structure
  *
- * \param [in]   multipart      Pointer to \ref PDM_multipart_t object
+ * \param [in]   multipart      Pointer to \ref PDM_multipart_t instance
  */
 void
 PDM_multipart_free
@@ -568,7 +568,7 @@ PDM_multipart_free
  *
  * \brief Get the vertex coordinates on current i_domain, i_part partition and return number of vertices
  *
- * \param [in]   multipart      Pointer to \ref PDM_multipart_t object
+ * \param [in]   multipart      Pointer to \ref PDM_multipart_t instance
  * \param [in]   i_domain       Id of current domain
  * \param [in]   i_part         Id of part
  * \param [out]  vtx_coord      Vertex coordinate (size = 3 * n_vtx)
@@ -592,7 +592,7 @@ const int                       i_part,
  *
  * \brief Get the group description for a given entity
  *
- * \param [in]   multipart              Pointer to \ref PDM_multipart_t object
+ * \param [in]   multipart              Pointer to \ref PDM_multipart_t instance
  * \param [in]   i_domain               Domain identifier
  * \param [in]   i_part                 Partition identifier
  * \param [in]   entity_type            Type of mesh entity
@@ -621,7 +621,7 @@ void PDM_multipart_group_get
  *
  * \brief Return statistics
  *
- * \param [in]   multipart                      Pointer to \ref PDM_part object
+ * \param [in]   multipart                      Pointer to \ref PDM_multipart instance
  * \param [out]  cells_average                  average of cells number
  * \param [out]  cells_median                   median of cells number
  * \param [out]  cells_std_deviation            standard deviation of cells number
