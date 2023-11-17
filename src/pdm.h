@@ -117,8 +117,11 @@ typedef enum {
 } PDM_data_t;
 
 /**
- * \enum PDM_part_to_block_distrib_t
- * \brief Type of distribution
+ * \enum PDM_stride_t
+ * \brief The notion of "stride" represents the number of field components. There are 3 modes:
+ *    - PDM_STRIDE_CST_INTERLACED   : The number of components is constant for each element. The field is stored according to this pattern (c_1,1 ... c_s,1 ... c_1,n ... c_s,n), whhere 's' is the stride and 'n' the number of field elements
+ *    - PDM_STRIDE_CST_INTERLEAVED  : The number of components is constant for each element. The field is stored according to this pattern (c_1,1 ... c_1,n ... c_s,1 ... c_s,n), whhere 's' is the stride and 'n' the number of field elements
+ *    - PDM_STRIDE_VAR_INTERLACED   : The number of components is variable for each element. The field is stored according to this pattern (c_1,1 ... c_s1,1 ... c_1,n ... c_sn,n), whhere 's_i' is the 'i' element stride and 'n' the number of field elements  
  *
  */
 

@@ -240,8 +240,15 @@ For further details about the install process of **ParaDiGM**, please refer to t
 
 Ownership of the results is defined either when the feature is created or when the function giving the result is called, using the **ownership** argument. Two choices are possible: 
 
-- **PDM_OWNERSHIP_KEEP** : The memory of the result(s) is freed when the feature is freed.
+- **PDM_OWNERSHIP_KEEP** : The memory of the result(s) is freed when the feature is freed ;
 - **PDM_OWNERSHIP_USER** : The user becomes the owner of the result(s) accessed. It is the user's responsibility to free them. 
+
+### Stride
+
+The notion of **stride** (PDM_stride_t) represents the number of field components. There are 3 modes:
+- **PDM_STRIDE_CST_INTERLACED**   : The number of components is constant for each element. The field is stored according to this pattern $ \left(c_{1,1} ... c_{s,1} ... c_{1,n} ... c_{s,n}\right)$ , where $s$ is the stride and $n$ the number of field elements. In this mode, $s$ is an scalar. ;
+- **PDM_STRIDE_CST_INTERLEAVED**  : The number of components is constant for each element. The field is stored according to this pattern $ \left(c_{1,1} ... c_{1,n} ... c_{s,1} ... c_{s,n}\right)$ , where $s$ is the stride and $n$ the number of field elements. In this mode, $s$ is an scalar ;
+- **PDM_STRIDE_VAR_INTERLACED**   : The number of components is variable for each element. The field is stored according to this pattern $ \left(c_{1,1} ... c_{s_1,1} ... c_{1,n} ... c_{s_n,n}\right)$ , where $s_i$ is the $i$ element stride and $n$ the number of field elements. In this mode, $s$ is an array.  
 
 ### Mesh
 
@@ -787,9 +794,15 @@ On this figure, it is clear that there is a direct dependency to **ParaDiGM** fu
 We can see that **elsA** has a dependency to **MAIA** which we mentioned earlier.
 Moreover, the tool ETC relies on **ppart** which itself relies on **ParaDiGM**'s mesh partitioning features.
 
+# Clone repository  
 
+Go to **exercise_clone_repo** in your working directory and clone https://gitlab.onera.net/numerics/mesh/paradigm.git
 
-# ParaDiGM git clone + installation
+In the **test directory**, you'll find a large number of validation tests. These tests are good examples of how to use the software to discover functionalities that will not be covered during this day.  
+
+- **PDM_t_closest_point** : Finding the $k$ nearest points in a cloud
+- **PDM_t_dist** : Calculating the distance from a point cloud to a surface
+- ...
 
 # Exercise 0
 
