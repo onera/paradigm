@@ -142,20 +142,14 @@ To ensure the partitions are connected, you should use either
 
 # Create partitioning object
 n_domain = 1      # fixed
-n_part = 1        # fixed
+n_part = 1        # fixed since there could be several domains provide it like this : np.array([n_part]).astype(np.intc)
 i_domain = 0      # fixed
 i_part = 0        # fixed
 merge_domains = 0 # fixed
 part_method      = PDM.MultiPart.HILBERT
 part_size_method = PDM.MultiPart.HOMOGENEOUS
 part_fraction    = None # unused here since the subdomains are homogeneous
-mpart = PDM.MultiPart(n_domain,                           # Number of domains
-                      np.array([n_part]).astype(np.intc), # Number of partitions per domain
-                      merge_domains,                      # Do not fuse domains
-                      part_method,                        # Partitioning method
-                      part_size_method,                   # Subdomains are homogeneously balanced
-                      None,                               # Weight (in %) of each partition in heterogeneous case
-                      comm)                               # MPI communicator
+mpart = PDM.MultiPart() # ??
 
 ```
 
@@ -193,7 +187,7 @@ This is a pratice internal to **ParaDiGM** algorithms. In your software you woul
 ---
 %%code_block -p exercise_1 -i 4
 
-mpart.dmesh_nodal_set(i_domain, dmn)
+mpart.dmesh_nodal_set() # ??
 ```
 
 +++ {"editable": false, "deletable": false}
@@ -207,7 +201,7 @@ At this point you have provided all the information necessary to run the mesh pa
 ---
 %%code_block -p exercise_1 -i 5
 
-mpart.compute()
+# compute ??
 ```
 
 +++ {"editable": false, "deletable": false}
@@ -235,12 +229,11 @@ Let's start with the **vertices** composing the subdomain. How many vertices are
 ---
 %%code_block -p exercise_1 -i 6
 
-# coords = mpart.vtx_coord_get(i_part,
-#                              i_domain)
-#
-# pmn = mpart.part_mesh_nodal_get(i_domain)
-# vtx_ln_to_gn = PDM.part_mesh_nodal_vtx_g_num_get(pmn, i_part)
-# n_vtx        = len(vtx_ln_to_gn)
+coords = mpart.vtx_coord_get() # ??
+
+pmn = mpart.part_mesh_nodal_get(i_domain)
+vtx_ln_to_gn = PDM.part_mesh_nodal_vtx_g_num_get() # ??
+n_vtx        = len(vtx_ln_to_gn)
 
 ```
 
@@ -257,13 +250,12 @@ To get insight about the concept behind this value you can have a look [here](#A
 ---
 %%code_block -p exercise_1 -i 7
 
-# i_section = 0 # fixed
-# output = PDM.part_mesh_nodal_get_sections(pmn,
-#                                           PDM._PDM_GEOMETRY_KIND_VOLUMIC,
-#                                           i_part)
-# elt_vtx      = output[i_section]["np_connec"]
-# elt_ln_to_gn = output[i_section]["np_numabs"]
-# n_elt        = len(elt_ln_to_gn)
+i_section = 0 # fixed
+# here we work on a 3D mesh : PDM._PDM_GEOMETRY_KIND_VOLUMIC
+output = PDM.part_mesh_nodal_get_sections() # ??
+elt_vtx      = output[i_section]["np_connec"]
+elt_ln_to_gn = output[i_section]["np_numabs"]
+n_elt        = len(elt_ln_to_gn)
 
 ```
 
@@ -277,15 +269,15 @@ Now we write the mesh that we just got to be able to visualize it later on **(no
 ---
 %%code_block -p exercise_1 -i 8
 
-# PDM.writer_wrapper(comm,
-#                    "visu",
-#                    "pmesh",
-#                    [coords],
-#                    [vtx_ln_to_gn],
-#                    [None],
-#                    [elt_vtx],
-#                    [elt_ln_to_gn],
-#                    PDM._PDM_WRITER_TETRA4)
+PDM.writer_wrapper(comm,
+                   "visu",
+                   "pmesh",
+                   [coords],
+                   [vtx_ln_to_gn],
+                   [None],
+                   [elt_vtx],
+                   [elt_ln_to_gn],
+                   PDM._PDM_WRITER_TETRA4)
 
 ```
 
@@ -311,14 +303,10 @@ Let's start from the top with **cell** data. How many cells are there? What are 
 ---
 %%code_block -p exercise_1 -i 9
 
-cell_ln_to_gn = mpart.ln_to_gn_get(i_domain,
-                                   i_part,
-                                   PDM._PDM_MESH_ENTITY_CELL)
+cell_ln_to_gn = mpart.ln_to_gn_get() # ??
 n_cell = len(cell_ln_to_gn)
 
-cell_face_idx, cell_face = mpart.connectivity_get(i_domain,
-                                                  i_part,
-                                                  PDM._PDM_CONNECTIVITY_TYPE_CELL_FACE)
+cell_face_idx, cell_face = mpart.connectivity_get() # ??
 
 ```
 
@@ -332,14 +320,10 @@ For the **faces** we proceed in a similar way. How many faces are there? What ar
 ---
 %%code_block -p exercise_1 -i 10
 
-face_ln_to_gn = mpart.ln_to_gn_get(i_domain,
-                                   i_part,
-                                   PDM._PDM_MESH_ENTITY_FACE)
+face_ln_to_gn = mpart.ln_to_gn_get() # ??
 n_face = len(face_ln_to_gn)
 
-face_vtx_idx, face_vtx = mpart.connectivity_get(i_domain,
-                                                i_part,
-                                                PDM._PDM_CONNECTIVITY_TYPE_FACE_VTX)
+face_vtx_idx, face_vtx = mpart.connectivity_get() # ??
 
 ```
 
@@ -353,13 +337,10 @@ To finish with, we need to have the description of the **vertices**.
 ---
 %%code_block -p exercise_1 -i 12
 
-vtx_ln_to_gn = mpart.ln_to_gn_get(i_domain,
-                                  i_part,
-                                  PDM._PDM_MESH_ENTITY_VTX)
+vtx_ln_to_gn = mpart.ln_to_gn_get() # ??
 n_vtx = len(vtx_ln_to_gn)
 
-coords = mpart.vtx_coord_get(i_domain,
-                             i_part)
+coords = mpart.vtx_coord_get() # ??
 
 ```
 
@@ -430,11 +411,8 @@ This bonus is not guided, so you should have a close look at the [documentation]
 
 extend_type = PDM.PartExtension.VTX
 depth       = 1
-part_ext = PDM.PartExtension(n_domain,
-                             np.array([n_part]).astype(np.intc),
-                             extend_type,
-                             depth,
-                             comm)
+# since there could be several domains provide it like this : np.array([n_part]).astype(np.intc)
+part_ext = PDM.PartExtension() # ??
 ```
 
 +++ {"editable": false, "deletable": false}
@@ -447,51 +425,32 @@ part_ext = PDM.PartExtension(n_domain,
 ---
 %%code_block -p exercise_1 -i 15
 
-output = mpart.graph_comm_get(i_domain,
-                              i_part,
-                              PDM._PDM_MESH_ENTITY_VTX)
+# extension by vertex : PDM._PDM_MESH_ENTITY_VTX
+output = mpart.graph_comm_get() # ??
 
 vtx_part_bound_proc_idx = output["np_entity_part_bound_proc_idx"]
 vtx_part_bound_part_idx = output["np_entity_part_bound_part_idx"]
 vtx_part_bound          = output["np_entity_part_bound"]
 
-part_ext.connectivity_set(i_domain,
-                          i_part,
-                          PDM._PDM_CONNECTIVITY_TYPE_CELL_FACE,
-                          cell_face_idx,
-                          cell_face)
+# set the above arrays
+part_ext.part_bound_graph_set() # ??
 
-part_ext.connectivity_set(i_domain,
-                          i_part,
-                          PDM._PDM_CONNECTIVITY_TYPE_FACE_VTX,
-                          face_vtx_idx,
-                          face_vtx)
+# set cell->face connectivity
+part_ext.connectivity_set() # ??
 
-part_ext.vtx_coord_set(i_domain,
-                       i_part,
-                       coords)
+# set face->vertex connectivity
+part_ext.connectivity_set() # ??
 
-part_ext.ln_to_gn_set(i_domain,
-                      i_part,
-                      PDM._PDM_MESH_ENTITY_CELL,
-                      cell_ln_to_gn)
+part_ext.vtx_coord_set() # ??
 
-part_ext.ln_to_gn_set(i_domain,
-                      i_part,
-                      PDM._PDM_MESH_ENTITY_FACE,
-                      face_ln_to_gn)
+# set cell global identifier array
+part_ext.ln_to_gn_set() # ??
 
-part_ext.ln_to_gn_set(i_domain,
-                      i_part,
-                      PDM._PDM_MESH_ENTITY_VTX,
-                      vtx_ln_to_gn)
+# set face global identifier array
+part_ext.ln_to_gn_set() # ??
 
-part_ext.part_bound_graph_set(i_domain,
-                              i_part,
-                              PDM._PDM_MESH_ENTITY_VTX,
-                              vtx_part_bound_proc_idx,
-                              vtx_part_bound_part_idx,
-                              vtx_part_bound)
+# set vertex global identifier array
+part_ext.ln_to_gn_set() # ??
 
 ```
 
@@ -505,7 +464,7 @@ part_ext.part_bound_graph_set(i_domain,
 ---
 %%code_block -p exercise_1 -i 16
 
-part_ext.compute()
+# compute ??
 ```
 
 +++ {"editable": false, "deletable": false}
@@ -519,31 +478,22 @@ part_ext.compute()
 %%code_block -p exercise_1 -i 17
 
 # Cell
-cell_ext_ln_to_gn = part_ext.ln_to_gn_get(i_domain,
-                                          i_part,
-                                          PDM._PDM_MESH_ENTITY_CELL)
+cell_ext_ln_to_gn = # ??
 
-cell_face_ext_idx, cell_face_ext = part_ext.connectivity_get(i_domain,
-                                                             i_part,
-                                                             PDM._PDM_CONNECTIVITY_TYPE_CELL_FACE)
+cell_face_ext_idx, cell_face_ext = # ??
 
 # Face
-face_ext_ln_to_gn = part_ext.ln_to_gn_get(i_domain,
-                                          i_part,
-                                          PDM._PDM_MESH_ENTITY_FACE)
+face_ext_ln_to_gn = # ??
 
-face_vtx_ext_idx, face_vtx_ext = part_ext.connectivity_get(i_domain,
-                                                           i_part,
-                                                           PDM._PDM_CONNECTIVITY_TYPE_FACE_VTX)
+face_vtx_ext_idx, face_vtx_ext = # ??
 
 # Vertices
-vtx_ext_ln_to_gn = part_ext.ln_to_gn_get(i_domain,
-                                         i_part,
-                                         PDM._PDM_MESH_ENTITY_VTX)
+vtx_ext_ln_to_gn = # ??
 
-vtx_coord_ext = part_ext.vtx_coord_get(i_domain,
-                                       i_part)
+vtx_coord_ext = # ??
 ```
+
+**(nothing to do)**
 
 ```{code-cell}
 ---
@@ -615,7 +565,7 @@ if i_rank == 0:
 
 ### Step 5
 
-Well, you have nothing to do for step 5 since it is implicit in Python.
+Well, you have **nothing to do** for step 5 since it is implicit in Python.
 
 ## Execution and visualization
 
