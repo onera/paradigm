@@ -638,7 +638,7 @@ You have access to:
   call pdm_pointer_array_create(src_send_field2, &
                                 src_n_part,      &
                                 PDM_TYPE_DOUBLE)
-  ! EXO
+
   ! do i_part = 1, src_n_part
 
   !   call pdm_mesh_location_points_in_elt_get(mesh_loc,           &

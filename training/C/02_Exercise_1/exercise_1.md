@@ -337,7 +337,7 @@ Now we write the mesh that we just got to be able to visualize it later on **(no
 
 You choose to get the partitioned mesh in descending connectivity, i.e. **cell->face**, **face->vtx** connectivities.
 Generic getters have been implemented in **ParaDiGM** for the connectivities and global identifier arrays.
-Enumerators allow to specify which data is requested (see details in [documentation](https://numerics.gitlab-pages.onera.net/mesh/paradigm/dev_formation/user_manual//partitioning/index.html#enumerators)). Here you will need for the mesh connectivity:
+Enumerators allow to specify which data is requested (see details in [documentation](https://numerics.gitlab-pages.onera.net/mesh/paradigm/dev_formation/user_manual/partitioning/index.html#enumerators)). Here you will need for the mesh connectivity:
 - **PDM_CONNECTIVITY_TYPE_CELL_FACE** : cell->face connectivity
 - **PDM_CONNECTIVITY_TYPE_FACE_VTX**  : face->vertex connectivity
 For the global identifier arrays you will use:
@@ -575,10 +575,10 @@ This bonus is not guided, so you should have a close look at the [documentation]
 ### Step 4
 
 ```{code-cell}
-%%code_block -p exercise_1 -i 18
 ---
 "deletable": false
 ---
+%%code_block -p exercise_1 -i 18
 
   // Cell
   PDM_g_num_t *cell_ln_to_gn_ext = NULL;

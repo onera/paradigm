@@ -722,9 +722,7 @@ Since the functions needed to develop this algorithm were (almost) present in **
   - `PDM_mesh_intersection` to operate the masking mesh intersection with the background volume mesh
   - `PDM_part_to_part` to change data between those meshes
 
-<span style="color:red">
-  Mentionner rapidement la liste des autres fonctionnalités haut niveau utilisées par CEDRE même mentionner plus bas pour les I/O
-</span>
+CEDRE uses other high-level features of **ParaDiGM** such as point-to-surface distance computation and parallel I/O.
 
 <img src="logo_modethec.png" align=right style="margin: 0px 50px;" width="180">
 
