@@ -19,7 +19,7 @@
 //
 //
 
-MPI_TEST_CASE("[1p] distant neighbor ",1) {
+MPI_TEST_CASE("[pdm_distant_neighbor] - 1p ",1) {
 
   PDM_MPI_Comm pdm_comm = PDM_MPI_mpi_2_pdm_mpi_comm(&test_comm);
 
@@ -152,7 +152,7 @@ MPI_TEST_CASE("[1p] distant neighbor ",1) {
 //   +--------+--------+           +--------+--------+
 //
 //
-MPI_TEST_CASE("[1p] distant neighbor (unsorted) ",1) {
+MPI_TEST_CASE("[pdm_distant_neighbor] - 1p - unsorted input ",1) {
 
   PDM_MPI_Comm pdm_comm = PDM_MPI_mpi_2_pdm_mpi_comm(&test_comm);
 
@@ -224,7 +224,7 @@ MPI_TEST_CASE("[1p] distant neighbor (unsorted) ",1) {
 //   +--------+--------+           +--------+--------+
 //
 //
-MPI_TEST_CASE("[1p] distant neighbor (multiple unsorted) ",1) {
+MPI_TEST_CASE("[pdm_distant_neighbor] - 1p - multiple unsorted ",1) {
 
   PDM_MPI_Comm pdm_comm = PDM_MPI_mpi_2_pdm_mpi_comm(&test_comm);
 
@@ -277,8 +277,8 @@ MPI_TEST_CASE("[1p] distant neighbor (multiple unsorted) ",1) {
   //                           NULL,
   //                 (void***)         &exch_fields);
 
-  PDM_log_trace_array_int(exch_fields[0], neighbor_idx_p1[n_entity[0]], "p1:: ");
-  PDM_log_trace_array_int(exch_fields[1], neighbor_idx_p2[n_entity[1]], "p2:: ");
+  // PDM_log_trace_array_int(exch_fields[0], neighbor_idx_p1[n_entity[0]], "p1:: ");
+  // PDM_log_trace_array_int(exch_fields[1], neighbor_idx_p2[n_entity[1]], "p2:: ");
 
   int exch_fields_expexted_p1[4] = {-3, -1, -1, -3};
   int exch_fields_expexted_p2[4] = { 3,  2,  2,  3};
@@ -297,7 +297,7 @@ MPI_TEST_CASE("[1p] distant neighbor (multiple unsorted) ",1) {
 
 
 
-MPI_TEST_CASE("[1p] distant neighbor (multiple unsorted) 3part ",1) {
+MPI_TEST_CASE("[pdm_distant_neighbor] - 1p - multiple unsorted with 3part ",1) {
 
   PDM_MPI_Comm pdm_comm = PDM_MPI_mpi_2_pdm_mpi_comm(&test_comm);
 
@@ -389,9 +389,9 @@ MPI_TEST_CASE("[1p] distant neighbor (multiple unsorted) 3part ",1) {
                            &exch_stri,
             (void ***)     &exch_fields);
 
-  PDM_log_trace_array_int(exch_fields[0], 3 * neighbor_idx_p1[n_entity[0]], "p1:: ");
-  PDM_log_trace_array_int(exch_fields[1], 3 * neighbor_idx_p2[n_entity[1]], "p2:: ");
-  PDM_log_trace_array_int(exch_fields[2], 3 * neighbor_idx_p3[n_entity[2]], "p3:: ");
+  // PDM_log_trace_array_int(exch_fields[0], 3 * neighbor_idx_p1[n_entity[0]], "p1:: ");
+  // PDM_log_trace_array_int(exch_fields[1], 3 * neighbor_idx_p2[n_entity[1]], "p2:: ");
+  // PDM_log_trace_array_int(exch_fields[2], 3 * neighbor_idx_p3[n_entity[2]], "p3:: ");
 
   CHECK_EQ_C_ARRAY(exch_fields[0], neighbor_desc_p1, 3 * neighbor_idx_p1[n_entity[0]]); // Part 1
   CHECK_EQ_C_ARRAY(exch_fields[1], neighbor_desc_p2, 3 * neighbor_idx_p2[n_entity[1]]); // Part 2

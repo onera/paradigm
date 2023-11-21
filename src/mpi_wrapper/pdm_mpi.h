@@ -452,6 +452,12 @@ int PDM_MPI_Type_create_contiguous(int               count,
 int PDM_MPI_Type_commit(PDM_MPI_Datatype *datatype);
 
 /*----------------------------------------------------------------------------
+ * MPI_Type_size (wrapping de la fonction MPI_Type_commit)
+ *
+ *----------------------------------------------------------------------------*/
+int PDM_MPI_Type_size(PDM_MPI_Datatype datatype, int *size);
+
+/*----------------------------------------------------------------------------
  * PDM_MPI_Type_free (wrapping de la fonction MPI_Type_free)
  *
  *----------------------------------------------------------------------------*/

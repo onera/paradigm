@@ -10,7 +10,7 @@
  *     ./paradigm/test/pdm_t_partitioning_dcube -n 3 -n_part 1 -pt-scotch (Générateur dcube_gen sur 8 cellules)
  */
 
-MPI_TEST_CASE("[1p] pdm_dconnectivity_transform dcell_face + dface_vtx = dcell_vtx ",1) {
+MPI_TEST_CASE("[pdm_dconnectivity_transform] - 1p - dcell_face + dface_vtx = dcell_vtx ",1) {
 
   PDM_MPI_Comm pdm_comm = PDM_MPI_mpi_2_pdm_mpi_comm(&test_comm);
 
@@ -31,7 +31,7 @@ MPI_TEST_CASE("[1p] pdm_dconnectivity_transform dcell_face + dface_vtx = dcell_v
                                   dcell_face,
                                   dface_vtx_idx,
                                   dface_vtx,
-                                  1,
+                                  0,
                                   &dcell_vtx_idx,
                                   &dcell_vtx);
 
@@ -72,7 +72,7 @@ MPI_TEST_CASE("[1p] pdm_dconnectivity_transform dcell_face + dface_vtx = dcell_v
 
 }
 
-MPI_TEST_CASE("[2p] pdm_dconnectivity_transform dcell_face + dface_vtx = dcell_vtx ",2) {
+MPI_TEST_CASE("[pdm_dconnectivity_transform] - 2p - dcell_face + dface_vtx = dcell_vtx ",2) {
 
   PDM_MPI_Comm pdm_comm = PDM_MPI_mpi_2_pdm_mpi_comm(&test_comm);
   // PDM_g_num_t vtx_distrib[3]    = {1, 14, 28};
@@ -123,7 +123,7 @@ MPI_TEST_CASE("[2p] pdm_dconnectivity_transform dcell_face + dface_vtx = dcell_v
                                   dcell_face,
                                   dface_vtx_idx,
                                   dface_vtx,
-                                  1,
+                                  0,
                                   &dcell_vtx_idx,
                                   &dcell_vtx);
 
@@ -160,7 +160,7 @@ MPI_TEST_CASE("[2p] pdm_dconnectivity_transform dcell_face + dface_vtx = dcell_v
 }
 
 
-MPI_TEST_CASE("[1p] PDM_dorder_reverse",1) {
+MPI_TEST_CASE("[pdm_dconnectivity_transform] - 1p - PDM_dorder_reverse",1) {
 
   PDM_MPI_Comm pdm_comm = PDM_MPI_mpi_2_pdm_mpi_comm(&test_comm);
   int i_rank;
@@ -184,7 +184,7 @@ MPI_TEST_CASE("[1p] PDM_dorder_reverse",1) {
 }
 
 
-MPI_TEST_CASE("[2p] PDM_dorder_reverse",2) {
+MPI_TEST_CASE("[pdm_dconnectivity_transform] - 2p - PDM_dorder_reverse",2) {
 
   PDM_MPI_Comm pdm_comm = PDM_MPI_mpi_2_pdm_mpi_comm(&test_comm);
   int i_rank;

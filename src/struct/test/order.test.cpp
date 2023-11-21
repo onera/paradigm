@@ -7,7 +7,7 @@
 #include "pdm_logging.h"
 
 
-TEST_CASE("PDM_order_inplace_unique_and_order_long - stride = 1") {
+TEST_CASE("[pdm_order] - PDM_order_inplace_unique_and_order_long - stride = 1") {
 
   std::vector<int> array = { 2, 4, 5, 4, 2, 1 };
 

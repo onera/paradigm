@@ -8,7 +8,7 @@
 
 // PDM_log_trace_array_int(block_pts_per_elt_n , block_n_elt, "block_pts_per_elt_n  AFTER :: ");
 
-TEST_CASE("PDM_inplace_unique") {
+TEST_CASE("[pdm_unique] - PDM_inplace_unique") {
 
   std::vector<int> array = { 2, 4, 5, 4, 2, 1 };
   int size = PDM_inplace_unique(array.data(), 0, static_cast<int>(array.size()-1));
@@ -21,7 +21,7 @@ TEST_CASE("PDM_inplace_unique") {
 
 }
 
-TEST_CASE("PDM_inplace_unique_long") {
+TEST_CASE("[pdm_unique] - PDM_inplace_unique_long") {
 
   std::vector<PDM_g_num_t> array = { 2, 4, 5, 4, 2, 1 };
   std::vector<int> order(array.size());
@@ -34,7 +34,7 @@ TEST_CASE("PDM_inplace_unique_long") {
   CHECK( size == 4);
   CHECK( array == array_expected);
 
-  PDM_log_trace_array_int(order.data(), 6, "order:: ");
+  // PDM_log_trace_array_int(order.data(), 6, "order:: ");
 
   std::vector<int> order_expected = {6, 1, 5, 2, 4, 3};
   CHECK( order == order_expected);
@@ -43,7 +43,7 @@ TEST_CASE("PDM_inplace_unique_long") {
 
 }
 
-TEST_CASE("PDM_inplace_unique_long2") {
+TEST_CASE("[pdm_unique] - PDM_inplace_unique_long2") {
 
   std::vector<PDM_g_num_t> array = { 2, 4, 5, 4, 2, 1 };
   std::vector<int> unique_order(array.size());
@@ -56,7 +56,7 @@ TEST_CASE("PDM_inplace_unique_long2") {
   CHECK( size == 4);
   CHECK( array == array_expected);
 
-  PDM_log_trace_array_int(unique_order.data(), 6, "unique_order:: ");
+  // PDM_log_trace_array_int(unique_order.data(), 6, "unique_order:: ");
 
   std::vector<int> unique_order_expected = {1, 2, 3, 2, 1, 0};
   CHECK( unique_order == unique_order_expected);
