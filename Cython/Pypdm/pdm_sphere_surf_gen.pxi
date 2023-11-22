@@ -158,9 +158,9 @@ def sphere_surf_icosphere_gen_nodal(MPI.Comm       comm,
                                       radius,
                                       &dmn)
 
-  py_casp = PyCapsule_New(dmn, NULL, NULL)
+  py_caps = PyCapsule_New(dmn, NULL, NULL)
 
-  return DistributedMeshNodalCapsule(py_casp)
+  return DistributedMeshNodalCapsule(py_caps)
 # ------------------------------------------------------------------------
 
 def sphere_surf_icosphere_gen_part(MPI.Comm         comm,
@@ -317,6 +317,6 @@ def sphere_surf_gen_nodal(MPI.Comm       comm,
                             radius,
                             &dmn)
 
-  py_casp = PyCapsule_New(dmn, NULL, NULL)
+  py_caps = PyCapsule_New(dmn, NULL, NULL)
 
-  return DistributedMeshNodalCapsule(py_casp)
+  return DistributedMeshNodalCapsule(py_caps)

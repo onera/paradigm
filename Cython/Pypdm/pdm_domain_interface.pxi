@@ -374,8 +374,8 @@ cdef class DomInterfaceCapsule:
   def __cinit__(self, object caps):
     """
     """
-    cdef PDM_domain_interface_t* casp_dom_intrf = <PDM_domain_interface_t *> PyCapsule_GetPointer(caps, NULL)
-    self.dom_intrf = casp_dom_intrf;
+    cdef PDM_domain_interface_t* caps_dom_intrf = <PDM_domain_interface_t *> PyCapsule_GetPointer(caps, NULL)
+    self.dom_intrf = caps_dom_intrf;
 
   # ------------------------------------------------------------------------
   def __dealloc__(self):

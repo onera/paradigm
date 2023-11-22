@@ -102,9 +102,9 @@ cdef class DMeshNodalToDMesh:
     # ************************************************************************
     PDM_dmesh_nodal_to_dmesh_get_dmesh(self.dmn_to_dm, i_mesh, &dm)
 
-    py_casp = PyCapsule_New(dm, NULL, NULL);
+    py_caps = PyCapsule_New(dm, NULL, NULL);
 
-    return DistributedMeshCapsule(py_casp) # The free is inside the class
+    return DistributedMeshCapsule(py_caps) # The free is inside the class
 
   # ------------------------------------------------------------------------
   def __dealloc__(self):

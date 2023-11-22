@@ -180,9 +180,9 @@ cdef class DCubeNodalGenerator:
       # ************************************************************************
       dmn = PDM_dcube_nodal_gen_dmesh_nodal_get(self._dcube)
 
-      py_casp = PyCapsule_New(dmn, NULL, NULL);
+      py_caps = PyCapsule_New(dmn, NULL, NULL);
 
-      return DistributedMeshNodalCapsule(py_casp) # The free is inside the class
+      return DistributedMeshNodalCapsule(py_caps) # The free is inside the class
 
 # ------------------------------------------------------------------
 cdef class DCubeNodalGeneratorCartTopo:
@@ -256,9 +256,9 @@ cdef class DCubeNodalGeneratorCartTopo:
       # ************************************************************************
       dmn = PDM_dcube_nodal_gen_dmesh_nodal_get(self._dcube[i_domain])
 
-      py_casp = PyCapsule_New(dmn, NULL, NULL);
+      py_caps = PyCapsule_New(dmn, NULL, NULL);
 
-      return DistributedMeshNodalCapsule(py_casp) # The free is inside the class
+      return DistributedMeshNodalCapsule(py_caps) # The free is inside the class
 
     # ------------------------------------------------------------------------
     def domain_interface_get(self):
@@ -268,9 +268,9 @@ cdef class DCubeNodalGeneratorCartTopo:
       # > Declaration
       cdef PDM_domain_interface_t* dom_intrf
       # ************************************************************************
-      py_casp = PyCapsule_New(self.dom_intrf, NULL, NULL);
+      py_caps = PyCapsule_New(self.dom_intrf, NULL, NULL);
 
-      return DomInterfaceCapsule(py_casp) # The free is inside the class
+      return DomInterfaceCapsule(py_caps) # The free is inside the class
 
     # ------------------------------------------------------------------
     def __dealloc__(self):

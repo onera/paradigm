@@ -133,8 +133,8 @@ cdef class PartMeshNodalCapsule:
     """
     """
     # print("DistributedMeshNodalCapsule", PyCapsule_GetName(caps))
-    cdef PDM_part_mesh_nodal_t* casp_pmn = <PDM_part_mesh_nodal_t *> PyCapsule_GetPointer(caps, NULL)
-    self.pmn = casp_pmn;
+    cdef PDM_part_mesh_nodal_t* caps_pmn = <PDM_part_mesh_nodal_t *> PyCapsule_GetPointer(caps, NULL)
+    self.pmn = caps_pmn;
 
   def dim_get(self):
     return part_mesh_nodal_dim_get(self)
