@@ -554,7 +554,7 @@ int main
 
 
   for (int i = 0; i < n_domain; i++) {
-    PDM_dmesh_nodal_to_dmesh_get_dmesh(dmn_to_dm, 0, &dm[i]);
+    PDM_dmesh_nodal_to_dmesh_get_dmesh(dmn_to_dm, i, &dm[i]);
 
     dn_vtx [i] = PDM_dmesh_dn_entity_get(dm[i], PDM_MESH_ENTITY_VERTEX);
 

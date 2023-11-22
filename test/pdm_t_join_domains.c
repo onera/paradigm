@@ -658,7 +658,7 @@ int main
   int         **dedge_vtx_idx = malloc( n_domain * sizeof(int *        ));
  
   for (int i = 0; i < n_domain; i++) {
-    PDM_dmesh_nodal_to_dmesh_get_dmesh(dmn_to_dm, 0, &dm[i]);
+    PDM_dmesh_nodal_to_dmesh_get_dmesh(dmn_to_dm, i, &dm[i]);
 
     dn_vtx [i] = PDM_dmesh_dn_entity_get(dm[i], PDM_MESH_ENTITY_VERTEX);
     dn_face[i] = PDM_dmesh_connectivity_get(dm[i],
@@ -712,7 +712,7 @@ int main
   PDM_g_num_t ***pvtx_ln_to_gn  = (PDM_g_num_t ***) malloc( n_domain * sizeof(PDM_g_num_t **));
   int         ***pface_vtx      = (int         ***) malloc( n_domain * sizeof(int         **));
   for (int i_dom = 0; i_dom < n_domain; i_dom++) {
-    pn_n_part    [i_dom] = n_part;
+    pn_n_part     [i_dom] = n_part;
     pn_face       [i_dom] = (int          *) malloc( n_part * sizeof(int          ));
     pn_edge       [i_dom] = (int          *) malloc( n_part * sizeof(int          ));
     pface_ln_to_gn[i_dom] = (PDM_g_num_t **) malloc( n_part * sizeof(PDM_g_num_t *));
