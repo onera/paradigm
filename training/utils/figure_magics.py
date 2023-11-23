@@ -2,7 +2,7 @@ from IPython.core import magic_arguments
 from IPython.core.magic import cell_magic, line_magic, Magics, magics_class
 import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle, Polygon
-import numpy as np
+import numpy as np 
 
 def mag2(a):
   return np.dot(a, a)
