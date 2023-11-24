@@ -280,7 +280,7 @@ To get insight about the concept behind this value you can have a look [here](#A
   PDM_g_num_t *elt_ln_to_gn        = NULL;
   int         *parent_num          = NULL;
   PDM_g_num_t *parent_entity_g_num = NULL;
-  ! use PDM_OWNERSHIP_USER
+  // use PDM_OWNERSHIP_USER
   PDM_part_mesh_nodal_section_std_get(); // ??
 
   int n_elt = PDM_part_mesh_nodal_section_n_elt_get(); // ??
