@@ -1146,6 +1146,62 @@ end subroutine PDM_part_to_part_recv_buffer_to_ref_lnum2_get
 
 !>
 !!
+!!  \brief Get buffer size and stride for send
+!!
+!!  \param [in]   ptp                       Block to part structure
+!!  \param [out]  default_n_send_buffer     Number of entities to send (size = n_rank)
+!!  \param [out]  default_i_send_buffer     Index (size = n_rank + 1)
+!!
+!!
+
+subroutine PDM_part_to_part_default_send_buffer_get (ptp,                   &
+                                                     default_n_send_buffer, &
+                                                     default_i_send_buffer)
+  use iso_c_binding
+  implicit none
+
+  type(c_ptr), value            :: ptp
+  integer(pdm_l_num_s), pointer :: default_n_send_buffer(:)
+  integer(pdm_l_num_s), pointer :: default_i_send_buffer(:)
+
+  integer                       :: n_rank
+  type(c_ptr)                   :: c_default_n_send_buffer = C_NULL_PTR
+  type(c_ptr)                   :: c_default_i_send_buffer = C_NULL_PTR
+
+interface
+  subroutine PDM_part_to_part_default_send_buffer_get_c (ptp,                   &
+                                                         default_n_send_buffer, &
+                                                         default_i_send_buffer) &
+  bind (c, name='PDM_part_to_part_default_send_buffer_get')
+    use iso_c_binding
+    implicit none
+
+    type(c_ptr),    value :: ptp
+    type(c_ptr)           :: default_n_send_buffer
+    type(c_ptr)           :: default_i_send_buffer
+
+  end subroutine PDM_part_to_part_default_send_buffer_get_c
+end interface
+
+  call PDM_part_to_part_default_send_buffer_get_c (ptp,                     &
+                                                   c_default_n_send_buffer, &
+                                                   c_default_i_send_buffer)
+
+  n_rank = PDM_part_to_part_n_ranks_get(ptp)
+
+  call c_f_pointer(c_default_n_send_buffer, &
+                   default_n_send_buffer,   &
+                   [n_rank])
+
+  call c_f_pointer(c_default_i_send_buffer, &
+                   default_i_send_buffer,   &
+                   [n_rank+1])
+
+end subroutine PDM_part_to_part_default_send_buffer_get
+
+
+!>
+!!
 !!  \brief Get buffer size and stride for recv
 !!
 !!  \param [in]   ptp                       Block to part structure
@@ -1230,7 +1286,7 @@ interface
                                                         i_part,             &
                                                         n_elt1,             &
                                                         part1_to_part2_idx) &
-  bind (c, name='PDM_part_to_part_part1_to_part2_idx_single_part_get') 
+  bind (c, name='PDM_part_to_part_part1_to_part2_idx_single_part_get')
     use iso_c_binding
     implicit none
 
