@@ -100,7 +100,14 @@ Fortran API
   Target point clouds definition
   """"""""""""""""""""""""""""""
 
-  .. .. f:autosubroutine:: pdm_mesh_location/pdm_mesh_location_n_part_cloud_set
+  .. f:autosubroutine pdm_mesh_location/pdm_mesh_location_n_part_cloud_set
+  .. f:subroutine:: pdm_mesh_location_n_part_cloud_set(mloc, i_point_cloud, n_part)
+
+    Set the number of partitions of a point cloud
+
+    :param c_ptr   mesh_loc      [in]: C pointer to PDM_mesh_location_t object
+    :param integer i_point_cloud [in]: Point cloud identifier
+    :param integer n_part        [in]: Number of partitions
 
   .. f:autosubroutine:: pdm_mesh_location/pdm_mesh_location_cloud_set_
 
