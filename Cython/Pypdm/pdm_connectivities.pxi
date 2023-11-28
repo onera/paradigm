@@ -1,3 +1,23 @@
+
+cdef extern from "pdm_dmesh_nodal_elements_utils.h":
+    # ------------------------------------------------------------------
+    void PDM_std_decomposes_faces(PDM_Mesh_nodal_elt_t  t_elt,
+                                  int                   order,
+                                  int                  *parent_node,
+                                  int                   n_elt,
+                                  int                  *n_elt_current,
+                                  int                  *n_dface_current,
+                                  PDM_g_num_t           beg_gnum_elt_current,
+                                  PDM_g_num_t           beg_gnum_face_current,
+                            const PDM_g_num_t          *connectivity_elmt_vtx,
+                                  int                  *elmt_face_vtx_idx,
+                                  PDM_g_num_t          *elmt_face_vtx,
+                                  PDM_g_num_t          *elmt_face_cell,
+                                  int                  *elmt_cell_face_idx,
+                                  PDM_g_num_t          *elmt_cell_face,
+                                  int                  *parent_elmt_position)
+    # ------------------------------------------------------------------
+
 cdef extern from "pdm_dconnectivity_transform.h":
     # ------------------------------------------------------------------
     void PDM_dconnectivity_transpose(const PDM_MPI_Comm     comm,
@@ -71,6 +91,76 @@ cdef extern from "pdm_part_connectivity_transform.h":
                                                  int  *edge_vtx,
                                                  int **face_vtx)
     # ------------------------------------------------------------------
+
+
+# ------------------------------------------------------------------------
+def decompose_std_elmt_faces(            int                               elt_type,
+                             NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1] elt_vtx):
+    '''
+    Wrapping function if `PDM_std_decomposes_faces` function.
+    For now only TETRA_4 wrapping is done, but interface can be updated to manage other std elements.
+    '''
+    # > Define n_vtx and n_face for each std elements
+    elt_type_to_n_vtx = {1:2, # BAR_2
+                         2:3, # TRI_3
+                         3:4, # QUAD_4
+                         5:4, # TETRA_4
+                         6:5, # PYRAMID_5
+                         }
+    elt_type_to_n_face = {1:0, # BAR_2
+                          2:1, # TRI_3
+                          3:1, # QUAD_4
+                          5:4, # TETRA_4
+                          6:5, # PYRAMID_5
+                         }
+    elt_type_to_nsum_vtx_face = {1:0, # BAR_2
+                                 2:3, # TRI_3
+                                 3:4, # QUAD_4
+                                 5:12, # TETRA_4
+                                 6:15, # PYRAMID_5
+                                 }   
+    # > General infos
+    cdef int n_elt           = elt_vtx.size // elt_type_to_n_vtx[elt_type];
+    cdef int order           = 1;
+    cdef int _n_elt_current   = 0;
+    cdef int _n_dface_current = 0;
+
+    # > Define face arrays
+    cdef int*         _elmt_face_vtx_idx = <int         *> malloc((n_elt*elt_type_to_n_face[elt_type]+1)    *sizeof(int         *))
+    cdef PDM_g_num_t* _elmt_face_vtx     = <PDM_g_num_t *> malloc( n_elt*elt_type_to_nsum_vtx_face[elt_type]*sizeof(PDM_g_num_t *))
+    cdef PDM_g_num_t* _elmt_face_cell    = <PDM_g_num_t *> malloc( n_elt*elt_type_to_n_face[elt_type]       *sizeof(PDM_g_num_t *))
+    cdef int*         _elmt_parent_elt   = <int         *> malloc( n_elt*elt_type_to_n_face[elt_type]       *sizeof(int         *))
+    _elmt_face_vtx_idx[0] = 0
+
+    # > Defined as NULL for TETRA_4
+    cdef PDM_g_num_t  _beg_gnum_elt_current  = 0
+    cdef PDM_g_num_t  _beg_gnum_face_current = 0
+    cdef int*         _parent_node           = NULL
+    cdef int*         _elmt_cell_face_idx    = NULL
+    cdef PDM_g_num_t* _elmt_cell_face        = NULL
+
+    cdef PDM_g_num_t* _elt_vtx = <PDM_g_num_t *> elt_vtx.data
+
+    PDM_std_decomposes_faces(<PDM_Mesh_nodal_elt_t> elt_type,
+                                                    order,
+                                                   _parent_node,
+                                                    n_elt,
+                                                  &_n_elt_current,
+                                                  &_n_dface_current,
+                                                   _beg_gnum_elt_current,
+                                                   _beg_gnum_face_current,
+                                                   _elt_vtx,
+                                                   _elmt_face_vtx_idx,
+                                                   _elmt_face_vtx,
+                                                   _elmt_face_cell,
+                                                   _elmt_cell_face_idx,
+                                                   _elmt_cell_face,
+                                                   _elmt_parent_elt)
+
+    np_elmt_face_vtx_idx = create_numpy_i(_elmt_face_vtx_idx, n_elt*elt_type_to_n_face[elt_type] +1)
+    np_elmt_face_vtx     = create_numpy_g(_elmt_face_vtx    , n_elt*elt_type_to_nsum_vtx_face[elt_type])
+
+    return np_elmt_face_vtx_idx, np_elmt_face_vtx
 
 # ------------------------------------------------------------------------
 def dconnectivity_transpose(MPI.Comm comm,
