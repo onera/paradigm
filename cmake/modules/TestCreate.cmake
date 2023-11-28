@@ -361,6 +361,8 @@ function(test_cpp_unit_create name n_proc LIST_TEST LIST_NRANK)
 
   add_executable(${name} "${name}.cpp" ${ARGS_SOURCES})
 
+  find_package(MPI)
+
   # foreach( test_file ${ARGS_SOURCES} )
   #   message("test_file" ${test_file})
   # endforeach()
@@ -375,6 +377,7 @@ function(test_cpp_unit_create name n_proc LIST_TEST LIST_NRANK)
                                       PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
    target_include_directories(${name} PRIVATE ${TEST_INC})
    target_link_libraries(${name} doctest::doctest)
+   target_link_libraries(${name} MPI::MPI_CXX)
    target_link_libraries(${name} ${LINK_LIBRARIES})
    install(TARGETS ${name} RUNTIME DESTINATION bin)
    add_test (${name} ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} ${n_proc}
