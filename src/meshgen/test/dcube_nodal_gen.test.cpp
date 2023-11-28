@@ -6,7 +6,7 @@
 #include "pdm_logging.h"
 #include "pdm_dcube_nodal_gen.h"
 
-MPI_TEST_CASE("[1p] dcube_nodal_gen HEXA ",1) {
+MPI_TEST_CASE("[dcube_nodal_gen] - 1p - hexahedron",1) {
 
   PDM_MPI_Comm pdm_comm = PDM_MPI_mpi_2_pdm_mpi_comm(&test_comm);
   int i_rank;
@@ -69,8 +69,8 @@ MPI_TEST_CASE("[1p] dcube_nodal_gen HEXA ",1) {
   PDM_DMesh_nodal_section_g_dims_get(dmesh_nodal, &n_cell_abs, &n_face_abs, &n_edge_abs, &n_vtx_abs);
 
   CHECK( n_cell_abs ==  8);
-  CHECK( n_face_abs == -1);
-  CHECK( n_edge_abs == -1);
+  CHECK( n_face_abs ==  0);
+  CHECK( n_edge_abs ==  0);
   CHECK( n_vtx_abs  == 27);
 
   int n_section_vol = PDM_DMesh_nodal_n_section_get(dmesh_nodal, PDM_GEOMETRY_KIND_VOLUMIC);
@@ -130,7 +130,7 @@ MPI_TEST_CASE("[1p] dcube_nodal_gen HEXA ",1) {
   PDM_dcube_nodal_gen_free(dcube);
 }
 
-MPI_TEST_CASE("[1p] dcube_nodal_gen PRISM ",1) {
+MPI_TEST_CASE("[dcube_nodal_gen] - 1p - prism",1) {
 
   PDM_MPI_Comm pdm_comm = PDM_MPI_mpi_2_pdm_mpi_comm(&test_comm);
   int i_rank;
@@ -191,8 +191,8 @@ MPI_TEST_CASE("[1p] dcube_nodal_gen PRISM ",1) {
   PDM_DMesh_nodal_section_g_dims_get(dmesh_nodal, &n_cell_abs, &n_face_abs, &n_edge_abs, &n_vtx_abs);
 
   CHECK( n_cell_abs == 16);
-  CHECK( n_face_abs == -1);
-  CHECK( n_edge_abs == -1);
+  CHECK( n_face_abs ==  0);
+  CHECK( n_edge_abs ==  0);
   CHECK( n_vtx_abs  == 27);
   int n_section_vol = PDM_DMesh_nodal_n_section_get(dmesh_nodal, PDM_GEOMETRY_KIND_VOLUMIC);
 
@@ -253,7 +253,7 @@ MPI_TEST_CASE("[1p] dcube_nodal_gen PRISM ",1) {
 
 
 
-MPI_TEST_CASE("[1p] dcube_nodal_gen TETRA ",1) {
+MPI_TEST_CASE("[dcube_nodal_gen] - 1p - Tetrahedron ",1) {
 
   PDM_MPI_Comm pdm_comm = PDM_MPI_mpi_2_pdm_mpi_comm(&test_comm);
   int i_rank;
@@ -314,8 +314,8 @@ MPI_TEST_CASE("[1p] dcube_nodal_gen TETRA ",1) {
   PDM_DMesh_nodal_section_g_dims_get(dmesh_nodal, &n_cell_abs, &n_face_abs, &n_edge_abs, &n_vtx_abs);
 
   CHECK( n_cell_abs == 40);
-  CHECK( n_face_abs == -1);
-  CHECK( n_edge_abs == -1);
+  CHECK( n_face_abs ==  0);
+  CHECK( n_edge_abs ==  0);
   CHECK( n_vtx_abs  == 27);
 
   int n_section_vol = PDM_DMesh_nodal_n_section_get(dmesh_nodal, PDM_GEOMETRY_KIND_VOLUMIC);
@@ -377,7 +377,7 @@ MPI_TEST_CASE("[1p] dcube_nodal_gen TETRA ",1) {
 }
 
 
-MPI_TEST_CASE("[1p] dcube_nodal_gen QUAD ",1) {
+MPI_TEST_CASE("[dcube_nodal_gen] - 1p - quad ",1) {
 
   PDM_MPI_Comm pdm_comm = PDM_MPI_mpi_2_pdm_mpi_comm(&test_comm);
   int i_rank;
@@ -437,9 +437,9 @@ MPI_TEST_CASE("[1p] dcube_nodal_gen QUAD ",1) {
   PDM_g_num_t n_vtx_abs  = -100;
   PDM_DMesh_nodal_section_g_dims_get(dmesh_nodal, &n_cell_abs, &n_face_abs, &n_edge_abs, &n_vtx_abs);
 
-  CHECK( n_cell_abs ==  4);
-  CHECK( n_face_abs == -1);
-  CHECK( n_edge_abs == -1);
+  CHECK( n_cell_abs ==  0);
+  CHECK( n_face_abs ==  4);
+  CHECK( n_edge_abs ==  0);
   CHECK( n_vtx_abs  ==  9);
 
   int n_section_surf = PDM_DMesh_nodal_n_section_get(dmesh_nodal, PDM_GEOMETRY_KIND_SURFACIC);
@@ -500,7 +500,7 @@ MPI_TEST_CASE("[1p] dcube_nodal_gen QUAD ",1) {
 }
 
 
-MPI_TEST_CASE("[1p] dcube_nodal_gen TRI ",1) {
+MPI_TEST_CASE("[dcube_nodal_gen] - 1p - Triangle",1) {
 
   PDM_MPI_Comm pdm_comm = PDM_MPI_mpi_2_pdm_mpi_comm(&test_comm);
   int i_rank;
@@ -559,9 +559,9 @@ MPI_TEST_CASE("[1p] dcube_nodal_gen TRI ",1) {
   PDM_g_num_t n_vtx_abs  = -100;
   PDM_DMesh_nodal_section_g_dims_get(dmesh_nodal, &n_cell_abs, &n_face_abs, &n_edge_abs, &n_vtx_abs);
 
-  CHECK( n_cell_abs ==  8);
-  CHECK( n_face_abs == -1);
-  CHECK( n_edge_abs == -1);
+  CHECK( n_cell_abs ==  0);
+  CHECK( n_face_abs ==  8);
+  CHECK( n_edge_abs ==  0);
   CHECK( n_vtx_abs  ==  9);
 
   int n_section_surf = PDM_DMesh_nodal_n_section_get(dmesh_nodal, PDM_GEOMETRY_KIND_SURFACIC);

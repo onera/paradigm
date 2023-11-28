@@ -258,6 +258,7 @@ PDM_dmesh_nodal_elmts_to_part_mesh_nodal_elmts
  int                          *pn_vtx,
  PDM_g_num_t                 **vtx_ln_to_gn,
  int                          *pn_elmt,
+ int                         **pelmt_to_entity,
  PDM_g_num_t                 **elmt_ln_to_gn,
  PDM_g_num_t                 **pparent_entitity_ln_to_gn
 )
@@ -628,7 +629,13 @@ PDM_dmesh_nodal_elmts_to_part_mesh_nodal_elmts
       }
 
       numabs    [i_section][idx_write] = g_num+1;
-      parent_num[i_section][idx_write] = i_elmt;//+1; // 0-based to be coherent with PDM_Mesh_nodal
+      if(pelmt_to_entity != NULL) {
+        parent_num[i_section][idx_write] = pelmt_to_entity[i_part][i_elmt];
+      }
+      else {
+        parent_num[i_section][idx_write] = i_elmt;//+1; // 0-based to be coherent with PDM_Mesh_nodal
+
+      }
       if(pparent_entitity_ln_to_gn != NULL) {
         sparent_entitity_ln_to_gn[i_section][idx_write] = pparent_entitity_ln_to_gn[i_part][i_elmt];
       }
@@ -641,8 +648,8 @@ PDM_dmesh_nodal_elmts_to_part_mesh_nodal_elmts
     for(int i_section = 0; i_section < n_section; ++i_section){
       int n_elmt_in_section = pelmt_by_section_n[i_section];
       for(int i_elmt = 0; i_elmt < n_elmt_in_section; ++i_elmt) {
-        int i_parent = parent_num[i_section][i_elmt];
-        section_elmts_ln_to_gn[i_part][idx_elmt++] = elmt_ln_to_gn[i_part][i_parent];
+        //int i_parent = parent_num[i_section][i_elmt];
+        section_elmts_ln_to_gn[i_part][idx_elmt++] = elmt_ln_to_gn[i_part][i_elmt];
       }
     }
     assert(idx_elmt == pn_elmt[i_part]);
@@ -788,6 +795,7 @@ PDM_reverse_dparent_gnum
        int            *pn_parent,
        PDM_g_num_t   **pparent_gnum,
        int           **pn_child,
+       int          ***pelmt_to_entity,
        PDM_g_num_t  ***pchild_gnum,
        PDM_g_num_t  ***pchild_parent_gnum,
        int          ***pchild_parent_sign,
@@ -804,14 +812,49 @@ PDM_reverse_dparent_gnum
 
   /* First part_to_block to map in parent block the child g_num */
   int dn_child_elmt = delmt_child_distrib[i_rank+1] - delmt_child_distrib[i_rank];
-  PDM_part_to_block_t* ptb = PDM_part_to_block_create(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
-                                                      PDM_PART_TO_BLOCK_POST_MERGE,
-                                                      1.,
-                                                      &dparent_gnum,
-                                                      NULL,
-                                                      &dn_child_elmt,
-                                                      1,
-                                                      comm);
+
+  // Take both parent and child into account to compute suitable distribution
+  int          *n_elts_both  = malloc((n_part+1) * sizeof(int));
+  PDM_g_num_t **lngn_both    = malloc((n_part+1) * sizeof(PDM_g_num_t*));
+  double      **weights_both = malloc((n_part+1) * sizeof(double*));
+  //Parent
+  for (int i_part=0; i_part < n_part; i_part++){
+    n_elts_both[i_part] = pn_parent[i_part];
+    lngn_both[i_part] = pparent_gnum[i_part];
+    weights_both[i_part] = PDM_array_const_double(n_elts_both[i_part], 1.0);
+  }
+  //Child
+  n_elts_both[n_part] = dn_child_elmt;
+  lngn_both[n_part] = dparent_gnum;
+  weights_both[n_part] = PDM_array_const_double(n_elts_both[n_part], 1.0);
+
+  PDM_g_num_t* distrib = NULL;
+  PDM_distrib_weight (2,
+                      n_rank,
+                      n_part+1,
+                      n_elts_both,
+(const PDM_g_num_t**) lngn_both,
+     (const double**) weights_both,
+                      5,
+                      0.1,
+                      comm,
+                      &distrib);
+  for (int i_part = 0; i_part < n_part+1; ++i_part) {
+    free(weights_both[i_part]);
+  }
+  free(weights_both);
+  free(lngn_both);
+  free(n_elts_both);
+
+  PDM_part_to_block_t* ptb = PDM_part_to_block_create_from_distrib(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
+                                                                   PDM_PART_TO_BLOCK_POST_MERGE,
+                                                                   1.,
+                                                                   &dparent_gnum,
+                                                                   distrib,
+                                                                   &dn_child_elmt,
+                                                                   1,
+                                                                   comm);
+
 
   int         *pblk_child_n    = (int         *) malloc( dn_child_elmt * sizeof(int        ));
   PDM_g_num_t *pblk_child_gnum = (PDM_g_num_t *) malloc( dn_child_elmt * sizeof(PDM_g_num_t));
@@ -863,12 +906,15 @@ PDM_reverse_dparent_gnum
   //                                                     pn_parent,
   //                                                     n_part,
   //                                                     comm);
-  PDM_block_to_part_t* btp = PDM_block_to_part_create_from_sparse_block(blk_dparent_gnum,
-                                                                        dn_parent,
-                                                (const PDM_g_num_t **)  pparent_gnum,
-                                                                        pn_parent,
-                                                                        n_part,
-                                                                        comm);
+  
+
+  PDM_block_to_part_t* btp = PDM_block_to_part_create_from_sparse_block_and_distrib(distrib,
+                                                                                    blk_dparent_gnum,
+                                                                                    dn_parent,
+                                                            (const PDM_g_num_t **)  pparent_gnum,
+                                                                                    pn_parent,
+                                                                                    n_part,
+                                                                                    comm);
 
 
 
@@ -910,6 +956,7 @@ PDM_reverse_dparent_gnum
 
   PDM_block_to_part_free(btp);
   PDM_part_to_block_free(ptb);
+  free(distrib);
   free(blk_child_n);
   free(blk_child_gnum);
   // free(block_distrib_tmp_idx);
@@ -922,6 +969,7 @@ PDM_reverse_dparent_gnum
   *pn_child = (int *) malloc(n_part * sizeof(int));
   int* _pn_child = *pn_child;
   PDM_g_num_t **_pchild_parent_gnum = (PDM_g_num_t **) malloc(n_part * sizeof(PDM_g_num_t *));
+  int **_pelmt_to_entity = (int **) malloc(n_part * sizeof(int *));
   int **_pchild_parent_sign = NULL;
   if(blk_dparent_sign != NULL) {
     _pchild_parent_sign = (int **) malloc(n_part * sizeof(int *));
@@ -936,6 +984,14 @@ PDM_reverse_dparent_gnum
       assert(_pchild_n[i_part][i] <= 1); // DOnc soit 0 soit 1
     }
 
+    int* _tmp_pelmt_to_entity = malloc(pn_child_tmp * sizeof(int));
+    pn_child_tmp = 0;
+    for(int i = 0; i < pn_parent[i_part]; ++i) {
+    if(_pchild_n[i_part][i] == 1) {
+        _tmp_pelmt_to_entity[pn_child_tmp++] = i;
+      }
+    }
+
     // PDM_log_trace_array_long(_pchild_gnum[i_part], pn_child_tmp, "_pchild_gnum :: ");
 
     int* unique_order = (int *) malloc( pn_child_tmp * sizeof(int));
@@ -944,10 +1000,12 @@ PDM_reverse_dparent_gnum
     _pchild_gnum[i_part] = realloc(_pchild_gnum[i_part], _pn_child[i_part] * sizeof(PDM_g_num_t));
 
     _pchild_parent_gnum[i_part] = (PDM_g_num_t *) malloc( pn_child_tmp * sizeof(PDM_g_num_t));
+    _pelmt_to_entity[i_part]    = (int         *) malloc( pn_child_tmp * sizeof(int));
     for(int i = 0; i < _pn_child[i_part]; ++i) {
       int idx_order = unique_order[i];
       PDM_g_num_t gnum = _tmp_pchild_parent_gnum[i_part][i];
       _pchild_parent_gnum[i_part][idx_order] = gnum;
+      _pelmt_to_entity[i_part][idx_order] = _tmp_pelmt_to_entity[i];
     }
 
     if(blk_dparent_sign != NULL) {
@@ -960,6 +1018,7 @@ PDM_reverse_dparent_gnum
       free(_tmp_pchild_parent_sign[i_part]);
     }
     free(_tmp_pchild_parent_gnum[i_part]);
+    free(_tmp_pelmt_to_entity);
 
     free(unique_order);
     free(_pchild_n[i_part]);
@@ -969,6 +1028,7 @@ PDM_reverse_dparent_gnum
   free(_tmp_pchild_n);
   free(_tmp_pchild_parent_gnum);
 
+  *pelmt_to_entity   = _pelmt_to_entity;
   *pchild_gnum        = _pchild_gnum;
   *pchild_parent_gnum = _pchild_parent_gnum;
   if(dparent_sign != NULL) {
@@ -1039,6 +1099,7 @@ PDM_generate_ho_vtx_ln_to_gn
   if(dmn->surfacic->n_section > 0) {
     /* Translate face information into elmt information first */
     int          *pn_surf             = NULL;
+    int         **psurf_to_entity     = NULL;
     PDM_g_num_t **psurf_gnum          = NULL;
     PDM_g_num_t **psurf_to_face_g_num = NULL;
 
@@ -1050,6 +1111,7 @@ PDM_generate_ho_vtx_ln_to_gn
                                pn_face,
                                pface_ln_to_gn,
                                &pn_surf,
+                               &psurf_to_entity,
                                &psurf_gnum,
                                &psurf_to_face_g_num,
                                NULL, // pchild_parent_sign
@@ -1070,7 +1132,9 @@ PDM_generate_ho_vtx_ln_to_gn
         free(pelmt_surfacic_type     [i_part]);
         free(psurf_gnum              [i_part]);
         free(psurf_to_face_g_num     [i_part]);
+        free(psurf_to_entity         [i_part]);
       }
+      free(psurf_to_entity);
       free(pelmt_surfacic_strid_idx);
       free(pelmt_surfacic_type);
       free(psurf_gnum);
@@ -1101,6 +1165,7 @@ PDM_generate_ho_vtx_ln_to_gn
   if(dmn->ridge->n_section > 0) {
     /* Translate edge information into elmt information first */
     int          *pn_ridge             = NULL;
+    int         **pridge_to_entity     = NULL;
     PDM_g_num_t **pridge_gnum          = NULL;
     PDM_g_num_t **pridge_to_edge_g_num = NULL;
 
@@ -1112,6 +1177,7 @@ PDM_generate_ho_vtx_ln_to_gn
                                pn_edge,
                                pedge_ln_to_gn,
                                &pn_ridge,
+                               &pridge_to_entity,
                                &pridge_gnum,
                                &pridge_to_edge_g_num,
                                NULL, // pchild_parent_sign
@@ -1132,11 +1198,13 @@ PDM_generate_ho_vtx_ln_to_gn
         free(pelmt_ridge_type     [i_part]);
         free(pridge_gnum          [i_part]);
         free(pridge_to_edge_g_num [i_part]);
+        free(pridge_to_entity     [i_part]);
       }
       free(pelmt_ridge_strid_idx);
       free(pelmt_ridge_type);
       free(pridge_gnum);
       free(pridge_to_edge_g_num);
+      free(pridge_to_entity);
       free(pn_ridge);
     }
     else {

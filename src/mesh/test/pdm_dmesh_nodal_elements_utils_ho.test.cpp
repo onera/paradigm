@@ -10,7 +10,7 @@
 // double coord_z[n_vtx] = {0., 0., 0., 0., 0., 0., 1., 1., 1., 1., 1., 1};
 
 
-MPI_TEST_CASE("decomposes hexa ho",1) {
+MPI_TEST_CASE("[pdm_dmesh_nodal_elements_utils] decomposes hexa ho",1) {
 
   // const PDM_g_num_t n_vtx            = 12;
   // const PDM_g_num_t n_cell           = 2;

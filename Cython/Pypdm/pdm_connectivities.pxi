@@ -8,7 +8,16 @@ cdef extern from "pdm_dconnectivity_transform.h":
                                            int              is_signed,
                                            int            **dentity2_entity1_idx,
                                            PDM_g_num_t    **dentity2_entity1)
-
+    void PDM_deduce_combine_connectivity(const PDM_MPI_Comm     comm,
+                                         const PDM_g_num_t     *entity1_distrib,
+                                         const PDM_g_num_t     *entity2_distrib,
+                                         const int             *dentity1_entity2_idx,
+                                         const PDM_g_num_t     *dentity1_entity2,
+                                         const int             *dentity2_entity3_idx,
+                                         const PDM_g_num_t     *dentity2_entity3,
+                                         const int              is_signed,
+                                               int            **dentity1_entity3_idx,
+                                               PDM_g_num_t    **dentity1_entity3)
     void PDM_dfacecell_to_dcellface(const PDM_g_num_t* face_distri,
                                     const PDM_g_num_t* cell_distri,
                                     const PDM_g_num_t* dface_cell,
@@ -223,6 +232,39 @@ def combine_connectivity(NPY.ndarray[int, mode='c', ndim=1]    entity1_entity2_i
     np_entity1_entity3     = create_numpy_i(_entity1_entity3, np_entity1_entity3_idx[n_entity1])
     
     return np_entity1_entity3_idx, np_entity1_entity3
+
+# ------------------------------------------------------------------------
+def dconnectivity_combine(MPI.Comm comm,
+                          NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1]    entity1_distrib,
+                          NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1]    entity2_distrib,
+                          NPY.ndarray[int           , mode='c', ndim=1]    dentity1_entity2_idx,
+                          NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1]    dentity1_entity2,
+                          NPY.ndarray[int           , mode='c', ndim=1]    dentity2_entity3_idx,
+                          NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1]    dentity2_entity3,
+                          bint                                             is_signed):
+    # > Convert mpi4py -> PDM_MPI
+    cdef MPI.MPI_Comm c_comm = comm.ob_mpi
+    cdef PDM_MPI_Comm PDMC   = PDM_MPI_mpi_2_pdm_mpi_comm(&c_comm)
+
+    cdef        int * _dentity1_entity3_idx
+    cdef PDM_g_num_t* _dentity1_entity3
+
+    PDM_deduce_combine_connectivity(PDMC,
+                     <PDM_g_num_t*> entity1_distrib.data,
+                     <PDM_g_num_t*> entity2_distrib.data,
+                     <int*        > dentity1_entity2_idx.data,
+                     <PDM_g_num_t*> dentity1_entity2.data,
+                     <int*        > dentity2_entity3_idx.data,
+                     <PDM_g_num_t*> dentity2_entity3.data,
+                              <int> is_signed,
+                                   &_dentity1_entity3_idx,
+                                   &_dentity1_entity3)
+
+    dn_entity1 = entity1_distrib[comm.Get_rank()+1] - entity1_distrib[comm.Get_rank()]
+
+    np_dentity1_entity3_idx = create_numpy_i       (_dentity1_entity3_idx, dn_entity1 + 1)
+    np_dentity1_entity3     = create_numpy_g(_dentity1_entity3, np_dentity1_entity3_idx[dn_entity1])
+    return np_dentity1_entity3_idx, np_dentity1_entity3
 
 # ------------------------------------------------------------------------
 def connectivity_transpose(NPY.int                               n_entity2, # We have to pass n_entity2 to manage empty tabs and gap numerbering

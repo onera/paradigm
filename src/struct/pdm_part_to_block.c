@@ -914,7 +914,7 @@ _distrib_data_morton
 
   PDM_morton_code_t *morton_codes_idx = (PDM_morton_code_t *) malloc ((ptb->s_comm+1) * sizeof(PDM_morton_code_t));
   PDM_morton_build_rank_index(3,
-                              ptb->s_comm,  // Number of chunk
+                              max_level, // Number of chunk
                               ptb->n_elt_proc,
                               morton_codes,
                               concat_weight,
