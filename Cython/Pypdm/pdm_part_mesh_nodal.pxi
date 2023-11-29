@@ -121,7 +121,7 @@ cdef class PartMeshNodal:
 
 
 # ------------------------------------------------------------------
-cdef class PartMeshNodalCaspule:
+cdef class PartMeshNodalCapsule:
   """
   """
   # ************************************************************************
@@ -132,9 +132,9 @@ cdef class PartMeshNodalCaspule:
   def __cinit__(self, object caps):
     """
     """
-    # print("DistributedMeshNodalCaspule", PyCapsule_GetName(caps))
-    cdef PDM_part_mesh_nodal_t* casp_pmn = <PDM_part_mesh_nodal_t *> PyCapsule_GetPointer(caps, NULL)
-    self.pmn = casp_pmn;
+    # print("DistributedMeshNodalCapsule", PyCapsule_GetName(caps))
+    cdef PDM_part_mesh_nodal_t* caps_pmn = <PDM_part_mesh_nodal_t *> PyCapsule_GetPointer(caps, NULL)
+    self.pmn = caps_pmn;
 
   def dim_get(self):
     return part_mesh_nodal_dim_get(self)
@@ -156,7 +156,7 @@ cdef class PartMeshNodalCaspule:
 
 ctypedef fused PMeshNodal:
   PartMeshNodal
-  PartMeshNodalCaspule
+  PartMeshNodalCapsule
 
 def part_mesh_nodal_vtx_g_num_get(PMeshNodal pypmn, int i_part):
   """

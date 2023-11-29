@@ -104,7 +104,7 @@ def meshb_to_dmesh_nodal(char *filename, MPI.Comm comm, int fix_orientation_2d, 
 
   dmn = PDM_reader_gamma_dmesh_nodal(pdm_comm, filename, fix_orientation_2d, fix_orientation_3d)
 
-  py_casp = PyCapsule_New(dmn, NULL, NULL);
+  py_caps = PyCapsule_New(dmn, NULL, NULL);
 
-  return DistributedMeshNodalCaspule(py_casp) # The free is inside the class
+  return DistributedMeshNodalCapsule(py_caps) # The free is inside the class
 

@@ -134,7 +134,7 @@ def sphere_surf_icosphere_gen_nodal(MPI.Comm       comm,
 
   Create a sphere surface mesh (icosphere)
 
-  :note: The output mesh is *block-distributed* in the form of a :py:class:`DistributedMeshNodalCaspule` object
+  :note: The output mesh is *block-distributed* in the form of a :py:class:`DistributedMeshNodalCapsule` object
 
   Parameters:
     comm     (MPI.Comm)       : MPI communicator
@@ -145,7 +145,7 @@ def sphere_surf_icosphere_gen_nodal(MPI.Comm       comm,
     radius   (double)         : Sphere radius
 
   Returns:
-    Distributed nodal icosphere mesh (:py:class:`DistributedMeshNodalCaspule`)
+    Distributed nodal icosphere mesh (:py:class:`DistributedMeshNodalCapsule`)
   """
   cdef PDM_dmesh_nodal_t *dmn = NULL
   cdef MPI.MPI_Comm c_comm = comm.ob_mpi
@@ -158,9 +158,9 @@ def sphere_surf_icosphere_gen_nodal(MPI.Comm       comm,
                                       radius,
                                       &dmn)
 
-  py_casp = PyCapsule_New(dmn, NULL, NULL)
+  py_caps = PyCapsule_New(dmn, NULL, NULL)
 
-  return DistributedMeshNodalCaspule(py_casp)
+  return DistributedMeshNodalCapsule(py_caps)
 # ------------------------------------------------------------------------
 
 def sphere_surf_icosphere_gen_part(MPI.Comm         comm,
@@ -317,6 +317,6 @@ def sphere_surf_gen_nodal(MPI.Comm       comm,
                             radius,
                             &dmn)
 
-  py_casp = PyCapsule_New(dmn, NULL, NULL)
+  py_caps = PyCapsule_New(dmn, NULL, NULL)
 
-  return DistributedMeshNodalCaspule(py_casp)
+  return DistributedMeshNodalCapsule(py_caps)
