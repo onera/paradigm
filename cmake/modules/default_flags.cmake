@@ -22,7 +22,11 @@ if (NOT PASS_DEFAULT_FLAGS)
 
 if (CMAKE_Fortran_COMPILER_ID STREQUAL "GNU")
 
-  set (CMAKE_Fortran_FLAGS "-fallow-argument-mismatch -fPIC -cpp -Wall -std=gnu -Wno-unused-dummy-argument -Wno-maybe-uninitialized")
+  if (CMAKE_Fortran_COMPILER_VERSION GREATER_EQUAL "10")
+    set (CMAKE_Fortran_FLAGS "-fallow-argument-mismatch -fPIC -cpp -Wall -std=gnu -Wno-unused-dummy-argument -Wno-maybe-uninitialized")
+  else()
+    set (CMAKE_Fortran_FLAGS "-fPIC -cpp -Wall -std=gnu -Wno-unused-dummy-argument -Wno-maybe-uninitialized")
+  endif()  
 
   set (CMAKE_Fortran_FLAGS_RELEASE         "-O3")
   set (CMAKE_Fortran_FLAGS_DEBUG           "-O0 -g -fcheck=bounds -fbacktrace")
