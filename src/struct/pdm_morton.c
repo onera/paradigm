@@ -614,7 +614,7 @@ _define_rank_distrib(int                      dim,
                      PDM_g_num_t              gsum_weight,
                      int                      n_codes,
                      const PDM_morton_code_t  morton_codes[],
-                     const int                weight[],
+                     const double             weight[],
                      const int                order[],
                      const double             sampling[],
                      double                   cfreq[],
@@ -855,7 +855,7 @@ _bucket_sampling(int                      dim,
                  int                      gmax_level,
                  int                      n_codes,
                  const PDM_morton_code_t  morton_codes[],
-                 const int                weight[],
+                 const double             weight[],
                  const int                order[],
                  double                  *sampling[],
                  PDM_MPI_Comm             comm)
@@ -864,7 +864,7 @@ _bucket_sampling(int                      dim,
   int   j;
   double  fit, best_fit, optim;
 
-  PDM_g_num_t   lsum_weight = 0, gsum_weight = 0;
+  double   lsum_weight = 0, gsum_weight = 0;
   PDM_g_num_t   *distrib = NULL;
   double  *cfreq = NULL, *best_sampling = NULL;
   double  *_sampling = *sampling;
@@ -879,7 +879,7 @@ _bucket_sampling(int                      dim,
   for (j = 0; j < n_codes; j++)
     lsum_weight += weight[j];
 
-  PDM_MPI_Allreduce(&lsum_weight, &gsum_weight, 1,  PDM__PDM_MPI_G_NUM, PDM_MPI_SUM, comm);
+  PDM_MPI_Allreduce(&lsum_weight, &gsum_weight, 1,  PDM_MPI_DOUBLE, PDM_MPI_SUM, comm);
 
   optim = (double)gsum_weight / (double)n_ranks;
 
@@ -1929,9 +1929,9 @@ PDM_morton_ordered_build_rank_index
       _weight[i] = (PDM_g_num_t) weight[i] + _weight[i-1];
     }
   }
-  /*log_trace("n_codes = %d\n", n_codes);
+  log_trace("n_codes = %d\n", n_codes);
   PDM_log_trace_array_int ( weight, n_codes ,"weight  : ");
-  PDM_log_trace_array_long(_weight, n_codes ,"_weight : ");*/
+  PDM_log_trace_array_long(_weight, n_codes ,"_weight : ");
 
 
   PDM_g_num_t scan;
@@ -2187,7 +2187,7 @@ PDM_morton_build_rank_index(int                     dim,
                             int                     gmax_level,
                             PDM_l_num_t             n_codes,
                             const PDM_morton_code_t code[],
-                            const int               weight[],
+                            const double            weight[],
                             const int               order[],
                             PDM_morton_code_t       rank_index[],
                             PDM_MPI_Comm            comm)

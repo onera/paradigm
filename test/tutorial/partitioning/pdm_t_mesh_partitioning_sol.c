@@ -396,6 +396,7 @@ int main
                                                       i_part,
                                                       PDM_MESH_ENTITY_CELL,
                                                       &cell_ln_to_gn_ext);
+    PDM_UNUSED(n_cell_ext);
 
     int *cell_face_ext     = NULL;
     int *cell_face_ext_idx = NULL;
@@ -413,6 +414,7 @@ int main
                                                       i_part,
                                                       PDM_MESH_ENTITY_FACE,
                                                       &face_ln_to_gn_ext);
+    PDM_UNUSED(n_face_ext);
 
     int *face_edge_ext     = NULL;
     int *face_edge_ext_idx = NULL;
@@ -430,6 +432,7 @@ int main
                                                       i_part,
                                                       PDM_MESH_ENTITY_EDGE,
                                                       &edge_ln_to_gn_ext);
+    PDM_UNUSED(n_edge_ext);
 
     int *edge_vtx_ext     = NULL;
     int *edge_vtx_ext_idx = NULL;
@@ -447,6 +450,7 @@ int main
                                                       i_part,
                                                       PDM_MESH_ENTITY_VERTEX,
                                                       &vtx_ln_to_gn_ext);
+    PDM_UNUSED(n_vtx_ext);
 
     double *vtx_coord_ext = NULL;
     PDM_part_extension_coord_get(part_ext,

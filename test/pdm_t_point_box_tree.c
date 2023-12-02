@@ -403,7 +403,10 @@ main
 
 
 
-  int *weight = PDM_array_const_int(sm_n_face, 1);
+  double *weight = malloc(sm_n_face * sizeof(double));
+  for(int i = 0; i < sm_n_face; ++i) {
+    weight[i] = 1.;
+  }
   PDM_part_to_block_t *ptb_box = PDM_part_to_block_geom_create(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
                                                                PDM_PART_TO_BLOCK_POST_CLEANUP,
                                                                1.,

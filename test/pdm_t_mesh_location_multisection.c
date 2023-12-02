@@ -796,7 +796,7 @@ int main(int argc, char *argv[])
       for (int i = 0; i < n_located; i++) {
         int pt_id = located[i] - 1;
         interp  [pt_id] = recv_field[i_part][i];
-        location[pt_id] = p_location[i];
+        location[pt_id] = (double) p_location[i];
         memcpy(proj + 3*pt_id, p_proj_coord + 3*i, sizeof(double) * 3);
       }
 

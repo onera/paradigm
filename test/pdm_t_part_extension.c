@@ -308,7 +308,7 @@ _visu
       val_num_part[i_part][i] = i_part + distrib_part[i_rank];
       val_cell_num[i_part][i] = i ;
       val_num_rank[i_part][i] = i_rank;
-      val_cell_gnum[i_part][i] = cell_ln_to_gn[i_part][i];
+      val_cell_gnum[i_part][i] = (double) cell_ln_to_gn[i_part][i];
     }
     // PDM_log_trace_array_double(val_num_part[i_part], n_cell[i_part], "val_num_part :: ");
 

@@ -1159,12 +1159,12 @@ PDM_part_mesh_dump_ensight
       if (!pmesh->is_compute_concat_bound[bound_type]) {
         pmesh->is_owner_concat_bound[bound_type] = PDM_TRUE;
         for (int i_part = 0; i_part < pmesh->n_part; i_part++) {
-          PDM_part_mesh_bound_concat_compute(pmesh, i_part, bound_type);
+          PDM_part_mesh_bound_concat_compute(pmesh, i_part, (PDM_bound_type_t) bound_type);
         }
       }
 
       _build_extract_part_bound(pmesh,
-                                bound_type,
+             (PDM_bound_type_t) bound_type,
                                 &extrp[bound_type]);
     }
   }

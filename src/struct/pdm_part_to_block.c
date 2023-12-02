@@ -590,7 +590,7 @@ _distrib_data_hilbert
 (
   PDM_part_to_block_t   *ptb,
   double               **pvtx_coords,
-  int                  **weight
+  double               **weight
 )
 {
   ptb->n_elt_proc = 0;
@@ -602,7 +602,7 @@ _distrib_data_hilbert
   }
 
   double *concat_vtx_coord = NULL;
-  int    *concat_weight    = NULL;
+  double *concat_weight    = NULL;
   if(ptb->n_part == 1 ) {
     concat_vtx_coord = pvtx_coords[0];
     concat_weight    = weight     [0];
@@ -855,7 +855,7 @@ _distrib_data_morton
 (
   PDM_part_to_block_t   *ptb,
   double               **pvtx_coords,
-  int                  **weight
+  double               **weight
 )
 {
   ptb->n_elt_proc = 0;
@@ -867,7 +867,7 @@ _distrib_data_morton
   }
 
   double *concat_vtx_coord = NULL;
-  int    *concat_weight    = NULL;
+  double *concat_weight    = NULL;
   if(ptb->n_part == 1 ) {
     concat_vtx_coord = pvtx_coords[0];
     concat_weight    = weight     [0];
@@ -2340,7 +2340,7 @@ PDM_part_to_block_geom_create
  PDM_part_geom_t               geom_kind,
  double                      **pvtx_coords,
  PDM_g_num_t                 **gnum_elt,
- int                         **weight,
+ double                      **weight,
  int                          *n_elt,
  int                           n_part,
  PDM_MPI_Comm                  comm

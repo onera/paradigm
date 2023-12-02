@@ -127,16 +127,16 @@ _read_args
 }
 
 
-static inline double
-_eval_field
-(
- const double x,
- const double y,
- const double z
- )
-{
-  return 1 + 2*x + 3*y + 4*z;
-}
+// static inline double
+// _eval_field
+// (
+//  const double x,
+//  const double y,
+//  const double z
+//  )
+// {
+//   return 1 + 2*x + 3*y + 4*z;
+// }
 
 
 static inline double
@@ -245,7 +245,7 @@ _visu_2d
 
     for (int i_face = 0; i_face < n_face[i_part]; i_face++) {
       val_part[i_face] = i_rank*n_part + i_part;
-      val_gnum[i_face] = face_ln_to_gn[i_part][i_face];
+      val_gnum[i_face] = (PDM_real_t) face_ln_to_gn[i_part][i_face];
     }
 
     PDM_writer_var_set(wrt,
@@ -593,7 +593,7 @@ int main(int argc, char *argv[])
     src_send_field1[i_part] = malloc(sizeof(double) * n_pts);
     for (int i_elt = 0; i_elt < src_n_face[i_part]; i_elt++) {
       for (int i_pt = src_to_tgt_idx[i_elt]; i_pt < src_to_tgt_idx[i_elt+1]; i_pt++) {
-        src_send_field1[i_part][i_pt] = src_face_ln_to_gn[i_part][i_elt];
+        src_send_field1[i_part][i_pt] = (double) src_face_ln_to_gn[i_part][i_elt];
       }
     }
   }
