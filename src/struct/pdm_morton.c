@@ -1929,9 +1929,10 @@ PDM_morton_ordered_build_rank_index
       _weight[i] = (PDM_g_num_t) weight[i] + _weight[i-1];
     }
   }
-  log_trace("n_codes = %d\n", n_codes);
-  PDM_log_trace_array_int ( weight, n_codes ,"weight  : ");
-  PDM_log_trace_array_long(_weight, n_codes ,"_weight : ");
+
+//  log_trace("n_codes = %d\n", n_codes);
+//  PDM_log_trace_array_int ( weight, n_codes ,"weight  : ");
+//  PDM_log_trace_array_long(_weight, n_codes ,"_weight : ");
 
 
   PDM_g_num_t scan;
