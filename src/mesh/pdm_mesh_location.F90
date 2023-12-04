@@ -878,8 +878,8 @@ module pdm_mesh_location
     integer(c_int)                     :: c_i_point_cloud
     integer(c_int)                     :: c_i_part
     integer(c_int)                     :: c_n_points
-    type(c_ptr)                        :: c_coords = C_NULL_PTR
-    type(c_ptr)                        :: c_gnum   = C_NULL_PTR
+    type(c_ptr)                        :: c_coords
+    type(c_ptr)                        :: c_gnum
 
     c_i_point_cloud = i_point_cloud
     c_i_part        = i_part
@@ -933,16 +933,16 @@ module pdm_mesh_location
 
     integer(c_int)                     :: c_i_part
     integer(c_int)                     :: c_n_cell
-    type(c_ptr)                        :: c_cell_face_idx = C_NULL_PTR
-    type(c_ptr)                        :: c_cell_face     = C_NULL_PTR
-    type(c_ptr)                        :: c_cell_ln_to_gn = C_NULL_PTR
+    type(c_ptr)                        :: c_cell_face_idx
+    type(c_ptr)                        :: c_cell_face
+    type(c_ptr)                        :: c_cell_ln_to_gn
     integer(c_int)                     :: c_n_face
-    type(c_ptr)                        :: c_face_vtx_idx  = C_NULL_PTR
-    type(c_ptr)                        :: c_face_vtx      = C_NULL_PTR
-    type(c_ptr)                        :: c_face_ln_to_gn = C_NULL_PTR
+    type(c_ptr)                        :: c_face_vtx_idx
+    type(c_ptr)                        :: c_face_vtx
+    type(c_ptr)                        :: c_face_ln_to_gn
     integer(c_int)                     :: c_n_vtx
-    type(c_ptr)                        :: c_coords        = C_NULL_PTR
-    type(c_ptr)                        :: c_vtx_ln_to_gn  = C_NULL_PTR
+    type(c_ptr)                        :: c_coords
+    type(c_ptr)                        :: c_vtx_ln_to_gn
 
     c_i_part = i_part
     c_n_cell = n_cell
@@ -1004,12 +1004,12 @@ module pdm_mesh_location
 
     integer(c_int)                     :: c_i_part
     integer(c_int)                     :: c_n_cell
-    type(c_ptr)                        :: c_cell_vtx_idx = C_NULL_PTR
-    type(c_ptr)                        :: c_cell_vtx     = C_NULL_PTR
-    type(c_ptr)                        :: c_cell_ln_to_gn = C_NULL_PTR
+    type(c_ptr)                        :: c_cell_vtx_idx
+    type(c_ptr)                        :: c_cell_vtx
+    type(c_ptr)                        :: c_cell_ln_to_gn
     integer(c_int)                     :: c_n_vtx
-    type(c_ptr)                        :: c_coords        = C_NULL_PTR
-    type(c_ptr)                        :: c_vtx_ln_to_gn  = C_NULL_PTR
+    type(c_ptr)                        :: c_coords
+    type(c_ptr)                        :: c_vtx_ln_to_gn
 
     c_i_part = i_part
     c_n_cell = n_cell
@@ -1065,14 +1065,14 @@ module pdm_mesh_location
 
     integer(c_int)                     :: c_i_part
     integer(c_int)                     :: c_n_face
-    type(c_ptr)                        :: c_face_edge_idx = C_NULL_PTR
-    type(c_ptr)                        :: c_face_edge     = C_NULL_PTR
-    type(c_ptr)                        :: c_face_ln_to_gn = C_NULL_PTR
+    type(c_ptr)                        :: c_face_edge_idx
+    type(c_ptr)                        :: c_face_edge
+    type(c_ptr)                        :: c_face_ln_to_gn
     integer(c_int)                     :: c_n_edge
-    type(c_ptr)                        :: c_edge_vtx      = C_NULL_PTR
+    type(c_ptr)                        :: c_edge_vtx
     integer(c_int)                     :: c_n_vtx
-    type(c_ptr)                        :: c_coords        = C_NULL_PTR
-    type(c_ptr)                        :: c_vtx_ln_to_gn  = C_NULL_PTR
+    type(c_ptr)                        :: c_coords
+    type(c_ptr)                        :: c_vtx_ln_to_gn
 
     c_i_part = i_part
     c_n_face = n_face
@@ -1127,12 +1127,12 @@ module pdm_mesh_location
 
     integer(c_int)                     :: c_i_part
     integer(c_int)                     :: c_n_face
-    type(c_ptr)                        :: c_face_vtx_idx  = C_NULL_PTR
-    type(c_ptr)                        :: c_face_vtx      = C_NULL_PTR
-    type(c_ptr)                        :: c_face_ln_to_gn = C_NULL_PTR
+    type(c_ptr)                        :: c_face_vtx_idx
+    type(c_ptr)                        :: c_face_vtx
+    type(c_ptr)                        :: c_face_ln_to_gn
     integer(c_int)                     :: c_n_vtx
-    type(c_ptr)                        :: c_coords        = C_NULL_PTR
-    type(c_ptr)                        :: c_vtx_ln_to_gn  = C_NULL_PTR
+    type(c_ptr)                        :: c_coords
+    type(c_ptr)                        :: c_vtx_ln_to_gn
 
     c_i_part = i_part
     c_n_face = n_face
@@ -1174,7 +1174,7 @@ module pdm_mesh_location
 
     integer(c_int)      :: c_i_point_cloud
     integer(c_int)      :: c_i_part
-    type(c_ptr)         :: c_located = C_NULL_PTR
+    type(c_ptr)         :: c_located
     integer(c_int)      :: n_located
 
     c_i_point_cloud = i_point_cloud
@@ -1212,7 +1212,7 @@ module pdm_mesh_location
 
     integer(c_int)      :: c_i_point_cloud
     integer(c_int)      :: c_i_part
-    type(c_ptr)         :: c_unlocated = C_NULL_PTR
+    type(c_ptr)         :: c_unlocated
     integer(c_int)      :: n_unlocated
 
     c_i_point_cloud = i_point_cloud
@@ -1255,9 +1255,9 @@ module pdm_mesh_location
 
     integer(c_int)                     :: c_i_point_cloud
     integer(c_int)                     :: c_i_part
-    type(c_ptr)                        :: c_location         = C_NULL_PTR
-    type(c_ptr)                        :: c_dist2            = C_NULL_PTR
-    type(c_ptr)                        :: c_projected_coords = C_NULL_PTR
+    type(c_ptr)                        :: c_location
+    type(c_ptr)                        :: c_dist2
+    type(c_ptr)                        :: c_projected_coords
     integer(c_int)                     :: n_located
 
     c_i_point_cloud = i_point_cloud
@@ -1266,6 +1266,10 @@ module pdm_mesh_location
     n_located = PDM_mesh_location_n_located_get(mloc,            &
                                                 c_i_point_cloud, &
                                                 c_i_part)
+
+    c_location         = C_NULL_PTR
+    c_dist2            = C_NULL_PTR
+    c_projected_coords = C_NULL_PTR
 
     call PDM_mesh_location_point_location_get_cf(mloc, &
                                                  c_i_point_cloud, &
@@ -1320,14 +1324,14 @@ module pdm_mesh_location
 
     integer(c_int)                     :: c_i_part
     integer(c_int)                     :: c_i_point_cloud
-    type(c_ptr)                        :: c_elt_pts_inside_idx      = C_NULL_PTR
-    type(c_ptr)                        :: c_points_gnum             = C_NULL_PTR
-    type(c_ptr)                        :: c_points_coords           = C_NULL_PTR
-    type(c_ptr)                        :: c_points_uvw              = C_NULL_PTR
-    type(c_ptr)                        :: c_points_weights_idx      = C_NULL_PTR
-    type(c_ptr)                        :: c_points_weights          = C_NULL_PTR
-    type(c_ptr)                        :: c_points_dist2            = C_NULL_PTR
-    type(c_ptr)                        :: c_points_projected_coords = C_NULL_PTR
+    type(c_ptr)                        :: c_elt_pts_inside_idx
+    type(c_ptr)                        :: c_points_gnum
+    type(c_ptr)                        :: c_points_coords
+    type(c_ptr)                        :: c_points_uvw
+    type(c_ptr)                        :: c_points_weights_idx
+    type(c_ptr)                        :: c_points_weights
+    type(c_ptr)                        :: c_points_dist2
+    type(c_ptr)                        :: c_points_projected_coords
     integer(c_int)                     :: n_elt
     integer                            :: n_pts_t
 
@@ -1338,6 +1342,15 @@ module pdm_mesh_location
     n_elt = pdm_mesh_location_n_cell_get(mloc,     &
                                          c_i_part)
 
+    c_elt_pts_inside_idx      = C_NULL_PTR
+    c_points_gnum             = C_NULL_PTR
+    c_points_coords           = C_NULL_PTR
+    c_points_uvw              = C_NULL_PTR
+    c_points_weights_idx      = C_NULL_PTR
+    c_points_weights          = C_NULL_PTR
+    c_points_dist2            = C_NULL_PTR
+    c_points_projected_coords = C_NULL_PTR
+    
     call PDM_mesh_location_points_in_elt_get_cf(mloc, &
                                                 c_i_point_cloud, &
                                                 c_i_part, &
@@ -1432,10 +1445,12 @@ module pdm_mesh_location
     integer(c_int),    intent(in) :: i_part          ! Partition identifier
     integer(pdm_l_num_s), pointer :: cell_vtx_idx(:) ! Index for cell -> vertex connectivity
     integer(pdm_l_num_s), pointer :: cell_vtx(:)     ! Cell -> vertex connectivity
-    type(c_ptr)                   :: c_cell_vtx_idx = C_NULL_PTR
-    type(c_ptr)                   :: c_cell_vtx     = C_NULL_PTR
+    type(c_ptr)                   :: c_cell_vtx_idx
+    type(c_ptr)                   :: c_cell_vtx
     integer                       :: n_cell
 
+    cell_vtx_idx = C_NULL_PTR
+    cell_vtx     = C_NULL_PTR
     call PDM_mesh_location_cell_vertex_get_cf(mloc,           &
                                               i_part,         &
                                               c_cell_vtx_idx, &

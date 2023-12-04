@@ -618,8 +618,8 @@ subroutine PDM_io_par_interlaced_read (fichier,         &
   integer(c_int)                   :: c_t_n_composantes
   integer(c_int)                   :: c_taille_donnee
   integer(c_int)                   :: c_n_donnees
-  type(c_ptr)                      :: c_n_composantes = C_NULL_PTR
-  type(c_ptr)                      :: c_indirection   = C_NULL_PTR
+  type(c_ptr)                      :: c_n_composantes
+  type(c_ptr)                      :: c_indirection
 
   interface
     subroutine PDM_io_par_interlaced_read_c (fichier,         &
@@ -698,7 +698,7 @@ subroutine PDM_io_par_block_read (fichier,         &
   integer(c_int)                   :: c_t_n_composantes
   integer(c_int)                   :: c_taille_donnee
   integer(c_int)                   :: c_n_donnees
-  type(c_ptr)                      :: c_n_composantes = C_NULL_PTR
+  type(c_ptr)                      :: c_n_composantes
 #ifdef PDM_LONG_G_NUM
   integer(c_long)                  :: c_debut_bloc
 #else
@@ -785,8 +785,8 @@ subroutine PDM_io_par_interlaced_write (fichier,         &
   integer(c_int)                   :: c_t_n_composantes
   integer(c_int)                   :: c_taille_donnee
   integer(c_int)                   :: c_n_donnees
-  type(c_ptr)                      :: c_n_composantes = C_NULL_PTR
-  type(c_ptr)                      :: c_indirection   = C_NULL_PTR
+  type(c_ptr)                      :: c_n_composantes
+  type(c_ptr)                      :: c_indirection
 
   interface
     subroutine PDM_io_par_interlaced_write_c (fichier,         &
@@ -865,7 +865,7 @@ subroutine PDM_io_par_block_write (fichier,         &
   integer(c_int)                   :: c_t_n_composantes
   integer(c_int)                   :: c_taille_donnee
   integer(c_int)                   :: c_n_donnees
-  type(c_ptr)                      :: c_n_composantes = C_NULL_PTR
+  type(c_ptr)                      :: c_n_composantes
 #ifdef PDM_LONG_G_NUM
   integer(c_long)                  :: c_debut_bloc
 #else
@@ -1287,9 +1287,9 @@ subroutine PDM_io_n_data_get (fichier,         &
   integer(pdm_g_num_s), intent(out) :: taille
 
   integer(c_int)                    :: c_t_n_composantes
-  type(c_ptr)                       :: c_n_composantes = C_NULL_PTR
+  type(c_ptr)                       :: c_n_composantes
   integer(c_int)                    :: c_n_donnees
-  type(c_ptr)                       :: c_indirection   = C_NULL_PTR
+  type(c_ptr)                       :: c_indirection
 #ifdef PDM_LONG_G_NUM
   integer(c_long)                   :: c_taille
 #else
@@ -1367,8 +1367,8 @@ subroutine PDM_io_array_write_data_append (num_var_cedre, &
   integer(pdm_g_num_s), pointer    :: indirection(:)
   type(c_ptr), value               :: donnees
 
-  type(c_ptr)                      :: c_n_composantes = C_NULL_PTR
-  type(c_ptr)                      :: c_indirection   = C_NULL_PTR
+  type(c_ptr)                      :: c_n_composantes
+  type(c_ptr)                      :: c_indirection
 
   interface
     subroutine PDM_io_array_write_data_append_c (num_var_cedre, &
@@ -1432,8 +1432,8 @@ subroutine PDM_io_array_read_data_append (num_var_cedre, &
   integer(pdm_g_num_s), pointer    :: indirection(:)
   type(c_ptr), value               :: donnees
 
-  type(c_ptr)                      :: c_n_composantes = C_NULL_PTR
-  type(c_ptr)                      :: c_indirection   = C_NULL_PTR
+  type(c_ptr)                      :: c_n_composantes
+  type(c_ptr)                      :: c_indirection
 
   interface
     subroutine PDM_io_array_read_data_append_c (num_var_cedre, &
