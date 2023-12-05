@@ -172,6 +172,148 @@ _rebuild_group
   free(dextract_bound_entity_ln_to_gn);
 }
 
+static
+void
+_rebuild_group_nodal
+(
+ PDM_dmesh_extract_t *dme,
+ PDM_g_num_t         *distrib_entity,
+ PDM_geometry_kind_t  geom_kind
+)
+{
+  int i_rank;
+  int n_rank;
+  PDM_MPI_Comm_rank(dme->comm, &i_rank);
+  PDM_MPI_Comm_size(dme->comm, &n_rank);
+
+  PDM_mesh_entities_t entity_type = PDM_MESH_ENTITY_MAX;
+  PDM_bound_type_t bound_type  = PDM_BOUND_TYPE_MAX;
+  if(geom_kind == PDM_GEOMETRY_KIND_VOLUMIC) {
+    entity_type = PDM_MESH_ENTITY_CELL;
+    bound_type  = PDM_BOUND_TYPE_CELL;
+  } else if(geom_kind == PDM_GEOMETRY_KIND_SURFACIC) {
+    entity_type = PDM_MESH_ENTITY_FACE;
+    bound_type  = PDM_BOUND_TYPE_FACE;
+  } else if(geom_kind == PDM_GEOMETRY_KIND_RIDGE) {
+    entity_type = PDM_MESH_ENTITY_EDGE;
+    bound_type  = PDM_BOUND_TYPE_EDGE;
+  } else if(geom_kind == PDM_GEOMETRY_KIND_CORNER) {
+    entity_type = PDM_MESH_ENTITY_VERTEX;
+    bound_type  = PDM_BOUND_TYPE_VTX;
+  }
+
+  int          n_group_entity    = 0;
+  int         *dbound_entity_idx = NULL;
+  PDM_g_num_t *dbound_entity     = NULL;
+  PDM_DMesh_nodal_section_group_elmt_get(dme->dmesh_nodal,
+                                         geom_kind,
+                                         &n_group_entity,
+                                         &dbound_entity_idx,
+                                         &dbound_entity);
+
+  assert(dme->btp_bound_entity_to_extract_entity[bound_type] == NULL);
+  assert(dme->btp_bound_ownership               [bound_type] == NULL);
+
+  dme->btp_bound_entity_to_extract_entity[bound_type] = malloc(n_group_entity * sizeof(PDM_block_to_part_t *));
+  dme->btp_bound_ownership               [bound_type] = malloc(n_group_entity * sizeof(PDM_ownership_t      ));
+
+  dme->n_bound[bound_type] = n_group_entity;
+
+  if(1 == 1) {
+    PDM_log_trace_connectivity_long(dbound_entity_idx, dbound_entity, n_group_entity, "dbound_entity ::");
+    log_trace("test \n");
+  }
+
+
+  int dn_entity = dme->distrib_extract[entity_type][i_rank+1] - dme->distrib_extract[entity_type][i_rank];
+
+  PDM_log_trace_array_long(dme->distrib_extract[entity_type], n_rank+1, "dme->distrib_extract ::");
+  PDM_log_trace_array_long(distrib_entity, n_rank+1, "distrib_entity ::");
+  PDM_log_trace_array_long(dme->parent_extract_gnum[entity_type], dn_entity, "dme->parent_extract_gnum ::");
+
+
+
+  log_trace("dn_entity = %i \n", dn_entity);
+  log_trace("n_group_entity = %i \n", n_group_entity);
+
+  int         **tmp_dextract_bound_entity_idx      = NULL;
+  int         **tmp_dextract_bound_entity          = NULL;
+  PDM_g_num_t **tmp_dextract_bound_entity_ln_to_gn = NULL;
+  // PDM_g_num_t  *distrib_entity = NULL;
+  PDM_part_distgroup_to_partgroup(dme->comm,
+                                  NULL,
+                                  n_group_entity,
+                                  dbound_entity_idx,
+                                  dbound_entity,
+                                  1,
+                                  &dn_entity,
+          (const PDM_g_num_t **)  &dme->parent_extract_gnum[entity_type],
+                                  &tmp_dextract_bound_entity_idx,
+                                  &tmp_dextract_bound_entity,
+                                  &tmp_dextract_bound_entity_ln_to_gn);
+
+  int         *dextract_bound_entity_idx      = tmp_dextract_bound_entity_idx     [0];
+  int         *dextract_bound_entity          = tmp_dextract_bound_entity         [0];
+  PDM_g_num_t *dextract_bound_entity_ln_to_gn = tmp_dextract_bound_entity_ln_to_gn[0];
+  free(tmp_dextract_bound_entity_idx     );
+  free(tmp_dextract_bound_entity         );
+  free(tmp_dextract_bound_entity_ln_to_gn);
+
+  if(1 == 1) {
+    PDM_log_trace_array_int (dextract_bound_entity         , dextract_bound_entity_idx[n_group_entity], "dextract_bound_entity ::");
+    PDM_log_trace_array_long(dextract_bound_entity_ln_to_gn, dextract_bound_entity_idx[n_group_entity], "dextract_bound_entity_ln_to_gn ::");
+  }
+  /*
+   * Rebuild all btp for each group
+   */
+  for(int i_group = 0; i_group < n_group_entity; ++i_group) {
+
+    int dn_group_entity = dbound_entity_idx[i_group+1] - dbound_entity_idx[i_group];
+    PDM_g_num_t* distrib_group_entity = PDM_compute_entity_distribution(dme->comm, dn_group_entity);
+
+    int beg = dextract_bound_entity_idx[i_group];
+    int dn_extract_group_entity = dextract_bound_entity_idx[i_group+1] - beg;
+    PDM_g_num_t *_lextract_bound_entity_ln_to_gn = &dextract_bound_entity_ln_to_gn[beg];
+
+    dme->btp_bound_entity_to_extract_entity[bound_type][i_group] = PDM_block_to_part_create(distrib_group_entity,
+                                                                     (const PDM_g_num_t **) &_lextract_bound_entity_ln_to_gn,
+                                                                                            &dn_extract_group_entity,
+                                                                                            1,
+                                                                                            dme->comm);
+
+
+    // dextract_bound_entity + dme->parent_extract_gnum[entity_type] => dbound_entity_extract (PDM_g_num_t)
+    // On peut également faire le transfert du gnum via le btp
+
+    dme->btp_bound_ownership[bound_type][i_group] = PDM_OWNERSHIP_KEEP;
+    free(distrib_group_entity);
+
+
+  }
+
+
+  /*
+   * Reminder : block(view as part) is implicit
+   */
+  PDM_g_num_t *dextract_bound_entity_gnum = malloc(dextract_bound_entity_idx[n_group_entity] * sizeof(PDM_g_num_t));
+  for(int i = 0; i < dextract_bound_entity_idx[n_group_entity]; ++i) {
+    dextract_bound_entity_gnum[i] = dme->distrib_extract[entity_type][i_rank] + dextract_bound_entity[i];
+  }
+
+  PDM_log_trace_connectivity_long(dextract_bound_entity_idx, dextract_bound_entity_gnum, n_group_entity, "dextract_bound_entity_gnum ::");
+
+  PDM_DMesh_nodal_section_group_elmt_set(dme->dmesh_nodal_extract,
+                                         geom_kind,
+                                         n_group_entity,
+                                         dextract_bound_entity_idx,
+                                         dextract_bound_entity_gnum,
+                                         PDM_OWNERSHIP_KEEP);
+
+
+  // free(dextract_bound_entity_idx     );
+  free(dextract_bound_entity         );
+  free(dextract_bound_entity_ln_to_gn);
+}
 
 
 
@@ -641,6 +783,8 @@ _dmesh_extract_nodal
     extracted_entity = PDM_MESH_ENTITY_VTX;
   }
 
+  PDM_log_trace_array_long(dmn_elts->section_distribution, n_rank+1, "dmne->section_distribution :: ");
+
   // For nodal meshes, parent_extract_gnum is filled for vertices *and* for the selected dim to extract :
   // parent gnum is ordered following *output* sections ordering in the extracted dmesh nodal
   PDM_dmesh_nodal_elmts_t* dmn_elts_extract = PDM_dmesh_nodal_elmts_to_extract_dmesh_nodal_elmts(dmn_elts,
@@ -675,12 +819,16 @@ _dmesh_extract_nodal
   PDM_g_num_t n_g_cell = 0;
   PDM_g_num_t n_g_face = 0;
   PDM_g_num_t n_g_edge = 0;
+  PDM_geometry_kind_t  geom_kind = PDM_GEOMETRY_KIND_MAX;
   if(dme->dim ==  3) {
     n_g_cell = dmn_elts_extract->section_distribution[dmn_elts_extract->n_section];
+    geom_kind = PDM_GEOMETRY_KIND_VOLUMIC;
   } else if(dme->dim == 2) {
     n_g_face = dmn_elts_extract->section_distribution[dmn_elts_extract->n_section];
+    geom_kind = PDM_GEOMETRY_KIND_SURFACIC;
   } else if(dme->dim == 1) {
     n_g_edge = dmn_elts_extract->section_distribution[dmn_elts_extract->n_section];
+    geom_kind = PDM_GEOMETRY_KIND_RIDGE;
   }
 
   dme->dmesh_nodal_extract = PDM_DMesh_nodal_create(dme->comm,
@@ -705,6 +853,12 @@ _dmesh_extract_nodal
                             dn_vtx,
                             tmp_dvtx_coord[0],
                             PDM_OWNERSHIP_KEEP);
+
+  _rebuild_group_nodal(dme,
+                       dme->distrib_extract[extracted_entity],
+                       geom_kind);
+
+
 
   free(tmp_dvtx_coord);
 

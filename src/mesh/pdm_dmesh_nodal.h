@@ -847,6 +847,13 @@ PDM_dmesh_nodal_have_ho
  PDM_dmesh_nodal_t         *dmn
 );
 
+
+void
+PDM_dmesh_nodal_find_topological_ridge
+(
+ PDM_dmesh_nodal_t         *dmesh_nodal
+);
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
