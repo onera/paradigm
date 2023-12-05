@@ -1133,21 +1133,21 @@ contains
     n_face_part_bound  = c_n_face_part_bound
     n_vtx              = c_n_vtx
     n_bound_groups     = c_n_bound_groups
-    type(c_ptr)  :: c_cell_face_idx            = C_NULL_PTR
-    type(c_ptr)  :: c_cell_face                = C_NULL_PTR
-    type(c_ptr)  :: c_cell_ln_to_gn            = C_NULL_PTR
-    type(c_ptr)  :: c_face_cell                = C_NULL_PTR
-    type(c_ptr)  :: c_face_vtx_idx             = C_NULL_PTR
-    type(c_ptr)  :: c_face_vtx                 = C_NULL_PTR
-    type(c_ptr)  :: c_face_ln_to_gn            = C_NULL_PTR
-    type(c_ptr)  :: c_face_part_bound_proc_idx = C_NULL_PTR
-    type(c_ptr)  :: c_face_part_bound_part_idx = C_NULL_PTR
-    type(c_ptr)  :: c_face_part_bound          = C_NULL_PTR
-    type(c_ptr)  :: c_vtx                      = C_NULL_PTR
-    type(c_ptr)  :: c_vtx_ln_to_gn             = C_NULL_PTR
-    type(c_ptr)  :: c_face_bound_idx           = C_NULL_PTR
-    type(c_ptr)  :: c_face_bound               = C_NULL_PTR
-    type(c_ptr)  :: c_face_bound_ln_to_gn      = C_NULL_PTR
+    c_cell_face_idx            = C_NULL_PTR
+    c_cell_face                = C_NULL_PTR
+    c_cell_ln_to_gn            = C_NULL_PTR
+    c_face_cell                = C_NULL_PTR
+    c_face_vtx_idx             = C_NULL_PTR
+    c_face_vtx                 = C_NULL_PTR
+    c_face_ln_to_gn            = C_NULL_PTR
+    c_face_part_bound_proc_idx = C_NULL_PTR
+    c_face_part_bound_part_idx = C_NULL_PTR
+    c_face_part_bound          = C_NULL_PTR
+    c_vtx                      = C_NULL_PTR
+    c_vtx_ln_to_gn             = C_NULL_PTR
+    c_face_bound_idx           = C_NULL_PTR
+    c_face_bound               = C_NULL_PTR
+    c_face_bound_ln_to_gn      = C_NULL_PTR
 
     call PDM_multipart_part_val_get_c(multipart, &
                                       i_zone, &

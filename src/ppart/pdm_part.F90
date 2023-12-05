@@ -1083,15 +1083,15 @@ contains
     type(c_ptr)                        :: c_dcell_faceIdx
     type(c_ptr)                        :: c_dcell_face
     type(c_ptr)                        :: c_dcell_tag
-    type(c_ptr)                        :: c_dcell_weight    = C_NULL_PTR
+    type(c_ptr)                        :: c_dcell_weight
     integer(c_int)                     :: c_have_dcell_part
-    type(c_ptr)                        :: c_dcell_part      = C_NULL_PTR
-    type(c_ptr)                        :: c_dface_cell      = C_NULL_PTR
+    type(c_ptr)                        :: c_dcell_part
+    type(c_ptr)                        :: c_dface_cell
     type(c_ptr)                        :: c_dface_vtx_idx
     type(c_ptr)                        :: c_dface_vtx
-    type(c_ptr)                        :: c_dface_tag       = C_NULL_PTR
+    type(c_ptr)                        :: c_dface_tag
     type(c_ptr)                        :: c_dvtx_coord
-    type(c_ptr)                        :: c_dvtx_tag        = C_NULL_PTR
+    type(c_ptr)                        :: c_dvtx_tag
     type(c_ptr)                        :: c_dface_group_idx
     type(c_ptr)                        :: c_dface_group
     integer(c_int)                     :: c_comm

@@ -1655,7 +1655,7 @@ module pdm_writer
     integer(c_int)            :: c_id_var
     integer(c_int)            :: c_id_geom
     integer(c_int)            :: c_id_part
-    type(c_ptr)               :: c_val = C_NULL_PTR
+    type(c_ptr)               :: c_val
 
     interface
       subroutine PDM_writer_var_set_c (cs,      &
