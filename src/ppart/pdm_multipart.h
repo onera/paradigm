@@ -36,6 +36,7 @@
 #include "pdm_part_mesh_nodal.h"
 #include "pdm_part_mesh.h"
 #include "pdm_domain_interface.h"
+#include "pdm_isosurface.h"
 
 /*----------------------------------------------------------------------------*/
 
