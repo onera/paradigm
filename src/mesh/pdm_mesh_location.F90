@@ -1449,8 +1449,9 @@ module pdm_mesh_location
     type(c_ptr)                   :: c_cell_vtx
     integer                       :: n_cell
 
-    cell_vtx_idx = C_NULL_PTR
-    cell_vtx     = C_NULL_PTR
+    c_cell_vtx_idx = C_NULL_PTR
+    c_cell_vtx     = C_NULL_PTR
+
     call PDM_mesh_location_cell_vertex_get_cf(mloc,           &
                                               i_part,         &
                                               c_cell_vtx_idx, &
