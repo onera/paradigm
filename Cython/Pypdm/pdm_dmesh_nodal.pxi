@@ -84,6 +84,7 @@ cdef extern from "pdm_dmesh_nodal.h":
     void PDM_dmesh_nodal_dump_vtk(PDM_dmesh_nodal_t   *dmn,
                                   PDM_geometry_kind_t  geom_kind,
                                   const char          *filename_patter)
+    void PDM_dmesh_nodal_find_topological_ridge(PDM_dmesh_nodal_t         *dmesh_nodal);
     # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 cdef extern from "pdm_elt_parent_find.h":
@@ -532,3 +533,7 @@ def ComputeDistributionFromDelmt(int         dnelt,
 # ------------------------------------------------------------------------
 
 
+def find_topological_ridge(DMeshNodal pydmn):
+  """
+  """
+  PDM_dmesh_nodal_find_topological_ridge(pydmn.dmn)
