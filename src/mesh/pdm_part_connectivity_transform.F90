@@ -135,12 +135,12 @@ module pdm_part_connectivity_transform
 
       integer(c_int) :: c_n_entity1
 
-      type(c_ptr)    :: c_entity1_entity2_idx     = C_NULL_PTR
-      type(c_ptr)    :: c_entity1_entity2         = C_NULL_PTR
-      type(c_ptr)    :: c_entity2_entity3_idx     = C_NULL_PTR
-      type(c_ptr)    :: c_entity2_entity3         = C_NULL_PTR
-      type(c_ptr)    :: c_entity1_entity3_idx     = C_NULL_PTR
-      type(c_ptr)    :: c_entity1_entity3         = C_NULL_PTR
+      type(c_ptr)    :: c_entity1_entity2_idx
+      type(c_ptr)    :: c_entity1_entity2
+      type(c_ptr)    :: c_entity2_entity3_idx
+      type(c_ptr)    :: c_entity2_entity3
+      type(c_ptr)    :: c_entity1_entity3_idx
+      type(c_ptr)    :: c_entity1_entity3
 
       c_n_entity1 = n_entity1
 
@@ -148,6 +148,8 @@ module pdm_part_connectivity_transform
       c_entity1_entity2     = c_loc(entity1_entity2)
       c_entity2_entity3_idx = c_loc(entity2_entity3_idx)
       c_entity2_entity3     = c_loc(entity2_entity3)
+      c_entity1_entity3_idx     = C_NULL_PTR
+      c_entity1_entity3         = C_NULL_PTR
 
       call PDM_combine_connectivity_cf(c_n_entity1,           &
                                        c_entity1_entity2_idx, &
@@ -201,16 +203,18 @@ module pdm_part_connectivity_transform
       integer(c_int) :: c_n_entity1
       integer(c_int) :: c_n_entity2
 
-      type(c_ptr)    :: c_entity1_entity2_idx     = C_NULL_PTR
-      type(c_ptr)    :: c_entity1_entity2         = C_NULL_PTR
-      type(c_ptr)    :: c_entity2_entity1_idx     = C_NULL_PTR
-      type(c_ptr)    :: c_entity2_entity1         = C_NULL_PTR
+      type(c_ptr)    :: c_entity1_entity2_idx
+      type(c_ptr)    :: c_entity1_entity2
+      type(c_ptr)    :: c_entity2_entity1_idx
+      type(c_ptr)    :: c_entity2_entity1
 
       c_n_entity1 = n_entity1
       c_n_entity2 = n_entity2
 
       c_entity1_entity2_idx = c_loc(entity1_entity2_idx)
       c_entity1_entity2     = c_loc(entity1_entity2)
+      c_entity2_entity1_idx = C_NULL_PTR
+      c_entity2_entity1     = C_NULL_PTR
 
       call PDM_connectivity_transpose_cf(c_n_entity1,           &
                                          c_n_entity2,           &

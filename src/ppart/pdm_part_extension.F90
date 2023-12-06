@@ -394,8 +394,8 @@ subroutine PDM_part_extension_connectivity_get (part_ext,          &
   integer(pdm_l_num_s), pointer :: connect(:)
   integer(pdm_l_num_s), pointer :: connect_idx(:)
 
-  type(c_ptr)                   :: c_connect     = C_NULL_PTR
-  type(c_ptr)                   :: c_connect_idx = C_NULL_PTR
+  type(c_ptr)                   :: c_connect
+  type(c_ptr)                   :: c_connect_idx
 
   interface
     function PDM_part_extension_connectivity_get_c (part_ext,          &
@@ -420,6 +420,8 @@ subroutine PDM_part_extension_connectivity_get (part_ext,          &
     end function PDM_part_extension_connectivity_get_c
   end interface
 
+  c_connect     = C_NULL_PTR
+  c_connect_idx = C_NULL_PTR
   n_elt =  PDM_part_extension_connectivity_get_c (part_ext,          &
                                                   i_domain,          &
                                                   i_part,            &
@@ -466,7 +468,7 @@ subroutine PDM_part_extension_ln_to_gn_get (part_ext,    &
   integer, intent(out)          :: n_elt
   integer(pdm_g_num_s), pointer :: ln_to_gn(:)
 
-  type(c_ptr)                   :: c_ln_to_gn = C_NULL_PTR
+  type(c_ptr)                   :: c_ln_to_gn
 
   interface
     function PDM_part_extension_ln_to_gn_get_c (part_ext,    &
@@ -489,6 +491,7 @@ subroutine PDM_part_extension_ln_to_gn_get (part_ext,    &
     end function PDM_part_extension_ln_to_gn_get_c
   end interface
 
+  c_ln_to_gn = C_NULL_PTR
   n_elt =  PDM_part_extension_ln_to_gn_get_c (part_ext,    &
                                               i_domain,    &
                                               i_part,      &
@@ -534,9 +537,9 @@ subroutine PDM_part_extension_group_get (part_ext,      &
   integer(pdm_l_num_s), pointer :: elt_group_idx(:)
   integer(pdm_g_num_s), pointer :: ln_to_gn(:)
 
-  type(c_ptr)                   :: c_elt_group     = C_NULL_PTR
-  type(c_ptr)                   :: c_elt_group_idx = C_NULL_PTR
-  type(c_ptr)                   :: c_ln_to_gn      = C_NULL_PTR
+  type(c_ptr)                   :: c_elt_group
+  type(c_ptr)                   :: c_elt_group_idx
+  type(c_ptr)                   :: c_ln_to_gn
 
   interface
     function PDM_part_extension_group_get_c (part_ext,      &
@@ -563,6 +566,9 @@ subroutine PDM_part_extension_group_get (part_ext,      &
     end function PDM_part_extension_group_get_c
   end interface
 
+  c_elt_group     = C_NULL_PTR
+  c_elt_group_idx = C_NULL_PTR
+  c_ln_to_gn      = C_NULL_PTR
   n_elt =  PDM_part_extension_group_get_c (part_ext,              &
                                            i_domain,              &
                                            i_part,                &
@@ -612,7 +618,7 @@ subroutine PDM_part_extension_coord_get (part_ext,    &
   integer, intent(out)      :: n_vtx
   double precision, pointer :: vtx_coord(:,:)
 
-  type(c_ptr)               :: c_vtx_coord = C_NULL_PTR
+  type(c_ptr)               :: c_vtx_coord
 
   interface
     function PDM_part_extension_coord_get_c (part_ext,    &
@@ -633,6 +639,7 @@ subroutine PDM_part_extension_coord_get (part_ext,    &
     end function PDM_part_extension_coord_get_c
   end interface
 
+  c_vtx_coord = C_NULL_PTR
   n_vtx =  PDM_part_extension_coord_get_c (part_ext,    &
                                            i_domain,    &
                                            i_part,      &
@@ -854,10 +861,10 @@ subroutine PDM_part_to_part_create_from_extension (ptp,                         
 
   integer                           :: i
   integer(c_int)                    :: c_comm
-  type(c_ptr)                       :: c_selected_cell_to_send_idx      = C_NULL_PTR
-  type(c_ptr)                       :: c_selected_cell_to_send          = C_NULL_PTR
-  type(c_ptr)                       :: c_selected_cell_to_send_ln_to_gn = C_NULL_PTR
-  type(c_ptr)                       :: c_n_selected_cell_to_send        = C_NULL_PTR
+  type(c_ptr)                       :: c_selected_cell_to_send_idx
+  type(c_ptr)                       :: c_selected_cell_to_send
+  type(c_ptr)                       :: c_selected_cell_to_send_ln_to_gn
+  type(c_ptr)                       :: c_n_selected_cell_to_send
   integer, allocatable              :: length_selected_cell_to_send_idx(:)
   integer, allocatable              :: length_selected_cell_to_send(:)
   integer, allocatable              :: length_selected_cell_to_send_ln_to_gn(:)
@@ -895,6 +902,10 @@ subroutine PDM_part_to_part_create_from_extension (ptp,                         
 
   c_comm = PDM_MPI_Comm_f2c(comm)
 
+  c_selected_cell_to_send_idx      = C_NULL_PTR
+  c_selected_cell_to_send          = C_NULL_PTR
+  c_selected_cell_to_send_ln_to_gn = C_NULL_PTR
+  c_n_selected_cell_to_send        = C_NULL_PTR
   call PDM_part_to_part_create_from_extension_c (ptp,                              &
                                                  n_part,                           &
                                                  c_loc(n_int_cell),                &

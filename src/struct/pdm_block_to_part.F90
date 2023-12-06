@@ -259,7 +259,7 @@ subroutine PDM_block_to_part_exch_in_place_int (btp,          &
   type(PDM_pointer_array_t), pointer :: part_stride
   type(PDM_pointer_array_t), pointer :: part_data
 
-  integer                           :: s_data = 4
+  integer, parameter                 :: s_data = 4
 
   if (part_data%type .ne. PDM_TYPE_INT) then
     print *, "PDM_block_to_part_exch_in_place_int : wrong type"
@@ -300,7 +300,7 @@ subroutine PDM_block_to_part_exch_in_place_g_num (btp,          &
   type(PDM_pointer_array_t), pointer :: part_stride
   type(PDM_pointer_array_t), pointer :: part_data
 
-  integer                           :: s_data = 8
+  integer, parameter                 :: s_data = 8
 
   if (part_data%type .ne. PDM_TYPE_G_NUM) then
     print *, "PDM_block_to_part_exch_in_place_g_num : wrong type"
@@ -341,7 +341,7 @@ subroutine PDM_block_to_part_exch_in_place_double (btp,          &
   type(PDM_pointer_array_t), pointer :: part_stride
   type(PDM_pointer_array_t), pointer :: part_data
 
-  integer                           :: s_data = 8
+  integer, parameter                 :: s_data = 8
 
   if (part_data%type .ne. PDM_TYPE_DOUBLE) then
     print *, "PDM_block_to_part_exch_in_place_double : wrong type"
@@ -381,7 +381,7 @@ subroutine PDM_block_to_part_exch_in_place_real4 (btp,          &
   type(PDM_pointer_array_t), pointer :: part_stride
   type(PDM_pointer_array_t), pointer :: part_data
 
-  integer                           :: s_data = 4
+  integer, parameter                 :: s_data = 4
 
   if (part_data%type .ne. PDM_TYPE_REAL4) then
     print *, "PDM_block_to_part_exch_in_place_real4 : wrong type"
@@ -421,7 +421,7 @@ subroutine PDM_block_to_part_exch_in_place_complex4 (btp,          &
   type(PDM_pointer_array_t), pointer :: part_stride
   type(PDM_pointer_array_t), pointer :: part_data
 
-  integer                           :: s_data = 8
+  integer, parameter                 :: s_data = 8
 
   if (part_data%type .ne. PDM_TYPE_REAL4) then
     print *, "PDM_block_to_part_exch_in_place_complex4 : wrong type"
@@ -461,7 +461,7 @@ subroutine PDM_block_to_part_exch_in_place_complex8 (btp,          &
   type(PDM_pointer_array_t), pointer :: part_stride
   type(PDM_pointer_array_t), pointer :: part_data
 
-  integer                           :: s_data = 16
+  integer, parameter                 :: s_data = 16
 
   if (part_data%type .ne. PDM_TYPE_REAL4) then
     print *, "PDM_block_to_part_exch_in_place_complex4 : wrong type"
@@ -558,10 +558,13 @@ subroutine PDM_block_to_part_exch_int (btp,          &
   type(PDM_pointer_array_t), pointer :: part_stride
   type(PDM_pointer_array_t), pointer :: part_data
 
-  type(c_ptr)                       :: c_part_stride = C_NULL_PTR
-  type(c_ptr)                       :: c_part_data   = C_NULL_PTR
+  type(c_ptr)                       :: c_part_stride
+  type(c_ptr)                       :: c_part_data  
 
-  integer                           :: s_data = 4
+  integer, parameter                :: s_data = 4
+
+  c_part_stride = C_NULL_PTR
+  c_part_data   = C_NULL_PTR
 
   call PDM_block_to_part_exch_c (btp,                 &
                                  s_data,              &
@@ -600,10 +603,13 @@ subroutine PDM_block_to_part_exch_g_num (btp,          &
   type(PDM_pointer_array_t), pointer :: part_stride
   type(PDM_pointer_array_t), pointer :: part_data
 
-  type(c_ptr)                       :: c_part_stride = C_NULL_PTR
-  type(c_ptr)                       :: c_part_data   = C_NULL_PTR
+  type(c_ptr)                       :: c_part_stride
+  type(c_ptr)                       :: c_part_data  
 
-  integer                           :: s_data = 8
+  integer, parameter                :: s_data = 8
+
+  c_part_stride = C_NULL_PTR
+  c_part_data   = C_NULL_PTR
 
   call PDM_block_to_part_exch_c (btp,                 &
                                  s_data,              &
@@ -641,10 +647,13 @@ subroutine PDM_block_to_part_exch_double (btp,          &
   type(PDM_pointer_array_t), pointer :: part_stride
   type(PDM_pointer_array_t), pointer :: part_data
 
-  type(c_ptr)                       :: c_part_stride = C_NULL_PTR
-  type(c_ptr)                       :: c_part_data   = C_NULL_PTR
+  type(c_ptr)                       :: c_part_stride 
+  type(c_ptr)                       :: c_part_data   
 
-  integer                           :: s_data = 8
+  integer, parameter                :: s_data = 8
+
+  c_part_stride = C_NULL_PTR
+  c_part_data   = C_NULL_PTR
 
   call PDM_block_to_part_exch_c (btp,                 &
                                  s_data,              &
@@ -681,10 +690,13 @@ subroutine PDM_block_to_part_exch_real4 (btp,          &
   type(PDM_pointer_array_t), pointer :: part_stride
   type(PDM_pointer_array_t), pointer :: part_data
 
-  type(c_ptr)                       :: c_part_stride = C_NULL_PTR
-  type(c_ptr)                       :: c_part_data   = C_NULL_PTR
+  type(c_ptr)                       :: c_part_stride 
+  type(c_ptr)                       :: c_part_data   
 
-  integer                           :: s_data = 4
+  integer, parameter                :: s_data = 4
+
+  c_part_stride = C_NULL_PTR
+  c_part_data   = C_NULL_PTR
 
   call PDM_block_to_part_exch_c (btp,                 &
                                  s_data,              &
@@ -721,10 +733,13 @@ subroutine PDM_block_to_part_exch_complex4 (btp,          &
   type(PDM_pointer_array_t), pointer :: part_stride
   type(PDM_pointer_array_t), pointer :: part_data
 
-  type(c_ptr)                       :: c_part_stride = C_NULL_PTR
-  type(c_ptr)                       :: c_part_data   = C_NULL_PTR
+  type(c_ptr)                       :: c_part_stride 
+  type(c_ptr)                       :: c_part_data   
 
-  integer                           :: s_data = 8
+  integer, parameter                :: s_data = 8
+
+  c_part_stride = C_NULL_PTR
+  c_part_data   = C_NULL_PTR
 
   call PDM_block_to_part_exch_c (btp,                 &
                                  s_data,              &
@@ -764,7 +779,10 @@ subroutine PDM_block_to_part_exch_complex8 (btp,          &
   type(c_ptr)                       :: c_part_stride = C_NULL_PTR
   type(c_ptr)                       :: c_part_data   = C_NULL_PTR
 
-  integer                           :: s_data = 16
+  integer, parameter                :: s_data = 16
+
+  c_part_stride = C_NULL_PTR
+  c_part_data   = C_NULL_PTR
 
   call PDM_block_to_part_exch_c (btp,                 &
                                  s_data,              &
@@ -805,6 +823,9 @@ subroutine PDM_block_to_part_exch_cptr (btp,          &
 
   type(c_ptr)                       :: c_part_stride = C_NULL_PTR
   type(c_ptr)                       :: c_part_data   = C_NULL_PTR
+
+  c_part_stride = C_NULL_PTR
+  c_part_data   = C_NULL_PTR
 
   call PDM_block_to_part_exch_c (btp,                 &
                                  s_data,              &
@@ -897,7 +918,7 @@ subroutine PDM_block_to_part_exch_finalize (btp,           &
   integer, intent(in), optional     :: s_data
 
   integer                           :: n_part, n_elt
-  integer(pdm_l_num_s), pointer     :: stride(:) => null()
+  integer(pdm_l_num_s), pointer     :: stride(:)
   integer                           :: s_part_data
   integer                           :: i, j
 
@@ -905,6 +926,7 @@ subroutine PDM_block_to_part_exch_finalize (btp,           &
   integer, allocatable              :: length_data(:)
 
   n_part = PDM_block_to_part_n_part_get (btp)
+  stride => null()
 
   allocate(length_data(n_part))
 
@@ -1033,11 +1055,12 @@ subroutine PDM_block_to_part_exch_in_place_finalize (btp,           &
   type(PDM_pointer_array_t), pointer :: part_data
 
   integer                           :: n_part, n_elt
-  integer(pdm_l_num_s), pointer     :: stride(:) => null()
+  integer(pdm_l_num_s), pointer     :: stride(:)
   integer                           :: s_part_data
   integer                           :: i, j
 
   n_part = PDM_block_to_part_n_part_get (btp)
+  stride => null()
 
   do i = 1, n_part
 

@@ -206,8 +206,8 @@ module pdm_mesh_nodal
     integer, intent(in)                 :: owner
     double precision, pointer           :: coords(:,:)
     integer (pdm_g_num_s), pointer      :: numabs(:)
-    type(c_ptr) :: c_coords = C_NULL_PTR
-    type(c_ptr) :: c_numabs = C_NULL_PTR
+    type(c_ptr) :: c_coords
+    type(c_ptr) :: c_numabs
 
     interface
       subroutine PDM_mesh_nodal_coord_set_c (mesh, id_part, n_vtx, coords, numabs, owner) &
@@ -258,10 +258,10 @@ module pdm_mesh_nodal
     integer (pdm_l_num_s), pointer      :: cell_vtx_nb(:)
     integer (pdm_l_num_s), pointer      :: cell_vtx(:)
     integer (pdm_g_num_s), pointer      :: numabs(:)
-    type(c_ptr) :: c_cell_vtx_idx = C_NULL_PTR
-    type(c_ptr) :: c_cell_vtx_nb = C_NULL_PTR
-    type(c_ptr) :: c_cell_vtx = C_NULL_PTR
-    type(c_ptr) :: c_numabs = C_NULL_PTR
+    type(c_ptr) :: c_cell_vtx_idx
+    type(c_ptr) :: c_cell_vtx_nb
+    type(c_ptr) :: c_cell_vtx
+    type(c_ptr) :: c_numabs
 
     interface
       subroutine PDM_Mesh_nodal_cells_cellvtx_add_c (mesh, id_part, n_cell, cell_vtx_idx, cell_vtx_nb, cell_vtx, numabs, owner) &
@@ -316,10 +316,10 @@ module pdm_mesh_nodal
     integer (pdm_l_num_s), pointer      :: face_vtx_nb(:)
     integer (pdm_l_num_s), pointer      :: face_vtx(:)
     integer (pdm_g_num_s), pointer      :: numabs(:)
-    type(c_ptr) :: c_face_vtx_idx = C_NULL_PTR
-    type(c_ptr) :: c_face_vtx_nb = C_NULL_PTR
-    type(c_ptr) :: c_face_vtx = C_NULL_PTR
-    type(c_ptr) :: c_numabs = C_NULL_PTR
+    type(c_ptr) :: c_face_vtx_idx
+    type(c_ptr) :: c_face_vtx_nb
+    type(c_ptr) :: c_face_vtx
+    type(c_ptr) :: c_numabs
 
     interface
       subroutine PDM_Mesh_nodal_faces_facevtx_add_c (mesh, id_part, n_face, face_vtx_idx, face_vtx_nb, face_vtx, numabs, owner) &
@@ -384,13 +384,13 @@ subroutine PDM_Mesh_nodal_cell2d_celledge_add (mesh, id_part, n_elt, n_edge, edg
     integer (pdm_l_num_s), pointer      :: cell_edge_nb(:)
     integer (pdm_l_num_s), pointer      :: cell_edge(:)
     integer (pdm_g_num_s), pointer      :: numabs(:)
-    type(c_ptr) :: c_edge_vtx_idx = C_NULL_PTR
-    type(c_ptr) :: c_edge_vtx_nb = C_NULL_PTR
-    type(c_ptr) :: c_edge_vtx = C_NULL_PTR
-    type(c_ptr) :: c_cell_edge_idx = C_NULL_PTR
-    type(c_ptr) :: c_cell_edge_nb = C_NULL_PTR
-    type(c_ptr) :: c_cell_edge = C_NULL_PTR
-    type(c_ptr) :: c_numabs = C_NULL_PTR
+    type(c_ptr) :: c_edge_vtx_idx
+    type(c_ptr) :: c_edge_vtx_nb
+    type(c_ptr) :: c_edge_vtx
+    type(c_ptr) :: c_cell_edge_idx
+    type(c_ptr) :: c_cell_edge_nb
+    type(c_ptr) :: c_cell_edge
+    type(c_ptr) :: c_numabs
 
     interface
       subroutine PDM_Mesh_nodal_cell2d_celledge_add_c (mesh, id_part, n_elt, n_edge, edge_vtx_idx, edge_vtx_nb, edge_vtx, &
@@ -465,14 +465,14 @@ subroutine PDM_Mesh_nodal_cell3d_cellface_add (mesh, id_part, n_elt, n_face, fac
     integer (pdm_l_num_s), pointer      :: cell_face_nb(:)
     integer (pdm_l_num_s), pointer      :: cell_face(:)
     integer (pdm_g_num_s), pointer      :: numabs(:)
-    type(c_ptr) :: c_face_vtx_idx = C_NULL_PTR
-    type(c_ptr) :: c_face_vtx_nb = C_NULL_PTR
-    type(c_ptr) :: c_face_vtx = C_NULL_PTR
-    type(c_ptr) :: c_face_ln_to_gn = C_NULL_PTR
-    type(c_ptr) :: c_cell_face_idx = C_NULL_PTR
-    type(c_ptr) :: c_cell_face_nb = C_NULL_PTR
-    type(c_ptr) :: c_cell_face = C_NULL_PTR
-    type(c_ptr) :: c_numabs = C_NULL_PTR
+    type(c_ptr) :: c_face_vtx_idx
+    type(c_ptr) :: c_face_vtx_nb
+    type(c_ptr) :: c_face_vtx
+    type(c_ptr) :: c_face_ln_to_gn
+    type(c_ptr) :: c_cell_face_idx
+    type(c_ptr) :: c_cell_face_nb
+    type(c_ptr) :: c_cell_face
+    type(c_ptr) :: c_numabs
 
     interface
       subroutine PDM_Mesh_nodal_cell3d_cellface_add_c (mesh, id_part, n_elt, n_face, face_vtx_idx, face_vtx_nb, face_vtx, &
@@ -530,8 +530,8 @@ subroutine PDM_Mesh_nodal_cell3d_cellface_add (mesh, id_part, n_elt, n_face, fac
     integer, intent(in)            :: id_part
     integer (pdm_l_num_s), pointer :: cell_vtx_idx(:)
     integer (pdm_l_num_s), pointer :: cell_vtx(:)
-    type(c_ptr)    :: c_cell_vtx_idx = C_NULL_PTR
-    type(c_ptr)    :: c_cell_vtx = C_NULL_PTR
+    type(c_ptr)    :: c_cell_vtx_idx
+    type(c_ptr)    :: c_cell_vtx
     integer(c_int) :: n_elt
 
     interface
@@ -567,6 +567,8 @@ subroutine PDM_Mesh_nodal_cell3d_cellface_add (mesh, id_part, n_elt, n_face, fac
 
     n_elt = PDM_Mesh_nodal_n_cell_get_c(mesh, id_part)
 
+    c_cell_vtx_idx = C_NULL_PTR
+    c_cell_vtx = C_NULL_PTR
     call  PDM_Mesh_nodal_cell_vtx_connectivity_get_c (mesh, id_part, c_cell_vtx_idx, c_cell_vtx)
 
     call c_f_pointer(c_cell_vtx_idx,   &
