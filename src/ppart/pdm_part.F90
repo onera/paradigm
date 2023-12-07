@@ -1869,9 +1869,16 @@ contains
     c_n_total_part    = n_total_part
     c_n_face_group    = n_face_group
 
-    c_renum_properties_cell = c_loc(renum_properties_cell)
-    c_renum_properties_face = c_loc(renum_properties_face)
+    c_renum_properties_cell = C_NULL_PTR
+    if (n_property_cell > 0 .and. associated(renum_properties_cell)) then
+      c_renum_properties_cell = c_loc(renum_properties_cell)
+    endif
 
+    c_renum_properties_face = C_NULL_PTR
+    if (n_property_face > 0 .and. associated(renum_properties_face)) then
+      c_renum_properties_face = c_loc(renum_properties_face)
+    endif
+    
     if (have_cell_tag) then
       c_have_cell_tag = 1
     else
