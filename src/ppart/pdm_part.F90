@@ -2087,9 +2087,6 @@ contains
     c_face_ln_to_gn            = c_loc(face_ln_to_gn           )
     c_vtxCoord                 = c_loc(vtxCoord                )
     c_vtx_ln_to_gn             = c_loc(vtx_ln_to_gn            )
-    c_face_group_idx           = c_loc(face_group_idx          )
-    c_face_group               = c_loc(face_group              )
-    c_face_group_ln_to_gn      = c_loc(face_group_ln_to_gn     )
     c_face_part_bound_proc_idx = c_loc(face_part_bound_proc_idx)
     c_face_part_bound_part_idx = c_loc(face_part_bound_part_idx)
     
@@ -2119,6 +2116,21 @@ contains
       c_face_weight = c_loc(face_weight)
     endif
 
+    c_face_group_idx = C_NULL_PTR
+    if (associated(face_group_idx)) then
+      c_face_group_idx = c_loc(face_group_idx)
+    endif
+
+    c_face_group = C_NULL_PTR
+    if (associated(face_group)) then
+      c_face_group = c_loc(face_group)
+    endif
+    
+    c_face_group_ln_to_gn = C_NULL_PTR
+    if (associated(face_group_ln_to_gn)) then
+      c_face_group_ln_to_gn = c_loc(face_group_ln_to_gn)
+    endif
+    
     c_face_part_bound = C_NULL_PTR
     if (associated(face_part_bound)) then
       c_face_part_bound = c_loc(face_part_bound)
