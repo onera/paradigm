@@ -1138,6 +1138,16 @@ contains
       c_renum_properties_face = c_loc(renum_properties_face)
     endif
 
+    c_dcell_faceIdx = C_NULL_PTR
+    if (associated(dCellFaceIdx)) then
+      c_dcell_faceIdx = c_loc(dCellFaceIdx)
+    endif
+
+    c_dcell_face = C_NULL_PTR
+    if (associated(dCellFace)) then
+      c_dcell_face = c_loc(dCellFace)
+    endif
+
     c_split_method    = split_method
     c_n_property_cell = nPropertyCell
     c_n_property_face = nPropertyFace
@@ -1148,8 +1158,6 @@ contains
     c_n_face_group    = nFaceGroup
 
     c_renum_properties_cell = c_loc(renum_properties_cell)
-    c_dcell_faceIdx         = c_loc(dCellFaceIdx         )
-    c_dcell_face            = c_loc(dCellFace            )
     c_dface_vtx_idx         = c_loc(dFaceVtxIdx          )
     c_dface_vtx             = c_loc(dFaceVtx             )
     c_dvtx_coord            = c_loc(dVtxCoord            )
