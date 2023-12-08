@@ -148,6 +148,10 @@ His idea is to fuse the graph contraction and seed expansion algorithms. It turn
 algorithm is more costly than a graph contraction algorithm but less than fusing the above cited algorithms. The
 boundary of the extracted zones are not remeshed as is the case with a cavity.
 
+The `SCOTCH_graphColor` algorithm in SCOTCH implements Luby's algorithm. In ParaDiGM we used the Greedy algorithm
+for the cavity-cavity graph coloring. The development of a parallel propagation algorithm would be the solution
+to the graph coloring problem (as well as creation of a Voronoï diagram or mesh generation).
+
 Tools
 =====
 
@@ -212,7 +216,7 @@ What points do we want to work on?
 - unitary tests
 - projection using :math:`P^3` reconstruction for direction (local or global?)
 - does MMG3D do projections ?
-- have a look at color_graph of SCOTCH (easily parallelizable?)
+- propagation algorithm for graph coloring
 
 References
 ==========
