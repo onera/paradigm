@@ -58,6 +58,15 @@ extern "C" {
 typedef struct _pdm_isosurface_t PDM_isosurface_t;
 
 
+typedef void (*PDM_isosurface_field_function_t)
+(
+ const double  x,
+ const double  y,
+ const double  z,
+ double       *value
+);
+
+
 /*=============================================================================
  * Static global variables
  *============================================================================*/
@@ -73,7 +82,6 @@ typedef struct _pdm_isosurface_t PDM_isosurface_t;
  *
  * \param [in]  comm            PDM MPI communicator
  * \param [in]  mesh_dimension  Dimension of source mesh (2 or 3)
- * \param [in]  kind            Iso-surface kind
  *
  */
 
@@ -81,8 +89,7 @@ PDM_isosurface_t *
 PDM_isosurface_create
 (
  PDM_MPI_Comm           comm,
- int                    mesh_dimension,
- PDM_iso_surface_kind_t kind
+ int                    mesh_dimension
 );
 
 
@@ -362,7 +369,33 @@ PDM_isosurface_dmesh_nodal_set
 
 /**
  *
- * \brief Set iso-surface equation
+ * \brief Add a requested set of iso-surfaces
+ *
+ * \param [in]  isos         \ref PDM_isosurface_t instance
+ * \param [in]  kind         Iso-surface kind (discrete field, slice equation or function pointer)
+ * \param [in]  n_isovalues  Number of iso-values
+ * \param [in]  isovalues    Iso-values (size = \p n_isovalues)
+ *
+ * \return Iso-surface identifier
+ *
+ */
+
+int PDM_isosurface_add
+(
+ PDM_isosurface_t       *isos,
+ PDM_iso_surface_kind_t  kind,
+ int                     n_isovalues,
+ double                 *isovalues
+ );
+
+
+
+
+
+
+/**
+ *
+ * \brief Set source field equation
  *
  * - \ref PDM_ISO_SURFACE_KIND_PLANE (3 coefficients):
  *   \f$\phi(x,y,z) = \texttt{coeff[0]} \cdot x + \texttt{coeff[1]} \cdot y + \texttt{coeff[2]} \cdot z\f$
@@ -373,16 +406,37 @@ PDM_isosurface_dmesh_nodal_set
  * - \ref PDM_ISO_SURFACE_KIND_QUADRIC (10 coefficients):
  *   \f$\phi(x,y,z) = \texttt{coeff[6]} \left(\frac{x - \texttt{coeff[0]}}{\texttt{coeff[3]}}\right)^2 + \texttt{coeff[7]} \left(\frac{y - \texttt{coeff[1]}}{\texttt{coeff[4]}}\right)^2 + \texttt{coeff[8]} \left(\frac{z - \texttt{coeff[2]}}{\texttt{coeff[5]}}\right)^2 - \texttt{coeff[9]}^2\f$
  *
- * \param [in]  isos    \ref PDM_isosurface_t instance
- * \param [in]  coeff   Equation coefficients
+ * \param [in]  isos           \ref PDM_isosurface_t instance
+ * \param [in]  id_isosurface  Iso-surface identifier
+ * \param [in]  coeff          Equation coefficients
  *
  */
 
 void PDM_isosurface_equation_set
 (
  PDM_isosurface_t *isos,
+ int               id_isosurface,
  double           *coeff
 );
+
+
+/**
+ *
+ * \brief Set source field function
+ *
+ * \param [in]  isos           \ref PDM_isosurface_t instance
+ * \param [in]  id_isosurface  Iso-surface identifier
+ * \param [in]  func           Function pointer
+ *
+ */
+// ajouter PDM_isosurface_gradient_function_set ?
+
+void PDM_isosurface_field_function_set
+(
+ PDM_isosurface_t                *isos,
+ int                              id_isosurface,
+ PDM_isosurface_field_function_t  func
+ );
 
 
 /**
@@ -395,6 +449,7 @@ void PDM_isosurface_equation_set
  *
  */
 // Doit-on gérer cell-centered?
+// un field par id_isosurface??
 
 void PDM_isosurface_field_set
 (
