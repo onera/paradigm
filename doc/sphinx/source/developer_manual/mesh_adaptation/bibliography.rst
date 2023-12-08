@@ -127,13 +127,26 @@ From a continuous point of view, the mesh gradation process consists in verifyin
 where :math:`C` is a constant and :math:`\left\lVert . \right\rVert` a matrix norm.
 This is an algorithm of quadratic complexity. Alternative less CPU-costly algorithms have been suggested in [13].
 
-Gradation
----------
-
 Groups
 ------
 
 The article we relied on to develop the group maintain algorithm is [14].
+
+Graph
+-----
+
+An important aspect of parallel mesh adaptation is the scheduling of the remeshing tasks.
+
+Rakotoarivelo [8] uses a graph of tasks from which a maximum stable is extracted. The graph is constructed on mesh entity couples rather than edges.
+The data structure induced cache misses when working with edges. An analysis of several approaches revealed that the method of Çatalyurek
+proved best. There are no sequential conflit handlings but the are some synchronisation barriers. Morevover, it is an algorithm for
+shared-memory parallelism.
+
+Lachat [15] aims to extract independant zones (sub-meshes) on which to call the sequential remesher MMG3D rather than independant tasks.
+The zones are not attached to a given partition to avoid marking the output mesh with the partitioning.
+His idea is to fuse the graph contraction and seed expansion algorithms. It turns out that a multi-level partitioning
+algorithm is more costly than a graph contraction algorithm but less than fusing the above cited algorithms. The
+boundary of the extracted zones are not remeshed as is the case with a cavity.
 
 Tools
 =====
@@ -150,6 +163,7 @@ Let's start with tool that mention a form of parallelism:
   - https://github.com/AMReX-Codes/amrex (massively parallel but block-structured, C++)
   - CDT3D (parallel)
   - https://github.com/nasa/refine (C, MPI)
+  - https://gitlab.inria.fr/PaMPA/PaMPA (C using MMG3D and PT-SCOTCH)
 
 Let's move on to other tools:
 
@@ -197,6 +211,8 @@ What points do we want to work on?
 - check independent to parallelism
 - unitary tests
 - projection using :math:`P^3` reconstruction for direction (local or global?)
+- does MMG3D do projections ?
+- have a look at color_graph of SCOTCH (easily parallelizable?)
 
 References
 ==========
@@ -238,3 +254,6 @@ In: Proceedings of the 2001 Symposium on Interactive 3D Graphics (2001).
 [13] F. Alauzet. “Size gradation control of anisotropic meshes”. In: Finite Elements in Analysis and Design (2009).
 
 [14] D. Marcum A. Loseille R. Löhner. “Robust Boundary Layer Mesh Generation”. In: ().
+
+[15] C. Lachat. "Conception et validation d’algorithmes de remaillage parallèles à mémoire distribuée
+basés sur un remailleur séquentiel". In: (2013).
