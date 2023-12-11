@@ -6,10 +6,6 @@ Iso-surfaces
 C API
 -----
 
-Enumerators
-"""""""""""
-
-.. doxygenenum:: PDM_iso_surface_kind_t
 
 Initialization
 """"""""""""""
@@ -48,8 +44,13 @@ Iso-surface settings
 """"""""""""""""""""
 
 .. doxygenfunction:: PDM_isosurface_add
+
+.. doxygenenum:: PDM_iso_surface_kind_t
+
 .. doxygenfunction:: PDM_isosurface_equation_set
 .. doxygenfunction:: PDM_isosurface_field_function_set
+
+.. doxygentypedef:: PDM_isosurface_field_function_t
 
 .. todo::
 
@@ -78,6 +79,11 @@ Iso-surface computation
 
 Outputs
 """""""
+
+.. todo::
+
+   - get groups/tags (entity→group/tag ou tag→group/entity)
+   - sortie en part_mesh_nodal/dmesh_nodal?
 
 Partitioned
 ~~~~~~~~~~~

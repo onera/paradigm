@@ -58,6 +58,15 @@ extern "C" {
 typedef struct _pdm_isosurface_t PDM_isosurface_t;
 
 
+/**
+ * \brief User-defined field function.
+ *
+ * \param [in]  x     X-coordinate
+ * \param [in]  y     Y-coordinate
+ * \param [in]  z     Z-coordinate
+ * \param [out] value Field value at point (x, y, z)
+ *
+ */
 typedef void (*PDM_isosurface_field_function_t)
 (
  const double  x,

@@ -341,7 +341,7 @@ typedef enum {
 
 /**
  * \enum PDM_iso_surface_kind_t
- * \brief Type of iso surface
+ * \brief Type of iso-surface
  *
  */
 typedef enum {
