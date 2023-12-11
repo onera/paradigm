@@ -83,6 +83,8 @@ typedef void (*PDM_isosurface_field_function_t)
  * \param [in]  comm            PDM MPI communicator
  * \param [in]  mesh_dimension  Dimension of source mesh (2 or 3)
  *
+ * \return Pointer to a new \ref PDM_isosurface_t instance
+ *
  */
 
 PDM_isosurface_t *
@@ -373,12 +375,13 @@ PDM_isosurface_dmesh_nodal_set
  *
  * \param [in]  isos         \ref PDM_isosurface_t instance
  * \param [in]  kind         Iso-surface kind (discrete field, slice equation or function pointer)
- * \param [in]  n_isovalues  Number of iso-values
- * \param [in]  isovalues    Iso-values (size = \p n_isovalues)
+ * \param [in]  n_isovalues  Number of iso-values to capture
+ * \param [in]  isovalues    Iso-values to capture (size = \p n_isovalues)
  *
  * \return Iso-surface identifier
  *
  */
+// elt_type, extract_kind, part_method?
 
 int PDM_isosurface_add
 (
@@ -389,13 +392,13 @@ int PDM_isosurface_add
  );
 
 
-
-
-
-
 /**
  *
  * \brief Set source field equation
+ *
+ * \param [in]  isos           \ref PDM_isosurface_t instance
+ * \param [in]  id_isosurface  Iso-surface identifier
+ * \param [in]  coeff          Equation coefficients
  *
  * - \ref PDM_ISO_SURFACE_KIND_PLANE (3 coefficients):
  *   \f$\phi(x,y,z) = \texttt{coeff[0]} \cdot x + \texttt{coeff[1]} \cdot y + \texttt{coeff[2]} \cdot z\f$
@@ -405,10 +408,6 @@ int PDM_isosurface_add
  *   \f$\phi(x,y,z) = \left(\frac{x - \texttt{coeff[0]}}{\texttt{coeff[3]}}\right)^2 + \left(\frac{y - \texttt{coeff[1]}}{\texttt{coeff[4]}}\right)^2 + \left(\frac{z - \texttt{coeff[2]}}{\texttt{coeff[5]}}\right)^2 - \texttt{coeff[6]}^2\f$
  * - \ref PDM_ISO_SURFACE_KIND_QUADRIC (10 coefficients):
  *   \f$\phi(x,y,z) = \texttt{coeff[6]} \left(\frac{x - \texttt{coeff[0]}}{\texttt{coeff[3]}}\right)^2 + \texttt{coeff[7]} \left(\frac{y - \texttt{coeff[1]}}{\texttt{coeff[4]}}\right)^2 + \texttt{coeff[8]} \left(\frac{z - \texttt{coeff[2]}}{\texttt{coeff[5]}}\right)^2 - \texttt{coeff[9]}^2\f$
- *
- * \param [in]  isos           \ref PDM_isosurface_t instance
- * \param [in]  id_isosurface  Iso-surface identifier
- * \param [in]  coeff          Equation coefficients
  *
  */
 
@@ -443,17 +442,18 @@ void PDM_isosurface_field_function_set
  *
  * \brief Set field values
  *
- * \param [in]  isos    \ref PDM_isosurface_t instance
- * \param [in]  i_part  Partition identifier
- * \param [in]  field   Field values (size = *n_vtx*)
+ * \param [in]  isos           \ref PDM_isosurface_t instance
+ * \param [in]  id_isosurface  Iso-surface identifier
+ * \param [in]  i_part         Partition identifier
+ * \param [in]  field          Field values (size = *n_vtx*)
  *
  */
-// Doit-on gérer cell-centered?
-// un field par id_isosurface??
+// on restreint à un seul field par id_isosurface?
 
 void PDM_isosurface_field_set
 (
  PDM_isosurface_t *isos,
+ int               id_isosurface,
  int               i_part,
  double           *field
 );
@@ -463,15 +463,17 @@ void PDM_isosurface_field_set
  *
  * \brief Set gradient values
  *
- * \param [in]  isos      \ref PDM_isosurface_t instance
- * \param [in]  i_part    Partition identifier
- * \param [in]  gradient  Gradient values (size = 3 * *n_vtx*)
+ * \param [in]  isos           \ref PDM_isosurface_t instance
+ * \param [in]  id_isosurface  Iso-surface identifier
+ * \param [in]  i_part         Partition identifier
+ * \param [in]  gradient       Gradient values (size = 3 * *n_vtx*)
  *
  */
 
 void PDM_isosurface_gradient_set
 (
  PDM_isosurface_t *isos,
+ int               id_isosurface,
  int               i_part,
  double           *gradient
 );
@@ -481,8 +483,9 @@ void PDM_isosurface_gradient_set
  *
  * \brief Set block-distributed field values
  *
- * \param [in]  isos    \ref PDM_isosurface_t instance
- * \param [in]  dfield  Field values (size = *dn_vtx*)
+ * \param [in]  isos           \ref PDM_isosurface_t instance
+ * \param [in]  id_isosurface  Iso-surface identifier
+ * \param [in]  dfield         Field values (size = *dn_vtx*)
  *
  */
 // Doit-on gérer cell-centered?
@@ -490,6 +493,7 @@ void PDM_isosurface_gradient_set
 void PDM_isosurface_dfield_set
 (
  PDM_isosurface_t *isos,
+ int               id_isosurface,
  double           *dfield
 );
 
@@ -498,18 +502,21 @@ void PDM_isosurface_dfield_set
  *
  * \brief Set block-distributed gradient values
  *
- * \param [in]  isos       \ref PDM_isosurface_t instance
- * \param [in]  dgradient  Gradient values (size = 3 * *dn_vtx*)
+ * \param [in]  isos           \ref PDM_isosurface_t instance
+ * \param [in]  id_isosurface  Iso-surface identifier
+ * \param [in]  dgradient      Gradient values (size = 3 * *dn_vtx*)
  *
  */
 
 void PDM_isosurface_dgradient_set
 (
  PDM_isosurface_t *isos,
+ int               id_isosurface,
  double           *dgradient
 );
 
 
+//---->>>> DANS CREATE OU ADD?
 /**
  *
  * \brief Set the iso-surface mesh element type
@@ -576,45 +583,23 @@ PDM_isosurface_part_method_set
  PDM_isosurface_t *isos,
  PDM_split_dual_t  part_method
  );
+//<<<<----
 
 
 /**
  *
- * \brief Set the iso-values to capture
+ * \brief Clear the constructed iso-surface meshes
  *
- * \param [in]  isos         \ref PDM_isosurface_t instance
- * \param [in]  n_isovalues  Number of iso-values
- * \param [in]  isovalues    Iso-values (size = \p n_isovalues)
- *
- * \note By default, a single iso-value is considered : 0
- *
- */
-
-//→ ça conditionne les allocations internes donc on peut
-// - basculer dans le create
-// - gérer les realloc/free avec un "reset" pour pouvoir garder le même mesh
-
-void
-PDM_isosurface_isovalues_set
-(
- PDM_isosurface_t *isos,
- int               n_isovalues,
- double           *isovalues
-);
-
-
-/**
- *
- * \brief Clear the constructed iso-surface meshes and the iso-values array
- *
- * \param [in]  isos  \ref PDM_isosurface_t instance
+ * \param [in]  isos           \ref PDM_isosurface_t instance
+ * \param [in]  id_isosurface  Iso-surface identifier (if < 0, all iso-surfaces are reset)
  *
  */
 
 void
 PDM_isosurface_reset
 (
- PDM_isosurface_t *isos
+ PDM_isosurface_t *isos,
+ int               id_isosurface
 );
 
 
@@ -624,14 +609,16 @@ PDM_isosurface_reset
  *
  * \brief Compute the iso-surface mesh for all requested iso-values
  *
- * \param [in]  isos  \ref PDM_isosurface_t instance
+ * \param [in]  isos           \ref PDM_isosurface_t instance
+ * \param [in]  id_isosurface  Iso-surface identifier (if < 0, all iso-surfaces are computed)
  *
  */
 
 void
 PDM_isosurface_compute
 (
- PDM_isosurface_t *isos
+ PDM_isosurface_t *isos,
+ int               id_isosurface
 );
 
 
@@ -652,14 +639,16 @@ PDM_isosurface_dump_times
 
 /* --- Outputs --- */
 
-// Doit-on gérer n_part > 1 en sortie?
+// Partitioned
 
 /**
  *
  * \brief Get iso-surface mesh connectivity for a given iso-value
  *
  * \param [in]  isos               \ref PDM_isosurface_t instance
+ * \param [in]  id_isosurface      Iso-surface identifier
  * \param [in]  i_isovalue         Iso-value identifier
+ * \param [in]  i_part             Partition identifier
  * \param [in]  connectivity_type  Connectivity type
  * \param [out] connect_idx        Connectivity index
  * \param [out] connect            Connectivity
@@ -677,7 +666,9 @@ int
 PDM_isosurface_connectivity_get
 (
  PDM_isosurface_t         *isos,
+ int                       id_isosurface,
  int                       i_isovalue,
+ int                       i_part,
  PDM_connectivity_type_t   connectivity_type,
  int                     **connect_idx,
  int                     **connect,
@@ -689,10 +680,12 @@ PDM_isosurface_connectivity_get
  *
  * \brief Get coordinates of iso-surface vertices
  *
- * \param [in]  isos        \ref PDM_isosurface_t instance
- * \param [in]  i_isovalue  Iso-value identifier
- * \param [out] vtx_coord   Vertex coordinates (size = 3 * *n_vtx*)
- * \param [in]  ownership   Ownership
+ * \param [in]  isos           \ref PDM_isosurface_t instance
+ * \param [in]  id_isosurface  Iso-surface identifier
+ * \param [in]  i_isovalue     Iso-value identifier
+ * \param [in]  i_part         Partition identifier
+ * \param [out] vtx_coord      Vertex coordinates (size = 3 * *n_vtx*)
+ * \param [in]  ownership      Ownership
  *
  * \return  Number of vertices
  *
@@ -702,7 +695,9 @@ int
 PDM_isosurface_vtx_coord_get
 (
  PDM_isosurface_t  *isos,
+ int                id_isosurface,
  int                i_isovalue,
+ int                i_part,
  double           **vtx_coord,
  PDM_ownership_t    ownership
 );
@@ -712,11 +707,13 @@ PDM_isosurface_vtx_coord_get
  *
  * \brief Get global ids of iso-surface entities
  *
- * \param [in]  isos         \ref PDM_isosurface_t instance
- * \param [in]  i_isovalue   Iso-value identifier
- * \param [in]  entity_type  Entity type
- * \param [out] ln_to_gn     Global ids
- * \param [in]  ownership    Ownership
+ * \param [in]  isos           \ref PDM_isosurface_t instance
+ * \param [in]  id_isosurface  Iso-surface identifier
+ * \param [in]  i_isovalue     Iso-value identifier
+ * \param [in]  i_part         Partition identifier
+ * \param [in]  entity_type    Entity type
+ * \param [out] ln_to_gn       Global ids
+ * \param [in]  ownership      Ownership
  *
  * \return  Number of entities
  *
@@ -726,7 +723,9 @@ int
 PDM_isosurface_ln_to_gn_get
 (
  PDM_isosurface_t     *isos,
+ int                   id_isosurface,
  int                   i_isovalue,
+ int                   i_part,
  PDM_mesh_entities_t   entity_type,
  PDM_g_num_t         **ln_to_gn,
  PDM_ownership_t       ownership
@@ -737,9 +736,64 @@ PDM_isosurface_ln_to_gn_get
 
 // Sorties en pmesh/pmesh_nodal ?
 
-// Sorties block-distribuées?
+// Block-distributed
+
+/**
+ *
+ * \brief Get iso-surface block-distributed mesh connectivity for a given iso-value
+ *
+ * \param [in]  isos               \ref PDM_isosurface_t instance
+ * \param [in]  id_isosurface      Iso-surface identifier
+ * \param [in]  i_isovalue         Iso-value identifier
+ * \param [in]  connectivity_type  Connectivity type
+ * \param [out] dconnect_idx       Connectivity index
+ * \param [out] dconnect           Connectivity
+ * \param [in]  ownership          Ownership
+ *
+ * \return Number of leading entities
+ *
+ */
+
+int
+PDM_isosurface_dconnectivity_get
+(
+ PDM_isosurface_t         *isos,
+ int                       id_isosurface,
+ int                       i_isovalue,
+ PDM_connectivity_type_t   connectivity_type,
+ int                     **dconnect_idx,
+ PDM_g_num_t             **dconnect,
+ PDM_ownership_t           ownership
+);
+
+
+/**
+ *
+ * \brief Get block-distributed coordinates of iso-surface vertices
+ *
+ * \param [in]  isos           \ref PDM_isosurface_t instance
+ * \param [in]  id_isosurface  Iso-surface identifier
+ * \param [in]  i_isovalue     Iso-value identifier
+ * \param [out] dvtx_coord     Vertex coordinates (size = 3 * *dn_vtx*)
+ * \param [in]  ownership      Ownership
+ *
+ * \return  Number of vertices
+ *
+ */
+
+int
+PDM_isosurface_dvtx_coord_get
+(
+ PDM_isosurface_t  *isos,
+ int                id_isosurface,
+ int                i_isovalue,
+ double           **dvtx_coord,
+ PDM_ownership_t    ownership
+);
 
 // Communication graphs
+
+// enable/disable construction of ptps?
 
 /**
  * \brief Get \ref PDM_part_to_part_t instance to exchange data
@@ -756,9 +810,6 @@ PDM_isosurface_ln_to_gn_get
 // PDM_MESH_ENTITY_VTX:  iso_vtx  → src_vtx  (gérer trace des ridges si mesh_dimension == 2 ?)
 // PDM_MESH_ENTITY_EDGE: iso_edge → src_face (only group faces if mesh_dimension == 3)
 // PDM_MESH_ENTITY_FACE: iso_face → src_cell
-
-// dans la première implem, on a pris un parti différent de mesh_location
-// (lien direct iso_vtx→src_vtx dans passer par les cellules)
 
 void PDM_isosurface_part_to_part_get
 (
