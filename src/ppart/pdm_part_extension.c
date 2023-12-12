@@ -7473,23 +7473,20 @@ PDM_part_extension_composed_interface_get
 
 /**
  *
- * \brief Create part_to_part from interior and ghost elements
+ * \brief Create part_to_part from interior and extended elements
  *
  * \param [out]  ptp                             Part to part structure
  * \param [in]   n_part                          Number of partitions
  * \param [in]   n_int_cell                      Number of interior elements
  * \param [in]   int_cell_ln_to_gn               gnum of interior elements
- * \param [in]   n_ghost_cell                    Number of ghost elements
- * \param [in]   ghost_cell_ln_to_gn             gnum of ghost elements
+ * \param [in]   n_ext_cell                      Number of extended elements
+ * \param [in]   ext_cell_ln_to_gn               gnum of extended elements
  * \param [out]  n_selected_cell_to_send         Number of elements selected for send
- * \param [out]  n_selected_cell_to_send_idx     Index of elements selected for send
  * \param [out]  selected_cell_to_send           Local numbering of elements selected for send
- * \param [out]  selected_cell_to_send_ln_to_gn  gnum of elements selected for send
  *
  */
 
 /* TODO : to generalize for SONICS for vertices
- * TODO : rename ghost
  */
 
 void
@@ -7499,20 +7496,18 @@ PDM_part_to_part_create_from_extension
  const int                  n_part,
        int                 *n_int_cell,
  const PDM_g_num_t        **int_cell_ln_to_gn,
-       int                 *n_ghost_cell,
- const PDM_g_num_t        **ghost_cell_ln_to_gn,
+       int                 *n_ext_cell,
+ const PDM_g_num_t        **ext_cell_ln_to_gn,
        int                **n_selected_cell_to_send,
-       int               ***selected_cell_to_send_idx,
        int               ***selected_cell_to_send,
-       PDM_g_num_t       ***selected_cell_to_send_ln_to_gn,
  const PDM_MPI_Comm         comm
 )
 {
 
   PDM_g_num_t _max_g_num = -1;
   for(int i_part = 0; i_part < n_part; ++i_part) {
-    for(int i = 0; i < n_ghost_cell[i_part]; ++i) {
-      _max_g_num = PDM_MAX(_max_g_num, ghost_cell_ln_to_gn[i_part][i]);
+    for(int i = 0; i < n_ext_cell[i_part]; ++i) {
+      _max_g_num = PDM_MAX(_max_g_num, ext_cell_ln_to_gn[i_part][i]);
     }
     for(int i = 0; i < n_int_cell[i_part]; ++i) {
       _max_g_num = PDM_MAX(_max_g_num, int_cell_ln_to_gn[i_part][i]);
@@ -7526,9 +7521,9 @@ PDM_part_to_part_create_from_extension
   PDM_part_to_block_t* ptb = PDM_part_to_block_create_from_distrib(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
                                                                    PDM_PART_TO_BLOCK_POST_MERGE,
                                                                    1.,
-                                             (PDM_g_num_t **)      ghost_cell_ln_to_gn,
+                                             (PDM_g_num_t **)      ext_cell_ln_to_gn,
                                                                    distrib_cell,
-                                                                   n_ghost_cell,
+                                                                   n_ext_cell,
                                                                    n_part,
                                                                    comm);
 
@@ -7548,14 +7543,14 @@ PDM_part_to_part_create_from_extension
                                                       comm);
 
   int   stride_one = 1;
-  int **is_ghost_cell = NULL;
+  int **is_ext_cell = NULL;
   PDM_block_to_part_exch(btp,
                          sizeof(int),
                          PDM_STRIDE_CST_INTERLACED,
                          &stride_one,
                          block_n,
                          NULL,
-           (void ***)    &is_ghost_cell);
+           (void ***)    &is_ext_cell);
 
   PDM_block_to_part_free(btp);
   PDM_part_to_block_free(ptb);
@@ -7570,26 +7565,22 @@ PDM_part_to_part_create_from_extension
   for(int i_part = 0; i_part < n_part; ++i_part) {
 
     // Compute buffer size
-    int n_ghost_to_send = 0;
+    int n_ext_to_send = 0;
     for(int i = 0; i < n_int_cell[i_part]; ++i) {
-      n_ghost_to_send += is_ghost_cell[i_part][i];
+      n_ext_to_send += is_ext_cell[i_part][i];
     }
 
-     _n_selected_cell_to_send[i_part] = n_ghost_to_send;
-    int         *__selected_cell_to_send_idx      = (int *)         malloc((n_ghost_to_send+1) * sizeof(int        ));
-    int         *__selected_cell_to_send          = (int *)         malloc(n_ghost_to_send     * sizeof(int        ));
-    PDM_g_num_t *__selected_cell_to_send_ln_to_gn = (PDM_g_num_t *) malloc(n_ghost_to_send     * sizeof(PDM_g_num_t));
-
-    _selected_cell_to_send_idx     [i_part] = __selected_cell_to_send_idx;
-    _selected_cell_to_send         [i_part] = __selected_cell_to_send;
-    _selected_cell_to_send_ln_to_gn[i_part] = __selected_cell_to_send_ln_to_gn;
+    _n_selected_cell_to_send       [i_part] = n_ext_to_send;
+    _selected_cell_to_send_idx     [i_part] = malloc((n_ext_to_send+1) * sizeof(int        ));
+    _selected_cell_to_send         [i_part] = malloc( n_ext_to_send    * sizeof(int        ));
+    _selected_cell_to_send_ln_to_gn[i_part] = malloc( n_ext_to_send    * sizeof(PDM_g_num_t));
 
     int idx_write = 0;
     _selected_cell_to_send_idx[i_part][0] = 0;
     for(int i = 0; i < n_int_cell[i_part]; ++i) {
-      if(is_ghost_cell[i_part][i] == 1) {
-        _selected_cell_to_send_idx     [i_part][idx_write+1] = _selected_cell_to_send_idx[i_part][idx_write] + is_ghost_cell[i_part][i];
-        _selected_cell_to_send         [i_part][idx_write]   = i;
+      if(is_ext_cell[i_part][i] == 1) {
+        _selected_cell_to_send_idx     [i_part][idx_write+1] = _selected_cell_to_send_idx[i_part][idx_write] + is_ext_cell[i_part][i];
+        _selected_cell_to_send         [i_part][idx_write]   = i+1;
         _selected_cell_to_send_ln_to_gn[i_part][idx_write]   = int_cell_ln_to_gn[i_part][i];
         idx_write++;
       }
@@ -7598,24 +7589,29 @@ PDM_part_to_part_create_from_extension
   }
 
   for(int i_part = 0; i_part < n_part; ++i_part) {
-    free(is_ghost_cell[i_part]);
+    free(is_ext_cell[i_part]);
   }
-  free(is_ghost_cell);
+  free(is_ext_cell);
 
   PDM_part_to_part_t  *_ptp = PDM_part_to_part_create((const PDM_g_num_t **) _selected_cell_to_send_ln_to_gn,
                                                                              _n_selected_cell_to_send,
                                                                              n_part,
-                                                      (const PDM_g_num_t **) ghost_cell_ln_to_gn,
-                                                                             n_ghost_cell,
+                                                      (const PDM_g_num_t **) ext_cell_ln_to_gn,
+                                                                             n_ext_cell,
                                                                              n_part,
                                                               (const int **) _selected_cell_to_send_idx,
                                                       (const PDM_g_num_t **) _selected_cell_to_send_ln_to_gn,
                                                                              comm);
 
-  *n_selected_cell_to_send        = _n_selected_cell_to_send;
-  *selected_cell_to_send_idx      = _selected_cell_to_send_idx;
-  *selected_cell_to_send_ln_to_gn = _selected_cell_to_send_ln_to_gn;
-  *selected_cell_to_send          = _selected_cell_to_send;
+  for(int i_part = 0; i_part < n_part; ++i_part) {
+    free(_selected_cell_to_send_idx     [i_part]);
+    free(_selected_cell_to_send_ln_to_gn[i_part]);
+  }
+  free(_selected_cell_to_send_idx);
+  free(_selected_cell_to_send_ln_to_gn);
+
+  *n_selected_cell_to_send = _n_selected_cell_to_send;
+  *selected_cell_to_send   = _selected_cell_to_send;
   *ptp = _ptp;
 }
 
