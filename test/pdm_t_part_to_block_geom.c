@@ -186,9 +186,9 @@ main
                               &src_g_num);
   _rotate(n_src, src_coord);
 
-  int *weight =  malloc( n_src * sizeof(int));
+  double *weight =  malloc( n_src * sizeof(double));
   for(int i = 0; i < n_src; ++i) {
-    weight[i] = 1;
+    weight[i] = 1.;
   }
   PDM_MPI_Barrier(comm);
   double t1 = PDM_MPI_Wtime();

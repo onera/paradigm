@@ -438,14 +438,14 @@ subroutine PDM_part_to_part_iexch (ptp,              &
 
   integer                           :: n_part1
   integer                           :: n_part2
-  type(c_ptr)                       :: c_part1_stride = C_NULL_PTR
-  type(c_ptr)                       :: c_part2_stride = C_NULL_PTR
-  type(c_ptr)                       :: c_part2_data   = C_NULL_PTR
+  type(c_ptr)                       :: c_part1_stride 
+  type(c_ptr)                       :: c_part2_stride 
+  type(c_ptr)                       :: c_part2_data   
   integer                           :: n_ref
-  integer(pdm_l_num_s), pointer     :: ref(:)                 => null()
-  integer(pdm_l_num_s), pointer     :: gnum1_come_from_idx(:) => null()
-  integer(pdm_g_num_s), pointer     :: gnum1_come_from(:)     => null()
-  integer(pdm_l_num_s), pointer     :: stride(:)              => null()
+  integer(pdm_l_num_s), pointer     :: ref(:)                 
+  integer(pdm_l_num_s), pointer     :: gnum1_come_from_idx(:) 
+  integer(pdm_g_num_s), pointer     :: gnum1_come_from(:)     
+  integer(pdm_l_num_s), pointer     :: stride(:)              
   integer                           :: s_part2_data
   integer                           :: i, j
 
@@ -483,6 +483,14 @@ subroutine PDM_part_to_part_iexch (ptp,              &
 
     end subroutine PDM_part_to_part_iexch_c
   end interface
+
+  c_part1_stride = C_NULL_PTR
+  c_part2_stride = C_NULL_PTR
+  c_part2_data   = C_NULL_PTR
+  ref                 => null()
+  gnum1_come_from_idx => null()
+  gnum1_come_from     => null()
+  stride              => null()
 
   c_s_data = part1_data%s_data
 
@@ -645,11 +653,11 @@ subroutine PDM_part_to_part_reverse_iexch (ptp,              &
 
   integer                           :: n_part1
   integer                           :: n_part2
-  type(c_ptr)                       :: c_part1_stride = C_NULL_PTR
-  type(c_ptr)                       :: c_part1_data   = C_NULL_PTR
+  type(c_ptr)                       :: c_part1_stride 
+  type(c_ptr)                       :: c_part1_data   
   integer                           :: n_elt1
-  integer(pdm_l_num_s), pointer     :: part1_to_part2_idx(:) => null()
-  integer(pdm_l_num_s), pointer     :: stride(:)             => null()
+  integer(pdm_l_num_s), pointer     :: part1_to_part2_idx(:)
+  integer(pdm_l_num_s), pointer     :: stride(:)            
   integer                           :: s_part1_data
   integer                           :: i, j
 
@@ -657,7 +665,7 @@ subroutine PDM_part_to_part_reverse_iexch (ptp,              &
   integer, allocatable              :: length_stride(:)
   integer(c_int)                    :: c_s_data
 
-  type(c_ptr)                       :: c_part2_stride   = C_NULL_PTR
+  type(c_ptr)                       :: c_part2_stride
 
   interface
     subroutine PDM_part_to_part_reverse_iexch_c (ptp,              &
@@ -689,6 +697,13 @@ subroutine PDM_part_to_part_reverse_iexch (ptp,              &
 
     end subroutine PDM_part_to_part_reverse_iexch_c
   end interface
+
+  c_part1_stride = C_NULL_PTR
+  c_part1_data   = C_NULL_PTR
+
+  part1_to_part2_idx => null()
+  stride             => null()
+  c_part2_stride   = C_NULL_PTR
 
   c_s_data = part2_data%s_data
 
@@ -808,7 +823,7 @@ subroutine PDM_part_to_part_ref_lnum2_get (ptp,         &
   integer, intent(out)          :: n_ref_lnum2
   integer(pdm_l_num_s), pointer :: ref_lnum2(:)
 
-  type(c_ptr)                   :: c_ref_lnum2 = C_NULL_PTR
+  type(c_ptr)                   :: c_ref_lnum2
 
   interface
 
@@ -828,6 +843,8 @@ subroutine PDM_part_to_part_ref_lnum2_get (ptp,         &
     end subroutine PDM_part_to_part_ref_lnum2_get_c
 
   end interface
+
+  c_ref_lnum2 = C_NULL_PTR
 
   call PDM_part_to_part_ref_lnum2_get_c (ptp,         &
                                          i_part,      &
@@ -864,7 +881,7 @@ subroutine PDM_part_to_part_unref_lnum2_get (ptp,           &
   integer, intent(out)          :: n_unref_lnum2
   integer(pdm_l_num_s), pointer :: unref_lnum2(:)
 
-  type(c_ptr)                   :: c_unref_lnum2 = C_NULL_PTR
+  type(c_ptr)                   :: c_unref_lnum2
 
   interface
 
@@ -884,6 +901,8 @@ subroutine PDM_part_to_part_unref_lnum2_get (ptp,           &
     end subroutine PDM_part_to_part_unref_lnum2_get_c
 
   end interface
+
+  c_unref_lnum2 = C_NULL_PTR
 
   call PDM_part_to_part_unref_lnum2_get_c (ptp,           &
                                            i_part,        &
@@ -920,10 +939,10 @@ subroutine PDM_part_to_part_gnum1_come_from_get (ptp,                 &
   integer(pdm_l_num_s), pointer :: gnum1_come_from_idx(:)
   integer(pdm_g_num_s), pointer :: gnum1_come_from(:)
 
-  type(c_ptr)                   :: c_gnum1_come_from_idx = C_NULL_PTR
-  type(c_ptr)                   :: c_gnum1_come_from     = C_NULL_PTR
+  type(c_ptr)                   :: c_gnum1_come_from_idx
+  type(c_ptr)                   :: c_gnum1_come_from    
   integer                       :: n_ref
-  integer(pdm_l_num_s), pointer :: ref(:) => null()
+  integer(pdm_l_num_s), pointer :: ref(:)
 
   interface
     subroutine PDM_part_to_part_gnum1_come_from_get_c (ptp,                 &
@@ -941,6 +960,10 @@ subroutine PDM_part_to_part_gnum1_come_from_get (ptp,                 &
 
     end subroutine PDM_part_to_part_gnum1_come_from_get_c
   end interface
+
+  c_gnum1_come_from_idx = C_NULL_PTR
+  c_gnum1_come_from     = C_NULL_PTR
+  ref => null()
 
   call PDM_part_to_part_ref_lnum2_get (ptp,    &
                                        i_part, &
@@ -988,11 +1011,11 @@ subroutine PDM_part_to_part_gnum1_to_send_buffer_get (ptp,                      
   integer                       :: n_part1
   integer                       :: n_part2
   integer                       :: n_elt1
-  integer(pdm_l_num_s), pointer :: part1_to_part2_idx(:)             => null()
-  integer(pdm_l_num_s), pointer :: gnum1_to_send_buffer_idx_ipart(:) => null()
+  integer(pdm_l_num_s), pointer :: part1_to_part2_idx(:)             
+  integer(pdm_l_num_s), pointer :: gnum1_to_send_buffer_idx_ipart(:) 
 
-  type(c_ptr)                   :: c_gnum1_to_send_buffer_idx = C_NULL_PTR
-  type(c_ptr)                   :: c_gnum1_to_send_buffer     = C_NULL_PTR
+  type(c_ptr)                   :: c_gnum1_to_send_buffer_idx 
+  type(c_ptr)                   :: c_gnum1_to_send_buffer     
 
   integer, allocatable          :: length_gnum1_to_send_buffer(:)
   integer, allocatable          :: length_gnum1_to_send_buffer_idx(:)
@@ -1011,6 +1034,11 @@ subroutine PDM_part_to_part_gnum1_to_send_buffer_get (ptp,                      
 
     end subroutine PDM_part_to_part_gnum1_to_send_buffer_get_c
   end interface
+
+  part1_to_part2_idx             => null()
+  gnum1_to_send_buffer_idx_ipart => null()
+  c_gnum1_to_send_buffer_idx = C_NULL_PTR
+  c_gnum1_to_send_buffer     = C_NULL_PTR
 
   call PDM_part_to_part_gnum1_to_send_buffer_get_c (ptp,                        &
                                                     c_gnum1_to_send_buffer_idx, &
@@ -1087,11 +1115,11 @@ subroutine PDM_part_to_part_recv_buffer_to_ref_lnum2_get (ptp,                  
   integer                       :: n_part1
   integer                       :: n_part2
   integer                       :: n_ref
-  integer(pdm_l_num_s), pointer :: ref(:)                 => null()
-  integer(pdm_l_num_s), pointer :: gnum1_come_from_idx(:) => null()
-  integer(pdm_g_num_s), pointer :: gnum1_come_from(:)     => null()
+  integer(pdm_l_num_s), pointer :: ref(:)                 
+  integer(pdm_l_num_s), pointer :: gnum1_come_from_idx(:) 
+  integer(pdm_g_num_s), pointer :: gnum1_come_from(:)     
 
-  type(c_ptr)                   :: c_recv_buffer_to_ref_lnum2 = C_NULL_PTR
+  type(c_ptr)                   :: c_recv_buffer_to_ref_lnum2
   integer, allocatable          :: length_recv_buffer_to_ref_lnum2(:)
 
   interface
@@ -1106,6 +1134,12 @@ subroutine PDM_part_to_part_recv_buffer_to_ref_lnum2_get (ptp,                  
 
     end subroutine PDM_part_to_part_recv_buffer_to_ref_lnum2_get_c
   end interface
+
+  ref                 => null()
+  gnum1_come_from_idx => null()
+  gnum1_come_from     => null()
+
+  c_recv_buffer_to_ref_lnum2 = C_NULL_PTR
 
   call PDM_part_to_part_recv_buffer_to_ref_lnum2_get_c (ptp,                        &
                                                         c_recv_buffer_to_ref_lnum2)
@@ -1221,8 +1255,8 @@ subroutine PDM_part_to_part_default_recv_buffer_get (ptp,                   &
   integer(pdm_l_num_s), pointer :: default_i_recv_buffer(:)
 
   integer                       :: n_rank
-  type(c_ptr)                   :: c_default_n_recv_buffer = C_NULL_PTR
-  type(c_ptr)                   :: c_default_i_recv_buffer = C_NULL_PTR
+  type(c_ptr)                   :: c_default_n_recv_buffer
+  type(c_ptr)                   :: c_default_i_recv_buffer
 
 interface
   subroutine PDM_part_to_part_default_recv_buffer_get_c (ptp,                   &
@@ -1238,6 +1272,9 @@ interface
 
   end subroutine PDM_part_to_part_default_recv_buffer_get_c
 end interface
+
+  c_default_n_recv_buffer = C_NULL_PTR  
+  c_default_i_recv_buffer = C_NULL_PTR
 
   call PDM_part_to_part_default_recv_buffer_get_c (ptp,                     &
                                                    c_default_n_recv_buffer, &
@@ -1279,7 +1316,7 @@ subroutine PDM_part_to_part_part1_to_part2_idx_get (ptp,                &
   integer, intent(out)          :: n_elt1
   integer(pdm_l_num_s), pointer :: part1_to_part2_idx(:)
 
-  type(c_ptr)                   :: c_part1_to_part2_idx = C_NULL_PTR
+  type(c_ptr)                   :: c_part1_to_part2_idx
 
 interface
   subroutine PDM_part_to_part_part1_to_part2_idx_get_c (ptp,                &
@@ -1297,6 +1334,8 @@ interface
 
   end subroutine PDM_part_to_part_part1_to_part2_idx_get_c
 end interface
+
+  c_part1_to_part2_idx = C_NULL_PTR
 
   call PDM_part_to_part_part1_to_part2_idx_get_c (ptp,                  &
                                                   i_part,               &

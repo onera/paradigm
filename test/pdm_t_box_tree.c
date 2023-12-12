@@ -445,7 +445,7 @@ int main(int argc, char *argv[])
                                        &box_pts_idx,
                                        &box_pts);
   dt = PDM_MPI_Wtime()-t1;
-  complexity = n_pts;
+  complexity = (double) n_pts;
   printf("PDM_box_tree_boxes_containing_points time : %12.5e - %12.5e - complexity = %12.5e \n", dt, dt/complexity, complexity);
 
   free(box_pts_idx);

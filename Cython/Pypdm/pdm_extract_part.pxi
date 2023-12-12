@@ -386,8 +386,8 @@ cdef class ExtractPart:
                                          entity_type,
                                         &ptpc,
                                          PDM_OWNERSHIP_USER)
-      py_casp = PyCapsule_New(ptpc, NULL, NULL);
-      self.ptp_objects[entity_type] = PartToPartCapsule(py_casp, self.py_comm) # The free is inside the class
+      py_caps = PyCapsule_New(ptpc, NULL, NULL);
+      self.ptp_objects[entity_type] = PartToPartCapsule(py_caps, self.py_comm) # The free is inside the class
       return self.ptp_objects[entity_type]
 
   # ------------------------------------------------------------------
@@ -405,8 +405,8 @@ cdef class ExtractPart:
                                                i_group,
                                               &ptpc,
                                                PDM_OWNERSHIP_USER)
-      py_casp = PyCapsule_New(ptpc, NULL, NULL);
-      self.ptp_group_objects[(i_group, bound_type)] = PartToPartCapsule(py_casp, self.py_comm) # The free is inside the class
+      py_caps = PyCapsule_New(ptpc, NULL, NULL);
+      self.ptp_group_objects[(i_group, bound_type)] = PartToPartCapsule(py_caps, self.py_comm) # The free is inside the class
       return self.ptp_group_objects[(i_group, bound_type)]
 
   # ------------------------------------------------------------------

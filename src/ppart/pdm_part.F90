@@ -1072,28 +1072,28 @@ contains
 
     integer(kind=c_int)                :: c_split_method
     integer(kind=c_int)                :: c_n_property_cell
-    type(c_ptr)                        :: c_renum_properties_cell = C_NULL_PTR
+    type(c_ptr)                        :: c_renum_properties_cell
     integer(kind=c_int)                :: c_n_property_face
-    type(c_ptr)                        :: c_renum_properties_face = C_NULL_PTR
+    type(c_ptr)                        :: c_renum_properties_face
     integer(kind=c_int)                :: c_n_part
     integer(kind=c_int)                :: c_dn_cell
     integer(kind=c_int)                :: c_dn_face
     integer(kind=c_int)                :: c_dn_vtx
     integer(kind=c_int)                :: c_n_face_group
-    type(c_ptr)                        :: c_dcell_faceIdx   = C_NULL_PTR
-    type(c_ptr)                        :: c_dcell_face      = C_NULL_PTR
-    type(c_ptr)                        :: c_dcell_tag       = C_NULL_PTR
-    type(c_ptr)                        :: c_dcell_weight    = C_NULL_PTR
+    type(c_ptr)                        :: c_dcell_faceIdx
+    type(c_ptr)                        :: c_dcell_face
+    type(c_ptr)                        :: c_dcell_tag
+    type(c_ptr)                        :: c_dcell_weight
     integer(c_int)                     :: c_have_dcell_part
-    type(c_ptr)                        :: c_dcell_part      = C_NULL_PTR
-    type(c_ptr)                        :: c_dface_cell      = C_NULL_PTR
-    type(c_ptr)                        :: c_dface_vtx_idx   = C_NULL_PTR
-    type(c_ptr)                        :: c_dface_vtx       = C_NULL_PTR
-    type(c_ptr)                        :: c_dface_tag       = C_NULL_PTR
-    type(c_ptr)                        :: c_dvtx_coord      = C_NULL_PTR
-    type(c_ptr)                        :: c_dvtx_tag        = C_NULL_PTR
-    type(c_ptr)                        :: c_dface_group_idx = C_NULL_PTR
-    type(c_ptr)                        :: c_dface_group     = C_NULL_PTR
+    type(c_ptr)                        :: c_dcell_part
+    type(c_ptr)                        :: c_dface_cell
+    type(c_ptr)                        :: c_dface_vtx_idx
+    type(c_ptr)                        :: c_dface_vtx
+    type(c_ptr)                        :: c_dface_tag
+    type(c_ptr)                        :: c_dvtx_coord
+    type(c_ptr)                        :: c_dvtx_tag
+    type(c_ptr)                        :: c_dface_group_idx
+    type(c_ptr)                        :: c_dface_group
     integer(c_int)                     :: c_comm
 
 
@@ -1103,30 +1103,37 @@ contains
       c_have_dcell_part = 0
     endif
 
+    c_dcell_tag       = C_NULL_PTR
     if (associated(dCellTag)) then
       c_dcell_tag = c_loc(dCellTag)
     endif
 
+    c_dcell_part = C_NULL_PTR
     if (associated(dCellPart)) then
       c_dcell_part = c_loc(dCellPart)
     endif
 
+    c_dface_cell = C_NULL_PTR
     if (associated(dFaceCell)) then
       c_dface_cell = c_loc(dFaceCell)
     endif
 
+    c_dface_tag = C_NULL_PTR
     if (associated(dFaceTag)) then
       c_dface_tag = c_loc(dFaceTag)
     endif
 
+    c_dvtx_tag = C_NULL_PTR
     if (associated(dVtxTag)) then
       c_dvtx_tag = c_loc(dVtxTag)
     endif
 
+    c_dcell_weight = C_NULL_PTR
     if (associated(dCellWeight)) then
       c_dcell_weight = c_loc(dCellWeight)
     endif
 
+    c_renum_properties_face = C_NULL_PTR
     if (associated(renum_properties_face)) then
       c_renum_properties_face = c_loc(renum_properties_face)
     endif
@@ -1358,24 +1365,24 @@ contains
     integer (kind = PDM_g_num_s), pointer :: face_group_ln_to_gn(:)
 
     integer(c_int)                        :: c_i_part
-    type(c_ptr)                           :: c_cell_tag                 = C_NULL_PTR
-    type(c_ptr)                           :: c_cell_face_idx            = C_NULL_PTR
-    type(c_ptr)                           :: c_cell_face                = C_NULL_PTR
-    type(c_ptr)                           :: c_cell_ln_to_gn            = C_NULL_PTR
-    type(c_ptr)                           :: c_face_tag                 = C_NULL_PTR
-    type(c_ptr)                           :: c_face_cell                = C_NULL_PTR
-    type(c_ptr)                           :: c_face_vtx_idx             = C_NULL_PTR
-    type(c_ptr)                           :: c_face_vtx                 = C_NULL_PTR
-    type(c_ptr)                           :: c_face_ln_to_gn            = C_NULL_PTR
-    type(c_ptr)                           :: c_face_part_bound_proc_idx = C_NULL_PTR
-    type(c_ptr)                           :: c_face_part_bound_part_idx = C_NULL_PTR
-    type(c_ptr)                           :: c_face_part_bound          = C_NULL_PTR
-    type(c_ptr)                           :: c_vtx_tag                  = C_NULL_PTR
-    type(c_ptr)                           :: c_vtx                      = C_NULL_PTR
-    type(c_ptr)                           :: c_vtx_ln_to_gn             = C_NULL_PTR
-    type(c_ptr)                           :: c_face_group_idx           = C_NULL_PTR
-    type(c_ptr)                           :: c_face_group               = C_NULL_PTR
-    type(c_ptr)                           :: c_face_group_ln_to_gn      = C_NULL_PTR
+    type(c_ptr)                           :: c_cell_tag
+    type(c_ptr)                           :: c_cell_face_idx
+    type(c_ptr)                           :: c_cell_face
+    type(c_ptr)                           :: c_cell_ln_to_gn
+    type(c_ptr)                           :: c_face_tag
+    type(c_ptr)                           :: c_face_cell
+    type(c_ptr)                           :: c_face_vtx_idx
+    type(c_ptr)                           :: c_face_vtx
+    type(c_ptr)                           :: c_face_ln_to_gn
+    type(c_ptr)                           :: c_face_part_bound_proc_idx
+    type(c_ptr)                           :: c_face_part_bound_part_idx
+    type(c_ptr)                           :: c_face_part_bound
+    type(c_ptr)                           :: c_vtx_tag
+    type(c_ptr)                           :: c_vtx
+    type(c_ptr)                           :: c_vtx_ln_to_gn
+    type(c_ptr)                           :: c_face_group_idx
+    type(c_ptr)                           :: c_face_group
+    type(c_ptr)                           :: c_face_group_ln_to_gn
     integer(c_int)                        :: n_cell
     integer(c_int)                        :: n_face
     integer(c_int)                        :: n_face_part_bound
@@ -1402,6 +1409,24 @@ contains
                                  sface_group,       &
                                  n_face_group)
 
+    c_cell_tag                 = C_NULL_PTR
+    c_cell_face_idx            = C_NULL_PTR
+    c_cell_face                = C_NULL_PTR
+    c_cell_ln_to_gn            = C_NULL_PTR
+    c_face_tag                 = C_NULL_PTR
+    c_face_cell                = C_NULL_PTR
+    c_face_vtx_idx             = C_NULL_PTR
+    c_face_vtx                 = C_NULL_PTR
+    c_face_ln_to_gn            = C_NULL_PTR
+    c_face_part_bound_proc_idx = C_NULL_PTR
+    c_face_part_bound_part_idx = C_NULL_PTR
+    c_face_part_bound          = C_NULL_PTR
+    c_vtx_tag                  = C_NULL_PTR
+    c_vtx                      = C_NULL_PTR
+    c_vtx_ln_to_gn             = C_NULL_PTR
+    c_face_group_idx           = C_NULL_PTR
+    c_face_group               = C_NULL_PTR
+    c_face_group_ln_to_gn      = C_NULL_PTR
     call PDM_part_part_val_get_c(ppart,                     &
                                  c_i_part,                   &
                                  c_cell_tag,                 &
@@ -1526,13 +1551,19 @@ contains
     double precision, intent(out) :: cpu_user(4)
     double precision, intent(out) :: cpu_sys(4)
 
-    type(c_ptr)                   :: c_elapsed  = C_NULL_PTR
-    type(c_ptr)                   :: c_cpu      = C_NULL_PTR
-    type(c_ptr)                   :: c_cpu_user = C_NULL_PTR
-    type(c_ptr)                   :: c_cpu_sys  = C_NULL_PTR
-    double precision, pointer     :: ptr(:)     => null()
+    type(c_ptr)                   :: c_elapsed
+    type(c_ptr)                   :: c_cpu
+    type(c_ptr)                   :: c_cpu_user
+    type(c_ptr)                   :: c_cpu_sys
+    double precision, pointer     :: ptr(:)
 
 
+    c_elapsed  = C_NULL_PTR
+    c_cpu      = C_NULL_PTR
+    c_cpu_user = C_NULL_PTR
+    c_cpu_sys  = C_NULL_PTR
+    ptr => null()
+    
     call PDM_part_time_get_c (ppart,      &
                               c_elapsed,  &
                               c_cpu,      &
@@ -1808,9 +1839,9 @@ contains
 
     integer(c_int)                     :: c_comm
     integer(c_int)                     :: c_n_property_cell
-    type(c_ptr)                        :: c_renum_properties_cell = C_NULL_PTR
+    type(c_ptr)                        :: c_renum_properties_cell
     integer(c_int)                     :: c_n_property_face
-    type(c_ptr)                        :: c_renum_properties_face = C_NULL_PTR
+    type(c_ptr)                        :: c_renum_properties_face
     integer(c_int)                     :: c_n_part
     integer(c_int)                     :: c_n_total_part
     integer(c_int)                     :: c_n_face_group
@@ -2002,26 +2033,26 @@ contains
     integer(c_int)                     :: c_n_vtx
     integer(c_int)                     :: c_n_face_group
     integer(c_int)                     :: c_n_face_part_bound
-    type(c_ptr)                        :: c_cell_face_idx            = C_NULL_PTR
-    type(c_ptr)                        :: c_cell_face                = C_NULL_PTR
-    type(c_ptr)                        :: c_cell_tag                 = C_NULL_PTR
-    type(c_ptr)                        :: c_cell_weight              = C_NULL_PTR
-    type(c_ptr)                        :: c_face_weight              = C_NULL_PTR
-    type(c_ptr)                        :: c_cell_ln_to_gn            = C_NULL_PTR
-    type(c_ptr)                        :: c_face_cell                = C_NULL_PTR
-    type(c_ptr)                        :: c_face_vtx_idx             = C_NULL_PTR
-    type(c_ptr)                        :: c_face_vtx                 = C_NULL_PTR
-    type(c_ptr)                        :: c_face_tag                 = C_NULL_PTR
-    type(c_ptr)                        :: c_face_ln_to_gn            = C_NULL_PTR
-    type(c_ptr)                        :: c_vtxCoord                 = C_NULL_PTR
-    type(c_ptr)                        :: c_vtx_tag                  = C_NULL_PTR
-    type(c_ptr)                        :: c_vtx_ln_to_gn             = C_NULL_PTR
-    type(c_ptr)                        :: c_face_group_idx           = C_NULL_PTR
-    type(c_ptr)                        :: c_face_group               = C_NULL_PTR
-    type(c_ptr)                        :: c_face_group_ln_to_gn      = C_NULL_PTR
-    type(c_ptr)                        :: c_face_part_bound_proc_idx = C_NULL_PTR
-    type(c_ptr)                        :: c_face_part_bound_part_idx = C_NULL_PTR
-    type(c_ptr)                        :: c_face_part_bound          = C_NULL_PTR
+    type(c_ptr)                        :: c_cell_face_idx
+    type(c_ptr)                        :: c_cell_face
+    type(c_ptr)                        :: c_cell_tag
+    type(c_ptr)                        :: c_cell_weight
+    type(c_ptr)                        :: c_face_weight
+    type(c_ptr)                        :: c_cell_ln_to_gn
+    type(c_ptr)                        :: c_face_cell
+    type(c_ptr)                        :: c_face_vtx_idx
+    type(c_ptr)                        :: c_face_vtx
+    type(c_ptr)                        :: c_face_tag
+    type(c_ptr)                        :: c_face_ln_to_gn
+    type(c_ptr)                        :: c_vtxCoord
+    type(c_ptr)                        :: c_vtx_tag
+    type(c_ptr)                        :: c_vtx_ln_to_gn
+    type(c_ptr)                        :: c_face_group_idx
+    type(c_ptr)                        :: c_face_group
+    type(c_ptr)                        :: c_face_group_ln_to_gn
+    type(c_ptr)                        :: c_face_part_bound_proc_idx
+    type(c_ptr)                        :: c_face_part_bound_part_idx
+    type(c_ptr)                        :: c_face_part_bound
 
 
     c_i_part            = i_part
@@ -2048,28 +2079,34 @@ contains
     c_face_part_bound_part_idx = c_loc(face_part_bound_part_idx)
     
 
+    c_vtx_tag = C_NULL_PTR
     if (associated(vtx_tag)) then
       c_vtx_tag  = c_loc(vtx_tag)
     endif
 
+    c_face_tag = C_NULL_PTR
     if (associated(face_tag)) then
       c_face_tag = c_loc(face_tag)
     endif
 
+    c_cell_tag = C_NULL_PTR
     if (associated(cell_tag)) then
       c_cell_tag = c_loc(cell_tag)
     endif
 
+    c_cell_weight = C_NULL_PTR
     if (associated(cell_weight)) then
       c_cell_weight = c_loc(cell_weight)
     endif
 
+    c_face_weight = C_NULL_PTR
     if (associated(face_weight)) then
-       c_face_weight = c_loc(face_weight)
+      c_face_weight = c_loc(face_weight)
     endif
 
+    c_face_part_bound = C_NULL_PTR
     if (associated(face_part_bound)) then
-       c_face_part_bound = c_loc(face_part_bound)
+      c_face_part_bound = c_loc(face_part_bound)
     endif
 
     call PDM_part_coarse_mesh_input_c (cm,                         &
@@ -2295,29 +2332,29 @@ contains
     integer(kind=PDM_l_num_s), pointer :: face_part_bound(:)
 
     integer(c_int)                     :: c_i_part
-    type(c_ptr)                        :: c_cell_face_idx            = C_NULL_PTR
-    type(c_ptr)                        :: c_cell_face                = C_NULL_PTR
-    type(c_ptr)                        :: c_cell_tag                 = C_NULL_PTR
-    type(c_ptr)                        :: c_cell_ln_to_gn            = C_NULL_PTR
-    type(c_ptr)                        :: c_cellInitCellIdx          = C_NULL_PTR
-    type(c_ptr)                        :: c_cellInitCell             = C_NULL_PTR
-    type(c_ptr)                        :: c_face_cell                = C_NULL_PTR
-    type(c_ptr)                        :: c_face_vtx_idx             = C_NULL_PTR
-    type(c_ptr)                        :: c_face_vtx                 = C_NULL_PTR
-    type(c_ptr)                        :: c_face_tag                 = C_NULL_PTR
-    type(c_ptr)                        :: c_face_ln_to_gn            = C_NULL_PTR
-    type(c_ptr)                        :: c_faceGroupInitFaceGroup   = C_NULL_PTR
-    type(c_ptr)                        :: c_faceInitFace             = C_NULL_PTR
-    type(c_ptr)                        :: c_vtxCoord                 = C_NULL_PTR
-    type(c_ptr)                        :: c_vtx_tag                  = C_NULL_PTR
-    type(c_ptr)                        :: c_vtx_ln_to_gn             = C_NULL_PTR
-    type(c_ptr)                        :: c_vtxInitVtx               = C_NULL_PTR
-    type(c_ptr)                        :: c_face_group_idx           = C_NULL_PTR
-    type(c_ptr)                        :: c_face_group               = C_NULL_PTR
-    type(c_ptr)                        :: c_face_group_ln_to_gn      = C_NULL_PTR
-    type(c_ptr)                        :: c_face_part_bound_proc_idx = C_NULL_PTR
-    type(c_ptr)                        :: c_face_part_bound_part_idx = C_NULL_PTR
-    type(c_ptr)                        :: c_face_part_bound          = C_NULL_PTR
+    type(c_ptr)                        :: c_cell_face_idx
+    type(c_ptr)                        :: c_cell_face
+    type(c_ptr)                        :: c_cell_tag
+    type(c_ptr)                        :: c_cell_ln_to_gn
+    type(c_ptr)                        :: c_cellInitCellIdx
+    type(c_ptr)                        :: c_cellInitCell
+    type(c_ptr)                        :: c_face_cell
+    type(c_ptr)                        :: c_face_vtx_idx
+    type(c_ptr)                        :: c_face_vtx
+    type(c_ptr)                        :: c_face_tag
+    type(c_ptr)                        :: c_face_ln_to_gn
+    type(c_ptr)                        :: c_faceGroupInitFaceGroup
+    type(c_ptr)                        :: c_faceInitFace
+    type(c_ptr)                        :: c_vtxCoord
+    type(c_ptr)                        :: c_vtx_tag
+    type(c_ptr)                        :: c_vtx_ln_to_gn
+    type(c_ptr)                        :: c_vtxInitVtx
+    type(c_ptr)                        :: c_face_group_idx
+    type(c_ptr)                        :: c_face_group
+    type(c_ptr)                        :: c_face_group_ln_to_gn
+    type(c_ptr)                        :: c_face_part_bound_proc_idx
+    type(c_ptr)                        :: c_face_part_bound_part_idx
+    type(c_ptr)                        :: c_face_part_bound
     integer(c_int)                     :: n_cell
     integer(c_int)                     :: n_face
     integer(c_int)                     :: n_face_part_bound
@@ -2346,6 +2383,29 @@ contains
                                               sface_group,           &
                                               sCoarseCellToFineCell)
 
+    c_cell_face_idx            = C_NULL_PTR
+    c_cell_face                = C_NULL_PTR
+    c_cell_tag                 = C_NULL_PTR
+    c_cell_ln_to_gn            = C_NULL_PTR
+    c_cellInitCellIdx          = C_NULL_PTR
+    c_cellInitCell             = C_NULL_PTR
+    c_face_cell                = C_NULL_PTR
+    c_face_vtx_idx             = C_NULL_PTR
+    c_face_vtx                 = C_NULL_PTR
+    c_face_tag                 = C_NULL_PTR
+    c_face_ln_to_gn            = C_NULL_PTR
+    c_faceGroupInitFaceGroup   = C_NULL_PTR
+    c_faceInitFace             = C_NULL_PTR
+    c_vtxCoord                 = C_NULL_PTR
+    c_vtx_tag                  = C_NULL_PTR
+    c_vtx_ln_to_gn             = C_NULL_PTR
+    c_vtxInitVtx               = C_NULL_PTR
+    c_face_group_idx           = C_NULL_PTR
+    c_face_group               = C_NULL_PTR
+    c_face_group_ln_to_gn      = C_NULL_PTR
+    c_face_part_bound_proc_idx = C_NULL_PTR
+    c_face_part_bound_part_idx = C_NULL_PTR
+    c_face_part_bound          = C_NULL_PTR
     call PDM_part_coarse_mesh_part_get_c (cm,                         &
                                           c_i_part,                   &
                                           c_cell_face_idx,            &
@@ -2586,13 +2646,18 @@ contains
     double precision, intent(out) :: cpu_user(18)
     double precision, intent(out) :: cpu_sys(18)
 
-    type(c_ptr)                   :: c_elapsed  = C_NULL_PTR
-    type(c_ptr)                   :: c_cpu      = C_NULL_PTR
-    type(c_ptr)                   :: c_cpu_user = C_NULL_PTR
-    type(c_ptr)                   :: c_cpu_sys  = C_NULL_PTR
-    double precision, pointer     :: ptr(:)     => null()
+    type(c_ptr)                   :: c_elapsed  
+    type(c_ptr)                   :: c_cpu      
+    type(c_ptr)                   :: c_cpu_user 
+    type(c_ptr)                   :: c_cpu_sys  
+    double precision, pointer     :: ptr(:)     
 
 
+    c_elapsed  = C_NULL_PTR
+    c_cpu      = C_NULL_PTR
+    c_cpu_user = C_NULL_PTR
+    c_cpu_sys  = C_NULL_PTR
+    ptr     => null()
     call PDM_part_coarse_mesh_time_get_c (cm,         &
                                           c_elapsed,  &
                                           c_cpu,      &
@@ -3141,10 +3206,10 @@ contains
     integer, intent(out)          :: agglomeration_lines_idx_size
     integer(pdm_l_num_s), pointer :: is_on_fine_bnd(:)
 
-    type(c_ptr)                   :: c_agglomeration_lines          = C_NULL_PTR
-    type(c_ptr)                   :: c_agglomeration_lines_idx      = C_NULL_PTR
+    type(c_ptr)                   :: c_agglomeration_lines          
+    type(c_ptr)                   :: c_agglomeration_lines_idx      
     integer(c_int)                :: c_agglomeration_lines_idx_size
-    type(c_ptr)                   :: c_is_on_fine_bnd               = C_NULL_PTR
+    type(c_ptr)                   :: c_is_on_fine_bnd               
     integer                       :: n_cell
     integer                       :: n_face
     integer                       :: n_face_part_bound
@@ -3179,6 +3244,9 @@ contains
       end subroutine PDM_part_coarse_mesh_part_get_anisotropic_info_f
     end interface
 
+    c_agglomeration_lines          = C_NULL_PTR
+    c_agglomeration_lines_idx      = C_NULL_PTR
+    c_is_on_fine_bnd               = C_NULL_PTR
     call PDM_part_coarse_mesh_part_get_anisotropic_info_f (cm,                             &
                                                            i_part,                         &
                                                            c_agglomeration_lines,          &

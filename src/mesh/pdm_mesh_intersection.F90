@@ -379,18 +379,18 @@ subroutine PDM_mesh_intersection_part_set_ (mi,            &
   integer(kind=pdm_g_num_s), pointer :: vtx_ln_to_gn(:)
   double precision,          pointer :: coords(:,:)
 
-  type(c_ptr) :: c_cell_face_idx = C_NULL_PTR
-  type(c_ptr) :: c_cell_face = C_NULL_PTR
-  type(c_ptr) :: c_face_edge_idx = C_NULL_PTR
-  type(c_ptr) :: c_face_edge = C_NULL_PTR
-  type(c_ptr) :: c_edge_vtx = C_NULL_PTR
-  type(c_ptr) :: c_face_vtx_idx = C_NULL_PTR
-  type(c_ptr) :: c_face_vtx = C_NULL_PTR
-  type(c_ptr) :: c_cell_ln_to_gn = C_NULL_PTR
-  type(c_ptr) :: c_face_ln_to_gn = C_NULL_PTR
-  type(c_ptr) :: c_edge_ln_to_gn = C_NULL_PTR
-  type(c_ptr) :: c_vtx_ln_to_gn = C_NULL_PTR
-  type(c_ptr) :: c_vtx_coord = C_NULL_PTR
+  type(c_ptr) :: c_cell_face_idx
+  type(c_ptr) :: c_cell_face
+  type(c_ptr) :: c_face_edge_idx
+  type(c_ptr) :: c_face_edge
+  type(c_ptr) :: c_edge_vtx
+  type(c_ptr) :: c_face_vtx_idx
+  type(c_ptr) :: c_face_vtx
+  type(c_ptr) :: c_cell_ln_to_gn
+  type(c_ptr) :: c_face_ln_to_gn
+  type(c_ptr) :: c_edge_ln_to_gn
+  type(c_ptr) :: c_vtx_ln_to_gn
+  type(c_ptr) :: c_vtx_coord
 
   interface 
     subroutine PDM_mesh_intersection_part_set_cf (mi,            &
@@ -441,50 +441,62 @@ subroutine PDM_mesh_intersection_part_set_ (mi,            &
     end subroutine PDM_mesh_intersection_part_set_cf
   end interface 
 
+  c_cell_face_idx = C_NULL_PTR
   if (associated(cell_face_idx)) then
     c_cell_face_idx = c_loc(cell_face_idx)
   endif
 
+  c_cell_face = C_NULL_PTR
   if (associated(cell_face)) then
     c_cell_face = c_loc(cell_face)
   endif
 
+  c_face_edge_idx = C_NULL_PTR
   if (associated(face_edge_idx)) then
     c_face_edge_idx = c_loc(face_edge_idx)
   endif
 
+  c_face_edge = C_NULL_PTR
   if (associated(face_edge)) then
     c_face_edge = c_loc(face_edge)
   endif
 
+  c_edge_vtx = C_NULL_PTR
   if (associated(edge_vtx)) then
     c_edge_vtx = c_loc(edge_vtx)
   endif
 
+  c_face_vtx_idx = C_NULL_PTR
   if (associated(face_vtx_idx)) then
     c_face_vtx_idx = c_loc(face_vtx_idx)
   endif
 
+  c_face_vtx = C_NULL_PTR
   if (associated(face_vtx)) then
     c_face_vtx = c_loc(face_vtx)
   endif
 
+  c_cell_ln_to_gn = C_NULL_PTR
   if (associated(cell_ln_to_gn)) then
     c_cell_ln_to_gn = c_loc(cell_ln_to_gn)
   endif
 
+  c_face_ln_to_gn = C_NULL_PTR
   if (associated(face_ln_to_gn)) then
     c_face_ln_to_gn = c_loc(face_ln_to_gn)
   endif
 
+  c_edge_ln_to_gn = C_NULL_PTR
   if (associated(edge_ln_to_gn)) then
     c_edge_ln_to_gn = c_loc(edge_ln_to_gn)
   endif
 
+  c_vtx_ln_to_gn = C_NULL_PTR
   if (associated(vtx_ln_to_gn)) then
     c_vtx_ln_to_gn = c_loc(vtx_ln_to_gn)
   endif
 
+  c_vtx_coord = C_NULL_PTR
   if (associated(coords)) then
     c_vtx_coord = c_loc(coords)
   endif

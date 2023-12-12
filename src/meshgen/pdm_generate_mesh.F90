@@ -535,25 +535,40 @@ module pdm_generate_mesh
     type(PDM_pointer_array_t), pointer :: pface_ln_to_gn ! Face global ids
 
     integer(c_int)          :: c_comm
-    type(c_ptr)             :: c_pn_vtx          = C_NULL_PTR
-    type(c_ptr)             :: c_pn_edge         = C_NULL_PTR
-    type(c_ptr)             :: c_pn_face         = C_NULL_PTR
-    type(c_ptr)             :: cc_pvtx_coord     = C_NULL_PTR
-    type(c_ptr)             :: cc_pedge_vtx      = C_NULL_PTR
-    type(c_ptr)             :: cc_pface_edge_idx = C_NULL_PTR
-    type(c_ptr)             :: cc_pface_edge     = C_NULL_PTR
-    type(c_ptr)             :: cc_pface_vtx      = C_NULL_PTR
-    type(c_ptr)             :: cc_pvtx_ln_to_gn  = C_NULL_PTR
-    type(c_ptr)             :: cc_pedge_ln_to_gn = C_NULL_PTR
-    type(c_ptr)             :: cc_pface_ln_to_gn = C_NULL_PTR
+    type(c_ptr)             :: c_pn_vtx
+    type(c_ptr)             :: c_pn_edge
+    type(c_ptr)             :: c_pn_face
+    type(c_ptr)             :: cc_pvtx_coord
+    type(c_ptr)             :: cc_pedge_vtx
+    type(c_ptr)             :: cc_pface_edge_idx
+    type(c_ptr)             :: cc_pface_edge
+    type(c_ptr)             :: cc_pface_vtx
+    type(c_ptr)             :: cc_pvtx_ln_to_gn
+    type(c_ptr)             :: cc_pedge_ln_to_gn
+    type(c_ptr)             :: cc_pface_ln_to_gn
 
     integer                 :: length(n_part)
-    type(c_ptr),    pointer :: fptr(:)          => null()
-    integer(c_int), pointer :: face_edge_idx(:) => null()
+    type(c_ptr),    pointer :: fptr(:)
+    integer(c_int), pointer :: face_edge_idx(:)
     integer                 :: i_part
 
     c_comm = PDM_MPI_Comm_f2c(comm)
 
+    c_pn_vtx          = C_NULL_PTR
+    c_pn_edge         = C_NULL_PTR
+    c_pn_face         = C_NULL_PTR
+    cc_pvtx_coord     = C_NULL_PTR
+    cc_pedge_vtx      = C_NULL_PTR
+    cc_pface_edge_idx = C_NULL_PTR
+    cc_pface_edge     = C_NULL_PTR
+    cc_pface_vtx      = C_NULL_PTR
+    cc_pvtx_ln_to_gn  = C_NULL_PTR
+    cc_pedge_ln_to_gn = C_NULL_PTR
+    cc_pface_ln_to_gn = C_NULL_PTR
+    
+    fptr          => null() 
+    face_edge_idx => null() 
+    
     call PDM_generate_mesh_rectangle_ngon_cf(c_comm,            &
                                              elt_type,          &
                                              xmin,              &

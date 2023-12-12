@@ -26,6 +26,7 @@ program testf
 #ifdef PDM_HAVE_FORTRAN_MPI_MODULE
   use mpi
 #endif
+  use pdm_fortran
   use pdm_part_mesh_nodal
   use iso_c_binding
 
@@ -201,6 +202,8 @@ action='read')
 
   ! Free memory
   call pdm_part_mesh_nodal_free(mesh)
+  call pdm_fortran_free_c(c_loc(tmp_cell_vtx_idx))
+  call pdm_fortran_free_c(c_loc(tmp_cell_vtx))
   nullify(tmp_cell_vtx_idx)
   nullify(tmp_cell_vtx)
 

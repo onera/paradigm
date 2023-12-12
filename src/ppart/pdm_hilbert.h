@@ -184,21 +184,12 @@ PDM_hilbert_build_rank_index(int                       dim,
                              int                       n_part,
                              int                       n_codes,
                              const PDM_hilbert_code_t  hilbert_code[],
-                             const int                 weight[],
+                             const double              weight[],
                              const int                 order[],
                              PDM_hilbert_code_t        rank_index[],
-                             PDM_MPI_Comm                  comm);
+                             PDM_MPI_Comm              comm);
 
 /*----------------------------------------------------------------------------*/
-
-double
-PDM_hilbert_build_rank_index_pond(int                       dim,
-                                  int                       n_t_part,
-                                  int                       n_codes,
-                                  const PDM_hilbert_code_t  hilbert_code[],
-                                  const int                 weight[],
-                                  PDM_hilbert_code_t        rank_index[],
-                                  PDM_MPI_Comm              comm);
 
 #ifdef __cplusplus
 }

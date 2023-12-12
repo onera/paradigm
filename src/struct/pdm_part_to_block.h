@@ -272,7 +272,7 @@ PDM_part_to_block_geom_create
  PDM_part_geom_t               geom_renum,
  double                      **coords,
  PDM_g_num_t                 **gnum,
- int                         **weight,
+ double                      **weight,
  int                          *n_elt,
  int                           n_part,
  PDM_MPI_Comm                  comm

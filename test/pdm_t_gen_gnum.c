@@ -99,7 +99,7 @@ _read_args
     }
 
     else if (strcmp (argv[i], "-merge") == 0) {
-      *merge = 1;
+      *merge = (PDM_bool_t) 1;
     }
 
     else

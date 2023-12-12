@@ -454,9 +454,9 @@ module pdm_extract_part
     integer(pdm_g_num_s), pointer :: extract_group_entity_parent_ln_to_gn(:)
     integer, intent(in)           :: ownership
 
-    type(c_ptr)                   :: c_extract_group_entity                 = C_NULL_PTR
-    type(c_ptr)                   :: c_extract_group_entity_ln_to_gn        = C_NULL_PTR
-    type(c_ptr)                   :: c_extract_group_entity_parent_ln_to_gn = C_NULL_PTR
+    type(c_ptr)                   :: c_extract_group_entity                 
+    type(c_ptr)                   :: c_extract_group_entity_ln_to_gn        
+    type(c_ptr)                   :: c_extract_group_entity_parent_ln_to_gn 
 
     interface
       subroutine pdm_extract_part_group_get_c (extrp,                                &
@@ -484,6 +484,10 @@ module pdm_extract_part
 
       end subroutine pdm_extract_part_group_get_c
     end interface
+
+    c_extract_group_entity                 = C_NULL_PTR
+    c_extract_group_entity_ln_to_gn        = C_NULL_PTR
+    c_extract_group_entity_parent_ln_to_gn = C_NULL_PTR
 
     call pdm_extract_part_group_get_c (extrp,                                  &
                                        bound_type,                             &
@@ -637,8 +641,8 @@ module pdm_extract_part
     integer(kind = PDM_l_num_s), pointer :: connect(:)
     integer(kind = PDM_l_num_s), pointer :: connect_idx(:)
 
-    type(c_ptr)                          :: c_connect     = C_NULL_PTR
-    type(c_ptr)                          :: c_connect_idx = C_NULL_PTR
+    type(c_ptr)                          :: c_connect    
+    type(c_ptr)                          :: c_connect_idx
 
     interface
       function pdm_extract_part_connectivity_get_c (extrp,             &
@@ -662,6 +666,9 @@ module pdm_extract_part
 
       end function pdm_extract_part_connectivity_get_c
     end interface
+
+    c_connect     = C_NULL_PTR
+    c_connect_idx = C_NULL_PTR
 
     n_entity = pdm_extract_part_connectivity_get_c (extrp,             &
                                                     i_part_out,        &
@@ -710,7 +717,7 @@ module pdm_extract_part
     integer                              :: n_entity
     integer(kind = PDM_g_num_s), pointer :: pentity_ln_to_gn(:)
 
-    type(c_ptr)                          :: c_pentity_ln_to_gn = C_NULL_PTR
+    type(c_ptr)                          :: c_pentity_ln_to_gn
 
     interface
       function pdm_extract_part_ln_to_gn_get_c (extrp,            &
@@ -732,6 +739,8 @@ module pdm_extract_part
 
       end function pdm_extract_part_ln_to_gn_get_c
     end interface
+
+    c_pentity_ln_to_gn = C_NULL_PTR
 
     n_entity = pdm_extract_part_ln_to_gn_get_c (extrp,              &
                                                 i_part_out,         &
@@ -841,7 +850,7 @@ module pdm_extract_part
     integer                              :: n_entity
     integer(kind = PDM_l_num_s), pointer :: parent_entity_lnum(:)
 
-    type(c_ptr)                          :: c_parent_entity_lnum = C_NULL_PTR
+    type(c_ptr)                          :: c_parent_entity_lnum
 
     interface
       function pdm_extract_part_parent_lnum_get_c (extrp,              &
@@ -863,6 +872,8 @@ module pdm_extract_part
 
       end function pdm_extract_part_parent_lnum_get_c
     end interface
+
+    c_parent_entity_lnum = C_NULL_PTR
 
     n_entity = pdm_extract_part_parent_lnum_get_c (extrp,                &
                                                    i_part_out,           &

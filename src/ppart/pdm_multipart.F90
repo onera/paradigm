@@ -761,12 +761,12 @@ contains
     type(c_ptr)                        :: multipart                     ! Pointer to a new \ref PDM_multipart_t object
     integer(c_int),            value   :: n_zone                        ! Number of zones in the original mesh
     integer(kind=PDM_l_num_s), pointer :: n_part(:)                     ! Number of partition per proc in each zone
-    type(c_ptr)                        :: c_n_part         = C_NULL_PTR
+    type(c_ptr)                        :: c_n_part
     integer(c_int),            value   :: merge_blocks                  ! Merge or not the zones before splitting
     integer(c_int),            value   :: split_method                  ! Choice of method used to split the mesh
     integer(c_int),            value   :: part_size_method              ! Choice of homogeneous or heterogeneous partitions
     double precision,          pointer :: part_fraction(:)              ! Weight (in %) of each partition in heterogeneous case
-    type(c_ptr)                        :: c_part_fraction  = C_NULL_PTR
+    type(c_ptr)                        :: c_part_fraction
     integer(c_int),            value   :: comm                          ! PDM_MPI communicator
     integer(c_int),            value   :: owner                         ! Data ownership
     integer(c_int)                     :: c_comm
@@ -799,7 +799,7 @@ contains
     type(c_ptr),               value   :: multipart                       ! Pointer to \ref PDM_multipart_t object
     integer(c_int),            value   :: n_total_joins                   ! Total number of interfaces
     integer(kind=PDM_l_num_s), pointer :: join_to_opposite(:)             ! For each global join id, give the global id of the opposite join (size = n_total_joins)
-    type(c_ptr)                        :: c_join_to_opposite = C_NULL_PTR
+    type(c_ptr)                        :: c_join_to_opposite
 
     c_join_to_opposite = c_loc(join_to_opposite)
 
@@ -825,7 +825,7 @@ contains
     integer(c_int),            value   :: i_zone                               ! Id of zone which parameters apply (or -1 for all zones)
     character (len=*)                  :: renum_cell_method                    ! Choice of renumbering method for cells
     integer(kind=PDM_l_num_s), pointer :: renum_cell_properties(:)             ! Parameters used by cacheblocking method : [n_cell_per_cache_wanted, is_asynchrone, is_vectorisation, n_vect_face, split_method]
-    type(c_ptr)                        :: c_renum_cell_properties = C_NULL_PTR
+    type(c_ptr)                        :: c_renum_cell_properties
     character (len=*)                  :: renum_face_method                    ! Choice of renumbering method for faces
 
     c_renum_cell_properties = c_loc(renum_cell_properties)
@@ -919,14 +919,14 @@ contains
     integer(kind=c_int)                :: c_dn_face
     integer(kind=c_int)                :: c_dn_vtx
     integer(kind=c_int)                :: c_n_face_group
-    type(c_ptr)                        :: c_dcell_face_idx  = C_NULL_PTR
-    type(c_ptr)                        :: c_dcell_face      = C_NULL_PTR
-    type(c_ptr)                        :: c_dface_cell      = C_NULL_PTR
-    type(c_ptr)                        :: c_dface_vtx_idx   = C_NULL_PTR
-    type(c_ptr)                        :: c_dface_vtx       = C_NULL_PTR
-    type(c_ptr)                        :: c_dvtx_coord      = C_NULL_PTR
-    type(c_ptr)                        :: c_dface_group_idx = C_NULL_PTR
-    type(c_ptr)                        :: c_dface_group     = C_NULL_PTR
+    type(c_ptr)                        :: c_dcell_face_idx
+    type(c_ptr)                        :: c_dcell_face
+    type(c_ptr)                        :: c_dface_cell
+    type(c_ptr)                        :: c_dface_vtx_idx
+    type(c_ptr)                        :: c_dface_vtx
+    type(c_ptr)                        :: c_dvtx_coord
+    type(c_ptr)                        :: c_dface_group_idx
+    type(c_ptr)                        :: c_dface_group
 
     c_i_zone          = i_zone
     c_dn_cell         = dn_cell
@@ -1081,21 +1081,21 @@ contains
     integer (kind = PDM_l_num_s), pointer :: face_bound(:)
     integer (kind = PDM_g_num_s), pointer :: face_bound_ln_to_gn(:)
 
-    type(c_ptr)  :: c_cell_face_idx            = C_NULL_PTR
-    type(c_ptr)  :: c_cell_face                = C_NULL_PTR
-    type(c_ptr)  :: c_cell_ln_to_gn            = C_NULL_PTR
-    type(c_ptr)  :: c_face_cell                = C_NULL_PTR
-    type(c_ptr)  :: c_face_vtx_idx             = C_NULL_PTR
-    type(c_ptr)  :: c_face_vtx                 = C_NULL_PTR
-    type(c_ptr)  :: c_face_ln_to_gn            = C_NULL_PTR
-    type(c_ptr)  :: c_face_part_bound_proc_idx = C_NULL_PTR
-    type(c_ptr)  :: c_face_part_bound_part_idx = C_NULL_PTR
-    type(c_ptr)  :: c_face_part_bound          = C_NULL_PTR
-    type(c_ptr)  :: c_vtx                      = C_NULL_PTR
-    type(c_ptr)  :: c_vtx_ln_to_gn             = C_NULL_PTR
-    type(c_ptr)  :: c_face_bound_idx           = C_NULL_PTR
-    type(c_ptr)  :: c_face_bound               = C_NULL_PTR
-    type(c_ptr)  :: c_face_bound_ln_to_gn      = C_NULL_PTR
+    type(c_ptr)  :: c_cell_face_idx
+    type(c_ptr)  :: c_cell_face
+    type(c_ptr)  :: c_cell_ln_to_gn
+    type(c_ptr)  :: c_face_cell
+    type(c_ptr)  :: c_face_vtx_idx
+    type(c_ptr)  :: c_face_vtx
+    type(c_ptr)  :: c_face_ln_to_gn
+    type(c_ptr)  :: c_face_part_bound_proc_idx
+    type(c_ptr)  :: c_face_part_bound_part_idx
+    type(c_ptr)  :: c_face_part_bound
+    type(c_ptr)  :: c_vtx
+    type(c_ptr)  :: c_vtx_ln_to_gn
+    type(c_ptr)  :: c_face_bound_idx
+    type(c_ptr)  :: c_face_bound
+    type(c_ptr)  :: c_face_bound_ln_to_gn
 
     integer(c_int) :: c_n_cell
     integer(c_int) :: c_n_face
@@ -1133,6 +1133,21 @@ contains
     n_face_part_bound  = c_n_face_part_bound
     n_vtx              = c_n_vtx
     n_bound_groups     = c_n_bound_groups
+    c_cell_face_idx            = C_NULL_PTR
+    c_cell_face                = C_NULL_PTR
+    c_cell_ln_to_gn            = C_NULL_PTR
+    c_face_cell                = C_NULL_PTR
+    c_face_vtx_idx             = C_NULL_PTR
+    c_face_vtx                 = C_NULL_PTR
+    c_face_ln_to_gn            = C_NULL_PTR
+    c_face_part_bound_proc_idx = C_NULL_PTR
+    c_face_part_bound_part_idx = C_NULL_PTR
+    c_face_part_bound          = C_NULL_PTR
+    c_vtx                      = C_NULL_PTR
+    c_vtx_ln_to_gn             = C_NULL_PTR
+    c_face_bound_idx           = C_NULL_PTR
+    c_face_bound               = C_NULL_PTR
+    c_face_bound_ln_to_gn      = C_NULL_PTR
 
     call PDM_multipart_part_val_get_c(multipart, &
                                       i_zone, &
@@ -1235,13 +1250,15 @@ contains
     integer(c_int),            value   :: i_part                     ! Partition index
     integer(c_int),            value   :: connectivity_type          ! Type of connectivity to be getted (enumerated type)
     integer(kind=PDM_l_num_s), pointer :: connect(:)                 ! Connectivity
-    type(c_ptr)                        :: c_connect = C_NULL_PTR
+    type(c_ptr)                        :: c_connect
     integer(kind=PDM_l_num_s), pointer :: connect_idx(:)             ! Connectivity index
-    type(c_ptr)                        :: c_connect_idx = C_NULL_PTR
+    type(c_ptr)                        :: c_connect_idx
     integer(c_int),            value   :: ownership                  ! Data ownership
     integer(c_int)                     :: pn_entity                  ! Number of entities
     integer(c_int)                     :: connec_size
 
+    c_connect = C_NULL_PTR
+    c_connect_idx = C_NULL_PTR
     pn_entity = PDM_multipart_part_connectivity_get_c(multipart,         &
                                                       i_zone,            &
                                                       i_part,            &
@@ -1287,10 +1304,11 @@ contains
     integer(c_int),            value   :: i_part                         ! Partition index
     integer(c_int),            value   :: entity_type                    ! Type of entity to be getted
     integer(kind=PDM_g_num_s), pointer :: entity_ln_to_gn(:)             ! Entity local number to global number
-    type(c_ptr)                        :: c_entity_ln_to_gn = C_NULL_PTR
+    type(c_ptr)                        :: c_entity_ln_to_gn
     integer(c_int),            value   :: ownership                      ! Data ownership
     integer(c_int)                     :: pn_entity                      ! Number of entities
 
+    c_entity_ln_to_gn = C_NULL_PTR
     pn_entity = PDM_multipart_part_ln_to_gn_get_c(multipart, &
                                                   i_zone, &
                                                   i_part, &
@@ -1323,10 +1341,11 @@ contains
     integer(c_int),            value   :: i_part                      ! Partition index
     integer(c_int),            value   :: entity_type                 ! Type of entity to be getted
     integer(kind=PDM_l_num_s), pointer :: entity_color(:)             ! Entity->color connectivity
-    type(c_ptr)                        :: c_entity_color = C_NULL_PTR
+    type(c_ptr)                        :: c_entity_color
     integer(c_int),            value   :: ownership                   ! Data ownership
     integer(c_int)                     :: pn_entity                   ! Number of entities
 
+    c_entity_color = C_NULL_PTR
     pn_entity = PDM_multipart_partition_color_get_c(multipart, &
                                                     i_zone, &
                                                     i_part, &
@@ -1355,7 +1374,7 @@ contains
     integer(c_int), value              :: i_zone                               ! Id of zone which parameters apply (or -1 for all zones)
     integer(c_int), value              :: i_part                               ! Partition index
     integer(kind=PDM_l_num_s), pointer :: vtx_ghost_information(:)             ! An integer for each vertex to describe it's kind
-    type(c_ptr)                        :: c_vtx_ghost_information = C_NULL_PTR
+    type(c_ptr)                        :: c_vtx_ghost_information
 
     integer(c_int) :: c_n_cell
     integer(c_int) :: c_n_face
@@ -1382,6 +1401,7 @@ contains
                                       c_s_face_bound, &
                                       c_n_bound_groups)
 
+    c_vtx_ghost_information = C_NULL_PTR
     call PDM_multipart_part_ghost_infomation_get_c(multipart, &
                                                    i_zone, &
                                                    i_part, &
@@ -1409,10 +1429,11 @@ contains
     integer(c_int),   value     :: i_zone                   ! Id of zone which parameters apply (or -1 for all zones)
     integer(c_int),   value     :: i_part                   ! Partition index
     double precision, pointer   :: vtx_coord(:,:)           ! Coordinates of vertices
-    type(c_ptr)                 :: c_vtx_coord = C_NULL_PTR
+    type(c_ptr)                 :: c_vtx_coord
     integer(c_int),   value     :: ownership                ! Data ownership
     integer(c_int)              :: n_vtx                    ! Number of vertices
 
+    c_vtx_coord = C_NULL_PTR
     n_vtx = PDM_multipart_part_vtx_coord_get_c(multipart, &
                                                i_zone, &
                                                i_part, &
@@ -1446,11 +1467,15 @@ contains
     integer(c_int)                     :: bound_type                    ! Boundary type
     integer(c_int)                     :: n_bound                       ! Number of boundaries
     integer(kind=PDM_l_num_s), pointer :: bound_idx(:)                  ! Boundary index
-    type(c_ptr)                        :: c_bound_idx = C_NULL_PTR
+    type(c_ptr)                        :: c_bound_idx
     integer(kind=PDM_l_num_s), pointer :: bound(:)                      ! Boundaries
-    type(c_ptr)                        :: c_bound = C_NULL_PTR
+    type(c_ptr)                        :: c_bound
     integer(kind=PDM_g_num_s), pointer :: bound_ln_to_gn(:)             ! Boundary local number to global number
-    type(c_ptr)                        :: c_bound_ln_to_gn = C_NULL_PTR
+    type(c_ptr)                        :: c_bound_ln_to_gn
+
+    c_bound_idx      = C_NULL_PTR
+    c_bound          = C_NULL_PTR
+    c_bound_ln_to_gn = C_NULL_PTR
 
     call PDM_multipart_bound_get_c(multipart, &
                                    i_zone, &
