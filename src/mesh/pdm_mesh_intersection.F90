@@ -100,6 +100,25 @@ module pdm_mesh_intersection
   !   PDM_mesh_intersection_extract_part_get_
     PDM_mesh_intersection_part_set_
 
+
+  interface
+
+    function PDM_mesh_intersection_mesh_dimension_get_cf(mi, i_mesh) &
+    result (dim) &
+    bind (c, name="PDM_mesh_intersection_mesh_dimension_get")
+
+      use iso_c_binding
+      implicit none
+
+      type(c_ptr),    value :: mi
+      integer(c_int), value :: i_mesh
+      integer(c_int)        :: dim
+
+    end function PDM_mesh_intersection_mesh_dimension_get_cf
+
+
+  end interface
+
 contains
 
 
@@ -774,7 +793,7 @@ end subroutine PDM_mesh_intersection_tolerance_set_
 !!
 !!
 
-subroutine PDM_mesh_intersection_preprocessing_get_ (mi,             &
+subroutine PDM_mesh_intersection_preprocessing_get_(mi,             &
                                                     box_a_box_b_idx, &
                                                     box_a_box_b,     &
                                                     extr_mesh_a,     &
@@ -790,13 +809,13 @@ subroutine PDM_mesh_intersection_preprocessing_get_ (mi,             &
   type(c_ptr)             :: extr_mesh_a
   type(c_ptr)             :: extr_mesh_b
 
-  integer                 :: n_cell_a 
+  integer                 :: n_elt_a, dim_a
   type(c_ptr)             :: c_box_a_box_b_idx
   type(c_ptr)             :: c_box_a_box_b
 
   integer                 :: i
   interface 
-    subroutine PDM_mesh_intersection_preprocessing_get_cf (mi,            &
+    subroutine PDM_mesh_intersection_preprocessing_get_cf(mi,            &
                                                           box_a_box_b_idx,&
                                                           box_a_box_b,    &
                                                           extr_mesh_a,    &
@@ -824,17 +843,34 @@ subroutine PDM_mesh_intersection_preprocessing_get_ (mi,             &
                                                    extr_mesh_a,       &
                                                    extr_mesh_b)
 
+  ! Get dimension of mesh A
+  dim_a = PDM_mesh_intersection_mesh_dimension_get_cf(mi, 0)
 
-  call PDM_extract_part_n_entity_get (extr_mesh_a,            &
-                                      0,                      &  ! ipart (only one)
-                                      PDM_MESH_ENTITY_CELL, &
-                                      n_cell_a)                                    
+  select case (dim_a)
+    case (1)
+      call PDM_extract_part_n_entity_get(extr_mesh_a,            &
+                                         0,                      &  ! ipart (only one)
+                                         PDM_MESH_ENTITY_EDGE,   &
+                                         n_elt_a)
+    case (2)
+      call PDM_extract_part_n_entity_get(extr_mesh_a,            &
+                                         0,                      &  ! ipart (only one)
+                                         PDM_MESH_ENTITY_FACE,   &
+                                         n_elt_a)
+    case (3)
+      call PDM_extract_part_n_entity_get(extr_mesh_a,            &
+                                         0,                      &  ! ipart (only one)
+                                         PDM_MESH_ENTITY_CELL,   &
+                                         n_elt_a)
+    case default
+      n_elt_a = 0
+  end select
 
 
-  call c_f_pointer (c_box_a_box_b_idx, box_a_box_b_idx, [n_cell_a + 1])
-  call c_f_pointer (c_box_a_box_b, box_a_box_b, [box_a_box_b_idx(n_cell_a + 1)])
+  call c_f_pointer (c_box_a_box_b_idx, box_a_box_b_idx, [n_elt_a + 1])
+  call c_f_pointer (c_box_a_box_b, box_a_box_b, [box_a_box_b_idx(n_elt_a + 1)])
 
-  do i = 1, box_a_box_b_idx(n_cell_a + 1)
+  do i = 1, box_a_box_b_idx(n_elt_a + 1)
     box_a_box_b(i) = box_a_box_b(i) + 1
   enddo   
 

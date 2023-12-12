@@ -1138,6 +1138,16 @@ contains
       c_renum_properties_face = c_loc(renum_properties_face)
     endif
 
+    c_dcell_faceIdx = C_NULL_PTR
+    if (associated(dCellFaceIdx)) then
+      c_dcell_faceIdx = c_loc(dCellFaceIdx)
+    endif
+
+    c_dcell_face = C_NULL_PTR
+    if (associated(dCellFace)) then
+      c_dcell_face = c_loc(dCellFace)
+    endif
+
     c_split_method    = split_method
     c_n_property_cell = nPropertyCell
     c_n_property_face = nPropertyFace
@@ -1147,14 +1157,35 @@ contains
     c_dn_vtx          = dnVtx
     c_n_face_group    = nFaceGroup
 
-    c_renum_properties_cell = c_loc(renum_properties_cell)
-    c_dcell_faceIdx         = c_loc(dCellFaceIdx         )
-    c_dcell_face            = c_loc(dCellFace            )
-    c_dface_vtx_idx         = c_loc(dFaceVtxIdx          )
-    c_dface_vtx             = c_loc(dFaceVtx             )
-    c_dvtx_coord            = c_loc(dVtxCoord            )
-    c_dface_group_idx       = c_loc(dFaceGroupIdx        )
-    c_dface_group           = c_loc(dFaceGroup           )
+    c_renum_properties_cell = C_NULL_PTR
+    if (associated (renum_properties_cell)) then 
+      c_renum_properties_cell = c_loc(renum_properties_cell)
+    endif 
+
+    c_dface_vtx_idx         = C_NULL_PTR
+    if (associated (dFaceVtxIdx)) then 
+      c_dface_vtx_idx         = c_loc(dFaceVtxIdx          )
+    endif 
+
+    c_dface_vtx             = C_NULL_PTR
+    if (associated (dFaceVtx)) then 
+      c_dface_vtx             = c_loc(dFaceVtx             )
+    endif 
+
+    c_dvtx_coord            = C_NULL_PTR
+    if (associated (dVtxCoord)) then 
+      c_dvtx_coord            = c_loc(dVtxCoord            )
+    endif 
+
+    c_dface_group_idx       = C_NULL_PTR
+    if (associated (dFaceGroupIdx)) then 
+      c_dface_group_idx       = c_loc(dFaceGroupIdx        )
+    endif 
+
+    c_dface_group           = C_NULL_PTR
+    if (associated (dFaceGroup)) then 
+      c_dface_group           = c_loc(dFaceGroup           )
+    endif 
 
     c_comm = PDM_MPI_Comm_f2c(f_comm)
 
@@ -1861,9 +1892,16 @@ contains
     c_n_total_part    = n_total_part
     c_n_face_group    = n_face_group
 
-    c_renum_properties_cell = c_loc(renum_properties_cell)
-    c_renum_properties_face = c_loc(renum_properties_face)
+    c_renum_properties_cell = C_NULL_PTR
+    if (n_property_cell > 0 .and. associated(renum_properties_cell)) then
+      c_renum_properties_cell = c_loc(renum_properties_cell)
+    endif
 
+    c_renum_properties_face = C_NULL_PTR
+    if (n_property_face > 0 .and. associated(renum_properties_face)) then
+      c_renum_properties_face = c_loc(renum_properties_face)
+    endif
+    
     if (have_cell_tag) then
       c_have_cell_tag = 1
     else
@@ -2063,21 +2101,60 @@ contains
     c_n_face_group      = n_face_group
     c_n_face_part_bound = n_face_part_bound
 
-    c_cell_face_idx            = c_loc(cell_face_idx           )
-    c_cell_face                = c_loc(cell_face               )
-    c_cell_ln_to_gn            = c_loc(cell_ln_to_gn           )
-    c_face_cell                = c_loc(face_cell               )
-    c_face_vtx_idx             = c_loc(face_vtx_idx            )
-    c_face_vtx                 = c_loc(face_vtx                )
-    c_face_ln_to_gn            = c_loc(face_ln_to_gn           )
-    c_vtxCoord                 = c_loc(vtxCoord                )
-    c_vtx_ln_to_gn             = c_loc(vtx_ln_to_gn            )
-    c_face_group_idx           = c_loc(face_group_idx          )
-    c_face_group               = c_loc(face_group              )
-    c_face_group_ln_to_gn      = c_loc(face_group_ln_to_gn     )
-    c_face_part_bound_proc_idx = c_loc(face_part_bound_proc_idx)
-    c_face_part_bound_part_idx = c_loc(face_part_bound_part_idx)
-    
+    c_cell_face_idx = C_NULL_PTR
+    if (associated (cell_face_idx)) then
+      c_cell_face_idx            = c_loc(cell_face_idx           )
+    endif
+
+    c_cell_face = C_NULL_PTR
+    if (associated (cell_face)) then
+      c_cell_face                = c_loc(cell_face               )
+    endif
+
+    c_cell_ln_to_gn = C_NULL_PTR
+    if (associated (cell_ln_to_gn)) then
+      c_cell_ln_to_gn            = c_loc(cell_ln_to_gn           )
+    endif
+
+    c_face_cell = C_NULL_PTR
+    if (associated (face_cell)) then
+      c_face_cell                = c_loc(face_cell               )
+    endif
+
+    c_face_vtx_idx = C_NULL_PTR
+    if (associated (face_vtx_idx)) then
+      c_face_vtx_idx             = c_loc(face_vtx_idx            )
+    endif
+
+    c_face_vtx = C_NULL_PTR
+    if (associated (face_vtx)) then
+      c_face_vtx                 = c_loc(face_vtx                )
+    endif
+
+    c_face_ln_to_gn = C_NULL_PTR
+    if (associated (face_ln_to_gn)) then
+      c_face_ln_to_gn            = c_loc(face_ln_to_gn           )
+    endif
+
+    c_vtxCoord = C_NULL_PTR
+    if (associated (vtxCoord)) then
+      c_vtxCoord                 = c_loc(vtxCoord                )
+    endif
+
+    c_vtx_ln_to_gn = C_NULL_PTR
+    if (associated (vtx_ln_to_gn)) then
+      c_vtx_ln_to_gn             = c_loc(vtx_ln_to_gn            )
+    endif
+
+    c_face_part_bound_proc_idx = C_NULL_PTR
+    if (associated (face_part_bound_proc_idx)) then
+      c_face_part_bound_proc_idx = c_loc(face_part_bound_proc_idx)
+    endif
+
+    c_face_part_bound_part_idx = C_NULL_PTR
+    if (associated (face_part_bound_part_idx)) then
+      c_face_part_bound_part_idx = c_loc(face_part_bound_part_idx)
+    endif  
 
     c_vtx_tag = C_NULL_PTR
     if (associated(vtx_tag)) then
@@ -2104,6 +2181,21 @@ contains
       c_face_weight = c_loc(face_weight)
     endif
 
+    c_face_group_idx = C_NULL_PTR
+    if (associated(face_group_idx)) then
+      c_face_group_idx = c_loc(face_group_idx)
+    endif
+
+    c_face_group = C_NULL_PTR
+    if (associated(face_group)) then
+      c_face_group = c_loc(face_group)
+    endif
+    
+    c_face_group_ln_to_gn = C_NULL_PTR
+    if (associated(face_group_ln_to_gn)) then
+      c_face_group_ln_to_gn = c_loc(face_group_ln_to_gn)
+    endif
+    
     c_face_part_bound = C_NULL_PTR
     if (associated(face_part_bound)) then
       c_face_part_bound = c_loc(face_part_bound)
