@@ -466,8 +466,15 @@ end function PDM_closest_points_n_closest_get
     c_i_part   = i_part
     c_n_points = n_points
 
-    c_coords = c_loc(coords)
-    c_gnum   = c_loc(gnum)
+    c_coords = C_NULL_PTR
+    if (associated(coords)) then
+      c_coords = c_loc(coords)
+    end if
+
+    c_gnum = C_NULL_PTR
+    if (associated(coords)) then
+      c_gnum = c_loc(gnum)
+    end if
 
     call PDM_closest_points_tgt_cloud_set_cf(cls,        &
                                              c_i_part,   &
@@ -513,8 +520,15 @@ end function PDM_closest_points_n_closest_get
     c_i_part   = i_part
     c_n_points = n_points
 
-    c_coords = c_loc(coords)
-    c_gnum   = c_loc(gnum)
+    c_coords = C_NULL_PTR
+    if (associated(coords)) then
+      c_coords = c_loc(coords)
+    end if
+
+    c_gnum = C_NULL_PTR
+    if (associated(coords)) then
+      c_gnum = c_loc(gnum)
+    end if
 
     call PDM_closest_points_src_cloud_set_cf(cls,        &
                                              c_i_part,   &
