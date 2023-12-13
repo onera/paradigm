@@ -3980,6 +3980,7 @@ _extract_part_and_reequilibrate
 
     for(int i = 0; i < extrp->n_extract[i_part]; ++i) {
       int lnum = extrp->extract_lnum[i_part][i];
+      weight             [i_part][i] = 1.;
       extract_entity_gnum[i_part][i] = entity_g_num[i_part][lnum];
     }
   }
@@ -4342,9 +4343,9 @@ PDM_extract_part_create
   }
   else if (dim == 1) {
     extrp->master_entity = PDM_MESH_ENTITY_EDGE;
-  } 
+  }
   else {
-    extrp->master_entity = PDM_MESH_ENTITY_VERTEX;   
+    extrp->master_entity = PDM_MESH_ENTITY_VERTEX;
   }
 
   extrp->is_owner_connectivity    = malloc( PDM_CONNECTIVITY_TYPE_MAX * sizeof(PDM_bool_t   ) );
@@ -4559,7 +4560,7 @@ PDM_extract_part_target_gnum_keep_ownnership
   PDM_extract_part_t       *extrp
 )
 {
-  extrp->target_ownership = PDM_OWNERSHIP_KEEP;  
+  extrp->target_ownership = PDM_OWNERSHIP_KEEP;
 }
 
 
@@ -4692,13 +4693,13 @@ PDM_extract_part_parent_ln_to_gn_get
 
     if(ownership == PDM_OWNERSHIP_USER || ownership == PDM_OWNERSHIP_UNGET_RESULT_IS_FREE) {
       extrp->is_owner_parent_ln_to_gn[entity_type] = PDM_FALSE;
-    } 
+    }
     else {
       extrp->is_owner_parent_ln_to_gn[entity_type] = PDM_TRUE;
     }
 
     n_entity = extrp->pextract_n_entity[entity_type][i_part_out];
-  } 
+  }
   else {
    *parent_entity_ln_to_gn = NULL;
   }
@@ -4902,7 +4903,7 @@ PDM_extract_part_partial_free
   /* Free parent_ln_to_gn */
   for(int i = 0; i < PDM_MESH_ENTITY_MAX; ++i) {
 
-    if ((extrp->from_target == 1) && 
+    if ((extrp->from_target == 1) &&
         (extrp->target_ownership == PDM_OWNERSHIP_KEEP) &&
         ((int) extrp->master_entity == i)) {
       if(extrp->pextract_entity_parent_ln_to_gn[i] != NULL) {
