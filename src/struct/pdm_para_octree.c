@@ -7832,10 +7832,7 @@ PDM_para_octree_build
 
   if (n_ranks > 1) {
 
-    double *weight = malloc(_octree->n_points * sizeof(double));
-    for(int i = 0; i < _octree->n_points; ++i) {
-      weight[i] = 1.;
-    }
+    double *weight = PDM_array_const_double(_octree->n_points, 1.);
 
     PDM_morton_code_t *morton_index =
       malloc (sizeof(PDM_morton_code_t) * (n_ranks + 1));

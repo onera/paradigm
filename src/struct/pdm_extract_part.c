@@ -3975,12 +3975,11 @@ _extract_part_and_reequilibrate
   double      **weight              = malloc(sizeof(double      *) * extrp->n_part_in);
   PDM_g_num_t **extract_entity_gnum = malloc(sizeof(PDM_g_num_t *) * extrp->n_part_in);
   for (int i_part = 0; i_part < extrp->n_part_in; i_part++) {
-    weight             [i_part] = malloc(extrp->n_extract[i_part] * sizeof(double     ));
+    weight             [i_part] = PDM_array_const_double(extrp->n_extract[i_part], 1.);
     extract_entity_gnum[i_part] = malloc(extrp->n_extract[i_part] * sizeof(PDM_g_num_t));
 
     for(int i = 0; i < extrp->n_extract[i_part]; ++i) {
       int lnum = extrp->extract_lnum[i_part][i];
-      weight             [i_part][i] = 1.;
       extract_entity_gnum[i_part][i] = entity_g_num[i_part][lnum];
     }
   }

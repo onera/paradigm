@@ -2609,10 +2609,7 @@ PDM_mesh_location_compute
     double **weight      = malloc(sizeof(double *) * pcloud->n_part);
     int    **pstride_one = malloc(sizeof(int    *) * pcloud->n_part);
     for (int ipart = 0; ipart < pcloud->n_part; ipart++) {
-      weight     [ipart] = malloc(sizeof(double) * n_select_pts[ipart]);
-      for(int i = 0; i < n_select_pts[ipart]; ++i) {
-        weight[ipart][i] = 1.;
-      }
+      weight     [ipart] = PDM_array_const_double(n_select_pts[ipart], 1.);
       pstride_one[ipart] = PDM_array_const_int(n_select_pts[ipart], 1);
     }
 
@@ -2730,10 +2727,7 @@ PDM_mesh_location_compute
 
       weight = malloc(sizeof(double *) * n_part);
       for (int ipart = 0; ipart < n_part; ipart++) {
-        weight[ipart] = malloc(sizeof(double) * n_select_elt[ipart]);
-        for(int i = 0; i < n_select_elt[ipart]; ++i) {
-          weight[ipart][i] = 1.;
-        }
+        weight[ipart] = PDM_array_const_double(n_select_elt[ipart], 1.);
       }
 
       if (dbg_enabled) {

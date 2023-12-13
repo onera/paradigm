@@ -509,11 +509,7 @@ PDM_dreorder_from_coords
 
   PDM_hilbert_code_t *hilbert_codes_idx = (PDM_hilbert_code_t *) malloc ((n_rank+1) * sizeof(PDM_hilbert_code_t));
 
-  double *weight = (double *) malloc (dn_vtx * sizeof(double));
-  for(int i = 0; i < dn_vtx; ++i) {
-    weight [i] = 1.;
-  }
-
+  double *weight = PDM_array_const_double(dn_vtx, 1.);
   PDM_hilbert_build_rank_index (dim,
                                 n_rank,
                                 dn_vtx,
@@ -664,11 +660,7 @@ PDM_dreorder_from_length
 
   PDM_hilbert_code_t *hilbert_codes_idx = (PDM_hilbert_code_t *) malloc ((n_rank+1) * sizeof(PDM_hilbert_code_t));
 
-  double *weight = (double *) malloc (dn_length * sizeof(double));
-  for(int i = 0; i < dn_length; ++i) {
-    weight [i] = 1.;
-  }
-
+  double *weight = PDM_array_const_double(dn_length, 1.);
   PDM_hilbert_build_rank_index (dim,
                                 n_rank,
                                 dn_length,
