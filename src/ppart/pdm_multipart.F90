@@ -934,14 +934,21 @@ contains
     c_dn_vtx          = dn_vtx
     c_n_face_group    = n_face_group
 
-    c_dcell_face_idx  = c_loc(dcell_face_idx )
-    c_dcell_face      = c_loc(dcell_face     )
+    c_dcell_face_idx  = C_NULL_PTR
+    c_dcell_face      = C_NULL_PTR
+    c_dface_cell      = C_NULL_PTR
     c_dface_vtx_idx   = c_loc(dface_vtx_idx  )
     c_dface_vtx       = c_loc(dface_vtx      )
     c_dvtx_coord      = c_loc(dvtx_coord     )
     c_dface_group_idx = c_loc(dface_group_idx)
     c_dface_group     = c_loc(dface_group    )
 
+    if (associated(dcell_face_idx)) then
+      c_dcell_face_idx = c_loc(dcell_face_idx)
+    endif
+    if (associated(dcell_face)) then
+      c_dcell_face = c_loc(dcell_face)
+    endif
     if (associated(dface_cell)) then
       c_dface_cell = c_loc(dface_cell)
     endif
