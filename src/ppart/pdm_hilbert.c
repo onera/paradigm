@@ -601,7 +601,7 @@ _evaluate_distribution(int       n_ranges,
 static void
 _define_rank_distrib(int                       dim,
                      int                       n_ranks,
-                     PDM_g_num_t               gsum_weight,
+                     double                    gsum_weight,
                      int                       n_codes,
                      const PDM_hilbert_code_t  hilbert_codes[],
                      const double              weight[],
