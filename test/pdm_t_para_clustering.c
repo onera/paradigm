@@ -13,11 +13,13 @@
 #include "pdm_gnum.h"
 #include "pdm_dcube_gen.h"
 #include "pdm_part.h"
+#include "pdm_extract_part.h"
 #include "pdm_sort.h"
 #include "pdm_part_to_part.h"
 #include "pdm_array.h"
 #include "pdm_closest_points.h"
 #include "pdm_priv.h"
+#include "pdm_dist_cloud_surf.h"
 #include "pdm_binary_search.h"
 #include "pdm_para_octree.h"
 #include "pdm_distrib.h"
@@ -254,6 +256,12 @@ int main(int argc, char *argv[])
 
   free(dcell_part);
 
+  PDM_g_num_t **gnum_bnd_face    = malloc (sizeof(PDM_g_num_t *) * n_part);
+  int         **lnum_bnd_face    = malloc (sizeof(int         *) * n_part);
+  int         **bnd_face_vtx_idx = malloc (sizeof(int         *) * n_part);
+  int         **bnd_face_vtx     = malloc (sizeof(int         *) * n_part);
+  int          *n_bnd_face       = malloc (sizeof(int          ) * n_part);
+
   PDM_g_num_t **gnum_bnd_vtx = malloc (sizeof(PDM_g_num_t *) * (n_part+1));
   int         **lnum_bnd_vtx = malloc (sizeof(int         *) *  n_part   );
   double      **bnd_vtx      = malloc (sizeof(double      *) * (n_part+1));
@@ -266,6 +274,15 @@ int main(int argc, char *argv[])
 
   PDM_g_num_t **bnd_to_all_vtx     = malloc (sizeof(PDM_g_num_t *) * n_part);
   int         **bnd_to_all_vtx_idx = malloc (sizeof(int         *) * n_part);
+
+  PDM_extract_part_t* extrp = PDM_extract_part_create(2,
+                                                      n_part,
+                                                      n_part,
+                                                      PDM_EXTRACT_PART_KIND_LOCAL,
+                                                      PDM_SPLIT_DUAL_WITH_HILBERT,
+                                                      PDM_TRUE,
+                                                      PDM_OWNERSHIP_KEEP,
+                                                      comm);
 
   for (int i_part = 0; i_part < n_part; i_part++) {
 
@@ -347,7 +364,7 @@ int main(int argc, char *argv[])
                              NULL);
     }
 
-    n_all_vtx[i_part] = n_vtx;
+    n_all_vtx   [i_part] = n_vtx;
     gnum_all_vtx[i_part] = malloc (sizeof(PDM_g_num_t)     * n_all_vtx[i_part]);
     all_vtx     [i_part] = malloc (sizeof(double     ) * 3 * n_all_vtx[i_part]);
 
@@ -358,60 +375,92 @@ int main(int argc, char *argv[])
       all_vtx     [i_part][3*i_vtx + 2] = vtx[3*i_vtx + 2];
     }
 
-   /*
-    * Get boundary vertices
-    */
-
-    n_bnd_vtx[i_part] = 0;
+    lnum_bnd_face[i_part] = malloc (sizeof(int) * sface_group);
 
     for (int i_group = 0; i_group < nface_group; i_group++) {
       for (int i_face_group = face_group_idx[i_group]; i_face_group < face_group_idx[i_group+1]; i_face_group++) {
-        int i_face = face_group[i_face_group]-1;
-        n_bnd_vtx[i_part] += face_vtx_idx[i_face+1] - face_vtx_idx[i_face];
+        lnum_bnd_face[i_part][i_face_group] = face_group[i_face_group]-1;
       }
     }
 
-    lnum_bnd_vtx[i_part] = malloc (sizeof(int) * n_bnd_vtx[i_part]);
+    PDM_extract_part_part_set(extrp,
+                              i_part,
+                              n_cell,
+                              n_face,
+                              -1,
+                              n_vtx,
+                              cell_face_idx,
+                              cell_face,
+                              NULL,
+                              NULL,
+                              NULL,
+                              face_vtx_idx,
+                              face_vtx,
+                              cell_ln_to_gn,
+                              face_ln_to_gn,
+                              NULL,
+                              vtx_ln_to_gn,
+                              vtx);
 
-    n_bnd_vtx[i_part] = 0;
+    PDM_extract_part_selected_lnum_set(extrp,
+                                       i_part,
+                                       sface_group,
+                                       lnum_bnd_face[i_part]);
 
-    for (int i_group = 0; i_group < nface_group; i_group++) {
-      for (int i_face_group = face_group_idx[i_group]; i_face_group < face_group_idx[i_group+1]; i_face_group++) {
-        int i_face = face_group[i_face_group]-1;
-        for (int i_vtx = face_vtx_idx[i_face]; i_vtx < face_vtx_idx[i_face+1]; i_vtx++) {
-          lnum_bnd_vtx[i_part][n_bnd_vtx[i_part]++] = face_vtx[i_vtx]-1;
-        }
-      }
-    }
+  }
 
-    PDM_sort_int(lnum_bnd_vtx[i_part], NULL, n_bnd_vtx[i_part]);
+  PDM_extract_part_compute(extrp);
 
-    if (n_bnd_vtx[i_part] > 0) {
-      int n_vtx_tmp = n_bnd_vtx[i_part];
-      n_bnd_vtx[i_part] = 1;
+  for (int i_part = 0; i_part < n_part; i_part++) {
 
-      for (int i_vtx = 1; i_vtx < n_vtx_tmp; i_vtx++) {
-        if (lnum_bnd_vtx[i_part][i_vtx] > lnum_bnd_vtx[i_part][i_vtx-1]){
-          lnum_bnd_vtx[i_part][n_bnd_vtx[i_part]++] = lnum_bnd_vtx[i_part][i_vtx];
-        }
-      }
-    }
+    /*
+     * Get boundary faces and vertices
+     */
 
-    lnum_bnd_vtx[i_part] = realloc (lnum_bnd_vtx[i_part], sizeof(int) * n_bnd_vtx[i_part]);
+    n_bnd_face[i_part] = PDM_extract_part_n_entity_get(extrp,
+                                                       i_part,
+                                                       PDM_MESH_ENTITY_FACE);
 
-    gnum_bnd_vtx[i_part] = malloc (sizeof(PDM_g_num_t)         * n_bnd_vtx[i_part]);
-    bnd_vtx     [i_part] = malloc (sizeof(double     ) * 3     * n_bnd_vtx[i_part]);
-    data_bnd_vtx[i_part] = malloc (sizeof(double     ) * n_var * n_bnd_vtx[i_part]);
+    PDM_extract_part_ln_to_gn_get(extrp,
+                                  i_part,
+                                  PDM_MESH_ENTITY_FACE,
+                                 &gnum_bnd_face[i_part],
+                                  PDM_OWNERSHIP_USER);
+
+    PDM_extract_part_connectivity_get(extrp,
+                                      i_part,
+                                      PDM_CONNECTIVITY_TYPE_FACE_VTX,
+                                     &bnd_face_vtx    [i_part],
+                                     &bnd_face_vtx_idx[i_part],
+                                      PDM_OWNERSHIP_USER);
+
+    n_bnd_vtx[i_part] = PDM_extract_part_n_entity_get(extrp,
+                                                      i_part,
+                                                      PDM_MESH_ENTITY_VERTEX);
+
+    PDM_extract_part_parent_lnum_get(extrp,
+                                     i_part,
+                                     PDM_MESH_ENTITY_VERTEX,
+                                    &lnum_bnd_vtx[i_part],
+                                     PDM_OWNERSHIP_USER);
+
+    PDM_extract_part_ln_to_gn_get(extrp,
+                                  i_part,
+                                  PDM_MESH_ENTITY_VERTEX,
+                                 &gnum_bnd_vtx[i_part],
+                                  PDM_OWNERSHIP_USER);
+
+    PDM_extract_part_vtx_coord_get(extrp,
+                                   i_part,
+                                  &bnd_vtx[i_part],
+                                   PDM_OWNERSHIP_USER);
 
     bnd_to_all_vtx    [i_part] = malloc (sizeof(PDM_g_num_t) * n_bnd_vtx[i_part]);
     bnd_to_all_vtx_idx[i_part] = PDM_array_new_idx_from_const_stride_int(1, n_bnd_vtx[i_part]);
+    data_bnd_vtx      [i_part] = malloc (sizeof(double) * n_var * n_bnd_vtx[i_part]);
 
     for (int i_vtx = 0; i_vtx < n_bnd_vtx[i_part]; i_vtx++) {
-      gnum_bnd_vtx  [i_part][  i_vtx    ] = vtx_ln_to_gn[lnum_bnd_vtx[i_part][i_vtx]];
-      bnd_to_all_vtx[i_part][  i_vtx    ] = vtx_ln_to_gn[lnum_bnd_vtx[i_part][i_vtx]];
-      bnd_vtx       [i_part][3*i_vtx    ] = vtx[3*lnum_bnd_vtx[i_part][i_vtx]    ];
-      bnd_vtx       [i_part][3*i_vtx + 1] = vtx[3*lnum_bnd_vtx[i_part][i_vtx] + 1];
-      bnd_vtx       [i_part][3*i_vtx + 2] = vtx[3*lnum_bnd_vtx[i_part][i_vtx] + 2];
+      bnd_to_all_vtx[i_part][i_vtx] = gnum_all_vtx[i_part][lnum_bnd_vtx[i_part][i_vtx]];
       for (int i_var = 0; i_var < n_var; i_var++) {
         data_bnd_vtx[i_part][n_var*i_vtx+i_var] = 0.0;
       }
@@ -421,15 +470,7 @@ int main(int argc, char *argv[])
 
   }
 
-  if (i_rank == 0) {
-    printf("-- Gnum boundary vertices\n");
-    fflush(stdout);
-  }
-
-  _compute_gnum(n_part,
-                n_bnd_vtx,
-                gnum_bnd_vtx,
-                comm);
+  PDM_extract_part_free(extrp);
 
   PDM_part_to_part_t *ptp = PDM_part_to_part_create((const PDM_g_num_t **) gnum_bnd_vtx,
                                                     (const int          *) n_bnd_vtx,
@@ -750,31 +791,40 @@ int main(int argc, char *argv[])
   PDM_g_num_t **int_to_bnd_vtx         = malloc (sizeof(PDM_g_num_t *) * n_part );
   int         **int_to_bnd_vtx_triplet = malloc (sizeof(int         *) * n_part );
 
-  PDM_closest_point_t* clsp = PDM_closest_points_create(comm,
-                                                        1,
-                                                        PDM_OWNERSHIP_KEEP);
+  PDM_dist_cloud_surf_t *dcs = PDM_dist_cloud_surf_create(PDM_MESH_NATURE_MESH_SETTED,
+                                                          1,
+                                                          comm,
+                                                          PDM_OWNERSHIP_KEEP);
 
-  PDM_closest_points_n_part_cloud_set(clsp,
-                                      n_part,
-                                      n_part);
+  PDM_dist_cloud_surf_surf_mesh_global_data_set(dcs,
+                                                n_part);
+
+  PDM_dist_cloud_surf_n_part_cloud_set(dcs,
+                                       0,
+                                       n_part);
 
   for (int i_part = 0; i_part < n_part; i_part++) {
 
-    PDM_closest_points_src_cloud_set(clsp,
-                                     i_part,
-                                     n_bnd_vtx   [i_part],
-                                     bnd_vtx     [i_part],
-                                     gnum_bnd_vtx[i_part]);
+    PDM_dist_cloud_surf_surf_mesh_part_set(dcs,
+                                           i_part,
+                                           n_bnd_face      [i_part],
+                                           bnd_face_vtx_idx[i_part],
+                                           bnd_face_vtx    [i_part],
+                                           gnum_bnd_face   [i_part],
+                                           n_bnd_vtx       [i_part],
+                                           bnd_vtx         [i_part],
+                                           gnum_bnd_vtx    [i_part]);
 
-    PDM_closest_points_tgt_cloud_set(clsp,
-                                     i_part,
-                                     n_int_vtx   [i_part],
-                                     int_vtx     [i_part],
-                                     gnum_int_vtx[i_part]);
+    PDM_dist_cloud_surf_cloud_set(dcs,
+                                  0,
+                                  i_part,
+                                  n_int_vtx   [i_part],
+                                  int_vtx     [i_part],
+                                  gnum_int_vtx[i_part]);
 
   }
 
-  PDM_closest_points_compute(clsp);
+  PDM_dist_cloud_surf_compute(dcs);
 
   double _max_dist = 0.0;
   double  max_dist = 0.0;
@@ -783,11 +833,14 @@ int main(int argc, char *argv[])
 
     PDM_g_num_t *closest_src_gnum = NULL;
     double      *closest_src_dist = NULL;
+    double      *closest_src_proj = NULL;
 
-    PDM_closest_points_get(clsp,
-                           i_part,
-                          &closest_src_gnum,
-                          &closest_src_dist);
+    PDM_dist_cloud_surf_get(dcs,
+                            0,
+                            i_part,
+                           &closest_src_dist,
+                           &closest_src_proj,
+                           &closest_src_gnum);
 
     for (int i_vtx = 0; i_vtx < n_int_vtx[i_part]; i_vtx++) {
       _max_dist = PDM_MAX(_max_dist, closest_src_dist[i_vtx]);
@@ -811,11 +864,14 @@ int main(int argc, char *argv[])
 
     PDM_g_num_t *closest_src_gnum = NULL;
     double      *closest_src_dist = NULL;
+    double      *closest_src_proj = NULL;
 
-    PDM_closest_points_get(clsp,
-                           i_part,
-                          &closest_src_gnum,
-                          &closest_src_dist);
+    PDM_dist_cloud_surf_get(dcs,
+                            0,
+                            i_part,
+                           &closest_src_dist,
+                           &closest_src_proj,
+                           &closest_src_gnum);
 
     for (int i_vtx = 0; i_vtx < n_int_vtx[i_part]; i_vtx++) {
 
@@ -890,7 +946,7 @@ int main(int argc, char *argv[])
 
   }
 
-  PDM_closest_points_free(clsp);
+  PDM_dist_cloud_surf_free(dcs);
 
   /*
    * Get groups of vertices for selected boundary vertices
@@ -1589,6 +1645,10 @@ int main(int argc, char *argv[])
     free(data_bnd_vtx[i_part]);
   }
   for (int i_part = 0; i_part < n_part; i_part++) {
+    free(lnum_bnd_face         [i_part]);
+    free(gnum_bnd_face         [i_part]);
+    free(bnd_face_vtx_idx      [i_part]);
+    free(bnd_face_vtx          [i_part]);
     free(lnum_bnd_vtx          [i_part]);
     free(gnum_int_vtx          [i_part]);
     free(lnum_int_vtx          [i_part]);
@@ -1617,6 +1677,11 @@ int main(int argc, char *argv[])
   for (int j_rank = 0; j_rank < n_rank; j_rank++) {
     free(distri_layer_vtx_transposed[j_rank]);
   }
+  free(lnum_bnd_face                 );
+  free(gnum_bnd_face                 );
+  free(bnd_face_vtx_idx              );
+  free(bnd_face_vtx                  );
+  free(n_bnd_face                    );
   free(gnum_bnd_vtx                  );
   free(lnum_bnd_vtx                  );
   free(bnd_vtx                       );
