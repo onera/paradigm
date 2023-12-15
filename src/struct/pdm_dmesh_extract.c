@@ -211,6 +211,10 @@ _rebuild_group_nodal
                                          &dbound_entity_idx,
                                          &dbound_entity);
 
+  if(n_group_entity == 0) {
+    return;
+  }
+
   assert(dme->btp_bound_entity_to_extract_entity[bound_type] == NULL);
   assert(dme->btp_bound_ownership               [bound_type] == NULL);
 
@@ -227,7 +231,7 @@ _rebuild_group_nodal
 
   int dn_entity = dme->distrib_extract[entity_type][i_rank+1] - dme->distrib_extract[entity_type][i_rank];
 
-  if(1 == 0) {
+  if(0 == 1) {
     PDM_log_trace_array_long(dme->distrib_extract[entity_type], n_rank+1, "dme->distrib_extract ::");
     PDM_log_trace_array_long(distrib_entity, n_rank+1, "distrib_entity ::");
     PDM_log_trace_array_long(dme->parent_extract_gnum[entity_type], dn_entity, "dme->parent_extract_gnum ::");
