@@ -219,7 +219,7 @@ _rebuild_group_nodal
 
   dme->n_bound[bound_type] = n_group_entity;
 
-  if(1 == 1) {
+  if(0 == 1) {
     PDM_log_trace_connectivity_long(dbound_entity_idx, dbound_entity, n_group_entity, "dbound_entity ::");
     log_trace("test \n");
   }
@@ -227,14 +227,13 @@ _rebuild_group_nodal
 
   int dn_entity = dme->distrib_extract[entity_type][i_rank+1] - dme->distrib_extract[entity_type][i_rank];
 
-  PDM_log_trace_array_long(dme->distrib_extract[entity_type], n_rank+1, "dme->distrib_extract ::");
-  PDM_log_trace_array_long(distrib_entity, n_rank+1, "distrib_entity ::");
-  PDM_log_trace_array_long(dme->parent_extract_gnum[entity_type], dn_entity, "dme->parent_extract_gnum ::");
-
-
-
-  log_trace("dn_entity = %i \n", dn_entity);
-  log_trace("n_group_entity = %i \n", n_group_entity);
+  if(1 == 0) {
+    PDM_log_trace_array_long(dme->distrib_extract[entity_type], n_rank+1, "dme->distrib_extract ::");
+    PDM_log_trace_array_long(distrib_entity, n_rank+1, "distrib_entity ::");
+    PDM_log_trace_array_long(dme->parent_extract_gnum[entity_type], dn_entity, "dme->parent_extract_gnum ::");
+    log_trace("dn_entity = %i \n", dn_entity);
+    log_trace("n_group_entity = %i \n", n_group_entity);
+  }
 
   int         **tmp_dextract_bound_entity_idx      = NULL;
   int         **tmp_dextract_bound_entity          = NULL;
@@ -259,7 +258,7 @@ _rebuild_group_nodal
   free(tmp_dextract_bound_entity         );
   free(tmp_dextract_bound_entity_ln_to_gn);
 
-  if(1 == 1) {
+  if(0 == 1) {
     PDM_log_trace_array_int (dextract_bound_entity         , dextract_bound_entity_idx[n_group_entity], "dextract_bound_entity ::");
     PDM_log_trace_array_long(dextract_bound_entity_ln_to_gn, dextract_bound_entity_idx[n_group_entity], "dextract_bound_entity_ln_to_gn ::");
   }
@@ -300,7 +299,7 @@ _rebuild_group_nodal
     dextract_bound_entity_gnum[i] = dme->distrib_extract[entity_type][i_rank] + dextract_bound_entity[i];
   }
 
-  PDM_log_trace_connectivity_long(dextract_bound_entity_idx, dextract_bound_entity_gnum, n_group_entity, "dextract_bound_entity_gnum ::");
+  // PDM_log_trace_connectivity_long(dextract_bound_entity_idx, dextract_bound_entity_gnum, n_group_entity, "dextract_bound_entity_gnum ::");
 
   PDM_DMesh_nodal_section_group_elmt_set(dme->dmesh_nodal_extract,
                                          geom_kind,
@@ -783,7 +782,7 @@ _dmesh_extract_nodal
     extracted_entity = PDM_MESH_ENTITY_VTX;
   }
 
-  PDM_log_trace_array_long(dmn_elts->section_distribution, n_rank+1, "dmne->section_distribution :: ");
+  // PDM_log_trace_array_long(dmn_elts->section_distribution, n_rank+1, "dmne->section_distribution :: ");
 
   // For nodal meshes, parent_extract_gnum is filled for vertices *and* for the selected dim to extract :
   // parent gnum is ordered following *output* sections ordering in the extracted dmesh nodal
