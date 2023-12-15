@@ -85,6 +85,8 @@ cdef extern from "pdm_dmesh_nodal.h":
                                   PDM_geometry_kind_t  geom_kind,
                                   const char          *filename_patter)
     void PDM_dmesh_nodal_find_topological_ridge(PDM_dmesh_nodal_t         *dmesh_nodal);
+    void PDM_dmesh_nodal_revert_orientation(PDM_dmesh_nodal_t    *dmesh_nodal,
+                                            PDM_geometry_kind_t   geom_kind);
     # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 cdef extern from "pdm_elt_parent_find.h":
@@ -537,3 +539,10 @@ def find_topological_ridge(DMeshNodal pydmn):
   """
   """
   PDM_dmesh_nodal_find_topological_ridge(pydmn.dmn)
+
+
+def revert_orientation(DMeshNodal          pydmn,
+                       PDM_geometry_kind_t geom_kind):
+  """
+  """
+  PDM_dmesh_nodal_revert_orientation(pydmn.dmn, geom_kind)

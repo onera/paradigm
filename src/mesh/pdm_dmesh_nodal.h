@@ -854,6 +854,14 @@ PDM_dmesh_nodal_find_topological_ridge
  PDM_dmesh_nodal_t         *dmesh_nodal
 );
 
+
+void
+PDM_dmesh_nodal_revert_orientation
+(
+ PDM_dmesh_nodal_t         *dmesh_nodal,
+ PDM_geometry_kind_t        geom_kind
+);
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

@@ -1861,11 +1861,11 @@ PDM_dmesh_nodal_find_topological_ridge
 )
 {
 
-  log_trace("PDM_dmesh_nodal_find_topological_ridge start ... \n");
+  // log_trace("PDM_dmesh_nodal_find_topological_ridge start ... \n");
 
   assert(dmesh_nodal->surfacic != NULL);
 
-  PDM_dmesh_nodal_elmts_t *dmne = dmesh_nodal->surfacic;
+  // PDM_dmesh_nodal_elmts_t *dmne = dmesh_nodal->surfacic;
 
   PDM_dmesh_nodal_to_dmesh_t* dmn_to_dm = PDM_dmesh_nodal_to_dmesh_create(1,
                                                                           dmesh_nodal->comm,
@@ -1887,6 +1887,7 @@ PDM_dmesh_nodal_find_topological_ridge
                                            &dface_edge,
                                            &dface_edge_idx,
                                            PDM_OWNERSHIP_KEEP);
+  PDM_UNUSED(dn_face);
 
   // PDM_log_trace_connectivity_long(dface_edge_idx, dface_edge, dn_face, "dface_edge ::");
 
@@ -2042,7 +2043,7 @@ PDM_dmesh_nodal_find_topological_ridge
     dridge_vtx[2*i  ] = dedge_vtx[2*i_edge  ];
     dridge_vtx[2*i+1] = dedge_vtx[2*i_edge+1];
   }
-  PDM_log_trace_array_long(dridge_vtx, 2 * dn_ridge, "dridge_vtx ::");
+  // PDM_log_trace_array_long(dridge_vtx, 2 * dn_ridge, "dridge_vtx ::");
 
   /*
    * Re-création des groupes
@@ -2082,15 +2083,38 @@ PDM_dmesh_nodal_find_topological_ridge
     dgroup_edge[idx] = distrib_ridge[i_rank] + i + 1;
   }
 
-  if(1 == 1) {
+  if(0 == 1) {
     PDM_log_trace_array_int(dgroup_edge_idx, n_group_ridge+1, "dgroup_edge_idx ::");
     PDM_log_trace_connectivity_long(dgroup_edge_idx, dgroup_edge, n_group_ridge, "dgroup_edge :: ");
   }
 
   /*
+   * Set in dmesh_nodal
+   */
+  int id_section_bar = PDM_DMesh_nodal_elmts_section_ho_add(dmesh_nodal->ridge,
+                                                            PDM_MESH_NODAL_BAR2,
+                                                            1,
+                                                            NULL);
+
+  PDM_DMesh_nodal_elmts_section_std_set(dmesh_nodal->ridge,
+                                        id_section_bar,
+                                        dn_ridge,
+                                        dridge_vtx,
+                                        PDM_OWNERSHIP_KEEP);
+
+
+  PDM_DMesh_nodal_elmts_group_set(dmesh_nodal->ridge,
+                                  n_group_ridge,
+                                  dgroup_edge_idx,
+                                  dgroup_edge,
+                                  PDM_OWNERSHIP_KEEP);
+
+
+
+  /*
    *  Sortie vtk
    */
-  if(0 == 0) {
+  if(1 == 0) {
 
     double* dvtx_coord = PDM_DMesh_nodal_vtx_get(dmesh_nodal);
     const PDM_g_num_t* vtx_distrib = PDM_DMesh_nodal_distrib_vtx_get(dmesh_nodal);
@@ -2158,18 +2182,13 @@ PDM_dmesh_nodal_find_topological_ridge
 
   }
 
-
-
-
-
-
+  // Hold by dmesh_nodal
+  // free(dgroup_edge_idx);
+  // free(dgroup_edge);
+  // free(dridge_vtx);
 
   free(distrib_ridge);
   free(dgroup_edge_n);
-  free(dgroup_edge_idx);
-  free(dgroup_edge);
-
-  free(dridge_vtx);
 
   free(edge_doublet);
   free(edge_group  );
@@ -2185,7 +2204,39 @@ PDM_dmesh_nodal_find_topological_ridge
 
 }
 
+void
+PDM_dmesh_nodal_revert_orientation
+(
+ PDM_dmesh_nodal_t         *dmesh_nodal,
+ PDM_geometry_kind_t        geom_kind
+)
+{
+  PDM_dmesh_nodal_elmts_t *dmne = _get_from_geometry_kind(dmesh_nodal, geom_kind);
 
+  int n_section = dmne->n_section;
+
+  for (int i_section = 0; i_section < n_section; i_section++) {
+
+    int id_section = dmne->sections_id[i_section];
+
+    PDM_Mesh_nodal_elt_t t_elt = PDM_DMesh_nodal_elmts_section_type_get(dmne, id_section);
+    int n_elt                  = PDM_DMesh_nodal_elmts_section_n_elt_get(dmne, id_section);
+    int n_vtx_per_elmt         = PDM_Mesh_nodal_n_vtx_elt_get(t_elt, 1);
+    PDM_g_num_t       *dconnec = PDM_DMesh_nodal_elmts_section_std_get(dmne, id_section);
+
+    PDM_g_num_t* tmp = malloc(n_vtx_per_elmt * sizeof(PDM_g_num_t));
+
+    for(int i = 0; i < n_elt; ++i) {
+      for(int k = 0; k < n_vtx_per_elmt; ++k) {
+        tmp[k] = dconnec[i*n_vtx_per_elmt+k];
+      }
+      for(int k = 0; k < n_vtx_per_elmt; ++k) {
+        dconnec[i*n_vtx_per_elmt+k] = tmp[n_vtx_per_elmt-k-1];
+      }
+    }
+    free(tmp);
+  }
+}
 
 
 #ifdef __cplusplus
