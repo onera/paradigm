@@ -73,6 +73,8 @@ MPI_TEST_CASE("[pdm_part_to_block] - 1p - part_to_block",1) {
     int *blk_strid    = NULL;
     int *blk_data_cst = NULL;
     int s_tot_size    = 0;
+    int **tmp_preverse_data = NULL;
+    int **tmp_preverse_stri = NULL;
 
     SUBCASE("Synchronous exch ") {
 
@@ -84,6 +86,18 @@ MPI_TEST_CASE("[pdm_part_to_block] - 1p - part_to_block",1) {
                                  (void **)   &pdata_cst,
                                              &blk_strid,
                                  (void **)   &blk_data_cst);
+
+      // Reverse
+      PDM_part_to_block_reverse_exch(ptb,
+                                     sizeof(int),
+                                     PDM_STRIDE_VAR_INTERLACED,
+                                     -1,
+                                     blk_strid,
+                                     blk_data_cst,
+                                     &tmp_preverse_stri,
+                         (void ***)  &tmp_preverse_data);
+
+
     }
 
     SUBCASE("Asynchronous exch") {
@@ -98,8 +112,34 @@ MPI_TEST_CASE("[pdm_part_to_block] - 1p - part_to_block",1) {
                               &blk_strid,
                   (void **)   &blk_data_cst,
                               &request_id);
-
       s_tot_size = PDM_part_to_block_iexch_wait(ptb, request_id);
+
+
+      // Reverse
+      PDM_part_to_block_reverse_iexch(ptb,
+                                      PDM_MPI_COMM_KIND_COLLECTIVE,
+                                      sizeof(int),
+                                      PDM_STRIDE_VAR_INTERLACED,
+                                     -1,
+                                     blk_strid,
+                                     blk_data_cst,
+                                     &tmp_preverse_stri,
+                         (void ***)  &tmp_preverse_data,
+                                     &request_id);
+      PDM_part_to_block_reverse_iexch_wait(ptb, request_id);
+
+
+    }
+
+    int *preverse_data = tmp_preverse_data[0];
+    free(tmp_preverse_data);
+
+    int *preverse_stri = tmp_preverse_stri[0];
+    free(tmp_preverse_stri);
+
+    if(0 == 1) {
+      PDM_log_trace_array_int(preverse_stri, n_elmts_part_0, "preverse_stri : ");
+      PDM_log_trace_array_int(preverse_data, 35, "preverse_data : ");
     }
 
     // log_trace("s_tot_size = %i \n", s_tot_size);
@@ -114,8 +154,8 @@ MPI_TEST_CASE("[pdm_part_to_block] - 1p - part_to_block",1) {
     CHECK(blk_data_size == 14);
 
     if(0 == 1) {
-      PDM_log_trace_array_long(blk_strid   , n_elmt_in_block , "blk_strid    : ");
-      PDM_log_trace_array_long(blk_data_cst,   blk_data_size , "blk_data_cst : ");
+      PDM_log_trace_array_int(blk_strid   , n_elmt_in_block , "blk_strid    : ");
+      PDM_log_trace_array_int(blk_data_cst,   blk_data_size , "blk_data_cst : ");
     }
 
     int blk_strid_expected[ 3] = {3, 7, 4};
@@ -126,6 +166,17 @@ MPI_TEST_CASE("[pdm_part_to_block] - 1p - part_to_block",1) {
 
     free(blk_strid   );
     free(blk_data_cst);
+
+    // Revser check
+    int preverse_stri_expected[7 ] = {7, 7, 4, 4, 3, 7, 3};
+    int preverse_data_expected[35] = {1, 2, 3, 4, 10, 11, 12, 1, 2, 3, 4, 10, 11, 12, 5, 6, 7, 8, 5, 6, 7, 8, 9, 13, 14, 1, 2, 3, 4, 10, 11, 12, 9, 13, 14};
+    CHECK_EQ_C_ARRAY(preverse_stri, preverse_stri_expected , 7  );
+    CHECK_EQ_C_ARRAY(preverse_data, preverse_data_expected , 35 );
+
+
+
+    free(preverse_data);
+    free(preverse_stri);
 
 
     PDM_part_to_block_free(ptb);
@@ -173,6 +224,7 @@ MPI_TEST_CASE("[pdm_part_to_block] - 1p - part_to_block",1) {
      */
     int *blk_data_cst = NULL;
     int s_tot_size = 0;
+    int **tmp_preverse_data = NULL;
 
     SUBCASE("Synchronous exch ") {
       s_tot_size = PDM_part_to_block_exch(ptb,
@@ -180,9 +232,20 @@ MPI_TEST_CASE("[pdm_part_to_block] - 1p - part_to_block",1) {
                                           PDM_STRIDE_CST_INTERLACED,
                                           2,
                                           NULL,
-                              (void **)   &pdata_cst,
+                             (void **)   &pdata_cst,
                                           NULL,
-                              (void **)   &blk_data_cst);
+                             (void **)   &blk_data_cst);
+
+      // Reverse
+      PDM_part_to_block_reverse_exch(ptb,
+                                     sizeof(int),
+                                     PDM_STRIDE_CST_INTERLACED,
+                                     2,
+                                     NULL,
+                                     blk_data_cst,
+                                     NULL,
+                         (void ***)  &tmp_preverse_data);
+
     }
 
     SUBCASE("Asynchronous exch") {
@@ -200,29 +263,50 @@ MPI_TEST_CASE("[pdm_part_to_block] - 1p - part_to_block",1) {
                               &request_id);
 
       s_tot_size = PDM_part_to_block_iexch_wait(ptb, request_id);
+
+      // Reverse
+      request_id = 0;
+      PDM_part_to_block_reverse_iexch(ptb,
+                                      PDM_MPI_COMM_KIND_COLLECTIVE,
+                                      sizeof(int),
+                                      PDM_STRIDE_CST_INTERLACED,
+                                      2,
+                                      NULL,
+                                      blk_data_cst,
+                                      NULL,
+                          (void ***)  &tmp_preverse_data,
+                                      &request_id);
+      PDM_part_to_block_reverse_iexch_wait(ptb, request_id);
+
     }
 
     CHECK(s_tot_size == 6);
 
     if(0 == 1) {
-      PDM_log_trace_array_long(blk_data_cst, s_tot_size, "blk_data_cst : ");
+      PDM_log_trace_array_int(blk_data_cst, s_tot_size, "blk_data_cst : ");
     }
 
     int blk_data_expected [6] = {9, 10, 1, 2, 5, 6};
 
     CHECK_EQ_C_ARRAY(blk_data_cst, blk_data_expected , s_tot_size  );
 
-    free(blk_data_cst);
+    int *preverse_data = tmp_preverse_data[0];
+    free(tmp_preverse_data);
 
+    if(0 == 1) {
+      PDM_log_trace_array_int(preverse_data, 2 * n_elmts_part_0, "preverse_data : ");
+    }
+
+    int preverse_data_expected [14] = {1, 2, 1, 2, 5, 6, 5, 6, 9, 10, 1, 2, 9, 10};
+    CHECK_EQ_C_ARRAY(preverse_data, preverse_data_expected, s_tot_size);
+
+    free(preverse_data);
+
+    free(blk_data_cst);
 
     PDM_part_to_block_free(ptb);
 
   }
-
-
-
-
-
 
 
   free(pn_elmt);
