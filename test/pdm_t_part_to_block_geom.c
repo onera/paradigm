@@ -25,6 +25,7 @@
 #include "pdm_logging.h"
 #include "pdm_version.h"
 #include "pdm_hilbert.h"
+#include "pdm_array.h"
 
 /*============================================================================
  * Macro definitions
@@ -234,6 +235,20 @@ main
                (void **) &src_g_num,
                          NULL,
                (void **) &blk_check_gnum);
+
+  // free(blk_check_gnum);
+  // int *part_strid = PDM_array_const_int(n_src, 1);
+  // PDM_log_trace_array_int(part_strid, n_src, "part_stride ::");
+  // int *blk_strid  = NULL;
+  // PDM_part_to_block_exch(ptb,
+  //                        sizeof(PDM_g_num_t),
+  //                        PDM_STRIDE_VAR_INTERLACED,
+  //                        1,
+  //                        &part_strid,
+  //              (void **) &src_g_num,
+  //                        &blk_strid,
+  //              (void **) &blk_check_gnum);
+  // free(part_strid);
 
 
   int          n_parent    = PDM_part_to_block_n_elt_block_get  (ptb);

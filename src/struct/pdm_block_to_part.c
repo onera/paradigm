@@ -277,21 +277,6 @@ PDM_block_to_part_global_timer_get
  * \return   Initialized \ref PDM_block_to_part instance
  *
  */
-
-// PDM_block_to_part_t *
-// PDM_block_to_part_create_cf
-// (
-//  const PDM_g_num_t     *block_distrib_idx,
-//  const PDM_g_num_t    **gnum_elt,
-//  const int            *n_elt,
-//  const int             n_part,
-//  const PDM_MPI_Fint    fcomm
-//  )
-// {
-//   const PDM_MPI_Comm _comm        = PDM_MPI_Comm_f2c(fcomm);
-//   return PDM_block_to_part_create (block_distrib_idx, gnum_elt, n_elt, n_part, _comm);
-// }
-
 PDM_block_to_part_t *
 PDM_block_to_part_create_from_sparse_block_and_distrib
 (
@@ -427,12 +412,11 @@ PDM_block_to_part_create
   double t1_cpu = PDM_timer_cpu(btp_t_timer[0]);
   PDM_timer_resume(btp_t_timer[0]);
 
-  PDM_block_to_part_t *btp =
-    (PDM_block_to_part_t *) malloc (sizeof(PDM_block_to_part_t));
+  PDM_block_to_part_t *btp = (PDM_block_to_part_t *) malloc (sizeof(PDM_block_to_part_t));
 
   btp->comm = comm;
 
-  btp->pttopt_comm = 0;
+  btp->pttopt_comm         = 0;
   btp->n_elt_partial_block = 0;
   btp->idx_partial         = NULL;
 
@@ -555,7 +539,6 @@ PDM_block_to_part_create
 
   free (requested_data);
 
-
   int n_rank_recv = 0;
   int n_rank_send = 0;
 
@@ -648,6 +631,16 @@ PDM_block_to_part_exch_in_place
 
   int s_distributed_data = btp->distributed_data_idx[btp->n_rank];
 
+  int s_data_tot = s_data;
+  if(t_stride == PDM_STRIDE_CST_INTERLACED) {
+    int cst_stride = *block_stride;
+    s_data_tot = s_data * cst_stride;
+  }
+
+  PDM_MPI_Datatype mpi_type;
+  PDM_MPI_Type_create_contiguous(s_data_tot, PDM_MPI_BYTE, &mpi_type);
+  PDM_MPI_Type_commit(&mpi_type);
+
   /* int step; */
 
   int rank;
@@ -712,8 +705,8 @@ PDM_block_to_part_exch_in_place
         n_send_buffer[i] += send_stride[k];
       }
 
-      n_send_buffer[i] *= (int) s_data;
-      max_n_send_buffer = PDM_MAX(max_n_send_buffer, n_send_buffer[i]);
+      // n_send_buffer[i] *= (int) s_data;
+      max_n_send_buffer = PDM_MAX(max_n_send_buffer, n_send_buffer[i] * s_data_tot);
 
       if (i > 0) {
         i_send_buffer[i] = i_send_buffer[i-1] + n_send_buffer[i-1];
@@ -722,15 +715,14 @@ PDM_block_to_part_exch_in_place
       }
 
       ibeg = btp->requested_data_idx[i];
-      iend = btp->requested_data_idx[i] +
-        btp->requested_data_n[i];
+      iend = btp->requested_data_idx[i] + btp->requested_data_n[i];
 
       n_recv_buffer[i] = 0;
       for (int k = ibeg; k < iend; k++) {
         n_recv_buffer[i] += recv_stride[k];
       }
 
-      n_recv_buffer[i] *= (int) s_data;
+      // n_recv_buffer[i] *= (int) s_data;
       max_n_recv_buffer = PDM_MAX(max_n_recv_buffer, n_recv_buffer[i]);
 
       if (i > 0) {
@@ -750,28 +742,29 @@ PDM_block_to_part_exch_in_place
 
   else {
 
-    int cst_stride = *block_stride;
+    // int cst_stride = *block_stride;
     max_n_send_buffer = 0;
     max_n_recv_buffer = 0;
 
     for (int i = 0; i < btp->n_rank; i++) {
 
-      i_send_buffer[i] = btp->distributed_data_idx[i] * cst_stride * (int) s_data;
-      i_recv_buffer[i] = btp->requested_data_idx[i] * cst_stride * (int) s_data;
+      i_send_buffer[i] = btp->distributed_data_idx[i]; // * cst_stride; //  * (int) s_data;
+      i_recv_buffer[i] = btp->requested_data_idx  [i]; // * cst_stride; //  * (int) s_data;
 
-      n_send_buffer[i] = btp->distributed_data_n[i] * cst_stride * (int) s_data;
-      n_recv_buffer[i] = btp->requested_data_n[i] * cst_stride * (int) s_data;
-      max_n_send_buffer = PDM_MAX(max_n_send_buffer, n_send_buffer[i]);
-      max_n_recv_buffer = PDM_MAX(max_n_recv_buffer, n_recv_buffer[i]);
+      n_send_buffer[i] = btp->distributed_data_n[i]; //  * cst_stride; // * (int) s_data;
+      n_recv_buffer[i] = btp->requested_data_n  [i]; //  * cst_stride; // * (int) s_data;
+      max_n_send_buffer = PDM_MAX(max_n_send_buffer, n_send_buffer[i] * s_data_tot);
+      max_n_recv_buffer = PDM_MAX(max_n_recv_buffer, n_recv_buffer[i] * s_data_tot);
 
     }
 
-    s_send_buffer = i_send_buffer[n_rank1] + n_send_buffer[n_rank1];
-    s_recv_buffer = i_recv_buffer[n_rank1] + n_recv_buffer[n_rank1];
+    // s_send_buffer = i_send_buffer[n_rank1] + n_send_buffer[n_rank1];
+    // s_recv_buffer = i_recv_buffer[n_rank1] + n_recv_buffer[n_rank1];
 
   }
 
-  s_recv_buffer = i_recv_buffer[n_rank1] + n_recv_buffer[n_rank1];
+  s_send_buffer = (i_send_buffer[n_rank1] + n_send_buffer[n_rank1]) * s_data_tot;
+  s_recv_buffer = (i_recv_buffer[n_rank1] + n_recv_buffer[n_rank1]) * s_data_tot;
 
   int n_active_buffer;
 
@@ -790,7 +783,6 @@ PDM_block_to_part_exch_in_place
     }
   }
   else {
-    s_send_buffer = i_send_buffer[n_rank1] + n_send_buffer[n_rank1];
     send_buffer[0] = (unsigned char *) malloc(sizeof(unsigned char) * s_send_buffer);
   }
 
@@ -803,9 +795,9 @@ PDM_block_to_part_exch_in_place
 
     for (int i = 0; i < btp->n_rank; i++) {
       if (n_recv_buffer[i] > 0) {
-        PDM_MPI_Irecv(recv_buffer + i_recv_buffer[i],
+        PDM_MPI_Irecv(recv_buffer + i_recv_buffer[i] * s_data_tot,
                       n_recv_buffer[i],
-                      PDM_MPI_BYTE,
+                      mpi_type,
                       i,
                       0,
                       btp->comm,
@@ -902,7 +894,7 @@ PDM_block_to_part_exch_in_place
 
           PDM_MPI_Issend(send_buffer[i],
                          n_send_buffer[active_rank[i]],
-                         PDM_MPI_BYTE,
+                         mpi_type,
                          active_rank[i],
                          0,
                          btp->comm,
@@ -997,11 +989,11 @@ PDM_block_to_part_exch_in_place
     PDM_MPI_Alltoallv_l(send_buffer[0],
                         n_send_buffer,
                         i_send_buffer,
-                        PDM_MPI_BYTE,
+                        mpi_type,
                         recv_buffer,
                         n_recv_buffer,
                         i_recv_buffer,
-                        PDM_MPI_BYTE,
+                        mpi_type,
                         btp->comm);
   
     for (int i = 0; i < btp->n_rank; i++) {
@@ -1075,7 +1067,7 @@ PDM_block_to_part_exch_in_place
 
       for (int j = 0; j < btp->n_elt[i]; j++) {
 
-        int idx1  = j * s_block_unit;
+        int idx1 = j * s_block_unit;
         int idx2 = btp->ind[i][j] * s_block_unit;
 
         for (int k = 0; k < s_block_unit; k++) {
@@ -1084,6 +1076,8 @@ PDM_block_to_part_exch_in_place
       }
     }
   }
+
+  PDM_MPI_Type_free(&mpi_type);
 
   PDM_timer_hang_on(btp_t_timer[1]);
   double t2_elaps = PDM_timer_elapsed(btp_t_timer[1]);
@@ -1132,10 +1126,10 @@ PDM_block_to_part_exch
   unsigned char *_block_data = (unsigned char *) block_data;
   unsigned char **_part_data;
 
-  size_t *i_send_buffer = (size_t *) malloc (sizeof(size_t) * btp->n_rank);
-  size_t *i_recv_buffer = (size_t *) malloc (sizeof(size_t) * btp->n_rank);
-  int *n_send_buffer = (int *) malloc (sizeof(int) * btp->n_rank);
-  int *n_recv_buffer = (int *) malloc (sizeof(int) * btp->n_rank);
+  size_t *i_send_buffer = (size_t *) malloc (btp->n_rank * sizeof(size_t) );
+  size_t *i_recv_buffer = (size_t *) malloc (btp->n_rank * sizeof(size_t) );
+  int    *n_send_buffer = (int    *) malloc (btp->n_rank * sizeof(int   ) );
+  int    *n_recv_buffer = (int    *) malloc (btp->n_rank * sizeof(int   ) );
 
   for (int i = 0; i < btp->n_rank; i++) {
     n_send_buffer[i] = 0;
@@ -1153,6 +1147,16 @@ PDM_block_to_part_exch
   int n_rank1 = btp->n_rank - 1;
 
   int s_distributed_data = btp->distributed_data_idx[btp->n_rank];
+
+  int s_data_tot = s_data;
+  if(t_stride == PDM_STRIDE_CST_INTERLACED) {
+    int cst_stride = *block_stride;
+    s_data_tot = s_data * cst_stride;
+  }
+
+  PDM_MPI_Datatype mpi_type;
+  PDM_MPI_Type_create_contiguous(s_data_tot, PDM_MPI_BYTE, &mpi_type);
+  PDM_MPI_Type_commit(&mpi_type);
 
   /*
    * Exchange Stride and build buffer properties
@@ -1215,45 +1219,41 @@ PDM_block_to_part_exch
 
     for (int i = 0; i < btp->n_rank; i++) {
       int ibeg = btp->distributed_data_idx[i];
-      int iend = btp->distributed_data_idx[i] +
-                 btp->distributed_data_n[i];
+      int iend = btp->distributed_data_idx[i] + btp->distributed_data_n[i];
 
       n_send_buffer[i] = 0;
       for (int k = ibeg; k < iend; k++)  {
         n_send_buffer[i] += send_stride[k];
       }
 
-      n_send_buffer[i] *= (int) s_data;
+      // n_send_buffer[i] *= (int) s_data;
 
       if (i > 0) {
         i_send_buffer[i] = i_send_buffer[i-1] + n_send_buffer[i-1];
-      }
-      else {
+      } else {
         i_send_buffer[i] = 0;
       }
 
       ibeg = btp->requested_data_idx[i];
-      iend = btp->requested_data_idx[i] +
-             btp->requested_data_n[i];
+      iend = btp->requested_data_idx[i] + btp->requested_data_n[i];
 
       n_recv_buffer[i] = 0;
       for (int k = ibeg; k < iend; k++) {
         n_recv_buffer[i] += recv_stride[k];
       }
 
-      n_recv_buffer[i] *= (int) s_data;
+      // n_recv_buffer[i] *= (int) s_data;
 
       if (i > 0) {
         i_recv_buffer[i] = i_recv_buffer[i-1] + n_recv_buffer[i-1];
-      }
-      else {
+      } else {
         i_recv_buffer[i] = 0;
       }
 
     }
 
-    s_send_buffer = i_send_buffer[n_rank1] + n_send_buffer[n_rank1];
-    s_recv_buffer = i_recv_buffer[n_rank1] + n_recv_buffer[n_rank1];
+    s_send_buffer = (i_send_buffer[n_rank1] + n_send_buffer[n_rank1]) * s_data_tot;
+    s_recv_buffer = (i_recv_buffer[n_rank1] + n_recv_buffer[n_rank1]) * s_data_tot;
 
     send_buffer = (unsigned char *) malloc(sizeof(unsigned char) * s_send_buffer);
     recv_buffer = (unsigned char *) malloc(sizeof(unsigned char) * s_recv_buffer);
@@ -1313,16 +1313,16 @@ PDM_block_to_part_exch
 
     for (int i = 0; i < btp->n_rank; i++) {
 
-      i_send_buffer[i] = btp->distributed_data_idx[i] * cst_stride * (int) s_data;
-      i_recv_buffer[i] = btp->requested_data_idx[i] * cst_stride * (int) s_data;
+      i_send_buffer[i] = btp->distributed_data_idx[i]; // * cst_stride * (int) s_data;
+      i_recv_buffer[i] = btp->requested_data_idx  [i]; // * cst_stride * (int) s_data;
 
-      n_send_buffer[i] = btp->distributed_data_n[i] * cst_stride * (int) s_data;
-      n_recv_buffer[i] = btp->requested_data_n[i] * cst_stride * (int) s_data;
+      n_send_buffer[i] = btp->distributed_data_n[i]; // * cst_stride * (int) s_data;
+      n_recv_buffer[i] = btp->requested_data_n  [i]; // * cst_stride * (int) s_data;
 
     }
 
-    s_send_buffer = i_send_buffer[n_rank1] + n_send_buffer[n_rank1];
-    s_recv_buffer = i_recv_buffer[n_rank1] + n_recv_buffer[n_rank1];
+    s_send_buffer = (i_send_buffer[n_rank1] + n_send_buffer[n_rank1]) * s_data_tot;
+    s_recv_buffer = (i_recv_buffer[n_rank1] + n_recv_buffer[n_rank1]) * s_data_tot;
 
     send_buffer = (unsigned char *) malloc(sizeof(unsigned char) * s_send_buffer);
     recv_buffer = (unsigned char *) malloc(sizeof(unsigned char) * s_recv_buffer);
@@ -1357,11 +1357,11 @@ PDM_block_to_part_exch
   PDM_MPI_Alltoallv_l(send_buffer,
                       n_send_buffer,
                       i_send_buffer,
-                      PDM_MPI_BYTE,
+                      mpi_type,
                       recv_buffer,
                       n_recv_buffer,
                       i_recv_buffer,
-                      PDM_MPI_BYTE,
+                      mpi_type,
                       btp->comm);
 
   free(send_buffer);
@@ -1428,7 +1428,7 @@ PDM_block_to_part_exch
 
       for (int j = 0; j < btp->n_elt[i]; j++) {
 
-        int idx1  = j * s_block_unit;
+        int idx1 = j * s_block_unit;
         int idx2 = btp->ind[i][j] * s_block_unit;
 
         for (int k = 0; k < s_block_unit; k++) {
@@ -1439,6 +1439,7 @@ PDM_block_to_part_exch
   }
 
   free(recv_buffer);
+  PDM_MPI_Type_free(&mpi_type);
 
 }
 
