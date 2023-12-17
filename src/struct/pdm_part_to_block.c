@@ -1423,11 +1423,11 @@ _prepare_exchange
 
     for (int i = 0; i < ptb->s_comm; i++) {
 
-      i_send_buffer[i] = ptb->i_send_data[i] * cst_stride; //  * (int) s_data;
-      i_recv_buffer[i] = ptb->i_recv_data[i] * cst_stride; //  * (int) s_data;
+      i_send_buffer[i] = ptb->i_send_data[i]; //  * cst_stride; //  * (int) s_data;
+      i_recv_buffer[i] = ptb->i_recv_data[i]; //  * cst_stride; //  * (int) s_data;
 
-      n_send_buffer[i] = ptb->n_send_data[i] * cst_stride; //  * (int) s_data;
-      n_recv_buffer[i] = ptb->n_recv_data[i] * cst_stride; //  * (int) s_data;
+      n_send_buffer[i] = ptb->n_send_data[i]; //  * cst_stride; //  * (int) s_data;
+      n_recv_buffer[i] = ptb->n_recv_data[i]; //  * cst_stride; //  * (int) s_data;
 
     }
   }
@@ -1538,11 +1538,11 @@ _prepare_reverse_exchange
 
     for (int i = 0; i < ptb->s_comm; i++) {
 
-      i_send_buffer[i] = ptb->i_recv_data[i] * cst_stride; // * (int) s_data;
-      i_recv_buffer[i] = ptb->i_send_data[i] * cst_stride; // * (int) s_data;
+      i_send_buffer[i] = ptb->i_recv_data[i]; // * cst_stride; // * (int) s_data;
+      i_recv_buffer[i] = ptb->i_send_data[i]; // * cst_stride; // * (int) s_data;
 
-      n_send_buffer[i] = ptb->n_recv_data[i] * cst_stride; // * (int) s_data;
-      n_recv_buffer[i] = ptb->n_send_data[i] * cst_stride; // * (int) s_data;
+      n_send_buffer[i] = ptb->n_recv_data[i]; // * cst_stride; // * (int) s_data;
+      n_recv_buffer[i] = ptb->n_send_data[i]; // * cst_stride; // * (int) s_data;
 
     }
 
@@ -1572,6 +1572,11 @@ _prepare_send_buffer
   unsigned char         *send_buffer
 )
 {
+  int s_data_tot = s_data;
+  if(t_stride == PDM_STRIDE_CST_INTERLACED) {
+    s_data_tot = s_data * cst_stride;
+  }
+
   unsigned char **_part_data = (unsigned char **) part_data;
 
   for (int i = 0; i <  ptb->s_comm; i++) {
@@ -1607,11 +1612,11 @@ _prepare_send_buffer
         i_part_elt  = i_part[j];
       }
 
-      int idx_write = (i_send_buffer[iproc] + n_send_buffer[iproc]) * s_data;
+      int idx_write = (i_send_buffer[iproc] + n_send_buffer[iproc]) * s_data_tot;
       if (t_stride == PDM_STRIDE_VAR_INTERLACED) {
         n_send_buffer[iproc] += part_stride[i][j];
       } else {
-        n_send_buffer[iproc] += cst_stride;
+        n_send_buffer[iproc] += 1;
       }
 
       for (int k = 0; k < (int) s_octet_elt; k++) {
@@ -1975,8 +1980,8 @@ _post_treatment_reverse
       _part_data[i] = malloc(ptb->n_elt[i] * n_octet * sizeof(unsigned char));
       for (int j = 0; j < ptb->n_elt[i]; j++) {
         int iproc = ptb->dest_proc[++idx];
-        int idx_read  = (i_recv_buffer[iproc] + n_recv_buffer[iproc]) * s_data;
-        n_recv_buffer[iproc] += cst_stride;
+        int idx_read  = (i_recv_buffer[iproc] + n_recv_buffer[iproc]) * s_data * cst_stride;
+        n_recv_buffer[iproc] += 1;
         for (int k = 0; k < (int) n_octet; k++) {
           _part_data[i][n_octet*j + k] = recv_buffer[idx_read+k];
         }
