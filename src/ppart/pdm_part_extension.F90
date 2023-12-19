@@ -250,6 +250,31 @@ subroutine PDM_part_extension_set_part (part_ext,                 &
   integer(pdm_g_num_s), pointer :: face_group_ln_to_gn(:)
   double precision,     pointer :: vtx_coord(:,:)
 
+  type(c_ptr) :: c_cell_face_idx
+  type(c_ptr) :: c_cell_face
+  type(c_ptr) :: c_face_cell
+  type(c_ptr) :: c_face_edge_idx
+  type(c_ptr) :: c_face_edge
+  type(c_ptr) :: c_face_vtx_idx
+  type(c_ptr) :: c_face_vtx
+  type(c_ptr) :: c_edge_vtx
+  type(c_ptr) :: c_face_bound_idx
+  type(c_ptr) :: c_face_bound
+  type(c_ptr) :: c_face_join_idx
+  type(c_ptr) :: c_face_join
+  type(c_ptr) :: c_face_part_bound_proc_idx
+  type(c_ptr) :: c_face_part_bound_part_idx
+  type(c_ptr) :: c_face_part_bound
+  type(c_ptr) :: c_vtx_part_bound_proc_idx
+  type(c_ptr) :: c_vtx_part_bound_part_idx
+  type(c_ptr) :: c_vtx_part_bound
+  type(c_ptr) :: c_cell_ln_to_gn
+  type(c_ptr) :: c_face_ln_to_gn
+  type(c_ptr) :: c_edge_ln_to_gn
+  type(c_ptr) :: c_vtx_ln_to_gn
+  type(c_ptr) :: c_face_group_ln_to_gn
+  type(c_ptr) :: c_vtx_coord
+
   interface
     subroutine PDM_part_extension_set_part_c (part_ext,                 &
                                               i_domain,                 &
@@ -325,6 +350,127 @@ subroutine PDM_part_extension_set_part (part_ext,                 &
     end subroutine PDM_part_extension_set_part_c
   end interface
 
+  c_cell_face_idx = C_NULL_PTR
+  if (associated(cell_face_idx)) then
+    c_cell_face_idx = c_loc(cell_face_idx)
+  endif 
+    
+  c_cell_face = C_NULL_PTR
+  if (associated(cell_face)) then
+    c_cell_face = c_loc(cell_face)
+  endif 
+    
+  c_face_cell = C_NULL_PTR
+  if (associated(face_cell)) then
+    c_face_cell = c_loc(face_cell)
+  endif 
+    
+  c_face_edge_idx = C_NULL_PTR
+  if (associated(face_edge_idx)) then
+    c_face_edge_idx = c_loc(face_edge_idx)
+  endif 
+    
+  c_face_edge = C_NULL_PTR
+  if (associated(face_edge)) then
+    c_face_edge = c_loc(face_edge)
+  endif 
+    
+  c_face_vtx_idx = C_NULL_PTR
+  if (associated(face_vtx_idx)) then
+    c_face_vtx_idx = c_loc(face_vtx_idx)
+  endif 
+    
+  c_face_vtx = C_NULL_PTR
+  if (associated(face_vtx)) then
+    c_face_vtx = c_loc(face_vtx)
+  endif 
+    
+  c_edge_vtx = C_NULL_PTR
+  if (associated(edge_vtx)) then
+    c_edge_vtx = c_loc(edge_vtx)
+  endif 
+    
+  c_face_bound_idx = C_NULL_PTR
+  if (associated(face_bound_idx)) then
+    c_face_bound_idx = c_loc(face_bound_idx)
+  endif 
+    
+  c_face_bound = C_NULL_PTR
+  if (associated(face_bound)) then
+    c_face_bound = c_loc(face_bound)
+  endif 
+    
+  c_face_join_idx = C_NULL_PTR
+  if (associated(face_join_idx)) then
+    c_face_join_idx = c_loc(face_join_idx)
+  endif 
+    
+  c_face_join = C_NULL_PTR
+  if (associated(face_join)) then
+    c_face_join = c_loc(face_join)
+  endif 
+    
+  c_face_part_bound_proc_idx = C_NULL_PTR
+  if (associated(face_part_bound_proc_idx)) then
+    c_face_part_bound_proc_idx = c_loc(face_part_bound_proc_idx)
+  endif 
+    
+  c_face_part_bound_part_idx = C_NULL_PTR
+  if (associated(face_part_bound_part_idx)) then
+    c_face_part_bound_part_idx = c_loc(face_part_bound_part_idx)
+  endif 
+    
+  c_face_part_bound = C_NULL_PTR
+  if (associated(face_part_bound)) then
+    c_face_part_bound = c_loc(face_part_bound)
+  endif 
+    
+  c_vtx_part_bound_proc_idx = C_NULL_PTR
+  if (associated(vtx_part_bound_proc_idx)) then
+    c_vtx_part_bound_proc_idx = c_loc(vtx_part_bound_proc_idx)
+  endif 
+    
+  c_vtx_part_bound_part_idx = C_NULL_PTR
+  if (associated(vtx_part_bound_part_idx)) then
+    c_vtx_part_bound_part_idx = c_loc(vtx_part_bound_part_idx)
+  endif 
+    
+  c_vtx_part_bound = C_NULL_PTR
+  if (associated(vtx_part_bound)) then
+    c_vtx_part_bound = c_loc(vtx_part_bound)
+  endif 
+    
+  c_cell_ln_to_gn = C_NULL_PTR
+  if (associated(cell_ln_to_gn)) then
+    c_cell_ln_to_gn = c_loc(cell_ln_to_gn)
+  endif 
+    
+  c_face_ln_to_gn = C_NULL_PTR
+  if (associated(face_ln_to_gn)) then
+    c_face_ln_to_gn = c_loc(face_ln_to_gn)
+  endif 
+    
+  c_edge_ln_to_gn = C_NULL_PTR
+  if (associated(edge_ln_to_gn)) then
+    c_edge_ln_to_gn = c_loc(edge_ln_to_gn)
+  endif 
+    
+  c_vtx_ln_to_gn = C_NULL_PTR
+  if (associated(vtx_ln_to_gn)) then
+    c_vtx_ln_to_gn = c_loc(vtx_ln_to_gn)
+  endif 
+    
+  c_face_group_ln_to_gn = C_NULL_PTR
+  if (associated(face_group_ln_to_gn)) then
+    c_face_group_ln_to_gn = c_loc(face_group_ln_to_gn)
+  endif 
+    
+  c_vtx_coord = C_NULL_PTR
+  if (associated(vtx_coord)) then
+    c_vtx_coord = c_loc(vtx_coord)
+  endif 
+    
+
   call PDM_part_extension_set_part_c (part_ext,                        &
                                       i_domain,                        &
                                       i_part,                          &
@@ -334,30 +480,30 @@ subroutine PDM_part_extension_set_part (part_ext,                 &
                                       n_face_group,                    &
                                       n_edge,                          &
                                       n_vtx,                           &
-                                      c_loc(cell_face_idx),            &
-                                      c_loc(cell_face),                &
-                                      c_loc(face_cell),                &
-                                      c_loc(face_edge_idx),            &
-                                      c_loc(face_edge),                &
-                                      c_loc(face_vtx_idx),             &
-                                      c_loc(face_vtx),                 &
-                                      c_loc(edge_vtx),                 &
-                                      c_loc(face_bound_idx),           &
-                                      c_loc(face_bound),               &
-                                      c_loc(face_join_idx),            &
-                                      c_loc(face_join),                &
-                                      c_loc(face_part_bound_proc_idx), &
-                                      c_loc(face_part_bound_part_idx), &
-                                      c_loc(face_part_bound),          &
-                                      c_loc(vtx_part_bound_proc_idx),  &
-                                      c_loc(vtx_part_bound_part_idx),  &
-                                      c_loc(vtx_part_bound),           &
-                                      c_loc(cell_ln_to_gn),            &
-                                      c_loc(face_ln_to_gn),            &
-                                      c_loc(edge_ln_to_gn),            &
-                                      c_loc(vtx_ln_to_gn),             &
-                                      c_loc(face_group_ln_to_gn),      &
-                                      c_loc(vtx_coord))
+                                      c_cell_face_idx,                 &
+                                      c_cell_face,                     &
+                                      c_face_cell,                     &
+                                      c_face_edge_idx,                 &
+                                      c_face_edge,                     &
+                                      c_face_vtx_idx,                  &
+                                      c_face_vtx,                      &
+                                      c_edge_vtx,                      &
+                                      c_face_bound_idx,                &
+                                      c_face_bound,                    &
+                                      c_face_join_idx,                 &
+                                      c_face_join,                     &
+                                      c_face_part_bound_proc_idx,      &
+                                      c_face_part_bound_part_idx,      &
+                                      c_face_part_bound,               &
+                                      c_vtx_part_bound_proc_idx,       &
+                                      c_vtx_part_bound_part_idx,       &
+                                      c_vtx_part_bound,                &
+                                      c_cell_ln_to_gn,                 &
+                                      c_face_ln_to_gn,                 &
+                                      c_edge_ln_to_gn,                 &
+                                      c_vtx_ln_to_gn,                  &
+                                      c_face_group_ln_to_gn,           &
+                                      c_vtx_coord)
 
 end subroutine PDM_part_extension_set_part
 
@@ -861,7 +1007,6 @@ subroutine PDM_part_to_part_create_from_extension (ptp,                         
   type(c_ptr)                       :: c_selected_cell_to_send
   type(c_ptr)                       :: c_selected_cell_to_send_ln_to_gn
   type(c_ptr)                       :: c_n_selected_cell_to_send
-  integer, allocatable              :: length_selected_cell_to_send_idx(:)
   integer, allocatable              :: length_selected_cell_to_send(:)
 
   interface

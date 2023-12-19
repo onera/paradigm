@@ -227,8 +227,16 @@ module pdm_mesh_nodal
       end subroutine PDM_mesh_nodal_coord_set_c
     end interface
 
-    c_coords = c_loc (coords)
-    c_numabs = c_loc (numabs)
+    c_coords = C_NULL_PTR
+    if (associated(coords)) then
+      c_coords = c_loc (coords)
+    endif
+      
+    c_numabs = C_NULL_PTR
+    if (associated(numabs)) then
+      c_numabs = c_loc (numabs)
+    endif
+      
 
     call  PDM_mesh_nodal_coord_set_c (mesh, id_part, n_vtx, c_coords, c_numabs, owner)
 
@@ -283,10 +291,25 @@ module pdm_mesh_nodal
       end subroutine PDM_Mesh_nodal_cells_cellvtx_add_c
     end interface
 
-    c_cell_vtx_idx = c_loc (cell_vtx_idx)
-    c_cell_vtx_nb = c_loc (cell_vtx_nb)
-    c_cell_vtx = c_loc (cell_vtx)
-    c_numabs = c_loc (numabs)
+    c_cell_vtx_idx = C_NULL_PTR
+    if (associated(cell_vtx_idx)) then
+      c_cell_vtx_idx = c_loc (cell_vtx_idx)
+    endif
+      
+    c_cell_vtx_nb = C_NULL_PTR
+    if (associated(cell_vtx_nb)) then
+      c_cell_vtx_nb = c_loc (cell_vtx_nb)
+    endif
+      
+    c_cell_vtx = C_NULL_PTR
+    if (associated(cell_vtx)) then
+      c_cell_vtx = c_loc (cell_vtx)
+    endif
+      
+    c_numabs = C_NULL_PTR
+    if (associated(numabs)) then
+      c_numabs = c_loc (numabs)
+    endif  
 
     call  PDM_Mesh_nodal_cells_cellvtx_add_c (mesh, id_part, n_cell, c_cell_vtx_idx, c_cell_vtx_nb, c_cell_vtx, c_numabs, owner)
 
@@ -341,10 +364,26 @@ module pdm_mesh_nodal
       end subroutine PDM_Mesh_nodal_faces_facevtx_add_c
     end interface
 
-    c_face_vtx_idx = c_loc (face_vtx_idx)
-    c_face_vtx_nb = c_loc (face_vtx_nb)
-    c_face_vtx = c_loc (face_vtx)
-    c_numabs = c_loc (numabs)
+    c_face_vtx_idx = C_NULL_PTR
+    if (associated(face_vtx_idx)) then
+      c_face_vtx_idx = c_loc (face_vtx_idx)
+    endif
+      
+    c_face_vtx_nb = C_NULL_PTR
+    if (associated(face_vtx_nb)) then
+      c_face_vtx_nb = c_loc (face_vtx_nb)
+    endif
+      
+    c_face_vtx = C_NULL_PTR
+    if (associated(face_vtx)) then
+      c_face_vtx = c_loc (face_vtx)
+    endif
+      
+    c_numabs = C_NULL_PTR
+    if (associated(numabs)) then
+      c_numabs = c_loc (numabs)
+    endif
+      
 
     call  PDM_Mesh_nodal_faces_facevtx_add_c (mesh, id_part, n_face, c_face_vtx_idx, c_face_vtx_nb, c_face_vtx, c_numabs, owner)
 
@@ -417,13 +456,41 @@ subroutine PDM_Mesh_nodal_cell2d_celledge_add (mesh, id_part, n_elt, n_edge, edg
       end subroutine PDM_Mesh_nodal_cell2d_celledge_add_c
     end interface
 
-    c_edge_vtx_idx = c_loc (edge_vtx_idx)
-    c_edge_vtx_nb = c_loc (edge_vtx_nb)
-    c_edge_vtx = c_loc (edge_vtx)
-    c_cell_edge_idx = c_loc (cell_edge_idx)
-    c_cell_edge_nb = c_loc (cell_edge_nb)
-    c_cell_edge = c_loc (cell_edge)
-    c_numabs = c_loc (numabs)
+    c_edge_vtx_idx = C_NULL_PTR
+    if (associated(edge_vtx_idx)) then
+      c_edge_vtx_idx = c_loc (edge_vtx_idx)
+    endif
+      
+    c_edge_vtx_nb = C_NULL_PTR
+    if (associated(edge_vtx_nb)) then
+      c_edge_vtx_nb = c_loc (edge_vtx_nb)
+    endif
+      
+    c_edge_vtx = C_NULL_PTR
+    if (associated(edge_vtx)) then
+      c_edge_vtx = c_loc (edge_vtx)
+    endif
+      
+    c_cell_edge_idx = C_NULL_PTR
+    if (associated(cell_edge_idx)) then
+      c_cell_edge_idx = c_loc (cell_edge_idx)
+    endif
+      
+    c_cell_edge_nb = C_NULL_PTR
+    if (associated(cell_edge_nb)) then
+      c_cell_edge_nb = c_loc (cell_edge_nb)
+    endif
+      
+    c_cell_edge = C_NULL_PTR
+    if (associated(cell_edge)) then
+      c_cell_edge = c_loc (cell_edge)
+    endif
+      
+    c_numabs = C_NULL_PTR
+    if (associated(numabs)) then
+      c_numabs = c_loc (numabs)
+    endif
+      
 
     call  PDM_Mesh_nodal_cell2d_celledge_add_c (mesh, id_part, n_elt, n_edge, c_edge_vtx_idx, c_edge_vtx_nb, c_edge_vtx, &
                                                 c_cell_edge_idx, c_cell_edge_nb, c_cell_edge, c_numabs, owner)
@@ -500,14 +567,46 @@ subroutine PDM_Mesh_nodal_cell3d_cellface_add (mesh, id_part, n_elt, n_face, fac
       end subroutine PDM_Mesh_nodal_cell3d_cellface_add_c
     end interface
 
-    c_face_vtx_idx = c_loc (face_vtx_idx)
-    c_face_vtx_nb = c_loc (face_vtx_nb)
-    c_face_vtx = c_loc (face_vtx)
-    c_face_ln_to_gn = c_loc (face_ln_to_gn)
-    c_cell_face_idx = c_loc (cell_face_idx)
-    c_cell_face_nb = c_loc (cell_face_nb)
-    c_cell_face = c_loc (cell_face)
-    c_numabs = c_loc (numabs)
+    c_face_vtx_idx = C_NULL_PTR
+    if (associated(face_vtx_idx)) then
+      c_face_vtx_idx = c_loc (face_vtx_idx)
+    endif 
+      
+    c_face_vtx_nb = C_NULL_PTR
+    if (associated(face_vtx_nb)) then
+      c_face_vtx_nb = c_loc (face_vtx_nb)
+    endif 
+      
+    c_face_vtx = C_NULL_PTR
+    if (associated(face_vtx)) then
+      c_face_vtx = c_loc (face_vtx)
+    endif 
+      
+    c_face_ln_to_gn = C_NULL_PTR
+    if (associated(face_ln_to_gn)) then
+      c_face_ln_to_gn = c_loc (face_ln_to_gn)
+    endif 
+      
+    c_cell_face_idx = C_NULL_PTR
+    if (associated(cell_face_idx)) then
+      c_cell_face_idx = c_loc (cell_face_idx)
+    endif 
+      
+    c_cell_face_nb = C_NULL_PTR
+    if (associated(cell_face_nb)) then
+      c_cell_face_nb = c_loc (cell_face_nb)
+    endif 
+      
+    c_cell_face = C_NULL_PTR
+    if (associated(cell_face)) then
+      c_cell_face = c_loc (cell_face)
+    endif 
+      
+    c_numabs = C_NULL_PTR
+    if (associated(numabs)) then
+      c_numabs = c_loc (numabs)
+    endif 
+      
 
     call  PDM_Mesh_nodal_cell3d_cellface_add_c (mesh, id_part, n_elt, n_face, c_face_vtx_idx, c_face_vtx_nb, c_face_vtx, &
                                                 c_face_ln_to_gn, c_cell_face_idx, c_cell_face_nb, c_cell_face, c_numabs, owner)

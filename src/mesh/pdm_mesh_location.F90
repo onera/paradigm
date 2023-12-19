@@ -885,8 +885,15 @@ module pdm_mesh_location
     c_i_part        = i_part
     c_n_points      = n_points
 
-    c_coords = c_loc(coords)
-    c_gnum   = c_loc(gnum)
+    c_coords = C_NULL_PTR
+    if (associated(coords)) then
+      c_coords = c_loc(coords)
+    endif
+      
+    c_gnum = C_NULL_PTR  
+    if (associated(gnum)) then
+      c_gnum = c_loc(gnum)
+    endif  
 
     call PDM_mesh_location_cloud_set_cf(mloc,            &
                                         c_i_point_cloud, &
@@ -949,14 +956,46 @@ module pdm_mesh_location
     c_n_face = n_face
     c_n_vtx  = n_vtx
 
-    c_cell_face_idx = c_loc(cell_face_idx)
-    c_cell_face     = c_loc(cell_face    )
-    c_cell_ln_to_gn = c_loc(cell_ln_to_gn)
-    c_face_vtx_idx  = c_loc(face_vtx_idx )
-    c_face_vtx      = c_loc(face_vtx     )
-    c_face_ln_to_gn = c_loc(face_ln_to_gn)
-    c_coords        = c_loc(coords       )
-    c_vtx_ln_to_gn  = c_loc(vtx_ln_to_gn )
+    c_cell_face_idx = C_NULL_PTR
+    if (associated(cell_face_idx)) then
+      c_cell_face_idx = c_loc(cell_face_idx)
+    endif
+      
+    c_cell_face = C_NULL_PTR
+    if (associated(cell_face)) then
+      c_cell_face     = c_loc(cell_face    )
+    endif
+      
+    c_cell_ln_to_gn = C_NULL_PTR
+    if (associated(cell_ln_to_gn)) then
+      c_cell_ln_to_gn = c_loc(cell_ln_to_gn)
+    endif
+      
+    c_face_vtx_idx = C_NULL_PTR
+    if (associated(face_vtx_idx)) then
+      c_face_vtx_idx  = c_loc(face_vtx_idx )
+    endif
+      
+    c_face_vtx = C_NULL_PTR
+    if (associated(face_vtx)) then
+      c_face_vtx      = c_loc(face_vtx     )
+    endif
+      
+    c_face_ln_to_gn = C_NULL_PTR
+    if (associated(face_ln_to_gn)) then
+      c_face_ln_to_gn = c_loc(face_ln_to_gn)
+    endif
+      
+    c_coords = C_NULL_PTR
+    if (associated(coords)) then
+      c_coords        = c_loc(coords       )
+    endif
+      
+    c_vtx_ln_to_gn = C_NULL_PTR
+    if (associated(vtx_ln_to_gn)) then
+      c_vtx_ln_to_gn  = c_loc(vtx_ln_to_gn )
+    endif
+      
 
     call PDM_mesh_location_part_set_cf(mloc,            &
                                        c_i_part,        &
@@ -1015,11 +1054,30 @@ module pdm_mesh_location
     c_n_cell = n_cell
     c_n_vtx  = n_vtx
 
-    c_cell_vtx_idx  = c_loc(cell_vtx_idx )
-    c_cell_vtx      = c_loc(cell_vtx     )
-    c_cell_ln_to_gn = c_loc(cell_ln_to_gn)
-    c_coords        = c_loc(coords       )
-    c_vtx_ln_to_gn  = c_loc(vtx_ln_to_gn )
+    c_cell_vtx_idx = C_NULL_PTR
+    if (associated(cell_vtx_idx)) then
+      c_cell_vtx_idx  = c_loc(cell_vtx_idx )
+    endif
+      
+    c_cell_vtx = C_NULL_PTR
+    if (associated(cell_vtx)) then
+      c_cell_vtx      = c_loc(cell_vtx     )
+    endif
+      
+    c_cell_ln_to_gn = C_NULL_PTR
+    if (associated(cell_ln_to_gn)) then
+      c_cell_ln_to_gn = c_loc(cell_ln_to_gn)
+    endif
+      
+    c_coords = C_NULL_PTR
+    if (associated(coords)) then
+      c_coords        = c_loc(coords       )
+    endif
+      
+    c_vtx_ln_to_gn = C_NULL_PTR
+    if (associated(vtx_ln_to_gn)) then
+      c_vtx_ln_to_gn  = c_loc(vtx_ln_to_gn )
+    endif    
 
     call PDM_mesh_location_nodal_part_set_cf(mloc,            &
                                              c_i_part,        &
@@ -1079,12 +1137,35 @@ module pdm_mesh_location
     c_n_edge = n_edge
     c_n_vtx  = n_vtx
 
-    c_face_edge_idx = c_loc(face_edge_idx)
-    c_face_edge     = c_loc(face_edge)
-    c_face_ln_to_gn = c_loc(face_ln_to_gn)
-    c_edge_vtx      = c_loc(edge_vtx     )
-    c_coords        = c_loc(coords       )
-    c_vtx_ln_to_gn  = c_loc(vtx_ln_to_gn )
+    c_face_edge_idx = C_NULL_PTR
+    if (associated (face_edge_idx)) then
+      c_face_edge_idx = c_loc(face_edge_idx)
+    endif
+      
+    c_face_edge = C_NULL_PTR
+    if (associated (face_edge)) then
+      c_face_edge     = c_loc(face_edge)
+    endif
+      
+    c_face_ln_to_gn = C_NULL_PTR
+    if (associated (face_ln_to_gn)) then
+      c_face_ln_to_gn = c_loc(face_ln_to_gn)
+    endif
+      
+    c_edge_vtx = C_NULL_PTR
+    if (associated (edge_vtx)) then
+      c_edge_vtx      = c_loc(edge_vtx     )
+    endif
+      
+    c_coords = C_NULL_PTR
+    if (associated (coords)) then
+      c_coords        = c_loc(coords       )
+    endif
+      
+    c_vtx_ln_to_gn = C_NULL_PTR
+    if (associated (vtx_ln_to_gn)) then
+      c_vtx_ln_to_gn  = c_loc(vtx_ln_to_gn )
+    endif   
 
     call PDM_mesh_location_part_set_2d_cf(mloc, &
                                           c_i_part, &
@@ -1138,11 +1219,31 @@ module pdm_mesh_location
     c_n_face = n_face
     c_n_vtx  = n_vtx
 
-    c_face_vtx_idx  = c_loc(face_vtx_idx)
-    c_face_vtx      = c_loc(face_vtx)
-    c_face_ln_to_gn = c_loc(face_ln_to_gn)
-    c_coords        = c_loc(coords       )
-    c_vtx_ln_to_gn  = c_loc(vtx_ln_to_gn )
+    c_face_vtx_idx = C_NULL_PTR
+    if (associated(face_vtx_idx)) then
+      c_face_vtx_idx  = c_loc(face_vtx_idx)
+    endif
+      
+    c_face_vtx = C_NULL_PTR
+    if (associated(face_vtx)) then
+      c_face_vtx      = c_loc(face_vtx)
+    endif
+      
+    c_face_ln_to_gn = C_NULL_PTR
+    if (associated(face_ln_to_gn)) then
+      c_face_ln_to_gn = c_loc(face_ln_to_gn)
+    endif
+      
+    c_coords = C_NULL_PTR
+    if (associated(coords)) then
+      c_coords        = c_loc(coords       )
+    endif
+      
+    c_vtx_ln_to_gn = C_NULL_PTR
+    if (associated(vtx_ln_to_gn)) then
+      c_vtx_ln_to_gn  = c_loc(vtx_ln_to_gn )
+    endif
+      
 
     call PDM_mesh_location_nodal_part_set_2d_cf(mloc, &
                                                 c_i_part, &

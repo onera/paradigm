@@ -144,10 +144,26 @@ module pdm_part_connectivity_transform
 
       c_n_entity1 = n_entity1
 
-      c_entity1_entity2_idx = c_loc(entity1_entity2_idx)
-      c_entity1_entity2     = c_loc(entity1_entity2)
-      c_entity2_entity3_idx = c_loc(entity2_entity3_idx)
-      c_entity2_entity3     = c_loc(entity2_entity3)
+      c_entity1_entity2_idx = C_NULL_PTR
+      if (associated(entity1_entity2_idx)) then
+        c_entity1_entity2_idx = c_loc(entity1_entity2_idx)
+      endif
+        
+      c_entity1_entity2 = C_NULL_PTR
+      if (associated(entity1_entity2)) then
+        c_entity1_entity2     = c_loc(entity1_entity2)
+      endif
+        
+      c_entity2_entity3_idx = C_NULL_PTR
+      if (associated(entity2_entity3_idx)) then
+        c_entity2_entity3_idx = c_loc(entity2_entity3_idx)
+      endif
+        
+      c_entity2_entity3 = C_NULL_PTR
+      if (associated(entity2_entity3)) then
+        c_entity2_entity3     = c_loc(entity2_entity3)
+      endif
+        
       c_entity1_entity3_idx     = C_NULL_PTR
       c_entity1_entity3         = C_NULL_PTR
 

@@ -771,8 +771,16 @@ contains
     integer(c_int),            value   :: owner                         ! Data ownership
     integer(c_int)                     :: c_comm
 
-    c_n_part        = c_loc(n_part)
-    c_part_fraction = c_loc(part_fraction)
+    c_n_part = C_NULL_PTR
+    if (associated(n_part)) then
+      c_n_part        = c_loc(n_part)
+    endif
+      
+    c_part_fraction = C_NULL_PTR
+    if (associated(part_fraction)) then
+      c_part_fraction = c_loc(part_fraction)
+    endif
+      
     c_comm = PDM_MPI_Comm_f2c(comm)
 
     multipart = PDM_multipart_create_c(n_zone, &
@@ -801,7 +809,10 @@ contains
     integer(kind=PDM_l_num_s), pointer :: join_to_opposite(:)             ! For each global join id, give the global id of the opposite join (size = n_total_joins)
     type(c_ptr)                        :: c_join_to_opposite
 
-    c_join_to_opposite = c_loc(join_to_opposite)
+    c_join_to_opposite = C_NULL_PTR
+    if (associated(join_to_opposite)) then
+      c_join_to_opposite = c_loc(join_to_opposite)
+    endif  
 
     call PDM_multipart_register_joins_c(multipart, &
                                         n_total_joins, &
@@ -934,14 +945,34 @@ contains
     c_dn_vtx          = dn_vtx
     c_n_face_group    = n_face_group
 
+    c_dface_vtx_idx = C_NULL_PTR
+    if (associated(dface_vtx_idx)) then
+      c_dface_vtx_idx   = c_loc(dface_vtx_idx  )
+    endif
+      
+    c_dface_vtx = C_NULL_PTR
+    if (associated(dface_vtx)) then
+      c_dface_vtx       = c_loc(dface_vtx      )
+    endif
+      
+    c_dvtx_coord = C_NULL_PTR
+    if (associated(dvtx_coord)) then
+      c_dvtx_coord      = c_loc(dvtx_coord     )
+    endif
+      
+    c_dface_group_idx = C_NULL_PTR
+    if (associated(dface_group_idx)) then
+      c_dface_group_idx = c_loc(dface_group_idx)
+    endif
+      
+    c_dface_group = C_NULL_PTR
+    if (associated(dface_group)) then
+      c_dface_group     = c_loc(dface_group    )
+    endif  
+
     c_dcell_face_idx  = C_NULL_PTR
     c_dcell_face      = C_NULL_PTR
     c_dface_cell      = C_NULL_PTR
-    c_dface_vtx_idx   = c_loc(dface_vtx_idx  )
-    c_dface_vtx       = c_loc(dface_vtx      )
-    c_dvtx_coord      = c_loc(dvtx_coord     )
-    c_dface_group_idx = c_loc(dface_group_idx)
-    c_dface_group     = c_loc(dface_group    )
 
     if (associated(dcell_face_idx)) then
       c_dcell_face_idx = c_loc(dcell_face_idx)
