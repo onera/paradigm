@@ -11,6 +11,16 @@ if(PDM_ENABLE_TRAINING)
   set(TRAINING_SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/training)
   set(TRAINING_BUILD  ${CMAKE_CURRENT_BINARY_DIR}/training)
 
+#configure_file(
+#  "${CMAKE_CURRENT_SOURCE_DIR}/cmake/templates/pdmConfig.cmake.in"
+#  pdmConfig.cmake
+#  @ONLY
+#)
+
+#  foreach(_target IN ITEMS ${_targets})
+
+#  endforeach()
+
   # TODO : Run jupytext --to ipynb on all *.md notebooks
 
 endif()
