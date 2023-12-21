@@ -853,24 +853,26 @@ _bucket_sampling(int                       dim,
   /* Compute the global number of elements and the optimal number of elements
      on each rank */
 
-  for (j = 0; j < n_codes; j++)
+  for (j = 0; j < n_codes; j++) {
     lsum_weight += weight[j];
+  }
 
   PDM_MPI_Allreduce(&lsum_weight, &gsum_weight, 1, PDM_MPI_DOUBLE, PDM_MPI_SUM, comm);
 
-  double _gsum_weight = (double)gsum_weight;
-  double _n_ranks = (double)n_ranks;
+  double _gsum_weight = (double) gsum_weight;
+  double _n_ranks     = (double) n_ranks;
   optim = _gsum_weight / _n_ranks;
 
   /* Define a naive sampling (uniform distribution) */
 
-  for (i = 0; i < n_samples + 1; i++)
+  for (i = 0; i < n_samples + 1; i++) {
     _sampling[i] = i*unit;
+  }
 
   /* Define the distribution associated to the current sampling array */
 
-  double  *distrib = (double   *) malloc (sizeof(double) * n_samples);
-  double  *cfreq = (double *) malloc (sizeof(double) * (n_samples + 1));
+  double  *distrib = (double *) malloc (sizeof(double) * n_samples      );
+  double  *cfreq   = (double *) malloc (sizeof(double) * (n_samples + 1));
 
   _define_rank_distrib(dim,
                        n_ranks,

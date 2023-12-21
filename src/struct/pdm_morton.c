@@ -523,7 +523,7 @@ _descend_morton_heap_with_order(PDM_g_num_t                 parent,
 
 static double
 _evaluate_distribution(int          n_ranges,
-                       PDM_g_num_t   *distribution,
+                       double      *distribution,
                        double       optim)
 {
   int  i;
@@ -611,14 +611,14 @@ static void
 _define_rank_distrib(int                      dim,
                      int                      n_ranks,
                      int                      gmax_level,
-                     PDM_g_num_t              gsum_weight,
+                     double                   gsum_weight,
                      int                      n_codes,
                      const PDM_morton_code_t  morton_codes[],
                      const double             weight[],
                      const int                order[],
                      const double             sampling[],
                      double                   cfreq[],
-                     PDM_g_num_t              g_distrib[],
+                     double                   g_distrib[],
                      PDM_MPI_Comm             comm)
 {
 
@@ -626,7 +626,7 @@ _define_rank_distrib(int                      dim,
   const int  n_samples = sampling_factor * n_ranks;
 
   /* Initialization */
-  PDM_g_num_t   *l_distrib = (PDM_g_num_t *) malloc(n_samples * sizeof(PDM_g_num_t));
+  double   *l_distrib = (double  *) malloc (n_samples * sizeof(double));
 
   for (int id = 0; id < n_samples; id++) {
     l_distrib[id] = 0;
@@ -670,7 +670,7 @@ _define_rank_distrib(int                      dim,
   }
 
   /* Define the global distribution */
-  PDM_MPI_Allreduce(l_distrib, g_distrib, n_samples, PDM__PDM_MPI_G_NUM, PDM_MPI_SUM, comm);
+  PDM_MPI_Allreduce(l_distrib, g_distrib, n_samples, PDM_MPI_DOUBLE, PDM_MPI_SUM, comm);
 
   free(l_distrib);
 
@@ -865,7 +865,7 @@ _bucket_sampling(int                      dim,
   double  fit, best_fit, optim;
 
   double   lsum_weight = 0, gsum_weight = 0;
-  PDM_g_num_t   *distrib = NULL;
+  double   *distrib = NULL;
   double  *cfreq = NULL, *best_sampling = NULL;
   double  *_sampling = *sampling;
 
@@ -876,8 +876,9 @@ _bucket_sampling(int                      dim,
   /* Compute the global number of elements and the optimal number of elements
      on each rank */
 
-  for (j = 0; j < n_codes; j++)
+  for (j = 0; j < n_codes; j++) {
     lsum_weight += weight[j];
+  }
 
   PDM_MPI_Allreduce(&lsum_weight, &gsum_weight, 1,  PDM_MPI_DOUBLE, PDM_MPI_SUM, comm);
 
@@ -885,13 +886,14 @@ _bucket_sampling(int                      dim,
 
   /* Define a naive sampling (uniform distribution) */
 
-  for (i = 0; i < n_samples + 1; i++)
+  for (i = 0; i < n_samples + 1; i++) {
     _sampling[i] = i*unit;
+  }
 
   /* Define the distribution associated to the current sampling array */
 
-  distrib = (PDM_g_num_t *) malloc(n_samples * sizeof(PDM_g_num_t));
-  cfreq = (double *) malloc((n_samples + 1) * sizeof(double));
+  distrib = (double      *) malloc(n_samples       * sizeof(double     ));
+  cfreq   = (double      *) malloc((n_samples + 1) * sizeof(double     ));
 
   _define_rank_distrib(dim,
                        n_ranks,
@@ -913,8 +915,9 @@ _bucket_sampling(int                      dim,
 
   best_sampling = malloc((n_samples + 1) * sizeof(double));
 
-  for (i = 0; i < n_samples + 1; i++)
+  for (i = 0; i < n_samples + 1; i++) {
     best_sampling[i] = _sampling[i];
+  }
 
   /* Loop to get a better sampling array */
 
