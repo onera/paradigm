@@ -661,24 +661,24 @@ program testf
   ! For a communication from initial mesh to extract mesh, use a reverse exchange
   !-----------------------------------------------------------
 
-  call PDM_extract_part_part_to_part_get (cube_extr_mesh,         &
-                                          PDM_MESH_ENTITY_CELL,   &
-                                          cube_ptp_cell,          &
+  call PDM_extract_part_part_to_part_get (cube_extr_mesh,       &
+                                          PDM_MESH_ENTITY_CELL, &
+                                          cube_ptp_cell,        &
                                           PDM_OWNERSHIP_KEEP)
 
-  call PDM_extract_part_part_to_part_get (cube_extr_mesh,         &
-                                          PDM_MESH_ENTITY_VERTEX, &
-                                          cube_ptp_vtx,           &
+  call PDM_extract_part_part_to_part_get (cube_extr_mesh,       &
+                                          PDM_MESH_ENTITY_VTX,  &
+                                          cube_ptp_vtx,         &
                                           PDM_OWNERSHIP_KEEP)
 
-  call PDM_extract_part_part_to_part_get (sphere_extr_mesh,       &
-                                          PDM_MESH_ENTITY_FACE,   &
-                                          sphere_ptp_face,        &
+  call PDM_extract_part_part_to_part_get (sphere_extr_mesh,     &
+                                          PDM_MESH_ENTITY_FACE, &
+                                          sphere_ptp_face,      &
                                           PDM_OWNERSHIP_KEEP)
 
-  call PDM_extract_part_part_to_part_get (sphere_extr_mesh,       &
-                                          PDM_MESH_ENTITY_VERTEX, &
-                                          sphere_ptp_vtx,         &
+  call PDM_extract_part_part_to_part_get (sphere_extr_mesh,     &
+                                          PDM_MESH_ENTITY_VTX,  &
+                                          sphere_ptp_vtx,       &
                                           PDM_OWNERSHIP_KEEP)
 
   !------------------------------------------------------------------------------

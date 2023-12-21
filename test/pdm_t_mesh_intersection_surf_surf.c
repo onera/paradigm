@@ -288,13 +288,13 @@ _generate_surface_mesh
                              "sphere_surf_");
   }
 
-  int n_zone = 1;
-  // int n_part_zones = {n_part};
-  int *n_part_zones = (int *) malloc(sizeof(int) * n_zone);
-  n_part_zones[0] = n_part;
+  int n_domain = 1;
+  // int n_part_domains = {n_part};
+  int *n_part_domains = (int *) malloc(sizeof(int) * n_domain);
+  n_part_domains[0] = n_part;
 
-  PDM_multipart_t *mpart = PDM_multipart_create(n_zone,
-                                                n_part_zones,
+  PDM_multipart_t *mpart = PDM_multipart_create(n_domain,
+                                                n_part_domains,
                                                 PDM_FALSE,
                                                 part_method,
                                                 PDM_PART_SIZE_HOMOGENEOUS,
@@ -308,10 +308,10 @@ _generate_surface_mesh
                                        NULL,
                                        "PDM_PART_RENUM_FACE_NONE");
 
-  PDM_multipart_register_dmesh_nodal(mpart, 0, dmn);
-  PDM_multipart_run_ppart(mpart);
+  PDM_multipart_dmesh_nodal_set(mpart, 0, dmn);
+  PDM_multipart_compute(mpart);
 
-  free(n_part_zones);
+  free(n_part_domains);
 
 
   *_mpart = mpart;
@@ -363,7 +363,7 @@ _set_mesh
     PDM_multipart_part_ln_to_gn_get(mpart,
                                     0,
                                     i_part,
-                                    PDM_MESH_ENTITY_VERTEX,
+                                    PDM_MESH_ENTITY_VTX,
                                     &vtx_ln_to_gn,
                                     PDM_OWNERSHIP_KEEP);
 
@@ -373,8 +373,8 @@ _set_mesh
                                                      0,
                                                      i_part,
                                                      PDM_CONNECTIVITY_TYPE_FACE_EDGE,
-                                                     &face_edge,
                                                      &face_edge_idx,
+                                                     &face_edge,
                                                      PDM_OWNERSHIP_KEEP);
 
     int *edge_vtx     = NULL;
@@ -383,8 +383,8 @@ _set_mesh
                                                      0,
                                                      i_part,
                                                      PDM_CONNECTIVITY_TYPE_EDGE_VTX,
-                                                     &edge_vtx,
                                                      &edge_vtx_idx,
+                                                     &edge_vtx,
                                                      PDM_OWNERSHIP_KEEP);
 
     // if (i_mesh == 1) {

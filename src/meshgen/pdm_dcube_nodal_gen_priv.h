@@ -52,6 +52,8 @@ struct _pdm_dcube_nodal_t {
   PDM_Mesh_nodal_elt_t  t_elt;                  /*!< Type of elements to generate              */
   int                   order;                  /*!< Order of elements                         */
 
+  double                random_factor;          /*!< Randomization factor                      */
+
   PDM_g_num_t          *distrib_hexa;
   PDM_g_num_t          *distrib_quad;
   PDM_g_num_t          *distrib_bar;

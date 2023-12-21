@@ -253,7 +253,7 @@ contains
   use iso_c_binding
   implicit none
 
-  type (c_ptr)                 :: gen_gnum  ! Pointer to PDM_gen_gnum object
+  type (c_ptr)                 :: gen_gnum  ! C pointer to PDM_gen_gnum_t object
   integer,          intent(in) :: dim       ! Spatial dimension
   integer,          intent(in) :: n_part    ! Number of local partitions
   integer,          intent(in) :: merge     ! Merge coincident points or not
@@ -297,7 +297,7 @@ contains
     use iso_c_binding
     implicit none
 
-    type(c_ptr), value        :: gen_gnum       ! Pointer to PDM_gen_gnum object
+    type(c_ptr), value        :: gen_gnum       ! C pointer to PDM_gen_gnum_t object
     integer, intent(in)       :: i_part         ! Current partition
     integer, intent(in)       :: n_elts         ! Number of elements
     double precision, pointer :: coords(:,:)    ! Coordinates (size = 3 * ``n_elts``)
@@ -329,11 +329,11 @@ contains
                                          i_part,      &
                                          n_elts,      &
                                          parent_gnum)
-    ! Set Parent global numbering
+    ! Set parent global numbering
     use iso_c_binding
     implicit none
 
-    type(c_ptr), value                 :: gen_gnum       ! Pointer to PDM_gen_gnum object
+    type(c_ptr), value                 :: gen_gnum       ! C pointer to PDM_gen_gnum_t object
     integer, intent(in)                :: i_part         ! Current partition
     integer, intent(in)                :: n_elts         ! Number of elements
     integer(kind=pdm_g_num_s), pointer :: parent_gnum(:) ! Parent global numbering (size = ``n_elts``)
@@ -364,7 +364,7 @@ contains
     use iso_c_binding
     implicit none
 
-    type(c_ptr), value                 :: gen_gnum  ! Pointer to PDM_gen_gnum object
+    type(c_ptr), value                 :: gen_gnum  ! C pointer to PDM_gen_gnum_t object
     integer, intent(in)                :: i_part    ! Current partition
     integer(kind=pdm_g_num_s), pointer :: g_nums(:) ! Array of global ids
 

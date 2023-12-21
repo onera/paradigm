@@ -32,8 +32,13 @@ module pdm_part_connectivity_transform
   PDM_connectivity_transpose_
   end interface
 
+  interface PDM_compute_face_vtx_from_face_and_edge ; module procedure &
+  PDM_compute_face_vtx_from_face_and_edge_
+  end interface
+
   private :: PDM_combine_connectivity_
   private :: PDM_connectivity_transpose_
+  private :: PDM_compute_face_vtx_from_face_and_edge_
 
   interface
 
@@ -94,6 +99,32 @@ module pdm_part_connectivity_transform
       type(c_ptr)           :: entity2_entity1
 
     end subroutine PDM_connectivity_transpose_cf
+
+    !!>
+    !!
+    !! \brief PDM_compute_face_vtx_from_face_and_edge
+
+    subroutine PDM_compute_face_vtx_from_face_and_edge_cf (n_face,        &
+                                                           face_edge_idx, &
+                                                           face_edge,     &
+                                                           edge_vtx,      &
+                                                           face_vtx)      &
+
+    bind (c, name = 'PDM_compute_face_vtx_from_face_and_edge')
+
+      use iso_c_binding
+
+      implicit none
+
+      integer(c_int), value :: n_face
+
+      type(c_ptr), value    :: face_edge_idx
+      type(c_ptr), value    :: face_edge
+      type(c_ptr), value    :: edge_vtx
+
+      type(c_ptr)           :: face_vtx
+
+    end subroutine PDM_compute_face_vtx_from_face_and_edge_cf
 
   end interface
 
@@ -248,5 +279,49 @@ module pdm_part_connectivity_transform
                        [entity2_entity1_idx(n_entity2+1)])
 
     end subroutine PDM_connectivity_transpose_
+
+    ! Combine face->edge with edge-vtx to create face-vtx preserving orientation
+
+    subroutine PDM_compute_face_vtx_from_face_and_edge_ (n_face,        &
+                                          face_edge_idx, &
+                                          face_edge,     &
+                                          edge_vtx,      &
+                                          face_vtx)
+
+      use iso_c_binding
+
+      implicit none
+
+      integer, intent(in) :: n_face           ! Number of faces
+
+      integer, pointer    :: face_edge_idx(:) ! Index of face->edge connectivity
+      integer, pointer    :: face_edge(:)     ! face->edge connectivity
+      integer, pointer    :: edge_vtx(:)      ! edge->vtx connectivity
+      integer, pointer    :: face_vtx(:)      ! face->vtx connectivity
+
+      integer(c_int) :: c_n_face
+
+      type(c_ptr)    :: c_face_edge_idx     = C_NULL_PTR
+      type(c_ptr)    :: c_face_edge         = C_NULL_PTR
+      type(c_ptr)    :: c_edge_vtx          = C_NULL_PTR
+      type(c_ptr)    :: c_face_vtx          = C_NULL_PTR
+
+      c_n_face = n_face
+
+      c_face_edge_idx = c_loc(face_edge_idx)
+      c_face_edge     = c_loc(face_edge)
+      c_edge_vtx      = c_loc(edge_vtx)
+
+      call PDM_compute_face_vtx_from_face_and_edge_cf(c_n_face,        &
+                                                      c_face_edge_idx, &
+                                                      c_face_edge,     &
+                                                      c_edge_vtx,      &
+                                                      c_face_vtx)
+
+      call c_f_pointer(c_face_vtx, &
+                       face_vtx,   &
+                       [face_edge_idx(n_face+1)])
+
+    end subroutine PDM_compute_face_vtx_from_face_and_edge_
 
 end module pdm_part_connectivity_transform

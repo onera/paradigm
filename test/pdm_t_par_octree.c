@@ -255,9 +255,9 @@ _read_cloud_from_mesh
   }
 
 
-  int n_zone = 1;
+  int n_domain = 1;
   int n_part = 1;
-  PDM_multipart_t *mpart = PDM_multipart_create(n_zone,
+  PDM_multipart_t *mpart = PDM_multipart_create(n_domain,
                                                 &n_part,
                                                 PDM_FALSE,
                                                 part_method,
@@ -272,8 +272,8 @@ _read_cloud_from_mesh
                                        NULL,
                                        "PDM_PART_RENUM_FACE_NONE");
 
-  PDM_multipart_register_dmesh_nodal(mpart, 0, dmn);
-  PDM_multipart_run_ppart(mpart);
+  PDM_multipart_dmesh_nodal_set(mpart, 0, dmn);
+  PDM_multipart_compute(mpart);
 
 
   double      *vtx_coord    = NULL;
@@ -287,7 +287,7 @@ _read_cloud_from_mesh
   PDM_multipart_part_ln_to_gn_get(mpart,
                                   0,
                                   0,
-                                  PDM_MESH_ENTITY_VERTEX,
+                                  PDM_MESH_ENTITY_VTX,
                                   &vtx_ln_to_gn,
                                   PDM_OWNERSHIP_KEEP); // USER is broken
 

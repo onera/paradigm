@@ -335,8 +335,8 @@ _gen_mesh
   int i_rank;
   PDM_MPI_Comm_rank(comm, &i_rank);
 
-  int n_zone = 1;
-  *mpart = PDM_multipart_create(n_zone,
+  int n_domain = 1;
+  *mpart = PDM_multipart_create(n_domain,
                                 &n_part,
                                 PDM_FALSE,
                                 part_method,
@@ -397,8 +397,8 @@ _gen_mesh
   /*
    * Split mesh
    */
-  PDM_multipart_register_dmesh_nodal(*mpart, 0, dmn);
-  PDM_multipart_run_ppart(*mpart);
+  PDM_multipart_dmesh_nodal_set(*mpart, 0, dmn);
+  PDM_multipart_compute(*mpart);
 
   PDM_part_mesh_nodal_t *pmn = NULL;
   PDM_multipart_get_part_mesh_nodal(*mpart, 0, &pmn, PDM_OWNERSHIP_KEEP);

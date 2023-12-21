@@ -179,6 +179,12 @@ option(PDM_ENABLE_UNIT_TEST "Enable unit test " OFF)
 
 option(PDM_ENABLE_DOC "Enable Sphinx documentation" OFF)
 
+
+# Training Notebooks
+# ------------------
+
+option(PDM_ENABLE_TRAINING "Enable training Jupyter Notebooks" OFF)
+
 #------------------------------------------------------------------------------
 # Default build : Release
 #------------------------------------------------------------------------------
@@ -251,7 +257,7 @@ if (PDM_ENABLE_MPI_CHECK)
    include(${CMAKE_MODULE_PATH}/CheckMPI.cmake)
 endif()
 
-# Checck SCOTCH an ParMETIS
+# Check SCOTCH an ParMETIS
 # -------------------------
 
 if (PDM_ENABLE_PARMETIS)
@@ -408,6 +414,10 @@ if (PDM_ENABLE_TESTS)
 endif()
 
 add_subdirectory(doc)
+
+if (PDM_ENABLE_TRAINING)
+  add_subdirectory(training)
+endif()  
 
 #------------------------------------------------------------------------------
 # Create PDM_run file

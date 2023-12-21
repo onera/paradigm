@@ -243,6 +243,22 @@ PDM_generate_cart_topo_lines
  PDM_domain_interface_t  **dom_intrf
 );
 
+
+/**
+ * \brief Set randomization factor
+ *
+ * \param [in]  dcube          Pointer to \ref PDM_dcube_nodal_t object
+ * \param [in]  random_factor  Randomization factor (between 0 and 1)
+ *
+ */
+
+void
+PDM_dcube_nodal_gen_random_factor_set
+(
+ PDM_dcube_nodal_t *dcube,
+ double             random_factor
+ );
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

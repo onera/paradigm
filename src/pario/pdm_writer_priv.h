@@ -185,6 +185,39 @@ typedef struct PDM_writer_fmt_t {
 
 } PDM_writer_fmt_t;
 
+/*============================================================================
+ * Definition des fonctions privees
+ *============================================================================*/
+
+ // Wrap mesh writer for training
+
+void
+writer_wrapper
+(
+ const PDM_MPI_Comm     comm,
+ const char            *folder,
+ const char            *file,
+ int                    n_part,
+ int                   *n_vtx,
+ double               **coords,
+ PDM_g_num_t          **vtx_ln_to_gn,
+ int                   *n_elt,
+ int                  **elt_vtx_idx,
+ int                  **elt_vtx,
+ PDM_g_num_t          **elt_ln_to_gn,
+ PDM_writer_elt_geom_t  cell_t,
+ int                   *n_face,
+ int                  **cell_face_idx,
+ int                  **cell_face,
+ const char            *format,
+ int                    n_elt_field,
+ const char           **elt_field_name,
+ double              ***elt_field_values,
+ int                    n_vtx_field,
+ const char           **vtx_field_name,
+ double              ***vtx_field_values
+);
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

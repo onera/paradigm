@@ -237,13 +237,13 @@ _generate_volume_mesh
                              "sphere_surf_");
   }
 
-  int n_zone = 1;
-  // int n_part_zones = {n_part};
-  int *n_part_zones = (int *) malloc(sizeof(int) * n_zone);
-  n_part_zones[0] = n_part;
+  int n_domain = 1;
+  // int n_part_domains = {n_part};
+  int *n_part_domains = (int *) malloc(sizeof(int) * n_domain);
+  n_part_domains[0] = n_part;
 
-  PDM_multipart_t *mpart = PDM_multipart_create(n_zone,
-                                                n_part_zones,
+  PDM_multipart_t *mpart = PDM_multipart_create(n_domain,
+                                                n_part_domains,
                                                 PDM_FALSE,
                                                 part_method,
                                                 PDM_PART_SIZE_HOMOGENEOUS,
@@ -257,10 +257,10 @@ _generate_volume_mesh
                                        NULL,
                                        "PDM_PART_RENUM_FACE_NONE");
 
-  PDM_multipart_register_dmesh_nodal(mpart, 0, dmn);
-  PDM_multipart_run_ppart(mpart);
+  PDM_multipart_dmesh_nodal_set(mpart, 0, dmn);
+  PDM_multipart_compute(mpart);
 
-  free(n_part_zones);
+  free(n_part_domains);
 
 
   *_mpart = mpart;
@@ -466,7 +466,7 @@ _create_wall_surf
     PDM_multipart_part_ln_to_gn_get(mpart,
                                     0,
                                     i_part,
-                                    PDM_MESH_ENTITY_VERTEX,
+                                    PDM_MESH_ENTITY_VTX,
                                     &vtx_ln_to_gn,
                                     PDM_OWNERSHIP_KEEP);
 
@@ -484,8 +484,8 @@ _create_wall_surf
                                                        0,
                                                        i_part,
                                                        PDM_CONNECTIVITY_TYPE_CELL_FACE,
-                                                       &pcell_face,
                                                        &pcell_face_idx,
+                                                       &pcell_face,
                                                        PDM_OWNERSHIP_KEEP);
     // PDM_log_trace_array_long(pcell_ln_to_gn[i_part], n_cell, "pcell_ln_to_gn : ");
 
@@ -493,15 +493,15 @@ _create_wall_surf
                                                  0,
                                                  i_part,
                                                  PDM_CONNECTIVITY_TYPE_FACE_EDGE,
-                                                 &face_edge,
                                                  &face_edge_idx,
+                                                 &face_edge,
                                                  PDM_OWNERSHIP_KEEP);
     PDM_multipart_part_connectivity_get(mpart,
                                         0,
                                         i_part,
                                         PDM_CONNECTIVITY_TYPE_EDGE_VTX,
-                                        &edge_vtx,
                                         &edge_vtx_idx,
+                                        &edge_vtx,
                                         PDM_OWNERSHIP_KEEP);
 
     int  n_bound = 0;
@@ -509,10 +509,10 @@ _create_wall_surf
     int* group_face          = NULL;
     PDM_g_num_t* face_group_ln_to_gn = NULL;
 
-    PDM_multipart_bound_get(mpart,
+    PDM_multipart_group_get(mpart,
                             0,
                             i_part,
-                            PDM_BOUND_TYPE_FACE,
+                            PDM_MESH_ENTITY_FACE,
                             &n_bound,
                             &group_face_idx,
                             &group_face,
@@ -884,7 +884,7 @@ _set_mesh
     PDM_multipart_part_ln_to_gn_get(mpart,
                                     0,
                                     i_part,
-                                    PDM_MESH_ENTITY_VERTEX,
+                                    PDM_MESH_ENTITY_VTX,
                                     &vtx_ln_to_gn,
                                     PDM_OWNERSHIP_KEEP);
 
@@ -894,22 +894,22 @@ _set_mesh
                                         0,
                                         i_part,
                                         PDM_CONNECTIVITY_TYPE_CELL_FACE,
-                                        &cell_face,
                                         &cell_face_idx,
+                                        &cell_face,
                                         PDM_OWNERSHIP_KEEP);
     int n_face = PDM_multipart_part_connectivity_get(mpart,
                                                      0,
                                                      i_part,
                                                      PDM_CONNECTIVITY_TYPE_FACE_EDGE,
-                                                     &face_edge,
                                                      &face_edge_idx,
+                                                     &face_edge,
                                                      PDM_OWNERSHIP_KEEP);
     int n_edge = PDM_multipart_part_connectivity_get(mpart,
                                                      0,
                                                      i_part,
                                                      PDM_CONNECTIVITY_TYPE_EDGE_VTX,
-                                                     &edge_vtx,
                                                      &edge_vtx_idx,
+                                                     &edge_vtx,
                                                      PDM_OWNERSHIP_KEEP);
 
     PDM_mesh_intersection_part_set(mi,

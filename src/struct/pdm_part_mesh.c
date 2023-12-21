@@ -91,7 +91,7 @@ _build_extract_part_bound
   switch (bound_type) {
     case PDM_BOUND_TYPE_VTX:
       dim = 0;
-      entity_type = PDM_MESH_ENTITY_VERTEX;
+      entity_type = PDM_MESH_ENTITY_VTX;
       break;
 
     case PDM_BOUND_TYPE_EDGE:
@@ -219,7 +219,7 @@ _build_extract_part_bound
                               n_cell,
                               n_face,
                               n_edge,
-                              pmesh->pn_entity[PDM_MESH_ENTITY_VERTEX][i_part],
+                              pmesh->pn_entity[PDM_MESH_ENTITY_VTX][i_part],
                               cell_face_idx,
                               cell_face,
                               face_edge_idx,
@@ -230,7 +230,7 @@ _build_extract_part_bound
                               cell_ln_to_gn,
                               face_ln_to_gn,
                               edge_ln_to_gn,
-                              pmesh->pentity_ln_to_gn[PDM_MESH_ENTITY_VERTEX][i_part],
+                              pmesh->pentity_ln_to_gn[PDM_MESH_ENTITY_VTX][i_part],
                               pmesh->vtx_coords[i_part]);
 
   }
@@ -259,7 +259,7 @@ _build_extract_part_bound
  * \param [in]   dn_face             Number of distributed faces
  * \param [in]   dn_vtx              Number of distributed vertices
  * \param [in]   n_bnd               Number of boundaries
- * \param [in]   n_join              Number of interfaces with other zones
+ * \param [in]   n_join              Number of interfaces with other domains
  *
  * \return     Identifier
  */
@@ -1195,9 +1195,9 @@ PDM_part_mesh_dump_ensight
     PDM_writer_geom_coord_set(wrt,
                               id_geom,
                               i_part,
-                              pmesh->pn_entity[PDM_MESH_ENTITY_VERTEX][i_part],
+                              pmesh->pn_entity[PDM_MESH_ENTITY_VTX][i_part],
                               pmesh->vtx_coords[i_part],
-                              pmesh->pentity_ln_to_gn[PDM_MESH_ENTITY_VERTEX][i_part],
+                              pmesh->pentity_ln_to_gn[PDM_MESH_ENTITY_VTX][i_part],
                               PDM_OWNERSHIP_USER);
 
     /* Bounds */
@@ -1208,7 +1208,7 @@ PDM_part_mesh_dump_ensight
         double      *vtx_coord    = NULL;
         int n_vtx = PDM_extract_part_ln_to_gn_get(extrp[bound_type],
                                                   i_part,
-                                                  PDM_MESH_ENTITY_VERTEX,
+                                                  PDM_MESH_ENTITY_VTX,
                                                   &vtx_ln_to_gn,
                                                   PDM_OWNERSHIP_KEEP);
         PDM_extract_part_vtx_coord_get(extrp[bound_type],
@@ -1421,7 +1421,7 @@ PDM_part_mesh_dump_ensight
         PDM_g_num_t *vtx_ln_to_gn = NULL;
         int n_vtx = PDM_extract_part_ln_to_gn_get(extrp[bound_type],
                                                   i_part,
-                                                  PDM_MESH_ENTITY_VERTEX,
+                                                  PDM_MESH_ENTITY_VTX,
                                                   &vtx_ln_to_gn,
                                                   PDM_OWNERSHIP_KEEP);
 
@@ -1517,7 +1517,7 @@ PDM_part_mesh_dump_ensight
         else if (bound_type == PDM_BOUND_TYPE_VTX) {
           n_entity = PDM_extract_part_n_entity_get(extrp[bound_type],
                                                    i_part,
-                                                   PDM_MESH_ENTITY_VERTEX);
+                                                   PDM_MESH_ENTITY_VTX);
         }
 
         val_num_part  [i_part] = malloc(sizeof(PDM_real_t) * n_entity);

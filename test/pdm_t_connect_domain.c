@@ -42,7 +42,7 @@ _exchange_point_list
   PDM_MPI_Comm_size(comm, &n_rank);
 
   /*
-   * We have for all extraction zone, we need to exchange id
+   * We have for all extraction domain, we need to exchange id
    */
   PDM_g_num_t **distrib_join   = malloc(n_group_join * sizeof(PDM_g_num_t *));
   // PDM_g_num_t **dface_join_opp = malloc(n_group_join * sizeof(PDM_g_num_t *));
@@ -190,7 +190,7 @@ int main(int argc, char *argv[])
 {
   PDM_g_num_t        n_vtx_seg = 10;
   double             length    = 1.;
-  int                n_zone    = 2;
+  int                n_domain    = 2;
   int                verbose   = 0;
 
 
@@ -209,41 +209,41 @@ int main(int argc, char *argv[])
   PDM_MPI_Comm_size(comm, &n_rank);
 
   /* Alloc for distributed mesh */
-  int *dn_cell       = (int *) malloc(n_zone * sizeof(int));
-  int *dn_face       = (int *) malloc(n_zone * sizeof(int));
-  int *dn_vtx        = (int *) malloc(n_zone * sizeof(int));
-  int *n_face_group  = (int *) malloc(n_zone * sizeof(int));
-  int *dface_vtx_s   = (int *) malloc(n_zone * sizeof(int));
-  int *dface_group_s = (int *) malloc(n_zone * sizeof(int));
+  int *dn_cell       = (int *) malloc(n_domain * sizeof(int));
+  int *dn_face       = (int *) malloc(n_domain * sizeof(int));
+  int *dn_vtx        = (int *) malloc(n_domain * sizeof(int));
+  int *n_face_group  = (int *) malloc(n_domain * sizeof(int));
+  int *dface_vtx_s   = (int *) malloc(n_domain * sizeof(int));
+  int *dface_group_s = (int *) malloc(n_domain * sizeof(int));
 
-  PDM_g_num_t  **dface_cell      = (PDM_g_num_t **) malloc(n_zone * sizeof(PDM_g_num_t *));
-  int          **dface_vtx_idx   = (int         **) malloc(n_zone * sizeof(int         *));
-  PDM_g_num_t  **dface_vtx       = (PDM_g_num_t **) malloc(n_zone * sizeof(PDM_g_num_t *));
-  double       **dvtx_coord      = (double      **) malloc(n_zone * sizeof(double      *));
-  int          **dface_group_idx = (int         **) malloc(n_zone * sizeof(int         *));
-  PDM_g_num_t  **dface_group     = (PDM_g_num_t **) malloc(n_zone * sizeof(PDM_g_num_t *));
+  PDM_g_num_t  **dface_cell      = (PDM_g_num_t **) malloc(n_domain * sizeof(PDM_g_num_t *));
+  int          **dface_vtx_idx   = (int         **) malloc(n_domain * sizeof(int         *));
+  PDM_g_num_t  **dface_vtx       = (PDM_g_num_t **) malloc(n_domain * sizeof(PDM_g_num_t *));
+  double       **dvtx_coord      = (double      **) malloc(n_domain * sizeof(double      *));
+  int          **dface_group_idx = (int         **) malloc(n_domain * sizeof(int         *));
+  PDM_g_num_t  **dface_group     = (PDM_g_num_t **) malloc(n_domain * sizeof(PDM_g_num_t *));
 
 
-  int          **dface_bnd_idx   = (int         **) malloc(n_zone * sizeof(int         *));
-  PDM_g_num_t  **dface_bnd       = (PDM_g_num_t **) malloc(n_zone * sizeof(PDM_g_num_t *));
+  int          **dface_bnd_idx   = (int         **) malloc(n_domain * sizeof(int         *));
+  PDM_g_num_t  **dface_bnd       = (PDM_g_num_t **) malloc(n_domain * sizeof(PDM_g_num_t *));
 
-  int n_group_join = 2*(n_zone-1);
+  int n_group_join = 2*(n_domain-1);
   int          *dface_join_idx  = (int         *) malloc((n_group_join + 1) * sizeof(int        ));
   PDM_g_num_t  *dface_join      = NULL; // A allouer propremet
 
-  int *group_join_to_zone_cur = (int *) malloc( n_group_join * sizeof(int));
-  int *group_join_to_zone_opp = (int *) malloc( n_group_join * sizeof(int));
+  int *group_join_to_domain_cur = (int *) malloc( n_group_join * sizeof(int));
+  int *group_join_to_domain_opp = (int *) malloc( n_group_join * sizeof(int));
   int *group_join_to_join_opp = (int *) malloc( n_group_join * sizeof(int));
 
 
-  int tmp_i_zone = 0;
+  int tmp_i_domain = 0;
   for (int i_join = 0; i_join < n_group_join; i_join++) {
     if (i_join % 2 == 0) {
       group_join_to_join_opp[i_join] = i_join + 1;
-      group_join_to_zone_opp[i_join] = tmp_i_zone + 1;
+      group_join_to_domain_opp[i_join] = tmp_i_domain + 1;
     } else {
       group_join_to_join_opp[i_join] = i_join - 1;
-      group_join_to_zone_opp[i_join] = tmp_i_zone++;
+      group_join_to_domain_opp[i_join] = tmp_i_domain++;
     }
   }
 
@@ -252,63 +252,63 @@ int main(int argc, char *argv[])
     dface_join_idx[i_group_join] = 0;
   }
 
-  PDM_dcube_t **dcube = (PDM_dcube_t **) malloc(n_zone * sizeof(PDM_dcube_t *));
+  PDM_dcube_t **dcube = (PDM_dcube_t **) malloc(n_domain * sizeof(PDM_dcube_t *));
   int tmp_i_group_join = 0;
-  for (int i_zone = 0; i_zone < n_zone; i_zone++) {
+  for (int i_domain = 0; i_domain < n_domain; i_domain++) {
 
-    dcube[i_zone] = PDM_dcube_gen_init(comm, n_vtx_seg, length, i_zone, 0., 0., PDM_OWNERSHIP_KEEP);
-    PDM_dcube_gen_dim_get(dcube         [i_zone],
-                          &n_face_group [i_zone],
-                          &dn_cell      [i_zone],
-                          &dn_face      [i_zone],
-                          &dn_vtx       [i_zone],
-                          &dface_vtx_s  [i_zone],
-                          &dface_group_s[i_zone]);
+    dcube[i_domain] = PDM_dcube_gen_init(comm, n_vtx_seg, length, i_domain, 0., 0., PDM_OWNERSHIP_KEEP);
+    PDM_dcube_gen_dim_get(dcube         [i_domain],
+                          &n_face_group [i_domain],
+                          &dn_cell      [i_domain],
+                          &dn_face      [i_domain],
+                          &dn_vtx       [i_domain],
+                          &dface_vtx_s  [i_domain],
+                          &dface_group_s[i_domain]);
 
-    PDM_dcube_gen_data_get(dcube          [i_zone],
-                          &dface_cell     [i_zone],
-                          &dface_vtx_idx  [i_zone],
-                          &dface_vtx      [i_zone],
-                          &dvtx_coord     [i_zone],
-                          &dface_group_idx[i_zone],
-                          &dface_group    [i_zone]);
+    PDM_dcube_gen_data_get(dcube          [i_domain],
+                          &dface_cell     [i_domain],
+                          &dface_vtx_idx  [i_domain],
+                          &dface_vtx      [i_domain],
+                          &dvtx_coord     [i_domain],
+                          &dface_group_idx[i_domain],
+                          &dface_group    [i_domain]);
 
     /*
      * Les faces groups du dcube sont : zmin, zmax, xmin, xmax, ymin, ymax
      * Il faut les séparer en faces de bords et faces raccord, sachant que
-     * les zones sont alignées selon X
+     * les domains sont alignées selon X
      */
     int n_bnd = 4;
     int n_jn  = 2;
-    if (i_zone == 0){
+    if (i_domain == 0){
       n_bnd++;
       n_jn-- ;
     }
-    if (i_zone == n_zone-1){
+    if (i_domain == n_domain-1){
       n_bnd++;
       n_jn-- ;
     }
-    // Join numbering (left to right, increasing i_zone)
+    // Join numbering (left to right, increasing i_domain)
 
-    dface_bnd_idx [i_zone] = (int *) malloc((n_bnd        + 1) * sizeof(int));
+    dface_bnd_idx [i_domain] = (int *) malloc((n_bnd        + 1) * sizeof(int));
 
     // First pass to count and allocate
     int i_bnd = 1;
     int i_jn  = tmp_i_group_join+1;
-    dface_bnd_idx[i_zone][0]  = 0;
+    dface_bnd_idx[i_domain][0]  = 0;
     // dface_join_idx[0] = 0;
-    for (int igroup = 0; igroup < n_face_group[i_zone]; igroup++) {
-      int copy_to_bnd = (igroup != 2 || (igroup == 2 && i_zone == 0)) && (igroup != 3 || (igroup == 3 && i_zone == n_zone-1));
-      int group_size = dface_group_idx[i_zone][igroup+1] - dface_group_idx[i_zone][igroup];
+    for (int igroup = 0; igroup < n_face_group[i_domain]; igroup++) {
+      int copy_to_bnd = (igroup != 2 || (igroup == 2 && i_domain == 0)) && (igroup != 3 || (igroup == 3 && i_domain == n_domain-1));
+      int group_size = dface_group_idx[i_domain][igroup+1] - dface_group_idx[i_domain][igroup];
       if (copy_to_bnd) { //Its a boundary
-        dface_bnd_idx[i_zone][i_bnd++] = group_size;
+        dface_bnd_idx[i_domain][i_bnd++] = group_size;
       } else { //Its a join
-        group_join_to_zone_cur[i_jn-1] = i_zone;
+        group_join_to_domain_cur[i_jn-1] = i_domain;
         dface_join_idx[i_jn++] = group_size;
       }
     }
     for (int i = 0; i < n_bnd; i++) {
-      dface_bnd_idx[i_zone][i+1] = dface_bnd_idx[i_zone][i+1] + dface_bnd_idx[i_zone][i];
+      dface_bnd_idx[i_domain][i+1] = dface_bnd_idx[i_domain][i+1] + dface_bnd_idx[i_domain][i];
     }
 
 
@@ -320,19 +320,19 @@ int main(int argc, char *argv[])
     dface_join = realloc(dface_join, dface_join_idx[i_jn-1] * sizeof(PDM_g_num_t));
 
     // Second pass to copy
-    dface_bnd [i_zone] = (PDM_g_num_t *) malloc(dface_bnd_idx [i_zone][n_bnd        ] * sizeof(PDM_g_num_t));
+    dface_bnd [i_domain] = (PDM_g_num_t *) malloc(dface_bnd_idx [i_domain][n_bnd        ] * sizeof(PDM_g_num_t));
     i_bnd = 0;
     i_jn  = tmp_i_group_join;
-    for (int igroup = 0; igroup < n_face_group[i_zone]; igroup++) {
-      int copy_to_bnd = (igroup != 2 || (igroup == 2 && i_zone == 0)) && (igroup != 3 || (igroup == 3 && i_zone == n_zone-1));
+    for (int igroup = 0; igroup < n_face_group[i_domain]; igroup++) {
+      int copy_to_bnd = (igroup != 2 || (igroup == 2 && i_domain == 0)) && (igroup != 3 || (igroup == 3 && i_domain == n_domain-1));
       if (copy_to_bnd){ //Its a boundary
-        for (int i = dface_group_idx[i_zone][igroup]; i < dface_group_idx[i_zone][igroup+1]; i++) {
-          dface_bnd[i_zone][i_bnd++] = dface_group[i_zone][i];
+        for (int i = dface_group_idx[i_domain][igroup]; i < dface_group_idx[i_domain][igroup+1]; i++) {
+          dface_bnd[i_domain][i_bnd++] = dface_group[i_domain][i];
         }
       } else { //Its a join
         int k = 0;
-        for (int i = dface_group_idx[i_zone][igroup]; i < dface_group_idx[i_zone][igroup+1]; i++) {
-          dface_join[dface_join_idx[i_jn]+k++] = dface_group[i_zone][i];
+        for (int i = dface_group_idx[i_domain][igroup]; i < dface_group_idx[i_domain][igroup+1]; i++) {
+          dface_join[dface_join_idx[i_jn]+k++] = dface_group[i_domain][i];
         }
         i_jn++;
       }
@@ -356,9 +356,9 @@ int main(int argc, char *argv[])
                        comm);
 
   /*log_trace("Global join data (%d)\n", n_group_join);*/
-  /*PDM_log_trace_array_int(group_join_to_zone_cur, n_group_join, "group_join_to_zone_cur :: ");*/
+  /*PDM_log_trace_array_int(group_join_to_domain_cur, n_group_join, "group_join_to_domain_cur :: ");*/
   /*PDM_log_trace_array_int(group_join_to_join_opp, n_group_join, "group_join_to_join_opp :: ");*/
-  /*PDM_log_trace_array_int(group_join_to_zone_opp, n_group_join, "group_join_to_zone_opp :: ");*/
+  /*PDM_log_trace_array_int(group_join_to_domain_opp, n_group_join, "group_join_to_domain_opp :: ");*/
 
   /*PDM_log_trace_array_int(dface_join_idx, n_group_join+1, "dface_join_idx :: ");*/
   /*PDM_log_trace_array_long(dface_join    , dface_join_idx[n_group_join], "dface_join     :: ");*/
@@ -381,10 +381,10 @@ int main(int argc, char *argv[])
       int idx = 0;
       for (int i_face = dface_join_idx[i_join]; i_face < dface_join_idx[i_join+1]; i_face++) {
         interface_ids_f[i_interface][idx] = dface_join[i_face];
-        interface_dom_f[i_interface][idx++] = group_join_to_zone_cur[i_join];
+        interface_dom_f[i_interface][idx++] = group_join_to_domain_cur[i_join];
 
         interface_ids_f[i_interface][idx] = dface_join_opp[i_face];
-        interface_dom_f[i_interface][idx++] = group_join_to_zone_opp[i_join];
+        interface_dom_f[i_interface][idx++] = group_join_to_domain_opp[i_join];
       }
       assert (idx == 2*n_face);
       i_interface++;
@@ -403,7 +403,7 @@ int main(int argc, char *argv[])
   }
   
   // New version begins
-  PDM_domain_interface_t *dom_intrf = PDM_domain_interface_create(n_interface, n_zone,
+  PDM_domain_interface_t *dom_intrf = PDM_domain_interface_create(n_interface, n_domain,
       PDM_DOMAIN_INTERFACE_MULT_YES, PDM_OWNERSHIP_KEEP, comm);
   PDM_domain_interface_set(dom_intrf, PDM_BOUND_TYPE_FACE, interface_dn_f, interface_ids_f, interface_dom_f);
 
@@ -426,10 +426,10 @@ int main(int argc, char *argv[])
   PDM_domain_interface_free(dom_intrf);
 
   /* Free memory */
-  for (int i_zone = 0; i_zone < n_zone; i_zone++) {
-    free(dface_bnd_idx [i_zone]);
-    free(dface_bnd     [i_zone]);
-    PDM_dcube_gen_free(dcube[i_zone]);
+  for (int i_domain = 0; i_domain < n_domain; i_domain++) {
+    free(dface_bnd_idx [i_domain]);
+    free(dface_bnd     [i_domain]);
+    PDM_dcube_gen_free(dcube[i_domain]);
   }
   free(dcube);
   free(dn_cell);
@@ -450,8 +450,8 @@ int main(int argc, char *argv[])
   free(dface_join);
   free(dface_join_opp);
 
-  free(group_join_to_zone_cur);
-  free(group_join_to_zone_opp);
+  free(group_join_to_domain_cur);
+  free(group_join_to_domain_opp);
   free(group_join_to_join_opp);
 
   for (i_interface = 0; i_interface < n_interface; i_interface++)

@@ -253,10 +253,10 @@ int main(int argc, char *argv[])
   /*
    * Partitionnement
    */
-  int n_zone = 1;
-  int n_part_zones = n_part;
-  PDM_multipart_t *mpart = PDM_multipart_create(n_zone,
-						   &n_part_zones,
+  int n_domain = 1;
+  int n_part_domains = n_part;
+  PDM_multipart_t *mpart = PDM_multipart_create(n_domain,
+						   &n_part_domains,
 						   PDM_FALSE,
 						   part_method,
 						   PDM_PART_SIZE_HOMOGENEOUS,
@@ -265,33 +265,33 @@ int main(int argc, char *argv[])
 						   PDM_OWNERSHIP_KEEP);
 
   PDM_multipart_set_reordering_options(mpart, -1, "PDM_PART_RENUM_CELL_NONE", NULL, "PDM_PART_RENUM_FACE_NONE");
-  PDM_multipart_register_block(mpart, 0, dm);
-  PDM_multipart_run_ppart(mpart);
+  PDM_multipart_dmesh_set(mpart, 0, dm);
+  PDM_multipart_compute(mpart);
 
   /*
-   * Get the partition zone
+   * Get the partition domain
    */
-  int i_zone = 0;
+  int i_domain = 0;
 
-  PDM_g_num_t **pcell_ln_to_gn          = (PDM_g_num_t **) malloc( n_part_zones * sizeof(PDM_g_num_t *));
-  PDM_g_num_t **pface_ln_to_gn          = (PDM_g_num_t **) malloc( n_part_zones * sizeof(PDM_g_num_t *));
-  PDM_g_num_t **pvtx_ln_to_gn           = (PDM_g_num_t **) malloc( n_part_zones * sizeof(PDM_g_num_t *));
-  int          *pn_cell                 = (int          *) malloc( n_part_zones * sizeof(int          ));
-  int          *pn_face                 = (int          *) malloc( n_part_zones * sizeof(int          ));
-  int          *pn_vtx                  = (int          *) malloc( n_part_zones * sizeof(int          ));
+  PDM_g_num_t **pcell_ln_to_gn          = (PDM_g_num_t **) malloc( n_part_domains * sizeof(PDM_g_num_t *));
+  PDM_g_num_t **pface_ln_to_gn          = (PDM_g_num_t **) malloc( n_part_domains * sizeof(PDM_g_num_t *));
+  PDM_g_num_t **pvtx_ln_to_gn           = (PDM_g_num_t **) malloc( n_part_domains * sizeof(PDM_g_num_t *));
+  int          *pn_cell                 = (int          *) malloc( n_part_domains * sizeof(int          ));
+  int          *pn_face                 = (int          *) malloc( n_part_domains * sizeof(int          ));
+  int          *pn_vtx                  = (int          *) malloc( n_part_domains * sizeof(int          ));
 
-  int         **pcell_face              = (int         **) malloc( n_part_zones * sizeof(int         *));
-  int         **pcell_face_idx          = (int         **) malloc( n_part_zones * sizeof(int         *));
-  int         **pface_vtx               = (int         **) malloc( n_part_zones * sizeof(int         *));
-  int         **pface_vtx_idx           = (int         **) malloc( n_part_zones * sizeof(int         *));
-  double      **pvtx_coord              = (double      **) malloc( n_part_zones * sizeof(double      *));
+  int         **pcell_face              = (int         **) malloc( n_part_domains * sizeof(int         *));
+  int         **pcell_face_idx          = (int         **) malloc( n_part_domains * sizeof(int         *));
+  int         **pface_vtx               = (int         **) malloc( n_part_domains * sizeof(int         *));
+  int         **pface_vtx_idx           = (int         **) malloc( n_part_domains * sizeof(int         *));
+  double      **pvtx_coord              = (double      **) malloc( n_part_domains * sizeof(double      *));
 
 
-  for (int i_part = 0; i_part < n_part_zones; i_part++){
+  for (int i_part = 0; i_part < n_part_domains; i_part++){
 
     PDM_g_num_t* cell_ln_to_gn = NULL;
     PDM_multipart_part_ln_to_gn_get(mpart,
-                                    i_zone,
+                                    i_domain,
                                     i_part,
                                     PDM_MESH_ENTITY_CELL,
                                     &cell_ln_to_gn,
@@ -300,26 +300,26 @@ int main(int argc, char *argv[])
     int *cell_face     = NULL;
     int *cell_face_idx = NULL;
     int n_cell = PDM_multipart_part_connectivity_get(mpart,
-                                                     i_zone,
+                                                     i_domain,
                                                      i_part,
                                                      PDM_CONNECTIVITY_TYPE_CELL_FACE,
-                                                     &cell_face,
                                                      &cell_face_idx,
+                                                     &cell_face,
                                                      PDM_OWNERSHIP_KEEP);
 
     int *face_vtx     = NULL;
     int *face_vtx_idx = NULL;
     PDM_multipart_part_connectivity_get(mpart,
-                                        i_zone,
+                                        i_domain,
                                         i_part,
                                         PDM_CONNECTIVITY_TYPE_FACE_VTX,
-                                        &face_vtx,
                                         &face_vtx_idx,
+                                        &face_vtx,
                                         PDM_OWNERSHIP_KEEP);
 
     PDM_g_num_t* face_ln_to_gn = NULL;
     int n_face = PDM_multipart_part_ln_to_gn_get(mpart,
-                                                 i_zone,
+                                                 i_domain,
                                                  i_part,
                                                  PDM_MESH_ENTITY_FACE,
                                                  &face_ln_to_gn,
@@ -327,15 +327,15 @@ int main(int argc, char *argv[])
 
     PDM_g_num_t* vtx_ln_to_gn = NULL;
     int n_vtx = PDM_multipart_part_ln_to_gn_get(mpart,
-                                                i_zone,
+                                                i_domain,
                                                 i_part,
-                                                PDM_MESH_ENTITY_VERTEX,
+                                                PDM_MESH_ENTITY_VTX,
                                                 &vtx_ln_to_gn,
                                                 PDM_OWNERSHIP_KEEP);
 
     double *vtx = NULL;
     PDM_multipart_part_vtx_coord_get(mpart,
-                                     i_zone,
+                                     i_domain,
                                      i_part,
                                      &vtx,
                                      PDM_OWNERSHIP_KEEP);
@@ -377,7 +377,7 @@ int main(int argc, char *argv[])
                                       &pedge_vtx,
                                       &pedge_ln_to_gn);
 
-  for (int i_part = 0; i_part < n_part_zones; i_part++) {
+  for (int i_part = 0; i_part < n_part_domains; i_part++) {
     free(pface_edge_idx[i_part]);
     free(pface_edge    [i_part]);
     free(pedge_vtx     [i_part]);

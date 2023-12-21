@@ -34,19 +34,19 @@ extern "C" {
  *============================================================================*/
 
 /**
- *  \brief Gather the entities splitted by the partitioner
+ *  \brief Gather the entities split by the partitioner
  *   (usually cells) to their attributed partition, using the array mapping
  *   entities id to their assigned partition number.
  *   Each partition is hold by a (unique) process following the input partition
  *   distribution. The connection between partition members and original entities
- *   is made trought the local to global numbering computed by the function.
+ *   is made through the local to global numbering computed by the function.
  *
  * \param [in]   comm                  PDM_MPI communicator
  * \param [in]   part_distribution     Distribution of partitions over the processes (size=n_rank+1)
  * \param [in]   entity_distribution   Distribution of entities over the processes (size=n_rank+1)
  * \param [in]   dentity_to_part       Id of assigned partition for each entity (size=dn_entity)
- * \param [in]   dentity_gnum          If not null specifie the current gnum in the block
- * \param [in]   dentity_init_location If not null specifie the current gnum in the block
+ * \param [in]   dentity_gnum          If not null specified the current gnum in the block
+ * \param [in]   dentity_init_location If not null specified the current gnum in the block
  * \param [out]  pn_entities           Number of entities in each partition (size = n_part)
  * \param [out]  pentity_ln_to_gn      Array of local to global entity id for each partition (size = n_part)
  *
@@ -179,7 +179,7 @@ PDM_part_distgroup_to_partgroup
  *   to global numbering. In addition, return the partitioned number of unique child_element
  *   and the corresponding local to global numbering for the child elements.
  *
- *   The orientation data (ie negative index) present in the distributed connectivity,
+ *   The orientation data (i.e. negative index) present in the distributed connectivity,
  *   if any, are preserved, *meaning that boundary faces can be badly oriented on partitions*.
  *   See PDM_part_reorient_bound_faces function to correct this orientation.
  *
@@ -222,7 +222,7 @@ PDM_part_dconnectivity_to_pconnectivity_sort
  *   to global numbering. In addition, return the partitioned number of unique child_element
  *   and the corresponding local to global numbering for the child elements.
  *
- *   The orientation data (ie negative index) present in the distributed connectivity,
+ *   The orientation data (i.e. negative index) present in the distributed connectivity,
  *   if any, are preserved, *meaning that boundary faces can be badly oriented on partitions*.
  *   See PDM_part_reorient_bound_faces function to correct this orientation.
  *
@@ -284,7 +284,7 @@ PDM_part_multi_dconnectivity_to_pconnectivity_sort
  *   to global numbering. In addition, return the partitioned number of unique child_element
  *   and the corresponding local to global numbering for the child elements.
  *
- *   The orientation data (ie negative index) present in the distributed connectivity,
+ *   The orientation data (i.e. negative index) present in the distributed connectivity,
  *   if any, are preserved, *meaning that boundary faces can be badly oriented on partitions*.
  *   See PDM_part_reorient_bound_faces function to correct this orientation.
  *
@@ -344,7 +344,7 @@ PDM_part_dconnectivity_to_pconnectivity_hash
  *                                   other procs (size=n_part, each component size=n_rank+1)
  * \param [out]  ppart_bound_idx     For each part, indexes of communication information related to the
  *                                   other (global id) parts (size=n_part, each component size=n_part_tot+1)
- * \param [out]  pentity_bound       For each part, communication information (see abobe) (size=n_part)
+ * \param [out]  pentity_bound       For each part, communication information (see above) (size=n_part)
  */
 void
 PDM_part_generate_entity_graph_comm
@@ -509,7 +509,7 @@ PDM_part_dentity_group_to_pentity_group
 
 
 /**
- *  \brief Compute the explicit distributed connectivity from an implicit one, with a prescrbe stride. Use to convert for exemple face_cell or edge_vtx implicit connectivity
+ *  \brief Compute the explicit distributed connectivity from an implicit one, with a prescribed stride. Use to convert for exemple face_cell or edge_vtx implicit connectivity
  *
  * \param [in]   dn_entity1             Number of entity1
  * \param [in]   stride                 Implicit stride of dentity1_dentity2 connectivity
@@ -530,26 +530,28 @@ PDM_setup_connectivity_idx
 
 
 /**
- *  \brief Compute the edges for all partitions in an independant of parallelism way. Usefull when user only give face_vtx but edges is mandatory for algorithm (ex : Iso-surfaces)
+ *  \brief Compute the edges for all partitions in an independent of parallelism way. Useful when user only give face_vtx but edges is mandatory for algorithm (ex : Iso-surfaces)
+ *
+ * \warning This function uses collective MPI communications and must be called simultaneously by all processes in \p comm.
  *
  * \param [in]  comm                PDM_MPI communicator
  * \param [in]  n_part              Number of partitions
- * \param [in]  pn_face             Number of faces for each partition (size = n_part)
- * \param [in]  pn_vtx              Number of vertices for each partition (size = n_part)
+ * \param [in]  pn_face             Number of faces for each partition (size = \p n_part)
+ * \param [in]  pn_vtx              Number of vertices for each partition (size = \p n_part)
  * \param [in]  pface_vtx_idx       For each part, connectivity index between faces and vertices
- *                                 (size = n_part, each component size = pn_face[i_part]+1)
+ *                                 (size = \p n_part, each component size = \p pn_face[i_part]+1)
  * \param [in]  pface_vtx           For each part, connectivity between faces and vertices
- *                                 (size = n_part, each component size = pface_vtx_idx[i_part][pn_face[i_part]])
- * \param [in]  pface_ln_to_gn      For each part, global id of faces (size = n_part, each component size = pn_face[i_part])
- * \param [in]  pvtx_ln_to_gn       For each part, global id of vertices (size = n_part, each component size = pn_vtx[i_part])
+ *                                 (size = \p n_part, each component size = \p pface_vtx_idx[i_part][\p pn_face[i_part]])
+ * \param [in]  pface_ln_to_gn      For each part, face global ids (size = \p n_part, each component size = \p pn_face[i_part])
+ * \param [in]  pvtx_ln_to_gn       For each part, vertex global ids (size = \p n_part, each component size = \p pn_vtx[i_part])
  * \param [out] pface_edge_idx      For each part, connectivity index between faces and edges
- *                                  (size = n_part, each component size = pn_face[i_part]+1)
+ *                                  (size = \p n_part, each component size = \p pn_face[i_part]+1)
  * \param [in]  pface_edge          For each part, connectivity between faces and edges
- *                                 (size = n_part, each component size = pface_edge_idx[i_part][pn_face[i_part]])
- * \param [out] pn_edge             Number of edges for each partition (size = n_part)
- * \param [out] pedge_vtx           For each part, implicit connectivity between edges and vertices
- *                                 (size = n_part, each component size = 2 * pn_edge[i_part])
- * \param [out] pedge_ln_to_gn      For each part, global id of edges (size = n_part, each component size = pn_edge[i_part])
+ *                                 (size = \p n_part, each component size = \p pface_edge_idx[i_part][\p pn_face[i_part]])
+ * \param [out] pn_edge             Number of edges for each partition (size = \p n_part)
+ * \param [out] pedge_vtx           For each part, connectivity between edges and vertices
+ *                                 (size = n_part, each component size = 2 * \p pn_edge[i_part])
+ * \param [out] pedge_ln_to_gn      For each part, edge global ids (size = \p n_part, each component size = \p pn_edge[i_part])
  *
  */
 void
@@ -621,7 +623,7 @@ PDM_pconnectivity_to_pconnectivity
 
 
 /**
- *  \brief Deduce connectivity in a new partition from another one. See \ref PDM_extract_part_t for exemple of use
+ *  \brief Deduce connectivity in a new partition from another one. See \ref PDM_extract_part_t for example of use
  *
  * \param [in]  comm                               PDM_MPI communicator
  * \param [in]  n_part1                            Number of partitions in first partitioning
@@ -644,7 +646,7 @@ PDM_pconnectivity_to_pconnectivity
  *                                                  (size = n_part2, each component size = part2_entity1_entity2_idx[n_part2_entity2[i_part]])
  * \param [out] part2_entity2_ln_to_gn             For each part, for partition 2, global id of entity2
  * \param [out] part2_entity2_child_ln_to_gn       For each part, for partition 2, global id of child entity2
- * \param [out] ptp                                Part to part exchange protocol (see \ref PDM_part_to_part_t ). Usefull to exchange additionnal data between part1 and part2
+ * \param [out] ptp                                Part to part exchange protocol (see \ref PDM_part_to_part_t ). Useful to exchange additional data between part1 and part2
  *
  */
 void
@@ -672,7 +674,7 @@ PDM_pconnectivity_to_pconnectivity_keep
 
 
 /**
- *  \brief Deduce connectivity in a new partition from another one. See \ref PDM_extract_part_t for exemple of use
+ *  \brief Deduce connectivity in a new partition from another one. See \ref PDM_extract_part_t for example of use
  *
  * \param [in]  comm                                    PDM_MPI communicator
  * \param [in]  n_part1                                 Number of partitions in first partitioning
@@ -695,7 +697,7 @@ PDM_pconnectivity_to_pconnectivity_keep
  *                                                       (size = n_part2, each component size = part2_entity1_entity2_idx[n_part2_entity2[i_part]])
  * \param [out] part2_entity2_ln_to_gn                  For each part, for partition 2, global id of entity2
  * \param [out] part2_entity2_child_ln_to_gn            For each part, for partition 2, global id of child entity2
- * \param [out] ptp                                     Part to part exchange protocol (see \ref PDM_part_to_part_t ). Usefull to exchange additionnal data between part1 and part2
+ * \param [out] ptp                                     Part to part exchange protocol (see \ref PDM_part_to_part_t ). Useful to exchange additional data between part1 and part2
  *
  */
 void

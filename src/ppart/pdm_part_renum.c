@@ -95,7 +95,7 @@ static int n_renum_methods[4] = {0, 0, 0, 0};
  *
  * \brief Initialize an array renumbering method for a specific type of mesh entity
  *
- * \param [in]  entity     Type of mesh entity (PDM_MESH_ENTITY_CELL, PDM_MESH_ENTITY_FACE, PDM_MESH_ENTITY_EDGE or PDM_MESH_ENTITY_VERTEX)
+ * \param [in]  entity     Type of mesh entity (PDM_MESH_ENTITY_CELL, PDM_MESH_ENTITY_FACE, PDM_MESH_ENTITY_EDGE or PDM_MESH_ENTITY_VTX)
  * \param [in]  size       Size of the renumbering method array
  *
  */
@@ -118,7 +118,7 @@ _PDM_part_renum_method_init
  *
  * \brief Add a renumbering method for a specific type of mesh entity
  *
- * \param [in]  entity     Type of mesh entity (PDM_MESH_ENTITY_CELL, PDM_MESH_ENTITY_FACE, PDM_MESH_ENTITY_EDGE or PDM_MESH_ENTITY_VERTEX)
+ * \param [in]  entity     Type of mesh entity (PDM_MESH_ENTITY_CELL, PDM_MESH_ENTITY_FACE, PDM_MESH_ENTITY_EDGE or PDM_MESH_ENTITY_VTX)
  * \param [in]  name       Name of the renumbering method
  * \param [in]  renum_fct  Pointer to the renumbering function
  *
@@ -1284,16 +1284,16 @@ PDM_part_renum_method_vtx_idx_get
 const char *name
 )
 {
-  if (renum_methods[PDM_MESH_ENTITY_VERTEX] == NULL) {
+  if (renum_methods[PDM_MESH_ENTITY_VTX] == NULL) {
     PDM_part_renum_method_load_local();
   }
   int idx = -1;
 
-  if (renum_methods[PDM_MESH_ENTITY_VERTEX] != NULL) {
-    int n_methods = n_renum_methods[PDM_MESH_ENTITY_VERTEX];
+  if (renum_methods[PDM_MESH_ENTITY_VTX] != NULL) {
+    int n_methods = n_renum_methods[PDM_MESH_ENTITY_VTX];
 
     for (int i = 0; i < n_methods; i++) {
-      _renum_method_t *method_ptr = renum_methods[PDM_MESH_ENTITY_VERTEX][i];
+      _renum_method_t *method_ptr = renum_methods[PDM_MESH_ENTITY_VTX][i];
       if (!strcmp(method_ptr->name, name)) {
         idx = i;
         break;
@@ -1473,7 +1473,7 @@ PDM_part_renum_method_vtx_add
  const PDM_part_renum_fct_t  renum_fct /*!< Customize \ref PDM_part_renum_face function for the format */
 )
 {
-  return _PDM_part_renum_method_add (PDM_MESH_ENTITY_VERTEX,
+  return _PDM_part_renum_method_add (PDM_MESH_ENTITY_VTX,
                                      name,
                                      renum_fct);
 }
@@ -1525,8 +1525,8 @@ void
                                     NULL);
   }
 
-  if (renum_methods[PDM_MESH_ENTITY_VERTEX] == NULL) {
-    _PDM_part_renum_method_init(PDM_MESH_ENTITY_VERTEX,
+  if (renum_methods[PDM_MESH_ENTITY_VTX] == NULL) {
+    _PDM_part_renum_method_init(PDM_MESH_ENTITY_VTX,
                                 2);
 
     PDM_part_renum_method_vtx_add ("PDM_PART_RENUM_VTX_NONE",
@@ -1699,12 +1699,12 @@ PDM_part_renum_vtx
  void     *specific_data
 )
 {
-  if (renum_methods[PDM_MESH_ENTITY_VERTEX] == NULL) {
+  if (renum_methods[PDM_MESH_ENTITY_VTX] == NULL) {
     PDM_part_renum_method_load_local ();
   }
 
-  assert(renum_vtx_method < n_renum_methods[PDM_MESH_ENTITY_VERTEX]);
-  const _renum_method_t *method_ptr = renum_methods[PDM_MESH_ENTITY_VERTEX][renum_vtx_method];
+  assert(renum_vtx_method < n_renum_methods[PDM_MESH_ENTITY_VTX]);
+  const _renum_method_t *method_ptr = renum_methods[PDM_MESH_ENTITY_VTX][renum_vtx_method];
 
   PDM_part_renum_fct_t fct = method_ptr->fct;
 

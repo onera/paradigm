@@ -144,10 +144,10 @@ int main(int argc, char *argv[])
                                                         0,
                                                         0);
 
-  int n_zone = 1;
-  int n_part_zones = n_part;
-  PDM_multipart_t *mpart = PDM_multipart_create(n_zone,
-                                                &n_part_zones,
+  int n_domain = 1;
+  int n_part_domains = n_part;
+  PDM_multipart_t *mpart = PDM_multipart_create(n_domain,
+                                                &n_part_domains,
                                                 PDM_FALSE,
                                                 part_method,
                                                 PDM_PART_SIZE_HOMOGENEOUS,
@@ -161,8 +161,8 @@ int main(int argc, char *argv[])
                                        NULL,
                                        "PDM_PART_RENUM_FACE_NONE");
 
-  PDM_multipart_register_dmesh_nodal(mpart, 0, dmn);
-  PDM_multipart_run_ppart(mpart);
+  PDM_multipart_dmesh_nodal_set(mpart, 0, dmn);
+  PDM_multipart_compute(mpart);
   PDM_DMesh_nodal_free(dmn);
 
   if (visu) {
@@ -215,8 +215,8 @@ int main(int argc, char *argv[])
                                                        0,
                                                        i_part,
                                                        PDM_CONNECTIVITY_TYPE_CELL_FACE,
-                                                       &cell_face,
                                                        &cell_face_idx,
+                                                       &cell_face,
                                                        PDM_OWNERSHIP_KEEP);
 
       int *face_vtx_idx;
@@ -225,8 +225,8 @@ int main(int argc, char *argv[])
                                                        0,
                                                        i_part,
                                                        PDM_CONNECTIVITY_TYPE_FACE_VTX,
-                                                       &face_vtx,
                                                        &face_vtx_idx,
+                                                       &face_vtx,
                                                        PDM_OWNERSHIP_KEEP);
 
 
@@ -240,8 +240,8 @@ int main(int argc, char *argv[])
                                             0,
                                             i_part,
                                             PDM_CONNECTIVITY_TYPE_FACE_EDGE,
-                                            &face_edge,
                                             &face_edge_idx,
+                                            &face_edge,
                                             PDM_OWNERSHIP_KEEP);
 
         int *edge_vtx;
@@ -250,8 +250,8 @@ int main(int argc, char *argv[])
                                             0,
                                             i_part,
                                             PDM_CONNECTIVITY_TYPE_EDGE_VTX,
-                                            &edge_vtx,
                                             &edge_vtx_idx,
+                                            &edge_vtx,
                                             PDM_OWNERSHIP_KEEP);
 
         pface_vtx_idx[i_part] = face_edge_idx;
@@ -292,7 +292,7 @@ int main(int argc, char *argv[])
       PDM_multipart_part_ln_to_gn_get(mpart,
                                       0,
                                       i_part,
-                                      PDM_MESH_ENTITY_VERTEX,
+                                      PDM_MESH_ENTITY_VTX,
                                       &vtx_ln_to_gn,
                                       PDM_OWNERSHIP_KEEP);
 

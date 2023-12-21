@@ -197,7 +197,7 @@ test_c_create (pdm_t_box_tree_intersect_volume_box 1 PDM_LIST_TEST PDM_LIST_NRAN
 test_c_create (pdm_t_dbbtree_intersect_volume_box 1 PDM_LIST_TEST PDM_LIST_NRANK)
 test_c_create (pdm_t_volume_intersect_back_mesh 1 PDM_LIST_TEST PDM_LIST_NRANK)
 test_c_create (pdm_t_mesh_extract 1 PDM_LIST_TEST PDM_LIST_NRANK)
-test_c_create (pdm_t_connect_zone 1 PDM_LIST_TEST PDM_LIST_NRANK)
+test_c_create (pdm_t_connect_domain 1 PDM_LIST_TEST PDM_LIST_NRANK)
 test_c_create (pdm_t_part_to_block_geom 1 PDM_LIST_TEST PDM_LIST_NRANK)
 test_c_create (pdm_t_multipart_0d 1 PDM_LIST_TEST PDM_LIST_NRANK)
 test_c_create (pdm_t_multipart_1d 1 PDM_LIST_TEST PDM_LIST_NRANK)

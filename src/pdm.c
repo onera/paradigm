@@ -83,7 +83,7 @@ PDM_connectivity_type_to_entity_type
              connectivity_type == PDM_CONNECTIVITY_TYPE_VTX_EDGE ||
              connectivity_type == PDM_CONNECTIVITY_TYPE_VTX_VTX )
   {
-    mesh_entity = PDM_MESH_ENTITY_VERTEX;
+    mesh_entity = PDM_MESH_ENTITY_VTX;
   }
   return mesh_entity;
 }

@@ -65,10 +65,30 @@
 }
 
 .card {
-  box-shadow: rgba(0, 0, 0, 0.05) 0px 1px 4px 0px,
+  box-shadow: rgba(0, 0, 0, 0.08) 0px 1px 4px 0px,
     rgba(211, 216, 223, 0.33) 0px 8px 14px -1px;
 }
 
 /* End section cards. */
 
 /* End genindex consistency. */
+
+
+.red {
+  color: #eb4034;
+}
+
+.green {
+  color: #03a621;
+}
+
+
+.largered {
+  color: #eb4034;
+  font-size:120%;
+}
+
+.largegreen {
+  color: #03a621;
+  font-size:120%;
+}

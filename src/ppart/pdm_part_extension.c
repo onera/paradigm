@@ -151,7 +151,10 @@ _offset_parts_by_domain
       pn_face            [i_domain][i_part] = part_ext->parts[i_domain][i_part].n_face;
       pn_edge            [i_domain][i_part] = part_ext->parts[i_domain][i_part].n_edge;
       pn_vtx             [i_domain][i_part] = part_ext->parts[i_domain][i_part].n_vtx;
-      pn_face_group      [i_domain][i_part] = part_ext->parts[i_domain][i_part].face_bound_idx[part_ext->parts[i_domain][i_part].n_face_group];
+      pn_face_group      [i_domain][i_part] = 0;
+      if (part_ext->parts[i_domain][i_part].n_face_group > 0) {
+        pn_face_group      [i_domain][i_part] = part_ext->parts[i_domain][i_part].face_bound_idx[part_ext->parts[i_domain][i_part].n_face_group];
+      }
 
       cell_ln_to_gn      [i_domain][i_part] = part_ext->parts[i_domain][i_part].cell_ln_to_gn;
       face_ln_to_gn      [i_domain][i_part] = part_ext->parts[i_domain][i_part].face_ln_to_gn;
@@ -1948,39 +1951,56 @@ _create_cell_cell_graph
 
       for(int i_part = 0; i_part < part_ext->n_part[i_domain]; ++i_part) {
         int pn_cell = part_ext->parts[i_domain][i_part].n_cell;
-        int pn_edge = part_ext->parts[i_domain][i_part].n_edge;
         int pn_vtx  = part_ext->parts[i_domain][i_part].n_vtx;
 
-        int* edge_vtx_idx = (int *) malloc( (pn_edge+1) * sizeof(int));
-        edge_vtx_idx[0] = 0;
-        for(int i_edge = 0; i_edge < pn_edge; ++i_edge) {
-          edge_vtx_idx[i_edge+1] = edge_vtx_idx[i_edge] + 2;
-        }
-
-        /* Compute cell_edge */
-        int* cell_edge_idx = NULL;
-        int* cell_edge     = NULL;
-        PDM_combine_connectivity(part_ext->parts[i_domain][i_part].n_cell,
-                                 part_ext->parts[i_domain][i_part].cell_face_idx,
-                                 part_ext->parts[i_domain][i_part].cell_face,
-                                 part_ext->parts[i_domain][i_part].face_edge_idx,
-                                 part_ext->parts[i_domain][i_part].face_edge,
-                                 &cell_edge_idx,
-                                 &cell_edge);
-
-        /* Compute cell_vtx */
         int* cell_vtx_idx = NULL;
         int* cell_vtx     = NULL;
-        PDM_combine_connectivity(part_ext->parts[i_domain][i_part].n_cell,
-                                 cell_edge_idx,
-                                 cell_edge,
-                                 edge_vtx_idx,
-                                 part_ext->parts[i_domain][i_part].edge_vtx,
-                                 &cell_vtx_idx,
-                                 &cell_vtx);
-        free(cell_edge_idx);
-        free(cell_edge);
-        free(edge_vtx_idx);
+
+        if (part_ext->has_connectivity[PDM_CONNECTIVITY_TYPE_FACE_EDGE]) {
+          assert(part_ext->has_connectivity[PDM_CONNECTIVITY_TYPE_EDGE_VTX]);
+          assert(part_ext->parts[i_domain][i_part].face_edge_idx != NULL);
+          assert(part_ext->parts[i_domain][i_part].face_edge     != NULL);
+
+          int pn_edge = part_ext->parts[i_domain][i_part].n_edge;
+          int *edge_vtx_idx = PDM_array_new_idx_from_const_stride_int(2, pn_edge);
+
+          /* Compute cell_edge */
+          int* cell_edge_idx = NULL;
+          int* cell_edge     = NULL;
+          PDM_combine_connectivity(part_ext->parts[i_domain][i_part].n_cell,
+                                   part_ext->parts[i_domain][i_part].cell_face_idx,
+                                   part_ext->parts[i_domain][i_part].cell_face,
+                                   part_ext->parts[i_domain][i_part].face_edge_idx,
+                                   part_ext->parts[i_domain][i_part].face_edge,
+                                   &cell_edge_idx,
+                                   &cell_edge);
+
+          /* Compute cell_vtx */
+          PDM_combine_connectivity(part_ext->parts[i_domain][i_part].n_cell,
+                                   cell_edge_idx,
+                                   cell_edge,
+                                   edge_vtx_idx,
+                                   part_ext->parts[i_domain][i_part].edge_vtx,
+                                   &cell_vtx_idx,
+                                   &cell_vtx);
+          free(cell_edge_idx);
+          free(cell_edge);
+          free(edge_vtx_idx);
+        }
+        else {
+          assert(part_ext->has_connectivity[PDM_CONNECTIVITY_TYPE_FACE_VTX]);
+          assert(part_ext->parts[i_domain][i_part].face_vtx_idx != NULL);
+
+          /* Compute cell_vtx */
+          PDM_combine_connectivity(part_ext->parts[i_domain][i_part].n_cell,
+                                   part_ext->parts[i_domain][i_part].cell_face_idx,
+                                   part_ext->parts[i_domain][i_part].cell_face,
+                                   part_ext->parts[i_domain][i_part].face_vtx_idx,
+                                   part_ext->parts[i_domain][i_part].face_vtx,
+                                   &cell_vtx_idx,
+                                   &cell_vtx);
+        }
+
 
         int *vtx_cell     = NULL;
         int *vtx_cell_idx = NULL;
@@ -5934,6 +5954,12 @@ PDM_part_extension_create
   part_ext->n_part_g_idx[0] = 0;
   for(int i_domain = 0; i_domain < n_domain; ++i_domain) {
     part_ext->parts[i_domain] = malloc( n_part[i_domain] * sizeof(_part_t));
+
+    for (int i_part = 0; i_part < n_part[i_domain]; i_part++) {
+      part_ext->parts[i_domain][i_domain].n_face_group = 0;
+      part_ext->parts[i_domain][i_domain].n_edge_group = 0;
+    }
+
     part_ext->n_part_idx[i_domain+1] = part_ext->n_part_idx[i_domain] + part_ext->n_part[i_domain];
 
     int n_part_l = n_part[i_domain];
@@ -6034,8 +6060,20 @@ PDM_part_extension_create
   part_ext->composed_interface        = NULL;
   part_ext->composed_ln_to_gn_sorted  = NULL;
 
+  for (int i = 0; i < PDM_CONNECTIVITY_TYPE_MAX; i++) {
+    part_ext->has_connectivity[i] = PDM_FALSE;
+  }
+
   return part_ext;
 }
+
+/**
+ *
+ * \brief Set data to perform the partitionned mesh extension
+ *
+ * \warning Deprecated : use the separate setters instead
+ *
+ */
 
 void
 PDM_part_extension_set_part
@@ -6075,6 +6113,25 @@ PDM_part_extension_set_part
   double               *vtx_coord
 )
 {
+  if (edge_vtx != NULL) {
+    part_ext->has_connectivity[PDM_CONNECTIVITY_TYPE_EDGE_VTX] = PDM_TRUE;
+  }
+
+  if (face_vtx != NULL) {
+    part_ext->has_connectivity[PDM_CONNECTIVITY_TYPE_FACE_VTX] = PDM_TRUE;
+  }
+
+  if (face_edge != NULL) {
+    part_ext->has_connectivity[PDM_CONNECTIVITY_TYPE_FACE_EDGE] = PDM_TRUE;
+  }
+
+  if (cell_face != NULL) {
+    part_ext->has_connectivity[PDM_CONNECTIVITY_TYPE_CELL_FACE] = PDM_TRUE;
+  }
+
+  if (face_cell != NULL) {
+    part_ext->has_connectivity[PDM_CONNECTIVITY_TYPE_FACE_CELL] = PDM_TRUE;
+  }
 
   part_ext->parts[i_domain][i_part].n_cell            = n_cell;
   part_ext->parts[i_domain][i_part].n_face            = n_face;
@@ -6265,14 +6322,28 @@ PDM_part_extension_compute
   // }
   if(part_ext->extend_type == PDM_EXTEND_FROM_FACE) {
     _rebuild_connectivity_cell_face(part_ext);
-    _rebuild_connectivity_face_vtx(part_ext);
-    // _rebuild_connectivity_face_edge(part_ext);
-    // _rebuild_connectivity_edge_vtx (part_ext);
+    if (part_ext->has_connectivity[PDM_CONNECTIVITY_TYPE_FACE_EDGE]) {
+      assert(part_ext->has_connectivity[PDM_CONNECTIVITY_TYPE_EDGE_VTX]);
+      _rebuild_connectivity_face_edge(part_ext);
+      _rebuild_connectivity_edge_vtx (part_ext);
+    }
+    else {
+      assert(part_ext->has_connectivity[PDM_CONNECTIVITY_TYPE_FACE_VTX]);
+      _rebuild_connectivity_face_vtx(part_ext);
+    }
   } else if (part_ext->extend_type == PDM_EXTEND_FROM_VTX) {
     _rebuild_connectivity_cell_face(part_ext);
     // exit(1);
-    _rebuild_connectivity_face_edge(part_ext);
-    _rebuild_connectivity_edge_vtx (part_ext);
+
+    if (part_ext->has_connectivity[PDM_CONNECTIVITY_TYPE_FACE_EDGE]) {
+      assert(part_ext->has_connectivity[PDM_CONNECTIVITY_TYPE_EDGE_VTX]);
+      _rebuild_connectivity_face_edge(part_ext);
+      _rebuild_connectivity_edge_vtx (part_ext);
+    }
+    else {
+      assert(part_ext->has_connectivity[PDM_CONNECTIVITY_TYPE_FACE_VTX]);
+      _rebuild_connectivity_face_vtx(part_ext);
+    }
   } else {
     PDM_error(__FILE__, __LINE__, 0, "PDM_part_extension_compute wrong extend_type \n");
   }
@@ -7133,16 +7204,16 @@ PDM_part_extension_free
 
 /**
  *
- * \brief Get connectivity
+ * \brief Get extended connectivity
  *
- * \param [in]  part_ext     Pointer to \ref PDM_part_extension_t object
- * \param [in]  i_domain     Id of current domain
- * \param [in]  i_part       Id of current partition
- * \param [in]  mesh_entity  Type of mesh entity
- * \param [out] connect      Entity->group graph (size = \ref connect_idx[\ref n_elt])
- * \param [out] connect_idx  Index for entity->group graph (size = \ref n_elt + 1)
+ * \param [in]  part_ext            \p PDM_part_extension_t structure instance
+ * \param [in]  i_domain            Domain identifier
+ * \param [in]  i_part              Partition identifier
+ * \param [in]  connectivity_type   Connectivity type
+ * \param [out] connect_idx         Connectivity index
+ * \param [out] connect             Connectivity
  *
- * \return  n_elt  Number of elements
+ * \return Number of leading entities
  *
  */
 
@@ -7153,8 +7224,8 @@ PDM_part_extension_connectivity_get
  int                       i_domain,
  int                       i_part,
  PDM_connectivity_type_t   connectivity_type,
- int                     **connect,
- int                     **connect_idx
+ int                     **connect_idx,
+ int                     **connect
 )
 {
   int n_entity = -1;
@@ -7266,7 +7337,7 @@ PDM_part_extension_ln_to_gn_get
     }
     break;
 
-    case PDM_MESH_ENTITY_VERTEX:
+    case PDM_MESH_ENTITY_VTX:
     {
       int n_vtx   = part_ext->parts[i_domain][i_part].n_vtx;
       n_entity     = part_ext->vtx_vtx_extended_idx[shift_part+i_part][n_vtx];
@@ -7336,7 +7407,7 @@ PDM_part_extension_interface_get
     }
     break;
 
-    case PDM_MESH_ENTITY_VERTEX:
+    case PDM_MESH_ENTITY_VTX:
     {
       int n_vtx   =  part_ext->parts[i_domain][i_part].n_vtx;
       n_entity      = part_ext->vtx_vtx_extended_idx[shift_part+i_part][n_vtx];
@@ -7353,21 +7424,6 @@ PDM_part_extension_interface_get
   return n_entity;
 }
 
-/**
- *
- * \brief Get groups
- *
- * \param [in]  part_ext     Pointer to \ref PDM_part_extension_t object
- * \param [in]  i_domain     Id of current domain
- * \param [in]  i_part       Id of current partition
- * \param [in]  mesh_entity  Type of mesh entity
- * \param [out] connect      Entity->group graph (size = \ref connect_idx[\ref n_elt])
- * \param [out] connect_idx  Index for entity->group graph (size = \ref n_elt + 1)
- * \param [out] ln_to_gn     Global ids (size = \ref connect_idx[\ref n_elt])
- *
- * \return  n_elt  Number of elements
- *
- */
 
 int
 PDM_part_extension_group_get
@@ -7376,12 +7432,12 @@ PDM_part_extension_group_get
  int                       i_domain,
  int                       i_part,
  PDM_mesh_entities_t       mesh_entity,
- int                     **connect,
- int                     **connect_idx,
- PDM_g_num_t             **ln_to_gn
+ int                     **group_entity_idx,
+ int                     **group_entity,
+ PDM_g_num_t             **group_entity_ln_to_gn
 )
 {
-  int n_entity = -1;
+  int n_group = -1;
   int shift_part = part_ext->n_part_idx[i_domain];
   switch(mesh_entity)
   {
@@ -7394,10 +7450,10 @@ PDM_part_extension_group_get
     case PDM_MESH_ENTITY_FACE:
     {
       int n_face_group = part_ext->parts[i_domain][i_part].n_face_group;
-      n_entity     = n_face_group;
-      *connect_idx = part_ext->border_face_group_idx[shift_part+i_part];
-      *connect     = part_ext->border_face_group    [shift_part+i_part];
-      *ln_to_gn    = part_ext->border_face_group_ln_to_gn [shift_part+i_part];
+      n_group                = n_face_group;
+      *group_entity_idx      = part_ext->border_face_group_idx     [shift_part+i_part];
+      *group_entity          = part_ext->border_face_group         [shift_part+i_part];
+      *group_entity_ln_to_gn = part_ext->border_face_group_ln_to_gn[shift_part+i_part];
     }
     break;
 
@@ -7407,7 +7463,7 @@ PDM_part_extension_group_get
     }
     break;
 
-    case PDM_MESH_ENTITY_VERTEX:
+    case PDM_MESH_ENTITY_VTX:
     {
       abort();
     }
@@ -7419,7 +7475,7 @@ PDM_part_extension_group_get
 
   }
 
-  return n_entity;
+  return n_group;
 }
 
 
@@ -7437,7 +7493,7 @@ PDM_part_extension_group_get
  */
 
 int
-PDM_part_extension_coord_get
+PDM_part_extension_vtx_coord_get
 (
  PDM_part_extension_t     *part_ext,
  int                       i_domain,
@@ -7615,6 +7671,260 @@ PDM_part_to_part_create_from_extension
   *ptp = _ptp;
 }
 
+
+
+
+/**
+ *
+ * \brief Set connectivity
+ *
+ * \param [in]  part_ext           \p PDM_part_extension_t structure instance
+ * \param [in]  i_domain           Domain identifier
+ * \param [in]  i_part             Partition identifier
+ * \param [in]  connectivity_type  Type of connectivity
+ * \param [in]  connect_idx        Index for connectivity (can be \p NULL for \p PDM_CONNECTIVITY_TYPE_EDGE_VTX)
+ * \param [in]  connect            Connectivity
+ *
+ */
+
+void
+PDM_part_extension_connectivity_set
+(
+ PDM_part_extension_t    *part_ext,
+ int                      i_domain,
+ int                      i_part,
+ PDM_connectivity_type_t  connectivity_type,
+ int                     *connect_idx,
+ int                     *connect
+ )
+{
+  part_ext->has_connectivity[connectivity_type] = PDM_TRUE;
+
+  switch (connectivity_type) {
+    case PDM_CONNECTIVITY_TYPE_EDGE_VTX: {
+      part_ext->parts[i_domain][i_part].edge_vtx = connect;
+      break;
+    }
+
+    case PDM_CONNECTIVITY_TYPE_FACE_VTX: {
+      part_ext->parts[i_domain][i_part].face_vtx_idx = connect_idx;
+      part_ext->parts[i_domain][i_part].face_vtx     = connect;
+      break;
+    }
+
+    case PDM_CONNECTIVITY_TYPE_FACE_EDGE: {
+      part_ext->parts[i_domain][i_part].face_edge_idx = connect_idx;
+      part_ext->parts[i_domain][i_part].face_edge     = connect;
+      break;
+    }
+
+    case PDM_CONNECTIVITY_TYPE_CELL_FACE: {
+      part_ext->parts[i_domain][i_part].cell_face_idx = connect_idx;
+      part_ext->parts[i_domain][i_part].cell_face     = connect;
+      break;
+    }
+
+    case PDM_CONNECTIVITY_TYPE_FACE_CELL: {
+      part_ext->parts[i_domain][i_part].face_cell = connect;
+      break;
+    }
+
+    default: {
+      PDM_error(__FILE__, __LINE__, 0, "Connectivity type %d not yet supported\n",
+                connectivity_type);
+      break;
+    }
+
+  }
+}
+
+
+/**
+ *
+ * \brief Set global ids
+ *
+ * \param [in]  part_ext     \p PDM_part_extension_t structure instance
+ * \param [in]  i_domain     Domain identifier
+ * \param [in]  i_part       Partition identifier
+ * \param [in]  mesh_entity  Type of mesh entity
+ * \param [in]  n_entity     Local number of entities
+ * \param [in]  ln_to_gn     Global ids (size = \p n_entity)
+ *
+ */
+
+void
+PDM_part_extension_ln_to_gn_set
+(
+ PDM_part_extension_t     *part_ext,
+ int                       i_domain,
+ int                       i_part,
+ PDM_mesh_entities_t       mesh_entity,
+ int                       n_entity,
+ PDM_g_num_t              *ln_to_gn
+)
+{
+  switch (mesh_entity) {
+    case PDM_MESH_ENTITY_VTX: {
+      part_ext->parts[i_domain][i_part].n_vtx         = n_entity;
+      part_ext->parts[i_domain][i_part].vtx_ln_to_gn  = ln_to_gn;
+      break;
+    }
+
+    case PDM_MESH_ENTITY_EDGE: {
+      part_ext->parts[i_domain][i_part].n_edge        = n_entity;
+      part_ext->parts[i_domain][i_part].edge_ln_to_gn = ln_to_gn;
+      break;
+    }
+
+    case PDM_MESH_ENTITY_FACE: {
+      part_ext->parts[i_domain][i_part].n_face        = n_entity;
+      part_ext->parts[i_domain][i_part].face_ln_to_gn = ln_to_gn;
+      break;
+    }
+
+    case PDM_MESH_ENTITY_CELL: {
+      part_ext->parts[i_domain][i_part].n_cell        = n_entity;
+      part_ext->parts[i_domain][i_part].cell_ln_to_gn = ln_to_gn;
+      break;
+    }
+
+    default: {
+      PDM_error(__FILE__, __LINE__, 0, "Invalid entity type %d\n", mesh_entity);
+      break;
+    }
+
+  }
+}
+
+
+/**
+ *
+ * \brief Set vertex coordinates
+ *
+ * \param [in]  part_ext     \p PDM_part_extension_t structure instance
+ * \param [in]  i_domain     Domain identifier
+ * \param [in]  i_part       Partition identifier
+ * \param [in]  vtx_coord    Vertex coordinates (size = 3 * *n_vtx*)
+ *
+ */
+
+void
+PDM_part_extension_vtx_coord_set
+(
+ PDM_part_extension_t     *part_ext,
+ int                       i_domain,
+ int                       i_part,
+ double                   *vtx_coord
+)
+{
+  part_ext->parts[i_domain][i_part].vtx = vtx_coord;
+}
+
+
+/**
+ *
+ * \brief Set the connection graph between partitions for the requested entity type
+ *
+ * \param [in]  multipart             \p PDM_part_extension_t structure instance
+ * \param [in]  i_domain              Domain identifier
+ * \param [in]  i_part                Partition identifier
+ * \param [in]  entity_type           Type of mesh entity
+ * \param [in]  part_bound_proc_idx   Partitioning boundary entities index from process (size = *n_rank* + 1)
+ * \param [in]  part_bound_part_idx   Partitioning boundary entities index from partition (size = *n_total_part* + 1)
+ * \param [in]  part_bound            Partitioning boundary entities (size = 4 * *n_entity_part_bound* = \p part_bound_proc_idx[*n_rank])
+ */
+
+void
+PDM_part_extension_part_bound_graph_set
+(
+ PDM_part_extension_t *part_ext,
+ int                   i_domain,
+ int                   i_part,
+ PDM_mesh_entities_t   entity_type,
+ int                  *part_bound_proc_idx,
+ int                  *part_bound_part_idx,
+ int                  *part_bound
+)
+{
+  switch (entity_type) {
+
+    case PDM_MESH_ENTITY_VTX: {
+      part_ext->parts[i_domain][i_part].vtx_part_bound_proc_idx  = part_bound_proc_idx;
+      part_ext->parts[i_domain][i_part].vtx_part_bound_part_idx  = part_bound_part_idx;
+      part_ext->parts[i_domain][i_part].vtx_part_bound           = part_bound;
+      break;
+    }
+
+    case PDM_MESH_ENTITY_FACE: {
+      part_ext->parts[i_domain][i_part].face_part_bound_proc_idx = part_bound_proc_idx;
+      part_ext->parts[i_domain][i_part].face_part_bound_part_idx = part_bound_part_idx;
+      part_ext->parts[i_domain][i_part].face_part_bound          = part_bound;
+      break;
+    }
+
+    default: {
+      PDM_error(__FILE__, __LINE__, 0, "Entity type %d not yet supported\n",
+                entity_type);
+      break;
+    }
+
+  }
+}
+
+
+/**
+ *
+ * \brief Set group description
+ *
+ * \param [in]  part_ext               \p PDM_part_extension_t structure instance
+ * \param [in]  i_domain               Domain identifier
+ * \param [in]  i_part                 Partition identifier
+ * \param [in]  entity_type            Type of mesh entity
+ * \param [in]  n_group                Number of groups
+ * \param [in]  group_entity_idx       Index for group->entity connectivity (size = \p n_group)
+ * \param [in]  group_entity           Group->entity connectivity (1-based local ids, size = \p group_entity_idx[\p n_group])
+ * \param [in]  group_entity_ln_to_gn  Group->entity connectivity (group-specific global ids, size = \p group_entity_idx[\p n_group])
+ *
+ */
+
+void
+PDM_part_extension_group_set
+(
+ PDM_part_extension_t     *part_ext,
+ int                       i_domain,
+ int                       i_part,
+ PDM_mesh_entities_t       entity_type,
+ int                       n_group,
+ int                      *group_entity_idx,
+ int                      *group_entity,
+ PDM_g_num_t              *group_entity_ln_to_gn
+)
+{
+  switch (entity_type) {
+
+    case PDM_MESH_ENTITY_EDGE: {
+      part_ext->parts[i_domain][i_part].n_edge_group        = n_group;
+      part_ext->parts[i_domain][i_part].edge_bound_idx      = group_entity_idx;
+      part_ext->parts[i_domain][i_part].edge_bound          = group_entity;
+      part_ext->parts[i_domain][i_part].edge_bound_ln_to_gn = group_entity_ln_to_gn;
+      break;
+    }
+
+    case PDM_MESH_ENTITY_FACE: {
+      part_ext->parts[i_domain][i_part].n_face_group        = n_group;
+      part_ext->parts[i_domain][i_part].face_bound_idx      = group_entity_idx;
+      part_ext->parts[i_domain][i_part].face_bound          = group_entity;
+      part_ext->parts[i_domain][i_part].face_bound_ln_to_gn = group_entity_ln_to_gn;
+      break;
+    }
+
+    default: {
+      PDM_error(__FILE__, __LINE__, 0, "Entity type %d not yet supported\n",
+                entity_type);
+      break;
+    }
+  }
+}
 
 #ifdef __cplusplus
 }
