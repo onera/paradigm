@@ -617,29 +617,29 @@ contains
 
   ! Set connecting data between all the zones
 
-  subroutine PDM_multipart_register_joins_ (multipart, &
-                                            n_total_joins, &
-                                            join_to_opposite)
+  ! subroutine PDM_multipart_register_joins_ (multipart, &
+  !                                           n_total_joins, &
+  !                                           join_to_opposite)
 
-    use pdm
-    use iso_c_binding
-    implicit none
+  !   use pdm
+  !   use iso_c_binding
+  !   implicit none
 
-    type(c_ptr),               value   :: multipart                       ! Pointer to \ref PDM_multipart_t object
-    integer(c_int),            value   :: n_total_joins                   ! Total number of interfaces
-    integer(kind=PDM_l_num_s), pointer :: join_to_opposite(:)             ! For each global join id, give the global id of the opposite join (size = n_total_joins)
-    type(c_ptr)                        :: c_join_to_opposite
+  !   type(c_ptr),               value   :: multipart                       ! Pointer to \ref PDM_multipart_t object
+  !   integer(c_int),            value   :: n_total_joins                   ! Total number of interfaces
+  !   integer(kind=PDM_l_num_s), pointer :: join_to_opposite(:)             ! For each global join id, give the global id of the opposite join (size = n_total_joins)
+  !   type(c_ptr)                        :: c_join_to_opposite
 
-    c_join_to_opposite = C_NULL_PTR
-    if (associated(join_to_opposite)) then
-      c_join_to_opposite = c_loc(join_to_opposite)
-    endif  
+  !   c_join_to_opposite = C_NULL_PTR
+  !   if (associated(join_to_opposite)) then
+  !     c_join_to_opposite = c_loc(join_to_opposite)
+  !   endif  
 
-    call PDM_multipart_register_joins_c(multipart, &
-                                        n_total_joins, &
-                                        c_join_to_opposite)
+  !   call PDM_multipart_register_joins_c(multipart, &
+  !                                       n_total_joins, &
+  !                                       c_join_to_opposite)
 
-  end subroutine PDM_multipart_register_joins_
+  ! end subroutine PDM_multipart_register_joins_
 
   ! Set the reordering methods to be used after partitioning
 
@@ -1327,9 +1327,9 @@ contains
     type(c_ptr)                        :: c_group_entity_idx
     type(c_ptr)                        :: c_group_entity_ln_to_gn
 
-    c_bound_idx      = C_NULL_PTR
-    c_bound          = C_NULL_PTR
-    c_bound_ln_to_gn = C_NULL_PTR
+    c_group_entity          = C_NULL_PTR
+    c_group_entity_idx      = C_NULL_PTR
+    c_group_entity_ln_to_gn = C_NULL_PTR
 
     call PDM_multipart_group_get_c(multipart, &
                                    i_domain, &

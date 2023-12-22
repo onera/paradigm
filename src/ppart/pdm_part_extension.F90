@@ -712,14 +712,6 @@ subroutine PDM_part_extension_group_get (part_ext,         &
     end function PDM_part_extension_group_get_c
   end interface
 
-  n_elt =  PDM_part_extension_group_get_c (part_ext,              &
-                                           i_domain,              &
-                                           i_part,                &
-                                           PDM_MESH_ENTITY_FACE,  &
-                                           c_elt_group,           &
-                                           c_elt_group_idx,       &
-                                           c_ln_to_gn)
-
   c_group_entity          = C_NULL_PTR
   c_group_entity_idx      = C_NULL_PTR
   c_group_entity_ln_to_gn = C_NULL_PTR

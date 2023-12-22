@@ -560,6 +560,7 @@ module pdm_generate_mesh
     type(c_ptr),    pointer :: fptr(:)
     integer(c_int), pointer :: face_edge_idx(:)
     integer                 :: i_part
+    real(c_double)          :: random_factor
 
     c_comm = PDM_MPI_Comm_f2c(comm)
 
