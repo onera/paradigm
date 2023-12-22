@@ -142,6 +142,7 @@ int main(int argc, char *argv[])
   double      zero_y           = -length/2;
   double      zero_z           = -length/2;
   int         n_part           = 2;
+  int         n_part_bnd       = 1;
   double      min_dist         = pow(length/20, 2);
   int         n_layer          = 4;
   int        *n_leaf_per_layer = malloc (n_layer*sizeof(int));
@@ -256,29 +257,29 @@ int main(int argc, char *argv[])
 
   free(dcell_part);
 
-  PDM_g_num_t **gnum_bnd_face    = malloc (sizeof(PDM_g_num_t *) * n_part);
-  int         **lnum_bnd_face    = malloc (sizeof(int         *) * n_part);
-  int         **bnd_face_vtx_idx = malloc (sizeof(int         *) * n_part);
-  int         **bnd_face_vtx     = malloc (sizeof(int         *) * n_part);
-  int          *n_bnd_face       = malloc (sizeof(int          ) * n_part);
+  int **selected_face = malloc (sizeof(int *) * n_part);
 
-  PDM_g_num_t **gnum_bnd_vtx = malloc (sizeof(PDM_g_num_t *) * (n_part+1));
-  int         **lnum_bnd_vtx = malloc (sizeof(int         *) *  n_part   );
-  double      **bnd_vtx      = malloc (sizeof(double      *) * (n_part+1));
-  double      **data_bnd_vtx = malloc (sizeof(double      *) * (n_part+1));
-  int          *n_bnd_vtx    = malloc (sizeof(int          ) * (n_part+1));
+  PDM_g_num_t **gnum_bnd_face    = malloc (sizeof(PDM_g_num_t *) * n_part_bnd);
+  int         **bnd_face_vtx_idx = malloc (sizeof(int         *) * n_part_bnd);
+  int         **bnd_face_vtx     = malloc (sizeof(int         *) * n_part_bnd);
+  int          *n_bnd_face       = malloc (sizeof(int          ) * n_part_bnd);
 
-  PDM_g_num_t **gnum_all_vtx = malloc (sizeof(PDM_g_num_t *) * n_part);
-  double      **all_vtx      = malloc (sizeof(double      *) * n_part);
-  int          *n_all_vtx    = malloc (sizeof(int          ) * n_part);
+  PDM_g_num_t **gnum_bnd_vtx = malloc (sizeof(PDM_g_num_t *) * (n_part_bnd+1));
+  double      **bnd_vtx      = malloc (sizeof(double      *) * (n_part_bnd+1));
+  double      **data_bnd_vtx = malloc (sizeof(double      *) * (n_part_bnd+1));
+  int          *n_bnd_vtx    = malloc (sizeof(int          ) * (n_part_bnd+1));
 
-  PDM_g_num_t **bnd_to_all_vtx     = malloc (sizeof(PDM_g_num_t *) * n_part);
-  int         **bnd_to_all_vtx_idx = malloc (sizeof(int         *) * n_part);
+  PDM_g_num_t **gnum_int_vtx = malloc (sizeof(PDM_g_num_t *) * n_part);
+  double      **int_vtx      = malloc (sizeof(double      *) * n_part);
+  int          *n_int_vtx    = malloc (sizeof(int          ) * n_part);
+
+  PDM_g_num_t **bnd_to_all_vtx     = malloc (sizeof(PDM_g_num_t *) * n_part_bnd);
+  int         **bnd_to_all_vtx_idx = malloc (sizeof(int         *) * n_part_bnd);
 
   PDM_extract_part_t* extrp = PDM_extract_part_create(2,
                                                       n_part,
-                                                      n_part,
-                                                      PDM_EXTRACT_PART_KIND_LOCAL,
+                                                      n_part_bnd,
+                                                      PDM_EXTRACT_PART_KIND_REEQUILIBRATE,
                                                       PDM_SPLIT_DUAL_WITH_HILBERT,
                                                       PDM_TRUE,
                                                       PDM_OWNERSHIP_KEEP,
@@ -364,22 +365,11 @@ int main(int argc, char *argv[])
                              NULL);
     }
 
-    n_all_vtx   [i_part] = n_vtx;
-    gnum_all_vtx[i_part] = malloc (sizeof(PDM_g_num_t)     * n_all_vtx[i_part]);
-    all_vtx     [i_part] = malloc (sizeof(double     ) * 3 * n_all_vtx[i_part]);
-
-    for (int i_vtx = 0; i_vtx < n_all_vtx[i_part]; i_vtx++) {
-      gnum_all_vtx[i_part][  i_vtx] = vtx_ln_to_gn[i_vtx];
-      all_vtx     [i_part][3*i_vtx    ] = vtx[3*i_vtx    ];
-      all_vtx     [i_part][3*i_vtx + 1] = vtx[3*i_vtx + 1];
-      all_vtx     [i_part][3*i_vtx + 2] = vtx[3*i_vtx + 2];
-    }
-
-    lnum_bnd_face[i_part] = malloc (sizeof(int) * sface_group);
+    selected_face[i_part] = malloc (sizeof(int) * sface_group);
 
     for (int i_group = 0; i_group < nface_group; i_group++) {
       for (int i_face_group = face_group_idx[i_group]; i_face_group < face_group_idx[i_group+1]; i_face_group++) {
-        lnum_bnd_face[i_part][i_face_group] = face_group[i_face_group]-1;
+        selected_face[i_part][i_face_group] = face_group[i_face_group]-1;
       }
     }
 
@@ -405,13 +395,13 @@ int main(int argc, char *argv[])
     PDM_extract_part_selected_lnum_set(extrp,
                                        i_part,
                                        sface_group,
-                                       lnum_bnd_face[i_part]);
+                                       selected_face[i_part]);
 
   }
 
   PDM_extract_part_compute(extrp);
 
-  for (int i_part = 0; i_part < n_part; i_part++) {
+  for (int i_part = 0; i_part < n_part_bnd; i_part++) {
 
     /*
      * Get boundary faces and vertices
@@ -438,12 +428,6 @@ int main(int argc, char *argv[])
                                                       i_part,
                                                       PDM_MESH_ENTITY_VERTEX);
 
-    PDM_extract_part_parent_lnum_get(extrp,
-                                     i_part,
-                                     PDM_MESH_ENTITY_VERTEX,
-                                    &lnum_bnd_vtx[i_part],
-                                     PDM_OWNERSHIP_USER);
-
     PDM_extract_part_ln_to_gn_get(extrp,
                                   i_part,
                                   PDM_MESH_ENTITY_VERTEX,
@@ -455,12 +439,16 @@ int main(int argc, char *argv[])
                                   &bnd_vtx[i_part],
                                    PDM_OWNERSHIP_USER);
 
-    bnd_to_all_vtx    [i_part] = malloc (sizeof(PDM_g_num_t) * n_bnd_vtx[i_part]);
+    PDM_extract_part_parent_ln_to_gn_get(extrp,
+                                         i_part,
+                                         PDM_MESH_ENTITY_VERTEX,
+                                        &bnd_to_all_vtx[i_part],
+                                         PDM_OWNERSHIP_USER);
+
     bnd_to_all_vtx_idx[i_part] = PDM_array_new_idx_from_const_stride_int(1, n_bnd_vtx[i_part]);
     data_bnd_vtx      [i_part] = malloc (sizeof(double) * n_var * n_bnd_vtx[i_part]);
 
     for (int i_vtx = 0; i_vtx < n_bnd_vtx[i_part]; i_vtx++) {
-      bnd_to_all_vtx[i_part][i_vtx] = gnum_all_vtx[i_part][lnum_bnd_vtx[i_part][i_vtx]];
       for (int i_var = 0; i_var < n_var; i_var++) {
         data_bnd_vtx[i_part][n_var*i_vtx+i_var] = 0.0;
       }
@@ -470,46 +458,52 @@ int main(int argc, char *argv[])
 
   }
 
-  PDM_extract_part_free(extrp);
+  for (int i_part = 0; i_part < n_part; i_part++) {
+    free(selected_face[i_part]);
+  }
 
-  PDM_part_to_part_t *ptp = PDM_part_to_part_create((const PDM_g_num_t **) gnum_bnd_vtx,
-                                                    (const int          *) n_bnd_vtx,
-                                                                           n_part,
-                                                    (const PDM_g_num_t **) gnum_all_vtx,
-                                                    (const int          *) n_all_vtx,
-                                                                           n_part,
-                                                    (const int         **) bnd_to_all_vtx_idx,
-                                                    (const PDM_g_num_t **) bnd_to_all_vtx,
-                                                                           comm);
+  free(selected_face);
+
+  PDM_part_to_part_t *ptp_vtx = NULL;
+  PDM_extract_part_part_to_part_get(extrp,
+                                    PDM_MESH_ENTITY_VERTEX,
+                                   &ptp_vtx,
+                                    PDM_OWNERSHIP_USER);
+
+  PDM_extract_part_free(extrp);
 
   int  *n_unref_vtx = NULL;
   int **unref_vtx   = NULL;
 
-  PDM_part_to_part_unref_lnum2_get(ptp,
+  PDM_part_to_part_unref_lnum2_get(ptp_vtx,
                                   &n_unref_vtx,
                                   &unref_vtx);
 
-  PDM_g_num_t **gnum_int_vtx          = malloc (sizeof(PDM_g_num_t *) * n_part);
-  int         **lnum_int_vtx          = malloc (sizeof(int         *) * n_part);
-  double      **int_vtx               = malloc (sizeof(double      *) * n_part);
-  int          *n_int_vtx             = malloc (sizeof(int          ) * n_part);
-  PDM_g_num_t **gnum_bnd_vtx_min_dist = malloc (sizeof(PDM_g_num_t *) * n_part);
-  double      **bnd_vtx_min_dist      = malloc (sizeof(double      *) * n_part);
-  int          *n_bnd_vtx_min_dist    = malloc (sizeof(int          ) * n_part);
-
   for (int i_part = 0; i_part < n_part; i_part++) {
 
-   /*
-    * Get interior vertices
-    */
+    int n_cell;
+    int n_face;
+    int n_face_part_bound;
+    int n_vtx;
+    int n_proc;
+    int n_total_part;
+    int scell_face;
+    int sface_vtx;
+    int sface_group;
+    int nface_group;
 
-    n_int_vtx[i_part] = n_unref_vtx[i_part];
-
-    lnum_int_vtx[i_part] = malloc (sizeof(int) * n_int_vtx[i_part]);
-
-    for (int i_vtx = 0; i_vtx < n_int_vtx[i_part]; i_vtx++) {
-      lnum_int_vtx[i_part][i_vtx] = unref_vtx[i_part][i_vtx]-1;
-    }
+    PDM_part_part_dim_get(ppart,
+                          i_part,
+                         &n_cell,
+                         &n_face,
+                         &n_face_part_bound,
+                         &n_vtx,
+                         &n_proc,
+                         &n_total_part,
+                         &scell_face,
+                         &sface_vtx,
+                         &sface_group,
+                         &nface_group);
 
     int         *cell_tag                 = NULL;
     int         *cell_face_idx            = NULL;
@@ -551,21 +545,22 @@ int main(int argc, char *argv[])
                          &face_group,
                          &face_group_ln_to_gn);
 
+   /*
+    * Get interior vertices
+    */
+
+    n_int_vtx[i_part] = n_unref_vtx[i_part];
+
     gnum_int_vtx[i_part] = malloc (sizeof(PDM_g_num_t)     * n_int_vtx[i_part]);
     int_vtx     [i_part] = malloc (sizeof(double     ) * 3 * n_int_vtx[i_part]);
 
     for (int i_vtx = 0; i_vtx < n_int_vtx[i_part]; i_vtx++) {
-      gnum_int_vtx[i_part][i_vtx] = vtx_ln_to_gn[lnum_int_vtx[i_part][i_vtx]];
-      int_vtx     [i_part][3*i_vtx    ] = vtx[3*lnum_int_vtx[i_part][i_vtx]    ];
-      int_vtx     [i_part][3*i_vtx + 1] = vtx[3*lnum_int_vtx[i_part][i_vtx] + 1];
-      int_vtx     [i_part][3*i_vtx + 2] = vtx[3*lnum_int_vtx[i_part][i_vtx] + 2];
+      gnum_int_vtx[i_part][  i_vtx    ] = vtx_ln_to_gn[unref_vtx[i_part][i_vtx]-1];
+      int_vtx     [i_part][3*i_vtx    ] = vtx[3*(unref_vtx[i_part][i_vtx]-1)    ];
+      int_vtx     [i_part][3*i_vtx + 1] = vtx[3*(unref_vtx[i_part][i_vtx]-1) + 1];
+      int_vtx     [i_part][3*i_vtx + 2] = vtx[3*(unref_vtx[i_part][i_vtx]-1) + 2];
     }
 
-  }
-
-  if (i_rank == 0) {
-    printf("-- Gnum interior vertices\n");
-    fflush(stdout);
   }
 
   _compute_gnum(n_part,
@@ -573,7 +568,6 @@ int main(int argc, char *argv[])
                 gnum_int_vtx,
                 comm);
 
-  PDM_part_to_part_free(ptp);
   PDM_dcube_gen_free(dcube);
 
   /*
@@ -588,7 +582,7 @@ int main(int argc, char *argv[])
   PDM_g_num_t _max_g_num = 0;
   PDM_g_num_t  max_g_num = 0;
 
-  for (int i_part = 0; i_part < n_part; i_part++) {
+  for (int i_part = 0; i_part < n_part_bnd; i_part++) {
     for (int i_vtx = 0; i_vtx < n_bnd_vtx[i_part]; i_vtx++) {
       _max_g_num = PDM_MAX(_max_g_num, gnum_bnd_vtx[i_part][i_vtx]);
     }
@@ -621,7 +615,7 @@ int main(int argc, char *argv[])
                                                        0,
                                                        comm);
 
-    for (int i_part = 0; i_part < n_part; i_part++) {
+    for (int i_part = 0; i_part < n_part_bnd; i_part++) {
 
       PDM_para_octree_point_cloud_set(octree,
                                       i_part,
@@ -686,7 +680,7 @@ int main(int argc, char *argv[])
                                                                                      1,
                                                              (const PDM_g_num_t **)  gnum_bnd_vtx,
                                                              (const int          *)  n_bnd_vtx,
-                                                                                     n_part,
+                                                                                     n_part_bnd,
                                                              (const int         **) &part_octree_to_bnd_vtx_idx,
                                                              (const PDM_g_num_t **) &pts_gnum_octree,
                                                                                      comm);
@@ -755,22 +749,22 @@ int main(int argc, char *argv[])
    * Extend boundary parts by layers
    */
 
-  n_bnd_vtx[n_part] = layer_vtx_idx[n_layer];
+  n_bnd_vtx[n_part_bnd] = layer_vtx_idx[n_layer];
 
-  gnum_bnd_vtx[n_part] = malloc (sizeof(PDM_g_num_t)         * n_bnd_vtx[n_part]);
-  bnd_vtx     [n_part] = malloc (sizeof(double     ) * 3     * n_bnd_vtx[n_part]);
-  data_bnd_vtx[n_part] = malloc (sizeof(double     ) * n_var * n_bnd_vtx[n_part]);
+  gnum_bnd_vtx[n_part_bnd] = malloc (sizeof(PDM_g_num_t)         * n_bnd_vtx[n_part_bnd]);
+  bnd_vtx     [n_part_bnd] = malloc (sizeof(double     ) * 3     * n_bnd_vtx[n_part_bnd]);
+  data_bnd_vtx[n_part_bnd] = malloc (sizeof(double     ) * n_var * n_bnd_vtx[n_part_bnd]);
 
   int idx_write = 0;
 
   for (int i_layer = 0; i_layer < n_layer; i_layer++) {
     for (int i_vtx = 0; i_vtx < n_layer_vtx[i_layer]; i_vtx++) {
-      gnum_bnd_vtx[n_part][  idx_write    ] = gnum_layer_vtx[i_layer][  i_vtx + distri_layer_vtx[i_layer][i_rank]];
-      bnd_vtx     [n_part][3*idx_write    ] = layer_vtx     [i_layer][3*i_vtx                                    ];
-      bnd_vtx     [n_part][3*idx_write + 1] = layer_vtx     [i_layer][3*i_vtx + 1                                ];
-      bnd_vtx     [n_part][3*idx_write + 2] = layer_vtx     [i_layer][3*i_vtx + 2                                ];
+      gnum_bnd_vtx[n_part_bnd][  idx_write    ] = gnum_layer_vtx[i_layer][  i_vtx + distri_layer_vtx[i_layer][i_rank]];
+      bnd_vtx     [n_part_bnd][3*idx_write    ] = layer_vtx     [i_layer][3*i_vtx                                    ];
+      bnd_vtx     [n_part_bnd][3*idx_write + 1] = layer_vtx     [i_layer][3*i_vtx + 1                                ];
+      bnd_vtx     [n_part_bnd][3*idx_write + 2] = layer_vtx     [i_layer][3*i_vtx + 2                                ];
       for (int i_var = 0; i_var < n_var; i_var++){
-        data_bnd_vtx[n_part][n_var*idx_write + i_var] = data_layer_vtx[i_layer][n_var*i_vtx + i_var];
+        data_bnd_vtx[n_part_bnd][n_var*idx_write + i_var] = data_layer_vtx[i_layer][n_var*i_vtx + i_var];
       }
       idx_write++;
     }
@@ -797,13 +791,13 @@ int main(int argc, char *argv[])
                                                           PDM_OWNERSHIP_KEEP);
 
   PDM_dist_cloud_surf_surf_mesh_global_data_set(dcs,
-                                                n_part);
+                                                n_part_bnd);
 
   PDM_dist_cloud_surf_n_part_cloud_set(dcs,
                                        0,
                                        n_part);
 
-  for (int i_part = 0; i_part < n_part; i_part++) {
+  for (int i_part = 0; i_part < n_part_bnd; i_part++) {
 
     PDM_dist_cloud_surf_surf_mesh_part_set(dcs,
                                            i_part,
@@ -815,6 +809,10 @@ int main(int argc, char *argv[])
                                            bnd_vtx         [i_part],
                                            gnum_bnd_vtx    [i_part]);
 
+  }
+
+  for (int i_part = 0; i_part < n_part; i_part++) {
+
     PDM_dist_cloud_surf_cloud_set(dcs,
                                   0,
                                   i_part,
@@ -825,6 +823,10 @@ int main(int argc, char *argv[])
   }
 
   PDM_dist_cloud_surf_compute(dcs);
+
+  PDM_g_num_t **gnum_bnd_vtx_min_dist = malloc (sizeof(PDM_g_num_t *) * n_part);
+  double      **bnd_vtx_min_dist      = malloc (sizeof(double      *) * n_part);
+  int          *n_bnd_vtx_min_dist    = malloc (sizeof(int          ) * n_part);
 
   double _max_dist = 0.0;
   double  max_dist = 0.0;
@@ -935,7 +937,7 @@ int main(int argc, char *argv[])
           for (int j_vtx = distri_layer_vtx[i_layer][j_rank]; j_vtx < distri_layer_vtx[i_layer][j_rank+1]; j_vtx++) {
             int_to_bnd_vtx        [i_part][  idx_write2    ] = gnum_layer_vtx[i_layer][j_vtx];
             int_to_bnd_vtx_triplet[i_part][3*idx_write2    ] = j_rank;
-            int_to_bnd_vtx_triplet[i_part][3*idx_write2 + 1] = n_part;
+            int_to_bnd_vtx_triplet[i_part][3*idx_write2 + 1] = n_part_bnd;
             int_to_bnd_vtx_triplet[i_part][3*idx_write2 + 2] = distri_layer_vtx_transposed[j_rank][i_layer] + j_vtx - distri_layer_vtx[i_layer][j_rank];
             idx_write2++;
           }
@@ -967,16 +969,20 @@ int main(int argc, char *argv[])
                                                                  PDM_OWNERSHIP_KEEP);
 
   PDM_closest_points_n_part_cloud_set(clsp_min_dist,
-                                      n_part,
+                                      n_part_bnd,
                                       n_part);
 
-  for (int i_part = 0; i_part < n_part; i_part++) {
+  for (int i_part = 0; i_part < n_part_bnd; i_part++) {
 
     PDM_closest_points_src_cloud_set(clsp_min_dist,
                                      i_part,
                                      n_bnd_vtx   [i_part],
                                      bnd_vtx     [i_part],
                                      gnum_bnd_vtx[i_part]);
+
+  }
+
+  for (int i_part = 0; i_part < n_part; i_part++) {
 
     PDM_closest_points_tgt_cloud_set(clsp_min_dist,
                                      i_part,
@@ -988,10 +994,19 @@ int main(int argc, char *argv[])
 
   PDM_closest_points_compute(clsp_min_dist);
 
-  PDM_gnum_location_t* gnum_loc = PDM_gnum_location_create(n_part,
+  PDM_gnum_location_t* gnum_loc = PDM_gnum_location_create(n_part_bnd,
                                                            n_part,
                                                            comm,
                                                            PDM_OWNERSHIP_KEEP);
+
+  for (int i_part = 0; i_part < n_part_bnd; i_part++) {
+
+    PDM_gnum_location_elements_set(gnum_loc,
+                                   i_part,
+                                   n_bnd_vtx   [i_part],
+                                   gnum_bnd_vtx[i_part]);
+
+  }
 
   for (int i_part = 0; i_part < n_part; i_part++) {
 
@@ -1002,11 +1017,6 @@ int main(int argc, char *argv[])
                            i_part,
                           &closest_src_gnum,
                           &closest_src_dist);
-
-    PDM_gnum_location_elements_set(gnum_loc,
-                                   i_part,
-                                   n_bnd_vtx   [i_part],
-                                   gnum_bnd_vtx[i_part]);
 
     PDM_gnum_location_requested_elements_set(gnum_loc,
                                              i_part,
@@ -1320,7 +1330,7 @@ int main(int argc, char *argv[])
                                                                      1,
                                              (const PDM_g_num_t **)  gnum_bnd_vtx,
                                              (const int          *)  n_bnd_vtx,
-                                                                     n_part+1,
+                                                                     n_part_bnd+1,
                                              (const int         **) &red_blk_int_to_bnd_vtx_idx,
                                              (const PDM_g_num_t **) &red_blk_int_to_bnd_vtx,
                                                                      comm);
@@ -1335,7 +1345,7 @@ int main(int argc, char *argv[])
                                                                (const int          *) &blk_n_int_vtx,
                                                                                        1,
                                                                (const int          *)  n_bnd_vtx,
-                                                                                       n_part+1,
+                                                                                       n_part_bnd+1,
                                                                (const int         **) &red_blk_int_to_bnd_vtx_idx,
                                                                                        NULL,
                                                                (const int         **) &red_blk_int_to_bnd_vtx_triplet,
@@ -1426,12 +1436,12 @@ int main(int argc, char *argv[])
   dx[1] = 0.0;
   dx[2] = 0.0;
 
-  for (int i_part = 0; i_part < n_part; i_part++) {
+  for (int i_part = 0; i_part < n_part_bnd; i_part++) {
     for (int i_vtx = 0; i_vtx < n_bnd_vtx[i_part]; i_vtx++) {
       m_vtx++;
-      dx[0] = dx[0] + all_vtx[i_part][3*lnum_bnd_vtx[i_part][i_vtx]    ];
-      dx[1] = dx[1] + all_vtx[i_part][3*lnum_bnd_vtx[i_part][i_vtx] + 1];
-      dx[2] = dx[2] + all_vtx[i_part][3*lnum_bnd_vtx[i_part][i_vtx] + 2];
+      dx[0] = dx[0] + bnd_vtx[i_part][3*i_vtx   ];
+      dx[1] = dx[1] + bnd_vtx[i_part][3*i_vtx+ 1];
+      dx[2] = dx[2] + bnd_vtx[i_part][3*i_vtx+ 2];
     }
   }
 
@@ -1442,11 +1452,11 @@ int main(int argc, char *argv[])
   dx[1] = dr[1]/_m_vtx;
   dx[2] = dr[2]/_m_vtx;
 
-  for (int i_part = 0; i_part < n_part; i_part++) {
+  for (int i_part = 0; i_part < n_part_bnd; i_part++) {
     for (int i_vtx = 0; i_vtx < n_bnd_vtx[i_part]; i_vtx++) {
-      dr[0] = dx[0] - all_vtx[i_part][3*lnum_bnd_vtx[i_part][i_vtx]    ];
-      dr[1] = dx[1] - all_vtx[i_part][3*lnum_bnd_vtx[i_part][i_vtx] + 1];
-      dr[2] = dx[2] - all_vtx[i_part][3*lnum_bnd_vtx[i_part][i_vtx] + 2];
+      dr[0] = dx[0] - bnd_vtx[i_part][3*i_vtx   ];
+      dr[1] = dx[1] - bnd_vtx[i_part][3*i_vtx+ 1];
+      dr[2] = dx[2] - bnd_vtx[i_part][3*i_vtx+ 2];
       l1 = PDM_MAX(l1, pow(dr[0],2)+pow(dr[1],2)+pow(dr[2],2));
     }
   }
@@ -1459,7 +1469,7 @@ int main(int argc, char *argv[])
   dx[2] = 0.0;
   aire  = 0;
 
-  for (int i_part = 0; i_part < n_part; i_part++) {
+  for (int i_part = 0; i_part < n_part_bnd; i_part++) {
     for (int i_vtx = 0; i_vtx < n_bnd_vtx[i_part]; i_vtx++) {
       aire  = aire  + data_bnd_vtx[i_part][n_var*i_vtx];
       dx[0] = dx[0] + data_bnd_vtx[i_part][n_var*i_vtx]*data_bnd_vtx[i_part][n_var*i_vtx + 1];
@@ -1475,7 +1485,7 @@ int main(int argc, char *argv[])
   dx[1] = dr[1]/_aire;
   dx[2] = dr[2]/_aire;
 
-  for (int i_part = 0; i_part < n_part; i_part++) {
+  for (int i_part = 0; i_part < n_part_bnd; i_part++) {
     for (int i_vtx = 0; i_vtx < n_bnd_vtx[i_part]; i_vtx++) {
       dr[0] = dx[0] - data_bnd_vtx[i_part][n_var*i_vtx + 1];
       dr[1] = dx[1] - data_bnd_vtx[i_part][n_var*i_vtx + 2];
@@ -1517,11 +1527,11 @@ int main(int argc, char *argv[])
    */
 
   if (i_rank == 0) {
-    printf("-- Get interior vertices coordinates\n");
+    printf("-- Get vertices new coordinates\n");
     fflush(stdout);
   }
 
-  double **int_vtx_from_blk = NULL;
+  double **tmp_int_vtx = NULL;
 
   PDM_part_to_block_reverse_exch(ptb,
                                  sizeof(double),
@@ -1530,23 +1540,44 @@ int main(int argc, char *argv[])
                                  NULL,
                      (void   *)  blk_int_vtx,
                                  NULL,
-                     (void ***) &int_vtx_from_blk);
+                     (void ***) &tmp_int_vtx);
 
   PDM_part_to_block_free(ptb);
 
-  for (int i_part = 0; i_part < n_part; i_part++) {
+  for (int i_part = 0; i_part < n_part_bnd; i_part++) {
 
     for (int i_vtx = 0; i_vtx < n_bnd_vtx[i_part]; i_vtx++) {
-      all_vtx[i_part][3*lnum_bnd_vtx[i_part][i_vtx]    ] = all_vtx[i_part][3*lnum_bnd_vtx[i_part][i_vtx]    ] + data_bnd_vtx[i_part][n_var*i_vtx + 1];
-      all_vtx[i_part][3*lnum_bnd_vtx[i_part][i_vtx] + 1] = all_vtx[i_part][3*lnum_bnd_vtx[i_part][i_vtx] + 1] + data_bnd_vtx[i_part][n_var*i_vtx + 2];
-      all_vtx[i_part][3*lnum_bnd_vtx[i_part][i_vtx] + 2] = all_vtx[i_part][3*lnum_bnd_vtx[i_part][i_vtx] + 2] + data_bnd_vtx[i_part][n_var*i_vtx + 3];
+      bnd_vtx[i_part][3*i_vtx   ] = bnd_vtx[i_part][3*i_vtx   ] + data_bnd_vtx[i_part][n_var*i_vtx + 1];
+      bnd_vtx[i_part][3*i_vtx+ 1] = bnd_vtx[i_part][3*i_vtx+ 1] + data_bnd_vtx[i_part][n_var*i_vtx + 2];
+      bnd_vtx[i_part][3*i_vtx+ 2] = bnd_vtx[i_part][3*i_vtx+ 2] + data_bnd_vtx[i_part][n_var*i_vtx + 3];
     }
 
-    for (int i_vtx = 0; i_vtx < n_int_vtx[i_part]; i_vtx++) {
-      all_vtx[i_part][3*lnum_int_vtx[i_part][i_vtx]    ] = int_vtx_from_blk[i_part][3*i_vtx    ];
-      all_vtx[i_part][3*lnum_int_vtx[i_part][i_vtx] + 1] = int_vtx_from_blk[i_part][3*i_vtx + 1];
-      all_vtx[i_part][3*lnum_int_vtx[i_part][i_vtx] + 2] = int_vtx_from_blk[i_part][3*i_vtx + 2];
-    }
+  }
+
+  double **tmp_bnd_vtx = NULL;
+
+  PDM_part_to_part_iexch(ptp_vtx,
+                         PDM_MPI_COMM_KIND_P2P,
+                         PDM_STRIDE_CST_INTERLACED,
+                         PDM_PART_TO_PART_DATA_DEF_ORDER_PART1,
+                         3,
+                         sizeof(double),
+                         NULL,
+         (const void **) bnd_vtx,
+                         NULL,
+             (void ***) &tmp_bnd_vtx,
+                        &request);
+
+  PDM_part_to_part_iexch_wait(ptp_vtx, request);
+
+  int  *n_ref_vtx = NULL;
+  int **ref_vtx   = NULL;
+
+  PDM_part_to_part_ref_lnum2_get(ptp_vtx,
+                                &n_ref_vtx,
+                                &ref_vtx);
+
+  for (int i_part = 0; i_part < n_part; i_part++) {
 
     int n_cell;
     int n_face;
@@ -1612,12 +1643,24 @@ int main(int argc, char *argv[])
                          &face_group,
                          &face_group_ln_to_gn);
 
+    for (int i_vtx = 0; i_vtx < n_ref_vtx[i_part]; i_vtx++) {
+      vtx[3*(ref_vtx[i_part][i_vtx]-1)    ] = tmp_bnd_vtx[i_part][3*i_vtx    ];
+      vtx[3*(ref_vtx[i_part][i_vtx]-1) + 1] = tmp_bnd_vtx[i_part][3*i_vtx + 1];
+      vtx[3*(ref_vtx[i_part][i_vtx]-1) + 2] = tmp_bnd_vtx[i_part][3*i_vtx + 2];
+    }
+
+    for (int i_vtx = 0; i_vtx < n_int_vtx[i_part]; i_vtx++) {
+      vtx[3*(unref_vtx[i_part][i_vtx]-1)    ] = tmp_int_vtx[i_part][3*i_vtx    ];
+      vtx[3*(unref_vtx[i_part][i_vtx]-1) + 1] = tmp_int_vtx[i_part][3*i_vtx + 1];
+      vtx[3*(unref_vtx[i_part][i_vtx]-1) + 2] = tmp_int_vtx[i_part][3*i_vtx + 2];
+    }
+
     if (show_mesh) {
       char filename[999];
       sprintf(filename, "end_face_vtx_coord_%3.3d_%3.3d.vtk", i_part, i_rank);
       PDM_vtk_write_polydata(filename,
                             n_vtx,
-                            all_vtx[i_part],
+                            vtx,
                             vtx_ln_to_gn,
                             n_face,
                             face_vtx_idx,
@@ -1626,8 +1669,13 @@ int main(int argc, char *argv[])
                             NULL);
     }
 
+    free(tmp_bnd_vtx[i_part]);
+    free(tmp_int_vtx[i_part]);
+
   }
 
+  free(tmp_bnd_vtx);
+  free(tmp_int_vtx);
   PDM_part_free(ppart);
 
   /*
@@ -1639,26 +1687,22 @@ int main(int argc, char *argv[])
     fflush(stdout);
   }
 
-  for (int i_part = 0; i_part < n_part+1; i_part++) {
+  for (int i_part = 0; i_part < n_part_bnd+1; i_part++) {
     free(gnum_bnd_vtx[i_part]);
     free(bnd_vtx     [i_part]);
     free(data_bnd_vtx[i_part]);
   }
+  for (int i_part = 0; i_part < n_part_bnd; i_part++) {
+    free(gnum_bnd_face     [i_part]);
+    free(bnd_face_vtx_idx  [i_part]);
+    free(bnd_face_vtx      [i_part]);
+    free(bnd_to_all_vtx    [i_part]);
+    free(bnd_to_all_vtx_idx[i_part]);
+  }
   for (int i_part = 0; i_part < n_part; i_part++) {
-    free(lnum_bnd_face         [i_part]);
-    free(gnum_bnd_face         [i_part]);
-    free(bnd_face_vtx_idx      [i_part]);
-    free(bnd_face_vtx          [i_part]);
-    free(lnum_bnd_vtx          [i_part]);
     free(gnum_int_vtx          [i_part]);
-    free(lnum_int_vtx          [i_part]);
     free(weight_int_vtx        [i_part]);
     free(int_vtx               [i_part]);
-    free(int_vtx_from_blk      [i_part]);
-    free(gnum_all_vtx          [i_part]);
-    free(all_vtx               [i_part]);
-    free(bnd_to_all_vtx        [i_part]);
-    free(bnd_to_all_vtx_idx    [i_part]);
     free(gnum_bnd_vtx_min_dist [i_part]);
     free(bnd_vtx_min_dist      [i_part]);
     free(n_int_to_bnd_vtx      [i_part]);
@@ -1677,25 +1721,18 @@ int main(int argc, char *argv[])
   for (int j_rank = 0; j_rank < n_rank; j_rank++) {
     free(distri_layer_vtx_transposed[j_rank]);
   }
-  free(lnum_bnd_face                 );
   free(gnum_bnd_face                 );
   free(bnd_face_vtx_idx              );
   free(bnd_face_vtx                  );
   free(n_bnd_face                    );
   free(gnum_bnd_vtx                  );
-  free(lnum_bnd_vtx                  );
   free(bnd_vtx                       );
   free(data_bnd_vtx                  );
   free(n_bnd_vtx                     );
   free(gnum_int_vtx                  );
-  free(lnum_int_vtx                  );
   free(weight_int_vtx                );
   free(int_vtx                       );
-  free(int_vtx_from_blk              );
   free(n_int_vtx                     );
-  free(gnum_all_vtx                  );
-  free(all_vtx                       );
-  free(n_all_vtx                     );
   free(bnd_to_all_vtx                );
   free(bnd_to_all_vtx_idx            );
   free(gnum_bnd_vtx_min_dist         );
@@ -1729,6 +1766,8 @@ int main(int argc, char *argv[])
   free(data_from_bnd_vtx             );
   free(coord_from_bnd_vtx            );
   free(n_leaf_per_layer              );
+
+  PDM_part_to_part_free(ptp_vtx);
 
   if (i_rank == 0) {
     PDM_printf ("-- End\n");
