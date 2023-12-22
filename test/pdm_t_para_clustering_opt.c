@@ -28,15 +28,8 @@
 #include "pdm_mpi.h"
 #include "pdm_config.h"
 
-
-/**
- *
- * \brief  Compute gnum
- *
- */
-
 static void
-_compute_gnum
+_compute_gnum_in_place
 (
   const int           n_part,
   const int          *n_entity,
@@ -69,8 +62,7 @@ _compute_gnum
 
 }
 
-static
-void
+static void
 _mean_data_per_leaf
 (
   const int      n_explicit_nodes,
@@ -551,10 +543,10 @@ int main(int argc, char *argv[])
 
   }
 
-  _compute_gnum(n_part,
-                n_int_vtx,
-                gnum_int_vtx,
-                comm);
+  _compute_gnum_in_place(n_part,
+                         n_int_vtx,
+                         gnum_int_vtx,
+                         comm);
 
   PDM_dcube_gen_free(dcube);
 
@@ -945,10 +937,10 @@ int main(int argc, char *argv[])
     fflush(stdout);
   }
 
-  _compute_gnum(n_part,
-                n_bnd_vtx_min_dist,
-                gnum_bnd_vtx_min_dist,
-                comm);
+  _compute_gnum_in_place(n_part,
+                         n_bnd_vtx_min_dist,
+                         gnum_bnd_vtx_min_dist,
+                         comm);
 
   PDM_closest_point_t* clsp_min_dist = PDM_closest_points_create(comm,
                                                                  n_vtx_min_dist,
