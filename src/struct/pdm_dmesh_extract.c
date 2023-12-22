@@ -198,7 +198,7 @@ _rebuild_group_nodal
     entity_type = PDM_MESH_ENTITY_EDGE;
     bound_type  = PDM_BOUND_TYPE_EDGE;
   } else if(geom_kind == PDM_GEOMETRY_KIND_CORNER) {
-    entity_type = PDM_MESH_ENTITY_VERTEX;
+    entity_type = PDM_MESH_ENTITY_VTX;
     bound_type  = PDM_BOUND_TYPE_VTX;
   }
 
