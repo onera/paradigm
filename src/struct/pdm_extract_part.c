@@ -3584,7 +3584,7 @@ _extract_part_and_reequilibrate_from_target
     entity_type = PDM_MESH_ENTITY_EDGE;
   } else {
     entity_g_num = extrp->vtx_ln_to_gn;
-    entity_type = PDM_MESH_ENTITY_VERTEX;
+    entity_type = PDM_MESH_ENTITY_VTX;
   }
 
   /* Not very bright... let the user be in charge of keeping track of the target g_num instead? */
