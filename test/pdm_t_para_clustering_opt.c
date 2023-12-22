@@ -270,9 +270,6 @@ int main(int argc, char *argv[])
   double      **int_vtx      = malloc (sizeof(double      *) * n_part);
   int          *n_int_vtx    = malloc (sizeof(int          ) * n_part);
 
-  PDM_g_num_t **bnd_to_all_vtx     = malloc (sizeof(PDM_g_num_t *) * n_part_bnd);
-  int         **bnd_to_all_vtx_idx = malloc (sizeof(int         *) * n_part_bnd);
-
   PDM_extract_part_t* extrp = PDM_extract_part_create(2,
                                                       n_part,
                                                       n_part_bnd,
@@ -436,14 +433,7 @@ int main(int argc, char *argv[])
                                   &bnd_vtx[i_part],
                                    PDM_OWNERSHIP_USER);
 
-    PDM_extract_part_parent_ln_to_gn_get(extrp,
-                                         i_part,
-                                         PDM_MESH_ENTITY_VERTEX,
-                                        &bnd_to_all_vtx[i_part],
-                                         PDM_OWNERSHIP_USER);
-
-    bnd_to_all_vtx_idx[i_part] = PDM_array_new_idx_from_const_stride_int(1, n_bnd_vtx[i_part]);
-    data_bnd_vtx      [i_part] = malloc (sizeof(double) * n_var * n_bnd_vtx[i_part]);
+    data_bnd_vtx[i_part] = malloc (sizeof(double) * n_var * n_bnd_vtx[i_part]);
 
     for (int i_vtx = 0; i_vtx < n_bnd_vtx[i_part]; i_vtx++) {
       for (int i_var = 0; i_var < n_var; i_var++) {
@@ -780,6 +770,10 @@ int main(int argc, char *argv[])
     fflush(stdout);
   }
 
+  PDM_g_num_t **gnum_bnd_vtx_min_dist = malloc (sizeof(PDM_g_num_t *) * n_part);
+  double      **bnd_vtx_min_dist      = malloc (sizeof(double      *) * n_part);
+  int          *n_bnd_vtx_min_dist    = malloc (sizeof(int          ) * n_part);
+
   int         **n_int_to_bnd_vtx   = malloc (sizeof(int         *) * n_part );
   int         **id_int_to_bnd_vtx  = malloc (sizeof(int         *) * n_part );
   int         **int_to_bnd_vtx_idx = malloc (sizeof(int         *) * n_part );
@@ -823,10 +817,6 @@ int main(int argc, char *argv[])
   }
 
   PDM_dist_cloud_surf_compute(dcs);
-
-  PDM_g_num_t **gnum_bnd_vtx_min_dist = malloc (sizeof(PDM_g_num_t *) * n_part);
-  double      **bnd_vtx_min_dist      = malloc (sizeof(double      *) * n_part);
-  int          *n_bnd_vtx_min_dist    = malloc (sizeof(int          ) * n_part);
 
   double _max_dist = 0.0;
   double  max_dist = 0.0;
@@ -1000,18 +990,6 @@ int main(int argc, char *argv[])
                           &closest_src_gnum,
                           &closest_src_dist);
 
-  }
-
-  for (int i_part = 0; i_part < n_part; i_part++) {
-
-    PDM_g_num_t *closest_src_gnum = NULL;
-    double      *closest_src_dist = NULL;
-
-    PDM_closest_points_get(clsp_min_dist,
-                           i_part,
-                          &closest_src_gnum,
-                          &closest_src_dist);
-
     for (int i_vtx = 0; i_vtx < n_int_vtx[i_part]; i_vtx++) {
 
       if (id_int_to_bnd_vtx[i_part][i_vtx] > 0) {
@@ -1027,6 +1005,15 @@ int main(int argc, char *argv[])
 
   }
 
+  for (int i_part = 0; i_part < n_part; i_part++) {
+    free(id_int_to_bnd_vtx    [i_part]);
+    free(bnd_vtx_min_dist     [i_part]);
+    free(gnum_bnd_vtx_min_dist[i_part]);
+  }
+  free(id_int_to_bnd_vtx    );
+  free(n_bnd_vtx_min_dist   );
+  free(bnd_vtx_min_dist     );
+  free(gnum_bnd_vtx_min_dist);
   PDM_closest_points_free(clsp_min_dist);
 
   /*
@@ -1094,10 +1081,18 @@ int main(int argc, char *argv[])
                          (void **) &blk_int_vtx);
 
   for (int i_part = 0; i_part < n_part; i_part++) {
-    free(stride_int[i_part]);
+    free(weight_int_vtx    [i_part]);
+    free(stride_int        [i_part]);
+    free(n_int_to_bnd_vtx  [i_part]);
+    free(int_to_bnd_vtx_idx[i_part]);
+    free(int_to_bnd_vtx    [i_part]);
   }
-  free(stride_int);
-  free(blk_stride_int);
+  free(weight_int_vtx    );
+  free(stride_int        );
+  free(blk_stride_int    );
+  free(n_int_to_bnd_vtx  );
+  free(int_to_bnd_vtx_idx);
+  free(int_to_bnd_vtx    );
 
   /*
    * Prepare exchange from boundary to interior vertices
@@ -1212,6 +1207,24 @@ int main(int argc, char *argv[])
   double  telapsed;
 
   PDM_MPI_Allreduce(&_telapsed, &telapsed, 1, PDM_MPI_DOUBLE, PDM_MPI_MAX, comm);
+
+  for (int i_layer = 0; i_layer < n_layer; i_layer++) {
+    free(gnum_layer_vtx  [i_layer]);
+    free(distri_layer_vtx[i_layer]);
+    free(layer_vtx       [i_layer]);
+    free(data_layer_vtx  [i_layer]);
+  }
+  for (int j_rank = 0; j_rank < n_rank; j_rank++) {
+    free(distri_layer_vtx_transposed[j_rank]);
+  }
+  free(gnum_layer_vtx             );
+  free(distri_layer_vtx           );
+  free(distri_layer_vtx_transposed);
+  free(layer_vtx                  );
+  free(data_layer_vtx             );
+  free(n_layer_vtx                );
+  free(m_layer_vtx                );
+  free(layer_vtx_idx              );
 
   if (i_rank == 0) {
     printf("Time for data reduction : %12.5es elapsed\n", telapsed);
@@ -1645,31 +1658,13 @@ int main(int argc, char *argv[])
     free(data_bnd_vtx[i_part]);
   }
   for (int i_part = 0; i_part < n_part_bnd; i_part++) {
-    free(gnum_bnd_face     [i_part]);
-    free(bnd_face_vtx_idx  [i_part]);
-    free(bnd_face_vtx      [i_part]);
-    free(bnd_to_all_vtx    [i_part]);
-    free(bnd_to_all_vtx_idx[i_part]);
+    free(gnum_bnd_face   [i_part]);
+    free(bnd_face_vtx_idx[i_part]);
+    free(bnd_face_vtx    [i_part]);
   }
   for (int i_part = 0; i_part < n_part; i_part++) {
-    free(gnum_int_vtx         [i_part]);
-    free(weight_int_vtx       [i_part]);
-    free(int_vtx              [i_part]);
-    free(gnum_bnd_vtx_min_dist[i_part]);
-    free(bnd_vtx_min_dist     [i_part]);
-    free(n_int_to_bnd_vtx     [i_part]);
-    free(id_int_to_bnd_vtx    [i_part]);
-    free(int_to_bnd_vtx_idx   [i_part]);
-    free(int_to_bnd_vtx       [i_part]);
-  }
-  for (int i_layer = 0; i_layer < n_layer; i_layer++) {
-    free(gnum_layer_vtx  [i_layer]);
-    free(distri_layer_vtx[i_layer]);
-    free(layer_vtx       [i_layer]);
-    free(data_layer_vtx  [i_layer]);
-  }
-  for (int j_rank = 0; j_rank < n_rank; j_rank++) {
-    free(distri_layer_vtx_transposed[j_rank]);
+    free(gnum_int_vtx[i_part]);
+    free(int_vtx     [i_part]);
   }
   free(gnum_bnd_face                 );
   free(bnd_face_vtx_idx              );
@@ -1680,26 +1675,8 @@ int main(int argc, char *argv[])
   free(data_bnd_vtx                  );
   free(n_bnd_vtx                     );
   free(gnum_int_vtx                  );
-  free(weight_int_vtx                );
   free(int_vtx                       );
   free(n_int_vtx                     );
-  free(bnd_to_all_vtx                );
-  free(bnd_to_all_vtx_idx            );
-  free(gnum_bnd_vtx_min_dist         );
-  free(bnd_vtx_min_dist              );
-  free(n_bnd_vtx_min_dist            );
-  free(gnum_layer_vtx                );
-  free(distri_layer_vtx              );
-  free(distri_layer_vtx_transposed   );
-  free(layer_vtx                     );
-  free(data_layer_vtx                );
-  free(n_layer_vtx                   );
-  free(m_layer_vtx                   );
-  free(layer_vtx_idx                 );
-  free(n_int_to_bnd_vtx              );
-  free(id_int_to_bnd_vtx             );
-  free(int_to_bnd_vtx_idx            );
-  free(int_to_bnd_vtx                );
   free(blk_int_to_bnd_vtx_idx        );
   free(blk_int_to_bnd_vtx            );
   free(red_blk_int_to_bnd_vtx_idx    );
