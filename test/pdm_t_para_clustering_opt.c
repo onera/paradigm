@@ -1123,9 +1123,6 @@ int main(int argc, char *argv[])
       /* If clustering layer is found */
       if ((PDM_g_num_t) blk_int_to_bnd_vtx[j_vtx] >= gnum_layer_vtx[0][0]) {
 
-        /* Get only the layer id in the part_to_block exchange would be better
-          but so far to test all methodologies we exchange all gnums and triplets */
-
         /* Find clustering layer id */
         int j_layer = -1;
 
@@ -1151,15 +1148,15 @@ int main(int argc, char *argv[])
           for (int k_vtx = 0; k_vtx < m_layer_vtx[j_layer]; k_vtx++) {
             assert(blk_int_to_bnd_vtx[j_vtx+k_vtx] == gnum_layer_vtx[j_layer][0] + k_vtx);
             int idx_write4 = red_blk_int_to_bnd_vtx_idx[i_vtx+1];
-            red_blk_int_to_bnd_vtx       [ idx_write4 ] = blk_int_to_bnd_vtx[j_vtx+k_vtx];
-            blk_to_red_blk_int_to_bnd_vtx[ j_vtx+k_vtx] = idx_write4;
+            red_blk_int_to_bnd_vtx       [idx_write4 ] = blk_int_to_bnd_vtx[j_vtx+k_vtx];
+            blk_to_red_blk_int_to_bnd_vtx[j_vtx+k_vtx] = idx_write4;
             red_blk_int_to_bnd_vtx_idx[i_vtx+1]++;
           }
         } else {
           int idx_write4 = order[i_gnum];
           for (int k_vtx = 0; k_vtx < m_layer_vtx[j_layer]; k_vtx++) {
             assert(blk_int_to_bnd_vtx[j_vtx+k_vtx] == gnum_layer_vtx[j_layer][0] + k_vtx);
-            blk_to_red_blk_int_to_bnd_vtx [  j_vtx+k_vtx   ] = idx_write4 + k_vtx;
+            blk_to_red_blk_int_to_bnd_vtx[j_vtx+k_vtx] = idx_write4 + k_vtx;
           }
         }
 
@@ -1182,8 +1179,8 @@ int main(int argc, char *argv[])
         /* Add boundary vertices one by one */
         if (i_gnum < 0) {
           int idx_write4 = red_blk_int_to_bnd_vtx_idx[i_vtx+1];
-          red_blk_int_to_bnd_vtx        [idx_write4] = blk_int_to_bnd_vtx[j_vtx];
-          blk_to_red_blk_int_to_bnd_vtx [j_vtx     ] = idx_write4;
+          red_blk_int_to_bnd_vtx       [idx_write4] = blk_int_to_bnd_vtx[j_vtx];
+          blk_to_red_blk_int_to_bnd_vtx[j_vtx     ] = idx_write4;
           red_blk_int_to_bnd_vtx_idx[i_vtx+1]++;
         } else {
           int idx_write4 = order[i_gnum];
@@ -1225,6 +1222,7 @@ int main(int argc, char *argv[])
   free(n_layer_vtx                );
   free(m_layer_vtx                );
   free(layer_vtx_idx              );
+  free(blk_int_to_bnd_vtx         );
 
   if (i_rank == 0) {
     printf("Time for data reduction : %12.5es elapsed\n", telapsed);
@@ -1258,6 +1256,9 @@ int main(int argc, char *argv[])
   _telapsed = ((double) t)/CLOCKS_PER_SEC;
 
   PDM_MPI_Allreduce(&_telapsed, &telapsed, 1, PDM_MPI_DOUBLE, PDM_MPI_MAX, comm);
+
+  free(red_blk_int_to_bnd_vtx_idx);
+  free(red_blk_int_to_bnd_vtx    );
 
   if (i_rank == 0) {
     printf("Time for ptp creation : %12.5es elapsed\n", telapsed);
@@ -1678,9 +1679,6 @@ int main(int argc, char *argv[])
   free(int_vtx                       );
   free(n_int_vtx                     );
   free(blk_int_to_bnd_vtx_idx        );
-  free(blk_int_to_bnd_vtx            );
-  free(red_blk_int_to_bnd_vtx_idx    );
-  free(red_blk_int_to_bnd_vtx        );
   free(blk_to_red_blk_int_to_bnd_vtx );
   free(blk_int_vtx                   );
   free(idw_blk_data_bnd_vtx [0]      );
