@@ -263,24 +263,8 @@ cdef class MultiPart:
 
     # ------------------------------------------------------------------
 
-    def multipart_register_block(self, int zone_gid,
-                                       DMesh dm): # DMesh = DistributedMeshCapsule or DistributedMesh
-        """
-        """
-        PDM_multipart_register_block(self._mtp,
-                                     zone_gid,
-                                     dm._dm)
-
-    # ------------------------------------------------------------------
-    def multipart_register_dmesh_nodal(self, int zone_gid,
-                                       DMeshNodal dmn): # DMesh = DistributedMeshCapsule or DistributedMesh
-        """
-        """
-        PDM_multipart_register_dmesh_nodal(self._mtp,
-                                           zone_gid,
-                                           dmn.dmn)
     def dmesh_set(self, int i_domain,
-                        DMesh dmesh): # DMesh = DistributedMeshCaspule or DistributedMesh
+                        DMesh dmesh): # DMesh = DistributedMeshCapsule or DistributedMesh
       """
       dmesh_set(i_domain, dmesh)
 
@@ -495,7 +479,7 @@ cdef class MultiPart:
         i_domain (int) : Domain identifier
 
       Returns:
-        Partitioned nodal mesh object (:py:class:`PartMeshNodalCaspule`)
+        Partitioned nodal mesh object (:py:class:`PartMeshNodalCapsule`)
       """
       cdef PDM_part_mesh_nodal_t *pmesh_nodal
       PDM_multipart_get_part_mesh_nodal(self._mtp, i_domain, &pmesh_nodal, PDM_OWNERSHIP_USER)
@@ -504,7 +488,7 @@ cdef class MultiPart:
       else:
         #See pdm_part_mesh_nodal.pxi
         py_caps = PyCapsule_New(pmesh_nodal, NULL, NULL);
-        return PartMeshNodalCaspule(py_caps)
+        return PartMeshNodalCapsule(py_caps)
 
     # ------------------------------------------------------------------
     def hyper_plane_color_get(self, int i_domain, int i_part):

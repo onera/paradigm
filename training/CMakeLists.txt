@@ -47,7 +47,7 @@ foreach(_md_file IN ITEMS ${SOURCES_JUPITEXT})
   file(REMOVE ${CMAKE_CURRENT_BINARY_DIR}/${_md_file_dir}/${_md_file_basename}.md)
 
   add_custom_command(OUTPUT ${_ipynb_file}
-                     COMMAND ${JUPYTEXT_EXECUTABLE} --to ipynb ${_md_file} -o ${_ipynb_file}
+                     COMMAND ${JUPYTEXT_EXECUTABLE} --to ipynb ${_md_file} -o ${_ipynb_file} -q
                      WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
                      DEPENDS 
                      ${JUPYTEXT_DEP}
