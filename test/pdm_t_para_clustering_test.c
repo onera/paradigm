@@ -739,6 +739,7 @@ int main(int argc, char *argv[])
   double      **bnd_vtx          = malloc (sizeof(double      *) * n_part_bnd);
   double      **bnd_dvtx         = malloc (sizeof(double      *) * n_part_bnd);
   double      **bnd_vtx_aux_geom = malloc (sizeof(double      *) * n_part_bnd);
+  int         **bnd_stride       = malloc (sizeof(int         *) * n_part_bnd);
   int          *n_bnd_vtx        = malloc (sizeof(int          ) * n_part_bnd);
 
   PDM_g_num_t **int_vtx_gnum = malloc (sizeof(PDM_g_num_t *) * n_part);
@@ -908,6 +909,7 @@ int main(int argc, char *argv[])
                                   &bnd_vtx[i_part],
                                    PDM_OWNERSHIP_USER);
 
+    bnd_stride      [i_part] = malloc (sizeof(int   )         * n_bnd_vtx[i_part]);
     bnd_dvtx        [i_part] = malloc (sizeof(double) * 3     * n_bnd_vtx[i_part]);
     bnd_vtx_aux_geom[i_part] = malloc (sizeof(double) * n_var * n_bnd_vtx[i_part]);
 
@@ -1155,6 +1157,137 @@ int main(int argc, char *argv[])
     fflush(stdout);
   }
 
+  int     blk_n_bnd_vtx        = PDM_part_to_block_n_elt_block_get(ptb_bnd_vtx);
+  double *blk_bnd_vtx          = NULL;
+  double *blk_bnd_dvtx         = NULL;
+  double *blk_bnd_vtx_aux_geom = NULL;
+  int    *blk_bnd_stride       = NULL;
+
+  for (int i_part = 0; i_part < n_part_bnd; i_part++) {
+    for (int i_vtx = 0; i_vtx < n_bnd_vtx[i_part]; i_vtx++) {
+      bnd_stride[i_part][i_vtx] = 3;
+    }
+  }
+
+  int blk_size = PDM_part_to_block_exch(ptb_bnd_vtx,
+                                        sizeof(double),
+                                        PDM_STRIDE_VAR_INTERLACED,
+                                        1,
+                                        bnd_stride,
+                             (void **)  bnd_vtx,
+                                       &blk_bnd_stride,
+                             (void **) &blk_bnd_vtx);
+
+  PDM_UNUSED(blk_size);
+
+  free(blk_bnd_stride);
+
+  blk_size = PDM_part_to_block_exch(ptb_bnd_vtx,
+                                    sizeof(double),
+                                    PDM_STRIDE_VAR_INTERLACED,
+                                    1,
+                                    bnd_stride,
+                         (void **)  bnd_dvtx,
+                                   &blk_bnd_stride,
+                         (void **) &blk_bnd_dvtx);
+
+  free(blk_bnd_stride);
+
+  for (int i_part = 0; i_part < n_part_bnd; i_part++) {
+    for (int i_vtx = 0; i_vtx < n_bnd_vtx[i_part]; i_vtx++) {
+      bnd_stride[i_part][i_vtx] = n_var;
+    }
+  }
+
+  blk_size = PDM_part_to_block_exch(ptb_bnd_vtx,
+                                    sizeof(double),
+                                    PDM_STRIDE_VAR_INTERLACED,
+                                    1,
+                                    bnd_stride,
+                         (void **)  bnd_vtx_aux_geom,
+                                   &blk_bnd_stride,
+                         (void **) &blk_bnd_vtx_aux_geom);
+
+  free(blk_bnd_stride);
+
+  double *dx = malloc (sizeof(double) * 3);
+  double *dr = malloc (sizeof(double) * 3);
+  double  sdist;
+  double  dist;
+
+  PDM_g_num_t  m_vtx = 0;
+  PDM_g_num_t _m_vtx = 0;
+  double       aire  = 0.0;
+  double      _aire  = 0.0;
+  double       l1    = 0.0;
+  double      _l1    = 0.0;
+  double       l2    = 0.0;
+  double      _l2    = 0.0;
+
+  dx[0] = 0.0;
+  dx[1] = 0.0;
+  dx[2] = 0.0;
+
+  for (int i_vtx = 0; i_vtx < blk_n_bnd_vtx; i_vtx++) {
+    m_vtx++;
+    dx[0] = dx[0] + blk_bnd_vtx[3*i_vtx    ];
+    dx[1] = dx[1] + blk_bnd_vtx[3*i_vtx + 1];
+    dx[2] = dx[2] + blk_bnd_vtx[3*i_vtx + 2];
+  }
+
+  PDM_MPI_Allreduce (&m_vtx, &_m_vtx, 1, PDM__PDM_MPI_G_NUM, PDM_MPI_SUM, comm);
+  PDM_MPI_Allreduce (dx, dr, 3, PDM_MPI_DOUBLE, PDM_MPI_SUM, comm);
+
+  dx[0] = dr[0]/_m_vtx;
+  dx[1] = dr[1]/_m_vtx;
+  dx[2] = dr[2]/_m_vtx;
+
+  for (int i_vtx = 0; i_vtx < blk_n_bnd_vtx; i_vtx++) {
+    dr[0] = dx[0] - blk_bnd_vtx[3*i_vtx    ];
+    dr[1] = dx[1] - blk_bnd_vtx[3*i_vtx + 1];
+    dr[2] = dx[2] - blk_bnd_vtx[3*i_vtx + 2];
+    l1 = PDM_MAX(l1, pow(dr[0],2)+pow(dr[1],2)+pow(dr[2],2));
+  }
+
+  PDM_MPI_Allreduce (&l1, &_l1, 1, PDM_MPI_DOUBLE, PDM_MPI_MAX, comm);
+  l1 = sqrt(_l1);
+
+  dx[0] = 0.0;
+  dx[1] = 0.0;
+  dx[2] = 0.0;
+
+  for (int i_vtx = 0; i_vtx < blk_n_bnd_vtx; i_vtx++) {
+    aire  = aire  + blk_bnd_vtx_aux_geom[n_var*i_vtx];
+    dx[0] = dx[0] + blk_bnd_vtx_aux_geom[n_var*i_vtx]*blk_bnd_dvtx[3*i_vtx    ];
+    dx[1] = dx[1] + blk_bnd_vtx_aux_geom[n_var*i_vtx]*blk_bnd_dvtx[3*i_vtx + 1];
+    dx[2] = dx[2] + blk_bnd_vtx_aux_geom[n_var*i_vtx]*blk_bnd_dvtx[3*i_vtx + 2];
+  }
+
+  PDM_MPI_Allreduce (dx, dr, 3, PDM_MPI_DOUBLE, PDM_MPI_SUM, comm);
+  PDM_MPI_Allreduce (&aire, &_aire, 1, PDM_MPI_DOUBLE, PDM_MPI_SUM, comm);
+
+  dx[0] = dr[0]/_aire;
+  dx[1] = dr[1]/_aire;
+  dx[2] = dr[2]/_aire;
+
+  for (int i_vtx = 0; i_vtx < blk_n_bnd_vtx; i_vtx++) {
+    dr[0] = dx[0] - blk_bnd_dvtx[3*i_vtx    ];
+    dr[1] = dx[1] - blk_bnd_dvtx[3*i_vtx + 1];
+    dr[2] = dx[2] - blk_bnd_dvtx[3*i_vtx + 2];
+    l2 = PDM_MAX(l2, pow(dr[0],2)+pow(dr[1],2)+pow(dr[2],2));
+  }
+
+  PDM_MPI_Allreduce (&l2, &_l2, 1, PDM_MPI_DOUBLE, PDM_MPI_MAX, comm);
+  l2 = PDM_MAX(0.1, 5.0*sqrt(_l2)/l1)*l1;
+
+  free(blk_bnd_vtx );
+  free(blk_bnd_dvtx);
+  free(blk_bnd_vtx_aux_geom);
+
+
+  free(dx);
+  free(dr);
+
   /*
    * Get vertices new coordinates
    */
@@ -1312,6 +1445,7 @@ int main(int argc, char *argv[])
     free(bnd_vtx          [i_part]);
     free(bnd_dvtx         [i_part]);
     free(bnd_vtx_aux_geom [i_part]);
+    free(bnd_stride       [i_part]);
     free(bnd_face_ln_to_gn[i_part]);
     free(bnd_face_vtx_idx [i_part]);
     free(bnd_face_vtx     [i_part]);
@@ -1328,6 +1462,7 @@ int main(int argc, char *argv[])
   free(bnd_vtx          );
   free(bnd_dvtx         );
   free(bnd_vtx_aux_geom );
+  free(bnd_stride       );
   free(n_bnd_vtx        );
   free(int_vtx_gnum     );
   free(int_vtx          );
