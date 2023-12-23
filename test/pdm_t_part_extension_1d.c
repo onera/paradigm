@@ -140,6 +140,137 @@ _read_args
   }
 }
 
+
+static
+void
+_extend_by_depth
+(
+  PDM_MPI_Comm                  comm,
+  PDM_part_domain_interface_t  *pdi,
+  int                           n_domain,
+  PDM_g_num_t                  *shift_by_domain_edge,
+  PDM_g_num_t                  *shift_by_domain_vtx,
+  int                          *n_part,
+  int                         **pn_vtx,
+  PDM_g_num_t                ***pvtx_ln_to_gn,
+  int                         **pn_edge,
+  PDM_g_num_t                ***pedge_ln_to_gn,
+  int                        ***pedge_vtx_idx,
+  int                        ***pedge_vtx,
+  int                         **out_pn_edge_extented,
+  int                        ***out_pedge_extented_to_pedge_idx,
+  int                        ***out_pedge_extented_to_pedge_triplet,
+  PDM_g_num_t                ***out_pedge_extented_ln_to_gn,
+  int                        ***out_pedge_extented_to_pedge_interface,
+  int                         **out_pn_vtx_extented,
+  PDM_g_num_t                ***out_pvtx_extented_ln_to_gn,
+  int                        ***out_pextented_edge_vtx_idx,
+  int                        ***out_pextented_edge_vtx,
+  int                        ***out_pvtx_extented_to_pvtx_idx,
+  int                        ***out_pvtx_extented_to_pvtx_triplet,
+  int                        ***out_pvtx_extented_to_pvtx_interface
+)
+{
+
+  int ln_part_tot = 0;
+  for(int i_dom = 0; i_dom < n_domain; ++i_dom) {
+    for(int i_part = 0; i_part < n_part[i_dom]; ++i_part) {
+      ln_part_tot += 1;
+    }
+  }
+
+  int          *pn_edge_extented                  = NULL;
+  int         **pedge_extented_to_pedge_idx       = NULL;
+  int         **pedge_extented_to_pedge_triplet   = NULL;
+  PDM_g_num_t **pedge_extented_ln_to_gn           = NULL;
+  int         **pedge_extented_to_pedge_interface = NULL;
+
+  PDM_part_extension_interface_by_entity1_to_interface_by_entity2(pdi,
+                                                                  PDM_BOUND_TYPE_VTX,
+                                                                  n_domain,
+                                                                  shift_by_domain_edge,
+                                                                  n_part,
+                                                                  pn_vtx,
+                                                                  pvtx_ln_to_gn,
+                                                                  NULL, // pvtx_hint,
+                                                                  pn_edge,
+                                                                  pedge_ln_to_gn,
+                                                                  pedge_vtx_idx,
+                                                                  pedge_vtx,
+                                                                  &pn_edge_extented,
+                                                                  &pedge_extented_ln_to_gn,
+                                                                  &pedge_extented_to_pedge_idx,
+                                                                  &pedge_extented_to_pedge_triplet,
+                                                                  &pedge_extented_to_pedge_interface,
+                                                                  comm);
+
+  if(1 == 1) {
+    for(int i_part = 0; i_part < ln_part_tot; ++i_part) {
+      int n_triplet = pedge_extented_to_pedge_idx[i_part][ pn_edge_extented[i_part]];
+      PDM_log_trace_array_long(pedge_extented_ln_to_gn          [i_part], pn_edge_extented[i_part]  , "pedge_extented_ln_to_gn           ::");
+      PDM_log_trace_array_int (pedge_extented_to_pedge_idx      [i_part], pn_edge_extented[i_part]+1, "pedge_extented_to_pedge_idx       ::");
+      PDM_log_trace_array_int (pedge_extented_to_pedge_interface[i_part], n_triplet/3               , "pedge_extented_to_pedge_interedge ::");
+      PDM_log_trace_array_int (pedge_extented_to_pedge_triplet  [i_part], n_triplet                 , "pedge_extented_to_pedge_triplet   ::");
+    }
+  }
+
+  int          *pn_vtx_extented                 = NULL;
+  PDM_g_num_t **pvtx_extented_ln_to_gn          = NULL;
+  int         **pextented_edge_vtx_idx          = NULL;
+  int         **pextented_edge_vtx              = NULL;
+  int         **pvtx_extented_to_pvtx_idx       = NULL;
+  int         **pvtx_extented_to_pvtx_triplet   = NULL;
+  int         **pvtx_extented_to_pvtx_interface = NULL;
+  // Rebuild edge_vtx direchly (after we will do face_edge then edge_vtx)
+
+  PDM_part_extension_pconnectivity_to_extented_pconnectivity(pdi,
+                                                             PDM_BOUND_TYPE_VTX,
+                                                             n_domain,
+                                                             shift_by_domain_vtx,
+                                                             n_part,
+                                                             pn_edge,
+                                                             pedge_ln_to_gn,
+                                                             pn_vtx,
+                                                             pvtx_ln_to_gn,
+                                                             pedge_vtx_idx,
+                                                             pedge_vtx,
+                                                             pn_edge_extented,
+                                                             pedge_extented_ln_to_gn,
+                                                             pedge_extented_to_pedge_idx,
+                                                             pedge_extented_to_pedge_triplet,
+                                                             pedge_extented_to_pedge_interface,
+                                                             &pn_vtx_extented,
+                                                             &pvtx_extented_ln_to_gn,
+                                                             &pextented_edge_vtx_idx,
+                                                             &pextented_edge_vtx,
+                                                             &pvtx_extented_to_pvtx_idx,
+                                                             &pvtx_extented_to_pvtx_triplet,
+                                                             &pvtx_extented_to_pvtx_interface,
+                                                             comm);
+
+
+
+
+  *out_pn_edge_extented                  = pn_edge_extented;
+  *out_pedge_extented_to_pedge_idx       = pedge_extented_to_pedge_idx;
+  *out_pedge_extented_to_pedge_triplet   = pedge_extented_to_pedge_triplet;
+  *out_pedge_extented_ln_to_gn           = pedge_extented_ln_to_gn;
+  *out_pedge_extented_to_pedge_interface = pedge_extented_to_pedge_interface;
+
+  *out_pn_vtx_extented                 = pn_vtx_extented;
+  *out_pvtx_extented_ln_to_gn          = pvtx_extented_ln_to_gn;
+  *out_pextented_edge_vtx_idx          = pextented_edge_vtx_idx;
+  *out_pextented_edge_vtx              = pextented_edge_vtx;
+  *out_pvtx_extented_to_pvtx_idx       = pvtx_extented_to_pvtx_idx;
+  *out_pvtx_extented_to_pvtx_triplet   = pvtx_extented_to_pvtx_triplet;
+  *out_pvtx_extented_to_pvtx_interface = pvtx_extented_to_pvtx_interface;
+
+}
+
+
+
+
+
 static
 void
 _part_extension
@@ -275,41 +406,11 @@ _part_extension
                                 1);
 
 
-  int          *pn_edge_extented                = NULL;
-  int         **pedge_extented_to_pedge_idx     = NULL;
-  int         **pedge_extented_to_pedge_triplet = NULL;
-  PDM_g_num_t **pedge_extented_ln_to_gn         = NULL;
+  int          *pn_edge_extented                  = NULL;
+  int         **pedge_extented_to_pedge_idx       = NULL;
+  int         **pedge_extented_to_pedge_triplet   = NULL;
+  PDM_g_num_t **pedge_extented_ln_to_gn           = NULL;
   int         **pedge_extented_to_pedge_interface = NULL;
-
-  PDM_part_extension_interface_by_entity1_to_interface_by_entity2(pdi,
-                                                                  PDM_BOUND_TYPE_VTX,
-                                                                  n_domain,
-                                                                  shift_by_domain_edge,
-                                                                  n_part,
-                                                                  pn_vtx,
-                                                                  pvtx_ln_to_gn,
-                                                                  NULL, // pvtx_hint,
-                                                                  pn_edge,
-                                                                  pedge_ln_to_gn,
-                                                                  pedge_vtx_idx,
-                                                                  pedge_vtx,
-                                                                  &pn_edge_extented,
-                                                                  &pedge_extented_ln_to_gn,
-                                                                  &pedge_extented_to_pedge_idx,
-                                                                  &pedge_extented_to_pedge_triplet,
-                                                                  &pedge_extented_to_pedge_interface,
-                                                                  comm);
-
-
-  if(1 == 1) {
-    for(int i_part = 0; i_part < ln_part_tot; ++i_part) {
-      int n_triplet = pedge_extented_to_pedge_idx[i_part][ pn_edge_extented[i_part]];
-      PDM_log_trace_array_long(pedge_extented_ln_to_gn          [i_part], pn_edge_extented[i_part]  , "pedge_extented_ln_to_gn : ");
-      PDM_log_trace_array_int (pedge_extented_to_pedge_idx      [i_part], pn_edge_extented[i_part]+1, "pedge_extented_to_pedge_idx      ::");
-      PDM_log_trace_array_int (pedge_extented_to_pedge_interface[i_part], n_triplet/3               , "pedge_extented_to_pedge_interedge       ::");
-      PDM_log_trace_array_int (pedge_extented_to_pedge_triplet  [i_part], n_triplet                 , "pedge_extented_to_pedge_triplet ::");
-    }
-  }
 
   int          *pn_vtx_extented                 = NULL;
   PDM_g_num_t **pvtx_extented_ln_to_gn          = NULL;
@@ -318,32 +419,31 @@ _part_extension
   int         **pvtx_extented_to_pvtx_idx       = NULL;
   int         **pvtx_extented_to_pvtx_triplet   = NULL;
   int         **pvtx_extented_to_pvtx_interface = NULL;
-  // Rebuild edge_vtx direchly (after we will do face_edge then edge_vtx)
 
-  PDM_part_extension_pconnectivity_to_extented_pconnectivity(pdi,
-                                                             PDM_BOUND_TYPE_VTX,
-                                                             n_domain,
-                                                             shift_by_domain_vtx,
-                                                             n_part,
-                                                             pn_edge,
-                                                             pedge_ln_to_gn,
-                                                             pn_vtx,
-                                                             pvtx_ln_to_gn,
-                                                             pedge_vtx_idx,
-                                                             pedge_vtx,
-                                                             pn_edge_extented,
-                                                             pedge_extented_ln_to_gn,
-                                                             pedge_extented_to_pedge_idx,
-                                                             pedge_extented_to_pedge_triplet,
-                                                             pedge_extented_to_pedge_interface,
-                                                             &pn_vtx_extented,
-                                                             &pvtx_extented_ln_to_gn,
-                                                             &pextented_edge_vtx_idx,
-                                                             &pextented_edge_vtx,
-                                                             &pvtx_extented_to_pvtx_idx,
-                                                             &pvtx_extented_to_pvtx_triplet,
-                                                             &pvtx_extented_to_pvtx_interface,
-                                                             comm);
+  _extend_by_depth(comm,
+                   pdi,
+                   n_domain,
+                   shift_by_domain_edge,
+                   shift_by_domain_vtx,
+                   n_part,
+                   pn_vtx,
+                   pvtx_ln_to_gn,
+                   pn_edge,
+                   pedge_ln_to_gn,
+                   pedge_vtx_idx,
+                   pedge_vtx,
+                   &pn_edge_extented,
+                   &pedge_extented_to_pedge_idx,
+                   &pedge_extented_to_pedge_triplet,
+                   &pedge_extented_ln_to_gn,
+                   &pedge_extented_to_pedge_interface,
+                   &pn_vtx_extented,
+                   &pvtx_extented_ln_to_gn,
+                   &pextented_edge_vtx_idx,
+                   &pextented_edge_vtx,
+                   &pvtx_extented_to_pvtx_idx,
+                   &pvtx_extented_to_pvtx_triplet,
+                   &pvtx_extented_to_pvtx_interface);
 
   /*
    * Hook coordinates
