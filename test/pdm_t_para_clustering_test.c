@@ -146,9 +146,15 @@ typedef struct _PDM_cloud_deform_t {
   PDM_g_num_t        **gnum;
 
   PDM_part_to_block_t *ptb_blk;
+  PDM_part_to_part_t  *ptp_blk;
   int                  blk_n_points;
   double              *blk_coords;
   double              *blk_dcoords;
+  int                 *blk_buffer_from_surf_idx;
+  int                 *blk_buffer_from_surf;
+  double              *blk_coords_from_surf;
+  double              *blk_dcoords_from_surf;
+  double              *blk_aux_geom_from_surf;
 
 } PDM_cloud_deform_t;
 
@@ -321,7 +327,10 @@ _PDM_mesh_deform_partial_free
   free(_surf_deform->ptp_layer   );
   free(_surf_deform->octree_layer);
 
+  free(_cloud_deform->blk_buffer_from_surf_idx);
+  free(_cloud_deform->blk_buffer_from_surf    );
   PDM_part_to_block_free(_cloud_deform->ptb_blk);
+  PDM_part_to_part_free(_cloud_deform->ptp_blk);
 
   def->is_cpt = 0;
 
@@ -762,6 +771,121 @@ _PDM_mesh_deform_compute
 
   _cloud_deform->blk_n_points = PDM_part_to_block_n_elt_block_get(_cloud_deform->ptb_blk);
 
+  int         *blk_n_cloud_to_surf = NULL;
+  PDM_g_num_t *blk_cloud_to_surf   = NULL;
+
+  int blk_size = PDM_part_to_block_exch(_cloud_deform->ptb_blk,
+                                        sizeof(PDM_g_num_t),
+                                        PDM_STRIDE_VAR_INTERLACED,
+                                        1,
+                                        n_cloud_to_surf,
+                             (void **)  cloud_to_surf,
+                                       &blk_n_cloud_to_surf,
+                             (void **) &blk_cloud_to_surf);
+
+  PDM_UNUSED(blk_size);
+
+  _cloud_deform->blk_buffer_from_surf_idx = PDM_array_new_idx_from_sizes_int(blk_n_cloud_to_surf, _cloud_deform->blk_n_points);
+  _cloud_deform->blk_buffer_from_surf     = malloc (sizeof(int) * _cloud_deform->blk_buffer_from_surf_idx[_cloud_deform->blk_n_points]);
+
+  int         *blk_cloud_to_surf_buffer_idx = malloc (sizeof(int        ) * (_cloud_deform->blk_n_points+1));
+  PDM_g_num_t *blk_cloud_to_surf_buffer     = malloc (sizeof(PDM_g_num_t) * _cloud_deform->blk_buffer_from_surf_idx[_cloud_deform->blk_n_points]);
+  blk_cloud_to_surf_buffer_idx[0] = 0;
+
+  PDM_g_num_t *sorted_gnum = malloc (sizeof(PDM_g_num_t) * _cloud_deform->blk_buffer_from_surf_idx[_cloud_deform->blk_n_points]);
+  int         *order       = malloc (sizeof(int        ) * _cloud_deform->blk_buffer_from_surf_idx[_cloud_deform->blk_n_points]);
+
+  for (int i_pts = 0; i_pts < _cloud_deform->blk_n_points; i_pts++) {
+
+    blk_cloud_to_surf_buffer_idx[i_pts+1] = blk_cloud_to_surf_buffer_idx[i_pts];
+
+    for (int j_pts = _cloud_deform->blk_buffer_from_surf_idx[i_pts]; j_pts < _cloud_deform->blk_buffer_from_surf_idx[i_pts+1]; j_pts++) {
+
+      for (int k_pts = 0; k_pts < blk_cloud_to_surf_buffer_idx[i_pts+1]; k_pts++) {
+        sorted_gnum[k_pts] = blk_cloud_to_surf_buffer[k_pts];
+        order      [k_pts] = k_pts;
+      }
+      PDM_sort_long(sorted_gnum, order, blk_cloud_to_surf_buffer_idx[i_pts+1]);
+
+      /* If clustering layer is found */
+      if ((PDM_g_num_t) blk_cloud_to_surf[j_pts] >= gnum_layer[0]) {
+
+        int j_layer = -1;
+        for (int i_layer = 0; i_layer < def->n_layer; i_layer++) {
+          if ((PDM_g_num_t) blk_cloud_to_surf[j_pts] == gnum_layer[i_layer]) {
+            j_layer = i_layer;
+          }
+        }
+
+        int i_gnum = -1;
+        if (blk_cloud_to_surf_buffer_idx[i_pts+1] > 0) {
+          i_gnum = PDM_binary_search_long(blk_cloud_to_surf[j_pts], sorted_gnum, blk_cloud_to_surf_buffer_idx[i_pts+1]);
+        }
+
+        int idx_write = 0;
+        if (i_gnum < 0) {
+          for (int k_pts = 0; k_pts < distri_layer[j_layer][n_rank]; k_pts++) {
+            assert(blk_cloud_to_surf[j_pts+k_pts] == gnum_layer[j_layer] + k_pts);
+            idx_write = blk_cloud_to_surf_buffer_idx[i_pts+1];
+            blk_cloud_to_surf_buffer[idx_write] = blk_cloud_to_surf[j_pts+k_pts];
+            _cloud_deform->blk_buffer_from_surf[j_pts+k_pts] = idx_write;
+            blk_cloud_to_surf_buffer_idx[i_pts+1]++;
+          }
+        } else {
+          idx_write = order[i_gnum];
+          for (int k_pts = 0; k_pts < distri_layer[j_layer][n_rank]; k_pts++) {
+            assert(blk_cloud_to_surf[j_pts+k_pts] == gnum_layer[j_layer] + k_pts);
+            _cloud_deform->blk_buffer_from_surf[j_pts+k_pts] = idx_write + k_pts;
+          }
+        }
+
+        break;
+
+      /* If no clustering layer is found */
+      } else {
+
+        int i_gnum = -1;
+        if (blk_cloud_to_surf_buffer_idx[i_pts+1] > 0) {
+          i_gnum = PDM_binary_search_long(blk_cloud_to_surf[j_pts], sorted_gnum, blk_cloud_to_surf_buffer_idx[i_pts+1]);
+        }
+
+        int idx_write = 0;
+        if (i_gnum < 0) {
+          idx_write = blk_cloud_to_surf_buffer_idx[i_pts+1];
+          blk_cloud_to_surf_buffer[idx_write] = blk_cloud_to_surf[j_pts];
+          _cloud_deform->blk_buffer_from_surf[j_pts] = idx_write;
+          blk_cloud_to_surf_buffer_idx[i_pts+1]++;
+        } else {
+          idx_write = order[i_gnum];
+          _cloud_deform->blk_buffer_from_surf[j_pts] = idx_write;
+        }
+
+      }
+
+    }
+
+  }
+
+  free(sorted_gnum);
+  free(order);
+
+  blk_cloud_to_surf_buffer = realloc (blk_cloud_to_surf_buffer, blk_cloud_to_surf_buffer_idx[_cloud_deform->blk_n_points] * sizeof(PDM_g_num_t));
+
+  printf("Reduction of data size : ini = %i ; end = %i\n", _cloud_deform->blk_buffer_from_surf_idx[_cloud_deform->blk_n_points],
+                                                           blk_cloud_to_surf_buffer_idx[_cloud_deform->blk_n_points]);
+
+  PDM_g_num_t *blk_gnum = PDM_part_to_block_block_gnum_get(_cloud_deform->ptb_blk);
+
+  _cloud_deform->ptp_blk = PDM_part_to_part_create((const PDM_g_num_t **) &blk_gnum,
+                                                   (const int          *) &_cloud_deform->blk_n_points,
+                                                                           1,
+                                                   (const PDM_g_num_t **)  _surf_deform->vtx_ln_to_gn,
+                                                   (const int          *)  _surf_deform->n_vtx,
+                                                                           _surf_deform->n_part+def->n_layer,
+                                                   (const int         **) &blk_cloud_to_surf_buffer_idx,
+                                                   (const PDM_g_num_t **) &blk_cloud_to_surf_buffer,
+                                                                           def->comm);
+
   for (int i_part = 0; i_part < _cloud_deform->n_part; i_part++) {
     free(cloud_weight     [i_part]);
     free(n_cloud_to_surf  [i_part]);
@@ -769,10 +893,14 @@ _PDM_mesh_deform_compute
     free(cloud_to_surf    [i_part]);
   }
 
-  free(cloud_weight     );
-  free(n_cloud_to_surf  );
-  free(cloud_to_surf_idx);
-  free(cloud_to_surf    );
+  free(cloud_weight       );
+  free(n_cloud_to_surf    );
+  free(cloud_to_surf_idx  );
+  free(cloud_to_surf      );
+  free(blk_n_cloud_to_surf);
+  free(blk_cloud_to_surf  );
+  free(blk_cloud_to_surf_buffer_idx);
+  free(blk_cloud_to_surf_buffer    );
 
   for (int i_layer = 0; i_layer < def->n_layer; i_layer++) {
     free(distri_layer[i_layer]);
