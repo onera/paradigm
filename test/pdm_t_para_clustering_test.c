@@ -1730,8 +1730,8 @@ int main(int argc, char *argv[])
 
   int    *blk_buffer_from_bnd_idx = NULL;
   int    *blk_buffer_from_bnd     = NULL;
-  double *blk_coords_from_bnd     = NULL;
-  double *blk_dcoords_from_bnd    = NULL;
+  double *blk_vtx_from_bnd        = NULL;
+  double *blk_dvtx_from_bnd       = NULL;
   double *blk_aux_geom_from_bnd   = NULL;
   int     blk_n_int_vtx           = 0;
   double *blk_int_vtx             = NULL;
@@ -1740,8 +1740,8 @@ int main(int argc, char *argv[])
   _PDM_mesh_deform_cloud_block_get(def,
                                   &blk_buffer_from_bnd_idx,
                                   &blk_buffer_from_bnd,
-                                  &blk_coords_from_bnd,
-                                  &blk_dcoords_from_bnd,
+                                  &blk_vtx_from_bnd,
+                                  &blk_dvtx_from_bnd,
                                   &blk_aux_geom_from_bnd,
                                   &blk_n_int_vtx,
                                   &blk_int_vtx,
@@ -1772,8 +1772,8 @@ int main(int argc, char *argv[])
 
   blk_buffer_from_bnd_idx = NULL;
   blk_buffer_from_bnd     = NULL;
-  blk_coords_from_bnd     = NULL;
-  blk_dcoords_from_bnd    = NULL;
+  blk_vtx_from_bnd        = NULL;
+  blk_dvtx_from_bnd       = NULL;
   blk_aux_geom_from_bnd   = NULL;
   blk_n_int_vtx           = 0;
   blk_int_vtx             = NULL;
@@ -1782,8 +1782,8 @@ int main(int argc, char *argv[])
   _PDM_mesh_deform_cloud_block_get(def,
                                   &blk_buffer_from_bnd_idx,
                                   &blk_buffer_from_bnd,
-                                  &blk_coords_from_bnd,
-                                  &blk_dcoords_from_bnd,
+                                  &blk_vtx_from_bnd,
+                                  &blk_dvtx_from_bnd,
                                   &blk_aux_geom_from_bnd,
                                   &blk_n_int_vtx,
                                   &blk_int_vtx,
@@ -1825,8 +1825,8 @@ int main(int argc, char *argv[])
 
   blk_buffer_from_bnd_idx = NULL;
   blk_buffer_from_bnd     = NULL;
-  blk_coords_from_bnd     = NULL;
-  blk_dcoords_from_bnd    = NULL;
+  blk_vtx_from_bnd        = NULL;
+  blk_dvtx_from_bnd       = NULL;
   blk_aux_geom_from_bnd   = NULL;
   blk_n_int_vtx           = 0;
   blk_int_vtx             = NULL;
@@ -1835,8 +1835,8 @@ int main(int argc, char *argv[])
   _PDM_mesh_deform_cloud_block_get(def,
                                   &blk_buffer_from_bnd_idx,
                                   &blk_buffer_from_bnd,
-                                  &blk_coords_from_bnd,
-                                  &blk_dcoords_from_bnd,
+                                  &blk_vtx_from_bnd,
+                                  &blk_dvtx_from_bnd,
                                   &blk_aux_geom_from_bnd,
                                   &blk_n_int_vtx,
                                   &blk_int_vtx,
@@ -1867,8 +1867,8 @@ int main(int argc, char *argv[])
 
   blk_buffer_from_bnd_idx = NULL;
   blk_buffer_from_bnd     = NULL;
-  blk_coords_from_bnd     = NULL;
-  blk_dcoords_from_bnd    = NULL;
+  blk_vtx_from_bnd        = NULL;
+  blk_dvtx_from_bnd       = NULL;
   blk_aux_geom_from_bnd   = NULL;
   blk_n_int_vtx           = 0;
   blk_int_vtx             = NULL;
@@ -1877,8 +1877,8 @@ int main(int argc, char *argv[])
   _PDM_mesh_deform_cloud_block_get(def,
                                   &blk_buffer_from_bnd_idx,
                                   &blk_buffer_from_bnd,
-                                  &blk_coords_from_bnd,
-                                  &blk_dcoords_from_bnd,
+                                  &blk_vtx_from_bnd,
+                                  &blk_dvtx_from_bnd,
                                   &blk_aux_geom_from_bnd,
                                   &blk_n_int_vtx,
                                   &blk_int_vtx,
@@ -1928,6 +1928,7 @@ int main(int argc, char *argv[])
                          (void **) &blk_bnd_vtx_aux_geom);
 
   double *dx = malloc (sizeof(double) * 3);
+  double *du = malloc (sizeof(double) * 3);
   double *dr = malloc (sizeof(double) * 3);
   double  sdist;
   double  dist;
@@ -2001,8 +2002,37 @@ int main(int argc, char *argv[])
   free(blk_bnd_dvtx);
   free(blk_bnd_vtx_aux_geom);
 
+  for (int i_vtx = 0; i_vtx < blk_n_int_vtx; i_vtx++) {
+    dx[0] = 0.0;
+    dx[1] = 0.0;
+    dx[2] = 0.0;
+    sdist = 0.0;
+    for (int j_vtx = blk_buffer_from_bnd_idx[i_vtx]; j_vtx < blk_buffer_from_bnd_idx[i_vtx+1]; j_vtx++) {
+      int k_vtx = blk_buffer_from_bnd[j_vtx];
+      du[0] = blk_dvtx_from_bnd[3*k_vtx    ];
+      du[1] = blk_dvtx_from_bnd[3*k_vtx + 1];
+      du[2] = blk_dvtx_from_bnd[3*k_vtx + 2];
+      dr[0] = blk_vtx_from_bnd[3*k_vtx    ] - blk_int_vtx[3*i_vtx    ];
+      dr[1] = blk_vtx_from_bnd[3*k_vtx + 1] - blk_int_vtx[3*i_vtx + 1];
+      dr[2] = blk_vtx_from_bnd[3*k_vtx + 2] - blk_int_vtx[3*i_vtx + 2];
+      dist  = sqrt(pow(dr[0],2)+pow(dr[1],2)+pow(dr[2],2));
+      if (sqrt(pow(du[0],2)+pow(du[1],2)+pow(du[2],2)) > 1e-6) {
+        dist = blk_aux_geom_from_bnd[n_var*k_vtx]*(pow(l1/dist,3) + pow(l2/dist,5));
+      } else {
+        dist = blk_aux_geom_from_bnd[n_var*k_vtx]*pow(l1/dist,3);
+      }
+      sdist = sdist + dist;
+      dx[0] = dx[0] + blk_dvtx_from_bnd[3*k_vtx    ]*dist;
+      dx[1] = dx[1] + blk_dvtx_from_bnd[3*k_vtx + 1]*dist;
+      dx[2] = dx[2] + blk_dvtx_from_bnd[3*k_vtx + 2]*dist;
+    }
+    blk_int_dvtx[3*i_vtx    ] = dx[0]/sdist;
+    blk_int_dvtx[3*i_vtx + 1] = dx[1]/sdist;
+    blk_int_dvtx[3*i_vtx + 2] = dx[2]/sdist;
+  }
 
   free(dx);
+  free(du);
   free(dr);
 
   /*
