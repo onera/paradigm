@@ -583,6 +583,7 @@ _PDM_mesh_deform_compute
   int         **n_cloud_to_surf   = malloc (sizeof(int         *) * _cloud_deform->n_part);
   int         **cloud_to_surf_idx = malloc (sizeof(int         *) * _cloud_deform->n_part);
   PDM_g_num_t **cloud_to_surf     = malloc (sizeof(PDM_g_num_t *) * _cloud_deform->n_part);
+  double      **cloud_weight      = malloc (sizeof(double      *) * _cloud_deform->n_part);
 
   for (int i_part = 0; i_part < _cloud_deform->n_part; i_part++) {
 
@@ -591,7 +592,8 @@ _PDM_mesh_deform_compute
     min_dist_coords  [i_part] = malloc (sizeof(double     ) * 3 * _cloud_deform->n_points[i_part]);
     cloud_to_min_dist[i_part] = malloc (sizeof(int        )     * _cloud_deform->n_points[i_part]);
 
-    n_cloud_to_surf[i_part] = malloc (sizeof(int) * _cloud_deform->n_points[i_part]);
+    n_cloud_to_surf[i_part] = malloc (sizeof(int   ) * _cloud_deform->n_points[i_part]);
+    cloud_weight   [i_part] = malloc (sizeof(double) * _cloud_deform->n_points[i_part]);
 
     PDM_g_num_t *sorted_gnum = malloc (sizeof(PDM_g_num_t) * _cloud_deform->n_points[i_part]);
     int         *order       = malloc (sizeof(int        ) * _cloud_deform->n_points[i_part]);
@@ -613,6 +615,7 @@ _PDM_mesh_deform_compute
 
       if (surf_dist[i_pts] <= def->min_dist_d) {
         n_cloud_to_surf[i_part][i_pts] = def->min_dist_n_vtx;
+        cloud_weight   [i_part][i_pts] = (double) def->min_dist_n_vtx;
         for (int j_vtx = 0; j_vtx < n_min_dist[i_part]; j_vtx++) {
           sorted_gnum[j_vtx] = min_dist_gnum[i_part][j_vtx];
           order      [j_vtx] = j_vtx;
@@ -637,7 +640,8 @@ _PDM_mesh_deform_compute
           double a_dist = def->min_dist_d + (max_dist - def->min_dist_d)/def->n_layer* i_layer;
           double b_dist = def->min_dist_d + (max_dist - def->min_dist_d)/def->n_layer*(i_layer+1);
           if (surf_dist[i_pts] > a_dist && surf_dist[i_pts] <= b_dist) {
-            n_cloud_to_surf  [i_part][i_pts] = distri_layer[i_layer][n_rank];
+            n_cloud_to_surf  [i_part][i_pts] = 1;
+            cloud_weight     [i_part][i_pts] = (double) distri_layer[i_layer][n_rank];
             cloud_to_min_dist[i_part][i_pts] = i_layer;
           }
         }
@@ -725,9 +729,7 @@ _PDM_mesh_deform_compute
         }
       } else {
         idx_write = cloud_to_surf_idx[i_part][i_pts];
-        for (int j_vtx = 0; j_vtx < n_cloud_to_surf[i_part][i_pts]; j_vtx++) {
-          cloud_to_surf[i_part][idx_write++] = gnum_layer[cloud_to_min_dist[i_part][i_pts]] + j_vtx;
-        }
+        cloud_to_surf[i_part][idx_write] = -(cloud_to_min_dist[i_part][i_pts]+1);
       }
 
     }
@@ -747,18 +749,6 @@ _PDM_mesh_deform_compute
   free(min_dist_gnum    );
   free(min_dist_coords  );
   free(cloud_to_min_dist);
-
-  double **cloud_weight = malloc (sizeof(double*) * _cloud_deform->n_part);
-
-  for (int i_part = 0; i_part < _cloud_deform->n_part; i_part++) {
-
-    cloud_weight[i_part] = malloc (sizeof(double) * _cloud_deform->n_points[i_part]);
-
-    for (int i_pts = 0; i_pts < _cloud_deform->n_points[i_part]; i_pts++) {
-      cloud_weight[i_part][i_pts] = (double) n_cloud_to_surf[i_part][i_pts];
-    }
-
-  }
 
   _cloud_deform->ptb_blk = PDM_part_to_block_create(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
                                                     PDM_PART_TO_BLOCK_POST_CLEANUP,
@@ -785,8 +775,25 @@ _PDM_mesh_deform_compute
 
   PDM_UNUSED(blk_size);
 
-  _cloud_deform->blk_buffer_from_surf_idx = PDM_array_new_idx_from_sizes_int(blk_n_cloud_to_surf, _cloud_deform->blk_n_points);
-  _cloud_deform->blk_buffer_from_surf     = malloc (sizeof(int) * _cloud_deform->blk_buffer_from_surf_idx[_cloud_deform->blk_n_points]);
+  int *blk_cloud_to_surf_idx = PDM_array_new_idx_from_sizes_int(blk_n_cloud_to_surf, _cloud_deform->blk_n_points);
+
+  _cloud_deform->blk_buffer_from_surf_idx = malloc (sizeof(int) * (_cloud_deform->blk_n_points+1));
+  _cloud_deform->blk_buffer_from_surf_idx[0] = 0;
+
+  for (int i_pts = 0; i_pts < _cloud_deform->blk_n_points; i_pts++) {
+
+    _cloud_deform->blk_buffer_from_surf_idx[i_pts+1] = _cloud_deform->blk_buffer_from_surf_idx[i_pts];
+
+    if (blk_cloud_to_surf[blk_cloud_to_surf_idx[i_pts]] < 0) {
+      int i_layer = -(blk_cloud_to_surf[blk_cloud_to_surf_idx[i_pts]]+1);
+      _cloud_deform->blk_buffer_from_surf_idx[i_pts+1] += distri_layer[i_layer][n_rank];
+    } else {
+      _cloud_deform->blk_buffer_from_surf_idx[i_pts+1] += blk_cloud_to_surf_idx[i_pts+1] - blk_cloud_to_surf_idx[i_pts];
+    }
+
+  }
+
+  _cloud_deform->blk_buffer_from_surf = malloc (sizeof(int) * _cloud_deform->blk_buffer_from_surf_idx[_cloud_deform->blk_n_points]);
 
   int         *blk_cloud_to_surf_buffer_idx = malloc (sizeof(int        ) * (_cloud_deform->blk_n_points+1));
   PDM_g_num_t *blk_cloud_to_surf_buffer     = malloc (sizeof(PDM_g_num_t) * _cloud_deform->blk_buffer_from_surf_idx[_cloud_deform->blk_n_points]);
@@ -799,7 +806,11 @@ _PDM_mesh_deform_compute
 
     blk_cloud_to_surf_buffer_idx[i_pts+1] = blk_cloud_to_surf_buffer_idx[i_pts];
 
-    for (int j_pts = _cloud_deform->blk_buffer_from_surf_idx[i_pts]; j_pts < _cloud_deform->blk_buffer_from_surf_idx[i_pts+1]; j_pts++) {
+    int idx_write = _cloud_deform->blk_buffer_from_surf_idx[i_pts];
+
+    if (blk_cloud_to_surf[blk_cloud_to_surf_idx[i_pts]] < 0) {
+
+      int i_layer = -(blk_cloud_to_surf[blk_cloud_to_surf_idx[i_pts]]+1);
 
       for (int k_pts = 0; k_pts < blk_cloud_to_surf_buffer_idx[i_pts+1]; k_pts++) {
         sorted_gnum[k_pts] = blk_cloud_to_surf_buffer[k_pts];
@@ -807,57 +818,48 @@ _PDM_mesh_deform_compute
       }
       PDM_sort_long(sorted_gnum, order, blk_cloud_to_surf_buffer_idx[i_pts+1]);
 
-      /* If clustering layer is found */
-      if ((PDM_g_num_t) blk_cloud_to_surf[j_pts] >= gnum_layer[0]) {
+      int i_gnum = -1;
+      if (blk_cloud_to_surf_buffer_idx[i_pts+1] > 0) {
+        i_gnum = PDM_binary_search_long(gnum_layer[i_layer], sorted_gnum, blk_cloud_to_surf_buffer_idx[i_pts+1]);
+      }
 
-        int j_layer = -1;
-        for (int i_layer = 0; i_layer < def->n_layer; i_layer++) {
-          if ((PDM_g_num_t) blk_cloud_to_surf[j_pts] == gnum_layer[i_layer]) {
-            j_layer = i_layer;
-          }
-        }
-
-        int i_gnum = -1;
-        if (blk_cloud_to_surf_buffer_idx[i_pts+1] > 0) {
-          i_gnum = PDM_binary_search_long(blk_cloud_to_surf[j_pts], sorted_gnum, blk_cloud_to_surf_buffer_idx[i_pts+1]);
-        }
-
-        int idx_write = 0;
-        if (i_gnum < 0) {
-          for (int k_pts = 0; k_pts < distri_layer[j_layer][n_rank]; k_pts++) {
-            assert(blk_cloud_to_surf[j_pts+k_pts] == gnum_layer[j_layer] + k_pts);
-            idx_write = blk_cloud_to_surf_buffer_idx[i_pts+1];
-            blk_cloud_to_surf_buffer[idx_write] = blk_cloud_to_surf[j_pts+k_pts];
-            _cloud_deform->blk_buffer_from_surf[j_pts+k_pts] = idx_write;
-            blk_cloud_to_surf_buffer_idx[i_pts+1]++;
-          }
-        } else {
-          idx_write = order[i_gnum];
-          for (int k_pts = 0; k_pts < distri_layer[j_layer][n_rank]; k_pts++) {
-            assert(blk_cloud_to_surf[j_pts+k_pts] == gnum_layer[j_layer] + k_pts);
-            _cloud_deform->blk_buffer_from_surf[j_pts+k_pts] = idx_write + k_pts;
-          }
-        }
-
-        break;
-
-      /* If no clustering layer is found */
-      } else {
-
-        int i_gnum = -1;
-        if (blk_cloud_to_surf_buffer_idx[i_pts+1] > 0) {
-          i_gnum = PDM_binary_search_long(blk_cloud_to_surf[j_pts], sorted_gnum, blk_cloud_to_surf_buffer_idx[i_pts+1]);
-        }
-
-        int idx_write = 0;
-        if (i_gnum < 0) {
-          idx_write = blk_cloud_to_surf_buffer_idx[i_pts+1];
-          blk_cloud_to_surf_buffer[idx_write] = blk_cloud_to_surf[j_pts];
-          _cloud_deform->blk_buffer_from_surf[j_pts] = idx_write;
+      int idx_write2 = 0;
+      if (i_gnum < 0) {
+        for (int j_pts = 0; j_pts < distri_layer[i_layer][n_rank]; j_pts++) {
+          idx_write2 = blk_cloud_to_surf_buffer_idx[i_pts+1];
+          blk_cloud_to_surf_buffer[idx_write2] = gnum_layer[i_layer]+j_pts;
           blk_cloud_to_surf_buffer_idx[i_pts+1]++;
+          _cloud_deform->blk_buffer_from_surf[idx_write++] = idx_write2;
+        }
+      } else {
+        for (int j_pts = 0; j_pts < distri_layer[i_layer][n_rank]; j_pts++) {
+          _cloud_deform->blk_buffer_from_surf[idx_write++] = order[i_gnum]+j_pts;
+        }
+      }
+
+    } else {
+
+      for (int j_pts = blk_cloud_to_surf_idx[i_pts]; j_pts < blk_cloud_to_surf_idx[i_pts+1]; j_pts++) {
+
+        for (int k_pts = 0; k_pts < blk_cloud_to_surf_buffer_idx[i_pts+1]; k_pts++) {
+          sorted_gnum[k_pts] = blk_cloud_to_surf_buffer[k_pts];
+          order      [k_pts] = k_pts;
+        }
+        PDM_sort_long(sorted_gnum, order, blk_cloud_to_surf_buffer_idx[i_pts+1]);
+
+        int i_gnum = -1;
+        if (blk_cloud_to_surf_buffer_idx[i_pts+1] > 0) {
+          i_gnum = PDM_binary_search_long(blk_cloud_to_surf[j_pts], sorted_gnum, blk_cloud_to_surf_buffer_idx[i_pts+1]);
+        }
+
+        int idx_write2 = 0;
+        if (i_gnum < 0) {
+          idx_write2 = blk_cloud_to_surf_buffer_idx[i_pts+1];
+          blk_cloud_to_surf_buffer[idx_write2] = blk_cloud_to_surf[j_pts];
+          blk_cloud_to_surf_buffer_idx[i_pts+1]++;
+          _cloud_deform->blk_buffer_from_surf[idx_write++] = idx_write2;
         } else {
-          idx_write = order[i_gnum];
-          _cloud_deform->blk_buffer_from_surf[j_pts] = idx_write;
+          _cloud_deform->blk_buffer_from_surf[idx_write++] = order[i_gnum];
         }
 
       }
@@ -893,12 +895,13 @@ _PDM_mesh_deform_compute
     free(cloud_to_surf    [i_part]);
   }
 
-  free(cloud_weight       );
-  free(n_cloud_to_surf    );
-  free(cloud_to_surf_idx  );
-  free(cloud_to_surf      );
-  free(blk_n_cloud_to_surf);
-  free(blk_cloud_to_surf  );
+  free(cloud_weight     );
+  free(n_cloud_to_surf  );
+  free(cloud_to_surf_idx);
+  free(cloud_to_surf    );
+  free(blk_n_cloud_to_surf  );
+  free(blk_cloud_to_surf_idx);
+  free(blk_cloud_to_surf    );
   free(blk_cloud_to_surf_buffer_idx);
   free(blk_cloud_to_surf_buffer    );
 
