@@ -431,11 +431,11 @@ int main(int argc, char *argv[])
 
     n_bnd_vtx[i_part] = PDM_extract_part_n_entity_get(extrp,
                                                       i_part,
-                                                      PDM_MESH_ENTITY_VERTEX);
+                                                      PDM_MESH_ENTITY_VTX);
 
     PDM_extract_part_ln_to_gn_get(extrp,
                                   i_part,
-                                  PDM_MESH_ENTITY_VERTEX,
+                                  PDM_MESH_ENTITY_VTX,
                                  &gnum_bnd_vtx[i_part],
                                   PDM_OWNERSHIP_USER);
 
@@ -446,7 +446,7 @@ int main(int argc, char *argv[])
 
     PDM_extract_part_parent_ln_to_gn_get(extrp,
                                          i_part,
-                                         PDM_MESH_ENTITY_VERTEX,
+                                         PDM_MESH_ENTITY_VTX,
                                         &bnd_to_all_vtx[i_part],
                                          PDM_OWNERSHIP_USER);
 
@@ -471,7 +471,7 @@ int main(int argc, char *argv[])
 
   /**PDM_part_to_part_t *ptp_vtx = NULL;
   PDM_extract_part_part_to_part_get(extrp,
-                                    PDM_MESH_ENTITY_VERTEX,
+                                    PDM_MESH_ENTITY_VTX,
                                    &ptp_vtx,
                                     PDM_OWNERSHIP_USER);**/
 
