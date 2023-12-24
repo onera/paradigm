@@ -152,9 +152,9 @@ typedef struct _PDM_cloud_deform_t {
   double              *blk_dcoords;
   int                 *blk_buffer_from_surf_idx;
   int                 *blk_buffer_from_surf;
-  double              *blk_coords_from_surf;
-  double              *blk_dcoords_from_surf;
-  double              *blk_aux_geom_from_surf;
+  double             **blk_coords_from_surf;
+  double             **blk_dcoords_from_surf;
+  double             **blk_aux_geom_from_surf;
 
 } PDM_cloud_deform_t;
 
@@ -241,9 +241,14 @@ _PDM_mesh_deform_create
     _cloud_deform->gnum[i]     = NULL;
   }
 
-  _cloud_deform->blk_n_points = 0;
-  _cloud_deform->blk_coords   = NULL;
-  _cloud_deform->blk_dcoords  = NULL;
+  _cloud_deform->blk_n_points             = 0;
+  _cloud_deform->blk_coords               = NULL;
+  _cloud_deform->blk_dcoords              = NULL;
+  _cloud_deform->blk_coords_from_surf     = NULL;
+  _cloud_deform->blk_dcoords_from_surf    = NULL;
+  _cloud_deform->blk_aux_geom_from_surf   = NULL;
+  _cloud_deform->blk_buffer_from_surf_idx = NULL;
+  _cloud_deform->blk_buffer_from_surf     = NULL;
 
   return def;
 
@@ -365,6 +370,14 @@ _PDM_mesh_deform_free
   if (def->is_blk == 1) {
     free(_cloud_deform->blk_coords );
     free(_cloud_deform->blk_dcoords);
+    free(_cloud_deform->blk_coords_from_surf[0] );
+    free(_cloud_deform->blk_dcoords_from_surf[0]);
+    free(_cloud_deform->blk_coords_from_surf    );
+    free(_cloud_deform->blk_dcoords_from_surf   );
+    if (def->n_aux_geom > 0) {
+      free(_cloud_deform->blk_aux_geom_from_surf[0]);
+      free(_cloud_deform->blk_aux_geom_from_surf   );
+    }
     def->is_blk = 0;
   }
 
@@ -920,6 +933,11 @@ static void
 _PDM_mesh_deform_cloud_block_get
 (
   PDM_mesh_deform_t  *def,
+  int               **blk_buffer_from_surf_idx,
+  int               **blk_buffer_from_surf,
+  double            **blk_coords_from_surf,
+  double            **blk_dcoords_from_surf,
+  double            **blk_aux_geom_from_surf,
   int                *blk_cloud_n_points,
   double            **blk_cloud_coords,
   double            **blk_cloud_dcoords
@@ -934,6 +952,14 @@ _PDM_mesh_deform_cloud_block_get
   if (def->is_blk == 1) {
     free(_cloud_deform->blk_coords );
     free(_cloud_deform->blk_dcoords);
+    free(_cloud_deform->blk_coords_from_surf[0] );
+    free(_cloud_deform->blk_dcoords_from_surf[0]);
+    free(_cloud_deform->blk_coords_from_surf    );
+    free(_cloud_deform->blk_dcoords_from_surf   );
+    if (def->n_aux_geom > 0) {
+      free(_cloud_deform->blk_aux_geom_from_surf[0]);
+      free(_cloud_deform->blk_aux_geom_from_surf   );
+    }
     def->is_blk = 0;
   }
 
@@ -1051,6 +1077,54 @@ _PDM_mesh_deform_cloud_block_get
 
   }
 
+  int request = 0;
+
+  PDM_part_to_part_reverse_iexch(_cloud_deform->ptp_blk,
+                                 PDM_MPI_COMM_KIND_P2P,
+                                 PDM_STRIDE_CST_INTERLACED,
+                                 PDM_PART_TO_PART_DATA_DEF_ORDER_PART2,
+                                 3,
+                                 sizeof(double),
+                                 NULL,
+               (const void **)   _surf_deform->coords,
+                                 NULL,
+                     (void ***) &_cloud_deform->blk_coords_from_surf,
+                                &request);
+
+  PDM_part_to_part_reverse_iexch_wait(_cloud_deform->ptp_blk, request);
+
+  PDM_part_to_part_reverse_iexch(_cloud_deform->ptp_blk,
+                                 PDM_MPI_COMM_KIND_P2P,
+                                 PDM_STRIDE_CST_INTERLACED,
+                                 PDM_PART_TO_PART_DATA_DEF_ORDER_PART2,
+                                 3,
+                                 sizeof(double),
+                                 NULL,
+               (const void **)   _surf_deform->dcoords,
+                                 NULL,
+                     (void ***) &_cloud_deform->blk_dcoords_from_surf,
+                                &request);
+
+  PDM_part_to_part_reverse_iexch_wait(_cloud_deform->ptp_blk, request);
+
+  if (def->n_aux_geom > 0) {
+
+    PDM_part_to_part_reverse_iexch(_cloud_deform->ptp_blk,
+                                   PDM_MPI_COMM_KIND_P2P,
+                                   PDM_STRIDE_CST_INTERLACED,
+                                   PDM_PART_TO_PART_DATA_DEF_ORDER_PART2,
+                                   def->n_aux_geom,
+                                   sizeof(double),
+                                   NULL,
+                 (const void **)   _surf_deform->aux_geom,
+                                   NULL,
+                       (void ***) &_cloud_deform->blk_aux_geom_from_surf,
+                                  &request);
+
+    PDM_part_to_part_reverse_iexch_wait(_cloud_deform->ptp_blk, request);
+
+  }
+
   int blk_size = PDM_part_to_block_exch(_cloud_deform->ptb_blk,
                                         sizeof(double),
                                         PDM_STRIDE_CST_INTERLACED,
@@ -1068,6 +1142,16 @@ _PDM_mesh_deform_cloud_block_get
     _cloud_deform->blk_dcoords[3*i_pts    ] = 0.0;
     _cloud_deform->blk_dcoords[3*i_pts + 1] = 0.0;
     _cloud_deform->blk_dcoords[3*i_pts + 2] = 0.0;
+  }
+
+  *blk_buffer_from_surf_idx = _cloud_deform->blk_buffer_from_surf_idx;
+  *blk_buffer_from_surf     = _cloud_deform->blk_buffer_from_surf;
+  *blk_coords_from_surf     = _cloud_deform->blk_coords_from_surf[0];
+  *blk_dcoords_from_surf    = _cloud_deform->blk_dcoords_from_surf[0];
+  if (def->n_aux_geom > 0) {
+    *blk_aux_geom_from_surf = _cloud_deform->blk_aux_geom_from_surf[0];
+  } else {
+    *blk_aux_geom_from_surf = NULL;
   }
 
   *blk_cloud_n_points = _cloud_deform->blk_n_points;
@@ -1644,11 +1728,21 @@ int main(int argc, char *argv[])
     fflush(stdout);
   }
 
-  int     blk_n_int_vtx = 0;
-  double *blk_int_vtx   = NULL;
-  double *blk_int_dvtx  = NULL;
+  int    *blk_buffer_from_bnd_idx = NULL;
+  int    *blk_buffer_from_bnd     = NULL;
+  double *blk_coords_from_bnd     = NULL;
+  double *blk_dcoords_from_bnd    = NULL;
+  double *blk_aux_geom_from_bnd   = NULL;
+  int     blk_n_int_vtx           = 0;
+  double *blk_int_vtx             = NULL;
+  double *blk_int_dvtx            = NULL;
 
   _PDM_mesh_deform_cloud_block_get(def,
+                                  &blk_buffer_from_bnd_idx,
+                                  &blk_buffer_from_bnd,
+                                  &blk_coords_from_bnd,
+                                  &blk_dcoords_from_bnd,
+                                  &blk_aux_geom_from_bnd,
                                   &blk_n_int_vtx,
                                   &blk_int_vtx,
                                   &blk_int_dvtx);
@@ -1676,11 +1770,21 @@ int main(int argc, char *argv[])
     fflush(stdout);
   }
 
-  blk_n_int_vtx = 0;
-  blk_int_vtx   = NULL;
-  blk_int_dvtx  = NULL;
+  blk_buffer_from_bnd_idx = NULL;
+  blk_buffer_from_bnd     = NULL;
+  blk_coords_from_bnd     = NULL;
+  blk_dcoords_from_bnd    = NULL;
+  blk_aux_geom_from_bnd   = NULL;
+  blk_n_int_vtx           = 0;
+  blk_int_vtx             = NULL;
+  blk_int_dvtx            = NULL;
 
   _PDM_mesh_deform_cloud_block_get(def,
+                                  &blk_buffer_from_bnd_idx,
+                                  &blk_buffer_from_bnd,
+                                  &blk_coords_from_bnd,
+                                  &blk_dcoords_from_bnd,
+                                  &blk_aux_geom_from_bnd,
                                   &blk_n_int_vtx,
                                   &blk_int_vtx,
                                   &blk_int_dvtx);
@@ -1719,11 +1823,21 @@ int main(int argc, char *argv[])
     fflush(stdout);
   }
 
-  blk_n_int_vtx = 0;
-  blk_int_vtx   = NULL;
-  blk_int_dvtx  = NULL;
+  blk_buffer_from_bnd_idx = NULL;
+  blk_buffer_from_bnd     = NULL;
+  blk_coords_from_bnd     = NULL;
+  blk_dcoords_from_bnd    = NULL;
+  blk_aux_geom_from_bnd   = NULL;
+  blk_n_int_vtx           = 0;
+  blk_int_vtx             = NULL;
+  blk_int_dvtx            = NULL;
 
   _PDM_mesh_deform_cloud_block_get(def,
+                                  &blk_buffer_from_bnd_idx,
+                                  &blk_buffer_from_bnd,
+                                  &blk_coords_from_bnd,
+                                  &blk_dcoords_from_bnd,
+                                  &blk_aux_geom_from_bnd,
                                   &blk_n_int_vtx,
                                   &blk_int_vtx,
                                   &blk_int_dvtx);
@@ -1751,11 +1865,21 @@ int main(int argc, char *argv[])
     fflush(stdout);
   }
 
-  blk_n_int_vtx = 0;
-  blk_int_vtx   = NULL;
-  blk_int_dvtx  = NULL;
+  blk_buffer_from_bnd_idx = NULL;
+  blk_buffer_from_bnd     = NULL;
+  blk_coords_from_bnd     = NULL;
+  blk_dcoords_from_bnd    = NULL;
+  blk_aux_geom_from_bnd   = NULL;
+  blk_n_int_vtx           = 0;
+  blk_int_vtx             = NULL;
+  blk_int_dvtx            = NULL;
 
   _PDM_mesh_deform_cloud_block_get(def,
+                                  &blk_buffer_from_bnd_idx,
+                                  &blk_buffer_from_bnd,
+                                  &blk_coords_from_bnd,
+                                  &blk_dcoords_from_bnd,
+                                  &blk_aux_geom_from_bnd,
                                   &blk_n_int_vtx,
                                   &blk_int_vtx,
                                   &blk_int_dvtx);
