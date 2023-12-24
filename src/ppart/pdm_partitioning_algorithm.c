@@ -1612,7 +1612,7 @@ PDM_part_generate_entity_graph_comm
     if (pentity_hint != NULL) {
       //First pass to count
       for(int i_entity = 0; i_entity < pn_entity[i_part]; ++i_entity){
-        if (pentity_hint[i_part][i_entity] == 1){
+        if (pentity_hint[i_part][i_entity] >= 1){
           idx_data++;
         }
       }
@@ -1624,7 +1624,7 @@ PDM_part_generate_entity_graph_comm
     if (pentity_hint != NULL){
       idx_data = 0;
       for(int i_entity = 0; i_entity < pn_entity[i_part]; ++i_entity) {
-        if (pentity_hint[i_part][i_entity]==1){
+        if (pentity_hint[i_part][i_entity]>=1){
           part_data[i_part][3*idx_data  ] = i_rank;
           part_data[i_part][3*idx_data+1] = i_part;
           part_data[i_part][3*idx_data+2] = i_entity;
@@ -1701,6 +1701,7 @@ PDM_part_generate_entity_graph_comm
   int** proc_part_stri = (int ** ) malloc( n_part * sizeof(int *));
   int** proc_part_data = (int ** ) malloc( n_part * sizeof(int *));
   int** part_part_data = (int ** ) malloc( n_part * sizeof(int *));
+  int** part_part_hint = (int ** ) malloc( n_part * sizeof(int *));
   for(int i_part = 0; i_part < n_part; ++i_part) {
     proc_part_stri[i_part] = (int *) malloc( pn_entity[i_part] * sizeof(int));
     proc_part_data[i_part] = (int *) malloc( pn_entity[i_part] * sizeof(int));
@@ -1710,6 +1711,14 @@ PDM_part_generate_entity_graph_comm
       proc_part_data[i_part][i] = i_rank;
       part_part_data[i_part][i] = i_part;
     }
+
+    if (pentity_hint != NULL){
+      part_part_hint[i_part] = (int *) pentity_hint[i_part];
+    } else {
+      part_part_hint[i_part] = PDM_array_const_int( pn_entity[i_part], 1);
+    }
+
+
   }
   int* proc_blk_stri = NULL;
   int* proc_blk_data = NULL;
@@ -1732,6 +1741,19 @@ PDM_part_generate_entity_graph_comm
                 (void **) part_part_data,
                           &proc_blk_stri,
                 (void **) &part_blk_data);
+  free(proc_blk_stri);
+
+
+  int* part_blk_hint = NULL;
+  PDM_part_to_block_exch (ptb,
+                          sizeof(int),
+                          PDM_STRIDE_VAR_INTERLACED,
+                          1,
+                          proc_part_stri,
+                (void **) part_part_hint,
+                          &proc_blk_stri,
+                (void **) &part_blk_hint);
+
 
   // PDM_g_num_t* new_distrib = PDM_part_to_block_adapt_partial_block_to_block(ptb, &blk_stri, _entity_distribution[n_rank]);
   // free(new_distrib);
@@ -1749,10 +1771,14 @@ PDM_part_generate_entity_graph_comm
     free(proc_part_stri[i_part]);
     free(proc_part_data[i_part]);
     free(part_part_data[i_part]);
+    if (pentity_hint == NULL) {
+      free(part_part_hint[i_part]);
+    }
   }
   free(proc_part_stri);
   free(proc_part_data);
   free(part_part_data);
+  free(part_part_hint);
   free(part_stri);
   free(part_data);
 
@@ -1762,11 +1788,20 @@ PDM_part_generate_entity_graph_comm
   if(0 == 1){
     int idx_debug_data = 0;
     for(int i_block = 0; i_block < n_entity_block; ++i_block){
-      printf("[%d]-blk_stri[%d]:: ", i_block, blk_stri[i_block]);
+      log_trace("[%d]-blk_stri[%d]:: ", i_block, blk_stri[i_block]);
       for(int i_data = 0; i_data < blk_stri[i_block]; ++i_data){
-        printf("%i ", blk_data[idx_debug_data++]);
+        log_trace("%i ", blk_data[idx_debug_data++]);
       }
-      printf("\n");
+      log_trace("\n");
+    }
+
+    idx_debug_data = 0;
+    for(int i_block = 0; i_block < n_entity_block; ++i_block){
+      log_trace("[%d]-blk_stri[%d]:: ", i_block, blk_stri[i_block]);
+      for(int i_data = 0; i_data < blk_stri[i_block]/3; ++i_data){
+        log_trace("%i ", part_blk_hint[idx_debug_data++]);
+      }
+      log_trace("\n");
     }
   }
 
@@ -1790,6 +1825,7 @@ PDM_part_generate_entity_graph_comm
   int* n_owner_entity_by_rank = PDM_array_zeros_int(part_distribution[n_rank]);
   int* proc_data_current = proc_blk_data;
   int* part_data_current = part_blk_data;
+  int* hint_data_current = part_blk_hint;
 
   for(int i_block = 0; i_block < n_entity_block; ++i_block){
 
@@ -1802,8 +1838,19 @@ PDM_part_generate_entity_graph_comm
       }
 
     } else {
-      for(int i_data = 0; i_data < blk_stri[i_block]; ++i_data){
-        blk_data[idx_comp++] = blk_data[idx_data++];
+      // for(int i_data = 0; i_data < blk_stri[i_block]; ++i_data){
+      //   blk_data[idx_comp++] = blk_data[idx_data++];
+      // }
+      int n_strid = blk_stri[i_block]/3;
+      for(int i_data = 0; i_data < n_strid; ++i_data){
+        if(hint_data_current[i_data] < 2) {
+          for(int k = 0; k < 3; ++k) {
+            blk_data[idx_comp++] = blk_data[idx_data++];
+          }
+        } else {
+          blk_stri[i_block] -= 3; // On l'enleve
+          idx_data +=3;
+        }
       }
       /* Fill up entity priority */
       if(setup_priority == 1){
@@ -1819,6 +1866,7 @@ PDM_part_generate_entity_graph_comm
     }
     proc_data_current += proc_blk_stri[i_block];
     part_data_current += proc_blk_stri[i_block];
+    hint_data_current += proc_blk_stri[i_block];
   }
   free(n_owner_entity_by_rank);
 
@@ -1827,41 +1875,22 @@ PDM_part_generate_entity_graph_comm
    */
   blk_data = (int *) realloc(blk_data, idx_comp * sizeof(int));
 
+  PDM_log_trace_array_int(blk_data, idx_comp, "blk_data ::");
+
   /*
    * Panic verbose
    */
   if(0 == 1){
     int idx_debug_data = 0;
     for(int i_block = 0; i_block < n_entity_block; ++i_block){
-      printf("[%d]-blk_stri[%d]:: ", i_block, blk_stri[i_block]);
+      log_trace("[%d]-blk_stri[%d]:: ", i_block, blk_stri[i_block]);
       for(int i_data = 0; i_data < blk_stri[i_block]; ++i_data){
-        printf("%i ", blk_data[idx_debug_data++]);
+        log_trace("%i ", blk_data[idx_debug_data++]);
       }
-      printf("\n");
+      log_trace("\n");
     }
   }
 
-  // int n_stride = 0;
-  // for(int i_block = 0; i_block < n_entity_block; ++i_block){
-  //   n_stride += blk_stri[i_block];
-  // }
-
-
-  // log_trace("n_stride = %i | n_entity_block = %i | dn_check = %i \n", n_stride, n_entity_block, dn_check);
-  // if(dn_check != n_entity_block) {
-  //   log_trace("STRANGE : n_stride = %i | n_entity_block = %i | dn_check = %i | dn_entity = %i \n", n_stride, n_entity_block, dn_check, dn_entity);
-  // }
-
-  // printf(" PDM_part_assemble_partitions PDM_part_generate_entity_graph_comm flag 4 \n");
-  // PDM_MPI_Barrier(comm);
-  /*
-   * All data is now sort we cen resend to partition
-   */
-  // PDM_block_to_part_t* btp = PDM_block_to_part_create(_entity_distribution,
-  //                              (const PDM_g_num_t **) pentity_ln_to_gn,
-  //                                                     pn_entity,
-  //                                                     n_part,
-  //                                                     comm);
   PDM_block_to_part_t* btp = PDM_block_to_part_create_from_sparse_block(gnum_block,
                                                                         n_entity_block,
                                                  (const PDM_g_num_t **) pentity_ln_to_gn,
@@ -1874,24 +1903,24 @@ PDM_part_generate_entity_graph_comm
   // printf(" PDM_part_assemble_partitions PDM_part_generate_entity_graph_comm flag 4 - 1 \n");
   // PDM_MPI_Barrier(comm);
   PDM_block_to_part_exch(btp,
-                          sizeof(int),
-                          PDM_STRIDE_VAR_INTERLACED,
-                          blk_stri,
-             (void *  )   blk_data,
-             (int  ***)  &part_stri,
-             (void ***)  &part_data);
+                         sizeof(int),
+                         PDM_STRIDE_VAR_INTERLACED,
+                         blk_stri,
+            (void *  )   blk_data,
+            (int  ***)  &part_stri,
+            (void ***)  &part_data);
   // printf(" PDM_part_assemble_partitions PDM_part_generate_entity_graph_comm flag 4 - 2 \n");
   // PDM_MPI_Barrier(comm);
 
   if(setup_priority == 1 ){
     int stride_one = 1;
     PDM_block_to_part_exch(btp,
-                            sizeof(int),
-                            PDM_STRIDE_CST_INTERLACED,
-                            &stride_one,
-               (void *  )   blk_priority_data,
-                            NULL,
-               (void ***)   pentity_priority);
+                           sizeof(int),
+                           PDM_STRIDE_CST_INTERLACED,
+                           &stride_one,
+              (void *  )   blk_priority_data,
+                           NULL,
+              (void ***)   pentity_priority);
     free(blk_priority_data);
   }
   // printf(" PDM_part_assemble_partitions PDM_part_generate_entity_graph_comm flag 4 - 3 \n");
@@ -1905,6 +1934,7 @@ PDM_part_generate_entity_graph_comm
   free(proc_blk_data);
   free(part_blk_data);
   free(proc_blk_stri);
+  free(part_blk_hint);
 
   /*
    * Interface for pdm_part is  :

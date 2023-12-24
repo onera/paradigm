@@ -328,7 +328,6 @@ _part_extension
   PDM_MPI_Comm_size(comm, &n_rank);
 
   int* n_part_g = malloc(n_domain * sizeof(int));
-  printf("n_domain = %i \n", n_domain);
   PDM_MPI_Allreduce(n_part, n_part_g, n_domain, PDM_MPI_INT, PDM_MPI_SUM, comm);
 
 
@@ -1114,13 +1113,13 @@ int main
     n_part_by_domain[i] = n_part;
   }
   PDM_multipart_t *mpart = PDM_multipart_create(n_domain,
-                                                   n_part_by_domain,
-                                                   PDM_FALSE,
-                                                   method,
-                                                   PDM_PART_SIZE_HOMOGENEOUS,
-                                                   NULL,
-                                                   comm,
-                                                   PDM_OWNERSHIP_KEEP);
+                                                n_part_by_domain,
+                                                PDM_FALSE,
+                                                method,
+                                                PDM_PART_SIZE_HOMOGENEOUS,
+                                                NULL,
+                                                comm,
+                                                PDM_OWNERSHIP_KEEP);
 
   for (int i = 0; i < n_domain; i++) {
     dmn[i] = PDM_dcube_nodal_gen_dmesh_nodal_get(dcube[i]);
@@ -1210,20 +1209,21 @@ int main
                                                    &pflat_vtx_coords,
                                                    PDM_OWNERSHIP_KEEP);
 
-
-      char filename[999];
-      sprintf(filename, "out_edge_i_part=%i_%i_%i.vtk", i_part, i_dom, i_rank);
-      PDM_vtk_write_std_elements(filename,
-                                 n_vtx,
-                                 pflat_vtx_coords,
-                                 pvtx_ln_to_gn[i_dom][i_part],
-                                 PDM_MESH_NODAL_BAR2,
-                                 pn_edge[i_dom][i_part],
-                                 pedge_vtx     [i_dom][i_part],
-                                 pedge_ln_to_gn[i_dom][i_part],
-                                 0,
-                                 NULL,
-                                 NULL);
+      if(1 == 1) {
+        char filename[999];
+        sprintf(filename, "out_edge_i_part=%i_%i_%i.vtk", i_part, i_dom, i_rank);
+        PDM_vtk_write_std_elements(filename,
+                                   n_vtx,
+                                   pflat_vtx_coords,
+                                   pvtx_ln_to_gn[i_dom][i_part],
+                                   PDM_MESH_NODAL_BAR2,
+                                   pn_edge[i_dom][i_part],
+                                   pedge_vtx     [i_dom][i_part],
+                                   pedge_ln_to_gn[i_dom][i_part],
+                                   0,
+                                   NULL,
+                                   NULL);
+      }
 
     }
   }
