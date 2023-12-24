@@ -1349,6 +1349,11 @@ int main(int argc, char *argv[])
   double      **int_vtx      = malloc (sizeof(double      *) * n_part);
   int          *n_int_vtx    = malloc (sizeof(int          ) * n_part);
 
+  PDM_g_num_t **bnd_to_all_vtx     = malloc (sizeof(PDM_g_num_t *) * n_part_bnd);
+  int         **bnd_to_all_vtx_idx = malloc (sizeof(int         *) * n_part_bnd);
+  PDM_g_num_t **all_vtx_ln_to_gn   = malloc (sizeof(PDM_g_num_t *) * n_part);
+  int          *n_all_vtx          = malloc (sizeof(int          ) * n_part);
+
   PDM_extract_part_t* extrp = PDM_extract_part_create(2,
                                                       n_part,
                                                       n_part_bnd,
@@ -1438,6 +1443,9 @@ int main(int argc, char *argv[])
                              NULL);
     }
 
+    n_all_vtx       [i_part] = n_vtx;
+    all_vtx_ln_to_gn[i_part] = vtx_ln_to_gn;
+
     selected_face[i_part] = malloc (sizeof(int) * sface_group);
 
     for (int i_group = 0; i_group < nface_group; i_group++) {
@@ -1512,6 +1520,14 @@ int main(int argc, char *argv[])
                                   &bnd_vtx[i_part],
                                    PDM_OWNERSHIP_USER);
 
+    PDM_extract_part_parent_ln_to_gn_get(extrp,
+                                         i_part,
+                                         PDM_MESH_ENTITY_VERTEX,
+                                        &bnd_to_all_vtx[i_part],
+                                         PDM_OWNERSHIP_KEEP);
+
+    bnd_to_all_vtx_idx[i_part] = PDM_array_new_idx_from_const_stride_int(1, n_bnd_vtx[i_part]);
+
     bnd_dvtx        [i_part] = malloc (sizeof(double) * 3     * n_bnd_vtx[i_part]);
     bnd_vtx_aux_geom[i_part] = malloc (sizeof(double) * n_var * n_bnd_vtx[i_part]);
 
@@ -1534,12 +1550,31 @@ int main(int argc, char *argv[])
 
   free(selected_face);
 
-  PDM_part_to_part_t *ptp_bnd_vtx = NULL;
+  /**PDM_part_to_part_t *ptp_bnd_vtx = NULL;
 
   PDM_extract_part_part_to_part_get(extrp,
                                     PDM_MESH_ENTITY_VERTEX,
                                    &ptp_bnd_vtx,
-                                    PDM_OWNERSHIP_USER);
+                                    PDM_OWNERSHIP_USER);**/
+
+  PDM_part_to_part_t *ptp_bnd_vtx = PDM_part_to_part_create((const PDM_g_num_t **) bnd_vtx_ln_to_gn,
+                                                            (const int          *) n_bnd_vtx,
+                                                                                   n_part_bnd,
+                                                            (const PDM_g_num_t **) all_vtx_ln_to_gn,
+                                                            (const int          *) n_all_vtx,
+                                                                                   n_part,
+                                                            (const int         **) bnd_to_all_vtx_idx,
+                                                            (const PDM_g_num_t **) bnd_to_all_vtx,
+                                                                                   comm);
+
+  for (int i_part = 0; i_part < n_part_bnd; i_part++) {
+    free(bnd_to_all_vtx_idx[i_part]);
+  }
+
+  free(bnd_to_all_vtx    );
+  free(bnd_to_all_vtx_idx);
+  free(all_vtx_ln_to_gn  );
+  free(n_all_vtx         );
 
   PDM_extract_part_free(extrp);
 

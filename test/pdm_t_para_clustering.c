@@ -275,6 +275,8 @@ int main(int argc, char *argv[])
 
   PDM_g_num_t **bnd_to_all_vtx     = malloc (sizeof(PDM_g_num_t *) * n_part_bnd);
   int         **bnd_to_all_vtx_idx = malloc (sizeof(int         *) * n_part_bnd);
+  PDM_g_num_t **gnum_all_vtx       = malloc (sizeof(PDM_g_num_t *) * n_part);
+  int          *n_all_vtx          = malloc (sizeof(int          ) * n_part);
 
   PDM_extract_part_t* extrp = PDM_extract_part_create(2,
                                                       n_part,
@@ -364,6 +366,9 @@ int main(int argc, char *argv[])
                              face_ln_to_gn,
                              NULL);
     }
+
+    n_all_vtx   [i_part] = n_vtx;
+    gnum_all_vtx[i_part] = vtx_ln_to_gn;
 
     selected_face[i_part] = malloc (sizeof(int) * sface_group);
 
@@ -464,11 +469,24 @@ int main(int argc, char *argv[])
 
   free(selected_face);
 
-  PDM_part_to_part_t *ptp_vtx = NULL;
+  /**PDM_part_to_part_t *ptp_vtx = NULL;
   PDM_extract_part_part_to_part_get(extrp,
                                     PDM_MESH_ENTITY_VERTEX,
                                    &ptp_vtx,
-                                    PDM_OWNERSHIP_USER);
+                                    PDM_OWNERSHIP_USER);**/
+
+  PDM_part_to_part_t *ptp_vtx = PDM_part_to_part_create((const PDM_g_num_t **) gnum_bnd_vtx,
+                                                        (const int          *) n_bnd_vtx,
+                                                                               n_part_bnd,
+                                                        (const PDM_g_num_t **) gnum_all_vtx,
+                                                        (const int          *) n_all_vtx,
+                                                                               n_part,
+                                                        (const int         **) bnd_to_all_vtx_idx,
+                                                        (const PDM_g_num_t **) bnd_to_all_vtx,
+                                                                               comm);
+
+  free(gnum_all_vtx);
+  free(n_all_vtx   );
 
   PDM_extract_part_free(extrp);
 
