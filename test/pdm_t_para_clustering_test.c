@@ -1198,6 +1198,170 @@ _PDM_mesh_deform_cloud_dcoords_part_get
 
 }
 
+static void
+_compute_idw
+(
+  PDM_part_to_block_t  *ptb_surf,
+  double              **surf_coords,
+  double              **surf_dcoords,
+  int                   n_aux_geom,
+  double              **surf_aux_geom,
+  int                  *blk_buffer_from_surf_idx,
+  int                  *blk_buffer_from_surf,
+  double               *blk_coords_from_surf,
+  double               *blk_dcoords_from_surf,
+  double               *blk_aux_geom_from_surf,
+  int                   blk_cloud_n_points,
+  double               *blk_cloud_coords,
+  double               *blk_cloud_dcoords,
+  PDM_MPI_Comm          comm
+)
+{
+
+  int     blk_surf_n_vtx    = PDM_part_to_block_n_elt_block_get(ptb_surf);
+  double *blk_surf_coords   = NULL;
+  double *blk_surf_dcoords  = NULL;
+  double *blk_surf_aux_geom = NULL;
+
+  int blk_size = PDM_part_to_block_exch(ptb_surf,
+                                        sizeof(double),
+                                        PDM_STRIDE_CST_INTERLACED,
+                                        3,
+                                        NULL,
+                             (void **)  surf_coords,
+                                        NULL,
+                             (void **) &blk_surf_coords);
+
+  PDM_UNUSED(blk_size);
+
+  blk_size = PDM_part_to_block_exch(ptb_surf,
+                                    sizeof(double),
+                                    PDM_STRIDE_CST_INTERLACED,
+                                    3,
+                                    NULL,
+                         (void **)  surf_dcoords,
+                                    NULL,
+                         (void **) &blk_surf_dcoords);
+
+  blk_size = PDM_part_to_block_exch(ptb_surf,
+                                    sizeof(double),
+                                    PDM_STRIDE_CST_INTERLACED,
+                                    n_aux_geom,
+                                    NULL,
+                         (void **)  surf_aux_geom,
+                                    NULL,
+                         (void **) &blk_surf_aux_geom);
+
+  double *dx = malloc (sizeof(double) * 3);
+  double *du = malloc (sizeof(double) * 3);
+  double *dr = malloc (sizeof(double) * 3);
+  double  sdist = 0.0;
+  double  dist  = 0.0;
+
+  PDM_g_num_t  m_vtx = 0;
+  PDM_g_num_t _m_vtx = 0;
+  double       aire  = 0.0;
+  double      _aire  = 0.0;
+  double       l1    = 0.0;
+  double      _l1    = 0.0;
+  double       l2    = 0.0;
+  double      _l2    = 0.0;
+
+  dx[0] = 0.0;
+  dx[1] = 0.0;
+  dx[2] = 0.0;
+
+  for (int i_vtx = 0; i_vtx < blk_surf_n_vtx; i_vtx++) {
+    m_vtx++;
+    dx[0] = dx[0] + blk_surf_coords[3*i_vtx    ];
+    dx[1] = dx[1] + blk_surf_coords[3*i_vtx + 1];
+    dx[2] = dx[2] + blk_surf_coords[3*i_vtx + 2];
+  }
+
+  PDM_MPI_Allreduce (&m_vtx, &_m_vtx, 1, PDM__PDM_MPI_G_NUM, PDM_MPI_SUM, comm);
+  PDM_MPI_Allreduce (dx, dr, 3, PDM_MPI_DOUBLE, PDM_MPI_SUM, comm);
+
+  dx[0] = dr[0]/_m_vtx;
+  dx[1] = dr[1]/_m_vtx;
+  dx[2] = dr[2]/_m_vtx;
+
+  for (int i_vtx = 0; i_vtx < blk_surf_n_vtx; i_vtx++) {
+    dr[0] = dx[0] - blk_surf_coords[3*i_vtx    ];
+    dr[1] = dx[1] - blk_surf_coords[3*i_vtx + 1];
+    dr[2] = dx[2] - blk_surf_coords[3*i_vtx + 2];
+    l1 = PDM_MAX(l1, pow(dr[0],2)+pow(dr[1],2)+pow(dr[2],2));
+  }
+
+  PDM_MPI_Allreduce (&l1, &_l1, 1, PDM_MPI_DOUBLE, PDM_MPI_MAX, comm);
+  l1 = sqrt(_l1);
+
+  dx[0] = 0.0;
+  dx[1] = 0.0;
+  dx[2] = 0.0;
+
+  for (int i_vtx = 0; i_vtx < blk_surf_n_vtx; i_vtx++) {
+    aire  = aire  + blk_surf_aux_geom[n_aux_geom*i_vtx];
+    dx[0] = dx[0] + blk_surf_aux_geom[n_aux_geom*i_vtx]*blk_surf_dcoords[3*i_vtx    ];
+    dx[1] = dx[1] + blk_surf_aux_geom[n_aux_geom*i_vtx]*blk_surf_dcoords[3*i_vtx + 1];
+    dx[2] = dx[2] + blk_surf_aux_geom[n_aux_geom*i_vtx]*blk_surf_dcoords[3*i_vtx + 2];
+  }
+
+  PDM_MPI_Allreduce (dx, dr, 3, PDM_MPI_DOUBLE, PDM_MPI_SUM, comm);
+  PDM_MPI_Allreduce (&aire, &_aire, 1, PDM_MPI_DOUBLE, PDM_MPI_SUM, comm);
+
+  dx[0] = dr[0]/_aire;
+  dx[1] = dr[1]/_aire;
+  dx[2] = dr[2]/_aire;
+
+  for (int i_vtx = 0; i_vtx < blk_surf_n_vtx; i_vtx++) {
+    dr[0] = dx[0] - blk_surf_dcoords[3*i_vtx    ];
+    dr[1] = dx[1] - blk_surf_dcoords[3*i_vtx + 1];
+    dr[2] = dx[2] - blk_surf_dcoords[3*i_vtx + 2];
+    l2 = PDM_MAX(l2, pow(dr[0],2)+pow(dr[1],2)+pow(dr[2],2));
+  }
+
+  PDM_MPI_Allreduce (&l2, &_l2, 1, PDM_MPI_DOUBLE, PDM_MPI_MAX, comm);
+  l2 = PDM_MAX(0.1, 5.0*sqrt(_l2)/l1)*l1;
+
+  free(blk_surf_coords  );
+  free(blk_surf_dcoords );
+  free(blk_surf_aux_geom);
+
+  for (int i_vtx = 0; i_vtx < blk_cloud_n_points; i_vtx++) {
+    dx[0] = 0.0;
+    dx[1] = 0.0;
+    dx[2] = 0.0;
+    sdist = 0.0;
+    for (int j_vtx = blk_buffer_from_surf_idx[i_vtx]; j_vtx < blk_buffer_from_surf_idx[i_vtx+1]; j_vtx++) {
+      int k_vtx = blk_buffer_from_surf[j_vtx];
+      du[0] = blk_dcoords_from_surf[3*k_vtx    ];
+      du[1] = blk_dcoords_from_surf[3*k_vtx + 1];
+      du[2] = blk_dcoords_from_surf[3*k_vtx + 2];
+      dr[0] = blk_coords_from_surf[3*k_vtx    ] - blk_cloud_coords[3*i_vtx    ];
+      dr[1] = blk_coords_from_surf[3*k_vtx + 1] - blk_cloud_coords[3*i_vtx + 1];
+      dr[2] = blk_coords_from_surf[3*k_vtx + 2] - blk_cloud_coords[3*i_vtx + 2];
+      dist  = sqrt(pow(dr[0],2)+pow(dr[1],2)+pow(dr[2],2));
+      if (sqrt(pow(du[0],2)+pow(du[1],2)+pow(du[2],2)) > 1e-6) {
+        dist = blk_aux_geom_from_surf[n_aux_geom*k_vtx]*(pow(l1/dist,3) + pow(l2/dist,5));
+      } else {
+        dist = blk_aux_geom_from_surf[n_aux_geom*k_vtx]*pow(l1/dist,3);
+      }
+      sdist = sdist + dist;
+      dx[0] = dx[0] + blk_dcoords_from_surf[3*k_vtx    ]*dist;
+      dx[1] = dx[1] + blk_dcoords_from_surf[3*k_vtx + 1]*dist;
+      dx[2] = dx[2] + blk_dcoords_from_surf[3*k_vtx + 2]*dist;
+    }
+    blk_cloud_dcoords[3*i_vtx    ] = dx[0]/sdist;
+    blk_cloud_dcoords[3*i_vtx + 1] = dx[1]/sdist;
+    blk_cloud_dcoords[3*i_vtx + 2] = dx[2]/sdist;
+  }
+
+  free(dx);
+  free(du);
+  free(dr);
+
+}
+
 /**
  *
  * \brief  Main
@@ -1928,147 +2092,20 @@ int main(int argc, char *argv[])
     fflush(stdout);
   }
 
-  int     blk_n_bnd_vtx        = PDM_part_to_block_n_elt_block_get(ptb_bnd_vtx);
-  double *blk_bnd_vtx          = NULL;
-  double *blk_bnd_dvtx         = NULL;
-  double *blk_bnd_vtx_aux_geom = NULL;
-
-  int blk_size = PDM_part_to_block_exch(ptb_bnd_vtx,
-                                        sizeof(double),
-                                        PDM_STRIDE_CST_INTERLACED,
-                                        3,
-                                        NULL,
-                             (void **)  bnd_vtx,
-                                        NULL,
-                             (void **) &blk_bnd_vtx);
-
-  PDM_UNUSED(blk_size);
-
-  blk_size = PDM_part_to_block_exch(ptb_bnd_vtx,
-                                    sizeof(double),
-                                    PDM_STRIDE_CST_INTERLACED,
-                                    3,
-                                    NULL,
-                         (void **)  bnd_dvtx,
-                                    NULL,
-                         (void **) &blk_bnd_dvtx);
-
-  blk_size = PDM_part_to_block_exch(ptb_bnd_vtx,
-                                    sizeof(double),
-                                    PDM_STRIDE_CST_INTERLACED,
-                                    n_var,
-                                    NULL,
-                         (void **)  bnd_vtx_aux_geom,
-                                    NULL,
-                         (void **) &blk_bnd_vtx_aux_geom);
-
-  double *dx = malloc (sizeof(double) * 3);
-  double *du = malloc (sizeof(double) * 3);
-  double *dr = malloc (sizeof(double) * 3);
-  double  sdist;
-  double  dist;
-
-  PDM_g_num_t  m_vtx = 0;
-  PDM_g_num_t _m_vtx = 0;
-  double       aire  = 0.0;
-  double      _aire  = 0.0;
-  double       l1    = 0.0;
-  double      _l1    = 0.0;
-  double       l2    = 0.0;
-  double      _l2    = 0.0;
-
-  dx[0] = 0.0;
-  dx[1] = 0.0;
-  dx[2] = 0.0;
-
-  for (int i_vtx = 0; i_vtx < blk_n_bnd_vtx; i_vtx++) {
-    m_vtx++;
-    dx[0] = dx[0] + blk_bnd_vtx[3*i_vtx    ];
-    dx[1] = dx[1] + blk_bnd_vtx[3*i_vtx + 1];
-    dx[2] = dx[2] + blk_bnd_vtx[3*i_vtx + 2];
-  }
-
-  PDM_MPI_Allreduce (&m_vtx, &_m_vtx, 1, PDM__PDM_MPI_G_NUM, PDM_MPI_SUM, comm);
-  PDM_MPI_Allreduce (dx, dr, 3, PDM_MPI_DOUBLE, PDM_MPI_SUM, comm);
-
-  dx[0] = dr[0]/_m_vtx;
-  dx[1] = dr[1]/_m_vtx;
-  dx[2] = dr[2]/_m_vtx;
-
-  for (int i_vtx = 0; i_vtx < blk_n_bnd_vtx; i_vtx++) {
-    dr[0] = dx[0] - blk_bnd_vtx[3*i_vtx    ];
-    dr[1] = dx[1] - blk_bnd_vtx[3*i_vtx + 1];
-    dr[2] = dx[2] - blk_bnd_vtx[3*i_vtx + 2];
-    l1 = PDM_MAX(l1, pow(dr[0],2)+pow(dr[1],2)+pow(dr[2],2));
-  }
-
-  PDM_MPI_Allreduce (&l1, &_l1, 1, PDM_MPI_DOUBLE, PDM_MPI_MAX, comm);
-  l1 = sqrt(_l1);
-
-  dx[0] = 0.0;
-  dx[1] = 0.0;
-  dx[2] = 0.0;
-
-  for (int i_vtx = 0; i_vtx < blk_n_bnd_vtx; i_vtx++) {
-    aire  = aire  + blk_bnd_vtx_aux_geom[n_var*i_vtx];
-    dx[0] = dx[0] + blk_bnd_vtx_aux_geom[n_var*i_vtx]*blk_bnd_dvtx[3*i_vtx    ];
-    dx[1] = dx[1] + blk_bnd_vtx_aux_geom[n_var*i_vtx]*blk_bnd_dvtx[3*i_vtx + 1];
-    dx[2] = dx[2] + blk_bnd_vtx_aux_geom[n_var*i_vtx]*blk_bnd_dvtx[3*i_vtx + 2];
-  }
-
-  PDM_MPI_Allreduce (dx, dr, 3, PDM_MPI_DOUBLE, PDM_MPI_SUM, comm);
-  PDM_MPI_Allreduce (&aire, &_aire, 1, PDM_MPI_DOUBLE, PDM_MPI_SUM, comm);
-
-  dx[0] = dr[0]/_aire;
-  dx[1] = dr[1]/_aire;
-  dx[2] = dr[2]/_aire;
-
-  for (int i_vtx = 0; i_vtx < blk_n_bnd_vtx; i_vtx++) {
-    dr[0] = dx[0] - blk_bnd_dvtx[3*i_vtx    ];
-    dr[1] = dx[1] - blk_bnd_dvtx[3*i_vtx + 1];
-    dr[2] = dx[2] - blk_bnd_dvtx[3*i_vtx + 2];
-    l2 = PDM_MAX(l2, pow(dr[0],2)+pow(dr[1],2)+pow(dr[2],2));
-  }
-
-  PDM_MPI_Allreduce (&l2, &_l2, 1, PDM_MPI_DOUBLE, PDM_MPI_MAX, comm);
-  l2 = PDM_MAX(0.1, 5.0*sqrt(_l2)/l1)*l1;
-
-  free(blk_bnd_vtx );
-  free(blk_bnd_dvtx);
-  free(blk_bnd_vtx_aux_geom);
-
-  for (int i_vtx = 0; i_vtx < blk_n_int_vtx; i_vtx++) {
-    dx[0] = 0.0;
-    dx[1] = 0.0;
-    dx[2] = 0.0;
-    sdist = 0.0;
-    for (int j_vtx = blk_buffer_from_bnd_idx[i_vtx]; j_vtx < blk_buffer_from_bnd_idx[i_vtx+1]; j_vtx++) {
-      int k_vtx = blk_buffer_from_bnd[j_vtx];
-      du[0] = blk_dvtx_from_bnd[3*k_vtx    ];
-      du[1] = blk_dvtx_from_bnd[3*k_vtx + 1];
-      du[2] = blk_dvtx_from_bnd[3*k_vtx + 2];
-      dr[0] = blk_vtx_from_bnd[3*k_vtx    ] - blk_int_vtx[3*i_vtx    ];
-      dr[1] = blk_vtx_from_bnd[3*k_vtx + 1] - blk_int_vtx[3*i_vtx + 1];
-      dr[2] = blk_vtx_from_bnd[3*k_vtx + 2] - blk_int_vtx[3*i_vtx + 2];
-      dist  = sqrt(pow(dr[0],2)+pow(dr[1],2)+pow(dr[2],2));
-      if (sqrt(pow(du[0],2)+pow(du[1],2)+pow(du[2],2)) > 1e-6) {
-        dist = blk_aux_geom_from_bnd[n_var*k_vtx]*(pow(l1/dist,3) + pow(l2/dist,5));
-      } else {
-        dist = blk_aux_geom_from_bnd[n_var*k_vtx]*pow(l1/dist,3);
-      }
-      sdist = sdist + dist;
-      dx[0] = dx[0] + blk_dvtx_from_bnd[3*k_vtx    ]*dist;
-      dx[1] = dx[1] + blk_dvtx_from_bnd[3*k_vtx + 1]*dist;
-      dx[2] = dx[2] + blk_dvtx_from_bnd[3*k_vtx + 2]*dist;
-    }
-    blk_int_dvtx[3*i_vtx    ] = dx[0]/sdist;
-    blk_int_dvtx[3*i_vtx + 1] = dx[1]/sdist;
-    blk_int_dvtx[3*i_vtx + 2] = dx[2]/sdist;
-  }
-
-  free(dx);
-  free(du);
-  free(dr);
+  _compute_idw(ptb_bnd_vtx,
+               bnd_vtx,
+               bnd_dvtx,
+               n_var,
+               bnd_vtx_aux_geom,
+               blk_buffer_from_bnd_idx,
+               blk_buffer_from_bnd,
+               blk_vtx_from_bnd,
+               blk_dvtx_from_bnd,
+               blk_aux_geom_from_bnd,
+               blk_n_int_vtx,
+               blk_int_vtx,
+               blk_int_dvtx,
+               comm);
 
   /*
    * Get part PDM_mesh_deform
