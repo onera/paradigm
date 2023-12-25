@@ -1702,7 +1702,7 @@ int main(int argc, char *argv[])
       for (int i_var = 0; i_var < n_var; i_var++) {
         bnd_vtx_aux_geom[i_part][n_var*i_vtx+i_var] = 0.0;
       }
-      bnd_dvtx        [i_part][3*i_vtx] = 2e-3*(1.0-(bnd_vtx[i_part][3*i_vtx]+length/2)/length);
+      bnd_dvtx        [i_part][3*i_vtx] = 5e-4*(1.0-(bnd_vtx[i_part][3*i_vtx]+length/2)/length);
       bnd_vtx_aux_geom[i_part][  i_vtx] = 1.0;
     }
 
@@ -1947,6 +1947,30 @@ int main(int argc, char *argv[])
                                   &blk_int_dvtx);
 
   /*
+   * Move vertices
+   */
+
+  if (i_rank == 0) {
+    printf("-- Move vertices 1/4\n");
+    fflush(stdout);
+  }
+
+  _compute_idw(ptb_bnd_vtx,
+               bnd_vtx,
+               bnd_dvtx,
+               n_var,
+               bnd_vtx_aux_geom,
+               blk_buffer_from_bnd_idx,
+               blk_buffer_from_bnd,
+               blk_vtx_from_bnd,
+               blk_dvtx_from_bnd,
+               blk_aux_geom_from_bnd,
+               blk_n_int_vtx,
+               blk_int_vtx,
+               blk_int_dvtx,
+               comm);
+
+  /*
    * Get part PDM_mesh_deform
    */
 
@@ -1959,6 +1983,26 @@ int main(int argc, char *argv[])
 
   _PDM_mesh_deform_cloud_dcoords_part_get(def,
                                          &int_dvtx);
+
+  for (int i_part = 0; i_part < n_part_bnd; i_part++) {
+
+    for (int i_vtx = 0; i_vtx < n_bnd_vtx[i_part]; i_vtx++) {
+      bnd_vtx[i_part][3*i_vtx   ] = bnd_vtx[i_part][3*i_vtx   ] + bnd_dvtx[i_part][3*i_vtx    ];
+      bnd_vtx[i_part][3*i_vtx+ 1] = bnd_vtx[i_part][3*i_vtx+ 1] + bnd_dvtx[i_part][3*i_vtx + 1];
+      bnd_vtx[i_part][3*i_vtx+ 2] = bnd_vtx[i_part][3*i_vtx+ 2] + bnd_dvtx[i_part][3*i_vtx + 2];
+    }
+
+  }
+
+  for (int i_part = 0; i_part < n_part; i_part++) {
+
+    for (int i_vtx = 0; i_vtx < n_int_vtx[i_part]; i_vtx++) {
+      int_vtx[i_part][3*i_vtx   ] = int_vtx[i_part][3*i_vtx   ] + int_dvtx[i_part][3*i_vtx    ];
+      int_vtx[i_part][3*i_vtx+ 1] = int_vtx[i_part][3*i_vtx+ 1] + int_dvtx[i_part][3*i_vtx + 1];
+      int_vtx[i_part][3*i_vtx+ 2] = int_vtx[i_part][3*i_vtx+ 2] + int_dvtx[i_part][3*i_vtx + 2];
+    }
+
+  }
 
   /*
    * Get block PDM_mesh_deform
@@ -1989,6 +2033,30 @@ int main(int argc, char *argv[])
                                   &blk_int_dvtx);
 
   /*
+   * Move vertices
+   */
+
+  if (i_rank == 0) {
+    printf("-- Move vertices 2/4\n");
+    fflush(stdout);
+  }
+
+  _compute_idw(ptb_bnd_vtx,
+               bnd_vtx,
+               bnd_dvtx,
+               n_var,
+               bnd_vtx_aux_geom,
+               blk_buffer_from_bnd_idx,
+               blk_buffer_from_bnd,
+               blk_vtx_from_bnd,
+               blk_dvtx_from_bnd,
+               blk_aux_geom_from_bnd,
+               blk_n_int_vtx,
+               blk_int_vtx,
+               blk_int_dvtx,
+               comm);
+
+  /*
    * Get part PDM_mesh_deform
    */
 
@@ -2001,6 +2069,26 @@ int main(int argc, char *argv[])
 
   _PDM_mesh_deform_cloud_dcoords_part_get(def,
                                          &int_dvtx);
+
+  for (int i_part = 0; i_part < n_part_bnd; i_part++) {
+
+    for (int i_vtx = 0; i_vtx < n_bnd_vtx[i_part]; i_vtx++) {
+      bnd_vtx[i_part][3*i_vtx   ] = bnd_vtx[i_part][3*i_vtx   ] + bnd_dvtx[i_part][3*i_vtx    ];
+      bnd_vtx[i_part][3*i_vtx+ 1] = bnd_vtx[i_part][3*i_vtx+ 1] + bnd_dvtx[i_part][3*i_vtx + 1];
+      bnd_vtx[i_part][3*i_vtx+ 2] = bnd_vtx[i_part][3*i_vtx+ 2] + bnd_dvtx[i_part][3*i_vtx + 2];
+    }
+
+  }
+
+  for (int i_part = 0; i_part < n_part; i_part++) {
+
+    for (int i_vtx = 0; i_vtx < n_int_vtx[i_part]; i_vtx++) {
+      int_vtx[i_part][3*i_vtx   ] = int_vtx[i_part][3*i_vtx   ] + int_dvtx[i_part][3*i_vtx    ];
+      int_vtx[i_part][3*i_vtx+ 1] = int_vtx[i_part][3*i_vtx+ 1] + int_dvtx[i_part][3*i_vtx + 1];
+      int_vtx[i_part][3*i_vtx+ 2] = int_vtx[i_part][3*i_vtx+ 2] + int_dvtx[i_part][3*i_vtx + 2];
+    }
+
+  }
 
   /*
    * Recompute PDM_mesh_deform
@@ -2042,6 +2130,30 @@ int main(int argc, char *argv[])
                                   &blk_int_dvtx);
 
   /*
+   * Move vertices
+   */
+
+  if (i_rank == 0) {
+    printf("-- Move vertices 3/4\n");
+    fflush(stdout);
+  }
+
+  _compute_idw(ptb_bnd_vtx,
+               bnd_vtx,
+               bnd_dvtx,
+               n_var,
+               bnd_vtx_aux_geom,
+               blk_buffer_from_bnd_idx,
+               blk_buffer_from_bnd,
+               blk_vtx_from_bnd,
+               blk_dvtx_from_bnd,
+               blk_aux_geom_from_bnd,
+               blk_n_int_vtx,
+               blk_int_vtx,
+               blk_int_dvtx,
+               comm);
+
+  /*
    * Get part PDM_mesh_deform
    */
 
@@ -2054,6 +2166,26 @@ int main(int argc, char *argv[])
 
   _PDM_mesh_deform_cloud_dcoords_part_get(def,
                                          &int_dvtx);
+
+  for (int i_part = 0; i_part < n_part_bnd; i_part++) {
+
+    for (int i_vtx = 0; i_vtx < n_bnd_vtx[i_part]; i_vtx++) {
+      bnd_vtx[i_part][3*i_vtx   ] = bnd_vtx[i_part][3*i_vtx   ] + bnd_dvtx[i_part][3*i_vtx    ];
+      bnd_vtx[i_part][3*i_vtx+ 1] = bnd_vtx[i_part][3*i_vtx+ 1] + bnd_dvtx[i_part][3*i_vtx + 1];
+      bnd_vtx[i_part][3*i_vtx+ 2] = bnd_vtx[i_part][3*i_vtx+ 2] + bnd_dvtx[i_part][3*i_vtx + 2];
+    }
+
+  }
+
+  for (int i_part = 0; i_part < n_part; i_part++) {
+
+    for (int i_vtx = 0; i_vtx < n_int_vtx[i_part]; i_vtx++) {
+      int_vtx[i_part][3*i_vtx   ] = int_vtx[i_part][3*i_vtx   ] + int_dvtx[i_part][3*i_vtx    ];
+      int_vtx[i_part][3*i_vtx+ 1] = int_vtx[i_part][3*i_vtx+ 1] + int_dvtx[i_part][3*i_vtx + 1];
+      int_vtx[i_part][3*i_vtx+ 2] = int_vtx[i_part][3*i_vtx+ 2] + int_dvtx[i_part][3*i_vtx + 2];
+    }
+
+  }
 
   /*
    * Get block PDM_mesh_deform
@@ -2088,7 +2220,7 @@ int main(int argc, char *argv[])
    */
 
   if (i_rank == 0) {
-    printf("-- Move vertices\n");
+    printf("-- Move vertices 4/4\n");
     fflush(stdout);
   }
 
