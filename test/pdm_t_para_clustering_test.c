@@ -435,7 +435,7 @@ _PDM_mesh_deform_compute
 
   for (int i_layer = 0; i_layer < def->n_layer; i_layer++) {
 
-    _surf_deform->octree_layer[i_layer] = PDM_para_octree_create(1,
+    _surf_deform->octree_layer[i_layer] = PDM_para_octree_create(_surf_deform->n_part,
                                                                  depth_max,
                                                                  def->n_leaf_per_layer[i_layer],
                                                                  0,

@@ -627,7 +627,7 @@ int main(int argc, char *argv[])
       fflush(stdout);
     }
 
-    PDM_para_octree_t *octree = PDM_para_octree_create(1,
+    PDM_para_octree_t *octree = PDM_para_octree_create(n_part_bnd,
                                                        depth_max,
                                                        n_leaf_per_layer[i_layer],
                                                        0,
