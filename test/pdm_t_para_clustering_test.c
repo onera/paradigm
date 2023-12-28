@@ -189,6 +189,8 @@ _PDM_mesh_deform_create
 )
 {
 
+  assert(n_layer >= 1);
+
   PDM_mesh_deform_t *def = (PDM_mesh_deform_t *) malloc(sizeof(PDM_mesh_deform_t));
 
   def->comm             = comm;
@@ -587,6 +589,7 @@ _PDM_mesh_deform_compute
   }
 
   PDM_MPI_Allreduce(&_max_dist, &max_dist, 1, PDM_MPI_DOUBLE, PDM_MPI_MAX, def->comm);
+  double min_dist = PDM_MAX(0.0, def->min_dist_d);
 
   int          *n_min_dist        = malloc (sizeof(int          ) * _cloud_deform->n_part);
   PDM_g_num_t **min_dist_gnum     = malloc (sizeof(PDM_g_num_t *) * _cloud_deform->n_part);
@@ -650,8 +653,8 @@ _PDM_mesh_deform_compute
         }
       } else {
         for (int i_layer = 0; i_layer < def->n_layer; i_layer++) {
-          double a_dist = def->min_dist_d + (max_dist - def->min_dist_d)/def->n_layer* i_layer;
-          double b_dist = def->min_dist_d + (max_dist - def->min_dist_d)/def->n_layer*(i_layer+1);
+          double a_dist = min_dist + (max_dist - min_dist)/def->n_layer* i_layer;
+          double b_dist = min_dist + (max_dist - min_dist)/def->n_layer*(i_layer+1);
           if (surf_dist[i_pts] > a_dist && surf_dist[i_pts] <= b_dist) {
             n_cloud_to_surf  [i_part][i_pts] = 1;
             cloud_weight     [i_part][i_pts] = (double) distri_layer[i_layer][n_rank];
