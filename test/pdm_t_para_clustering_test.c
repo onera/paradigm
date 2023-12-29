@@ -689,7 +689,32 @@ _PDM_mesh_deform_compute
 
   PDM_closest_points_n_part_cloud_set(cls,
                                       _surf_deform->n_part,
-                                      _cloud_deform->n_part);
+                                      1);
+
+  PDM_part_to_block_t *ptb_min_dist = PDM_part_to_block_create(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
+                                                               PDM_PART_TO_BLOCK_POST_CLEANUP,
+                                                               1.,
+                                                               min_dist_gnum,
+                                                               NULL,
+                                                               n_min_dist,
+                                                               _cloud_deform->n_part,
+                                                               def->comm);
+
+  int          blk_n_min_dist    = PDM_part_to_block_n_elt_block_get(ptb_min_dist);
+  PDM_g_num_t *blk_min_dist_gnum = PDM_part_to_block_block_gnum_get(ptb_min_dist);
+
+  double *blk_min_dist_coords = NULL;
+
+  int blk_size = PDM_part_to_block_exch(ptb_min_dist,
+                                        sizeof(double),
+                                        PDM_STRIDE_CST_INTERLACED,
+                                        3,
+                                        NULL,
+                             (void **)  min_dist_coords,
+                                        NULL,
+                             (void **) &blk_min_dist_coords);
+
+  PDM_UNUSED(blk_size);
 
   for (int i_part = 0; i_part < _surf_deform->n_part; i_part++) {
 
@@ -701,17 +726,31 @@ _PDM_mesh_deform_compute
 
   }
 
-  for (int i_part = 0; i_part < _cloud_deform->n_part; i_part++) {
-
-    PDM_closest_points_tgt_cloud_set(cls,
-                                     i_part,
-                                     n_min_dist     [i_part],
-                                     min_dist_coords[i_part],
-                                     min_dist_gnum  [i_part]);
-
-  }
+  PDM_closest_points_tgt_cloud_set(cls,
+                                   0,
+                                   blk_n_min_dist,
+                                   blk_min_dist_coords,
+                                   blk_min_dist_gnum);
 
   PDM_closest_points_compute(cls);
+
+  PDM_g_num_t  *blk_closest_src_gnum = NULL;
+  double       *blk_closest_src_dist = NULL;
+  PDM_g_num_t **closest_src_gnum     = NULL;
+
+  PDM_closest_points_get(cls,
+                         0,
+                        &blk_closest_src_gnum,
+                        &blk_closest_src_dist);
+
+  PDM_part_to_block_reverse_exch(ptb_min_dist,
+                                 sizeof(PDM_g_num_t),
+                                 PDM_STRIDE_CST_INTERLACED,
+                                 def->min_dist_n_vtx,
+                                 NULL,
+                     (void   *)  blk_closest_src_gnum,
+                                 NULL,
+                     (void ***) &closest_src_gnum);
 
   for (int i_part = 0; i_part < _cloud_deform->n_part; i_part++) {
 
@@ -726,14 +765,6 @@ _PDM_mesh_deform_compute
                            &surf_proj,
                            &surf_gnum);
 
-    PDM_g_num_t *closest_src_gnum = NULL;
-    double      *closest_src_dist = NULL;
-
-    PDM_closest_points_get(cls,
-                           i_part,
-                          &closest_src_gnum,
-                          &closest_src_dist);
-
     for (int i_pts = 0; i_pts < _cloud_deform->n_points[i_part]; i_pts++) {
 
       int idx_write = 0;
@@ -741,7 +772,7 @@ _PDM_mesh_deform_compute
       if (surf_dist[i_pts] <= def->min_dist_d) {
         idx_write = cloud_to_surf_idx[i_part][i_pts];
         for (int j_vtx = 0; j_vtx < n_cloud_to_surf[i_part][i_pts]; j_vtx++) {
-          cloud_to_surf[i_part][idx_write++] = closest_src_gnum[def->min_dist_n_vtx*cloud_to_min_dist[i_part][i_pts]+j_vtx];
+          cloud_to_surf[i_part][idx_write++] = closest_src_gnum[i_part][def->min_dist_n_vtx*cloud_to_min_dist[i_part][i_pts]+j_vtx];
         }
       } else {
         idx_write = cloud_to_surf_idx[i_part][i_pts];
@@ -752,6 +783,7 @@ _PDM_mesh_deform_compute
 
   }
 
+  PDM_part_to_block_free(ptb_min_dist);
   PDM_dist_cloud_surf_free(dcs);
   PDM_closest_points_free(cls);
 
@@ -759,12 +791,15 @@ _PDM_mesh_deform_compute
     free(min_dist_gnum    [i_part]);
     free(min_dist_coords  [i_part]);
     free(cloud_to_min_dist[i_part]);
+    free(closest_src_gnum [i_part]);
   }
 
-  free(n_min_dist       );
-  free(min_dist_gnum    );
-  free(min_dist_coords  );
-  free(cloud_to_min_dist);
+  free(n_min_dist         );
+  free(min_dist_gnum      );
+  free(min_dist_coords    );
+  free(cloud_to_min_dist  );
+  free(closest_src_gnum   );
+  free(blk_min_dist_coords);
 
   _cloud_deform->ptb_blk = PDM_part_to_block_create(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
                                                     PDM_PART_TO_BLOCK_POST_CLEANUP,
@@ -780,16 +815,14 @@ _PDM_mesh_deform_compute
   int         *blk_n_cloud_to_surf = NULL;
   PDM_g_num_t *blk_cloud_to_surf   = NULL;
 
-  int blk_size = PDM_part_to_block_exch(_cloud_deform->ptb_blk,
-                                        sizeof(PDM_g_num_t),
-                                        PDM_STRIDE_VAR_INTERLACED,
-                                        1,
-                                        n_cloud_to_surf,
-                             (void **)  cloud_to_surf,
-                                       &blk_n_cloud_to_surf,
-                             (void **) &blk_cloud_to_surf);
-
-  PDM_UNUSED(blk_size);
+  blk_size = PDM_part_to_block_exch(_cloud_deform->ptb_blk,
+                                    sizeof(PDM_g_num_t),
+                                    PDM_STRIDE_VAR_INTERLACED,
+                                    1,
+                                    n_cloud_to_surf,
+                         (void **)  cloud_to_surf,
+                                   &blk_n_cloud_to_surf,
+                         (void **) &blk_cloud_to_surf);
 
   int *blk_cloud_to_surf_idx = PDM_array_new_idx_from_sizes_int(blk_n_cloud_to_surf, _cloud_deform->blk_n_points);
 
