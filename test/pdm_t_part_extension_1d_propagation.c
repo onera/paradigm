@@ -169,9 +169,23 @@ _part_extension_init
   int                        ***out_pextented_edge_vtx,
   int                        ***out_pvtx_extented_to_pvtx_idx,
   int                        ***out_pvtx_extented_to_pvtx_triplet,
-  int                        ***out_pvtx_extented_to_pvtx_interface
+  int                        ***out_pvtx_extented_to_pvtx_interface,
+  int                         **out_pn_concat_vtx,
+  PDM_g_num_t                ***out_pconcat_vtx_ln_to_gn,
+  int                         **out_pn_concat_edge,
+  PDM_g_num_t                ***out_pconcat_edge_ln_to_gn,
+  int                        ***out_pconcat_edge_vtx,
+  int                        ***out_pconcat_edge_vtx_idx,
+  double                     ***out_pconcat_vtx_coords,
+  int                        ***out_pconcat_pvtx_extented_to_pvtx_idx,
+  int                        ***out_pconcat_pvtx_extented_to_pvtx_triplet,
+  int                        ***out_pconcat_pvtx_extented_to_pvtx_interface,
+  int                        ***out_pconcat_pedge_extented_to_pedge_idx,
+  int                        ***out_pconcat_pedge_extented_to_pedge_triplet,
+  int                        ***out_pconcat_pedge_extented_to_pedge_interface
 )
 {
+  PDM_UNUSED(n_depth);
 
   int ln_part_tot = 0;
   for(int i_dom = 0; i_dom < n_domain; ++i_dom) {
@@ -557,39 +571,10 @@ _part_extension_init
   free(pflat_vtx_coords);
   free(pextract_vtx_coords);
 
-
   for(int i_part = 0; i_part < ln_part_tot; ++i_part) {
-    free(concat_edge_ln_to_gn[i_part]);
-    free(concat_vtx_ln_to_gn [i_part]);
-    free(concat_edge_vtx     [i_part]);
-    free(concat_edge_vtx_idx [i_part]);
-    free(concat_vtx_coords   [i_part]);
     free(edge_kind           [i_part]);
-
-    free(concat_pvtx_extented_to_pvtx_idx        [i_part]);
-    free(concat_pvtx_extented_to_pvtx_triplet    [i_part]);
-    free(concat_pvtx_extented_to_pvtx_interface  [i_part]);
-    free(concat_pedge_extented_to_pedge_idx      [i_part]);
-    free(concat_pedge_extented_to_pedge_triplet  [i_part]);
-    free(concat_pedge_extented_to_pedge_interface[i_part]);
   }
-  free(pn_concat_edge);
-  free(pn_concat_vtx );
-
-  free(concat_edge_ln_to_gn);
-  free(concat_vtx_ln_to_gn );
-  free(concat_edge_vtx     );
-  free(concat_edge_vtx_idx );
-  free(concat_vtx_coords   );
   free(edge_kind           );
-
-  free(concat_pvtx_extented_to_pvtx_idx        );
-  free(concat_pvtx_extented_to_pvtx_triplet    );
-  free(concat_pvtx_extented_to_pvtx_interface  );
-  free(concat_pedge_extented_to_pedge_idx      );
-  free(concat_pedge_extented_to_pedge_triplet  );
-  free(concat_pedge_extented_to_pedge_interface);
-
 
   *out_pn_edge_extented                  = pn_edge_extented;
   *out_pedge_extented_to_pedge_idx       = pedge_extented_to_pedge_idx;
@@ -603,6 +588,22 @@ _part_extension_init
   *out_pvtx_extented_to_pvtx_idx         = pvtx_extented_to_pvtx_idx;
   *out_pvtx_extented_to_pvtx_triplet     = pvtx_extented_to_pvtx_triplet;
   *out_pvtx_extented_to_pvtx_interface   = pvtx_extented_to_pvtx_interface;
+
+  *out_pn_concat_vtx                             = pn_concat_vtx;
+  *out_pconcat_vtx_ln_to_gn                      = concat_vtx_ln_to_gn;
+  *out_pn_concat_edge                            = pn_concat_edge;
+  *out_pconcat_edge_ln_to_gn                     = concat_edge_ln_to_gn;
+  *out_pconcat_edge_vtx                          = concat_edge_vtx;
+  *out_pconcat_edge_vtx_idx                      = concat_edge_vtx_idx;
+  *out_pconcat_vtx_coords                        = concat_vtx_coords;
+  *out_pconcat_pvtx_extented_to_pvtx_idx         = concat_pvtx_extented_to_pvtx_idx;
+  *out_pconcat_pvtx_extented_to_pvtx_triplet     = concat_pvtx_extented_to_pvtx_triplet;
+  *out_pconcat_pvtx_extented_to_pvtx_interface   = concat_pvtx_extented_to_pvtx_interface;
+  *out_pconcat_pedge_extented_to_pedge_idx       = concat_pedge_extented_to_pedge_idx;
+  *out_pconcat_pedge_extented_to_pedge_triplet   = concat_pedge_extented_to_pedge_triplet;
+  *out_pconcat_pedge_extented_to_pedge_interface = concat_pedge_extented_to_pedge_interface;
+
+
 
 }
 
@@ -770,6 +771,27 @@ _part_extension
   int         **pvtx_extented_to_pvtx_interface = NULL;
 
 
+  /*
+   * Concatenate partition
+   */
+  int *pn_concat_edge = NULL;
+  int *pn_concat_vtx  = NULL;
+
+  PDM_g_num_t **pconcat_edge_ln_to_gn = NULL;
+  PDM_g_num_t **pconcat_vtx_ln_to_gn  = NULL;
+  int         **pconcat_edge_vtx     = NULL;
+  int         **pconcat_edge_vtx_idx = NULL;
+  double      **pconcat_vtx_coords   = NULL;
+
+  // int **edge_kind = NULL;
+  int **pconcat_pvtx_extented_to_pvtx_idx         = NULL;
+  int **pconcat_pvtx_extented_to_pvtx_triplet     = NULL;
+  int **pconcat_pvtx_extented_to_pvtx_interface   = NULL;
+  int **pconcat_pedge_extented_to_pedge_idx       = NULL;
+  int **pconcat_pedge_extented_to_pedge_triplet   = NULL;
+  int **pconcat_pedge_extented_to_pedge_interface = NULL;
+
+
   _part_extension_init(comm,
                        n_depth,
                        pdi,
@@ -795,10 +817,52 @@ _part_extension
                        &pextented_edge_vtx,
                        &pvtx_extented_to_pvtx_idx,
                        &pvtx_extented_to_pvtx_triplet,
-                       &pvtx_extented_to_pvtx_interface);
+                       &pvtx_extented_to_pvtx_interface,
+                       &pn_concat_vtx,
+                       &pconcat_vtx_ln_to_gn,
+                       &pn_concat_edge,
+                       &pconcat_edge_ln_to_gn,
+                       &pconcat_edge_vtx,
+                       &pconcat_edge_vtx_idx,
+                       &pconcat_vtx_coords,
+                       &pconcat_pvtx_extented_to_pvtx_idx,
+                       &pconcat_pvtx_extented_to_pvtx_triplet,
+                       &pconcat_pvtx_extented_to_pvtx_interface,
+                       &pconcat_pedge_extented_to_pedge_idx,
+                       &pconcat_pedge_extented_to_pedge_triplet,
+                       &pconcat_pedge_extented_to_pedge_interface);
 
 
 
+  for(int i_part = 0; i_part < ln_part_tot; ++i_part) {
+    free(pconcat_edge_ln_to_gn[i_part]);
+    free(pconcat_vtx_ln_to_gn [i_part]);
+    free(pconcat_edge_vtx     [i_part]);
+    free(pconcat_edge_vtx_idx [i_part]);
+    free(pconcat_vtx_coords   [i_part]);
+
+    free(pconcat_pvtx_extented_to_pvtx_idx        [i_part]);
+    free(pconcat_pvtx_extented_to_pvtx_triplet    [i_part]);
+    free(pconcat_pvtx_extented_to_pvtx_interface  [i_part]);
+    free(pconcat_pedge_extented_to_pedge_idx      [i_part]);
+    free(pconcat_pedge_extented_to_pedge_triplet  [i_part]);
+    free(pconcat_pedge_extented_to_pedge_interface[i_part]);
+  }
+  free(pn_concat_edge);
+  free(pn_concat_vtx );
+
+  free(pconcat_edge_ln_to_gn);
+  free(pconcat_vtx_ln_to_gn );
+  free(pconcat_edge_vtx     );
+  free(pconcat_edge_vtx_idx );
+  free(pconcat_vtx_coords   );
+
+  free(pconcat_pvtx_extented_to_pvtx_idx        );
+  free(pconcat_pvtx_extented_to_pvtx_triplet    );
+  free(pconcat_pvtx_extented_to_pvtx_interface  );
+  free(pconcat_pedge_extented_to_pedge_idx      );
+  free(pconcat_pedge_extented_to_pedge_triplet  );
+  free(pconcat_pedge_extented_to_pedge_interface);
 
 
   /* Unshift ln_to_gn */
