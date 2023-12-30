@@ -580,44 +580,65 @@ _PDM_mesh_deform_compute
 
   PDM_timer_resume(def->timer);
 
-  PDM_dist_cloud_surf_t *dcs = PDM_dist_cloud_surf_create(PDM_MESH_NATURE_MESH_SETTED,
-                                                          1,
-                                                          def->comm,
-                                                          PDM_OWNERSHIP_KEEP);
+  //PDM_dist_cloud_surf_t *dcs = PDM_dist_cloud_surf_create(PDM_MESH_NATURE_MESH_SETTED,
+  //                                                        1,
+  //                                                        def->comm,
+  //                                                        PDM_OWNERSHIP_KEEP);
 
-  PDM_dist_cloud_surf_surf_mesh_global_data_set(dcs,
-                                                _surf_deform->n_part);
+  //PDM_dist_cloud_surf_surf_mesh_global_data_set(dcs,
+  //                                              _surf_deform->n_part);
 
-  PDM_dist_cloud_surf_n_part_cloud_set(dcs,
-                                       0,
-                                       _cloud_deform->n_part);
+  //PDM_dist_cloud_surf_n_part_cloud_set(dcs,
+  //                                     0,
+  //                                     _cloud_deform->n_part);
+
+  PDM_closest_point_t* dcs = PDM_closest_points_create(def->comm,
+                                                       1,
+                                                       PDM_OWNERSHIP_KEEP);
+
+  PDM_closest_points_n_part_cloud_set(dcs,
+                                      _surf_deform->n_part,
+                                      _cloud_deform->n_part);
 
   for (int i_part = 0; i_part < _surf_deform->n_part; i_part++) {
 
-    PDM_dist_cloud_surf_surf_mesh_part_set(dcs,
-                                           i_part,
-                                           _surf_deform->n_face       [i_part],
-                                           _surf_deform->face_vtx_idx [i_part],
-                                           _surf_deform->face_vtx     [i_part],
-                                           _surf_deform->face_ln_to_gn[i_part],
-                                           _surf_deform->n_vtx        [i_part],
-                                           _surf_deform->coords       [i_part],
-                                           _surf_deform->vtx_ln_to_gn [i_part]);
+    //PDM_dist_cloud_surf_surf_mesh_part_set(dcs,
+    //                                       i_part,
+    //                                       _surf_deform->n_face       [i_part],
+    //                                       _surf_deform->face_vtx_idx [i_part],
+    //                                       _surf_deform->face_vtx     [i_part],
+    //                                       _surf_deform->face_ln_to_gn[i_part],
+    //                                       _surf_deform->n_vtx        [i_part],
+    //                                       _surf_deform->coords       [i_part],
+    //                                       _surf_deform->vtx_ln_to_gn [i_part]);
+
+    PDM_closest_points_src_cloud_set(dcs,
+                                     i_part,
+                                     _surf_deform->n_vtx        [i_part],
+                                     _surf_deform->coords       [i_part],
+                                     _surf_deform->vtx_ln_to_gn [i_part]);
 
   }
 
   for (int i_part = 0; i_part < _cloud_deform->n_part; i_part++) {
 
-    PDM_dist_cloud_surf_cloud_set(dcs,
-                                  0,
-                                  i_part,
-                                  _cloud_deform->n_points[i_part],
-                                  _cloud_deform->coords  [i_part],
-                                  _cloud_deform->gnum    [i_part]);
+    //PDM_dist_cloud_surf_cloud_set(dcs,
+    //                              0,
+    //                              i_part,
+    //                              _cloud_deform->n_points[i_part],
+    //                              _cloud_deform->coords  [i_part],
+    //                              _cloud_deform->gnum    [i_part]);
+
+    PDM_closest_points_tgt_cloud_set(dcs,
+                                     i_part,
+                                     _cloud_deform->n_points[i_part],
+                                     _cloud_deform->coords  [i_part],
+                                     _cloud_deform->gnum    [i_part]);
 
   }
 
-  PDM_dist_cloud_surf_compute(dcs);
+  //PDM_dist_cloud_surf_compute(dcs);
+  PDM_closest_points_compute(dcs);
 
   double _max_dist = 0.0;
   double  max_dist = 0.0;
@@ -626,14 +647,19 @@ _PDM_mesh_deform_compute
 
     PDM_g_num_t *surf_gnum = NULL;
     double      *surf_dist = NULL;
-    double      *surf_proj = NULL;
+    //double      *surf_proj = NULL;
 
-    PDM_dist_cloud_surf_get(dcs,
-                            0,
-                            i_part,
-                           &surf_dist,
-                           &surf_proj,
-                           &surf_gnum);
+    //PDM_dist_cloud_surf_get(dcs,
+    //                        0,
+    //                        i_part,
+    //                       &surf_dist,
+    //                       &surf_proj,
+    //                       &surf_gnum);
+
+    PDM_closest_points_get(dcs,
+                           i_part,
+                          &surf_gnum,
+                          &surf_dist);
 
     for (int i_pts = 0; i_pts < _cloud_deform->n_points[i_part]; i_pts++) {
       _max_dist = PDM_MAX(_max_dist, surf_dist[i_pts]);
@@ -669,14 +695,19 @@ _PDM_mesh_deform_compute
 
     PDM_g_num_t *surf_gnum = NULL;
     double      *surf_dist = NULL;
-    double      *surf_proj = NULL;
+    //double      *surf_proj = NULL;
 
-    PDM_dist_cloud_surf_get(dcs,
-                            0,
-                            i_part,
-                           &surf_dist,
-                           &surf_proj,
-                           &surf_gnum);
+    //PDM_dist_cloud_surf_get(dcs,
+    //                        0,
+    //                        i_part,
+    //                       &surf_dist,
+    //                       &surf_proj,
+    //                       &surf_gnum);
+
+    PDM_closest_points_get(dcs,
+                           i_part,
+                          &surf_gnum,
+                          &surf_dist);
 
     for (int i_pts = 0; i_pts < _cloud_deform->n_points[i_part]; i_pts++) {
 
@@ -818,14 +849,19 @@ _PDM_mesh_deform_compute
 
     PDM_g_num_t *surf_gnum = NULL;
     double      *surf_dist = NULL;
-    double      *surf_proj = NULL;
+    //double      *surf_proj = NULL;
 
-    PDM_dist_cloud_surf_get(dcs,
-                            0,
-                            i_part,
-                           &surf_dist,
-                           &surf_proj,
-                           &surf_gnum);
+    //PDM_dist_cloud_surf_get(dcs,
+    //                        0,
+    //                        i_part,
+    //                       &surf_dist,
+    //                       &surf_proj,
+    //                       &surf_gnum);
+
+    PDM_closest_points_get(dcs,
+                           i_part,
+                          &surf_gnum,
+                          &surf_dist);
 
     for (int i_pts = 0; i_pts < _cloud_deform->n_points[i_part]; i_pts++) {
 
@@ -846,7 +882,8 @@ _PDM_mesh_deform_compute
   }
 
   PDM_part_to_block_free(ptb_min_dist);
-  PDM_dist_cloud_surf_free(dcs);
+  //PDM_dist_cloud_surf_free(dcs);
+  PDM_closest_points_free(dcs);
   PDM_closest_points_free(cls);
 
   for (int i_part = 0; i_part < _cloud_deform->n_part; i_part++) {
