@@ -1875,7 +1875,7 @@ PDM_part_generate_entity_graph_comm
    */
   blk_data = (int *) realloc(blk_data, idx_comp * sizeof(int));
 
-  PDM_log_trace_array_int(blk_data, idx_comp, "blk_data ::");
+  // PDM_log_trace_array_int(blk_data, idx_comp, "blk_data ::");
 
   /*
    * Panic verbose

@@ -441,6 +441,10 @@ _part_extension_init
       concat_edge_vtx     [shift_part+i_part] = malloc(2 * pn_concat_edge[shift_part+i_part]  * sizeof(int));
       concat_edge_vtx_idx [shift_part+i_part] = malloc( (pn_concat_edge[shift_part+i_part]+1) * sizeof(int));
 
+      for(int i_edge = 0; i_edge < pn_concat_edge[shift_part+i_part]+1; ++i_edge) {
+        concat_edge_vtx_idx [shift_part+i_part][i_edge] = 2 * i_edge;
+      }
+
       concat_edge_ln_to_gn[shift_part+i_part] = malloc(     (pn_concat_edge[shift_part+i_part]  ) * sizeof(PDM_g_num_t));
       concat_vtx_ln_to_gn [shift_part+i_part] = malloc(     (pn_concat_vtx[shift_part+i_part]   ) * sizeof(PDM_g_num_t));
       concat_vtx_coords   [shift_part+i_part] = malloc( 3 * (pn_concat_vtx[shift_part+i_part]   ) * sizeof(double     ));
@@ -714,7 +718,14 @@ _part_extension_one_depth
   for(int i_part = 0; i_part < ln_part_tot; ++i_part) {
 
     int n_gnum1_come_from = gnum1_come_from_idx[i_part][ n_ref_lnum2[i_part]];
-    int *_pvtx_edge_idx     = pvtx_edge_idx    [i_part];
+    int *_pvtx_edge_idx   = pvtx_edge_idx      [i_part];
+
+    printf("n_gnum1_come_from = %i \n", n_gnum1_come_from);
+    PDM_log_trace_array_int(ref_lnum2[i_part], n_ref_lnum2[i_part], "ref_lnum2 ::");
+    PDM_log_trace_array_int(gnum1_come_from_idx[i_part], n_ref_lnum2[i_part]+1, "gnum1_come_from_idx ::");
+
+
+    PDM_log_trace_connectivity_int(pedge_vtx[i_part], pedge_vtx_idx[i_part], pn_edge[i_part], "pedge_vtx ::");
 
     /* Count */
     int n_send_part2 = 0;
@@ -725,6 +736,7 @@ _part_extension_one_depth
       }
     }
 
+    printf("n_send_part2 = %i \n", n_send_part2);
     /* Allocate */
     gnum1_com_from_triplet_n   [i_part] = malloc(    n_gnum1_come_from * sizeof(int        ));
     gnum1_com_from_triplet_send[i_part] = malloc(3 * n_send_part2      * sizeof(int        ));
@@ -818,7 +830,23 @@ _part_extension_one_depth
     }
   }
 
+  int **pextract_entity2_idx = malloc(ln_part_tot * sizeof(int *));
+  for(int i_part = 0; i_part < ln_part_tot; ++i_part) {
+    int n_part1_to_part2 = pvtx_extented_to_pvtx_idx[i_part][pn_vtx[i_part]]/3;
+    pextract_entity2_idx[i_part] = PDM_array_new_idx_from_sizes_int(pextract_edge_n[i_part], n_part1_to_part2);
+
+    PDM_log_trace_array_int (pextract_entity2_idx[i_part], n_part1_to_part2+1, "pextract_entity2_idx ::");
+    PDM_log_trace_array_long(pextract_edge_gnum[i_part], pextract_entity2_idx[i_part][n_part1_to_part2], "pextract_edge_gnum ::");
+  }
+
+
   PDM_part_to_part_free(ptp_vtx);
+
+
+  for(int i_part = 0; i_part < ln_part_tot; ++i_part) {
+    free(pextract_entity2_idx[i_part]);
+  }
+  free(pextract_entity2_idx);
 
 
   for(int i_part = 0; i_part < ln_part_tot; ++i_part) {
@@ -1217,7 +1245,7 @@ _part_extension
  * \brief  Main
  *
  */
-
+// mpirun -np 1 ./test/pdm_t_part_extension_1d_propagation -n 5 -depth 1 -pi
 int
 main
 (
