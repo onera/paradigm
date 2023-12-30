@@ -24,6 +24,7 @@
 #include "pdm_para_octree.h"
 #include "pdm_distrib.h"
 #include "pdm_vtk.h"
+#include "pdm_timer.h"
 
 #include "pdm_mpi.h"
 #include "pdm_config.h"
@@ -117,6 +118,22 @@ _mean_array_double_per_leaf
 
 }
 
+#define NTIMER 9
+
+typedef enum {
+
+  BEGIN_CPT = 0,
+  END_CLU   = 1,
+  END_DST   = 2,
+  END_CLS   = 3,
+  END_CPT   = 4,
+  BEGIN_BLK = 5,
+  END_BLK   = 6,
+  BEGIN_PRT = 7,
+  END_PRT   = 8,
+
+} _timer_step_t;
+
 typedef struct _PDM_surf_deform_t {
 
   int                  n_part;
@@ -173,6 +190,12 @@ typedef struct _PDM_mesh_deform_t {
   PDM_surf_deform_t  *surf_deform;
   PDM_cloud_deform_t *cloud_deform;
 
+  PDM_timer_t        *timer;                   /*!< Timer */
+  double              times_elapsed[NTIMER];   /*!< Elapsed time */
+  double              times_cpu[NTIMER];       /*!< CPU time */
+  double              times_cpu_u[NTIMER];     /*!< User CPU time */
+  double              times_cpu_s[NTIMER];     /*!< System CPU time */
+
 } PDM_mesh_deform_t;
 
 static PDM_mesh_deform_t*
@@ -194,9 +217,9 @@ _PDM_mesh_deform_create
   PDM_mesh_deform_t *def = (PDM_mesh_deform_t *) malloc(sizeof(PDM_mesh_deform_t));
 
   def->comm             = comm;
-  def->is_cpt           = 0;
-  def->is_blk           = 0;
-  def->is_res           = 0;
+  def->is_cpt           = PDM_FALSE;
+  def->is_blk           = PDM_FALSE;
+  def->is_res           = PDM_FALSE;
   def->n_aux_geom       = n_aux_geom;
   def->n_layer          = n_layer;
   def->n_leaf_per_layer = (int*) n_leaf_per_layer;
@@ -239,8 +262,8 @@ _PDM_mesh_deform_create
 
   for (int i = 0; i < n_part_cloud; i++) {
     _cloud_deform->n_points[i] = 0;
-    _cloud_deform->coords[i]   = NULL;
-    _cloud_deform->gnum[i]     = NULL;
+    _cloud_deform->coords  [i] = NULL;
+    _cloud_deform->gnum    [i] = NULL;
   }
 
   _cloud_deform->blk_n_points             = 0;
@@ -251,6 +274,16 @@ _PDM_mesh_deform_create
   _cloud_deform->blk_aux_geom_from_surf   = NULL;
   _cloud_deform->blk_buffer_from_surf_idx = NULL;
   _cloud_deform->blk_buffer_from_surf     = NULL;
+
+  def->timer = PDM_timer_create();
+  PDM_timer_resume(def->timer);
+
+  for (int i = 0; i < NTIMER; i++) {
+    def->times_elapsed[i] = 0.0;
+    def->times_cpu    [i] = 0.0;
+    def->times_cpu_u  [i] = 0.0;
+    def->times_cpu_s  [i] = 0.0;
+  }
 
   return def;
 
@@ -313,7 +346,7 @@ _PDM_mesh_deform_partial_free
 )
 {
 
-  if (def->is_cpt == 0) {
+  if (def->is_cpt == PDM_FALSE) {
     return;
   }
 
@@ -339,7 +372,7 @@ _PDM_mesh_deform_partial_free
   PDM_part_to_block_free(_cloud_deform->ptb_blk);
   PDM_part_to_part_free(_cloud_deform->ptp_blk);
 
-  def->is_cpt = 0;
+  def->is_cpt = PDM_FALSE;
 
 }
 
@@ -369,7 +402,7 @@ _PDM_mesh_deform_free
   free(_cloud_deform->coords  );
   free(_cloud_deform->gnum    );
 
-  if (def->is_blk == 1) {
+  if (def->is_blk == PDM_TRUE) {
     free(_cloud_deform->blk_coords );
     free(_cloud_deform->blk_dcoords);
     free(_cloud_deform->blk_coords_from_surf[0] );
@@ -380,16 +413,18 @@ _PDM_mesh_deform_free
       free(_cloud_deform->blk_aux_geom_from_surf[0]);
       free(_cloud_deform->blk_aux_geom_from_surf   );
     }
-    def->is_blk = 0;
+    def->is_blk = PDM_FALSE;
   }
 
-  if (def->is_res == 1) {
+  if (def->is_res == PDM_TRUE) {
     for (int i_part = 0; i_part < _cloud_deform->n_part; i_part++) {
       free(_cloud_deform->dcoords[i_part]);
     }
     free(_cloud_deform->dcoords);
-    def->is_res = 0;
+    def->is_res = PDM_FALSE;
   }
+
+  PDM_timer_free(def->timer);
 
   free(def->surf_deform );
   free(def->cloud_deform);
@@ -405,6 +440,15 @@ _PDM_mesh_deform_compute
 {
 
   _PDM_mesh_deform_partial_free(def);
+
+  PDM_timer_hang_on(def->timer);
+
+  def->times_elapsed[BEGIN_CPT] = PDM_timer_elapsed(def->timer);
+  def->times_cpu    [BEGIN_CPT] = PDM_timer_cpu(def->timer);
+  def->times_cpu_u  [BEGIN_CPT] = PDM_timer_cpu_user(def->timer);
+  def->times_cpu_s  [BEGIN_CPT] = PDM_timer_cpu_sys(def->timer);
+
+  PDM_timer_resume(def->timer);
 
   PDM_surf_deform_t  *_surf_deform  = def->surf_deform;
   PDM_cloud_deform_t *_cloud_deform = def->cloud_deform;
@@ -526,6 +570,15 @@ _PDM_mesh_deform_compute
     free(leaf_nodes_id);
 
   }
+
+  PDM_timer_hang_on(def->timer);
+
+  def->times_elapsed[END_CLU] = PDM_timer_elapsed(def->timer);
+  def->times_cpu    [END_CLU] = PDM_timer_cpu(def->timer);
+  def->times_cpu_u  [END_CLU] = PDM_timer_cpu_user(def->timer);
+  def->times_cpu_s  [END_CLU] = PDM_timer_cpu_sys(def->timer);
+
+  PDM_timer_resume(def->timer);
 
   PDM_dist_cloud_surf_t *dcs = PDM_dist_cloud_surf_create(PDM_MESH_NATURE_MESH_SETTED,
                                                           1,
@@ -683,6 +736,15 @@ _PDM_mesh_deform_compute
                          min_dist_gnum,
                          def->comm);
 
+  PDM_timer_hang_on(def->timer);
+
+  def->times_elapsed[END_DST] = PDM_timer_elapsed(def->timer);
+  def->times_cpu    [END_DST] = PDM_timer_cpu(def->timer);
+  def->times_cpu_u  [END_DST] = PDM_timer_cpu_user(def->timer);
+  def->times_cpu_s  [END_DST] = PDM_timer_cpu_sys(def->timer);
+
+  PDM_timer_resume(def->timer);
+
   PDM_closest_point_t* cls = PDM_closest_points_create(def->comm,
                                                        def->min_dist_n_vtx,
                                                        PDM_OWNERSHIP_KEEP);
@@ -801,6 +863,15 @@ _PDM_mesh_deform_compute
   free(closest_src_gnum   );
   free(blk_min_dist_coords);
 
+  PDM_timer_hang_on(def->timer);
+
+  def->times_elapsed[END_CLS] = PDM_timer_elapsed(def->timer);
+  def->times_cpu    [END_CLS] = PDM_timer_cpu(def->timer);
+  def->times_cpu_u  [END_CLS] = PDM_timer_cpu_user(def->timer);
+  def->times_cpu_s  [END_CLS] = PDM_timer_cpu_sys(def->timer);
+
+  PDM_timer_resume(def->timer);
+
   _cloud_deform->ptb_blk = PDM_part_to_block_create(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
                                                     PDM_PART_TO_BLOCK_POST_CLEANUP,
                                                     1.,
@@ -913,8 +984,18 @@ _PDM_mesh_deform_compute
 
   blk_cloud_to_surf_buffer = realloc (blk_cloud_to_surf_buffer, blk_cloud_to_surf_buffer_idx[_cloud_deform->blk_n_points] * sizeof(PDM_g_num_t));
 
-  printf("Reduction of data size : ini = %i ; end = %i\n", _cloud_deform->blk_buffer_from_surf_idx[_cloud_deform->blk_n_points],
-                                                           blk_cloud_to_surf_buffer_idx[_cloud_deform->blk_n_points]);
+  double r = 0.0;
+  double rmin = 0.0;
+  double rmax = 0.0;
+
+  r = (double) blk_cloud_to_surf_buffer_idx[_cloud_deform->blk_n_points] / (double) _cloud_deform->blk_buffer_from_surf_idx[_cloud_deform->blk_n_points];
+
+  PDM_MPI_Allreduce (&r, &rmin, 1, PDM_MPI_DOUBLE, PDM_MPI_MIN, def->comm);
+  PDM_MPI_Allreduce (&r, &rmax, 1, PDM_MPI_DOUBLE, PDM_MPI_MAX, def->comm);
+
+  if (i_rank == 0) {
+    PDM_printf("mesh_deform reduction statistics : min = %12.5e%%, max = %12.5e%%\n", 100.0*rmin, 100.0*rmax);
+  }
 
   PDM_g_num_t *blk_gnum = PDM_part_to_block_block_gnum_get(_cloud_deform->ptb_blk);
 
@@ -952,7 +1033,16 @@ _PDM_mesh_deform_compute
   free(distri_layer);
   free(gnum_layer  );
 
-  def->is_cpt = 1;
+  PDM_timer_hang_on(def->timer);
+
+  def->times_elapsed[END_CPT] = PDM_timer_elapsed(def->timer);
+  def->times_cpu    [END_CPT] = PDM_timer_cpu(def->timer);
+  def->times_cpu_u  [END_CPT] = PDM_timer_cpu_user(def->timer);
+  def->times_cpu_s  [END_CPT] = PDM_timer_cpu_sys(def->timer);
+
+  PDM_timer_resume(def->timer);
+
+  def->is_cpt = PDM_TRUE;
 
 }
 
@@ -971,12 +1061,21 @@ _PDM_mesh_deform_cloud_block_get
 )
 {
 
-  assert(def->is_cpt == 1);
+  assert(def->is_cpt == PDM_TRUE);
+
+  PDM_timer_hang_on(def->timer);
+
+  def->times_elapsed[BEGIN_BLK] = PDM_timer_elapsed(def->timer);
+  def->times_cpu    [BEGIN_BLK] = PDM_timer_cpu(def->timer);
+  def->times_cpu_u  [BEGIN_BLK] = PDM_timer_cpu_user(def->timer);
+  def->times_cpu_s  [BEGIN_BLK] = PDM_timer_cpu_sys(def->timer);
+
+  PDM_timer_resume(def->timer);
 
   PDM_surf_deform_t  *_surf_deform  = def->surf_deform;
   PDM_cloud_deform_t *_cloud_deform = def->cloud_deform;
 
-  if (def->is_blk == 1) {
+  if (def->is_blk == PDM_TRUE) {
     free(_cloud_deform->blk_coords );
     free(_cloud_deform->blk_dcoords);
     free(_cloud_deform->blk_coords_from_surf[0] );
@@ -987,7 +1086,7 @@ _PDM_mesh_deform_cloud_block_get
       free(_cloud_deform->blk_aux_geom_from_surf[0]);
       free(_cloud_deform->blk_aux_geom_from_surf   );
     }
-    def->is_blk = 0;
+    def->is_blk = PDM_FALSE;
   }
 
   for (int i_layer = 0; i_layer < def->n_layer; i_layer++) {
@@ -1185,7 +1284,16 @@ _PDM_mesh_deform_cloud_block_get
   *blk_cloud_coords   = _cloud_deform->blk_coords;
   *blk_cloud_dcoords  = _cloud_deform->blk_dcoords;
 
-  def->is_blk = 1;
+  PDM_timer_hang_on(def->timer);
+
+  def->times_elapsed[END_BLK] = PDM_timer_elapsed(def->timer);
+  def->times_cpu    [END_BLK] = PDM_timer_cpu(def->timer);
+  def->times_cpu_u  [END_BLK] = PDM_timer_cpu_user(def->timer);
+  def->times_cpu_s  [END_BLK] = PDM_timer_cpu_sys(def->timer);
+
+  PDM_timer_resume(def->timer);
+
+  def->is_blk = PDM_TRUE;
 
 }
 
@@ -1197,17 +1305,26 @@ _PDM_mesh_deform_cloud_dcoords_part_get
 )
 {
 
-  assert(def->is_cpt == 1);
-  assert(def->is_blk == 1);
+  assert(def->is_cpt == PDM_TRUE);
+  assert(def->is_blk == PDM_TRUE);
+
+  PDM_timer_hang_on(def->timer);
+
+  def->times_elapsed[BEGIN_PRT] = PDM_timer_elapsed(def->timer);
+  def->times_cpu    [BEGIN_PRT] = PDM_timer_cpu(def->timer);
+  def->times_cpu_u  [BEGIN_PRT] = PDM_timer_cpu_user(def->timer);
+  def->times_cpu_s  [BEGIN_PRT] = PDM_timer_cpu_sys(def->timer);
+
+  PDM_timer_resume(def->timer);
 
   PDM_cloud_deform_t *_cloud_deform = def->cloud_deform;
 
-  if (def->is_res == 1) {
+  if (def->is_res == PDM_TRUE) {
     for (int i_part = 0; i_part < _cloud_deform->n_part; i_part++) {
       free(_cloud_deform->dcoords[i_part]);
     }
     free(_cloud_deform->dcoords);
-    def->is_res = 0;
+    def->is_res = PDM_FALSE;
   }
 
   PDM_part_to_block_reverse_exch(_cloud_deform->ptb_blk,
@@ -1221,7 +1338,117 @@ _PDM_mesh_deform_cloud_dcoords_part_get
 
   *cloud_dcoords = _cloud_deform->dcoords;
 
-  def->is_res = 1;
+  PDM_timer_hang_on(def->timer);
+
+  def->times_elapsed[END_PRT] = PDM_timer_elapsed(def->timer);
+  def->times_cpu    [END_PRT] = PDM_timer_cpu(def->timer);
+  def->times_cpu_u  [END_PRT] = PDM_timer_cpu_user(def->timer);
+  def->times_cpu_s  [END_PRT] = PDM_timer_cpu_sys(def->timer);
+
+  PDM_timer_resume(def->timer);
+
+  def->is_res = PDM_TRUE;
+
+}
+
+static void
+_PDM_mesh_deform_dump_times
+(
+  PDM_mesh_deform_t *def
+)
+{
+
+  int i_rank;
+  PDM_MPI_Comm_rank(def->comm, &i_rank);
+
+  double t1 = 0.0;
+  double t2 = 0.0;
+  double t1max = 0.0;
+  double t2max = 0.0;
+
+  t1 = def->times_elapsed[END_CPT] - def->times_elapsed[BEGIN_CPT];
+  t2 = def->times_cpu[END_CPT] - def->times_cpu[BEGIN_CPT];
+
+  PDM_MPI_Allreduce (&t1, &t1max, 1, PDM_MPI_DOUBLE, PDM_MPI_MAX, def->comm);
+  PDM_MPI_Allreduce (&t2, &t2max, 1, PDM_MPI_DOUBLE, PDM_MPI_MAX, def->comm);
+
+  if (i_rank == 0) {
+    PDM_printf( "mesh_deform timer : compute all    (elapsed and cpu) : %12.5es %12.5es\n",
+                t1max, t2max);
+  }
+
+  t1 = def->times_elapsed[END_CLU] - def->times_elapsed[BEGIN_CPT];
+  t2 = def->times_cpu[END_CLU] - def->times_cpu[BEGIN_CPT];
+
+  PDM_MPI_Allreduce (&t1, &t1max, 1, PDM_MPI_DOUBLE, PDM_MPI_MAX, def->comm);
+  PDM_MPI_Allreduce (&t2, &t2max, 1, PDM_MPI_DOUBLE, PDM_MPI_MAX, def->comm);
+
+  if (i_rank == 0) {
+    PDM_printf( "mesh_deform timer : clustering     (elapsed and cpu) : %12.5es %12.5es\n",
+                t1max, t2max);
+  }
+
+  t1 = def->times_elapsed[END_DST] - def->times_elapsed[END_CLU];
+  t2 = def->times_cpu[END_DST] - def->times_cpu[END_CLU];
+
+  PDM_MPI_Allreduce (&t1, &t1max, 1, PDM_MPI_DOUBLE, PDM_MPI_MAX, def->comm);
+  PDM_MPI_Allreduce (&t2, &t2max, 1, PDM_MPI_DOUBLE, PDM_MPI_MAX, def->comm);
+
+  if (i_rank == 0) {
+    PDM_printf( "mesh_deform timer : distance       (elapsed and cpu) : %12.5es %12.5es\n",
+                t1max, t2max);
+  }
+
+  t1 = def->times_elapsed[END_CLS] - def->times_elapsed[END_DST];
+  t2 = def->times_cpu[END_CLS] - def->times_cpu[END_DST];
+
+  PDM_MPI_Allreduce (&t1, &t1max, 1, PDM_MPI_DOUBLE, PDM_MPI_MAX, def->comm);
+  PDM_MPI_Allreduce (&t2, &t2max, 1, PDM_MPI_DOUBLE, PDM_MPI_MAX, def->comm);
+
+  if (i_rank == 0) {
+    PDM_printf( "mesh_deform timer : closest points (elapsed and cpu) : %12.5es %12.5es\n",
+                t1max, t2max);
+  }
+
+  t1 = def->times_elapsed[END_CPT] - def->times_elapsed[END_CLS];
+  t2 = def->times_cpu[END_CPT] - def->times_cpu[END_CLS];
+
+  PDM_MPI_Allreduce (&t1, &t1max, 1, PDM_MPI_DOUBLE, PDM_MPI_MAX, def->comm);
+  PDM_MPI_Allreduce (&t2, &t2max, 1, PDM_MPI_DOUBLE, PDM_MPI_MAX, def->comm);
+
+  if (i_rank == 0) {
+    PDM_printf( "mesh_deform timer : reduction      (elapsed and cpu) : %12.5es %12.5es\n",
+                t1max, t2max);
+  }
+
+  t1 = def->times_elapsed[END_BLK] - def->times_elapsed[BEGIN_BLK];
+  t2 = def->times_cpu[END_BLK] - def->times_cpu[BEGIN_BLK];
+
+  PDM_MPI_Allreduce (&t1, &t1max, 1, PDM_MPI_DOUBLE, PDM_MPI_MAX, def->comm);
+  PDM_MPI_Allreduce (&t2, &t2max, 1, PDM_MPI_DOUBLE, PDM_MPI_MAX, def->comm);
+
+  if (i_rank == 0) {
+    PDM_printf( "mesh_deform timer : get block      (elapsed and cpu) : %12.5es %12.5es\n",
+                t1max, t2max);
+  }
+
+  t1 = def->times_elapsed[END_PRT] - def->times_elapsed[BEGIN_PRT];
+  t2 = def->times_cpu[END_PRT] - def->times_cpu[BEGIN_PRT];
+
+  PDM_MPI_Allreduce (&t1, &t1max, 1, PDM_MPI_DOUBLE, PDM_MPI_MAX, def->comm);
+  PDM_MPI_Allreduce (&t2, &t2max, 1, PDM_MPI_DOUBLE, PDM_MPI_MAX, def->comm);
+
+  if (i_rank == 0) {
+    PDM_printf( "mesh_deform timer : get part       (elapsed and cpu) : %12.5es %12.5es\n",
+                t1max, t2max);
+  }
+
+  for (int i = 0; i < NTIMER; i++) {
+    def->times_elapsed[i] = 0.0;
+    def->times_cpu    [i] = 0.0;
+    def->times_cpu_u  [i] = 0.0;
+    def->times_cpu_s  [i] = 0.0;
+  }
 
 }
 
@@ -2010,6 +2237,7 @@ int main(int argc, char *argv[])
 
   _PDM_mesh_deform_cloud_dcoords_part_get(def,
                                          &int_dvtx);
+  _PDM_mesh_deform_dump_times(def);
 
   for (int i_part = 0; i_part < n_part_bnd; i_part++) {
 
@@ -2193,6 +2421,7 @@ int main(int argc, char *argv[])
 
   _PDM_mesh_deform_cloud_dcoords_part_get(def,
                                          &int_dvtx);
+  _PDM_mesh_deform_dump_times(def);
 
   for (int i_part = 0; i_part < n_part_bnd; i_part++) {
 
