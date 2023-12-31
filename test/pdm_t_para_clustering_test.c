@@ -169,6 +169,36 @@ _prepare_mean_array_double_per_leaf
 
 }
 
+static void
+_finalize_mean_array_double_per_leaf
+(
+  const int     n_leaf,
+  const int    *leaf_idx,
+  const int    *n_pts_in_leaf,
+  const int     stride,
+  const double *pts_array_double,
+        double *leaf_array_double
+)
+{
+
+  for (int i_leaf = 0; i_leaf < n_leaf; i_leaf++) {
+    for (int i = 0; i < stride; i++) {
+      leaf_array_double[stride*i_leaf+i] = 0.0;
+    }
+    int n_vtx = 0;
+    for (int i_pts = leaf_idx[i_leaf]; i_pts < leaf_idx[i_leaf+1]; i_pts++) {
+      for (int i = 0; i < stride; i++) {
+        leaf_array_double[stride*i_leaf+i] = leaf_array_double[stride*i_leaf+i] + pts_array_double[stride*i_pts+i];
+      }
+      n_vtx = n_vtx + n_pts_in_leaf[i_pts];
+    }
+    for (int i = 0; i < stride; i++) {
+      leaf_array_double[stride*i_leaf+i] = leaf_array_double[stride*i_leaf+i]/n_vtx;
+    }
+  }
+
+}
+
 #define NTIMER 9
 
 typedef enum {
@@ -1490,6 +1520,13 @@ _PDM_mesh_deform_cloud_block_get
 
     PDM_UNUSED(blk_size);
 
+    _finalize_mean_array_double_per_leaf(_surf_deform->blk_n_leaf       [i_layer],
+                           (const int *) _surf_deform->blk_leaf_idx     [i_layer],
+                           (const int *) _surf_deform->blk_n_vtx_in_leaf[i_layer],
+                                         3,
+                        (const double *) tmp_array,
+                                         _surf_deform->coords[_surf_deform->n_part+i_layer]);
+
     free(tmp_stride_array);
     free(tmp_array);
 
@@ -1510,6 +1547,13 @@ _PDM_mesh_deform_cloud_block_get
                            (void **)  _surf_deform->dcoords_leaf[i_layer],
                                      &tmp_stride_array,
                            (void **) &tmp_array);
+
+    _finalize_mean_array_double_per_leaf(_surf_deform->blk_n_leaf       [i_layer],
+                           (const int *) _surf_deform->blk_leaf_idx     [i_layer],
+                           (const int *) _surf_deform->blk_n_vtx_in_leaf[i_layer],
+                                         3,
+                        (const double *) tmp_array,
+                                         _surf_deform->dcoords[_surf_deform->n_part+i_layer]);
 
     free(tmp_stride_array);
     free(tmp_array);
@@ -1533,6 +1577,13 @@ _PDM_mesh_deform_cloud_block_get
                              (void **)  _surf_deform->aux_geom_leaf[i_layer],
                                        &tmp_stride_array,
                              (void **) &tmp_array);
+
+      _finalize_mean_array_double_per_leaf(_surf_deform->blk_n_leaf       [i_layer],
+                             (const int *) _surf_deform->blk_leaf_idx     [i_layer],
+                             (const int *) _surf_deform->blk_n_vtx_in_leaf[i_layer],
+                                           def->n_aux_geom,
+                          (const double *) tmp_array,
+                                           _surf_deform->aux_geom[_surf_deform->n_part+i_layer]);
 
       free(tmp_stride_array);
       free(tmp_array);
