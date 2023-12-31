@@ -90,6 +90,32 @@ _leaf_get
 }
 
 static void
+_pts_leaf_rank_and_gnum_get
+(
+  const int          n_leaf,
+  const int         *leaf_nodes_id,
+  const int         *n_points,
+  const int         *range,
+  const PDM_g_num_t  gnum_leaf0,
+        int         *pts_leaf_rank,
+        PDM_g_num_t *pts_leaf_gnum,
+        PDM_MPI_Comm comm
+)
+{
+
+  int i_rank;
+  PDM_MPI_Comm_rank(comm, &i_rank);
+
+  for (int i_leaf = 0; i_leaf < n_leaf; i_leaf++) {
+    for (int i_pts = range[leaf_nodes_id[i_leaf]]; i_pts < range[leaf_nodes_id[i_leaf]] + n_points[leaf_nodes_id[i_leaf]]; i_pts++) {
+      pts_leaf_rank[i_pts] = i_rank;
+      pts_leaf_gnum[i_pts] = gnum_leaf0 + i_leaf;
+    }
+  }
+
+}
+
+static void
 _mean_array_double_per_leaf
 (
   const int     n_leaf,
@@ -136,21 +162,27 @@ typedef enum {
 
 typedef struct _PDM_surf_deform_t {
 
-  int                  n_part;
-  int                 *n_face;
-  int                 *n_vtx;
-  double             **coords;
-  PDM_g_num_t        **vtx_ln_to_gn;
-  PDM_g_num_t        **face_ln_to_gn;
+  int                    n_part;
+  int                   *n_face;
+  int                   *n_vtx;
+  double               **coords;
+  PDM_g_num_t          **vtx_ln_to_gn;
+  PDM_g_num_t          **face_ln_to_gn;
 
-  int                **face_vtx_idx;
-  int                **face_vtx;
+  int                  **face_vtx_idx;
+  int                  **face_vtx;
 
-  double             **dcoords;
-  double             **aux_geom;
+  double               **dcoords;
+  double               **aux_geom;
 
-  PDM_para_octree_t  **octree_layer;
-  PDM_part_to_part_t **ptp_layer;
+  PDM_para_octree_t    **octree_layer;
+  PDM_part_to_part_t   **ptp_layer;
+  PDM_part_to_block_t  **ptb_layer;
+
+  int                  **n_leaf;
+  PDM_g_num_t         ***gnum_leaf;
+  int                 ***vtx_in_leaf_idx;
+  int                 ***vtx_in_leaf;
 
 } PDM_surf_deform_t;
 
@@ -354,6 +386,15 @@ _PDM_mesh_deform_partial_free
   PDM_cloud_deform_t *_cloud_deform = def->cloud_deform;
 
   for (int i_layer = 0; i_layer < def->n_layer; i_layer++) {
+    for (int i_part = 0; i_part < _surf_deform->n_part; i_part++) {
+      free(_surf_deform->gnum_leaf      [i_layer][i_part]);
+      free(_surf_deform->vtx_in_leaf_idx[i_layer][i_part]);
+      free(_surf_deform->vtx_in_leaf    [i_layer][i_part]);
+    }
+    free(_surf_deform->n_leaf         [i_layer]);
+    free(_surf_deform->gnum_leaf      [i_layer]);
+    free(_surf_deform->vtx_in_leaf_idx[i_layer]);
+    free(_surf_deform->vtx_in_leaf    [i_layer]);
     free(_surf_deform->vtx_ln_to_gn[_surf_deform->n_part+i_layer]);
     free(_surf_deform->coords      [_surf_deform->n_part+i_layer]);
     free(_surf_deform->dcoords     [_surf_deform->n_part+i_layer]);
@@ -361,11 +402,17 @@ _PDM_mesh_deform_partial_free
       free(_surf_deform->aux_geom[_surf_deform->n_part+i_layer]);
     }
     PDM_part_to_part_free(_surf_deform->ptp_layer[i_layer]);
+    PDM_part_to_block_free(_surf_deform->ptb_layer[i_layer]);
     PDM_para_octree_free(_surf_deform->octree_layer[i_layer]);
   }
 
-  free(_surf_deform->ptp_layer   );
-  free(_surf_deform->octree_layer);
+  free(_surf_deform->n_leaf         );
+  free(_surf_deform->gnum_leaf      );
+  free(_surf_deform->vtx_in_leaf_idx);
+  free(_surf_deform->vtx_in_leaf    );
+  free(_surf_deform->ptp_layer      );
+  free(_surf_deform->ptb_layer      );
+  free(_surf_deform->octree_layer   );
 
   free(_cloud_deform->blk_buffer_from_surf_idx);
   free(_cloud_deform->blk_buffer_from_surf    );
@@ -471,8 +518,13 @@ _PDM_mesh_deform_compute
 
   _max_g_num = max_g_num + 1;
 
-  _surf_deform->octree_layer = malloc(sizeof(PDM_para_octree_t  *) * def->n_layer);
-  _surf_deform->ptp_layer    = malloc(sizeof(PDM_part_to_part_t *) * def->n_layer);
+  _surf_deform->octree_layer    = malloc(sizeof(PDM_para_octree_t    *) * def->n_layer);
+  _surf_deform->ptp_layer       = malloc(sizeof(PDM_part_to_part_t   *) * def->n_layer);
+  _surf_deform->ptb_layer       = malloc(sizeof(PDM_part_to_block_t  *) * def->n_layer);
+  _surf_deform->n_leaf          = malloc (sizeof(int                **) * def->n_layer);
+  _surf_deform->gnum_leaf       = malloc (sizeof(PDM_g_num_t        **) * def->n_layer);
+  _surf_deform->vtx_in_leaf_idx = malloc(sizeof(int                 **) * def->n_layer);
+  _surf_deform->vtx_in_leaf     = malloc(sizeof(int                 **) * def->n_layer);
 
   PDM_g_num_t **distri_layer = malloc(sizeof(PDM_g_num_t *) * def->n_layer);
   PDM_g_num_t  *gnum_layer   = malloc(sizeof(PDM_g_num_t  ) * def->n_layer);
@@ -561,13 +613,147 @@ _PDM_mesh_deform_compute
       _surf_deform->aux_geom[_surf_deform->n_part+i_layer] = malloc (sizeof(double) * def->n_aux_geom * n_leaf);
     }
 
-    for (int i_vtx = 0; i_vtx < n_leaf; i_vtx++) {
-      _surf_deform->vtx_ln_to_gn[_surf_deform->n_part+i_layer][i_vtx] = _max_g_num + distri_layer[i_layer][i_rank] + i_vtx;
+    for (int i_leaf = 0; i_leaf < n_leaf; i_leaf++) {
+      _surf_deform->vtx_ln_to_gn[_surf_deform->n_part+i_layer][i_leaf] = _max_g_num + distri_layer[i_layer][i_rank] + i_leaf;
     }
 
     _max_g_num = _max_g_num + distri_layer[i_layer][n_rank];
 
+    int         *pts_leaf_rank = malloc (sizeof(int        ) * n_pts_octree);
+    PDM_g_num_t *pts_leaf_gnum = malloc (sizeof(PDM_g_num_t) * n_pts_octree);
+
+    _pts_leaf_rank_and_gnum_get(n_leaf,
+                                leaf_nodes_id,
+                                n_points,
+                                range,
+                                distri_layer[i_layer][i_rank]+1,
+                                pts_leaf_rank,
+                                pts_leaf_gnum,
+                                def->comm);
+
+    int   request       = 0;
+    int **tmp_leaf_rank = NULL;
+
+    PDM_part_to_part_iexch(_surf_deform->ptp_layer[i_layer],
+                           PDM_MPI_COMM_KIND_P2P,
+                           PDM_STRIDE_CST_INTERLACED,
+                           PDM_PART_TO_PART_DATA_DEF_ORDER_PART1,
+                           1,
+                           sizeof(int),
+                           NULL,
+          (const void **) &pts_leaf_rank,
+                           NULL,
+               (void ***) &tmp_leaf_rank,
+                          &request);
+
+    PDM_part_to_part_iexch_wait(_surf_deform->ptp_layer[i_layer], request);
+
+    PDM_g_num_t **tmp_leaf_gnum = NULL;
+
+    PDM_part_to_part_iexch(_surf_deform->ptp_layer[i_layer],
+                           PDM_MPI_COMM_KIND_P2P,
+                           PDM_STRIDE_CST_INTERLACED,
+                           PDM_PART_TO_PART_DATA_DEF_ORDER_PART1,
+                           1,
+                           sizeof(PDM_g_num_t),
+                           NULL,
+          (const void **) &pts_leaf_gnum,
+                           NULL,
+               (void ***) &tmp_leaf_gnum,
+                          &request);
+
+    PDM_part_to_part_iexch_wait(_surf_deform->ptp_layer[i_layer], request);
+
+    _surf_deform->n_leaf         [i_layer] = malloc (sizeof(int         *) * _surf_deform->n_part);
+    _surf_deform->gnum_leaf      [i_layer] = malloc (sizeof(PDM_g_num_t *) * _surf_deform->n_part);
+    _surf_deform->vtx_in_leaf_idx[i_layer] = malloc (sizeof(int         *) * _surf_deform->n_part);
+    _surf_deform->vtx_in_leaf    [i_layer] = malloc (sizeof(int         *) * _surf_deform->n_part);
+
+    for (int i_part = 0; i_part < _surf_deform->n_part; i_part++) {
+
+      _surf_deform->gnum_leaf[i_layer][i_part] = malloc (sizeof(PDM_g_num_t) * _surf_deform->n_vtx[i_part]);
+      _surf_deform->n_leaf   [i_layer][i_part] = 0;
+
+      PDM_g_num_t *sorted_gnum = malloc (sizeof(PDM_g_num_t) * _surf_deform->n_vtx[i_part]);
+      int         *order       = malloc (sizeof(int        ) * _surf_deform->n_vtx[i_part]);
+
+      for (int i_vtx = 0; i_vtx < _surf_deform->n_vtx[i_part]; i_vtx++) {
+        if (tmp_leaf_rank[i_part][i_vtx] == i_rank) {
+          for (int i_leaf = 0; i_leaf < _surf_deform->n_leaf[i_layer][i_part]; i_leaf++) {
+            sorted_gnum[i_leaf] = _surf_deform->gnum_leaf[i_layer][i_part][i_leaf];
+            order      [i_leaf] = i_leaf;
+          }
+          PDM_sort_long(sorted_gnum, order, _surf_deform->n_leaf[i_layer][i_part]);
+          int i_gnum = -1;
+          if (_surf_deform->n_leaf[i_layer][i_part] > 0) {
+            i_gnum = PDM_binary_search_long(tmp_leaf_gnum[i_part][i_vtx], sorted_gnum, _surf_deform->n_leaf[i_layer][i_part]);
+          }
+          if (i_gnum < 0) {
+            _surf_deform->gnum_leaf[i_layer][i_part][_surf_deform->n_leaf[i_layer][i_part]] = tmp_leaf_gnum[i_part][i_vtx];
+            tmp_leaf_gnum[i_part][i_vtx] = (PDM_g_num_t) _surf_deform->n_leaf[i_layer][i_part];
+            _surf_deform->n_leaf[i_layer][i_part]++;
+          } else {
+            tmp_leaf_gnum[i_part][i_vtx] = (PDM_g_num_t) order[i_gnum];
+          }
+        }
+      }
+
+      _surf_deform->gnum_leaf[i_layer][i_part] = realloc (_surf_deform->gnum_leaf[i_layer][i_part], sizeof(PDM_g_num_t) * _surf_deform->n_leaf[i_layer][i_part]);
+
+      free(sorted_gnum);
+      free(order);
+
+      int *n_vtx_in_leaf = malloc (sizeof(int) * _surf_deform->n_leaf[i_layer][i_part]);
+
+      for (int i_leaf = 0; i_leaf < _surf_deform->n_leaf[i_layer][i_part]; i_leaf++) {
+        n_vtx_in_leaf[i_leaf] = 0;
+      }
+
+      for (int i_vtx = 0; i_vtx < _surf_deform->n_vtx[i_part]; i_vtx++) {
+        if (tmp_leaf_rank[i_part][i_vtx] == i_rank) {
+          int i_leaf = (int) tmp_leaf_gnum[i_part][i_vtx];
+          n_vtx_in_leaf[i_leaf]++;
+        }
+      }
+
+      _surf_deform->vtx_in_leaf_idx[i_layer][i_part] = PDM_array_new_idx_from_sizes_int(n_vtx_in_leaf, _surf_deform->n_leaf[i_layer][i_part]);
+      _surf_deform->vtx_in_leaf    [i_layer][i_part] = malloc (sizeof(int) * _surf_deform->vtx_in_leaf_idx[i_layer][i_part][_surf_deform->n_leaf[i_layer][i_part]]);
+
+      for (int i_leaf = 0; i_leaf < _surf_deform->n_leaf[i_layer][i_part]; i_leaf++) {
+        n_vtx_in_leaf[i_leaf] = 0;
+      }
+
+      for (int i_vtx = 0; i_vtx < _surf_deform->n_vtx[i_part]; i_vtx++) {
+        if (tmp_leaf_rank[i_part][i_vtx] == i_rank) {
+          int i_leaf = (int) tmp_leaf_gnum[i_part][i_vtx];
+          _surf_deform->vtx_in_leaf[i_layer][i_part][_surf_deform->vtx_in_leaf_idx[i_layer][i_part][i_leaf]+n_vtx_in_leaf[i_leaf]] = i_vtx;
+          n_vtx_in_leaf[i_leaf]++;
+        }
+      }
+
+      free(n_vtx_in_leaf);
+
+    }
+
+    _surf_deform->ptb_layer[i_layer] = PDM_part_to_block_create_from_distrib(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
+                                                                             PDM_PART_TO_BLOCK_POST_MERGE,
+                                                                             1.,
+                                                                             _surf_deform->gnum_leaf[i_layer],
+                                                                             distri_layer[i_layer],
+                                                                             _surf_deform->n_leaf[i_layer],
+                                                                             _surf_deform->n_part,
+                                                                             def->comm);
+
+    for (int i_part = 0; i_part < _surf_deform->n_part; i_part++) {
+      free(tmp_leaf_rank[i_part]);
+      free(tmp_leaf_gnum[i_part]);
+    }
+
     free(leaf_nodes_id);
+    free(pts_leaf_rank);
+    free(pts_leaf_gnum);
+    free(tmp_leaf_rank);
+    free(tmp_leaf_gnum);
 
   }
 
