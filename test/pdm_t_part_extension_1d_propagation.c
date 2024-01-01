@@ -655,7 +655,6 @@ _part_extension_one_depth
   PDM_MPI_Comm_rank(comm, &i_rank);
   PDM_MPI_Comm_size(comm, &n_rank);
 
-
   int          *pn_vtx                            = *out_pn_vtx;
   PDM_g_num_t **pvtx_ln_to_gn                     = *out_pvtx_ln_to_gn;
   int          *pn_edge                           = *out_pn_edge;
@@ -678,6 +677,26 @@ _part_extension_one_depth
     }
   }
 
+  /*
+   * Compute offset gnum
+   */
+  PDM_g_num_t _lshift_edge_gnum = -1;
+  PDM_g_num_t _lshift_vtx_gnum  = -1;
+
+  for(int i_part = 0; i_part < ln_part_tot; ++i_part) {
+    for(int i_edge = 0; i_edge < pn_edge[i_part]; ++i_edge) {
+      _lshift_edge_gnum = PDM_MAX(_lshift_edge_gnum, pedge_ln_to_gn[i_part][i_edge]);
+    }
+    for(int i_vtx = 0; i_vtx < pn_vtx[i_part]; ++i_vtx) {
+      _lshift_vtx_gnum = PDM_MAX(_lshift_vtx_gnum, pvtx_ln_to_gn[i_part][i_vtx]);
+    }
+  }
+
+  PDM_g_num_t shift_edge_gnum = -1;
+  PDM_g_num_t shift_vtx_gnum  = -1;
+
+  PDM_MPI_Allreduce(&_lshift_edge_gnum, &shift_edge_gnum, 1, PDM__PDM_MPI_G_NUM, PDM_MPI_MAX, comm);
+  PDM_MPI_Allreduce(&_lshift_vtx_gnum , &shift_vtx_gnum , 1, PDM__PDM_MPI_G_NUM, PDM_MPI_MAX, comm);
 
 
   int         **pvtx_edge_idx  = NULL;
@@ -725,9 +744,41 @@ _part_extension_one_depth
 
     int n_part1_to_part2 = pedge_extented_to_pedge_idx[i_part][pn_edge[i_part]]/3;
     PDM_log_trace_array_long(pextented_edge_gnum[i_part], n_part1_to_part2, "pextented_edge_gnum ::");
+  }
+
+  /*
+   * Prepare previous gnum that alreay computed
+   *  Caution : We need to preshift the gnum to have the "true" gnum
+   */
+  PDM_g_num_t **prev_edge_ln_to_gn_and_interface = malloc(ln_part_tot * sizeof(PDM_g_num_t *));
+  for(int i_part = 0; i_part < ln_part_tot; ++i_part) {
+
+    int n_part1_to_part2 = pedge_extented_to_pedge_idx[i_part][pn_edge[i_part]]/3;
+    prev_edge_ln_to_gn_and_interface[i_part] = malloc( 2 * n_part1_to_part2 * sizeof(PDM_g_num_t));
+
+    for(int i = 0; i < n_part1_to_part2; ++i) {
+      prev_edge_ln_to_gn_and_interface[i_part][2*i  ] = pextented_edge_gnum              [i_part][i];
+      prev_edge_ln_to_gn_and_interface[i_part][2*i+1] = pedge_extented_to_pedge_interface[i_part][i];
+    }
+
+    int *order = malloc(n_part1_to_part2 * sizeof(int));
+
+    PDM_order_gnum_s(prev_edge_ln_to_gn_and_interface[i_part], 2, order, n_part1_to_part2);
+
+    PDM_order_array(n_part1_to_part2, 2 * sizeof(PDM_g_num_t), order, prev_edge_ln_to_gn_and_interface[i_part]);
+
+
+    free(order);
     free(pextented_edge_gnum[i_part]);
+
+
+    PDM_log_trace_array_long(prev_edge_ln_to_gn_and_interface[i_part], 2 * n_part1_to_part2, "prev_edge_ln_to_gn_and_interface ::");
+
+
   }
   free(pextented_edge_gnum);
+
+
 
 
   PDM_part_to_part_t* ptp_vtx = PDM_part_to_part_create_from_num2_triplet((const PDM_g_num_t **) pvtx_ln_to_gn,
@@ -907,10 +958,24 @@ _part_extension_one_depth
 
     int n_part1_to_part2          = pvtx_extented_to_pvtx_idx[i_part][pn_vtx[i_part]]/3;
     int n_part1_to_part2_recv_tot = _pextract_edge_idx[n_part1_to_part2];
+
+    int n_part1_to_part2_edge = pedge_extented_to_pedge_idx[i_part][pn_edge[i_part]]/3;
     pn_edge_only_by_interface[i_part] = 0;
     for(int i = 0; i < n_part1_to_part2; ++i) {
       if(pvtx_extented_to_pvtx_interface[i_part][i] != 0) {
-        pn_edge_only_by_interface[i_part] += pextract_edge_n[i_part][i];
+
+        for(int j = _pextract_edge_idx[i]; j < _pextract_edge_idx[i+1]; ++j) {
+          // Remove already gnum generate by interface
+          PDM_g_num_t gnum_and_itrf[2] = {_pextract_edge_gnum[j], pvtx_extented_to_pvtx_interface[i_part][i]};
+          int pos = PDM_order_binary_search_long(gnum_and_itrf,
+                                                 prev_edge_ln_to_gn_and_interface[i_part],
+                                                 2,
+                                                 n_part1_to_part2_edge);
+          log_trace(" ooooooo : %i \n", pos);
+          if(pos == -1) {
+            pn_edge_only_by_interface[i_part] += 1; // pextract_edge_n[i_part][i];
+          }
+        }
       }
     }
 
@@ -919,16 +984,25 @@ _part_extension_one_depth
     }
 
     pedge_ln_to_gn_only_by_interface[i_part] = malloc(2 * pn_edge_only_by_interface[i_part] * sizeof(PDM_g_num_t));
-    pedge_interface                 [i_part] = malloc(    n_part1_to_part2_recv_tot            * sizeof(int        ));
+    pedge_interface                 [i_part] = malloc(    n_part1_to_part2_recv_tot         * sizeof(int        ));
     PDM_g_num_t *_pedge_ln_to_gn_only_by_interface = pedge_ln_to_gn_only_by_interface[i_part];
 
     pn_edge_only_by_interface[i_part] = 0;
     for(int i = 0; i < n_part1_to_part2; ++i) {
       if(pvtx_extented_to_pvtx_interface[i_part][i] != 0) {
         for(int j = _pextract_edge_idx[i]; j < _pextract_edge_idx[i+1]; ++j) {
-          int idx_write = pn_edge_only_by_interface[i_part]++;
-          _pedge_ln_to_gn_only_by_interface[2*idx_write  ] = _pextract_edge_gnum[j];
-          _pedge_ln_to_gn_only_by_interface[2*idx_write+1] = pvtx_extented_to_pvtx_interface[i_part][i];
+
+          // Remove already gnum generate by interface
+          PDM_g_num_t gnum_and_itrf[2] = {_pextract_edge_gnum[j], pvtx_extented_to_pvtx_interface[i_part][i]};
+          int pos = PDM_order_binary_search_long(gnum_and_itrf,
+                                                 prev_edge_ln_to_gn_and_interface[i_part],
+                                                 2,
+                                                 n_part1_to_part2_edge);
+          if(pos == -1) {
+            int idx_write = pn_edge_only_by_interface[i_part]++;
+            _pedge_ln_to_gn_only_by_interface[2*idx_write  ] = _pextract_edge_gnum[j];
+            _pedge_ln_to_gn_only_by_interface[2*idx_write+1] = pvtx_extented_to_pvtx_interface[i_part][i];
+          }
         }
       }
 
@@ -963,12 +1037,21 @@ _part_extension_one_depth
     pn_edge_only_by_interface[i_part] = 0;
 
     int n_part1_to_part2 = pvtx_extented_to_pvtx_idx[i_part][pn_vtx[i_part]]/3;
+    int n_part1_to_part2_edge = pedge_extented_to_pedge_idx[i_part][pn_edge[i_part]]/3;
 
     int idx_read = 0;
     for(int i = 0; i < n_part1_to_part2; ++i) {
       if(pvtx_extented_to_pvtx_interface[i_part][i] != 0) {
         for(int j = _pextract_edge_idx[i]; j < _pextract_edge_idx[i+1]; ++j) {
-          _pextract_edge_gnum[j] = extented_edge_ln_to_gn[idx_read++] + shift_by_domain_edge[n_domain];
+          // Remove already gnum generate by interface
+          PDM_g_num_t gnum_and_itrf[2] = {_pextract_edge_gnum[j], pvtx_extented_to_pvtx_interface[i_part][i]};
+          int pos = PDM_order_binary_search_long(gnum_and_itrf,
+                                                 prev_edge_ln_to_gn_and_interface[i_part],
+                                                 2,
+                                                 n_part1_to_part2_edge);
+          if(pos == -1) {
+            _pextract_edge_gnum[j] = extented_edge_ln_to_gn[idx_read++] + shift_edge_gnum;
+          }
         }
       }
     }
@@ -1001,6 +1084,8 @@ _part_extension_one_depth
 
     int n_part1_to_part2 = pvtx_extented_to_pvtx_idx[i_part][pn_vtx[i_part]]/3;
     int n_part1_to_part2_recv_tot = _pextract_edge_idx[n_part1_to_part2];
+    int n_part1_to_part2_edge = pedge_extented_to_pedge_idx[i_part][pn_edge[i_part]]/3;
+
 
     // All gnum has be unified / shift w/r of interface, only sort along gnum
     int *order = malloc(n_part1_to_part2_recv_tot * sizeof(int));
@@ -1015,16 +1100,39 @@ _part_extension_one_depth
     }
     PDM_sort_long(sorted_pedge_ln_to_gn, NULL, pn_edge[i_part]);
 
+    PDM_log_trace_array_long(sorted_pedge_ln_to_gn, pn_edge[i_part], "sorted_pedge_ln_to_gn ::");
+
     int n_unique = PDM_inplace_unique_long_and_order(_pextract_edge_gnum,
                                                      order,
                                                      0,
                                                      n_part1_to_part2_recv_tot-1);
 
+    /*
+     * The new edge can be :
+     *  - In current partition
+     *  - In interface array
+     */
+
+    /*
+     * Solution 1 : On mix les numero globaux et les doublets
+     * Solution 2 : On se fait un tableau trié complet avec les doublet
+     *              --> On genere le gnum a la toute fin ? --> On peut pas car on a besoin de gnum pour le part_to_part
+     */
+
+
     pedge_extented_ln_to_gn[i_part] = malloc(n_unique * sizeof(PDM_g_num_t));
     int n_unique2 = 0;
     for(int i = 0; i < n_unique; ++i) {
       int pos = PDM_binary_search_long(_pextract_edge_gnum[i], sorted_pedge_ln_to_gn, pn_edge[i_part]);
-      if(pos == -1) {
+
+      int old_pos = order[i];
+      PDM_g_num_t gnum_and_itrf[2] = {_pextract_edge_gnum[i], pedge_interface    [i_part][  old_pos  ]};
+      int pos2 = PDM_order_binary_search_long(gnum_and_itrf,
+                                              prev_edge_ln_to_gn_and_interface[i_part],
+                                              2,
+                                              n_part1_to_part2_edge);
+
+      if(pos == -1 && pos2 == -1) {
         pedge_extented_ln_to_gn[i_part][n_unique2] = _pextract_edge_gnum[i];
         n_unique2++;
       }
@@ -1043,7 +1151,14 @@ _part_extension_one_depth
     for(int i_edge = 0; i_edge < n_unique; ++i_edge) {
       int pos = PDM_binary_search_long(_pextract_edge_gnum[i_edge], sorted_pedge_ln_to_gn, pn_edge[i_part]);
 
-      if(pos == -1) {
+      int old_pos = order[i_edge];
+      PDM_g_num_t gnum_and_itrf[2] = {_pextract_edge_gnum[i_edge], pedge_interface    [i_part][  old_pos  ]};
+      int pos2 = PDM_order_binary_search_long(gnum_and_itrf,
+                                              prev_edge_ln_to_gn_and_interface[i_part],
+                                              2,
+                                              n_part1_to_part2_edge);
+
+      if(pos == -1 && pos2 == -1) {
         int old_pos = order[i_edge];
         pnext_edge_extented_to_pedge_idx[i_part][idx_write+1] = pnext_edge_extented_to_pedge_idx[i_part][idx_write] + 3;
 
@@ -1053,7 +1168,7 @@ _part_extension_one_depth
 
         // Save the link (gnum, interface)
         pnext_edge_extented_to_pedge_interface[i_part][idx_write] = pedge_interface    [i_part][  old_pos  ];
-        extented_edge_orig_gnum             [i_part][idx_write] = _pextract_edge_gnum        [  i_edge  ]; // Because it's sorted already
+        extented_edge_orig_gnum               [i_part][idx_write] = _pextract_edge_gnum        [  i_edge   ]; // Because it's sorted already
         idx_write++;
       }
     }
@@ -1075,6 +1190,11 @@ _part_extension_one_depth
 
   }
 
+
+  for(int i_part = 0; i_part < ln_part_tot; ++i_part) {
+    free(prev_edge_ln_to_gn_and_interface[i_part]);
+  }
+  free(prev_edge_ln_to_gn_and_interface);
 
 
   for(int i_part = 0; i_part < ln_part_tot; ++i_part) {
