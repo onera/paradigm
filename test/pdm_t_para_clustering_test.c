@@ -927,10 +927,10 @@ _PDM_mesh_deform_compute
   //                                                        1,
   //                                                        def->comm,
   //                                                        PDM_OWNERSHIP_KEEP);
-
+  //
   //PDM_dist_cloud_surf_surf_mesh_global_data_set(dcs,
   //                                              _surf_deform->n_part);
-
+  //
   //PDM_dist_cloud_surf_n_part_cloud_set(dcs,
   //                                     0,
   //                                     _cloud_deform->n_part);
@@ -991,7 +991,7 @@ _PDM_mesh_deform_compute
     PDM_g_num_t *surf_gnum = NULL;
     double      *surf_dist = NULL;
     //double      *surf_proj = NULL;
-
+    //
     //PDM_dist_cloud_surf_get(dcs,
     //                        0,
     //                        i_part,
@@ -1039,7 +1039,7 @@ _PDM_mesh_deform_compute
     PDM_g_num_t *surf_gnum = NULL;
     double      *surf_dist = NULL;
     //double      *surf_proj = NULL;
-
+    //
     //PDM_dist_cloud_surf_get(dcs,
     //                        0,
     //                        i_part,
@@ -1193,7 +1193,7 @@ _PDM_mesh_deform_compute
     PDM_g_num_t *surf_gnum = NULL;
     double      *surf_dist = NULL;
     //double      *surf_proj = NULL;
-
+    //
     //PDM_dist_cloud_surf_get(dcs,
     //                        0,
     //                        i_part,
@@ -1337,12 +1337,12 @@ _PDM_mesh_deform_compute
         //  order      [k_pts] = k_pts;
         //}
         //PDM_sort_long(sorted_gnum, order, blk_cloud_to_surf_buffer_idx[i_pts+1]);
-
+        //
         //int i_gnum = -1;
         //if (blk_cloud_to_surf_buffer_idx[i_pts+1] > 0) {
         //  i_gnum = PDM_binary_search_long(blk_cloud_to_surf[j_pts], sorted_gnum, blk_cloud_to_surf_buffer_idx[i_pts+1]);
         //}
-
+        //
         //if (i_gnum < 0) {
           int idx_write2 = blk_cloud_to_surf_buffer_idx[i_pts+1];
           blk_cloud_to_surf_buffer[idx_write2] = blk_cloud_to_surf[j_pts];
@@ -1471,31 +1471,31 @@ _PDM_mesh_deform_cloud_block_get
 
   for (int i_layer = 0; i_layer < def->n_layer; i_layer++) {
 
-    int  n_explicit_nodes = 0;
-    int *n_points         = NULL;
-    int *range            = NULL;
-    int *leaf_id          = NULL;
-    int *leaf_nodes_id    = NULL;
-    int *children_id      = NULL;
-    int *ancestor_id      = NULL;
-    int  n_child          = 0;
-    int  n_leaf           = 0;
-    int  stack_size       = 0;
-
-    PDM_para_octree_explicit_node_get(_surf_deform->octree_layer[i_layer],
-                                     &n_explicit_nodes,
-                                     &n_points,
-                                     &range,
-                                     &leaf_id,
-                                     &children_id,
-                                     &ancestor_id,
-                                     &n_child,
-                                     &stack_size);
-
-    _leaf_get(n_explicit_nodes,
-              leaf_id,
-             &n_leaf,
-             &leaf_nodes_id);
+    //int  n_explicit_nodes = 0;
+    //int *n_points         = NULL;
+    //int *range            = NULL;
+    //int *leaf_id          = NULL;
+    //int *leaf_nodes_id    = NULL;
+    //int *children_id      = NULL;
+    //int *ancestor_id      = NULL;
+    //int  n_child          = 0;
+    //int  n_leaf           = 0;
+    //int  stack_size       = 0;
+    //
+    //PDM_para_octree_explicit_node_get(_surf_deform->octree_layer[i_layer],
+    //                                 &n_explicit_nodes,
+    //                                 &n_points,
+    //                                 &range,
+    //                                 &leaf_id,
+    //                                 &children_id,
+    //                                 &ancestor_id,
+    //                                 &n_child,
+    //                                 &stack_size);
+    //
+    //_leaf_get(n_explicit_nodes,
+    //          leaf_id,
+    //         &n_leaf,
+    //         &leaf_nodes_id);
 
     _prepare_mean_array_double_per_leaf(_surf_deform->n_part,
                                         _surf_deform->n_leaf         [i_layer],
@@ -1590,89 +1590,89 @@ _PDM_mesh_deform_cloud_block_get
 
     }
 
-    int      request    = 0;
-    double **tmp_octree = NULL;
-
-    PDM_part_to_part_reverse_iexch(_surf_deform->ptp_layer[i_layer],
-                                   PDM_MPI_COMM_KIND_P2P,
-                                   PDM_STRIDE_CST_INTERLACED,
-                                   PDM_PART_TO_PART_DATA_DEF_ORDER_PART2,
-                                   3,
-                                   sizeof(double),
-                                   NULL,
-                 (const void **)   _surf_deform->coords,
-                                   NULL,
-                       (void ***) &tmp_octree,
-                                  &request);
-
-    PDM_part_to_part_reverse_iexch_wait(_surf_deform->ptp_layer[i_layer], request);
-
-    _mean_array_double_per_leaf(n_leaf,
-                                leaf_nodes_id,
-                                n_points,
-                                range,
-                                3,
-                                tmp_octree[0],
-                                _surf_deform->coords[_surf_deform->n_part+i_layer]);
-
-    free(tmp_octree[0]);
-    free(tmp_octree   );
-
-    PDM_part_to_part_reverse_iexch(_surf_deform->ptp_layer[i_layer],
-                                   PDM_MPI_COMM_KIND_P2P,
-                                   PDM_STRIDE_CST_INTERLACED,
-                                   PDM_PART_TO_PART_DATA_DEF_ORDER_PART2,
-                                   3,
-                                   sizeof(double),
-                                   NULL,
-                 (const void **)   _surf_deform->dcoords,
-                                   NULL,
-                       (void ***) &tmp_octree,
-                                  &request);
-
-    PDM_part_to_part_reverse_iexch_wait(_surf_deform->ptp_layer[i_layer], request);
-
-    _mean_array_double_per_leaf(n_leaf,
-                                leaf_nodes_id,
-                                n_points,
-                                range,
-                                3,
-                                tmp_octree[0],
-                                _surf_deform->dcoords[_surf_deform->n_part+i_layer]);
-
-    free(tmp_octree[0]);
-    free(tmp_octree   );
-
-    if (def->n_aux_geom > 0) {
-
-      PDM_part_to_part_reverse_iexch(_surf_deform->ptp_layer[i_layer],
-                                     PDM_MPI_COMM_KIND_P2P,
-                                     PDM_STRIDE_CST_INTERLACED,
-                                     PDM_PART_TO_PART_DATA_DEF_ORDER_PART2,
-                                     def->n_aux_geom,
-                                     sizeof(double),
-                                     NULL,
-                   (const void **)   _surf_deform->aux_geom,
-                                     NULL,
-                         (void ***) &tmp_octree,
-                                    &request);
-
-      PDM_part_to_part_reverse_iexch_wait(_surf_deform->ptp_layer[i_layer], request);
-
-      _mean_array_double_per_leaf(n_leaf,
-                                  leaf_nodes_id,
-                                  n_points,
-                                  range,
-                                  def->n_aux_geom,
-                                  tmp_octree[0],
-                                  _surf_deform->aux_geom[_surf_deform->n_part+i_layer]);
-
-      free(tmp_octree[0]);
-      free(tmp_octree   );
-
-    }
-
-    free(leaf_nodes_id);
+    //int      request    = 0;
+    //double **tmp_octree = NULL;
+    //
+    //PDM_part_to_part_reverse_iexch(_surf_deform->ptp_layer[i_layer],
+    //                               PDM_MPI_COMM_KIND_P2P,
+    //                               PDM_STRIDE_CST_INTERLACED,
+    //                               PDM_PART_TO_PART_DATA_DEF_ORDER_PART2,
+    //                               3,
+    //                               sizeof(double),
+    //                               NULL,
+    //             (const void **)   _surf_deform->coords,
+    //                               NULL,
+    //                   (void ***) &tmp_octree,
+    //                              &request);
+    //
+    //PDM_part_to_part_reverse_iexch_wait(_surf_deform->ptp_layer[i_layer], request);
+    //
+    //_mean_array_double_per_leaf(n_leaf,
+    //                            leaf_nodes_id,
+    //                            n_points,
+    //                            range,
+    //                            3,
+    //                            tmp_octree[0],
+    //                            _surf_deform->coords[_surf_deform->n_part+i_layer]);
+    //
+    //free(tmp_octree[0]);
+    //free(tmp_octree   );
+    //
+    //PDM_part_to_part_reverse_iexch(_surf_deform->ptp_layer[i_layer],
+    //                               PDM_MPI_COMM_KIND_P2P,
+    //                               PDM_STRIDE_CST_INTERLACED,
+    //                               PDM_PART_TO_PART_DATA_DEF_ORDER_PART2,
+    //                               3,
+    //                               sizeof(double),
+    //                               NULL,
+    //             (const void **)   _surf_deform->dcoords,
+    //                               NULL,
+    //                   (void ***) &tmp_octree,
+    //                              &request);
+    //
+    //PDM_part_to_part_reverse_iexch_wait(_surf_deform->ptp_layer[i_layer], request);
+    //
+    //_mean_array_double_per_leaf(n_leaf,
+    //                            leaf_nodes_id,
+    //                            n_points,
+    //                            range,
+    //                            3,
+    //                            tmp_octree[0],
+    //                            _surf_deform->dcoords[_surf_deform->n_part+i_layer]);
+    //
+    //free(tmp_octree[0]);
+    //free(tmp_octree   );
+    //
+    //if (def->n_aux_geom > 0) {
+    //
+    //  PDM_part_to_part_reverse_iexch(_surf_deform->ptp_layer[i_layer],
+    //                                 PDM_MPI_COMM_KIND_P2P,
+    //                                 PDM_STRIDE_CST_INTERLACED,
+    //                                 PDM_PART_TO_PART_DATA_DEF_ORDER_PART2,
+    //                                 def->n_aux_geom,
+    //                                 sizeof(double),
+    //                                 NULL,
+    //               (const void **)   _surf_deform->aux_geom,
+    //                                 NULL,
+    //                     (void ***) &tmp_octree,
+    //                                &request);
+    //
+    //  PDM_part_to_part_reverse_iexch_wait(_surf_deform->ptp_layer[i_layer], request);
+    //
+    //  _mean_array_double_per_leaf(n_leaf,
+    //                              leaf_nodes_id,
+    //                              n_points,
+    //                              range,
+    //                              def->n_aux_geom,
+    //                              tmp_octree[0],
+    //                              _surf_deform->aux_geom[_surf_deform->n_part+i_layer]);
+    //
+    //  free(tmp_octree[0]);
+    //  free(tmp_octree   );
+    //
+    //}
+    //
+    //free(leaf_nodes_id);
 
   }
 
