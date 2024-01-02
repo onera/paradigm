@@ -591,6 +591,10 @@ _PDM_mesh_deform_compute
   int i_rank;
   PDM_MPI_Comm_rank(def->comm, &i_rank);
 
+  /*
+   * Get maximal gnum of surface mesh vertices
+   */
+
   PDM_g_num_t _max_g_num = 0;
   PDM_g_num_t  max_g_num = 0;
 
@@ -604,18 +608,18 @@ _PDM_mesh_deform_compute
 
   _max_g_num = max_g_num + 1;
 
-  _surf_deform->octree_layer    = malloc(sizeof(PDM_para_octree_t    *) * def->n_layer);
-  _surf_deform->ptp_layer       = malloc(sizeof(PDM_part_to_part_t   *) * def->n_layer);
-  _surf_deform->ptb_layer       = malloc(sizeof(PDM_part_to_block_t  *) * def->n_layer);
-  _surf_deform->n_leaf          = malloc(sizeof(int                 **) * def->n_layer);
-  _surf_deform->gnum_leaf       = malloc(sizeof(PDM_g_num_t         **) * def->n_layer);
-  _surf_deform->vtx_in_leaf_idx = malloc(sizeof(int                 **) * def->n_layer);
-  _surf_deform->vtx_in_leaf     = malloc(sizeof(int                 **) * def->n_layer);
-  _surf_deform->stride_leaf     = malloc(sizeof(int                 **) * def->n_layer);
-  _surf_deform->coords_leaf     = malloc(sizeof(double              **) * def->n_layer);
-  _surf_deform->dcoords_leaf    = malloc(sizeof(double              **) * def->n_layer);
+  _surf_deform->octree_layer      = malloc(sizeof(PDM_para_octree_t    *) * def->n_layer);
+  _surf_deform->ptp_layer         = malloc(sizeof(PDM_part_to_part_t   *) * def->n_layer);
+  _surf_deform->ptb_layer         = malloc(sizeof(PDM_part_to_block_t  *) * def->n_layer);
+  _surf_deform->n_leaf            = malloc(sizeof(int                 **) * def->n_layer);
+  _surf_deform->gnum_leaf         = malloc(sizeof(PDM_g_num_t         **) * def->n_layer);
+  _surf_deform->vtx_in_leaf_idx   = malloc(sizeof(int                 **) * def->n_layer);
+  _surf_deform->vtx_in_leaf       = malloc(sizeof(int                 **) * def->n_layer);
+  _surf_deform->stride_leaf       = malloc(sizeof(int                 **) * def->n_layer);
+  _surf_deform->coords_leaf       = malloc(sizeof(double              **) * def->n_layer);
+  _surf_deform->dcoords_leaf      = malloc(sizeof(double              **) * def->n_layer);
   if (def->n_aux_geom > 0) {
-    _surf_deform->aux_geom_leaf = malloc(sizeof(double              **) * def->n_layer);
+    _surf_deform->aux_geom_leaf   = malloc(sizeof(double              **) * def->n_layer);
   }
   _surf_deform->blk_n_leaf        = malloc(sizeof(int                   ) * def->n_layer);
   _surf_deform->blk_n_vtx_in_leaf = malloc(sizeof(int                  *) * def->n_layer);
@@ -625,6 +629,10 @@ _PDM_mesh_deform_compute
   PDM_g_num_t  *gnum_layer   = malloc(sizeof(PDM_g_num_t  ) * def->n_layer);
 
   int depth_max = 50;
+
+  /*
+   * Create clustering layers
+   */
 
   for (int i_layer = 0; i_layer < def->n_layer; i_layer++) {
 
@@ -690,6 +698,10 @@ _PDM_mesh_deform_compute
                                      &n_child,
                                      &stack_size);
 
+    /*
+     * Add leaves as blocks of surface mesh vertices
+     */
+
     _leaf_get(n_explicit_nodes,
               leaf_id,
              &n_leaf,
@@ -713,6 +725,12 @@ _PDM_mesh_deform_compute
     }
 
     _max_g_num = _max_g_num + distri_layer[i_layer][n_rank];
+
+    /*
+     * Setup 2-step mean computation on leaves:
+     * - prepare mean with local contributions to leaves
+     * - merge contributions for each leaf by part_to_block and post-processing
+     */
 
     PDM_g_num_t *pts_leaf_gnum = malloc (sizeof(PDM_g_num_t) * n_pts_octree);
 
@@ -922,6 +940,15 @@ _PDM_mesh_deform_compute
   def->times_cpu_s  [END_CLU] = PDM_timer_cpu_sys(def->timer);
 
   PDM_timer_resume(def->timer);
+
+  /*
+   * Compute distance from cloud to surface :
+   * - faster estimation with closest points (surface mesh information are kept so far for later needs)
+   * - segregate cloud points :
+   *   - d >  def->min_dist_d = associate a clustering layer as a function of the distance
+   *   - d <= def->min_dist_d = associate def->min_dist_n_vtx surface vertices
+   * def->min_dist_d can be negative to consider only clustering layers
+   */
 
   //PDM_dist_cloud_surf_t *dcs = PDM_dist_cloud_surf_create(PDM_MESH_NATURE_MESH_SETTED,
   //                                                        1,
@@ -1252,6 +1279,15 @@ _PDM_mesh_deform_compute
 
   PDM_timer_resume(def->timer);
 
+  /*
+   * Setup block treatment of cloud
+   * - create part_to_block with weighting by number of source surface vertices
+   * - reduce size of array to exchange with an indirection from exchange buffer to source surface vertices:
+   *   - if the source is a clustering layer, add the vertices only once
+   *   - if the source is a real surface vertex, keep with duplicates
+   * post-processing to remove duplicates is possible for real surface vertices but costly
+   */
+
   _cloud_deform->ptb_blk = PDM_part_to_block_create(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
                                                     PDM_PART_TO_BLOCK_POST_CLEANUP,
                                                     1.,
@@ -1468,6 +1504,13 @@ _PDM_mesh_deform_cloud_block_get
     }
     def->is_blk = PDM_FALSE;
   }
+
+  /*
+   * Get data ready for IDW
+   * - update means on leaves
+   * - get source data for each cloud block
+   * - initialize target data for each cloud block
+   */
 
   for (int i_layer = 0; i_layer < def->n_layer; i_layer++) {
 
@@ -1799,6 +1842,11 @@ _PDM_mesh_deform_cloud_dcoords_part_get
     free(_cloud_deform->dcoords);
     def->is_res = PDM_FALSE;
   }
+
+  /*
+   * Get results from IDW
+   * - get target data for all cloud parts
+   */
 
   PDM_part_to_block_reverse_exch(_cloud_deform->ptb_blk,
                                  sizeof(double),
