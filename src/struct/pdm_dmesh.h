@@ -63,15 +63,14 @@ typedef struct _pdm_dmesh_t PDM_dmesh_t;
  *
  * \brief Build a distributed mesh structure
  *
- * \param [in]   dn_cell             Number of distributed cells
- * \param [in]   dn_face             Number of distributed faces
- * \param [in]   dn_vtx              Number of distributed vertices
- * \param [in]   dn_bnd              Number of boundaries
- * \param [in]   n_join              Number of interfaces with other zones
+ * \param [in]   dn_cell   Number of distributed cells
+ * \param [in]   dn_face   Number of distributed faces
+ * \param [in]   dn_edge   Number of distributed edges
+ * \param [in]   dn_vtx    Number of distributed vertices
+ * \param [in]   comm      PDM_MPI communicator
  *
- * \return     Identifier
+ * \return     Pointer to a new \ref PDM_dmesh_t object
  */
-
 PDM_dmesh_t*
 PDM_dmesh_create
 (
@@ -87,18 +86,16 @@ PDM_dmesh_create
  *
  * \brief Get the dimensions of the distributed mesh
  *
- * \param [in]    id                id of the requested dmesh
- * \param [out]   dn_cell            Number of distributed cells
- * \param [out]   dn_face            Number of distributed faces
- * \param [out]   dn_vtx             Number of distributed vertices
- * \param [out]   dn_bnd             Number of boundaries
- * \param [out]   n_join             Number of interfaces with other zones
+ * \param [in]    dmesh    Pointer to \ref PDM_dmesh_t object
+ * \param [out]   dn_cell  Number of distributed cells
+ * \param [out]   dn_face  Number of distributed faces
+ * \param [out]   dn_edge  Number of distributed edges
+ * \param [out]   dn_vtx   Number of distributed vertices
  */
-
 void
 PDM_dmesh_dims_get
 (
- PDM_dmesh_t *dmeshm,
+ PDM_dmesh_t *dmesh,
  int         *dn_cell,
  int         *dn_face,
  int         *dn_edge,
@@ -109,7 +106,7 @@ PDM_dmesh_dims_get
  *
  * \brief Get the dimensions of the distributed mesh
  *
- * \param [in]    id                id of the dmesh requested
+ * \param [in]    dmesh             Pointer to \ref PDM_dmesh_t object
  * \param [in]    entity_type       Kind of entity
  * \param [in]    dn_cell           Number of distributed cells
  */
@@ -125,8 +122,8 @@ PDM_dmesh_dn_entity_set
  *
  * \brief Get the dimensions of the distributed mesh
  *
- * \param [in]    id                id of the dmesh requested
- * \param [in]    entity_type       Kind of entity
+ * \param [in]    dmesh             Pointer to \ref PDM_dmesh_t object
+ * \param [in]    entity_type       Kind of mesh entity \ref PDM_mesh_entities_t
  */
 int
 PDM_dmesh_dn_entity_get
@@ -135,6 +132,14 @@ PDM_dmesh_dn_entity_get
  PDM_mesh_entities_t  entity_type
 );
 
+/**
+ *
+ * \brief Get the distributed coordinates array
+ *
+ * \param [in]   dmesh          Pointer to \ref PDM_dmesh_t object
+ * \param [out]  dvtx_coord     Vertex coordinate (size = 3 * dn_vtx)
+ * \param [in]   ownership      Ownership for color ( \ref PDM_ownership_t )
+ */
 void
 PDM_dmesh_vtx_coord_get
 (
@@ -143,6 +148,14 @@ PDM_dmesh_vtx_coord_get
  PDM_ownership_t   ownership
 );
 
+/**
+ *
+ * \brief Set the distributed coordinates array
+ *
+ * \param [in]   dmesh          Pointer to \ref PDM_dmesh_t object
+ * \param [out]  dvtx_coord     Vertex coordinate (size = 3 * dn_vtx)
+ * \param [in]   ownership      Ownership for color ( \ref PDM_ownership_t )
+ */
 void
 PDM_dmesh_vtx_coord_set
 (
@@ -151,6 +164,16 @@ PDM_dmesh_vtx_coord_set
  PDM_ownership_t   ownership
 );
 
+/**
+ *
+ * \brief Set the distributed connectivity array
+ *
+ * \param [in]  dmesh             Pointer to \ref PDM_dmesh_t object
+ * \param [in]  connectivity_type Connectivity kind \ref PDM_connectivity_type_t
+ * \param [in]  connect           Connectivity array (size = connect_idx[n_entity] )
+ * \param [in]  connect_idx       Connectivity index (size = n_entity+1 )
+ * \param [in]  ownership         Choice of ownership of the input arrays \ref PDM_ownership_t
+ */
 void
 PDM_dmesh_connectivity_set
 (
@@ -161,6 +184,17 @@ PDM_dmesh_connectivity_set
  PDM_ownership_t           ownership
 );
 
+/**
+ *
+ * \brief Get the distributed connectivity array
+ *
+ * \param [in]  dmesh             Pointer to \ref PDM_dmesh_t object
+ * \param [in]  connectivity_type Connectivity kind \ref PDM_connectivity_type_t
+ * \param [out] connect           Connectivity array (size = connect_idx[n_entity] )
+ * \param [out] connect_idx       Connectivity index (size = n_entity+1 )
+ * \param [in]  ownership         Choice of ownership of the input arrays \ref PDM_ownership_t
+ * \return Number of element of entity kind
+ */
 int
 PDM_dmesh_connectivity_get
 (
@@ -171,6 +205,17 @@ PDM_dmesh_connectivity_get
  PDM_ownership_t           ownership
 );
 
+/**
+ *
+ * \brief Get the distributed connectivity bound array
+ *
+ * \param [in]  dmesh             Pointer to \ref PDM_dmesh_t object
+ * \param [in]  bound_type        Connectivity kind \ref PDM_bound_type_t
+ * \param [out] connect           Connectivity array (size = connect_idx[n_bound] )
+ * \param [out] connect_idx       Connectivity index (size = n_bound+1 )
+ * \param [in]  ownership         Choice of ownership of the input arrays \ref PDM_ownership_t
+ * \return Number of group for the requested entity (n_bound)
+ */
 int
 PDM_dmesh_bound_get
 (
@@ -181,6 +226,16 @@ PDM_dmesh_bound_get
  PDM_ownership_t    ownership
 );
 
+
+/**
+ *
+ * \brief Get the distribution of requested entity
+ *
+ * \param [in]  dmesh             Pointer to \ref PDM_dmesh_t object
+ * \param [out] entity_type       entity_type       Kind of mesh entity \ref PDM_mesh_entities_t
+ * \param [out] distrib           Distribution array (size = n_rank+1, numbering start at 0)
+ * \return Number of process on this distribution ( n_rank )
+ */
 int
 PDM_dmesh_distrib_get
 (
@@ -193,10 +248,9 @@ PDM_dmesh_distrib_get
  *
  * \brief Free
  *
- * \param [in]   id           Identifier
+ * \param [in]  dmesh             Pointer to \ref PDM_dmesh_t object
  *
  */
-
 void
 PDM_dmesh_free
 (
@@ -204,13 +258,32 @@ PDM_dmesh_free
 );
 
 
+/**
+ *
+ * \brief Compute the bounding box extend of current distributed mesh
+ *
+ * \param [in]  dmesh             Pointer to \ref PDM_dmesh_t object
+ * \return Extents of current mesh (6 components Xmin, Ymin, Zmin, Xmax, Ymax, Zmax )
+ *
+ */
 const double *
 PDM_dmesh_global_extents_get
 (
  PDM_dmesh_t         *dmesh
- );
+);
 
 
+/**
+ *
+ * \brief Get the distributed connectivity bound array
+ *
+ * \param [in]  dmesh             Pointer to \ref PDM_dmesh_t object
+ * \param [in]  bound_type        Connectivity kind \ref PDM_bound_type_t
+ * \param [in]  n_bound           Number of bound for current entity
+ * \param [in]  connect           Connectivity array (size = connect_idx[n_bound] )
+ * \param [in]  connect_idx       Connectivity index (size = n_bound+1 )
+ * \param [in]  ownership         Choice of ownership of the input arrays \ref PDM_ownership_t
+ */
 void
 PDM_dmesh_bound_set
 (

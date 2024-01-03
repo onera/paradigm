@@ -67,7 +67,7 @@ typedef struct _pdm_part_mesh_t PDM_part_mesh_t;
  * \param [in]   dn_face             Number of distributed faces
  * \param [in]   dn_vtx              Number of distributed vertices
  * \param [in]   dn_bnd              Number of boundaries
- * \param [in]   n_join              Number of interfaces with other zones
+ * \param [in]   n_join              Number of interfaces with other domains
  *
  * \return     Identifier
  */

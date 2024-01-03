@@ -259,9 +259,9 @@ _generate_surface_mesh
                              "surface_mesh_");
   }
 
-  int n_zone = 1;
+  int n_domain = 1;
 
-  PDM_multipart_t *mpart = PDM_multipart_create(n_zone,
+  PDM_multipart_t *mpart = PDM_multipart_create(n_domain,
                                                 &n_part,
                                                 PDM_FALSE,
                                                 part_method,
@@ -276,8 +276,8 @@ _generate_surface_mesh
                                        NULL,
                                        "PDM_PART_RENUM_FACE_NONE");
 
-  PDM_multipart_register_dmesh_nodal(mpart, 0, dmn);
-  PDM_multipart_run_ppart(mpart);
+  PDM_multipart_dmesh_nodal_set(mpart, 0, dmn);
+  PDM_multipart_compute(mpart);
 
   PDM_dcube_nodal_gen_free(dcube);
 

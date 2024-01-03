@@ -111,8 +111,8 @@ module PDM_part_mesh_nodal
       type (c_ptr),   value :: pmn
       integer(c_int), value :: i_section, i_part, ownership
 
-      type (c_ptr),   value :: numabs, parent_entity_g_num
-      type (c_ptr),   value :: connec, parent_num
+      type (c_ptr)          :: numabs, parent_entity_g_num
+      type (c_ptr)          :: connec, parent_num
 
     end subroutine PDM_part_mesh_nodal_section_std_get_cf
 
@@ -198,37 +198,29 @@ module PDM_part_mesh_nodal
 
   contains
 
-    ! Get number of section elements
+
 
     subroutine PDM_part_mesh_nodal_section_n_elt_get_(pmn,       &
-                                                     i_section, &
-                                                     i_part,    &
-                                                     n_elt)
-
+                                                      i_section, &
+                                                      i_part,    &
+                                                      n_elt)
+      ! Get number of section elements
       use iso_c_binding
       implicit none
 
-      type(c_ptr), value   :: pmn       ! Pointer to \ref PDM_part_mesh_nodal_t object
+      type(c_ptr), value   :: pmn       ! Pointer to PDM_part_mesh_nodal_t object
       integer, intent(in)  :: i_section ! Section identifier
       integer, intent(in)  :: i_part    ! Partition identifier
 
       integer, intent(out) :: n_elt     ! Number of elements
 
-      integer(c_int) :: c_i_section, c_i_part
-      integer(c_int) :: c_n_elt
-
-      c_i_section = i_section
-      c_i_part = i_part
-
-      c_n_elt = PDM_part_mesh_nodal_section_n_elt_get_cf(pmn,       &
-                                                         i_section, &
-                                                         i_part)
-
-      n_elt = c_n_elt
+      n_elt = PDM_part_mesh_nodal_section_n_elt_get_cf(pmn,       &
+                                                       i_section, &
+                                                       i_part)
 
     end subroutine PDM_part_mesh_nodal_section_n_elt_get_
 
-    ! Return standard section description
+
 
     subroutine PDM_part_mesh_nodal_section_std_get_(pmn,                 &
                                                     i_section,           &
@@ -238,176 +230,149 @@ module PDM_part_mesh_nodal
                                                     parent_num,          &
                                                     parent_entity_g_num, &
                                                     ownership)
-
+      ! Return standard section description
       use iso_c_binding
       implicit none
 
-      type (c_ptr),   value :: pmn                                  ! Pointer to \ref PDM_part_mesh_nodal_t object
-      integer, intent(in)   :: i_section                            ! Section identifier
-      integer, intent(in)   :: i_part                               ! Partition identifier
-      integer, intent(in)   :: ownership                            ! Data ownership
+      type (c_ptr),   value          :: pmn                    ! Pointer to PDM_part_mesh_nodal_t object
+      integer, intent(in)            :: i_section              ! Section identifier
+      integer, intent(in)            :: i_part                 ! Partition identifier
+      integer, intent(in)            :: ownership              ! Data ownership
 
-      integer(kind=PDM_l_num_s), pointer  :: connec(:)              ! Connectivity
-      integer (pdm_g_num_s), pointer      :: numabs(:)              ! Global numbering
-      integer(kind=PDM_l_num_s), pointer  :: parent_num(:)          ! Parent numbering or NULL
-      integer (pdm_g_num_s), pointer      :: parent_entity_g_num(:) ! Parent global numbering or NULL
+      integer(pdm_l_num_s), pointer  :: connec(:)              ! Connectivity
+      integer(pdm_g_num_s), pointer  :: numabs(:)              ! Global ids
+      integer(pdm_l_num_s), pointer  :: parent_num(:)          ! Parent local ids or *null()*
+      integer(pdm_g_num_s), pointer  :: parent_entity_g_num(:) ! Parent global ids or *null()*
 
-      integer                             :: elt_t, n_vtx_per_elt
-      integer                             :: order = 1
-
-      integer(c_int) :: c_i_section, c_i_part, c_ownership
+      integer                        :: n_elt, elt_t, n_vtx_per_elt
+      integer                        :: order = 1
 
       type (c_ptr)   :: c_connec
       type (c_ptr)   :: c_numabs
       type (c_ptr)   :: c_parent_entity_g_num
       type (c_ptr)   :: c_parent_num
 
-      integer(c_int) :: c_n_elt
-
-      c_i_section = i_section
-      c_i_part    = i_part
-      c_ownership = ownership
-
       c_connec = C_NULL_PTR
       c_numabs = C_NULL_PTR
       c_parent_entity_g_num = C_NULL_PTR
       c_parent_num = C_NULL_PTR
       call PDM_part_mesh_nodal_section_std_get_cf(pmn,                   &
-                                                  c_i_section,           &
-                                                  c_i_part,              &
+                                                  i_section,             &
+                                                  i_part,                &
                                                   c_connec,              &
                                                   c_numabs,              &
                                                   c_parent_num,          &
                                                   c_parent_entity_g_num, &
-                                                  c_ownership)
+                                                  ownership)
 
-      c_n_elt = PDM_part_mesh_nodal_section_n_elt_get_cf(pmn,       &
-                                                         c_i_section, &
-                                                         c_i_part)
+      n_elt = PDM_part_mesh_nodal_section_n_elt_get_cf(pmn,       &
+                                                       i_section, &
+                                                       i_part)
 
       call PDM_part_mesh_nodal_section_elt_type_get(pmn,       &
-                                                    c_i_section, &
+                                                    i_section, &
                                                     elt_t)
 
-      call  PDM_Mesh_nodal_n_vtx_elt_get(elt_t, &
-                                         order, &
-                                         n_vtx_per_elt)
+      call PDM_Mesh_nodal_n_vtx_elt_get(elt_t, &
+                                        order, &
+                                        n_vtx_per_elt)
 
       call c_f_pointer(c_connec, &
                        connec,   &
-                       [c_n_elt * n_vtx_per_elt])
+                       [n_elt * n_vtx_per_elt])
 
       call c_f_pointer(c_numabs, &
                        numabs,   &
-                       [c_n_elt])
+                       [n_elt])
 
       parent_num => null()
-      if ( c_associated(c_parent_num) )then
+      if ( c_associated(c_parent_num) ) then
         call c_f_pointer(c_parent_num, &
                          parent_num,   &
-                         [c_n_elt])
+                         [n_elt])
       end if
 
       parent_entity_g_num => null()
-      if ( c_associated(c_parent_entity_g_num) )then
+      if ( c_associated(c_parent_entity_g_num) ) then
         call c_f_pointer(c_parent_entity_g_num, &
                          parent_entity_g_num,   &
-                         [c_n_elt])
+                         [n_elt])
       end if
 
     end subroutine PDM_part_mesh_nodal_section_std_get_
 
-    ! Return global ids of vertices
+
 
     subroutine PDM_part_mesh_nodal_vtx_g_num_get_(pmn,          &
                                                   i_part,       &
                                                   vtx_ln_to_gn)
-
+      ! Return global ids of vertices
       use iso_c_binding
       implicit none
 
-      type (c_ptr),   value          :: pmn             ! Pointer to \ref PDM_part_mesh_nodal_t object
+      type (c_ptr),   value          :: pmn             ! Pointer to PDM_part_mesh_nodal_t object
 
       integer, intent(in)            :: i_part          ! Partition identifier
-      integer (pdm_g_num_s), pointer :: vtx_ln_to_gn(:) ! Golbal ids of vertices (size = n_vtx)
+      integer (pdm_g_num_s), pointer :: vtx_ln_to_gn(:) ! Golbal ids of vertices (size = ``n_vtx``)
 
-      integer(c_int)  :: c_i_part
-      type (c_ptr)    :: c_vtx_ln_to_gn
+      type (c_ptr)    :: c_vtx_ln_to_gn = C_NULL_PTR
+      integer         :: n_vtx
 
-      integer(c_int) :: c_n_vtx
-
-      c_i_part = i_part
 
       c_vtx_ln_to_gn = PDM_part_mesh_nodal_vtx_g_num_get_cf(pmn, &
-                                                            c_i_part)
+                                                            i_part)
 
-      c_n_vtx = PDM_part_mesh_nodal_n_vtx_get_cf(pmn, &
-                                                 c_i_part)
+      n_vtx = PDM_part_mesh_nodal_n_vtx_get_cf(pmn, &
+                                               i_part)
 
       call c_f_pointer(c_vtx_ln_to_gn, &
                        vtx_ln_to_gn,   &
-                       [c_n_vtx])
+                       [n_vtx])
 
     end subroutine PDM_part_mesh_nodal_vtx_g_num_get_
 
-    ! Return number of vertices
 
     subroutine PDM_part_mesh_nodal_n_vtx_get_(pmn,    &
                                               i_part, &
                                               n_vtx)
-
+      ! Return number of vertices
       use iso_c_binding
       implicit none
 
-      type (c_ptr),   value :: pmn    ! Pointer to \ref PDM_part_mesh_nodal_t object
+      type (c_ptr),   value :: pmn    ! Pointer to PDM_part_mesh_nodal_t object
       integer, intent(in)   :: i_part ! Partition identifier
       integer, intent(out)  :: n_vtx  ! Number of vertices
 
-      integer(c_int)        :: c_i_part
-      integer(c_int)        :: c_n_vtx
-
-      c_i_part = i_part
-
-      c_n_vtx = PDM_part_mesh_nodal_n_vtx_get_cf(pmn, &
-                                                 c_i_part)
-
-      n_vtx = c_n_vtx
+      n_vtx = PDM_part_mesh_nodal_n_vtx_get_cf(pmn, &
+                                                 i_part)
 
     end subroutine PDM_part_mesh_nodal_n_vtx_get_
 
-    ! Return type of section
 
     subroutine PDM_part_mesh_nodal_section_elt_type_get_(pmn,       &
                                                          i_section, &
                                                          elt_t)
-
+      ! Return type of section
       use iso_c_binding
       implicit none
 
-      type (c_ptr),   value :: pmn       ! Pointer to \ref PDM_part_mesh_nodal_t object
+      type (c_ptr),   value :: pmn       ! Pointer to PDM_part_mesh_nodal_t object
       integer, intent(in)   :: i_section ! Section identifier
-      integer, intent(in)   :: elt_t     ! Type of section
+      integer, intent(out)  :: elt_t     ! Type of section
 
-      integer(c_int)        :: c_i_section
-      integer(c_int)        :: c_elt_t
-
-      c_i_section = i_section
-
-      c_elt_t = PDM_part_mesh_nodal_section_elt_type_get_cf(pmn, &
-                                                            c_i_section)
-
-      c_elt_t = elt_t
+      elt_t = PDM_part_mesh_nodal_section_elt_type_get_cf(pmn, &
+                                                          i_section)
 
     end subroutine PDM_part_mesh_nodal_section_elt_type_get_
 
-  ! Create a PDM_part_mesh_nodal structure
+
 
   subroutine PDM_part_mesh_nodal_create (mesh, mesh_dimension, n_part, f_comm)
+    ! Create a PDM_part_mesh_nodal structure
     use iso_c_binding
-
     implicit none
 
-    type(c_ptr)          :: mesh           ! Pointer to \ref PDM_part_mesh_nodal object
+    type(c_ptr)          :: mesh           ! Pointer to PDM_part_mesh_nodal object
     integer, intent(in)  :: mesh_dimension ! Mesh dimension
     integer, intent(in)  :: n_part         ! Number of partition on the current process
     integer, intent(in)  :: f_comm         ! MPI communicator
@@ -431,14 +396,14 @@ module PDM_part_mesh_nodal
 
   end subroutine PDM_part_mesh_nodal_create
 
-  ! Free partially a PDM_part_mesh_nodal structure
 
   subroutine PDM_part_mesh_nodal_partial_free (mesh)
+    ! Free partially a PDM_part_mesh_nodal structure
     use iso_c_binding
 
     implicit none
 
-    type(c_ptr), value     :: mesh ! Pointer to \ref PDM_part_mesh_nodal object
+    type(c_ptr), value     :: mesh ! Pointer to PDM_part_mesh_nodal object
 
     interface
       subroutine PDM_part_mesh_nodal_partial_free_c (mesh) &
@@ -456,14 +421,14 @@ module PDM_part_mesh_nodal
 
   end subroutine PDM_part_mesh_nodal_partial_free
 
-  ! Free a PDM_part_mesh_nodal structure
 
   subroutine PDM_part_mesh_nodal_free (mesh)
+    ! Free a PDM_part_mesh_nodal structure
     use iso_c_binding
 
     implicit none
 
-    type(c_ptr), value :: mesh ! Pointer to \ref PDM_part_mesh_nodal object
+    type(c_ptr), value :: mesh ! Pointer to PDM_part_mesh_nodal object
 
     interface
       subroutine PDM_part_mesh_nodal_free_c (mesh) &
@@ -481,14 +446,14 @@ module PDM_part_mesh_nodal
 
   end subroutine PDM_part_mesh_nodal_free
 
-  ! Define partition vertices
 
   subroutine PDM_part_mesh_nodal_coord_set (mesh, id_part, n_vtx, coords, numabs, owner)
+    ! Define partition vertices
     use iso_c_binding
 
     implicit none
 
-    type(c_ptr), value                  :: mesh        ! Pointer to \ref PDM_part_mesh_nodal object
+    type(c_ptr), value                  :: mesh        ! Pointer to PDM_part_mesh_nodal object
     integer, intent(in)                 :: id_part     ! Partition identifier
     integer, intent(in)                 :: n_vtx       ! Number of vertices
     integer, intent(in)                 :: owner       ! Data ownership
@@ -515,21 +480,28 @@ module PDM_part_mesh_nodal
       end subroutine PDM_part_mesh_nodal_coord_set_c
     end interface
 
-    c_coords = c_loc (coords)
-    c_numabs = c_loc (numabs)
+    c_coords = C_NULL_PTR
+    if (associated(coords)) then
+      c_coords = c_loc (coords)
+    endif
+      
+    c_numabs = C_NULL_PTR
+    if (associated(numabs)) then
+      c_numabs = c_loc (numabs)
+    endif    
 
     call  PDM_part_mesh_nodal_coord_set_c (mesh, id_part, n_vtx, c_coords, c_numabs, owner)
 
   end subroutine PDM_part_mesh_nodal_coord_set
 
-  ! Define standard 3D cells by cell-vertex connectivity
 
   subroutine PDM_part_mesh_nodal_cells_cellvtx_add (mesh, id_part, n_cell, cell_vtx_idx, cell_vtx, numabs, owner)
+    ! Define standard 3D cells by cell-vertex connectivity
     use iso_c_binding
 
     implicit none
 
-    type(c_ptr), value                  :: mesh            ! Pointer to \ref PDM_part_mesh_nodal object
+    type(c_ptr), value                  :: mesh            ! Pointer to PDM_part_mesh_nodal object
     integer, intent(in)                 :: id_part         ! Partition identifier
     integer, intent(in)                 :: n_cell          ! Number of cells
     integer, intent(in)                 :: owner           ! Data ownership
@@ -559,23 +531,35 @@ module PDM_part_mesh_nodal
       end subroutine PDM_part_mesh_nodal_cells_cellvtx_add_c
     end interface
 
-    c_cell_vtx_idx = c_loc (cell_vtx_idx)
-    c_cell_vtx = c_loc (cell_vtx)
-    c_numabs = c_loc (numabs)
+    c_cell_vtx_idx = C_NULL_PTR
+    if (associated (cell_vtx_idx)) then
+      c_cell_vtx_idx = c_loc (cell_vtx_idx)
+    endif
+
+    c_cell_vtx = C_NULL_PTR
+    if (associated (cell_vtx)) then
+      c_cell_vtx = c_loc (cell_vtx)
+    endif
+
+    c_numabs = C_NULL_PTR
+    if (associated (numabs)) then
+      c_numabs = c_loc (numabs)
+    endif
+
 
     call  PDM_part_mesh_nodal_cells_cellvtx_add_c (mesh, id_part, n_cell, c_cell_vtx_idx, c_cell_vtx, &
                                                    c_numabs, owner)
 
   end subroutine PDM_part_mesh_nodal_cells_cellvtx_add
 
-  ! Define faces by face-vertex connectivity
 
   subroutine PDM_part_mesh_nodal_faces_facevtx_add (mesh, id_part, n_face, face_vtx_idx, face_vtx, numabs, owner)
+    ! Define faces by face-vertex connectivity
     use iso_c_binding
 
     implicit none
 
-    type(c_ptr), value                  :: mesh            ! Pointer to \ref PDM_part_mesh_nodal object
+    type(c_ptr), value                  :: mesh            ! Pointer to PDM_part_mesh_nodal object
     integer, intent(in)                 :: id_part         ! Partition identifier
     integer, intent(in)                 :: n_face          ! Number of faces
     integer, intent(in)                 :: owner           ! Data ownership
@@ -605,24 +589,36 @@ module PDM_part_mesh_nodal
       end subroutine PDM_part_mesh_nodal_faces_facevtx_add_c
     end interface
 
-    c_face_vtx_idx = c_loc (face_vtx_idx)
-    c_face_vtx = c_loc (face_vtx)
-    c_numabs = c_loc (numabs)
+    c_face_vtx_idx = C_NULL_PTR
+    if (associated(face_vtx_idx)) then
+      c_face_vtx_idx = c_loc (face_vtx_idx)
+    endif
+      
+    c_face_vtx = C_NULL_PTR
+    if (associated(face_vtx)) then
+      c_face_vtx = c_loc (face_vtx)
+    endif
+      
+    c_numabs = C_NULL_PTR
+    if (associated(numabs)) then
+      c_numabs = c_loc (numabs)
+    endif
+      
 
     call  PDM_part_mesh_nodal_faces_facevtx_add_c (mesh, id_part, n_face, c_face_vtx_idx, c_face_vtx, &
                                                    c_numabs, owner)
 
   end subroutine PDM_part_mesh_nodal_faces_facevtx_add
 
-  ! Define 2D faces by face-edge connectivity
 
   subroutine PDM_part_mesh_nodal_face2d_faceedge_add (mesh, id_part, n_elt, n_edge, edge_vtx, &
                                                       face_edge_idx, face_edge, numabs, owner)
+    ! Define 2D faces by face-edge connectivity
     use iso_c_binding
 
     implicit none
 
-    type(c_ptr), value                  :: mesh             ! Pointer to \ref PDM_part_mesh_nodal object
+    type(c_ptr), value                  :: mesh             ! Pointer to PDM_part_mesh_nodal object
     integer, intent(in)                 :: id_part          ! Partition identifier
     integer, intent(in)                 :: n_elt            ! Number of polyhedra
     integer, intent(in)                 :: n_edge           ! Number of edges used to describe polyhedra
@@ -658,25 +654,41 @@ module PDM_part_mesh_nodal
       end subroutine PDM_part_mesh_nodal_face2d_faceedge_add_c
     end interface
 
-    c_edge_vtx = c_loc (edge_vtx)
-    c_face_edge_idx = c_loc (face_edge_idx)
-    c_face_edge = c_loc (face_edge)
-    c_numabs = c_loc (numabs)
+    c_edge_vtx = C_NULL_PTR
+    if (associated(edge_vtx)) then
+      c_edge_vtx = c_loc (edge_vtx)
+    endif
+      
+    c_face_edge_idx = C_NULL_PTR
+    if (associated(face_edge_idx)) then
+      c_face_edge_idx = c_loc (face_edge_idx)
+    endif
+      
+    c_face_edge = C_NULL_PTR
+    if (associated(face_edge)) then
+      c_face_edge = c_loc (face_edge)
+    endif
+      
+    c_numabs = C_NULL_PTR
+    if (associated(numabs)) then
+      c_numabs = c_loc (numabs)
+    endif
+      
 
     call  PDM_part_mesh_nodal_face2d_faceedge_add_c (mesh, id_part, n_elt, n_edge, c_edge_vtx, &
                                                      c_face_edge_idx, c_face_edge, c_numabs, owner)
 
   end subroutine PDM_part_mesh_nodal_face2d_faceedge_add
 
-  ! 3D cells by cell-face connectivity
 
   subroutine PDM_part_mesh_nodal_cell3d_cellface_add (mesh, id_part, n_elt, n_face, face_vtx_idx, face_vtx, &
                                                       face_ln_to_gn, cell_face_idx, cell_face, numabs, owner)
+    ! 3D cells by cell-face connectivity
     use iso_c_binding
 
     implicit none
 
-    type(c_ptr), value                  :: mesh             ! Pointer to \ref PDM_part_mesh_nodal object
+    type(c_ptr), value                  :: mesh             ! Pointer to PDM_part_mesh_nodal object
     integer, intent(in)                 :: id_part          ! Partition identifier
     integer, intent(in)                 :: n_elt            ! Number of polyhedra
     integer, intent(in)                 :: n_face           ! Number of faces used to describe polyhedra
@@ -718,26 +730,50 @@ module PDM_part_mesh_nodal
       end subroutine PDM_part_mesh_nodal_cell3d_cellface_add_c
     end interface
 
-    c_face_vtx_idx = c_loc (face_vtx_idx)
-    c_face_vtx = c_loc (face_vtx)
-    c_face_ln_to_gn = c_loc (face_ln_to_gn)
-    c_cell_face_idx = c_loc (cell_face_idx)
-    c_cell_face = c_loc (cell_face)
-    c_numabs = c_loc (numabs)
+    c_face_vtx_idx = C_NULL_PTR
+    if (associated(face_vtx_idx)) then
+      c_face_vtx_idx = c_loc (face_vtx_idx)
+    endif 
+      
+    c_face_vtx = C_NULL_PTR
+    if (associated(face_vtx)) then
+      c_face_vtx = c_loc (face_vtx)
+    endif 
+      
+    c_face_ln_to_gn = C_NULL_PTR
+    if (associated(face_ln_to_gn)) then
+      c_face_ln_to_gn = c_loc (face_ln_to_gn)
+    endif 
+      
+    c_cell_face_idx = C_NULL_PTR
+    if (associated(cell_face_idx)) then
+      c_cell_face_idx = c_loc (cell_face_idx)
+    endif 
+      
+    c_cell_face = C_NULL_PTR
+    if (associated(cell_face)) then
+      c_cell_face = c_loc (cell_face)
+    endif 
+      
+    c_numabs = C_NULL_PTR
+    if (associated(numabs)) then
+      c_numabs = c_loc (numabs)
+    endif 
+      
 
     call  PDM_part_mesh_nodal_cell3d_cellface_add_c (mesh, id_part, n_elt, n_face, c_face_vtx_idx, c_face_vtx, &
                                                      c_face_ln_to_gn, c_cell_face_idx, c_cell_face, c_numabs, owner)
 
   end subroutine PDM_part_mesh_nodal_cell3d_cellface_add
 
-  ! Get cell-vertex connectivity
 
   subroutine PDM_part_mesh_nodal_cell_vtx_connect_get (mesh, id_part, cell_vtx_idx, cell_vtx)
+    ! Get cell-vertex connectivity
     use iso_c_binding
 
     implicit none
 
-    type(c_ptr), value             :: mesh            ! Pointer to \ref PDM_part_mesh_nodal object
+    type(c_ptr), value             :: mesh            ! Pointer to PDM_part_mesh_nodal object
     integer, intent(in)            :: id_part         ! Partition identifier
     integer (pdm_l_num_s), pointer :: cell_vtx_idx(:) ! Index of cell vertex connectivity
     integer (pdm_l_num_s), pointer :: cell_vtx(:)     ! Cell vertex connectivity

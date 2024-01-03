@@ -204,7 +204,7 @@ _part_extension
       pn_vtx[i_dom][i_part] = PDM_multipart_part_ln_to_gn_get(mpart,
                                                               i_dom,
                                                               i_part,
-                                                              PDM_MESH_ENTITY_VERTEX,
+                                                              PDM_MESH_ENTITY_VTX,
                                                               &pvtx_ln_to_gn[i_dom][i_part],
                                                               PDM_OWNERSHIP_KEEP);
 
@@ -225,8 +225,8 @@ _part_extension
                                           i_dom,
                                           i_part,
                                           PDM_CONNECTIVITY_TYPE_EDGE_VTX,
-                                          &pedge_vtx    [i_dom][i_part],
                                           &pedge_vtx_idx[i_dom][i_part],
+                                          &pedge_vtx    [i_dom][i_part],
                                           PDM_OWNERSHIP_KEEP);
 
       assert(pedge_vtx_idx[i_dom][i_part] == NULL);
@@ -706,10 +706,10 @@ char *argv[]
                                                 PDM_OWNERSHIP_KEEP);
 
   for(int i_dom = 0; i_dom < n_dom_i; ++i_dom) {
-    PDM_multipart_register_block(mpart, i_dom, dm[i_dom]);
+    PDM_multipart_dmesh_set(mpart, i_dom, dm[i_dom]);
   }
 
-  PDM_multipart_run_ppart(mpart);
+  PDM_multipart_compute(mpart);
 
   int n_domain = n_dom_i;
 
@@ -726,7 +726,7 @@ char *argv[]
       pn_vtx[i_dom][i_part] = PDM_multipart_part_ln_to_gn_get(mpart,
                                                               i_dom,
                                                               i_part,
-                                                              PDM_MESH_ENTITY_VERTEX,
+                                                              PDM_MESH_ENTITY_VTX,
                                                               &pvtx_ln_to_gn[i_dom][i_part],
                                                               PDM_OWNERSHIP_KEEP);
 
@@ -743,7 +743,7 @@ char *argv[]
         PDM_multipart_part_ln_to_gn_get(mpart,
                                         i_dom,
                                         i_part,
-                                        PDM_MESH_ENTITY_VERTEX,
+                                        PDM_MESH_ENTITY_VTX,
                                         &lpvtx_ln_to_gn,
                                         PDM_OWNERSHIP_KEEP);
 
@@ -761,8 +761,8 @@ char *argv[]
                                             i_dom,
                                             i_part,
                                             PDM_CONNECTIVITY_TYPE_EDGE_VTX,
-                                            &pedge_vtx,
                                             &pedge_vtx_idx,
+                                            &pedge_vtx,
                                             PDM_OWNERSHIP_KEEP);
 
         double *pvtx_coord = NULL;

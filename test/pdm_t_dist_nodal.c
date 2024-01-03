@@ -190,13 +190,13 @@ _generate_surface_mesh
                              "sphere_surf_");
   }
 
-  int n_zone = 1;
-  // int n_part_zones = {n_part};
-  int *n_part_zones = (int *) malloc(sizeof(int) * n_zone);
-  n_part_zones[0] = n_part;
+  int n_domain = 1;
+  // int n_part_domains = {n_part};
+  int *n_part_domains = (int *) malloc(sizeof(int) * n_domain);
+  n_part_domains[0] = n_part;
 
-  PDM_multipart_t *mpart = PDM_multipart_create(n_zone,
-                                                n_part_zones,
+  PDM_multipart_t *mpart = PDM_multipart_create(n_domain,
+                                                n_part_domains,
                                                 PDM_FALSE,
                                                 part_method,
                                                 PDM_PART_SIZE_HOMOGENEOUS,
@@ -210,10 +210,10 @@ _generate_surface_mesh
                                        NULL,
                                        "PDM_PART_RENUM_FACE_NONE");
 
-  PDM_multipart_register_dmesh_nodal(mpart, 0, dmn);
-  PDM_multipart_run_ppart(mpart);
+  PDM_multipart_dmesh_nodal_set(mpart, 0, dmn);
+  PDM_multipart_compute(mpart);
 
-  free(n_part_zones);
+  free(n_part_domains);
 
   *_mpart = mpart;
   *_dmn   = dmn;
@@ -337,7 +337,7 @@ int main(int argc, char *argv[])
     PDM_multipart_part_ln_to_gn_get(mpart_surf,
                                     0,
                                     i_part,
-                                    PDM_MESH_ENTITY_VERTEX,
+                                    PDM_MESH_ENTITY_VTX,
                                     &surf_pvtx_ln_to_gn[i_part],
                                     PDM_OWNERSHIP_KEEP);
 
@@ -352,8 +352,8 @@ int main(int argc, char *argv[])
                                                                0,
                                                                i_part,
                                                                PDM_CONNECTIVITY_TYPE_FACE_EDGE,
-                                                               &surf_pface_edge[i_part],
                                                                &surf_pface_edge_idx[i_part],
+                                                               &surf_pface_edge[i_part],
                                                                PDM_OWNERSHIP_KEEP);
 
     int* tmp_pedge_vtx_idx = NULL;
@@ -361,8 +361,8 @@ int main(int argc, char *argv[])
                                                                0,
                                                                i_part,
                                                                PDM_CONNECTIVITY_TYPE_EDGE_VTX,
-                                                               &surf_pedge_vtx[i_part],
                                                                &tmp_pedge_vtx_idx,
+                                                               &surf_pedge_vtx[i_part],
                                                                PDM_OWNERSHIP_KEEP);
     assert(tmp_pedge_vtx_idx == NULL);
 

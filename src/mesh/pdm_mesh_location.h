@@ -41,7 +41,7 @@ typedef struct _pdm_mesh_location_t PDM_mesh_location_t;
  * \param [in]   comm           MPI communicator
  * \param [in]   owner          Ownership
  *
- * \return     Pointer to \ref PDM_mesh_location_t object
+ * \return     Pointer to \ref PDM_mesh_location_t instance
  *
  */
 
@@ -58,7 +58,7 @@ PDM_mesh_location_create
  *
  * \brief Set the number of partitions of a point cloud
  *
- * \param [in]   ml              Pointer to \ref PDM_mesh_location_t object
+ * \param [in]   ml              Pointer to \ref PDM_mesh_location_t instance
  * \param [in]   i_point_cloud   Point cloud identifier
  * \param [in]   n_part          Number of partitions
  *
@@ -78,7 +78,7 @@ PDM_mesh_location_n_part_cloud_set
  *
  * \brief Set a point cloud
  *
- * \param [in]   ml              Pointer to \ref PDM_mesh_location_t object
+ * \param [in]   ml              Pointer to \ref PDM_mesh_location_t instance
  * \param [in]   i_point_cloud   Point cloud identifier
  * \param [in]   i_part          Partition identifier
  * \param [in]   n_points        Number of points
@@ -103,7 +103,7 @@ PDM_mesh_location_cloud_set
  *
  * \brief Get a point cloud
  *
- * \param [in]   ml              Pointer to \ref PDM_mesh_location_t object
+ * \param [in]   ml              Pointer to \ref PDM_mesh_location_t instance
  * \param [in]   i_point_cloud   Point cloud identifier
  * \param [in]   i_part          Partition identifier
  * \param [out]  n_points        Number of points
@@ -128,7 +128,7 @@ PDM_mesh_location_cloud_get
  *
  * \brief Get the number of located points
  *
- * \param [in]   ml              Pointer to \ref PDM_mesh_location_t object
+ * \param [in]   ml              Pointer to \ref PDM_mesh_location_t instance
  * \param [in]   i_point_cloud   Point cloud identifier
  * \param [in]   i_part          Partition identifier
  *
@@ -149,7 +149,7 @@ PDM_mesh_location_n_located_get
  *
  * \brief Get the number of unlocated points
  *
- * \param [in]   ml              Pointer to \ref PDM_mesh_location_t object
+ * \param [in]   ml              Pointer to \ref PDM_mesh_location_t instance
  * \param [in]   i_point_cloud   Point cloud identifier
  * \param [in]   i_part          Partition identifier
  *
@@ -170,7 +170,7 @@ PDM_mesh_location_n_unlocated_get
  *
  * \brief Get the list of unlocated points
  *
- * \param [in]   ml              Pointer to \ref PDM_mesh_location_t object
+ * \param [in]   ml              Pointer to \ref PDM_mesh_location_t instance
  * \param [in]   i_point_cloud   Point cloud identifier
  * \param [in]   i_part          Partition identifier
  *
@@ -191,7 +191,7 @@ PDM_mesh_location_unlocated_get
  *
  * \brief Get the list of located points
  *
- * \param [in]   ml              Pointer to \ref PDM_mesh_location_t object
+ * \param [in]   ml              Pointer to \ref PDM_mesh_location_t instance
  * \param [in]   i_point_cloud   Point cloud identifier
  * \param [in]   i_part          Partition identifier
  *
@@ -213,8 +213,8 @@ PDM_mesh_location_located_get
  *
  * \brief Set the nodal mesh
  *
- * \param [in]   ml             Pointer to \ref PDM_mesh_location_t object
- * \param [in]   mesh_nodal     Pointer to \ref PDM_part_mesh_nodal_t object
+ * \param [in]   ml             Pointer to \ref PDM_mesh_location_t instance
+ * \param [in]   mesh_nodal     Pointer to \ref PDM_part_mesh_nodal_t instance
  *
  */
 
@@ -230,7 +230,7 @@ PDM_mesh_location_shared_nodal_mesh_set
  *
  * \brief Set the number of partitions of the mesh
  *
- * \param [in]   ml             Pointer to \ref PDM_mesh_location_t object
+ * \param [in]   ml             Pointer to \ref PDM_mesh_location_t instance
  * \param [in]   n_part         Number of partitions
  *
  */
@@ -247,7 +247,7 @@ PDM_mesh_location_mesh_n_part_set
  *
  * \brief Set a *volume* mesh partition
  *
- * \param [in]   ml              Pointer to \ref PDM_mesh_location_t object
+ * \param [in]   ml              Pointer to \ref PDM_mesh_location_t instance
  * \param [in]   i_part          Partition identifier
  * \param [in]   n_cell          Number of cells
  * \param [in]   cell_face_idx   Index for cell -> face connectivity (size : \p n_cell + 1)
@@ -288,7 +288,7 @@ PDM_mesh_location_part_set
  * The mesh is assumed to contain only standard elements
  * (tetrahedra, pyramids, prisms, hexahedra).
  *
- * \param [in]   ml            Pointer to \ref PDM_mesh_location object
+ * \param [in]   ml            Pointer to \ref PDM_mesh_location instance
  * \param [in]   i_part        Partition to define
  * \param [in]   n_cell        Number of cells
  * \param [in]   cell_vtx_idx  Index in the cell -> vertex connectivity
@@ -317,7 +317,7 @@ PDM_mesh_location_nodal_part_set
  *
  * \brief Select cells to extract before computing location
  *
- * \param [in]   ml                     Pointer to \ref PDM_mesh_location_t object
+ * \param [in]   ml                     Pointer to \ref PDM_mesh_location_t instance
  * \param [in]   i_part                 Partition identifier
  * \param [in]   is_elmt_select_by_user Flag to determine which cells must be extracted (size : *n_cell*)
  *
@@ -336,7 +336,7 @@ PDM_mesh_location_user_extract_set
  *
  * \brief Set a *surface* mesh partition
  *
- * \param [in]   ml             Pointer to \ref PDM_mesh_location object
+ * \param [in]   ml             Pointer to \ref PDM_mesh_location instance
  * \param [in]   i_part         Partition to define
  * \param [in]   n_face         Number of faces
  * \param [in]   face_edge_idx  Index for face -> edge connectivity (size : \p n_face + 1)
@@ -370,7 +370,7 @@ PDM_mesh_location_part_set_2d
  *
  * \brief Set a *surface* mesh partition with nodal connectivity
  *
- * \param [in]   ml             Pointer to \ref PDM_mesh_location object
+ * \param [in]   ml             Pointer to \ref PDM_mesh_location instance
  * \param [in]   i_part         Partition to define
  * \param [in]   n_face         Number of faces
  * \param [in]   face_vtx_idx   Index for face -> vertex connectivity
@@ -400,7 +400,9 @@ PDM_mesh_location_nodal_part_set_2d
  *
  * \brief Set the relative tolerance for bounding boxes
  *
- * \param [in]   ml              Pointer to \ref PDM_mesh_location_t object
+ * \note This is an optional setting. By default a relative tolerance equal to 0 is used.
+ *
+ * \param [in]   ml              Pointer to \ref PDM_mesh_location_t instance
  * \param [in]   tol             Tolerance
  *
  */
@@ -417,7 +419,14 @@ PDM_mesh_location_tolerance_set
  *
  * \brief Set the method for computing location (preconditioning stage)
  *
- * \param [in]   ml              Pointer to \ref PDM_mesh_location_t object
+ * \note This is an optional setting.
+ *
+ * Admissible values are :
+ *    - \p PDM_MESH_LOCATION_OCTREE         : Use point octree (default method)
+ *    - \p PDM_MESH_LOCATION_DBBTREE        : Use bounding-box tree
+ *    - \p PDM_MESH_LOCATION_LOCATE_ALL_TGT : All target points are guaranteed to be located
+ *
+ * \param [in]   ml              Pointer to \ref PDM_mesh_location_t instance
  * \param [in]   method          Preconditioning method
  *
  */
@@ -434,7 +443,7 @@ PDM_mesh_location_method_set
  *
  * \brief Compute point location
  *
- * \param [in]   ml              Pointer to \ref PDM_mesh_location_t object
+ * \param [in]   ml              Pointer to \ref PDM_mesh_location_t instance
  *
  */
 
@@ -449,7 +458,9 @@ PDM_mesh_location_compute
  *
  * \brief Get point location
  *
- * \param [in]   ml                    Pointer to \ref PDM_mesh_location_t object
+ * \note The results are related to located points only
+ *
+ * \param [in]   ml                    Pointer to \ref PDM_mesh_location_t instance
  * \param [in]   i_point_cloud         Point cloud identifier
  * \param [in]   i_part                Partition identifier
  * \param [out]  location              Global id of nearest mesh element if the point is located, -1 otherwise
@@ -474,11 +485,11 @@ PDM_mesh_location_point_location_get
  *
  * \brief Get the cell->vertex connectivity used for internal computations
  *
- * \note This connectivity is built by ParaDiGM and is necessary to associate
+ * \note For non-standard elements, this connectivity is built by ParaDiGM and is necessary to associate
  *       the `points_weights` array (returned by \ref PDM_mesh_location_points_in_elt_get)
  *       to the appropriate mesh vertices.
  *
- * \param [in]   ml                    Pointer to \ref PDM_mesh_location_t object
+ * \param [in]   ml                    Pointer to \ref PDM_mesh_location_t instance
  * \param [in]   i_part                Partition identifier
  * \param [out]  cell_vtx_idx          Index for cell -> vertex connectivity (size = *n_elt* + 1)
  * \param [out]  cell_vtx              Cell -> vertex connectivity
@@ -499,7 +510,7 @@ PDM_mesh_location_cell_vertex_get
  *
  * \brief Get location data for points located in elements
  *
- * \param [in]   ml                      Pointer to \ref PDM_mesh_location_t object
+ * \param [in]   ml                      Pointer to \ref PDM_mesh_location_t instance
  * \param [in]   i_point_cloud           Point cloud identifier
  * \param [in]   i_part                  Partition identifier
  * \param [out]  elt_pts_inside_idx      Index for element -> points mapping (size = *n_elt* + 1)
@@ -534,7 +545,7 @@ PDM_mesh_location_points_in_elt_get
  *
  * \brief Free a mesh location structure
  *
- * \param [in]  ml       Pointer to \ref PDM_mesh_location_t object
+ * \param [in]  ml       Pointer to \ref PDM_mesh_location_t instance
  *
  */
 
@@ -549,7 +560,7 @@ PDM_mesh_location_free
  *
  * \brief Get the number of cells
  *
- * \param [in]  ml       Pointer to \ref PDM_mesh_location_t object
+ * \param [in]  ml       Pointer to \ref PDM_mesh_location_t instance
  * \param [in]  i_part   Partition identifier
  *
  * \return Number of cells
@@ -567,7 +578,7 @@ PDM_mesh_location_n_cell_get
  *
  * \brief  Dump elapsed and CPU times
  *
- * \param [in]  ml       Pointer to \ref PDM_mesh_location_t object
+ * \param [in]  ml       Pointer to \ref PDM_mesh_location_t instance
  *
  */
 
@@ -582,9 +593,9 @@ PDM_mesh_location_t *ml
  *
  * \brief Get the nodal mesh
  *
- * \param [in]  ml  Pointer to \ref PDM_mesh_location_t object
+ * \param [in]  ml  Pointer to \ref PDM_mesh_location_t instance
  *
- * \return          Pointer to \ref PDM_part_mesh_nodal_t object
+ * \return          Pointer to \ref PDM_part_mesh_nodal_t instance
  *
  */
 
@@ -596,12 +607,12 @@ PDM_mesh_location_t *ml
 
 
 /**
- * \brief Get \ref PDM_part_to_part_t object to exchange data between
+ * \brief Get \ref PDM_part_to_part_t instance to exchange data between
  * the source mesh and a target point cloud (both in user frame)
  *
- * \param [in ] ml            Pointer to \ref PDM_mesh_location_t object
+ * \param [in ] ml            Pointer to \ref PDM_mesh_location_t instance
  * \param [in ] i_point_cloud Point cloud identifier
- * \param [out] ptp           Pointer to \ref PDM_part_to_part_t object
+ * \param [out] ptp           Pointer to \ref PDM_part_to_part_t instance
  * \param [in ] ownership     Ownership for \p ptp
  *
  */

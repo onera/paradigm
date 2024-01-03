@@ -48,9 +48,9 @@ program testf
   type(c_ptr)                           :: multipart = C_NULL_PTR
   integer(c_int)                        :: split_method
   integer(c_int)                        :: n_part = 1
-  integer(c_int)                        :: n_zone = 1
-  integer(c_int)                        :: i_zone = -1
-  integer(kind=PDM_l_num_s), pointer    :: n_part_zones(:)  => null()
+  integer(c_int)                        :: n_domain = 1
+  integer(c_int)                        :: i_domain = -1
+  integer(kind=PDM_l_num_s), pointer    :: n_part_domains(:)  => null()
   double precision,          pointer    :: part_fraction(:) => null()
   integer(kind=PDM_l_num_s), pointer    :: renum_cell_properties(:) => null()
   ! MESH
@@ -87,11 +87,11 @@ program testf
 
   split_method  = PDM_SPLIT_DUAL_WITH_HILBERT;
 
-  allocate(n_part_zones(n_zone), &
+  allocate(n_part_domains(n_domain), &
            dface_join_idx(n_jn+1))
 
-  do i = 1, n_zone
-    n_part_zones(i) = n_part
+  do i = 1, n_domain
+    n_part_domains(i) = n_part
   end do
 
   if (i_rank .eq. 0) then
@@ -99,8 +99,8 @@ program testf
   end if
 
   call PDM_multipart_create(multipart, &
-                            n_zone, &
-                            n_part_zones, &
+                            n_domain, &
+                            n_part_domains, &
                             PDM_FALSE, &
                             split_method, &
                             PDM_PART_SIZE_HOMOGENEOUS, &
@@ -114,12 +114,12 @@ program testf
   end if
 
   call PDM_multipart_set_reordering_options(multipart, &
-                                            i_zone, &
+                                            i_domain, &
                                             "PDM_PART_RENUM_CELL_CUTHILL", &
                                             renum_cell_properties, &
                                             "PDM_PART_RENUM_FACE_LEXICOGRAPHIC")
 
-  ! Generate Mesh (case : n_zone = 1)
+  ! Generate Mesh (case : n_domain = 1)
   ! > dcube
   if (i_rank .eq. 0) then
     write(*, *) "> dcube"
@@ -174,17 +174,17 @@ program testf
   !                    dface_join_idx,  &
   !                    dface_join)
 
-  ! call PDM_multipart_register_block(multipart, i_zone, dm)
-  ! call PDM_multipart_register_joins(multipart, n_total_joins, join_to_opposite)
+  ! call PDM_multipart_dmesh_set(multipart, i_domain, dm)
+  ! call PDM_multipart_joins_set(multipart, n_total_joins, join_to_opposite)
 
   ! Run
-  ! call PDM_multipart_run_ppart(multipart)
+  ! call PDM_multipart_compute(multipart)
 
   ! Get
-  ! call PDM_multipart_part_dim_get(multipart, i_zone, i_part, n_section, n_elt, &
+  ! call PDM_multipart_part_dim_get(multipart, i_domain, i_part, n_section, n_elt, &
   !                                 n_cell, n_face, n_part_joins, n_vtx, n_proc, tn_part, &
   !                                 scell_face, sface_vtx, sface_bound, n_bounds, sface_join, n_joins)
-  ! call PDM_multipart_part_val_get(multipart, i_zone, i_part, elt_vtx_idx, elt_vtx, elt_section_ln_to_gn, &
+  ! call PDM_multipart_part_val_get(multipart, i_domain, i_part, elt_vtx_idx, elt_vtx, elt_section_ln_to_gn, &
   !                                 cell_tag, cell_face_idx, cell_face, cell_ln_to_gn, &
   !                                 face_tag, face_cell, face_vtx_idx, face_vtx, face_ln_to_gn, &
   !                                 face_part_bound_proc_idx, face_part_bound_part_idx, face_part_bound, &

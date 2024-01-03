@@ -1,5 +1,6 @@
 #!/bin/bash
 
+
 listTest=( @PDM_LIST_TEST@ )
 listNRank=( @PDM_LIST_NRANK@ )
 

@@ -42,11 +42,15 @@ CMake general options
 
   CMAKE_INSTALL_PREFIX=<prefix>
 
+.. _enable_fortran_interface:
+
 **Enable Fortran interface**
 
 .. code-block:: sh
 
   PDM_ENABLE_Fortran=<ON | OFF> (default : OFF)
+
+.. _enable_python_interface:
 
 **Enable Python interface**
 

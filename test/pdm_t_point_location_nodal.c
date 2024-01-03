@@ -176,10 +176,10 @@ _gen_mesh
   *pn_vtx        = malloc(sizeof(int          ) * n_part);
   *pvtx_coord    = malloc(sizeof(double      *) * n_part);
 
-  int n_zone = 1;
-  int n_part_zones = n_part;
-  PDM_multipart_t *mpart = PDM_multipart_create(n_zone,
-                                                &n_part_zones,
+  int n_domain = 1;
+  int n_part_domains = n_part;
+  PDM_multipart_t *mpart = PDM_multipart_create(n_domain,
+                                                &n_part_domains,
                                                 PDM_FALSE,
                                                 part_method,
                                                 PDM_PART_SIZE_HOMOGENEOUS,
@@ -271,9 +271,9 @@ _gen_mesh
                         dface_group_idx,
                         PDM_OWNERSHIP_USER);
 
-    PDM_multipart_register_block (mpart, 0, dmesh);
+    PDM_multipart_dmesh_set (mpart, 0, dmesh);
 
-    PDM_multipart_run_ppart(mpart);
+    PDM_multipart_compute(mpart);
 
     PDM_dmesh_free(dmesh);
     free(dvtx_coord);
@@ -328,8 +328,8 @@ _gen_mesh
                                                        0,
                                                        ipart,
                                                        PDM_CONNECTIVITY_TYPE_FACE_VTX,
-                                                       &_face_vtx,
                                                        &_face_vtx_idx,
+                                                       &_face_vtx,
                                                        PDM_OWNERSHIP_KEEP);
       pn_face[ipart] = n_face;
       int *_cell_face;
@@ -338,8 +338,8 @@ _gen_mesh
                                           0,
                                           ipart,
                                           PDM_CONNECTIVITY_TYPE_CELL_FACE,
-                                          &_cell_face,
                                           &_cell_face_idx,
+                                          &_cell_face,
                                           PDM_OWNERSHIP_KEEP);
 
       pcell_face_idx[ipart] = _cell_face_idx;
@@ -467,10 +467,10 @@ _gen_mesh
                         dedge_bnd_idx,
                         PDM_OWNERSHIP_USER);
 
-    PDM_multipart_register_block(mpart, 0, dmesh);
+    PDM_multipart_dmesh_set(mpart, 0, dmesh);
 
     /* Run */
-    PDM_multipart_run_ppart(mpart);
+    PDM_multipart_compute(mpart);
 
     PDM_dmesh_free(dmesh);
     free(dedge_bnd_idx   );
@@ -517,8 +517,8 @@ _gen_mesh
                                           0,
                                           ipart,
                                           PDM_CONNECTIVITY_TYPE_FACE_VTX,
-                                          &_face_vtx,
                                           &_face_vtx_idx,
+                                          &_face_vtx,
                                           PDM_OWNERSHIP_KEEP);
 
       int *_face_edge;
@@ -527,8 +527,8 @@ _gen_mesh
                                           0,
                                           ipart,
                                           PDM_CONNECTIVITY_TYPE_CELL_FACE,
-                                          &_face_edge,
                                           &_face_edge_idx,
+                                          &_face_edge,
                                           PDM_OWNERSHIP_KEEP);
 
       pface_edge_idx[ipart] = _face_edge_idx;
@@ -542,8 +542,8 @@ _gen_mesh
                                                          0,
                                                          ipart,
                                                          PDM_CONNECTIVITY_TYPE_FACE_VTX,
-                                                         &_edge_vtx,
                                                          &_edge_vtx_idx,
+                                                         &_edge_vtx,
                                                          PDM_OWNERSHIP_KEEP);
         pn_edge[ipart] = n_edge;
         pedge_vtx_idx[ipart] = _edge_vtx_idx;
@@ -617,9 +617,9 @@ _gen_mesh
     }
 
 
-    PDM_multipart_register_dmesh_nodal(mpart, 0, dmn);
+    PDM_multipart_dmesh_nodal_set(mpart, 0, dmn);
 
-    PDM_multipart_run_ppart(mpart);
+    PDM_multipart_compute(mpart);
 
     PDM_g_num_t **pvtx_ln_to_gn  = malloc(sizeof(PDM_g_num_t *) * n_part);
     for (int ipart = 0; ipart < n_part; ipart++) {
@@ -635,7 +635,7 @@ _gen_mesh
       (*pn_vtx)[ipart] = PDM_multipart_part_ln_to_gn_get(mpart,
                                                          0,
                                                          ipart,
-                                                         PDM_MESH_ENTITY_VERTEX,
+                                                         PDM_MESH_ENTITY_VTX,
                                                          &pvtx_ln_to_gn[ipart],
                                                          PDM_OWNERSHIP_KEEP);
 
@@ -686,9 +686,9 @@ _mesh_from_file
                                                         0,
                                                         0);
 
-  int n_zone = 1;
+  int n_domain = 1;
   int n_part_mesh = n_part;
-  PDM_multipart_t *mpart = PDM_multipart_create(n_zone,
+  PDM_multipart_t *mpart = PDM_multipart_create(n_domain,
                                                 &n_part_mesh,
                                                 PDM_FALSE,
                                                 part_method,
@@ -703,8 +703,8 @@ _mesh_from_file
                                        NULL,
                                        "PDM_PART_RENUM_FACE_NONE");
 
-  PDM_multipart_register_dmesh_nodal(mpart, 0, dmn);
-  PDM_multipart_run_ppart(mpart);
+  PDM_multipart_dmesh_nodal_set(mpart, 0, dmn);
+  PDM_multipart_compute(mpart);
 
   *pn_elt        = malloc(sizeof(int          ) * n_part);
   *pelt_ln_to_gn = malloc(sizeof(PDM_g_num_t *) * n_part);
@@ -726,7 +726,7 @@ _mesh_from_file
     (*pn_vtx)[ipart] = PDM_multipart_part_ln_to_gn_get(mpart,
                                                        0,
                                                        ipart,
-                                                       PDM_MESH_ENTITY_VERTEX,
+                                                       PDM_MESH_ENTITY_VTX,
                                                        &pvtx_ln_to_gn[ipart],
                                                        PDM_OWNERSHIP_USER);
 

@@ -350,12 +350,12 @@ int main(int argc, char *argv[])
                             &vol_dmn);
 
   PDM_split_dual_t part_method = PDM_SPLIT_DUAL_WITH_HILBERT;
-  int n_zone                   = 1;
-  int *n_part_zones            = (int *) malloc(sizeof(int) * n_zone);
-  n_part_zones[0]              = n_part;
+  int n_domain                 = 1;
+  int *n_part_domains          = (int *) malloc(sizeof(int) * n_domain);
+  n_part_domains[0]            = n_part;
 
-  PDM_multipart_t *mpart = PDM_multipart_create(n_zone,
-                                                n_part_zones,
+  PDM_multipart_t *mpart = PDM_multipart_create(n_domain,
+                                                n_part_domains,
                                                 PDM_FALSE,
                                                 part_method,
                                                 PDM_PART_SIZE_HOMOGENEOUS,
@@ -369,11 +369,11 @@ int main(int argc, char *argv[])
                                        NULL,
                                        "PDM_PART_RENUM_FACE_NONE");
 
-  PDM_multipart_register_dmesh_nodal(mpart, 0, vol_dmn);
+  PDM_multipart_dmesh_nodal_set(mpart, 0, vol_dmn);
 
-  PDM_multipart_run_ppart(mpart);
+  PDM_multipart_compute(mpart);
 
-  free(n_part_zones);
+  free(n_part_domains);
 
   // Vertices
   int     i_part          = 0;
@@ -388,7 +388,7 @@ int main(int argc, char *argv[])
   PDM_multipart_part_ln_to_gn_get(mpart,
                                   0,
                                   i_part,
-                                  PDM_MESH_ENTITY_VERTEX,
+                                  PDM_MESH_ENTITY_VTX,
                                   &vol_vtx_ln_to_gn,
                                   PDM_OWNERSHIP_KEEP);
 
@@ -399,8 +399,8 @@ int main(int argc, char *argv[])
                                                           0,
                                                           i_part,
                                                           PDM_CONNECTIVITY_TYPE_EDGE_VTX,
-                                                          &p_vol_edge_vtx,
                                                           &p_vol_edge_vtx_idx,
+                                                          &p_vol_edge_vtx,
                                                           PDM_OWNERSHIP_KEEP);
 
   if (p_vol_edge_vtx_idx != NULL) free(p_vol_edge_vtx_idx);
@@ -420,8 +420,8 @@ int main(int argc, char *argv[])
                                                          0,
                                                          i_part,
                                                          PDM_CONNECTIVITY_TYPE_FACE_EDGE,
-                                                         &p_vol_face_edge,
                                                          &p_vol_face_edge_idx,
+                                                         &p_vol_face_edge,
                                                          PDM_OWNERSHIP_KEEP);
 
   PDM_g_num_t *vol_face_ln_to_gn = NULL;

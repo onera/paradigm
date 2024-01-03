@@ -4,93 +4,116 @@
 Simple mesh generation
 ######################
 
-.. _dcube_nodal_gen:
+.. container:: toc-cards
 
-Distributed nodal square/cube
------------------------------
+  .. container:: card
 
-.. doxygenfile:: pdm_dcube_nodal_gen.h
-   :project: paradigm
-
-
-.. _sphere_surf_gen:
-
-Sphere (surface)
-----------------
-
-Icosphere
-^^^^^^^^^
-
-.. figure:: ../../../../images/icosphere.png
-   :alt: icosphere meshes
-
-   Icosphere meshes with increasing subdivision level (from left to right: *n* = 0, 1, 2, 3, 4).
+    :ref:`Dcube nodal <dcube_nodal>`
+      Generate block-distributed square/cube meshes with nodal connectivity
 
 
-.. _c_api_icosphere:
+  .. container:: card
 
-C API
-"""""
-.. doxygenfunction:: PDM_sphere_surf_icosphere_gen
-
-.. doxygenfunction:: PDM_sphere_surf_icosphere_gen_nodal
-
-.. doxygenfunction:: PDM_sphere_surf_icosphere_gen_part
-
-
-.. _python_api_icosphere:
-
-Python API
-""""""""""
-.. autofunction:: Pypdm.Pypdm.sphere_surf_icosphere_gen
-
-.. autofunction:: Pypdm.Pypdm.sphere_surf_icosphere_gen_nodal
-
-.. autofunction:: Pypdm.Pypdm.sphere_surf_icosphere_gen_part
-
-
-UV Sphere
-^^^^^^^^^
-.. doxygenfunction:: PDM_sphere_surf_gen
-
-.. doxygenfunction:: PDM_sphere_surf_gen_nodal
+    :ref:`Simplified mesh generation <generate_mesh>`
+      Generate simple partitioned meshes in a single function call
 
 
 
+.. toctree::
+  :caption: Simple mesh generation
+  :maxdepth: 1
+  :hidden:
 
-.. _sphere_vol_gen:
+  dcube_nodal
+  generate_mesh
 
-Ball (volume)
--------------
+|
 
-.. doxygenfile:: pdm_sphere_vol_gen.h
-   :project: paradigm
+.. .. _sphere_surf_gen:
 
+.. Sphere (surface)
+.. ----------------
 
-.. _poly_vol_gen:
+.. Icosphere
+.. ^^^^^^^^^
 
-Polyhedral mesh
----------------
+.. .. figure:: ../../../../images/icosphere.png
+..    :alt: icosphere meshes
 
-.. doxygenfile:: pdm_poly_vol_gen.h
-   :project: paradigm
-
-
-
-.. _point_cloud_gen:
-
-Point clouds
-------------
-
-.. doxygenfile:: pdm_point_cloud_gen.h
-   :project: paradigm
+..    Icosphere meshes with increasing subdivision level (from left to right: *n* = 0, 1, 2, 3, 4).
 
 
+.. .. _c_api_icosphere:
 
-.. _box_gen:
+.. C API
+.. """""
+.. .. doxygenfunction:: PDM_sphere_surf_icosphere_gen
 
-Box sets
---------
+.. .. doxygenfunction:: PDM_sphere_surf_icosphere_gen_nodal
 
-.. doxygenfile:: pdm_box_gen.h
-   :project: paradigm
+.. .. doxygenfunction:: PDM_sphere_surf_icosphere_gen_part
+
+
+.. .. _python_api_icosphere:
+
+.. Python API
+.. """"""""""
+
+.. .. ifconfig:: enable_python_doc == 'ON'
+
+..   .. autofunction:: Pypdm.Pypdm.sphere_surf_icosphere_gen
+
+..   .. autofunction:: Pypdm.Pypdm.sphere_surf_icosphere_gen_nodal
+
+..   .. autofunction:: Pypdm.Pypdm.sphere_surf_icosphere_gen_part
+
+.. .. ifconfig:: enable_python_doc == 'OFF'
+
+..   .. warning::
+..     Unavailable (refer to the :ref:`installation guide <enable_python_interface>` to enable the Python API)
+
+.. UV Sphere
+.. ^^^^^^^^^
+.. .. doxygenfunction:: PDM_sphere_surf_gen
+
+.. .. doxygenfunction:: PDM_sphere_surf_gen_nodal
+
+
+
+
+.. .. _sphere_vol_gen:
+
+.. Ball (volume)
+.. -------------
+
+.. .. doxygenfile:: pdm_sphere_vol_gen.h
+..    :project: paradigm
+
+
+.. .. _poly_vol_gen:
+
+.. Polyhedral mesh
+.. ---------------
+
+.. .. doxygenfile:: pdm_poly_vol_gen.h
+..    :project: paradigm
+
+
+
+.. .. _point_cloud_gen:
+
+.. Point clouds
+.. ------------
+
+.. .. doxygenfile:: pdm_point_cloud_gen.h
+..    :project: paradigm
+
+
+
+.. .. _box_gen:
+
+.. Box sets
+.. --------
+
+.. .. doxygenfile:: pdm_box_gen.h
+..    :project: paradigm

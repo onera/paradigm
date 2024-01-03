@@ -1,7 +1,7 @@
 
 cdef extern from "pdm_multipart.h":
     ctypedef enum PDM_part_size_t:
-        PDM_PART_SIZE_HOMONEGEOUS   = 1
+        PDM_PART_SIZE_HOMOGENEOUS   = 1
         PDM_PART_SIZE_HETEROGENEOUS = 2
     ctypedef struct PDM_multipart_t:
         pass
@@ -9,9 +9,9 @@ cdef extern from "pdm_multipart.h":
     # -> PPART bases functions
     # ------------------------------------------------------------------
     # MPI_Comm      comm,
-    PDM_multipart_t* PDM_multipart_create(int              n_zone,
+    PDM_multipart_t* PDM_multipart_create(int              n_domain,
                                           int*             n_part,
-                                          PDM_bool_t       merge_blocks,
+                                          PDM_bool_t       merge_domains,
                                           PDM_split_dual_t split_method,
                                           PDM_part_size_t  part_size_method,
                                           double*          part_fraction,
@@ -19,36 +19,31 @@ cdef extern from "pdm_multipart.h":
                                           PDM_ownership_t  owner)
 
     # ------------------------------------------------------------------
-    void PDM_multipart_register_block(PDM_multipart_t *mtp,
-                                      int              zone_gid,
-                                      PDM_dmesh_t     *dmesh)
+    void PDM_multipart_dmesh_set(PDM_multipart_t *mtp,
+                                 int              i_domain,
+                                 PDM_dmesh_t     *dmesh)
 
     # ------------------------------------------------------------------
-    void PDM_multipart_register_dmesh_nodal(PDM_multipart_t   *mtp,
-                                            int                zone_gid,
-                                            PDM_dmesh_nodal_t *dmesh)
-
-    # ------------------------------------------------------------------
-    void PDM_multipart_register_joins(PDM_multipart_t *mtp,
-                                      int              n_total_joins,
-                                      int*             matching_join_array)
+    void PDM_multipart_dmesh_nodal_set(PDM_multipart_t   *mtp,
+                                       int                i_domain,
+                                       PDM_dmesh_nodal_t *dmesh)
 
     # ------------------------------------------------------------------
     void PDM_multipart_set_reordering_options(      PDM_multipart_t *mtp,
-                                              const int              i_zone,
+                                              const int              i_domain,
                                               const char            *renum_cell_method,
                                               const int             *renum_cell_properties,
                                               const char            *renum_face_method)
     void PDM_multipart_set_reordering_options_vtx(      PDM_multipart_t *mtp,
-                                                  const int              i_zone,
+                                                  const int              i_domain,
                                                   const char            *renum_vtx_method)
 
     # ------------------------------------------------------------------
-    void PDM_multipart_run_ppart(PDM_multipart_t *mtp)
+    void PDM_multipart_compute(PDM_multipart_t *mtp)
 
     # ------------------------------------------------------------------
     void PDM_multipart_part_dim_get(PDM_multipart_t  *mtp,
-                                    int               zone_gid,
+                                    int               i_domain,
                                     int               ipart,
                                     int              *n_cell,
                                     int              *n_face,
@@ -63,7 +58,7 @@ cdef extern from "pdm_multipart.h":
 
     # ------------------------------------------------------------------
     void PDM_multipart_part_val_get(PDM_multipart_t   *mtp,
-                                    int                zone_gid,
+                                    int                i_domain,
                                     int                ipart,
                                     int              **cell_face_idx,
                                     int              **cell_face,
@@ -83,64 +78,64 @@ cdef extern from "pdm_multipart.h":
 
     # ------------------------------------------------------------------
     int PDM_multipart_part_vtx_coord_get(PDM_multipart_t  *multipart,
-                                         const int         i_zone,
+                                         const int         i_domain,
                                          const int         i_part,
                                          double          **vtx_coord,
                                          PDM_ownership_t   ownership)
 
     # ------------------------------------------------------------------
     void PDM_multipart_get_part_mesh_nodal(PDM_multipart_t   *mtp,
-                                           const int   i_zone,
+                                           const int   i_domain,
                                            PDM_part_mesh_nodal_t **pmesh_nodal,
                                            PDM_ownership_t         ownership)
 
     # ------------------------------------------------------------------
-    void PDM_multipart_part_graph_comm_get(PDM_multipart_t    *multipart,
-                                           const int           i_zone,
-                                           const int           i_part,
-                                           PDM_bound_type_t    bound_type,
-                                           int               **ppart_bound_proc_idx,
-                                           int               **ppart_bound_part_idx,
-                                           int               **ppart_bound,
-                                           PDM_ownership_t     ownership);
+    void PDM_multipart_part_graph_comm_get(PDM_multipart_t      *multipart,
+                                           const int             i_domain,
+                                           const int             i_part,
+                                           PDM_mesh_entities_t   entity_type,
+                                           int                 **ppart_bound_proc_idx,
+                                           int                 **ppart_bound_part_idx,
+                                           int                 **ppart_bound,
+                                           PDM_ownership_t       ownership);
     # ------------------------------------------------------------------
     void PDM_multipart_part_hyperplane_color_get(PDM_multipart_t  *multipart,
-                                                 int               i_zone,
+                                                 int               i_domain,
                                                  int               i_part,
                                                  int             **hyperplane_color,
                                                  PDM_ownership_t   ownership);
     # ------------------------------------------------------------------
     void PDM_multipart_part_thread_color_get(PDM_multipart_t  *multipart,
-                                                 int               i_zone,
+                                                 int               i_domain,
                                                  int               i_part,
                                                  int             **thread_color,
                                                  PDM_ownership_t   ownership);
 
     # ------------------------------------------------------------------
     void PDM_multipart_part_ghost_infomation_get(PDM_multipart_t *mtp,
-                                                 int              zone_gid,
+                                                 int              i_domain,
                                                  int              ipart,
                                                  int             **vtx_ghost_information,
                                                  PDM_ownership_t   ownership)
 
     # ------------------------------------------------------------------
     int PDM_multipart_part_connectivity_get(PDM_multipart_t          *mtp,
-                                            int                       i_zone,
+                                            int                       i_domain,
                                             int                       i_part,
                                             PDM_connectivity_type_t   connectivity_type,
-                                            int                     **connect,
                                             int                     **connect_idx,
+                                            int                     **connect,
                                             PDM_ownership_t           ownership);
     # ------------------------------------------------------------------
     int PDM_multipart_part_ln_to_gn_get(PDM_multipart_t      *mtp,
-                                        int                   i_zone,
+                                        int                   i_domain,
                                         int                   i_part,
                                         PDM_mesh_entities_t   entity_type,
                                         PDM_g_num_t         **entity_ln_to_gn,
                                         PDM_ownership_t       ownership);
     # ------------------------------------------------------------------
     int PDM_multipart_partition_color_get(PDM_multipart_t      *mtp,
-                                          int                   i_zone,
+                                          int                   i_domain,
                                           int                   i_part,
                                           PDM_mesh_entities_t   entity_type,
                                           int                 **entity_ln_to_gn,
@@ -148,11 +143,11 @@ cdef extern from "pdm_multipart.h":
 
     # ------------------------------------------------------------------
     int PDM_multipart_part_tn_part_get(PDM_multipart_t *multipart,
-                                       const int        i_zone);
+                                       const int        i_domain);
 
     # ------------------------------------------------------------------
     void PDM_multipart_time_get(PDM_multipart_t      *mtp,
-                                int                   zone_gid,
+                                int                   i_domain,
                                 double              **elapsed,
                                 double              **cpu,
                                 double              **cpu_user,
@@ -160,7 +155,7 @@ cdef extern from "pdm_multipart.h":
 
     # ------------------------------------------------------------------
     int PDM_multipart_part_n_entity_get(PDM_multipart_t      *multipart,
-                                        int                   i_zone,
+                                        int                   i_domain,
                                         int                   i_part,
                                         PDM_mesh_entities_t   entity_type)
     # ------------------------------------------------------------------
@@ -168,85 +163,153 @@ cdef extern from "pdm_multipart.h":
 
 # ------------------------------------------------------------------
 cdef class MultiPart:
-    """
-       MultiPpart
-    """
     # > For Ppart
     cdef PDM_multipart_t* _mtp
     cdef int n_rank
+
+
+    HOMOGENEOUS   = PDM_PART_SIZE_HOMOGENEOUS
+    HETEROGENEOUS = PDM_PART_SIZE_HETEROGENEOUS
+
+    HILBERT  = _PDM_SPLIT_DUAL_WITH_HILBERT
+    PARMETIS = _PDM_SPLIT_DUAL_WITH_PARMETIS
+    PTSCOTCH = _PDM_SPLIT_DUAL_WITH_PTSCOTCH
+    # ------------------------------------------------------------------
+    # Fake init (Use only for docstring)
+    def __init__(self,
+                 int                                           n_domain,
+                 NPY.ndarray[NPY.int32_t   , mode='c', ndim=1] n_part,
+                 int                                           merge_domains,
+                 PDM_split_dual_t                              split_method,
+                 PDM_part_size_t                               part_size_method,
+                 NPY.ndarray[NPY.double_t  , mode='c', ndim=1] part_fraction,
+                 MPI.Comm                                      comm):
+
+      """
+      __init__(n_domain, n_part, merge_domains, split_method, part_size_method, part_fraction, comm)
+
+      Build a MultiPart structure. This method allows to split multiple domains.
+
+      Parameters:
+        n_domain         (int)                     : Number of domains in the original mesh
+        n_part           (np.ndarray[np.int32_t])  : Number of partitions per rank in each domain
+        merge_domains    (int)                     : Merge or not the domains before splitting
+        split_method     (PDM_split_dual_t)        : Choice of library used to split the mesh
+        part_size_method (PDM_part_size_t)         : Choice of homogeneous or heterogeneous partitions
+        part_fraction    (np.ndarray[np.double_t]) : Weight (in %) of each partition in heterogeneous case if ``part_size_method`` is set to ``PDM_PART_SIZE_HETEROGENEOUS``
+        comm             (MPI.Comm)                : MPI communicator
+
+      Admissible values for ``split_method`` are:
+        - :py:attr:`HILBERT`
+        - :py:attr:`PARMETIS`
+        - :py:attr:`PTSCOTCH`
+
+      Admissible values for ``part_size_method`` are:
+        - :py:attr:`HOMOGENEOUS`: All requested partition have the same size
+        - :py:attr:`HETEROGENEOUS`: Each requested partition can have a portion (within 0. and 1.) of the mesh
+      """
     # ------------------------------------------------------------------
     def __cinit__(self,
-                  int                                           n_zone,
+                  int                                           n_domain,
                   NPY.ndarray[NPY.int32_t   , mode='c', ndim=1] n_part,
-                  int                                           merge_blocks,
+                  int                                           merge_domains,
                   PDM_split_dual_t                              split_method,
                   PDM_part_size_t                               part_size_method,
                   NPY.ndarray[NPY.double_t  , mode='c', ndim=1] part_fraction,
                   MPI.Comm                                      comm):
 
-        """
-        """
-        # ~> Communicator Mpi
-        cdef MPI.MPI_Comm c_comm = comm.ob_mpi
-        cdef double* part_fraction_data
+      """
+      __cinit__(n_domain, n_part, merge_domains, split_method, part_size_method, part_fraction, comm)
 
-        # print("MultiPart::n_zone -->", n_zone)
-        # print("MultiPart::n_part -->", n_part)
-        # print("MultiPart::merge_blocks -->", merge_blocks)
-        # print("MultiPart::split_method -->", split_method)
-        self.n_rank = comm.Get_size()
+      Build a MultiPart structure. This method allows to split multiple domains.
 
-        if part_fraction is None:
-          part_fraction_data = NULL
-        else:
-          part_fraction_data = <double *> part_fraction.data
+      Parameters:
+        n_domain         (int)                     : Number of domains in the original mesh
+        n_part           (np.ndarray[np.int32_t])  : Number of partitions per rank in each domain
+        merge_domains     (int)                    : Merge or not the domains before splitting
+        split_method     (PDM_split_dual_t)        : Choice of library used to split the mesh
+        part_size_method (PDM_part_size_t)         : Choice of homogeneous or heterogeneous partitions
+        part_fraction    (np.ndarray[np.double_t]) : Weight (in %) of each partition in heterogeneous case if ``part_size_method`` is set to ``PDM_PART_SIZE_HETEROGENEOUS``
+        comm             (MPI.Comm)                : MPI communicator
+      """
+      # ~> MPI communicator
+      cdef MPI.MPI_Comm c_comm = comm.ob_mpi
+      cdef double* part_fraction_data
 
-        # -> Create PPART
-        self._mtp = PDM_multipart_create(n_zone,
-                                              <int*> n_part.data,
-                                              <PDM_bool_t> merge_blocks,
-                                              split_method,
-                                              part_size_method,
-                                              part_fraction_data,
-                                              PDM_MPI_mpi_2_pdm_mpi_comm (<void *> &c_comm),
-                                              PDM_OWNERSHIP_USER) # Python take ownership
+      # print("MultiPart::n_domain -->", n_domain)
+      # print("MultiPart::n_part -->", n_part)
+      # print("MultiPart::merge_domains -->", merge_domains)
+      # print("MultiPart::split_method -->", split_method)
+      self.n_rank = comm.Get_size()
+
+      if part_fraction is None:
+        part_fraction_data = NULL
+      else:
+        part_fraction_data = <double *> part_fraction.data
+
+      # -> Create PPART
+      self._mtp = PDM_multipart_create(n_domain,
+                          <int      *> n_part.data,
+                          <PDM_bool_t> merge_domains,
+                                       split_method,
+                                       part_size_method,
+                                       part_fraction_data,
+                                       PDM_MPI_mpi_2_pdm_mpi_comm (<void *> &c_comm),
+                                       PDM_OWNERSHIP_USER) # Python take ownership
 
     # ------------------------------------------------------------------
     def __dealloc__(self):
         PDM_multipart_free(self._mtp)
 
     # ------------------------------------------------------------------
-    def multipart_register_block(self, int zone_gid,
-                                       DMesh dm): # DMesh = DistributedMeshCapsule or DistributedMesh
-        """
-        """
-        PDM_multipart_register_block(self._mtp,
-                                     zone_gid,
-                                     dm._dm)
 
-    # ------------------------------------------------------------------
-    def multipart_register_dmesh_nodal(self, int zone_gid,
-                                       DMeshNodal dmn): # DMesh = DistributedMeshCapsule or DistributedMesh
-        """
-        """
-        PDM_multipart_register_dmesh_nodal(self._mtp,
-                                           zone_gid,
-                                           dmn.dmn)
-
-    # ------------------------------------------------------------------
-    def multipart_register_joins(self, int n_total_joins,
-                                 NPY.ndarray[NPY.int32_t, mode='c', ndim=1] matching_join):
-        """
-        """
-        PDM_multipart_register_joins(       self._mtp,
-                                            n_total_joins,
-                                     <int*> matching_join.data)
-    # ------------------------------------------------------------------
-    def multipart_set_reordering(self, int i_zone,
-                                 char *renum_cell_method,
-                                 char *renum_face_method,
-                                 NPY.ndarray[NPY.int32_t, mode='c', ndim=1] renum_properties_cell):
+    def dmesh_set(self, int i_domain,
+                        DMesh dmesh): # DMesh = DistributedMeshCapsule or DistributedMesh
       """
+      dmesh_set(i_domain, dmesh)
+
+      Set distributed mesh data for the input domain
+
+      Parameters:
+        i_domain (int)               : Domain identifier
+        dmesh    (:py:class:`DMesh`) : Distributed mesh structure
+      """
+      PDM_multipart_dmesh_set(self._mtp,
+                              i_domain,
+                              dmesh._dm)
+
+    # ------------------------------------------------------------------
+    def dmesh_nodal_set(self, int i_domain,
+                              DMeshNodal dmn):
+      """
+      dmesh_nodal_set(i_domain, dmn)
+
+      Set distributed mesh data for the input domain.
+      The mesh is described by nodal connectivity.
+
+      Parameters:
+        i_domain (int)                    : Domain identifier
+        dmn      (:py:class:`DMeshNodal`) : Distributed nodal mesh structure
+      """
+      PDM_multipart_dmesh_nodal_set(self._mtp,
+                                    i_domain,
+                                    dmn.dmn)
+
+    # ------------------------------------------------------------------
+    def reordering_set(self, int i_domain,
+                       char *renum_cell_method,
+                       NPY.ndarray[NPY.int32_t, mode='c', ndim=1] renum_properties_cell,
+                       char *renum_face_method):
+      """
+      reordering_set(i_domain, renum_cell_method, renum_face_method, renum_properties_cell)
+
+      Set the reordering methods to be used after partitioning
+
+      Parameters:
+        i_domain              (int)                    : Id of domain which parameters apply (or -1 for all domains)
+        renum_cell_method     (str)                    : Choice of renumbering method for cells
+        renum_cell_properties (np.ndarray[np.int32_t]) : Parameters used by cache-blocking method : (*n_cell_per_cache_wanted*, *is_asynchronous*, *is_vectorisation*, *n_vect_face*, *split_method*)
+        renum_face_method     (str)                    : Choice of renumbering method for faces
       """
       cdef int *renum_properties_cell_data
       if (renum_properties_cell is None):
@@ -254,31 +317,49 @@ cdef class MultiPart:
       else:
         renum_properties_cell_data = <int *> renum_properties_cell.data
       PDM_multipart_set_reordering_options(self._mtp,
-                                           i_zone,
+                                           i_domain,
                                            renum_cell_method,
                                            renum_properties_cell_data,
                                            renum_face_method)
     # ------------------------------------------------------------------
-    def multipart_set_reordering_vtx(self, int i_zone,
-                                 char *renum_vtx_method):
+    def reordering_vtx_set(self, int i_domain,
+                           char *renum_vtx_method):
       """
+      reordering_vtx_set(i_domain, renum_vtx_method)
+
+      Set the vertex reordering methods to be used after partitioning
+
+      Parameters:
+        i_domain         (int) : Id of domain which parameters apply (or -1 for all domains)
+        renum_vtx_method (str) : Choice of renumbering method for vertices
       """
       PDM_multipart_set_reordering_options_vtx(self._mtp,
-                                           i_zone,
-                                           renum_vtx_method)
+                                               i_domain,
+                                               renum_vtx_method)
     # ------------------------------------------------------------------
-    def multipart_run_ppart(self):
-        """
-        """
-        PDM_multipart_run_ppart(self._mtp)
+    def compute(self):
+      """
+      Construct the partitioned meshes on all domains
+      """
+      PDM_multipart_compute(self._mtp)
 
     # ------------------------------------------------------------------
-    def multipart_n_entity_get(self, i_part, i_zone, entity_type):
-        return PDM_multipart_part_n_entity_get(self._mtp, i_zone, i_part, <PDM_mesh_entities_t> entity_type)
+    def n_entity_get(self, int i_domain, int i_part, PDM_mesh_entities_t entity_type):
+      """
+      n_entity_get(i_domain, i_part, entity_type)
 
-    def multipart_dim_get(self, int ipart, int zone_gid):
+      Get the number of entities with given type
+
+      Parameters:
+        i_domain    (int)                 : Domain identifier
+        i_part      (int)                 : Partition identifier
+        entity_type (PDM_mesh_entities_t) : Entity type
+      """
+      return PDM_multipart_part_n_entity_get(self._mtp, i_domain, i_part, entity_type)
+
+    def dim_get(self, int i_domain, int i_part):
         """
-           Get partition dimensions
+        Get partition dimensions
         """
         # ************************************************************************
         # > Declaration
@@ -295,8 +376,8 @@ cdef class MultiPart:
         # ************************************************************************
 
         PDM_multipart_part_dim_get(self._mtp,
-                                   zone_gid,
-                                   ipart,
+                                   i_domain,
+                                   i_part,
                                    &n_cell,
                                    &n_face,
                                    &n_face_part_bound,
@@ -309,7 +390,7 @@ cdef class MultiPart:
                                    &n_face_bound)
 
         return {'n_cell'            : n_cell,
-                'ipart'             : ipart,
+                'ipart'             : i_part,
                 'n_face'            : n_face,
                 'nt_part'           : nt_part,
                 'n_proc'            : n_proc,
@@ -321,9 +402,9 @@ cdef class MultiPart:
                 'n_face_bound'      : n_face_bound}
 
     # ------------------------------------------------------------------
-    def multipart_val_get(self, int ipart, int zone_gid):
+    def val_get(self, int i_domain, int i_part):
         """
-           Get partition dimensions
+           Get partition dimensions (deprecated)
         """
         # ************************************************************************
         # > Declaration
@@ -345,12 +426,12 @@ cdef class MultiPart:
         # ************************************************************************
 
         # dims = self.part_dim_get(self._mtp, ipart)
-        dims = self.multipart_dim_get(ipart, zone_gid)
+        dims = self.dim_get(i_domain, i_part)
 
         # -> Call PPART to get info
         PDM_multipart_part_val_get(self._mtp,
-                                   zone_gid,
-                                   ipart,
+                                   i_domain,
+                                   i_part,
                                    &cell_face_idx,
                                    &cell_face,
                                    &cell_ln_to_gn,
@@ -387,132 +468,202 @@ cdef class MultiPart:
 
 
     # ------------------------------------------------------------------
-    def multipart_part_mesh_nodal_get(self, int zone_gid):
-        cdef PDM_part_mesh_nodal_t *pmesh_nodal
-        PDM_multipart_get_part_mesh_nodal(self._mtp, zone_gid, &pmesh_nodal, PDM_OWNERSHIP_USER)
-        if pmesh_nodal == NULL:
-          return None
-        else:
-          #See pdm_part_mesh_nodal.pxi
-          py_caps = PyCapsule_New(pmesh_nodal, NULL, NULL);
-          return PartMeshNodalCapsule(py_caps)
 
-    # ------------------------------------------------------------------
-    def multipart_hyper_plane_color_get(self, int ipart, int zone_gid):
-        """
-           Get partition dimensions
-        """
-        # ************************************************************************
-        # > Declaration
-        cdef int           n_cell
-        cdef int          *hyper_plane_color
-        # ************************************************************************
-
-        n_cell = PDM_multipart_part_n_entity_get(self._mtp, zone_gid, ipart, PDM_MESH_ENTITY_CELL)
-        PDM_multipart_part_hyperplane_color_get(self._mtp, zone_gid, ipart, &hyper_plane_color, PDM_OWNERSHIP_USER);
-
-        return {'np_hyper_plane_color' : create_numpy_or_none_i(hyper_plane_color, n_cell)}
-
-    # ------------------------------------------------------------------
-    def multipart_thread_color_get(self, int ipart, int zone_gid):
-        """
-           Get partition dimensions
-        """
-        # ************************************************************************
-        # > Declaration
-        cdef int           n_cell
-        cdef int          *thread_color
-        # ************************************************************************
-
-        n_cell = PDM_multipart_part_n_entity_get(self._mtp, zone_gid, ipart, PDM_MESH_ENTITY_CELL)
-        PDM_multipart_part_thread_color_get(self._mtp, zone_gid, ipart, &thread_color, PDM_OWNERSHIP_USER);
-
-        return {'np_thread_color' : create_numpy_or_none_i(thread_color, n_cell)}
-
-
-    # ------------------------------------------------------------------
-    def multipart_ghost_information_get(self, int ipart, int zone_gid):
-        """
-           Get partition ghost information
-        """
-        # ************************************************************************
-        # > Declaration
-        cdef int          *vtx_ghost_information
-        # ************************************************************************
-
-        # dims = self.part_dim_get(self._mtp, ipart)
-        dims = self.multipart_dim_get(ipart, zone_gid)
-
-        # -> Call PPART to get info
-        PDM_multipart_part_ghost_infomation_get(self._mtp,
-                                                zone_gid,
-                                                ipart,
-                                                &vtx_ghost_information,
-                                                PDM_OWNERSHIP_USER)
-        # -> Begin
-        cdef NPY.npy_intp dim
-
-        return {'np_vtx_ghost_information' : create_numpy_or_none_i(vtx_ghost_information, dims['n_vtx'])}
-
-    # ------------------------------------------------------------------
-    def multipart_connectivity_get(self, int ipart, int zone_gid, PDM_connectivity_type_t connectivity_type):
-        """
-           Get partition ghost information
-        """
-        # ************************************************************************
-        # > Declaration
-        cdef int          *entity1_entity2
-        cdef int          *entity1_entity2_idx
-        # ************************************************************************
-
-        # -> Call PPART to get info
-        n_entity1 = PDM_multipart_part_connectivity_get(self._mtp,
-                                                        zone_gid,
-                                                        ipart,
-                                                        connectivity_type,
-                                                        &entity1_entity2,
-                                                        &entity1_entity2_idx,
-                                                        PDM_OWNERSHIP_USER)
-
-        if (entity1_entity2_idx == NULL and entity1_entity2 != NULL):
-            np_entity1_entity2_idx = None
-            np_entity1_entity2 = create_numpy_i(entity1_entity2, 2*n_entity1)
-        elif(entity1_entity2 != NULL):
-            np_entity1_entity2_idx = create_numpy_i(entity1_entity2_idx, n_entity1+1)
-            np_entity1_entity2 = create_numpy_i(entity1_entity2, np_entity1_entity2_idx[n_entity1])
-        else:
-          np_entity1_entity2_idx = None
-          np_entity1_entity2     = None
-
-
-        return {'np_entity1_entity2'     : np_entity1_entity2,
-                'np_entity1_entity2_idx' : np_entity1_entity2_idx}
-
-
-    # ------------------------------------------------------------------
-    def multipart_ln_to_gn_get(self, int ipart, int zone_gid, PDM_mesh_entities_t entity_type):
-        """
-           Get partition ghost information
-        """
-        # ************************************************************************
-        # > Declaration
-        cdef PDM_g_num_t  *entity_ln_to_gn
-        # ************************************************************************
-
-        # -> Call PPART to get info
-        n_entity1 = PDM_multipart_part_ln_to_gn_get(self._mtp,
-                                                    zone_gid,
-                                                    ipart,
-                                                    entity_type,
-                                                    &entity_ln_to_gn,
-                                                    PDM_OWNERSHIP_USER)
-
-        return {'np_entity_ln_to_gn' : create_numpy_or_none_g(entity_ln_to_gn, n_entity1)}
-
-    # ------------------------------------------------------------------
-    def multipart_vtx_coord_get(self, int ipart, int zone_gid):
+    def part_mesh_nodal_get(self, int i_domain):
       """
-      Get partition vertex coordinates
+      part_mesh_nodal_get(i_domain)
+
+      Retrieve the partitioned nodal mesh
+
+      Parameters:
+        i_domain (int) : Domain identifier
+
+      Returns:
+        Partitioned nodal mesh object (:py:class:`PartMeshNodalCapsule`)
+      """
+      cdef PDM_part_mesh_nodal_t *pmesh_nodal
+      PDM_multipart_get_part_mesh_nodal(self._mtp, i_domain, &pmesh_nodal, PDM_OWNERSHIP_USER)
+      if pmesh_nodal == NULL:
+        return None
+      else:
+        #See pdm_part_mesh_nodal.pxi
+        py_caps = PyCapsule_New(pmesh_nodal, NULL, NULL);
+        return PartMeshNodalCapsule(py_caps)
+
+    # ------------------------------------------------------------------
+    def hyper_plane_color_get(self, int i_domain, int i_part):
+      """
+      hyper_plane_color_get(i_domain, i_part)
+
+      Get array containing hyperplane color
+
+      Parameters:
+        i_domain (int) : Domain identifier
+        i_part   (int) : Partition identifier
+
+      Returns:
+        Hyperplane color (`np.ndarray[np.int32_t]`)
+      """
+      # ************************************************************************
+      # > Declaration
+      cdef int           n_cell
+      cdef int          *hyper_plane_color
+      # ************************************************************************
+
+      n_cell = PDM_multipart_part_n_entity_get(self._mtp, i_domain, i_part, PDM_MESH_ENTITY_CELL)
+      PDM_multipart_part_hyperplane_color_get(self._mtp, i_domain, i_part, &hyper_plane_color, PDM_OWNERSHIP_USER);
+
+      return create_numpy_or_none_i(hyper_plane_color, n_cell)
+
+    # ------------------------------------------------------------------
+    def thread_color_get(self, int i_domain, int i_part):
+      """
+      thread_color_get(i_domain, i_part)
+
+      Get array containing thread color.
+      Only if specific reordering (in **ParaDiGMA** plugins).
+
+      Parameters:
+        i_domain (int) : Domain identifier
+        i_part   (int) : Partition identifier
+
+      Returns:
+        Thread color (`np.ndarray[np.int32_t]`)
+      """
+      # ************************************************************************
+      # > Declaration
+      cdef int           n_cell
+      cdef int          *thread_color
+      # ************************************************************************
+
+      n_cell = PDM_multipart_part_n_entity_get(self._mtp, i_domain, i_part, PDM_MESH_ENTITY_CELL)
+      PDM_multipart_part_thread_color_get(self._mtp, i_domain, i_part, &thread_color, PDM_OWNERSHIP_USER);
+
+      return create_numpy_or_none_i(thread_color, n_cell)
+
+
+    # ------------------------------------------------------------------
+    def ghost_information_get(self, int i_domain, int i_part):
+      """
+      ghost_information_get(int i_domain, int i_part)
+
+      Get array containing vtx_ghost_information, useful to have a priority on vertex between multiple partitions
+
+      Parameters:
+        i_domain (int) : Domain identifier
+        i_part   (int) : Partition identifier
+
+      Returns:
+        Integer that gives the current priority of vertices on current partitions (`np.ndarray[np.int32_t]`)
+      """
+      # ************************************************************************
+      # > Declaration
+      cdef int          *vtx_ghost_information
+      # ************************************************************************
+
+      # dims = self.part_dim_get(self._mtp, i_part)
+      dims = self.dim_get(i_domain, i_part)
+
+      # -> Call PPART to get info
+      PDM_multipart_part_ghost_infomation_get(self._mtp,
+                                              i_domain,
+                                              i_part,
+                                              &vtx_ghost_information,
+                                              PDM_OWNERSHIP_USER)
+      # -> Begin
+      cdef NPY.npy_intp dim
+
+      return create_numpy_or_none_i(vtx_ghost_information, dims['n_vtx'])
+
+    # ------------------------------------------------------------------
+    def connectivity_get(self, int i_domain, int i_part, PDM_connectivity_type_t connectivity_type):
+      """
+      connectivity_get(i_domain, i_part, connectivity_type)
+
+      Get a partitioned connectivity
+
+      Parameters:
+        i_domain          (int)                     : Domain identifier
+        i_part            (int)                     : Partition identifier
+        connectivity_type (PDM_connectivity_type_t) : Connectivity type
+
+      Returns:
+        Tuple
+          - Connectivity index (`np.ndarray[np.int32_t]`)
+          - Connectivity       (`np.ndarray[np.int32_t]`)
+      """
+      # ************************************************************************
+      # > Declaration
+      cdef int          *entity1_entity2
+      cdef int          *entity1_entity2_idx
+      # ************************************************************************
+
+      # -> Call PPART to get info
+      n_entity1 = PDM_multipart_part_connectivity_get(self._mtp,
+                                                      i_domain,
+                                                      i_part,
+                                                      connectivity_type,
+                                                      &entity1_entity2_idx,
+                                                      &entity1_entity2,
+                                                      PDM_OWNERSHIP_USER)
+
+      if (entity1_entity2_idx == NULL and entity1_entity2 != NULL):
+          np_entity1_entity2_idx = None
+          np_entity1_entity2 = create_numpy_i(entity1_entity2, 2*n_entity1)
+      elif(entity1_entity2 != NULL):
+          np_entity1_entity2_idx = create_numpy_i(entity1_entity2_idx, n_entity1+1)
+          np_entity1_entity2 = create_numpy_i(entity1_entity2, np_entity1_entity2_idx[n_entity1])
+      else:
+        np_entity1_entity2_idx = None
+        np_entity1_entity2     = None
+
+
+      return (np_entity1_entity2_idx, np_entity1_entity2)
+
+
+    # ------------------------------------------------------------------
+    def ln_to_gn_get(self, int i_domain, int i_part, PDM_mesh_entities_t entity_type):
+      """
+      ln_to_gn_get(i_domain, i_part, entity_type)
+
+      Get the global ids of entities with given type
+
+      Parameters:
+        i_domain    (int)               : Domain identifier
+        i_part      (int)               : Partition identifier
+        entity_type (PDM_entity_type_t) : Entity type
+
+      Returns:
+        Global ids (`np.ndarray[npy_pdm_gnum_t]`)
+      """
+      # ************************************************************************
+      # > Declaration
+      cdef PDM_g_num_t  *entity_ln_to_gn
+      # ************************************************************************
+
+      # -> Call PPART to get info
+      n_entity1 = PDM_multipart_part_ln_to_gn_get(self._mtp,
+                                                  i_domain,
+                                                  i_part,
+                                                  entity_type,
+                                                  &entity_ln_to_gn,
+                                                  PDM_OWNERSHIP_USER)
+
+      return create_numpy_or_none_g(entity_ln_to_gn, n_entity1)
+
+    # ------------------------------------------------------------------
+    def vtx_coord_get(self, int i_domain, int i_part):
+      """
+      vtx_coord_get(i_domain, i_part)
+
+      Get vertex coordinates
+
+      Parameters:
+          i_domain (int) : Domain identifier
+          i_part   (int) : Partition identifier
+
+      Returns:
+        Vertex coordinates (`np.ndarray[np.double_t]`)
       """
       # ************************************************************************
       # > Declaration
@@ -520,40 +671,63 @@ cdef class MultiPart:
       # ************************************************************************
 
       n_vtx = PDM_multipart_part_vtx_coord_get(self._mtp,
-                                               zone_gid,
-                                               ipart,
+                                               i_domain,
+                                               i_part,
                                                &vtx_coord,
                                                PDM_OWNERSHIP_USER)
 
-      return {'np_vtx_coord' : create_numpy_or_none_d(vtx_coord, 3*n_vtx)}
+      return create_numpy_or_none_d(vtx_coord, 3*n_vtx)
 
     # ------------------------------------------------------------------
-    def multipart_part_color_get(self, int ipart, int zone_gid, PDM_mesh_entities_t entity_type):
-        """
-           Get partition ghost information
-        """
-        # ************************************************************************
-        # > Declaration
-        cdef int  *entity_color
-        # ************************************************************************
+    def color_get(self, int i_domain, int i_part, PDM_mesh_entities_t entity_type):
+      """
+      color_get(i_domain, i_part, entity_type)
 
-        # -> Call PPART to get info
-        n_entity1 = PDM_multipart_partition_color_get(self._mtp,
-                                                      zone_gid,
-                                                      ipart,
-                                                      entity_type,
-                                                      &entity_color,
-                                                      PDM_OWNERSHIP_USER)
+      Get the color of entities with given type
 
-        return {'np_entity_color' : create_numpy_or_none_i(entity_color, n_entity1)}
+      Parameters:
+        i_domain    (int)               : Domain identifier
+        i_part      (int)               : Partition identifier
+        entity_type (PDM_entity_type_t) : Entity type
+
+      Returns:
+        Entity color (`np.ndarray[np.int32_t]`)
+      """
+      # ************************************************************************
+      # > Declaration
+      cdef int  *entity_color
+      # ************************************************************************
+
+      # -> Call PPART to get info
+      n_entity1 = PDM_multipart_partition_color_get(self._mtp,
+                                                    i_domain,
+                                                    i_part,
+                                                    entity_type,
+                                                    &entity_color,
+                                                    PDM_OWNERSHIP_USER)
+
+      return create_numpy_or_none_i(entity_color, n_entity1)
 
     # ------------------------------------------------------------------
-    def multipart_graph_comm_get(self,
-                                 int ipart,
-                                 int zone_gid,
-                                 PDM_bound_type_t bound_type):
+    def graph_comm_get(self,
+                       int i_domain,
+                       int i_part,
+                       PDM_mesh_entities_t entity_type):
         """
-           Get partition ghost information
+        graph_comm_get(i_domain, i_part, entity_type)
+
+        Get the connection graph between partition for the requested entity type
+
+        Parameters:
+          i_domain    (int)                 : Domain identifier
+          i_part      (int)                 : Partition identifier
+          entity_type (PDM_mesh_entities_t) : Type of mesh entity
+
+        Returns:
+          Dictionary
+            - ``"np_entity_part_bound_proc_idx"`` (`np.ndarray[np.int32_t]`) : Partitioning boundary entities index from process
+            - ``"np_entity_part_bound_part_idx"`` (`np.ndarray[np.int32_t]`) : Partitioning boundary entities index from partition
+            - ``"np_entity_part_bound"``          (`np.ndarray[np.int32_t]`) : Partitioning boundary entities
         """
         # ************************************************************************
         # > Declaration
@@ -563,15 +737,15 @@ cdef class MultiPart:
         # ************************************************************************
         # -> Call PPART to get info
         PDM_multipart_part_graph_comm_get(self._mtp,
-                                          zone_gid,
-                                          ipart,
-                                          bound_type,
+                                          i_domain,
+                                          i_part,
+                                          entity_type,
                                           &entity_part_bound_proc_idx,
                                           &entity_part_bound_part_idx,
                                           &entity_part_bound,
                                           PDM_OWNERSHIP_USER)
 
-        tn_part = PDM_multipart_part_tn_part_get(self._mtp, zone_gid)
+        tn_part = PDM_multipart_part_tn_part_get(self._mtp, i_domain)
 
         if (entity_part_bound == NULL) :
             np_entity_part_bound = None
@@ -584,9 +758,9 @@ cdef class MultiPart:
                 'np_entity_part_bound'           : np_entity_part_bound}
 
     # ------------------------------------------------------------------
-    def multipart_time_get(self, int zone_gid):
+    def time_get(self, int i_domain):
         """
-        Get times
+        Get times (not implemented)
         """
         # ************************************************************************
         # > Declaration
@@ -596,7 +770,7 @@ cdef class MultiPart:
         cdef double *cpu_sys
         # ************************************************************************
 
-        PDM_multipart_time_get(self._mtp, zone_gid, &elapsed, &cpu, &cpu_user, &cpu_sys)
+        PDM_multipart_time_get(self._mtp, i_domain, &elapsed, &cpu, &cpu_user, &cpu_sys)
 
         d_elapsed = {'total'              : elapsed[0],
                      'building graph'     : elapsed[1],

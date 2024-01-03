@@ -18,6 +18,7 @@ cdef extern from "pdm_generate_mesh.h":
                                         const PDM_g_num_t             n_y,
                                         const int                     n_part,
                                         const PDM_split_dual_t        part_method,
+                                        const double                  random_factor,
                                         int                         **pn_vtx,
                                         int                         **pn_edge,
                                         int                         **pn_face,
@@ -43,7 +44,7 @@ def generate_mesh_rectangle_simplified(MPI.Comm      comm,
   """
   generate_mesh_rectangle_simplified(comm, n_vtx_seg)
 
-  Create a simple partitionned rectangle mesh (2D).
+  Create a simple partitioned rectangle mesh (2D).
 
   Parameters:
     comm      (MPI.Comm) : MPI communicator
@@ -95,35 +96,45 @@ def generate_mesh_rectangle_ngon(MPI.Comm             comm,
                                  PDM_g_num_t          n_x,
                                  PDM_g_num_t          n_y,
                                  int                  n_part,
-                                 PDM_split_dual_t     part_method):
+                                 PDM_split_dual_t     part_method,
+                                 double               random_factor=0):
   """
+  generate_mesh_rectangle_ngon(comm, elt_type, xmin, ymin, zmin, lengthx, lengthy, n_x, n_y, n_part, part_method, random_factor=0)
+
+  Create a partitioned rectangular mesh (2D) with descending connectivities
+
   Parameters:
-    comm        (MPI.Comm) : MPI communicator
-    elt_type    (int)      : Element type
-    xmin        (double)   : Minimal x-coordinate
-    ymin        (double)   : Minimal y-coordinate
-    zmin        (double)   : Minimal z-coordinate
-    lengthx     (double)   : Length of the rectangle in the x-direction
-    lengthy     (double)   : Length of the rectangle in the y-direction
-    n_x         (int)      : Number of points in the x-direction
-    n_y         (int)      : Number of points in the y-direction
-    n_part      (int)      : Number of partitions
-    part_method (int)      : Paritioning method
-    n_vtx_seg   (int)      : Number of vertices along each side of the rectangle
+    comm          (MPI.Comm)         : MPI communicator
+    elt_type      (int)              : Element type
+    xmin          (double)           : Minimal x-coordinate
+    ymin          (double)           : Minimal y-coordinate
+    zmin          (double)           : Minimal z-coordinate
+    lengthx       (double)           : Length of the rectangle in the x-direction
+    lengthy       (double)           : Length of the rectangle in the y-direction
+    n_x           (int)              : Number of points in the x-direction
+    n_y           (int)              : Number of points in the y-direction
+    n_part        (int)              : Number of partitions
+    part_method   (int)              : Partitioning method
+    random_factor (double, optional) : Randomization factor (between 0 and 1, default = 0)
 
   Returns:
     Dictionary
-      - ``"pn_vtx"``         (`list`) : Number of vertices
-      - ``"pn_edge"``        (`list`) : Number of edges
-      - ``"pn_face"``        (`list`) : Number of faces
-      - ``"pvtx_coord"``     (`list`) : Vertex coordinates
-      - ``"pedge_vtx"``      (`list`) : Edge->vertex connectivity
-      - ``"pface_edge_idx"`` (`list`) : Index of face->edge connectivity
-      - ``"pface_edge"``     (`list`) : Face->edge connectivity
-      - ``"pface_vtx"``      (`list`) : Face->vertex connectivity
-      - ``"pvtx_ln_to_gn"``  (`list`) : Vertex global ids
-      - ``"pedge_ln_to_gn"`` (`list`) : Edge global ids
-      - ``"pface_ln_to_gn"`` (`list`) : Face global ids
+      - ``"pn_vtx"``         (`list` of `int`)                        : Number of vertices
+      - ``"pn_edge"``        (`list` of `int`)                        : Number of edges
+      - ``"pn_face"``        (`list` of `int`)                        : Number of faces
+      - ``"pvtx_coord"``     (`list` of `np.ndarray[np.double_t]`)    : Vertex coordinates
+      - ``"pedge_vtx"``      (`list` of `np.ndarray[np.int32_t]`)     : Edge->vertex connectivity
+      - ``"pface_edge_idx"`` (`list` of `np.ndarray[np.int32_t]`)     : Index of face->edge connectivity
+      - ``"pface_edge"``     (`list` of `np.ndarray[np.int32_t]`)     : Face->edge connectivity
+      - ``"pface_vtx"``      (`list` of `np.ndarray[np.int32_t]`)     : Face->vertex connectivity
+      - ``"pvtx_ln_to_gn"``  (`list` of `np.ndarray[npy_pdm_gnum_t]`) : Vertex global ids
+      - ``"pedge_ln_to_gn"`` (`list` of `np.ndarray[npy_pdm_gnum_t]`) : Edge global ids
+      - ``"pface_ln_to_gn"`` (`list` of `np.ndarray[npy_pdm_gnum_t]`) : Face global ids
+
+  Admissible values for ``elt_type``:
+    - 2 : triangles
+    - 3 : quadrangles
+    - 4 : mixed polygons (triangles, quadrangles and octagons)
   """
 
   # MPI communicator
@@ -153,6 +164,7 @@ def generate_mesh_rectangle_ngon(MPI.Comm             comm,
                                    n_y,
                                    n_part,
                                    part_method,
+                                   random_factor,
                                    &_pn_vtx,
                                    &_pn_edge,
                                    &_pn_face,

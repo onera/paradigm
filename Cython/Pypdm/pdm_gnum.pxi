@@ -209,7 +209,7 @@ cdef class GlobalNumbering:
       i_part (int) : Current partition
 
     Returns:
-      Array of global ids (np.ndarray[npy_pdm_gnum_t])
+      Array of global ids (`np.ndarray[npy_pdm_gnum_t]`)
     """
     # ************************************************************************
     # > Declaration

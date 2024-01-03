@@ -336,6 +336,7 @@ module pdm_generate_mesh
                                                  n_y,            &
                                                  n_part,         &
                                                  part_method,    &
+                                                 random_factor,  &
                                                  pn_vtx,         &
                                                  pn_edge,        &
                                                  pn_face,        &
@@ -361,6 +362,7 @@ module pdm_generate_mesh
     integer(c_int),  value :: n_x, n_y
 #endif
     integer(c_int),  value :: n_part, part_method
+    real(c_double),  value :: random_factor
     type(c_ptr)            :: pn_vtx
     type(c_ptr)            :: pn_edge
     type(c_ptr)            :: pn_face
@@ -506,33 +508,40 @@ module pdm_generate_mesh
                                               pface_vtx,      &
                                               pvtx_ln_to_gn,  &
                                               pedge_ln_to_gn, &
-                                              pface_ln_to_gn)
-    ! Create a partitionned rectangle mesh (2D) with descending connectivities.
+                                              pface_ln_to_gn, &
+                                              random_factor_opt)
+    ! Create a partitioned rectangular mesh (2D) with descending connectivities
+    !
+    ! Admissible values for ``elt_type``:
+    !   - ``PDM_MESH_NODAL_TRIA3``   : triangles
+    !   - ``PDM_MESH_NODAL_QUAD4``   : quadrangles
+    !   - ``PDM_MESH_NODAL_POLY_2D`` : mixed polygons (triangles, quadrangles and octagons)
     use iso_c_binding
     implicit none
 
-    integer(c_int),       intent(in)   :: comm           ! MPI communicator
-    integer(c_int),       intent(in)   :: elt_type       ! Element type
-    real(c_double),       intent(in)   :: xmin           ! Minimal x-coordinate
-    real(c_double),       intent(in)   :: ymin           ! Minimal y-coordinate
-    real(c_double),       intent(in)   :: zmin           ! Minimal z-coordinate
-    real(c_double),       intent(in)   :: lengthx        ! Length of the rectangle in the x-direction
-    real(c_double),       intent(in)   :: lengthy        ! Length of the rectangle in the y-direction
-    integer(pdm_g_num_s), intent(in)   :: n_x            ! Number of points in the x-direction
-    integer(pdm_g_num_s), intent(in)   :: n_y            ! Number of points in the y-direction
-    integer(c_int),       intent(in)   :: n_part         ! Number of partitions
-    integer(c_int),       intent(in)   :: part_method    ! Paritioning method
-    integer(pdm_l_num_s),      pointer :: pn_vtx(:)      ! Number of vertices
-    integer(pdm_l_num_s),      pointer :: pn_edge(:)     ! Number of edges
-    integer(pdm_l_num_s),      pointer :: pn_face(:)     ! Number of faces
-    type(PDM_pointer_array_t), pointer :: pvtx_coord     ! Vertex coordinates
-    type(PDM_pointer_array_t), pointer :: pedge_vtx      ! Edge->vertex connectivity
-    type(PDM_pointer_array_t), pointer :: pface_edge_idx ! Index of face->edge connectivity
-    type(PDM_pointer_array_t), pointer :: pface_edge     ! Face->edge connectivity
-    type(PDM_pointer_array_t), pointer :: pface_vtx      ! Face->vertex connectivity
-    type(PDM_pointer_array_t), pointer :: pvtx_ln_to_gn  ! Vertex global ids
-    type(PDM_pointer_array_t), pointer :: pedge_ln_to_gn ! Edge global ids
-    type(PDM_pointer_array_t), pointer :: pface_ln_to_gn ! Face global ids
+    integer(c_int),       intent(in)           :: comm              ! MPI communicator
+    integer(c_int),       intent(in)           :: elt_type          ! Element type
+    real(c_double),       intent(in)           :: xmin              ! Minimal x-coordinate
+    real(c_double),       intent(in)           :: ymin              ! Minimal y-coordinate
+    real(c_double),       intent(in)           :: zmin              ! Minimal z-coordinate
+    real(c_double),       intent(in)           :: lengthx           ! Length of the rectangle in the x-direction
+    real(c_double),       intent(in)           :: lengthy           ! Length of the rectangle in the y-direction
+    integer(pdm_g_num_s), intent(in)           :: n_x               ! Number of points in the x-direction
+    integer(pdm_g_num_s), intent(in)           :: n_y               ! Number of points in the y-direction
+    integer(c_int),       intent(in)           :: n_part            ! Number of partitions
+    integer(c_int),       intent(in)           :: part_method       ! Partitioning method
+    integer(pdm_l_num_s),      pointer         :: pn_vtx(:)         ! Number of vertices
+    integer(pdm_l_num_s),      pointer         :: pn_edge(:)        ! Number of edges
+    integer(pdm_l_num_s),      pointer         :: pn_face(:)        ! Number of faces
+    type(PDM_pointer_array_t), pointer         :: pvtx_coord        ! Vertex coordinates
+    type(PDM_pointer_array_t), pointer         :: pedge_vtx         ! Edge->vertex connectivity
+    type(PDM_pointer_array_t), pointer         :: pface_edge_idx    ! Index of face->edge connectivity
+    type(PDM_pointer_array_t), pointer         :: pface_edge        ! Face->edge connectivity
+    type(PDM_pointer_array_t), pointer         :: pface_vtx         ! Face->vertex connectivity
+    type(PDM_pointer_array_t), pointer         :: pvtx_ln_to_gn     ! Vertex global ids
+    type(PDM_pointer_array_t), pointer         :: pedge_ln_to_gn    ! Edge global ids
+    type(PDM_pointer_array_t), pointer         :: pface_ln_to_gn    ! Face global ids
+    real(c_double),       intent(in), optional :: random_factor_opt ! Randomization factor (between 0 and 1)
 
     integer(c_int)          :: c_comm
     type(c_ptr)             :: c_pn_vtx
@@ -551,6 +560,7 @@ module pdm_generate_mesh
     type(c_ptr),    pointer :: fptr(:)
     integer(c_int), pointer :: face_edge_idx(:)
     integer                 :: i_part
+    real(c_double)          :: random_factor
 
     c_comm = PDM_MPI_Comm_f2c(comm)
 
@@ -569,6 +579,12 @@ module pdm_generate_mesh
     fptr          => null() 
     face_edge_idx => null() 
     
+    if (present(random_factor_opt)) then
+      random_factor = random_factor_opt
+    else
+      random_factor = 0.d0
+    endif
+
     call PDM_generate_mesh_rectangle_ngon_cf(c_comm,            &
                                              elt_type,          &
                                              xmin,              &
@@ -580,6 +596,7 @@ module pdm_generate_mesh
                                              n_y,               &
                                              n_part,            &
                                              part_method,       &
+                                             random_factor,     &
                                              c_pn_vtx,          &
                                              c_pn_edge,         &
                                              c_pn_face,         &

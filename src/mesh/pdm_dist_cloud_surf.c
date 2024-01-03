@@ -1707,7 +1707,7 @@ _dist_cloud_surf_compute_optim
 
     int pextract_n_vtx = PDM_extract_part_n_entity_get(extrp,
                                                        0,
-                                                       PDM_MESH_ENTITY_VERTEX);
+                                                       PDM_MESH_ENTITY_VTX);
     double *pextract_vtx_coord = NULL;
     PDM_extract_part_vtx_coord_get(extrp,
                                    0,
