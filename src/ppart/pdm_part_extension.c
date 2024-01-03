@@ -6453,7 +6453,7 @@ PDM_part_extension_compute_test
 
       int n_vtx_ext = PDM_extract_part_parent_ln_to_gn_get(extrp,
                                                            i_part,
-                                                           PDM_MESH_ENTITY_VERTEX,
+                                                           PDM_MESH_ENTITY_VTX,
                                                            &vtx_ext_ln_to_gn,
                                                            PDM_OWNERSHIP_KEEP);
 
