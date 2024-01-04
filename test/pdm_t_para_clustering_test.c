@@ -339,15 +339,68 @@ _PDM_mesh_deform_create
   _surf_deform->aux_geom      = malloc(sizeof(double      *) * (n_part_surf+n_layer));
 
   for (int i = 0; i < n_part_surf+n_layer; i++) {
-    _surf_deform->n_face[i]        = 0;
-    _surf_deform->n_vtx[i]         = 0;
-    _surf_deform->coords[i]        = NULL;
-    _surf_deform->vtx_ln_to_gn[i]  = NULL;
+    _surf_deform->n_face       [i] = 0;
+    _surf_deform->n_vtx        [i] = 0;
+    _surf_deform->coords       [i] = NULL;
+    _surf_deform->vtx_ln_to_gn [i] = NULL;
     _surf_deform->face_ln_to_gn[i] = NULL;
-    _surf_deform->face_vtx_idx[i]  = NULL;
-    _surf_deform->face_vtx[i]      = NULL;
-    _surf_deform->dcoords[i]       = NULL;
-    _surf_deform->aux_geom[i]      = NULL;
+    _surf_deform->face_vtx_idx [i] = NULL;
+    _surf_deform->face_vtx     [i] = NULL;
+    _surf_deform->dcoords      [i] = NULL;
+    _surf_deform->aux_geom     [i] = NULL;
+  }
+
+  _surf_deform->n_leaf          = malloc(sizeof(int         **) * n_layer);
+  _surf_deform->gnum_leaf       = malloc(sizeof(PDM_g_num_t **) * n_layer);
+  _surf_deform->vtx_in_leaf_idx = malloc(sizeof(int         **) * n_layer);
+  _surf_deform->vtx_in_leaf     = malloc(sizeof(int         **) * n_layer);
+  _surf_deform->stride_leaf     = malloc(sizeof(int         **) * n_layer);
+  _surf_deform->coords_leaf     = malloc(sizeof(double      **) * n_layer);
+  _surf_deform->dcoords_leaf    = malloc(sizeof(double      **) * n_layer);
+  if (def->n_aux_geom > 0) {
+    _surf_deform->aux_geom_leaf = malloc(sizeof(double      **) * n_layer);
+  }
+
+  _surf_deform->blk_n_leaf        = malloc(sizeof(int  ) * n_layer);
+  _surf_deform->blk_n_vtx_in_leaf = malloc(sizeof(int *) * n_layer);
+  _surf_deform->blk_leaf_idx      = malloc(sizeof(int *) * n_layer);
+
+  _surf_deform->ptp_layer    = malloc(sizeof(PDM_part_to_part_t  *) * n_layer);
+  _surf_deform->ptb_layer    = malloc(sizeof(PDM_part_to_block_t *) * n_layer);
+  _surf_deform->octree_layer = malloc(sizeof(PDM_para_octree_t   *) * n_layer);
+
+  for (int i_layer = 0; i_layer < n_layer; i_layer++) {
+    _surf_deform->n_leaf         [i_layer] = malloc (sizeof(int         *) * n_part_surf);
+    _surf_deform->gnum_leaf      [i_layer] = malloc (sizeof(PDM_g_num_t *) * n_part_surf);
+    _surf_deform->vtx_in_leaf_idx[i_layer] = malloc (sizeof(int         *) * n_part_surf);
+    _surf_deform->vtx_in_leaf    [i_layer] = malloc (sizeof(int         *) * n_part_surf);
+    _surf_deform->stride_leaf    [i_layer] = malloc (sizeof(int         *) * n_part_surf);
+    _surf_deform->coords_leaf    [i_layer] = malloc (sizeof(double      *) * n_part_surf);
+    _surf_deform->dcoords_leaf   [i_layer] = malloc (sizeof(double      *) * n_part_surf);
+    if (def->n_aux_geom > 0) {
+      _surf_deform->aux_geom_leaf[i_layer] = malloc (sizeof(double      *) * n_part_surf);
+    }
+
+    _surf_deform->blk_n_leaf       [i_layer] = 0;
+    _surf_deform->blk_n_vtx_in_leaf[i_layer] = NULL;
+    _surf_deform->blk_leaf_idx     [i_layer] = NULL;
+
+    _surf_deform->ptp_layer   [i_layer] = NULL;
+    _surf_deform->ptb_layer   [i_layer] = NULL;
+    _surf_deform->octree_layer[i_layer] = NULL;
+
+    for (int i_part = 0; i_part < n_part_surf; i_part++) {
+      _surf_deform->n_leaf         [i_layer][i_part] = 0;
+      _surf_deform->gnum_leaf      [i_layer][i_part] = NULL;
+      _surf_deform->vtx_in_leaf_idx[i_layer][i_part] = NULL;
+      _surf_deform->vtx_in_leaf    [i_layer][i_part] = NULL;
+      _surf_deform->stride_leaf    [i_layer][i_part] = NULL;
+      _surf_deform->coords_leaf    [i_layer][i_part] = NULL;
+      _surf_deform->dcoords_leaf   [i_layer][i_part] = NULL;
+      if (def->n_aux_geom > 0) {
+        _surf_deform->aux_geom_leaf[i_layer][i_part] = NULL;
+      }
+    }
   }
 
   _cloud_deform->n_part   = n_part_cloud;
@@ -460,16 +513,6 @@ _PDM_mesh_deform_partial_free
         free(_surf_deform->aux_geom_leaf[i_layer][i_part]);
       }
     }
-    free(_surf_deform->n_leaf         [i_layer]);
-    free(_surf_deform->gnum_leaf      [i_layer]);
-    free(_surf_deform->vtx_in_leaf_idx[i_layer]);
-    free(_surf_deform->vtx_in_leaf    [i_layer]);
-    free(_surf_deform->stride_leaf    [i_layer]);
-    free(_surf_deform->coords_leaf    [i_layer]);
-    free(_surf_deform->dcoords_leaf   [i_layer]);
-    if (def->n_aux_geom > 0) {
-      free(_surf_deform->aux_geom_leaf[i_layer]);
-    }
     free(_surf_deform->blk_n_vtx_in_leaf[i_layer]);
     free(_surf_deform->blk_leaf_idx     [i_layer]);
     free(_surf_deform->vtx_ln_to_gn[_surf_deform->n_part+i_layer]);
@@ -482,23 +525,6 @@ _PDM_mesh_deform_partial_free
     PDM_part_to_block_free(_surf_deform->ptb_layer[i_layer]);
     PDM_para_octree_free(_surf_deform->octree_layer[i_layer]);
   }
-
-  free(_surf_deform->n_leaf         );
-  free(_surf_deform->gnum_leaf      );
-  free(_surf_deform->vtx_in_leaf_idx);
-  free(_surf_deform->vtx_in_leaf    );
-  free(_surf_deform->stride_leaf    );
-  free(_surf_deform->coords_leaf    );
-  free(_surf_deform->dcoords_leaf   );
-  if (def->n_aux_geom > 0) {
-    free(_surf_deform->aux_geom_leaf);
-  }
-  free(_surf_deform->blk_n_leaf       );
-  free(_surf_deform->blk_n_vtx_in_leaf);
-  free(_surf_deform->blk_leaf_idx     );
-  free(_surf_deform->ptp_layer        );
-  free(_surf_deform->ptb_layer        );
-  free(_surf_deform->octree_layer     );
 
   free(_cloud_deform->blk_buffer_from_surf_idx);
   free(_cloud_deform->blk_buffer_from_surf    );
@@ -530,6 +556,38 @@ _PDM_mesh_deform_free
   free(_surf_deform->face_vtx     );
   free(_surf_deform->dcoords      );
   free(_surf_deform->aux_geom     );
+
+  for (int i_layer = 0; i_layer < def->n_layer; i_layer++) {
+    free(_surf_deform->n_leaf         [i_layer]);
+    free(_surf_deform->gnum_leaf      [i_layer]);
+    free(_surf_deform->vtx_in_leaf_idx[i_layer]);
+    free(_surf_deform->vtx_in_leaf    [i_layer]);
+    free(_surf_deform->stride_leaf    [i_layer]);
+    free(_surf_deform->coords_leaf    [i_layer]);
+    free(_surf_deform->dcoords_leaf   [i_layer]);
+    if (def->n_aux_geom > 0) {
+      free(_surf_deform->aux_geom_leaf[i_layer]);
+    }
+  }
+
+  free(_surf_deform->n_leaf         );
+  free(_surf_deform->gnum_leaf      );
+  free(_surf_deform->vtx_in_leaf_idx);
+  free(_surf_deform->vtx_in_leaf    );
+  free(_surf_deform->stride_leaf    );
+  free(_surf_deform->coords_leaf    );
+  free(_surf_deform->dcoords_leaf   );
+  if (def->n_aux_geom > 0) {
+    free(_surf_deform->aux_geom_leaf);
+  }
+
+  free(_surf_deform->blk_n_leaf       );
+  free(_surf_deform->blk_n_vtx_in_leaf);
+  free(_surf_deform->blk_leaf_idx     );
+
+  free(_surf_deform->ptp_layer   );
+  free(_surf_deform->ptb_layer   );
+  free(_surf_deform->octree_layer);
 
   free(_cloud_deform->n_points);
   free(_cloud_deform->coords  );
@@ -607,23 +665,6 @@ _PDM_mesh_deform_compute
   PDM_MPI_Allreduce(&_max_g_num, &max_g_num, 1, PDM_MPI_LONG, PDM_MPI_MAX, def->comm);
 
   _max_g_num = max_g_num + 1;
-
-  _surf_deform->octree_layer      = malloc(sizeof(PDM_para_octree_t    *) * def->n_layer);
-  _surf_deform->ptp_layer         = malloc(sizeof(PDM_part_to_part_t   *) * def->n_layer);
-  _surf_deform->ptb_layer         = malloc(sizeof(PDM_part_to_block_t  *) * def->n_layer);
-  _surf_deform->n_leaf            = malloc(sizeof(int                 **) * def->n_layer);
-  _surf_deform->gnum_leaf         = malloc(sizeof(PDM_g_num_t         **) * def->n_layer);
-  _surf_deform->vtx_in_leaf_idx   = malloc(sizeof(int                 **) * def->n_layer);
-  _surf_deform->vtx_in_leaf       = malloc(sizeof(int                 **) * def->n_layer);
-  _surf_deform->stride_leaf       = malloc(sizeof(int                 **) * def->n_layer);
-  _surf_deform->coords_leaf       = malloc(sizeof(double              **) * def->n_layer);
-  _surf_deform->dcoords_leaf      = malloc(sizeof(double              **) * def->n_layer);
-  if (def->n_aux_geom > 0) {
-    _surf_deform->aux_geom_leaf   = malloc(sizeof(double              **) * def->n_layer);
-  }
-  _surf_deform->blk_n_leaf        = malloc(sizeof(int                   ) * def->n_layer);
-  _surf_deform->blk_n_vtx_in_leaf = malloc(sizeof(int                  *) * def->n_layer);
-  _surf_deform->blk_leaf_idx      = malloc(sizeof(int                  *) * def->n_layer);
 
   PDM_g_num_t **distri_layer = malloc(sizeof(PDM_g_num_t *) * def->n_layer);
   PDM_g_num_t  *gnum_layer   = malloc(sizeof(PDM_g_num_t  ) * def->n_layer);
@@ -799,17 +840,6 @@ _PDM_mesh_deform_compute
                           &request);
 
     PDM_part_to_part_iexch_wait(_surf_deform->ptp_layer[i_layer], request);
-
-    _surf_deform->n_leaf         [i_layer] = malloc (sizeof(int         *) * _surf_deform->n_part);
-    _surf_deform->gnum_leaf      [i_layer] = malloc (sizeof(PDM_g_num_t *) * _surf_deform->n_part);
-    _surf_deform->vtx_in_leaf_idx[i_layer] = malloc (sizeof(int         *) * _surf_deform->n_part);
-    _surf_deform->vtx_in_leaf    [i_layer] = malloc (sizeof(int         *) * _surf_deform->n_part);
-    _surf_deform->stride_leaf    [i_layer] = malloc (sizeof(int         *) * _surf_deform->n_part);
-    _surf_deform->coords_leaf    [i_layer] = malloc (sizeof(double      *) * _surf_deform->n_part);
-    _surf_deform->dcoords_leaf   [i_layer] = malloc (sizeof(double      *) * _surf_deform->n_part);
-    if (def->n_aux_geom > 0) {
-      _surf_deform->aux_geom_leaf[i_layer] = malloc (sizeof(double      *) * _surf_deform->n_part);
-    }
 
     int **n_vtx_in_leaf = malloc (sizeof(int *) * _surf_deform->n_part);
 
