@@ -1116,9 +1116,9 @@ _PDM_mesh_deform_compute
       if (surf_dist[i_pts] <= def->min_dist_d) {
         n_cloud_to_surf[i_part][i_pts] = def->min_dist_n_vtx;
         cloud_weight   [i_part][i_pts] = (double) def->min_dist_n_vtx;
-        for (int j_vtx = 0; j_vtx < n_min_dist[i_part]; j_vtx++) {
-          sorted_gnum[j_vtx] = min_dist_gnum[i_part][j_vtx];
-          order      [j_vtx] = j_vtx;
+        for (int i_vtx = 0; i_vtx < n_min_dist[i_part]; i_vtx++) {
+          sorted_gnum[i_vtx] = min_dist_gnum[i_part][i_vtx];
+          order      [i_vtx] = i_vtx;
         }
         PDM_sort_long(sorted_gnum, order, n_min_dist[i_part]);
         int i_gnum = -1;
@@ -1269,8 +1269,8 @@ _PDM_mesh_deform_compute
 
       if (surf_dist[i_pts] <= def->min_dist_d) {
         idx_write = cloud_to_surf_idx[i_part][i_pts];
-        for (int j_vtx = 0; j_vtx < n_cloud_to_surf[i_part][i_pts]; j_vtx++) {
-          cloud_to_surf[i_part][idx_write++] = closest_src_gnum[i_part][def->min_dist_n_vtx*cloud_to_min_dist[i_part][i_pts]+j_vtx];
+        for (int i_vtx = 0; i_vtx < n_cloud_to_surf[i_part][i_pts]; i_vtx++) {
+          cloud_to_surf[i_part][idx_write++] = closest_src_gnum[i_part][def->min_dist_n_vtx*cloud_to_min_dist[i_part][i_pts]+i_vtx];
         }
       } else {
         idx_write = cloud_to_surf_idx[i_part][i_pts];
@@ -2132,19 +2132,19 @@ _compute_idw
   free(blk_surf_dcoords );
   free(blk_surf_aux_geom);
 
-  for (int i_vtx = 0; i_vtx < blk_cloud_n_points; i_vtx++) {
+  for (int i_pts = 0; i_pts < blk_cloud_n_points; i_pts++) {
     dx[0] = 0.0;
     dx[1] = 0.0;
     dx[2] = 0.0;
     sdist = 0.0;
-    for (int j_vtx = blk_buffer_from_surf_idx[i_vtx]; j_vtx < blk_buffer_from_surf_idx[i_vtx+1]; j_vtx++) {
-      int k_vtx = blk_buffer_from_surf[j_vtx];
+    for (int i_vtx = blk_buffer_from_surf_idx[i_pts]; i_vtx < blk_buffer_from_surf_idx[i_pts+1]; i_vtx++) {
+      int k_vtx = blk_buffer_from_surf[i_vtx];
       du[0] = blk_dcoords_from_surf[3*k_vtx    ];
       du[1] = blk_dcoords_from_surf[3*k_vtx + 1];
       du[2] = blk_dcoords_from_surf[3*k_vtx + 2];
-      dr[0] = blk_coords_from_surf[3*k_vtx    ] - blk_cloud_coords[3*i_vtx    ];
-      dr[1] = blk_coords_from_surf[3*k_vtx + 1] - blk_cloud_coords[3*i_vtx + 1];
-      dr[2] = blk_coords_from_surf[3*k_vtx + 2] - blk_cloud_coords[3*i_vtx + 2];
+      dr[0] = blk_coords_from_surf[3*k_vtx    ] - blk_cloud_coords[3*i_pts    ];
+      dr[1] = blk_coords_from_surf[3*k_vtx + 1] - blk_cloud_coords[3*i_pts + 1];
+      dr[2] = blk_coords_from_surf[3*k_vtx + 2] - blk_cloud_coords[3*i_pts + 2];
       dist  = sqrt(pow(dr[0],2)+pow(dr[1],2)+pow(dr[2],2));
       if (sqrt(pow(du[0],2)+pow(du[1],2)+pow(du[2],2)) > 1e-6) {
         dist = blk_aux_geom_from_surf[n_aux_geom*k_vtx]*(pow(l1/dist,3) + pow(l2/dist,5));
@@ -2156,9 +2156,9 @@ _compute_idw
       dx[1] = dx[1] + blk_dcoords_from_surf[3*k_vtx + 1]*dist;
       dx[2] = dx[2] + blk_dcoords_from_surf[3*k_vtx + 2]*dist;
     }
-    blk_cloud_dcoords[3*i_vtx    ] = dx[0]/sdist;
-    blk_cloud_dcoords[3*i_vtx + 1] = dx[1]/sdist;
-    blk_cloud_dcoords[3*i_vtx + 2] = dx[2]/sdist;
+    blk_cloud_dcoords[3*i_pts    ] = dx[0]/sdist;
+    blk_cloud_dcoords[3*i_pts + 1] = dx[1]/sdist;
+    blk_cloud_dcoords[3*i_pts + 2] = dx[2]/sdist;
   }
 
   free(dx);
