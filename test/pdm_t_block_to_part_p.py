@@ -17,17 +17,16 @@ parser = argparse.ArgumentParser()
 
 parser.add_argument("-f", "--filename", default="output.txt")
 
-parser.add_argument("-n", "--n_iter", default=1)
+parser.add_argument("-n", "--n_iter", default=10)
 
 parser.add_argument("-s", "--size", default=10)
-parser.add_argument("-ssf", "--size_shift", default=10) # quasi-diagonal (percentage)
-parser.add_argument("-csf", "--center_shift", default=0) # circulente
+parser.add_argument("-sp", "--shift_percentage", default=0) # quasi-diagonal (ex : 10% == 0.1)
 
 parser.add_argument("-r", "--randomize", action="store_true") # random partition
 
 args = parser.parse_args()
 
-# Size (TO DO: size +/- 20% rand ?)
+# Size
 size = int(args.size)
 
 # Block
@@ -37,19 +36,18 @@ block_data = np.array([1 for i in range(size)]).astype(np.intc)
 # Part
 n_part = 1
 
-p_size_shift = int(args.size_shift)
-size_shift   = size * (p_size_shift/100)
-size_shift   = int(size_shift)
-center_shift = int(args.center_shift)
+shift_percentage = float(args.shift_percentage)
+shift_size = n_rank * shift_percentage
+shift_size = int(shift_size)
 
 randomize = args.randomize
 
 if randomize:
   part_ln_to_gn = np.random.randint(1, size * n_rank + 1, size, dtype=PDM.npy_pdm_gnum_dtype)
 else:
-  beg = ((i_rank + center_shift)%n_rank)*size - size_shift + 1
+  beg = ((i_rank)%n_rank)*size - shift_size + 1
   beg = max(1, min(beg, n_rank*size))
-  end = ((i_rank + center_shift)%n_rank)*size + size_shift + size
+  end = ((i_rank)%n_rank)*size + shift_size + size
   end = max(1, min(end, n_rank*size))
   part_ln_to_gn = np.random.randint(beg, end+1, size, dtype=PDM.npy_pdm_gnum_dtype)
 
