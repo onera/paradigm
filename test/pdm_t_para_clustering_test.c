@@ -1,3 +1,7 @@
+/*============================================================================
+ * Mesh deformation with parallel clustering
+ *============================================================================*/
+
 /*----------------------------------------------------------------------------
  * Standard C library headers
  *----------------------------------------------------------------------------*/
@@ -71,7 +75,7 @@ typedef struct _PDM_surf_deform_t {
   int                  **face_vtx;               /*!< Face -> vertex connectivity */
 
   double               **dcoords;                /*!< Vertices displacements */
-  double               **aux_geom;               /*!< Auxiliary geometric variables */
+  double               **aux_geom;               /*!< Vertices auxiliary geometric variables */
 
   int                  **n_leaf;                 /*!< Number of local leaves */
   PDM_g_num_t         ***gnum_leaf;              /*!< Local to global leaves numbering */
@@ -102,11 +106,11 @@ typedef struct _PDM_cloud_deform_t {
   int                  blk_n_points;             /*!< Number of points in block */
   double              *blk_coords;               /*!< Points coordinates in block */
   double              *blk_dcoords;              /*!< Points displacements in block */
-  int                 *blk_buffer_from_surf_idx; /*!< Index of surface vertex -> block buffer connectivity */
-  int                 *blk_buffer_from_surf;     /*!< Surface vertex -> block buffer connectivity */
-  double             **blk_coords_from_surf;     /*!< Surface vertices coordinates in block buffer */
-  double             **blk_dcoords_from_surf;    /*!< Surface vertices displacements in block buffer */
-  double             **blk_aux_geom_from_surf;   /*!< Surface vertices auxiliary geometric variables in block buffer */
+  int                 *blk_buffer_from_surf_idx; /*!< Index of cloud point -> block buffer connectivity */
+  int                 *blk_buffer_from_surf;     /*!< Cloud point -> block buffer connectivity */
+  double             **blk_coords_from_surf;     /*!< Surface vertices and clusters coordinates in block buffer */
+  double             **blk_dcoords_from_surf;    /*!< Surface vertices and clusters displacements in block buffer */
+  double             **blk_aux_geom_from_surf;   /*!< Surface vertices and clusters auxiliary geometric variables in block buffer */
 
 } PDM_cloud_deform_t;
 
@@ -345,6 +349,28 @@ _finalize_mean_array_double_per_leaf
  * Public function definitions
  *============================================================================*/
 
+/**
+ *
+ * \brief Create a structure to generate multiple clusters of vertices (surface mesh) in parallel,
+ *        associate source vertices and clusters to target cloud points and propagate deformation
+ *        (and auxiliary geometric variables) from source to target. Target cloud points are
+ *        reequilibrated.
+ *
+ * \param [in] n_part_surf      Number of partitions of the surface mesh
+ * \param [in] n_part_cloud     Number of partitions of the points cloud
+ * \param [in] n_aux_geom       Number of auxiliary geometric variables
+ * \param [in] n_layer          Number of clustering layers (>= 1)
+ * \param [in] n_leaf_per_layer Number of leaves per clustering layer
+ * \param [in] min_dist_d       Minimal distance of cloud point to surface vertex for which surface
+ *                              vertices are used without clustering (inactive if negative)
+ * \param [in] min_dist_n_vtx   Number of closest surface vertices to use for each cloud point
+ *                              without clustering
+ * \param [in] comm             MPI communicator
+ *
+ * \return                      Initialized \ref PDM_mesh_deform instance
+ *
+ */
+
 static PDM_mesh_deform_t*
 _PDM_mesh_deform_create
 (
@@ -359,7 +385,13 @@ _PDM_mesh_deform_create
 )
 {
 
+  assert(n_part_surf >= 1);
+  assert(n_part_cloud >= 1);
+  assert(n_aux_geom >= 0);
   assert(n_layer >= 1);
+  if (min_dist_d > 0.0) {
+    assert(min_dist_n_vtx >= 1);
+  }
 
   PDM_mesh_deform_t *def = (PDM_mesh_deform_t *) malloc(sizeof(PDM_mesh_deform_t));
 
@@ -485,6 +517,24 @@ _PDM_mesh_deform_create
 
 }
 
+/**
+ *
+ * \brief Set surface mesh partition
+ *
+ * \param [inout] def           \ref PDM_mesh_deform instance
+ * \param [in]    i_part        Index of partition
+ * \param [in]    n_face        Number of faces
+ * \param [in]    n_vtx         Number of vertices
+ * \param [in]    face_vtx_idx  Index of face -> vertex connectivity
+ * \param [in]    face_vtx      Face -> vertex connectivity
+ * \param [in]    face_ln_to_gn Local to global faces numbering
+ * \param [in]    vtx_ln_to_gn  Local to global vertices numbering
+ * \param [in]    vtx_coord     Vertices coordinates
+ * \param [in]    vtx_dcoord    Vertices displacements
+ * \param [in]    vtx_aux_geom  Vertices auxiliary geometric variables
+ *
+ */
+
 static void
 _PDM_mesh_deform_surf_part_set
 (
@@ -516,6 +566,18 @@ _PDM_mesh_deform_surf_part_set
 
 }
 
+/**
+ *
+ * \brief Set point cloud partition
+ *
+ * \param [inout] def      \ref PDM_mesh_deform instance
+ * \param [in]    i_part   Index of partition
+ * \param [in]    n_points Number of points
+ * \param [in]    gnum     Local to global points numbering
+ * \param [in]    coords   Points coordinates
+ *
+ */
+
 static void
 _PDM_mesh_deform_cloud_part_set
 (
@@ -534,6 +596,14 @@ _PDM_mesh_deform_cloud_part_set
   _cloud_deform->gnum[i_part]     = gnum;
 
 }
+
+/**
+ *
+ * \brief Free \ref PDM_mesh_deform instance partially
+ *
+ * \param [inout] def \ref PDM_mesh_deform instance
+ *
+ */
 
 static void
 _PDM_mesh_deform_partial_free
@@ -580,6 +650,14 @@ _PDM_mesh_deform_partial_free
   def->is_cpt = PDM_FALSE;
 
 }
+
+/**
+ *
+ * \brief Free \ref PDM_mesh_deform instance
+ *
+ * \param [inout] def \ref PDM_mesh_deform instance
+ *
+ */
 
 static void
 _PDM_mesh_deform_free
@@ -666,6 +744,14 @@ _PDM_mesh_deform_free
   free(def);
 
 }
+
+/**
+ *
+ * \brief Compute clusters and source to target connectivity
+ *
+ * \param [inout] def \ref PDM_mesh_deform instance
+ *
+ */
 
 static void
 _PDM_mesh_deform_compute
@@ -901,9 +987,9 @@ _PDM_mesh_deform_compute
             sorted_gnum[i_leaf] = _surf_deform->gnum_leaf[i_layer][i_part][i_leaf];
             order      [i_leaf] = i_leaf;
           }
-          PDM_sort_long(sorted_gnum, order, _surf_deform->n_leaf[i_layer][i_part]);
           int i_gnum = -1;
           if (_surf_deform->n_leaf[i_layer][i_part] > 0) {
+            PDM_sort_long(sorted_gnum, order, _surf_deform->n_leaf[i_layer][i_part]);
             i_gnum = PDM_binary_search_long(tmp_leaf_gnum[i_part][i_vtx], sorted_gnum, _surf_deform->n_leaf[i_layer][i_part]);
           }
           if (i_gnum < 0) {
@@ -1167,9 +1253,9 @@ _PDM_mesh_deform_compute
           sorted_gnum[i_vtx] = min_dist_gnum[i_part][i_vtx];
           order      [i_vtx] = i_vtx;
         }
-        PDM_sort_long(sorted_gnum, order, n_min_dist[i_part]);
         int i_gnum = -1;
         if (n_min_dist[i_part] > 0) {
+          PDM_sort_long(sorted_gnum, order, n_min_dist[i_part]);
           i_gnum = PDM_binary_search_long(surf_gnum[i_pts], sorted_gnum, n_min_dist[i_part]);
         }
         if (i_gnum < 0) {
@@ -1449,13 +1535,11 @@ _PDM_mesh_deform_compute
         //  sorted_gnum[k_pts] = blk_cloud_to_surf_buffer[k_pts];
         //  order      [k_pts] = k_pts;
         //}
-        //PDM_sort_long(sorted_gnum, order, blk_cloud_to_surf_buffer_idx[i_pts+1]);
-        //
         //int i_gnum = -1;
         //if (blk_cloud_to_surf_buffer_idx[i_pts+1] > 0) {
+        //  PDM_sort_long(sorted_gnum, order, blk_cloud_to_surf_buffer_idx[i_pts+1]);
         //  i_gnum = PDM_binary_search_long(blk_cloud_to_surf[j_pts], sorted_gnum, blk_cloud_to_surf_buffer_idx[i_pts+1]);
         //}
-        //
         //if (i_gnum < 0) {
           int idx_write2 = blk_cloud_to_surf_buffer_idx[i_pts+1];
           blk_cloud_to_surf_buffer[idx_write2] = blk_cloud_to_surf[j_pts];
@@ -1538,6 +1622,30 @@ _PDM_mesh_deform_compute
   def->is_cpt = PDM_TRUE;
 
 }
+
+/**
+ *
+ * \brief Get source -> target connectivity, source coordinates, displacements and
+ *        auxiliary geometric variables, and target coordinates and displacements.
+ *        Cloud points are reequilibrated in block. Exchanges to block are performed
+ *        here. Target displacements are to be filled according to user-defined
+ *        mesh deformation strategy (inverse distance weighting for example) after
+ *        calling PDM_mesh_deform_cloud_block_get.
+ *
+ * \param [inout] def                      \ref PDM_mesh_deform instance
+ * \param [out]   blk_buffer_from_surf_idx Index of cloud point -> block buffer connectivity
+ * \param [out]   blk_buffer_from_surf     Cloud point -> block buffer connectivity
+ * \param [out]   blk_coords_from_surf     Surface vertices and clusters coordinates in
+ *                                         block buffer
+ * \param [out]   blk_dcoords_from_surf    Surface vertices and clusters displacements in
+ *                                         block buffer
+ * \param [out]   blk_aux_geom_from_surf   Surface vertices and clusters auxiliary geometric
+ *                                         variables in block buffer
+ * \param [out]   blk_cloud_n_points       Number of points in block
+ * \param [out]   blk_cloud_coords         Points coordinates in block
+ * \param [out]   blk_cloud_dcoords        Points displacements in block
+ *
+ */
 
 static void
 _PDM_mesh_deform_cloud_block_get
@@ -1780,11 +1888,22 @@ _PDM_mesh_deform_cloud_block_get
 
 }
 
+/**
+ *
+ * \brief Finalize the computation of target cloud points displacements. Cloud points
+ *        are reequilibrated in block. Exchanges back to partition are performed here.
+ *        PDM_mesh_deform_cloud_dcoords_finalize is to be called after computing
+ *        target displacements according to user-defined mesh deformation strategy
+ *        (inverse distance weighting for example).
+ *
+ * \param [inout] def \ref PDM_mesh_deform instance
+ *
+ */
+
 static void
-_PDM_mesh_deform_cloud_dcoords_part_get
+_PDM_mesh_deform_cloud_dcoords_finalize
 (
-  PDM_mesh_deform_t   *def,
-  double            ***cloud_dcoords
+  PDM_mesh_deform_t *def
 )
 {
 
@@ -1824,8 +1943,6 @@ _PDM_mesh_deform_cloud_dcoords_part_get
                                  NULL,
                      (void ***) &_cloud_deform->dcoords);
 
-  *cloud_dcoords = _cloud_deform->dcoords;
-
   PDM_timer_hang_on(def->timer);
 
   def->times_elapsed[END_PRT] = PDM_timer_elapsed(def->timer);
@@ -1838,6 +1955,62 @@ _PDM_mesh_deform_cloud_dcoords_part_get
   def->is_res = PDM_TRUE;
 
 }
+
+/**
+ *
+ * \brief Get cloud points displacements
+ *
+ * \param [in]  def           \ref PDM_mesh_deform instance
+ * \param [out] cloud_dcoords Points displacements
+ *
+ */
+
+static void
+_PDM_mesh_deform_cloud_dcoords_part_get
+(
+  PDM_mesh_deform_t   *def,
+  double            ***cloud_dcoords
+)
+{
+
+  assert(def->is_res == PDM_TRUE);
+
+  *cloud_dcoords = def->cloud_deform->dcoords;
+
+}
+
+/**
+ *
+ * \brief Get cloud points displacements
+ *
+ * \param [in]  def           \ref PDM_mesh_deform instance
+ * \param [in]  i_part        Index of partition
+ * \param [out] cloud_dcoords Points displacements
+ *
+ */
+
+static void
+_PDM_mesh_deform_cloud_dcoords_single_part_get
+(
+  PDM_mesh_deform_t  *def,
+  const int           i_part,
+        double      **cloud_dcoords
+)
+{
+
+  assert(def->is_res == PDM_TRUE);
+
+  *cloud_dcoords = def->cloud_deform->dcoords[i_part];
+
+}
+
+/**
+ *
+ * \brief Get execution times
+ *
+ * \param [inout] def \ref PDM_mesh_deform instance
+ *
+ */
 
 static void
 _PDM_mesh_deform_dump_times
@@ -1939,6 +2112,10 @@ _PDM_mesh_deform_dump_times
   }
 
 }
+
+/*=============================================================================
+ * Test-specific function definitions
+ *============================================================================*/
 
 static void
 _compute_idw
@@ -2723,6 +2900,7 @@ int main(int argc, char *argv[])
 
   double **int_dvtx = NULL;
 
+  _PDM_mesh_deform_cloud_dcoords_finalize(def);
   _PDM_mesh_deform_cloud_dcoords_part_get(def,
                                          &int_dvtx);
   _PDM_mesh_deform_dump_times(def);
@@ -2810,6 +2988,7 @@ int main(int argc, char *argv[])
 
   int_dvtx = NULL;
 
+  _PDM_mesh_deform_cloud_dcoords_finalize(def);
   _PDM_mesh_deform_cloud_dcoords_part_get(def,
                                          &int_dvtx);
 
@@ -2907,6 +3086,7 @@ int main(int argc, char *argv[])
 
   int_dvtx = NULL;
 
+  _PDM_mesh_deform_cloud_dcoords_finalize(def);
   _PDM_mesh_deform_cloud_dcoords_part_get(def,
                                          &int_dvtx);
   _PDM_mesh_deform_dump_times(def);
@@ -2994,6 +3174,7 @@ int main(int argc, char *argv[])
 
   int_dvtx = NULL;
 
+  _PDM_mesh_deform_cloud_dcoords_finalize(def);
   _PDM_mesh_deform_cloud_dcoords_part_get(def,
                                          &int_dvtx);
 
