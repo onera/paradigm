@@ -2746,15 +2746,6 @@ int main(int argc, char *argv[])
 
   PDM_extract_part_free(extrp);
 
-  PDM_part_to_block_t *ptb_bnd_vtx = PDM_part_to_block_create(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
-                                                              PDM_PART_TO_BLOCK_POST_CLEANUP,
-                                                              1.,
-                                                              bnd_vtx_ln_to_gn,
-                                                              NULL,
-                                                              n_bnd_vtx,
-                                                              n_part_bnd,
-                                                              comm);
-
   int  *n_ref_vtx = NULL;
   int **ref_vtx   = NULL;
 
@@ -3435,7 +3426,6 @@ int main(int argc, char *argv[])
     fflush(stdout);
   }
 
-  PDM_part_to_block_free(ptb_bnd_vtx);
   PDM_part_to_part_free(ptp_bnd_vtx);
   PDM_part_free(ppart);
 
