@@ -29,6 +29,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
+#include <string.h>
 
 /*----------------------------------------------------------------------------
  *  Local headers
@@ -61,6 +62,7 @@
 #include "pdm_dmesh_nodal_to_dmesh.h"
 #include "pdm_part_mesh.h"
 #include "pdm_part_mesh_priv.h"
+#include "pdm_part_connectivity_transform.h"
 
 /*----------------------------------------------------------------------------
  *  Header for the current file
@@ -90,6 +92,34 @@ extern "C" {
  * Private function definitions
  *============================================================================*/
 
+static
+PDM_bound_type_t
+_entity_type_to_bound_type
+(
+ PDM_mesh_entities_t entity_type
+ )
+{
+  PDM_bound_type_t bound_type;
+  switch (entity_type) {
+    case PDM_MESH_ENTITY_VTX:
+      bound_type = PDM_BOUND_TYPE_VTX;
+      break;
+
+    case PDM_MESH_ENTITY_EDGE:
+      bound_type = PDM_BOUND_TYPE_EDGE;
+      break;
+
+    case PDM_MESH_ENTITY_FACE:
+      bound_type = PDM_BOUND_TYPE_FACE;
+      break;
+
+    default:
+      PDM_error(__FILE__, __LINE__, 0, "Entity type %d has no corresponding bound type\n", entity_type);
+  }
+
+  return bound_type;
+}
+
 
 /**
  *
@@ -108,10 +138,10 @@ _map_part_t_with_part_mesh
 
     pdm_part[i_part] = _part_create();
 
-    pdm_part[i_part]->n_cell                   = PDM_part_mesh_n_entity_get(pm, i_part, PDM_MESH_ENTITY_CELL  );
-    pdm_part[i_part]->n_face                   = PDM_part_mesh_n_entity_get(pm, i_part, PDM_MESH_ENTITY_FACE  );
-    pdm_part[i_part]->n_edge                   = PDM_part_mesh_n_entity_get(pm, i_part, PDM_MESH_ENTITY_EDGE  );
-    pdm_part[i_part]->n_vtx                    = PDM_part_mesh_n_entity_get(pm, i_part, PDM_MESH_ENTITY_VERTEX);
+    pdm_part[i_part]->n_cell                   = PDM_part_mesh_n_entity_get(pm, i_part, PDM_MESH_ENTITY_CELL);
+    pdm_part[i_part]->n_face                   = PDM_part_mesh_n_entity_get(pm, i_part, PDM_MESH_ENTITY_FACE);
+    pdm_part[i_part]->n_edge                   = PDM_part_mesh_n_entity_get(pm, i_part, PDM_MESH_ENTITY_EDGE);
+    pdm_part[i_part]->n_vtx                    = PDM_part_mesh_n_entity_get(pm, i_part, PDM_MESH_ENTITY_VTX);
     pdm_part[i_part]->n_section                = 0;
     pdm_part[i_part]->n_elt                    = NULL;
 
@@ -186,7 +216,7 @@ _map_part_t_with_part_mesh
 
     PDM_part_mesh_entity_ln_to_gn_get(pm,
                                       i_part,
-                                      PDM_MESH_ENTITY_VERTEX,
+                                      PDM_MESH_ENTITY_VTX,
                                       &pdm_part[i_part]->vtx_ln_to_gn,
                                       PDM_OWNERSHIP_BAD_VALUE);
 
@@ -467,9 +497,9 @@ _compute_part_mesh_nodal_3d
   double       **pvtx_coord     = (double      ** ) malloc( n_part * sizeof(double      *));
   for(int i_part = 0; i_part < n_part; ++i_part){
 
-    pn_cell[i_part] = PDM_part_mesh_n_entity_get(pm->pmesh, i_part, PDM_MESH_ENTITY_CELL  );
-    pn_face[i_part] = PDM_part_mesh_n_entity_get(pm->pmesh, i_part, PDM_MESH_ENTITY_FACE  );
-    pn_vtx [i_part] = PDM_part_mesh_n_entity_get(pm->pmesh, i_part, PDM_MESH_ENTITY_VERTEX);
+    pn_cell[i_part] = PDM_part_mesh_n_entity_get(pm->pmesh, i_part, PDM_MESH_ENTITY_CELL);
+    pn_face[i_part] = PDM_part_mesh_n_entity_get(pm->pmesh, i_part, PDM_MESH_ENTITY_FACE);
+    pn_vtx [i_part] = PDM_part_mesh_n_entity_get(pm->pmesh, i_part, PDM_MESH_ENTITY_VTX);
 
     PDM_part_mesh_entity_ln_to_gn_get(pm->pmesh,
                                       i_part,
@@ -483,7 +513,7 @@ _compute_part_mesh_nodal_3d
 
     PDM_part_mesh_entity_ln_to_gn_get(pm->pmesh,
                                       i_part,
-                                      PDM_MESH_ENTITY_VERTEX,
+                                      PDM_MESH_ENTITY_VTX,
                                       &pvtx_ln_to_gn[i_part], PDM_OWNERSHIP_BAD_VALUE);
 
     PDM_part_mesh_vtx_coord_get(pm->pmesh,
@@ -496,10 +526,12 @@ _compute_part_mesh_nodal_3d
                                                                                         pn_vtx,
                                                                                         pvtx_ln_to_gn,
                                                                                         pn_cell,
+                                                                                        NULL,
                                                                                         pcell_ln_to_gn,
                                                                                         NULL);
 
   int          *pn_surf             = NULL;
+  int         **psurf_to_entity     = NULL;
   PDM_g_num_t **psurf_gnum          = NULL;
   PDM_g_num_t **psurf_to_face_g_num = NULL;
   PDM_reverse_dparent_gnum(dmn->surfacic->dparent_gnum,
@@ -509,6 +541,7 @@ _compute_part_mesh_nodal_3d
                            pn_face,
                            pface_ln_to_gn,
                           &pn_surf,
+                          &psurf_to_entity,
                           &psurf_gnum,
                           &psurf_to_face_g_num,
                            NULL, // pchild_parent_sign
@@ -527,13 +560,16 @@ _compute_part_mesh_nodal_3d
                                                                                          pn_vtx,
                                                                                          pvtx_ln_to_gn,
                                                                                          pn_surf,
+                                                                                         psurf_to_entity,
                                                                                          psurf_gnum,
                                                                                          psurf_to_face_g_num);
 
   for(int i_part = 0; i_part < n_part; ++i_part){
     free(psurf_gnum         [i_part]);
     free(psurf_to_face_g_num[i_part]);
+    free(psurf_to_entity    [i_part]);
   }
+  free(psurf_to_entity);
   free(pn_surf);
   free(psurf_gnum);
   free(psurf_to_face_g_num);
@@ -554,6 +590,7 @@ _compute_part_mesh_nodal_3d
                                         &pedge_ln_to_gn[i_part], PDM_OWNERSHIP_BAD_VALUE);
     }
     int          *pn_ridge             = NULL;
+    int         **pridge_to_entity     = NULL;
     PDM_g_num_t **pridge_gnum          = NULL;
     PDM_g_num_t **pridge_to_edge_g_num = NULL;
     PDM_reverse_dparent_gnum(dmn->ridge->dparent_gnum,
@@ -563,6 +600,7 @@ _compute_part_mesh_nodal_3d
                              pn_edge,
                              pedge_ln_to_gn,
                             &pn_ridge,
+                            &pridge_to_entity,
                             &pridge_gnum,
                             &pridge_to_edge_g_num,
                              NULL, // pchild_parent_sign
@@ -574,13 +612,16 @@ _compute_part_mesh_nodal_3d
                                                                pn_vtx,
                                                                pvtx_ln_to_gn,
                                                                pn_ridge,
+                                                               pridge_to_entity,
                                                                pridge_gnum,
                                                                pridge_to_edge_g_num);
 
     for(int i_part = 0; i_part < n_part; ++i_part){
       free(pridge_gnum[i_part]);
       free(pridge_to_edge_g_num[i_part]);
+      free(pridge_to_entity[i_part]);
     }
+    free(pridge_to_entity);
     free(pn_ridge);
     free(pridge_gnum);
     free(pridge_to_edge_g_num);
@@ -597,6 +638,7 @@ _compute_part_mesh_nodal_3d
     _create_dparent_num_corner(dmn->corner, &dparent_gnum_corner, &distrib_corner);
 
     int          *pn_corner             = NULL;
+    int         **pcorner_to_entity     = NULL;
     PDM_g_num_t **pcorner_gnum          = NULL;
     PDM_g_num_t **pcorner_to_vtx_g_num  = NULL;
     PDM_reverse_dparent_gnum(dparent_gnum_corner,
@@ -606,6 +648,7 @@ _compute_part_mesh_nodal_3d
                              pn_vtx,
                              pvtx_ln_to_gn,
                             &pn_corner,
+                            &pcorner_to_entity,
                             &pcorner_gnum,
                             &pcorner_to_vtx_g_num,
                              NULL, // pchild_parent_sign
@@ -617,6 +660,7 @@ _compute_part_mesh_nodal_3d
                                                                 pn_vtx,
                                                                 pvtx_ln_to_gn,
                                                                 pn_corner,
+                                                                pcorner_to_entity,
                                                                 pcorner_gnum,
                                                                 pcorner_to_vtx_g_num);
     free(dparent_gnum_corner);
@@ -624,7 +668,9 @@ _compute_part_mesh_nodal_3d
     for(int i_part = 0; i_part < n_part; ++i_part){
       free(pcorner_gnum[i_part]);
       free(pcorner_to_vtx_g_num[i_part]);
+      free(pcorner_to_entity[i_part]);
     }
+    free(pcorner_to_entity);
     free(pn_corner);
     free(pcorner_gnum);
     free(pcorner_to_vtx_g_num);
@@ -696,8 +742,8 @@ _compute_part_mesh_nodal_2d
   int           *pn_vtx         = (int *  )         malloc( n_part * sizeof(int          ));
   double       **pvtx_coord     = (double      ** ) malloc( n_part * sizeof(double      *));
   for(int i_part = 0; i_part < n_part; ++i_part){
-    pn_face[i_part] = PDM_part_mesh_n_entity_get(pm->pmesh, i_part, PDM_MESH_ENTITY_FACE  );
-    pn_vtx [i_part] = PDM_part_mesh_n_entity_get(pm->pmesh, i_part, PDM_MESH_ENTITY_VERTEX);
+    pn_face[i_part] = PDM_part_mesh_n_entity_get(pm->pmesh, i_part, PDM_MESH_ENTITY_FACE);
+    pn_vtx [i_part] = PDM_part_mesh_n_entity_get(pm->pmesh, i_part, PDM_MESH_ENTITY_VTX);
 
     PDM_part_mesh_entity_ln_to_gn_get(pm->pmesh,
                                       i_part,
@@ -706,7 +752,7 @@ _compute_part_mesh_nodal_2d
 
     PDM_part_mesh_entity_ln_to_gn_get(pm->pmesh,
                                       i_part,
-                                      PDM_MESH_ENTITY_VERTEX,
+                                      PDM_MESH_ENTITY_VTX,
                                       &pvtx_ln_to_gn[i_part], PDM_OWNERSHIP_BAD_VALUE);
 
     PDM_part_mesh_vtx_coord_get(pm->pmesh,
@@ -719,6 +765,7 @@ _compute_part_mesh_nodal_2d
                                                                                          pn_vtx,
                                                                                          pvtx_ln_to_gn,
                                                                                          pn_face,
+                                                                                         NULL,
                                                                                          pface_ln_to_gn,
                                                                                          NULL);
 
@@ -732,6 +779,7 @@ _compute_part_mesh_nodal_2d
                                       &pedge_ln_to_gn[i_part], PDM_OWNERSHIP_BAD_VALUE);
   }
   int          *pn_ridge;
+  int         **pridge_to_entity;
   PDM_g_num_t **pridge_gnum;
   PDM_g_num_t **pridge_to_edge_g_num;
   PDM_reverse_dparent_gnum(dmn->ridge->dparent_gnum,
@@ -741,6 +789,7 @@ _compute_part_mesh_nodal_2d
                            pn_edge,
                            pedge_ln_to_gn,
                           &pn_ridge,
+                          &pridge_to_entity,
                           &pridge_gnum,
                           &pridge_to_edge_g_num,
                            NULL, // pchild_parent_sign
@@ -751,13 +800,16 @@ _compute_part_mesh_nodal_2d
                                                                                           pn_vtx,
                                                                                           pvtx_ln_to_gn,
                                                                                           pn_ridge,
+                                                                                          pridge_to_entity,
                                                                                           pridge_gnum,
                                                                                           pridge_to_edge_g_num);
 
   for(int i_part = 0; i_part < n_part; ++i_part){
     free(pridge_gnum[i_part]);
     free(pridge_to_edge_g_num[i_part]);
+    free(pridge_to_entity[i_part]);
   }
+  free(pridge_to_entity);
   free(pn_ridge);
   free(pridge_gnum);
   free(pridge_to_edge_g_num);
@@ -771,6 +823,7 @@ _compute_part_mesh_nodal_2d
     _create_dparent_num_corner(dmn->corner, &dparent_gnum_corner, &distrib_corner);
 
     int          *pn_corner             = NULL;
+    int         **pcorner_to_entity     = NULL;
     PDM_g_num_t **pcorner_gnum          = NULL;
     PDM_g_num_t **pcorner_to_vtx_g_num  = NULL;
     PDM_reverse_dparent_gnum(dparent_gnum_corner,
@@ -780,6 +833,7 @@ _compute_part_mesh_nodal_2d
                              pn_vtx,
                              pvtx_ln_to_gn,
                             &pn_corner,
+                            &pcorner_to_entity,
                             &pcorner_gnum,
                             &pcorner_to_vtx_g_num,
                              NULL, // pchild_parent_sign
@@ -791,6 +845,7 @@ _compute_part_mesh_nodal_2d
                                                                 pn_vtx,
                                                                 pvtx_ln_to_gn,
                                                                 pn_corner,
+                                                                pcorner_to_entity,
                                                                 pcorner_gnum,
                                                                 pcorner_to_vtx_g_num);
     free(dparent_gnum_corner);
@@ -798,7 +853,9 @@ _compute_part_mesh_nodal_2d
     for(int i_part = 0; i_part < n_part; ++i_part){
       free(pcorner_gnum[i_part]);
       free(pcorner_to_vtx_g_num[i_part]);
+      free(pcorner_to_entity[i_part]);
     }
+    free(pcorner_to_entity);
     free(pn_corner);
     free(pcorner_gnum);
     free(pcorner_to_vtx_g_num);
@@ -872,8 +929,8 @@ _compute_part_mesh_nodal_1d
   int           *pn_vtx         = (int *  )         malloc( n_part * sizeof(int          ));
   double       **pvtx_coord     = (double      ** ) malloc( n_part * sizeof(double      *));
   for(int i_part = 0; i_part < n_part; ++i_part){
-    pn_edge[i_part] = PDM_part_mesh_n_entity_get(pm->pmesh, i_part, PDM_MESH_ENTITY_EDGE  );
-    pn_vtx [i_part] = PDM_part_mesh_n_entity_get(pm->pmesh, i_part, PDM_MESH_ENTITY_VERTEX);
+    pn_edge[i_part] = PDM_part_mesh_n_entity_get(pm->pmesh, i_part, PDM_MESH_ENTITY_EDGE);
+    pn_vtx [i_part] = PDM_part_mesh_n_entity_get(pm->pmesh, i_part, PDM_MESH_ENTITY_VTX);
 
     PDM_part_mesh_entity_ln_to_gn_get(pm->pmesh,
                                       i_part,
@@ -882,7 +939,7 @@ _compute_part_mesh_nodal_1d
 
     PDM_part_mesh_entity_ln_to_gn_get(pm->pmesh,
                                       i_part,
-                                      PDM_MESH_ENTITY_VERTEX,
+                                      PDM_MESH_ENTITY_VTX,
                                       &pvtx_ln_to_gn[i_part], PDM_OWNERSHIP_BAD_VALUE);
 
     PDM_part_mesh_vtx_coord_get(pm->pmesh,
@@ -895,6 +952,7 @@ _compute_part_mesh_nodal_1d
                                                                                           pn_vtx,
                                                                                           pvtx_ln_to_gn,
                                                                                           pn_edge,
+                                                                                          NULL,
                                                                                           pedge_ln_to_gn,
                                                                                           NULL);
 
@@ -908,6 +966,7 @@ _compute_part_mesh_nodal_1d
     _create_dparent_num_corner(dmn->corner, &dparent_gnum_corner, &distrib_corner);
 
     int          *pn_corner             = NULL;
+    int         **pcorner_to_entity     = NULL;
     PDM_g_num_t **pcorner_gnum          = NULL;
     PDM_g_num_t **pcorner_to_vtx_g_num  = NULL;
     PDM_reverse_dparent_gnum(dparent_gnum_corner,
@@ -917,6 +976,7 @@ _compute_part_mesh_nodal_1d
                              pn_vtx,
                              pvtx_ln_to_gn,
                             &pn_corner,
+                            &pcorner_to_entity,
                             &pcorner_gnum,
                             &pcorner_to_vtx_g_num,
                              NULL, // pchild_parent_sign
@@ -928,6 +988,7 @@ _compute_part_mesh_nodal_1d
                                                                 pn_vtx,
                                                                 pvtx_ln_to_gn,
                                                                 pn_corner,
+                                                                pcorner_to_entity,
                                                                 pcorner_gnum,
                                                                 pcorner_to_vtx_g_num);
     free(dparent_gnum_corner);
@@ -935,7 +996,9 @@ _compute_part_mesh_nodal_1d
     for(int i_part = 0; i_part < n_part; ++i_part){
       free(pcorner_gnum[i_part]);
       free(pcorner_to_vtx_g_num[i_part]);
+      free(pcorner_to_entity[i_part]);
     }
+    free(pcorner_to_entity);
     free(pn_corner);
     free(pcorner_gnum);
     free(pcorner_to_vtx_g_num);
@@ -1015,7 +1078,7 @@ _split_graph_hilbert
     }
 
     PDM_g_num_t *distrib_vtx = NULL;
-    PDM_dmesh_distrib_get(dmesh, PDM_MESH_ENTITY_VERTEX, &distrib_vtx);
+    PDM_dmesh_distrib_get(dmesh, PDM_MESH_ENTITY_VTX, &distrib_vtx);
     int own_distrib_vtx = 0;
     if(distrib_vtx == NULL) {
       own_distrib_vtx = 1;
@@ -1420,10 +1483,10 @@ const double            *part_fraction,
    *  Split only graph by the most high entity : (cell for 3D / face for 2D)
    *  The most high level entitvy is named elmt
    */
-  int  dn_cell = PDM_dmesh_dn_entity_get(dmesh, PDM_MESH_ENTITY_CELL  );
-  int  dn_face = PDM_dmesh_dn_entity_get(dmesh, PDM_MESH_ENTITY_FACE  );
-  int  dn_edge = PDM_dmesh_dn_entity_get(dmesh, PDM_MESH_ENTITY_EDGE  );
-  int  dn_vtx  = PDM_dmesh_dn_entity_get(dmesh, PDM_MESH_ENTITY_VERTEX);
+  int  dn_cell = PDM_dmesh_dn_entity_get(dmesh, PDM_MESH_ENTITY_CELL);
+  int  dn_face = PDM_dmesh_dn_entity_get(dmesh, PDM_MESH_ENTITY_FACE);
+  int  dn_edge = PDM_dmesh_dn_entity_get(dmesh, PDM_MESH_ENTITY_EDGE);
+  int  dn_vtx  = PDM_dmesh_dn_entity_get(dmesh, PDM_MESH_ENTITY_VTX);
 
   if(verbose && i_rank == 0) {
     printf(" dn_cell = %i \n", dn_cell);
@@ -1454,7 +1517,7 @@ const double            *part_fraction,
   int dn_node = distrib_node[i_rank+1] - distrib_node[i_rank];
   int *_node_part = malloc(dn_node * sizeof(int));
 
-  // Compute total number of partitions for this zone
+  // Compute total number of partitions for this domain
   int tn_part;
   PDM_MPI_Allreduce(&n_part, &tn_part, 1, PDM_MPI_INT, PDM_MPI_SUM, comm);
   pmeshes->tn_part = tn_part;
@@ -1733,6 +1796,10 @@ _part_mesh_t       *pmeshes,
                                            &dentity_bound_idx,
                                            PDM_OWNERSHIP_BAD_VALUE);
 
+  if (n_entity_group == 0) {
+    return;
+  }
+
 
   int         **pentity_bound_idx               = NULL;
   int         **pentity_bound                   = NULL;
@@ -1792,10 +1859,10 @@ _deduce_part_connectivity_0d
 
 
   for (int i_part = 0; i_part < n_part; i_part++) {
-    PDM_part_mesh_n_entity_set(pmeshes->pmesh, i_part, PDM_MESH_ENTITY_VERTEX, pn_vtx[i_part]);
+    PDM_part_mesh_n_entity_set(pmeshes->pmesh, i_part, PDM_MESH_ENTITY_VTX, pn_vtx[i_part]);
     PDM_part_mesh_entity_ln_to_gn_set(pmeshes->pmesh,
                                       i_part,
-                                      PDM_MESH_ENTITY_VERTEX,
+                                      PDM_MESH_ENTITY_VTX,
                                       pvtx_ln_to_gn[i_part],
                                       PDM_OWNERSHIP_KEEP);
     PDM_part_mesh_vtx_coord_set(pmeshes->pmesh,
@@ -2065,6 +2132,26 @@ _deduce_part_connectivity_3d
                            pface_ln_to_gn,
                            comm);
 
+  if (edge_distrib != NULL) {
+    _rebuild_part_mesh_group(dmesh,
+                             pmeshes,
+                             n_part,
+                             PDM_BOUND_TYPE_EDGE,
+                             edge_distrib,
+                             pn_edge,
+                             pedge_ln_to_gn,
+                             comm);
+  }
+
+  _rebuild_part_mesh_group(dmesh,
+                           pmeshes,
+                           n_part,
+                           PDM_BOUND_TYPE_VTX,
+                           vtx_distrib,
+                           pn_vtx,
+                           pvtx_ln_to_gn,
+                           comm);
+
   *out_pn_face        = pn_face;
   *out_pface_ln_to_gn = pface_ln_to_gn;
   *out_pface_vtx_idx  = pface_vtx_idx;
@@ -2195,7 +2282,7 @@ _deduce_part_connectivity_2d
 
 static
 void
-_run_ppart_zone
+_run_ppart_domain
 (
 PDM_dmesh_t       *dmesh,
 PDM_dmesh_nodal_t *dmesh_nodal,
@@ -2213,10 +2300,10 @@ PDM_MPI_Comm       comm
   PDM_MPI_Comm_rank(comm, &i_rank);
   PDM_MPI_Comm_size(comm, &n_rank);
 
-  // int  dn_cell = PDM_dmesh_dn_entity_get(dmesh, PDM_MESH_ENTITY_CELL  );
-  int  dn_face = PDM_dmesh_dn_entity_get(dmesh, PDM_MESH_ENTITY_FACE  );
-  int  dn_edge = PDM_dmesh_dn_entity_get(dmesh, PDM_MESH_ENTITY_EDGE  );
-  int  dn_vtx  = PDM_dmesh_dn_entity_get(dmesh, PDM_MESH_ENTITY_VERTEX);
+  // int  dn_cell = PDM_dmesh_dn_entity_get(dmesh, PDM_MESH_ENTITY_CELL);
+  int  dn_face = PDM_dmesh_dn_entity_get(dmesh, PDM_MESH_ENTITY_FACE);
+  int  dn_edge = PDM_dmesh_dn_entity_get(dmesh, PDM_MESH_ENTITY_EDGE);
+  int  dn_vtx  = PDM_dmesh_dn_entity_get(dmesh, PDM_MESH_ENTITY_VTX);
 
   int dn_node = 0;
   if(dmesh->n_g_cell != 0) {
@@ -2484,7 +2571,7 @@ PDM_MPI_Comm       comm
     if (parts[i_part]->vtx_color != NULL) {
       PDM_part_mesh_entity_color_set(pmeshes->pmesh,
                                      i_part,
-                                     PDM_MESH_ENTITY_VERTEX,
+                                     PDM_MESH_ENTITY_VTX,
                                      parts[i_part]->vtx_color,
                                      PDM_OWNERSHIP_KEEP);
     }
@@ -2533,7 +2620,7 @@ PDM_MPI_Comm       comm
       double      *tmp_vtx_coord    = NULL;
       PDM_part_mesh_entity_ln_to_gn_get(pmeshes->pmesh,
                                         i_part,
-                                        PDM_MESH_ENTITY_VERTEX,
+                                        PDM_MESH_ENTITY_VTX,
                                         &tmp_vtx_ln_to_gn,
                                         PDM_OWNERSHIP_USER);
       PDM_part_mesh_vtx_coord_get(pmeshes->pmesh,
@@ -2560,10 +2647,10 @@ PDM_MPI_Comm       comm
 
 
     for (int i_part = 0; i_part < n_part; i_part++) {
-      PDM_part_mesh_n_entity_set(pmeshes->pmesh, i_part, PDM_MESH_ENTITY_VERTEX, pn_vtx_all[i_part]);
+      PDM_part_mesh_n_entity_set(pmeshes->pmesh, i_part, PDM_MESH_ENTITY_VTX, pn_vtx_all[i_part]);
       PDM_part_mesh_entity_ln_to_gn_set(pmeshes->pmesh,
                                         i_part,
-                                        PDM_MESH_ENTITY_VERTEX,
+                                        PDM_MESH_ENTITY_VTX,
                                         pvtx_ln_to_gn[i_part],
                                         PDM_OWNERSHIP_KEEP);
       PDM_part_mesh_vtx_coord_set(pmeshes->pmesh,
@@ -2711,23 +2798,22 @@ PDM_MPI_Comm       comm
 
 /**
  *
- * \brief Build a multipart structure
+ * \brief Build a multipart structure. This method allows to split multiple domains
  *
- * \param [in]   n_zone       Number of zones in the original mesh
- * \param [in]   n_part       Number of partition per proc in each zone
- * \param [in]   merge_blocks Merge or not the zones before splitting
- * \param [in]   split_method Choice of library used to split the mesh
+ * \param [in]   n_domain         Number of domains in the original mesh
+ * \param [in]   n_part           Number of partition per proc in each domain
+ * \param [in]   merge_blocks     Merge or not the domains before splitting
+ * \param [in]   split_method     Choice of library used to split the mesh
  * \param [in]   part_size_method Choice of homogeneous or heterogeneous partitions
- * \param [in]   part_weight  Weight (in %) of each partition in heterogeneous case
- * \param [in]   comm         PDM_MPI communicator
+ * \param [in]   part_weight      Weight (in %) of each partition in heterogeneous case if \ref PDM_part_size_t is set at PDM_PART_SIZE_HETEROGENEOUS
+ * \param [in]   comm             PDM_MPI communicator
  *
  * \return     Pointer to a new \ref PDM_multipart_t object
  */
-
 PDM_multipart_t *
 PDM_multipart_create
 (
- const int              n_zone,
+ const int              n_domain,
  const int             *n_part,
  const PDM_bool_t       merge_blocks,
  const PDM_split_dual_t split_method,
@@ -2739,10 +2825,10 @@ PDM_multipart_create
 {
   PDM_multipart_t *multipart = (PDM_multipart_t *) malloc(sizeof(PDM_multipart_t));
 
-  multipart->n_zone           = n_zone;
-  multipart->n_part           = (int * ) malloc( multipart->n_zone * sizeof(int));
+  multipart->n_domain = n_domain;
+  multipart->n_part   = (int * ) malloc( multipart->n_domain * sizeof(int));
 
-  for (int i = 0; i < multipart->n_zone; ++i) {
+  for (int i = 0; i < multipart->n_domain; ++i) {
     multipart->n_part[i] = n_part[i];
   }
 
@@ -2756,42 +2842,45 @@ PDM_multipart_create
   multipart->n_total_joins    = 0;
   multipart->join_to_opposite = NULL;
 
-  // multipart->dmeshes_ids = (int *) malloc(multipart->n_zone * sizeof(int));
+  // multipart->dmeshes_ids = (int *) malloc(multipart->n_domain * sizeof(int));
 
-  multipart->dmeshes       = (PDM_dmesh_t                **) malloc(multipart->n_zone * sizeof(PDM_dmesh_t                *));
-  multipart->dmeshes_nodal = (PDM_dmesh_nodal_t          **) malloc(multipart->n_zone * sizeof(PDM_dmesh_nodal_t          *));
-  multipart->dmn_to_dm     = (PDM_dmesh_nodal_to_dmesh_t **) malloc(multipart->n_zone * sizeof(PDM_dmesh_nodal_to_dmesh_t *));
-  for (int izone = 0; izone < multipart->n_zone; ++izone) {
-    multipart->dmeshes_nodal[izone] = NULL;
-    multipart->dmeshes      [izone] = NULL;
-    multipart->dmn_to_dm    [izone] = NULL;
+  multipart->dmeshes          = (PDM_dmesh_t                **) malloc(multipart->n_domain * sizeof(PDM_dmesh_t                *));
+  multipart->dmeshes_nodal    = (PDM_dmesh_nodal_t          **) malloc(multipart->n_domain * sizeof(PDM_dmesh_nodal_t          *));
+  multipart->dmn_to_dm        = (PDM_dmesh_nodal_to_dmesh_t **) malloc(multipart->n_domain * sizeof(PDM_dmesh_nodal_to_dmesh_t *));
+  multipart->is_owner_dmeshes = (PDM_bool_t                  *) malloc(multipart->n_domain * sizeof(PDM_bool_t                  ));
+
+  for (int idomain = 0; idomain < multipart->n_domain; ++idomain) {
+    multipart->dmeshes_nodal   [idomain] = NULL;
+    multipart->dmeshes         [idomain] = NULL;
+    multipart->dmn_to_dm       [idomain] = NULL;
+    multipart->is_owner_dmeshes[idomain] = PDM_FALSE;
   }
 
-  multipart->pmeshes       = (_part_mesh_t *) malloc(multipart->n_zone * sizeof(_part_mesh_t));
+  multipart->pmeshes       = (_part_mesh_t *) malloc(multipart->n_domain * sizeof(_part_mesh_t));
 
   int _renum_cell_method = PDM_part_renum_method_cell_idx_get("PDM_PART_RENUM_CELL_NONE");
   int _renum_face_method = PDM_part_renum_method_face_idx_get("PDM_PART_RENUM_FACE_NONE");
   int _renum_edge_method = PDM_part_renum_method_edge_idx_get("PDM_PART_RENUM_EDGE_NONE");
   int _renum_vtx_method  = PDM_part_renum_method_vtx_idx_get ("PDM_PART_RENUM_VTX_NONE" );
-  for (int izone = 0; izone < multipart->n_zone; izone++) {
-    multipart->pmeshes[izone].renum_cell_method = _renum_cell_method;
-    multipart->pmeshes[izone].renum_face_method = _renum_face_method;
-    multipart->pmeshes[izone].renum_edge_method = _renum_edge_method;
-    multipart->pmeshes[izone].renum_vtx_method  = _renum_vtx_method;
-    multipart->pmeshes[izone].renum_cell_properties = NULL;
-    multipart->pmeshes[izone].joins_ids = NULL;
-    multipart->pmeshes[izone].pmesh     = PDM_part_mesh_create(n_part[izone], comm);
-    multipart->pmeshes[izone].vtx_ghost_information = malloc(n_part[izone] * sizeof(int *));
-    multipart->pmeshes[izone].hyperplane_color      = malloc(n_part[izone] * sizeof(int *));
-    multipart->pmeshes[izone].thread_color          = malloc(n_part[izone] * sizeof(int *));
-    for(int i_part = 0; i_part < n_part[izone]; ++i_part) {
-      multipart->pmeshes[izone].vtx_ghost_information[i_part] = NULL;
-      multipart->pmeshes[izone].hyperplane_color     [i_part] = NULL;
-      multipart->pmeshes[izone].thread_color         [i_part] = NULL;
+  for (int idomain = 0; idomain < multipart->n_domain; idomain++) {
+    multipart->pmeshes[idomain].renum_cell_method = _renum_cell_method;
+    multipart->pmeshes[idomain].renum_face_method = _renum_face_method;
+    multipart->pmeshes[idomain].renum_edge_method = _renum_edge_method;
+    multipart->pmeshes[idomain].renum_vtx_method  = _renum_vtx_method;
+    multipart->pmeshes[idomain].renum_cell_properties = NULL;
+    multipart->pmeshes[idomain].joins_ids = NULL;
+    multipart->pmeshes[idomain].pmesh     = PDM_part_mesh_create(n_part[idomain], comm);
+    multipart->pmeshes[idomain].vtx_ghost_information = malloc(n_part[idomain] * sizeof(int *));
+    multipart->pmeshes[idomain].hyperplane_color      = malloc(n_part[idomain] * sizeof(int *));
+    multipart->pmeshes[idomain].thread_color          = malloc(n_part[idomain] * sizeof(int *));
+    for(int i_part = 0; i_part < n_part[idomain]; ++i_part) {
+      multipart->pmeshes[idomain].vtx_ghost_information[i_part] = NULL;
+      multipart->pmeshes[idomain].hyperplane_color     [i_part] = NULL;
+      multipart->pmeshes[idomain].thread_color         [i_part] = NULL;
     }
-    multipart->pmeshes[izone].is_owner_vtx_ghost_information = PDM_TRUE;
-    multipart->pmeshes[izone].is_owner_hyperplane_color      = PDM_TRUE;
-    multipart->pmeshes[izone].is_owner_thread_color          = PDM_TRUE;
+    multipart->pmeshes[idomain].is_owner_vtx_ghost_information = PDM_TRUE;
+    multipart->pmeshes[idomain].is_owner_hyperplane_color      = PDM_TRUE;
+    multipart->pmeshes[idomain].is_owner_thread_color          = PDM_TRUE;
   }
 
   return (PDM_multipart_t *) multipart;
@@ -2799,144 +2888,131 @@ PDM_multipart_create
 
 /**
  *
- * \brief Set distributed mesh data for the input zone
+ * \brief Set distributed mesh data for the input domain
  *
  * \param [in]   multipart      Pointer to \ref PDM_multipart_t object
- * \param [in]   zone_id        Global zone id
- * \param [in]   dmesh_id       Id of the distributed mesh structure to use
+ * \param [in]   domain_id      Domain identifier
+ * \param [in]   dmesh          Pointer on \ref PDM_dmesh_t containaing all distributed connectivities
  */
-void PDM_multipart_register_block
+void PDM_multipart_dmesh_set
 (
  PDM_multipart_t   *multipart,
- const int          zone_id,
+ const int          domain_id,
        PDM_dmesh_t *dmesh
 )
 {
-  assert(zone_id < multipart->n_zone);
-  multipart->dmeshes[zone_id] = dmesh;
+  assert(domain_id < multipart->n_domain);
+  multipart->dmeshes[domain_id] = dmesh;
 }
 
 /**
  *
- * \brief Set distributed mesh data for the input zone
+ * \brief Set distributed mesh data for the input domain. The mesh is describe by nodal connectiviy
  *
  * \param [in]   multipart      Pointer to \ref PDM_multipart_t object
- * \param [in]   zone_id        Global zone id
- * \param [in]   dmesh_id       Id of the distributed mesh structure to use
+ * \param [in]   domain_id        Global domain id
+ * \param [in]   dmesh_nodal    Pointer on \ref PDM_dmesh_nodal_t
  */
-void PDM_multipart_register_dmesh_nodal
+void PDM_multipart_dmesh_nodal_set
 (
  PDM_multipart_t         *multipart,
- const int                zone_id,
+ const int                domain_id,
        PDM_dmesh_nodal_t *dmesh_nodal
 )
 {
-  assert(zone_id < multipart->n_zone);
-  assert(multipart->dmeshes_nodal[zone_id] == NULL);
-  multipart->dmeshes_nodal[zone_id] = dmesh_nodal;
+  assert(domain_id < multipart->n_domain);
+  assert(multipart->dmeshes_nodal[domain_id] == NULL);
+  multipart->dmeshes_nodal[domain_id] = dmesh_nodal;
 }
 
+
 /**
- * \brief Set number of element in the block entity
+ * \brief Set block
  *
- * \param [in]  multipart             Pointer to \ref PDM_multipart_t object
- * \param [in]  i_zone                Id of zone
- * \param [in]  entity_type           Type of entity (can be cell/face/edge/vtx)
- * \param [in]  dn_entity             Distributed number of entity in current process
+ * \param [in]   multipart              Pointer to \ref PDM_multipart_t object
+ * \param [in]   i_domain               Domain identifier
+ * \param [in]   dn_cell                Number of distributed cells
+ * \param [in]   dn_face                Number of distributed faces
+ * \param [in]   dn_vtx                 Number of distributed vertices
+ * \param [in]   n_face_group           Number of face groups
+ * \param [in]   dcell_face_idx         Distributed cell face connectivity index or NULL
+ *                                      (size : dn_cell + 1, numbering : 0 to n-1)
+ * \param [in]   dcell_face             Distributed cell face connectivity or NULL
+ *                                      (size : dface_vtx_idx[dn_cell], numbering : 1 to n)
+ * \param [in]   dface_cell             Distributed face cell connectivity or NULL
+ *                                      (size : 2 * dn_face, numbering : 1 to n)
+ * \param [in]   dface_vtx_idx          Distributed face to vertex connectivity index
+ *                                      (size : dn_face + 1, numbering : 0 to n-1)
+ * \param [in]   dface_vtx              Distributed face to vertex connectivity
+ *                                      (size : dface_vtx_idx[dn_face], numbering : 1 to n)
+ * \param [in]   dvtx_coord             Distributed vertex coordinates
+ *                                      (size : 3*dn_vtx)
+ * \param [in]   dface_group_idx        Index of distributed faces list of each group
+ *                                      (size = n_face_group + 1) or NULL
+ * \param [in]   dface_group            Distributed faces list of each group
+ *                                      (size = dface_group[dface_group_idx[n_face_group]], numbering : 1 to n)
+ *                                      or NULL
  *
  */
 void
-PDM_multipart_dn_entity_set
+PDM_multipart_block_set
 (
-       PDM_multipart_t     *multipart,
- const int                  i_zone,
-       PDM_mesh_entities_t  entity_type,
-       int                  dn_entity
+ PDM_multipart_t             *multipart,
+ const int                    i_domain,
+ const int                    dn_cell,
+ const int                    dn_face,
+ const int                    dn_vtx,
+ const int                    n_face_group,
+ const int                   *dcell_face_idx,
+ const PDM_g_num_t           *dcell_face,
+ const PDM_g_num_t           *dface_cell,
+ const int                   *dface_vtx_idx,
+ const PDM_g_num_t           *dface_vtx,
+ const double                *dvtx_coord,
+ const int                   *dface_group_idx,
+ const PDM_g_num_t           *dface_group
 )
 {
-  PDM_UNUSED(multipart);
-  PDM_UNUSED(i_zone);
-  PDM_UNUSED(entity_type);
-  PDM_UNUSED(dn_entity);
-  abort();
-}
 
-/**
- * \brief Set number connectivity for current block
- *
- * \param [in]  multipart             Pointer to \ref PDM_multipart_t object
- * \param [in]  i_zone                Id of zone
- * \param [in]  connectivity_type     Type of connectivity
- * \param [in]  connect               connectivity (size = connect_idx[dn_entity] )
- * \param [in]  connect_idx           Index of connectivity or NULL if face_cell for example  (size = dn_entity )
- *
- */
-void
-PDM_multipart_dconnectivity_set
-(
-       PDM_multipart_t         *multipart,
- const int                      i_zone,
-       PDM_connectivity_type_t  connectivity_type,
-       PDM_g_num_t             *dconnect,
-       int                     *dconnect_idx
-)
-{
-  PDM_UNUSED(multipart);
-  PDM_UNUSED(i_zone);
-  PDM_UNUSED(connectivity_type);
-  PDM_UNUSED(dconnect);
-  PDM_UNUSED(dconnect_idx);
-  abort();
-}
+  // Create dmesh
+  PDM_dmesh_t* dm = PDM_dmesh_create(PDM_OWNERSHIP_KEEP,
+                                     dn_cell,
+                                     dn_face,
+                                     0,
+                                     dn_vtx,
+                                     multipart->comm);
 
-/**
- * \brief Set group connectivity by kind
- *
- * \param [in]  multipart             Pointer to \ref PDM_multipart_t object
- * \param [in]  i_zone                Id of zone
- * \param [in]  bound_type            Type of bound
- * \param [in]  connect               connectivity (size = connect_idx[dn_entity] )
- * \param [in]  connect_idx           Index of connectivity or NULL if face_cell for example  (size = dn_entity )
- *
- */
-void
-PDM_multipart_dgroup_set
-(
-       PDM_multipart_t          *multipart,
- const int                       i_zone,
-       PDM_bound_type_t          bound_type,
-       PDM_g_num_t              *dconnect,
-       int                      *dconnect_idx
-)
-{
-  PDM_UNUSED(multipart);
-  PDM_UNUSED(i_zone);
-  PDM_UNUSED(bound_type);
-  PDM_UNUSED(dconnect);
-  PDM_UNUSED(dconnect_idx);
-  abort();
-}
+  PDM_dmesh_vtx_coord_set(dm,
+             (double  *)  dvtx_coord,
+                          PDM_OWNERSHIP_USER);
 
-/**
- * \brief Set group connectivity by kind
- *
- * \param [in]  multipart             Pointer to \ref PDM_multipart_t object
- * \param [in]  i_zone                Id of zone
- * \param [in]  dvtx_coord            Mesh coordinates (size = 3 * dn_vtx)
- */
-void
-PDM_multipart_dvtx_coord_set
-(
-       PDM_multipart_t *multipart,
- const int              i_zone,
- const double          *dvtx_coord
-)
-{
-  PDM_UNUSED(multipart);
-  PDM_UNUSED(i_zone);
-  PDM_UNUSED(dvtx_coord);
-  abort();
+  PDM_dmesh_connectivity_set(dm,
+                             PDM_CONNECTIVITY_TYPE_FACE_VTX,
+             (PDM_g_num_t *) dface_vtx,
+             (int         *) dface_vtx_idx,
+                             PDM_OWNERSHIP_USER);
 
+  PDM_dmesh_connectivity_set(dm,
+                             PDM_CONNECTIVITY_TYPE_FACE_CELL,
+             (PDM_g_num_t *) dface_cell,
+                             NULL,
+                             PDM_OWNERSHIP_USER);
+
+  PDM_dmesh_connectivity_set(dm,
+                             PDM_CONNECTIVITY_TYPE_CELL_FACE,
+             (PDM_g_num_t *) dcell_face,
+             (int         *) dcell_face_idx,
+                             PDM_OWNERSHIP_USER);
+
+  PDM_dmesh_bound_set(dm,
+                      PDM_BOUND_TYPE_FACE,
+                      n_face_group,
+      (PDM_g_num_t *) dface_group,
+      (int         *) dface_group_idx,
+                      PDM_OWNERSHIP_USER);
+
+  PDM_multipart_dmesh_set(multipart, i_domain, dm);
+  multipart->is_owner_dmeshes[i_domain] = PDM_TRUE;
 }
 
 void
@@ -2954,33 +3030,10 @@ PDM_multipart_domain_interface_shared_set
 
 /**
  *
- * \brief Set connecting data between all the zones
- *
- * \param [in]   multipart         Pointer to \ref PDM_multipart_t object
- * \param [in]   n_total_joins     Total number of interfaces
- * \param [in]   join_to_opposite  For each global join id, give the global id
- *                                   of the opposite join (size = n_total_joins)
- *
- * \note Join global id numbering must start at 0 and be continuous.
- */
-void PDM_multipart_register_joins
-(
- PDM_multipart_t *multipart,
- const int        n_total_joins,
- const int       *join_to_opposite
-)
-{
-
-  multipart->n_total_joins    = n_total_joins;
-  multipart->join_to_opposite = join_to_opposite;
-}
-
-/**
- *
  * \brief Set the reordering methods to be used after partitioning
  *
  * \param [in]   multipart             Pointer to \ref PDM_multipart_t object
- * \param [in]   i_zone                Id of zone which parameters apply (or -1 for all zones)
+ * \param [in]   i_domain              Id of domain which parameters apply (or -1 for all domains)
  * \param [in]   renum_cell_method     Choice of renumbering method for cells
  * \param [in]   renum_cell_properties Parameters used by cacheblocking method :
  *                                     [n_cell_per_cache_wanted, is_asynchrone, is_vectorisation,
@@ -2991,7 +3044,7 @@ void PDM_multipart_register_joins
 void PDM_multipart_set_reordering_options
 (
  PDM_multipart_t *multipart,
- const int        i_zone,
+ const int        i_domain,
  const char      *renum_cell_method,
  const int       *renum_cell_properties,
  const char      *renum_face_method
@@ -3007,24 +3060,24 @@ void PDM_multipart_set_reordering_options
     PDM_error (__FILE__, __LINE__, 0, "'%s' is an unknown renumbering face method\n", renum_face_method);
   }
 
-  if(i_zone < 0) {
-    for (int izone = 0; izone < multipart->n_zone; izone++) {
-      multipart->pmeshes[izone].renum_cell_method = _renum_cell_method;
-      multipart->pmeshes[izone].renum_face_method = _renum_face_method;
-      multipart->pmeshes[izone].renum_cell_properties = renum_cell_properties;
+  if(i_domain < 0) {
+    for (int idomain = 0; idomain < multipart->n_domain; idomain++) {
+      multipart->pmeshes[idomain].renum_cell_method = _renum_cell_method;
+      multipart->pmeshes[idomain].renum_face_method = _renum_face_method;
+      multipart->pmeshes[idomain].renum_cell_properties = renum_cell_properties;
     }
   }
   else {
-    assert(i_zone < multipart->n_zone);
-    multipart->pmeshes[i_zone].renum_cell_method = _renum_cell_method;
-    multipart->pmeshes[i_zone].renum_face_method = _renum_face_method;
-    multipart->pmeshes[i_zone].renum_cell_properties = renum_cell_properties;
+    assert(i_domain < multipart->n_domain);
+    multipart->pmeshes[i_domain].renum_cell_method = _renum_cell_method;
+    multipart->pmeshes[i_domain].renum_face_method = _renum_face_method;
+    multipart->pmeshes[i_domain].renum_cell_properties = renum_cell_properties;
   }
 }
 void PDM_multipart_set_reordering_options_vtx
 (
  PDM_multipart_t *multipart,
- const int        i_zone,
+ const int        i_domain,
  const char      *renum_vtx_method
 )
 {
@@ -3034,24 +3087,24 @@ void PDM_multipart_set_reordering_options_vtx
     PDM_error (__FILE__, __LINE__, 0, "'%s' is an unknown renumbering vtx method\n", renum_vtx_method);
   }
 
-  if(i_zone < 0) {
-    for (int izone = 0; izone < multipart->n_zone; izone++) {
-      multipart->pmeshes[izone].renum_vtx_method = _renum_vtx_method;
+  if(i_domain < 0) {
+    for (int idomain = 0; idomain < multipart->n_domain; idomain++) {
+      multipart->pmeshes[idomain].renum_vtx_method = _renum_vtx_method;
     }
   }
   else {
-    assert(i_zone < multipart->n_zone);
-    multipart->pmeshes[i_zone].renum_vtx_method = _renum_vtx_method;
+    assert(i_domain < multipart->n_domain);
+    multipart->pmeshes[i_domain].renum_vtx_method = _renum_vtx_method;
   }
 }
 
 /**
- * \brief Construct the partitioned meshes on every zones
+ * \brief Construct the partitioned meshes on every domains
  *
  * \param [in]   multipart             Pointer to \ref PDM_multipart_t object
  */
 void
-PDM_multipart_run_ppart
+PDM_multipart_compute
 (
  PDM_multipart_t *multipart
 )
@@ -3076,22 +3129,22 @@ PDM_multipart_run_ppart
   } else {
     PDM_timer_t *timer = PDM_timer_create();
     double cum_elapsed_time = 0;
-    int *starting_part_idx =  PDM_array_new_idx_from_sizes_int(multipart->n_part, multipart->n_zone);
+    int *starting_part_idx =  PDM_array_new_idx_from_sizes_int(multipart->n_part, multipart->n_domain);
 
     // int is_by_elt = 0;
-    for (int i_zone = 0; i_zone < multipart->n_zone; ++i_zone) {
-      PDM_dmesh_nodal_t* dmesh_nodal = multipart->dmeshes_nodal[i_zone];
+    for (int i_domain = 0; i_domain < multipart->n_domain; ++i_domain) {
+      PDM_dmesh_nodal_t* dmesh_nodal = multipart->dmeshes_nodal[i_domain];
       if (dmesh_nodal != NULL) { // element representation
         // is_by_elt = 1;
-        // PDM_printf("Partitionning elt zone %d/%d \n", i_zone+1, multipart->n_zone);
+        // PDM_printf("Partitionning elt domain %d/%d \n", i_domain+1, multipart->n_domain);
         PDM_MPI_Comm comm = multipart->comm;
         PDM_split_dual_t split_method = multipart->split_method;
-        int n_part = multipart->n_part[i_zone];
-        _part_mesh_t* pmesh = &(multipart->pmeshes[i_zone]);
+        int n_part = multipart->n_part[i_domain];
+        _part_mesh_t* pmesh = &(multipart->pmeshes[i_domain]);
 
-        // _run_ppart_zone_nodal(dmesh_nodal,pmesh,split_method,n_part,comm);
+        // _run_ppart_domain_nodal(dmesh_nodal,pmesh,split_method,n_part,comm);
 
-        const double* part_fraction      = &multipart->part_fraction[starting_part_idx[i_zone]];
+        const double* part_fraction      = &multipart->part_fraction[starting_part_idx[i_domain]];
         PDM_part_size_t part_size_method = multipart->part_size_method;
 
         //Convert dmesh nodal to dmesh
@@ -3116,31 +3169,31 @@ PDM_multipart_run_ppart
 
         PDM_dmesh_t  *_dmesh = NULL;
         PDM_dmesh_nodal_to_dmesh_get_dmesh(dmn_to_dm, 0, &_dmesh);
-        _run_ppart_zone(_dmesh, dmesh_nodal, pmesh, n_part, split_method, part_size_method, part_fraction, comm);
-        multipart->dmeshes  [i_zone] = _dmesh;
-        multipart->dmn_to_dm[i_zone] = dmn_to_dm; /* Store it - We need it for PDM_multipart_get_part_mesh_nodal */
+        _run_ppart_domain(_dmesh, dmesh_nodal, pmesh, n_part, split_method, part_size_method, part_fraction, comm);
+        multipart->dmeshes  [i_domain] = _dmesh;
+        multipart->dmn_to_dm[i_domain] = dmn_to_dm; /* Store it - We need it for PDM_multipart_get_part_mesh_nodal */
         // PDM_dmesh_nodal_to_dmesh_free(dmn_to_dm);
 
       } else { // face representation
-        // PDM_printf("Partitionning face zone %d/%d \n", i_zone+1, multipart->n_zone);
+        // PDM_printf("Partitionning face domain %d/%d \n", i_domain+1, multipart->n_domain);
 
         PDM_MPI_Comm comm = multipart->comm;
 
         PDM_split_dual_t split_method    = multipart->split_method;
         PDM_part_size_t part_size_method = multipart->part_size_method;
 
-        const double* part_fraction = &multipart->part_fraction[starting_part_idx[i_zone]];
+        const double* part_fraction = &multipart->part_fraction[starting_part_idx[i_domain]];
 
-        PDM_dmesh_t  *_dmeshes =   multipart->dmeshes[i_zone];
-        _part_mesh_t *_pmeshes = &(multipart->pmeshes[i_zone]);
+        PDM_dmesh_t  *_dmeshes =   multipart->dmeshes[i_domain];
+        _part_mesh_t *_pmeshes = &(multipart->pmeshes[i_domain]);
 
-        int n_part = multipart->n_part[i_zone];
+        int n_part = multipart->n_part[i_domain];
 
 
         if (0 && i_rank == 0)
-          PDM_printf("Running partitioning for block %i...\n", i_zone+1);
+          PDM_printf("Running partitioning for block %i...\n", i_domain+1);
         PDM_timer_resume(timer);
-        _run_ppart_zone(_dmeshes, NULL, _pmeshes, n_part, split_method, part_size_method, part_fraction, comm);
+        _run_ppart_domain(_dmeshes, NULL, _pmeshes, n_part, split_method, part_size_method, part_fraction, comm);
         PDM_timer_hang_on(timer);
         if (0 && i_rank == 0)
           PDM_printf("...completed (elapsed time : %f)\n", PDM_timer_elapsed(timer) - cum_elapsed_time);
@@ -3157,7 +3210,7 @@ PDM_multipart_run_ppart
  * \brief Retreive the partitionned nodal mesh
  *
  * \param [in]  multipart             Pointer to \ref PDM_multipart_t object
- * \param [in]  i_zone                Id of zone
+ * \param [in]  i_domain              Domain identifier
  * \param [out] pmesh_nodal           Nodal partitionned mesh
  * \param [in]  ownership             Who is responsible to free retreived data ?
  *
@@ -3167,20 +3220,20 @@ void
 PDM_multipart_get_part_mesh_nodal
 (
 PDM_multipart_t        *multipart,
-const int               i_zone,
+const int               i_domain,
 PDM_part_mesh_nodal_t **pmesh_nodal,
 PDM_ownership_t         ownership
 )
 {
-  assert(i_zone < multipart->n_zone);
+  assert(i_domain < multipart->n_domain);
 
-  _part_mesh_t      *pmesh       = &(multipart->pmeshes    [i_zone]);
-  PDM_dmesh_nodal_t *dmesh_nodal = multipart->dmeshes_nodal[i_zone];
+  _part_mesh_t      *pmesh       = &(multipart->pmeshes    [i_domain]);
+  PDM_dmesh_nodal_t *dmesh_nodal = multipart->dmeshes_nodal[i_domain];
   if (dmesh_nodal == NULL) {
     *pmesh_nodal = NULL;
   }
   else {
-    int n_part = multipart->n_part[i_zone];
+    int n_part = multipart->n_part[i_domain];
     if(dmesh_nodal->mesh_dimension == 3){
       *pmesh_nodal = _compute_part_mesh_nodal_3d(dmesh_nodal, pmesh, n_part, ownership);
     } else if(dmesh_nodal->mesh_dimension == 2){
@@ -3197,7 +3250,7 @@ PDM_ownership_t         ownership
  * \brief Retreive the partitionned mesh
  *
  * \param [in]  multipart             Pointer to \ref PDM_multipart_t object
- * \param [in]  i_zone                Id of zone
+ * \param [in]  i_domain              Id of domain
  * \param [out] pmesh                 Partitionned mesh
  *
  */
@@ -3207,13 +3260,13 @@ PDM_ownership_t         ownership
 // PDM_multipart_get_part_mesh
 // (
 //        PDM_multipart_t  *multipart,
-//  const int               i_zone,
+//  const int               i_domain,
 //        PDM_part_mesh_t **pmesh
 // )
 // {
-//   assert(i_zone < multipart->n_zone);
+//   assert(i_domain < multipart->n_domain);
 
-//   *pmesh = &(multipart->pmeshes    [i_zone]);
+//   *pmesh = &(multipart->pmeshes    [i_domain]);
 // }
 
 /**
@@ -3227,7 +3280,7 @@ void
 PDM_multipart_part_dim_get
 (
 PDM_multipart_t *multipart,
-const int        i_zone,
+const int        i_domain,
 const int        i_part,
       int       *n_cell,
       int       *n_face,
@@ -3242,12 +3295,12 @@ const int        i_part,
 )
 {
 
-  assert(i_zone < multipart->n_zone && i_part < multipart->n_part[i_zone]);
-  _part_mesh_t _pmeshes = multipart->pmeshes[i_zone];
+  assert(i_domain < multipart->n_domain && i_part < multipart->n_part[i_domain]);
+  _part_mesh_t _pmeshes = multipart->pmeshes[i_domain];
 
-  *n_cell = PDM_part_mesh_n_entity_get(_pmeshes.pmesh, i_part, PDM_MESH_ENTITY_CELL  );
-  *n_face = PDM_part_mesh_n_entity_get(_pmeshes.pmesh, i_part, PDM_MESH_ENTITY_FACE  );
-  *n_vtx  = PDM_part_mesh_n_entity_get(_pmeshes.pmesh, i_part, PDM_MESH_ENTITY_VERTEX);
+  *n_cell = PDM_part_mesh_n_entity_get(_pmeshes.pmesh, i_part, PDM_MESH_ENTITY_CELL);
+  *n_face = PDM_part_mesh_n_entity_get(_pmeshes.pmesh, i_part, PDM_MESH_ENTITY_FACE);
+  *n_vtx  = PDM_part_mesh_n_entity_get(_pmeshes.pmesh, i_part, PDM_MESH_ENTITY_VTX);
 
   PDM_MPI_Comm_size(multipart->comm, n_proc);
   *n_total_part = _pmeshes.tn_part;
@@ -3271,7 +3324,6 @@ const int        i_part,
                                  &face_vtx,
                                  &face_vtx_idx,
                                  PDM_OWNERSHIP_BAD_VALUE);
-
   if(*n_cell > 0) {
     *s_cell_face = cell_face_idx[*n_cell];
   }
@@ -3317,21 +3369,35 @@ const int        i_part,
 }
 
 
+/**
+ *
+ * \brief Returns the connexion graph between partition for the request \ref PDM_bound_type_t
+ * \param [in]  multipart             Pointer to \ref PDM_multipart_t object
+ * \param [in]  i_domain              Id of domain
+ * \param [in]  i_domain              Id of part
+ * \param [in]  entity_type           Type of mesh entity
+ * \param [out] ppart_bound_proc_idx  Partitioning boundary entities block distribution from processus (size = n_proc + 1)
+ * \param [out] ppart_bound_part_idx  Partitioning boundary entities block distribution from partition (size = n_total_part + 1)
+ * \param [out] ppart_bound           Partitioning boundary entities (size = 4 * n_entity_part_bound)
+ * \param [in]  ownership             Choice of ownership of the resulting arrays \ref PDM_ownership_t
+ */
 void
 PDM_multipart_part_graph_comm_get
 (
- PDM_multipart_t    *multipart,
- const int           i_zone,
- const int           i_part,
- PDM_bound_type_t    bound_type,
- int               **ppart_bound_proc_idx,
- int               **ppart_bound_part_idx,
- int               **ppart_bound,
- PDM_ownership_t     ownership
+ PDM_multipart_t      *multipart,
+ const int             i_domain,
+ const int             i_part,
+ PDM_mesh_entities_t   entity_type,
+ int                 **ppart_bound_proc_idx,
+ int                 **ppart_bound_part_idx,
+ int                 **ppart_bound,
+ PDM_ownership_t       ownership
 )
 {
-  assert(i_zone < multipart->n_zone && i_part < multipart->n_part[i_zone]);
-  _part_mesh_t _pmeshes = multipart->pmeshes[i_zone];
+  assert(i_domain < multipart->n_domain && i_part < multipart->n_part[i_domain]);
+  _part_mesh_t _pmeshes = multipart->pmeshes[i_domain];
+
+  PDM_bound_type_t bound_type = _entity_type_to_bound_type(entity_type);
 
   PDM_part_mesh_part_graph_comm_get(_pmeshes.pmesh,
                                     i_part,
@@ -3345,21 +3411,18 @@ PDM_multipart_part_graph_comm_get
 /**
  *
  * \brief Returns the data arrays of a given partition
+ *
+ * \deprecated Use \ref PDM_multipart_part_connectivity_get instead
  */
 void
 PDM_multipart_part_val_get
 (
 PDM_multipart_t     *multipart,
-const int            i_zone,
+const int            i_domain,
 const int            i_part,
-      int         ***elt_vtx_idx,
-      int         ***elt_vtx,
-      PDM_g_num_t ***elt_section_ln_to_gn,
-      int          **cell_tag,
       int          **cell_face_idx,
       int          **cell_face,
       PDM_g_num_t  **cell_ln_to_gn,
-      int          **face_tag,
       int          **face_cell,
       int          **face_vtx_idx,
       int          **face_vtx,
@@ -3367,24 +3430,20 @@ const int            i_part,
       int          **face_part_bound_proc_idx,
       int          **face_part_bound_part_idx,
       int          **face_part_bound,
-      int          **vtx_tag,
       double       **vtx,
       PDM_g_num_t  **vtx_ln_to_gn,
       int          **face_bound_idx,
       int          **face_bound,
-      PDM_g_num_t  **face_bound_ln_to_gn,
-      int          **face_join_idx,
-      int          **face_join,
-      PDM_g_num_t  **face_join_ln_to_gn
+      PDM_g_num_t  **face_bound_ln_to_gn
 )
 {
 
-  assert(i_zone < multipart->n_zone && i_part < multipart->n_part[i_zone]);
-  _part_mesh_t _pmeshes = multipart->pmeshes[i_zone];
+  assert(i_domain < multipart->n_domain && i_part < multipart->n_part[i_domain]);
+  _part_mesh_t _pmeshes = multipart->pmeshes[i_domain];
 
-  *cell_tag = NULL;
-  *face_tag = NULL;
-  *vtx_tag  = NULL;
+  // *cell_tag = NULL;
+  // *face_tag = NULL;
+  // *vtx_tag  = NULL;
 
   // *cell_ln_to_gn = _pmeshes.parts[i_part]->cell_ln_to_gn;
   // *face_ln_to_gn = _pmeshes.parts[i_part]->face_ln_to_gn;
@@ -3405,7 +3464,7 @@ const int            i_part,
 
   PDM_part_mesh_entity_ln_to_gn_get(_pmeshes.pmesh,
                                     i_part,
-                                    PDM_MESH_ENTITY_VERTEX,
+                                    PDM_MESH_ENTITY_VTX,
                                     vtx_ln_to_gn,
                                     PDM_OWNERSHIP_BAD_VALUE);
 
@@ -3476,48 +3535,56 @@ const int            i_part,
                                    face_bound_ln_to_gn,
                                    PDM_OWNERSHIP_BAD_VALUE);
   }
-  *face_join_idx        = NULL; // _pmeshes.parts[i_part]->face_join_idx;
-  *face_join            = NULL; // _pmeshes.parts[i_part]->face_join;
-  *face_join_ln_to_gn   = NULL; // _pmeshes.parts[i_part]->face_join_ln_to_gn;
+  // *face_join_idx        = NULL; // _pmeshes.parts[i_part]->face_join_idx;
+  // *face_join            = NULL; // _pmeshes.parts[i_part]->face_join;
+  // *face_join_ln_to_gn   = NULL; // _pmeshes.parts[i_part]->face_join_ln_to_gn;
 
-  *elt_vtx_idx          = NULL; // _pmeshes.parts[i_part]->elt_vtx_idx;
-  *elt_vtx              = NULL; // _pmeshes.parts[i_part]->elt_vtx;
-  *elt_section_ln_to_gn = NULL; // _pmeshes.parts[i_part]->elt_section_ln_to_gn;
+  // *elt_vtx_idx          = NULL; // _pmeshes.parts[i_part]->elt_vtx_idx;
+  // *elt_vtx              = NULL; // _pmeshes.parts[i_part]->elt_vtx;
+  // *elt_section_ln_to_gn = NULL; // _pmeshes.parts[i_part]->elt_section_ln_to_gn;
 }
 
 
+/**
+ *
+ * \brief Returns the total number of part among all process
+ */
 int
 PDM_multipart_part_tn_part_get
 (
 PDM_multipart_t *multipart,
-const int        i_zone
+const int        i_domain
 )
 {
-  assert(i_zone < multipart->n_zone);
-  _part_mesh_t _pmeshes = multipart->pmeshes[i_zone];
+  assert(i_domain < multipart->n_domain);
+  _part_mesh_t _pmeshes = multipart->pmeshes[i_domain];
   return PDM_part_mesh_tn_part_get(_pmeshes.pmesh);
 }
 
 /**
- *
- * \brief Returns the data arrays of a given partition
+ * \brief Return size of leading connectivity on current partition ( n_entity )
+ * \param [in]  multipart             Pointer to \ref PDM_multipart_t object
+ * \param [in]  i_domain              Id of domain
+ * \param [in]  i_part                Id of part
+ * \param [in]  connectivity_type     Connectivity kind \ref PDM_connectivity_type_t
+ * \param [in]  connect_idx           Connectivity index (size = n_entity+1 )
+ * \param [in]  connect               Connectivity array (size = connect_idx[n_entity] )
  */
 int
 PDM_multipart_part_connectivity_get
 (
 PDM_multipart_t                *multipart,
-const int                       i_zone,
+const int                       i_domain,
 const int                       i_part,
       PDM_connectivity_type_t   connectivity_type,
-      int                     **connect,
       int                     **connect_idx,
+      int                     **connect,
       PDM_ownership_t           ownership
 )
 {
-  PDM_UNUSED(ownership);
-  assert(i_zone < multipart->n_zone && i_part < multipart->n_part[i_zone]);
+  assert(i_domain < multipart->n_domain && i_part < multipart->n_part[i_domain]);
 
-  _part_mesh_t _pmeshes = multipart->pmeshes[i_zone];
+  _part_mesh_t _pmeshes = multipart->pmeshes[i_domain];
   int pn_entity = -1;
 
   if( connectivity_type == PDM_CONNECTIVITY_TYPE_CELL_ELMT ||
@@ -3547,7 +3614,7 @@ const int                       i_part,
              connectivity_type == PDM_CONNECTIVITY_TYPE_VTX_EDGE ||
              connectivity_type == PDM_CONNECTIVITY_TYPE_VTX_VTX )
   {
-    pn_entity = PDM_part_mesh_n_entity_get(_pmeshes.pmesh, i_part, PDM_MESH_ENTITY_VERTEX);
+    pn_entity = PDM_part_mesh_n_entity_get(_pmeshes.pmesh, i_part, PDM_MESH_ENTITY_VTX);
   } else {
     PDM_error(__FILE__, __LINE__, 0, "PDM_multipart_part_connectivity_get error : Wrong connectivity_type \n");
   }
@@ -3559,41 +3626,99 @@ const int                       i_part,
                                  connect_idx,
                                  ownership);
 
+  /* Build the requested connectivity if missing */
+  if (*connect == NULL) {
+    if (connectivity_type == PDM_CONNECTIVITY_TYPE_FACE_VTX) {
+      int *face_edge_idx = NULL;
+      int *face_edge     = NULL;
+      PDM_part_mesh_connectivity_get(_pmeshes.pmesh,
+                                     i_part,
+                                     PDM_CONNECTIVITY_TYPE_FACE_EDGE,
+                                     &face_edge,
+                                     &face_edge_idx,
+                                     PDM_OWNERSHIP_BAD_VALUE);
+
+      if (face_edge_idx != NULL) {
+        /* In some case, face_edge connectivity also does not exists (for example 1d meshes)
+        so we can not always reconstruct face_vtx connectivity (which should not be
+        asked at all, but we preserve old behaviour) */
+
+        assert(face_edge_idx != NULL);
+        assert(face_edge     != NULL);
+
+        int *edge_vtx_idx = NULL;
+        int *edge_vtx     = NULL;
+        PDM_part_mesh_connectivity_get(_pmeshes.pmesh,
+                                      i_part,
+                                      PDM_CONNECTIVITY_TYPE_EDGE_VTX,
+                                      &edge_vtx,
+                                      &edge_vtx_idx,
+                                      PDM_OWNERSHIP_BAD_VALUE);
+
+        assert(edge_vtx != NULL);
+
+        PDM_compute_face_vtx_from_face_and_edge(pn_entity,
+                                                face_edge_idx,
+                                                face_edge,
+                                                edge_vtx,
+                                                connect);
+
+        // same index as face_edge, do we need a copy?
+        *connect_idx = malloc(sizeof(int) * (pn_entity + 1));
+        memcpy(*connect_idx, face_edge_idx, sizeof(int) * (pn_entity + 1));
+      }
+    }
+    else {
+      // TODO: face_edge/edge_vtx ?
+    }
+
+    // Store the connectivity we just built, with the requested ownership
+    PDM_part_mesh_connectivity_set(_pmeshes.pmesh,
+                                   i_part,
+                                   connectivity_type,
+                                   *connect,
+                                   *connect_idx,
+                                   ownership);
+  }
+
   return pn_entity;
 }
 
 /**
- *
- * \brief Returns the data arrays of a given partition
+ * \brief Return size of leading connectivity on current partition ( n_entity )
+ * \param [in]  multipart             Pointer to \ref PDM_multipart_t object
+ * \param [in]  i_domain              Id of domain
+ * \param [in]  i_part                Id of part
+ * \param [in]  entity_type           Entity kind \ref PDM_mesh_entities_t
  */
 int
 PDM_multipart_part_n_entity_get
 (
 PDM_multipart_t            *multipart,
-const int                   i_zone,
+const int                   i_domain,
 const int                   i_part,
       PDM_mesh_entities_t   entity_type
 )
 {
-  assert(i_zone < multipart->n_zone && i_part < multipart->n_part[i_zone]);
-  _part_mesh_t _pmeshes = multipart->pmeshes[i_zone];
+  assert(i_domain < multipart->n_domain && i_part < multipart->n_part[i_domain]);
+  _part_mesh_t _pmeshes = multipart->pmeshes[i_domain];
 
   int pn_entity = 0;
   switch (entity_type) {
     case PDM_MESH_ENTITY_CELL:
-       pn_entity = PDM_part_mesh_n_entity_get(_pmeshes.pmesh, i_part, PDM_MESH_ENTITY_CELL  );
+       pn_entity = PDM_part_mesh_n_entity_get(_pmeshes.pmesh, i_part, PDM_MESH_ENTITY_CELL);
       break;
     case PDM_MESH_ENTITY_FACE:
-       pn_entity = PDM_part_mesh_n_entity_get(_pmeshes.pmesh, i_part, PDM_MESH_ENTITY_FACE  );
+       pn_entity = PDM_part_mesh_n_entity_get(_pmeshes.pmesh, i_part, PDM_MESH_ENTITY_FACE);
       break;
     case PDM_MESH_ENTITY_EDGE:
-       pn_entity = PDM_part_mesh_n_entity_get(_pmeshes.pmesh, i_part, PDM_MESH_ENTITY_EDGE  );
+       pn_entity = PDM_part_mesh_n_entity_get(_pmeshes.pmesh, i_part, PDM_MESH_ENTITY_EDGE);
       break;
-    case PDM_MESH_ENTITY_VERTEX:
-       pn_entity = PDM_part_mesh_n_entity_get(_pmeshes.pmesh, i_part, PDM_MESH_ENTITY_VERTEX);
+    case PDM_MESH_ENTITY_VTX:
+       pn_entity = PDM_part_mesh_n_entity_get(_pmeshes.pmesh, i_part, PDM_MESH_ENTITY_VTX);
       break;
     default:
-      PDM_error(__FILE__, __LINE__, 0, "PDM_multipart_part_ln_to_gn_get error : Wrong entity_type \n");
+      PDM_error(__FILE__, __LINE__, 0, "PDM_multipart_part_n_entity_get error : Wrong entity_type \n");
       break;
   }
 
@@ -3602,24 +3727,30 @@ const int                   i_part,
 
 /**
  *
- * \brief Returns the data arrays of a given partition
+ * \brief Return size of entity_type on current partition ( n_entity )
+ * \param [in]  multipart             Pointer to \ref PDM_multipart_t object
+ * \param [in]  i_domain              Id of domain
+ * \param [in]  i_part                Id of part
+ * \param [in]  entity_type           Entity kind \ref PDM_mesh_entities_t)
+ * \param [out] entity_ln_to_gn       Entity local numbering to global numbering (size = n_entity, numbering : 1 to n)
+ * \param [in]  ownership             Ownership for entity_ln_to_gn ( \ref PDM_ownership_t )
  */
 int
 PDM_multipart_part_ln_to_gn_get
 (
 PDM_multipart_t            *multipart,
-const int                   i_zone,
+const int                   i_domain,
 const int                   i_part,
       PDM_mesh_entities_t   entity_type,
       PDM_g_num_t         **entity_ln_to_gn,
       PDM_ownership_t       ownership
 )
 {
-  assert(i_zone < multipart->n_zone && i_part < multipart->n_part[i_zone]);
+  assert(i_domain < multipart->n_domain && i_part < multipart->n_part[i_domain]);
 
-  _part_mesh_t _pmeshes = multipart->pmeshes[i_zone];
+  _part_mesh_t _pmeshes = multipart->pmeshes[i_domain];
 
-  int pn_entity = PDM_multipart_part_n_entity_get(multipart, i_zone, i_part, entity_type);
+  int pn_entity = PDM_multipart_part_n_entity_get(multipart, i_domain, i_part, entity_type);
 
   PDM_part_mesh_entity_ln_to_gn_get(_pmeshes.pmesh,
                                     i_part,
@@ -3632,23 +3763,29 @@ const int                   i_part,
 
 /**
  *
- * \brief Returns the data arrays of a given partition
+ * \brief Return number of entity on current partition ( n_entity )
+ * \param [in]  multipart             Pointer to \ref PDM_multipart_t object
+ * \param [in]  i_domain              Id of domain
+ * \param [in]  i_part                Id of part
+ * \param [in]  entity_type           Entity kind \ref PDM_mesh_entities_t)
+ * \param [out] entity_color          Entity color (only for specific renumbering option )
+ * \param [in]  ownership             Ownership for color ( \ref PDM_ownership_t )
  */
 int
 PDM_multipart_partition_color_get
 (
 PDM_multipart_t            *multipart,
-const int                   i_zone,
+const int                   i_domain,
 const int                   i_part,
       PDM_mesh_entities_t   entity_type,
       int                 **entity_color,
       PDM_ownership_t       ownership
 )
 {
-  assert(i_zone < multipart->n_zone && i_part < multipart->n_part[i_zone]);
-  _part_mesh_t _pmeshes = multipart->pmeshes[i_zone];
+  assert(i_domain < multipart->n_domain && i_part < multipart->n_part[i_domain]);
+  _part_mesh_t _pmeshes = multipart->pmeshes[i_domain];
 
-  int pn_entity = PDM_multipart_part_n_entity_get(multipart, i_zone, i_part, entity_type);
+  int pn_entity = PDM_multipart_part_n_entity_get(multipart, i_domain, i_part, entity_type);
   PDM_part_mesh_entity_color_get(_pmeshes.pmesh,
                                  i_part,
                                  entity_type,
@@ -3658,78 +3795,107 @@ const int                   i_part,
   return pn_entity;
 }
 
+/**
+ *
+ * \brief Get array containing hyperplane color
+ * \param [in]  multipart             Pointer to \ref PDM_multipart_t object
+ * \param [in]  i_domain              Id of domain
+ * \param [in]  i_part                Id of part
+ * \param [in]  hyperplane_color      Hyperplane color
+ * \param [in]  ownership             Ownership for color ( \ref PDM_ownership_t )
+ */
 void
 PDM_multipart_part_hyperplane_color_get
 (
 PDM_multipart_t        *multipart,
-const int               i_zone,
+const int               i_domain,
 const int               i_part,
       int             **hyperplane_color,
       PDM_ownership_t   ownership
 )
 {
-  assert(i_zone < multipart->n_zone && i_part < multipart->n_part[i_zone]);
-  _part_mesh_t* _pmeshes = (&multipart->pmeshes[i_zone]);
+  assert(i_domain < multipart->n_domain && i_part < multipart->n_part[i_domain]);
+  _part_mesh_t* _pmeshes = (&multipart->pmeshes[i_domain]);
 
   *hyperplane_color = _pmeshes->hyperplane_color[i_part];
     if(ownership == PDM_OWNERSHIP_USER || ownership == PDM_OWNERSHIP_UNGET_RESULT_IS_FREE) {
-    multipart->pmeshes[i_zone].is_owner_hyperplane_color = PDM_FALSE;
+    multipart->pmeshes[i_domain].is_owner_hyperplane_color = PDM_FALSE;
   } else {
-    multipart->pmeshes[i_zone].is_owner_hyperplane_color = PDM_TRUE;
+    multipart->pmeshes[i_domain].is_owner_hyperplane_color = PDM_TRUE;
   }
 }
 
+/**
+ *
+ * \brief Get array containing thread color - Only if specific reordering (in paradigma plugins)
+ *
+ * \param [in]  multipart             Pointer to \ref PDM_multipart_t object
+ * \param [in]  i_domain              Id of domain
+ * \param [in]  i_part                Id of part
+ * \param [in]  thread_color          Thread color
+ * \param [in]  ownership             Ownership for color ( \ref PDM_ownership_t )
+ */
 void
 PDM_multipart_part_thread_color_get
 (
 PDM_multipart_t        *multipart,
-const int               i_zone,
+const int               i_domain,
 const int               i_part,
       int             **thread_color,
       PDM_ownership_t   ownership
 )
 {
-  assert(i_zone < multipart->n_zone && i_part < multipart->n_part[i_zone]);
-  _part_mesh_t* _pmeshes = (&multipart->pmeshes[i_zone]);
+  assert(i_domain < multipart->n_domain && i_part < multipart->n_part[i_domain]);
+  _part_mesh_t* _pmeshes = (&multipart->pmeshes[i_domain]);
 
   *thread_color = _pmeshes->thread_color[i_part];
     if(ownership == PDM_OWNERSHIP_USER || ownership == PDM_OWNERSHIP_UNGET_RESULT_IS_FREE) {
-    multipart->pmeshes[i_zone].is_owner_thread_color = PDM_FALSE;
+    multipart->pmeshes[i_domain].is_owner_thread_color = PDM_FALSE;
   } else {
-    multipart->pmeshes[i_zone].is_owner_thread_color = PDM_TRUE;
+    multipart->pmeshes[i_domain].is_owner_thread_color = PDM_TRUE;
   }
 }
 
+/**
+ *
+ * \brief Get array containing vtx_ghost_information, usefull to have a priority on vertex between 2 partitions
+ *
+ * \param [in]  multipart             Pointer to \ref PDM_multipart_t object
+ * \param [in]  i_domain              Id of domain
+ * \param [in]  i_part                Id of part
+ * \param [in]  vtx_ghost_information Integer that give the current priority of vertices on current partitions
+ * \param [in]  ownership             Ownership for color ( \ref PDM_ownership_t )
+ */
 void
 PDM_multipart_part_ghost_infomation_get
 (
 PDM_multipart_t        *multipart,
-const int               i_zone,
+const int               i_domain,
 const int               i_part,
       int             **vtx_ghost_information,
       PDM_ownership_t   ownership
 )
 {
 
-  assert(i_zone < multipart->n_zone && i_part < multipart->n_part[i_zone]);
-  _part_mesh_t* _pmeshes = (&multipart->pmeshes[i_zone]);
+  assert(i_domain < multipart->n_domain && i_part < multipart->n_part[i_domain]);
+  _part_mesh_t* _pmeshes = (&multipart->pmeshes[i_domain]);
 
   *vtx_ghost_information = _pmeshes->vtx_ghost_information[i_part];
   if(ownership == PDM_OWNERSHIP_USER || ownership == PDM_OWNERSHIP_UNGET_RESULT_IS_FREE) {
-    multipart->pmeshes[i_zone].is_owner_vtx_ghost_information = PDM_FALSE;
+    multipart->pmeshes[i_domain].is_owner_vtx_ghost_information = PDM_FALSE;
   } else {
-    multipart->pmeshes[i_zone].is_owner_vtx_ghost_information = PDM_TRUE;
+    multipart->pmeshes[i_domain].is_owner_vtx_ghost_information = PDM_TRUE;
   }
 }
 
 
 /**
  *
- * \brief Return times for a given zone
+ * \brief Return times for a given domain
  * (NOT IMPLEMENTED)
  *
  * \param [in]   multipart      Pointer to \ref PDM_multipart_t object
- * \param [in]   i_zone         Id of current zone
+ * \param [in]   i_domain       Id of current domain
  * \param [out]  elapsed        Elapsed time
  * \param [out]  cpu            CPU time
  * \param [out]  cpu_user       User CPU time
@@ -3741,14 +3907,14 @@ void
 PDM_multipart_time_get
 (
  PDM_multipart_t *multipart,
- const int        i_zone,
+ const int        i_domain,
  double         **elapsed,
  double         **cpu,
  double         **cpu_user,
  double         **cpu_sys
 )
 {
-  assert(i_zone < multipart->n_zone);
+  assert(i_domain < multipart->n_domain);
 
   // PDM_printf("PDM_multipart_time_get: Not implemented\n");
   *elapsed  = NULL;
@@ -3772,45 +3938,52 @@ PDM_multipart_free
 )
 {
   // free(multipart->dmeshes_ids);
-  for (int i_zone = 0; i_zone < multipart->n_zone; i_zone++) {
-    if (multipart->pmeshes[i_zone].joins_ids != NULL) {
-      free(multipart->pmeshes[i_zone].joins_ids);
+  for (int i_domain = 0; i_domain < multipart->n_domain; i_domain++) {
+    if (multipart->pmeshes[i_domain].joins_ids != NULL) {
+      free(multipart->pmeshes[i_domain].joins_ids);
     }
 
-    for (int i_part = 0; i_part < multipart->n_part[i_zone]; i_part++) {
-      if(multipart->pmeshes[i_zone].vtx_ghost_information[i_part] != NULL) {
-        if(multipart->pmeshes[i_zone].is_owner_vtx_ghost_information == PDM_TRUE) {
-          free(multipart->pmeshes[i_zone].vtx_ghost_information[i_part]);
+    for (int i_part = 0; i_part < multipart->n_part[i_domain]; i_part++) {
+      if(multipart->pmeshes[i_domain].vtx_ghost_information[i_part] != NULL) {
+        if(multipart->pmeshes[i_domain].is_owner_vtx_ghost_information == PDM_TRUE) {
+          free(multipart->pmeshes[i_domain].vtx_ghost_information[i_part]);
         }
       }
 
-      if(multipart->pmeshes[i_zone].hyperplane_color[i_part] != NULL) {
-        if(multipart->pmeshes[i_zone].is_owner_hyperplane_color == PDM_TRUE) {
-          free(multipart->pmeshes[i_zone].hyperplane_color[i_part]);
+      if(multipart->pmeshes[i_domain].hyperplane_color[i_part] != NULL) {
+        if(multipart->pmeshes[i_domain].is_owner_hyperplane_color == PDM_TRUE) {
+          free(multipart->pmeshes[i_domain].hyperplane_color[i_part]);
         }
       }
 
-      if(multipart->pmeshes[i_zone].thread_color[i_part] != NULL) {
-        if(multipart->pmeshes[i_zone].is_owner_thread_color == PDM_TRUE) {
-          free(multipart->pmeshes[i_zone].thread_color[i_part]);
+      if(multipart->pmeshes[i_domain].thread_color[i_part] != NULL) {
+        if(multipart->pmeshes[i_domain].is_owner_thread_color == PDM_TRUE) {
+          free(multipart->pmeshes[i_domain].thread_color[i_part]);
         }
       }
     }
-    free(multipart->pmeshes[i_zone].vtx_ghost_information);
-    free(multipart->pmeshes[i_zone].hyperplane_color);
-    free(multipart->pmeshes[i_zone].thread_color);
+    free(multipart->pmeshes[i_domain].vtx_ghost_information);
+    free(multipart->pmeshes[i_domain].hyperplane_color);
+    free(multipart->pmeshes[i_domain].thread_color);
 
-    PDM_part_mesh_free(multipart->pmeshes[i_zone].pmesh);
+    PDM_part_mesh_free(multipart->pmeshes[i_domain].pmesh);
 
-    if(multipart->dmn_to_dm[i_zone] != NULL) {
-      PDM_dmesh_nodal_to_dmesh_free(multipart->dmn_to_dm[i_zone]);
-      multipart->dmn_to_dm[i_zone] = NULL;
+    if(multipart->dmeshes[i_domain] != NULL ) {
+      if(multipart->is_owner_dmeshes[i_domain] == PDM_TRUE) {
+        PDM_dmesh_free(multipart->dmeshes[i_domain]);
+      }
+    }
+
+    if(multipart->dmn_to_dm[i_domain] != NULL) {
+      PDM_dmesh_nodal_to_dmesh_free(multipart->dmn_to_dm[i_domain]);
+      multipart->dmn_to_dm[i_domain] = NULL;
     }
   }
   free(multipart->pmeshes);
   free(multipart->dmeshes);
   free(multipart->dmeshes_nodal);
   free(multipart->dmn_to_dm);
+  free(multipart->is_owner_dmeshes);
   free(multipart->n_part);
 
   //PDM_part_renum_method_purge();
@@ -3821,11 +3994,22 @@ PDM_multipart_free
 }
 
 
+/**
+ *
+ * \brief Get the vertex coordinates on current i_domain, i_part partition and return number of vertices
+ *
+ * \param [in]   multipart      Pointer to \ref PDM_multipart_t object
+ * \param [in]   i_domain       Id of current domain
+ * \param [in]   i_part         Id of part
+ * \param [out]  vtx_coord      Vertex coordinate (size = 3 * n_vtx)
+ * \param [in]   ownership      Ownership for color ( \ref PDM_ownership_t )
+ *
+ */
 int
 PDM_multipart_part_vtx_coord_get
 (
 PDM_multipart_t                *multipart,
-const int                       i_zone,
+const int                       i_domain,
 const int                       i_part,
       double                  **vtx_coord,
       PDM_ownership_t           ownership
@@ -3833,52 +4017,87 @@ const int                       i_part,
 {
   PDM_UNUSED(ownership);
 
-  assert(i_zone < multipart->n_zone && i_part < multipart->n_part[i_zone]);
+  assert(i_domain < multipart->n_domain && i_part < multipart->n_part[i_domain]);
 
-  _part_mesh_t _pmeshes = multipart->pmeshes[i_zone];
+  _part_mesh_t _pmeshes = multipart->pmeshes[i_domain];
 
   PDM_part_mesh_vtx_coord_get(_pmeshes.pmesh,
                               i_part,
                               vtx_coord,
                               ownership);
 
-  return PDM_part_mesh_n_entity_get(_pmeshes.pmesh, i_part, PDM_MESH_ENTITY_VERTEX);
+  return PDM_part_mesh_n_entity_get(_pmeshes.pmesh, i_part, PDM_MESH_ENTITY_VTX);
 }
 
 
-void PDM_multipart_bound_get
+/**
+ *
+ * \brief Get the group description for a given entity
+ *
+ * \param [in]   multipart              Pointer to \ref PDM_multipart_t object
+ * \param [in]   i_domain               Domain identifier
+ * \param [in]   i_part                 Partition identifier
+ * \param [in]   entity_type            Type of mesh entity
+ * \param [out]  n_group                Number of groups
+ * \param [out]  group_entity_idx       Index for group->entity connectivity (size = \p n_group)
+ * \param [out]  group_entity           Group->entity connectivity (1-based local ids, size = \p group_entity_idx[\p n_group])
+ * \param [out]  group_entity_ln_to_gn  Group->entity connectivity (group-specific global ids, size = \p group_entity_idx[\p n_group])
+ * \param [in]   ownership              Ownership
+ *
+ */
+void PDM_multipart_group_get
 (
- PDM_multipart_t   *multipart,
- const int          i_zone,
- const int          i_part,
- PDM_bound_type_t   bound_type,
- int               *n_bound,
- int              **bound_idx,
- int              **bound,
- PDM_g_num_t      **bound_ln_to_gn,
- PDM_ownership_t    ownership
+ PDM_multipart_t      *multipart,
+ const int             i_domain,
+ const int             i_part,
+ PDM_mesh_entities_t   entity_type,
+ int                  *n_group,
+ int                 **group_entity_idx,
+ int                 **group_entity,
+ PDM_g_num_t         **group_entity_ln_to_gn,
+ PDM_ownership_t       ownership
 )
 {
 
-  assert(i_zone < multipart->n_zone && i_part < multipart->n_part[i_zone]);
-  _part_mesh_t _pmeshes = multipart->pmeshes[i_zone];
+  assert(i_domain < multipart->n_domain && i_part < multipart->n_part[i_domain]);
+  _part_mesh_t _pmeshes = multipart->pmeshes[i_domain];
 
-  *n_bound = PDM_part_mesh_n_bound_get(_pmeshes.pmesh, bound_type);
+  PDM_bound_type_t bound_type = _entity_type_to_bound_type(entity_type);
+
+  *n_group = PDM_part_mesh_n_bound_get(_pmeshes.pmesh, bound_type);
 
   PDM_part_mesh_bound_concat_get(_pmeshes.pmesh,
                                  i_part,
                                  bound_type,
-                                 bound_idx,
-                                 bound,
-                                 bound_ln_to_gn,
+                                 group_entity_idx,
+                                 group_entity,
+                                 group_entity_ln_to_gn,
                                  ownership);
 }
 
+
+/**
+ *
+ * \brief Return statistics
+ *
+ * \param [in]   ppart                          Pointer to \ref PDM_part object
+ * \param [out]  cells_average                  average of cells number
+ * \param [out]  cells_median                   median of cells number
+ * \param [out]  cells_std_deviation            standard deviation of cells number
+ * \param [out]  cells_min                      minimum of cells nummber
+ * \param [out]  cells_max                      maximum of cells nummber
+ * \param [out]  bound_part_faces_average       average of partitioning boundary faces
+ * \param [out]  bound_part_faces_median        median of partitioning boundary faces
+ * \param [out]  bound_part_faces_std_deviation standard deviation of partitioning boundary faces
+ * \param [out]  bound_part_faces_min           minimum of partitioning boundary faces
+ * \param [out]  bound_part_faces_max           maximum of partitioning boundary faces
+ *
+ */
 void
 PDM_multipart_stat_get
 (
  PDM_multipart_t  *multipart,
- int               i_zone,
+ int               i_domain,
  int              *cells_average,
  int              *cells_median,
  double           *cells_std_deviation,
@@ -3895,11 +4114,11 @@ PDM_multipart_stat_get
   int n_rank;
   PDM_MPI_Comm_size(multipart->comm, &n_rank);
 
-  assert(i_zone < multipart->n_zone);
-  _part_mesh_t _pmeshes = multipart->pmeshes[i_zone];
+  assert(i_domain < multipart->n_domain);
+  _part_mesh_t _pmeshes = multipart->pmeshes[i_domain];
 
   int* dpart_proc = (int *) malloc((n_rank + 1) * sizeof(int));
-  PDM_MPI_Allgather((void *) &multipart->n_part[i_zone],
+  PDM_MPI_Allgather((void *) &multipart->n_part[i_domain],
                     1,
                     PDM_MPI_INT,
            (void *) (&dpart_proc[1]),
@@ -3912,13 +4131,13 @@ PDM_multipart_stat_get
     dpart_proc[i] = dpart_proc[i] + dpart_proc[i-1];
   }
 
-  int *n_loc = (int *) malloc(multipart->n_part[i_zone]  * sizeof(int));
+  int *n_loc = (int *) malloc(multipart->n_part[i_domain]  * sizeof(int));
   int *n_tot = (int *) malloc(dpart_proc[n_rank]          * sizeof(int));
 
-  int *s_loc = (int *) malloc(multipart->n_part[i_zone]  * sizeof(int));
+  int *s_loc = (int *) malloc(multipart->n_part[i_domain]  * sizeof(int));
   int *s_tot = (int *) malloc(dpart_proc[n_rank]          * sizeof(int));
 
-  for (int i = 0; i < multipart->n_part[i_zone]; i++) {
+  for (int i = 0; i < multipart->n_part[i_domain]; i++) {
     n_loc[i] = 0;
     s_loc[i] = 0;
   }
@@ -3930,7 +4149,7 @@ PDM_multipart_stat_get
 
 
   int tn_part = dpart_proc[n_rank];
-  for (int i_part = 0; i_part < multipart->n_part[i_zone]; i_part++) {
+  for (int i_part = 0; i_part < multipart->n_part[i_domain]; i_part++) {
     n_loc[i_part] = PDM_part_mesh_n_entity_get(_pmeshes.pmesh, i_part, PDM_MESH_ENTITY_CELL  );
 
     int                     *face_part_bound_proc_idx;
@@ -3955,7 +4174,7 @@ PDM_multipart_stat_get
   }
 
   PDM_MPI_Allgatherv(n_loc,
-                     multipart->n_part[i_zone],
+                     multipart->n_part[i_domain],
                      PDM_MPI_INT,
                      n_tot,
                      n_part_proc,
@@ -3964,7 +4183,7 @@ PDM_multipart_stat_get
                      multipart->comm);
 
   PDM_MPI_Allgatherv(s_loc,
-                     multipart->n_part[i_zone],
+                     multipart->n_part[i_domain],
                      PDM_MPI_INT,
                      s_tot,
                      n_part_proc,

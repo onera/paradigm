@@ -1,3 +1,7 @@
+/*
+ * \file
+ */
+
 #ifndef __PDM_PART_TO_BLOCK_H__
 #define __PDM_PART_TO_BLOCK_H__
 
@@ -31,14 +35,14 @@ extern "C" {
 
 /**
  * \enum PDM_part_to_block_distrib_t
- * \brief Type of distribution
+ * \brief Type of block distribution
  *
  */
 
 typedef enum {
 
   PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC          = 0,  /*!< Distribute block on all processes */
-  PDM_PART_TO_BLOCK_DISTRIB_ONE_PROC_PER_NODE = 1,  /*!< Distribute block on one processe pere node */
+  PDM_PART_TO_BLOCK_DISTRIB_ONE_PROC_PER_NODE = 1,  /*!< Distribute block on a single process per node */
   PDM_PART_TO_BLOCK_DISTRIB_PART_OF_NODE      = 2   /*!< Distribute block on part of nodes */
 
 } PDM_part_to_block_distrib_t;
@@ -46,36 +50,23 @@ typedef enum {
 
 /**
  * \enum PDM_part_to_block_post_t
- * \brief Type of Post processing about blocks
+ * \brief Type of post-processing performed on blocks
  *
  */
 
 typedef enum {
 
-  PDM_PART_TO_BLOCK_POST_NOTHING       = 0,  /*!< No post processing     */
-  PDM_PART_TO_BLOCK_POST_CLEANUP       = 1,  /*!< Cleanup multi-elements */
-  PDM_PART_TO_BLOCK_POST_MERGE         = 2,  /*!< Merge multi-elements   */
-  PDM_PART_TO_BLOCK_POST_MERGE_UNIFORM = 3   /*!< TMP   */
+  PDM_PART_TO_BLOCK_POST_NOTHING       = 0,  /*!< No post processing                 */
+  PDM_PART_TO_BLOCK_POST_CLEANUP       = 1,  /*!< Cleanup multi-elements             */
+  PDM_PART_TO_BLOCK_POST_MERGE         = 2,  /*!< Merge multi-elements               */
+  PDM_PART_TO_BLOCK_POST_MERGE_UNIFORM = 3   /*!< Merge but keep the original buffer */
 
 } PDM_part_to_block_post_t;
-
-/**
- * \enum PDM_part_to_block_distrib_t
- * \brief Type of distribution
- *
- */
-
-/* typedef enum {
-
- PDM_PART_TO_BLOCK_STRIDE_CST = 0, */  /*!< Constant stride element */
- /* PDM_PART_TO_BLOCK_STRIDE_VAR = 1, */  /*!< Variable stride element */
-
-/* } PDM_part_to_block_stride_t; */
 
 
 /**
  * \struct PDM_part_to_block_t
- * \brief  Partitioning to block redistribution
+ * \brief  Partition-to-Block redistribution
  *
  */
 
@@ -92,8 +83,12 @@ typedef struct _pdm_part_to_block_t PDM_part_to_block_t;
 /**
  * \brief PDM_extents_conformize
  *
- * Correction extents to manage singular cases and di-symetrizes pb
+ * Correction extents to manage singular cases and breaks symmetry
  * eps = 1.e-3 is a standard value
+ *
+ * \param [in]    dim      Spatial dimension
+ * \param [inout] extents  Spatial extents (size = 2 * \p dim : [*x_min*, *y_min*, ..., *x_max*, *y_max*, ...])
+ * \param [in]    eps      Geometric tolerance
  *
  */
 void
@@ -104,7 +99,7 @@ PDM_extents_conformize(int    dim,
 
 /**
  *
- * \brief Reset global statistic
+ * \brief Reset global part-to-block statistics
  *
  */
 
@@ -117,7 +112,7 @@ void
 
 /**
  *
- * \brief Get global timer in part to block
+ * \brief Get global part-to-block statistics
  *
  * \param [in]   comm                 MPI communicator
  * \param [out]  min_exch_rank_send   Global min part of ranks used to send
@@ -148,7 +143,7 @@ PDM_part_to_block_global_statistic_get
 
 /**
  *
- * \brief Get global timer in part to block
+ * \brief Get global part-to-block timer
  *
  * \param [in]   comm              MPI communicator
  * \param [out]  min_elaps         Min elapsed time
@@ -190,18 +185,18 @@ PDM_part_to_block_global_timer_get
 
 /**
  *
- * \brief Create a partitioning to block redistribution
+ * \brief Create a part-to-block redistribution
  *
  * \param [in]   t_distrib       Distribution type
  * \param [in]   t_post          Post processing type
- * \param [in]   partActiveNode  Part of active nodes (\ref PDM_writer_BLOCK_DISTRIB_PART_OF_NODE mode)
- * \param [in]   gnum_elt        Element global number
- * \param [in]   weight          Weight of elements (or NULL)
+ * \param [in]   partActiveNode  Part of active nodes (\ref PDM_PART_TO_BLOCK_DISTRIB_PART_OF_NODE mode)
+ * \param [in]   gnum_elt        Element global numbers
+ * \param [in]   weight          Element weights of elements (or ``NULL``)
  * \param [in]   n_elt           Local number of elements
- * \param [in]   n_part          Number of partition
+ * \param [in]   n_part          Number of partitions
  * \param [in]   comm            MPI communicator
  *
- * \return   Initialized PDM_part_to_block_t
+ * \return   Initialized \ref PDM_part_to_block_t object
  *
  */
 
@@ -210,9 +205,9 @@ PDM_part_to_block_create
 (
  PDM_part_to_block_distrib_t   t_distrib,
  PDM_part_to_block_post_t      t_post,
- double                         partActiveNode,
+ double                        partActiveNode,
  PDM_g_num_t                 **gnum_elt,
- double                       **weight,
+ double                      **weight,
  int                          *n_elt,
  int                           n_part,
  PDM_MPI_Comm                  comm
@@ -221,18 +216,18 @@ PDM_part_to_block_create
 
 /**
  *
- * \brief Create a partitioning to block redistribution
+ * \brief Create a part-to-block redistribution from a given distribution index
  *
  * \param [in]   t_distrib       Distribution type
  * \param [in]   t_post          Post processing type
  * \param [in]   partActiveNode  Part of active nodes (\ref PDM_writer_BLOCK_DISTRIB_PART_OF_NODE mode)
- * \param [in]   gnum_elt        Element global number
- * \param [in]   weight          Weight of elements (or NULL)
+ * \param [in]   gnum_elt        Element global numbers
+ * \param [in]   distrib         Distribution index (\p distrib[0] = 0 and size = *n_rank* + 1)
  * \param [in]   n_elt           Local number of elements
- * \param [in]   n_part          Number of partition
+ * \param [in]   n_part          Number of partitions
  * \param [in]   comm            MPI communicator
  *
- * \return   Initialized PDM_part_to_block_t
+ * \return   Initialized \ref PDM_part_to_block_t object
  *
  */
 
@@ -243,11 +238,30 @@ PDM_part_to_block_create_from_distrib
  PDM_part_to_block_post_t      t_post,
  double                        partActiveNode,
  PDM_g_num_t                 **gnum_elt,
- const PDM_g_num_t            *dataDistribIndex,
+ const PDM_g_num_t            *distrib,
  int                          *n_elt,
  int                           n_part,
  PDM_MPI_Comm                  comm
 );
+
+
+/**
+ *
+ * \brief Create a part-to-block redistribution from geometric renumbering
+ *
+ * \param [in]   t_distrib       Distribution type
+ * \param [in]   t_post          Post processing type
+ * \param [in]   partActiveNode  Part of active nodes (\ref PDM_writer_BLOCK_DISTRIB_PART_OF_NODE mode)
+ * \param [in]   geom_renum      Geometric renumbering
+ * \param [in]   gnum_elt        Element global numbers
+ * \param [in]   weight          Element weights of elements (or ``NULL``)
+ * \param [in]   n_elt           Local number of elements
+ * \param [in]   n_part          Number of partitions
+ * \param [in]   comm            MPI communicator
+ *
+ * \return   Initialized \ref PDM_part_to_block_t object
+ *
+ */
 
 PDM_part_to_block_t *
 PDM_part_to_block_geom_create
@@ -255,10 +269,10 @@ PDM_part_to_block_geom_create
  PDM_part_to_block_distrib_t   t_distrib,
  PDM_part_to_block_post_t      t_post,
  double                        part_active_node,
- PDM_part_geom_t               geom_kind,
- double                      **pvtx_coords,
- PDM_g_num_t                 **gnum_elt,
- int                         **weight,
+ PDM_part_geom_t               geom_renum,
+ double                      **coords,
+ PDM_g_num_t                 **gnum,
+ double                      **weight,
  int                          *n_elt,
  int                           n_part,
  PDM_MPI_Comm                  comm
@@ -268,7 +282,7 @@ PDM_part_to_block_geom_create
  *
  * \brief Return number of active ranks
  *
- * \param [in]   ptb          Part to block structure
+ * \param [in]   ptb          Part-to-Block structure
  *
  * \return Number of active ranks
  *
@@ -285,9 +299,9 @@ PDM_part_to_block_n_active_ranks_get
  *
  * \brief Return active ranks
  *
- * \param [in]   ptb          Part to block structure
+ * \param [in]   ptb          Part-to-Block structure
  *
- * \return  active ranks
+ * \return  List of active ranks
  *
  */
 
@@ -302,9 +316,9 @@ PDM_part_to_block_active_ranks_get
  *
  * \brief Return if current rank is active
  *
- * \param [in]   ptb          Part to block structure
+ * \param [in]   ptb          Part-to-Block structure
  *
- * \return  if current rank is active
+ * \return  1 if current rank is active, 0 otherwise
  *
  */
 
@@ -317,11 +331,11 @@ PDM_part_to_block_is_active_rank
 
 /**
  *
- * \brief Return number of element in the current process
+ * \brief Return number of elements on current process (in the block-distributed frame)
  *
- * \param [in]   ptb          Part to block structure
+ * \param [in]   ptb          Part-to-Block structure
  *
- * \return Number of element in the current process
+ * \return Number of elements in the current process
  *
  */
 
@@ -334,9 +348,9 @@ PDM_part_to_block_n_elt_block_get
 
 /**
  *
- * \brief Return global numbers of element in the current process
+ * \brief Return global numbers of elements on current process (in the block-distributed frame)
  *
- * \param [in]   ptb          Part to block structure
+ * \param [in]   ptb          Part-to-Block structure
  *
  * \return  Global numbers
  *
@@ -350,9 +364,9 @@ PDM_part_to_block_block_gnum_get
 
 /**
  *
- * \brief Return numbers of occurence of each gnum element in the current process
+ * \brief Return numbers of occurrence of each gnum element on current process
  *
- * \param [in]   ptb          Part to block structure
+ * \param [in]   ptb          Part-to-Block structure
  *
  * \return  Global numbers counter
  *
@@ -367,18 +381,18 @@ PDM_part_to_block_block_gnum_count_get
 
 /**
  *
- * \brief Initialize a data exchange
+ * \brief Exchange data from *partitioned* frame to *block-distributed* frame
  *
- * \param [in]   ptb          Part to block structure
+ * \param [in]   ptb          Part-to-Block structure
  * \param [in]   s_data       Data size
  * \param [in]   t_stride     Stride type
- * \param [in]   cst_stride   Stride only for \ref PDM_writer_STRIDE_CST
- * \param [in]   part_stride  Variable stride (size = n_part) only for \ref PDM_writer_STRIDE_VAR
- * \param [in]   part_data    partitioned data
+ * \param [in]   cst_stride   Stride (only for \ref PDM_STRIDE_CST_INTERLACED or \ref PDM_STRIDE_CST_INTERLEAVED)
+ * \param [in]   part_stride  Variable stride (size = \p n_part) (only for \ref PDM_STRIDE_VAR_INTERLACED)
+ * \param [in]   part_data    Partitioned data (size = \p n_part)
  * \param [out]  block_stride Block stride
  * \param [out]  block_data   Block data
  *
- * \return       Size of highest block
+ * \return       Size of \p block_data array
  *
  */
 
@@ -396,6 +410,20 @@ PDM_part_to_block_exch
 );
 
 
+/**
+ *
+ * \brief Exchange data from *block-distributed* frame to *partitioned* frame
+ *
+ * \param [in]   ptb          Part-to-Block structure
+ * \param [in]   s_data       Data size
+ * \param [in]   t_stride     Stride type
+ * \param [in]   cst_stride   Stride (only for \ref PDM_STRIDE_CST_INTERLACED or \ref PDM_STRIDE_CST_INTERLEAVED)
+ * \param [in]   block_stride Block stride
+ * \param [in]   block_data   Block data
+ * \param [out]  part_stride  Variable stride (size = \p n_part) (only for \ref PDM_STRIDE_VAR_INTERLACED)
+ * \param [out]  part_data    Partitioned data (size = \p n_part)
+ *
+ */
 
 void
 PDM_part_to_block_reverse_exch
@@ -413,16 +441,17 @@ PDM_part_to_block_reverse_exch
 
 /**
  *
- * \brief Initialize a data exchange
+ * \brief Initiate a data exchange
+ * (TODO: Replace by \ref PDM_part_to_block_iexch ?)
  *
- * \param [in]   ptb          Part to block structure
+ * \param [in]   ptb          Part-to-Block structure
  * \param [in]   s_data       Data size
  * \param [in]   t_stride     Stride type
  * \param [in]   cst_stride   Stride only for \ref PDM_writer_STRIDE_CST
  * \param [in]   part_stride  Variable stride (size = n_part) only for \ref PDM_writer_STRIDE_VAR
  * \param [in]   part_data    partitioned data
  *
- * \return       Size of highest block
+ * \return       Exchange request
  *
  */
 
@@ -439,17 +468,22 @@ PDM_part_to_block_async_exch
 
 /**
  *
- * \brief Initialize a asynchronous data exchange
+ * \brief Initiate a non-blocking data exchange from *partitioned* frame
+ *        to *block-distributed* frame
  *
- * \param [in]   ptb          Part to block structure
+ * \param [in]   ptb          Part-to-Block structure
+ * \param [in]   k_comm       Kind of MPI communication
  * \param [in]   s_data       Data size
  * \param [in]   t_stride     Stride type
- * \param [in]   cst_stride   Stride only for \ref PDM_writer_STRIDE_CST
- * \param [in]   part_stride  Variable stride (size = n_part) only for \ref PDM_writer_STRIDE_VAR
- * \param [in]   part_data    partitioned data
- *
+ * \param [in]   cst_stride   Stride (only for \ref PDM_STRIDE_CST_INTERLACED or \ref PDM_STRIDE_CST_INTERLEAVED)
+ * \param [in]   part_stride  Variable stride (size = \p n_part) (only for \ref PDM_STRIDE_VAR_INTERLACED)
+ * \param [in]   part_data    Partitioned data (size = \p n_part)
+ * \param [out]  block_stride Block stride
+ * \param [out]  block_data   Block data
+ * \param [out]  request      Request
  *
  */
+
 void
 PDM_part_to_block_iexch
 (
@@ -467,14 +501,16 @@ PDM_part_to_block_iexch
 
 /**
  *
- * \brief Finalize and post-treated a asynchronous data exchange
+ * \brief Finalize and post-process a non-blocking data exchange
+ *        from *partitioned* frame to *block-distributed* frame
  *
- * \param [in]   ptb          Part to block structure
- * \param [in]   request_id   id of request to wait / post
+ * \param [in]   ptb          Part-to-Block structure
+ * \param [in]   request_id   Request to wait / post-process
  *
- * \return       Size of highest block
+ * \return       Size of block data
  *
  */
+
 int
 PDM_part_to_block_iexch_wait
 (
@@ -485,17 +521,19 @@ PDM_part_to_block_iexch_wait
 
 /**
  *
- * \brief Initialize a asynchronous data exchange
+ * \brief Initiate a non-blocking data exchange from *block-distributed* frame
+ *        to *partitioned* frame
  *
- * \param [in]   ptb          Part to block structure
+ * \param [in]   ptb          Part-to-Block structure
+ * \param [in]   k_comm       Kind of MPI communication
  * \param [in]   s_data       Data size
  * \param [in]   t_stride     Stride type
- * \param [in]   cst_stride   Stride only for \ref PDM_writer_STRIDE_CST
- * \param [in]   block_stride Variable stride (size = n_part) only for \ref PDM_writer_STRIDE_VAR
- * \param [in]   block_data   block data
- * \param [in]   part_stride  Variable stride (size = n_part) only for \ref PDM_writer_STRIDE_VAR
- * \param [in]   part_data    partitioned data
- *
+ * \param [in]   cst_stride   Stride (only for \ref PDM_STRIDE_CST_INTERLACED or \ref PDM_STRIDE_CST_INTERLEAVED)
+ * \param [in]   block_stride Block stride
+ * \param [in]   block_data   Block data
+ * \param [out]  part_stride  Variable stride (size = \p n_part) (only for \ref PDM_STRIDE_VAR_INTERLACED)
+ * \param [out]  part_data    Partitioned data (size = \p n_part)
+ * \param [out]  request      Request
  *
  */
 void
@@ -515,14 +553,13 @@ PDM_part_to_block_reverse_iexch
 
 /**
  *
- * \brief Finalize and post-treated a asynchronous data exchange
+ * \brief Finalize a non-blocking data exchange from *block-distributed* frame to *partitioned* frame
  *
- * \param [in]   ptb          Part to block structure
- * \param [in]   request_id   id of request to wait / post
- *
- * \return       Size of highest block
+ * \param [in]   ptb          Part-to-Block structure
+ * \param [in]   request_id   Request to wait
  *
  */
+
 void
 PDM_part_to_block_reverse_iexch_wait
 (
@@ -533,8 +570,9 @@ PDM_part_to_block_reverse_iexch_wait
 /**
  *
  * \brief Wait for an exchange
+ * (TODO: Replace by \ref PDM_part_to_block_iexch_wait ?)
  *
- * \param [in]   ptb          Part to block structure
+ * \param [in]   ptb          Part-to-Block structure
  * \param [in]   request_id   Internal id of the current exchange
  *
  */
@@ -547,13 +585,14 @@ PDM_part_to_block_async_wait
 
 /**
  *
- * \brief Get the raw exchange buffer and stride and deallocate memory
+ * \brief Get the raw exchange buffer and stride and free memory
  *
- * \param [in]   ptb          Part to block structure
+ * \param [in]   ptb          Part-to-Block structure
  * \param [in]   request_id   Internal id of the current exchange
  * \param [out]  block_stride Block stride
  * \param [out]  block_data   Block data
  *
+ * \return Size of raw received data array
  */
 int
 PDM_part_to_block_asyn_get_raw
@@ -566,13 +605,14 @@ PDM_part_to_block_asyn_get_raw
 
 /**
  *
- * \brief Get the raw exchange buffer and stride and deallocate memory
+ * \brief Get the raw exchange buffer and stride and free memory
  *
- * \param [in]   ptb          Part to block structure
+ * \param [in]   ptb          Part-to-Block structure
  * \param [in]   request_id   Internal id of the current exchange
  * \param [out]  block_stride Block stride
  * \param [out]  block_data   Block data
  *
+ * \return       Size of block data
  */
 int
 PDM_part_to_block_asyn_post_treatment
@@ -585,11 +625,11 @@ PDM_part_to_block_asyn_post_treatment
 
 /**
  *
- * \brief Free a part to block structure
+ * \brief Free a Part-to-Block structure
  *
- * \param [inout] ptb         Part to block structure
+ * \param [inout] ptb         Part-to-Block structure
  *
- * \return       NULL
+ * \return       Null pointer
  */
 
 PDM_part_to_block_t *
@@ -603,9 +643,9 @@ PDM_part_to_block_free
  *
  * \brief Return block distribution
  *
- * \param [in] ptb         Part to block structure
+ * \param [in] ptb         Part-to-Block structure
  *
- * \return  Distribution (size = communicator size + 1)
+ * \return  Distribution (size = *n_rank* + 1)
  */
 
 PDM_g_num_t *
@@ -617,9 +657,9 @@ PDM_part_to_block_distrib_index_get
 
 /**
  *
- * \brief Return processus destination
+ * \brief Return destination process
  *
- * \param [in] ptb         Part to block structure
+ * \param [in] ptb         Part-to-Block structure
  *
  * \return  Destination (size = sum of partition elements)
  */
@@ -631,7 +671,19 @@ PDM_part_to_block_destination_get
 );
 
 
-PDM_g_num_t*
+/**
+ *
+ * \brief Adapt a partial block (padd stride and distribution arrays)
+ *
+ * \param [in]    ptb         Part-to-Block structure
+ * \param [inout] block_n     Block stride
+ * \param [in]    n_g_block   Total number of elements (across all processes)
+ *
+ * \return New block distribution (size = *n_rank* + 1)
+ *
+ */
+
+PDM_g_num_t *
 PDM_part_to_block_adapt_partial_block_to_block
 (
  PDM_part_to_block_t  *ptb,
@@ -643,11 +695,11 @@ PDM_part_to_block_adapt_partial_block_to_block
 
 /**
  *
- * \brief Return global weights of element in the current process
+ * \brief Return global weights of elements on current process
  *
- * \param [in]   ptb          Part to block structure
+ * \param [in]   ptb          Part-to-Block structure
  *
- * \return  Global weights
+ * \return  Global weights (size = *n_part*)
  *
  */
 
@@ -662,7 +714,7 @@ PDM_part_to_block_global_weight_get
  *
  * \brief Get number of MPI ranks
  *
- * \param [in]   ptb          Part to block structure
+ * \param [in]   ptb          Part-to-Block structure
  *
  * \return  Number of MPI ranks
  *
@@ -677,11 +729,11 @@ PDM_part_to_block_n_ranks_get
 
 /**
  *
- * \brief Return total number of element in the current process (summed over all partitions)
+ * \brief Return total number of elements on current process (summed over all partitions)
  *
- * \param [in]   ptb          Part to block structure
+ * \param [in]   ptb          Part-to-Block structure
  *
- * \return Total number of element in the current process
+ * \return Total number of elements on current process (in *partition* frame)
  *
  */
 

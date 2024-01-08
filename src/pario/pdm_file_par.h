@@ -1,3 +1,7 @@
+/*
+ * \file
+ */
+
 #ifndef __FILE_PAR_H__
 #define __FILE_PAR_H__
 

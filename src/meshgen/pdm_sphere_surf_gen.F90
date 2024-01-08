@@ -57,27 +57,25 @@ module pdm_sphere_surf_gen
     integer,              intent(in)  :: n_part
     integer,              intent(in)  :: part_method
     integer(pdm_l_num_s), pointer     :: pn_vtx(:)
-    type(PDM_pointer_array_t)         :: pvtx_coord
-    type(PDM_pointer_array_t)         :: pvtx_ln_to_gn
+    type(PDM_pointer_array_t), pointer:: pvtx_coord
+    type(PDM_pointer_array_t), pointer:: pvtx_ln_to_gn
     integer(pdm_l_num_s), pointer     :: pn_face(:)
-    type(PDM_pointer_array_t)         :: pface_vtx_idx
-    type(PDM_pointer_array_t)         :: pface_vtx
-    type(PDM_pointer_array_t)         :: pface_ln_to_gn
+    type(PDM_pointer_array_t), pointer:: pface_vtx_idx
+    type(PDM_pointer_array_t), pointer:: pface_vtx
+    type(PDM_pointer_array_t), pointer:: pface_ln_to_gn
 
     integer(c_int)                    :: c_comm
-    type(c_ptr)                       :: c_pn_vtx            = C_NULL_PTR
-    type(c_ptr)                       :: c_pn_face           = C_NULL_PTR
-    type(c_ptr)                       :: cc_pvtx_coord       = C_NULL_PTR
-    type(c_ptr)                       :: cc_pvtx_ln_to_gn    = C_NULL_PTR
-    type(c_ptr)                       :: cc_pface_vtx_idx    = C_NULL_PTR
-    type(c_ptr)                       :: cc_pface_vtx        = C_NULL_PTR
-    type(c_ptr)                       :: cc_pface_ln_to_gn   = C_NULL_PTR
-    type(c_ptr), pointer              :: c_pvtx_coord(:)     => null()
-    type(c_ptr), pointer              :: c_pvtx_ln_to_gn(:)  => null()
-    type(c_ptr), pointer              :: c_pface_vtx_idx(:)  => null()
-    type(c_ptr), pointer              :: c_pface_vtx(:)      => null()
-    type(c_ptr), pointer              :: c_pface_ln_to_gn(:) => null()
-    integer                           :: ipart
+    type(c_ptr)                       :: c_pn_vtx
+    type(c_ptr)                       :: c_pn_face
+    type(c_ptr)                       :: cc_pvtx_coord
+    type(c_ptr)                       :: cc_pvtx_ln_to_gn
+    type(c_ptr)                       :: cc_pface_vtx_idx
+    type(c_ptr)                       :: cc_pface_vtx
+    type(c_ptr)                       :: cc_pface_ln_to_gn
+
+    type(c_ptr),    pointer           :: fptr(:)
+    integer(c_int), pointer           :: face_vtx_idx(:)
+    integer                           :: i
 
     interface
 
@@ -124,8 +122,25 @@ module pdm_sphere_surf_gen
       end subroutine PDM_sphere_surf_icosphere_gen_part_c
     end interface
 
+    integer, allocatable :: length_cc_pvtx_coord(:)
+    integer, allocatable :: length_cc_pvtx_ln_to_gn(:)
+    integer, allocatable :: length_cc_pface_vtx_idx(:)
+    integer, allocatable :: length_cc_pface_vtx(:)
+    integer, allocatable :: length_cc_pface_ln_to_gn(:)
+
     c_comm = PDM_MPI_Comm_f2c(comm)
 
+    c_pn_vtx            = C_NULL_PTR
+    c_pn_face           = C_NULL_PTR
+    cc_pvtx_coord       = C_NULL_PTR
+    cc_pvtx_ln_to_gn    = C_NULL_PTR
+    cc_pface_vtx_idx    = C_NULL_PTR
+    cc_pface_vtx        = C_NULL_PTR
+    cc_pface_ln_to_gn   = C_NULL_PTR
+
+    fptr         => null()
+    face_vtx_idx => null()
+    
     call PDM_sphere_surf_icosphere_gen_part_c(c_comm,            &
                                               n,                 &
                                               x_center,          &
@@ -150,80 +165,64 @@ module pdm_sphere_surf_gen
                      pn_face,   &
                      [n_part])
 
+    allocate(length_cc_pvtx_coord    (n_part), &
+             length_cc_pvtx_ln_to_gn (n_part), &
+             length_cc_pface_vtx_idx (n_part), &
+             length_cc_pface_vtx     (n_part), &
+             length_cc_pface_ln_to_gn(n_part))
 
-    call PDM_pointer_array_create(pvtx_coord,     &
-                                  n_part,         &
-                                  PDM_TYPE_DOUBLE)
+    ! fill size
+    length_cc_pvtx_coord    (:) = pn_vtx(:)
+    length_cc_pvtx_ln_to_gn (:) = pn_vtx(:) * 3
+    length_cc_pface_vtx_idx (:) = pn_face(:) + 1
+    length_cc_pface_ln_to_gn(:) = pn_face(:)
 
-    call PDM_pointer_array_create(pvtx_ln_to_gn,  &
-                                  n_part,         &
-                                  PDM_TYPE_G_NUM)
-
-    call PDM_pointer_array_create(pface_vtx_idx,  &
-                                  n_part,         &
-                                  PDM_TYPE_INT)
-
-    call PDM_pointer_array_create(pface_vtx,      &
-                                  n_part,         &
-                                  PDM_TYPE_INT)
-
-    call PDM_pointer_array_create(pface_ln_to_gn, &
-                                  n_part,         &
-                                  PDM_TYPE_G_NUM)
-
-    call c_f_pointer(cc_pvtx_coord, &
-                     c_pvtx_coord,  &
-                     [n_part])
-
-    call c_f_pointer(cc_pvtx_ln_to_gn, &
-                     c_pvtx_ln_to_gn,  &
-                     [n_part])
-
-    call c_f_pointer(cc_pface_vtx_idx, &
-                     c_pface_vtx_idx,  &
-                     [n_part])
-
-    call c_f_pointer(cc_pface_vtx, &
-                     c_pface_vtx,  &
-                     [n_part])
-
-    call c_f_pointer(cc_pface_ln_to_gn, &
-                     c_pface_ln_to_gn,  &
-                     [n_part])
-
-    do ipart = 1, n_part
-      call PDM_pointer_array_part_set_from_cptr(pvtx_coord,          &
-                                                ipart-1,             &
-                                                c_pvtx_coord(ipart), &
-                                                3*pn_vtx(ipart))
-
-      call PDM_pointer_array_part_set_from_cptr(pvtx_ln_to_gn,          &
-                                                ipart-1,                &
-                                                c_pvtx_ln_to_gn(ipart), &
-                                                pn_vtx(ipart))
-
-      call PDM_pointer_array_part_set_from_cptr(pface_vtx_idx,          &
-                                                ipart-1,                &
-                                                c_pface_vtx_idx(ipart), &
-                                                pn_face(ipart))
-
-      call PDM_pointer_array_part_set_from_cptr(pface_vtx,          &
-                                                ipart-1,            &
-                                                c_pface_vtx(ipart), &
-                                                pn_face(ipart))
-
-      call PDM_pointer_array_part_set_from_cptr(pface_ln_to_gn,          &
-                                                ipart-1,                 &
-                                                c_pface_ln_to_gn(ipart), &
-                                                pn_face(ipart))
+    do i = 1, n_part
+      call c_f_pointer(cc_pface_vtx_idx, fptr,         [n_part])
+      call c_f_pointer(fptr(i),          face_vtx_idx, [pn_face(i) + 1])
+      length_cc_pface_vtx(i) = face_vtx_idx(pn_face(i))
     end do
 
+    call PDM_pointer_array_create(pvtx_coord,             &
+                                  n_part,                 &
+                                  PDM_TYPE_DOUBLE,        &
+                                  cc_pvtx_coord,          &
+                                  length_cc_pvtx_coord,   &
+                                  PDM_OWNERSHIP_KEEP)
 
-    call pdm_fortran_free_c(cc_pvtx_coord)
-    call pdm_fortran_free_c(cc_pvtx_ln_to_gn)
-    call pdm_fortran_free_c(cc_pface_vtx_idx)
-    call pdm_fortran_free_c(cc_pface_vtx)
-    call pdm_fortran_free_c(cc_pface_ln_to_gn)
+    call PDM_pointer_array_create(pvtx_ln_to_gn,          &
+                                  n_part,                 &
+                                  PDM_TYPE_G_NUM,         &
+                                  cc_pvtx_ln_to_gn,       &
+                                  length_cc_pvtx_ln_to_gn,&
+                                  PDM_OWNERSHIP_KEEP)
+
+    call PDM_pointer_array_create(pface_vtx_idx,          &
+                                  n_part,                 &
+                                  PDM_TYPE_INT,           &
+                                  cc_pface_vtx_idx,       &
+                                  length_cc_pface_vtx_idx,&
+                                  PDM_OWNERSHIP_KEEP)
+
+    call PDM_pointer_array_create(pface_vtx,          &
+                                  n_part,             &
+                                  PDM_TYPE_INT,       &
+                                  cc_pface_vtx,       &
+                                  length_cc_pface_vtx,&
+                                  PDM_OWNERSHIP_KEEP)
+
+    call PDM_pointer_array_create(pface_ln_to_gn,          &
+                                  n_part,                  &
+                                  PDM_TYPE_G_NUM,          &
+                                  cc_pface_ln_to_gn,       &
+                                  length_cc_pface_ln_to_gn,&
+                                  PDM_OWNERSHIP_KEEP)
+
+    deallocate(length_cc_pvtx_coord,     &
+               length_cc_pvtx_ln_to_gn,  &
+               length_cc_pface_vtx_idx,  &
+               length_cc_pface_vtx,      &
+               length_cc_pface_ln_to_gn)
 
   end subroutine PDM_sphere_surf_icosphere_gen_part
 

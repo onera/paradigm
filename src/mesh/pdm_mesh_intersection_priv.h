@@ -127,11 +127,15 @@ struct _pdm_mesh_intersection_t {
 
   /* Results */
   PDM_ownership_t owner;
+  int tag_extrp_mesh;
   int tag_elt_a_elt_b_get;
+  int tag_box_a_box_b_get;
   int tag_elt_b_elt_a_get;
   int tag_elt_volume_get[2];
   int         **elt_a_elt_b_idx;
   PDM_g_num_t **elt_a_elt_b;
+  int          *box_a_box_b_idx;
+  int          *box_a_box_b;
   double      **elt_a_elt_b_volume;
 
   double      **elt_b_elt_a_volume;

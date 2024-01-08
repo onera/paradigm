@@ -1,3 +1,7 @@
+/*
+ * \file
+ */
+
 #ifndef __PDM_PART_RENUM_H__
 #define	__PDM_PART_RENUM_H__
 

@@ -88,7 +88,7 @@ _export_vtk_1d
     PDM_g_num_t *edge_ln_to_gn = NULL;
     PDM_g_num_t *vtx_ln_to_gn  = NULL;
     int n_edge = PDM_extract_part_ln_to_gn_get(extrp_mesh, i_part, PDM_MESH_ENTITY_EDGE  , &edge_ln_to_gn, PDM_OWNERSHIP_KEEP);
-    int n_vtx  = PDM_extract_part_ln_to_gn_get(extrp_mesh, i_part, PDM_MESH_ENTITY_VERTEX, &vtx_ln_to_gn , PDM_OWNERSHIP_KEEP);
+    int n_vtx  = PDM_extract_part_ln_to_gn_get(extrp_mesh, i_part, PDM_MESH_ENTITY_VTX, &vtx_ln_to_gn , PDM_OWNERSHIP_KEEP);
 
     double *vtx_coord = NULL;
     PDM_extract_part_vtx_coord_get(extrp_mesh, i_part, &vtx_coord, PDM_OWNERSHIP_KEEP);
@@ -131,7 +131,7 @@ _export_vtk_2d
     int n_face = extrp_mesh->n_target[i_part];
     face_ln_to_gn = extrp_mesh->target_gnum[i_part];
     // int n_face = PDM_extract_part_parent_ln_to_gn_get(extrp_mesh, i_part, PDM_MESH_ENTITY_FACE  , &face_ln_to_gn, PDM_OWNERSHIP_KEEP);
-    int n_vtx  = PDM_extract_part_ln_to_gn_get(extrp_mesh, i_part, PDM_MESH_ENTITY_VERTEX, &vtx_ln_to_gn , PDM_OWNERSHIP_KEEP);
+    int n_vtx  = PDM_extract_part_ln_to_gn_get(extrp_mesh, i_part, PDM_MESH_ENTITY_VTX, &vtx_ln_to_gn , PDM_OWNERSHIP_KEEP);
 
     double *vtx_coord = NULL;
     PDM_extract_part_vtx_coord_get(extrp_mesh, i_part, &vtx_coord, PDM_OWNERSHIP_KEEP);
@@ -199,7 +199,7 @@ _export_vtk_3d
 
     pn_extract_vtx[i_part] = PDM_extract_part_n_entity_get(extrp,
                                                            i_part,
-                                                           PDM_MESH_ENTITY_VERTEX);
+                                                           PDM_MESH_ENTITY_VTX);
 
     PDM_extract_part_connectivity_get(extrp,
                                       i_part,
@@ -263,7 +263,7 @@ _export_vtk_3d
 
     PDM_extract_part_ln_to_gn_get(extrp,
                                   i_part,
-                                  PDM_MESH_ENTITY_VERTEX,
+                                  PDM_MESH_ENTITY_VTX,
                                   &pextract_vtx_ln_to_gn[i_part],
                                   PDM_OWNERSHIP_KEEP);
 
@@ -663,6 +663,7 @@ _compute_part_mesh_extents
 
       int n_face = PDM_part_mesh_n_entity_get(mesh, i_part, PDM_MESH_ENTITY_FACE);
       PDM_part_mesh_connectivity_get(mesh, i_part, PDM_CONNECTIVITY_TYPE_FACE_VTX , &face_vtx , &face_vtx_idx, PDM_OWNERSHIP_BAD_VALUE);
+
 
       PDM_part_mesh_vtx_coord_get(mesh, i_part, &vtx_coord, PDM_OWNERSHIP_BAD_VALUE); // Il faudrait un unchanged
       extents[i_part] = malloc(6 * n_face * sizeof(double));
@@ -1287,11 +1288,15 @@ static
 PDM_extract_part_t*
 _create_extract_part
 (
- PDM_part_mesh_t *mesh,
- int              dim_mesh,
- PDM_box_set_t   *boxes_meshes
+  PDM_part_mesh_t              *mesh,
+  int                           dim_mesh,
+  PDM_mesh_intersection_kind_t  intersect_kind,
+  PDM_box_set_t                *boxes_meshes
 )
 {
+  PDM_g_num_t *gnum_elt_mesh = (PDM_g_num_t *) PDM_box_set_get_g_num (boxes_meshes);
+  int n_elt_mesh = PDM_box_set_get_size (boxes_meshes);
+
   int n_part_out = 1;
   PDM_extract_part_t* extrp_mesh = PDM_extract_part_create(dim_mesh,
                                                            mesh->n_part,
@@ -1302,31 +1307,36 @@ _create_extract_part
                                                            PDM_OWNERSHIP_KEEP,
                                                            mesh->comm);
 
-  int n_elt_mesh = PDM_box_set_get_size (boxes_meshes);
+  PDM_g_num_t *target_g_num = gnum_elt_mesh;
+  if (intersect_kind == PDM_MESH_INTERSECTION_KIND_PREPROCESS) { 
+    target_g_num = malloc(sizeof(PDM_g_num_t) * n_elt_mesh);
+    memcpy(target_g_num, gnum_elt_mesh, sizeof(PDM_g_num_t) * n_elt_mesh);
+    PDM_extract_part_target_gnum_keep_ownnership(extrp_mesh);
+  }
+
 
   // printf("n_elt_mesh = %i  \n", n_elt_mesh);
 
-  PDM_g_num_t *gnum_elt_mesh = (PDM_g_num_t *) PDM_box_set_get_g_num (boxes_meshes);
 
   int *init_location_elt_mesh = (int  *) PDM_box_set_origin_get(boxes_meshes);
 
 
   for(int i_part = 0; i_part < mesh->n_part; ++i_part) {
 
-    int n_cell = PDM_part_mesh_n_entity_get(mesh, i_part, PDM_MESH_ENTITY_CELL  );
-    int n_face = PDM_part_mesh_n_entity_get(mesh, i_part, PDM_MESH_ENTITY_FACE  );
-    int n_edge = PDM_part_mesh_n_entity_get(mesh, i_part, PDM_MESH_ENTITY_EDGE  );
-    int n_vtx  = PDM_part_mesh_n_entity_get(mesh, i_part, PDM_MESH_ENTITY_VERTEX);
+    int n_cell = PDM_part_mesh_n_entity_get(mesh, i_part, PDM_MESH_ENTITY_CELL);
+    int n_face = PDM_part_mesh_n_entity_get(mesh, i_part, PDM_MESH_ENTITY_FACE);
+    int n_edge = PDM_part_mesh_n_entity_get(mesh, i_part, PDM_MESH_ENTITY_EDGE);
+    int n_vtx  = PDM_part_mesh_n_entity_get(mesh, i_part, PDM_MESH_ENTITY_VTX);
 
     PDM_g_num_t *cell_ln_to_gn = NULL;
     PDM_g_num_t *face_ln_to_gn = NULL;
     PDM_g_num_t *edge_ln_to_gn = NULL;
     PDM_g_num_t *vtx_ln_to_gn  = NULL;
 
-    PDM_part_mesh_entity_ln_to_gn_get(mesh, i_part, PDM_MESH_ENTITY_CELL  , &cell_ln_to_gn, PDM_OWNERSHIP_BAD_VALUE);
-    PDM_part_mesh_entity_ln_to_gn_get(mesh, i_part, PDM_MESH_ENTITY_FACE  , &face_ln_to_gn, PDM_OWNERSHIP_BAD_VALUE);
-    PDM_part_mesh_entity_ln_to_gn_get(mesh, i_part, PDM_MESH_ENTITY_EDGE  , &edge_ln_to_gn, PDM_OWNERSHIP_BAD_VALUE);
-    PDM_part_mesh_entity_ln_to_gn_get(mesh, i_part, PDM_MESH_ENTITY_VERTEX, &vtx_ln_to_gn , PDM_OWNERSHIP_BAD_VALUE);
+    PDM_part_mesh_entity_ln_to_gn_get(mesh, i_part, PDM_MESH_ENTITY_CELL, &cell_ln_to_gn, PDM_OWNERSHIP_BAD_VALUE);
+    PDM_part_mesh_entity_ln_to_gn_get(mesh, i_part, PDM_MESH_ENTITY_FACE, &face_ln_to_gn, PDM_OWNERSHIP_BAD_VALUE);
+    PDM_part_mesh_entity_ln_to_gn_get(mesh, i_part, PDM_MESH_ENTITY_EDGE, &edge_ln_to_gn, PDM_OWNERSHIP_BAD_VALUE);
+    PDM_part_mesh_entity_ln_to_gn_get(mesh, i_part, PDM_MESH_ENTITY_VTX,  &vtx_ln_to_gn , PDM_OWNERSHIP_BAD_VALUE);
 
     int *cell_face     = NULL;
     int *cell_face_idx = NULL;
@@ -1369,10 +1379,7 @@ _create_extract_part
 
 
   /*  Setup target frame */
-  PDM_extract_part_target_set(extrp_mesh, 0, n_elt_mesh, gnum_elt_mesh, init_location_elt_mesh);
-  // PDM_g_num_t *target_g_num = malloc(sizeof(PDM_g_num_t) * n_elt_mesh);
-  // memcpy(target_g_num, gnum_elt_mesh, sizeof(PDM_g_num_t) * n_elt_mesh);
-  // PDM_extract_part_target_set(extrp_mesh, 0, n_elt_mesh, target_g_num, init_location_elt_mesh);
+  PDM_extract_part_target_set(extrp_mesh, 0, n_elt_mesh, target_g_num, init_location_elt_mesh);
 
   PDM_extract_part_compute(extrp_mesh);
 
@@ -1384,9 +1391,9 @@ static
 PDM_extract_part_t*
 _create_extract_part_nodal
 (
- PDM_mesh_intersection_t *mi,
- const int                i_mesh,
- PDM_box_set_t           *boxes_meshes
+ PDM_mesh_intersection_t      *mi,
+ const int                     i_mesh,
+ PDM_box_set_t                 *boxes_meshes
 )
 {
   PDM_MPI_Comm comm = mi->comm;
@@ -1436,6 +1443,10 @@ _create_extract_part_nodal
                                                         n_part,
                                                         &pmne);
 
+  PDM_g_num_t *gnum_elt_mesh = (PDM_g_num_t *) PDM_box_set_get_g_num (boxes_meshes);
+
+  int n_elt_mesh = PDM_box_set_get_size (boxes_meshes);
+
 
   int n_part_out = 1;
   PDM_extract_part_t* extrp_mesh = PDM_extract_part_create(dim_mesh,
@@ -1447,11 +1458,15 @@ _create_extract_part_nodal
                                                            PDM_OWNERSHIP_KEEP,
                                                            comm);
 
-  int n_elt_mesh = PDM_box_set_get_size (boxes_meshes);
+  PDM_g_num_t *target_g_num = gnum_elt_mesh;
+  if (mi->intersect_kind == PDM_MESH_INTERSECTION_KIND_PREPROCESS) { 
+    target_g_num = malloc(sizeof(PDM_g_num_t) * n_elt_mesh);
+    memcpy(target_g_num, gnum_elt_mesh, sizeof(PDM_g_num_t) * n_elt_mesh);
+    PDM_extract_part_target_gnum_keep_ownnership(extrp_mesh);
+  }
 
   // printf("n_elt_mesh = %i  \n", n_elt_mesh);
 
-  PDM_g_num_t *gnum_elt_mesh = (PDM_g_num_t *) PDM_box_set_get_g_num (boxes_meshes);
 
   int *init_location_elt_mesh = (int  *) PDM_box_set_origin_get(boxes_meshes);
 
@@ -1526,7 +1541,7 @@ _create_extract_part_nodal
   }
 
   /*  Setup target frame */
-  PDM_extract_part_target_set(extrp_mesh, 0, n_elt_mesh, gnum_elt_mesh, init_location_elt_mesh);
+  PDM_extract_part_target_set(extrp_mesh, 0, n_elt_mesh, target_g_num, init_location_elt_mesh);
   // PDM_g_num_t *target_g_num = malloc(sizeof(PDM_g_num_t) * n_elt_mesh);
   // memcpy(target_g_num, gnum_elt_mesh, sizeof(PDM_g_num_t) * n_elt_mesh);
   // PDM_extract_part_target_set(extrp_mesh, 0, n_elt_mesh, target_g_num, init_location_elt_mesh);
@@ -1610,7 +1625,7 @@ _get_extracted_mesh_vol
 
   PDM_extract_part_parent_ln_to_gn_get(extrp,
                                        0,
-                                       PDM_MESH_ENTITY_VERTEX,
+                                       PDM_MESH_ENTITY_VTX,
                                        vtx_ln_to_gn,
                                        PDM_OWNERSHIP_KEEP);
 
@@ -1633,11 +1648,10 @@ _export_ensight3d
  double       *vtx_coord,
  PDM_g_num_t  *cell_ln_to_gn,
  PDM_g_num_t  *vtx_ln_to_gn
- )
+)
 {
   int i_rank;
   PDM_MPI_Comm_rank(comm, &i_rank);
-
 
   PDM_gen_gnum_t *gnum_vtx = PDM_gnum_create(3, 1, PDM_FALSE, 1., comm, PDM_OWNERSHIP_KEEP);
 
@@ -1806,16 +1820,11 @@ _export_ensight3d
   free(val_gnum);
   free(val_vol );
   // free(cell_face_n);
-  // free(face_vtx_n );
+  // free(face_vtx_n);
 
   PDM_gnum_free(gnum_vtx );
   PDM_gnum_free(gnum_cell);
 }
-
-
-
-
-
 
 
 static void
@@ -2354,11 +2363,11 @@ _mesh_intersection_vol_vol
   for (int i = 0; i < 2; i++) {
     n_vtx[i] = PDM_extract_part_n_entity_get(mi->extrp_mesh[i],
                                              0,
-                                             PDM_MESH_ENTITY_VERTEX);
+                                             PDM_MESH_ENTITY_VTX);
 
     PDM_extract_part_parent_ln_to_gn_get(mi->extrp_mesh[i],
                                          0,
-                                         PDM_MESH_ENTITY_VERTEX,
+                                         PDM_MESH_ENTITY_VTX,
                                          &vtx_ln_to_gn[i],
                                          PDM_OWNERSHIP_KEEP);
 
@@ -4482,7 +4491,7 @@ _mesh_intersection_surf_surf
 
     n_vtx[i] = PDM_extract_part_n_entity_get(mi->extrp_mesh[i],
                                              0,
-                                             PDM_MESH_ENTITY_VERTEX);
+                                             PDM_MESH_ENTITY_VTX);
 
     PDM_extract_part_vtx_coord_get(mi->extrp_mesh[i],
                                    0,
@@ -5167,17 +5176,23 @@ PDM_mesh_intersection_create
   mi->mesh_nodal[0] = NULL;
   mi->mesh_nodal[1] = NULL;
 
+  mi->extrp_mesh[0] = NULL;
+  mi->extrp_mesh[1] = NULL;
 
   /* Initialize results */
   mi->owner = owner;
+  mi->tag_extrp_mesh      = 0;
   mi->tag_elt_a_elt_b_get = 0;
+  mi->tag_box_a_box_b_get = 0;
   mi->tag_elt_b_elt_a_get = 0;
-  mi->elt_a_elt_b_idx    = NULL;
-  mi->elt_a_elt_b        = NULL;
-  mi->elt_a_elt_b_volume = NULL;
-  mi->elt_b_elt_a_volume = NULL;
-  mi->ptp                = NULL;
-  mi->ptp_ownership      = PDM_OWNERSHIP_KEEP;
+  mi->elt_a_elt_b_idx     = NULL;
+  mi->elt_a_elt_b         = NULL;
+  mi->box_a_box_b_idx     = NULL;
+  mi->box_a_box_b         = NULL;
+  mi->elt_a_elt_b_volume  = NULL;
+  mi->elt_b_elt_a_volume  = NULL;
+  mi->ptp                 = NULL;
+  mi->ptp_ownership       = PDM_OWNERSHIP_KEEP;
 
   mi->tag_elt_volume_get[0] = 0;
   mi->tag_elt_volume_get[1] = 0;
@@ -5438,6 +5453,7 @@ PDM_mesh_intersection_compute
                    box_a_to_box_b,
                    &redistribute_box_a_to_box_b_idx,
                    &redistribute_box_a_to_box_b);
+  
   free(box_a_to_box_b_idx);
   free(box_a_to_box_b);
 
@@ -5455,6 +5471,7 @@ PDM_mesh_intersection_compute
     if (mi->mesh_nodal[imesh] == NULL && mi->mesh[imesh] != NULL) {
       mi->extrp_mesh[imesh] = _create_extract_part(mi->mesh[imesh],
                                                    mi->dim_mesh[imesh],
+                                                   mi->intersect_kind,
                                                    boxes_mesh[imesh]);
     }
     else {
@@ -5491,7 +5508,7 @@ PDM_mesh_intersection_compute
         PDM_g_num_t *_vtx_ln_to_gn = NULL;
         PDM_extract_part_parent_ln_to_gn_get(mi->extrp_mesh[imesh],
                                              0,
-                                             PDM_MESH_ENTITY_VERTEX,
+                                             PDM_MESH_ENTITY_VTX,
                                              &_vtx_ln_to_gn,
                                              PDM_OWNERSHIP_KEEP);
 
@@ -5537,60 +5554,75 @@ PDM_mesh_intersection_compute
     }
   }
 
+
   PDM_MPI_Barrier(mi->comm);
 
-  // if (mi->mesh_nodal[0] != NULL ||
-  //     mi->mesh_nodal[1] != NULL) {
-  //   PDM_error(__FILE__, __LINE__, 0, "Nodal version not implemented yet\n");
-  // }
+  if (mi->intersect_kind == PDM_MESH_INTERSECTION_KIND_PREPROCESS) {
+    mi->box_a_box_b_idx   = redistribute_box_a_to_box_b_idx;
+    mi->box_a_box_b       = redistribute_box_a_to_box_b;
+    PDM_box_set_destroy (&boxes_mesh[0]);
+    PDM_box_set_destroy (&boxes_mesh[1]);
 
-  if(mi->dim_mesh[0] == 3 && mi->dim_mesh[1] == 3) {
-      _mesh_intersection_vol_vol(mi,
-                                 redistribute_box_a_to_box_b_idx,
-                                 redistribute_box_a_to_box_b);
-  } else if(mi->dim_mesh[0] == 3 && mi->dim_mesh[1] == 2) {
-    // On suppose que l'utilisateur met A = Vol et B = Surf
-    _mesh_intersection_vol_surf(mi,
-                                extrp_mesh_a,
-                                extrp_mesh_b,
-                                redistribute_box_a_to_box_b_idx,
-                                redistribute_box_a_to_box_b);
-  } else if(mi->dim_mesh[0] == 2 && mi->dim_mesh[1] == 2) {
-    _mesh_intersection_surf_surf(mi,
-                                 redistribute_box_a_to_box_b_idx,
-                                 redistribute_box_a_to_box_b);
-  } else if(mi->dim_mesh[0] == 2 && mi->dim_mesh[1] == 1) {
-    // On suppose que l'utilisateur met A = Vol et B = Surf
-    _mesh_intersection_surf_line(mi,
-                                 extrp_mesh_a,
-                                 extrp_mesh_b,
-                                 redistribute_box_a_to_box_b_idx,
-                                 redistribute_box_a_to_box_b);
-  } else if(mi->dim_mesh[0] == 3 && mi->dim_mesh[1] == 1) {
-    // On suppose que l'utilisateur met A = Vol et B = Surf
-    _mesh_intersection_vol_line(mi,
-                                extrp_mesh_a,
-                                extrp_mesh_b,
-                                redistribute_box_a_to_box_b_idx,
-                                redistribute_box_a_to_box_b);
-  } else {
-    PDM_error(__FILE__, __LINE__, 0,
-              "PDM_mesh_intersection_compute error : Cannot handle meshA with dim = %i and meshB = %i \n", mi->dim_mesh[0], mi->dim_mesh[1]);
   }
-  PDM_box_set_destroy (&boxes_mesh[0]);
-  PDM_box_set_destroy (&boxes_mesh[1]);
 
-  free(redistribute_box_a_to_box_b_idx);
-  free(redistribute_box_a_to_box_b    );
+  else {
 
-  for (int imesh = 0; imesh < 2; imesh++) {
-    if (mi->mesh_nodal[imesh] == NULL && mi->mesh[imesh] == NULL) {
-      PDM_part_mesh_nodal_elmts_free(mi->extrp_mesh[imesh]->pmne);
+    // if (mi->mesh_nodal[0] != NULL ||
+    //     mi->mesh_nodal[1] != NULL) {
+    //   PDM_error(__FILE__, __LINE__, 0, "Nodal version not implemented yet\n");
+    // }
+
+    if(mi->dim_mesh[0] == 3 && mi->dim_mesh[1] == 3) {
+        _mesh_intersection_vol_vol(mi,
+                                   redistribute_box_a_to_box_b_idx,
+                                   redistribute_box_a_to_box_b);
+    } else if(mi->dim_mesh[0] == 3 && mi->dim_mesh[1] == 2) {
+      // On suppose que l'utilisateur met A = Vol et B = Surf
+      _mesh_intersection_vol_surf(mi,
+                                  extrp_mesh_a,
+                                  extrp_mesh_b,
+                                  redistribute_box_a_to_box_b_idx,
+                                  redistribute_box_a_to_box_b);
+    } else if(mi->dim_mesh[0] == 2 && mi->dim_mesh[1] == 2) {
+      _mesh_intersection_surf_surf(mi,
+                                   redistribute_box_a_to_box_b_idx,
+                                   redistribute_box_a_to_box_b);
+    } else if(mi->dim_mesh[0] == 2 && mi->dim_mesh[1] == 1) {
+      // On suppose que l'utilisateur met A = Vol et B = Surf
+      _mesh_intersection_surf_line(mi,
+                                   extrp_mesh_a,
+                                   extrp_mesh_b,
+                                   redistribute_box_a_to_box_b_idx,
+                                   redistribute_box_a_to_box_b);
+    } else if(mi->dim_mesh[0] == 3 && mi->dim_mesh[1] == 1) {
+      // On suppose que l'utilisateur met A = Vol et B = Surf
+      _mesh_intersection_vol_line(mi,
+                                  extrp_mesh_a,
+                                  extrp_mesh_b,
+                                  redistribute_box_a_to_box_b_idx,
+                                  redistribute_box_a_to_box_b);
+    } else {
+      PDM_error(__FILE__, __LINE__, 0,
+                "PDM_mesh_intersection_compute error : Cannot handle meshA with dim = %i and meshB = %i \n", mi->dim_mesh[0], mi->dim_mesh[1]);
     }
-  }
+    PDM_box_set_destroy (&boxes_mesh[0]);
+    PDM_box_set_destroy (&boxes_mesh[1]);
 
-  PDM_extract_part_free(extrp_mesh_a);
-  PDM_extract_part_free(extrp_mesh_b);
+    free(redistribute_box_a_to_box_b_idx);
+    free(redistribute_box_a_to_box_b    );
+
+    for (int imesh = 0; imesh < 2; imesh++) {
+      if (mi->mesh_nodal[imesh] == NULL && mi->mesh[imesh] == NULL) {
+        PDM_part_mesh_nodal_elmts_free(mi->extrp_mesh[imesh]->pmne);
+      }
+    }
+
+    PDM_extract_part_free(extrp_mesh_a);
+    PDM_extract_part_free(extrp_mesh_b);
+
+    mi->extrp_mesh[0] = NULL; 
+    mi->extrp_mesh[1] = NULL;
+  }
 
 }
 
@@ -5651,20 +5683,20 @@ PDM_mesh_intersection_part_set
 
   PDM_part_mesh_t* mesh = mi->mesh[i_mesh];
 
-  PDM_part_mesh_n_entity_set(mesh, i_part, PDM_MESH_ENTITY_CELL  , n_cell);
-  PDM_part_mesh_n_entity_set(mesh, i_part, PDM_MESH_ENTITY_FACE  , n_face);
-  PDM_part_mesh_n_entity_set(mesh, i_part, PDM_MESH_ENTITY_EDGE  , n_edge);
-  PDM_part_mesh_n_entity_set(mesh, i_part, PDM_MESH_ENTITY_VERTEX, n_vtx );
+  PDM_part_mesh_n_entity_set(mesh, i_part, PDM_MESH_ENTITY_CELL, n_cell);
+  PDM_part_mesh_n_entity_set(mesh, i_part, PDM_MESH_ENTITY_FACE, n_face);
+  PDM_part_mesh_n_entity_set(mesh, i_part, PDM_MESH_ENTITY_EDGE, n_edge);
+  PDM_part_mesh_n_entity_set(mesh, i_part, PDM_MESH_ENTITY_VTX,  n_vtx );
 
   PDM_part_mesh_connectivity_set(mesh, i_part, PDM_CONNECTIVITY_TYPE_CELL_FACE, cell_face, cell_face_idx, PDM_OWNERSHIP_USER);
   PDM_part_mesh_connectivity_set(mesh, i_part, PDM_CONNECTIVITY_TYPE_FACE_EDGE, face_edge, face_edge_idx, PDM_OWNERSHIP_USER);
   PDM_part_mesh_connectivity_set(mesh, i_part, PDM_CONNECTIVITY_TYPE_FACE_VTX , face_vtx , face_vtx_idx , PDM_OWNERSHIP_USER);
   PDM_part_mesh_connectivity_set(mesh, i_part, PDM_CONNECTIVITY_TYPE_EDGE_VTX , edge_vtx , NULL         , PDM_OWNERSHIP_USER);
 
-  PDM_part_mesh_entity_ln_to_gn_set(mesh, i_part, PDM_MESH_ENTITY_CELL  , cell_ln_to_gn, PDM_OWNERSHIP_USER);
-  PDM_part_mesh_entity_ln_to_gn_set(mesh, i_part, PDM_MESH_ENTITY_FACE  , face_ln_to_gn, PDM_OWNERSHIP_USER);
-  PDM_part_mesh_entity_ln_to_gn_set(mesh, i_part, PDM_MESH_ENTITY_EDGE  , edge_ln_to_gn, PDM_OWNERSHIP_USER);
-  PDM_part_mesh_entity_ln_to_gn_set(mesh, i_part, PDM_MESH_ENTITY_VERTEX, vtx_ln_to_gn , PDM_OWNERSHIP_USER);
+  PDM_part_mesh_entity_ln_to_gn_set(mesh, i_part, PDM_MESH_ENTITY_CELL, cell_ln_to_gn, PDM_OWNERSHIP_USER);
+  PDM_part_mesh_entity_ln_to_gn_set(mesh, i_part, PDM_MESH_ENTITY_FACE, face_ln_to_gn, PDM_OWNERSHIP_USER);
+  PDM_part_mesh_entity_ln_to_gn_set(mesh, i_part, PDM_MESH_ENTITY_EDGE, edge_ln_to_gn, PDM_OWNERSHIP_USER);
+  PDM_part_mesh_entity_ln_to_gn_set(mesh, i_part, PDM_MESH_ENTITY_VTX,  vtx_ln_to_gn , PDM_OWNERSHIP_USER);
 
   PDM_part_mesh_vtx_coord_set(mesh, i_part, vtx_coord, PDM_OWNERSHIP_USER);
 }
@@ -5712,6 +5744,7 @@ PDM_mesh_intersection_free
   PDM_part_mesh_free(mi->mesh[0]);
   PDM_part_mesh_free(mi->mesh[1]);
 
+
   if (mi->ptp != NULL && mi->ptp_ownership == PDM_OWNERSHIP_KEEP) {
     PDM_part_to_part_free(mi->ptp);
   }
@@ -5738,6 +5771,32 @@ PDM_mesh_intersection_free
       }
   }
     free(mi->elt_a_elt_b);
+  }
+
+  if (mi->box_a_box_b != NULL) {
+    if ((mi->owner == PDM_OWNERSHIP_KEEP ) ||
+        (mi->owner == PDM_OWNERSHIP_UNGET_RESULT_IS_FREE && !mi->tag_box_a_box_b_get)) {
+      free(mi->box_a_box_b);
+      mi->box_a_box_b = NULL;
+    }
+  }
+
+  if (mi->box_a_box_b_idx != NULL) {
+    if ((mi->owner == PDM_OWNERSHIP_KEEP ) ||
+        (mi->owner == PDM_OWNERSHIP_UNGET_RESULT_IS_FREE && !mi->tag_box_a_box_b_get)) {
+      free(mi->box_a_box_b_idx);
+      mi->box_a_box_b = NULL;
+    }
+  }
+
+  if ((mi->owner == PDM_OWNERSHIP_KEEP ) ||
+      (mi->owner == PDM_OWNERSHIP_UNGET_RESULT_IS_FREE && !mi->tag_extrp_mesh)) {
+    for (int imesh = 0; imesh < 2; imesh++) {
+      if (mi->extrp_mesh[imesh] != NULL) {
+        PDM_extract_part_free(mi->extrp_mesh[imesh]);
+        mi->extrp_mesh[imesh] = NULL;
+      }
+    }
   }
 
   if (mi->elt_a_elt_b_volume != NULL) {
@@ -5858,7 +5917,7 @@ PDM_mesh_intersection_elt_volume_get
 
       int n_vtx = PDM_part_mesh_n_entity_get(mi->mesh[imesh],
                                              ipart,
-                                             PDM_MESH_ENTITY_VERTEX);
+                                             PDM_MESH_ENTITY_VTX);
       double *vtx_coord = NULL;
       PDM_part_mesh_vtx_coord_get(mi->mesh[imesh],
                                   ipart,
@@ -6015,6 +6074,60 @@ PDM_mesh_intersection_tolerance_set
   mi->bbox_tolerance = tol;
 }
 
+
+/**
+ * \brief Get preprocessing results 
+ *
+ * \param [in ] mi                 Pointer to \ref PDM_mesh_intersection_t object
+ * \param [out] elt_a_elt_b_idx    Index of list of intersected B element candidate for each A element
+ *                                 in the extr_mesh distribution 
+ * \param [out] elt_a_elt_b        List of intersected B element candidate for each A element in the 
+ *                                 extr_mesh distribution 
+ * \param [out]                    Redistributed mesh A with only A element candidate  
+ * \param [out]                    Redistributed mesh B with only B element candidate  
+ *
+ */
+
+void
+PDM_mesh_intersection_preprocessing_get
+(
+       PDM_mesh_intersection_t  *mi,
+       int                     **box_a_box_b_idx,
+       int                     **box_a_box_b,
+       PDM_extract_part_t      **extr_mesh_a,
+       PDM_extract_part_t      **extr_mesh_b
+)
+{
+
+  assert(mi->intersect_kind == PDM_MESH_INTERSECTION_KIND_PREPROCESS);
+  *extr_mesh_a = mi->extrp_mesh[0];
+  *extr_mesh_b = mi->extrp_mesh[1];
+   mi->tag_extrp_mesh = 1;
+  *box_a_box_b_idx = mi->box_a_box_b_idx;
+  *box_a_box_b = mi->box_a_box_b;  
+}
+
+
+/**
+ *
+ * \brief Get mesh dimension
+ *
+ * \param [in] mi                 Pointer to \ref PDM_mesh_intersection_t object
+ * \param [in] i_mesh             Mesh identifier
+ *
+ * \return Dimension of mesh \p i_mesh
+ */
+
+int
+PDM_mesh_intersection_mesh_dimension_get
+(
+       PDM_mesh_intersection_t  *mi,
+ const int                       i_mesh
+)
+{
+  assert(i_mesh == 0 || i_mesh == 1);
+  return mi->dim_mesh[i_mesh];
+}
 
 #ifdef __cplusplus
 }

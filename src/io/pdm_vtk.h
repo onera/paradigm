@@ -1,3 +1,7 @@
+/*
+ * \file
+ */
+
 #ifndef __PDM_VTK_H__
 #define __PDM_VTK_H__
 
@@ -25,6 +29,66 @@ extern "C" {
 } /* Fake brace to force back Emacs auto-indentation back to column 0 */
 #endif
 #endif /* __cplusplus */
+
+/*============================================================================
+ * Fortran function header
+ *============================================================================*/
+
+ /**
+ * \brief Export a polygonal mesh to ASCII VTK format (polydata)
+ *
+ * \param [in]  filename      Output file name
+ * \param [in]  l_filename    Length of filename
+ * \param [in]  n_vtx         Number of vertices
+ * \param [in]  vtx_coord     Coordinates of the vertices (size = 3 * \ref n_vtx)
+ *                            (x0, y0, z0, x1, ...)
+ * \param [in]  vtx_g_num     Global ids of the vertices (or NULL)
+ * \param [in]  n_face        Number of faces
+ * \param [in]  face_vtx_idx  Index of the face-vertex connectivity (size = \ref n_face + 1)
+ * \param [in]  face_vtx      Face-vertex connectivity (size = \ref face_vtx_idx[\ref n_face])
+ * \param [in]  face_g_num    Global ids of the faces (or NULL)
+ * \param [in]  face_color    Integer color of the faces (or NULL)
+ *
+ */
+
+void
+PDM_vtk_write_polydata_cf
+(
+ const char         *filename,
+ const int           l_filename,
+ const int           n_vtx,
+ const double*       vtx_coord,
+ const PDM_g_num_t*  vtx_g_num,
+ const int           n_face,
+ const int*          face_vtx_idx,
+ const int*          face_vtx,
+ const PDM_g_num_t * face_g_num,
+ const int*          face_color
+);
+
+/**
+ * \brief Export a point cloud to ASCII VTK format (unstructured grid of points)
+ *
+ * \param [in]  filename      Output file name
+ * \param [in]  l_filename    Length of filename
+ * \param [in]  n_vtx         Number of points
+ * \param [in]  vtx_coord     Coordinates of the points (size = 3 * \ref n_vtx)
+ *                            (x0, y0, z0, x1, ...)
+ * \param [in]  vtx_g_num     Global ids of the points (or NULL)
+ * \param [in]  color         Integer color of the points (or NULL)
+ *
+ */
+
+void
+PDM_vtk_write_point_cloud_cf
+(
+ const char        *filename,
+ const int           l_filename,
+ const int          n_vtx,
+ const double*      vtx_coord,
+ const PDM_g_num_t* vtx_g_num,
+ const int*         color
+);
 
 /*============================================================================
  * Types definition
@@ -369,7 +433,7 @@ PDM_vtk_write_std_elements_ho
  *                           (x0, y0, z0, x1, ...)
  * \param [in]  axes         Axes of the ellipses (size = 6 * \ref n_circles)
  *                           (xa0, ya0, za0, xb0, yb0, zb0, xa1, ...)
- * \param [in]  radius       Radii of the ellipses (size = 2 * \ref n_ellipse)
+ * \param [in]  radii        Radii of the ellipses (size = 2 * \ref n_ellipse)
  * \param [in]  g_num        Global ids of the ellipses (or NULL)
  * \param [in]  color        Integer color of the ellipses (or NULL)
  * \param [in]  resolution   Number of segments on each ellipse

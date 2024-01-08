@@ -1,3 +1,7 @@
+/*
+ * \file
+ */
+
 #ifndef __PDM_PARA_GRAPH_DUAL_H__
 #define __PDM_PARA_GRAPH_DUAL_H__
 

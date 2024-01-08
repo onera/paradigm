@@ -113,7 +113,7 @@ _read_args(int                     argc,
       if (i >= argc)
         _usage(EXIT_FAILURE);
       else {
-        *t_elt = atoi(argv[i]);
+        *t_elt = (PDM_Mesh_nodal_elt_t) atoi(argv[i]);
       }
     }
     else if (strcmp(argv[i], "-post") == 0) {
@@ -294,7 +294,7 @@ _dmesh_extract_from_group_id
                                     dextract_edge_parent_gnum_out,
                                     PDM_OWNERSHIP_USER);
   PDM_dmesh_extract_parent_gnum_get(dme,
-                                    PDM_MESH_ENTITY_VERTEX,
+                                    PDM_MESH_ENTITY_VTX,
                                     dn_extract_vtx_out,
                                     dextract_vtx_parent_gnum_out,
                                     PDM_OWNERSHIP_USER);
@@ -320,7 +320,7 @@ _dmesh_extract_from_group_id
     extract_face_ln_to_gn[i] = distrib_face_extract[i_rank] + i + 1;
   }
 
-  int dn_extract_vtx  = PDM_dmesh_dn_entity_get(dmesh_extract, PDM_MESH_ENTITY_VERTEX);
+  int dn_extract_vtx  = PDM_dmesh_dn_entity_get(dmesh_extract, PDM_MESH_ENTITY_VTX);
   PDM_g_num_t *extract_vtx_distribution = PDM_compute_entity_distribution(comm, dn_extract_vtx);
 
   int pn_extract_vtx = -1;

@@ -1,3 +1,7 @@
+/*
+ * \file
+ */
+
 #ifndef __PDM_DCUBE_GEN_H__
 #define __PDM_DCUBE_GEN_H__
 
@@ -38,6 +42,7 @@ typedef struct _pdm_dcube_t PDM_dcube_t;
  * \param [in]   zero_x         Coordinates of the origin
  * \param [in]   zero_y         Coordinates of the origin
  * \param [in]   zero_z         Coordinates of the origin
+ * \param [in]   ownership      Choice of ownership of the results \ref PDM_ownership_t
  *
  * \return      Pointer to \ref PDM_dcube_t object
  *

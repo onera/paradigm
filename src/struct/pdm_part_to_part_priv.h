@@ -50,6 +50,8 @@ struct _pdm_part_to_part_t {
   const int         **part1_to_part2_triplet;       /*!< triplet (irank2, ipart2, icel2) */
         PDM_MPI_Comm  comm;                         /*!< MPI communicator */  
 
+  int                 use_tag;                      /*!< Number of MPI ranks */
+
   int                 n_rank;                       /*!< Number of MPI ranks */
   int                 my_rank;                      /*!< Current rank */
 

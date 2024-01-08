@@ -68,6 +68,13 @@ PDM_g_num_t* PDM_array_const_gnum(const int size, const PDM_g_num_t value) {
   for (int i = 0; i < size; i++) array[i] = value;
   return array;
 }
+double* PDM_array_const_double(const int size, const double value) {
+  assert (size >= 0);
+  double *array = (double *) malloc(size * sizeof(double));
+  assert (array != NULL);
+  for (int i = 0; i < size; i++) array[i] = value;
+  return array;
+}
 
 /*
  * Allocate a new array index array (size=size+1) and fill it from

@@ -460,14 +460,21 @@ end function PDM_closest_points_n_closest_get
 
     integer(c_int)                     :: c_i_part
     integer(c_int)                     :: c_n_points
-    type(c_ptr)                        :: c_coords = C_NULL_PTR
-    type(c_ptr)                        :: c_gnum   = C_NULL_PTR
+    type(c_ptr)                        :: c_coords
+    type(c_ptr)                        :: c_gnum
 
     c_i_part   = i_part
     c_n_points = n_points
 
-    c_coords = c_loc(coords)
-    c_gnum   = c_loc(gnum)
+    c_coords = C_NULL_PTR
+    if (associated(coords)) then
+      c_coords = c_loc(coords)
+    end if
+
+    c_gnum = C_NULL_PTR
+    if (associated(coords)) then
+      c_gnum = c_loc(gnum)
+    end if
 
     call PDM_closest_points_tgt_cloud_set_cf(cls,        &
                                              c_i_part,   &
@@ -507,14 +514,21 @@ end function PDM_closest_points_n_closest_get
 
     integer(c_int)                     :: c_i_part
     integer(c_int)                     :: c_n_points
-    type(c_ptr)                        :: c_coords = C_NULL_PTR
-    type(c_ptr)                        :: c_gnum   = C_NULL_PTR
+    type(c_ptr)                        :: c_coords
+    type(c_ptr)                        :: c_gnum
 
     c_i_part   = i_part
     c_n_points = n_points
 
-    c_coords = c_loc(coords)
-    c_gnum   = c_loc(gnum)
+    c_coords = C_NULL_PTR
+    if (associated(coords)) then
+      c_coords = c_loc(coords)
+    end if
+
+    c_gnum = C_NULL_PTR
+    if (associated(coords)) then
+      c_gnum = c_loc(gnum)
+    end if
 
     call PDM_closest_points_src_cloud_set_cf(cls,        &
                                              c_i_part,   &
@@ -553,12 +567,14 @@ end function PDM_closest_points_n_closest_get
     double precision,          pointer :: closest_src_distance(:)
 
     integer(c_int)                     :: c_i_part_tgt
-    type(c_ptr)                        :: c_closest_src_gnum     = C_NULL_PTR
-    type(c_ptr)                        :: c_closest_src_distance = C_NULL_PTR
+    type(c_ptr)                        :: c_closest_src_gnum
+    type(c_ptr)                        :: c_closest_src_distance
     integer(c_int)                     :: n_tgt, n_closest
 
     c_i_part_tgt = i_part_tgt
 
+    c_closest_src_gnum     = C_NULL_PTR
+    c_closest_src_distance = C_NULL_PTR
     call PDM_closest_points_get_cf (cls,                    &
                                     c_i_part_tgt,           &
                                     c_closest_src_gnum,     &
@@ -605,12 +621,14 @@ end function PDM_closest_points_n_closest_get
     integer(kind=pdm_g_num_s), pointer :: tgt_in_src(:)
 
     integer(c_int)                     :: c_i_part_src
-    type(c_ptr)                        :: c_tgt_in_src_idx = C_NULL_PTR
-    type(c_ptr)                        :: c_tgt_in_src     = C_NULL_PTR
+    type(c_ptr)                        :: c_tgt_in_src_idx
+    type(c_ptr)                        :: c_tgt_in_src
     integer(c_int)                     :: n_src
 
     c_i_part_src = i_part_src
 
+    c_tgt_in_src_idx = C_NULL_PTR
+    c_tgt_in_src     = C_NULL_PTR
     call PDM_closest_points_tgt_in_src_get_cf (cls,                  &
                                                i_part_src,           &
                                                c_tgt_in_src_idx,     &

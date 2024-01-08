@@ -165,12 +165,12 @@ PDM_multipart_t      **_mpart
 
 
 
-  int n_zone = 1;
-  int *n_part_zones = (int *) malloc(sizeof(int) * n_zone);
-  n_part_zones[0] = n_part;
+  int n_domain = 1;
+  int *n_part_domains = (int *) malloc(sizeof(int) * n_domain);
+  n_part_domains[0] = n_part;
 
-  PDM_multipart_t *mpart = PDM_multipart_create(n_zone,
-                                                n_part_zones,
+  PDM_multipart_t *mpart = PDM_multipart_create(n_domain,
+                                                n_part_domains,
                                                 PDM_FALSE,
                                                 part_method,
                                                 PDM_PART_SIZE_HOMOGENEOUS,
@@ -184,13 +184,13 @@ PDM_multipart_t      **_mpart
                                        NULL,
                                        "PDM_PART_RENUM_FACE_NONE");
 
-  PDM_multipart_register_dmesh_nodal(mpart, 0, dmn);
+  PDM_multipart_dmesh_nodal_set(mpart, 0, dmn);
 
 
   /* Run */
-  PDM_multipart_run_ppart (mpart);
+  PDM_multipart_compute (mpart);
 
-  free(n_part_zones);
+  free(n_part_domains);
 
   *_mpart = mpart;
 
@@ -204,7 +204,7 @@ static void
 _get_groups
 (
  PDM_multipart_t     *multipart,
- const int            i_zone,
+ const int            i_domain,
  const int            i_part,
        int           *n_face_group,
        int          **face_bound_idx,
@@ -212,10 +212,10 @@ _get_groups
  )
 {
   PDM_g_num_t *face_bound_ln_to_gn = NULL;
-  PDM_multipart_bound_get(multipart,
+  PDM_multipart_group_get(multipart,
                           0,
                           i_part,
-                          PDM_BOUND_TYPE_FACE,
+                          PDM_MESH_ENTITY_FACE,
                           n_face_group,
                           face_bound_idx,
                           face_bound,
@@ -290,7 +290,7 @@ int main(int argc, char *argv[])
   PDM_multipart_part_ln_to_gn_get(mpart,
                                   0,
                                   i_part,
-                                  PDM_MESH_ENTITY_VERTEX,
+                                  PDM_MESH_ENTITY_VTX,
                                   &vtx_ln_to_gn,
                                   PDM_OWNERSHIP_KEEP);
 
@@ -300,8 +300,8 @@ int main(int argc, char *argv[])
                                                0,
                                                i_part,
                                                PDM_CONNECTIVITY_TYPE_EDGE_VTX,
-                                               &pedge_vtx,
                                                &tmp_pedge_vtx_idx,
+                                               &pedge_vtx,
                                                PDM_OWNERSHIP_KEEP);
 
   /* Get faces */
@@ -309,8 +309,8 @@ int main(int argc, char *argv[])
                                                0,
                                                i_part,
                                                PDM_CONNECTIVITY_TYPE_FACE_EDGE,
-                                               &pface_edge,
                                                &pface_edge_idx,
+                                               &pface_edge,
                                                PDM_OWNERSHIP_KEEP);
 
   /* Get groups */
@@ -385,17 +385,17 @@ int main(int argc, char *argv[])
   int *pedge_vtx_extension_idx = NULL;
 
   pn_edge_extension = PDM_part_extension_connectivity_get(pe,
-                                      0, // i_domain
-                                      i_part,
-                                      PDM_CONNECTIVITY_TYPE_EDGE_VTX,
-                                      &pedge_vtx_extension,
-                                      &pedge_vtx_extension_idx);
+                                                          0, // i_domain
+                                                          i_part,
+                                                          PDM_CONNECTIVITY_TYPE_EDGE_VTX,
+                                                          &pedge_vtx_extension_idx,
+                                                          &pedge_vtx_extension);
 
   // Get coordinates (TO DO PDM_part_extension_group_get for extension ou group)
 
   double *pvtx_coord_extension = NULL;
 
-  PDM_part_extension_coord_get(pe,
+  PDM_part_extension_vtx_coord_get(pe,
                                0, // i_domain
                                i_part,
                                &pvtx_coord_extension);
@@ -408,7 +408,7 @@ int main(int argc, char *argv[])
   pn_vtx_extension = PDM_part_extension_ln_to_gn_get(pe,
                                                      0, // i_domain
                                                      i_part,
-                                                     PDM_MESH_ENTITY_VERTEX,
+                                                     PDM_MESH_ENTITY_VTX,
                                                      &extension_vtx_gnum);
 
   /* part_to_part */

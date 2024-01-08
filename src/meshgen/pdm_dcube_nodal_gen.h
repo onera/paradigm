@@ -1,5 +1,27 @@
+/*
+ * \file
+ */
+
 #ifndef __PDM_DCUBE_NODAL_GEN_H__
 #define __PDM_DCUBE_NODAL_GEN_H__
+/*
+  This file is part of the CWIPI library.
+
+  Copyright (C) 2021-2023  ONERA
+
+  This library is free software; you can redistribute it and/or
+  modify it under the terms of the GNU Lesser General Public
+  License as published by the Free Software Foundation; either
+  version 3 of the License, or (at your option) any later version.
+
+  This library is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+  Lesser General Public License for more details.
+
+  You should have received a copy of the GNU Lesser General Public
+  License along with this library. If not, see <http://www.gnu.org/licenses/>.
+*/
 
 #include "pdm.h"
 #include "pdm_mesh_nodal.h"
@@ -41,9 +63,9 @@ typedef struct _pdm_dcube_nodal_t PDM_dcube_nodal_t;
  * \param [in]   n_vtx_y        Number of vertices on segments in y-direction
  * \param [in]   n_vtx_z        Number of vertices on segments in z-direction
  * \param [in]   length         Segment length
- * \param [in]   zero_x         X-coordinate of the origin
- * \param [in]   zero_y         Y-coordinate of the origin
- * \param [in]   zero_z         Z-coordinate of the origin
+ * \param [in]   zero_x         x-coordinate of the origin
+ * \param [in]   zero_y         y-coordinate of the origin
+ * \param [in]   zero_z         z-coordinate of the origin
  * \param [in]   t_elt          Element type
  * \param [in]   order          Element order
  * \param [in]   owner          Ownership
@@ -134,6 +156,34 @@ PDM_dcube_nodal_gen_dmesh_nodal_get
 );
 
 
+/**
+ *
+ * \brief Generate a multi-domain, 3D array of \ref PDM_dcube_nodal_t
+ *        with (possibly periodic) inter-domain joints
+ *
+ * \param [in]   comm           MPI communicator
+ * \param [in]   n_dom_i        Number of domains in 1st dimension
+ * \param [in]   n_dom_j        Number of domains in 2nd dimension
+ * \param [in]   n_dom_k        Number of domains in 3rd dimension
+ * \param [in]   periodic_i     Enable periodic joint in 1st dimension (0 or 1)
+ * \param [in]   periodic_j     Enable periodic joint in 2nd dimension (0 or 1)
+ * \param [in]   periodic_k     Enable periodic joint in 3rd dimension (0 or 1)
+ * \param [in]   n_vtx_x_in     Number of vertices on segments in x-direction (for each domain)
+ * \param [in]   n_vtx_y_in     Number of vertices on segments in y-direction (for each domain)
+ * \param [in]   n_vtx_z_in     Number of vertices on segments in z-direction (for each domain)
+ * \param [in]   length         Segment length (for each domain)
+ * \param [in]   zero_x         x-coordinate of the origin
+ * \param [in]   zero_y         y-coordinate of the origin
+ * \param [in]   zero_z         z-coordinate of the origin
+ * \param [in]   t_elt          Element type
+ * \param [in]   order          Element order
+ * \param [in]   owner          Ownership
+ * \param [out]  dcube          Set of \ref PDM_dcube_nodal_t objects
+ * \param [out]  dom_intrf      Inter-domain joints
+ * \param [in]   owner          Ownership
+ *
+ */
+
 void
 PDM_dcube_nodal_cart_topo
 (
@@ -157,6 +207,57 @@ PDM_dcube_nodal_cart_topo
        PDM_domain_interface_t  **dom_intrf,
        PDM_ownership_t           owner
 );
+
+
+void
+PDM_generate_lines
+(
+  PDM_MPI_Comm  comm,
+  double        zero_x,
+  double        zero_y,
+  double        zero_z,
+  double        length,
+  PDM_g_num_t   n_g_pts,
+  PDM_g_num_t **distrib_edge_out,
+  PDM_g_num_t **distrib_vtx_out,
+  PDM_g_num_t **dedge_vtx_out,
+  double      **dvtx_coord_out
+);
+
+
+void
+PDM_generate_cart_topo_lines
+(
+ PDM_MPI_Comm              comm,
+ int                       n_dom_i,
+ int                       periodic_i,
+ double                    zero_x,
+ double                    zero_y,
+ double                    zero_z,
+ double                    length,
+ PDM_g_num_t               n_g_pts,
+ PDM_g_num_t            ***distrib_edge_out,
+ PDM_g_num_t            ***distrib_vtx_out,
+ PDM_g_num_t            ***dedge_vtx_out,
+ double                 ***dvtx_coord_out,
+ PDM_domain_interface_t  **dom_intrf
+);
+
+
+/**
+ * \brief Set randomization factor
+ *
+ * \param [in]  dcube          Pointer to \ref PDM_dcube_nodal_t object
+ * \param [in]  random_factor  Randomization factor (between 0 and 1)
+ *
+ */
+
+void
+PDM_dcube_nodal_gen_random_factor_set
+(
+ PDM_dcube_nodal_t *dcube,
+ double             random_factor
+ );
 
 #ifdef __cplusplus
 }

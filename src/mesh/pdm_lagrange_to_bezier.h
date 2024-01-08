@@ -1,3 +1,7 @@
+/*
+ * \file
+ */
+
 #ifndef __PDM_LAGRANGE_TO_BEZIER_H__
 #define __PDM_LAGRANGE_TO_BEZIER_H__
 

@@ -178,9 +178,9 @@ char *argv[]
                                                 comm,
                                                 PDM_OWNERSHIP_KEEP);
 
-  PDM_multipart_register_block(mpart, 0, dm);
+  PDM_multipart_dmesh_set(mpart, 0, dm);
 
-  PDM_multipart_run_ppart(mpart);
+  PDM_multipart_compute(mpart);
 
   if(0 == 1) {
     for(int i_part = 0; i_part < n_part; ++i_part) {
@@ -189,7 +189,7 @@ char *argv[]
       PDM_multipart_part_ln_to_gn_get(mpart,
                                       0,
                                       i_part,
-                                      PDM_MESH_ENTITY_VERTEX,
+                                      PDM_MESH_ENTITY_VTX,
                                       &pvtx_ln_to_gn,
                                       PDM_OWNERSHIP_KEEP);
 

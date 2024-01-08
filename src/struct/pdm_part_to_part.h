@@ -1,3 +1,7 @@
+/*
+ * \file
+ */
+
 #ifndef __PDM_PART_TO_PART_H__
 #define	__PDM_PART_TO_PART_H__
 
@@ -27,7 +31,7 @@ extern "C" {
 
 /**
  * \struct PDM_part_to_part_t
- * \brief  Block to partition redistribution
+ * \brief  Partition-to-Partition redistribution
  *
  */
 
@@ -63,17 +67,18 @@ typedef enum {
 
 /**
  *
- * \brief Create a partitions to partitions redistribution
+ * \brief Create a Partition-to-Partition redistribution from global ids
  *
- * \param [in]   gnum_elt1          Element global number (size : \ref n_part1)
- * \param [in]   n_elt1             Local number of elements (size : \ref n_part1)
- * \param [in]   n_part1            Number of partition
- * \param [in]   gnum_elt2          Element global number (size : \ref n_part2)
- * \param [in]   n_elt2             Local number of elements (size : \ref n_part2)
- * \param [in]   n_part2            Number of partition
- * \param [in]   part1_to_part2_idx Index of data to send to gnum2 from gnum1
- *                                  (for each part size : \ref n_elt1+1)
- * \param [in]   part1_to_part2     Data to send to gnum2 from gnum1
+ * \param [in]   gnum_elt1          Element global ids in Part1 (size : \p n_part1)
+ * \param [in]   n_elt1             Local number of elements in Part1 (size : \p n_part1)
+ * \param [in]   n_part1            Number of partitions in Part1
+ * \param [in]   gnum_elt2          Element global ids in Part2 (size : \p n_part2)
+ * \param [in]   n_elt2             Local number of elements in Part2 (size : \p n_part2)
+ * \param [in]   n_part2            Number of partitions in Part2
+ * \param [in]   part1_to_part2_idx Index for Part1→Part2 mapping <br>
+ *                                  (for each part, size : \p n_elt1 + 1)
+ * \param [in]   part1_to_part2     Part1→Part2 mapping (global ids) <br>
+ *                                  (for each part, size : \p part1_to_part2_idx[\p n_elt1])
  * \param [in]   comm               MPI communicator
  *
  * \return   Initialized \ref PDM_part_to_part instance
@@ -97,17 +102,19 @@ PDM_part_to_part_create
 
 /**
  *
- * \brief Create a partitions to partitions redistribution
+ * \brief Create a Partition-to-Partition redistribution from location triplets
  *
- * \param [in]   gnum_elt1                   Element global number (size : \ref n_part1)
- * \param [in]   n_elt1                      Local number of elements (size : \ref n_part1)
- * \param [in]   n_part1                     Number of partition
- * \param [in]   n_elt2                      Local number of elements (size : \ref n_part2)
- * \param [in]   n_part2                     Number of partition
- * \param [in]   part1_to_part2_idx          Index of data to send to gnum2 from gnum1
- *                                           (for each part size : \ref n_elt1+1)
- * \param [in]   part1_to_part2_triplet_idx  (for each part size : \ref part1_to_part2_idx[\ref n_elt] + 1)
- * \param [in]   part1_to_part2_triplet      Data to send to (irank2, ipart2, ielt2) from gnum1
+ * \param [in]   gnum_elt1                   Element global numbers in Part1 (size : \p n_part1)
+ * \param [in]   n_elt1                      Local number of elements in Part1 (size : \p n_part1)
+ * \param [in]   n_part1                     Number of partitions in Part1
+ * \param [in]   n_elt2                      Local number of elements in Part2 (size : \p n_part2)
+ * \param [in]   n_part2                     Number of partitions in Part2
+ * \param [in]   part1_to_part2_idx          Index for Part1→Part2 mapping <br>
+ *                                           (for each part, size : \p n_elt1 + 1)
+ * \param [in]   part1_to_part2_triplet_idx  Index for multiple locations in Part2 <br>
+ *                                           (for each part, size : \p part1_to_part2_idx[\p n_elt1] + 1)
+ * \param [in]   part1_to_part2_triplet      Part1→Part2 mapping (location triplets: (*irank2*, *ipart2*, *ielt2*)) <br>
+ *                                           (for each part, size : \p part1_to_part2_triplet_idx[\p part1_to_part2_idx[\p n_elt1]] + 1)
  * \param [in]   comm                        MPI communicator
  *
  * \return   Initialized \ref PDM_part_to_part instance
@@ -131,13 +138,13 @@ PDM_part_to_part_create_from_num2_triplet
 
 /**
  *
- * \brief Initialize an exchange based on MPI_ialltoall
+ * \brief Initiate a collective Part1→Part2 exchange (based on `MPI_ialltoall`)
  *
- * \param [in]   ptp                 Block to part structure
+ * \param [in]   ptp                 Part-to-Part structure
  * \param [in]   s_data              Data size
  * \param [in]   cst_stride          Constant stride
- * \param [in]   part1_to_part2_data Data in same order than part1_to_part2 array
- * \param [out]  ref_part2_data      Data to referenced part2 elements
+ * \param [in]   part1_to_part2_data Part1 data to send (ordered as in *part1_to_part2*)
+ * \param [out]  ref_part2_data      Part2 data to receive (only referenced Part2 elements)
  * \param [out]  request             Request
  *
  */
@@ -154,16 +161,17 @@ PDM_part_to_part_t *ptp,
 );
 
 
+
 /**
  *
- * \brief Initialize an exchange based on MPI_ialltoall
+ * \brief Initiate a collective Part2→Part1 exchange (based on `MPI_ialltoall`)
  *
- * \param [in]   ptp                     Block to part structure
- * \param [in]   s_data                  Data size
- * \param [in]   cst_stride              Constant stride
- * \param [in]   ref_part2_to_part1_data Data in ref_lnum2 order
- * \param [out]  part1_part2_data        Data in part1_to_part2 order
- * \param [out]  request                 Request
+ * \param [in]   ptp                      Part-to-Part structure
+ * \param [in]   s_data                   Data size
+ * \param [in]   cst_stride               Constant stride
+ * \param [in]   ref_part2_to_part1_data  Part2 data to send (ordered as *ref_lnum2*)
+ * \param [in]   part1_to_part2_data      Part1 data to receive (ordered as *part1_to_part2*)
+ * \param [out]  request                  Request
  *
  */
 
@@ -181,9 +189,9 @@ PDM_part_to_part_t *ptp,
 
 /**
  *
- * \brief Wait a asynchronus alltoall wait
+ * \brief Finalize a collective Part1→Part2 exchange
  *
- * \param [in]  ptp           part to part structure
+ * \param [in]  ptp           Part-to-Part structure
  * \param [in]  request       Request
  *
  */
@@ -198,9 +206,9 @@ PDM_part_to_part_ialltoall_wait
 
 /**
  *
- * \brief Wait a asynchronus reverse alltoall wait
+ * \brief Finalize a collective Part2→Part1 exchange
  *
- * \param [in]  ptp           part to part structure
+ * \param [in]  ptp           Part-to-Part structure
  * \param [in]  request       Request
  *
  */
@@ -215,13 +223,13 @@ PDM_part_to_part_reverse_ialltoall_wait
 
 /**
  *
- * \brief Initialize an exchange based on MPI_ineighbor_alltoall
+ * \brief Initiate a collective Part1→Part2 exchange (based on `MPI_ineighbor_alltoall`)
  *
- * \param [in]   ptp                 Block to part structure
+ * \param [in]   ptp                 Part-to-Part structure
  * \param [in]   s_data              Data size
  * \param [in]   cst_stride          Constant stride
- * \param [in]   part1_to_part2_data Data in same order than part1_to_part2 array
- * \param [out]  ref_part2_data      Data to referenced part2 elements
+ * \param [in]   part1_to_part2_data Part1 data to send (ordered as \ref part1_to_part2)
+ * \param [out]  ref_part2_data      Part2 data to receive (only referenced Part2 elements)
  * \param [out]  request             Request
  *
  */
@@ -240,12 +248,13 @@ PDM_part_to_part_ineighbor_alltoall
 
 /**
  *
- * \brief Wait a asynchronus issend
+ * \brief Finalize a collective Part1→Part2 exchange
  *
- * \param [in]  ptp           part to part structure
- * \param [in]  request       Request
+ * \param [in]  ptp                 Part-to-Part structure
+ * \param [in]  request             Request
  *
  */
+
 
 void
 PDM_part_to_part_ineighbor_alltoall_wait
@@ -254,17 +263,35 @@ PDM_part_to_part_ineighbor_alltoall_wait
  int                 request
 );
 
-
 /**
  *
- * \brief Get selected numbers of part2
+ * \brief Get selected numbers of part2 index
  *
  * \param [in]   ptp                 Block to part structure
  * \param [out]  n_elt1              Number of gnum1 element
  * \param [out]  part1_to_part2_idx  Index of data to send to gnum2 from gnum1
  *                                  (for each part size : \ref n_elt1+1)
- * \param [out]  part1_to_part2      Data to send to gnum2 from gnum1 for each part
+ */
+
+void
+PDM_part_to_part_part1_to_part2_idx_get
+(
+ PDM_part_to_part_t *ptp,
+ int               **n_elt1,
+ int              ***part1_to_part2_idx
+);
+
+
+/**
  *
+ * \brief Get Part1→Part2 mapping (global ids)
+ *
+ * \param [in]   ptp                 Part-to-Part structure
+ * \param [out]  n_elt1              Number of Part1 elements (size = *n_part1*)
+ * \param [out]  part1_to_part2_idx  Index for Part1→Part2 mapping <br>
+ *                                   (for each part, size : \p n_elt1 + 1)
+ * \param [out]  part1_to_part2      Part1→Part2 mapping (global ids) <br>
+ *                                   (for each part, size : \p part1_to_part2_idx[\p n_elt1] + 1)
  */
 
 void
@@ -280,11 +307,11 @@ PDM_part_to_part_part1_to_part2_get
 
 /**
  *
- * \brief Get referenced gnum2 elements
+ * \brief Get referenced Part2 elements
  *
- * \param [in]   ptp           Block to part structure
- * \param [out]  n_ref_lnum2   Number of referenced gnum2
- * \param [out]  ref_lnum2     Referenced gnum2
+ * \param [in]   ptp           Part-to-Part structure
+ * \param [out]  n_ref_lnum2   Number of referenced Part2 elements
+ * \param [out]  ref_lnum2     Referenced Part2 elements (1-based local ids)
  *
  */
 
@@ -299,30 +326,31 @@ PDM_part_to_part_ref_lnum2_get
 
 /**
  *
- * \brief Get unreferenced gnum2 elements
+ * \brief Get unreferenced Part2 elements
  *
- * \param [in]   ptp           Block to part structure
- * \param [out]  n_unref_lnum2   Number of referenced gnum2
- * \param [out]  unref_lnum2     Referenced gnum2
+ * \param [in]   ptp             Part-to-Part structure
+ * \param [out]  n_unref_lnum2   Number of referenced Part2 elements
+ * \param [out]  unref_lnum2     Unreferenced Part2 elements (1-based local ids)
  *
  */
 
 void
 PDM_part_to_part_unref_lnum2_get
 (
- PDM_part_to_part_t *ptp,
- int               **n_unref_lnum2,
+ PDM_part_to_part_t  *ptp,
+ int                **n_unref_lnum2,
  int               ***unref_lnum2
 );
 
 
 /**
  *
- * \brief Get gnum come from gnum1 for each referenced gnum2
+ * \brief Get Part2→Part1 mapping for referenced Part2 elements
  *
- * \param [in]   ptp                 Block to part structure
- * \param [out]  gnum1_come_from_idx Index for gnum1_come_from array (size = \ref n_part2)
- * \param [out]  gnum1_come_from     gnum come from gnum1 for each referenced gnum2
+ * \param [in]   ptp                 Part-to-Part structure
+ * \param [out]  gnum1_come_from_idx Index for Part2→Part1 mapping (size = *n_part2*)
+ * \param [out]  gnum1_come_from     Part2→Part1 mapping (global ids) <br>
+ *                                   (for each part, size = \p gnum1_come_from_idx[*n_ref_lnum2*])
  *
  */
 
@@ -337,13 +365,13 @@ PDM_part_to_part_gnum1_come_from_get
 
 /**
  *
- * \brief Initialize an asynchronus issend
+ * \brief Initiate a non-blocking send from Part1 to Part2 (based on `MPI_issend`)
  *
- * \param [in]   ptp                 Block to part structure
+ * \param [in]   ptp                 Part-to-Part structure
  * \param [in]   s_data              Data size
  * \param [in]   cst_stride          Constant stride
- * \param [in]   part1_to_part2_data Data (order given by part1_to_part2 array)
- * \param [in]   tag                 Tag of the exchange
+ * \param [in]   part1_to_part2_data Part1 data to send (order as in *part1_to_part2*)
+ * \param [in]   tag                 Exchange tag
  * \param [out]  request             Request
  *
  */
@@ -362,13 +390,13 @@ PDM_part_to_part_issend
 
 /**
  *
- * \brief Initialize a asynchronus issend
+ * \brief Initiate a *raw*, non-blocking send from Part1 to Part2 (based on `MPI_issend`)
  *
- * \param [in]   ptp                 Block to part structure
+ * \param [in]   ptp                 Part-to-Part structure
  * \param [in]   s_data              Data size
  * \param [in]   cst_stride          Constant stride
- * \param [in]   part1_to_part2_data Data (order given by part1_to_part2 array)
- * \param [in]   tag                 Tag of the exchange
+ * \param [in]   part1_to_part2_data Part1 data to send (order as in *part1_to_part2*)
+ * \param [in]   tag                 Exchange tag
  * \param [out]  request             Request
  *
  */
@@ -386,10 +414,9 @@ PDM_part_to_part_issend_raw
 
 /**
  *
- * \brief Wait an asynchronus issend (part1 to part2)
+ * \brief Finalize a non-blocking send from Part1 to Part2
  *
- * \param [in]  ptp           part to part structure
- * \param [in]  tag           Tag of the exchange
+ * \param [in]  ptp           Part-to-Part structure
  * \param [in]  request       Request
  *
  */
@@ -404,13 +431,13 @@ PDM_part_to_part_issend_wait
 
 /**
  *
- * \brief Initialize an asynchronus reverse issend (part2 to part1)
+ * \brief Initiate a non-blocking send from Part2 to Part1 (based on `MPI_issend`)
  *
- * \param [in]   ptp                 Block to part structure
+ * \param [in]   ptp                 Part-to-Part structure
  * \param [in]   s_data              Data size
  * \param [in]   cst_stride          Constant stride
- * \param [in]   part2_to_part1_data Data (order given by gnum1_come_from and ref_lnum2 arrays)
- * \param [in]   tag                 Tag of the exchange
+ * \param [in]   part2_to_part1_data Part2 data to send (order given by *gnum1_come_from* and *ref_lnum2* arrays)
+ * \param [in]   tag                 Exchange tag
  * \param [out]  request             Request
  *
  */
@@ -429,10 +456,9 @@ PDM_part_to_part_reverse_issend
 
 /**
  *
- * \brief Wait an asynchronus reverse issend (part2 to part1)
+ * \brief Finalize a non-blocking send from Part2 to Part1
  *
- * \param [in]  ptp           part to part structure
- * \param [in]  tag           Tag of the exchange
+ * \param [in]  ptp           Part-to-Part structure
  * \param [in]  request       Request
  *
  */
@@ -447,9 +473,9 @@ PDM_part_to_part_reverse_issend_wait
 
 /**
  *
- * \brief Wait an asynchronus reverse issend (part2 to part1)
+ * \brief Test a non-blocking send from Part2 to Part1
  *
- * \param [in]  ptp           part to part structure
+ * \param [in]  ptp           Part-to-Part structure
  * \param [in]  request       Request
  *
  */
@@ -463,9 +489,9 @@ PDM_part_to_part_reverse_issend_test
 
 /**
  *
- * \brief Wait an asynchronus reverse issend (part2 to part1)
+ * \brief Post (after test completion is OK) a non-blocking send from Part2 to Part1
  *
- * \param [in]  ptp           part to part structure
+ * \param [in]  ptp           Part-to-Part structure
  * \param [in]  request       Request
  *
  */
@@ -479,14 +505,14 @@ PDM_part_to_part_reverse_issend_post
 
 /**
  *
- * \brief Initialize a asynchronus irecv (from part1)
+ * \brief Initiate a non-blocking recv (Part1→Part2) (based on `MPI_irecv`)
  *
- * \param [in]  ptp           Part to part structure
- * \param [in]  s_data        Data size
- * \param [in]  cst_stride    Constant stride
- * \param [in]  part2_data    Partition 2 data (order given by gnum1_come_from and ref_lnum2 arrays)
- * \param [in]  tag           Tag of the exchange
- * \param [out] request       Request
+ * \param [in]   ptp                 Part-to-Part structure
+ * \param [in]   s_data              Data size
+ * \param [in]   cst_stride          Constant stride
+ * \param [in]   part2_data          Part2 data (order given by *gnum1_come_from* and *ref_lnum2* arrays)
+ * \param [in]   tag                 Exchange tag
+ * \param [out]  request             Request
  *
  */
 
@@ -503,12 +529,12 @@ PDM_part_to_part_irecv
 
 /**
  *
- * \brief Initialize a asynchronus irecv
+ * \brief Initiate a *raw*, non-blocking recv (Part1→Part2) (based on `MPI_irecv`)
  *
  * \param [in]  ptp           Part to part structure
  * \param [in]  s_data        Data size
  * \param [in]  cst_stride    Constant stride
- * \param [in]  raw_buffer    Buffer give by user
+ * \param [in]  raw_buffer    Buffer given by user
  * \param [in]  tag           Tag of the exchange
  * \param [out] request       Request
  *
@@ -527,10 +553,9 @@ PDM_part_to_part_irecv_raw
 
 /**
  *
- * \brief Initialize a asynchronus irecv (from part1)
+ * \brief Finalize a non-blocking recv (Part1→Part2)
  *
- * \param [in]  ptp           Part to part structure
- * \param [in]  tag           Tag of the exchange
+ * \param [in]  ptp           Part-to-Part structure
  * \param [in]  request       Request
  *
  */
@@ -544,12 +569,13 @@ PDM_part_to_part_irecv_wait
 
 /**
  *
- * \brief Wait a asynchronus raw irecv
+ * \brief Finalize a *raw*, non-blocking recv (Part1→Part2)
  *
- * \param [in]  ptp           Part to part structure
+ * \param [in]  ptp           Part-to-Part structure
  * \param [in]  request       Request
  *
  */
+
 
 void
 PDM_part_to_part_irecv_wait_raw
@@ -560,13 +586,13 @@ PDM_part_to_part_irecv_wait_raw
 
 /**
  *
- * \brief Test an asynchronus issend (part2 to part1)
+ * \brief Test a non-blocking send (Part1→Part2)
  *
- * \param [in]  ptp           part to part structure
- * \param [in]  tag           Tag of the exchange
+ * \param [in]  ptp           Part-to-Part structure
  * \param [in]  request       Request
  *
  */
+
 
 int
 PDM_part_to_part_issend_test
@@ -578,9 +604,9 @@ PDM_part_to_part_issend_test
 
 /**
  *
- * \brief Test an asynchronus irecv (part2 to part1)
+ * \brief Test a non-blocking recv (Part1→Part2)
  *
- * \param [in]  ptp           part to part structure
+ * \param [in]  ptp           Part-to-Part structure
  * \param [in]  request       Request
  *
  */
@@ -594,9 +620,9 @@ PDM_part_to_part_irecv_test
 
 /**
  *
- * \brief Post an asynchronus issend (After test completion is OK )
+ * \brief Post (after test completion is OK) a non-blocking send from Part1 to Part2
  *
- * \param [in]  ptp           part to part structure
+ * \param [in]  ptp           Part-to-Part structure
  * \param [in]  request       Request
  *
  */
@@ -609,9 +635,9 @@ PDM_part_to_part_issend_post
 
 /**
  *
- * \brief Post an asynchronus irecv (After test completion is OK )
+ * \brief Post (after test completion is OK) a non-blocking recv (Part1→Part2)
  *
- * \param [in]  ptp           part to part structure
+ * \param [in]  ptp           Part-to-Part structure
  * \param [in]  request       Request
  *
  */
@@ -624,14 +650,14 @@ PDM_part_to_part_irecv_post
 
 /**
  *
- * \brief Initialize a asynchronus reverse irecv (from part2)
+ * \brief Initiate a non-blocking recv (Part2→Part1) (based on `MPI_irecv`)
  *
- * \param [in]  ptp           Part to part structure
- * \param [in]  s_data        Data size
- * \param [in]  cst_stride    Constant stride
- * \param [in]  part1_data    Partition 1 data (order given by part1_to_part2 array)
- * \param [in]  tag           Tag of the exchange
- * \param [out] request       Request
+ * \param [in]   ptp                 Part-to-Part structure
+ * \param [in]   s_data              Data size
+ * \param [in]   cst_stride          Constant stride
+ * \param [in]   part1_data          Part1 data to receive (ordered as in *part1_to_part2*)
+ * \param [in]   tag                 Exchange tag
+ * \param [out]  request             Request
  *
  */
 
@@ -641,7 +667,7 @@ PDM_part_to_part_reverse_irecv
  PDM_part_to_part_t *ptp,
  const size_t        s_data,
  const int           cst_stride,
- void              **part2_data,
+ void              **part1_data,
  const int           tag,
  int                *request
 );
@@ -649,10 +675,9 @@ PDM_part_to_part_reverse_irecv
 
 /**
  *
- * \brief Initialize a asynchronus reverse irecv (from part2)
+ * \brief Finalize a non-blocking recv (Part2→Part1)
  *
- * \param [in]  ptp           Part to part structure
- * \param [in]  tag           Tag of the exchange
+ * \param [in]  ptp           Part-to-Part structure
  * \param [in]  request       Request
  *
  */
@@ -666,9 +691,9 @@ PDM_part_to_part_reverse_irecv_wait
 
 /**
  *
- * \brief Test a partial asynchronus exchange
+ * \brief Finalize a non-blocking recv (Part2→Part1)
  *
- * \param [in]  ptp           Part to part structure
+ * \param [in]  ptp           Part-to-Part structure
  * \param [in]  request       Request
  *
  */
@@ -682,9 +707,9 @@ PDM_part_to_part_reverse_irecv_test
 
 /**
  *
- * \brief Post a partial asynchronus exchange (after test completion)
+ * \brief Post (after test completion is OK) a non-blocking recv (Part2→Part1)
  *
- * \param [in]  ptp           Part to part structure
+ * \param [in]  ptp           Part-to-Part structure
  * \param [in]  request       Request
  *
  */
@@ -698,18 +723,18 @@ PDM_part_to_part_reverse_irecv_post
 
 /**
  *
- * \brief Initialize a partial asynchronus exchange
+ * \brief Initiate a non-blocking exchange (Part1→Part2)
  *
- * \param [in]   ptp              Part to part structure
+ * \param [in]   ptp              Part-to-Part structure
  * \param [in]   k_comm           Kind of MPI communication
  * \param [in]   t_stride         Kind of stride
- * \param [in]   t_part1_data_def Kind of part1 data definition
+ * \param [in]   t_part1_data_def Kind of Part1 data definition
  * \param [in]   cst_stride       Constant stride
  * \param [in]   s_data           Data size
- * \param [in]   part1_stride     Stride of partition 1 data
- * \param [in]   part1_data       Partition 1 data
- * \param [out]  part2_stride     Stride of partition 2 data (order given by gnum1_come_from and ref_lnum2 arrays)
- * \param [out]  part2_data       Partition 2 data (order given by gnum1_come_from and ref_lnum2 arrays)
+ * \param [in]   part1_stride     Stride of Part1 data (according to \p t_part1_data_def)
+ * \param [in]   part1_data       Part1 data           (according to \p t_part1_data_def)
+ * \param [out]  part2_stride     Stride of Part2 data (order given by *gnum1_come_from* and *ref_lnum2* arrays)
+ * \param [out]  part2_data       Part2 data           (order given by *gnum1_come_from* and *ref_lnum2* arrays)
  * \param [out]  request          Request
  *
  */
@@ -733,9 +758,9 @@ PDM_part_to_part_iexch
 
 /**
  *
- * \brief Wait a partial asynchronus exchange
+ * \brief Finalize a non-blocking exchange (Part1→Part2)
  *
- * \param [in]  ptp      Part to part structure
+ * \param [in]  ptp      Part-to-Part structure
  * \param [in]  request  Request
  *
  */
@@ -750,18 +775,18 @@ PDM_part_to_part_iexch_wait
 
 /**
  *
- * \brief Initialize a partial reverse asynchronus exchange
+ * \brief Initiate a non-blocking exchange (Part2→Part1)
  *
- * \param [in]   ptp              Part to part structure
+ * \param [in]   ptp              Part-to-Part structure
  * \param [in]   k_comm           Kind of MPI communication
  * \param [in]   t_stride         Kind of stride
- * \param [in]   t_part2_data_def Kind of part2 data definition
+ * \param [in]   t_part2_data_def Kind of Part2 data definition
  * \param [in]   cst_stride       Constant stride
  * \param [in]   s_data           Data size
- * \param [in]   part2_stride     Stride of partition 1 data (Accordding to t_part2_data_def)
- * \param [in]   part2_data       Partition 1 data (Accordding to t_part2_data_def)
- * \param [out]  part1_stride     Stride of partition 2 data (order given by part1_to_part2)
- * \param [out]  part1_data       Partition 2 data (order given by part1_to_part2)
+ * \param [in]   part2_stride     Stride of Part1 data (according to \p t_part2_data_def)
+ * \param [in]   part2_data       Part1 data           (according to \p t_part2_data_def)
+ * \param [out]  part1_stride     Stride of Part2 data (order given by *part1_to_part2*)
+ * \param [out]  part1_data       Part2 data           (order given by *part1_to_part2*)
  * \param [out]  request          Request
  *
  */
@@ -785,9 +810,9 @@ PDM_part_to_part_reverse_iexch
 
 /**
  *
- * \brief Wait a partial asynchronus exchange
+ * \brief Finalize a non-blocking exchange (Part2→Part1)
  *
- * \param [in]  ptp      Part to part structure
+ * \param [in]  ptp      Part-to-Part structure
  * \param [in]  request  Request
  *
  */
@@ -802,9 +827,9 @@ PDM_part_to_part_reverse_iexch_wait
 
 /**
  *
- * \brief Free a block to part structure
+ * \brief Free a Part-to-Part structure
  *
- * \param [inout] ptp  Block to part structure
+ * \param [inout] ptp  Part-to-Part structure
  *
  * \return       NULL
  */
@@ -821,8 +846,8 @@ PDM_part_to_part_free
  * \brief Get number of partitions
  *
  * \param [in]  ptp       Pointer to \ref PDM_part_to_part_t object
- * \param [out] n_part1   Number of partitions on side 1
- * \param [out] n_part2   Number of partitions on side 2
+ * \param [out] n_part1   Number of partitions in Part1
+ * \param [out] n_part2   Number of partitions in Part2
  *
  */
 
@@ -837,13 +862,13 @@ PDM_part_to_part_n_part_get
 
 /**
  *
- * \brief Get number of partitions and n_elt1 and n_elt2
+ * \brief Get number of partitions and number of elements
  *
  * \param [in]  ptp       Pointer to \ref PDM_part_to_part_t object
- * \param [out] n_part1   Number of partitions on side 1
- * \param [out] n_part2   Number of partitions on side 2
- * \param [out] n_elt1    Number of gnum1 element
- * \param [out] n_elt2    Number of gnum2 element
+ * \param [out] n_part1   Number of partitions in Part1
+ * \param [out] n_part2   Number of partitions in Part2
+ * \param [out] n_elt1    Number of Part1 elements (size = \p n_part1)
+ * \param [out] n_elt2    Number of Part2 elements (size = \p n_part2)
  *
  */
 void
@@ -859,12 +884,12 @@ PDM_part_to_part_n_part_and_n_elt_get
 
 /**
  *
- * \brief Get referenced gnum2 elements
+ * \brief Get referenced Part2 elements in current partition
  *
- * \param [in]   ptp           Block to part structure
- * \param [in]   i_part        Id of partition
- * \param [out]  n_ref_lnum2   Number of referenced gnum2
- * \param [out]  ref_lnum2     Referenced gnum2
+ * \param [in]   ptp           Part-to-Part structure
+ * \param [in]   i_part        Id of current partition
+ * \param [out]  n_ref_lnum2   Number of referenced Part2 elements
+ * \param [out]  ref_lnum2     Referenced Part2 elements (zero-based local ids)
  *
  */
 
@@ -880,12 +905,12 @@ PDM_part_to_part_ref_lnum2_single_part_get
 
 /**
  *
- * \brief Get unreferenced gnum2 elements
+ * \brief Get unreferenced Part2 elements in current partition
  *
- * \param [in]   ptp           Block to part structure
+ * \param [in]   ptp           Part-to-Part structure
  * \param [in]   i_part        Id of partition
- * \param [out]  n_unref_lnum2 Number of unreferenced gnum2
- * \param [out]  unref_lnum2   Unreferenced gnum2
+ * \param [out]  n_unref_lnum2 Number of unreferenced Part2 elements
+ * \param [out]  unref_lnum2   Unreferenced Part2 elements (zero-based local ids)
  *
  */
 
@@ -901,12 +926,12 @@ PDM_part_to_part_unref_lnum2_single_part_get
 
 /**
  *
- * \brief Get gnum come from gnum1 for each referenced gnum2
+ * \brief Get Part2→Part1 mapping for referenced Part2 elements in current partition
  *
- * \param [in]   ptp                 Block to part structure
- * \param [in]   i_part              Id of partition
- * \param [out]  gnum1_come_from_idx Index for gnum1_come_from array
- * \param [out]  gnum1_come_from     Gnum come from gnum1 for each referenced gnum2
+ * \param [in]   ptp                 Part-to-Part structure
+ * \param [in]   i_part              Id of current partition
+ * \param [out]  gnum1_come_from_idx Index for Part2→Part1 mapping
+ * \param [out]  gnum1_come_from     Part2→Part1 mapping
  *
  */
 
@@ -919,17 +944,36 @@ PDM_part_to_part_gnum1_come_from_single_part_get
        PDM_g_num_t        **gnum1_come_from
 );
 
-
 /**
  *
- * \brief Get selected numbers of part2
+ * \brief Get selected numbers of part2 (only index)
  *
  * \param [in]   ptp                 Block to part structure
  * \param [in]   i_part              Id of partition
  * \param [out]  n_elt1              Number of gnum1 element
  * \param [out]  part1_to_part2_idx  Index of data to send to gnum2 from gnum1
  *                                  (for each part size : \ref n_elt1+1)
- * \param [out]  part1_to_part2      Data to send to gnum2 from gnum1 for each part
+ *
+ */
+
+void
+PDM_part_to_part_part1_to_part2_idx_single_part_get
+(
+       PDM_part_to_part_t  *ptp,
+ const int                  i_part,
+       int                 *n_elt1,
+       int                **part1_to_part2_idx
+);
+
+/**
+ *
+ * \brief Get Part1→Part2 mapping for current partition
+ *
+ * \param [in]   ptp                 Part-to-Part structure
+ * \param [in]   i_part              Id of current partition
+ * \param [out]  n_elt1              Number of Part1 elements
+ * \param [out]  part1_to_part2_idx  Index for Part1→Part2 mapping (size : \p n_elt1 + 1)
+ * \param [out]  part1_to_part2      Part1→Part2 mapping (global ids)
  *
  */
 
@@ -946,11 +990,10 @@ PDM_part_to_part_part1_to_part2_single_part_get
 
 /**
  *
- * \brief Get indirection from part1_to_part2 to buffer send (usefull to setup buffer outside ptp )
+ * \brief Get indirection from part1_to_part2 to send buffer (useful to setup buffer outside ptp) (??)
  *
- * \param [in]   ptp                       Block to part structure
- * \param [out]  gnum1_to_send_buffer_idx  Index of data to send to gnum2 from gnum1
- *                                           (for each part size : \ref n_elt1+1)
+ * \param [in]   ptp                       Part-to-Part structure
+ * \param [out]  gnum1_to_send_buffer_idx  Index of data to send to gnum2 from gnum1 (for each part size : *n_elt1* + 1)
  * \param [out]  gnum1_to_send_buffer      For each gnum1 the position in send buffer
  *
  */
@@ -964,10 +1007,10 @@ PDM_part_to_part_gnum1_to_send_buffer_get
 
 /**
  *
- * \brief Get indirection from ref_lnum2 to buffer recv (usefull to setup buffer outside ptp )
+ * \brief Get indirection from ref_lnum2 to recv buffer  (useful to setup buffer outside ptp) (??)
  *
- * \param [in]   ptp                       Block to part structure
- * \param [out]  recv_buffer_to_ref_lnum2  For each gnum2 the position in recv buffer ( size = gnum1_come_from_idx[n_ref_lnum2])
+ * \param [in]   ptp                       Part-to-Part structure
+ * \param [out]  recv_buffer_to_ref_lnum2  For each gnum2 the position in recv buffer (size = *gnum1_come_from_idx*[*n_ref_lnum2*])
  *
  */
 void
@@ -982,9 +1025,9 @@ PDM_part_to_part_recv_buffer_to_ref_lnum2_get
  *
  * \brief Get buffer size and stride for send
  *
- * \param [in]   ptp                       Block to part structure
- * \param [out]  default_n_send_buffer     Number of entities to send (size = n_rank)
- * \param [out]  default_i_send_buffer     Index (size = n_rank + 1)
+ * \param [in]   ptp                       Part-to-Part structure
+ * \param [out]  default_n_send_buffer     Number of entities to send (size = *n_rank*)
+ * \param [out]  default_i_send_buffer     Index (size = *n_rank* + 1)
  *
  */
 void
@@ -999,9 +1042,9 @@ PDM_part_to_part_default_send_buffer_get
  *
  * \brief Get buffer size and stride for recv
  *
- * \param [in]   ptp                       Block to part structure
- * \param [out]  default_n_recv_buffer     Number of entities to recv (size = n_rank)
- * \param [out]  default_i_recv_buffer     Index (size = n_rank + 1)
+ * \param [in]   ptp                       Part-to-Part structure
+ * \param [out]  default_n_recv_buffer     Number of entities to recv (size = *n_rank*)
+ * \param [out]  default_i_recv_buffer     Index (size = *n_rank* + 1)
  *
  */
 void
@@ -1012,6 +1055,21 @@ PDM_part_to_part_default_recv_buffer_get
  int                  **default_i_recv_buffer
 );
 
+/**
+ *
+ * \brief Get number of MPI ranks
+ *
+ * \param [in]   ptp          Part to part structure
+ *
+ * \return  Number of MPI ranks
+ *
+ */
+
+int
+PDM_part_to_part_n_ranks_get
+(
+ PDM_part_to_part_t    *ptp
+);
 
 #ifdef	__cplusplus
 }

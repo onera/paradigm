@@ -221,10 +221,10 @@ _dmesh_extract_3d
     from_face_edge = 1;
   }
 
-  int dn_cell = PDM_dmesh_dn_entity_get(dme->dmesh, PDM_MESH_ENTITY_CELL  );
-  int dn_face = PDM_dmesh_dn_entity_get(dme->dmesh, PDM_MESH_ENTITY_FACE  );
-  int dn_edge = PDM_dmesh_dn_entity_get(dme->dmesh, PDM_MESH_ENTITY_EDGE  );
-  int dn_vtx  = PDM_dmesh_dn_entity_get(dme->dmesh, PDM_MESH_ENTITY_VERTEX);
+  int dn_cell = PDM_dmesh_dn_entity_get(dme->dmesh, PDM_MESH_ENTITY_CELL);
+  int dn_face = PDM_dmesh_dn_entity_get(dme->dmesh, PDM_MESH_ENTITY_FACE);
+  int dn_edge = PDM_dmesh_dn_entity_get(dme->dmesh, PDM_MESH_ENTITY_EDGE);
+  int dn_vtx  = PDM_dmesh_dn_entity_get(dme->dmesh, PDM_MESH_ENTITY_VTX);
 
   PDM_g_num_t* distrib_cell = PDM_compute_entity_distribution(dme->comm, dn_cell);
   PDM_g_num_t* distrib_face = PDM_compute_entity_distribution(dme->comm, dn_face);
@@ -292,8 +292,8 @@ _dmesh_extract_3d
                                                      &dme->dmesh_extract->dconnectivity_idx[PDM_CONNECTIVITY_TYPE_EDGE_VTX],
                                                      &dme->dmesh_extract->dconnectivity    [PDM_CONNECTIVITY_TYPE_EDGE_VTX],
                                                      &dme->btp_entity_to_extract_entity    [PDM_MESH_ENTITY_EDGE],
-                                                     &dme->distrib_extract                 [PDM_MESH_ENTITY_VERTEX],
-                                                     &dme->parent_extract_gnum             [PDM_MESH_ENTITY_VERTEX]);
+                                                     &dme->distrib_extract                 [PDM_MESH_ENTITY_VTX],
+                                                     &dme->parent_extract_gnum             [PDM_MESH_ENTITY_VTX]);
 
     dme->dmesh_extract->is_owner_connectivity[PDM_CONNECTIVITY_TYPE_EDGE_VTX] = PDM_TRUE;
     free(dme->dmesh_extract->dconnectivity_idx[PDM_CONNECTIVITY_TYPE_EDGE_VTX]);
@@ -312,25 +312,25 @@ _dmesh_extract_3d
                                                      &dme->dmesh_extract->dconnectivity_idx[PDM_CONNECTIVITY_TYPE_FACE_VTX],
                                                      &dme->dmesh_extract->dconnectivity    [PDM_CONNECTIVITY_TYPE_FACE_VTX],
                                                      &dme->btp_entity_to_extract_entity    [PDM_MESH_ENTITY_FACE],
-                                                     &dme->distrib_extract                 [PDM_MESH_ENTITY_VERTEX],
-                                                     &dme->parent_extract_gnum             [PDM_MESH_ENTITY_VERTEX]);
+                                                     &dme->distrib_extract                 [PDM_MESH_ENTITY_VTX],
+                                                     &dme->parent_extract_gnum             [PDM_MESH_ENTITY_VTX]);
 
     dme->dmesh_extract->is_owner_connectivity[PDM_CONNECTIVITY_TYPE_FACE_VTX] = PDM_TRUE;
  }
 
-  dme->dmesh_extract->dn_face = dme->distrib_extract[PDM_MESH_ENTITY_FACE  ][i_rank+1] - dme->distrib_extract[PDM_MESH_ENTITY_FACE  ][i_rank];
-  dme->dmesh_extract->dn_vtx  = dme->distrib_extract[PDM_MESH_ENTITY_VERTEX][i_rank+1] - dme->distrib_extract[PDM_MESH_ENTITY_VERTEX][i_rank];
-  dme->btp_entity_to_extract_entity[PDM_MESH_ENTITY_VERTEX] = PDM_block_to_part_create(distrib_vtx,
-                                                                (const PDM_g_num_t **) &dme->parent_extract_gnum[PDM_MESH_ENTITY_VERTEX],
-                                                                                       &dme->dmesh_extract->dn_vtx,
-                                                                                       1,
-                                                                                       dme->comm);
+  dme->dmesh_extract->dn_face = dme->distrib_extract[PDM_MESH_ENTITY_FACE][i_rank+1] - dme->distrib_extract[PDM_MESH_ENTITY_FACE][i_rank];
+  dme->dmesh_extract->dn_vtx  = dme->distrib_extract[PDM_MESH_ENTITY_VTX ][i_rank+1] - dme->distrib_extract[PDM_MESH_ENTITY_VTX ][i_rank];
+  dme->btp_entity_to_extract_entity[PDM_MESH_ENTITY_VTX] = PDM_block_to_part_create(distrib_vtx,
+                                                             (const PDM_g_num_t **) &dme->parent_extract_gnum[PDM_MESH_ENTITY_VTX],
+                                                                                    &dme->dmesh_extract->dn_vtx,
+                                                                                    1,
+                                                                                    dme->comm);
 
 
-  _rebuild_group(dme, distrib_cell, PDM_MESH_ENTITY_CELL  , PDM_BOUND_TYPE_CELL);
-  _rebuild_group(dme, distrib_face, PDM_MESH_ENTITY_FACE  , PDM_BOUND_TYPE_FACE);
-  _rebuild_group(dme, distrib_edge, PDM_MESH_ENTITY_EDGE  , PDM_BOUND_TYPE_EDGE);
-  _rebuild_group(dme, distrib_vtx , PDM_MESH_ENTITY_VERTEX, PDM_BOUND_TYPE_VTX );
+  _rebuild_group(dme, distrib_cell, PDM_MESH_ENTITY_CELL, PDM_BOUND_TYPE_CELL);
+  _rebuild_group(dme, distrib_face, PDM_MESH_ENTITY_FACE, PDM_BOUND_TYPE_FACE);
+  _rebuild_group(dme, distrib_edge, PDM_MESH_ENTITY_EDGE, PDM_BOUND_TYPE_EDGE);
+  _rebuild_group(dme, distrib_vtx , PDM_MESH_ENTITY_VTX,  PDM_BOUND_TYPE_VTX );
 
   free(distrib_cell);
   free(distrib_face);
@@ -383,9 +383,9 @@ _dmesh_extract_2d
     from_face_edge = 1;
   }
 
-  int dn_face = PDM_dmesh_dn_entity_get(dme->dmesh, PDM_MESH_ENTITY_FACE  );
-  int dn_edge = PDM_dmesh_dn_entity_get(dme->dmesh, PDM_MESH_ENTITY_EDGE  );
-  int dn_vtx  = PDM_dmesh_dn_entity_get(dme->dmesh, PDM_MESH_ENTITY_VERTEX);
+  int dn_face = PDM_dmesh_dn_entity_get(dme->dmesh, PDM_MESH_ENTITY_FACE);
+  int dn_edge = PDM_dmesh_dn_entity_get(dme->dmesh, PDM_MESH_ENTITY_EDGE);
+  int dn_vtx  = PDM_dmesh_dn_entity_get(dme->dmesh, PDM_MESH_ENTITY_VTX);
 
   PDM_g_num_t* distrib_face = PDM_compute_entity_distribution(dme->comm, dn_face);
   PDM_g_num_t* distrib_vtx  = PDM_compute_entity_distribution(dme->comm, dn_vtx );
@@ -437,8 +437,8 @@ _dmesh_extract_2d
                                                      &dme->dmesh_extract->dconnectivity_idx[PDM_CONNECTIVITY_TYPE_EDGE_VTX],
                                                      &dme->dmesh_extract->dconnectivity    [PDM_CONNECTIVITY_TYPE_EDGE_VTX],
                                                      &dme->btp_entity_to_extract_entity    [PDM_MESH_ENTITY_EDGE],
-                                                     &dme->distrib_extract                 [PDM_MESH_ENTITY_VERTEX],
-                                                     &dme->parent_extract_gnum             [PDM_MESH_ENTITY_VERTEX]);
+                                                     &dme->distrib_extract                 [PDM_MESH_ENTITY_VTX],
+                                                     &dme->parent_extract_gnum             [PDM_MESH_ENTITY_VTX]);
 
     dme->dmesh_extract->is_owner_connectivity[PDM_CONNECTIVITY_TYPE_EDGE_VTX] = PDM_TRUE;
     free(dme->dmesh_extract->dconnectivity_idx[PDM_CONNECTIVITY_TYPE_EDGE_VTX]);
@@ -459,24 +459,24 @@ _dmesh_extract_2d
                                                &dme->dmesh_extract->dconnectivity_idx[PDM_CONNECTIVITY_TYPE_FACE_VTX],
                                                &dme->dmesh_extract->dconnectivity    [PDM_CONNECTIVITY_TYPE_FACE_VTX],
                                                &dme->btp_entity_to_extract_entity    [PDM_MESH_ENTITY_FACE],
-                                               &dme->distrib_extract                 [PDM_MESH_ENTITY_VERTEX],
-                                               &dme->parent_extract_gnum             [PDM_MESH_ENTITY_VERTEX]);
+                                               &dme->distrib_extract                 [PDM_MESH_ENTITY_VTX],
+                                               &dme->parent_extract_gnum             [PDM_MESH_ENTITY_VTX]);
 
     dme->dmesh_extract->is_owner_connectivity[PDM_CONNECTIVITY_TYPE_FACE_VTX] = PDM_TRUE;
  }
 
-  dme->dmesh_extract->dn_face = dme->distrib_extract[PDM_MESH_ENTITY_FACE  ][i_rank+1] - dme->distrib_extract[PDM_MESH_ENTITY_FACE  ][i_rank];
-  dme->dmesh_extract->dn_vtx  = dme->distrib_extract[PDM_MESH_ENTITY_VERTEX][i_rank+1] - dme->distrib_extract[PDM_MESH_ENTITY_VERTEX][i_rank];
-  dme->btp_entity_to_extract_entity[PDM_MESH_ENTITY_VERTEX] = PDM_block_to_part_create(distrib_vtx,
-                                                                (const PDM_g_num_t **) &dme->parent_extract_gnum[PDM_MESH_ENTITY_VERTEX],
-                                                                                       &dme->dmesh_extract->dn_vtx,
-                                                                                       1,
-                                                                                       dme->comm);
+  dme->dmesh_extract->dn_face = dme->distrib_extract[PDM_MESH_ENTITY_FACE][i_rank+1] - dme->distrib_extract[PDM_MESH_ENTITY_FACE][i_rank];
+  dme->dmesh_extract->dn_vtx  = dme->distrib_extract[PDM_MESH_ENTITY_VTX ][i_rank+1] - dme->distrib_extract[PDM_MESH_ENTITY_VTX ][i_rank];
+  dme->btp_entity_to_extract_entity[PDM_MESH_ENTITY_VTX] = PDM_block_to_part_create(distrib_vtx,
+                                                             (const PDM_g_num_t **) &dme->parent_extract_gnum[PDM_MESH_ENTITY_VTX],
+                                                                                    &dme->dmesh_extract->dn_vtx,
+                                                                                    1,
+                                                                                    dme->comm);
 
 
-  _rebuild_group(dme, distrib_face, PDM_MESH_ENTITY_FACE  , PDM_BOUND_TYPE_FACE);
-  _rebuild_group(dme, distrib_edge, PDM_MESH_ENTITY_EDGE  , PDM_BOUND_TYPE_EDGE);
-  _rebuild_group(dme, distrib_vtx , PDM_MESH_ENTITY_VERTEX, PDM_BOUND_TYPE_VTX );
+  _rebuild_group(dme, distrib_face, PDM_MESH_ENTITY_FACE, PDM_BOUND_TYPE_FACE);
+  _rebuild_group(dme, distrib_edge, PDM_MESH_ENTITY_EDGE, PDM_BOUND_TYPE_EDGE);
+  _rebuild_group(dme, distrib_vtx , PDM_MESH_ENTITY_VTX,  PDM_BOUND_TYPE_VTX );
 
   free(distrib_face);
   if(distrib_edge != NULL) {
@@ -496,8 +496,8 @@ _dmesh_extract_1d
   int i_rank;
   PDM_MPI_Comm_rank(dme->comm, &i_rank);
 
-  int dn_edge = PDM_dmesh_dn_entity_get(dme->dmesh, PDM_MESH_ENTITY_EDGE  );
-  int dn_vtx  = PDM_dmesh_dn_entity_get(dme->dmesh, PDM_MESH_ENTITY_VERTEX);
+  int dn_edge = PDM_dmesh_dn_entity_get(dme->dmesh, PDM_MESH_ENTITY_EDGE);
+  int dn_vtx  = PDM_dmesh_dn_entity_get(dme->dmesh, PDM_MESH_ENTITY_VTX );
 
   PDM_g_num_t *distrib_edge = PDM_compute_entity_distribution(dme->comm, dn_edge);
   PDM_g_num_t* distrib_vtx  = PDM_compute_entity_distribution(dme->comm, dn_vtx );
@@ -532,8 +532,8 @@ _dmesh_extract_1d
                                              &dme->dmesh_extract->dconnectivity_idx[PDM_CONNECTIVITY_TYPE_EDGE_VTX],
                                              &dme->dmesh_extract->dconnectivity    [PDM_CONNECTIVITY_TYPE_EDGE_VTX],
                                              &dme->btp_entity_to_extract_entity    [PDM_MESH_ENTITY_EDGE],
-                                             &dme->distrib_extract                 [PDM_MESH_ENTITY_VERTEX],
-                                             &dme->parent_extract_gnum             [PDM_MESH_ENTITY_VERTEX]);
+                                             &dme->distrib_extract                 [PDM_MESH_ENTITY_VTX],
+                                             &dme->parent_extract_gnum             [PDM_MESH_ENTITY_VTX]);
 
   dme->dmesh_extract->is_owner_connectivity[PDM_CONNECTIVITY_TYPE_EDGE_VTX] = PDM_TRUE;
   free(dme->dmesh_extract->dconnectivity_idx[PDM_CONNECTIVITY_TYPE_EDGE_VTX]);
@@ -542,17 +542,17 @@ _dmesh_extract_1d
     free(_dedge_vtx_idx);
   }
 
-  dme->dmesh_extract->dn_edge = dme->distrib_extract[PDM_MESH_ENTITY_EDGE  ][i_rank+1] - dme->distrib_extract[PDM_MESH_ENTITY_EDGE  ][i_rank];
-  dme->dmesh_extract->dn_vtx  = dme->distrib_extract[PDM_MESH_ENTITY_VERTEX][i_rank+1] - dme->distrib_extract[PDM_MESH_ENTITY_VERTEX][i_rank];
+  dme->dmesh_extract->dn_edge = dme->distrib_extract[PDM_MESH_ENTITY_EDGE][i_rank+1] - dme->distrib_extract[PDM_MESH_ENTITY_EDGE][i_rank];
+  dme->dmesh_extract->dn_vtx  = dme->distrib_extract[PDM_MESH_ENTITY_VTX ][i_rank+1] - dme->distrib_extract[PDM_MESH_ENTITY_VTX ][i_rank];
 
-  dme->btp_entity_to_extract_entity[PDM_MESH_ENTITY_VERTEX] = PDM_block_to_part_create(distrib_vtx,
-                                                                (const PDM_g_num_t **) &dme->parent_extract_gnum[PDM_MESH_ENTITY_VERTEX],
-                                                                                       &dme->dmesh_extract->dn_vtx,
-                                                                                       1,
-                                                                                       dme->comm);
+  dme->btp_entity_to_extract_entity[PDM_MESH_ENTITY_VTX] = PDM_block_to_part_create(distrib_vtx,
+                                                             (const PDM_g_num_t **) &dme->parent_extract_gnum[PDM_MESH_ENTITY_VTX],
+                                                                                    &dme->dmesh_extract->dn_vtx,
+                                                                                    1,
+                                                                                    dme->comm);
 
-  _rebuild_group(dme, distrib_edge, PDM_MESH_ENTITY_EDGE  , PDM_BOUND_TYPE_EDGE);
-  _rebuild_group(dme, distrib_vtx , PDM_MESH_ENTITY_VERTEX, PDM_BOUND_TYPE_VTX );
+  _rebuild_group(dme, distrib_edge, PDM_MESH_ENTITY_EDGE, PDM_BOUND_TYPE_EDGE);
+  _rebuild_group(dme, distrib_vtx , PDM_MESH_ENTITY_VTX,  PDM_BOUND_TYPE_VTX );
 
   free(distrib_edge);
   free(distrib_vtx );
@@ -569,7 +569,7 @@ _dmesh_extract_0d
   int i_rank;
   PDM_MPI_Comm_rank(dme->comm, &i_rank);
 
-  int dn_vtx  = PDM_dmesh_dn_entity_get(dme->dmesh, PDM_MESH_ENTITY_VERTEX);
+  int dn_vtx  = PDM_dmesh_dn_entity_get(dme->dmesh, PDM_MESH_ENTITY_VTX);
 
   PDM_g_num_t* distrib_vtx  = PDM_compute_entity_distribution(dme->comm, dn_vtx );
 
@@ -590,23 +590,23 @@ _dmesh_extract_0d
   int          dn_extract_vtx      = PDM_part_to_block_n_elt_block_get  (ptb);
   PDM_g_num_t *dextract_gnum_vtx   = PDM_part_to_block_block_gnum_get   (ptb);
 
-  dme->distrib_extract[PDM_MESH_ENTITY_VERTEX] = PDM_compute_entity_distribution(dme->comm, dn_extract_vtx);
+  dme->distrib_extract[PDM_MESH_ENTITY_VTX] = PDM_compute_entity_distribution(dme->comm, dn_extract_vtx);
 
-  dme->dmesh_extract->dn_vtx = dme->distrib_extract[PDM_MESH_ENTITY_VERTEX][i_rank+1] - dme->distrib_extract[PDM_MESH_ENTITY_VERTEX][i_rank];
+  dme->dmesh_extract->dn_vtx = dme->distrib_extract[PDM_MESH_ENTITY_VTX][i_rank+1] - dme->distrib_extract[PDM_MESH_ENTITY_VTX][i_rank];
 
-  dme->parent_extract_gnum[PDM_MESH_ENTITY_VERTEX] = malloc(dme->dmesh_extract->dn_vtx * sizeof(PDM_g_num_t));
+  dme->parent_extract_gnum[PDM_MESH_ENTITY_VTX] = malloc(dme->dmesh_extract->dn_vtx * sizeof(PDM_g_num_t));
   for(int i = 0; i < dme->dmesh_extract->dn_vtx; ++i) {
-    dme->parent_extract_gnum[PDM_MESH_ENTITY_VERTEX][i] = dextract_gnum_vtx[i];
+    dme->parent_extract_gnum[PDM_MESH_ENTITY_VTX][i] = dextract_gnum_vtx[i];
   }
 
   PDM_part_to_block_free(ptb);
 
-  dme->btp_entity_to_extract_entity[PDM_MESH_ENTITY_VERTEX] = PDM_block_to_part_create(distrib_vtx,
-                                                                (const PDM_g_num_t **) &dme->parent_extract_gnum[PDM_MESH_ENTITY_VERTEX],
-                                                                                       &dme->dmesh_extract->dn_vtx,
-                                                                                       1,
-                                                                                       dme->comm);
-  _rebuild_group(dme, distrib_vtx , PDM_MESH_ENTITY_VERTEX, PDM_BOUND_TYPE_VTX );
+  dme->btp_entity_to_extract_entity[PDM_MESH_ENTITY_VTX] = PDM_block_to_part_create(distrib_vtx,
+                                                             (const PDM_g_num_t **) &dme->parent_extract_gnum[PDM_MESH_ENTITY_VTX],
+                                                                                    &dme->dmesh_extract->dn_vtx,
+                                                                                    1,
+                                                                                    dme->comm);
+  _rebuild_group(dme, distrib_vtx , PDM_MESH_ENTITY_VTX, PDM_BOUND_TYPE_VTX );
 
   free(distrib_vtx );
 }
@@ -626,36 +626,45 @@ _dmesh_extract_nodal
 
   /* Equilibrate */
   PDM_dmesh_nodal_elmts_t *dmn_elts = NULL;
+  PDM_mesh_entities_t extracted_entity;
   if(dme->dim == 3) {
     dmn_elts = dme->dmesh_nodal->volumic;
+    extracted_entity = PDM_MESH_ENTITY_CELL;
   } else if(dme->dim == 2) {
     dmn_elts = dme->dmesh_nodal->surfacic;
+    extracted_entity = PDM_MESH_ENTITY_FACE;
   } else if(dme->dim == 1) {
     dmn_elts = dme->dmesh_nodal->ridge;
+    extracted_entity = PDM_MESH_ENTITY_EDGE;
   } else {
     dmn_elts = dme->dmesh_nodal->corner;
+    extracted_entity = PDM_MESH_ENTITY_VTX;
   }
 
+  // For nodal meshes, parent_extract_gnum is filled for vertices *and* for the selected dim to extract :
+  // parent gnum is ordered following *output* sections ordering in the extracted dmesh nodal
   PDM_dmesh_nodal_elmts_t* dmn_elts_extract = PDM_dmesh_nodal_elmts_to_extract_dmesh_nodal_elmts(dmn_elts,
                                                                                                  dme->n_selected,
                                                                                                  dme->selected_gnum,
-                                                                                                 &dme->distrib_extract    [PDM_MESH_ENTITY_VERTEX],
-                                                                                                 &dme->parent_extract_gnum[PDM_MESH_ENTITY_VERTEX]);
-  int dn_vtx  = dme->distrib_extract[PDM_MESH_ENTITY_VERTEX][i_rank+1] - dme->distrib_extract[PDM_MESH_ENTITY_VERTEX][i_rank];
+                                                                                                 &dme->distrib_extract    [PDM_MESH_ENTITY_VTX],
+                                                                                                 &dme->parent_extract_gnum[PDM_MESH_ENTITY_VTX],
+                                                                                                 &dme->distrib_extract    [extracted_entity],
+                                                                                                 &dme->parent_extract_gnum[extracted_entity]);
+  int dn_vtx  = dme->distrib_extract[PDM_MESH_ENTITY_VTX][i_rank+1] - dme->distrib_extract[PDM_MESH_ENTITY_VTX][i_rank];
 
   const PDM_g_num_t *distrib_vtx = PDM_DMesh_nodal_distrib_vtx_get(dme->dmesh_nodal);
 
-  dme->btp_entity_to_extract_entity[PDM_MESH_ENTITY_VERTEX] = PDM_block_to_part_create(distrib_vtx,
-                                                                (const PDM_g_num_t **) &dme->parent_extract_gnum[PDM_MESH_ENTITY_VERTEX],
-                                                                                       &dn_vtx,
-                                                                                       1,
-                                                                                       dme->comm);
+  dme->btp_entity_to_extract_entity[PDM_MESH_ENTITY_VTX] = PDM_block_to_part_create(distrib_vtx,
+                                                             (const PDM_g_num_t **) &dme->parent_extract_gnum[PDM_MESH_ENTITY_VTX],
+                                                                                    &dn_vtx,
+                                                                                    1,
+                                                                                    dme->comm);
 
   PDM_dmesh_nodal_elmts_generate_distribution(dmn_elts_extract);
 
   double** tmp_dvtx_coord   = NULL;
   int stride_one = 1;
-  PDM_block_to_part_exch(dme->btp_entity_to_extract_entity[PDM_MESH_ENTITY_VERTEX],
+  PDM_block_to_part_exch(dme->btp_entity_to_extract_entity[PDM_MESH_ENTITY_VTX],
                          3 * sizeof(double),
                          PDM_STRIDE_CST_INTERLACED,
                          &stride_one,
@@ -676,7 +685,7 @@ _dmesh_extract_nodal
 
   dme->dmesh_nodal_extract = PDM_DMesh_nodal_create(dme->comm,
                                                     dme->dim,
-                                                    dme->distrib_extract[PDM_MESH_ENTITY_VERTEX][n_rank],
+                                                    dme->distrib_extract[PDM_MESH_ENTITY_VTX][n_rank],
                                                     n_g_cell,
                                                     n_g_face,
                                                     n_g_edge);
@@ -792,7 +801,7 @@ PDM_dmesh_extract_compute
     if(dme->dmesh->_dvtx_coord != NULL) {
       double** tmp_dvtx_coord   = NULL;
       int stride_one = 1;
-      PDM_block_to_part_exch(dme->btp_entity_to_extract_entity[PDM_MESH_ENTITY_VERTEX],
+      PDM_block_to_part_exch(dme->btp_entity_to_extract_entity[PDM_MESH_ENTITY_VTX],
                              3 * sizeof(double),
                              PDM_STRIDE_CST_INTERLACED,
                              &stride_one,
@@ -823,6 +832,16 @@ PDM_dmesh_extract_compute
 }
 
 
+/**
+ *
+ * \brief Set the extract number
+ *
+ * \param [in]   dme                  PDM_dmesh_extract_t
+ * \param [in]   entity_type          Entity kind to be extracted (\ref PDM_mesh_entities_t)
+ * \param [in]   n_selected           Number of entity to select
+ * \param [in]   selected_gnum        List of global id to extract
+ *
+ */
 void
 PDM_dmesh_extract_selected_gnum_set
 (
@@ -838,6 +857,16 @@ PDM_dmesh_extract_selected_gnum_set
 
 }
 
+
+/**
+ *
+ * \brief Set the dn_entity of entity_type
+ *
+ * \param [in]   dme                  PDM_dmesh_extract_t
+ * \param [in]   entity_type          Entity kind (\ref PDM_mesh_entities_t)
+ * \param [in]   dn_entity            Number of entity in current process
+ *
+ */
 void
 PDM_dmesh_extract_dn_entity_set
 (
@@ -850,6 +879,14 @@ PDM_dmesh_extract_dn_entity_set
 }
 
 
+/**
+ *
+ * \brief Set vertices coordinates
+ *
+ * \param [in]   dme           PDM_dmesh_extract_t
+ * \param [in]   dvtx_coord    Distributed vertex coordinates (size = 3 * dn_vtx )
+ *
+ */
 void
 PDM_dmesh_extract_vtx_coord_set
 (
@@ -860,6 +897,17 @@ PDM_dmesh_extract_vtx_coord_set
   PDM_dmesh_vtx_coord_set(dme->dmesh, dvtx_coord, PDM_OWNERSHIP_USER);
 }
 
+/**
+ *
+ * \brief Set mesh bound for one bound_type
+ *
+ * \param [in]   dme           PDM_dmesh_extract_t
+ * \param [in]   bound_type    Bound kind (\ref PDM_bound_type_t)
+ * \param [in]   n_bound       Number of bound in for bound_type
+ * \param [in]   connect       Connectivity between group and entity (size = connect_idx[n_bound])
+ * \param [in]   connect_idx   Connectivity index between group and entity (size = n_bound+1)
+ *
+ */
 void
 PDM_dmesh_extract_dmesh_bound_set
 (
@@ -874,6 +922,16 @@ PDM_dmesh_extract_dmesh_bound_set
 }
 
 
+/**
+ *
+ * \brief Set connectivity by kind (\ref PDM_connectivity_type_t )
+ *
+ * \param [in]   dme                  PDM_dmesh_extract_t
+ * \param [in]   connectivity_type    Connectivity kind (\ref PDM_connectivity_type_t)
+ * \param [in]   dconnect             Connectivity (size = dconnect_idx[dn_entity])
+ * \param [in]   dconnect_idx         Connectivity (size = dn_entity+1)
+ *
+ */
 void
 PDM_dmesh_extract_dconnectivity_set
 (
@@ -890,6 +948,14 @@ PDM_dmesh_extract_dconnectivity_set
                              PDM_OWNERSHIP_USER);
 }
 
+/**
+ *
+ * \brief Set a dmesh object correspond to extraction
+ *
+ * \param [in]   dme                  PDM_dmesh_extract_t
+ * \param [out]  dmesh                PDM_dmesh_t who need to be extracted
+ *
+ */
 void
 PDM_dmesh_extract_dmesh_set
 (
@@ -901,6 +967,14 @@ PDM_dmesh_extract_dmesh_set
 }
 
 
+/**
+ *
+ * \brief Get a dmesh object correspond to extraction
+ *
+ * \param [in]   dme                  PDM_dmesh_extract_t
+ * \param [out]  dmesh_nodal          PDM_dmesh_nodal_t who need to be extracted
+ *
+ */
 void
 PDM_dmesh_extract_dmesh_nodal_set
 (
@@ -911,6 +985,15 @@ PDM_dmesh_extract_dmesh_nodal_set
   dme->dmesh_nodal = dmesh_nodal;
 }
 
+/**
+ *
+ * \brief Get a dmesh object correspond to extraction
+ *
+ * \param [in]   dme                  PDM_dmesh_extract_t
+ * \param [out]  dmesh_extract        Current extraction direclty inside a PDM_dmesh_t
+ * \param [in]   ownership            KEEP or USER
+ *
+ */
 void
 PDM_dmesh_extract_dmesh_get
 (
@@ -923,6 +1006,15 @@ PDM_dmesh_extract_dmesh_get
   dme->dmesh_extract_ownership = ownership;
 }
 
+/**
+ *
+ * \brief Get a dmesh object correspond to extraction
+ *
+ * \param [in]   dme                  PDM_dmesh_extract_t
+ * \param [out]  dmesh_nodal_extract  Current extraction direclty inside a PDM_dmesh_nodal_t
+ * \param [in]   ownership            KEEP or USER
+ *
+ */
 void
 PDM_dmesh_extract_dmesh_nodal_get
 (
@@ -935,6 +1027,17 @@ PDM_dmesh_extract_dmesh_nodal_get
   dme->dmesh_extract_ownership = ownership;
 }
 
+/**
+ *
+ * \brief Get the redistributed parent_gnum (in block frame)
+ *
+ * \param [in]   dme                  PDM_dmesh_extract_t
+ * \param [in]   entity_type          Entity type (cell, face, edge, vtx)
+ * \param [out]  dn_entity            Size of block of current entity
+ * \param [out]  parent_gnum          Parent gnum redistributed
+ * \param [in]   ownership            KEEP or USER
+ *
+ */
 void
 PDM_dmesh_extract_parent_gnum_get
 (
@@ -958,6 +1061,16 @@ PDM_dmesh_extract_parent_gnum_get
 }
 
 
+/**
+ *
+ * \brief Get the block_to_part associated to extraction
+ *
+ * \param [in]   dme                  PDM_dmesh_extract_t
+ * \param [in]   entity_type          Entity type (cell, face, edge, vtx)
+ * \param [out]  btp                  block_to_part to transfert data to extract block
+ * \param [in]   ownership            KEEP or USER
+ *
+ */
 void
 PDM_dmesh_extract_btp_get
 (
@@ -972,6 +1085,17 @@ PDM_dmesh_extract_btp_get
 }
 
 
+/**
+ *
+ * \brief Get the block_to_part associated to extraction for each group
+ *
+ * \param [in]   dme                  PDM_dmesh_extract_t
+ * \param [in]   i_group              No of group
+ * \param [in]   bound_type           Bound type (cell, face, edge, vtx)
+ * \param [out]  btp                  block_to_part to transfert data to extract block
+ * \param [in]   ownership            KEEP or USER
+ *
+ */
 void
 PDM_dmesh_extract_btp_group_get
 (
@@ -987,6 +1111,13 @@ PDM_dmesh_extract_btp_group_get
 }
 
 
+/**
+ *
+ * \brief Free structure
+ *
+ * \param [in]   dme                  PDM_dmesh_extract_t
+ *
+ */
 void
 PDM_dmesh_extract_free
 (

@@ -75,7 +75,6 @@ extern "C" {
  * \param [in, out] arg_ptr   pointer to variable argument list based on format
  *                            string.
  *
- * \dontinclude pdm_error_example.c
  *
  * In an MPI environment, it is recommended to replace the default
  * error handler. This requires using the following headers:
@@ -92,12 +91,6 @@ extern "C" {
  *
  * In a more complex environment, \c MPI_COMM_WORLD could be replaced
  * by another communicator.
- */
-
-/*!
- * \example pdm_error_example.c
- *
- * This is an example of an MPI-aware error handler.
  */
 
 /*-----------------------------------------------------------------------------

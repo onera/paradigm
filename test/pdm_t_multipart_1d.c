@@ -17,7 +17,7 @@
 #include "pdm_printf.h"
 #include "pdm_error.h"
 #include "pdm_gnum.h"
-#include "pdm_point_cloud_gen.h"
+#include "pdm_dcube_nodal_gen.h"
 #include "pdm_octree.h"
 #include "pdm_logging.h"
 #include "pdm_distrib.h"
@@ -107,75 +107,6 @@ _read_args
   }
 }
 
-static
-void
-_generate_lines
-(
-  PDM_MPI_Comm  comm,
-  double        zero_x,
-  double        zero_y,
-  double        zero_z,
-  double        length,
-  PDM_g_num_t   n_g_pts,
-  PDM_g_num_t **distrib_edge_out,
-  PDM_g_num_t **distrib_vtx_out,
-  PDM_g_num_t **dedge_vtx_out,
-  double      **dvtx_coord_out
-)
-{
-  int i_rank;
-  int n_rank;
-  PDM_MPI_Comm_rank(comm, &i_rank);
-  PDM_MPI_Comm_size(comm, &n_rank);
-
-  PDM_g_num_t gn_vtx  = (n_g_pts    );
-  PDM_g_num_t gn_edge = (n_g_pts - 1);
-
-  int dcube_nx = n_g_pts - 1;
-
-  PDM_g_num_t* distrib_edge = PDM_compute_uniform_entity_distribution(comm, gn_edge);
-  PDM_g_num_t* distrib_vtx  = PDM_compute_uniform_entity_distribution(comm, gn_vtx);
-
-  int dn_vtx  = (int) (distrib_vtx [i_rank+1] - distrib_vtx [i_rank]);
-  int dn_edge = (int) (distrib_edge[i_rank+1] - distrib_edge[i_rank]);
-
-  double *dvtx_coord = malloc(sizeof(double) * dn_vtx * 3);
-
-  double step_x = length / (double) (n_g_pts - 1);
-
-  for (int i_vtx = 0; i_vtx < dn_vtx; ++i_vtx) {
-
-    PDM_g_num_t g_vtx = distrib_vtx[i_rank] + i_vtx;
-
-    PDM_g_num_t indi = g_vtx % n_g_pts;
-
-    dvtx_coord[3 * i_vtx    ] = indi * step_x + zero_x;
-    dvtx_coord[3 * i_vtx + 1] = zero_y;
-    dvtx_coord[3 * i_vtx + 2] = zero_z;
-  }
-
-
-  PDM_g_num_t *dedge_vtx     = malloc( 2 * dn_edge * sizeof(PDM_g_num_t));
-
-  for (int i_edge = 0; i_edge < dn_edge; ++i_edge) {
-
-    PDM_g_num_t g = distrib_edge[i_rank] + i_edge;
-
-    PDM_g_num_t indi = g % dcube_nx;
-
-    dedge_vtx[2*i_edge  ] = 1 + (indi  );
-    dedge_vtx[2*i_edge+1] = 1 + (indi+1);
-  }
-
-  *dvtx_coord_out   = dvtx_coord;
-  *dedge_vtx_out    = dedge_vtx;
-  *distrib_edge_out = distrib_edge;
-  *distrib_vtx_out  = distrib_vtx;
-}
-
-
-
-
 /*============================================================================
  * Public function definitions
  *============================================================================*/
@@ -212,16 +143,16 @@ char *argv[]
   PDM_g_num_t *distrib_edge = NULL;
   PDM_g_num_t *distrib_vtx  = NULL;
   PDM_g_num_t *dedge_vtx    = NULL;
-  _generate_lines(comm,
-                  0.,
-                  0.,
-                  0.,
-                  1.,
-                  n_g_pts,
-                  &distrib_edge,
-                  &distrib_vtx,
-                  &dedge_vtx,
-                  &dvtx_coord);
+  PDM_generate_lines(comm,
+                     0.,
+                     0.,
+                     0.,
+                     1.,
+                     n_g_pts,
+                     &distrib_edge,
+                     &distrib_vtx,
+                     &dedge_vtx,
+                     &dvtx_coord);
 
   int dn_edge = distrib_edge[i_rank+1] - distrib_edge[i_rank];
   int dn_vtx  = distrib_vtx [i_rank+1] - distrib_vtx [i_rank];
@@ -261,9 +192,9 @@ char *argv[]
                                                 comm,
                                                 PDM_OWNERSHIP_KEEP);
 
-  PDM_multipart_register_block(mpart, 0, dm);
+  PDM_multipart_dmesh_set(mpart, 0, dm);
 
-  PDM_multipart_run_ppart(mpart);
+  PDM_multipart_compute(mpart);
 
   if(0 == 1) {
     for(int i_part = 0; i_part < n_part; ++i_part) {
@@ -272,7 +203,7 @@ char *argv[]
       PDM_multipart_part_ln_to_gn_get(mpart,
                                       0,
                                       i_part,
-                                      PDM_MESH_ENTITY_VERTEX,
+                                      PDM_MESH_ENTITY_VTX,
                                       &pvtx_ln_to_gn,
                                       PDM_OWNERSHIP_KEEP);
 
@@ -290,8 +221,8 @@ char *argv[]
                                           0,
                                           i_part,
                                           PDM_CONNECTIVITY_TYPE_EDGE_VTX,
-                                          &pedge_vtx,
                                           &pedge_vtx_idx,
+                                          &pedge_vtx,
                                           PDM_OWNERSHIP_KEEP);
 
       double *pvtx_coord = NULL;

@@ -1,3 +1,7 @@
+/*
+ * \file
+ */
+
 #ifndef __PDM_PART_DISTANT_NEIGHBOR_H__
 #define __PDM_PART_DISTANT_NEIGHBOR_H__
 

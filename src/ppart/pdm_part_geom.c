@@ -177,7 +177,7 @@ PDM_part_entity_geom
  const PDM_MPI_Comm  comm,
  const PDM_g_num_t   dn_entity,
  const double       *dentity_coord,
- const int          *dentity_weight,
+ const double       *dentity_weight,
        int          *dentity_part
 )
 {
@@ -206,7 +206,7 @@ PDM_part_entity_geom
   PDM_MPI_Allreduce ((void *) &n_part, &n_total_part, 1, PDM_MPI_INT, PDM_MPI_SUM, comm);
   PDM_hilbert_code_t *hilbert_codes_idx = (PDM_hilbert_code_t *) malloc ((n_total_part+1) * sizeof(PDM_hilbert_code_t));
 
-  int * weight = (int *) malloc (dn_entity * sizeof(int));
+  double * weight = (double *) malloc (dn_entity * sizeof(double));
   if (dentity_weight != NULL) {
     for(int i = 0; i < dn_entity; ++i) {
       weight [i] = dentity_weight [i];
@@ -214,7 +214,7 @@ PDM_part_entity_geom
   }
   else {
     for(int i = 0; i < dn_entity; ++i) {
-      weight [i] = 1;
+      weight [i] = 1.;
     }
   }
 
@@ -303,14 +303,25 @@ PDM_part_geom
                             distrib_vtx,
                             barycenter_coords);
 
+  double *dcell_weight_d = NULL;
+  if(dcell_weight != NULL) {
+    dcell_weight_d = malloc(dn_cell * sizeof(double));
+    for(int i = 0; i < dn_cell; ++i) {
+      dcell_weight_d[i] = dcell_weight[i];
+    }
+  }
 
   PDM_part_entity_geom(method,
                        n_part,
                        comm,
                        dn_cell,
                        barycenter_coords,
-                       dcell_weight,
+                       dcell_weight_d,
                        dcell_part);
+
+  if(dcell_weight != NULL) {
+    free(dcell_weight_d);
+  }
 
   free(barycenter_coords);
 }
@@ -324,7 +335,7 @@ PDM_part_geom_0d
  const PDM_MPI_Comm  comm,
  const int           dn_vtx,
  const double       *dvtx_coord,
- const int          *dvtx_weight,
+ const double       *dvtx_weight,
        int          *dvtx_part
 )
 {
@@ -347,7 +358,7 @@ PDM_part_geom_1d
  const int           dn_vtx,
  const PDM_g_num_t  *dedge_vtx,
  const double       *dvtx_coord,
- const int          *dedge_weight,
+ const double       *dedge_weight,
        int          *dedge_part
 )
 {
@@ -392,7 +403,7 @@ PDM_part_geom_2d
  const PDM_g_num_t  *dface_edge,
  const PDM_g_num_t  *dedge_vtx,
  const double       *dvtx_coord,
- const int          *dface_weight,
+ const double       *dface_weight,
        int          *dface_part
 )
 {
@@ -498,11 +509,7 @@ PDM_dreorder_from_coords
 
   PDM_hilbert_code_t *hilbert_codes_idx = (PDM_hilbert_code_t *) malloc ((n_rank+1) * sizeof(PDM_hilbert_code_t));
 
-  int *weight = (int *) malloc (dn_vtx * sizeof(int));
-  for(int i = 0; i < dn_vtx; ++i) {
-    weight [i] = 1;
-  }
-
+  double *weight = PDM_array_const_double(dn_vtx, 1.);
   PDM_hilbert_build_rank_index (dim,
                                 n_rank,
                                 dn_vtx,
@@ -653,11 +660,7 @@ PDM_dreorder_from_length
 
   PDM_hilbert_code_t *hilbert_codes_idx = (PDM_hilbert_code_t *) malloc ((n_rank+1) * sizeof(PDM_hilbert_code_t));
 
-  int *weight = (int *) malloc (dn_length * sizeof(int));
-  for(int i = 0; i < dn_length; ++i) {
-    weight [i] = 1;
-  }
-
+  double *weight = PDM_array_const_double(dn_length, 1.);
   PDM_hilbert_build_rank_index (dim,
                                 n_rank,
                                 dn_length,

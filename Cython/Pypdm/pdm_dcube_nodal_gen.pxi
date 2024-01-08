@@ -1,6 +1,6 @@
 cdef extern from "pdm_dcube_nodal_gen.h":
     # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-    # > Wrapping of Ppart Structure
+    # > Wrapping of Dcube Nodal Gen Structure
     ctypedef struct PDM_dcube_nodal_t:
       pass
     # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -49,13 +49,45 @@ cdef extern from "pdm_dcube_nodal_gen.h":
                                    PDM_ownership_t           owner);
     # ------------------------------------------------------------------
 
+    # ------------------------------------------------------------------
+    void PDM_dcube_nodal_gen_random_factor_set(PDM_dcube_nodal_t *dcube,
+                                               double             random_factor)
+    # ------------------------------------------------------------------
+
 # ------------------------------------------------------------------
 cdef class DCubeNodalGenerator:
-    """
-       DCubeNodalGenerator
-    """
-    # > For Ppart
+    # > For Dcube Nodal Gen
     cdef PDM_dcube_nodal_t* _dcube
+    # ------------------------------------------------------------------
+    # Fake init (Use only for docstring)
+    def __init__(self,
+                 npy_pdm_gnum_t                         nx,
+                 npy_pdm_gnum_t                         ny,
+                 npy_pdm_gnum_t                         nz,
+                 NPY.double_t                           length,
+                 NPY.double_t                           zero_x,
+                 NPY.double_t                           zero_y,
+                 NPY.double_t                           zero_z,
+                 PDM_Mesh_nodal_elt_t                   t_elmt,
+                 int                                    order,
+                 MPI.Comm                               comm):
+      """
+      __init__(nx, ny, nz, length, zero_x, zero_y, zero_z, t_elmt, order, comm)
+
+      Initialize a distributed mesh generator structure
+
+      Parameters:
+        nx     (npy_pdm_gnum_t)       : Number of vertices on segments in x-direction
+        ny     (npy_pdm_gnum_t)       : Number of vertices on segments in y-direction
+        nz     (npy_pdm_gnum_t)       : Number of vertices on segments in z-direction
+        length (double)               : Segment length
+        zero_x (double)               : x-coordinate of the origin
+        zero_y (double)               : y-coordinate of the origin
+        zero_z (double)               : z-coordinate of the origin
+        t_elmt (PDM_Mesh_nodal_elt_t) : Element type
+        order  (int)                  : Element order
+        comm   (MPI.Comm)             : MPI communicator
+      """
     # ------------------------------------------------------------------
     def __cinit__(self,
                   npy_pdm_gnum_t                         nx,
@@ -71,7 +103,7 @@ cdef class DCubeNodalGenerator:
 
         """
         """
-        # ~> Communicator Mpi
+        # ~> MPI communicator
         cdef MPI.MPI_Comm c_comm = comm.ob_mpi
 
         # -> Create dcube
@@ -85,7 +117,7 @@ cdef class DCubeNodalGenerator:
                                                  zero_z,
                                                  t_elmt,
                                                  order,
-                                                 PDM_OWNERSHIP_USER) # Python take owership
+                                                 PDM_OWNERSHIP_USER) # Python takes ownership
 
 
 
@@ -94,9 +126,20 @@ cdef class DCubeNodalGenerator:
         PDM_dcube_nodal_gen_free(self._dcube)
     # ------------------------------------------------------------------
     def set_ordering(self, char *pdm_ho_ordering):
+      """
+      set_ordering(pdm_ho_ordering)
+
+      Set the HO-ordering
+
+      Parameters:
+        pdm_ho_ordering (str) : Name of the HO-ordering
+      """
       PDM_dcube_nodal_gen_ordering_set(self._dcube, pdm_ho_ordering)
     # ------------------------------------------------------------------
     def compute(self):
+      """
+      Generate a distributed nodal mesh
+      """
       PDM_dcube_nodal_gen_build(self._dcube)
 
 
@@ -173,6 +216,10 @@ cdef class DCubeNodalGenerator:
     # ------------------------------------------------------------------------
     def get_dmesh_nodal(self):
       """
+      Get the associated distributed nodal mesh object
+
+      Returns
+        Distributed nodal mesh object (:py:class:`DistributedMeshNodalCaspule`)
       """
       # ************************************************************************
       # > Declaration
@@ -180,9 +227,21 @@ cdef class DCubeNodalGenerator:
       # ************************************************************************
       dmn = PDM_dcube_nodal_gen_dmesh_nodal_get(self._dcube)
 
-      py_casp = PyCapsule_New(dmn, NULL, NULL);
+      py_caps = PyCapsule_New(dmn, NULL, NULL);
 
-      return DistributedMeshNodalCaspule(py_casp) # The free is inside the class
+      return DistributedMeshNodalCapsule(py_caps) # The free is inside the class
+
+    # ------------------------------------------------------------------
+    def set_random_factor(self, double random_factor):
+      """
+      set_random_factor(random_factor)
+
+      Set randomization factor
+
+      Parameters:
+        random_factor (double) : Randomization factor (between 0 and 1)
+      """
+      PDM_dcube_nodal_gen_random_factor_set(self._dcube, random_factor)
 
 # ------------------------------------------------------------------
 cdef class DCubeNodalGeneratorCartTopo:
@@ -238,7 +297,7 @@ cdef class DCubeNodalGeneratorCartTopo:
                                   order,
                                   &self._dcube,
                                   &self.dom_intrf,
-                                  PDM_OWNERSHIP_USER); # Python take owership
+                                  PDM_OWNERSHIP_USER); # Python takes ownership
 
     # ------------------------------------------------------------------------
     def get_n_domain(self):
@@ -256,9 +315,9 @@ cdef class DCubeNodalGeneratorCartTopo:
       # ************************************************************************
       dmn = PDM_dcube_nodal_gen_dmesh_nodal_get(self._dcube[i_domain])
 
-      py_casp = PyCapsule_New(dmn, NULL, NULL);
+      py_caps = PyCapsule_New(dmn, NULL, NULL);
 
-      return DistributedMeshNodalCaspule(py_casp) # The free is inside the class
+      return DistributedMeshNodalCapsule(py_caps) # The free is inside the class
 
     # ------------------------------------------------------------------------
     def domain_interface_get(self):
@@ -268,9 +327,9 @@ cdef class DCubeNodalGeneratorCartTopo:
       # > Declaration
       cdef PDM_domain_interface_t* dom_intrf
       # ************************************************************************
-      py_casp = PyCapsule_New(self.dom_intrf, NULL, NULL);
+      py_caps = PyCapsule_New(self.dom_intrf, NULL, NULL);
 
-      return DomInterfaceCapsule(py_casp) # The free is inside the class
+      return DomInterfaceCapsule(py_caps) # The free is inside the class
 
     # ------------------------------------------------------------------
     def __dealloc__(self):

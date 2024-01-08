@@ -82,7 +82,7 @@ cdef extern from "pdm_part_mesh_nodal.h":
 # ------------------------------------------------------------------
 cdef class PartMeshNodal:
     """
-       PartMeshNodal: Interface to build face from Element->Vtx connectivity
+      PartMeshNodal: Interface to build face from Element->Vtx connectivity
     """
     # ************************************************************************
     # > Class attributes
@@ -121,7 +121,7 @@ cdef class PartMeshNodal:
 
 
 # ------------------------------------------------------------------
-cdef class PartMeshNodalCaspule:
+cdef class PartMeshNodalCapsule:
   """
   """
   # ************************************************************************
@@ -132,15 +132,31 @@ cdef class PartMeshNodalCaspule:
   def __cinit__(self, object caps):
     """
     """
-    # print("DistributedMeshNodalCaspule", PyCapsule_GetName(caps))
-    cdef PDM_part_mesh_nodal_t* casp_pmn = <PDM_part_mesh_nodal_t *> PyCapsule_GetPointer(caps, NULL)
-    self.pmn = casp_pmn;
+    # print("DistributedMeshNodalCapsule", PyCapsule_GetName(caps))
+    cdef PDM_part_mesh_nodal_t* caps_pmn = <PDM_part_mesh_nodal_t *> PyCapsule_GetPointer(caps, NULL)
+    self.pmn = caps_pmn;
 
   def dim_get(self):
     return part_mesh_nodal_dim_get(self)
   # ------------------------------------------------------------------------
-  def part_mesh_nodal_get_sections(self, PDM_geometry_kind_t geom_kind, int i_part):
+  def get_sections(self, PDM_geometry_kind_t geom_kind, int i_part):
     """
+    get_sections(geom_kind, i_part)
+
+    Get all standard sections (one partition)
+
+    Parameters:
+      geom_kind (PDM_geometry_kind_t) : Geometry kind (volume, surface, ridge or corner)
+      i_part    (int)                 : Partition identifier
+
+    Returns:
+      List of sections. Each section is represented as a dictionary
+
+        - ``"pdm_type"``               (`int`)                        : Element type
+        - ``"np_connec"``              (`np.ndarray[np.int32_t]`)     : Connectivity
+        - ``"np_numabs"``              (`np.ndarray[npy_pdm_gnum_t]`) : Element global ids
+        - ``"np_parent_num"``          (`np.ndarray[np.int32_t]`)     : Element parent local ids
+        - ``"np_parent_entity_g_num"`` (`np.ndarray[npy_pdm_gnum_t]`) : Element parent global ids
     """
     return part_mesh_nodal_get_sections(self, geom_kind, i_part)
 
@@ -156,7 +172,18 @@ cdef class PartMeshNodalCaspule:
 
 ctypedef fused PMeshNodal:
   PartMeshNodal
-  PartMeshNodalCaspule
+  PartMeshNodalCapsule
+
+def part_mesh_nodal_vtx_g_num_get(PMeshNodal pypmn, int i_part):
+  """
+  Get vertex global numbering for partition i_part
+  """
+  cdef PDM_g_num_t *vtx_ln_to_gn = NULL
+  vtx_ln_to_gn = PDM_part_mesh_nodal_vtx_g_num_get(pypmn.pmn, i_part)
+
+  n_vtx = PDM_part_mesh_nodal_n_vtx_get(pypmn.pmn, i_part)
+
+  return create_numpy_g(vtx_ln_to_gn, n_vtx, False)
 
 def part_mesh_nodal_dim_get(PMeshNodal pypmn):
   return PDM_part_mesh_nodal_mesh_dimension_get(pypmn.pmn)

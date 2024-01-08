@@ -70,6 +70,13 @@ cdef class ClosestPoints:
   def __init__(self, MPI.Comm comm,
                      int      n_closest):
     """
+    __init__(comm, n_closest)
+
+    Create the structure
+
+    Parameters:
+      comm      (MPI.Comm) : MPI communicator
+      n_closest (int)      : Number of closest source points to find for each target point
     """
     # ::::::::::::::::::::::::::::::::::::::::::::::::::
     self.n_closest = n_closest
@@ -100,6 +107,13 @@ cdef class ClosestPoints:
   def n_part_cloud_set(self, int n_part_cloud_src,
                              int n_part_cloud_tgt):
     """
+    n_part_cloud_set(n_part_cloud_src, n_part_cloud_tgt)
+
+    Set the number of partitions of both point clouds
+
+    Parameters:
+      n_part_cloud_src (int) : Number of partitions of the source cloud
+      n_part_cloud_tgt (int) : Number of partitions of the target cloud
     """
     assert(self.src_n_points  == NULL)
     assert(self.tgt_n_points  == NULL)
@@ -115,6 +129,15 @@ cdef class ClosestPoints:
                           NPY.ndarray[NPY.double_t  , mode='c', ndim=1] coords,
                           NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1] gnum):
     """
+    tgt_cloud_set(i_part, n_points, coords, gnum)
+
+    Set the target point cloud
+
+    Parameters:
+      i_part   (int)                        : Partition identifier
+      n_points (int)                        : Number of points (to remove)
+      coords   (np.ndarray[np.double_t])    : Point coordinates
+      gnum     (np.ndarray[npy_pdm_gnum_t]) : Point global ids
     """
     self.tgt_n_points[i_part] = n_points
     PDM_closest_points_tgt_cloud_set(self._cls,
@@ -130,6 +153,15 @@ cdef class ClosestPoints:
                           NPY.ndarray[NPY.double_t  , mode='c', ndim=1] coords,
                           NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1] gnum):
     """
+    src_cloud_set(i_part, n_points, coords, gnum)
+
+    Set the source point cloud
+
+    Parameters:
+      i_part   (int)                        : Partition identifier
+      n_points (int)                        : Number of points (to remove)
+      coords   (np.ndarray[np.double_t])    : Point coordinates
+      gnum     (np.ndarray[npy_pdm_gnum_t]) : Point global ids
     """
     self.src_n_points[i_part] = n_points
     PDM_closest_points_src_cloud_set(self._cls,
@@ -141,12 +173,24 @@ cdef class ClosestPoints:
   # ------------------------------------------------------------------------
   def compute(self):
     """
+    Look for closest points
     """
     PDM_closest_points_compute(self._cls)
 
   # ------------------------------------------------------------------------
   def points_get(self, int i_part_tgt):
     """
+    points_get(i_part_tgt)
+
+    Get closest source points global ids and (squared) distance
+
+    Parameters:
+      i_part_tgt (int) : Partition identifier
+
+    Returns:
+      Dictionary
+        - ``"closest_src_gnum"``     (`np.ndarray[npy_pdm_gnum_t]`) : Global ids of the closest source points
+        - ``"closest_src_distance"`` (`np.ndarray[np.double_t]`)    : Squared distance from closest source points
     """
     # ************************************************************************
     # > Declaration
@@ -168,6 +212,18 @@ cdef class ClosestPoints:
   # ------------------------------------------------------------------------
   def tgt_in_src_get(self, int i_part_src):
     """
+    tgt_in_src_get(i_part_src)
+
+    Get source-to-target mapping and distances
+
+    Parameters:
+      i_part_src (int) : Partition identifier
+
+    Returns:
+      Dictionary
+        - ``"tgt_in_src_idx"``   (`np.ndarray[np.int32_t]`)     : Index for source-to-target mapping
+        - ``"tgt_in_src"``       (`np.ndarray[npy_pdm_gnum_t]`) : Source-to-target mapping (global ids)
+        - ``"tgt_in_src_dist2"`` (`np.ndarray[np.double_t]`)    : Squared source-to-target distance
     """
     # ************************************************************************
     # > Declaration
@@ -197,18 +253,24 @@ cdef class ClosestPoints:
   # ------------------------------------------------------------------------
   def part_to_part_get(self):
     """
+    Get the PartToPart object to exchange data between
+    the source and target point clouds
+
+    Returns:
+      PartToPart object (:py:class:`PartToPart`)
     """
     cdef PDM_part_to_part_t *ptpc
     PDM_closest_points_part_to_part_get(self._cls,
                                         &ptpc,
                                         PDM_OWNERSHIP_USER)
 
-    py_casp = PyCapsule_New(ptpc, NULL, NULL)
-    return PartToPartCapsule(py_casp, self.py_comm) # The free is inside the class
+    py_caps = PyCapsule_New(ptpc, NULL, NULL)
+    return PartToPartCapsule(py_caps, self.py_comm) # The free is inside the class
 
   # ------------------------------------------------------------------------
   def dump_times(self):
     """
+    Dump elapsed and CPU times
     """
     PDM_closest_points_dump_times(self._cls)
 

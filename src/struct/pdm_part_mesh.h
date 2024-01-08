@@ -1,3 +1,7 @@
+/*
+ * \file
+ */
+
 #ifndef __PDM_PART_MESH_H__
 #define __PDM_PART_MESH_H__
 
@@ -63,7 +67,7 @@ typedef struct _pdm_part_mesh_t PDM_part_mesh_t;
  * \param [in]   dn_face             Number of distributed faces
  * \param [in]   dn_vtx              Number of distributed vertices
  * \param [in]   dn_bnd              Number of boundaries
- * \param [in]   n_join              Number of interfaces with other zones
+ * \param [in]   n_join              Number of interfaces with other domains
  *
  * \return     Identifier
  */
@@ -204,6 +208,12 @@ PDM_part_mesh_tn_part_get
  PDM_part_mesh_t          *pmesh
 );
 
+int
+PDM_part_mesh_n_part_get
+(
+ PDM_part_mesh_t          *pmesh
+);
+
 void
 PDM_part_mesh_bound_set
 (
@@ -287,6 +297,25 @@ PDM_part_mesh_part_graph_comm_set
  int                      *ppart_bound_part_idx,
  int                      *ppart_bound,
  PDM_ownership_t           ownership
+);
+
+/**
+ * \brief Export a partitioned mesh in Ensight format
+ *
+ * \param [in] pmesh          Pointer to \ref PDM_part_mesh_t object
+ * \param [in] directory      Output directory
+ * \param [in] name           Output name
+ * \param [in] export_bounds  Option to export bounds
+ *
+ */
+
+void
+PDM_part_mesh_dump_ensight
+(
+ PDM_part_mesh_t *pmesh,
+ const char      *directory,
+ const char      *name,
+ PDM_bool_t       export_bounds
 );
 
 /*----------------------------------------------------------------------------*/

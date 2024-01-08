@@ -87,7 +87,7 @@ cdef extern from "pdm_dmesh.h":
 #   PDM_dmesh_free(dm);
 
 # ------------------------------------------------------------------
-cdef class DistributedMeshCaspule:
+cdef class DistributedMeshCapsule:
   """
   """
   # ************************************************************************
@@ -98,7 +98,7 @@ cdef class DistributedMeshCaspule:
   def __cinit__(self, object caps):
     """
     """
-    # print("DistributedMeshCaspule", PyCapsule_GetName(caps))
+    # print("DistributedMeshCapsule", PyCapsule_GetName(caps))
     cdef PDM_dmesh_t* dm = <PDM_dmesh_t *> PyCapsule_GetPointer(caps, NULL)
     self._dm = dm;
 
@@ -265,7 +265,7 @@ cdef class DistributedMesh:
 
 ctypedef fused DMesh:
   DistributedMesh
-  DistributedMeshCaspule
+  DistributedMeshCapsule
 
 # ------------------------------------------------------------------------
 def dmesh_connectivity_get(DMesh pydm, PDM_connectivity_type_t connectivity_type):
@@ -386,7 +386,7 @@ def dmesh_vtx_coord_set(DMesh pydm,
                             PDM_OWNERSHIP_USER)
 
 def dmesh_vtx_coord_get(DMesh pydm):
-    dn_vtx = PDM_dmesh_dn_entity_get(pydm._dm, PDM_MESH_ENTITY_VERTEX)
+    dn_vtx = PDM_dmesh_dn_entity_get(pydm._dm, PDM_MESH_ENTITY_VTX)
     cdef double* dvtx_coord = NULL
     PDM_dmesh_vtx_coord_get(pydm._dm, 
                            &dvtx_coord,

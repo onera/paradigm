@@ -1833,6 +1833,15 @@ int PDM_MPI_Type_commit(PDM_MPI_Datatype *datatype)
 }
 
 /*----------------------------------------------------------------------------
+ * MPI_Type_size (wrapping de la fonction MPI_Type_commit)
+ *
+ *----------------------------------------------------------------------------*/
+int PDM_MPI_Type_size(PDM_MPI_Datatype datatype, int *size)
+{
+  return MPI_Type_size(_pdm_mpi_2_mpi_datatype(datatype), size);
+}
+
+/*----------------------------------------------------------------------------
  * PDM_MPI_Type_free (wrapping de la fonction MPI_Type_free)
  *
  *----------------------------------------------------------------------------*/
@@ -2502,6 +2511,19 @@ int PDM_MPI_Comm_split(PDM_MPI_Comm comm, int color, int key, PDM_MPI_Comm *newc
 }
 
 /*----------------------------------------------------------------------------
+ * PDM_MPI_Comm_dup
+ *
+ *----------------------------------------------------------------------------*/
+
+int PDM_MPI_Comm_dup(PDM_MPI_Comm comm, PDM_MPI_Comm *newcomm)
+{
+  MPI_Comm _newcomm;
+  int code = MPI_Comm_dup(_pdm_mpi_2_mpi_comm(comm), &_newcomm);
+  *newcomm = _mpi_2_pdm_mpi_comm(_newcomm);
+  return _mpi_2_pdm_mpi_err(code);
+}
+
+/*----------------------------------------------------------------------------
  * PDM_MPI_Comm_split_type_numa // Non portable mettre un ifdef
  *
  *----------------------------------------------------------------------------*/
@@ -2695,7 +2717,8 @@ int PDM_MPI_Rand_tag (PDM_MPI_Comm comm)
   void  *max_tag_tmp;
   int flag;
 
-  MPI_Comm_get_attr(_pdm_mpi_2_mpi_comm(comm), MPI_TAG_UB, &max_tag_tmp, &flag);
+  // Mandatory to call with PDM_MPI_COMM_WORLD becuase only this one keep attributes (openMPI implemntation for exemple)
+  MPI_Comm_get_attr(MPI_COMM_WORLD, MPI_TAG_UB, &max_tag_tmp, &flag);
   long max_tag = (long) (*((int *) max_tag_tmp));
 
   // printf("max_tag = %li | ltag = %li \n", max_tag, ltag);

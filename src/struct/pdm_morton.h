@@ -1,3 +1,7 @@
+/*
+ * \file
+ */
+
 #ifndef __PDM_MORTON_H__
 #define __PDM_MORTON_H__
 
@@ -475,7 +479,7 @@ PDM_morton_build_rank_index(int                      dim,
                             int                      gmax_level,
                             PDM_l_num_t              n_codes,
                             const PDM_morton_code_t  code[],
-                            const int                weight[],
+                            const double             weight[],
                             const int                order[],
                             PDM_morton_code_t        rank_index[],
                             PDM_MPI_Comm             comm);

@@ -1,3 +1,7 @@
+/*
+ * \file
+ */
+
 #ifndef __PDM_GNUM_FROM_HASH_VALUES_H__
 #define __PDM_GNUM_FROM_HASH_VALUES_H__
 

@@ -4,7 +4,7 @@
 #include "pdm_doctest.h"
 #include "pdm_distrib.h"
 
-MPI_TEST_CASE("[1p] PDM_distrib_compute",1) {
+MPI_TEST_CASE("[pdm_distrib] - 1p - PDM_distrib_compute",1) {
 
   PDM_MPI_Comm pdm_comm = PDM_MPI_mpi_2_pdm_mpi_comm(&test_comm);
 
@@ -38,7 +38,7 @@ MPI_TEST_CASE("[1p] PDM_distrib_compute",1) {
 }
 
 
-MPI_TEST_CASE("[2p] PDM_distrib_compute",2) {
+MPI_TEST_CASE("[pdm_distrib] - 2p - PDM_distrib_compute",2) {
 
   PDM_MPI_Comm pdm_comm = PDM_MPI_mpi_2_pdm_mpi_comm(&test_comm);
 
@@ -74,7 +74,7 @@ MPI_TEST_CASE("[2p] PDM_distrib_compute",2) {
 }
 
 
-MPI_TEST_CASE("[1p] PDM_compute_entity_distribution",1) {
+MPI_TEST_CASE("[pdm_distrib] - 1p - PDM_compute_entity_distribution",1) {
 
   PDM_MPI_Comm pdm_comm = PDM_MPI_mpi_2_pdm_mpi_comm(&test_comm);
 
@@ -94,7 +94,7 @@ MPI_TEST_CASE("[1p] PDM_compute_entity_distribution",1) {
 
 }
 
-MPI_TEST_CASE("[2p] PDM_compute_entity_distribution",2) {
+MPI_TEST_CASE("[pdm_distrib] - 2p - PDM_compute_entity_distribution",2) {
 
   PDM_MPI_Comm pdm_comm = PDM_MPI_mpi_2_pdm_mpi_comm(&test_comm);
 
@@ -117,7 +117,7 @@ MPI_TEST_CASE("[2p] PDM_compute_entity_distribution",2) {
 }
 
 
-MPI_TEST_CASE("[1p] PDM_compute_uniform_entity_distribution",1) {
+MPI_TEST_CASE("[pdm_distrib] - 1p - PDM_compute_uniform_entity_distribution",1) {
 
   PDM_MPI_Comm pdm_comm = PDM_MPI_mpi_2_pdm_mpi_comm(&test_comm);
 
@@ -139,7 +139,7 @@ MPI_TEST_CASE("[1p] PDM_compute_uniform_entity_distribution",1) {
   free(distrib);
 }
 
-MPI_TEST_CASE("[2p] PDM_compute_uniform_entity_distribution",2) {
+MPI_TEST_CASE("[pdm_distrib] - 2p - PDM_compute_uniform_entity_distribution",2) {
 
   PDM_MPI_Comm pdm_comm = PDM_MPI_mpi_2_pdm_mpi_comm(&test_comm);
 

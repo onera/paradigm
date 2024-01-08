@@ -1,3 +1,7 @@
+/*
+ * \file
+ */
+
 #ifndef __PDM_PART_DOMAIN_INTERFACE_H__
 #define __PDM_PART_DOMAIN_INTERFACE_H__
 
@@ -169,6 +173,36 @@ PDM_part_domain_interface_translate
  int                         ***entity1_entity2
 );
 
+
+/**
+ *
+ * \brief Create from all interface information a view by partition
+ *
+ * \param [in]    pdi                       part_domain_interface structure
+ * \param [in]    interface_kind            Kind of interface
+ * \param [out]   pn_entity_num             Number of entity by interface (size = n_part along all domain )
+ * \param [out]   pentity_num               Index of entity by partition
+ * \param [out]   pentity_opp_interface_idx For each index, idx of connected triplet
+ * \param [out]   pentity_opp_location      For each index, all opposite triplet
+ * \param [out]   pentity_opp_interface     For each index, by which interface the entity is connected
+ *
+ */
+void
+PDM_part_domain_interface_view_by_part
+(
+  PDM_part_domain_interface_t   *pdi,
+  PDM_bound_type_t               interface_kind,
+  int                           *pn_entity,
+  PDM_g_num_t                  **pentity_ln_to_gn,
+  int                          **pn_entity_num,
+  int                         ***pentity_num,
+  int                         ***pentity_opp_location_idx,
+  int                         ***pentity_opp_location,
+  int                         ***pentity_opp_interface_idx,
+  int                         ***pentity_opp_interface,
+  int                         ***pentity_opp_sens,
+  PDM_g_num_t                 ***pentity_opp_gnum_out
+);
 
 void
 PDM_part_domain_interface_add

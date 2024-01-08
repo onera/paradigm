@@ -555,9 +555,9 @@ _warm_up_distant_neighbor
 )
 {
   /* Deduce graph with all graphe inside same domain and between domain */
-  // int ***vtx_part_bound_proc_idx = fctv->entity_part_bound_proc_idx[PDM_MESH_ENTITY_VERTEX];
-  int ***vtx_part_bound_part_idx = fctv->entity_part_bound_part_idx[PDM_MESH_ENTITY_VERTEX];
-  int ***vtx_part_bound          = fctv->entity_part_bound         [PDM_MESH_ENTITY_VERTEX];
+  // int ***vtx_part_bound_proc_idx = fctv->entity_part_bound_proc_idx[PDM_MESH_ENTITY_VTX];
+  int ***vtx_part_bound_part_idx = fctv->entity_part_bound_part_idx[PDM_MESH_ENTITY_VTX];
+  int ***vtx_part_bound          = fctv->entity_part_bound         [PDM_MESH_ENTITY_VTX];
 
 
   int         **pdi_neighbor_idx         = NULL;
@@ -1540,7 +1540,7 @@ PDM_field_cell_to_vtx_compute
   int         ***pvtx_part_bound_idx  = NULL;
   int         ***pvtx_bound           = NULL;
   int         ***pvtx_priority        = NULL;
-  if(fctv->graph_comm_is_defined[PDM_MESH_ENTITY_VERTEX] == 0) {
+  if(fctv->graph_comm_is_defined[PDM_MESH_ENTITY_VTX] == 0) {
     pvtx_proc_bound_idx = malloc( fctv->n_domain * sizeof(int **));
     pvtx_part_bound_idx = malloc( fctv->n_domain * sizeof(int **));
     pvtx_bound          = malloc( fctv->n_domain * sizeof(int **));
@@ -1572,9 +1572,9 @@ PDM_field_cell_to_vtx_compute
       free(pvtx_ln_to_gn);
 
       for(int i_part = 0; i_part < fctv->n_part[i_domain]; ++i_part) {
-        fctv->entity_part_bound_proc_idx[PDM_MESH_ENTITY_VERTEX][i_domain][i_part] = pvtx_proc_bound_idx[i_domain][i_part];
-        fctv->entity_part_bound_part_idx[PDM_MESH_ENTITY_VERTEX][i_domain][i_part] = pvtx_part_bound_idx[i_domain][i_part];
-        fctv->entity_part_bound         [PDM_MESH_ENTITY_VERTEX][i_domain][i_part] = pvtx_bound         [i_domain][i_part];
+        fctv->entity_part_bound_proc_idx[PDM_MESH_ENTITY_VTX][i_domain][i_part] = pvtx_proc_bound_idx[i_domain][i_part];
+        fctv->entity_part_bound_part_idx[PDM_MESH_ENTITY_VTX][i_domain][i_part] = pvtx_part_bound_idx[i_domain][i_part];
+        fctv->entity_part_bound         [PDM_MESH_ENTITY_VTX][i_domain][i_part] = pvtx_bound         [i_domain][i_part];
       }
     }
   }
@@ -1591,7 +1591,7 @@ PDM_field_cell_to_vtx_compute
   _warm_up_distant_neighbor(fctv);
 
   /* Free unused */
-  if(fctv->graph_comm_is_defined[PDM_MESH_ENTITY_VERTEX] == 0) {
+  if(fctv->graph_comm_is_defined[PDM_MESH_ENTITY_VTX] == 0) {
 
     for(int i_domain = 0; i_domain < fctv->n_domain; ++i_domain) {
       for(int i_part = 0; i_part < fctv->n_part[i_domain]; ++i_part) {

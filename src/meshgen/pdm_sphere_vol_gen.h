@@ -1,9 +1,13 @@
+/*
+ * \file
+ */
+
 #ifndef __PDM_SPHERE_VOL_GEN_H__
 #define __PDM_SPHERE_VOL_GEN_H__
 /*
   This file is part of the CWIPI library.
 
-  Copyright (C) 2011  ONERA
+  Copyright (C) 2022-2023  ONERA
 
   This library is free software; you can redistribute it and/or
   modify it under the terms of the GNU Lesser General Public
@@ -40,19 +44,22 @@ extern "C" {
 
 /**
  *
- * \brief Create a volume mesh bounded by a sphere (deformed cube)
+ * \brief Create a volume, nodal mesh bounded by a sphere (deformed cube)
+ *
+ * \note The output mesh is *block-distributed*,
+ * in the form of a \ref PDM_dmesh_nodal_t object
  *
  * \param[in]  comm            MPI communicator
  * \param[in]  n_vtx_x         Number of vertices on segments in x-direction
  * \param[in]  n_vtx_y         Number of vertices on segments in y-direction
  * \param[in]  n_vtx_z         Number of vertices on segments in z-direction
- * \param[in]  radius          Radius of the sphere
- * \param[in]  center_x        x coordinate of the center of the sphere
- * \param[in]  center_y        y coordinate of the center of the sphere
- * \param[in]  center_z        z coordinate of the center of the sphere
+ * \param[in]  radius          Sphere radius
+ * \param[in]  x_center        x-coordinate of the sphere center
+ * \param[in]  y_center        y-coordinate of the sphere center
+ * \param[in]  z_center        z-coordinate of the sphere center
  * \param[in]  t_elt           Element type
  * \param[in]  order           Element order
- * \param[out] dmn             Pointer to a \ref PDM_dmesh_nodal object
+ * \param[out] dmn             Pointer to a \ref PDM_dmesh_nodal_t object
  *
  */
 
@@ -64,9 +71,9 @@ PDM_sphere_vol_gen_nodal
  const PDM_g_num_t      n_vtx_y,
  const PDM_g_num_t      n_vtx_z,
  const double           radius,
- const double           center_x,
- const double           center_y,
- const double           center_z,
+ const double           x_center,
+ const double           y_center,
+ const double           z_center,
  PDM_Mesh_nodal_elt_t   t_elt,
  const int              order,
  PDM_dmesh_nodal_t    **dmn
@@ -75,20 +82,22 @@ PDM_sphere_vol_gen_nodal
 
 /**
  * \brief Create a volume mesh bounded by an icosphere
- * (all cells are tetrahedra)
+ * (all cells are tetrahedra, all faces are triangles)
+ *
+ * \note The output mesh is *block-distributed*.
  *
  * \param[in]  comm            MPI communicator
- * \param[in]  n               Number of icosphere subdivisions
- * \param[in]  x_center        x coordinate of the center of the sphere
- * \param[in]  y_center        y coordinate of the center of the sphere
- * \param[in]  z_center        z coordinate of the center of the sphere
- * \param[in]  radius          Radius of the sphere
- * \param[out] dvtx_coord      Connectivity of distributed vertex to coordinates
- * \param[out] dface_vtx       Connectivity of distributed face to vertex
- * \param[out] dcell_vtx       Connectivity of distributed cell to vertex
- * \param[out] distrib_vtx     Distribution of vertices
- * \param[out] distrib_face    Distribution of faces
- * \param[out] distrib_face    Distribution of cells
+ * \param[in]  n               Icosphere subdivision level
+ * \param[in]  x_center        x-coordinate of the sphere center
+ * \param[in]  y_center        y-coordinate of the sphere center
+ * \param[in]  z_center        z-coordinate of the sphere center
+ * \param[in]  radius          Sphere radius
+ * \param[out] dvtx_coord      Vertex coordinates
+ * \param[out] dface_vtx       Face -> vertex connectivity (global ids)
+ * \param[out] dcell_vtx       Cell -> face connectivity (global ids)
+ * \param[out] distrib_vtx     Vertex distribution (size : *n_rank* + 1)
+ * \param[out] distrib_face    Face distribution (size : *n_rank* + 1)
+ * \param[out] distrib_face    Cell distribution (size : *n_rank* + 1)
  *
  */
 
@@ -111,15 +120,18 @@ PDM_sphere_vol_icosphere_gen
 
 
 /**
- * \brief Create a volume mesh bounded by an icosphere
+ * \brief Create a volume, nodal mesh bounded by an icosphere
  * (all cells are tetrahedra)
  *
+ * \note The output mesh is *block-distributed*,
+ * in the form of a \ref PDM_dmesh_nodal_t object
+ *
  * \param[in]  comm            MPI communicator
- * \param[in]  n               Number of icosphere subdivisions
- * \param[in]  x_center        x coordinate of the center of the sphere
- * \param[in]  y_center        y coordinate of the center of the sphere
- * \param[in]  z_center        z coordinate of the center of the sphere
- * \param[in]  radius          Radius of the sphere
+ * \param[in]  n               Icosphere subdivision level
+ * \param[in]  x_center        x-coordinate of the sphere center
+ * \param[in]  y_center        y-coordinate of the sphere center
+ * \param[in]  z_center        z-coordinate of the sphere center
+ * \param[in]  radius          Sphere radius
  * \param[out] dmn             Pointer to a \ref PDM_dmesh_nodal object
  *
  */
@@ -138,17 +150,20 @@ PDM_sphere_vol_icosphere_gen_nodal
 
 
 /**
- * \brief Create a volume mesh bounded by two concentric icospheres
+ * \brief Create a volume, nodal mesh bounded by two concentric icospheres
  * (all cells are prisms)
  *
+ * \note The output mesh is *block-distributed*,
+ * in the form of a \ref PDM_dmesh_nodal_t object
+ *
  * \param[in]  comm            MPI communicator
- * \param[in]  n               Number of icosphere subdivisions
+ * \param[in]  n               Icosphere subdivision level
  * \param[in]  n_layer         Number of extrusion layers
- * \param[in]  x_center        x coordinate of the center of the sphere
- * \param[in]  y_center        y coordinate of the center of the sphere
- * \param[in]  z_center        z coordinate of the center of the sphere
- * \param[in]  radius_interior Radius of the interior sphere
- * \param[in]  radius_exterior Radius of the exterior sphere
+ * \param[in]  x_center        x-coordinate of the spheres center
+ * \param[in]  y_center        y-coordinate of the spheres center
+ * \param[in]  z_center        z-coordinate of the spheres center
+ * \param[in]  radius_interior Interior sphere radius
+ * \param[in]  radius_exterior Exterior sphere radius
  * \param[in]  geometric_ratio Geometric ratio for layer thickness
  * \param[out] dmn             Pointer to a \ref PDM_dmesh_nodal object
  *

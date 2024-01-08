@@ -1,5 +1,6 @@
 #!/bin/bash
 
+
 listTest=( @PDM_LIST_TEST@ )
 listNRank=( @PDM_LIST_NRANK@ )
 
@@ -22,9 +23,9 @@ Help()
   echo "-srun                               Run with srun command (default : mpirun)"
   echo "-no_log_vtk                         Exit on error if test writes some log and vtk files"
   echo "-n_avail_rank                       Number of available ranks to run cases"
-  echo "-t <\"test name and its options\">    Test name (Name of the executable) "
-  echo "-n <\"number of ranks\">            Number of ranks of executables (template : n_rannks_exe1:...:n_rannks_exen)"
-  echo "-args <\"options of executables\">    Arguments of each executable (template : arg1exe1;...;argnexe1:...:arg1exen;...;argnexen) "
+  echo "-t <\"test name and its options\">  Test name (Name of the executable) "
+  echo "-n <\"number of ranks\">            Number of ranks for each executable (template : n_ranks_exe1:...:n_ranks_exen)"
+  echo "-args <\"options of executables\">  Arguments of each executable (template : arg1exe1;...;argnexe1:...:arg1exen;...;argnexen) "
   echo "-output-junit  <file>               Export to Format XML JUnit"
   echo "-timeout       <time>               time (minute) (default 2)"
   echo
@@ -388,28 +389,28 @@ do
       OptExe=$(echo ${TestOptionl[k]} | tr ";" " ")
       CmdLine="${CmdLine} ${sep}  --time=${Timeout} --output=$OutputFile.%t --error=$ErrFile.%t -N 1 -n ${Nrankl[k]} --exact /usr/bin/time  -f \"Maximum Resident Memory : %M Kb\nReal time : %e s\""
       if [ -f "${TestDir}/${ex}.py" ]; then
-        CmdLine="${CmdLine} ${PROJECT_BINARY_DIR}/pdm_launch_python ${PythonUnbuffered} ${TestDir}/$ex.py ${optExe}"
+        CmdLine="${CmdLine} ${PROJECT_BINARY_DIR}/pdm_launch_python ${PythonUnbuffered} ${TestDir}/$ex.py ${OptExe}"
       else
         CmdLine="${CmdLine} ${PROJECT_BINARY_DIR}/pdm_launch ${TestDir}/$ex ${OptExe}"
       fi
       sep=":"
       ((k=k+1))
-    done 
+    done
 
     CmdLine="${CmdLine} 2>/dev/null &"
     eval "${CmdLine}"
     pids=(${pids[@]} "$!")
 
-  else  
+  else
     ((TimeOutS=Timeout*60))
     if [ $Nranks -gt $NAvailRank ]
     then
       echo "Error PDM_run : Number of requested ranks is greater then the number of available ranks"
       exit 1
-    fi  
+    fi
 
-    ((cptRank=IndexRank+Nranks)) 
-    
+    ((cptRank=IndexRank+Nranks))
+
     if [ $cptRank -gt $NAvailRank ]
     then
       Wait_job
@@ -426,7 +427,7 @@ do
         OptExe=$(echo ${TestOptionl[k]} | tr ";" " ")
         CmdLine="${CmdLine} ${sep} -n ${Nrankl[k]} /usr/bin/time  -f \"Maximum Resident Memory : %M Kb\nReal time : %e s\""
         if [ -f "${TestDir}/${ex}.py" ]; then
-          CmdLine="${CmdLine} ${PROJECT_BINARY_DIR}/pdm_launch_python ${PythonUnbuffered} ${TestDir}/$ex.py ${optExe}"
+          CmdLine="${CmdLine} ${PROJECT_BINARY_DIR}/pdm_launch_python ${PythonUnbuffered} ${TestDir}/$ex.py ${OptExe}"
         else
           CmdLine="${CmdLine} ${PROJECT_BINARY_DIR}/pdm_launch ${TestDir}/$ex ${OptExe}"
         fi
@@ -439,11 +440,26 @@ do
       pids=(${pids[@]} "$!")
 
     else
-      echo -e "${RED}Error${NC}: OpenMPI is not available for pdm_run script"
-      echo -e "${PURPLE}${TestNamel[0]}: ${RED}Failed${NC}"
-      exit 1
-#      @PDM_RUN_LSAN@ @PDM_RUN_PYTHONPATH@ ${ExeMPI} -genv @PDM_RUN_PRELOAD@ -output-filename $OutputFile -n $Nrank /usr/bin/time  -f "Maximum Resident Memory : %M Kb\nReal time : %e s" ../${TestName} ${TestOption} 2>/dev/null
-#      pids=(${pids[@]} "$!")
+      CmdLine="${ExeMPI} --timeout ${TimeOutS} --output-filename $OutputFile"
+      k=0
+      sep=""
+      for ex in "${TestNamel[@]}"
+      do
+        OptExe=$(echo ${TestOptionl[k]} | tr ";" " ")
+        CmdLine="${CmdLine} ${sep} -n ${Nrankl[k]} /usr/bin/time  -f \"Maximum Resident Memory : %M Kb\nReal time : %e s\""
+        if [ -f "${TestDir}/${ex}.py" ]; then
+          CmdLine="${CmdLine} ${PROJECT_BINARY_DIR}/pdm_launch_python ${PythonUnbuffered} ${TestDir}/$ex.py ${OptExe}"
+        else
+          CmdLine="${CmdLine} ${PROJECT_BINARY_DIR}/pdm_launch ${TestDir}/$ex ${OptExe}"
+        fi
+        sep=":"
+        ((k=k+1))
+      done 
+
+      CmdLine="${CmdLine} 2>/dev/null >/dev/null &"
+      eval "${CmdLine}"
+      pids=(${pids[@]} "$!")
+
     fi
     ((IndexRank=IndexRank+Nranks)) 
   

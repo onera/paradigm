@@ -1,3 +1,7 @@
+/*
+ * \file
+ */
+
 #ifndef __CEDRE_IO_MPI_IO_NODE_RANK_H__
 #define __CEDRE_IO_MPI_IO_NODE_RANK_H__
 
