@@ -143,7 +143,7 @@ typedef struct _PDM_mesh_deform_t {
 
 /**
  *
- * \brief Get the list of owned entities
+ * \brief Get the list of owned entities on the current process
  *
  * \param [in]  n_part            Number of partitions
  * \param [in]  n_entity          Number of entities
@@ -2219,7 +2219,9 @@ _PDM_mesh_deform_dump_times
 static void
 _compute_idw
 (
-  PDM_part_to_block_t  *ptb_surf,
+  int                   n_part,
+  int                  *n_unique_surf,
+  int                 **lnum_unique_surf,
   double              **surf_coords,
   double              **surf_dcoords,
   int                   n_aux_geom,
@@ -2235,40 +2237,6 @@ _compute_idw
   PDM_MPI_Comm          comm
 )
 {
-
-  int     blk_surf_n_vtx    = PDM_part_to_block_n_elt_block_get(ptb_surf);
-  double *blk_surf_coords   = NULL;
-  double *blk_surf_dcoords  = NULL;
-  double *blk_surf_aux_geom = NULL;
-
-  int blk_size = PDM_part_to_block_exch(ptb_surf,
-                                        sizeof(double),
-                                        PDM_STRIDE_CST_INTERLACED,
-                                        3,
-                                        NULL,
-                             (void **)  surf_coords,
-                                        NULL,
-                             (void **) &blk_surf_coords);
-
-  PDM_UNUSED(blk_size);
-
-  blk_size = PDM_part_to_block_exch(ptb_surf,
-                                    sizeof(double),
-                                    PDM_STRIDE_CST_INTERLACED,
-                                    3,
-                                    NULL,
-                         (void **)  surf_dcoords,
-                                    NULL,
-                         (void **) &blk_surf_dcoords);
-
-  blk_size = PDM_part_to_block_exch(ptb_surf,
-                                    sizeof(double),
-                                    PDM_STRIDE_CST_INTERLACED,
-                                    n_aux_geom,
-                                    NULL,
-                         (void **)  surf_aux_geom,
-                                    NULL,
-                         (void **) &blk_surf_aux_geom);
 
   double *dx = malloc (sizeof(double) * 3);
   double *du = malloc (sizeof(double) * 3);
@@ -2289,11 +2257,14 @@ _compute_idw
   dx[1] = 0.0;
   dx[2] = 0.0;
 
-  for (int i_vtx = 0; i_vtx < blk_surf_n_vtx; i_vtx++) {
-    m_vtx++;
-    dx[0] = dx[0] + blk_surf_coords[3*i_vtx    ];
-    dx[1] = dx[1] + blk_surf_coords[3*i_vtx + 1];
-    dx[2] = dx[2] + blk_surf_coords[3*i_vtx + 2];
+  for (int i_part = 0; i_part < n_part; i_part++) {
+    for (int i_vtx = 0; i_vtx < n_unique_surf[i_part]; i_vtx++) {
+      int k_vtx = lnum_unique_surf[i_part][i_vtx]-1;
+      m_vtx++;
+      dx[0] = dx[0] + surf_coords[i_part][3*k_vtx    ];
+      dx[1] = dx[1] + surf_coords[i_part][3*k_vtx + 1];
+      dx[2] = dx[2] + surf_coords[i_part][3*k_vtx + 2];
+    }
   }
 
   PDM_MPI_Allreduce (&m_vtx, &_m_vtx, 1, PDM__PDM_MPI_G_NUM, PDM_MPI_SUM, comm);
@@ -2303,11 +2274,14 @@ _compute_idw
   dx[1] = dr[1]/_m_vtx;
   dx[2] = dr[2]/_m_vtx;
 
-  for (int i_vtx = 0; i_vtx < blk_surf_n_vtx; i_vtx++) {
-    dr[0] = dx[0] - blk_surf_coords[3*i_vtx    ];
-    dr[1] = dx[1] - blk_surf_coords[3*i_vtx + 1];
-    dr[2] = dx[2] - blk_surf_coords[3*i_vtx + 2];
-    l1 = PDM_MAX(l1, pow(dr[0],2)+pow(dr[1],2)+pow(dr[2],2));
+  for (int i_part = 0; i_part < n_part; i_part++) {
+    for (int i_vtx = 0; i_vtx < n_unique_surf[i_part]; i_vtx++) {
+      int k_vtx = lnum_unique_surf[i_part][i_vtx]-1;
+      dr[0] = dx[0] - surf_coords[i_part][3*k_vtx    ];
+      dr[1] = dx[1] - surf_coords[i_part][3*k_vtx + 1];
+      dr[2] = dx[2] - surf_coords[i_part][3*k_vtx + 2];
+      l1 = PDM_MAX(l1, pow(dr[0],2)+pow(dr[1],2)+pow(dr[2],2));
+    }
   }
 
   PDM_MPI_Allreduce (&l1, &_l1, 1, PDM_MPI_DOUBLE, PDM_MPI_MAX, comm);
@@ -2317,11 +2291,14 @@ _compute_idw
   dx[1] = 0.0;
   dx[2] = 0.0;
 
-  for (int i_vtx = 0; i_vtx < blk_surf_n_vtx; i_vtx++) {
-    aire  = aire  + blk_surf_aux_geom[n_aux_geom*i_vtx];
-    dx[0] = dx[0] + blk_surf_aux_geom[n_aux_geom*i_vtx]*blk_surf_dcoords[3*i_vtx    ];
-    dx[1] = dx[1] + blk_surf_aux_geom[n_aux_geom*i_vtx]*blk_surf_dcoords[3*i_vtx + 1];
-    dx[2] = dx[2] + blk_surf_aux_geom[n_aux_geom*i_vtx]*blk_surf_dcoords[3*i_vtx + 2];
+  for (int i_part = 0; i_part < n_part; i_part++) {
+    for (int i_vtx = 0; i_vtx < n_unique_surf[i_part]; i_vtx++) {
+      int k_vtx = lnum_unique_surf[i_part][i_vtx]-1;
+      aire  = aire  + surf_aux_geom[i_part][n_aux_geom*k_vtx];
+      dx[0] = dx[0] + surf_aux_geom[i_part][n_aux_geom*k_vtx]*surf_dcoords[i_part][3*k_vtx    ];
+      dx[1] = dx[1] + surf_aux_geom[i_part][n_aux_geom*k_vtx]*surf_dcoords[i_part][3*k_vtx + 1];
+      dx[2] = dx[2] + surf_aux_geom[i_part][n_aux_geom*k_vtx]*surf_dcoords[i_part][3*k_vtx + 2];
+    }
   }
 
   PDM_MPI_Allreduce (dx, dr, 3, PDM_MPI_DOUBLE, PDM_MPI_SUM, comm);
@@ -2331,19 +2308,18 @@ _compute_idw
   dx[1] = dr[1]/_aire;
   dx[2] = dr[2]/_aire;
 
-  for (int i_vtx = 0; i_vtx < blk_surf_n_vtx; i_vtx++) {
-    dr[0] = dx[0] - blk_surf_dcoords[3*i_vtx    ];
-    dr[1] = dx[1] - blk_surf_dcoords[3*i_vtx + 1];
-    dr[2] = dx[2] - blk_surf_dcoords[3*i_vtx + 2];
-    l2 = PDM_MAX(l2, pow(dr[0],2)+pow(dr[1],2)+pow(dr[2],2));
+  for (int i_part = 0; i_part < n_part; i_part++) {
+    for (int i_vtx = 0; i_vtx < n_unique_surf[i_part]; i_vtx++) {
+      int k_vtx = lnum_unique_surf[i_part][i_vtx]-1;
+      dr[0] = dx[0] - surf_dcoords[i_part][3*k_vtx    ];
+      dr[1] = dx[1] - surf_dcoords[i_part][3*k_vtx + 1];
+      dr[2] = dx[2] - surf_dcoords[i_part][3*k_vtx + 2];
+      l2 = PDM_MAX(l2, pow(dr[0],2)+pow(dr[1],2)+pow(dr[2],2));
+    }
   }
 
   PDM_MPI_Allreduce (&l2, &_l2, 1, PDM_MPI_DOUBLE, PDM_MPI_MAX, comm);
   l2 = PDM_MAX(0.1, 5.0*sqrt(_l2)/l1)*l1;
-
-  free(blk_surf_coords  );
-  free(blk_surf_dcoords );
-  free(blk_surf_aux_geom);
 
   for (int i_pts = 0; i_pts < blk_cloud_n_points; i_pts++) {
     dx[0] = 0.0;
@@ -2983,7 +2959,9 @@ int main(int argc, char *argv[])
     fflush(stdout);
   }
 
-  _compute_idw(ptb_bnd_vtx,
+  _compute_idw(n_part_bnd,
+               n_unique_bnd_vtx,
+               lnum_unique_bnd_vtx,
                bnd_vtx,
                bnd_dvtx,
                n_var,
@@ -3071,7 +3049,9 @@ int main(int argc, char *argv[])
     fflush(stdout);
   }
 
-  _compute_idw(ptb_bnd_vtx,
+  _compute_idw(n_part_bnd,
+               n_unique_bnd_vtx,
+               lnum_unique_bnd_vtx,
                bnd_vtx,
                bnd_dvtx,
                n_var,
@@ -3169,7 +3149,9 @@ int main(int argc, char *argv[])
     fflush(stdout);
   }
 
-  _compute_idw(ptb_bnd_vtx,
+  _compute_idw(n_part_bnd,
+               n_unique_bnd_vtx,
+               lnum_unique_bnd_vtx,
                bnd_vtx,
                bnd_dvtx,
                n_var,
@@ -3257,7 +3239,9 @@ int main(int argc, char *argv[])
     fflush(stdout);
   }
 
-  _compute_idw(ptb_bnd_vtx,
+  _compute_idw(n_part_bnd,
+               n_unique_bnd_vtx,
+               lnum_unique_bnd_vtx,
                bnd_vtx,
                bnd_dvtx,
                n_var,
