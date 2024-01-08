@@ -108,7 +108,7 @@ endif()
 # Enable long for absolute number
 # -------------------------------
 
-option(PDM_ENABLE_LONG_G_NUM "Enable long for global number" OFF)
+option(PDM_ENABLE_LONG_G_NUM "Enable long for global number" ON)
 
 # Pt-scotch
 # ---------
@@ -417,7 +417,7 @@ add_subdirectory(doc)
 
 if (PDM_ENABLE_TRAINING)
   add_subdirectory(training)
-endif()  
+endif()
 
 #------------------------------------------------------------------------------
 # Create PDM_run file
@@ -521,4 +521,3 @@ install(FILES "${CMAKE_CURRENT_BINARY_DIR}/pdmConfigVersion.cmake"
 
 
 add_subdirectory(${PDM_CMAKE_DIR}/post-install)
-
