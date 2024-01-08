@@ -143,6 +143,105 @@ typedef struct _PDM_mesh_deform_t {
 
 /**
  *
+ * \brief Get the list of owned entities
+ *
+ * \param [in]  n_part            Number of partitions
+ * \param [in]  n_entity          Number of entities
+ * \param [in]  entity_ln_to_gn   Entity local numbering to global numbering (size = n_entity)
+ * \param [out] n_owned_entity    Number of owned entities
+ * \param [out] lnum_owned_entity Owned entity local numbering (size = n_owned_entity)
+ * \param [in]  comm              MPI communicator
+ *
+ */
+
+static void
+_owned_entity_get
+(
+  const int             n_part,
+  const int            *n_entity,
+  const PDM_g_num_t   **entity_ln_to_gn,
+        int           **n_owned_entity,
+        int          ***lnum_owned_entity,
+        PDM_MPI_Comm    comm
+)
+{
+
+  int i_rank;
+  PDM_MPI_Comm_rank(comm, &i_rank);
+
+  PDM_part_to_block_t *ptb = PDM_part_to_block_create(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
+                                                      PDM_PART_TO_BLOCK_POST_CLEANUP,
+                                                      1.,
+                                     (PDM_g_num_t **) entity_ln_to_gn,
+                                                      NULL,
+                                              (int *) n_entity,
+                                                      n_part,
+                                                      comm);
+
+  int **tmp_rank_and_part = malloc(sizeof(int *) * n_part);
+
+  for (int i_part = 0; i_part < n_part; i_part++) {
+    tmp_rank_and_part[i_part] = malloc(sizeof(int) * n_entity[i_part] * 2);
+    for (int i_entity = 0; i_entity < n_entity[i_part]; i_entity++) {
+      tmp_rank_and_part[i_part][2*i_entity    ] = i_rank;
+      tmp_rank_and_part[i_part][2*i_entity + 1] = i_part;
+    }
+  }
+
+  int *blk_rank_and_part = NULL;
+
+  PDM_part_to_block_exch(ptb,
+                         sizeof(int),
+                         PDM_STRIDE_CST_INTERLACED,
+                         2,
+                         NULL,
+              (void **)  tmp_rank_and_part,
+                         NULL,
+              (void **) &blk_rank_and_part);
+
+  for (int i_part = 0; i_part < n_part; i_part++) {
+    free(tmp_rank_and_part[i_part]);
+  }
+  free(tmp_rank_and_part);
+
+  PDM_part_to_block_reverse_exch(ptb,
+                                 sizeof(int),
+                                 PDM_STRIDE_CST_INTERLACED,
+                                 2,
+                                 NULL,
+                       (void *)  blk_rank_and_part,
+                                 NULL,
+                     (void ***) &tmp_rank_and_part);
+
+  int  *_n_owned_entity    = malloc(sizeof(int  ) * n_part);
+  int **_lnum_owned_entity = malloc(sizeof(int *) * n_part);
+
+  for (int i_part = 0; i_part < n_part; i_part++) {
+    _lnum_owned_entity[i_part] = malloc(sizeof(int) * n_entity[i_part]);
+    _n_owned_entity   [i_part] = 0;
+    for (int i_entity = 0; i_entity < n_entity[i_part]; i_entity++) {
+      if (tmp_rank_and_part[i_part][2*i_entity    ] == i_rank &&
+          tmp_rank_and_part[i_part][2*i_entity + 1] == i_part) {
+        _lnum_owned_entity[i_part][_n_owned_entity[i_part]++] = i_entity+1;
+      }
+    }
+    _lnum_owned_entity[i_part] = realloc(_lnum_owned_entity[i_part], _n_owned_entity[i_part]*sizeof(int));
+  }
+
+  for (int i_part = 0; i_part < n_part; i_part++) {
+    free(tmp_rank_and_part[i_part]);
+  }
+  free(tmp_rank_and_part);
+  free(blk_rank_and_part);
+  PDM_part_to_block_free(ptb);
+
+  *n_owned_entity    = _n_owned_entity;
+  *lnum_owned_entity = _lnum_owned_entity;
+
+}
+
+/**
+ *
  * \brief Compute gnum from parent gnum in place
  *
  * \param [in]    n_part          Number of partitions
@@ -2627,6 +2726,16 @@ int main(int argc, char *argv[])
 
   }
 
+  int  *n_unique_bnd_vtx    = NULL;
+  int **lnum_unique_bnd_vtx = NULL;
+
+  _owned_entity_get(                       n_part_bnd,
+                    (const int          *) n_bnd_vtx,
+                    (const PDM_g_num_t **) bnd_vtx_ln_to_gn,
+                                          &n_unique_bnd_vtx,
+                                          &lnum_unique_bnd_vtx,
+                                           comm);
+
   for (int i_part = 0; i_part < n_part; i_part++) {
     free(selected_face[i_part]);
   }
@@ -3347,31 +3456,34 @@ int main(int argc, char *argv[])
   PDM_part_free(ppart);
 
   for (int i_part = 0; i_part < n_part_bnd; i_part++) {
-    free(bnd_vtx_ln_to_gn [i_part]);
-    free(bnd_vtx          [i_part]);
-    free(bnd_dvtx         [i_part]);
-    free(bnd_vtx_aux_geom [i_part]);
-    free(bnd_face_ln_to_gn[i_part]);
-    free(bnd_face_vtx_idx [i_part]);
-    free(bnd_face_vtx     [i_part]);
+    free(bnd_vtx_ln_to_gn   [i_part]);
+    free(bnd_vtx            [i_part]);
+    free(bnd_dvtx           [i_part]);
+    free(bnd_vtx_aux_geom   [i_part]);
+    free(bnd_face_ln_to_gn  [i_part]);
+    free(bnd_face_vtx_idx   [i_part]);
+    free(bnd_face_vtx       [i_part]);
+    free(lnum_unique_bnd_vtx[i_part]);
   }
   for (int i_part = 0; i_part < n_part; i_part++) {
     free(int_vtx_gnum[i_part]);
     free(int_vtx     [i_part]);
   }
-  free(bnd_face_ln_to_gn);
-  free(bnd_face_vtx_idx );
-  free(bnd_face_vtx     );
-  free(n_bnd_face       );
-  free(bnd_vtx_ln_to_gn );
-  free(bnd_vtx          );
-  free(bnd_dvtx         );
-  free(bnd_vtx_aux_geom );
-  free(n_bnd_vtx        );
-  free(int_vtx_gnum     );
-  free(int_vtx          );
-  free(n_int_vtx        );
-  free(n_leaf_per_layer );
+  free(bnd_face_ln_to_gn  );
+  free(bnd_face_vtx_idx   );
+  free(bnd_face_vtx       );
+  free(n_bnd_face         );
+  free(bnd_vtx_ln_to_gn   );
+  free(bnd_vtx            );
+  free(bnd_dvtx           );
+  free(bnd_vtx_aux_geom   );
+  free(lnum_unique_bnd_vtx);
+  free(n_bnd_vtx          );
+  free(n_unique_bnd_vtx   );
+  free(int_vtx_gnum       );
+  free(int_vtx            );
+  free(n_int_vtx          );
+  free(n_leaf_per_layer   );
 
   if (i_rank == 0) {
     PDM_printf ("-- End\n");
