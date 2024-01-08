@@ -1,10 +1,23 @@
+## [2.4.0] - 2024-01-??
+### Added
+- Training : Jupyter notebook in 3 languages (C, Fortran, Python)
+- Documentation : Partial Sphinx documentation
+- Fortran API : PDM_dmesh_nodal, PDM_dist_cloud_surf, PDM_mesh_intersection, PDM_part_connectivity_transform, PDM_dcube_nodal_gen
+- Python API : PDM_distrib, PDM_mblock_to_part
+- 7 Tests + 2 Tutorials
+### Changed
+- PDM_mesh_location : API
+- PDM_multipart : API
+### Deprecated
+### Removed
+### Fixed
 ## [2.3.0] - 2023-06-23
 ### Added
 - PDM_generate_mesh : Unique API for simple mesh generation
 - PDM_dmesh_extract : Extract mesh in distributed blocks
 ### Changed
 - CI : Improvment
-- PDM_mesh_location : Add PDM_MESh_LOCATION_LOCATE_ALL_TGT mode (All points are located) 
+- PDM_mesh_location : Add PDM_MESh_LOCATION_LOCATE_ALL_TGT mode (All points are located)
 - PDM_multipart : Add 0D, 1D and 2D meshes
 - PDM_extract_part : Add 0D and 1D and meshes + Fix npart=0 case + groups preservation
 - PDM_part_to_part : Add API to setup a user buffer + API Fortran
@@ -28,36 +41,36 @@
 - PDM_mesh_nodal : Fortran interface
 - PDM_part_mesh_nodal : Fortran interface
 - PDM_multipart : Fortran interface
-- 30 Tests (including 3 for ParaDiGMA) 
+- 30 Tests (including 3 for ParaDiGMA)
 ### Changed
 - PDM_dist_cloud_surf : PDM_part_mesh_nodal is accepted in input
-- PDM_ho_location : Implement a Newton method for all elements (for all orders) 
-- PDM_mesh_intersection : PDM_part_mesh_nodal is accepted in input  
+- PDM_ho_location : Implement a Newton method for all elements (for all orders)
+- PDM_mesh_intersection : PDM_part_mesh_nodal is accepted in input
 - PDM_part_mesh_nodal : Replace PDM_part_mesh (more general and generic structure)
 - PDM_part_mesh_nodal_to_pmesh : Compute faces and (or) edges from a PDM_part_mesh_nodal
-- PDM_lagrange_to_bezier : Implement all standard high-order elements 
+- PDM_lagrange_to_bezier : Implement all standard high-order elements
 - PDM_mesh_location : Add high order elements + switch to PDM_part_mesh_nodal
-- PDM_point_location : Use the Newton method primarily 
+- PDM_point_location : Use the Newton method primarily
 - PDM_writer : Switch to PDM_part_mesh_nodal structure
 - PDM_part : Call PDM_multi_part from PDM_part if the environment variable PDM_USE_MULTIPART is defined
 - PDM_part_renum : Renumbering of groups of entities (face, edge, vertex)
-- PDM_multi_part : PDM_part_mesh_nodal as output + HO  
+- PDM_multi_part : PDM_part_mesh_nodal as output + HO
 - PDM_partitioning_algorithm : Support HO elements
 - PDM_partitioning_nodal_algorithm : Support HO elements
 - PDM_box_tree : An user init location is accepted in input
 - PDM_extract_part : PDM_part_mesh_nodal is accepted in input
-- PDM_gnum : Build global numbering from tuple + Optimization 
+- PDM_gnum : Build global numbering from tuple + Optimization
 - PDM_part_mesh : Manage group (Face, edge, vertex) + boundaries
-- PDM_iso_surface (ParaDiGMA) : Transfer boundary data to iso_surface (beta)  
+- PDM_iso_surface (ParaDiGMA) : Transfer boundary data to iso_surface (beta)
 ### Deprecated
 - PDM_mesh_nodal : Replace with PDM_part_mesh_nodal
 ### Removed
 - Nuga sources (ParaDiGMA)
 ### Fixed
 - PDM_para_octree (fix multiple points)
-- PDM_part_extension (fix n_part > 1) 
-- PDM_part_to_block (fix n_part > 1) 
-- PDM_point_tree_seq 
+- PDM_part_extension (fix n_part > 1)
+- PDM_part_to_block (fix n_part > 1)
+- PDM_point_tree_seq
 ## [2.1.0] - 2022-12-06
 ### Added
 - PDM_ho_bezier : Elementary functions for high-order Bezier elements
