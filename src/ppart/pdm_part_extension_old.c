@@ -5812,6 +5812,8 @@ PDM_part_extension_create
   part_ext->n_part_g_idx  = (int * ) malloc( (n_domain + 1) * sizeof(int));
   part_ext->parts = malloc(n_domain * sizeof(_part_t *));
 
+  part_ext->compute_kind  = 0;
+
 
   part_ext->n_part_idx  [0] = 0;
   part_ext->n_part_g_idx[0] = 0;
@@ -5821,6 +5823,10 @@ PDM_part_extension_create
     for (int i_part = 0; i_part < n_part[i_domain]; i_part++) {
       part_ext->parts[i_domain][i_domain].n_face_group = 0;
       part_ext->parts[i_domain][i_domain].n_edge_group = 0;
+      part_ext->parts[i_domain][i_domain].n_cell = 0;
+      part_ext->parts[i_domain][i_domain].n_face = 0;
+      part_ext->parts[i_domain][i_domain].n_edge = 0;
+      part_ext->parts[i_domain][i_domain].n_vtx = 0;
     }
 
     part_ext->n_part_idx[i_domain+1] = part_ext->n_part_idx[i_domain] + part_ext->n_part[i_domain];
@@ -6074,6 +6080,7 @@ PDM_part_extension_compute
   PDM_MPI_Comm_rank(part_ext->comm, &i_rank);
   PDM_MPI_Comm_size(part_ext->comm, &n_rank);
 
+  part_ext->compute_kind = 0;
   int depth = part_ext->depth;
 
   part_ext->n_tot_part_by_domain = (int *) malloc( part_ext->n_domain * sizeof(int));

@@ -569,17 +569,31 @@ int main
                                                                                    pface_ln_to_gn,
                                                                                    pedge_ln_to_gn,
                                                                                    pvtx_ln_to_gn);
-  PDM_part_domain_interface_add(pdi,
-                                PDM_BOUND_TYPE_VTX,
-                                PDM_BOUND_TYPE_EDGE,
-                                pn_n_part,
-                                pn_vtx,
-                                pvtx_ln_to_gn,
-                                pn_edge,
-                                pedge_ln_to_gn,
-                                pedge_vtx_idx,
-                                pedge_vtx,
-                                1); // Connectivity_is_signed
+  // PDM_part_domain_interface_add(pdi,
+  //                               PDM_BOUND_TYPE_VTX,
+  //                               PDM_BOUND_TYPE_EDGE,
+  //                               pn_n_part,
+  //                               pn_vtx,
+  //                               pvtx_ln_to_gn,
+  //                               pn_edge,
+  //                               pedge_ln_to_gn,
+  //                               pedge_vtx_idx,
+  //                               pedge_vtx,
+  //                               1); // Connectivity_is_signed
+
+
+
+  // step 1 : create
+  PDM_extend_type_t  extend_type = PDM_EXTEND_FROM_VTX;
+  int                depth       = 1;
+  PDM_part_extension_t *part_ext = PDM_part_extension_create(n_domain,
+                                                             pn_n_part,
+                                                             extend_type,
+                                                             depth,
+                                                             comm,
+                                                             PDM_OWNERSHIP_KEEP);
+
+
 
 
   /*
@@ -721,7 +735,7 @@ int main
                         face_edge,
                         edge_vtx,
                         &pface_vtx[i_dom][i_part]);
-      free(pface_vtx[i_dom][i_part]);
+      // free(pface_vtx[i_dom][i_part]);
       // _compute_face_vtx2(n_face2,
       //                   face_edge_idx,
       //                   face_edge,
@@ -740,18 +754,66 @@ int main
                                         &face_part_bound,
                                         PDM_OWNERSHIP_KEEP);
 
+
+    PDM_part_extension_connectivity_set(part_ext,
+                                        i_dom,
+                                        i_part,
+                                        PDM_CONNECTIVITY_TYPE_FACE_VTX,
+                                        face_edge_idx,
+                                        pface_vtx[i_dom][i_part]);
+
+    PDM_part_extension_ln_to_gn_set(part_ext,
+                                    i_dom,
+                                    i_part,
+                                    PDM_MESH_ENTITY_FACE,
+                                    n_face,
+                                    face_ln_to_gn);
+
+    PDM_part_extension_ln_to_gn_set(part_ext,
+                                    i_dom,
+                                    i_part,
+                                    PDM_MESH_ENTITY_VTX,
+                                    n_vtx,
+                                    vtx_ln_to_gn);
+
+    PDM_part_extension_vtx_coord_set(part_ext,
+                                     i_dom,
+                                     i_part,
+                                     vtx);
+
+
+
+
+
+
     }
     shift_part += pn_n_part[i_dom];
   }
   PDM_UNUSED(shift_part);
 
+  /* Set interface */
+  PDM_part_extension_part_domain_interface_shared_set(part_ext, pdi);
+
+
+
+
+  PDM_part_extension_compute2(part_ext, 2);
+
+
+
+
+
+
+
+  PDM_part_extension_free(part_ext);
   /*
    *  Pour le debug : extration des faces avec le extract part + vtk
    */
   for (int i_dom = 0; i_dom < n_domain; i_dom++) {
 
     for (int i_part = 0; i_part < pn_n_part[i_dom]; i_part++){
-      free(pedge_vtx_idx [i_dom][i_part]);
+      free(pedge_vtx_idx[i_dom][i_part]);
+      free(pface_vtx    [i_dom][i_part]);
     }
     free(pn_face       [i_dom]);
     free(pn_edge       [i_dom]);

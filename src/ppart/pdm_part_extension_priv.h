@@ -166,12 +166,12 @@ struct _pdm_part_extension_t {
   int **pdi_neighbor;
 
   /* New manner to do part_extension */
+  int compute_kind; // 0 : old // 1 : new
   int ln_part_tot;
 
-
   PDM_domain_interface_t *dom_itrf;
-  PDM_part_to_block_t **ptb_itrf[PDM_MESH_ENTITY_MAX];
-  PDM_g_num_t         **opp_gnum[PDM_MESH_ENTITY_MAX];
+  PDM_part_to_block_t **ptb_itrf[PDM_BOUND_TYPE_MAX];
+  PDM_g_num_t         **opp_gnum[PDM_BOUND_TYPE_MAX];
 
 
 };
