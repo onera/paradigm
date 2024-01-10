@@ -810,12 +810,13 @@ _part_extension_one_depth
     int n_gnum1_come_from = gnum1_come_from_idx[i_part][ n_ref_lnum2[i_part]];
     int *_pvtx_edge_idx   = pvtx_edge_idx      [i_part];
 
-    printf("n_gnum1_come_from = %i \n", n_gnum1_come_from);
-    PDM_log_trace_array_int(ref_lnum2[i_part], n_ref_lnum2[i_part], "ref_lnum2 ::");
-    PDM_log_trace_array_int(gnum1_come_from_idx[i_part], n_ref_lnum2[i_part]+1, "gnum1_come_from_idx ::");
+    if(0 == 1) {
+      printf("n_gnum1_come_from = %i \n", n_gnum1_come_from);
+      PDM_log_trace_array_int(ref_lnum2[i_part], n_ref_lnum2[i_part], "ref_lnum2 ::");
+      PDM_log_trace_array_int(gnum1_come_from_idx[i_part], n_ref_lnum2[i_part]+1, "gnum1_come_from_idx ::");
+    }
 
-
-    PDM_log_trace_connectivity_int(pedge_vtx_idx[i_part], pedge_vtx[i_part], pn_edge[i_part], "pedge_vtx dbg ::");
+    // PDM_log_trace_connectivity_int(pedge_vtx_idx[i_part], pedge_vtx[i_part], pn_edge[i_part], "pedge_vtx dbg ::");
 
     /* Count */
     int n_send_part2 = 0;
@@ -1418,9 +1419,9 @@ _part_extension
 
   PDM_g_num_t **pconcat_edge_ln_to_gn = NULL;
   PDM_g_num_t **pconcat_vtx_ln_to_gn  = NULL;
-  int         **pconcat_edge_vtx     = NULL;
-  int         **pconcat_edge_vtx_idx = NULL;
-  double      **pconcat_vtx_coords   = NULL;
+  int         **pconcat_edge_vtx      = NULL;
+  int         **pconcat_edge_vtx_idx  = NULL;
+  double      **pconcat_vtx_coords    = NULL;
 
   // int **edge_kind = NULL;
   int **pconcat_pvtx_extented_to_pvtx_idx         = NULL;
@@ -1429,6 +1430,26 @@ _part_extension
   int **pconcat_pedge_extented_to_pedge_idx       = NULL;
   int **pconcat_pedge_extented_to_pedge_triplet   = NULL;
   int **pconcat_pedge_extented_to_pedge_interface = NULL;
+
+
+  /*
+   * Init all interface information in block frame to hook easily all data
+   * And for all meshes entities
+   * One block per interface and by mesh_entities
+   * Il faut une version qui update : PDM_domain_interface_make_flat_view
+   * Micro-structure =
+   *    - n_interface
+   *    - part_to_block [PDM_MESH_ENTITY_MAX][n_interface]
+   *    - block_data_opp[PDM_MESH_ENTITY_MAX][n_interface]
+   *    Une methode de check
+   *    Une methode init from domaine_interface / part_domain_interface
+   *    Une methode append qui prends l'existant
+   *       - Existant = 1 partition
+   *       - Nouveau  = 1 nouvelle partition
+   *    --> Recreation du ptb + block_data associé
+   */
+
+
 
 
   _part_extension_init(comm,
