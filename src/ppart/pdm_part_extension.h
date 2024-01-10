@@ -95,6 +95,22 @@ PDM_part_extension_compute
 
 /**
  *
+ * \brief Compute extended partitions
+ *
+ * \param [in]   part_ext          \p PDM_part_extension_t structure instance
+ * \param [in]   dim               Dimension of the problem
+ *
+ */
+void
+PDM_part_extension_compute2
+(
+        PDM_part_extension_t *part_ext,
+  const int                   dim
+);
+
+
+/**
+ *
  * \brief Set data to perform the partitioned mesh extension
  *
  * \warning Deprecated: use the individual setters instead

@@ -5229,6 +5229,7 @@ PDM_domain_interface_make_flat_view
     interface_ids_shifted[itrf] = (PDM_g_num_t *) malloc( 2 * interface_dn[itrf] * sizeof(PDM_g_num_t));
     send_data            [itrf] = (PDM_g_num_t *) malloc( 2 * interface_dn[itrf] * sizeof(PDM_g_num_t));
     stride_one           [itrf] = (int         *) malloc( 2 * interface_dn[itrf] * sizeof(int        ));
+    double* weight              = (double      *) malloc( 2 * interface_dn[itrf] * sizeof(double     ));
 
     int dom    = -1;
     int domopp = -1;
@@ -5254,6 +5255,8 @@ PDM_domain_interface_make_flat_view
       send_data            [itrf][2*k+1] = sgn1 * gnum1;
       stride_one           [itrf][2*k  ] = 1;
       stride_one           [itrf][2*k+1] = 1;
+      weight                     [2*k  ] = 1.;
+      weight                     [2*k+1] = 1.;
     }
 
     int dn_interface_twice = 2 * interface_dn[itrf];
@@ -5262,10 +5265,11 @@ PDM_domain_interface_make_flat_view
                                                         PDM_PART_TO_BLOCK_POST_MERGE,
                                                         1.,
                                                         &interface_ids_shifted[itrf],
-                                                        NULL,
+                                                        &weight,
                                                         &dn_interface_twice,
                                                         1,
                                                         dom_intrf->comm);
+    free(weight);
 
     int         *recv_stride = NULL;
     PDM_g_num_t *recv_data   = NULL;

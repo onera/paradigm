@@ -2212,11 +2212,14 @@ PDM_part_domain_interface_to_domain_interface
   /*
    * Re-Create a domain interface
    */
-  PDM_domain_interface_t* ditrf = PDM_domain_interface_create(n_interface,
-                                                              dom_intrf->n_domain,
-                                                              PDM_DOMAIN_INTERFACE_MULT_YES,
-                                                              PDM_OWNERSHIP_KEEP,
-                                                              dom_intrf->comm);
+  PDM_domain_interface_t* ditrf = *ditrf_out;
+  if(ditrf == NULL) {
+    ditrf = PDM_domain_interface_create(n_interface,
+                                        dom_intrf->n_domain,
+                                        PDM_DOMAIN_INTERFACE_MULT_YES,
+                                        PDM_OWNERSHIP_KEEP,
+                                        dom_intrf->comm);
+  }
 
 
   /*

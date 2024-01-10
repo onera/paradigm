@@ -165,6 +165,15 @@ struct _pdm_part_extension_t {
   int **pdi_neighbor_idx;
   int **pdi_neighbor;
 
+  /* New manner to do part_extension */
+  int ln_part_tot;
+
+
+  PDM_domain_interface_t *dom_itrf;
+  PDM_part_to_block_t **ptb_itrf[PDM_MESH_ENTITY_MAX];
+  PDM_g_num_t         **opp_gnum[PDM_MESH_ENTITY_MAX];
+
+
 };
 
 #ifdef __cplusplus

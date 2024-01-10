@@ -58,37 +58,6 @@ extern "C" {
  * Static function definitions
  *============================================================================*/
 
-static
-void
-_part_extension_3d
-(
- PDM_part_extension_t *part_ext
-)
-{
-  PDM_UNUSED(part_ext);
-}
-
-static
-void
-_part_extension_2d
-(
- PDM_part_extension_t *part_ext
-)
-{
-  PDM_UNUSED(part_ext);
-
-}
-
-static
-void
-_part_extension_1d
-(
- PDM_part_extension_t *part_ext
-)
-{
-  PDM_UNUSED(part_ext);
-
-}
 
 static
 void
@@ -2525,40 +2494,6 @@ PDM_part_extension_pconnectivity_to_extented_pconnectivity
   free(pentity1_entity2    );
   free(pn_entity2          );
   free(pentity2_ln_to_gn   );
-
-}
-
-static void
-PDM_part_extension_compute2
-(
-        PDM_part_extension_t *part_ext,
-  const int                   dim
-)
-{
-  // TODO : mv dim in create but break API
-
-  /* Manage shift */
-  // _offset_parts_by_domain(part_ext, 1);
-
-  /* Manage dim */
-  if(dim == 3) {
-    _part_extension_3d(part_ext);
-  } else if(dim == 2) {
-    _part_extension_2d(part_ext);
-  } else if(dim == 1) {
-    _part_extension_1d(part_ext);
-  } else  {
-    PDM_error(__FILE__, __LINE__, 0, "Wrong dim size in PDM_part_extension_compute2 : %d ( Should be >=1 )\n", (int) dim);
-  }
-
-
-  /* Manage loop for depth AND multiple transformation */
-
-
-
-  /* Manage unshift */
-  // _offset_parts_by_domain(part_ext, -1);
-  // _offset_results_by_domain(part_ext);
 
 }
 
