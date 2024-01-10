@@ -3,11 +3,11 @@
 - Training : Jupyter notebook in 3 languages (C, Fortran, Python)
 - Documentation : Partial Sphinx documentation
 - Fortran API : PDM_dmesh_nodal, PDM_dist_cloud_surf, PDM_mesh_intersection, PDM_part_connectivity_transform, PDM_dcube_nodal_gen
-- Python API : PDM_distrib, PDM_mblock_to_part
+- Python API : PDM_distrib, PDM_multi_block_to_part
 - 7 Tests + 2 Tutorials
 ### Changed
 - PDM_mesh_location : API
-- PDM_multipart : API
+- PDM_multipart : API + Add 1D and 0D
 - PDM_part_extension : API
 ### Deprecated
 ### Removed
