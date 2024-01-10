@@ -1,3 +1,7 @@
+/*
+ * \file
+ */
+
 #ifndef __PDM_MULTI_BLOCK_MERGE_H__
 #define __PDM_MULTI_BLOCK_MERGE_H__
 

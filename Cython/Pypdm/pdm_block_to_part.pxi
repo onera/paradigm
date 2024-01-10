@@ -1,5 +1,3 @@
-import warnings
-
 cdef extern from "pdm_block_to_part.h":
     # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
     # > Wrapping of Ppart Structure
@@ -109,7 +107,7 @@ cdef class BlockToPart:
 
       if isinstance(block_stride, int):
         _stride_t = PDM_STRIDE_CST_INTERLACED if interlaced_str else PDM_STRIDE_CST_INTERLEAVED
-        _block_stride = <int *> malloc(1 * sizeof(int *))
+        _block_stride = <int *> malloc(1 * sizeof(int))
         _block_stride[0] = block_stride
         assert_single_dim_np(block_data, block_data.dtype, block_stride*self.dn_elt)
       elif isinstance(block_stride, NPY.ndarray):
@@ -221,15 +219,10 @@ cdef class BlockToPart:
     # ------------------------------------------------------------------
     def BlockToPart_Exchange(self, dict         dField,
                                    dict         pField,
-                                   PDM_stride_t t_stride = <PDM_stride_t> -1,
                                    BlkStride = 1,
                                    bint interlaced_str=True):
       """ Shortcut to exchange multiple fieds stored in dict """
-      if t_stride != -1:
-        warnings.warn("Parameter t_stride is deprecated and will be removed in further release",
-          DeprecationWarning, stacklevel=2)
-      dField = {key:data for key,data in dField.items() \
-        if not (key.endswith("#PDM_Stride") or key.endswith("#Stride"))} #To remove when PtB output always #PDM_Stride
+      dField = {key:data for key,data in dField.items() if not key.endswith("#PDM_Stride")}
       for field_name in dField:
         PartStride = None
         if field_name + '#PDM_Stride' in pField:
@@ -239,16 +232,11 @@ cdef class BlockToPart:
     # ------------------------------------------------------------------
     def BlockToPart_Exchange2(self, dict         dField,
                                     dict         pField,
-                                    PDM_stride_t t_stride = <PDM_stride_t> -1,
                                     BlkStride = 1,
                                     bint interlaced_str=True):
 
       """ Shortcut to exchange multiple fieds stored in dict """
-      if t_stride != -1:
-        warnings.warn("Parameter t_stride is deprecated and will be removed in further release",
-          DeprecationWarning, stacklevel=2)
-      dField = {key:data for key,data in dField.items() \
-        if not (key.endswith("#PDM_Stride") or key.endswith("#Stride"))}  #To remove when PtB output always #PDM_Stride
+      dField = {key:data for key,data in dField.items() if not key.endswith("#PDM_Stride")}
       for field_name, field in dField.items():
         part_stride, part_data = self.exchange_field(field, BlkStride, interlaced_str)
         pField[field_name] = part_data

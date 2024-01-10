@@ -1,3 +1,7 @@
+/*
+ * \file
+ */
+
 #ifndef __PDM_EXTRACT_PART_H__
 #define __PDM_EXTRACT_PART_H__
 
@@ -141,6 +145,21 @@ PDM_extract_part_target_set
   int                      *target_location
 );
 
+
+/**
+ *
+ * \brief Keep target_gnum data ownership inside extrp
+ *
+ * \param [in]   extrp             PDM_extract_part_t
+ * 
+ */
+void
+PDM_extract_part_target_gnum_keep_ownnership
+(
+  PDM_extract_part_t       *extrp
+);
+
+
 /**
  *
  * \brief Set partition
@@ -252,7 +271,7 @@ PDM_extract_part_entity_center_set
  *
  * \param [in]   extrp               PDM_extract_part_t structure
  * \param [in]   i_part_out          part identifier
- * \param [in]   PDM_mesh_entities_t Kind of entity required
+ * \param [in]   PDM_mesh_entities_t Kind of entity required \ref PDM_mesh_entities_t
  *
  * \return Number of entity
  */
@@ -266,6 +285,15 @@ PDM_extract_part_n_entity_get
 
 
 
+/**
+ * \brief Return size of leading connectivity on current partition ( n_entity )
+ * \param [in]  extrp               Pointer to \ref PDM_extract_part_t object
+ * \param [in]  i_part              Id of part
+ * \param [in]  connectivity_type   Connectivity kind \ref PDM_connectivity_type_t
+ * \param [in]  connect             Connectivity array (size = connect_idx[n_entity] )
+ * \param [in]  connect_idx         Connectivity index (size = n_entity+1 )
+ * \param [in]  ownership           Choice of ownership of the resulting arrays \ref PDM_ownership_t
+ */
 int
 PDM_extract_part_connectivity_get
 (
@@ -278,6 +306,15 @@ PDM_extract_part_connectivity_get
 );
 
 
+/**
+ *
+ * \brief Return size of entity_type on current partition ( n_entity )
+ * \param [in]  extrp             Pointer to \ref PDM_extract_part_t object
+ * \param [in]  i_part            Id of part
+ * \param [in]  entity_type       Entity kind \ref PDM_mesh_entities_t)
+ * \param [out] entity_ln_to_gn   Entity local numbering to global numbering (size = n_entity, numbering : 1 to n)
+ * \param [in]  ownership         Ownership for entity_ln_to_gn ( \ref PDM_ownership_t )
+ */
 int
 PDM_extract_part_ln_to_gn_get
 (
@@ -289,6 +326,15 @@ PDM_extract_part_ln_to_gn_get
 );
 
 
+/**
+ *
+ * \brief Return size of entity_type on current partition ( n_entity )
+ * \param [in]  extrp                  Pointer to \ref PDM_extract_part_t object
+ * \param [in]  i_part                 Id of part
+ * \param [in]  entity_type            Entity kind \ref PDM_mesh_entities_t)
+ * \param [out] parent_entity_ln_to_gn Entity local numbering to global numbering of parent entity, correspond to the input mesh (size = n_entity, numbering : 1 to n)
+ * \param [in]  ownership              Ownership for entity_ln_to_gn ( \ref PDM_ownership_t )
+ */
 int
 PDM_extract_part_parent_ln_to_gn_get
 (
@@ -299,7 +345,15 @@ PDM_extract_part_parent_ln_to_gn_get
  PDM_ownership_t           ownership
 );
 
-
+/**
+ *
+ * \brief Return size of entity_type on current partition ( n_entity )
+ * \param [in]  extrp                  Pointer to \ref PDM_extract_part_t object
+ * \param [in]  i_part                 Id of part
+ * \param [in]  entity_type            Entity kind \ref PDM_mesh_entities_t)
+ * \param [out] parent_entity_lnum     Local indexes of parent entity, correspond to the input mesh (size = n_entity)
+ * \param [in]  ownership              Ownership for entity_ln_to_gn ( \ref PDM_ownership_t )
+ */
 int
 PDM_extract_part_parent_lnum_get
 (
@@ -310,6 +364,16 @@ PDM_extract_part_parent_lnum_get
  PDM_ownership_t            ownership
 );
 
+
+/**
+ *
+ * \brief Get the vertex coordinates on current i_part partition and return number of vertices
+ *
+ * \param [in]   extrp      Pointer to \ref PDM_extract_part_t object
+ * \param [in]   i_part     Id of part
+ * \param [out]  vtx_coord  Vertex coordinate (size = 3 * n_vtx)
+ * \param [in]   ownership  Ownership for color ( \ref PDM_ownership_t )
+ */
 int
 PDM_extract_part_vtx_coord_get
 (
@@ -320,6 +384,14 @@ PDM_extract_part_vtx_coord_get
 );
 
 
+/**
+ * \brief Retreive the partitionned mesh
+ *
+ * \param [in]  extrp             Pointer to \ref PDM_extract_part_t object
+ * \param [out] extract_pmne      Partitionned mesh nodal, describe by elements (see \ref PDM_part_mesh_nodal_elmts_t )
+ * \param [in]  ownership         Who is responsible to free retreived data ?
+ *
+ */
 void
 PDM_extract_part_part_mesh_nodal_get
 (
@@ -328,18 +400,43 @@ PDM_extract_part_part_mesh_nodal_get
   PDM_ownership_t               ownership
 );
 
+
+/**
+ *
+ * \brief Free the structure
+ *
+ * \param [in]   extrp      Pointer to \ref PDM_extract_part_t object
+ */
 void
 PDM_extract_part_free
 (
   PDM_extract_part_t  *extrp
 );
 
+/**
+ *
+ * \brief Free all resulting array if not owner
+ *
+ * \param [in]   extrp      Pointer to \ref PDM_extract_part_t object
+ */
 void
 PDM_extract_part_partial_free
 (
   PDM_extract_part_t  *extrp
 );
 
+
+/**
+ *
+ * \brief Get for entity_type (cells/faces/edge/vertices) the associated part_to_part (\ref PDM_part_to_part_t ). The part to part exchange protocol allow user to
+ * exchange easily data from input mesh to the extract one.
+ *
+ * \param [in]   extrp        Pointer to \ref PDM_extract_part_t object
+ * \param [in]   entity_type  Bound type \ref PDM_mesh_entities_t
+ * \param [out]  ptp          Part to part protocol exchange, to exchange betwenn the input mesh and the output one (\ref PDM_part_to_part_t)
+ * \param [in]   ownership    Ownership for color ( \ref PDM_ownership_t )
+ *
+ */
 void
 PDM_extract_part_part_to_part_get
 (
@@ -351,6 +448,18 @@ PDM_extract_part_part_to_part_get
 );
 
 
+/**
+ *
+ * \brief Get for bound_type the associated part_to_part (\ref PDM_part_to_part_t ). The part to part exchange protocol allow user to
+ * exchange easily data from input mesh to the extract one.
+ *
+ * \param [in]   extrp        Pointer to \ref PDM_extract_part_t object
+ * \param [in]   bound_type   Bound type \ref PDM_bound_type_t
+ * \param [in]   i_group      Id of group
+ * \param [out]  ptp          Part to part protocol exchange, to exchange betwenn the input mesh and the output one (\ref PDM_part_to_part_t)
+ * \param [in]   ownership    Ownership for color ( \ref PDM_ownership_t )
+ *
+ */
 void
 PDM_extract_part_part_to_part_group_get
 (
@@ -362,6 +471,21 @@ PDM_extract_part_part_to_part_group_get
 
 );
 
+
+/**
+ *
+ * \brief Get the bound description for the entity (cell/face/edge/vertices)
+ *
+ * \param [in]   extrp                              Pointer to \ref PDM_extract_part_t object
+ * \param [in]   bound_type                             Bound type \ref PDM_bound_type_t
+ * \param [in]   i_part                                 Id of part
+ * \param [in]   i_group                                Id of group
+ * \param [out]  pn_extract_group_entity                Number of entity in current group
+ * \param [out]  pextract_group_entity_ln_to_gn         Entity global id in current partition (size = pn_extract_group_entity)
+ * \param [out]  pextract_group_entity_parent_ln_to_gn  Entity global id in parent partition (size = pn_extract_group_entity)
+ * \param [in]   ownership      Ownership for color ( \ref PDM_ownership_t )
+ *
+ */
 void
 PDM_extract_part_group_get
 (

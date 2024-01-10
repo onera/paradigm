@@ -2682,49 +2682,11 @@ _multipart_create
 
   PDM_split_dual_t split_method = (PDM_split_dual_t) method; // TO DO: uniformise method type
 
-  // Create dmesh
-  PDM_dmesh_t* dm = PDM_dmesh_create(PDM_OWNERSHIP_KEEP,
-                                     dn_cell,
-                                     dn_face,
-                                     0, // dn_edge
-                                     dn_vtx,
-                                     comm);
-
-  PDM_dmesh_vtx_coord_set(dm,
-          (double  *)     dvtx_coord,
-                          PDM_OWNERSHIP_USER);
-
-
-  PDM_dmesh_connectivity_set(dm,
-                             PDM_CONNECTIVITY_TYPE_FACE_VTX,
-             (PDM_g_num_t *) dface_vtx,
-             (int         *) dface_vtx_idx,
-                             PDM_OWNERSHIP_USER);
-
-  PDM_dmesh_connectivity_set(dm,
-                             PDM_CONNECTIVITY_TYPE_FACE_CELL,
-             (PDM_g_num_t *) dface_cell,
-                             NULL,
-                             PDM_OWNERSHIP_USER);
-
-  PDM_dmesh_connectivity_set(dm,
-                             PDM_CONNECTIVITY_TYPE_CELL_FACE,
-             (PDM_g_num_t *) dcell_face,
-             (int         *) dcell_face_idx,
-                             PDM_OWNERSHIP_USER);
-
-  PDM_dmesh_bound_set(dm,
-                      PDM_BOUND_TYPE_FACE,
-                      n_face_group,
-      (PDM_g_num_t *) dface_group,
-      (int         *) dface_group_idx,
-                      PDM_OWNERSHIP_USER);
-
-  // Partitionning
-  int n_zone = 1;
-  int n_part_zones = n_part;
-  PDM_multipart_t *multipart = PDM_multipart_create(n_zone,
-                                                    &n_part_zones,
+  // Partitioning
+  int n_domain = 1;
+  int n_part_domains = n_part;
+  PDM_multipart_t *multipart = PDM_multipart_create(n_domain,
+                                                    &n_part_domains,
                                                     PDM_FALSE,
                                                     split_method,
                                                     PDM_PART_SIZE_HOMOGENEOUS,
@@ -2733,13 +2695,24 @@ _multipart_create
                                                     PDM_OWNERSHIP_KEEP);
 
   PDM_multipart_set_reordering_options(multipart, -1, renum_cell_method, renum_properties_cell, renum_face_method);
-  PDM_multipart_register_block(multipart, 0, dm);
+
+  PDM_multipart_block_set(multipart,
+                          0,
+                          dn_cell,
+                          dn_face,
+                          dn_vtx,
+                          n_face_group,
+          (int         *) dcell_face_idx,
+          (PDM_g_num_t *) dcell_face,
+          (PDM_g_num_t *) dface_cell,
+          (int         *) dface_vtx_idx,
+          (PDM_g_num_t *) dface_vtx,
+          (double      *) dvtx_coord,
+          (int         *) dface_group_idx,
+          (PDM_g_num_t *) dface_group);
 
   // Run
-  PDM_multipart_run_ppart(multipart);
-
-  // free
-  PDM_dmesh_free(dm);
+  PDM_multipart_compute(multipart);
 
   return multipart;
  }
@@ -2761,10 +2734,10 @@ _dim_get
         int      *n_face_group
 )
 {
-  int  i_zone = 0;
+  int  i_domain = 0;
 
   PDM_multipart_part_dim_get(multipart,
-                             i_zone,
+                             i_domain,
                              i_part,
                              n_cell,
                              n_face,
@@ -2803,63 +2776,63 @@ const  int         i_part,
  PDM_g_num_t     **face_group_ln_to_gn
 )
 {
-  int           i_zone               = 0;
+  int i_domain = 0;
 
   *cell_tag = NULL;
   *face_tag = NULL;
   *vtx_tag  = NULL;
 
   PDM_multipart_part_ln_to_gn_get(multipart,
-                                  i_zone,
+                                  i_domain,
                                   i_part,
                                   PDM_MESH_ENTITY_CELL,
                                   cell_ln_to_gn,
                                   PDM_OWNERSHIP_KEEP);
 
   PDM_multipart_part_connectivity_get(multipart,
-                                      i_zone,
+                                      i_domain,
                                       i_part,
                                       PDM_CONNECTIVITY_TYPE_CELL_FACE,
-                                      cell_face,
                                       cell_face_idx,
+                                      cell_face,
                                       PDM_OWNERSHIP_KEEP);
 
   int *face_cell_idx = NULL;
   PDM_multipart_part_connectivity_get(multipart,
-                                      i_zone,
+                                      i_domain,
                                       i_part,
                                       PDM_CONNECTIVITY_TYPE_FACE_CELL,
-                                      face_cell,
                                       &face_cell_idx,
+                                      face_cell,
                                       PDM_OWNERSHIP_KEEP);
   assert(face_cell_idx == NULL);
 
   PDM_multipart_part_connectivity_get(multipart,
-                                      i_zone,
+                                      i_domain,
                                       i_part,
                                       PDM_CONNECTIVITY_TYPE_FACE_VTX,
-                                      face_vtx,
                                       face_vtx_idx,
+                                      face_vtx,
                                       PDM_OWNERSHIP_KEEP);
 
   PDM_multipart_part_ln_to_gn_get(multipart,
-                                  i_zone,
+                                  i_domain,
                                   i_part,
                                   PDM_MESH_ENTITY_FACE,
                                   face_ln_to_gn,
                                   PDM_OWNERSHIP_KEEP);
 
   PDM_multipart_part_ln_to_gn_get(multipart,
-                                  i_zone,
+                                  i_domain,
                                   i_part,
-                                  PDM_MESH_ENTITY_VERTEX,
+                                  PDM_MESH_ENTITY_VTX,
                                   vtx_ln_to_gn,
                                   PDM_OWNERSHIP_KEEP);
   int pn_face_group = 0;
-  PDM_multipart_bound_get(multipart,
-                          i_zone,
+  PDM_multipart_group_get(multipart,
+                          i_domain,
                           i_part,
-                          PDM_BOUND_TYPE_FACE,
+                          PDM_MESH_ENTITY_FACE,
                           &pn_face_group,
                           face_group_idx,
                           face_group,
@@ -2867,15 +2840,15 @@ const  int         i_part,
                           PDM_OWNERSHIP_KEEP);
 
   PDM_multipart_part_graph_comm_get(multipart,
-                                    i_zone,
+                                    i_domain,
                                     i_part,
-                                    PDM_BOUND_TYPE_FACE,
+                                    PDM_MESH_ENTITY_FACE,
                                     face_part_bound_proc_idx,
                                     face_part_bound_part_idx,
                                     face_part_bound,
                                     PDM_OWNERSHIP_KEEP);
   PDM_multipart_part_vtx_coord_get(multipart,
-                                   i_zone,
+                                   i_domain,
                                    i_part,
                                    vtx,
                                    PDM_OWNERSHIP_KEEP);
@@ -3611,26 +3584,26 @@ const  int      i_part,
   _PDM_part_t *_ppart = (_PDM_part_t *) ppart;
 
   if (_ppart->use_multipart) {
-    int i_zone = 0;
+    int i_domain = 0;
     PDM_multipart_partition_color_get(ppart->multipart,
-                                      i_zone,
+                                      i_domain,
                                       i_part,
                                       PDM_MESH_ENTITY_CELL,
                                       cell_color,
                                       PDM_OWNERSHIP_KEEP);
     PDM_multipart_partition_color_get(ppart->multipart,
-                                      i_zone,
+                                      i_domain,
                                       i_part,
                                       PDM_MESH_ENTITY_FACE,
                                       face_color,
                                       PDM_OWNERSHIP_KEEP);
     PDM_multipart_part_hyperplane_color_get(ppart->multipart,
-                                            i_zone,
+                                            i_domain,
                                             i_part,
                                             hyperplane_color,
                                             PDM_OWNERSHIP_KEEP);
     PDM_multipart_part_thread_color_get(ppart->multipart,
-                                        i_zone,
+                                        i_domain,
                                         i_part,
                                         thread_color,
                                         PDM_OWNERSHIP_KEEP);
@@ -3809,7 +3782,7 @@ int         *bound_part_faces_sum
   _PDM_part_t *_ppart = (_PDM_part_t *) ppart;
   if (_ppart->use_multipart) {
     PDM_multipart_stat_get(ppart->multipart,
-                           0, // i_zone
+                           0, // i_domain
                            cells_average,
                            cells_median,
                            cells_std_deviation,

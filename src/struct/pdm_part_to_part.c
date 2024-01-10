@@ -1191,6 +1191,11 @@ _alltotall_stride_var_iexch
           int idx = ptp->recv_buffer_to_ref_lnum2[i][k];
           blk_recv_stride[idx] = _part2_stride[i][k];
         }
+        for (int k = ptp->recv_buffer_to_duplicate_idx[i][j]; k < ptp->recv_buffer_to_duplicate_idx[i][j+1]; k++) {
+          int idx      = ptp->recv_buffer_to_duplicate[i][2*k  ];
+          int idx_data = ptp->recv_buffer_to_duplicate[i][2*k+1];
+          blk_recv_stride[idx] = _part2_stride[i][idx_data];
+        }
       }
     }
   }
@@ -1605,6 +1610,11 @@ _p2p_stride_var_iexch
         for (int k = ptp->gnum1_come_from_idx[i][j]; k < ptp->gnum1_come_from_idx[i][j+1]; k++) {
           int idx = ptp->recv_buffer_to_ref_lnum2[i][k];
           blk_recv_stride[idx] = _part2_stride[i][k];
+        }
+        for (int k = ptp->recv_buffer_to_duplicate_idx[i][j]; k < ptp->recv_buffer_to_duplicate_idx[i][j+1]; k++) {
+          int idx      = ptp->recv_buffer_to_duplicate[i][2*k  ];
+          int idx_data = ptp->recv_buffer_to_duplicate[i][2*k+1];
+          blk_recv_stride[idx] = _part2_stride[i][idx_data];
         }
       }
     }
@@ -2178,8 +2188,19 @@ _create
 {
   PDM_part_to_part_t *ptp = (PDM_part_to_part_t *) malloc (sizeof(PDM_part_to_part_t));
 
+  char *env_var = NULL;
+  env_var = getenv ("PDM_PART_TO_PART_USE_TAG");
+  ptp->use_tag = 0;
+  if (env_var != NULL) {
+    ptp->use_tag = (int) atoi(env_var);
+  }
+
   /* Init */
-  ptp->comm                     = comm;
+  if(ptp->use_tag == 1) {
+    ptp->comm                     = comm;
+  } else {
+    PDM_MPI_Comm_dup(comm, &ptp->comm);
+  }
 
   ptp->n_part1                  = n_part1;
   ptp->gnum_elt1                = gnum_elt1;
@@ -2693,10 +2714,6 @@ _create
   }
   free(gnum1_to_send_buffer_n);
 
-
-
-  fflush(stdout);
-
   free (n_elt_part);
   free (order);
 
@@ -2723,9 +2740,9 @@ _create
   }
 
   for (int i = 0; i < n_rank; i++) {
-    ptp->default_n_send_buffer[i]   *= 4;
+    ptp->default_n_send_buffer[i  ] *= 4;
     ptp->default_i_send_buffer[i+1] *= 4;
-    ptp->default_n_recv_buffer[i]   *= 4;
+    ptp->default_n_recv_buffer[i  ] *= 4;
     ptp->default_i_recv_buffer[i+1] *= 4;
   }
 
@@ -2764,9 +2781,9 @@ _create
                      comm);
 
   for (int i = 0; i < n_rank; i++) {
-    ptp->default_n_send_buffer[i]   /= 4;
+    ptp->default_n_send_buffer[i  ] /= 4;
     ptp->default_i_send_buffer[i+1] /= 4;
-    ptp->default_n_recv_buffer[i]   /= 4;
+    ptp->default_n_recv_buffer[i  ] /= 4;
     ptp->default_i_recv_buffer[i+1] /= 4;
   }
 
@@ -2942,7 +2959,7 @@ _create
 
     for (int j = 0; j < ptp->n_ref_lnum2[i]; j++) {
 
-      int current_val = -1;
+      PDM_g_num_t current_val = -1;
       for (int k = _old_gnum1_come_from_idx[j]; k < _old_gnum1_come_from_idx[j+1]; k++) {
         if (ptp->gnum1_come_from[i][k] != current_val) {
           current_val = ptp->gnum1_come_from[i][k];
@@ -3031,10 +3048,19 @@ _create
   void  *max_tag_tmp;
   int    flag = 0;
 
-  PDM_MPI_Comm_get_attr_tag_ub(comm, &max_tag_tmp, &flag);
-  ptp->max_tag  = (long) (*((int *) max_tag_tmp));
-  ptp->seed_tag = PDM_MPI_Rand_tag(comm);
-  ptp->next_tag = 1;
+  if(ptp->use_tag == 1) {
+    // Mandatory to call with PDM_MPI_COMM_WORLD becuase only this one keep attributes (openMPI implemntation for exemple)
+    PDM_MPI_Comm_get_attr_tag_ub(PDM_MPI_COMM_WORLD, &max_tag_tmp, &flag);
+    ptp->max_tag  = (long) (*((int *) max_tag_tmp));
+    ptp->seed_tag = PDM_MPI_Rand_tag(comm);
+    ptp->next_tag = 1;
+  } else {
+    // Mandatory to call with PDM_MPI_COMM_WORLD becuase only this one keep attributes (openMPI implemntation for exemple)
+    PDM_MPI_Comm_get_attr_tag_ub(PDM_MPI_COMM_WORLD, &max_tag_tmp, &flag);
+    ptp->max_tag  = (long) (*((int *) max_tag_tmp));
+    ptp->seed_tag = 1;
+    ptp->next_tag = 1;
+  }
 
   return ptp;
 }
@@ -3144,6 +3170,30 @@ PDM_part_to_part_create_from_num2_triplet
                   from_triplet,
                   comm);
 }
+
+
+/**
+ *
+ * \brief Get selected numbers of part2 index
+ *
+ * \param [in]   ptp                 Block to part structure
+ * \param [out]  n_elt1              Number of gnum1 element
+ * \param [out]  part1_to_part2_idx  Index of data to send to gnum2 from gnum1
+ *                                  (for each part size : \ref n_elt1+1)
+ */
+
+void
+PDM_part_to_part_part1_to_part2_idx_get
+(
+ PDM_part_to_part_t *ptp,
+ int               **n_elt1,
+ int              ***part1_to_part2_idx
+)
+{
+  *n_elt1             = (int          *) ptp->n_elt1;
+  *part1_to_part2_idx = (int         **) ptp->part1_to_part2_idx;
+}
+
 
 /**
  *
@@ -3368,11 +3418,11 @@ PDM_part_to_part_ineighbor_alltoall_wait
 
 /**
  *
- * \brief Get referenced gnum2 elements
+ * \brief Get referenced Part2 elements
  *
- * \param [in]   ptp           Block to part structure
- * \param [out]  n_ref_lnum2   Number of referenced gnum2
- * \param [out]  ref_lnum2     Referenced gnum2
+ * \param [in]   ptp           Part-to-Part structure
+ * \param [out]  n_ref_lnum2   Number of referenced Part2 elements
+ * \param [out]  ref_lnum2     Referenced Part2 elements (one-based local ids)
  *
  */
 
@@ -3391,11 +3441,11 @@ PDM_part_to_part_ref_lnum2_get
 
 /**
  *
- * \brief Get unreferenced gnum2 elements
+ * \brief Get unreferenced Part2 elements
  *
- * \param [in]   ptp           Block to part structure
- * \param [out]  n_unref_lnum2   Number of referenced gnum2
- * \param [out]  unref_lnum2     Referenced gnum2
+ * \param [in]   ptp             Part-to-Part structure
+ * \param [out]  n_unref_lnum2   Number of referenced Part2 elements
+ * \param [out]  unref_lnum2     Unreferenced Part2 elements (one-based local ids)
  *
  */
 
@@ -4657,9 +4707,9 @@ PDM_part_to_part_iexch_wait
 
     if (ptp->async_exch_k_comm[request] == PDM_MPI_COMM_KIND_P2P) {
 
-      PDM_part_to_part_irecv_wait (ptp, ptp->async_exch_subrequest[request][0]);
+      PDM_part_to_part_irecv_wait (ptp, ptp->async_exch_subrequest[request][1]);
 
-      PDM_part_to_part_issend_wait (ptp, ptp->async_exch_subrequest[request][1]);
+      PDM_part_to_part_issend_wait (ptp, ptp->async_exch_subrequest[request][0]);
 
     }
 
@@ -4826,7 +4876,12 @@ PDM_part_to_part_reverse_iexch
  int                               *request
 )
 {
-  int tag = PDM_MPI_Rand_tag (ptp->comm);
+  int tag = -10000;
+  if (k_comm == PDM_MPI_COMM_KIND_P2P) {
+    tag  = ptp->seed_tag;
+    tag += (ptp->next_tag++);
+    tag %= ptp->max_tag;
+  }
 
   *request = _find_open_async_exch (ptp);
 
@@ -5729,6 +5784,35 @@ PDM_part_to_part_gnum1_come_from_single_part_get
 
 /**
  *
+ * \brief Get selected numbers of part2 (only index)
+ *
+ * \param [in]   ptp                 Block to part structure
+ * \param [in]   i_part              Id of partition
+ * \param [out]  n_elt1              Number of gnum1 element
+ * \param [out]  part1_to_part2_idx  Index of data to send to gnum2 from gnum1
+ *                                  (for each part size : \ref n_elt1+1)
+ *
+ */
+
+void
+PDM_part_to_part_part1_to_part2_idx_single_part_get
+(
+       PDM_part_to_part_t  *ptp,
+ const int                  i_part,
+       int                 *n_elt1,
+       int                **part1_to_part2_idx
+)
+{
+  assert(ptp != NULL);
+  assert(i_part < ptp->n_part1);
+
+  *n_elt1             = (int          ) ptp->n_elt1[i_part];
+  *part1_to_part2_idx = (int         *) ptp->part1_to_part2_idx[i_part];
+}
+
+
+/**
+ *
  * \brief Get selected numbers of part2
  *
  * \param [in]   ptp                 Block to part structure
@@ -5840,6 +5924,26 @@ PDM_part_to_part_default_recv_buffer_get
 {
   *default_n_recv_buffer = ptp->default_n_recv_buffer;
   *default_i_recv_buffer = ptp->default_i_recv_buffer;
+}
+
+
+/**
+ *
+ * \brief Get number of MPI ranks
+ *
+ * \param [in]   ptp          Part to part structure
+ *
+ * \return  Number of MPI ranks
+ *
+ */
+
+int
+PDM_part_to_part_n_ranks_get
+(
+ PDM_part_to_part_t    *ptp
+)
+{
+  return ptp->n_rank;
 }
 
 #ifdef __cplusplus

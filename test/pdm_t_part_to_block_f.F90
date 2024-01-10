@@ -42,18 +42,18 @@ program testf
   type(c_ptr)                           :: ptb = C_NULL_PTR
 
   integer                               :: n_part
-  type(PDM_pointer_array_t)             :: gnum_elt
-  type(PDM_pointer_array_t)             :: weight
+  type(PDM_pointer_array_t), pointer    :: gnum_elt => null()
+  type(PDM_pointer_array_t), pointer    :: weight   => null()
   integer(pdm_l_num_s), pointer         :: n_elt(:)        => null()
   integer(pdm_g_num_s), pointer         :: elt_ln_to_gn(:) => null()
 
-  type(PDM_pointer_array_t)             :: part_stride
-  type(PDM_pointer_array_t)             :: part_data
+  type(PDM_pointer_array_t), pointer    :: part_stride => null()
+  type(PDM_pointer_array_t), pointer    :: part_data   => null()
   integer(pdm_l_num_s), pointer         :: block_stride(:) => null()
   integer(pdm_l_num_s), pointer         :: block_data(:)   => null()
 
-  integer(pdm_l_num_s), pointer         :: stride(:) => null()
-  integer(pdm_l_num_s), pointer         :: data(:)   => null()
+  integer(pdm_l_num_s), pointer      :: stride(:) => null()
+  integer(pdm_l_num_s), pointer      :: data(:)   => null()
 
   integer                               :: code
   integer                               :: i_rank
@@ -133,15 +133,14 @@ program testf
   print *, "block_data   :", block_data
 
   !  Free memory
-  call PDM_part_to_block_free (ptb)
+  call PDM_part_to_block_free(ptb)
 
-  deallocate(n_elt)
-  deallocate(elt_ln_to_gn)
-  call PDM_pointer_array_free (gnum_elt)
-  call PDM_pointer_array_free (part_data)
-  deallocate(stride)
-  deallocate(data)
-  call PDM_pointer_array_free (part_stride)
+  deallocate(n_elt,  &
+             stride, &
+             data)
+  call PDM_pointer_array_free(gnum_elt)
+  call PDM_pointer_array_free(part_data)
+  call PDM_pointer_array_free(part_stride)
   call pdm_fortran_free_c(c_loc(block_stride))
   call pdm_fortran_free_c(c_loc(block_data))
 

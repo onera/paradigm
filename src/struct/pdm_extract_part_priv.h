@@ -106,8 +106,9 @@ struct _pdm_extract_part_t
   int                  from_target;
   int                 *n_target;
   PDM_g_num_t        **target_gnum;
+  PDM_ownership_t      target_ownership;
   int                **target_location;
-
+  PDM_mesh_entities_t  master_entity;
 
   /* Extracted part */
   double             **pextract_vtx_coord;
@@ -137,10 +138,13 @@ struct _pdm_extract_part_t
   /* Part-to-part objects */
   PDM_part_to_part_t  **ptp_group_entity                     [PDM_BOUND_TYPE_MAX];
   PDM_ownership_t      *ptp_group_ownership                  [PDM_BOUND_TYPE_MAX];
+
   int                 **pn_extract_group_entity              [PDM_BOUND_TYPE_MAX];
   int                ***pextract_group_entity                [PDM_BOUND_TYPE_MAX];
   PDM_g_num_t        ***pextract_group_entity_ln_to_gn       [PDM_BOUND_TYPE_MAX];
   PDM_g_num_t        ***pextract_group_entity_parent_ln_to_gn[PDM_BOUND_TYPE_MAX];
+  PDM_ownership_t      *group_array_ownership                [PDM_BOUND_TYPE_MAX];
+
   PDM_bool_t           *is_owner_extract_group               [PDM_BOUND_TYPE_MAX];
 
 };

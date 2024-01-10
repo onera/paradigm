@@ -854,8 +854,8 @@ _intersect_triangle_triangle_coplanar
           log_trace("  inter_coord = %f %f %f\n",
                     inter_coord[3*n_inter], inter_coord[3*n_inter+1], inter_coord[3*n_inter+2]);
         }
-        inter_locA[n_inter] = (_point_triangle_loc_t) ivtxA1;
-        inter_locB[n_inter] = (_point_triangle_loc_t) ivtxB1;
+        inter_locA[n_inter] = (_point_triangle_loc_t) (ivtxA1);
+        inter_locB[n_inter] = (_point_triangle_loc_t) (ivtxB1);
         inter_tA  [n_inter] = 0;
         inter_tB  [n_inter] = 0;
         n_inter++;
@@ -885,8 +885,8 @@ _intersect_triangle_triangle_coplanar
           log_trace("  inter_coord = %f %f %f\n",
                     inter_coord[3*n_inter], inter_coord[3*n_inter+1], inter_coord[3*n_inter+2]);
         }
-        inter_locA[n_inter] = (_point_triangle_loc_t) ivtxA1;
-        inter_locB[n_inter] = (_point_triangle_loc_t) iedgeB + 3;
+        inter_locA[n_inter] = (_point_triangle_loc_t) (ivtxA1);
+        inter_locB[n_inter] = (_point_triangle_loc_t) (iedgeB + 3);
         inter_tA  [n_inter] = 0;
         inter_tB  [n_inter] = tB; // (1 - tB) if sign < 0 ??
         n_inter++;
@@ -916,8 +916,8 @@ _intersect_triangle_triangle_coplanar
           log_trace("  inter_coord = %f %f %f\n",
                     inter_coord[3*n_inter], inter_coord[3*n_inter+1], inter_coord[3*n_inter+2]);
         }
-        inter_locA[n_inter] = (_point_triangle_loc_t) iedgeA + 3;
-        inter_locB[n_inter] = (_point_triangle_loc_t) ivtxB1;
+        inter_locA[n_inter] = (_point_triangle_loc_t) (iedgeA + 3);
+        inter_locB[n_inter] = (_point_triangle_loc_t) (ivtxB1);
         inter_tA  [n_inter] = tA;
         inter_tB  [n_inter] = 0;
         n_inter++;
@@ -952,8 +952,8 @@ _intersect_triangle_triangle_coplanar
             log_trace("  inter_coord = %f %f %f\n",
                       inter_coord[3*n_inter], inter_coord[3*n_inter+1], inter_coord[3*n_inter+2]);
           }
-          inter_locA[n_inter] = (_point_triangle_loc_t) iedgeA + 3;
-          inter_locB[n_inter] = (_point_triangle_loc_t) iedgeB + 3;
+          inter_locA[n_inter] = (_point_triangle_loc_t) (iedgeA + 3);
+          inter_locB[n_inter] = (_point_triangle_loc_t) (iedgeB + 3);
           inter_tA  [n_inter] = tA;
           inter_tB  [n_inter] = tB; // (1 - tB) if sign < 0 ??
           n_inter++;

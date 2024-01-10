@@ -1,3 +1,7 @@
+/*
+ * \file
+ */
+
 #ifndef PDM_KDTREE_SEQ_H
 #define PDM_KDTREE_SEQ_H
 

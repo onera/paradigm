@@ -383,17 +383,13 @@ int main(int argc, char *argv[])
   /*
    *  Mesh location structure initialization
    */
-  PDM_mesh_location_t *id_loc1 = PDM_mesh_location_create (PDM_MESH_NATURE_MESH_SETTED,
-                                                          1,
+  PDM_mesh_location_t *id_loc1 = PDM_mesh_location_create(1,
                                                           PDM_MPI_COMM_WORLD,
                                                           PDM_OWNERSHIP_KEEP);
-  PDM_mesh_location_reverse_results_enable(id_loc1);
 
-  PDM_mesh_location_t *id_loc2 = PDM_mesh_location_create (PDM_MESH_NATURE_MESH_SETTED,
-                                                          1,
+  PDM_mesh_location_t *id_loc2 = PDM_mesh_location_create(1,
                                                           PDM_MPI_COMM_WORLD,
                                                           PDM_OWNERSHIP_KEEP);
-  PDM_mesh_location_reverse_results_enable(id_loc2);
 
   /* Set target point cloud */
   PDM_mesh_location_n_part_cloud_set (id_loc1,
@@ -597,10 +593,10 @@ int main(int argc, char *argv[])
 
 
   /* Set source mesh */
-  PDM_mesh_location_mesh_global_data_set (id_loc1,
+  PDM_mesh_location_mesh_n_part_set (id_loc1,
                                           n_part);
 
-  PDM_mesh_location_mesh_global_data_set (id_loc2,
+  PDM_mesh_location_mesh_n_part_set (id_loc2,
                                           n_part);
 
   for (int ipart = 0; ipart < n_part; ipart++) {

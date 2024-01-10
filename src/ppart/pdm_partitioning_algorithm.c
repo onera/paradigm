@@ -307,7 +307,7 @@ PDM_part_assemble_partitions
  *                                  (size = n_part*pcell_face_idx[i_part][np_cell+1])
  * \param [out]  pface_face         2d array of face to cell connectivity
  *                                  (size = n_part*2*np_face[i_part])
-*/
+ */
 void
 PDM_part_reverse_pcellface
 (
@@ -363,7 +363,7 @@ PDM_part_reverse_pcellface
  *                                   (size = n_part*np_vtx[i_part])
  * \param [inout] pface_vtx          On each part, array of face to vertex connectivity
  *                                  (size = n_part*pface_vtx_idx[i_part][np_vtx+1])
-*/
+ */
 void
 PDM_part_reorient_bound_faces
 (
@@ -448,7 +448,7 @@ PDM_part_reorient_bound_faces
  *                                   (size = n_part, each component size = pgroup_idx[n_group])
  * \param [out]  pgroup_ln_to_gn     For each part, position of entity in the original groups
  *                                   (size = n_part, each component size = pgroup_idx[n_group])
-*/
+ */
 void
 PDM_part_distgroup_to_partgroup
 (
@@ -472,7 +472,6 @@ PDM_part_distgroup_to_partgroup
   PDM_MPI_Comm_rank(comm, &i_rank);
   PDM_MPI_Comm_size(comm, &n_rank);
 
-  // int dn_entity = entity_distribution[i_rank+1] -  entity_distribution[i_rank];
 
   /*
    * Compute the groups distribution - Mandatory to have the link between rank and group
@@ -491,7 +490,9 @@ PDM_part_distgroup_to_partgroup
   int dgroup_tot_size = dgroup_idx[n_group];
 
   PDM_part_to_block_t *ptb_group = NULL;
+  PDM_g_num_t* _entity_distribution = NULL;
   if(entity_distribution != NULL) {
+    _entity_distribution = (PDM_g_num_t *) entity_distribution;
     ptb_group = PDM_part_to_block_create_from_distrib(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
                                                       PDM_PART_TO_BLOCK_POST_MERGE,
                                                       1.,
@@ -501,15 +502,25 @@ PDM_part_distgroup_to_partgroup
                                                       1,
                                                       comm);
   } else {
+
+    double* weights = malloc(dgroup_tot_size * sizeof(double));
+    for(int i = 0; i < dgroup_tot_size; ++i) {
+      weights[i] = 1.;
+    }
+
     ptb_group = PDM_part_to_block_create(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
                                          PDM_PART_TO_BLOCK_POST_MERGE,
                                          1.,
                         (PDM_g_num_t **) &dgroup,
-                                          NULL,
+                                         &weights,
                                          &dgroup_tot_size,
                                          1,
                                          comm);
+    free(weights);
+    
+    _entity_distribution = PDM_part_to_block_distrib_index_get(ptb_group);
   }
+  int dn_entity = _entity_distribution[i_rank+1] -  _entity_distribution[i_rank];
 
   /*
    * Prepare send
@@ -568,34 +579,36 @@ PDM_part_distgroup_to_partgroup
   /*
    * No choice we need to rebuild a proper blk_stri (but not blk_data)
    */
-  // int* blk_stri_full = PDM_array_zeros_int(dn_entity);
-  // /* On remet la stri au bonne endroit */
-  // // int idx_face = 0;
-  // for(int i_elmt = 0; i_elmt < n_entity_block; ++i_elmt) {
-  //   int l_elmt = blk_gnum[i_elmt] - entity_distribution[i_rank] - 1;
-  //   // printf("[%d] --> %d \n", i_elmt, l_elmt);
-  //   blk_stri_full[l_elmt] = blk_stri[i_elmt];
-  // }
-  // free(blk_stri);
+  int* blk_stri_full = PDM_array_zeros_int(dn_entity);
+  /* On remet la stri au bonne endroit */
+  // int idx_face = 0;
+  for(int i_elmt = 0; i_elmt < n_entity_block; ++i_elmt) {
+    int l_elmt = blk_gnum[i_elmt] - _entity_distribution[i_rank] - 1;
+    blk_stri_full[l_elmt] = blk_stri[i_elmt];
+  }
+  free(blk_stri);
 
-  int* blk_stri_full = blk_stri;
+  // int* blk_stri_full = blk_stri;
+
+  // }
+
 
   /*
    * Prepare exchange protocol
    */
 
-  PDM_block_to_part_t *btp = PDM_block_to_part_create_from_sparse_block(blk_gnum,
-                                                                        n_entity_block,
-                                                                        pentity_ln_to_gn,
-                                                                        pn_entity,
-                                                                        n_part,
-                                                                        comm);
+  // PDM_block_to_part_t *btp = PDM_block_to_part_create_from_sparse_block(blk_gnum,
+  //                                                                       n_entity_block,
+  //                                                                       pentity_ln_to_gn,
+  //                                                                       pn_entity,
+  //                                                                       n_part,
+  //                                                                       comm);
 
-  // PDM_block_to_part_t* btp = PDM_block_to_part_create(entity_distribution,
-  //                              (const PDM_g_num_t **) pentity_ln_to_gn,
-  //                                                     pn_entity,
-  //                                                     n_part,
-  //                                                     comm);
+  PDM_block_to_part_t* btp = PDM_block_to_part_create(_entity_distribution,
+                               (const PDM_g_num_t **) pentity_ln_to_gn,
+                                                      pn_entity,
+                                                      n_part,
+                                                      comm);
 
   /*
    * Exchange
@@ -1131,7 +1144,7 @@ PDM_part_multi_dconnectivity_to_pconnectivity_sort
  *                                   (size = n_part, each component size = pn_entity[i_part])
  * \param [out]  pconnectivity       For each part, partitioned connectivity (size = n_part,
  *                                   each component size = pconnectivity_idx[i_part][pn_entity[i_part]])
-*/
+ */
 void
 PDM_part_dconnectivity_to_pconnectivity_sort
 (
@@ -1294,7 +1307,7 @@ PDM_part_dconnectivity_to_pconnectivity_sort_single_part
  *                                   (size = n_part, each component size = pn_entity[i_part])
  * \param [out]  pconnectivity       For each part, partitioned connectivity (size = n_part,
  *                                   each component size = pconnectivity_idx[i_part][pn_entity[i_part]])
-*/
+ */
 void
 PDM_part_dconnectivity_to_pconnectivity_hash
 (
@@ -2207,6 +2220,21 @@ PDM_part_dfield_to_pfield2
 
 
 
+/**
+ *  \brief Deduce group for each partition from the distributed one (for cells, faces, edges and vtx)
+ *
+ * \param [in]  comm                PDM_MPI communicator
+ * \param [in]  n_part              Number of partitions
+ * \param [in]  entity_distribution Distribution of entities over the processes (size=n_rank+1)
+ * \param [in]  dentity_group_idx   Connectivity index between entity and group (size = dn_entity)
+ * \param [in]  dentity_group       For each entity the associated group (size = dentity_group_idx[dn_entity])
+ * \param [in]  pn_entity           Number of entities in each partition (size = n_part)
+ * \param [in]  pentity_ln_to_gn    Array of local to global entity id for each partition
+ *                                   (size=n_part, each component size = pn_entities[i_part])
+ * \param [out] pentity_group_idx   Connectivity index between entity and group (size = n_part)
+ * \param [out] pentity_group       For each entity the associated group  (size = n_part)
+ *
+ */
 void
 PDM_part_dentity_group_to_pentity_group
 (
@@ -2445,6 +2473,16 @@ PDM_extend_mesh
   free(part_dual_graph);
 }
 
+/**
+ *  \brief Compute the explicit distributed connectivity from an implicit one, with a prescrbe stride. Use to convert for exemple face_cell or edge_vtx implicit connectivity
+ *
+ * \param [in]   dn_entity1             Number of entity1
+ * \param [in]   stride                 Implicit stride of dentity1_dentity2 connectivity
+ * \param [in]   dentity1_dentity2      Implicit connectivity between entity and group (size = stride * dn_entity1)
+ * \param [out]  dentity1_dentity2_idx  Connectivity index between entity1 and entity2 (size = dn_entity1)
+ * \param [out]  dentity1_dentity2_new  Connectivity index between entity1 and entity2 (size = dentity1_dentity2_idx[dn_entity1])
+ *
+ */
 void
 PDM_setup_connectivity_idx
 (
@@ -2474,6 +2512,30 @@ PDM_setup_connectivity_idx
   *dentity1_dentity2_new = _dentity1_dentity2_new;
 }
 
+
+/**
+ *  \brief Compute the edges for all partitions in an independant of parallelism way. Usefull when user only give face_vtx but edges is mandatory for algorithm (ex : Iso-surfaces)
+ *
+ * \param [in]  comm                PDM_MPI communicator
+ * \param [in]  n_part              Number of partitions
+ * \param [in]  pn_face             Number of faces for each partition (size = n_part)
+ * \param [in]  pn_vtx              Number of vertices for each partition (size = n_part)
+ * \param [in]  pface_vtx_idx       For each part, connectivity index between faces and vertices
+ *                                 (size = n_part, each component size = pn_face[i_part]+1)
+ * \param [in]  pface_vtx           For each part, connectivity between faces and vertices
+ *                                 (size = n_part, each component size = pface_vtx_idx[i_part][pn_face[i_part]])
+ * \param [in]  pface_ln_to_gn      For each part, global id of faces (size = n_part, each component size = pn_face[i_part])
+ * \param [in]  pvtx_ln_to_gn       For each part, global id of vertices (size = n_part, each component size = pn_vtx[i_part])
+ * \param [out] pface_edge_idx      For each part, connectivity index between faces and edges
+ *                                  (size = n_part, each component size = pn_face[i_part]+1)
+ * \param [in]  pface_edge          For each part, connectivity between faces and edges
+ *                                 (size = n_part, each component size = pface_edge_idx[i_part][pn_face[i_part]])
+ * \param [out] pn_edge             Number of edges for each partition (size = n_part)
+ * \param [out] pedge_vtx           For each part, implicit connectivity between edges and vertices
+ *                                 (size = n_part, each component size = 2 * pn_edge[i_part])
+ * \param [out] pedge_ln_to_gn      For each part, global id of edges (size = n_part, each component size = pn_edge[i_part])
+ *
+ */
 void
 PDM_compute_face_edge_from_face_vtx
 (
@@ -2710,6 +2772,33 @@ PDM_compute_face_edge_from_face_vtx
 }
 
 
+/**
+ *  \brief Deduce connectivity in a new partition from another one. See \ref PDM_extract_part_t for exemple of use
+ *
+ * \param [in]  comm                               PDM_MPI communicator
+ * \param [in]  n_part1                            Number of partitions in first partitioning
+ * \param [in]  n_part1_entity1                    For each part, number of entity1
+ * \param [in]  part1_entity1_entity2_idx          For each part, for partition 1, connectivity index between entity1 and entity2
+ *                                                  (size = n_part1, each component size = n_part1_entity1[i_part]+1)
+ * \param [in]  part1_entity1_entity2              For each part, for partition1, connectivity between entity1 and entity2
+ *                                                  (size = n_part1, each component size = part1_entity1_entity2_idx[n_part1_entity1[i_part]])
+ * \param [in]  part1_entity1_ln_to_gn             For each part, for partition 1, global id of entity1
+ * \param [in]  part1_entity2_ln_to_gn             For each part, for partition 1, global id of entity2
+ * \param [in]  n_part2                            Number of partitions in second partitioning
+ * \param [in]  n_part2_entity1                    For each part, number of entity1
+ * \param [in]  part2_entity1_ln_to_gn             For each part, for partition 2, global id of entity1
+ * \param [in]  part2_entity1_to_part1_entity1_idx For each part, for partition 2, connectivity index between part2_entity1 and part1_entity1
+ * \param [in]  part2_entity1_to_part1_entity1     For each part, for partition 2, connectivity between part2_entity1 and part1_entity1 (global id)
+ * \param [out] n_part2_entity2                    For each part, number of entity2
+ * \param [out] part2_entity1_entity2_idx          For each part, for partition 2, connectivity index between entity1 and entity2
+ *                                                  (size = n_part2, each component size = n_part2_entity2[i_part]+1)
+ * \param [out] part2_entity1_entity2              For each part, for partition 2, connectivity between entity1 and entity2
+ *                                                  (size = n_part2, each component size = part2_entity1_entity2_idx[n_part2_entity2[i_part]])
+ * \param [out] part2_entity2_ln_to_gn             For each part, for partition 2, global id of entity2
+ * \param [out] part2_entity2_child_ln_to_gn       For each part, for partition 2, global id of child entity2
+ * \param [out] ptp                                Part to part exchange protocol (see \ref PDM_part_to_part_t ). Usefull to exchange additionnal data between part1 and part2
+ *
+ */
 void
 PDM_pconnectivity_to_pconnectivity_keep
 (
@@ -2908,6 +2997,33 @@ PDM_pconnectivity_to_pconnectivity_keep
 
 }
 
+
+/**
+ *  \brief Deduce connectivity in a new partition from another one. See \ref PDM_extract_part_t for exemple of use
+ *
+ * \param [in]  comm                               PDM_MPI communicator
+ * \param [in]  n_part1                            Number of partitions in first partitioning
+ * \param [in]  n_part1_entity1                    For each part, number of entity1
+ * \param [in]  part1_entity1_entity2_idx          For each part, for partition 1, connectivity index between entity1 and entity2
+ *                                                  (size = n_part1, each component size = n_part1_entity1[i_part]+1)
+ * \param [in]  part1_entity1_entity2              For each part, for partition1, connectivity between entity1 and entity2
+ *                                                  (size = n_part1, each component size = part1_entity1_entity2_idx[n_part1_entity1[i_part]])
+ * \param [in]  part1_entity1_ln_to_gn             For each part, for partition 1, global id of entity1
+ * \param [in]  part1_entity2_ln_to_gn             For each part, for partition 1, global id of entity2
+ * \param [in]  n_part2                            Number of partitions in second partitioning
+ * \param [in]  n_part2_entity1                    For each part, number of entity1
+ * \param [in]  part2_entity1_ln_to_gn             For each part, for partition 2, global id of entity1
+ * \param [in]  part2_entity1_to_part1_entity1_idx For each part, for partition 2, connectivity index between part2_entity1 and part1_entity1
+ * \param [in]  part2_entity1_to_part1_entity1     For each part, for partition 2, connectivity between part2_entity1 and part1_entity1 (global id)
+ * \param [out] n_part2_entity2                    For each part, number of entity2
+ * \param [out] part2_entity1_entity2_idx          For each part, for partition 2, connectivity index between entity1 and entity2
+ *                                                  (size = n_part1, each component size = n_part2_entity2[i_part]+1)
+ * \param [out] part2_entity1_entity2              For each part, for partition 2, connectivity between entity1 and entity2
+ *                                                  (size = n_part1, each component size = part2_entity1_entity2_idx[n_part2_entity2[i_part]])
+ * \param [out] part2_entity2_child_ln_to_gn       For each part, for partition 2, global id of child entity2
+ * \param [out] part2_entity2_ln_to_gn             For each part, for partition 2, global id of entity2
+ *
+ */
 void
 PDM_pconnectivity_to_pconnectivity
 (
@@ -2957,6 +3073,33 @@ PDM_pconnectivity_to_pconnectivity
 
 
 
+/**
+ *  \brief Deduce connectivity in a new partition from another one. See \ref PDM_extract_part_t for exemple of use
+ *
+ * \param [in]  comm                                    PDM_MPI communicator
+ * \param [in]  n_part1                                 Number of partitions in first partitioning
+ * \param [in]  n_part1_entity1                         For each part, number of entity1
+ * \param [in]  part1_entity1_entity2_idx               For each part, for partition 1, connectivity index between entity1 and entity2
+ *                                                       (size = n_part1, each component size = n_part1_entity1[i_part]+1)
+ * \param [in]  part1_entity1_entity2                   For each part, for partition1, connectivity between entity1 and entity2
+ *                                                       (size = n_part1, each component size = part1_entity1_entity2_idx[n_part1_entity1[i_part]])
+ * \param [in]  part1_entity1_ln_to_gn                  For each part, for partition 1, global id of entity1
+ * \param [in]  part1_entity2_ln_to_gn                  For each part, for partition 1, global id of entity2
+ * \param [in]  n_part2                                 Number of partitions in second partitioning
+ * \param [in]  n_part2_entity1                         For each part, number of entity1
+ * \param [in]  part2_entity1_ln_to_gn                  For each part, for partition 2, global id of entity1
+ * \param [in]  part2_entity1_to_part1_entity1_idx      For each part, for partition 2, connectivity index between part2_entity1 and part1_entity1
+ * \param [in]  part2_entity1_to_part1_entity1_triplet  For each part, for partition 2, connectivity between part2_entity1 and part1_entity1 by triplet (i_proc, i_part, i_entity)
+ * \param [out] n_part2_entity2                         For each part, number of entity2
+ * \param [out] part2_entity1_entity2_idx               For each part, for partition 2, connectivity index between entity1 and entity2
+ *                                                       (size = n_part2, each component size = n_part2_entity2[i_part]+1)
+ * \param [out] part2_entity1_entity2                   For each part, for partition 2, connectivity between entity1 and entity2
+ *                                                       (size = n_part2, each component size = part2_entity1_entity2_idx[n_part2_entity2[i_part]])
+ * \param [out] part2_entity2_ln_to_gn                  For each part, for partition 2, global id of entity2
+ * \param [out] part2_entity2_child_ln_to_gn            For each part, for partition 2, global id of child entity2
+ * \param [out] ptp                                     Part to part exchange protocol (see \ref PDM_part_to_part_t ). Usefull to exchange additionnal data between part1 and part2
+ *
+ */
 void
 PDM_pconnectivity_to_pconnectivity_from_location_keep
 (
@@ -3123,15 +3266,20 @@ PDM_pconnectivity_to_pconnectivity_from_location_keep
 
     _part2_entity1_entity2_idx[i_part] = malloc( (n_part2_entity1[i_part] + 1) * sizeof(int));
 
-    // PDM_log_trace_array_int(recv_entity1_entity2_n[i_part], n_part2_entity1[i_part], "recv_entity1_entity2_n ::");
+    // PDM_log_trace_array_int(recv_entity1_entity2_n[i_part], n_connect, "recv_entity1_entity2_n ::");
     // PDM_log_trace_array_int(recv_entity1_entity2_n[i_part],
-    //                         part2_entity1_to_part1_entity1_idx[i_part][n_part2_entity1[i_part]]/3,
+    //                         part2_entity1_to_part1_entity1_idx[i_part][n_connect]/3,
     //                         "recv_entity1_entity2_n ::");
+
+    const int *_part2_entity1_to_part1_entity1_idx = part2_entity1_to_part1_entity1_idx[i_part];
 
     /* Compute recv stride */
     _part2_entity1_entity2_idx[i_part][0] = 0;
     for(int i_entity1 = 0; i_entity1 < n_part2_entity1[i_part]; ++i_entity1) {
-      _part2_entity1_entity2_idx[i_part][i_entity1+1] = _part2_entity1_entity2_idx[i_part][i_entity1] + recv_entity1_entity2_n[i_part][i_entity1];
+      _part2_entity1_entity2_idx[i_part][i_entity1+1] = _part2_entity1_entity2_idx[i_part][i_entity1];
+      for(int idx_entity1 = _part2_entity1_to_part1_entity1_idx[i_entity1]/3; idx_entity1 < _part2_entity1_to_part1_entity1_idx[i_entity1+1]/3; ++idx_entity1) {
+        _part2_entity1_entity2_idx[i_part][i_entity1+1] += recv_entity1_entity2_n[i_part][idx_entity1];
+      }
     }
     int n_recv_entity1_entity2 = _part2_entity1_entity2_idx[i_part][n_part2_entity1[i_part]];
 
@@ -3143,7 +3291,6 @@ PDM_pconnectivity_to_pconnectivity_from_location_keep
     for(int i = 0; i < n_recv_entity1_entity2; ++i) {
       _part2_entity2_ln_to_gn[i_part][i] = PDM_ABS(recv_entity1_entity2[i_part][i]);
     }
-
     int n_extract_entity2 = PDM_inplace_unique_long2(_part2_entity2_ln_to_gn[i_part],
                                                      unique_order_entity2,
                                                      0,

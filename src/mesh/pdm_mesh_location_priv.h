@@ -82,16 +82,14 @@ typedef struct {
 
 
 /**
- * \struct _PDM_Dist_t
- * \brief  Distance to a mesh surface structure
+ * \struct _pdm_mesh_location_t
+ * \brief  Structure to locate point clouds inside a mesh
  *
  */
 struct _pdm_mesh_location_t {
 
   int  n_point_cloud; /*!< Number of point clouds */
   PDM_MPI_Comm comm;  /*!< MPI communicator */
-
-  PDM_mesh_nature_t mesh_nature;  /*!< Nature of the mesh */
 
   int mesh_dimension;
 

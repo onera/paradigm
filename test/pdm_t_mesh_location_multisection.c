@@ -576,8 +576,7 @@ int main(int argc, char *argv[])
   /*
    *  Mesh location structure initialization
    */
-  PDM_mesh_location_t *mesh_loc = PDM_mesh_location_create(PDM_MESH_NATURE_MESH_SETTED,
-                                                           1,
+  PDM_mesh_location_t *mesh_loc = PDM_mesh_location_create(1,
                                                            comm,
                                                            PDM_OWNERSHIP_KEEP);
 
@@ -797,7 +796,7 @@ int main(int argc, char *argv[])
       for (int i = 0; i < n_located; i++) {
         int pt_id = located[i] - 1;
         interp  [pt_id] = recv_field[i_part][i];
-        location[pt_id] = p_location[i];
+        location[pt_id] = (double) p_location[i];
         memcpy(proj + 3*pt_id, p_proj_coord + 3*i, sizeof(double) * 3);
       }
 

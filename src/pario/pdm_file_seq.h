@@ -1,3 +1,7 @@
+/*
+ * \file
+ */
+
 #ifndef __PDM_FILE_SEQ_H__
 #define __PDM_FILE_SEQ_H__
 

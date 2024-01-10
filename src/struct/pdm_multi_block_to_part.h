@@ -1,3 +1,7 @@
+/*
+ * \file
+ */
+
 #ifndef PDM_MULTI_BLOCK_TO_PART_H
 #define PDM_MULTI_BLOCK_TO_PART_H
 

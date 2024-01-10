@@ -42,7 +42,7 @@ module pdm_gnum
   end interface
 
   private :: pdm_gnum_create_
-  private :: pdm_gnum_set_from_coords_
+  ! private :: pdm_gnum_set_from_coords_
   private :: pdm_gnum_set_from_parents_
   private :: pdm_gnum_get_
 
@@ -239,21 +239,8 @@ module pdm_gnum
   end interface
 
 
-  contains
+contains
 
-
-
-  !>
-  !!
-  !! \brief Build a global numbering structure
-  !!
-  !! \param [out]  gen_gnum     Pointer to \ref PDM_gen_gnum object
-  !! \param [in]   dim          Spatial dimension
-  !! \param [in]   n_part       Number of local partitions
-  !! \param [in]   merge        Merge double points or not
-  !! \param [in]   tolerance    Geometric tolerance (if merge double points is activated)
-  !! \param [in]   comm         PDM_MPI communicator
-  !!
 
   subroutine PDM_gnum_create_ (gen_gnum,  &
                                dim,       &
@@ -262,17 +249,17 @@ module pdm_gnum
                                tolerance, &
                                f_comm,    &
                                owner)
-
+  ! Build a global numbering structure
   use iso_c_binding
   implicit none
 
-  integer,          intent(in) :: dim
-  integer,          intent(in) :: n_part
-  integer,          intent(in) :: merge
-  double precision, intent(in) :: tolerance
-  integer,          intent(in) :: f_comm
-  integer,          intent(in) :: owner
-  type (c_ptr)                 :: gen_gnum
+  type (c_ptr)                 :: gen_gnum  ! C pointer to PDM_gen_gnum_t object
+  integer,          intent(in) :: dim       ! Spatial dimension
+  integer,          intent(in) :: n_part    ! Number of local partitions
+  integer,          intent(in) :: merge     ! Merge coincident points or not
+  double precision, intent(in) :: tolerance ! Geometric tolerance (used only if ``merge`` is enabled)
+  integer,          intent(in) :: f_comm    ! Fortran MPI communicator
+  integer,          intent(in) :: owner     ! Ownership
 
   integer(c_int)               :: c_dim
   integer(c_int)               :: c_n_part
@@ -301,34 +288,20 @@ module pdm_gnum
 
 
 
-
-  !>
-  !!
-  !! \brief Set from coordinates
-  !!
-  !! \param [in]   gen_gnum     Pointer to \ref PDM_gen_gnum object
-  !! \param [in]   i_part       Current partition
-  !! \param [in]   n_elts       Number of elements
-  !! \param [in]   coords       Coordinates (size = 3 * \ref n_elts)
-  !! \param [in]   char_length  Characteristic length (or NULL)
-  !!                            (used if merge double points is activated)
-  !!
-  !!
-
-  subroutine PDM_gnum_set_from_coords_ (gen_gnum,    &
-                                        i_part,      &
-                                        n_elts,      &
-                                        coords,      &
-                                        char_length)
-
+  subroutine PDM_gnum_set_from_coords_(gen_gnum,    &
+                                       i_part,      &
+                                       n_elts,      &
+                                       coords,      &
+                                       char_length)
+    ! Set from coordinates
     use iso_c_binding
     implicit none
 
-    type(c_ptr), value        :: gen_gnum
-    integer, intent(in)       :: i_part
-    integer, intent(in)       :: n_elts
-    double precision, pointer :: coords(:,:)
-    double precision, pointer :: char_length(:)
+    type(c_ptr), value        :: gen_gnum       ! C pointer to PDM_gen_gnum_t object
+    integer, intent(in)       :: i_part         ! Current partition
+    integer, intent(in)       :: n_elts         ! Number of elements
+    double precision, pointer :: coords(:,:)    ! Coordinates (size = 3 * ``n_elts``)
+    double precision, pointer :: char_length(:) ! Characteristic length (or *null()*) (used only if ``merge`` was enabled in PDM_gnum_create)
 
     integer(c_int)            :: c_i_part
     integer(c_int)            :: c_n_elts
@@ -351,29 +324,19 @@ module pdm_gnum
   end subroutine PDM_gnum_set_from_coords_
 
 
-  !>
-  !!
-  !! \brief Set Parent global numbering
-  !!
-  !! \param [in]   gen_gnum     Pointer to \ref PDM_gen_gnum object
-  !! \param [in]   i_part       Current partition
-  !! \param [in]   n_elts       Number of elements
-  !! \param [in]   parent_gnum  Parent global numbering (size = \ref n_elts)
-  !!
-  !!
 
   subroutine PDM_gnum_set_from_parents_ (gen_gnum,    &
                                          i_part,      &
                                          n_elts,      &
                                          parent_gnum)
-
+    ! Set parent global numbering
     use iso_c_binding
     implicit none
 
-    type(c_ptr), value                 :: gen_gnum
-    integer, intent(in)                :: i_part
-    integer, intent(in)                :: n_elts
-    integer(kind=pdm_g_num_s), pointer :: parent_gnum(:)
+    type(c_ptr), value                 :: gen_gnum       ! C pointer to PDM_gen_gnum_t object
+    integer, intent(in)                :: i_part         ! Current partition
+    integer, intent(in)                :: n_elts         ! Number of elements
+    integer(kind=pdm_g_num_s), pointer :: parent_gnum(:) ! Parent global numbering (size = ``n_elts``)
 
     integer(c_int)                     :: c_i_part
     integer(c_int)                     :: c_n_elts
@@ -390,29 +353,20 @@ module pdm_gnum
                                        c_n_elts,      &
                                        c_parent_gnum)
 
-    end subroutine PDM_gnum_set_from_parents_
+  end subroutine PDM_gnum_set_from_parents_
 
 
-  !>
-  !!
-  !! \brief Get global ids for a given partition
-  !!
-  !! \param [in]   gen_gnum     Pointer to \ref PDM_gen_gnum object
-  !! \param [in]   i_part       Current partition
-  !! \param [out]  g_nums       Array of global ids
-  !!
-  !!
 
   subroutine PDM_gnum_get_ (gen_gnum, &
                             i_part,   &
                             g_nums)
-
+    ! Get global ids for a given partition
     use iso_c_binding
     implicit none
 
-    type(c_ptr), value                 :: gen_gnum
-    integer, intent(in)                :: i_part
-    integer(kind=pdm_g_num_s), pointer :: g_nums(:)
+    type(c_ptr), value                 :: gen_gnum  ! C pointer to PDM_gen_gnum_t object
+    integer, intent(in)                :: i_part    ! Current partition
+    integer(kind=pdm_g_num_s), pointer :: g_nums(:) ! Array of global ids
 
     integer(c_int)                     :: c_i_part
     type(c_ptr)                        :: c_g_nums = C_NULL_PTR
@@ -433,4 +387,4 @@ module pdm_gnum
 
   end subroutine PDM_gnum_get_
 
-  end module pdm_gnum
+end module pdm_gnum

@@ -1,8 +1,8 @@
 /*
- * File:   pdm_ext_wrapper.h
- * Author: equemera
+ * \file
+ * \author equemera
  *
- * Created on December 6, 2016, 9:50 AM
+ * \date December 6, 2016, 9:50 AM
  */
 
 #ifndef PDM_EXT_WRAPPER_H

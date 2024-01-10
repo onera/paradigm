@@ -36,6 +36,10 @@ cdef extern from "pdm_dmesh_extract.h":
                                    PDM_dmesh_t            **dmesh_extract,
                                    PDM_ownership_t          ownership);
 
+  void PDM_dmesh_extract_dmesh_nodal_get(PDM_dmesh_extract_t     *dme,
+                                         PDM_dmesh_nodal_t      **dmesh_nodal_extract,
+                                         PDM_ownership_t          ownership);
+
   void PDM_dmesh_extract_parent_gnum_get(PDM_dmesh_extract_t     *dme,
                                          PDM_mesh_entities_t      entity_type,
                                          int                     *dn_entity,
@@ -54,6 +58,8 @@ cdef extern from "pdm_dmesh_extract.h":
                                        PDM_ownership_t          ownership);
   void PDM_dmesh_extract_dmesh_set(PDM_dmesh_extract_t     *dme,
                                    PDM_dmesh_t             *dmesh);
+  void PDM_dmesh_extract_dmesh_nodal_set(PDM_dmesh_extract_t     *dme,
+                                         PDM_dmesh_nodal_t       *dmesh_nodal);
 
   void PDM_dmesh_extract_free(PDM_dmesh_extract_t  *dme);
 
@@ -99,6 +105,10 @@ cdef class DMeshExtract:
     PDM_dmesh_extract_dmesh_set(self._dme, dm._dm)
 
   # ------------------------------------------------------------------
+  def register_dmesh_nodal(self, DMeshNodal dmn):
+    PDM_dmesh_extract_dmesh_nodal_set(self._dme, dmn.dmn)
+
+  # ------------------------------------------------------------------
   def set_gnum_to_extract(self,
                           entity_type, 
                           NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1] selected_gnum):
@@ -131,9 +141,16 @@ cdef class DMeshExtract:
     # ************************************************************************
     PDM_dmesh_extract_dmesh_get(self._dme, &dm, PDM_OWNERSHIP_USER)
 
-    py_casp = PyCapsule_New(dm, NULL, NULL);
+    py_caps = PyCapsule_New(dm, NULL, NULL);
 
-    return DistributedMeshCaspule(py_casp) # The free is inside the class
+    return DistributedMeshCapsule(py_caps) # The free is inside the class
+
+  def get_dmesh_nodal(self):
+    cdef PDM_dmesh_nodal_t* dmn
+    PDM_dmesh_extract_dmesh_nodal_get(self._dme, &dmn, PDM_OWNERSHIP_USER)
+    py_caps = PyCapsule_New(dmn, NULL, NULL);
+
+    return DistributedMeshNodalCapsule(py_caps) # The free is inside the class
 
   # ------------------------------------------------------------------
   def __dealloc__(self):

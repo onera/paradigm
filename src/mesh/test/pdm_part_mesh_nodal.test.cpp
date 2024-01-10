@@ -18,7 +18,7 @@
  *
  *  A l'issu de l'algorithme on doit identifer 7 edges -->
  */
-MPI_TEST_CASE("[PDM_part_mesh_nodal_elmts_t] Constructor",1) {
+MPI_TEST_CASE("[pdm_part_mesh_nodal_elmts] Constructor",1) {
   // double dvtx_coord[27] = { 1. , 0. , 0.,
   //                           1. , 0.5, 0.,
   //                           1. , 1. , 0.,
@@ -91,11 +91,11 @@ MPI_TEST_CASE("[PDM_part_mesh_nodal_elmts_t] Constructor",1) {
                                     NULL,
                                     PDM_OWNERSHIP_USER);
 
-  PDM_part_mesh_nodal_add_part_mesh_nodal_elmts(pmn, pelmts_surf , PDM_OWNERSHIP_USER);
-  PDM_part_mesh_nodal_add_part_mesh_nodal_elmts(pmn, pelmts_ridge, PDM_OWNERSHIP_USER);
+  PDM_part_mesh_nodal_add_part_mesh_nodal_elmts(pmn, pelmts_surf );
+  PDM_part_mesh_nodal_add_part_mesh_nodal_elmts(pmn, pelmts_ridge);
 
-  PDM_part_mesh_nodal_elmts_free(pelmts_surf);
-  PDM_part_mesh_nodal_elmts_free(pelmts_ridge);
+  // PDM_part_mesh_nodal_elmts_free(pelmts_surf);
+  // PDM_part_mesh_nodal_elmts_free(pelmts_ridge);
 
   PDM_part_mesh_nodal_free(pmn);
 }

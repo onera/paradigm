@@ -1,8 +1,8 @@
 /*
- * File:   PDM_facecell_orient.h
- * Author: equemera
+ * \file
+ * \author equemera
  *
- * Created on August 31, 2017, 1:24 PM
+ * \date August 31, 2017, 1:24 PM
  */
 
 #ifndef PDM_FACECELL_ORIENT_H
@@ -49,15 +49,15 @@ extern "C" {
  * if surface normal is inside the cell, negative otherwise. \ref face_cell is
  * oriented in the same way
  *
- * \param [in]     n_cell       Number of cells
- * \param [in]     n_face       Number of faces
- * \param [in]     n_vtx        Number of vertices
- * \param [in]     coords      Vertices coordinates
- * \param [in]     cell_face_idx Cell to face connectivity index (size = \ref n_cell + 1)
- * \param [in, out]cell_face    Cell to face connectivity (size = cell_face_idx[n_cell])
- * \param [in, out]face_cell    face to cell connectivity (size = 2 * \ref n_face) or NULL
- * \param [in]     face_vtx_idx  face to vertex connectivity index (size = \ref n_face + 1)
- * \param [in]     face_vtx     face to vertex connectivity (size = face_vtx_idx[n_face])
+ * \param [in]      n_cell         Number of cells
+ * \param [in]      n_face         Number of faces
+ * \param [in]      n_vtx          Number of vertices
+ * \param [in]      coords         Vertices coordinates
+ * \param [in]      cell_face_idx  Cell to face connectivity index (size = \ref n_cell + 1)
+ * \param [in, out] cell_face      Cell to face connectivity (size = cell_face_idx[n_cell])
+ * \param [in, out] face_cell      Face to cell connectivity (size = 2 * \ref n_face) or NULL
+ * \param [in]      face_vtx_idx   Face to vertex connectivity index (size = \ref n_face + 1)
+ * \param [in]      face_vtx       Face to vertex connectivity (size = face_vtx_idx[n_face])
  *
  */
 

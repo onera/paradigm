@@ -1,3 +1,7 @@
+/*
+ * \file
+ */
+
 #ifndef __PDM_TRIANGLE_H__
 #define __PDM_TRIANGLE_H__
 
@@ -188,6 +192,36 @@ PDM_triangle_ray_intersection
        double *t,
        double *weight
  );
+
+
+/**
+ * \brief Build triangle->vertex from triangle->edge and edge->vertex connectivities.
+ *
+ * \note In each triangle, edge #i is opposite to vertex #i:
+ *         v2
+ *         o
+ *        / \
+ *    e1 /   \ e0
+ *      /     \
+ *  v0 o-------o v1
+ *         e2
+ *
+ * \param [in]  n_face     Number of faces
+ * \param [in]  face_edge  Face -> edge (signed) connectivity (1-based, size : 3 * \p n_face)
+ * \param [in]  face_edge  Edge -> vertex connectivity (1-based, size : 2 * *n_edge*)
+ * \param [out] face_vtx   Face -> vertex (signed) connectivity (size : 3 * \p n_face)
+ *
+ */
+
+void
+PDM_triangle_ngon_to_nodal
+(
+ int   n_face,
+ int  *face_edge,
+ int  *edge_vtx,
+ int **face_vtx
+ );
+
 
 
 #ifdef __cplusplus

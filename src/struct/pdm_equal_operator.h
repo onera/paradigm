@@ -1,3 +1,7 @@
+/*
+ * \file
+ */
+
 #ifndef __PDM_EQUAL_OPERATOR_H__
 #define __PDM_EQUAL_OPERATOR_H__
 

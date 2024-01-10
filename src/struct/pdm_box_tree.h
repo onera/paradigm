@@ -1,3 +1,7 @@
+/*
+ * \file
+ */
+
 #ifndef __PDM_BOX_TREE_H__
 #define __PDM_BOX_TREE_H__
 

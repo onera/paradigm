@@ -308,12 +308,9 @@ program testf
   !
 
   call PDM_mesh_location_create (ml, &
-                                 PDM_MESH_NATURE_MESH_SETTED, &
                                  n_point_cloud, &
                                  MPI_COMM_WORLD, &
                                  PDM_OWNERSHIP_KEEP)
-
-  call PDM_mesh_location_reverse_results_enable (ml)
 
   !
   ! Set the local number partition for any point cloud
@@ -338,7 +335,7 @@ program testf
   ! Set mesh
   !
 
-  call PDM_mesh_location_mesh_global_data_set (ml, &
+  call PDM_mesh_location_mesh_n_part_set (ml, &
                                                n_part_mesh)
 
   call PDM_mesh_location_part_set (ml, &

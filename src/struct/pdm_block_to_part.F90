@@ -191,7 +191,7 @@ subroutine PDM_block_to_part_create (btp,               &
 
   type(c_ptr)                       :: btp
   integer(pdm_g_num_s), pointer     :: block_distrib_idx(:)
-  type(PDM_pointer_array_t), target :: gnum_elt
+  type(PDM_pointer_array_t), pointer :: gnum_elt
   integer(pdm_l_num_s), pointer     :: n_elt(:)
   integer, intent(in)               :: n_part
   integer, intent(in)               :: comm
@@ -256,23 +256,48 @@ subroutine PDM_block_to_part_exch_in_place_int (btp,          &
   integer, intent(in)               :: t_stride
   integer(pdm_l_num_s), pointer     :: block_stride(:)
   integer(pdm_l_num_s), pointer     :: block_data(:)
-  type(PDM_pointer_array_t), target :: part_stride
-  type(PDM_pointer_array_t), target :: part_data
+  type(PDM_pointer_array_t), pointer :: part_stride
+  type(PDM_pointer_array_t), pointer :: part_data
 
-  integer                           :: s_data = 4
+  integer, parameter                 :: s_data = 4
+
+  type(c_ptr) :: c_block_stride     
+  type(c_ptr) :: c_block_data       
+  type(c_ptr) :: c_part_stride_cptr 
+  type(c_ptr) :: c_part_data_cptr
 
   if (part_data%type .ne. PDM_TYPE_INT) then
     print *, "PDM_block_to_part_exch_in_place_int : wrong type"
     stop
   end if
+  
+  c_block_stride = C_NULL_PTR
+  if (associated(block_stride)) then
+    c_block_stride = c_loc(block_stride)
+  endif 
+    
+  c_block_data = C_NULL_PTR
+  if (associated(block_data)) then
+    c_block_data = c_loc(block_data)
+  endif 
+    
+  c_part_stride_cptr = C_NULL_PTR
+  if (associated(part_stride%cptr)) then
+    c_part_stride_cptr = c_loc(part_stride%cptr)
+  endif 
+    
+  c_part_data_cptr = C_NULL_PTR
+  if (associated(part_data%cptr)) then
+    c_part_data_cptr = c_loc(part_data%cptr)
+  endif 
 
   call PDM_block_to_part_exch_in_place_c (btp,                     &
                                           s_data,                  &
                                           t_stride,                &
-                                          c_loc(block_stride),     &
-                                          c_loc(block_data),       &
-                                          c_loc(part_stride%cptr), &
-                                          c_loc(part_data%cptr))
+                                          c_block_stride,          &
+                                          c_block_data,            &
+                                          c_part_stride_cptr,      &
+                                          c_part_data_cptr)
 
   call PDM_block_to_part_exch_in_place_finalize (btp,           &
                                                  t_stride,      &
@@ -297,23 +322,48 @@ subroutine PDM_block_to_part_exch_in_place_g_num (btp,          &
   integer, intent(in)               :: t_stride
   integer(pdm_l_num_s), pointer     :: block_stride(:)
   integer(pdm_g_num_s), pointer     :: block_data(:)
-  type(PDM_pointer_array_t), target :: part_stride
-  type(PDM_pointer_array_t), target :: part_data
+  type(PDM_pointer_array_t), pointer :: part_stride
+  type(PDM_pointer_array_t), pointer :: part_data
 
-  integer                           :: s_data = 8
+  integer, parameter                 :: s_data = 8
+
+  type(c_ptr) :: c_block_stride     
+  type(c_ptr) :: c_block_data       
+  type(c_ptr) :: c_part_stride_cptr 
+  type(c_ptr) :: c_part_data_cptr
 
   if (part_data%type .ne. PDM_TYPE_G_NUM) then
     print *, "PDM_block_to_part_exch_in_place_g_num : wrong type"
     stop
   end if
 
+  c_block_stride = C_NULL_PTR
+  if (associated(block_stride)) then
+    c_block_stride = c_loc(block_stride)
+  endif 
+    
+  c_block_data = C_NULL_PTR
+  if (associated(block_data)) then
+    c_block_data = c_loc(block_data)
+  endif 
+    
+  c_part_stride_cptr = C_NULL_PTR
+  if (associated(part_stride%cptr)) then
+    c_part_stride_cptr = c_loc(part_stride%cptr)
+  endif 
+    
+  c_part_data_cptr = C_NULL_PTR
+  if (associated(part_data%cptr)) then
+    c_part_data_cptr = c_loc(part_data%cptr)
+  endif 
+
   call PDM_block_to_part_exch_in_place_c (btp,                     &
                                           s_data,                  &
                                           t_stride,                &
-                                          c_loc(block_stride),     &
-                                          c_loc(block_data),       &
-                                          c_loc(part_stride%cptr), &
-                                          c_loc(part_data%cptr))
+                                          c_block_stride,     &
+                                          c_block_data,       &
+                                          c_part_stride_cptr, &
+                                          c_part_data_cptr)
 
   call PDM_block_to_part_exch_in_place_finalize (btp,           &
                                                  t_stride,      &
@@ -338,23 +388,48 @@ subroutine PDM_block_to_part_exch_in_place_double (btp,          &
   integer, intent(in)               :: t_stride
   integer(pdm_l_num_s), pointer     :: block_stride(:)
   double precision,     pointer     :: block_data(:)
-  type(PDM_pointer_array_t), target :: part_stride
-  type(PDM_pointer_array_t), target :: part_data
+  type(PDM_pointer_array_t), pointer :: part_stride
+  type(PDM_pointer_array_t), pointer :: part_data
 
-  integer                           :: s_data = 8
+  integer, parameter                 :: s_data = 8
+
+  type(c_ptr) :: c_block_stride     
+  type(c_ptr) :: c_block_data       
+  type(c_ptr) :: c_part_stride_cptr 
+  type(c_ptr) :: c_part_data_cptr
 
   if (part_data%type .ne. PDM_TYPE_DOUBLE) then
     print *, "PDM_block_to_part_exch_in_place_double : wrong type"
     stop
   end if
 
+  c_block_stride = C_NULL_PTR
+  if (associated(block_stride)) then
+    c_block_stride = c_loc(block_stride)
+  endif 
+    
+  c_block_data = C_NULL_PTR
+  if (associated(block_data)) then
+    c_block_data = c_loc(block_data)
+  endif 
+    
+  c_part_stride_cptr = C_NULL_PTR
+  if (associated(part_stride%cptr)) then
+    c_part_stride_cptr = c_loc(part_stride%cptr)
+  endif 
+    
+  c_part_data_cptr = C_NULL_PTR
+  if (associated(part_data%cptr)) then
+    c_part_data_cptr = c_loc(part_data%cptr)
+  endif 
+
   call PDM_block_to_part_exch_in_place_c (btp,                     &
                                           s_data,                  &
                                           t_stride,                &
-                                          c_loc(block_stride),     &
-                                          c_loc(block_data),       &
-                                          c_loc(part_stride%cptr), &
-                                          c_loc(part_data%cptr))
+                                          c_block_stride,     &
+                                          c_block_data,       &
+                                          c_part_stride_cptr, &
+                                          c_part_data_cptr)
 
   call PDM_block_to_part_exch_in_place_finalize (btp,           &
                                                  t_stride,      &
@@ -378,23 +453,49 @@ subroutine PDM_block_to_part_exch_in_place_real4 (btp,          &
   integer, intent(in)               :: t_stride
   integer(pdm_l_num_s), pointer     :: block_stride(:)
   real (kind = 4),      pointer     :: block_data(:)
-  type(PDM_pointer_array_t), target :: part_stride
-  type(PDM_pointer_array_t), target :: part_data
+  type(PDM_pointer_array_t), pointer :: part_stride
+  type(PDM_pointer_array_t), pointer :: part_data
 
-  integer                           :: s_data = 4
+  integer, parameter                 :: s_data = 4
+
+  type(c_ptr) :: c_block_stride     
+  type(c_ptr) :: c_block_data       
+  type(c_ptr) :: c_part_stride_cptr 
+  type(c_ptr) :: c_part_data_cptr
 
   if (part_data%type .ne. PDM_TYPE_REAL4) then
     print *, "PDM_block_to_part_exch_in_place_real4 : wrong type"
     stop
   end if
 
+  c_block_stride = C_NULL_PTR
+  if (associated(block_stride)) then
+    c_block_stride = c_loc(block_stride)
+  endif 
+    
+  c_block_data = C_NULL_PTR
+  if (associated(block_data)) then
+    c_block_data = c_loc(block_data)
+  endif 
+    
+  c_part_stride_cptr = C_NULL_PTR
+  if (associated(part_stride%cptr)) then
+    c_part_stride_cptr = c_loc(part_stride%cptr)
+  endif 
+    
+  c_part_data_cptr = C_NULL_PTR
+  if (associated(part_data%cptr)) then
+    c_part_data_cptr = c_loc(part_data%cptr)
+  endif 
+
+
   call PDM_block_to_part_exch_in_place_c (btp,                     &
                                           s_data,                  &
                                           t_stride,                &
-                                          c_loc(block_stride),     &
-                                          c_loc(block_data),       &
-                                          c_loc(part_stride%cptr), &
-                                          c_loc(part_data%cptr))
+                                          c_block_stride,     &
+                                          c_block_data,       &
+                                          c_part_stride_cptr, &
+                                          c_part_data_cptr)
 
   call PDM_block_to_part_exch_in_place_finalize (btp,           &
                                                  t_stride,      &
@@ -418,23 +519,48 @@ subroutine PDM_block_to_part_exch_in_place_complex4 (btp,          &
   integer, intent(in)               :: t_stride
   integer(pdm_l_num_s), pointer     :: block_stride(:)
   complex (kind = 4),      pointer :: block_data(:)
-  type(PDM_pointer_array_t), target :: part_stride
-  type(PDM_pointer_array_t), target :: part_data
+  type(PDM_pointer_array_t), pointer :: part_stride
+  type(PDM_pointer_array_t), pointer :: part_data
 
-  integer                           :: s_data = 8
+  integer, parameter                 :: s_data = 8
+
+  type(c_ptr) :: c_block_stride     
+  type(c_ptr) :: c_block_data       
+  type(c_ptr) :: c_part_stride_cptr 
+  type(c_ptr) :: c_part_data_cptr
 
   if (part_data%type .ne. PDM_TYPE_REAL4) then
     print *, "PDM_block_to_part_exch_in_place_complex4 : wrong type"
     stop
   end if
 
+  c_block_stride = C_NULL_PTR
+  if (associated(block_stride)) then
+    c_block_stride = c_loc(block_stride)
+  endif 
+    
+  c_block_data = C_NULL_PTR
+  if (associated(block_data)) then
+    c_block_data = c_loc(block_data)
+  endif 
+    
+  c_part_stride_cptr = C_NULL_PTR
+  if (associated(part_stride%cptr)) then
+    c_part_stride_cptr = c_loc(part_stride%cptr)
+  endif 
+    
+  c_part_data_cptr = C_NULL_PTR
+  if (associated(part_data%cptr)) then
+    c_part_data_cptr = c_loc(part_data%cptr)
+  endif 
+
   call PDM_block_to_part_exch_in_place_c (btp,                     &
                                           s_data,                  &
                                           t_stride,                &
-                                          c_loc(block_stride),     &
-                                          c_loc(block_data),       &
-                                          c_loc(part_stride%cptr), &
-                                          c_loc(part_data%cptr))
+                                          c_block_stride,     &
+                                          c_block_data,       &
+                                          c_part_stride_cptr, &
+                                          c_part_data_cptr)
 
   call PDM_block_to_part_exch_in_place_finalize (btp,           &
                                                  t_stride,      &
@@ -458,23 +584,48 @@ subroutine PDM_block_to_part_exch_in_place_complex8 (btp,          &
   integer, intent(in)               :: t_stride
   integer(pdm_l_num_s), pointer     :: block_stride(:)
   complex (kind = 8),      pointer :: block_data(:)
-  type(PDM_pointer_array_t), target :: part_stride
-  type(PDM_pointer_array_t), target :: part_data
+  type(PDM_pointer_array_t), pointer :: part_stride
+  type(PDM_pointer_array_t), pointer :: part_data
 
-  integer                           :: s_data = 16
+  integer, parameter                 :: s_data = 16
+
+  type(c_ptr) :: c_block_stride     
+  type(c_ptr) :: c_block_data       
+  type(c_ptr) :: c_part_stride_cptr 
+  type(c_ptr) :: c_part_data_cptr
 
   if (part_data%type .ne. PDM_TYPE_REAL4) then
     print *, "PDM_block_to_part_exch_in_place_complex4 : wrong type"
     stop
   end if
 
+  c_block_stride = C_NULL_PTR
+  if (associated(block_stride)) then
+    c_block_stride = c_loc(block_stride)
+  endif 
+    
+  c_block_data = C_NULL_PTR
+  if (associated(block_data)) then
+    c_block_data = c_loc(block_data)
+  endif 
+    
+  c_part_stride_cptr = C_NULL_PTR
+  if (associated(part_stride%cptr)) then
+    c_part_stride_cptr = c_loc(part_stride%cptr)
+  endif 
+    
+  c_part_data_cptr = C_NULL_PTR
+  if (associated(part_data%cptr)) then
+    c_part_data_cptr = c_loc(part_data%cptr)
+  endif 
+
   call PDM_block_to_part_exch_in_place_c (btp,                     &
                                           s_data,                  &
                                           t_stride,                &
-                                          c_loc(block_stride),     &
-                                          c_loc(block_data),       &
-                                          c_loc(part_stride%cptr), &
-                                          c_loc(part_data%cptr))
+                                          c_block_stride,     &
+                                          c_block_data,       &
+                                          c_part_stride_cptr, &
+                                          c_part_data_cptr)
 
   call PDM_block_to_part_exch_in_place_finalize (btp,           &
                                                  t_stride,      &
@@ -498,10 +649,15 @@ subroutine PDM_block_to_part_exch_in_place_cptr (btp,          &
   integer, intent(in)               :: t_stride
   integer(pdm_l_num_s), pointer     :: block_stride(:)
   type (c_ptr),      pointer        :: block_data(:)
-  type(PDM_pointer_array_t), target :: part_stride
-  type(PDM_pointer_array_t), target :: part_data
+  type(PDM_pointer_array_t), pointer :: part_stride
+  type(PDM_pointer_array_t), pointer :: part_data
 
   integer                           :: s_data
+
+  type(c_ptr) :: c_block_stride     
+  type(c_ptr) :: c_block_data       
+  type(c_ptr) :: c_part_stride_cptr 
+  type(c_ptr) :: c_part_data_cptr
 
   s_data = part_data%s_data
 
@@ -510,13 +666,33 @@ subroutine PDM_block_to_part_exch_in_place_cptr (btp,          &
     stop
   end if
 
+  c_block_stride = C_NULL_PTR
+  if (associated(block_stride)) then
+    c_block_stride = c_loc(block_stride)
+  endif 
+    
+  c_block_data = C_NULL_PTR
+  if (associated(block_data)) then
+    c_block_data = c_loc(block_data)
+  endif 
+    
+  c_part_stride_cptr = C_NULL_PTR
+  if (associated(part_stride%cptr)) then
+    c_part_stride_cptr = c_loc(part_stride%cptr)
+  endif 
+    
+  c_part_data_cptr = C_NULL_PTR
+  if (associated(part_data%cptr)) then
+    c_part_data_cptr = c_loc(part_data%cptr)
+  endif 
+
   call PDM_block_to_part_exch_in_place_c (btp,                     &
                                           s_data,                  &
                                           t_stride,                &
-                                          c_loc(block_stride),     &
-                                          c_loc(block_data),       &
-                                          c_loc(part_stride%cptr), &
-                                          c_loc(part_data%cptr))
+                                          c_block_stride,     &
+                                          c_block_data,       &
+                                          c_part_stride_cptr, &
+                                          c_part_data_cptr)
 
   call PDM_block_to_part_exch_in_place_finalize (btp,           &
                                                  t_stride,      &
@@ -555,19 +731,35 @@ subroutine PDM_block_to_part_exch_int (btp,          &
   integer, intent(in)               :: t_stride
   integer(pdm_l_num_s), pointer     :: block_stride(:)
   integer(pdm_l_num_s), pointer     :: block_data(:)
-  type(PDM_pointer_array_t), target :: part_stride
-  type(PDM_pointer_array_t), target :: part_data
+  type(PDM_pointer_array_t), pointer :: part_stride
+  type(PDM_pointer_array_t), pointer :: part_data
 
-  type(c_ptr)                       :: c_part_stride = C_NULL_PTR
-  type(c_ptr)                       :: c_part_data   = C_NULL_PTR
+  type(c_ptr)                       :: c_block_stride     
+  type(c_ptr)                       :: c_block_data       
+  type(c_ptr)                       :: c_part_stride
+  type(c_ptr)                       :: c_part_data  
 
-  integer                           :: s_data = 4
+  integer, parameter                :: s_data = 4
+
+  c_part_stride = C_NULL_PTR
+  c_part_data   = C_NULL_PTR
+
+
+  c_block_stride = C_NULL_PTR
+  if (associated(block_stride)) then
+    c_block_stride = c_loc(block_stride)
+  endif 
+    
+  c_block_data = C_NULL_PTR
+  if (associated(block_data)) then
+    c_block_data = c_loc(block_data)
+  endif 
 
   call PDM_block_to_part_exch_c (btp,                 &
                                  s_data,              &
                                  t_stride,            &
-                                 c_loc(block_stride), &
-                                 c_loc(block_data),   &
+                                 c_block_stride, &
+                                 c_block_data,   &
                                  c_part_stride,       &
                                  c_part_data)
 
@@ -597,19 +789,34 @@ subroutine PDM_block_to_part_exch_g_num (btp,          &
   integer, intent(in)               :: t_stride
   integer(pdm_l_num_s), pointer     :: block_stride(:)
   integer(pdm_g_num_s), pointer     :: block_data(:)
-  type(PDM_pointer_array_t), target :: part_stride
-  type(PDM_pointer_array_t), target :: part_data
+  type(PDM_pointer_array_t), pointer :: part_stride
+  type(PDM_pointer_array_t), pointer :: part_data
 
-  type(c_ptr)                       :: c_part_stride = C_NULL_PTR
-  type(c_ptr)                       :: c_part_data   = C_NULL_PTR
+  type(c_ptr)                       :: c_block_stride     
+  type(c_ptr)                       :: c_block_data       
+  type(c_ptr)                       :: c_part_stride
+  type(c_ptr)                       :: c_part_data  
 
-  integer                           :: s_data = 8
+  integer, parameter                :: s_data = 8
+
+  c_part_stride = C_NULL_PTR
+  c_part_data   = C_NULL_PTR
+
+  c_block_stride = C_NULL_PTR
+  if (associated(block_stride)) then
+    c_block_stride = c_loc(block_stride)
+  endif 
+    
+  c_block_data = C_NULL_PTR
+  if (associated(block_data)) then
+    c_block_data = c_loc(block_data)
+  endif 
 
   call PDM_block_to_part_exch_c (btp,                 &
                                  s_data,              &
                                  t_stride,            &
-                                 c_loc(block_stride), &
-                                 c_loc(block_data),   &
+                                 c_block_stride, &
+                                 c_block_data,   &
                                  c_part_stride,       &
                                  c_part_data)
 
@@ -638,19 +845,34 @@ subroutine PDM_block_to_part_exch_double (btp,          &
   integer, intent(in)               :: t_stride
   integer(pdm_l_num_s), pointer     :: block_stride(:)
   double precision,     pointer     :: block_data(:)
-  type(PDM_pointer_array_t), target :: part_stride
-  type(PDM_pointer_array_t), target :: part_data
+  type(PDM_pointer_array_t), pointer :: part_stride
+  type(PDM_pointer_array_t), pointer :: part_data
 
-  type(c_ptr)                       :: c_part_stride = C_NULL_PTR
-  type(c_ptr)                       :: c_part_data   = C_NULL_PTR
+  type(c_ptr)                       :: c_block_stride     
+  type(c_ptr)                       :: c_block_data       
+  type(c_ptr)                       :: c_part_stride 
+  type(c_ptr)                       :: c_part_data   
 
-  integer                           :: s_data = 8
+  integer, parameter                :: s_data = 8
+
+  c_part_stride = C_NULL_PTR
+  c_part_data   = C_NULL_PTR
+
+  c_block_stride = C_NULL_PTR
+  if (associated(block_stride)) then
+    c_block_stride = c_loc(block_stride)
+  endif 
+    
+  c_block_data = C_NULL_PTR
+  if (associated(block_data)) then
+    c_block_data = c_loc(block_data)
+  endif 
 
   call PDM_block_to_part_exch_c (btp,                 &
                                  s_data,              &
                                  t_stride,            &
-                                 c_loc(block_stride), &
-                                 c_loc(block_data),   &
+                                 c_block_stride,      &
+                                 c_block_data,        &
                                  c_part_stride,       &
                                  c_part_data)
 
@@ -678,19 +900,33 @@ subroutine PDM_block_to_part_exch_real4 (btp,          &
   integer, intent(in)               :: t_stride
   integer(pdm_l_num_s), pointer     :: block_stride(:)
   real (kind = 4),      pointer     :: block_data(:)
-  type(PDM_pointer_array_t), target :: part_stride
-  type(PDM_pointer_array_t), target :: part_data
+  type(PDM_pointer_array_t), pointer :: part_stride
+  type(PDM_pointer_array_t), pointer :: part_data
 
-  type(c_ptr)                       :: c_part_stride = C_NULL_PTR
-  type(c_ptr)                       :: c_part_data   = C_NULL_PTR
+  type(c_ptr)                       :: c_block_stride     
+  type(c_ptr)                       :: c_block_data       
+  type(c_ptr)                       :: c_part_stride 
+  type(c_ptr)                       :: c_part_data   
 
-  integer                           :: s_data = 4
+  integer, parameter                :: s_data = 4
 
+  c_part_stride = C_NULL_PTR
+  c_part_data   = C_NULL_PTR
+
+  c_block_stride = C_NULL_PTR
+  if (associated(block_stride)) then
+    c_block_stride = c_loc(block_stride)
+  endif 
+    
+  c_block_data = C_NULL_PTR
+  if (associated(block_data)) then
+    c_block_data = c_loc(block_data)
+  endif 
   call PDM_block_to_part_exch_c (btp,                 &
                                  s_data,              &
                                  t_stride,            &
-                                 c_loc(block_stride), &
-                                 c_loc(block_data),   &
+                                 c_block_stride,      &
+                                 c_block_data,        &
                                  c_part_stride,       &
                                  c_part_data)
 
@@ -718,19 +954,34 @@ subroutine PDM_block_to_part_exch_complex4 (btp,          &
   integer, intent(in)               :: t_stride
   integer(pdm_l_num_s), pointer     :: block_stride(:)
   complex (kind = 4),     pointer     :: block_data(:)
-  type(PDM_pointer_array_t), target :: part_stride
-  type(PDM_pointer_array_t), target :: part_data
+  type(PDM_pointer_array_t), pointer :: part_stride
+  type(PDM_pointer_array_t), pointer :: part_data
 
-  type(c_ptr)                       :: c_part_stride = C_NULL_PTR
-  type(c_ptr)                       :: c_part_data   = C_NULL_PTR
+  type(c_ptr)                       :: c_block_stride     
+  type(c_ptr)                       :: c_block_data       
+  type(c_ptr)                       :: c_part_stride 
+  type(c_ptr)                       :: c_part_data   
 
-  integer                           :: s_data = 8
+  integer, parameter                :: s_data = 8
+
+  c_part_stride = C_NULL_PTR
+  c_part_data   = C_NULL_PTR
+
+  c_block_stride = C_NULL_PTR
+  if (associated(block_stride)) then
+    c_block_stride = c_loc(block_stride)
+  endif 
+    
+  c_block_data = C_NULL_PTR
+  if (associated(block_data)) then
+    c_block_data = c_loc(block_data)
+  endif 
 
   call PDM_block_to_part_exch_c (btp,                 &
                                  s_data,              &
                                  t_stride,            &
-                                 c_loc(block_stride), &
-                                 c_loc(block_data),   &
+                                 c_block_stride,      &
+                                 c_block_data,        &
                                  c_part_stride,       &
                                  c_part_data)
 
@@ -758,19 +1009,34 @@ subroutine PDM_block_to_part_exch_complex8 (btp,          &
   integer, intent(in)               :: t_stride
   integer(pdm_l_num_s), pointer     :: block_stride(:)
   complex (kind = 8),     pointer     :: block_data(:)
-  type(PDM_pointer_array_t), target :: part_stride
-  type(PDM_pointer_array_t), target :: part_data
+  type(PDM_pointer_array_t), pointer :: part_stride
+  type(PDM_pointer_array_t), pointer :: part_data
 
-  type(c_ptr)                       :: c_part_stride = C_NULL_PTR
-  type(c_ptr)                       :: c_part_data   = C_NULL_PTR
+  type(c_ptr)                       :: c_block_stride     
+  type(c_ptr)                       :: c_block_data       
+  type(c_ptr)                       :: c_part_stride 
+  type(c_ptr)                       :: c_part_data   
 
-  integer                           :: s_data = 16
+  integer, parameter                :: s_data = 16
+
+  c_part_stride = C_NULL_PTR
+  c_part_data   = C_NULL_PTR
+
+  c_block_stride = C_NULL_PTR
+  if (associated(block_stride)) then
+    c_block_stride = c_loc(block_stride)
+  endif 
+    
+  c_block_data = C_NULL_PTR
+  if (associated(block_data)) then
+    c_block_data = c_loc(block_data)
+  endif 
 
   call PDM_block_to_part_exch_c (btp,                 &
                                  s_data,              &
                                  t_stride,            &
-                                 c_loc(block_stride), &
-                                 c_loc(block_data),   &
+                                 c_block_stride,      &
+                                 c_block_data,        &
                                  c_part_stride,       &
                                  c_part_data)
 
@@ -800,17 +1066,32 @@ subroutine PDM_block_to_part_exch_cptr (btp,          &
   integer, intent(in)               :: t_stride
   integer(pdm_l_num_s), pointer     :: block_stride(:)
   type (c_ptr),         pointer     :: block_data(:)
-  type(PDM_pointer_array_t), target :: part_stride
-  type(PDM_pointer_array_t), target :: part_data
+  type(PDM_pointer_array_t), pointer :: part_stride
+  type(PDM_pointer_array_t), pointer :: part_data
 
-  type(c_ptr)                       :: c_part_stride = C_NULL_PTR
-  type(c_ptr)                       :: c_part_data   = C_NULL_PTR
+  type(c_ptr)                       :: c_block_stride     
+  type(c_ptr)                       :: c_block_data       
+  type(c_ptr)                       :: c_part_stride 
+  type(c_ptr)                       :: c_part_data   
+
+  c_part_stride = C_NULL_PTR
+  c_part_data   = C_NULL_PTR
+
+  c_block_stride = C_NULL_PTR
+  if (associated(block_stride)) then
+    c_block_stride = c_loc(block_stride)
+  endif 
+    
+  c_block_data = C_NULL_PTR
+  if (associated(block_data)) then
+    c_block_data = c_loc(block_data)
+  endif 
 
   call PDM_block_to_part_exch_c (btp,                 &
                                  s_data,              &
                                  t_stride,            &
-                                 c_loc(block_stride), &
-                                 c_loc(block_data),   &
+                                 c_block_stride,      &
+                                 c_block_data,        &
                                  c_part_stride,       &
                                  c_part_data)
 
@@ -892,80 +1173,131 @@ subroutine PDM_block_to_part_exch_finalize (btp,           &
   integer, intent(in)               :: data_type
   type(c_ptr), value                :: c_part_stride
   type(c_ptr), value                :: c_part_data
-  type(PDM_pointer_array_t), target :: part_stride
-  type(PDM_pointer_array_t), target :: part_data
+  type(PDM_pointer_array_t), pointer:: part_stride
+  type(PDM_pointer_array_t), pointer:: part_data
   integer, intent(in), optional     :: s_data
 
   integer                           :: n_part, n_elt
-  integer(pdm_l_num_s), pointer     :: stride(:) => null()
+  integer(pdm_l_num_s), pointer     :: stride(:)
   integer                           :: s_part_data
   integer                           :: i, j
 
+  integer, allocatable              :: length_stride(:)
+  integer, allocatable              :: length_data(:)
 
   n_part = PDM_block_to_part_n_part_get (btp)
+  stride => null()
 
-  call c_f_pointer(c_part_stride,    &
-                   part_stride%cptr, &
-                   [n_part])
+  allocate(length_data(n_part))
 
-  call c_f_pointer(c_part_data,    &
-                   part_data%cptr, &
-                   [n_part])
+  if (t_stride .eq. PDM_STRIDE_VAR_INTERLACED) then
 
-  call  PDM_pointer_array_create_type (part_stride,     &
-                                       n_part, &
-                                       PDM_TYPE_INT)
+    allocate(length_stride(n_part))
 
-  if (present(s_data)) then
+    do i = 1, n_part
 
-    call  PDM_pointer_array_create_type (part_data,     &
-                                         n_part, &
-                                         data_type)
-  else
+      length_stride(i) = PDM_block_to_part_n_elt_get(btp, &
+                                              i-1)
+    end do
 
-    if (data_type .eq. PDM_TYPE_CPTR) then
-      print *, "Error PDM_block_to_part_exch : s-data is mandatory for PDM_TYPE_CPTR type"
-      call exit
-    endif
+    call  PDM_pointer_array_create (part_stride,     &
+                                    n_part, &
+                                    PDM_TYPE_INT, &
+                                    c_part_stride, &
+                                    length_stride, &
+                                    PDM_OWNERSHIP_KEEP)
 
-    call  PDM_pointer_array_create_type (part_data,     &
-                                         n_part, &
-                                         data_type, &
-                                         s_data)
-  endif
-
-  do i = 1, n_part
-
-    n_elt = PDM_block_to_part_n_elt_get(btp, &
-                                        i-1)
-
-    if (t_stride .eq. PDM_STRIDE_VAR_INTERLACED) then
-
-      part_stride%length(i) = n_elt
+    do i = 1, n_part
 
       call PDM_pointer_array_part_get (part_stride, &
                                        i-1,         &
                                        stride)
 
       s_part_data = 0
-      do j = 1, n_elt
+      do j = 1, length_stride(i)
         s_part_data = s_part_data + stride(j)
       end do
 
-    else
+      length_data(i) = s_part_data
+    
+    enddo  
+
+    if (present(s_data)) then
+
+      call  PDM_pointer_array_create (part_data,     &
+                                      n_part, &
+                                      data_type, &
+                                      c_part_data, &
+                                      length_data,      &
+                                      PDM_OWNERSHIP_KEEP, &
+                                      s_data)
+
+    else 
+
+      if (data_type .eq. PDM_TYPE_CPTR) then
+        print *, "Error PDM_block_to_part_exch : s-data is mandatory for PDM_TYPE_CPTR type"
+        call exit
+      endif
+
+      call  PDM_pointer_array_create (part_data,     &
+                                      n_part, &
+                                      data_type, &
+                                      c_part_data, &
+                                      length_data, &
+                                      PDM_OWNERSHIP_KEEP)
+
+    endif  
+
+    deallocate(length_stride)
+
+  else
+
+    part_stride => null() 
+
+    do i = 1, n_part
+
+      n_elt = PDM_block_to_part_n_elt_get(btp, &
+                                          i-1)
 
       if (size(block_stride) .gt. 0) then
         s_part_data = block_stride(1) * n_elt
       end if
 
-    end if
+      length_data(i) = s_part_data
 
-    part_data%length(i) = s_part_data
+    end do
 
-  end do
+    if (present(s_data)) then
+
+      call  PDM_pointer_array_create (part_data,     &
+                                      n_part, &
+                                      data_type, &
+                                      c_part_data, &
+                                      length_data,      &
+                                      PDM_OWNERSHIP_KEEP, &
+                                      s_data)
+
+    else 
+
+      if (data_type .eq. PDM_TYPE_CPTR) then
+        print *, "Error PDM_block_to_part_exch : s-data is mandatory for PDM_TYPE_CPTR type"
+        call exit
+      endif
+
+      call  PDM_pointer_array_create (part_data,     &
+                                      n_part, &
+                                      data_type, &
+                                      c_part_data, &
+                                      length_data, &
+                                      PDM_OWNERSHIP_KEEP);
+
+    endif  
+
+  endif 
+
+  deallocate(length_data)
 
 end subroutine PDM_block_to_part_exch_finalize
-
 
 
 subroutine PDM_block_to_part_exch_in_place_finalize (btp,           &
@@ -979,16 +1311,16 @@ subroutine PDM_block_to_part_exch_in_place_finalize (btp,           &
   type(c_ptr), value                :: btp
   integer, intent(in)               :: t_stride
   integer(pdm_l_num_s), pointer     :: block_stride(:)
-  type(PDM_pointer_array_t), target :: part_stride
-  type(PDM_pointer_array_t), target :: part_data
+  type(PDM_pointer_array_t), pointer :: part_stride
+  type(PDM_pointer_array_t), pointer :: part_data
 
   integer                           :: n_part, n_elt
-  integer(pdm_l_num_s), pointer     :: stride(:) => null()
+  integer(pdm_l_num_s), pointer     :: stride(:)
   integer                           :: s_part_data
   integer                           :: i, j
 
-
   n_part = PDM_block_to_part_n_part_get (btp)
+  stride => null()
 
   do i = 1, n_part
 
@@ -1014,9 +1346,12 @@ subroutine PDM_block_to_part_exch_in_place_finalize (btp,           &
 
     end if
 
-    part_data%length(i) = s_part_data
+    call PDM_pointer_array_part_length_update (part_data, &
+                                               i-1, &
+                                               s_part_data)
 
   end do
+
 
 end subroutine PDM_block_to_part_exch_in_place_finalize
 

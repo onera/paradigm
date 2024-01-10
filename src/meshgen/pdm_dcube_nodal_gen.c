@@ -1718,7 +1718,7 @@ _gen_poly2d
  const double       ymin,
  const double       zmin,
  const double       length,
- const int          randomize
+ const double       random_factor
  )
  {
   int dbg = 0;
@@ -1744,12 +1744,20 @@ _gen_poly2d
   PDM_g_num_t n_vtx2 = nx + 1;
   PDM_g_num_t n_vtx3 = n_vtx1 + 2*n_vtx2;
 
+  int randomize = (random_factor > 0);
+
   for (int ivtx = 0; ivtx < dn_vtx; ivtx++) {
     PDM_g_num_t g = distrib_vtx[i_rank] + ivtx;
     PDM_g_num_t i, j;
     double x, y;
-    double rx = 0;//noise
-    double ry = 0;//noise
+    double rx = 0;
+    double ry = 0;
+
+    if (randomize) {
+      srand(g);
+      rx = stepx * random_factor * (rand() / (double) RAND_MAX - 0.5);
+      ry = stepy * random_factor * (rand() / (double) RAND_MAX - 0.5);
+    }
 
     if (g > gn_vtx - 5) {
       // Corner
@@ -2272,6 +2280,8 @@ PDM_dcube_nodal_gen_create
   dcube->distrib_quad = NULL;
   dcube->distrib_hexa = NULL;
 
+  dcube->random_factor = 0.;
+
   return dcube;
 }
 
@@ -2391,6 +2401,25 @@ PDM_dcube_nodal_gen_build
 
   //log_trace("gn_vtx = "PDM_FMT_G_NUM"\n", gn_vtx);
 
+  switch (dcube->t_elt) {
+    case PDM_MESH_NODAL_TRIA3:
+    case PDM_MESH_NODAL_TRIAHO:
+    case PDM_MESH_NODAL_TRIAHO_BEZIER:
+    case PDM_MESH_NODAL_POLY_2D:
+    case PDM_MESH_NODAL_PYRAMID5:
+    case PDM_MESH_NODAL_PYRAMIDHO:
+    case PDM_MESH_NODAL_PRISM6:
+    case PDM_MESH_NODAL_PRISMHO:
+      dcube->random_factor *= 0.5*sqrt(2);
+      break;
+    case PDM_MESH_NODAL_TETRA4:
+    case PDM_MESH_NODAL_TETRAHO:
+      dcube->random_factor *= 1./sqrt(3);
+      break;
+    default:
+      break;
+  }
+
 
   /*
    * Create the dmesh_nodal that hold the resulting mesh
@@ -2412,7 +2441,7 @@ PDM_dcube_nodal_gen_build
                                        dcube->zero_y,
                                        dcube->zero_z,
                                        dcube->length,
-                                       0);//randomize);
+                                       dcube->random_factor);
       return dcube->dmesh_nodal;
     }
     else {
@@ -2441,6 +2470,8 @@ PDM_dcube_nodal_gen_build
   double step_y = dcube->length / (double) (n_vtx_y - 1);
   double step_z = dcube->length / (double) (n_vtx_z - 1);
 
+  int randomize = (dcube->random_factor > 0);
+
   if (dim == 2) {
     for (int i_vtx = 0; i_vtx < dn_vtx; ++i_vtx) {
 
@@ -2452,6 +2483,14 @@ PDM_dcube_nodal_gen_build
       dvtx_coord[3 * i_vtx    ] = indi * step_x + dcube->zero_x;
       dvtx_coord[3 * i_vtx + 1] = indj * step_y + dcube->zero_y;
       dvtx_coord[3 * i_vtx + 2] = dcube->zero_z;
+
+      if (randomize) {
+        srand(g_vtx);
+        double dx = step_x * dcube->random_factor * (rand() / (double) RAND_MAX - 0.5);
+        double dy = step_y * dcube->random_factor * (rand() / (double) RAND_MAX - 0.5);
+        dvtx_coord[3 * i_vtx    ] += dx * (indi > 0 && indi < n_vtx_x-1);
+        dvtx_coord[3 * i_vtx + 1] += dy * (indj > 0 && indj < n_vtx_y-1);
+      }
     }
   }
   else {
@@ -2466,6 +2505,16 @@ PDM_dcube_nodal_gen_build
       dvtx_coord[3 * i_vtx    ] = indi * step_x + dcube->zero_x;
       dvtx_coord[3 * i_vtx + 1] = indj * step_y + dcube->zero_y;
       dvtx_coord[3 * i_vtx + 2] = indk * step_z + dcube->zero_z;
+
+      if (randomize) {
+        srand(g_vtx);
+        double dx = step_x * dcube->random_factor * (rand() / (double) RAND_MAX - 0.5);
+        double dy = step_y * dcube->random_factor * (rand() / (double) RAND_MAX - 0.5);
+        double dz = step_z * dcube->random_factor * (rand() / (double) RAND_MAX - 0.5);
+        dvtx_coord[3 * i_vtx    ] += dx * (indi > 0 && indi < n_vtx_x-1);
+        dvtx_coord[3 * i_vtx + 1] += dy * (indj > 0 && indj < n_vtx_y-1);
+        dvtx_coord[3 * i_vtx + 2] += dz * (indk > 0 && indk < n_vtx_z-1);
+      }
     }
   }
   free (distrib_vtx);
@@ -2805,7 +2854,7 @@ PDM_dcube_nodal_cart_topo
       PDM_domain_interface_translation_set(_dom_intrf,
                                            i_itrf,
                                            translation_vect);
-    } else {
+    } else if(i_period[i_itrf] == 3) {
       double translation_vect[3] = {0.,             0.,             length*n_dom_k};
       PDM_domain_interface_translation_set(_dom_intrf,
                                            i_itrf,
@@ -2831,4 +2880,219 @@ PDM_dcube_nodal_cart_topo
                            interface_dom);
   _dom_intrf->is_result[PDM_BOUND_TYPE_VTX] = 1;
 
+}
+
+
+
+
+
+void
+PDM_generate_lines
+(
+  PDM_MPI_Comm  comm,
+  double        zero_x,
+  double        zero_y,
+  double        zero_z,
+  double        length,
+  PDM_g_num_t   n_g_pts,
+  PDM_g_num_t **distrib_edge_out,
+  PDM_g_num_t **distrib_vtx_out,
+  PDM_g_num_t **dedge_vtx_out,
+  double      **dvtx_coord_out
+)
+{
+  int i_rank;
+  int n_rank;
+  PDM_MPI_Comm_rank(comm, &i_rank);
+  PDM_MPI_Comm_size(comm, &n_rank);
+
+  PDM_g_num_t gn_vtx  = (n_g_pts    );
+  PDM_g_num_t gn_edge = (n_g_pts - 1);
+
+  int dcube_nx = n_g_pts - 1;
+
+  PDM_g_num_t* distrib_edge = PDM_compute_uniform_entity_distribution(comm, gn_edge);
+  PDM_g_num_t* distrib_vtx  = PDM_compute_uniform_entity_distribution(comm, gn_vtx);
+
+  int dn_vtx  = (int) (distrib_vtx [i_rank+1] - distrib_vtx [i_rank]);
+  int dn_edge = (int) (distrib_edge[i_rank+1] - distrib_edge[i_rank]);
+
+  double *dvtx_coord = malloc(sizeof(double) * dn_vtx * 3);
+
+  double step_x = length / (double) (n_g_pts - 1);
+
+  for (int i_vtx = 0; i_vtx < dn_vtx; ++i_vtx) {
+
+    PDM_g_num_t g_vtx = distrib_vtx[i_rank] + i_vtx;
+
+    PDM_g_num_t indi = g_vtx % n_g_pts;
+
+    dvtx_coord[3 * i_vtx    ] = indi * step_x + zero_x;
+    dvtx_coord[3 * i_vtx + 1] = zero_y;
+    dvtx_coord[3 * i_vtx + 2] = zero_z;
+  }
+
+
+  PDM_g_num_t *dedge_vtx     = malloc( 2 * dn_edge * sizeof(PDM_g_num_t));
+
+  for (int i_edge = 0; i_edge < dn_edge; ++i_edge) {
+
+    PDM_g_num_t g = distrib_edge[i_rank] + i_edge;
+
+    PDM_g_num_t indi = g % dcube_nx;
+
+    dedge_vtx[2*i_edge  ] = 1 + (indi  );
+    dedge_vtx[2*i_edge+1] = 1 + (indi+1);
+  }
+
+  *dvtx_coord_out   = dvtx_coord;
+  *dedge_vtx_out    = dedge_vtx;
+  *distrib_edge_out = distrib_edge;
+  *distrib_vtx_out  = distrib_vtx;
+}
+
+
+
+void
+PDM_generate_cart_topo_lines
+(
+ PDM_MPI_Comm              comm,
+ int                       n_dom_i,
+ int                       periodic_i,
+ double                    zero_x,
+ double                    zero_y,
+ double                    zero_z,
+ double                    length,
+ PDM_g_num_t               n_g_pts,
+ PDM_g_num_t            ***distrib_edge_out,
+ PDM_g_num_t            ***distrib_vtx_out,
+ PDM_g_num_t            ***dedge_vtx_out,
+ double                 ***dvtx_coord_out,
+ PDM_domain_interface_t  **dom_intrf
+)
+{
+
+  int i_rank;
+  PDM_MPI_Comm_rank(comm, &i_rank);
+
+  int n_interface = (n_dom_i - 1 + periodic_i);
+
+  int n_domain = n_dom_i;
+
+  PDM_g_num_t **distrib_edge = malloc( n_domain * sizeof(PDM_g_num_t *));
+  PDM_g_num_t **distrib_vtx  = malloc( n_domain * sizeof(PDM_g_num_t *));
+  PDM_g_num_t **dedge_vtx    = malloc( n_domain * sizeof(PDM_g_num_t *));
+  double      **dvtx_coord   = malloc( n_domain * sizeof(double      *));
+
+  *distrib_edge_out = distrib_edge;
+  *distrib_vtx_out  = distrib_vtx;
+  *dedge_vtx_out    = dedge_vtx;
+  *dvtx_coord_out   = dvtx_coord;
+
+  for(int i_domain = 0; i_domain < n_domain; ++i_domain) {
+    PDM_generate_lines(comm,
+                       zero_x + length*i_domain,
+                       zero_y,
+                       zero_z,
+                       length,
+                       n_g_pts,
+                       &distrib_edge[i_domain],
+                       &distrib_vtx [i_domain],
+                       &dedge_vtx   [i_domain],
+                       &dvtx_coord  [i_domain]);
+  }
+
+  *dom_intrf = PDM_domain_interface_create(n_interface,
+                                           n_domain,
+                                           PDM_DOMAIN_INTERFACE_MULT_NO,
+                                           PDM_OWNERSHIP_KEEP,
+                                           comm);
+  PDM_domain_interface_t* _dom_intrf = *dom_intrf;
+
+  /*
+   *  Interfaces
+   */
+  int          *interface_dn  = (int          *) malloc(sizeof(int          ) * n_interface);
+  PDM_g_num_t **interface_ids = (PDM_g_num_t **) malloc(sizeof(PDM_g_num_t *) * n_interface);
+  int         **interface_dom = (int         **) malloc(sizeof(int         *) * n_interface);
+
+  int *i_period = PDM_array_zeros_int(n_interface);
+
+  int i_interface = 0;
+
+  /* i-direction */
+  PDM_g_num_t *distrib_i = PDM_compute_uniform_entity_distribution(comm, 1);
+
+  for (int i = 0; i < n_dom_i - 1 + periodic_i; i++) {
+
+    int i_domain1 = i;
+    int i_domain2 = (i+1)%n_dom_i;
+
+    interface_dn[i_interface] = (int) (distrib_i[i_rank+1] - distrib_i[i_rank]);
+
+    interface_dom[i_interface] = (int *) malloc(sizeof(int) * 2);
+    interface_dom[i_interface][0] = i_domain1;
+    interface_dom[i_interface][1] = i_domain2;
+
+    interface_ids[i_interface] = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * 2 * interface_dn[i_interface]);
+
+    for (int idx = 0; idx < interface_dn[i_interface]; idx++) {
+      interface_ids[i_interface][2*idx  ] = 1 + n_g_pts-1;
+      interface_ids[i_interface][2*idx+1] = 1;
+    }
+
+    if (i == n_dom_i-1) {
+      i_period[i_interface] = 1;
+    }
+
+    i_interface++;
+  }
+  free(distrib_i);
+
+
+  for(int i_itrf = 0; i_itrf < n_interface; ++i_itrf) {
+    if(i_period[i_itrf] == 1) {
+      double translation_vect[3] = {length*n_dom_i, 0., 0.};
+      PDM_domain_interface_translation_set(_dom_intrf,
+                                           i_itrf,
+                                           translation_vect);
+    }
+  }
+
+
+  free(i_period);
+
+  if(0 == 1) {
+    for(int i_itrf = 0; i_itrf < n_interface; ++i_itrf) {
+      PDM_log_trace_array_long(interface_ids[i_itrf], 2 * interface_dn[i_itrf], "nodal_gen - interface_ids ::");
+    }
+  }
+
+  PDM_domain_interface_set(_dom_intrf,
+                           PDM_BOUND_TYPE_VTX,
+                           interface_dn,
+                           interface_ids,
+                           interface_dom);
+  _dom_intrf->is_result[PDM_BOUND_TYPE_VTX] = 1;
+
+}
+
+
+
+/**
+ * \brief Set randomization factor
+ *
+ * \param [in]  dcube          Pointer to \ref PDM_dcube_nodal_t object
+ * \param [in]  random_factor  Randomization factor (between 0 and 1)
+ *
+ */
+
+void
+PDM_dcube_nodal_gen_random_factor_set
+(
+ PDM_dcube_nodal_t *dcube,
+ double             random_factor
+ )
+{
+  dcube->random_factor = random_factor;
 }

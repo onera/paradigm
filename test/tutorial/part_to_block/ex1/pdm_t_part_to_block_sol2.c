@@ -21,6 +21,12 @@
 
 #include "pdm_part_to_block.h"
 
+/**
+ * \example pdm_t_part_to_block_sol2.c
+ *
+ * This is an example on how to do a part_to_block operation:
+ */
+
 
 /*============================================================================
  * Type definitions

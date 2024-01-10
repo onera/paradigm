@@ -1,3 +1,7 @@
+/*
+ * \file
+ */
+
 #ifndef __PDM_BINARY_SEARCH_H__
 #define __PDM_BINARY_SEARCH_H__
 

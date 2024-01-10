@@ -199,8 +199,8 @@ cdef class MeshIntersection:
                                              &ptpc,
                                              PDM_OWNERSHIP_USER)
 
-      py_casp = PyCapsule_New(ptpc, NULL, NULL)
-      return PartToPartCapsule(py_casp, self.py_comm) # The free is inside the class
+      py_caps = PyCapsule_New(ptpc, NULL, NULL)
+      return PartToPartCapsule(py_caps, self.py_comm) # The free is inside the class
 
     # ------------------------------------------------------------------
     def a_to_b_get(self, int i_part):

@@ -159,12 +159,12 @@ PDM_multipart_t      **_mpart
 
 
 
-  int n_zone = 1;
-  int *n_part_zones = (int *) malloc(sizeof(int) * n_zone);
-  n_part_zones[0] = n_part;
+  int n_domain = 1;
+  int *n_part_domains = (int *) malloc(sizeof(int) * n_domain);
+  n_part_domains[0] = n_part;
 
-  PDM_multipart_t *mpart = PDM_multipart_create(n_zone,
-                                                n_part_zones,
+  PDM_multipart_t *mpart = PDM_multipart_create(n_domain,
+                                                n_part_domains,
                                                 PDM_FALSE,
                                                 part_method,
                                                 PDM_PART_SIZE_HOMOGENEOUS,
@@ -178,13 +178,13 @@ PDM_multipart_t      **_mpart
                                        NULL,
                                        "PDM_PART_RENUM_FACE_NONE");
 
-  PDM_multipart_register_dmesh_nodal(mpart, 0, dmn);
+  PDM_multipart_dmesh_nodal_set(mpart, 0, dmn);
 
 
   /* Run */
-  PDM_multipart_run_ppart (mpart);
+  PDM_multipart_compute (mpart);
 
-  free(n_part_zones);
+  free(n_part_domains);
 
   *_mpart = mpart;
 
@@ -198,7 +198,7 @@ PDM_multipart_t      **_mpart
 // _get_groups
 // (
 //  PDM_multipart_t     *multipart,
-//  const int            i_zone,
+//  const int            i_domain,
 //  const int            i_part,
 //        int           *n_face_group,
 //        int          **face_bound_idx,
@@ -220,7 +220,7 @@ PDM_multipart_t      **_mpart
 //   int s_face_join;
 //   int n_join_groups;
 //   PDM_multipart_part_dim_get(multipart,
-//                              i_zone,
+//                              i_domain,
 //                              i_part,
 //                              &n_section,
 //                              &n_elt,
@@ -261,7 +261,7 @@ PDM_multipart_t      **_mpart
 //   int          *face_join;
 //   PDM_g_num_t  *face_join_ln_to_gn;
 //   PDM_multipart_part_val_get(multipart,
-//                              i_zone,
+//                              i_domain,
 //                              i_part,
 //                              &elt_vtx_idx,
 //                              &elt_vtx,
@@ -308,7 +308,7 @@ int main(int argc, char *argv[])
    */
 
   PDM_g_num_t          n_vtx_seg = 5;  // Number of vtx on each side of the cube mesh
-  PDM_Mesh_nodal_elt_t elt_type  = 2;  // Type of cells
+  PDM_Mesh_nodal_elt_t elt_type  = PDM_MESH_NODAL_TRIA3;  // Type of cells
   int                  n_steps   = 10; // Number of smoothing steps
   _read_args(argc,
              argv,
@@ -355,7 +355,7 @@ int main(int argc, char *argv[])
   PDM_multipart_part_ln_to_gn_get(mpart,
                                   0,
                                   i_part,
-                                  PDM_MESH_ENTITY_VERTEX,
+                                  PDM_MESH_ENTITY_VTX,
                                   &vtx_ln_to_gn,
                                   PDM_OWNERSHIP_KEEP);
 
@@ -365,8 +365,8 @@ int main(int argc, char *argv[])
                                                0,
                                                i_part,
                                                PDM_CONNECTIVITY_TYPE_EDGE_VTX,
-                                               &pedge_vtx,
                                                &tmp_pedge_vtx_idx,
+                                               &pedge_vtx,
                                                PDM_OWNERSHIP_KEEP);
 
   /* Get faces */
@@ -374,8 +374,8 @@ int main(int argc, char *argv[])
                                       0,
                                       i_part,
                                       PDM_CONNECTIVITY_TYPE_FACE_EDGE,
-                                      &pface_edge,
                                       &pface_edge_idx,
+                                      &pface_edge,
                                       PDM_OWNERSHIP_KEEP);
 
   /* Get groups */
@@ -387,7 +387,7 @@ int main(int argc, char *argv[])
   //             &pgroup_edge);
   PDM_g_num_t *edge_bound_ln_to_gn  = NULL;
 
-  PDM_multipart_bound_get(mpart, 0, i_part, PDM_BOUND_TYPE_EDGE,
+  PDM_multipart_group_get(mpart, 0, i_part, PDM_MESH_ENTITY_EDGE,
                           &pn_edge_group,
                           &pgroup_edge_idx,
                           &pgroup_edge,

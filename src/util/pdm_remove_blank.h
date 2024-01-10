@@ -1,3 +1,7 @@
+/*
+ * \file
+ */
+
 #ifndef __PDM_REMOVE_BLANK_H__
 #define __PDM_REMOVE_BLANK_H__
 

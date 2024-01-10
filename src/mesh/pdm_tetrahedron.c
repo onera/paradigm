@@ -529,6 +529,57 @@ PDM_tetrahedron_circumsphere
   *radius = sqrt(radius2);
 }
 
+
+/**
+ * \brief Build tetrahedron->vertex from tetrahedron->face and face->vertex connectivities.
+ *
+ * \note In each tetrahedron, face #i is opposite to vertex #i.
+ *
+ * \param [in]  n_cell     Number of cells
+ * \param [in]  cell_face  Cell -> face (signed) connectivity (1-based, size : 4 * \p n_cell)
+ * \param [in]  cell_face  Face -> vertex connectivity (1-based, size : 3 * *n_face*)
+ * \param [out] cell_vtx   Cell -> vertex (signed) connectivity (size : 4 * \p n_cell)
+ *
+ */
+
+void
+PDM_tetrahedron_ngon_to_nodal
+(
+ int   n_cell,
+ int  *cell_face,
+ int  *face_vtx,
+ int **cell_vtx
+ )
+{
+  *cell_vtx = malloc(sizeof(int) * n_cell * 4);
+
+  for (int i = 0; i < n_cell; i++) {
+    int iface = cell_face[4*i+3];
+
+    if (iface < 0) {
+      iface = -iface - 1;
+      (*cell_vtx)[4*i  ] = face_vtx[3*iface  ];
+      (*cell_vtx)[4*i+1] = face_vtx[3*iface+1];
+      (*cell_vtx)[4*i+2] = face_vtx[3*iface+2];
+    } else {
+      iface = iface - 1;
+      (*cell_vtx)[4*i  ] = face_vtx[3*iface+2];
+      (*cell_vtx)[4*i+1] = face_vtx[3*iface+1];
+      (*cell_vtx)[4*i+2] = face_vtx[3*iface  ];
+    }
+
+    iface = PDM_ABS(cell_face[4*i+1]) - 1;
+    for (int j = 0; j < 3; j++) {
+      int ivtx = face_vtx[3*iface+j];
+      if (ivtx != (*cell_vtx)[4*i  ] &&
+          ivtx != (*cell_vtx)[4*i+1] &&
+          ivtx != (*cell_vtx)[4*i+2] ) {
+        (*cell_vtx)[4*i+3] = ivtx;
+      }
+    }
+  }
+}
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

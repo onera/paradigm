@@ -1,5 +1,3 @@
-import warnings
-
 cdef extern from "pdm_part_to_block.h":
     # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
     # > Wrapping of Ppart Structure
@@ -78,16 +76,11 @@ cdef class PartToBlock:
     def __cinit__(self, MPI.Comm comm, list pLNToGN, list pWeight, int partN,
                         PDM_part_to_block_distrib_t t_distrib = <PDM_part_to_block_distrib_t> (0),
                         PDM_part_to_block_post_t    t_post    = <PDM_part_to_block_post_t   > (0),
-                        PDM_stride_t                t_stride  = <PDM_stride_t   > (-1), #Trick to print warning if setted
                         double partActiveNode = 1.,
                         NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1] userDistribution=None):
         """
         Constructor of PartToBlock object : Python wrapping of PDM library (E. Quémerais)
         """
-        # > Warning
-        if t_stride != -1:
-          warnings.warn("Parameter t_stride is deprecated and will be removed in further release",
-            DeprecationWarning, stacklevel=2)
         # > Some checks
         assert(len(pLNToGN) == partN)
         for i in range(partN):
@@ -208,10 +201,7 @@ cdef class PartToBlock:
         block_stride, block_data = self.exchange_field(part_data, pStrid, interlaced_str)
         dField[field_name] = block_data
         if block_stride is not None:
-          dField[field_name + "#Stride"] = block_stride
           dField[field_name + "#PDM_Stride"] = block_stride
-          warnings.warn("Stride is now know as #PDM_Stride instead of #Stride. Old key will be removed in further release",
-            DeprecationWarning, stacklevel=2)
 
     # ------------------------------------------------------------------------
     def getBlockGnumCopy(self):

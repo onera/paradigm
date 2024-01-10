@@ -5,7 +5,7 @@
 
 
 
-MPI_TEST_CASE("[1p] dual from arc2node", 1) {
+MPI_TEST_CASE("[pdm_para_graph_dual] - 1p - dual from arc2node", 1) {
 
   PDM_MPI_Comm pdm_comm = PDM_MPI_mpi_2_pdm_mpi_comm(&test_comm);
   PDM_g_num_t* dual_graph_idx;
@@ -92,7 +92,7 @@ MPI_TEST_CASE("[1p] dual from arc2node", 1) {
     free(dcell_face);
 }
 
-MPI_TEST_CASE("[3p] dual from arc2node", 3) {
+MPI_TEST_CASE("[pdm_para_graph_dual] - 3p - dual from arc2node", 3) {
 
   PDM_MPI_Comm pdm_comm = PDM_MPI_mpi_2_pdm_mpi_comm(&test_comm);
   PDM_g_num_t* dual_graph_idx = NULL;
@@ -180,7 +180,7 @@ MPI_TEST_CASE("[3p] dual from arc2node", 3) {
 
 
 
-MPI_TEST_CASE("[1p] dual from node2arc", 1) {
+MPI_TEST_CASE("[pdm_para_graph_dual] - 1p - dual from node2arc", 1) {
 
   PDM_MPI_Comm pdm_comm = PDM_MPI_mpi_2_pdm_mpi_comm(&test_comm);
   PDM_g_num_t* dual_graph_idx = NULL;
@@ -249,7 +249,7 @@ MPI_TEST_CASE("[1p] dual from node2arc", 1) {
   free(dual_graph);
 }
 
-MPI_TEST_CASE("[3p] dual from node2arc", 3) {
+MPI_TEST_CASE("[pdm_para_graph_dual] - 3p - dual from node2arc", 3) {
 
   PDM_MPI_Comm pdm_comm = PDM_MPI_mpi_2_pdm_mpi_comm(&test_comm);
   PDM_g_num_t* dual_graph_idx = NULL;
@@ -326,7 +326,7 @@ MPI_TEST_CASE("[3p] dual from node2arc", 3) {
   free(dual_graph);
 }
 
-MPI_TEST_CASE("[3p] Split graph with PARMetis", 3) {
+MPI_TEST_CASE("[pdm_para_graph_dual] - 3p - Split graph with PARMetis", 3) {
 
   PDM_MPI_Comm pdm_comm = PDM_MPI_mpi_2_pdm_mpi_comm(&test_comm);
 

@@ -48,9 +48,9 @@ mpart = PDM.MultiPart(1,
                       np.ones(1).astype(np.double),
                       comm)
 
-mpart.multipart_register_dmesh_nodal(0, dmn_capsule)
+mpart.dmesh_nodal_set(0, dmn_capsule)
 
-mpart.multipart_run_ppart()
+mpart.compute()
 ############################################################################
 
 
@@ -60,29 +60,26 @@ mpart.multipart_run_ppart()
 extract_fraction = 0.25 # on sélectionne 25% des arêtes
 
 # on récupère la connectivité arête->sommets des partitions
-edges = mpart.multipart_connectivity_get(0, 0, PDM._PDM_CONNECTIVITY_TYPE_EDGE_VTX)
-edge_vtx = edges["np_entity1_entity2"]
+_, edge_vtx = mpart.connectivity_get(0, 0, PDM._PDM_CONNECTIVITY_TYPE_EDGE_VTX)
 
-res_face_edge = mpart.multipart_connectivity_get(0, 0, PDM._PDM_CONNECTIVITY_TYPE_FACE_EDGE)
-face_edge, face_edge_idx = res_face_edge["np_entity1_entity2"],res_face_edge["np_entity1_entity2_idx"]
+face_edge_idx, face_edge = mpart.connectivity_get(0, 0, PDM._PDM_CONNECTIVITY_TYPE_FACE_EDGE)
 
-res_edge_face = mpart.multipart_connectivity_get(0, 0, PDM._PDM_CONNECTIVITY_TYPE_EDGE_FACE)
-edge_face, edge_face_idx = res_edge_face["np_entity1_entity2"],res_edge_face["np_entity1_entity2_idx"]
+edge_face_idx, edge_face = mpart.connectivity_get(0, 0, PDM._PDM_CONNECTIVITY_TYPE_EDGE_FACE)
 
-# part_infos = mpart.multipart_val_get(0, 0)
+# part_infos = mpart.val_get(0, 0)
 
-ghost_info_vtx  = mpart.multipart_ghost_information_get(0, 0)
+ghost_info_vtx  = mpart.ghost_information_get(0, 0)
 
 # on récupère les numéros absolus des arêtes
-edge_ln_to_gn = mpart.multipart_ln_to_gn_get(0, 0, PDM._PDM_MESH_ENTITY_EDGE)["np_entity_ln_to_gn"]
+edge_ln_to_gn = mpart.ln_to_gn_get(0, 0, PDM._PDM_MESH_ENTITY_EDGE)
 n_edge = len(edge_ln_to_gn)
 
 # on récupère les numéros absolus des sommets
-vtx_ln_to_gn = mpart.multipart_ln_to_gn_get(0, 0, PDM._PDM_MESH_ENTITY_VERTEX)["np_entity_ln_to_gn"]
+vtx_ln_to_gn = mpart.ln_to_gn_get(0, 0, PDM._PDM_MESH_ENTITY_VTX)
 # vtx_ln_to_gn = part_infos["np_vtx_ln_to_gn"]
 
 # on récupère les coordonnées des sommets
-vtx_coord = mpart.multipart_vtx_coord_get(0, 0)["np_vtx_coord"]
+vtx_coord = mpart.vtx_coord_get(0, 0)
 n_vtx = len(vtx_ln_to_gn)
 
 # vtx_coord = part_infos["np_vtx_coord"]
@@ -167,10 +164,10 @@ for i in range(n_segment):
 
 # on (re-)construit une numérotation absolue pour les segments
 gen_gnum = PDM.GlobalNumbering(3, 1, 0, 1., comm)
-gen_gnum.gnum_set_from_coords(0, n_segment, segment_base_coord, np.ones(n_segment))
-gen_gnum.gnum_compute()
+gen_gnum.set_from_coords(0, segment_base_coord, np.ones(n_segment))
+gen_gnum.compute()
 
-segment_ln_to_gn = gen_gnum.gnum_get(0)["gnum"]
+segment_ln_to_gn = gen_gnum.get(0)
 ############################################################################
 
 
@@ -242,7 +239,7 @@ part2_stride, part2_data = ptp.wait(request)
 ############################################################################
 # Export for visu (ENSIGHT/VTK?)
 # if visu:
-#   faces = mpart.multipart_connectivity_get(0, 0, PDM._PDM_CONNECTIVITY_TYPE_FACE_EDGE)
+#   faces = mpart.connectivity_get(0, 0, PDM._PDM_CONNECTIVITY_TYPE_FACE_EDGE)
 #   face_edge_idx = faces["np_entity1_entity2_idx"]
 #   face_edge     = faces["np_entity1_entity2"]
 

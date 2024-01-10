@@ -32,14 +32,14 @@ program testf
   double precision                  :: radius   = 4.d0
 
   integer(pdm_l_num_s), pointer     :: pn_vtx(:)  => null()
-  type(PDM_pointer_array_t)         :: pvtx_coord
-  type(PDM_pointer_array_t)         :: pvtx_ln_to_gn
+  type(PDM_pointer_array_t), pointer:: pvtx_coord => null()
+  type(PDM_pointer_array_t), pointer:: pvtx_ln_to_gn => null()
   integer(pdm_l_num_s), pointer     :: pn_face(:) => null()
-  type(PDM_pointer_array_t)         :: pface_vtx_idx
-  type(PDM_pointer_array_t)         :: pface_vtx
-  type(PDM_pointer_array_t)         :: pface_ln_to_gn
+  type(PDM_pointer_array_t), pointer:: pface_vtx_idx => null()
+  type(PDM_pointer_array_t), pointer:: pface_vtx => null()
+  type(PDM_pointer_array_t), pointer:: pface_ln_to_gn => null()
 
-  double precision,     pointer     :: vtx_coord(:)     => null()
+  ! double precision,     pointer     :: vtx_coord(:)     => null()
   double precision,     pointer     :: vtx_coord2(:,:)  => null()
   integer(pdm_g_num_s), pointer     :: vtx_ln_to_gn(:)  => null()
   integer(pdm_l_num_s), pointer     :: face_vtx(:)      => null()
@@ -136,15 +136,20 @@ program testf
     call PDM_pointer_array_part_get(pvtx_ln_to_gn, &
                                     ipart-1,       &
                                     vtx_ln_to_gn)
-    call PDM_pointer_array_part_get(pvtx_coord, &
-                                    ipart-1,    &
-                                    vtx_coord)
+    ! call PDM_pointer_array_part_get(pvtx_coord, &
+    !                                 ipart-1,    &
+    !                                 vtx_coord)
 
     ! Reshape without copy
-    call c_f_pointer(c_loc(vtx_coord), vtx_coord2, [3, pn_vtx(ipart)])
-    call PDM_pointer_array_part_get(pvtx_coord, &
-                                    ipart-1,    &
-                                    vtx_coord)
+    ! call c_f_pointer(c_loc(vtx_coord), vtx_coord2, [3, pn_vtx(ipart)])
+    ! call PDM_pointer_array_part_get(pvtx_coord, &
+    !                                 ipart-1,    &
+    !                                 vtx_coord)
+    call PDM_pointer_array_part_get(pvtx_coord,                &
+                                    ipart-1,                   &
+                                    PDM_STRIDE_CST_INTERLACED, &
+                                    3,                         &
+                                    vtx_coord2)
 
     call PDM_writer_geom_coord_set(wrt,                &
                                    id_geom,            &
@@ -184,15 +189,15 @@ program testf
 
   call PDM_writer_free(wrt)
 
-
   !  Free memory
+
   call pdm_fortran_free_c(c_loc(pn_vtx))
   call pdm_fortran_free_c(c_loc(pn_face))
-  call PDM_pointer_array_free_from_c(pvtx_coord)
-  call PDM_pointer_array_free_from_c(pvtx_ln_to_gn)
-  call PDM_pointer_array_free_from_c(pface_vtx_idx)
-  call PDM_pointer_array_free_from_c(pface_vtx)
-  call PDM_pointer_array_free_from_c(pface_ln_to_gn)
+  call PDM_pointer_array_free(pvtx_coord)
+  call PDM_pointer_array_free(pvtx_ln_to_gn)
+  call PDM_pointer_array_free(pface_vtx_idx)
+  call PDM_pointer_array_free(pface_vtx)
+  call PDM_pointer_array_free(pface_ln_to_gn)
 
 
   if (i_rank .eq. 0) then

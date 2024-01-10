@@ -1,3 +1,7 @@
+/*
+ * \file
+ */
+
 #ifndef __PDM_CUTHILL_H__
 #define __PDM_CUTHILL_H__
 

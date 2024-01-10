@@ -1,3 +1,7 @@
+/*
+ * \file
+ */
+
 #ifndef __PDM_VERSION_H__
 #define __PDM_VERSION_H__
 

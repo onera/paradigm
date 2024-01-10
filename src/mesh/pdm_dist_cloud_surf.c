@@ -1707,7 +1707,7 @@ _dist_cloud_surf_compute_optim
 
     int pextract_n_vtx = PDM_extract_part_n_entity_get(extrp,
                                                        0,
-                                                       PDM_MESH_ENTITY_VERTEX);
+                                                       PDM_MESH_ENTITY_VTX);
     double *pextract_vtx_coord = NULL;
     PDM_extract_part_vtx_coord_get(extrp,
                                    0,
@@ -2449,6 +2449,7 @@ _dist_cloud_surf_compute_optim
  * \param [in]   mesh_nature    Nature of the mesh
  * \param [in]   n_point_cloud  Number of point cloud
  * \param [in]   comm           MPI communicator
+ * \param [in]   owner          Ownership of \ref PDM_dist_cloud_surf_t
  *
  * \return     Pointer to \ref PDM_dist_cloud_surf object
  */
@@ -2730,7 +2731,7 @@ PDM_dist_cloud_surf_compute
  * \param [in]   i_part            Index of partition of the cloud
  * \param [out]  distance          Distance
  * \param [out]  projected         Projected point coordinates
- * \param [out]  closest_elt_g_num Global number of the closest element
+ * \param [out]  closest_elt_gnum  Global number of the closest element
  *
  */
 

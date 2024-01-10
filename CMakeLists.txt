@@ -108,7 +108,7 @@ endif()
 # Enable long for absolute number
 # -------------------------------
 
-option(PDM_ENABLE_LONG_G_NUM "Enable long for global number" OFF)
+option(PDM_ENABLE_LONG_G_NUM "Enable long for global number" ON)
 
 # Pt-scotch
 # ---------
@@ -172,6 +172,18 @@ option(PDM_ENABLE_Fortran_MPI_MODULE "Use Fortran MPI module" ON)
 # ------
 
 option(PDM_ENABLE_UNIT_TEST "Enable unit test " OFF)
+
+
+# Documentation
+# -------------
+
+option(PDM_ENABLE_DOC "Enable Sphinx documentation" OFF)
+
+
+# Training Notebooks
+# ------------------
+
+option(PDM_ENABLE_TRAINING "Enable training Jupyter Notebooks" OFF)
 
 #------------------------------------------------------------------------------
 # Default build : Release
@@ -245,7 +257,7 @@ if (PDM_ENABLE_MPI_CHECK)
    include(${CMAKE_MODULE_PATH}/CheckMPI.cmake)
 endif()
 
-# Checck SCOTCH an ParMETIS
+# Check SCOTCH an ParMETIS
 # -------------------------
 
 if (PDM_ENABLE_PARMETIS)
@@ -403,6 +415,10 @@ endif()
 
 add_subdirectory(doc)
 
+if (PDM_ENABLE_TRAINING)
+  add_subdirectory(training)
+endif()
+
 #------------------------------------------------------------------------------
 # Create PDM_run file
 #------------------------------------------------------------------------------
@@ -420,6 +436,10 @@ if (CMAKE_BUILD_TYPE STREQUAL "Sanitize")
   set(PDM_RUN_PRELOAD "LD_PRELOAD ${PRELOAD_ASAN}:${PROJECT_BINARY_DIR}/script/asan/fake_dlclose/libdlclose.so")
   set(PDM_RUN_PRELOAD_SRUN "LD_PRELOAD=${PRELOAD_ASAN}:${PROJECT_BINARY_DIR}/script/asan/fake_dlclose/libdlclose.so")
   set(PDM_RUN_LSAN "LSAN_OPTIONS=suppressions=${PROJECT_SOURCE_DIR}/script/asan/asan.supp")
+
+  if (PDM_ENABLE_DOC)
+    message(FATAL_ERROR "Documention can not be built in Sanitize CMAKE_BUILD_TYPE")
+  endif ()
 endif()
 
 if(DEFINED ENV{PYTHONPATH})
@@ -453,16 +473,16 @@ configure_file(${PROJECT_SOURCE_DIR}/script/pdm_launch_python.in "${PROJECT_BINA
 
 if(PDM_ENABLE_UNIT_TEST)
   include(FetchContent)
-  # FetchContent_Declare(
-  #   doctest
-  #   GIT_REPOSITORY https://github.com/onqtam/doctest.git
-  #   GIT_TAG        2.4.1
-  # )
   FetchContent_Declare(
     doctest
-     GIT_REPOSITORY https://github.com/BerengerBerthoul/doctest.git
-     GIT_TAG        f13a00607463ce211004be23b5aa0bdf24d3ab61
+    GIT_REPOSITORY https://github.com/doctest/doctest.git
+    GIT_TAG        v2.4.11
   )
+  # FetchContent_Declare(
+  #   doctest
+  #    GIT_REPOSITORY https://github.com/BerengerBerthoul/doctest.git
+  #    GIT_TAG        f13a00607463ce211004be23b5aa0bdf24d3ab61
+  # )
   FetchContent_GetProperties(doctest)
   if(NOT doctest_POPULATED)
     FetchContent_Populate(doctest)
@@ -501,4 +521,3 @@ install(FILES "${CMAKE_CURRENT_BINARY_DIR}/pdmConfigVersion.cmake"
 
 
 add_subdirectory(${PDM_CMAKE_DIR}/post-install)
-

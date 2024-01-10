@@ -1,3 +1,7 @@
+/*
+ * \file
+ */
+
 #ifndef PDM_MESH_LOCATION_H
 #define PDM_MESH_LOCATION_H
 
@@ -31,21 +35,19 @@ typedef struct _pdm_mesh_location_t PDM_mesh_location_t;
 
 /**
  *
- * \brief Create a structure to compute the location of point clouds inta a mesh
+ * \brief Create a structure to compute the location of point clouds inside a mesh
  *
- * \param [in]   mesh_nature    Nature of the mesh
- * \param [in]   n_point_cloud  Number of point cloud
+ * \param [in]   n_point_cloud  Number of point clouds
  * \param [in]   comm           MPI communicator
  * \param [in]   owner          Ownership
  *
- * \return     Pointer to \ref PDM_mesh_location object
+ * \return     Pointer to \ref PDM_mesh_location_t instance
  *
  */
 
 PDM_mesh_location_t*
 PDM_mesh_location_create
 (
- const PDM_mesh_nature_t mesh_nature,
  const int               n_point_cloud,
  const PDM_MPI_Comm      comm,
  const PDM_ownership_t   owner
@@ -56,8 +58,8 @@ PDM_mesh_location_create
  *
  * \brief Set the number of partitions of a point cloud
  *
- * \param [in]   id              Pointer to \ref PDM_mesh_location object
- * \param [in]   i_point_cloud   Index of point cloud
+ * \param [in]   ml              Pointer to \ref PDM_mesh_location_t instance
+ * \param [in]   i_point_cloud   Point cloud identifier
  * \param [in]   n_part          Number of partitions
  *
  */
@@ -76,12 +78,12 @@ PDM_mesh_location_n_part_cloud_set
  *
  * \brief Set a point cloud
  *
- * \param [in]   id              Pointer to \ref PDM_mesh_location object
- * \param [in]   i_point_cloud   Index of point cloud
- * \param [in]   i_part          Index of partition
+ * \param [in]   ml              Pointer to \ref PDM_mesh_location_t instance
+ * \param [in]   i_point_cloud   Point cloud identifier
+ * \param [in]   i_part          Partition identifier
  * \param [in]   n_points        Number of points
- * \param [in]   coords          Point coordinates
- * \param [in]   gnum            Point global number
+ * \param [in]   coords          Point coordinates (size : 3 * \p n_points)
+ * \param [in]   gnum            Point global ids (size : \p n_points)
  *
  */
 
@@ -101,12 +103,12 @@ PDM_mesh_location_cloud_set
  *
  * \brief Get a point cloud
  *
- * \param [in]   id              Pointer to \ref PDM_mesh_location object
- * \param [in]   i_point_cloud   Index of point cloud
- * \param [in]   i_part          Index of partition
+ * \param [in]   ml              Pointer to \ref PDM_mesh_location_t instance
+ * \param [in]   i_point_cloud   Point cloud identifier
+ * \param [in]   i_part          Partition identifier
  * \param [out]  n_points        Number of points
  * \param [out]  coords          Point coordinates
- * \param [out]  gnum            Point global number
+ * \param [out]  gnum            Point global ids
  *
  */
 
@@ -126,11 +128,11 @@ PDM_mesh_location_cloud_get
  *
  * \brief Get the number of located points
  *
- * \param [in]   id              Pointer to \ref PDM_mesh_location object
- * \param [in]   i_point_cloud   Index of point cloud
- * \param [in]   i_part          Index of partition
+ * \param [in]   ml              Pointer to \ref PDM_mesh_location_t instance
+ * \param [in]   i_point_cloud   Point cloud identifier
+ * \param [in]   i_part          Partition identifier
  *
- * \return     The number of located points
+ * \return     Number of located points
  *
  */
 
@@ -147,11 +149,11 @@ PDM_mesh_location_n_located_get
  *
  * \brief Get the number of unlocated points
  *
- * \param [in]   id              Pointer to \ref PDM_mesh_location object
- * \param [in]   i_point_cloud   Index of point cloud
- * \param [in]   i_part          Index of partition
+ * \param [in]   ml              Pointer to \ref PDM_mesh_location_t instance
+ * \param [in]   i_point_cloud   Point cloud identifier
+ * \param [in]   i_part          Partition identifier
  *
- * \return     The number of unlocated points
+ * \return     Number of unlocated points
  *
  */
 
@@ -168,11 +170,11 @@ PDM_mesh_location_n_unlocated_get
  *
  * \brief Get the list of unlocated points
  *
- * \param [in]   id              Pointer to \ref PDM_mesh_location object
- * \param [in]   i_point_cloud   Index of point cloud
- * \param [in]   i_part          Index of partition
+ * \param [in]   ml              Pointer to \ref PDM_mesh_location_t instance
+ * \param [in]   i_point_cloud   Point cloud identifier
+ * \param [in]   i_part          Partition identifier
  *
- * \return     The list of unlocated points
+ * \return     List of unlocated points (1-based ids)
  *
  */
 
@@ -189,11 +191,11 @@ PDM_mesh_location_unlocated_get
  *
  * \brief Get the list of located points
  *
- * \param [in]   id              Pointer to \ref PDM_mesh_location object
- * \param [in]   i_point_cloud   Index of point cloud
- * \param [in]   i_part          Index of partition
+ * \param [in]   ml              Pointer to \ref PDM_mesh_location_t instance
+ * \param [in]   i_point_cloud   Point cloud identifier
+ * \param [in]   i_part          Partition identifier
  *
- * \return     The list of located points
+ * \return     List of located points (1-based ids)
  *
  */
 
@@ -209,10 +211,10 @@ PDM_mesh_location_located_get
 
 /**
  *
- * \brief Set the mesh nodal
+ * \brief Set the nodal mesh
  *
- * \param [in]   id             Pointer to \ref PDM_mesh_location object
- * \param [in]   mesh_nodal_id  Mesh nodal Pointer to \ref PDM_mesh_location object
+ * \param [in]   ml             Pointer to \ref PDM_mesh_location_t instance
+ * \param [in]   mesh_nodal     Pointer to \ref PDM_part_mesh_nodal_t instance
  *
  */
 
@@ -226,15 +228,15 @@ PDM_mesh_location_shared_nodal_mesh_set
 
 /**
  *
- * \brief Set global data of a mesh
+ * \brief Set the number of partitions of the mesh
  *
- * \param [in]   ml             Pointer to \ref PDM_mesh_location object
+ * \param [in]   ml             Pointer to \ref PDM_mesh_location_t instance
  * \param [in]   n_part         Number of partitions
  *
  */
 
 void
-PDM_mesh_location_mesh_global_data_set
+PDM_mesh_location_mesh_n_part_set
 (
        PDM_mesh_location_t *ml,
  const int                  n_part
@@ -243,21 +245,21 @@ PDM_mesh_location_mesh_global_data_set
 
 /**
  *
- * \brief Set a part of a mesh
+ * \brief Set a *volume* mesh partition
  *
- * \param [in]   id            Pointer to \ref PDM_mesh_location object
- * \param [in]   i_part        Partition to define
- * \param [in]   n_cell        Number of cells
- * \param [in]   cell_face_idx Index in the cell -> face connectivity
- * \param [in]   cell_face     cell -> face connectivity
- * \param [in]   cell_ln_to_gn Local cell numbering to global cel numbering
- * \param [in]   n_face        Number of faces
- * \param [in]   face_vtx_idx  Index in the face -> vertex connectivity
- * \param [in]   face_vtx      face -> vertex connectivity
- * \param [in]   face_ln_to_gn Local face numbering to global face numbering
- * \param [in]   n_vtx         Number of vertices
- * \param [in]   coords        Coordinates
- * \param [in]   vtx_ln_to_gn  Local vertex numbering to global vertex numbering
+ * \param [in]   ml              Pointer to \ref PDM_mesh_location_t instance
+ * \param [in]   i_part          Partition identifier
+ * \param [in]   n_cell          Number of cells
+ * \param [in]   cell_face_idx   Index for cell -> face connectivity (size : \p n_cell + 1)
+ * \param [in]   cell_face       Cell -> face connectivity (size : \p cell_face_idx[\p n_cell])
+ * \param [in]   cell_ln_to_gn   Cell global ids (size : \p n_cell)
+ * \param [in]   n_face          Number of faces
+ * \param [in]   face_vtx_idx    Index for face -> vertex connectivity (size : \p n_face + 1)
+ * \param [in]   face_vtx        Face -> vertex connectivity (size : \p face_vtx_idx[\p n_face])
+ * \param [in]   face_ln_to_gn   Face global ids (size : \p n_face)
+ * \param [in]   n_vtx           Number of vertices
+ * \param [in]   coords          Vertex coordinates (size : 3 * \p n_vtx)
+ * \param [in]   vtx_ln_to_gn    Vertex global ids (size : \p n_vtx)
  *
  */
 
@@ -281,12 +283,43 @@ PDM_mesh_location_part_set
 
 /**
  *
- * \brief Set a part of a mesh
+ * \brief Set a *volume* mesh partition defined by nodal connectivity
  *
- * \param [in]   id                     Pointer to \ref PDM_mesh_location object
- * \param [in]   i_part                 Partition to define
- * \param [in]   n_cell                 Number of cells
- * \param [in]   is_elmt_select_by_user Flag to determine if user want or no to extract current cell
+ * The mesh is assumed to contain only standard elements
+ * (tetrahedra, pyramids, prisms, hexahedra).
+ *
+ * \param [in]   ml            Pointer to \ref PDM_mesh_location instance
+ * \param [in]   i_part        Partition to define
+ * \param [in]   n_cell        Number of cells
+ * \param [in]   cell_vtx_idx  Index in the cell -> vertex connectivity
+ * \param [in]   cell_vtx      Cell -> vertex connectivity
+ * \param [in]   cell_ln_to_gn Global cell ids
+ * \param [in]   n_vtx         Number of vertices
+ * \param [in]   coords        Coordinates
+ * \param [in]   vtx_ln_to_gn  Vertex global ids
+ *
+ */
+void
+PDM_mesh_location_nodal_part_set
+(
+       PDM_mesh_location_t *ml,
+ const int                  i_part,
+ const int                  n_cell,
+ const int                 *cell_vtx_idx,
+ const int                 *cell_vtx,
+ const PDM_g_num_t         *cell_ln_to_gn,
+ const int                  n_vtx,
+ const double              *coords,
+ const PDM_g_num_t         *vtx_ln_to_gn
+);
+
+/**
+ *
+ * \brief Select cells to extract before computing location
+ *
+ * \param [in]   ml                     Pointer to \ref PDM_mesh_location_t instance
+ * \param [in]   i_part                 Partition identifier
+ * \param [in]   is_elmt_select_by_user Flag to determine which cells must be extracted (size : *n_cell*)
  *
  */
 void
@@ -301,21 +334,19 @@ PDM_mesh_location_user_extract_set
 
 /**
  *
- * \brief Set a part of a mesh (2d version)
+ * \brief Set a *surface* mesh partition
  *
- * \param [in]   id            Pointer to \ref PDM_mesh_location object
- * \param [in]   i_part        Partition to define
- * \param [in]   n_cell        Number of cells
- * \param [in]   cell_edge_idx Index in the cell -> edge connectivity
- * \param [in]   cell_edge     cell -> edge connectivity
- * \param [in]   cell_ln_to_gn Local cell numbering to global cel numbering
- * \param [in]   n_edge        Number of edges
- * \param [in]   edge_vtx_idx  Index in the edge -> vertex connectivity
- * \param [in]   edge_vtx      edge -> vertex connectivity
- * \param [in]   edge_ln_to_gn Local edge numbering to global edge numbering
- * \param [in]   n_vtx         Number of vertices
- * \param [in]   coords        Coordinates
- * \param [in]   vtx_ln_to_gn  Local vertex numbering to global vertex numbering
+ * \param [in]   ml             Pointer to \ref PDM_mesh_location instance
+ * \param [in]   i_part         Partition to define
+ * \param [in]   n_face         Number of faces
+ * \param [in]   face_edge_idx  Index for face -> edge connectivity (size : \p n_face + 1)
+ * \param [in]   face_edge      Face -> edge connectivity (size : \p face_edge_idx[\p n_face])
+ * \param [in]   face_ln_to_gn  Face global ids (size : \p n_face)
+ * \param [in]   n_edge         Number of edges
+ * \param [in]   edge_vtx       Edge -> vertex connectivity
+ * \param [in]   n_vtx          Number of vertices
+ * \param [in]   coords         Coordinates
+ * \param [in]   vtx_ln_to_gn   Vertex global ids
  *
  */
 
@@ -324,14 +355,12 @@ PDM_mesh_location_part_set_2d
 (
        PDM_mesh_location_t *ml,
  const int                  i_part,
- const int                  n_cell,
- const int                 *cell_edge_idx,
- const int                 *cell_edge,
- const PDM_g_num_t         *cell_ln_to_gn,
+ const int                  n_face,
+ const int                 *face_edge_idx,
+ const int                 *face_edge,
+ const PDM_g_num_t         *face_ln_to_gn,
  const int                  n_edge,
- const int                 *edge_vtx_idx,
  const int                 *edge_vtx,
- const PDM_g_num_t         *edge_ln_to_gn,
  const int                  n_vtx,
  const double              *coords,
  const PDM_g_num_t         *vtx_ln_to_gn
@@ -339,9 +368,41 @@ PDM_mesh_location_part_set_2d
 
 /**
  *
- * \brief Set the tolerance for bounding boxes
+ * \brief Set a *surface* mesh partition with nodal connectivity
  *
- * \param [in]   id              Pointer to \ref PDM_mesh_location object
+ * \param [in]   ml             Pointer to \ref PDM_mesh_location instance
+ * \param [in]   i_part         Partition to define
+ * \param [in]   n_face         Number of faces
+ * \param [in]   face_vtx_idx   Index for face -> vertex connectivity
+ * \param [in]   face_vtx       Face -> vertex connectivity
+ * \param [in]   face_ln_to_gn  Face global ids
+ * \param [in]   n_vtx          Number of vertices
+ * \param [in]   coords         Coordinates
+ * \param [in]   vtx_ln_to_gn   Vertex global ids
+ *
+ */
+
+void
+PDM_mesh_location_nodal_part_set_2d
+(
+       PDM_mesh_location_t *ml,
+ const int                  i_part,
+ const int                  n_face,
+ const int                 *face_vtx_idx,
+ const int                 *face_vtx,
+ const PDM_g_num_t         *face_ln_to_gn,
+ const int                  n_vtx,
+ const double              *coords,
+ const PDM_g_num_t         *vtx_ln_to_gn
+);
+
+/**
+ *
+ * \brief Set the relative tolerance for bounding boxes
+ *
+ * \note This is an optional setting. By default a relative tolerance equal to 0 is used.
+ *
+ * \param [in]   ml              Pointer to \ref PDM_mesh_location_t instance
  * \param [in]   tol             Tolerance
  *
  */
@@ -356,10 +417,17 @@ PDM_mesh_location_tolerance_set
 
 /**
  *
- * \brief Set the method for computing location
+ * \brief Set the method for computing location (preconditioning stage)
  *
- * \param [in]   id              Pointer to \ref PDM_mesh_location object
- * \param [in]   method          Method
+ * \note This is an optional setting.
+ *
+ * Admissible values are :
+ *    - \p PDM_MESH_LOCATION_OCTREE         : Use point octree (default method)
+ *    - \p PDM_MESH_LOCATION_DBBTREE        : Use bounding-box tree
+ *    - \p PDM_MESH_LOCATION_LOCATE_ALL_TGT : All target points are guaranteed to be located
+ *
+ * \param [in]   ml              Pointer to \ref PDM_mesh_location_t instance
+ * \param [in]   method          Preconditioning method
  *
  */
 
@@ -375,15 +443,9 @@ PDM_mesh_location_method_set
  *
  * \brief Compute point location
  *
- * \param [in]   id  Pointer to \ref PDM_mesh_location object
+ * \param [in]   ml              Pointer to \ref PDM_mesh_location_t instance
  *
  */
-
-void
-PDM_mesh_location_compute_old
-(
-PDM_mesh_location_t        *ml
-);
 
 void
 PDM_mesh_location_compute
@@ -396,13 +458,14 @@ PDM_mesh_location_compute
  *
  * \brief Get point location
  *
- * \param [in]   id                    Pointer to \ref PDM_mesh_location object
- * \param [in]   i_point_cloud         Current cloud
- * \param [in]   i_part                Index of partition of the cloud
- * \param [out]  n_points              Number of points in point cloud
- * \param [out]  coord                 Coordinates of points in point cloud
- * \param [out]  location              The global number of the closest element if the point is located,
- *                                     -1 otherwise
+ * \note The results are related to located points only
+ *
+ * \param [in]   ml                    Pointer to \ref PDM_mesh_location_t instance
+ * \param [in]   i_point_cloud         Point cloud identifier
+ * \param [in]   i_part                Partition identifier
+ * \param [out]  location              Global id of nearest mesh element if the point is located, -1 otherwise
+ * \param [out]  dist2                 Signed squared distance from nearest element (negative if the point is located inside that element)
+ * \param [out]  projected_coord       Cartesian coordinates of projection onto the nearest element (identity if the point is located inside that element)
  *
  */
 
@@ -420,12 +483,16 @@ PDM_mesh_location_point_location_get
 
 /**
  *
- * \brief get cell vertex connectivity
+ * \brief Get the cell->vertex connectivity used for internal computations
  *
- * \param [in]   id                    Pointer to \ref PDM_mesh_location object
- * \param [in]   i_part                Index of partition of the cloud
- * \param [out]  cell_vtx_idx          Index in (size = n_elt + 1)
- * \param [out]  cell_vtx              Cell vertex connectivity
+ * \note For non-standard elements, this connectivity is built by ParaDiGM and is necessary to associate
+ *       the `points_weights` array (returned by \ref PDM_mesh_location_points_in_elt_get)
+ *       to the appropriate mesh vertices.
+ *
+ * \param [in]   ml                    Pointer to \ref PDM_mesh_location_t instance
+ * \param [in]   i_part                Partition identifier
+ * \param [out]  cell_vtx_idx          Index for cell -> vertex connectivity (size = *n_elt* + 1)
+ * \param [out]  cell_vtx              Cell -> vertex connectivity
  *
  */
 
@@ -441,19 +508,19 @@ PDM_mesh_location_cell_vertex_get
 
 /**
  *
- * \brief Get point list located in elements
+ * \brief Get location data for points located in elements
  *
- * \param [in]   id                      Pointer to \ref PDM_mesh_location object
- * \param [in]   i_part                  Index of partition of the mesh
- * \param [in]   i_point_cloud           Index of cloud
- * \param [out]  elt_pts_inside_idx      Points index (size = n_elt + 1)
- * \param [out]  points_gnum             Points global number
- * \param [out]  points_coords           Points coordinates
- * \param [out]  points_uvw              Points parametric coordinates in elements
- * \param [out]  points_weights_idx      Interpolation weights index (size = elt_pts_inside_idx[n_elt] + 1)
- * \param [out]  points_weights          Interpolation weights
- * \param [out]  points_dist2            Distance element-points (dist < 0 if the point is inside)
- * \param [out]  points_projected_coords Point projection on element if the point is outside
+ * \param [in]   ml                      Pointer to \ref PDM_mesh_location_t instance
+ * \param [in]   i_point_cloud           Point cloud identifier
+ * \param [in]   i_part                  Partition identifier
+ * \param [out]  elt_pts_inside_idx      Index for element -> points mapping (size = *n_elt* + 1)
+ * \param [out]  points_gnum             Located points global ids (size : \p elt_pts_inside_idx[ *n_elt* ])
+ * \param [out]  points_coords           Located points cartesian coordinates (size : 3 * \p elt_pts_inside_idx[ *n_elt* ])
+ * \param [out]  points_uvw              Located points parametric coordinates (size : 3 * \p elt_pts_inside_idx[ *n_elt* ])
+ * \param [out]  points_weights_idx      Index for interpolation weights (size : \p elt_pts_inside_idx[ *n_elt* ] + 1)
+ * \param [out]  points_weights          Interpolation weights (size : \p points_weights_idx[\p elt_pts_inside_idx[ *n_elt* ]])
+ * \param [out]  points_dist2            Signed squared distance element-points (< 0 if the point is inside) (size : \p elt_pts_inside_idx[ *n_elt* ])
+ * \param [out]  points_projected_coords Cartesian coordinates of projection on element (identity if the point is inside) (size : 3 * \p elt_pts_inside_idx[ *n_elt* ])
  *
  */
 
@@ -461,8 +528,8 @@ void
 PDM_mesh_location_points_in_elt_get
 (
        PDM_mesh_location_t  *ml,
- const int                   i_part,
  const int                   i_point_cloud,
+ const int                   i_part,
        int                 **elt_pts_inside_idx,
        PDM_g_num_t         **points_gnum,
        double              **points_coords,
@@ -478,7 +545,7 @@ PDM_mesh_location_points_in_elt_get
  *
  * \brief Free a mesh location structure
  *
- * \param [in]  ml       Pointer to \ref PDM_mesh_location object
+ * \param [in]  ml       Pointer to \ref PDM_mesh_location_t instance
  *
  */
 
@@ -493,8 +560,8 @@ PDM_mesh_location_free
  *
  * \brief Get the number of cells
  *
- * \param [in]  id       Pointer to \ref PDM_mesh_location object
- * \param [in]  i_part   Index of partition of the mesh
+ * \param [in]  ml       Pointer to \ref PDM_mesh_location_t instance
+ * \param [in]  i_part   Partition identifier
  *
  * \return Number of cells
  */
@@ -509,9 +576,9 @@ PDM_mesh_location_n_cell_get
 
 /**
  *
- * \brief  Dump elapsed an CPU time
+ * \brief  Dump elapsed and CPU times
  *
- * \param [in]  id       Pointer to \ref PDM_mesh_location object
+ * \param [in]  ml       Pointer to \ref PDM_mesh_location_t instance
  *
  */
 
@@ -521,6 +588,17 @@ PDM_mesh_location_dump_times
 PDM_mesh_location_t *ml
 );
 
+
+/**
+ *
+ * \brief Get the nodal mesh
+ *
+ * \param [in]  ml  Pointer to \ref PDM_mesh_location_t instance
+ *
+ * \return          Pointer to \ref PDM_part_mesh_nodal_t instance
+ *
+ */
+
 PDM_part_mesh_nodal_t*
 PDM_mesh_location_mesh_nodal_get
 (
@@ -529,24 +607,13 @@ PDM_mesh_location_t *ml
 
 
 /**
- * Enable reverse results computation (To call PDM_mesh_location_points_in_elt_get)
- */
-
-void
-PDM_mesh_location_reverse_results_enable
-(
-PDM_mesh_location_t *ml
-);
-
-
-/**
- * \brief Get part_to_part object to exchange data between
+ * \brief Get \ref PDM_part_to_part_t instance to exchange data between
  * the source mesh and a target point cloud (both in user frame)
  *
- * \param [in ] ml         Pointer to \ref PDM_mesh_location_t object
- * \param [in ] icloud     Point cloud ID
- * \param [out] ptp        Pointer to \ref PDM_part_to_part_t object
- * \param [in ] ownership  Ownership for ptp
+ * \param [in ] ml            Pointer to \ref PDM_mesh_location_t instance
+ * \param [in ] i_point_cloud Point cloud identifier
+ * \param [out] ptp           Pointer to \ref PDM_part_to_part_t instance
+ * \param [in ] ownership     Ownership for \p ptp
  *
  */
 
@@ -554,7 +621,7 @@ void
 PDM_mesh_location_part_to_part_get
 (
        PDM_mesh_location_t  *ml,
- const int                   icloud,
+ const int                   i_point_cloud,
        PDM_part_to_part_t  **ptp,
        PDM_ownership_t       ownership
  );

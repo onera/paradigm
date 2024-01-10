@@ -502,8 +502,8 @@ module pdm_writer
     integer(c_int)                :: c_id_geom
     integer(c_int)                :: c_id_part
     integer(c_int)                :: c_n_som
-    type(c_ptr)                   :: c_coords = C_NULL_PTR
-    type(c_ptr)                   :: c_numabs = C_NULL_PTR
+    type(c_ptr)                   :: c_coords
+    type(c_ptr)                   :: c_numabs
 
     interface
       subroutine PDM_writer_geom_coord_set_c (cs,      &
@@ -533,8 +533,16 @@ module pdm_writer
     c_n_som   = n_som
     c_owner   = owner
 
-    c_coords = c_loc(coords)
-    c_numabs = c_loc(numabs)
+    c_coords = C_NULL_PTR
+    if (associated(coords)) then
+      c_coords = c_loc(coords)
+    endif 
+      
+    c_numabs = C_NULL_PTR
+    if (associated(numabs)) then
+      c_numabs = c_loc(numabs)
+    endif 
+      
 
     call PDM_writer_geom_coord_set_c (cs,        &
                                       c_id_geom, &
@@ -594,10 +602,10 @@ module pdm_writer
     integer(c_int)                :: c_n_som
     integer(c_int)                :: c_n_som_parent
     integer(c_int)                :: c_owner
-    type(c_ptr)                   :: c_numabs        = C_NULL_PTR
-    type(c_ptr)                   :: c_num_parent    = C_NULL_PTR
-    type(c_ptr)                   :: c_coords_parent = C_NULL_PTR
-    type(c_ptr)                   :: c_numabs_parent = C_NULL_PTR
+    type(c_ptr)                   :: c_numabs
+    type(c_ptr)                   :: c_num_parent
+    type(c_ptr)                   :: c_coords_parent
+    type(c_ptr)                   :: c_numabs_parent
 
     interface
       subroutine PDM_writer_geom_coord_from_parent_set_c (cs,            &
@@ -634,10 +642,26 @@ module pdm_writer
     c_n_som_parent = n_som_parent
     c_owner        = owner
 
-    c_numabs        = c_loc(numabs)
-    c_num_parent    = c_loc(num_parent)
-    c_coords_parent = c_loc(coords_parent)
-    c_numabs_parent = c_loc(numabs_parent)
+    c_numabs = C_NULL_PTR
+    if (associated(numabs)) then
+      c_numabs        = c_loc(numabs)
+    endif
+      
+    c_num_parent = C_NULL_PTR
+    if (associated(num_parent)) then
+      c_num_parent    = c_loc(num_parent)
+    endif
+      
+    c_coords_parent = C_NULL_PTR
+    if (associated(coords_parent)) then
+      c_coords_parent = c_loc(coords_parent)
+    endif
+      
+    c_numabs_parent = C_NULL_PTR
+    if (associated(numabs_parent)) then
+      c_numabs_parent = c_loc(numabs_parent)
+    endif
+      
 
     call PDM_writer_geom_coord_from_parent_set_c (cs,              &
                                                   c_id_geom,       &
@@ -819,8 +843,8 @@ module pdm_writer
     integer(c_int)                :: c_id_bloc
     integer(c_int)                :: c_id_part
     integer(c_int)                :: c_n_elt
-    type(c_ptr)                   :: c_connec = C_NULL_PTR
-    type(c_ptr)                   :: c_numabs = C_NULL_PTR
+    type(c_ptr)                   :: c_connec
+    type(c_ptr)                   :: c_numabs
 
     interface
       subroutine PDM_writer_geom_bloc_std_set_c (cs,      &
@@ -850,8 +874,16 @@ module pdm_writer
     c_id_part = id_part
     c_n_elt   = n_elt
 
-    c_connec = c_loc(connec)
-    c_numabs = c_loc(numabs)
+    c_connec = C_NULL_PTR
+    if (associated(connec)) then
+      c_connec = c_loc(connec)
+    endif
+      
+    c_numabs = C_NULL_PTR
+    if (associated(numabs)) then
+      c_numabs = c_loc(numabs)
+    endif
+      
 
     call PDM_writer_geom_bloc_std_set_c (cs,        &
                                          c_id_geom, &
@@ -902,9 +934,9 @@ module pdm_writer
     integer(c_int)                :: c_id_bloc
     integer(c_int)                :: c_id_part
     integer(c_int)                :: c_n_elt
-    type(c_ptr)                   :: c_connec_idx = C_NULL_PTR
-    type(c_ptr)                   :: c_connec     = C_NULL_PTR
-    type(c_ptr)                   :: c_numabs     = C_NULL_PTR
+    type(c_ptr)                   :: c_connec_idx
+    type(c_ptr)                   :: c_connec
+    type(c_ptr)                   :: c_numabs
 
     interface
       subroutine PDM_writer_geom_bloc_poly2d_set_c (cs,         &
@@ -936,9 +968,21 @@ module pdm_writer
     c_id_part = id_part
     c_n_elt   = n_elt
 
-    c_connec_idx = c_loc(connec_idx)
-    c_connec     = c_loc(connec)
-    c_numabs     = c_loc(numabs)
+    c_connec_idx = C_NULL_PTR
+    if (associated(connec_idx)) then
+      c_connec_idx = c_loc(connec_idx)
+    endif 
+      
+    c_connec = C_NULL_PTR
+    if (associated(connec)) then
+      c_connec     = c_loc(connec)
+    endif 
+      
+    c_numabs = C_NULL_PTR
+    if (associated(numabs)) then
+      c_numabs     = c_loc(numabs)
+    endif 
+      
 
     call PDM_writer_geom_bloc_poly2d_set_c (cs,           &
                                             c_id_geom,    &
@@ -1000,11 +1044,11 @@ module pdm_writer
     integer(c_int)                :: c_id_part
     integer(c_int)                :: c_n_elt
     integer(c_int)                :: c_n_face
-    type(c_ptr)                   :: c_facsom_idx  = C_NULL_PTR
-    type(c_ptr)                   :: c_facsom      = C_NULL_PTR
-    type(c_ptr)                   :: c_cellfac_idx = C_NULL_PTR
-    type(c_ptr)                   :: c_cellfac     = C_NULL_PTR
-    type(c_ptr)                   :: c_numabs      = C_NULL_PTR
+    type(c_ptr)                   :: c_facsom_idx
+    type(c_ptr)                   :: c_facsom
+    type(c_ptr)                   :: c_cellfac_idx
+    type(c_ptr)                   :: c_cellfac
+    type(c_ptr)                   :: c_numabs
 
     interface
       subroutine PDM_writer_geom_bloc_poly3d_set_c (cs,          &
@@ -1043,11 +1087,31 @@ module pdm_writer
     c_n_elt   = n_elt
     c_n_face  = n_face
 
-    c_facsom_idx  = c_loc(facsom_idx)
-    c_facsom      = c_loc(facsom)
-    c_cellfac_idx = c_loc(cellfac_idx)
-    c_cellfac     = c_loc(cellfac)
-    c_numabs      = c_loc(numabs)
+    c_facsom_idx = C_NULL_PTR
+    if (associated(facsom_idx)) then 
+      c_facsom_idx  = c_loc(facsom_idx)
+    endif 
+      
+    c_facsom = C_NULL_PTR
+    if (associated(facsom)) then 
+      c_facsom      = c_loc(facsom)
+    endif 
+      
+    c_cellfac_idx = C_NULL_PTR
+    if (associated(cellfac_idx)) then 
+      c_cellfac_idx = c_loc(cellfac_idx)
+    endif 
+      
+    c_cellfac = C_NULL_PTR
+    if (associated(cellfac)) then 
+      c_cellfac     = c_loc(cellfac)
+    endif 
+      
+    c_numabs = C_NULL_PTR
+    if (associated(numabs)) then 
+      c_numabs      = c_loc(numabs)
+    endif 
+      
 
     call PDM_writer_geom_bloc_poly3d_set_c (cs,            &
                                             c_id_geom,     &
@@ -1119,13 +1183,13 @@ module pdm_writer
     integer(c_int)                :: c_id_part
     integer(c_int)                :: c_n_cell
     integer(c_int)                :: c_n_face
-    type(c_ptr)                   :: c_face_som_idx  = C_NULL_PTR
-    type(c_ptr)                   :: c_face_som_nb   = C_NULL_PTR
-    type(c_ptr)                   :: c_face_som      = C_NULL_PTR
-    type(c_ptr)                   :: c_cell_face_idx = C_NULL_PTR
-    type(c_ptr)                   :: c_cell_face_nb  = C_NULL_PTR
-    type(c_ptr)                   :: c_cell_face     = C_NULL_PTR
-    type(c_ptr)                   :: c_numabs        = C_NULL_PTR
+    type(c_ptr)                   :: c_face_som_idx
+    type(c_ptr)                   :: c_face_som_nb
+    type(c_ptr)                   :: c_face_som
+    type(c_ptr)                   :: c_cell_face_idx
+    type(c_ptr)                   :: c_cell_face_nb
+    type(c_ptr)                   :: c_cell_face
+    type(c_ptr)                   :: c_numabs
 
     interface
       subroutine PDM_writer_geom_cell3d_cellface_add_c (cs,            &
@@ -1165,13 +1229,40 @@ module pdm_writer
     c_n_cell  = n_cell
     c_n_face  = n_face
 
-    c_face_som_idx  = c_loc(face_som_idx)
-    c_face_som_nb   = c_loc(face_som_nb)
-    c_face_som      = c_loc(face_som)
-    c_cell_face_idx = c_loc(cell_face_idx)
-    c_cell_face_nb  = c_loc(cell_face_nb)
-    c_cell_face     = c_loc(cell_face)
-    c_numabs        = c_loc(numabs)
+    c_face_som_idx = C_NULL_PTR
+    if (associated(face_som_idx)) then
+        c_face_som_idx  = c_loc(face_som_idx)
+    endif
+        
+    c_face_som = C_NULL_PTR
+    if (associated(face_som)) then
+        c_face_som      = c_loc(face_som)
+    endif
+        
+    c_cell_face_idx = C_NULL_PTR
+    if (associated(cell_face_idx)) then
+        c_cell_face_idx = c_loc(cell_face_idx)
+    endif
+        
+    c_numabs = C_NULL_PTR
+    if (associated(numabs)) then
+        c_numabs        = c_loc(numabs)
+    endif
+        
+    c_cell_face = C_NULL_PTR
+    if (associated(cell_face)) then
+        c_cell_face     = c_loc(cell_face)
+    endif      
+
+    c_face_som_nb   = C_NULL_PTR
+    if (associated(face_som_nb)) then
+      c_face_som_nb   = c_loc(face_som_nb)
+    endif     
+
+    c_cell_face_nb  = C_NULL_PTR
+    if (associated(cell_face_nb)) then
+      c_cell_face_nb  = c_loc(cell_face_nb)
+    endif
 
     call PDM_writer_geom_cell3d_cellface_add_c (cs,              &
                                                 c_id_geom,       &
@@ -1242,13 +1333,13 @@ module pdm_writer
     integer(c_int)                :: c_id_part
     integer(c_int)                :: c_n_cell
     integer(c_int)                :: c_n_face
-    type(c_ptr)                   :: c_face_som_idx  = C_NULL_PTR
-    type(c_ptr)                   :: c_face_som_nb   = C_NULL_PTR
-    type(c_ptr)                   :: c_face_som      = C_NULL_PTR
-    type(c_ptr)                   :: c_cell_face_idx = C_NULL_PTR
-    type(c_ptr)                   :: c_cell_face_nb  = C_NULL_PTR
-    type(c_ptr)                   :: c_cell_face     = C_NULL_PTR
-    type(c_ptr)                   :: c_numabs        = C_NULL_PTR
+    type(c_ptr)                   :: c_face_som_idx
+    type(c_ptr)                   :: c_face_som_nb
+    type(c_ptr)                   :: c_face_som
+    type(c_ptr)                   :: c_cell_face_idx
+    type(c_ptr)                   :: c_cell_face_nb
+    type(c_ptr)                   :: c_cell_face
+    type(c_ptr)                   :: c_numabs
 
     interface
       subroutine PDM_writer_geom_cell2d_cellface_add_c (cs,            &
@@ -1288,13 +1379,40 @@ module pdm_writer
     c_n_cell  = n_cell
     c_n_face  = n_face
 
-    c_face_som_idx  = c_loc(face_som_idx)
-    c_face_som_nb   = c_loc(face_som_nb)
-    c_face_som      = c_loc(face_som)
-    c_cell_face_idx = c_loc(cell_face_idx)
-    c_cell_face_nb  = c_loc(cell_face_nb)
-    c_cell_face     = c_loc(cell_face)
-    c_numabs        = c_loc(numabs)
+    c_face_som_idx = C_NULL_PTR
+    if (associated(face_som_idx)) then
+      c_face_som_idx  = c_loc(face_som_idx)
+    endif
+      
+    c_face_som = C_NULL_PTR
+    if (associated(face_som)) then
+      c_face_som      = c_loc(face_som)
+    endif
+      
+    c_cell_face_idx = C_NULL_PTR
+    if (associated(cell_face_idx)) then
+      c_cell_face_idx = c_loc(cell_face_idx)
+    endif
+      
+    c_face_som_nb = C_NULL_PTR
+    if (associated(face_som_nb)) then
+      c_face_som_nb   = C_NULL_PTR
+    endif
+      
+    c_cell_face = C_NULL_PTR
+    if (associated(cell_face)) then
+      c_cell_face     = c_loc(cell_face)
+    endif
+      
+    c_numabs = C_NULL_PTR
+    if (associated(numabs)) then
+      c_numabs        = c_loc(numabs)
+    endif
+
+    c_cell_face_nb  = C_NULL_PTR
+    if (associated(cell_face_nb)) then
+      c_cell_face_nb  = c_loc(cell_face_nb)
+    endif
 
     call PDM_writer_geom_cell2d_cellface_add_c (cs,              &
                                                 c_id_geom,       &
@@ -1354,10 +1472,10 @@ module pdm_writer
     integer(c_int)                :: c_id_geom
     integer(c_int)                :: c_id_part
     integer(c_int)                :: c_n_face
-    type(c_ptr)                   :: c_face_som_idx = C_NULL_PTR
-    type(c_ptr)                   :: c_face_som_nb  = C_NULL_PTR
-    type(c_ptr)                   :: c_face_som     = C_NULL_PTR
-    type(c_ptr)                   :: c_numabs       = C_NULL_PTR
+    type(c_ptr)                   :: c_face_som_idx
+    type(c_ptr)                   :: c_face_som_nb
+    type(c_ptr)                   :: c_face_som
+    type(c_ptr)                   :: c_numabs
 
     interface
       subroutine PDM_writer_geom_faces_facesom_add_c (cs,            &
@@ -1388,10 +1506,26 @@ module pdm_writer
     c_id_part = id_part
     c_n_face  = n_face
 
-    c_face_som_idx  = c_loc(face_som_idx)
-    c_face_som_nb   = c_loc(face_som_nb)
-    c_face_som      = c_loc(face_som)
-    c_numabs        = c_loc(numabs)
+    c_face_som_idx = C_NULL_PTR
+    if (associated(face_som_idx)) then
+      c_face_som_idx  = c_loc(face_som_idx)
+    endif 
+      
+    c_face_som_nb = C_NULL_PTR
+    if (associated(face_som_nb)) then
+      c_face_som_nb   = c_loc(face_som_nb)
+    endif 
+      
+    c_face_som = C_NULL_PTR
+    if (associated(face_som)) then
+      c_face_som      = c_loc(face_som)
+    endif 
+      
+    c_numabs = C_NULL_PTR
+    if (associated(numabs)) then
+      c_numabs        = c_loc(numabs)
+    endif 
+      
 
     call PDM_writer_geom_faces_facesom_add_c (cs,              &
                                               c_id_geom,       &
@@ -1643,7 +1777,7 @@ module pdm_writer
     integer(c_int)            :: c_id_var
     integer(c_int)            :: c_id_geom
     integer(c_int)            :: c_id_part
-    type(c_ptr)               :: c_val = C_NULL_PTR
+    type(c_ptr)               :: c_val
 
     interface
       subroutine PDM_writer_var_set_c (cs,      &
@@ -1668,7 +1802,10 @@ module pdm_writer
     c_id_geom = id_geom
     c_id_part = id_part
 
-    c_val = c_loc(val)
+    c_val = C_NULL_PTR
+    if (associated(val)) then
+      c_val = c_loc(val)
+    endif  
 
     call PDM_writer_var_set_c (cs,        &
                                c_id_var,  &
@@ -1726,16 +1863,16 @@ module pdm_writer
     procedure(), pointer :: var_write_fct
     procedure(), pointer :: var_free_fct
 
-    type(c_funptr)       :: c_create_fct      = C_NULL_FUNPTR
-    type(c_funptr)       :: c_free_fct        = C_NULL_FUNPTR
-    type(c_funptr)       :: c_beg_step_fct    = C_NULL_FUNPTR
-    type(c_funptr)       :: c_end_step_fct    = C_NULL_FUNPTR
-    type(c_funptr)       :: c_geom_create_fct = C_NULL_FUNPTR
-    type(c_funptr)       :: c_geom_write_fct  = C_NULL_FUNPTR
-    type(c_funptr)       :: c_geom_free_fct   = C_NULL_FUNPTR
-    type(c_funptr)       :: c_var_create_fct  = C_NULL_FUNPTR
-    type(c_funptr)       :: c_var_write_fct   = C_NULL_FUNPTR
-    type(c_funptr)       :: c_var_free_fct    = C_NULL_FUNPTR
+    type(c_funptr)       :: c_create_fct
+    type(c_funptr)       :: c_free_fct
+    type(c_funptr)       :: c_beg_step_fct
+    type(c_funptr)       :: c_end_step_fct
+    type(c_funptr)       :: c_geom_create_fct
+    type(c_funptr)       :: c_geom_write_fct
+    type(c_funptr)       :: c_geom_free_fct
+    type(c_funptr)       :: c_var_create_fct
+    type(c_funptr)       :: c_var_write_fct
+    type(c_funptr)       :: c_var_free_fct
 
     interface
       subroutine PDM_writer_fmt_add_c (name,            &

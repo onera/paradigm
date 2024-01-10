@@ -1538,7 +1538,7 @@ _complete_octree
 
     PDM_morton_code_t *L2_morton_index = malloc(sizeof(PDM_morton_code_t) * (n_ranks + 1));
 
-    int *order = malloc (sizeof(int) * L2->n_nodes);
+    int *order  = malloc (sizeof(int) * L2->n_nodes);
     int *weight = malloc (sizeof(int) * L2->n_nodes);
 
     for (int i = 0; i < L2->n_nodes; i++) {
@@ -2083,7 +2083,7 @@ _compress_octants
     }
 
     /* Leaf node */
-    if (start == end-1) {
+    if (start == end-1 && (octants->n_points[start] > 0)) {
       double *_min = _pts_extents + 6*(*n_nodes);
       double *_max = _min + 3;
       _nodes[4*(*n_nodes)] = (int) octants->codes[start].L;
@@ -2148,7 +2148,9 @@ _compress_octants
             }
           }
 
-          (*n_nodes)++;
+          if (_n_pts[*n_nodes] > 0) {
+            (*n_nodes)++;
+          }
           if (dbg_enabled) printf("  --> add to nodes\n");
           continue;
         }
@@ -6122,10 +6124,9 @@ _prepare_copies
                 n_rank);
 
   if (i_rank == 0) {
-    printf("copy threshold = %d (%g)\nmax copy = %d (%g)\n", (int) n_threshold, f_threshold, n_max_copy, f_max_copy);
-    fflush(stdout);
-
     if (dbg_enabled) {
+      printf("copy threshold = %d (%g)\nmax copy = %d (%g)\n", (int) n_threshold, f_threshold, n_max_copy, f_max_copy);
+      fflush(stdout);
       printf("avant: min = %d, max = %d (%g times mean), max-min = %d\n",
              all_n_request[0],
              all_n_request[n_rank-1],
@@ -7833,7 +7834,7 @@ PDM_para_octree_build
 
   if (n_ranks > 1) {
 
-    int *weight = PDM_array_const_int(_octree->n_points, 1);
+    double *weight = PDM_array_const_double(_octree->n_points, 1.);
 
     PDM_morton_code_t *morton_index =
       malloc (sizeof(PDM_morton_code_t) * (n_ranks + 1));

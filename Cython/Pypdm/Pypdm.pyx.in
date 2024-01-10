@@ -1,3 +1,5 @@
+# cython: c_string_type=str, c_string_encoding=ascii
+
 # Import Section (Python) :
 # ------------------------
 import numpy     as NPY
@@ -22,7 +24,7 @@ cdef extern from "pdm_config.h":
     cdef int _PDM_VERSION_RELEASE "PDM_RELEASE_VERSION"
     cdef char* _PDM_VERSION "PDM_VERSION"
 
-__version__ = _PDM_VERSION.decode()
+__version__ = _PDM_VERSION
 
 
 cdef extern from "numpy/arrayobject.h":
@@ -75,14 +77,16 @@ cdef extern from "pdm.h":
         PDM_MESH_NATURE_MESH_SETTED
 
     ctypedef enum PDM_mesh_intersection_kind_t:
-        PDM_MESH_INTERSECTION_KIND_SOFT
-        PDM_MESH_INTERSECTION_KIND_FULL
+        PDM_MESH_INTERSECTION_KIND_PREPROCESS    = 0
+        PDM_MESH_INTERSECTION_KIND_WEIGHT        = 1
+        PDM_MESH_INTERSECTION_KIND_UNMERGED_POLY = 2
+        PDM_MESH_INTERSECTION_KIND_MESH          = 3
 
     ctypedef enum PDM_mesh_entities_t:
         PDM_MESH_ENTITY_CELL
         PDM_MESH_ENTITY_FACE
         PDM_MESH_ENTITY_EDGE
-        PDM_MESH_ENTITY_VERTEX
+        PDM_MESH_ENTITY_VTX
 
     ctypedef enum PDM_geometry_kind_t:
         PDM_GEOMETRY_KIND_VOLUMIC  = 0,
@@ -210,13 +214,15 @@ cdef extern from "pdm_mpi.h":
     PDM_MPI_Comm PDM_MPI_mpi_2_pdm_mpi_comm(void *pt_comm)
 # -----------------------------------------------------------------
 
-_PDM_MESH_ENTITY_CELL   = PDM_MESH_ENTITY_CELL
-_PDM_MESH_ENTITY_FACE   = PDM_MESH_ENTITY_FACE
-_PDM_MESH_ENTITY_EDGE   = PDM_MESH_ENTITY_EDGE
-_PDM_MESH_ENTITY_VERTEX = PDM_MESH_ENTITY_VERTEX
+_PDM_MESH_ENTITY_CELL = PDM_MESH_ENTITY_CELL
+_PDM_MESH_ENTITY_FACE = PDM_MESH_ENTITY_FACE
+_PDM_MESH_ENTITY_EDGE = PDM_MESH_ENTITY_EDGE
+_PDM_MESH_ENTITY_VTX  = PDM_MESH_ENTITY_VTX
 
-_PDM_MESH_INTERSECTION_KIND_SOFT = PDM_MESH_INTERSECTION_KIND_SOFT
-_PDM_MESH_INTERSECTION_KIND_FULL = PDM_MESH_INTERSECTION_KIND_FULL
+_PDM_MESH_INTERSECTION_KIND_PREPROCESS    = PDM_MESH_INTERSECTION_KIND_PREPROCESS
+_PDM_MESH_INTERSECTION_KIND_WEIGHT        = PDM_MESH_INTERSECTION_KIND_WEIGHT
+_PDM_MESH_INTERSECTION_KIND_UNMERGED_POLY = PDM_MESH_INTERSECTION_KIND_UNMERGED_POLY
+_PDM_MESH_INTERSECTION_KIND_MESH          = PDM_MESH_INTERSECTION_KIND_MESH
 
 _PDM_GEOMETRY_KIND_VOLUMIC  = PDM_GEOMETRY_KIND_VOLUMIC
 _PDM_GEOMETRY_KIND_SURFACIC = PDM_GEOMETRY_KIND_SURFACIC
@@ -332,6 +338,10 @@ _PDM_CELL_TO_VTX_INTERP_KIND_RBF  = PDM_CELL_TO_VTX_INTERP_KIND_RBF
 _PDM_CELL_TO_VTX_INTERP_KIND_LSQ  = PDM_CELL_TO_VTX_INTERP_KIND_LSQ
 _PDM_CELL_TO_VTX_INTERP_KIND_USER = PDM_CELL_TO_VTX_INTERP_KIND_USER
 
+_PDM_MESH_LOCATION_OCTREE         =  PDM_MESH_LOCATION_OCTREE
+_PDM_MESH_LOCATION_DBBTREE        =  PDM_MESH_LOCATION_DBBTREE
+_PDM_MESH_LOCATION_LOCATE_ALL_TGT =  PDM_MESH_LOCATION_LOCATE_ALL_TGT
+_PDM_MESH_LOCATION_DOCTREE        =  PDM_MESH_LOCATION_DOCTREE
 
 _PDM_SPLIT_DUAL_WITH_PARMETIS = PDM_SPLIT_DUAL_WITH_PARMETIS
 _PDM_SPLIT_DUAL_WITH_PTSCOTCH = PDM_SPLIT_DUAL_WITH_PTSCOTCH
@@ -490,6 +500,7 @@ include "pdm_part_to_block.pxi"
 # PDM_block_to_part :
 # ------------------
 include "pdm_block_to_part.pxi"
+include "pdm_mblock_to_part.pxi"
 
 # PDM_block_to_block :
 # ------------------
@@ -655,3 +666,11 @@ include "pdm_point_cloud_gen.pxi"
 # PDM_dextract_part :
 # -------------------
 include "pdm_dmesh_extract.pxi"
+
+# PDM_distrib:
+# -------------------
+include "pdm_distrib.pxi"
+
+# PDM_vtk:
+# -------------------
+include "pdm_vtk.pxi"

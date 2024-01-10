@@ -273,8 +273,8 @@ module pdm_gnum_location
     integer(pdm_l_num_s), pointer :: location_idx(:)
     integer(pdm_l_num_s), pointer :: location(:)
 
-    type(c_ptr)                   :: c_location_idx = C_NULL_PTR
-    type(c_ptr)                   :: c_location     = C_NULL_PTR
+    type(c_ptr)                   :: c_location_idx
+    type(c_ptr)                   :: c_location    
     integer                       :: n_elt
 
     interface
@@ -293,6 +293,9 @@ module pdm_gnum_location
 
       end subroutine pdm_gnum_location_get_c
     end interface
+
+    c_location_idx = C_NULL_PTR
+    c_location     = C_NULL_PTR
 
     call pdm_gnum_location_get_c (gloc,           &
                                   i_part_out,     &

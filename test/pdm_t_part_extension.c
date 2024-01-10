@@ -308,7 +308,7 @@ _visu
       val_num_part[i_part][i] = i_part + distrib_part[i_rank];
       val_cell_num[i_part][i] = i ;
       val_num_rank[i_part][i] = i_rank;
-      val_cell_gnum[i_part][i] = cell_ln_to_gn[i_part][i];
+      val_cell_gnum[i_part][i] = (double) cell_ln_to_gn[i_part][i];
     }
     // PDM_log_trace_array_double(val_num_part[i_part], n_cell[i_part], "val_num_part :: ");
 
@@ -830,8 +830,8 @@ int main(int argc, char *argv[])
     double* vtx_coord_extended;
     PDM_g_num_t* border_vtx_ln_to_gn;
     PDM_g_num_t* border_cell_ln_to_gn;
-    int n_vtx_extended  = PDM_part_extension_coord_get(part_ext, 0, i_part, &vtx_coord_extended);
-    int n_vtx_extended2 = PDM_part_extension_ln_to_gn_get(part_ext, 0, i_part, PDM_MESH_ENTITY_VERTEX, &border_vtx_ln_to_gn);
+    int n_vtx_extended  = PDM_part_extension_vtx_coord_get(part_ext, 0, i_part, &vtx_coord_extended);
+    int n_vtx_extended2 = PDM_part_extension_ln_to_gn_get(part_ext, 0, i_part, PDM_MESH_ENTITY_VTX,  &border_vtx_ln_to_gn);
     int n_cell_extended = PDM_part_extension_ln_to_gn_get(part_ext, 0, i_part, PDM_MESH_ENTITY_CELL, &border_cell_ln_to_gn);
     assert(n_vtx_extended == n_vtx_extended2);
     if(0 == 1) {

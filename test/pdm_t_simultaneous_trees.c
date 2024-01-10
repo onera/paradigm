@@ -335,10 +335,10 @@ main
     double *expli_box_extents = malloc(3 * 8 * n_box * sizeof(double));
     PDM_hilbert_code_t *expli_box_codes   = malloc( 8 * n_box * sizeof(PDM_hilbert_code_t));
 
-    int *weight     = (int *) malloc (8 * n_box * sizeof(int));
+    double *weight     = (double *) malloc (8 * n_box * sizeof(double));
 
     for(int i = 0; i < 8 * n_box; ++i) {
-      weight   [i] = 1;
+      weight   [i] = 1.;
     }
 
 

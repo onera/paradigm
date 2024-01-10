@@ -1,3 +1,7 @@
+/*
+ * \file
+ */
+
 #ifndef __PDM_PART_MESH_NODAL_ELMTS_H__
 #define __PDM_PART_MESH_NODAL_ELMTS_H__
 

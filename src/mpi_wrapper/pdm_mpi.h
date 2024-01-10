@@ -1,3 +1,7 @@
+/*
+ * \file
+ */
+
 #ifndef __PDM_MPI_H__
 #define __PDM_MPI_H__
 
@@ -448,6 +452,12 @@ int PDM_MPI_Type_create_contiguous(int               count,
 int PDM_MPI_Type_commit(PDM_MPI_Datatype *datatype);
 
 /*----------------------------------------------------------------------------
+ * MPI_Type_size (wrapping de la fonction MPI_Type_commit)
+ *
+ *----------------------------------------------------------------------------*/
+int PDM_MPI_Type_size(PDM_MPI_Datatype datatype, int *size);
+
+/*----------------------------------------------------------------------------
  * PDM_MPI_Type_free (wrapping de la fonction MPI_Type_free)
  *
  *----------------------------------------------------------------------------*/
@@ -694,6 +704,13 @@ int PDM_MPI_Comm_free(PDM_MPI_Comm *comm);
  *----------------------------------------------------------------------------*/
 
 int PDM_MPI_Comm_split(PDM_MPI_Comm comm, int color, int key, PDM_MPI_Comm *newcomm);
+
+/*----------------------------------------------------------------------------
+ * PDM_MPI_Comm_dup
+ *
+ *----------------------------------------------------------------------------*/
+
+int PDM_MPI_Comm_dup(PDM_MPI_Comm comm, PDM_MPI_Comm *newcomm);
 
 /*----------------------------------------------------------------------------
  * PDM_MPI_Comm_split

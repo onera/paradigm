@@ -6,6 +6,7 @@
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
+#include <assert.h>
 
 /*----------------------------------------------------------------------------
  *  Header for the current file
@@ -1040,6 +1041,67 @@ PDM_triangle_evaluate_position
     }
   }
   return stat;
+}
+
+
+/**
+ * \brief Build triangle->vertex from triangle->edge and edge->vertex connectivities.
+ *
+ * \note In each triangle, edge #i is opposite to vertex #i:
+ *         v2
+ *         o
+ *        / \
+ *    e1 /   \ e0
+ *      /     \
+ *  v0 o-------o v1
+ *         e2
+ *
+ * \param [in]  n_face     Number of faces
+ * \param [in]  face_edge  Face -> edge (signed) connectivity (1-based, size : 3 * \p n_face)
+ * \param [in]  face_edge  Edge -> vertex connectivity (1-based, size : 2 * *n_edge*)
+ * \param [out] face_vtx   Face -> vertex (signed) connectivity (size : 3 * \p n_face)
+ *
+ */
+
+void
+PDM_triangle_ngon_to_nodal
+(
+ int   n_face,
+ int  *face_edge,
+ int  *edge_vtx,
+ int **face_vtx
+ )
+{
+  *face_vtx = malloc(sizeof(int) * n_face * 3);
+
+  for (int iface = 0; iface < n_face; iface++) {
+
+    int *fv = *face_vtx  + 3*iface;
+    int *fe =  face_edge + 3*iface;
+
+    int iedge = fe[0];
+
+    if (iedge < 0) {
+      iedge = -iedge - 1;
+      fv[1] = edge_vtx[2*iedge+1];
+      fv[2] = edge_vtx[2*iedge  ];
+    } else {
+      iedge =  iedge - 1;
+      fv[1] = edge_vtx[2*iedge  ];
+      fv[2] = edge_vtx[2*iedge+1];
+    }
+
+    iedge = PDM_ABS(fe[1]) - 1;
+    int ivtx1 = edge_vtx[2*iedge  ];
+    int ivtx2 = edge_vtx[2*iedge+1];
+    if (ivtx1 == fv[1] || ivtx1 == fv[2]) {
+      fv[0] = ivtx2;
+    } else {
+      assert(ivtx2 == fv[1] || ivtx2 == fv[2]);
+      fv[0] = ivtx1;
+    }
+
+  }
 }
 
 

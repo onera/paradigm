@@ -175,7 +175,7 @@ _read_args(int            argc,
       if (i >= argc)
         _usage(EXIT_FAILURE);
       else {
-        *t_elt = atoi(argv[i]);
+        *t_elt = (PDM_Mesh_nodal_elt_t) atoi(argv[i]);
       }
     }
     else if (strcmp(argv[i], "-l") == 0) {
@@ -352,7 +352,7 @@ int main
   for (int i = 0; i < n_domain; i++) {
     dmn[i] = PDM_dcube_nodal_gen_dmesh_nodal_get(dcube[i]);
     PDM_dmesh_nodal_generate_distribution(dmn[i]);
-    PDM_multipart_register_dmesh_nodal(mpart_id, i, dmn[i]);
+    PDM_multipart_dmesh_nodal_set(mpart_id, i, dmn[i]);
   }
 
   PDM_multipart_set_reordering_options(mpart_id,
@@ -360,7 +360,7 @@ int main
                                        "PDM_PART_RENUM_CELL_NONE",
                                        NULL,
                                        "PDM_PART_RENUM_FACE_NONE");
-  PDM_multipart_run_ppart(mpart_id);
+  PDM_multipart_compute(mpart_id);
 
 
 
@@ -387,7 +387,7 @@ int main
   // int         **dedge_vtx_idx = malloc( n_domain * sizeof(int *        ));
  
   // for (int i = 0; i < n_domain; i++) {
-  //   PDM_dmesh_nodal_to_dmesh_get_dmesh(dmn_to_dm, 0, &dm[i]);
+  //   PDM_dmesh_nodal_to_dmesh_get_dmesh(dmn_to_dm, i, &dm[i]);
 
   //   int _dn_cell, _dn_face, _dn_edge, _dn_vtx, _n_bnd, _n_join;
   //   PDM_dmesh_dims_get(dm[i], &_dn_cell, &_dn_face, &_dn_edge, &_dn_vtx, &_n_bnd, &_n_join);
@@ -472,7 +472,7 @@ int main
       pn_vtx[i_dom][i_part] = PDM_multipart_part_ln_to_gn_get(mpart_id,
                                                               i_dom,
                                                               i_part,
-                                                              PDM_MESH_ENTITY_VERTEX,
+                                                              PDM_MESH_ENTITY_VTX,
                                                               &pvtx_ln_to_gn[i_dom][i_part],
                                                               PDM_OWNERSHIP_KEEP);
 
@@ -480,8 +480,8 @@ int main
                                           i_dom,
                                           i_part,
                                           PDM_CONNECTIVITY_TYPE_EDGE_VTX,
-                                          &pedge_vtx     [i_dom][i_part],
                                           &pedge_vtx_idx [i_dom][i_part],
+                                          &pedge_vtx     [i_dom][i_part],
                                           PDM_OWNERSHIP_KEEP);
       assert(pedge_vtx_idx [i_dom][i_part] == NULL);
       pedge_vtx_idx [i_dom][i_part] = malloc((pn_edge[i_dom][i_part]+1) * sizeof(int));

@@ -1,3 +1,7 @@
+/*
+ * \file
+ */
+
 #ifndef __PDM_IO_TAB_H__
 #define __PDM_IO_TAB_H__
 

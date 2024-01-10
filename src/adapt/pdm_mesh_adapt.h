@@ -1,3 +1,7 @@
+/*
+ * \file
+ */
+
 #ifndef PDM_MESH_ADAPT_H
 #define PDM_MESH_ADAPT_H
 
@@ -344,6 +348,7 @@ typedef void (*PDM_Mesh_adapt_interp_from_location_t)
  *                                        setted from
  *                                        \ref PDM_adapt_mesh_user_src_struct_set function
  *                                        or NULL
+ *  \param [in]  dof_location             Degrees of freedom location
  *  \param [in]  field_stride             Field stride
  *  \param [in]  src_field                Source field
  *  \param [out] tgt_field                Target field
@@ -382,7 +387,7 @@ typedef void (*PDM_Mesh_adapt_interp_from_intersect_t)
  *                                        the 'k' closest source vertices
  *  \param [in]  tgt_src_closest_dist     For each target vertex the distance to
  *                                        the 'k' closest source vertices
- *  \param [in]  tgt_src_closest_dist     For each target vertex the coordinates of
+ *  \param [in]  tgt_src_closest_coords   For each target vertex the coordinates of
  *                                        the 'k' closest source vertices
  *  \param [in]  dof_location             Degrees of freedom location
  *  \param [in]  field_stride             Field stride
@@ -458,13 +463,13 @@ typedef struct _PDM_Mesh_adapt_t PDM_Mesh_adapt_t;
  *                       - PDM_MESH_ADAPT_GEOM_REPR_STL
  *                       - PDM_MESH_ADAPT_GEOM_REPR_IGES
  *                       - PDM_MESH_ADAPT_GEOM_REPR_STEP
- * \param [in] tgt_part  Target mesh partitionning
+ * \param [in] part_tool Target mesh partitionning
  *                       - PDM_MESH_ADAPT_PART_PTSCOTCH
  *                       - PDM_MESH_ADAPT_PART_PARMETIS
  *                       - PDM_MESH_ADAPT_PART_TREEPART
  *                       - PDM_MESH_ADAPT_PART_HILBERT
  *                       - PDM_MESH_ADAPT_PART_MORTON
- * \param [in] order  Mesh order
+ * \param [in] mesh_order  Mesh order
  * \param [in] n_dom  Number of meshes
  * \param [in] n_part Number of local mesh partition for each domain (size = \p n_dom)
  *                    (same value for source and target meshes)
@@ -526,7 +531,7 @@ PDM_Mesh_adapt_free
  * \param [in]  ma           Mesh adaptation workflow
  * \param [in]  i_dom        Current domain
  * \param [in]  i_part       Current partition
- * \param [in]  n_vtx        Number of vertices
+ * \param [in]  n_nodes      Number of vertices
  * \param [in]  coord        Coordinates (size = 3 * \p n_vtx)
  * \param [in]  g_num        Global element number (or NULL)
  *
@@ -971,7 +976,7 @@ PDM_Mesh_adapt_src_intra_dom_graph_add
  * \brief Set an intra-domain graph communication between partitions
  *
  * \param [in]  ma          Mesh adaptation workflow
- * \param [in]  i_dom       Domain identifier
+ * \param [in]  i_graph     Domain identifier
  * \param [in]  i_part      Partition identifier
  * \param [in]  n_elt_graph Number of elements in the
  * \param [in]  graph_idx   Element index in \p graph
@@ -1005,6 +1010,7 @@ PDM_Mesh_adapt_src_intra_dom_graph_set
  * Face groups are used to define boundary conditions.
  *
  * \param [in]  ma        Mesh adaptation workflow
+ * \param [in]  g_entity  Group entity
  * \param [in]  i_dom     Domain identifier
  * \param [in]  n_group   Number of face groups
  *
@@ -1488,7 +1494,7 @@ PDM_Mesh_adapt_geom_repr_ridge_set
  * \param [in]  i_dom            Domain identifier
  * \param [in]  i_part           Partition identifier
  * \param [in]  n_corner         Number of corners
- * \param [in]  ridges           List of corners
+ * \param [in]  corners          List of corners
  *
  */
 
@@ -1508,6 +1514,7 @@ PDM_Mesh_adapt_geom_repr_corner_set
  * This functions loads the CAD file
  *
  * \param [in]  ma               Mesh adaptation workflow
+ * \param [in]  cad_file         Computer Aided Desgin file
  *
  */
 
@@ -1637,7 +1644,7 @@ PDM_Mesh_adapt_compute
  *
  * \param [in]   ma                Mesh adaptation workflow
  * \param [in]   i_dom             Domain identifier
- * \param [out]  g_n_node          Global number of nodes
+ * \param [out]  g_n_vtx           Global number of nodes
  * \param [out]  g_n_elt           Global number of elements
  * \param [out]  g_n_face          Global number of faces
  * \param [out]  g_n_boundary_elt  Global number of elements on the boundary
@@ -1664,7 +1671,7 @@ PDM_Mesh_adapt_tgt_global_size
  * \param [in]   i_part          Current partition
  * \param [out]  n_vtx           Number of vertices
  * \param [out]  n_elt           Number of elements
- * \param [out]  n_face          Number of faces
+ * \param [out]  n_fac           Number of faces
  * \param [out]  n_boundary_elt  Number of elements on the boundary
  *
  */
@@ -2072,7 +2079,7 @@ PDM_Mesh_adapt_tgt_entity_group_get
  * \brief Get an intra-domain graph communication between partitions
  *
  * \param [in]  ma          Mesh adaptation workflow
- * \param [in]  i_dom       Domain identifier
+ * \param [in]  i_graph     Domain identifier
  * \param [in]  i_part      Partition identifier
  * \param [out]  n_elt_graph Number of elements in the
  * \param [out]  graph_idx   Element index in \p graph
@@ -2302,7 +2309,7 @@ PDM_Mesh_adapt_src_field_issend
  * \param [in]  i_field_family      Family of the field
  *                                  (from \ref PDM_Mesh_adapt_field_family_add)
  * \param [in]  stride              Stride of the field
- * \param [in]  src_field           Array of pointers to field data (size = \n_part)
+ * \param [in]  tgt_field           Array of pointers to field data (size = \n_part)
  * \param [out] request             Request is used by \ref PDM_Mesh_adapt_src_wait_field
  *
  */

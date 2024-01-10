@@ -227,9 +227,9 @@ main
 
 
   /* Rearrange points (Hilbert) */
-  int *weight =  malloc( n_pts * sizeof(int));
+  double *weight =  malloc( n_pts * sizeof(double));
   for(int i = 0; i < n_pts; ++i) {
-    weight[i] = 1;
+    weight[i] = 1.;
   }
   PDM_MPI_Barrier(comm);
   // double t1 = PDM_MPI_Wtime();

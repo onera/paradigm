@@ -1,3 +1,7 @@
+/*
+ * \file
+ */
+
 #ifndef PDM_DOCTREE_H
 #define PDM_DOCTREE_H
 

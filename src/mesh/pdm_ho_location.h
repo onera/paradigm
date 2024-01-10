@@ -1,3 +1,7 @@
+/*
+ * \file
+ */
+
 #ifndef __PDM_HO_LOCATION_H__
 #define __PDM_HO_LOCATION_H__
 

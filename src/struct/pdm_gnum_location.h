@@ -1,10 +1,14 @@
+/*
+ * \file
+ */
+
 #ifndef __PDM_GNUM_LOCATION_H__
 #define __PDM_GNUM_LOCATION_H__
 
 /*
   This file is part of the ParaDiGM library.
 
-  Copyright (C) 2019       ONERA
+  Copyright (C) 2019-2023       ONERA
 
   This library is free software; you can redistribute it and/or
   modify it under the terms of the GNU Lesser General Public
@@ -63,14 +67,14 @@ typedef struct _pdm_gnum_location_t PDM_gnum_location_t;
 
 /**
  *
- * \brief Build a global numbering location structure
+ * \brief Create a structure to retrieve the locations of elements with given global ids
  *
- * \param [in]   n_part_in      Number of local partitions for elements
+ * \param [in]   n_part_in      Number of local partitions
  * \param [in]   n_part_out     Number of local partitions for requested locations
  * \param [in]   comm           PDM_MPI communicator
- * \param [in]   owner          Owner
+ * \param [in]   owner          Ownership of results
  *
- * \return     Pointer to \ref PDM_gnum_locaion object
+ * \return     Pointer to \ref PDM_gnum_location_t object
  */
 
 PDM_gnum_location_t*
@@ -85,12 +89,12 @@ PDM_gnum_location_create
 
 /**
  *
- * \brief Set global numbering
+ * \brief Set global ids
  *
- * \param [in]   gnum_loc    Pointer to \ref PDM_gnum_locaion object
+ * \param [in]   gnum_loc    Pointer to \ref PDM_gnum_location_t object
  * \param [in]   i_part_in   Current partition
  * \param [in]   n_elts_in   Number of elements
- * \param [in]   gnum_in     Global numbering
+ * \param [in]   gnum_in     Global ids (size : \p \n_elts_in)
  *
  */
 
@@ -108,10 +112,10 @@ PDM_gnum_location_elements_set
  *
  * \brief Set requested elements
  *
- * \param [in]   gnum_loc     Pointer to \ref PDM_gnum_locaion object
+ * \param [in]   gnum_loc     Pointer to \ref PDM_gnum_location_t object
  * \param [in]   i_part_out   Current partition
  * \param [in]   n_elts_out   Number of elements
- * \param [in]   gnum_out     Global numbering
+ * \param [in]   gnum_out     Global ids (size : \p \n_elts_out)
  *
  */
 
@@ -127,9 +131,9 @@ PDM_gnum_location_requested_elements_set
 
 /**
  *
- * \brief Compute the location (processus, partittion, local number in the partition)
+ * \brief Compute the location (MPI rank, partition, local id in the partition)
  *
- * \param [in]   gnum_loc     Pointer to \ref PDM_gnum_locaion object
+ * \param [in]   gnum_loc     Pointer to \ref PDM_gnum_location_t object
  *
  */
 
@@ -142,13 +146,12 @@ PDM_gnum_location_compute
 
 /**
  *
- * \brief Get localtion
+ * \brief Get requested locations
  *
- * \param [in]    gnum_loc       Pointer to \ref PDM_gnum_locaion object
+ * \param [in]    gnum_loc       Pointer to \ref PDM_gnum_location_t object
  * \param [in]    i_part_out     Current partition
- * \param [out]   location_idx   Index in the location arrays (size = 3 * \ref n_elts + 1)
- * \param [out]   location       Locations of each element
- *                                (Three informations : process, partition, element)
+ * \param [out]   location_idx   Index in the location arrays (size = *n_elts_out* + 1)
+ * \param [out]   location       Locations of requested elements (MPI rank, partition, local id in partition)
  *
  */
 
@@ -164,9 +167,9 @@ PDM_gnum_location_get
 
 /**
  *
- * \brief Free
+ * \brief Free a \ref PDM_gnum_location_t object
  *
- * \param [in]   gnum_loc      Pointer to \ref PDM_gnum_locaion object
+ * \param [in]   gnum_loc      Pointer to \ref PDM_gnum_location_t object
  *
  */
 
@@ -181,10 +184,10 @@ PDM_gnum_location_free
  *
  * \brief Get the number of requested elements in a given partition
  *
- * \param [in]  gnum_loc      Pointer to \ref PDM_gnum_locaion object
- * \param [in]  i_part_out    Id of current partition
+ * \param [in]  gnum_loc      Pointer to \ref PDM_gnum_location_t object
+ * \param [in]  i_part_out    Current partition
  *
- * \return  Number of requested elements in the current partition
+ * \return  Number of requested elements in current partition
  *
  */
 

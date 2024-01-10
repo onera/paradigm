@@ -546,9 +546,9 @@ _descend_hilbert_heap(PDM_g_num_t           parent,
  *----------------------------------------------------------------------------*/
 
 static double
-_evaluate_distribution(int          n_ranges,
-                       PDM_g_num_t   *distribution,
-                       double       optim)
+_evaluate_distribution(int       n_ranges,
+                       double   *distribution,
+                       double    optim)
 {
   int  i;
   double  d_low = 0, d_up = 0, fit = 0;
@@ -601,14 +601,14 @@ _evaluate_distribution(int          n_ranges,
 static void
 _define_rank_distrib(int                       dim,
                      int                       n_ranks,
-                     PDM_g_num_t               gsum_weight,
+                     double                    gsum_weight,
                      int                       n_codes,
                      const PDM_hilbert_code_t  hilbert_codes[],
-                     const int                 weight[],
+                     const double              weight[],
                      const int                 order[],
                      const PDM_hilbert_code_t  sampling[],
                      double                    cfreq[],
-                     PDM_g_num_t               g_distrib[],
+                     double                    g_distrib[],
                      PDM_MPI_Comm              comm)
 {
   const int  sampling_factor = _sampling_factors[dim];
@@ -616,7 +616,7 @@ _define_rank_distrib(int                       dim,
 
   /* Initialization */
 
-  PDM_g_num_t   *l_distrib = (PDM_g_num_t   *) malloc (n_samples * sizeof(PDM_g_num_t));
+  double   *l_distrib = (double   *) malloc (n_samples * sizeof(double));
 
   for (int id = 0; id < n_samples; id++) {
     l_distrib[id] = 0;
@@ -650,7 +650,7 @@ _define_rank_distrib(int                       dim,
   }
 
   /* Define the global distribution */
-  PDM_MPI_Allreduce(l_distrib, g_distrib, n_samples, PDM__PDM_MPI_G_NUM, PDM_MPI_SUM, comm);
+  PDM_MPI_Allreduce(l_distrib, g_distrib, n_samples, PDM_MPI_DOUBLE, PDM_MPI_SUM, comm);
 
   free(l_distrib);
 
@@ -700,7 +700,7 @@ _define_rank_distrib(int                       dim,
 
   for (int rank_id = 0; rank_id < n_ranks; rank_id++) {
 
-    PDM_g_num_t   sum = 0;
+    double   sum = 0;
     int   shift = rank_id * sampling_factor;
 
     for (int id = 0; id < sampling_factor; id++)
@@ -834,7 +834,7 @@ _bucket_sampling(int                       dim,
                  int                       n_ranks,
                  int                       n_codes,
                  const PDM_hilbert_code_t  hilbert_codes[],
-                 const int                 weight[],
+                 const double              weight[],
                  const int                 order[],
                  PDM_hilbert_code_t       *sampling[],
                  PDM_MPI_Comm              comm)
@@ -843,7 +843,7 @@ _bucket_sampling(int                       dim,
   int   j;
   double  fit, best_fit, optim;
 
-  PDM_g_num_t   lsum_weight = 0, gsum_weight = 0;
+  double   lsum_weight = 0, gsum_weight = 0;
   PDM_hilbert_code_t  *_sampling = *sampling;
 
   const int  sampling_factor = _sampling_factors[dim];
@@ -853,24 +853,26 @@ _bucket_sampling(int                       dim,
   /* Compute the global number of elements and the optimal number of elements
      on each rank */
 
-  for (j = 0; j < n_codes; j++)
+  for (j = 0; j < n_codes; j++) {
     lsum_weight += weight[j];
+  }
 
-  PDM_MPI_Allreduce(&lsum_weight, &gsum_weight, 1, PDM__PDM_MPI_G_NUM, PDM_MPI_SUM, comm);
+  PDM_MPI_Allreduce(&lsum_weight, &gsum_weight, 1, PDM_MPI_DOUBLE, PDM_MPI_SUM, comm);
 
-  double _gsum_weight = (double)gsum_weight;
-  double _n_ranks = (double)n_ranks;
+  double _gsum_weight = (double) gsum_weight;
+  double _n_ranks     = (double) n_ranks;
   optim = _gsum_weight / _n_ranks;
 
   /* Define a naive sampling (uniform distribution) */
 
-  for (i = 0; i < n_samples + 1; i++)
+  for (i = 0; i < n_samples + 1; i++) {
     _sampling[i] = i*unit;
+  }
 
   /* Define the distribution associated to the current sampling array */
 
-  PDM_g_num_t   *distrib = (PDM_g_num_t   *) malloc (sizeof(PDM_g_num_t) * n_samples);
-  double  *cfreq = (double *) malloc (sizeof(double) * (n_samples + 1));
+  double  *distrib = (double *) malloc (sizeof(double) * n_samples      );
+  double  *cfreq   = (double *) malloc (sizeof(double) * (n_samples + 1));
 
   _define_rank_distrib(dim,
                        n_ranks,
@@ -1332,7 +1334,7 @@ PDM_hilbert_build_rank_index(int                       dim,
                              int                       n_t_part,
                              int                       n_codes,
                              const PDM_hilbert_code_t  hilbert_code[],
-                             const int                 weight[],
+                             const double              weight[],
                              const int                 order[],
                              PDM_hilbert_code_t        rank_index[],
                              PDM_MPI_Comm              comm)

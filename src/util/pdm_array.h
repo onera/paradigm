@@ -1,3 +1,7 @@
+/*
+ * \file
+ */
+
 #ifndef __PDM_ARRAY_H__
 #define __PDM_ARRAY_H__
 
@@ -27,6 +31,7 @@ int* PDM_array_zeros_int(const int size);
 // Create an array and fill it with given value
 int*         PDM_array_const_int (const int size, const int         value);
 PDM_g_num_t* PDM_array_const_gnum(const int size, const PDM_g_num_t value);
+double*      PDM_array_const_double(const int size, const double value);
 
 // Create an index array from a size array
 int*         PDM_array_new_idx_from_sizes_int (const int *size_array, const int size);

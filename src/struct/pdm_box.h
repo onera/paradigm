@@ -1,3 +1,7 @@
+/*
+ * \file
+ */
+
 #ifndef __PDM_BOX_H__
 #define __PDM_BOX_H__
 
@@ -323,7 +327,7 @@ PDM_box_set_build_morton_index(const PDM_box_set_t *boxes,
                                PDM_box_distrib_t   *distrib,
                                int                  n_leaves,
                                PDM_morton_code_t   *leaf_codes,
-                               int                 *weight);
+                               double              *weight);
 
 
 /**

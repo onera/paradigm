@@ -16,6 +16,7 @@
 #include "pdm_array.h"
 #include "pdm_priv.h"
 #include "pdm_logging.h"
+#include "pdm_distrib.h"
 #include "pdm_timer.h"
 
 #ifdef __cplusplus
@@ -277,20 +278,66 @@ PDM_block_to_part_global_timer_get
  *
  */
 
+// PDM_block_to_part_t *
+// PDM_block_to_part_create_cf
+// (
+//  const PDM_g_num_t     *block_distrib_idx,
+//  const PDM_g_num_t    **gnum_elt,
+//  const int            *n_elt,
+//  const int             n_part,
+//  const PDM_MPI_Fint    fcomm
+//  )
+// {
+//   const PDM_MPI_Comm _comm        = PDM_MPI_Comm_f2c(fcomm);
+//   return PDM_block_to_part_create (block_distrib_idx, gnum_elt, n_elt, n_part, _comm);
+// }
+
 PDM_block_to_part_t *
-PDM_block_to_part_create_cf
+PDM_block_to_part_create_from_sparse_block_and_distrib
 (
  const PDM_g_num_t     *block_distrib_idx,
+ const PDM_g_num_t     *delt_gnum,  // Should be betwenn [1, N]
+ const int              dn_elt,
  const PDM_g_num_t    **gnum_elt,
- const int            *n_elt,
- const int             n_part,
- const PDM_MPI_Fint    fcomm
- )
+ const int             *n_elt,
+ const int              n_part,
+ const PDM_MPI_Comm     comm
+)
 {
-  const PDM_MPI_Comm _comm        = PDM_MPI_Comm_f2c(fcomm);
-  return PDM_block_to_part_create (block_distrib_idx, gnum_elt, n_elt, n_part, _comm);
-}
+  PDM_block_to_part_t* btp = PDM_block_to_part_create(block_distrib_idx,
+                                                      gnum_elt,
+                                                      n_elt,
+                                                      n_part,
+                                                      comm);
+  /*
+   *  Post traitement du distrib_data
+   */
+  assert(btp->idx_partial         == NULL);
+  assert(btp->n_elt_partial_block == 0);
+  btp->idx_partial = (int * ) malloc( btp->distributed_data_idx[btp->n_rank] * sizeof(int));
 
+
+  // PDM_log_trace_array_int(btp->distributed_data_idx, btp->n_rank+1, "distributed_data_idx : ");
+  // PDM_log_trace_array_int(btp->distributed_data, btp->distributed_data_idx[btp->n_rank], "distributed_data : ");
+
+  for (int i = 0; i < btp->distributed_data_idx[btp->n_rank]; i++) {
+    int lid = btp->distributed_data[i];
+    PDM_g_num_t g_num_send = lid + btp->block_distrib_idx[btp->i_rank] + 1;
+    if(dn_elt > 0) {
+      int idx_in_partial_block = PDM_binary_search_long(g_num_send, delt_gnum, dn_elt);
+      btp->idx_partial[i] = idx_in_partial_block;
+    } else {
+      btp->idx_partial[i] = -1;
+    }
+  }
+  btp->n_elt_partial_block = dn_elt;
+
+  if(0 == 1) {
+    PDM_log_trace_array_int(btp->idx_partial, btp->distributed_data_idx[btp->n_rank], "idx_partial : ");
+  }
+
+  return btp;
+}
 
 PDM_block_to_part_t *
 PDM_block_to_part_create_from_sparse_block
@@ -338,41 +385,22 @@ PDM_block_to_part_create_from_sparse_block
   PDM_g_num_t gmax_part_g_num = 0;
   PDM_MPI_Allreduce(&max_part_g_num, &gmax_part_g_num, 1,
                     PDM__PDM_MPI_G_NUM, PDM_MPI_MAX, comm);
+
+  if(_block_distrib_idx[n_rank] == 0) {
+    free(_block_distrib_idx);
+    _block_distrib_idx = PDM_compute_uniform_entity_distribution(comm, gmax_part_g_num);
+  }
+
   _block_distrib_idx[n_rank] = PDM_MAX(_block_distrib_idx[n_rank], gmax_part_g_num+1);
 
-  PDM_block_to_part_t* btp = PDM_block_to_part_create(_block_distrib_idx,
-                                                      gnum_elt,
-                                                      n_elt,
-                                                      n_part,
-                                                      comm);
+  PDM_block_to_part_t* btp = PDM_block_to_part_create_from_sparse_block_and_distrib(_block_distrib_idx,
+                                                                                   delt_gnum,
+                                                                                   dn_elt,
+                                                                                   gnum_elt,
+                                                                                   n_elt,
+                                                                                   n_part,
+                                                                                   comm);
   free(_block_distrib_idx);
-  /*
-   *  Post traitement du distrib_data
-   */
-  assert(btp->idx_partial         == NULL);
-  assert(btp->n_elt_partial_block == 0);
-  btp->idx_partial = (int * ) malloc( btp->distributed_data_idx[btp->n_rank] * sizeof(int));
-
-
-  // PDM_log_trace_array_int(btp->distributed_data_idx, btp->n_rank+1, "distributed_data_idx : ");
-  // PDM_log_trace_array_int(btp->distributed_data, btp->distributed_data_idx[btp->n_rank], "distributed_data : ");
-
-  for (int i = 0; i < btp->distributed_data_idx[btp->n_rank]; i++) {
-    int lid = btp->distributed_data[i];
-    PDM_g_num_t g_num_send = lid + btp->block_distrib_idx[btp->i_rank] + 1;
-    if(dn_elt > 0) {
-      int idx_in_partial_block = PDM_binary_search_long(g_num_send, delt_gnum, dn_elt);
-      btp->idx_partial[i] = idx_in_partial_block;
-    } else {
-      btp->idx_partial[i] = -1;
-    }
-  }
-  btp->n_elt_partial_block = dn_elt;
-
-  if(0 == 1) {
-    PDM_log_trace_array_int(btp->idx_partial, btp->distributed_data_idx[btp->n_rank], "idx_partial : ");
-  }
-
   return btp;
 }
 
