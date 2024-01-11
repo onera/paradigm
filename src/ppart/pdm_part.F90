@@ -1513,7 +1513,7 @@ contains
 
     call c_f_pointer(c_face_ln_to_gn, &
                      face_ln_to_gn,   &
-                     [sface_vtx])
+                     [n_face])
 
     call c_f_pointer(c_face_part_bound_proc_idx, &
                      face_part_bound_proc_idx,   &
