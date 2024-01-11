@@ -2083,7 +2083,7 @@ _compress_octants
     }
 
     /* Leaf node */
-    if (start == end-1) {
+    if (start == end-1 && (octants->n_points[start] > 0)) {
       double *_min = _pts_extents + 6*(*n_nodes);
       double *_max = _min + 3;
       _nodes[4*(*n_nodes)] = (int) octants->codes[start].L;
@@ -2148,7 +2148,9 @@ _compress_octants
             }
           }
 
-          (*n_nodes)++;
+          if (_n_pts[*n_nodes] > 0) {
+            (*n_nodes)++;
+          }
           if (dbg_enabled) printf("  --> add to nodes\n");
           continue;
         }
