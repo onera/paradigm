@@ -26,6 +26,7 @@
 #include "pdm_part_to_block.h"
 #include "pdm_part_extension_priv.h"
 #include "pdm_part_connectivity_transform.h"
+#include "pdm_part_extension_algorithm.h"
 #include "pdm_domain_utils.h"
 #include "pdm_distrib.h"
 #include "pdm_array.h"
@@ -325,6 +326,8 @@ _compute_other_part_domain_interface
 
     }
   }
+  part_ext->have_edge = have_edge;
+  part_ext->have_face = have_face;
 
   // En gros noeud centré avec toutes les connectivités
   if(is_describe_vtx == 1 &&
@@ -645,7 +648,95 @@ _part_extension_2d
  PDM_part_extension_t *part_ext
 )
 {
-  PDM_UNUSED(part_ext);
+
+  /*
+   * Dans tous les cas on cherche a obtenir le graphe entre le propagateur et l'entité principale :
+   *    - PDM_EXTEND_FROM_VTX
+   *    - PDM_EXTEND_FROM_EDGE
+   */
+  int          **pn_entity1        = (int         ** ) malloc( part_ext->n_domain * sizeof(int          *));
+  PDM_g_num_t ***pentity1_ln_to_gn = (PDM_g_num_t ***) malloc( part_ext->n_domain * sizeof(PDM_g_num_t **));
+  PDM_bound_type_t bound_type = PDM_BOUND_TYPE_MAX;
+  if(part_ext->extend_type == PDM_EXTEND_FROM_VTX) {
+    bound_type = PDM_BOUND_TYPE_VTX;
+
+    for(int i_domain = 0; i_domain < part_ext->n_domain; ++i_domain) {
+      pn_entity1        [i_domain] = (int         * ) malloc( part_ext->n_domain * sizeof(int          ));
+      pentity1_ln_to_gn [i_domain] = (PDM_g_num_t **) malloc( part_ext->n_domain * sizeof(PDM_g_num_t *));
+      for(int i_part = 0; i_part < part_ext->n_part[i_domain]; ++i_part) {
+        pn_entity1       [i_domain][i_part] = part_ext->parts[i_domain][i_part].n_vtx;
+        pentity1_ln_to_gn[i_domain][i_part] = part_ext->parts[i_domain][i_part].vtx_ln_to_gn;
+      }
+    }
+
+  } else if(part_ext->extend_type == PDM_EXTEND_FROM_EDGE) {
+    bound_type = PDM_BOUND_TYPE_EDGE;
+
+    for(int i_domain = 0; i_domain < part_ext->n_domain; ++i_domain) {
+      pn_entity1        [i_domain] = (int         * ) malloc( part_ext->n_domain * sizeof(int          ));
+      pentity1_ln_to_gn [i_domain] = (PDM_g_num_t **) malloc( part_ext->n_domain * sizeof(PDM_g_num_t *));
+      for(int i_part = 0; i_part < part_ext->n_part[i_domain]; ++i_part) {
+        pn_entity1       [i_domain][i_part] = part_ext->parts[i_domain][i_part].n_edge;
+        pentity1_ln_to_gn[i_domain][i_part] = part_ext->parts[i_domain][i_part].edge_ln_to_gn;
+      }
+    }
+
+  }
+
+  /*
+   * 1st step :
+   *   - Connectivity between partition have two kind :
+   *      + by partitionning interface (same domain)
+   *      + by domaine interface (other domain or periodic or multidomain)
+   *   - This step give rebuild a connectivity graphe with both contribution
+   *      + The first is deduce by global numbering
+   *      + The second is deduce by all domain_interface give by the user
+   */
+  int **pentity1_extented_to_pentity1_idx       = NULL;
+  int **pentity1_extented_to_pentity1_triplet   = NULL;
+  int **pentity1_extented_to_pentity1_interface = NULL;
+  PDM_part_extension_build_entity1_graph(part_ext->pdi,
+                                         bound_type,
+                                         part_ext->n_domain,
+                                         part_ext->n_part,
+                                         pn_entity1,
+                                         pentity1_ln_to_gn,
+                                         NULL,
+                                         &pentity1_extented_to_pentity1_idx,
+                                         &pentity1_extented_to_pentity1_triplet,
+                                         &pentity1_extented_to_pentity1_interface,
+                                         part_ext->comm);
+
+
+  /*
+   * 2 possibilities :
+   *   - With face_vtx
+   *   - With face_edge + edge_vtx
+   */
+  if(part_ext->have_edge == 1) {
+    printf("Part extension with edges not implemented yet !");
+    abort();
+  } else {
+
+  }
+
+
+  for(int i_part = 0; i_part < part_ext->ln_part_tot; ++i_part) {
+    free(pentity1_extented_to_pentity1_idx      [i_part]);
+    free(pentity1_extented_to_pentity1_triplet  [i_part]);
+    free(pentity1_extented_to_pentity1_interface[i_part]);
+  }
+  free(pentity1_extented_to_pentity1_idx      );
+  free(pentity1_extented_to_pentity1_triplet  );
+  free(pentity1_extented_to_pentity1_interface);
+
+
+  for(int i_domain = 0; i_domain < part_ext->n_domain; ++i_domain) {
+    free(pn_entity1       [i_domain]);
+    free(pentity1_ln_to_gn[i_domain]);
+  }
+  free(pn_entity1);
+  free(pentity1_ln_to_gn);
 
 }
 
