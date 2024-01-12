@@ -626,7 +626,102 @@ _setup_domain_interface_in_block_frame
                                        &part_ext->ptb_itrf[PDM_BOUND_TYPE_FACE],
                                        &part_ext->opp_gnum[PDM_BOUND_TYPE_FACE]);
   }
+}
 
+static
+void
+_build_bound_graph
+(
+ PDM_part_extension_t   *part_ext
+)
+{
+  /*
+   * Dans tous les cas on cherche a obtenir le graphe entre le propagateur et l'entité principale :
+   *    - PDM_EXTEND_FROM_VTX
+   *    - PDM_EXTEND_FROM_EDGE
+   *    - PDM_EXTEND_FROM_FACE
+   */
+  int          **pn_entity1        = (int         ** ) malloc( part_ext->n_domain * sizeof(int          *));
+  PDM_g_num_t ***pentity1_ln_to_gn = (PDM_g_num_t ***) malloc( part_ext->n_domain * sizeof(PDM_g_num_t **));
+  PDM_bound_type_t bound_type = PDM_BOUND_TYPE_MAX;
+  if(part_ext->extend_type == PDM_EXTEND_FROM_VTX) {
+    bound_type = PDM_BOUND_TYPE_VTX;
+    for(int i_domain = 0; i_domain < part_ext->n_domain; ++i_domain) {
+      pn_entity1        [i_domain] = (int         * ) malloc( part_ext->n_domain * sizeof(int          ));
+      pentity1_ln_to_gn [i_domain] = (PDM_g_num_t **) malloc( part_ext->n_domain * sizeof(PDM_g_num_t *));
+      for(int i_part = 0; i_part < part_ext->n_part[i_domain]; ++i_part) {
+        pn_entity1       [i_domain][i_part] = part_ext->parts[i_domain][i_part].n_vtx;
+        pentity1_ln_to_gn[i_domain][i_part] = part_ext->parts[i_domain][i_part].vtx_ln_to_gn;
+      }
+    }
+  } else if(part_ext->extend_type == PDM_EXTEND_FROM_EDGE) {
+    bound_type = PDM_BOUND_TYPE_EDGE;
+    for(int i_domain = 0; i_domain < part_ext->n_domain; ++i_domain) {
+      pn_entity1        [i_domain] = (int         * ) malloc( part_ext->n_domain * sizeof(int          ));
+      pentity1_ln_to_gn [i_domain] = (PDM_g_num_t **) malloc( part_ext->n_domain * sizeof(PDM_g_num_t *));
+      for(int i_part = 0; i_part < part_ext->n_part[i_domain]; ++i_part) {
+        pn_entity1       [i_domain][i_part] = part_ext->parts[i_domain][i_part].n_edge;
+        pentity1_ln_to_gn[i_domain][i_part] = part_ext->parts[i_domain][i_part].edge_ln_to_gn;
+      }
+    }
+  } else if(part_ext->extend_type == PDM_EXTEND_FROM_FACE) {
+    bound_type = PDM_BOUND_TYPE_FACE;
+    for(int i_domain = 0; i_domain < part_ext->n_domain; ++i_domain) {
+      pn_entity1        [i_domain] = (int         * ) malloc( part_ext->n_domain * sizeof(int          ));
+      pentity1_ln_to_gn [i_domain] = (PDM_g_num_t **) malloc( part_ext->n_domain * sizeof(PDM_g_num_t *));
+      for(int i_part = 0; i_part < part_ext->n_part[i_domain]; ++i_part) {
+        pn_entity1       [i_domain][i_part] = part_ext->parts[i_domain][i_part].n_face;
+        pentity1_ln_to_gn[i_domain][i_part] = part_ext->parts[i_domain][i_part].face_ln_to_gn;
+      }
+    }
+  }
+
+  /*
+   * 1st step :
+   *   - Connectivity between partition have two kind :
+   *      + by partitionning interface (same domain)
+   *      + by domaine interface (other domain or periodic or multidomain)
+   *   - This step give rebuild a connectivity graphe with both contribution
+   *      + The first is deduce by global numbering
+   *      + The second is deduce by all domain_interface give by the user
+   */
+  int **pentity_bound_to_pentity_bound_idx       = NULL;
+  int **pentity_bound_to_pentity_bound_triplet   = NULL;
+  int **pentity_bound_to_pentity_bound_interface = NULL;
+  PDM_part_extension_build_entity1_graph(part_ext->pdi,
+                                         bound_type,
+                                         part_ext->n_domain,
+                                         part_ext->n_part,
+                                         pn_entity1,
+                                         pentity1_ln_to_gn,
+                                         NULL,
+                                         &pentity_bound_to_pentity_bound_idx,
+                                         &pentity_bound_to_pentity_bound_triplet,
+                                         &pentity_bound_to_pentity_bound_interface,
+                                         part_ext->comm);
+
+  if(1 == 1) {
+    int l_part = 0;
+    for(int i_domain = 0; i_domain < part_ext->n_domain; ++i_domain) {
+      for(int i_part = 0; i_part < part_ext->n_part[i_domain]; ++i_part) {
+        PDM_log_trace_array_int(pentity_bound_to_pentity_bound_idx      [l_part], pn_entity1[i_domain][i_part], "pentity_bound_to_pentity_bound_idx ::");
+        PDM_log_trace_array_int(pentity_bound_to_pentity_bound_triplet  [l_part], pentity_bound_to_pentity_bound_idx[l_part][pn_entity1[i_domain][i_part]], "pentity_bound_to_pentity_bound_triplet ::");
+        PDM_log_trace_array_int(pentity_bound_to_pentity_bound_interface[l_part], pentity_bound_to_pentity_bound_idx[l_part][pn_entity1[i_domain][i_part]]/3, "pentity_bound_to_pentity_bound_interface ::");
+        l_part++;
+      }
+    }
+  }
+
+  for(int i_domain = 0; i_domain < part_ext->n_domain; ++i_domain) {
+    free(pn_entity1       [i_domain]);
+    free(pentity1_ln_to_gn[i_domain]);
+  }
+  free(pn_entity1);
+  free(pentity1_ln_to_gn);
+
+  part_ext->pinit_entity_bound_to_pentity_bound_idx       = pentity_bound_to_pentity_bound_idx;
+  part_ext->pinit_entity_bound_to_pentity_bound_triplet   = pentity_bound_to_pentity_bound_triplet;
+  part_ext->pinit_entity_bound_to_pentity_bound_interface = pentity_bound_to_pentity_bound_interface;
 
 }
 
@@ -650,65 +745,6 @@ _part_extension_2d
 {
 
   /*
-   * Dans tous les cas on cherche a obtenir le graphe entre le propagateur et l'entité principale :
-   *    - PDM_EXTEND_FROM_VTX
-   *    - PDM_EXTEND_FROM_EDGE
-   */
-  int          **pn_entity1        = (int         ** ) malloc( part_ext->n_domain * sizeof(int          *));
-  PDM_g_num_t ***pentity1_ln_to_gn = (PDM_g_num_t ***) malloc( part_ext->n_domain * sizeof(PDM_g_num_t **));
-  PDM_bound_type_t bound_type = PDM_BOUND_TYPE_MAX;
-  if(part_ext->extend_type == PDM_EXTEND_FROM_VTX) {
-    bound_type = PDM_BOUND_TYPE_VTX;
-
-    for(int i_domain = 0; i_domain < part_ext->n_domain; ++i_domain) {
-      pn_entity1        [i_domain] = (int         * ) malloc( part_ext->n_domain * sizeof(int          ));
-      pentity1_ln_to_gn [i_domain] = (PDM_g_num_t **) malloc( part_ext->n_domain * sizeof(PDM_g_num_t *));
-      for(int i_part = 0; i_part < part_ext->n_part[i_domain]; ++i_part) {
-        pn_entity1       [i_domain][i_part] = part_ext->parts[i_domain][i_part].n_vtx;
-        pentity1_ln_to_gn[i_domain][i_part] = part_ext->parts[i_domain][i_part].vtx_ln_to_gn;
-      }
-    }
-
-  } else if(part_ext->extend_type == PDM_EXTEND_FROM_EDGE) {
-    bound_type = PDM_BOUND_TYPE_EDGE;
-
-    for(int i_domain = 0; i_domain < part_ext->n_domain; ++i_domain) {
-      pn_entity1        [i_domain] = (int         * ) malloc( part_ext->n_domain * sizeof(int          ));
-      pentity1_ln_to_gn [i_domain] = (PDM_g_num_t **) malloc( part_ext->n_domain * sizeof(PDM_g_num_t *));
-      for(int i_part = 0; i_part < part_ext->n_part[i_domain]; ++i_part) {
-        pn_entity1       [i_domain][i_part] = part_ext->parts[i_domain][i_part].n_edge;
-        pentity1_ln_to_gn[i_domain][i_part] = part_ext->parts[i_domain][i_part].edge_ln_to_gn;
-      }
-    }
-
-  }
-
-  /*
-   * 1st step :
-   *   - Connectivity between partition have two kind :
-   *      + by partitionning interface (same domain)
-   *      + by domaine interface (other domain or periodic or multidomain)
-   *   - This step give rebuild a connectivity graphe with both contribution
-   *      + The first is deduce by global numbering
-   *      + The second is deduce by all domain_interface give by the user
-   */
-  int **pentity1_extented_to_pentity1_idx       = NULL;
-  int **pentity1_extented_to_pentity1_triplet   = NULL;
-  int **pentity1_extented_to_pentity1_interface = NULL;
-  PDM_part_extension_build_entity1_graph(part_ext->pdi,
-                                         bound_type,
-                                         part_ext->n_domain,
-                                         part_ext->n_part,
-                                         pn_entity1,
-                                         pentity1_ln_to_gn,
-                                         NULL,
-                                         &pentity1_extented_to_pentity1_idx,
-                                         &pentity1_extented_to_pentity1_triplet,
-                                         &pentity1_extented_to_pentity1_interface,
-                                         part_ext->comm);
-
-
-  /*
    * 2 possibilities :
    *   - With face_vtx
    *   - With face_edge + edge_vtx
@@ -720,23 +756,83 @@ _part_extension_2d
 
   }
 
+  int           *pn_vtx         = (int         * ) malloc( part_ext->n_domain * sizeof(int          ));
+  int           *pn_edge        = (int         * ) malloc( part_ext->n_domain * sizeof(int          ));
+  int           *pn_face        = (int         * ) malloc( part_ext->n_domain * sizeof(int          ));
+  PDM_g_num_t  **pvtx_ln_to_gn  = (PDM_g_num_t **) malloc( part_ext->n_domain * sizeof(PDM_g_num_t *));
+  PDM_g_num_t  **pedge_ln_to_gn = (PDM_g_num_t **) malloc( part_ext->n_domain * sizeof(PDM_g_num_t *));
+  PDM_g_num_t  **pface_ln_to_gn = (PDM_g_num_t **) malloc( part_ext->n_domain * sizeof(PDM_g_num_t *));
+  int          **pface_vtx_idx  = (int         **) malloc( part_ext->n_domain * sizeof(int         *));
+  int          **pface_vtx      = (int         **) malloc( part_ext->n_domain * sizeof(int         *));
+  int          **pedge_vtx_idx  = (int         **) malloc( part_ext->n_domain * sizeof(int         *));
+  int          **pedge_vtx      = (int         **) malloc( part_ext->n_domain * sizeof(int         *));
 
-  for(int i_part = 0; i_part < part_ext->ln_part_tot; ++i_part) {
-    free(pentity1_extented_to_pentity1_idx      [i_part]);
-    free(pentity1_extented_to_pentity1_triplet  [i_part]);
-    free(pentity1_extented_to_pentity1_interface[i_part]);
-  }
-  free(pentity1_extented_to_pentity1_idx      );
-  free(pentity1_extented_to_pentity1_triplet  );
-  free(pentity1_extented_to_pentity1_interface);
-
-
+  int lpart = 0;
   for(int i_domain = 0; i_domain < part_ext->n_domain; ++i_domain) {
-    free(pn_entity1       [i_domain]);
-    free(pentity1_ln_to_gn[i_domain]);
+    for(int i_part = 0; i_part < part_ext->n_part[i_domain]; ++i_part) {
+      pn_vtx        [lpart] = part_ext->parts[i_domain][i_part].n_vtx;
+      pn_edge       [lpart] = part_ext->parts[i_domain][i_part].n_edge;
+      pn_face       [lpart] = part_ext->parts[i_domain][i_part].n_face;
+      pvtx_ln_to_gn [lpart] = part_ext->parts[i_domain][i_part].vtx_ln_to_gn;
+      pedge_ln_to_gn[lpart] = part_ext->parts[i_domain][i_part].edge_ln_to_gn;
+      pface_ln_to_gn[lpart] = part_ext->parts[i_domain][i_part].face_ln_to_gn;
+      pface_vtx_idx [lpart] = part_ext->parts[i_domain][i_part].face_vtx_idx;
+      pface_vtx     [lpart] = part_ext->parts[i_domain][i_part].face_vtx;
+      pedge_vtx_idx [lpart] = NULL;
+      pedge_vtx     [lpart] = part_ext->parts[i_domain][i_part].edge_vtx;
+    }
   }
-  free(pn_entity1);
-  free(pentity1_ln_to_gn);
+
+
+  /*
+   * On va etendre la partition avec le graphe de base tant que de nouveau elements apparaissent
+   *   -> Il faut ajuster la taille du graphe en fonction des nouvelles entités (juste une rallonge)
+   *   -> On doit également alimenter un tableau pour le lien avec les entités de la recursion d'après
+   */
+  int converged = 0;
+  while(converged == 0) {
+
+    /* Use descending connectivity to deduce connectivity and extend_face */
+    int          *pn_face_extented                  = NULL;
+    PDM_g_num_t **pface_extented_ln_to_gn           = NULL;
+    int         **pface_extented_to_pface_idx       = NULL;
+    int         **pface_extented_to_pface_triplet   = NULL;
+    int         **pface_extented_to_pface_interface = NULL;
+
+    PDM_part_extension_entity1_to_entity2(part_ext->n_domain,
+                                          part_ext->shift_by_domain_face, // Attention il va evoluer lui
+                                          part_ext->ln_part_tot,
+                                          pn_vtx,
+                                          pvtx_ln_to_gn,
+                                          part_ext->pinit_entity_bound_to_pentity_bound_idx, // pvtx_to_pvtx_idx,
+                                          part_ext->pinit_entity_bound_to_pentity_bound_triplet, // pvtx_to_pvtx_triplet,
+                                          part_ext->pinit_entity_bound_to_pentity_bound_interface, // pvtx_to_pvtx_interface,
+                                          pn_face,
+                                          pface_ln_to_gn,
+                                          pface_vtx_idx,
+                                          pface_vtx,
+                                          &pn_face_extented,
+                                          &pface_extented_ln_to_gn,
+                                          &pface_extented_to_pface_idx,
+                                          &pface_extented_to_pface_triplet,
+                                          &pface_extented_to_pface_interface,
+                                          part_ext->comm);
+
+
+    converged = 1;
+  }
+
+  free(pn_vtx        );
+  free(pn_edge       );
+  free(pn_face       );
+  free(pvtx_ln_to_gn );
+  free(pedge_ln_to_gn);
+  free(pface_ln_to_gn);
+  free(pface_vtx_idx );
+  free(pface_vtx     );
+  free(pedge_vtx_idx );
+  free(pedge_vtx     );
+
 
 }
 
@@ -781,22 +877,22 @@ PDM_part_extension_compute2
    *   - Go to distributed frame
    *   - Create the extend_type part_domain_interface to setup the first step of the algorithme
    */
-  printf("_compute_other_part_domain_interface \n");
   _compute_other_part_domain_interface(part_ext);
-  printf("_compute_other_part_domain_interface end\n");
 
   /*
    * Let's do an block frame domain_interface
    */
-  printf("_setup_domain_interface_in_block_frame \n");
   _setup_domain_interface_in_block_frame(part_ext);
-  printf("_setup_domain_interface_in_block_frame end\n");
-
 
   /* Manage shift */
-  printf("_offset_parts_by_domain \n");
   _offset_parts_by_domain(part_ext, 1);
-  printf("_offset_parts_by_domain end \n");
+
+  /*
+   * Create the initial graphe with the extend_kind
+   */
+  _build_bound_graph(part_ext);
+
+
 
   /* Manage dim */
   if(dim == 3) {
@@ -1174,6 +1270,19 @@ PDM_part_extension_free
     free(part_ext->cell_cell_extended_pruned    );
     free(part_ext->cell_cell_interface_pruned   );
   }
+
+
+  if(part_ext->pinit_entity_bound_to_pentity_bound_idx != NULL) {
+    for(int i_part = 0; i_part < part_ext->ln_part_tot; ++i_part) {
+      free(part_ext->pinit_entity_bound_to_pentity_bound_idx      [i_part]);
+      free(part_ext->pinit_entity_bound_to_pentity_bound_triplet  [i_part]);
+      free(part_ext->pinit_entity_bound_to_pentity_bound_interface[i_part]);
+    }
+    free(part_ext->pinit_entity_bound_to_pentity_bound_idx      );
+    free(part_ext->pinit_entity_bound_to_pentity_bound_triplet  );
+    free(part_ext->pinit_entity_bound_to_pentity_bound_interface);
+  }
+
 
   free(part_ext->n_part_idx);
   free(part_ext->n_part_g_idx);

@@ -964,6 +964,88 @@ PDM_part_extension_build_entity1_graph
  *     - face to cell
  */
 void
+PDM_part_extension_entity1_to_entity2
+(
+  int                           n_domain,
+  PDM_g_num_t                  *shift_by_domain_entity2,
+  int                           n_part,
+  int                          *pn_entity1,
+  PDM_g_num_t                 **pentity1_ln_to_gn,
+  int                         **pentity1_to_pentity1_idx,
+  int                         **pentity1_to_pentity1_triplet,
+  int                         **pentity1_to_pentity1_interface,
+  int                          *pn_entity2,
+  PDM_g_num_t                 **pentity2_ln_to_gn,
+  int                         **pentity2_entity1_idx,
+  int                         **pentity2_entity1,
+  int                         **pn_entity2_extented_out,
+  PDM_g_num_t                ***pentity2_extented_ln_to_gn_out,
+  int                        ***pentity2_extented_to_pentity2_idx_out,
+  int                        ***pentity2_extented_to_pentity2_triplet_out,
+  int                        ***pentity2_extented_to_pentity2_interface_out,
+  PDM_MPI_Comm                  comm
+)
+{
+
+  int         **pentity1_entity2_idx  = NULL;
+  int         **pentity1_entity2      = NULL;
+  PDM_part_connectivity_transpose(n_part,
+                                  pn_entity2,
+                                  pn_entity1,
+                                  pentity2_entity1_idx,
+                                  pentity2_entity1,
+                                  &pentity1_entity2_idx,
+                                  &pentity1_entity2);
+
+  /*
+   * Preparation de echanges
+   */
+
+
+  /*
+   * Create part_to_part to exchange all data in opposit part
+   */
+  PDM_part_to_part_t* ptp = PDM_part_to_part_create_from_num2_triplet((const PDM_g_num_t **) pentity1_ln_to_gn,
+                                                                      (const int          *) pn_entity1,
+                                                                      n_part,
+                                                                      (const int          *) pn_entity1,
+                                                                      n_part,
+                                                                      (const int         **) pentity1_to_pentity1_idx,
+                                                                      (const int         **) NULL,
+                                                                      (const int         **) pentity1_to_pentity1_triplet,
+                                                                      comm);
+
+
+  int  *n_ref_lnum2 = NULL;
+  int **ref_lnum2   = NULL;
+  PDM_part_to_part_ref_lnum2_get(ptp, &n_ref_lnum2, &ref_lnum2);
+
+  int         **gnum1_come_from_idx = NULL;
+  PDM_g_num_t **gnum1_come_from     = NULL;
+  PDM_part_to_part_gnum1_come_from_get(ptp, &gnum1_come_from_idx, &gnum1_come_from);
+
+
+  for(int i_part = 0; i_part < n_part; ++i_part) {
+    free(pentity1_entity2_idx[i_part]);
+    free(pentity1_entity2    [i_part]);
+  }
+  free(pentity1_entity2_idx);
+  free(pentity1_entity2    );
+
+
+
+
+  PDM_part_to_part_free(ptp);
+}
+
+/*
+ * Translate and post-treated link by interface with on entity to another
+ *  Exemple of use :
+ *     - entity1 to face
+ *     - entity1 to edge
+ *     - face to cell
+ */
+void
 PDM_part_extension_interface_by_entity1_to_interface_by_entity2
 (
   PDM_part_domain_interface_t  *pdi,

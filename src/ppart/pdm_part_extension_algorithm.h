@@ -41,6 +41,28 @@ extern "C" {
  * Public function prototypes
  *============================================================================*/
 
+void
+PDM_part_extension_entity1_to_entity2
+(
+  int                           n_domain,
+  PDM_g_num_t                  *shift_by_domain_entity2,
+  int                           n_part,
+  int                          *pn_entity1,
+  PDM_g_num_t                 **pentity1_ln_to_gn,
+  int                         **pentity1_to_pentity1_idx,
+  int                         **pentity1_to_pentity1_triplet,
+  int                         **pentity1_to_pentity1_interface,
+  int                          *pn_entity2,
+  PDM_g_num_t                 **pentity2_ln_to_gn,
+  int                         **pentity2_entity1_idx,
+  int                         **pentity2_entity1,
+  int                         **pn_entity2_extented_out,
+  PDM_g_num_t                ***pentity2_extented_ln_to_gn_out,
+  int                        ***pentity2_extented_to_pentity2_idx_out,
+  int                        ***pentity2_extented_to_pentity2_triplet_out,
+  int                        ***pentity2_extented_to_pentity2_interface_out,
+  PDM_MPI_Comm                  comm
+);
 
 void
 PDM_part_extension_interface_by_entity1_to_interface_by_entity2

@@ -5933,6 +5933,10 @@ PDM_part_extension_create
     part_ext->has_connectivity[i] = PDM_FALSE;
   }
 
+  part_ext->pinit_entity_bound_to_pentity_bound_idx       = NULL;
+  part_ext->pinit_entity_bound_to_pentity_bound_triplet   = NULL;
+  part_ext->pinit_entity_bound_to_pentity_bound_interface = NULL;
+
   return part_ext;
 }
 
