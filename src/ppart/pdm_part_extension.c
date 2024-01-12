@@ -780,6 +780,20 @@ _part_extension_2d
       pface_vtx     [lpart] = part_ext->parts[i_domain][i_part].face_vtx;
       pedge_vtx_idx [lpart] = NULL;
       pedge_vtx     [lpart] = part_ext->parts[i_domain][i_part].edge_vtx;
+
+      /* Copy to to realloc after all */
+      pface_vtx_idx [lpart] = malloc((pn_face[lpart]+1) * sizeof(int));
+      pface_vtx     [lpart] = malloc(part_ext->parts[i_domain][i_part].face_vtx_idx[pn_face[lpart]]   * sizeof(int));
+
+      for(int i_face = 0; i_face < pn_face[i_part]+1; ++i_face) {
+        pface_vtx_idx [lpart][i_face] = part_ext->parts[i_domain][i_part].face_vtx_idx[i_face];
+      }
+
+      for(int idx = 0; idx < pface_vtx_idx[i_part][pn_face[lpart]]; ++idx) {
+        pface_vtx [lpart][idx] = part_ext->parts[i_domain][i_part].face_vtx[idx];
+      }
+
+      lpart++;
     }
   }
 
@@ -818,8 +832,47 @@ _part_extension_2d
                                           &pface_extented_to_pface_interface,
                                           part_ext->comm);
 
+    /*
+     * Concatenate all information to continue recursion
+     */
+    for(int i = 0; i < part_ext->ln_part_tot; ++i) {
+
+      /* Concatenate */
+
+
+
+
+    }
+
+    /*
+     * Update shift_by_domain_face
+     */
+
+
+    /*
+     * Free
+     */
+    for(int i_part = 0; i_part < part_ext->ln_part_tot; ++i_part) {
+      free(pface_extented_ln_to_gn          [i_part]);
+      free(pface_extented_to_pface_idx      [i_part]);
+      free(pface_extented_to_pface_triplet  [i_part]);
+      free(pface_extented_to_pface_interface[i_part]);
+    }
+    free(pface_extented_ln_to_gn          );
+    free(pface_extented_to_pface_idx      );
+    free(pface_extented_to_pface_triplet  );
+    free(pface_extented_to_pface_interface);
+    free(pn_face_extented);
+
+
 
     converged = 1;
+  }
+
+
+  for(int i_part = 0; i_part < part_ext->ln_part_tot; ++i_part) {
+    free(pface_vtx_idx[i_part]);
+    free(pface_vtx    [i_part]);
   }
 
   free(pn_vtx        );

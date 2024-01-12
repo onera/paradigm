@@ -1376,21 +1376,17 @@ PDM_part_extension_entity1_to_entity2
 
 
   for(int i_part = 0; i_part < n_part; ++i_part) {
-    free(pentity2_extented_to_pentity2_idx      [i_part]);
-    free(pentity2_extented_to_pentity2_triplet  [i_part]);
-    free(pentity2_extented_ln_to_gn             [i_part]);
-    free(extented_entity2_orig_gnum             [i_part]);
-    free(pentity2_extented_to_pentity2_interface[i_part]);
+    free(extented_entity2_orig_gnum[i_part]);
   }
-
-  free(pn_entity2_extented                    );
-  free(pentity2_extented_to_pentity2_idx      );
-  free(pentity2_extented_to_pentity2_triplet  );
-  free(pentity2_extented_ln_to_gn             );
-  free(extented_entity2_orig_gnum             );
-  free(pentity2_extented_to_pentity2_interface);
+  free(extented_entity2_orig_gnum);
 
 
+
+  *pn_entity2_extented_out                     = pn_entity2_extented;
+  *pentity2_extented_ln_to_gn_out              = pentity2_extented_ln_to_gn;
+  *pentity2_extented_to_pentity2_idx_out       = pentity2_extented_to_pentity2_idx;
+  *pentity2_extented_to_pentity2_triplet_out   = pentity2_extented_to_pentity2_triplet;
+  *pentity2_extented_to_pentity2_interface_out = pentity2_extented_to_pentity2_interface;
 
   for(int i_part = 0; i_part < n_part; ++i_part) {
     free(pextract_entity2_idx[i_part]);
