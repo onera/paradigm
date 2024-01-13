@@ -56,11 +56,17 @@ PDM_part_extension_entity1_to_entity2
   PDM_g_num_t                 **pentity2_ln_to_gn,
   int                         **pentity2_entity1_idx,
   int                         **pentity2_entity1,
+  PDM_g_num_t                  *prev_dentity2_elt_gnum,
+  PDM_g_num_t                  *prev_dentity2_orig_gnum_and_itrf,
+  PDM_g_num_t                  *prev_distrib_extented_entity2,
   int                         **pn_entity2_extented_out,
   PDM_g_num_t                ***pentity2_extented_ln_to_gn_out,
   int                        ***pentity2_extented_to_pentity2_idx_out,
   int                        ***pentity2_extented_to_pentity2_triplet_out,
   int                        ***pentity2_extented_to_pentity2_interface_out,
+  PDM_g_num_t                 **next_dentity2_elt_gnum_out,
+  PDM_g_num_t                 **next_dentity2_orig_gnum_and_itrf_out,
+  PDM_g_num_t                 **next_distrib_extented_entity2_out,
   PDM_MPI_Comm                  comm
 );
 

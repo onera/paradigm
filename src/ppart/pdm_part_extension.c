@@ -803,6 +803,11 @@ _part_extension_2d
    *   -> Il faut ajuster la taille du graphe en fonction des nouvelles entités (juste une rallonge)
    *   -> On doit également alimenter un tableau pour le lien avec les entités de la recursion d'après
    */
+
+  PDM_g_num_t *prev_dentity2_elt_gnum           = NULL;
+  PDM_g_num_t *prev_dentity2_orig_gnum_and_itrf = NULL;
+  PDM_g_num_t *prev_distrib_extented_entity2    = NULL;
+
   int converged = 0;
   // while(converged == 0 && i_detph == n_depth) {
   while(converged == 0) {
@@ -820,6 +825,9 @@ _part_extension_2d
      *   - Keep an block array containaing blk_gnum -> (orig_gnum, interface)
      *   - Use this information to remove alreay faces in the mesh (at the second step of the algorithm)
      */
+    PDM_g_num_t *next_dentity2_elt_gnum           = NULL;
+    PDM_g_num_t *next_dentity2_orig_gnum_and_itrf = NULL;
+    PDM_g_num_t *next_distrib_extented_entity2    = NULL;
     PDM_part_extension_entity1_to_entity2(part_ext->n_domain,
                                           part_ext->shift_by_domain_face, // Attention il va evoluer lui
                                           part_ext->ln_part_tot,
@@ -832,17 +840,27 @@ _part_extension_2d
                                           pface_ln_to_gn,
                                           pface_vtx_idx,
                                           pface_vtx,
+                                          prev_dentity2_elt_gnum,
+                                          prev_dentity2_orig_gnum_and_itrf,
+                                          prev_distrib_extented_entity2,
                                           &pn_face_extented,
                                           &pface_extented_ln_to_gn,
                                           &pface_extented_to_pface_idx,
                                           &pface_extented_to_pface_triplet,
                                           &pface_extented_to_pface_interface,
+                                          &next_dentity2_elt_gnum,
+                                          &next_dentity2_orig_gnum_and_itrf,
+                                          &next_distrib_extented_entity2,
                                           part_ext->comm);
 
     /*
      * Update with descending connectivity :
      *   - Mandatory because we need to iterate the connectivity face_vtx (but with the new faces)
      */
+
+    free(next_dentity2_elt_gnum);
+    free(next_dentity2_orig_gnum_and_itrf);
+    free(next_distrib_extented_entity2);
 
     /*
      * Concatenate all information to continue recursion

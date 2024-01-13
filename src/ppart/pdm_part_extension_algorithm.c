@@ -978,11 +978,17 @@ PDM_part_extension_entity1_to_entity2
   PDM_g_num_t                 **pentity2_ln_to_gn,
   int                         **pentity2_entity1_idx,
   int                         **pentity2_entity1,
+  PDM_g_num_t                  *prev_dentity2_elt_gnum,
+  PDM_g_num_t                  *prev_dentity2_orig_gnum_and_itrf,
+  PDM_g_num_t                  *prev_distrib_extented_entity2,
   int                         **pn_entity2_extented_out,
   PDM_g_num_t                ***pentity2_extented_ln_to_gn_out,
   int                        ***pentity2_extented_to_pentity2_idx_out,
   int                        ***pentity2_extented_to_pentity2_triplet_out,
   int                        ***pentity2_extented_to_pentity2_interface_out,
+  PDM_g_num_t                 **next_dentity2_elt_gnum_out,
+  PDM_g_num_t                 **next_dentity2_orig_gnum_and_itrf_out,
+  PDM_g_num_t                 **next_distrib_extented_entity2_out,
   PDM_MPI_Comm                  comm
 )
 {
@@ -1285,10 +1291,10 @@ PDM_part_extension_entity1_to_entity2
   PDM_g_num_t **all_pentity2_orig_gnum_and_itrf  = malloc(n_part_and_on_blk * sizeof(PDM_g_num_t *));
   int          *all_pn_entity2_only_by_interface = malloc(n_part_and_on_blk * sizeof(int          ));
 
-  PDM_g_num_t *prev_dextented_entity2_ln_to_gn           = NULL;
-  PDM_g_num_t *prev_dextented_entity2_orig_gnum_and_itrf = NULL;
-  int          prev_dextented_entity2_n                  = 0;
   PDM_g_num_t  shift_extented_entity2                    = 0;
+  if(prev_distrib_extented_entity2 != NULL) {
+    shift_extented_entity2 = prev_distrib_extented_entity2[n_rank+1];
+  }
 
   for(int i_part = 0; i_part < n_part; ++i_part) {
     all_pextented_entity2_ln_to_gn  [i_part] = pextented_entity2_ln_to_gn  [i_part];
@@ -1299,9 +1305,13 @@ PDM_part_extension_entity1_to_entity2
       pextented_entity2_ln_to_gn[i_part] += shift_extented_entity2;
     }
   }
-  all_pextented_entity2_ln_to_gn  [n_part] = prev_dextented_entity2_ln_to_gn;
-  all_pn_entity2_only_by_interface[n_part] = prev_dextented_entity2_n;
-  all_pentity2_orig_gnum_and_itrf [n_part] = prev_dextented_entity2_orig_gnum_and_itrf;
+  all_pextented_entity2_ln_to_gn  [n_part] = prev_dentity2_elt_gnum;
+  all_pentity2_orig_gnum_and_itrf [n_part] = prev_dentity2_elt_gnum;
+  if(prev_distrib_extented_entity2 != NULL) {
+    all_pn_entity2_only_by_interface[n_part] = prev_distrib_extented_entity2[i_rank+1] - prev_distrib_extented_entity2[i_rank];
+  } else {
+    all_pn_entity2_only_by_interface[n_part] = 0;
+  }
 
   PDM_part_to_block_t* ptb = PDM_part_to_block_create(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
                                                       PDM_PART_TO_BLOCK_POST_CLEANUP,
@@ -1311,6 +1321,7 @@ PDM_part_extension_entity1_to_entity2
                                                       all_pn_entity2_only_by_interface,
                                                       n_part_and_on_blk,
                                                       comm);
+  free(all_pextented_entity2_ln_to_gn);
 
   PDM_g_num_t *dentity2_orig_gnum_and_itrf = NULL;
   PDM_part_to_block_exch(ptb,
@@ -1323,33 +1334,37 @@ PDM_part_extension_entity1_to_entity2
           (void **)      &dentity2_orig_gnum_and_itrf);
 
   int n_blk_elt = PDM_part_to_block_n_elt_block_get(ptb);
-  PDM_g_num_t *dnext_entity2_elt_gnum = PDM_part_to_block_block_gnum_get(ptb);
+  PDM_g_num_t *next_dentity2_elt_gnum_ptp        = PDM_part_to_block_block_gnum_get   (ptb);
+  PDM_g_num_t *distrib_extented_by_interface_ptp = PDM_part_to_block_distrib_index_get(ptb);
 
   if(1 == 1) {
     PDM_log_trace_array_long(dentity2_orig_gnum_and_itrf, 2 * n_blk_elt, "dentity2_ln_to_gn_only_by_interface ::");
   }
-  free(dentity2_orig_gnum_and_itrf);
+  // free(dentity2_orig_gnum_and_itrf);
   free(pextented_entity2_ln_to_gn);
   free(all_pn_entity2_only_by_interface);
   free(all_pentity2_orig_gnum_and_itrf);
 
   /*
-   * Chaque extension genere des nouveaux gnum :
-   *    - next_pextented_entity2_ln_to_gn
-   *    - next_pextented_entity2_orig_gnum_and_itrf
-   * Qu'on merge avec les previous
+   * Merge data and prepare for next step
    */
-  PDM_g_num_t *prev_dentity2_ln_to_gn_only_by_interface = NULL;
-  // PDM_g_num_t *prev_dentity2_ln_to_gn_only_by_interface = NULL;
-
-
-
+  PDM_g_num_t *next_dentity2_elt_gnum        = malloc( n_blk_elt * sizeof(PDM_g_num_t));
+  PDM_g_num_t *distrib_extented_by_interface = malloc((n_rank+1) * sizeof(PDM_g_num_t));
+  for(int i = 0; i < n_blk_elt; ++i) {
+    next_dentity2_elt_gnum[i] = next_dentity2_elt_gnum_ptp[i];
+  }
+  for(int i = 0; i < n_rank+1; ++i) {
+    distrib_extented_by_interface[i] = distrib_extented_by_interface_ptp[i];
+  }
   PDM_part_to_block_free(ptb);
-
-  free(all_pextented_entity2_ln_to_gn);
-
-
   PDM_gnum_free(gen_gnum_entity2);
+
+  /*
+   * Fix output
+   */
+  *next_dentity2_elt_gnum_out           = next_dentity2_elt_gnum;
+  *next_dentity2_orig_gnum_and_itrf_out = dentity2_orig_gnum_and_itrf;
+  *next_distrib_extented_entity2_out    = distrib_extented_by_interface;
 
 
   /*
