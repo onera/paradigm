@@ -111,7 +111,26 @@ PDM_part_extension_build_entity1_graph
   PDM_MPI_Comm                   comm
 );
 
-
+void
+PDM_part_extension_pentity1_entity2_to_extented_pentity1_entity2
+(
+ int                    n_part,
+ int                    n_interface,
+ PDM_part_to_block_t  **ptb_itrf,
+ PDM_g_num_t          **opp_gnum_itrf,
+ int                   *pn_entity1,
+ PDM_g_num_t          **pentity1_ln_to_gn,
+ int                   *pn_entity2,
+ PDM_g_num_t          **pentity2_ln_to_gn,
+ int                  **pentity1_entity2_idx,
+ int                  **pentity1_entity2,
+ int                   *pn_entity1_extented,
+ PDM_g_num_t          **pentity1_extented_ln_to_gn,
+ int                  **pentity1_extented_to_pentity1_idx,
+ int                  **pentity1_extented_to_pentity1_triplet,
+ int                  **pentity1_extented_to_pentity1_interface,
+ PDM_MPI_Comm           comm
+);
 
 void
 PDM_part_extension_pconnectivity_to_extented_pconnectivity

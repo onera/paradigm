@@ -857,6 +857,25 @@ _part_extension_2d
      * Update with descending connectivity :
      *   - Mandatory because we need to iterate the connectivity face_vtx (but with the new faces)
      */
+    PDM_part_extension_pentity1_entity2_to_extented_pentity1_entity2(part_ext->ln_part_tot,
+                                                                     part_ext->n_interface,
+                                                                     part_ext->ptb_itrf[PDM_BOUND_TYPE_VTX],
+                                                                     part_ext->opp_gnum[PDM_BOUND_TYPE_VTX],
+                                                                     pn_face,
+                                                                     pface_ln_to_gn,
+                                                                     pn_vtx,
+                                                                     pvtx_ln_to_gn,
+                                                                     pface_vtx_idx,
+                                                                     pface_vtx,
+                                                                     pn_face_extented,
+                                                                     pface_extented_ln_to_gn,
+                                                                     pface_extented_to_pface_idx,
+                                                                     pface_extented_to_pface_triplet,
+                                                                     pface_extented_to_pface_interface,
+                                                                     part_ext->comm);
+
+
+
 
     free(next_dentity2_elt_gnum);
     free(next_dentity2_orig_gnum_and_itrf);
@@ -869,7 +888,7 @@ _part_extension_2d
 
       /* Concatenate */
 
-
+      /* Concatenate graphe in other array */
 
 
     }
