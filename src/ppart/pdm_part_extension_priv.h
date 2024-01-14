@@ -172,6 +172,7 @@ struct _pdm_part_extension_t {
   PDM_domain_interface_t  *dom_itrf;
   PDM_part_to_block_t    **ptb_itrf[PDM_BOUND_TYPE_MAX];
   PDM_g_num_t            **opp_gnum[PDM_BOUND_TYPE_MAX];
+  int                    **opp_sens[PDM_BOUND_TYPE_MAX];
 
   int have_edge;
   int have_face;

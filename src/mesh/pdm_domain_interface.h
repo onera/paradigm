@@ -228,7 +228,8 @@ PDM_domain_interface_make_flat_view
   PDM_bound_type_t         interface_kind,
   PDM_g_num_t             *shift_by_domain,
   PDM_part_to_block_t   ***ptb_interface_out,
-  PDM_g_num_t           ***entity_opp_gnum_out
+  PDM_g_num_t           ***entity_opp_gnum_out,
+  int                   ***entity_opp_sens_out
 );
 
 #ifdef __cplusplus

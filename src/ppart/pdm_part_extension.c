@@ -594,6 +594,7 @@ _setup_domain_interface_in_block_frame
   for(int i = 0; i < PDM_BOUND_TYPE_MAX; ++i) {
     part_ext->ptb_itrf[i] = NULL; // (PDM_part_to_block_t **) malloc( n_interface * sizeof(PDM_part_to_block_t **));
     part_ext->opp_gnum[i] = NULL; // (PDM_g_num_t         **) malloc( n_interface * sizeof(PDM_g_num_t         **));
+    part_ext->opp_sens[i] = NULL; // (PDM_g_num_t         **) malloc( n_interface * sizeof(PDM_g_num_t         **));
 
     // for(int i_itrf = 0; i_itrf < n_interface; ++i_itrf) {
     //   part_ext->ptb_itrf[i][i_itrf] = NULL;
@@ -607,7 +608,8 @@ _setup_domain_interface_in_block_frame
                                       PDM_BOUND_TYPE_VTX,
                                       part_ext->shift_by_domain_vtx,
                                       &part_ext->ptb_itrf[PDM_BOUND_TYPE_VTX],
-                                      &part_ext->opp_gnum[PDM_BOUND_TYPE_VTX]);
+                                      &part_ext->opp_gnum[PDM_BOUND_TYPE_VTX],
+                                      &part_ext->opp_sens[PDM_BOUND_TYPE_VTX]);
 
 
   if(is_describe_edge) {
@@ -615,7 +617,8 @@ _setup_domain_interface_in_block_frame
                                         PDM_BOUND_TYPE_EDGE,
                                         part_ext->shift_by_domain_edge,
                                        &part_ext->ptb_itrf[PDM_BOUND_TYPE_EDGE],
-                                       &part_ext->opp_gnum[PDM_BOUND_TYPE_EDGE]);
+                                       &part_ext->opp_gnum[PDM_BOUND_TYPE_EDGE],
+                                       &part_ext->opp_sens[PDM_BOUND_TYPE_EDGE]);
   }
 
 
@@ -624,7 +627,8 @@ _setup_domain_interface_in_block_frame
                                         PDM_BOUND_TYPE_FACE,
                                         part_ext->shift_by_domain_face,
                                        &part_ext->ptb_itrf[PDM_BOUND_TYPE_FACE],
-                                       &part_ext->opp_gnum[PDM_BOUND_TYPE_FACE]);
+                                       &part_ext->opp_gnum[PDM_BOUND_TYPE_FACE],
+                                       &part_ext->opp_sens[PDM_BOUND_TYPE_EDGE]);
   }
 }
 
@@ -861,6 +865,7 @@ _part_extension_2d
                                                                      part_ext->n_interface,
                                                                      part_ext->ptb_itrf[PDM_BOUND_TYPE_VTX],
                                                                      part_ext->opp_gnum[PDM_BOUND_TYPE_VTX],
+                                                                     part_ext->opp_sens[PDM_BOUND_TYPE_VTX],
                                                                      pn_face,
                                                                      pface_ln_to_gn,
                                                                      pn_vtx,
@@ -1022,10 +1027,12 @@ PDM_part_extension_compute2
         if(part_ext->ptb_itrf[i][i_itrf] != NULL) {
           PDM_part_to_block_free(part_ext->ptb_itrf[i][i_itrf]);
           free(part_ext->opp_gnum[i][i_itrf]);
+          free(part_ext->opp_sens[i][i_itrf]);
         }
       }
     }
     free(part_ext->ptb_itrf[i]);
+    free(part_ext->opp_sens[i]);
     free(part_ext->opp_gnum[i]);
   }
 
