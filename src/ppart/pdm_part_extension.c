@@ -863,8 +863,8 @@ _part_extension_2d
      */
     int                           *pn_vtx_extented                 = NULL;
     PDM_g_num_t                  **pvtx_extented_ln_to_gn          = NULL;
-    int                          **pextented_entity1_vtx_idx       = NULL;
-    int                          **pextented_entity1_vtx           = NULL;
+    int                          **pextented_face_vtx_idx       = NULL;
+    int                          **pextented_face_vtx           = NULL;
     int                          **pvtx_extented_to_pvtx_idx       = NULL;
     int                          **pvtx_extented_to_pvtx_triplet   = NULL;
     int                          **pvtx_extented_to_pvtx_interface = NULL;
@@ -887,8 +887,8 @@ _part_extension_2d
                                                                      pface_extented_to_pface_interface,
                                                                      &pn_vtx_extented,
                                                                      &pvtx_extented_ln_to_gn,
-                                                                     &pextented_entity1_vtx_idx,
-                                                                     &pextented_entity1_vtx,
+                                                                     &pextented_face_vtx_idx,
+                                                                     &pextented_face_vtx,
                                                                      &pvtx_extented_to_pvtx_idx,
                                                                      &pvtx_extented_to_pvtx_triplet,
                                                                      &pvtx_extented_to_pvtx_interface,
@@ -897,6 +897,32 @@ _part_extension_2d
     free(next_dentity2_elt_gnum);
     free(next_dentity2_orig_gnum_and_itrf);
     free(next_distrib_extented_entity2);
+
+    if(1 == 1) {
+      for(int i_part = 0; i_part < part_ext->ln_part_tot; ++i_part) {
+        PDM_log_trace_array_long(pvtx_extented_ln_to_gn[i_part], pn_vtx_extented[i_part], "pvtx_extented_ln_to_gn ::");
+        PDM_log_trace_connectivity_int(pextented_face_vtx_idx[i_part], pextented_face_vtx[i_part], pn_face_extented[i_part], "pextented_face_vtx ::");
+      }
+    }
+
+    /*
+     * Avoid leaks temporary
+     */
+    for(int i_part = 0; i_part < part_ext->ln_part_tot; ++i_part) {
+      free(pvtx_extented_ln_to_gn         [i_part]);
+      free(pextented_face_vtx_idx         [i_part]);
+      free(pextented_face_vtx             [i_part]);
+      free(pvtx_extented_to_pvtx_idx      [i_part]);
+      free(pvtx_extented_to_pvtx_triplet  [i_part]);
+      free(pvtx_extented_to_pvtx_interface[i_part]);
+    }
+    free(pn_vtx_extented);
+    free(pvtx_extented_ln_to_gn         );
+    free(pextented_face_vtx_idx         );
+    free(pextented_face_vtx             );
+    free(pvtx_extented_to_pvtx_idx      );
+    free(pvtx_extented_to_pvtx_triplet  );
+    free(pvtx_extented_to_pvtx_interface);
 
     /*
      * Concatenate all information to continue recursion
@@ -929,8 +955,6 @@ _part_extension_2d
     free(pface_extented_to_pface_triplet  );
     free(pface_extented_to_pface_interface);
     free(pn_face_extented);
-
-
 
     converged = 1;
   }
