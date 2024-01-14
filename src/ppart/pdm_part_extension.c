@@ -785,9 +785,23 @@ _part_extension_2d
       pedge_vtx_idx [lpart] = NULL;
       pedge_vtx     [lpart] = part_ext->parts[i_domain][i_part].edge_vtx;
 
-      /* Copy to to realloc after all */
-      pface_vtx_idx [lpart] = malloc((pn_face[lpart]+1) * sizeof(int));
+      /* Copy to realloc after all step */
+      pvtx_ln_to_gn [lpart] = malloc((pn_vtx [lpart]  ) * sizeof(PDM_g_num_t));
+      pedge_ln_to_gn[lpart] = malloc((pn_edge[lpart]  ) * sizeof(PDM_g_num_t));
+      pface_ln_to_gn[lpart] = malloc((pn_face[lpart]  ) * sizeof(PDM_g_num_t));
+      pface_vtx_idx [lpart] = malloc((pn_face[lpart]+1) * sizeof(int        ));
       pface_vtx     [lpart] = malloc(part_ext->parts[i_domain][i_part].face_vtx_idx[pn_face[lpart]]   * sizeof(int));
+
+
+      for(int i_face = 0; i_face < pn_face[i_part]; ++i_face) {
+        pface_ln_to_gn[lpart][i_face] = part_ext->parts[i_domain][i_part].face_ln_to_gn[i_face];
+      }
+      for(int i_edge = 0; i_edge < pn_edge[i_part]; ++i_edge) {
+        pedge_ln_to_gn[lpart][i_edge] = part_ext->parts[i_domain][i_part].edge_ln_to_gn[i_edge];
+      }
+      for(int i_vtx = 0; i_vtx < pn_vtx[i_part]; ++i_vtx) {
+        pvtx_ln_to_gn[lpart][i_vtx] = part_ext->parts[i_domain][i_part].vtx_ln_to_gn[i_vtx];
+      }
 
       for(int i_face = 0; i_face < pn_face[i_part]+1; ++i_face) {
         pface_vtx_idx [lpart][i_face] = part_ext->parts[i_domain][i_part].face_vtx_idx[i_face];
@@ -863,8 +877,8 @@ _part_extension_2d
      */
     int                           *pn_vtx_extented                 = NULL;
     PDM_g_num_t                  **pvtx_extented_ln_to_gn          = NULL;
-    int                          **pextented_face_vtx_idx       = NULL;
-    int                          **pextented_face_vtx           = NULL;
+    int                          **pextented_face_vtx_idx          = NULL;
+    int                          **pextented_face_vtx              = NULL;
     int                          **pvtx_extented_to_pvtx_idx       = NULL;
     int                          **pvtx_extented_to_pvtx_triplet   = NULL;
     int                          **pvtx_extented_to_pvtx_interface = NULL;
@@ -906,6 +920,50 @@ _part_extension_2d
     }
 
     /*
+     * Concatenate all information to continue recursion
+     */
+    for(int i_part = 0; i_part < part_ext->ln_part_tot; ++i_part) {
+
+      /*   */
+      int pn_concat_vtx  = pn_vtx [i_part] + pn_vtx_extented [i_part];
+      int pn_concat_edge = pn_edge[i_part]; // + pn_edge_extented[i_part];
+      int pn_concat_face = pn_face[i_part] + pn_face_extented[i_part];
+
+      int pn_concat_face_vtx_idx = pface_vtx_idx [i_part][pn_face[i_part]] + pextented_face_vtx_idx[i_part][pn_face_extented[i_part]];
+
+      /* Realloc */
+      pvtx_ln_to_gn [i_part] = realloc(pvtx_ln_to_gn [i_part], pn_concat_vtx          * sizeof(PDM_g_num_t));
+      pedge_ln_to_gn[i_part] = realloc(pedge_ln_to_gn[i_part], pn_concat_edge         * sizeof(PDM_g_num_t));
+      pface_ln_to_gn[i_part] = realloc(pface_ln_to_gn[i_part], pn_concat_face         * sizeof(PDM_g_num_t));
+      pface_vtx_idx [i_part] = realloc(pface_vtx_idx [i_part], (pn_concat_face+1)     * sizeof(int        ));
+      pface_vtx     [i_part] = realloc(pface_vtx     [i_part], pn_concat_face_vtx_idx * sizeof(int        ));
+
+      /* Concatenate */
+      for(int i_face = 0; i_face < pn_face_extented[i_part]; ++i_face) {
+        pface_ln_to_gn[i_part][pn_face[i_part]+i_face] = pface_extented_ln_to_gn[i_part][i_face];
+      }
+
+      // for(int i_edge = ; i_edge < pn_edge_extented[i_part]; ++i_edge) {
+      //   pedge_ln_to_gn[i_part][pn_edge[i_part]+i_edge] = pedge_extented_ln_to_gn[i_part][i_edge];
+      // }
+
+      for(int i_vtx = 0; i_vtx < pn_vtx_extented[i_part]; ++i_vtx) {
+        pvtx_ln_to_gn[i_part][pn_vtx[i_part]+i_vtx] = pvtx_extented_ln_to_gn[i_part][i_vtx];
+      }
+
+      /* Concatenate graphe in other array */
+      for(int i_face = 0; i_face < pn_face_extented[i_part]; ++i_face) {
+        int ln_vtx = pextented_face_vtx_idx[i_part][i_face+1] - pextented_face_vtx_idx[i_part][i_face];
+        pface_vtx_idx [i_part][pn_face[i_part]+1] = pface_vtx_idx [i_part][pn_face[i_part]] + ln_vtx;
+      }
+    }
+
+    /*
+     * Update shift_by_domain_face
+     */
+
+
+    /*
      * Avoid leaks temporary
      */
     for(int i_part = 0; i_part < part_ext->ln_part_tot; ++i_part) {
@@ -924,21 +982,6 @@ _part_extension_2d
     free(pvtx_extented_to_pvtx_triplet  );
     free(pvtx_extented_to_pvtx_interface);
 
-    /*
-     * Concatenate all information to continue recursion
-     */
-    for(int i = 0; i < part_ext->ln_part_tot; ++i) {
-
-      /* Concatenate */
-
-      /* Concatenate graphe in other array */
-
-
-    }
-
-    /*
-     * Update shift_by_domain_face
-     */
 
 
     /*
@@ -961,8 +1004,11 @@ _part_extension_2d
 
 
   for(int i_part = 0; i_part < part_ext->ln_part_tot; ++i_part) {
-    free(pface_vtx_idx[i_part]);
-    free(pface_vtx    [i_part]);
+    free(pvtx_ln_to_gn [i_part]);
+    free(pedge_ln_to_gn[i_part]);
+    free(pface_ln_to_gn[i_part]);
+    free(pface_vtx_idx [i_part]);
+    free(pface_vtx     [i_part]);
   }
 
   free(pn_vtx        );
