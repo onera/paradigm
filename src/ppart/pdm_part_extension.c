@@ -861,8 +861,16 @@ _part_extension_2d
      * Update with descending connectivity :
      *   - Mandatory because we need to iterate the connectivity face_vtx (but with the new faces)
      */
+    int                           *pn_vtx_extented                 = NULL;
+    PDM_g_num_t                  **pvtx_extented_ln_to_gn          = NULL;
+    int                          **pextented_entity1_vtx_idx       = NULL;
+    int                          **pextented_entity1_vtx           = NULL;
+    int                          **pvtx_extented_to_pvtx_idx       = NULL;
+    int                          **pvtx_extented_to_pvtx_triplet   = NULL;
+    int                          **pvtx_extented_to_pvtx_interface = NULL;
     PDM_part_extension_pentity1_entity2_to_extented_pentity1_entity2(part_ext->ln_part_tot,
                                                                      part_ext->n_interface,
+                                                                     part_ext->shift_by_domain_vtx[part_ext->n_domain], // Attention il va evoluer lui
                                                                      part_ext->ptb_itrf[PDM_BOUND_TYPE_VTX],
                                                                      part_ext->opp_gnum[PDM_BOUND_TYPE_VTX],
                                                                      part_ext->opp_sens[PDM_BOUND_TYPE_VTX],
@@ -877,10 +885,14 @@ _part_extension_2d
                                                                      pface_extented_to_pface_idx,
                                                                      pface_extented_to_pface_triplet,
                                                                      pface_extented_to_pface_interface,
+                                                                     &pn_vtx_extented,
+                                                                     &pvtx_extented_ln_to_gn,
+                                                                     &pextented_entity1_vtx_idx,
+                                                                     &pextented_entity1_vtx,
+                                                                     &pvtx_extented_to_pvtx_idx,
+                                                                     &pvtx_extented_to_pvtx_triplet,
+                                                                     &pvtx_extented_to_pvtx_interface,
                                                                      part_ext->comm);
-
-
-
 
     free(next_dentity2_elt_gnum);
     free(next_dentity2_orig_gnum_and_itrf);
