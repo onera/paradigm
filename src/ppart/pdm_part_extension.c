@@ -826,6 +826,37 @@ _part_extension_2d
   PDM_g_num_t *prev_dentity2_orig_gnum_and_itrf = NULL;
   PDM_g_num_t *prev_distrib_extented_entity2    = NULL;
 
+
+  int           *pfull_n_vtx_extented                 = malloc(part_ext->ln_part_tot * sizeof(int         *));
+  PDM_g_num_t  **pfull_vtx_extented_ln_to_gn          = malloc(part_ext->ln_part_tot * sizeof(PDM_g_num_t *));
+  int          **pfull_vtx_extented_to_pvtx_idx       = malloc(part_ext->ln_part_tot * sizeof(int         *));
+  int          **pfull_vtx_extented_to_pvtx_triplet   = malloc(part_ext->ln_part_tot * sizeof(int         *));
+  int          **pfull_vtx_extented_to_pvtx_interface = malloc(part_ext->ln_part_tot * sizeof(int         *));
+
+  int           *pfull_n_face_extented                  = malloc(part_ext->ln_part_tot * sizeof(int         *));
+  PDM_g_num_t  **pfull_face_extented_ln_to_gn           = malloc(part_ext->ln_part_tot * sizeof(PDM_g_num_t *));
+  int          **pfull_face_extented_to_pface_idx       = malloc(part_ext->ln_part_tot * sizeof(int         *));
+  int          **pfull_face_extented_to_pface_triplet   = malloc(part_ext->ln_part_tot * sizeof(int         *));
+  int          **pfull_face_extented_to_pface_interface = malloc(part_ext->ln_part_tot * sizeof(int         *));
+
+  for(int i_part = 0; i_part < part_ext->ln_part_tot; ++i_part) {
+    pfull_n_vtx_extented [i_part] = 0;
+    pfull_n_face_extented[i_part] = 0;
+
+    pfull_vtx_extented_to_pvtx_idx  [i_part] = malloc((pfull_n_vtx_extented [i_part]+1) * sizeof(int));
+    pfull_face_extented_to_pface_idx[i_part] = malloc((pfull_n_face_extented[i_part]+1) * sizeof(int));
+    pfull_vtx_extented_to_pvtx_idx  [i_part][0] = 0;
+    pfull_face_extented_to_pface_idx[i_part][0] = 0;
+
+    pfull_vtx_extented_ln_to_gn           [i_part] = malloc(0 * sizeof(PDM_g_num_t ));
+    pfull_vtx_extented_to_pvtx_triplet    [i_part] = malloc(0 * sizeof(int         ));
+    pfull_vtx_extented_to_pvtx_interface  [i_part] = malloc(0 * sizeof(int         ));
+
+    pfull_face_extented_ln_to_gn          [i_part] = malloc(0 * sizeof(PDM_g_num_t ));
+    pfull_face_extented_to_pface_triplet  [i_part] = malloc(0 * sizeof(int         ));
+    pfull_face_extented_to_pface_interface[i_part] = malloc(0 * sizeof(int         ));
+  }
+
   int converged = 0;
   // while(converged == 0 && i_detph == n_depth) {
   while(converged == 0) {
@@ -836,7 +867,6 @@ _part_extension_2d
     int         **pface_extented_to_pface_idx       = NULL;
     int         **pface_extented_to_pface_triplet   = NULL;
     int         **pface_extented_to_pface_interface = NULL;
-
 
     /*
      * TODO :
@@ -924,6 +954,12 @@ _part_extension_2d
      */
     for(int i_part = 0; i_part < part_ext->ln_part_tot; ++i_part) {
 
+      /* Update size */
+      int pn_vtx_extented_old  = pfull_n_vtx_extented [i_part];
+      int pn_face_extented_old = pfull_n_face_extented[i_part];
+      pfull_n_vtx_extented [i_part] += pn_vtx_extented [i_part];
+      pfull_n_face_extented[i_part] += pn_face_extented[i_part];
+
       /*   */
       int pn_concat_vtx  = pn_vtx [i_part] + pn_vtx_extented [i_part];
       int pn_concat_edge = pn_edge[i_part]; // + pn_edge_extented[i_part];
@@ -956,6 +992,25 @@ _part_extension_2d
         int ln_vtx = pextented_face_vtx_idx[i_part][i_face+1] - pextented_face_vtx_idx[i_part][i_face];
         pface_vtx_idx [i_part][pn_face[i_part]+1] = pface_vtx_idx [i_part][pn_face[i_part]] + ln_vtx;
       }
+
+      int size_vtx_vtx = pfull_vtx_extented_to_pvtx_idx[i_part][pn_vtx_extented_old];
+      pfull_vtx_extented_ln_to_gn         [i_part] = realloc(pfull_vtx_extented_ln_to_gn         [i_part],  pfull_n_vtx_extented[i_part]    * sizeof(PDM_g_num_t));
+      pfull_vtx_extented_to_pvtx_idx      [i_part] = realloc(pfull_vtx_extented_to_pvtx_idx      [i_part], (pfull_n_vtx_extented[i_part]+1) * sizeof(int        ));
+      pfull_vtx_extented_to_pvtx_triplet  [i_part] = realloc(pfull_vtx_extented_to_pvtx_triplet  [i_part], 3 * size_vtx_vtx                 * sizeof(int        ));
+      pfull_vtx_extented_to_pvtx_interface[i_part] = realloc(pfull_vtx_extented_to_pvtx_interface[i_part],     size_vtx_vtx                 * sizeof(int        ));
+
+      int size_face_face = pfull_face_extented_to_pface_idx[i_part][pn_face_extented_old];
+      pfull_face_extented_ln_to_gn          [i_part] = realloc(pfull_face_extented_ln_to_gn          [i_part],  pfull_n_face_extented[i_part]    * sizeof(PDM_g_num_t));
+      pfull_face_extented_to_pface_idx      [i_part] = realloc(pfull_face_extented_to_pface_idx      [i_part], (pfull_n_face_extented[i_part]+1) * sizeof(int        ));
+      pfull_face_extented_to_pface_triplet  [i_part] = realloc(pfull_face_extented_to_pface_triplet  [i_part], 3 * size_face_face                * sizeof(int        ));
+      pfull_face_extented_to_pface_interface[i_part] = realloc(pfull_face_extented_to_pface_interface[i_part],     size_face_face                * sizeof(int        ));
+
+      // for(int i_face = 0; i_face < pn_face_extented[i_part]; ++i_face) {
+
+      // }
+
+
+
     }
 
     /*
@@ -1021,6 +1076,34 @@ _part_extension_2d
   free(pface_vtx     );
   free(pedge_vtx_idx );
   free(pedge_vtx     );
+
+  /*
+   * To keep
+   */
+  for(int i_part = 0; i_part < part_ext->ln_part_tot; ++i_part) {
+    free(pfull_vtx_extented_ln_to_gn         [i_part]);
+    free(pfull_vtx_extented_to_pvtx_idx      [i_part]);
+    free(pfull_vtx_extented_to_pvtx_triplet  [i_part]);
+    free(pfull_vtx_extented_to_pvtx_interface[i_part]);
+
+    free(pfull_face_extented_ln_to_gn          [i_part]);
+    free(pfull_face_extented_to_pface_idx      [i_part]);
+    free(pfull_face_extented_to_pface_triplet  [i_part]);
+    free(pfull_face_extented_to_pface_interface[i_part]);
+
+  }
+  free(pfull_n_vtx_extented                );
+  free(pfull_vtx_extented_ln_to_gn         );
+  free(pfull_vtx_extented_to_pvtx_idx      );
+  free(pfull_vtx_extented_to_pvtx_triplet  );
+  free(pfull_vtx_extented_to_pvtx_interface);
+
+  free(pfull_n_face_extented                 );
+  free(pfull_face_extented_ln_to_gn          );
+  free(pfull_face_extented_to_pface_idx      );
+  free(pfull_face_extented_to_pface_triplet  );
+  free(pfull_face_extented_to_pface_interface);
+
 
 
 }
