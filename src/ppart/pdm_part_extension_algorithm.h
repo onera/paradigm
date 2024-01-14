@@ -116,8 +116,8 @@ PDM_part_extension_pentity1_entity2_to_extented_pentity1_entity2
 (
  int                    n_part,
  int                    n_interface,
- PDM_part_to_block_t  **ptb_itrf,
- PDM_g_num_t          **opp_gnum_itrf,
+ PDM_part_to_block_t  **ptb_itrf_entity2,
+ PDM_g_num_t          **opp_gnum_itrf_entity2,
  int                   *pn_entity1,
  PDM_g_num_t          **pentity1_ln_to_gn,
  int                   *pn_entity2,
