@@ -1011,9 +1011,10 @@ _part_extension_2d
      *   - Keep an block array containaing blk_gnum -> (orig_gnum, interface)
      *   - Use this information to remove alreay faces in the mesh (at the second step of the algorithm)
      */
-    PDM_g_num_t *next_dentity2_elt_gnum           = NULL;
-    PDM_g_num_t *next_dentity2_orig_gnum_and_itrf = NULL;
-    PDM_g_num_t *next_distrib_extented_entity2    = NULL;
+    int          next_dentity2_itrf_n_blk               = 0;
+    PDM_g_num_t *next_dentity2_itrf_blk_gnum            = NULL;
+    int         *next_dentity2_itrf_gnum_and_itrf_strid = NULL;
+    PDM_g_num_t *next_dentity2_itrf_gnum_and_itrf_data  = NULL;
     log_trace(" PDM_part_extension_entity1_to_entity2 beg \n");
     PDM_part_extension_entity1_to_entity2(shift_by_domain_face, // Attention il va evoluer lui
                                           part_ext->ln_part_tot,
@@ -1034,9 +1035,10 @@ _part_extension_2d
                                           &pface_extented_to_pface_idx,
                                           &pface_extented_to_pface_triplet,
                                           &pface_extented_to_pface_interface,
-                                          &next_dentity2_elt_gnum,
-                                          &next_dentity2_orig_gnum_and_itrf,
-                                          &next_distrib_extented_entity2,
+                                          &next_dentity2_itrf_n_blk,
+                                          &next_dentity2_itrf_blk_gnum,
+                                          &next_dentity2_itrf_gnum_and_itrf_strid,
+                                          &next_dentity2_itrf_gnum_and_itrf_data,
                                           part_ext->comm);
     log_trace(" PDM_part_extension_entity1_to_entity2 end \n");
 
@@ -1079,9 +1081,9 @@ _part_extension_2d
                                                                      part_ext->comm);
     log_trace(" PDM_part_extension_pentity1_entity2_to_extented_pentity1_entity2 end \n");
 
-    free(next_dentity2_elt_gnum);
-    free(next_dentity2_orig_gnum_and_itrf);
-    free(next_distrib_extented_entity2);
+    free(next_dentity2_itrf_blk_gnum);
+    free(next_dentity2_itrf_gnum_and_itrf_strid);
+    free(next_dentity2_itrf_gnum_and_itrf_data);
 
     if(1 == 1) {
       for(int i_part = 0; i_part < part_ext->ln_part_tot; ++i_part) {
