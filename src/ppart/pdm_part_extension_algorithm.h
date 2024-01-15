@@ -44,8 +44,7 @@ extern "C" {
 void
 PDM_part_extension_entity1_to_entity2
 (
-  int                           n_domain,
-  PDM_g_num_t                  *shift_by_domain_entity2,
+  PDM_g_num_t                   shift_by_domain_entity2,
   int                           n_part,
   int                          *pn_entity1,
   PDM_g_num_t                 **pentity1_ln_to_gn,

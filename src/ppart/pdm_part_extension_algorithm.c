@@ -966,8 +966,7 @@ PDM_part_extension_build_entity1_graph
 void
 PDM_part_extension_entity1_to_entity2
 (
-  int                           n_domain,
-  PDM_g_num_t                  *shift_by_domain_entity2,
+  PDM_g_num_t                   shift_by_domain_entity2,
   int                           n_part,
   int                          *pn_entity1,
   PDM_g_num_t                 **pentity1_ln_to_gn,
@@ -1006,6 +1005,15 @@ PDM_part_extension_entity1_to_entity2
                                   pentity2_entity1,
                                   &pentity1_entity2_idx,
                                   &pentity1_entity2);
+
+  if(1 == 1) {
+    for(int i_part = 0; i_part < n_part; ++i_part) {
+      PDM_log_trace_array_long(pentity1_ln_to_gn[i_part], pn_entity1[i_part], "pentity1_ln_to_gn ::");
+      PDM_log_trace_array_long(pentity2_ln_to_gn[i_part], pn_entity2[i_part], "pentity2_ln_to_gn ::");
+      PDM_log_trace_connectivity_int(pentity1_entity2_idx[i_part], pentity1_entity2[i_part], pn_entity1[i_part],"pentity1_entity2 ::");
+      PDM_log_trace_connectivity_int(pentity2_entity1_idx[i_part], pentity2_entity1[i_part], pn_entity2[i_part],"pentity2_entity1 ::");
+    }
+  }
 
   /*
    * Create part_to_part to exchange all data in opposit part
@@ -1074,7 +1082,9 @@ PDM_part_extension_entity1_to_entity2
       }
     }
 
-    PDM_log_trace_array_long(_gnum1_com_from_gnum_send, n_send_part2, "_gnum1_com_from_gnum_send ::");
+    if(0 == 1) {
+      PDM_log_trace_array_long(_gnum1_com_from_gnum_send, n_send_part2, "_gnum1_com_from_gnum_send ::");
+    }
 
 
   }
@@ -1262,7 +1272,7 @@ PDM_part_extension_entity1_to_entity2
     for(int i = 0; i < n_part1_to_part2; ++i) {
       if(pentity1_to_pentity1_interface[i_part][i] != 0) {
         for(int j = _pextract_entity2_idx[i]; j < _pextract_entity2_idx[i+1]; ++j) {
-          _pextract_entity2_gnum[j] = extented_entity2_ln_to_gn[idx_read++] + shift_by_domain_entity2[n_domain];
+          _pextract_entity2_gnum[j] = extented_entity2_ln_to_gn[idx_read++] + shift_by_domain_entity2;
         }
       }
     }
