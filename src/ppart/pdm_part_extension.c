@@ -729,6 +729,132 @@ _build_bound_graph
 
 }
 
+static
+void
+_exchange_coord_and_apply_transform
+(
+PDM_part_extension_t  *part_ext,
+int                   *pn_vtx_extented,
+PDM_g_num_t          **pvtx_extented_ln_to_gn,
+int                   *pn_vtx,
+double               **pvtx_coords,
+int                  **pvtx_extented_to_pvtx_idx,
+int                  **pvtx_extented_to_pvtx_triplet,
+int                  **pvtx_extented_to_pvtx_interface,
+double              ***pvtx_extented_coords_out
+)
+{
+  PDM_part_to_part_t* ptp_vtx = PDM_part_to_part_create_from_num2_triplet((const PDM_g_num_t **) pvtx_extented_ln_to_gn,
+                                                                          (const int          *) pn_vtx_extented,
+                                                                          part_ext->ln_part_tot,
+                                                                          (const int          *) pn_vtx,
+                                                                          part_ext->ln_part_tot,
+                                                                          (const int         **) pvtx_extented_to_pvtx_idx,
+                                                                          (const int         **) NULL,
+                                                                          (const int         **) pvtx_extented_to_pvtx_triplet,
+                                                                          part_ext->comm);
+  /*
+   *
+   */
+  int exch_request = -1;
+  double      **pextract_vtx_coords           = NULL;
+  PDM_part_to_part_reverse_iexch(ptp_vtx,
+                                 PDM_MPI_COMM_KIND_P2P,
+                                 PDM_STRIDE_CST_INTERLACED,
+                                 PDM_PART_TO_PART_DATA_DEF_ORDER_PART2,
+                                 1,
+                                 3 * sizeof(double),
+                                 NULL,
+                (const void **)  pvtx_coords,
+                                 NULL,
+                    (void ***)   &pextract_vtx_coords,
+                                 &exch_request);
+  PDM_part_to_part_reverse_iexch_wait(ptp_vtx, exch_request);
+
+  PDM_part_to_part_free(ptp_vtx);
+
+  /*
+   * Apply transformation if any
+   */
+  int n_interface = 0;
+  if(part_ext->pdi != NULL) {
+    n_interface = PDM_part_domain_interface_n_interface_get(part_ext->pdi);
+  }
+  double  **translation_vector = malloc(n_interface * sizeof(double *  ));
+  double ***rotation_matrix    = malloc(n_interface * sizeof(double ** ));
+  double  **rotation_direction = malloc(n_interface * sizeof(double *  ));
+  double  **rotation_center    = malloc(n_interface * sizeof(double *  ));
+  double   *rotation_angle     = malloc(n_interface * sizeof(double    ));
+  for(int i_interf = 0; i_interf < n_interface; ++i_interf) {
+    translation_vector[i_interf] = NULL;
+    PDM_part_domain_interface_translation_get(part_ext->pdi, i_interf, &translation_vector[i_interf]);
+
+    rotation_matrix[i_interf] = NULL;
+    PDM_part_domain_interface_rotation_get   (part_ext->pdi,
+                                              i_interf,
+                                              &rotation_direction[i_interf],
+                                              &rotation_center   [i_interf],
+                                              &rotation_angle    [i_interf]);
+
+    if(rotation_center    [i_interf] != NULL) {
+      rotation_matrix[i_interf] = malloc(3 * sizeof(double *));
+      for(int k = 0; k < 3; ++k) {
+        rotation_matrix[i_interf][k] = malloc(3 * sizeof(double));
+      }
+    }
+  }
+
+  for(int i_part = 0; i_part < part_ext->ln_part_tot; ++i_part) {
+    for(int i_vtx = 0; i_vtx < pn_vtx_extented[i_part]; ++i_vtx) {
+      int i_interface   = PDM_ABS (pvtx_extented_to_pvtx_interface[i_part][i_vtx]);
+      int sgn_interface = PDM_SIGN(pvtx_extented_to_pvtx_interface[i_part][i_vtx]);
+      if(i_interface != 0 && translation_vector[PDM_ABS(i_interface)-1] != NULL) {
+        for(int k = 0; k < 3; ++k) {
+          pextract_vtx_coords[i_part][3*i_vtx+k] += sgn_interface * translation_vector[PDM_ABS(i_interface)-1][k];
+        }
+      }
+    }
+  }
+
+
+  for(int i_interf = 0; i_interf < n_interface; ++i_interf) {
+    if(translation_vector[i_interf] != NULL) {
+      free(translation_vector[i_interf]);
+    }
+    if(rotation_center    [i_interf] != NULL) {
+      for(int k = 0; k < 3; ++k) {
+        free(rotation_matrix[i_interf][k]);
+      }
+      free(rotation_matrix[i_interf]);
+    }
+  }
+  free(translation_vector);
+  free(rotation_matrix);
+  free(rotation_direction);
+  free(rotation_center);
+  free(rotation_angle);
+
+  /*
+   * Petit vtk en légende
+   */
+  if(1 == 1) {
+    int i_rank;
+    PDM_MPI_Comm_rank(part_ext->comm, &i_rank);
+
+    for(int i_part = 0; i_part < part_ext->ln_part_tot; ++i_part) {
+      char filename[999];
+      sprintf(filename, "extented_vtx_coords_%i_%i.vtk", i_part, i_rank);
+
+      PDM_vtk_write_point_cloud(filename,
+                                pn_vtx_extented       [i_part],
+                                pextract_vtx_coords   [i_part],
+                                pvtx_extented_ln_to_gn[i_part],
+                                NULL);
+    }
+  }
+
+  *pvtx_extented_coords_out = pextract_vtx_coords;
+}
 
 static
 void
@@ -770,6 +896,7 @@ _part_extension_2d
   int          **pface_vtx      = (int         **) malloc( part_ext->n_domain * sizeof(int         *));
   int          **pedge_vtx_idx  = (int         **) malloc( part_ext->n_domain * sizeof(int         *));
   int          **pedge_vtx      = (int         **) malloc( part_ext->n_domain * sizeof(int         *));
+  double       **pvtx_coords    = (double      **) malloc( part_ext->n_domain * sizeof(double      *));
 
   int lpart = 0;
   for(int i_domain = 0; i_domain < part_ext->n_domain; ++i_domain) {
@@ -791,24 +918,29 @@ _part_extension_2d
       pface_ln_to_gn[lpart] = malloc((pn_face[lpart]  ) * sizeof(PDM_g_num_t));
       pface_vtx_idx [lpart] = malloc((pn_face[lpart]+1) * sizeof(int        ));
       pface_vtx     [lpart] = malloc(part_ext->parts[i_domain][i_part].face_vtx_idx[pn_face[lpart]]   * sizeof(int));
+      pvtx_coords   [lpart] = malloc(3 * pn_vtx [lpart] * sizeof(double));
 
 
-      for(int i_face = 0; i_face < pn_face[i_part]; ++i_face) {
+      for(int i_face = 0; i_face < pn_face[lpart]; ++i_face) {
         pface_ln_to_gn[lpart][i_face] = part_ext->parts[i_domain][i_part].face_ln_to_gn[i_face];
       }
-      for(int i_edge = 0; i_edge < pn_edge[i_part]; ++i_edge) {
+      for(int i_edge = 0; i_edge < pn_edge[lpart]; ++i_edge) {
         pedge_ln_to_gn[lpart][i_edge] = part_ext->parts[i_domain][i_part].edge_ln_to_gn[i_edge];
       }
-      for(int i_vtx = 0; i_vtx < pn_vtx[i_part]; ++i_vtx) {
+      for(int i_vtx = 0; i_vtx < pn_vtx[lpart]; ++i_vtx) {
         pvtx_ln_to_gn[lpart][i_vtx] = part_ext->parts[i_domain][i_part].vtx_ln_to_gn[i_vtx];
       }
 
-      for(int i_face = 0; i_face < pn_face[i_part]+1; ++i_face) {
+      for(int i_face = 0; i_face < pn_face[lpart]+1; ++i_face) {
         pface_vtx_idx [lpart][i_face] = part_ext->parts[i_domain][i_part].face_vtx_idx[i_face];
       }
 
       for(int idx = 0; idx < pface_vtx_idx[i_part][pn_face[lpart]]; ++idx) {
         pface_vtx [lpart][idx] = part_ext->parts[i_domain][i_part].face_vtx[idx];
+      }
+
+      for(int i_vtx = 0; i_vtx < 3 * pn_vtx[lpart]; ++i_vtx) {
+        pvtx_coords   [lpart][i_vtx] = part_ext->parts[i_domain][i_part].vtx[i_vtx];
       }
 
       lpart++;
@@ -948,6 +1080,30 @@ _part_extension_2d
         PDM_log_trace_connectivity_int(pextented_face_vtx_idx[i_part], pextented_face_vtx[i_part], pn_face_extented[i_part], "pextented_face_vtx ::");
       }
     }
+
+    /*
+     * Hook coordinates
+     */
+    double **pvtx_extented_coords = NULL;
+    _exchange_coord_and_apply_transform(part_ext,
+                                        pn_vtx_extented,
+                                        pvtx_extented_ln_to_gn,
+                                        pn_vtx,
+                                        pvtx_coords,
+                                        pvtx_extented_to_pvtx_idx,
+                                        pvtx_extented_to_pvtx_triplet,
+                                        pvtx_extented_to_pvtx_interface,
+                                        &pvtx_extented_coords);
+
+    /*
+     * Concat and free
+     */
+    for(int i_part = 0; i_part < part_ext->ln_part_tot; ++i_part) {
+
+      free(pvtx_extented_coords[i_part]);
+    }
+    free(pvtx_extented_coords);
+
 
     /*
      * Concatenate all information to continue recursion
@@ -1091,6 +1247,7 @@ _part_extension_2d
     free(pface_ln_to_gn[i_part]);
     free(pface_vtx_idx [i_part]);
     free(pface_vtx     [i_part]);
+    free(pvtx_coords   [i_part]);
   }
 
   free(pn_vtx        );
@@ -1103,6 +1260,7 @@ _part_extension_2d
   free(pface_vtx     );
   free(pedge_vtx_idx );
   free(pedge_vtx     );
+  free(pvtx_coords   );
 
   /*
    * To keep
