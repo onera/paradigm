@@ -993,23 +993,50 @@ _part_extension_2d
         pface_vtx_idx [i_part][pn_face[i_part]+1] = pface_vtx_idx [i_part][pn_face[i_part]] + ln_vtx;
       }
 
-      int size_vtx_vtx = pfull_vtx_extented_to_pvtx_idx[i_part][pn_vtx_extented_old];
+      int size_vtx_vtx = (pfull_vtx_extented_to_pvtx_idx[i_part][pn_vtx_extented_old] + pvtx_extented_to_pvtx_idx[i_part][pn_vtx_extented[i_part]])/3;
       pfull_vtx_extented_ln_to_gn         [i_part] = realloc(pfull_vtx_extented_ln_to_gn         [i_part],  pfull_n_vtx_extented[i_part]    * sizeof(PDM_g_num_t));
       pfull_vtx_extented_to_pvtx_idx      [i_part] = realloc(pfull_vtx_extented_to_pvtx_idx      [i_part], (pfull_n_vtx_extented[i_part]+1) * sizeof(int        ));
       pfull_vtx_extented_to_pvtx_triplet  [i_part] = realloc(pfull_vtx_extented_to_pvtx_triplet  [i_part], 3 * size_vtx_vtx                 * sizeof(int        ));
       pfull_vtx_extented_to_pvtx_interface[i_part] = realloc(pfull_vtx_extented_to_pvtx_interface[i_part],     size_vtx_vtx                 * sizeof(int        ));
 
-      int size_face_face = pfull_face_extented_to_pface_idx[i_part][pn_face_extented_old];
+      int size_face_face = (pfull_face_extented_to_pface_idx[i_part][pn_face_extented_old] + pface_extented_to_pface_idx[i_part][pn_face_extented[i_part]])/3;
       pfull_face_extented_ln_to_gn          [i_part] = realloc(pfull_face_extented_ln_to_gn          [i_part],  pfull_n_face_extented[i_part]    * sizeof(PDM_g_num_t));
       pfull_face_extented_to_pface_idx      [i_part] = realloc(pfull_face_extented_to_pface_idx      [i_part], (pfull_n_face_extented[i_part]+1) * sizeof(int        ));
       pfull_face_extented_to_pface_triplet  [i_part] = realloc(pfull_face_extented_to_pface_triplet  [i_part], 3 * size_face_face                * sizeof(int        ));
       pfull_face_extented_to_pface_interface[i_part] = realloc(pfull_face_extented_to_pface_interface[i_part],     size_face_face                * sizeof(int        ));
 
-      // for(int i_face = 0; i_face < pn_face_extented[i_part]; ++i_face) {
+      for(int i_face = 0; i_face < pn_face_extented[i_part]; ++i_face) {
+        int ln_face = pface_extented_to_pface_idx[i_part][i_face+1] - pface_extented_to_pface_idx[i_part][i_face];
+        pfull_face_extented_to_pface_idx[i_part][pn_face_extented_old+i_face+1] = pfull_face_extented_to_pface_idx[i_part][pn_face_extented_old+i_face] + ln_face;
+      }
 
-      // }
+      for(int i = 0; i < pface_extented_to_pface_idx[i_part][pn_face_extented[i_part]]/3; ++i) {
+        int idx_write = pfull_face_extented_to_pface_idx[i_part][pn_face_extented_old]/3 + i;
+        pfull_face_extented_to_pface_triplet  [i_part][3*idx_write  ] = pface_extented_to_pface_triplet  [i_part][3*i  ];
+        pfull_face_extented_to_pface_triplet  [i_part][3*idx_write+1] = pface_extented_to_pface_triplet  [i_part][3*i+1];
+        pfull_face_extented_to_pface_triplet  [i_part][3*idx_write+2] = pface_extented_to_pface_triplet  [i_part][3*i+2];
+        pfull_face_extented_to_pface_interface[i_part][  idx_write  ] = pface_extented_to_pface_interface[i_part][  i  ];
+      }
 
+      for(int i_vtx = 0; i_vtx < pn_vtx_extented[i_part]; ++i_vtx) {
+        int ln_vtx = pvtx_extented_to_pvtx_idx[i_part][i_vtx+1] - pvtx_extented_to_pvtx_idx[i_part][i_vtx];
+        pfull_vtx_extented_to_pvtx_idx[i_part][pn_vtx_extented_old+i_vtx+1] = pfull_vtx_extented_to_pvtx_idx[i_part][pn_vtx_extented_old+i_vtx] + ln_vtx;
+      }
 
+      for(int i = 0; i < pvtx_extented_to_pvtx_idx[i_part][pn_vtx_extented[i_part]]/3; ++i) {
+        int idx_write = pfull_vtx_extented_to_pvtx_idx[i_part][pn_vtx_extented_old]/3 + i;
+        pfull_vtx_extented_to_pvtx_triplet  [i_part][3*idx_write  ] = pvtx_extented_to_pvtx_triplet  [i_part][3*i  ];
+        pfull_vtx_extented_to_pvtx_triplet  [i_part][3*idx_write+1] = pvtx_extented_to_pvtx_triplet  [i_part][3*i+1];
+        pfull_vtx_extented_to_pvtx_triplet  [i_part][3*idx_write+2] = pvtx_extented_to_pvtx_triplet  [i_part][3*i+2];
+        pfull_vtx_extented_to_pvtx_interface[i_part][  idx_write  ] = pvtx_extented_to_pvtx_interface[i_part][  i  ];
+      }
+
+      if(1 == 1) {
+        PDM_log_trace_array_int(pfull_face_extented_to_pface_triplet  [i_part], 3 * size_face_face, "pfull_face_extented_to_pface_triplet   ::");
+        PDM_log_trace_array_int(pfull_face_extented_to_pface_interface[i_part],     size_face_face, "pfull_face_extented_to_pface_interface ::");
+        PDM_log_trace_array_int(pfull_vtx_extented_to_pvtx_triplet    [i_part], 3 * size_vtx_vtx  , "pfull_vtx_extented_to_pvtx_triplet     ::");
+        PDM_log_trace_array_int(pfull_vtx_extented_to_pvtx_interface  [i_part],     size_vtx_vtx  , "pfull_vtx_extented_to_pvtx_interface   ::");
+      }
 
     }
 
