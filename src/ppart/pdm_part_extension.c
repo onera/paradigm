@@ -993,6 +993,13 @@ _part_extension_2d
 
   int converged = 0;
   int step      = 0;
+
+
+  int          prev_dface_itrf_n_blk               = 0;
+  PDM_g_num_t *prev_dface_itrf_blk_gnum            = NULL;
+  int         *prev_dface_itrf_gnum_and_itrf_strid = NULL;
+  PDM_g_num_t *prev_dface_itrf_gnum_and_itrf_data  = NULL;
+
   // while(converged == 0 && i_detph == n_depth) {
   // while(converged == 0) {
   while(step < 2) {
@@ -1011,10 +1018,10 @@ _part_extension_2d
      *   - Keep an block array containaing blk_gnum -> (orig_gnum, interface)
      *   - Use this information to remove alreay faces in the mesh (at the second step of the algorithm)
      */
-    int          next_dentity2_itrf_n_blk               = 0;
-    PDM_g_num_t *next_dentity2_itrf_blk_gnum            = NULL;
-    int         *next_dentity2_itrf_gnum_and_itrf_strid = NULL;
-    PDM_g_num_t *next_dentity2_itrf_gnum_and_itrf_data  = NULL;
+    int          next_dface_itrf_n_blk               = 0;
+    PDM_g_num_t *next_dface_itrf_blk_gnum            = NULL;
+    int         *next_dface_itrf_gnum_and_itrf_strid = NULL;
+    PDM_g_num_t *next_dface_itrf_gnum_and_itrf_data  = NULL;
     log_trace(" PDM_part_extension_entity1_to_entity2 beg \n");
     PDM_part_extension_entity1_to_entity2(shift_by_domain_face, // Attention il va evoluer lui
                                           part_ext->ln_part_tot,
@@ -1027,20 +1034,32 @@ _part_extension_2d
                                           pface_ln_to_gn,
                                           pface_vtx_idx,
                                           pface_vtx,
-                                          prev_dentity2_elt_gnum,
-                                          prev_dentity2_orig_gnum_and_itrf,
-                                          prev_distrib_extented_entity2,
+                                          prev_dface_itrf_n_blk,
+                                          prev_dface_itrf_blk_gnum,
+                                          prev_dface_itrf_gnum_and_itrf_strid,
+                                          prev_dface_itrf_gnum_and_itrf_data,
                                           &pn_face_extented,
                                           &pface_extented_ln_to_gn,
                                           &pface_extented_to_pface_idx,
                                           &pface_extented_to_pface_triplet,
                                           &pface_extented_to_pface_interface,
-                                          &next_dentity2_itrf_n_blk,
-                                          &next_dentity2_itrf_blk_gnum,
-                                          &next_dentity2_itrf_gnum_and_itrf_strid,
-                                          &next_dentity2_itrf_gnum_and_itrf_data,
+                                          &next_dface_itrf_n_blk,
+                                          &next_dface_itrf_blk_gnum,
+                                          &next_dface_itrf_gnum_and_itrf_strid,
+                                          &next_dface_itrf_gnum_and_itrf_data,
                                           part_ext->comm);
     log_trace(" PDM_part_extension_entity1_to_entity2 end \n");
+    if(step == 1) {
+      exit(1);
+    }
+
+    free(prev_dface_itrf_blk_gnum           );
+    free(prev_dface_itrf_gnum_and_itrf_strid);
+    free(prev_dface_itrf_gnum_and_itrf_data );
+    prev_dface_itrf_n_blk               = next_dface_itrf_n_blk;
+    prev_dface_itrf_blk_gnum            = next_dface_itrf_blk_gnum;
+    prev_dface_itrf_gnum_and_itrf_strid = next_dface_itrf_gnum_and_itrf_strid;
+    prev_dface_itrf_gnum_and_itrf_data  = next_dface_itrf_gnum_and_itrf_data;
 
     /*
      * Update with descending connectivity :
@@ -1080,10 +1099,6 @@ _part_extension_2d
                                                                      &pvtx_extented_to_pvtx_interface,
                                                                      part_ext->comm);
     log_trace(" PDM_part_extension_pentity1_entity2_to_extented_pentity1_entity2 end \n");
-
-    free(next_dentity2_itrf_blk_gnum);
-    free(next_dentity2_itrf_gnum_and_itrf_strid);
-    free(next_dentity2_itrf_gnum_and_itrf_data);
 
     if(1 == 1) {
       for(int i_part = 0; i_part < part_ext->ln_part_tot; ++i_part) {
@@ -1246,11 +1261,8 @@ _part_extension_2d
                                NULL);
 
       }
-
-
-
-
     }
+
 
     /*
      * Free coords
@@ -1319,6 +1331,9 @@ _part_extension_2d
     step++;
   }
 
+  free(prev_dface_itrf_blk_gnum           );
+  free(prev_dface_itrf_gnum_and_itrf_strid);
+  free(prev_dface_itrf_gnum_and_itrf_data );
 
   for(int i_part = 0; i_part < part_ext->ln_part_tot; ++i_part) {
     free(pvtx_ln_to_gn [i_part]);
