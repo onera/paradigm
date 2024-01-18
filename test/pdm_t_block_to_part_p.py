@@ -46,7 +46,7 @@ if randomize:
   part_ln_to_gn = np.random.randint(1, size * n_rank + 1, size, dtype=PDM.npy_pdm_gnum_dtype)
 else:
   beg = i_rank*size - shift_size*size
-  end = i_rank*size + shift_size*size
+  end = i_rank*size + shift_size*size + size
 
   part_ln_to_gn = np.random.randint(beg, end, size, dtype=PDM.npy_pdm_gnum_dtype)
 

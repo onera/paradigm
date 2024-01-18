@@ -58,14 +58,15 @@ extern "C" {
 
 typedef enum {
 
-  GENERATE_DISTRIB    = 0,
-  BINARY_SEARCH       = 1,
-  CREATE_EXCHANGE     = 2,
-  BLOCK_POST          = 3,
-  GLOBAL_WEIGHTS      = 4,
-  CREATE_FROM_DISTRIB = 5,
-  CREATE_GEOM         = 6,
-  DATA_EXCHANGE       = 7
+  GENERATE_DISTRIB       = 0,
+  BINARY_SEARCH          = 1,
+  CREATE_EXCHANGE        = 2,
+  BLOCK_POST             = 3,
+  GLOBAL_WEIGHTS         = 4,
+  CREATE_FROM_DISTRIB    = 5,
+  CREATE_GEOM            = 6,
+  DATA_EXCHANGE          = 7,
+  ALLTOALL_DATA_EXCHANGE = 8
 
 } _ptb_timer_step_t;
 
@@ -95,11 +96,11 @@ static const int _sampling_factors[4] = {1, /* OD */
  */
 
 // Store timers
-PDM_timer_t *t_timer[NTIMER_PTB] = {NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL};
+PDM_timer_t *t_timer[NTIMER_PTB] = {NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL};
 
 // Timer step by step
-double t_elaps[NTIMER_PTB] = {0., 0., 0., 0., 0., 0., 0., 0.};
-double t_cpu[NTIMER_PTB] = {0., 0., 0., 0., 0., 0., 0., 0.};
+double t_elaps[NTIMER_PTB] = {0., 0., 0., 0., 0., 0., 0., 0., 0.};
+double t_cpu[NTIMER_PTB] = {0., 0., 0., 0., 0., 0., 0., 0., 0.};
 
 int min_exch_rank[2] = {INT_MAX, INT_MAX};
 int max_exch_rank[2] = {-1, -1};
@@ -1411,14 +1412,15 @@ _ptb_create
 )
 {
   if (n_ptb == 0) {
-    t_timer[GENERATE_DISTRIB   ] = PDM_timer_create ();
-    t_timer[BINARY_SEARCH      ] = PDM_timer_create ();
-    t_timer[CREATE_EXCHANGE    ] = PDM_timer_create ();
-    t_timer[BLOCK_POST         ] = PDM_timer_create ();
-    t_timer[GLOBAL_WEIGHTS     ] = PDM_timer_create ();
-    t_timer[CREATE_FROM_DISTRIB] = PDM_timer_create ();
-    t_timer[CREATE_GEOM        ] = PDM_timer_create ();
-    t_timer[DATA_EXCHANGE      ] = PDM_timer_create ();
+    t_timer[GENERATE_DISTRIB      ] = PDM_timer_create ();
+    t_timer[BINARY_SEARCH         ] = PDM_timer_create ();
+    t_timer[CREATE_EXCHANGE       ] = PDM_timer_create ();
+    t_timer[BLOCK_POST            ] = PDM_timer_create ();
+    t_timer[GLOBAL_WEIGHTS        ] = PDM_timer_create ();
+    t_timer[CREATE_FROM_DISTRIB   ] = PDM_timer_create ();
+    t_timer[CREATE_GEOM           ] = PDM_timer_create ();
+    t_timer[DATA_EXCHANGE         ] = PDM_timer_create ();
+    t_timer[ALLTOALL_DATA_EXCHANGE] = PDM_timer_create ();
   }
   n_ptb++;
 
@@ -2480,6 +2482,14 @@ PDM_part_to_block_time_per_step_dump
     mean_cpu[i_step]   /= n_rank;
   } // end loop on timed steps
 
+  // TMP
+  int i_rank = 0;
+  PDM_MPI_Comm_rank(comm, &i_rank);
+  if (i_rank == 0) {
+    printf("ALLTOALL_DATA_EXCHANGE elaps %.12f %.12f %.12f cpu %.12f %.12f %.12f\n", min_elaps[ALLTOALL_DATA_EXCHANGE], mean_elaps[ALLTOALL_DATA_EXCHANGE], max_elaps[ALLTOALL_DATA_EXCHANGE], min_cpu[ALLTOALL_DATA_EXCHANGE], mean_cpu[ALLTOALL_DATA_EXCHANGE], max_cpu[ALLTOALL_DATA_EXCHANGE]);
+  }
+  // TMP
+
   // Global write times
   size_t s_buffer = 436; // buffer size for %.5f + 1
   char *buffer = malloc(s_buffer);
@@ -3064,6 +3074,9 @@ PDM_part_to_block_exch
   /*
    * Data exchange
    */
+  double t3_elaps = PDM_timer_elapsed(t_timer[ALLTOALL_DATA_EXCHANGE]);
+  double t3_cpu   = PDM_timer_cpu    (t_timer[ALLTOALL_DATA_EXCHANGE]);
+  PDM_timer_resume(t_timer[ALLTOALL_DATA_EXCHANGE]);
 
   int mandatory_size = PDM_size_idx_from_stride (n_send_buffer, ptb->s_comm, ptb->comm);
   mandatory_size = PDM_MAX(PDM_size_idx_from_stride (n_send_buffer, ptb->s_comm, ptb->comm), mandatory_size);
@@ -3120,6 +3133,13 @@ PDM_part_to_block_exch
 
     }
   } 
+
+  PDM_timer_hang_on(t_timer[ALLTOALL_DATA_EXCHANGE]);
+  double t4_elaps = PDM_timer_elapsed(t_timer[ALLTOALL_DATA_EXCHANGE]);
+  double t4_cpu   = PDM_timer_cpu    (t_timer[ALLTOALL_DATA_EXCHANGE]);
+
+  t_elaps[ALLTOALL_DATA_EXCHANGE] += (t4_elaps - t3_elaps);
+  t_cpu  [ALLTOALL_DATA_EXCHANGE] += (t4_cpu   - t3_cpu  );
 
   /*
    * Statistics
@@ -4339,14 +4359,15 @@ PDM_part_to_block_free
 
   n_ptb--;
   if (n_ptb == 0) {
-    PDM_timer_free(t_timer[GENERATE_DISTRIB   ]);
-    PDM_timer_free(t_timer[BINARY_SEARCH      ]);
-    PDM_timer_free(t_timer[CREATE_EXCHANGE    ]);
-    PDM_timer_free(t_timer[BLOCK_POST         ]);
-    PDM_timer_free(t_timer[GLOBAL_WEIGHTS     ]);
-    PDM_timer_free(t_timer[CREATE_FROM_DISTRIB]);
-    PDM_timer_free(t_timer[CREATE_GEOM        ]);
-    PDM_timer_free(t_timer[DATA_EXCHANGE      ]);
+    PDM_timer_free(t_timer[GENERATE_DISTRIB      ]);
+    PDM_timer_free(t_timer[BINARY_SEARCH         ]);
+    PDM_timer_free(t_timer[CREATE_EXCHANGE       ]);
+    PDM_timer_free(t_timer[BLOCK_POST            ]);
+    PDM_timer_free(t_timer[GLOBAL_WEIGHTS        ]);
+    PDM_timer_free(t_timer[CREATE_FROM_DISTRIB   ]);
+    PDM_timer_free(t_timer[CREATE_GEOM           ]);
+    PDM_timer_free(t_timer[DATA_EXCHANGE         ]);
+    PDM_timer_free(t_timer[ALLTOALL_DATA_EXCHANGE]);
   }
 
   return NULL;
