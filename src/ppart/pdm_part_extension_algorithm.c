@@ -1239,6 +1239,45 @@ PDM_part_extension_entity1_to_entity2
       PDM_log_trace_array_long(prev_pentity2_itrf_gnum_and_itrf_data[i_part], 2 * n_data      , "prev_pentity2_itrf_gnum_and_itrf_data ::");
     }
 
+    PDM_g_num_t *_prev_pentity2_itrf_gnum_and_itrf_data = prev_pentity2_itrf_gnum_and_itrf_data[i_part];
+    PDM_g_num_t *_pextract_entity2_gnum                 = pextract_entity2_gnum                [i_part];
+
+    int idx_read      = 0;
+    int idx_read_data = 0;
+    for(int i = 0; i < n_part1_to_part2; ++i) {
+      if(pentity1_to_pentity1_interface[i_part][i] != 0) {
+        for(int j = 0; j < pextract_entity2_n[i_part][i]; ++j) {
+
+          int cur_itrf     = PDM_ABS (pentity1_to_pentity1_interface[i_part][i]);
+          int sgn_cur_itrf = PDM_SIGN(pentity1_to_pentity1_interface[i_part][i]);
+          log_trace(" ----------------- gnum = ("PDM_FMT_G_NUM",%i) \n", _pextract_entity2_gnum[idx_read], pentity1_to_pentity1_interface[i_part][i]);
+
+          int found = 0;
+          for(int k = 0; k < prev_pentity2_itrf_gnum_and_itrf_strid[i_part][idx_read]; ++k) {
+            log_trace("\t ("PDM_FMT_G_NUM"/"PDM_FMT_G_NUM") \n", _prev_pentity2_itrf_gnum_and_itrf_data[2*idx_read_data], _prev_pentity2_itrf_gnum_and_itrf_data[2*idx_read_data+1]);
+
+            PDM_g_num_t gnum_opp = _prev_pentity2_itrf_gnum_and_itrf_data[2*idx_read_data];
+            int         opp_itrf     = PDM_ABS (_prev_pentity2_itrf_gnum_and_itrf_data[2*idx_read_data+1]);
+            int         opp_sgn_itrf = PDM_SIGN(_prev_pentity2_itrf_gnum_and_itrf_data[2*idx_read_data+1]);
+
+            if(cur_itrf == opp_itrf && sgn_cur_itrf == - opp_sgn_itrf) {
+              found = 1;
+            }
+
+            idx_read_data++;
+          }
+
+          if(found == 0) {
+            log_trace("Not found = ("PDM_FMT_G_NUM",%i) \n", _pextract_entity2_gnum[idx_read], pentity1_to_pentity1_interface[i_part][i]);
+          }
+
+          idx_read++;
+        }
+      }
+    }
+
+
+
     free(prev_pentity2_itrf_gnum_and_itrf_strid[i_part]);
     free(prev_pentity2_itrf_gnum_and_itrf_data [i_part]);
   }
