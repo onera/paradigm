@@ -585,7 +585,7 @@ int main
 
   // step 1 : create
   PDM_extend_type_t  extend_type = PDM_EXTEND_FROM_VTX;
-  int                depth       = 1;
+  int                depth       = 2;
   PDM_part_extension_t *part_ext = PDM_part_extension_create(n_domain,
                                                              pn_n_part,
                                                              extend_type,

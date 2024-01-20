@@ -991,18 +991,37 @@ _part_extension_2d
 
   PDM_g_num_t shift_by_domain_face = part_ext->shift_by_domain_face[part_ext->n_domain];
 
-  int converged = 0;
-  int step      = 0;
-
 
   int          prev_dface_itrf_n_blk               = 0;
   PDM_g_num_t *prev_dface_itrf_blk_gnum            = NULL;
   int         *prev_dface_itrf_gnum_and_itrf_strid = NULL;
   PDM_g_num_t *prev_dface_itrf_gnum_and_itrf_data  = NULL;
 
-  // while(converged == 0 && i_detph == n_depth) {
-  // while(converged == 0) {
-  while(step < 2) {
+  int **pcurr_entity_bound_to_pentity_bound_idx       = part_ext->pinit_entity_bound_to_pentity_bound_idx;
+  int **pcurr_entity_bound_to_pentity_bound_triplet   = part_ext->pinit_entity_bound_to_pentity_bound_triplet;
+  int **pcurr_entity_bound_to_pentity_bound_interface = part_ext->pinit_entity_bound_to_pentity_bound_interface;
+
+
+  int       **pn_vtx_extented_by_depth   = malloc(part_ext->depth * sizeof(int         *));
+  int       **pn_face_extented_by_depth  = malloc(part_ext->depth * sizeof(int         *));
+  for(int i_depth = 0; i_depth < part_ext->depth; ++i_depth) {
+    pn_vtx_extented_by_depth [i_depth] = malloc(part_ext->ln_part_tot * sizeof(int));
+    pn_face_extented_by_depth[i_depth] = malloc(part_ext->ln_part_tot * sizeof(int));
+
+    for(int i_part = 0; i_part < part_ext->ln_part_tot; ++i_part) {
+      pn_vtx_extented_by_depth [i_depth][i_part] = 0;
+      pn_face_extented_by_depth[i_depth][i_part] = 0;
+    }
+
+  }
+
+
+  int i_depth   = 0;
+  // int converged = 0;
+  int step      = 0;
+  while(i_depth < part_ext->depth) {
+  // // while(converged == 0) {
+  // while(step < 2) {
 
     /* Use descending connectivity to deduce connectivity and extend_face */
     int          *pn_face_extented                  = NULL;
@@ -1027,9 +1046,9 @@ _part_extension_2d
                                           part_ext->ln_part_tot,
                                           pn_vtx,
                                           pvtx_ln_to_gn,
-                                          part_ext->pinit_entity_bound_to_pentity_bound_idx,       // pvtx_to_pvtx_idx,
-                                          part_ext->pinit_entity_bound_to_pentity_bound_triplet,   // pvtx_to_pvtx_triplet,
-                                          part_ext->pinit_entity_bound_to_pentity_bound_interface, // pvtx_to_pvtx_interface,
+                                          pcurr_entity_bound_to_pentity_bound_idx,       // pvtx_to_pvtx_idx,
+                                          pcurr_entity_bound_to_pentity_bound_triplet,   // pvtx_to_pvtx_triplet,
+                                          pcurr_entity_bound_to_pentity_bound_interface, // pvtx_to_pvtx_interface,
                                           pn_face,
                                           pface_ln_to_gn,
                                           pface_vtx_idx,
@@ -1049,9 +1068,9 @@ _part_extension_2d
                                           &next_dface_itrf_gnum_and_itrf_data,
                                           part_ext->comm);
     log_trace(" PDM_part_extension_entity1_to_entity2 end \n");
-    if(step == 1) {
-      exit(1);
-    }
+    // if(step == 1) {
+    //   exit(1);
+    // }
 
     free(prev_dface_itrf_blk_gnum           );
     free(prev_dface_itrf_gnum_and_itrf_strid);
@@ -1132,6 +1151,9 @@ _part_extension_2d
       pfull_n_vtx_extented [i_part] += pn_vtx_extented [i_part];
       pfull_n_face_extented[i_part] += pn_face_extented[i_part];
 
+      pn_vtx_extented_by_depth [i_depth][i_part] += pn_vtx_extented [i_part];
+      pn_face_extented_by_depth[i_depth][i_part] += pn_face_extented[i_part];
+
       /*   */
       int pn_concat_vtx  = pn_vtx [i_part] + pn_vtx_extented [i_part];
       int pn_concat_edge = pn_edge[i_part]; // + pn_edge_extented[i_part];
@@ -1150,6 +1172,7 @@ _part_extension_2d
       /* Concatenate */
       for(int i_face = 0; i_face < pn_face_extented[i_part]; ++i_face) {
         pface_ln_to_gn[i_part][pn_face[i_part]+i_face] = pface_extented_ln_to_gn[i_part][i_face];
+        shift_by_domain_face = PDM_MAX(shift_by_domain_face, pface_extented_ln_to_gn[i_part][i_face]);
       }
 
       // for(int i_edge = ; i_edge < pn_edge_extented[i_part]; ++i_edge) {
@@ -1199,7 +1222,7 @@ _part_extension_2d
         pfull_face_extented_to_pface_triplet  [i_part][3*idx_write+2] = pface_extented_to_pface_triplet  [i_part][3*i+2];
         pfull_face_extented_to_pface_interface[i_part][  idx_write  ] = pface_extented_to_pface_interface[i_part][  i  ];
       }
-
+      log_trace("pn_vtx_extented = %i \n", pn_vtx_extented[i_part]);
       for(int i_vtx = 0; i_vtx < pn_vtx_extented[i_part]; ++i_vtx) {
         int ln_vtx = pvtx_extented_to_pvtx_idx[i_part][i_vtx+1] - pvtx_extented_to_pvtx_idx[i_part][i_vtx];
         pfull_vtx_extented_to_pvtx_idx[i_part][pn_vtx_extented_old+i_vtx+1] = pfull_vtx_extented_to_pvtx_idx[i_part][pn_vtx_extented_old+i_vtx] + ln_vtx;
@@ -1214,6 +1237,7 @@ _part_extension_2d
       }
 
       if(1 == 1) {
+        PDM_log_trace_array_int(pfull_vtx_extented_to_pvtx_idx[i_part], pfull_n_vtx_extented[i_part]+1  , "pfull_vtx_extented_to_pvtx_idx     ::");
         PDM_log_trace_array_int(pfull_face_extented_to_pface_triplet  [i_part], 3 * size_face_face, "pfull_face_extented_to_pface_triplet   ::");
         PDM_log_trace_array_int(pfull_face_extented_to_pface_interface[i_part],     size_face_face, "pfull_face_extented_to_pface_interface ::");
         PDM_log_trace_array_int(pfull_vtx_extented_to_pvtx_triplet    [i_part], 3 * size_vtx_vtx  , "pfull_vtx_extented_to_pvtx_triplet     ::");
@@ -1236,14 +1260,11 @@ _part_extension_2d
         // pn_entity_extented        = pn_edge_extented[i_part];
         // pn_entity                 = pn_edge         [i_part];
       }
-
-      part_ext->pinit_entity_bound_to_pentity_bound_idx[i_part] = realloc(part_ext->pinit_entity_bound_to_pentity_bound_idx[i_part], (pn_concat_entity_extented+1) * sizeof(int));
+      log_trace("pn_concat_entity_extented = %i \n", pn_concat_entity_extented);
+      pcurr_entity_bound_to_pentity_bound_idx[i_part] = realloc(pcurr_entity_bound_to_pentity_bound_idx[i_part], (pn_concat_entity_extented+1) * sizeof(int));
       for(int i = 0; i < pn_entity_extented; ++i) {
-        part_ext->pinit_entity_bound_to_pentity_bound_idx[i_part][pn_entity+i+1] = part_ext->pinit_entity_bound_to_pentity_bound_idx[i_part][pn_entity];
+        pcurr_entity_bound_to_pentity_bound_idx[i_part][pn_entity+i+1] = pcurr_entity_bound_to_pentity_bound_idx[i_part][pn_entity];
       }
-
-      // PDM_log_trace_array_int(part_ext->pinit_entity_bound_to_pentity_bound_idx    [i_part], pn_concat_entity_extented, "pinit_entity_bound_to_pentity_bound_idx ::");
-
 
       if(1 == 1) {
         int i_rank;
@@ -1261,8 +1282,7 @@ _part_extension_2d
                                NULL);
 
       }
-    }
-
+    } /* End loop part */
 
     /*
      * Free coords
@@ -1272,11 +1292,95 @@ _part_extension_2d
     }
     free(pvtx_extented_coords);
 
-
-
     /*
      * Update shift_by_domain_face
      */
+    PDM_g_num_t _shift_by_domain_face = shift_by_domain_face;
+    PDM_MPI_Allreduce(&_shift_by_domain_face, &shift_by_domain_face, 1, PDM_MPI_INT, PDM_MPI_MAX, part_ext->comm);
+
+
+    PDM_g_num_t _pn_face_extented_tot = 0;
+    PDM_g_num_t  pn_face_extented_tot = 0;
+    for(int i_part = 0; i_part < part_ext->ln_part_tot; ++i_part) {
+      _pn_face_extented_tot += pn_face_extented[i_part];
+    }
+
+    PDM_MPI_Allreduce(&_pn_face_extented_tot, &pn_face_extented_tot, 1, PDM__PDM_MPI_G_NUM, PDM_MPI_SUM, part_ext->comm);
+
+    log_trace("pn_face_extented_tot = %i \n", pn_face_extented_tot);
+
+    /*
+     * Free
+     */
+    for(int i_part = 0; i_part < part_ext->ln_part_tot; ++i_part) {
+      free(pvtx_extented_ln_to_gn           [i_part]);
+      free(pextented_face_vtx_idx           [i_part]);
+      free(pextented_face_vtx               [i_part]);
+      free(pvtx_extented_to_pvtx_idx        [i_part]);
+      free(pvtx_extented_to_pvtx_triplet    [i_part]);
+      free(pvtx_extented_to_pvtx_interface  [i_part]);
+      free(pface_extented_ln_to_gn          [i_part]);
+      free(pface_extented_to_pface_idx      [i_part]);
+      free(pface_extented_to_pface_triplet  [i_part]);
+      free(pface_extented_to_pface_interface[i_part]);
+    }
+    free(pvtx_extented_ln_to_gn         );
+    free(pextented_face_vtx_idx         );
+    free(pextented_face_vtx             );
+    free(pvtx_extented_to_pvtx_idx      );
+    free(pvtx_extented_to_pvtx_triplet  );
+    free(pvtx_extented_to_pvtx_interface);
+    free(pface_extented_ln_to_gn          );
+    free(pface_extented_to_pface_idx      );
+    free(pface_extented_to_pface_triplet  );
+    free(pface_extented_to_pface_interface);
+
+    if(pn_face_extented_tot == 0) {
+      // Change graph
+      if(part_ext->extend_type == PDM_EXTEND_FROM_VTX) {
+        // pcurr_entity_bound_to_pentity_bound_idx       = pfull_vtx_extented_to_pvtx_idx;
+        pcurr_entity_bound_to_pentity_bound_triplet   = pfull_vtx_extented_to_pvtx_triplet;
+        pcurr_entity_bound_to_pentity_bound_interface = pfull_vtx_extented_to_pvtx_interface;
+        //
+
+        // Ne marche pas si depth == 3 il faut uniquement le detph-1
+        if(i_depth == 2) {
+          abort();
+        }
+
+        for(int i_part = 0; i_part < part_ext->ln_part_tot; ++i_part) {
+          int pn_vtx_tot = pn_vtx [i_part] + pn_vtx_extented [i_part];
+
+          // Deja fait plus haut
+          // pcurr_entity_bound_to_pentity_bound_idx[i_part] = realloc(pcurr_entity_bound_to_pentity_bound_idx[i_part], (pn_vtx_tot+1) * sizeof(int));
+          // for(int i = 0; i < pn_entity_extented; ++i) {
+          //   pcurr_entity_bound_to_pentity_bound_idx[i_part][pn_entity+i+1] = pcurr_entity_bound_to_pentity_bound_idx[i_part][pn_entity];
+          // }
+          // int *pcurr_entity_bound_to_pentity_bound_n = PDM_array_zeros_int(pn_vtx_tot);
+          pcurr_entity_bound_to_pentity_bound_idx[i_part][0] = 0;
+
+          for(int i = 0; i < pn_vtx [i_part]; ++i) {
+            pcurr_entity_bound_to_pentity_bound_idx[i_part][i+1] = pcurr_entity_bound_to_pentity_bound_idx[i_part][i];
+          }
+
+          PDM_log_trace_array_int(pfull_vtx_extented_to_pvtx_idx[i_part], pn_vtx_extented_by_depth[i_depth][i_part]+1, "pfull_vtx_extented_to_pvtx_idx ::");
+
+          int pn_vtx_old_depth = pn_vtx [i_part] - pn_vtx_extented_by_depth[i_depth][i_part];
+          for(int i = 0; i < pn_vtx_extented_by_depth[i_depth][i_part]; ++i) {
+            int ln_curr_centity = pfull_vtx_extented_to_pvtx_idx[i_part][i+1] - pfull_vtx_extented_to_pvtx_idx[i_part][i];
+            pcurr_entity_bound_to_pentity_bound_idx[i_part][pn_vtx_old_depth+i+1] = pcurr_entity_bound_to_pentity_bound_idx[i_part][pn_vtx_old_depth+i] + ln_curr_centity;
+          }
+
+          // free(pcurr_entity_bound_to_pentity_bound_n);
+        }
+
+      } else {
+        abort();
+      }
+
+      i_depth++;
+    }
+    step++;
 
 
     /*
@@ -1289,46 +1393,13 @@ _part_extension_2d
       pn_edge[i_part] += 0; // + pn_edge_extented[i_part];
       pn_face[i_part] += pn_face_extented[i_part];
     }
-
-
-    /*
-     * Avoid leaks temporary
-     */
-    for(int i_part = 0; i_part < part_ext->ln_part_tot; ++i_part) {
-      free(pvtx_extented_ln_to_gn         [i_part]);
-      free(pextented_face_vtx_idx         [i_part]);
-      free(pextented_face_vtx             [i_part]);
-      free(pvtx_extented_to_pvtx_idx      [i_part]);
-      free(pvtx_extented_to_pvtx_triplet  [i_part]);
-      free(pvtx_extented_to_pvtx_interface[i_part]);
-    }
     free(pn_vtx_extented);
-    free(pvtx_extented_ln_to_gn         );
-    free(pextented_face_vtx_idx         );
-    free(pextented_face_vtx             );
-    free(pvtx_extented_to_pvtx_idx      );
-    free(pvtx_extented_to_pvtx_triplet  );
-    free(pvtx_extented_to_pvtx_interface);
-
-
-
-    /*
-     * Free
-     */
-    for(int i_part = 0; i_part < part_ext->ln_part_tot; ++i_part) {
-      free(pface_extented_ln_to_gn          [i_part]);
-      free(pface_extented_to_pface_idx      [i_part]);
-      free(pface_extented_to_pface_triplet  [i_part]);
-      free(pface_extented_to_pface_interface[i_part]);
-    }
-    free(pface_extented_ln_to_gn          );
-    free(pface_extented_to_pface_idx      );
-    free(pface_extented_to_pface_triplet  );
-    free(pface_extented_to_pface_interface);
     free(pn_face_extented);
 
-    converged = 1;
-    step++;
+    if(step > 2) {
+      abort();
+    }
+
   }
 
   free(prev_dface_itrf_blk_gnum           );
