@@ -630,6 +630,13 @@ _setup_domain_interface_in_block_frame
                                        &part_ext->opp_gnum[PDM_BOUND_TYPE_FACE],
                                        &part_ext->opp_sens[PDM_BOUND_TYPE_EDGE]);
   }
+
+
+  // prev_dface_itrf_n_blk,
+  // prev_dface_itrf_blk_gnum,
+  // prev_dface_itrf_gnum_and_itrf_strid,
+  // prev_dface_itrf_gnum_and_itrf_data,
+  // prev_dface_itrf_gnum_and_itrf_sens,
 }
 
 static
@@ -990,6 +997,7 @@ _part_extension_2d
   }
 
   PDM_g_num_t shift_by_domain_face = part_ext->shift_by_domain_face[part_ext->n_domain];
+  PDM_g_num_t shift_by_domain_vtx  = part_ext->shift_by_domain_vtx [part_ext->n_domain];
 
 
   int          prev_dface_itrf_n_blk               = 0;
@@ -1000,6 +1008,23 @@ _part_extension_2d
   int **pcurr_entity_bound_to_pentity_bound_idx       = part_ext->pinit_entity_bound_to_pentity_bound_idx;
   int **pcurr_entity_bound_to_pentity_bound_triplet   = part_ext->pinit_entity_bound_to_pentity_bound_triplet;
   int **pcurr_entity_bound_to_pentity_bound_interface = part_ext->pinit_entity_bound_to_pentity_bound_interface;
+
+  // int ***pcurr_entity_bound_to_pentity_bound_idx       = malloc( (part_ext->depth+1) * sizeof(int         **));
+  // int ***pcurr_entity_bound_to_pentity_bound_triplet   = malloc( (part_ext->depth+1) * sizeof(int         **));
+  // int ***pcurr_entity_bound_to_pentity_bound_interface = malloc( (part_ext->depth+1) * sizeof(int         **));
+
+  // /*
+  //  * Init
+  //  */
+  // pcurr_entity_bound_to_pentity_bound_idx      [0] = part_ext->pinit_entity_bound_to_pentity_bound_idx;
+  // pcurr_entity_bound_to_pentity_bound_triplet  [0] = part_ext->pinit_entity_bound_to_pentity_bound_triplet;
+  // pcurr_entity_bound_to_pentity_bound_interface[0] = part_ext->pinit_entity_bound_to_pentity_bound_interface;
+
+  // for(int i_depth = 1; i_depth < part_ext->depth+1; ++i_depth) {
+  //   pcurr_entity_bound_to_pentity_bound_idx      [i_depth] = NULL;
+  //   pcurr_entity_bound_to_pentity_bound_triplet  [i_depth] = NULL;
+  //   pcurr_entity_bound_to_pentity_bound_interface[i_depth] = NULL;
+  // }
 
 
   int       **pn_vtx_extented_by_depth   = malloc(part_ext->depth * sizeof(int         *));
@@ -1046,8 +1071,11 @@ _part_extension_2d
                                           part_ext->ln_part_tot,
                                           pn_vtx,
                                           pvtx_ln_to_gn,
-                                          pcurr_entity_bound_to_pentity_bound_idx,       // pvtx_to_pvtx_idx,
-                                          pcurr_entity_bound_to_pentity_bound_triplet,   // pvtx_to_pvtx_triplet,
+                                          // pcurr_entity_bound_to_pentity_bound_idx      [i_depth],       // pvtx_to_pvtx_idx,
+                                          // pcurr_entity_bound_to_pentity_bound_triplet  [i_depth],   // pvtx_to_pvtx_triplet,
+                                          // pcurr_entity_bound_to_pentity_bound_interface[i_depth], // pvtx_to_pvtx_interface,
+                                          pcurr_entity_bound_to_pentity_bound_idx      ,       // pvtx_to_pvtx_idx,
+                                          pcurr_entity_bound_to_pentity_bound_triplet  ,   // pvtx_to_pvtx_triplet,
                                           pcurr_entity_bound_to_pentity_bound_interface, // pvtx_to_pvtx_interface,
                                           pn_face,
                                           pface_ln_to_gn,
@@ -1094,7 +1122,7 @@ _part_extension_2d
     log_trace(" PDM_part_extension_pentity1_entity2_to_extented_pentity1_entity2 beg \n");
     PDM_part_extension_pentity1_entity2_to_extented_pentity1_entity2(part_ext->ln_part_tot,
                                                                      part_ext->n_interface,
-                                                                     part_ext->shift_by_domain_vtx[part_ext->n_domain], // Attention il va evoluer lui
+                                                                     shift_by_domain_vtx, // Attention il va evoluer lui
                                                                      part_ext->ptb_itrf[PDM_BOUND_TYPE_VTX],
                                                                      part_ext->opp_gnum[PDM_BOUND_TYPE_VTX],
                                                                      part_ext->opp_sens[PDM_BOUND_TYPE_VTX],
@@ -1181,6 +1209,7 @@ _part_extension_2d
 
       for(int i_vtx = 0; i_vtx < pn_vtx_extented[i_part]; ++i_vtx) {
         pvtx_ln_to_gn[i_part][pn_vtx[i_part]+i_vtx] = pvtx_extented_ln_to_gn[i_part][i_vtx];
+        shift_by_domain_vtx = PDM_MAX(shift_by_domain_vtx, pvtx_extented_ln_to_gn[i_part][i_vtx]);
       }
 
       for(int i_vtx = 0; i_vtx < 3 * pn_vtx_extented[i_part]; ++i_vtx) {
@@ -1222,7 +1251,7 @@ _part_extension_2d
         pfull_face_extented_to_pface_triplet  [i_part][3*idx_write+2] = pface_extented_to_pface_triplet  [i_part][3*i+2];
         pfull_face_extented_to_pface_interface[i_part][  idx_write  ] = pface_extented_to_pface_interface[i_part][  i  ];
       }
-      log_trace("pn_vtx_extented = %i \n", pn_vtx_extented[i_part]);
+
       for(int i_vtx = 0; i_vtx < pn_vtx_extented[i_part]; ++i_vtx) {
         int ln_vtx = pvtx_extented_to_pvtx_idx[i_part][i_vtx+1] - pvtx_extented_to_pvtx_idx[i_part][i_vtx];
         pfull_vtx_extented_to_pvtx_idx[i_part][pn_vtx_extented_old+i_vtx+1] = pfull_vtx_extented_to_pvtx_idx[i_part][pn_vtx_extented_old+i_vtx] + ln_vtx;
@@ -1266,6 +1295,11 @@ _part_extension_2d
         pcurr_entity_bound_to_pentity_bound_idx[i_part][pn_entity+i+1] = pcurr_entity_bound_to_pentity_bound_idx[i_part][pn_entity];
       }
 
+      // pcurr_entity_bound_to_pentity_bound_idx[i_depth][i_part] = realloc(pcurr_entity_bound_to_pentity_bound_idx[i_depth][i_part], (pn_concat_entity_extented+1) * sizeof(int));
+      // for(int i = 0; i < pn_entity_extented; ++i) {
+      //   pcurr_entity_bound_to_pentity_bound_idx[i_depth][i_part][pn_entity+i+1] = pcurr_entity_bound_to_pentity_bound_idx[i_depth][i_part][pn_entity];
+      // }
+
       if(1 == 1) {
         int i_rank;
         PDM_MPI_Comm_rank(part_ext->comm, &i_rank);
@@ -1298,6 +1332,8 @@ _part_extension_2d
     PDM_g_num_t _shift_by_domain_face = shift_by_domain_face;
     PDM_MPI_Allreduce(&_shift_by_domain_face, &shift_by_domain_face, 1, PDM_MPI_INT, PDM_MPI_MAX, part_ext->comm);
 
+    PDM_g_num_t _shift_by_domain_vtx = shift_by_domain_vtx;
+    PDM_MPI_Allreduce(&_shift_by_domain_vtx, &shift_by_domain_vtx, 1, PDM_MPI_INT, PDM_MPI_MAX, part_ext->comm);
 
     PDM_g_num_t _pn_face_extented_tot = 0;
     PDM_g_num_t  pn_face_extented_tot = 0;
@@ -1334,6 +1370,15 @@ _part_extension_2d
     free(pface_extented_to_pface_idx      );
     free(pface_extented_to_pface_triplet  );
     free(pface_extented_to_pface_interface);
+
+
+    /*
+     * A chaque étape :
+     *   - On garde le même graphe entre les entitiés, mais on agrandit le tableau idx (pour être cohérent avec le part_to_part )
+     *   - A l'issu d'une étape, il faut swap le graph avec celui de la nouvelle depth
+     *   - Pour avoir l'historique complet on peut agglomerer tout les graphe de chaque depth to have the full one
+     */
+
 
     if(pn_face_extented_tot == 0) {
       // Change graph
