@@ -1430,11 +1430,11 @@ PDM_part_extension_entity1_to_entity2
   /*
    *  Creation d'une table à partir de pentity2_orig_gnum_and_itrf et extented_entity2_ln_to_gn (Attention au shift)
    */
-  PDM_g_num_t **gnum_itrf_link                     = malloc(n_part * sizeof(PDM_g_num_t *));
-  PDM_g_num_t **gnum_and_itrf_data                 = malloc(n_part * sizeof(PDM_g_num_t *));
-  int         **gnum_and_itrf_stri                 = malloc(n_part * sizeof(int         *));
-  double      **gnum_and_itrf_weight               = malloc(n_part * sizeof(double      *));
-  int          *pn_entity2_only_by_interface_twice = malloc(n_part * sizeof(int          ));
+  PDM_g_num_t **gnum_itrf_link                     = malloc((n_part+1) * sizeof(PDM_g_num_t *));
+  PDM_g_num_t **gnum_and_itrf_data                 = malloc((n_part+1) * sizeof(PDM_g_num_t *));
+  int         **gnum_and_itrf_stri                 = malloc((n_part+1) * sizeof(int         *));
+  double      **gnum_and_itrf_weight               = malloc((n_part+1) * sizeof(double      *));
+  int          *pn_entity2_only_by_interface_twice = malloc((n_part+1) * sizeof(int          ));
   for(int i_part = 0; i_part < n_part; ++i_part) {
 
     PDM_g_num_t* _pentity2_orig_gnum_and_itrf = pentity2_orig_gnum_and_itrf[i_part];
@@ -1481,6 +1481,17 @@ PDM_part_extension_entity1_to_entity2
     }
   }
 
+  /*
+   * Merge with previous
+   */
+  gnum_itrf_link                    [n_part] = prev_dentity2_itrf_blk_gnum;
+  gnum_and_itrf_data                [n_part] = prev_dentity2_itrf_gnum_and_itrf_data;
+  gnum_and_itrf_stri                [n_part] = prev_dentity2_itrf_gnum_and_itrf_strid;
+  gnum_and_itrf_weight              [n_part] = malloc(prev_dentity2_itrf_n_blk * sizeof(double));
+  pn_entity2_only_by_interface_twice[n_part] = prev_dentity2_itrf_n_blk;
+  for(int i = 0; i < prev_dentity2_itrf_n_blk; ++i) {
+    gnum_and_itrf_weight[n_part][i] = 1.;
+  }
 
   PDM_part_to_block_t* ptb_itrf = PDM_part_to_block_create(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
                                                            PDM_PART_TO_BLOCK_POST_MERGE,
@@ -1488,8 +1499,10 @@ PDM_part_extension_entity1_to_entity2
                                                            gnum_itrf_link,
                                                            gnum_and_itrf_weight,
                                                            pn_entity2_only_by_interface_twice,
-                                                           n_part, // To modify at second step
+                                                           n_part+1,
                                                            comm);
+
+  free(gnum_and_itrf_weight[n_part]);
 
   int         *dentity2_gnum_and_itrf_strid = NULL;
   PDM_g_num_t *dentity2_gnum_and_itrf_data  = NULL;
@@ -1562,7 +1575,7 @@ PDM_part_extension_entity1_to_entity2
 
   dentity2_gnum_and_itrf_data = realloc(dentity2_gnum_and_itrf_data, 2 * idx_blk_write * sizeof(PDM_g_num_t));
 
-  if(1 == 1) {
+  if(0 == 1) {
     PDM_log_trace_array_int (dentity2_gnum_and_itrf_strid,     n_blk_elt_itrf, "dentity2_gnum_and_itrf_strid (Unique) ::");
     PDM_log_trace_array_long(dentity2_gnum_and_itrf_data , 2 * idx_blk_write , "dentity2_gnum_and_itrf_data  (Unique) ::");
   }
