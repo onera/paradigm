@@ -3074,6 +3074,7 @@ PDM_part_to_block_exch
   /*
    * Data exchange
    */
+  PDM_MPI_Barrier(ptb->comm);
   double t3_elaps = PDM_timer_elapsed(t_timer[ALLTOALL_DATA_EXCHANGE]);
   double t3_cpu   = PDM_timer_cpu    (t_timer[ALLTOALL_DATA_EXCHANGE]);
   PDM_timer_resume(t_timer[ALLTOALL_DATA_EXCHANGE]);
