@@ -159,6 +159,7 @@ PDM_block_to_block_exch
   unsigned char *sendBuffer = (unsigned char *) block_data_ini;
 
   int s_recv_buffer = 0;
+  int s_data_tot    = s_data;
 
   /*
    * Exchange Stride and build buffer properties
@@ -210,7 +211,7 @@ PDM_block_to_block_exch
       int send_rank = PDM_binary_search_gap_long (i,
                                                  _btb->block_distrib_end_idx,
                                                  _btb->n_rank + 1);
-      n_send_buffer[send_rank] += block_stride_ini[k++] * s_data;
+      n_send_buffer[send_rank] += block_stride_ini[k++]; // * s_data;
     }
 
     k = 0;
@@ -219,7 +220,7 @@ PDM_block_to_block_exch
       int recv_rank = PDM_binary_search_gap_long (i,
                                                  _btb->block_distrib_ini_idx,
                                                  _btb->n_rank + 1);
-      n_recv_buffer[recv_rank] += block_stride_end[k++] * s_data;
+      n_recv_buffer[recv_rank] += block_stride_end[k++]; // * s_data;
     }
 
     for(int i = 1; i < _btb->n_rank; i++){
@@ -231,10 +232,13 @@ PDM_block_to_block_exch
 
   else if (t_stride == PDM_STRIDE_CST_INTERLACED) {
 
-    for(int i = 0; i < _btb->n_rank; i++){
-      n_send_buffer[i] *= cst_stride * s_data;
-      n_recv_buffer[i] *= cst_stride * s_data;
-    }
+    // for(int i = 0; i < _btb->n_rank; i++){
+    //   n_send_buffer[i] *= cst_stride; // * s_data;
+    //   n_recv_buffer[i] *= cst_stride; // * s_data;
+    // }
+
+    s_data_tot = s_data * cst_stride;
+
     for(int i = 1; i < _btb->n_rank; i++){
       // i_send_buffer[i] = i_send_buffer[i-1] + n_send_buffer[i-1] * s_data * cst_stride;
       // i_recv_buffer[i] = i_recv_buffer[i-1] + n_recv_buffer[i-1] * s_data * cst_stride;
@@ -247,7 +251,12 @@ PDM_block_to_block_exch
   s_recv_buffer = i_recv_buffer[_btb->n_rank-1] + n_recv_buffer[_btb->n_rank-1];
 
   unsigned char *recv_buffer =
-    (unsigned char *) malloc(sizeof(unsigned char) * s_recv_buffer);
+    (unsigned char *) malloc(sizeof(unsigned char) * s_recv_buffer * s_data_tot);
+
+
+  PDM_MPI_Datatype mpi_type;
+  PDM_MPI_Type_create_contiguous(s_data_tot, PDM_MPI_BYTE, &mpi_type);
+  PDM_MPI_Type_commit(&mpi_type);
 
   /*
    * Data exchange
@@ -256,17 +265,19 @@ PDM_block_to_block_exch
   PDM_MPI_Alltoallv(sendBuffer,
                     n_send_buffer,
                     i_send_buffer,
-                    PDM_MPI_BYTE,
+                    mpi_type,
                     recv_buffer,
                     n_recv_buffer,
                     i_recv_buffer,
-                    PDM_MPI_BYTE,
+                    mpi_type,
                     _btb->comm);
 
   free(n_send_buffer);
   free(i_send_buffer);
   free(n_recv_buffer);
   free(i_recv_buffer);
+
+  PDM_MPI_Type_free(&mpi_type);
 
   *block_data_end = recv_buffer;
 

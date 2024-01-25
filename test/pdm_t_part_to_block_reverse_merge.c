@@ -137,12 +137,12 @@ int main(int argc, char *argv[])
     pstrid      [i] = 1;
   }
 
-  if(0 == 1) {
+  if(1 == 1) {
     PDM_log_trace_array_long(pln_to_to_gn, pn_elmt, "pln_to_to_gn : ");
   }
 
 
-  if(0 == 1) {
+  if(1 == 1) {
     PDM_log_trace_array_int(pfield, pn_elmt, "pfield : ");
   }
 
@@ -184,17 +184,19 @@ int main(int argc, char *argv[])
     PDM_log_trace_array_int(dfield_strid, n_elmt_in_block, "dfield_strid : ");
   }
 
-  PDM_g_num_t* dfield_post = malloc(n_elmt_in_block * sizeof(PDM_g_num_t));
+  PDM_g_num_t* dfield_post = malloc(2 * n_elmt_in_block * sizeof(PDM_g_num_t));
   for(int i = 0; i < n_elmt_in_block; ++i) {
     // dfield_post[i] = i;
-    dfield_post[i] = blk_gnum[i];
+    dfield_post[2*                i] = blk_gnum[i];
+    dfield_post[2*                i+1] = blk_gnum[i];
+    // dfield_post[n_elmt_in_block+i] = -1;
   }
 
   PDM_g_num_t** tmp_pfield_post = NULL;
   PDM_part_to_block_reverse_exch(ptb,
                                  sizeof(PDM_g_num_t),
                                  PDM_STRIDE_CST_INTERLACED,
-                                 1,
+                                 2,
                                  NULL,
                       (void **)  dfield_post,
                                  NULL,
@@ -204,13 +206,16 @@ int main(int argc, char *argv[])
   PDM_g_num_t *pfield_post = tmp_pfield_post[0];
   free(tmp_pfield_post);
 
-  // PDM_log_trace_array_long(pfield_post, pn_elmt, "pfield_post : ");
+  if(0 == 1) {
+    PDM_log_trace_array_long(pfield_post, 2 * pn_elmt, "pfield_post : ");
+    PDM_log_trace_array_long(pln_to_to_gn, pn_elmt, "pln_to_to_gn : ");
+  }
 
   /*
    * Check
    */
   for(int i = 0; i < pn_elmt; ++i) {
-    assert(pfield_post[i] == pln_to_to_gn[i]);
+    assert(pfield_post[2*i] == pln_to_to_gn[i]);
   }
 
 
@@ -221,7 +226,7 @@ int main(int argc, char *argv[])
    * Stride Var check
    */
   for(int i = 0; i < n_elmt_in_block; ++i) {
-    dfield_strid[i] = 1; // TO DO --> Generation aléatoire de strid entre 1 et 6 par exemple
+    dfield_strid[i] = 2; // TO DO --> Generation aléatoire de strid entre 1 et 6 par exemple
   }
 
   int** tmp_pfield_post_strid = NULL;
@@ -243,8 +248,8 @@ int main(int argc, char *argv[])
    * Check
    */
   for(int i = 0; i < pn_elmt; ++i) {
-    assert(pfield_post      [i] == pln_to_to_gn[i]);
-    assert(pfield_post_strid[i] == 1);
+    assert(pfield_post      [2*i] == pln_to_to_gn[i]);
+    assert(pfield_post_strid[i] == 2);
   }
   free(pfield_post);
   free(pfield_post_strid);
@@ -267,24 +272,40 @@ int main(int argc, char *argv[])
       dfield_post[idx_write++] = blk_gnum[i];
     }
   }
-  // PDM_log_trace_array_int (dfield_strid, n_elmt_in_block, "dfield_strid ::");
-  // PDM_log_trace_array_long(dfield_post , idx_write      , "dfield_post ::");
 
-  PDM_part_to_block_reverse_exch(ptb,
-                                 sizeof(PDM_g_num_t),
-                                 PDM_STRIDE_VAR_INTERLACED,
-                                 1,
-                                 dfield_strid,
-                      (void **)  dfield_post,
-                                 &tmp_pfield_post_strid,
-                      (void ***) &tmp_pfield_post);
+  if(0 == 1) {
+    PDM_log_trace_array_int (dfield_strid, n_elmt_in_block, "dfield_strid ::");
+    PDM_log_trace_array_long(dfield_post , idx_write      , "dfield_post ::");
+  }
+
+  // PDM_part_to_block_reverse_exch(ptb,
+  //                                sizeof(PDM_g_num_t),
+  //                                PDM_STRIDE_VAR_INTERLACED,
+  //                                1,
+  //                                dfield_strid,
+  //                     (void **)  dfield_post,
+  //                                &tmp_pfield_post_strid,
+  //                     (void ***) &tmp_pfield_post);
+
+  int request = 0;
+  PDM_part_to_block_reverse_iexch(ptb,
+                                  PDM_MPI_COMM_KIND_COLLECTIVE,
+                                  sizeof(PDM_g_num_t),
+                                  PDM_STRIDE_VAR_INTERLACED,
+                                  1,
+                                  dfield_strid,
+                       (void **)  dfield_post,
+                                  &tmp_pfield_post_strid,
+                       (void ***) &tmp_pfield_post,
+                                  &request);
+  PDM_part_to_block_reverse_iexch_wait(ptb, request);
 
   pfield_post       = tmp_pfield_post[0];
   pfield_post_strid = tmp_pfield_post_strid[0];
   free(tmp_pfield_post);
   free(tmp_pfield_post_strid);
 
-  if(0 == 1) {
+  if(1 == 1) {
     int s_data = 0;
     for(int i = 0; i < pn_elmt; ++i) {
       for(int k = 0; k < pfield_post_strid[i]; ++k) {

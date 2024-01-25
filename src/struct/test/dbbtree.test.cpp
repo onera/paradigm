@@ -162,7 +162,10 @@ MPI_TEST_CASE("[pdm_dbbtree] simple test",1) {
                                    &pts_g_num,
                                    &pts_coord,
                                    0);
-
+  free(pts_idx  );
+  free(pts_g_num);
+  free(pts_coord);
+  free(pcell_ln_to_gn);
 
   // for(int i_box = 0; i_box < n_boxes; ++i_box) {
   //   printf("i_box = %i \n", i_box);
@@ -173,6 +176,7 @@ MPI_TEST_CASE("[pdm_dbbtree] simple test",1) {
 
 
   PDM_dbbtree_free (dbbtreeA);
+  PDM_box_set_destroy (&boxesA);
 
   free(extents);
   free(coords);

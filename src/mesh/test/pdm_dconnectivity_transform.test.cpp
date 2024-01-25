@@ -180,6 +180,7 @@ MPI_TEST_CASE("[pdm_dconnectivity_transform] - 1p - PDM_dorder_reverse",1) {
   MPI_CHECK_EQ_C_ARRAY(0, old_to_new, old_to_new_expected.data(), dn_entity);
 
   // PDM_log_trace_array_long(old_to_new, dn_entity, "old_to_new : ");
+  free(old_to_new);
 
 }
 
@@ -213,5 +214,6 @@ MPI_TEST_CASE("[pdm_dconnectivity_transform] - 2p - PDM_dorder_reverse",2) {
   MPI_CHECK_EQ_C_ARRAY(1, old_to_new, old_to_new_expected_p1.data(), dn_entity);
 
   // PDM_log_trace_array_long(old_to_new, dn_entity, "old_to_new : ");
+  free(old_to_new);
 
 }
