@@ -588,20 +588,20 @@ contains
     real(8),                   pointer :: part_fraction(:)              ! Weight (in %) of each partition in heterogeneous case
     integer(c_int),            value   :: comm                          ! MPI communicator
     integer(c_int),            value   :: owner                         ! Data ownership
-    type(c_ptr)                        :: c_n_part        
-    type(c_ptr)                        :: c_part_fraction 
+    type(c_ptr)                        :: c_n_part
+    type(c_ptr)                        :: c_part_fraction
     integer(c_int)                     :: c_comm
 
     c_n_part = C_NULL_PTR
     if (associated(n_part)) then
       c_n_part        = c_loc(n_part)
     endif
-      
+
     c_part_fraction = C_NULL_PTR
     if (associated(part_fraction)) then
       c_part_fraction = c_loc(part_fraction)
     endif
-      
+
     c_comm = PDM_MPI_Comm_f2c(comm)
 
     multipart = PDM_multipart_create_c(n_domain, &
@@ -633,7 +633,7 @@ contains
   !   c_join_to_opposite = C_NULL_PTR
   !   if (associated(join_to_opposite)) then
   !     c_join_to_opposite = c_loc(join_to_opposite)
-  !   endif  
+  !   endif
 
   !   call PDM_multipart_register_joins_c(multipart, &
   !                                       n_total_joins, &
@@ -663,8 +663,8 @@ contains
     c_renum_cell_properties = C_NULL_PTR
     if (associated(renum_cell_properties)) then
       c_renum_cell_properties = c_loc(renum_cell_properties)
-    endif  
-      
+    endif
+
     call PDM_multipart_set_reordering_options_c(multipart, &
                                                 i_domain, &
                                                 trim(renum_cell_method)//C_NULL_CHAR, &
@@ -770,26 +770,26 @@ contains
     if (associated(dface_vtx_idx)) then
       c_dface_vtx_idx   = c_loc(dface_vtx_idx  )
     endif
-      
+
     c_dface_vtx = C_NULL_PTR
     if (associated(dface_vtx)) then
       c_dface_vtx       = c_loc(dface_vtx      )
     endif
-      
+
     c_dvtx_coord = C_NULL_PTR
     if (associated(dvtx_coord)) then
       c_dvtx_coord      = c_loc(dvtx_coord     )
     endif
-      
+
     c_dface_group_idx = C_NULL_PTR
     if (associated(dface_group_idx)) then
       c_dface_group_idx = c_loc(dface_group_idx)
     endif
-      
+
     c_dface_group = C_NULL_PTR
     if (associated(dface_group)) then
       c_dface_group     = c_loc(dface_group    )
-    endif  
+    endif
 
     c_dcell_face_idx  = C_NULL_PTR
     c_dcell_face      = C_NULL_PTR
@@ -967,6 +967,7 @@ contains
 
     integer :: n_cell
     integer :: n_face
+    integer :: n_total_part
     integer :: n_face_part_bound
     integer :: n_vtx
     integer :: n_bound_groups
@@ -987,6 +988,7 @@ contains
 
     n_cell             = c_n_cell
     n_face             = c_n_face
+    n_total_part       = c_n_total_part
     n_face_part_bound  = c_n_face_part_bound
     n_vtx              = c_n_vtx
     n_bound_groups     = c_n_bound_groups
@@ -1059,11 +1061,11 @@ contains
 
     call c_f_pointer(c_face_part_bound_part_idx, &
                      face_part_bound_part_idx,   &
-                     [n_face_part_bound + 1])
+                     [n_total_part + 1])
 
     call c_f_pointer(c_face_part_bound, &
                      face_part_bound,   &
-                     [face_part_bound_part_idx(n_face_part_bound+1)])
+                     [4*n_face_part_bound])
 
     call c_f_pointer(c_vtx, &
                      vtx,   &
@@ -1109,8 +1111,8 @@ contains
     integer(kind=PDM_l_num_s), pointer :: connect(:)                 ! Connectivity (size = ``connect_idx(p_entity+1)``)
     integer(c_int),            value   :: ownership                  ! Data ownership
     integer(c_int)                     :: n_entity                   ! Number of leading entities
-    type(c_ptr)                        :: c_connect_idx 
-    type(c_ptr)                        :: c_connect     
+    type(c_ptr)                        :: c_connect_idx
+    type(c_ptr)                        :: c_connect
     integer(c_int)                     :: connec_size
 
     c_connect = C_NULL_PTR
@@ -1162,7 +1164,7 @@ contains
     integer(kind=PDM_g_num_s), pointer :: entity_ln_to_gn(:)             ! Global ids (size = ``n_entity``)
     integer(c_int),            value   :: ownership                      ! Data ownership
     integer(c_int)                     :: n_entity                       ! Number of entities
-    type(c_ptr)                        :: c_entity_ln_to_gn 
+    type(c_ptr)                        :: c_entity_ln_to_gn
 
     c_entity_ln_to_gn = C_NULL_PTR
     n_entity = PDM_multipart_part_ln_to_gn_get_c(multipart, &

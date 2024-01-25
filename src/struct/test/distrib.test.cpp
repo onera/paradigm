@@ -159,5 +159,6 @@ MPI_TEST_CASE("[pdm_distrib] - 2p - PDM_compute_uniform_entity_distribution",2) 
   std::vector<PDM_g_num_t> distrib_expected = { 0, 5, 9};
   CHECK_EQ_C_ARRAY(distrib, distrib_expected.data(), n_rank+1);
 
+  free(distrib);
 
 }
