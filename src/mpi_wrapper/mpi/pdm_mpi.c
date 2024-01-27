@@ -2337,10 +2337,9 @@ int PDM_MPI_Alltoallv_l(void *sendbuf, int *sendcounts, size_t *sdispls,
                       PDM_MPI_Datatype sendtype, void *recvbuf, int *recvcounts,
                       size_t *rdispls, PDM_MPI_Datatype recvtype, PDM_MPI_Comm comm)
 {
-
+  double t_elaps[5] = {0., 0., 0., 0., 0.};
   PDM_MPI_Barrier(comm);
-  double t3_elaps = PDM_MPI_Wtime();
-
+  double t1_elaps = PDM_MPI_Wtime();
   int code = MPI_SUCCESS;
 
   int size;
@@ -2353,42 +2352,18 @@ int PDM_MPI_Alltoallv_l(void *sendbuf, int *sendcounts, size_t *sdispls,
     large = 1;
   }
 
-  double t4_elaps = PDM_MPI_Wtime();
-
-  double t_cp_elaps = t4_elaps - t3_elaps;
-
-  PDM_MPI_Barrier(comm);
-
-  double min_cp_elaps  = 0;
-  double mean_cp_elaps = 0;
-  double max_cp_elaps  = 0;
-
-  PDM_MPI_Allreduce (&t_cp_elaps, &min_cp_elaps, 1,
-                     PDM_MPI_DOUBLE, PDM_MPI_MIN, comm);
-
-  PDM_MPI_Allreduce (&t_cp_elaps, &mean_cp_elaps, 1,
-                     PDM_MPI_DOUBLE, PDM_MPI_SUM, comm);
-
-  PDM_MPI_Allreduce (&t_cp_elaps, &max_cp_elaps, 1,
-                     PDM_MPI_DOUBLE, PDM_MPI_MAX, comm);
-
-  int n_cp_rank = 0;
-  int i_cp_rank = 0;
-  PDM_MPI_Comm_size(comm, &n_cp_rank);
-  PDM_MPI_Comm_rank(comm, &i_cp_rank);
-
-  mean_cp_elaps = mean_cp_elaps / n_cp_rank;
-
-  if (i_cp_rank == 0) {
-    printf("IF elaps %.12f %.12f %.12f\n", min_cp_elaps, mean_cp_elaps, max_cp_elaps);
-  }
-
   int s_large = 0;
   MPI_Allreduce (&large, &s_large, 1, MPI_INT,  MPI_SUM,  _pdm_mpi_2_mpi_comm(comm));
   large = s_large;
 
+  double t2_elaps = PDM_MPI_Wtime();
+  t_elaps[0] = t2_elaps - t1_elaps;
+
 
   if (!large) {
+
+    PDM_MPI_Barrier(comm);
+    double t3_elaps = PDM_MPI_Wtime();
 
     int *_sdispls = malloc(sizeof(int) * size);
     int *_rdispls = malloc(sizeof(int) * size);
@@ -2398,8 +2373,11 @@ int PDM_MPI_Alltoallv_l(void *sendbuf, int *sendcounts, size_t *sdispls,
       _rdispls[i] = (int) rdispls[i];
     }
 
+    double t4_elaps = PDM_MPI_Wtime();
+    t_elaps[1] = t4_elaps - t3_elaps;
+
     PDM_MPI_Barrier(comm);
-    double t1_elaps = PDM_MPI_Wtime();
+    double t5_elaps = PDM_MPI_Wtime();
 
     MPI_Alltoallv(sendbuf,
                   sendcounts,
@@ -2411,38 +2389,18 @@ int PDM_MPI_Alltoallv_l(void *sendbuf, int *sendcounts, size_t *sdispls,
                   _pdm_mpi_2_mpi_datatype(recvtype),
                   _pdm_mpi_2_mpi_comm(comm));
 
-    double t2_elaps = PDM_MPI_Wtime();
+    double t6_elaps = PDM_MPI_Wtime();
+    t_elaps[2] = t6_elaps - t5_elaps;
 
-    double t_elaps = t2_elaps - t1_elaps;
 
     PDM_MPI_Barrier(comm);
-
-    double min_elaps  = 0;
-    double mean_elaps = 0;
-    double max_elaps  = 0;
-
-    PDM_MPI_Allreduce (&t_elaps, &min_elaps, 1,
-                       PDM_MPI_DOUBLE, PDM_MPI_MIN, comm);
-
-    PDM_MPI_Allreduce (&t_elaps, &mean_elaps, 1,
-                       PDM_MPI_DOUBLE, PDM_MPI_SUM, comm);
-
-    PDM_MPI_Allreduce (&t_elaps, &max_elaps, 1,
-                       PDM_MPI_DOUBLE, PDM_MPI_MAX, comm);
-
-    int n_rank = 0;
-    int i_rank = 0;
-    PDM_MPI_Comm_size(comm, &n_rank);
-    PDM_MPI_Comm_rank(comm, &i_rank);
-
-    mean_elaps = mean_elaps / n_rank;
-
-    if (i_rank == 0) {
-      printf("ALLTOALL_DATA_EXCHANGE elaps %.12f %.12f %.12f\n", min_elaps, mean_elaps, max_elaps);
-    }
+    double t7_elaps = PDM_MPI_Wtime();
 
     free (_sdispls);
     free (_rdispls);
+
+    double t8_elaps = PDM_MPI_Wtime();
+    t_elaps[3] = t8_elaps - t7_elaps;
   }
 
   else {
@@ -2503,6 +2461,39 @@ int PDM_MPI_Alltoallv_l(void *sendbuf, int *sendcounts, size_t *sdispls,
 
     free (request_r);
     free (request_s);
+  }
+
+  double t9_elaps = PDM_MPI_Wtime();
+  t_elaps[4] = t9_elaps - t1_elaps;
+
+  double min_elaps[5]  = {0., 0., 0., 0., 0.};
+  double mean_elaps[5] = {0., 0., 0., 0., 0.};
+  double max_elaps[5]  = {0., 0., 0., 0., 0.};
+
+  PDM_MPI_Allreduce (&t_elaps, &min_elaps, 5,
+                     PDM_MPI_DOUBLE, PDM_MPI_MIN, comm);
+
+  PDM_MPI_Allreduce (&t_elaps, &mean_elaps, 5,
+                     PDM_MPI_DOUBLE, PDM_MPI_SUM, comm);
+
+  PDM_MPI_Allreduce (&t_elaps, &max_elaps, 5,
+                     PDM_MPI_DOUBLE, PDM_MPI_MAX, comm);
+
+  int n_rank = 0;
+  int i_rank = 0;
+  PDM_MPI_Comm_size(comm, &n_rank);
+  PDM_MPI_Comm_rank(comm, &i_rank);
+
+  for (int i = 0; i < 5; i++) {
+    mean_elaps[i] = mean_elaps[i] / n_rank;
+  }
+
+  if (i_rank == 0) {
+    printf("All-Reduce elaps  %.12f %.12f %.12f\n", min_elaps[0], mean_elaps[0], max_elaps[0]);
+    printf("Copy elaps        %.12f %.12f %.12f\n", min_elaps[1], mean_elaps[1], max_elaps[1]);
+    printf("All-to-Allv elaps %.12f %.12f %.12f\n", min_elaps[2], mean_elaps[2], max_elaps[2]);
+    printf("Free elaps        %.12f %.12f %.12f\n", min_elaps[3], mean_elaps[3], max_elaps[3]);
+    printf("Total elaps       %.12f %.12f %.12f\n", min_elaps[4], mean_elaps[4], max_elaps[4]);
   }
 
   return _mpi_2_pdm_mpi_err(code);
