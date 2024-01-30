@@ -77,6 +77,7 @@ int btp_max_exch_rank[2] = {-1, -1};
 unsigned long long btp_exch_data[2] = {0, 0};
 
 int n_btp = 0;
+int count_btp = 0;
 
 /*=============================================================================
  * Static function definitions
@@ -353,13 +354,13 @@ PDM_block_to_part_time_per_step_dump
                      PDM_MPI_DOUBLE, PDM_MPI_MAX, comm);
 
   for (int i_step = 0; i_step < NTIMER_BTP; i_step++) {
-    min_elaps[i_step]  /= n_btp;
-    mean_elaps[i_step] /= n_btp;
-    max_elaps[i_step]  /= n_btp;
+    min_elaps[i_step]  /= count_btp;
+    mean_elaps[i_step] /= count_btp;
+    max_elaps[i_step]  /= count_btp;
 
-    min_cpu[i_step]  /= n_btp;
-    mean_cpu[i_step] /= n_btp;
-    max_cpu[i_step]  /= n_btp;
+    min_cpu[i_step]  /= count_btp;
+    mean_cpu[i_step] /= count_btp;
+    max_cpu[i_step]  /= count_btp;
 
     mean_elaps[i_step] /= n_rank;
     mean_cpu[i_step]   /= n_rank;
@@ -608,12 +609,15 @@ PDM_block_to_part_create
 )
 {
 
-  if (n_btp == 0) {
+  // TMP
+  if (count_btp == 0) {
+  // if (n_btp == 0) {
     btp_t_timer[BINARY_SEARCH  ] = PDM_timer_create ();
     btp_t_timer[CREATE_EXCHANGE] = PDM_timer_create ();
     btp_t_timer[DATA_EXCHANGE  ] = PDM_timer_create ();
   }
   n_btp++;
+  count_btp++;
 
   // Start binary search timer
   double t1_elaps = PDM_timer_elapsed(btp_t_timer[BINARY_SEARCH]);
@@ -1907,7 +1911,9 @@ PDM_block_to_part_free
   free (btp);
 
   n_btp--;
-  if (n_btp == 0) {
+  // TMP
+  if (count_btp == 0) {
+  // if (n_btp == 0) {
     PDM_timer_free(btp_t_timer[BINARY_SEARCH]);
     PDM_timer_free(btp_t_timer[CREATE_EXCHANGE]);
     PDM_timer_free(btp_t_timer[DATA_EXCHANGE]);

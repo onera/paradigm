@@ -108,6 +108,7 @@ int max_exch_rank[2] = {-1, -1};
 unsigned long long exch_data[2] = {0, 0};
 
 int n_ptb = 0;
+int count_ptb = 0;
 
 
 /*=============================================================================
@@ -1411,7 +1412,9 @@ _ptb_create
  PDM_MPI_Comm                  comm
 )
 {
-  if (n_ptb == 0) {
+  // if (n_ptb == 0) {
+  // TMP
+  if (count_ptb == 0) {
     t_timer[GENERATE_DISTRIB      ] = PDM_timer_create ();
     t_timer[BINARY_SEARCH         ] = PDM_timer_create ();
     t_timer[CREATE_EXCHANGE       ] = PDM_timer_create ();
@@ -1423,6 +1426,7 @@ _ptb_create
     t_timer[ALLTOALL_DATA_EXCHANGE] = PDM_timer_create ();
   }
   n_ptb++;
+  count_ptb++;
 
   PDM_part_to_block_t *ptb = (PDM_part_to_block_t *) malloc (sizeof(PDM_part_to_block_t));
 
@@ -2470,24 +2474,24 @@ PDM_part_to_block_time_per_step_dump
                      PDM_MPI_DOUBLE, PDM_MPI_MAX, comm);
 
   for (int i_step = 0; i_step < NTIMER_PTB; i_step++) {
-    min_elaps[i_step]  /= n_ptb;
-    mean_elaps[i_step] /= n_ptb;
-    max_elaps[i_step]  /= n_ptb;
+    min_elaps[i_step]  /= count_ptb;
+    mean_elaps[i_step] /= count_ptb;
+    max_elaps[i_step]  /= count_ptb;
 
-    min_cpu[i_step]  /= n_ptb;
-    mean_cpu[i_step] /= n_ptb;
-    max_cpu[i_step]  /= n_ptb;
+    min_cpu[i_step]  /= count_ptb;
+    mean_cpu[i_step] /= count_ptb;
+    max_cpu[i_step]  /= count_ptb;
 
     mean_elaps[i_step] /= n_rank;
     mean_cpu[i_step]   /= n_rank;
   } // end loop on timed steps
 
   // TMP
-  int i_rank = 0;
-  PDM_MPI_Comm_rank(comm, &i_rank);
-  if (i_rank == 0) {
-    printf("ALLTOALL_DATA_EXCHANGE elaps %.12f %.12f %.12f cpu %.12f %.12f %.12f\n", min_elaps[ALLTOALL_DATA_EXCHANGE], mean_elaps[ALLTOALL_DATA_EXCHANGE], max_elaps[ALLTOALL_DATA_EXCHANGE], min_cpu[ALLTOALL_DATA_EXCHANGE], mean_cpu[ALLTOALL_DATA_EXCHANGE], max_cpu[ALLTOALL_DATA_EXCHANGE]);
-  }
+  // int i_rank = 0;
+  // PDM_MPI_Comm_rank(comm, &i_rank);
+  // if (i_rank == 0) {
+  //   printf("ALLTOALL_DATA_EXCHANGE elaps %.12f %.12f %.12f cpu %.12f %.12f %.12f\n", min_elaps[ALLTOALL_DATA_EXCHANGE], mean_elaps[ALLTOALL_DATA_EXCHANGE], max_elaps[ALLTOALL_DATA_EXCHANGE], min_cpu[ALLTOALL_DATA_EXCHANGE], mean_cpu[ALLTOALL_DATA_EXCHANGE], max_cpu[ALLTOALL_DATA_EXCHANGE]);
+  // }
   // TMP
 
   // Global write times
@@ -4359,7 +4363,9 @@ PDM_part_to_block_free
   free (ptb);
 
   n_ptb--;
-  if (n_ptb == 0) {
+  // TMP
+  // if (n_ptb == 0) {
+  if (count_ptb == 0) {
     PDM_timer_free(t_timer[GENERATE_DISTRIB      ]);
     PDM_timer_free(t_timer[BINARY_SEARCH         ]);
     PDM_timer_free(t_timer[CREATE_EXCHANGE       ]);
