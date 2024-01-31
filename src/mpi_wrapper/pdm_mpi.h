@@ -637,6 +637,12 @@ int PDM_MPI_Ialltoallv_p2p (void *sendbuf, int *sendcounts, int *sdispls, PDM_MP
                             PDM_MPI_Comm comm, PDM_MPI_Request **request_s, PDM_MPI_Request **request_r, 
                             int *n_request_s, int *n_request_r);
 
+int PDM_MPI_Ialltoallv_p2p_l (void *sendbuf, int *sendcounts, size_t *sdispls, PDM_MPI_Datatype sendtype,
+                            void *recvbuf, int *recvcounts, size_t *rdispls, PDM_MPI_Datatype recvtype,
+                            PDM_MPI_Comm comm, PDM_MPI_Request **request_s, PDM_MPI_Request **request_r, 
+                            int *n_request_s, int *n_request_r);
+
+
 /*----------------------------------------------------------------------------
  * PDM_MPI_Alltoallv (wrapping de la fonction MPI_Alltoallv)
  *
@@ -644,6 +650,9 @@ int PDM_MPI_Ialltoallv_p2p (void *sendbuf, int *sendcounts, int *sdispls, PDM_MP
 
 int PDM_MPI_Alltoallv_p2p(void *sendbuf, int *sendcounts, int *sdispls, PDM_MPI_Datatype sendtype, void *recvbuf, int *recvcounts,
                           int *rdispls, PDM_MPI_Datatype recvtype, PDM_MPI_Comm comm);
+
+int PDM_MPI_Alltoallv_p2p_l(void *sendbuf, int *sendcounts, size_t *sdispls, PDM_MPI_Datatype sendtype, void *recvbuf, 
+                            int *recvcounts, size_t *rdispls, PDM_MPI_Datatype recvtype, PDM_MPI_Comm comm);
 
 /*----------------------------------------------------------------------------
  * 
