@@ -2161,7 +2161,7 @@ void PDM_MPI_Partofactiverank(int *sendcounts,
   MPI_Comm_size(_pdm_mpi_2_mpi_comm(comm), &size);
 
   int rank;
-  MPI_Comm_size(_pdm_mpi_2_mpi_comm(comm), &rank);
+  MPI_Comm_rank(_pdm_mpi_2_mpi_comm(comm), &rank);
 
   int n_active_rank = 0;
   for (int i = 0; i < size; i++) {
@@ -2172,12 +2172,15 @@ void PDM_MPI_Partofactiverank(int *sendcounts,
 
   double _part_active_rank = (double) n_active_rank / (double) size;
 
-  PDM_MPI_Allreduce (part_active_rank, 
-                    &_part_active_rank, 
-                    1, 
-                    PDM_MPI_DOUBLE, 
-                    PDM_MPI_MAX, 
-                    comm);
+  PDM_MPI_Allreduce (&_part_active_rank, 
+                     part_active_rank, 
+                     1, 
+                     PDM_MPI_DOUBLE, 
+                     PDM_MPI_MAX, 
+                     comm);
+
+  printf("active rank: %d %d, %12.5e %12.5e\n", n_active_rank, size, _part_active_rank, *part_active_rank);
+
 }
 
 
@@ -2211,7 +2214,7 @@ int PDM_MPI_Alltoallv_p2p(void *sendbuf, int *sendcounts, int *sdispls, PDM_MPI_
     if (recvcounts[i] != 0) {
       void *buf = (void *) ((unsigned char*) recvbuf + rdispls[i] * size_recvType);
       code = MPI_Irecv(buf, recvcounts[i], _pdm_mpi_2_mpi_datatype(recvtype), i,
-                       0, _pdm_mpi_2_mpi_comm(comm), request_r + i);
+                       0, _pdm_mpi_2_mpi_comm(comm), request_r + n_request_r);
       n_request_r++; 
       if (code != MPI_SUCCESS) {
         break;
@@ -2221,7 +2224,7 @@ int PDM_MPI_Alltoallv_p2p(void *sendbuf, int *sendcounts, int *sdispls, PDM_MPI_
     if (sendcounts[i] != 0) {
       void *buf = (void *) ((unsigned char*) sendbuf + sdispls[i] * size_sendType);
       code = MPI_Issend(buf, sendcounts[i], _pdm_mpi_2_mpi_datatype(sendtype), i,
-                        0, _pdm_mpi_2_mpi_comm(comm), request_s + i);
+                        0, _pdm_mpi_2_mpi_comm(comm), request_s + n_request_s);
       n_request_s++; 
       if (code != MPI_SUCCESS) {
         break;
@@ -2282,7 +2285,7 @@ int PDM_MPI_Alltoallv_p2p_l(void *sendbuf, int *sendcounts, size_t *sdispls, PDM
     if (recvcounts[i] != 0) {
       void *buf = (void *) ((unsigned char*) recvbuf + rdispls[i] * size_recvType);
       code = MPI_Irecv(buf, recvcounts[i], _pdm_mpi_2_mpi_datatype(recvtype), i,
-                       0, _pdm_mpi_2_mpi_comm(comm), request_r + i);
+                       0, _pdm_mpi_2_mpi_comm(comm), request_r + n_request_r);
       n_request_r++; 
       if (code != MPI_SUCCESS) {
         break;
@@ -2292,7 +2295,7 @@ int PDM_MPI_Alltoallv_p2p_l(void *sendbuf, int *sendcounts, size_t *sdispls, PDM
     if (sendcounts[i] != 0) {
       void *buf = (void *) ((unsigned char*) sendbuf + sdispls[i] * size_sendType);
       code = MPI_Issend(buf, sendcounts[i], _pdm_mpi_2_mpi_datatype(sendtype), i,
-                        0, _pdm_mpi_2_mpi_comm(comm), request_s + i);
+                        0, _pdm_mpi_2_mpi_comm(comm), request_s + n_request_s);
       n_request_s++; 
       if (code != MPI_SUCCESS) {
         break;
