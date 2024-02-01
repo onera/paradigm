@@ -1058,7 +1058,6 @@ PDM_block_to_part_exch_in_place
   
       if (btp->p2p_factor < btp->part_active_rank) {
   
-        printf("btp collectif: %12.5e %12.5e\n", btp->p2p_factor, btp->part_active_rank);
         int *_i_send_buffer = (int *) malloc(sizeof(int) * btp->n_rank);
         int *_i_recv_buffer = (int *) malloc(sizeof(int) * btp->n_rank);
   
@@ -1083,7 +1082,6 @@ PDM_block_to_part_exch_in_place
   
       else {
   
-        printf("btp p2p\n");
         PDM_MPI_Alltoallv_p2p_l(send_buffer,
                                 n_send_buffer,
                                 i_send_buffer,
@@ -1506,7 +1504,6 @@ PDM_block_to_part_exch
 
     if (btp->p2p_factor  < btp->part_active_rank) {
 
-      printf("btp collectif: %12.5e %12.5e\n", btp->p2p_factor, btp->part_active_rank);
       int *_i_send_buffer = (int *) malloc(sizeof(int) * btp->n_rank);
       int *_i_recv_buffer = (int *) malloc(sizeof(int) * btp->n_rank);
 
@@ -1531,7 +1528,6 @@ PDM_block_to_part_exch
 
     else {
 
-      printf("btp p2p\n");
       PDM_MPI_Alltoallv_p2p_l(send_buffer,
                               n_send_buffer,
                               i_send_buffer,
