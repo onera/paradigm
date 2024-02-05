@@ -1042,7 +1042,7 @@ PDM_block_to_part_exch_in_place
   
     if (mandatory_size > 32) {
   
-      PDM_MPI_Alltoallv_p2p_l(send_buffer,
+      PDM_MPI_Alltoallv_p2p_l(send_buffer[0],
                               n_send_buffer,
                               i_send_buffer,
                               mpi_type,
@@ -1066,7 +1066,7 @@ PDM_block_to_part_exch_in_place
           _i_recv_buffer[i] = (int) i_recv_buffer[i];
         }
   
-        PDM_MPI_Alltoallv(send_buffer,
+        PDM_MPI_Alltoallv(send_buffer[0],
                           n_send_buffer,
                           _i_send_buffer,
                           mpi_type,
@@ -1082,7 +1082,7 @@ PDM_block_to_part_exch_in_place
   
       else {
   
-        PDM_MPI_Alltoallv_p2p_l(send_buffer,
+        PDM_MPI_Alltoallv_p2p_l(send_buffer[0],
                                 n_send_buffer,
                                 i_send_buffer,
                                 mpi_type,
