@@ -51,6 +51,11 @@ typedef struct {
   PDM_g_num_t    *block_distrib_end_idx;  /*!< Block distribution final
                                            * (size : \ref size of \ref comm + 1) */
 
+  int            *n_send_buffer;          /*!< Number of ids to send to each rank
+                                           * (size : \ref size of \ref comm) */
+  int            *n_recv_buffer;          /*!< Number of ids to recv from each rank
+                                           * (size : \ref size of \ref comm) */
+
 } _pdm_block_to_block_t;
 
 /*=============================================================================
