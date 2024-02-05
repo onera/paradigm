@@ -398,6 +398,23 @@ cdef int* list_to_int_pointer(list data):
     array[i] = <int> d
   return array
 
+cdef PDM_g_num_t* np_to_gnum_pointer(NPY.ndarray[npy_pdm_gnum_t] array):
+  cdef PDM_g_num_t* ptr = NULL
+  if array is not None:
+    ptr = <PDM_g_num_t*> array.data
+  return ptr
+cdef int* np_to_int_pointer(NPY.ndarray[NPY.int32_t] array):
+  cdef int* ptr = NULL
+  if array is not None:
+    ptr = <int*> array.data
+  return ptr
+cdef double* np_to_double_pointer(NPY.ndarray[double] array):
+  cdef double* ptr = NULL
+  if array is not None:
+    ptr = <double*> array.data
+  return ptr
+  
+
 cdef void** np_list_to_void_pointers(list datas):
   cdef NPY.ndarray numpy_void
   cdef void** array = <void **> malloc(len(datas) * sizeof(void*))

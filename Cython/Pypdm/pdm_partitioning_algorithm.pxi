@@ -60,54 +60,20 @@ def part_distgroup_to_partgroup(MPI.Comm                                      co
     cdef MPI.MPI_Comm c_comm = comm.ob_mpi
     cdef PDM_MPI_Comm PDMC   = PDM_MPI_mpi_2_pdm_mpi_comm(&c_comm)
 
-    # ~> \param [in]   entity_distribution   Distributed entity
-    cdef PDM_g_num_t * entity_distribution_data
-    if (entity_distribution is None):
-        entity_distribution_data = NULL
-    else:
-        entity_distribution_data = <PDM_g_num_t *> entity_distribution.data
+    cdef PDM_g_num_t * entity_distribution_data = np_to_gnum_pointer(entity_distribution)
 
-    # ~> \param [in]   n_goupe
     cdef int _n_group = n_group
-
-    # ~> \param [in]   dgroup_idx
-    cdef int *dgroup_idx_data
-    if (dgroup_idx is None):
-        dgroup_idx_data = NULL
-    else:
-        dgroup_idx_data = <int *> dgroup_idx.data
-
-    # ~> \param [in]   distributed group
-    cdef PDM_g_num_t * dgroup_data
-    if (dgroup is None):
-        dgroup_data = NULL
-    else:
-        dgroup_data = <PDM_g_num_t *> dgroup.data
-
-    # ~> \param [in]   Npart
     cdef int _n_part = n_part
 
-    # ~> \param [in]   pn_entity
-    cdef int * _pn_entity
-    _pn_entity        = <int *> malloc(sizeof(int) * _n_part )
-    for idx, part_pn_entity  in enumerate(pn_entity):
-        _pn_entity[idx] = part_pn_entity
+    cdef int *dgroup_idx_data = np_to_int_pointer(dgroup_idx)
+    cdef PDM_g_num_t * dgroup_data = np_to_gnum_pointer(dgroup)
 
-    # ~> \param [in]   pentity_ln_to_gn local to global
-    cdef NPY.ndarray[npy_pdm_gnum_t, ndim=1, mode='c'] partLNToGN
-    cdef PDM_g_num_t ** LNToGN
+    cdef int * _pn_entity = list_to_int_pointer(pn_entity)
+    cdef PDM_g_num_t** LNToGN = np_list_to_gnum_pointers(pentity_ln_to_gn)
 
-    LNToGN        = <PDM_g_num_t **> malloc(sizeof(PDM_g_num_t *) * _n_part )
-    for idx, partLNToGN in enumerate(pentity_ln_to_gn):
-        LNToGN[idx] = <PDM_g_num_t *> partLNToGN.data
 
-    # ~> \param [out]   pgroup_idx
     cdef int **_pgroup_idx
-
-    # ~> \param [out]   pgroup
     cdef int **_pgroup
-
-    # ~> \param [out]   pgroup_ln_to_gn
     cdef PDM_g_num_t **_pgroup_ln_to_gn
 
     PDM_part_distgroup_to_partgroup(
@@ -177,25 +143,15 @@ def transform_to_parent_gnum(list     gnum_to_transform,
   for child_gn, parent_gn in zip(child_ln_to_gn, parent_ln_to_gn):
     assert child_gn.shape == parent_gn.shape
 
-  cdef NPY.ndarray[npy_pdm_gnum_t, ndim=1, mode='c'] np_array
   cdef int n_part_out = len(gnum_to_transform)
   cdef int n_part_ini   = len(child_ln_to_gn)
 
-  cdef PDM_g_num_t **_gnum_to_transform = <PDM_g_num_t **> malloc(sizeof(PDM_g_num_t *) * n_part_out)
-  cdef int          *_pn_elt_out        = <int *>          malloc(sizeof(int)           * n_part_out)
-  for idx, np_array in enumerate(gnum_to_transform):
-      _gnum_to_transform[idx] = <PDM_g_num_t *> np_array.data
-      _pn_elt_out[idx] = <int> np_array.shape[0]
+  cdef PDM_g_num_t **_gnum_to_transform = np_list_to_gnum_pointers(gnum_to_transform)
+  cdef int          *_pn_elt_out        = list_to_int_pointer([t.shape[0] for t in gnum_to_transform])
 
-  cdef PDM_g_num_t **_child_ln_to_gn  = <PDM_g_num_t **> malloc(sizeof(PDM_g_num_t *) * n_part_ini)
-  cdef PDM_g_num_t **_parent_ln_to_gn = <PDM_g_num_t **> malloc(sizeof(PDM_g_num_t *) * n_part_ini)
-  cdef int          *_pn_elt_in       = <int *>          malloc(sizeof(int)           * n_part_ini)
-  for idx in range(n_part_ini):
-      np_array = child_ln_to_gn[idx]
-      _child_ln_to_gn[idx] = <PDM_g_num_t *> np_array.data
-      np_array = parent_ln_to_gn[idx]
-      _parent_ln_to_gn[idx] = <PDM_g_num_t *> np_array.data
-      _pn_elt_in[idx] = <int> np_array.shape[0]
+  cdef PDM_g_num_t **_child_ln_to_gn  = np_list_to_gnum_pointers(child_ln_to_gn)
+  cdef PDM_g_num_t **_parent_ln_to_gn = np_list_to_gnum_pointers(parent_ln_to_gn)
+  cdef int          *_pn_elt_in       = list_to_int_pointer([t.shape[0] for t in parent_ln_to_gn])
     
   cdef MPI.MPI_Comm c_comm = comm.ob_mpi
   cdef PDM_MPI_Comm PDMC   = PDM_MPI_mpi_2_pdm_mpi_comm(&c_comm)
@@ -225,16 +181,12 @@ def part_dcoordinates_to_pcoordinates(MPI.Comm                                  
     """
     cdef MPI.MPI_Comm c_comm = comm.ob_mpi
     cdef PDM_MPI_Comm PDMC   = PDM_MPI_mpi_2_pdm_mpi_comm(&c_comm)
-    cdef NPY.ndarray[npy_pdm_gnum_t, ndim=1, mode='fortran'] part_ln_to_gn
 
     cdef int n_part = len(l_pvtx_ln_to_gn)
-    cdef int          *pn_vtx        = <int          *> malloc(n_part * sizeof(int          ))
-    cdef PDM_g_num_t **pvtx_ln_to_gn = <PDM_g_num_t **> malloc(n_part * sizeof(PDM_g_num_t *))
+    cdef int          *pn_vtx        = list_to_int_pointer([t.shape[0] for t in l_pvtx_ln_to_gn])
+    cdef PDM_g_num_t **pvtx_ln_to_gn = np_list_to_gnum_pointers(l_pvtx_ln_to_gn)
     cdef double      **pvtx_coord
 
-    for i, part_ln_to_gn in enumerate(l_pvtx_ln_to_gn):
-        pn_vtx[i]        = l_pvtx_ln_to_gn[i].shape[0]
-        pvtx_ln_to_gn[i] = <PDM_g_num_t *> part_ln_to_gn.data
 
     PDM_part_dcoordinates_to_pcoordinates(PDMC,
                                           n_part,
