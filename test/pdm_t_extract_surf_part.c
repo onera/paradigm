@@ -422,7 +422,7 @@ int main(int argc, char *argv[])
       }
 
       if(inside == 1) {
-        selected_face_l_num[i_part][n_select_face] = i_face;
+        selected_face_l_num[i_part][n_select_face] = i_face+1;
         n_select_face++;
       }
 
