@@ -5937,6 +5937,14 @@ PDM_part_extension_create
   part_ext->pinit_entity_bound_to_pentity_bound_triplet   = NULL;
   part_ext->pinit_entity_bound_to_pentity_bound_interface = NULL;
 
+  for (int i = 0; i < PDM_BOUND_TYPE_MAX; i++) {
+    part_ext->dentity_itrf_n_blk              [i] = 0;
+    part_ext->dentity_itrf_blk_gnum           [i] = NULL;
+    part_ext->dentity_itrf_gnum_and_itrf_strid[i] = NULL;
+    part_ext->dentity_itrf_gnum_and_itrf_data [i] = NULL;
+    part_ext->dentity_itrf_gnum_and_itrf_sens [i] = NULL;
+  }
+
   return part_ext;
 }
 

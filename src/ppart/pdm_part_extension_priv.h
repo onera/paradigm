@@ -170,9 +170,20 @@ struct _pdm_part_extension_t {
   int ln_part_tot;
 
   PDM_domain_interface_t  *dom_itrf;
+
+  /* TODO - delete */
   PDM_part_to_block_t    **ptb_itrf[PDM_BOUND_TYPE_MAX];
   PDM_g_num_t            **opp_gnum[PDM_BOUND_TYPE_MAX];
   int                    **opp_sens[PDM_BOUND_TYPE_MAX];
+
+  /* New manner */
+  int          dentity_itrf_n_blk              [PDM_BOUND_TYPE_MAX];
+  PDM_g_num_t *dentity_itrf_blk_gnum           [PDM_BOUND_TYPE_MAX];
+  int         *dentity_itrf_gnum_and_itrf_strid[PDM_BOUND_TYPE_MAX];
+  PDM_g_num_t *dentity_itrf_gnum_and_itrf_data [PDM_BOUND_TYPE_MAX];
+  int         *dentity_itrf_gnum_and_itrf_sens [PDM_BOUND_TYPE_MAX];
+
+
 
   int have_edge;
   int have_face;

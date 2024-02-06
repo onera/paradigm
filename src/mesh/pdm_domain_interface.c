@@ -5340,6 +5340,150 @@ PDM_domain_interface_make_flat_view
 
 
 
+void
+PDM_domain_interface_make_flat_view2
+(
+  PDM_domain_interface_t  *dom_intrf,
+  PDM_bound_type_t         interface_kind,
+  PDM_g_num_t             *shift_by_domain,
+  int                     *dentity2_itrf_n_blk,
+  PDM_g_num_t            **dentity2_itrf_blk_gnum,
+  int                    **dentity2_itrf_gnum_and_itrf_strid,
+  PDM_g_num_t            **dentity2_itrf_gnum_and_itrf_data,
+  int                    **dentity2_itrf_gnum_and_itrf_sens
+)
+{
+
+  log_trace("TODO : check sign and sens in PDM_domain_interface_make_flat_view2 \n");
+
+  int          *interface_dn  = NULL;
+  PDM_g_num_t **interface_ids = NULL;
+  int         **interface_dom = NULL;
+  PDM_domain_interface_get(dom_intrf,
+                           interface_kind,
+                           &interface_dn,
+                           &interface_ids,
+                           &interface_dom);
+
+  int n_interface = dom_intrf->n_interface;
+
+  int          *dn_interface_twice    = (int          *) malloc(n_interface * sizeof(int          ));
+  PDM_g_num_t **interface_ids_shifted = (PDM_g_num_t **) malloc(n_interface * sizeof(PDM_g_num_t *));
+  PDM_g_num_t **send_data             = (PDM_g_num_t **) malloc(n_interface * sizeof(PDM_g_num_t *));
+  int         **send_sens             = (int         **) malloc(n_interface * sizeof(int         *));
+  double      **weight                = (double      **) malloc(n_interface * sizeof(double      *));
+  int         **stride_one            = (int         **) malloc(n_interface * sizeof(int         *));
+
+  for (int itrf = 0; itrf < n_interface; itrf++) {
+    // stride_one           [itrf] = (int         *) malloc(2*interface_dn[itrf]*sizeof(int        ));
+    interface_ids_shifted[itrf] = (PDM_g_num_t *) malloc( 2 * interface_dn[itrf] * sizeof(PDM_g_num_t));
+    send_data            [itrf] = (PDM_g_num_t *) malloc( 4 * interface_dn[itrf] * sizeof(PDM_g_num_t));
+    stride_one           [itrf] = (int         *) malloc( 2 * interface_dn[itrf] * sizeof(int        ));
+    send_sens            [itrf] = (int         *) malloc( 2 * interface_dn[itrf] * sizeof(int        ));
+    weight               [itrf] = (double      *) malloc( 2 * interface_dn[itrf] * sizeof(double     ));
+
+    int dom    = -1;
+    int domopp = -1;
+    if(dom_intrf->multidomain_intrf == PDM_DOMAIN_INTERFACE_MULT_NO) {
+      dom    = interface_dom[itrf][0];
+      domopp = interface_dom[itrf][1];
+    }
+
+    for (int k = 0; k < interface_dn[itrf]; k++) {
+      if (dom_intrf->multidomain_intrf == PDM_DOMAIN_INTERFACE_MULT_YES) {
+        dom    = interface_dom[itrf][2*k  ];
+        domopp = interface_dom[itrf][2*k+1];
+      }
+
+      PDM_g_num_t gnum1 = PDM_ABS(interface_ids[itrf][2*k  ]) + shift_by_domain[dom   ];
+      PDM_g_num_t gnum2 = PDM_ABS(interface_ids[itrf][2*k+1]) + shift_by_domain[domopp];
+      int         sgn1  = PDM_SIGN(interface_ids[itrf][2*k  ]);
+      int         sgn2  = PDM_SIGN(interface_ids[itrf][2*k+1]);
+
+      interface_ids_shifted[itrf][2*k  ] = gnum1;
+      interface_ids_shifted[itrf][2*k+1] = gnum2;
+
+      send_data            [itrf][4*k  ] =   gnum2;
+      send_data            [itrf][4*k+1] =  -(itrf+1);
+      send_data            [itrf][4*k+2] =  gnum1;
+      send_data            [itrf][4*k+3] =  (itrf+1);
+
+      stride_one           [itrf][2*k  ] = 1;
+      stride_one           [itrf][2*k+1] = 1;
+      send_sens            [itrf][2*k  ] =  sgn2;
+      send_sens            [itrf][2*k+1] =  sgn1;
+      weight               [itrf][2*k  ] = 1.;
+      weight               [itrf][2*k+1] = 1.;
+
+      /* On veut envoyer l'info du gnum1 du couple gnum2, i_itrf et vice versa, donc on doit dedoublé */
+
+
+    }
+
+    dn_interface_twice[itrf] = 2 * interface_dn[itrf];
+
+  }
+
+
+  PDM_part_to_block_t *ptb = PDM_part_to_block_create(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
+                                                      PDM_PART_TO_BLOCK_POST_MERGE,
+                                                      1.,
+                                                      interface_ids_shifted,
+                                                      weight,
+                                                      dn_interface_twice,
+                                                      n_interface,
+                                                      dom_intrf->comm);
+  int         *recv_stride = NULL;
+  PDM_g_num_t *recv_data   = NULL;
+  int n_connected_l = PDM_part_to_block_exch(ptb,
+                                             2 * sizeof(PDM_g_num_t),
+                                             PDM_STRIDE_VAR_INTERLACED,
+                                             -1,
+                                             stride_one,
+                                   (void **) send_data,
+                                             &recv_stride,
+                                   (void **) &recv_data);
+
+  free(recv_stride);
+  int* recv_sens   = NULL;
+  PDM_part_to_block_exch(ptb,
+                         sizeof(int),
+                         PDM_STRIDE_VAR_INTERLACED,
+                         -1,
+                         stride_one,
+               (void **) send_sens ,
+                         &recv_stride,
+               (void **) &recv_sens);
+
+  int n_gnum = PDM_part_to_block_n_elt_block_get(ptb);
+
+  assert(n_gnum == n_connected_l); // ie all recv_stride == 1
+
+  if (1 == 1) {
+    PDM_log_trace_array_long(PDM_part_to_block_block_gnum_get(ptb), n_gnum, "gnum");
+    PDM_log_trace_array_int (recv_stride, n_gnum       , "recv_stride ::");
+    PDM_log_trace_array_long(recv_data  , n_connected_l, "recv_data   ::");
+    PDM_log_trace_array_int (recv_sens  , n_connected_l, "recv_sens   ::");
+  }
+
+
+  PDM_g_num_t *ptb_dentity2_elt_gnum_ptp_itrf = PDM_part_to_block_block_gnum_get   (ptb);
+
+  PDM_g_num_t *_dentity2_itrf_blk_gnum = (PDM_g_num_t *) malloc(n_gnum * sizeof(PDM_g_num_t));
+  for(int i = 0; i < n_gnum; ++i) {
+    _dentity2_itrf_blk_gnum[i] = ptb_dentity2_elt_gnum_ptp_itrf[i];
+  }
+
+  PDM_part_to_block_free(ptb);
+
+
+  *dentity2_itrf_n_blk               = n_gnum;
+  *dentity2_itrf_blk_gnum            = _dentity2_itrf_blk_gnum;
+  *dentity2_itrf_gnum_and_itrf_strid = recv_stride;
+  *dentity2_itrf_gnum_and_itrf_data  = recv_data;
+  *dentity2_itrf_gnum_and_itrf_sens  = recv_sens;
+
+}
 
 
 
