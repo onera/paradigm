@@ -61,10 +61,10 @@ typedef struct _pdm_isosurface_t PDM_isosurface_t;
 /**
  * \brief User-defined field function.
  *
- * \param [in]  x     X-coordinate
- * \param [in]  y     Y-coordinate
- * \param [in]  z     Z-coordinate
- * \param [out] value Field value at point (x, y, z)
+ * \param [in]  x      X-coordinate
+ * \param [in]  y      Y-coordinate
+ * \param [in]  z      Z-coordinate
+ * \param [out] value  Field value at point (x, y, z)
  *
  */
 typedef void (*PDM_isosurface_field_function_t)
@@ -84,13 +84,19 @@ typedef void (*PDM_isosurface_field_function_t)
  * Public function prototypes
  *============================================================================*/
 
-// Doit-on gérer multi-domaines?
-
 /**
  * \brief Create a \ref PDM_isosurface_t instance
  *
  * \param [in]  comm            PDM MPI communicator
  * \param [in]  mesh_dimension  Dimension of source mesh (2 or 3)
+ * \param [in]  elt_type        Desired element type for iso-surface mesh
+ * \param [in]  method          Contouring method (?)
+ * \param [in]  extract_kind    Redistribution kind
+ * \param [in]  part_method     Partitioning method (only used if \p extract_kind is set to PDM_EXTRACT_PART_KIND_REEQUILIBRATE)
+ *
+ * \note Admissible values for \p extract_kind are:
+ *   - \ref PDM_EXTRACT_PART_KIND_REEQUILIBRATE: the iso-surface is evenly redistributed (Default kind)
+ *   - \ref PDM_EXTRACT_PART_KIND_LOCAL: the iso-surface is not redistributed (same partitioning as the input mesh)
  *
  * \return Pointer to a new \ref PDM_isosurface_t instance
  *
@@ -99,8 +105,12 @@ typedef void (*PDM_isosurface_field_function_t)
 PDM_isosurface_t *
 PDM_isosurface_create
 (
- PDM_MPI_Comm           comm,
- int                    mesh_dimension
+ PDM_MPI_Comm             comm,
+ int                      mesh_dimension,
+ PDM_Mesh_nodal_elt_t     elt_type,
+ // PDM_isosurface_method_t  method, // (?)
+ PDM_extract_part_kind_t  extract_kind,
+ PDM_split_dual_t         part_method
 );
 
 
@@ -390,7 +400,6 @@ PDM_isosurface_dmesh_nodal_set
  * \return Iso-surface identifier
  *
  */
-// elt_type, extract_kind, part_method?
 
 int PDM_isosurface_add
 (
@@ -438,6 +447,7 @@ void PDM_isosurface_equation_set
  *
  */
 // ajouter PDM_isosurface_gradient_function_set ?
+// ou bien inclure calcul (optionnel) du gradient dans 'func' (permet de factoriser des calculs)
 
 void PDM_isosurface_field_function_set
 (
@@ -523,76 +533,6 @@ void PDM_isosurface_dgradient_set
  int               id_isosurface,
  double           *dgradient
 );
-
-
-//---->>>> DANS CREATE OU ADD?
-/**
- *
- * \brief Set the iso-surface mesh element type
- *
- * \param [in]  isos      \ref PDM_isosurface_t instance
- * \param [in]  elt_type  Desired element type for iso-surface mesh
- *
- * \note Admissible values for \p elt_type are:
- *   - \p PDM_MESH_NODAL_TRIA3
- *   - \p PDM_MESH_NODAL_QUAD4
- *   - \p PDM_MESH_NODAL_POLY_2D
- *
- * \note Maybe ajouter un "contouring_method_set"?
- *       - Dual contouring: tria ou quad
- *       - Marching tetra/cube/poly3d: poly2d ou tria
- *
- * --> déplacer dans "create"?
- */
-
-void PDM_isosurface_elt_type_set
-(
- PDM_isosurface_t     *isos,
- PDM_Mesh_nodal_elt_t  elt_type
-);
-
-
-/**
- *
- * \brief Set the iso-surface mesh redistribution kind
- *
- * \param [in]  isos          \ref PDM_isosurface_t instance
- * \param [in]  extract_kind  Redistribution kind
- *
- * \note Admissible values for \p extract_kind are:
- *   - \ref PDM_EXTRACT_PART_KIND_REEQUILIBRATE: the iso-surface is evenly redistributed (Default kind)
- *   - \ref PDM_EXTRACT_PART_KIND_LOCAL: the iso-surface is not redistributed (same partitioning as the input mesh)
- *
- *  --> déplacer dans "create"?
- */
-
-void
-PDM_isosurface_extract_kind_set
-(
- PDM_isosurface_t        *isos,
- PDM_extract_part_kind_t  extract_kind
-);
-
-
-/**
- *
- * \brief Set the iso-surface mesh partitioning method
- *
- * \param [in]  isos        \ref PDM_isosurface_t instance
- * \param [in]  part_method  Partitioning method
- *
- * \note Not used if \ref PDM_EXTRACT_PART_KIND_LOCAL is passed to \ref PDM_isosurface_extract_kind_set
- *
- * --> déplacer dans "create"?
- */
-
-void
-PDM_isosurface_part_method_set
-(
- PDM_isosurface_t *isos,
- PDM_split_dual_t  part_method
- );
-//<<<<----
 
 
 /**
@@ -742,6 +682,7 @@ PDM_isosurface_ln_to_gn_get
 
 
 // Get groups?
+// group->entity ou entity->group?
 
 // Sorties en pmesh/pmesh_nodal ?
 
