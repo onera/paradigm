@@ -54,8 +54,6 @@ Iso-surface settings
 
 .. todo::
 
-  - enable/disable ptps?
-  - elt_type, extract_kind, part_method? (create ou add?)
   - PDM_isosurface_field_gradient_function_set?
 
 Partitioned discrete field
@@ -85,22 +83,28 @@ Outputs
    - get groups/tags (entity→group/tag ou tag→group/entity)
    - sortie en part_mesh_nodal/dmesh_nodal?
 
+
+.. doxygenfunction:: PDM_isosurface_vtx_parent_weight_get
+
 Partitioned
 ~~~~~~~~~~~
 
 .. doxygenfunction:: PDM_isosurface_connectivity_get
 .. doxygenfunction:: PDM_isosurface_vtx_coord_get
 .. doxygenfunction:: PDM_isosurface_ln_to_gn_get
+.. doxygenfunction:: PDM_isosurface_group_get
 
 Block-distributed
 ~~~~~~~~~~~~~~~~~
 
 .. doxygenfunction:: PDM_isosurface_dconnectivity_get
 .. doxygenfunction:: PDM_isosurface_dvtx_coord_get
+.. doxygenfunction:: PDM_isosurface_dgroup_get
 
 Communication graphs
 ~~~~~~~~~~~~~~~~~~~~
 
+.. doxygenfunction:: PDM_isosurface_enable_part_to_part
 .. doxygenfunction:: PDM_isosurface_part_to_part_get
 
 

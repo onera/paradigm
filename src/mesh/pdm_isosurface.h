@@ -90,7 +90,6 @@ typedef void (*PDM_isosurface_field_function_t)
  * \param [in]  comm            PDM MPI communicator
  * \param [in]  mesh_dimension  Dimension of source mesh (2 or 3)
  * \param [in]  elt_type        Desired element type for iso-surface mesh
- * \param [in]  method          Contouring method (?)
  * \param [in]  extract_kind    Redistribution kind
  * \param [in]  part_method     Partitioning method (only used if \p extract_kind is set to PDM_EXTRACT_PART_KIND_REEQUILIBRATE)
  *
@@ -108,7 +107,6 @@ PDM_isosurface_create
  PDM_MPI_Comm             comm,
  int                      mesh_dimension,
  PDM_Mesh_nodal_elt_t     elt_type,
- // PDM_isosurface_method_t  method, // (?)
  PDM_extract_part_kind_t  extract_kind,
  PDM_split_dual_t         part_method
 );
@@ -210,7 +208,7 @@ PDM_isosurface_ln_to_gn_set
  * \param [in]  i_part                 Partition identifier
  * \param [in]  entity_type            Type of mesh entity
  * \param [in]  n_group                Number of groups
- * \param [in]  group_entity_idx       Index for group→entity connectivity (size = \p n_group)
+ * \param [in]  group_entity_idx       Index for group→entity connectivity (size = \p n_group + 1)
  * \param [in]  group_entity           Group→entity connectivity (1-based local ids, size = \p group_entity_idx[\p n_group])
  * \param [in]  group_entity_ln_to_gn  Group→entity connectivity (group-specific global ids, size = \p group_entity_idx[\p n_group])
  *
@@ -334,7 +332,7 @@ PDM_isosurface_distrib_set
  * \param [in]  isos                   \ref PDM_isosurface_t instance
  * \param [in]  entity_type            Type of mesh entity
  * \param [in]  n_group                Number of groups
- * \param [in]  dgroup_entity_idx      Index for group→entity connectivity (size = \p n_group)
+ * \param [in]  dgroup_entity_idx      Index for group→entity connectivity (size = \p n_group + 1)
  * \param [in]  dgroup_entity          Group→entity connectivity (1-based global ids, size = \p dgroup_entity_idx[\p n_group])
  *
  */
@@ -681,10 +679,44 @@ PDM_isosurface_ln_to_gn_get
 );
 
 
-// Get groups?
-// group->entity ou entity->group?
+// Groups
 
-// Sorties en pmesh/pmesh_nodal ?
+/**
+ *
+ * \brief Set group description
+ *
+ * \param [in]  isos                   \ref PDM_isosurface_t instance
+ * \param [in]  id_isosurface          Iso-surface identifier
+ * \param [in]  i_isovalue             Iso-value identifier
+ * \param [in]  i_part                 Partition identifier
+ * \param [in]  entity_type            Entity type
+ * \param [out] n_group                Number of groups
+ * \param [out] group_entity_idx       Index for group→entity connectivity (size = \p n_group + 1)
+ * \param [out] group_entity           Group→entity connectivity (1-based local ids, size = \p group_entity_idx[\p n_group])
+ * \param [out] group_entity_ln_to_gn  Group→entity connectivity (group-specific global ids, size = \p group_entity_idx[\p n_group])
+ * \param [in]  ownership              Ownership
+ *
+ * \return  Number of entities
+ *
+ */
+
+int
+PDM_isosurface_group_get
+(
+ PDM_isosurface_t     *isos,
+ int                   id_isosurface,
+ int                   i_isovalue,
+ int                   i_part,
+ PDM_mesh_entities_t   entity_type,
+ int                  *n_group,
+ int                 **group_entity_idx,
+ int                 **group_entity,
+ PDM_g_num_t         **group_entity_ln_to_gn,
+ PDM_ownership_t       ownership
+);
+
+
+// Sorties en part_mesh_nodal ?
 
 // Block-distributed
 
@@ -719,7 +751,7 @@ PDM_isosurface_dconnectivity_get
 
 /**
  *
- * \brief Get block-distributed coordinates of iso-surface vertices
+ * \brief Get coordinates of block-distributed iso-surface vertices
  *
  * \param [in]  isos           \ref PDM_isosurface_t instance
  * \param [in]  id_isosurface  Iso-surface identifier
@@ -741,19 +773,107 @@ PDM_isosurface_dvtx_coord_get
  PDM_ownership_t    ownership
 );
 
+
+// Groups
+
+/**
+ *
+ * \brief Get block-distributed group description
+ *
+ * \param [in]  isos               \ref PDM_isosurface_t instance
+ * \param [in]  id_isosurface      Iso-surface identifier
+ * \param [in]  i_isovalue         Iso-value identifier
+ * \param [in]  i_part             Partition identifier
+ * \param [in]  entity_type        Entity type
+ * \param [out] n_group            Number of groups
+ * \param [out] dgroup_entity_idx  Index for group→entity connectivity (size = \p n_group + 1)
+ * \param [out] dgroup_entity      Group→entity connectivity (group-specific global ids, size = \p group_entity_idx[\p n_group])
+ * \param [in]  ownership          Ownership
+ *
+ * \return  Local number of block-distributed entities
+ *
+ */
+
+int
+PDM_isosurface_dgroup_get
+(
+ PDM_isosurface_t     *isos,
+ int                   id_isosurface,
+ int                   i_isovalue,
+ int                   i_part,
+ PDM_mesh_entities_t   entity_type,
+ int                  *n_group,
+ int                 **dgroup_entity_idx,
+ PDM_g_num_t         **dgroup_entity,
+ PDM_ownership_t       ownership
+);
+
+// Sorties en dmesh_nodal ?
+
+/**
+ *
+ * \brief Get interpolation weights of iso-surface vertices
+ *
+ * \param [in]  isos               \ref PDM_isosurface_t instance
+ * \param [in]  id_isosurface      Iso-surface identifier
+ * \param [in]  i_isovalue         Iso-value identifier
+ * \param [in]  i_part             Partition identifier
+ * \param [out] vtx_parent_weight  Interpolation weights
+ * \param [in]  ownership          Ownership
+ *
+ * \warning These weights are only computed if the construction
+ * of the vertex Part-to-Part has been enabled (see \ref PDM_isosurface_enable_part_to_part).
+ *
+ * \todo Rajouter \p vtx_weight_idx en sortie pour éviter l'appel à PDM_part_to_part_gnum1_come_from_get? (attention copie ou alias)
+ *
+ * \return  Number of vertices
+ *
+ */
+
+int
+PDM_isosurface_vtx_parent_weight_get
+(
+ PDM_isosurface_t  *isos,
+ int                id_isosurface,
+ int                i_isovalue,
+ int                i_part,
+ double           **vtx_parent_weight,
+ PDM_ownership_t    ownership
+);
+
 // Communication graphs
 
-// enable/disable construction of ptps?
+/**
+ * \brief Enable construction of a communication graph between source mesh entities and iso-surface entities.
+ *
+ * \param [in]  isos           \ref PDM_isosurface_t instance
+ * \param [in]  id_isosurface  Iso-surface identifier
+ * \param [in]  i_isovalue     Iso-value identifier
+ * \param [in]  entity_type    Entity type
+ *
+ * \warning This function must be called prior to \ref PDM_isosurface_compute
+ *
+ */
+
+void
+PDM_isosurface_enable_part_to_part
+(
+ PDM_isosurface_t     *isos,
+ int                   id_isosurface,
+ int                   i_isovalue,
+ PDM_mesh_entities_t   entity_type
+ );
 
 /**
  * \brief Get \ref PDM_part_to_part_t instance to exchange data
  * between source mesh entities and iso-surface entities.
  *
- * \param [in]  isos         \ref PDM_isosurface_t instance
- * \param [in]  i_isovalue   Iso-value identifier
- * \param [in]  entity_type  Entity type
- * \param [out] ptp          Pointer to \ref PDM_part_to_part_t instance
- * \param [in ] ownership    Ownership for \p ptp
+ * \param [in]  isos           \ref PDM_isosurface_t instance
+ * \param [in]  id_isosurface  Iso-surface identifier
+ * \param [in]  i_isovalue     Iso-value identifier
+ * \param [in]  entity_type    Entity type
+ * \param [out] ptp            Pointer to \ref PDM_part_to_part_t instance
+ * \param [in ] ownership      Ownership for \p ptp
  *
  */
 
@@ -761,9 +881,11 @@ PDM_isosurface_dvtx_coord_get
 // PDM_MESH_ENTITY_EDGE: iso_edge → src_face (only group faces if mesh_dimension == 3)
 // PDM_MESH_ENTITY_FACE: iso_face → src_cell
 
-void PDM_isosurface_part_to_part_get
+void
+PDM_isosurface_part_to_part_get
 (
  PDM_isosurface_t     *isos,
+ int                   id_isosurface,
  int                   i_isovalue,
  PDM_mesh_entities_t   entity_type,
  PDM_part_to_part_t  **ptp,

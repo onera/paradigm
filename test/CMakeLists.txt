@@ -274,6 +274,8 @@ if (PDM_ENABLE_PYTHON_BINDINGS)
    add_dependencies (pdm_t_mesh_gen_demo_p Pypdm)
    test_python_create (pdm_t_gnum_p 2 PDM_LIST_TEST PDM_LIST_NRANK)
    add_dependencies (pdm_t_gnum_p Pypdm)
+   test_python_create (demo_isosurface 2 PDM_LIST_TEST PDM_LIST_NRANK)
+   add_dependencies (demo_isosurface Pypdm)
 endif()
 
 if (PDM_ENABLE_STATIC_Fortran_INTERFACE OR PDM_ENABLE_SHARED_Fortran_INTERFACE)
