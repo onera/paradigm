@@ -571,6 +571,10 @@ include "pdm_geom.pxi"
 # --------------------
 #@COMMENT_NOT_PDMA@include "pdm_mesh_adaptation.pxi"
 
+# PDM_mesh_deform :
+# --------------------
+@COMMENT_NOT_PDMA@include "pdm_mesh_deform.pxi"
+
 # PDM_points_merge :
 # --------------------
 include "pdm_points_merge.pxi"
