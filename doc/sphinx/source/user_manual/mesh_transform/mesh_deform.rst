@@ -80,9 +80,21 @@ Fortran API
   Perform deformation
   ~~~~~~~~~~~~~~~~~~~
 
-  .. f:autosubroutine:: PDM_mesh_deform_compute
+  .. f:subroutine:: PDM_mesh_deform_compute(def)
 
-  .. f:autosubroutine:: PDM_mesh_deform_cloud_displ_finalize
+    Compute clusters and source to target connectivity
+
+    :param c_ptr def [inout]: C pointer to PDM_mesh_deform_t instance
+
+  .. f:subroutine:: PDM_mesh_deform_cloud_displ_finalize(def)
+
+    Finalize the computation of target cloud points displacements. Cloud points
+    are reequilibrated in block. Exchanges back to partition are performed here.
+    PDM_mesh_deform_cloud_displ_finalize is to be called after computing
+    target displacements according to user-defined mesh deformation strategy
+    (inverse distance weighting for example).
+
+    :param c_ptr def [inout]: C pointer to PDM_mesh_deform_t instance
 
   Get outputs
   ~~~~~~~~~~~
@@ -95,23 +107,50 @@ Fortran API
 
   .. f:autosubroutine:: PDM_mesh_deform_cloud_displ_part_get
 
-  .. f:autosubroutine:: PDM_mesh_deform_n_aux_geom_get
+  .. f:function:: PDM_mesh_deform_n_aux_geom_get(def) result(n_aux_geom)
 
-  .. f:autosubroutine:: PDM_mesh_deform_cloud_block_n_points_get
+    Get number of auxiliary geometric variables
 
-  .. f:autosubroutine:: PDM_mesh_deform_cloud_block_buffer_size_get
+    :param c_ptr   def        [in]:  C pointer to PDM_mesh_deform_t instance
+    :param integer n_aux_geom [out]: Number of auxiliary geometric variables
+
+  .. f:function:: PDM_mesh_deform_cloud_block_n_points_get(def) result(n_points)
+
+    Get number of points in block
+
+    :param c_ptr   def      [in]:  C pointer to PDM_mesh_deform_t instance
+    :param integer n_points [out]: Number of points in block
+
+  .. f:function:: PDM_mesh_deform_cloud_block_buffer_size_get(def) result(s_buffer)
+
+    Get size of block buffer
+
+    :param c_ptr   def      [in]:  C pointer to PDM_mesh_deform_t instance
+    :param integer s_buffer [out]: Size of block buffer
 
   Finalize
   ~~~~~~~~
 
-  .. f:autosubroutine:: PDM_mesh_deform_partial_free
+  .. f:subroutine:: PDM_mesh_deform_partial_free(def)
 
-  .. f:autosubroutine:: PDM_mesh_deform_free
+    Free PDM_mesh_deform_t instance partially
+
+    :param c_ptr def [inout]: C pointer to PDM_mesh_deform_t instance
+
+  .. f:subroutine:: PDM_mesh_deform_free(def)
+
+    Free PDM_mesh_deform_t instance
+
+    :param c_ptr def [inout]: C pointer to PDM_mesh_deform_t instance
 
   Timers
   ~~~~~~
 
-  .. f:autosubroutine:: PDM_mesh_deform_dump_times
+  .. f:subroutine:: PDM_mesh_deform_dump_times(def)
+
+    Get execution times
+
+    :param c_ptr def [inout]: C pointer to PDM_mesh_deform_t instance
 
 Python API
 ----------
