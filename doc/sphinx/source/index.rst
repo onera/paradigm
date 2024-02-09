@@ -91,9 +91,10 @@ User manual
     High-order meshes
       Utilities for high-order, curved meshes
 
-      .. * ho ordering
-      .. * ...
+  .. container:: card
 
+    :ref:`Mesh Transformation <mesh_transform>`
+      Algorithms performing geometrical or topological transformations on meshes
 
   .. container:: card
 
@@ -119,6 +120,7 @@ User manual
    user_manual/gnum/index
    user_manual/prepro_algo/index
    user_manual/faq
+   user_manual/mesh_transform
 
 |
 
