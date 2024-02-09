@@ -159,7 +159,7 @@ def transform_to_parent_gnum(list     gnum_to_transform,
   cdef PDM_g_num_t **_child_ln_to_gn  = np_list_to_gnum_pointers(child_ln_to_gn)
   cdef PDM_g_num_t **_parent_ln_to_gn = np_list_to_gnum_pointers(parent_ln_to_gn)
   cdef int          *_pn_elt_in       = list_to_int_pointer([t.shape[0] for t in parent_ln_to_gn])
-    
+
   cdef MPI.MPI_Comm c_comm = comm.ob_mpi
   cdef PDM_MPI_Comm PDMC   = PDM_MPI_mpi_2_pdm_mpi_comm(&c_comm)
   PDM_transform_to_parent_gnum(                 n_part_ini,
@@ -241,8 +241,8 @@ def compute_dface_vtx_from_edges(MPI.Comm                                      c
 
 def compute_face_edge_from_face_vtx(MPI.Comm comm,
                                     list pn_face,
-                                    list pn_vtx, 
-                                    list pface_vtx_idx, 
+                                    list pn_vtx,
+                                    list pface_vtx_idx,
                                     list pface_vtx,
                                     list pface_ln_to_gn,
                                     list pvtx_ln_to_gn):
@@ -253,7 +253,7 @@ def compute_face_edge_from_face_vtx(MPI.Comm comm,
 
   cdef MPI.MPI_Comm c_comm = comm.ob_mpi
   cdef PDM_MPI_Comm PDMC   = PDM_MPI_mpi_2_pdm_mpi_comm(&c_comm)
- 
+
   cdef int* _pn_face = list_to_int_pointer(pn_face)
   cdef int* _pn_vtx  = list_to_int_pointer(pn_vtx)
 
@@ -271,15 +271,15 @@ def compute_face_edge_from_face_vtx(MPI.Comm comm,
 
   PDM_compute_face_edge_from_face_vtx(PDMC,
                                       n_part,
-                                      _pn_face, 
-                                      _pn_vtx, 
+                                      _pn_face,
+                                      _pn_vtx,
                                       _pface_vtx_idx,
                                       _pface_vtx,
                                       _pface_ln_to_gn,
                                       _pvtx_ln_to_gn,
                                      &_pface_edge_idx,
                                      &_pface_edge,
-                                     &_pn_edge, 
+                                     &_pn_edge,
                                      &_pedge_vtx,
                                      &_pedge_ln_to_gn)
 
@@ -309,7 +309,7 @@ def compute_face_edge_from_face_vtx(MPI.Comm comm,
   free(_pedge_vtx)
   free(_pedge_ln_to_gn)
 
-  return all_part_data 
+  return all_part_data
 
 # ===================================================================================
 def compute_graph_comm_entity_ownerhip(int                                           n_part,
@@ -341,5 +341,8 @@ def compute_graph_comm_entity_ownerhip(int                                      
   lnum_owned_entity = []
   for i_part in range(n_part):
     lnum_owned_entity.append(create_numpy_i(_lnum_owned_entity[i_part], n_owned_entity[i_part]))
+
+  free(_entity_ln_to_gn)
+  free(_lnum_owned_entity)
 
   return n_owned_entity, lnum_owned_entity
