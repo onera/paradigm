@@ -42,6 +42,13 @@ cdef extern from "pdm_partitioning_algorithm.h":
                                              int          ***pedge_vtx,
                                              PDM_g_num_t  ***pedge_ln_to_gn);
 
+    void PDM_compute_graph_comm_entity_ownerhip(int             n_part,
+                                                int            *n_entity,
+                                                PDM_g_num_t   **entity_ln_to_gn,
+                                                int           **n_owned_entity,
+                                                int          ***lnum_owned_entity,
+                                                PDM_MPI_Comm    comm)
+
     # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 
@@ -303,3 +310,36 @@ def compute_face_edge_from_face_vtx(MPI.Comm comm,
   free(_pedge_ln_to_gn)
 
   return all_part_data 
+
+# ===================================================================================
+def compute_graph_comm_entity_ownerhip(int                                           n_part,
+                                       NPY.ndarray[NPY.int32_t   , mode='c', ndim=1] n_entity not None,
+                                       list                                          entity_ln_to_gn not None,
+                                       MPI.Comm                                      comm):
+  """
+  compute_graph_comm_entity_ownerhip(n_part, n_entity, entity_ln_to_gn, comm)
+  """
+
+  # Convert mpi4py -> PDM_MPI
+  cdef MPI.MPI_Comm c_comm   = comm.ob_mpi
+  cdef PDM_MPI_Comm PDM_comm = PDM_MPI_mpi_2_pdm_mpi_comm(<void *> &c_comm)
+
+  cdef int  *_n_owned_entity    = NULL
+  cdef int **_lnum_owned_entity = NULL
+
+  cdef PDM_g_num_t **_entity_ln_to_gn = np_list_to_gnum_pointers(entity_ln_to_gn)
+
+  PDM_compute_graph_comm_entity_ownerhip(n_part,
+                                 <int *> n_entity.data,
+                        <PDM_g_num_t **> _entity_ln_to_gn,
+                                         &_n_owned_entity,
+                                         &_lnum_owned_entity,
+                                         PDM_comm)
+
+  n_owned_entity = create_numpy_i(_n_owned_entity, n_part)
+
+  lnum_owned_entity = []
+  for i_part in range(n_part):
+    lnum_owned_entity.append(create_numpy_i(_lnum_owned_entity[i_part], n_owned_entity[i_part]))
+
+  return n_owned_entity, lnum_owned_entity
