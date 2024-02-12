@@ -58,15 +58,15 @@ extern "C" {
 
 typedef enum {
 
-  GENERATE_DISTRIB       = 0,
-  BINARY_SEARCH          = 1,
-  CREATE_EXCHANGE        = 2,
-  BLOCK_POST             = 3,
-  GLOBAL_WEIGHTS         = 4,
-  CREATE_FROM_DISTRIB    = 5,
-  CREATE_GEOM            = 6,
-  DATA_EXCHANGE          = 7,
-  ALLTOALL_DATA_EXCHANGE = 8
+  MALLOC_ACTIVE_RANKS    = 0, // Initialisation step in Part-to-Block creation
+  GENERATE_DISTRIB       = 1, // Block-distribution generation step in Part-to-Block creation
+  BINARY_SEARCH          = 2, // Binary search step in Part-to-Block creation
+  CREATE_EXCHANGE        = 3, // Collective communication step in Part-to-Block creation
+  BLOCK_POST             = 4, // Post-processing step in Part-to-Block creation
+  GLOBAL_WEIGHTS         = 5, // Global weight computation step in Part-to-Block creation
+  CREATE_FROM_DISTRIB    = 6, // Part-to-Block creation from provided distribution
+  CREATE_GEOM            = 7, // Geometric Part-to-Block creation
+  DATA_EXCHANGE          = 8  // Collective communication step in Part-to-Block data exchange
 
 } _ptb_timer_step_t;
 
@@ -107,9 +107,11 @@ int max_exch_rank[2] = {-1, -1};
 
 unsigned long long exch_data[2] = {0, 0};
 
+// Number of Part-to-Block instances in a run
 int n_ptb = 0;
-int count_ptb = 0;
 
+// Number of atomic test performance run
+int n_ptb_pref = 0;
 
 /*=============================================================================
  * Static function definitions
@@ -1412,9 +1414,8 @@ _ptb_create
  PDM_MPI_Comm                  comm
 )
 {
-  // if (n_ptb == 0) {
-  // TMP
-  if (count_ptb == 0) {
+  // Warning : Previously n_ptb == 0
+  if (n_ptb_pref == 0) {
     t_timer[GENERATE_DISTRIB      ] = PDM_timer_create ();
     t_timer[BINARY_SEARCH         ] = PDM_timer_create ();
     t_timer[CREATE_EXCHANGE       ] = PDM_timer_create ();
@@ -1423,10 +1424,9 @@ _ptb_create
     t_timer[CREATE_FROM_DISTRIB   ] = PDM_timer_create ();
     t_timer[CREATE_GEOM           ] = PDM_timer_create ();
     t_timer[DATA_EXCHANGE         ] = PDM_timer_create ();
-    t_timer[ALLTOALL_DATA_EXCHANGE] = PDM_timer_create ();
   }
   n_ptb++;
-  count_ptb++;
+  n_ptb_pref++;
 
   PDM_part_to_block_t *ptb = (PDM_part_to_block_t *) malloc (sizeof(PDM_part_to_block_t));
 
@@ -2394,15 +2394,18 @@ PDM_part_to_block_global_timer_get
   PDM_MPI_Allreduce (t_cpu, max_cpu, NTIMER_PTB,
                      PDM_MPI_DOUBLE, PDM_MPI_MAX, comm);
 
-  // TO DO: output seperatly CREATE_GEOM or use BINARY_SEARCH instead of CREATE_GEOM
-  *min_elaps_create  = min_elaps[GENERATE_DISTRIB] + min_elaps[BINARY_SEARCH] + min_elaps[CREATE_EXCHANGE] + min_elaps[BLOCK_POST] + min_elaps[GLOBAL_WEIGHTS];
-  *max_elaps_create  = max_elaps[GENERATE_DISTRIB] + max_elaps[BINARY_SEARCH] + max_elaps[CREATE_EXCHANGE] + max_elaps[BLOCK_POST] + max_elaps[GLOBAL_WEIGHTS];
-  *min_cpu_create    = min_cpu[GENERATE_DISTRIB]   + min_cpu[BINARY_SEARCH]   + min_cpu[CREATE_EXCHANGE]   + min_cpu[BLOCK_POST]   + min_cpu[GLOBAL_WEIGHTS]  ;
-  *max_cpu_create    = max_cpu[GENERATE_DISTRIB]   + max_cpu[BINARY_SEARCH]   + max_cpu[CREATE_EXCHANGE]   + max_cpu[BLOCK_POST]   + max_cpu[GLOBAL_WEIGHTS]  ;
+  // Part-to-Block creation with block-distribution generation
+  *min_elaps_create  = min_elaps[MALLOC_ACTIVE_RANKS] + min_elaps[GENERATE_DISTRIB] + min_elaps[BINARY_SEARCH] + min_elaps[CREATE_EXCHANGE] + min_elaps[BLOCK_POST] + min_elaps[GLOBAL_WEIGHTS];
+  *max_elaps_create  = max_elaps[MALLOC_ACTIVE_RANKS] + max_elaps[GENERATE_DISTRIB] + max_elaps[BINARY_SEARCH] + max_elaps[CREATE_EXCHANGE] + max_elaps[BLOCK_POST] + max_elaps[GLOBAL_WEIGHTS];
+  *min_cpu_create    = min_cpu[MALLOC_ACTIVE_RANKS]   + min_cpu[GENERATE_DISTRIB]   + min_cpu[BINARY_SEARCH]   + min_cpu[CREATE_EXCHANGE]   + min_cpu[BLOCK_POST]   + min_cpu[GLOBAL_WEIGHTS]  ;
+  *max_cpu_create    = max_cpu[MALLOC_ACTIVE_RANKS]   + max_cpu[GENERATE_DISTRIB]   + max_cpu[BINARY_SEARCH]   + max_cpu[CREATE_EXCHANGE]   + max_cpu[BLOCK_POST]   + max_cpu[GLOBAL_WEIGHTS]  ;
+  // Part-to-Block creation with user provided block-distribution
   *min_elaps_create2 = min_elaps[CREATE_FROM_DISTRIB];
   *max_elaps_create2 = max_elaps[CREATE_FROM_DISTRIB];
   *min_cpu_create2   = min_cpu[CREATE_FROM_DISTRIB];
   *max_cpu_create2   = max_cpu[CREATE_FROM_DISTRIB];
+  // Warning : Geometric Part-to-Block creation is not outputed while exchanges are counted
+  // Data exchange
   *min_elaps_exch    = min_elaps[DATA_EXCHANGE];
   *max_elaps_exch    = max_elaps[DATA_EXCHANGE];
   *min_cpu_exch      = min_cpu[DATA_EXCHANGE];
@@ -2474,25 +2477,17 @@ PDM_part_to_block_time_per_step_dump
                      PDM_MPI_DOUBLE, PDM_MPI_MAX, comm);
 
   for (int i_step = 0; i_step < NTIMER_PTB; i_step++) {
-    min_elaps[i_step]  /= count_ptb;
-    mean_elaps[i_step] /= count_ptb;
-    max_elaps[i_step]  /= count_ptb;
+    min_elaps[i_step]  /= n_ptb_pref;
+    mean_elaps[i_step] /= n_ptb_pref;
+    max_elaps[i_step]  /= n_ptb_pref;
 
-    min_cpu[i_step]  /= count_ptb;
-    mean_cpu[i_step] /= count_ptb;
-    max_cpu[i_step]  /= count_ptb;
+    min_cpu[i_step]  /= n_ptb_pref;
+    mean_cpu[i_step] /= n_ptb_pref;
+    max_cpu[i_step]  /= n_ptb_pref;
 
     mean_elaps[i_step] /= n_rank;
     mean_cpu[i_step]   /= n_rank;
   } // end loop on timed steps
-
-  // TMP
-  // int i_rank = 0;
-  // PDM_MPI_Comm_rank(comm, &i_rank);
-  // if (i_rank == 0) {
-  //   printf("ALLTOALL_DATA_EXCHANGE elaps %.12f %.12f %.12f cpu %.12f %.12f %.12f\n", min_elaps[ALLTOALL_DATA_EXCHANGE], mean_elaps[ALLTOALL_DATA_EXCHANGE], max_elaps[ALLTOALL_DATA_EXCHANGE], min_cpu[ALLTOALL_DATA_EXCHANGE], mean_cpu[ALLTOALL_DATA_EXCHANGE], max_cpu[ALLTOALL_DATA_EXCHANGE]);
-  // }
-  // TMP
 
   // Global write times
   size_t s_buffer = 436; // buffer size for %.5f + 1
@@ -2512,6 +2507,7 @@ PDM_part_to_block_time_per_step_dump
 
   sprintf(buffer + strlen(buffer), "global_weights elaps %.5f %.5f %.5f cpu %.5f %.5f %.5f\n", min_elaps[GLOBAL_WEIGHTS], mean_elaps[GLOBAL_WEIGHTS], max_elaps[GLOBAL_WEIGHTS], min_cpu[GLOBAL_WEIGHTS], mean_cpu[GLOBAL_WEIGHTS], max_cpu[GLOBAL_WEIGHTS]);
 
+  // Warning : Geometric Part-to-Block creation is not outputed while exchanges are counted
   sprintf(buffer + strlen(buffer), "data_exchange elaps %.5f %.5f %.5f cpu %.5f %.5f %.5f\n", min_elaps[DATA_EXCHANGE], mean_elaps[DATA_EXCHANGE], max_elaps[DATA_EXCHANGE], min_cpu[DATA_EXCHANGE], mean_cpu[DATA_EXCHANGE], max_cpu[DATA_EXCHANGE]);
 
   PDM_io_global_write(writer,
@@ -2640,6 +2636,14 @@ PDM_part_to_block_create
    * Common creation
    */
 
+  if (n_ptb_pref == 0) {
+    t_timer[MALLOC_ACTIVE_RANKS   ] = PDM_timer_create ();
+  }
+
+  double t0_elaps = PDM_timer_elapsed(t_timer[MALLOC_ACTIVE_RANKS]);
+  double t0_cpu   = PDM_timer_cpu    (t_timer[MALLOC_ACTIVE_RANKS]);
+  PDM_timer_resume(t_timer[MALLOC_ACTIVE_RANKS]);
+
   PDM_part_to_block_t* ptb = _ptb_create(t_distrib,
                                          t_post,
                                          part_active_node,
@@ -2648,6 +2652,13 @@ PDM_part_to_block_create
                                          n_elt,
                                          n_part,
                                          comm);
+
+  PDM_timer_hang_on(t_timer[MALLOC_ACTIVE_RANKS]);
+  double t01_elaps = PDM_timer_elapsed(t_timer[MALLOC_ACTIVE_RANKS]);
+  double t01_cpu   = PDM_timer_cpu    (t_timer[MALLOC_ACTIVE_RANKS]);
+
+  t_elaps[MALLOC_ACTIVE_RANKS] += (t01_elaps - t0_elaps);
+  t_cpu  [MALLOC_ACTIVE_RANKS] += (t01_cpu   - t0_cpu  );
 
   /*
    * Data distribution definition
@@ -2724,6 +2735,9 @@ PDM_part_to_block_create_from_distrib
  PDM_MPI_Comm                  comm
 )
 {
+  double t1_elaps = PDM_timer_elapsed(t_timer[CREATE_FROM_DISTRIB]);
+  double t1_cpu = PDM_timer_cpu(t_timer[CREATE_FROM_DISTRIB]);
+  PDM_timer_resume(t_timer[CREATE_FROM_DISTRIB]);
   /*
    * Common creation
    */
@@ -2740,14 +2754,17 @@ PDM_part_to_block_create_from_distrib
     ptb->data_distrib_index[i_rank] = data_distrib_index[i_rank];
   }
 
-  double t1_elaps = PDM_timer_elapsed(t_timer[CREATE_FROM_DISTRIB]);
-  double t1_cpu = PDM_timer_cpu(t_timer[CREATE_FROM_DISTRIB]);
-  PDM_timer_resume(t_timer[CREATE_FROM_DISTRIB]);
-
   /*
    * Data distribution definition
    */
   _distrib_data (ptb, 1);
+
+  PDM_timer_hang_on(t_timer[CREATE_FROM_DISTRIB]);
+  double t2_elaps = PDM_timer_elapsed(t_timer[CREATE_FROM_DISTRIB]);
+  double t2_cpu   = PDM_timer_cpu    (t_timer[CREATE_FROM_DISTRIB]);
+
+  t_elaps[CREATE_FROM_DISTRIB] += (t2_elaps - t1_elaps);
+  t_cpu  [CREATE_FROM_DISTRIB] += (t2_cpu   - t1_cpu);
 
   int n_rank_recv = 0;
   int n_rank_send = 0;
@@ -2766,13 +2783,6 @@ PDM_part_to_block_create_from_distrib
   max_exch_rank[1] = PDM_MAX(max_exch_rank[1], n_rank_recv);
   min_exch_rank[0] = PDM_MIN(min_exch_rank[0], n_rank_send);
   min_exch_rank[1] = PDM_MIN(min_exch_rank[1], n_rank_recv);
-
-  PDM_timer_hang_on(t_timer[CREATE_FROM_DISTRIB]);
-  double t2_elaps = PDM_timer_elapsed(t_timer[CREATE_FROM_DISTRIB]);
-  double t2_cpu   = PDM_timer_cpu    (t_timer[CREATE_FROM_DISTRIB]);
-
-  t_elaps[CREATE_FROM_DISTRIB] += (t2_elaps - t1_elaps);
-  t_cpu  [CREATE_FROM_DISTRIB] += (t2_cpu   - t1_cpu);
 
   return (PDM_part_to_block_t *) ptb;
 }
@@ -4363,9 +4373,9 @@ PDM_part_to_block_free
   free (ptb);
 
   n_ptb--;
-  // TMP
-  // if (n_ptb == 0) {
-  if (count_ptb == 0) {
+  // Warning : Previously n_ptb == 0
+  if (n_ptb_pref == 0) {
+    PDM_timer_free(t_timer[MALLOC_ACTIVE_RANKS   ]);
     PDM_timer_free(t_timer[GENERATE_DISTRIB      ]);
     PDM_timer_free(t_timer[BINARY_SEARCH         ]);
     PDM_timer_free(t_timer[CREATE_EXCHANGE       ]);
@@ -4374,7 +4384,6 @@ PDM_part_to_block_free
     PDM_timer_free(t_timer[CREATE_FROM_DISTRIB   ]);
     PDM_timer_free(t_timer[CREATE_GEOM           ]);
     PDM_timer_free(t_timer[DATA_EXCHANGE         ]);
-    PDM_timer_free(t_timer[ALLTOALL_DATA_EXCHANGE]);
   }
 
   return NULL;

@@ -15,7 +15,7 @@ n_rank = comm.size
 # Command line arguments
 parser = argparse.ArgumentParser()
 
-parser.add_argument("-w", "--write", action="store_true") # Activate performance file write
+parser.add_argument("-wr", "--write", action="store_true") # Activate performance file write
 
 parser.add_argument("-f", "--filename", default="output.txt")
 

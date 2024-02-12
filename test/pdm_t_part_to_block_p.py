@@ -15,6 +15,8 @@ n_rank = comm.size
 # Command line arguments
 parser = argparse.ArgumentParser()
 
+parser.add_argument("-wr", "--write", action="store_true") # Activate performance file write
+
 parser.add_argument("-f", "--filename", default="output.txt")
 
 parser.add_argument("-n", "--n_iter", default=10)
@@ -91,8 +93,9 @@ for i in range(n_iter):
                         userDistribution=block_distribution)
 
   # Output communication graph
-  if i == 0:
-    ptb.comm_graph_dump(filename)
+  if args.write:
+    if i == 0:
+      ptb.comm_graph_dump(filename)
 
   # Exchange
   block_stride, block_data = ptb.exchange_field([part_data])
@@ -101,8 +104,9 @@ for i in range(n_iter):
   comm.Barrier()
 
 # Output timings
-PDM.ptb_time_per_step_dump(comm,
-                           filename)
+if args.write:
+  PDM.ptb_time_per_step_dump(comm,
+                             filename)
 
 if i_rank == 0:
   print("End :)")
