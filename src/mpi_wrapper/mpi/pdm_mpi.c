@@ -2179,8 +2179,6 @@ void PDM_MPI_Partofactiverank(int *sendcounts,
                      PDM_MPI_MAX, 
                      comm);
 
-  printf("active rank: %d %d, %12.5e %12.5e\n", n_active_rank, size, _part_active_rank, *part_active_rank);
-
 }
 
 
