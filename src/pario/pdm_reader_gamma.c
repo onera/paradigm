@@ -994,10 +994,18 @@ PDM_write_gamma_matsym
 
   fprintf(f, "1 3 \n");
   for (int i = 0; i < n_vtx; i++) {
-    for(int i_field = 0; i_field < 6; ++i_field) {
-      fprintf(f, "%20.16lf ", fields[6*i+i_field]);
-    }
-    fprintf(f, " \n");
+    // for(int i_field = 0; i_field < 6; ++i_field) {
+    //   fprintf(f, "%20.16lf ", fields[6*i+i_field]);
+    // }
+    // fprintf(f, " \n");
+    fprintf(f, "%20.16lf %20.16lf %20.16lf %20.16lf %20.16lf %20.16lf\n",
+            fields[6*i+0],
+            fields[6*i+1],
+            fields[6*i+3],
+            fields[6*i+2],
+            fields[6*i+4],
+            fields[6*i+5]);
+
   }
   fprintf(f, "End\n");
   fclose(f);
@@ -1062,4 +1070,140 @@ PDM_read_gamma_sol
     }
   }
   fclose(f);
+}
+
+
+
+
+
+int
+PDM_read_gamma_sol_at_vertices
+(
+ const char   *filename,
+ int          *n_field,
+ int         **field_stride,
+ double     ***field_values
+ )
+{
+  // Read file
+  FILE *f = fopen(filename, "r");
+
+  if (f == NULL) {
+    PDM_error(__FILE__, __LINE__, 0, "Could not read file %s\n", filename);
+  }
+
+  *n_field      = 0;
+  *field_stride = NULL;
+  *field_values = NULL;
+
+  char line[999];
+
+  int n_vtx = 0;
+  int dim   = -1;
+
+  while (1) {
+
+    int stat = fscanf(f, "%s", line);
+
+    if (stat == EOF) {
+      // End of file
+      break;
+    }
+
+    if (strstr(line, "Dimension") != NULL) {
+      // Get dimension
+      fscanf(f, "%d", &dim);
+    }
+
+    else if (strstr(line, "SolAtVertices") != NULL) {
+      // Get number of vertices
+      fscanf(f, "%d", &n_vtx);
+      fscanf(f, "%d", n_field);
+      *field_stride = malloc(sizeof(int     ) * (*n_field));
+      *field_values = malloc(sizeof(double *) * (*n_field));
+
+      for (int i_field = 0; i_field < (*n_field); i_field++) {
+        int field_type = -1;
+        fscanf(f, "%d", &field_type);
+
+        switch (field_type) {
+          case 1: {
+            (*field_stride)[i_field] = 1;
+            break;
+          }
+          case 2: {
+            (*field_stride)[i_field] = dim;
+            break;
+          }
+          case 3: {
+            (*field_stride)[i_field] = dim*(dim+1)/2;
+            break;
+          }
+          case 4: {
+            (*field_stride)[i_field] = dim*dim;
+            break;
+          }
+          default: {
+            PDM_error(__FILE__, __LINE__, 0, "Invalid field type %d\n", field_type);
+          }
+        }
+
+        (*field_values)[i_field] = malloc(sizeof(double) * (*field_stride)[i_field] * n_vtx);
+      }
+
+
+      for (int i_vtx = 0; i_vtx < n_vtx; i_vtx++) {
+        for (int i_field = 0; i_field < *n_field; i_field++) {
+          switch ((*field_stride)[i_field]) {
+            case 1:
+            case 2:
+            case 3: {
+              for (int i = 0; i < (*field_stride)[i_field]; i++) {
+                fscanf(f, "%lf", &(*field_values)[i_field][(*field_stride)[i_field]*i_vtx + i]);
+              }
+              break;
+            }
+            case 4: { // full matrix (2D)
+              fscanf(f, "%lf %lf %lf %lf",
+                     &(*field_values)[i_field][(*field_stride)[i_field]*i_vtx + 0],
+                     &(*field_values)[i_field][(*field_stride)[i_field]*i_vtx + 2],
+                     &(*field_values)[i_field][(*field_stride)[i_field]*i_vtx + 1],
+                     &(*field_values)[i_field][(*field_stride)[i_field]*i_vtx + 3]);
+              break;
+            }
+            case 6: { // symmetric matrix (3D)
+              fscanf(f, "%lf %lf %lf %lf %lf %lf",
+                     &(*field_values)[i_field][(*field_stride)[i_field]*i_vtx + 0],
+                     &(*field_values)[i_field][(*field_stride)[i_field]*i_vtx + 1],
+                     &(*field_values)[i_field][(*field_stride)[i_field]*i_vtx + 3],
+                     &(*field_values)[i_field][(*field_stride)[i_field]*i_vtx + 2],
+                     &(*field_values)[i_field][(*field_stride)[i_field]*i_vtx + 4],
+                     &(*field_values)[i_field][(*field_stride)[i_field]*i_vtx + 5]);
+              break;
+            }
+            case 9: { // full matrix (3D)
+              fscanf(f, "%lf %lf %lf %lf %lf %lf %lf %lf %lf",
+                     &(*field_values)[i_field][(*field_stride)[i_field]*i_vtx + 0],
+                     &(*field_values)[i_field][(*field_stride)[i_field]*i_vtx + 3],
+                     &(*field_values)[i_field][(*field_stride)[i_field]*i_vtx + 6],
+                     &(*field_values)[i_field][(*field_stride)[i_field]*i_vtx + 1],
+                     &(*field_values)[i_field][(*field_stride)[i_field]*i_vtx + 4],
+                     &(*field_values)[i_field][(*field_stride)[i_field]*i_vtx + 5],
+                     &(*field_values)[i_field][(*field_stride)[i_field]*i_vtx + 2],
+                     &(*field_values)[i_field][(*field_stride)[i_field]*i_vtx + 7],
+                     &(*field_values)[i_field][(*field_stride)[i_field]*i_vtx + 8]);
+              break;
+            }
+            default: {
+              PDM_error(__FILE__, __LINE__, 0, "Invalid field stride %d\n", (*field_stride)[i_field]);
+            }
+          }
+        }
+      }
+    }
+
+  }
+  fclose(f);
+
+  return n_vtx;
 }

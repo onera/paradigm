@@ -112,6 +112,27 @@ PDM_write_gamma_matsym
 );
 
 
+/**
+ * \brief Read solution file in Gamma Mesh Format
+ *
+ * \param [in]  filename       Solution file name
+ * \param [out] n_field        Number of fields
+ * \param [out] field_stride   Field strides (size = \p n_field)
+ * \param [out] field_values   Field values (size = \p n_field, for each field \p i, size = \p n_vtx * \p field_stride[i])
+ *
+ * \return Number of vertices
+ */
+
+int
+PDM_read_gamma_sol_at_vertices
+(
+ const char   *filename,
+ int          *n_field,
+ int         **field_stride,
+ double     ***field_values
+ );
+
+
 #ifdef __cplusplus
 }
 #endif
