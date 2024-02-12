@@ -15,6 +15,8 @@ n_rank = comm.size
 # Command line arguments
 parser = argparse.ArgumentParser()
 
+parser.add_argument("-w", "--write", action="store_true") # Activate performance file write
+
 parser.add_argument("-f", "--filename", default="output.txt")
 
 parser.add_argument("-n", "--n_iter", default=10)
@@ -75,8 +77,9 @@ for i in range(n_iter):
                         n_part)
 
   # Output communication graph
-  if i == 0:
-    btp.comm_graph_dump(filename)
+  if args.write:
+    if i == 0:
+      btp.comm_graph_dump(filename)
 
   # Exchange
   part_stride, part_data = btp.exchange_field(block_data)
@@ -85,8 +88,9 @@ for i in range(n_iter):
   comm.Barrier()
 
 # Output timings
-PDM.btp_time_per_step_dump(comm,
-                           filename)
+if args.write:
+  PDM.btp_time_per_step_dump(comm,
+                             filename)
 
 if i_rank == 0:
   print("End :)")

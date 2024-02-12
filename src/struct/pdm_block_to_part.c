@@ -47,9 +47,9 @@ extern "C" {
 
 typedef enum {
 
-  BINARY_SEARCH    = 0,
-  CREATE_EXCHANGE  = 1,
-  DATA_EXCHANGE    = 2
+  BINARY_SEARCH    = 0, // Binary search step in Block-to-Part creation
+  CREATE_EXCHANGE  = 1, // Collective communication in Block-to-Part creation
+  DATA_EXCHANGE    = 2  // Collective communication in data exchange
 
 } _btp_timer_step_t;
 
@@ -76,8 +76,11 @@ int btp_max_exch_rank[2] = {-1, -1};
 
 unsigned long long btp_exch_data[2] = {0, 0};
 
+// Number of Block-to-Part instances in a run
 int n_btp = 0;
-int count_btp = 0;
+
+// Number of atomic test performance run
+int n_perf = 0;
 
 /*=============================================================================
  * Static function definitions
@@ -279,14 +282,14 @@ PDM_block_to_part_global_timer_get
   PDM_MPI_Allreduce (btp_t_cpu, max_cpu, NTIMER_BTP,
                      PDM_MPI_DOUBLE, PDM_MPI_MAX, comm);
 
-  *min_elaps_create  = min_elaps[BINARY_SEARCH] + min_elaps[CREATE_EXCHANGE];
-  *max_elaps_create  = max_elaps[BINARY_SEARCH] + max_elaps[CREATE_EXCHANGE];
-  *min_cpu_create    = min_cpu[BINARY_SEARCH]   + min_cpu[CREATE_EXCHANGE];
-  *max_cpu_create    = max_cpu[BINARY_SEARCH]   + max_cpu[CREATE_EXCHANGE];
-  *min_elaps_exch    = min_elaps[DATA_EXCHANGE];
-  *max_elaps_exch    = max_elaps[DATA_EXCHANGE];
-  *min_cpu_exch      = min_cpu[DATA_EXCHANGE];
-  *max_cpu_exch      = max_cpu[DATA_EXCHANGE];
+  *min_elaps_create  = min_elaps[BINARY_SEARCH] + min_elaps[CREATE_EXCHANGE]; // Minimum elapsed time for Block-to-Part creation
+  *max_elaps_create  = max_elaps[BINARY_SEARCH] + max_elaps[CREATE_EXCHANGE]; // Maximum elapsed time for Block-to-Part creation
+  *min_cpu_create    = min_cpu[BINARY_SEARCH]   + min_cpu[CREATE_EXCHANGE];   // Minimum CPU time for Block-to-Part creation
+  *max_cpu_create    = max_cpu[BINARY_SEARCH]   + max_cpu[CREATE_EXCHANGE];   // Maximum CPU time for Block-to-Part creation
+  *min_elaps_exch    = min_elaps[DATA_EXCHANGE]; // Indifferently in place or classic
+  *max_elaps_exch    = max_elaps[DATA_EXCHANGE]; // Indifferently in place or classic
+  *min_cpu_exch      = min_cpu[DATA_EXCHANGE];   // Indifferently in place or classic
+  *max_cpu_exch      = max_cpu[DATA_EXCHANGE];   // Indifferently in place or classic
 
 }
 
@@ -354,13 +357,13 @@ PDM_block_to_part_time_per_step_dump
                      PDM_MPI_DOUBLE, PDM_MPI_MAX, comm);
 
   for (int i_step = 0; i_step < NTIMER_BTP; i_step++) {
-    min_elaps[i_step]  /= count_btp;
-    mean_elaps[i_step] /= count_btp;
-    max_elaps[i_step]  /= count_btp;
+    min_elaps[i_step]  /= n_perf;
+    mean_elaps[i_step] /= n_perf;
+    max_elaps[i_step]  /= n_perf;
 
-    min_cpu[i_step]  /= count_btp;
-    mean_cpu[i_step] /= count_btp;
-    max_cpu[i_step]  /= count_btp;
+    min_cpu[i_step]  /= n_perf;
+    mean_cpu[i_step] /= n_perf;
+    max_cpu[i_step]  /= n_perf;
 
     mean_elaps[i_step] /= n_rank;
     mean_cpu[i_step]   /= n_rank;
@@ -609,15 +612,14 @@ PDM_block_to_part_create
 )
 {
 
-  // TMP
-  if (count_btp == 0) {
-  // if (n_btp == 0) {
+  // Warning : Previously n_btp == 0
+  if (n_perf == 0) {
     btp_t_timer[BINARY_SEARCH  ] = PDM_timer_create ();
     btp_t_timer[CREATE_EXCHANGE] = PDM_timer_create ();
     btp_t_timer[DATA_EXCHANGE  ] = PDM_timer_create ();
   }
   n_btp++;
-  count_btp++;
+  n_perf++;
 
   // Start binary search timer
   double t1_elaps = PDM_timer_elapsed(btp_t_timer[BINARY_SEARCH]);
@@ -1911,9 +1913,8 @@ PDM_block_to_part_free
   free (btp);
 
   n_btp--;
-  // TMP
-  if (count_btp == 0) {
-  // if (n_btp == 0) {
+  // Warning : Previously n_btp == 0
+  if (n_perf == 0) {
     PDM_timer_free(btp_t_timer[BINARY_SEARCH]);
     PDM_timer_free(btp_t_timer[CREATE_EXCHANGE]);
     PDM_timer_free(btp_t_timer[DATA_EXCHANGE]);
