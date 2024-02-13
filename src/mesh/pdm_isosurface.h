@@ -252,7 +252,7 @@ PDM_isosurface_part_mesh_set
  * \brief Set nodal mesh
  *
  * \param [in]  isos  \ref PDM_isosurface_t instance
- * \param [in]  pmn   \p PDM_part_mesh_nodal_t instance
+ * \param [in]  pmn   \ref PDM_part_mesh_nodal_t instance
  *
  */
 
@@ -418,10 +418,16 @@ int PDM_isosurface_add
  *
  * - \ref PDM_ISO_SURFACE_KIND_PLANE (3 coefficients):
  *   \f$\phi(x,y,z) = \texttt{coeff[0]} \cdot x + \texttt{coeff[1]} \cdot y + \texttt{coeff[2]} \cdot z\f$
+ * 
+ * 
  * - \ref PDM_ISO_SURFACE_KIND_SPHERE (4 coefficients):
  *   \f$\phi(x,y,z) = (x - \texttt{coeff[0]})^2 + (y - \texttt{coeff[1]})^2 + (z - \texttt{coeff[2]})^2 - \texttt{coeff[3]}^2\f$
+ * 
+ * 
  * - \ref PDM_ISO_SURFACE_KIND_ELLIPSE (7 coefficients):
  *   \f$\phi(x,y,z) = \left(\frac{x - \texttt{coeff[0]}}{\texttt{coeff[3]}}\right)^2 + \left(\frac{y - \texttt{coeff[1]}}{\texttt{coeff[4]}}\right)^2 + \left(\frac{z - \texttt{coeff[2]}}{\texttt{coeff[5]}}\right)^2 - \texttt{coeff[6]}^2\f$
+ * 
+ * 
  * - \ref PDM_ISO_SURFACE_KIND_QUADRIC (10 coefficients):
  *   \f$\phi(x,y,z) = \texttt{coeff[6]} \left(\frac{x - \texttt{coeff[0]}}{\texttt{coeff[3]}}\right)^2 + \texttt{coeff[7]} \left(\frac{y - \texttt{coeff[1]}}{\texttt{coeff[4]}}\right)^2 + \texttt{coeff[8]} \left(\frac{z - \texttt{coeff[2]}}{\texttt{coeff[5]}}\right)^2 - \texttt{coeff[9]}^2\f$
  *
@@ -443,9 +449,9 @@ void PDM_isosurface_equation_set
  * \param [in]  id_isosurface  Iso-surface identifier
  * \param [in]  func           Function pointer
  *
+ * \warning ajouter PDM_isosurface_gradient_function_set ?
+ *          ou bien inclure calcul (optionnel) du gradient dans 'func' (permet de factoriser des calculs)
  */
-// ajouter PDM_isosurface_gradient_function_set ?
-// ou bien inclure calcul (optionnel) du gradient dans 'func' (permet de factoriser des calculs)
 
 void PDM_isosurface_field_function_set
 (
@@ -463,9 +469,8 @@ void PDM_isosurface_field_function_set
  * \param [in]  id_isosurface  Iso-surface identifier
  * \param [in]  i_part         Partition identifier
  * \param [in]  field          Field values (size = *n_vtx*)
- *
+ * 
  */
-// on restreint à un seul field par id_isosurface?
 
 void PDM_isosurface_field_set
 (
@@ -505,7 +510,6 @@ void PDM_isosurface_gradient_set
  * \param [in]  dfield         Field values (size = *dn_vtx*)
  *
  */
-// Doit-on gérer cell-centered?
 
 void PDM_isosurface_dfield_set
 (
@@ -539,6 +543,8 @@ void PDM_isosurface_dgradient_set
  *
  * \param [in]  isos           \ref PDM_isosurface_t instance
  * \param [in]  id_isosurface  Iso-surface identifier (if < 0, all iso-surfaces are reset)
+ * 
+ * \warning hide in \ref PDM_isosurface_compute ?
  *
  */
 
@@ -574,6 +580,8 @@ PDM_isosurface_compute
  * \brief Dump elapsed and CPU times
  *
  * \param [in]  isos  \ref PDM_isosurface_t instance
+ * 
+ * \warning Un timer par \p id_isosurface ?
  *
  */
 
@@ -824,7 +832,7 @@ PDM_isosurface_dgroup_get
  * \warning These weights are only computed if the construction
  * of the vertex Part-to-Part has been enabled (see \ref PDM_isosurface_enable_part_to_part).
  *
- * \todo Rajouter \p vtx_weight_idx en sortie pour éviter l'appel à PDM_part_to_part_gnum1_come_from_get? (attention copie ou alias)
+ * \warning Rajouter \p vtx_weight_idx en sortie pour éviter l'appel à PDM_part_to_part_gnum1_come_from_get? (attention copie ou alias)
  *
  * \return  Number of vertices
  *

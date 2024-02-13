@@ -80,7 +80,6 @@ Outputs
 
 .. todo::
 
-   - get groups/tags (entity→group/tag ou tag→group/entity)
    - sortie en part_mesh_nodal/dmesh_nodal?
 
 
