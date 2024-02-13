@@ -9,6 +9,7 @@
 #include <math.h>
 #include <string.h>
 #include <float.h>
+#include <unistd.h>
 
 /*----------------------------------------------------------------------------
  *  Header for the current file
@@ -30,6 +31,7 @@
 #include "pdm_order.h"
 #include "pdm_logging.h"
 #include "pdm_distrib.h"
+#include "pdm_size_idx_from_stride.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -429,6 +431,7 @@ _distrib_data
                     ptb->n_recv_data, 1, PDM_MPI_INT,
                     ptb->comm);
 
+
   ptb->i_send_data = (int *) malloc(sizeof(int) * ptb->s_comm);
   ptb->i_recv_data = (int *) malloc(sizeof(int) * ptb->s_comm);
 
@@ -465,15 +468,37 @@ _distrib_data
   ptb->sorted_recv_gnum =
     (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * ptb->tn_recv_data);
 
-  PDM_MPI_Alltoallv(send_gnum,
-                    ptb->n_send_data,
-                    ptb->i_send_data,
-                    PDM__PDM_MPI_G_NUM,
-                    ptb->sorted_recv_gnum,
-                    ptb->n_recv_data,
-                    ptb->i_recv_data,
-                    PDM__PDM_MPI_G_NUM,
-                    ptb->comm);
+  PDM_MPI_Partofactiverank (ptb->n_send_data,
+                            ptb->n_recv_data,
+                            ptb->comm,
+                            &(ptb->part_active_rank));
+
+  if (ptb->p2p_factor < ptb->part_active_rank) {
+
+    PDM_MPI_Alltoallv(send_gnum,
+                      ptb->n_send_data,
+                      ptb->i_send_data,
+                      PDM__PDM_MPI_G_NUM,
+                      ptb->sorted_recv_gnum,
+                      ptb->n_recv_data,
+                      ptb->i_recv_data,
+                      PDM__PDM_MPI_G_NUM,
+                      ptb->comm);
+  }
+
+  else {
+
+    PDM_MPI_Alltoallv_p2p(send_gnum,
+                          ptb->n_send_data,
+                          ptb->i_send_data,
+                          PDM__PDM_MPI_G_NUM,
+                          ptb->sorted_recv_gnum,
+                          ptb->n_recv_data,
+                          ptb->i_recv_data,
+                          PDM__PDM_MPI_G_NUM,
+                          ptb->comm);
+
+  }
 
   free(send_gnum);
 
@@ -739,25 +764,54 @@ _distrib_data_hilbert
   ptb->sorted_recv_gnum                 = (PDM_g_num_t        *) malloc(sizeof(PDM_g_num_t       ) * ptb->tn_recv_data);
   PDM_hilbert_code_t *sorted_recv_codes = (PDM_hilbert_code_t *) malloc(sizeof(PDM_hilbert_code_t) * ptb->tn_recv_data);
 
-  PDM_MPI_Alltoallv(send_gnum,
-                    ptb->n_send_data,
-                    ptb->i_send_data,
-                    PDM__PDM_MPI_G_NUM,
-                    ptb->sorted_recv_gnum,
-                    ptb->n_recv_data,
-                    ptb->i_recv_data,
-                    PDM__PDM_MPI_G_NUM,
-                    ptb->comm);
+  PDM_MPI_Partofactiverank (ptb->n_send_data,
+                            ptb->n_recv_data,
+                            ptb->comm,
+                            &(ptb->part_active_rank));
 
-  PDM_MPI_Alltoallv(send_codes,
-                    ptb->n_send_data,
-                    ptb->i_send_data,
-                    PDM_MPI_DOUBLE,
-                    sorted_recv_codes,
-                    ptb->n_recv_data,
-                    ptb->i_recv_data,
-                    PDM_MPI_DOUBLE,
-                    ptb->comm);
+  if (ptb->p2p_factor < ptb->part_active_rank) {
+    PDM_MPI_Alltoallv(send_gnum,
+                      ptb->n_send_data,
+                      ptb->i_send_data,
+                      PDM__PDM_MPI_G_NUM,
+                      ptb->sorted_recv_gnum,
+                      ptb->n_recv_data,
+                      ptb->i_recv_data,
+                      PDM__PDM_MPI_G_NUM,
+                      ptb->comm);
+  
+    PDM_MPI_Alltoallv(send_codes,
+                      ptb->n_send_data,
+                      ptb->i_send_data,
+                      PDM_MPI_DOUBLE,
+                      sorted_recv_codes,
+                      ptb->n_recv_data,
+                      ptb->i_recv_data,
+                      PDM_MPI_DOUBLE,
+                      ptb->comm);
+  }
+
+  else {
+    PDM_MPI_Alltoallv_p2p(send_gnum,
+                          ptb->n_send_data,
+                          ptb->i_send_data,
+                          PDM__PDM_MPI_G_NUM,
+                          ptb->sorted_recv_gnum,
+                          ptb->n_recv_data,
+                          ptb->i_recv_data,
+                          PDM__PDM_MPI_G_NUM,
+                          ptb->comm);
+  
+    PDM_MPI_Alltoallv_p2p(send_codes,
+                          ptb->n_send_data,
+                          ptb->i_send_data,
+                          PDM_MPI_DOUBLE,
+                          sorted_recv_codes,
+                          ptb->n_recv_data,
+                          ptb->i_recv_data,
+                          PDM_MPI_DOUBLE,
+                          ptb->comm);
+  }
 
   free(send_gnum);
   free(send_codes);
@@ -1005,30 +1059,66 @@ _distrib_data_morton
   ptb->sorted_recv_gnum                 = (PDM_g_num_t        *) malloc(sizeof(PDM_g_num_t       ) * ptb->tn_recv_data);
   PDM_morton_code_t *sorted_recv_codes = (PDM_morton_code_t *) malloc(sizeof(PDM_morton_code_t) * ptb->tn_recv_data);
 
-  PDM_MPI_Alltoallv(send_gnum,
-                    ptb->n_send_data,
-                    ptb->i_send_data,
-                    PDM__PDM_MPI_G_NUM,
-                    ptb->sorted_recv_gnum,
-                    ptb->n_recv_data,
-                    ptb->i_recv_data,
-                    PDM__PDM_MPI_G_NUM,
-                    ptb->comm);
+  PDM_MPI_Partofactiverank (ptb->n_send_data,
+                            ptb->n_recv_data,
+                            ptb->comm,
+                            &(ptb->part_active_rank));
 
-  PDM_MPI_Datatype mpi_morton_type;
-  PDM_MPI_Type_create_contiguous(4, PDM_MPI_INT, &mpi_morton_type);
-  PDM_MPI_Type_commit(&mpi_morton_type);
-  PDM_MPI_Alltoallv(send_codes,
-                    ptb->n_send_data,
-                    ptb->i_send_data,
-                    mpi_morton_type,
-                    sorted_recv_codes,
-                    ptb->n_recv_data,
-                    ptb->i_recv_data,
-                    mpi_morton_type,
-                    ptb->comm);
-  PDM_MPI_Type_free(&mpi_morton_type);
+  if (ptb->p2p_factor < ptb->part_active_rank) {
 
+    PDM_MPI_Alltoallv(send_gnum,
+                      ptb->n_send_data,
+                      ptb->i_send_data,
+                      PDM__PDM_MPI_G_NUM,
+                      ptb->sorted_recv_gnum,
+                      ptb->n_recv_data,
+                      ptb->i_recv_data,
+                      PDM__PDM_MPI_G_NUM,
+                      ptb->comm);
+  
+    PDM_MPI_Datatype mpi_morton_type;
+    PDM_MPI_Type_create_contiguous(4, PDM_MPI_INT, &mpi_morton_type);
+    PDM_MPI_Type_commit(&mpi_morton_type);
+    PDM_MPI_Alltoallv(send_codes,
+                      ptb->n_send_data,
+                      ptb->i_send_data,
+                      mpi_morton_type,
+                      sorted_recv_codes,
+                      ptb->n_recv_data,
+                      ptb->i_recv_data,
+                      mpi_morton_type,
+                      ptb->comm);
+    PDM_MPI_Type_free(&mpi_morton_type);
+  }
+
+  else {
+
+    PDM_MPI_Alltoallv_p2p(send_gnum,
+                          ptb->n_send_data,
+                          ptb->i_send_data,
+                          PDM__PDM_MPI_G_NUM,
+                          ptb->sorted_recv_gnum,
+                          ptb->n_recv_data,
+                          ptb->i_recv_data,
+                          PDM__PDM_MPI_G_NUM,
+                          ptb->comm);
+  
+    PDM_MPI_Datatype mpi_morton_type;
+    PDM_MPI_Type_create_contiguous(4, PDM_MPI_INT, &mpi_morton_type);
+    PDM_MPI_Type_commit(&mpi_morton_type);
+    PDM_MPI_Alltoallv_p2p(send_codes,
+                          ptb->n_send_data,
+                          ptb->i_send_data,
+                          mpi_morton_type,
+                          sorted_recv_codes,
+                          ptb->n_recv_data,
+                          ptb->i_recv_data,
+                          mpi_morton_type,
+                          ptb->comm);
+    PDM_MPI_Type_free(&mpi_morton_type);
+  }
+
+  
   free(send_gnum);
   free(send_codes);
   free(part_idx);
@@ -1135,15 +1225,29 @@ _compute_global_weights
   }
 
   double *recv_weight = malloc (sizeof(double) * ptb->tn_recv_data);
-  PDM_MPI_Alltoallv (part_weight,
-                     ptb->n_send_data,
-                     ptb->i_send_data,
-                     PDM_MPI_DOUBLE,
-                     recv_weight,
-                     ptb->n_recv_data,
-                     ptb->i_recv_data,
-                     PDM_MPI_DOUBLE,
-                     ptb->comm);
+
+  if (ptb->p2p_factor < ptb->part_active_rank) {
+    PDM_MPI_Alltoallv (part_weight,
+                       ptb->n_send_data,
+                       ptb->i_send_data,
+                       PDM_MPI_DOUBLE,
+                       recv_weight,
+                       ptb->n_recv_data,
+                       ptb->i_recv_data,
+                       PDM_MPI_DOUBLE,
+                       ptb->comm);
+  }
+  else {
+    PDM_MPI_Alltoallv_p2p (part_weight,
+                           ptb->n_send_data,
+                           ptb->i_send_data,
+                           PDM_MPI_DOUBLE,
+                           recv_weight,
+                           ptb->n_recv_data,
+                           ptb->i_recv_data,
+                           PDM_MPI_DOUBLE,
+                           ptb->comm);
+  }
 
   /* Sum received weights */
   double *block_weight = malloc (sizeof(double) * ptb->n_elt_block);
@@ -1171,15 +1275,33 @@ _compute_global_weights
   free (block_weight);
 
   /* Send back global weights */
-  PDM_MPI_Alltoallv (recv_weight,
-                     ptb->n_recv_data,
-                     ptb->i_recv_data,
-                     PDM_MPI_DOUBLE,
-                     part_weight,
-                     ptb->n_send_data,
-                     ptb->i_send_data,
-                     PDM_MPI_DOUBLE,
-                     ptb->comm);
+
+  if (ptb->p2p_factor < ptb->part_active_rank) {
+
+    PDM_MPI_Alltoallv (recv_weight,
+                       ptb->n_recv_data,
+                       ptb->i_recv_data,
+                       PDM_MPI_DOUBLE,
+                       part_weight,
+                       ptb->n_send_data,
+                       ptb->i_send_data,
+                       PDM_MPI_DOUBLE,
+                       ptb->comm);
+  }
+
+  else {
+
+    PDM_MPI_Alltoallv_p2p (recv_weight,
+                           ptb->n_recv_data,
+                           ptb->i_recv_data,
+                           PDM_MPI_DOUBLE,
+                           part_weight,
+                           ptb->n_send_data,
+                           ptb->i_send_data,
+                           PDM_MPI_DOUBLE,
+                           ptb->comm);
+  }
+
   free (recv_weight);
 
   /* Store global weights */
@@ -1311,9 +1433,25 @@ _ptb_create
     ptb->mpi_type     [i_req] = PDM_MPI_DATATYPE_NULL;
   }
 
+  ptb->p2p_factor = 0.25;
+
+  char host[1024];
+  gethostname(host, 1023);
+
+  if (!strncmp(host, "sator" , 5)) {
+    ptb->p2p_factor = -0.1;
+  }
+
+  char *env_var = NULL;
+  env_var = getenv ("PDM_PART_TO_BLOCK_P2P_FACTOR");
+  if (env_var != NULL) {
+    ptb->p2p_factor = atof (env_var);
+  }
+
   /*
    * Active ranks definition
    */
+
   _active_ranks (ptb);
 
   return ptb;
@@ -1366,15 +1504,32 @@ _prepare_exchange
 
     *recv_stride = _recv_stride;
 
-    PDM_MPI_Alltoallv (send_stride,
-                       ptb->n_send_data,
-                       ptb->i_send_data,
-                       PDM_MPI_INT,
-                       _recv_stride,
-                       ptb->n_recv_data,
-                       ptb->i_recv_data,
-                       PDM_MPI_INT,
-                       ptb->comm);
+    if (ptb->p2p_factor < ptb->part_active_rank) {
+
+      PDM_MPI_Alltoallv (send_stride,
+                         ptb->n_send_data,
+                         ptb->i_send_data,
+                         PDM_MPI_INT,
+                         _recv_stride,
+                         ptb->n_recv_data,
+                         ptb->i_recv_data,
+                         PDM_MPI_INT,
+                         ptb->comm);
+    }
+
+    else {
+
+      PDM_MPI_Alltoallv_p2p (send_stride,
+                             ptb->n_send_data,
+                             ptb->i_send_data,
+                             PDM_MPI_INT,
+                             _recv_stride,
+                             ptb->n_recv_data,
+                             ptb->i_recv_data,
+                             PDM_MPI_INT,
+                             ptb->comm);
+
+    }
 
     /*
      * Build buffers
@@ -1480,15 +1635,28 @@ _prepare_reverse_exchange
 
     *recv_stride = _recv_stride;
 
-    PDM_MPI_Alltoallv (_send_stride,
-                       ptb->n_recv_data,
-                       ptb->i_recv_data,
-                       PDM_MPI_INT,
-                       _recv_stride,
-                       ptb->n_send_data,
-                       ptb->i_send_data,
-                       PDM_MPI_INT,
-                       ptb->comm);
+    if (ptb->p2p_factor < ptb->part_active_rank) {
+      PDM_MPI_Alltoallv (_send_stride,
+                         ptb->n_recv_data,
+                         ptb->i_recv_data,
+                         PDM_MPI_INT,
+                         _recv_stride,
+                         ptb->n_send_data,
+                         ptb->i_send_data,
+                         PDM_MPI_INT,
+                         ptb->comm); 
+    }
+    else {
+      PDM_MPI_Alltoallv_p2p (_send_stride,
+                             ptb->n_recv_data,
+                             ptb->i_recv_data,
+                             PDM_MPI_INT,
+                             _recv_stride,
+                             ptb->n_send_data,
+                             ptb->i_send_data,
+                             PDM_MPI_INT,
+                             ptb->comm);      
+    }
 
     if(0 == 1) {
       PDM_log_trace_array_int(_recv_stride, s_recv, "recv_stride :: ");
@@ -1497,6 +1665,7 @@ _prepare_reverse_exchange
     /*
      * Build buffers
      */
+
     for (int i = 0; i < ptb->s_comm; i++) {
       int ibeg = ptb->i_recv_data[i];
       int iend = ptb->i_recv_data[i] + ptb->n_recv_data[i];
@@ -2194,6 +2363,7 @@ PDM_part_to_block_create
   /*
    * Common creation
    */
+
   PDM_part_to_block_t* ptb = _ptb_create(t_distrib,
                                          t_post,
                                          part_active_node,
@@ -2213,10 +2383,10 @@ PDM_part_to_block_create
 
   _distrib_data (ptb, 0);
 
-
   /*
    * Compute global weight for each element
    */
+
   if (ptb->weight != NULL) {// && ptb->t_post == PDM_PART_TO_BLOCK_POST_MERGE) {
     _compute_global_weights (ptb);
   }
@@ -2633,15 +2803,62 @@ PDM_part_to_block_exch
   /*
    * Data exchange
    */
-  PDM_MPI_Alltoallv_l(send_buffer,
-                      n_send_buffer,
-                      i_send_buffer,
-                      mpi_type,
-                      recv_buffer,
-                      n_recv_buffer,
-                      i_recv_buffer,
-                      mpi_type,
-                      ptb->comm);
+
+  int mandatory_size = PDM_size_idx_from_stride (n_send_buffer, ptb->s_comm, ptb->comm);
+  mandatory_size = PDM_MAX(PDM_size_idx_from_stride (n_send_buffer, ptb->s_comm, ptb->comm), mandatory_size);
+  
+  if (mandatory_size > 32) {
+    PDM_MPI_Alltoallv_p2p_l(send_buffer,
+                            n_send_buffer,
+                            i_send_buffer,
+                            mpi_type,
+                            recv_buffer,
+                            n_recv_buffer,
+                            i_recv_buffer,
+                            mpi_type,
+                            ptb->comm);
+  }
+
+  else {
+ 
+    if (ptb->p2p_factor < ptb->part_active_rank) {
+     
+      int *_i_send_buffer = (int *) malloc(sizeof(int) * ptb->s_comm);
+      int *_i_recv_buffer = (int *) malloc(sizeof(int) * ptb->s_comm);
+     
+      for (int i = 0; i < ptb->s_comm; i++) {
+        _i_send_buffer[i] = (int) i_send_buffer[i];
+        _i_recv_buffer[i] = (int) i_recv_buffer[i];
+      }
+
+      PDM_MPI_Alltoallv(send_buffer,
+                        n_send_buffer,
+                        _i_send_buffer,
+                        mpi_type,
+                        recv_buffer,
+                        n_recv_buffer,
+                        _i_recv_buffer,
+                        mpi_type,
+                        ptb->comm);
+
+      free (_i_send_buffer); 
+      free (_i_recv_buffer); 
+    }
+
+    else {
+
+      PDM_MPI_Alltoallv_p2p_l(send_buffer,
+                              n_send_buffer,
+                              i_send_buffer,
+                              mpi_type,
+                              recv_buffer,
+                              n_recv_buffer,
+                              i_recv_buffer,
+                              mpi_type,
+                              ptb->comm);
+
+    }
+  } 
 
   /*
    * Statistics
@@ -2767,15 +2984,62 @@ PDM_part_to_block_reverse_exch
   /*
    * Data exchange
    */
-  PDM_MPI_Alltoallv_l(send_buffer,
-                      n_send_buffer,
-                      i_send_buffer,
-                      mpi_type,
-                      recv_buffer,
-                      n_recv_buffer,
-                      i_recv_buffer,
-                      mpi_type,
-                      ptb->comm);
+  
+  int mandatory_size = PDM_size_idx_from_stride (n_send_buffer, ptb->s_comm, ptb->comm);
+  mandatory_size = PDM_MAX(PDM_size_idx_from_stride (n_send_buffer, ptb->s_comm, ptb->comm), mandatory_size);
+
+  if (mandatory_size > 32) {
+    PDM_MPI_Alltoallv_p2p_l(send_buffer,
+                            n_send_buffer,
+                            i_send_buffer,
+                            mpi_type,
+                            recv_buffer,
+                            n_recv_buffer,
+                            i_recv_buffer,
+                            mpi_type,
+                            ptb->comm);
+  }
+
+  else {
+ 
+    if (ptb->p2p_factor < ptb->part_active_rank) {
+     
+      int *_i_send_buffer = (int *) malloc(sizeof(int) * ptb->s_comm);
+      int *_i_recv_buffer = (int *) malloc(sizeof(int) * ptb->s_comm);
+     
+      for (int i = 0; i < ptb->s_comm; i++) {
+        _i_send_buffer[i] = (int) i_send_buffer[i];
+        _i_recv_buffer[i] = (int) i_recv_buffer[i];
+      }
+
+      PDM_MPI_Alltoallv(send_buffer,
+                        n_send_buffer,
+                        _i_send_buffer,
+                        mpi_type,
+                        recv_buffer,
+                        n_recv_buffer,
+                        _i_recv_buffer,
+                        mpi_type,
+                        ptb->comm);
+
+      free (_i_send_buffer); 
+      free (_i_recv_buffer); 
+    }
+
+    else {
+
+      PDM_MPI_Alltoallv_p2p_l(send_buffer,
+                              n_send_buffer,
+                              i_send_buffer,
+                              mpi_type,
+                              recv_buffer,
+                              n_recv_buffer,
+                              i_recv_buffer,
+                              mpi_type,
+                              ptb->comm);
+
+    }
+  } 
 
   _post_treatment_reverse(ptb,
                           s_data,
