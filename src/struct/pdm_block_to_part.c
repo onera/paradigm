@@ -6,6 +6,7 @@
 #include <limits.h>
 #include <assert.h>
 #include <stdlib.h>
+#include <unistd.h>
 
 /*----------------------------------------------------------------------------
  *  Header for the current file
@@ -419,6 +420,13 @@ PDM_block_to_part_create
   btp->comm = comm;
 
   btp->p2p_factor = 0.25;
+
+  char host[1024];
+  gethostname(host, 1023);
+
+  if (!strncmp(host, "sator" , 5)) {
+    btp->p2p_factor = -0.1;
+  }
 
   char *env_var = NULL;
   env_var = getenv ("PDM_BLOCK_TO_PART_P2P_FACTOR");
