@@ -2091,7 +2091,7 @@ PDM_part_generate_entity_graph_comm
  */
 
 void
-PDM_compute_graph_comm_entity_ownerhip
+PDM_compute_graph_comm_entity_ownership
 (
   const int             n_part,
   const int            *n_entity,
@@ -2189,7 +2189,7 @@ PDM_compute_graph_comm_entity_ownerhip
  */
 
 void
-PDM_compute_graph_comm_entity_ownerhip_single_part
+PDM_compute_graph_comm_entity_ownership_single_part
 (
   const int            n_entity,
   const PDM_g_num_t   *entity_ln_to_gn,

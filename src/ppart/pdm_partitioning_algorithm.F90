@@ -9,12 +9,12 @@ implicit none
 
 interface
 
-  subroutine PDM_compute_graph_comm_entity_ownerhip_single_part_cf (n_entity,          &
-                                                                    entity_ln_to_gn,   &
-                                                                    n_owned_entity,    &
-                                                                    lnum_owned_entity, &
-                                                                    comm)              &
-    bind(c, name='PDM_compute_graph_comm_entity_ownerhip_single_part')
+  subroutine PDM_compute_graph_comm_entity_ownership_single_part_cf (n_entity,          &
+                                                                     entity_ln_to_gn,   &
+                                                                     n_owned_entity,    &
+                                                                     lnum_owned_entity, &
+                                                                     comm)              &
+    bind(c, name='PDM_compute_graph_comm_entity_ownership_single_part')
 
     use iso_c_binding
     implicit none
@@ -25,7 +25,7 @@ interface
     type(c_ptr)           :: lnum_owned_entity
     integer(c_int), value :: comm
 
-  end subroutine PDM_compute_graph_comm_entity_ownerhip_single_part_cf
+  end subroutine PDM_compute_graph_comm_entity_ownership_single_part_cf
 
 end interface
 
@@ -44,12 +44,12 @@ contains
   !!
   !!
 
-  subroutine PDM_compute_graph_comm_entity_ownerhip (n_part,            &
-                                                     n_entity,          &
-                                                     entity_ln_to_gn,   &
-                                                     n_owned_entity,    &
-                                                     lnum_owned_entity, &
-                                                     f_comm)
+  subroutine PDM_compute_graph_comm_entity_ownership (n_part,            &
+                                                      n_entity,          &
+                                                      entity_ln_to_gn,   &
+                                                      n_owned_entity,    &
+                                                      lnum_owned_entity, &
+                                                      f_comm)
 
     use iso_c_binding
     implicit none
@@ -67,13 +67,13 @@ contains
 
     interface
 
-      subroutine PDM_compute_graph_comm_entity_ownerhip_c (n_part,            &
-                                                           n_entity,          &
-                                                           entity_ln_to_gn,   &
-                                                           n_owned_entity,    &
-                                                           lnum_owned_entity, &
-                                                           comm)              &
-        bind(c, name='PDM_compute_graph_comm_entity_ownerhip')
+      subroutine PDM_compute_graph_comm_entity_ownership_c (n_part,            &
+                                                            n_entity,          &
+                                                            entity_ln_to_gn,   &
+                                                            n_owned_entity,    &
+                                                            lnum_owned_entity, &
+                                                            comm)              &
+        bind(c, name='PDM_compute_graph_comm_entity_ownership')
 
         use iso_c_binding
         implicit none
@@ -85,18 +85,18 @@ contains
         type(c_ptr)           :: lnum_owned_entity
         integer(c_int), value :: comm
 
-      end subroutine PDM_compute_graph_comm_entity_ownerhip_c
+      end subroutine PDM_compute_graph_comm_entity_ownership_c
 
     end interface
 
     c_comm = PDM_MPI_Comm_f2c(f_comm)
 
-    call PDM_compute_graph_comm_entity_ownerhip_c (n_part,                      &
-                                                   c_loc(n_entity),             &
-                                                   c_loc(entity_ln_to_gn%cptr), &
-                                                   c_n_owned_entity,            &
-                                                   c_lnum_owned_entity,         &
-                                                   c_comm)
+    call PDM_compute_graph_comm_entity_ownership_c (n_part,                      &
+                                                    c_loc(n_entity),             &
+                                                    c_loc(entity_ln_to_gn%cptr), &
+                                                    c_n_owned_entity,            &
+                                                    c_lnum_owned_entity,         &
+                                                    c_comm)
 
     call c_f_pointer(c_n_owned_entity, &
                      n_owned_entity,   &
@@ -109,7 +109,7 @@ contains
                                    n_owned_entity,      &
                                    PDM_OWNERSHIP_USER)
 
-  end subroutine PDM_compute_graph_comm_entity_ownerhip
+  end subroutine PDM_compute_graph_comm_entity_ownership
 
   !>
   !!
@@ -123,11 +123,11 @@ contains
   !!
   !!
 
-  subroutine PDM_compute_graph_comm_entity_ownerhip_single_part (n_entity,          &
-                                                                 entity_ln_to_gn,   &
-                                                                 n_owned_entity,    &
-                                                                 lnum_owned_entity, &
-                                                                 f_comm)
+  subroutine PDM_compute_graph_comm_entity_ownership_single_part (n_entity,          &
+                                                                  entity_ln_to_gn,   &
+                                                                  n_owned_entity,    &
+                                                                  lnum_owned_entity, &
+                                                                  f_comm)
 
     use iso_c_binding
     implicit none
@@ -149,16 +149,16 @@ contains
 
     c_comm = PDM_MPI_Comm_f2c(f_comm)
 
-    call PDM_compute_graph_comm_entity_ownerhip_single_part_cf (n_entity,            &
-                                                                c_entity_ln_to_gn,   &
-                                                                n_owned_entity,      &
-                                                                c_lnum_owned_entity, &
-                                                                c_comm)
+    call PDM_compute_graph_comm_entity_ownership_single_part_cf (n_entity,            &
+                                                                 c_entity_ln_to_gn,   &
+                                                                 n_owned_entity,      &
+                                                                 c_lnum_owned_entity, &
+                                                                 c_comm)
 
     call c_f_pointer(c_lnum_owned_entity, &
                      lnum_owned_entity,   &
                      [n_owned_entity])
 
-  end subroutine PDM_compute_graph_comm_entity_ownerhip_single_part
+  end subroutine PDM_compute_graph_comm_entity_ownership_single_part
 
 end module pdm_partitioning_algorithm
