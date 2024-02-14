@@ -42,12 +42,12 @@ cdef extern from "pdm_partitioning_algorithm.h":
                                              int          ***pedge_vtx,
                                              PDM_g_num_t  ***pedge_ln_to_gn);
 
-    void PDM_compute_graph_comm_entity_ownerhip(int             n_part,
-                                                int            *n_entity,
-                                                PDM_g_num_t   **entity_ln_to_gn,
-                                                int           **n_owned_entity,
-                                                int          ***lnum_owned_entity,
-                                                PDM_MPI_Comm    comm)
+    void PDM_compute_graph_comm_entity_ownership(int             n_part,
+                                                 int            *n_entity,
+                                                 PDM_g_num_t   **entity_ln_to_gn,
+                                                 int           **n_owned_entity,
+                                                 int          ***lnum_owned_entity,
+                                                 PDM_MPI_Comm    comm)
 
     # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
@@ -312,12 +312,12 @@ def compute_face_edge_from_face_vtx(MPI.Comm comm,
   return all_part_data
 
 # ===================================================================================
-def compute_graph_comm_entity_ownerhip(int                                           n_part,
-                                       NPY.ndarray[NPY.int32_t   , mode='c', ndim=1] n_entity not None,
-                                       list                                          entity_ln_to_gn not None,
-                                       MPI.Comm                                      comm):
+def compute_graph_comm_entity_ownership(int                                           n_part,
+                                        NPY.ndarray[NPY.int32_t   , mode='c', ndim=1] n_entity not None,
+                                        list                                          entity_ln_to_gn not None,
+                                        MPI.Comm                                      comm):
   """
-  compute_graph_comm_entity_ownerhip(n_part, n_entity, entity_ln_to_gn, comm)
+  compute_graph_comm_entity_ownership(n_part, n_entity, entity_ln_to_gn, comm)
   """
 
   # Convert mpi4py -> PDM_MPI
@@ -329,12 +329,12 @@ def compute_graph_comm_entity_ownerhip(int                                      
 
   cdef PDM_g_num_t **_entity_ln_to_gn = np_list_to_gnum_pointers(entity_ln_to_gn)
 
-  PDM_compute_graph_comm_entity_ownerhip(n_part,
-                                 <int *> n_entity.data,
-                        <PDM_g_num_t **> _entity_ln_to_gn,
-                                         &_n_owned_entity,
-                                         &_lnum_owned_entity,
-                                         PDM_comm)
+  PDM_compute_graph_comm_entity_ownership(n_part,
+                                  <int *> n_entity.data,
+                         <PDM_g_num_t **> _entity_ln_to_gn,
+                                          &_n_owned_entity,
+                                          &_lnum_owned_entity,
+                                          PDM_comm)
 
   n_owned_entity = create_numpy_i(_n_owned_entity, n_part)
 
