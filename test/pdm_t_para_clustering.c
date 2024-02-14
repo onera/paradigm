@@ -135,27 +135,27 @@ int main(int argc, char *argv[])
    * Parameters
    */
 
-  PDM_bool_t  show_mesh        = PDM_FALSE;
-  PDM_g_num_t n_vtx_seg        = 30;
-  double      length           = 1e-2;
-  double      zero_x           = -length/2;
-  double      zero_y           = -length/2;
-  double      zero_z           = -length/2;
-  int         n_part           = 2;
-  int         n_part_bnd       = 1;
-  double      min_dist         = pow(length/20, 2);
-  int         n_layer          = 4;
-  int        *n_leaf_per_layer = malloc (n_layer*sizeof(int));
-  int         n_vtx_min_dist   = 10;
-  int         depth_max        = 50;
-  int         n_var            = 4;
-  int         data_reduction   = 0;
-  int         from_triplet     = 1;
+  PDM_bool_t  show_mesh               = PDM_FALSE;
+  PDM_g_num_t n_vtx_seg               = 30;
+  double      length                  = 1e-2;
+  double      zero_x                  = -length/2;
+  double      zero_y                  = -length/2;
+  double      zero_z                  = -length/2;
+  int         n_part                  = 2;
+  int         n_part_bnd              = 1;
+  double      min_dist                = pow(length/20, 2);
+  int         n_layer                 = 4;
+  int        *n_vtx_in_leaf_per_layer = malloc (n_layer*sizeof(int));
+  int         n_vtx_min_dist          = 10;
+  int         depth_max               = 50;
+  int         n_var                   = 4;
+  int         data_reduction          = 0;
+  int         from_triplet            = 1;
 
-  n_leaf_per_layer[0] = 31;
-  n_leaf_per_layer[1] = 62;
-  n_leaf_per_layer[2] = 125;
-  n_leaf_per_layer[3] = 250;
+  n_vtx_in_leaf_per_layer[0] = 31;
+  n_vtx_in_leaf_per_layer[1] = 62;
+  n_vtx_in_leaf_per_layer[2] = 125;
+  n_vtx_in_leaf_per_layer[3] = 250;
 
   /*
    * Generate a cube
@@ -629,7 +629,7 @@ int main(int argc, char *argv[])
 
     PDM_para_octree_t *octree = PDM_para_octree_create(n_part_bnd,
                                                        depth_max,
-                                                       n_leaf_per_layer[i_layer],
+                                                       n_vtx_in_leaf_per_layer[i_layer],
                                                        0,
                                                        comm);
 
@@ -1783,7 +1783,7 @@ int main(int argc, char *argv[])
   free(coord_from_bnd_vtx[0]         );
   free(data_from_bnd_vtx             );
   free(coord_from_bnd_vtx            );
-  free(n_leaf_per_layer              );
+  free(n_vtx_in_leaf_per_layer              );
 
   PDM_part_to_part_free(ptp_vtx);
 
