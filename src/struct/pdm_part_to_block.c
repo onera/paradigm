@@ -1416,14 +1416,15 @@ _ptb_create
 {
   // Warning : Previously n_ptb == 0
   if (n_ptb_pref == 0) {
-    t_timer[GENERATE_DISTRIB      ] = PDM_timer_create ();
-    t_timer[BINARY_SEARCH         ] = PDM_timer_create ();
-    t_timer[CREATE_EXCHANGE       ] = PDM_timer_create ();
-    t_timer[BLOCK_POST            ] = PDM_timer_create ();
-    t_timer[GLOBAL_WEIGHTS        ] = PDM_timer_create ();
-    t_timer[CREATE_FROM_DISTRIB   ] = PDM_timer_create ();
-    t_timer[CREATE_GEOM           ] = PDM_timer_create ();
-    t_timer[DATA_EXCHANGE         ] = PDM_timer_create ();
+    t_timer[MALLOC_ACTIVE_RANKS] = PDM_timer_create (); // Warning : unused for now because negligable
+    t_timer[GENERATE_DISTRIB   ] = PDM_timer_create ();
+    t_timer[BINARY_SEARCH      ] = PDM_timer_create ();
+    t_timer[CREATE_EXCHANGE    ] = PDM_timer_create ();
+    t_timer[BLOCK_POST         ] = PDM_timer_create ();
+    t_timer[GLOBAL_WEIGHTS     ] = PDM_timer_create ();
+    t_timer[DATA_EXCHANGE      ] = PDM_timer_create ();
+    t_timer[CREATE_FROM_DISTRIB] = PDM_timer_create ();
+    t_timer[CREATE_GEOM        ] = PDM_timer_create ();
   }
   n_ptb++;
   n_ptb_pref++;
@@ -2636,13 +2637,7 @@ PDM_part_to_block_create
    * Common creation
    */
 
-  if (n_ptb_pref == 0) {
-    t_timer[MALLOC_ACTIVE_RANKS   ] = PDM_timer_create ();
-  }
-
-  double t0_elaps = PDM_timer_elapsed(t_timer[MALLOC_ACTIVE_RANKS]);
-  double t0_cpu   = PDM_timer_cpu    (t_timer[MALLOC_ACTIVE_RANKS]);
-  PDM_timer_resume(t_timer[MALLOC_ACTIVE_RANKS]);
+  // Warning : timing of _ptb_create not considered because induces issues
 
   PDM_part_to_block_t* ptb = _ptb_create(t_distrib,
                                          t_post,
@@ -2652,13 +2647,6 @@ PDM_part_to_block_create
                                          n_elt,
                                          n_part,
                                          comm);
-
-  PDM_timer_hang_on(t_timer[MALLOC_ACTIVE_RANKS]);
-  double t01_elaps = PDM_timer_elapsed(t_timer[MALLOC_ACTIVE_RANKS]);
-  double t01_cpu   = PDM_timer_cpu    (t_timer[MALLOC_ACTIVE_RANKS]);
-
-  t_elaps[MALLOC_ACTIVE_RANKS] += (t01_elaps - t0_elaps);
-  t_cpu  [MALLOC_ACTIVE_RANKS] += (t01_cpu   - t0_cpu  );
 
   /*
    * Data distribution definition
@@ -2735,12 +2723,12 @@ PDM_part_to_block_create_from_distrib
  PDM_MPI_Comm                  comm
 )
 {
-  double t1_elaps = PDM_timer_elapsed(t_timer[CREATE_FROM_DISTRIB]);
-  double t1_cpu = PDM_timer_cpu(t_timer[CREATE_FROM_DISTRIB]);
-  PDM_timer_resume(t_timer[CREATE_FROM_DISTRIB]);
   /*
    * Common creation
    */
+
+  // Warning : timing of _ptb_create not considered because induces issues
+
   PDM_part_to_block_t* ptb = _ptb_create(t_distrib,
                                          t_post,
                                          part_active_node,
@@ -2749,6 +2737,10 @@ PDM_part_to_block_create_from_distrib
                                          n_elt,
                                          n_part,
                                          comm);
+
+  double t1_elaps = PDM_timer_elapsed(t_timer[CREATE_FROM_DISTRIB]);
+  double t1_cpu = PDM_timer_cpu(t_timer[CREATE_FROM_DISTRIB]);
+  PDM_timer_resume(t_timer[CREATE_FROM_DISTRIB]);
 
   for(int i_rank = 0; i_rank < ptb->s_comm+1; i_rank++){
     ptb->data_distrib_index[i_rank] = data_distrib_index[i_rank];
@@ -2823,6 +2815,9 @@ PDM_part_to_block_geom_create
   /*
    * Common creation
    */
+
+  // Warning : timing of _ptb_create not considered because induces issues
+
   PDM_part_to_block_t* ptb = _ptb_create(t_distrib,
                                          t_post,
                                          part_active_node,
