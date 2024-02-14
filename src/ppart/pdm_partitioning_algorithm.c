@@ -517,7 +517,7 @@ PDM_part_distgroup_to_partgroup
                                          1,
                                          comm);
     free(weights);
-    
+
     _entity_distribution = PDM_part_to_block_distrib_index_get(ptb_group);
   }
   int dn_entity = _entity_distribution[i_rank+1] -  _entity_distribution[i_rank];
@@ -2075,6 +2075,191 @@ PDM_part_generate_entity_graph_comm
   free(part_stri);
   free(part_data);
   PDM_block_to_part_free(btp);
+}
+
+/**
+ *
+ * \brief Get the list of owned entities on the current process
+ *
+ * \param [in]  n_part            Number of partitions
+ * \param [in]  n_entity          Number of entities
+ * \param [in]  entity_ln_to_gn   Entity local numbering to global numbering (size = n_entity)
+ * \param [out] n_owned_entity    Number of owned entities
+ * \param [out] lnum_owned_entity Owned entity local numbering (size = n_owned_entity)
+ * \param [in]  comm              MPI communicator
+ *
+ */
+
+void
+PDM_compute_graph_comm_entity_ownerhip
+(
+  const int             n_part,
+  const int            *n_entity,
+  const PDM_g_num_t   **entity_ln_to_gn,
+        int           **n_owned_entity,
+        int          ***lnum_owned_entity,
+        PDM_MPI_Comm    comm
+)
+{
+
+  int i_rank;
+  PDM_MPI_Comm_rank(comm, &i_rank);
+
+  PDM_part_to_block_t *ptb = PDM_part_to_block_create(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
+                                                      PDM_PART_TO_BLOCK_POST_CLEANUP,
+                                                      1.,
+                                     (PDM_g_num_t **) entity_ln_to_gn,
+                                                      NULL,
+                                              (int *) n_entity,
+                                                      n_part,
+                                                      comm);
+
+  int **tmp_rank_and_part = malloc(sizeof(int *) * n_part);
+
+  for (int i_part = 0; i_part < n_part; i_part++) {
+    tmp_rank_and_part[i_part] = malloc(sizeof(int) * n_entity[i_part] * 2);
+    for (int i_entity = 0; i_entity < n_entity[i_part]; i_entity++) {
+      tmp_rank_and_part[i_part][2*i_entity    ] = i_rank;
+      tmp_rank_and_part[i_part][2*i_entity + 1] = i_part;
+    }
+  }
+
+  int *blk_rank_and_part = NULL;
+
+  PDM_part_to_block_exch(ptb,
+                         sizeof(int),
+                         PDM_STRIDE_CST_INTERLACED,
+                         2,
+                         NULL,
+              (void **)  tmp_rank_and_part,
+                         NULL,
+              (void **) &blk_rank_and_part);
+
+  for (int i_part = 0; i_part < n_part; i_part++) {
+    free(tmp_rank_and_part[i_part]);
+  }
+  free(tmp_rank_and_part);
+
+  PDM_part_to_block_reverse_exch(ptb,
+                                 sizeof(int),
+                                 PDM_STRIDE_CST_INTERLACED,
+                                 2,
+                                 NULL,
+                       (void *)  blk_rank_and_part,
+                                 NULL,
+                     (void ***) &tmp_rank_and_part);
+
+  int  *_n_owned_entity    = malloc(sizeof(int  ) * n_part);
+  int **_lnum_owned_entity = malloc(sizeof(int *) * n_part);
+
+  for (int i_part = 0; i_part < n_part; i_part++) {
+    _lnum_owned_entity[i_part] = malloc(sizeof(int) * n_entity[i_part]);
+    _n_owned_entity   [i_part] = 0;
+    for (int i_entity = 0; i_entity < n_entity[i_part]; i_entity++) {
+      if (tmp_rank_and_part[i_part][2*i_entity    ] == i_rank &&
+          tmp_rank_and_part[i_part][2*i_entity + 1] == i_part) {
+        _lnum_owned_entity[i_part][_n_owned_entity[i_part]++] = i_entity+1;
+      }
+    }
+    _lnum_owned_entity[i_part] = realloc(_lnum_owned_entity[i_part], _n_owned_entity[i_part]*sizeof(int));
+  }
+
+  for (int i_part = 0; i_part < n_part; i_part++) {
+    free(tmp_rank_and_part[i_part]);
+  }
+  free(tmp_rank_and_part);
+  free(blk_rank_and_part);
+  PDM_part_to_block_free(ptb);
+
+  *n_owned_entity    = _n_owned_entity;
+  *lnum_owned_entity = _lnum_owned_entity;
+
+}
+
+/**
+ *
+ * \brief Get the list of owned entities on the current process
+ *
+ * \param [in]  n_entity          Number of entities
+ * \param [in]  entity_ln_to_gn   Entity local numbering to global numbering (size = n_entity)
+ * \param [out] n_owned_entity    Number of owned entities
+ * \param [out] lnum_owned_entity Owned entity local numbering (size = n_owned_entity)
+ * \param [in]  comm              MPI communicator
+ *
+ */
+
+void
+PDM_compute_graph_comm_entity_ownerhip_single_part
+(
+  const int            n_entity,
+  const PDM_g_num_t   *entity_ln_to_gn,
+        int           *n_owned_entity,
+        int          **lnum_owned_entity,
+        PDM_MPI_Comm   comm
+)
+{
+
+  int i_rank;
+  PDM_MPI_Comm_rank(comm, &i_rank);
+
+  PDM_part_to_block_t *ptb = PDM_part_to_block_create(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
+                                                      PDM_PART_TO_BLOCK_POST_CLEANUP,
+                                                      1.,
+                                    (PDM_g_num_t **) &entity_ln_to_gn,
+                                                      NULL,
+                                             (int *) &n_entity,
+                                                      1,
+                                                      comm);
+
+  int *tmp_rank = malloc(sizeof(int) * n_entity);
+
+  for (int i_entity = 0; i_entity < n_entity; i_entity++) {
+    tmp_rank[i_entity] = i_rank;
+  }
+
+  int *blk_rank = NULL;
+
+  PDM_part_to_block_exch(ptb,
+                         sizeof(int),
+                         PDM_STRIDE_CST_INTERLACED,
+                         1,
+                         NULL,
+              (void **) &tmp_rank,
+                         NULL,
+              (void **) &blk_rank);
+
+  free(tmp_rank);
+
+  int **tmp_rank_clean = NULL;
+
+  PDM_part_to_block_reverse_exch(ptb,
+                                 sizeof(int),
+                                 PDM_STRIDE_CST_INTERLACED,
+                                 1,
+                                 NULL,
+                       (void *)  blk_rank,
+                                 NULL,
+                     (void ***) &tmp_rank_clean);
+
+  int  _n_owned_entity    = 0;
+  int *_lnum_owned_entity = malloc(sizeof(int) * n_entity);
+
+  for (int i_entity = 0; i_entity < n_entity; i_entity++) {
+    if (tmp_rank_clean[0][i_entity] == i_rank) {
+      _lnum_owned_entity[_n_owned_entity++] = i_entity+1;
+    }
+  }
+
+  _lnum_owned_entity = realloc(_lnum_owned_entity, _n_owned_entity*sizeof(int));
+
+  free(tmp_rank_clean[0]);
+  free(tmp_rank_clean   );
+  free(blk_rank         );
+  PDM_part_to_block_free(ptb);
+
+  *n_owned_entity    = _n_owned_entity;
+  *lnum_owned_entity = _lnum_owned_entity;
+
 }
 
 /**

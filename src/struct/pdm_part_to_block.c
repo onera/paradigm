@@ -1394,7 +1394,7 @@ _ptb_create
   ptb->s_data           = (size_t          * ) malloc ( ptb->max_exch_request * sizeof(size_t           ) );
   ptb->t_stride         = (PDM_stride_t    * ) malloc ( ptb->max_exch_request * sizeof(PDM_stride_t     ) );
   ptb->cst_stride       = (int             * ) malloc ( ptb->max_exch_request * sizeof(int              ) );
-  ptb->wait_status      = (int             * ) malloc ( ptb->max_exch_request * sizeof(int              ) );
+  ptb->wait_status      =  PDM_array_const_int(ptb->max_exch_request, 2);
   ptb->request_mpi      = (PDM_MPI_Request * ) malloc ( ptb->max_exch_request * sizeof(PDM_MPI_Request  ) );
 
   ptb->send_buffer      = (unsigned char  ** ) malloc ( ptb->max_exch_request * sizeof(unsigned char   *) );
@@ -3101,7 +3101,10 @@ PDM_part_to_block_iexch
    * Take next id for message and buffer
    */
   int request_id = ptb->next_request++;
+  request_id %= ptb->max_exch_request;
   *request = request_id;
+
+  assert(ptb->wait_status[request_id] = 2);
 
   ptb->i_send_buffer[request_id] = (int *) malloc (sizeof(int) * ptb->s_comm);
   ptb->i_recv_buffer[request_id] = (int *) malloc (sizeof(int) * ptb->s_comm);
@@ -3299,7 +3302,10 @@ PDM_part_to_block_reverse_iexch
    * Take next id for message and buffer
    */
   int request_id = ptb->next_request++;
+  request_id %= ptb->max_exch_request;
   *request = request_id;
+
+  assert(ptb->wait_status[request_id] = 2);
 
   ptb->i_send_buffer[request_id] = (int *) malloc (sizeof(int) * ptb->s_comm);
   ptb->i_recv_buffer[request_id] = (int *) malloc (sizeof(int) * ptb->s_comm);
@@ -3697,6 +3703,9 @@ PDM_part_to_block_async_exch
    * Take next id for message and buffer
    */
   int request_id = ptb->next_request++;
+  request_id %= ptb->max_exch_request;
+
+  assert(ptb->wait_status[request_id] = 2);
 
   ptb->i_send_buffer[request_id] = (int *) malloc (sizeof(int) * ptb->s_comm);
   ptb->i_recv_buffer[request_id] = (int *) malloc (sizeof(int) * ptb->s_comm);

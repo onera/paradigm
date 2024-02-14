@@ -173,6 +173,8 @@ cdef extern from "pdm.h":
       PDM_MPI_COMM_KIND_WIN_SHARED_AND_NEIGHBOR_COLLECTIVE = 5
       PDM_MPI_COMM_KIND_WIN_RMA                            = 6
 
+    ctypedef enum PDM_clustering_kind_t:
+      PDM_CLUSTERING_KIND_OCTREE = 0
 
     void PDM_Finalize ()
 
@@ -364,6 +366,11 @@ _PDM_MPI_COMM_KIND_WIN_SHARED_AND_P2P                 = PDM_MPI_COMM_KIND_WIN_SH
 _PDM_MPI_COMM_KIND_WIN_SHARED_AND_COLLECTIVE          = PDM_MPI_COMM_KIND_WIN_SHARED_AND_COLLECTIVE
 _PDM_MPI_COMM_KIND_WIN_SHARED_AND_NEIGHBOR_COLLECTIVE = PDM_MPI_COMM_KIND_WIN_SHARED_AND_NEIGHBOR_COLLECTIVE
 _PDM_MPI_COMM_KIND_WIN_RMA                            = PDM_MPI_COMM_KIND_WIN_RMA
+
+_PDM_CLUSTERING_KIND_OCTREE = PDM_CLUSTERING_KIND_OCTREE
+
+_PDM_FALSE = PDM_FALSE
+_PDM_TRUE = PDM_TRUE
 
 @COMMENT_NOT_PDMA@
 @COMMENT_NOT_PDMA@cdef extern from "pdm_plugin.h":
@@ -566,6 +573,10 @@ include "pdm_geom.pxi"
 # PDM_mesh_adaptation :
 # --------------------
 #@COMMENT_NOT_PDMA@include "pdm_mesh_adaptation.pxi"
+
+# PDM_mesh_deform :
+# --------------------
+@COMMENT_NOT_PDMA@include "pdm_mesh_deform.pxi"
 
 # PDM_points_merge :
 # --------------------

@@ -121,7 +121,7 @@ typedef enum {
  * \brief The notion of "stride" represents the number of field components. There are 3 modes:
  *    - PDM_STRIDE_CST_INTERLACED   : The number of components is constant for each element. The field is stored according to this pattern (c_1,1 ... c_s,1 ... c_1,n ... c_s,n), whhere 's' is the stride and 'n' the number of field elements
  *    - PDM_STRIDE_CST_INTERLEAVED  : The number of components is constant for each element. The field is stored according to this pattern (c_1,1 ... c_1,n ... c_s,1 ... c_s,n), whhere 's' is the stride and 'n' the number of field elements
- *    - PDM_STRIDE_VAR_INTERLACED   : The number of components is variable for each element. The field is stored according to this pattern (c_1,1 ... c_s1,1 ... c_1,n ... c_sn,n), whhere 's_i' is the 'i' element stride and 'n' the number of field elements  
+ *    - PDM_STRIDE_VAR_INTERLACED   : The number of components is variable for each element. The field is stored according to this pattern (c_1,1 ... c_s1,1 ... c_1,n ... c_sn,n), whhere 's_i' is the 'i' element stride and 'n' the number of field elements
  *
  */
 
@@ -376,6 +376,12 @@ typedef enum {
   PDM_MESH_INTERSECTION_KIND_UNMERGED_POLY = 2, /*! Resulting is the union of disjoint intersection polyhedra                    */
   PDM_MESH_INTERSECTION_KIND_MESH          = 3, /*! Resulting is new mesh                                                        */
 } PDM_mesh_intersection_kind_t;
+
+typedef enum {
+
+  PDM_CLUSTERING_KIND_OCTREE = 0, /*!< Clustering by parallel octree */
+
+} PDM_clustering_kind_t;
 
 /*=============================================================================
  * Public function prototypes
