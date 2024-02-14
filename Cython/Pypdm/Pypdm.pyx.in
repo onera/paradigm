@@ -173,6 +173,8 @@ cdef extern from "pdm.h":
       PDM_MPI_COMM_KIND_WIN_SHARED_AND_NEIGHBOR_COLLECTIVE = 5
       PDM_MPI_COMM_KIND_WIN_RMA                            = 6
 
+    ctypedef enum PDM_clustering_kind_t:
+      PDM_CLUSTERING_KIND_OCTREE = 0
 
     void PDM_Finalize ()
 
@@ -365,6 +367,11 @@ _PDM_MPI_COMM_KIND_WIN_SHARED_AND_COLLECTIVE          = PDM_MPI_COMM_KIND_WIN_SH
 _PDM_MPI_COMM_KIND_WIN_SHARED_AND_NEIGHBOR_COLLECTIVE = PDM_MPI_COMM_KIND_WIN_SHARED_AND_NEIGHBOR_COLLECTIVE
 _PDM_MPI_COMM_KIND_WIN_RMA                            = PDM_MPI_COMM_KIND_WIN_RMA
 
+_PDM_CLUSTERING_KIND_OCTREE = PDM_CLUSTERING_KIND_OCTREE
+
+_PDM_FALSE = PDM_FALSE
+_PDM_TRUE = PDM_TRUE
+
 @COMMENT_NOT_PDMA@
 @COMMENT_NOT_PDMA@cdef extern from "pdm_plugin.h":
 @COMMENT_NOT_PDMA@    void PDM_plugin_load ()
@@ -397,6 +404,23 @@ cdef int* list_to_int_pointer(list data):
   for i,d in enumerate(data):
     array[i] = <int> d
   return array
+
+cdef PDM_g_num_t* np_to_gnum_pointer(NPY.ndarray[npy_pdm_gnum_t] array):
+  cdef PDM_g_num_t* ptr = NULL
+  if array is not None:
+    ptr = <PDM_g_num_t*> array.data
+  return ptr
+cdef int* np_to_int_pointer(NPY.ndarray[NPY.int32_t] array):
+  cdef int* ptr = NULL
+  if array is not None:
+    ptr = <int*> array.data
+  return ptr
+cdef double* np_to_double_pointer(NPY.ndarray[double] array):
+  cdef double* ptr = NULL
+  if array is not None:
+    ptr = <double*> array.data
+  return ptr
+  
 
 cdef void** np_list_to_void_pointers(list datas):
   cdef NPY.ndarray numpy_void
@@ -549,6 +573,10 @@ include "pdm_geom.pxi"
 # PDM_mesh_adaptation :
 # --------------------
 #@COMMENT_NOT_PDMA@include "pdm_mesh_adaptation.pxi"
+
+# PDM_mesh_deform :
+# --------------------
+@COMMENT_NOT_PDMA@include "pdm_mesh_deform.pxi"
 
 # PDM_points_merge :
 # --------------------

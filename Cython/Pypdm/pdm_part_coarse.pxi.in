@@ -222,19 +222,8 @@ cdef class CoarseMesh:
       # ~> Set _n_face_group
       self._n_face_group =  n_face_group
 
-      # ~> \param [in]   renum_properties_cell
-      cdef int * renum_properties_cell_data
-      if (renum_properties_cell is None):
-          renum_properties_cell_data = NULL
-      else:
-          renum_properties_cell_data = <int *> renum_properties_cell.data
-
-      # ~> \param [in] renum_properties_face
-      cdef int * renum_properties_face_data
-      if (renum_properties_face is None):
-          renum_properties_face_data = NULL
-      else:
-          renum_properties_face_data = <int *> renum_properties_face.data
+      cdef int * renum_properties_cell_data = np_to_int_pointer(renum_properties_cell)
+      cdef int * renum_properties_face_data = np_to_int_pointer(renum_properties_face)
 
       # > Create
       self._cm = PDM_part_coarse_mesh_create(PDM_MPI_mpi_2_pdm_mpi_comm (<void *> &c_comm),
@@ -340,17 +329,8 @@ cdef class CoarseMesh:
         CellFace_data    = <int *>         CellFace.data
         CellLNToGN_data  = <PDM_g_num_t *> CellLNToGN.data
 
-        # \param [in]   CellTag       Cell tag (size : nCell) or NULL
-        if (CellTag is None):
-            CellTag_data = NULL
-        else:
-            CellTag_data = <int *> CellTag.data
-
-        # \param [in]   CellWeight    Cell weight (size : nCell) or NULL
-        if (CellWeight is None):
-            CellWeight_data = NULL
-        else:
-            CellWeight_data = <int *> CellWeight.data
+        CellTag_data    = np_to_int_pointer(CellTag)
+        CellWeight_data = np_to_int_pointer(CellWeight)
 
         # :::::::::::::::::::::::::::::::::::::::::::::::::::::
         FaceCell_data   = <int *>         FaceCell.data
@@ -358,42 +338,18 @@ cdef class CoarseMesh:
         FaceVtx_data    = <int *>         FaceVtx.data
         FaceVtxIdx_data = <int *>         FaceVtxIdx.data
 
-        # \param [in]   FaceTag       Distributed face tag
-        if (FaceTag is None):
-          FaceTag_data = NULL
-        else:
-          FaceTag_data = <int *> FaceTag.data
-
-        # \param [in]   faceWeight    Face weight (size : nFace) or NULL
-        if (FaceWeight is None):
-            FaceWeight_data = NULL
-        else:
-            FaceWeight_data = <int *> FaceWeight.data
+        FaceTag_data    = np_to_int_pointer(FaceTag)
+        FaceWeight_data = np_to_int_pointer(FaceWeight)
 
         # :::::::::::::::::::::::::::::::::::::::::::::::::::::
         VtxCoord_data  = <double *>      VtxCoord.data
         VtxLNToGN_data = <PDM_g_num_t *> VtxLNToGN.data
-
-        if (VtxTag is None):
-          VtxTag_data = NULL
-        else:
-          VtxTag_data = <int *> VtxTag.data
+        VtxTag_data = np_to_int_pointer(VtxTag)
 
         # :::::::::::::::::::::::::::::::::::::::::::::::::::::
-        if (FaceGroup is None):
-          FaceGroup_data = NULL
-        else:
-          FaceGroup_data            = <int *>         FaceGroup.data
-
-        if (FaceGroupIdx is None):
-          FaceGroupIdx_data = NULL
-        else:
-          FaceGroupIdx_data            = <int *>         FaceGroupIdx.data
-
-        if (FaceGroupLNToGN is None):
-          FaceGroupLNToGN_data = NULL
-        else:
-          FaceGroupLNToGN_data            = <PDM_g_num_t *> FaceGroupLNToGN.data
+        FaceGroup_data = np_to_int_pointer(FaceGroup)
+        FaceGroupIdx_data = np_to_int_pointer(FaceGroupIdx)
+        FaceGroupLNToGN_data = np_to_gnum_pointer(FaceGroupLNToGN)
 
         FacePartBoundProcIdx_data = <int *>         FacePartBoundProcIdx.data
         FacePartBoundPartIdx_data = <int *>         FacePartBoundPartIdx.data
@@ -449,25 +405,12 @@ cdef class CoarseMesh:
 @COMMENT_NOT_PDMA@        cdef int             *isOnFineBndInit_data
 @COMMENT_NOT_PDMA@        # ************************************************************************
 @COMMENT_NOT_PDMA@
-@COMMENT_NOT_PDMA@        # \param [in]
-@COMMENT_NOT_PDMA@        if (agglomerationLinesInit is None):
-@COMMENT_NOT_PDMA@            agglomerationLinesInit_data = NULL
-@COMMENT_NOT_PDMA@        else:
-@COMMENT_NOT_PDMA@            agglomerationLinesInit_data = <int *> agglomerationLinesInit.data
+@COMMENT_NOT_PDMA@        agglomerationLinesInit_data = np_to_int_pointer(agglomerationLinesInit)
 @COMMENT_NOT_PDMA@
-@COMMENT_NOT_PDMA@        # \param [in]
-@COMMENT_NOT_PDMA@        if (agglomerationLinesInitIdx is None):
-@COMMENT_NOT_PDMA@            agglomerationLinesInitIdx_data  = NULL
-@COMMENT_NOT_PDMA@            agglomerationLinesInitIdx_size  = 0
-@COMMENT_NOT_PDMA@        else:
-@COMMENT_NOT_PDMA@            agglomerationLinesInitIdx_data = <int *> agglomerationLinesInitIdx.data
-@COMMENT_NOT_PDMA@            agglomerationLinesInitIdx_size  = agglomerationLinesInitIdx.shape[0]
+@COMMENT_NOT_PDMA@        agglomerationLinesInitIdx_data = np_to_int_pointer(agglomerationLinesInitIdx)
+@COMMENT_NOT_PDMA@        agglomerationLinesInitIdx_size = 0 if agglomerationLinesInitIdx is None else agglomerationLinesInitIdx.shape[0]
 @COMMENT_NOT_PDMA@
-@COMMENT_NOT_PDMA@        # \param [in]
-@COMMENT_NOT_PDMA@        if (isOnFineBndInit is None):
-@COMMENT_NOT_PDMA@            isOnFineBndInit_data = NULL
-@COMMENT_NOT_PDMA@        else:
-@COMMENT_NOT_PDMA@            isOnFineBndInit_data = <int *> isOnFineBndInit.data
+@COMMENT_NOT_PDMA@        isOnFineBndInit_data = np_to_int_pointer(isOnFineBndInit)
 @COMMENT_NOT_PDMA@
 @COMMENT_NOT_PDMA@        # > Verbose
 @COMMENT_NOT_PDMA@        # print "isOnFineBndInit           = ", isOnFineBndInit

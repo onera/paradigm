@@ -120,7 +120,10 @@ struct _pdm_part_to_block_t {
   PDM_MPI_Win             *win_recv;
   PDM_MPI_Datatype        *mpi_type;
 
-} ;
+  double                   p2p_factor;
+  double                   part_active_rank;
+
+};
 
 /*=============================================================================
  * Static global variables

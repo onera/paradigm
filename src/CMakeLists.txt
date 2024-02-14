@@ -283,6 +283,8 @@ if (PDM_ENABLE_STATIC_Fortran_INTERFACE OR PDM_ENABLE_SHARED_Fortran_INTERFACE)
   list(APPEND LIST_HEADERF "${CMAKE_CURRENT_SOURCE_DIR}/meshgen/pdm_dcube_nodal_gen.F90")
   list(APPEND LIST_HEADERF "${CMAKE_CURRENT_SOURCE_DIR}/mesh/pdm_dmesh_nodal.F90")
   list(APPEND LIST_HEADERF "${CMAKE_CURRENT_BINARY_DIR}/pdm_generate_mesh.mod")
+  list(APPEND LIST_HEADERF "${CMAKE_CURRENT_BINARY_DIR}/pdm_partitioning_algorithm.mod")
+  list(APPEND LIST_HEADERF "${CMAKE_CURRENT_SOURCE_DIR}/ppart/pdm_partitioning_algorithm.F90")
 
   list(APPEND LIST_HEADERF "${CMAKE_CURRENT_SOURCE_DIR}/util/pdm_writer_wrapper.F90")
 

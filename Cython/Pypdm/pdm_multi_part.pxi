@@ -234,7 +234,6 @@ cdef class MultiPart:
       """
       # ~> MPI communicator
       cdef MPI.MPI_Comm c_comm = comm.ob_mpi
-      cdef double* part_fraction_data
 
       # print("MultiPart::n_domain -->", n_domain)
       # print("MultiPart::n_part -->", n_part)
@@ -242,10 +241,7 @@ cdef class MultiPart:
       # print("MultiPart::split_method -->", split_method)
       self.n_rank = comm.Get_size()
 
-      if part_fraction is None:
-        part_fraction_data = NULL
-      else:
-        part_fraction_data = <double *> part_fraction.data
+      cdef double* part_fraction_data = np_to_double_pointer(part_fraction)
 
       # -> Create PPART
       self._mtp = PDM_multipart_create(n_domain,
@@ -311,15 +307,11 @@ cdef class MultiPart:
         renum_cell_properties (np.ndarray[np.int32_t]) : Parameters used by cache-blocking method : (*n_cell_per_cache_wanted*, *is_asynchronous*, *is_vectorisation*, *n_vect_face*, *split_method*)
         renum_face_method     (str)                    : Choice of renumbering method for faces
       """
-      cdef int *renum_properties_cell_data
-      if (renum_properties_cell is None):
-        renum_properties_cell_data = NULL
-      else:
-        renum_properties_cell_data = <int *> renum_properties_cell.data
+      cdef int *_renum_properties_cell = np_to_int_pointer(renum_properties_cell)
       PDM_multipart_set_reordering_options(self._mtp,
                                            i_domain,
                                            renum_cell_method,
-                                           renum_properties_cell_data,
+                                           _renum_properties_cell,
                                            renum_face_method)
     # ------------------------------------------------------------------
     def reordering_vtx_set(self, int i_domain,

@@ -369,12 +369,12 @@ def dmesh_connectivity_set(DMesh pydm,
   # > Declaration
   # ************************************************************************
 
-  cdef int* _connect_idx = NULL
-  if connect_idx is not None:
-    _connect_idx = <int *> connect_idx.data
+  cdef PDM_g_num_t* _connect     = np_to_gnum_pointer(connect)
+  cdef int*         _connect_idx = np_to_int_pointer(connect_idx)
+  
   PDM_dmesh_connectivity_set(pydm._dm,
                              entity_type,
-             <PDM_g_num_t *> connect.data,
+                             _connect,
                              _connect_idx,
                              PDM_OWNERSHIP_USER)
 

@@ -363,6 +363,52 @@ PDM_part_generate_entity_graph_comm
 );
 
 /**
+ *
+ * \brief Get the list of owned entities on the current process
+ *
+ * \param [in]  n_part            Number of partitions
+ * \param [in]  n_entity          Number of entities
+ * \param [in]  entity_ln_to_gn   Entity local numbering to global numbering (size = n_entity)
+ * \param [out] n_owned_entity    Number of owned entities
+ * \param [out] lnum_owned_entity Owned entity local numbering (size = n_owned_entity)
+ * \param [in]  comm              MPI communicator
+ *
+ */
+
+void
+PDM_compute_graph_comm_entity_ownerhip
+(
+  const int             n_part,
+  const int            *n_entity,
+  const PDM_g_num_t   **entity_ln_to_gn,
+        int           **n_owned_entity,
+        int          ***lnum_owned_entity,
+        PDM_MPI_Comm    comm
+);
+
+/**
+ *
+ * \brief Get the list of owned entities on the current process
+ *
+ * \param [in]  n_entity          Number of entities
+ * \param [in]  entity_ln_to_gn   Entity local numbering to global numbering (size = n_entity)
+ * \param [out] n_owned_entity    Number of owned entities
+ * \param [out] lnum_owned_entity Owned entity local numbering (size = n_owned_entity)
+ * \param [in]  comm              MPI communicator
+ *
+ */
+
+void
+PDM_compute_graph_comm_entity_ownerhip_single_part
+(
+  const int            n_entity,
+  const PDM_g_num_t   *entity_ln_to_gn,
+        int           *n_owned_entity,
+        int          **lnum_owned_entity,
+        PDM_MPI_Comm   comm
+);
+
+/**
  *  \brief Recover partitioned coordinates from distributed coordinates and
  *   vertex ln_to_gn indirection.
  *   This function basically calls PDM_block_to_part on to exchange vertex coordinates.
