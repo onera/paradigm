@@ -3088,11 +3088,6 @@ PDM_part_to_block_exch
   /*
    * Data exchange
    */
-  PDM_MPI_Barrier(ptb->comm);
-  double t3_elaps = PDM_timer_elapsed(t_timer[ALLTOALL_DATA_EXCHANGE]);
-  double t3_cpu   = PDM_timer_cpu    (t_timer[ALLTOALL_DATA_EXCHANGE]);
-  PDM_timer_resume(t_timer[ALLTOALL_DATA_EXCHANGE]);
-
   int mandatory_size = PDM_size_idx_from_stride (n_send_buffer, ptb->s_comm, ptb->comm);
   mandatory_size = PDM_MAX(PDM_size_idx_from_stride (n_send_buffer, ptb->s_comm, ptb->comm), mandatory_size);
   
@@ -3148,13 +3143,6 @@ PDM_part_to_block_exch
 
     }
   } 
-
-  PDM_timer_hang_on(t_timer[ALLTOALL_DATA_EXCHANGE]);
-  double t4_elaps = PDM_timer_elapsed(t_timer[ALLTOALL_DATA_EXCHANGE]);
-  double t4_cpu   = PDM_timer_cpu    (t_timer[ALLTOALL_DATA_EXCHANGE]);
-
-  t_elaps[ALLTOALL_DATA_EXCHANGE] += (t4_elaps - t3_elaps);
-  t_cpu  [ALLTOALL_DATA_EXCHANGE] += (t4_cpu   - t3_cpu  );
 
   /*
    * Statistics
