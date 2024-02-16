@@ -375,7 +375,7 @@ int main(int argc, char *argv[])
         }
       }
       if(inside == 1) {
-        selected_l_num[i_part][n_select_vtx]     = i_vtx;
+        selected_l_num[i_part][n_select_vtx]     = i_vtx+1;
         n_select_vtx++;
       }
 

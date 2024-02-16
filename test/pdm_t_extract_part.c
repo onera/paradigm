@@ -442,7 +442,7 @@ int main(int argc, char *argv[])
         }
       }
       if(inside == 1) {
-        selected_l_num[i_part][n_select_cell]     = i_cell;
+        selected_l_num[i_part][n_select_cell]     = i_cell+1;
         n_select_cell++;
       }
 
@@ -532,7 +532,7 @@ int main(int argc, char *argv[])
     fake_group_vtx[i_part] = malloc(pn_vtx[i_part] * sizeof(int        ));
 
     for (int i_vtx = 0; i_vtx < pn_vtx[i_part]; ++i_vtx){
-      fake_group_vtx[i_part][i_vtx] = i_vtx;
+      fake_group_vtx[i_part][i_vtx] = i_vtx+1;
     }
 
     PDM_extract_part_n_group_set(extrp,
@@ -564,7 +564,7 @@ int main(int argc, char *argv[])
     for(int i_group = 0; i_group < n_bound; ++i_group) {
       fake_group_face_idx[i_part][i_group+1] = group_face_idx[i_group+1];
       for (int i_face = group_face_idx[i_group]; i_face < group_face_idx[i_group+1]; ++i_face){
-        fake_group_face[i_part][i_face]          = group_face[i_face]-1;
+        fake_group_face[i_part][i_face]          = group_face[i_face];
         fake_face_group_ln_to_gn[i_part][i_face] = face_group_ln_to_gn[i_face];
       }
     }
@@ -573,7 +573,7 @@ int main(int argc, char *argv[])
     fake_group_face_idx[i_part][n_bound+1] = fake_group_face_idx[i_part][n_bound] + fake_group_n_face;
     for (int i_face = fake_group_face_idx[i_part][n_bound]; i_face < fake_group_face_idx[i_part][n_bound+1]; ++i_face){
       int j_face = i_face - fake_group_n_face;
-      fake_group_face[i_part][i_face]          = group_face[j_face]-1;
+      fake_group_face[i_part][i_face]          = group_face[j_face];
       fake_face_group_ln_to_gn[i_part][i_face] = face_group_ln_to_gn[j_face];
     }
 
@@ -688,7 +688,7 @@ int main(int argc, char *argv[])
                                   PDM_OWNERSHIP_KEEP);
 
       for(int idx_entity = 0; idx_entity < pn_extract_group_entity; ++idx_entity) {
-        int i_face = pextract_group_entity[idx_entity];
+        int i_face = pextract_group_entity[idx_entity]-1;
         pextract_face_group[i_part][i_face] = i_group;
       }
 
