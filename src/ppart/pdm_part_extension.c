@@ -639,15 +639,22 @@ _setup_domain_interface_in_block_frame
   assert(part_ext->dentity_itrf_gnum_and_itrf_data [PDM_BOUND_TYPE_VTX] == NULL);
   assert(part_ext->dentity_itrf_gnum_and_itrf_sens [PDM_BOUND_TYPE_VTX] == NULL);
 
-
-  PDM_domain_interface_make_flat_view2(part_ext->dom_itrf,
-                                       PDM_BOUND_TYPE_VTX,
-                                       part_ext->shift_by_domain_vtx,
-                                       &part_ext->dentity_itrf_n_blk              [PDM_BOUND_TYPE_VTX],
-                                       &part_ext->dentity_itrf_blk_gnum           [PDM_BOUND_TYPE_VTX],
-                                       &part_ext->dentity_itrf_gnum_and_itrf_strid[PDM_BOUND_TYPE_VTX],
-                                       &part_ext->dentity_itrf_gnum_and_itrf_data [PDM_BOUND_TYPE_VTX],
-                                       &part_ext->dentity_itrf_gnum_and_itrf_sens [PDM_BOUND_TYPE_VTX]);
+  if(part_ext->dom_itrf != NULL) {
+    PDM_domain_interface_make_flat_view2(part_ext->dom_itrf,
+                                         PDM_BOUND_TYPE_VTX,
+                                         part_ext->shift_by_domain_vtx,
+                                         &part_ext->dentity_itrf_n_blk              [PDM_BOUND_TYPE_VTX],
+                                         &part_ext->dentity_itrf_blk_gnum           [PDM_BOUND_TYPE_VTX],
+                                         &part_ext->dentity_itrf_gnum_and_itrf_strid[PDM_BOUND_TYPE_VTX],
+                                         &part_ext->dentity_itrf_gnum_and_itrf_data [PDM_BOUND_TYPE_VTX],
+                                         &part_ext->dentity_itrf_gnum_and_itrf_sens [PDM_BOUND_TYPE_VTX]);
+  } else {
+    part_ext->dentity_itrf_n_blk              [PDM_BOUND_TYPE_VTX] = 0;
+    part_ext->dentity_itrf_blk_gnum           [PDM_BOUND_TYPE_VTX] = NULL;
+    part_ext->dentity_itrf_gnum_and_itrf_strid[PDM_BOUND_TYPE_VTX] = NULL;
+    part_ext->dentity_itrf_gnum_and_itrf_data [PDM_BOUND_TYPE_VTX] = NULL;
+    part_ext->dentity_itrf_gnum_and_itrf_sens [PDM_BOUND_TYPE_VTX] = NULL;
+  }
 
   int n_data = 0;
   for(int i = 0; i < part_ext->dentity_itrf_n_blk[PDM_BOUND_TYPE_VTX]; ++i) {
@@ -1148,6 +1155,13 @@ _part_extension_2d
     int                          **pvtx_extented_to_pvtx_idx       = NULL;
     int                          **pvtx_extented_to_pvtx_triplet   = NULL;
     int                          **pvtx_extented_to_pvtx_interface = NULL;
+
+
+    int          next_dvtx_itrf_n_blk               = 0;
+    PDM_g_num_t *next_dvtx_itrf_blk_gnum            = NULL;
+    int         *next_dvtx_itrf_gnum_and_itrf_strid = NULL;
+    PDM_g_num_t *next_dvtx_itrf_gnum_and_itrf_data  = NULL;
+    int         *next_dvtx_itrf_gnum_and_itrf_sens  = NULL;
     log_trace(" PDM_part_extension_pentity1_entity2_to_extented_pentity1_entity2 beg \n");
     PDM_part_extension_pentity1_entity2_to_extented_pentity1_entity2(part_ext->ln_part_tot,
                                                                      part_ext->n_interface,
@@ -1155,6 +1169,12 @@ _part_extension_2d
                                                                      part_ext->ptb_itrf[PDM_BOUND_TYPE_VTX],
                                                                      part_ext->opp_gnum[PDM_BOUND_TYPE_VTX],
                                                                      part_ext->opp_sens[PDM_BOUND_TYPE_VTX],
+                                                                     // New
+                                                                     part_ext->dentity_itrf_n_blk              [PDM_BOUND_TYPE_VTX],
+                                                                     part_ext->dentity_itrf_blk_gnum           [PDM_BOUND_TYPE_VTX],
+                                                                     part_ext->dentity_itrf_gnum_and_itrf_strid[PDM_BOUND_TYPE_VTX],
+                                                                     part_ext->dentity_itrf_gnum_and_itrf_data [PDM_BOUND_TYPE_VTX],
+                                                                     part_ext->dentity_itrf_gnum_and_itrf_sens [PDM_BOUND_TYPE_VTX],
                                                                      pn_face,
                                                                      pface_ln_to_gn,
                                                                      pn_vtx,
@@ -1173,6 +1193,12 @@ _part_extension_2d
                                                                      &pvtx_extented_to_pvtx_idx,
                                                                      &pvtx_extented_to_pvtx_triplet,
                                                                      &pvtx_extented_to_pvtx_interface,
+                                                                     // NEW
+                                                                     &next_dvtx_itrf_n_blk,
+                                                                     &next_dvtx_itrf_blk_gnum,
+                                                                     &next_dvtx_itrf_gnum_and_itrf_strid,
+                                                                     &next_dvtx_itrf_gnum_and_itrf_data,
+                                                                     &next_dvtx_itrf_gnum_and_itrf_sens,
                                                                      part_ext->comm);
     log_trace(" PDM_part_extension_pentity1_entity2_to_extented_pentity1_entity2 end \n");
 

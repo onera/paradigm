@@ -118,9 +118,17 @@ PDM_part_extension_pentity1_entity2_to_extented_pentity1_entity2
  int                    n_part,
  int                    n_interface,
  PDM_g_num_t            shift_by_domain_entity2,
+ // OLD
  PDM_part_to_block_t  **ptb_itrf_entity2,
  PDM_g_num_t          **opp_gnum_itrf_entity2,
  int                  **opp_sens_itrf_entity2,
+ // NEW
+ int                    prev_dentity2_itrf_n_blk,
+ PDM_g_num_t           *prev_dentity2_itrf_blk_gnum,
+ int                   *prev_dentity2_itrf_gnum_and_itrf_strid,
+ PDM_g_num_t           *prev_dentity2_itrf_gnum_and_itrf_data,
+ int                   *prev_dentity2_itrf_gnum_and_itrf_sens,
+
  int                   *pn_entity1,
  PDM_g_num_t          **pentity1_ln_to_gn,
  int                   *pn_entity2,
@@ -139,7 +147,16 @@ PDM_part_extension_pentity1_entity2_to_extented_pentity1_entity2
  int                 ***pentity2_extented_to_pentity2_idx_out,
  int                 ***pentity2_extented_to_pentity2_triplet_out,
  int                 ***pentity2_extented_to_pentity2_interface_out,
+
+ int                   *next_dentity2_itrf_n_blk,
+ PDM_g_num_t          **next_dentity2_itrf_blk_gnum,
+ int                  **next_dentity2_itrf_gnum_and_itrf_strid,
+ PDM_g_num_t          **next_dentity2_itrf_gnum_and_itrf_data,
+ int                  **next_dentity2_itrf_gnum_and_itrf_sens,
+
+
  PDM_MPI_Comm           comm
+
 );
 
 void
