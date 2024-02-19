@@ -1060,13 +1060,13 @@ int         ***old_to_new_entity2_no
     int idx_write = 0;
     _n_extract_entity2[i_part] = 0;
     for(int idx_entity = 0; idx_entity < n_extract; ++idx_entity) {
-      int i_entity = extract_entity1_lnum[i_part][idx_entity];
+      int i_entity = extract_entity1_lnum[i_part][idx_entity]-1;
 
       for(int idx_entity2 = _pentity1_entity2_idx[i_entity]; idx_entity2 < _pentity1_entity2_idx[i_entity+1]; ++idx_entity2) {
         int i_entity2 = PDM_ABS(_pentity1_entity2[idx_entity2])-1;
         if(is_visited[i_entity2] == 0) {
           int idx = _n_extract_entity2[i_part]++;
-          _extract_entity2_lnum           [i_part][idx] = i_entity2;
+          _extract_entity2_lnum           [i_part][idx] = i_entity2+1;
           _extract_parent_entity2_ln_to_gn[i_part][idx] = _pentity2_ln_to_gn[i_entity2];
           is_visited                    [i_entity2] = 1;
           _old_to_new_entity2_no[i_part][i_entity2] = idx_write++;
@@ -1143,7 +1143,7 @@ int                 ***extract_entity2_lnum
     int idx_write = 0;
     _selected_entity1_entity2_idx[i_part][0] = 0;
     for(int idx_entity = 0; idx_entity < n_extract_entity1[i_part]; ++idx_entity) {
-      int i_entity = extract_entity1_lnum[i_part][idx_entity];
+      int i_entity = extract_entity1_lnum[i_part][idx_entity]-1;
 
       int n_tmp = _pentity1_entity2_idx[i_entity+1] - _pentity1_entity2_idx[i_entity];
       _selected_entity1_entity2_idx[i_part][idx_entity+1] = _selected_entity1_entity2_idx[i_part][idx_entity] + n_tmp;
@@ -1386,7 +1386,7 @@ _extract_part_nodal
               is_selected_vtx         [i_part][i_vtx                ] = 1;
               old_to_new_vtx          [i_part][i_vtx                ] = n_extract_vtx[i_part];
               extract_parent_vtx_g_num[i_part][n_extract_vtx[i_part]] = extrp->vtx_ln_to_gn[i_part][i_vtx];
-              extract_vtx_lnum        [i_part][n_extract_vtx[i_part]] = i_vtx;
+              extract_vtx_lnum        [i_part][n_extract_vtx[i_part]] = i_vtx+1;
               n_extract_vtx[i_part]++;
             }
           }
@@ -1553,7 +1553,7 @@ _extract_part_nodal
     extrp->pextract_vtx_coord[i_part] = (double *) malloc( 3 * n_extract_vtx[i_part] * sizeof(double));
 
     for(int idx_vtx = 0; idx_vtx < n_extract_vtx[i_part]; ++idx_vtx) {
-      int i_vtx = extract_vtx_lnum[i_part][idx_vtx];
+      int i_vtx = extract_vtx_lnum[i_part][idx_vtx]-1;
       extrp->pextract_vtx_coord[i_part][3*idx_vtx  ] = extrp->pvtx_coord[i_part][3*i_vtx  ];
       extrp->pextract_vtx_coord[i_part][3*idx_vtx+1] = extrp->pvtx_coord[i_part][3*i_vtx+1];
       extrp->pextract_vtx_coord[i_part][3*idx_vtx+2] = extrp->pvtx_coord[i_part][3*i_vtx+2];
@@ -3081,7 +3081,7 @@ _extract_part
     extrp->pextract_vtx_coord[i_part] = (double *) malloc( 3 * n_extract_vtx[i_part] * sizeof(double));
 
     for(int idx_vtx = 0; idx_vtx < n_extract_vtx[i_part]; ++idx_vtx) {
-      int i_vtx = extract_vtx_lnum[i_part][idx_vtx];
+      int i_vtx = extract_vtx_lnum[i_part][idx_vtx]-1;
       extrp->pextract_vtx_coord[i_part][3*idx_vtx  ] = extrp->pvtx_coord[i_part][3*i_vtx  ];
       extrp->pextract_vtx_coord[i_part][3*idx_vtx+1] = extrp->pvtx_coord[i_part][3*i_vtx+1];
       extrp->pextract_vtx_coord[i_part][3*idx_vtx+2] = extrp->pvtx_coord[i_part][3*i_vtx+2];
