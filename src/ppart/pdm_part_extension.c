@@ -591,46 +591,45 @@ _setup_domain_interface_in_block_frame
    *   During the part_extension problem we need this information to merge / amend all extend entity
    *   We make a distributed vision that more convenient to do all this kind of operation
    */
-  for(int i = 0; i < PDM_BOUND_TYPE_MAX; ++i) {
-    part_ext->ptb_itrf[i] = NULL; // (PDM_part_to_block_t **) malloc( n_interface * sizeof(PDM_part_to_block_t **));
-    part_ext->opp_gnum[i] = NULL; // (PDM_g_num_t         **) malloc( n_interface * sizeof(PDM_g_num_t         **));
-    part_ext->opp_sens[i] = NULL; // (PDM_g_num_t         **) malloc( n_interface * sizeof(PDM_g_num_t         **));
-
-    // for(int i_itrf = 0; i_itrf < n_interface; ++i_itrf) {
-    //   part_ext->ptb_itrf[i][i_itrf] = NULL;
-    //   part_ext->opp_gnum[i][i_itrf] = NULL;
-    // }
-  }
-
   part_ext->n_interface = n_interface;
 
-  PDM_domain_interface_make_flat_view(part_ext->dom_itrf,
-                                      PDM_BOUND_TYPE_VTX,
-                                      part_ext->shift_by_domain_vtx,
-                                      &part_ext->ptb_itrf[PDM_BOUND_TYPE_VTX],
-                                      &part_ext->opp_gnum[PDM_BOUND_TYPE_VTX],
-                                      &part_ext->opp_sens[PDM_BOUND_TYPE_VTX]);
+  // for(int i = 0; i < PDM_BOUND_TYPE_MAX; ++i) {
+  //   part_ext->ptb_itrf[i] = NULL; // (PDM_part_to_block_t **) malloc( n_interface * sizeof(PDM_part_to_block_t **));
+  //   part_ext->opp_gnum[i] = NULL; // (PDM_g_num_t         **) malloc( n_interface * sizeof(PDM_g_num_t         **));
+  //   part_ext->opp_sens[i] = NULL; // (PDM_g_num_t         **) malloc( n_interface * sizeof(PDM_g_num_t         **));
+
+  //   // for(int i_itrf = 0; i_itrf < n_interface; ++i_itrf) {
+  //   //   part_ext->ptb_itrf[i][i_itrf] = NULL;
+  //   //   part_ext->opp_gnum[i][i_itrf] = NULL;
+  //   // }
+  // }
+
+  // PDM_domain_interface_make_flat_view(part_ext->dom_itrf,
+  //                                     PDM_BOUND_TYPE_VTX,
+  //                                     part_ext->shift_by_domain_vtx,
+  //                                     &part_ext->ptb_itrf[PDM_BOUND_TYPE_VTX],
+  //                                     &part_ext->opp_gnum[PDM_BOUND_TYPE_VTX],
+  //                                     &part_ext->opp_sens[PDM_BOUND_TYPE_VTX]);
 
 
-  if(is_describe_edge) {
-    PDM_domain_interface_make_flat_view(part_ext->dom_itrf,
-                                        PDM_BOUND_TYPE_EDGE,
-                                        part_ext->shift_by_domain_edge,
-                                       &part_ext->ptb_itrf[PDM_BOUND_TYPE_EDGE],
-                                       &part_ext->opp_gnum[PDM_BOUND_TYPE_EDGE],
-                                       &part_ext->opp_sens[PDM_BOUND_TYPE_EDGE]);
-  }
+  // if(is_describe_edge) {
+  //   PDM_domain_interface_make_flat_view(part_ext->dom_itrf,
+  //                                       PDM_BOUND_TYPE_EDGE,
+  //                                       part_ext->shift_by_domain_edge,
+  //                                      &part_ext->ptb_itrf[PDM_BOUND_TYPE_EDGE],
+  //                                      &part_ext->opp_gnum[PDM_BOUND_TYPE_EDGE],
+  //                                      &part_ext->opp_sens[PDM_BOUND_TYPE_EDGE]);
+  // }
 
 
-  if(is_describe_face) {
-    PDM_domain_interface_make_flat_view(part_ext->dom_itrf,
-                                        PDM_BOUND_TYPE_FACE,
-                                        part_ext->shift_by_domain_face,
-                                       &part_ext->ptb_itrf[PDM_BOUND_TYPE_FACE],
-                                       &part_ext->opp_gnum[PDM_BOUND_TYPE_FACE],
-                                       &part_ext->opp_sens[PDM_BOUND_TYPE_FACE]);
-  }
-
+  // if(is_describe_face) {
+  //   PDM_domain_interface_make_flat_view(part_ext->dom_itrf,
+  //                                       PDM_BOUND_TYPE_FACE,
+  //                                       part_ext->shift_by_domain_face,
+  //                                      &part_ext->ptb_itrf[PDM_BOUND_TYPE_FACE],
+  //                                      &part_ext->opp_gnum[PDM_BOUND_TYPE_FACE],
+  //                                      &part_ext->opp_sens[PDM_BOUND_TYPE_FACE]);
+  // }
 
 
   assert(part_ext->dentity_itrf_n_blk              [PDM_BOUND_TYPE_VTX] == 0   );
@@ -669,10 +668,10 @@ _setup_domain_interface_in_block_frame
   }
 
 
-  free(part_ext->dentity_itrf_blk_gnum           [PDM_BOUND_TYPE_VTX]);
-  free(part_ext->dentity_itrf_gnum_and_itrf_strid[PDM_BOUND_TYPE_VTX]);
-  free(part_ext->dentity_itrf_gnum_and_itrf_data [PDM_BOUND_TYPE_VTX]);
-  free(part_ext->dentity_itrf_gnum_and_itrf_sens [PDM_BOUND_TYPE_VTX]);
+  // free(part_ext->dentity_itrf_blk_gnum           [PDM_BOUND_TYPE_VTX]);
+  // free(part_ext->dentity_itrf_gnum_and_itrf_strid[PDM_BOUND_TYPE_VTX]);
+  // free(part_ext->dentity_itrf_gnum_and_itrf_data [PDM_BOUND_TYPE_VTX]);
+  // free(part_ext->dentity_itrf_gnum_and_itrf_sens [PDM_BOUND_TYPE_VTX]);
 }
 
 static
@@ -1166,9 +1165,9 @@ _part_extension_2d
     PDM_part_extension_pentity1_entity2_to_extented_pentity1_entity2(part_ext->ln_part_tot,
                                                                      part_ext->n_interface,
                                                                      shift_by_domain_vtx, // Attention il va evoluer lui
-                                                                     part_ext->ptb_itrf[PDM_BOUND_TYPE_VTX],
-                                                                     part_ext->opp_gnum[PDM_BOUND_TYPE_VTX],
-                                                                     part_ext->opp_sens[PDM_BOUND_TYPE_VTX],
+                                                                     // part_ext->ptb_itrf[PDM_BOUND_TYPE_VTX],
+                                                                     // part_ext->opp_gnum[PDM_BOUND_TYPE_VTX],
+                                                                     // part_ext->opp_sens[PDM_BOUND_TYPE_VTX],
                                                                      // New
                                                                      part_ext->dentity_itrf_n_blk              [PDM_BOUND_TYPE_VTX],
                                                                      part_ext->dentity_itrf_blk_gnum           [PDM_BOUND_TYPE_VTX],
@@ -1637,18 +1636,27 @@ PDM_part_extension_compute2
 
   /* Free data - Should be usefull to redo all part_interface after all the process */
   for(int i = 0; i < PDM_BOUND_TYPE_MAX; ++i) {
-    if(part_ext->ptb_itrf[i] != NULL) {
-      for(int i_itrf = 0; i_itrf < part_ext->n_interface; ++i_itrf) {
-        if(part_ext->ptb_itrf[i][i_itrf] != NULL) {
-          PDM_part_to_block_free(part_ext->ptb_itrf[i][i_itrf]);
-          free(part_ext->opp_gnum[i][i_itrf]);
-          free(part_ext->opp_sens[i][i_itrf]);
-        }
-      }
+    // if(part_ext->ptb_itrf[i] != NULL) {
+    //   for(int i_itrf = 0; i_itrf < part_ext->n_interface; ++i_itrf) {
+    //     if(part_ext->ptb_itrf[i][i_itrf] != NULL) {
+    //       PDM_part_to_block_free(part_ext->ptb_itrf[i][i_itrf]);
+    //       free(part_ext->opp_gnum[i][i_itrf]);
+    //       free(part_ext->opp_sens[i][i_itrf]);
+    //     }
+    //   }
+    // }
+    // free(part_ext->ptb_itrf[i]);
+    // free(part_ext->opp_sens[i]);
+    // free(part_ext->opp_gnum[i]);
+
+    if(part_ext->dentity_itrf_blk_gnum[i] != NULL) {
+      free(part_ext->dentity_itrf_blk_gnum           [i]);
+      free(part_ext->dentity_itrf_gnum_and_itrf_strid[i]);
+      free(part_ext->dentity_itrf_gnum_and_itrf_data [i]);
+      free(part_ext->dentity_itrf_gnum_and_itrf_sens [i]);
     }
-    free(part_ext->ptb_itrf[i]);
-    free(part_ext->opp_sens[i]);
-    free(part_ext->opp_gnum[i]);
+
+
   }
 
   if(part_ext->dom_itrf != NULL) {
