@@ -112,7 +112,7 @@ PDM_extract_part_compute
  * \param [in]   extrp         PDM_extract_part_t
  * \param [in]   i_part        part identifier
  * \param [in]   n_extract     Number of entity to select
- * \param [in]   extract_lnum  List of id to extract (starting at 0)
+ * \param [in]   extract_lnum  List of id to extract (starting at 1)
  *
  */
 void
@@ -151,7 +151,7 @@ PDM_extract_part_target_set
  * \brief Keep target_gnum data ownership inside extrp
  *
  * \param [in]   extrp             PDM_extract_part_t
- * 
+ *
  */
 void
 PDM_extract_part_target_gnum_keep_ownnership

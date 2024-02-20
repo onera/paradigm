@@ -257,8 +257,6 @@ int main(int argc, char *argv[])
 
   free(dcell_part);
 
-  int **selected_face = malloc (sizeof(int *) * n_part);
-
   PDM_g_num_t **gnum_bnd_face    = malloc (sizeof(PDM_g_num_t *) * n_part_bnd);
   int         **bnd_face_vtx_idx = malloc (sizeof(int         *) * n_part_bnd);
   int         **bnd_face_vtx     = malloc (sizeof(int         *) * n_part_bnd);
@@ -370,14 +368,6 @@ int main(int argc, char *argv[])
     n_all_vtx   [i_part] = n_vtx;
     gnum_all_vtx[i_part] = vtx_ln_to_gn;
 
-    selected_face[i_part] = malloc (sizeof(int) * sface_group);
-
-    for (int i_group = 0; i_group < nface_group; i_group++) {
-      for (int i_face_group = face_group_idx[i_group]; i_face_group < face_group_idx[i_group+1]; i_face_group++) {
-        selected_face[i_part][i_face_group] = face_group[i_face_group]-1;
-      }
-    }
-
     PDM_extract_part_part_set(extrp,
                               i_part,
                               n_cell,
@@ -400,7 +390,7 @@ int main(int argc, char *argv[])
     PDM_extract_part_selected_lnum_set(extrp,
                                        i_part,
                                        sface_group,
-                                       selected_face[i_part]);
+                                       face_group);
 
   }
 
@@ -462,12 +452,6 @@ int main(int argc, char *argv[])
     }
 
   }
-
-  for (int i_part = 0; i_part < n_part; i_part++) {
-    free(selected_face[i_part]);
-  }
-
-  free(selected_face);
 
   /**PDM_part_to_part_t *ptp_vtx = NULL;
   PDM_extract_part_part_to_part_get(extrp,

@@ -77,7 +77,7 @@ cdef class DMeshNodalToDMesh:
                                                      PDM_OWNERSHIP_USER) # Python take ownership);
 
   # ------------------------------------------------------------------------
-  def add_dmesh_nodal(self, int i_mesh, DistributedMeshNodal dmn):
+  def add_dmesh_nodal(self, int i_mesh, DMeshNodal dmn):
     """
     """
     self.keep_alive.append(dmn)

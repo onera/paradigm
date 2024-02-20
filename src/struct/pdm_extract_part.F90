@@ -520,7 +520,7 @@ module pdm_extract_part
   !! \param [in]   extrp         PDM_extract_part_t
   !! \param [in]   i_part        part identifier
   !! \param [in]   n_extract     Number of entity to select
-  !! \param [in]   extract_lnum  List of id to extract (starting at 0)
+  !! \param [in]   extract_lnum  List of id to extract (starting at 1)
   !!
   !!
 
