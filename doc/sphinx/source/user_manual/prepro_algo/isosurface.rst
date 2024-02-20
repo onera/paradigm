@@ -43,6 +43,8 @@ Block-distributed
 Iso-surface settings
 """"""""""""""""""""
 
+.. doxygenfunction:: PDM_isosurface_redistribution_set
+
 .. doxygenfunction:: PDM_isosurface_add
 
 .. doxygenenum:: PDM_iso_surface_kind_t
@@ -52,9 +54,9 @@ Iso-surface settings
 
 .. doxygentypedef:: PDM_isosurface_field_function_t
 
-.. todo::
+.. .. todo::
 
-  - PDM_isosurface_field_gradient_function_set?
+..   - PDM_isosurface_field_gradient_function_set?
 
 Partitioned discrete field
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -78,11 +80,11 @@ Iso-surface computation
 Outputs
 """""""
 
-.. todo::
+.. .. todo::
 
-   - sortie en part_mesh_nodal/dmesh_nodal?
+..    - sortie en part_mesh_nodal/dmesh_nodal?
 
-
+.. doxygenfunction:: PDM_isosurface_local_parent_get
 .. doxygenfunction:: PDM_isosurface_vtx_parent_weight_get
 
 Partitioned

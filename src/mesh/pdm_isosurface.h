@@ -90,12 +90,6 @@ typedef void (*PDM_isosurface_field_function_t)
  * \param [in]  comm            PDM MPI communicator
  * \param [in]  mesh_dimension  Dimension of source mesh (2 or 3)
  * \param [in]  elt_type        Desired element type for iso-surface mesh
- * \param [in]  extract_kind    Redistribution kind
- * \param [in]  part_method     Partitioning method (only used if \p extract_kind is set to PDM_EXTRACT_PART_KIND_REEQUILIBRATE)
- *
- * \note Admissible values for \p extract_kind are:
- *   - \ref PDM_EXTRACT_PART_KIND_REEQUILIBRATE: the iso-surface is evenly redistributed (Default kind)
- *   - \ref PDM_EXTRACT_PART_KIND_LOCAL: the iso-surface is not redistributed (same partitioning as the input mesh)
  *
  * \return Pointer to a new \ref PDM_isosurface_t instance
  *
@@ -106,9 +100,7 @@ PDM_isosurface_create
 (
  PDM_MPI_Comm             comm,
  int                      mesh_dimension,
- PDM_Mesh_nodal_elt_t     elt_type,
- PDM_extract_part_kind_t  extract_kind,
- PDM_split_dual_t         part_method
+ PDM_Mesh_nodal_elt_t     elt_type
 );
 
 
@@ -399,7 +391,8 @@ PDM_isosurface_dmesh_nodal_set
  *
  */
 
-int PDM_isosurface_add
+int
+PDM_isosurface_add
 (
  PDM_isosurface_t       *isos,
  PDM_iso_surface_kind_t  kind,
@@ -433,7 +426,8 @@ int PDM_isosurface_add
  *
  */
 
-void PDM_isosurface_equation_set
+void
+PDM_isosurface_equation_set
 (
  PDM_isosurface_t *isos,
  int               id_isosurface,
@@ -453,7 +447,8 @@ void PDM_isosurface_equation_set
  *          ou bien inclure calcul (optionnel) du gradient dans 'func' (permet de factoriser des calculs)
  */
 
-void PDM_isosurface_field_function_set
+void
+PDM_isosurface_field_function_set
 (
  PDM_isosurface_t                *isos,
  int                              id_isosurface,
@@ -472,7 +467,8 @@ void PDM_isosurface_field_function_set
  * 
  */
 
-void PDM_isosurface_field_set
+void
+PDM_isosurface_field_set
 (
  PDM_isosurface_t *isos,
  int               id_isosurface,
@@ -492,7 +488,8 @@ void PDM_isosurface_field_set
  *
  */
 
-void PDM_isosurface_gradient_set
+void
+PDM_isosurface_gradient_set
 (
  PDM_isosurface_t *isos,
  int               id_isosurface,
@@ -511,7 +508,8 @@ void PDM_isosurface_gradient_set
  *
  */
 
-void PDM_isosurface_dfield_set
+void
+PDM_isosurface_dfield_set
 (
  PDM_isosurface_t *isos,
  int               id_isosurface,
@@ -529,11 +527,34 @@ void PDM_isosurface_dfield_set
  *
  */
 
-void PDM_isosurface_dgradient_set
+void
+PDM_isosurface_dgradient_set
 (
  PDM_isosurface_t *isos,
  int               id_isosurface,
  double           *dgradient
+);
+
+
+/**
+ * \brief Set the isosurface redistribution options
+ *
+ * \param [in]  isos           \ref PDM_isosurface_t instance
+ * \param [in]  extract_kind    Redistribution kind
+ * \param [in]  part_method     Partitioning method (only used if \p extract_kind is set to PDM_EXTRACT_PART_KIND_REEQUILIBRATE)
+ *
+ * \note Admissible values for \p extract_kind are:
+ *   - \ref PDM_EXTRACT_PART_KIND_REEQUILIBRATE: the iso-surface is evenly redistributed (Default kind)
+ *   - \ref PDM_EXTRACT_PART_KIND_LOCAL: the iso-surface is not redistributed (same partitioning as the input mesh)
+ *
+ */
+
+void
+PDM_isosurface_redistribution_set
+(
+ PDM_isosurface_t        *isos,
+ PDM_extract_part_kind_t  extract_kind,
+ PDM_split_dual_t         part_method
 );
 
 
@@ -544,8 +565,6 @@ void PDM_isosurface_dgradient_set
  * \param [in]  isos           \ref PDM_isosurface_t instance
  * \param [in]  id_isosurface  Iso-surface identifier (if < 0, all iso-surfaces are reset)
  * 
- * \warning hide in \ref PDM_isosurface_compute ?
- *
  */
 
 void
@@ -581,8 +600,6 @@ PDM_isosurface_compute
  *
  * \param [in]  isos  \ref PDM_isosurface_t instance
  * 
- * \warning Un timer par \p id_isosurface ?
- *
  */
 
 void
@@ -602,7 +619,6 @@ PDM_isosurface_dump_times
  *
  * \param [in]  isos               \ref PDM_isosurface_t instance
  * \param [in]  id_isosurface      Iso-surface identifier
- * \param [in]  i_isovalue         Iso-value identifier
  * \param [in]  i_part             Partition identifier
  * \param [in]  connectivity_type  Connectivity type
  * \param [out] connect_idx        Connectivity index
@@ -622,7 +638,6 @@ PDM_isosurface_connectivity_get
 (
  PDM_isosurface_t         *isos,
  int                       id_isosurface,
- int                       i_isovalue,
  int                       i_part,
  PDM_connectivity_type_t   connectivity_type,
  int                     **connect_idx,
@@ -637,7 +652,6 @@ PDM_isosurface_connectivity_get
  *
  * \param [in]  isos           \ref PDM_isosurface_t instance
  * \param [in]  id_isosurface  Iso-surface identifier
- * \param [in]  i_isovalue     Iso-value identifier
  * \param [in]  i_part         Partition identifier
  * \param [out] vtx_coord      Vertex coordinates (size = 3 * *n_vtx*)
  * \param [in]  ownership      Ownership
@@ -651,7 +665,6 @@ PDM_isosurface_vtx_coord_get
 (
  PDM_isosurface_t  *isos,
  int                id_isosurface,
- int                i_isovalue,
  int                i_part,
  double           **vtx_coord,
  PDM_ownership_t    ownership
@@ -664,7 +677,6 @@ PDM_isosurface_vtx_coord_get
  *
  * \param [in]  isos           \ref PDM_isosurface_t instance
  * \param [in]  id_isosurface  Iso-surface identifier
- * \param [in]  i_isovalue     Iso-value identifier
  * \param [in]  i_part         Partition identifier
  * \param [in]  entity_type    Entity type
  * \param [out] ln_to_gn       Global ids
@@ -679,7 +691,6 @@ PDM_isosurface_ln_to_gn_get
 (
  PDM_isosurface_t     *isos,
  int                   id_isosurface,
- int                   i_isovalue,
  int                   i_part,
  PDM_mesh_entities_t   entity_type,
  PDM_g_num_t         **ln_to_gn,
@@ -695,7 +706,6 @@ PDM_isosurface_ln_to_gn_get
  *
  * \param [in]  isos                   \ref PDM_isosurface_t instance
  * \param [in]  id_isosurface          Iso-surface identifier
- * \param [in]  i_isovalue             Iso-value identifier
  * \param [in]  i_part                 Partition identifier
  * \param [in]  entity_type            Entity type
  * \param [out] n_group                Number of groups
@@ -713,7 +723,6 @@ PDM_isosurface_group_get
 (
  PDM_isosurface_t     *isos,
  int                   id_isosurface,
- int                   i_isovalue,
  int                   i_part,
  PDM_mesh_entities_t   entity_type,
  int                  *n_group,
@@ -734,7 +743,6 @@ PDM_isosurface_group_get
  *
  * \param [in]  isos               \ref PDM_isosurface_t instance
  * \param [in]  id_isosurface      Iso-surface identifier
- * \param [in]  i_isovalue         Iso-value identifier
  * \param [in]  connectivity_type  Connectivity type
  * \param [out] dconnect_idx       Connectivity index
  * \param [out] dconnect           Connectivity
@@ -749,7 +757,6 @@ PDM_isosurface_dconnectivity_get
 (
  PDM_isosurface_t         *isos,
  int                       id_isosurface,
- int                       i_isovalue,
  PDM_connectivity_type_t   connectivity_type,
  int                     **dconnect_idx,
  PDM_g_num_t             **dconnect,
@@ -763,7 +770,6 @@ PDM_isosurface_dconnectivity_get
  *
  * \param [in]  isos           \ref PDM_isosurface_t instance
  * \param [in]  id_isosurface  Iso-surface identifier
- * \param [in]  i_isovalue     Iso-value identifier
  * \param [out] dvtx_coord     Vertex coordinates (size = 3 * *dn_vtx*)
  * \param [in]  ownership      Ownership
  *
@@ -776,7 +782,6 @@ PDM_isosurface_dvtx_coord_get
 (
  PDM_isosurface_t  *isos,
  int                id_isosurface,
- int                i_isovalue,
  double           **dvtx_coord,
  PDM_ownership_t    ownership
 );
@@ -790,8 +795,6 @@ PDM_isosurface_dvtx_coord_get
  *
  * \param [in]  isos               \ref PDM_isosurface_t instance
  * \param [in]  id_isosurface      Iso-surface identifier
- * \param [in]  i_isovalue         Iso-value identifier
- * \param [in]  i_part             Partition identifier
  * \param [in]  entity_type        Entity type
  * \param [out] n_group            Number of groups
  * \param [out] dgroup_entity_idx  Index for group→entity connectivity (size = \p n_group + 1)
@@ -807,8 +810,6 @@ PDM_isosurface_dgroup_get
 (
  PDM_isosurface_t     *isos,
  int                   id_isosurface,
- int                   i_isovalue,
- int                   i_part,
  PDM_mesh_entities_t   entity_type,
  int                  *n_group,
  int                 **dgroup_entity_idx,
@@ -819,12 +820,75 @@ PDM_isosurface_dgroup_get
 // Sorties en dmesh_nodal ?
 
 /**
+ * \brief Get isovalue
+ *
+ * \param [in]  isos                 \ref PDM_isosurface_t instance
+ * \param [in]  id_isosurface        Iso-surface identifier
+ * \param [in]  i_part               Partition identifier
+ * \param [in]  entity_type          Entity type
+ * \param [in]  isovalue_entity_idx  Index for isovalue→entity connectivity (size = \p n_isovalue + 1)
+ *
+ * \return Number of isovalues
+ *
+ * \warning comment on fait en block-distribué?
+ *
+ */
+
+int
+PDM_isosurface_isovalue_entity_idx_get
+(
+ PDM_isosurface_t     *isos,
+ int                   id_isosurface,
+ int                   i_part,
+ PDM_mesh_entities_t   entity_type,
+ int                 **isovalue_entity_idx
+ );
+
+
+/**
+ *
+ * \brief Get local parents of iso-surface entities
+ *
+ * \param [in]  isos               \ref PDM_isosurface_t instance
+ * \param [in]  id_isosurface      Iso-surface identifier
+ * \param [in]  i_part             Partition identifier
+ * \param [in]  entity_type        Entity type
+ * \param [out] entity_parent_idx  Index for isosurface entity → parent connectivity (size = \p n_entity + 1)
+ * \param [out] entity_parent      Isosurface entity → parent connectivity (size = \p entity_parent_idx[\p n_entity])
+ * \param [in]  ownership          Ownership
+ *
+ * \return  Number of entities
+ *
+ * \note This function can only be called if \p extract_kind has been set to \ref PDM_EXTRACT_PART_KIND_LOCAL
+ * in \ref PDM_isosurface_redistribution_set.
+ * The nature of parent entities depends on \p entity_type as follows:
+ *   - PDM_MESH_ENTITY_VTX  : parents are vertices
+ *   - PDM_MESH_ENTITY_EDGE : parents are faces
+ *   - PDM_MESH_ENTITY_FACE : parents are cells
+ *
+ * \warning comment on fait en block-distribué?
+ *
+ */
+
+int
+PDM_isosurface_local_parent_get
+(
+ PDM_isosurface_t     *isos,
+ int                   id_isosurface,
+ int                   i_part,
+ PDM_mesh_entities_t   entity_type,
+ int                 **entity_parent_idx,
+ int                 **entity_parent,
+ PDM_ownership_t       ownership
+);
+
+
+/**
  *
  * \brief Get interpolation weights of iso-surface vertices
  *
  * \param [in]  isos               \ref PDM_isosurface_t instance
  * \param [in]  id_isosurface      Iso-surface identifier
- * \param [in]  i_isovalue         Iso-value identifier
  * \param [in]  i_part             Partition identifier
  * \param [out] vtx_parent_weight  Interpolation weights
  * \param [in]  ownership          Ownership
@@ -843,7 +907,6 @@ PDM_isosurface_vtx_parent_weight_get
 (
  PDM_isosurface_t  *isos,
  int                id_isosurface,
- int                i_isovalue,
  int                i_part,
  double           **vtx_parent_weight,
  PDM_ownership_t    ownership
@@ -856,7 +919,6 @@ PDM_isosurface_vtx_parent_weight_get
  *
  * \param [in]  isos           \ref PDM_isosurface_t instance
  * \param [in]  id_isosurface  Iso-surface identifier
- * \param [in]  i_isovalue     Iso-value identifier
  * \param [in]  entity_type    Entity type
  *
  * \warning This function must be called prior to \ref PDM_isosurface_compute
@@ -868,7 +930,6 @@ PDM_isosurface_enable_part_to_part
 (
  PDM_isosurface_t     *isos,
  int                   id_isosurface,
- int                   i_isovalue,
  PDM_mesh_entities_t   entity_type
  );
 
@@ -878,7 +939,6 @@ PDM_isosurface_enable_part_to_part
  *
  * \param [in]  isos           \ref PDM_isosurface_t instance
  * \param [in]  id_isosurface  Iso-surface identifier
- * \param [in]  i_isovalue     Iso-value identifier
  * \param [in]  entity_type    Entity type
  * \param [out] ptp            Pointer to \ref PDM_part_to_part_t instance
  * \param [in ] ownership      Ownership for \p ptp
@@ -894,7 +954,6 @@ PDM_isosurface_part_to_part_get
 (
  PDM_isosurface_t     *isos,
  int                   id_isosurface,
- int                   i_isovalue,
  PDM_mesh_entities_t   entity_type,
  PDM_part_to_part_t  **ptp,
  PDM_ownership_t       ownership
