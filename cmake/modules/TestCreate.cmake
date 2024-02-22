@@ -235,6 +235,14 @@ function(test_fortran_create name n_proc LIST_TEST LIST_NRANK)
   target_link_libraries(${name} ${LINK_LIBRARIES})
   set_target_properties(${name} PROPERTIES LINKER_LANGUAGE "Fortran")
 
+  if (LAPACK_FOUND)
+    target_link_libraries(${name} LAPACK::LAPACK)
+  endif()
+  if (NOT LAPACK_FOUND AND BLAS_FOUND)
+    target_link_libraries(${name} BLAS::BLAS)
+  endif()
+
+
 
   # NB: Faire le passage dans le -genv de MPI n'est pas équivalent à faire l'export avant ...
   set (MPIEXEC_GENV_COMMAND      "")
