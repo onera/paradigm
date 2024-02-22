@@ -975,6 +975,7 @@ PDM_part_extension_entity1_to_entity2
   int                         **pentity1_to_pentity1_interface,
   int                          *pn_entity2,
   PDM_g_num_t                 **pentity2_ln_to_gn,
+  int                         **pentity2_alrdy_sent,
   int                         **pentity2_entity1_idx,
   int                         **pentity2_entity1,
   int                           prev_dentity2_itrf_n_blk,
@@ -1012,6 +1013,7 @@ PDM_part_extension_entity1_to_entity2
     for(int i_part = 0; i_part < n_part; ++i_part) {
       PDM_log_trace_array_long(pentity1_ln_to_gn[i_part], pn_entity1[i_part], "pentity1_ln_to_gn ::");
       PDM_log_trace_array_long(pentity2_ln_to_gn[i_part], pn_entity2[i_part], "pentity2_ln_to_gn ::");
+      PDM_log_trace_array_long(pentity2_alrdy_sent[i_part], pn_entity2[i_part], "pentity2_alrdy_sent ::");
       PDM_log_trace_connectivity_int(pentity1_entity2_idx[i_part], pentity1_entity2[i_part], pn_entity1[i_part],"pentity1_entity2 ::");
       PDM_log_trace_connectivity_int(pentity2_entity1_idx[i_part], pentity2_entity1[i_part], pn_entity2[i_part],"pentity2_entity1 ::");
 
@@ -1058,7 +1060,12 @@ PDM_part_extension_entity1_to_entity2
     for(int i_ref = 0; i_ref < n_ref_lnum2[i_part]; ++i_ref) {
       int i_entity1 = ref_lnum2[i_part][i_ref]-1;
       for(int k = gnum1_come_from_idx[i_part][i_ref]; k < gnum1_come_from_idx[i_part][i_ref+1]; ++k) {
-        n_send_part2 += _pentity1_entity2_idx[i_entity1+1] - _pentity1_entity2_idx[i_entity1];
+        for(int idx_entity2 = _pentity1_entity2_idx[i_entity1]; idx_entity2 < _pentity1_entity2_idx[i_entity1+1]; ++idx_entity2) {
+          int i_entity2 = PDM_ABS(pentity1_entity2[i_part][idx_entity2])-1;
+          if (pentity2_alrdy_sent[i_part][i_entity2]==0) {
+            n_send_part2 += 1;
+          }
+        }
       }
     }
 
@@ -1071,20 +1078,26 @@ PDM_part_extension_entity1_to_entity2
     int         *_gnum1_com_from_triplet_send = gnum1_com_from_triplet_send[i_part];
     PDM_g_num_t *_gnum1_com_from_gnum_send    = gnum1_com_from_gnum_send   [i_part];
 
+    int l_n_send_part2 = 0;
     n_send_part2 = 0;
     for(int i_ref = 0; i_ref < n_ref_lnum2[i_part]; ++i_ref) {
       int i_entity1 = ref_lnum2[i_part][i_ref]-1;
       for(int k = gnum1_come_from_idx[i_part][i_ref]; k < gnum1_come_from_idx[i_part][i_ref+1]; ++k) {
-        _gnum1_com_from_triplet_n[k] = _pentity1_entity2_idx[i_entity1+1] - _pentity1_entity2_idx[i_entity1];
+        l_n_send_part2 = 0;
         for(int idx_entity2 = _pentity1_entity2_idx[i_entity1]; idx_entity2 < _pentity1_entity2_idx[i_entity1+1]; ++idx_entity2) {
 
           int i_entity2 = PDM_ABS(pentity1_entity2[i_part][idx_entity2])-1;
-          _gnum1_com_from_gnum_send   [  n_send_part2  ] = pentity2_ln_to_gn[i_part][i_entity2];
-          _gnum1_com_from_triplet_send[3*n_send_part2  ] = i_rank;
-          _gnum1_com_from_triplet_send[3*n_send_part2+1] = i_part;
-          _gnum1_com_from_triplet_send[3*n_send_part2+2] = i_entity2;
-          n_send_part2++;
+          if (pentity2_alrdy_sent[i_part][i_entity2]==0) {
+            _gnum1_com_from_gnum_send   [  n_send_part2  ] = pentity2_ln_to_gn[i_part][i_entity2];
+            _gnum1_com_from_triplet_send[3*n_send_part2  ] = i_rank;
+            _gnum1_com_from_triplet_send[3*n_send_part2+1] = i_part;
+            _gnum1_com_from_triplet_send[3*n_send_part2+2] = i_entity2;
+            l_n_send_part2++;
+            n_send_part2++;
+          }
         }
+        _gnum1_com_from_triplet_n[k] = l_n_send_part2;
+
       }
     }
 
@@ -1678,6 +1691,14 @@ PDM_part_extension_entity1_to_entity2
       PDM_log_trace_array_long(extented_entity2_orig_gnum             [i_part], n_triplet/3, "extented_entity2_orig_gnum             ::");
       PDM_log_trace_array_int (pentity2_extented_to_pentity2_interface[i_part], n_triplet/3, "pentity2_extented_to_pentity2_interface::");
       PDM_log_trace_array_int (pentity2_extented_to_pentity2_triplet  [i_part], n_triplet  , "pentity2_extented_to_pentity2_triplet  ::");
+    }
+
+    /*
+     * Tag faces that have been sent
+     */
+    for (int i_face=0; i_face<n_unique; ++i_face) {
+      int i_entity2 = pentity2_extented_to_pentity2_triplet[i_part][3*i_face+2];
+      pentity2_alrdy_sent[i_part][i_entity2] = 1;
     }
 
     free(order);

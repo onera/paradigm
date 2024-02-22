@@ -53,6 +53,7 @@ PDM_part_extension_entity1_to_entity2
   int                         **pentity1_to_pentity1_interface,
   int                          *pn_entity2,
   PDM_g_num_t                 **pentity2_ln_to_gn,
+  int                         **pentity1_alrdy_sent,
   int                         **pentity2_entity1_idx,
   int                         **pentity2_entity1,
   int                           prev_dentity2_itrf_n_blk,
