@@ -315,17 +315,17 @@ subroutine PDM_part_to_block_create_from_distrib (ptb,              &
   use iso_c_binding
   implicit none
 
-  type(c_ptr)                       :: ptb
-  integer,          intent(in)      :: t_distrib
-  integer,          intent(in)      :: t_post
-  double precision, intent(in)      :: partActiveNode
+  type(c_ptr)                        :: ptb
+  integer,          intent(in)       :: t_distrib
+  integer,          intent(in)       :: t_post
+  double precision, intent(in)       :: partActiveNode
   type(PDM_pointer_array_t), pointer :: gnum_elt
-  type(PDM_pointer_array_t), pointer :: dataDistribIndex
-  integer(pdm_l_num_s), pointer     :: n_elt(:)
-  integer,          intent(in)      :: n_part
-  integer,          intent(in)      :: comm
+  integer(pdm_g_num_s),      pointer :: dataDistribIndex(:)
+  integer(pdm_l_num_s),      pointer :: n_elt(:)
+  integer,          intent(in)       :: n_part
+  integer,          intent(in)       :: comm
 
-  integer(c_int)                    :: c_comm
+  integer(c_int)                     :: c_comm
 
   interface
     function PDM_part_to_block_create_from_distrib_c (t_distrib,        &
@@ -356,13 +356,13 @@ subroutine PDM_part_to_block_create_from_distrib (ptb,              &
 
   c_comm = PDM_MPI_Comm_f2c(comm)
 
-  ptb = PDM_part_to_block_create_from_distrib_c (t_distrib,                    &
-                                                 t_post,                       &
-                                                 partActiveNode,               &
-                                                 c_loc(gnum_elt%cptr),         &
-                                                 c_loc(dataDistribIndex%cptr), &
-                                                 c_loc(n_elt),                 &
-                                                 n_part,                       &
+  ptb = PDM_part_to_block_create_from_distrib_c (t_distrib,               &
+                                                 t_post,                  &
+                                                 partActiveNode,          &
+                                                 c_loc(gnum_elt%cptr),    &
+                                                 c_loc(dataDistribIndex), &
+                                                 c_loc(n_elt),            &
+                                                 n_part,                  &
                                                  c_comm)
 
 end subroutine PDM_part_to_block_create_from_distrib
