@@ -1,7 +1,7 @@
 !-----------------------------------------------------------------------------
 ! This file is part of the ParaDiGM library.
 !
-! Copyright (C) 2020  ONERA
+! Copyright (C) 2024  ONERA
 !
 ! This library is free software; you can redistribute it and/or
 ! modify it under the terms of the GNU Lesser General Public
@@ -41,6 +41,7 @@ program testf
   integer, parameter                    :: n_low  = 10
   integer, parameter                    :: n_high = 20
 
+  character(len=99)                     :: arg
 
   integer                               :: code
   integer                               :: i_rank
@@ -72,9 +73,28 @@ program testf
   call mpi_comm_rank(comm, i_rank, code)
   call mpi_comm_size(comm, n_rank, code)
 
+  !  Default values
+  n_part = 1
+
+  !  Read command line arguments
+  i = 1
+  do while (i <= command_argument_count())
+    call get_command_argument(i, arg)
+    select case(arg)
+      case ("-n_part")
+        i = i+1
+        call get_command_argument(i, arg)
+        read(arg, *) n_part
+      case default
+        print *, "Invalid command argument ", arg
+        stop
+    end select
+
+    i = i + 1
+  enddo
+
 
   !  Define partitions
-  n_part = 1
 
   allocate(n_elt(n_part))
   dn_elt = 0
@@ -142,6 +162,9 @@ program testf
                                 PDM_TYPE_INT)
 
   do i = 1, n_part
+    call PDM_pointer_array_part_get(gnum_elt, &
+                                    i-1,      &
+                                    ln_to_gn)
     allocate(data(n_elt(i)))
     do j = 1, n_elt(i)
       data(j) = 2*int(ln_to_gn(j), kind=pdm_l_num_s)
@@ -169,14 +192,25 @@ program testf
   do i = 1, dn_elt
     expected = 2*(data_distrib_idx(i_rank+1) + i)
     if (block_data(i) /= expected) then
-      write (*,*) "expected", expected, " but got", block_data(i)
+      write (*,*) data_distrib_idx(i_rank+1) + i, "expected", expected, " but got", block_data(i)
     endif
   enddo
 
 
   !  Free memory
   call PDM_part_to_block_free(ptb)
+  do i = 1, n_part
+    call PDM_pointer_array_part_get(gnum_elt, &
+                                    i-1,      &
+                                    ln_to_gn)
+    deallocate(ln_to_gn)
+    call PDM_pointer_array_part_get(part_data, &
+                                    i-1,       &
+                                    data)
+    deallocate(data)
+  enddo
   call PDM_pointer_array_free(gnum_elt)
+  call PDM_pointer_array_free(part_data)
   deallocate(n_elt, data_distrib_idx)
   call PDM_fortran_free_c(c_loc(block_data))
 
