@@ -288,18 +288,18 @@ end subroutine PDM_part_to_block_create
 
 !>
 !!
-!! \brief Create a partitioning to block redistribution
+!! \brief Create a part-to-block redistribution from a given distribution index
 !!
-!! \param [in]   t_distrib       Distribution type
-!! \param [in]   t_post          Post processing type
-!! \param [in]   partActiveNode  Part of active nodes (\ref PDM_writer_BLOCK_DISTRIB_PART_OF_NODE mode)
-!! \param [in]   gnum_elt        Element global number
-!! \param [in]   weight          Weight of elements (or NULL)
-!! \param [in]   n_elt           Local number of elements
-!! \param [in]   n_part          Number of partition
-!! \param [in]   comm            MPI communicator
+!! \param [in]   t_distrib         Distribution type
+!! \param [in]   t_post            Post processing type
+!! \param [in]   partActiveNode    Part of active nodes (\ref PDM_writer_BLOCK_DISTRIB_PART_OF_NODE mode)
+!! \param [in]   gnum_elt          Element global numbers
+!! \param [in]   dataDistribIndex  Distribution index (\p distrib[0] = 0 and size = *n_rank* + 1)
+!! \param [in]   n_elt             Local number of elements
+!! \param [in]   n_part            Number of partitions
+!! \param [in]   comm              MPI communicator
 !!
-!! \return   Initialized PDM_part_to_block_t
+!! \return   Initialized \ref PDM_part_to_block_t object
 !!
 !!
 
