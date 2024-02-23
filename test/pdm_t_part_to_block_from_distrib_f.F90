@@ -190,7 +190,7 @@ program testf
 
 
   do i = 1, dn_elt
-    expected = 2*(int(data_distrib_idx(i_rank+1), kind=pdm_l_num_s + i)
+    expected = 2*(int(data_distrib_idx(i_rank+1), kind=pdm_l_num_s) + i)
     if (block_data(i) /= expected) then
       write (*,*) data_distrib_idx(i_rank+1) + i, "expected", expected, " but got", block_data(i)
     endif
