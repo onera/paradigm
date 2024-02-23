@@ -190,7 +190,7 @@ program testf
 
 
   do i = 1, dn_elt
-    expected = 2*(data_distrib_idx(i_rank+1) + i)
+    expected = 2*(int(data_distrib_idx(i_rank+1), kind=pdm_l_num_s + i)
     if (block_data(i) /= expected) then
       write (*,*) data_distrib_idx(i_rank+1) + i, "expected", expected, " but got", block_data(i)
     endif
@@ -199,16 +199,17 @@ program testf
 
   !  Free memory
   call PDM_part_to_block_free(ptb)
-  do i = 1, n_part
-    call PDM_pointer_array_part_get(gnum_elt, &
-                                    i-1,      &
-                                    ln_to_gn)
-    deallocate(ln_to_gn)
-    call PDM_pointer_array_part_get(part_data, &
-                                    i-1,       &
-                                    data)
-    deallocate(data)
-  enddo
+  ! Leaks if n_part > 1 but invalid deallocate in intel (╯°□°）╯︵ ┻━┻
+  ! do i = 1, n_part
+  !   call PDM_pointer_array_part_get(gnum_elt, &
+  !                                   i-1,      &
+  !                                   ln_to_gn)
+  !   deallocate(ln_to_gn)
+  !   call PDM_pointer_array_part_get(part_data, &
+  !                                   i-1,       &
+  !                                   data)
+  !   deallocate(data)
+  ! enddo
   call PDM_pointer_array_free(gnum_elt)
   call PDM_pointer_array_free(part_data)
   deallocate(n_elt, data_distrib_idx)
