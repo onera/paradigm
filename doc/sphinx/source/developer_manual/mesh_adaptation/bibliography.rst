@@ -158,27 +158,39 @@ Tools
 The Unstructured Grid Adaptation Working Group is an open gathering of researchers working on adapting simplicial meshes to conform to a metric field.
 They have created benchmarks available here: https://github.com/UGAWG.
 
-In this section, we established a list of known mesh adaptation tools. Feel free to add other ones.
-Let's start with tool that mention a form of parallelism:
-
-  - https://github.com/hobywan/trinity (C++, 2D surface shared-memory)
-  - https://github.com/MmgTools (C, 2D and 3D, ParMMG MPI-partitioned)
-  - https://github.com/sandialabs/omega_h/tree/main (C++, optionally MPI, OpenMP, CUDA, 2D, 3D)
-  - https://github.com/AMReX-Codes/amrex (massively parallel but block-structured, C++)
-  - CDT3D (parallel)
-  - https://github.com/nasa/refine (C, MPI)
-  - https://gitlab.inria.fr/PaMPA/PaMPA (C using MMG3D and PT-SCOTCH)
-
-Let's move on to other tools:
-
-  - https://github.com/tucanos/tucanos (Airbus, Rust, 2D and 3D)
-  - Yams by P. Frey
-  - feflo.a by A. Loseille
-  - EPIC (Boeing)
-  - Pragmatic (Imperial College London)
-  - https://github.com/hpc-maths/samurai (C++)
-  - http://www.p4est.org/
-  - https://optimad.github.io/PABLO/
++-----------+------------+---------------------+------+------+-------------------------------------------------------------------------------------------+
+| Tool      | Language   | Parallelism         | Pros | Cons | Link                                                                                      |
++===========+============+=====================+======+======+===========================================================================================+
+| ParMMG    | C          | MPI Frozen Frontier |      |      | https://github.com/MmgTools                                                               |
++-----------+------------+---------------------+------+------+-------------------------------------------------------------------------------------------+
+| TreeAdapt | Fortran, C | MPI Frozen Frontier |      |      | https://www.excellerat.eu/success-story-enabling-parallel-mesh-adaptation-with-treeadapt/ |
++-----------+------------+---------------------+------+------+-------------------------------------------------------------------------------------------+
+| Refine    | C          | MPI                 |      |      | https://github.com/nasa/refine                                                            |
++-----------+------------+---------------------+------+------+-------------------------------------------------------------------------------------------+
+| feflo.a   | Fortran    | OpenMP?             |      |      |                                                                                           |
++-----------+------------+---------------------+------+------+-------------------------------------------------------------------------------------------+
+| AMReX     | C++        |                     |      |      | https://github.com/AMReX-Codes/amrex                                                      |
++-----------+------------+---------------------+------+------+-------------------------------------------------------------------------------------------+
+| Trinity   | C++        | OpenMP?             |      |      |                                                                                           |
++-----------+------------+---------------------+------+------+-------------------------------------------------------------------------------------------+
+| PaMPA     | C          | MPI Buble           |      |      | https://gitlab.inria.fr/PaMPA/PaMPA                                                       |
++-----------+------------+---------------------+------+------+-------------------------------------------------------------------------------------------+
+| CDT3D     |            |                     |      |      |                                                                                           |
++-----------+------------+---------------------+------+------+-------------------------------------------------------------------------------------------+
+| EPIC      |            |                     |      |      |                                                                                           |
++-----------+------------+---------------------+------+------+-------------------------------------------------------------------------------------------+
+| samurai   | C++        |                     |      |      | https://github.com/hpc-maths/samurai                                                      |
++-----------+------------+---------------------+------+------+-------------------------------------------------------------------------------------------+
+| p4est     |            |                     |      |      | http://www.p4est.org/                                                                     |
++-----------+------------+---------------------+------+------+-------------------------------------------------------------------------------------------+
+| PABLO     |            |                     |      |      | https://optimad.github.io/PABLO/                                                          |
++-----------+------------+---------------------+------+------+-------------------------------------------------------------------------------------------+
+| Pragmatic |            |                     |      |      |                                                                                           |
++-----------+------------+---------------------+------+------+-------------------------------------------------------------------------------------------+
+| Omega_h   | C++, CUDA  | MPI, OPenMP, GPU    |      |      | https://github.com/sandialabs/omega_h/tree/main                                           |
++-----------+------------+---------------------+------+------+-------------------------------------------------------------------------------------------+
+| Tucanos   | Rust       |                     |      |      | https://github.com/tucanos/tucanos                                                        |
++-----------+------------+---------------------+------+------+-------------------------------------------------------------------------------------------+
 
 ParaDiGM's approach
 ===================
@@ -196,27 +208,6 @@ With a simple extrapolation that means 6512 billion cells for the CREATE compres
 
 Let us underline that the usual approach for mesh adaptation in parallel is by working with on partitions and to
 refine the partition boundaries to remove those fake ridges as shown in [7]. They considered themselves this not to be an optimal solution.
-
-What points do we want to work on?
-----------------------------------
-
-- implement swap (adapt seed for face-swap) (local and global?)
-- implement smoothing (local when staring and global?)
-- provide a score to prioritize cavities
-- extract area in which mesh adaptation will be done
-- cavity prison to avoid blocking cavity (limit cavity growth) or interleave swap operations like P. Caplan suggests
-- check background mesh is coherent with the volume mesh
-- multi-section background mesh
-- Hilbert partitioning
-- try not all groups on all procs
-- change metric interpolation (with a background mesh for instance)
-- change quality tolerance
-- asynchronism
-- check independent to parallelism
-- unitary tests
-- projection using :math:`P^3` reconstruction for direction (local or global?)
-- does MMG3D do projections ?
-- propagation algorithm for graph coloring
 
 References
 ==========
@@ -261,3 +252,5 @@ In: Proceedings of the 2001 Symposium on Interactive 3D Graphics (2001).
 
 [15] C. Lachat. "Conception et validation d’algorithmes de remaillage parallèles à mémoire distribuée
 basés sur un remailleur séquentiel". In: (2013).
+
+[16] R. Haimes J.F. Dannenhoffer. "EGADSlite: A Lightweight Geometry Kernel for HPC". In (2018)
