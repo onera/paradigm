@@ -295,6 +295,25 @@ PDM_dmesh_bound_set
  PDM_ownership_t   ownership
 );
 
+
+
+void
+PDM_dfind_topological_ridges
+(
+  PDM_MPI_Comm   comm,
+  PDM_g_num_t   *distrib_face,
+  int           *dface_vtx_idx,
+  PDM_g_num_t   *dface_vtx,
+  int            n_group_face,
+  int           *dgroup_face_idx,
+  PDM_g_num_t   *dgroup_face,
+  PDM_g_num_t  **out_distrib_ridge,
+  PDM_g_num_t  **out_dridge_vtx,
+  int           *out_n_group_ridge,
+  int          **out_dgroup_edge_idx,
+  PDM_g_num_t  **out_dgroup_edge
+);
+
 /*----------------------------------------------------------------------------*/
 
 #ifdef __cplusplus

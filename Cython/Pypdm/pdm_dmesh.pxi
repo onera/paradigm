@@ -77,7 +77,20 @@ cdef extern from "pdm_dmesh.h":
                                     PDM_g_num_t              *connect,
                                     int                      *connect_idx,
                                     PDM_ownership_t           ownership);
-    void PDM_dmesh_free(PDM_dmesh_t   *dm)
+    void PDM_dmesh_free(PDM_dmesh_t   *dm);
+
+    void PDM_dfind_topological_ridges(PDM_MPI_Comm   comm,
+                                      PDM_g_num_t   *distrib_face,
+                                      int           *dface_vtx_idx,
+                                      PDM_g_num_t   *dface_vtx,
+                                      int            n_group_face,
+                                      int           *dgroup_face_idx,
+                                      PDM_g_num_t   *dgroup_face,
+                                      PDM_g_num_t  **out_distrib_ridge,
+                                      PDM_g_num_t  **out_dridge_vtx,
+                                      int           *out_n_group_ridge,
+                                      int          **out_dgroup_edge_idx,
+                                      PDM_g_num_t  **out_dgroup_edge);
     # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 # ------------------------------------------------------------------
@@ -392,3 +405,43 @@ def dmesh_vtx_coord_get(DMesh pydm):
                            &dvtx_coord,
                             PDM_OWNERSHIP_USER)
     return create_numpy_d(dvtx_coord, 3*dn_vtx)
+
+
+def dfind_topological_ridge(MPI.Comm comm,
+                            NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1] distrib_face,
+                            NPY.ndarray[NPY.int32_t   , mode='c', ndim=1] dface_vtx_idx,
+                            NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1] dface_vtx,
+                            NPY.ndarray[NPY.int32_t   , mode='c', ndim=1] dgroup_face_idx,
+                            NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1] dgroup_face):
+  """
+  """
+  cdef MPI.MPI_Comm c_comm = comm.ob_mpi
+  cdef PDM_g_num_t  *distrib_ridge   = NULL
+  cdef PDM_g_num_t  *dridge_vtx      = NULL
+  cdef int           n_group_ridge   = 0
+  cdef int          *dgroup_edge_idx = NULL
+  cdef PDM_g_num_t  *dgroup_edge     = NULL
+
+  cdef int n_group_face = dgroup_face_idx.shape[0]-1
+
+  PDM_dfind_topological_ridges(PDM_MPI_mpi_2_pdm_mpi_comm (<void *> &c_comm),
+               <PDM_g_num_t *> distrib_face.data,
+               <int         *> dface_vtx_idx.data,
+               <PDM_g_num_t *> dface_vtx.data,
+                               n_group_face,
+               <int         *> dgroup_face_idx.data,
+               <PDM_g_num_t *> dgroup_face.data,
+                               &distrib_ridge,
+                               &dridge_vtx,
+                               &n_group_ridge,
+                               &dgroup_edge_idx,
+                               &dgroup_edge)
+  n_rank = comm.Get_size()
+  i_rank = comm.Get_rank()
+  cdef int dn_edge = distrib_ridge[i_rank+1] - distrib_ridge[i_rank]
+  np_distrib_ridge   = create_numpy_g(distrib_ridge, n_rank+1)
+  np_dridge_vtx      = create_numpy_g(dridge_vtx, 2 * dn_edge)
+  np_dgroup_edge_idx = create_numpy_i(dgroup_edge_idx, n_group_ridge+1)
+  np_dgroup_edge     = create_numpy_g(dgroup_edge, dgroup_edge_idx[n_group_ridge])
+
+  return np_distrib_ridge, np_dridge_vtx, np_dgroup_edge_idx, np_dgroup_edge

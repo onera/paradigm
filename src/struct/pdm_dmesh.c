@@ -45,7 +45,16 @@
  *  Header for the current file
  *----------------------------------------------------------------------------*/
 
+#include "pdm_dmesh_nodal_to_dmesh.h"
+#include "pdm_dmesh_nodal_elements_utils.h"
+#include "pdm_dconnectivity_transform.h"
+#include "pdm_part_to_block.h"
+#include "pdm_block_to_part.h"
 #include "pdm_dmesh.h"
+#include "pdm_logging.h"
+#include "pdm_gnum.h"
+#include "pdm_distrib.h"
+#include "pdm_array.h"
 
 /*----------------------------------------------------------------------------*/
 
@@ -645,6 +654,368 @@ PDM_dmesh_bound_set
     dmesh->is_owner_bound[bound_type] = PDM_TRUE;
   }
 }
+
+
+void
+PDM_dfind_topological_ridges
+(
+  PDM_MPI_Comm   comm,
+  PDM_g_num_t   *distrib_face,
+  int           *dface_vtx_idx,
+  PDM_g_num_t   *dface_vtx,
+  int            n_group_face,
+  int           *dgroup_face_idx,
+  PDM_g_num_t   *dgroup_face,
+  PDM_g_num_t  **out_distrib_ridge,
+  PDM_g_num_t  **out_dridge_vtx,
+  int           *out_n_group_ridge,
+  int          **out_dgroup_edge_idx,
+  PDM_g_num_t  **out_dgroup_edge
+)
+{
+  int i_rank;
+  int n_rank;
+  PDM_MPI_Comm_rank(comm, &i_rank);
+  PDM_MPI_Comm_size(comm, &n_rank);
+
+  /*
+   * Computation of edges
+   */
+  int dn_face = distrib_face[i_rank+1] - distrib_face[i_rank];
+
+  /*
+   * Extract faces only link to a group
+   */
+  PDM_g_num_t         *distrib_extract_face     = NULL;
+  PDM_g_num_t         *dparent_face             = NULL;
+  int                 *dextract_face_vtx_idx    = NULL;
+  PDM_g_num_t         *dextract_face_vtx        = NULL;
+  PDM_block_to_part_t *btp_face_to_extract_face = NULL;
+  PDM_g_num_t         *distrib_extract_vtx      = NULL;
+  PDM_g_num_t         *dparent_vtx              = NULL;
+
+  PDM_dconnectivity_to_extract_dconnectivity(comm,
+                                             dgroup_face_idx[n_group_face],
+                                             dgroup_face,
+                                             distrib_face,
+                                             dface_vtx_idx,
+                                             dface_vtx,
+                                             &distrib_extract_face,
+                                             &dparent_face,
+                                             &dextract_face_vtx_idx,
+                                             &dextract_face_vtx,
+                                             &btp_face_to_extract_face,
+                                             &distrib_extract_vtx,
+                                             &dparent_vtx);
+
+  int dn_face_extract = distrib_extract_face[i_rank+1] - distrib_extract_face[i_rank];
+
+  int n_edge_elt_tot = dextract_face_vtx_idx[dn_face_extract];
+  PDM_g_num_t* tmp_dface_edge         = (PDM_g_num_t *) malloc(     n_edge_elt_tot    * sizeof(PDM_g_num_t) );
+  int*         tmp_parent_elmt_pos    = (int         *) malloc(     n_edge_elt_tot    * sizeof(int        ) );
+  int*         tmp_dface_edge_vtx_idx = (int         *) malloc( ( n_edge_elt_tot + 1) * sizeof(int        ) );
+  PDM_g_num_t* tmp_dface_edge_vtx     = (PDM_g_num_t *) malloc( 2 * n_edge_elt_tot    * sizeof(PDM_g_num_t) );
+
+  int n_elmt_current = 0;
+  int n_edge_current = 0;
+  tmp_dface_edge_vtx_idx[0] = 0;
+  PDM_poly2d_decomposes_edges(dn_face_extract,
+                              &n_elmt_current,
+                              &n_edge_current,
+                              distrib_extract_face[i_rank],
+                              -1,
+                              dextract_face_vtx,
+                              dextract_face_vtx_idx,
+                              tmp_dface_edge_vtx_idx,
+                              tmp_dface_edge_vtx,
+                              tmp_dface_edge,
+                              NULL,
+                              NULL,
+                              tmp_parent_elmt_pos);
+  assert(n_edge_current == n_edge_elt_tot);
+  free(tmp_parent_elmt_pos);
+
+  int dn_edge = 0;
+  PDM_g_num_t  *edge_distrib   = NULL;
+  int          *dedge_vtx_idx  = NULL;
+  PDM_g_num_t  *dedge_vtx      = NULL;
+  int          *dedge_face_idx = NULL;
+  PDM_g_num_t  *dedge_face     = NULL;
+  PDM_generate_entitiy_connectivity_raw(comm,
+                                        distrib_extract_vtx[n_rank],
+                                        n_edge_elt_tot,
+                                        tmp_dface_edge,
+                                        tmp_dface_edge_vtx_idx,
+                                        tmp_dface_edge_vtx,
+                                        &dn_edge,
+                                        &edge_distrib,
+                                        &dedge_vtx_idx,
+                                        &dedge_vtx,
+                                        &dedge_face_idx,
+                                        &dedge_face);
+
+  free(dparent_face         );
+  free(dextract_face_vtx_idx);
+  free(dextract_face_vtx    );
+
+  if(0 == 1) {
+    PDM_log_trace_array_long(edge_distrib, n_rank+1               , "edge_distrib::");
+    PDM_log_trace_array_long(dedge_vtx   , dedge_vtx_idx [dn_edge], "dedge_vtx::"   );
+    PDM_log_trace_array_long(dedge_face  , dedge_face_idx[dn_edge], "dedge_face::"  );
+  }
+
+
+  PDM_part_to_block_t* ptb = PDM_part_to_block_create_from_distrib(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
+                                                                   PDM_PART_TO_BLOCK_POST_CLEANUP,
+                                                                   1.,
+                                                                   &dgroup_face,
+                                                                   distrib_face,
+                                                                   &dgroup_face_idx[n_group_face],
+                                                                   1,
+                                                                   comm);
+
+  int *pface_group   = malloc(dgroup_face_idx[n_group_face] * sizeof(int));
+  int *pface_group_n = malloc(dgroup_face_idx[n_group_face] * sizeof(int));
+  for(int i_group = 0; i_group < n_group_face; ++i_group) {
+    for(int idx_face = dgroup_face_idx[i_group]; idx_face < dgroup_face_idx[i_group+1]; ++idx_face) {
+      pface_group  [idx_face] = (i_group+1);
+      pface_group_n[idx_face] = 1;
+    }
+  }
+
+  if(1 == 0) {
+    PDM_log_trace_array_long(dgroup_face  , dgroup_face_idx[n_group_face], "dgroup_face   ::");
+    PDM_log_trace_array_int (pface_group_n, dgroup_face_idx[n_group_face], "pface_group_n ::");
+  }
+
+  int *dface_group   = NULL;
+  int *tmp_dface_group_n = NULL;
+  PDM_part_to_block_exch(ptb,
+                         sizeof(int),
+                         PDM_STRIDE_VAR_INTERLACED,
+                         1,
+                        &pface_group_n,
+             (void **)  &pface_group,
+                        &tmp_dface_group_n,
+             (void **)  &dface_group);
+
+  free(pface_group_n);
+  free(pface_group);
+
+  int n_elt_face = PDM_part_to_block_n_elt_block_get(ptb);
+  PDM_g_num_t* blk_gnum_face = PDM_part_to_block_block_gnum_get(ptb);
+
+  int *dface_group_n = PDM_array_zeros_int(dn_face);
+
+  for(int i1 = 0; i1 < n_elt_face; ++i1) {
+    int i = (int) (blk_gnum_face[i1] - distrib_face[i_rank] - 1);
+    dface_group_n[i] = tmp_dface_group_n[i1];
+  }
+  free(tmp_dface_group_n);
+
+  PDM_part_to_block_free(ptb);
+
+  /*
+   * Go to extract_face frame
+   */
+  int **tmp_dextract_face_group_n = NULL;
+  int **tmp_dextract_face_group   = NULL;
+  PDM_block_to_part_exch(btp_face_to_extract_face,
+                         sizeof(int),
+                         PDM_STRIDE_VAR_INTERLACED,
+                         dface_group_n,
+                         dface_group,
+             (int ***)   &tmp_dextract_face_group_n,
+             (void ***)  &tmp_dextract_face_group);
+  int *dextract_face_group_n = tmp_dextract_face_group_n[0];
+  int *dextract_face_group   = tmp_dextract_face_group  [0];
+  free(tmp_dextract_face_group_n);
+  free(tmp_dextract_face_group  );
+
+  free(dface_group_n);
+  free(dface_group);
+  free(dextract_face_group_n);
+  PDM_block_to_part_free(btp_face_to_extract_face);
+
+  /* Go back to edge */
+  int dn_edge_twice = 2 * dn_edge;
+  PDM_block_to_part_t *btp = PDM_block_to_part_create(distrib_extract_face,
+                            (const PDM_g_num_t **)    &dedge_face,
+                                                      &dn_edge_twice,
+                                                      1,
+                                                      comm);
+
+  int **dedge_face_group_tmp = NULL;
+  int stride_one = 1;
+  PDM_block_to_part_exch(btp,
+                         sizeof(int),
+                         PDM_STRIDE_CST_INTERLACED,
+                         &stride_one,
+                         dextract_face_group,
+                         NULL,
+             (void ***) &dedge_face_group_tmp);
+  int *dedge_face_group = dedge_face_group_tmp[0];
+  free(dedge_face_group_tmp);
+  free(dextract_face_group);
+  PDM_block_to_part_free(btp);
+
+  free(distrib_extract_face );
+
+  /*
+   * Prepare gnum
+   */
+  PDM_gen_gnum_t* gen_gnum = PDM_gnum_create(3,
+                                             1,
+                                             PDM_TRUE,
+                                             1e-4,
+                                             comm,
+                                             PDM_OWNERSHIP_USER);
+
+
+  PDM_g_num_t *edge_doublet = malloc( dn_edge_twice * sizeof(PDM_g_num_t));
+  PDM_g_num_t *edge_group   = NULL;
+  int         *pridge_edge  = malloc( dn_edge       * sizeof(int        ));
+  int          dn_ridge     = 0;
+
+  int idx_write = 0;
+  for(int i = 0; i < dn_edge; ++i) {
+
+    int igroup1 = dedge_face_group[2*i  ];
+    int igroup2 = dedge_face_group[2*i+1];
+
+    if(igroup1 != igroup2) {
+      edge_doublet[2*idx_write  ] = PDM_MIN(igroup1, igroup2);
+      edge_doublet[2*idx_write+1] = PDM_MAX(igroup1, igroup2);
+
+      pridge_edge[dn_ridge++] = i;
+      idx_write++;
+    }
+  }
+  free(dedge_face_group);
+
+  PDM_gnum_set_from_parents(gen_gnum, 0, dn_ridge, edge_doublet);
+  PDM_gnum_set_parents_nuplet(gen_gnum, 2);
+
+  PDM_gnum_compute(gen_gnum);
+  edge_group = PDM_gnum_get(gen_gnum, 0);
+
+  if(0 == 1) {
+    PDM_log_trace_array_long(edge_group, dn_ridge, "edge_group ::");
+  }
+
+  int _n_group_ridge = 0;
+  for(int i = 0; i < dn_ridge; ++i) {
+    _n_group_ridge = PDM_MAX(_n_group_ridge, edge_group[i]);
+  }
+  int n_group_ridge = 0;
+  PDM_MPI_Allreduce(&_n_group_ridge, &n_group_ridge, 1, PDM_MPI_INT, PDM_MPI_MAX, comm);
+
+  free(edge_doublet);
+  /*
+   * Hook edge
+   */
+  PDM_g_num_t *dridge_vtx = malloc(2 * dn_ridge * sizeof(PDM_g_num_t));
+  for(int i = 0; i < dn_ridge; ++i) {
+    int i_edge = pridge_edge[i];
+    dridge_vtx[2*i  ] = dedge_vtx[2*i_edge  ];
+    dridge_vtx[2*i+1] = dedge_vtx[2*i_edge+1];
+  }
+  free(pridge_edge);
+  // PDM_log_trace_array_long(dridge_vtx, 2 * dn_ridge, "dridge_vtx ::");
+
+  /*
+   * Re-création des groupes
+   */
+  int *dgroup_edge_n = malloc(n_group_ridge * sizeof(int));
+
+  for(int i = 0; i < n_group_ridge; ++i) {
+    dgroup_edge_n[i] = 0;
+  }
+
+  for(int i = 0; i < dn_ridge; ++i) {
+    dgroup_edge_n[edge_group[i]-1]++;
+  }
+
+  if(1 == 0) {
+    PDM_log_trace_array_int(dgroup_edge_n, n_group_ridge, "dgroup_edge_n ::");
+  }
+
+  int *dgroup_edge_idx = malloc((n_group_ridge+1) * sizeof(int));
+  dgroup_edge_idx[0] = 0;
+  for(int i = 0; i < n_group_ridge; ++i) {
+    dgroup_edge_idx[i+1] = dgroup_edge_idx[i] + dgroup_edge_n[i];
+    dgroup_edge_n[i] = 0;
+  }
+
+  PDM_g_num_t* dgroup_edge = malloc(dgroup_edge_idx[n_group_ridge] * sizeof(PDM_g_num_t));
+
+  PDM_g_num_t* distrib_ridge = PDM_compute_entity_distribution(comm, dn_ridge);
+
+  for(int i = 0; i < dn_ridge; ++i) {
+    int i_group = edge_group[i]-1;
+    int idx = dgroup_edge_idx[i_group] + dgroup_edge_n[i_group]++;
+    dgroup_edge[idx] = distrib_ridge[i_rank] + i + 1;
+  }
+
+  if(0 == 1) {
+    PDM_log_trace_array_int(dgroup_edge_idx, n_group_ridge+1, "dgroup_edge_idx ::");
+    PDM_log_trace_connectivity_long(dgroup_edge_idx, dgroup_edge, n_group_ridge, "dgroup_edge :: ");
+  }
+
+  free(edge_group);
+  PDM_gnum_free(gen_gnum);
+
+  /*
+   * Update ridge gnum
+   */
+  int dn_ridge_twice = 2 * dn_ridge;
+  PDM_block_to_part_t* btp_vtx = PDM_block_to_part_create(distrib_extract_vtx,
+                                   (const PDM_g_num_t **) &dridge_vtx,
+                                                          &dn_ridge_twice,
+                                                          1,
+                                                          comm);
+
+  PDM_g_num_t **tmp_dridge_vtx_parent = NULL;
+  PDM_block_to_part_exch(btp_vtx,
+                         sizeof(PDM_g_num_t),
+                         PDM_STRIDE_CST_INTERLACED,
+                         &stride_one,
+                         dparent_vtx,
+                         NULL,
+             (void ***) &tmp_dridge_vtx_parent);
+  PDM_g_num_t *dridge_vtx_parent = tmp_dridge_vtx_parent[0];
+  free(tmp_dridge_vtx_parent);
+
+
+  free(dparent_vtx);
+  free(distrib_extract_vtx);
+  free(dridge_vtx);
+
+  PDM_block_to_part_free(btp_vtx);
+
+
+  /* Fix output */
+  *out_distrib_ridge   = distrib_ridge;
+  *out_dridge_vtx      = dridge_vtx_parent;
+  *out_n_group_ridge   = n_group_ridge;
+  *out_dgroup_edge     = dgroup_edge;
+  *out_dgroup_edge_idx = dgroup_edge_idx;
+
+  /*
+   * Free
+   */
+  free(dgroup_edge_n );
+  free(edge_distrib  );
+  free(dedge_vtx_idx );
+  free(dedge_vtx     );
+  free(dedge_face_idx);
+  free(dedge_face    );
+
+}
+
+
+
+
 
 #ifdef __cplusplus
 }
