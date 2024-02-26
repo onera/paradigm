@@ -348,9 +348,26 @@ PDM_reader_gamma_dmesh_nodal
       /* Shift groups */
       // _shift_groups((int) gn_vtx,   gvtx_group); // TODO: when corners
       _shift_groups((int) gn_edge,  gedge_group);
-      _shift_groups((int) gn_tria,  gtria_group);
+
+      // >>> TMP fix
+      int min_group = INT_MAX;
+
+      for (int i = 0; i < gn_tria; i++) {
+        min_group = PDM_MIN(min_group, gtria_group[i]);
+      }
+      for (int i = 0; i < gn_quad; i++) {
+        min_group = PDM_MIN(min_group, gquad_group[i]);
+      }
+
+      for (int i = 0; i < gn_tria; i++) {
+        gtria_group[i] += 1 - min_group;
+      }
+      for (int i = 0; i < gn_quad; i++) {
+        gquad_group[i] += 1 - min_group;
+      }
+      // <<< TMP fix
+
       _shift_groups((int) gn_tetra, gtetra_group);
-      _shift_groups((int) gn_quad,  gquad_group);
     }
 
     if (0) {
