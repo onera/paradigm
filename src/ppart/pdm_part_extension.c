@@ -943,6 +943,7 @@ _part_extension_2d
 
   int          **pface_alrdy_sent     = (int         **) malloc( part_ext->n_domain * sizeof(int         *));
   int          **pface_which_gate     = (int         **) malloc( part_ext->n_domain * sizeof(int         *));
+  int          **pface_parent         = (int         **) malloc( part_ext->n_domain * sizeof(int         *));
 
   int lpart = 0;
   for(int i_domain = 0; i_domain < part_ext->n_domain; ++i_domain) {
@@ -967,6 +968,7 @@ _part_extension_2d
       pvtx_coords   [lpart] = malloc(3 * pn_vtx [lpart] * sizeof(double));
       pface_alrdy_sent    [lpart] = malloc(    pn_face[lpart] * sizeof(int));
       pface_which_gate    [lpart] = malloc(    pn_face[lpart] * sizeof(int));
+      pface_parent        [lpart] = malloc(    pn_face[lpart] * sizeof(int));
 
 
       for(int i_face = 0; i_face < pn_face[lpart]; ++i_face) {
@@ -990,11 +992,11 @@ _part_extension_2d
       for(int i_vtx = 0; i_vtx < 3 * pn_vtx[lpart]; ++i_vtx) {
         pvtx_coords   [lpart][i_vtx] = part_ext->parts[i_domain][i_part].vtx[i_vtx];
       }
-      for(int i_face = 0; i_face <     pn_face[lpart]; ++i_face) {
-        pface_alrdy_sent    [lpart][i_face] = 0;
       }
       for(int i_face = 0; i_face <     pn_face[lpart]; ++i_face) {
-        pface_which_gate    [lpart][i_face] = 0;
+        pface_alrdy_sent[lpart][i_face] = 0;
+        pface_which_gate[lpart][i_face] = 0;
+        pface_parent    [lpart][i_face] = 0;
       }
 
       lpart++;
@@ -1099,6 +1101,7 @@ _part_extension_2d
     int          *pn_face_extented                  = NULL;
     PDM_g_num_t **pface_extented_ln_to_gn           = NULL;
     int         **pface_extented_which_gate         = NULL;
+    int         **pface_extented_parent             = NULL;
     int         **pface_extented_to_pface_idx       = NULL;
     int         **pface_extented_to_pface_triplet   = NULL;
     int         **pface_extented_to_pface_interface = NULL;
@@ -1129,6 +1132,7 @@ _part_extension_2d
                                           pface_ln_to_gn,
                                           pface_alrdy_sent,
                                           pface_which_gate,
+                                          pface_parent,
                                           pface_vtx_idx,
                                           pface_vtx,
                                           prev_dface_itrf_n_blk,
@@ -1138,6 +1142,7 @@ _part_extension_2d
                                           &pn_face_extented,
                                           &pface_extented_ln_to_gn,
                                           &pface_extented_which_gate,
+                                          &pface_extented_parent,
                                           &pface_extented_to_pface_idx,
                                           &pface_extented_to_pface_triplet,
                                           &pface_extented_to_pface_interface,
@@ -1266,6 +1271,7 @@ _part_extension_2d
       pface_ln_to_gn[i_part] = realloc(pface_ln_to_gn[i_part],     pn_concat_face         * sizeof(PDM_g_num_t));
       pface_alrdy_sent[i_part] = realloc(pface_alrdy_sent[i_part],     pn_concat_face         * sizeof(int));
       pface_which_gate[i_part] = realloc(pface_which_gate[i_part],     pn_concat_face         * sizeof(int));
+      pface_parent    [i_part] = realloc(pface_parent    [i_part],     pn_concat_face         * sizeof(int));
       pface_vtx_idx [i_part] = realloc(pface_vtx_idx [i_part],     (pn_concat_face+1)     * sizeof(int        ));
       pface_vtx     [i_part] = realloc(pface_vtx     [i_part],     pn_concat_face_vtx_idx * sizeof(int        ));
 
@@ -1274,6 +1280,7 @@ _part_extension_2d
         pface_ln_to_gn[i_part][pn_face[i_part]+i_face] = pface_extented_ln_to_gn[i_part][i_face];
         pface_alrdy_sent[i_part][pn_face[i_part]+i_face] = 0;
         pface_which_gate[i_part][pn_face[i_part]+i_face] = pface_extented_which_gate[i_part][i_face];
+        pface_parent    [i_part][pn_face[i_part]+i_face] = pface_extented_parent    [i_part][i_face];
         shift_by_domain_face = PDM_MAX(shift_by_domain_face, pface_extented_ln_to_gn[i_part][i_face]);
       }
 
@@ -1531,6 +1538,7 @@ _part_extension_2d
     free(pface_ln_to_gn[i_part]);
     free(pface_alrdy_sent[i_part]);
     free(pface_which_gate[i_part]);
+    free(pface_parent[i_part]);
     free(pface_vtx_idx [i_part]);
     free(pface_vtx     [i_part]);
     free(pvtx_coords   [i_part]);
@@ -1544,6 +1552,7 @@ _part_extension_2d
   free(pface_ln_to_gn);
   free(pface_alrdy_sent);
   free(pface_which_gate);
+  free(pface_parent);
   free(pface_vtx_idx );
   free(pface_vtx     );
   free(pedge_vtx_idx );
