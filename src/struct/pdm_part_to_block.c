@@ -110,8 +110,8 @@ unsigned long long exch_data[2] = {0, 0};
 // Number of Part-to-Block instances in a run
 int n_ptb = 0;
 
-// Number of atomic test performance run
-int n_ptb_pref = 0;
+// Number of create Part-to-Block instances
+int n_ptb_open = 0;
 
 /*=============================================================================
  * Static function definitions
@@ -1414,8 +1414,7 @@ _ptb_create
  PDM_MPI_Comm                  comm
 )
 {
-  // Warning : Previously n_ptb == 0
-  if (n_ptb_pref == 0) {
+  if (n_ptb == 0) {
     t_timer[MALLOC_ACTIVE_RANKS] = PDM_timer_create (); // Warning : unused for now because negligable
     t_timer[GENERATE_DISTRIB   ] = PDM_timer_create ();
     t_timer[BINARY_SEARCH      ] = PDM_timer_create ();
@@ -1427,7 +1426,7 @@ _ptb_create
     t_timer[CREATE_GEOM        ] = PDM_timer_create ();
   }
   n_ptb++;
-  n_ptb_pref++;
+  n_ptb_open++;
 
   PDM_part_to_block_t *ptb = (PDM_part_to_block_t *) malloc (sizeof(PDM_part_to_block_t));
 
@@ -2478,13 +2477,13 @@ PDM_part_to_block_time_per_step_dump
                      PDM_MPI_DOUBLE, PDM_MPI_MAX, comm);
 
   for (int i_step = 0; i_step < NTIMER_PTB; i_step++) {
-    min_elaps[i_step]  /= n_ptb_pref;
-    mean_elaps[i_step] /= n_ptb_pref;
-    max_elaps[i_step]  /= n_ptb_pref;
+    min_elaps[i_step]  /= n_ptb_open;
+    mean_elaps[i_step] /= n_ptb_open;
+    max_elaps[i_step]  /= n_ptb_open;
 
-    min_cpu[i_step]  /= n_ptb_pref;
-    mean_cpu[i_step] /= n_ptb_pref;
-    max_cpu[i_step]  /= n_ptb_pref;
+    min_cpu[i_step]  /= n_ptb_open;
+    mean_cpu[i_step] /= n_ptb_open;
+    max_cpu[i_step]  /= n_ptb_open;
 
     mean_elaps[i_step] /= n_rank;
     mean_cpu[i_step]   /= n_rank;
@@ -4356,8 +4355,7 @@ PDM_part_to_block_free
   free (ptb);
 
   n_ptb--;
-  // Warning : Previously n_ptb == 0
-  if (n_ptb_pref == 0) {
+  if (n_ptb == 0) {
     PDM_timer_free(t_timer[MALLOC_ACTIVE_RANKS   ]);
     PDM_timer_free(t_timer[GENERATE_DISTRIB      ]);
     PDM_timer_free(t_timer[BINARY_SEARCH         ]);

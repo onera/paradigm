@@ -79,8 +79,8 @@ unsigned long long btp_exch_data[2] = {0, 0};
 // Number of Block-to-Part instances in a run
 int n_btp = 0;
 
-// Number of atomic test performance run
-int n_btp_perf = 0;
+// Number of create Block-to-Part instances
+int n_btp_open = 0;
 
 /*=============================================================================
  * Static function definitions
@@ -357,13 +357,13 @@ PDM_block_to_part_time_per_step_dump
                      PDM_MPI_DOUBLE, PDM_MPI_MAX, comm);
 
   for (int i_step = 0; i_step < NTIMER_BTP; i_step++) {
-    min_elaps[i_step]  /= n_btp_perf;
-    mean_elaps[i_step] /= n_btp_perf;
-    max_elaps[i_step]  /= n_btp_perf;
+    min_elaps[i_step]  /= n_btp_open;
+    mean_elaps[i_step] /= n_btp_open;
+    max_elaps[i_step]  /= n_btp_open;
 
-    min_cpu[i_step]  /= n_btp_perf;
-    mean_cpu[i_step] /= n_btp_perf;
-    max_cpu[i_step]  /= n_btp_perf;
+    min_cpu[i_step]  /= n_btp_open;
+    mean_cpu[i_step] /= n_btp_open;
+    max_cpu[i_step]  /= n_btp_open;
 
     mean_elaps[i_step] /= n_rank;
     mean_cpu[i_step]   /= n_rank;
@@ -611,15 +611,13 @@ PDM_block_to_part_create
  const PDM_MPI_Comm     comm
 )
 {
-
-  // Warning : Previously n_btp == 0
-  if (n_btp_perf == 0) {
+  if (n_btp == 0) {
     btp_t_timer[BINARY_SEARCH  ] = PDM_timer_create ();
     btp_t_timer[CREATE_EXCHANGE] = PDM_timer_create ();
     btp_t_timer[DATA_EXCHANGE  ] = PDM_timer_create ();
   }
   n_btp++;
-  n_btp_perf++;
+  n_btp_open++;
 
   // Start binary search timer
   double t1_elaps = PDM_timer_elapsed(btp_t_timer[BINARY_SEARCH]);
@@ -1913,8 +1911,7 @@ PDM_block_to_part_free
   free (btp);
 
   n_btp--;
-  // Warning : Previously n_btp == 0
-  if (n_btp_perf == 0) {
+  if (n_btp == 0) {
     PDM_timer_free(btp_t_timer[BINARY_SEARCH]);
     PDM_timer_free(btp_t_timer[CREATE_EXCHANGE]);
     PDM_timer_free(btp_t_timer[DATA_EXCHANGE]);
