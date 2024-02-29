@@ -1112,9 +1112,9 @@ PDM_triangle_inscribed_circle
  const double  vtx_coord[9]
 )
 {
-  double *a = &(vtx_coord[0]);
-  double *b = &(vtx_coord[3]);
-  double *c = &(vtx_coord[6]);
+  const double *a = &(vtx_coord[0]);
+  const double *b = &(vtx_coord[3]);
+  const double *c = &(vtx_coord[6]);
 
   double ab[3] = {b[0] - a[0],
                   b[1] - a[1],
