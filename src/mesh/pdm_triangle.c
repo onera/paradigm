@@ -1105,6 +1105,48 @@ PDM_triangle_ngon_to_nodal
 }
 
 
+double
+PDM_triangle_inscribed_circle
+(
+ const double  vtx_coord[9]
+)
+{
+  double *a = &(vtx_coord[0]);
+  double *b = &(vtx_coord[3]);
+  double *c = &(vtx_coord[6]);
+
+  double ab[3] = {b[0] - a[0],
+                  b[1] - a[1],
+                  b[2] - a[2]};
+
+  double bc[3] = {b[0] - a[0],
+                  b[1] - a[1],
+                  b[2] - a[2]};
+
+  double ac[3] = {c[0] - a[0],
+                  c[1] - a[1],
+                  c[2] - a[2]};
+
+  double lab = PDM_MODULE(ab);
+  double lbc = PDM_MODULE(bc);
+  double lac = PDM_MODULE(ac);
+
+  double A = 0.;
+  if (PDM_ABS(a[2]) > 1.e-15 ||
+      PDM_ABS(b[2]) > 1.e-15 ||
+      PDM_ABS(c[2]) > 1.e-15) {
+    double n[3] = {0., 0., 0.};
+    PDM_CROSS_PRODUCT(n, ab, ac);
+    A = 0.5 * PDM_MODULE(n);
+  } else {
+    A = 0.5 * PDM_predicate_orient2d(a, b, c);
+  }
+
+  return (2. * A) / (lab + lbc + lac);
+}
+
+
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

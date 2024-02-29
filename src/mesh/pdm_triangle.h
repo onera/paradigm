@@ -223,6 +223,22 @@ PDM_triangle_ngon_to_nodal
  );
 
 
+/**
+ * \brief Computes the center and radius of a triangle's inscribed circle
+ *
+ * \param [in]   vtx_coord  Triangle vertices coordinates
+ *
+ * \rerurn Radius of inscribed circle
+ *
+ */
+
+double
+PDM_triangle_inscribed_circle
+(
+ const double  vtx_coord[9]
+);
+
+
 
 #ifdef __cplusplus
 }
