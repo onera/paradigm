@@ -18,6 +18,7 @@
 #include "pdm_line.h"
 #include "pdm_plane.h"
 #include "pdm_logging.h"
+#include "pdm_predicate.h"
 
 /*=============================================================================
  * Macro definitions
