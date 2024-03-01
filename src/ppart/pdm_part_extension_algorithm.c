@@ -1310,15 +1310,19 @@ PDM_part_extension_entity1_to_entity2
     // }
 
     for(int i = 0; i < n_part1_to_part2; ++i) {
-      if(pentity1_to_pentity1_interface[i_part][i] != 0) {
+      if (pentity1_to_pentity1_interface[i_part][i] != 0) {
         for(int j = _pextract_entity2_idx[i]; j < _pextract_entity2_idx[i+1]; ++j) {
+          if (PDM_ABS(_pextract_entity2_interf[j])!=PDM_ABS(pentity1_to_pentity1_interface[i_part][i])) {
             pn_entity2_only_by_interface[i_part] += 1;
+          }
         }
       }
     }
 
-    if(0 == 1) {
-      PDM_log_trace_array_long(_pextract_entity2_gnum, n_part1_to_part2_recv_tot, "_pextract_entity2_gnum ::");
+    if(1 == 1) {
+      PDM_log_trace_array_long(_pextract_entity2_gnum  , n_part1_to_part2_recv_tot, "_pextract_entity2_gnum   ::");
+      PDM_log_trace_array_long(_pextract_entity2_interf, n_part1_to_part2_recv_tot, "_pextract_entity2_interf ::");
+      PDM_log_trace_array_long(_pextract_entity2_parent, n_part1_to_part2_recv_tot, "_pextract_entity2_parent ::");
     }
 
     pentity2_orig_gnum_and_itrf[i_part] = malloc(2 * pn_entity2_only_by_interface[i_part] * sizeof(PDM_g_num_t));
@@ -1349,6 +1353,7 @@ PDM_part_extension_entity1_to_entity2
               _pentity2_orig_gnum_and_itrf[2*idx_write  ] =  _pextract_entity2_parent[j];
               _pentity2_orig_gnum_and_itrf[2*idx_write+1] = 9999;
             }
+          }
         }
       }
 
