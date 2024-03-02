@@ -2752,7 +2752,6 @@ PDM_part_extension_pentity1_entity2_to_extented_pentity1_entity2
     PDM_g_num_t *_pentity2_ln_to_gn_sorted        = pentity2_ln_to_gn_sorted       [i_part];
 
 
-
     int idx_read      = 0;
     int idx_read_data = 0;
     for(int i = 0; i < n_part1_to_part2; ++i) {
@@ -2886,7 +2885,7 @@ PDM_part_extension_pentity1_entity2_to_extented_pentity1_entity2
 
   for(int i_part = 0; i_part < n_part; ++i_part) {
 
-    int         *_pentity2_extented_by_kind_idx           = pentity2_extented_by_kind_idx          [i_part];
+    int *_pentity2_extented_by_kind_idx = pentity2_extented_by_kind_idx[i_part];
 
     /* Prepare copy */
     int n_gnum = _pentity2_extented_by_kind_idx[n_extented_kind] - _pentity2_extented_by_kind_idx[n_extented_kind-1];
@@ -2922,7 +2921,7 @@ PDM_part_extension_pentity1_entity2_to_extented_pentity1_entity2
   /* Post-treatment */
   for(int i_part = 0; i_part < n_part; ++i_part) {
 
-    int         *_pentity2_extented_by_kind_idx           = pentity2_extented_by_kind_idx          [i_part];
+    int         *_pentity2_extented_by_kind_idx = pentity2_extented_by_kind_idx          [i_part];
     int n_gnum = _pentity2_extented_by_kind_idx[n_extented_kind] - _pentity2_extented_by_kind_idx[n_extented_kind-1];
 
     PDM_g_num_t* extented_from_itrf_entity2_ln_to_gn = PDM_gnum_get(gen_gnum_entity2, i_part);
@@ -3027,10 +3026,17 @@ PDM_part_extension_pentity1_entity2_to_extented_pentity1_entity2
 
     /* Setup all new connexion and update connectivity */
     int idx_write = 0;
-    for(int i_kind = 1; i_kind < n_extented_kind; ++i_kind) {
+    for(int i_kind = 0; i_kind < n_extented_kind; ++i_kind) {
 
-      if(i_kind == 2) {
-        continue; // Tout est deja fait, ps de nouveaux entity2
+      if(i_kind == 0 || i_kind == 2) {
+
+        for(int i = _pentity2_extented_by_kind_idx[i_kind]; i < _pentity2_extented_by_kind_idx[i_kind+1]; ++i) {
+          int idx_read = _recv_buffer_to_sort_kind_order[i];
+          _pextract_entity1_entity2[idx_read] = _pextract_entity2_gnum_translate[idx_read]+1; // TODO : SIGN
+        }
+
+        // juste update
+        continue;
       }
 
       int         *_unique_order_entity2          =  unique_order_entity2[i_kind];
@@ -3041,7 +3047,7 @@ PDM_part_extension_pentity1_entity2_to_extented_pentity1_entity2
         int idx_read = _recv_buffer_to_sort_kind_order[i];
         int i_unique = _unique_order_entity2[i-_pentity2_extented_by_kind_idx[i_kind]];
 
-        log_trace("i_unique = %i / %i \n", i_unique, pn_entity2_extented[i_part]);
+        log_trace("[%i] - i_unique = %i / %i \n", i, i_unique, pn_entity2_extented[i_part]);
 
         /* Can be erase multiple time */
         _pentity2_extented_ln_to_gn [  i_unique  ] = _pextract_entity1_entity2_gnum   [  idx_read  ];
@@ -3050,7 +3056,7 @@ PDM_part_extension_pentity1_entity2_to_extented_pentity1_entity2
         _pentity2_extented_triplet  [3*i_unique+2] = _pextract_entity1_entity2_triplet[3*idx_read+2];
         _pentity2_extented_interface[  i_unique  ] = _pextract_entity2_gnum_translate [  idx_read  ];
 
-        _pextract_entity1_entity2[i] = (pn_entity2[i_part] + i_unique + 1); // TODO : SIGN
+        _pextract_entity1_entity2[idx_read] = (pn_entity2[i_part] + i_unique + 1); // TODO : SIGN
 
 
       }
