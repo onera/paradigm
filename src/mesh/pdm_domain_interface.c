@@ -5477,6 +5477,21 @@ PDM_domain_interface_make_flat_view2
   PDM_part_to_block_free(ptb);
 
 
+  for (int itrf = 0; itrf < n_interface; itrf++) {
+    free(interface_ids_shifted[itrf]);
+    free(send_data            [itrf]);
+    free(stride_one           [itrf]);
+    free(send_sens            [itrf]);
+    free(weight               [itrf]);
+  }
+  free(interface_ids_shifted);
+  free(send_data);
+  free(stride_one);
+  free(send_sens);
+  free(weight);
+  free(dn_interface_twice);
+
+
   *dentity2_itrf_n_blk               = n_gnum;
   *dentity2_itrf_blk_gnum            = _dentity2_itrf_blk_gnum;
   *dentity2_itrf_gnum_and_itrf_strid = recv_stride;
