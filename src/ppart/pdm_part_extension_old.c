@@ -5821,12 +5821,12 @@ PDM_part_extension_create
     part_ext->parts[i_domain] = malloc( n_part[i_domain] * sizeof(_part_t));
 
     for (int i_part = 0; i_part < n_part[i_domain]; i_part++) {
-      part_ext->parts[i_domain][i_domain].n_face_group = 0;
-      part_ext->parts[i_domain][i_domain].n_edge_group = 0;
-      part_ext->parts[i_domain][i_domain].n_cell = 0;
-      part_ext->parts[i_domain][i_domain].n_face = 0;
-      part_ext->parts[i_domain][i_domain].n_edge = 0;
-      part_ext->parts[i_domain][i_domain].n_vtx = 0;
+      part_ext->parts[i_domain][i_part].n_face_group = 0;
+      part_ext->parts[i_domain][i_part].n_edge_group = 0;
+      part_ext->parts[i_domain][i_part].n_cell = 0;
+      part_ext->parts[i_domain][i_part].n_face = 0;
+      part_ext->parts[i_domain][i_part].n_edge = 0;
+      part_ext->parts[i_domain][i_part].n_vtx = 0;
     }
 
     part_ext->n_part_idx[i_domain+1] = part_ext->n_part_idx[i_domain] + part_ext->n_part[i_domain];
