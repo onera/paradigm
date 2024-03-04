@@ -1106,7 +1106,7 @@ _part_extension_2d
     int         **pface_extented_to_pface_triplet   = NULL;
     int         **pface_extented_to_pface_interface = NULL;
 
-    log_trace(" --------------------- step = %i / i_depth = %i \n", step, i_depth);
+    log_trace("\n\n\n >> DEPTH %d step = %i\n", i_depth, step);
 
     /*
      * TODO :
@@ -1117,7 +1117,12 @@ _part_extension_2d
     PDM_g_num_t *next_dface_itrf_blk_gnum            = NULL;
     int         *next_dface_itrf_gnum_and_itrf_strid = NULL;
     PDM_g_num_t *next_dface_itrf_gnum_and_itrf_data  = NULL;
-    log_trace(" PDM_part_extension_entity1_to_entity2 beg \n");
+    log_trace("\n PDM_part_extension_entity1_to_entity2 beg \n");
+    /*
+     * ID: il faut arriver ici en ayant filtré les nouveaux vertex, devrait éliminer les faux-positifs
+     *    -> nécessite d'utiliser le nouveau graphe vtx->face des nouveaux éléments
+     *    -> sur les nouveaux vertex, il ne faut traiter que les interfaces différents de celui qui l'a créé
+     */
     PDM_part_extension_entity1_to_entity2(shift_by_domain_face, // Attention il va evoluer lui
                                           part_ext->ln_part_tot,
                                           pn_vtx,
@@ -1151,7 +1156,7 @@ _part_extension_2d
                                           &next_dface_itrf_gnum_and_itrf_strid,
                                           &next_dface_itrf_gnum_and_itrf_data,
                                           part_ext->comm);
-    log_trace(" PDM_part_extension_entity1_to_entity2 end \n");
+    log_trace(" PDM_part_extension_entity1_to_entity2 end \n\n");
     // if(step == 1) {
     //   exit(1);
     // }
@@ -1182,7 +1187,7 @@ _part_extension_2d
     int         *next_dvtx_itrf_gnum_and_itrf_strid = NULL;
     PDM_g_num_t *next_dvtx_itrf_gnum_and_itrf_data  = NULL;
     int         *next_dvtx_itrf_gnum_and_itrf_sens  = NULL;
-    log_trace(" PDM_part_extension_pentity1_entity2_to_extented_pentity1_entity2 beg \n");
+    log_trace("\n PDM_part_extension_pentity1_entity2_to_extented_pentity1_entity2 beg \n");
     PDM_part_extension_pentity1_entity2_to_extented_pentity1_entity2(part_ext->ln_part_tot,
                                                                      part_ext->n_interface,
                                                                      shift_by_domain_vtx, // Attention il va evoluer lui
@@ -1220,7 +1225,7 @@ _part_extension_2d
                                                                      &next_dvtx_itrf_gnum_and_itrf_data,
                                                                      &next_dvtx_itrf_gnum_and_itrf_sens,
                                                                      part_ext->comm);
-    log_trace(" PDM_part_extension_pentity1_entity2_to_extented_pentity1_entity2 end \n");
+    log_trace(" PDM_part_extension_pentity1_entity2_to_extented_pentity1_entity2 end \n\n");
 
     if(1 == 1) {
       for(int i_part = 0; i_part < part_ext->ln_part_tot; ++i_part) {
@@ -1246,7 +1251,9 @@ _part_extension_2d
     /*
      * Concatenate all information to continue recursion
      */
+    log_trace("\n Concatenate all information to continue recursion \n");
     for(int i_part = 0; i_part < part_ext->ln_part_tot; ++i_part) {
+      log_trace("  -> i_part = %d \n", i_part);
 
       /* Update size */
       int pn_vtx_extented_old  = pfull_n_vtx_extented [i_part];

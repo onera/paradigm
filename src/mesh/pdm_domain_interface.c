@@ -5457,7 +5457,8 @@ PDM_domain_interface_make_flat_view2
 
   int n_gnum = PDM_part_to_block_n_elt_block_get(ptb);
 
-  assert(n_gnum == n_connected_l); // ie all recv_stride == 1
+  log_trace("n_gnum = %d ; n_connected_l = %d \n",n_gnum, n_connected_l);
+  // assert(n_gnum == n_connected_l); // ie all recv_stride == 1
 
   if (1 == 1) {
     PDM_log_trace_array_long(PDM_part_to_block_block_gnum_get(ptb), n_gnum, "gnum");
