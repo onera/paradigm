@@ -172,9 +172,9 @@ struct _pdm_part_extension_t {
   PDM_domain_interface_t  *dom_itrf;
 
   /* TODO - delete */
-  PDM_part_to_block_t    **ptb_itrf[PDM_BOUND_TYPE_MAX];
-  PDM_g_num_t            **opp_gnum[PDM_BOUND_TYPE_MAX];
-  int                    **opp_sens[PDM_BOUND_TYPE_MAX];
+  // PDM_part_to_block_t    **ptb_itrf[PDM_BOUND_TYPE_MAX];
+  // PDM_g_num_t            **opp_gnum[PDM_BOUND_TYPE_MAX];
+  // int                    **opp_sens[PDM_BOUND_TYPE_MAX];
 
   /* New manner */
   int          dentity_itrf_n_blk              [PDM_BOUND_TYPE_MAX];
