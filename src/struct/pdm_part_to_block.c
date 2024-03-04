@@ -3104,7 +3104,7 @@ PDM_part_to_block_iexch
   request_id %= ptb->max_exch_request;
   *request = request_id;
 
-  assert(ptb->wait_status[request_id] = 2);
+  assert(ptb->wait_status[request_id] == 2);
 
   ptb->i_send_buffer[request_id] = (int *) malloc (sizeof(int) * ptb->s_comm);
   ptb->i_recv_buffer[request_id] = (int *) malloc (sizeof(int) * ptb->s_comm);
@@ -3305,7 +3305,7 @@ PDM_part_to_block_reverse_iexch
   request_id %= ptb->max_exch_request;
   *request = request_id;
 
-  assert(ptb->wait_status[request_id] = 2);
+  assert(ptb->wait_status[request_id] == 2);
 
   ptb->i_send_buffer[request_id] = (int *) malloc (sizeof(int) * ptb->s_comm);
   ptb->i_recv_buffer[request_id] = (int *) malloc (sizeof(int) * ptb->s_comm);
@@ -3705,7 +3705,7 @@ PDM_part_to_block_async_exch
   int request_id = ptb->next_request++;
   request_id %= ptb->max_exch_request;
 
-  assert(ptb->wait_status[request_id] = 2);
+  assert(ptb->wait_status[request_id] == 2);
 
   ptb->i_send_buffer[request_id] = (int *) malloc (sizeof(int) * ptb->s_comm);
   ptb->i_recv_buffer[request_id] = (int *) malloc (sizeof(int) * ptb->s_comm);
