@@ -119,8 +119,8 @@ PDM_tetrahedron_circumsphere
  *
  * \param [in]  n_cell     Number of cells
  * \param [in]  cell_face  Cell -> face (signed) connectivity (1-based, size : 4 * \p n_cell)
- * \param [in]  cell_face  Face -> vertex connectivity (1-based, size : 3 * *n_face*)
- * \param [out] cell_vtx   Cell -> vertex (signed) connectivity (size : 4 * \p n_cell)
+ * \param [in]  face_vtx   Face -> vertex connectivity (1-based, size : 3 * *n_face*)
+ * \param [out] cell_vtx   Cell -> vertex connectivity (1-based, size : 4 * \p n_cell)
  *
  */
 

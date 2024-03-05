@@ -4144,8 +4144,8 @@ _extract_part_and_reequilibrate
                        distrib_elmt,
                        dual_graph_idx,
                        dual_graph,
-                       NULL,
-                       NULL,
+                       NULL, // node weight
+                       NULL, // arc weight
                        tn_part,
                        NULL,
                        _elmt_part,

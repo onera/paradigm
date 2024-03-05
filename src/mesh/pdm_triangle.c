@@ -1059,8 +1059,8 @@ PDM_triangle_evaluate_position
  *
  * \param [in]  n_face     Number of faces
  * \param [in]  face_edge  Face -> edge (signed) connectivity (1-based, size : 3 * \p n_face)
- * \param [in]  face_edge  Edge -> vertex connectivity (1-based, size : 2 * *n_edge*)
- * \param [out] face_vtx   Face -> vertex (signed) connectivity (size : 3 * \p n_face)
+ * \param [in]  edge_vtx   Edge -> vertex connectivity (1-based, size : 2 * *n_edge*)
+ * \param [out] face_vtx   Face -> vertex connectivity (1-based, size : 3 * \p n_face)
  *
  */
 
