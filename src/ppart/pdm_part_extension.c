@@ -57,6 +57,27 @@ extern "C" {
 
 static
 void
+_concat_int_array_current_with_extended
+(
+  int            ln_part_tot,
+  int           *pn_entity,
+  int           *pn_entity_extented,
+  int          **pentity_array,
+  int          **pentity_extented_array
+)
+{
+  for(int i_part = 0; i_part < ln_part_tot; ++i_part) {
+    int pn_concat_entity  = pn_entity [i_part] + pn_entity_extented [i_part];
+    pentity_array [i_part] = realloc(pentity_array [i_part], pn_concat_entity * sizeof(int));
+    for(int i_entity = 0; i_entity < pn_entity_extented[i_part]; ++i_entity) {
+      pentity_array[i_part][pn_entity[i_part]+i_entity] = pentity_extented_array[i_part][i_entity];
+    }
+  }
+}
+
+
+static
+void
 _concat_ln_to_gn_current_with_extended
 (
   int            ln_part_tot,
@@ -1211,9 +1232,9 @@ _part_extension_2d
   int          **pedge_vtx      = (int         **) malloc( part_ext->n_domain * sizeof(int         *));
   double       **pvtx_coords    = (double      **) malloc( part_ext->n_domain * sizeof(double      *));
 
-  int          **pface_alrdy_sent     = (int         **) malloc( part_ext->n_domain * sizeof(int         *));
-  int          **pface_from_itrf     = (int         **) malloc( part_ext->n_domain * sizeof(int         *));
-  int          **pface_parent         = (int         **) malloc( part_ext->n_domain * sizeof(int         *));
+  int          **pface_alrdy_sent = (int         **) malloc( part_ext->n_domain * sizeof(int         *));
+  int          **pface_from_itrf  = (int         **) malloc( part_ext->n_domain * sizeof(int         *));
+  int          **pface_parent     = (int         **) malloc( part_ext->n_domain * sizeof(int         *));
 
   int lpart = 0;
   for(int i_domain = 0; i_domain < part_ext->n_domain; ++i_domain) {
@@ -1230,15 +1251,15 @@ _part_extension_2d
       pedge_vtx     [lpart] = part_ext->parts[i_domain][i_part].edge_vtx;
 
       /* Copy to realloc after all step */
-      pvtx_ln_to_gn [lpart] = malloc((pn_vtx [lpart]  ) * sizeof(PDM_g_num_t));
-      pedge_ln_to_gn[lpart] = malloc((pn_edge[lpart]  ) * sizeof(PDM_g_num_t));
-      pface_ln_to_gn[lpart] = malloc((pn_face[lpart]  ) * sizeof(PDM_g_num_t));
-      pface_vtx_idx [lpart] = malloc((pn_face[lpart]+1) * sizeof(int        ));
-      pface_vtx     [lpart] = malloc(part_ext->parts[i_domain][i_part].face_vtx_idx[pn_face[lpart]]   * sizeof(int));
-      pvtx_coords   [lpart] = malloc(3 * pn_vtx [lpart] * sizeof(double));
-      pface_alrdy_sent    [lpart] = malloc(    pn_face[lpart] * sizeof(int));
-      pface_from_itrf    [lpart] = malloc(    pn_face[lpart] * sizeof(int));
-      pface_parent        [lpart] = malloc(    pn_face[lpart] * sizeof(int));
+      pvtx_ln_to_gn   [lpart] = malloc((pn_vtx [lpart]  ) * sizeof(PDM_g_num_t));
+      pedge_ln_to_gn  [lpart] = malloc((pn_edge[lpart]  ) * sizeof(PDM_g_num_t));
+      pface_ln_to_gn  [lpart] = malloc((pn_face[lpart]  ) * sizeof(PDM_g_num_t));
+      pface_vtx_idx   [lpart] = malloc((pn_face[lpart]+1) * sizeof(int        ));
+      pface_vtx       [lpart] = malloc(part_ext->parts[i_domain][i_part].face_vtx_idx[pn_face[lpart]]   * sizeof(int));
+      pvtx_coords     [lpart] = malloc(3 * pn_vtx [lpart] * sizeof(double));
+      pface_alrdy_sent[lpart] = malloc((pn_face[lpart]  ) * sizeof(int));
+      pface_from_itrf [lpart] = malloc((pn_face[lpart]  ) * sizeof(int));
+      pface_parent    [lpart] = malloc((pn_face[lpart]  ) * sizeof(int));
 
 
       for(int i_face = 0; i_face < pn_face[lpart]; ++i_face) {
@@ -1263,9 +1284,9 @@ _part_extension_2d
         pvtx_coords   [lpart][i_vtx] = part_ext->parts[i_domain][i_part].vtx[i_vtx];
       }
 
-      for(int i_face = 0; i_face <     pn_face[lpart]; ++i_face) {
+      for(int i_face = 0; i_face < pn_face[lpart]; ++i_face) {
         pface_alrdy_sent[lpart][i_face] = 0;
-        pface_from_itrf[lpart][i_face] = 0;
+        pface_from_itrf [lpart][i_face] = 0;
         pface_parent    [lpart][i_face] = 0;
       }
 
@@ -1371,7 +1392,8 @@ _part_extension_2d
     /* Use descending connectivity to deduce connectivity and extend_face */
     int          *pn_face_extented                  = NULL;
     PDM_g_num_t **pface_extented_ln_to_gn           = NULL;
-    int         **pface_extented_from_itrf         = NULL;
+    int         **pface_extented_alrdy_sent         = NULL;
+    int         **pface_extented_from_itrf          = NULL;
     int         **pface_extented_parent             = NULL;
     int         **pface_extented_to_pface_idx       = NULL;
     int         **pface_extented_to_pface_triplet   = NULL;
@@ -1413,6 +1435,7 @@ _part_extension_2d
                                           prev_dface_itrf_gnum_and_itrf_data,
                                           &pn_face_extented,
                                           &pface_extented_ln_to_gn,
+                                          &pface_extented_alrdy_sent,
                                           &pface_extented_from_itrf,
                                           &pface_extented_parent,
                                           &pface_extented_to_pface_idx,
@@ -1559,6 +1582,23 @@ _part_extension_2d
                                        pface_vtx,
                                        pextented_face_vtx_idx,
                                        pextented_face_vtx);
+
+
+    _concat_int_array_current_with_extended(part_ext->ln_part_tot,
+                                            pn_face,
+                                            pn_face_extented,
+                                            pface_alrdy_sent,
+                                            pface_extented_alrdy_sent);
+    _concat_int_array_current_with_extended(part_ext->ln_part_tot,
+                                            pn_face,
+                                            pn_face_extented,
+                                            pface_from_itrf,
+                                            pface_extented_from_itrf);
+    _concat_int_array_current_with_extended(part_ext->ln_part_tot,
+                                            pn_face,
+                                            pn_face_extented,
+                                            pface_parent,
+                                            pface_extented_parent);
 
     /* Edges */
 
