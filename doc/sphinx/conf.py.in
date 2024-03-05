@@ -37,7 +37,7 @@ extensions = [
     'sphinx.ext.autosectionlabel',
     'sphinx.ext.intersphinx',
     'breathe',
-    # 'sphinxcontrib.tikz',
+    'sphinxcontrib.tikz',
     # 'sphinx.ext.coverage',
     # 'sphinx.ext.doctest',
 ]
