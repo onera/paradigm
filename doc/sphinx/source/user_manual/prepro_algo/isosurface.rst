@@ -67,8 +67,8 @@ Partitioned discrete field
 Block-distributed discrete field
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. doxygenfunction:: PDM_isosurface_field_set
-.. doxygenfunction:: PDM_isosurface_gradient_set
+.. doxygenfunction:: PDM_isosurface_dfield_set
+.. doxygenfunction:: PDM_isosurface_dgradient_set
 
 Iso-surface computation
 """""""""""""""""""""""
