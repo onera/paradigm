@@ -2322,7 +2322,9 @@ PDM_MPI_Comm       comm
 
   int dn_node = 0;
   if(dmesh->n_g_cell != 0) {
-    assert(dmesh->dn_cell > 0);
+    if(split_method != PDM_SPLIT_DUAL_WITH_HILBERT) {
+      assert(dmesh->dn_cell > 0);
+    }
     dn_node = dmesh->dn_cell;
   } else if (dmesh->n_g_face != 0) {
     dn_node = dmesh->dn_face;
