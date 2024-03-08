@@ -298,7 +298,7 @@ PDM_dmesh_bound_set
 
 
 void
-PDM_dfind_topological_ridges
+PDM_dmesh_find_topological_ridges
 (
   PDM_MPI_Comm   comm,
   PDM_g_num_t   *distrib_face,
@@ -311,7 +311,9 @@ PDM_dfind_topological_ridges
   PDM_g_num_t  **out_dridge_vtx,
   int           *out_n_group_ridge,
   int          **out_dgroup_edge_idx,
-  PDM_g_num_t  **out_dgroup_edge
+  PDM_g_num_t  **out_dgroup_edge,
+  int          **out_dridge_face_group_idx,
+  int          **out_dridge_face_group
 );
 
 /*----------------------------------------------------------------------------*/

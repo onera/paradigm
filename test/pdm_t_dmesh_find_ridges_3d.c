@@ -26,6 +26,7 @@
 #include "pdm_part_connectivity_transform.h"
 #include "pdm_vtk.h"
 #include "pdm_array.h"
+#include "pdm_logging.h"
 
 /*============================================================================
  * Type definitions
@@ -134,7 +135,7 @@ int main(int argc, char *argv[])
   PDM_g_num_t        n_vtx_seg = 10;
   double             length    = 1.;
   PDM_Mesh_nodal_elt_t t_elt   = PDM_MESH_NODAL_HEXA8;
-  int post                     = 0;
+  int post                     = 1;
   /*
    *  Read args
    */
@@ -189,7 +190,7 @@ int main(int argc, char *argv[])
   double      *dvtx_coord  = PDM_DMesh_nodal_vtx_get(dmn);
   int dn_vtx = vtx_distrib[i_rank+1] - vtx_distrib[i_rank];
 
-  if(0 == 1) {
+  if(1 == 1) {
     PDM_dmesh_nodal_dump_vtk(dmn, PDM_GEOMETRY_KIND_VOLUMIC , "out_volumic");
     PDM_dmesh_nodal_dump_vtk(dmn, PDM_GEOMETRY_KIND_SURFACIC, "out_surfacic");
   }
@@ -231,23 +232,86 @@ int main(int argc, char *argv[])
   PDM_g_num_t *distrib_face = NULL;
   PDM_dmesh_distrib_get(dmesh, PDM_MESH_ENTITY_FACE, &distrib_face);
 
-  int           n_group_ridge   = 0;
-  PDM_g_num_t  *distrib_ridge   = NULL;
-  PDM_g_num_t  *dridge_vtx      = NULL;
-  int          *dgroup_edge_idx = NULL;
-  PDM_g_num_t  *dgroup_edge     = NULL;
-  PDM_dfind_topological_ridges(comm,
-                               distrib_face,
-                               dface_vtx_idx,
-                               dface_vtx,
-                               n_face_group,
-                               dgroup_face_idx,
-                               dgroup_face,
-                               &distrib_ridge,
-                               &dridge_vtx,
-                               &n_group_ridge,
-                               &dgroup_edge_idx,
-                               &dgroup_edge);
+  // if (1 == 1){
+  //   int _n_face = distrib_face[i_rank+1]-distrib_face[i_rank];
+  //   log_trace("n_face       = %d\n", _n_face);
+  //   log_trace("n_face_group = %d\n", n_face_group);
+  //   PDM_log_trace_array_long(distrib_face   ,  n_rank+1                     , "distrib_face    ::");
+  //   PDM_log_trace_array_int (dface_vtx_idx  , _n_face+1                     , "dface_vtx_idx   ::");
+  //   PDM_log_trace_array_long(dface_vtx      ,  dface_vtx_idx[_n_face]       , "dface_vtx       ::");
+  //   PDM_log_trace_array_int (dgroup_face_idx,  n_face_group+1               , "dgroup_face_idx ::");
+  //   PDM_log_trace_array_long(dgroup_face    ,  dgroup_face_idx[n_face_group], "dgroup_face     ::");
+  // }
+
+
+  // int          _n_face          = 8;
+  // PDM_g_num_t *_distrib_face    = malloc(( n_rank+1) * sizeof(PDM_g_num_t));
+  // int         *_dface_vtx_idx   = malloc((_n_face+1) * sizeof(int));
+  // PDM_g_num_t *_dface_vtx       = malloc((_n_face*4) * sizeof(PDM_g_num_t));
+  // int          _n_face_group    = 2;
+  // int         *_dgroup_face_idx = malloc((_n_face_group+1) * sizeof(int));
+  // PDM_g_num_t *_dgroup_face     = malloc((_n_face) * sizeof(PDM_g_num_t));
+
+  // _distrib_face[0] = 0 ; _distrib_face[1] = _n_face;
+
+  // int extract_i_face = 0;
+  // _dface_vtx_idx[extract_i_face] = 0;
+  // _dgroup_face_idx[0] = 0 ;
+
+  // for (int i_grp=0; i_grp<_n_face_group; ++i_grp) {
+  //   int n_face_in_grp = dgroup_face_idx[i_grp+1] - dgroup_face_idx[i_grp];
+  //   printf("i_grp = %d --> n_face_in_grp = %d\n", i_grp, n_face_in_grp);
+  //   for (int i_face_grp=dgroup_face_idx[i_grp]; i_face_grp<dgroup_face_idx[i_grp+1]; ++i_face_grp) {
+  //     PDM_g_num_t face_id = dgroup_face[i_face_grp]-1;
+  //     printf("   i_face_grp = %d --> face_id = %d\n", i_face_grp, face_id);
+  //     _dface_vtx_idx[extract_i_face  +1] = _dface_vtx_idx[extract_i_face]+4;
+  //     _dface_vtx    [extract_i_face*4+0] = dface_vtx[face_id*4+0];
+  //     _dface_vtx    [extract_i_face*4+1] = dface_vtx[face_id*4+1];
+  //     _dface_vtx    [extract_i_face*4+2] = dface_vtx[face_id*4+2];
+  //     _dface_vtx    [extract_i_face*4+3] = dface_vtx[face_id*4+3];
+  //     _dgroup_face  [extract_i_face    ] = extract_i_face+1;
+  //     extract_i_face++;
+  //   }
+  //  _dgroup_face_idx[i_grp+1] = _dgroup_face_idx[i_grp] + n_face_in_grp;
+  // }
+
+
+  // if (1 == 1){
+  //   log_trace("\n");
+  //   log_trace("\n");
+  //   log_trace("\n");
+  //   log_trace("_n_face       = %d\n", _n_face);
+  //   log_trace("_n_face_group = %d\n", _n_face_group);
+  //   PDM_log_trace_array_long(_distrib_face   ,  n_rank+1                      , "_distrib_face    ::");
+  //   PDM_log_trace_array_int (_dface_vtx_idx  , _n_face+1                      , "_dface_vtx_idx   ::");
+  //   PDM_log_trace_array_long(_dface_vtx      , _dface_vtx_idx[_n_face]        , "_dface_vtx       ::");
+  //   PDM_log_trace_array_int (_dgroup_face_idx, _n_face_group+1                , "_dgroup_face_idx ::");
+  //   PDM_log_trace_array_long(_dgroup_face    , _dgroup_face_idx[_n_face_group], "_dgroup_face     ::");
+  // }
+
+
+
+  int           n_group_ridge         = 0;
+  PDM_g_num_t  *distrib_ridge         = NULL;
+  PDM_g_num_t  *dridge_vtx            = NULL;
+  int          *dgroup_edge_idx       = NULL;
+  PDM_g_num_t  *dgroup_edge           = NULL;
+  int          *dridge_face_group_idx = NULL;
+  int          *dridge_face_group     = NULL;
+  PDM_dmesh_find_topological_ridges(comm,
+                                    distrib_face,
+                                    dface_vtx_idx,
+                                    dface_vtx,
+                                    n_face_group,
+                                    dgroup_face_idx,
+                                    dgroup_face,
+                                    &distrib_ridge,
+                                    &dridge_vtx,
+                                    &n_group_ridge,
+                                    &dgroup_edge_idx,
+                                    &dgroup_edge,
+                                    &dridge_face_group_idx,
+                                    &dridge_face_group);
 
 
   if (post) {
@@ -355,6 +419,8 @@ int main(int argc, char *argv[])
   free(dridge_vtx     );
   free(dgroup_edge_idx);
   free(dgroup_edge    );
+  free(dridge_face_group_idx    );
+  free(dridge_face_group );
 
 
   PDM_dmesh_nodal_to_dmesh_free(dmntodm);
