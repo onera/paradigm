@@ -235,7 +235,7 @@ PDM_triangle_ngon_to_nodal
 double
 PDM_triangle_inscribed_circle
 (
- const double  vtx_coord[9]
+ const double*  vtx_coord[3]
 );
 
 
