@@ -112,8 +112,10 @@ build:
     - echo "Runner directory is $PWD; move to working directory $CUSTOM_CI_DIR"
     - cd $CUSTOM_CI_DIR
     - mkdir -p build$MATRIX_KEY && cd build$MATRIX_KEY
-    - if [ "${COMPILER}" == "gcc@12" ]; then
+    - if [ "${COMPILER}" == "gcc@12" && "${MPI_LIB}" == "intel-oneapi" ]; then
     -   cmake -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DPDM_ENABLE_Fortran_MPI_MODULE=OFF -DPDM_ENABLE_PYTHON_BINDINGS=ON -DPDM_ENABLE_STATIC=OFF -DPDM_ENABLE_SHARED=ON -DPDM_ENABLE_Fortran=ON -DPDM_ENABLE_EXTENSION_PDMA=ON -DPDM_ENABLE_LONG_G_NUM=${GNUM64} -DMPIEXEC_EXECUTABLE=/opt/tools/intel/oneapi/mpi/2021.6.0/bin/mpirun ../
+    - elif [[ "${COMPILER}" == "gcc@12" && "${MPI_LIB}" == "openmpi" ]]; then
+    -   cmake -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DPDM_ENABLE_Fortran_MPI_MODULE=OFF -DPDM_ENABLE_PYTHON_BINDINGS=ON -DPDM_ENABLE_STATIC=OFF -DPDM_ENABLE_SHARED=ON -DPDM_ENABLE_Fortran=ON -DPDM_ENABLE_EXTENSION_PDMA=ON -DPDM_ENABLE_LONG_G_NUM=${GNUM64} -DMPIEXEC_EXECUTABLE=/opt/tools/openmpi/4.1.1-gnu831-hpc-cuda112/bin/mpirun ../
     - elif [ "${COMPILER}" == "intel@2022" ]; then
     -   cmake -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DPDM_ENABLE_PYTHON_BINDINGS=ON -DPDM_ENABLE_STATIC=OFF -DPDM_ENABLE_SHARED=ON -DPDM_ENABLE_Fortran=ON -DPDM_ENABLE_EXTENSION_PDMA=${PDMA} -DPDM_ENABLE_LONG_G_NUM=${GNUM64} -DPDM_ENABLE_DOC=ON -DMPIEXEC_EXECUTABLE=/opt/tools/intel/oneapi/mpi/2021.6.0/bin/mpirun ../
     - else
