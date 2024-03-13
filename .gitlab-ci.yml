@@ -183,6 +183,8 @@ unit_test:
           BUILD_TYPE: 
             - "Sanitize"
         - COMPILER: "intel@2022"
+          GNUM64: 
+            - "ON"
           MPI_LIB:
             - "intel-oneapi"
           PDMA:
