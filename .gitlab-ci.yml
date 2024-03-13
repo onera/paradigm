@@ -124,7 +124,6 @@ build:
     - make -j
 #          -DPDM_ENABLE_Fortran_MPI_MODULE=OFF \
 
-
 unit_test:
   parallel:
     matrix:
@@ -207,11 +206,11 @@ unit_test:
     - if [ "${BUILD_TYPE}" == "Coverage" ]; then
     -   gcovr --xml-pretty --exclude-unreachable-branches --print-summary -o coverage.xml --root ${CI_PROJECT_DIR}
     - fi
-   # - cd $CUSTOM_CI_DIR/build$MATRIX_KEY
-   # - ctest --output-junit $CI_PROJECT_DIR/paradigm_ctest$MATRIX_KEY.xml
-   #    # Artefacts are searched in CI_PROJECT_DIR, but job was executed in CUSTOM_CI_DIR
-   #    #- ctest -V --output-junit $CI_PROJECT_DIR/paradigm_ctest$MATRIX_KEY.xml
-   #    # Go back to runner dir for artifact modification
+# - cd $CUSTOM_CI_DIR/build$MATRIX_KEY
+# - ctest --output-junit $CI_PROJECT_DIR/paradigm_ctest$MATRIX_KEY.xml
+#    # Artefacts are searched in CI_PROJECT_DIR, but job was executed in CUSTOM_CI_DIR
+#    #- ctest -V --output-junit $CI_PROJECT_DIR/paradigm_ctest$MATRIX_KEY.xml
+#    # Go back to runner dir for artifact modification
   after_script:
     - echo $PWD
     - cd $CI_PROJECT_DIR
@@ -256,7 +255,6 @@ unit_test:
 #   - if: $CI_COMMIT_BRANCH == "dev"
 # Rajouter int/long
 # Tester si paradigm se compiler seul (sans paradigma)
-
 
 pages:
   stage: deploy
