@@ -207,8 +207,8 @@ unit_test:
     - if [ "${BUILD_TYPE}" == "Coverage" ]; then
     -   gcovr --xml-pretty --exclude-unreachable-branches --print-summary -o coverage.xml --root ${CI_PROJECT_DIR}
     - fi
-  # - cd $CUSTOM_CI_DIR/build$MATRIX_KEY
-  # - ctest --output-junit $CI_PROJECT_DIR/paradigm_ctest$MATRIX_KEY.xml
+   # - cd $CUSTOM_CI_DIR/build$MATRIX_KEY
+   # - ctest --output-junit $CI_PROJECT_DIR/paradigm_ctest$MATRIX_KEY.xml
    #    # Artefacts are searched in CI_PROJECT_DIR, but job was executed in CUSTOM_CI_DIR
    #    #- ctest -V --output-junit $CI_PROJECT_DIR/paradigm_ctest$MATRIX_KEY.xml
    #    # Go back to runner dir for artifact modification
@@ -268,16 +268,10 @@ pages:
     - mkdir -p public
     - echo "CI_COMMIT_TAG = ${CI_COMMIT_TAG}"
     - if [ "${CI_COMMIT_TAG}" == "" ]; then
-    -   cp -r $CUSTOM_CI_DIR/build_intel@2022_intel-oneapi_GNUM64__BUILD_Debug/doc/sphinx/html public/$CI_COMMIT_BRANCH
+    -   cp -r $CUSTOM_CI_DIR/build_intel@2022_intel-oneapi_GNUM64_ON_BUILD_Debug_PDMA_ON/doc/sphinx/html public/$CI_COMMIT_BRANCH
     - else
-    -   cp -r $CUSTOM_CI_DIR/build_intel@2022_intel-oneapi_GNUM64__BUILD_Debug/doc/sphinx/html public/$CI_COMMIT_TAG
+    -   cp -r $CUSTOM_CI_DIR/build_intel@2022_intel-oneapi_GNUM64_ON_BUILD_Debug_PDMA_ON/doc/sphinx/html public/$CI_COMMIT_TAG
     - fi
-    # - |
-    #   cat > public/index.html << EOF
-    #   <head>
-    #     <meta http-equiv='refresh' content='0; URL=dev/index.html'>
-    #   </head>
-    #   EOF
   artifacts:
     paths:
       - public
