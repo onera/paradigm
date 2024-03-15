@@ -57,6 +57,50 @@ extern "C" {
 
 static
 void
+_concat_int_idx_array_current_with_extended
+(
+  int            ln_part_tot,
+  int           *pn_entity,
+  int           *pn_entity_extented,
+  int          **pentity_idx_array,
+  int          **pentity_extented_idx_array
+)
+{
+  for(int i_part = 0; i_part < ln_part_tot; ++i_part) {
+    int pn_concat_entity  = pn_entity [i_part] +1 + pn_entity_extented [i_part] +1;
+    int prev_last_idx = pentity_idx_array[i_part][pn_entity[i_part]];
+    pentity_idx_array [i_part] = realloc(pentity_idx_array [i_part], (pn_concat_entity+1) * sizeof(int));
+    for(int i_entity = 0; i_entity < pn_entity_extented[i_part]; ++i_entity) {
+      pentity_idx_array[i_part][pn_entity[i_part]+1+i_entity] = pentity_extented_idx_array[i_part][i_entity+1]+prev_last_idx;
+    }
+  }
+}
+
+static
+void
+_concat_int_array_current_with_extended_from_idx
+(
+  int            ln_part_tot,
+  int           *pn_entity,
+  int           *pn_entity_extented,
+  int          **pentity_array_idx,
+  int          **pentity_array,
+  int          **pentity_extented_array_idx,
+  int          **pentity_extented_array
+)
+{
+  for(int i_part = 0; i_part < ln_part_tot; ++i_part) {
+    int          array_size = pentity_array_idx         [i_part][pn_entity         [i_part]];
+    int extented_array_size = pentity_extented_array_idx[i_part][pn_entity_extented[i_part]];
+    pentity_array[i_part] = realloc(pentity_array[i_part], (array_size+extented_array_size) * sizeof(int));
+    for(int i_entity = 0; i_entity < extented_array_size; ++i_entity) {
+      pentity_array[i_part][array_size+i_entity] = pentity_extented_array[i_part][i_entity];
+    }
+  }
+}
+
+static
+void
 _concat_int_array_current_with_extended
 (
   int            ln_part_tot,
@@ -1233,6 +1277,7 @@ _part_extension_2d
   double       **pvtx_coords    = (double      **) malloc( part_ext->n_domain * sizeof(double      *));
 
   int          **pface_alrdy_sent = (int         **) malloc( part_ext->n_domain * sizeof(int         *));
+  int          **pface_ancstr_idx = (int         **) malloc( part_ext->n_domain * sizeof(int         *));
   int          **pface_from_itrf  = (int         **) malloc( part_ext->n_domain * sizeof(int         *));
   int          **pface_parent     = (int         **) malloc( part_ext->n_domain * sizeof(int         *));
 
@@ -1258,8 +1303,9 @@ _part_extension_2d
       pface_vtx       [lpart] = malloc(part_ext->parts[i_domain][i_part].face_vtx_idx[pn_face[lpart]]   * sizeof(int));
       pvtx_coords     [lpart] = malloc(3 * pn_vtx [lpart] * sizeof(double));
       pface_alrdy_sent[lpart] = malloc((pn_face[lpart]  ) * sizeof(int));
-      pface_from_itrf [lpart] = malloc((pn_face[lpart]  ) * sizeof(int));
-      pface_parent    [lpart] = malloc((pn_face[lpart]  ) * sizeof(int));
+      pface_ancstr_idx[lpart] = malloc((pn_face[lpart]+1) * sizeof(int));
+      pface_from_itrf [lpart] = malloc((0  ) * sizeof(int));
+      pface_parent    [lpart] = malloc((0  ) * sizeof(int)); // normally, for a face with multiple interface, orig gnum is the same
 
 
       for(int i_face = 0; i_face < pn_face[lpart]; ++i_face) {
@@ -1286,9 +1332,11 @@ _part_extension_2d
 
       for(int i_face = 0; i_face < pn_face[lpart]; ++i_face) {
         pface_alrdy_sent[lpart][i_face] = 0;
-        pface_from_itrf [lpart][i_face] = 0;
-        pface_parent    [lpart][i_face] = 0;
+        pface_ancstr_idx[lpart][i_face] = 0;
+        // pface_from_itrf [lpart][i_face] = 0;
+        // pface_parent    [lpart][i_face] = 0;
       }
+      pface_ancstr_idx  [lpart][pn_face[lpart]] = 0;
 
       lpart++;
     }
@@ -1393,6 +1441,7 @@ _part_extension_2d
     int          *pn_face_extented                  = NULL;
     PDM_g_num_t **pface_extented_ln_to_gn           = NULL;
     int         **pface_extented_alrdy_sent         = NULL;
+    int         **pface_extented_ancstr_idx         = NULL;
     int         **pface_extented_from_itrf          = NULL;
     int         **pface_extented_parent             = NULL;
     int         **pface_extented_to_pface_idx       = NULL;
@@ -1425,6 +1474,7 @@ _part_extension_2d
                                           pn_face,
                                           pface_ln_to_gn,
                                           pface_alrdy_sent,
+                                          pface_ancstr_idx,
                                           pface_from_itrf,
                                           pface_parent,
                                           pface_vtx_idx,
@@ -1436,6 +1486,7 @@ _part_extension_2d
                                           &pn_face_extented,
                                           &pface_extented_ln_to_gn,
                                           &pface_extented_alrdy_sent,
+                                          &pface_extented_ancstr_idx,
                                           &pface_extented_from_itrf,
                                           &pface_extented_parent,
                                           &pface_extented_to_pface_idx,
@@ -1589,16 +1640,25 @@ _part_extension_2d
                                             pn_face_extented,
                                             pface_alrdy_sent,
                                             pface_extented_alrdy_sent);
-    _concat_int_array_current_with_extended(part_ext->ln_part_tot,
-                                            pn_face,
-                                            pn_face_extented,
-                                            pface_from_itrf,
-                                            pface_extented_from_itrf);
-    _concat_int_array_current_with_extended(part_ext->ln_part_tot,
-                                            pn_face,
-                                            pn_face_extented,
-                                            pface_parent,
-                                            pface_extented_parent);
+    _concat_int_array_current_with_extended_from_idx(part_ext->ln_part_tot,
+                                                     pn_face,
+                                                     pn_face_extented,
+                                                     pface_ancstr_idx,
+                                                     pface_from_itrf,
+                                                     pface_extented_ancstr_idx,
+                                                     pface_extented_from_itrf);
+    _concat_int_array_current_with_extended_from_idx(part_ext->ln_part_tot,
+                                                     pn_face,
+                                                     pn_face_extented,
+                                                     pface_ancstr_idx,
+                                                     pface_parent,
+                                                     pface_extented_ancstr_idx,
+                                                     pface_extented_parent);
+    _concat_int_idx_array_current_with_extended(part_ext->ln_part_tot,
+                                                pn_face,
+                                                pn_face_extented,
+                                                pface_ancstr_idx,
+                                                pface_extented_ancstr_idx);
 
     /* Edges */
 
