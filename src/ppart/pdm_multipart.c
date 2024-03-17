@@ -99,7 +99,7 @@ _entity_type_to_bound_type
  PDM_mesh_entities_t entity_type
  )
 {
-  PDM_bound_type_t bound_type;
+  PDM_bound_type_t bound_type = PDM_BOUND_TYPE_MAX;
   switch (entity_type) {
     case PDM_MESH_ENTITY_VTX:
       bound_type = PDM_BOUND_TYPE_VTX;

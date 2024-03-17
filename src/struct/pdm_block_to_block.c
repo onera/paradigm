@@ -81,7 +81,8 @@ PDM_block_to_block_create
 )
 {
 
-  int i_rank, n_rank;
+  int i_rank = -1;
+  int n_rank = 0;
   PDM_MPI_Comm_size (comm, &n_rank);
   PDM_MPI_Comm_rank (comm, &i_rank);
 
@@ -152,8 +153,8 @@ PDM_block_to_block_exch
 {
   _pdm_block_to_block_t *_btb = (_pdm_block_to_block_t *) btb;
 
-  int *n_send_buffer;
-  int *n_recv_buffer;
+  int *n_send_buffer = NULL;
+  int *n_recv_buffer = NULL;
   int *i_send_buffer = (int *) malloc (sizeof(int) * _btb->n_rank);
   int *i_recv_buffer = (int *) malloc (sizeof(int) * _btb->n_rank);
 
@@ -256,8 +257,8 @@ PDM_block_to_block_exch_with_mpi_type
 {
   _pdm_block_to_block_t *_btb = (_pdm_block_to_block_t *) btb;
 
-  int *n_send_buffer;
-  int *n_recv_buffer;
+  int *n_send_buffer = NULL;
+  int *n_recv_buffer = NULL;
   int *i_send_buffer = (int *) malloc (sizeof(int) * _btb->n_rank);
   int *i_recv_buffer = (int *) malloc (sizeof(int) * _btb->n_rank);
 
