@@ -91,6 +91,11 @@ typedef void (*PDM_isosurface_field_function_t)
  * \param [in]  mesh_dimension  Dimension of source mesh (2 or 3)
  * \param [in]  elt_type        Desired element type for iso-surface mesh
  *
+ * \note Admissible values for \p elt_type are:
+ *   - \ref PDM_MESH_NODAL_TRIA3
+ *   - \ref PDM_MESH_NODAL_POLY_2D
+ *
+ *
  * \return Pointer to a new \ref PDM_isosurface_t instance
  *
  */
@@ -408,6 +413,7 @@ PDM_isosurface_add
  * \param [in]  isos           \ref PDM_isosurface_t instance
  * \param [in]  id_isosurface  Iso-surface identifier
  * \param [in]  coeff          Equation coefficients
+ * \param [in]  use_gradient   1 to use gradient for finer isosurface (Dual Contouring method), 0 otherwise
  *
  * - \ref PDM_ISO_SURFACE_KIND_PLANE (3 coefficients):
  *   \f$\phi(x,y,z) = \texttt{coeff[0]} \cdot x + \texttt{coeff[1]} \cdot y + \texttt{coeff[2]} \cdot z\f$
@@ -431,7 +437,8 @@ PDM_isosurface_equation_set
 (
  PDM_isosurface_t *isos,
  int               id_isosurface,
- double           *coeff
+ double           *coeff,
+ int               use_gradient
 );
 
 
