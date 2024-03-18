@@ -223,10 +223,6 @@ PDM_part_assemble_partitions
   int* _pn_entity = *pn_entity;
   int* order = NULL;
   int offset = 0;
-  int* pentity_init_location_tmp_sorted = NULL;
-  if (have_init_location == 1) {
-     pentity_init_location_tmp_sorted  = malloc(3*n_recv_tot*sizeof(int));
-  }
   for (int i=0; i < n_part_block; ++i) {
 
     if (have_init_location == 1) { //Keep order to sort pentity_init_location_tmp
@@ -236,19 +232,11 @@ PDM_part_assemble_partitions
     PDM_sort_long(&(pentity_ln_to_gn_tmp[offset]), order, _pn_entity[i]);
 
     if (have_init_location == 1) {
-      for (int j = 0; j < _pn_entity[i]; ++j) {
-        pentity_init_location_tmp_sorted[3*(offset + j)+0] = pentity_init_location_tmp[3*(offset + order[j])+0];
-        pentity_init_location_tmp_sorted[3*(offset + j)+1] = pentity_init_location_tmp[3*(offset + order[j])+1];
-        pentity_init_location_tmp_sorted[3*(offset + j)+2] = pentity_init_location_tmp[3*(offset + order[j])+2];
-      }
+      PDM_order_array(_pn_entity[i], 3*sizeof(int), order, &(pentity_init_location_tmp[3*offset]));
       free(order);
     }
 
     offset += _pn_entity[i];
-  }
-  if (have_init_location == 1) {
-    free(pentity_init_location_tmp);
-    pentity_init_location_tmp = pentity_init_location_tmp_sorted;
   }
 
 
