@@ -1449,81 +1449,29 @@ PDM_part_extension_entity1_to_entity2
 
     pn_entity2_only_by_interface[i_part] = 0;
     for(int i = 0; i < n_part1_to_part2; ++i) {
+      for(int j = _pextract_entity2_idx[i]; j < _pextract_entity2_idx[i+1]; ++j) {
+        if (_pentity2_is_valid[j]) {
+          int idx_write = pn_entity2_only_by_interface[i_part]++;
+          _pentity2_only_by_interface_parent[              2 *idx_write  ] = _pextract_entity2_gnum  [j];
+          _pentity2_only_by_interface_parent[              2 *idx_write+1] =  pentity1_to_pentity1_interface[i_part][i];
 
-      // if(pentity1_to_pentity1_interface[i_part][i] != 0) {
-        for(int j = _pextract_entity2_idx[i]; j < _pextract_entity2_idx[i+1]; ++j) {
-          // log_trace("j = %d --> gnum = %d : n_ancestors = %d\n", j, _pextract_entity2_gnum[j], _pextract_entity2_n_itrf  [j]);
-          // log_trace("    n_ancestors = %d\n",_pextract_entity2_n_itrf  [j]);
-          // log_trace("    interfaces = ");
-          // for (int i_ancstr=_pextract_entity2_path_itrf_idx[j]; i_ancstr<_pextract_entity2_path_itrf_idx[j+1]; ++i_ancstr) {
-          //   log_trace("%d ",_pextract_entity2_path_itrf[i_ancstr]);
-          // }
-          // log_trace("\n");
-          if (_pentity2_is_valid[j]) {
-            int idx_write = pn_entity2_only_by_interface[i_part]++;
-            _pentity2_only_by_interface_parent[              2 *idx_write  ] = _pextract_entity2_gnum  [j];
-            _pentity2_only_by_interface_parent[              2 *idx_write+1] =  pentity1_to_pentity1_interface[i_part][i];
-  
-            // > Fill with previous interface, those who has no previous or less than other, fill with current interface
-            _pentity2_only_by_interface_nuplet[(n_max_ancstr+2)*idx_write  ] = _pextract_entity2_ancstr[j];
-            int l_i_ancstr = 0;
-            for (int i_ancstr=_pextract_entity2_path_itrf_idx[j]; i_ancstr<_pextract_entity2_path_itrf_idx[j+1]; ++i_ancstr) {
-              tmp_itrf_ancstr[l_i_ancstr++] = _pextract_entity2_path_itrf[i_ancstr];
-            }
-            for (int i_ancstr=_pextract_entity2_n_itrf[j]; i_ancstr<n_max_ancstr+1; ++i_ancstr){
-              tmp_itrf_ancstr[l_i_ancstr++] = pentity1_to_pentity1_interface[i_part][i];
-            }
-
-            // > Sort interface so that entity with same ancstr will give same gnum
-            PDM_sort_int(tmp_itrf_ancstr, NULL, n_max_ancstr+1);
-            
-            for (int i_ancstr=0; i_ancstr<n_max_ancstr+1; ++i_ancstr){
-              _pentity2_only_by_interface_nuplet[(n_max_ancstr+2)*idx_write+1+i_ancstr] = tmp_itrf_ancstr[i_ancstr];
-            }
+          // > Fill with previous interface, those who has no previous or less than other, fill with current interface
+          _pentity2_only_by_interface_nuplet[(n_max_ancstr+2)*idx_write  ] = _pextract_entity2_ancstr[j];
+          int l_i_ancstr = 0;
+          for (int i_ancstr=_pextract_entity2_path_itrf_idx[j]; i_ancstr<_pextract_entity2_path_itrf_idx[j+1]; ++i_ancstr) {
+            tmp_itrf_ancstr[l_i_ancstr++] = _pextract_entity2_path_itrf[i_ancstr];
+          }
+          for (int i_ancstr=_pextract_entity2_n_itrf[j]; i_ancstr<n_max_ancstr+1; ++i_ancstr){
+            tmp_itrf_ancstr[l_i_ancstr++] = pentity1_to_pentity1_interface[i_part][i];
           }
 
-          /*
-          if (_pextract_entity2_n_itrf  [j]==0) { // Si pas d'ancetre, peut pas etre en conflit
-            int idx_write = pn_entity2_only_by_interface[i_part]++;
-            _pentity2_only_by_interface_parent[              2 *idx_write  ] = _pextract_entity2_gnum  [j];
-            _pentity2_only_by_interface_parent[              2 *idx_write+1] =  pentity1_to_pentity1_interface[i_part][i];
-            _pentity2_only_by_interface_nuplet[(n_max_ancstr+2)*idx_write  ] = _pextract_entity2_ancstr[j];
-            _pentity2_only_by_interface_nuplet[(n_max_ancstr+2)*idx_write+1] =  pentity1_to_pentity1_interface[i_part][i];
-            for (int i_ancstr=1; i_ancstr<n_max_ancstr+1; ++i_ancstr){
-              _pentity2_only_by_interface_nuplet[(n_max_ancstr+2)*idx_write+i_ancstr] = pentity1_to_pentity1_interface[i_part][i];
-            }
+          // > Sort interface so that entity with same ancstr will give same gnum
+          PDM_sort_int(tmp_itrf_ancstr, NULL, n_max_ancstr+1);
+          
+          for (int i_ancstr=0; i_ancstr<n_max_ancstr+1; ++i_ancstr){
+            _pentity2_only_by_interface_nuplet[(n_max_ancstr+2)*idx_write+1+i_ancstr] = tmp_itrf_ancstr[i_ancstr];
           }
-          else { // Sinon faut voir si l'entity est pas deja passée par l'interface
-            // Faut trouver la bonne position a prendre
-            // Faut parcourir tous les previous interf et si aucun match alors on ajoute
-            int i_last_itrf = _pextract_entity2_path_itrf_idx[j+1]-1;
-            int   last_itrf = _pextract_entity2_path_itrf[i_last_itrf];
-            // if (PDM_ABS(last_itrf)!=PDM_ABS(pentity1_to_pentity1_interface[i_part][i])) {
-            if (is_valid==1) {
-              int idx_write = pn_entity2_only_by_interface[i_part]++;
-              // log_trace("     ----> PRESERVED %d\n", idx_write);
-
-              _pentity2_only_by_interface_parent[              2 *idx_write  ] = _pextract_entity2_gnum  [j];
-              _pentity2_only_by_interface_parent[              2 *idx_write+1] =  pentity1_to_pentity1_interface[i_part][i];
-              _pentity2_only_by_interface_nuplet[(n_max_ancstr+2)*idx_write  ] = _pextract_entity2_ancstr[j];
-              int l_i_ancstr = 0;
-              tmp_itrf_ancstr[l_i_ancstr++] = pentity1_to_pentity1_interface[i_part][i];
-              for (int i_ancstr=_pextract_entity2_path_itrf_idx[j]; i_ancstr<_pextract_entity2_path_itrf_idx[j+1]; ++i_ancstr) {
-                tmp_itrf_ancstr[l_i_ancstr++] = _pextract_entity2_path_itrf[i_ancstr];
-                // l_i_ancstr ++;
-              }
-
-              // PDM_log_trace_array_long(tmp_itrf_ancstr, (n_max_ancstr+1), "    tmp_itrf_ancstr ::");
-              PDM_sort_int(tmp_itrf_ancstr, NULL, n_max_ancstr+1);
-              // PDM_log_trace_array_long(tmp_itrf_ancstr, (n_max_ancstr+1), "    tmp_itrf_ancstr sorted::");
-
-              for (int i_ancstr=0; i_ancstr<n_max_ancstr+1; ++i_ancstr){
-                _pentity2_only_by_interface_nuplet[(n_max_ancstr+2)*idx_write+1+i_ancstr] = tmp_itrf_ancstr[i_ancstr];
-              }
-            }
-          }
-          */
-        // }
+        }
       }
     }
 
@@ -1543,7 +1491,6 @@ PDM_part_extension_entity1_to_entity2
   }
 
   PDM_gnum_compute(gen_gnum_entity2);
-
 
 
   /* Update new entities2 with computed gnum */
@@ -1612,42 +1559,6 @@ PDM_part_extension_entity1_to_entity2
             _pnew_entity2_path_itrf[l_i_ancstr] = interf_entity_1;
             idx_write++;
           }
-
-          /*
-          _pnew_entity2_path_itrf_idx[idx_write+1] = _pnew_entity2_path_itrf_idx[idx_write]+_pextract_entity2_n_itrf  [j]+1;
-          if (_pextract_entity2_n_itrf[j]==0) {
-            _pnew_entity2_gnum  [idx_write] = extented_entity2_ln_to_gn[idx_read++] + shift_by_domain_entity2;
-            // _pnew_entity2_ancstr[idx_write] = pentity2_only_by_interface_parent[i_part][idx_read-1]; // ca sert a quoi ca deja ?
-            _pnew_entity2_ancstr[idx_write] = _pextract_entity2_ancstr  [j];
-            _pnew_entity2_parent_t[3*idx_write  ] =  pextract_entity2_triplet[i_part][3*j  ];
-            _pnew_entity2_parent_t[3*idx_write+1] =  pextract_entity2_triplet[i_part][3*j+1];
-            _pnew_entity2_parent_t[3*idx_write+2] =  pextract_entity2_triplet[i_part][3*j+2];
-            _pnew_entity2_n_itrf[idx_write] = _pextract_entity2_n_itrf  [j]+1;
-            _pnew_entity2_path_itrf[_pnew_entity2_path_itrf_idx[idx_write]] = interf_entity_1;
-            idx_write++;
-          }
-          else {
-            int i_last_itrf = _pextract_entity2_path_itrf_idx[j+1]-1;
-            int   last_itrf = _pextract_entity2_path_itrf[i_last_itrf];
-            // if (PDM_ABS(last_itrf)!=PDM_ABS(pentity1_to_pentity1_interface[i_part][i])) {
-            if (is_valid==1) {
-              _pnew_entity2_gnum  [idx_write] = extented_entity2_ln_to_gn[idx_read++] + shift_by_domain_entity2;
-              // _pnew_entity2_ancstr[idx_write] = pentity2_only_by_interface_parent[i_part][idx_read-1]; // ca sert a quoi ca deja ?
-              _pnew_entity2_ancstr[idx_write] = _pextract_entity2_ancstr  [j];
-              _pnew_entity2_parent_t[3*idx_write  ] =  pextract_entity2_triplet[i_part][3*j  ];
-              _pnew_entity2_parent_t[3*idx_write+1] =  pextract_entity2_triplet[i_part][3*j+1];
-              _pnew_entity2_parent_t[3*idx_write+2] =  pextract_entity2_triplet[i_part][3*j+2];
-              _pnew_entity2_n_itrf[idx_write] = _pextract_entity2_n_itrf  [j]+1;
-              int l_i_ancstr = _pnew_entity2_path_itrf_idx[idx_write];
-              for (int i_ancstr=_pextract_entity2_path_itrf_idx[j]; i_ancstr<_pextract_entity2_path_itrf_idx[j+1]; ++i_ancstr) {
-                _pnew_entity2_path_itrf[l_i_ancstr] = _pextract_entity2_path_itrf[i_ancstr];
-                l_i_ancstr ++;
-              }
-              _pnew_entity2_path_itrf[l_i_ancstr] = interf_entity_1;
-              idx_write++;
-            }
-          }
-          */
         }
       }
       else {
