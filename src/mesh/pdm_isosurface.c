@@ -93,16 +93,16 @@ PDM_isosurface_equation_set
 }
 
 
-// void
-// PDM_isosurface_field_function_set
-// (
-//  PDM_isosurface_t                *isos,
-//  int                              id_isosurface,
-//  PDM_isosurface_field_function_t  func
-// )
-// {
+void
+PDM_isosurface_field_function_set
+(
+ PDM_isosurface_t                *isos,
+ int                              id_isosurface,
+ PDM_isosurface_field_function_t  func
+)
+{
 
-// }
+}
 
 
 void

@@ -63,7 +63,14 @@ typedef struct _pdm_isosurface_t PDM_isosurface_t;
  * \param [out] value  Field value at point (x, y, z)
  *
  */
-// typedef void _pdm_isosurface_field_function_t PDM_isosurface_field_function_t;
+typedef void (*_pdm_isosurface_field_function_t)
+(
+ const double  x,
+ const double  y,
+ const double  z,
+ double       *value
+);
+typedef _pdm_isosurface_field_function_t PDM_isosurface_field_function_t;
 
 
 /*=============================================================================

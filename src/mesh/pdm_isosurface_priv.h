@@ -33,6 +33,7 @@
 #include "pdm_part_mesh.h"
 #include "pdm_dmesh.h"
 #include "pdm_part_to_part.h"
+#include "pdm_isosurface.h"
 
 /*----------------------------------------------------------------------------*/
 
@@ -50,15 +51,6 @@ extern "C" {
 /*============================================================================
  * Type definitions
  *============================================================================*/
-
-
-// void (*_pdm_isosurface_field_function_t)
-// (
-//  const double  x,
-//  const double  y,
-//  const double  z,
-//  double       *value
-// );
 
 
 struct _pdm_isosurface_t {
@@ -85,8 +77,8 @@ struct _pdm_isosurface_t {
   double                 *eq_coeffs;
   int                     use_gradient;
 
-  // // > Function args
-  // _pdm_isosurface_field_function_t *iso_func;
+  // > Function args
+  _pdm_isosurface_field_function_t *iso_func;
 
   
   // ========================
