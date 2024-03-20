@@ -53,6 +53,23 @@ extern "C" {
  * Public function prototypes
  *============================================================================*/
 
+
+void
+_check_entry_mesh_coherence
+(
+ PDM_isosurface_t *isos,
+ int               entry_mesh_type
+)
+{
+  if (isos->entry_mesh_type==0) {
+    isos->entry_mesh_type=entry_mesh_type;
+  }
+  else if (isos->entry_mesh_type!=entry_mesh_type) {
+    PDM_error(__FILE__, __LINE__, 0, "PDM_isosurface_t:entry_mesh_type already set to %d.\n", isos->entry_mesh_type);
+  }
+}
+
+
 PDM_isosurface_t *
 PDM_isosurface_create
 (
@@ -63,6 +80,7 @@ PDM_isosurface_create
 {
   PDM_isosurface_t *isos = (PDM_isosurface_t *) malloc(sizeof(PDM_isosurface_t));
   isos->is_dist_or_part  = -1; 
+  isos->entry_mesh_type  =  0; 
   return isos;
 }
 

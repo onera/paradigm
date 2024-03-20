@@ -79,6 +79,13 @@ PDM_isosurface_n_part_set
 )
 {
   _check_is_not_dist(isos);
+  _check_entry_mesh_coherence(isos, -1);
+
+  isos->n_part = n_part;
+
+  /*
+   * TODO: malloc des tableaux 
+   */
 }
 
 void
@@ -91,7 +98,33 @@ PDM_isosurface_connectivity_set
  int                     *connect
 )
 {
+  /*
+   * TODO: transform connectivity as pmesh or not ? 
+   */
+
   _check_is_not_dist(isos);
+  _check_entry_mesh_coherence(isos, -1);
+
+  switch (connectivity_type) {
+    case PDM_CONNECTIVITY_TYPE_CELL_FACE:
+      isos->cell_face     = connect;
+      isos->cell_face_idx = connect_idx;
+      break;
+    case PDM_CONNECTIVITY_TYPE_FACE_EDGE:
+      isos->face_edge     = connect;
+      isos->face_edge_idx = connect_idx;
+      break;
+    case PDM_CONNECTIVITY_TYPE_FACE_VTX:
+      isos->face_vtx     = connect;
+      isos->face_vtx_idx = connect_idx;
+      break;
+    case PDM_CONNECTIVITY_TYPE_EDGE_VTX:
+      isos->edge_vtx     = connect;
+      break;
+    default:
+      PDM_error(__FILE__, __LINE__, 0, "invalid connectivity_type (%d) for isosurface.\n", connectivity_type);
+      break;
+  }
 }
 
 
@@ -104,6 +137,9 @@ PDM_isosurface_vtx_coord_set
 )
 {
   _check_is_not_dist(isos);
+  _check_entry_mesh_coherence(isos, -1);
+  
+  isos->vtx_coord[i_part] = vtx_coord;
 }
 
 
@@ -112,12 +148,35 @@ PDM_isosurface_ln_to_gn_set
 (
  PDM_isosurface_t    *isos,
  int                  i_part,
- PDM_mesh_entities_t  mesh_entity,
+ PDM_mesh_entities_t  entity_type,
  int                  n_entity,
  PDM_g_num_t         *ln_to_gn
 )
 {
   _check_is_not_dist(isos);
+  _check_entry_mesh_coherence(isos, -1);
+  
+  switch (entity_type) {
+    case PDM_MESH_ENTITY_CELL:
+      isos->n_cell   [i_part] = n_entity;
+      isos->cell_gnum[i_part] = ln_to_gn;
+      break;
+    case PDM_MESH_ENTITY_FACE:
+      isos->n_face   [i_part] = n_entity;
+      isos->face_gnum[i_part] = ln_to_gn;
+      break;
+    case PDM_MESH_ENTITY_EDGE:
+      isos->n_edge   [i_part] = n_entity;
+      isos->edge_gnum[i_part] = ln_to_gn;
+      break;
+    case PDM_MESH_ENTITY_VTX:
+      isos->n_vtx   [i_part]  = n_entity;
+      isos->vtx_gnum[i_part]  = ln_to_gn;
+      break;
+    default:
+      PDM_error(__FILE__, __LINE__, 0, "invalid entity_type (%d) for isosurface.\n", entity_type);
+      break;
+  }
 }
 
 
@@ -134,6 +193,28 @@ PDM_isosurface_group_set
 )
 {
   _check_is_not_dist(isos);
+  _check_entry_mesh_coherence(isos, -1);
+
+  switch (entity_type) {
+    case PDM_MESH_ENTITY_FACE:
+      isos->n_group_face    [i_part] = n_group;
+      isos->  group_face_idx[i_part] = group_entity_idx;
+      isos->  group_face    [i_part] = group_entity;
+      break;
+    case PDM_MESH_ENTITY_EDGE:
+      isos->n_group_edge    [i_part] = n_group;
+      isos->  group_edge_idx[i_part] = group_entity_idx;
+      isos->  group_edge    [i_part] = group_entity;
+      break;
+    case PDM_MESH_ENTITY_VTX:
+      isos->n_group_vtx    [i_part]  = n_group;
+      isos->  group_vtx_idx[i_part]  = group_entity_idx;
+      isos->  group_vtx    [i_part]  = group_entity;
+      break;
+    default:
+      PDM_error(__FILE__, __LINE__, 0, "invalid entity_type (%d) for isosurface boundary.\n", entity_type);
+      break;
+  }
 }
 
 
@@ -145,6 +226,9 @@ PDM_isosurface_part_mesh_set
 )
 {
   _check_is_not_dist(isos);
+  _check_entry_mesh_coherence(isos, -2);
+  
+  isos->pmesh = pmesh;
 }
 
 
@@ -156,6 +240,9 @@ PDM_isosurface_mesh_nodal_set
 )
 {
   _check_is_not_dist(isos);
+  _check_entry_mesh_coherence(isos, -3);
+
+  isos->pmesh_nodal = pmn;
 }
 
 
@@ -168,6 +255,9 @@ PDM_isosurface_redistribution_set
 )
 {
   _check_is_not_dist(isos);
+ 
+  isos->extract_kind = extract_kind;
+  isos->part_method  = part_method;
 }
 
 
@@ -181,6 +271,8 @@ PDM_isosurface_field_set
 )
 {
   _check_is_not_dist(isos);
+ 
+  isos->field[id_isosurface][i_part] = field;
 }
 
 
@@ -194,6 +286,8 @@ PDM_isosurface_gradient_set
 )
 {
   _check_is_not_dist(isos);
+ 
+  isos->gradient[id_isosurface][i_part] = gradient;
 }
 
 

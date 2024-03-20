@@ -60,14 +60,17 @@ struct _pdm_isosurface_t {
   PDM_MPI_Comm comm;
 
 
-  // ========================
-  // > Isosurface API
+  // ====================
+  // > Isosurface options
 
   // > Isosurface type
   int                     mesh_dimension;
   PDM_Mesh_nodal_elt_t    elt_type;
   PDM_iso_surface_kind_t  kind;
-  int                     is_dist_or_part; // -1: undef, 0: dist, 1: part
+
+  // > Isosurface switch
+  int is_dist_or_part; // -1: undef, 0: dist, 1: part
+  int entry_mesh_type; //  0: undef, 1: dist_alamano, 2: dmesh, 3: dmesh_nodal, -1: part_alamano, -2: pmesh, -3: pmesh_nodal
 
   // > Isovalues
   int                     n_isovalues;
@@ -80,11 +83,16 @@ struct _pdm_isosurface_t {
   // > Function args
   _pdm_isosurface_field_function_t *iso_func;
 
+  // > Redistribution
+  PDM_extract_part_kind_t extract_kind;
+  PDM_split_dual_t        part_method;
   
   // ========================
   // > Distributed entry data
 
-  // > 
+  // > Mesh structs
+  PDM_dmesh_t       *dmesh;
+  PDM_dmesh_nodal_t *dmesh_nodal;
 
   // > Distribution
   PDM_g_num_t *distrib_cell;
@@ -105,15 +113,15 @@ struct _pdm_isosurface_t {
   PDM_g_num_t *dedge_vtx;
 
   // > Boundaries
-  int          n_group_face;
+  int          n_dgroup_face;
   int         *dgroup_face_idx;
   PDM_g_num_t *dgroup_face;
 
-  int          n_group_edge;
+  int          n_dgroup_edge;
   int         *dgroup_edge_idx;
   PDM_g_num_t *dgroup_edge;
   
-  int          n_group_vtx;
+  int          n_dgroup_vtx;
   int         *dgroup_vtx_idx;
   PDM_g_num_t *dgroup_vtx;
 
@@ -126,17 +134,56 @@ struct _pdm_isosurface_t {
   // ========================
   // > Partitioned entry data
 
-  // > Distribution
+  // > Mesh structs
+  PDM_part_mesh_t       *pmesh;
+  PDM_part_mesh_nodal_t *pmesh_nodal;
+
+  // > Partition
+  int  n_part;
+  int *n_cell;
+  int *n_face;
+  int *n_edge;
+  int *n_vtx;
+  PDM_g_num_t *cell_gnum;
+  PDM_g_num_t *face_gnum;
+  PDM_g_num_t *edge_gnum;
+  PDM_g_num_t * vtx_gnum;
 
   // > Vertices
+  double **vtx_coord;
 
   // > Connectivities
+  int         **cell_face_idx;
+  PDM_g_num_t **cell_face;
+  int         **face_edge_idx;
+  PDM_g_num_t **face_edge;
+  int         **face_vtx_idx;
+  PDM_g_num_t **face_vtx;
+  PDM_g_num_t **edge_vtx;
 
   // > Boundaries
+  int          *n_group_face;
+  int         **group_face_idx;
+  PDM_g_num_t **group_face;
+
+  int          *n_group_edge;
+  int         **group_edge_idx;
+  PDM_g_num_t **group_edge;
+  
+  int          *n_group_vtx;
+  int         **group_vtx_idx;
+  PDM_g_num_t **group_vtx;
+
+  // > Field
+  double ***field;
+  double ***gradient;
+
 
 
   // ===============
   // > Internal data
+
+
 
 
   // ========

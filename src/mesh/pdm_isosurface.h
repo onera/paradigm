@@ -82,6 +82,18 @@ typedef _pdm_isosurface_field_function_t PDM_isosurface_field_function_t;
  *============================================================================*/
 
 /**
+ * TODO: comment la rendre privée ?
+ */
+void
+_check_entry_mesh_coherence
+(
+ PDM_isosurface_t *isos,
+ int               entry_mesh_type
+);
+
+
+
+/**
  * \brief Create a \ref PDM_isosurface_t instance
  *
  * \param [in]  comm            PDM MPI communicator
@@ -177,7 +189,7 @@ PDM_isosurface_vtx_coord_set
  *
  * \param [in]  isos         \ref PDM_isosurface_t instance
  * \param [in]  i_part       Partition identifier
- * \param [in]  mesh_entity  Type of mesh entity
+ * \param [in]  entity_type  Type of mesh entity
  * \param [in]  n_entity     Local number of entities
  * \param [in]  ln_to_gn     Global ids (size = \p n_entity)
  *
@@ -188,7 +200,7 @@ PDM_isosurface_ln_to_gn_set
 (
  PDM_isosurface_t    *isos,
  int                  i_part,
- PDM_mesh_entities_t  mesh_entity,
+ PDM_mesh_entities_t  entity_type,
  int                  n_entity,
  PDM_g_num_t         *ln_to_gn
 );

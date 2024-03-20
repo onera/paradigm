@@ -80,7 +80,12 @@ PDM_isosurface_dconnectivity_set
  PDM_g_num_t             *dconnect
 )
 {
+  /*
+   * TODO: transform connectivity as dmesh or not ? 
+   */
+
   _check_is_not_part(isos);
+  _check_entry_mesh_coherence(isos, 1);
 
   switch (connectivity_type) {
     case PDM_CONNECTIVITY_TYPE_CELL_FACE:
@@ -99,7 +104,7 @@ PDM_isosurface_dconnectivity_set
       isos->dedge_vtx     = dconnect;
       break;
     default:
-      PDM_error(__FILE__, __LINE__, 0, "invalid connectivity_type for iso_surface %d\n", connectivity_type);
+      PDM_error(__FILE__, __LINE__, 0, "invalid connectivity_type (%d) for isosurface.\n", connectivity_type);
       break;
   }
 }
@@ -113,6 +118,7 @@ PDM_isosurface_dvtx_coord_set
 )
 {
   _check_is_not_part(isos);
+  _check_entry_mesh_coherence(isos, 1);
   
   isos->dvtx_coord = dvtx_coord;
 }
@@ -127,6 +133,7 @@ PDM_isosurface_distrib_set
 )
 {
   _check_is_not_part(isos);
+  _check_entry_mesh_coherence(isos, 1);
 
   switch (entity_type) {
     case PDM_MESH_ENTITY_CELL:
@@ -142,7 +149,7 @@ PDM_isosurface_distrib_set
       isos->distrib_vtx  = distrib;
       break;
     default:
-      PDM_error(__FILE__, __LINE__, 0, "invalid entity_type for iso_surface %d\n", entity_type);
+      PDM_error(__FILE__, __LINE__, 0, "invalid entity_type (%d) for isosurface.\n", entity_type);
       break;
   }
 }
@@ -159,25 +166,26 @@ PDM_isosurface_dgroup_set
 )
 {
   _check_is_not_part(isos);
+  _check_entry_mesh_coherence(isos, 1);
   
   switch (entity_type) {
     case PDM_MESH_ENTITY_FACE:
-      isos->n_group_face    = n_group;
-      isos->dgroup_face_idx = dgroup_entity_idx;
-      isos->dgroup_face     = dgroup_entity;
+      isos->n_dgroup_face     = n_group;
+      isos->  dgroup_face_idx = dgroup_entity_idx;
+      isos->  dgroup_face     = dgroup_entity;
       break;
     case PDM_MESH_ENTITY_EDGE:
-      isos->n_group_edge    = n_group;
-      isos->dgroup_edge_idx = dgroup_entity_idx;
-      isos->dgroup_edge     = dgroup_entity;
+      isos->n_dgroup_edge     = n_group;
+      isos->  dgroup_edge_idx = dgroup_entity_idx;
+      isos->  dgroup_edge     = dgroup_entity;
       break;
     case PDM_MESH_ENTITY_VTX:
-      isos->n_group_vtx     = n_group;
-      isos->dgroup_vtx_idx  = dgroup_entity_idx;
-      isos->dgroup_vtx      = dgroup_entity;
+      isos->n_dgroup_vtx      = n_group;
+      isos->  dgroup_vtx_idx  = dgroup_entity_idx;
+      isos->  dgroup_vtx      = dgroup_entity;
       break;
     default:
-      PDM_error(__FILE__, __LINE__, 0, "invalid entity_type for iso_surface boundary %d\n", entity_type);
+      PDM_error(__FILE__, __LINE__, 0, "invalid entity_type (%d) for isosurface boundary.\n", entity_type);
       break;
   }
 }
@@ -191,6 +199,9 @@ PDM_isosurface_dmesh_set
 )
 {
   _check_is_not_part(isos);
+  _check_entry_mesh_coherence(isos, 2);
+ 
+  isos->dmesh = dmesh;
 }
 
 void
@@ -201,6 +212,9 @@ PDM_isosurface_dmesh_nodal_set
 )
 {
   _check_is_not_part(isos);
+  _check_entry_mesh_coherence(isos, 3);
+
+  isos->dmesh_nodal = dmn;
 }
 
 
