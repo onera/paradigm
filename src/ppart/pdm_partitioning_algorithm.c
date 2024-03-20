@@ -187,15 +187,14 @@ PDM_part_assemble_partitions
    */
   PDM_g_num_t* pentity_ln_to_gn_tmp = NULL;
 
-  // C'est peut être un multiblock_to_part ???
-  PDM_part_to_block_exch (ptb_partition,
-                          sizeof(PDM_g_num_t),
-                          PDM_STRIDE_VAR_INTERLACED,
-                          1,
-                          &dentity_stri,
-                (void **) &dentity_ln_to_gn,
-                          pn_entity,
-                (void **) &pentity_ln_to_gn_tmp);
+  int n_recv_tot = PDM_part_to_block_exch(ptb_partition,
+                                          sizeof(PDM_g_num_t),
+                                          PDM_STRIDE_VAR_INTERLACED,
+                                          1,
+                                          &dentity_stri,
+                                (void **) &dentity_ln_to_gn,
+                                          pn_entity,
+                                (void **) &pentity_ln_to_gn_tmp);
   if(dentity_gnum == NULL) {
     free(dentity_ln_to_gn);
   }
@@ -220,6 +219,26 @@ PDM_part_assemble_partitions
   }
   free(dentity_stri);
 
+  /* Sort cells in increasing gnum */
+  int* _pn_entity = *pn_entity;
+  int* order = NULL;
+  int offset = 0;
+  for (int i=0; i < n_part_block; ++i) {
+
+    if (have_init_location == 1) { //Keep order to sort pentity_init_location_tmp
+      order = PDM_array_new_range_int(_pn_entity[i]);
+    }
+
+    PDM_sort_long(&(pentity_ln_to_gn_tmp[offset]), order, _pn_entity[i]);
+
+    if (have_init_location == 1) {
+      PDM_order_array(_pn_entity[i], 3*sizeof(int), order, &(pentity_init_location_tmp[3*offset]));
+      free(order);
+    }
+
+    offset += _pn_entity[i];
+  }
+
 
   /* Reshape pentity_ln_to_gn */
   *pentity_ln_to_gn = (PDM_g_num_t **) malloc( sizeof(PDM_g_num_t *) * n_part_block);
@@ -231,7 +250,7 @@ PDM_part_assemble_partitions
     _pentity_init_location = *pentity_init_location;
   }
 
-  int offset = 0;
+  offset = 0;
   for(int i_part = 0; i_part < n_part_block; ++i_part){
 
     int _pn_entity = (*pn_entity)[i_part];
