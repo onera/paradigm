@@ -228,6 +228,10 @@ PDM_isosurface_part_mesh_set
   _check_is_not_dist(isos);
   _check_entry_mesh_coherence(isos, -2);
   
+  /**
+   * TODO: add check on entry pmesh to be sure that all required data are in. 
+   */
+
   isos->pmesh = pmesh;
 }
 
@@ -241,6 +245,10 @@ PDM_isosurface_mesh_nodal_set
 {
   _check_is_not_dist(isos);
   _check_entry_mesh_coherence(isos, -3);
+  
+  /**
+   * TODO: add check on entry pmesh_nodal to be sure that all required data are in. 
+   */
 
   isos->pmesh_nodal = pmn;
 }
