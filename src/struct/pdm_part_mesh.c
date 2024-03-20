@@ -86,7 +86,7 @@ _build_extract_part_bound
   int i_rank;
   PDM_MPI_Comm_rank(pmesh->comm, &i_rank);
 
-  int dim;
+  int dim = 0;
   PDM_mesh_entities_t entity_type;
   switch (bound_type) {
     case PDM_BOUND_TYPE_VTX:
