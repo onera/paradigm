@@ -51,10 +51,6 @@ extern "C" {
  * Type definitions
  *============================================================================*/
 
-  struct _pdm_isosurface_t {
-
-  };
-
 typedef struct _pdm_isosurface_t PDM_isosurface_t;
 
 
@@ -67,13 +63,7 @@ typedef struct _pdm_isosurface_t PDM_isosurface_t;
  * \param [out] value  Field value at point (x, y, z)
  *
  */
-typedef void (*PDM_isosurface_field_function_t)
-(
- const double  x,
- const double  y,
- const double  z,
- double       *value
-);
+// typedef void _pdm_isosurface_field_function_t PDM_isosurface_field_function_t;
 
 
 /*=============================================================================
@@ -454,13 +444,13 @@ PDM_isosurface_equation_set
  *          ou bien inclure calcul (optionnel) du gradient dans 'func' (permet de factoriser des calculs)
  */
 
-void
-PDM_isosurface_field_function_set
-(
- PDM_isosurface_t                *isos,
- int                              id_isosurface,
- PDM_isosurface_field_function_t  func
- );
+// void
+// PDM_isosurface_field_function_set
+// (
+//  PDM_isosurface_t                *isos,
+//  int                              id_isosurface,
+//  PDM_isosurface_field_function_t  func
+// );
 
 
 /**
@@ -938,7 +928,7 @@ PDM_isosurface_enable_part_to_part
  PDM_isosurface_t     *isos,
  int                   id_isosurface,
  PDM_mesh_entities_t   entity_type
- );
+);
 
 /**
  * \brief Get \ref PDM_part_to_part_t instance to exchange data
@@ -964,7 +954,7 @@ PDM_isosurface_part_to_part_get
  PDM_mesh_entities_t   entity_type,
  PDM_part_to_part_t  **ptp,
  PDM_ownership_t       ownership
- );
+);
 
 
 /**
