@@ -2353,7 +2353,6 @@ int PDM_MPI_Alltoallv_l(void *sendbuf, int *sendcounts, size_t *sdispls,
   MPI_Allreduce (&large, &s_large, 1, MPI_INT,  MPI_SUM,  _pdm_mpi_2_mpi_comm(comm));
   large = s_large;
 
-
   if (!large) {
 
     int *_sdispls = malloc(sizeof(int) * size);

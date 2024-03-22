@@ -1,3 +1,6 @@
+# cython: c_string_type=str, c_string_encoding=ascii
+import warnings
+
 cdef extern from "pdm_block_to_part.h":
     # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
     # > Wrapping of Ppart Structure
@@ -30,8 +33,32 @@ cdef extern from "pdm_block_to_part.h":
                                 void                ***part_data)
 
     PDM_block_to_part_t *PDM_block_to_part_free(PDM_block_to_part_t *btp)
+
+    void PDM_block_to_part_time_per_step_dump(PDM_MPI_Comm  comm,
+                                              const char   *filename)
+
+    void PDM_block_to_part_comm_graph_dump(PDM_block_to_part_t *btp,
+                                           const char          *filename)
     # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
+# ------------------------------------------------------------------
+def btp_time_per_step_dump(MPI.Comm  comm,
+                          char     *filename):
+    """
+    time_per_step_dump(comm, filename)
+    Global write block-to-part step timer.
+
+    Parameters:
+      comm     (MPI.Comm)    : MPI communicator
+      filename (str)         : File name
+    """
+
+    # MPI communicator
+    cdef MPI.MPI_Comm c_comm = comm.ob_mpi
+    cdef PDM_MPI_Comm PDMC   = PDM_MPI_mpi_2_pdm_mpi_comm(&c_comm)
+
+    PDM_block_to_part_time_per_step_dump(PDMC,
+                                         filename)
 
 # ------------------------------------------------------------------
 cdef class BlockToPart:
@@ -243,6 +270,20 @@ cdef class BlockToPart:
         if part_stride is not None:
           pField[field_name + "#PDM_Stride"] = part_stride
 
+    # ------------------------------------------------------------------
+    def comm_graph_dump(self,
+                        char *filename):
+      """
+      comm_graph_dump(self, filename)
+      Write in parallel communication graph
+
+      Parameters:
+      self           : BlockToPart object
+      filename (str) : File name
+      """
+
+      PDM_block_to_part_comm_graph_dump(self.BTP,
+                                        filename)
 
     # ------------------------------------------------------------------
     def __dealloc__(self):
