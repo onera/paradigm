@@ -976,7 +976,7 @@ PDM_part_extension_entity1_to_entity2
   int                          *pn_entity2,
   PDM_g_num_t                 **pentity2_ln_to_gn,
   int                         **pentity2_alrdy_sent,
-  int                         **pentity2_ancstr,
+  PDM_g_num_t                 **pentity2_ancstr,
   int                         **pentity2_path_itrf_idx,
   int                         **pentity2_path_itrf,
   int                         **pentity2_entity1_idx,
@@ -1432,8 +1432,11 @@ PDM_part_extension_entity1_to_entity2
         }
       }
       else {
+        for(int j = _pextract_entity2_idx[i]; j < _pextract_entity2_idx[i+1]; ++j) {
+        _pentity2_is_valid[j] = 0;
         pn_entity2_valid[i_part] += 1;
-        pn_entity2_valid_n_itrf[i_part] += 8888; // ?????? WHAT TO DO ?
+        pn_entity2_valid_n_itrf[i_part] += 1; // ?????? WHAT TO DO ?
+        }
       }
     }
     // log_trace("\npn_entity2_only_by_interface[i_part] = %d\n", pn_entity2_only_by_interface[i_part]);
@@ -1541,7 +1544,7 @@ PDM_part_extension_entity1_to_entity2
     _pnew_entity2_path_itrf_idx[0] = 0;
     for(int i = 0; i < n_part1_to_part2; ++i) {
       interf_entity_1 = pentity1_to_pentity1_interface[i_part][i];
-      if(pentity1_to_pentity1_interface[i_part][i] != 0) {
+      if(interf_entity_1 != 0) {
         for(int j = _pextract_entity2_idx[i]; j < _pextract_entity2_idx[i+1]; ++j) {
 
           if (_pentity2_is_valid[j]==1) {
@@ -1563,10 +1566,20 @@ PDM_part_extension_entity1_to_entity2
       }
       else {
         for(int j = _pextract_entity2_idx[i]; j < _pextract_entity2_idx[i+1]; ++j) {
-          _pnew_entity2_path_itrf[idx_write] = 0;
-          idx_write++;
+          _pnew_entity2_path_itrf_idx[  idx_write+1] = _pnew_entity2_path_itrf_idx[idx_write]+_pextract_entity2_n_itrf  [j]+1;
+          _pnew_entity2_gnum         [  idx_write  ] = _pextract_entity2_ancstr  [j];
+          _pnew_entity2_ancstr       [  idx_write  ] = _pextract_entity2_ancstr  [j];
+          _pnew_entity2_parent_t     [3*idx_write  ] =  pextract_entity2_triplet[i_part][3*j  ];
+          _pnew_entity2_parent_t     [3*idx_write+1] =  pextract_entity2_triplet[i_part][3*j+1];
+          _pnew_entity2_parent_t     [3*idx_write+2] =  pextract_entity2_triplet[i_part][3*j+2];
+          _pnew_entity2_n_itrf       [  idx_write  ] = _pextract_entity2_n_itrf  [j]+1;
+          int l_i_ancstr = _pnew_entity2_path_itrf_idx[idx_write];
+          for (int i_ancstr=_pextract_entity2_path_itrf_idx[j]; i_ancstr<_pextract_entity2_path_itrf_idx[j+1]; ++i_ancstr) {
+            _pnew_entity2_path_itrf[l_i_ancstr++] = _pextract_entity2_path_itrf[i_ancstr];
+          }
+          _pnew_entity2_path_itrf[l_i_ancstr] = interf_entity_1;
+          idx_write++; // ?????????????????????
         }
-        // idx_read ++; // ???
       }
     }
 
@@ -2797,7 +2810,7 @@ PDM_part_extension_pentity1_entity2_to_extented_pentity1_entity2
     0       0       0       1       2       2       -1       2       1      -1 
     0 0 0   0 0 1   0 0 2   0 0 0   0 0 0   0 0 1   0 0 2   0 0 2   1 0 0   1 0 2 
    */
-PDM_part_to_part_t* ptp = PDM_part_to_part_create_from_num2_triplet((const PDM_g_num_t **) pentity1_extented_ln_to_gn,
+PDM_part_to_part_t* ptp = PDM_part_to_part_create_from_num2_triplet(  (const PDM_g_num_t **) pentity1_extented_ln_to_gn,
                                                                       (const int          *) pn_entity1_extented,
                                                                       n_part,
                                                                       (const int          *) pn_entity1,
@@ -2988,7 +3001,7 @@ PDM_part_to_part_t* ptp = PDM_part_to_part_create_from_num2_triplet((const PDM_g
    *       a/ Know by relation table and know in current partition : 2
    *       b/ Know by relation table but not local                 : 3
    *       c/ New                                                  : 4
-   * On essaye après d'organiser les nouvelles entités dans l'ordres suivant :
+   * On essaye après d'organiser les nouvelles entités dans l'ordre suivant :
    *    [1/3/4]
    */
   int n_extented_kind = 5;
