@@ -1892,6 +1892,11 @@ PDM_part_extension_entity1_to_entity2
           pentity2_extented_path_itrf[i_part][i_beg+l_i_ancstr] = _pnew_entity2_path_itrf[i_ancstr];
           l_i_ancstr ++;
         }
+
+        // entities which came from interf=0 has already be sent (cause if dont they wouldn't be here)
+        if (pentity2_extented_path_itrf[i_part][i_beg+l_i_ancstr-1] == 0) {
+          pentity2_extented_alrdy_sent[i_part][i_entity2] = 1;
+        }
         idx_write++;
       }
     }

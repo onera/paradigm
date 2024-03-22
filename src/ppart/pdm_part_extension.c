@@ -1896,6 +1896,9 @@ _part_extension_2d
             }
           }
 
+          for (int i_face=0; i_face<pn_face[i_part]; ++i_face) {
+            pface_alrdy_sent[i_part][i_face] = 0;
+          }
           // PDM_log_trace_array_int(pcurr_entity_bound_to_pentity_bound_idx    [i_part], pn_vtx [i_part]+1, "pcurr_entity_bound_to_pentity_bound_idx     ::");
           // PDM_log_trace_array_int(pcurr_entity_bound_to_pentity_bound_triplet[i_part], 3 * n_new_size   , "pcurr_entity_bound_to_pentity_bound_triplet     ::");
           // log_trace("pn_vtx_extented_by_depth[%i][%i] --> %i \n",i_depth, i_part, pn_vtx_extented_by_depth [i_depth][i_part]);
