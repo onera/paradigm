@@ -3019,7 +3019,7 @@ PDM_part_to_part_t* ptp = PDM_part_to_part_create_from_num2_triplet(  (const PDM
     }
 
     int n_part1_to_part2 = pentity1_extented_to_pentity1_idx[i_part][pn_entity1_extented[i_part]]/3;
-    if(0 == 1) {
+    if(1 == 1) {
       PDM_log_trace_array_long(pextract_entity1_entity2_gnum          [i_part], pextract_entity1_entity2_n_elmt[i_part], "pextract_entity1_entity2_gnum          ::");
       PDM_log_trace_array_int (prev_pentity2_itrf_gnum_and_itrf_strid [i_part], pextract_entity1_entity2_n_elmt[i_part], "prev_pentity2_itrf_gnum_and_itrf_strid ::");
       PDM_log_trace_array_int (pentity1_extented_to_pentity1_interface[i_part],     n_part1_to_part2                   , "pentity1_extented_to_pentity1_interface::");
@@ -3118,6 +3118,10 @@ PDM_part_to_part_t* ptp = PDM_part_to_part_create_from_num2_triplet(  (const PDM
             pextract_entity2_kind[i_part][idx_read] = 1;
           }
 
+          for(int k = 0; k < prev_pentity2_itrf_gnum_and_itrf_strid[i_part][idx_read]; ++k) {
+            idx_read_data++;
+          }
+
           idx_read++;
         }
       }
@@ -3149,7 +3153,7 @@ PDM_part_to_part_t* ptp = PDM_part_to_part_create_from_num2_triplet(  (const PDM
       pentity2_extented_by_kind_idx[i_part][i+1] = pentity2_extented_by_kind_idx[i_part][i] + pentity2_extented_by_kind_n[i];
     }
 
-    // PDM_log_trace_array_int(pentity2_extented_by_kind_idx[i_part], n_extented_kind, "pentity2_extented_by_kind_idx ::");
+    PDM_log_trace_array_int(pentity2_extented_by_kind_idx[i_part], n_extented_kind, "pentity2_extented_by_kind_idx ::");
 
     free(pentity2_extented_by_kind_n);
   }
@@ -3196,7 +3200,7 @@ PDM_part_to_part_t* ptp = PDM_part_to_part_create_from_num2_triplet(  (const PDM
     }
 
 
-    // PDM_log_trace_array_long(_pentity2_extented_ln_to_gn_by_interface, 2 * n_gnum, "_pentity2_extented_ln_to_gn_by_interface :: ");
+    PDM_log_trace_array_long(_pentity2_extented_ln_to_gn_by_interface, 2 * n_gnum, "_pentity2_extented_ln_to_gn_by_interface :: ");
 
 
     PDM_gnum_set_from_parents(gen_gnum_entity2,
@@ -3335,7 +3339,7 @@ PDM_part_to_part_t* ptp = PDM_part_to_part_create_from_num2_triplet(  (const PDM
         int idx_read = _recv_buffer_to_sort_kind_order[i];
         int i_unique = _unique_order_entity2[i-_pentity2_extented_by_kind_idx[i_kind]];
 
-        // log_trace("[%i] - i_unique = %i / %i \n", i, i_unique, pn_entity2_extented[i_part]);
+        log_trace("[%i] - i_unique = %i / %i \n", i, i_unique, pn_entity2_extented[i_part]);
 
         /* Can be erase multiple time */
         _pentity2_extented_ln_to_gn [  i_unique  ] = _pextract_entity1_entity2_gnum   [  idx_read  ];
