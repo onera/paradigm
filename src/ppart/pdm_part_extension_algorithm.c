@@ -1578,7 +1578,7 @@ PDM_part_extension_entity1_to_entity2
             _pnew_entity2_path_itrf[l_i_ancstr++] = _pextract_entity2_path_itrf[i_ancstr];
           }
           _pnew_entity2_path_itrf[l_i_ancstr] = interf_entity_1;
-          idx_write++; // ?????????????????????
+          idx_write++;
         }
       }
     }
@@ -2996,14 +2996,15 @@ PDM_part_to_part_t* ptp = PDM_part_to_part_create_from_num2_triplet(  (const PDM
    * pextract_entity2_kind :
    *    1/ Internal
    *       a/ Already know in current partition                    : 0
-   *       b/ New in current partition                             : 1
+   *       b/ New in current partition                             : 2
    *    2/ From interface
-   *       a/ Know by relation table and know in current partition : 2
+   *       a/ Know by relation table and know in current partition : 1
    *       b/ Know by relation table but not local                 : 3
    *       c/ New                                                  : 4
    * On essaye après d'organiser les nouvelles entités dans l'ordre suivant :
-   *    [1/3/4]
+   *    [2/3/4]
    */
+
   int n_extented_kind = 5;
   int         **pextract_entity2_kind           = malloc(n_part * sizeof(int *));
   int         **pextract_entity2_translate      = malloc(n_part * sizeof(int *));
@@ -3091,8 +3092,9 @@ PDM_part_to_part_t* ptp = PDM_part_to_part_create_from_num2_triplet(  (const PDM
             if( pos_int != -1) {
               _pextract_entity2_translate  [idx_read] = pos_int;
               _pextract_entity2_interface  [idx_read] = pentity1_extented_to_pentity1_interface[i_part][i];
-              pextract_entity2_kind[i_part][idx_read] = 2;
+              pextract_entity2_kind[i_part][idx_read] = 1;
             } else {
+              _pextract_entity1_entity2_gnum[idx_read] = gnum_opp;
               _pextract_entity2_translate  [idx_read] = -1;
               _pextract_entity2_interface  [idx_read] = pentity1_extented_to_pentity1_interface[i_part][i];
               pextract_entity2_kind[i_part][idx_read] = 3;
@@ -3115,7 +3117,7 @@ PDM_part_to_part_t* ptp = PDM_part_to_part_create_from_num2_triplet(  (const PDM
           } else {
             _pextract_entity2_translate  [idx_read] = -1;
             _pextract_entity2_interface  [idx_read] = pentity1_extented_to_pentity1_interface[i_part][i];
-            pextract_entity2_kind[i_part][idx_read] = 1;
+            pextract_entity2_kind[i_part][idx_read] = 2;
           }
 
           for(int k = 0; k < prev_pentity2_itrf_gnum_and_itrf_strid[i_part][idx_read]; ++k) {
@@ -3251,11 +3253,6 @@ PDM_part_to_part_t* ptp = PDM_part_to_part_create_from_num2_triplet(  (const PDM
   for(int i_part = 0; i_part < n_part; ++i_part) {
     pn_entity2_extented[i_part] = 0;
 
-    int **unique_order_entity2 = malloc(n_extented_kind * sizeof(int *));
-    int  *n_extract_entity2    = malloc(n_extented_kind * sizeof(int  ));
-    for(int i = 0; i < n_extented_kind; ++i) {
-      unique_order_entity2[i] = NULL;
-    }
 
 
     int         *_pextract_entity1_entity2_idx     = pextract_entity1_entity2_idx    [i_part];
@@ -3265,38 +3262,31 @@ PDM_part_to_part_t* ptp = PDM_part_to_part_create_from_num2_triplet(  (const PDM
     int         *_recv_buffer_to_sort_kind_order   = recv_buffer_to_sort_kind_order  [i_part];
     int         *_pextract_entity2_translate       = pextract_entity2_translate      [i_part];
 
-    for(int i_kind = 1; i_kind < n_extented_kind; ++i_kind) {
+    int beg_entry = _pentity2_extented_by_kind_idx[2];
+    int end_entry = _pentity2_extented_by_kind_idx[5];
 
-      if(i_kind == 2) {
-        continue; // Tout est deja fait, ps de nouveaux entity2
-      }
+    int n_entry = end_entry - beg_entry;
 
-      int n_entry = _pentity2_extented_by_kind_idx[i_kind+1] - _pentity2_extented_by_kind_idx[i_kind];
+    int idx_write = 0;
+    PDM_g_num_t *tmp_ln_to_gn = malloc(n_entry * sizeof(PDM_g_num_t));
+    for(int i = beg_entry; i < end_entry; ++i) {
+      int idx_read = _recv_buffer_to_sort_kind_order[i];
+      tmp_ln_to_gn[idx_write++] = _pextract_entity1_entity2_gnum[idx_read];
+    }
+    int *unique_order_entity2 = malloc(n_entry * sizeof(int));
 
-      int idx_write = 0;
-      PDM_g_num_t *tmp_ln_to_gn = malloc(n_entry * sizeof(PDM_g_num_t));
-      for(int i = _pentity2_extented_by_kind_idx[i_kind]; i < _pentity2_extented_by_kind_idx[i_kind+1]; ++i) {
-        int idx_read = _recv_buffer_to_sort_kind_order[i];
-        tmp_ln_to_gn[idx_write++] = _pextract_entity1_entity2_gnum[idx_read];
-      }
+    int n_unique = PDM_inplace_unique_long2(tmp_ln_to_gn,
+                                            unique_order_entity2,
+                                            0,
+                                            n_entry-1);
 
-      unique_order_entity2[i_kind] = malloc(n_entry * sizeof(int));
-      n_extract_entity2[i_kind] = PDM_inplace_unique_long2(tmp_ln_to_gn,
-                                                           unique_order_entity2[i_kind],
-                                                           0,
-                                                           n_entry-1);
 
-      for(int i = 0; i < n_entry; ++i) {
-        unique_order_entity2[i_kind][i] += pn_entity2_extented[i_part];
-      }
+    for(int i = 0; i < n_entry; ++i) {
+      unique_order_entity2[i] += pn_entity2_extented[i_part];
+    }
+    pn_entity2_extented[i_part] += n_unique;
+    free(tmp_ln_to_gn);
 
-      // PDM_log_trace_array_int(unique_order_entity2[i_kind], n_entry, "unique_order_entity2[i_kind] ::");
-
-      // free(unique_order_entity2[i_kind]);
-      free(tmp_ln_to_gn);
-
-      pn_entity2_extented[i_part] += n_extract_entity2[i_kind];
-    } /* End kind */
 
     /* Allocate array */
     pentity2_extented_to_entity2_idx[i_part] = malloc(   (pn_entity2_extented[i_part]+1) * sizeof(int        ));
@@ -3322,7 +3312,7 @@ PDM_part_to_part_t* ptp = PDM_part_to_part_create_from_num2_triplet(  (const PDM
     /* Setup all new connexion and update connectivity */
     for(int i_kind = 0; i_kind < n_extented_kind; ++i_kind) {
 
-      if(i_kind == 0 || i_kind == 2) {
+      if(i_kind == 0 || i_kind == 1) {
 
         for(int i = _pentity2_extented_by_kind_idx[i_kind]; i < _pentity2_extented_by_kind_idx[i_kind+1]; ++i) {
           int idx_read = _recv_buffer_to_sort_kind_order[i];
@@ -3333,11 +3323,11 @@ PDM_part_to_part_t* ptp = PDM_part_to_part_create_from_num2_triplet(  (const PDM
         continue;
       }
 
-      int         *_unique_order_entity2          =  unique_order_entity2[i_kind];
+      int         *_unique_order_entity2          =  unique_order_entity2;
 
       for(int i = _pentity2_extented_by_kind_idx[i_kind]; i < _pentity2_extented_by_kind_idx[i_kind+1]; ++i) {
         int idx_read = _recv_buffer_to_sort_kind_order[i];
-        int i_unique = _unique_order_entity2[i-_pentity2_extented_by_kind_idx[i_kind]];
+        int i_unique = _unique_order_entity2[i-_pentity2_extented_by_kind_idx[2]];
 
         log_trace("[%i] - i_unique = %i / %i \n", i, i_unique, pn_entity2_extented[i_part]);
 
@@ -3362,13 +3352,7 @@ PDM_part_to_part_t* ptp = PDM_part_to_part_create_from_num2_triplet(  (const PDM
     }
 
 
-    for(int i = 0; i < n_extented_kind; ++i) {
-      if(unique_order_entity2[i] != NULL) {
-        free(unique_order_entity2[i]);
-      }
-    }
     free(unique_order_entity2);
-    free(n_extract_entity2);
 
   }
 
