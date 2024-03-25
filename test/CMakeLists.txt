@@ -299,6 +299,7 @@ if (PDM_ENABLE_STATIC_Fortran_INTERFACE OR PDM_ENABLE_SHARED_Fortran_INTERFACE)
   test_fortran_create (pdm_t_mesh_nodal_cellvtx_f 2 PDM_LIST_TEST PDM_LIST_NRANK)
   test_fortran_create (pdm_t_part_mesh_nodal_cellvtx_f 2 PDM_LIST_TEST PDM_LIST_NRANK)
   test_fortran_create (pdm_t_generate_mesh_f 2 PDM_LIST_TEST PDM_LIST_NRANK)
+  test_fortran_create (pdm_t_intersection_prepro 2 PDM_LIST_TEST PDM_LIST_NRANK)
   # test_fortran_create (pdm_t_io  2 PDM_LIST_TEST PDM_LIST_NRANK)
 endif()
 
