@@ -1530,7 +1530,7 @@ PDM_part_extension_entity1_to_entity2
     log_trace("pn_new_entity2_kind4  = %d\n",pn_new_entity2_kind4 [i_part]);
     log_trace("pn_new_entity2_n_itrf = %d\n",pn_new_entity2_n_itrf[i_part]);
     PDM_log_trace_array_int(pextract_entity2_kind[i_part], pextract_entity1_entity2_n_elmt[i_part], "pextract_entity2_kind ::");
-
+    printf("ATTTENTION L'ORDRE DANS LE TABLEAU TRIE DOIT ETRE RETROUVE DANS LA POSITION !!!!!!\n");
 
     free(prev_pentity2_itrf_gnum_and_itrf_strid[i_part]);
     free(prev_pentity2_itrf_gnum_and_itrf_data [i_part]);
@@ -1691,7 +1691,7 @@ PDM_part_extension_entity1_to_entity2
   for(int i_part = 0; i_part < n_part; ++i_part) {
 
     int         *_pextract_entity2_idx           = pextract_entity2_idx          [i_part];
-    // PDM_g_num_t *_pextract_entity2_gnum          = pextract_entity2_gnum         [i_part];
+    PDM_g_num_t *_pextract_entity2_gnum          = pextract_entity2_gnum         [i_part];
     PDM_g_num_t *_pextract_entity2_ancstr        = pextract_entity2_ancstr       [i_part];
     int         *_pextract_entity2_n_itrf        = pextract_entity2_n_itrf       [i_part];
     int         *_pextract_entity2_path_itrf_idx = pextract_entity2_path_itrf_idx[i_part];
@@ -1758,7 +1758,7 @@ PDM_part_extension_entity1_to_entity2
 
           if (_pextract_entity2_kind[j]==2) {
             _pnew_entity2_path_itrf_idx[  idx_write+1] = _pnew_entity2_path_itrf_idx[idx_write]+_pextract_entity2_n_itrf  [j];
-            _pnew_entity2_gnum         [  idx_write  ] = _pextract_entity2_ancstr  [j];
+            _pnew_entity2_gnum         [  idx_write  ] = _pextract_entity2_gnum    [j];
             _pnew_entity2_ancstr       [  idx_write  ] = _pextract_entity2_ancstr  [j];
             _pnew_entity2_kind         [  idx_write  ] = _pextract_entity2_kind    [j];
             _pnew_entity2_parent_t     [3*idx_write  ] =  pextract_entity2_triplet[i_part][3*j  ];
@@ -2973,6 +2973,8 @@ PDM_part_extension_pentity1_entity2_to_extented_pentity1_entity2
   PDM_UNUSED(n_interface);
   PDM_UNUSED(pentity1_ln_to_gn);
 
+  int debug = 1;
+
   int i_rank;
   int n_rank;
   PDM_MPI_Comm_rank(comm, &i_rank);
@@ -2981,7 +2983,11 @@ PDM_part_extension_pentity1_entity2_to_extented_pentity1_entity2
   /*
    * Creation du ptp between extented part and current partition for entity1
    */
-
+  if (debug==1) {
+    log_trace("\n\n");
+    log_trace("-------------------------\n");
+    log_trace("PTP to exchange entities2\n");
+  }
 
   if(0 == 1) {
     for(int i_part = 0; i_part < n_part; ++i_part) {
@@ -3147,24 +3153,22 @@ PDM_part_extension_pentity1_entity2_to_extented_pentity1_entity2
          (void ***)      &prev_pentity2_itrf_gnum_and_itrf_data);
   PDM_block_to_part_free(btp);
 
+
+
   /*
-   * Prepare for unify
+   * Need to sort pentity2_gnum to search if a candidate entity
+   * doesn't already exist in partition.
+   *
    */
   int         **entity2_order            = malloc( n_part * sizeof(int         *));
   PDM_g_num_t **pentity2_ln_to_gn_sorted = malloc( n_part * sizeof(PDM_g_num_t *));
+
   for(int i_part = 0; i_part < n_part; ++i_part) {
-
-
-    log_trace("pn_entity2[i_part] = %i \n", pn_entity2[i_part]);
-
-    /*
-     * Sort current part entity2_ln_to_gn
-     */
     entity2_order           [i_part] = malloc( pn_entity2[i_part] * sizeof(int        ));
     pentity2_ln_to_gn_sorted[i_part] = malloc( pn_entity2[i_part] * sizeof(PDM_g_num_t));
     for(int i_entity2 = 0; i_entity2 < pn_entity2[i_part]; ++i_entity2) {
-      pentity2_ln_to_gn_sorted[i_part][i_entity2] = pentity2_ln_to_gn[i_part][i_entity2];
       entity2_order           [i_part][i_entity2] = i_entity2;
+      pentity2_ln_to_gn_sorted[i_part][i_entity2] = pentity2_ln_to_gn[i_part][i_entity2];
     }
     PDM_sort_long(pentity2_ln_to_gn_sorted[i_part], entity2_order[i_part], pn_entity2[i_part]);
   }
@@ -3187,6 +3191,11 @@ PDM_part_extension_pentity1_entity2_to_extented_pentity1_entity2
    * On essaye après d'organiser les nouvelles entités dans l'ordre suivant :
    *    [2/3/4]
    */
+  if (debug==1) {
+    log_trace("\n\n");
+    log_trace("--------------------\n");
+    log_trace("find valid entities2\n");
+  }
 
   int n_extented_kind = 5;
   int         **pextract_entity2_kind           = malloc(n_part * sizeof(int *));
@@ -3273,7 +3282,7 @@ PDM_part_extension_pentity1_entity2_to_extented_pentity1_entity2
             int pos_int = PDM_binary_search_long(gnum_opp, _pentity2_ln_to_gn_sorted, pn_entity2[i_part]);
             // log_trace("pos_int = %i \n", pos_int);
             if( pos_int != -1) {
-              _pextract_entity2_translate  [idx_read] = pos_int;
+              _pextract_entity2_translate  [idx_read] = entity2_order[i_part][pos_int];
               _pextract_entity2_interface  [idx_read] = pentity1_extented_to_pentity1_interface[i_part][i];
               pextract_entity2_kind[i_part][idx_read] = 1;
             } else {
@@ -3294,7 +3303,7 @@ PDM_part_extension_pentity1_entity2_to_extented_pentity1_entity2
 
           int pos_int = PDM_binary_search_long(gnum_cur, _pentity2_ln_to_gn_sorted, pn_entity2[i_part]);
           if( pos_int != -1) {
-            _pextract_entity2_translate  [idx_read] = pos_int;
+            _pextract_entity2_translate  [idx_read] = entity2_order[i_part][pos_int];
             _pextract_entity2_interface  [idx_read] = pentity1_extented_to_pentity1_interface[i_part][i];
             pextract_entity2_kind[i_part][idx_read] = 0;
           } else {
@@ -3384,9 +3393,14 @@ PDM_part_extension_pentity1_entity2_to_extented_pentity1_entity2
       idx_write++;
     }
 
-
-    PDM_log_trace_array_long(_pentity2_extented_ln_to_gn_by_interface, 2 * n_gnum, "_pentity2_extented_ln_to_gn_by_interface :: ");
-
+    if (1==1) {
+      log_trace("\n");
+      log_trace("ngum = %d\n", n_gnum);
+      log_trace("pextract_entity1_entity2_n_elmt[i_part] = %d\n", pextract_entity1_entity2_n_elmt[i_part]);
+      PDM_log_trace_array_long(_pextract_entity1_entity2_gnum, pextract_entity1_entity2_n_elmt[i_part], "pextract_entity1_entity2_gnum :: ");
+      PDM_log_trace_array_long(_pextract_entity2_translate, pextract_entity1_entity2_n_elmt[i_part] , "_pextract_entity2_translate :: ");
+      PDM_log_trace_array_long(_pentity2_extented_ln_to_gn_by_interface, 2 * n_gnum, "_pentity2_extented_ln_to_gn_by_interface :: ");
+    }
 
     PDM_gnum_set_from_parents(gen_gnum_entity2,
                               i_part,
@@ -3424,7 +3438,11 @@ PDM_part_extension_pentity1_entity2_to_extented_pentity1_entity2
    * You need to update all incoming conectivity
    * For each kind (if new), we unique all entries in order to setup a new local order
    */
-
+  if (debug==1) {
+    log_trace("\n\n");
+    log_trace("--------------------------------\n");
+    log_trace("update connectivity of entities1\n");
+  }
   int          *pn_entity2_extented              = malloc(n_part * sizeof(int          ));
   PDM_g_num_t **pentity2_extented_ln_to_gn       = malloc(n_part * sizeof(PDM_g_num_t *));
   int         **pentity2_extented_triplet        = malloc(n_part * sizeof(int         *));
@@ -3550,6 +3568,12 @@ PDM_part_extension_pentity1_entity2_to_extented_pentity1_entity2
 
 
   /* Update new block of interface */
+  if (debug==1) {
+    log_trace("\n\n");
+    log_trace("-------------------------\n");
+    log_trace("update entity1 interfaces\n");
+  }
+
   PDM_g_num_t **gnum_itrf_link                     = malloc((n_part+1) * sizeof(PDM_g_num_t *));
   PDM_g_num_t **gnum_and_itrf_data                 = malloc((n_part+1) * sizeof(PDM_g_num_t *));
   int         **gnum_and_itrf_stri                 = malloc((n_part+1) * sizeof(int         *));
