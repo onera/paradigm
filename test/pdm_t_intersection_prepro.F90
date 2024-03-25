@@ -46,7 +46,7 @@ program testf
   integer                            :: cube_dim                       = 3
 
   integer                            :: sphere_elt_type                = PDM_MESH_NODAL_TRIA3
-  double precision                   :: sphere_radius                  = 0.35
+  double precision                   :: sphere_radius                  = 10
   double precision                   :: sphere_center_x                = 0.
   double precision                   :: sphere_center_y                = 0.
   double precision                   :: sphere_center_z                = 0.
