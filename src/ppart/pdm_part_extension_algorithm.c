@@ -1749,6 +1749,21 @@ PDM_part_extension_entity1_to_entity2
             }
             _pnew_entity2_path_itrf[l_i_ancstr] = interf_entity_1;
             idx_write++;
+          } else if (_pextract_entity2_kind[j]==3) {
+            _pnew_entity2_path_itrf_idx[  idx_write+1] = _pnew_entity2_path_itrf_idx[idx_write]+_pextract_entity2_n_itrf  [j]+1;
+            _pnew_entity2_gnum         [  idx_write  ] = _pextract_entity2_gnum    [j];
+            _pnew_entity2_ancstr       [  idx_write  ] = _pextract_entity2_ancstr  [j];
+            _pnew_entity2_kind         [  idx_write  ] = _pextract_entity2_kind    [j];
+            _pnew_entity2_parent_t     [3*idx_write  ] =  pextract_entity2_triplet[i_part][3*j  ];
+            _pnew_entity2_parent_t     [3*idx_write+1] =  pextract_entity2_triplet[i_part][3*j+1];
+            _pnew_entity2_parent_t     [3*idx_write+2] =  pextract_entity2_triplet[i_part][3*j+2];
+            _pnew_entity2_n_itrf       [  idx_write  ] = _pextract_entity2_n_itrf  [j]+1;
+            int l_i_ancstr = _pnew_entity2_path_itrf_idx[idx_write];
+            for (int i_ancstr=_pextract_entity2_path_itrf_idx[j]; i_ancstr<_pextract_entity2_path_itrf_idx[j+1]; ++i_ancstr) {
+              _pnew_entity2_path_itrf[l_i_ancstr++] = _pextract_entity2_path_itrf[i_ancstr];
+            }
+            _pnew_entity2_path_itrf[l_i_ancstr] = interf_entity_1;
+            idx_write++;
           }
         }
       }
@@ -2068,7 +2083,7 @@ PDM_part_extension_entity1_to_entity2
         pentity2_extented_to_pentity2_triplet[i_part][3*idx_write+2] = pnew_entity2_parent_t[i_part][3*old_pos+2];
 
         // Save the link (gnum, interface)
-        if (_pnew_entity2_kind[old_pos] == 4) {
+        if ((_pnew_entity2_kind[old_pos] == 3)||(_pnew_entity2_kind[old_pos] == 4)) {
           int i_last_interf = pnew_entity2_path_itrf_idx[i_part][old_pos+1]-1;
           pentity2_extented_to_pentity2_interface[i_part][idx_write] =  pnew_entity2_path_itrf    [i_part][i_last_interf];
         }
