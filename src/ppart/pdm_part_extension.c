@@ -1477,7 +1477,9 @@ _part_extension_2d
     PDM_g_num_t *next_dface_itrf_blk_gnum            = NULL;
     int         *next_dface_itrf_gnum_and_itrf_strid = NULL;
     PDM_g_num_t *next_dface_itrf_gnum_and_itrf_data  = NULL;
-    log_trace("\n PDM_part_extension_entity1_to_entity2 beg \n");
+    log_trace("\n\n");
+    log_trace("========================================= \n");
+    log_trace("PDM_part_extension_entity1_to_entity2 beg \n");
     /*
      * ID: il faut arriver ici en ayant filtré les nouveaux vertex, devrait éliminer les faux-positifs
      *    -> nécessite d'utiliser le nouveau graphe vtx->face des nouveaux éléments
@@ -1516,7 +1518,9 @@ _part_extension_2d
                                           &next_dface_itrf_gnum_and_itrf_strid,
                                           &next_dface_itrf_gnum_and_itrf_data,
                                           part_ext->comm);
-    log_trace(" PDM_part_extension_entity1_to_entity2 end \n\n");
+    log_trace("\n\n");
+    log_trace("PDM_part_extension_entity1_to_entity2 end \n");
+    log_trace("========================================= \n");
     // if(step == 1) {
     //   exit(1);
     // }
@@ -1547,7 +1551,9 @@ _part_extension_2d
     int         *next_dvtx_itrf_gnum_and_itrf_strid = NULL;
     PDM_g_num_t *next_dvtx_itrf_gnum_and_itrf_data  = NULL;
     int         *next_dvtx_itrf_gnum_and_itrf_sens  = NULL;
-    log_trace("\n PDM_part_extension_pentity1_entity2_to_extented_pentity1_entity2 beg \n");
+    log_trace("\n\n\n\n");
+    log_trace("==================================================================== \n");
+    log_trace("PDM_part_extension_pentity1_entity2_to_extented_pentity1_entity2 beg \n");
     PDM_part_extension_pentity1_entity2_to_extented_pentity1_entity2(part_ext->ln_part_tot,
                                                                      part_ext->n_interface,
                                                                      shift_by_domain_vtx, // Attention il va evoluer lui
@@ -1580,7 +1586,9 @@ _part_extension_2d
                                                                      &next_dvtx_itrf_gnum_and_itrf_data,
                                                                      &next_dvtx_itrf_gnum_and_itrf_sens,
                                                                      part_ext->comm);
-    log_trace(" PDM_part_extension_pentity1_entity2_to_extented_pentity1_entity2 end \n\n");
+    log_trace("\n\n");
+    log_trace("PDM_part_extension_pentity1_entity2_to_extented_pentity1_entity2 end \n");
+    log_trace("==================================================================== \n");
 
     free(prev_dvtx_itrf_blk_gnum           );
     free(prev_dvtx_itrf_gnum_and_itrf_strid);
