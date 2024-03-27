@@ -107,19 +107,19 @@ PDM_isosurface_connectivity_set
 
   switch (connectivity_type) {
     case PDM_CONNECTIVITY_TYPE_CELL_FACE:
-      isos->cell_face     = connect;
-      isos->cell_face_idx = connect_idx;
+      isos->cell_face    [i_part] = connect;
+      isos->cell_face_idx[i_part] = connect_idx;
       break;
     case PDM_CONNECTIVITY_TYPE_FACE_EDGE:
-      isos->face_edge     = connect;
-      isos->face_edge_idx = connect_idx;
+      isos->face_edge    [i_part] = connect;
+      isos->face_edge_idx[i_part] = connect_idx;
       break;
     case PDM_CONNECTIVITY_TYPE_FACE_VTX:
-      isos->face_vtx     = connect;
-      isos->face_vtx_idx = connect_idx;
+      isos->face_vtx     [i_part] = connect;
+      isos->face_vtx_idx [i_part] = connect_idx;
       break;
     case PDM_CONNECTIVITY_TYPE_EDGE_VTX:
-      isos->edge_vtx     = connect;
+      isos->edge_vtx     [i_part] = connect;
       break;
     default:
       PDM_error(__FILE__, __LINE__, 0, "invalid connectivity_type (%d) for isosurface.\n", connectivity_type);

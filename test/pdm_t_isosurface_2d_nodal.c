@@ -170,7 +170,7 @@ int main(int argc, char *argv[])
              &n_part,
              &dist_entry,
              &post);
-  
+
 
   /*
    *  Generate mesh
@@ -211,8 +211,18 @@ int main(int argc, char *argv[])
                                        n_part,
                                        PDM_SPLIT_DUAL_WITH_PARMETIS); // TODO: Allow various partitioning ?
   } else {
-    PDM_error(__FILE__, __LINE__, 0, "PDM_t_isosurface_2d_nodal dist_entry must be 1 or 2 (here set to %d)\n", dist_entry);
+    PDM_error(__FILE__, __LINE__, 0, "PDM_t_isosurface_2d_nodal dist_entry must be 0 or 1 (here set to %d)\n", dist_entry);
   }
+
+
+  /*
+   *  TODO:
+   *    - extract bc
+   *    - plusieurs isovalues
+   *    - reequilibrate/local
+   *    - test reset (et chp variable ?)
+   */
+
 
 
   /*
@@ -229,7 +239,60 @@ int main(int argc, char *argv[])
   } else if (dist_entry==0) {
     PDM_isosurface_mesh_nodal_set(isos, pmn);
   } else {
-    PDM_error(__FILE__, __LINE__, 0, "PDM_t_isosurface_2d_nodal dist_entry must be 1 or 2 (here set to %d)\n", dist_entry);
+    PDM_error(__FILE__, __LINE__, 0, "PDM_t_isosurface_2d_nodal dist_entry must be 0 or 1 (here set to %d)\n", dist_entry);
+  }
+
+
+  /*
+   *  Add isosurface parameters
+   */
+
+  // > Plane isosurface
+  double plane_equation [4] = {1.,1.,1.,0.};
+  double plane_isovalues[3] = {1.,2.,3.};
+  int iso1 = PDM_isosurface_add(isos, 
+                                PDM_ISO_SURFACE_KIND_PLANE,
+                                3,
+                                plane_isovalues);
+  PDM_isosurface_equation_set(isos,
+                              iso1,
+                              plane_equation,
+                              0);
+
+  // > Sphere isosurface
+  double sphere_equation [4] = {0.5,0.5,0.5,0.5};
+  double sphere_isovalues[2] = {0.,0.1};
+  int iso2 = PDM_isosurface_add(isos, 
+                                PDM_ISO_SURFACE_KIND_SPHERE,
+                                2,
+                                sphere_isovalues);
+  PDM_isosurface_equation_set(isos,
+                              iso2,
+                              sphere_equation,
+                              0);
+
+  // > User field isosurface
+  double  *dfield = NULL;
+  double **field  = NULL;
+
+  double field_isovalues[1] = {0.};
+  int iso3 = PDM_isosurface_add(isos, 
+                                PDM_ISO_SURFACE_KIND_FIELD,
+                                1,
+                                field_isovalues);
+  if (dist_entry==1) {
+    PDM_isosurface_dfield_set(isos,
+                              iso3,
+                              dfield);
+  } else if (dist_entry==0) {
+    for (int i_part=0; i_part<n_part; ++i_part) {
+      PDM_isosurface_field_set(isos,
+                               iso3,
+                               i_part,
+                               field[i_part]);
+    }
+  } else {
+    PDM_error(__FILE__, __LINE__, 0, "PDM_t_isosurface_2d_nodal dist_entry must be 0 or 1 (here set to %d)\n", dist_entry);
   }
 
 
@@ -242,7 +305,7 @@ int main(int argc, char *argv[])
   } else if (dist_entry==0) {
     PDM_part_mesh_nodal_free(pmn);
   } else {
-    PDM_error(__FILE__, __LINE__, 0, "PDM_t_isosurface_2d_nodal dist_entry must be 1 or 2 (here set to %d)\n", dist_entry);
+    PDM_error(__FILE__, __LINE__, 0, "PDM_t_isosurface_2d_nodal dist_entry must be 0 or 1 (here set to %d)\n", dist_entry);
   }
 
 

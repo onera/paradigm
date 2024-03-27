@@ -75,18 +75,22 @@ struct _pdm_isosurface_t {
   // ====================
   // > Isosurface options
 
+  // > Isosurfaces
+  int                     n_isosurface;
+
   // > Isosurface type
   int                     mesh_dimension;
   PDM_Mesh_nodal_elt_t    iso_elt_type;
-  PDM_iso_surface_kind_t  kind;
+  PDM_iso_surface_kind_t *kind;
 
   // > Isovalues
-  int                     n_isovalues;
-  double                 *isovalues;
+  int                    *n_isovalues;
+  double                **isovalues;
 
   // > Equation args
-  double                 *eq_coeffs;
-  int                     use_gradient;
+  PDM_isosurface_field_function_t *field_function;
+  double                **eq_coeffs;
+  int                    *use_gradient;
 
   // > Function args
   _pdm_isosurface_field_function_t *iso_func;
@@ -152,35 +156,35 @@ struct _pdm_isosurface_t {
   int *n_face;
   int *n_edge;
   int *n_vtx;
-  PDM_g_num_t *cell_gnum;
-  PDM_g_num_t *face_gnum;
-  PDM_g_num_t *edge_gnum;
-  PDM_g_num_t * vtx_gnum;
+  PDM_g_num_t **cell_gnum;
+  PDM_g_num_t **face_gnum;
+  PDM_g_num_t **edge_gnum;
+  PDM_g_num_t ** vtx_gnum;
 
   // > Vertices
   double **vtx_coord;
 
   // > Connectivities
-  int         **cell_face_idx;
-  PDM_g_num_t **cell_face;
-  int         **face_edge_idx;
-  PDM_g_num_t **face_edge;
-  int         **face_vtx_idx;
-  PDM_g_num_t **face_vtx;
-  PDM_g_num_t **edge_vtx;
+  int **cell_face_idx;
+  int **cell_face;
+  int **face_edge_idx;
+  int **face_edge;
+  int **face_vtx_idx;
+  int **face_vtx;
+  int **edge_vtx;
 
   // > Boundaries
-  int          *n_group_face;
-  int         **group_face_idx;
-  PDM_g_num_t **group_face;
+  int  *n_group_face;
+  int **group_face_idx;
+  int **group_face;
 
-  int          *n_group_edge;
-  int         **group_edge_idx;
-  PDM_g_num_t **group_edge;
+  int  *n_group_edge;
+  int **group_edge_idx;
+  int **group_edge;
   
-  int          *n_group_vtx;
-  int         **group_vtx_idx;
-  PDM_g_num_t **group_vtx;
+  int  *n_group_vtx;
+  int **group_vtx_idx;
+  int **group_vtx;
 
   // > Field
   double ***field;
