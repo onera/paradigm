@@ -374,6 +374,11 @@ _PDM_CLUSTERING_KIND_OCTREE = PDM_CLUSTERING_KIND_OCTREE
 _PDM_FALSE = PDM_FALSE
 _PDM_TRUE = PDM_TRUE
 
+_PDM_MESH_EVAL_CENTERED_METRIC_QUALITY = PDM_MESH_EVAL_CENTERED_METRIC_QUALITY
+_PDM_MESH_EVAL_WORST_QUALITY           = PDM_MESH_EVAL_WORST_QUALITY
+_PDM_MESH_EVAL_LARGEST_DET_QUALITY     = PDM_MESH_EVAL_LARGEST_DET_QUALITY
+_PDM_MESH_EVAL_NONE                    = PDM_MESH_EVAL_NONE
+
 @COMMENT_NOT_PDMA@
 @COMMENT_NOT_PDMA@cdef extern from "pdm_plugin.h":
 @COMMENT_NOT_PDMA@    void PDM_plugin_load ()
@@ -586,6 +591,10 @@ include "pdm_geom.pxi"
 # PDM_mesh_deform :
 # --------------------
 @COMMENT_NOT_PDMA@include "pdm_mesh_deform.pxi"
+
+# PDM_mesh_eval :
+# --------------------
+@COMMENT_NOT_PDMA@include "pdm_mesh_eval.pxi"
 
 # PDM_points_merge :
 # --------------------
