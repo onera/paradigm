@@ -60,17 +60,25 @@ struct _pdm_isosurface_t {
   PDM_MPI_Comm comm;
 
 
+  // ========================
+  // > Entry mesh information
+
+  // > Isosurface switch
+  int is_dist_or_part; // -1: undef, 0: dist, 1: part
+  int entry_mesh_type; //  0: undef, 1: dist_alamano, 2: dmesh, 3: dmesh_nodal, -1: part_alamano, -2: pmesh, -3: pmesh_nodal
+
+  // > Mesh information
+  int entry_mesh_dim;
+
+
+
   // ====================
   // > Isosurface options
 
   // > Isosurface type
   int                     mesh_dimension;
-  PDM_Mesh_nodal_elt_t    elt_type;
+  PDM_Mesh_nodal_elt_t    iso_elt_type;
   PDM_iso_surface_kind_t  kind;
-
-  // > Isosurface switch
-  int is_dist_or_part; // -1: undef, 0: dist, 1: part
-  int entry_mesh_type; //  0: undef, 1: dist_alamano, 2: dmesh, 3: dmesh_nodal, -1: part_alamano, -2: pmesh, -3: pmesh_nodal
 
   // > Isovalues
   int                     n_isovalues;

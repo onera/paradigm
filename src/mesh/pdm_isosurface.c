@@ -79,8 +79,18 @@ PDM_isosurface_create
 )
 {
   PDM_isosurface_t *isos = (PDM_isosurface_t *) malloc(sizeof(PDM_isosurface_t));
+
+  // > Entry mesh information
   isos->is_dist_or_part  = -1; 
   isos->entry_mesh_type  =  0; 
+  isos->entry_mesh_dim   =  mesh_dimension;
+
+  // > Isosurface mesh information
+  isos->iso_elt_type     =  elt_type; 
+
+  // > Isovalues
+  isos->n_isovalues = 0;
+
   return isos;
 }
 
@@ -94,7 +104,12 @@ PDM_isosurface_add
  double                 *isovalues
 )
 {
-
+  isos->kind = kind;
+  isos->n_isovalues = n_isovalues;
+  isos->isovalues = malloc(sizeof(double) * n_isovalues);
+  for (int i=0; i<n_isovalues; ++i) {
+    isos->isovalues[i] = isovalues[i];
+  }
 }
 
 
@@ -161,7 +176,11 @@ PDM_isosurface_free
   PDM_isosurface_t  *isos
 )
 {
+  if (isos->n_isovalues>0) {
+    free(isos->isovalues);
+  }
 
+  free(isos);
 }
 
 
