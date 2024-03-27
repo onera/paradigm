@@ -2837,7 +2837,7 @@ int PDM_MPI_Comm_free(PDM_MPI_Comm *comm)
 
 int PDM_MPI_Comm_split(PDM_MPI_Comm comm, int color, int key, PDM_MPI_Comm *newcomm)
 {
-  MPI_Comm _newcomm;
+  MPI_Comm _newcomm = MPI_COMM_NULL;
   int code = MPI_Comm_split(_pdm_mpi_2_mpi_comm(comm), color, key, &_newcomm);
   *newcomm = _mpi_2_pdm_mpi_comm(_newcomm);
   return _mpi_2_pdm_mpi_err(code);
@@ -2850,7 +2850,7 @@ int PDM_MPI_Comm_split(PDM_MPI_Comm comm, int color, int key, PDM_MPI_Comm *newc
 
 int PDM_MPI_Comm_dup(PDM_MPI_Comm comm, PDM_MPI_Comm *newcomm)
 {
-  MPI_Comm _newcomm;
+  MPI_Comm _newcomm = MPI_COMM_NULL;
   int code = MPI_Comm_dup(_pdm_mpi_2_mpi_comm(comm), &_newcomm);
   *newcomm = _mpi_2_pdm_mpi_comm(_newcomm);
   return _mpi_2_pdm_mpi_err(code);
@@ -2904,7 +2904,7 @@ int PDM_MPI_Comm_split_type(PDM_MPI_Comm comm, int split_type, PDM_MPI_Comm *new
   // PDM_MPI_Comm _newcomm;
   int code = 0;
   if(split_type == PDM_MPI_SPLIT_SHARED) {
-    MPI_Comm comm_shared;
+    MPI_Comm comm_shared = MPI_COMM_NULL;
     code = MPI_Comm_split_type(_pdm_mpi_2_mpi_comm(comm), MPI_COMM_TYPE_SHARED, i_rank /* Key */,
                                MPI_INFO_NULL, &comm_shared);
     *newcomm = _mpi_2_pdm_mpi_comm(comm_shared);
@@ -3073,7 +3073,7 @@ int PDM_MPI_Dist_graph_create_adjacent(PDM_MPI_Comm  comm_old,
                                        int           reorder,
                                        PDM_MPI_Comm *newcomm)
 {
-  MPI_Comm _newcomm;
+  MPI_Comm _newcomm = MPI_COMM_NULL;
   const int *weight_in  = MPI_UNWEIGHTED;
   const int *weight_out = MPI_UNWEIGHTED;
   int code = MPI_Dist_graph_create_adjacent(_pdm_mpi_2_mpi_comm(comm_old),

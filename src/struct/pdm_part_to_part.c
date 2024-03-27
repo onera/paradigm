@@ -2197,8 +2197,9 @@ _create
 
   /* Init */
   if(ptp->use_tag == 1) {
-    ptp->comm                     = comm;
+    ptp->comm = comm;
   } else {
+    ptp->comm = PDM_MPI_COMM_NULL;
     PDM_MPI_Comm_dup(comm, &ptp->comm);
   }
 
