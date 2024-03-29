@@ -214,6 +214,7 @@ def Finalize ():
 cdef extern from "pdm_mpi.h":
     ctypedef int PDM_MPI_Comm
     PDM_MPI_Comm PDM_MPI_mpi_2_pdm_mpi_comm(void *pt_comm)
+    int PDM_MPI_Finalize()
 # -----------------------------------------------------------------
 
 _PDM_MESH_ENTITY_CELL = PDM_MESH_ENTITY_CELL
@@ -489,6 +490,9 @@ cdef create_numpy_or_none_g(PDM_g_num_t* array, int size, bint flag_owndata=True
 
 cdef create_numpy_or_none_d(double* array, int size, bint flag_owndata=True):
     return create_numpy_or_none(<void *> array, NPY.NPY_DOUBLE, size, flag_owndata)
+
+def MPI_Finalize():
+    return PDM_MPI_Finalize()
 
 # PDM_dmesh :
 # --------------------
