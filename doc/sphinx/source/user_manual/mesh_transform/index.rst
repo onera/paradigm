@@ -16,3 +16,13 @@ Mesh Transformations
 
     :ref:`Mesh Evaluation <mesh_eval>`
       Mesh analysis utilities
+
+.. toctree::
+   :caption: User manual
+   :maxdepth: 1
+   :hidden:
+
+   mesh_deform
+   mesh_eval
+
+|
