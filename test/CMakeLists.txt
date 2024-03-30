@@ -266,6 +266,7 @@ test_c_create (pdm_t_svd 1  PDM_LIST_TEST PDM_LIST_NRANK)
 
 test_c_create (pdm_t_isosurface_2d_nodal 1 PDM_LIST_TEST PDM_LIST_NRANK)
 
+test_c_create (pdm_t_triangulate 1 PDM_LIST_TEST PDM_LIST_NRANK)
 
 if (PDM_ENABLE_PYTHON_BINDINGS)
    test_python_create (pdm_t_part_to_part_p 2 PDM_LIST_TEST PDM_LIST_NRANK)
