@@ -777,9 +777,9 @@ INPUT                  = @PDM_SOURCE_DIR@/doc/mainpage.h \
                          @PDM_SOURCE_DIR@/src/ppart \
                          @PDM_SOURCE_DIR@/src/struct \
                          @PDM_SOURCE_DIR@/src/util \
-                         @PDM_SOURCE_DIR@/extensions/paradigma/src/mesh \
-                         @PDM_SOURCE_DIR@/extensions/paradigma/src/adapt \
-                         @PDM_SOURCE_DIR@/extensions/paradigma/Cython/ \
+                         @COMMENT_NOT_PDMA@@PDM_SOURCE_DIR@/extensions/paradigma/src/mesh \
+                         @COMMENT_NOT_PDMA@@PDM_SOURCE_DIR@/extensions/paradigma/src/adapt \
+                         @COMMENT_NOT_PDMA@@PDM_SOURCE_DIR@/extensions/paradigma/Cython/ \
                          @PDM_SOURCE_DIR@/Cython/
                          # @PDM_SOURCE_DIR@/extensions/paradigma/src/adapt \
                          # @PDM_SOURCE_DIR@/extensions/paradigma/src/plugins/coarse_mesh \

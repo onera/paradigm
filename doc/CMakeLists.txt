@@ -1,6 +1,9 @@
 # Writing this file using:
 #   - Maia's CMake
 #   - https://devblogs.microsoft.com/cppblog/clear-functional-c-documentation-with-sphinx-breathe-doxygen-cmake/
+if (NOT PDM_ENABLE_EXTENSION_PDMA)
+  set(COMMENT_NOT_PDMA "\#")
+endif()
 
 if(PDM_ENABLE_DOC)
     find_package(Doxygen 1.8.9 REQUIRED)

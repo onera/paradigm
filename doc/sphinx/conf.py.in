@@ -76,7 +76,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = 'ParaDiGM'
-copyright = '2023, ONERA The French Aerospace Lab'
+copyright = '2024, ONERA The French Aerospace Lab'
 author = 'B. Andrieu, K. Hoogveld, B. Maugars, E. Quémerais'
 
 # The version info for the project you're documenting, acts as replacement for
@@ -437,7 +437,7 @@ rst_prolog = """
 def setup(app):
     app.add_config_value('enable_fortran_doc', '@PDM_ENABLE_Fortran@',         'env')
     app.add_config_value('enable_python_doc',  '@PDM_ENABLE_PYTHON_BINDINGS@', 'env')
-
+    app.add_config_value('enable_pdma',        '@PDM_ENABLE_EXTENSION_PDMA@',  'env')
 
 """
 .. raw:: html

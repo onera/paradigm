@@ -82,6 +82,11 @@ Python API
     .. autofunction:: Pypdm.Pypdm.mesh_eval_triangle_load
     .. autofunction:: Pypdm.Pypdm.mesh_eval_tetrahedron_load
 
-    .. rubric:: Topology
+    .. rubric:: Topological
 
     .. autofunction:: Pypdm.Pypdm.mesh_eval_pvtx_valency
+
+.. ifconfig:: enable_python_doc == 'OFF'
+
+  .. warning::
+    Unavailable (refer to the :ref:`installation guide <enable_python_interface>` to enable the Python API)
