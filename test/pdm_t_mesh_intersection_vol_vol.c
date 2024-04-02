@@ -1240,9 +1240,15 @@ main
         exact *= PDM_MAX(0, length_a - shift_b[i]);
       }
     }
+    double absolute_err = PDM_ABS(g_volume_AB - exact);
+    double relative_err = absolute_err;
+    PDM_GCC_SUPPRESS_WARNING_WITH_PUSH("-Wfloat-equal")
+    if (exact != 0) {
+      relative_err /= exact;
+    }
+    PDM_GCC_SUPPRESS_WARNING_POP
     printf("error : absolute = %e, relative = %e\n",
-           PDM_ABS(g_volume_AB - exact),
-           PDM_ABS(g_volume_AB - exact)/exact);
+           absolute_err, relative_err);
   }
 
 

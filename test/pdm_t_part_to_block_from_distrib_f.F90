@@ -36,6 +36,11 @@ program testf
   include "mpif.h"
 #endif
 
+  type my_type
+    integer(pdm_g_num_s), pointer :: ln_to_gn(:) => null()
+    integer(pdm_l_num_s), pointer :: data(:)     => null()
+  end type my_type
+
   !-----------------------------------------------------------
   integer, parameter                    :: comm = MPI_COMM_WORLD
   integer, parameter                    :: n_low  = 10
@@ -54,7 +59,7 @@ program testf
   integer(pdm_g_num_s),      pointer    :: ln_to_gn(:) => null()
 
   type(c_ptr)                           :: ptb = C_NULL_PTR
-  integer(pdm_l_num_s),      pointer    :: all_dn_elt(:) => null()
+  integer(pdm_l_num_s),      pointer    :: all_dn_elt(:)       => null()
   integer(pdm_g_num_s),      pointer    :: data_distrib_idx(:) => null()
 
   type(PDM_pointer_array_t), pointer    :: part_data => null()
@@ -66,6 +71,8 @@ program testf
   integer(pdm_l_num_s)                  :: expected
 
   integer                               :: i, j, k
+
+  type(my_type), allocatable            :: parts(:)
   !-----------------------------------------------------------
 
 
@@ -95,7 +102,7 @@ program testf
 
 
   !  Define partitions
-
+  allocate(parts(n_part))
   allocate(n_elt(n_part))
   dn_elt = 0
   do i = 1, n_part
@@ -140,6 +147,7 @@ program testf
                                     ln_to_gn)
 
     ! write (*,*) "ln_to_gn =", ln_to_gn
+    parts(i)%ln_to_gn => ln_to_gn
   enddo
 
 
@@ -175,6 +183,7 @@ program testf
                                     data)
 
     ! write (*,*) "data =", data
+    parts(i)%data => data
   enddo
 
 
@@ -190,7 +199,7 @@ program testf
 
 
   do i = 1, dn_elt
-    expected = 2*(data_distrib_idx(i_rank+1) + i)
+    expected = 2*(int(data_distrib_idx(i_rank+1), kind=pdm_l_num_s) + i)
     if (block_data(i) /= expected) then
       write (*,*) data_distrib_idx(i_rank+1) + i, "expected", expected, " but got", block_data(i)
     endif
@@ -199,20 +208,28 @@ program testf
 
   !  Free memory
   call PDM_part_to_block_free(ptb)
+  ! Leaks if n_part > 1 but invalid deallocate in intel (╯°□°）╯︵ ┻━┻
+  ! do i = 1, n_part
+  !   call PDM_pointer_array_part_get(gnum_elt, &
+  !                                   i-1,      &
+  !                                   ln_to_gn)
+  !   deallocate(ln_to_gn)
+  !   call PDM_pointer_array_part_get(part_data, &
+  !                                   i-1,       &
+  !                                   data)
+  !   deallocate(data)
+  ! enddo
+
+  ! This does work ┬──┬ ノ( ゜-゜ノ)
   do i = 1, n_part
-    call PDM_pointer_array_part_get(gnum_elt, &
-                                    i-1,      &
-                                    ln_to_gn)
-    deallocate(ln_to_gn)
-    call PDM_pointer_array_part_get(part_data, &
-                                    i-1,       &
-                                    data)
-    deallocate(data)
+    deallocate(parts(i)%ln_to_gn)
+    deallocate(parts(i)%data)
   enddo
   call PDM_pointer_array_free(gnum_elt)
   call PDM_pointer_array_free(part_data)
   deallocate(n_elt, data_distrib_idx)
   call PDM_fortran_free_c(c_loc(block_data))
+  deallocate(parts)
 
   if (i_rank .eq. 0) then
     write(*, *) "-- End"
