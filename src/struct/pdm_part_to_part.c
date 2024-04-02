@@ -2197,8 +2197,9 @@ _create
 
   /* Init */
   if(ptp->use_tag == 1) {
-    ptp->comm                     = comm;
+    ptp->comm = comm;
   } else {
+    ptp->comm = PDM_MPI_COMM_NULL;
     PDM_MPI_Comm_dup(comm, &ptp->comm);
   }
 
@@ -5637,6 +5638,10 @@ PDM_part_to_part_free
 
   ptp->async_alltoall_n_free  = 0;
   ptp->async_alltoall_l_array = 0;
+
+  if (ptp->use_tag == 0) {
+    PDM_MPI_Comm_free(&ptp->comm);
+  }
 
   free(ptp);
   return NULL;
