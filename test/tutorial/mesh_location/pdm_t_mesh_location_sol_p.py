@@ -249,9 +249,6 @@ def run_tuto():
   if comm.rank == 0:
     print("The End :D")
 
-  PDM.MPI_Finalize()  
-
-  MPI.Finalize()
 
 if __name__ == '__main__':
   run_tuto()
