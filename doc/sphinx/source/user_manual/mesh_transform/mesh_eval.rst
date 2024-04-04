@@ -67,6 +67,8 @@ Python API
       ~Pypdm.Pypdm.mesh_eval_triangle_load
       ~Pypdm.Pypdm.mesh_eval_tetrahedron_load
       ~Pypdm.Pypdm.mesh_eval_pvtx_valency
+      ~Pypdm.Pypdm.mesh_eval_dmesh_complexity
+      ~Pypdm.Pypdm.mesh_eval_pmesh_complexity
 
     .. rubric:: Metric-Based
 
@@ -81,6 +83,8 @@ Python API
     .. autofunction:: Pypdm.Pypdm.mesh_eval_elt_natural_metric
     .. autofunction:: Pypdm.Pypdm.mesh_eval_triangle_load
     .. autofunction:: Pypdm.Pypdm.mesh_eval_tetrahedron_load
+    .. autofunction:: Pypdm.Pypdm.mesh_eval_dmesh_complexity
+    .. autofunction:: Pypdm.Pypdm.mesh_eval_pmesh_complexity
 
     .. rubric:: Topological
 
