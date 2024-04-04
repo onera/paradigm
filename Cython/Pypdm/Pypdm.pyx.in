@@ -373,7 +373,7 @@ _PDM_MPI_COMM_KIND_WIN_SHARED_AND_COLLECTIVE          = PDM_MPI_COMM_KIND_WIN_SH
 _PDM_MPI_COMM_KIND_WIN_SHARED_AND_NEIGHBOR_COLLECTIVE = PDM_MPI_COMM_KIND_WIN_SHARED_AND_NEIGHBOR_COLLECTIVE
 _PDM_MPI_COMM_KIND_WIN_RMA                            = PDM_MPI_COMM_KIND_WIN_RMA
 
-_PDM_CLUSTERING_KIND_OCTREE = PDM_CLUSTERING_KIND_OCTREE
+@COMMENT_NOT_PDMA@_PDM_CLUSTERING_KIND_OCTREE = PDM_CLUSTERING_KIND_OCTREE
 
 _PDM_FALSE = PDM_FALSE
 _PDM_TRUE = PDM_TRUE
@@ -383,12 +383,20 @@ _PDM_TRUE = PDM_TRUE
 @COMMENT_NOT_PDMA@_PDM_MESH_EVAL_LARGEST_DET_QUALITY     = PDM_MESH_EVAL_LARGEST_DET_QUALITY
 @COMMENT_NOT_PDMA@_PDM_MESH_EVAL_NONE                    = PDM_MESH_EVAL_NONE
 
+# -----------------------------------------------------------------
+# Execute when loading module
+
 @COMMENT_NOT_PDMA@
 @COMMENT_NOT_PDMA@cdef extern from "pdm_plugin.h":
 @COMMENT_NOT_PDMA@    void PDM_plugin_load ()
 # @COMMENT_NOT_PDMA@print(f"Pypdm : load plugin (PDM_plugin_load).")
 @COMMENT_NOT_PDMA@PDM_plugin_load()
 @COMMENT_NOT_PDMA@
+
+cdef extern from "pdm_predicate.h":
+  void PDM_predicate_exactinit ()
+
+PDM_predicate_exactinit()
 
 py_mem_domain = 42440
 # -----------------------------------------------------------------
