@@ -1836,6 +1836,10 @@ _part_extension_2d
       free(pface_extented_to_pface_idx      [i_part]);
       free(pface_extented_to_pface_triplet  [i_part]);
       free(pface_extented_to_pface_interface[i_part]);
+      free(pface_extented_path_itrf_idx     [i_part]);
+      free(pface_extented_path_itrf         [i_part]);
+      free(pface_extented_ancstr            [i_part]);
+      free(pface_extented_alrdy_sent        [i_part]);
     }
     free(pvtx_extented_ln_to_gn         );
     free(pextented_face_vtx_idx         );
@@ -1847,6 +1851,10 @@ _part_extension_2d
     free(pface_extented_to_pface_idx      );
     free(pface_extented_to_pface_triplet  );
     free(pface_extented_to_pface_interface);
+    free(pface_extented_path_itrf_idx     );
+    free(pface_extented_path_itrf         );
+    free(pface_extented_ancstr            );
+    free(pface_extented_alrdy_sent        );
 
     /*
      * A chaque étape :
@@ -1997,12 +2005,14 @@ _part_extension_2d
     free(pfull_face_extented_to_pface_interface[i_part]);
 
   }
+  free(pn_vtx_extented_old                 );
   free(pfull_n_vtx_extented                );
   free(pfull_vtx_extented_ln_to_gn         );
   free(pfull_vtx_extented_to_pvtx_idx      );
   free(pfull_vtx_extented_to_pvtx_triplet  );
   free(pfull_vtx_extented_to_pvtx_interface);
 
+  free(pn_face_extented_old);
   free(pfull_n_face_extented                 );
   free(pfull_face_extented_ln_to_gn          );
   free(pfull_face_extented_to_pface_idx      );

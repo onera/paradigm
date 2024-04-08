@@ -1595,7 +1595,7 @@ PDM_part_extension_entity1_to_entity2
    * doesn't already exist in partition.
    *
    */
-  int         **entity2_order            = malloc( n_part * sizeof(int         *));
+  int         **entity2_order        = malloc( n_part * sizeof(int         *));
   PDM_g_num_t **pentity2_gnum_sorted = malloc( n_part * sizeof(PDM_g_num_t *));
 
   for(int i_part = 0; i_part < n_part; ++i_part) {
@@ -1606,7 +1606,13 @@ PDM_part_extension_entity1_to_entity2
       pentity2_gnum_sorted[i_part][i_entity2] = pentity2_ln_to_gn[i_part][i_entity2];
     }
     PDM_sort_long(pentity2_gnum_sorted[i_part], entity2_order[i_part], pn_entity2[i_part]);
+    PDM_log_trace_array_long(pentity2_ln_to_gn   [i_part], pn_entity2[i_part], "pentity2_gnum         ::");
+    PDM_log_trace_array_int (entity2_order       [i_part], pn_entity2[i_part], "entity2_order         ::");
+    PDM_log_trace_array_long(pentity2_gnum_sorted[i_part], pn_entity2[i_part], "pentity2_gnum_sorted  ::");
+
+    free(entity2_order[i_part]);
   }
+  free(entity2_order);
 
 
 
@@ -1741,8 +1747,10 @@ PDM_part_extension_entity1_to_entity2
     log_trace("pn_new_entity2        = %d\n",pn_new_entity2       [i_part]);
     log_trace("pn_new_entity2_kind4  = %d\n",pn_new_entity2_kind4 [i_part]);
     log_trace("pn_new_entity2_n_itrf = %d\n",pn_new_entity2_n_itrf[i_part]);
+    PDM_log_trace_array_int(pextract_entity2_gnum[i_part], pextract_entity1_entity2_n_elmt[i_part], "pextract_entity2_gnum ::");
     PDM_log_trace_array_int(pextract_entity2_kind[i_part], pextract_entity1_entity2_n_elmt[i_part], "pextract_entity2_kind ::");
     printf("ATTTENTION L'ORDRE DANS LE TABLEAU TRIE DOIT ETRE RETROUVE DANS LA POSITION !!!!!!\n");
+    printf("--> change quoi dans le unique ??\n");
 
     free(prev_pentity2_itrf_gnum_and_itrf_strid[i_part]);
     free(prev_pentity2_itrf_gnum_and_itrf_data [i_part]);
@@ -1750,6 +1758,7 @@ PDM_part_extension_entity1_to_entity2
 
   free(prev_pentity2_itrf_gnum_and_itrf_strid);
   free(prev_pentity2_itrf_gnum_and_itrf_data );
+  free(pextract_entity1_entity2_n_elmt);
 
 
 
@@ -1871,7 +1880,7 @@ PDM_part_extension_entity1_to_entity2
       }
     }
     assert(idx_write == pn_new_entity2_kind4[i_part]);
-
+    free(tmp_itrf_ancstr);
 
     if(1 == 1) {
       log_trace("\n");
@@ -2014,6 +2023,10 @@ PDM_part_extension_entity1_to_entity2
     }
   }
 
+  for(int i_part = 0; i_part < n_part; ++i_part) {
+    free(pextract_entity2_path_itrf_idx[i_part]);
+  }
+  free(pextract_entity2_path_itrf_idx);
 
   /*
    * Create part_to_block to keep link between the new extent entity2 link with origin (CAUTION TO SHIFT) :
@@ -2079,6 +2092,9 @@ PDM_part_extension_entity1_to_entity2
 
     }
   }
+  free(extented_entity2_ln_to_gn);
+
+
 
   /*
    * Merge with previous
@@ -2323,6 +2339,31 @@ PDM_part_extension_entity1_to_entity2
         idx_write++;
       }
     }
+
+
+    // > Free pentity2_new arrays
+    for(int i_part = 0; i_part < n_part; ++i_part) {
+      free(pentity2_gnum_sorted[i_part]);
+
+      free(pnew_entity2_gnum         [i_part]);
+      free(pnew_entity2_ancstr       [i_part]);
+      free(pnew_entity2_parent_t     [i_part]);
+      free(pnew_entity2_n_itrf       [i_part]);
+      free(pnew_entity2_kind         [i_part]);
+      free(pnew_entity2_path_itrf_idx[i_part]);
+      free(pnew_entity2_path_itrf    [i_part]);
+    }
+    free(pentity2_gnum_sorted);
+
+    free(pnew_entity2_gnum         );
+    free(pnew_entity2_ancstr       );
+    free(pnew_entity2_parent_t     );
+    free(pnew_entity2_n_itrf       );
+    free(pnew_entity2_kind         );
+    free(pnew_entity2_path_itrf_idx);
+    free(pnew_entity2_path_itrf    );
+
+
     assert(idx_write == n_unique2);
     n_unique = n_unique2;
 
@@ -2396,14 +2437,22 @@ PDM_part_extension_entity1_to_entity2
 
   for(int i_part = 0; i_part < n_part; ++i_part) {
     free(pextract_entity2_n         [i_part]);
+    free(pextract_entity2_itrf_n    [i_part]);
     free(pextract_entity2_gnum      [i_part]);
-    free(pnew_entity2_path_itrf  [i_part]);
+    free(pextract_entity2_ancstr    [i_part]);
     free(pextract_entity2_triplet   [i_part]);
+    free(pextract_entity2_n_itrf    [i_part]);
+    free(pextract_entity2_path_itrf [i_part]);
+    free(pextract_entity2_kind      [i_part]);
   }
   free(pextract_entity2_n         );
+  free(pextract_entity2_itrf_n    );
   free(pextract_entity2_gnum      );
-  free(pnew_entity2_path_itrf);
+  free(pextract_entity2_ancstr    );
   free(pextract_entity2_triplet   );
+  free(pextract_entity2_n_itrf    );
+  free(pextract_entity2_path_itrf );
+  free(pextract_entity2_kind      );
 
 }
 
@@ -3726,6 +3775,7 @@ PDM_part_extension_pentity1_entity2_to_extented_pentity1_entity2
                               _pentity2_extented_ln_to_gn_by_interface);
 
   }
+  free(pextract_entity1_entity2_n_elmt);
 
   PDM_gnum_compute(gen_gnum_entity2);
 
@@ -4033,6 +4083,10 @@ PDM_part_extension_pentity1_entity2_to_extented_pentity1_entity2
     }
     pn_entity2_cur[i_part] += idx_write;
 
+
+    free(prev_pentity2_itrf_gnum_and_itrf_strid[i_part]);
+    free(prev_pentity2_itrf_gnum_and_itrf_data [i_part]);
+
     if (debug==1) {
       int n_tot_data = pextract_entity2_kind4_twin_itrf_idx[i_part][pn_new_entity2_kind4[i_part]];
       PDM_log_trace_array_long(pextract_entity2_kind4_twin_itrf_gn  [i_part],   n_tot_data,                     "pextract_entity2_kind4_twin_itrf_gn  ::");
@@ -4043,6 +4097,11 @@ PDM_part_extension_pentity1_entity2_to_extented_pentity1_entity2
     }
 
   }
+
+  free(prev_pentity2_itrf_gnum_and_itrf_strid);
+  free(prev_pentity2_itrf_gnum_and_itrf_data );
+  free(pn_new_entity2_kind4);
+  free(pn_twin_interface);
 
 
   int          dn_entity2_itrf_with_twin    = 0;
@@ -4092,6 +4151,42 @@ PDM_part_extension_pentity1_entity2_to_extented_pentity1_entity2
   *next_dentity2_itrf_blk_gnum_out            = dentity2_itrf_gnum_with_twin;
   *next_dentity2_itrf_gnum_and_itrf_strid_out = dentity2_itrf_strd_with_twin;
   *next_dentity2_itrf_gnum_and_itrf_data_out  = dentity2_itrf_data_with_twin;
+
+  // > Free previous data_base
+  free(dentity2_itrf_gnum);
+  free(dentity2_itrf_strd);
+  free(dentity2_itrf_data);
+
+  // > Free tmp arrays used to enrich data_base
+  for (int i_part=0; i_part<n_part; ++i_part) {
+    free(pentity2_extented_gnum[i_part]);
+
+    free(pextract_entity2_kind4_gn [i_part]);
+    free(pextract_entity2_kind4_ln [i_part]);
+    free(pextract_entity2_kind4_itf[i_part]);
+    
+    free(pextract_entity2_kind4_twin_itrf_gn [i_part]);
+    free(pextract_entity2_kind4_twin_itrf_idx[i_part]);
+    free(pextract_entity2_kind4_twin_itrf_itf[i_part]);
+    free(pextract_entity2_kind4_twin_itrf_twn[i_part]);
+    free(pextract_entity2_kind4_twin_itrf_data[i_part]);
+  }
+  free(pn_entity2_cur);
+
+  free(pentity2_extented_gnum);
+
+  free(pextract_entity2_kind4_gn );
+  free(pextract_entity2_kind4_ln );
+  free(pextract_entity2_kind4_itf);
+
+  free(pextract_entity2_kind4_twin_itrf_gn );
+  free(pextract_entity2_kind4_twin_itrf_idx);
+  free(pextract_entity2_kind4_twin_itrf_itf);
+  free(pextract_entity2_kind4_twin_itrf_twn);
+  free(pextract_entity2_kind4_twin_itrf_data);
+
+
+
   PDM_gnum_free(gen_gnum_entity2);
 
   /* Free all working array */
