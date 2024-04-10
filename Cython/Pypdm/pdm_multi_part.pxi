@@ -84,6 +84,17 @@ cdef extern from "pdm_multipart.h":
                                          PDM_ownership_t   ownership)
 
     # ------------------------------------------------------------------
+    void PDM_multipart_group_get(PDM_multipart_t      *multipart,
+                                 const int             i_domain,
+                                 const int             i_part,
+                                 PDM_mesh_entities_t   entity_type,
+                                 int                  *n_group_entity,
+                                 int                 **group_entity_idx,
+                                 int                 **group_entity,
+                                 PDM_g_num_t         **group_entity_ln_to_gn,
+                                 PDM_ownership_t       ownership)
+
+    # ------------------------------------------------------------------
     void PDM_multipart_get_part_mesh_nodal(PDM_multipart_t   *mtp,
                                            const int   i_domain,
                                            PDM_part_mesh_nodal_t **pmesh_nodal,
@@ -669,6 +680,44 @@ cdef class MultiPart:
                                                PDM_OWNERSHIP_USER)
 
       return create_numpy_or_none_d(vtx_coord, 3*n_vtx)
+
+    # ------------------------------------------------------------------
+    def group_get(self, int i_domain, int i_part, PDM_mesh_entities_t entity_type):
+      """
+      group_get(i_domain, i_part, entity_type)
+
+      Get vertex coordinates
+
+      Parameters:
+          i_domain (int) : Domain identifier
+          i_part   (int) : Partition identifier
+
+      Returns:
+        Dictionary
+          - ``"group_entity_idx"``      (`np.ndarray[np.int32_t]`)     : Index for group->entity connectivity (size = *n_group*)
+          - ``"group_entity"``          (`np.ndarray[np.int32_t]`)     : Group->entity connectivity (1-based local ids, size = ``group_entity_idx[n_group]``)
+          - ``"group_entity_ln_to_gn"`` (`np.ndarray[npy_pdm_gnum_t]`) : Group->entity connectivity (group-specific global ids, size = ``group_entity_idx[n_group]``)
+      """
+      cdef int          n_group        = 0
+      cdef int         *group_entity_idx      = NULL
+      cdef int         *group_entity          = NULL
+      cdef PDM_g_num_t *group_entity_ln_to_gn = NULL
+
+      PDM_multipart_group_get(self._mtp,
+                              i_domain,
+                              i_part,
+                              entity_type,
+                              &n_group,
+                              &group_entity_idx,
+                              &group_entity,
+                              &group_entity_ln_to_gn,
+                              PDM_OWNERSHIP_USER)
+
+      return {
+        "group_entity_idx"     : create_numpy_or_none_i(group_entity_idx,      n_group+1),
+        "group_entity"         : create_numpy_or_none_i(group_entity,          group_entity_idx[n_group]),
+        "group_entity_ln_to_gn": create_numpy_or_none_g(group_entity_ln_to_gn, group_entity_idx[n_group])
+      }
 
     # ------------------------------------------------------------------
     def color_get(self, int i_domain, int i_part, PDM_mesh_entities_t entity_type):

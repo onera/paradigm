@@ -150,13 +150,13 @@ cdef extern from "pdm.h":
       PDM_MESH_LOCATION_LOCATE_ALL_TGT = 2
       PDM_MESH_LOCATION_DOCTREE        = 3
 
-    ctypedef enum PDM_iso_surface_kind_t:
-      PDM_ISO_SURFACE_KIND_PLANE   = 0
-      PDM_ISO_SURFACE_KIND_SPHERE  = 1
-      PDM_ISO_SURFACE_KIND_FIELD   = 2
-      PDM_ISO_SURFACE_KIND_ELLIPSE = 3
-      PDM_ISO_SURFACE_KIND_QUADRIC = 4
-      PDM_ISO_SURFACE_KIND_HEART   = 5
+    @COMMENT_NOT_PDMA@ctypedef enum PDM_iso_surface_kind_t:
+    @COMMENT_NOT_PDMA@  PDM_ISO_SURFACE_KIND_PLANE   = 0
+    @COMMENT_NOT_PDMA@  PDM_ISO_SURFACE_KIND_SPHERE  = 1
+    @COMMENT_NOT_PDMA@  PDM_ISO_SURFACE_KIND_FIELD   = 2
+    @COMMENT_NOT_PDMA@  PDM_ISO_SURFACE_KIND_ELLIPSE = 3
+    @COMMENT_NOT_PDMA@  PDM_ISO_SURFACE_KIND_QUADRIC = 4
+    @COMMENT_NOT_PDMA@  PDM_ISO_SURFACE_KIND_HEART   = 5
 
     ctypedef enum PDM_cell_to_vtx_interp_kind_t:
       PDM_CELL_TO_VTX_INTERP_KIND_IDW  = 0
@@ -214,6 +214,7 @@ def Finalize ():
 cdef extern from "pdm_mpi.h":
     ctypedef int PDM_MPI_Comm
     PDM_MPI_Comm PDM_MPI_mpi_2_pdm_mpi_comm(void *pt_comm)
+    int PDM_MPI_Finalize()
 # -----------------------------------------------------------------
 
 _PDM_MESH_ENTITY_CELL = PDM_MESH_ENTITY_CELL
@@ -328,12 +329,17 @@ _PDM_WRITER_TOPO_CST         = PDM_WRITER_TOPO_CST
 _PDM_WRITER_TOPO_DEFORMABLE  = PDM_WRITER_TOPO_DEFORMABLE
 _PDM_WRITER_TOPO_VARIABLE    = PDM_WRITER_TOPO_VARIABLE
 
-_PDM_ISO_SURFACE_KIND_PLANE   = PDM_ISO_SURFACE_KIND_PLANE
-_PDM_ISO_SURFACE_KIND_SPHERE  = PDM_ISO_SURFACE_KIND_SPHERE
-_PDM_ISO_SURFACE_KIND_FIELD   = PDM_ISO_SURFACE_KIND_FIELD
-_PDM_ISO_SURFACE_KIND_ELLIPSE = PDM_ISO_SURFACE_KIND_ELLIPSE
-_PDM_ISO_SURFACE_KIND_QUADRIC = PDM_ISO_SURFACE_KIND_QUADRIC
-_PDM_ISO_SURFACE_KIND_HEART   = PDM_ISO_SURFACE_KIND_HEART
+@COMMENT_NOT_PDMA@_PDM_ISO_SURFACE_KIND_PLANE   = PDM_ISO_SURFACE_KIND_PLANE
+@COMMENT_NOT_PDMA@_PDM_ISO_SURFACE_KIND_SPHERE  = PDM_ISO_SURFACE_KIND_SPHERE
+@COMMENT_NOT_PDMA@_PDM_ISO_SURFACE_KIND_FIELD   = PDM_ISO_SURFACE_KIND_FIELD
+@COMMENT_NOT_PDMA@_PDM_ISO_SURFACE_KIND_ELLIPSE = PDM_ISO_SURFACE_KIND_ELLIPSE
+@COMMENT_NOT_PDMA@_PDM_ISO_SURFACE_KIND_QUADRIC = PDM_ISO_SURFACE_KIND_QUADRIC
+@COMMENT_NOT_PDMA@_PDM_ISO_SURFACE_KIND_HEART   = PDM_ISO_SURFACE_KIND_HEART
+
+@COMMENT_NOT_PDMA@_PDM_METRIC_TYPE_SCALAR     = PDM_METRIC_TYPE_SCALAR
+@COMMENT_NOT_PDMA@_PDM_METRIC_TYPE_VECTOR     = PDM_METRIC_TYPE_VECTOR
+@COMMENT_NOT_PDMA@_PDM_METRIC_TYPE_TENSOR_SYM = PDM_METRIC_TYPE_TENSOR_SYM
+@COMMENT_NOT_PDMA@_PDM_METRIC_TYPE_TENSOR     = PDM_METRIC_TYPE_TENSOR
 
 _PDM_CELL_TO_VTX_INTERP_KIND_IDW  = PDM_CELL_TO_VTX_INTERP_KIND_IDW
 _PDM_CELL_TO_VTX_INTERP_KIND_RBF  = PDM_CELL_TO_VTX_INTERP_KIND_RBF
@@ -367,10 +373,18 @@ _PDM_MPI_COMM_KIND_WIN_SHARED_AND_COLLECTIVE          = PDM_MPI_COMM_KIND_WIN_SH
 _PDM_MPI_COMM_KIND_WIN_SHARED_AND_NEIGHBOR_COLLECTIVE = PDM_MPI_COMM_KIND_WIN_SHARED_AND_NEIGHBOR_COLLECTIVE
 _PDM_MPI_COMM_KIND_WIN_RMA                            = PDM_MPI_COMM_KIND_WIN_RMA
 
-_PDM_CLUSTERING_KIND_OCTREE = PDM_CLUSTERING_KIND_OCTREE
+@COMMENT_NOT_PDMA@_PDM_CLUSTERING_KIND_OCTREE = PDM_CLUSTERING_KIND_OCTREE
 
 _PDM_FALSE = PDM_FALSE
 _PDM_TRUE = PDM_TRUE
+
+@COMMENT_NOT_PDMA@_PDM_MESH_EVAL_CENTERED_METRIC_QUALITY = PDM_MESH_EVAL_CENTERED_METRIC_QUALITY
+@COMMENT_NOT_PDMA@_PDM_MESH_EVAL_WORST_QUALITY           = PDM_MESH_EVAL_WORST_QUALITY
+@COMMENT_NOT_PDMA@_PDM_MESH_EVAL_LARGEST_DET_QUALITY     = PDM_MESH_EVAL_LARGEST_DET_QUALITY
+@COMMENT_NOT_PDMA@_PDM_MESH_EVAL_NONE                    = PDM_MESH_EVAL_NONE
+
+# -----------------------------------------------------------------
+# Execute when loading module
 
 @COMMENT_NOT_PDMA@
 @COMMENT_NOT_PDMA@cdef extern from "pdm_plugin.h":
@@ -378,6 +392,11 @@ _PDM_TRUE = PDM_TRUE
 # @COMMENT_NOT_PDMA@print(f"Pypdm : load plugin (PDM_plugin_load).")
 @COMMENT_NOT_PDMA@PDM_plugin_load()
 @COMMENT_NOT_PDMA@
+
+cdef extern from "pdm_predicate.h":
+  void PDM_predicate_exactinit ()
+
+PDM_predicate_exactinit()
 
 py_mem_domain = 42440
 # -----------------------------------------------------------------
@@ -489,6 +508,9 @@ cdef create_numpy_or_none_g(PDM_g_num_t* array, int size, bint flag_owndata=True
 cdef create_numpy_or_none_d(double* array, int size, bint flag_owndata=True):
     return create_numpy_or_none(<void *> array, NPY.NPY_DOUBLE, size, flag_owndata)
 
+def MPI_Finalize():
+    return PDM_MPI_Finalize()
+
 # PDM_dmesh :
 # --------------------
 include "pdm_dmesh.pxi"
@@ -558,6 +580,10 @@ include "pdm_geom.pxi"
 # --------------------
 @COMMENT_NOT_PDMA@include "pdm_remesh.pxi"
 
+# PDM_mesh_refine :
+# --------------------
+@COMMENT_NOT_PDMA@include "pdm_mesh_refine.pxi"
+
 # PDM_iso_surface :
 # --------------------
 @COMMENT_NOT_PDMA@include "pdm_iso_surface.pxi"
@@ -577,6 +603,10 @@ include "pdm_geom.pxi"
 # PDM_mesh_deform :
 # --------------------
 @COMMENT_NOT_PDMA@include "pdm_mesh_deform.pxi"
+
+# PDM_mesh_eval :
+# --------------------
+@COMMENT_NOT_PDMA@include "pdm_mesh_eval.pxi"
 
 # PDM_points_merge :
 # --------------------

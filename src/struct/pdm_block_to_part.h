@@ -128,6 +128,38 @@ PDM_block_to_part_global_timer_get
 
 /**
  *
+ * \brief Global write block-to-part step timer
+ *
+ * \param [in]  comm            MPI communicator
+ * \param [in]  filename        File name
+ *
+ */
+
+void
+PDM_block_to_part_time_per_step_dump
+(
+ PDM_MPI_Comm  comm,
+ const char   *filename
+);
+
+/**
+ *
+ * \brief Write in parallel communication graph
+ *
+ * \param [in]  btp          Block-to-Part structure
+ * \param [in]  filename     File name
+ *
+ */
+
+void
+PDM_block_to_part_comm_graph_dump
+(
+ PDM_block_to_part_t *btp,
+ const char          *filename
+);
+
+/**
+ *
  * \brief Create a block-to-part redistribution
  *
  * \param [in]   block_distrib_idx Block distribution (size : *n_rank* + 1)

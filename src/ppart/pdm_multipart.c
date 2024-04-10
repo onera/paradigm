@@ -99,7 +99,7 @@ _entity_type_to_bound_type
  PDM_mesh_entities_t entity_type
  )
 {
-  PDM_bound_type_t bound_type;
+  PDM_bound_type_t bound_type = PDM_BOUND_TYPE_MAX;
   switch (entity_type) {
     case PDM_MESH_ENTITY_VTX:
       bound_type = PDM_BOUND_TYPE_VTX;
@@ -2152,6 +2152,8 @@ _deduce_part_connectivity_3d
                            pvtx_ln_to_gn,
                            comm);
 
+  // TO DO : add cell groups
+
   *out_pn_face        = pn_face;
   *out_pface_ln_to_gn = pface_ln_to_gn;
   *out_pface_vtx_idx  = pface_vtx_idx;
@@ -2265,6 +2267,19 @@ _deduce_part_connectivity_2d
                            pedge_ln_to_gn,
                            comm);
 
+  if (dmesh->n_group_bnd[PDM_BOUND_TYPE_FACE] > 0) {
+    _rebuild_part_mesh_group(dmesh,
+                             pmeshes,
+                             n_part,
+                             PDM_BOUND_TYPE_FACE,
+                             face_distrib,
+                             pn_face,
+                             pface_ln_to_gn,
+                             comm);
+  } // end if has surface group in 2D
+
+  // TO DO : add corners
+
 
   *out_pface_vtx_idx  = pface_vtx_idx;
   *out_pface_vtx      = pface_vtx;
@@ -2307,7 +2322,9 @@ PDM_MPI_Comm       comm
 
   int dn_node = 0;
   if(dmesh->n_g_cell != 0) {
-    assert(dmesh->dn_cell > 0);
+    if(split_method != PDM_SPLIT_DUAL_WITH_HILBERT) {
+      assert(dmesh->dn_cell > 0);
+    }
     dn_node = dmesh->dn_cell;
   } else if (dmesh->n_g_face != 0) {
     dn_node = dmesh->dn_face;

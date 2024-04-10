@@ -77,6 +77,17 @@ double* PDM_array_const_double(const int size, const double value) {
 }
 
 /*
+ * Allocate a new array (size=size) and fill it with identity
+*/
+int* PDM_array_new_range_int(const int size) {
+  int* array = (int *) malloc(size*sizeof(int));
+  for (int i = 0; i < size; ++i) {
+    array[i] = i;
+  }
+  return array;
+}
+
+/*
  * Allocate a new array index array (size=size+1) and fill it from
  * the size array size_array (which must be of size size)
 */

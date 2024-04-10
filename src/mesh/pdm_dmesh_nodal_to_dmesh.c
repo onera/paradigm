@@ -2067,6 +2067,41 @@ _translate_element_group_to_vtx
   }
 }
 
+static
+void
+_set_mesh_dimension_groups
+(
+ _pdm_link_dmesh_nodal_to_dmesh_t* link
+)
+{
+  PDM_dmesh_nodal_t *dmesh_nodal = link->dmesh_nodal;
+  PDM_dmesh_t       *dm          = link->dmesh;
+
+  PDM_bound_type_t         bount_t = PDM_BOUND_TYPE_FACE;
+  PDM_dmesh_nodal_elmts_t *elmt    = dmesh_nodal->surfacic;
+  if (dmesh_nodal->mesh_dimension == 3) {
+    bount_t = PDM_BOUND_TYPE_CELL;
+    elmt    = dmesh_nodal->volumic;
+  } // end if 3D
+
+  if (elmt->n_group_elmt > 0) {
+    int *dgroup_elt_idx = malloc(sizeof(int) * (elmt->n_group_elmt+1));
+    memcpy(dgroup_elt_idx,
+           elmt->dgroup_elmt_idx,
+           sizeof(int) * (elmt->n_group_elmt+1));
+
+    PDM_g_num_t *dgroup_elt = malloc(sizeof(PDM_g_num_t) * dgroup_elt_idx[elmt->n_group_elmt]);
+    memcpy(dgroup_elt,
+           elmt->dgroup_elmt,
+           sizeof(PDM_g_num_t) * dgroup_elt_idx[elmt->n_group_elmt]);
+
+    dm->n_group_bnd   [bount_t] = elmt->n_group_elmt;
+    dm->is_owner_bound[bount_t] = PDM_TRUE;
+    dm->dbound_idx    [bount_t] = dgroup_elt_idx;
+    dm->dbound        [bount_t] = dgroup_elt;
+  } // end if groups
+}
+
 
 static
 _pdm_link_dmesh_nodal_to_dmesh_t*
@@ -2338,18 +2373,27 @@ PDM_dmesh_nodal_to_dmesh_compute
             _translate_element_group_to_faces(dmesh_nodal_to_dm->link[i_mesh]);
             _translate_element_group_to_edges(dmesh_nodal_to_dm->link[i_mesh]);
             _translate_element_group_to_vtx  (dmesh_nodal_to_dm->link[i_mesh]);
+
+            // copy group->elt(_idx) for cell groups
+            if (dmesh_nodal_to_dm->link[i_mesh]->dmesh_nodal->mesh_dimension == 3) {
+              _set_mesh_dimension_groups(dmesh_nodal_to_dm->link[i_mesh]);
+            } // end if 3D
           }
           break;
         case PDM_DMESH_NODAL_TO_DMESH_TRANSLATE_GROUP_TO_EDGE:
           {
             _translate_element_group_to_edges(dmesh_nodal_to_dm->link[i_mesh]);
             _translate_element_group_to_vtx  (dmesh_nodal_to_dm->link[i_mesh]);
-            // PDM_error (__FILE__, __LINE__, 0, "PDM_DMESH_NODAL_TO_DMESH_TRANSLATE_GROUP_TO_EDGE not implemented \n");
+
+            // copy group->elt(_idx) for face groups
+            if (dmesh_nodal_to_dm->link[i_mesh]->dmesh_nodal->mesh_dimension == 2) {
+              _set_mesh_dimension_groups(dmesh_nodal_to_dm->link[i_mesh]);
+            } // end if 2D
           }
           break;
         case PDM_DMESH_NODAL_TO_DMESH_TRANSLATE_GROUP_TO_VTX:
           {
-            // Do nothing all is translationg naturally
+            // Do nothing all is translating naturally
           }
           break;
       }

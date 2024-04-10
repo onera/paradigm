@@ -33,6 +33,9 @@ int*         PDM_array_const_int (const int size, const int         value);
 PDM_g_num_t* PDM_array_const_gnum(const int size, const PDM_g_num_t value);
 double*      PDM_array_const_double(const int size, const double value);
 
+// Create a range array
+int* PDM_array_new_range_int(const int size);
+
 // Create an index array from a size array
 int*         PDM_array_new_idx_from_sizes_int (const int *size_array, const int size);
 PDM_g_num_t* PDM_array_new_idx_from_sizes_gnum(const int *size_array, const int size);

@@ -14,7 +14,7 @@ cdef extern from "pdm_mesh_nodal.h":
 
 cdef extern from "pdm_writer.h":
   # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-  # > Wrapping of Ppart Structure
+  # > Wrapping of Writer Structure
   ctypedef struct PDM_writer_t:
     pass
   # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -241,9 +241,42 @@ cdef extern from "pdm_writer.h":
 
 cdef class Writer:
   """
+  Create a ParaDiGM writer object.
   """
 
   cdef PDM_writer_t* _wt
+
+  # ------------------------------------------------------------------
+  # Fake init (Use only for docstring)
+  def __init__(self,
+               char                  *fmt,
+               PDM_writer_fmt_fic_t   fmt_fic,
+               PDM_writer_topology_t  topologie,
+               PDM_writer_status_t    st_reprise,
+               char                  *rep_sortie,
+               char                  *nom_sortie,
+               MPI.Comm               comm,
+               PDM_io_kind_t          acces,
+               NPY.double_t           prop_noeuds_actifs,
+               char                  *options):
+      """
+      __init__(fmt, fmt_fic, topologie, st_reprise, rep_sortie, nom_sortie, comm, acces, prop_noeuds_actifs, options)
+      Create a Writer object.
+
+      Parameters:
+        fmt                (str                  ) : Output format
+        fmt_fic            (PDM_writer_fmt_fic_t ) : Binary or ASCII
+        topologie          (PDM_writer_topology_t) : Indicates whether the mesh is mobile
+        st_reprise         (PDM_writer_status_t  ) : Finalizes previous outputs before restart
+        rep_sortie         (str                  ) : Output repository
+        nom_sortie         (str                  ) : Output filename
+        comm               (MPI.Comm             ) : MPI communicator
+        acces              (PDM_io_kind_t        ) : Access type
+        prop_noeuds_actifs (NPY.double_t         ) : Amount of active nodes
+        options            (str                  ) : Complementary options for the format structured as ("name_1 = val_1 : ... : name_n = val_n")
+      """
+  # ------------------------------------------------------------------
+
 
   def __cinit__(self,                  char  *fmt,
                 PDM_writer_fmt_fic_t   fmt_fic,
@@ -256,6 +289,23 @@ cdef class Writer:
                 NPY.double_t           prop_noeuds_actifs,
                 char                  *options):
       """
+      cinit(fmt, fmt_fic, topologie, st_reprise, rep_sortie, nom_sortie, comm, acces, prop_noeuds_actifs, options)
+      Create a Writer object and return a pointer to it.
+
+      Parameters:
+        fmt                (str                  ) : Output format
+        fmt_fic            (PDM_writer_fmt_fic_t ) : Binary or ASCII
+        topologie          (PDM_writer_topology_t) : Indicates whether the mesh is mobile
+        st_reprise         (PDM_writer_status_t  ) : Finalizes previous outputs before restart
+        rep_sortie         (str                  ) : Output repository
+        nom_sortie         (str                  ) : Output filename
+        comm               (MPI.Comm             ) : MPI communicator
+        acces              (PDM_io_kind_t        ) : Access type
+        prop_noeuds_actifs (NPY.double_t         ) : Amount of active nodes
+        options            (str                  ) : Complementary options for the format structured as ("name_1 = val_1 : ... : name_n = val_n")
+
+      Returns:
+        Writer object
       """
 
       cdef MPI.MPI_Comm c_comm = comm.ob_mpi
@@ -276,6 +326,15 @@ cdef class Writer:
                   char  *nom_geom,
                   int    n_part):
       """
+      geom_create(nom_geom, n_part)
+      Create a new geometry in the writer object
+
+      Parameters:
+        nom_geom (str) :  Name of the geometry
+        n_part   (int) :  Number of partitions
+
+      Returns:
+        Geometry identifier
       """
 
       return PDM_writer_geom_create(self._wt,
@@ -301,6 +360,18 @@ cdef class Writer:
                                NPY.ndarray[NPY.int32_t  , mode='c', ndim=1] face_edge,
                                NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1] numabs):
       """
+      geom_cell2d_cellface_add(id_geom, id_part, edge_vtx, face_edge_idx, face_edge, numabs)
+      Add 2D cells described in terms of faces.
+      This function determines element types and creates
+      blocks grouping elements of the same type.
+
+      Parameters:
+        id_geom       (int)                           : Geometry identifier
+        id_part       (int)                           : Partition identifier
+        edge_vtx      (numpy array of int32_t)        : Edge->Vertex connectivity
+        face_edge_idx (numpy array of int32_t)        : Index of the Face->Edge connectivity
+        face_edge     (numpy array of int32_t)        : Face->Edge connectivity
+        numabs        (numpy array of npy_pdm_gnum_t) : Face global numbering
       """
       cdef int n_edge = len(edge_vtx)//2
       cdef int n_face = len(face_edge_idx) - 1
@@ -327,6 +398,19 @@ cdef class Writer:
                                NPY.ndarray[NPY.int32_t  , mode='c', ndim=1] cell_face,
                                NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1] numabs):
       """
+      geom_cell3d_cellface_add(id_geom, id_part, face_vtx_idx, face_vtx, cell_face_idx, cell_face, numabs)
+      Add 3D cells described in terms of faces.
+      This function determines element types and creates
+      blocks grouping elements of the same type.
+
+      Parameters:
+        id_geom       (int)                           : Geometry identifier
+        id_part       (int)                           : Partition identifier
+        face_vtx_idx  (numpy array of int32_t)        : Index of the Face->Vertex connectivity
+        face_vtx      (numpy array of int32_t)        : Face->Vertex connectivity
+        cell_face_idx (numpy array of int32_t)        : Index of the Cell->Face connectivity
+        cell_face     (numpy array of int32_t)        : Cell->Face connectivity
+        numabs        (numpy array of npy_pdm_gnum_t) : Cell global numbering
       """
       cdef int n_face = len(face_vtx_idx)  - 1
       cdef int n_cell = len(cell_face_idx) - 1
@@ -347,10 +431,17 @@ cdef class Writer:
   def geom_coord_set(self,
                      int            id_geom,
                      int            id_part,
-                     # int            n_vtx,
                      NPY.ndarray[NPY.double_t, mode='c', ndim=1] coords,
                      NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1] numabs):
       """
+      geom_coord_set(id_geom, id_part, coords, numabs)
+      Define the coordinates of the current partition
+
+      Parameters:
+        id_geom (int)                           : Geometry identifier
+        id_part (int)                           : Partition identifier
+        coords  (numpy array of double_t)       : Coordinates
+        numabs  (numpy array of npy_pdm_gnum_t) : Vertex global numbering
       """
       cdef int n_vtx = len(numabs)
 
@@ -370,6 +461,17 @@ cdef class Writer:
                              NPY.ndarray[NPY.int32_t  , mode='c', ndim=1] face_vtx,
                              NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1] numabs):
       """
+      geom_faces_facevtx_add(id_geom, id_part, face_vtx_idx, face_vtx, numabs)
+      Add faces described in nodal fashion.
+      This function determines element types and creates
+      blocks grouping elements of the same type.
+
+      Parameters:
+        id_geom      (int)                           : Geometry identifier
+        id_part      (int)                           : Partition identifier
+        face_vtx_idx (numpy array of int32_t)        : Index of the Face->Vertex connectivity
+        face_vtx     (numpy array of int32_t)        : Face->Vertex connectivity
+        numabs       (numpy array of npy_pdm_gnum_t) : Face global numbering
       """
       cdef int n_face = len(face_vtx_idx) - 1
       PDM_writer_geom_faces_facesom_add(self._wt,
@@ -386,6 +488,13 @@ cdef class Writer:
                      PDM_writer_elt_geom_t  t_elt,
                      PDM_ownership_t        owner):
     """
+    geom_block_add(id_geom, t_elt, owner)
+    Add a block of elements of a given type
+
+    Parameters:
+      id_geom  (int)                   : Geometry identifier
+      t_elt    (PDM_writer_elt_geom_t) : Element type
+      owner    (PDM_ownership_t)       : Ownership
     """
     return PDM_writer_geom_bloc_add(self._wt, id_geom, t_elt, owner)
 
@@ -397,6 +506,15 @@ cdef class Writer:
                          NPY.ndarray[NPY.int32_t,    mode='c', ndim=1] elt_vtx,
                          NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1] elt_ln_to_gn):
     """
+    geom_block_std_set(id_geom, id_block, i_part, elt_vtx, elt_ln_to_gn)
+    Set in the given geometry a block of elements of a given type
+
+    Parameters:
+      id_geom      (int)                           : Geometry identifier
+      id_block     (int)                           : Bloc identifier
+      i_part       (int)                           : Partition identifier
+      elt_vtx      (numpy array of int32_t)        : Element->Vertex connectivity
+      elt_ln_to_gn (numpy array of npy_pdm_gnum_t) : Element global numbering
     """
     cdef int n_elt = len(elt_ln_to_gn)
 
@@ -410,6 +528,11 @@ cdef class Writer:
 
   def geom_write(self, int id_geom):
       """
+      geom_write(id_geom)
+      Write current mesh
+
+      Parameters:
+        id_geom (int) : Geometry identifier
       """
 
       PDM_writer_geom_write(self._wt, id_geom)
@@ -417,6 +540,12 @@ cdef class Writer:
   
   def geom_data_free(self, int id_geom):
       """
+      geom_data_free(id_geom)
+      Free data describing the current mesh.
+      Indirections on absolute numbering are retained
+
+      Parameters:
+        id_geom (int) : Geometry identifier
       """
   
       PDM_writer_geom_data_free(self._wt, id_geom)
@@ -424,6 +553,11 @@ cdef class Writer:
 
   def geom_free(self, int id_geom):
       """
+      geom_free(id_geom)
+      Free data describing the current mesh
+
+      Parameters:
+        id_geom (int) : Geometry identifier
       """
       PDM_writer_geom_free(self._wt, id_geom)
 
@@ -434,6 +568,14 @@ cdef class Writer:
                  PDM_writer_var_loc_t  loc,
                  char                 *nom_var):
       """
+      var_create(st_dep_tps, dim, loc, nom_var)
+      Create a variable
+
+      Parameters:
+        st_dep_tps (PDM_writer_status_t)  :  Indicates whether the variable is time dependent
+        dim        (PDM_writer_var_dim_t) :  Variable's dimension
+        loc        (PDM_writer_var_loc_t) :  Variable's location
+        nom_var    (str                 ) :  Name of the variable
       """
   
       return PDM_writer_var_create(self._wt,
@@ -446,6 +588,12 @@ cdef class Writer:
                    char   *public_name,
                    char   *private_name):
       """
+      name_map_add(public_name, private_name)
+      Variable name mapping
+
+      Parameters:
+        public_name (str) : Public variable name
+        pivate_name (str) : Private variable name
       """
   
       PDM_writer_name_map_add(self._wt,
@@ -454,6 +602,11 @@ cdef class Writer:
 
   def var_write(self, int id_var):
       """
+      var_write(id_var)
+      Write variable values
+
+      Parameters:
+        id_var (int) : Variable identifier
       """
   
       PDM_writer_var_write(self._wt, id_var)
@@ -465,6 +618,16 @@ cdef class Writer:
               int           id_part,
               NPY.ndarray[NPY.double_t  , mode='c', ndim=1] val):
       """
+      var_set(id_var, id_geom, id_part, val)
+      Update variable values.
+
+      .. warning:: the values defined for the elements must be defined in the order in which the blocks are defined!
+
+      Parameters:
+        id_var  (int)                  : Variable identifier
+        id_geom (int)                  : Geometry identifier
+        id_part (int)                  : Partition identifier
+        val (numpy array of double_t) : Variable values
       """
   
       PDM_writer_var_set(self._wt,
@@ -477,6 +640,11 @@ cdef class Writer:
                     int           id_var):
   
       """
+      var_data_free(id_var)
+      Free variable data arrays
+
+       Parameters:
+        id_var (int) : Variable identifier
       """
       PDM_writer_var_data_free(self._wt,
                               id_var)
@@ -484,14 +652,30 @@ cdef class Writer:
 
   def var_free(self, int id_var):
       """
+      var_free(id_var)
+      Free variable
+
+      Parameters:
+        id_var (int) : Variable identifier
       """
 
       PDM_writer_var_free(self._wt, id_var)
 
   def step_beg(self, double t):
+    """
+    step_beg(t)
+    Begin a time step
+
+    Parameters:
+      t (double) : Time
+    """
     PDM_writer_step_beg(self._wt, t)
 
   def step_end(self):
+    """
+    step_end()
+    End a time step
+    """
     PDM_writer_step_end(self._wt);
 
   # ------------------------------------------------------------------------

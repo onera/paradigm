@@ -7,6 +7,7 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <string.h>
 
 /*----------------------------------------------------------------------------
  *  Header for the current file
@@ -21,6 +22,9 @@
 #include "pdm_distrib.h"
 #include "pdm_timer.h"
 #include "pdm_size_idx_from_stride.h"
+
+#include "pdm_io.h"
+#include <string.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -37,6 +41,19 @@ extern "C" {
  * Type
  *============================================================================*/
 
+/**
+ * \enum _btp_timer_step_t
+ *
+ */
+
+typedef enum {
+
+  BINARY_SEARCH    = 0, // Binary search step in Block-to-Part creation
+  CREATE_EXCHANGE  = 1, // Collective communication in Block-to-Part creation
+  DATA_EXCHANGE    = 2  // Collective communication in data exchange
+
+} _btp_timer_step_t;
+
 /*=============================================================================
  * Static global variables
  *============================================================================*/
@@ -47,16 +64,24 @@ extern "C" {
  * No static : truly global
  *  https://stackoverflow.com/questions/1856599/when-to-use-static-keyword-before-global-variables
  */
-double btp_t_elaps[2] = {0., 0.};
-double btp_t_cpu[2] = {0., 0.};
-PDM_timer_t *btp_t_timer[2] = {NULL, NULL};
+
+// Store timers
+PDM_timer_t *btp_t_timer[NTIMER_BTP] = {NULL, NULL, NULL};
+
+// Timer step by step
+double btp_t_elaps[NTIMER_BTP] = {0., 0., 0.};
+double btp_t_cpu[NTIMER_BTP] = {0., 0., 0.};
 
 int btp_min_exch_rank[2] = {INT_MAX, INT_MAX};
 int btp_max_exch_rank[2] = {-1, -1};
 
 unsigned long long btp_exch_data[2] = {0, 0};
 
+// Number of Block-to-Part instances in a run
 int n_btp = 0;
+
+// Number of create Block-to-Part instances
+int n_btp_open = 0;
 
 /*=============================================================================
  * Static function definitions
@@ -131,9 +156,12 @@ PDM_block_to_part_global_statistic_reset
 (
 )
 {
-  for (int i = 0; i < 2; i++) {
+  for (int i = 0; i < NTIMER_BTP; i++) {
     btp_t_elaps[i] = 0;
     btp_t_cpu[i] = 0;
+  }
+
+  for (int i = 0; i < 2; i++) {
     btp_min_exch_rank[i] = INT_MAX;
     btp_max_exch_rank[i] = -1;
     btp_exch_data[i] = 0;
@@ -238,32 +266,213 @@ PDM_block_to_part_global_timer_get
 )
 {
 
-  double min_elaps[2];
-  double max_elaps[2];
-  double min_cpu[2];
-  double max_cpu[2];
+  double min_elaps[NTIMER_BTP];
+  double max_elaps[NTIMER_BTP];
+  double min_cpu[NTIMER_BTP];
+  double max_cpu[NTIMER_BTP];
 
-  PDM_MPI_Allreduce (btp_t_elaps, min_elaps, 2,
+  PDM_MPI_Allreduce (btp_t_elaps, min_elaps, NTIMER_BTP,
                      PDM_MPI_DOUBLE, PDM_MPI_MIN, comm);
   
-  PDM_MPI_Allreduce (btp_t_elaps, max_elaps, 2,
+  PDM_MPI_Allreduce (btp_t_elaps, max_elaps, NTIMER_BTP,
                      PDM_MPI_DOUBLE, PDM_MPI_MAX, comm);
 
-  PDM_MPI_Allreduce (btp_t_cpu, min_cpu, 2,
+  PDM_MPI_Allreduce (btp_t_cpu, min_cpu, NTIMER_BTP,
                      PDM_MPI_DOUBLE, PDM_MPI_MIN, comm);
   
-  PDM_MPI_Allreduce (btp_t_cpu, max_cpu, 2,
+  PDM_MPI_Allreduce (btp_t_cpu, max_cpu, NTIMER_BTP,
                      PDM_MPI_DOUBLE, PDM_MPI_MAX, comm);
 
-  *min_elaps_create  = min_elaps[0];
-  *max_elaps_create  = max_elaps[0];
-  *min_cpu_create    = min_cpu[0];
-  *max_cpu_create    = max_cpu[0];
-  *min_elaps_exch    = min_elaps[1];
-  *max_elaps_exch    = max_elaps[1];
-  *min_cpu_exch      = min_cpu[1];
-  *max_cpu_exch      = max_cpu[1];
+  *min_elaps_create  = min_elaps[BINARY_SEARCH] + min_elaps[CREATE_EXCHANGE]; // Minimum elapsed time for Block-to-Part creation
+  *max_elaps_create  = max_elaps[BINARY_SEARCH] + max_elaps[CREATE_EXCHANGE]; // Maximum elapsed time for Block-to-Part creation
+  *min_cpu_create    = min_cpu[BINARY_SEARCH]   + min_cpu[CREATE_EXCHANGE];   // Minimum CPU time for Block-to-Part creation
+  *max_cpu_create    = max_cpu[BINARY_SEARCH]   + max_cpu[CREATE_EXCHANGE];   // Maximum CPU time for Block-to-Part creation
+  *min_elaps_exch    = min_elaps[DATA_EXCHANGE]; // Indifferently in place or classic
+  *max_elaps_exch    = max_elaps[DATA_EXCHANGE]; // Indifferently in place or classic
+  *min_cpu_exch      = min_cpu[DATA_EXCHANGE];   // Indifferently in place or classic
+  *max_cpu_exch      = max_cpu[DATA_EXCHANGE];   // Indifferently in place or classic
 
+}
+
+/**
+ *
+ * \brief Global write block-to-part step timer
+ *
+ * \param [in]  comm            MPI communicator
+ * \param [in]  filename        File name
+ *
+ */
+
+void
+PDM_block_to_part_time_per_step_dump
+(
+ PDM_MPI_Comm  comm,
+ const char   *filename
+)
+{
+  // Write in parallel
+  PDM_io_file_t *writer = NULL;
+  PDM_l_num_t    ierr;
+
+  PDM_io_open(filename,
+              PDM_IO_FMT_BIN,
+              PDM_IO_SUFF_MAN,
+              "",
+              PDM_IO_BACKUP_OFF,
+              PDM_IO_KIND_MPI_SIMPLE,
+              PDM_IO_MOD_APPEND,
+              PDM_IO_NATIVE,
+              comm,
+              -1.,
+              &writer,
+              &ierr);
+
+  // MPI
+  int n_rank = 0;
+  PDM_MPI_Comm_size (comm, &n_rank);
+
+  // Create timer statistics
+  double min_elaps[NTIMER_BTP];
+  double mean_elaps[NTIMER_BTP];
+  double max_elaps[NTIMER_BTP];
+  double min_cpu[NTIMER_BTP];
+  double mean_cpu[NTIMER_BTP];
+  double max_cpu[NTIMER_BTP];
+
+  PDM_MPI_Allreduce (btp_t_elaps, min_elaps, NTIMER_BTP,
+                     PDM_MPI_DOUBLE, PDM_MPI_MIN, comm);
+
+  PDM_MPI_Allreduce (btp_t_elaps, mean_elaps, NTIMER_BTP,
+                     PDM_MPI_DOUBLE, PDM_MPI_SUM, comm);
+
+  PDM_MPI_Allreduce (btp_t_elaps, max_elaps, NTIMER_BTP,
+                     PDM_MPI_DOUBLE, PDM_MPI_MAX, comm);
+
+  PDM_MPI_Allreduce (btp_t_cpu, min_cpu, NTIMER_BTP,
+                     PDM_MPI_DOUBLE, PDM_MPI_MIN, comm);
+
+  PDM_MPI_Allreduce (btp_t_cpu, mean_cpu, NTIMER_BTP,
+                     PDM_MPI_DOUBLE, PDM_MPI_SUM, comm);
+
+  PDM_MPI_Allreduce (btp_t_cpu, max_cpu, NTIMER_BTP,
+                     PDM_MPI_DOUBLE, PDM_MPI_MAX, comm);
+
+  for (int i_step = 0; i_step < NTIMER_BTP; i_step++) {
+    min_elaps[i_step]  /= n_btp_open;
+    mean_elaps[i_step] /= n_btp_open;
+    max_elaps[i_step]  /= n_btp_open;
+
+    min_cpu[i_step]  /= n_btp_open;
+    mean_cpu[i_step] /= n_btp_open;
+    max_cpu[i_step]  /= n_btp_open;
+
+    mean_elaps[i_step] /= n_rank;
+    mean_cpu[i_step]   /= n_rank;
+  } // end loop on timed steps
+
+  // Global write times
+  size_t s_buffer = 219; // buffer size for %.5f + 1
+  char *buffer = malloc(s_buffer);
+
+  for (int i = 0; i < (int) s_buffer; i++) {
+    buffer[i] = '\0';
+  }
+
+  sprintf(buffer, "binary_search elaps %.5f %.5f %.5f cpu %.5f %.5f %.5f\n", min_elaps[BINARY_SEARCH], mean_elaps[BINARY_SEARCH], max_elaps[BINARY_SEARCH], min_cpu[BINARY_SEARCH], mean_cpu[BINARY_SEARCH], max_cpu[BINARY_SEARCH]);
+
+  sprintf(buffer + strlen(buffer), "create_exchange elaps %.5f %.5f %.5f cpu %.5f %.5f %.5f\n", min_elaps[CREATE_EXCHANGE], mean_elaps[CREATE_EXCHANGE], max_elaps[CREATE_EXCHANGE], min_cpu[CREATE_EXCHANGE], mean_cpu[CREATE_EXCHANGE], max_cpu[CREATE_EXCHANGE]);
+
+  sprintf(buffer + strlen(buffer), "data_exchange elaps %.5f %.5f %.5f cpu %.5f %.5f %.5f\n", min_elaps[DATA_EXCHANGE], mean_elaps[DATA_EXCHANGE], max_elaps[DATA_EXCHANGE], min_cpu[DATA_EXCHANGE], mean_cpu[DATA_EXCHANGE], max_cpu[DATA_EXCHANGE]);
+
+  PDM_io_global_write(writer,
+                      (PDM_l_num_t) sizeof(char),
+                      (PDM_l_num_t) s_buffer,
+                      buffer);
+
+  free(buffer);
+
+  // Finalize parallel write
+  PDM_io_close(writer);
+  PDM_io_free(writer);
+}
+
+/**
+ *
+ * \brief Write in parallel communication graph
+ *
+ * \param [in]  btp             Block-to-Part structure
+ * \param [in]  filename        File name
+ *
+ */
+
+void
+PDM_block_to_part_comm_graph_dump
+(
+ PDM_block_to_part_t *btp,
+ const char          *filename
+)
+{
+  // Write in parallel
+  PDM_io_file_t *writer = NULL;
+  PDM_l_num_t    ierr;
+
+  PDM_io_open(filename,
+              PDM_IO_FMT_BIN,
+              PDM_IO_SUFF_MAN,
+              "",
+              PDM_IO_BACKUP_OFF,
+              PDM_IO_KIND_MPI_SIMPLE,
+              PDM_IO_MOD_WRITE,
+              PDM_IO_NATIVE,
+              btp->comm,
+              -1.,
+              &writer,
+              &ierr);
+
+  // Create a node identifier
+  PDM_MPI_Comm shared_comm = PDM_MPI_COMM_WORLD;
+
+  PDM_MPI_Comm_split_type(btp->comm, PDM_MPI_SPLIT_SHARED, &shared_comm);
+
+  int i_shared_rank = 0;
+  PDM_MPI_Comm_rank(shared_comm, &i_shared_rank);
+
+  int bcast_buffer = 0;
+  if (i_shared_rank == 0) {
+    bcast_buffer = btp->i_rank;
+  }
+  PDM_MPI_Bcast(&bcast_buffer, 1, PDM_MPI_INT32_T, 0, shared_comm);
+
+  // Block write i_rank, node and number of send data
+  int s_buffer = btp->n_rank * 11 + 40 + 2 + 1; // (10 + 1 space) * n_rank + chaine + space + \n + 1
+  char *buffer = malloc(s_buffer);
+
+  for (int i = 0; i < (int) s_buffer; i++) {
+    buffer[i] = '\0';
+  }
+
+  sprintf(buffer, "i_rank %10d\nnode %10d\nn_send", btp->i_rank, bcast_buffer);
+
+  for (int j_rank = 0; j_rank < btp->n_rank; j_rank++) {
+    sprintf(buffer + strlen(buffer), " %10d", btp->distributed_data_n[j_rank]);
+  } // end loop on n_rank
+  sprintf(buffer + strlen(buffer), " \n");
+
+  PDM_l_num_t one = 1;
+  PDM_g_num_t i_rank_gnum = (PDM_g_num_t) (btp->i_rank+1);
+  PDM_io_par_interlaced_write(writer,
+                              PDM_STRIDE_VAR_INTERLACED,
+                              (PDM_l_num_t *) &s_buffer,
+                              (PDM_l_num_t) sizeof(char),
+                              one,
+                              &i_rank_gnum,
+                              (const void *) buffer);
+
+  free(buffer);
+
+  // Finalize parallel write
+  PDM_io_close(writer);
+  PDM_io_free(writer);
 }
 
 /**
@@ -403,17 +612,18 @@ PDM_block_to_part_create
  const PDM_MPI_Comm     comm
 )
 {
-
   if (n_btp == 0) {
-    btp_t_timer[0] = PDM_timer_create ();
-    btp_t_timer[1] = PDM_timer_create ();
+    btp_t_timer[BINARY_SEARCH  ] = PDM_timer_create ();
+    btp_t_timer[CREATE_EXCHANGE] = PDM_timer_create ();
+    btp_t_timer[DATA_EXCHANGE  ] = PDM_timer_create ();
   }
   n_btp++;
+  n_btp_open++;
 
-
-  double t1_elaps = PDM_timer_elapsed(btp_t_timer[0]);
-  double t1_cpu = PDM_timer_cpu(btp_t_timer[0]);
-  PDM_timer_resume(btp_t_timer[0]);
+  // Start binary search timer
+  double t1_elaps = PDM_timer_elapsed(btp_t_timer[BINARY_SEARCH]);
+  double t1_cpu = PDM_timer_cpu(btp_t_timer[BINARY_SEARCH]);
+  PDM_timer_resume(btp_t_timer[BINARY_SEARCH]);
 
   PDM_block_to_part_t *btp = (PDM_block_to_part_t *) malloc (sizeof(PDM_block_to_part_t));
 
@@ -519,6 +729,19 @@ PDM_block_to_part_create
     }
   }
 
+  // End binary search timer
+  PDM_timer_hang_on(btp_t_timer[BINARY_SEARCH]);
+  double t2_elaps = PDM_timer_elapsed(btp_t_timer[BINARY_SEARCH] );
+  double t2_cpu = PDM_timer_cpu(btp_t_timer[BINARY_SEARCH]);
+
+  btp_t_elaps[BINARY_SEARCH] += (t2_elaps - t1_elaps);
+  btp_t_cpu[BINARY_SEARCH] += (t2_cpu - t1_cpu);
+
+  // Start create exchange
+  double t3_elaps = PDM_timer_elapsed(btp_t_timer[CREATE_EXCHANGE]);
+  double t3_cpu = PDM_timer_cpu(btp_t_timer[CREATE_EXCHANGE]);
+  PDM_timer_resume(btp_t_timer[CREATE_EXCHANGE]);
+
   btp->distributed_data_n = malloc (sizeof(int) * btp->n_rank);
 
   PDM_MPI_Alltoall (btp->requested_data_n,   1, PDM_MPI_INT,
@@ -598,13 +821,13 @@ PDM_block_to_part_create
   btp_min_exch_rank[0] = PDM_MIN(btp_min_exch_rank[0], n_rank_send);
   btp_min_exch_rank[1] = PDM_MIN(btp_min_exch_rank[1], n_rank_recv);
 
+  // End create exchange
+  PDM_timer_hang_on(btp_t_timer[CREATE_EXCHANGE]);
+  double t4_elaps = PDM_timer_elapsed(btp_t_timer[CREATE_EXCHANGE] );
+  double t4_cpu = PDM_timer_cpu(btp_t_timer[CREATE_EXCHANGE]);
 
-  PDM_timer_hang_on(btp_t_timer[0]);
-  double t2_elaps = PDM_timer_elapsed(btp_t_timer[0] );
-  double t2_cpu = PDM_timer_cpu(btp_t_timer[0]);
-
-  btp_t_elaps[0] += (t2_elaps - t1_elaps);
-  btp_t_cpu[0] += (t2_cpu - t1_cpu);
+  btp_t_elaps[CREATE_EXCHANGE] += (t4_elaps - t3_elaps);
+  btp_t_cpu[CREATE_EXCHANGE] += (t4_cpu - t3_cpu);
 
   return (PDM_block_to_part_t *) btp;
 
@@ -639,9 +862,10 @@ PDM_block_to_part_exch_in_place
 )
 {
 
-  double t1_elaps = PDM_timer_elapsed(btp_t_timer[1]);
-  double t1_cpu = PDM_timer_cpu(btp_t_timer[1]);
-  PDM_timer_resume(btp_t_timer[1]);
+  // Start data exchange timer
+  double t1_elaps = PDM_timer_elapsed(btp_t_timer[DATA_EXCHANGE]);
+  double t1_cpu = PDM_timer_cpu(btp_t_timer[DATA_EXCHANGE]);
+  PDM_timer_resume(btp_t_timer[DATA_EXCHANGE]);
 
   unsigned char *_block_data = (unsigned char *) block_data;
   unsigned char **_part_data = (unsigned char **) part_data;
@@ -1196,12 +1420,13 @@ PDM_block_to_part_exch_in_place
 
   PDM_MPI_Type_free(&mpi_type);
 
-  PDM_timer_hang_on(btp_t_timer[1]);
-  double t2_elaps = PDM_timer_elapsed(btp_t_timer[1]);
-  double t2_cpu = PDM_timer_cpu(btp_t_timer[1]);
+  // End data exchange timer
+  PDM_timer_hang_on(btp_t_timer[DATA_EXCHANGE]);
+  double t2_elaps = PDM_timer_elapsed(btp_t_timer[DATA_EXCHANGE]);
+  double t2_cpu = PDM_timer_cpu(btp_t_timer[DATA_EXCHANGE]);
 
-  btp_t_elaps[1] += (t2_elaps - t1_elaps);
-  btp_t_cpu[1] += (t2_cpu - t1_cpu);
+  btp_t_elaps[DATA_EXCHANGE] += (t2_elaps - t1_elaps);
+  btp_t_cpu[DATA_EXCHANGE] += (t2_cpu - t1_cpu);
 
   free(recv_buffer);
 
@@ -1237,6 +1462,10 @@ PDM_block_to_part_exch
  void              ***part_data
 )
 {
+  // Start data exchange timer
+  double t1_elaps = PDM_timer_elapsed(btp_t_timer[DATA_EXCHANGE]);
+  double t1_cpu = PDM_timer_cpu(btp_t_timer[DATA_EXCHANGE]);
+  PDM_timer_resume(btp_t_timer[DATA_EXCHANGE]);
 
   int n_elt_block = btp->block_distrib_idx[btp->i_rank+1] - btp->block_distrib_idx[btp->i_rank];
 
@@ -1633,6 +1862,14 @@ PDM_block_to_part_exch
     }
   }
 
+  // End data exchange timer
+  PDM_timer_hang_on(btp_t_timer[DATA_EXCHANGE]);
+  double t2_elaps = PDM_timer_elapsed(btp_t_timer[DATA_EXCHANGE]);
+  double t2_cpu = PDM_timer_cpu(btp_t_timer[DATA_EXCHANGE]);
+
+  btp_t_elaps[DATA_EXCHANGE] += (t2_elaps - t1_elaps);
+  btp_t_cpu[DATA_EXCHANGE] += (t2_cpu - t1_cpu);
+
   free(recv_buffer);
   PDM_MPI_Type_free(&mpi_type);
 
@@ -1676,8 +1913,9 @@ PDM_block_to_part_free
 
   n_btp--;
   if (n_btp == 0) {
-    PDM_timer_free(btp_t_timer[0]);
-    PDM_timer_free(btp_t_timer[1]);
+    PDM_timer_free(btp_t_timer[BINARY_SEARCH]);
+    PDM_timer_free(btp_t_timer[CREATE_EXCHANGE]);
+    PDM_timer_free(btp_t_timer[DATA_EXCHANGE]);
   }
 
   return NULL;

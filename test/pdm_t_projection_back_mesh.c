@@ -146,6 +146,7 @@ _read_back_mesh
 
   fscanf(f, "%d %d %d %d\n", n_vtx, n_elt, &elt_dim, elt_order);
 
+  *elt_type = PDM_MESH_NODAL_N_ELEMENT_TYPES;
   if (elt_dim == 1) {
     if (*elt_order == 1) {
       *elt_type = PDM_MESH_NODAL_BAR2;
