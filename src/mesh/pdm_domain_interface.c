@@ -5404,9 +5404,9 @@ PDM_domain_interface_make_flat_view2
       interface_ids_shifted[itrf][2*k+1] = gnum2;
 
       send_data            [itrf][4*k  ] =   gnum2;
-      send_data            [itrf][4*k+1] =  -(itrf+1);
-      send_data            [itrf][4*k+2] =  gnum1;
-      send_data            [itrf][4*k+3] =  (itrf+1);
+      send_data            [itrf][4*k+1] =  (itrf+1);
+      send_data            [itrf][4*k+2] =   gnum1;
+      send_data            [itrf][4*k+3] = -(itrf+1);
 
       stride_one           [itrf][2*k  ] = 1;
       stride_one           [itrf][2*k+1] = 1;

@@ -535,7 +535,6 @@ _find_valid_entities
     pentity2_itrf[i_part] = malloc(pn_entity2[i_part] * sizeof(int));
 
 
-    int idx_read       = 0; // read index in entity1_entity2
     int idx_read_data  = 0; // read index in received entity2 data_base infos
     int lidx_read_data = 0;
 
@@ -549,14 +548,14 @@ _find_valid_entities
           int opp_itrf_sgn = 0;
           
           // Entity2 informations
-          PDM_g_num_t cur_gnum     = pentity1_entity2_gnum[i_part][idx_read];
+          PDM_g_num_t cur_gnum     = pentity1_entity2_gnum[i_part][j];
           int         cur_itrf     = PDM_ABS (pentity1_itrf[i_part][i]);
           int         cur_itrf_sgn = PDM_SIGN(pentity1_itrf[i_part][i]);
 
           // Candidate for entity2 (from data_base)
-          int know_in_db = 0;
+          int known_in_db = 0;
           lidx_read_data = idx_read_data;
-          for(int k = 0; k < p_db_entity2_strd[i_part][idx_read]; ++k) {
+          for(int k = 0; k < p_db_entity2_strd[i_part][j]; ++k) {
           
             // Candidate informations
             opp_gnum     =          p_db_entity2_data[i_part][2*lidx_read_data  ];
@@ -566,7 +565,7 @@ _find_valid_entities
             // Check if candidate have same interface that entity2, if so it (entity2, itrf) alrdy know
             // NOTE: je commente && gnum_opp == 0 (normalement on peut pas avoir 2 candidats valides différents?)
             if(cur_itrf == opp_itrf && cur_itrf_sgn == -opp_itrf_sgn) {// && gnum_opp == 0) { // Sign a unifier avec l'autre
-              know_in_db = 1;
+              known_in_db = 1;
               break;
             }
   
@@ -574,33 +573,32 @@ _find_valid_entities
           }
 
 
-          if (know_in_db==0) {
+          if (known_in_db==0) {
 
-            pentity2_lnum[i_part][idx_read] = -1;
-            pentity2_itrf[i_part][idx_read] = pentity1_itrf[i_part][i];
-            pentity2_kind[i_part][idx_read] = 4;
+            pentity2_lnum[i_part][j] = -1;
+            pentity2_itrf[i_part][j] = pentity1_itrf[i_part][i];
+            pentity2_kind[i_part][j] = 4;
 
           } else {
 
             // Search if entity2 is known in partition
             int pos_int = PDM_binary_search_long(opp_gnum, pentity2_gnum_sorted[i_part], pn_entity2[i_part]);
             if( pos_int != -1) {
-              pentity2_lnum[i_part][idx_read] = pentity2_ordr[i_part][pos_int];
-              pentity2_itrf[i_part][idx_read] = pentity1_itrf[i_part][i];
-              pentity2_kind[i_part][idx_read] = 1;
+              pentity2_lnum[i_part][j] = pentity2_ordr[i_part][pos_int];
+              pentity2_itrf[i_part][j] = pentity1_itrf[i_part][i];
+              pentity2_kind[i_part][j] = 1;
             } else {
-              pentity2_lnum[i_part][idx_read] = -1;
-              pentity2_itrf[i_part][idx_read] = pentity1_itrf[i_part][i];
-              pentity2_kind[i_part][idx_read] = 3;
+              pentity2_lnum[i_part][j] = -1;
+              pentity2_itrf[i_part][j] = pentity1_itrf[i_part][i];
+              pentity2_kind[i_part][j] = 3;
               
               // entity2 take the opposite gnum from db
-              pentity1_entity2_gnum[i_part][idx_read] = opp_gnum;
+              pentity1_entity2_gnum[i_part][j] = opp_gnum;
             }
           }
 
           // Increment reading
-          idx_read_data += p_db_entity2_strd[i_part][idx_read];
-          idx_read++;
+          idx_read_data += p_db_entity2_strd[i_part][j];
         }
 
       } else {
@@ -608,25 +606,23 @@ _find_valid_entities
         for(int j = pentity1_entity2_idx[i_part][i]; j < pentity1_entity2_idx[i_part][i+1]; ++j) {
          
           // Entity2 informations
-          PDM_g_num_t cur_gnum = pentity1_entity2_gnum[i_part][idx_read];
+          PDM_g_num_t cur_gnum = pentity1_entity2_gnum[i_part][j];
           
           // Search if entity2 is known in partition
           int pos_int = PDM_binary_search_long(cur_gnum, pentity2_gnum_sorted[i_part], pn_entity2[i_part]);
         
           if( pos_int != -1) {
-            pentity2_lnum[i_part][idx_read] = pentity2_ordr[i_part][pos_int];
-            pentity2_itrf[i_part][idx_read] = pentity1_itrf[i_part][i];
-            pentity2_kind[i_part][idx_read] = 0;
+            pentity2_lnum[i_part][j] = pentity2_ordr[i_part][pos_int];
+            pentity2_itrf[i_part][j] = pentity1_itrf[i_part][i];
+            pentity2_kind[i_part][j] = 0;
           } else {
-            pentity2_lnum[i_part][idx_read] = -1;
-            pentity2_itrf[i_part][idx_read] = pentity1_itrf[i_part][i];
-            pentity2_kind[i_part][idx_read] = 2;
+            pentity2_lnum[i_part][j] = -1;
+            pentity2_itrf[i_part][j] = pentity1_itrf[i_part][i];
+            pentity2_kind[i_part][j] = 2;
           }
           
           // Increment reading
-          idx_read_data += p_db_entity2_strd[i_part][idx_read];
-          idx_read++;
-
+          idx_read_data += p_db_entity2_strd[i_part][j];
         }
       }
     }
@@ -3868,7 +3864,7 @@ PDM_part_extension_pentity1_entity2_to_extented_pentity1_entity2
     for(int i = _pentity2_extented_by_kind_idx[n_extented_kind-1]; i < _pentity2_extented_by_kind_idx[n_extented_kind]; ++i) {
       int idx_read = _recv_buffer_to_sort_kind_order[i];
       _pentity2_extented_ln_to_gn_by_interface[2*idx_write  ] = _pextract_entity1_entity2_gnum[idx_read];
-      _pentity2_extented_ln_to_gn_by_interface[2*idx_write+1] = _pextract_entity2_interface   [idx_read];
+      _pentity2_extented_ln_to_gn_by_interface[2*idx_write+1] =-_pextract_entity2_itrf   [idx_read];
       idx_write++;
     }
 
