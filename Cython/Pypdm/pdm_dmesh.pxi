@@ -91,8 +91,8 @@ cdef extern from "pdm_dmesh.h":
                                            int           *out_n_group_ridge,
                                            int          **out_dgroup_edge_idx,
                                            PDM_g_num_t  **out_dgroup_edge,
-                                           int          **out_dgroup_edge_idx,
-                                           int          **out_dgroup_edge);
+                                           int          **out_dridge_face_group_idx,
+                                           int          **out_dridge_face_group);
     # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 # ------------------------------------------------------------------
@@ -416,6 +416,25 @@ def dfind_topological_ridge(MPI.Comm comm,
                             NPY.ndarray[NPY.int32_t   , mode='c', ndim=1] dgroup_face_idx,
                             NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1] dgroup_face):
   """
+  dfind_topological_ridge(comm, distrib_face, dface_vtx_idx, dface_vtx, dgroup_face_idx, dgroup_face)
+
+  Retrieve ridges from block-distributed faces with groups, and build associated edges
+
+  Parameters:
+    comm            (MPI.Comm)                   : MPI communicator
+    distrib_face    (np.ndarray[npy_pdm_gnum_t]) : Distribution of faces
+    dface_vtx_idx   (np.ndarray[np.int32_t])     : Index for block-distributed face->vertex connectivity
+    dface_vtx       (np.ndarray[npy_pdm_gnum_t]) : Block-distributed face->vertex connectivity
+    dgroup_face_idx (np.ndarray[np.int32_t])     : Index for block-distributed group->face connectivity
+    dgroup_face     (np.ndarray[npy_pdm_gnum_t]) : Block-distributed group->face connectivity
+
+  Returns:
+    Distribution of edges (only those on ridges)                       (np.ndarray[npy_pdm_gnum_t])
+    Block-distributed edge->vertex connectivity (only those on ridges) (np.ndarray[npy_pdm_gnum_t])
+    Index for block-distributed group->edge connectivity               (np.ndarray[np.int32_t])
+    Block-distributed group->edge connectivity                         (np.ndarray[npy_pdm_gnum_t])
+    Index for ridge->surface connectivity                              (np.ndarray[np.int32_t])
+    Ridge->surface connectivity                                        (np.ndarray[np.int32_t])
   """
   cdef MPI.MPI_Comm c_comm = comm.ob_mpi
   cdef PDM_g_num_t  *distrib_ridge         = NULL
@@ -429,19 +448,19 @@ def dfind_topological_ridge(MPI.Comm comm,
   cdef int n_group_face = dgroup_face_idx.shape[0]-1
 
   PDM_dmesh_find_topological_ridges(PDM_MPI_mpi_2_pdm_mpi_comm (<void *> &c_comm),
-               <PDM_g_num_t *> distrib_face.data,
-               <int         *> dface_vtx_idx.data,
-               <PDM_g_num_t *> dface_vtx.data,
-                               n_group_face,
-               <int         *> dgroup_face_idx.data,
-               <PDM_g_num_t *> dgroup_face.data,
-                               &distrib_ridge,
-                               &dridge_vtx,
-                               &n_group_ridge,
-                               &dgroup_edge_idx,
-                               &dgroup_edge,
-                               &dridge_face_group_idx,
-                               &dridge_face_group);
+                    <PDM_g_num_t *> distrib_face.data,
+                    <int         *> dface_vtx_idx.data,
+                    <PDM_g_num_t *> dface_vtx.data,
+                                    n_group_face,
+                    <int         *> dgroup_face_idx.data,
+                    <PDM_g_num_t *> dgroup_face.data,
+                                    &distrib_ridge,
+                                    &dridge_vtx,
+                                    &n_group_ridge,
+                                    &dgroup_edge_idx,
+                                    &dgroup_edge,
+                                    &dridge_face_group_idx,
+                                    &dridge_face_group);
   n_rank = comm.Get_size()
   i_rank = comm.Get_rank()
   cdef int dn_edge = distrib_ridge[i_rank+1] - distrib_ridge[i_rank]

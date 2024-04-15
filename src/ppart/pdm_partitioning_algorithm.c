@@ -195,6 +195,7 @@ PDM_part_assemble_partitions
                                 (void **) &dentity_ln_to_gn,
                                           pn_entity,
                                 (void **) &pentity_ln_to_gn_tmp);
+  PDM_UNUSED(n_recv_tot);
   if(dentity_gnum == NULL) {
     free(dentity_ln_to_gn);
   }
@@ -253,28 +254,28 @@ PDM_part_assemble_partitions
   offset = 0;
   for(int i_part = 0; i_part < n_part_block; ++i_part){
 
-    int _pn_entity = (*pn_entity)[i_part];
-    _pentity_ln_to_gn[i_part] = (PDM_g_num_t *) malloc( sizeof(PDM_g_num_t) * _pn_entity);
+    // int _pn_entity = (*pn_entity)[i_part];
+    _pentity_ln_to_gn[i_part] = (PDM_g_num_t *) malloc( sizeof(PDM_g_num_t) * _pn_entity[i_part]);
 
-    for(int i_elmt = 0; i_elmt < _pn_entity; ++i_elmt){
+    for(int i_elmt = 0; i_elmt < _pn_entity[i_part]; ++i_elmt){
       _pentity_ln_to_gn[i_part][i_elmt] = pentity_ln_to_gn_tmp[offset + i_elmt];
     }
 
     if(have_init_location == 1) {
-      _pentity_init_location[i_part] = (int *) malloc( sizeof(int) * 3 * _pn_entity);
-      for(int i_elmt = 0; i_elmt < _pn_entity; ++i_elmt){
+      _pentity_init_location[i_part] = (int *) malloc( sizeof(int) * 3 * _pn_entity[i_part]);
+      for(int i_elmt = 0; i_elmt < _pn_entity[i_part]; ++i_elmt){
         _pentity_init_location[i_part][3*i_elmt  ] = pentity_init_location_tmp[3*(offset + i_elmt)  ];
         _pentity_init_location[i_part][3*i_elmt+1] = pentity_init_location_tmp[3*(offset + i_elmt)+1];
         _pentity_init_location[i_part][3*i_elmt+2] = pentity_init_location_tmp[3*(offset + i_elmt)+2];
       }
     }
 
-    offset += _pn_entity;
+    offset += _pn_entity[i_part];
 
     /* Panic verbose */
     if(0 == 1){
       printf("[%i] _pentity_ln_to_gn = ", i_rank);
-      for(int i_data = 0; i_data < _pn_entity; ++i_data){
+      for(int i_data = 0; i_data < _pn_entity[i_part]; ++i_data){
         printf(PDM_FMT_G_NUM" ", _pentity_ln_to_gn[i_part][i_data]);
       }
       printf("\n");
