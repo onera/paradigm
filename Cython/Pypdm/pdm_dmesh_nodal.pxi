@@ -537,6 +537,12 @@ def ComputeDistributionFromDelmt(int         dnelt,
 
 def find_topological_ridge(DMeshNodal pydmn):
   """
+  find_topological_ridge(pydmn)
+
+  Retrieve ridges from surfaces in a Dmesh Nodal and build associated edges
+
+  Parameters:
+    pydmn (:py:class:`DMeshNodal`) : Dmesh Nodal object
   """
   PDM_dmesh_nodal_find_topological_ridge(pydmn.dmn)
 
@@ -544,5 +550,12 @@ def find_topological_ridge(DMeshNodal pydmn):
 def revert_orientation(DMeshNodal          pydmn,
                        PDM_geometry_kind_t geom_kind):
   """
+  revert_orientation(pydmn, geom_kind)
+
+  Reverse orientation of all sections of a given geometry kind in a Dmesh Nodal
+
+  Parameters:
+    pydmn     (:py:class:`DMeshNodal`) : Dmesh Nodal object
+    geom_kind (int)                    : Geometry kind (ridge, surface or volume)
   """
   PDM_dmesh_nodal_revert_orientation(pydmn.dmn, geom_kind)
