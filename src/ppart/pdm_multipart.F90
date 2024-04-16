@@ -387,7 +387,7 @@ interface
     integer(c_int), value  :: i_domain
     integer(c_int), value  :: i_part
     type(c_ptr)            :: vtx_coord
-    integer(c_int)         :: ownership
+    integer(c_int), value  :: ownership
     integer(c_int)         :: n_vtx
 
   end function PDM_multipart_part_vtx_coord_get_c
