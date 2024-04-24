@@ -2354,9 +2354,22 @@ PDM_MPI_Comm       comm
   /*
    * Deduce node_ln_to_gn
    */
+  int order_part             = 0;
+  int _renum_vtx_method_none = PDM_part_renum_method_vtx_idx_get ("PDM_PART_RENUM_VTX_NONE");
+  int _renum_cell_method_hpc = PDM_part_renum_method_cell_idx_get("PDM_PART_RENUM_CELL_HPC");
+  int _renum_cell_method_cb  = PDM_part_renum_method_cell_idx_get("PDM_PART_RENUM_CELL_CACHEBLOCKING");
+  int _renum_cell_method_cb2 = PDM_part_renum_method_cell_idx_get("PDM_PART_RENUM_CELL_CACHEBLOCKING2");
+  if (pmeshes->renum_vtx_method  == _renum_vtx_method_none &&
+      pmeshes->renum_cell_method != _renum_cell_method_hpc &&
+      pmeshes->renum_cell_method != _renum_cell_method_cb  &&
+      pmeshes->renum_cell_method != _renum_cell_method_cb2) {
+    order_part = 1;
+  }
+
   int          *pn_node        = NULL;
   PDM_g_num_t **pnode_ln_to_gn = NULL;
   PDM_part_assemble_partitions(comm,
+                               order_part,
                                distrib_partition,
                                distrib_node,
                                node_part,

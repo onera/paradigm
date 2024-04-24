@@ -4153,9 +4153,11 @@ _extract_part_and_reequilibrate
 
   PDM_g_num_t *distrib_partition = PDM_compute_entity_distribution(extrp->comm, extrp->n_part_out);
 
+  int order_part = 0; /* TODO : check entity renumbering options */
   int **pinit_location = NULL;
   PDM_g_num_t **_target_parent_ln_to_gn = NULL;
   PDM_part_assemble_partitions(extrp->comm,
+                               order_part,
                                distrib_partition,
                                distrib_elmt,
                                _elmt_part,
