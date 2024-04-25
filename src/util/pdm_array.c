@@ -120,6 +120,42 @@ int PDM_array_are_equal_gnum(const PDM_g_num_t *array1, const PDM_g_num_t *array
   return 1;
 }
 
+/* Utils functions for reducing arrays */
+int PDM_array_max_int(const int *array, const int size) {
+  int max = -INT_MAX;
+  for (int i = 0; i < size; i++) {
+    if (array[i] > max)
+      max = array[i];
+  }
+  return max;
+}
+int PDM_array_min_int(const int *array, const int size) {
+  int min = INT_MAX;
+  for (int i = 0; i < size; i++) {
+    if (array[i] < min)
+      min = array[i];
+  }
+  return min;
+}
+
+PDM_g_num_t PDM_array_max_gnum(const PDM_g_num_t *array, const int size) {
+  PDM_g_num_t max = -PDM_G_NUM_MAX;
+  for (int i = 0; i < size; i++) {
+    if (array[i] > max)
+      max = array[i];
+  }
+  return max;
+}
+PDM_g_num_t PDM_array_min_gnum(const PDM_g_num_t *array, const int size) {
+  PDM_g_num_t min = PDM_G_NUM_MAX;
+  for (int i = 0; i < size; i++) {
+    if (array[i] < min)
+      min = array[i];
+  }
+  return min;
+}
+
+
 /* Utils functions modifying arrays*/
 
 

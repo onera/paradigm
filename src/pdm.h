@@ -6,6 +6,7 @@
 #define __PDM_H__
 
 #include <stdio.h>
+#include <limits.h>
 #include "pdm_config.h"
 #include "pdm_mpi.h"
 
@@ -81,10 +82,12 @@ extern "C" {
 typedef  long PDM_g_num_t;
 #define  PDM__MPI_G_NUM MPI_LONG
 #define  PDM__PDM_MPI_G_NUM PDM_MPI_LONG
+#define  PDM_G_NUM_MAX LONG_MAX
 #else
 typedef int PDM_g_num_t;
 #define  PDM__MPI_G_NUM MPI_INT
 #define  PDM__PDM_MPI_G_NUM PDM_MPI_INT
+#define  PDM_G_NUM_MAX INT_MAX
 #endif
 
 typedef  double PDM_real_t;

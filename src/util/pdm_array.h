@@ -40,6 +40,13 @@ int*         PDM_array_new_idx_from_const_stride_int(const int stride, const int
 
 /* Utils functions compararing arrays */
 
+/* Utils functions for reducing arrays */
+int         PDM_array_max_int (const int         *array, const int size);
+int         PDM_array_min_int (const int         *array, const int size);
+PDM_g_num_t PDM_array_max_gnum(const PDM_g_num_t *array, const int size);
+PDM_g_num_t PDM_array_min_gnum(const PDM_g_num_t *array, const int size);
+
+
 // Return 1 if the two arrays are equal, 0 otherwise
 int PDM_array_are_equal_int(const int *array1, const int *array2, const int size);
 int PDM_array_are_equal_gnum(const PDM_g_num_t *array1, const PDM_g_num_t *array2, const int size);
