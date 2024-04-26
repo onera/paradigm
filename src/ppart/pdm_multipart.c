@@ -2321,17 +2321,27 @@ PDM_MPI_Comm       comm
   int  dn_vtx  = PDM_dmesh_dn_entity_get(dmesh, PDM_MESH_ENTITY_VTX);
 
   int dn_node = 0;
+  int _renum_node_method_none    = 0;
+  int _pmeshes_renum_node_method = 0;
   if(dmesh->n_g_cell != 0) {
     if(split_method != PDM_SPLIT_DUAL_WITH_HILBERT) {
       assert(dmesh->dn_cell > 0);
     }
     dn_node = dmesh->dn_cell;
+    _renum_node_method_none = PDM_part_renum_method_cell_idx_get("PDM_PART_RENUM_CELL_NONE");
+    _pmeshes_renum_node_method = pmeshes->renum_cell_method;
   } else if (dmesh->n_g_face != 0) {
     dn_node = dmesh->dn_face;
+    _renum_node_method_none = PDM_part_renum_method_face_idx_get("PDM_PART_RENUM_FACE_NONE");
+    _pmeshes_renum_node_method = pmeshes->renum_face_method;
   } else if (dmesh->n_g_edge != 0) {
     dn_node = dmesh->dn_edge;
+    _renum_node_method_none = PDM_part_renum_method_edge_idx_get("PDM_PART_RENUM_EDGE_NONE");
+    _pmeshes_renum_node_method = pmeshes->renum_edge_method;
   } else if (dmesh->n_g_vtx != 0) {
     dn_node = dmesh->dn_vtx;
+    _renum_node_method_none = PDM_part_renum_method_vtx_idx_get ("PDM_PART_RENUM_VTX_NONE");
+    _pmeshes_renum_node_method = pmeshes->renum_vtx_method;
   } else {
     dn_node = 0;
   }
@@ -2354,9 +2364,15 @@ PDM_MPI_Comm       comm
   /*
    * Deduce node_ln_to_gn
    */
+  int order_part = 0;
+  if (_pmeshes_renum_node_method == _renum_node_method_none) {
+    order_part = 1;
+  }
+
   int          *pn_node        = NULL;
   PDM_g_num_t **pnode_ln_to_gn = NULL;
   PDM_part_assemble_partitions(comm,
+                               order_part,
                                distrib_partition,
                                distrib_node,
                                node_part,

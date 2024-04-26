@@ -102,6 +102,7 @@ static inline int _is_prime(int num)
  *   is made trought the local to global numbering computed by the function.
  *
  * \param [in]   comm                  PDM_MPI communicator
+ * \param [in]   order_part            Order part by increasing gnum
  * \param [in]   part_distribution     Distribution of partitions over the processes (size=n_rank+1)
  * \param [in]   entity_distribution   Distribution of entities over the processes (size=n_rank+1)
  * \param [in]   dentity_to_part       Id of assigned partition for each entity (size=dn_entity)
@@ -116,6 +117,7 @@ int
 PDM_part_assemble_partitions
 (
  const PDM_MPI_Comm    comm,
+ const int             order_part,
        PDM_g_num_t    *part_distribution,
  const PDM_g_num_t    *entity_distribution,
  const int            *dentity_to_part,
@@ -220,24 +222,27 @@ PDM_part_assemble_partitions
   }
   free(dentity_stri);
 
-  /* Sort cells in increasing gnum */
   int* _pn_entity = *pn_entity;
-  int* order = NULL;
   int offset = 0;
-  for (int i=0; i < n_part_block; ++i) {
 
-    if (have_init_location == 1) { //Keep order to sort pentity_init_location_tmp
-      order = PDM_array_new_range_int(_pn_entity[i]);
+  /* Sort cells in increasing gnum */
+  if (order_part == 1){
+    int* order = NULL;
+    for (int i=0; i < n_part_block; ++i) {
+
+      if (have_init_location == 1) { //Keep order to sort pentity_init_location_tmp
+        order = PDM_array_new_range_int(_pn_entity[i]);
+      }
+
+      PDM_sort_long(&(pentity_ln_to_gn_tmp[offset]), order, _pn_entity[i]);
+
+      if (have_init_location == 1) {
+        PDM_order_array(_pn_entity[i], 3*sizeof(int), order, &(pentity_init_location_tmp[3*offset]));
+        free(order);
+      }
+
+      offset += _pn_entity[i];
     }
-
-    PDM_sort_long(&(pentity_ln_to_gn_tmp[offset]), order, _pn_entity[i]);
-
-    if (have_init_location == 1) {
-      PDM_order_array(_pn_entity[i], 3*sizeof(int), order, &(pentity_init_location_tmp[3*offset]));
-      free(order);
-    }
-
-    offset += _pn_entity[i];
   }
 
 
