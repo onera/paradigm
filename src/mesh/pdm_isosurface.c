@@ -30,6 +30,7 @@
 #include "pdm_error.h"
 #include "pdm_logging.h"
 
+#include "pdm_array.h"
 #include "pdm_mesh_nodal.h"
 #include "pdm_isosurface.h"
 #include "pdm_isosurface_priv.h"
@@ -281,6 +282,9 @@ PDM_isosurface_create
   // // > Isosurface mesh information
   // isos->iso_elt_type = elt_type; 
 
+  // > Link with entry mesh
+  isos->compute_ptp = NULL;
+
   // > Isosurfaces informations
   isos->n_isosurface = 0;
   isos->n_isovalues     = NULL;
@@ -358,30 +362,39 @@ PDM_isosurface_create
 
   // > Partitioned output data
   isos->iso_n_vtx             = NULL;
-  isos->iso_vtx_owner         = NULL;
   isos->iso_vtx_coord         = NULL;
   isos->iso_vtx_gnum          = NULL;
-  isos->iso_vtx_parent_idx    = NULL;
-  isos->iso_vtx_parent        = NULL;
+  isos->iso_vtx_lparent_idx   = NULL;
+  isos->iso_vtx_lparent       = NULL;
   isos->iso_vtx_parent_weight = NULL;
 
-  isos->iso_n_edge          = NULL;
-  isos->iso_edge_owner      = NULL;
-  isos->iso_edge_vtx        = NULL;
-  isos->iso_edge_gnum       = NULL;
-  isos->iso_edge_parent_idx = NULL;
-  isos->iso_edge_parent     = NULL;
-  isos->isovalue_edge_idx   = NULL;
+  isos->iso_n_edge            = NULL;
+  isos->iso_edge_vtx          = NULL;
+  isos->iso_edge_gnum         = NULL;
+  isos->iso_edge_lparent_idx  = NULL;
+  isos->iso_edge_lparent      = NULL;
+  isos->isovalue_edge_idx     = NULL;
 
-  isos->iso_n_face          = NULL;
-  isos->iso_face_owner      = NULL;
-  isos->iso_face_vtx_idx    = NULL;
-  isos->iso_face_vtx        = NULL;
-  isos->iso_face_gnum       = NULL;
-  isos->iso_face_parent_idx = NULL;
-  isos->iso_face_parent     = NULL;
-  isos->isovalue_face_idx   = NULL;
+  isos->iso_n_face            = NULL;
+  isos->iso_face_vtx_idx      = NULL;
+  isos->iso_face_vtx          = NULL;
+  isos->iso_face_gnum         = NULL;
+  isos->iso_face_lparent_idx  = NULL;
+  isos->iso_face_lparent      = NULL;
+  isos->isovalue_face_idx     = NULL;
 
+  // > Part_to_part between iso entities and entry mesh entites
+  isos->iso_ptp_vtx  = NULL;
+  isos->iso_ptp_edge = NULL;
+  isos->iso_ptp_face = NULL;
+
+  // > Owners
+  isos->iso_owner_vtx_coord         = NULL;
+  isos->iso_owner_vtx_parent_weight = NULL;
+  isos->iso_owner_gnum              = NULL;
+  isos->iso_owner_connec            = NULL;
+  isos->iso_owner_lparent           = NULL;
+  isos->iso_owner_ptp               = NULL;
 
 
   return isos;
@@ -406,6 +419,10 @@ PDM_isosurface_add
   isos->eq_coeffs      = realloc(isos->eq_coeffs     , sizeof(double                         *) * isos->n_isosurface);
   isos->field_function = realloc(isos->field_function, sizeof(PDM_isosurface_field_function_t ) * isos->n_isosurface);
   
+  isos->field_function = realloc(isos->field_function, sizeof(PDM_isosurface_field_function_t ) * isos->n_isosurface);
+  
+  isos->compute_ptp = realloc(isos->compute_ptp, sizeof(int *) * isos->n_isosurface);
+  isos->compute_ptp[id_isosurface] = PDM_array_zeros_int(PDM_MESH_ENTITY_MAX);
   isos->dfield         = realloc(isos->dfield        , sizeof(double                         *) * isos->n_isosurface);
   isos->field          = realloc(isos->field         , sizeof(double                        **) * isos->n_isosurface);
   isos->n_isovalues    = realloc(isos->n_isovalues   , sizeof(int                             ) * isos->n_isosurface);
@@ -414,34 +431,41 @@ PDM_isosurface_add
 
   // > Partitioned iso vertices
   isos->iso_n_vtx             = realloc(isos->iso_n_vtx            , sizeof(int           *) * isos->n_isosurface);
-  isos->iso_vtx_owner         = realloc(isos->iso_vtx_owner        , sizeof(PDM_ownership_t) * isos->n_isosurface);
   isos->iso_vtx_coord         = realloc(isos->iso_vtx_coord        , sizeof(double       **) * isos->n_isosurface);
   isos->iso_vtx_gnum          = realloc(isos->iso_vtx_gnum         , sizeof(PDM_g_num_t  **) * isos->n_isosurface);
-  isos->iso_vtx_parent_idx    = realloc(isos->iso_vtx_parent_idx   , sizeof(int          **) * isos->n_isosurface);
-  isos->iso_vtx_parent        = realloc(isos->iso_vtx_parent       , sizeof(int          **) * isos->n_isosurface);
+  isos->iso_vtx_lparent_idx   = realloc(isos->iso_vtx_lparent_idx  , sizeof(int          **) * isos->n_isosurface);
+  isos->iso_vtx_lparent       = realloc(isos->iso_vtx_lparent      , sizeof(int          **) * isos->n_isosurface);
   isos->iso_vtx_parent_weight = realloc(isos->iso_vtx_parent_weight, sizeof(double       **) * isos->n_isosurface);
-  isos->iso_vtx_owner[id_isosurface] = PDM_OWNERSHIP_BAD_VALUE;
 
   // > Partitioned iso edges
-  isos->iso_n_edge          = realloc(isos->iso_n_edge          , sizeof(int           *) * isos->n_isosurface);
-  isos->iso_edge_owner      = realloc(isos->iso_edge_owner      , sizeof(PDM_ownership_t) * isos->n_isosurface);
-  isos->iso_edge_vtx        = realloc(isos->iso_edge_vtx        , sizeof(int          **) * isos->n_isosurface);
-  isos->iso_edge_gnum       = realloc(isos->iso_edge_gnum       , sizeof(PDM_g_num_t  **) * isos->n_isosurface);
-  isos->iso_edge_parent_idx = realloc(isos->iso_edge_parent_idx , sizeof(int          **) * isos->n_isosurface);
-  isos->iso_edge_parent     = realloc(isos->iso_edge_parent     , sizeof(int          **) * isos->n_isosurface);
-  isos->isovalue_edge_idx   = realloc(isos->isovalue_edge_idx   , sizeof(int          **) * isos->n_isosurface);
-  isos->iso_edge_owner[id_isosurface] = PDM_OWNERSHIP_BAD_VALUE;
+  isos->iso_n_edge           = realloc(isos->iso_n_edge          , sizeof(int           *) * isos->n_isosurface);
+  isos->iso_edge_vtx         = realloc(isos->iso_edge_vtx        , sizeof(int          **) * isos->n_isosurface);
+  isos->iso_edge_gnum        = realloc(isos->iso_edge_gnum       , sizeof(PDM_g_num_t  **) * isos->n_isosurface);
+  isos->iso_edge_lparent_idx = realloc(isos->iso_edge_lparent_idx, sizeof(int          **) * isos->n_isosurface);
+  isos->iso_edge_lparent     = realloc(isos->iso_edge_lparent    , sizeof(int          **) * isos->n_isosurface);
+  isos->isovalue_edge_idx    = realloc(isos->isovalue_edge_idx   , sizeof(int          **) * isos->n_isosurface);
 
   // > Partitioned iso faces
-  isos->iso_n_face          = realloc(isos->iso_n_face          , sizeof(int           *) * isos->n_isosurface);
-  isos->iso_face_owner      = realloc(isos->iso_face_owner      , sizeof(PDM_ownership_t) * isos->n_isosurface);
-  isos->iso_face_vtx_idx    = realloc(isos->iso_face_vtx_idx    , sizeof(int          **) * isos->n_isosurface);
-  isos->iso_face_vtx        = realloc(isos->iso_face_vtx        , sizeof(int          **) * isos->n_isosurface);
-  isos->iso_face_gnum       = realloc(isos->iso_face_gnum       , sizeof(PDM_g_num_t  **) * isos->n_isosurface);
-  isos->iso_face_parent_idx = realloc(isos->iso_face_parent_idx , sizeof(int          **) * isos->n_isosurface);
-  isos->iso_face_parent     = realloc(isos->iso_face_parent     , sizeof(int          **) * isos->n_isosurface);
-  isos->isovalue_face_idx   = realloc(isos->isovalue_face_idx   , sizeof(int          **) * isos->n_isosurface);
-  isos->iso_face_owner[id_isosurface]  = PDM_OWNERSHIP_BAD_VALUE;
+  isos->iso_n_face           = realloc(isos->iso_n_face          , sizeof(int           *) * isos->n_isosurface);
+  isos->iso_face_vtx_idx     = realloc(isos->iso_face_vtx_idx    , sizeof(int          **) * isos->n_isosurface);
+  isos->iso_face_vtx         = realloc(isos->iso_face_vtx        , sizeof(int          **) * isos->n_isosurface);
+  isos->iso_face_gnum        = realloc(isos->iso_face_gnum       , sizeof(PDM_g_num_t  **) * isos->n_isosurface);
+  isos->iso_face_lparent_idx = realloc(isos->iso_face_lparent_idx, sizeof(int          **) * isos->n_isosurface);
+  isos->iso_face_lparent     = realloc(isos->iso_face_lparent    , sizeof(int          **) * isos->n_isosurface);
+  isos->isovalue_face_idx    = realloc(isos->isovalue_face_idx   , sizeof(int          **) * isos->n_isosurface);
+
+  // > Part_to_part between iso entities and entry mesh entites
+  isos->iso_ptp_vtx  = realloc(isos->iso_ptp_vtx , sizeof(PDM_part_to_part_t *) * isos->n_isosurface);
+  isos->iso_ptp_edge = realloc(isos->iso_ptp_edge, sizeof(PDM_part_to_part_t *) * isos->n_isosurface);
+  isos->iso_ptp_face = realloc(isos->iso_ptp_face, sizeof(PDM_part_to_part_t *) * isos->n_isosurface);
+
+  // > Partitioned owners
+  isos->iso_owner_vtx_coord         = realloc(isos->iso_owner_vtx_coord         , sizeof(PDM_ownership_t  *) * isos->n_isosurface);
+  isos->iso_owner_vtx_parent_weight = realloc(isos->iso_owner_vtx_parent_weight , sizeof(PDM_ownership_t  *) * isos->n_isosurface);
+  isos->iso_owner_gnum              = realloc(isos->iso_owner_gnum              , sizeof(PDM_ownership_t **) * isos->n_isosurface);
+  isos->iso_owner_connec            = realloc(isos->iso_owner_connec            , sizeof(PDM_ownership_t **) * isos->n_isosurface);
+  isos->iso_owner_lparent           = realloc(isos->iso_owner_lparent           , sizeof(PDM_ownership_t **) * isos->n_isosurface);
+  isos->iso_owner_ptp               = realloc(isos->iso_owner_ptp               , sizeof(PDM_ownership_t  *) * isos->n_isosurface);
 
 
   isos->kind       [id_isosurface] = kind;
@@ -451,7 +475,7 @@ PDM_isosurface_add
     isos->isovalues[id_isosurface][i] = isovalues[i];
   }
 
-  if        (kind==PDM_ISO_SURFACE_KIND_FIELD) {
+  if (kind==PDM_ISO_SURFACE_KIND_FIELD) {
     isos->eq_coeffs     [id_isosurface] = NULL;
   }
   else if (kind==PDM_ISO_SURFACE_KIND_PLANE) {
@@ -548,7 +572,8 @@ PDM_isosurface_reset
  int               id_isosurface
 )
 {
-
+  PDM_UNUSED(isos);
+  PDM_UNUSED(id_isosurface);
 }
 
 
@@ -601,7 +626,6 @@ PDM_isosurface_compute
 
       _compute_iso_field(isos, id_isosurface);
 
-      double **iso_vtx_coord = NULL;
       PDM_isosurface_marching_algo(isos,
                                    id_isosurface);
 
@@ -621,7 +645,7 @@ PDM_isosurface_dump_times
  PDM_isosurface_t *isos
 )
 {
-
+  PDM_UNUSED(isos);
 }
 
 
@@ -632,14 +656,12 @@ PDM_isosurface_free
 )
 {
   for (int id_iso=0; id_iso<isos->n_isosurface; ++id_iso) {
-    printf("id_iso = %d\n", id_iso);
     if (isos->n_isovalues[id_iso]>0) {
       free(isos->isovalues[id_iso]);
       if (isos->kind[id_iso]==PDM_ISO_SURFACE_KIND_FIELD) {
         if (isos->is_dist_or_part==0) { // is distributed
           free(isos->dfield[id_iso]);
         } else if (isos->is_dist_or_part==1) { // is partitioned
-          printf("\t free isos->field[id_iso]\n");
           free(isos->field[id_iso]); // TODO: check if field is desallocated by iso or not
         }
       } else  {
@@ -668,82 +690,136 @@ PDM_isosurface_free
   free(isos->field);
 
   for (int id_iso=0; id_iso<isos->n_isosurface; ++id_iso) {
-    if (isos->iso_vtx_owner[id_iso]==PDM_OWNERSHIP_KEEP) {
-      for (int i_part=0; i_part<isos->iso_n_part; ++i_part) {
-        free(isos->iso_vtx_coord        [id_iso][i_part]);
-        free(isos->iso_vtx_gnum         [id_iso][i_part]);
-        free(isos->iso_vtx_parent_idx   [id_iso][i_part]);
-        free(isos->iso_vtx_parent       [id_iso][i_part]);
+    for (int i_part=0; i_part<isos->iso_n_part; ++i_part) {
+      if (isos->iso_owner_vtx_coord[id_iso][i_part]==PDM_OWNERSHIP_KEEP) {
+        free(isos->iso_vtx_coord[id_iso][i_part]);
+      }
+      if (isos->iso_owner_gnum[id_iso][i_part][PDM_MESH_ENTITY_VTX]==PDM_OWNERSHIP_KEEP) {
+        free(isos->iso_vtx_gnum[id_iso][i_part]);
+      }
+      free(isos->iso_vtx_lparent_idx   [id_iso][i_part]);
+      free(isos->iso_vtx_lparent       [id_iso][i_part]);
+      if (isos->iso_owner_vtx_parent_weight[id_iso][i_part]==PDM_OWNERSHIP_KEEP) {
         free(isos->iso_vtx_parent_weight[id_iso][i_part]);
       }
     }
     free(isos->iso_n_vtx            [id_iso]);
     free(isos->iso_vtx_coord        [id_iso]);
     free(isos->iso_vtx_gnum         [id_iso]);
-    free(isos->iso_vtx_parent_idx   [id_iso]);
-    free(isos->iso_vtx_parent       [id_iso]);
+    free(isos->iso_vtx_lparent_idx  [id_iso]);
+    free(isos->iso_vtx_lparent      [id_iso]);
     free(isos->iso_vtx_parent_weight[id_iso]);
     
-    if (isos->iso_edge_owner[id_iso]==PDM_OWNERSHIP_KEEP) {
-      for (int i_part=0; i_part<isos->iso_n_part; ++i_part) {
-        free(isos->iso_edge_vtx       [id_iso][i_part]);
-        free(isos->iso_edge_gnum      [id_iso][i_part]);
-        // free(isos->iso_edge_parent_idx[id_iso][i_part]);
-        free(isos->iso_edge_parent    [id_iso][i_part]);
-        free(isos->isovalue_edge_idx    [id_iso][i_part]);
+    for (int i_part=0; i_part<isos->iso_n_part; ++i_part) {
+      if (isos->iso_owner_connec[id_iso][i_part][PDM_MESH_ENTITY_EDGE]==PDM_OWNERSHIP_KEEP) {
+        free(isos->iso_edge_vtx[id_iso][i_part]);
       }
+      if (isos->iso_owner_gnum[id_iso][i_part][PDM_MESH_ENTITY_EDGE]==PDM_OWNERSHIP_KEEP) {
+        free(isos->iso_edge_gnum[id_iso][i_part]);
+      }
+      // free(isos->iso_edge_lparent_idx[id_iso][i_part]);
+      free(isos->iso_edge_lparent    [id_iso][i_part]);
+      free(isos->isovalue_edge_idx    [id_iso][i_part]);
     }
     free(isos->iso_n_edge         [id_iso]);
     free(isos->iso_edge_vtx       [id_iso]);
     free(isos->iso_edge_gnum      [id_iso]);
-    // free(isos->iso_edge_parent_idx[id_iso]);
-    free(isos->iso_edge_parent    [id_iso]);
+    // free(isos->iso_edge_lparent_idx[id_iso]);
+    free(isos->iso_edge_lparent    [id_iso]);
     free(isos->isovalue_edge_idx  [id_iso]);
 
     
-    if (isos->iso_edge_owner[id_iso]==PDM_OWNERSHIP_KEEP) {
-      for (int i_part=0; i_part<isos->iso_n_part; ++i_part) {
+    for (int i_part=0; i_part<isos->iso_n_part; ++i_part) {
+      if (isos->iso_owner_connec[id_iso][i_part][PDM_MESH_ENTITY_EDGE]==PDM_OWNERSHIP_KEEP) {
         free(isos->iso_face_vtx_idx   [id_iso][i_part]);
         free(isos->iso_face_vtx       [id_iso][i_part]);
-        // free(isos->iso_face_gnum      [id_iso][i_part]);
-        // free(isos->iso_face_parent_idx[id_iso][i_part]);
-        free(isos->iso_face_parent    [id_iso][i_part]);
-        free(isos->isovalue_face_idx  [id_iso][i_part]);
       }
+      // if (isos->iso_owner_gnum[id_iso][i_part][PDM_MESH_ENTITY_FACE]==PDM_OWNERSHIP_KEEP) {
+      //   free(isos->iso_face_gnum      [id_iso][i_part]);
+      // }
+      // free(isos->iso_face_lparent_idx[id_iso][i_part]);
+      free(isos->iso_face_lparent    [id_iso][i_part]);
+      free(isos->isovalue_face_idx  [id_iso][i_part]);
     }
     free(isos->iso_n_face         [id_iso]);
     free(isos->iso_face_vtx_idx   [id_iso]);
     free(isos->iso_face_vtx       [id_iso]);
     // free(isos->iso_face_gnum      [id_iso]);
-    // free(isos->iso_face_parent_idx[id_iso]);
-    free(isos->iso_face_parent    [id_iso]);
+    // free(isos->iso_face_lparent_idx[id_iso]);
+    free(isos->iso_face_lparent    [id_iso]);
     free(isos->isovalue_face_idx  [id_iso]);
   }
 
   free(isos->iso_n_vtx);
   free(isos->iso_vtx_coord);
   free(isos->iso_vtx_gnum);
-  free(isos->iso_vtx_parent_idx);
-  free(isos->iso_vtx_parent);
+  free(isos->iso_vtx_lparent_idx);
+  free(isos->iso_vtx_lparent);
   free(isos->iso_vtx_parent_weight);
-  free(isos->iso_vtx_owner);
   
   free(isos->iso_n_edge);
-  free(isos->iso_edge_vtx       );
-  free(isos->iso_edge_gnum      );
-  free(isos->iso_edge_parent_idx);
-  free(isos->iso_edge_parent    );
-  free(isos->isovalue_edge_idx  );
-  free(isos->iso_edge_owner);
+  free(isos->iso_edge_vtx);
+  free(isos->iso_edge_gnum);
+  free(isos->iso_edge_lparent_idx);
+  free(isos->iso_edge_lparent);
+  free(isos->isovalue_edge_idx);
 
   free(isos->iso_n_face);
-  free(isos->iso_face_vtx_idx   );
-  free(isos->iso_face_vtx       );
-  free(isos->iso_face_gnum      );
-  free(isos->iso_face_parent_idx);
-  free(isos->iso_face_parent    );
-  free(isos->isovalue_face_idx  );
-  free(isos->iso_face_owner);
+  free(isos->iso_face_vtx_idx);
+  free(isos->iso_face_vtx);
+  free(isos->iso_face_gnum);
+  free(isos->iso_face_lparent_idx);
+  free(isos->iso_face_lparent);
+  free(isos->isovalue_face_idx);
+
+
+  // > Part_to_part between iso entities and entry mesh entites
+  for (int id_iso=0; id_iso<isos->n_isosurface; ++id_iso) {
+    if (isos->  compute_ptp[id_iso][PDM_MESH_ENTITY_VTX]==1 &&
+        isos->iso_owner_ptp[id_iso][PDM_MESH_ENTITY_VTX]==PDM_OWNERSHIP_KEEP) {
+      PDM_part_to_part_free(isos->iso_ptp_vtx[id_iso]);
+    }
+    else if (isos->  compute_ptp[id_iso][PDM_MESH_ENTITY_EDGE]==1 &&
+             isos->iso_owner_ptp[id_iso][PDM_MESH_ENTITY_EDGE]==PDM_OWNERSHIP_KEEP) {
+      PDM_part_to_part_free(isos->iso_ptp_edge[id_iso]);
+    }
+    else if (isos->  compute_ptp[id_iso][PDM_MESH_ENTITY_FACE]==1 &&
+             isos->iso_owner_ptp[id_iso][PDM_MESH_ENTITY_FACE]==PDM_OWNERSHIP_KEEP) {
+      PDM_part_to_part_free(isos->iso_ptp_face[id_iso]);
+    }
+  }
+
+  free(isos->iso_ptp_vtx);
+  free(isos->iso_ptp_edge);
+  free(isos->iso_ptp_face);
+
+
+
+  for (int id_iso=0; id_iso<isos->n_isosurface; ++id_iso) {
+    free(isos->iso_owner_vtx_coord        [id_iso]);
+    free(isos->iso_owner_vtx_parent_weight[id_iso]);
+    for (int i_part=0; i_part<isos->iso_n_part; ++i_part) {
+      free(isos->iso_owner_gnum   [id_iso][i_part]);
+      free(isos->iso_owner_connec [id_iso][i_part]);
+      free(isos->iso_owner_lparent[id_iso][i_part]);
+    }
+    free(isos->iso_owner_gnum   [id_iso]);
+    free(isos->iso_owner_connec [id_iso]);
+    free(isos->iso_owner_lparent[id_iso]);
+  }
+  free(isos->iso_owner_vtx_coord);
+  free(isos->iso_owner_vtx_parent_weight);
+  free(isos->iso_owner_gnum);
+  free(isos->iso_owner_connec);
+  free(isos->iso_owner_lparent);
+  free(isos->iso_owner_ptp);
+
+
+
+  for (int id_iso=0; id_iso<isos->n_isosurface; ++id_iso) {
+    free(isos->compute_ptp[id_iso]);
+  }
+  free(isos->compute_ptp);
 
 
   free(isos);

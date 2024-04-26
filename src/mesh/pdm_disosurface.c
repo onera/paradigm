@@ -265,6 +265,12 @@ PDM_isosurface_dconnectivity_get
  PDM_ownership_t           ownership
 )
 {
+  PDM_UNUSED(id_isosurface);
+  PDM_UNUSED(connectivity_type);
+  PDM_UNUSED(dconnect_idx);
+  PDM_UNUSED(dconnect);
+  PDM_UNUSED(ownership);
+
   _check_is_not_part(isos);
 
   return 0;
@@ -280,6 +286,10 @@ PDM_isosurface_dvtx_coord_get
  PDM_ownership_t    ownership
 )
 {
+  PDM_UNUSED(id_isosurface);
+  PDM_UNUSED(dvtx_coord);
+  PDM_UNUSED(ownership);
+ 
   _check_is_not_part(isos);
 
   return 0;
@@ -298,6 +308,13 @@ PDM_isosurface_dgroup_get
  PDM_ownership_t       ownership
 )
 {
+  PDM_UNUSED(id_isosurface);
+  PDM_UNUSED(entity_type);
+  PDM_UNUSED(n_group);
+  PDM_UNUSED(dgroup_entity_idx);
+  PDM_UNUSED(dgroup_entity);
+  PDM_UNUSED(ownership);
+
   _check_is_not_part(isos);
 
   return 0;

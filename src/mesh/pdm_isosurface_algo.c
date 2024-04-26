@@ -1010,28 +1010,44 @@ PDM_isosurface_marching_algo
    */
   isos->iso_n_part = n_part;
 
-  isos->iso_vtx_owner        [id_iso] = PDM_OWNERSHIP_KEEP;
   isos->iso_n_vtx            [id_iso] = iso_n_vtx;
   isos->iso_vtx_coord        [id_iso] = iso_vtx_coord;
   isos->iso_vtx_gnum         [id_iso] = iso_vtx_gnum;
-  isos->iso_vtx_parent_idx   [id_iso] = iso_vtx_parent_idx;
-  isos->iso_vtx_parent       [id_iso] = iso_vtx_parent;
+  isos->iso_vtx_lparent_idx  [id_iso] = iso_vtx_parent_idx;
+  isos->iso_vtx_lparent      [id_iso] = iso_vtx_parent;
   isos->iso_vtx_parent_weight[id_iso] = iso_vtx_parent_weight;
   
-  isos->iso_edge_owner   [id_iso] = PDM_OWNERSHIP_KEEP;
   isos->iso_n_edge       [id_iso] = iso_n_edge;
   isos->iso_edge_vtx     [id_iso] = iso_edge_vtx;
   isos->iso_edge_gnum    [id_iso] = iso_edge_gnum;
-  isos->iso_edge_parent  [id_iso] = iso_edge_parent;
+  isos->iso_edge_lparent  [id_iso] = iso_edge_parent;
   isos->isovalue_edge_idx[id_iso] = isovalue_edge_idx;
   
-  isos->iso_face_owner  [id_iso] = PDM_OWNERSHIP_KEEP;
   isos->iso_n_face      [id_iso] = iso_n_face;
   isos->iso_face_vtx_idx[id_iso] = iso_face_vtx_idx;
   isos->iso_face_vtx    [id_iso] = iso_face_vtx;
   // isos->iso_face_gnum   [id_iso] = iso_face_gnum;
-  isos->iso_face_parent [id_iso] = iso_face_parent;
+  isos->iso_face_lparent [id_iso] = iso_face_parent;
   isos->isovalue_face_idx[id_iso] = isovalue_face_idx;
+
+  isos->iso_owner_vtx_coord         [id_iso] = malloc(sizeof(PDM_ownership_t  ) * n_part);
+  isos->iso_owner_vtx_parent_weight [id_iso] = malloc(sizeof(PDM_ownership_t  ) * n_part);
+  isos->iso_owner_gnum              [id_iso] = malloc(sizeof(PDM_ownership_t *) * n_part);
+  isos->iso_owner_connec            [id_iso] = malloc(sizeof(PDM_ownership_t *) * n_part);
+  isos->iso_owner_lparent           [id_iso] = malloc(sizeof(PDM_ownership_t *) * n_part);
+  for (int i_part=0; i_part<n_part; ++i_part) {
+    isos->iso_owner_vtx_coord         [id_iso][i_part] = PDM_OWNERSHIP_KEEP;
+    isos->iso_owner_vtx_parent_weight [id_iso][i_part] = PDM_OWNERSHIP_KEEP;
+
+    isos->iso_owner_gnum              [id_iso][i_part] = malloc(sizeof(PDM_ownership_t *) * PDM_MESH_ENTITY_MAX );
+    isos->iso_owner_connec            [id_iso][i_part] = malloc(sizeof(PDM_ownership_t *) * PDM_MESH_ENTITY_MAX );
+    isos->iso_owner_lparent           [id_iso][i_part] = malloc(sizeof(PDM_ownership_t *) * PDM_MESH_ENTITY_MAX );
+    for (int i_entity=0; i_entity<PDM_MESH_ENTITY_MAX; ++i_entity) {
+      isos->iso_owner_gnum   [id_iso][i_part][i_entity] = PDM_OWNERSHIP_KEEP;
+      isos->iso_owner_connec [id_iso][i_part][i_entity] = PDM_OWNERSHIP_KEEP;
+      isos->iso_owner_lparent[id_iso][i_part][i_entity] = PDM_OWNERSHIP_KEEP;
+    }
+  }
 
 }
 

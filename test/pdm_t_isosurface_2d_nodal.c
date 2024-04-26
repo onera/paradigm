@@ -21,6 +21,44 @@
  * Private function definitions
  *============================================================================*/
 
+static void
+
+_build_pmn_from_iso_result
+(
+  PDM_isosurface_t       *isos,
+  int                     id_isosurface,
+  int                     n_part,
+  PDM_part_mesh_nodal_t **pmn_out,
+  PDM_MPI_Comm            comm
+)
+{
+
+  PDM_part_mesh_nodal_t *pmn = PDM_part_mesh_nodal_create(1, n_part, comm);
+  int i_edge_section = PDM_part_mesh_nodal_section_add(pmn, PDM_MESH_NODAL_BAR2);
+  
+  for (int i_part=0; i_part<n_part; ++i_part) {
+    // > Vertex
+    double      *iso_vtx_coord = NULL;
+    PDM_g_num_t *iso_vtx_gnum  = NULL;
+    int iso_n_vtx = PDM_isosurface_vtx_coord_get(isos, id_isosurface, i_part, &iso_vtx_coord, PDM_OWNERSHIP_KEEP);
+    PDM_isosurface_ln_to_gn_get(isos, id_isosurface, i_part, PDM_MESH_ENTITY_VTX, &iso_vtx_gnum, PDM_OWNERSHIP_KEEP);
+    PDM_part_mesh_nodal_coord_set(pmn, i_part, iso_n_vtx, iso_vtx_coord, iso_vtx_gnum, PDM_OWNERSHIP_USER);
+
+    // > Edge
+    int         *iso_edge_vtx  = NULL;
+    PDM_g_num_t *iso_edge_gnum = NULL;
+    int iso_n_edge = PDM_isosurface_connectivity_get(isos, id_isosurface, i_part, PDM_CONNECTIVITY_TYPE_EDGE_VTX, NULL, &iso_edge_vtx, PDM_OWNERSHIP_KEEP);
+    PDM_isosurface_ln_to_gn_get(isos, id_isosurface, i_part, PDM_MESH_ENTITY_VTX, &iso_edge_gnum, PDM_OWNERSHIP_KEEP);
+    PDM_part_mesh_nodal_section_std_set(pmn, i_edge_section, i_part, iso_n_edge, iso_edge_vtx, iso_edge_gnum, NULL, NULL, PDM_OWNERSHIP_USER);
+  }
+
+  // TODO: why if KEEP on pmn and USER on iso it double free ?
+
+  // > Return
+  *pmn_out = pmn;
+}
+
+
 /**
  *
  * \brief  Usage
@@ -274,6 +312,7 @@ int main(int argc, char *argv[])
   // > User field isosurface
   double  *dfield = NULL;
   double **field  = NULL;
+  PDM_isosurface_compute(isos, iso1);
 
   double field_isovalues[1] = {0.};
   int iso3 = PDM_isosurface_add(isos, 
@@ -290,13 +329,25 @@ int main(int argc, char *argv[])
                                iso3,
                                i_part,
                                field[i_part]);
+
+
+  if (visu==1) {
+    if (dist_entry==1) {
+      PDM_error(__FILE__, __LINE__, 0, "PDM_t_isosurface_2d_nodal not implmented\n");
     }
-  } else {
-    PDM_error(__FILE__, __LINE__, 0, "PDM_t_isosurface_2d_nodal dist_entry must be 0 or 1 (here set to %d)\n", dist_entry);
+    else if (dist_entry==0) {
+      PDM_part_mesh_nodal_t *iso_pmn = NULL;
+      _build_pmn_from_iso_result(isos, iso1, n_part, &iso_pmn, comm);
+
+      PDM_part_mesh_nodal_dump_vtk(iso_pmn,
+                                   PDM_GEOMETRY_KIND_RIDGE,
+                                   "pmn_iso_mesh");
+
+      PDM_part_mesh_nodal_free(iso_pmn);
+    }
   }
 
 
-  PDM_isosurface_compute(isos, iso1);
 
   /*
    *  Free objects

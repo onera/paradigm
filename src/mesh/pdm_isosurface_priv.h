@@ -98,6 +98,9 @@ struct _pdm_isosurface_t {
   // > Redistribution
   PDM_extract_part_kind_t extract_kind;
   PDM_split_dual_t        part_method;
+
+  // > Link with entry mesh
+  int **compute_ptp;
   
   // ========================
   // > Distributed entry data
@@ -199,33 +202,42 @@ struct _pdm_isosurface_t {
   int iso_n_part;
 
   // > Vertices
-  PDM_ownership_t *iso_vtx_owner;
-  int            **iso_n_vtx;
-  double        ***iso_vtx_coord;
-  PDM_g_num_t   ***iso_vtx_gnum;
-  int           ***iso_vtx_parent_idx;
-  int           ***iso_vtx_parent;
-  double        ***iso_vtx_parent_weight;
+  int             **iso_n_vtx;
+  double         ***iso_vtx_coord;
+  PDM_g_num_t    ***iso_vtx_gnum;
+  int            ***iso_vtx_lparent_idx;
+  int            ***iso_vtx_lparent;
+  double         ***iso_vtx_parent_weight;
 
   // > Edges
-  PDM_ownership_t *iso_edge_owner;
   int            **iso_n_edge;
   int           ***iso_edge_vtx;
   PDM_g_num_t   ***iso_edge_gnum;
-  int           ***iso_edge_parent_idx; //TODO: edge_parent_idx pour les edges a cheval sur 2 faces ?
-  int           ***iso_edge_parent; //TODO: edge_parent_idx pour les edges a cheval sur 2 faces ?
+  int           ***iso_edge_lparent_idx; //TODO: edge_parent_idx pour les edges a cheval sur 2 faces ?
+  int           ***iso_edge_lparent; //TODO: edge_parent_idx pour les edges a cheval sur 2 faces ?
   int           ***isovalue_edge_idx;
 
   // > Faces
-  PDM_ownership_t *iso_face_owner;
   int            **iso_n_face;
   int           ***iso_face_vtx_idx;
   int           ***iso_face_vtx;
   PDM_g_num_t   ***iso_face_gnum;
-  int           ***iso_face_parent_idx; //TODO: edge_parent_idx pour les faces a cheval sur 2 cellule ?
-  int           ***iso_face_parent;
+  int           ***iso_face_lparent_idx; //TODO: edge_parent_idx pour les faces a cheval sur 2 cellule ?
+  int           ***iso_face_lparent;
   int           ***isovalue_face_idx;
 
+  // > Part_to_part between iso entities and entry mesh entites
+  PDM_part_to_part_t **iso_ptp_vtx;
+  PDM_part_to_part_t **iso_ptp_edge;
+  PDM_part_to_part_t **iso_ptp_face;
+
+  // > Owners
+  PDM_ownership_t  **iso_owner_vtx_coord;
+  PDM_ownership_t  **iso_owner_vtx_parent_weight;
+  PDM_ownership_t ***iso_owner_gnum;
+  PDM_ownership_t ***iso_owner_connec;
+  PDM_ownership_t ***iso_owner_lparent;
+  PDM_ownership_t  **iso_owner_ptp;
 
 
   // ===============

@@ -189,9 +189,11 @@ PDM_isosurface_group_set
  int                  n_group,
  int                 *group_entity_idx,
  int                 *group_entity,
- PDM_g_num_t         *group_entity_ln_to_gn
+ PDM_g_num_t         *group_entity_ln_to_gn //TODO: useful ??
 )
 {
+  PDM_UNUSED(group_entity_ln_to_gn);
+
   _check_is_not_dist(isos);
   _check_entry_mesh_coherence(isos, -1);
 
@@ -313,7 +315,32 @@ PDM_isosurface_local_parent_get
 {
   _check_is_not_dist(isos);
 
-  return 0;
+  if (isos->extract_kind!=PDM_EXTRACT_PART_KIND_LOCAL) {
+    PDM_error(__FILE__, __LINE__, 0, "PDM_isosurface_t: extract_kind is not PDM_EXTRACT_PART_KIND_LOCAL.\n");
+  }
+
+  int n_entity = 0;
+  isos->iso_owner_lparent[id_isosurface][i_part][entity_type] = ownership;
+  
+  if (entity_type==PDM_MESH_ENTITY_VTX ) {
+    n_entity = isos->iso_n_vtx[id_isosurface][i_part];
+    *entity_parent_idx = isos->iso_vtx_lparent_idx[id_isosurface][i_part];
+    *entity_parent     = isos->iso_vtx_lparent    [id_isosurface][i_part];
+  }
+  else if (entity_type==PDM_MESH_ENTITY_EDGE) {
+    n_entity = isos->iso_n_edge[id_isosurface][i_part];
+    *entity_parent_idx = isos->iso_edge_lparent_idx[id_isosurface][i_part];
+    *entity_parent     = isos->iso_edge_lparent    [id_isosurface][i_part];
+  }
+  else if (entity_type==PDM_MESH_ENTITY_FACE) {
+    n_entity  = isos->iso_n_face   [id_isosurface][i_part];
+    *entity_parent_idx = isos->iso_face_lparent_idx[id_isosurface][i_part];
+    *entity_parent     = isos->iso_face_lparent    [id_isosurface][i_part];
+  }
+  else {
+    PDM_error(__FILE__, __LINE__, 0, "PDM_isosurface_t: has no cell mesh entity.\n");
+  }
+  return n_entity;
 }
 
 
@@ -329,7 +356,10 @@ PDM_isosurface_vtx_parent_weight_get
 {
   _check_is_not_dist(isos);
 
-  return 0;
+  isos->iso_owner_vtx_parent_weight[id_isosurface][i_part] = ownership;
+  *vtx_parent_weight = isos->iso_vtx_parent_weight[id_isosurface][i_part];
+  
+  return isos->iso_n_vtx[id_isosurface][i_part];
 }
 
 
@@ -347,7 +377,23 @@ PDM_isosurface_connectivity_get
 {
   _check_is_not_dist(isos);
 
-  return 0;
+  int n_entity = 0;
+  isos->iso_owner_connec[id_isosurface][i_part][connectivity_type] = ownership;
+
+  if (connectivity_type==PDM_CONNECTIVITY_TYPE_EDGE_VTX) {
+    n_entity = isos->iso_n_edge  [id_isosurface][i_part];
+    *connect = isos->iso_edge_vtx[id_isosurface][i_part];
+  }
+  else if (connectivity_type==PDM_CONNECTIVITY_TYPE_FACE_VTX) {
+    n_entity     = isos->iso_n_face      [id_isosurface][i_part];
+    *connect_idx = isos->iso_face_vtx_idx[id_isosurface][i_part];
+    *connect     = isos->iso_face_vtx    [id_isosurface][i_part];
+  }
+  else {
+    PDM_error(__FILE__, __LINE__, 0, "PDM_isosurface_t: has no connectivity of type %d.\n", connectivity_type);
+  }
+
+  return n_entity;
 }
 
 
@@ -363,7 +409,10 @@ PDM_isosurface_vtx_coord_get
 {
   _check_is_not_dist(isos);
 
-  return 0;
+  isos->iso_owner_vtx_coord[id_isosurface][i_part] = ownership;
+  *vtx_coord = isos->iso_vtx_coord[id_isosurface][i_part];
+
+  return isos->iso_n_vtx[id_isosurface][i_part];
 }
 
 
@@ -380,7 +429,25 @@ PDM_isosurface_ln_to_gn_get
 {
   _check_is_not_dist(isos);
 
-  return 0;
+  int n_entity = 0;
+  isos->iso_owner_gnum[id_isosurface][i_part][entity_type] = ownership;
+  if (entity_type==PDM_MESH_ENTITY_VTX ) {
+    n_entity  = isos->iso_n_vtx   [id_isosurface][i_part];
+    *ln_to_gn = isos->iso_vtx_gnum[id_isosurface][i_part];
+  }
+  else if (entity_type==PDM_MESH_ENTITY_EDGE) {
+    n_entity  = isos->iso_n_edge   [id_isosurface][i_part];
+    *ln_to_gn = isos->iso_edge_gnum[id_isosurface][i_part];
+  }
+  else if (entity_type==PDM_MESH_ENTITY_FACE) {
+    n_entity  = isos->iso_n_face   [id_isosurface][i_part];
+    *ln_to_gn = isos->iso_face_gnum[id_isosurface][i_part];
+  }
+  else {
+    PDM_error(__FILE__, __LINE__, 0, "PDM_isosurface_t: has no cell mesh entity.\n");
+  }
+
+  return n_entity;
 }
 
 
@@ -398,6 +465,15 @@ PDM_isosurface_group_get
  PDM_ownership_t       ownership
 )
 {
+  PDM_UNUSED(id_isosurface);
+  PDM_UNUSED(i_part);
+  PDM_UNUSED(entity_type);
+  PDM_UNUSED(n_group);
+  PDM_UNUSED(group_entity_idx);
+  PDM_UNUSED(group_entity);
+  PDM_UNUSED(group_entity_ln_to_gn);
+  PDM_UNUSED(ownership);
+
   _check_is_not_dist(isos);
 
   return 0;
@@ -413,6 +489,8 @@ PDM_isosurface_enable_part_to_part
 )
 {
   _check_is_not_dist(isos);
+  
+  isos->compute_ptp[id_isosurface][entity_type] = 1;
 }
 
 
@@ -427,6 +505,25 @@ PDM_isosurface_part_to_part_get
 )
 {
   _check_is_not_dist(isos);
+  
+  if (isos->compute_ptp[id_isosurface][entity_type]!=1) {
+    PDM_error(__FILE__, __LINE__, 0, "PDM_isosurface_t: part_to_part for entity %d of isosurface %d is not computed.\n", entity_type, id_isosurface);
+  }
+  isos->iso_owner_ptp[id_isosurface][entity_type] = ownership;
+
+  if (entity_type==PDM_MESH_ENTITY_VTX) {
+    *ptp = isos->iso_ptp_vtx[id_isosurface];
+  }
+  else if (entity_type==PDM_MESH_ENTITY_EDGE) {
+    *ptp = isos->iso_ptp_edge[id_isosurface];
+  }
+  else if (entity_type==PDM_MESH_ENTITY_FACE) {
+    *ptp = isos->iso_ptp_face[id_isosurface];
+  }
+  else {
+    PDM_error(__FILE__, __LINE__, 0, "PDM_isosurface_t: has no cell entity.\n");
+  }
+
 }
 
 
