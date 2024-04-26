@@ -137,12 +137,10 @@ def vtk_write_std_elements_double(char                                          
   elif elt_type == _PDM_MESH_NODAL_HEXA8:
     stride = 8
   else:
-    print(f"Invalid elt_type {elt_type}")
-    exit(1)
+    raise ValueError(f"Invalid elt_type {elt_type}")
 
   if len(elt_vtx)%stride != 0:
-    print(f"Size of elt_vtx must be a multiple of {stride} for elt_type {elt_type}")
-    exit(1)
+    raise ValueError(f"Size of elt_vtx must be a multiple of {stride} for elt_type {elt_type}")
 
   cdef int n_vtx = len(vtx_coord) // 3
   cdef int n_elt = len(elt_vtx)   // stride
