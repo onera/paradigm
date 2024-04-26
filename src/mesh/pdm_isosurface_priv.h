@@ -64,6 +64,7 @@ struct _pdm_isosurface_t {
   // > Entry mesh information
 
   // > Isosurface switch
+  // TODO: is entry_mesh_type sign necessary ???
   int is_dist_or_part; // -1: undef, 0: dist, 1: part
   int entry_mesh_type; //  0: undef, 1: dist_alamano, 2: dmesh, 3: dmesh_nodal, -1: part_alamano, -2: pmesh, -3: pmesh_nodal
 
@@ -80,7 +81,6 @@ struct _pdm_isosurface_t {
 
   // > Isosurface type
   int                     mesh_dimension;
-  PDM_Mesh_nodal_elt_t    iso_elt_type;
   PDM_iso_surface_kind_t *kind;
 
   // > Isovalues
@@ -89,8 +89,8 @@ struct _pdm_isosurface_t {
 
   // > Equation args
   PDM_isosurface_field_function_t *field_function;
-  double                **eq_coeffs;
-  int                    *use_gradient;
+  double                         **eq_coeffs;
+  int                             *use_gradient;
 
   // > Function args
   _pdm_isosurface_field_function_t *iso_func;
@@ -189,6 +189,42 @@ struct _pdm_isosurface_t {
   // > Field
   double ***field;
   double ***gradient;
+
+
+
+  // =========================
+  // > Partitioned output data
+
+  int iso_mesh_dimension;
+  int iso_n_part;
+
+  // > Vertices
+  PDM_ownership_t *iso_vtx_owner;
+  int            **iso_n_vtx;
+  double        ***iso_vtx_coord;
+  PDM_g_num_t   ***iso_vtx_gnum;
+  int           ***iso_vtx_parent_idx;
+  int           ***iso_vtx_parent;
+  double        ***iso_vtx_parent_weight;
+
+  // > Edges
+  PDM_ownership_t *iso_edge_owner;
+  int            **iso_n_edge;
+  int           ***iso_edge_vtx;
+  PDM_g_num_t   ***iso_edge_gnum;
+  int           ***iso_edge_parent_idx; //TODO: edge_parent_idx pour les edges a cheval sur 2 faces ?
+  int           ***iso_edge_parent; //TODO: edge_parent_idx pour les edges a cheval sur 2 faces ?
+  int           ***isovalue_edge_idx;
+
+  // > Faces
+  PDM_ownership_t *iso_face_owner;
+  int            **iso_n_face;
+  int           ***iso_face_vtx_idx;
+  int           ***iso_face_vtx;
+  PDM_g_num_t   ***iso_face_gnum;
+  int           ***iso_face_parent_idx; //TODO: edge_parent_idx pour les faces a cheval sur 2 cellule ?
+  int           ***iso_face_parent;
+  int           ***isovalue_face_idx;
 
 
 

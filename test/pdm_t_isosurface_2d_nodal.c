@@ -37,7 +37,7 @@ _usage(int exit_code)
      "  -l       <level>  Cube length.\n\n"
      "  -n_part  <level>  Number of partitions (if partitioned entry).\n\n"
      "  -is_dist          Is entry distributed ou partitioned.\n\n"
-     "  -post             Activate post-treatment.\n\n"
+     "  -visu             Activate output.\n\n"
      "  -h                This message.\n\n");
 
   exit(exit_code);
@@ -55,7 +55,7 @@ _usage(int exit_code)
  * \param [inout]   length     Cube length
  * \param [inout]   n_part     Number of partitions par process
  * \param [inout]   dist_entry Is entry distributed or partitioned (resp 1, 0)
- * \param [inout]   post       Ensight outputs status
+ * \param [inout]   visu       Ensight outputs status
  *
  */
 static void
@@ -66,7 +66,7 @@ _read_args(int                     argc,
            double                *length,
            int                   *n_part,
            int                   *dist_entry,
-           int                   *post)
+           int                   *visu)
 {
   int i = 1;
 
@@ -121,8 +121,8 @@ _read_args(int                     argc,
     else if (strcmp(argv[i], "-dist_entry") == 0) {
       *dist_entry = 1;
     }
-    else if (strcmp(argv[i], "-post") == 0) {
-      *post = 1;
+    else if (strcmp(argv[i], "-visu") == 0) {
+      *visu = 1;
     }
     else
       _usage(EXIT_FAILURE);
@@ -160,7 +160,7 @@ int main(int argc, char *argv[])
   int                  order      = 1;
   PDM_Mesh_nodal_elt_t elt_type   = PDM_MESH_NODAL_TRIA3;
   int                  dist_entry = 0;
-  int                  post       = 0;
+  int                  visu       = 0;
   
   _read_args(argc,
              argv,
@@ -169,7 +169,7 @@ int main(int argc, char *argv[])
              &length,
              &n_part,
              &dist_entry,
-             &post);
+             &visu);
 
 
   /*
@@ -232,8 +232,8 @@ int main(int argc, char *argv[])
   log_trace("============================\n");
   log_trace("> Creating isosurface object\n");
   PDM_isosurface_t *isos = PDM_isosurface_create(comm,
-                                                 2,
-                                                 PDM_MESH_NODAL_BAR2);
+                                                 2/*,
+                                                 PDM_MESH_NODAL_BAR2*/);
   if (dist_entry==1) {
     PDM_isosurface_dmesh_nodal_set(isos, dmn);
   } else if (dist_entry==0) {
@@ -248,8 +248,8 @@ int main(int argc, char *argv[])
    */
 
   // > Plane isosurface
-  double plane_equation [4] = {1.,1.,1.,0.};
-  double plane_isovalues[3] = {1.,2.,3.};
+  double plane_equation [4] = {1.,0.,0.,0.5};
+  double plane_isovalues[3] = {-0.25,0.,0.25};
   int iso1 = PDM_isosurface_add(isos, 
                                 PDM_ISO_SURFACE_KIND_PLANE,
                                 3,
@@ -295,6 +295,8 @@ int main(int argc, char *argv[])
     PDM_error(__FILE__, __LINE__, 0, "PDM_t_isosurface_2d_nodal dist_entry must be 0 or 1 (here set to %d)\n", dist_entry);
   }
 
+
+  PDM_isosurface_compute(isos, iso1);
 
   /*
    *  Free objects

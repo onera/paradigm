@@ -113,8 +113,8 @@ PDM_isosurface_t *
 PDM_isosurface_create
 (
  PDM_MPI_Comm             comm,
- int                      mesh_dimension,
- PDM_Mesh_nodal_elt_t     elt_type
+ int                      mesh_dimension
+ // PDM_Mesh_nodal_elt_t     elt_type // TODO: Why this arg ? depends of entry
 );
 
 
@@ -463,13 +463,13 @@ PDM_isosurface_equation_set
  *          ou bien inclure calcul (optionnel) du gradient dans 'func' (permet de factoriser des calculs)
  */
 
-// void
-// PDM_isosurface_field_function_set
-// (
-//  PDM_isosurface_t                *isos,
-//  int                              id_isosurface,
-//  PDM_isosurface_field_function_t  func
-// );
+void
+PDM_isosurface_field_function_set
+(
+ PDM_isosurface_t                *isos,
+ int                              id_isosurface,
+ PDM_isosurface_field_function_t  func
+);
 
 
 /**
@@ -988,6 +988,27 @@ PDM_isosurface_free
 (
   PDM_isosurface_t  *isos
 );
+
+
+
+/*
+ * ==========
+ * Algorithms
+ */
+
+
+void
+PDM_isosurface_marching_algo
+(
+  PDM_isosurface_t        *isos,
+  int                      id_iso
+);
+
+
+/*
+ * End Algorithms
+ * ==============
+ */
 
 
 
