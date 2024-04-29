@@ -460,8 +460,13 @@ _build_iso_vtx_on_active_edge
       iso_vtx_parent       [iso_vtx_parent_idx[_iso_n_vtx]+1] = i_vtx1 + 1;
       iso_vtx_parent_weight[iso_vtx_parent_idx[_iso_n_vtx]+1] = t;
       
-      iso_vtx_parent_gnum  [2*_iso_n_vtx  ] = vtx_gnum[i_vtx0];
-      iso_vtx_parent_gnum  [2*_iso_n_vtx+1] = vtx_gnum[i_vtx1];
+      if (vtx_gnum[i_vtx0]>vtx_gnum[i_vtx1]) {
+        iso_vtx_parent_gnum  [2*_iso_n_vtx+0] = vtx_gnum[i_vtx1];
+        iso_vtx_parent_gnum  [2*_iso_n_vtx+1] = vtx_gnum[i_vtx0];
+      } else {
+        iso_vtx_parent_gnum  [2*_iso_n_vtx  ] = vtx_gnum[i_vtx0];
+        iso_vtx_parent_gnum  [2*_iso_n_vtx+1] = vtx_gnum[i_vtx1];
+      }
       
       edge_to_iso_vtx[i_edge] = ++_iso_n_vtx;
     }
@@ -574,15 +579,15 @@ _contouring_triangles
           iso_edge_vtx[2*iso_n_edge  ] = vtx_on_vtx0;
           iso_edge_vtx[2*iso_n_edge+1] = vtx_on_edge0;
 
-          iso_edge_parent_gnum[2*iso_n_edge  ] = max_elt_gnum + vtx_gnum[perm_elt_vtx[2]];
-          iso_edge_parent_gnum[2*iso_n_edge+1] = elt_gnum[edge_id0];
+          iso_edge_parent_gnum[2*iso_n_edge  ] = max_elt_gnum + vtx_gnum[perm_elt_vtx[0]];
+          iso_edge_parent_gnum[2*iso_n_edge+1] = elt_gnum[i_elt];
         }
         else {
           iso_edge_vtx[2*iso_n_edge  ] = vtx_on_edge0;
           iso_edge_vtx[2*iso_n_edge+1] = vtx_on_vtx0;
 
-          iso_edge_parent_gnum[2*iso_n_edge  ] = elt_gnum[edge_id0];
-          iso_edge_parent_gnum[2*iso_n_edge+1] = max_elt_gnum + vtx_gnum[perm_elt_vtx[2]];
+          iso_edge_parent_gnum[2*iso_n_edge  ] = elt_gnum[i_elt];
+          iso_edge_parent_gnum[2*iso_n_edge+1] = max_elt_gnum + vtx_gnum[perm_elt_vtx[0]];
         }
         break;
       }
@@ -600,15 +605,15 @@ _contouring_triangles
           iso_edge_vtx[2*iso_n_edge  ] = vtx_on_edge1;
           iso_edge_vtx[2*iso_n_edge+1] = vtx_on_edge0;
 
-          iso_edge_parent_gnum[2*iso_n_edge  ] = elt_gnum[edge_id1];
-          iso_edge_parent_gnum[2*iso_n_edge+1] = elt_gnum[edge_id0];
+          iso_edge_parent_gnum[2*iso_n_edge  ] = elt_gnum[i_elt];
+          iso_edge_parent_gnum[2*iso_n_edge+1] = elt_gnum[i_elt];
         }
         else {
           iso_edge_vtx[2*iso_n_edge  ] = vtx_on_edge0;
           iso_edge_vtx[2*iso_n_edge+1] = vtx_on_edge1;
 
-          iso_edge_parent_gnum[2*iso_n_edge  ] = elt_gnum[edge_id0];
-          iso_edge_parent_gnum[2*iso_n_edge+1] = elt_gnum[edge_id1];
+          iso_edge_parent_gnum[2*iso_n_edge  ] = elt_gnum[i_elt];
+          iso_edge_parent_gnum[2*iso_n_edge+1] = elt_gnum[i_elt];
         }
         break;
       }
@@ -979,8 +984,8 @@ PDM_isosurface_marching_algo
   for (int i_part=0; i_part<n_part; i_part++) {
     PDM_gnum_set_from_parents(gen_gnum_vtx , i_part, iso_n_vtx [i_part], iso_vtx_parent_gnum [i_part]);
     PDM_gnum_set_from_parents(gen_gnum_edge, i_part, iso_n_edge[i_part], iso_edge_parent_gnum[i_part]);
-    PDM_log_trace_array_long(iso_vtx_parent_gnum [i_part], iso_n_vtx [i_part], "iso_vtx_parent_gnum  :: ");
-    PDM_log_trace_array_long(iso_edge_parent_gnum[i_part], iso_n_edge[i_part], "iso_edge_parent_gnum :: ");
+    PDM_log_trace_array_long(iso_vtx_parent_gnum [i_part], 2*iso_n_vtx [i_part], "iso_vtx_parent_gnum  :: ");
+    PDM_log_trace_array_long(iso_edge_parent_gnum[i_part], 2*iso_n_edge[i_part], "iso_edge_parent_gnum :: ");
   }
   PDM_gnum_compute(gen_gnum_vtx);
   PDM_gnum_compute(gen_gnum_edge);
@@ -1020,7 +1025,7 @@ PDM_isosurface_marching_algo
   isos->iso_n_edge       [id_iso] = iso_n_edge;
   isos->iso_edge_vtx     [id_iso] = iso_edge_vtx;
   isos->iso_edge_gnum    [id_iso] = iso_edge_gnum;
-  isos->iso_edge_lparent  [id_iso] = iso_edge_parent;
+  isos->iso_edge_lparent [id_iso] = iso_edge_parent;
   isos->isovalue_edge_idx[id_iso] = isovalue_edge_idx;
   
   isos->iso_n_face      [id_iso] = iso_n_face;

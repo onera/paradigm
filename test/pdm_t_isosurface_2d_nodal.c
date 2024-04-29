@@ -48,7 +48,7 @@ _build_pmn_from_iso_result
     int         *iso_edge_vtx  = NULL;
     PDM_g_num_t *iso_edge_gnum = NULL;
     int iso_n_edge = PDM_isosurface_connectivity_get(isos, id_isosurface, i_part, PDM_CONNECTIVITY_TYPE_EDGE_VTX, NULL, &iso_edge_vtx, PDM_OWNERSHIP_KEEP);
-    PDM_isosurface_ln_to_gn_get(isos, id_isosurface, i_part, PDM_MESH_ENTITY_VTX, &iso_edge_gnum, PDM_OWNERSHIP_KEEP);
+    PDM_isosurface_ln_to_gn_get(isos, id_isosurface, i_part, PDM_MESH_ENTITY_EDGE, &iso_edge_gnum, PDM_OWNERSHIP_KEEP);
     PDM_part_mesh_nodal_section_std_set(pmn, i_edge_section, i_part, iso_n_edge, iso_edge_vtx, iso_edge_gnum, NULL, NULL, PDM_OWNERSHIP_USER);
   }
 
@@ -333,7 +333,7 @@ int main(int argc, char *argv[])
 
   if (visu==1) {
     if (dist_entry==1) {
-      PDM_error(__FILE__, __LINE__, 0, "PDM_t_isosurface_2d_nodal not implmented\n");
+      PDM_error(__FILE__, __LINE__, 0, "PDM_t_isosurface_2d_nodal:: Not implmented\n");
     }
     else if (dist_entry==0) {
       PDM_part_mesh_nodal_t *iso_pmn = NULL;
