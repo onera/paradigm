@@ -265,6 +265,7 @@ test_c_create (pdm_t_newton_ho 1  PDM_LIST_TEST PDM_LIST_NRANK)
 test_c_create (pdm_t_svd 1  PDM_LIST_TEST PDM_LIST_NRANK)
 
 test_c_create (pdm_t_isosurface_2d_nodal 1 PDM_LIST_TEST PDM_LIST_NRANK)
+test_c_create (pdm_t_isosurface_3d_nodal 1 PDM_LIST_TEST PDM_LIST_NRANK)
 
 test_c_create (pdm_t_triangulate 1 PDM_LIST_TEST PDM_LIST_NRANK)
 

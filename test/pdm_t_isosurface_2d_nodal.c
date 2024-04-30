@@ -271,9 +271,6 @@ int main(int argc, char *argv[])
   PDM_dcube_nodal_t     *dcube_nodal = NULL;
   PDM_dmesh_nodal_t     *dmn         = NULL;
   PDM_part_mesh_nodal_t *pmn         = NULL;
-  log_trace("\n\n");
-  log_trace("===============\n");
-  log_trace("> Generate mesh\n");
   if (dist_entry==1) {
     dcube_nodal = PDM_dcube_nodal_gen_create(comm,
                                              n_vtx_x,
@@ -321,9 +318,6 @@ int main(int argc, char *argv[])
   /*
    *  Creating isosurface object
    */
-  log_trace("\n\n");
-  log_trace("============================\n");
-  log_trace("> Creating isosurface object\n");
   PDM_isosurface_t *isos = PDM_isosurface_create(comm,
                                                  2/*,
                                                  PDM_MESH_NODAL_BAR2*/);
@@ -402,11 +396,17 @@ int main(int argc, char *argv[])
   }
 
 
+  /*
+   *  Compute isosurfaces
+   */
   PDM_isosurface_compute(isos, iso1);
   PDM_isosurface_compute(isos, iso2);
   PDM_isosurface_compute(isos, iso3);
 
 
+  /*
+   *  Visu isosurfaces
+   */
   if (visu==1) {
     if (dist_entry==1) {
       PDM_error(__FILE__, __LINE__, 0, "PDM_t_isosurface_2d_nodal:: Not implmented\n");
