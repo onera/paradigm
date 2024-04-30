@@ -329,6 +329,8 @@ int main(int argc, char *argv[])
                                iso3,
                                i_part,
                                field[i_part]);
+    }
+  }
 
 
   if (visu==1) {
