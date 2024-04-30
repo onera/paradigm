@@ -137,6 +137,32 @@ static int _pattern_permutation_2d[8] = {
 
 static const double ISOSURFACE_EPS = 1e-6;
 static inline int
+_is_at_0_level(
+  const double v
+)
+{
+  return (PDM_ABS(v) <= ISOSURFACE_EPS);
+}
+
+
+static inline int
+_is_at_any_level
+(
+  const double v,
+  const int    n_isovalues,
+  const double isovalues[]
+)
+{
+  int n_crossings = 0;
+  for (int i = 0; i < n_isovalues; i++) {
+    n_crossings += _is_at_0_level(v - isovalues[i]);
+  }
+
+  return n_crossings;
+}
+
+
+static inline int
 _cross_0_level
 (
   const double v0,
@@ -179,7 +205,7 @@ _count_active_vertices
   *n_vtx_on_vtx = 0;
   for (int i_vtx = 0; i_vtx < n_vtx; i_vtx++) {
     for (int i_isovalue = 0; i_isovalue < n_isovalues; i_isovalue++) {
-      if (PDM_ABS(vtx_field[i_vtx] - isovalues[i_isovalue]) <= ISOSURFACE_EPS) {
+      if (_is_at_0_level(vtx_field[i_vtx] - isovalues[i_isovalue])) {
         ++*n_vtx_on_vtx;
       }
     }
@@ -187,6 +213,12 @@ _count_active_vertices
 }
 
 
+/**
+ * \brief
+ * Go though each section of iso pmn, rebuild active edge (cross by iso or on iso) of elements
+ * making edge shared by multiple elements unique. For each element of each section, link is kept
+ * between the element edge and the iso edge lnum.
+ */
 static void
 _build_active_edges
 (
@@ -411,7 +443,7 @@ _build_iso_vtx_on_active_edge
   int tmp_iso_n_vtx = _iso_n_vtx;
   for (int i_vtx = 0; i_vtx < n_vtx; i_vtx++) {
     vtx_to_iso_vtx[i_vtx] = 0;
-    if (PDM_ABS(vtx_field[i_vtx] - isovalue) <= ISOSURFACE_EPS) {
+    if (_is_at_0_level(vtx_field[i_vtx] - isovalue)) {
       vtx_to_iso_vtx[i_vtx] = ++tmp_iso_n_vtx;
     }
   }
@@ -984,8 +1016,10 @@ PDM_isosurface_marching_algo
   for (int i_part=0; i_part<n_part; i_part++) {
     PDM_gnum_set_from_parents(gen_gnum_vtx , i_part, iso_n_vtx [i_part], iso_vtx_parent_gnum [i_part]);
     PDM_gnum_set_from_parents(gen_gnum_edge, i_part, iso_n_edge[i_part], iso_edge_parent_gnum[i_part]);
-    PDM_log_trace_array_long(iso_vtx_parent_gnum [i_part], 2*iso_n_vtx [i_part], "iso_vtx_parent_gnum  :: ");
-    PDM_log_trace_array_long(iso_edge_parent_gnum[i_part], 2*iso_n_edge[i_part], "iso_edge_parent_gnum :: ");
+    if (debug==1) {
+      PDM_log_trace_array_long(iso_vtx_parent_gnum [i_part], 2*iso_n_vtx [i_part], "iso_vtx_parent_gnum  :: ");
+      PDM_log_trace_array_long(iso_edge_parent_gnum[i_part], 2*iso_n_edge[i_part], "iso_edge_parent_gnum :: ");
+    }
   }
   PDM_gnum_compute(gen_gnum_vtx);
   PDM_gnum_compute(gen_gnum_edge);
@@ -995,6 +1029,10 @@ PDM_isosurface_marching_algo
   for (int i_part=0; i_part<n_part; i_part++) {
     iso_vtx_gnum [i_part] = PDM_gnum_get(gen_gnum_vtx , i_part);
     iso_edge_gnum[i_part] = PDM_gnum_get(gen_gnum_edge, i_part);
+    if (debug==1) {
+      PDM_log_trace_array_long(iso_vtx_gnum [i_part], iso_n_vtx [i_part], "iso_vtx_gnum  :: ");
+      PDM_log_trace_array_long(iso_edge_gnum[i_part], iso_n_edge[i_part], "iso_edge_gnum :: ");
+    }
   }
 
   for (int i_part=0; i_part<n_part; i_part++) {
