@@ -329,6 +329,25 @@ PDM_extract_part_ln_to_gn_get
 /**
  *
  * \brief Return size of entity_type on current partition ( n_entity )
+ * \param [in]  extrp             Pointer to \ref PDM_extract_part_t object
+ * \param [in]  i_part            Id of part
+ * \param [in]  entity_type       Entity kind \ref PDM_mesh_entities_t)
+ * \param [out] pentity_color     Entity color (size = n_entity, numbering : 1 to n)
+ * \param [in]  ownership         Ownership for entity_ln_to_gn ( \ref PDM_ownership_t )
+ */
+int
+PDM_extract_part_color_get
+(
+ PDM_extract_part_t        *extrp,
+ int                        i_part_out,
+ PDM_mesh_entities_t        entity_type,
+ int                      **pentity_color,
+ PDM_ownership_t            ownership
+);
+
+/**
+ *
+ * \brief Return size of entity_type on current partition ( n_entity )
  * \param [in]  extrp                  Pointer to \ref PDM_extract_part_t object
  * \param [in]  i_part                 Id of part
  * \param [in]  entity_type            Entity kind \ref PDM_mesh_entities_t)
@@ -476,7 +495,7 @@ PDM_extract_part_part_to_part_group_get
  *
  * \brief Get the bound description for the entity (cell/face/edge/vertices)
  *
- * \param [in]   extrp                              Pointer to \ref PDM_extract_part_t object
+ * \param [in]   extrp                                  Pointer to \ref PDM_extract_part_t object
  * \param [in]   bound_type                             Bound type \ref PDM_bound_type_t
  * \param [in]   i_part                                 Id of part
  * \param [in]   i_group                                Id of group
@@ -500,6 +519,26 @@ PDM_extract_part_group_get
        PDM_ownership_t       ownership
 );
 
+
+/**
+ *
+ * \brief Set the reordering methods to be used after partitioning
+ *
+ * \param [in]   extrp                   Pointer to \ref PDM_extract_part_t object
+ * \param [in]   i_domain                Id of domain which parameters apply (or -1 for all domains)
+ * \param [in]   mesh_entity             kind of entity who want to renum
+ * \param [in]   renum_entity_method     Choice of renumbering method for cells
+ * \param [in]   renum_entity_properties parameter list of current method (can be NULL)
+ *
+ */
+void
+PDM_extract_part_renum_method_set
+(
+ PDM_extract_part_t  *extrp,
+ PDM_mesh_entities_t  mesh_entity,
+ const char          *renum_entity_method,
+ const int           *renum_entity_properties
+);
 
 
 

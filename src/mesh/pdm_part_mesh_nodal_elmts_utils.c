@@ -560,6 +560,7 @@ PDM_part_mesh_nodal_quad_decomposes_faces
        int         *parent_elmt_position
 )
 {
+  PDM_UNUSED(parent_num);
 
   const int n_face_elt        = 1;
   // const int n_sum_vtx_face    = 4;
