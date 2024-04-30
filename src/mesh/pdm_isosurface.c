@@ -717,14 +717,14 @@ PDM_isosurface_free
       if (isos->iso_owner_gnum[id_iso][i_part][PDM_MESH_ENTITY_EDGE]==PDM_OWNERSHIP_KEEP) {
         free(isos->iso_edge_gnum[id_iso][i_part]);
       }
-      // free(isos->iso_edge_lparent_idx[id_iso][i_part]);
+      free(isos->iso_edge_lparent_idx[id_iso][i_part]);
       free(isos->iso_edge_lparent    [id_iso][i_part]);
       free(isos->isovalue_edge_idx    [id_iso][i_part]);
     }
     free(isos->iso_n_edge         [id_iso]);
     free(isos->iso_edge_vtx       [id_iso]);
     free(isos->iso_edge_gnum      [id_iso]);
-    // free(isos->iso_edge_lparent_idx[id_iso]);
+    free(isos->iso_edge_lparent_idx[id_iso]);
     free(isos->iso_edge_lparent    [id_iso]);
     free(isos->isovalue_edge_idx  [id_iso]);
 
