@@ -254,7 +254,9 @@ _build_active_edges
 
   PDM_array_reset_int(key_count, max_key, 0);
 
-  /* First loop to count */
+  /** 
+   * First loop to count
+   */
   for (int i_section = 0; i_section < n_section; i_section++) {
 
     // Get section type
@@ -302,9 +304,20 @@ _build_active_edges
           int key = (i_vtx0 + i_vtx1 - 2) % max_key;
           key_count[key]++;
         }
+        else {
+          for (int i = 0; i < n_isovalues; i++) {
+            if (_is_at_0_level(vtx_field[i_vtx0-1] - isovalues[i]) &&
+                _is_at_0_level(vtx_field[i_vtx1-1] - isovalues[i])) {
+              // This is an active edge with vertices on entry mesh vertices
+              int key = (i_vtx0 + i_vtx1 - 2) % max_key;
+              key_count[key]++;
+            }
+          }
+        }
       } // End of loop on pairs
     } // End of loop on elements
   } // End of loop on sections
+
 
   /* Set up index and reset counter */
   // TODO: use array function
@@ -314,11 +327,14 @@ _build_active_edges
     key_count[i] = 0;
   }
 
+
+  /**
+   * Second loop to fill
+   */
   int *key_edge  = malloc(sizeof(int) * key_idx[max_key]);
   int *_edge_vtx = malloc(sizeof(int) * key_idx[max_key] * 2);
   *n_edge = 0;
 
-  /* Second loop to fill */
   for (int i_section = 0; i_section < n_section; i_section++) {
 
     // Get section type
@@ -351,7 +367,7 @@ _build_active_edges
     int n_pair    = PDM_n_nedge_elt_per_elmt(t_elt);
     int elt_n_vtx = PDM_Mesh_nodal_n_vtx_elt_get(t_elt, 1);
 
-    elt_edge[i_section] = malloc(sizeof(int) * n_pair*n_elt);
+    elt_edge[i_section] = PDM_array_zeros_int(n_pair*n_elt);
 
     for (int i_elt = 0; i_elt < n_elt; i_elt++) {
       int *_connec = connec + elt_n_vtx*i_elt;
@@ -360,25 +376,27 @@ _build_active_edges
         int i_vtx1 = _connec[pairs[2*i_pair+1]];
 
         int edge_id = 0;
+        int key = (i_vtx0 + i_vtx1 - 2) % max_key;
+
         int _n_crossings = _cross_any_level(vtx_field[i_vtx0-1],
                                             vtx_field[i_vtx1-1],
                                             n_isovalues,
                                             isovalues);
-        if (_n_crossings > 0) {
-          int key = (i_vtx0 + i_vtx1 - 2) % max_key;
-
-          /* Look for possible collision */
-          for (int i = 0; i < key_count[key]; i++) {
-            int i_edge = key_edge[key_idx[key] + i];
-            if (_edge_vtx[2*i_edge] == i_vtx0 && _edge_vtx[2*i_edge+1] == i_vtx1) {
-              edge_id = i_edge+1;
-              break;
-            }
-            else if (_edge_vtx[2*i_edge] == i_vtx1 && _edge_vtx[2*i_edge+1] == i_vtx0) {
-              edge_id = -(i_edge+1);
-              break;
-            }
+        
+        /* Look for possible collision */
+        for (int i = 0; i < key_count[key]; i++) {
+          int i_edge = key_edge[key_idx[key] + i];
+          if (_edge_vtx[2*i_edge] == i_vtx0 && _edge_vtx[2*i_edge+1] == i_vtx1) {
+            edge_id = i_edge+1;
+            break;
           }
+          else if (_edge_vtx[2*i_edge] == i_vtx1 && _edge_vtx[2*i_edge+1] == i_vtx0) {
+            edge_id = -(i_edge+1);
+            break;
+          }
+        }
+        
+        if (_n_crossings > 0) {
 
           if (edge_id == 0) {
             // Create new edge
@@ -388,6 +406,21 @@ _build_active_edges
             key_edge[key_idx[key] + key_count[key]++] = (*n_edge);
             edge_id = ++(*n_edge);
           }
+          
+        } else {
+          for (int i = 0; i < n_isovalues; i++) {
+            if (_is_at_0_level(vtx_field[i_vtx0-1] - isovalues[i]) &&
+                _is_at_0_level(vtx_field[i_vtx1-1] - isovalues[i])) {
+              
+              if (edge_id == 0) {
+                _edge_vtx[2*(*n_edge)  ] = i_vtx0;
+                _edge_vtx[2*(*n_edge)+1] = i_vtx1;
+                key_edge[key_idx[key] + key_count[key]++] = (*n_edge);
+                edge_id = ++(*n_edge);
+              }
+              
+            }
+          }
         } // End if active edge
 
         elt_edge[i_section][n_pair*i_elt+i_pair] = edge_id;
@@ -396,7 +429,10 @@ _build_active_edges
   } // End of loop on sections
   free(key_edge);
 
-  *edge_vtx = realloc(_edge_vtx, sizeof(int) * (*n_edge) * 2);
+  
+
+  // > Output
+  *edge_vtx        = realloc(_edge_vtx, sizeof(int) * (*n_edge) * 2);
 }
 
 
@@ -493,11 +529,11 @@ _build_iso_vtx_on_active_edge
       iso_vtx_parent_weight[iso_vtx_parent_idx[_iso_n_vtx]+1] = t;
       
       if (vtx_gnum[i_vtx0]>vtx_gnum[i_vtx1]) {
-        iso_vtx_parent_gnum  [2*_iso_n_vtx+0] = vtx_gnum[i_vtx1];
-        iso_vtx_parent_gnum  [2*_iso_n_vtx+1] = vtx_gnum[i_vtx0];
+        iso_vtx_parent_gnum[2*_iso_n_vtx+0] = vtx_gnum[i_vtx1];
+        iso_vtx_parent_gnum[2*_iso_n_vtx+1] = vtx_gnum[i_vtx0];
       } else {
-        iso_vtx_parent_gnum  [2*_iso_n_vtx  ] = vtx_gnum[i_vtx0];
-        iso_vtx_parent_gnum  [2*_iso_n_vtx+1] = vtx_gnum[i_vtx1];
+        iso_vtx_parent_gnum[2*_iso_n_vtx  ] = vtx_gnum[i_vtx0];
+        iso_vtx_parent_gnum[2*_iso_n_vtx+1] = vtx_gnum[i_vtx1];
       }
       
       edge_to_iso_vtx[i_edge] = ++_iso_n_vtx;
@@ -527,7 +563,6 @@ _contouring_triangles
   int           n_elt,
   int          *elt_vtx,
   PDM_g_num_t  *elt_gnum,
-  PDM_g_num_t   max_elt_gnum,
   int          *parent_num,
   int          *elt_edge,
   PDM_g_num_t  *vtx_gnum,
@@ -540,14 +575,9 @@ _contouring_triangles
   PDM_g_num_t **out_iso_edge_parent_gnum
 )
 {
-  /*
-   * TODO:
-   *   - is parent_gnum = (edge_gnum, edge_gnum) or (edge_gnum, max_edge_num + vtx_gnum) or (max_edge_num + vtx_gnum, max_edge_num + vtx_gnum)
-   *      --> how is that ???
-   */
-
   /* First loop to count */
-  int iso_n_edge = *out_iso_n_edge;
+  int  iso_n_edge   = *out_iso_n_edge;
+  int *iso_edge_def = PDM_array_zeros_int(n_elt);
   for (int i_elt = 0; i_elt < n_elt; i_elt++) {
 
     unsigned char pattern = 0;
@@ -562,6 +592,46 @@ _contouring_triangles
     if (pattern > 0 && pattern < 7) {
       iso_n_edge++;
     }
+    else if (pattern == 0) {
+
+      int offset = _pattern_permutation_2d[pattern];
+      int perm_elt_vtx [3];
+      int perm_elt_edge[3];
+      for (int i = 0; i < 3; i++) {
+        perm_elt_vtx [i] = elt_vtx [3*i_elt + (offset+i)%3] - 1;
+        perm_elt_edge[i] = elt_edge[3*i_elt + (offset+i)%3];
+      }
+
+
+      // > For iso edge on entry mesh, count only once edge
+      int vtx_on_vtx0 = vtx_to_iso_vtx[perm_elt_vtx[0]];
+      int vtx_on_vtx1 = vtx_to_iso_vtx[perm_elt_vtx[1]];
+      int vtx_on_vtx2 = vtx_to_iso_vtx[perm_elt_vtx[2]];
+      
+      if (vtx_on_vtx0!=0 && vtx_on_vtx1!=0) {
+        int edge_id2 = PDM_ABS(perm_elt_edge[2]) - 1;
+        if (iso_edge_def[edge_id2]==0) { // edge not build yet
+          iso_edge_def[edge_id2]=1;
+          iso_n_edge++;
+        }
+      }
+
+      else if (vtx_on_vtx0!=0 && vtx_on_vtx2!=0) {
+        int edge_id1 = PDM_ABS(perm_elt_edge[1]) - 1;
+        if (iso_edge_def[edge_id1]==0) { // edge not build yet
+          iso_edge_def[edge_id1]=1;
+          iso_n_edge++;
+        }
+      }
+
+      else if (vtx_on_vtx1!=0 && vtx_on_vtx2!=0) {
+        int edge_id0 = PDM_ABS(perm_elt_edge[0]) - 1;
+        if (iso_edge_def[edge_id0]==0) { // edge not build yet
+          iso_edge_def[edge_id0]=1;
+          iso_n_edge++;
+        }
+      }
+    }
 
   } // End of loop on elements
 
@@ -569,6 +639,7 @@ _contouring_triangles
   int         *iso_edge_vtx         = realloc(*out_iso_edge_vtx,         sizeof(int        ) * iso_n_edge * 2);
   int         *iso_edge_parent      = realloc(*out_iso_edge_parent,      sizeof(int        ) * iso_n_edge    );
   PDM_g_num_t *iso_edge_parent_gnum = realloc(*out_iso_edge_parent_gnum, sizeof(PDM_g_num_t) * iso_n_edge * 2);
+  PDM_array_reset_int(iso_edge_def, n_elt, 0);
 
   iso_n_edge = *out_iso_n_edge;
 
@@ -585,7 +656,7 @@ _contouring_triangles
       pattern |= (bit << i_edge);
     } // End of loop on edges
 
-    if (pattern == 0 || pattern == 7) {
+    if (pattern == 7) { // Three edge are active -> impossible
       continue;
     }
 
@@ -600,6 +671,87 @@ _contouring_triangles
 
 
     switch (pattern) {
+      case 0:{
+        int vtx_on_vtx0 = vtx_to_iso_vtx[perm_elt_vtx[0]];
+        int vtx_on_vtx1 = vtx_to_iso_vtx[perm_elt_vtx[1]];
+        int vtx_on_vtx2 = vtx_to_iso_vtx[perm_elt_vtx[2]];
+        if (vtx_on_vtx0!=0 && vtx_on_vtx1!=0) {
+
+          int edge_id2 = PDM_ABS(perm_elt_edge[2]) - 1;
+          if (iso_edge_def[edge_id2]==0) { // edge not build yet
+            iso_edge_def[edge_id2]=1;
+          
+            iso_edge_vtx[2*iso_n_edge  ] = vtx_on_vtx0;
+            iso_edge_vtx[2*iso_n_edge+1] = vtx_on_vtx1;
+
+            if (vtx_gnum[perm_elt_vtx[0]] > vtx_gnum[perm_elt_vtx[1]]) {
+              iso_edge_parent_gnum[2*iso_n_edge  ] = vtx_gnum[perm_elt_vtx[1]];
+              iso_edge_parent_gnum[2*iso_n_edge+1] = vtx_gnum[perm_elt_vtx[0]];
+            }
+            else {
+              iso_edge_parent_gnum[2*iso_n_edge  ] = vtx_gnum[perm_elt_vtx[0]];
+              iso_edge_parent_gnum[2*iso_n_edge+1] = vtx_gnum[perm_elt_vtx[1]];
+            }
+        
+            iso_n_edge++;
+          }
+        }
+        else if (vtx_on_vtx0!=0 && vtx_on_vtx2!=0) {
+
+          int edge_id1 = PDM_ABS(perm_elt_edge[1]) - 1;
+          if (iso_edge_def[edge_id1]==0) { // edge not build yet
+            iso_edge_def[edge_id1]=1;
+            
+            iso_edge_vtx[2*iso_n_edge  ] = vtx_on_vtx0;
+            iso_edge_vtx[2*iso_n_edge+1] = vtx_on_vtx2;
+
+            if (vtx_gnum[perm_elt_vtx[0]] > vtx_gnum[perm_elt_vtx[2]]) {
+              iso_edge_parent_gnum[2*iso_n_edge  ] = vtx_gnum[perm_elt_vtx[2]];
+              iso_edge_parent_gnum[2*iso_n_edge+1] = vtx_gnum[perm_elt_vtx[0]];
+            }
+            else {
+              iso_edge_parent_gnum[2*iso_n_edge  ] = vtx_gnum[perm_elt_vtx[0]];
+              iso_edge_parent_gnum[2*iso_n_edge+1] = vtx_gnum[perm_elt_vtx[2]];
+            }
+        
+            iso_n_edge++;
+          }
+        }
+        else if (vtx_on_vtx1!=0 && vtx_on_vtx2!=0) {
+
+          int edge_id0 = PDM_ABS(perm_elt_edge[0]) - 1;
+          if (iso_edge_def[edge_id0]==0) { // edge not build yet
+            iso_edge_def[edge_id0]=1;
+            
+            iso_edge_vtx[2*iso_n_edge  ] = vtx_on_vtx1;
+            iso_edge_vtx[2*iso_n_edge+1] = vtx_on_vtx2;
+
+            if (vtx_gnum[perm_elt_vtx[1]] > vtx_gnum[perm_elt_vtx[2]]) {
+              iso_edge_parent_gnum[2*iso_n_edge  ] = vtx_gnum[perm_elt_vtx[2]];
+              iso_edge_parent_gnum[2*iso_n_edge+1] = vtx_gnum[perm_elt_vtx[1]];
+            }
+            else {
+              iso_edge_parent_gnum[2*iso_n_edge  ] = vtx_gnum[perm_elt_vtx[1]];
+              iso_edge_parent_gnum[2*iso_n_edge+1] = vtx_gnum[perm_elt_vtx[2]];
+            }
+        
+            iso_n_edge++;
+
+          }
+        }
+        else {
+          // 3 points on element -> quite ambiguous case  
+          if (vtx_on_vtx0!=0 && vtx_on_vtx1!=0 && vtx_on_vtx2!=0) {
+            printf("WARNING: element "PDM_FMT_G_NUM" is fully on isosurface.\n", elt_gnum[i_elt]);
+            // TODO: keep warning ? if on BC of volumic mesh, can be anoying
+          }
+          // 1 point on isosurface: may be managed/generated by neighbourhood
+          // 0 point on isosurface: nothing to do
+          continue;
+        }
+
+        break;
+      }
       case 1: case 2: case 4: {
         int vtx_on_vtx0 = vtx_to_iso_vtx[perm_elt_vtx[0]];
         assert(vtx_on_vtx0);
@@ -611,16 +763,19 @@ _contouring_triangles
           iso_edge_vtx[2*iso_n_edge  ] = vtx_on_vtx0;
           iso_edge_vtx[2*iso_n_edge+1] = vtx_on_edge0;
 
-          iso_edge_parent_gnum[2*iso_n_edge  ] = max_elt_gnum + vtx_gnum[perm_elt_vtx[0]];
-          iso_edge_parent_gnum[2*iso_n_edge+1] = elt_gnum[i_elt];
+          iso_edge_parent_gnum[2*iso_n_edge  ] = elt_gnum[i_elt];
+          iso_edge_parent_gnum[2*iso_n_edge+1] = -1;
         }
         else {
           iso_edge_vtx[2*iso_n_edge  ] = vtx_on_edge0;
           iso_edge_vtx[2*iso_n_edge+1] = vtx_on_vtx0;
 
           iso_edge_parent_gnum[2*iso_n_edge  ] = elt_gnum[i_elt];
-          iso_edge_parent_gnum[2*iso_n_edge+1] = max_elt_gnum + vtx_gnum[perm_elt_vtx[0]];
+          iso_edge_parent_gnum[2*iso_n_edge+1] = -1;
         }
+        
+        iso_n_edge++;
+
         break;
       }
 
@@ -638,15 +793,18 @@ _contouring_triangles
           iso_edge_vtx[2*iso_n_edge+1] = vtx_on_edge0;
 
           iso_edge_parent_gnum[2*iso_n_edge  ] = elt_gnum[i_elt];
-          iso_edge_parent_gnum[2*iso_n_edge+1] = elt_gnum[i_elt];
+          iso_edge_parent_gnum[2*iso_n_edge+1] = -1;
         }
         else {
           iso_edge_vtx[2*iso_n_edge  ] = vtx_on_edge0;
           iso_edge_vtx[2*iso_n_edge+1] = vtx_on_edge1;
 
           iso_edge_parent_gnum[2*iso_n_edge  ] = elt_gnum[i_elt];
-          iso_edge_parent_gnum[2*iso_n_edge+1] = elt_gnum[i_elt];
+          iso_edge_parent_gnum[2*iso_n_edge+1] = -1;
         }
+
+        iso_n_edge++;
+        
         break;
       }
 
@@ -666,6 +824,7 @@ _contouring_triangles
     }
   }
 
+  free(iso_edge_def);
 
   *out_iso_n_edge           = iso_n_edge;
   *out_iso_edge_vtx         = iso_edge_vtx;
@@ -917,14 +1076,10 @@ PDM_isosurface_marching_algo
         switch (t_elt) {
 
           case PDM_MESH_NODAL_TRIA3: {
-            PDM_g_num_t l_max_elt_gnum = PDM_array_max_gnum(gnum, n_elt);
-            PDM_g_num_t   max_elt_gnum = 0;
-            PDM_MPI_Allreduce (&l_max_elt_gnum, &max_elt_gnum, 1, PDM__PDM_MPI_G_NUM, PDM_MPI_MAX, isos->comm);
             
             _contouring_triangles(n_elt,
                                   connec,
                                   gnum,
-                                  max_elt_gnum,
                                   parent_num,
                                   elt_edge[i_section],
                                   vtx_gnum,
