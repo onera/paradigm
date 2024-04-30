@@ -2329,19 +2329,19 @@ PDM_MPI_Comm       comm
     }
     dn_node = dmesh->dn_cell;
     _renum_node_method_none = PDM_part_renum_method_cell_idx_get("PDM_PART_RENUM_CELL_NONE");
-    _pmeshes_renum_node_method = pmeshes->renum_cell_method;
+    _pmeshes_renum_node_method = pmeshes->renum_method[PDM_MESH_ENTITY_CELL];
   } else if (dmesh->n_g_face != 0) {
     dn_node = dmesh->dn_face;
     _renum_node_method_none = PDM_part_renum_method_face_idx_get("PDM_PART_RENUM_FACE_NONE");
-    _pmeshes_renum_node_method = pmeshes->renum_face_method;
+    _pmeshes_renum_node_method = pmeshes->renum_method[PDM_MESH_ENTITY_FACE];
   } else if (dmesh->n_g_edge != 0) {
     dn_node = dmesh->dn_edge;
     _renum_node_method_none = PDM_part_renum_method_edge_idx_get("PDM_PART_RENUM_EDGE_NONE");
-    _pmeshes_renum_node_method = pmeshes->renum_edge_method;
+    _pmeshes_renum_node_method = pmeshes->renum_method[PDM_MESH_ENTITY_EDGE];
   } else if (dmesh->n_g_vtx != 0) {
     dn_node = dmesh->dn_vtx;
     _renum_node_method_none = PDM_part_renum_method_vtx_idx_get ("PDM_PART_RENUM_VTX_NONE");
-    _pmeshes_renum_node_method = pmeshes->renum_vtx_method;
+    _pmeshes_renum_node_method = pmeshes->renum_method[PDM_MESH_ENTITY_VTX];
   } else {
     dn_node = 0;
   }
