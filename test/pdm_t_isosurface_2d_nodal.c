@@ -1,7 +1,9 @@
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 
 #include "pdm.h"
+#include "pdm_priv.h"
 #include "pdm_config.h"
 #include "pdm_mpi.h"
 
@@ -21,8 +23,61 @@
  * Private function definitions
  *============================================================================*/
 
-static void
 
+
+static const int it_max = 40;
+static void
+_eval_mandelbrot
+(
+ const double  x,
+ const double  y,
+ const double  z,
+       double *f
+)
+{
+  PDM_UNUSED(z);
+
+  double _x = x - 0.5;
+  double _y = y;
+
+  double xk = 0;
+  double yk = 0;
+
+  double zxk = 1.;
+  double zyk = 0.;
+  double rk;
+
+  int it;
+  for (it = 0; it < it_max; it++) {
+    double xk_new = xk*xk - yk*yk + _x;
+    double yk_new = 2*xk*yk       + _y;
+    xk = xk_new;
+    yk = yk_new;
+    rk = sqrt(xk*xk + yk*yk);
+
+    double zxk_new = 2*(xk*zxk - yk*zyk) + 1;
+    double zyk_new = 2*(zxk*yk + xk*zyk) + 1;
+
+    zxk = zxk_new;
+    zyk = zyk_new;
+
+    if (rk > 2.) {
+      break;
+    }
+  }
+
+  double mag_dz = sqrt(zxk*zxk + zyk*zyk);
+  *f = rk * log(PDM_MAX(1e-9, rk)) / PDM_MAX(1e-9, mag_dz);
+  // if (it < it_max-1) {
+  //   *f = 1.;
+  // } else {
+  //   *f = -1.;
+  // }
+}
+
+
+
+static void
 _build_pmn_from_iso_result
 (
   PDM_isosurface_t       *isos,
@@ -287,7 +342,7 @@ int main(int argc, char *argv[])
 
   // > Plane isosurface
   double plane_equation [4] = {1.,0.,0.,0.5};
-  double plane_isovalues[3] = {-0.25,0.,0.25};
+  double plane_isovalues[3] = {-0.30,0.,0.30};
   int iso1 = PDM_isosurface_add(isos, 
                                 PDM_ISO_SURFACE_KIND_PLANE,
                                 3,
@@ -312,7 +367,6 @@ int main(int argc, char *argv[])
   // > User field isosurface
   double  *dfield = NULL;
   double **field  = NULL;
-  PDM_isosurface_compute(isos, iso1);
 
   double field_isovalues[1] = {0.};
   int iso3 = PDM_isosurface_add(isos, 
@@ -324,13 +378,33 @@ int main(int argc, char *argv[])
                               iso3,
                               dfield);
   } else if (dist_entry==0) {
+    field = malloc(sizeof(double *) * n_part);
+
     for (int i_part=0; i_part<n_part; ++i_part) {
+      int     n_vtx     = PDM_part_mesh_nodal_n_vtx_get(pmn, i_part);
+      double *vtx_coord = PDM_part_mesh_nodal_vtx_coord_get(pmn, i_part);
+      field[i_part] = malloc(sizeof(double) * n_vtx);
+      
+      for (int i_vtx=0; i_vtx<n_vtx; ++i_vtx) {
+        _eval_mandelbrot( vtx_coord[3*i_vtx  ],
+                          vtx_coord[3*i_vtx+1],
+                          vtx_coord[3*i_vtx+2],
+                         &field[i_part][i_vtx]);
+      }
       PDM_isosurface_field_set(isos,
                                iso3,
                                i_part,
                                field[i_part]);
     }
   }
+  else {
+    PDM_error(__FILE__, __LINE__, 0, "PDM_t_isosurface_2d_nodal dist_entry must be 0 or 1 (here set to %d)\n", dist_entry);
+  }
+
+
+  PDM_isosurface_compute(isos, iso1);
+  PDM_isosurface_compute(isos, iso2);
+  PDM_isosurface_compute(isos, iso3);
 
 
   if (visu==1) {
@@ -338,17 +412,45 @@ int main(int argc, char *argv[])
       PDM_error(__FILE__, __LINE__, 0, "PDM_t_isosurface_2d_nodal:: Not implmented\n");
     }
     else if (dist_entry==0) {
-      PDM_part_mesh_nodal_t *iso_pmn = NULL;
-      _build_pmn_from_iso_result(isos, iso1, n_part, &iso_pmn, comm);
+      // > iso line output
+      PDM_part_mesh_nodal_t *iso_pmn1 = NULL;
+      _build_pmn_from_iso_result(isos, iso1, n_part, &iso_pmn1, comm);
 
-      PDM_part_mesh_nodal_dump_vtk(iso_pmn,
+      PDM_part_mesh_nodal_dump_vtk(iso_pmn1,
                                    PDM_GEOMETRY_KIND_RIDGE,
-                                   "pmn_iso_mesh");
+                                   "pmn_iso_line_iso_mesh");
 
-      PDM_part_mesh_nodal_free(iso_pmn);
+      PDM_part_mesh_nodal_free(iso_pmn1);
+
+
+      // > iso circle output
+      PDM_part_mesh_nodal_t *iso_pmn2 = NULL;
+      _build_pmn_from_iso_result(isos, iso2, n_part, &iso_pmn2, comm);
+
+      PDM_part_mesh_nodal_dump_vtk(iso_pmn2,
+                                   PDM_GEOMETRY_KIND_RIDGE,
+                                   "pmn_circle_iso_mesh");
+
+      PDM_part_mesh_nodal_free(iso_pmn2);
+
+
+      // > iso field output
+      PDM_part_mesh_nodal_t *iso_pmn3 = NULL;
+      _build_pmn_from_iso_result(isos, iso3, n_part, &iso_pmn3, comm);
+
+      PDM_part_mesh_nodal_dump_vtk(iso_pmn3,
+                                   PDM_GEOMETRY_KIND_RIDGE,
+                                   "pmn_field_iso_mesh");
+
+      PDM_part_mesh_nodal_free(iso_pmn3);
     }
   }
 
+
+  /*
+   * TODO: 
+   *   - if default test conf, put assert ?
+   */
 
 
   /*
@@ -361,6 +463,15 @@ int main(int argc, char *argv[])
     PDM_part_mesh_nodal_free(pmn);
   } else {
     PDM_error(__FILE__, __LINE__, 0, "PDM_t_isosurface_2d_nodal dist_entry must be 0 or 1 (here set to %d)\n", dist_entry);
+  }
+
+  if (field!=NULL) {
+    for (int i_part=0; i_part<n_part; ++i_part) {
+      if (field[i_part]!=NULL) {
+        free(field[i_part]);
+      }
+    }
+    free(field);
   }
 
 
