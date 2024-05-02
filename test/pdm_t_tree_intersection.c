@@ -271,7 +271,7 @@ main
   double      *box_extents = NULL;
   PDM_g_num_t *box_g_num   = NULL;
 
-  double _n = PDM_MAX(2, 1 + pow(gn_box, 1./3.));
+  double _n = PDM_MAX(2., 1. + pow((double) gn_box, 1./3.));
 
   if (filename != NULL) {
 
@@ -432,7 +432,7 @@ main
   double      *pts_coord = NULL;
   PDM_g_num_t *pts_g_num = NULL;
 
-  _n = PDM_MAX(2, 1 + pow(gn_pts, 1./3.));
+  _n = PDM_MAX(2., 1. + pow((double) gn_pts, 1./3.));
 
   if (cartesian_pts) {
     PDM_point_cloud_gen_cartesian(comm,

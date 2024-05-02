@@ -32,6 +32,7 @@
 
 /* point classification wrt a triangle */
 typedef enum {
+  LOC_UNDEF             = -1,
   LOC_ON_VTX0           = 0,
   LOC_ON_VTX1           = 1,
   LOC_ON_VTX2           = 2,
@@ -117,82 +118,82 @@ _dist2_point_segment
 }
 
 /* Compute squared euclidean distance between point p and triangle abc */
-static inline double
-_dist2_point_triangle
-(
- const double  p[3],
- const double  a[3],
- const double  b[3],
- const double  c[3],
-       double *u,
-       double *v
- )
-{
-  double ab[3] = {b[0] - a[0], b[1] - a[1], b[2] - a[2]};
-  double ac[3] = {c[0] - a[0], c[1] - a[1], c[2] - a[2]};
-  double ap[3] = {p[0] - a[0], p[1] - a[1], p[2] - a[2]};
+// static inline double
+// _dist2_point_triangle
+// (
+//  const double  p[3],
+//  const double  a[3],
+//  const double  b[3],
+//  const double  c[3],
+//        double *u,
+//        double *v
+//  )
+// {
+//   double ab[3] = {b[0] - a[0], b[1] - a[1], b[2] - a[2]};
+//   double ac[3] = {c[0] - a[0], c[1] - a[1], c[2] - a[2]};
+//   double ap[3] = {p[0] - a[0], p[1] - a[1], p[2] - a[2]};
 
-  double abab = PDM_DOT_PRODUCT(ab, ab);
-  double abac = PDM_DOT_PRODUCT(ab, ac);
-  double acac = PDM_DOT_PRODUCT(ac, ac);
-  double abap = PDM_DOT_PRODUCT(ab, ap);
-  double acap = PDM_DOT_PRODUCT(ac, ap);
+//   double abab = PDM_DOT_PRODUCT(ab, ab);
+//   double abac = PDM_DOT_PRODUCT(ab, ac);
+//   double acac = PDM_DOT_PRODUCT(ac, ac);
+//   double abap = PDM_DOT_PRODUCT(ab, ap);
+//   double acap = PDM_DOT_PRODUCT(ac, ap);
 
-  double det = abab*acac - abac*abac;
+//   double det = abab*acac - abac*abac;
 
-  double _u = abap*acac - acap*abac;
-  double _v = acap*abab - abap*abac;
+//   double _u = abap*acac - acap*abac;
+//   double _v = acap*abab - abap*abac;
 
-  if (_u >= 0 && _u <= det &&
-      _v >= 0 && _v <= det &&
-      _u + _v <= det) {
-    if (det >= 0.0) {
-      double idet = 1./det;
-      _u *= idet;
-      _v *= idet;
-    }
-    *u = _u;
-    *v = _v;
-    double q[3] = {
-      a[0] + _u*ab[0] + _v*ac[0],
-      a[1] + _u*ab[1] + _v*ac[1],
-      a[2] + _u*ab[2] + _v*ac[2]
-    };
-    return _dist2_point_point(p, q);
-  }
+//   if (_u >= 0 && _u <= det &&
+//       _v >= 0 && _v <= det &&
+//       _u + _v <= det) {
+//     if (det >= 0.0) {
+//       double idet = 1./det;
+//       _u *= idet;
+//       _v *= idet;
+//     }
+//     *u = _u;
+//     *v = _v;
+//     double q[3] = {
+//       a[0] + _u*ab[0] + _v*ac[0],
+//       a[1] + _u*ab[1] + _v*ac[1],
+//       a[2] + _u*ab[2] + _v*ac[2]
+//     };
+//     return _dist2_point_point(p, q);
+//   }
 
-  const double *x[3] = {a, b, c};
-  double dist2 = HUGE_VAL;
-  int    imin = -1;
-  double tmin = 0;
-  for (int i = 0; i < 3; i++) {
-    double t;
-    double d = _dist2_point_segment(p,
-                                    x[i],
-                                    x[(i+1)%3],
-                                    &t);
-    if (d < dist2) {
-      dist2 = d;
-      tmin  = t;
-      imin  = i;
-    }
-  }
+//   const double *x[3] = {a, b, c};
+//   double dist2 = HUGE_VAL;
+//   int    imin = -1;
+//   double tmin = 0;
+//   for (int i = 0; i < 3; i++) {
+//     double t;
+//     double d = _dist2_point_segment(p,
+//                                     x[i],
+//                                     x[(i+1)%3],
+//                                     &t);
+//     if (d < dist2) {
+//       dist2 = d;
+//       tmin  = t;
+//       imin  = i;
+//     }
+//   }
 
-  if (imin == 0) {
-    *u = tmin;
-    *v = 0;
-  }
-  else if (imin == 1) {
-    *u = 1 - tmin;
-    *v = tmin;
-  }
-  else {
-    *u = 0;
-    *v = 1 - tmin;
-  }
+//   if (imin == 0) {
+//     *u = tmin;
+//     *v = 0;
+//   }
+//   else if (imin == 1) {
+//     *u = 1 - tmin;
+//     *v = tmin;
+//   }
+//   else {
+//     *u = 0;
+//     *v = 1 - tmin;
+//   }
 
-  return dist2;
-}
+//   return dist2;
+// }
 
 static inline double
 _rand01
@@ -1351,13 +1352,13 @@ _intersect_triangle_triangle
                edgeA_inter_planeB_coord + 3*order[i+1],
                sizeof(double) * 3);
         inter_locA[i] = edgeA_inter_planeB_locA[i];
-        inter_locB[i] = -1; // ?
+        inter_locB[i] = LOC_UNDEF; // ?
       }
       else {
         memcpy(inter_coord    + 3*i,
                edgeB_inter_planeA_coord + 3*(order[i+1] - n_edgeA_inter_planeB),
                sizeof(double) * 3);
-        inter_locA[i] = -1; // ?
+        inter_locA[i] = LOC_UNDEF; // ?
         inter_locB[i] = edgeB_inter_planeA_locB[i];
       }
     }
