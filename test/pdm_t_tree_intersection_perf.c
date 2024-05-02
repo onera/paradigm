@@ -171,7 +171,7 @@ main
 
   double t1, t2;
 
-  double _n = PDM_MAX(2, 1 + pow(gn_pts, 1./3.));
+  double _n = PDM_MAX(2., 1. + pow((double) gn_pts, 1./3.));
 
   /* Generate point cloud */
   int          n_pts     = 0;

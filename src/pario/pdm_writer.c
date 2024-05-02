@@ -236,7 +236,7 @@ writer_wrapper
 
     for (int i_face = 0; i_face < n_elt[i_part]; i_face++) {
       val_part[i_face] = i_rank*n_part + i_part;
-      val_gnum[i_face] = elt_ln_to_gn[i_part][i_face];
+      val_gnum[i_face] = (PDM_real_t) elt_ln_to_gn[i_part][i_face];
     }
 
     PDM_writer_var_set(wrt,

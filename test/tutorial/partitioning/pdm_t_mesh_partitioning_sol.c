@@ -632,7 +632,7 @@ int main
                     &total_face_vtx_idx,
                     &total_face_vtx,
                     &total_cell_ln_to_gn,
-                    -1, // cell_t
+                    PDM_WRITER_UNDEF, // cell_t
                     &total_n_face,
                     &total_cell_face_idx,
                     &total_cell_face,

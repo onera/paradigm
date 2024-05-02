@@ -467,7 +467,7 @@ int main(int argc, char *argv[])
     for (int i = 0; i < n_located; i++) {
       int vtx_id = located[i] - 1;
       is_located[vtx_id] = 1;
-      tgt_field1[vtx_id] = tgt_recv_field1[i_part][i];
+      tgt_field1[vtx_id] = (double) tgt_recv_field1[i_part][i];
       tgt_field2[vtx_id] = tgt_recv_field2[i_part][i];
 
       double error = fabs(tgt_field2[vtx_id] - tgt_vtx_coord[i_part][3*vtx_id]);
@@ -508,7 +508,7 @@ int main(int argc, char *argv[])
                  src_face_edge_idx,
                  src_face_vtx,
                  src_face_ln_to_gn,
-                 -1,
+                 PDM_WRITER_UNDEF, // cell_t
                  0,
                  NULL,
                  NULL,
@@ -537,7 +537,7 @@ int main(int argc, char *argv[])
                  tgt_face_edge_idx,
                  tgt_face_vtx,
                  tgt_face_ln_to_gn,
-                 -1,
+                 PDM_WRITER_UNDEF, // cell_t
                  0,
                  NULL,
                  NULL,
