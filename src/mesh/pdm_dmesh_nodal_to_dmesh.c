@@ -538,124 +538,156 @@ PDM_g_num_t  **dmissing_child_parent_g_num
     _tmp_missing_parent_gnum[i] = _tmp_missing_parent_gnum[i] + _entity_distrib[i_rank] + 1;
   }
 
-  /*
-   * Exchange in origin absolute numbering
-   */
-  double* weights = malloc(i_abs_child * sizeof(double));
-  for(int i = 0; i < i_abs_child; ++i) {
-    weights[i] = 1.;
+  int i_abs_child_max = 0;
+  PDM_MPI_Allreduce (&i_abs_child,
+                     &i_abs_child_max,
+                     1,
+                     PDM_MPI_INTEGER,
+                     PDM_MPI_MAX,
+                     comm);
+
+  int i_abs_missing_max = 0;
+  PDM_MPI_Allreduce (&i_abs_missing,
+                     &i_abs_missing_max,
+                     1,
+                     PDM_MPI_INTEGER,
+                     PDM_MPI_MAX,
+                     comm);
+
+  if (i_abs_child_max > 0) {
+
+    /*
+    * Exchange in origin absolute numbering
+    */
+    double* weights = malloc(i_abs_child * sizeof(double));
+    for(int i = 0; i < i_abs_child; ++i) {
+      weights[i] = 1.;
+    }
+
+    PDM_part_to_block_t *ptb = PDM_part_to_block_create(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
+                                                        PDM_PART_TO_BLOCK_POST_MERGE,
+                                                        1.,
+                                                        &_tmp_parent_ln_to_gn,
+                                                        &weights,
+                                                        &i_abs_child,
+                                                        1,
+                                                        comm);
+    free(weights);
+    //PDM_g_num_t* distrib = PDM_part_to_block_distrib_index_get(ptb);
+    //printf(" A GERE BLOCK PARTIEL INSIDE _generate_entitiy_connectivity in pdm_dmesh_nodal_to_dmesh.c \n");
+
+    int n_rank = -1;
+    PDM_MPI_Comm_size(comm, &n_rank);
+
+    int* stride_one = (int *) malloc( i_abs_child * sizeof(int));
+    for(int i = 0; i < i_abs_child; ++i) {
+      stride_one[i] = 1;
+    }
+
+    int* blk_strid = NULL;
+    int s_block_data = PDM_part_to_block_exch(ptb,
+                                              sizeof(PDM_g_num_t),
+                                              PDM_STRIDE_VAR_INTERLACED,
+                                              -1,
+                                              &stride_one,
+                                    (void **) &_tmp_parent_gnum,
+                                              &blk_strid,
+                                    (void **) dparent_gnum);
+    PDM_UNUSED(s_block_data);
+    // PDM_log_trace_array_long(*dparent_gnum, s_block_data, "dparent_gnum : ");
+
+    free(blk_strid);
+    s_block_data = PDM_part_to_block_exch(ptb,
+                                          sizeof(int),
+                                          PDM_STRIDE_VAR_INTERLACED,
+                                          -1,
+                                          &stride_one,
+                                (void **) &_tmp_parent_sign,
+                                          &blk_strid,
+                                (void **) dparent_sign);
+    // PDM_log_trace_array_int(*dparent_sign, s_block_data, "dparent_sign : ");
+
+    // log_trace("n_g_child = "PDM_FMT_G_NUM"\n", n_g_child);
+    *delmt_child_distrib = PDM_part_to_block_adapt_partial_block_to_block (ptb,
+                                                                           &blk_strid,
+                                                                           n_g_child);
+
+    int dn_elmt_child = (int) ((*delmt_child_distrib)[i_rank+1] - (*delmt_child_distrib)[i_rank]);
+    *dparent_idx = PDM_array_new_idx_from_sizes_int (blk_strid,
+                                                     dn_elmt_child);
+    // PDM_log_trace_array_int(*dparent_idx, dn_elmt_child+1, "dparent_idx : ");
+
+
+    PDM_part_to_block_free(ptb);
+    free(stride_one);
+    free(blk_strid);
+  } else {
+    dparent_gnum = NULL;
+    dparent_sign = NULL;
+    dparent_idx  = NULL;
+    int dn_elmt_child    = 0;
+    *delmt_child_distrib = PDM_compute_entity_distribution (comm, dn_elmt_child);
   }
-
-  PDM_part_to_block_t *ptb = PDM_part_to_block_create(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
-                                                      PDM_PART_TO_BLOCK_POST_MERGE,
-                                                      1.,
-                                                      &_tmp_parent_ln_to_gn,
-                                                      &weights,
-                                                      &i_abs_child,
-                                                      1,
-                                                      comm);
-  free(weights);
-  //PDM_g_num_t* distrib = PDM_part_to_block_distrib_index_get(ptb);
-  //printf(" A GERE BLOCK PARTIEL INSIDE _generate_entitiy_connectivity in pdm_dmesh_nodal_to_dmesh.c \n");
-
-  int n_rank = -1;
-  PDM_MPI_Comm_size(comm, &n_rank);
-
-  int* stride_one = (int *) malloc( i_abs_child * sizeof(int));
-  for(int i = 0; i < i_abs_child; ++i) {
-    stride_one[i] = 1;
-  }
-
-  int* blk_strid = NULL;
-  int s_block_data = PDM_part_to_block_exch(ptb,
-                                            sizeof(PDM_g_num_t),
-                                            PDM_STRIDE_VAR_INTERLACED,
-                                            -1,
-                                            &stride_one,
-                                  (void **) &_tmp_parent_gnum,
-                                            &blk_strid,
-                                  (void **) dparent_gnum);
-  PDM_UNUSED(s_block_data);
-  // PDM_log_trace_array_long(*dparent_gnum, s_block_data, "dparent_gnum : ");
-
-  free(blk_strid);
-  s_block_data = PDM_part_to_block_exch(ptb,
-                                        sizeof(int),
-                                        PDM_STRIDE_VAR_INTERLACED,
-                                        -1,
-                                        &stride_one,
-                              (void **) &_tmp_parent_sign,
-                                        &blk_strid,
-                              (void **) dparent_sign);
-  // PDM_log_trace_array_int(*dparent_sign, s_block_data, "dparent_sign : ");
-
-  // log_trace("n_g_child = "PDM_FMT_G_NUM"\n", n_g_child);
-  *delmt_child_distrib = PDM_part_to_block_adapt_partial_block_to_block (ptb,
-                                                                         &blk_strid,
-                                                                         n_g_child);
-
-  int dn_elmt_child = (int) ((*delmt_child_distrib)[i_rank+1] - (*delmt_child_distrib)[i_rank]);
-  *dparent_idx = PDM_array_new_idx_from_sizes_int (blk_strid,
-                                                   dn_elmt_child);
-  // PDM_log_trace_array_int(*dparent_idx, dn_elmt_child+1, "dparent_idx : ");
-
-
-  PDM_part_to_block_free(ptb);
-  free(stride_one);
-  free(blk_strid);
   free(_tmp_parent_ln_to_gn);
   free(_tmp_parent_sign);
   free(_tmp_parent_gnum);
 
-  /*
-   * Exchange in origin absolute numbering
-   */
-  // PDM_log_trace_array_long(_tmp_missing_ln_to_gn, i_abs_missing, "_tmp_missing_ln_to_gn : ");
-  // PDM_log_trace_array_long(_tmp_missing_parent_gnum, i_abs_missing, "_tmp_missing_parent_gnum : ");
+  if (i_abs_missing_max > 0) {
 
-  ptb = PDM_part_to_block_create(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
-                                 PDM_PART_TO_BLOCK_POST_MERGE,
-                                 1.,
-                                 &_tmp_missing_ln_to_gn,
-                                 NULL,
-                                 &i_abs_missing,
-                                 1,
-                                 comm);
+    /*
+    * Exchange in origin absolute numbering
+    */
+    // PDM_log_trace_array_long(_tmp_missing_ln_to_gn, i_abs_missing, "_tmp_missing_ln_to_gn : ");
+    // PDM_log_trace_array_long(_tmp_missing_parent_gnum, i_abs_missing, "_tmp_missing_parent_gnum : ");
 
-  stride_one = (int *) malloc( i_abs_missing * sizeof(int));
-  for(int i = 0; i < i_abs_missing; ++i) {
-    stride_one[i] = 1;
+    PDM_part_to_block_t *ptb = PDM_part_to_block_create(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
+                                                        PDM_PART_TO_BLOCK_POST_MERGE,
+                                                        1.,
+                                                        &_tmp_missing_ln_to_gn,
+                                                        NULL,
+                                                        &i_abs_missing,
+                                                        1,
+                                                        comm);
+
+    int* stride_one = (int *) malloc( i_abs_missing * sizeof(int));
+    for(int i = 0; i < i_abs_missing; ++i) {
+      stride_one[i] = 1;
+    }
+
+    int* blk_strid = NULL;
+    int s_block_data = PDM_part_to_block_exch(ptb,
+                                              sizeof(PDM_g_num_t),
+                                              PDM_STRIDE_VAR_INTERLACED,
+                                              -1,
+                                              &stride_one,
+                                    (void **) &_tmp_missing_parent_gnum,
+                                              &blk_strid,
+                                    (void **) dmissing_child_parent_g_num);
+    PDM_UNUSED(s_block_data);
+
+    int dn_missing_ridge = PDM_part_to_block_n_elt_block_get(ptb);
+    // PDM_log_trace_array_int(blk_strid, dn_missing_ridge, "blk_strid : ");
+    // PDM_log_trace_array_long(*dmissing_child_parent_g_num, s_block_data, "dmissing_child_parent_g_num : ");
+
+    /*PDM_g_num_t *_distrib_missing_child = PDM_part_to_block_distrib_index_get (ptb);
+    *distrib_missing_child = malloc (sizeof(PDM_g_num_t) * (n_rank + 1));
+    memcpy (*distrib_missing_child, _distrib_missing_child, sizeof(PDM_g_num_t) * (n_rank + 1));*/
+    *distrib_missing_child = PDM_compute_entity_distribution (comm, dn_missing_ridge);
+
+    PDM_part_to_block_free(ptb);
+    free(stride_one);
+    free(blk_strid);
+  } else {
+    dmissing_child_parent_g_num = NULL;
+    int dn_missing_ridge   = 0;
+    *distrib_missing_child = PDM_compute_entity_distribution (comm, dn_missing_ridge);
   }
-
-
-  s_block_data = PDM_part_to_block_exch(ptb,
-                                        sizeof(PDM_g_num_t),
-                                        PDM_STRIDE_VAR_INTERLACED,
-                                        -1,
-                                        &stride_one,
-                              (void **) &_tmp_missing_parent_gnum,
-                                        &blk_strid,
-                              (void **) dmissing_child_parent_g_num);
-
-  int dn_missing_ridge = PDM_part_to_block_n_elt_block_get(ptb);
-  // PDM_log_trace_array_int(blk_strid, dn_missing_ridge, "blk_strid : ");
-  // PDM_log_trace_array_long(*dmissing_child_parent_g_num, s_block_data, "dmissing_child_parent_g_num : ");
-
-  /*PDM_g_num_t *_distrib_missing_child = PDM_part_to_block_distrib_index_get (ptb);
-  *distrib_missing_child = malloc (sizeof(PDM_g_num_t) * (n_rank + 1));
-  memcpy (*distrib_missing_child, _distrib_missing_child, sizeof(PDM_g_num_t) * (n_rank + 1));*/
-  *distrib_missing_child = PDM_compute_entity_distribution (comm, dn_missing_ridge);
-
-  PDM_part_to_block_free(ptb);
-  free(stride_one);
-  free(blk_strid);
   free(_tmp_missing_ln_to_gn);
   free(_tmp_missing_parent_gnum);
 
-  PDM_g_num_t* _dparent_gnum = *dparent_gnum;
-  int*         _dparent_sign = *dparent_sign;
-
   if( 0 == 1 ){
+    PDM_g_num_t* _dparent_gnum = *dparent_gnum;
+    int*         _dparent_sign = *dparent_sign;
     printf("i_abs_entity::%i | i_abs_child:: %i \n", i_abs_entity+1, i_abs_child+1);
     PDM_log_trace_array_int(_dentity_vtx_idx , i_abs_entity+1                 , "_dentity_vtx_idx:: " );
     PDM_log_trace_array_long(_dentity_vtx    , _dentity_vtx_idx[i_abs_entity] , "_dentity_vtx:: "     );
