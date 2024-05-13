@@ -1394,6 +1394,12 @@ _compute_gnum_from_ancestor_and_itrfs
     log_trace("-----------------------------------------\n");
     log_trace("\n");
   }
+
+  for(int i_part = 0; i_part < n_part; ++i_part) {
+    free(pentity2_ancstr_nuplet[i_part]);
+  }
+  free(pentity2_ancstr_nuplet);
+  PDM_gnum_free(gen_gnum_entity2);
 }
 
 
@@ -2661,6 +2667,12 @@ PDM_part_extension_entity1_to_entity2
       pextended_entity2_to_entity2_idx[i_part][i]*=3;
     }
 
+    free(pextended_entity2_to_entity2_i_write);
+    free(pextended_entity2_to_entity2_n);
+    free(pextended_entity2_len_path);
+    free(tmp_gnum);
+    free(order);
+
     if (debug==1) {
       log_trace("\n");
       log_trace("pn_entity2_extended[i_part] = %d\n", pn_entity2_extended[i_part]);
@@ -2875,7 +2887,9 @@ PDM_part_extension_entity1_to_entity2
 
   for(int i_part = 0; i_part < n_part; ++i_part) {
 
-    free(pentity2_gnum_sorted);
+    free(pentity2_gnum_sorted[i_part]);
+    free(pnew_entity2_gnum[i_part]);
+    free(pnew_entity2_parent_nuplet[i_part]);
 
     free(pextract_entity2_idx       [i_part]);
     free(pextract_entity2_n         [i_part]);
@@ -2895,6 +2909,9 @@ PDM_part_extension_entity1_to_entity2
   }
   free(p_db_n_entity2);
   free(pnew_entity2_gnum);
+  free(pnew_entity2_parent_nuplet);
+
+  free(pentity2_gnum_sorted);
 
   free(pn_new_entity2_n_itrf);
   free(pextract_entity2_idx);
