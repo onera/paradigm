@@ -1283,7 +1283,7 @@ _compute_gnum_from_ancestor_and_itrfs
   int l_max_len_path_t[1] = {l_max_len_path};
   PDM_MPI_Allreduce(l_max_len_path_t, max_len_path_t, 1, PDM_MPI_INT, PDM_MPI_MAX, comm);
   int   max_len_path = max_len_path_t[0];
-  // log_trace("\n-->max_len_path = %d\n", max_len_path);
+  if (debug==1) {log_trace("\n-->max_len_path = %d\n", max_len_path);}
   
   PDM_gnum_set_parents_nuplet(gen_gnum_entity2, 2+max_len_path);
 
@@ -1315,8 +1315,9 @@ _compute_gnum_from_ancestor_and_itrfs
         tmp_ancstr_nplt[l_i_ancstr++] = pentity1_entity2_path_itrf[i_part][i_ancstr];
       }
       int len_path = pentity1_entity2_path_itrf_idx[i_part][j+1]-pentity1_entity2_path_itrf_idx[i_part][j];
-      for (int i_ancstr=len_path; i_ancstr<max_len_path+1; ++i_ancstr){
-        tmp_ancstr_nplt[l_i_ancstr++] = pentity1_entity2_itrf[i_part][j];
+      tmp_ancstr_nplt[l_i_ancstr++] = pentity1_entity2_itrf[i_part][j];
+      for (int i_ancstr=len_path+1; i_ancstr<max_len_path+1; ++i_ancstr){
+        tmp_ancstr_nplt[l_i_ancstr++] = 0; // works ?? --> if not really need a compute gnum from idx
       }
 
       // > Sort interface so that entity with same ancstr will give same gnum
@@ -1362,8 +1363,16 @@ _compute_gnum_from_ancestor_and_itrfs
 
     /* Update array */
     int idx_write = 0;
+    int idx_write_dbg = 0;
     for(int i = pentity1_entity2_kind_idx[i_part][4]; i < pentity1_entity2_kind_idx[i_part][5]; ++i) {
       int idx_read = pentity1_entity2_kind_order[i_part][i];
+      if (debug==1) {
+        log_trace("new gnum "PDM_FMT_G_NUM" (path = ", kind4_entity2_new_gnum[idx_write] + shift);
+        for (int i_path=0; i_path<2+max_len_path; ++i_path) {
+          log_trace("%d ", pentity2_ancstr_nuplet[i_part][idx_write_dbg++]);
+        }
+        log_trace(")\n");
+      }
       pentity1_entity2_gnum[i_part][idx_read]  = kind4_entity2_new_gnum[idx_write] + shift;
       pnew_entity2_gnum    [i_part][idx_write] = pentity1_entity2_gnum[i_part][idx_read];
       idx_write++;
