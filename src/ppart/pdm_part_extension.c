@@ -1284,17 +1284,21 @@ _part_extension_2d
 
   }
 
-  int           *pn_vtx         = (int         * ) malloc( part_ext->n_domain * sizeof(int          ));
-  int           *pn_edge        = (int         * ) malloc( part_ext->n_domain * sizeof(int          ));
-  int           *pn_face        = (int         * ) malloc( part_ext->n_domain * sizeof(int          ));
-  PDM_g_num_t  **pvtx_ln_to_gn  = (PDM_g_num_t **) malloc( part_ext->n_domain * sizeof(PDM_g_num_t *));
-  PDM_g_num_t  **pedge_ln_to_gn = (PDM_g_num_t **) malloc( part_ext->n_domain * sizeof(PDM_g_num_t *));
-  PDM_g_num_t  **pface_ln_to_gn = (PDM_g_num_t **) malloc( part_ext->n_domain * sizeof(PDM_g_num_t *));
-  int          **pface_vtx_idx  = (int         **) malloc( part_ext->n_domain * sizeof(int         *));
-  int          **pface_vtx      = (int         **) malloc( part_ext->n_domain * sizeof(int         *));
-  int          **pedge_vtx_idx  = (int         **) malloc( part_ext->n_domain * sizeof(int         *));
-  int          **pedge_vtx      = (int         **) malloc( part_ext->n_domain * sizeof(int         *));
-  double       **pvtx_coords    = (double      **) malloc( part_ext->n_domain * sizeof(double      *));
+  int           *pn_vtx             = (int         * ) malloc( part_ext->n_domain * sizeof(int          ));
+  int           *pn_edge            = (int         * ) malloc( part_ext->n_domain * sizeof(int          ));
+  int           *pn_face            = (int         * ) malloc( part_ext->n_domain * sizeof(int          ));
+  PDM_g_num_t  **pvtx_ln_to_gn      = (PDM_g_num_t **) malloc( part_ext->n_domain * sizeof(PDM_g_num_t *));
+  PDM_g_num_t  **pedge_ln_to_gn     = (PDM_g_num_t **) malloc( part_ext->n_domain * sizeof(PDM_g_num_t *));
+  PDM_g_num_t  **pface_ln_to_gn     = (PDM_g_num_t **) malloc( part_ext->n_domain * sizeof(PDM_g_num_t *));
+  int          **pface_vtx_idx      = (int         **) malloc( part_ext->n_domain * sizeof(int         *));
+  int          **pface_vtx          = (int         **) malloc( part_ext->n_domain * sizeof(int         *));
+  int          **pedge_vtx_idx      = (int         **) malloc( part_ext->n_domain * sizeof(int         *));
+  int          **pedge_vtx          = (int         **) malloc( part_ext->n_domain * sizeof(int         *));
+  double       **pvtx_coords        = (double      **) malloc( part_ext->n_domain * sizeof(double      *));
+  PDM_g_num_t  **pvtx_ancstr        = (PDM_g_num_t **) malloc( part_ext->n_domain * sizeof(PDM_g_num_t *));
+  int          **pvtx_path_itrf_idx = (int         **) malloc( part_ext->n_domain * sizeof(int         *));
+  int          **pvtx_path_itrf     = (int         **) malloc( part_ext->n_domain * sizeof(int         *));
+
 
   int          **pface_alrdy_sent    = (int         **) malloc( part_ext->n_domain * sizeof(int         *));
   PDM_g_num_t  **pface_ancstr        = (PDM_g_num_t **) malloc( part_ext->n_domain * sizeof(PDM_g_num_t *));
@@ -1317,6 +1321,9 @@ _part_extension_2d
 
       /* Copy to realloc after all step */
       pvtx_ln_to_gn      [lpart] = malloc((pn_vtx [lpart]  ) * sizeof(PDM_g_num_t));
+      pvtx_ancstr        [lpart] = malloc((pn_vtx [lpart]  ) * sizeof(PDM_g_num_t));
+      pvtx_path_itrf_idx [lpart] = malloc((pn_vtx [lpart]+1) * sizeof(int));
+      pvtx_path_itrf     [lpart] = malloc((0               ) * sizeof(int));
       pedge_ln_to_gn     [lpart] = malloc((pn_edge[lpart]  ) * sizeof(PDM_g_num_t));
       pface_ln_to_gn     [lpart] = malloc((pn_face[lpart]  ) * sizeof(PDM_g_num_t));
       pface_vtx_idx      [lpart] = malloc((pn_face[lpart]+1) * sizeof(int        ));
@@ -1335,8 +1342,11 @@ _part_extension_2d
         pedge_ln_to_gn[lpart][i_edge] = part_ext->parts[i_domain][i_part].edge_ln_to_gn[i_edge];
       }
       for(int i_vtx = 0; i_vtx < pn_vtx[lpart]; ++i_vtx) {
-        pvtx_ln_to_gn[lpart][i_vtx] = part_ext->parts[i_domain][i_part].vtx_ln_to_gn[i_vtx];
+        pvtx_ln_to_gn     [lpart][i_vtx] = part_ext->parts[i_domain][i_part].vtx_ln_to_gn[i_vtx];
+        pvtx_ancstr       [lpart][i_vtx] = pvtx_ln_to_gn[lpart][i_vtx];
+        pvtx_path_itrf_idx[lpart][i_vtx] = 0;
       }
+      pvtx_path_itrf_idx  [lpart][pn_vtx[lpart]] = 0;
 
       for(int i_face = 0; i_face < pn_face[lpart]+1; ++i_face) {
         pface_vtx_idx [lpart][i_face] = part_ext->parts[i_domain][i_part].face_vtx_idx[i_face];
@@ -1539,6 +1549,9 @@ _part_extension_2d
      */
     int                           *pn_vtx_extented                 = NULL;
     PDM_g_num_t                  **pvtx_extented_ln_to_gn          = NULL;
+    PDM_g_num_t                  **pvtx_extented_ancstr            = NULL;
+    int                          **pvtx_extented_path_itrf_idx     = NULL;
+    int                          **pvtx_extented_path_itrf         = NULL;
     int                          **pextented_face_vtx_idx          = NULL;
     int                          **pextented_face_vtx              = NULL;
     int                          **pvtx_extented_to_pvtx_idx       = NULL;
@@ -1554,7 +1567,7 @@ _part_extension_2d
     log_trace("\n\n\n\n");
     log_trace("==================================================================== \n");
     log_trace("PDM_part_extension_pentity1_entity2_to_extented_pentity1_entity2 beg \n");
-    PDM_part_extension_pentity1_entity2_to_extented_pentity1_entity2(part_ext->ln_part_tot,
+    PDM_part_extension_pentity1_entity2_to_extended_pentity1_entity2(part_ext->ln_part_tot,
                                                                      part_ext->n_interface,
                                                                      shift_by_domain_vtx, // Attention il va evoluer lui
                                                                      prev_dvtx_itrf_n_blk,
@@ -1566,6 +1579,9 @@ _part_extension_2d
                                                                      pface_ln_to_gn,
                                                                      pn_vtx,
                                                                      pvtx_ln_to_gn,
+                                                                     pvtx_ancstr,
+                                                                     pvtx_path_itrf_idx,
+                                                                     pvtx_path_itrf,
                                                                      pface_vtx_idx,
                                                                      pface_vtx,
                                                                      pn_face_extented,
@@ -1575,6 +1591,9 @@ _part_extension_2d
                                                                      pface_extented_to_pface_interface,
                                                                      &pn_vtx_extented,
                                                                      &pvtx_extented_ln_to_gn,
+                                                                     &pvtx_extented_ancstr,
+                                                                     &pvtx_extented_path_itrf_idx,
+                                                                     &pvtx_extented_path_itrf,
                                                                      &pextented_face_vtx_idx,
                                                                      &pextented_face_vtx,
                                                                      &pvtx_extented_to_pvtx_idx,
@@ -1696,6 +1715,23 @@ _part_extension_2d
                                            pvtx_ln_to_gn,
                                            pvtx_extented_ln_to_gn,
                                            &shift_by_domain_vtx);
+    _concat_gnum_array_current_with_extended(part_ext->ln_part_tot,
+                                             pn_vtx,
+                                             pn_vtx_extented,
+                                             pvtx_ancstr,
+                                             pvtx_extented_ancstr);
+    _concat_int_array_current_with_extended_from_idx(part_ext->ln_part_tot,
+                                                     pn_vtx,
+                                                     pn_vtx_extented,
+                                                     pvtx_path_itrf_idx,
+                                                     pvtx_path_itrf,
+                                                     pvtx_extented_path_itrf_idx,
+                                                     pvtx_extented_path_itrf);
+    _concat_int_idx_array_current_with_extended(part_ext->ln_part_tot,
+                                                pn_vtx,
+                                                pn_vtx_extented,
+                                                pvtx_path_itrf_idx,
+                                                pvtx_extented_path_itrf_idx);
 
     _concat_coords_current_with_extended(part_ext->ln_part_tot,
                                          pn_vtx,
@@ -1827,6 +1863,9 @@ _part_extension_2d
      */
     for(int i_part = 0; i_part < part_ext->ln_part_tot; ++i_part) {
       free(pvtx_extented_ln_to_gn           [i_part]);
+      free(pvtx_extented_path_itrf_idx      [i_part]);
+      free(pvtx_extented_path_itrf          [i_part]);
+      free(pvtx_extented_ancstr             [i_part]);
       free(pextented_face_vtx_idx           [i_part]);
       free(pextented_face_vtx               [i_part]);
       free(pvtx_extented_to_pvtx_idx        [i_part]);
@@ -1842,6 +1881,9 @@ _part_extension_2d
       free(pface_extented_alrdy_sent        [i_part]);
     }
     free(pvtx_extented_ln_to_gn         );
+    free(pvtx_extented_path_itrf_idx    );
+    free(pvtx_extented_path_itrf        );
+    free(pvtx_extented_ancstr           );
     free(pextented_face_vtx_idx         );
     free(pextented_face_vtx             );
     free(pvtx_extented_to_pvtx_idx      );
@@ -1955,6 +1997,9 @@ _part_extension_2d
 
   for(int i_part = 0; i_part < part_ext->ln_part_tot; ++i_part) {
     free(pvtx_ln_to_gn      [i_part]);
+    free(pvtx_ancstr        [i_part]);
+    free(pvtx_path_itrf_idx [i_part]);
+    free(pvtx_path_itrf     [i_part]);
     free(pedge_ln_to_gn     [i_part]);
     free(pface_ln_to_gn     [i_part]);
     free(pface_alrdy_sent   [i_part]);
@@ -1966,11 +2011,14 @@ _part_extension_2d
     free(pvtx_coords        [i_part]);
   }
 
-  free(pn_vtx        );
+  free(pn_vtx             );
+  free(pvtx_ln_to_gn      );
+  free(pvtx_ancstr        );
+  free(pvtx_path_itrf_idx );
+  free(pvtx_path_itrf     );
   free(pn_edge       );
-  free(pn_face       );
-  free(pvtx_ln_to_gn );
   free(pedge_ln_to_gn);
+  free(pn_face       );
   free(pface_ln_to_gn);
   free(pface_alrdy_sent);
   free(pface_ancstr);

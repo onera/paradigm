@@ -339,9 +339,9 @@ int main
   int                  n_part     = 1;
   int                  post       = 0;
   int                  n_depth    = 1;
-  // PDM_Mesh_nodal_elt_t t_elt      = PDM_MESH_NODAL_TRIA3;
+  PDM_Mesh_nodal_elt_t t_elt      = PDM_MESH_NODAL_TRIA3;
   // PDM_Mesh_nodal_elt_t t_elt      = PDM_MESH_NODAL_HEXA8;
-  PDM_Mesh_nodal_elt_t t_elt      = PDM_MESH_NODAL_QUAD4;
+  // PDM_Mesh_nodal_elt_t t_elt      = PDM_MESH_NODAL_QUAD4;
   // PDM_Mesh_nodal_elt_t t_elt      = PDM_MESH_NODAL_TETRA4;
   // PDM_Mesh_nodal_elt_t t_elt      = PDM_MESH_NODAL_PRISM6;
   // 2 -> tria
@@ -585,11 +585,10 @@ int main
 
   // step 1 : create
   PDM_extend_type_t  extend_type = PDM_EXTEND_FROM_VTX;
-  int                depth       = 2;
   PDM_part_extension_t *part_ext = PDM_part_extension_create(n_domain,
                                                              pn_n_part,
                                                              extend_type,
-                                                             depth,
+                                                             n_depth,
                                                              comm,
                                                              PDM_OWNERSHIP_KEEP);
 
