@@ -19,6 +19,9 @@ autom4te.cache/*
 autoscan.log
 cython/cwipi.c
 doc/sphinx/source/conf.py
+doc/sphinx/source/user_manual/mesh_transform/index.rst
+doc/sphinx/source/user_manual/mesh_transform/mesh_deform.rst
+doc/sphinx/source/user_manual/mesh_transform/mesh_eval.rst
 \#*
 nbproject
 build
