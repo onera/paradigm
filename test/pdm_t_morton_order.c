@@ -426,6 +426,7 @@ main
 
   for (int i = 0; i < n_pts; i++) {
     PDM_morton_code_t code = _double_to_code(3, flat_code[i], level_max);
+    PDM_UNUSED(code);
 //    double            dble = _code_to_double(3, code);
 //    dble *= normalization;
     // log_trace("i = %d: L = %zu, X = %zu %zu %zu / L = %zu, X = %zu %zu %zu, flat = %f / %f\n",
