@@ -413,7 +413,7 @@ _set_L2_basis_equi
 (
  const int              order,
  const int              n_pts,
- const double *restrict u,
+ double       *restrict u,
  double       *restrict weights
  )
 {

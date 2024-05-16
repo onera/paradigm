@@ -107,8 +107,8 @@ PDM_block_to_block_create
     btb->block_distrib_end_idx[i] = block_distrib_end_idx[i];
   }
 
-  btb->n_send_buffer = (int *) malloc (sizeof(int) * n_rank);
-  btb->n_recv_buffer = (int *) malloc (sizeof(int) * n_rank);
+  btb->n_send_buffer = (int *) malloc ((unsigned int) n_rank * sizeof(int));
+  btb->n_recv_buffer = (int *) malloc ((unsigned int) n_rank * sizeof(int));
   for (int i = 0; i < n_rank; ++i) {
     btb->n_send_buffer[i] = _overlap_size(block_distrib_ini_idx[i_rank], block_distrib_ini_idx[i_rank+1], 
                                           block_distrib_end_idx[i], block_distrib_end_idx[i+1]);

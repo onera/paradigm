@@ -4852,14 +4852,14 @@ PDM_extract_part_create
     extrp->is_owner_connectivity    [i] = PDM_TRUE;
     extrp->pextract_connectivity    [i] = NULL;
     extrp->pextract_connectivity_idx[i] = NULL;
-    extrp->pextract_entity_color    [i] = NULL;
-    extrp->pextract_entity_order    [i] = NULL;
   }
   for(int i = 0; i < PDM_MESH_ENTITY_MAX; ++i) {
     extrp->is_owner_ln_to_gn              [i] = PDM_TRUE;
     extrp->is_owner_parent_ln_to_gn       [i] = PDM_TRUE;
     extrp->is_owner_parent_lnum           [i] = PDM_TRUE;
     extrp->is_owner_color                 [i] = PDM_TRUE;
+    extrp->pextract_entity_color          [i] = NULL;
+    extrp->pextract_entity_order          [i] = NULL;
     extrp->pextract_entity_ln_to_gn       [i] = NULL;
     extrp->pextract_entity_parent_ln_to_gn[i] = NULL;
     extrp->pextract_entity_parent_lnum    [i] = NULL;

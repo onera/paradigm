@@ -461,7 +461,7 @@ static MPI_Comm _pdm_mpi_2_mpi_comm(PDM_MPI_Comm pdm_mpi_comm)
   /* Traitement des communicateurs predefinis */
 
   if (pdm_mpi_comm < 0)
-    return mpi_comm_cste[-pdm_mpi_comm - 1];
+    return mpi_comm_cste[PDM_MIN(1, -pdm_mpi_comm - 1)];
 
   /* Traitement des communicateurs utilisateurs */
 
