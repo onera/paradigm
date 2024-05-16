@@ -323,7 +323,7 @@ _gen_config
         else {
           if (loc[i] == LOC_EXTERIOR_ON_PLANE) {
             double dmin = HUGE_VAL;
-            double tmin;
+            double tmin = 0.;;
             int    jmin = -1;
             for (int j = 0; j < 3; j++) {
               double t;

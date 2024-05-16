@@ -1224,7 +1224,9 @@ PDM_polygon_ray_intersection
 
       PDM_polygon_status_t stat = PDM_POLYGON_OUTSIDE;
       *t = HUGE_VAL;
-      double s, _s, _t;
+      double s  = 0.;
+      double _s = 0.;
+      double _t = 0.;
       int iedge = -1;
       for (int i = 0; i < n_vtx; i++) {
         PDM_line_intersection_mean_square(vtx_coord + 3*i,
