@@ -1139,6 +1139,9 @@ _basis_hexa_pn
     double *w  = malloc (sizeof(double) * n_pts);
 
     for (int i = 0; i < n_pts; i++) {
+      u[i] = 0.;
+      v[i] = 0.;
+      w[i] = 0.;
       u[i] = 2 * uvw[3*i]   - 1;
       v[i] = 2 * uvw[3*i+1] - 1;
       w[i] = 2 * uvw[3*i+2] - 1;
