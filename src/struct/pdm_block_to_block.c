@@ -110,7 +110,7 @@ PDM_block_to_block_create
   btb->n_send_buffer = (int *) malloc ((unsigned int) n_rank * sizeof(int));
   btb->n_recv_buffer = (int *) malloc ((unsigned int) n_rank * sizeof(int));
   for (int i = 0; i < n_rank; ++i) {
-    btb->n_send_buffer[i] = _overlap_size(block_distrib_ini_idx[i_rank], block_distrib_ini_idx[i_rank+1], 
+    btb->n_send_buffer[i] = _overlap_size(block_distrib_ini_idx[i_rank], block_distrib_ini_idx[i_rank+1],
                                           block_distrib_end_idx[i], block_distrib_end_idx[i+1]);
     btb->n_recv_buffer[i] = _overlap_size(block_distrib_end_idx[i_rank], block_distrib_end_idx[i_rank+1],
                                           block_distrib_ini_idx[i], block_distrib_ini_idx[i+1]);
@@ -302,7 +302,7 @@ PDM_block_to_block_exch_with_mpi_type
   _compute_displ(n_send_buffer, i_send_buffer, _btb->n_rank);
   _compute_displ(n_recv_buffer, i_recv_buffer, _btb->n_rank);
 
-  int s_recv_buffer = i_recv_buffer[_btb->n_rank-1] + _btb->n_recv_buffer[_btb->n_rank-1];
+  int s_recv_buffer = i_recv_buffer[_btb->n_rank-1] + n_recv_buffer[_btb->n_rank-1];
 
   int s_type = 0;
   PDM_MPI_Type_size(mpi_type, &s_type);
