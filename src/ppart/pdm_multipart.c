@@ -2321,17 +2321,27 @@ PDM_MPI_Comm       comm
   int  dn_vtx  = PDM_dmesh_dn_entity_get(dmesh, PDM_MESH_ENTITY_VTX);
 
   int dn_node = 0;
+  int _renum_node_method_none    = 0;
+  int _pmeshes_renum_node_method = 0;
   if(dmesh->n_g_cell != 0) {
     if(split_method != PDM_SPLIT_DUAL_WITH_HILBERT) {
       assert(dmesh->dn_cell > 0);
     }
     dn_node = dmesh->dn_cell;
+    _renum_node_method_none = PDM_part_renum_method_cell_idx_get("PDM_PART_RENUM_CELL_NONE");
+    _pmeshes_renum_node_method = pmeshes->renum_method[PDM_MESH_ENTITY_CELL];
   } else if (dmesh->n_g_face != 0) {
     dn_node = dmesh->dn_face;
+    _renum_node_method_none = PDM_part_renum_method_face_idx_get("PDM_PART_RENUM_FACE_NONE");
+    _pmeshes_renum_node_method = pmeshes->renum_method[PDM_MESH_ENTITY_FACE];
   } else if (dmesh->n_g_edge != 0) {
     dn_node = dmesh->dn_edge;
+    _renum_node_method_none = PDM_part_renum_method_edge_idx_get("PDM_PART_RENUM_EDGE_NONE");
+    _pmeshes_renum_node_method = pmeshes->renum_method[PDM_MESH_ENTITY_EDGE];
   } else if (dmesh->n_g_vtx != 0) {
     dn_node = dmesh->dn_vtx;
+    _renum_node_method_none = PDM_part_renum_method_vtx_idx_get ("PDM_PART_RENUM_VTX_NONE");
+    _pmeshes_renum_node_method = pmeshes->renum_method[PDM_MESH_ENTITY_VTX];
   } else {
     dn_node = 0;
   }
@@ -2354,9 +2364,15 @@ PDM_MPI_Comm       comm
   /*
    * Deduce node_ln_to_gn
    */
+  int order_part = 0;
+  if (_pmeshes_renum_node_method == _renum_node_method_none) {
+    order_part = 1;
+  }
+
   int          *pn_node        = NULL;
   PDM_g_num_t **pnode_ln_to_gn = NULL;
   PDM_part_assemble_partitions(comm,
+                               order_part,
                                distrib_partition,
                                distrib_node,
                                node_part,
@@ -2556,10 +2572,10 @@ PDM_MPI_Comm       comm
   /*
    * Real re-numebering
    */
-  PDM_part_renum_cell(parts, n_part, pmeshes->renum_cell_method, (void *) pmeshes->renum_cell_properties);
-  PDM_part_renum_face(parts, n_part, pmeshes->renum_face_method, NULL);
-  PDM_part_renum_edge(parts, n_part, pmeshes->renum_edge_method, NULL);
-  PDM_part_renum_vtx (parts, n_part, pmeshes->renum_vtx_method , (void *) pinternal_vtx_priority);
+  PDM_part_renum_cell(parts, n_part, pmeshes->renum_method[PDM_MESH_ENTITY_CELL], (void*) pmeshes->renum_method_properties[PDM_MESH_ENTITY_CELL]);
+  PDM_part_renum_face(parts, n_part, pmeshes->renum_method[PDM_MESH_ENTITY_FACE], (void*) pmeshes->renum_method_properties[PDM_MESH_ENTITY_FACE]);
+  PDM_part_renum_edge(parts, n_part, pmeshes->renum_method[PDM_MESH_ENTITY_EDGE], (void*) pmeshes->renum_method_properties[PDM_MESH_ENTITY_EDGE]);
+  PDM_part_renum_vtx (parts, n_part, pmeshes->renum_method[PDM_MESH_ENTITY_VTX ], (void*) pmeshes->renum_method_properties[PDM_MESH_ENTITY_VTX ]);
   free(pinternal_vtx_priority);
 
   for (int i_part = 0; i_part < n_part; i_part++) {
@@ -2856,21 +2872,16 @@ PDM_multipart_create
   multipart->comm             = comm;
   multipart->owner            = owner;
 
-  multipart->n_total_joins    = 0;
-  multipart->join_to_opposite = NULL;
-
-  // multipart->dmeshes_ids = (int *) malloc(multipart->n_domain * sizeof(int));
-
   multipart->dmeshes          = (PDM_dmesh_t                **) malloc(multipart->n_domain * sizeof(PDM_dmesh_t                *));
   multipart->dmeshes_nodal    = (PDM_dmesh_nodal_t          **) malloc(multipart->n_domain * sizeof(PDM_dmesh_nodal_t          *));
   multipart->dmn_to_dm        = (PDM_dmesh_nodal_to_dmesh_t **) malloc(multipart->n_domain * sizeof(PDM_dmesh_nodal_to_dmesh_t *));
   multipart->is_owner_dmeshes = (PDM_bool_t                  *) malloc(multipart->n_domain * sizeof(PDM_bool_t                  ));
 
-  for (int idomain = 0; idomain < multipart->n_domain; ++idomain) {
-    multipart->dmeshes_nodal   [idomain] = NULL;
-    multipart->dmeshes         [idomain] = NULL;
-    multipart->dmn_to_dm       [idomain] = NULL;
-    multipart->is_owner_dmeshes[idomain] = PDM_FALSE;
+  for (int i_dom = 0; i_dom < multipart->n_domain; ++i_dom) {
+    multipart->dmeshes_nodal   [i_dom] = NULL;
+    multipart->dmeshes         [i_dom] = NULL;
+    multipart->dmn_to_dm       [i_dom] = NULL;
+    multipart->is_owner_dmeshes[i_dom] = PDM_FALSE;
   }
 
   multipart->pmeshes       = (_part_mesh_t *) malloc(multipart->n_domain * sizeof(_part_mesh_t));
@@ -2879,25 +2890,28 @@ PDM_multipart_create
   int _renum_face_method = PDM_part_renum_method_face_idx_get("PDM_PART_RENUM_FACE_NONE");
   int _renum_edge_method = PDM_part_renum_method_edge_idx_get("PDM_PART_RENUM_EDGE_NONE");
   int _renum_vtx_method  = PDM_part_renum_method_vtx_idx_get ("PDM_PART_RENUM_VTX_NONE" );
-  for (int idomain = 0; idomain < multipart->n_domain; idomain++) {
-    multipart->pmeshes[idomain].renum_cell_method = _renum_cell_method;
-    multipart->pmeshes[idomain].renum_face_method = _renum_face_method;
-    multipart->pmeshes[idomain].renum_edge_method = _renum_edge_method;
-    multipart->pmeshes[idomain].renum_vtx_method  = _renum_vtx_method;
-    multipart->pmeshes[idomain].renum_cell_properties = NULL;
-    multipart->pmeshes[idomain].joins_ids = NULL;
-    multipart->pmeshes[idomain].pmesh     = PDM_part_mesh_create(n_part[idomain], comm);
-    multipart->pmeshes[idomain].vtx_ghost_information = malloc(n_part[idomain] * sizeof(int *));
-    multipart->pmeshes[idomain].hyperplane_color      = malloc(n_part[idomain] * sizeof(int *));
-    multipart->pmeshes[idomain].thread_color          = malloc(n_part[idomain] * sizeof(int *));
-    for(int i_part = 0; i_part < n_part[idomain]; ++i_part) {
-      multipart->pmeshes[idomain].vtx_ghost_information[i_part] = NULL;
-      multipart->pmeshes[idomain].hyperplane_color     [i_part] = NULL;
-      multipart->pmeshes[idomain].thread_color         [i_part] = NULL;
+  for (int i_dom = 0; i_dom < multipart->n_domain; i_dom++) {
+
+    multipart->pmeshes[i_dom].renum_method[PDM_MESH_ENTITY_CELL] = _renum_cell_method;
+    multipart->pmeshes[i_dom].renum_method[PDM_MESH_ENTITY_FACE] = _renum_face_method;
+    multipart->pmeshes[i_dom].renum_method[PDM_MESH_ENTITY_EDGE] = _renum_edge_method;
+    multipart->pmeshes[i_dom].renum_method[PDM_MESH_ENTITY_VTX ] = _renum_vtx_method;
+    for(int i = 0; i < PDM_MESH_ENTITY_MAX; ++i) {
+      multipart->pmeshes[i_dom].renum_method_properties[i] = NULL;
     }
-    multipart->pmeshes[idomain].is_owner_vtx_ghost_information = PDM_TRUE;
-    multipart->pmeshes[idomain].is_owner_hyperplane_color      = PDM_TRUE;
-    multipart->pmeshes[idomain].is_owner_thread_color          = PDM_TRUE;
+
+    multipart->pmeshes[i_dom].pmesh     = PDM_part_mesh_create(n_part[i_dom], comm);
+    multipart->pmeshes[i_dom].vtx_ghost_information = malloc(n_part[i_dom] * sizeof(int *));
+    multipart->pmeshes[i_dom].hyperplane_color      = malloc(n_part[i_dom] * sizeof(int *));
+    multipart->pmeshes[i_dom].thread_color          = malloc(n_part[i_dom] * sizeof(int *));
+    for(int i_part = 0; i_part < n_part[i_dom]; ++i_part) {
+      multipart->pmeshes[i_dom].vtx_ghost_information[i_part] = NULL;
+      multipart->pmeshes[i_dom].hyperplane_color     [i_part] = NULL;
+      multipart->pmeshes[i_dom].thread_color         [i_part] = NULL;
+    }
+    multipart->pmeshes[i_dom].is_owner_vtx_ghost_information = PDM_TRUE;
+    multipart->pmeshes[i_dom].is_owner_hyperplane_color      = PDM_TRUE;
+    multipart->pmeshes[i_dom].is_owner_thread_color          = PDM_TRUE;
   }
 
   return (PDM_multipart_t *) multipart;
@@ -3044,6 +3058,55 @@ PDM_multipart_domain_interface_shared_set
   abort();
 }
 
+/**
+ *
+ * \brief Set the reordering methods to be used after partitioning
+ *
+ * \param [in]   multipart               Pointer to \ref PDM_multipart_t object
+ * \param [in]   i_domain                Id of domain which parameters apply (or -1 for all domains)
+ * \param [in]   mesh_entity             kind of entity who want to renum
+ * \param [in]   renum_entity_method     Choice of renumbering method for cells
+ * \param [in]   renum_entity_properties parameter list of current method (can be NULL)
+ *
+ */
+void
+PDM_multipart_renum_method_set
+(
+ PDM_multipart_t     *multipart,
+ const int            i_domain,
+ PDM_mesh_entities_t  mesh_entity,
+ const char          *renum_entity_method,
+ const int           *renum_entity_properties
+)
+{
+  int method_renum_id = -1;
+  if(mesh_entity == PDM_MESH_ENTITY_CELL) {
+    method_renum_id = PDM_part_renum_method_cell_idx_get(renum_entity_method);
+  } else if(mesh_entity == PDM_MESH_ENTITY_FACE) {
+    method_renum_id = PDM_part_renum_method_face_idx_get(renum_entity_method);
+  } else if(mesh_entity == PDM_MESH_ENTITY_EDGE) {
+    method_renum_id = PDM_part_renum_method_edge_idx_get(renum_entity_method);
+  } else if(mesh_entity == PDM_MESH_ENTITY_VTX) {
+    method_renum_id = PDM_part_renum_method_vtx_idx_get(renum_entity_method);
+  }
+
+  if (method_renum_id == -1) {
+    PDM_error (__FILE__, __LINE__, 0, "'%s' is an unknown renumbering mesh_entity method\n", renum_entity_method);
+  }
+
+  if(i_domain < 0) {
+    for (int i_dom = 0; i_dom < multipart->n_domain; i_dom++) {
+      multipart->pmeshes[i_dom].renum_method           [mesh_entity] = method_renum_id;
+      multipart->pmeshes[i_dom].renum_method_properties[mesh_entity] = renum_entity_properties;
+    }
+  }
+  else {
+    assert(i_domain < multipart->n_domain);
+    multipart->pmeshes[i_domain].renum_method           [mesh_entity] = method_renum_id;
+    multipart->pmeshes[i_domain].renum_method_properties[mesh_entity] = renum_entity_properties;
+  }
+}
+
 
 /**
  *
@@ -3058,7 +3121,8 @@ PDM_multipart_domain_interface_shared_set
  * \param [in]   renum_face_method     Choice of renumbering method for faces
  *
  */
-void PDM_multipart_set_reordering_options
+void
+PDM_multipart_set_reordering_options
 (
  PDM_multipart_t *multipart,
  const int        i_domain,
@@ -3078,19 +3142,21 @@ void PDM_multipart_set_reordering_options
   }
 
   if(i_domain < 0) {
-    for (int idomain = 0; idomain < multipart->n_domain; idomain++) {
-      multipart->pmeshes[idomain].renum_cell_method = _renum_cell_method;
-      multipart->pmeshes[idomain].renum_face_method = _renum_face_method;
-      multipart->pmeshes[idomain].renum_cell_properties = renum_cell_properties;
+    for (int i_dom = 0; i_dom < multipart->n_domain; i_dom++) {
+      multipart->pmeshes[i_dom].renum_method           [PDM_MESH_ENTITY_CELL] = _renum_cell_method;
+      multipart->pmeshes[i_dom].renum_method           [PDM_MESH_ENTITY_FACE] = _renum_face_method;
+      multipart->pmeshes[i_dom].renum_method_properties[PDM_MESH_ENTITY_CELL] = renum_cell_properties;
     }
   }
   else {
     assert(i_domain < multipart->n_domain);
-    multipart->pmeshes[i_domain].renum_cell_method = _renum_cell_method;
-    multipart->pmeshes[i_domain].renum_face_method = _renum_face_method;
-    multipart->pmeshes[i_domain].renum_cell_properties = renum_cell_properties;
+    multipart->pmeshes[i_domain].renum_method           [PDM_MESH_ENTITY_CELL] = _renum_cell_method;
+    multipart->pmeshes[i_domain].renum_method           [PDM_MESH_ENTITY_FACE] = _renum_face_method;
+    multipart->pmeshes[i_domain].renum_method_properties[PDM_MESH_ENTITY_CELL] = renum_cell_properties;
   }
 }
+
+
 void PDM_multipart_set_reordering_options_vtx
 (
  PDM_multipart_t *multipart,
@@ -3105,13 +3171,13 @@ void PDM_multipart_set_reordering_options_vtx
   }
 
   if(i_domain < 0) {
-    for (int idomain = 0; idomain < multipart->n_domain; idomain++) {
-      multipart->pmeshes[idomain].renum_vtx_method = _renum_vtx_method;
+    for (int i_dom = 0; i_dom < multipart->n_domain; i_dom++) {
+      multipart->pmeshes[i_dom].renum_method[PDM_MESH_ENTITY_VTX] = _renum_vtx_method;
     }
   }
   else {
     assert(i_domain < multipart->n_domain);
-    multipart->pmeshes[i_domain].renum_vtx_method = _renum_vtx_method;
+    multipart->pmeshes[i_domain].renum_method[PDM_MESH_ENTITY_VTX] = _renum_vtx_method;
   }
 }
 
@@ -3159,7 +3225,6 @@ PDM_multipart_compute
         int n_part = multipart->n_part[i_domain];
         _part_mesh_t* pmesh = &(multipart->pmeshes[i_domain]);
 
-        // _run_ppart_domain_nodal(dmesh_nodal,pmesh,split_method,n_part,comm);
 
         const double* part_fraction      = &multipart->part_fraction[starting_part_idx[i_domain]];
         PDM_part_size_t part_size_method = multipart->part_size_method;
@@ -3956,10 +4021,6 @@ PDM_multipart_free
 {
   // free(multipart->dmeshes_ids);
   for (int i_domain = 0; i_domain < multipart->n_domain; i_domain++) {
-    if (multipart->pmeshes[i_domain].joins_ids != NULL) {
-      free(multipart->pmeshes[i_domain].joins_ids);
-    }
-
     for (int i_part = 0; i_part < multipart->n_part[i_domain]; i_part++) {
       if(multipart->pmeshes[i_domain].vtx_ghost_information[i_part] != NULL) {
         if(multipart->pmeshes[i_domain].is_owner_vtx_ghost_information == PDM_TRUE) {

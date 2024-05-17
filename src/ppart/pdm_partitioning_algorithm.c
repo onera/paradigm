@@ -102,6 +102,7 @@ static inline int _is_prime(int num)
  *   is made trought the local to global numbering computed by the function.
  *
  * \param [in]   comm                  PDM_MPI communicator
+ * \param [in]   order_part            Order part by increasing gnum
  * \param [in]   part_distribution     Distribution of partitions over the processes (size=n_rank+1)
  * \param [in]   entity_distribution   Distribution of entities over the processes (size=n_rank+1)
  * \param [in]   dentity_to_part       Id of assigned partition for each entity (size=dn_entity)
@@ -116,6 +117,7 @@ int
 PDM_part_assemble_partitions
 (
  const PDM_MPI_Comm    comm,
+ const int             order_part,
        PDM_g_num_t    *part_distribution,
  const PDM_g_num_t    *entity_distribution,
  const int            *dentity_to_part,
@@ -195,6 +197,7 @@ PDM_part_assemble_partitions
                                 (void **) &dentity_ln_to_gn,
                                           pn_entity,
                                 (void **) &pentity_ln_to_gn_tmp);
+  PDM_UNUSED(n_recv_tot);
   if(dentity_gnum == NULL) {
     free(dentity_ln_to_gn);
   }
@@ -219,24 +222,27 @@ PDM_part_assemble_partitions
   }
   free(dentity_stri);
 
-  /* Sort cells in increasing gnum */
   int* _pn_entity = *pn_entity;
-  int* order = NULL;
   int offset = 0;
-  for (int i=0; i < n_part_block; ++i) {
 
-    if (have_init_location == 1) { //Keep order to sort pentity_init_location_tmp
-      order = PDM_array_new_range_int(_pn_entity[i]);
+  /* Sort cells in increasing gnum */
+  if (order_part == 1){
+    int* order = NULL;
+    for (int i=0; i < n_part_block; ++i) {
+
+      if (have_init_location == 1) { //Keep order to sort pentity_init_location_tmp
+        order = PDM_array_new_range_int(_pn_entity[i]);
+      }
+
+      PDM_sort_long(&(pentity_ln_to_gn_tmp[offset]), order, _pn_entity[i]);
+
+      if (have_init_location == 1) {
+        PDM_order_array(_pn_entity[i], 3*sizeof(int), order, &(pentity_init_location_tmp[3*offset]));
+        free(order);
+      }
+
+      offset += _pn_entity[i];
     }
-
-    PDM_sort_long(&(pentity_ln_to_gn_tmp[offset]), order, _pn_entity[i]);
-
-    if (have_init_location == 1) {
-      PDM_order_array(_pn_entity[i], 3*sizeof(int), order, &(pentity_init_location_tmp[3*offset]));
-      free(order);
-    }
-
-    offset += _pn_entity[i];
   }
 
 
@@ -253,28 +259,28 @@ PDM_part_assemble_partitions
   offset = 0;
   for(int i_part = 0; i_part < n_part_block; ++i_part){
 
-    int _pn_entity = (*pn_entity)[i_part];
-    _pentity_ln_to_gn[i_part] = (PDM_g_num_t *) malloc( sizeof(PDM_g_num_t) * _pn_entity);
+    // int _pn_entity = (*pn_entity)[i_part];
+    _pentity_ln_to_gn[i_part] = (PDM_g_num_t *) malloc( sizeof(PDM_g_num_t) * _pn_entity[i_part]);
 
-    for(int i_elmt = 0; i_elmt < _pn_entity; ++i_elmt){
+    for(int i_elmt = 0; i_elmt < _pn_entity[i_part]; ++i_elmt){
       _pentity_ln_to_gn[i_part][i_elmt] = pentity_ln_to_gn_tmp[offset + i_elmt];
     }
 
     if(have_init_location == 1) {
-      _pentity_init_location[i_part] = (int *) malloc( sizeof(int) * 3 * _pn_entity);
-      for(int i_elmt = 0; i_elmt < _pn_entity; ++i_elmt){
+      _pentity_init_location[i_part] = (int *) malloc( sizeof(int) * 3 * _pn_entity[i_part]);
+      for(int i_elmt = 0; i_elmt < _pn_entity[i_part]; ++i_elmt){
         _pentity_init_location[i_part][3*i_elmt  ] = pentity_init_location_tmp[3*(offset + i_elmt)  ];
         _pentity_init_location[i_part][3*i_elmt+1] = pentity_init_location_tmp[3*(offset + i_elmt)+1];
         _pentity_init_location[i_part][3*i_elmt+2] = pentity_init_location_tmp[3*(offset + i_elmt)+2];
       }
     }
 
-    offset += _pn_entity;
+    offset += _pn_entity[i_part];
 
     /* Panic verbose */
     if(0 == 1){
       printf("[%i] _pentity_ln_to_gn = ", i_rank);
-      for(int i_data = 0; i_data < _pn_entity; ++i_data){
+      for(int i_data = 0; i_data < _pn_entity[i_part]; ++i_data){
         printf(PDM_FMT_G_NUM" ", _pentity_ln_to_gn[i_part][i_data]);
       }
       printf("\n");
@@ -290,6 +296,7 @@ PDM_part_assemble_partitions
       (*pentity_ln_to_gn)[i_part] = NULL;
     }
     if(pentity_init_location != NULL) {
+      free(*pentity_init_location);
       *pentity_init_location = (int **) malloc( sizeof(int *) * dn_part);
       for(int i_part = 0; i_part < dn_part; ++i_part) {
         (*pentity_init_location)[i_part] = NULL;

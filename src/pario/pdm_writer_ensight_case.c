@@ -15,6 +15,7 @@
  *  Header for the current file
  *----------------------------------------------------------------------------*/
 
+#include "pdm_priv.h"
 #include "pdm_writer.h"
 #include "pdm_writer_priv.h"
 #include "pdm_writer_ensight_case.h"
@@ -1169,6 +1170,9 @@ PDM_writer_ensight_case_write(PDM_writer_ensight_case_t  *const this_case,
         for (int j1 = 0 ; j1 < 3076 ; j1++) {
           line[j1] = ' ';
         }
+
+PDM_GCC_SUPPRESS_WARNING_WITH_PUSH("-Wstringop-truncation")
+
         size_t l = strlen(var->name);
 
         /* Create description (49 chars max) */
@@ -1176,6 +1180,9 @@ PDM_writer_ensight_case_write(PDM_writer_ensight_case_t  *const this_case,
         if (l > 49)
             l = 49;
         strncpy(description, var->name, l);
+
+PDM_GCC_SUPPRESS_WARNING_POP
+
         description[l] = '\0';
 
         for (int j1 = 0 ; j1 < (int) l ; j1++) {

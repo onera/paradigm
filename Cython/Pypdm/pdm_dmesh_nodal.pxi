@@ -84,6 +84,9 @@ cdef extern from "pdm_dmesh_nodal.h":
     void PDM_dmesh_nodal_dump_vtk(PDM_dmesh_nodal_t   *dmn,
                                   PDM_geometry_kind_t  geom_kind,
                                   const char          *filename_patter)
+    void PDM_dmesh_nodal_find_topological_ridge(PDM_dmesh_nodal_t         *dmesh_nodal);
+    void PDM_dmesh_nodal_revert_orientation(PDM_dmesh_nodal_t    *dmesh_nodal,
+                                            PDM_geometry_kind_t   geom_kind);
     # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 cdef extern from "pdm_elt_parent_find.h":
@@ -532,3 +535,27 @@ def ComputeDistributionFromDelmt(int         dnelt,
 # ------------------------------------------------------------------------
 
 
+def find_topological_ridge(DMeshNodal pydmn):
+  """
+  find_topological_ridge(pydmn)
+
+  Retrieve ridges from surfaces in a Dmesh Nodal and build associated edges
+
+  Parameters:
+    pydmn (:py:class:`DMeshNodal`) : Dmesh Nodal object
+  """
+  PDM_dmesh_nodal_find_topological_ridge(pydmn.dmn)
+
+
+def revert_orientation(DMeshNodal          pydmn,
+                       PDM_geometry_kind_t geom_kind):
+  """
+  revert_orientation(pydmn, geom_kind)
+
+  Reverse orientation of all sections of a given geometry kind in a Dmesh Nodal
+
+  Parameters:
+    pydmn     (:py:class:`DMeshNodal`) : Dmesh Nodal object
+    geom_kind (int)                    : Geometry kind (ridge, surface or volume)
+  """
+  PDM_dmesh_nodal_revert_orientation(pydmn.dmn, geom_kind)

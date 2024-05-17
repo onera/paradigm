@@ -185,6 +185,28 @@ PDM_multipart_block_set
  *
  * \brief Set the reordering methods to be used after partitioning
  *
+ * \param [in]   multipart               Pointer to \ref PDM_multipart_t object
+ * \param [in]   i_domain                Id of domain which parameters apply (or -1 for all domains)
+ * \param [in]   mesh_entity             kind of entity who want to renum
+ * \param [in]   renum_entity_method     Choice of renumbering method for cells
+ * \param [in]   renum_entity_properties parameter list of current method (can be NULL)
+ *
+ */
+void
+PDM_multipart_renum_method_set
+(
+ PDM_multipart_t     *multipart,
+ const int            i_domain,
+ PDM_mesh_entities_t  mesh_entity,
+ const char          *renum_entity_method,
+ const int           *renum_entity_properties
+);
+
+
+/**
+ *
+ * \brief Set the reordering methods to be used after partitioning
+ *
  * \param [in]   multipart             Pointer to \ref PDM_multipart_t instance
  * \param [in]   i_domain              Id of domain which parameters apply (or -1 for all domains)
  * \param [in]   renum_cell_method     Choice of renumbering method for cells

@@ -1825,9 +1825,23 @@ int     *new_to_old_order
    old_to_new_order[new_to_old_order[i]] = i;
   }
 
-  PDM_part_renum_array (part->cell_face_idx[part->n_cell],
-                        old_to_new_order,
-                        part->cell_face);
+  if(part->cell_face_idx != NULL) {
+    PDM_part_renum_array (part->cell_face_idx[part->n_cell],
+                          old_to_new_order,
+                          part->cell_face);
+  }
+
+  if(part->edge_face_idx != NULL && part->edge_face != NULL) {
+    PDM_part_renum_array (part->edge_face_idx[part->n_edge],
+                          old_to_new_order,
+                          part->edge_face);
+  } else if (part->edge_face != NULL) {
+    _renum_face_cell(part->n_face,
+                     part->n_edge,
+                     part->edge_face,
+                     new_to_old_order);
+  }
+
 
   /** face_tag **/
   if (part->face_tag != NULL) {
@@ -1880,9 +1894,11 @@ int     *new_to_old_order
   }
 
   /** face_cell Face **/
-  PDM_order_face_cell (part->n_face,
-                       new_to_old_order,
-                       part->face_cell);
+  if(part->face_cell != NULL) {
+    PDM_order_face_cell (part->n_face,
+                         new_to_old_order,
+                         part->face_cell);
+  }
 
   /* Free */
   free (old_to_new_order);
@@ -1907,7 +1923,7 @@ int     *new_to_old_order
   /** face_vtx **/
   int *old_to_new_order = (int *) malloc (part->n_edge * sizeof(int));
   for(int i = 0; i < part->n_edge; i++) {
-   old_to_new_order[new_to_old_order[i]] = i;
+    old_to_new_order[new_to_old_order[i]] = i;
   }
 
   if (part->face_edge != NULL) {
@@ -1916,11 +1932,15 @@ int     *new_to_old_order
                           part->face_edge);
   }
 
-  if(part->edge_face != NULL) {
+  if(part->edge_face != NULL && part->edge_face_idx != NULL) {
     PDM_part_renum_connectivities (part->n_face,
                                    new_to_old_order,
                                    part->edge_face_idx,
                                    part->edge_face);
+  } else if(part->edge_face != NULL) { // 2d case - edge_face is 2 * n_edge
+    PDM_order_face_cell(part->n_edge,
+                        new_to_old_order,
+                        part->edge_face);
   }
 
   if( part->edge_vtx != NULL) {
@@ -2097,6 +2117,49 @@ int     *new_to_old_order
                      part->face_bound_ln_to_gn);
   }
 }
+
+
+
+/**
+ *
+ * \brief Perform faces renumbering from a new order
+ *
+ * \param [in,out]  part        Current partition
+ * \param [in]      new_to_old_order    NewOrder
+ *
+ */
+void
+PDM_part_reorder_edge_bound
+(
+_part_t *part,
+int     *new_to_old_order
+)
+{
+  if (part->edge_group != NULL) {
+    PDM_order_array (part->edge_group_idx[part->n_edge_group],
+                     sizeof(int),
+                     new_to_old_order,
+                     part->edge_group);
+
+    PDM_order_array (part->edge_group_idx[part->n_edge_group],
+                     sizeof(PDM_g_num_t),
+                     new_to_old_order,
+                     part->edge_group_ln_to_gn);
+  }
+
+  if (part->edge_bound != NULL) {
+    PDM_order_array (part->edge_bound_idx[part->n_edge_group],
+                     sizeof(int),
+                     new_to_old_order,
+                     part->edge_bound);
+
+    PDM_order_array (part->edge_bound_idx[part->n_edge_group],
+                     sizeof(PDM_g_num_t),
+                     new_to_old_order,
+                     part->edge_bound_ln_to_gn);
+  }
+}
+
 
 #ifdef __cplusplus
 }

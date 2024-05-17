@@ -907,7 +907,7 @@ PDM_part_mesh_free
     for(int i = 0; i < PDM_MESH_ENTITY_MAX; ++i) {
       if(pmesh->is_owner_color[i] == PDM_TRUE) {
         for(int i_part = 0; i_part < pmesh->n_part; ++i_part) {
-          if(pmesh->pentity_color[i][i_part] != NULL) {
+          if(pmesh->pentity_color[i] != NULL && pmesh->pentity_color[i][i_part] != NULL) {
             free(pmesh->pentity_color[i][i_part]);
           }
         }
