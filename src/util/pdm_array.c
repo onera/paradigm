@@ -41,6 +41,24 @@ extern "C" {
 
 
 /*
+ * Array copy
+ */
+int* PDM_array_copy_int(const int *array, const int size) {
+  assert (size >= 0);
+  int *array_cp = (int *) malloc(size * sizeof(int));
+  assert (array != NULL);
+  for (int i = 0; i < size; i++) array_cp[i] = array[i];
+  return array_cp;
+}
+PDM_g_num_t* PDM_array_copy_gnum(const PDM_g_num_t *array, const int size) {
+  assert (size >= 0);
+  PDM_g_num_t *array_cp = (PDM_g_num_t *) malloc(size * sizeof(PDM_g_num_t));
+  assert (array != NULL);
+  for (int i = 0; i < size; i++) array_cp[i] = array[i];
+  return array_cp;
+}
+
+/*
  * Allocate a new array of size size and fill it with 0
 */
 int* PDM_array_zeros_int(const int size) {
@@ -48,6 +66,13 @@ int* PDM_array_zeros_int(const int size) {
   int *array = (int *) malloc(size * sizeof(int));
   assert (array != NULL);
   for (int i = 0; i < size; i++) array[i] = 0;
+  return array;
+}
+double* PDM_array_zeros_double(const int size) {
+  assert (size >= 0);
+  double *array = (double *) malloc(size * sizeof(double));
+  assert (array != NULL);
+  for (int i = 0; i < size; i++) array[i] = 0.;
   return array;
 }
 
