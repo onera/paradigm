@@ -179,6 +179,9 @@ struct _pdm_part_extension_t {
   /* New manner */
   int          dentity_itrf_n_blk              [PDM_BOUND_TYPE_MAX];
   PDM_g_num_t *dentity_itrf_blk_gnum           [PDM_BOUND_TYPE_MAX];
+  // PDM_g_num_t *dentity_itrf_blk_ancstr         [PDM_BOUND_TYPE_MAX];
+  // int         *dentity_itrf_blk_path_itrf_strd [PDM_BOUND_TYPE_MAX];
+  int         *dentity_itrf_blk_path_itrf      [PDM_BOUND_TYPE_MAX];
   int         *dentity_itrf_gnum_and_itrf_strid[PDM_BOUND_TYPE_MAX];
   PDM_g_num_t *dentity_itrf_gnum_and_itrf_data [PDM_BOUND_TYPE_MAX];
   int         *dentity_itrf_gnum_and_itrf_sens [PDM_BOUND_TYPE_MAX];

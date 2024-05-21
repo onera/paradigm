@@ -497,6 +497,7 @@ _find_twin_interface
   PDM_g_num_t   *d_db_entity_data,
   int           *pn_entity,
   PDM_g_num_t  **pentity_gnum,
+  PDM_g_num_t  **pentity_ancstr,
   int          **pentity_itrf,
   int          **pentity_twin_itrf_idx,
   int          **pentity_twin_itrf_itrf,
@@ -504,6 +505,8 @@ _find_twin_interface
   int          **pentity_twin_itrf_lnum,
   int          **p_db_n_entity_out,
   PDM_g_num_t ***p_db_entity_gnum_out,
+  PDM_g_num_t ***p_db_entity_ancstr_out,
+  int         ***p_db_entity_path_itrf_strd_out,
   PDM_g_num_t ***p_db_entity_data_out,
   PDM_MPI_Comm   comm
 )
@@ -547,6 +550,8 @@ _find_twin_interface
 
   int  *_p_db_n_entity_out    = *p_db_n_entity_out;
   int **_p_db_entity_gnum_out = *p_db_entity_gnum_out;
+  int **_p_db_entity_ancstr_out = *p_db_entity_ancstr_out;
+  int **_p_db_entity_path_itrf_strd_out = *p_db_entity_path_itrf_strd_out;
   int **_p_db_entity_data_out = *p_db_entity_data_out;
 
   for(int i_part = 0; i_part < n_part; ++i_part) {
@@ -559,7 +564,11 @@ _find_twin_interface
     int *p_db_entity2_idx = PDM_array_new_idx_from_sizes_int(p_db_entity_strd[i_part], pn_twin_itrf[i_part]);
 
     // > Realloc entry args
+    if (debug_loop==1) {log_trace("\n_p_db_n_entity_out[i_part] = %d\n", _p_db_n_entity_out[i_part]);}
+    if (debug_loop==1) {log_trace("\n pn_twin_itrf     [i_part] = %d\n",  pn_twin_itrf     [i_part]);}
     _p_db_entity_gnum_out[i_part] = realloc(_p_db_entity_gnum_out[i_part],   (_p_db_n_entity_out[i_part]+pn_twin_itrf[i_part]) * sizeof(PDM_g_num_t));
+    _p_db_entity_ancstr_out[i_part] = realloc(_p_db_entity_ancstr_out[i_part],   (_p_db_n_entity_out[i_part]+pn_twin_itrf[i_part]) * sizeof(PDM_g_num_t));
+    _p_db_entity_path_itrf_strd_out[i_part] = realloc(_p_db_entity_path_itrf_strd_out[i_part],   (_p_db_n_entity_out[i_part]+pn_twin_itrf[i_part]) * sizeof(int));
     _p_db_entity_data_out[i_part] = realloc(_p_db_entity_data_out[i_part], 2*(_p_db_n_entity_out[i_part]+pn_twin_itrf[i_part]) * sizeof(PDM_g_num_t));
 
     int idx_write = _p_db_n_entity_out[i_part];
@@ -568,6 +577,7 @@ _find_twin_interface
       if (debug_loop==1) {log_trace("\ni = %d --> i_pos = %d\n", i, i_pos);}
 
       int cur_gnum = pentity_gnum[i_part][i_pos];
+      int cur_ancstr = pentity_ancstr[i_part][i_pos];
       int cur_itrf = pentity_itrf[i_part][i_pos];
       if (debug_loop==1) {log_trace("\t -> gnum = %d ; interf = %d \n", cur_gnum, cur_itrf);}
 
@@ -579,10 +589,12 @@ _find_twin_interface
                                                         p_db_entity2_idx[j+1]-p_db_entity2_idx[j],
                                                         opp_gnum, opp_itrf);}
           if (cur_itrf==-opp_itrf) {
+            if (debug_loop==1) {log_trace("is valid (idx_write=%d)", idx_write);}
             _p_db_entity_gnum_out[i_part][  idx_write  ] =  cur_gnum;
+            _p_db_entity_ancstr_out[i_part][  idx_write  ] =  cur_ancstr;
+            _p_db_entity_path_itrf_strd_out[i_part][  idx_write  ] =  0;
             _p_db_entity_data_out[i_part][2*idx_write  ] =  opp_gnum;
             _p_db_entity_data_out[i_part][2*idx_write+1] =  pentity_twin_itrf_itrf[i_part][j];
-            if (debug_loop==1) {log_trace("is valid");}
 
             idx_write++;
           }
@@ -596,6 +608,8 @@ _find_twin_interface
 
     if (debug==1) {
       PDM_log_trace_array_int(_p_db_entity_gnum_out[i_part],   _p_db_n_entity_out[i_part], "_p_db_entity_gnum_out ::");
+      PDM_log_trace_array_int(_p_db_entity_ancstr_out[i_part],   _p_db_n_entity_out[i_part], "_p_db_entity_ancstr_out ::");
+      PDM_log_trace_array_int(_p_db_entity_path_itrf_strd_out[i_part],   _p_db_n_entity_out[i_part], "_p_db_entity_path_itrf_strd_out ::");
       PDM_log_trace_array_int(_p_db_entity_data_out[i_part], 2*_p_db_n_entity_out[i_part], "_p_db_entity_data_out ::");
     }
     
@@ -624,16 +638,23 @@ _find_valid_entities
   int          **pentity1_itrf,
   int          **pentity1_entity2_idx,
   PDM_g_num_t  **pentity1_entity2_gnum,
+  // PDM_g_num_t  **pentity1_entity2_ancstr,
   int           *pentity1_entity2_ntot,
   int           *pn_entity2,
   PDM_g_num_t  **pentity2_gnum,
   int            d_db_n_entity2, // Distributed data_base
   PDM_g_num_t   *d_db_entity2_gnum,
+  PDM_g_num_t   *d_db_entity2_ancstr,
+  int           *d_db_entity2_path_itrf_strd,
+  int           *d_db_entity2_path_itrf,
   int           *d_db_entity2_strd,
   PDM_g_num_t   *d_db_entity2_data,
   int         ***pentity2_kind_out,
   int         ***pentity2_lnum_out,
   int         ***pentity2_itrf_out,
+  int         ***pentity2_ancstr_out,
+  int         ***pentity2_path_itrf_strd_out,
+  int         ***pentity2_path_itrf_out,
   int         ***pentity2_kind_idx_out,
   int         ***pentity2_kind_ordr_out,
   int         ***pentity2_twin_itrf_idx_out,
@@ -657,6 +678,16 @@ _find_valid_entities
     for(int i_part = 0; i_part < n_part; ++i_part) {
       PDM_log_trace_array_long(pentity1_entity2_idx[i_part], pn_entity1[i_part]+1, "pentity1_entity2_idx ::");
     }
+    
+    log_trace("\n");
+    int n_itrf = 0;
+    for (int i_entity=0; i_entity<d_db_n_entity2; ++i_entity) {
+      n_itrf+=d_db_entity2_path_itrf_strd[i_entity];
+    }
+    PDM_log_trace_array_long(d_db_entity2_gnum          , d_db_n_entity2, "d_db_entity2_gnum           ::");
+    PDM_log_trace_array_long(d_db_entity2_ancstr        , d_db_n_entity2, "d_db_entity2_ancstr         ::");
+    PDM_log_trace_array_long(d_db_entity2_path_itrf_strd, d_db_n_entity2, "d_db_entity2_path_itrf_strd ::");
+    PDM_log_trace_array_long(d_db_entity2_path_itrf     , n_itrf        , "d_db_entity2_path_itrf      ::");
   }
   
 
@@ -674,7 +705,6 @@ _find_valid_entities
 
   int         **p_db_entity2_strd = NULL;
   PDM_g_num_t **p_db_entity2_data = NULL;
-
   PDM_block_to_part_exch(btp,
                          2 * sizeof(PDM_g_num_t),
                          PDM_STRIDE_VAR_INTERLACED,
@@ -682,6 +712,28 @@ _find_valid_entities
                          d_db_entity2_data,
                         &p_db_entity2_strd,
          (void ***)     &p_db_entity2_data);
+
+  // > Var stride here cause some entities can be missing from init db
+  int          *d_db_entity2_ancstr_strd = PDM_array_const_int(d_db_n_entity2, 1);
+  int         **p_db_entity2_ancstr_strd = NULL;
+  PDM_g_num_t **p_db_entity2_ancstr = NULL;
+  PDM_block_to_part_exch(btp,
+                         1 * sizeof(PDM_g_num_t),
+                         PDM_STRIDE_VAR_INTERLACED,
+                         d_db_entity2_ancstr_strd,
+                         d_db_entity2_ancstr,
+                        &p_db_entity2_ancstr_strd,
+         (void ***)     &p_db_entity2_ancstr);
+
+  int **p_db_entity2_path_itrf_strd = NULL;
+  int **p_db_entity2_path_itrf      = NULL;
+  PDM_block_to_part_exch(btp,
+                         1 * sizeof(int),
+                         PDM_STRIDE_VAR_INTERLACED,
+                         d_db_entity2_path_itrf_strd,
+                         d_db_entity2_path_itrf,
+                        &p_db_entity2_path_itrf_strd,
+         (void ***)     &p_db_entity2_path_itrf);
   PDM_block_to_part_free(btp);
 
 
@@ -692,7 +744,18 @@ _find_valid_entities
    */
   if (debug==1) {
     for(int i_part = 0; i_part < n_part; ++i_part) {
-      PDM_log_trace_array_long(pentity2_gnum[i_part], pn_entity2[i_part], "pentity2_gnum        ::");
+      log_trace("\n");
+      int n_data = 0;
+      int n_itrf = 0;
+      for (int i_entity = 0; i_entity < pentity1_entity2_ntot[i_part]; ++i_entity) {
+        n_data += p_db_entity2_ancstr_strd[i_part][i_entity];
+        n_itrf += p_db_entity2_path_itrf_strd[i_part][i_entity];
+      }
+      PDM_log_trace_array_long(pentity2_gnum              [i_part], pn_entity2           [i_part], "pentity2_gnum               ::");
+      PDM_log_trace_array_int (p_db_entity2_ancstr_strd   [i_part], pentity1_entity2_ntot[i_part], "p_db_entity2_ancstr_strd    ::");
+      PDM_log_trace_array_long(p_db_entity2_ancstr        [i_part], n_data                       , "p_db_entity2_ancstr         ::");
+      PDM_log_trace_array_int (p_db_entity2_path_itrf_strd[i_part], pentity1_entity2_ntot[i_part], "p_db_entity2_path_itrf_strd ::");
+      PDM_log_trace_array_long(p_db_entity2_path_itrf     [i_part], n_itrf                       , "p_db_entity2_path_itrf      ::");
     }
   }
 
@@ -710,6 +773,12 @@ _find_valid_entities
   }
   if (debug==1) {
     for(int i_part = 0; i_part < n_part; ++i_part) {
+      log_trace("\n");
+      int n_data = 0;
+      for (int i_entity = 0; i_entity < pentity1_entity2_ntot[i_part]; ++i_entity) {
+        n_data += p_db_entity2_ancstr_strd[i_part][i_entity];
+      }
+      PDM_log_trace_array_long(pentity1_entity2_gnum       [i_part], pentity1_entity2_ntot[i_part], "pentity1_entity2_gnum        ::");
       PDM_log_trace_array_int (pentity2_ordr       [i_part], pn_entity2[i_part], "pentity2_ordr        ::");
       PDM_log_trace_array_long(pentity2_gnum_sorted[i_part], pn_entity2[i_part], "pentity2_gnum_sorted ::");
     }
@@ -743,23 +812,32 @@ _find_valid_entities
   int **pentity2_twin_itrf_gnum = malloc(n_part * sizeof(int *));
   int **pentity2_twin_itrf_itrf = malloc(n_part * sizeof(int *));
 
+  PDM_g_num_t **pentity2_ancstr         = malloc(n_part * sizeof(int *));
+  int         **pentity2_path_itrf_strd = malloc(n_part * sizeof(int *));
+  int         **pentity2_path_itrf      = malloc(n_part * sizeof(int *));
+
 
   for(int i_part = 0; i_part < n_part; ++i_part) {
     
     // > Allocate
-    pentity2_kind[i_part] = malloc(pentity1_entity2_ntot[i_part] * sizeof(int));
-    pentity2_lnum[i_part] = malloc(pentity1_entity2_ntot[i_part] * sizeof(int));
-    pentity2_itrf[i_part] = malloc(pentity1_entity2_ntot[i_part] * sizeof(int));
+    pentity2_kind  [i_part] = PDM_array_const_int(pentity1_entity2_ntot[i_part], -1);
+    pentity2_lnum  [i_part] = PDM_array_const_int(pentity1_entity2_ntot[i_part], -1);
+    pentity2_itrf  [i_part] = PDM_array_const_int(pentity1_entity2_ntot[i_part], -1);
+    
+    pentity2_ancstr        [i_part] = PDM_array_const_int(pentity1_entity2_ntot[i_part],  0);
+    pentity2_path_itrf_strd[i_part] = PDM_array_const_int(pentity1_entity2_ntot[i_part],  0);
+    PDM_log_trace_array_int(pentity2_path_itrf_strd[i_part], pentity1_entity2_ntot[i_part], "pentity2_path_itrf_strd ::");
   
     pentity2_twin_itrf_idx[i_part] = malloc((pentity1_entity2_ntot[i_part]+1) * sizeof(int));
     pentity2_twin_itrf_idx[i_part][0] = 0;
 
-
+    int len_path_itrf_tot = 0;
     int idx_read_data  = 0; // read index in received entity2 data_base infos
     int lidx_read_data = 0;
+    int i_read_ancstr = 0; // read index in received entity2 data_base ancstr infos
 
     for (int i = 0; i < pn_entity1[i_part]; ++i) {
-      if (debug_loop==1) {log_trace("\n\ni_entity1 = %d -> interf = %d \n", i, pentity1_itrf[i_part][i]);}
+      if (debug_loop==1) {log_trace("\n\ni_entity1 = %d gnum = "PDM_FMT_G_NUM" -> interf = %d \n", i, pentity1_itrf[i_part][i]);}
 
       if(pentity1_itrf[i_part][i] != 0) {
 
@@ -780,9 +858,9 @@ _find_valid_entities
           for(int k = 0; k < p_db_entity2_strd[i_part][j]; ++k) {
           
             // Candidate informations
-            opp_gnum     =          p_db_entity2_data[i_part][2*lidx_read_data  ];
-            opp_itrf     = PDM_ABS (p_db_entity2_data[i_part][2*lidx_read_data+1]);
-            opp_itrf_sgn = PDM_SIGN(p_db_entity2_data[i_part][2*lidx_read_data+1]);
+            opp_gnum     =          p_db_entity2_data  [i_part][2*lidx_read_data  ];
+            opp_itrf     = PDM_ABS (p_db_entity2_data  [i_part][2*lidx_read_data+1]);
+            opp_itrf_sgn = PDM_SIGN(p_db_entity2_data  [i_part][2*lidx_read_data+1]);
             if (debug_loop==1) {log_trace("\t\t candidate %d%d: ("PDM_FMT_G_NUM"/"PDM_FMT_G_NUM") \n", k+1, p_db_entity2_strd[i_part][j], opp_gnum, opp_itrf_sgn*opp_itrf);}
             
             // Check if candidate have same interface that entity2, if so it (entity2, itrf) alrdy know
@@ -799,10 +877,19 @@ _find_valid_entities
           if (known_in_db==0) {
             if (debug_loop==1) {log_trace("\t\t ===> Not found = ("PDM_FMT_G_NUM",%i), j = %d \n", cur_gnum, cur_itrf_sgn*cur_itrf, j);}
 
-            pentity2_lnum[i_part][j] = -1;
             pentity2_itrf[i_part][j] = pentity1_itrf[i_part][i];
             pentity2_kind[i_part][j] = 4;
             
+            if (p_db_entity2_ancstr_strd[i_part][j]==0) { // not in db now, wo it means that it is an ancstr
+              pentity2_ancstr        [i_part][j] = cur_gnum;
+            }
+            else {
+              pentity2_ancstr        [i_part][j] = p_db_entity2_ancstr        [i_part][i_read_ancstr];
+            }
+            pentity2_path_itrf_strd[i_part][j] = p_db_entity2_path_itrf_strd[i_part][j];
+            
+            len_path_itrf_tot += p_db_entity2_path_itrf_strd[i_part][j];
+
             // > Find other interfaces of the entity
             pentity2_twin_itrf_idx[i_part][j+1] = pentity2_twin_itrf_idx[i_part][j];
             lidx_read_data = idx_read_data;
@@ -816,8 +903,8 @@ _find_valid_entities
               }
               lidx_read_data++;
             }
-
-          } else {
+          }
+          else {
             if (debug_loop==1) {log_trace("\t\t ===> Local found = ("PDM_FMT_G_NUM",%i) \n", opp_gnum, opp_itrf_sgn*opp_itrf);}
 
             // Search if entity2 is known in partition
@@ -828,12 +915,11 @@ _find_valid_entities
               pentity2_itrf[i_part][j] = pentity1_itrf[i_part][i];
               pentity2_kind[i_part][j] = 1;
             } else {
-              pentity2_lnum[i_part][j] = -1;
               pentity2_itrf[i_part][j] = pentity1_itrf[i_part][i];
               pentity2_kind[i_part][j] = 3;
               
               // entity2 take the opposite gnum from db
-              pentity1_entity2_gnum[i_part][j] = opp_gnum;
+              pentity1_entity2_gnum  [i_part][j] = opp_gnum;
             }
 
             // > Other interfaces of the entity not interesting
@@ -842,6 +928,8 @@ _find_valid_entities
 
           // Increment reading
           idx_read_data += p_db_entity2_strd[i_part][j];
+          i_read_ancstr+=p_db_entity2_ancstr_strd[i_part][j];
+          // log_trace("i_read_ancstr = %d\n", i_read_ancstr)
         }
 
       } else {
@@ -860,7 +948,6 @@ _find_valid_entities
             pentity2_itrf[i_part][j] = pentity1_itrf[i_part][i];
             pentity2_kind[i_part][j] = 0;
           } else {
-            pentity2_lnum[i_part][j] = -1;
             pentity2_itrf[i_part][j] = pentity1_itrf[i_part][i];
             pentity2_kind[i_part][j] = 2;
           }
@@ -870,24 +957,33 @@ _find_valid_entities
           
           // Increment reading
           idx_read_data += p_db_entity2_strd[i_part][j];
+          i_read_ancstr+=p_db_entity2_ancstr_strd[i_part][j];
+          // log_trace("i_read_ancstr = %d\n", i_read_ancstr)
         }
       }
     }
 
     if (debug==1) {
-      PDM_log_trace_array_long(pentity1_entity2_gnum[i_part], pentity1_entity2_ntot[i_part], "pentity1_entity2_gnum ::");
-      PDM_log_trace_array_int (pentity2_lnum        [i_part], pentity1_entity2_ntot[i_part], "pentity2_lnum         ::");
-      PDM_log_trace_array_int (pentity2_itrf        [i_part], pentity1_entity2_ntot[i_part], "pentity2_itrf         ::");
-      PDM_log_trace_array_int (pentity2_kind        [i_part], pentity1_entity2_ntot[i_part], "pentity2_kind         ::");
+      PDM_log_trace_array_long(pentity1_entity2_gnum  [i_part], pentity1_entity2_ntot[i_part], "pentity1_entity2_gnum   ::");
+      PDM_log_trace_array_int (pentity2_lnum          [i_part], pentity1_entity2_ntot[i_part], "pentity2_lnum           ::");
+      PDM_log_trace_array_int (pentity2_itrf          [i_part], pentity1_entity2_ntot[i_part], "pentity2_itrf           ::");
+      PDM_log_trace_array_int (pentity2_kind          [i_part], pentity1_entity2_ntot[i_part], "pentity2_kind           ::");
+      PDM_log_trace_array_long(pentity2_ancstr        [i_part], pentity1_entity2_ntot[i_part], "pentity2_ancstr         ::");
+      PDM_log_trace_array_int (pentity2_path_itrf_strd[i_part], pentity1_entity2_ntot[i_part], "pentity2_path_itrf_strd ::");
     }
+
 
     // > Allocate
     int n_twin_interface = pentity2_twin_itrf_idx[i_part][pentity1_entity2_ntot[i_part]];
     pentity2_twin_itrf_gnum[i_part] = malloc( n_twin_interface * sizeof(PDM_g_num_t));;
     pentity2_twin_itrf_itrf[i_part] = malloc( n_twin_interface * sizeof(int        ));;
     
+    pentity2_path_itrf[i_part] = malloc(len_path_itrf_tot * sizeof(int        ));;
+    
     idx_read_data  = 0; // read index in received entity2 data_base infos
+    int idx_read_itrf  = 0; // read index in received entity2 data_base infos
     int idx_write_data = 0;
+    int idx_write_itrf = 0;
 
     for (int i = 0; i < pn_entity1[i_part]; ++i) {
       if (debug_loop==1) {log_trace("\n\ni_entity1 = %d -> interf = %d \n", i, pentity1_itrf[i_part][i]);}
@@ -915,16 +1011,25 @@ _find_valid_entities
             }
             idx_read_data++;
           }
-        } else {
-          idx_read_data += p_db_entity2_strd[i_part][j];
+          for(int k = 0; k < p_db_entity2_path_itrf_strd[i_part][j]; ++k) {
+            if (debug_loop==1) {log_trace("idx_write_itrf = %d -> interf = %d \n", idx_write_itrf, p_db_entity2_path_itrf[i_part][idx_read_itrf]);}
+            pentity2_path_itrf[i_part][idx_write_itrf++] = p_db_entity2_path_itrf[i_part][idx_read_itrf];
+            idx_read_itrf++;
+          }
+
+        }
+        else {
+          idx_read_data += p_db_entity2_strd          [i_part][j];
+          idx_read_itrf += p_db_entity2_path_itrf_strd[i_part][j];
         }
       }
     }
 
     if (debug==1) {
       PDM_log_trace_array_long(pentity2_twin_itrf_idx [i_part], pentity1_entity2_ntot[i_part]+1, "pentity2_twin_itrf_idx  ::");
-      PDM_log_trace_array_long(pentity2_twin_itrf_gnum[i_part], n_twin_interface    , "pentity2_twin_itrf_gnum ::");
-      PDM_log_trace_array_int (pentity2_twin_itrf_itrf[i_part], n_twin_interface    , "pentity2_twin_itrf_itrf ::");
+      PDM_log_trace_array_long(pentity2_twin_itrf_gnum[i_part], n_twin_interface               , "pentity2_twin_itrf_gnum ::");
+      PDM_log_trace_array_int (pentity2_twin_itrf_itrf[i_part], n_twin_interface               , "pentity2_twin_itrf_itrf ::");
+      PDM_log_trace_array_int (pentity2_path_itrf     [i_part], len_path_itrf_tot              , "pentity2_path_itrf      ::");
     }
   }
 
@@ -988,10 +1093,15 @@ _find_valid_entities
 
 
   // > Return
-  *pentity2_kind_out      = pentity2_kind     ;
-  *pentity2_lnum_out      = pentity2_lnum     ;
-  *pentity2_itrf_out      = pentity2_itrf     ;
-  *pentity2_kind_idx_out  = pentity2_kind_idx ;
+  *pentity2_kind_out      = pentity2_kind;
+  *pentity2_lnum_out      = pentity2_lnum;
+  *pentity2_itrf_out      = pentity2_itrf;
+  *pentity2_ancstr_out    = pentity2_ancstr;
+
+  *pentity2_path_itrf_strd_out  = pentity2_path_itrf_strd;
+  *pentity2_path_itrf_out       = pentity2_path_itrf;
+  
+  *pentity2_kind_idx_out  = pentity2_kind_idx;
   *pentity2_kind_ordr_out = pentity2_kind_ordr;
 
   *pentity2_twin_itrf_idx_out  = pentity2_twin_itrf_idx;
@@ -1016,19 +1126,30 @@ _enrich_block_interface
   int           n_part,
   int          *pn_entity_cur,
   PDM_g_num_t **cur_pentity_itrf_gnum,
+  PDM_g_num_t **cur_pentity_itrf_ancstr,
+  int         **cur_pentity_itrf_path_itrf_strd,
+  int         **cur_pentity_itrf_path_itrf,
   PDM_g_num_t **cur_pentity_itrf_data,
   int           pn_entity_prev,
   PDM_g_num_t  *prev_pentity_itrf_gnum,
+  PDM_g_num_t  *prev_pentity_itrf_ancstr,
+  int          *prev_pentity_itrf_path_itrf_strd,
+  int          *prev_pentity_itrf_path_itrf,
   int          *prev_pentity_itrf_strd,
   PDM_g_num_t  *prev_pentity_itrf_data,
   int          *dn_entity_next,
   PDM_g_num_t **next_dentity_itrf_gnum,
+  PDM_g_num_t **next_dentity_itrf_ancstr,
+  int         **next_dentity_itrf_path_itrf_strd,
+  int         **next_dentity_itrf_path_itrf,
   int         **next_dentity_itrf_strd,
   PDM_g_num_t **next_dentity_itrf_data,
+  int           fill_ancstr_and_path_itrf,
   PDM_MPI_Comm  comm
 )
 {
-  int debug = 0;
+  int debug      = 0;
+  int debug_loop = 0;
 
   if (debug==1) {
     log_trace("\n");
@@ -1039,36 +1160,77 @@ _enrich_block_interface
   /*
    * Concatenate array as one "domain"
    */
-  PDM_g_num_t **concat_pentity_itrf_gnum = malloc((n_part+1) * sizeof(PDM_g_num_t *));
-  int         **concat_pentity_itrf_strd = malloc((n_part+1) * sizeof(int         *));
-  PDM_g_num_t **concat_pentity_itrf_data = malloc((n_part+1) * sizeof(PDM_g_num_t *));
-  double      **concat_pentity_itrf_wght = malloc((n_part+1) * sizeof(double      *));
-  int          *pn_entity                = malloc((n_part+1) * sizeof(int          ));
+  int          *pn_entity                          = malloc((n_part+1) * sizeof(int          ));
+
+  PDM_g_num_t **concat_pentity_itrf_gnum           = malloc((n_part+1) * sizeof(PDM_g_num_t *));
+  int         **concat_pentity_itrf_strd           = malloc((n_part+1) * sizeof(int         *));
+  PDM_g_num_t **concat_pentity_itrf_data           = malloc((n_part+1) * sizeof(PDM_g_num_t *));
+  double      **concat_pentity_itrf_wght           = malloc((n_part+1) * sizeof(double      *));
   
+  PDM_g_num_t **concat_pentity_itrf_ancstr_strd    = NULL;
+  PDM_g_num_t **concat_pentity_itrf_ancstr         = NULL;
+  int         **concat_pentity_itrf_len_path_strd  = NULL;
+  int         **concat_pentity_itrf_path_itrf_strd = NULL;
+  int         **concat_pentity_itrf_path_itrf      = NULL;
+  if (fill_ancstr_and_path_itrf) {
+    concat_pentity_itrf_ancstr_strd    = malloc((n_part+1) * sizeof(int         *));
+    concat_pentity_itrf_ancstr         = malloc((n_part+1) * sizeof(PDM_g_num_t *));
+    concat_pentity_itrf_len_path_strd  = malloc((n_part+1) * sizeof(int         *));
+    concat_pentity_itrf_path_itrf_strd = malloc((n_part+1) * sizeof(int         *));
+    concat_pentity_itrf_path_itrf      = malloc((n_part+1) * sizeof(int         *));
+  }
     
   for(int i_part = 0; i_part < n_part; ++i_part) {
     if(debug == 1) {
       log_trace("\n");
       PDM_log_trace_array_long  (cur_pentity_itrf_gnum[i_part],   pn_entity_cur[i_part], "cur_pentity_itrf_gnum ::");
+      if (fill_ancstr_and_path_itrf) {
+        int n_itrf = 0;
+        for (int i=0; i<pn_entity_cur[i_part];++i) {
+          n_itrf += cur_pentity_itrf_path_itrf_strd[i_part][i];
+        }
+        PDM_log_trace_array_long  (cur_pentity_itrf_ancstr        [i_part],   pn_entity_cur[i_part], "cur_pentity_itrf_ancstr         ::");
+        PDM_log_trace_array_int   (cur_pentity_itrf_path_itrf_strd[i_part],   pn_entity_cur[i_part], "cur_pentity_itrf_path_itrf_strd ::");
+        PDM_log_trace_array_int   (cur_pentity_itrf_path_itrf     [i_part],   n_itrf               , "cur_pentity_itrf_path_itrf      ::");
+      }
     }
 
-    pn_entity[i_part] = 2 * pn_entity_cur[i_part];
+    pn_entity[i_part] = 2*pn_entity_cur[i_part];
+    int *cur_pentity_itrf_path_itrf_idx = NULL;
+    int len_path_itrf_tot = 0;
+    if (fill_ancstr_and_path_itrf) {
+      cur_pentity_itrf_path_itrf_idx = PDM_array_new_idx_from_sizes_int(cur_pentity_itrf_path_itrf_strd[i_part], pn_entity_cur[i_part]);
+      len_path_itrf_tot = cur_pentity_itrf_path_itrf_idx[pn_entity_cur[i_part]];
+      if(debug == 1) {
+        PDM_log_trace_array_int(cur_pentity_itrf_path_itrf_idx,   pn_entity_cur[i_part]+1, "cur_pentity_itrf_path_itrf_idx ::");
+      }
+    }
 
-    concat_pentity_itrf_gnum[i_part] = malloc(2 * pn_entity[i_part] * sizeof(PDM_g_num_t));
-    concat_pentity_itrf_strd[i_part] = malloc(2 * pn_entity[i_part] * sizeof(int        ));
-    concat_pentity_itrf_data[i_part] = malloc(4 * pn_entity[i_part] * sizeof(PDM_g_num_t));
-    concat_pentity_itrf_wght[i_part] = malloc(2 * pn_entity[i_part] * sizeof(double     ));
+    concat_pentity_itrf_gnum          [i_part] = malloc(    pn_entity[i_part] * sizeof(PDM_g_num_t));
+    concat_pentity_itrf_strd          [i_part] = malloc(    pn_entity[i_part] * sizeof(int        ));
+    concat_pentity_itrf_data          [i_part] = malloc(2 * pn_entity[i_part] * sizeof(PDM_g_num_t));
+    concat_pentity_itrf_wght          [i_part] = malloc(    pn_entity[i_part] * sizeof(double     ));
+    if (fill_ancstr_and_path_itrf) {
+      concat_pentity_itrf_ancstr_strd   [i_part] = malloc(    pn_entity[i_part] * sizeof(int        ));
+      concat_pentity_itrf_ancstr        [i_part] = malloc(    pn_entity[i_part] * sizeof(PDM_g_num_t));
+      concat_pentity_itrf_len_path_strd [i_part] = malloc(    pn_entity[i_part] * sizeof(int        ));
+      concat_pentity_itrf_path_itrf_strd[i_part] = malloc(    pn_entity[i_part] * sizeof(int        ));
+      // concat_pentity_itrf_path_itrf     [i_part] = malloc(2 * len_path_itrf_tot * sizeof(int        ));
+      concat_pentity_itrf_path_itrf     [i_part] = malloc(    len_path_itrf_tot * sizeof(int        ));
+    }
 
+    int j_write_data = 0;
     for(int i = 0; i < pn_entity_cur[i_part]; ++i) {
-      PDM_g_num_t orig_gnum = cur_pentity_itrf_data[i_part][2*i  ];
-      PDM_g_num_t i_itrf    = cur_pentity_itrf_data[i_part][2*i+1];
-      PDM_g_num_t new_gnum  = cur_pentity_itrf_gnum[i_part][  i  ];
-
+      PDM_g_num_t orig_gnum   = cur_pentity_itrf_data  [i_part][2*i  ];
+      PDM_g_num_t i_itrf      = cur_pentity_itrf_data  [i_part][2*i+1];
+      PDM_g_num_t new_gnum    = cur_pentity_itrf_gnum  [i_part][  i  ];
+      
       int j = pn_entity_cur[i_part]+i;
 
       /* Remplissage */
       concat_pentity_itrf_gnum[i_part][i] = orig_gnum;
       concat_pentity_itrf_gnum[i_part][j] = new_gnum;
+
 
       concat_pentity_itrf_data[i_part][2*i  ] = new_gnum;
       concat_pentity_itrf_data[i_part][2*i+1] =-i_itrf;
@@ -1081,6 +1243,26 @@ _enrich_block_interface
 
       concat_pentity_itrf_wght[i_part][i] = 1.;
       concat_pentity_itrf_wght[i_part][j] = 1.;
+
+      if (fill_ancstr_and_path_itrf) {
+        PDM_g_num_t new_ancstr            = cur_pentity_itrf_ancstr          [i_part][  i  ];
+        int         new_path_itrf_strd    = cur_pentity_itrf_path_itrf_strd  [i_part][  i  ];
+        
+        concat_pentity_itrf_ancstr_strd[i_part][i] = 1;
+        concat_pentity_itrf_ancstr_strd[i_part][j] = 1;
+        concat_pentity_itrf_ancstr[i_part][i] = new_ancstr;
+        concat_pentity_itrf_ancstr[i_part][j] = new_ancstr;
+
+        concat_pentity_itrf_len_path_strd[i_part][i] = 1;
+        concat_pentity_itrf_len_path_strd[i_part][j] = 1;
+        concat_pentity_itrf_path_itrf_strd[i_part][i] = 0;
+        concat_pentity_itrf_path_itrf_strd[i_part][j] = new_path_itrf_strd;
+        int i_beg_read_data = cur_pentity_itrf_path_itrf_idx[i  ];
+        int i_end_read_data = cur_pentity_itrf_path_itrf_idx[i+1];
+        for (int i_read_data=i_beg_read_data; i_read_data<i_end_read_data; ++i_read_data) {
+          concat_pentity_itrf_path_itrf[i_part][j_write_data++] = cur_pentity_itrf_path_itrf[i_part][i_read_data];
+        }
+      }
     }
 
     if(debug == 1) {
@@ -1088,26 +1270,65 @@ _enrich_block_interface
       PDM_log_trace_array_long  (concat_pentity_itrf_gnum[i_part],   pn_entity[i_part], "concat_pentity_itrf_gnum ::");
       PDM_log_trace_array_int   (concat_pentity_itrf_strd[i_part],   pn_entity[i_part], "concat_pentity_itrf_strd ::");
       PDM_log_trace_array_long  (concat_pentity_itrf_data[i_part], 2*pn_entity[i_part], "concat_pentity_itrf_data ::");
-      PDM_log_trace_array_double(concat_pentity_itrf_wght[i_part],   pn_entity[i_part], "concat_pentity_itrf_wght ::");
+      // PDM_log_trace_array_double(concat_pentity_itrf_wght[i_part],   pn_entity[i_part], "concat_pentity_itrf_wght ::");
+      if (fill_ancstr_and_path_itrf) {
+        int n_data = 0;
+        for (int i=0; i<pn_entity[i_part];++i) {
+          n_data += concat_pentity_itrf_path_itrf_strd[i_part][i];
+        }
+        PDM_log_trace_array_int (concat_pentity_itrf_ancstr_strd   [i_part],   pn_entity[i_part]  , "concat_pentity_itrf_path_itrf_strd ::");
+        PDM_log_trace_array_long(concat_pentity_itrf_ancstr        [i_part],   pn_entity[i_part]  , "concat_pentity_itrf_ancstr         ::");
+        PDM_log_trace_array_int (concat_pentity_itrf_len_path_strd [i_part],   pn_entity[i_part]  , "concat_pentity_itrf_len_path_strd  ::");
+        PDM_log_trace_array_int (concat_pentity_itrf_path_itrf_strd[i_part],   pn_entity[i_part]  , "concat_pentity_itrf_path_itrf_strd ::");
+        PDM_log_trace_array_int (concat_pentity_itrf_path_itrf     [i_part],   n_data             , "concat_pentity_itrf_path_itrf      ::");
+      }
     }
-
   }
-  concat_pentity_itrf_gnum[n_part] = prev_pentity_itrf_gnum;
-  concat_pentity_itrf_strd[n_part] = prev_pentity_itrf_strd;
-  concat_pentity_itrf_data[n_part] = prev_pentity_itrf_data;
-  concat_pentity_itrf_wght[n_part] = malloc(pn_entity_prev * sizeof(double));
+
+  concat_pentity_itrf_gnum          [n_part] = prev_pentity_itrf_gnum;
+  concat_pentity_itrf_strd          [n_part] = prev_pentity_itrf_strd;
+  concat_pentity_itrf_data          [n_part] = prev_pentity_itrf_data;
+  concat_pentity_itrf_wght          [n_part] = malloc(pn_entity_prev * sizeof(double));
+  if (fill_ancstr_and_path_itrf) {
+    concat_pentity_itrf_ancstr_strd   [n_part] = PDM_array_const_int(pn_entity_prev, 1);
+    concat_pentity_itrf_ancstr        [n_part] = prev_pentity_itrf_ancstr;
+    concat_pentity_itrf_path_itrf_strd[n_part] = prev_pentity_itrf_path_itrf_strd;
+    concat_pentity_itrf_path_itrf     [n_part] = prev_pentity_itrf_path_itrf;
+    concat_pentity_itrf_len_path_strd [n_part] = PDM_array_zeros_int(pn_entity_prev);
+    for(int i = 0; i < pn_entity_prev; ++i) {
+        concat_pentity_itrf_len_path_strd [n_part][i] = 1;
+    }
+  }
+
   pn_entity[n_part] = pn_entity_prev;
   for(int i = 0; i < pn_entity_prev; ++i) {
     concat_pentity_itrf_wght[n_part][i] = 1.;
   }
 
   if(debug == 1) {
-      log_trace("\n");
-      PDM_log_trace_array_long  (concat_pentity_itrf_gnum[n_part], pn_entity[n_part], "concat_pentity_itrf_gnum ::");
-      PDM_log_trace_array_int   (concat_pentity_itrf_strd[n_part], pn_entity[n_part], "concat_pentity_itrf_strd ::");
-      PDM_log_trace_array_long  (concat_pentity_itrf_data[n_part], pn_entity[n_part], "concat_pentity_itrf_data ::");
-      PDM_log_trace_array_double(concat_pentity_itrf_wght[n_part], pn_entity[n_part], "concat_pentity_itrf_wght ::");
-      PDM_log_trace_array_int   (pn_entity, n_part+1, "pn_entity ::");
+    int n_data = 0;
+    for (int i=0; i<pn_entity_prev;++i) {
+      n_data += concat_pentity_itrf_strd[n_part][i];
+    }
+    log_trace("\n");
+    PDM_log_trace_array_long  (concat_pentity_itrf_gnum[n_part], pn_entity_prev, "concat_pentity_itrf_gnum ::");
+    PDM_log_trace_array_int   (concat_pentity_itrf_strd[n_part], pn_entity_prev, "concat_pentity_itrf_strd ::");
+    PDM_log_trace_array_long  (concat_pentity_itrf_data[n_part], n_data        , "concat_pentity_itrf_data ::");
+    // PDM_log_trace_array_double(concat_pentity_itrf_wght[n_part], pn_entity_prev, "concat_pentity_itrf_wght ::");
+    PDM_log_trace_array_int   (pn_entity, n_part+1, "pn_entity ::");
+    if (fill_ancstr_and_path_itrf) {
+      int n_ancstr = 0;
+      int n_itrf = 0;
+      for (int i=0; i<pn_entity_prev;++i) {
+        n_ancstr += concat_pentity_itrf_ancstr_strd[n_part][i];
+        n_itrf += concat_pentity_itrf_path_itrf_strd[n_part][i];
+      }
+      PDM_log_trace_array_long(concat_pentity_itrf_ancstr_strd   [n_part],   pn_entity_prev, "concat_pentity_itrf_ancstr_strd    ::");
+      PDM_log_trace_array_long(concat_pentity_itrf_ancstr        [n_part],   n_ancstr      , "concat_pentity_itrf_ancstr         ::");
+      PDM_log_trace_array_int (concat_pentity_itrf_len_path_strd [n_part],   pn_entity_prev, "concat_pentity_itrf_len_path_strd  ::");
+      PDM_log_trace_array_long(concat_pentity_itrf_path_itrf_strd[n_part],   pn_entity_prev, "concat_pentity_itrf_path_itrf_strd ::");
+      PDM_log_trace_array_int (concat_pentity_itrf_path_itrf     [n_part],   n_itrf        , "concat_pentity_itrf_path_itrf      ::");
+    }
   }
 
   /*
@@ -1121,7 +1342,6 @@ _enrich_block_interface
                                                            pn_entity,
                                                            n_part+1,
                                                            comm);
-  free(concat_pentity_itrf_wght[n_part]);
 
   // > Exchange data
   int         *dentity_itrf_strd = NULL;
@@ -1132,8 +1352,49 @@ _enrich_block_interface
                          1,
                          concat_pentity_itrf_strd,
           (void **)      concat_pentity_itrf_data,
-                         &dentity_itrf_strd,
-          (void **)      &dentity_itrf_data);
+                        &dentity_itrf_strd,
+          (void **)     &dentity_itrf_data);
+
+
+  PDM_g_num_t *dentity_itrf_ancstr = NULL;
+  int *dentity_itrf_len_path_strd  = NULL; // aled
+  int *dentity_itrf_len_path       = NULL; // aled
+  int *dentity_itrf_path_itrf_strd = NULL;
+  int *dentity_itrf_path_itrf      = NULL;
+  int  *dentity_itrf_ancstr_strd = NULL;
+  if (fill_ancstr_and_path_itrf) {
+    PDM_part_to_block_exch(ptb_itrf,
+                           1 * sizeof(PDM_g_num_t),
+                           // PDM_STRIDE_CST_INTERLACED,
+                           PDM_STRIDE_VAR_INTERLACED,
+                           1,
+                           // NULL,
+                           concat_pentity_itrf_ancstr_strd,
+            (void **)      concat_pentity_itrf_ancstr,
+                           // NULL,
+                          &dentity_itrf_ancstr_strd,
+            (void **)     &dentity_itrf_ancstr);
+
+
+    PDM_part_to_block_exch(ptb_itrf,
+                           1 * sizeof(int),
+                           PDM_STRIDE_VAR_INTERLACED,
+                           1,
+                           concat_pentity_itrf_len_path_strd,
+            (void **)      concat_pentity_itrf_path_itrf_strd,
+                          &dentity_itrf_len_path_strd,
+            (void **)     &dentity_itrf_len_path);
+
+    PDM_part_to_block_exch(ptb_itrf,
+                           1 * sizeof(int),
+                           PDM_STRIDE_VAR_INTERLACED,
+                           1,
+                           concat_pentity_itrf_path_itrf_strd,
+            (void **)      concat_pentity_itrf_path_itrf,
+                          &dentity_itrf_path_itrf_strd,
+            (void **)     &dentity_itrf_path_itrf);
+  }
+  free(concat_pentity_itrf_wght[n_part]);
 
   // > Free local arrays
   for(int i_part = 0; i_part < n_part; ++i_part) {
@@ -1141,20 +1402,52 @@ _enrich_block_interface
     free(concat_pentity_itrf_strd[i_part]);
     free(concat_pentity_itrf_data[i_part]);
     free(concat_pentity_itrf_wght[i_part]);
+    if (fill_ancstr_and_path_itrf) {
+      free(concat_pentity_itrf_ancstr[i_part]);
+      free(concat_pentity_itrf_path_itrf_strd[i_part]);
+      free(concat_pentity_itrf_path_itrf[i_part]);
+    }
   }
   free(concat_pentity_itrf_gnum);
   free(concat_pentity_itrf_strd);
   free(concat_pentity_itrf_data);
   free(concat_pentity_itrf_wght);
   free(pn_entity);
+  if (fill_ancstr_and_path_itrf) {
+    free(concat_pentity_itrf_ancstr);
+    free(concat_pentity_itrf_path_itrf_strd);
+    free(concat_pentity_itrf_path_itrf);
+  }
 
 
-
+  // TODO comprendre pourquoi il répartit de manière cheloue
   /*
    * Post-treatment of PTB
    */
   int dn_entity_itrf = PDM_part_to_block_n_elt_block_get(ptb_itrf);
   PDM_g_num_t *next_dentity_itrf_gnum_ptp = PDM_part_to_block_block_gnum_get(ptb_itrf);
+  
+  if (debug==1) {
+    log_trace("\n");
+    if (fill_ancstr_and_path_itrf) {
+      int n_ancstr = 0;
+      int n_len_path = 0;
+      int n_itrf = 0;
+      for (int i=0; i<dn_entity_itrf;++i) {
+        n_ancstr += dentity_itrf_ancstr_strd[i];
+        n_len_path += dentity_itrf_len_path_strd[i];
+        n_itrf += dentity_itrf_path_itrf_strd[i];
+      }
+      PDM_log_trace_array_long(next_dentity_itrf_gnum_ptp , dn_entity_itrf, "dentity_itrf_gnum          ::");
+      PDM_log_trace_array_long(dentity_itrf_ancstr        , n_ancstr      , "dentity_itrf_ancstr        ::");
+      PDM_log_trace_array_int (dentity_itrf_ancstr_strd   , dn_entity_itrf, "dentity_itrf_ancstr_strd   ::");
+      PDM_log_trace_array_int (dentity_itrf_len_path_strd , dn_entity_itrf, "dentity_itrf_len_path_strd ::");
+      PDM_log_trace_array_int (dentity_itrf_len_path      , n_len_path    , "dentity_itrf_len_path      ::");
+      PDM_log_trace_array_int (dentity_itrf_path_itrf_strd, dn_entity_itrf, "dentity_itrf_path_itrf_strd::");
+      PDM_log_trace_array_int (dentity_itrf_path_itrf     , n_itrf        , "dentity_itrf_path_itrf     ::");
+    }
+
+  }
 
   PDM_g_num_t *dentity_itrf_gnum = (PDM_g_num_t *) malloc(dn_entity_itrf * sizeof(PDM_g_num_t));
   for(int i = 0; i < dn_entity_itrf; ++i) {
@@ -1171,6 +1464,16 @@ _enrich_block_interface
   // > Unique incomming data
   int idx_read  = 0;
   int idx_write = 0;
+  int idx_read_ancstr  = 0;
+  int idx_write_ancstr = 0;
+  int idx_read_itrf  = 0;
+  int idx_write_itrf = 0;
+  int idx_write_itrf_strd = 0;
+  int *dentity_itrf_len_path_idx = NULL;
+  if (fill_ancstr_and_path_itrf) {
+    dentity_itrf_len_path_idx = PDM_array_new_idx_from_sizes_int(dentity_itrf_len_path_strd, dn_entity_itrf);
+    PDM_log_trace_array_int (dentity_itrf_len_path_idx     , dn_entity_itrf+1        , "dentity_itrf_len_path_idx     ::");
+  }
   for(int i = 0; i < dn_entity_itrf; ++i) {
 
     int n_data   = dentity_itrf_strd[i];
@@ -1182,13 +1485,60 @@ _enrich_block_interface
       dentity_itrf_data[2*idx_write+1] = dentity_itrf_data[(idx_read+2*i_unique)+1];
       idx_write++;
     }
+    if (debug_loop) log_trace("gnum = "PDM_FMT_G_NUM"\n", dentity_itrf_gnum[i]);
+
+    if (fill_ancstr_and_path_itrf) {
+      if (dentity_itrf_ancstr_strd[i]!=0) {
+        dentity_itrf_ancstr[idx_write_ancstr++] = dentity_itrf_ancstr[idx_read_ancstr];
+        log_trace("\t ancstr = "PDM_FMT_G_NUM"\n", dentity_itrf_ancstr[idx_write_ancstr-1]);
+        idx_read_ancstr += dentity_itrf_ancstr_strd[i];
+      }
+
+      int i_beg_read_len_path = dentity_itrf_len_path_idx[i];
+      int i_end_read_len_path = dentity_itrf_len_path_idx[i+1];
+      int n_referenced = dentity_itrf_len_path_idx[i+1]-dentity_itrf_len_path_idx[i];
+      if (debug_loop) log_trace("\t n_referenced = %d :: i_beg_read_len_path = %d ; i_end_read_len_path = %d\n", n_referenced, i_beg_read_len_path, i_end_read_len_path);
+      int entity_all_len_path = dentity_itrf_path_itrf_strd[idx_write_itrf_strd];
+      for (int i_read_len_path=i_beg_read_len_path; i_read_len_path<i_end_read_len_path; ++i_read_len_path) {
+        if (debug_loop) log_trace("\t i_read_len_path = %d\n", i_read_len_path);
+        int len_path = dentity_itrf_len_path[i_read_len_path];
+        if (debug_loop) log_trace("\t\t len_path = %d\n", len_path);
+        if (debug_loop) log_trace("\t\t idx_write_itrf_strd = %d\n", idx_write_itrf_strd);
+        if (debug_loop) log_trace("\t\t idx_read_itrf       = %d\n", idx_read_itrf      );
+        dentity_itrf_path_itrf_strd[idx_write_itrf_strd] = len_path;
+        if (len_path!=0) {
+          if (debug_loop) log_trace("\t\t path itrf = ");
+          for (int i_itrf = 0; i_itrf<len_path; ++i_itrf) {
+            dentity_itrf_path_itrf[idx_write_itrf++] = dentity_itrf_path_itrf[idx_read_itrf+i_itrf];
+            if (debug_loop) log_trace(" %d", dentity_itrf_path_itrf[idx_write_itrf-1]);
+          }
+          if (debug_loop) log_trace("\n");
+          if (debug_loop) log_trace("\t\t dentity_itrf_path_itrf_strd[i_read_len_path] = %d\n", dentity_itrf_path_itrf_strd[i_read_len_path]);
+          break;
+        }
+      }
+      idx_write_itrf_strd++;
+      idx_read_itrf += entity_all_len_path;
+    }
 
     dentity_itrf_strd[i] = n_unique;
     idx_read += 2 * n_data;
   }
   free(data_order);
-  dentity_itrf_data = realloc(dentity_itrf_data, 2 * idx_write * sizeof(PDM_g_num_t));
+  
 
+  if(debug == 1) {
+    log_trace("iidx_write           = %d\n", idx_write          );
+    log_trace("iidx_write_ancstr    = %d\n", idx_write_ancstr   );
+    log_trace("iidx_write_itrf      = %d\n", idx_write_itrf     );
+    log_trace("iidx_write_itrf_strd = %d\n", idx_write_itrf_strd);
+  }
+  dentity_itrf_data           = realloc(dentity_itrf_data          , 2 * idx_write           * sizeof(PDM_g_num_t));
+  if (fill_ancstr_and_path_itrf) {
+    dentity_itrf_ancstr         = realloc(dentity_itrf_ancstr        ,     idx_write_ancstr    * sizeof(PDM_g_num_t));
+    dentity_itrf_path_itrf_strd = realloc(dentity_itrf_path_itrf_strd,     dn_entity_itrf      * sizeof(int        ));
+    dentity_itrf_path_itrf      = realloc(dentity_itrf_path_itrf     ,     idx_write_itrf      * sizeof(int        ));
+  }
 
   if(debug == 1) {
     log_trace("\n");
@@ -1196,6 +1546,15 @@ _enrich_block_interface
     PDM_log_trace_array_long(dentity_itrf_gnum,     dn_entity_itrf, "dentity_itrf_gnum (Unique) ::");
     PDM_log_trace_array_int (dentity_itrf_strd,     dn_entity_itrf, "dentity_itrf_strd (Unique) ::");
     PDM_log_trace_array_long(dentity_itrf_data, 2 * idx_write     , "dentity_itrf_data (Unique) ::");
+    if (fill_ancstr_and_path_itrf) {
+      int n_itrf = 0;
+      for (int i_entity=0; i_entity<dn_entity_itrf;++i_entity) {
+        n_itrf += dentity_itrf_path_itrf_strd[i_entity];
+      }
+      PDM_log_trace_array_long(dentity_itrf_ancstr        ,     dn_entity_itrf, "dentity_itrf_ancstr         (Unique) ::");
+      PDM_log_trace_array_int (dentity_itrf_path_itrf_strd,     dn_entity_itrf, "dentity_itrf_path_itrf_strd (Unique) ::");
+      PDM_log_trace_array_int (dentity_itrf_path_itrf     ,     n_itrf        , "dentity_itrf_path_itrf      (Unique) ::");
+    }
   }
 
   PDM_part_to_block_free(ptb_itrf);
