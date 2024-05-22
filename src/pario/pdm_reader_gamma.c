@@ -37,6 +37,8 @@
 /*=============================================================================
  * Macro definitions
  *============================================================================*/
+ #define PDM_UNUSED_IO_KEY    "TO DEFINE"
+ #define PDM_INRIA_IO_KEY_DIM PDM_MESH_NODAL_N_ELEMENT_TYPES
 
 /*============================================================================
  * Type
@@ -45,6 +47,29 @@
 /*=============================================================================
  * Static global variables
  *============================================================================*/
+ static const char * const IO_keys[PDM_MESH_NODAL_N_ELEMENT_TYPES + 1] = {
+   "Vertices",
+   "Edges",
+   "Triangles",
+   "Quadrilaterals",
+   PDM_UNUSED_IO_KEY,
+   "Tetrahedra",
+   "Pyramids",
+   "Prisms",
+   "Hexahedra",
+   PDM_UNUSED_IO_KEY,
+   PDM_UNUSED_IO_KEY,
+   PDM_UNUSED_IO_KEY,
+   PDM_UNUSED_IO_KEY,
+   PDM_UNUSED_IO_KEY,
+   PDM_UNUSED_IO_KEY,
+   PDM_UNUSED_IO_KEY,
+   PDM_UNUSED_IO_KEY,
+   PDM_UNUSED_IO_KEY,
+   PDM_UNUSED_IO_KEY,
+   "Dimension"
+ };
+
 
 /*=============================================================================
  * Private function prototypes
@@ -147,13 +172,13 @@ PDM_reader_gamma_dmesh_nodal
       }
 
 
-      if (strstr(line, "Dimension") != NULL) {
+      if (strstr(line, IO_keys[PDM_INRIA_IO_KEY_DIM]) != NULL) {
         // Get dimension
         fscanf(f, "%d", &dim);
       }
 
 
-      else if (strstr(line, "Vertices") != NULL) {
+      else if (strstr(line, IO_keys[PDM_MESH_NODAL_POINT]) != NULL) {
         // Get vertices
         long _gn_vtx;
         fscanf(f, "%ld", &_gn_vtx);
@@ -173,7 +198,7 @@ PDM_reader_gamma_dmesh_nodal
       }
 
 
-      else if (strstr(line, "Edges") != NULL) {
+      else if (strstr(line, IO_keys[PDM_MESH_NODAL_BAR2]) != NULL) {
         // Get edges
         long _gn_edge;
         fscanf(f, "%ld", &_gn_edge);
@@ -190,7 +215,7 @@ PDM_reader_gamma_dmesh_nodal
       }
 
 
-      else if (strstr(line, "Triangles") != NULL) {
+      else if (strstr(line, IO_keys[PDM_MESH_NODAL_TRIA3]) != NULL) {
         // Get triangles
         long _gn_tria;
         fscanf(f, "%ld", &_gn_tria);
@@ -207,7 +232,7 @@ PDM_reader_gamma_dmesh_nodal
       }
 
 
-      else if (strstr(line, "Tetrahedra") != NULL) {
+      else if (strstr(line, IO_keys[PDM_MESH_NODAL_TETRA4]) != NULL) {
         // Get tetrahedra
         long _gn_tetra;
         fscanf(f, "%ld", &_gn_tetra);
@@ -224,7 +249,7 @@ PDM_reader_gamma_dmesh_nodal
       }
 
 
-      else if (strstr(line, "Pyramids") != NULL) {
+      else if (strstr(line, IO_keys[PDM_MESH_NODAL_PYRAMID5]) != NULL) {
         // Get pyramids
         long _gn_pyra;
         fscanf(f, "%ld", &_gn_pyra);
@@ -241,7 +266,7 @@ PDM_reader_gamma_dmesh_nodal
       }
 
 
-      else if (strstr(line, "Prisms") != NULL) {
+      else if (strstr(line, IO_keys[PDM_MESH_NODAL_PRISM6]) != NULL) {
         // Get prisms
         long _gn_prism;
         fscanf(f, "%ld", &_gn_prism);
@@ -258,7 +283,7 @@ PDM_reader_gamma_dmesh_nodal
       }
 
 
-      else if (strstr(line, "Hexahedra") != NULL) {
+      else if (strstr(line, IO_keys[PDM_MESH_NODAL_HEXA8]) != NULL) {
         // Get hexahedra
         long _gn_hexa;
         fscanf(f, "%ld", &_gn_hexa);
@@ -274,7 +299,8 @@ PDM_reader_gamma_dmesh_nodal
         }
       }
 
-      else if (strstr(line, "Quadrilaterals") != NULL) {
+
+      else if (strstr(line, IO_keys[PDM_MESH_NODAL_QUAD4]) != NULL) {
         // Get quads
         long _gn_quad;
         fscanf(f, "%ld", &_gn_quad);
@@ -1009,23 +1035,13 @@ PDM_reader_gamma_dmesh_nodal
 }
 
 
-
 void
-PDM_write_meshb
-(
-  const char   *filename,
-  const int     n_vtx,
-  const int     n_tetra,
-  const int     n_tri,
-  const int     n_edge,
-  const double *vtx_coords,
-  const int    *vtx_tags,
-  const int    *tetra_vtx,
-  const int    *tetra_tag,
-  const int    *tria_vtx,
-  const int    *tria_tag,
-  const int    *edge_vtx,
-  const int    *edge_tag
+PDM_write_meshb(
+  const char         *filename,
+  const int          *n_elt_table,
+        int         **tag_table,
+        PDM_g_num_t **vtx_connect_table,
+  const double       *vtx_coords
 )
 {
   // Write file
@@ -1033,44 +1049,158 @@ PDM_write_meshb
 
   fprintf(f, "MeshVersionFormatted 2\n");
   fprintf(f, "# rank %d\n\n", 0);
-  fprintf(f, "Dimension\n3\n\n");
+  fprintf(f, "%s\n3\n\n", IO_keys[PDM_INRIA_IO_KEY_DIM]);
 
-  fprintf(f, "Vertices\n%d\n", n_vtx);
-  for (int i = 0; i < n_vtx; i++) {
-    fprintf(f, "%20.16lf %20.16lf %20.16lf %i\n",
-            vtx_coords[3*i  ],
-            vtx_coords[3*i+1],
-            vtx_coords[3*i+2],
-            vtx_tags[i]);
+  // ---- Write vertices
+  int  n_vtx    = n_elt_table[PDM_MESH_NODAL_POINT];
+  int *vtx_tags = tag_table  [PDM_MESH_NODAL_POINT];
+
+  if (n_vtx > 0) {
+    fprintf(f, "%s\n%d\n", IO_keys[PDM_MESH_NODAL_POINT], n_vtx);
+
+    for (int i = 0; i < n_vtx; i++) {
+      fprintf(f, "%20.16lf %20.16lf %20.16lf %i\n",
+      vtx_coords[3*i  ],
+      vtx_coords[3*i+1],
+      vtx_coords[3*i+2],
+      vtx_tags[i]);
+    }
   }
 
-  fprintf(f, "Tetrahedra\n%d\n", n_tetra);
-  for (int i = 0; i < n_tetra; i++) {
-    fprintf(f, "%d %d %d %d %i\n",
-            tetra_vtx[4*i  ],
-            tetra_vtx[4*i+1],
-            tetra_vtx[4*i+2],
-            tetra_vtx[4*i+3],
-            tetra_tag[i]);
+  // ---- Write tetrahedra
+  int          n_tetra   = n_elt_table      [PDM_MESH_NODAL_TETRA4];
+  int         *tetra_tag = tag_table        [PDM_MESH_NODAL_TETRA4];
+  PDM_g_num_t *tetra_vtx = vtx_connect_table[PDM_MESH_NODAL_TETRA4];
+
+  if (n_tetra > 0) {
+    fprintf(f, "%s\n%d\n", IO_keys[PDM_MESH_NODAL_TETRA4], n_tetra);
+
+    for (int i = 0; i < n_tetra; i++) {
+      fprintf(f, ""PDM_FMT_G_NUM" "PDM_FMT_G_NUM" "PDM_FMT_G_NUM" "PDM_FMT_G_NUM" %i\n",
+      tetra_vtx[4*i  ],
+      tetra_vtx[4*i+1],
+      tetra_vtx[4*i+2],
+      tetra_vtx[4*i+3],
+      tetra_tag[i]);
+    }
   }
 
-  fprintf(f, "Triangles\n%d\n", n_tri);
-  for (int i = 0; i < n_tri; i++) {
-    fprintf(f, "%d %d %d %i\n",
-            tria_vtx[3*i    ],
-            tria_vtx[3*i + 1],
-            tria_vtx[3*i + 2],
-            tria_tag[i]);
-  }
-  fprintf(f, "End\n");
+  // ---- Write pyramids
+  int          n_pyra   = n_elt_table      [PDM_MESH_NODAL_PYRAMID5];
+  int         *pyra_tag = tag_table        [PDM_MESH_NODAL_PYRAMID5];
+  PDM_g_num_t *pyra_vtx = vtx_connect_table[PDM_MESH_NODAL_PYRAMID5];
 
-  fprintf(f, "Edges\n%d\n", n_edge);
-  for (int i = 0; i < n_edge; i++) {
-    fprintf(f, "%d %d %i\n",
-            edge_vtx[2*i    ],
-            edge_vtx[2*i + 1],
-            edge_tag[i]);
+  if (n_pyra > 0) {
+    fprintf(f, "%s\n%d\n", IO_keys[PDM_MESH_NODAL_PYRAMID5], n_pyra);
+
+    for (int i=0; i<n_pyra; i++) {
+      fprintf(f, ""PDM_FMT_G_NUM" "PDM_FMT_G_NUM" "PDM_FMT_G_NUM" "PDM_FMT_G_NUM" "PDM_FMT_G_NUM" %i\n",
+        pyra_vtx[5*i    ],
+        pyra_vtx[5*i + 1],
+        pyra_vtx[5*i + 2],
+        pyra_vtx[5*i + 3],
+        pyra_vtx[5*i + 4],
+        pyra_tag[i]
+      );
+    }
   }
+
+  // ---- Write prisms
+  int          n_prism   = n_elt_table      [PDM_MESH_NODAL_PRISM6];
+  int         *prism_tag = tag_table        [PDM_MESH_NODAL_PRISM6];
+  PDM_g_num_t *prism_vtx = vtx_connect_table[PDM_MESH_NODAL_PRISM6];
+
+  if (n_prism > 0) {
+    fprintf(f, "%s\n%d\n", IO_keys[PDM_MESH_NODAL_PRISM6], n_prism);
+
+    for (int i=0; i<n_prism; i++) {
+      fprintf(f, ""PDM_FMT_G_NUM" "PDM_FMT_G_NUM" "PDM_FMT_G_NUM" "PDM_FMT_G_NUM" "PDM_FMT_G_NUM" "PDM_FMT_G_NUM" %i\n",
+        prism_vtx[6*i    ],
+        prism_vtx[6*i + 1],
+        prism_vtx[6*i + 2],
+        prism_vtx[6*i + 3],
+        prism_vtx[6*i + 4],
+        prism_vtx[6*i + 5],
+        prism_tag[i]
+      );
+    }
+  }
+
+  // ---- Write hexahedra
+  int          n_hexa   = n_elt_table      [PDM_MESH_NODAL_HEXA8];
+  int         *hexa_tag = tag_table        [PDM_MESH_NODAL_HEXA8];
+  PDM_g_num_t *hexa_vtx = vtx_connect_table[PDM_MESH_NODAL_HEXA8];
+
+  if (n_hexa > 0) {
+    fprintf(f, "%s\n%d\n", IO_keys[PDM_MESH_NODAL_HEXA8], n_hexa);
+
+    for (int i=0; i<n_hexa; i++) {
+      fprintf(f, ""PDM_FMT_G_NUM" "PDM_FMT_G_NUM" "PDM_FMT_G_NUM" "PDM_FMT_G_NUM" "PDM_FMT_G_NUM" "PDM_FMT_G_NUM" "PDM_FMT_G_NUM" "PDM_FMT_G_NUM" %i\n",
+        hexa_vtx[8*i    ],
+        hexa_vtx[8*i + 1],
+        hexa_vtx[8*i + 2],
+        hexa_vtx[8*i + 3],
+        hexa_vtx[8*i + 4],
+        hexa_vtx[8*i + 5],
+        hexa_vtx[8*i + 6],
+        hexa_vtx[8*i + 7],
+        hexa_tag[i]
+      );
+    }
+  }
+
+  // ---- Write triangles
+  int          n_tri    = n_elt_table      [PDM_MESH_NODAL_TRIA3];
+  int         *tria_tag = tag_table        [PDM_MESH_NODAL_TRIA3];
+  PDM_g_num_t *tria_vtx = vtx_connect_table[PDM_MESH_NODAL_TRIA3];
+
+  if (n_tri > 0) {
+    fprintf(f, "%s\n%d\n", IO_keys[PDM_MESH_NODAL_TRIA3], n_tri);
+
+    for (int i = 0; i < n_tri; i++) {
+      fprintf(f, ""PDM_FMT_G_NUM" "PDM_FMT_G_NUM" "PDM_FMT_G_NUM" %i\n",
+      tria_vtx[3*i    ],
+      tria_vtx[3*i + 1],
+      tria_vtx[3*i + 2],
+      tria_tag[i]);
+    }
+  }
+
+  // ---- Write quadrilaterals
+  int          n_quad   = n_elt_table      [PDM_MESH_NODAL_QUAD4];
+  int         *quad_tag = tag_table        [PDM_MESH_NODAL_QUAD4];
+  PDM_g_num_t *quad_vtx = vtx_connect_table[PDM_MESH_NODAL_QUAD4];
+
+  if (n_quad > 0) {
+    fprintf(f, "%s\n%d\n", IO_keys[PDM_MESH_NODAL_QUAD4], n_quad);
+
+    for (int i=0; i<n_quad; i++) {
+      fprintf(f, ""PDM_FMT_G_NUM" "PDM_FMT_G_NUM" "PDM_FMT_G_NUM" "PDM_FMT_G_NUM", %i\n",
+        quad_vtx[4*i    ],
+        quad_vtx[4*i + 1],
+        quad_vtx[4*i + 2],
+        quad_vtx[4*i + 3],
+        quad_tag[i]
+      );
+    }
+  }
+
+  // ---- Write edges
+  int          n_edge   = n_elt_table      [PDM_MESH_NODAL_BAR2];
+  int         *edge_tag = tag_table        [PDM_MESH_NODAL_BAR2];
+  PDM_g_num_t *edge_vtx = vtx_connect_table[PDM_MESH_NODAL_BAR2];
+
+  if (n_edge > 0) {
+    fprintf(f, "%s\n%d\n", IO_keys[PDM_MESH_NODAL_BAR2], n_edge);
+
+    for (int i = 0; i < n_edge; i++) {
+      fprintf(f, ""PDM_FMT_G_NUM" "PDM_FMT_G_NUM" %i\n",
+      edge_vtx[2*i    ],
+      edge_vtx[2*i + 1],
+      edge_tag[i]);
+    }
+  }
+
   fprintf(f, "End\n");
   fclose(f);
 }
