@@ -393,6 +393,7 @@ PDM_reader_gamma_dmesh_nodal
       }
       // <<< TMP fix
 
+      // TODO: handle other volume element types (!! shift groups)
       _shift_groups((int) gn_tetra, gtetra_group);
     }
 
@@ -977,6 +978,8 @@ PDM_reader_gamma_dmesh_nodal
 
     counters[grp]++;
   }
+  free(dtria_group);
+  free(dquad_group);
 
   // -------- Set groups
   PDM_DMesh_nodal_elmts_group_set(
