@@ -318,6 +318,24 @@ PDM_log_trace_connectivity_long
   }
 }
 
+void
+PDM_log_trace_connectivity_dual
+(
+ const PDM_g_num_t *array_idx,
+ const PDM_g_num_t *array,
+ const int          larray,
+ const char*        header
+)
+{
+  // log_trace(header);
+  for(int i = 0; i < larray; ++i) {
+    log_trace("%s["PDM_FMT_G_NUM"] -> ", header, i);
+    for(int j = array_idx[i]; j < array_idx[i+1]; ++j) {
+      log_trace(PDM_FMT_G_NUM" ", array[j]);
+    }
+    log_trace("\n");
+  }
+}
 
 void
 PDM_log_trace_connectivity_int
