@@ -1400,7 +1400,7 @@ _part_extension_2d
    */
   int          prev_dface_itrf_n_blk               = 0;
   PDM_g_num_t *prev_dface_itrf_blk_gnum            = NULL;
-  PDM_g_num_t *prev_dface_itrf_blk_ancstr_strd     = NULL;
+  int         *prev_dface_itrf_blk_ancstr_strd     = NULL;
   PDM_g_num_t *prev_dface_itrf_blk_ancstr          = NULL;
   int         *prev_dface_itrf_blk_path_itrf_strd  = NULL;
   int         *prev_dface_itrf_blk_path_itrf       = NULL;
@@ -1426,7 +1426,7 @@ _part_extension_2d
   PDM_g_num_t *prev_dvtx_itrf_gnum_and_itrf_data  = part_ext->dentity_itrf_gnum_and_itrf_data [PDM_BOUND_TYPE_VTX];
   int         *prev_dvtx_itrf_gnum_and_itrf_sens  = part_ext->dentity_itrf_gnum_and_itrf_sens [PDM_BOUND_TYPE_VTX];
   int         *prev_dvtx_itrf_blk_ancstr_strd     = PDM_array_zeros_int(prev_dvtx_itrf_n_blk);
-  PDM_g_num_t *prev_dvtx_itrf_blk_ancstr          = PDM_array_zeros_int(0);
+  PDM_g_num_t *prev_dvtx_itrf_blk_ancstr          = PDM_array_zeros_gnum(0);
   int         *prev_dvtx_itrf_blk_path_itrf_strd  = PDM_array_zeros_int(prev_dvtx_itrf_n_blk);
   int         *prev_dvtx_itrf_blk_path_itrf       = PDM_array_zeros_int(0);
 
@@ -1468,8 +1468,10 @@ _part_extension_2d
 
     int i_rank;
     PDM_MPI_Comm_rank(part_ext->comm, &i_rank);
-    if (i_rank==0) printf("Computing DEPTH %d (step = %i)\n", i_depth, step);
+    if (i_rank==0) printf("Computing DEPTH %d (step = %i) ", i_depth, step);
     log_trace("\n\n\n >> DEPTH %d step = %i\n", i_depth, step);
+    double t_start = PDM_MPI_Wtime();
+
 
 
     /*
@@ -1477,7 +1479,7 @@ _part_extension_2d
      */
     int          next_dface_itrf_n_blk               = 0;
     PDM_g_num_t *next_dface_itrf_blk_gnum            = NULL;
-    PDM_g_num_t *next_dface_itrf_blk_ancstr_strd     = NULL;
+    int         *next_dface_itrf_blk_ancstr_strd     = NULL;
     PDM_g_num_t *next_dface_itrf_blk_ancstr          = NULL;
     int         *next_dface_itrf_blk_path_itrf_strd  = NULL;
     int         *next_dface_itrf_blk_path_itrf       = NULL;
@@ -1564,7 +1566,7 @@ _part_extension_2d
 
     int          next_dvtx_itrf_n_blk               = 0;
     PDM_g_num_t *next_dvtx_itrf_blk_gnum            = NULL;
-    PDM_g_num_t *next_dvtx_itrf_blk_ancstr_strd     = NULL;
+    int         *next_dvtx_itrf_blk_ancstr_strd     = NULL;
     PDM_g_num_t *next_dvtx_itrf_blk_ancstr          = NULL;
     int         *next_dvtx_itrf_blk_path_itrf_strd  = NULL;
     int         *next_dvtx_itrf_blk_path_itrf       = NULL;
@@ -1962,6 +1964,11 @@ _part_extension_2d
     // if(step > 1) {
     //   abort();
     // }
+
+    double t_end = PDM_MPI_Wtime();
+
+    if (i_rank==0) printf(" (%.3fs)\n", t_end - t_start);
+
 
   }
 
