@@ -68,6 +68,13 @@ int* PDM_array_zeros_int(const int size) {
   for (int i = 0; i < size; i++) array[i] = 0;
   return array;
 }
+PDM_g_num_t* PDM_array_zeros_gnum(const int size) {
+  assert (size >= 0);
+  PDM_g_num_t *array = (PDM_g_num_t *) malloc(size * sizeof(PDM_g_num_t));
+  assert (array != NULL);
+  for (int i = 0; i < size; i++) array[i] = 0;
+  return array;
+}
 double* PDM_array_zeros_double(const int size) {
   assert (size >= 0);
   double *array = (double *) malloc(size * sizeof(double));

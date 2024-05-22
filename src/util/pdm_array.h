@@ -30,8 +30,9 @@ int*         PDM_array_copy_int (const int         *array, const int size);
 PDM_g_num_t* PDM_array_copy_gnum(const PDM_g_num_t *array, const int size);
 
 // Create an array and fill it with 0
-int*    PDM_array_zeros_int   (const int size);
-double* PDM_array_zeros_double(const int size);
+int*    	 	PDM_array_zeros_int   (const int size);
+PDM_g_num_t*    PDM_array_zeros_gnum  (const int size);
+double* 		PDM_array_zeros_double(const int size);
 
 // Create an array and fill it with given value
 int*         PDM_array_const_int (const int size, const int         value);
