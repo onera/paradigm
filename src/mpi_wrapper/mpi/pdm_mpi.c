@@ -2874,9 +2874,10 @@ PDM_MPI_Comm_split_type_numa
   PDM_MPI_Comm_rank(comm_node, &i_rank_node);
 
   int i_cpu;
-  int i_numa;
+  int i_numa = 0;
 #ifdef __linux__
   syscall(SYS_getcpu, &i_cpu, &i_numa, NULL);
+#elif __APPLE__
 #else
   printf("PDM_MPI_Comm_split_type_numa : appel a SYS_getcpu commente car non portable : a reintroduire après tests dans CMake\n");
   abort();
