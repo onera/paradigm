@@ -313,3 +313,108 @@ MPI_TEST_CASE("[pdm_part_to_block] - 1p - part_to_block",1) {
   free(pln_to_to_gn);
 
 }
+
+
+
+MPI_TEST_CASE("[pdm_part_to_block] - 2p - zero global weight", 2) {
+
+  PDM_MPI_Comm pdm_comm = PDM_MPI_mpi_2_pdm_mpi_comm(&test_comm);
+  int i_rank;
+  int n_rank;
+  PDM_MPI_Comm_rank (pdm_comm, &i_rank);
+  PDM_MPI_Comm_size (pdm_comm, &n_rank);
+
+  int n_part = 1;
+  int          *pn_elmt    = (int          *) malloc(sizeof(int          ) * n_part);
+  PDM_g_num_t **pln_to_gn  = (PDM_g_num_t **) malloc(sizeof(PDM_g_num_t *) * n_part);
+  double      **pweight    = (double      **) malloc(sizeof(double      *) * n_part);
+  PDM_g_num_t **part_data  = (PDM_g_num_t **) malloc(sizeof(PDM_g_num_t *) * n_part);
+  PDM_g_num_t  *block_data = NULL;
+
+  PDM_g_num_t distrib_expected[3];
+
+  SUBCASE("Empty parts") {
+    for (int i_part = 0; i_part < n_part; i_part++) {
+      pn_elmt  [i_part] = 0;
+      pln_to_gn[i_part] = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * pn_elmt[i_part]);
+      pweight  [i_part] = (double      *) malloc(sizeof(double     ) * pn_elmt[i_part]);
+    }
+
+    distrib_expected[0] = 0;
+    distrib_expected[1] = 0;
+    distrib_expected[2] = 0;
+  }
+
+
+  SUBCASE("Non-empty parts") {
+    for (int i_part = 0; i_part < n_part; i_part++) {
+      pn_elmt  [i_part] = 5;
+      pln_to_gn[i_part] = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * pn_elmt[i_part]);
+      pweight  [i_part] = (double      *) malloc(sizeof(double     ) * pn_elmt[i_part]);
+      for (int i = 0; i < pn_elmt[i_part]; i++) {
+        pln_to_gn[i_part][i] = 1 + n_rank*i + i_rank;
+        pweight  [i_part][i] = 0.;
+      }
+    }
+
+    distrib_expected[0] = 0;
+    distrib_expected[1] = 5;
+    distrib_expected[2] = 10;
+  }
+
+  // Create ptb structure
+  PDM_part_to_block_t *ptb = PDM_part_to_block_create(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
+                                                      PDM_PART_TO_BLOCK_POST_CLEANUP,
+                                                      1.,
+                                                      pln_to_gn,
+                                                      pweight,
+                                                      pn_elmt,
+                                                      n_part,
+                                                      pdm_comm);
+
+  // Check block distribution
+  PDM_g_num_t *distrib = PDM_part_to_block_distrib_index_get(ptb);
+
+  CHECK_EQ_C_ARRAY(distrib, distrib_expected, n_rank+1);
+
+  // Exchange data from part to block
+  for (int i_part = 0; i_part < n_part; i_part++) {
+    part_data[i_part] = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * pn_elmt[i_part]);
+    for (int i = 0; i < pn_elmt[i_part]; i++) {
+      part_data[i_part][i] = pln_to_gn[i_part][i];
+    }
+  }
+
+  PDM_part_to_block_exch(ptb,
+                         sizeof(PDM_g_num_t),
+                         PDM_STRIDE_CST_INTERLACED,
+                         1,
+                         NULL,
+                         (void **) part_data,
+                         NULL,
+                         (void **) &block_data);
+
+  PDM_part_to_block_free(ptb);
+
+  // Check block data
+  int dn_elmt = distrib_expected[i_rank+1] - distrib_expected[i_rank];
+  PDM_g_num_t *block_data_expected = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * dn_elmt);
+  for (int i = 0; i < dn_elmt; i++) {
+    block_data_expected[i] = 1 + distrib_expected[i_rank] + i;
+  }
+
+  CHECK_EQ_C_ARRAY(block_data, block_data_expected, dn_elmt);
+
+  // Free memory
+  for (int i_part = 0; i_part < n_part; i_part++) {
+    free(pln_to_gn[i_part]);
+    free(pweight  [i_part]);
+    free(part_data[i_part]);
+  }
+  free(pn_elmt);
+  free(pln_to_gn);
+  free(pweight);
+  free(part_data);
+  free(block_data);
+  free(block_data_expected);
+}
