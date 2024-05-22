@@ -201,7 +201,7 @@ int main(int argc, char *argv[])
                                    src_n_vtx_seg,
                                    src_n_vtx_seg,
                                    src_n_part,
-                                   PDM_SPLIT_DUAL_WITH_PARMETIS,
+                                   PDM_SPLIT_DUAL_WITH_HILBERT,
                                    src_random,
                                    &src_n_vtx,
                                    &src_n_edge,
