@@ -1400,6 +1400,7 @@ _part_extension_2d
    */
   int          prev_dface_itrf_n_blk               = 0;
   PDM_g_num_t *prev_dface_itrf_blk_gnum            = NULL;
+  PDM_g_num_t *prev_dface_itrf_blk_ancstr_strd     = NULL;
   PDM_g_num_t *prev_dface_itrf_blk_ancstr          = NULL;
   int         *prev_dface_itrf_blk_path_itrf_strd  = NULL;
   int         *prev_dface_itrf_blk_path_itrf       = NULL;
@@ -1424,7 +1425,8 @@ _part_extension_2d
   int         *prev_dvtx_itrf_gnum_and_itrf_strid = part_ext->dentity_itrf_gnum_and_itrf_strid[PDM_BOUND_TYPE_VTX];
   PDM_g_num_t *prev_dvtx_itrf_gnum_and_itrf_data  = part_ext->dentity_itrf_gnum_and_itrf_data [PDM_BOUND_TYPE_VTX];
   int         *prev_dvtx_itrf_gnum_and_itrf_sens  = part_ext->dentity_itrf_gnum_and_itrf_sens [PDM_BOUND_TYPE_VTX];
-  PDM_g_num_t *prev_dvtx_itrf_blk_ancstr          = PDM_array_copy_gnum(prev_dvtx_itrf_blk_gnum, prev_dvtx_itrf_n_blk);
+  int         *prev_dvtx_itrf_blk_ancstr_strd     = PDM_array_zeros_int(prev_dvtx_itrf_n_blk);
+  PDM_g_num_t *prev_dvtx_itrf_blk_ancstr          = PDM_array_zeros_int(0);
   int         *prev_dvtx_itrf_blk_path_itrf_strd  = PDM_array_zeros_int(prev_dvtx_itrf_n_blk);
   int         *prev_dvtx_itrf_blk_path_itrf       = PDM_array_zeros_int(0);
 
@@ -1475,6 +1477,7 @@ _part_extension_2d
      */
     int          next_dface_itrf_n_blk               = 0;
     PDM_g_num_t *next_dface_itrf_blk_gnum            = NULL;
+    PDM_g_num_t *next_dface_itrf_blk_ancstr_strd     = NULL;
     PDM_g_num_t *next_dface_itrf_blk_ancstr          = NULL;
     int         *next_dface_itrf_blk_path_itrf_strd  = NULL;
     int         *next_dface_itrf_blk_path_itrf       = NULL;
@@ -1502,6 +1505,7 @@ _part_extension_2d
                                           pface_vtx,
                                           prev_dface_itrf_n_blk,
                                           prev_dface_itrf_blk_gnum,
+                                          prev_dface_itrf_blk_ancstr_strd,
                                           prev_dface_itrf_blk_ancstr,
                                           prev_dface_itrf_blk_path_itrf_strd,
                                           prev_dface_itrf_blk_path_itrf,
@@ -1515,6 +1519,7 @@ _part_extension_2d
                                           &pface_extented_to_pface_interface,
                                           &next_dface_itrf_n_blk,
                                           &next_dface_itrf_blk_gnum,
+                                          &next_dface_itrf_blk_ancstr_strd,
                                           &next_dface_itrf_blk_ancstr,
                                           &next_dface_itrf_blk_path_itrf_strd,
                                           &next_dface_itrf_blk_path_itrf,
@@ -1529,6 +1534,7 @@ _part_extension_2d
     // }
 
     free(prev_dface_itrf_blk_gnum           );
+    free(prev_dface_itrf_blk_ancstr_strd    );
     free(prev_dface_itrf_blk_ancstr         );
     free(prev_dface_itrf_blk_path_itrf_strd );
     free(prev_dface_itrf_blk_path_itrf      );
@@ -1536,6 +1542,7 @@ _part_extension_2d
     free(prev_dface_itrf_gnum_and_itrf_data );
     prev_dface_itrf_n_blk               = next_dface_itrf_n_blk;
     prev_dface_itrf_blk_gnum            = next_dface_itrf_blk_gnum;
+    prev_dface_itrf_blk_ancstr_strd     = next_dface_itrf_blk_ancstr_strd;
     prev_dface_itrf_blk_ancstr          = next_dface_itrf_blk_ancstr;
     prev_dface_itrf_blk_path_itrf_strd  = next_dface_itrf_blk_path_itrf_strd;
     prev_dface_itrf_blk_path_itrf       = next_dface_itrf_blk_path_itrf;
@@ -1557,6 +1564,7 @@ _part_extension_2d
 
     int          next_dvtx_itrf_n_blk               = 0;
     PDM_g_num_t *next_dvtx_itrf_blk_gnum            = NULL;
+    PDM_g_num_t *next_dvtx_itrf_blk_ancstr_strd     = NULL;
     PDM_g_num_t *next_dvtx_itrf_blk_ancstr          = NULL;
     int         *next_dvtx_itrf_blk_path_itrf_strd  = NULL;
     int         *next_dvtx_itrf_blk_path_itrf       = NULL;
@@ -1571,6 +1579,7 @@ _part_extension_2d
                                                                      shift_by_domain_vtx, // Attention il va evoluer lui
                                                                      prev_dvtx_itrf_n_blk,
                                                                      prev_dvtx_itrf_blk_gnum,
+                                                                     prev_dvtx_itrf_blk_ancstr_strd,
                                                                      prev_dvtx_itrf_blk_ancstr,
                                                                      prev_dvtx_itrf_blk_path_itrf_strd,
                                                                      prev_dvtx_itrf_blk_path_itrf,
@@ -1597,6 +1606,7 @@ _part_extension_2d
                                                                      &pvtx_extented_to_pvtx_interface,
                                                                      &next_dvtx_itrf_n_blk,
                                                                      &next_dvtx_itrf_blk_gnum,
+                                                                     &next_dvtx_itrf_blk_ancstr_strd,
                                                                      &next_dvtx_itrf_blk_ancstr,
                                                                      &next_dvtx_itrf_blk_path_itrf_strd,
                                                                      &next_dvtx_itrf_blk_path_itrf,
@@ -1609,6 +1619,7 @@ _part_extension_2d
     log_trace("==================================================================== \n");
 
     free(prev_dvtx_itrf_blk_gnum           );
+    free(prev_dvtx_itrf_blk_ancstr_strd    );
     free(prev_dvtx_itrf_blk_ancstr         );
     free(prev_dvtx_itrf_blk_path_itrf_strd );
     free(prev_dvtx_itrf_blk_path_itrf      );
@@ -1617,6 +1628,7 @@ _part_extension_2d
     // free(prev_dvtx_itrf_gnum_and_itrf_sens );
     prev_dvtx_itrf_n_blk               = next_dvtx_itrf_n_blk;
     prev_dvtx_itrf_blk_gnum            = next_dvtx_itrf_blk_gnum;
+    prev_dvtx_itrf_blk_ancstr_strd     = next_dvtx_itrf_blk_ancstr_strd;
     prev_dvtx_itrf_blk_ancstr          = next_dvtx_itrf_blk_ancstr;
     prev_dvtx_itrf_blk_path_itrf_strd  = next_dvtx_itrf_blk_path_itrf_strd;
     prev_dvtx_itrf_blk_path_itrf       = next_dvtx_itrf_blk_path_itrf;
@@ -1859,6 +1871,7 @@ _part_extension_2d
     free(pface_extented_to_pface_interface);
     free(pface_extented_alrdy_sent        );
 
+
     /*
      * A chaque étape :
      *   - On garde le même graphe entre les entitiés, mais on agrandit le tableau idx (pour être cohérent avec le part_to_part )
@@ -1953,8 +1966,18 @@ _part_extension_2d
   }
 
   free(prev_dface_itrf_blk_gnum           );
+  free(prev_dface_itrf_blk_ancstr_strd    );
+  free(prev_dface_itrf_blk_ancstr         );
+  free(prev_dface_itrf_blk_path_itrf_strd );
+  free(prev_dface_itrf_blk_path_itrf      );
   free(prev_dface_itrf_gnum_and_itrf_strid);
   free(prev_dface_itrf_gnum_and_itrf_data );
+
+
+  free(prev_dvtx_itrf_blk_ancstr_strd);
+  free(prev_dvtx_itrf_blk_ancstr);
+  free(prev_dvtx_itrf_blk_path_itrf_strd);
+  free(prev_dvtx_itrf_blk_path_itrf);
 
   for(int i_part = 0; i_part < part_ext->ln_part_tot; ++i_part) {
     free(pvtx_ln_to_gn      [i_part]);
