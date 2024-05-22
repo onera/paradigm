@@ -344,6 +344,47 @@ PDM_part_combine_connectivity
   }
 }
 
+void
+PDM_part_graph_dual
+(
+  int    n_part,
+  int   *n_entity1,
+  int   *n_entity2,
+  int  **entity1_entity2_idx,
+  int  **entity1_entity2,
+  int ***out_entity2_entity1_idx,
+  int ***out_entity2_entity1,
+  int ***entity1_entity1_idx,
+  int ***entity1_entity1
+)
+{
+
+  int **entity2_entity1_idx = NULL;
+  int **entity2_entity1     = NULL;
+  PDM_part_connectivity_transpose(n_part,
+                                  n_entity1,
+                                  n_entity2,
+                                  entity1_entity2_idx,
+                                  entity1_entity2,
+                                  &entity2_entity1_idx,
+                                  &entity2_entity1);
+
+  *out_entity2_entity1_idx = entity2_entity1_idx;
+  *out_entity2_entity1     = entity2_entity1;
+
+  PDM_part_combine_connectivity(n_part,
+                                n_entity1,
+                                entity1_entity2_idx,
+                                entity1_entity2,
+                                entity2_entity1_idx,
+                                entity2_entity1,
+                                entity1_entity1_idx,
+                                entity1_entity1);
+
+}
+
+
+
 /**
  *
  * \brief Convert implicit pair connectivity, to a connectivity with index. Useful for convert face_cell or edge_vtx.
