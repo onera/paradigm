@@ -235,7 +235,7 @@ _build_active_edges
   int                    *n_crossings
 )
 {
-  int debug = 1;
+  int debug = 0;
 
   *n_crossings = 0;
   int n_section = PDM_part_mesh_nodal_n_section_get(pmn);
@@ -410,8 +410,6 @@ _build_active_edges
             edge_id = ++(*n_edge);
           }
 
-          _edge_count_parent[PDM_ABS(edge_id)]++;
-          
         } else {
           for (int i = 0; i < n_isovalues; i++) {
             if (_is_at_0_level(vtx_field[i_vtx0-1] - isovalues[i]) &&
@@ -424,7 +422,7 @@ _build_active_edges
                 edge_id = ++(*n_edge);
               }
 
-              _edge_count_parent[PDM_ABS(edge_id)]++;
+              _edge_count_parent[PDM_ABS(edge_id)-1]++;
               
             }
           }
@@ -441,9 +439,9 @@ _build_active_edges
    * Third loop to set edge parent
    */
   int *_edge_parent_idx   = PDM_array_new_idx_from_sizes_int(_edge_count_parent, key_idx[max_key]);
-  int *_edge_parent_count = PDM_array_zeros_int(*n_edge);
   int n_parent_tot  = _edge_parent_idx[key_idx[max_key]];
   int *_edge_parent = PDM_array_zeros_int(n_parent_tot);
+  PDM_array_reset_int(_edge_count_parent, *n_edge, 0);
   if (debug==1) {
     log_trace("n_parent_tot = %d\n", n_parent_tot);
     PDM_log_trace_array_int(_edge_count_parent, key_idx[max_key]  , "_edge_count_parent ::");
@@ -479,39 +477,41 @@ _build_active_edges
                                         &parent_entity_g_num,
                                         PDM_OWNERSHIP_BAD_VALUE);
 
-    if (parent_num) {
-      int n_pair    = PDM_n_nedge_elt_per_elmt(t_elt);
+    int n_pair    = PDM_n_nedge_elt_per_elmt(t_elt);
 
-      // TODO: fill parent 
-      for (int i_elt = 0; i_elt < n_elt; i_elt++) {
-        for (int i_pair = 0; i_pair < n_pair; i_pair++) {
-          int edge_id = PDM_ABS(elt_edge[i_section][n_pair*i_elt+i_pair]);
-          if (edge_id != 0) {
-            int i_write_data = _edge_parent_idx[edge_id] + _edge_parent_count[edge_id-1];
+    // TODO: fill parent 
+    for (int i_elt = 0; i_elt < n_elt; i_elt++) {
+      for (int i_pair = 0; i_pair < n_pair; i_pair++) {
+        int edge_id = PDM_ABS(elt_edge[i_section][n_pair*i_elt+i_pair]);
+        if (edge_id!=0 && _edge_parent_idx[edge_id]-_edge_parent_idx[edge_id-1] != 0) {
+          int i_write_data = _edge_parent_idx[edge_id-1] + _edge_count_parent[edge_id-1];
+          if (parent_num) {
             _edge_parent[i_write_data] = parent_num[i_elt];
-            _edge_parent_count[edge_id-1]++;
           }
-        } // End of loop on pairs
-      } // End of loop on elements
-    } // End if parent num
+          else {
+            _edge_parent[i_write_data] = parent_num[i_elt+1];
+          }
+          _edge_count_parent[edge_id-1]++;
+        } // End if has parent
+      } // End of loop on pairs
+    } // End of loop on elements
   } // End of loop on sections
   
 
   if (debug==1) {
-    PDM_log_trace_array_int(_edge_parent_count, *n_edge     , "_edge_parent_count ::");
+    PDM_log_trace_array_int(_edge_count_parent, *n_edge     , "_edge_count_parent ::");
     PDM_log_trace_array_int(_edge_parent      , n_parent_tot, "_edge_parent       ::");
   }
   
 
   // > Output
-  *edge_parent_idx = PDM_array_new_idx_from_sizes_int(_edge_parent_count, *n_edge);
+  *edge_parent_idx = _edge_parent_idx;
   *edge_parent     = _edge_parent;
   *edge_vtx        = realloc(_edge_vtx, sizeof(int) * (*n_edge) * 2);
 
   // > Free tmp arrays
-  free(_edge_parent_count);
   free(_edge_count_parent);
-  free(_edge_parent_idx);
+  // free(_edge_parent_idx);
 }
 
 
@@ -536,11 +536,6 @@ _build_iso_vtx_on_active_edge
         PDM_g_num_t **out_iso_vtx_parent_gnum
 )
 {
-  /*
-   * TODO: 
-   *   - put iso vtx from mesh vtx next to iso vtx
-   *     from mesh edge close in memory (in build active edge directly ?)
-   */
   int         *vtx_to_iso_vtx        = *out_vtx_to_iso_vtx;
   int         *edge_to_iso_vtx       = *out_edge_to_iso_vtx;
   int          _iso_n_vtx            = *out_iso_n_vtx;
@@ -642,6 +637,8 @@ _contouring_triangles
   int           n_elt,
   int          *elt_vtx,
   PDM_g_num_t  *elt_gnum,
+  int          *edge_parent_idx,
+  int          *edge_parent,
   int          *elt_edge,
   PDM_g_num_t  *vtx_gnum,
   double       *vtx_field,
@@ -649,12 +646,16 @@ _contouring_triangles
   int          *edge_to_iso_vtx,
   int          *out_iso_n_edge,
   int         **out_iso_edge_vtx,
-  PDM_g_num_t **out_iso_edge_parent_gnum
+  PDM_g_num_t **out_iso_edge_parent_gnum,
+  int          *out_iso_n_edge_parent,
+  int         **out_iso_edge_parent_count,
+  int         **out_iso_edge_parent
 )
 {
   /* First loop to count */
   int  iso_n_edge   = *out_iso_n_edge;
   int *iso_edge_def = PDM_array_zeros_int(n_elt);
+  int  iso_n_edge_parent = 0;
   for (int i_elt = 0; i_elt < n_elt; i_elt++) {
 
     unsigned char pattern = 0;
@@ -668,6 +669,7 @@ _contouring_triangles
 
     if (pattern > 0 && pattern < 7) {
       iso_n_edge++;
+      iso_n_edge_parent++;
     }
     else if (pattern == 0) {
 
@@ -691,6 +693,7 @@ _contouring_triangles
           iso_edge_def[edge_id2]=1;
           iso_n_edge++;
         }
+        iso_n_edge_parent += edge_parent_idx[edge_id2+1]-edge_parent_idx[edge_id2];
       }
 
       else if (vtx_on_vtx0!=0 && vtx_on_vtx2!=0) {
@@ -699,6 +702,7 @@ _contouring_triangles
           iso_edge_def[edge_id1]=1;
           iso_n_edge++;
         }
+        iso_n_edge_parent += edge_parent_idx[edge_id1+1]-edge_parent_idx[edge_id1];
       }
 
       else if (vtx_on_vtx1!=0 && vtx_on_vtx2!=0) {
@@ -707,17 +711,25 @@ _contouring_triangles
           iso_edge_def[edge_id0]=1;
           iso_n_edge++;
         }
+        iso_n_edge_parent += edge_parent_idx[edge_id0+1]-edge_parent_idx[edge_id0];
       }
     }
 
   } // End of loop on elements
 
   /* Allocate */
-  int         *iso_edge_vtx         = realloc(*out_iso_edge_vtx,         sizeof(int        ) * iso_n_edge * 2);
-  PDM_g_num_t *iso_edge_parent_gnum = realloc(*out_iso_edge_parent_gnum, sizeof(PDM_g_num_t) * iso_n_edge * 2);
+  iso_n_edge_parent += *out_iso_n_edge_parent;
+  int         *iso_edge_vtx          = realloc(*out_iso_edge_vtx,         2 * iso_n_edge       * sizeof(int        ));
+  PDM_g_num_t *iso_edge_parent_gnum  = realloc(*out_iso_edge_parent_gnum, 2 * iso_n_edge       * sizeof(PDM_g_num_t));
+  int         *iso_edge_parent_count = realloc(*out_iso_edge_parent_count,    iso_n_edge       * sizeof(int        ));
+  int         *iso_edge_parent       = realloc(*out_iso_edge_parent      ,    iso_n_edge_parent* sizeof(int        ));
   PDM_array_reset_int(iso_edge_def, n_elt, 0);
+  for (int i_edge = *out_iso_n_edge; i_edge < iso_n_edge; i_edge++) {
+    iso_edge_parent_count[i_edge] = 0.;
+  }
 
-  iso_n_edge = *out_iso_n_edge;
+  iso_n_edge        = *out_iso_n_edge;
+  iso_n_edge_parent = *out_iso_n_edge_parent;
 
 
   /* Second loop to fill */
@@ -769,6 +781,13 @@ _contouring_triangles
               iso_edge_parent_gnum[2*iso_n_edge+1] = vtx_gnum[perm_elt_vtx[1]];
             }
         
+            int i_beg_parent = edge_parent_idx[edge_id2  ];
+            int i_end_parent = edge_parent_idx[edge_id2+1];
+            for (int i_parent=i_beg_parent; i_parent<i_end_parent; ++i_parent) {
+              iso_edge_parent_count[iso_n_edge]++;
+              iso_edge_parent[iso_n_edge_parent++] = edge_parent[i_parent];
+            }
+
             iso_n_edge++;
           }
         }
@@ -790,6 +809,13 @@ _contouring_triangles
               iso_edge_parent_gnum[2*iso_n_edge+1] = vtx_gnum[perm_elt_vtx[2]];
             }
         
+            int i_beg_parent = edge_parent_idx[edge_id1  ];
+            int i_end_parent = edge_parent_idx[edge_id1+1];
+            for (int i_parent=i_beg_parent; i_parent<i_end_parent; ++i_parent) {
+              iso_edge_parent_count[iso_n_edge]++;
+              iso_edge_parent[iso_n_edge_parent++] = edge_parent[i_parent];
+            }
+
             iso_n_edge++;
           }
         }
@@ -811,6 +837,13 @@ _contouring_triangles
               iso_edge_parent_gnum[2*iso_n_edge+1] = vtx_gnum[perm_elt_vtx[2]];
             }
         
+            int i_beg_parent = edge_parent_idx[edge_id0  ];
+            int i_end_parent = edge_parent_idx[edge_id0+1];
+            for (int i_parent=i_beg_parent; i_parent<i_end_parent; ++i_parent) {
+              iso_edge_parent_count[iso_n_edge]++;
+              iso_edge_parent[iso_n_edge_parent++] = edge_parent[i_parent];
+            }
+
             iso_n_edge++;
 
           }
@@ -849,7 +882,10 @@ _contouring_triangles
           iso_edge_parent_gnum[2*iso_n_edge  ] = elt_gnum[i_elt];
           iso_edge_parent_gnum[2*iso_n_edge+1] = -1;
         }
-        
+
+        iso_edge_parent_count[iso_n_edge]++;
+        iso_edge_parent[iso_n_edge_parent++] = i_elt;
+
         iso_n_edge++;
 
         break;
@@ -879,6 +915,9 @@ _contouring_triangles
           iso_edge_parent_gnum[2*iso_n_edge+1] = -1;
         }
 
+        iso_edge_parent_count[iso_n_edge]++;
+        iso_edge_parent[iso_n_edge_parent++] = i_elt;
+
         iso_n_edge++;
         
         break;
@@ -891,11 +930,15 @@ _contouring_triangles
 
   } // End of loop on elements
 
-  free(iso_edge_def);
 
   *out_iso_n_edge           = iso_n_edge;
   *out_iso_edge_vtx         = iso_edge_vtx;
   *out_iso_edge_parent_gnum = iso_edge_parent_gnum;
+  *out_iso_n_edge_parent    = iso_n_edge_parent;
+  *out_iso_edge_parent_count= iso_edge_parent_count;
+  *out_iso_edge_parent      = iso_edge_parent;
+
+  free(iso_edge_def);
 }
 
 
@@ -951,10 +994,10 @@ PDM_isosurface_marching_algo
   // > Allocate isosurface edges
   int          *iso_n_edge           = PDM_array_zeros_int(n_part);
   int         **iso_edge_vtx         = malloc(sizeof(int         *) * n_part);
-  int         **iso_edge_parent_idx  = malloc(sizeof(int         *) * n_part);
-  int         **iso_edge_parent      = malloc(sizeof(int         *) * n_part);
   PDM_g_num_t **iso_edge_parent_gnum = malloc(sizeof(PDM_g_num_t *) * n_part);
   int         **isovalue_edge_idx    = malloc(sizeof(int         *) * n_part);
+  int         **iso_edge_parent_idx  = malloc(sizeof(int         *) * n_part);
+  int         **iso_edge_parent      = malloc(sizeof(int         *) * n_part);
 
   // > Allocate face edges
   // TODO: transformer en part_mesh_nodal (tetra sera que TRI et QUAD)
@@ -987,9 +1030,11 @@ PDM_isosurface_marching_algo
      */
     t_start = PDM_MPI_Wtime();
     
-    int  n_edge       = 0;
-    int *edge_vtx     = NULL;
-    int  n_crossings  = 0;
+    int  n_edge           = 0;
+    int *edge_vtx         = NULL;
+    int *edge_parent_idx  = NULL;
+    int *edge_parent      = NULL;
+    int  n_crossings      = 0;
     
     _build_active_edges(pmn,
                         i_part,
@@ -998,15 +1043,15 @@ PDM_isosurface_marching_algo
                         vtx_field[i_part],
                         &n_edge,
                         &edge_vtx,
-                        &iso_edge_parent_idx[i_part],
-                        &iso_edge_parent    [i_part],
+                        &edge_parent_idx,
+                        &edge_parent,
                         elt_edge,
                         &n_crossings);
 
     if (debug==1) {
-      int n_parent_tot = iso_edge_parent_idx[i_part][n_edge];
-      PDM_log_trace_array_int(iso_edge_parent_idx[i_part], n_edge+1    , "iso_edge_parent_idx ::");
-      PDM_log_trace_array_int(iso_edge_parent    [i_part], n_parent_tot, "iso_edge_parent     ::");
+      int n_parent_tot = edge_parent_idx[n_edge];
+      PDM_log_trace_array_int(edge_parent_idx, n_edge+1    , "edge_parent_idx ::");
+      PDM_log_trace_array_int(edge_parent    , n_parent_tot, "edge_parent     ::");
     }
     // TODO: merge iso_edge_parent with parallel
 
@@ -1073,11 +1118,13 @@ PDM_isosurface_marching_algo
 
 
     // > Allocate edge
-    iso_edge_vtx        [i_part] = NULL;
-    iso_edge_parent_gnum[i_part] = NULL;
-    isovalue_edge_idx   [i_part] = malloc(sizeof(int) * (n_isovalues + 1));
-    isovalue_edge_idx   [i_part][0] = 0;
-
+    iso_edge_vtx         [i_part] = NULL;
+    iso_edge_parent_idx  [i_part] = NULL;
+    iso_edge_parent      [i_part] = NULL;
+    iso_edge_parent_gnum [i_part] = NULL;
+    isovalue_edge_idx    [i_part] = malloc(sizeof(int) * (n_isovalues + 1));
+    isovalue_edge_idx    [i_part][0] = 0;
+    int *iso_edge_parent_count = NULL;
 
     // > Allocate face
     iso_face_vtx_idx    [i_part] = NULL;
@@ -1093,10 +1140,12 @@ PDM_isosurface_marching_algo
      * Build isosurface mesh
      */
     iso_n_vtx[i_part] = 0;
+    int iso_n_edge_parent = 0;
     for (int i_isovalue = 0; i_isovalue < n_isovalues; i_isovalue++) {
       
       if (debug) {
         log_trace("Building i_isovalue %d\n", i_isovalue);
+        log_trace("Building i_isovalue:: n_edge = %d\n", n_edge);
       }
       t_start = PDM_MPI_Wtime();
 
@@ -1155,14 +1204,19 @@ PDM_isosurface_marching_algo
             _contouring_triangles(n_elt,
                                   connec,
                                   gnum,
+                                  edge_parent_idx,
+                                  edge_parent,
                                   elt_edge[i_section],
                                   vtx_gnum,
                                   vtx_field[i_part],
                                   vtx_to_iso_vtx,
                                   edge_to_iso_vtx,
-                                  &iso_n_edge          [i_part],
-                                  &iso_edge_vtx        [i_part],
-                                  &iso_edge_parent_gnum[i_part]);
+                                  &iso_n_edge           [i_part],
+                                  &iso_edge_vtx         [i_part],
+                                  &iso_edge_parent_gnum [i_part],
+                                  &iso_n_edge_parent,
+                                  &iso_edge_parent_count,
+                                  &iso_edge_parent      [i_part]);
             break;
           }
 
@@ -1225,11 +1279,16 @@ PDM_isosurface_marching_algo
     for (int i_section = 0; i_section < n_section; i_section++) {
       free(elt_edge[i_section]);
     }
+
+    iso_edge_parent_idx[i_part] = PDM_array_new_idx_from_sizes_int(iso_edge_parent_count, iso_n_edge[i_part]);
+    free(iso_edge_parent_count);
+
     free(elt_edge);
     free(edge_vtx);
+    free(edge_parent_idx);
+    free(edge_parent);
     free(vtx_to_iso_vtx);
     free(edge_to_iso_vtx);
-
   } // End of loop on partitions
 
 
