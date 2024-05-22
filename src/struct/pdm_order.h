@@ -99,6 +99,16 @@ PDM_order_binary_search_long
  const size_t      nb_ent
 );
 
+int
+PDM_order_binary_search_int
+(
+ const int         elt   [],
+ const int         array [],
+ const size_t      stride,
+ const size_t      nb_ent
+);
+
+
 /**
  *
  * \brief Unique array lexicographicaly
