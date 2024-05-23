@@ -284,9 +284,9 @@ PDM_global_mean_field_compute
                             PDM_STRIDE_VAR_INTERLACED,
                             1,
                             _stride_w,
-                           (void **) gmean->local_weight,
-                                     &block_weight_stride,
-                           (void **) &block_weight);
+                  (void **) gmean->local_weight,
+                            &block_weight_stride,
+                  (void **) &block_weight);
     free (block_weight_stride);
   }
 
@@ -335,13 +335,13 @@ PDM_global_mean_field_compute
     }
   }
 
-  PDM_block_to_part_exch_in_place (gmean->btp,
-                          sizeof(double),
-                          PDM_STRIDE_CST_INTERLACED,
-                          &gmean->stride,
-                          block_field,
-                          NULL,
-                          (void **) gmean->global_mean_field);
+  PDM_block_to_part_exch_in_place(gmean->btp,
+                                  sizeof(double),
+                                  PDM_STRIDE_CST_INTERLACED,
+                                  &gmean->stride,
+                                  block_field,
+                                  NULL,
+                        (void **) gmean->global_mean_field);
 
   free (block_field);
   if (block_weight != NULL) {

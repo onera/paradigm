@@ -9,7 +9,7 @@
 
 TEST_CASE("[pdm_order] - PDM_order_inplace_unique_and_order_long - stride = 1") {
 
-  std::vector<int> array = { 2, 4, 5, 4, 2, 1 };
+  std::vector<PDM_g_num_t> array = { 2, 4, 5, 4, 2, 1 };
 
   int n_entity = array.size();
   std::vector<int> order(array.size());
@@ -22,7 +22,7 @@ TEST_CASE("[pdm_order] - PDM_order_inplace_unique_and_order_long - stride = 1") 
   // PDM_log_trace_array_int(array.data() , n_unique, "array :: ");
   // PDM_log_trace_array_int(order.data() , n_unique, "order :: ");
 
-  std::vector<int> array_expected = { 1, 2, 4, 5};
+  std::vector<PDM_g_num_t> array_expected = { 1, 2, 4, 5};
   std::vector<int> order_expected = { 5, 0, 3, 2};
 
   CHECK( n_unique == 4);

@@ -66,21 +66,12 @@ PDM_reader_gamma_dmesh_nodal
 
 
 void
-PDM_write_meshb
-(
-  const char   *filename,
-  const int     n_vtx,
-  const int     n_tetra,
-  const int     n_tri,
-  const int     n_edge,
-  const double *vtx_coords,
-  const int    *vtx_tags,
-  const int    *tetra_vtx,
-  const int    *tetra_tag,
-  const int    *tria_vtx,
-  const int    *tria_tag,
-  const int    *edge_vtx,
-  const int    *edge_tag
+PDM_write_meshb(
+  const char         *filename,
+  const int          *n_elt_table,
+        int         **tag_table,
+        PDM_g_num_t **vtx_connect_table,
+  const double       *vtx_coords
 );
 
 
@@ -110,6 +101,27 @@ PDM_write_gamma_matsym
   const int     n_vtx,
   const double *fields
 );
+
+
+/**
+ * \brief Read solution file in Gamma Mesh Format
+ *
+ * \param [in]  filename       Solution file name
+ * \param [out] n_field        Number of fields
+ * \param [out] field_stride   Field strides (size = \p n_field)
+ * \param [out] field_values   Field values (size = \p n_field, for each field \p i, size = \p n_vtx * \p field_stride[i])
+ *
+ * \return Number of vertices
+ */
+
+int
+PDM_read_gamma_sol_at_vertices
+(
+ const char   *filename,
+ int          *n_field,
+ int         **field_stride,
+ double     ***field_values
+ );
 
 
 #ifdef __cplusplus

@@ -9,6 +9,7 @@
 #include <math.h>
 #include <string.h>
 #include <float.h>
+#include <unistd.h>
 
 /*----------------------------------------------------------------------------
  *  Header for the current file
@@ -30,6 +31,10 @@
 #include "pdm_order.h"
 #include "pdm_logging.h"
 #include "pdm_distrib.h"
+#include "pdm_size_idx_from_stride.h"
+
+#include "pdm_io.h"
+#include <string.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -45,6 +50,25 @@ extern "C" {
 /*============================================================================
  * Type
  *============================================================================*/
+
+/**
+ * \enum _ptb_timer_step_t
+ *
+ */
+
+typedef enum {
+
+  MALLOC_ACTIVE_RANKS    = 0, // Initialisation step in Part-to-Block creation
+  GENERATE_DISTRIB       = 1, // Block-distribution generation step in Part-to-Block creation
+  BINARY_SEARCH          = 2, // Binary search step in Part-to-Block creation
+  CREATE_EXCHANGE        = 3, // Collective communication step in Part-to-Block creation
+  BLOCK_POST             = 4, // Post-processing step in Part-to-Block creation
+  GLOBAL_WEIGHTS         = 5, // Global weight computation step in Part-to-Block creation
+  CREATE_FROM_DISTRIB    = 6, // Part-to-Block creation from provided distribution
+  CREATE_GEOM            = 7, // Geometric Part-to-Block creation
+  DATA_EXCHANGE          = 8  // Collective communication step in Part-to-Block data exchange
+
+} _ptb_timer_step_t;
 
 /*=============================================================================
  * Static global variables
@@ -70,17 +94,24 @@ static const int _sampling_factors[4] = {1, /* OD */
  * No static : truly global
  *  https://stackoverflow.com/questions/1856599/when-to-use-static-keyword-before-global-variables
  */
-double t_elaps[3] = {0., 0., 0.};
-double t_cpu[3] = {0., 0., 0.};
-PDM_timer_t *t_timer[3] = {NULL, NULL, NULL};
+
+// Store timers
+PDM_timer_t *t_timer[NTIMER_PTB] = {NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL};
+
+// Timer step by step
+double t_elaps[NTIMER_PTB] = {0., 0., 0., 0., 0., 0., 0., 0., 0.};
+double t_cpu[NTIMER_PTB] = {0., 0., 0., 0., 0., 0., 0., 0., 0.};
 
 int min_exch_rank[2] = {INT_MAX, INT_MAX};
 int max_exch_rank[2] = {-1, -1};
 
 unsigned long long exch_data[2] = {0, 0};
 
+// Number of Part-to-Block instances in a run
 int n_ptb = 0;
 
+// Number of create Part-to-Block instances
+int n_ptb_open = 0;
 
 /*=============================================================================
  * Static function definitions
@@ -279,6 +310,10 @@ _distrib_data
  int                  user_distrib
 )
 {
+  double t1_elaps = PDM_timer_elapsed(t_timer[GENERATE_DISTRIB]);
+  double t1_cpu   = PDM_timer_cpu    (t_timer[GENERATE_DISTRIB]);
+  PDM_timer_resume(t_timer[GENERATE_DISTRIB]);
+
   PDM_g_num_t _id_max     = 0;
   PDM_g_num_t _id_max_max = 0;
 
@@ -395,6 +430,17 @@ _distrib_data
     }
   }
 
+  PDM_timer_hang_on(t_timer[GENERATE_DISTRIB]);
+  double t2_elaps = PDM_timer_elapsed(t_timer[GENERATE_DISTRIB]);
+  double t2_cpu   = PDM_timer_cpu    (t_timer[GENERATE_DISTRIB]);
+
+  t_elaps[GENERATE_DISTRIB] += (t2_elaps - t1_elaps);
+  t_cpu  [GENERATE_DISTRIB] += (t2_cpu   - t1_cpu  );
+
+  double t3_elaps = PDM_timer_elapsed(t_timer[BINARY_SEARCH]);
+  double t3_cpu   = PDM_timer_cpu    (t_timer[BINARY_SEARCH]);
+  PDM_timer_resume(t_timer[BINARY_SEARCH]);
+
   ptb->n_send_data = (int *) malloc (sizeof(int) * ptb->s_comm);
   ptb->n_recv_data = (int *) malloc (sizeof(int) * ptb->s_comm);
 
@@ -425,9 +471,21 @@ _distrib_data
     }
   }
 
+  PDM_timer_hang_on(t_timer[BINARY_SEARCH]);
+  double t4_elaps = PDM_timer_elapsed(t_timer[BINARY_SEARCH]);
+  double t4_cpu   = PDM_timer_cpu    (t_timer[BINARY_SEARCH]);
+
+  t_elaps[BINARY_SEARCH] += (t4_elaps - t3_elaps);
+  t_cpu  [BINARY_SEARCH] += (t4_cpu   - t3_cpu  );
+
+  double t5_elaps = PDM_timer_elapsed(t_timer[CREATE_EXCHANGE]);
+  double t5_cpu   = PDM_timer_cpu    (t_timer[CREATE_EXCHANGE]);
+  PDM_timer_resume(t_timer[CREATE_EXCHANGE]);
+
   PDM_MPI_Alltoall (ptb->n_send_data, 1, PDM_MPI_INT,
                     ptb->n_recv_data, 1, PDM_MPI_INT,
                     ptb->comm);
+
 
   ptb->i_send_data = (int *) malloc(sizeof(int) * ptb->s_comm);
   ptb->i_recv_data = (int *) malloc(sizeof(int) * ptb->s_comm);
@@ -465,17 +523,50 @@ _distrib_data
   ptb->sorted_recv_gnum =
     (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * ptb->tn_recv_data);
 
-  PDM_MPI_Alltoallv(send_gnum,
-                    ptb->n_send_data,
-                    ptb->i_send_data,
-                    PDM__PDM_MPI_G_NUM,
-                    ptb->sorted_recv_gnum,
-                    ptb->n_recv_data,
-                    ptb->i_recv_data,
-                    PDM__PDM_MPI_G_NUM,
-                    ptb->comm);
+  PDM_MPI_Partofactiverank (ptb->n_send_data,
+                            ptb->n_recv_data,
+                            ptb->comm,
+                            &(ptb->part_active_rank));
+
+  if (ptb->p2p_factor < ptb->part_active_rank) {
+
+    PDM_MPI_Alltoallv(send_gnum,
+                      ptb->n_send_data,
+                      ptb->i_send_data,
+                      PDM__PDM_MPI_G_NUM,
+                      ptb->sorted_recv_gnum,
+                      ptb->n_recv_data,
+                      ptb->i_recv_data,
+                      PDM__PDM_MPI_G_NUM,
+                      ptb->comm);
+  }
+
+  else {
+
+    PDM_MPI_Alltoallv_p2p(send_gnum,
+                          ptb->n_send_data,
+                          ptb->i_send_data,
+                          PDM__PDM_MPI_G_NUM,
+                          ptb->sorted_recv_gnum,
+                          ptb->n_recv_data,
+                          ptb->i_recv_data,
+                          PDM__PDM_MPI_G_NUM,
+                          ptb->comm);
+
+  }
 
   free(send_gnum);
+
+  PDM_timer_hang_on(t_timer[CREATE_EXCHANGE]);
+  double t6_elaps = PDM_timer_elapsed(t_timer[CREATE_EXCHANGE]);
+  double t6_cpu   = PDM_timer_cpu    (t_timer[CREATE_EXCHANGE]);
+
+  t_elaps[CREATE_EXCHANGE] += (t6_elaps - t5_elaps);
+  t_cpu  [CREATE_EXCHANGE] += (t6_cpu   - t5_cpu  );
+
+  double t7_elaps = PDM_timer_elapsed(t_timer[BLOCK_POST]);
+  double t7_cpu   = PDM_timer_cpu    (t_timer[BLOCK_POST]);
+  PDM_timer_resume(t_timer[BLOCK_POST]);
 
   /*
    * Sort
@@ -582,6 +673,13 @@ _distrib_data
       ptb->idx_partial[i] = idx_in_partial_block;
     }
   }
+
+  PDM_timer_hang_on(t_timer[BLOCK_POST]);
+  double t8_elaps = PDM_timer_elapsed(t_timer[BLOCK_POST]);
+  double t8_cpu   = PDM_timer_cpu    (t_timer[BLOCK_POST]);
+
+  t_elaps[BLOCK_POST] += (t8_elaps - t7_elaps);
+  t_cpu  [BLOCK_POST] += (t8_cpu   - t7_cpu  );
 }
 
 static
@@ -739,25 +837,54 @@ _distrib_data_hilbert
   ptb->sorted_recv_gnum                 = (PDM_g_num_t        *) malloc(sizeof(PDM_g_num_t       ) * ptb->tn_recv_data);
   PDM_hilbert_code_t *sorted_recv_codes = (PDM_hilbert_code_t *) malloc(sizeof(PDM_hilbert_code_t) * ptb->tn_recv_data);
 
-  PDM_MPI_Alltoallv(send_gnum,
-                    ptb->n_send_data,
-                    ptb->i_send_data,
-                    PDM__PDM_MPI_G_NUM,
-                    ptb->sorted_recv_gnum,
-                    ptb->n_recv_data,
-                    ptb->i_recv_data,
-                    PDM__PDM_MPI_G_NUM,
-                    ptb->comm);
+  PDM_MPI_Partofactiverank (ptb->n_send_data,
+                            ptb->n_recv_data,
+                            ptb->comm,
+                            &(ptb->part_active_rank));
 
-  PDM_MPI_Alltoallv(send_codes,
-                    ptb->n_send_data,
-                    ptb->i_send_data,
-                    PDM_MPI_DOUBLE,
-                    sorted_recv_codes,
-                    ptb->n_recv_data,
-                    ptb->i_recv_data,
-                    PDM_MPI_DOUBLE,
-                    ptb->comm);
+  if (ptb->p2p_factor < ptb->part_active_rank) {
+    PDM_MPI_Alltoallv(send_gnum,
+                      ptb->n_send_data,
+                      ptb->i_send_data,
+                      PDM__PDM_MPI_G_NUM,
+                      ptb->sorted_recv_gnum,
+                      ptb->n_recv_data,
+                      ptb->i_recv_data,
+                      PDM__PDM_MPI_G_NUM,
+                      ptb->comm);
+  
+    PDM_MPI_Alltoallv(send_codes,
+                      ptb->n_send_data,
+                      ptb->i_send_data,
+                      PDM_MPI_DOUBLE,
+                      sorted_recv_codes,
+                      ptb->n_recv_data,
+                      ptb->i_recv_data,
+                      PDM_MPI_DOUBLE,
+                      ptb->comm);
+  }
+
+  else {
+    PDM_MPI_Alltoallv_p2p(send_gnum,
+                          ptb->n_send_data,
+                          ptb->i_send_data,
+                          PDM__PDM_MPI_G_NUM,
+                          ptb->sorted_recv_gnum,
+                          ptb->n_recv_data,
+                          ptb->i_recv_data,
+                          PDM__PDM_MPI_G_NUM,
+                          ptb->comm);
+  
+    PDM_MPI_Alltoallv_p2p(send_codes,
+                          ptb->n_send_data,
+                          ptb->i_send_data,
+                          PDM_MPI_DOUBLE,
+                          sorted_recv_codes,
+                          ptb->n_recv_data,
+                          ptb->i_recv_data,
+                          PDM_MPI_DOUBLE,
+                          ptb->comm);
+  }
 
   free(send_gnum);
   free(send_codes);
@@ -1005,30 +1132,66 @@ _distrib_data_morton
   ptb->sorted_recv_gnum                 = (PDM_g_num_t        *) malloc(sizeof(PDM_g_num_t       ) * ptb->tn_recv_data);
   PDM_morton_code_t *sorted_recv_codes = (PDM_morton_code_t *) malloc(sizeof(PDM_morton_code_t) * ptb->tn_recv_data);
 
-  PDM_MPI_Alltoallv(send_gnum,
-                    ptb->n_send_data,
-                    ptb->i_send_data,
-                    PDM__PDM_MPI_G_NUM,
-                    ptb->sorted_recv_gnum,
-                    ptb->n_recv_data,
-                    ptb->i_recv_data,
-                    PDM__PDM_MPI_G_NUM,
-                    ptb->comm);
+  PDM_MPI_Partofactiverank (ptb->n_send_data,
+                            ptb->n_recv_data,
+                            ptb->comm,
+                            &(ptb->part_active_rank));
 
-  PDM_MPI_Datatype mpi_morton_type;
-  PDM_MPI_Type_create_contiguous(4, PDM_MPI_INT, &mpi_morton_type);
-  PDM_MPI_Type_commit(&mpi_morton_type);
-  PDM_MPI_Alltoallv(send_codes,
-                    ptb->n_send_data,
-                    ptb->i_send_data,
-                    mpi_morton_type,
-                    sorted_recv_codes,
-                    ptb->n_recv_data,
-                    ptb->i_recv_data,
-                    mpi_morton_type,
-                    ptb->comm);
-  PDM_MPI_Type_free(&mpi_morton_type);
+  if (ptb->p2p_factor < ptb->part_active_rank) {
 
+    PDM_MPI_Alltoallv(send_gnum,
+                      ptb->n_send_data,
+                      ptb->i_send_data,
+                      PDM__PDM_MPI_G_NUM,
+                      ptb->sorted_recv_gnum,
+                      ptb->n_recv_data,
+                      ptb->i_recv_data,
+                      PDM__PDM_MPI_G_NUM,
+                      ptb->comm);
+  
+    PDM_MPI_Datatype mpi_morton_type;
+    PDM_MPI_Type_create_contiguous(4, PDM_MPI_INT, &mpi_morton_type);
+    PDM_MPI_Type_commit(&mpi_morton_type);
+    PDM_MPI_Alltoallv(send_codes,
+                      ptb->n_send_data,
+                      ptb->i_send_data,
+                      mpi_morton_type,
+                      sorted_recv_codes,
+                      ptb->n_recv_data,
+                      ptb->i_recv_data,
+                      mpi_morton_type,
+                      ptb->comm);
+    PDM_MPI_Type_free(&mpi_morton_type);
+  }
+
+  else {
+
+    PDM_MPI_Alltoallv_p2p(send_gnum,
+                          ptb->n_send_data,
+                          ptb->i_send_data,
+                          PDM__PDM_MPI_G_NUM,
+                          ptb->sorted_recv_gnum,
+                          ptb->n_recv_data,
+                          ptb->i_recv_data,
+                          PDM__PDM_MPI_G_NUM,
+                          ptb->comm);
+  
+    PDM_MPI_Datatype mpi_morton_type;
+    PDM_MPI_Type_create_contiguous(4, PDM_MPI_INT, &mpi_morton_type);
+    PDM_MPI_Type_commit(&mpi_morton_type);
+    PDM_MPI_Alltoallv_p2p(send_codes,
+                          ptb->n_send_data,
+                          ptb->i_send_data,
+                          mpi_morton_type,
+                          sorted_recv_codes,
+                          ptb->n_recv_data,
+                          ptb->i_recv_data,
+                          mpi_morton_type,
+                          ptb->comm);
+    PDM_MPI_Type_free(&mpi_morton_type);
+  }
+
+  
   free(send_gnum);
   free(send_codes);
   free(part_idx);
@@ -1135,15 +1298,29 @@ _compute_global_weights
   }
 
   double *recv_weight = malloc (sizeof(double) * ptb->tn_recv_data);
-  PDM_MPI_Alltoallv (part_weight,
-                     ptb->n_send_data,
-                     ptb->i_send_data,
-                     PDM_MPI_DOUBLE,
-                     recv_weight,
-                     ptb->n_recv_data,
-                     ptb->i_recv_data,
-                     PDM_MPI_DOUBLE,
-                     ptb->comm);
+
+  if (ptb->p2p_factor < ptb->part_active_rank) {
+    PDM_MPI_Alltoallv (part_weight,
+                       ptb->n_send_data,
+                       ptb->i_send_data,
+                       PDM_MPI_DOUBLE,
+                       recv_weight,
+                       ptb->n_recv_data,
+                       ptb->i_recv_data,
+                       PDM_MPI_DOUBLE,
+                       ptb->comm);
+  }
+  else {
+    PDM_MPI_Alltoallv_p2p (part_weight,
+                           ptb->n_send_data,
+                           ptb->i_send_data,
+                           PDM_MPI_DOUBLE,
+                           recv_weight,
+                           ptb->n_recv_data,
+                           ptb->i_recv_data,
+                           PDM_MPI_DOUBLE,
+                           ptb->comm);
+  }
 
   /* Sum received weights */
   double *block_weight = malloc (sizeof(double) * ptb->n_elt_block);
@@ -1171,15 +1348,33 @@ _compute_global_weights
   free (block_weight);
 
   /* Send back global weights */
-  PDM_MPI_Alltoallv (recv_weight,
-                     ptb->n_recv_data,
-                     ptb->i_recv_data,
-                     PDM_MPI_DOUBLE,
-                     part_weight,
-                     ptb->n_send_data,
-                     ptb->i_send_data,
-                     PDM_MPI_DOUBLE,
-                     ptb->comm);
+
+  if (ptb->p2p_factor < ptb->part_active_rank) {
+
+    PDM_MPI_Alltoallv (recv_weight,
+                       ptb->n_recv_data,
+                       ptb->i_recv_data,
+                       PDM_MPI_DOUBLE,
+                       part_weight,
+                       ptb->n_send_data,
+                       ptb->i_send_data,
+                       PDM_MPI_DOUBLE,
+                       ptb->comm);
+  }
+
+  else {
+
+    PDM_MPI_Alltoallv_p2p (recv_weight,
+                           ptb->n_recv_data,
+                           ptb->i_recv_data,
+                           PDM_MPI_DOUBLE,
+                           part_weight,
+                           ptb->n_send_data,
+                           ptb->i_send_data,
+                           PDM_MPI_DOUBLE,
+                           ptb->comm);
+  }
+
   free (recv_weight);
 
   /* Store global weights */
@@ -1220,11 +1415,18 @@ _ptb_create
 )
 {
   if (n_ptb == 0) {
-    t_timer[0] = PDM_timer_create ();
-    t_timer[1] = PDM_timer_create ();
-    t_timer[2] = PDM_timer_create ();
+    t_timer[MALLOC_ACTIVE_RANKS] = PDM_timer_create (); // Warning : unused for now because negligable
+    t_timer[GENERATE_DISTRIB   ] = PDM_timer_create ();
+    t_timer[BINARY_SEARCH      ] = PDM_timer_create ();
+    t_timer[CREATE_EXCHANGE    ] = PDM_timer_create ();
+    t_timer[BLOCK_POST         ] = PDM_timer_create ();
+    t_timer[GLOBAL_WEIGHTS     ] = PDM_timer_create ();
+    t_timer[DATA_EXCHANGE      ] = PDM_timer_create ();
+    t_timer[CREATE_FROM_DISTRIB] = PDM_timer_create ();
+    t_timer[CREATE_GEOM        ] = PDM_timer_create ();
   }
   n_ptb++;
+  n_ptb_open++;
 
   PDM_part_to_block_t *ptb = (PDM_part_to_block_t *) malloc (sizeof(PDM_part_to_block_t));
 
@@ -1272,7 +1474,7 @@ _ptb_create
   ptb->s_data           = (size_t          * ) malloc ( ptb->max_exch_request * sizeof(size_t           ) );
   ptb->t_stride         = (PDM_stride_t    * ) malloc ( ptb->max_exch_request * sizeof(PDM_stride_t     ) );
   ptb->cst_stride       = (int             * ) malloc ( ptb->max_exch_request * sizeof(int              ) );
-  ptb->wait_status      = (int             * ) malloc ( ptb->max_exch_request * sizeof(int              ) );
+  ptb->wait_status      =  PDM_array_const_int(ptb->max_exch_request, 2);
   ptb->request_mpi      = (PDM_MPI_Request * ) malloc ( ptb->max_exch_request * sizeof(PDM_MPI_Request  ) );
 
   ptb->send_buffer      = (unsigned char  ** ) malloc ( ptb->max_exch_request * sizeof(unsigned char   *) );
@@ -1292,6 +1494,7 @@ _ptb_create
   ptb->comm_kind        = (PDM_mpi_comm_kind_t *) malloc ( ptb->max_exch_request * sizeof(PDM_mpi_comm_kind_t  ));
   ptb->win_send         = (PDM_MPI_Win         *) malloc ( ptb->max_exch_request * sizeof(PDM_MPI_Win         *));
   ptb->win_recv         = (PDM_MPI_Win         *) malloc ( ptb->max_exch_request * sizeof(PDM_MPI_Win         *));
+  ptb->mpi_type         = (PDM_MPI_Datatype    *) malloc ( ptb->max_exch_request * sizeof(PDM_MPI_Datatype    *));
 
   for(int i_req = 0; i_req < ptb->max_exch_request; ++i_req) {
     ptb->send_buffer  [i_req] = NULL;
@@ -1307,11 +1510,28 @@ _ptb_create
     ptb->part_data    [i_req] = NULL;
     ptb->win_send     [i_req] = PDM_MPI_WIN_NULL;
     ptb->win_recv     [i_req] = PDM_MPI_WIN_NULL;
+    ptb->mpi_type     [i_req] = PDM_MPI_DATATYPE_NULL;
+  }
+
+  ptb->p2p_factor = 0.25;
+
+  char host[1024];
+  gethostname(host, 1023);
+
+  if (!strncmp(host, "sator" , 5)) {
+    ptb->p2p_factor = -0.1;
+  }
+
+  char *env_var = NULL;
+  env_var = getenv ("PDM_PART_TO_BLOCK_P2P_FACTOR");
+  if (env_var != NULL) {
+    ptb->p2p_factor = atof (env_var);
   }
 
   /*
    * Active ranks definition
    */
+
   _active_ranks (ptb);
 
   return ptb;
@@ -1334,6 +1554,8 @@ _prepare_exchange
   int                  **recv_stride
 )
 {
+  PDM_UNUSED(s_data);
+  PDM_UNUSED(cst_stride);
   /*
    * Exchange Stride and build buffer properties
    */
@@ -1362,15 +1584,32 @@ _prepare_exchange
 
     *recv_stride = _recv_stride;
 
-    PDM_MPI_Alltoallv (send_stride,
-                       ptb->n_send_data,
-                       ptb->i_send_data,
-                       PDM_MPI_INT,
-                       _recv_stride,
-                       ptb->n_recv_data,
-                       ptb->i_recv_data,
-                       PDM_MPI_INT,
-                       ptb->comm);
+    if (ptb->p2p_factor < ptb->part_active_rank) {
+
+      PDM_MPI_Alltoallv (send_stride,
+                         ptb->n_send_data,
+                         ptb->i_send_data,
+                         PDM_MPI_INT,
+                         _recv_stride,
+                         ptb->n_recv_data,
+                         ptb->i_recv_data,
+                         PDM_MPI_INT,
+                         ptb->comm);
+    }
+
+    else {
+
+      PDM_MPI_Alltoallv_p2p (send_stride,
+                             ptb->n_send_data,
+                             ptb->i_send_data,
+                             PDM_MPI_INT,
+                             _recv_stride,
+                             ptb->n_recv_data,
+                             ptb->i_recv_data,
+                             PDM_MPI_INT,
+                             ptb->comm);
+
+    }
 
     /*
      * Build buffers
@@ -1381,15 +1620,15 @@ _prepare_exchange
       int iend = ptb->i_send_data[i] + ptb->n_send_data[i];
 
       n_send_buffer[i] = 0;
-      for (int k = ibeg; k < iend; k++)
+      for (int k = ibeg; k < iend; k++) {
         n_send_buffer[i] += send_stride[k];
+      }
 
-      n_send_buffer[i] *= (int) s_data;
+      // n_send_buffer[i] *= (int) s_data;
 
       if (i > 0) {
         i_send_buffer[i] = i_send_buffer[i-1] + n_send_buffer[i-1];
-      }
-      else {
+      } else {
         i_send_buffer[i] = 0;
       }
 
@@ -1397,15 +1636,17 @@ _prepare_exchange
       iend = ptb->i_recv_data[i] + ptb->n_recv_data[i];
 
       n_recv_buffer[i] = 0;
-      for (int k = ibeg; k < iend; k++)
+      for (int k = ibeg; k < iend; k++) {
         n_recv_buffer[i] += _recv_stride[k];
+      }
 
-      n_recv_buffer[i] *= (int) s_data;
+      // n_recv_buffer[i] *= (int) s_data;
 
-      if (i > 0)
+      if (i > 0) {
         i_recv_buffer[i] = i_recv_buffer[i-1] + n_recv_buffer[i-1];
-      else
+      } else {
         i_recv_buffer[i] = 0;
+      }
 
     }
 
@@ -1417,11 +1658,11 @@ _prepare_exchange
 
     for (int i = 0; i < ptb->s_comm; i++) {
 
-      i_send_buffer[i] = ptb->i_send_data[i] * cst_stride * (int) s_data;
-      i_recv_buffer[i] = ptb->i_recv_data[i] * cst_stride * (int) s_data;
+      i_send_buffer[i] = ptb->i_send_data[i]; //  * cst_stride; //  * (int) s_data;
+      i_recv_buffer[i] = ptb->i_recv_data[i]; //  * cst_stride; //  * (int) s_data;
 
-      n_send_buffer[i] = ptb->n_send_data[i] * cst_stride * (int) s_data;
-      n_recv_buffer[i] = ptb->n_recv_data[i] * cst_stride * (int) s_data;
+      n_send_buffer[i] = ptb->n_send_data[i]; //  * cst_stride; //  * (int) s_data;
+      n_recv_buffer[i] = ptb->n_recv_data[i]; //  * cst_stride; //  * (int) s_data;
 
     }
   }
@@ -1445,6 +1686,8 @@ _prepare_reverse_exchange
   int                  **recv_stride
 )
 {
+  PDM_UNUSED(s_data);
+  PDM_UNUSED(cst_stride);
   /*
    * Exchange Stride and build buffer properties
    */
@@ -1472,15 +1715,28 @@ _prepare_reverse_exchange
 
     *recv_stride = _recv_stride;
 
-    PDM_MPI_Alltoallv (_send_stride,
-                       ptb->n_recv_data,
-                       ptb->i_recv_data,
-                       PDM_MPI_INT,
-                       _recv_stride,
-                       ptb->n_send_data,
-                       ptb->i_send_data,
-                       PDM_MPI_INT,
-                       ptb->comm);
+    if (ptb->p2p_factor < ptb->part_active_rank) {
+      PDM_MPI_Alltoallv (_send_stride,
+                         ptb->n_recv_data,
+                         ptb->i_recv_data,
+                         PDM_MPI_INT,
+                         _recv_stride,
+                         ptb->n_send_data,
+                         ptb->i_send_data,
+                         PDM_MPI_INT,
+                         ptb->comm); 
+    }
+    else {
+      PDM_MPI_Alltoallv_p2p (_send_stride,
+                             ptb->n_recv_data,
+                             ptb->i_recv_data,
+                             PDM_MPI_INT,
+                             _recv_stride,
+                             ptb->n_send_data,
+                             ptb->i_send_data,
+                             PDM_MPI_INT,
+                             ptb->comm);      
+    }
 
     if(0 == 1) {
       PDM_log_trace_array_int(_recv_stride, s_recv, "recv_stride :: ");
@@ -1489,6 +1745,7 @@ _prepare_reverse_exchange
     /*
      * Build buffers
      */
+
     for (int i = 0; i < ptb->s_comm; i++) {
       int ibeg = ptb->i_recv_data[i];
       int iend = ptb->i_recv_data[i] + ptb->n_recv_data[i];
@@ -1498,7 +1755,7 @@ _prepare_reverse_exchange
         n_send_buffer[i] += _send_stride[k];
       }
 
-      n_send_buffer[i] *= (int) s_data;
+      // n_send_buffer[i] *= (int) s_data;
 
       if (i > 0) {
         i_send_buffer[i] = i_send_buffer[i-1] + n_send_buffer[i-1];
@@ -1514,7 +1771,7 @@ _prepare_reverse_exchange
         n_recv_buffer[i] += _recv_stride[k];
       }
 
-      n_recv_buffer[i] *= (int) s_data;
+      // n_recv_buffer[i] *= (int) s_data;
 
       if (i > 0) {
         i_recv_buffer[i] = i_recv_buffer[i-1] + n_recv_buffer[i-1];
@@ -1530,11 +1787,11 @@ _prepare_reverse_exchange
 
     for (int i = 0; i < ptb->s_comm; i++) {
 
-      i_send_buffer[i] = ptb->i_recv_data[i] * cst_stride * (int) s_data;
-      i_recv_buffer[i] = ptb->i_send_data[i] * cst_stride * (int) s_data;
+      i_send_buffer[i] = ptb->i_recv_data[i]; // * cst_stride; // * (int) s_data;
+      i_recv_buffer[i] = ptb->i_send_data[i]; // * cst_stride; // * (int) s_data;
 
-      n_send_buffer[i] = ptb->n_recv_data[i] * cst_stride * (int) s_data;
-      n_recv_buffer[i] = ptb->n_send_data[i] * cst_stride * (int) s_data;
+      n_send_buffer[i] = ptb->n_recv_data[i]; // * cst_stride; // * (int) s_data;
+      n_recv_buffer[i] = ptb->n_send_data[i]; // * cst_stride; // * (int) s_data;
 
     }
 
@@ -1547,12 +1804,6 @@ _prepare_reverse_exchange
     PDM_log_trace_array_int   (n_recv_buffer, ptb->s_comm, "n_recv_buffer ::");
   }
 }
-
-
-
-
-
-
 
 
 static
@@ -1570,6 +1821,11 @@ _prepare_send_buffer
   unsigned char         *send_buffer
 )
 {
+  int s_data_tot = s_data;
+  if(t_stride == PDM_STRIDE_CST_INTERLACED) {
+    s_data_tot = s_data * cst_stride;
+  }
+
   unsigned char **_part_data = (unsigned char **) part_data;
 
   for (int i = 0; i <  ptb->s_comm; i++) {
@@ -1584,9 +1840,10 @@ _prepare_send_buffer
       i_part = (size_t *) malloc (sizeof(size_t) * (ptb->n_elt[i] + 1));
       assert (i_part != NULL);
 
-    i_part[0] = 0;
-      for (int j = 1; j < ptb->n_elt[i] + 1; j++)
+      i_part[0] = 0;
+      for (int j = 1; j < ptb->n_elt[i] + 1; j++) {
         i_part[j] = i_part[j-1] + ((size_t) part_stride[i][j-1] * s_data);
+      }
     }
 
     for (int j = 0; j < ptb->n_elt[i]; j++) {
@@ -1604,12 +1861,17 @@ _prepare_send_buffer
         i_part_elt  = i_part[j];
       }
 
-      for (int k = 0; k < (int) s_octet_elt; k++) {
-        send_buffer[i_send_buffer[iproc] + n_send_buffer[iproc]++] =
-          _part_data[i][i_part_elt + k];
+      int idx_write = (i_send_buffer[iproc] + n_send_buffer[iproc]) * s_data_tot;
+      if (t_stride == PDM_STRIDE_VAR_INTERLACED) {
+        n_send_buffer[iproc] += part_stride[i][j];
+      } else {
+        n_send_buffer[iproc] += 1;
       }
 
-
+      for (int k = 0; k < (int) s_octet_elt; k++) {
+        send_buffer[idx_write + k] =
+          _part_data[i][i_part_elt + k];
+      }
     }
 
     if (i_part != NULL)
@@ -1638,7 +1900,12 @@ _prepare_reverse_send_buffer
   // unsigned char **_part_data = (unsigned char **) part_data;
   unsigned char *_block_data = (unsigned char *) block_data;
 
-  int s_send_buffer = i_send_buffer[ptb->s_comm-1] + n_send_buffer[ptb->s_comm-1];
+  int s_data_tot = s_data;
+  if (t_stride == PDM_STRIDE_CST_INTERLACED) {
+    s_data_tot = s_data * cst_stride;
+  }
+
+  int s_send_buffer = (i_send_buffer[ptb->s_comm-1] + n_send_buffer[ptb->s_comm-1]) * s_data_tot;
 
   if (t_stride == PDM_STRIDE_VAR_INTERLACED) {
 
@@ -1651,7 +1918,6 @@ _prepare_reverse_send_buffer
     send_idx[0] = 0;
     for(int i = 0; i < ptb->tn_recv_data; ++i) {
       send_idx[i+1] = send_idx[i] + send_stride[i];
-      // send_stride[i] = 0;
     }
 
     // Same for block_stride
@@ -1943,9 +2209,10 @@ _post_treatment_reverse
       for (int j = 0; j < ptb->n_elt[i]; j++) {
         int iproc = ptb->dest_proc[++idx];
         int idx_write = n_octet * _part_idx[i][j];
+        int idx_read  = (i_recv_buffer[iproc] + n_recv_buffer[iproc]) * s_data;
+        n_recv_buffer[iproc] += _part_stride[i][j];
         for (int k = 0; k < (int) n_octet * _part_stride[i][j]; k++) {
-          int idx_read = i_recv_buffer[iproc] + n_recv_buffer[iproc]++;
-          _part_data[i][idx_write + k] = recv_buffer[idx_read];
+          _part_data[i][idx_write + k] = recv_buffer[idx_read+k];
         }
       }
       free(_part_idx[i]);
@@ -1962,9 +2229,10 @@ _post_treatment_reverse
       _part_data[i] = malloc(ptb->n_elt[i] * n_octet * sizeof(unsigned char));
       for (int j = 0; j < ptb->n_elt[i]; j++) {
         int iproc = ptb->dest_proc[++idx];
+        int idx_read  = (i_recv_buffer[iproc] + n_recv_buffer[iproc]) * s_data * cst_stride;
+        n_recv_buffer[iproc] += 1;
         for (int k = 0; k < (int) n_octet; k++) {
-          int idx_read = i_recv_buffer[iproc] + n_recv_buffer[iproc]++;
-          _part_data[i][n_octet*j + k] = recv_buffer[idx_read];
+          _part_data[i][n_octet*j + k] = recv_buffer[idx_read+k];
         }
       }
     }
@@ -1991,7 +2259,7 @@ PDM_part_to_block_global_statistic_reset
   void
 )
 {
-  for (int i = 0; i < 3; i++) {
+  for (int i = 0; i < NTIMER_PTB; i++) {
     t_elaps[i] = 0;
     t_cpu[i] = 0;
   }
@@ -2109,36 +2377,228 @@ PDM_part_to_block_global_timer_get
 )
 {
 
-  double min_elaps[3];
-  double max_elaps[3];
-  double min_cpu[3];
-  double max_cpu[3];
+  double min_elaps[NTIMER_PTB];
+  double max_elaps[NTIMER_PTB];
+  double min_cpu[NTIMER_PTB];
+  double max_cpu[NTIMER_PTB];
 
-  PDM_MPI_Allreduce (t_elaps, min_elaps, 3,
+  PDM_MPI_Allreduce (t_elaps, min_elaps, NTIMER_PTB,
                      PDM_MPI_DOUBLE, PDM_MPI_MIN, comm);
 
-  PDM_MPI_Allreduce (t_elaps, max_elaps, 3,
+  PDM_MPI_Allreduce (t_elaps, max_elaps, NTIMER_PTB,
                      PDM_MPI_DOUBLE, PDM_MPI_MAX, comm);
 
-  PDM_MPI_Allreduce (t_cpu, min_cpu, 3,
+  PDM_MPI_Allreduce (t_cpu, min_cpu, NTIMER_PTB,
                      PDM_MPI_DOUBLE, PDM_MPI_MIN, comm);
 
-  PDM_MPI_Allreduce (t_cpu, max_cpu, 3,
+  PDM_MPI_Allreduce (t_cpu, max_cpu, NTIMER_PTB,
                      PDM_MPI_DOUBLE, PDM_MPI_MAX, comm);
 
-  *min_elaps_create  = min_elaps[0];
-  *max_elaps_create  = max_elaps[0];
-  *min_cpu_create    = min_cpu[0];
-  *max_cpu_create    = max_cpu[0];
-  *min_elaps_create2 = min_elaps[1];
-  *max_elaps_create2 = max_elaps[1];
-  *min_cpu_create2   = min_cpu[1];
-  *max_cpu_create2   = max_cpu[1];
-  *min_elaps_exch    = min_elaps[2];
-  *max_elaps_exch    = max_elaps[2];
-  *min_cpu_exch      = min_cpu[2];
-  *max_cpu_exch      = max_cpu[2];
+  // Part-to-Block creation with block-distribution generation
+  *min_elaps_create  = min_elaps[MALLOC_ACTIVE_RANKS] + min_elaps[GENERATE_DISTRIB] + min_elaps[BINARY_SEARCH] + min_elaps[CREATE_EXCHANGE] + min_elaps[BLOCK_POST] + min_elaps[GLOBAL_WEIGHTS];
+  *max_elaps_create  = max_elaps[MALLOC_ACTIVE_RANKS] + max_elaps[GENERATE_DISTRIB] + max_elaps[BINARY_SEARCH] + max_elaps[CREATE_EXCHANGE] + max_elaps[BLOCK_POST] + max_elaps[GLOBAL_WEIGHTS];
+  *min_cpu_create    = min_cpu[MALLOC_ACTIVE_RANKS]   + min_cpu[GENERATE_DISTRIB]   + min_cpu[BINARY_SEARCH]   + min_cpu[CREATE_EXCHANGE]   + min_cpu[BLOCK_POST]   + min_cpu[GLOBAL_WEIGHTS]  ;
+  *max_cpu_create    = max_cpu[MALLOC_ACTIVE_RANKS]   + max_cpu[GENERATE_DISTRIB]   + max_cpu[BINARY_SEARCH]   + max_cpu[CREATE_EXCHANGE]   + max_cpu[BLOCK_POST]   + max_cpu[GLOBAL_WEIGHTS]  ;
+  // Part-to-Block creation with user provided block-distribution
+  *min_elaps_create2 = min_elaps[CREATE_FROM_DISTRIB];
+  *max_elaps_create2 = max_elaps[CREATE_FROM_DISTRIB];
+  *min_cpu_create2   = min_cpu[CREATE_FROM_DISTRIB];
+  *max_cpu_create2   = max_cpu[CREATE_FROM_DISTRIB];
+  // Warning : Geometric Part-to-Block creation is not outputed while exchanges are counted
+  // Data exchange
+  *min_elaps_exch    = min_elaps[DATA_EXCHANGE];
+  *max_elaps_exch    = max_elaps[DATA_EXCHANGE];
+  *min_cpu_exch      = min_cpu[DATA_EXCHANGE];
+  *max_cpu_exch      = max_cpu[DATA_EXCHANGE];
 
+}
+
+/**
+ *
+ * \brief Global write part-to-block step timer
+ *
+ * \param [in]  comm            MPI communicator
+ * \param [in]  filename        File name
+ *
+ */
+
+void
+PDM_part_to_block_time_per_step_dump
+(
+ PDM_MPI_Comm  comm,
+ const char   *filename
+)
+{
+  // Write in parallel
+  PDM_io_file_t *writer = NULL;
+  PDM_l_num_t    ierr;
+
+  PDM_io_open(filename,
+              PDM_IO_FMT_BIN,
+              PDM_IO_SUFF_MAN,
+              "",
+              PDM_IO_BACKUP_OFF,
+              PDM_IO_KIND_MPI_SIMPLE,
+              PDM_IO_MOD_APPEND,
+              PDM_IO_NATIVE,
+              comm,
+              -1.,
+              &writer,
+              &ierr);
+
+  // MPI
+  int n_rank = 0;
+  PDM_MPI_Comm_size (comm, &n_rank);
+
+  // Create timer statistics
+  double min_elaps[NTIMER_PTB];
+  double mean_elaps[NTIMER_PTB];
+  double max_elaps[NTIMER_PTB];
+  double min_cpu[NTIMER_PTB];
+  double mean_cpu[NTIMER_PTB];
+  double max_cpu[NTIMER_PTB];
+
+  PDM_MPI_Allreduce (t_elaps, min_elaps, NTIMER_PTB,
+                     PDM_MPI_DOUBLE, PDM_MPI_MIN, comm);
+
+  PDM_MPI_Allreduce (t_elaps, mean_elaps, NTIMER_PTB,
+                     PDM_MPI_DOUBLE, PDM_MPI_SUM, comm);
+
+  PDM_MPI_Allreduce (t_elaps, max_elaps, NTIMER_PTB,
+                     PDM_MPI_DOUBLE, PDM_MPI_MAX, comm);
+
+  PDM_MPI_Allreduce (t_cpu, min_cpu, NTIMER_PTB,
+                     PDM_MPI_DOUBLE, PDM_MPI_MIN, comm);
+
+  PDM_MPI_Allreduce (t_cpu, mean_cpu, NTIMER_PTB,
+                     PDM_MPI_DOUBLE, PDM_MPI_SUM, comm);
+
+  PDM_MPI_Allreduce (t_cpu, max_cpu, NTIMER_PTB,
+                     PDM_MPI_DOUBLE, PDM_MPI_MAX, comm);
+
+  for (int i_step = 0; i_step < NTIMER_PTB; i_step++) {
+    min_elaps[i_step]  /= n_ptb_open;
+    mean_elaps[i_step] /= n_ptb_open;
+    max_elaps[i_step]  /= n_ptb_open;
+
+    min_cpu[i_step]  /= n_ptb_open;
+    mean_cpu[i_step] /= n_ptb_open;
+    max_cpu[i_step]  /= n_ptb_open;
+
+    mean_elaps[i_step] /= n_rank;
+    mean_cpu[i_step]   /= n_rank;
+  } // end loop on timed steps
+
+  // Global write times
+  size_t s_buffer = 436; // buffer size for %.5f + 1
+  char *buffer = malloc(s_buffer);
+
+  for (int i = 0; i < (int) s_buffer; i++) {
+    buffer[i] = '\0';
+  }
+
+  sprintf(buffer, "generate_distrib elaps %.5f %.5f %.5f cpu %.5f %.5f %.5f\n", min_elaps[GENERATE_DISTRIB], mean_elaps[GENERATE_DISTRIB], max_elaps[GENERATE_DISTRIB], min_cpu[GENERATE_DISTRIB], mean_cpu[GENERATE_DISTRIB], max_cpu[GENERATE_DISTRIB]);
+
+  sprintf(buffer + strlen(buffer), "binary_search elaps %.5f %.5f %.5f cpu %.5f %.5f %.5f\n", min_elaps[BINARY_SEARCH], mean_elaps[BINARY_SEARCH], max_elaps[BINARY_SEARCH], min_cpu[BINARY_SEARCH], mean_cpu[BINARY_SEARCH], max_cpu[BINARY_SEARCH]);
+
+  sprintf(buffer + strlen(buffer), "create_exchange elaps %.5f %.5f %.5f cpu %.5f %.5f %.5f\n", min_elaps[CREATE_EXCHANGE], mean_elaps[CREATE_EXCHANGE], max_elaps[CREATE_EXCHANGE], min_cpu[CREATE_EXCHANGE], mean_cpu[CREATE_EXCHANGE], max_cpu[CREATE_EXCHANGE]);
+
+  sprintf(buffer + strlen(buffer), "block_post elaps %.5f %.5f %.5f cpu %.5f %.5f %.5f\n", min_elaps[BLOCK_POST], mean_elaps[BLOCK_POST], max_elaps[BLOCK_POST], min_cpu[BLOCK_POST], mean_cpu[BLOCK_POST], max_cpu[BLOCK_POST]);
+
+  sprintf(buffer + strlen(buffer), "global_weights elaps %.5f %.5f %.5f cpu %.5f %.5f %.5f\n", min_elaps[GLOBAL_WEIGHTS], mean_elaps[GLOBAL_WEIGHTS], max_elaps[GLOBAL_WEIGHTS], min_cpu[GLOBAL_WEIGHTS], mean_cpu[GLOBAL_WEIGHTS], max_cpu[GLOBAL_WEIGHTS]);
+
+  // Warning : Geometric Part-to-Block creation is not outputed while exchanges are counted
+  sprintf(buffer + strlen(buffer), "data_exchange elaps %.5f %.5f %.5f cpu %.5f %.5f %.5f\n", min_elaps[DATA_EXCHANGE], mean_elaps[DATA_EXCHANGE], max_elaps[DATA_EXCHANGE], min_cpu[DATA_EXCHANGE], mean_cpu[DATA_EXCHANGE], max_cpu[DATA_EXCHANGE]);
+
+  PDM_io_global_write(writer,
+                      (PDM_l_num_t) sizeof(char),
+                      (PDM_l_num_t) s_buffer,
+                      buffer);
+
+  free(buffer);
+
+  // Finalize parallel write
+  PDM_io_close(writer);
+  PDM_io_free(writer);
+}
+
+/**
+ *
+ * \brief Write in parallel communication graph
+ *
+ * \param [in]  ptb             Part-to-Block structure
+ * \param [in]  filename        File name
+ *
+ */
+
+void
+PDM_part_to_block_comm_graph_dump
+(
+ PDM_part_to_block_t *ptb,
+ const char          *filename
+)
+{
+  // Write in parallel
+  PDM_io_file_t *writer = NULL;
+  PDM_l_num_t    ierr;
+
+  PDM_io_open(filename,
+              PDM_IO_FMT_BIN,
+              PDM_IO_SUFF_MAN,
+              "",
+              PDM_IO_BACKUP_OFF,
+              PDM_IO_KIND_MPI_SIMPLE,
+              PDM_IO_MOD_WRITE,
+              PDM_IO_NATIVE,
+              ptb->comm,
+              -1.,
+              &writer,
+              &ierr);
+
+  // Create a node identifier
+  PDM_MPI_Comm shared_comm = PDM_MPI_COMM_WORLD;
+
+  PDM_MPI_Comm_split_type(ptb->comm, PDM_MPI_SPLIT_SHARED, &shared_comm);
+
+  int i_shared_rank = 0;
+  PDM_MPI_Comm_rank(shared_comm, &i_shared_rank);
+
+  int bcast_buffer = 0;
+  if (i_shared_rank == 0) {
+    bcast_buffer = ptb->i_rank;
+  }
+  PDM_MPI_Bcast(&bcast_buffer, 1, PDM_MPI_INT32_T, 0, shared_comm);
+
+  // Block write i_rank, node and number of send data
+  int s_buffer = ptb->s_comm * 11 + 40 + 2 + 1; // (10 + 1 space) * n_rank + chaine + space + \n + 1
+  char *buffer = malloc(s_buffer);
+
+  for (int i = 0; i < (int) s_buffer; i++) {
+    buffer[i] = '\0';
+  }
+
+  sprintf(buffer, "i_rank %10d\nnode %10d\nn_send", ptb->i_rank, bcast_buffer);
+
+  for (int j_rank = 0; j_rank < ptb->s_comm; j_rank++) {
+    sprintf(buffer + strlen(buffer), " %10d", ptb->n_send_data[j_rank]);
+  } // end loop on n_rank
+  sprintf(buffer + strlen(buffer), " \n");
+
+  PDM_l_num_t one = 1;
+  PDM_g_num_t i_rank_gnum = (PDM_g_num_t) (ptb->i_rank+1);
+  PDM_io_par_interlaced_write(writer,
+                              PDM_STRIDE_VAR_INTERLACED,
+                              (PDM_l_num_t *) &s_buffer,
+                              (PDM_l_num_t) sizeof(char),
+                              one,
+                              &i_rank_gnum,
+                              (const void *) buffer);
+
+  free(buffer);
+
+  // Finalize parallel write
+  PDM_io_close(writer);
+  PDM_io_free(writer);
 }
 
 
@@ -2175,6 +2635,9 @@ PDM_part_to_block_create
   /*
    * Common creation
    */
+
+  // Warning : timing of _ptb_create not considered because induces issues
+
   PDM_part_to_block_t* ptb = _ptb_create(t_distrib,
                                          t_post,
                                          part_active_node,
@@ -2184,23 +2647,29 @@ PDM_part_to_block_create
                                          n_part,
                                          comm);
 
-  double t1_elaps = PDM_timer_elapsed(t_timer[0]);
-  double t1_cpu   = PDM_timer_cpu    (t_timer[0]);
-  PDM_timer_resume(t_timer[0]);
-
   /*
    * Data distribution definition
    */
 
   _distrib_data (ptb, 0);
 
-
   /*
    * Compute global weight for each element
    */
+  double t1_elaps = PDM_timer_elapsed(t_timer[GLOBAL_WEIGHTS]);
+  double t1_cpu   = PDM_timer_cpu    (t_timer[GLOBAL_WEIGHTS]);
+  PDM_timer_resume(t_timer[GLOBAL_WEIGHTS]);
+
   if (ptb->weight != NULL) {// && ptb->t_post == PDM_PART_TO_BLOCK_POST_MERGE) {
     _compute_global_weights (ptb);
   }
+
+  PDM_timer_hang_on(t_timer[GLOBAL_WEIGHTS]);
+  double t2_elaps = PDM_timer_elapsed(t_timer[GLOBAL_WEIGHTS]);
+  double t2_cpu   = PDM_timer_cpu    (t_timer[GLOBAL_WEIGHTS]);
+
+  t_elaps[GLOBAL_WEIGHTS] += (t2_elaps - t1_elaps);
+  t_cpu  [GLOBAL_WEIGHTS] += (t2_cpu   - t1_cpu  );
 
   int n_rank_recv = 0;
   int n_rank_send = 0;
@@ -2218,13 +2687,6 @@ PDM_part_to_block_create
   max_exch_rank[1] = PDM_MAX(max_exch_rank[1], n_rank_recv);
   min_exch_rank[0] = PDM_MIN(min_exch_rank[0], n_rank_send);
   min_exch_rank[1] = PDM_MIN(min_exch_rank[1], n_rank_recv);
-
-  PDM_timer_hang_on(t_timer[0]);
-  double t2_elaps = PDM_timer_elapsed(t_timer[0]);
-  double t2_cpu   = PDM_timer_cpu    (t_timer[0]);
-
-  t_elaps[0] += (t2_elaps - t1_elaps);
-  t_cpu  [0] += (t2_cpu   - t1_cpu  );
 
   return (PDM_part_to_block_t *) ptb;
 }
@@ -2263,6 +2725,9 @@ PDM_part_to_block_create_from_distrib
   /*
    * Common creation
    */
+
+  // Warning : timing of _ptb_create not considered because induces issues
+
   PDM_part_to_block_t* ptb = _ptb_create(t_distrib,
                                          t_post,
                                          part_active_node,
@@ -2272,18 +2737,25 @@ PDM_part_to_block_create_from_distrib
                                          n_part,
                                          comm);
 
+  double t1_elaps = PDM_timer_elapsed(t_timer[CREATE_FROM_DISTRIB]);
+  double t1_cpu = PDM_timer_cpu(t_timer[CREATE_FROM_DISTRIB]);
+  PDM_timer_resume(t_timer[CREATE_FROM_DISTRIB]);
+
   for(int i_rank = 0; i_rank < ptb->s_comm+1; i_rank++){
     ptb->data_distrib_index[i_rank] = data_distrib_index[i_rank];
   }
-
-  double t1_elaps = PDM_timer_elapsed(t_timer[1]);
-  double t1_cpu = PDM_timer_cpu(t_timer[1]);
-  PDM_timer_resume(t_timer[1]);
 
   /*
    * Data distribution definition
    */
   _distrib_data (ptb, 1);
+
+  PDM_timer_hang_on(t_timer[CREATE_FROM_DISTRIB]);
+  double t2_elaps = PDM_timer_elapsed(t_timer[CREATE_FROM_DISTRIB]);
+  double t2_cpu   = PDM_timer_cpu    (t_timer[CREATE_FROM_DISTRIB]);
+
+  t_elaps[CREATE_FROM_DISTRIB] += (t2_elaps - t1_elaps);
+  t_cpu  [CREATE_FROM_DISTRIB] += (t2_cpu   - t1_cpu);
 
   int n_rank_recv = 0;
   int n_rank_send = 0;
@@ -2302,13 +2774,6 @@ PDM_part_to_block_create_from_distrib
   max_exch_rank[1] = PDM_MAX(max_exch_rank[1], n_rank_recv);
   min_exch_rank[0] = PDM_MIN(min_exch_rank[0], n_rank_send);
   min_exch_rank[1] = PDM_MIN(min_exch_rank[1], n_rank_recv);
-
-  PDM_timer_hang_on(t_timer[1]);
-  double t2_elaps = PDM_timer_elapsed(t_timer[1]);
-  double t2_cpu   = PDM_timer_cpu    (t_timer[1]);
-
-  t_elaps[1] += (t2_elaps - t1_elaps);
-  t_cpu  [1] += (t2_cpu   - t1_cpu);
 
   return (PDM_part_to_block_t *) ptb;
 }
@@ -2349,6 +2814,9 @@ PDM_part_to_block_geom_create
   /*
    * Common creation
    */
+
+  // Warning : timing of _ptb_create not considered because induces issues
+
   PDM_part_to_block_t* ptb = _ptb_create(t_distrib,
                                          t_post,
                                          part_active_node,
@@ -2358,9 +2826,9 @@ PDM_part_to_block_geom_create
                                          n_part,
                                          comm);
 
-  double t1_elaps = PDM_timer_elapsed(t_timer[0]);
-  double t1_cpu = PDM_timer_cpu(t_timer[0]);
-  PDM_timer_resume(t_timer[0]);
+  double t1_elaps = PDM_timer_elapsed(t_timer[CREATE_GEOM]);
+  double t1_cpu = PDM_timer_cpu(t_timer[CREATE_GEOM]);
+  PDM_timer_resume(t_timer[CREATE_GEOM]);
 
   if(geom_kind == PDM_PART_GEOM_HILBERT ) {
     _distrib_data_hilbert(ptb, pvtx_coords, weight);
@@ -2392,12 +2860,12 @@ PDM_part_to_block_geom_create
   min_exch_rank[0] = PDM_MIN(min_exch_rank[0], n_rank_send);
   min_exch_rank[1] = PDM_MIN(min_exch_rank[1], n_rank_recv);
 
-  PDM_timer_hang_on(t_timer[0]);
-  double t2_elaps = PDM_timer_elapsed(t_timer[0] );
-  double t2_cpu = PDM_timer_cpu(t_timer[0]);
+  PDM_timer_hang_on(t_timer[CREATE_GEOM]);
+  double t2_elaps = PDM_timer_elapsed(t_timer[CREATE_GEOM] );
+  double t2_cpu = PDM_timer_cpu(t_timer[CREATE_GEOM]);
 
-  t_elaps[0] += (t2_elaps - t1_elaps);
-  t_cpu[0] += (t2_cpu - t1_cpu);
+  t_elaps[CREATE_GEOM] += (t2_elaps - t1_elaps);
+  t_cpu[CREATE_GEOM] += (t2_cpu - t1_cpu);
 
   return (PDM_part_to_block_t *) ptb;
 }
@@ -2549,9 +3017,9 @@ PDM_part_to_block_exch
 )
 {
 
-  double t1_elaps = PDM_timer_elapsed(t_timer[2]);
-  double t1_cpu = PDM_timer_cpu(t_timer[2]);
-  PDM_timer_resume(t_timer[2]);
+  double t1_elaps = PDM_timer_elapsed(t_timer[DATA_EXCHANGE]);
+  double t1_cpu = PDM_timer_cpu(t_timer[DATA_EXCHANGE]);
+  PDM_timer_resume(t_timer[DATA_EXCHANGE]);
 
   if ((ptb->t_post == PDM_PART_TO_BLOCK_POST_MERGE) &&
       (t_stride ==  PDM_STRIDE_CST_INTERLACED)) {
@@ -2563,6 +3031,16 @@ PDM_part_to_block_exch
   size_t *i_recv_buffer = (size_t *) malloc (sizeof(size_t) * ptb->s_comm);
   int    *n_send_buffer = (int    *) malloc (sizeof(int   ) * ptb->s_comm);
   int    *n_recv_buffer = (int    *) malloc (sizeof(int   ) * ptb->s_comm);
+
+  int s_data_tot = s_data;
+  if(t_stride == PDM_STRIDE_CST_INTERLACED) {
+    s_data_tot = s_data * cst_stride;
+  }
+
+  PDM_MPI_Datatype mpi_type;
+  PDM_MPI_Type_create_contiguous(s_data_tot, PDM_MPI_BYTE, &mpi_type);
+  PDM_MPI_Type_commit(&mpi_type);
+
 
   /*
    * Exchange Stride and build buffer properties
@@ -2582,8 +3060,8 @@ PDM_part_to_block_exch
   /*
    * Prepare buffer
    */
-  size_t s_send_buffer = i_send_buffer[ptb->s_comm - 1] + n_send_buffer[ptb->s_comm -1];
-  size_t s_recv_buffer = i_recv_buffer[ptb->s_comm - 1] + n_recv_buffer[ptb->s_comm -1];
+  size_t s_send_buffer = ( i_send_buffer[ptb->s_comm - 1] + n_send_buffer[ptb->s_comm -1] ) * s_data_tot;
+  size_t s_recv_buffer = ( i_recv_buffer[ptb->s_comm - 1] + n_recv_buffer[ptb->s_comm -1] ) * s_data_tot;
 
   unsigned char *send_buffer = (unsigned char *) malloc(sizeof(unsigned char) * s_send_buffer);
   unsigned char *recv_buffer = (unsigned char *) malloc(sizeof(unsigned char) * s_recv_buffer);
@@ -2604,15 +3082,61 @@ PDM_part_to_block_exch
   /*
    * Data exchange
    */
-  PDM_MPI_Alltoallv_l(send_buffer,
-                      n_send_buffer,
-                      i_send_buffer,
-                      PDM_MPI_BYTE,
-                      recv_buffer,
-                      n_recv_buffer,
-                      i_recv_buffer,
-                      PDM_MPI_BYTE,
-                      ptb->comm);
+  int mandatory_size = PDM_size_idx_from_stride (n_send_buffer, ptb->s_comm, ptb->comm);
+  mandatory_size = PDM_MAX(PDM_size_idx_from_stride (n_send_buffer, ptb->s_comm, ptb->comm), mandatory_size);
+  
+  if (mandatory_size > 32) {
+    PDM_MPI_Alltoallv_p2p_l(send_buffer,
+                            n_send_buffer,
+                            i_send_buffer,
+                            mpi_type,
+                            recv_buffer,
+                            n_recv_buffer,
+                            i_recv_buffer,
+                            mpi_type,
+                            ptb->comm);
+  }
+
+  else {
+ 
+    if (ptb->p2p_factor < ptb->part_active_rank) {
+     
+      int *_i_send_buffer = (int *) malloc(sizeof(int) * ptb->s_comm);
+      int *_i_recv_buffer = (int *) malloc(sizeof(int) * ptb->s_comm);
+     
+      for (int i = 0; i < ptb->s_comm; i++) {
+        _i_send_buffer[i] = (int) i_send_buffer[i];
+        _i_recv_buffer[i] = (int) i_recv_buffer[i];
+      }
+
+      PDM_MPI_Alltoallv(send_buffer,
+                        n_send_buffer,
+                        _i_send_buffer,
+                        mpi_type,
+                        recv_buffer,
+                        n_recv_buffer,
+                        _i_recv_buffer,
+                        mpi_type,
+                        ptb->comm);
+
+      free (_i_send_buffer); 
+      free (_i_recv_buffer); 
+    }
+
+    else {
+
+      PDM_MPI_Alltoallv_p2p_l(send_buffer,
+                              n_send_buffer,
+                              i_send_buffer,
+                              mpi_type,
+                              recv_buffer,
+                              n_recv_buffer,
+                              i_recv_buffer,
+                              mpi_type,
+                              ptb->comm);
+
+    }
+  } 
 
   /*
    * Statistics
@@ -2640,13 +3164,14 @@ PDM_part_to_block_exch
                                      block_stride,
                                      block_data);
   free (recv_buffer);
+  PDM_MPI_Type_free(&mpi_type);
 
-  PDM_timer_hang_on(t_timer[2]);
-  double t2_elaps = PDM_timer_elapsed(t_timer[2]);
-  double t2_cpu   = PDM_timer_cpu    (t_timer[2]);
+  PDM_timer_hang_on(t_timer[DATA_EXCHANGE]);
+  double t2_elaps = PDM_timer_elapsed(t_timer[DATA_EXCHANGE]);
+  double t2_cpu   = PDM_timer_cpu    (t_timer[DATA_EXCHANGE]);
 
-  t_elaps[2] += (t2_elaps - t1_elaps);
-  t_cpu  [2] += (t2_cpu   - t1_cpu  );
+  t_elaps[DATA_EXCHANGE] += (t2_elaps - t1_elaps);
+  t_cpu  [DATA_EXCHANGE] += (t2_cpu   - t1_cpu  );
 
   return s_block_data;
 }
@@ -2685,6 +3210,15 @@ PDM_part_to_block_reverse_exch
   int    *n_send_buffer = (int    *) malloc (sizeof(int   ) * ptb->s_comm);
   int    *n_recv_buffer = (int    *) malloc (sizeof(int   ) * ptb->s_comm);
 
+  int s_data_tot = s_data;
+  if(t_stride == PDM_STRIDE_CST_INTERLACED) {
+    s_data_tot = s_data * cst_stride;
+  }
+
+  PDM_MPI_Datatype mpi_type;
+  PDM_MPI_Type_create_contiguous(s_data_tot, PDM_MPI_BYTE, &mpi_type);
+  PDM_MPI_Type_commit(&mpi_type);
+
   /*
    * Exchange Stride and build buffer properties
    */
@@ -2705,8 +3239,8 @@ PDM_part_to_block_reverse_exch
   /*
    * Prepare buffer
    */
-  size_t s_send_buffer = i_send_buffer[ptb->s_comm - 1] + n_send_buffer[ptb->s_comm -1];
-  size_t s_recv_buffer = i_recv_buffer[ptb->s_comm - 1] + n_recv_buffer[ptb->s_comm -1];
+  size_t s_send_buffer = ( i_send_buffer[ptb->s_comm - 1] + n_send_buffer[ptb->s_comm -1] ) * s_data_tot;
+  size_t s_recv_buffer = ( i_recv_buffer[ptb->s_comm - 1] + n_recv_buffer[ptb->s_comm -1] ) * s_data_tot;
 
   unsigned char *send_buffer = (unsigned char *) malloc(sizeof(unsigned char) * s_send_buffer);
   unsigned char *recv_buffer = (unsigned char *) malloc(sizeof(unsigned char) * s_recv_buffer);
@@ -2724,24 +3258,66 @@ PDM_part_to_block_reverse_exch
                                i_send_buffer,
                                n_send_buffer,
                                send_buffer);
-  // if(send_stride != NULL) {
-  //   free(send_stride);
-  // }
 
   /*
    * Data exchange
    */
-  PDM_MPI_Alltoallv_l(send_buffer,
-                      n_send_buffer,
-                      i_send_buffer,
-                      PDM_MPI_BYTE,
-                      recv_buffer,
-                      n_recv_buffer,
-                      i_recv_buffer,
-                      PDM_MPI_BYTE,
-                      ptb->comm);
+  
+  int mandatory_size = PDM_size_idx_from_stride (n_send_buffer, ptb->s_comm, ptb->comm);
+  mandatory_size = PDM_MAX(PDM_size_idx_from_stride (n_send_buffer, ptb->s_comm, ptb->comm), mandatory_size);
 
+  if (mandatory_size > 32) {
+    PDM_MPI_Alltoallv_p2p_l(send_buffer,
+                            n_send_buffer,
+                            i_send_buffer,
+                            mpi_type,
+                            recv_buffer,
+                            n_recv_buffer,
+                            i_recv_buffer,
+                            mpi_type,
+                            ptb->comm);
+  }
 
+  else {
+ 
+    if (ptb->p2p_factor < ptb->part_active_rank) {
+     
+      int *_i_send_buffer = (int *) malloc(sizeof(int) * ptb->s_comm);
+      int *_i_recv_buffer = (int *) malloc(sizeof(int) * ptb->s_comm);
+     
+      for (int i = 0; i < ptb->s_comm; i++) {
+        _i_send_buffer[i] = (int) i_send_buffer[i];
+        _i_recv_buffer[i] = (int) i_recv_buffer[i];
+      }
+
+      PDM_MPI_Alltoallv(send_buffer,
+                        n_send_buffer,
+                        _i_send_buffer,
+                        mpi_type,
+                        recv_buffer,
+                        n_recv_buffer,
+                        _i_recv_buffer,
+                        mpi_type,
+                        ptb->comm);
+
+      free (_i_send_buffer); 
+      free (_i_recv_buffer); 
+    }
+
+    else {
+
+      PDM_MPI_Alltoallv_p2p_l(send_buffer,
+                              n_send_buffer,
+                              i_send_buffer,
+                              mpi_type,
+                              recv_buffer,
+                              n_recv_buffer,
+                              i_recv_buffer,
+                              mpi_type,
+                              ptb->comm);
+
+    }
+  } 
 
   _post_treatment_reverse(ptb,
                           s_data,
@@ -2753,6 +3329,7 @@ PDM_part_to_block_reverse_exch
                           i_recv_buffer,
                           part_stride,
                           part_data);
+  PDM_MPI_Type_free(&mpi_type);
 
   free (recv_buffer);
   free (send_buffer);
@@ -2802,7 +3379,10 @@ PDM_part_to_block_iexch
    * Take next id for message and buffer
    */
   int request_id = ptb->next_request++;
+  request_id %= ptb->max_exch_request;
   *request = request_id;
+
+  assert(ptb->wait_status[request_id] == 2);
 
   ptb->i_send_buffer[request_id] = (int *) malloc (sizeof(int) * ptb->s_comm);
   ptb->i_recv_buffer[request_id] = (int *) malloc (sizeof(int) * ptb->s_comm);
@@ -2811,7 +3391,6 @@ PDM_part_to_block_iexch
 
   ptb->block_stride[request_id] = block_stride;
   ptb->block_data  [request_id] = block_data;
-
 
   /* Store additionnal information necessary for post-process */
   ptb->s_data    [request_id] = s_data;
@@ -2827,6 +3406,17 @@ PDM_part_to_block_iexch
 
   size_t *tmp_i_send_buffer = (size_t *) malloc (sizeof(size_t) * ptb->s_comm);
   size_t *tmp_i_recv_buffer = (size_t *) malloc (sizeof(size_t) * ptb->s_comm);
+
+  int s_data_tot = s_data;
+  if(t_stride == PDM_STRIDE_CST_INTERLACED) {
+    s_data_tot = s_data * cst_stride;
+  }
+
+  PDM_MPI_Datatype mpi_type;
+  PDM_MPI_Type_create_contiguous(s_data_tot, PDM_MPI_BYTE, &mpi_type);
+  PDM_MPI_Type_commit(&mpi_type);
+  ptb->mpi_type[request_id] = mpi_type;
+
   /*
    * Exchange Stride and build buffer properties
    */
@@ -2846,8 +3436,8 @@ PDM_part_to_block_iexch
   /*
    * Data exchange
    */
-  int s_send_buffer = tmp_i_send_buffer[ptb->s_comm - 1] + n_send_buffer[ptb->s_comm -1];
-  int s_recv_buffer = tmp_i_recv_buffer[ptb->s_comm - 1] + n_recv_buffer[ptb->s_comm -1];
+  int s_send_buffer = ( tmp_i_send_buffer[ptb->s_comm - 1] + n_send_buffer[ptb->s_comm -1] ) * s_data_tot;
+  int s_recv_buffer = ( tmp_i_recv_buffer[ptb->s_comm - 1] + n_recv_buffer[ptb->s_comm -1] ) * s_data_tot;
 
   if(k_comm == PDM_MPI_COMM_KIND_WIN_RMA) {
 
@@ -2858,7 +3448,9 @@ PDM_part_to_block_iexch
 
     ptb->send_buffer[request_id] = (unsigned char *) malloc(sizeof(unsigned char) * s_send_buffer);
     ptb->recv_buffer[request_id] = (unsigned char *) malloc(sizeof(unsigned char) * s_recv_buffer);
+
   }
+
   /* Shortcut */
   unsigned char *send_buffer = ptb->send_buffer[request_id];
   unsigned char *recv_buffer = ptb->recv_buffer[request_id];
@@ -2895,11 +3487,11 @@ PDM_part_to_block_iexch
     PDM_MPI_Ialltoallv(send_buffer,
                        n_send_buffer,
                        i_send_buffer,
-                       PDM_MPI_BYTE,
+                       mpi_type,
                        recv_buffer,
                        n_recv_buffer,
                        i_recv_buffer,
-                       PDM_MPI_BYTE,
+                       mpi_type,
                        ptb->comm,
                        &ptb->request_mpi[request_id]);
   } else if (k_comm == PDM_MPI_COMM_KIND_NEIGHBOR_COLLECTIVE) {
@@ -2936,11 +3528,11 @@ PDM_part_to_block_iexch
                            send_buffer,
                            n_send_buffer,
                            i_send_buffer,
-                           PDM_MPI_BYTE,
+                           mpi_type,
                            recv_buffer,
                            n_recv_buffer,
                            i_recv_buffer,
-                           PDM_MPI_BYTE,
+                           mpi_type,
                            ptb->comm);
     // double dt = PDM_MPI_Wtime() - t1;
     // log_trace("PDM_MPI_Get_ialltoallv + fence dt = %12.5e \n", dt);
@@ -2988,7 +3580,10 @@ PDM_part_to_block_reverse_iexch
    * Take next id for message and buffer
    */
   int request_id = ptb->next_request++;
+  request_id %= ptb->max_exch_request;
   *request = request_id;
+
+  assert(ptb->wait_status[request_id] == 2);
 
   ptb->i_send_buffer[request_id] = (int *) malloc (sizeof(int) * ptb->s_comm);
   ptb->i_recv_buffer[request_id] = (int *) malloc (sizeof(int) * ptb->s_comm);
@@ -3013,6 +3608,17 @@ PDM_part_to_block_reverse_iexch
 
   size_t *tmp_i_send_buffer = (size_t *) malloc (sizeof(size_t) * ptb->s_comm);
   size_t *tmp_i_recv_buffer = (size_t *) malloc (sizeof(size_t) * ptb->s_comm);
+
+  int s_data_tot = s_data;
+  if(t_stride == PDM_STRIDE_CST_INTERLACED) {
+    s_data_tot = s_data * cst_stride;
+  }
+
+  PDM_MPI_Datatype mpi_type;
+  PDM_MPI_Type_create_contiguous(s_data_tot, PDM_MPI_BYTE, &mpi_type);
+  PDM_MPI_Type_commit(&mpi_type);
+  ptb->mpi_type[request_id] = mpi_type;
+
   /*
    * Exchange Stride and build buffer properties
    */
@@ -3034,8 +3640,8 @@ PDM_part_to_block_reverse_iexch
   /*
    * Data exchange
    */
-  int s_send_buffer = tmp_i_send_buffer[ptb->s_comm - 1] + n_send_buffer[ptb->s_comm -1];
-  int s_recv_buffer = tmp_i_recv_buffer[ptb->s_comm - 1] + n_recv_buffer[ptb->s_comm -1];
+  int s_send_buffer = (tmp_i_send_buffer[ptb->s_comm - 1] + n_send_buffer[ptb->s_comm -1]) * s_data_tot;
+  int s_recv_buffer = (tmp_i_recv_buffer[ptb->s_comm - 1] + n_recv_buffer[ptb->s_comm -1]) * s_data_tot;
 
   if(k_comm == PDM_MPI_COMM_KIND_WIN_RMA) {
 
@@ -3046,7 +3652,9 @@ PDM_part_to_block_reverse_iexch
 
     ptb->send_buffer[request_id] = (unsigned char *) malloc(sizeof(unsigned char) * s_send_buffer);
     ptb->recv_buffer[request_id] = (unsigned char *) malloc(sizeof(unsigned char) * s_recv_buffer);
+
   }
+
   /* Shortcut */
   unsigned char *send_buffer = ptb->send_buffer[request_id];
   unsigned char *recv_buffer = ptb->recv_buffer[request_id];
@@ -3084,11 +3692,11 @@ PDM_part_to_block_reverse_iexch
     PDM_MPI_Ialltoallv(send_buffer,
                        n_send_buffer,
                        i_send_buffer,
-                       PDM_MPI_BYTE,
+                       mpi_type,
                        recv_buffer,
                        n_recv_buffer,
                        i_recv_buffer,
-                       PDM_MPI_BYTE,
+                       mpi_type,
                        ptb->comm,
                        &ptb->request_mpi[request_id]);
   } else if (k_comm == PDM_MPI_COMM_KIND_NEIGHBOR_COLLECTIVE) {
@@ -3125,11 +3733,11 @@ PDM_part_to_block_reverse_iexch
                            send_buffer,
                            n_send_buffer,
                            i_send_buffer,
-                           PDM_MPI_BYTE,
+                           mpi_type,
                            recv_buffer,
                            n_recv_buffer,
                            i_recv_buffer,
-                           PDM_MPI_BYTE,
+                           mpi_type,
                            ptb->comm);
     // double dt = PDM_MPI_Wtime() - t1;
     // log_trace("PDM_MPI_Get_ialltoallv + fence dt = %12.5e \n", dt);
@@ -3171,12 +3779,22 @@ PDM_part_to_block_iexch_wait
     assert(code == PDM_MPI_SUCCESS);
   }
 
+  PDM_MPI_Type_free(&ptb->mpi_type[request_id]);
+
   ptb->wait_status[request_id] = 1;
+  size_t       s_data     = ptb->s_data    [request_id];
+  PDM_stride_t t_stride   = ptb->t_stride  [request_id];
+  int          cst_stride = ptb->cst_stride[request_id];
+
+  int s_data_tot = s_data;
+  if(t_stride == PDM_STRIDE_CST_INTERLACED) {
+    s_data_tot = s_data * cst_stride;
+  }
 
   /*
    *  Post-treatment
    */
-  size_t s_recv_buffer = ptb->i_recv_buffer[request_id][ptb->s_comm - 1] + ptb->n_recv_buffer[request_id][ptb->s_comm -1];
+  size_t s_recv_buffer = ( ptb->i_recv_buffer[request_id][ptb->s_comm - 1] + ptb->n_recv_buffer[request_id][ptb->s_comm -1]) * s_data_tot;
 
   if(ptb->comm_kind[request_id] == PDM_MPI_COMM_KIND_WIN_RMA) {
     PDM_MPI_Win_free(&ptb->win_send[request_id]);
@@ -3194,10 +3812,6 @@ PDM_part_to_block_iexch_wait
   ptb->i_send_buffer[request_id] = NULL;
   ptb->n_recv_buffer[request_id] = NULL;
   ptb->i_recv_buffer[request_id] = NULL;
-
-  size_t       s_data     = ptb->s_data    [request_id];
-  PDM_stride_t t_stride   = ptb->t_stride  [request_id];
-  int          cst_stride = ptb->cst_stride[request_id];
 
   int           *recv_stride = ptb->recv_stride[request_id];
   unsigned char *recv_buffer = ptb->recv_buffer[request_id];
@@ -3264,14 +3878,16 @@ PDM_part_to_block_reverse_iexch_wait
     assert(code == PDM_MPI_SUCCESS);
   }
 
+  PDM_MPI_Type_free(&ptb->mpi_type[request_id]);
+
   ptb->wait_status[request_id] = 1;
+  size_t       s_data     = ptb->s_data    [request_id];
+  PDM_stride_t t_stride   = ptb->t_stride  [request_id];
+  int          cst_stride = ptb->cst_stride[request_id];
 
   /*
    *  Post-treatment
    */
-  // size_t s_recv_buffer = ptb->i_recv_buffer[request_id][ptb->s_comm - 1] + ptb->n_recv_buffer[request_id][ptb->s_comm -1];
-
-
   if(ptb->comm_kind[request_id] == PDM_MPI_COMM_KIND_WIN_RMA) {
     PDM_MPI_Win_free(&ptb->win_send[request_id]);
     ptb->win_send[request_id] = PDM_MPI_WIN_NULL;
@@ -3284,10 +3900,6 @@ PDM_part_to_block_reverse_iexch_wait
   ptb->send_buffer  [request_id] = NULL;
   ptb->n_send_buffer[request_id] = NULL;
   ptb->i_send_buffer[request_id] = NULL;
-
-  size_t       s_data     = ptb->s_data    [request_id];
-  PDM_stride_t t_stride   = ptb->t_stride  [request_id];
-  int          cst_stride = ptb->cst_stride[request_id];
 
   int           *recv_stride = ptb->recv_stride[request_id];
   unsigned char *recv_buffer = ptb->recv_buffer[request_id];
@@ -3369,6 +3981,9 @@ PDM_part_to_block_async_exch
    * Take next id for message and buffer
    */
   int request_id = ptb->next_request++;
+  request_id %= ptb->max_exch_request;
+
+  assert(ptb->wait_status[request_id] == 2);
 
   ptb->i_send_buffer[request_id] = (int *) malloc (sizeof(int) * ptb->s_comm);
   ptb->i_recv_buffer[request_id] = (int *) malloc (sizeof(int) * ptb->s_comm);
@@ -3388,6 +4003,18 @@ PDM_part_to_block_async_exch
 
   size_t *tmp_i_send_buffer = (size_t *) malloc (sizeof(size_t) * ptb->s_comm);
   size_t *tmp_i_recv_buffer = (size_t *) malloc (sizeof(size_t) * ptb->s_comm);
+
+  int s_data_tot = s_data;
+  if(t_stride == PDM_STRIDE_CST_INTERLACED) {
+    s_data_tot = s_data * cst_stride;
+  }
+
+  PDM_MPI_Datatype mpi_type;
+  PDM_MPI_Type_create_contiguous(s_data_tot, PDM_MPI_BYTE, &mpi_type);
+  PDM_MPI_Type_commit(&mpi_type);
+  ptb->mpi_type[request_id] = mpi_type;
+
+
   /*
    * Exchange Stride and build buffer properties
    */
@@ -3407,8 +4034,8 @@ PDM_part_to_block_async_exch
   /*
    * Data exchange
    */
-  int s_send_buffer = tmp_i_send_buffer[ptb->s_comm - 1] + n_send_buffer[ptb->s_comm -1];
-  int s_recv_buffer = tmp_i_recv_buffer[ptb->s_comm - 1] + n_recv_buffer[ptb->s_comm -1];
+  int s_send_buffer = ( tmp_i_send_buffer[ptb->s_comm - 1] + n_send_buffer[ptb->s_comm -1] ) * s_data_tot;
+  int s_recv_buffer = ( tmp_i_recv_buffer[ptb->s_comm - 1] + n_recv_buffer[ptb->s_comm -1] ) * s_data_tot;
 
   ptb->send_buffer[request_id] = (unsigned char *) malloc(sizeof(unsigned char) * s_send_buffer);
   ptb->recv_buffer[request_id] = (unsigned char *) malloc(sizeof(unsigned char) * s_recv_buffer);
@@ -3444,11 +4071,11 @@ PDM_part_to_block_async_exch
   PDM_MPI_Ialltoallv(send_buffer,
                      n_send_buffer,
                      i_send_buffer,
-                     PDM_MPI_BYTE,
+                     mpi_type,
                      recv_buffer,
                      n_recv_buffer,
                      i_recv_buffer,
-                     PDM_MPI_BYTE,
+                     mpi_type,
                      ptb->comm,
                      &ptb->request_mpi[request_id]);
 
@@ -3481,6 +4108,7 @@ PDM_part_to_block_async_wait
   assert(code == PDM_MPI_SUCCESS);
 
   ptb->wait_status[request_id] = 1;
+  PDM_MPI_Type_free(&ptb->mpi_type[request_id]);
 
 }
 
@@ -3555,8 +4183,16 @@ PDM_part_to_block_asyn_post_treatment
 {
   assert(ptb->wait_status[request_id] == 1);
 
+  size_t       s_data     = ptb->s_data    [request_id];
+  PDM_stride_t t_stride   = ptb->t_stride  [request_id];
+  int          cst_stride = ptb->cst_stride[request_id];
+  int s_data_tot = s_data;
+  if(t_stride == PDM_STRIDE_CST_INTERLACED) {
+    s_data_tot = s_data * cst_stride;
+  }
+
   // size_t s_send_buffer = ptb->i_send_buffer[request_id][ptb->s_comm - 1] + ptb->n_send_buffer[request_id][ptb->s_comm -1];
-  size_t s_recv_buffer = ptb->i_recv_buffer[request_id][ptb->s_comm - 1] + ptb->n_recv_buffer[request_id][ptb->s_comm -1];
+  size_t s_recv_buffer = ( ptb->i_recv_buffer[request_id][ptb->s_comm - 1] + ptb->n_recv_buffer[request_id][ptb->s_comm -1] )*s_data_tot;
 
   free(ptb->send_buffer  [request_id]);
   free(ptb->n_send_buffer[request_id]);
@@ -3570,9 +4206,6 @@ PDM_part_to_block_asyn_post_treatment
   ptb->n_recv_buffer[request_id] = NULL;
   ptb->i_recv_buffer[request_id] = NULL;
 
-  size_t       s_data     = ptb->s_data    [request_id];
-  PDM_stride_t t_stride   = ptb->t_stride  [request_id];
-  int          cst_stride = ptb->cst_stride[request_id];
 
   int           *recv_stride = ptb->recv_stride[request_id];
   unsigned char *recv_buffer = ptb->recv_buffer[request_id];
@@ -3609,7 +4242,6 @@ PDM_part_to_block_asyn_post_treatment
  *
  * \return       NULL
  */
-
 PDM_part_to_block_t *
 PDM_part_to_block_free
 (
@@ -3695,6 +4327,7 @@ PDM_part_to_block_free
     assert(ptb->part_data    [i_req] == NULL);
     assert(ptb->win_send     [i_req] == PDM_MPI_WIN_NULL);
     assert(ptb->win_recv     [i_req] == PDM_MPI_WIN_NULL);
+    assert(ptb->mpi_type     [i_req] == PDM_MPI_DATATYPE_NULL);
   }
 
   free(ptb->s_data       );
@@ -3717,14 +4350,21 @@ PDM_part_to_block_free
   free(ptb->comm_kind);
   free(ptb->win_send );
   free(ptb->win_recv );
+  free(ptb->mpi_type );
 
   free (ptb);
 
   n_ptb--;
   if (n_ptb == 0) {
-    PDM_timer_free(t_timer[0]);
-    PDM_timer_free(t_timer[1]);
-    PDM_timer_free(t_timer[2]);
+    PDM_timer_free(t_timer[MALLOC_ACTIVE_RANKS   ]);
+    PDM_timer_free(t_timer[GENERATE_DISTRIB      ]);
+    PDM_timer_free(t_timer[BINARY_SEARCH         ]);
+    PDM_timer_free(t_timer[CREATE_EXCHANGE       ]);
+    PDM_timer_free(t_timer[BLOCK_POST            ]);
+    PDM_timer_free(t_timer[GLOBAL_WEIGHTS        ]);
+    PDM_timer_free(t_timer[CREATE_FROM_DISTRIB   ]);
+    PDM_timer_free(t_timer[CREATE_GEOM           ]);
+    PDM_timer_free(t_timer[DATA_EXCHANGE         ]);
   }
 
   return NULL;

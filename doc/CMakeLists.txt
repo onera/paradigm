@@ -1,6 +1,9 @@
 # Writing this file using:
 #   - Maia's CMake
 #   - https://devblogs.microsoft.com/cppblog/clear-functional-c-documentation-with-sphinx-breathe-doxygen-cmake/
+if (NOT PDM_ENABLE_EXTENSION_PDMA)
+  set(COMMENT_NOT_PDMA "\#")
+endif()
 
 if(PDM_ENABLE_DOC)
     find_package(Doxygen 1.8.9 REQUIRED)
@@ -29,10 +32,17 @@ if(PDM_ENABLE_DOC)
     set(SPHINX_OUT ${CMAKE_CURRENT_SOURCE_DIR}/sphinx/source/conf.py)
 
     set(DOXYGEN_INDEX_FILE ${CMAKE_CURRENT_BINARY_DIR}/xml/index.xml)
+    if (NOT PDM_ENABLE_EXTENSION_PDMA)
+      set(COMMENT_NOT_PDMA_RST ".. ")
+    endif ()  
 
     configure_file(${DOXYFILE_IN} ${DOXYFILE_OUT} @ONLY)
     configure_file(${SPHINX_IN} ${SPHINX_OUT} @ONLY)
-
+    configure_file(${CMAKE_CURRENT_SOURCE_DIR}/sphinx/source/user_manual/mesh_transform/index.rst.in ${CMAKE_CURRENT_SOURCE_DIR}/sphinx/source/user_manual/mesh_transform/index.rst @ONLY)
+    if (PDM_ENABLE_EXTENSION_PDMA)
+      configure_file(${CMAKE_CURRENT_SOURCE_DIR}/sphinx/source/user_manual/mesh_transform/mesh_deform.rst.in ${CMAKE_CURRENT_SOURCE_DIR}/sphinx/source/user_manual/mesh_transform/mesh_deform.rst @ONLY)
+      configure_file(${CMAKE_CURRENT_SOURCE_DIR}/sphinx/source/user_manual/mesh_transform/mesh_eval.rst.in ${CMAKE_CURRENT_SOURCE_DIR}/sphinx/source/user_manual/mesh_transform/mesh_eval.rst @ONLY)
+    endif()
 
     if (PDM_ENABLE_SHARED)
         set(DOXYGEN_DEP pdm_shared)
@@ -97,7 +107,7 @@ if(PDM_ENABLE_DOC)
     add_custom_command(OUTPUT ${SPHINX_INDEX_FILE}
                        COMMAND ${CMAKE_COMMAND} -E env ${DOC_PYTHONPATH} env ${DOC_PRELOAD} env ${RUN_LSAN}
                          ${SPHINX_EXECUTABLE} -b html 
-                         -Q
+                         -Q # Remove to have complete log file
                          -w ${CMAKE_CURRENT_BINARY_DIR}/sphinx_build_warnings.log
                          # Tell Breathe where to find the Doxygen output
                          -Dbreathe_projects.cwipi=${CMAKE_CURRENT_BINARY_DIR}/xml

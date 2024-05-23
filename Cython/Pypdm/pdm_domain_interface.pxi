@@ -41,6 +41,21 @@ cdef extern from "pdm_domain_interface.h":
                                                int                    **dface_vtx_idx,
                                                PDM_g_num_t            **dface_vtx)
 
+  void PDM_domain_interface_translate_entity1_entity2(int                      n_domain,
+                                                      int                      n_interface,
+                                                      int                     *dn_entity1,
+                                                      int                     *dn_entity2,
+                                                      int                     *dn_interface,
+                                                      int                    **interface_dom,
+                                                      PDM_g_num_t            **interface_ids,
+                                                      int                    **dentity2_entity1_idx,
+                                                      PDM_g_num_t            **dentity2_entity1,
+                                                      int                      connectivity_is_signed,
+                                                      PDM_MPI_Comm             comm,
+                                                      int                    **interface_dn_entity2,
+                                                      PDM_g_num_t           ***interface_ids_entity2,
+                                                      int                   ***interface_dom_entity2)
+
   void PDM_domain_interface_free(PDM_domain_interface_t *dom_intrf)
 
 # ===================================================================================
@@ -256,6 +271,85 @@ def interface_vertex_to_face(int       n_interface,
       free(_interface_dom_face)
 
     return face_interface
+
+
+def interface_connectivity_translate(list dn_entity1, 
+                                     list dn_entity2,
+                                     list interface_dn,
+                                     list interface_dom,
+                                     list interface_ids,
+                                     list dentity2_entity1_idx,
+                                     list dentity2_entity1,
+                                     bint connectivity_is_signed,
+                                     MPI.Comm comm):
+
+  cdef int n_interface = len(interface_dn)
+  cdef int n_domain    = len(dentity2_entity1)
+
+  #Some checks
+  assert len(interface_dn) == len(interface_ids) == len(interface_dom) == n_interface
+  assert (len(dn_entity1) == len(dn_entity2) == len(dentity2_entity1_idx) == len(dentity2_entity1) == n_domain)
+  for i in range(n_domain):
+    assert_single_dim_np(dentity2_entity1_idx[i], NPY.int32)
+    assert_single_dim_np(dentity2_entity1[i], npy_pdm_gnum_dtype)
+  for i in range(n_interface):
+    assert_single_dim_np(interface_ids[i], npy_pdm_gnum_dtype, 2*interface_dn[i])
+
+  #Convert input data
+  cdef MPI.MPI_Comm c_comm = comm.ob_mpi
+  cdef PDM_MPI_Comm PDMC   = PDM_MPI_mpi_2_pdm_mpi_comm(&c_comm)
+
+  # Interface data
+  cdef int*          _interface_dn = list_to_int_pointer(interface_dn)
+  cdef PDM_g_num_t** _interface_ids = np_list_to_gnum_pointers(interface_ids)
+  cdef int**         _interface_dom = np_list_to_int_pointers(interface_dom)
+
+  # Domain data
+  cdef int*  _dn_entity_1  = list_to_int_pointer(dn_entity1)
+  cdef int*  _dn_entity_2  = list_to_int_pointer(dn_entity2)
+  cdef int** _dentity2_entity1_idx = np_list_to_int_pointers(dentity2_entity1_idx)
+  cdef PDM_g_num_t** _dentity2_entity1 = np_list_to_gnum_pointers(dentity2_entity1)
+
+
+  cdef int          *_interface_dn_out  = NULL;
+  cdef PDM_g_num_t **_interface_ids_out = NULL;
+  cdef int         **_interface_dom_out = NULL;
+
+  PDM_domain_interface_translate_entity1_entity2(n_domain,
+                                                 n_interface,
+                                                 _dn_entity_1,
+                                                 _dn_entity_2,
+                                                 _interface_dn,
+                                                 _interface_dom,
+                                                 _interface_ids,
+                                                 _dentity2_entity1_idx,
+                                                 _dentity2_entity1,
+                                                 connectivity_is_signed,
+                                                 PDMC,
+                                                &_interface_dn_out,
+                                                &_interface_ids_out,
+                                                &_interface_dom_out)
+
+  out_interface = list()
+  for i in range(n_interface):
+    interface_ids_out = create_numpy_g(_interface_ids_out[i], 2*_interface_dn_out[i])
+    interface_dom_out = create_numpy_i(_interface_dom_out[i], 2*_interface_dn_out[i])
+    interface_results = {'interface_dn_out' : _interface_dn_out[i], 'np_interface_ids_out' : interface_ids_out, 'np_interface_dom_out' : interface_dom_out}
+    out_interface.append(interface_results)
+
+  free(_dn_entity_1)
+  free(_dn_entity_2)
+  free(_interface_dn)
+  free(_dentity2_entity1_idx)
+  free(_dentity2_entity1)
+  free(_interface_ids)
+  free(_interface_dom)
+
+  free(_interface_dn_out)
+  free(_interface_ids_out)
+  free(_interface_dom_out)
+
+  return out_interface
 
 def interface_to_graph(int       n_interface,
                        bint      multidomain_interface,

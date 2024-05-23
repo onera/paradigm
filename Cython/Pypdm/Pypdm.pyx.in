@@ -48,7 +48,7 @@ pdm_has_ptscotch   = @PYX_PDM_HAS_PTSCOTCH@
 pdm_has_pdma       = @PYX_PDM_HAS_PDMA@
 ctypedef @PYX_G_NUM@ PDM_g_num_t
 ctypedef @PYX_L_NUM@ PDM_l_num_t
-ctypedef double PDM_real_t 
+ctypedef double PDM_real_t
 
 ctypedef enum PDM_g_num_npy_t:
   PDM_G_NUM_NPY_INT = @PDM_G_NUM_NPY_INT@
@@ -66,7 +66,7 @@ cdef extern from "pdm.h":
         PDM_FIELD_KIND_VECTOR     = 3
         PDM_FIELD_KIND_TENSOR_SYM = 4
 
-   
+
     ctypedef enum PDM_stride_t:
         PDM_STRIDE_CST_INTERLACED  = 0
         PDM_STRIDE_CST_INTERLEAVED = 1
@@ -150,13 +150,13 @@ cdef extern from "pdm.h":
       PDM_MESH_LOCATION_LOCATE_ALL_TGT = 2
       PDM_MESH_LOCATION_DOCTREE        = 3
 
-    ctypedef enum PDM_iso_surface_kind_t:
-      PDM_ISO_SURFACE_KIND_PLANE   = 0
-      PDM_ISO_SURFACE_KIND_SPHERE  = 1
-      PDM_ISO_SURFACE_KIND_FIELD   = 2
-      PDM_ISO_SURFACE_KIND_ELLIPSE = 3
-      PDM_ISO_SURFACE_KIND_QUADRIC = 4
-      PDM_ISO_SURFACE_KIND_HEART   = 5
+    @COMMENT_NOT_PDMA@ctypedef enum PDM_iso_surface_kind_t:
+    @COMMENT_NOT_PDMA@  PDM_ISO_SURFACE_KIND_PLANE   = 0
+    @COMMENT_NOT_PDMA@  PDM_ISO_SURFACE_KIND_SPHERE  = 1
+    @COMMENT_NOT_PDMA@  PDM_ISO_SURFACE_KIND_FIELD   = 2
+    @COMMENT_NOT_PDMA@  PDM_ISO_SURFACE_KIND_ELLIPSE = 3
+    @COMMENT_NOT_PDMA@  PDM_ISO_SURFACE_KIND_QUADRIC = 4
+    @COMMENT_NOT_PDMA@  PDM_ISO_SURFACE_KIND_HEART   = 5
 
     ctypedef enum PDM_cell_to_vtx_interp_kind_t:
       PDM_CELL_TO_VTX_INTERP_KIND_IDW  = 0
@@ -173,21 +173,34 @@ cdef extern from "pdm.h":
       PDM_MPI_COMM_KIND_WIN_SHARED_AND_NEIGHBOR_COLLECTIVE = 5
       PDM_MPI_COMM_KIND_WIN_RMA                            = 6
 
+    ctypedef enum PDM_clustering_kind_t:
+      PDM_CLUSTERING_KIND_OCTREE = 0
 
     void PDM_Finalize ()
 
 cdef extern from "pdm_dmesh_nodal.h":
     ctypedef enum PDM_Mesh_nodal_elt_t:
-      PDM_MESH_NODAL_POINT    = 0
-      PDM_MESH_NODAL_BAR2     = 1
-      PDM_MESH_NODAL_TRIA3    = 2
-      PDM_MESH_NODAL_QUAD4    = 3
-      PDM_MESH_NODAL_POLY_2D  = 4
-      PDM_MESH_NODAL_TETRA4   = 5
-      PDM_MESH_NODAL_PYRAMID5 = 6
-      PDM_MESH_NODAL_PRISM6   = 7
-      PDM_MESH_NODAL_HEXA8    = 8
-      PDM_MESH_NODAL_POLY_3D  = 9
+      PDM_MESH_NODAL_POINT            = 0
+      PDM_MESH_NODAL_BAR2             = 1
+      PDM_MESH_NODAL_TRIA3            = 2
+      PDM_MESH_NODAL_QUAD4            = 3
+      PDM_MESH_NODAL_POLY_2D          = 4
+      PDM_MESH_NODAL_TETRA4           = 5
+      PDM_MESH_NODAL_PYRAMID5         = 6
+      PDM_MESH_NODAL_PRISM6           = 7
+      PDM_MESH_NODAL_HEXA8            = 8
+      PDM_MESH_NODAL_POLY_3D          = 9
+      PDM_MESH_NODAL_BARHO            = 10
+      PDM_MESH_NODAL_TRIAHO           = 11
+      PDM_MESH_NODAL_QUADHO           = 12
+      PDM_MESH_NODAL_TETRAHO          = 13
+      PDM_MESH_NODAL_PYRAMIDHO        = 14
+      PDM_MESH_NODAL_PRISMHO          = 15
+      PDM_MESH_NODAL_HEXAHO           = 16
+      PDM_MESH_NODAL_BARHO_BEZIER     = 17
+      PDM_MESH_NODAL_TRIAHO_BEZIER    = 18
+      PDM_MESH_NODAL_N_ELEMENT_TYPES  = 19
+
 
 cdef extern from "pdm_para_graph_dual.h":
     ctypedef enum PDM_split_dual_t:
@@ -212,6 +225,7 @@ def Finalize ():
 cdef extern from "pdm_mpi.h":
     ctypedef int PDM_MPI_Comm
     PDM_MPI_Comm PDM_MPI_mpi_2_pdm_mpi_comm(void *pt_comm)
+    int PDM_MPI_Finalize()
 # -----------------------------------------------------------------
 
 _PDM_MESH_ENTITY_CELL = PDM_MESH_ENTITY_CELL
@@ -278,16 +292,26 @@ _PDM_EXTEND_FROM_FACE   = PDM_EXTEND_FROM_FACE
 _PDM_EXTEND_FROM_EDGE   = PDM_EXTEND_FROM_EDGE
 _PDM_EXTEND_FROM_VTX    = PDM_EXTEND_FROM_VTX
 
-_PDM_MESH_NODAL_POINT    = PDM_MESH_NODAL_POINT
-_PDM_MESH_NODAL_BAR2     = PDM_MESH_NODAL_BAR2
-_PDM_MESH_NODAL_TRIA3    = PDM_MESH_NODAL_TRIA3
-_PDM_MESH_NODAL_QUAD4    = PDM_MESH_NODAL_QUAD4
-_PDM_MESH_NODAL_POLY_2D  = PDM_MESH_NODAL_POLY_2D
-_PDM_MESH_NODAL_TETRA4   = PDM_MESH_NODAL_TETRA4
-_PDM_MESH_NODAL_PYRAMID5 = PDM_MESH_NODAL_PYRAMID5
-_PDM_MESH_NODAL_PRISM6   = PDM_MESH_NODAL_PRISM6
-_PDM_MESH_NODAL_HEXA8    = PDM_MESH_NODAL_HEXA8
-_PDM_MESH_NODAL_POLY_3D  = PDM_MESH_NODAL_POLY_3D
+_PDM_MESH_NODAL_POINT            = PDM_MESH_NODAL_POINT
+_PDM_MESH_NODAL_BAR2             = PDM_MESH_NODAL_BAR2
+_PDM_MESH_NODAL_TRIA3            = PDM_MESH_NODAL_TRIA3
+_PDM_MESH_NODAL_QUAD4            = PDM_MESH_NODAL_QUAD4
+_PDM_MESH_NODAL_POLY_2D          = PDM_MESH_NODAL_POLY_2D
+_PDM_MESH_NODAL_TETRA4           = PDM_MESH_NODAL_TETRA4
+_PDM_MESH_NODAL_PYRAMID5         = PDM_MESH_NODAL_PYRAMID5
+_PDM_MESH_NODAL_PRISM6           = PDM_MESH_NODAL_PRISM6
+_PDM_MESH_NODAL_HEXA8            = PDM_MESH_NODAL_HEXA8
+_PDM_MESH_NODAL_POLY_3D          = PDM_MESH_NODAL_POLY_3D
+_PDM_MESH_NODAL_BARHO            = PDM_MESH_NODAL_BARHO
+_PDM_MESH_NODAL_TRIAHO           = PDM_MESH_NODAL_TRIAHO
+_PDM_MESH_NODAL_QUADHO           = PDM_MESH_NODAL_QUADHO
+_PDM_MESH_NODAL_TETRAHO          = PDM_MESH_NODAL_TETRAHO
+_PDM_MESH_NODAL_PYRAMIDHO        = PDM_MESH_NODAL_PYRAMIDHO
+_PDM_MESH_NODAL_PRISMHO          = PDM_MESH_NODAL_PRISMHO
+_PDM_MESH_NODAL_HEXAHO           = PDM_MESH_NODAL_HEXAHO
+_PDM_MESH_NODAL_BARHO_BEZIER     = PDM_MESH_NODAL_BARHO_BEZIER
+_PDM_MESH_NODAL_TRIAHO_BEZIER    = PDM_MESH_NODAL_TRIAHO_BEZIER
+_PDM_MESH_NODAL_N_ELEMENT_TYPES  = PDM_MESH_NODAL_N_ELEMENT_TYPES
 
 _PDM_IO_KIND_MPIIO_EO   = PDM_IO_KIND_MPIIO_EO
 _PDM_IO_KIND_MPIIO_IP   = PDM_IO_KIND_MPIIO_IP
@@ -326,12 +350,17 @@ _PDM_WRITER_TOPO_CST         = PDM_WRITER_TOPO_CST
 _PDM_WRITER_TOPO_DEFORMABLE  = PDM_WRITER_TOPO_DEFORMABLE
 _PDM_WRITER_TOPO_VARIABLE    = PDM_WRITER_TOPO_VARIABLE
 
-_PDM_ISO_SURFACE_KIND_PLANE   = PDM_ISO_SURFACE_KIND_PLANE
-_PDM_ISO_SURFACE_KIND_SPHERE  = PDM_ISO_SURFACE_KIND_SPHERE
-_PDM_ISO_SURFACE_KIND_FIELD   = PDM_ISO_SURFACE_KIND_FIELD
-_PDM_ISO_SURFACE_KIND_ELLIPSE = PDM_ISO_SURFACE_KIND_ELLIPSE
-_PDM_ISO_SURFACE_KIND_QUADRIC = PDM_ISO_SURFACE_KIND_QUADRIC
-_PDM_ISO_SURFACE_KIND_HEART   = PDM_ISO_SURFACE_KIND_HEART
+@COMMENT_NOT_PDMA@_PDM_ISO_SURFACE_KIND_PLANE   = PDM_ISO_SURFACE_KIND_PLANE
+@COMMENT_NOT_PDMA@_PDM_ISO_SURFACE_KIND_SPHERE  = PDM_ISO_SURFACE_KIND_SPHERE
+@COMMENT_NOT_PDMA@_PDM_ISO_SURFACE_KIND_FIELD   = PDM_ISO_SURFACE_KIND_FIELD
+@COMMENT_NOT_PDMA@_PDM_ISO_SURFACE_KIND_ELLIPSE = PDM_ISO_SURFACE_KIND_ELLIPSE
+@COMMENT_NOT_PDMA@_PDM_ISO_SURFACE_KIND_QUADRIC = PDM_ISO_SURFACE_KIND_QUADRIC
+@COMMENT_NOT_PDMA@_PDM_ISO_SURFACE_KIND_HEART   = PDM_ISO_SURFACE_KIND_HEART
+
+@COMMENT_NOT_PDMA@_PDM_METRIC_TYPE_SCALAR     = PDM_METRIC_TYPE_SCALAR
+@COMMENT_NOT_PDMA@_PDM_METRIC_TYPE_VECTOR     = PDM_METRIC_TYPE_VECTOR
+@COMMENT_NOT_PDMA@_PDM_METRIC_TYPE_TENSOR_SYM = PDM_METRIC_TYPE_TENSOR_SYM
+@COMMENT_NOT_PDMA@_PDM_METRIC_TYPE_TENSOR     = PDM_METRIC_TYPE_TENSOR
 
 _PDM_CELL_TO_VTX_INTERP_KIND_IDW  = PDM_CELL_TO_VTX_INTERP_KIND_IDW
 _PDM_CELL_TO_VTX_INTERP_KIND_RBF  = PDM_CELL_TO_VTX_INTERP_KIND_RBF
@@ -365,12 +394,30 @@ _PDM_MPI_COMM_KIND_WIN_SHARED_AND_COLLECTIVE          = PDM_MPI_COMM_KIND_WIN_SH
 _PDM_MPI_COMM_KIND_WIN_SHARED_AND_NEIGHBOR_COLLECTIVE = PDM_MPI_COMM_KIND_WIN_SHARED_AND_NEIGHBOR_COLLECTIVE
 _PDM_MPI_COMM_KIND_WIN_RMA                            = PDM_MPI_COMM_KIND_WIN_RMA
 
+@COMMENT_NOT_PDMA@_PDM_CLUSTERING_KIND_OCTREE = PDM_CLUSTERING_KIND_OCTREE
+
+_PDM_FALSE = PDM_FALSE
+_PDM_TRUE = PDM_TRUE
+
+@COMMENT_NOT_PDMA@_PDM_MESH_EVAL_CENTERED_METRIC_QUALITY = PDM_MESH_EVAL_CENTERED_METRIC_QUALITY
+@COMMENT_NOT_PDMA@_PDM_MESH_EVAL_WORST_QUALITY           = PDM_MESH_EVAL_WORST_QUALITY
+@COMMENT_NOT_PDMA@_PDM_MESH_EVAL_LARGEST_DET_QUALITY     = PDM_MESH_EVAL_LARGEST_DET_QUALITY
+@COMMENT_NOT_PDMA@_PDM_MESH_EVAL_NONE                    = PDM_MESH_EVAL_NONE
+
+# -----------------------------------------------------------------
+# Execute when loading module
+
 @COMMENT_NOT_PDMA@
 @COMMENT_NOT_PDMA@cdef extern from "pdm_plugin.h":
 @COMMENT_NOT_PDMA@    void PDM_plugin_load ()
 # @COMMENT_NOT_PDMA@print(f"Pypdm : load plugin (PDM_plugin_load).")
 @COMMENT_NOT_PDMA@PDM_plugin_load()
 @COMMENT_NOT_PDMA@
+
+cdef extern from "pdm_predicate.h":
+  void PDM_predicate_exactinit ()
+
+PDM_predicate_exactinit()
 
 py_mem_domain = 42440
 # -----------------------------------------------------------------
@@ -397,6 +444,23 @@ cdef int* list_to_int_pointer(list data):
   for i,d in enumerate(data):
     array[i] = <int> d
   return array
+
+cdef PDM_g_num_t* np_to_gnum_pointer(NPY.ndarray[npy_pdm_gnum_t] array):
+  cdef PDM_g_num_t* ptr = NULL
+  if array is not None:
+    ptr = <PDM_g_num_t*> array.data
+  return ptr
+cdef int* np_to_int_pointer(NPY.ndarray[NPY.int32_t] array):
+  cdef int* ptr = NULL
+  if array is not None:
+    ptr = <int*> array.data
+  return ptr
+cdef double* np_to_double_pointer(NPY.ndarray[double] array):
+  cdef double* ptr = NULL
+  if array is not None:
+    ptr = <double*> array.data
+  return ptr
+
 
 cdef void** np_list_to_void_pointers(list datas):
   cdef NPY.ndarray numpy_void
@@ -464,6 +528,9 @@ cdef create_numpy_or_none_g(PDM_g_num_t* array, int size, bint flag_owndata=True
 
 cdef create_numpy_or_none_d(double* array, int size, bint flag_owndata=True):
     return create_numpy_or_none(<void *> array, NPY.NPY_DOUBLE, size, flag_owndata)
+
+def MPI_Finalize():
+    return PDM_MPI_Finalize()
 
 # PDM_dmesh :
 # --------------------
@@ -534,6 +601,10 @@ include "pdm_geom.pxi"
 # --------------------
 @COMMENT_NOT_PDMA@include "pdm_remesh.pxi"
 
+# PDM_mesh_refine :
+# --------------------
+@COMMENT_NOT_PDMA@include "pdm_mesh_refine.pxi"
+
 # PDM_iso_surface :
 # --------------------
 @COMMENT_NOT_PDMA@include "pdm_iso_surface.pxi"
@@ -549,6 +620,14 @@ include "pdm_geom.pxi"
 # PDM_mesh_adaptation :
 # --------------------
 #@COMMENT_NOT_PDMA@include "pdm_mesh_adaptation.pxi"
+
+# PDM_mesh_deform :
+# --------------------
+@COMMENT_NOT_PDMA@include "pdm_mesh_deform.pxi"
+
+# PDM_mesh_eval :
+# --------------------
+@COMMENT_NOT_PDMA@include "pdm_mesh_eval.pxi"
 
 # PDM_points_merge :
 # --------------------

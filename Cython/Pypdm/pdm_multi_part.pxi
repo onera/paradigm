@@ -84,6 +84,17 @@ cdef extern from "pdm_multipart.h":
                                          PDM_ownership_t   ownership)
 
     # ------------------------------------------------------------------
+    void PDM_multipart_group_get(PDM_multipart_t      *multipart,
+                                 const int             i_domain,
+                                 const int             i_part,
+                                 PDM_mesh_entities_t   entity_type,
+                                 int                  *n_group_entity,
+                                 int                 **group_entity_idx,
+                                 int                 **group_entity,
+                                 PDM_g_num_t         **group_entity_ln_to_gn,
+                                 PDM_ownership_t       ownership)
+
+    # ------------------------------------------------------------------
     void PDM_multipart_get_part_mesh_nodal(PDM_multipart_t   *mtp,
                                            const int   i_domain,
                                            PDM_part_mesh_nodal_t **pmesh_nodal,
@@ -234,7 +245,6 @@ cdef class MultiPart:
       """
       # ~> MPI communicator
       cdef MPI.MPI_Comm c_comm = comm.ob_mpi
-      cdef double* part_fraction_data
 
       # print("MultiPart::n_domain -->", n_domain)
       # print("MultiPart::n_part -->", n_part)
@@ -242,10 +252,7 @@ cdef class MultiPart:
       # print("MultiPart::split_method -->", split_method)
       self.n_rank = comm.Get_size()
 
-      if part_fraction is None:
-        part_fraction_data = NULL
-      else:
-        part_fraction_data = <double *> part_fraction.data
+      cdef double* part_fraction_data = np_to_double_pointer(part_fraction)
 
       # -> Create PPART
       self._mtp = PDM_multipart_create(n_domain,
@@ -311,15 +318,11 @@ cdef class MultiPart:
         renum_cell_properties (np.ndarray[np.int32_t]) : Parameters used by cache-blocking method : (*n_cell_per_cache_wanted*, *is_asynchronous*, *is_vectorisation*, *n_vect_face*, *split_method*)
         renum_face_method     (str)                    : Choice of renumbering method for faces
       """
-      cdef int *renum_properties_cell_data
-      if (renum_properties_cell is None):
-        renum_properties_cell_data = NULL
-      else:
-        renum_properties_cell_data = <int *> renum_properties_cell.data
+      cdef int *_renum_properties_cell = np_to_int_pointer(renum_properties_cell)
       PDM_multipart_set_reordering_options(self._mtp,
                                            i_domain,
                                            renum_cell_method,
-                                           renum_properties_cell_data,
+                                           _renum_properties_cell,
                                            renum_face_method)
     # ------------------------------------------------------------------
     def reordering_vtx_set(self, int i_domain,
@@ -677,6 +680,44 @@ cdef class MultiPart:
                                                PDM_OWNERSHIP_USER)
 
       return create_numpy_or_none_d(vtx_coord, 3*n_vtx)
+
+    # ------------------------------------------------------------------
+    def group_get(self, int i_domain, int i_part, PDM_mesh_entities_t entity_type):
+      """
+      group_get(i_domain, i_part, entity_type)
+
+      Get vertex coordinates
+
+      Parameters:
+          i_domain (int) : Domain identifier
+          i_part   (int) : Partition identifier
+
+      Returns:
+        Dictionary
+          - ``"group_entity_idx"``      (`np.ndarray[np.int32_t]`)     : Index for group->entity connectivity (size = *n_group*)
+          - ``"group_entity"``          (`np.ndarray[np.int32_t]`)     : Group->entity connectivity (1-based local ids, size = ``group_entity_idx[n_group]``)
+          - ``"group_entity_ln_to_gn"`` (`np.ndarray[npy_pdm_gnum_t]`) : Group->entity connectivity (group-specific global ids, size = ``group_entity_idx[n_group]``)
+      """
+      cdef int          n_group        = 0
+      cdef int         *group_entity_idx      = NULL
+      cdef int         *group_entity          = NULL
+      cdef PDM_g_num_t *group_entity_ln_to_gn = NULL
+
+      PDM_multipart_group_get(self._mtp,
+                              i_domain,
+                              i_part,
+                              entity_type,
+                              &n_group,
+                              &group_entity_idx,
+                              &group_entity,
+                              &group_entity_ln_to_gn,
+                              PDM_OWNERSHIP_USER)
+
+      return {
+        "group_entity_idx"     : create_numpy_or_none_i(group_entity_idx,      n_group+1),
+        "group_entity"         : create_numpy_or_none_i(group_entity,          group_entity_idx[n_group]),
+        "group_entity_ln_to_gn": create_numpy_or_none_g(group_entity_ln_to_gn, group_entity_idx[n_group])
+      }
 
     # ------------------------------------------------------------------
     def color_get(self, int i_domain, int i_part, PDM_mesh_entities_t entity_type):

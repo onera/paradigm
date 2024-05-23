@@ -77,7 +77,22 @@ cdef extern from "pdm_dmesh.h":
                                     PDM_g_num_t              *connect,
                                     int                      *connect_idx,
                                     PDM_ownership_t           ownership);
-    void PDM_dmesh_free(PDM_dmesh_t   *dm)
+    void PDM_dmesh_free(PDM_dmesh_t   *dm);
+
+    void PDM_dmesh_find_topological_ridges(PDM_MPI_Comm   comm,
+                                           PDM_g_num_t   *distrib_face,
+                                           int           *dface_vtx_idx,
+                                           PDM_g_num_t   *dface_vtx,
+                                           int            n_group_face,
+                                           int           *dgroup_face_idx,
+                                           PDM_g_num_t   *dgroup_face,
+                                           PDM_g_num_t  **out_distrib_ridge,
+                                           PDM_g_num_t  **out_dridge_vtx,
+                                           int           *out_n_group_ridge,
+                                           int          **out_dgroup_edge_idx,
+                                           PDM_g_num_t  **out_dgroup_edge,
+                                           int          **out_dridge_face_group_idx,
+                                           int          **out_dridge_face_group);
     # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 # ------------------------------------------------------------------
@@ -369,12 +384,12 @@ def dmesh_connectivity_set(DMesh pydm,
   # > Declaration
   # ************************************************************************
 
-  cdef int* _connect_idx = NULL
-  if connect_idx is not None:
-    _connect_idx = <int *> connect_idx.data
+  cdef PDM_g_num_t* _connect     = np_to_gnum_pointer(connect)
+  cdef int*         _connect_idx = np_to_int_pointer(connect_idx)
+  
   PDM_dmesh_connectivity_set(pydm._dm,
                              entity_type,
-             <PDM_g_num_t *> connect.data,
+                             _connect,
                              _connect_idx,
                              PDM_OWNERSHIP_USER)
 
@@ -392,3 +407,69 @@ def dmesh_vtx_coord_get(DMesh pydm):
                            &dvtx_coord,
                             PDM_OWNERSHIP_USER)
     return create_numpy_d(dvtx_coord, 3*dn_vtx)
+
+
+def dfind_topological_ridge(MPI.Comm comm,
+                            NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1] distrib_face,
+                            NPY.ndarray[NPY.int32_t   , mode='c', ndim=1] dface_vtx_idx,
+                            NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1] dface_vtx,
+                            NPY.ndarray[NPY.int32_t   , mode='c', ndim=1] dgroup_face_idx,
+                            NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1] dgroup_face):
+  """
+  dfind_topological_ridge(comm, distrib_face, dface_vtx_idx, dface_vtx, dgroup_face_idx, dgroup_face)
+
+  Retrieve ridges from block-distributed faces with groups, and build associated edges
+
+  Parameters:
+    comm            (MPI.Comm)                   : MPI communicator
+    distrib_face    (np.ndarray[npy_pdm_gnum_t]) : Distribution of faces
+    dface_vtx_idx   (np.ndarray[np.int32_t])     : Index for block-distributed face->vertex connectivity
+    dface_vtx       (np.ndarray[npy_pdm_gnum_t]) : Block-distributed face->vertex connectivity
+    dgroup_face_idx (np.ndarray[np.int32_t])     : Index for block-distributed group->face connectivity
+    dgroup_face     (np.ndarray[npy_pdm_gnum_t]) : Block-distributed group->face connectivity
+
+  Returns:
+    Distribution of edges (only those on ridges)                       (np.ndarray[npy_pdm_gnum_t])
+    Block-distributed edge->vertex connectivity (only those on ridges) (np.ndarray[npy_pdm_gnum_t])
+    Index for block-distributed group->edge connectivity               (np.ndarray[np.int32_t])
+    Block-distributed group->edge connectivity                         (np.ndarray[npy_pdm_gnum_t])
+    Index for ridge->surface connectivity                              (np.ndarray[np.int32_t])
+    Ridge->surface connectivity                                        (np.ndarray[np.int32_t])
+  """
+  cdef MPI.MPI_Comm c_comm = comm.ob_mpi
+  cdef PDM_g_num_t  *distrib_ridge         = NULL
+  cdef PDM_g_num_t  *dridge_vtx            = NULL
+  cdef int           n_group_ridge         = 0
+  cdef int          *dgroup_edge_idx       = NULL
+  cdef PDM_g_num_t  *dgroup_edge           = NULL
+  cdef int          *dridge_face_group_idx = NULL
+  cdef int          *dridge_face_group     = NULL
+
+  cdef int n_group_face = dgroup_face_idx.shape[0]-1
+
+  PDM_dmesh_find_topological_ridges(PDM_MPI_mpi_2_pdm_mpi_comm (<void *> &c_comm),
+                    <PDM_g_num_t *> distrib_face.data,
+                    <int         *> dface_vtx_idx.data,
+                    <PDM_g_num_t *> dface_vtx.data,
+                                    n_group_face,
+                    <int         *> dgroup_face_idx.data,
+                    <PDM_g_num_t *> dgroup_face.data,
+                                    &distrib_ridge,
+                                    &dridge_vtx,
+                                    &n_group_ridge,
+                                    &dgroup_edge_idx,
+                                    &dgroup_edge,
+                                    &dridge_face_group_idx,
+                                    &dridge_face_group);
+  n_rank = comm.Get_size()
+  i_rank = comm.Get_rank()
+  cdef int dn_edge = distrib_ridge[i_rank+1] - distrib_ridge[i_rank]
+  np_distrib_ridge   = create_numpy_g(distrib_ridge, n_rank+1)
+  np_dridge_vtx      = create_numpy_g(dridge_vtx, 2 * dn_edge)
+  np_dgroup_edge_idx = create_numpy_i(dgroup_edge_idx, n_group_ridge+1)
+  np_dgroup_edge     = create_numpy_g(dgroup_edge, dgroup_edge_idx[n_group_ridge])
+
+  np_dridge_face_group_idx = create_numpy_i(dridge_face_group_idx, dn_edge+1)
+  np_dridge_face_group     = create_numpy_i(dridge_face_group    , dridge_face_group_idx[dn_edge])
+
+  return np_distrib_ridge, np_dridge_vtx, np_dgroup_edge_idx, np_dgroup_edge, np_dridge_face_group_idx, np_dridge_face_group

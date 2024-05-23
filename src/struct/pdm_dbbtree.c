@@ -1150,7 +1150,8 @@ PDM_dbbtree_boxes_set_with_init_location
         _initLocation[idx2++] = j;
       }
     }
-  } else {
+  } 
+  else {
     for (int i = 0; i < n_part; i++) {
       for (int j = 0; j < nElts[i]; j++) {
         _boxGnum[idx++] = gNum[i][j];

@@ -588,8 +588,6 @@ PDM_distrib_weight
 
   const int n_samples = sampling_factor * n_active_ranks;
 
-  PDM_g_num_t *sampling = malloc(sizeof(PDM_g_num_t) * (n_samples + 1));
-
   double  lsum_weight = 0.;
   if(weight != NULL) {
     for (int i = 0; i < n_part; i++) {
@@ -607,12 +605,21 @@ PDM_distrib_weight
   PDM_MPI_Allreduce(&lsum_weight, &gsum_weight, 1,
                     PDM_MPI_DOUBLE, PDM_MPI_SUM, comm);
 
+PDM_GCC_SUPPRESS_WARNING_WITH_PUSH("-Wfloat-equal")
+  if (gsum_weight == 0.0) {
+PDM_GCC_SUPPRESS_WARNING_POP
+    *rank_index = PDM_compute_uniform_entity_distribution(comm, _id_max_max);
+    return;
+  }
+
+
   double optim = gsum_weight / n_active_ranks;
 
   /* Define a naive sampling (uniform distribution) */
   PDM_g_num_t _n_sample_data = _id_max_max / n_samples;
   PDM_g_num_t _samplerest    = _id_max_max % n_samples;
 
+  PDM_g_num_t *sampling = malloc(sizeof(PDM_g_num_t) * (n_samples + 1));
   sampling[0] = 0;
   int k = 0;
   for (int i = 0; i < n_samples; i++) {

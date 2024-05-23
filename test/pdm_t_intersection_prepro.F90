@@ -46,7 +46,7 @@ program testf
   integer                            :: cube_dim                       = 3
 
   integer                            :: sphere_elt_type                = PDM_MESH_NODAL_TRIA3
-  double precision                   :: sphere_radius                  = 0.35
+  double precision                   :: sphere_radius                  = 10
   double precision                   :: sphere_center_x                = 0.
   double precision                   :: sphere_center_y                = 0.
   double precision                   :: sphere_center_z                = 0.
@@ -592,6 +592,10 @@ program testf
   !  Get connectivities and other data from extract meshes            
   !-----------------------------------------------------------
 
+  if (.not.c_associated(cube_extr_mesh) .or. .not.c_associated(sphere_extr_mesh)) then
+    GOTO 666
+  endif
+
   call PDM_extract_part_connectivity_get (cube_extr_mesh,                  &
                                           0,                               & ! A unique partition
                                           PDM_CONNECTIVITY_TYPE_CELL_FACE, &
@@ -858,11 +862,20 @@ program testf
   call PDM_extract_part_free(cube_extr_mesh)
   call PDM_extract_part_free(sphere_extr_mesh)
 
+
+  call PDM_pointer_array_free(cube_extr_mesh_vtx_coord_r_pt_array)
+
+  call PDM_pointer_array_free(stride_n_face_candidates)
+  call PDM_pointer_array_free(list_of_face_candidates)
+
+  call PDM_pointer_array_free(stride_n_face_candidates_r)
+  call PDM_pointer_array_free(list_of_face_candidates_r)
+
   !-----------------------------------------------------------
   !    Finalize writer 
   !-----------------------------------------------------------
 
-  call PDM_writer_free(wrt)
+666  call PDM_writer_free(wrt)
 
   !-----------------------------------------------------------
   !    Free structures 
@@ -906,13 +919,6 @@ program testf
   call PDM_pointer_array_free(sphere_pedge_ln_to_gn)
   call PDM_pointer_array_free(sphere_pface_ln_to_gn)
 
-  call PDM_pointer_array_free(cube_extr_mesh_vtx_coord_r_pt_array)
- 
-  call PDM_pointer_array_free(stride_n_face_candidates)
-  call PDM_pointer_array_free(list_of_face_candidates)
-
-  call PDM_pointer_array_free(stride_n_face_candidates_r)
-  call PDM_pointer_array_free(list_of_face_candidates_r)
 
   if (i_rank .eq. 0) then
     write(*, *) "-- End"

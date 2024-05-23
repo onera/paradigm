@@ -66,6 +66,9 @@ struct _pdm_extract_part_t
   PDM_ownership_t         ownership;
   PDM_MPI_Comm            comm;
 
+  int                     renum_method           [PDM_MESH_ENTITY_MAX];
+  const int              *renum_method_properties[PDM_MESH_ENTITY_MAX];
+
   /* Partitioned view - To do with extract for selected gnum + part_to_part */
   int                 *n_cell;
   int                 *n_face;
@@ -126,6 +129,11 @@ struct _pdm_extract_part_t
   PDM_g_num_t       **pextract_entity_ln_to_gn       [PDM_MESH_ENTITY_MAX];
   PDM_g_num_t       **pextract_entity_parent_ln_to_gn[PDM_MESH_ENTITY_MAX];
   int               **pextract_entity_parent_lnum    [PDM_MESH_ENTITY_MAX];
+
+  // For renumbering
+  PDM_bool_t         *is_owner_color;
+  int               **pextract_entity_color          [PDM_MESH_ENTITY_MAX];
+  int               **pextract_entity_order          [PDM_MESH_ENTITY_MAX];
 
   /* If partition is described by elements */
   PDM_bool_t                   is_owner_extract_pmne;

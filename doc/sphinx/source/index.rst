@@ -82,8 +82,8 @@ User manual
 
   .. container:: card
 
-    I/O
-      MPI-IO wrappings to read/write files in parallel
+    :ref:`Parallel I/O <io>`
+      Parallel read and write
 
 
   .. container:: card
@@ -91,9 +91,10 @@ User manual
     High-order meshes
       Utilities for high-order, curved meshes
 
-      .. * ho ordering
-      .. * ...
+  .. container:: card
 
+    :ref:`Mesh Transformation <mesh_transform>`
+      Algorithms performing geometrical or topological transformations on meshes
 
   .. container:: card
 
@@ -118,6 +119,8 @@ User manual
    user_manual/comm_graph/index
    user_manual/gnum/index
    user_manual/prepro_algo/index
+   user_manual/mesh_transform/index
+   user_manual/io/index
    user_manual/faq
 
 |

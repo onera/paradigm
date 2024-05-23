@@ -488,8 +488,8 @@ char *argv[]
   int         *pedge_vtx      = NULL;
   PDM_g_num_t *pedge_ln_to_gn = NULL;
   PDM_g_num_t *pvtx_ln_to_gn = NULL;
-  int min_size = 0.25;
-  int max_size = 0.5;
+  double min_size = 0.25;
+  double max_size = 0.5;
   double x_min = 0.;
   double y_min = 0.;
   double z_min = 0.;

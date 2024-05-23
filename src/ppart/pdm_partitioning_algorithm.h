@@ -42,6 +42,7 @@ extern "C" {
  *   is made through the local to global numbering computed by the function.
  *
  * \param [in]   comm                  PDM_MPI communicator
+ * \param [in]   order_part            Order part by increasing gnum
  * \param [in]   part_distribution     Distribution of partitions over the processes (size=n_rank+1)
  * \param [in]   entity_distribution   Distribution of entities over the processes (size=n_rank+1)
  * \param [in]   dentity_to_part       Id of assigned partition for each entity (size=dn_entity)
@@ -56,6 +57,7 @@ int
 PDM_part_assemble_partitions
 (
  const PDM_MPI_Comm    comm,
+ const int             order_part,
        PDM_g_num_t    *part_distribution,
  const PDM_g_num_t    *entity_distribution,
  const int            *dentity_to_part,
@@ -360,6 +362,52 @@ PDM_part_generate_entity_graph_comm
        int         ***ppart_bound_idx,
        int         ***pentity_bound,
        int         ***pentity_priority
+);
+
+/**
+ *
+ * \brief Get the list of owned entities on the current process
+ *
+ * \param [in]  n_part            Number of partitions
+ * \param [in]  n_entity          Number of entities
+ * \param [in]  entity_ln_to_gn   Entity local numbering to global numbering (size = n_entity)
+ * \param [out] n_owned_entity    Number of owned entities
+ * \param [out] lnum_owned_entity Owned entity local numbering (size = n_owned_entity)
+ * \param [in]  comm              MPI communicator
+ *
+ */
+
+void
+PDM_compute_graph_comm_entity_ownership
+(
+  const int             n_part,
+  const int            *n_entity,
+  const PDM_g_num_t   **entity_ln_to_gn,
+        int           **n_owned_entity,
+        int          ***lnum_owned_entity,
+        PDM_MPI_Comm    comm
+);
+
+/**
+ *
+ * \brief Get the list of owned entities on the current process
+ *
+ * \param [in]  n_entity          Number of entities
+ * \param [in]  entity_ln_to_gn   Entity local numbering to global numbering (size = n_entity)
+ * \param [out] n_owned_entity    Number of owned entities
+ * \param [out] lnum_owned_entity Owned entity local numbering (size = n_owned_entity)
+ * \param [in]  comm              MPI communicator
+ *
+ */
+
+void
+PDM_compute_graph_comm_entity_ownership_single_part
+(
+  const int            n_entity,
+  const PDM_g_num_t   *entity_ln_to_gn,
+        int           *n_owned_entity,
+        int          **lnum_owned_entity,
+        PDM_MPI_Comm   comm
 );
 
 /**

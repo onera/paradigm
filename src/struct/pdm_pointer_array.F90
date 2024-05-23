@@ -369,8 +369,10 @@ module pdm_pointer_array
       stop
     end if
 
-    pa%cptr(i_part+1)   = c_loc(pointer_f)
-    pa%length(i_part+1) = size(pointer_f)
+    if (associated(pointer_f)) then
+      pa%cptr(i_part+1)   = c_loc(pointer_f)
+      pa%length(i_part+1) = size(pointer_f)
+    end if
 
   end subroutine PDM_pointer_array_part_set_int
 
@@ -408,8 +410,10 @@ module pdm_pointer_array
       stop
     end if
 
-    pa%cptr(i_part+1)   = c_loc(pointer_f)
-    pa%length(i_part+1) = size(pointer_f)
+    if (associated(pointer_f)) then
+      pa%cptr(i_part+1)   = c_loc(pointer_f)
+      pa%length(i_part+1) = size(pointer_f)
+    end if
 
   end subroutine PDM_pointer_array_part_set_g_num
 #endif
@@ -447,8 +451,10 @@ module pdm_pointer_array
       stop
     end if
 
-    pa%cptr(i_part+1)   = c_loc(pointer_f)
-    pa%length(i_part+1) = size(pointer_f)
+    if (associated(pointer_f)) then
+      pa%cptr(i_part+1)   = c_loc(pointer_f)
+      pa%length(i_part+1) = size(pointer_f)
+    end if
 
   end subroutine PDM_pointer_array_part_set_double
 
@@ -485,8 +491,10 @@ module pdm_pointer_array
       stop
     end if
 
-    pa%cptr(i_part+1)   = c_loc(pointer_f)
-    pa%length(i_part+1) = size(pointer_f)
+    if (associated(pointer_f)) then
+      pa%cptr(i_part+1)   = c_loc(pointer_f)
+      pa%length(i_part+1) = size(pointer_f)
+    end if
 
   end subroutine PDM_pointer_array_part_set_double_2
 
@@ -523,8 +531,10 @@ module pdm_pointer_array
       stop
     end if
 
-    pa%cptr(i_part+1)   = c_loc(pointer_f)
-    pa%length(i_part+1) = size(pointer_f)
+    if (associated(pointer_f)) then
+      pa%cptr(i_part+1)   = c_loc(pointer_f)
+      pa%length(i_part+1) = size(pointer_f)
+    end if
 
   end subroutine PDM_pointer_array_part_set_double_3
 
@@ -561,8 +571,10 @@ module pdm_pointer_array
       stop
     end if
 
-    pa%cptr(i_part+1)   = c_loc(pointer_f)
-    pa%length(i_part+1) = size(pointer_f)
+    if (associated(pointer_f)) then
+      pa%cptr(i_part+1)   = c_loc(pointer_f)
+      pa%length(i_part+1) = size(pointer_f)
+    end if
 
   end subroutine PDM_pointer_array_part_set_complex4
 
@@ -599,8 +611,10 @@ module pdm_pointer_array
       stop
     end if
 
-    pa%cptr(i_part+1)   = c_loc(pointer_f)
-    pa%length(i_part+1) = size(pointer_f)
+    if (associated(pointer_f)) then
+      pa%cptr(i_part+1)   = c_loc(pointer_f)
+      pa%length(i_part+1) = size(pointer_f)
+    end if
 
   end subroutine PDM_pointer_array_part_set_complex8
 
@@ -638,8 +652,10 @@ module pdm_pointer_array
       stop
     end if
 
-    pa%cptr(i_part+1)   = c_loc(pointer_f)
-    pa%length(i_part+1) = size(pointer_f)
+    if (associated(pointer_f)) then
+      pa%cptr(i_part+1)   = c_loc(pointer_f)
+      pa%length(i_part+1) = size(pointer_f)
+    end if
 
   end subroutine PDM_pointer_array_part_set_real4
 

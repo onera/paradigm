@@ -63,15 +63,16 @@ typedef enum {
 
 typedef enum {
 
-  PDM_WRITER_POINT = PDM_MESH_NODAL_POINT,
-  PDM_WRITER_BAR2 = PDM_MESH_NODAL_BAR2,
-  PDM_WRITER_TRIA3 = PDM_MESH_NODAL_TRIA3,
-  PDM_WRITER_QUAD4 = PDM_MESH_NODAL_QUAD4,
-  PDM_WRITER_POLY_2D = PDM_MESH_NODAL_POLY_2D,
-  PDM_WRITER_TETRA4 = PDM_MESH_NODAL_TETRA4,
+  PDM_WRITER_UNDEF    = -1,
+  PDM_WRITER_POINT    = PDM_MESH_NODAL_POINT,
+  PDM_WRITER_BAR2     = PDM_MESH_NODAL_BAR2,
+  PDM_WRITER_TRIA3    = PDM_MESH_NODAL_TRIA3,
+  PDM_WRITER_QUAD4    = PDM_MESH_NODAL_QUAD4,
+  PDM_WRITER_POLY_2D  = PDM_MESH_NODAL_POLY_2D,
+  PDM_WRITER_TETRA4   = PDM_MESH_NODAL_TETRA4,
   PDM_WRITER_PYRAMID5 = PDM_MESH_NODAL_PYRAMID5,
-  PDM_WRITER_PRISM6 = PDM_MESH_NODAL_PRISM6,
-  PDM_WRITER_HEXA8 = PDM_MESH_NODAL_HEXA8,
+  PDM_WRITER_PRISM6   = PDM_MESH_NODAL_PRISM6,
+  PDM_WRITER_HEXA8    = PDM_MESH_NODAL_HEXA8,
   PDM_WRITER_POLY_3D  = PDM_MESH_NODAL_POLY_3D
 
 } PDM_writer_elt_geom_t;
@@ -89,7 +90,7 @@ typedef struct _PDM_writer_cst_global_var_t PDM_writer_cst_global_var_t;
 /**
  * \struct PDM_writer_fct_t
  *
- * \brief  Function pointer used to define an user format with \ref PDM_writer_t instance
+ * \brief  Function pointer used to define an user format with \ref PDM_writer_t_t instance
  *
  */
 
@@ -99,7 +100,7 @@ typedef void (*PDM_writer_fct_t) (PDM_writer_t *pw);
 /**
  * \struct PDM_writer_geom_fct_t
  *
- * \brief  Function pointer used to define an user format with \ref PDM_writer_geom_t instance
+ * \brief  Function pointer used to define an user format with \ref PDM_writer_t_geom_t instance
  *
  */
 
@@ -109,7 +110,7 @@ typedef void (*PDM_writer_geom_fct_t) (PDM_writer_geom_t *geom);
 /**
  * \struct PDM_writer_var_fct_t
  *
- * \brief  Function pointer used to define an user format with \ref PDM_writer_var_t instance
+ * \brief  Function pointer used to define an user format with \ref PDM_writer_t_var_t instance
  *
  */
 
@@ -164,24 +165,24 @@ typedef enum {
 
 /**
  *
- * \brief Cree un objet CS (Cedre Sortie) et retoure un pointeur sur cet objet
+ * \brief Create a structure for parallel writing of geometry and associated variables
  *
- * \param [in] fmt                  Format de sortie
+ * \param [in] fmt                  Output format
  * \param [in] fmt_fic              Binary or ASCII
- * \param [in] topologie            Indique le maillage est mobile ou non
- * \param [in] st_reprise           Complete les sorties des calculs precedents en reprise
- * \param [in] rep_sortie           Repertoire de sortie
- * \param [in] nom_sortie           Nom de la sortie
- * \param [in] pdm_mpi_com          Communicateur MSG
- * \param [in] acces                Type d'acces
- * \param [in] prop_noeuds_actifs   Proportion des noeuds actifs dans les acces au fichier
- *                                    *  -1 : tous les processus actifs
- *                                    *   1 : un processus par noeud
- *                                    * 0 < val < 1 : un processus par noeud actif
- * \param [in] options              Options complementaires propres au format sous
- *                                 la forme ("nom_1 = val_1 : ... : nom_n = val_n")
+ * \param [in] topologie            Indicates whether the mesh is mobile
+ * \param [in] st_reprise           Finalizes previous outputs before restart
+ * \param [in] rep_sortie           Output repository
+ * \param [in] nom_sortie           Output filename
+ * \param [in] pdm_mpi_com          MPI communicator
+ * \param [in] acces                Access type
+ * \param [in] prop_noeuds_actifs   Amount of active nodes:
+ *                                    *  -1 : all active
+ *                                    *   1 : one process per node
+ *                                    * 0 < val < 1 : one process per active node
+ * \param [in] options              Complementary options for the format structured as
+ *                                  ("name_1 = val_1 : ... : name_n = val_n")
  *
- * \return   Pointer to \ref PDM_writer object
+ * \return   Pointer to \ref PDM_writer_t object
  *
  */
 
@@ -202,9 +203,9 @@ const char                   *options
 
 
 /**
- * \brief Libere un objet CS (Cedre Sortie) et retourne un pointeur NULL si pas d'erreur
+ * \brief Free a writer structure
  *
- * \param [in] cs    Pointer to \ref PDM_writer object
+ * \param [in] cs    Pointer to \ref PDM_writer_t object
  *
  */
 
@@ -216,10 +217,10 @@ PDM_writer_free
 
 
 /**
- * \brief Debut d'increment
+ * \brief Begin a time step
  *
- * \param [in] cs             Pointer to \ref PDM_writer object
- * \param [in] physical_time  Temps
+ * \param [in] cs             Pointer to \ref PDM_writer_t object
+ * \param [in] physical_time  Time
  */
 
 void
@@ -231,14 +232,14 @@ PDM_writer_step_beg
 
 
 /**
- * \brief Is there a open step
+ * \brief Is there a open time step?
  *
- * \param [in] cs             Pointer to \ref PDM_writer object
+ * \param [in] cs             Pointer to \ref PDM_writer_t object
  *
- * \return   Flag which indicates if a step is open
+ * \return   Flag which indicates if a time step is open
  */
 
-int 
+int
 PDM_writer_is_open_step
 (
  PDM_writer_t  *cs
@@ -246,9 +247,9 @@ PDM_writer_is_open_step
 
 
 /**
- * \brief Fin d'increment
+ * \brief End a time step
  *
- * \param [in] cs             Pointer to \ref PDM_writer object
+ * \param [in] cs             Pointer to \ref PDM_writer_t object
  *
  */
 
@@ -260,12 +261,13 @@ PDM_writer_step_end
 
 
 /**
- * \brief Cree une nouvelle geometrie dans l'objet CS (Cedre Sortie)
+ * \brief Create a new geometry in the writer structure
  *
- * \param [in]  cs                Pointer to \ref PDM_writer object
- * \param [in]  nom_geom          Nom de l'objet geometrique
+ * \param [in]  cs                Pointer to \ref PDM_writer_t object
+ * \param [in]  nom_geom          Name of the geometry
+ * \param [in]  n_part            Number of partitions
  *
- * \return   Identificateur de l'objet geom dans cs
+ * \return   Identifier of the geometry within the writer instance
  *
  */
 
@@ -278,6 +280,17 @@ PDM_writer_geom_create
 );
 
 
+/**
+ * \brief Create a geometry from a nodal mesh structure
+ *
+ * \param [in]  cs                Pointer to \ref PDM_writer_t object
+ * \param [in]  nom_geom          Name of the geometry
+ * \param [in]  mesh              Pointer to \ref PDM_part_mesh_nodal_t instance
+ *
+ * \return   Identifier of the geometry within the writer instance
+ *
+ */
+
 int
 PDM_writer_geom_create_from_mesh_nodal
 (
@@ -286,6 +299,15 @@ PDM_writer_geom_create_from_mesh_nodal
  PDM_part_mesh_nodal_t     *mesh
 );
 
+
+/**
+ * \brief Set a geometry from a nodal mesh structure
+ *
+ * \param [in]  cs                Pointer to \ref PDM_writer_t object
+ * \param [in]  id_geom           Geometry identifier
+ * \param [in]  mesh              Pointer to \ref PDM_part_mesh_nodal_t instance
+ *
+ */
 
 void
 PDM_writer_geom_set_from_mesh_nodal
@@ -297,14 +319,15 @@ PDM_writer_geom_set_from_mesh_nodal
 
 
 /**
- * \brief Definition des coordonnees de la partition courante
+ * \brief Define the coordinates of the current partition
  *
- * \param [in] cs        Pointer to \ref PDM_writer object
- * \param [in] id_geom   Identificateur de l'objet geometrique
- * \param [in] id_part   Indice de partition
- * \param [in] n_som     Nombre de sommets de la partition
- * \param [in] coords    Coordonnes des sommets
- * \param [in] numabs    Numerotation absolue des sommets
+ * \param [in] cs        Pointer to \ref PDM_writer_t object
+ * \param [in] id_geom   Geometry identifier
+ * \param [in] id_part   Partition identifier
+ * \param [in] n_som     Number of vertices
+ * \param [in] coords    Coordinates (size = 3 * \p n_som)
+ * \param [in] numabs    Vertex global numbering (size = \p n_som)
+ * \param [in] ownership Ownership
  *
  */
 
@@ -322,19 +345,19 @@ PDM_writer_geom_coord_set
 
 
 /**
- * \brief Definition des coordonnees des sommets de la partition courante
- * a partir d'un ensemble parent
+ * \brief Definition of the coordinates of the vertices in the current partition from a parent set
  *
  *
- * \param [in] cs               Pointer to \ref PDM_writer object
- * \param [in] id_geom          Identificateur de l'objet geometrique
- * \param [in] id_part          Indice de partition
- * \param [in] n_som            Nombre de sommets de la partition
- * \param [in] n_som_parent     Nombre de sommets parent
- * \param [in] numabs           Numerotation absolue des sommets (size = n_som)
- * \param [in] num_parent       Numerotation des sommets dans la numerotation parente (size = n_som)
- * \param [in] coords_parent    Coordonnes des sommets parents (size = 3 * n_som_parent)
- * \param [in] numabs_parent    Numerotation absolue des sommets parents (size = n_som_parent)
+ * \param [in] cs               Pointer to \ref PDM_writer_t object
+ * \param [in] id_geom          Geometry identifier
+ * \param [in] id_part          Partition identifier
+ * \param [in] n_som            Number of vertices
+ * \param [in] n_som_parent     Number of parent vertices
+ * \param [in] numabs           Vertex global numbering (size = \p n_som)
+ * \param [in] num_parent       Vertex parent local numbering (size = \p n_som)
+ * \param [in] coords_parent    Coordinates of parent vertices (size = 3 * \p n_som_parent)
+ * \param [in] numabs_parent    Vertex parent global numbering (size = \p n_som_parent)
+ * \param [in] ownership        Ownership
  *
  */
 
@@ -355,13 +378,14 @@ PDM_writer_geom_coord_from_parent_set
 
 
 /**
- * \brief Ajout d'un bloc d'elements d'un type donne
+ * \brief Add a block of elements of a given type
  *
- * \param [in] cs             Pointer to \ref PDM_writer object
- * \param [in] id_geom        Identificateur de l'objet geometrique
- * \param [in] t_elt          Type d'element
+ * \param [in] cs             Pointer to \ref PDM_writer_t object
+ * \param [in] id_geom        Geometry identifier
+ * \param [in] t_elt          Element type
+ * \param [in] owner          Block ownership
  *
- * \return   Identificateur du bloc
+ * \return   Block identifier
  *
  */
 
@@ -376,84 +400,15 @@ PDM_writer_geom_bloc_add
 
 
 /**
- * \brief Ajout d'un bloc d'elements d'un type donne dans la partition courante
+ * \brief Set in the given geometry a block of elements of a given type
  *
- *  - PDM_writer_POINT :
- *
- *   1 x
- *
- *  - PDM_writer_BAR2 :
- *
- *   1 x-------x 2
- *
- *  - PDM_writer_TRIA3 :
- *
- *   1 x-------x 3
- *      \     /
- *       \   /
- *        \ /
- *         x 2
- *
- *  - PDM_writer_QUAD4 :
- *
- *      4 x-------x 3
- *       /       /
- *      /       /
- *   1 x-------x2
- *
- *   - PDM_writer_TETRA4 :
- *
- *         x 4
- *        /|\
- *       / | \
- *      /  |  \
- *   1 x- -|- -x 3
- *      \  |  /
- *       \ | /
- *        \|/
- *         x 2
- *
- *   - PDM_writer_PYRAMID5 :
- *
- *          5 x
- *           /|\
- *          //| \
- *         // |  \
- *      4 x/--|---x 3
- *       //   |  /
- *      //    | /
- *   1 x-------x 2
- *
- *  - PDM_writer_PRSIM6 :
- *
- *   4 x-------x 6
- *     |\     /|
- *     | \   / |
- *   1 x- \-/ -x 3
- *      \ 5x  /
- *       \ | /
- *        \|/
- *         x 2
- *
- *  - PDM_writer_HEXA8 :
- *
- *      8 x-------x 7
- *       /|      /|
- *      / |     / |
- *   5 x-------x6 |
- *     | 4x----|--x 3
- *     | /     | /
- *     |/      |/
- *   1 x-------x 2
- *
- * \param [in] cs                  Pointer to \ref PDM_writer object
- * \param [in] id_geom             Identificateur de l'objet geometrique
- * \param [in] id_bloc             Identificateur du bloc
- * \param [in] id_part             Indice de partition
- * \param [in] t_elt               Type d'element
- * \param [in] n_elt               Nombre d'elements dans le bloc
- * \param [in] connec              Table de connectivite des elements
- * \param [in] num_part            Numerotation dans la partition
+ * \param [in] cs                  Pointer to \ref PDM_writer_t object
+ * \param [in] id_geom             Geometry identifier
+ * \param [in] id_bloc             Block identifier
+ * \param [in] id_part             Partition identifier
+ * \param [in] n_elt               Number of elements
+ * \param [in] connec              Element->Vertex connectivity
+ * \param [in] numabs              Element global numbering
  *
  */
 
@@ -471,15 +426,16 @@ PDM_writer_geom_bloc_std_set
 
 
 /**
- * \brief Ajout d'un bloc de polygones dans la partition courante
+ * \brief Add a block of polygons to the current partition
  *
- * \param [in] cs              Pointer to \ref PDM_writer object
- * \param [in] id_geom         Identificateur de l'objet geometrique
- * \param [in] id_part         Indice de partition
- * \param [in] n_elt           Nombre d'elements dans le bloc
- * \param [in] connec_idx      Index dans la table de connectivite (dim = n_elt+1)
- * \param [in] connec          Table de connectivite des elements (dim = connec_idx[n_elt])
- * \param [in] numabs          Numerotation absolue des elements
+ * \param [in] cs              Pointer to \ref PDM_writer_t object
+ * \param [in] id_geom         Geometry identifier
+ * \param [in] id_bloc         Block identifier
+ * \param [in] id_part         Partition identifier
+ * \param [in] n_elt           Number of elements
+ * \param [in] connec_idx      Index of the Element->Vertex connectivity (size = \p n_elt+1)
+ * \param [in] connec          Element->Vertex connectivity (size = \p connec_idx[\p n_elt])
+ * \param [in] numabs          Element global numbering (size = \p n_elt)
  *
  */
 
@@ -498,18 +454,19 @@ const PDM_l_num_t    n_elt,
 
 
 /**
- * \brief Ajout d'un bloc de polyedres dans la partition courante
+ * \brief Add a block of polyhedra to the current partition
  *
- * \param [in] cs              Pointer to \ref PDM_writer object
- * \param [in] id_geom         Identificateur de l'objet geometrique
- * \param [in] id_part         Indice de partition
- * \param [in] n_elt           Nombre d'elements dans le bloc
- * \param [in] n_face          Nombre de faces de chaque element (dim = n_elt)
- * \param [in] facsom_idx      Index dans la table de connectivite des faces (dim = n_face_total+1)
- * \param [in] facsom          Table de connectivite des faces (dim = facsom_idx[n_face_total}
- * \param [in] cellfac_idx     Index dans la table de connectivite des cellules (dim = n_elt+1)
- * \param [in] cellfac         Table de connectivite des elements (dim = cellfac_idx[n_elt])
- * \param [in] numabs          Numerotation absolue des elements
+ * \param [in] cs              Pointer to \ref PDM_writer_t object
+ * \param [in] id_geom         Geometry identifier
+ * \param [in] id_bloc         Block identifier
+ * \param [in] id_part         Partition identifier
+ * \param [in] n_elt           Number of elements
+ * \param [in] n_face          Number of faces
+ * \param [in] facsom_idx      Index of the Face->Vertex connectivity (size = \p n_face + 1)
+ * \param [in] facsom          Face->Vertex connectivity (size = \p facsom_idx[\p n_face])
+ * \param [in] cellfac_idx     Index of the Cell->Face connectivity (size = \p n_elt+1)
+ * \param [in] cellfac         Cell->Face connectivity (size = \p cellfac_idx[\p n_elt])
+ * \param [in] numabs          Cell global numbering (size = \p n_elt)
  *
  */
 
@@ -532,22 +489,23 @@ const PDM_l_num_t    n_face,
 
 /**
  *
- * \brief Ajout de cellules 3D decrites en fonctions des faces.
+ * \brief Add 3D cells described in terms of faces
  *
- * Cette fonction détermine les types des éléments et crée des blocs regrouppant les éléments
- * de même type. Elle retourne l'indirection vers le nouvel ordre de rangement
- * des cellules.
+ * This function determines element types and creates
+ * blocks grouping elements of the same type.
  *
- * \param [in]  cs              Pointer to \ref PDM_writer object
- * \param [in]  id_geom         Identificateur de l'objet geometrique
- * \param [in]  id_part         Identificateur de partition
- * \param [in]  n_cell          Nombre de cellules 3D ajoutées
- * \param [in]  n_face          Nombre de faces décrites
- * \param [in]  face_som_idx    Index de connectivite faces -> sommets
- * \param [in]  face_som        Connectivite faces -> sommets
- * \param [in]  cell_face_idx   Index de connectivite cellules -> faces
- * \param [in]  cell_face       Connectivite cellules -> faces
- * \param [in]  numabs          Numerotation absolue des cellules
+ * \param [in]  cs              Pointer to \ref PDM_writer_t object
+ * \param [in]  id_geom         Geometry identifier
+ * \param [in]  id_part         Partition identifier
+ * \param [in]  n_cell          Number of 3D cells
+ * \param [in]  n_face          Number of faces
+ * \param [in]  face_som_idx    Index of the Face->Vertex connectivity (size = \p n_face + 1)
+ * \param [in]  face_som_nb     Number of vertices per face (optional)
+ * \param [in]  face_som        Face->Vertex connectivity (size = \p face_som_idx[\p n_face])
+ * \param [in]  cell_face_idx   Index of the Cell->Face connectivity (size = \p n_cell + 1)
+ * \param [in]  cell_face_nb    Number of faces per cell (optional)
+ * \param [in]  cell_face       Cell->Face connectivity (size = \p cell_face_idx[\p n_cell])
+ * \param [in]  numabs          Cell global numbering (size = \p n_cell)
  *
  */
 
@@ -571,21 +529,23 @@ PDM_writer_geom_cell3d_cellface_add
 
 /**
  *
- * \brief Ajout de cellules 2D decrites en fonctions des faces.
+ * \brief Add 2D cells described in terms of faces
  *
- * Cette fonction détermine les types des éléments et crée des blocs regrouppant les éléments
- * de même type. Elle retourne l'indirection vers le nouvel ordre de rangement
- * des cellules.
+ * This function determines element types and creates
+ * blocks grouping elements of the same type.
  *
- * \param [in] cs              Pointer to \ref PDM_writer object
- * \param [in] id_geom         Identificateur de l'objet geometrique
- * \param [in] n_cell          Nombre de cellules 3D ajoutées
- * \param [in] n_face          Nombre de faces décrites
- * \param [in] face_som_idx    Index de connectivite faces -> sommets
- * \param [in] face_som        Connectivite faces -> sommets
- * \param [in] cell_face_idx   Index de connectivite cellules -> faces
- * \param [in] cell_face       Connectivite cellules -> faces
- * \param [in] numabs          Numerotation absolue des cellules
+ * \param [in] cs              Pointer to \ref PDM_writer_t object
+ * \param [in] id_geom         Geometry identifier
+ * \param [in] id_part         Partition identifier
+ * \param [in] n_cell          Number of 2D cells
+ * \param [in] n_face          Number of faces
+ * \param [in] face_som_idx    Index of the Face->Vertex connectivity (unused)
+ * \param [in] face_som_nb     Number of vertices per face (unused)
+ * \param [in] face_som        Face->Vertex connectivity (size = 2 * \p n_face)
+ * \param [in] cell_face_idx   Index of the Cell->Face connectivity (size = \p n_cell + 1)
+ * \param [in] cell_face_nb    Number of faces per cell (optional)
+ * \param [in] cell_face       Cell->Face connectivity (size = \p cell_face_idx[\p n_cell])
+ * \param [in] numabs          Cell global numbering (size = \p n_cell)
  *
  */
 
@@ -609,19 +569,19 @@ PDM_writer_geom_cell2d_cellface_add
 
 /**
  *
- * \brief Ajout de faces decrites en fonctions des sommets.
+ * \brief Add faces described in nodal fashion
  *
- * Cette fonction détermine les types des éléments et crée des blocs regrouppant les éléments
- * de même type. Elle retourne l'indirection vers le nouvel ordre de rangement
- * des cellules.
+ * This function determines element types and creates
+ * blocks grouping elements of the same type.
  *
- * \param [in] cs              Pointer to \ref PDM_writer object
- * \param [in] id_geom         Identificateur de l'objet geometrique
- * \param [in] n_elt           Nombre de cellules 3D ajoutées
- * \param [in] n_face          Nombre de faces décrites
- * \param [in] face_som_idx    Index de connectivite faces -> sommets
- * \param [in] face_som        Connectivite faces -> sommets
- * \param [in] numabs          Numerotation absolue des faces
+ * \param [in] cs              Pointer to \ref PDM_writer_t object
+ * \param [in] id_geom         Geometry identifier
+ * \param [in] id_part         Partition identifier
+ * \param [in] n_face          Number of faces
+ * \param [in] face_som_idx    Index of the Face->Vertex connectivity (size = \p n_face + 1)
+ * \param [in] face_som_nb     Number of vertices per face (optional)
+ * \param [in] face_som        Face->Vertex connectivity (size = \p face_som_idx[\p n_face])
+ * \param [in] numabs          Face global numbering (size = \p n_face)
  *
  */
 
@@ -640,10 +600,10 @@ PDM_writer_geom_faces_facesom_add
 
 
 /**
- * \brief Ecriture du maillage courant
+ * \brief Write current geometry
  *
- * \param [in] cs              Pointer to \ref PDM_writer object
- * \param [in] id_geom         Identificateur de l'objet geometrique
+ * \param [in] cs              Pointer to \ref PDM_writer_t object
+ * \param [in] id_geom         Geometry identifier
  *
  */
 
@@ -656,11 +616,11 @@ PDM_writer_geom_write
 
 
 /**
- * \brief Liberation des donnees decrivant le maillage courant
- * les indirections sur les numérotation absolues sont conservées
+ * \brief Free data describing the current geometry
+ *        Indirections on absolute numbering are retained
  *
- * \param [in] cs              Pointer to \ref PDM_writer object
- * \param [in] id_geom         Identificateur de l'objet geometrique
+ * \param [in] cs              Pointer to \ref PDM_writer_t object
+ * \param [in] id_geom         Geometry identifier
  *
  */
 
@@ -673,10 +633,10 @@ PDM_writer_geom_data_free
 
 
 /**
- * \brief Liberation des donnees decrivant le maillage courant
+ * \brief Free data describing the current geometry
  *
- * \param [in] cs              Pointer to \ref PDM_writer object
- * \param [in] id_geom         Identificateur de l'objet geometrique
+ * \param [in] cs              Pointer to \ref PDM_writer_t object
+ * \param [in] id_geom         Geometry identifier
  *
  */
 
@@ -691,11 +651,11 @@ PDM_writer_geom_free
 /**
  * \brief Create a global constant variable
  *
- * \param [in] cs              Pointer to \ref PDM_writer object
- * \param [in] nom_var         Nom de la variable
- * \param [in] val_var         Valeur de la variable
+ * \param [in] cs              Pointer to \ref PDM_writer_t object
+ * \param [in] nom_var         Variable name
+ * \param [in] val_var         Variable value
  *
- * \return  Identificateur de l'objet variable
+ * \return  Variable identifier
  *
  */
 
@@ -709,13 +669,13 @@ PDM_writer_cst_global_var_create
 
 
 /**
- * \brief Create a global constant variable
+ * \brief Set a global constant variable
  *
- * \param [in] cs              Pointer to \ref PDM_writer object
- * \param [in] id_var          Variable id
- * \param [in] val_var         Valeur de la variable
+ * \param [in] cs              Pointer to \ref PDM_writer_t object
+ * \param [in] id_var          Variable identifier
+ * \param [in] val_var         Variable value
  *
- * \return  Identificateur de l'objet variable
+ * \return Variable identifier
  *
  */
 
@@ -730,16 +690,15 @@ PDM_writer_cst_global_var_set
 
 
 /**
- * \brief Creation d'une variable
+ * \brief Create a variable
  *
- * \param [in] cs              Pointer to \ref PDM_writer object
- * \param [in] st_dep_temps    Indique si la variable est dependante du temps
- * \param [in] id_geom         Identificateur de l'objet geometrique
- * \param [in] dim             Dimension de la variable
- * \param [in] loc             Localisation de la variable
- * \param [in] nom_var         Nom de la variable
+ * \param [in] cs              Pointer to \ref PDM_writer_t object
+ * \param [in] st_dep_temps    Indicates whether the variable is time dependent
+ * \param [in] dim             Variable's dimension
+ * \param [in] loc             Variable's location
+ * \param [in] nom_var         Name of the variable
  *
- * \return  Identificateur de l'objet variable
+ * \return  Variable identifier
  *
  */
 
@@ -755,11 +714,11 @@ PDM_writer_var_create
 
 
 /**
- * \brief Mapping des noms de variable
+ * \brief Variable name mapping
  *
- * \param [in] cs              Pointer to \ref PDM_writer object
- * \param [in] public_name     Nom Public de la variable
- * \param [in] pivate_name     Nom privé de la variable
+ * \param [in] cs              Pointer to \ref PDM_writer_t object
+ * \param [in] public_name     Public variable name
+ * \param [in] pivate_name     Private variable name
  *
  */
 
@@ -773,10 +732,10 @@ PDM_writer_name_map_add
 
 
 /**
- * \brief Ecriture des valeurs de la variable
+ * \brief Write variable values
  *
- * \param [in] cs              Pointer to \ref PDM_writer object
- * \param [in] id_var          Identificateur de la variable a ecrire
+ * \param [in] cs              Pointer to \ref PDM_writer_t object
+ * \param [in] id_var          Variable identifier
  *
  */
 
@@ -789,15 +748,15 @@ PDM_writer_var_write
 
 
 /**
- * \brief Mise a jour des valeurs de la variable.
+ * \brief Update variable values
  *
- * Attention, les valeurs définies aux elements doivent être définies suivant l'ordre de définition des blocs !
+ * \warning the values defined for the elements must be defined in the order in which the blocks are defined!
  *
- * \param [in] cs              Pointer to \ref PDM_writer object
- * \param [in] id_geom         Identificateur de l'objet geometrique
- * \param [in] id_part         Identificateur de la partition dans l'objet geometrique
- * \param [in] id_var          Identificateur de la variable mise à jour
- * \param [in] val             Valeurs
+ * \param [in] cs              Pointer to \ref PDM_writer_t object
+ * \param [in] id_var          Variable identifier
+ * \param [in] id_geom         Geometry identifier
+ * \param [in] id_part         Partition identifier
+ * \param [in] val             Variable values
  *
  */
 
@@ -813,10 +772,10 @@ PDM_writer_var_set
 
 
 /**
- * \brief Liberation du tableau de donnees des variables
+ * \brief Free variable data arrays
  *
- * \param [in] cs              Pointer to \ref PDM_writer object
- * \param [in] id_var          Identificateur de la variable
+ * \param [in] cs              Pointer to \ref PDM_writer_t object
+ * \param [in] id_var          Variable identifier
  *
  */
 
@@ -829,10 +788,10 @@ PDM_writer_var_data_free
 
 
 /**
- * \brief Liberation d'une variable
+ * \brief Free variable
  *
- * \param [in] cs              Pointer to \ref PDM_writer object
- * \param [in] id_var          Identificateur de la variable
+ * \param [in] cs              Pointer to \ref PDM_writer_t object
+ * \param [in] id_var          Variable identifier
  *
  */
 
@@ -850,16 +809,16 @@ PDM_writer_var_free
  * Define a new format writer
  *
  * \param [in] name            Name
- * \param [in] create_fct      Customize \ref PDM_writer_create function for the new format  (or NULL)
- * \param [in] free_fct        Customize \ref PDM_writer_free function for the new format (or NULL)
- * \param [in] beg_step_fct    Customize \ref PDM_writer_step_beg function for the new format (or NULL)
- * \param [in] end_step_fct    Customize \ref PDM_writer_step_end function for the new format (or NULL)
- * \param [in] geom_create_fct Customize \ref PDM_writer_geom_create function for the new format (or NULL)
- * \param [in] geom_write_fct  Customize \ref PDM_writer_geom_write function for the new format
- * \param [in] geom_free_fct   Customize \ref PDM_writer_geom_free function for the new format (or NULL)
- * \param [in] var_create_fct  Customize \ref PDM_writer_var_create function for the new format (or NULL)
- * \param [in] var_write_fct   Customize \ref PDM_writer_var_write function for the new format
- * \param [in] var_free_fct    Customize \ref PDM_writer_var_free function for the new format (or NULL)
+ * \param [in] create_fct      Customize \ref PDM_writer_t_create function for the new format  (or NULL)
+ * \param [in] free_fct        Customize \ref PDM_writer_t_free function for the new format (or NULL)
+ * \param [in] beg_step_fct    Customize \ref PDM_writer_t_step_beg function for the new format (or NULL)
+ * \param [in] end_step_fct    Customize \ref PDM_writer_t_step_end function for the new format (or NULL)
+ * \param [in] geom_create_fct Customize \ref PDM_writer_t_geom_create function for the new format (or NULL)
+ * \param [in] geom_write_fct  Customize \ref PDM_writer_t_geom_write function for the new format
+ * \param [in] geom_free_fct   Customize \ref PDM_writer_t_geom_free function for the new format (or NULL)
+ * \param [in] var_create_fct  Customize \ref PDM_writer_t_var_create function for the new format (or NULL)
+ * \param [in] var_write_fct   Customize \ref PDM_writer_t_var_write function for the new format
+ * \param [in] var_free_fct    Customize \ref PDM_writer_t_var_free function for the new format (or NULL)
  *
  */
 
@@ -867,16 +826,16 @@ void
 PDM_writer_fmt_add
 (
  const char                  *name,            /*!< Name                                                     */
- const PDM_writer_fct_t       create_fct,      /*!< Customize \ref PDM_writer_create function for the format */
- const PDM_writer_fct_t       free_fct,        /*!< Customize \ref PDM_writer_free function for the format   */
- const PDM_writer_fct_t       beg_step_fct,    /*!< Customize \ref PDM_writer_free function for the format   */
- const PDM_writer_fct_t       end_step_fct,    /*!< Customize \ref PDM_writer_free function for the format   */
- const PDM_writer_geom_fct_t  geom_create_fct, /*!< Customize \ref PDM_writer_free function for the format   */
- const PDM_writer_geom_fct_t  geom_write_fct,  /*!< Customize \ref PDM_writer_free function for the format   */
- const PDM_writer_geom_fct_t  geom_free_fct,   /*!< Customize \ref PDM_writer_free function for the format   */
- const PDM_writer_var_fct_t   var_create_fct,  /*!< Customize \ref PDM_writer_free function for the format   */
- const PDM_writer_var_fct_t   var_write_fct,   /*!< Customize \ref PDM_writer_free function for the format   */
- const PDM_writer_var_fct_t   var_free_fct     /*!< Customize \ref PDM_writer_free function for the format   */
+ const PDM_writer_fct_t       create_fct,      /*!< Customize \ref PDM_writer_t_create function for the format */
+ const PDM_writer_fct_t       free_fct,        /*!< Customize \ref PDM_writer_t_free function for the format   */
+ const PDM_writer_fct_t       beg_step_fct,    /*!< Customize \ref PDM_writer_t_free function for the format   */
+ const PDM_writer_fct_t       end_step_fct,    /*!< Customize \ref PDM_writer_t_free function for the format   */
+ const PDM_writer_geom_fct_t  geom_create_fct, /*!< Customize \ref PDM_writer_t_free function for the format   */
+ const PDM_writer_geom_fct_t  geom_write_fct,  /*!< Customize \ref PDM_writer_t_free function for the format   */
+ const PDM_writer_geom_fct_t  geom_free_fct,   /*!< Customize \ref PDM_writer_t_free function for the format   */
+ const PDM_writer_var_fct_t   var_create_fct,  /*!< Customize \ref PDM_writer_t_free function for the format   */
+ const PDM_writer_var_fct_t   var_write_fct,   /*!< Customize \ref PDM_writer_t_free function for the format   */
+ const PDM_writer_var_fct_t   var_free_fct     /*!< Customize \ref PDM_writer_t_free function for the format   */
 );
 
 
@@ -893,10 +852,10 @@ PDM_writer_fmt_free
 
 
 /**
- * \brief Réinitialisation des donnees decrivant le maillage courant
+ * \brief Reset data describing the current geometry
  *
- * \param [in] cs              Pointer to \ref PDM_writer object
- * \param [in] id_geom         Identificateur de l'objet geometrique
+ * \param [in] cs              Pointer to \ref PDM_writer_t object
+ * \param [in] id_geom         Geometry identifier
  *
  */
 

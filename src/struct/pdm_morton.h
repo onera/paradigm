@@ -45,6 +45,9 @@
 
 #include "pdm.h"
 #include "pdm_mpi.h"
+#ifdef __cplusplus
+#include <stdbool.h>
+#endif /* __cplusplus */
 
 /*----------------------------------------------------------------------------*/
 
@@ -232,7 +235,6 @@ PDM_morton_local_sort(int                n_codes,
 
 
 
-#ifndef __cplusplus
 /**
  * \brief Test if Morton code "a" is greater than Morton code "b"
  *
@@ -260,7 +262,6 @@ PDM_morton_a_gt_b(PDM_morton_code_t  a,
 _Bool
 PDM_morton_a_gtmin_b(PDM_morton_code_t  a,
                      PDM_morton_code_t  b);
-#endif
 
 
 /**

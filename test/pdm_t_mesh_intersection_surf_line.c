@@ -259,9 +259,6 @@ _extract_part_edge_and_set_mesh
                                                            PDM_OWNERSHIP_KEEP,
                                                            comm);
 
-  int  *pn_extract    = malloc(n_part * sizeof(int  ));
-  int **pextract_lnum = malloc(n_part * sizeof(int *));
-
   for (int i_part = 0; i_part < n_part; i_part++) {
 
     double *vtx_coord = NULL;
@@ -331,28 +328,14 @@ _extract_part_edge_and_set_mesh
                               vtx_ln_to_gn,
                               vtx_coord);
 
-    pn_extract   [i_part] = edge_group_idx[n_edge_group];
-    pextract_lnum[i_part] = malloc(edge_group_idx[n_edge_group] * sizeof(int));
-
-    for(int idx_edge = 0; idx_edge < edge_group_idx[n_edge_group]; ++idx_edge) {
-      pextract_lnum[i_part][idx_edge] = edge_group[idx_edge]-1;
-    }
-
     PDM_extract_part_selected_lnum_set(extrp_mesh,
                                        i_part,
-                                       pn_extract[i_part],
-                                       pextract_lnum[i_part]);
+                                       edge_group_idx[n_edge_group],
+                                       edge_group);
 
   }
 
   PDM_extract_part_compute(extrp_mesh);
-
-
-  for (int i_part = 0; i_part < n_part; i_part++) {
-    free(pextract_lnum[i_part]);
-  }
-  free(pextract_lnum);
-  free(pn_extract);
 
   *extract_part_edge = extrp_mesh;
 }

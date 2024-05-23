@@ -114,16 +114,8 @@ cdef class GlobalNumbering:
     """
     # ************************************************************************
     # > Declaration
-    cdef double *caracteristic_length_data
-    cdef double *coords_data
-    # ************************************************************************
-
-    # ************************************************************************
-    coords_data = <double *> coords.data
-    if (char_length is None):
-      caracteristic_length_data = NULL
-    else:
-      caracteristic_length_data = <double *> char_length.data
+    cdef double *caracteristic_length_data = np_to_double_pointer(char_length)
+    cdef double *coords_data = np_to_double_pointer(coords)
     # ************************************************************************
 
     # ************************************************************************

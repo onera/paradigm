@@ -200,6 +200,8 @@ int main(int argc, char *argv[])
   int i_group = 3;
   int dn_extract = dgroup_face_idx[i_group+1] - dgroup_face_idx[i_group];
   PDM_g_num_t *selected = &dgroup_face[dgroup_face_idx[i_group]];
+  // int dn_extract = dgroup_face_idx[n_group_face];
+  // PDM_g_num_t *selected = &dgroup_face[0];
 
   // PDM_log_trace_array_long(selected, dn_extract, "selected :");
 

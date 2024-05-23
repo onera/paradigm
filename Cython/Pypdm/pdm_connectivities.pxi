@@ -372,8 +372,7 @@ def connectivity_transpose(NPY.int                               n_entity2, # We
     assert entity1_entity2_idx is not None
     _entity1_entity2_idx = <int *> entity1_entity2_idx.data
     
-    cdef int *_entity1_entity2
-    _entity1_entity2 = <int *> entity1_entity2.data
+    cdef int *_entity1_entity2 = <int *> entity1_entity2.data
     
     cdef int *_entity2_entity1_idx = NULL
     cdef int *_entity2_entity1     = NULL
@@ -491,14 +490,9 @@ def compute_face_vtx_from_face_and_edge(NPY.ndarray[int, mode='c', ndim=1] face_
 
     cdef int *face_vtx = NULL
 
-    cdef int *_face_edge_idx
-    _face_edge_idx = <int *> face_edge_idx.data
-
-    cdef int *_face_edge
-    _face_edge = <int *> face_edge.data
-
-    cdef int *_edge_vtx
-    _edge_vtx = <int *> edge_vtx.data
+    cdef int *_face_edge_idx = <int *> face_edge_idx.data
+    cdef int *_face_edge     = <int *> face_edge.data
+    cdef int *_edge_vtx      = <int *> edge_vtx.data
 
     cdef int n_face = len(face_edge_idx)-1
     PDM_compute_face_vtx_from_face_and_edge(n_face,

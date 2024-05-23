@@ -240,143 +240,37 @@ cdef class PartExtension:
       Deprecated: use the individual setters instead
     """
 
-    cdef int * cell_face_idx_data
-    if (cell_face_idx is None):
-      cell_face_idx_data = NULL
-    else:
-      cell_face_idx_data = <int *> cell_face_idx.data
+    cdef int* cell_face_idx_data = np_to_int_pointer(cell_face_idx)
+    cdef int* cell_face_data = np_to_int_pointer(cell_face)
+    cdef int* face_cell_data = np_to_int_pointer(face_cell)
 
-    cdef int * cell_face_data
-    if (cell_face is None):
-      cell_face_data = NULL
-    else:
-      cell_face_data = <int *> cell_face.data
+    cdef int* face_edge_idx_data = np_to_int_pointer(face_edge_idx)
+    cdef int* face_edge_data = np_to_int_pointer(face_edge)
 
-    cdef int * face_cell_data
-    if (face_cell is None):
-      face_cell_data = NULL
-    else:
-      face_cell_data = <int *> face_cell.data
+    cdef int* face_vtx_idx_data = np_to_int_pointer(face_vtx_idx)
+    cdef int* face_vtx_data = np_to_int_pointer(face_vtx)
 
-    cdef int * face_edge_idx_data
-    if (face_edge_idx is None):
-      face_edge_idx_data = NULL
-    else:
-      face_edge_idx_data = <int *> face_edge_idx.data
+    cdef int* edge_vtx_data = np_to_int_pointer(edge_vtx)
 
-    cdef int * face_edge_data
-    if (face_edge is None):
-      face_edge_data = NULL
-    else:
-      face_edge_data = <int *> face_edge.data
+    cdef int* face_bound_data = np_to_int_pointer(face_bound)
+    cdef int* face_bound_idx_data = np_to_int_pointer(face_bound_idx)
+    cdef int* face_join_idx_data = np_to_int_pointer(face_join_idx)
+    cdef int* face_join_data = np_to_int_pointer(face_join)
 
-    cdef int * face_vtx_idx_data
-    if (face_vtx_idx is None):
-      face_vtx_idx_data = NULL
-    else:
-      face_vtx_idx_data = <int *> face_vtx_idx.data
+    cdef int* face_part_bound_proc_idx_data = np_to_int_pointer(face_part_bound_proc_idx)
+    cdef int* face_part_bound_part_idx_data = np_to_int_pointer(face_part_bound_part_idx)
+    cdef int* face_part_bound_data = np_to_int_pointer(face_part_bound)
 
-    cdef int * face_vtx_data
-    if (face_vtx is None):
-      face_vtx_data = NULL
-    else:
-      face_vtx_data = <int *> face_vtx.data
+    cdef int* vtx_part_bound_proc_idx_data = np_to_int_pointer(vtx_part_bound_proc_idx)
+    cdef int* vtx_part_bound_part_idx_data = np_to_int_pointer(vtx_part_bound_part_idx)
+    cdef int* vtx_part_bound_data = np_to_int_pointer(vtx_part_bound)
 
-    cdef int * edge_vtx_data
-    if (edge_vtx is None):
-      edge_vtx_data = NULL
-    else:
-      edge_vtx_data = <int *> edge_vtx.data
+    cdef PDM_g_num_t* cell_ln_to_gn_data = np_to_gnum_pointer(cell_ln_to_gn)
+    cdef PDM_g_num_t* face_ln_to_gn_data = np_to_gnum_pointer(face_ln_to_gn)
+    cdef PDM_g_num_t* edge_ln_to_gn_data = np_to_gnum_pointer(edge_ln_to_gn)
+    cdef PDM_g_num_t* vtx_ln_to_gn_data  = np_to_gnum_pointer(vtx_ln_to_gn)
 
-    cdef int * face_bound_data
-    if (face_bound is None):
-      face_bound_data = NULL
-    else:
-      face_bound_data = <int *> face_bound.data
-
-    cdef int * face_bound_idx_data
-    if (face_bound_idx is None):
-      face_bound_idx_data = NULL
-    else:
-      face_bound_idx_data = <int *> face_bound_idx.data
-
-    cdef int * face_join_idx_data
-    if (face_join_idx is None):
-      face_join_idx_data = NULL
-    else:
-      face_join_idx_data = <int *> face_join_idx.data
-
-    cdef int * face_join_data
-    if (face_join is None):
-      face_join_data = NULL
-    else:
-      face_join_data = <int *> face_join.data
-
-    cdef int * face_part_bound_proc_idx_data
-    if (face_part_bound_proc_idx is None):
-      face_part_bound_proc_idx_data = NULL
-    else:
-      face_part_bound_proc_idx_data = <int *> face_part_bound_proc_idx.data
-
-    cdef int * face_part_bound_part_idx_data
-    if (face_part_bound_part_idx is None):
-      face_part_bound_part_idx_data = NULL
-    else:
-      face_part_bound_part_idx_data = <int *> face_part_bound_part_idx.data
-
-    cdef int * face_part_bound_data
-    if (face_part_bound is None):
-      face_part_bound_data = NULL
-    else:
-      face_part_bound_data = <int *> face_part_bound.data
-
-    cdef int * vtx_part_bound_proc_idx_data
-    if (vtx_part_bound_proc_idx is None):
-      vtx_part_bound_proc_idx_data = NULL
-    else:
-      vtx_part_bound_proc_idx_data = <int *> vtx_part_bound_proc_idx.data
-
-    cdef int * vtx_part_bound_part_idx_data
-    if (vtx_part_bound_part_idx is None):
-      vtx_part_bound_part_idx_data = NULL
-    else:
-      vtx_part_bound_part_idx_data = <int *> vtx_part_bound_part_idx.data
-
-    cdef int * vtx_part_bound_data
-    if (vtx_part_bound is None):
-      vtx_part_bound_data = NULL
-    else:
-      vtx_part_bound_data = <int *> vtx_part_bound.data
-
-    cdef PDM_g_num_t * cell_ln_to_gn_data
-    if (cell_ln_to_gn is None):
-      cell_ln_to_gn_data = NULL
-    else:
-      cell_ln_to_gn_data = <PDM_g_num_t *> cell_ln_to_gn.data
-
-    cdef PDM_g_num_t * face_ln_to_gn_data
-    if (face_ln_to_gn is None):
-      face_ln_to_gn_data = NULL
-    else:
-      face_ln_to_gn_data = <PDM_g_num_t *> face_ln_to_gn.data
-
-    cdef PDM_g_num_t * edge_ln_to_gn_data
-    if (edge_ln_to_gn is None):
-      edge_ln_to_gn_data = NULL
-    else:
-      edge_ln_to_gn_data = <PDM_g_num_t *> edge_ln_to_gn.data
-
-    cdef PDM_g_num_t * vtx_ln_to_gn_data
-    if (vtx_ln_to_gn is None):
-      vtx_ln_to_gn_data = NULL
-    else:
-      vtx_ln_to_gn_data = <PDM_g_num_t *> vtx_ln_to_gn.data
-
-    cdef PDM_g_num_t * face_group_ln_to_gn_data
-    if (face_group_ln_to_gn is None):
-      face_group_ln_to_gn_data = NULL
-    else:
-      face_group_ln_to_gn_data = <PDM_g_num_t *> face_group_ln_to_gn.data
+    cdef PDM_g_num_t * face_group_ln_to_gn_data = np_to_gnum_pointer(face_group_ln_to_gn)
 
     PDM_part_extension_set_part(self._part_ext,
                                 i_domain,
@@ -431,9 +325,7 @@ cdef class PartExtension:
       connect_idx       (np.ndarray[np.int32_t])  : Index for connectivity
       connect           (np.ndarray[np.int32_t])  : Connectivity
     """
-    cdef int *connect_idx_data = NULL
-    if connect_idx is not None:
-      connect_idx_data = <int *> connect_idx.data
+    cdef int *connect_idx_data = np_to_int_pointer(connect_idx)
 
     PDM_part_extension_connectivity_set(self._part_ext,
                                         i_domain,
