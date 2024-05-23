@@ -3024,33 +3024,6 @@ PDM_part_extension_entity1_to_entity2
 
 
 
-
-
-  /*
-   * Need to sort pentity2_gnum to search if a candidate entity
-   * doesn't already exist in partition.
-   *
-   */
-  int         **entity2_order        = malloc( n_part * sizeof(int         *));
-  PDM_g_num_t **pentity2_gnum_sorted = malloc( n_part * sizeof(PDM_g_num_t *));
-
-  for(int i_part = 0; i_part < n_part; ++i_part) {
-    entity2_order       [i_part] = malloc( pn_entity2[i_part] * sizeof(int        ));
-    pentity2_gnum_sorted[i_part] = malloc( pn_entity2[i_part] * sizeof(PDM_g_num_t));
-    for(int i_entity2 = 0; i_entity2 < pn_entity2[i_part]; ++i_entity2) {
-      entity2_order       [i_part][i_entity2] = i_entity2;
-      pentity2_gnum_sorted[i_part][i_entity2] = pentity2_ln_to_gn[i_part][i_entity2];
-    }
-    PDM_sort_long(pentity2_gnum_sorted[i_part], entity2_order[i_part], pn_entity2[i_part]);
-
-    free(entity2_order[i_part]);
-  }
-  free(entity2_order);
-
-
-
-
-
   /*
    * At this stage :
    *   - We have the connectivity exchange
@@ -3364,7 +3337,6 @@ PDM_part_extension_entity1_to_entity2
 
   for(int i_part = 0; i_part < n_part; ++i_part) {
 
-    free(pentity2_gnum_sorted[i_part]);
     free(pnew_entity2_gnum[i_part]);
     free(pnew_entity2_ancstr[i_part]);
     free(pnew_entity2_path_itrf_strd[i_part]);
@@ -3392,8 +3364,6 @@ PDM_part_extension_entity1_to_entity2
   free(pnew_entity2_path_itrf_strd);
   free(pnew_entity2_path_itrf);
   free(pnew_entity2_parent_nuplet);
-
-  free(pentity2_gnum_sorted);
 
   free(pextract_entity2_idx);
   free(pextract_entity2_n         );
