@@ -5402,6 +5402,35 @@ PDM_mesh_intersection_compute
   free(extents_mesh[0]);
   free(extents_mesh[1]);
 
+  // Check for zero extracted boxes
+  for (int imesh = 0; imesh < 2; imesh++) {
+    PDM_g_num_t ln_box = 0;
+    for (int i_part = 0; i_part < n_part[imesh]; i_part++) {
+      ln_box += n_extract_elmt[imesh][i_part];
+    }
+    PDM_g_num_t gn_box = 0;
+    PDM_MPI_Allreduce(&ln_box, &gn_box, 1, PDM__PDM_MPI_G_NUM, PDM_MPI_SUM, mi->comm);
+
+    if (gn_box == 0) {
+      // Early return
+      for (int i = 0; i < 2; i++) {
+        mi->extrp_mesh[i] = NULL;
+        for (int i_part = 0; i_part < n_part[i]; i_part++) {
+          free(extract_elmt_init_location[i][i_part]);
+          free(extract_box_extents       [i][i_part]);
+          free(extract_elmt_ln_to_gn     [i][i_part]);
+        }
+        free(n_extract_elmt            [i]);
+        free(extract_elmt_init_location[i]);
+        free(extract_box_extents       [i]);
+        free(extract_elmt_ln_to_gn     [i]);
+      }
+      mi->box_a_box_b_idx = NULL;
+      mi->box_a_box_b     = NULL;
+      return;
+    }
+  }
+
   // Attention le dbtree fait  le init_location sauf que la il faut le forcer !!!!!!
   PDM_dbbtree_t *dbbtree_mesh_a = PDM_dbbtree_create (mi->comm, dim, g_global_extents);
 
@@ -5438,6 +5467,28 @@ PDM_mesh_intersection_compute
     free(extract_elmt_init_location[i_mesh]);
     free(extract_box_extents       [i_mesh]);
     free(extract_elmt_ln_to_gn     [i_mesh]);
+  }
+
+  // Check for zero candidates
+  int n_box_a = PDM_box_set_get_size(boxes_mesh[0]);
+  PDM_g_num_t ln_candidates = (PDM_g_num_t) box_a_to_box_b_idx[n_box_a];
+  PDM_g_num_t gn_candidates = 0;
+  PDM_MPI_Allreduce(&ln_candidates, &gn_candidates, 1, PDM__PDM_MPI_G_NUM, PDM_MPI_SUM, mi->comm);
+
+  if (gn_candidates == 0) {
+    // Early return
+    for (int imesh = 0; imesh < 2; imesh++) {
+      mi->extrp_mesh[imesh] = NULL;
+      PDM_box_set_destroy(&boxes_mesh[imesh]);
+    }
+
+    free(box_a_to_box_b_idx);
+    free(box_a_to_box_b);
+    PDM_dbbtree_free(dbbtree_mesh_a);
+
+    mi->box_a_box_b_idx = NULL;
+    mi->box_a_box_b     = NULL;
+    return;
   }
 
 

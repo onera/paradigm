@@ -918,8 +918,10 @@ int main(int argc, char *argv[])
    */
   PDM_g_num_t** pcell_ln_to_gn;
   int*  pn_cell;
+  int order_part = 1;
 
   int n_res_part = PDM_part_assemble_partitions(comm,
+                                                order_part,
                                                 part_distribution,
                                                 cell_distribution,
                                                 cell_part,

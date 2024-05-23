@@ -106,6 +106,10 @@ typedef struct  _part_t {
                                       (size = n_face_group + 1)                */
   int          *face_group;          /*!< Face group index
                                      (size = face_group_idx[n_face_group])     */
+  int          *edge_group_idx;      /*!< edge group index
+                                      (size = n_edge_group + 1)                */
+  int          *edge_group;          /*!< edge group index
+                                     (size = edge_group_idx[n_edge_group])     */
   int   *face_part_bound_proc_idx;   /*!< Partitioning boundary bloc distribution
                                       (size = n_ranks + 1)                     */
   int   *face_part_bound_part_idx;   /*!< Partitioning boundary bloc distribution
@@ -187,6 +191,9 @@ typedef struct  _part_t {
                                       (size = n_vtx)                           */
   PDM_g_num_t *face_group_ln_to_gn;  /*!< Local to global boundary face numbering
                                       (size = face_group_idx[n_face_group])    */
+  PDM_g_num_t *edge_group_ln_to_gn;  /*!< Local to global boundary edge numbering
+                                      (size = edge_group_idx[n_edge_group])    */
+
   //New interface differs boundary groups and interface groups
   PDM_g_num_t *face_bound_ln_to_gn;  /*!< Local to global boundary face numbering
                                       (size = face_bound_idx[n_bounds])        */
@@ -425,6 +432,8 @@ void
   part->edge_vtx                 = NULL;
   part->face_group_idx           = NULL;
   part->face_group               = NULL;
+  part->edge_group_idx           = NULL;
+  part->edge_group               = NULL;
   part->face_part_bound_proc_idx = NULL;
   part->face_part_bound_part_idx = NULL;
   part->face_part_bound          = NULL;
@@ -448,6 +457,7 @@ void
   part->edge_ln_to_gn            = NULL;
   part->vtx_ln_to_gn             = NULL;
   part->face_group_ln_to_gn      = NULL;
+  part->edge_group_ln_to_gn      = NULL;
   part->face_bound_ln_to_gn      = NULL;
   part->edge_bound_ln_to_gn      = NULL;
   part->face_join_ln_to_gn       = NULL;

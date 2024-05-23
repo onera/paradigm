@@ -32,6 +32,11 @@ cdef extern from "pdm_reader_gamma.h":
                                 int     n_vtx,
                                 double *fields)
 
+    int PDM_read_gamma_sol_at_vertices(char     *filename,
+                                       int      *n_field,
+                                       int     **field_stride,
+                                       double ***field_values)
+
 def write_meshb(char *filename,
                 int n_vtx,
                 int n_tetra,
@@ -108,3 +113,32 @@ def meshb_to_dmesh_nodal(char *filename, MPI.Comm comm, int fix_orientation_2d, 
 
   return DistributedMeshNodalCapsule(py_caps) # The free is inside the class
 
+
+def read_sol_at_vertices(char *filename):
+  """
+  read_sol_at_vertices(filename)
+
+  Parameters:
+    filename (str) : Solution file name
+
+  Returns:
+    Dictionary
+      - ``"n_vtx"``        (int)                               : Number of vertices
+      - ``"field_stride"`` (`np.ndarray[np.int32_t]`)          : Field strides
+      - ``"field_values"`` (`list of np.ndarray[np.double_t]`) : Field values
+  """
+  cdef int      n_field
+  cdef int     *field_stride
+  cdef double **field_values
+  cdef int      n_vtx
+
+  n_vtx = PDM_read_gamma_sol_at_vertices(filename,
+                                         &n_field,
+                                         &field_stride,
+                                         &field_values)
+
+  return {
+    "n_vtx"        : n_vtx,
+    "field_stride" : create_numpy_i(field_stride, n_vtx),
+    "field_values" : [create_numpy_d(field_values[i], field_stride[i]*n_vtx) for i in range(n_field)]
+  }

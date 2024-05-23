@@ -160,18 +160,20 @@ const char* PDM_io_file_name_get
 
 
 /**
- * \brief Ouverture d'un fichier pour acces parallele
+ * \brief Open a file for parallel access
  *
- * \param [in]  nom             Nom du fichier
- * \param [in]  fmt             Fichier text ou binaire
- * \param [in]  suff_t          Type de suffixe (manuel ou automatique)
- * \param [in]  suff_u          Suffixe (si suffixe manuel)
- * \param [in]  s_backup        Active le backup d'un fichier preexistant en mode ecriture
- * \param [in]  accesio         Type (parallele avec mpiio, parallele sans mpiio, sequentiel)
- * \param [in]  mode            Mode d'acces (lecture, ecriture, lecture/ecriture)
- * \param [in]  pdm_mpi_comm    Communicateur lie au fichier
- * \param [out] unite           Unite du fichier
- * \param [out] ierr            Indique si le fichier est de type PDM_io ou non (uniquement pour une ouverture en lecture)
+ * \param [in]  nom                 File name
+ * \param [in]  fmt                 Text of Binary format
+ * \param [in]  suff_t              Type of suffix (manual or automatic)
+ * \param [in]  suff_u              Suffix (if manual)
+ * \param [in]  s_backup            Activates the backup of a pre-existing file in write mode
+ * \param [in]  acces               Type (parallel with MPI-IO, parallel without MPI-IO, sequential)
+ * \param [in]  mode                Access mode (read, write, read/write)
+ * \param [in]  endian              Endian type (big, little or native)
+ * \param [in]  comm                Communicator associated to the file
+ * \param [in]  prop_noeuds_actifs  Proportion of active nodes
+ * \param [out] unite               Unit of the file
+ * \param [out] ierr                Indicates whether the file is of type PDM_io or not (for read-only opening only)
  *
  */
 
@@ -182,12 +184,12 @@ void PDM_io_open
  const PDM_io_suff_t     suff_t,
  const char             *suff_u,
  const PDM_io_backup_t   s_backup,
- const PDM_io_kind_t    acces,
- const PDM_io_mod_t     mode,
+ const PDM_io_kind_t     acces,
+ const PDM_io_mod_t      mode,
  const PDM_io_endian_t   endian,
  PDM_MPI_Comm            comm,
  double                  prop_noeuds_actifs,
- PDM_io_file_t      **unite,
+ PDM_io_file_t         **unite,
  PDM_l_num_t            *ierr
 );
 
@@ -196,7 +198,7 @@ void PDM_io_open
  * \brief Set the file position indicator
  *
  * \param [in] fichier         Pointer to \ref PDM_io_file_t object
- * \param [in] offset          Adress
+ * \param [in] offset          Address
  * \param [in] seek            Origin type
  *
  */
@@ -226,13 +228,13 @@ PDM_io_tell
 
 
 /**
- * \brief Lecture globale : Le processus maitre accede seul au fichier et redistribue
- * l'information a l'ensemble des processus du communicateur
+ * \brief Global read: the master process alone accesses the
+ *        file and redistributes the information to all the communicator's processes
  *
  * \param [in]  fichier         Pointer to \ref PDM_io_file_t object
- * \param [in]  taille_donnee   Taille unitaire de la donnee
- * \param [in]  n_donnees       Nombre de donnees a lire
- * \param [out] donnees         Donnees lues
+ * \param [in]  taille_donnee   Size of a unit piece of data
+ * \param [in]  n_donnees       Amount of data to be read
+ * \param [out] donnees         Read data
  *
  */
 
@@ -246,12 +248,12 @@ void PDM_io_global_read
 
 
 /**
- * \brief Ecriture globale : Le processus maitre accede seul au fichier
+ * \brief Global write: The master process has sole access to the file
  *
  * \param [in]  fichier         Pointer to \ref PDM_io_file_t object
- * \param [in]  taille_donnee   Taille unitaire de la donnee
- * \param [in]  n_donnees       Nombre de donnees a ecrire
- * \param [in]  donnees         Donnees ecrites
+ * \param [in]  taille_donnee   Size of a unit piece of data
+ * \param [in]  n_donnees       Amount of data to write
+ * \param [in]  donnees         Data to write
  *
  */
 
@@ -265,16 +267,16 @@ void PDM_io_global_write
 
 
 /**
- * \brief Lecture parallele de blocs de donnees suivie d'une redistribution des
- * des donnees suivant l'indirection
+ * \brief Parallel reading of data blocks followed by
+ *        redistribution of the data according to indirection
  *
  * \param [in]  fichier          Pointer to \ref PDM_io_file_t object
- * \param [in]  t_n_composantes  Type de tailles composantes (PDM_STRIDE_CST_INTERLACED ou PDM_STRIDE_VAR_INTERLACED)
- * \param [in]  n_composantes    Nombre de composantes pour chaque donnee
- * \param [in]  taille_donnee    Taille unitaire de la donnee
- * \param [in]  n_donnees        Nombre de donnees a lire
- * \param [in]  indirection      Indirection de redistribition des donnees
- * \param [out] donnees          Donnees lues
+ * \param [in]  t_n_composantes  Type of component sizes (PDM_STRIDE_CST_INTERLACED or PDM_STRIDE_VAR_INTERLACED)
+ * \param [in]  n_composantes    Number of components for each piece of data
+ * \param [in]  taille_donnee    Unit size of a piece of data
+ * \param [in]  n_donnees        Number of data items to be read
+ * \param [in]  indirection      Indirection of data redistribution
+ * \param [out] donnees          Read data
  *
  */
 
@@ -291,17 +293,17 @@ void PDM_io_par_interlaced_read
 
 
 /**
- * \brief Lecture parallele de blocs de donnees
- * Les blocs doivent etre ranges par ordre croissant suivant la numerotation
- * des processus
+ * \brief Parallel reading of data blocks
+ *        The blocks must be arranged in ascending order
+ *        according to the numbering of the processes
  *
  * \param [in]  fichier          Pointer to \ref PDM_io_file_t object
- * \param [in]  t_n_composantes  Type de tailles composantes (PDM_STRIDE_CST_INTERLACED ou PDM_STRIDE_VAR_INTERLACED)
- * \param [in]  n_composantes    Nombre de composantes pour chaque donnee
- * \param [in]  taille_donnee    Taille unitaire de la donnee
- * \param [in]  n_donnees        Nombre de donnees a lire
- * \param [in]  debut_bloc       Adresse relative du debut de bloc
- * \param [out] donnees          Donnees lues
+ * \param [in]  t_n_composantes  Component size type (PDM_STRIDE_CST_INTERLACED or PDM_STRIDE_VAR_INTERLACED)
+ * \param [in]  n_composantes    Number of components for each data item
+ * \param [in]  taille_donnee    Unit size of a piece of data
+ * \param [in]  n_donnees        Number of data items to be read
+ * \param [in]  debut_bloc       Relative address of start of block
+ * \param [out] donnees          Read data
  *
  */
 
@@ -318,16 +320,15 @@ void PDM_io_par_block_read
 
 
 /**
- * \brief Tri des donnees suivant l'indirection puis ecriture parallele des blocs de
- * donnees
+ * \brief Data sorted according to indirection, then parallel write of data blocks
  *
  * \param [in] fichier           Pointer to \ref PDM_io_file_t object
- * \param [in] t_n_composantes   Type de tailles composantes (PDM_STRIDE_CST_INTERLACED ou PDM_STRIDE_VAR_INTERLACED)
- * \param [in] n_composantes     Nombre de composantes pour chaque donnee
- * \param [in] taille_donnee     Taille unitaire de la donnee
- * \param [in] n_donnees         Nombre de donnees a ecrire
- * \param [in] indirection       Indirection de redistribition des donnees
- * \param [in] donnees           Donnees a ecrire
+ * \param [in] t_n_composantes   Type of component sizes (PDM_STRIDE_CST_INTERLACED or PDM_STRIDE_VAR_INTERLACED)
+ * \param [in] n_composantes     Number of components for each data item
+ * \param [in] taille_donnee     Unit size of the data
+ * \param [in] n_donnees         Number of data items to be written
+ * \param [in] indirection       Data redistribution direction
+ * \param [in] donnees           Data to be written
  *
  */
 
@@ -344,17 +345,17 @@ void PDM_io_par_interlaced_write
 
 
 /**
- * \brief Ecriture parallele de blocs de donnees
- * Les blocs doivent etre rangés par ordre croissant suivant la numérotation
- * des processus
+ * \brief Parallel writing of data blocks
+ *        Blocks must be arranged in ascending order according
+ *        to numbering of the processes
  *
  * \param [in] fichier           Pointer to \ref PDM_io_file_t object
- * \param [in] t_n_composantes   Type de tailles composantes (PDM_STRIDE_CST_INTERLACED ou PDM_STRIDE_VAR_INTERLACED)
- * \param [in] n_composantes     Nombre de composantes pour chaque donnee
- * \param [in] taille_donnee     Taille unitaire de la donnee
- * \param [in] debut_bloc        Adresse relative du debut de bloc
- * \param [in] n_donnees         Nombre de donnees a lire
- * \param [in] donnees           Donnees a ecrire
+ * \param [in] t_n_composantes   Type of component sizes (PDM_STRIDE_CST_)INTERLACED or PDM_STRIDE_VAR_INTERLACED)
+ * \param [in] n_composantes     Number of components for each data item
+ * \param [in] taille_donnee     Unit size of the data
+ * \param [in] n_donnees         Number of data to read
+ * \param [in] debut_bloc        Relative address of start of block
+ * \param [in] donnees           Data to be written
  *
  */
 
@@ -371,8 +372,8 @@ void PDM_io_par_block_write
 
 
 /**
- * \brief Fermeture du fichier sans destruction de la structure PDM_io associee a
- * l'unite
+ * \brief Closing the file without destroying the PDM_io structure
+ *        associated with unit
  *
  * \param [in] fichier           Pointer to \ref PDM_io_file_t object
  *
@@ -385,7 +386,7 @@ void PDM_io_close
 
 
 /**
- * \brief Destruction de la structure PDM_io associee a l'unite
+ * \brief Free of the PDM_io structure associated with the unit
  *
  * \param [in] fichier           Pointer to \ref PDM_io_file_t object
  *
@@ -398,11 +399,11 @@ void PDM_io_free
 
 
 /**
- * \brief Retourne le temps cumule d'acces aux fichiers
+ * \brief Returns the cumulative files access time
  *
  * \param [in]  fichier           Pointer to \ref PDM_io_file_t object
- * \param [out] t_cpu             Temps CPU
- * \param [out] t_elapsed         Temps elapsed
+ * \param [out] t_cpu             CPU time
+ * \param [out] t_elapsed         Elapsed time
  *
  */
 
@@ -415,11 +416,11 @@ void PDM_io_get_timer_fichier
 
 
 /**
- * \brief Retourne le temps cumule pour le swap des donnees
+ * \brief Returns the cumulative time for data swap
  *
  * \param [in]  fichier           Pointer to \ref PDM_io_file_t object
- * \param [out] t_cpu             Temps CPU
- * \param [out] t_elapsed         Temps elapsed
+ * \param [out] t_cpu             CPU time
+ * \param [out] t_elapsed         Elapsed time
  *
  */
 
@@ -432,11 +433,11 @@ void PDM_io_timer_swap_endian_get
 
 
 /**
- * \brief Retourne le temps cumule pour la distribution des donnees
+ * \brief Returns the cumulative time for data distribution
  *
  * \param [in]  fichier           Pointer to \ref PDM_io_file_t object
- * \param [out] t_cpu             Temps CPU
- * \param [out] t_elapsed         Temps elapsed
+ * \param [out] t_cpu             CPU time
+ * \param [out] t_elapsed         Elapsed time
  *
  */
 
@@ -449,11 +450,11 @@ void PDM_io_timer_distrib_get
 
 
 /**
- * \brief Retourne le temps cumule total
+ * \brief Returns the total cumulative time
  *
  * \param [in]  fichier           Pointer to \ref PDM_io_file_t object
- * \param [out] t_cpu             Temps CPU
- * \param [out] t_elapsed         Temps elapsed
+ * \param [out] t_cpu             CPU time
+ * \param [out] t_elapsed         Elapsed time
  *
  */
 
@@ -466,7 +467,7 @@ void PDM_io_timer_total_get
 
 
 /**
- * \brief Affiche les informations sur le fichier
+ * \brief Shows file information
  *
  * \param [in]  fichier           Pointer to \ref PDM_io_file_t object
  *
@@ -479,10 +480,10 @@ void PDM_io_dump
 
 
 /**
- * \brief Retourne le communicateur du fichier
+ * \brief Returns the file communicator
  *
  * \param [in]  fichier           Pointer to \ref PDM_io_file_t object
- * \param [out] pdm_mpi_comm      Communicateur MPI
+ * \param [out] pdm_mpi_comm      MPI communicator
  *
  */
 
@@ -494,7 +495,7 @@ void PDM_io_comm_get
 
 
 /**
- * \brief Active le swap endian
+ * \brief Activate endian swap
  *
  * \param [in]  fichier           Pointer to \ref PDM_io_file_t object
  *
@@ -507,7 +508,7 @@ void PDM_io_swap_endian_on
 
 
 /**
- * \brief Désactive le swap endian
+ * \brief Deactivate endian swap
  *
  * \param [in]  fichier           Pointer to \ref PDM_io_file_t object
  *
@@ -522,10 +523,10 @@ void PDM_io_swap_endian_off
 /**
  * \brief Swap endian pour conversion little endian <-> big endian
  *
- * \param [in]  taille_donnee   Taille unitaire de la donnee
- * \param [in]  n_donnee        Nombre de donnees
- * \param [in]  donnees         Donnees
- * \param [out] resultats       Resultat
+ * \param [in]  taille_donnee   Size of a unit piece of data
+ * \param [in]  n_donnee        Amount of data
+ * \param [in]  donnees         Data
+ * \param [out] resultats       Result
  *
  */
 
@@ -539,11 +540,11 @@ void PDM_io_swap_endian
 
 
 /**
- * \brief Définit le format de la donnée indviduelle pour la sortie text
+ * \brief Defines the format of the individual data for text output
  *
  * \param [in]  fichier           Pointer to \ref PDM_io_file_t object
- * \param [in]  n_char_fmt        Nombre de caractères du format
- * \param [in]  data_type         Type de donnees
+ * \param [in]  n_char_fmt        Number of characters in the format
+ * \param [in]  data_type         Type of data
  * \param [in]  fmt               Format
  *
  */
@@ -573,15 +574,15 @@ int PDM_io_mkdir
 
 
 /**
- * \brief Calcul de la taille totale d'un champ de donnees
+ * \brief Calculating the total size of a data field
  *
  * \param [in]  fichier          Pointer to \ref PDM_io_file_t object
- * \param [in]  t_n_composantes  Type de tailles composantes (PDM_STRIDE_CST_INTERLACED ou PDM_STRIDE_VAR_INTERLACED)
- * \param [in]  n_composantes    Nombre de composantes pour chaque donnee
- * \param [in]  n_donnees        Nombre de donnees
- * \param [in]  indirection      Indirection de redistribition des donnees
+ * \param [in]  t_n_composantes  Type of component sizes (PDM_STRIDE_CST_INTERLACED or PDM_STRIDE_VAR_INTERLACED)
+ * \param [in]  n_composantes    Number of components for each data
+ * \param [in]  n_donnees        Number of data
+ * \param [in]  indirection      Data redistribution direction
  *
- * \return   Taille totale d'un champ de donnees
+ * \return   Total size of a data field
  *
  */
 

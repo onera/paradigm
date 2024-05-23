@@ -145,22 +145,22 @@ _read_args
 
 
 
-inline static int
-_intersect_box_box
-(
- const int              dim,
- const double *restrict box_extents_a,
- const double *restrict box_extents_b
- )
-{
-  for (int i = 0; i < dim; i++) {
-    if (box_extents_a[i] > box_extents_b[i+dim] || box_extents_b[i] > box_extents_a[i+dim]) {
-      return 0;
-    }
-  }
+// inline static int
+// _intersect_box_box
+// (
+//  const int              dim,
+//  const double *restrict box_extents_a,
+//  const double *restrict box_extents_b
+//  )
+// {
+//   for (int i = 0; i < dim; i++) {
+//     if (box_extents_a[i] > box_extents_b[i+dim] || box_extents_b[i] > box_extents_a[i+dim]) {
+//       return 0;
+//     }
+//   }
 
-  return 1;
-}
+//   return 1;
+// }
 
 inline static int
 _point_inside_box
@@ -230,7 +230,7 @@ main
   double      *box_extents = NULL;
   PDM_g_num_t *box_g_num   = NULL;
 
-  double _n = PDM_MAX(2, 1 + pow(gn_box, 1./3.));
+  double _n = PDM_MAX(2., 1. + pow((double) gn_box, 1./3.));
 
   int n_vtx_x = (int) _n;
   int n_vtx_y = (int) _n;

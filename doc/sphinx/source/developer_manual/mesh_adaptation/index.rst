@@ -1,14 +1,12 @@
-.. _api:
+.. _mesh_adaptation:
 
 ###############
 Mesh adaptation
 ###############
 
-:ref:`Bibliography <bibliography>`
+.. container:: toc-cards
 
-.. toctree::
-   :caption: API Reference
-   :maxdepth: 1
-   :hidden:
+  .. container:: card
 
-   bibliography
+    :ref:`Bibliography <bibliography>`
+      Mesh adaptation algorithm bibliography

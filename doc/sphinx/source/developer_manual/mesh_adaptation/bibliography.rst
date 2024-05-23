@@ -111,6 +111,7 @@ of the points on the boundary of the high-order element reconstruction.
 To enforce precision and regularity (:math:`G^{1}` continuity at vertices and edges), he uses a quadratic spline patch representation.
 To interconnect patches he builds a Gregory patch by blending twists points [12].
 This is useful for projections in the smoothing phase when point are not inserted in on a given element but moved around to the optimal position.
+A performance benchmark in [16] reveals projection on CAD to be less costly due to EgadsLite usage. A PhD with use of OpenCASCADE is planned in 2024 at CERFACS.
 
 Our idea is to use :math:`P^{3}` local reconstruction as a pre-conditioner for the projection direction on a refined background mesh.
 This allows to remain accurate to the real world representation if in a given step the mesh is collapsed and later refined again.
@@ -126,6 +127,22 @@ From a continuous point of view, the mesh gradation process consists in verifyin
 
 where :math:`C` is a constant and :math:`\left\lVert . \right\rVert` a matrix norm.
 This is an algorithm of quadratic complexity. Alternative less CPU-costly algorithms have been suggested in [13].
+
+Let be an edge with points i and j at the ends. Let k denote a direction of the eigenvectors.
+
++-----------------------------------------------------------------------------------------------------------------------------+--------------------------------------------------------------------------+----------------------------------------------------------------------------------------------------------+
+| F. Alauzet's approach                                                                                                       | H. Rakotoarivelo's approch (p.88)                                        | MMG's approach (src/mmg3d/anisosiz_3d.c)                                                                 |
++=============================================================================================================================+==========================================================================+==========================================================================================================+
+| In order to avoid the ray phenomena, a mixed space gradation is proposed.                                                   | The eigenvalue scaling is done in the common space of metric i and j.    | First, metric j is extend to i using  MMG5_grad2metVol_extmet, which does                                |
+|                                                                                                                             |                                                                          |                                                                                                          |
+| In the eigenbasis of the metric matrix of j,                                                                                | Eigenvalue of metric j in that space is scaled by                        | :math:`\lambda_{j, k}^{ext} = (1 + \sqrt{\lambda_{j, k}} + hgrad \lVert \vec{ij} \rVert + 10^{-15})^{-2}`|
+|                                                                                                                             |                                                                          |                                                                                                          |
+| let the eigenvalues be scaled by                                                                                            |                                                                          |                                                                                                          |
+|                                                                                                                             |                                                                          |                                                                                                          |
+| :math:`\eta_{k} = ((1+\sqrt{\lambda_{j, k}} \lVert \vec{ij} \rVert ln(hgrad))^{t}(1+l_{p}(\vec{ij}) ln(hgrad))^{1-t})^{-2}` | :math:`\eta_{k} = (1+h_{j, k} \lVert \vec{ij} \rVert ln(hgrad))`         | In the common basis, if :math:`\lambda_{j, k}^{ext} > \lambda_{i, k} (1 + tol)`,                         |
+|                                                                                                                             |                                                                          |                                                                                                          |
+| The adapted j metric is then intersected with i metric.                                                                     | When :math:`\lambda_{j, k} > \lambda_{i, k}` the metrics are intersected.| :math:`\lambda_{i, k}` is replaced by :math:`\lambda_{j, k}^{ext}`                                       |
++-----------------------------------------------------------------------------------------------------------------------------+--------------------------------------------------------------------------+----------------------------------------------------------------------------------------------------------+
 
 Groups
 ------
@@ -158,27 +175,39 @@ Tools
 The Unstructured Grid Adaptation Working Group is an open gathering of researchers working on adapting simplicial meshes to conform to a metric field.
 They have created benchmarks available here: https://github.com/UGAWG.
 
-In this section, we established a list of known mesh adaptation tools. Feel free to add other ones.
-Let's start with tool that mention a form of parallelism:
-
-  - https://github.com/hobywan/trinity (C++, 2D surface shared-memory)
-  - https://github.com/MmgTools (C, 2D and 3D, ParMMG MPI-partitioned)
-  - https://github.com/sandialabs/omega_h/tree/main (C++, optionally MPI, OpenMP, CUDA, 2D, 3D)
-  - https://github.com/AMReX-Codes/amrex (massively parallel but block-structured, C++)
-  - CDT3D (parallel)
-  - https://github.com/nasa/refine (C, MPI)
-  - https://gitlab.inria.fr/PaMPA/PaMPA (C using MMG3D and PT-SCOTCH)
-
-Let's move on to other tools:
-
-  - https://github.com/tucanos/tucanos (Airbus, Rust, 2D and 3D)
-  - Yams by P. Frey
-  - feflo.a by A. Loseille
-  - EPIC (Boeing)
-  - Pragmatic (Imperial College London)
-  - https://github.com/hpc-maths/samurai (C++)
-  - http://www.p4est.org/
-  - https://optimad.github.io/PABLO/
++-----------+------------+---------------------+---------------------------------------------------------------------+----------------------+-------------------------------------------------------------------------------------------+
+| Tool      | Language   | Parallelism         | Pros                                                                | Cons                 | Link                                                                                      |
++===========+============+=====================+=====================================================================+======================+===========================================================================================+
+| (Par)MMG  | C          | MPI Frozen Frontier | LGPL                                                                | ParMMG in stand-by   | https://github.com/MmgTools                                                               |
++-----------+------------+---------------------+---------------------------------------------------------------------+----------------------+-------------------------------------------------------------------------------------------+
+| TreeAdapt | C++        | MPI Frozen Frontier |                                                                     |                      | https://gitlab.com/cerfacs/kalpataru                                                      |
++-----------+------------+---------------------+---------------------------------------------------------------------+----------------------+-------------------------------------------------------------------------------------------+
+| Refine    | C          | MPI                 | APACHE2.0 (freely used, studied, reproduced, modified, distributed) |                      | https://github.com/nasa/refine                                                            |
++-----------+------------+---------------------+---------------------------------------------------------------------+----------------------+-------------------------------------------------------------------------------------------+
+| feflo.a   | Fortran    | OpenMP?             |                                                                     | Not freely available |                                                                                           |
++-----------+------------+---------------------+---------------------------------------------------------------------+----------------------+-------------------------------------------------------------------------------------------+
+| AMReX     | C++        |                     |                                                                     |                      | https://github.com/AMReX-Codes/amrex                                                      |
++-----------+------------+---------------------+---------------------------------------------------------------------+----------------------+-------------------------------------------------------------------------------------------+
+| Trinity   | C++        | OpenMP?             |                                                                     |                      |                                                                                           |
++-----------+------------+---------------------+---------------------------------------------------------------------+----------------------+-------------------------------------------------------------------------------------------+
+| PaMPA     | C          | MPI Buble           |                                                                     |                      | https://gitlab.inria.fr/PaMPA/PaMPA                                                       |
++-----------+------------+---------------------+---------------------------------------------------------------------+----------------------+-------------------------------------------------------------------------------------------+
+| CDT3D     |            |                     |                                                                     |                      |                                                                                           |
++-----------+------------+---------------------+---------------------------------------------------------------------+----------------------+-------------------------------------------------------------------------------------------+
+| EPIC      |            |                     |                                                                     |                      |                                                                                           |
++-----------+------------+---------------------+---------------------------------------------------------------------+----------------------+-------------------------------------------------------------------------------------------+
+| samurai   | C++        |                     |                                                                     |                      | https://github.com/hpc-maths/samurai                                                      |
++-----------+------------+---------------------+---------------------------------------------------------------------+----------------------+-------------------------------------------------------------------------------------------+
+| p4est     |            |                     |                                                                     |                      | http://www.p4est.org/                                                                     |
++-----------+------------+---------------------+---------------------------------------------------------------------+----------------------+-------------------------------------------------------------------------------------------+
+| PABLO     |            |                     |                                                                     |                      | https://optimad.github.io/PABLO/                                                          |
++-----------+------------+---------------------+---------------------------------------------------------------------+----------------------+-------------------------------------------------------------------------------------------+
+| Pragmatic |            |                     |                                                                     |                      |                                                                                           |
++-----------+------------+---------------------+---------------------------------------------------------------------+----------------------+-------------------------------------------------------------------------------------------+
+| Omega_h   | C++, CUDA  | MPI, OPenMP, GPU    |                                                                     |                      | https://github.com/sandialabs/omega_h/tree/main                                           |
++-----------+------------+---------------------+---------------------------------------------------------------------+----------------------+-------------------------------------------------------------------------------------------+
+| Tucanos   | Rust       |                     |                                                                     |                      | https://github.com/tucanos/tucanos                                                        |
++-----------+------------+---------------------+---------------------------------------------------------------------+----------------------+-------------------------------------------------------------------------------------------+
 
 ParaDiGM's approach
 ===================
@@ -196,27 +225,6 @@ With a simple extrapolation that means 6512 billion cells for the CREATE compres
 
 Let us underline that the usual approach for mesh adaptation in parallel is by working with on partitions and to
 refine the partition boundaries to remove those fake ridges as shown in [7]. They considered themselves this not to be an optimal solution.
-
-What points do we want to work on?
-----------------------------------
-
-- implement swap (adapt seed for face-swap) (local and global?)
-- implement smoothing (local when staring and global?)
-- provide a score to prioritize cavities
-- extract area in which mesh adaptation will be done
-- cavity prison to avoid blocking cavity (limit cavity growth) or interleave swap operations like P. Caplan suggests
-- check background mesh is coherent with the volume mesh
-- multi-section background mesh
-- Hilbert partitioning
-- try not all groups on all procs
-- change metric interpolation (with a background mesh for instance)
-- change quality tolerance
-- asynchronism
-- check independent to parallelism
-- unitary tests
-- projection using :math:`P^3` reconstruction for direction (local or global?)
-- does MMG3D do projections ?
-- propagation algorithm for graph coloring
 
 References
 ==========
@@ -261,3 +269,5 @@ In: Proceedings of the 2001 Symposium on Interactive 3D Graphics (2001).
 
 [15] C. Lachat. "Conception et validation d’algorithmes de remaillage parallèles à mémoire distribuée
 basés sur un remailleur séquentiel". In: (2013).
+
+[16] R. Haimes J.F. Dannenhoffer. "EGADSlite: A Lightweight Geometry Kernel for HPC". In (2018)

@@ -400,7 +400,7 @@ _check_async_exch_alloc
  PDM_part_to_part_t *ptp
 )
 {
-  if (ptp->async_recv_l_array == 0) {
+  if (ptp->async_exch_l_array == 0) {
     ptp->async_exch_l_array       = 10;
     ptp->async_exch_free          = malloc (sizeof(int) * ptp->async_exch_l_array);
     ptp->async_exch_subrequest_s  = malloc (sizeof(int) * ptp->async_exch_l_array);
@@ -411,7 +411,7 @@ _check_async_exch_alloc
     ptp->async_exch_recv_idx      = malloc (sizeof(int *) * ptp->async_exch_l_array);
     ptp->async_exch_part2_stride  = malloc (sizeof(int **) * ptp->async_exch_l_array);
 
-    for (int i = 0; i < ptp->async_recv_l_array; i++) {
+    for (int i = 0; i < ptp->async_exch_l_array; i++) {
       ptp->async_exch_free[ptp->async_exch_n_free++] = ptp->async_exch_l_array -1 - i;
       ptp->async_exch_recv_n[i]   = NULL;
       ptp->async_exch_recv_idx[i] = NULL;
@@ -427,8 +427,8 @@ _check_async_exch_alloc
 
   }
 
-  if (ptp->async_recv_n_free == 0) {
-    const int pre_val = ptp->async_recv_l_array;
+  if (ptp->async_exch_n_free == 0) {
+    const int pre_val = ptp->async_exch_l_array;
     ptp->async_exch_l_array      *= 2;
     ptp->async_exch_free          = realloc (ptp->async_exch_free       , sizeof(int) * ptp->async_exch_l_array);
     ptp->async_exch_subrequest_s  = realloc (ptp->async_exch_subrequest_s , sizeof(int) * ptp->async_exch_l_array);
@@ -2197,8 +2197,9 @@ _create
 
   /* Init */
   if(ptp->use_tag == 1) {
-    ptp->comm                     = comm;
+    ptp->comm = comm;
   } else {
+    ptp->comm = PDM_MPI_COMM_NULL;
     PDM_MPI_Comm_dup(comm, &ptp->comm);
   }
 
@@ -5640,6 +5641,10 @@ PDM_part_to_part_free
 
   ptp->async_alltoall_n_free  = 0;
   ptp->async_alltoall_l_array = 0;
+
+  if (ptp->use_tag == 0) {
+    PDM_MPI_Comm_free(&ptp->comm);
+  }
 
   free(ptp);
   return NULL;

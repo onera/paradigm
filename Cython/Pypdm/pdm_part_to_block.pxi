@@ -57,8 +57,32 @@ cdef extern from "pdm_part_to_block.h":
     PDM_g_num_t *PDM_part_to_block_distrib_index_get(PDM_part_to_block_t *ptb)
 
     PDM_l_num_t *PDM_part_to_block_destination_get(PDM_part_to_block_t *ptb)
+
+    void PDM_part_to_block_time_per_step_dump(PDM_MPI_Comm  comm,
+                                              const char   *filename)
+
+    void PDM_part_to_block_comm_graph_dump(PDM_part_to_block_t *ptb,
+                                           const char          *filename)
     # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
+# ------------------------------------------------------------------
+def ptb_time_per_step_dump(MPI.Comm  comm,
+                           char     *filename):
+    """
+    time_per_step_dump(comm, filename)
+    Global write part-to-block step timer.
+
+    Parameters:
+      comm     (MPI.Comm)    : MPI communicator
+      filename (str)         : File name
+    """
+
+    # MPI communicator
+    cdef MPI.MPI_Comm c_comm = comm.ob_mpi
+    cdef PDM_MPI_Comm PDMC   = PDM_MPI_mpi_2_pdm_mpi_comm(&c_comm)
+
+    PDM_part_to_block_time_per_step_dump(PDMC,
+                                         filename)
 
 # ------------------------------------------------------------------
 cdef class PartToBlock:
@@ -236,6 +260,21 @@ cdef class PartToBlock:
       GlB = Distrib[self.py_comm.Get_size()]
 
       return (Beg, NbE, GlB)
+
+     # ------------------------------------------------------------------
+    def comm_graph_dump(self,
+                        char *filename):
+      """
+      comm_graph_dump(self, filename)
+      Write in parallel communication graph
+
+      Parameters:
+      self           : PartToBlock object
+      filename (str) : File name
+      """
+
+      PDM_part_to_block_comm_graph_dump(self.PTB,
+                                        filename)
 
     # ------------------------------------------------------------------------
     def __dealloc__(self):

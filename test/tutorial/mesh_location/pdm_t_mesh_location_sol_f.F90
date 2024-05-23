@@ -130,7 +130,7 @@ program tp_mesh_location
                                         src_n_vtx_seg,                &
                                         src_n_vtx_seg,                &
                                         src_n_part,                   &
-                                        PDM_SPLIT_DUAL_WITH_PARMETIS, &
+                                        PDM_SPLIT_DUAL_WITH_HILBERT, &
                                         src_n_vtx,                    &
                                         src_n_edge,                   &
                                         src_n_face,                   &

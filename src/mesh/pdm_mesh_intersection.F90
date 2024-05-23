@@ -844,37 +844,43 @@ subroutine PDM_mesh_intersection_preprocessing_get_(mi,             &
                                                    extr_mesh_b)
 
   ! Get dimension of mesh A
-  dim_a = PDM_mesh_intersection_mesh_dimension_get_cf(mi, 0)
+  if (c_associated(extr_mesh_a)) then
+    dim_a = PDM_mesh_intersection_mesh_dimension_get_cf(mi, 0)
 
-  select case (dim_a)
-    case (1)
-      call PDM_extract_part_n_entity_get(extr_mesh_a,            &
-                                         0,                      &  ! ipart (only one)
-                                         PDM_MESH_ENTITY_EDGE,   &
-                                         n_elt_a)
-    case (2)
-      call PDM_extract_part_n_entity_get(extr_mesh_a,            &
-                                         0,                      &  ! ipart (only one)
-                                         PDM_MESH_ENTITY_FACE,   &
-                                         n_elt_a)
-    case (3)
-      call PDM_extract_part_n_entity_get(extr_mesh_a,            &
-                                         0,                      &  ! ipart (only one)
-                                         PDM_MESH_ENTITY_CELL,   &
-                                         n_elt_a)
-    case default
-      n_elt_a = 0
-  end select
+    select case (dim_a)
+      case (1)
+        call PDM_extract_part_n_entity_get(extr_mesh_a,            &
+                                           0,                      &  ! ipart (only one)
+                                           PDM_MESH_ENTITY_EDGE,   &
+                                           n_elt_a)
+      case (2)
+        call PDM_extract_part_n_entity_get(extr_mesh_a,            &
+                                           0,                      &  ! ipart (only one)
+                                           PDM_MESH_ENTITY_FACE,   &
+                                           n_elt_a)
+      case (3)
+        call PDM_extract_part_n_entity_get(extr_mesh_a,            &
+                                           0,                      &  ! ipart (only one)
+                                           PDM_MESH_ENTITY_CELL,   &
+                                           n_elt_a)
+      case default
+        n_elt_a = 0
+    end select
 
 
-  call c_f_pointer (c_box_a_box_b_idx, box_a_box_b_idx, [n_elt_a + 1])
-  call c_f_pointer (c_box_a_box_b, box_a_box_b, [box_a_box_b_idx(n_elt_a + 1)])
+    call c_f_pointer (c_box_a_box_b_idx, box_a_box_b_idx, [n_elt_a + 1])
+    call c_f_pointer (c_box_a_box_b, box_a_box_b, [box_a_box_b_idx(n_elt_a + 1)])
 
-  do i = 1, box_a_box_b_idx(n_elt_a + 1)
-    box_a_box_b(i) = box_a_box_b(i) + 1
-  enddo   
+    do i = 1, box_a_box_b_idx(n_elt_a + 1)
+      box_a_box_b(i) = box_a_box_b(i) + 1
+    enddo
 
-  ! 0-based to 1-based !
+    ! 0-based to 1-based !
+  else
+    n_elt_a = 0
+    box_a_box_b_idx => null()
+    box_a_box_b     => null()
+  endif
 
 end subroutine PDM_mesh_intersection_preprocessing_get_
 

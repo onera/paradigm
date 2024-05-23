@@ -146,6 +146,7 @@ _read_back_mesh
 
   fscanf(f, "%d %d %d %d\n", n_vtx, n_elt, &elt_dim, elt_order);
 
+  *elt_type = PDM_MESH_NODAL_N_ELEMENT_TYPES;
   if (elt_dim == 1) {
     if (*elt_order == 1) {
       *elt_type = PDM_MESH_NODAL_BAR2;
@@ -462,11 +463,10 @@ _projection_on_background_mesh_get2
                                        tria_coord,
                                        cp,
                                        &distance,
-                                       uvw);
+                                       weight);
         uvw[0] = weight[2];
         uvw[1] = weight[0];
         uvw[2] = weight[1];
-        // PERMUTATION??
       } else {
         double weight[3];
         PDM_triangle_closest_point(pt_to_project_coord,

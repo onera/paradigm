@@ -42,6 +42,7 @@ extern "C" {
  *   is made through the local to global numbering computed by the function.
  *
  * \param [in]   comm                  PDM_MPI communicator
+ * \param [in]   order_part            Order part by increasing gnum
  * \param [in]   part_distribution     Distribution of partitions over the processes (size=n_rank+1)
  * \param [in]   entity_distribution   Distribution of entities over the processes (size=n_rank+1)
  * \param [in]   dentity_to_part       Id of assigned partition for each entity (size=dn_entity)
@@ -56,6 +57,7 @@ int
 PDM_part_assemble_partitions
 (
  const PDM_MPI_Comm    comm,
+ const int             order_part,
        PDM_g_num_t    *part_distribution,
  const PDM_g_num_t    *entity_distribution,
  const int            *dentity_to_part,
