@@ -205,7 +205,7 @@ unit_test:
     - ./pdm_run -srun
     - if [ "${BUILD_TYPE}" == "Coverage" ]; then
     -   cd $CUSTOM_CI_DIR/build$MATRIX_KEY/src/CMakeFiles/pdm.dir
-    -   for d in */ ; do ; cd $d ; gcov -b -l -p -c *.gcno ; cd .. ; done
+    -   for d in */ ; do cd $d && gcov -b -l -p -c *.gcno && cd .. ; done
     -   cd $CUSTOM_CI_DIR/build$MATRIX_KEY
     -   gcovr --gcov-ignore-parse-errors -g -k --xml-pretty --print-summary --root $CUSTOM_CI_DIR --object-directory $CUSTOM_CI_DIR/build$MATRIX_KEY --output coverage.xml
     - fi
