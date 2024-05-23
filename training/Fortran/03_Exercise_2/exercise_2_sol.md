@@ -999,6 +999,7 @@ You must therefore use the appropriate indirection to correctly read the receive
   enddo
 
   call writer_wrapper(comm,                      &
+                      i_rank,                    &
                       "visu",                    &
                       "src_mesh",                &
                       src_n_part,                &
@@ -1013,6 +1014,7 @@ You must therefore use the appropriate indirection to correctly read the receive
                       vtx_field=src_visu_field2)
 
   call writer_wrapper(comm,                  &
+                      i_rank,                &
                       "visu",                &
                       "tgt_mesh",            &
                       tgt_n_part,            &
