@@ -1,34 +1,34 @@
 ## [2.5.0] - 2024-05-24
 ### Added
-- PDM_reader_gamma : Add prisms, hexaedra, pyramids, quadrilaterals (C and Python API) 
-- PDM_dmesh_nodal : Mesh reorientation + Find rigde in surface mesh + Fortran API 
-- Documentation : Gradation in mesh adaptation, PDM_io, PDM_writer
+- PDM_reader_gamma : Add prisms, hexahedra, pyramids, quadrilaterals (C and Python API)
+- PDM_dmesh_nodal : Mesh reorientation + Find ridges in surface mesh + Fortran API
+- Documentation : PDM_io, PDM_writer
 - PDM_extract_part : Entities renumbering
-- PDM_part_to_block : Timers + export of the topolgy of the communication graph + 
-                      automatic switchover to point-to-point communication if the communication graph is hollow
+- PDM_multipart : Entities renumbering
+- PDM_part_to_block : Timers + export of the topology of the communication graph +
+                      automatic switchover to point-to-point communication if the communication graph is sparse
                       + improved exchange capacity (> 2GB)
-- PDM_block_to_part : Automatic switchover to point-to-point communication if the communication graph is hollow 
+- PDM_block_to_part : Automatic switchover to point-to-point communication if the communication graph is sparse
                       + improved exchange capacity (> 2GB)                       
 - PDM_domain_interface : PDM_domain_interface_translate_entity1_entity2 in Python API
-- PDM_morton : Add unit tests
 - PDM_part_to_part : improved exchange capacity (> 2GB) 
 ### Changed
-- PDM_block_to_block : Improvment (Binary search replaced by analytical formula) + 
+- PDM_block_to_block : Improvement (Binary search replaced by analytical formula)
 - PDM_multipart : Add some checks and conditions for entities reordering
-- PDM_multipart : For a single local and global numbering are the same
+- PDM_multipart : For a single MPI rank, local and global numbering are identical
 - PDM_extract_part : 1-based Entities numbering
 ### Deprecated
 ### Removed
 ### Fixed
-- PDM_part_to_block : Sum of weights zero
+- PDM_part_to_block : handle global sum of weights equal to zero
 - PDM_part_to_part : Memory leak (local copy of the MPI communicator) + request storage
 - PDM_mesh_intersection : No candidate for the intersection 
 - PDM_part/pdm_multipart : Hilbert with number of ranks > number of mesh entities
 - PDM_extract_part : parent local numbering
-- PDM_dmeshe_nodal_to_dmesh : Python API
+- PDM_dmesh_nodal_to_dmesh : Python API
 ## [2.4.0] - 2024-01-09
 ### Added
-- Training : Jupyter notebook in 3 languages (C, Fortran, Python)
+- Training : Jupyter notebooks in 3 languages (C, Fortran, Python)
 - Documentation : Partial Sphinx documentation
 - Fortran API : PDM_dmesh_nodal, PDM_dist_cloud_surf, PDM_mesh_intersection, PDM_part_connectivity_transform, PDM_dcube_nodal_gen
 - Python API : PDM_distrib, PDM_multi_block_to_part
