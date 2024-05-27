@@ -411,7 +411,8 @@ PDM_isosurface_add
  double                 *isovalues
 )
 {
-
+  // TODO: check that difference between isovalues>ISOSURFACE_EPS
+  
   int id_isosurface = isos->n_isosurface;
   isos->n_isosurface++;
   
@@ -634,6 +635,10 @@ PDM_isosurface_compute
 {
   int debug = 1;
 
+  if (debug==1) {
+    log_trace("PDM_isosurface:: compute isosurface n°%d\n", id_isosurface);
+  }
+
   if (isos->is_dist_or_part==0) { // Distributed entry
     if (isos->entry_mesh_type<0) {
       PDM_error(__FILE__, __LINE__, 0, "Isosurface is_dist_or_part = %d incoherent with isos->entry_mesh_type = %d < 0.\n", isos->is_dist_or_part, isos->entry_mesh_type);
@@ -656,9 +661,17 @@ PDM_isosurface_compute
     } else if (isos->entry_mesh_type==-3) { // Part mesh nodal
 
       if (debug == 1) {
-        PDM_part_mesh_nodal_dump_vtk(isos->pmesh_nodal,
-                                     PDM_GEOMETRY_KIND_SURFACIC,
-                                     "pmn_entry_mesh");
+        int mesh_dim = PDM_part_mesh_nodal_mesh_dimension_get(isos->pmesh_nodal);
+        if (mesh_dim>1) {
+          PDM_part_mesh_nodal_dump_vtk(isos->pmesh_nodal,
+                                       PDM_GEOMETRY_KIND_SURFACIC,
+                                       "pmn_surfacic_entry_mesh");
+        }
+        if (mesh_dim>2) {
+          PDM_part_mesh_nodal_dump_vtk(isos->pmesh_nodal,
+                                       PDM_GEOMETRY_KIND_VOLUMIC,
+                                       "pmn_volumic_entry_mesh");
+        }
       }
 
       /*

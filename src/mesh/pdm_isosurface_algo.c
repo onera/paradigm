@@ -217,7 +217,7 @@ _count_active_vertices
  * \brief
  * Go though each section of iso pmn, rebuild active edge (cross by iso or on iso) of elements
  * making edge shared by multiple elements unique. For each element of each section, link is kept
- * between the element edge and the iso edge lnum.
+ * between the element edge and the iso edge lnum. For edges on iso, parent elements are kept.
  */
 static void
 _build_active_edges
@@ -477,9 +477,8 @@ _build_active_edges
                                         &parent_entity_g_num,
                                         PDM_OWNERSHIP_BAD_VALUE);
 
-    int n_pair    = PDM_n_nedge_elt_per_elmt(t_elt);
+    int n_pair = PDM_n_nedge_elt_per_elmt(t_elt);
 
-    // TODO: fill parent 
     for (int i_elt = 0; i_elt < n_elt; i_elt++) {
       for (int i_pair = 0; i_pair < n_pair; i_pair++) {
         int edge_id = PDM_ABS(elt_edge[i_section][n_pair*i_elt+i_pair]);
@@ -511,122 +510,147 @@ _build_active_edges
 
   // > Free tmp arrays
   free(_edge_count_parent);
-  // free(_edge_parent_idx);
 }
 
 
 
 static void
-_build_iso_vtx_on_active_edge
+_build_iso_vtx
 (
-  const double        isovalue,
+  const int           n_isovalues,
+  const double       *isovalues,
   const int           n_vtx,
   const PDM_g_num_t  *vtx_gnum,
   const double       *vtx_coord,
   const double       *vtx_field,
   const int           n_edge,
   const int          *edge_vtx,
+  const int           n_crossings,
         int         **out_vtx_to_iso_vtx,
-        int         **out_edge_to_iso_vtx,
         int          *out_iso_n_vtx,
         double      **out_iso_vtx_coord,
         int         **out_iso_vtx_parent_idx,
         int         **out_iso_vtx_parent,
         double      **out_iso_vtx_parent_weight,
-        PDM_g_num_t **out_iso_vtx_parent_gnum
+        PDM_g_num_t **out_iso_vtx_parent_gnum,
+        int         **out_iso_vtx_to_edge,
+        int         **out_isovalue_vtx_idx
 )
 {
-  int         *vtx_to_iso_vtx        = *out_vtx_to_iso_vtx;
-  int         *edge_to_iso_vtx       = *out_edge_to_iso_vtx;
-  int          _iso_n_vtx            = *out_iso_n_vtx;
-  double      *iso_vtx_coord         = *out_iso_vtx_coord;
-  int         *iso_vtx_parent_idx    = *out_iso_vtx_parent_idx;
-  int         *iso_vtx_parent        = *out_iso_vtx_parent;
-  double      *iso_vtx_parent_weight = *out_iso_vtx_parent_weight;
-  PDM_g_num_t *iso_vtx_parent_gnum   = *out_iso_vtx_parent_gnum;
+  int debug = 0;
 
-
-  /*
-   * Keep link between mesh vertices and iso vertices
-   */  
-  PDM_array_reset_int(vtx_to_iso_vtx, n_vtx, 0);
-  int tmp_iso_n_vtx = _iso_n_vtx;
+  /**
+   * Count number of iso vertices on entry mesh vertices
+   * and allocate.
+   */
+  int n_vtx_on_vtx = 0;
   for (int i_vtx = 0; i_vtx < n_vtx; i_vtx++) {
-    vtx_to_iso_vtx[i_vtx] = 0;
-    if (_is_at_0_level(vtx_field[i_vtx] - isovalue)) {
-      vtx_to_iso_vtx[i_vtx] = ++tmp_iso_n_vtx;
+    for (int i_isovalue = 0; i_isovalue < n_isovalues; i_isovalue++) {
+      if (_is_at_0_level(vtx_field[i_vtx] - isovalues[i_isovalue])) {
+        n_vtx_on_vtx++;
+      }
     }
   }
+
+  int          iso_n_vtx             = n_vtx_on_vtx + n_crossings;
+  double      *iso_vtx_coord         = malloc(sizeof(double     ) *  iso_n_vtx * 3);
+  int         *iso_vtx_parent_idx    = malloc(sizeof(int        ) * (iso_n_vtx + 1));
+  int         *iso_vtx_parent        = malloc(sizeof(int        ) * (n_vtx_on_vtx + 2*n_crossings));
+  double      *iso_vtx_parent_weight = malloc(sizeof(double     ) * (n_vtx_on_vtx + 2*n_crossings));
+  PDM_g_num_t *iso_vtx_parent_gnum   = malloc(sizeof(PDM_g_num_t) *  iso_n_vtx * 2);
+  int *vtx_to_iso_vtx   = PDM_array_zeros_int(n_vtx);
+  int *iso_vtx_to_edge  = PDM_array_zeros_int(iso_n_vtx);
+  int *isovalue_vtx_idx = PDM_array_zeros_int(n_isovalues+1);
+  iso_vtx_parent_idx[0] = 0;
 
 
   /*
    * Fill iso vertices infos
    */
-  iso_vtx_parent_idx[0] = 0;
- 
-  // > Iso vertices on mesh vertices
-  for (int i_vtx = 0; i_vtx < n_vtx; i_vtx++) {
-    if (vtx_to_iso_vtx[i_vtx] > 0) {
-      memcpy(iso_vtx_coord + 3*_iso_n_vtx,
-             vtx_coord     + 3*i_vtx,
-             sizeof(double) * 3);
-      iso_vtx_parent_idx   [                   _iso_n_vtx+1] = iso_vtx_parent_idx[_iso_n_vtx] + 1;
-      iso_vtx_parent       [iso_vtx_parent_idx[_iso_n_vtx ]] = i_vtx + 1;
-      iso_vtx_parent_weight[iso_vtx_parent_idx[_iso_n_vtx ]] = 1.;
-      iso_vtx_parent_gnum  [                 2*_iso_n_vtx  ] = vtx_gnum[i_vtx];
-      iso_vtx_parent_gnum  [                 2*_iso_n_vtx+1] = vtx_gnum[i_vtx];
-      _iso_n_vtx++;
+  iso_n_vtx = 0;
+
+  for (int i_isovalue = 0; i_isovalue < n_isovalues; i_isovalue++) {
+    double isovalue = isovalues[i_isovalue];
+
+    // > Iso vertices on mesh vertices (one array for all isovalue is okay thx to ISOSURFACE_EPS)
+    for (int i_vtx = 0; i_vtx < n_vtx; i_vtx++) {
+      if (_is_at_0_level(vtx_field[i_vtx] - isovalue)) {
+        vtx_to_iso_vtx[i_vtx] = iso_n_vtx+1;
+        memcpy(iso_vtx_coord + 3*iso_n_vtx,
+               vtx_coord     + 3*i_vtx,
+               sizeof(double) * 3);
+        iso_vtx_parent_idx   [                   iso_n_vtx+1] = iso_vtx_parent_idx[iso_n_vtx] + 1;
+        iso_vtx_parent       [iso_vtx_parent_idx[iso_n_vtx ]] = i_vtx + 1;
+        iso_vtx_parent_weight[iso_vtx_parent_idx[iso_n_vtx ]] = 1.;
+        iso_vtx_parent_gnum  [                 2*iso_n_vtx  ] = vtx_gnum[i_vtx];
+        iso_vtx_parent_gnum  [                 2*iso_n_vtx+1] = vtx_gnum[i_vtx];
+        iso_n_vtx++;
+      }
     }
+    
+    // > Iso vertices on mesh edges
+    for (int i_edge = 0; i_edge < n_edge; i_edge++) {
+      int i_vtx0 = edge_vtx[2*i_edge  ] - 1;
+      int i_vtx1 = edge_vtx[2*i_edge+1] - 1;
+
+      double val0 = vtx_field[i_vtx0] - isovalue;
+      double val1 = vtx_field[i_vtx1] - isovalue;
+
+      if (_cross_0_level(val0, val1)) {
+        double t = val0 / (val0 - val1);
+        for (int i = 0; i < 3; i++) {
+          iso_vtx_coord[3*iso_n_vtx+i] = (1-t)*vtx_coord[3*i_vtx0+i] + t*vtx_coord[3*i_vtx1+i];
+        }
+        iso_vtx_parent_idx[iso_n_vtx+1] = iso_vtx_parent_idx[iso_n_vtx] + 2;
+
+        iso_vtx_parent       [iso_vtx_parent_idx[iso_n_vtx]  ] = i_vtx0 + 1;
+        iso_vtx_parent_weight[iso_vtx_parent_idx[iso_n_vtx]  ] = 1. - t;
+
+        iso_vtx_parent       [iso_vtx_parent_idx[iso_n_vtx]+1] = i_vtx1 + 1;
+        iso_vtx_parent_weight[iso_vtx_parent_idx[iso_n_vtx]+1] = t;
+        
+        if (vtx_gnum[i_vtx0]>vtx_gnum[i_vtx1]) {
+          iso_vtx_parent_gnum[2*iso_n_vtx+0] = vtx_gnum[i_vtx1];
+          iso_vtx_parent_gnum[2*iso_n_vtx+1] = vtx_gnum[i_vtx0];
+        } else {
+          iso_vtx_parent_gnum[2*iso_n_vtx  ] = vtx_gnum[i_vtx0];
+          iso_vtx_parent_gnum[2*iso_n_vtx+1] = vtx_gnum[i_vtx1];
+        }
+        
+        iso_vtx_to_edge[iso_n_vtx] = i_edge+1;
+
+        iso_n_vtx++;
+      }
+
+    } // End of loop on edges
+    isovalue_vtx_idx[i_isovalue+1] = iso_n_vtx;
+  } // End of loop on isovalues
+
+
+  if (debug==1) {
+    int n_parent_tot = iso_vtx_parent_idx[iso_n_vtx];
+    log_trace("\n");
+    PDM_log_trace_array_int (iso_vtx_parent_idx ,   iso_n_vtx    , "iso_vtx_parent_idx ::");
+    PDM_log_trace_array_int (iso_vtx_parent     ,   n_parent_tot , "iso_vtx_parent     ::");
+    PDM_log_trace_array_long(iso_vtx_parent_gnum, 2*iso_n_vtx    , "iso_vtx_parent_gnum::");
+    PDM_log_trace_array_int (iso_vtx_to_edge    ,   iso_n_vtx    , "iso_vtx_to_edge    ::");
+    PDM_log_trace_array_int (vtx_to_iso_vtx     ,   n_vtx        , "vtx_to_iso_vtx     ::");
+    PDM_log_trace_array_int (isovalue_vtx_idx   ,   n_isovalues+1, "isovalue_vtx_idx   ::");
   }
-  
-  // > Iso vertices on mesh edges
-  PDM_array_reset_int(edge_to_iso_vtx, n_edge, 0);
-
-  for (int i_edge = 0; i_edge < n_edge; i_edge++) {
-    int i_vtx0 = edge_vtx[2*i_edge  ] - 1;
-    int i_vtx1 = edge_vtx[2*i_edge+1] - 1;
-
-    double val0 = vtx_field[i_vtx0] - isovalue;
-    double val1 = vtx_field[i_vtx1] - isovalue;
-
-    if (_cross_0_level(val0, val1)) {
-      double t = val0 / (val0 - val1);
-      for (int i = 0; i < 3; i++) {
-        iso_vtx_coord[3*_iso_n_vtx+i] = (1-t)*vtx_coord[3*i_vtx0+i] + t*vtx_coord[3*i_vtx1+i];
-      }
-      iso_vtx_parent_idx[_iso_n_vtx+1] = iso_vtx_parent_idx[_iso_n_vtx] + 2;
-
-      iso_vtx_parent       [iso_vtx_parent_idx[_iso_n_vtx]  ] = i_vtx0 + 1;
-      iso_vtx_parent_weight[iso_vtx_parent_idx[_iso_n_vtx]  ] = 1. - t;
-
-      iso_vtx_parent       [iso_vtx_parent_idx[_iso_n_vtx]+1] = i_vtx1 + 1;
-      iso_vtx_parent_weight[iso_vtx_parent_idx[_iso_n_vtx]+1] = t;
-      
-      if (vtx_gnum[i_vtx0]>vtx_gnum[i_vtx1]) {
-        iso_vtx_parent_gnum[2*_iso_n_vtx+0] = vtx_gnum[i_vtx1];
-        iso_vtx_parent_gnum[2*_iso_n_vtx+1] = vtx_gnum[i_vtx0];
-      } else {
-        iso_vtx_parent_gnum[2*_iso_n_vtx  ] = vtx_gnum[i_vtx0];
-        iso_vtx_parent_gnum[2*_iso_n_vtx+1] = vtx_gnum[i_vtx1];
-      }
-      
-      edge_to_iso_vtx[i_edge] = ++_iso_n_vtx;
-    }
-
-  } // End of loop on edges
 
 
   /*
    * Output
    */
   *out_vtx_to_iso_vtx        = vtx_to_iso_vtx;
-  *out_edge_to_iso_vtx       = edge_to_iso_vtx;
-  *out_iso_n_vtx             = _iso_n_vtx;
+  *out_iso_n_vtx             = iso_n_vtx;
   *out_iso_vtx_coord         = iso_vtx_coord;
   *out_iso_vtx_parent_idx    = iso_vtx_parent_idx;
   *out_iso_vtx_parent        = iso_vtx_parent;
   *out_iso_vtx_parent_weight = iso_vtx_parent_weight;
   *out_iso_vtx_parent_gnum   = iso_vtx_parent_gnum;
+  *out_iso_vtx_to_edge       = iso_vtx_to_edge;
+  *out_isovalue_vtx_idx      = isovalue_vtx_idx;
 }
 
 
@@ -637,6 +661,7 @@ _contouring_triangles
   int           n_elt,
   int          *elt_vtx,
   PDM_g_num_t  *elt_gnum,
+  int           n_edge,
   int          *edge_parent_idx,
   int          *edge_parent,
   int          *elt_edge,
@@ -652,11 +677,17 @@ _contouring_triangles
   int         **out_iso_edge_parent
 )
 {
+  int debug      = 0;
+  int debug_loop = 0;
+
+
   /* First loop to count */
   int  iso_n_edge   = *out_iso_n_edge;
-  int *iso_edge_def = PDM_array_zeros_int(n_elt);
+  int *iso_edge_def = PDM_array_zeros_int(n_edge);
   int  iso_n_edge_parent = 0;
+  if (debug==1) log_trace("iso_n_edge = %d\n", iso_n_edge);
   for (int i_elt = 0; i_elt < n_elt; i_elt++) {
+    if (debug_loop==1) log_trace("\ti_elt = %d\n", i_elt);
 
     unsigned char pattern = 0;
     for (int i_edge = 0; i_edge < 3; i_edge++) {
@@ -666,6 +697,7 @@ _contouring_triangles
       }
       pattern |= (bit << i_edge);
     } // End of loop on edges
+    if (debug_loop==1) log_trace("\t\tpattern = %d\n", pattern);
 
     if (pattern > 0 && pattern < 7) {
       iso_n_edge++;
@@ -689,6 +721,7 @@ _contouring_triangles
       
       if (vtx_on_vtx0!=0 && vtx_on_vtx1!=0) {
         int edge_id2 = PDM_ABS(perm_elt_edge[2]) - 1;
+        if (debug_loop==1) log_trace("\t\tedge_id2 = %d\n", edge_id2);
         if (iso_edge_def[edge_id2]==0) { // edge not build yet
           iso_edge_def[edge_id2]=1;
           iso_n_edge++;
@@ -698,6 +731,7 @@ _contouring_triangles
 
       else if (vtx_on_vtx0!=0 && vtx_on_vtx2!=0) {
         int edge_id1 = PDM_ABS(perm_elt_edge[1]) - 1;
+        if (debug_loop==1) log_trace("\t\tedge_id1 = %d\n", edge_id1);
         if (iso_edge_def[edge_id1]==0) { // edge not build yet
           iso_edge_def[edge_id1]=1;
           iso_n_edge++;
@@ -707,6 +741,7 @@ _contouring_triangles
 
       else if (vtx_on_vtx1!=0 && vtx_on_vtx2!=0) {
         int edge_id0 = PDM_ABS(perm_elt_edge[0]) - 1;
+        if (debug_loop==1) log_trace("\t\tedge_id0 = %d\n", edge_id0);
         if (iso_edge_def[edge_id0]==0) { // edge not build yet
           iso_edge_def[edge_id0]=1;
           iso_n_edge++;
@@ -716,6 +751,9 @@ _contouring_triangles
     }
 
   } // End of loop on elements
+  if (debug==1) log_trace("iso_n_edge = %d\n", iso_n_edge);
+  if (debug==1) log_trace("iso_n_edge_parent = %d\n", iso_n_edge_parent);
+
 
   /* Allocate */
   iso_n_edge_parent += *out_iso_n_edge_parent;
@@ -723,7 +761,7 @@ _contouring_triangles
   PDM_g_num_t *iso_edge_parent_gnum  = realloc(*out_iso_edge_parent_gnum, 2 * iso_n_edge       * sizeof(PDM_g_num_t));
   int         *iso_edge_parent_count = realloc(*out_iso_edge_parent_count,    iso_n_edge       * sizeof(int        ));
   int         *iso_edge_parent       = realloc(*out_iso_edge_parent      ,    iso_n_edge_parent* sizeof(int        ));
-  PDM_array_reset_int(iso_edge_def, n_elt, 0);
+  PDM_array_reset_int(iso_edge_def, n_edge, 0);
   for (int i_edge = *out_iso_n_edge; i_edge < iso_n_edge; i_edge++) {
     iso_edge_parent_count[i_edge] = 0.;
   }
@@ -731,10 +769,14 @@ _contouring_triangles
   iso_n_edge        = *out_iso_n_edge;
   iso_n_edge_parent = *out_iso_n_edge_parent;
 
+  if (debug==1) log_trace("iso_n_edge        = %d\n", iso_n_edge       );
+  if (debug==1) log_trace("iso_n_edge_parent = %d\n", iso_n_edge_parent);
 
   /* Second loop to fill */
   for (int i_elt = 0; i_elt < n_elt; i_elt++) {
 
+    if (debug_loop==1) log_trace("\ti_elt = %d\n", i_elt);
+    PDM_log_trace_array_int (iso_edge_def, n_edge , "iso_edge_def ::");
     unsigned char pattern = 0;
     for (int i_edge = 0; i_edge < 3; i_edge++) {
       char bit = 0;
@@ -744,6 +786,7 @@ _contouring_triangles
       pattern |= (bit << i_edge);
     } // End of loop on edges
 
+    if (debug_loop==1) log_trace("\t\tpattern = %d\n", pattern);
     if (pattern == 7) { // Three edge are active -> impossible
       continue;
     }
@@ -771,6 +814,7 @@ _contouring_triangles
           
             iso_edge_vtx[2*iso_n_edge  ] = vtx_on_vtx0;
             iso_edge_vtx[2*iso_n_edge+1] = vtx_on_vtx1;
+            if (debug_loop==1) log_trace("i_elt = %d (pattern %d 1) : ivtx0 = %d ; ivtx1 = %d\n", i_elt, pattern, vtx_on_vtx0, vtx_on_vtx2);
 
             if (vtx_gnum[perm_elt_vtx[0]] > vtx_gnum[perm_elt_vtx[1]]) {
               iso_edge_parent_gnum[2*iso_n_edge  ] = vtx_gnum[perm_elt_vtx[1]];
@@ -800,6 +844,7 @@ _contouring_triangles
             iso_edge_vtx[2*iso_n_edge  ] = vtx_on_vtx0;
             iso_edge_vtx[2*iso_n_edge+1] = vtx_on_vtx2;
 
+            if (debug_loop==1) log_trace("i_elt = %d (pattern %d 2) : ivtx0 = %d ; ivtx1 = %d\n", i_elt, pattern, vtx_on_vtx0, vtx_on_vtx2);
             if (vtx_gnum[perm_elt_vtx[0]] > vtx_gnum[perm_elt_vtx[2]]) {
               iso_edge_parent_gnum[2*iso_n_edge  ] = vtx_gnum[perm_elt_vtx[2]];
               iso_edge_parent_gnum[2*iso_n_edge+1] = vtx_gnum[perm_elt_vtx[0]];
@@ -827,6 +872,7 @@ _contouring_triangles
             
             iso_edge_vtx[2*iso_n_edge  ] = vtx_on_vtx1;
             iso_edge_vtx[2*iso_n_edge+1] = vtx_on_vtx2;
+            if (debug_loop==1) log_trace("i_elt = %d (pattern %d 3) : ivtx0 = %d ; ivtx1 = %d\n", i_elt, pattern, vtx_on_vtx0, vtx_on_vtx2);
 
             if (vtx_gnum[perm_elt_vtx[1]] > vtx_gnum[perm_elt_vtx[2]]) {
               iso_edge_parent_gnum[2*iso_n_edge  ] = vtx_gnum[perm_elt_vtx[2]];
@@ -938,6 +984,11 @@ _contouring_triangles
   *out_iso_edge_parent_count= iso_edge_parent_count;
   *out_iso_edge_parent      = iso_edge_parent;
 
+  if (debug==1) {
+    PDM_log_trace_array_int(*out_iso_edge_parent_count, iso_n_edge       , "out_iso_edge_parent_count ::");
+    PDM_log_trace_array_int(*out_iso_edge_parent      , iso_n_edge_parent, "out_iso_edge_parent       ::");
+  }
+
   free(iso_edge_def);
 }
 
@@ -954,7 +1005,8 @@ PDM_isosurface_marching_algo
   int                      id_iso
 )
 {
-  int debug = 1;
+  int debug      = 1;
+  int debug_visu = 1;
   double t_start, t_end;
 
   if (debug==1) {
@@ -990,14 +1042,15 @@ PDM_isosurface_marching_algo
   int         **iso_vtx_parent        = malloc(sizeof(int         *) * n_part);
   double      **iso_vtx_parent_weight = malloc(sizeof(double      *) * n_part);
   PDM_g_num_t **iso_vtx_parent_gnum   = malloc(sizeof(PDM_g_num_t *) * n_part);
+  int         **isovalue_vtx_idx      = malloc(sizeof(int         *) * n_part);
 
   // > Allocate isosurface edges
   int          *iso_n_edge           = PDM_array_zeros_int(n_part);
   int         **iso_edge_vtx         = malloc(sizeof(int         *) * n_part);
   PDM_g_num_t **iso_edge_parent_gnum = malloc(sizeof(PDM_g_num_t *) * n_part);
-  int         **isovalue_edge_idx    = malloc(sizeof(int         *) * n_part);
   int         **iso_edge_parent_idx  = malloc(sizeof(int         *) * n_part);
   int         **iso_edge_parent      = malloc(sizeof(int         *) * n_part);
+  int         **isovalue_edge_idx    = malloc(sizeof(int         *) * n_part);
 
   // > Allocate face edges
   // TODO: transformer en part_mesh_nodal (tetra sera que TRI et QUAD)
@@ -1005,8 +1058,9 @@ PDM_isosurface_marching_algo
   int          *iso_n_face           = PDM_array_zeros_int(n_part);
   int         **iso_face_vtx_idx     = malloc(sizeof(int         *) * n_part);
   int         **iso_face_vtx         = malloc(sizeof(int         *) * n_part);
-  int         **iso_face_parent      = malloc(sizeof(int         *) * n_part);
   PDM_g_num_t **iso_face_parent_gnum = malloc(sizeof(PDM_g_num_t *) * n_part);
+  int         **iso_face_parent_idx  = malloc(sizeof(int         *) * n_part);
+  int         **iso_face_parent      = malloc(sizeof(int         *) * n_part);
   int         **isovalue_face_idx    = malloc(sizeof(int         *) * n_part);
 
 
@@ -1018,24 +1072,24 @@ PDM_isosurface_marching_algo
     PDM_g_num_t *vtx_gnum  = PDM_part_mesh_nodal_vtx_g_num_get(pmn, i_part);
     double      *vtx_coord = PDM_part_mesh_nodal_vtx_coord_get(pmn, i_part);
     
-    // > Active edges for each sections
-    int **elt_edge = malloc(sizeof(int *) * n_section);
-    for (int i_section = 0; i_section < n_section; i_section++) {
-      elt_edge[i_section] = NULL;
-    }
 
 
     /*
-     * Build active edges from entry mesh (i.e. crossing at least one isosurface)
+     * Build active edges from entry mesh (i.e. crossing or on at least one isosurface)
      */
-    t_start = PDM_MPI_Wtime();
-    
     int  n_edge           = 0;
     int *edge_vtx         = NULL;
     int *edge_parent_idx  = NULL;
     int *edge_parent      = NULL;
     int  n_crossings      = 0;
+
+    // > Active edges for each sections
+    int **elt_edge = malloc(sizeof(int *) * n_section);
+    for (int i_section = 0; i_section < n_section; i_section++) {
+      elt_edge[i_section] = NULL;
+    }
     
+    t_start = PDM_MPI_Wtime();
     _build_active_edges(pmn,
                         i_part,
                         n_isovalues,
@@ -1047,25 +1101,18 @@ PDM_isosurface_marching_algo
                         &edge_parent,
                         elt_edge,
                         &n_crossings);
+    // TODO: merge iso_edge_parent with parallel
+    t_end = PDM_MPI_Wtime();
 
     if (debug==1) {
+      log_trace("\n");
+      log_trace("Build active edges : %.3fs  (%d edges)\n", t_end - t_start, n_edge);
       int n_parent_tot = edge_parent_idx[n_edge];
       PDM_log_trace_array_int(edge_parent_idx, n_edge+1    , "edge_parent_idx ::");
       PDM_log_trace_array_int(edge_parent    , n_parent_tot, "edge_parent     ::");
     }
-    // TODO: merge iso_edge_parent with parallel
 
-    t_end = PDM_MPI_Wtime();
-    printf("   build active edges : %.3fs  (%d active edges)\n", 
-           t_end - t_start,
-           n_edge);
-    fflush(stdout);
-
-
-    if (debug==1) {
-      log_trace("n_active_edge = %d\n", n_edge);
-      log_trace("n_crossings   = %d\n", n_crossings);
-
+    if (debug_visu==1) {
       char outname[999];
       sprintf(outname, "marching_sections_active_edges_%d_%d.vtk", i_rank, i_part);
       PDM_vtk_write_std_elements(outname,
@@ -1084,40 +1131,57 @@ PDM_isosurface_marching_algo
 
 
     /*
-     * Count active vertices from entry mesh (i.e. intersecting at least one isosurface)
+     * Build vertices on actives edges
      */
+    iso_vtx_coord        [i_part] = NULL;
+    iso_vtx_parent_idx   [i_part] = NULL;
+    iso_vtx_parent       [i_part] = NULL;
+    iso_vtx_parent_weight[i_part] = NULL;
+    iso_vtx_parent_gnum  [i_part] = NULL;
+    int *vtx_to_iso_vtx           = NULL;
+    int *iso_vtx_to_edge          = NULL;
+
+    // > Build iso-vertices on active edges
+    iso_n_vtx[i_part] = 0;
     t_start = PDM_MPI_Wtime();
 
-    int n_vtx_on_vtx = 0;
-    _count_active_vertices( n_isovalues,
-                            isovalues,
-                            n_vtx,
-                            vtx_field[i_part],
-                           &n_vtx_on_vtx);
+    _build_iso_vtx(n_isovalues, 
+                   isovalues,
+                   n_vtx,
+                   vtx_gnum,
+                   vtx_coord,
+                   vtx_field[i_part],
+                   n_edge,
+                   edge_vtx,
+                   n_crossings,
+                  &vtx_to_iso_vtx,
+                  &(iso_n_vtx[i_part]),
+                  &iso_vtx_coord[i_part],
+                  &iso_vtx_parent_idx[i_part],
+                  &iso_vtx_parent[i_part],
+                  &iso_vtx_parent_weight[i_part],
+                  &iso_vtx_parent_gnum[i_part],
+                  &iso_vtx_to_edge,
+                  &isovalue_vtx_idx[i_part]);
 
     t_end = PDM_MPI_Wtime();
-    printf("   count active vertices : %.3fs  (%d active vertices)\n", 
-           t_end - t_start,
-           n_vtx_on_vtx);
-    fflush(stdout);
 
     if (debug==1) {
-      log_trace("n_vtx_on_vtx  = %d\n", n_vtx_on_vtx);
+      log_trace("\n");
+      log_trace("Build active vertices : %.3fs  (%d vertices)\n", t_end - t_start, iso_n_vtx[i_part]);
+      
+      int n_parent_tot = iso_vtx_parent_idx[i_part][iso_n_vtx[i_part]];
+      PDM_log_trace_array_int (iso_vtx_parent_idx [i_part],   iso_n_vtx[i_part] , "iso_vtx_parent_idx ::");
+      PDM_log_trace_array_int (iso_vtx_parent     [i_part],   n_parent_tot      , "iso_vtx_parent     ::");
+      PDM_log_trace_array_long(iso_vtx_parent_gnum[i_part], 2*iso_n_vtx[i_part] , "iso_vtx_parent_gnum::");
+      PDM_log_trace_array_int (iso_vtx_to_edge            ,   iso_n_vtx[i_part] , "iso_vtx_to_edge    ::");
+      PDM_log_trace_array_int (vtx_to_iso_vtx             ,   n_vtx             , "vtx_to_iso_vtx     ::");
+      PDM_log_trace_array_int (isovalue_vtx_idx   [i_part],   n_isovalues+1     , "isovalue_vtx_idx   ::");
     }
 
 
-    // > Allocate vertex
-    iso_n_vtx[i_part] = n_vtx_on_vtx + n_crossings;
-    iso_vtx_coord        [i_part] = malloc(sizeof(double     ) *  iso_n_vtx[i_part] * 3);
-    iso_vtx_parent_idx   [i_part] = malloc(sizeof(int        ) * (iso_n_vtx[i_part] + 1));
-    iso_vtx_parent       [i_part] = malloc(sizeof(int        ) * (n_vtx_on_vtx + 2*n_crossings));
-    iso_vtx_parent_weight[i_part] = malloc(sizeof(double     ) * (n_vtx_on_vtx + 2*n_crossings));
-    iso_vtx_parent_gnum  [i_part] = malloc(sizeof(PDM_g_num_t) *  iso_n_vtx[i_part] * 2);
-    int *vtx_to_iso_vtx           = malloc(sizeof(int        ) * n_vtx);
-    int *edge_to_iso_vtx          = malloc(sizeof(int        ) * n_edge); // TODO: why set at 0 in proto
 
 
-    // > Allocate edge
     iso_edge_vtx         [i_part] = NULL;
     iso_edge_parent_idx  [i_part] = NULL;
     iso_edge_parent      [i_part] = NULL;
@@ -1139,41 +1203,38 @@ PDM_isosurface_marching_algo
     /*
      * Build isosurface mesh
      */
-    iso_n_vtx[i_part] = 0;
     int iso_n_edge_parent = 0;
     for (int i_isovalue = 0; i_isovalue < n_isovalues; i_isovalue++) {
       
-      if (debug) {
-        log_trace("Building i_isovalue %d\n", i_isovalue);
-        log_trace("Building i_isovalue:: n_edge = %d\n", n_edge);
+      int *edge_to_iso_vtx = PDM_array_zeros_int(n_edge);
+      int i_beg_iso_vtx = isovalue_vtx_idx[i_part][i_isovalue  ];
+      int i_end_iso_vtx = isovalue_vtx_idx[i_part][i_isovalue+1];
+      log_trace("i_beg_iso_vtx = %d ; i_end_iso_vtx = %d\n", i_beg_iso_vtx, i_end_iso_vtx);
+
+      for (int i_iso_vtx=i_beg_iso_vtx; i_iso_vtx<i_end_iso_vtx; ++i_iso_vtx) {
+
+        int cross_edge = iso_vtx_to_edge[i_iso_vtx];
+        log_trace("i_iso_vtx = %d -> cross_edge = %d\n", i_iso_vtx, cross_edge);
+        if (cross_edge!=0) {
+          edge_to_iso_vtx[iso_vtx_to_edge[i_iso_vtx]-1] = i_iso_vtx+1;
+        }
       }
-      t_start = PDM_MPI_Wtime();
-
-
-      /* Build iso-vertices on active edges */
-      _build_iso_vtx_on_active_edge(isovalues[i_isovalue],
-                                    n_vtx,
-                                    vtx_gnum,
-                                    vtx_coord,
-                                    vtx_field[i_part],
-                                    n_edge,
-                                    edge_vtx,
-                                   &vtx_to_iso_vtx,
-                                   &edge_to_iso_vtx,
-                                   &(iso_n_vtx[i_part]),
-                                   &iso_vtx_coord[i_part],
-                                   &iso_vtx_parent_idx[i_part],
-                                   &iso_vtx_parent[i_part],
-                                   &iso_vtx_parent_weight[i_part],
-                                   &iso_vtx_parent_gnum[i_part]
-                                   );
+      int *_vtx_to_iso_vtx = malloc(n_vtx * sizeof(int));
+      memcpy(_vtx_to_iso_vtx, vtx_to_iso_vtx, n_vtx * sizeof(int));
+      for (int i_vtx=0; i_vtx<n_vtx; ++i_vtx) {
+        if (_vtx_to_iso_vtx[i_vtx] < i_beg_iso_vtx || i_end_iso_vtx < _vtx_to_iso_vtx[i_vtx]) {
+          _vtx_to_iso_vtx[i_vtx] = 0;
+        }
+      }
       if (debug) {
         log_trace("\n");
-        log_trace("Vertices \n");
-        log_trace("iso_n_vtx[i_part] = %d \n", iso_n_vtx[i_part]);
-        // PDM_log_trace_array_double(iso_vtx_coord[i_part], iso_n_vtx[i_part]*3, "iso_vtx_coord ::");
+        log_trace("Building i_isovalue %d\n", i_isovalue);
+        PDM_log_trace_array_int (edge_to_iso_vtx, n_edge, "edge_to_iso_vtx ::");
+        PDM_log_trace_array_int ( vtx_to_iso_vtx, n_vtx , " vtx_to_iso_vtx ::");
+        PDM_log_trace_array_int (_vtx_to_iso_vtx, n_vtx , "_vtx_to_iso_vtx ::");
       }
 
+      t_start = PDM_MPI_Wtime();
       for (int i_section = 0; i_section < n_section; i_section++) {
 
         // Get section type
@@ -1204,12 +1265,13 @@ PDM_isosurface_marching_algo
             _contouring_triangles(n_elt,
                                   connec,
                                   gnum,
+                                  n_edge,
                                   edge_parent_idx,
                                   edge_parent,
                                   elt_edge[i_section],
                                   vtx_gnum,
                                   vtx_field[i_part],
-                                  vtx_to_iso_vtx,
+                                  _vtx_to_iso_vtx,
                                   edge_to_iso_vtx,
                                   &iso_n_edge           [i_part],
                                   &iso_edge_vtx         [i_part],
@@ -1228,6 +1290,8 @@ PDM_isosurface_marching_algo
 
       } // End of loop on sections
       
+      free(edge_to_iso_vtx);
+
       isovalue_edge_idx[i_part][i_isovalue+1] = iso_n_edge[i_part];
       
       t_end = PDM_MPI_Wtime();
@@ -1245,9 +1309,14 @@ PDM_isosurface_marching_algo
      * Visu
      */
     if (debug) {
+
+      log_trace("\n");
+      log_trace("iso_n_edge = %d\n", iso_n_edge[i_part]);
+      PDM_log_trace_array_int(iso_edge_vtx[i_part], iso_n_edge[i_part]*2, "iso_edge_vtx     ::");
       char outname[999];
 
-      log_trace("n_vertices = %d \n", iso_n_vtx[i_part]);
+      log_trace("\n");
+      log_trace("iso_n_vertices = %d \n", iso_n_vtx[i_part]);
 
       int *iso_edge_isovalue = malloc(sizeof(int) * iso_n_edge[i_part]);
       for (int i_isovalue = 0; i_isovalue < n_isovalues; i_isovalue++) {
@@ -1288,7 +1357,7 @@ PDM_isosurface_marching_algo
     free(edge_parent_idx);
     free(edge_parent);
     free(vtx_to_iso_vtx);
-    free(edge_to_iso_vtx);
+    free(iso_vtx_to_edge);
   } // End of loop on partitions
 
 
@@ -1370,14 +1439,28 @@ PDM_isosurface_marching_algo
     isos->iso_owner_vtx_coord         [id_iso][i_part] = PDM_OWNERSHIP_KEEP;
     isos->iso_owner_vtx_parent_weight [id_iso][i_part] = PDM_OWNERSHIP_KEEP;
 
-    isos->iso_owner_gnum              [id_iso][i_part] = malloc(sizeof(PDM_ownership_t *) * PDM_MESH_ENTITY_MAX );
-    isos->iso_owner_connec            [id_iso][i_part] = malloc(sizeof(PDM_ownership_t *) * PDM_MESH_ENTITY_MAX );
-    isos->iso_owner_lparent           [id_iso][i_part] = malloc(sizeof(PDM_ownership_t *) * PDM_MESH_ENTITY_MAX );
+    // > Allocate at max and set to bad_value
+    isos->iso_owner_gnum   [id_iso][i_part] = malloc(sizeof(PDM_ownership_t *) * PDM_MESH_ENTITY_MAX );
+    isos->iso_owner_lparent[id_iso][i_part] = malloc(sizeof(PDM_ownership_t *) * PDM_MESH_ENTITY_MAX );
+    isos->iso_owner_connec [id_iso][i_part] = malloc(sizeof(PDM_ownership_t *) * PDM_CONNECTIVITY_TYPE_MAX );
     for (int i_entity=0; i_entity<PDM_MESH_ENTITY_MAX; ++i_entity) {
-      isos->iso_owner_gnum   [id_iso][i_part][i_entity] = PDM_OWNERSHIP_KEEP;
-      isos->iso_owner_connec [id_iso][i_part][i_entity] = PDM_OWNERSHIP_KEEP;
-      isos->iso_owner_lparent[id_iso][i_part][i_entity] = PDM_OWNERSHIP_KEEP;
+      isos->iso_owner_gnum   [id_iso][i_part][i_entity] = PDM_OWNERSHIP_BAD_VALUE;
+      isos->iso_owner_lparent[id_iso][i_part][i_entity] = PDM_OWNERSHIP_BAD_VALUE;
     }
+    for (int i_connec=0; i_connec<PDM_CONNECTIVITY_TYPE_MAX; ++i_connec) {
+      isos->iso_owner_connec [id_iso][i_part][i_connec] = PDM_OWNERSHIP_BAD_VALUE;
+    }
+
+    isos->iso_owner_gnum   [id_iso][i_part][PDM_MESH_ENTITY_VTX          ] = PDM_OWNERSHIP_KEEP;
+    isos->iso_owner_lparent[id_iso][i_part][PDM_MESH_ENTITY_VTX          ] = PDM_OWNERSHIP_KEEP;
+
+    isos->iso_owner_gnum   [id_iso][i_part][PDM_MESH_ENTITY_EDGE          ] = PDM_OWNERSHIP_KEEP;
+    isos->iso_owner_lparent[id_iso][i_part][PDM_MESH_ENTITY_EDGE          ] = PDM_OWNERSHIP_KEEP;
+    isos->iso_owner_connec [id_iso][i_part][PDM_CONNECTIVITY_TYPE_EDGE_VTX] = PDM_OWNERSHIP_KEEP;
+
+    isos->iso_owner_gnum   [id_iso][i_part][PDM_MESH_ENTITY_FACE          ] = PDM_OWNERSHIP_KEEP;
+    isos->iso_owner_lparent[id_iso][i_part][PDM_MESH_ENTITY_FACE          ] = PDM_OWNERSHIP_KEEP;
+    isos->iso_owner_connec [id_iso][i_part][PDM_CONNECTIVITY_TYPE_FACE_VTX] = PDM_OWNERSHIP_KEEP;
   }
 
 }

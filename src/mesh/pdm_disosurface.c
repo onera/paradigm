@@ -276,6 +276,17 @@ PDM_isosurface_dconnectivity_get
   return 0;
 }
 
+int
+PDM_isosurface_dvtx_parent_gnum_get()
+{
+  // Important to get all parent (even for isosurface between two partition)
+}
+
+int
+PDM_isosurface_dvtx_protocol_get()
+{
+  // Which protocol ?
+}
 
 int
 PDM_isosurface_dvtx_coord_get
