@@ -551,6 +551,21 @@ PDM_part_reorder_face_bound
  int    *new_to_old_order
 );
 
+/**
+ *
+ * \brief Perform edges renumbering from a new order
+ *
+ * \param [in,out]  part        Current partition
+ * \param [in]      new_to_old_order    NewOrder
+ *
+ */
+void
+PDM_part_reorder_edge_bound
+(
+part_t  *part,
+int     *new_to_old_order
+);
+
 #ifdef	__cplusplus
 }
 #endif

@@ -111,7 +111,7 @@ enum {X, Y, Z};
  */
 
 #define PDM_MODULE(vect)                                                \
-  sqrt((vect)[X] * (vect)[X] + (vect)[Y] * (vect)[Y] + (vect)[Z] * (vect)[Z])
+  (sqrt((vect)[X] * (vect)[X] + (vect)[Y] * (vect)[Y] + (vect)[Z] * (vect)[Z]))
 
 #define PDM_CROSS_PRODUCT(prod_vect, vect1, vect2)  \
     ((prod_vect)[X] = (vect1)[Y] * (vect2)[Z] - (vect2)[Y] * (vect1)[Z], \

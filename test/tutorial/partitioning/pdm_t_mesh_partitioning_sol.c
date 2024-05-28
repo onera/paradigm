@@ -147,7 +147,7 @@ int main
   // Create partitioning object
   int              n_domain      = 1; // fixed
   int              n_part      = 1; // fixed
-  PDM_split_dual_t part_method = PDM_SPLIT_DUAL_WITH_PTSCOTCH; // PDM_SPLIT_DUAL_WITH_HILBERT;
+  PDM_split_dual_t part_method = PDM_SPLIT_DUAL_WITH_HILBERT; // PDM_SPLIT_DUAL_WITH_HILBERT;
   PDM_multipart_t *mpart = PDM_multipart_create(n_domain,
                                                 &n_part,
                                                 PDM_FALSE,
@@ -632,7 +632,7 @@ int main
                     &total_face_vtx_idx,
                     &total_face_vtx,
                     &total_cell_ln_to_gn,
-                    -1, // cell_t
+                    PDM_WRITER_UNDEF, // cell_t
                     &total_n_face,
                     &total_cell_face_idx,
                     &total_cell_face,

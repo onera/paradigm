@@ -142,9 +142,10 @@ PDM_l_num_t        order[]
 
     g_swap = false;
 
-    for (i = start_id + 1; i < end_id; i++) {
+    // remove i-1 to avoid compiler warning since 0-1 in size_t is max_size_t
+    for (i = start_id; i <= end_id; i++) {
 
-      size_t j_prev = order[i-1], j = order[i];
+      size_t j_prev = order[i], j = order[i+1];
       bool l_swap = false;
 
       if (dim == 3) {
@@ -171,9 +172,9 @@ PDM_l_num_t        order[]
       }
 
       if (l_swap) {
-        PDM_l_num_t o_save = order[i-1];
-        order[i-1] = order[i];
-        order[i] = o_save;
+        PDM_l_num_t o_save = order[i];
+        order[i] = order[i+1];
+        order[i+1] = o_save;
         g_swap = true;
       }
     }

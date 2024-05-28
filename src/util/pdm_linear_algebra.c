@@ -37,7 +37,8 @@
 
 #include "pdm_config.h"
 #include "pdm_priv.h"
-
+#include "pdm_sort.h"
+#include "pdm_error.h"
 
 #include "pdm_linear_algebra.h"
 
@@ -154,6 +155,179 @@ static void svbksb
     for (int i = 0; i < n_col; i++) {
       for (int k = 0; k < stride; k++) {
         x[stride*j+k] += v[n_col*j+i] * y[stride*i+k];
+      }
+    }
+  }
+
+}
+
+
+
+
+/************************************************
+ *
+ * Adapted from https://www.geometrictools.com/Documentation/RobustEigenSymmetric3x3.pdf
+ * and https://www.geometrictools.com/GTE/Mathematics/SymmetricEigensolver3x3.h
+ *
+ ************************************************/
+
+/*
+ * Robustly compute a right-handed orthonormal set {u, v, w}
+ * The vector w is assumed to be unit-length.
+ */
+static void _compute_orthogonal_complement
+(
+ const double *w,
+ double       *u,
+ double       *v
+ )
+{
+  if (PDM_ABS(w[0]) > PDM_ABS(w[1])) {
+    // The component of maximum absolute value is either w0 or w2
+    double imag = 1. / sqrt(w[0]*w[0] + w[2]*w[2]);
+    u[0] = -w[2] * imag;
+    u[1] =  0.;
+    u[2] =  w[0] * imag;
+  }
+  else {
+    // The component of maximum absolute value is either w1 or w2
+    double imag = 1. / sqrt(w[1]*w[1] + w[2]*w[2]);
+    u[0] =  0;
+    u[1] =  w[2] * imag;
+    u[2] = -w[1] * imag;
+  }
+
+  PDM_CROSS_PRODUCT (v, w, u);
+}
+
+
+/*
+ * Compute a unit-length eigenvector for eigenvalue val0
+ */
+static int _compute_eigvec0
+(
+ const double  a00,
+ const double  a01,
+ const double  a02,
+ const double  a11,
+ const double  a12,
+ const double  a22,
+ const double  val0,
+ double       *vec0
+ )
+{
+  double r[9] = {
+    a00 - val0, a01,        a02       ,
+    a01,        a11 - val0, a12       ,
+    a02,        a12,        a22 - val0
+  };
+
+  double rixrj[9], dij[3], dmax = 0.;
+  int imax = -1;
+  for (int i = 0; i < 3; i++) {
+    PDM_CROSS_PRODUCT (rixrj + 3*i, r + 3*i, r + 3*((i+1)%3));
+    dij[i] = PDM_DOT_PRODUCT (rixrj + 3*i, rixrj + 3*i);
+
+    if (dij[i] > dmax) {
+      dmax = dij[i];
+      imax = i;
+    }
+  }
+
+  if (imax < 0) {
+    // log_trace("Error imax = %d\n", imax);
+    // return 1;
+  }
+
+  dmax = 1. / sqrt(dmax);
+  for (int i = 0; i < 3; i++) {
+    vec0[i] = rixrj[3*imax + i] * dmax;
+  }
+
+  return 0;
+}
+
+
+/*
+ * Compute a unit-length eigenvector for eigenvalue val1
+ */
+static void _compute_eigvec1
+(
+ const double  a00,
+ const double  a01,
+ const double  a02,
+ const double  a11,
+ const double  a12,
+ const double  a22,
+ const double *vec0,
+ const double  val1,
+ double       *vec1
+ )
+{
+  double u[3], v[3];
+  _compute_orthogonal_complement (vec0, u, v);
+
+  double au[3] = {
+    a00*u[0] + a01*u[1] + a02*u[2],
+    a01*u[0] + a11*u[1] + a12*u[2],
+    a02*u[0] + a12*u[1] + a22*u[2]
+  };
+
+  double av[3] = {
+    a00*v[0] + a01*v[1] + a02*v[2],
+    a01*v[0] + a11*v[1] + a12*v[2],
+    a02*v[0] + a12*v[1] + a22*v[2]
+  };
+
+  double m00 = u[0]*au[0] + u[1]*au[1] + u[2]*au[2] - val1;
+  double m01 = u[0]*av[0] + u[1]*av[1] + u[2]*av[2];
+  double m11 = v[0]*av[0] + v[1]*av[1] + v[2]*av[2] - val1;
+
+  double am00 = PDM_ABS(m00);
+  double am01 = PDM_ABS(m01);
+  double am11 = PDM_ABS(m11);
+  double maxm;
+  if (am00 >= am11) {
+    maxm = PDM_MAX(am00, am01);
+    if (maxm > 0.) {
+      if (am00 >= am01) {
+        m01 /= m00;
+        m00 = 1. / sqrt(1. + m01*m01);
+        m01 *= m00;
+      } else {
+        m00 /= m01;
+        m01 = 1. / sqrt(1. + m00*m00);
+        m00 *= m01;
+      }
+
+      for (int i = 0; i < 3; i++) {
+        vec1[i] = m01*u[i] - m00*v[i];
+      }
+    } else {
+      for (int i = 0; i < 3; i++) {
+        vec1[i] = u[i];
+      }
+    }
+  }
+  else {
+    maxm = PDM_MAX(am11, am01);
+    if (maxm > 0.) {
+      if (am11 >= am01){
+        m01 /= m11;
+        m11 = 1. / sqrt(1. + m01*m01);
+        m01 *= m11;
+      } else {
+        m11 /= m01;
+        m01 = 1. / sqrt(1. + m11*m11);
+        m11 *= m01;
+      }
+
+      for (int i = 0; i < 3; i++) {
+        vec1[i] = m11*u[i] - m01*v[i];
+      }
+    } else {
+      for (int i = 0; i < 3; i++) {
+        vec1[i] = u[i];
       }
     }
   }
@@ -631,6 +805,159 @@ PDM_linear_algebra_linsolve_gauss
 
 
 PDM_GCC_SUPPRESS_WARNING_POP
+
+
+/**
+ * \brief Compute the eigenvalues and eigenvectors of a 3x3 symmetric matrix.
+ *
+ * (Only the upper triangular part of matrix A is specified.)
+ * The eigenvalues are sorted in ascending order.
+ *
+ * \param a   [in]   Upper triangular part of the symmetric matrix (A[0,0], A[0,1], A[0,2], A[1,1], A[1,2], A[2,2])
+ * \param val [out]  Eigenvalues
+ * \param vec [out]  Eigenvectors (vec[3*i:3*(i+1)] is the i-th eigenvector)
+ *
+ */
+
+void PDM_linear_algebra_eigv_3x3_sym
+(
+ double a[6],
+ double val[3],
+ double vec[9]
+ )
+{
+ /*
+  * Precondition the matrix by factoring out the maximum absolute
+  * value of the components. This guards against floating-point
+  * overflow when computing the eigenvalues.
+  */
+  double maxa = 0.;
+  for (int i = 0; i < 6; i++) {
+    maxa = PDM_MAX(maxa, PDM_ABS(a[i]));
+  }
+
+PDM_GCC_SUPPRESS_WARNING_WITH_PUSH("-Wfloat-equal")
+  if (maxa == 0.) {
+    // A is the zero matrix
+    val[0] = 0.;
+    val[1] = 0.;
+    val[2] = 0.;
+    vec[0] = 1.; vec[1] = 0.; vec[2] = 0.;
+    vec[3] = 0.; vec[4] = 1.; vec[5] = 0.;
+    vec[6] = 0.; vec[7] = 0.; vec[8] = 1.;
+    return;
+  }
+PDM_GCC_SUPPRESS_WARNING_POP
+
+  // Normalize
+  double imaxa = 1. / maxa;
+  double a00 = a[0] * imaxa;
+  double a01 = a[1] * imaxa;
+  double a02 = a[2] * imaxa;
+  double a11 = a[3] * imaxa;
+  double a12 = a[4] * imaxa;
+  double a22 = a[5] * imaxa;
+
+  double norm = a01*a01 + a02*a02 + a12*a12;
+
+PDM_GCC_SUPPRESS_WARNING_WITH_PUSH("-Wfloat-equal")
+  if (norm == 0.) {
+    /*
+     *  A is diagonal
+     */
+    val[0] = a[0];
+    val[1] = a[3];
+    val[2] = a[5];
+
+    for (int i = 0; i < 9; i++) {
+      vec[i] = 0.;
+    }
+
+    int order[3] = {0, 1, 2};
+    PDM_sort_double (val, order, 3);
+    for (int i = 0; i < 3; i++) {
+      vec[3*i + order[i]] = 1.;
+    }
+  }
+
+  else {
+    /*
+     * A is non-diagonal
+     *
+     * Let B = (A - q*I)/p, where
+     *   q = tr(A) / 3, and
+     *   p = sqrt(tr((A - q*I)^2)/6)
+     */
+    double q = (a00 + a11 + a22) / 3.;
+
+    double b00 = a00 - q;
+    double b11 = a11 - q;
+    double b22 = a22 - q;
+
+    double p = sqrt((b00*b00 + b11*b11 + b22*b22 + 2.*norm) / 6.);
+
+    double c00 = b11*b22 - a12*a12;
+    double c01 = a01*b22 - a12*a02;
+    double c02 = a01*a12 - b11*a02;
+    double hdet = 0.5 * (b00*c00 - a01*c01 + a02*c02) / (p*p*p);
+
+    hdet = PDM_MIN (1., PDM_MAX (-1., hdet));
+
+    double angle = acos(hdet) / 3.;
+    double beta2 = 2. * cos(angle);
+    double beta0 = 2. * cos(angle + 2.*PDM_PI/3.);
+    double beta1 = -(beta0 + beta2);
+
+    /*
+     * The eigenvalues of A are sorted in ascending order
+     */
+    val[0] = q + p * beta0;
+    val[1] = q + p * beta1;
+    val[2] = q + p * beta2;
+
+    /*
+     * Compute an orthonormal, right-handed set of eigenvectors
+     */
+    if (hdet >= 0.) {
+      int err = _compute_eigvec0 (a00, a01, a02, a11, a12, a22, val[2], vec + 6);
+      if (err != 0) {
+        PDM_error(__FILE__, __LINE__, 0,
+                  "eigv_3x3_sym : error with matrix\n"
+                  "%f %f %f\n"
+                  "%f %f %f\n"
+                  "%f %f %f\n",
+                  a[0], a[1], a[2],
+                  a[1], a[3], a[4],
+                  a[2], a[4], a[5]);
+      }
+      _compute_eigvec1 (a00, a01, a02, a11, a12, a22, vec + 6, val[1], vec + 3);
+      PDM_CROSS_PRODUCT (vec, vec+3, vec+6);
+    } else {
+      int err = _compute_eigvec0 (a00, a01, a02, a11, a12, a22, val[0], vec);
+      if (err != 0) {
+        PDM_error(__FILE__, __LINE__, 0,
+                  "eigv_3x3_sym : error with matrix\n"
+                  "%f %f %f\n"
+                  "%f %f %f\n"
+                  "%f %f %f\n",
+                  a[0], a[1], a[2],
+                  a[1], a[3], a[4],
+                  a[2], a[4], a[5]);
+      }
+      _compute_eigvec1 (a00, a01, a02, a11, a12, a22, vec, val[1], vec + 3);
+      PDM_CROSS_PRODUCT (vec+6, vec, vec+3);
+    }
+
+    // Revert the scaling
+    for (int i = 0; i < 3; i++) {
+      val[i] *= maxa;
+    }
+  }
+PDM_GCC_SUPPRESS_WARNING_POP
+}
+
+
+
 
 #ifdef  __cplusplus
 }

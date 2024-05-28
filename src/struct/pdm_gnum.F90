@@ -235,6 +235,28 @@ module pdm_gnum
 
   end function PDM_gnum_n_elt_get
 
+  !>
+  !!
+  !! \brief Set size of tuple for nuplet
+  !!
+  !! \param [in]   gen_gnum     Pointer to \ref PDM_gen_gnum_t object
+  !! \param [in]   nuplet       Size of tuple
+  !!
+  !!
+
+  subroutine PDM_gnum_set_parents_nuplet (gen_gnum, &
+                                          nuplet)   &
+
+    bind (c, name='PDM_gnum_set_parents_nuplet')
+
+    use iso_c_binding
+    implicit none
+
+    type (c_ptr),   value :: gen_gnum
+    integer(c_int), value :: nuplet
+
+  end subroutine PDM_gnum_set_parents_nuplet
+
 
   end interface
 

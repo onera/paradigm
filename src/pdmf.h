@@ -15,6 +15,7 @@
   integer, parameter :: PDM_OWNERSHIP_KEEP                 = 0
   integer, parameter :: PDM_OWNERSHIP_USER                 = 1
   integer, parameter :: PDM_OWNERSHIP_UNGET_RESULT_IS_FREE = 2
+  integer, parameter :: PDM_OWNERSHIP_BAD_VALUE            = 3
 
   integer, parameter :: PDM_MESH_ENTITY_CELL = 0  !< Cell entity
   integer, parameter :: PDM_MESH_ENTITY_FACE = 1  !< Face entity
@@ -60,6 +61,8 @@
   integer, parameter :: PDM_EXTRACT_PART_KIND_LOCAL         = 0
   integer, parameter :: PDM_EXTRACT_PART_KIND_REEQUILIBRATE = 1
   integer, parameter :: PDM_EXTRACT_PART_KIND_FROM_TARGET   = 2
+
+  integer, parameter :: PDM_CLUSTERING_KIND_OCTREE = 0
 
   integer, parameter :: PDM_BOUND_TYPE_ELMT = 0
   integer, parameter :: PDM_BOUND_TYPE_CELL = 1

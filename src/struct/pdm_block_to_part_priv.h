@@ -31,6 +31,8 @@ extern "C" {
  * Type
  *============================================================================*/
 
+#define NTIMER_BTP 3
+
 
 /**
  * \struct _PDM_block_to_part_t
@@ -64,6 +66,10 @@ struct _pdm_block_to_part_t {
                                        * (size : requestd_data_idx[n_rank - 1]
                                              +requestd_data_n[n_rank - 1] ) */
   int           pttopt_comm;          /*!< Use point to point communication if pttopt_comm == 1 */
+
+  double        p2p_factor;    /*!< Factor to switch all_to_all to p2p */ 
+
+  double        part_active_rank;  /*!< Part of active ranks */          
 
 } ;
 

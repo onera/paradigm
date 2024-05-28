@@ -454,9 +454,9 @@ module pdm_extract_part
     integer(pdm_g_num_s), pointer :: extract_group_entity_parent_ln_to_gn(:)
     integer, intent(in)           :: ownership
 
-    type(c_ptr)                   :: c_extract_group_entity                 
-    type(c_ptr)                   :: c_extract_group_entity_ln_to_gn        
-    type(c_ptr)                   :: c_extract_group_entity_parent_ln_to_gn 
+    type(c_ptr)                   :: c_extract_group_entity
+    type(c_ptr)                   :: c_extract_group_entity_ln_to_gn
+    type(c_ptr)                   :: c_extract_group_entity_parent_ln_to_gn
 
     interface
       subroutine pdm_extract_part_group_get_c (extrp,                                &
@@ -520,7 +520,7 @@ module pdm_extract_part
   !! \param [in]   extrp         PDM_extract_part_t
   !! \param [in]   i_part        part identifier
   !! \param [in]   n_extract     Number of entity to select
-  !! \param [in]   extract_lnum  List of id to extract (starting at 0)
+  !! \param [in]   extract_lnum  List of id to extract (starting at 1)
   !!
   !!
 
@@ -536,6 +536,8 @@ module pdm_extract_part
     integer, intent(in)                  :: i_part_in
     integer, intent(in)                  :: n_entity
     integer(kind = PDM_l_num_s), pointer :: extract_lnum(:)
+
+    type(c_ptr)                          :: c_extract_lnum
 
     interface
       subroutine pdm_extract_part_selected_lnum_set_c (extrp,        &
@@ -554,10 +556,15 @@ module pdm_extract_part
       end subroutine pdm_extract_part_selected_lnum_set_c
     end interface
 
+    c_extract_lnum = C_NULL_PTR
+    if (associated(extract_lnum)) then
+      c_extract_lnum = c_loc(extract_lnum)
+    end if
+
     call pdm_extract_part_selected_lnum_set_c (extrp,             &
                                                i_part_in,         &
                                                n_entity,          &
-                                               c_loc(extract_lnum))
+                                               c_extract_lnum)
 
   end subroutine PDM_extract_part_selected_lnum_set
 
@@ -641,7 +648,7 @@ module pdm_extract_part
     integer(kind = PDM_l_num_s), pointer :: connect(:)
     integer(kind = PDM_l_num_s), pointer :: connect_idx(:)
 
-    type(c_ptr)                          :: c_connect    
+    type(c_ptr)                          :: c_connect
     type(c_ptr)                          :: c_connect_idx
 
     interface
@@ -757,7 +764,7 @@ module pdm_extract_part
 
   !>
   !!
-  !! \brief Get Parent global numbering of entity 
+  !! \brief Get Parent global numbering of entity
   !!
   !! \param [in]  extrp               PDM_extract_part_t instance
   !! \param [in]  i_part_out          Number of final partition
@@ -909,7 +916,7 @@ module pdm_extract_part
         bind (c, name='PDM_extract_part_part_to_part_get')
         use iso_c_binding
         implicit none
-    
+
         type(c_ptr), value           :: extrp
         integer(c_int), value        :: entity_type
         type(c_ptr)                  :: ptp
@@ -921,10 +928,10 @@ module pdm_extract_part
     integer(c_int) :: c_entity_type
     integer(c_int) :: c_ownership
 
-    c_entity_type = entity_type 
+    c_entity_type = entity_type
     c_ownership   = ownership
 
-    call PDM_extract_part_part_to_part_get_c (extrp, c_entity_type, ptp, c_ownership) 
+    call PDM_extract_part_part_to_part_get_c (extrp, c_entity_type, ptp, c_ownership)
 
    end subroutine PDM_extract_part_part_to_part_get
 

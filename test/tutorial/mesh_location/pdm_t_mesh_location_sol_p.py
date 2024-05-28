@@ -41,7 +41,7 @@ def run_tuto():
                                               n_x           = n,
                                               n_y           = n,
                                               n_part        = src_n_part,
-                                              part_method   = PDM._PDM_SPLIT_DUAL_WITH_PARMETIS,
+                                              part_method   = PDM._PDM_SPLIT_DUAL_WITH_HILBERT,
                                               random_factor = 0.8)
 
   src_n_vtx        = src_mesh["pn_vtx"]

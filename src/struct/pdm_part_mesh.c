@@ -86,7 +86,7 @@ _build_extract_part_bound
   int i_rank;
   PDM_MPI_Comm_rank(pmesh->comm, &i_rank);
 
-  int dim;
+  int dim = 0;
   PDM_mesh_entities_t entity_type;
   switch (bound_type) {
     case PDM_BOUND_TYPE_VTX:
@@ -119,7 +119,7 @@ _build_extract_part_bound
   int **group_entity_idx = pmesh->pconcat_bound_idx[bound_type];
   int **group_entity     = pmesh->pconcat_bound    [bound_type];
 
-  int         **selected_l_num = malloc(sizeof(int         *) * pmesh->n_part);
+  //int         **selected_l_num = malloc(sizeof(int         *) * pmesh->n_part);
   // PDM_g_num_t **selected_g_num = malloc(sizeof(PDM_g_num_t *) * pmesh->n_part);
   // int         **selected_loc   = malloc(sizeof(int         *) * pmesh->n_part);
 
@@ -136,16 +136,16 @@ _build_extract_part_bound
   /* Set parts */
   for (int i_part = 0; i_part < pmesh->n_part; i_part++) {
 
-    selected_l_num[i_part] = malloc(sizeof(int        ) * group_entity_idx[i_part][n_group]);
+    //selected_l_num[i_part] = malloc(sizeof(int        ) * group_entity_idx[i_part][n_group]);
     // selected_g_num[i_part] = malloc(sizeof(PDM_g_num_t) * group_entity_idx[i_part][n_group]);
     // selected_loc  [i_part] = malloc(sizeof(int        ) * group_entity_idx[i_part][n_group] * 3);
-    for (int i = 0; i < group_entity_idx[i_part][n_group]; i++) {
-      selected_l_num[i_part][i] = group_entity[i_part][i] - 1;
+    //for (int i = 0; i < group_entity_idx[i_part][n_group]; i++) {
+      //selected_l_num[i_part][i] = group_entity[i_part][i] - 1;
       // selected_g_num[i_part][i] = pmesh->pentity_ln_to_gn[entity_type][i_part][group_entity[i_part][i] - 1];
       // selected_loc  [i_part][3*i  ] = i_rank;
       // selected_loc  [i_part][3*i+1] = i_part;
       // selected_loc  [i_part][3*i+2] = group_entity[i_part][i] - 1;
-    }
+    //}
 
     // PDM_log_trace_array_int(selected_l_num[i_part],
     //                         group_entity_idx[i_part][n_group],
@@ -155,7 +155,7 @@ _build_extract_part_bound
     PDM_extract_part_selected_lnum_set(*extrp,
                                        i_part,
                                        group_entity_idx[i_part][n_group],
-                                       selected_l_num[i_part]);
+                                       group_entity[i_part]);
 
     // PDM_log_trace_array_long(selected_g_num[i_part],
     //                          group_entity_idx[i_part][n_group],
@@ -237,12 +237,12 @@ _build_extract_part_bound
 
   PDM_extract_part_compute(*extrp);
 
-  for (int i = 0; i < pmesh->n_part; i++) {
-    free(selected_l_num[i]);
+  //for (int i = 0; i < pmesh->n_part; i++) {
+    //free(selected_l_num[i]);
     // free(selected_g_num[i]);
     // free(selected_loc  [i]);
-  }
-  free(selected_l_num);
+  //}
+  //free(selected_l_num);
   // free(selected_g_num);
   // free(selected_loc  );
 }
@@ -907,7 +907,7 @@ PDM_part_mesh_free
     for(int i = 0; i < PDM_MESH_ENTITY_MAX; ++i) {
       if(pmesh->is_owner_color[i] == PDM_TRUE) {
         for(int i_part = 0; i_part < pmesh->n_part; ++i_part) {
-          if(pmesh->pentity_color[i][i_part] != NULL) {
+          if(pmesh->pentity_color[i] != NULL && pmesh->pentity_color[i][i_part] != NULL) {
             free(pmesh->pentity_color[i][i_part]);
           }
         }

@@ -399,8 +399,10 @@ MPI_TEST_CASE("[pdm_distant_neighbor] - 1p - multiple unsorted with 3part ",1) {
 
   for(int i_part = 0; i_part < n_part; ++i_part) {
     free(exch_fields[i_part]);
+    free(exch_stri[i_part]);
   }
   free(exch_fields);
+  free(exch_stri);
 
   PDM_distant_neighbor_free(dn);
 

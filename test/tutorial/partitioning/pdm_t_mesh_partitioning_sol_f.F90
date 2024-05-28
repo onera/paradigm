@@ -268,6 +268,7 @@ program pdm_t_mesh_partitioning_sol_f
       call PDM_pointer_array_part_set(pelt_ln_to_gn, 0, elt_ln_to_gn)
 
       call writer_wrapper(comm,          &
+                          i_rank,        &
                           "visu",        &
                           "pmesh",       &
                           1,             &
@@ -370,6 +371,7 @@ program pdm_t_mesh_partitioning_sol_f
       call PDM_pointer_array_part_set(pcell_face,     0, cell_face)
 
       call writer_wrapper(comm,                            &
+                          i_rank,                          &
                           "visu",                          &
                           "pmesh",                         &
                           1,                               &

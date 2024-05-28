@@ -541,7 +541,7 @@ int main(int argc, char *argv[])
     int n_select_face        = 0;
 
     for(int idx_face = group_face_idx[i_extract_face_group]; idx_face < group_face_idx[i_extract_face_group+1]; ++idx_face) {
-      int i_face = group_face[idx_face] - 1;
+      int i_face = group_face[idx_face];
       selected_face_l_num[i_part][n_select_face] = i_face;
       n_select_face++;
     }

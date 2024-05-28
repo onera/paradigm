@@ -130,6 +130,25 @@ PDM_linear_algebra_linsolve_gauss
  );
 
 
+/**
+ * \brief Compute the eigenvalues and eigenvectors of a 3x3 symmetric matrix.
+ *
+ * (Only the upper triangular part of matrix A is specified.)
+ * The eigenvalues are sorted in ascending order.
+ *
+ * \param a   [in]   Upper triangular part of the symmetric matrix (A[0,0], A[0,1], A[0,2], A[1,1], A[1,2], A[2,2])
+ * \param val [out]  Eigenvalues
+ * \param vec [out]  Eigenvectors (vec[3*i:3*(i+1)] is the i-th eigenvector)
+ *
+ */
+
+void PDM_linear_algebra_eigv_3x3_sym
+(
+ double a[6],
+ double val[3],
+ double vec[9]
+ );
+
 #ifdef  __cplusplus
 }
 #endif

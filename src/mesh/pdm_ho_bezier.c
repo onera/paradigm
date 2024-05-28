@@ -80,6 +80,12 @@ _newton_curve
   const int vb = 0;
   if (vb) {
     log_trace(">>> Newton curve\n");
+    PDM_log_trace_array_double(target, 3, "  target : ");
+    for (int i = 0; i < 4; i++) {
+      log_trace("  p%d : ", i);
+      PDM_log_trace_array_double(p+3*i, 3, "");
+    }
+    log_trace("  init u = %20.15e\n", *u);
   }
 
   const int    it_max  = 10;
@@ -807,6 +813,7 @@ PDM_ho_bezier_curve_location
                                 node_coord,
                                 db_du,
                                 projected_coord);
+  // log_trace("converged? %d\n", converged);
   // log_trace("projected_coord : %f %f %f\n", projected_coord[0], projected_coord[1], projected_coord[2]);
   PDM_UNUSED(converged);
 

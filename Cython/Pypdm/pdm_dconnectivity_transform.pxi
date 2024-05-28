@@ -87,11 +87,7 @@ def compute_vtx_characteristic_length(MPI.Comm                                  
     cdef double *dchar_lenght
     # ::::::::::::::::::::::::::::::::::::::::::::::::::
 
-    cdef PDM_g_num_t* _dedge_vtx
-    if dedge_vtx is None:
-        _dedge_vtx = NULL
-    else:
-        _dedge_vtx = <PDM_g_num_t *> dedge_vtx.data
+    cdef PDM_g_num_t* _dedge_vtx  = np_to_gnum_pointer(dedge_vtx)
 
     PDM_compute_vtx_characteristic_length(PDMC,
                                           dn_face,

@@ -75,6 +75,7 @@ static void
 _read_args(int                         argc,
            char                      **argv,
            char                      **filename,
+           char                      **fileout,
            int                        *post,
            int                        *n_part,
            PDM_g_num_t                *gn_pts,
@@ -96,6 +97,16 @@ _read_args(int                         argc,
         _usage(EXIT_FAILURE);
       else {
         *filename = argv[i];
+      }
+    }
+
+    else if (strcmp(argv[i], "-o") == 0) {
+      i++;
+      if (i >= argc) {
+        _usage(EXIT_FAILURE);
+      }
+      else {
+        *fileout = argv[i];
       }
     }
 
@@ -453,9 +464,6 @@ _dump_point_cloud
   PDM_writer_free(wrt);
 }
 
-
-
-
 static double
 _eval_field
 (
@@ -467,8 +475,135 @@ _eval_field
   return x + 2*y + 3*z;
 }
 
+// -----------------------------------------------------------------------------
+static
+void _get_vtx_connectivity(
+  PDM_dmesh_nodal_t   *dmn,
+  int                  n_elt_table[PDM_MESH_NODAL_N_ELEMENT_TYPES],
+  int                 *tag_table[PDM_MESH_NODAL_N_ELEMENT_TYPES],
+  PDM_g_num_t         *vtx_connect_table[PDM_MESH_NODAL_N_ELEMENT_TYPES],
+  double             **vtx_coords
+) {
+  // ---- Get number of section
+  int dn_section_vol  = PDM_DMesh_nodal_n_section_get(dmn, PDM_GEOMETRY_KIND_VOLUMIC);
+  int dn_section_surf = PDM_DMesh_nodal_n_section_get(dmn, PDM_GEOMETRY_KIND_SURFACIC);
+  int dn_section_edge = PDM_DMesh_nodal_n_section_get(dmn, PDM_GEOMETRY_KIND_RIDGE);
+
+  // ---- Get Volumic element data
+  int *section_vol_ids = PDM_DMesh_nodal_sections_id_get(dmn, PDM_GEOMETRY_KIND_VOLUMIC);
+
+  for (int i_section=0; i_section<dn_section_vol; i_section++) {
+    PDM_Mesh_nodal_elt_t elt_type = PDM_DMesh_nodal_section_elt_type_get(
+      dmn, PDM_GEOMETRY_KIND_VOLUMIC, section_vol_ids[i_section]
+    );
+
+    n_elt_table[elt_type] = PDM_DMesh_nodal_section_n_elt_get(
+      dmn, PDM_GEOMETRY_KIND_VOLUMIC, section_vol_ids[i_section]
+    );
+
+    vtx_connect_table[elt_type] = PDM_DMesh_nodal_section_std_get(
+      dmn, PDM_GEOMETRY_KIND_VOLUMIC, section_vol_ids[i_section]
+    );
+
+    // -------- We assume vertex are always set to 0
+    // -------- and so cell's tag are all set to 1
+    // -------- Or NULL if that type does not exist in the mesh
+    tag_table[elt_type] = (int *) malloc(sizeof(int) * n_elt_table[elt_type]);
+
+    for (int i_cell=0; i_cell<n_elt_table[elt_type]; i_cell++) {
+      tag_table[elt_type][i_cell] = 1;
+    }
+  }
+
+  // ---- Get surfacic element data
+  int *section_surf_ids = PDM_DMesh_nodal_sections_id_get(dmn, PDM_GEOMETRY_KIND_SURFACIC);
+
+  for (int i_section=0; i_section<dn_section_surf; i_section++) {
+    PDM_Mesh_nodal_elt_t elt_type = PDM_DMesh_nodal_section_elt_type_get(
+      dmn, PDM_GEOMETRY_KIND_SURFACIC, section_surf_ids[i_section]
+    );
+
+    n_elt_table[elt_type] = PDM_DMesh_nodal_section_n_elt_get(
+      dmn, PDM_GEOMETRY_KIND_SURFACIC, section_surf_ids[i_section]
+    );
+
+    vtx_connect_table[elt_type] = PDM_DMesh_nodal_section_std_get(
+      dmn, PDM_GEOMETRY_KIND_SURFACIC, section_surf_ids[i_section]
+    );
+
+    // -------- Set all surfacic tag to 2
+    // -------- This is just for testing the meshb writer
+    tag_table[elt_type] = (int *) malloc(sizeof(int) * n_elt_table[elt_type]);
+
+    for (int i_face=0; i_face<n_elt_table[elt_type]; i_face++) {
+      tag_table[elt_type][i_face] = 2;
+    }
+  }
+
+  // ---- Get edge element data
+  int *section_edge_ids = PDM_DMesh_nodal_sections_id_get(dmn, PDM_GEOMETRY_KIND_RIDGE);
+
+  for (int i_section=0; i_section<dn_section_edge; i_section++) {
+    PDM_Mesh_nodal_elt_t elt_type = PDM_DMesh_nodal_section_elt_type_get(
+      dmn, PDM_GEOMETRY_KIND_RIDGE, section_edge_ids[i_section]
+    );
+
+    n_elt_table[elt_type] = PDM_DMesh_nodal_section_n_elt_get(
+      dmn, PDM_GEOMETRY_KIND_RIDGE, section_edge_ids[i_section]
+    );
+
+    vtx_connect_table[elt_type] = PDM_DMesh_nodal_section_std_get(
+      dmn, PDM_GEOMETRY_KIND_RIDGE, section_edge_ids[i_section]
+    );
+
+    // -------- Set all edges tag to 3
+    // -------- This is just for testing the meshb writer
+    tag_table[elt_type] = (int *) malloc(sizeof(int) * n_elt_table[elt_type]);
+
+    for (int i_edge=0; i_edge<n_elt_table[elt_type]; i_edge++) {
+      tag_table[elt_type][i_edge] = 3;
+    }
+  }
+
+  // ---- Get vertex element
+  n_elt_table[PDM_MESH_NODAL_POINT] = PDM_DMesh_nodal_n_vtx_get(dmn);
+  tag_table[PDM_MESH_NODAL_POINT]   = PDM_DMesh_nodal_vtx_tag_get(dmn);
+  *vtx_coords                       = PDM_DMesh_nodal_vtx_get(dmn);
+}
+
+// -----------------------------------------------------------------------------
+static
+void _dump_DMesh_nodal_to_mesh(
+        PDM_dmesh_nodal_t *dmn,
+  const char              *filename
+)
+{
+  int           n_elt_table[PDM_MESH_NODAL_N_ELEMENT_TYPES]       = {0};
+  int          *tag_table[PDM_MESH_NODAL_N_ELEMENT_TYPES]         = {NULL};
+  PDM_g_num_t  *vtx_connect_table[PDM_MESH_NODAL_N_ELEMENT_TYPES] = {NULL};
+  double       *vtx_coords                                        = NULL;
+
+  _get_vtx_connectivity(
+    dmn,
+    n_elt_table, tag_table, vtx_connect_table,
+    &vtx_coords
+  );
+
+  PDM_write_meshb(
+    filename,
+    n_elt_table, tag_table,
+    vtx_connect_table,
+    vtx_coords
+  );
+
+  // ---- Free memory
+  for (int i_type=1; i_type<PDM_MESH_NODAL_N_ELEMENT_TYPES; i_type++) {
+    if (tag_table[i_type] != NULL) free(tag_table[i_type]);
+  }
+}
 
 
+// -----------------------------------------------------------------------------
 int main(int argc, char *argv[])
 {
   /*
@@ -488,6 +623,7 @@ int main(int argc, char *argv[])
    *  Read args
    */
   char       *filename = NULL;
+  char       *fileout  = NULL;
   int         post     = 0;
   int         n_part   = 1;
   PDM_g_num_t gn_pts = 10;
@@ -499,6 +635,7 @@ int main(int argc, char *argv[])
   _read_args(argc,
              argv,
              &filename,
+             &fileout,
              &post,
              &n_part,
              &gn_pts,
@@ -558,13 +695,12 @@ int main(int argc, char *argv[])
 
   PDM_multipart_dmesh_nodal_set(mpart, 0, dmn);
   PDM_multipart_compute(mpart);
+
+  // ---- Writing input file in .MESH format just to test the function
+  // ---- Only to use if only one proc is used
+  if (fileout != NULL && n_rank == 1) _dump_DMesh_nodal_to_mesh(dmn, fileout);
+
   PDM_DMesh_nodal_free(dmn);
-
-
-
-
-
-
 
   /*
    *  Generate point cloud
