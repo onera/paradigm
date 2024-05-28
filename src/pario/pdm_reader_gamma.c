@@ -1178,7 +1178,7 @@ PDM_write_meshb(
     fprintf(f, "%s\n%d\n", IO_keys[PDM_MESH_NODAL_QUAD4], n_quad);
 
     for (int i=0; i<n_quad; i++) {
-      fprintf(f, ""PDM_FMT_G_NUM" "PDM_FMT_G_NUM" "PDM_FMT_G_NUM" "PDM_FMT_G_NUM", %i\n",
+      fprintf(f, ""PDM_FMT_G_NUM" "PDM_FMT_G_NUM" "PDM_FMT_G_NUM" "PDM_FMT_G_NUM" %i\n",
         quad_vtx[4*i    ],
         quad_vtx[4*i + 1],
         quad_vtx[4*i + 2],
