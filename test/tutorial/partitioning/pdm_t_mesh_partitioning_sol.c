@@ -147,7 +147,7 @@ int main
   // Create partitioning object
   int              n_domain      = 1; // fixed
   int              n_part      = 1; // fixed
-  PDM_split_dual_t part_method = PDM_SPLIT_DUAL_WITH_PTSCOTCH; // PDM_SPLIT_DUAL_WITH_HILBERT;
+  PDM_split_dual_t part_method = PDM_SPLIT_DUAL_WITH_HILBERT; // PDM_SPLIT_DUAL_WITH_HILBERT;
   PDM_multipart_t *mpart = PDM_multipart_create(n_domain,
                                                 &n_part,
                                                 PDM_FALSE,
