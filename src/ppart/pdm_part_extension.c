@@ -2389,6 +2389,12 @@ PDM_part_extension_free
           free(part_ext->vtx_vtx_extended[i_part+shift_part]);
         }
 
+        if(part_ext->owner_vtx_part_bound == 1) {
+          free(part_ext->parts[i_domain][i_part].vtx_part_bound_proc_idx);
+          free(part_ext->parts[i_domain][i_part].vtx_part_bound_part_idx);
+          free(part_ext->parts[i_domain][i_part].vtx_part_bound);
+        }
+
         if(part_ext->owner == PDM_OWNERSHIP_KEEP) {
 
           if(part_ext->border_cell_face_idx != NULL) {

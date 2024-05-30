@@ -195,6 +195,7 @@ struct _pdm_part_extension_t {
   int **pinit_entity_bound_to_pentity_bound_triplet;
   int **pinit_entity_bound_to_pentity_bound_interface;
 
+  int owner_vtx_part_bound;
 
 };
 

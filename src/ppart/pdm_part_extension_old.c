@@ -28,6 +28,7 @@
 #include "pdm_part_connectivity_transform.h"
 #include "pdm_distrib.h"
 #include "pdm_array.h"
+#include "pdm_partitioning_algorithm.h"
 #include "pdm_vtk.h"
 
 #ifdef __cplusplus
@@ -2819,6 +2820,66 @@ _create_cell_graph_comm
       PDM_error(__FILE__, __LINE__, 0, "PDM_part_extension_compute wrong extend_type \n");
     }
 
+  }
+
+  /*
+   * Compute graph of vtx if not available
+   */
+  if(part_ext->extend_type == PDM_EXTEND_FROM_VTX) {
+    for(int i_domain = 0; i_domain < part_ext->n_domain; ++i_domain) {
+
+      /* First loop to count */
+      int lhave_vtx_part_bound = 0;
+      for(int i_part = 0; i_part < part_ext->n_part[i_domain]; ++i_part) {
+        if(part_ext->parts[i_domain][i_part].vtx_part_bound_part_idx != NULL) {
+          lhave_vtx_part_bound = 1;
+        }
+      }
+
+      int have_vtx_part_bound = 0;
+      PDM_MPI_Allreduce(&have_vtx_part_bound,
+                        &have_vtx_part_bound, 1, PDM_MPI_INT, PDM_MPI_MAX, part_ext->comm);
+
+      if(have_vtx_part_bound == 0) {
+        part_ext->owner_vtx_part_bound = 1;
+        PDM_g_num_t *part_distribution = PDM_compute_entity_distribution(part_ext->comm, part_ext->n_part[i_domain]);
+
+        int          *pn_vtx        = malloc(part_ext->n_part[i_domain] * sizeof(int          ));
+        PDM_g_num_t **pvtx_ln_to_gn = malloc(part_ext->n_part[i_domain] * sizeof(PDM_g_num_t *));
+        for(int i_part = 0; i_part < part_ext->n_part[i_domain]; ++i_part) {
+          pn_vtx           [i_part] = part_ext->parts[i_domain][i_part].n_vtx;
+          pvtx_ln_to_gn[i_part] = part_ext->parts[i_domain][i_part].vtx_ln_to_gn;
+        }
+
+        int **ppart_entity1_proc_idx = NULL;
+        int **ppart_entity1_part_idx = NULL;
+        int **ppart_entity1          = NULL; // (i_entity1, i_proc, i_part, i_entity1_opp)
+        PDM_part_generate_entity_graph_comm(part_ext->comm,
+                                            part_distribution,
+                                            NULL,
+                                            part_ext->n_part[i_domain],
+                                            pn_vtx,
+                     (const PDM_g_num_t **) pvtx_ln_to_gn,
+                                            NULL,
+                                            &ppart_entity1_proc_idx,
+                                            &ppart_entity1_part_idx,
+                                            &ppart_entity1,
+                                            NULL);
+
+        for(int i_part = 0; i_part < part_ext->n_part[i_domain]; ++i_part) {
+          part_ext->parts[i_domain][i_part].vtx_part_bound_proc_idx = ppart_entity1_proc_idx[i_part];
+          part_ext->parts[i_domain][i_part].vtx_part_bound_part_idx = ppart_entity1_part_idx[i_part];
+          part_ext->parts[i_domain][i_part].vtx_part_bound          = ppart_entity1         [i_part];
+        }
+        free(ppart_entity1_proc_idx);
+        free(ppart_entity1_part_idx);
+        free(ppart_entity1         );
+
+        free(pn_vtx);
+        free(pvtx_ln_to_gn);
+        free(part_distribution);
+      }
+    }
   }
 
   // Begin with exchange by the connectivity the cell opposite number
@@ -5807,6 +5868,8 @@ PDM_part_extension_create
   part_ext->owner       = owner;
   part_ext->extend_type = extend_type;
   part_ext->depth       = depth;
+
+  part_ext->owner_vtx_part_bound = 0;
 
   part_ext->n_part_idx    = (int * ) malloc( (n_domain + 1) * sizeof(int));
   part_ext->n_part_g_idx  = (int * ) malloc( (n_domain + 1) * sizeof(int));
