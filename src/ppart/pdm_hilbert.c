@@ -994,6 +994,30 @@ PDM_hilbert_get_coord_extents_seq(      int    dim,
 
     }
   }
+
+  double delta = 0.0;
+
+  if (n_coords > 1) {
+    for (j = 0; j < (size_t)dim; j++) {
+      double x = g_extents[j + dim] - g_extents[j];
+      if (delta < x) {
+        delta = x;
+      }
+    }
+  }
+
+  double eps = 1e-7;
+  double tol = 1e-8;
+  if (delta > eps) {
+    delta *= tol;
+  } else {
+    delta = eps;
+  }
+
+  for (j = 0; j < (size_t)dim; j++) {
+    g_extents[j]       -= delta;
+    g_extents[j + dim] += delta;
+  }
 }
 
 void
