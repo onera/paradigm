@@ -673,6 +673,8 @@ _build_active_edges
     PDM_log_trace_array_int(_edge_vtx         , key_idx[max_key]*2, "_edge_vtx          ::");
   }
 
+
+
   /**
    * Third loop to set edge parent
    */
@@ -942,7 +944,6 @@ _build_active_faces
             int _n_vtx = section_face_vtx_idx[i_face+1] - section_face_vtx_idx[i_face];
             // if (debug_loop) log_trace("\t _n_vtx = %d\n", _n_vtx);
             for (int i = 0; i < _n_vtx; i++) {
-              // tmp_face_vtx[i] = vtx_to_iso_vtx[_connec[section_face_vtx[section_face_vtx_idx[i_face]+i]] - 1];
               tmp_face_vtx[i] = _connec[section_face_vtx[section_face_vtx_idx[i_face]+i]];
               key += tmp_face_vtx[i] - 1;
             }
@@ -1734,6 +1735,7 @@ _contouring_tetrahedra
 
   /* Second loop to fill */
   for (int i_elt = 0; i_elt < n_elt; i_elt++) {
+    if (debug_loop==1) log_trace("\n");
     if (debug_loop==1) log_trace("i_elt = %d\n", i_elt);
 
     unsigned char pattern = 0;
@@ -1760,11 +1762,17 @@ _contouring_tetrahedra
     switch (pattern) {
       case 0: {
         // > Check that vertices on face are on current isosurface
+        double face_val = 0.;
+        double vtx_val  = 0.;
         int n_active_vtx = 0;
         for (int i_vtx=0; i_vtx<4; i_vtx++) {
           int vtx_id = elt_vtx[4*i_elt + i_vtx] - 1;
           if (vtx_to_iso_vtx[vtx_id]!=0) {
             n_active_vtx++;
+            face_val = vtx_field[vtx_id];
+          }
+          else {
+            vtx_val = vtx_field[vtx_id];
           }
         }
         if (n_active_vtx>=3) {
@@ -1779,9 +1787,17 @@ _contouring_tetrahedra
               int iso_idx = iso_face_vtx_idx[iso_n_face];
               if (debug_loop==1) log_trace("\tidx = %d\n", idx);
 
-              iso_face_vtx[iso_idx++] = vtx_to_iso_vtx[face_vtx[idx  ]-1];
-              iso_face_vtx[iso_idx++] = vtx_to_iso_vtx[face_vtx[idx+1]-1];
-              iso_face_vtx[iso_idx++] = vtx_to_iso_vtx[face_vtx[idx+2]-1];
+              if (face_val<vtx_val) {
+                iso_face_vtx[iso_idx++] = vtx_to_iso_vtx[face_vtx[idx+2]-1];
+                iso_face_vtx[iso_idx++] = vtx_to_iso_vtx[face_vtx[idx+1]-1];
+                iso_face_vtx[iso_idx++] = vtx_to_iso_vtx[face_vtx[idx  ]-1];
+              }
+              else if (vtx_val<=face_val) {
+                iso_face_vtx[iso_idx++] = vtx_to_iso_vtx[face_vtx[idx  ]-1];
+                iso_face_vtx[iso_idx++] = vtx_to_iso_vtx[face_vtx[idx+1]-1];
+                iso_face_vtx[iso_idx++] = vtx_to_iso_vtx[face_vtx[idx+2]-1];
+              }
+
               iso_face_vtx_idx[iso_n_face+1] = iso_face_vtx_idx[iso_n_face]+3;
           
               int i_beg_parent  = face_parent_idx[face_id-1];
@@ -2252,7 +2268,7 @@ PDM_isosurface_marching_algo
       int *_vtx_to_iso_vtx = malloc(n_vtx * sizeof(int));
       memcpy(_vtx_to_iso_vtx, vtx_to_iso_vtx, n_vtx * sizeof(int));
       for (int i_vtx=0; i_vtx<n_vtx; ++i_vtx) {
-        if (_vtx_to_iso_vtx[i_vtx] < i_beg_iso_vtx || i_end_iso_vtx < _vtx_to_iso_vtx[i_vtx]) {
+        if (_vtx_to_iso_vtx[i_vtx] <= i_beg_iso_vtx || i_end_iso_vtx < _vtx_to_iso_vtx[i_vtx]) {
           _vtx_to_iso_vtx[i_vtx] = 0;
         }
       }
