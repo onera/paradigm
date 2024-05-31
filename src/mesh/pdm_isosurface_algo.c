@@ -1188,7 +1188,6 @@ PDM_isosurface_marching_algo
     iso_edge_parent_gnum [i_part] = NULL;
     isovalue_edge_idx    [i_part] = malloc(sizeof(int) * (n_isovalues + 1));
     isovalue_edge_idx    [i_part][0] = 0;
-    int *iso_edge_parent_count = NULL;
 
     // > Allocate face
     iso_face_vtx_idx    [i_part] = NULL;
@@ -1209,12 +1208,9 @@ PDM_isosurface_marching_algo
       int *edge_to_iso_vtx = PDM_array_zeros_int(n_edge);
       int i_beg_iso_vtx = isovalue_vtx_idx[i_part][i_isovalue  ];
       int i_end_iso_vtx = isovalue_vtx_idx[i_part][i_isovalue+1];
-      log_trace("i_beg_iso_vtx = %d ; i_end_iso_vtx = %d\n", i_beg_iso_vtx, i_end_iso_vtx);
 
       for (int i_iso_vtx=i_beg_iso_vtx; i_iso_vtx<i_end_iso_vtx; ++i_iso_vtx) {
-
         int cross_edge = iso_vtx_to_edge[i_iso_vtx];
-        log_trace("i_iso_vtx = %d -> cross_edge = %d\n", i_iso_vtx, cross_edge);
         if (cross_edge!=0) {
           edge_to_iso_vtx[iso_vtx_to_edge[i_iso_vtx]-1] = i_iso_vtx+1;
         }
@@ -1277,7 +1273,7 @@ PDM_isosurface_marching_algo
                                   &iso_edge_vtx         [i_part],
                                   &iso_edge_parent_gnum [i_part],
                                   &iso_n_edge_parent,
-                                  &iso_edge_parent_count,
+                                  &iso_edge_parent_idx  [i_part],
                                   &iso_edge_parent      [i_part]);
             break;
           }
@@ -1348,9 +1344,6 @@ PDM_isosurface_marching_algo
     for (int i_section = 0; i_section < n_section; i_section++) {
       free(elt_edge[i_section]);
     }
-
-    iso_edge_parent_idx[i_part] = PDM_array_new_idx_from_sizes_int(iso_edge_parent_count, iso_n_edge[i_part]);
-    free(iso_edge_parent_count);
 
     free(elt_edge);
     free(edge_vtx);
