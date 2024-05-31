@@ -208,6 +208,7 @@ struct _pdm_isosurface_t {
   int            ***iso_vtx_lparent_idx;
   int            ***iso_vtx_lparent;
   double         ***iso_vtx_parent_weight;
+  int            ***isovalue_vtx_idx;
 
   // > Edges
   int            **iso_n_edge;

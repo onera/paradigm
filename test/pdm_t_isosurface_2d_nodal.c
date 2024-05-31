@@ -429,7 +429,7 @@ int main(int argc, char *argv[])
 
       PDM_part_mesh_nodal_dump_vtk(iso_pmn2,
                                    PDM_GEOMETRY_KIND_RIDGE,
-                                   "pmn_circle_iso_mesh");
+                                   "pmn_iso_circle_mesh");
 
       PDM_part_mesh_nodal_free(iso_pmn2);
 
@@ -440,7 +440,7 @@ int main(int argc, char *argv[])
 
       PDM_part_mesh_nodal_dump_vtk(iso_pmn3,
                                    PDM_GEOMETRY_KIND_RIDGE,
-                                   "pmn_field_iso_mesh");
+                                   "pmn_iso_field_mesh");
 
       PDM_part_mesh_nodal_free(iso_pmn3);
     }

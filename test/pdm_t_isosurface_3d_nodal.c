@@ -37,8 +37,8 @@ _build_pmn_from_iso_result
 
   PDM_part_mesh_nodal_t *pmn = PDM_part_mesh_nodal_create(2, n_part, comm);
   int i_edge_section = PDM_part_mesh_nodal_section_add(pmn, PDM_MESH_NODAL_BAR2);
-  // int i_face_section = PDM_part_mesh_nodal_section_add(pmn, PDM_MESH_NODAL_POLY_2D);
-  
+  int i_face_section = PDM_part_mesh_nodal_section_add(pmn, PDM_MESH_NODAL_POLY_2D);
+
   for (int i_part=0; i_part<n_part; ++i_part) {
     // > Vertex
     double      *iso_vtx_coord = NULL;
@@ -54,12 +54,13 @@ _build_pmn_from_iso_result
     PDM_isosurface_ln_to_gn_get(isos, id_isosurface, i_part, PDM_MESH_ENTITY_EDGE, &iso_edge_gnum, PDM_OWNERSHIP_KEEP);
     PDM_part_mesh_nodal_section_std_set(pmn, i_edge_section, i_part, iso_n_edge, iso_edge_vtx, iso_edge_gnum, NULL, NULL, PDM_OWNERSHIP_USER);
 
-    // // > Face
-    // int         *iso_face_vtx  = NULL;
-    // PDM_g_num_t *iso_face_gnum = NULL;
-    // int iso_n_face = PDM_isosurface_connectivity_get(isos, id_isosurface, i_part, PDM_CONNECTIVITY_TYPE_FACE_VTX, NULL, &iso_face_vtx, PDM_OWNERSHIP_KEEP);
-    // PDM_isosurface_ln_to_gn_get(isos, id_isosurface, i_part, PDM_MESH_ENTITY_FACE, &iso_face_gnum, PDM_OWNERSHIP_KEEP);
-    // PDM_part_mesh_nodal_section_std_set(pmn, i_face_section, i_part, iso_n_face, iso_face_vtx, iso_face_gnum, NULL, NULL, PDM_OWNERSHIP_USER);
+    // > Face
+    int         *iso_face_vtx_idx  = NULL;
+    int         *iso_face_vtx      = NULL;
+    PDM_g_num_t *iso_face_gnum     = NULL;
+    int iso_n_face = PDM_isosurface_connectivity_get(isos, id_isosurface, i_part, PDM_CONNECTIVITY_TYPE_FACE_VTX, &iso_face_vtx_idx, &iso_face_vtx, PDM_OWNERSHIP_KEEP);
+    PDM_isosurface_ln_to_gn_get(isos, id_isosurface, i_part, PDM_MESH_ENTITY_FACE, &iso_face_gnum, PDM_OWNERSHIP_KEEP);
+    PDM_part_mesh_nodal_section_poly2d_set(pmn, i_face_section, i_part, iso_n_face, iso_face_vtx_idx, iso_face_vtx, iso_face_gnum, NULL, PDM_OWNERSHIP_USER);
   }
 
   // TODO: why if KEEP on pmn and USER on iso it double free ?
@@ -339,12 +340,30 @@ int main(int argc, char *argv[])
       PDM_part_mesh_nodal_dump_vtk(iso_pmn1,
                                    PDM_GEOMETRY_KIND_RIDGE,
                                    "pmn_iso_line_iso_mesh");
+      PDM_part_mesh_nodal_dump_vtk(iso_pmn1,
+                                   PDM_GEOMETRY_KIND_SURFACIC,
+                                   "pmn_iso_face_iso_mesh");
 
       PDM_part_mesh_nodal_free(iso_pmn1);
     }
   }
 
 
+  /*
+   *  Free objects
+   */
+  PDM_isosurface_free(isos);
+  if (dist_entry==1) {
+    PDM_dcube_nodal_gen_free(dcube_nodal);
+  } else if (dist_entry==0) {
+    PDM_part_mesh_nodal_free(pmn);
+  } else {
+    PDM_error(__FILE__, __LINE__, 0, "PDM_t_isosurface_2d_nodal dist_entry must be 0 or 1 (here set to %d)\n", dist_entry);
+  }
+
+
+
+  PDM_MPI_Finalize();
 
   return 0;
 }

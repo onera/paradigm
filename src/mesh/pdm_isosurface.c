@@ -792,7 +792,7 @@ PDM_isosurface_free
     
     if (isos->iso_owner_connec[id_iso]!=NULL) {
       for (int i_part=0; i_part<isos->iso_n_part; ++i_part) {
-        if (isos->iso_owner_connec[id_iso][i_part][PDM_MESH_ENTITY_EDGE]==PDM_OWNERSHIP_KEEP) {
+        if (isos->iso_owner_connec[id_iso][i_part][PDM_CONNECTIVITY_TYPE_EDGE_VTX]==PDM_OWNERSHIP_KEEP) {
           free(isos->iso_edge_vtx[id_iso][i_part]);
         }
         if (isos->iso_owner_gnum[id_iso][i_part][PDM_MESH_ENTITY_EDGE]==PDM_OWNERSHIP_KEEP) {
@@ -825,26 +825,32 @@ PDM_isosurface_free
     
     if (isos->iso_owner_connec[id_iso]!=NULL) {
       for (int i_part=0; i_part<isos->iso_n_part; ++i_part) {
-        if (isos->iso_owner_connec[id_iso][i_part][PDM_MESH_ENTITY_EDGE]==PDM_OWNERSHIP_KEEP) {
+        if (isos->iso_owner_connec[id_iso][i_part][PDM_CONNECTIVITY_TYPE_FACE_VTX]==PDM_OWNERSHIP_KEEP) {
           free(isos->iso_face_vtx_idx   [id_iso][i_part]);
           free(isos->iso_face_vtx       [id_iso][i_part]);
         }
-        // if (isos->iso_owner_gnum[id_iso][i_part][PDM_MESH_ENTITY_FACE]==PDM_OWNERSHIP_KEEP) {
-        //   free(isos->iso_face_gnum      [id_iso][i_part]);
-        // }
-        // free(isos->iso_face_lparent_idx[id_iso][i_part]);
+        if (isos->iso_owner_gnum[id_iso][i_part][PDM_MESH_ENTITY_FACE]==PDM_OWNERSHIP_KEEP) {
+          free(isos->iso_face_gnum      [id_iso][i_part]);
+        }
+        free(isos->iso_face_lparent_idx[id_iso][i_part]);
         free(isos->iso_face_lparent    [id_iso][i_part]);
-        free(isos->isovalue_face_idx  [id_iso][i_part]);
+        free(isos->isovalue_face_idx   [id_iso][i_part]);
       }
     }
     if (isos->iso_n_face[id_iso]!=NULL) {
       free(isos->iso_n_face[id_iso]);
+    }
+    if (isos->iso_face_gnum[id_iso]!=NULL) {
+      free(isos->iso_face_gnum[id_iso]);
     }
     if (isos->iso_face_vtx_idx[id_iso]!=NULL) {
       free(isos->iso_face_vtx_idx[id_iso]);
     }
     if (isos->iso_face_vtx[id_iso]!=NULL) {
       free(isos->iso_face_vtx[id_iso]);
+    }
+    if (isos->iso_face_lparent_idx[id_iso]!=NULL) {
+      free(isos->iso_face_lparent_idx[id_iso]);
     }
     if (isos->iso_face_lparent[id_iso]!=NULL) {
       free(isos->iso_face_lparent[id_iso]);
