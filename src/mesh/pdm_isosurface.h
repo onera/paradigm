@@ -789,6 +789,31 @@ PDM_isosurface_dconnectivity_get
 
 /**
  *
+ * \brief TODO
+ *
+ */
+int
+PDM_isosurface_dvtx_parent_gnum_get
+(
+ PDM_isosurface_t         *isos
+);
+
+/**
+ *
+ * \brief TODO
+ *
+ */
+int
+PDM_isosurface_dvtx_protocol_get
+(
+ PDM_isosurface_t         *isos
+);
+
+
+
+
+/**
+ *
  * \brief Get coordinates of block-distributed iso-surface vertices
  *
  * \param [in]  isos           \ref PDM_isosurface_t instance
