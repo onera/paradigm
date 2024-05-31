@@ -368,6 +368,7 @@ PDM_isosurface_create
   isos->iso_vtx_lparent_idx   = NULL;
   isos->iso_vtx_lparent       = NULL;
   isos->iso_vtx_parent_weight = NULL;
+  isos->isovalue_vtx_idx      = NULL;
 
   isos->iso_n_edge            = NULL;
   isos->iso_edge_vtx          = NULL;
@@ -461,12 +462,14 @@ PDM_isosurface_add
   isos->iso_vtx_lparent_idx   = realloc(isos->iso_vtx_lparent_idx  , sizeof(int          **) * isos->n_isosurface);
   isos->iso_vtx_lparent       = realloc(isos->iso_vtx_lparent      , sizeof(int          **) * isos->n_isosurface);
   isos->iso_vtx_parent_weight = realloc(isos->iso_vtx_parent_weight, sizeof(double       **) * isos->n_isosurface);
+  isos->isovalue_vtx_idx      = realloc(isos->isovalue_vtx_idx     , sizeof(int          **) * isos->n_isosurface);
   isos->iso_n_vtx            [id_isosurface] = NULL;
   isos->iso_vtx_coord        [id_isosurface] = NULL;
   isos->iso_vtx_gnum         [id_isosurface] = NULL;
   isos->iso_vtx_lparent_idx  [id_isosurface] = NULL;
   isos->iso_vtx_lparent      [id_isosurface] = NULL;
   isos->iso_vtx_parent_weight[id_isosurface] = NULL;
+  isos->isovalue_vtx_idx     [id_isosurface] = NULL;
 
   // > Partitioned iso edges
   isos->iso_n_edge           = realloc(isos->iso_n_edge          , sizeof(int           *) * isos->n_isosurface);
@@ -762,6 +765,7 @@ PDM_isosurface_free
         if (isos->iso_owner_vtx_parent_weight[id_iso][i_part]==PDM_OWNERSHIP_KEEP) {
           free(isos->iso_vtx_parent_weight[id_iso][i_part]);
         }
+        free(isos->isovalue_vtx_idx[id_iso][i_part]);
       }
     }
     if (isos->iso_n_vtx[id_iso]!=NULL) {
@@ -781,6 +785,9 @@ PDM_isosurface_free
     }
     if (isos->iso_vtx_parent_weight[id_iso]!=NULL) {
       free(isos->iso_vtx_parent_weight[id_iso]);
+    }
+    if (isos->isovalue_vtx_idx[id_iso]!=NULL) {
+      free(isos->isovalue_vtx_idx[id_iso]);
     }
     
     if (isos->iso_owner_connec[id_iso]!=NULL) {
@@ -853,6 +860,7 @@ PDM_isosurface_free
   free(isos->iso_vtx_lparent_idx);
   free(isos->iso_vtx_lparent);
   free(isos->iso_vtx_parent_weight);
+  free(isos->isovalue_vtx_idx);
   
   free(isos->iso_n_edge);
   free(isos->iso_edge_vtx);

@@ -1415,6 +1415,7 @@ PDM_isosurface_marching_algo
   isos->iso_vtx_lparent_idx  [id_iso] = iso_vtx_parent_idx;
   isos->iso_vtx_lparent      [id_iso] = iso_vtx_parent;
   isos->iso_vtx_parent_weight[id_iso] = iso_vtx_parent_weight;
+  isos->isovalue_vtx_idx     [id_iso] = isovalue_vtx_idx;
   
   isos->iso_n_edge          [id_iso] = iso_n_edge;
   isos->iso_edge_vtx        [id_iso] = iso_edge_vtx;
