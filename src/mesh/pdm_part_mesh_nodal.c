@@ -1130,8 +1130,20 @@ PDM_part_mesh_nodal_dump_vtk
     int  n_section  = PDM_part_mesh_nodal_n_section_in_geom_kind_get  (pmn, geom_kind);
     int *section_id = PDM_part_mesh_nodal_sections_id_in_geom_kind_get(pmn, geom_kind);
 
-    // printf("pn_vtx = %i\n", pn_vtx);
+    /* Export group also */
+    int n_group = pmne->n_group;
+    int n_elt_tot = PDM_part_mesh_nodal_elmts_n_elmts_get(pmne, i_part);
+    int *group_id = PDM_array_const_int(n_elt_tot, -1);
+    for(int i_group = 0; i_group < n_group; ++i_group) {
+      for(int i = 0; i < pmne->n_group_elmt[i_part][i_group]; ++i) {
+        int i_elt = pmne->group_elmt    [i_part][i_group][i]-1;
+        group_id[i_elt] = i_group;
+      }
+    }
 
+
+    // printf("pn_vtx = %i\n", pn_vtx);
+    int shift = 0;
     for(int i_section = 0; i_section < n_section; ++i_section) {
 
       int id_section = section_id  [i_section];
@@ -1253,6 +1265,8 @@ PDM_part_mesh_nodal_dump_vtk
           free(pcell_vtx_out);
         } else {
 
+          const char  *field_name[] = {"groud_id"};
+          int *section_group_id = &group_id[shift];
           int         *pcell_vtx       = NULL;
           PDM_g_num_t *pelmt_ln_to_gn  = NULL;
           int         *parent_num      = NULL;
@@ -1274,12 +1288,14 @@ PDM_part_mesh_nodal_dump_vtk
                                      n_elt,
                                      pcell_vtx,
                                      pelmt_ln_to_gn,
-                                     0,
-                                     NULL,
-                                     NULL);
+                                     1,
+                                     field_name,
+                      (const int **) &section_group_id);
         }
       }
+      shift += n_elt;
     }
+    free(group_id);
   }
 }
 
