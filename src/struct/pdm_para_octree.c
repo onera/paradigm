@@ -7427,8 +7427,7 @@ PDM_para_octree_create
   }
 
   if (depth_max > 31) {
-    PDM_error(__FILE__, __LINE__, 0,
-      "PDM_para_octree_create error: depth_max exceeds the maximum allowed value. Falling back to 31.\n");
+    PDM_printf("PDM_para_octree_create error: depth_max exceeds the maximum allowed value. Falling back to 31.\n");
   }
 
   octree->depth_max = PDM_MIN(31, depth_max);
