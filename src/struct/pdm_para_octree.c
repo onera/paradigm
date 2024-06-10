@@ -6159,7 +6159,7 @@ _prepare_copies
                                        sizeof(int) * (*n_copied_ranks));
 
     PDM_sort_int (*copied_ranks, NULL, *n_copied_ranks);
-  } 
+  }
   else {
     free (*copied_ranks);
     *copied_ranks = NULL;
@@ -7426,7 +7426,11 @@ PDM_para_octree_create
     octree->d[i]         = 0.;
   }
 
-  octree->depth_max = depth_max;
+  if (depth_max > 31) {
+    PDM_printf("PDM_para_octree_create error: depth_max exceeds the maximum allowed value. Falling back to 31.\n");
+  }
+
+  octree->depth_max = PDM_MIN(31, depth_max);
   octree->points_in_leaf_max = points_in_leaf_max;
 
   octree->n_point_clouds = n_point_cloud;
