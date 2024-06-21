@@ -1271,6 +1271,7 @@ _part_extension_2d
  PDM_part_extension_t *part_ext
 )
 {
+  int debug = 1;
 
   /*
    * 2 possibilities :
@@ -1468,7 +1469,7 @@ _part_extension_2d
 
     int i_rank;
     PDM_MPI_Comm_rank(part_ext->comm, &i_rank);
-    if (i_rank==0) printf("Computing DEPTH %d (step = %i) ", i_depth, step);
+    if (i_rank==0) printf("Computing DEPTH %d (step = %i) \n", i_depth, step);
     log_trace("\n\n\n >> DEPTH %d step = %i\n", i_depth, step);
     double t_start = PDM_MPI_Wtime();
 
@@ -1764,15 +1765,22 @@ _part_extension_2d
       /* Realloc */
       pedge_ln_to_gn[i_part] = realloc(pedge_ln_to_gn[i_part],     pn_concat_edge         * sizeof(PDM_g_num_t));
 
-      int size_vtx_vtx = (pfull_vtx_extented_to_pvtx_idx[i_part][pn_vtx_extented_old [i_part]] + pvtx_extented_to_pvtx_idx[i_part][pn_vtx_extented[i_part]])/3;
+      int size_vtx_vtx   = (pfull_vtx_extented_to_pvtx_idx  [i_part][pn_vtx_extented_old [i_part]] + pvtx_extented_to_pvtx_idx  [i_part][pn_vtx_extented [i_part]])/3;
       int size_face_face = (pfull_face_extented_to_pface_idx[i_part][pn_face_extented_old[i_part]] + pface_extented_to_pface_idx[i_part][pn_face_extented[i_part]])/3;
 
-      if(1 == 1) {
-        PDM_log_trace_array_int(pfull_face_extented_to_pface_triplet  [i_part], 3 * size_face_face, "pfull_face_extented_to_pface_triplet   ::");
-        PDM_log_trace_array_int(pfull_face_extented_to_pface_interface[i_part],     size_face_face, "pfull_face_extented_to_pface_interface ::");
-        PDM_log_trace_array_int(pfull_vtx_extented_to_pvtx_idx[i_part], pfull_n_vtx_extented[i_part]+1  , "pfull_vtx_extented_to_pvtx_idx     ::");
-        PDM_log_trace_array_int(pfull_vtx_extented_to_pvtx_triplet    [i_part], 3 * size_vtx_vtx  , "pfull_vtx_extented_to_pvtx_triplet     ::");
-        PDM_log_trace_array_int(pfull_vtx_extented_to_pvtx_interface  [i_part],     size_vtx_vtx  , "pfull_vtx_extented_to_pvtx_interface   ::");
+      if(debug == 1) {
+        log_trace("\n");
+        log_trace("i_part = %d\n", i_part);
+        log_trace("Vertices connection :: \n");
+        PDM_log_trace_array_long(pfull_vtx_extented_ln_to_gn           [i_part], pfull_n_vtx_extented[i_part]  , "pfull_vtx_extented_ln_to_gn         ::");
+        PDM_log_trace_array_int (pfull_vtx_extented_to_pvtx_idx        [i_part], pfull_n_vtx_extented[i_part]+1, "pfull_vtx_extented_to_pvtx_idx      ::");
+        PDM_log_trace_array_int (pfull_vtx_extented_to_pvtx_triplet    [i_part], 3 * size_vtx_vtx              , "pfull_vtx_extented_to_pvtx_triplet  ::");
+        PDM_log_trace_array_int (pfull_vtx_extented_to_pvtx_interface  [i_part],     size_vtx_vtx              , "pfull_vtx_extented_to_pvtx_interface::");
+        log_trace("Faces connection :: \n");
+        PDM_log_trace_array_long(pfull_face_extented_ln_to_gn          [i_part], pfull_n_face_extented[i_part]  , "pfull_face_extented_ln_to_gn           ::");
+        PDM_log_trace_array_int (pfull_face_extented_to_pface_idx      [i_part], pfull_n_face_extented[i_part]+1, "pfull_face_extented_to_pface_idx       ::");
+        PDM_log_trace_array_int (pfull_face_extented_to_pface_triplet  [i_part], 3 * size_face_face             , "pfull_face_extented_to_pface_triplet   ::");
+        PDM_log_trace_array_int (pfull_face_extented_to_pface_interface[i_part],     size_face_face             , "pfull_face_extented_to_pface_interface ::");
       }
 
       /*
@@ -1899,9 +1907,9 @@ _part_extension_2d
             shift += pn_vtx_extented_by_depth[k][i_part];
           }
 
-          pcurr_entity_bound_to_pentity_bound_idx [i_part] = malloc( (pn_vtx [i_part]+1) * sizeof(int));
-
+          pcurr_entity_bound_to_pentity_bound_idx[i_part] = malloc( (pn_vtx [i_part]+1) * sizeof(int));
           pcurr_entity_bound_to_pentity_bound_idx[i_part][0] = 0;
+
           for(int i = 0; i < pn_vtx [i_part]; ++i) {
             pcurr_entity_bound_to_pentity_bound_idx[i_part][i+1] = pcurr_entity_bound_to_pentity_bound_idx[i_part][i];
           }

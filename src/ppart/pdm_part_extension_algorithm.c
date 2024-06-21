@@ -740,15 +740,19 @@ _find_valid_entities
   if (debug==1) {
     for(int i_part = 0; i_part < n_part; ++i_part) {
       log_trace("\n");
-      int n_data = 0;
-      int n_itrf = 0;
+      int n_data   = 0;
+      int n_ancstr = 0;
+      int n_itrf   = 0;
       for (int i_entity = 0; i_entity < pentity1_entity2_ntot[i_part]; ++i_entity) {
-        n_data += p_db_entity2_ancstr_strd[i_part][i_entity];
-        n_itrf += p_db_entity2_path_itrf_strd[i_part][i_entity];
+        n_data   += p_db_entity2_strd[i_part][i_entity];
+        n_ancstr += p_db_entity2_ancstr_strd[i_part][i_entity];
+        n_itrf   += p_db_entity2_path_itrf_strd[i_part][i_entity];
       }
       PDM_log_trace_array_long(pentity2_gnum              [i_part], pn_entity2           [i_part], "pentity2_gnum               ::");
+      PDM_log_trace_array_int (p_db_entity2_strd          [i_part], pentity1_entity2_ntot[i_part], "p_db_entity2_strd           ::");
+      PDM_log_trace_array_long(p_db_entity2_data          [i_part], 2*n_data                     , "p_db_entity2_data           ::");
       PDM_log_trace_array_int (p_db_entity2_ancstr_strd   [i_part], pentity1_entity2_ntot[i_part], "p_db_entity2_ancstr_strd    ::");
-      PDM_log_trace_array_long(p_db_entity2_ancstr        [i_part], n_data                       , "p_db_entity2_ancstr         ::");
+      PDM_log_trace_array_long(p_db_entity2_ancstr        [i_part], n_ancstr                     , "p_db_entity2_ancstr         ::");
       PDM_log_trace_array_int (p_db_entity2_path_itrf_strd[i_part], pentity1_entity2_ntot[i_part], "p_db_entity2_path_itrf_strd ::");
       PDM_log_trace_array_int (p_db_entity2_path_itrf     [i_part], n_itrf                       , "p_db_entity2_path_itrf      ::");
     }
@@ -893,6 +897,7 @@ _find_valid_entities
               pentity2_twin_itrf_idx[i_part][j+1] = pentity2_twin_itrf_idx[i_part][j];
               lidx_read_data = idx_read_data;
               for(int k = 0; k < p_db_entity2_strd[i_part][j]; ++k) {
+                opp_gnum     =          p_db_entity2_data[i_part][2*lidx_read_data  ];
                 opp_itrf     = PDM_ABS (p_db_entity2_data[i_part][2*lidx_read_data+1]);
                 opp_itrf_sgn = PDM_SIGN(p_db_entity2_data[i_part][2*lidx_read_data+1]);
                 if (cur_itrf!=opp_itrf) {
@@ -964,16 +969,18 @@ _find_valid_entities
             }
           }
           else {
-            if (debug_loop==1) {log_trace("\t\t ===> Local found = ("PDM_FMT_G_NUM",%i) \n", opp_gnum, opp_itrf_sgn*opp_itrf);}
 
             // Search if entity2 is known in partition
             int pos_int = PDM_binary_search_long(opp_gnum, pentity2_gnum_sorted[i_part], pn_entity2[i_part]);
             if( pos_int != -1) {
+              if (debug_loop==1) {log_trace("\t\t ===> Local found = ("PDM_FMT_G_NUM",%i) -> kind = 1\n", opp_gnum, opp_itrf_sgn*opp_itrf);}
               // log_trace("\t\t\t opp_gnum = %d --> lnum = %d \n", opp_gnum, pentity2_ordr[i_part][pos_int]);
               pentity2_lnum[i_part][j] = pentity2_ordr[i_part][pos_int];
               pentity2_itrf[i_part][j] = pentity1_itrf[i_part][i];
               pentity2_kind[i_part][j] = 1;
-            } else {
+            }
+            else {
+              if (debug_loop==1) {log_trace("\t\t ===> Local found = ("PDM_FMT_G_NUM",%i) -> kind = 3\n", opp_gnum, opp_itrf_sgn*opp_itrf);}
               pentity2_itrf[i_part][j] = pentity1_itrf[i_part][i];
               pentity2_kind[i_part][j] = 3;
               
@@ -2046,9 +2053,6 @@ _unique_entities_and_update_connectivity
         _out_pconnec_to_entity[i_part][i_pos] = (pn_entity[i_part] + i_unique +1); // TODO : SIGN
       }
     }
-    for(int i = 0; i < n_unique+1; ++i) {
-      _out_pentity_to_entity_idx[i_part][i]*=3;
-    }
 
     free(pentity_to_entity_i_write);
     free(pentity_to_entity_n);
@@ -2096,6 +2100,11 @@ _unique_entities_and_update_connectivity
 
 
       int n_unique_trplt_tot = unique_entity_to_entity_idx[_out_pn_entity[i_part]];
+      if (debug==1) {
+        log_trace("\n");
+        log_trace("n_unique_trplt_tot = %d\n", n_unique_trplt_tot);
+        PDM_log_trace_array_int (unique_entity_to_entity_idx, _out_pn_entity[i_part]+1, "unique_entity_to_entity_idx ::");
+      }
       _out_pentity_to_entity_trplt[i_part] = realloc(_out_pentity_to_entity_trplt[i_part], 3*n_unique_trplt_tot * sizeof(int));
       _out_pentity_to_entity_itrf [i_part] = realloc(_out_pentity_to_entity_itrf [i_part],   n_unique_trplt_tot * sizeof(int));
       for(int i = 0; i < n_unique_trplt_tot; ++i) {
@@ -2103,9 +2112,7 @@ _unique_entities_and_update_connectivity
         _out_pentity_to_entity_trplt[i_part][3*i+1] = unique_entity_to_entity[4*i+1];
         _out_pentity_to_entity_trplt[i_part][3*i+2] = unique_entity_to_entity[4*i+2];
         _out_pentity_to_entity_itrf [i_part][  i  ] = unique_entity_to_entity[4*i+3];
-        unique_entity_to_entity_idx[i]*=3;
       }
-      unique_entity_to_entity_idx[n_unique_trplt_tot]*=3;
 
       free(_out_pentity_to_entity_idx[i_part]);
       _out_pentity_to_entity_idx[i_part] = unique_entity_to_entity_idx;
@@ -2118,6 +2125,10 @@ _unique_entities_and_update_connectivity
         PDM_log_trace_array_int(_out_pentity_to_entity_trplt[i_part], 3*n_unique_trplt_tot      , "pentity_to_entity_trplt (unique)::");
         PDM_log_trace_array_int(_out_pentity_to_entity_itrf [i_part],   n_unique_trplt_tot      , "pentity_to_entity_itrf  (unique)::");
       }
+    }
+
+    for(int i = 0; i < n_unique+1; ++i) {
+      _out_pentity_to_entity_idx[i_part][i]*=3;
     }
   }
 
@@ -2894,7 +2905,7 @@ PDM_part_extension_entity1_to_entity2
             // }
           }
         }
-        _gnum1_com_from_triplet_n     [k] = l_n_send_part2;
+        _gnum1_com_from_triplet_n[k] = l_n_send_part2;
 
       }
     }
@@ -4446,7 +4457,7 @@ PDM_part_extension_pentity1_entity2_to_extended_pentity1_entity2
     PDM_log_trace_array_int (prev_dentity2_itrf_blk_path_itrf_strd , prev_dentity2_itrf_n_blk, "prev_dentity2_itrf_blk_path_itrf_strd  ::");
     PDM_log_trace_array_int (prev_dentity2_itrf_blk_path_itrf      , n_itrf                  , "prev_dentity2_itrf_blk_path_itrf       ::");
     PDM_log_trace_array_int (prev_dentity2_itrf_gnum_and_itrf_strid, prev_dentity2_itrf_n_blk, "prev_dentity2_itrf_gnum_and_itrf_strid ::");
-    PDM_log_trace_array_long(prev_dentity2_itrf_gnum_and_itrf_data , n_data                  , "prev_dentity2_itrf_gnum_and_itrf_data  ::");
+    PDM_log_trace_array_long(prev_dentity2_itrf_gnum_and_itrf_data , 2*n_data                , "prev_dentity2_itrf_gnum_and_itrf_data  ::");
   }
 
 
