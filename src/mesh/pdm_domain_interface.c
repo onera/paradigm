@@ -5412,6 +5412,14 @@ PDM_domain_interface_make_flat_view2
       stride_one           [itrf][2*k+1] = 1;
       send_sens            [itrf][2*k  ] =  sgn2;
       send_sens            [itrf][2*k+1] =  sgn1;
+      if (sgn1==sgn2) {
+        send_sens            [itrf][2*k  ] = 1;
+        send_sens            [itrf][2*k+1] = 1;
+      }
+      else {
+        send_sens            [itrf][2*k  ] =-1;
+        send_sens            [itrf][2*k+1] =-1;
+      }
       weight               [itrf][2*k  ] = 1.;
       weight               [itrf][2*k+1] = 1.;
 
