@@ -1642,7 +1642,11 @@ _part_extension_2d
     prev_dface_itrf_gnum_and_itrf_strid = next_dface_itrf_gnum_and_itrf_strid;
     prev_dface_itrf_gnum_and_itrf_data  = next_dface_itrf_gnum_and_itrf_data;
 
-
+    if(part_ext->have_edge == 1) {
+      for(int i_part = 0; i_part < part_ext->ln_part_tot; ++i_part) {
+        free(pface_vtx[i_part]);
+      }
+    }
 
     /*
      * Update with descending connectivity :
@@ -1759,6 +1763,12 @@ _part_extension_2d
       prev_dedge_itrf_gnum_and_itrf_strid = next_dedge_itrf_gnum_and_itrf_strid;
       prev_dedge_itrf_gnum_and_itrf_data  = next_dedge_itrf_gnum_and_itrf_data;
       prev_dedge_itrf_gnum_and_itrf_sens  = next_dedge_itrf_gnum_and_itrf_sens;
+
+      part_ext->dentity_itrf_n_blk              [PDM_BOUND_TYPE_EDGE] = prev_dedge_itrf_n_blk;
+      part_ext->dentity_itrf_blk_gnum           [PDM_BOUND_TYPE_EDGE] = prev_dedge_itrf_blk_gnum;
+      part_ext->dentity_itrf_gnum_and_itrf_strid[PDM_BOUND_TYPE_EDGE] = prev_dedge_itrf_gnum_and_itrf_strid;
+      part_ext->dentity_itrf_gnum_and_itrf_data [PDM_BOUND_TYPE_EDGE] = prev_dedge_itrf_gnum_and_itrf_data;
+      part_ext->dentity_itrf_gnum_and_itrf_sens [PDM_BOUND_TYPE_EDGE] = prev_dedge_itrf_gnum_and_itrf_sens;
 
 
       log_trace("\n\n\n\n");
@@ -2159,6 +2169,8 @@ _part_extension_2d
         }
 
 
+        int *_pface_vtx_idx = NULL;
+        int *_pface_vtx     = NULL;
         if (part_ext->have_edge==1) {
           if(debug == 1) {
             log_trace("\n");
@@ -2186,22 +2198,25 @@ _part_extension_2d
           PDM_compute_face_vtx_from_face_and_edge(pn_concat_face,
                                                   pface_edge_idx[i_part],
                                                   pface_edge    [i_part],
-                                                  // _face_edge,
                                                   pedge_vtx     [i_part],
-                                                 &pface_vtx     [i_part]);
-          pface_vtx_idx[i_part] = pface_edge_idx[i_part];
+                                                &_pface_vtx);
+          _pface_vtx_idx = pface_edge_idx[i_part];
 
+        }
+        else {
+          _pface_vtx_idx = pface_vtx_idx[i_part];
+          _pface_vtx     = pface_vtx    [i_part];
         }
 
 
         if(debug == 1) {
           log_trace("\n");
           log_trace("FACE_VTX\n");
-          int face_vtx_size = pface_vtx_idx[i_part][pn_concat_face];
+          int face_vtx_size = _pface_vtx_idx[pn_concat_face];
           log_trace("pn_concat_face = %d\n", pn_concat_face);
-          PDM_log_trace_array_int (pface_vtx_idx [i_part], pn_concat_face+1, "pface_vtx_idx  ::");
-          PDM_log_trace_array_int (pface_vtx     [i_part], face_vtx_size   , "pface_vtx      ::");
-          PDM_log_trace_array_long(pface_ln_to_gn[i_part], pn_concat_face  , "pface_ln_to_gn ::");
+          PDM_log_trace_array_int (_pface_vtx_idx         , pn_concat_face+1, "pface_vtx_idx  ::");
+          PDM_log_trace_array_int (_pface_vtx             , face_vtx_size   , "pface_vtx      ::");
+          PDM_log_trace_array_long( pface_ln_to_gn[i_part], pn_concat_face  , "pface_ln_to_gn ::");
         }
 
         PDM_MPI_Comm_rank(part_ext->comm, &i_rank);
@@ -2212,14 +2227,18 @@ _part_extension_2d
                                pvtx_coords   [i_part],
                                pvtx_ln_to_gn [i_part],
                                pn_concat_face,
-                               pface_vtx_idx [i_part],
-                               pface_vtx     [i_part],
+                              _pface_vtx_idx,
+                              _pface_vtx,
                                pface_ln_to_gn[i_part],
                                NULL);
 
+        if (part_ext->have_edge==1) {
+          free(_pface_vtx);
+        }
+      } // End visu
 
 
-      }
+
     } /* End loop part */
 
     /*
@@ -2258,37 +2277,56 @@ _part_extension_2d
      * Free
      */
     for(int i_part = 0; i_part < part_ext->ln_part_tot; ++i_part) {
-      free(pvtx_extented_ln_to_gn           [i_part]);
+      free(pvtx_extended_ln_to_gn         [i_part]);
+      free(pvtx_extended_to_pvtx_idx      [i_part]);
+      free(pvtx_extended_to_pvtx_triplet  [i_part]);
+      free(pvtx_extended_to_pvtx_interface[i_part]);
+
       if (part_ext->have_edge==1) {
-        free(pextented_face_edge_idx        [i_part]);
-        free(pextented_face_edge            [i_part]);
-        free(pextented_edge_vtx_idx         [i_part]);
-        free(pextented_edge_vtx             [i_part]);
+        free(pedge_extended_ln_to_gn          [i_part]);
+        free(pedge_extended_to_pedge_idx      [i_part]);
+        free(pedge_extended_to_pedge_triplet  [i_part]);
+        free(pedge_extended_to_pedge_interface[i_part]);
+
+        free(pextended_face_edge_idx[i_part]);
+        free(pextended_face_edge    [i_part]);
+        free(pextended_edge_vtx_idx [i_part]);
+        free(pextended_edge_vtx     [i_part]);
       }
       else {
         free(pextended_face_vtx_idx[i_part]);
         free(pextended_face_vtx    [i_part]);
       }
-      free(pvtx_extented_to_pvtx_idx        [i_part]);
-      free(pvtx_extented_to_pvtx_triplet    [i_part]);
-      free(pvtx_extented_to_pvtx_interface  [i_part]);
-      free(pface_extented_ln_to_gn          [i_part]);
-      free(pface_extented_to_pface_idx      [i_part]);
-      free(pface_extented_to_pface_triplet  [i_part]);
-      free(pface_extented_to_pface_interface[i_part]);
-      free(pface_extented_alrdy_sent        [i_part]);
+      
+      free(pface_extended_ln_to_gn          [i_part]);
+      free(pface_extended_to_pface_idx      [i_part]);
+      free(pface_extended_to_pface_triplet  [i_part]);
+      free(pface_extended_to_pface_interface[i_part]);
+      free(pface_extended_alrdy_sent        [i_part]);
     }
-    free(pvtx_extented_ln_to_gn         );
-    free(pextented_face_vtx_idx         );
-    free(pextented_face_vtx             );
-    free(pvtx_extented_to_pvtx_idx      );
-    free(pvtx_extented_to_pvtx_triplet  );
-    free(pvtx_extented_to_pvtx_interface);
-    free(pface_extented_ln_to_gn          );
-    free(pface_extented_to_pface_idx      );
-    free(pface_extented_to_pface_triplet  );
-    free(pface_extented_to_pface_interface);
-    free(pface_extented_alrdy_sent        );
+
+    free(pvtx_extended_ln_to_gn);
+    free(pvtx_extended_to_pvtx_idx);
+    free(pvtx_extended_to_pvtx_triplet);
+    free(pvtx_extended_to_pvtx_interface);
+
+    free(pedge_extended_ln_to_gn);
+    free(pedge_extended_to_pedge_idx);
+    free(pedge_extended_to_pedge_triplet);
+    free(pedge_extended_to_pedge_interface);
+
+    free(pextended_face_vtx_idx);
+    free(pextended_face_vtx);
+    free(pextended_face_edge_idx);
+    free(pextended_face_edge);
+    free(pextended_edge_vtx_idx);
+    free(pextended_edge_vtx);
+    
+    free(pface_extended_ln_to_gn);
+    free(pface_extended_to_pface_idx);
+    free(pface_extended_to_pface_triplet);
+    free(pface_extended_to_pface_interface);
+    free(pface_extended_alrdy_sent);
 
 
     /*
@@ -2403,14 +2441,10 @@ _part_extension_2d
   free(prev_dface_itrf_gnum_and_itrf_data );
 
   if (part_ext->have_edge==1) {
-    free(prev_dedge_itrf_blk_gnum           );
     free(prev_dedge_itrf_blk_ancstr_strd    );
     free(prev_dedge_itrf_blk_ancstr         );
     free(prev_dedge_itrf_blk_path_itrf_strd );
     free(prev_dedge_itrf_blk_path_itrf      );
-    free(prev_dedge_itrf_gnum_and_itrf_strid);
-    free(prev_dedge_itrf_gnum_and_itrf_data );
-    free(prev_dedge_itrf_gnum_and_itrf_sens );
   }
   
   free(prev_dvtx_itrf_blk_ancstr_strd);
@@ -2423,13 +2457,15 @@ _part_extension_2d
     free(pedge_ln_to_gn     [i_part]);
     free(pface_ln_to_gn     [i_part]);
     free(pface_alrdy_sent   [i_part]);
-    free(pface_vtx_idx      [i_part]);
-    free(pface_vtx          [i_part]);
     if (part_ext->have_edge==1) {
       free(pface_edge_idx     [i_part]);
       free(pface_edge         [i_part]);
       free(pedge_vtx_idx      [i_part]);
       free(pedge_vtx          [i_part]);
+    }
+    else {
+      free(pface_vtx_idx      [i_part]);
+      free(pface_vtx          [i_part]);
     }
     free(pvtx_coords        [i_part]);
   }

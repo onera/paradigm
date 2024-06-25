@@ -1103,7 +1103,7 @@ _find_valid_entities
         
           if( pos_int != -1) {
             // log_trace("cur_gnum = %d -> pos_int = %d\n", cur_gnum, pos_int);
-            pentity2_lnum[i_part][j] = pentity2_ordr[i_part][pos_int];
+            pentity2_lnum[i_part][j] = pentity2_ordr[i_part][pos_int]+1;
             pentity2_itrf[i_part][j] = pentity1_itrf[i_part][i];
             pentity2_kind[i_part][j] = 0;
           } else {
@@ -1300,6 +1300,9 @@ _find_valid_entities
   *pentity2_twin_itrf_itrf_out = pentity2_twin_itrf_itrf;
   if (has_sens==1) {
     *pentity2_twin_itrf_sens_out = pentity2_twin_itrf_sens;
+  }
+  else {
+    free(pentity2_twin_itrf_sens);
   }
 
   if (debug==1) {
@@ -5151,6 +5154,7 @@ PDM_part_extension_pentity1_entity2_to_extended_pentity1_entity2
     free(p_db_entity_path_itrf_strd[i_part]);
     free(p_db_entity_path_itrf[i_part]);
     free(p_db_entity_data[i_part]);
+    free(p_db_entity_sens[i_part]);
 
     free(pextract_entity1_entity2_n      [i_part]);
     free(pextract_entity1_entity2_gnum   [i_part]);
@@ -5164,6 +5168,7 @@ PDM_part_extension_pentity1_entity2_to_extended_pentity1_entity2
     free(pextract_entity2_twin_itrf_idx[i_part]);
     free(pextract_entity2_twin_itrf_gnum[i_part]);
     free(pextract_entity2_twin_itrf_itrf[i_part]);
+    free(pextract_entity2_twin_itrf_sens[i_part]);
     
     free(pextract_entity2_kind_idx [i_part]);
     free(pextract_entity2_kind_ordr[i_part]);
@@ -5174,6 +5179,7 @@ PDM_part_extension_pentity1_entity2_to_extended_pentity1_entity2
   free(p_db_entity_path_itrf);
   free(p_db_entity_data);
   free(p_db_entity_gnum);
+  free(p_db_entity_sens);
 
   free(pextract_entity1_entity2_n);
   free(pextract_entity1_entity2_gnum);
@@ -5187,6 +5193,7 @@ PDM_part_extension_pentity1_entity2_to_extended_pentity1_entity2
   free(pextract_entity2_twin_itrf_idx);
   free(pextract_entity2_twin_itrf_gnum);
   free(pextract_entity2_twin_itrf_itrf);
+  free(pextract_entity2_twin_itrf_sens);
   
   free(pextract_entity2_kind_idx);
   free(pextract_entity2_kind_ordr);
