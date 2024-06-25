@@ -858,7 +858,7 @@ _setup_domain_interface_in_block_frame
     if(is_describe_edge) {
       PDM_domain_interface_make_flat_view2(part_ext->dom_itrf,
                                            PDM_BOUND_TYPE_EDGE,
-                                           part_ext->shift_by_domain_vtx,
+                                           part_ext->shift_by_domain_edge,
                                            &part_ext->dentity_itrf_n_blk              [PDM_BOUND_TYPE_EDGE],
                                            &part_ext->dentity_itrf_blk_gnum           [PDM_BOUND_TYPE_EDGE],
                                            &part_ext->dentity_itrf_gnum_and_itrf_strid[PDM_BOUND_TYPE_EDGE],
@@ -1364,7 +1364,7 @@ _part_extension_2d
         pedge_ln_to_gn[lpart][i_edge] = part_ext->parts[i_domain][i_part].edge_ln_to_gn[i_edge];
       }
       for(int i_vtx = 0; i_vtx < pn_vtx[lpart]; ++i_vtx) {
-        pvtx_ln_to_gn     [lpart][i_vtx] = part_ext->parts[i_domain][i_part].vtx_ln_to_gn[i_vtx];
+        pvtx_ln_to_gn[lpart][i_vtx] = part_ext->parts[i_domain][i_part].vtx_ln_to_gn[i_vtx];
       }
 
       if(part_ext->have_edge == 1) {
@@ -1704,7 +1704,7 @@ _part_extension_2d
       log_trace("PDM_part_extension_pentity1_entity2_to_extended_pentity1_entity2 beg (Face->Edge)\n");
       PDM_part_extension_pentity1_entity2_to_extended_pentity1_entity2(part_ext->ln_part_tot,
                                                                        part_ext->n_interface,
-                                                                       shift_by_domain_edge, // Attention il va evoluer lui
+                                                                       shift_by_domain_edge,
                                                                        prev_dedge_itrf_n_blk,
                                                                        prev_dedge_itrf_blk_gnum,
                                                                        prev_dedge_itrf_blk_ancstr_strd,
@@ -1774,9 +1774,7 @@ _part_extension_2d
       log_trace("\n\n\n\n");
       log_trace("================================================================================\n");
       log_trace("PDM_part_extension_pentity1_entity2_to_extended_pentity1_entity2 beg (Edge->Vtx)\n");
-      for(int i_part = 0; i_part < part_ext->ln_part_tot; ++i_part) {
-        printf("pn_edge = %d\n", pn_edge[i_part]);
-      }
+
       PDM_part_extension_pentity1_entity2_to_extended_pentity1_entity2(part_ext->ln_part_tot,
                                                                        part_ext->n_interface,
                                                                        shift_by_domain_vtx, // Attention il va evoluer lui
@@ -2210,6 +2208,11 @@ _part_extension_2d
 
 
         if(debug == 1) {
+          log_trace("\n");
+          log_trace("i_part = %d\n", i_part);
+          log_trace("pn_concat_vtx = %d\n", pn_concat_vtx);
+          PDM_log_trace_array_long(pvtx_ln_to_gn[i_part], pn_concat_vtx, "pvtx_ln_to_gn ::");
+
           log_trace("\n");
           log_trace("FACE_VTX\n");
           int face_vtx_size = _pface_vtx_idx[pn_concat_face];

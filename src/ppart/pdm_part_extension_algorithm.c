@@ -513,7 +513,7 @@ _find_twin_interface
 {
   int debug      = 0;
   int debug_loop = 0;
-  
+
   if (debug==1) {
     log_trace("\n");
     log_trace("------------------------\n");
@@ -878,8 +878,8 @@ _find_valid_entities
    *    2/ From interface
    *       a/ Know by relation table and know in current partition : 1
    *       b/ Know by relation table but not local                 : 3
-   *       b/ Unknown by relation table but from other part        : 4
-   *       c/ New                                                  : 5
+   *       c/ Unknown by relation table but from other part        : 4
+   *       d/ New                                                  : 5
    * On essaye après d'organiser les nouvelles entités dans l'ordre suivant :
    *    [2/3/4]
    */
@@ -928,6 +928,7 @@ _find_valid_entities
           PDM_g_num_t opp_gnum     = 0;
           int         opp_itrf     = 0;
           int         opp_itrf_sgn = 0;
+          int         opp_sens     = 1;
           
           // Entity2 informations
           PDM_g_num_t cur_gnum         = pentity1_entity2_gnum[i_part][j];
@@ -944,9 +945,12 @@ _find_valid_entities
           for(int k = 0; k < p_db_entity2_strd[i_part][j]; ++k) {
           
             // Candidate informations
-            opp_gnum     =          p_db_entity2_data  [i_part][2*lidx_read_data  ];
-            opp_itrf     = PDM_ABS (p_db_entity2_data  [i_part][2*lidx_read_data+1]);
-            opp_itrf_sgn = PDM_SIGN(p_db_entity2_data  [i_part][2*lidx_read_data+1]);
+            opp_gnum     =          p_db_entity2_data[i_part][2*lidx_read_data  ];
+            opp_itrf     = PDM_ABS (p_db_entity2_data[i_part][2*lidx_read_data+1]);
+            opp_itrf_sgn = PDM_SIGN(p_db_entity2_data[i_part][2*lidx_read_data+1]);
+            if (has_sens==1) {
+              opp_sens   =          p_db_entity2_sens[i_part][  lidx_read_data  ];
+            }
             if (debug_loop==1) {log_trace("\t\t candidate %d/%d: ("PDM_FMT_G_NUM"/%d) \n", k+1, p_db_entity2_strd[i_part][j], opp_gnum, opp_itrf_sgn*opp_itrf);}
             
             // Check if candidate have same interface that entity2, if so it (entity2, itrf) alrdy know
@@ -962,7 +966,8 @@ _find_valid_entities
 
           if (known_in_db==0) {
             if (debug_loop==1) {log_trace("\t\t ===> Not found = ("PDM_FMT_G_NUM",%i), j = %d \n", cur_gnum, cur_itrf_sgn*cur_itrf, j);}
-            if (cur_trplt_part==i_part) {
+            
+            if (cur_trplt_part==i_part) { // From the same partition (domain)
               pentity2_itrf[i_part][j] = pentity1_itrf[i_part][i];
               pentity2_kind[i_part][j] = 5;
               
@@ -993,14 +998,16 @@ _find_valid_entities
                 lidx_read_data++;
               }
             }
-            else {
+
+            else { // From a different partition (domain)
               if (debug_loop==1) {log_trace("\t\t ===> From other part = ("PDM_FMT_G_NUM",part=%d)\n", cur_gnum, cur_trplt_part);}
 
               // PDM_log_trace_array_long(pentity2_gnum_sorted  [i_part], pn_entity2[i_part], "pentity2_gnum_sorted   ::");
               int pos_int = PDM_binary_search_long(cur_gnum, pentity2_gnum_sorted[i_part], pn_entity2[i_part]);
               if( pos_int != -1) {
-                if (debug_loop==1) {log_trace("\t\t ===> And known in partition = (i_pos=%d)\n", pos_int);}
-                pentity2_lnum[i_part][j] = pentity2_ordr[i_part][pos_int];
+                if (debug_loop==1) {log_trace("\t\t ===> And known in partition = (i_pos=%d) sens = %d\n", pos_int, opp_sens);}
+                assert((has_sens==0)||(opp_sens==-1||opp_sens==1));
+                pentity2_lnum[i_part][j] = opp_sens*(pentity2_ordr[i_part][pos_int]+1);
                 pentity2_itrf[i_part][j] = pentity1_itrf[i_part][i];
                 pentity2_kind[i_part][j] = 1; //Bluff
               }
@@ -1010,11 +1017,18 @@ _find_valid_entities
 
                 // Is there any candidate alrdy in partition. If yes, hope its to good one
                 int pos_int_c = -1;
+                opp_sens  =  0;
                 lidx_read_data = idx_read_data;
                 for(int k = 0; k < p_db_entity2_strd[i_part][j]; ++k) {
                 
                   // Candidate informations
-                  opp_gnum =          p_db_entity2_data  [i_part][2*lidx_read_data  ];
+                  if (has_sens==1) {
+                    opp_sens = p_db_entity2_sens[i_part][lidx_read_data];
+                  }
+                  else {
+                    opp_sens = 1;
+                  }
+                  opp_gnum = p_db_entity2_data  [i_part][2*lidx_read_data  ];
                   if (debug_loop==1) {log_trace("\t\t\t candidate %d/%d: ("PDM_FMT_G_NUM") \n", k+1, p_db_entity2_strd[i_part][j], opp_gnum);}
                   pos_int_c = PDM_binary_search_long(opp_gnum, pentity2_gnum_sorted[i_part], pn_entity2[i_part]);
                   if (pos_int_c!=-1) {
@@ -1025,22 +1039,28 @@ _find_valid_entities
                 lidx_read_data = idx_read_data+p_db_entity2_strd[i_part][j];
 
                 if( pos_int_c != -1) {
-                  if (debug_loop==1) {log_trace("\t\t ===> Twin known in partition = (i_pos=%d)\n", pos_int_c);}
-                  pentity2_lnum[i_part][j] = pentity2_ordr[i_part][pos_int_c];
+                  assert((has_sens==0)||(opp_sens==-1||opp_sens==1));
+                  if (debug_loop==1) {log_trace("\t\t ===> Twin known in partition = (i_pos=%d) sens = %d\n", pos_int_c, opp_sens);}
+                  pentity2_lnum[i_part][j] = opp_sens*(pentity2_ordr[i_part][pos_int_c]+1);
                   pentity2_itrf[i_part][j] = pentity1_itrf[i_part][i];
                   pentity2_kind[i_part][j] = 1; //Bluff
                 }
-                else {
+
+                else { 
+                  /**
+                   * Entity from other partition (domain) is unknown in current partition:
+                   *   -> get the entity with the original gnum
+                   */
 
                   if (debug_loop==1) {log_trace("\t\t ===> Unknown in partition = (i_pos=%d)\n", pos_int);}
                   pentity2_itrf[i_part][j] = pentity1_itrf[i_part][i];
                   pentity2_kind[i_part][j] = 4;
 
                   if (p_db_entity2_ancstr_strd[i_part][j]==0) { // not in db now, wo it means that it is an ancstr
-                    pentity2_ancstr        [i_part][j] = cur_gnum;
+                    pentity2_ancstr[i_part][j] = cur_gnum;
                   }
                   else {
-                    pentity2_ancstr        [i_part][j] = p_db_entity2_ancstr[i_part][i_read_ancstr];
+                    pentity2_ancstr[i_part][j] = p_db_entity2_ancstr[i_part][i_read_ancstr];
                   }
 
                   pentity2_path_itrf_strd[i_part][j] = p_db_entity2_path_itrf_strd[i_part][j];
@@ -1050,15 +1070,15 @@ _find_valid_entities
 
               }
               pentity2_twin_itrf_idx[i_part][j+1] = pentity2_twin_itrf_idx[i_part][j];
-
             }
           }
-          else {
+
+          else { // Unknow in data_base
 
             // Search if entity2 is known in partition
             int pos_int = PDM_binary_search_long(opp_gnum, pentity2_gnum_sorted[i_part], pn_entity2[i_part]);
             if( pos_int != -1) {
-              int opp_sens = -1;
+              opp_sens = -1;
               if (has_sens==1) {
                 opp_sens = p_db_entity2_sens[i_part][lidx_read_data];
               }
@@ -1067,6 +1087,7 @@ _find_valid_entities
               }
               if (debug_loop==1) {log_trace("\t\t ===> Local found = ("PDM_FMT_G_NUM",%i) sens = %d -> kind = 1\n", opp_gnum, opp_itrf_sgn*opp_itrf, opp_sens);}
 
+              assert((has_sens==0)||(opp_sens==-1||opp_sens==1));
               pentity2_lnum[i_part][j] = opp_sens*(pentity2_ordr[i_part][pos_int]+1);
               pentity2_itrf[i_part][j] = pentity1_itrf[i_part][i];
               pentity2_kind[i_part][j] = 1;
@@ -2209,7 +2230,7 @@ _unique_entities_and_update_connectivity
       int i_beg = pentity_kind_idx  [i_part][2];
       int i_pos = pentity_kind_order[i_part][i_beg+i];
  
-      _out_pentity_gnum  [i_part][i_unique] = tmp_gnum[i_unique];
+      _out_pentity_gnum[i_part][i_unique] = tmp_gnum[i_unique];
       if (pentity_kind[i_part][i_pos]==2){
         _out_pentity_alrdy_sent[i_part][i_unique] = 1;
       } else {
@@ -4508,9 +4529,9 @@ PDM_part_extension_pentity1_entity2_to_extended_pentity1_entity2
 
   PDM_part_to_part_t* ptp = PDM_part_to_part_create_from_num2_triplet((const PDM_g_num_t **) pentity1_extended_ln_to_gn,
                                                                       (const int          *) pn_entity1_extended,
-                                                                      n_part,
+                                                                                             n_part,
                                                                       (const int          *) pn_entity1,
-                                                                      n_part,
+                                                                                             n_part,
                                                                       (const int         **) pentity1_extended_to_pentity1_idx,
                                                                       (const int         **) NULL,
                                                                       (const int         **) pentity1_extended_to_pentity1_triplet,
@@ -5168,7 +5189,9 @@ PDM_part_extension_pentity1_entity2_to_extended_pentity1_entity2
     free(pextract_entity2_twin_itrf_idx[i_part]);
     free(pextract_entity2_twin_itrf_gnum[i_part]);
     free(pextract_entity2_twin_itrf_itrf[i_part]);
-    free(pextract_entity2_twin_itrf_sens[i_part]);
+    if (pextract_entity2_twin_itrf_sens!=NULL) {
+      free(pextract_entity2_twin_itrf_sens[i_part]);
+    }
     
     free(pextract_entity2_kind_idx [i_part]);
     free(pextract_entity2_kind_ordr[i_part]);
