@@ -1500,12 +1500,10 @@ _part_extension_2d
   PDM_g_num_t *prev_dvtx_itrf_blk_gnum            = part_ext->dentity_itrf_blk_gnum           [PDM_BOUND_TYPE_VTX];
   int         *prev_dvtx_itrf_gnum_and_itrf_strid = part_ext->dentity_itrf_gnum_and_itrf_strid[PDM_BOUND_TYPE_VTX];
   PDM_g_num_t *prev_dvtx_itrf_gnum_and_itrf_data  = part_ext->dentity_itrf_gnum_and_itrf_data [PDM_BOUND_TYPE_VTX];
-  int         *prev_dvtx_itrf_gnum_and_itrf_sens  = part_ext->dentity_itrf_gnum_and_itrf_sens [PDM_BOUND_TYPE_VTX];
   int         *prev_dvtx_itrf_blk_ancstr_strd     = PDM_array_zeros_int(prev_dvtx_itrf_n_blk);
   PDM_g_num_t *prev_dvtx_itrf_blk_ancstr          = PDM_array_zeros_gnum(0);
   int         *prev_dvtx_itrf_blk_path_itrf_strd  = PDM_array_zeros_int(prev_dvtx_itrf_n_blk);
   int         *prev_dvtx_itrf_blk_path_itrf       = PDM_array_zeros_int(0);
-
 
   int **pcurr_entity_bound_to_pentity_bound_idx       = part_ext->pinit_entity_bound_to_pentity_bound_idx;
   int **pcurr_entity_bound_to_pentity_bound_triplet   = part_ext->pinit_entity_bound_to_pentity_bound_triplet;
@@ -1666,6 +1664,7 @@ _part_extension_2d
     int         **pedge_extended_to_pedge_idx       = NULL;
     int         **pedge_extended_to_pedge_triplet   = NULL;
     int         **pedge_extended_to_pedge_interface = NULL;
+    int         **pedge_extended_to_pedge_sens      = NULL;
     
     // > Extended connectivities
     int         **pextended_face_edge_idx           = NULL;
@@ -1684,7 +1683,6 @@ _part_extension_2d
     int         *next_dvtx_itrf_blk_path_itrf       = NULL;
     int         *next_dvtx_itrf_gnum_and_itrf_strid = NULL;
     PDM_g_num_t *next_dvtx_itrf_gnum_and_itrf_data  = NULL;
-    int         *next_dvtx_itrf_gnum_and_itrf_sens  = NULL;
 
     // > Edges next data_base 
     int          next_dedge_itrf_n_blk               = 0;
@@ -1725,6 +1723,7 @@ _part_extension_2d
                                                                        pface_extended_to_pface_idx,
                                                                        pface_extended_to_pface_triplet,
                                                                        pface_extended_to_pface_interface,
+                                                                       NULL,
                                                                        &pn_edge_extended,
                                                                        &pedge_extended_ln_to_gn,
                                                                        &pextended_face_edge_idx,
@@ -1732,6 +1731,7 @@ _part_extension_2d
                                                                        &pedge_extended_to_pedge_idx,
                                                                        &pedge_extended_to_pedge_triplet,
                                                                        &pedge_extended_to_pedge_interface,
+                                                                       &pedge_extended_to_pedge_sens,
                                                                        &next_dedge_itrf_n_blk,
                                                                        &next_dedge_itrf_blk_gnum,
                                                                        &next_dedge_itrf_blk_ancstr_strd,
@@ -1786,7 +1786,7 @@ _part_extension_2d
                                                                        prev_dvtx_itrf_blk_path_itrf,
                                                                        prev_dvtx_itrf_gnum_and_itrf_strid,
                                                                        prev_dvtx_itrf_gnum_and_itrf_data,
-                                                                       prev_dvtx_itrf_gnum_and_itrf_sens,
+                                                                       NULL,
                                                                        pn_edge,
                                                                        pedge_ln_to_gn,
                                                                        pn_vtx,
@@ -1798,28 +1798,34 @@ _part_extension_2d
                                                                        pedge_extended_to_pedge_idx,
                                                                        pedge_extended_to_pedge_triplet,
                                                                        pedge_extended_to_pedge_interface,
-                                                                       &pn_vtx_extended,
-                                                                       &pvtx_extended_ln_to_gn,
-                                                                       &pextended_edge_vtx_idx,
-                                                                       &pextended_edge_vtx,
-                                                                       &pvtx_extended_to_pvtx_idx,
-                                                                       &pvtx_extended_to_pvtx_triplet,
-                                                                       &pvtx_extended_to_pvtx_interface,
-                                                                       &next_dvtx_itrf_n_blk,
-                                                                       &next_dvtx_itrf_blk_gnum,
-                                                                       &next_dvtx_itrf_blk_ancstr_strd,
-                                                                       &next_dvtx_itrf_blk_ancstr,
-                                                                       &next_dvtx_itrf_blk_path_itrf_strd,
-                                                                       &next_dvtx_itrf_blk_path_itrf,
-                                                                       &next_dvtx_itrf_gnum_and_itrf_strid,
-                                                                       &next_dvtx_itrf_gnum_and_itrf_data,
-                                                                       &next_dvtx_itrf_gnum_and_itrf_sens,
+                                                                       pedge_extended_to_pedge_sens,
+                                                                      &pn_vtx_extended,
+                                                                      &pvtx_extended_ln_to_gn,
+                                                                      &pextended_edge_vtx_idx,
+                                                                      &pextended_edge_vtx,
+                                                                      &pvtx_extended_to_pvtx_idx,
+                                                                      &pvtx_extended_to_pvtx_triplet,
+                                                                      &pvtx_extended_to_pvtx_interface,
+                                                                       NULL,
+                                                                      &next_dvtx_itrf_n_blk,
+                                                                      &next_dvtx_itrf_blk_gnum,
+                                                                      &next_dvtx_itrf_blk_ancstr_strd,
+                                                                      &next_dvtx_itrf_blk_ancstr,
+                                                                      &next_dvtx_itrf_blk_path_itrf_strd,
+                                                                      &next_dvtx_itrf_blk_path_itrf,
+                                                                      &next_dvtx_itrf_gnum_and_itrf_strid,
+                                                                      &next_dvtx_itrf_gnum_and_itrf_data,
+                                                                       NULL,
                                                                        part_ext->comm);
       log_trace("\n\n");
       log_trace("PDM_part_extension_pentity1_entity2_to_extended_pentity1_entity2 end (Edge->Vtx)\n");
       log_trace("================================================================================\n");
 
-
+      for(int i_part = 0; i_part < part_ext->ln_part_tot; ++i_part) {
+        free(pedge_extended_to_pedge_sens[i_part]);
+      }
+      free(pedge_extended_to_pedge_sens);
+      
       free(prev_dvtx_itrf_blk_gnum);
       free(prev_dvtx_itrf_blk_ancstr_strd);
       free(prev_dvtx_itrf_blk_ancstr);
@@ -1827,7 +1833,6 @@ _part_extension_2d
       free(prev_dvtx_itrf_blk_path_itrf);
       free(prev_dvtx_itrf_gnum_and_itrf_strid);
       free(prev_dvtx_itrf_gnum_and_itrf_data);
-      free(prev_dvtx_itrf_gnum_and_itrf_sens);
       prev_dvtx_itrf_n_blk               = next_dvtx_itrf_n_blk;
       prev_dvtx_itrf_blk_gnum            = next_dvtx_itrf_blk_gnum;
       prev_dvtx_itrf_blk_ancstr_strd     = next_dvtx_itrf_blk_ancstr_strd;
@@ -1836,7 +1841,6 @@ _part_extension_2d
       prev_dvtx_itrf_blk_path_itrf       = next_dvtx_itrf_blk_path_itrf;
       prev_dvtx_itrf_gnum_and_itrf_strid = next_dvtx_itrf_gnum_and_itrf_strid;
       prev_dvtx_itrf_gnum_and_itrf_data  = next_dvtx_itrf_gnum_and_itrf_data;
-      prev_dvtx_itrf_gnum_and_itrf_sens  = next_dvtx_itrf_gnum_and_itrf_sens;
 
       part_ext->dentity_itrf_n_blk              [PDM_BOUND_TYPE_VTX] = prev_dvtx_itrf_n_blk;
       part_ext->dentity_itrf_blk_gnum           [PDM_BOUND_TYPE_VTX] = prev_dvtx_itrf_blk_gnum;
@@ -1845,8 +1849,6 @@ _part_extension_2d
       // part_ext->dentity_itrf_blk_path_itrf      [PDM_BOUND_TYPE_VTX] = prev_dvtx_itrf_blk_path_itrf;
       part_ext->dentity_itrf_gnum_and_itrf_strid[PDM_BOUND_TYPE_VTX] = prev_dvtx_itrf_gnum_and_itrf_strid;
       part_ext->dentity_itrf_gnum_and_itrf_data [PDM_BOUND_TYPE_VTX] = prev_dvtx_itrf_gnum_and_itrf_data;
-      part_ext->dentity_itrf_gnum_and_itrf_sens [PDM_BOUND_TYPE_VTX] = prev_dvtx_itrf_gnum_and_itrf_sens;
-      // part_ext->dentity_itrf_gnum_and_itrf_sens [PDM_BOUND_TYPE_VTX];
 
     }
     else {
@@ -1865,7 +1867,7 @@ _part_extension_2d
                                                                        prev_dvtx_itrf_blk_path_itrf,
                                                                        prev_dvtx_itrf_gnum_and_itrf_strid,
                                                                        prev_dvtx_itrf_gnum_and_itrf_data,
-                                                                       prev_dvtx_itrf_gnum_and_itrf_sens,
+                                                                       NULL,
                                                                        pn_face,
                                                                        pface_ln_to_gn,
                                                                        pn_vtx,
@@ -1877,22 +1879,24 @@ _part_extension_2d
                                                                        pface_extended_to_pface_idx,
                                                                        pface_extended_to_pface_triplet,
                                                                        pface_extended_to_pface_interface,
-                                                                       &pn_vtx_extended,
-                                                                       &pvtx_extended_ln_to_gn,
-                                                                       &pextended_face_vtx_idx,
-                                                                       &pextended_face_vtx,
-                                                                       &pvtx_extended_to_pvtx_idx,
-                                                                       &pvtx_extended_to_pvtx_triplet,
-                                                                       &pvtx_extended_to_pvtx_interface,
-                                                                       &next_dvtx_itrf_n_blk,
-                                                                       &next_dvtx_itrf_blk_gnum,
-                                                                       &next_dvtx_itrf_blk_ancstr_strd,
-                                                                       &next_dvtx_itrf_blk_ancstr,
-                                                                       &next_dvtx_itrf_blk_path_itrf_strd,
-                                                                       &next_dvtx_itrf_blk_path_itrf,
-                                                                       &next_dvtx_itrf_gnum_and_itrf_strid,
-                                                                       &next_dvtx_itrf_gnum_and_itrf_data,
-                                                                       &next_dvtx_itrf_gnum_and_itrf_sens,
+                                                                       NULL,
+                                                                      &pn_vtx_extended,
+                                                                      &pvtx_extended_ln_to_gn,
+                                                                      &pextended_face_vtx_idx,
+                                                                      &pextended_face_vtx,
+                                                                      &pvtx_extended_to_pvtx_idx,
+                                                                      &pvtx_extended_to_pvtx_triplet,
+                                                                      &pvtx_extended_to_pvtx_interface,
+                                                                       NULL,
+                                                                      &next_dvtx_itrf_n_blk,
+                                                                      &next_dvtx_itrf_blk_gnum,
+                                                                      &next_dvtx_itrf_blk_ancstr_strd,
+                                                                      &next_dvtx_itrf_blk_ancstr,
+                                                                      &next_dvtx_itrf_blk_path_itrf_strd,
+                                                                      &next_dvtx_itrf_blk_path_itrf,
+                                                                      &next_dvtx_itrf_gnum_and_itrf_strid,
+                                                                      &next_dvtx_itrf_gnum_and_itrf_data,
+                                                                       NULL,
                                                                        part_ext->comm);
       log_trace("\n\n");
       log_trace("PDM_part_extension_pentity1_entity2_to_extended_pentity1_entity2 end (Face->Vtx) \n");
@@ -1905,7 +1909,6 @@ _part_extension_2d
       free(prev_dvtx_itrf_blk_path_itrf      );
       free(prev_dvtx_itrf_gnum_and_itrf_strid);
       free(prev_dvtx_itrf_gnum_and_itrf_data );
-      free(prev_dvtx_itrf_gnum_and_itrf_sens );
       prev_dvtx_itrf_n_blk               = next_dvtx_itrf_n_blk;
       prev_dvtx_itrf_blk_gnum            = next_dvtx_itrf_blk_gnum;
       prev_dvtx_itrf_blk_ancstr_strd     = next_dvtx_itrf_blk_ancstr_strd;
@@ -1914,7 +1917,6 @@ _part_extension_2d
       prev_dvtx_itrf_blk_path_itrf       = next_dvtx_itrf_blk_path_itrf;
       prev_dvtx_itrf_gnum_and_itrf_strid = next_dvtx_itrf_gnum_and_itrf_strid;
       prev_dvtx_itrf_gnum_and_itrf_data  = next_dvtx_itrf_gnum_and_itrf_data;
-      prev_dvtx_itrf_gnum_and_itrf_sens  = next_dvtx_itrf_gnum_and_itrf_sens;
 
       part_ext->dentity_itrf_n_blk              [PDM_BOUND_TYPE_VTX] = prev_dvtx_itrf_n_blk;
       part_ext->dentity_itrf_blk_gnum           [PDM_BOUND_TYPE_VTX] = prev_dvtx_itrf_blk_gnum;
@@ -1923,7 +1925,6 @@ _part_extension_2d
       // part_ext->dentity_itrf_blk_path_itrf      [PDM_BOUND_TYPE_VTX] = prev_dvtx_itrf_blk_path_itrf;
       part_ext->dentity_itrf_gnum_and_itrf_strid[PDM_BOUND_TYPE_VTX] = prev_dvtx_itrf_gnum_and_itrf_strid;
       part_ext->dentity_itrf_gnum_and_itrf_data [PDM_BOUND_TYPE_VTX] = prev_dvtx_itrf_gnum_and_itrf_data;
-      part_ext->dentity_itrf_gnum_and_itrf_sens [PDM_BOUND_TYPE_VTX] = prev_dvtx_itrf_gnum_and_itrf_sens;
 
 
       if(debug == 1) {
