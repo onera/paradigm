@@ -149,6 +149,7 @@ PDM_part_extension_pentity1_entity2_to_extended_pentity1_entity2
  int                  **pentity1_extended_to_pentity1_triplet,
  int                  **pentity1_extended_to_pentity1_interface,
  int                  **pentity1_extended_to_pentity1_sens,
+ int                    keep_all_parent,
  int                  **pn_entity2_extended_out,
  PDM_g_num_t         ***pentity2_extended_ln_to_gn_out,
  int                 ***pextended_entity1_entity2_idx_out,

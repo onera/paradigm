@@ -1788,6 +1788,7 @@ _part_extension_2d
                                                                        pface_extended_to_pface_triplet,
                                                                        pface_extended_to_pface_interface,
                                                                        NULL,
+                                                                       1,
                                                                        &pn_edge_extended,
                                                                        &pedge_extended_ln_to_gn,
                                                                        &pextended_face_edge_idx,
@@ -1863,6 +1864,7 @@ _part_extension_2d
                                                                        pedge_extended_to_pedge_triplet,
                                                                        pedge_extended_to_pedge_interface,
                                                                        pedge_extended_to_pedge_sens,
+                                                                       0,
                                                                       &pn_vtx_extended,
                                                                       &pvtx_extended_ln_to_gn,
                                                                       &pextended_edge_vtx_idx,
@@ -1944,6 +1946,7 @@ _part_extension_2d
                                                                        pface_extended_to_pface_triplet,
                                                                        pface_extended_to_pface_interface,
                                                                        NULL,
+                                                                       0,
                                                                       &pn_vtx_extended,
                                                                       &pvtx_extended_ln_to_gn,
                                                                       &pextended_face_vtx_idx,
@@ -1990,13 +1993,6 @@ _part_extension_2d
       part_ext->dentity_itrf_gnum_and_itrf_strid[PDM_BOUND_TYPE_VTX] = prev_dvtx_itrf_gnum_and_itrf_strid;
       part_ext->dentity_itrf_gnum_and_itrf_data [PDM_BOUND_TYPE_VTX] = prev_dvtx_itrf_gnum_and_itrf_data;
 
-
-      if(debug == 1) {
-        for(int i_part = 0; i_part < part_ext->ln_part_tot; ++i_part) {
-          PDM_log_trace_array_long(pvtx_extended_ln_to_gn      [i_part], pn_vtx_extended[i_part], "pvtx_extended_ln_to_gn ::");
-          PDM_log_trace_connectivity_int(pextended_face_vtx_idx[i_part], pextended_face_vtx[i_part], pn_face_extended[i_part], "pextended_face_vtx ::");
-        }
-      }
     }
 
     /*
@@ -2522,18 +2518,18 @@ _part_extension_2d
 
   for(int i_part = 0; i_part < part_ext->ln_part_tot; ++i_part) {
     free(pvtx_ln_to_gn      [i_part]);
-    free(pedge_ln_to_gn     [i_part]);
     free(pface_ln_to_gn     [i_part]);
     free(pface_alrdy_sent   [i_part]);
     if (part_ext->have_edge==1) {
-      free(pface_edge_idx     [i_part]);
-      free(pface_edge         [i_part]);
-      free(pedge_vtx_idx      [i_part]);
-      free(pedge_vtx          [i_part]);
+      free(pedge_ln_to_gn   [i_part]);
+      free(pface_edge_idx   [i_part]);
+      free(pface_edge       [i_part]);
+      free(pedge_vtx_idx    [i_part]);
+      free(pedge_vtx        [i_part]);
     }
     else {
-      free(pface_vtx_idx      [i_part]);
-      free(pface_vtx          [i_part]);
+      free(pface_vtx_idx    [i_part]);
+      free(pface_vtx        [i_part]);
     }
     free(pvtx_coords        [i_part]);
   }
@@ -2756,7 +2752,8 @@ PDM_part_extension_compute2
 )
 {
   // TODO : mv dim in create but break API
-  part_ext->compute_kind  = 1;
+  part_ext->dim          = dim;
+  part_ext->compute_kind = 1;
 
   part_ext->ln_part_tot = 0;
   for(int i_dom = 0; i_dom < part_ext->n_domain; ++i_dom) {
