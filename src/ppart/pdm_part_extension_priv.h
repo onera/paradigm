@@ -40,6 +40,8 @@ struct _pdm_part_extension_t {
   PDM_MPI_Comm      comm;            /*!< MPI communicator                          */
   PDM_ownership_t   owner;           /*!< Which have the responsabilities of results*/
 
+  int               dim;
+
   PDM_extend_type_t extend_type;
   int               depth;
 
