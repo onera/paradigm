@@ -375,6 +375,10 @@ PDM_isosurface_create
   isos->iso_edge_gnum         = NULL;
   isos->iso_edge_lparent_idx  = NULL;
   isos->iso_edge_lparent      = NULL;
+  isos->iso_n_edge_group      = NULL;
+  isos->iso_edge_group_idx    = NULL;
+  isos->iso_edge_group_lnum   = NULL;
+  isos->iso_edge_group_gnum   = NULL;
   isos->isovalue_edge_idx     = NULL;
 
   isos->iso_n_face            = NULL;
@@ -396,6 +400,7 @@ PDM_isosurface_create
   isos->iso_owner_gnum              = NULL;
   isos->iso_owner_connec            = NULL;
   isos->iso_owner_lparent           = NULL;
+  isos->iso_owner_edge_bnd          = NULL;
   isos->iso_owner_ptp               = NULL;
 
 
@@ -477,12 +482,20 @@ PDM_isosurface_add
   isos->iso_edge_gnum        = realloc(isos->iso_edge_gnum       , sizeof(PDM_g_num_t  **) * isos->n_isosurface);
   isos->iso_edge_lparent_idx = realloc(isos->iso_edge_lparent_idx, sizeof(int          **) * isos->n_isosurface);
   isos->iso_edge_lparent     = realloc(isos->iso_edge_lparent    , sizeof(int          **) * isos->n_isosurface);
+  isos->iso_n_edge_group     = realloc(isos->iso_n_edge_group    , sizeof(int            ) * isos->n_isosurface);
+  isos->iso_edge_group_idx   = realloc(isos->iso_edge_group_idx  , sizeof(int          **) * isos->n_isosurface);
+  isos->iso_edge_group_lnum  = realloc(isos->iso_edge_group_lnum , sizeof(int          **) * isos->n_isosurface);
+  isos->iso_edge_group_gnum  = realloc(isos->iso_edge_group_gnum , sizeof(PDM_g_num_t  **) * isos->n_isosurface);
   isos->isovalue_edge_idx    = realloc(isos->isovalue_edge_idx   , sizeof(int          **) * isos->n_isosurface);
   isos->iso_n_edge          [id_isosurface] = NULL;
   isos->iso_edge_vtx        [id_isosurface] = NULL;
   isos->iso_edge_gnum       [id_isosurface] = NULL;
   isos->iso_edge_lparent_idx[id_isosurface] = NULL;
   isos->iso_edge_lparent    [id_isosurface] = NULL;
+  isos->iso_n_edge_group    [id_isosurface] = 0;
+  isos->iso_edge_group_idx  [id_isosurface] = NULL;
+  isos->iso_edge_group_lnum [id_isosurface] = NULL;
+  isos->iso_edge_group_gnum [id_isosurface] = NULL;
   isos->isovalue_edge_idx   [id_isosurface] = NULL;
 
   // > Partitioned iso faces
@@ -512,12 +525,14 @@ PDM_isosurface_add
   isos->iso_owner_gnum              = realloc(isos->iso_owner_gnum              , sizeof(PDM_ownership_t **) * isos->n_isosurface);
   isos->iso_owner_connec            = realloc(isos->iso_owner_connec            , sizeof(PDM_ownership_t **) * isos->n_isosurface);
   isos->iso_owner_lparent           = realloc(isos->iso_owner_lparent           , sizeof(PDM_ownership_t **) * isos->n_isosurface);
+  isos->iso_owner_edge_bnd          = realloc(isos->iso_owner_edge_bnd          , sizeof(PDM_ownership_t **) * isos->n_isosurface);
   isos->iso_owner_ptp               = realloc(isos->iso_owner_ptp               , sizeof(PDM_ownership_t  *) * isos->n_isosurface);
   isos->iso_owner_vtx_coord        [id_isosurface] = NULL;
   isos->iso_owner_vtx_parent_weight[id_isosurface] = NULL;
   isos->iso_owner_gnum             [id_isosurface] = NULL;
   isos->iso_owner_connec           [id_isosurface] = NULL;
   isos->iso_owner_lparent          [id_isosurface] = NULL;
+  isos->iso_owner_edge_bnd         [id_isosurface] = NULL;
   isos->iso_owner_ptp              [id_isosurface] = NULL;
 
   isos->kind       [id_isosurface] = kind;
@@ -800,7 +815,10 @@ PDM_isosurface_free
         }
         free(isos->iso_edge_lparent_idx[id_iso][i_part]);
         free(isos->iso_edge_lparent    [id_iso][i_part]);
-        free(isos->isovalue_edge_idx    [id_iso][i_part]);
+        free(isos->iso_edge_group_idx  [id_iso][i_part]);
+        free(isos->iso_edge_group_lnum [id_iso][i_part]);
+        free(isos->iso_edge_group_gnum [id_iso][i_part]);
+        free(isos->isovalue_edge_idx   [id_iso][i_part]);
       }
     }
     if (isos->iso_n_edge[id_iso]!=NULL) {
@@ -817,6 +835,15 @@ PDM_isosurface_free
     }
     if (isos->iso_edge_lparent[id_iso]!=NULL) {
       free(isos->iso_edge_lparent[id_iso]);
+    }
+    if (isos->iso_edge_group_idx[id_iso]!=NULL) {//TODO: aled plz make a safe dealloc
+      free(isos->iso_edge_group_idx[id_iso]);
+    }
+    if (isos->iso_edge_group_lnum[id_iso]!=NULL) {//TODO: aled plz make a safe dealloc
+      free(isos->iso_edge_group_lnum[id_iso]);
+    }
+    if (isos->iso_edge_group_gnum[id_iso]!=NULL) {//TODO: aled plz make a safe dealloc
+      free(isos->iso_edge_group_gnum[id_iso]);
     }
     if (isos->isovalue_edge_idx[id_iso]!=NULL) {
       free(isos->isovalue_edge_idx[id_iso]);
@@ -873,6 +900,10 @@ PDM_isosurface_free
   free(isos->iso_edge_gnum);
   free(isos->iso_edge_lparent_idx);
   free(isos->iso_edge_lparent);
+  free(isos->iso_n_edge_group);
+  free(isos->iso_edge_group_idx);
+  free(isos->iso_edge_group_lnum);
+  free(isos->iso_edge_group_gnum);
   free(isos->isovalue_edge_idx);
 
   free(isos->iso_n_face);
@@ -929,12 +960,16 @@ PDM_isosurface_free
     if (isos->iso_owner_lparent[id_iso]!=NULL) {
       free(isos->iso_owner_lparent[id_iso]);
     }
+    if (isos->iso_owner_edge_bnd[id_iso]!=NULL) {
+      free(isos->iso_owner_edge_bnd[id_iso]);
+    }
   }
   free(isos->iso_owner_vtx_coord);
   free(isos->iso_owner_vtx_parent_weight);
   free(isos->iso_owner_gnum);
   free(isos->iso_owner_connec);
   free(isos->iso_owner_lparent);
+  free(isos->iso_owner_edge_bnd);
   free(isos->iso_owner_ptp);
 
 

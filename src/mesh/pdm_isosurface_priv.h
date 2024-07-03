@@ -214,8 +214,12 @@ struct _pdm_isosurface_t {
   int            **iso_n_edge;
   int           ***iso_edge_vtx;
   PDM_g_num_t   ***iso_edge_gnum;
-  int           ***iso_edge_lparent_idx; //TODO: edge_parent_idx pour les edges a cheval sur 2 faces ?
-  int           ***iso_edge_lparent; //TODO: edge_parent_idx pour les edges a cheval sur 2 faces ?
+  int           ***iso_edge_lparent_idx;
+  int           ***iso_edge_lparent;
+  int             *iso_n_edge_group;
+  int           ***iso_edge_group_idx;
+  int           ***iso_edge_group_lnum;
+  PDM_g_num_t   ***iso_edge_group_gnum;
   int           ***isovalue_edge_idx;
 
   // > Faces
@@ -223,7 +227,7 @@ struct _pdm_isosurface_t {
   int           ***iso_face_vtx_idx;
   int           ***iso_face_vtx;
   PDM_g_num_t   ***iso_face_gnum;
-  int           ***iso_face_lparent_idx; //TODO: edge_parent_idx pour les faces a cheval sur 2 cellule ?
+  int           ***iso_face_lparent_idx;
   int           ***iso_face_lparent;
   int           ***isovalue_face_idx;
 
@@ -239,6 +243,7 @@ struct _pdm_isosurface_t {
   PDM_ownership_t ***iso_owner_connec;
   PDM_ownership_t ***iso_owner_lparent;
   PDM_ownership_t  **iso_owner_ptp;
+  PDM_ownership_t  **iso_owner_edge_bnd;
 
 
   // ===============

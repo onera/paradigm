@@ -27,6 +27,7 @@
 #include "pdm_part_to_part.h"
 #include "pdm_isosurface.h"
 #include "pdm_isosurface_priv.h"
+#include "pdm_unique.h"
 #include "pdm_vtk.h"
 
 /*----------------------------------------------------------------------------*/
@@ -446,6 +447,47 @@ _compare_nuplets
 
 
 /**
+ * \brief Convert group info into tag
+ */
+static void
+_convert_group_info_to_tag
+(
+  PDM_part_mesh_nodal_t  *pmn,
+  int                     i_part,
+  int                     n_elt,
+  PDM_geometry_kind_t     geom_kind,
+  int                   **elt_bnd_tag_out
+)
+{
+  int debug = 0;
+
+  *elt_bnd_tag_out = PDM_array_zeros_int(n_elt);
+  int *elt_bnd_tag = *elt_bnd_tag_out;
+  int n_group = PDM_part_mesh_nodal_n_group_get(pmn, geom_kind);
+  for (int i_group=0; i_group<n_group; ++i_group) {
+    int          n_group_elmt    = 0;
+    int         *group_elmt_lnum = 0;
+    PDM_g_num_t *group_elmt_gnum = 0;
+    PDM_part_mesh_nodal_group_get(pmn,
+                                  geom_kind,
+                                  i_part,
+                                  i_group,
+                                 &n_group_elmt,
+                                 &group_elmt_lnum,
+                                 &group_elmt_gnum,
+                                  PDM_OWNERSHIP_KEEP);
+    for (int i_elmt=0; i_elmt<n_group_elmt; ++i_elmt) {
+      assert(elt_bnd_tag[group_elmt_lnum[i_elmt]-1]==0);
+      elt_bnd_tag[group_elmt_lnum[i_elmt]-1] = i_group+1;
+    }
+  }
+  if (debug==1) {
+    PDM_log_trace_array_int(elt_bnd_tag, n_elt, "elt_bnd_tag ::");
+  }
+}
+
+
+/**
  * \brief
  * Go though each section of iso pmn, rebuild active edge (cross by iso or on iso) of elements
  * making edge shared by multiple elements unique. For each element of each section, link is kept
@@ -461,9 +503,12 @@ _build_active_edges
   double                 *vtx_field,
   int                    *n_edge,
   int                   **edge_vtx,
+  int                   **edge_bnd_tag_idx,
+  int                   **edge_bnd_tag,
   int                   **edge_parent_idx,
   int                   **edge_parent,
   int                   **elt_edge,
+  int                   **elt_edge_bnd_tag,
   int                    *n_crossings
 )
 {
@@ -568,7 +613,8 @@ _build_active_edges
   if (debug==1) log_trace("n_active_edges = %d\n", key_idx[max_key]);
   int *key_edge  = malloc(sizeof(int) * key_idx[max_key]);
   int *_edge_vtx = malloc(sizeof(int) * key_idx[max_key] * 2);
-  int *_edge_count_parent = PDM_array_zeros_int(key_idx[max_key]);
+  int *_edge_count_parent  = PDM_array_zeros_int(key_idx[max_key]);
+  int *_edge_count_bnd_tag = PDM_array_zeros_int(key_idx[max_key]);
   *n_edge = 0;
 
   for (int i_section = 0; i_section < n_section; i_section++) {
@@ -604,8 +650,19 @@ _build_active_edges
     int elt_n_vtx = PDM_Mesh_nodal_n_vtx_elt_get(t_elt, 1);
 
     elt_edge[i_section] = PDM_array_zeros_int(n_pair*n_elt);
+    int has_bnd = 0;
+    if (t_elt==PDM_MESH_NODAL_TRIA3) {
+      _convert_group_info_to_tag(pmn, i_part, n_elt, PDM_GEOMETRY_KIND_SURFACIC, &elt_edge_bnd_tag[i_section]);
+      has_bnd = 1;
+    }
 
     for (int i_elt = 0; i_elt < n_elt; i_elt++) {
+
+      int is_bnd = 0;
+      if (has_bnd) {
+        is_bnd = elt_edge_bnd_tag[i_section][i_elt]!=0;
+      }
+
       int *_connec = connec + elt_n_vtx*i_elt;
       for (int i_pair = 0; i_pair < n_pair; i_pair++) {
         int i_vtx0 = _connec[pairs[2*i_pair  ]];
@@ -656,7 +713,9 @@ _build_active_edges
               }
 
               _edge_count_parent[PDM_ABS(edge_id)-1]++;
-              
+              if (is_bnd==1) {
+                _edge_count_bnd_tag[PDM_ABS(edge_id)-1]++;
+              }
             }
           }
         } // End if active edge
@@ -669,8 +728,9 @@ _build_active_edges
 
   if (debug==1) {
     log_trace("(*n_edge) = %d\n", (*n_edge));
-    PDM_log_trace_array_int(_edge_count_parent, key_idx[max_key]  , "_edge_count_parent ::");
-    PDM_log_trace_array_int(_edge_vtx         , key_idx[max_key]*2, "_edge_vtx          ::");
+    PDM_log_trace_array_int(_edge_count_bnd_tag, key_idx[max_key]  , "_edge_count_bnd_tag ::");
+    PDM_log_trace_array_int(_edge_count_parent , key_idx[max_key]  , "_edge_count_parent  ::");
+    PDM_log_trace_array_int(_edge_vtx          , key_idx[max_key]*2, "_edge_vtx           ::");
   }
 
 
@@ -678,11 +738,17 @@ _build_active_edges
   /**
    * Third loop to set edge parent
    */
-  int *_edge_parent_idx   = PDM_array_new_idx_from_sizes_int(_edge_count_parent, *n_edge);
-  int n_parent_tot  = _edge_parent_idx[*n_edge];
-  int *_edge_parent = PDM_array_zeros_int(n_parent_tot);
-  PDM_array_reset_int(_edge_count_parent, *n_edge, 0);
+  int *_edge_bnd_tag_idx = PDM_array_new_idx_from_sizes_int(_edge_count_bnd_tag, *n_edge);
+  int *_edge_parent_idx  = PDM_array_new_idx_from_sizes_int(_edge_count_parent , *n_edge);
+  int n_bnd_tag_tot  = _edge_bnd_tag_idx[*n_edge];
+  int n_parent_tot   = _edge_parent_idx [*n_edge];
+  int *_edge_bnd_tag = PDM_array_zeros_int(n_parent_tot);
+  int *_edge_parent  = PDM_array_zeros_int(n_parent_tot);
+  PDM_array_reset_int(_edge_count_bnd_tag, *n_edge, 0);
+  PDM_array_reset_int(_edge_count_parent , *n_edge, 0);
   if (debug==1) {
+    log_trace("n_bnd_tag_tot = %d\n", n_bnd_tag_tot);
+    PDM_log_trace_array_int(_edge_count_bnd_tag,   key_idx[max_key], "_edge_count_bnd_tag ::");
     log_trace("n_parent_tot = %d\n", n_parent_tot);
     PDM_log_trace_array_int(_edge_count_parent,   key_idx[max_key], "_edge_count_parent ::");
     PDM_log_trace_array_int(_edge_parent_idx  , (*n_edge)+1       , "_edge_parent_idx   ::");
@@ -718,38 +784,59 @@ _build_active_edges
                                         PDM_OWNERSHIP_BAD_VALUE);
 
     int n_pair = PDM_n_nedge_elt_per_elmt(t_elt);
+    int has_bnd = elt_edge_bnd_tag[i_section]!=NULL;
 
     for (int i_elt = 0; i_elt < n_elt; i_elt++) {
+
+      int elt_tag = 0;
+      if (has_bnd==1) {
+        elt_tag = elt_edge_bnd_tag[i_section][i_elt];
+      }
+
       for (int i_pair = 0; i_pair < n_pair; i_pair++) {
         int edge_id = PDM_ABS(elt_edge[i_section][n_pair*i_elt+i_pair]);
-        if (edge_id!=0 && _edge_parent_idx[edge_id]-_edge_parent_idx[edge_id-1] != 0) {
-          int i_write_data = _edge_parent_idx[edge_id-1] + _edge_count_parent[edge_id-1];
+
+        // > Fill parent
+        if (edge_id!=0 && _edge_parent_idx[edge_id]-_edge_parent_idx[edge_id-1]!=0) {
+          int i_write = _edge_parent_idx[edge_id-1] + _edge_count_parent[edge_id-1];
           if (parent_num) {
-            _edge_parent[i_write_data] = parent_num[i_elt]+1;
+            _edge_parent[i_write] = parent_num[i_elt]+1;
           }
           else {
-            _edge_parent[i_write_data] = i_elt+1;
+            _edge_parent[i_write] = i_elt+1;
           }
           _edge_count_parent[edge_id-1]++;
         } // End if has parent
+          
+        // > Fill bnd tag
+        if (edge_id!=0 && elt_tag!=0 && _edge_bnd_tag_idx[edge_id]-_edge_bnd_tag_idx[edge_id-1]!=0) {
+          int i_write = _edge_bnd_tag_idx[edge_id-1] + _edge_count_bnd_tag[edge_id-1];
+          _edge_bnd_tag[i_write] = elt_tag;
+          _edge_count_bnd_tag[edge_id-1]++;
+        } // End if has bnd tag
+          
       } // End of loop on pairs
     } // End of loop on elements
   } // End of loop on sections
   
 
   if (debug==1) {
-    PDM_log_trace_array_int(_edge_count_parent, *n_edge     , "_edge_count_parent ::");
-    PDM_log_trace_array_int(_edge_parent      , n_parent_tot, "_edge_parent       ::");
+    PDM_log_trace_array_int(_edge_count_bnd_tag, *n_edge     , "_edge_count_bnd_tag ::");
+    PDM_log_trace_array_int(_edge_count_parent , *n_edge     , "_edge_count_parent  ::");
+    PDM_log_trace_array_int(_edge_parent       , n_parent_tot, "_edge_parent        ::");
   }
   
 
   // > Output
-  *edge_parent_idx = _edge_parent_idx;
-  *edge_parent     = _edge_parent;
-  *edge_vtx        = realloc(_edge_vtx, sizeof(int) * (*n_edge) * 2);
+  *edge_bnd_tag_idx = _edge_bnd_tag_idx;
+  *edge_bnd_tag     = _edge_bnd_tag;
+  *edge_parent_idx  = _edge_parent_idx;
+  *edge_parent      = _edge_parent;
+  *edge_vtx         = realloc(_edge_vtx, sizeof(int) * (*n_edge) * 2);
 
   // > Free tmp arrays
   free(_edge_count_parent);
+  free(_edge_count_bnd_tag);
 }
 
 
@@ -921,7 +1008,7 @@ _build_active_faces
 
     int elt_n_vtx = PDM_Mesh_nodal_n_vtx_elt_get(t_elt, 1);
 
-    elt_face[i_section] = PDM_array_zeros_int(section_n_face_tot[i_section]*n_elt);
+    elt_face[i_section] = PDM_array_zeros_int(section_n_face_tot[i_section]);
     section_n_face_tot[i_section] = 0;
     for (int i_elt = 0; i_elt < n_elt; i_elt++) {
       // if (debug_loop) log_trace("i_elt = %d/%d\n", i_elt, n_elt);
@@ -1244,7 +1331,10 @@ _contouring_triangles
   int           n_elt,
   int          *elt_vtx,
   PDM_g_num_t  *elt_gnum,
+  int          *elt_bnd_tag,
   int           n_edge,
+  int          *edge_bnd_tag_idx,
+  int          *edge_bnd_tag,
   int          *edge_parent_idx,
   int          *edge_parent,
   int          *elt_edge,
@@ -1255,6 +1345,9 @@ _contouring_triangles
   int          *out_iso_n_edge,
   int         **out_iso_edge_vtx,
   PDM_g_num_t **out_iso_edge_parent_gnum,
+  int          *out_iso_n_edge_bnd_tag,
+  int         **out_iso_edge_bnd_tag_idx,
+  int         **out_iso_edge_bnd_tag,
   int          *out_iso_n_edge_parent,
   int         **out_iso_edge_parent_idx,
   int         **out_iso_edge_parent
@@ -1265,12 +1358,15 @@ _contouring_triangles
 
 
   /* First loop to count */
-  int  iso_n_edge   = *out_iso_n_edge;
   int *iso_edge_def = PDM_array_zeros_int(n_edge);
-  int  iso_n_edge_parent = 0;
-  if (debug==1) log_trace("iso_n_edge = %d\n", iso_n_edge);
+  int  iso_n_edge         = 0;
+  int  iso_n_edge_parent  = 0;
+  int  iso_n_edge_bnd_tag = 0;
+
   for (int i_elt = 0; i_elt < n_elt; i_elt++) {
     if (debug_loop==1) log_trace("\ti_elt = %d\n", i_elt);
+
+    int is_bnd = elt_bnd_tag[i_elt]!=0;
 
     unsigned char pattern = 0;
     for (int i_edge = 0; i_edge < 3; i_edge++) {
@@ -1285,6 +1381,9 @@ _contouring_triangles
     if (pattern > 0 && pattern < 7) {
       iso_n_edge++;
       iso_n_edge_parent++;
+      if (is_bnd) {
+        iso_n_edge_bnd_tag++;
+      }
     }
     else if (pattern == 0) {
 
@@ -1310,6 +1409,9 @@ _contouring_triangles
           iso_n_edge++;
         }
         iso_n_edge_parent += edge_parent_idx[edge_id2+1]-edge_parent_idx[edge_id2];
+        if (is_bnd) {
+          iso_n_edge_bnd_tag += edge_bnd_tag_idx[edge_id2+1]-edge_bnd_tag_idx[edge_id2];
+        }
       }
 
       else if (vtx_on_vtx0!=0 && vtx_on_vtx2!=0) {
@@ -1320,6 +1422,9 @@ _contouring_triangles
           iso_n_edge++;
         }
         iso_n_edge_parent += edge_parent_idx[edge_id1+1]-edge_parent_idx[edge_id1];
+        if (is_bnd) {
+          iso_n_edge_bnd_tag += edge_bnd_tag_idx[edge_id1+1]-edge_bnd_tag_idx[edge_id1];
+        }
       }
 
       else if (vtx_on_vtx1!=0 && vtx_on_vtx2!=0) {
@@ -1330,32 +1435,45 @@ _contouring_triangles
           iso_n_edge++;
         }
         iso_n_edge_parent += edge_parent_idx[edge_id0+1]-edge_parent_idx[edge_id0];
+        if (is_bnd) {
+          iso_n_edge_bnd_tag += edge_bnd_tag_idx[edge_id0+1]-edge_bnd_tag_idx[edge_id0];
+        }
       }
     }
 
   } // End of loop on elements
-  if (debug==1) log_trace("iso_n_edge = %d\n", iso_n_edge);
-  if (debug==1) log_trace("iso_n_edge_parent = %d\n", iso_n_edge_parent);
+  if (debug==1) log_trace("iso_n_edge         = %d\n", iso_n_edge);
+  if (debug==1) log_trace("iso_n_edge_bnd_tag = %d\n", iso_n_edge_bnd_tag);
+  if (debug==1) log_trace("iso_n_edge_parent  = %d\n", iso_n_edge_parent);
 
 
   /* Allocate */
-  iso_n_edge_parent += *out_iso_n_edge_parent;
-  int         *iso_edge_vtx          = realloc(*out_iso_edge_vtx,         2 * iso_n_edge       * sizeof(int        ));
-  PDM_g_num_t *iso_edge_parent_gnum  = realloc(*out_iso_edge_parent_gnum, 2 * iso_n_edge       * sizeof(PDM_g_num_t));
-  int         *iso_edge_parent_idx   = realloc(*out_iso_edge_parent_idx ,    (iso_n_edge+1)    * sizeof(int        ));
-  int         *iso_edge_parent       = realloc(*out_iso_edge_parent     ,     iso_n_edge_parent* sizeof(int        ));
+
+  iso_n_edge         += *out_iso_n_edge;
+  iso_n_edge_parent  += *out_iso_n_edge_parent;
+  iso_n_edge_bnd_tag += *out_iso_n_edge_bnd_tag;
+  int         *iso_edge_vtx          = realloc(*out_iso_edge_vtx,         2 * iso_n_edge        * sizeof(int        ));
+  PDM_g_num_t *iso_edge_parent_gnum  = realloc(*out_iso_edge_parent_gnum, 2 * iso_n_edge        * sizeof(PDM_g_num_t));
+  int         *iso_edge_bnd_tag_idx  = realloc(*out_iso_edge_bnd_tag_idx,    (iso_n_edge+1)     * sizeof(int        ));
+  int         *iso_edge_bnd_tag      = realloc(*out_iso_edge_bnd_tag    ,     iso_n_edge_bnd_tag* sizeof(int        ));
+  int         *iso_edge_parent_idx   = realloc(*out_iso_edge_parent_idx ,    (iso_n_edge+1)     * sizeof(int        ));
+  int         *iso_edge_parent       = realloc(*out_iso_edge_parent     ,     iso_n_edge_parent * sizeof(int        ));
   PDM_array_reset_int(iso_edge_def, n_edge, 0);
-  iso_edge_parent_idx[0] = 0.;
+  iso_edge_parent_idx [0] = 0;
+  iso_edge_bnd_tag_idx[0] = 0;
 
-  iso_n_edge        = *out_iso_n_edge;
-  iso_n_edge_parent = *out_iso_n_edge_parent;
+  iso_n_edge         = *out_iso_n_edge;
+  iso_n_edge_bnd_tag = *out_iso_n_edge_bnd_tag;
+  iso_n_edge_parent  = *out_iso_n_edge_parent;
 
-  if (debug==1) log_trace("iso_n_edge        = %d\n", iso_n_edge       );
-  if (debug==1) log_trace("iso_n_edge_parent = %d\n", iso_n_edge_parent);
+  if (debug==1) log_trace("iso_n_edge         = %d\n", iso_n_edge       );
+  if (debug==1) log_trace("iso_n_edge_bnd_tag = %d\n", iso_n_edge_bnd_tag);
+  if (debug==1) log_trace("iso_n_edge_parent  = %d\n", iso_n_edge_parent);
 
   /* Second loop to fill */
   for (int i_elt = 0; i_elt < n_elt; i_elt++) {
 
+    int elt_tag = elt_bnd_tag[i_elt];
     if (debug_loop==1) log_trace("\ti_elt = %d\n", i_elt);
     if (debug_loop==1) PDM_log_trace_array_int (iso_edge_def, n_edge , "iso_edge_def ::");
     unsigned char pattern = 0;
@@ -1406,6 +1524,7 @@ _contouring_triangles
               iso_edge_parent_gnum[2*iso_n_edge+1] = vtx_gnum[perm_elt_vtx[1]];
             }
         
+            // > Fill parent
             int i_beg_parent = edge_parent_idx[edge_id2  ];
             int i_end_parent = edge_parent_idx[edge_id2+1];
             int n_edge_parent = i_end_parent - i_beg_parent;
@@ -1413,6 +1532,17 @@ _contouring_triangles
               iso_edge_parent[iso_n_edge_parent++] = edge_parent[i_parent];
             }
             iso_edge_parent_idx[iso_n_edge+1] = iso_edge_parent_idx[iso_n_edge]+n_edge_parent;
+
+            // > Fill bnd tag
+            if (elt_tag!=0) {
+              int i_beg_bnd_tag = edge_bnd_tag_idx[edge_id2  ];
+              int i_end_bnd_tag = edge_bnd_tag_idx[edge_id2+1];
+              int n_edge_bnd_tag = i_end_bnd_tag - i_beg_bnd_tag;
+              for (int i_bnd_tag=i_beg_bnd_tag; i_bnd_tag<i_end_bnd_tag; ++i_bnd_tag) {
+                iso_edge_bnd_tag[iso_n_edge_bnd_tag++] = edge_bnd_tag[i_bnd_tag];
+              }
+              iso_edge_bnd_tag_idx[iso_n_edge+1] = iso_edge_bnd_tag_idx[iso_n_edge]+n_edge_bnd_tag;
+            }
 
             iso_n_edge++;
           }
@@ -1436,6 +1566,7 @@ _contouring_triangles
               iso_edge_parent_gnum[2*iso_n_edge+1] = vtx_gnum[perm_elt_vtx[2]];
             }
         
+            // > Fill parent
             int i_beg_parent = edge_parent_idx[edge_id1  ];
             int i_end_parent = edge_parent_idx[edge_id1+1];
             int n_edge_parent = i_end_parent - i_beg_parent;
@@ -1443,6 +1574,17 @@ _contouring_triangles
               iso_edge_parent[iso_n_edge_parent++] = edge_parent[i_parent];
             }
             iso_edge_parent_idx[iso_n_edge+1] = iso_edge_parent_idx[iso_n_edge]+n_edge_parent;
+
+            // > Fill bnd tag
+            if (elt_tag!=0) {
+              int i_beg_bnd_tag = edge_bnd_tag_idx[edge_id1  ];
+              int i_end_bnd_tag = edge_bnd_tag_idx[edge_id1+1];
+              int n_edge_bnd_tag = i_end_bnd_tag - i_beg_bnd_tag;
+              for (int i_bnd_tag=i_beg_bnd_tag; i_bnd_tag<i_end_bnd_tag; ++i_bnd_tag) {
+                iso_edge_bnd_tag[iso_n_edge_bnd_tag++] = edge_bnd_tag[i_bnd_tag];
+              }
+              iso_edge_bnd_tag_idx[iso_n_edge+1] = iso_edge_bnd_tag_idx[iso_n_edge]+n_edge_bnd_tag;
+            }
 
             iso_n_edge++;
           }
@@ -1466,6 +1608,7 @@ _contouring_triangles
               iso_edge_parent_gnum[2*iso_n_edge+1] = vtx_gnum[perm_elt_vtx[2]];
             }
         
+            // > Fill parent
             int i_beg_parent = edge_parent_idx[edge_id0  ];
             int i_end_parent = edge_parent_idx[edge_id0+1];
             int n_edge_parent = i_end_parent - i_beg_parent;
@@ -1473,6 +1616,17 @@ _contouring_triangles
               iso_edge_parent[iso_n_edge_parent++] = edge_parent[i_parent];
             }
             iso_edge_parent_idx[iso_n_edge+1] = iso_edge_parent_idx[iso_n_edge]+n_edge_parent;
+
+            // > Fill bnd tag
+            if (elt_tag!=0) {
+              int i_beg_bnd_tag = edge_bnd_tag_idx[edge_id0  ];
+              int i_end_bnd_tag = edge_bnd_tag_idx[edge_id0+1];
+              int n_edge_bnd_tag = i_end_bnd_tag - i_beg_bnd_tag;
+              for (int i_bnd_tag=i_beg_bnd_tag; i_bnd_tag<i_end_bnd_tag; ++i_bnd_tag) {
+                iso_edge_bnd_tag[iso_n_edge_bnd_tag++] = edge_bnd_tag[i_bnd_tag];
+              }
+              iso_edge_bnd_tag_idx[iso_n_edge+1] = iso_edge_bnd_tag_idx[iso_n_edge]+n_edge_bnd_tag;
+            }
 
             iso_n_edge++;
 
@@ -1516,6 +1670,11 @@ _contouring_triangles
         iso_edge_parent_idx[iso_n_edge+1] = iso_edge_parent_idx[iso_n_edge]+1;
         iso_edge_parent[iso_n_edge_parent++] = i_elt+1;
 
+        if (elt_tag!=0) {
+          iso_edge_bnd_tag_idx[iso_n_edge+1] = iso_edge_bnd_tag_idx[iso_n_edge]+1;
+          iso_edge_bnd_tag[iso_n_edge_bnd_tag++] = elt_tag;
+        }
+
         iso_n_edge++;
 
         break;
@@ -1548,6 +1707,11 @@ _contouring_triangles
         iso_edge_parent_idx[iso_n_edge+1] = iso_edge_parent_idx[iso_n_edge]+1;
         iso_edge_parent[iso_n_edge_parent++] = i_elt+1;
 
+        if (elt_tag!=0) {
+          iso_edge_bnd_tag_idx[iso_n_edge+1] = iso_edge_bnd_tag_idx[iso_n_edge]+1;
+          iso_edge_bnd_tag[iso_n_edge_bnd_tag++] = elt_tag;
+        }
+
         iso_n_edge++;
         
         break;
@@ -1564,6 +1728,9 @@ _contouring_triangles
   *out_iso_n_edge           = iso_n_edge;
   *out_iso_edge_vtx         = iso_edge_vtx;
   *out_iso_edge_parent_gnum = iso_edge_parent_gnum;
+  *out_iso_n_edge_bnd_tag   = iso_n_edge_bnd_tag;
+  *out_iso_edge_bnd_tag_idx = iso_edge_bnd_tag_idx;
+  *out_iso_edge_bnd_tag     = iso_edge_bnd_tag;
   *out_iso_n_edge_parent    = iso_n_edge_parent;
   *out_iso_edge_parent_idx  = iso_edge_parent_idx;
   *out_iso_edge_parent      = iso_edge_parent;
@@ -1573,8 +1740,12 @@ _contouring_triangles
     log_trace("iso_n_edge = %d\n", iso_n_edge);
     PDM_log_trace_array_int(iso_edge_vtx, 2*iso_n_edge, "iso_edge_vtx ::");
     log_trace("\n");
+    int edge_bnd_tag_size = iso_edge_bnd_tag_idx[iso_n_edge];
+    PDM_log_trace_array_int(*out_iso_edge_bnd_tag_idx, iso_n_edge+1     , "out_iso_edge_bnd_tag_idx ::");
+    PDM_log_trace_array_int(*out_iso_edge_bnd_tag    , edge_bnd_tag_size, "out_iso_edge_bnd_tag     ::");
+    log_trace("\n");
     int edge_parent_size = iso_edge_parent_idx[iso_n_edge];
-    PDM_log_trace_array_int(*out_iso_edge_parent_idx, iso_n_edge      , "out_iso_edge_parent_idx ::");
+    PDM_log_trace_array_int(*out_iso_edge_parent_idx, iso_n_edge+1    , "out_iso_edge_parent_idx ::");
     PDM_log_trace_array_int(*out_iso_edge_parent    , edge_parent_size, "out_iso_edge_parent     ::");
     log_trace("\n");
     PDM_log_trace_array_long(iso_edge_parent_gnum, 2*iso_n_edge, "iso_edge_parent_gnum ::");
@@ -2050,6 +2221,11 @@ PDM_isosurface_marching_algo
   // > Allocate isosurface edges
   int          *iso_n_edge           = PDM_array_zeros_int(n_part);
   int         **iso_edge_vtx         = malloc(sizeof(int         *) * n_part);
+  int         **iso_edge_bnd_tag_idx = malloc(sizeof(int         *) * n_part);
+  int         **iso_edge_bnd_tag     = malloc(sizeof(int         *) * n_part);
+  int           iso_n_edge_group     = 0;
+  int         **iso_edge_group_idx   = malloc(sizeof(int         *) * n_part);
+  int         **iso_edge_group_lnum  = malloc(sizeof(int         *) * n_part);
   PDM_g_num_t **iso_edge_parent_gnum = malloc(sizeof(PDM_g_num_t *) * n_part);
   int         **iso_edge_parent_idx  = malloc(sizeof(int         *) * n_part);
   int         **iso_edge_parent      = malloc(sizeof(int         *) * n_part);
@@ -2082,14 +2258,18 @@ PDM_isosurface_marching_algo
      */
     int  n_edge           = 0;
     int *edge_vtx         = NULL;
+    int *edge_bnd_tag_idx = NULL;
+    int *edge_bnd_tag     = NULL;
     int *edge_parent_idx  = NULL;
     int *edge_parent      = NULL;
     int  n_crossings      = 0;
 
     // > Active edges for each sections
-    int **elt_edge = malloc(sizeof(int *) * n_section);
+    int **elt_edge    = malloc(sizeof(int *) * n_section);
+    int **elt_bnd_tag = malloc(sizeof(int *) * n_section);
     for (int i_section = 0; i_section < n_section; i_section++) {
-      elt_edge[i_section] = NULL;
+      elt_edge   [i_section] = NULL;
+      elt_bnd_tag[i_section] = NULL;
     }
     
     t_start = PDM_MPI_Wtime();
@@ -2100,9 +2280,12 @@ PDM_isosurface_marching_algo
                         vtx_field[i_part],
                         &n_edge,
                         &edge_vtx,
+                        &edge_bnd_tag_idx,
+                        &edge_bnd_tag,
                         &edge_parent_idx,
                         &edge_parent,
                         elt_edge,
+                        elt_bnd_tag,
                         &n_crossings);
     // TODO: merge iso_edge_parent with parallel
     t_end = PDM_MPI_Wtime();
@@ -2110,6 +2293,9 @@ PDM_isosurface_marching_algo
     if (debug==1) {
       log_trace("\n");
       log_trace("Build active edges : %.3fs  (%d edges)\n", t_end - t_start, n_edge);
+      int n_bnd_tag_tot = edge_bnd_tag_idx[n_edge];
+      PDM_log_trace_array_int(edge_bnd_tag_idx, n_edge+1     , "edge_bnd_tag_idx ::");
+      PDM_log_trace_array_int(edge_bnd_tag    , n_bnd_tag_tot, "edge_bnd_tag     ::");
       int n_parent_tot = edge_parent_idx[n_edge];
       PDM_log_trace_array_int(edge_parent_idx, n_edge+1    , "edge_parent_idx ::");
       PDM_log_trace_array_int(edge_parent    , n_parent_tot, "edge_parent     ::");
@@ -2231,6 +2417,8 @@ PDM_isosurface_marching_algo
 
     // > Allocate edge
     iso_edge_vtx         [i_part] = NULL;
+    iso_edge_bnd_tag_idx [i_part] = NULL;
+    iso_edge_bnd_tag     [i_part] = NULL;
     iso_edge_parent_idx  [i_part] = NULL;
     iso_edge_parent      [i_part] = NULL;
     iso_edge_parent_gnum [i_part] = NULL;
@@ -2251,8 +2439,9 @@ PDM_isosurface_marching_algo
     /*
      * Build isosurface mesh
      */
-    int iso_n_edge_parent = 0;
-    int iso_n_face_parent = 0;
+    int iso_n_edge_bnd_tag = 0;
+    int iso_n_edge_parent  = 0;
+    int iso_n_face_parent  = 0;
     for (int i_isovalue = 0; i_isovalue < n_isovalues; i_isovalue++) {
       
       int *edge_to_iso_vtx = PDM_array_zeros_int(n_edge);
@@ -2302,8 +2491,6 @@ PDM_isosurface_marching_algo
                                             &parent_entity_g_num,
                                             PDM_OWNERSHIP_BAD_VALUE);
 
-
-
         switch (t_elt) {
 
           case PDM_MESH_NODAL_TRIA3: {
@@ -2311,7 +2498,10 @@ PDM_isosurface_marching_algo
             _contouring_triangles(n_elt,
                                   connec,
                                   gnum,
+                                  elt_bnd_tag[i_section],
                                   n_edge,
+                                  edge_bnd_tag_idx,
+                                  edge_bnd_tag,
                                   edge_parent_idx,
                                   edge_parent,
                                   elt_edge[i_section],
@@ -2322,6 +2512,9 @@ PDM_isosurface_marching_algo
                                   &iso_n_edge           [i_part],
                                   &iso_edge_vtx         [i_part],
                                   &iso_edge_parent_gnum [i_part],
+                                  &iso_n_edge_bnd_tag,
+                                  &iso_edge_bnd_tag_idx [i_part],
+                                  &iso_edge_bnd_tag     [i_part],
                                   &iso_n_edge_parent,
                                   &iso_edge_parent_idx  [i_part],
                                   &iso_edge_parent      [i_part]);
@@ -2329,6 +2522,7 @@ PDM_isosurface_marching_algo
           }
 
           case PDM_MESH_NODAL_TETRA4: {
+
             _contouring_tetrahedra(n_elt,
                                    connec,
                                    gnum,
@@ -2378,6 +2572,80 @@ PDM_isosurface_marching_algo
 
     } // End of loop on isovalues
 
+
+
+    /*
+     * Convert bnd tag to group
+     * Warning edges can be in multiple group
+     */
+    if (debug) {
+      PDM_log_trace_array_int(iso_edge_bnd_tag_idx[i_part], iso_n_edge[i_part], "iso_edge_bnd_tag_idx ::");
+      PDM_log_trace_array_int(iso_edge_bnd_tag    [i_part], iso_edge_bnd_tag_idx[i_part][iso_n_edge[i_part]], "iso_edge_bnd_tag ::");
+    }
+    iso_n_edge_group = PDM_part_mesh_nodal_n_group_get(pmn, PDM_GEOMETRY_KIND_SURFACIC);
+    
+    // > Delete duplicate in edge tags
+    int *iso_edge_bnd_tag_unique_n = PDM_array_zeros_int(iso_n_edge[i_part]);
+    int i_write_tag = 0;
+    for (int i_edge=0; i_edge<iso_n_edge[i_part]; ++i_edge) {
+      int i_beg_bnd_tag = iso_edge_bnd_tag_idx[i_part][i_edge  ];
+      int i_end_bnd_tag = iso_edge_bnd_tag_idx[i_part][i_edge+1];
+      int n_unique_tag = PDM_inplace_unique(iso_edge_bnd_tag[i_part], i_beg_bnd_tag, i_end_bnd_tag-1);
+      for (int i_tag=0; i_tag<n_unique_tag; ++i_tag) {
+        iso_edge_bnd_tag[i_part][i_write_tag++] = iso_edge_bnd_tag[i_part][i_beg_bnd_tag+i_tag];
+        iso_edge_bnd_tag_unique_n[i_edge]++;
+      }
+    }
+    free(iso_edge_bnd_tag_idx[i_part]);
+    iso_edge_bnd_tag_idx[i_part] = PDM_array_new_idx_from_sizes_int(iso_edge_bnd_tag_unique_n, iso_n_edge[i_part]);
+    iso_edge_bnd_tag    [i_part] = realloc(iso_edge_bnd_tag[i_part], iso_edge_bnd_tag_idx[i_part][iso_n_edge[i_part]] * sizeof(int)); 
+    if (debug) {
+      PDM_log_trace_array_int(iso_edge_bnd_tag_unique_n   , iso_n_edge[i_part], "iso_edge_bnd_tag_unique_n ::");
+      PDM_log_trace_array_int(iso_edge_bnd_tag_idx[i_part], iso_n_edge[i_part], "iso_edge_bnd_tag_idx ::");
+      PDM_log_trace_array_int(iso_edge_bnd_tag    [i_part], iso_edge_bnd_tag_idx[i_part][iso_n_edge[i_part]], "iso_edge_bnd_tag ::");
+    }
+    free(iso_edge_bnd_tag_unique_n);
+
+
+    // > Count number of entities in each group
+    int *iso_edge_group_n = PDM_array_zeros_int(iso_n_edge_group);
+    for (int i_tag=0; i_tag<iso_edge_bnd_tag_idx[i_part][iso_n_edge[i_part]]; ++i_tag) {
+      int i_group = iso_edge_bnd_tag[i_part][i_tag]-1;
+      iso_edge_group_n[i_group]++;
+    }
+
+    // > Fill groups with entities
+    iso_edge_group_idx [i_part] = PDM_array_new_idx_from_sizes_int(iso_edge_group_n, iso_n_edge_group);
+    iso_edge_group_lnum[i_part] = PDM_array_zeros_int(iso_edge_group_idx[i_part][iso_n_edge_group]);
+    PDM_array_reset_int(iso_edge_group_n, iso_n_edge_group, 0);
+    for (int i_edge=0; i_edge<iso_n_edge[i_part]; ++i_edge) {
+      int i_beg_bnd_tag = iso_edge_bnd_tag_idx[i_part][i_edge  ];
+      int i_end_bnd_tag = iso_edge_bnd_tag_idx[i_part][i_edge+1];
+
+      for (int i_tag=i_beg_bnd_tag; i_tag<i_end_bnd_tag; ++i_tag) {
+        int i_group = iso_edge_bnd_tag[i_part][i_tag]-1;
+        int i_write = iso_edge_group_idx[i_part][i_group]+iso_edge_group_n[i_group];
+        
+        iso_edge_group_lnum[i_part][i_write] = i_edge+1;
+        iso_edge_group_n[i_group]++;
+      }
+    }
+    free(iso_edge_group_n);
+    free(iso_edge_bnd_tag_idx[i_part]);
+    free(iso_edge_bnd_tag    [i_part]);
+
+    if (debug) {
+      PDM_log_trace_array_int(iso_edge_group_idx [i_part], iso_n_edge_group+1, "iso_edge_group_idx ::");
+      PDM_log_trace_array_int(iso_edge_group_lnum[i_part], iso_edge_group_idx[i_part][iso_n_edge_group], "iso_edge_group_lnum ::");
+      for (int i_group=0; i_group<iso_n_edge_group; ++i_group) {
+        log_trace("i_group = %d\n", i_group+1);
+        int i_beg      = iso_edge_group_idx[i_part][i_group];
+        int n_in_group = iso_edge_group_idx[i_part][i_group+1]-iso_edge_group_idx[i_part][i_group];
+        PDM_log_trace_array_int(&iso_edge_group_lnum[i_part][i_beg], n_in_group, "iso_edge_group_lnum ::");
+      }
+    }
+
+
     /* 
      * Visu
      */
@@ -2419,14 +2687,20 @@ PDM_isosurface_marching_algo
 
     // > Free temp arrays
     for (int i_section = 0; i_section < n_section; i_section++) {
-      free(elt_edge[i_section]);
-      free(elt_face[i_section]);
+      free(elt_bnd_tag[i_section]);
+      free(elt_edge   [i_section]);
+      free(elt_face   [i_section]);
     }
 
+    free(elt_bnd_tag);
     free(elt_edge);
     free(edge_vtx);
+    free(edge_bnd_tag_idx);
+    free(edge_bnd_tag);
     free(edge_parent_idx);
     free(edge_parent);
+    free(iso_edge_bnd_tag_idx);
+    free(iso_edge_bnd_tag);
     free(elt_face);
     free(face_vtx_idx);
     free(face_vtx);
@@ -2476,16 +2750,58 @@ PDM_isosurface_marching_algo
   }
 
   for (int i_part=0; i_part<n_part; i_part++) {
-    free(iso_vtx_parent_gnum[i_part]);
+    free(iso_vtx_parent_gnum [i_part]);
     free(iso_edge_parent_gnum[i_part]);
     free(iso_face_parent_gnum[i_part]);
   }
   free(iso_vtx_parent_gnum);
   free(iso_edge_parent_gnum);
   free(iso_face_parent_gnum);
-  PDM_gnum_free(gen_gnum_vtx );
+  PDM_gnum_free(gen_gnum_vtx);
   PDM_gnum_free(gen_gnum_edge);
   PDM_gnum_free(gen_gnum_face);
+
+
+  /*
+   * Build edge groups gnum
+   */
+  PDM_g_num_t   **iso_edge_group_gnum = malloc(n_part * sizeof(PDM_g_num_t *));
+  for (int i_part=0; i_part<n_part; i_part++) {
+    iso_edge_group_gnum[i_part] = malloc(iso_edge_group_idx[i_part][iso_n_edge_group] * sizeof(PDM_g_num_t));
+  }
+  PDM_gen_gnum_t *gen_gnum_edge_group = PDM_gnum_create(mesh_dim-1, n_part, PDM_FALSE, 1., isos->comm, PDM_OWNERSHIP_USER);
+  PDM_gnum_set_parents_nuplet(gen_gnum_edge_group, 1);
+
+  PDM_g_num_t **_iso_edge_group_gnum = malloc(n_part * sizeof(PDM_g_num_t *));
+  for (int i_group=0; i_group<iso_n_edge_group; ++i_group) {
+    for (int i_part=0; i_part<n_part; i_part++) {
+      int i_beg_group = iso_edge_group_idx[i_part][i_group  ];
+      int i_end_group = iso_edge_group_idx[i_part][i_group+1];
+      int n_edge_in_group = i_end_group - i_beg_group;
+      _iso_edge_group_gnum[i_part] = malloc(n_edge_in_group * sizeof(PDM_g_num_t));
+      int i_write = 0;
+      for (int i_edge=i_beg_group; i_edge<i_end_group; ++i_edge) {
+        int lnum = iso_edge_group_lnum[i_part][i_edge];
+        _iso_edge_group_gnum[i_part][i_write++] = iso_edge_gnum[i_part][lnum-1];
+      }
+      PDM_gnum_set_from_parents(gen_gnum_edge_group, i_part, n_edge_in_group, _iso_edge_group_gnum[i_part]);
+    }
+    PDM_gnum_compute(gen_gnum_edge_group);
+    
+    for (int i_part=0; i_part<n_part; i_part++) {
+      free(_iso_edge_group_gnum[i_part]);
+      int i_beg_group = iso_edge_group_idx[i_part][i_group  ];
+      int i_end_group = iso_edge_group_idx[i_part][i_group+1];
+      _iso_edge_group_gnum[i_part] = PDM_gnum_get(gen_gnum_edge_group, i_part);
+      int i_read = 0;
+      for (int i_edge=i_beg_group; i_edge<i_end_group; ++i_edge) {
+        iso_edge_group_gnum[i_part][i_edge] = _iso_edge_group_gnum[i_part][i_read++];
+      }
+      free(_iso_edge_group_gnum[i_part]);
+    }
+  }
+  PDM_gnum_free(gen_gnum_edge_group);
+  free(_iso_edge_group_gnum);
 
   /*
    * Store isosurface in part_mesh_nodal
@@ -2506,6 +2822,10 @@ PDM_isosurface_marching_algo
   isos->iso_edge_vtx        [id_iso] = iso_edge_vtx;
   isos->iso_edge_gnum       [id_iso] = iso_edge_gnum;
   isos->iso_edge_lparent_idx[id_iso] = iso_edge_parent_idx;
+  isos->iso_n_edge_group    [id_iso] = iso_n_edge_group;
+  isos->iso_edge_group_idx  [id_iso] = iso_edge_group_idx;
+  isos->iso_edge_group_lnum [id_iso] = iso_edge_group_lnum;
+  isos->iso_edge_group_gnum [id_iso] = iso_edge_group_gnum;
   isos->iso_edge_lparent    [id_iso] = iso_edge_parent;
   isos->isovalue_edge_idx   [id_iso] = isovalue_edge_idx;
   
@@ -2522,6 +2842,7 @@ PDM_isosurface_marching_algo
   isos->iso_owner_gnum              [id_iso] = malloc(sizeof(PDM_ownership_t *) * n_part);
   isos->iso_owner_connec            [id_iso] = malloc(sizeof(PDM_ownership_t *) * n_part);
   isos->iso_owner_lparent           [id_iso] = malloc(sizeof(PDM_ownership_t *) * n_part);
+  isos->iso_owner_edge_bnd          [id_iso] = malloc(sizeof(PDM_ownership_t *) * n_part);
   for (int i_part=0; i_part<n_part; ++i_part) {
     isos->iso_owner_vtx_coord         [id_iso][i_part] = PDM_OWNERSHIP_KEEP;
     isos->iso_owner_vtx_parent_weight [id_iso][i_part] = PDM_OWNERSHIP_KEEP;
@@ -2548,6 +2869,8 @@ PDM_isosurface_marching_algo
     isos->iso_owner_gnum   [id_iso][i_part][PDM_MESH_ENTITY_FACE          ] = PDM_OWNERSHIP_KEEP;
     isos->iso_owner_lparent[id_iso][i_part][PDM_MESH_ENTITY_FACE          ] = PDM_OWNERSHIP_KEEP;
     isos->iso_owner_connec [id_iso][i_part][PDM_CONNECTIVITY_TYPE_FACE_VTX] = PDM_OWNERSHIP_KEEP;
+   
+    isos->iso_owner_edge_bnd[id_iso][i_part] = PDM_OWNERSHIP_KEEP;
   }
 
 }

@@ -10,6 +10,9 @@
 #include "pdm_logging.h"
 #include "pdm_printf.h"
 #include "pdm_error.h"
+#include "pdm_vtk.h"
+
+#include "pdm_array.h"
 
 #include "pdm_isosurface.h"
 #include "pdm_dcube_nodal_gen.h"
@@ -70,6 +73,120 @@ _build_pmn_from_iso_result
 }
 
 
+static void
+_output_iso_result
+(
+  PDM_isosurface_t       *isos,
+  int                     id_isosurface,
+  int                     n_part,
+  PDM_MPI_Comm            comm
+)
+{
+  int i_rank;
+  PDM_MPI_Comm_rank(comm, &i_rank);
+
+  
+  for (int i_part=0; i_part<n_part; ++i_part) {
+
+    /**
+     * Get isosurface data
+     */
+    // > Vertex
+    double      *iso_vtx_coord = NULL;
+    PDM_g_num_t *iso_vtx_gnum  = NULL;
+    int iso_n_vtx = PDM_isosurface_vtx_coord_get(isos, id_isosurface, i_part, &iso_vtx_coord, PDM_OWNERSHIP_KEEP);
+    PDM_isosurface_ln_to_gn_get(isos, id_isosurface, i_part, PDM_MESH_ENTITY_VTX, &iso_vtx_gnum, PDM_OWNERSHIP_KEEP);
+
+    // > Edge
+    int         *iso_edge_vtx  = NULL;
+    PDM_g_num_t *iso_edge_gnum = NULL;
+    int          iso_edge_n_group    = 0;
+    int         *iso_edge_group_idx  = NULL;
+    int         *iso_edge_group_lnum = NULL;
+    PDM_g_num_t *iso_edge_group_gnum = NULL;
+    int iso_n_edge = PDM_isosurface_connectivity_get(isos, id_isosurface, i_part, PDM_CONNECTIVITY_TYPE_EDGE_VTX,
+                                                     NULL, &iso_edge_vtx,
+                                                     PDM_OWNERSHIP_KEEP);
+    PDM_isosurface_ln_to_gn_get(isos, id_isosurface, i_part, PDM_MESH_ENTITY_EDGE,
+                               &iso_edge_gnum,
+                                PDM_OWNERSHIP_KEEP);
+    PDM_isosurface_group_get(isos, id_isosurface, i_part, PDM_MESH_ENTITY_EDGE,
+                            &iso_edge_n_group, &iso_edge_group_idx, &iso_edge_group_lnum, &iso_edge_group_gnum,
+                             PDM_OWNERSHIP_KEEP);
+    // > Convert group into tag
+    int         *iso_edge_tag1      = PDM_array_zeros_int (iso_n_edge);
+    int         *iso_edge_tag2      = PDM_array_zeros_int (iso_n_edge);
+    PDM_g_num_t *iso_edge_tag1_gnum = PDM_array_zeros_gnum(iso_n_edge);
+    PDM_g_num_t *iso_edge_tag2_gnum = PDM_array_zeros_gnum(iso_n_edge);
+    for (int i_group=0; i_group<iso_edge_n_group; ++i_group) {
+      int i_beg_group = iso_edge_group_idx[i_group  ];
+      int i_end_group = iso_edge_group_idx[i_group+1];
+      for (int i_read=i_beg_group; i_read<i_end_group; ++i_read) {
+        int         edge_lnum = iso_edge_group_lnum[i_read];
+        PDM_g_num_t edge_gnum = iso_edge_group_gnum[i_read];
+        if (iso_edge_tag1[edge_lnum-1]==0) {
+          iso_edge_tag1     [edge_lnum-1] = i_group+1;
+          iso_edge_tag1_gnum[edge_lnum-1] = edge_gnum;
+        }
+        iso_edge_tag2     [edge_lnum-1] = i_group+1;
+        iso_edge_tag2_gnum[edge_lnum-1] = edge_gnum;
+      }
+    }
+
+
+    // > Face
+    int         *iso_face_vtx_idx  = NULL;
+    int         *iso_face_vtx      = NULL;
+    PDM_g_num_t *iso_face_gnum     = NULL;
+    int iso_n_face = PDM_isosurface_connectivity_get(isos, id_isosurface, i_part, PDM_CONNECTIVITY_TYPE_FACE_VTX, &iso_face_vtx_idx, &iso_face_vtx, PDM_OWNERSHIP_KEEP);
+    PDM_isosurface_ln_to_gn_get(isos, id_isosurface, i_part, PDM_MESH_ENTITY_FACE, &iso_face_gnum, PDM_OWNERSHIP_KEEP);
+
+
+    /**
+     * Write isosurface
+     */
+    char filename[999];
+
+    const char *edge_field_name [] = {"tag1", "tag1_gnum", "tag2", "tag2_gnum"};
+    const int  *edge_field_value[] = {iso_edge_tag1, iso_edge_tag1_gnum, iso_edge_tag2, iso_edge_tag2_gnum};
+    sprintf(filename, "iso_edge_id_%i_part_%i_rank_%i.vtk", id_isosurface, i_part, i_rank);
+    PDM_vtk_write_std_elements(filename,
+                               iso_n_vtx,
+                               iso_vtx_coord,
+                               iso_vtx_gnum,
+                               PDM_MESH_NODAL_BAR2,
+                               iso_n_edge,
+                               iso_edge_vtx,
+                               iso_edge_gnum,
+                               4,
+                               edge_field_name,
+                               edge_field_value);
+
+    // const char *face_field_name [] = {};
+    // const int  *face_field_value[] = {};
+    sprintf(filename, "iso_face_id_%i_part_%i_rank_%i.vtk", id_isosurface, i_part, i_rank);
+    PDM_vtk_write_polydata_field(filename,
+                                 iso_n_vtx,
+                                 iso_vtx_coord,
+                                 iso_vtx_gnum,
+                                 iso_n_face,
+                                 iso_face_vtx_idx,
+                                 iso_face_vtx,
+                                 iso_face_gnum,
+                                 NULL,
+                                 NULL,
+                                 NULL,
+                                 NULL);
+
+    free(iso_edge_tag1);
+    free(iso_edge_tag2);
+    free(iso_edge_tag1_gnum);
+    free(iso_edge_tag2_gnum);
+  }
+
+}
+
+
 
 /**
  *
@@ -84,6 +201,7 @@ _usage(int exit_code)
      "  Usage: \n\n"
      "  -nx      <level>  Number of vertices on the cube side (x direction).\n\n"
      "  -ny      <level>  Number of vertices on the cube side (y direction).\n\n"
+     "  -nz      <level>  Number of vertices on the cube side (z direction).\n\n"
      "  -l       <level>  Cube length.\n\n"
      "  -n_part  <level>  Number of partitions (if partitioned entry).\n\n"
      "  -is_dist          Is entry distributed ou partitioned.\n\n"
@@ -330,7 +448,7 @@ int main(int argc, char *argv[])
    */
   if (visu==1) {
     if (dist_entry==1) {
-      PDM_error(__FILE__, __LINE__, 0, "PDM_t_isosurface_2d_nodal:: Not implmented\n");
+      PDM_error(__FILE__, __LINE__, 0, "PDM_t_isosurface_3d_nodal:: Not implemented\n");
     }
     else if (dist_entry==0) {
       // > iso line output
@@ -345,6 +463,7 @@ int main(int argc, char *argv[])
                                    "pmn_iso_face_iso_mesh");
 
       PDM_part_mesh_nodal_free(iso_pmn1);
+      _output_iso_result(isos, iso1, n_part, comm);
     }
   }
 

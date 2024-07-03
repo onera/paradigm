@@ -516,20 +516,22 @@ PDM_isosurface_group_get
  int                  *n_group,
  int                 **group_entity_idx,
  int                 **group_entity,
- PDM_g_num_t         **group_entity_ln_to_gn,
+ PDM_g_num_t         **group_entity_gnum,
  PDM_ownership_t       ownership
 )
 {
-  PDM_UNUSED(id_isosurface);
-  PDM_UNUSED(i_part);
-  PDM_UNUSED(entity_type);
-  PDM_UNUSED(n_group);
-  PDM_UNUSED(group_entity_idx);
-  PDM_UNUSED(group_entity);
-  PDM_UNUSED(group_entity_ln_to_gn);
-  PDM_UNUSED(ownership);
-
   _check_is_not_dist(isos);
+
+  if (entity_type==PDM_MESH_ENTITY_EDGE) {
+    isos->iso_owner_edge_bnd[id_isosurface][i_part] = ownership;
+    *n_group           = isos->iso_n_edge_group   [id_isosurface];
+    *group_entity_idx  = isos->iso_edge_group_idx [id_isosurface][i_part];
+    *group_entity      = isos->iso_edge_group_lnum[id_isosurface][i_part];
+    *group_entity_gnum = isos->iso_edge_group_gnum[id_isosurface][i_part];
+  }
+  else {
+    PDM_error(__FILE__, __LINE__, 0, "PDM_isosurface_t: has no bounds for entity %d.\n",entity_type);
+  }
 
   return 0;
 }
