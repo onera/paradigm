@@ -1543,6 +1543,9 @@ _contouring_triangles
               }
               iso_edge_bnd_tag_idx[iso_n_edge+1] = iso_edge_bnd_tag_idx[iso_n_edge]+n_edge_bnd_tag;
             }
+            else {
+              iso_edge_bnd_tag_idx[iso_n_edge+1] = iso_edge_bnd_tag_idx[iso_n_edge];
+            }
 
             iso_n_edge++;
           }
@@ -1585,6 +1588,9 @@ _contouring_triangles
               }
               iso_edge_bnd_tag_idx[iso_n_edge+1] = iso_edge_bnd_tag_idx[iso_n_edge]+n_edge_bnd_tag;
             }
+            else {
+              iso_edge_bnd_tag_idx[iso_n_edge+1] = iso_edge_bnd_tag_idx[iso_n_edge];
+            }
 
             iso_n_edge++;
           }
@@ -1626,6 +1632,9 @@ _contouring_triangles
                 iso_edge_bnd_tag[iso_n_edge_bnd_tag++] = edge_bnd_tag[i_bnd_tag];
               }
               iso_edge_bnd_tag_idx[iso_n_edge+1] = iso_edge_bnd_tag_idx[iso_n_edge]+n_edge_bnd_tag;
+            }
+            else {
+              iso_edge_bnd_tag_idx[iso_n_edge+1] = iso_edge_bnd_tag_idx[iso_n_edge];
             }
 
             iso_n_edge++;
@@ -1674,6 +1683,9 @@ _contouring_triangles
           iso_edge_bnd_tag_idx[iso_n_edge+1] = iso_edge_bnd_tag_idx[iso_n_edge]+1;
           iso_edge_bnd_tag[iso_n_edge_bnd_tag++] = elt_tag;
         }
+        else {
+          iso_edge_bnd_tag_idx[iso_n_edge+1] = iso_edge_bnd_tag_idx[iso_n_edge];
+        }
 
         iso_n_edge++;
 
@@ -1710,6 +1722,9 @@ _contouring_triangles
         if (elt_tag!=0) {
           iso_edge_bnd_tag_idx[iso_n_edge+1] = iso_edge_bnd_tag_idx[iso_n_edge]+1;
           iso_edge_bnd_tag[iso_n_edge_bnd_tag++] = elt_tag;
+        }
+        else {
+          iso_edge_bnd_tag_idx[iso_n_edge+1] = iso_edge_bnd_tag_idx[iso_n_edge];
         }
 
         iso_n_edge++;

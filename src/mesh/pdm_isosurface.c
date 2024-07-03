@@ -290,6 +290,14 @@ _free_iso_vtx
   if (isos->isovalue_vtx_idx[id_iso]!=NULL) {
     free(isos->isovalue_vtx_idx[id_iso]);
   }
+
+  isos->iso_n_vtx            [id_iso] = NULL;
+  isos->iso_vtx_coord        [id_iso] = NULL;
+  isos->iso_vtx_gnum         [id_iso] = NULL;
+  isos->iso_vtx_lparent_idx  [id_iso] = NULL;
+  isos->iso_vtx_lparent      [id_iso] = NULL;
+  isos->iso_vtx_parent_weight[id_iso] = NULL;
+  isos->isovalue_vtx_idx     [id_iso] = NULL;
 }
 
 
@@ -343,6 +351,17 @@ _free_iso_edge
   if (isos->isovalue_edge_idx[id_iso]!=NULL) {
     free(isos->isovalue_edge_idx[id_iso]);
   }
+
+  isos->iso_n_edge          [id_iso] = NULL;
+  isos->iso_edge_vtx        [id_iso] = NULL;
+  isos->iso_edge_gnum       [id_iso] = NULL;
+  isos->iso_edge_lparent_idx[id_iso] = NULL;
+  isos->iso_edge_lparent    [id_iso] = NULL;
+  isos->iso_n_edge_group    [id_iso] = 0;
+  isos->iso_edge_group_idx  [id_iso] = NULL;
+  isos->iso_edge_group_lnum [id_iso] = NULL;
+  isos->iso_edge_group_gnum [id_iso] = NULL;
+  isos->isovalue_edge_idx   [id_iso] = NULL;
 }
 
 
@@ -389,6 +408,14 @@ _free_iso_face
   if (isos->isovalue_face_idx[id_iso]!=NULL) {
     free(isos->isovalue_face_idx[id_iso]);
   }
+
+  isos->iso_n_face          [id_iso] = NULL;
+  isos->iso_face_vtx_idx    [id_iso] = NULL;
+  isos->iso_face_vtx        [id_iso] = NULL;
+  isos->iso_face_gnum       [id_iso] = NULL;
+  isos->iso_face_lparent_idx[id_iso] = NULL;
+  isos->iso_face_lparent    [id_iso] = NULL;
+  isos->isovalue_face_idx   [id_iso] = NULL;
 }
 
 
@@ -407,6 +434,7 @@ _free_field
     }
     free(isos->field[id_iso]);
   }
+  isos->field[id_iso] = NULL;
 }
 
 
@@ -442,6 +470,13 @@ _free_owner
   if (isos->iso_owner_edge_bnd[id_iso]!=NULL) {
     free(isos->iso_owner_edge_bnd[id_iso]);
   }
+  isos->iso_owner_vtx_coord        [id_iso] = NULL;
+  isos->iso_owner_vtx_parent_weight[id_iso] = NULL;
+  isos->iso_owner_gnum             [id_iso] = NULL;
+  isos->iso_owner_connec           [id_iso] = NULL;
+  isos->iso_owner_lparent          [id_iso] = NULL;
+  isos->iso_owner_edge_bnd         [id_iso] = NULL;
+  isos->iso_owner_ptp              [id_iso] = NULL;
 }
 
 

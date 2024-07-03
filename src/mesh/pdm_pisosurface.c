@@ -435,23 +435,29 @@ PDM_isosurface_connectivity_get
 {
   _check_is_not_dist(isos);
 
-  int n_entity = 0;
-  isos->iso_owner_connec[id_isosurface][i_part][connectivity_type] = ownership;
+  if (isos->iso_owner_connec[id_isosurface]!=NULL) {
+    int n_entity = 0;
+    isos->iso_owner_connec[id_isosurface][i_part][connectivity_type] = ownership;
 
-  if (connectivity_type==PDM_CONNECTIVITY_TYPE_EDGE_VTX) {
-    n_entity = isos->iso_n_edge  [id_isosurface][i_part];
-    *connect = isos->iso_edge_vtx[id_isosurface][i_part];
-  }
-  else if (connectivity_type==PDM_CONNECTIVITY_TYPE_FACE_VTX) {
-    n_entity     = isos->iso_n_face      [id_isosurface][i_part];
-    *connect_idx = isos->iso_face_vtx_idx[id_isosurface][i_part];
-    *connect     = isos->iso_face_vtx    [id_isosurface][i_part];
+    if (connectivity_type==PDM_CONNECTIVITY_TYPE_EDGE_VTX) {
+      n_entity = isos->iso_n_edge  [id_isosurface][i_part];
+      *connect = isos->iso_edge_vtx[id_isosurface][i_part];
+    }
+    else if (connectivity_type==PDM_CONNECTIVITY_TYPE_FACE_VTX) {
+      n_entity     = isos->iso_n_face      [id_isosurface][i_part];
+      *connect_idx = isos->iso_face_vtx_idx[id_isosurface][i_part];
+      *connect     = isos->iso_face_vtx    [id_isosurface][i_part];
+    }
+    else {
+      PDM_error(__FILE__, __LINE__, 0, "PDM_isosurface_t: has no connectivity of type %d.\n", connectivity_type);
+    }
+
+    return n_entity;
   }
   else {
-    PDM_error(__FILE__, __LINE__, 0, "PDM_isosurface_t: has no connectivity of type %d.\n", connectivity_type);
+    PDM_error(__FILE__, __LINE__, 0, "PDM_isosurface_connectivity_get: Isosurface with id %d seems not computed.\n", id_isosurface);
+    return 0;
   }
-
-  return n_entity;
 }
 
 
@@ -467,10 +473,16 @@ PDM_isosurface_vtx_coord_get
 {
   _check_is_not_dist(isos);
 
-  isos->iso_owner_vtx_coord[id_isosurface][i_part] = ownership;
-  *vtx_coord = isos->iso_vtx_coord[id_isosurface][i_part];
+  if (isos->iso_owner_vtx_coord[id_isosurface]!=NULL) {
+    isos->iso_owner_vtx_coord[id_isosurface][i_part] = ownership;
+    *vtx_coord = isos->iso_vtx_coord[id_isosurface][i_part];
 
-  return isos->iso_n_vtx[id_isosurface][i_part];
+    return isos->iso_n_vtx[id_isosurface][i_part];
+  }
+  else {
+    PDM_error(__FILE__, __LINE__, 0, "PDM_isosurface_vtx_coord_get: Isosurface with id %d seems not computed.\n", id_isosurface);
+    return 0;
+  }
 }
 
 
@@ -487,25 +499,31 @@ PDM_isosurface_ln_to_gn_get
 {
   _check_is_not_dist(isos);
 
-  int n_entity = 0;
-  isos->iso_owner_gnum[id_isosurface][i_part][entity_type] = ownership;
-  if (entity_type==PDM_MESH_ENTITY_VTX ) {
-    n_entity  = isos->iso_n_vtx   [id_isosurface][i_part];
-    *ln_to_gn = isos->iso_vtx_gnum[id_isosurface][i_part];
-  }
-  else if (entity_type==PDM_MESH_ENTITY_EDGE) {
-    n_entity  = isos->iso_n_edge   [id_isosurface][i_part];
-    *ln_to_gn = isos->iso_edge_gnum[id_isosurface][i_part];
-  }
-  else if (entity_type==PDM_MESH_ENTITY_FACE) {
-    n_entity  = isos->iso_n_face   [id_isosurface][i_part];
-    *ln_to_gn = isos->iso_face_gnum[id_isosurface][i_part];
+  if (isos->iso_owner_gnum[id_isosurface]!=NULL) {
+    int n_entity = 0;
+    isos->iso_owner_gnum[id_isosurface][i_part][entity_type] = ownership;
+    if (entity_type==PDM_MESH_ENTITY_VTX ) {
+      n_entity  = isos->iso_n_vtx   [id_isosurface][i_part];
+      *ln_to_gn = isos->iso_vtx_gnum[id_isosurface][i_part];
+    }
+    else if (entity_type==PDM_MESH_ENTITY_EDGE) {
+      n_entity  = isos->iso_n_edge   [id_isosurface][i_part];
+      *ln_to_gn = isos->iso_edge_gnum[id_isosurface][i_part];
+    }
+    else if (entity_type==PDM_MESH_ENTITY_FACE) {
+      n_entity  = isos->iso_n_face   [id_isosurface][i_part];
+      *ln_to_gn = isos->iso_face_gnum[id_isosurface][i_part];
+    }
+    else {
+      PDM_error(__FILE__, __LINE__, 0, "PDM_isosurface_t: has no cell mesh entity.\n");
+    }
+
+    return n_entity;
   }
   else {
-    PDM_error(__FILE__, __LINE__, 0, "PDM_isosurface_t: has no cell mesh entity.\n");
+    PDM_error(__FILE__, __LINE__, 0, "PDM_isosurface_ln_to_gn_get: Isosurface with id %d seems not computed.\n", id_isosurface);
+    return 0;
   }
-
-  return n_entity;
 }
 
 
