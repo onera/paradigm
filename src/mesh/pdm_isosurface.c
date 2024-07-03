@@ -245,6 +245,206 @@ _compute_iso_field
  *============================================================================*/
 
 
+
+static void
+_free_iso_vtx
+(
+  PDM_isosurface_t *isos,
+  int               id_iso
+)
+{
+  if (isos->iso_owner_vtx_coord[id_iso]!=NULL) {
+    for (int i_part=0; i_part<isos->iso_n_part; ++i_part) {
+      if (isos->iso_owner_vtx_coord[id_iso][i_part]==PDM_OWNERSHIP_KEEP) {
+        free(isos->iso_vtx_coord[id_iso][i_part]);
+      }
+      if (isos->iso_owner_gnum[id_iso][i_part][PDM_MESH_ENTITY_VTX]==PDM_OWNERSHIP_KEEP) {
+        free(isos->iso_vtx_gnum[id_iso][i_part]);
+      }
+      free(isos->iso_vtx_lparent_idx   [id_iso][i_part]);
+      free(isos->iso_vtx_lparent       [id_iso][i_part]);
+      if (isos->iso_owner_vtx_parent_weight[id_iso][i_part]==PDM_OWNERSHIP_KEEP) {
+        free(isos->iso_vtx_parent_weight[id_iso][i_part]);
+      }
+      free(isos->isovalue_vtx_idx[id_iso][i_part]);
+    }
+  }
+  if (isos->iso_n_vtx[id_iso]!=NULL) {
+    free(isos->iso_n_vtx            [id_iso]);
+  }
+  if (isos->iso_vtx_coord[id_iso]!=NULL) {
+    free(isos->iso_vtx_coord[id_iso]);
+  }
+  if (isos->iso_vtx_gnum[id_iso]!=NULL) {
+    free(isos->iso_vtx_gnum[id_iso]);
+  }
+  if (isos->iso_vtx_lparent_idx[id_iso]!=NULL) {
+    free(isos->iso_vtx_lparent_idx[id_iso]);
+  }
+  if (isos->iso_vtx_lparent[id_iso]!=NULL) {
+    free(isos->iso_vtx_lparent[id_iso]);
+  }
+  if (isos->iso_vtx_parent_weight[id_iso]!=NULL) {
+    free(isos->iso_vtx_parent_weight[id_iso]);
+  }
+  if (isos->isovalue_vtx_idx[id_iso]!=NULL) {
+    free(isos->isovalue_vtx_idx[id_iso]);
+  }
+}
+
+
+static void
+_free_iso_edge
+(
+  PDM_isosurface_t *isos,
+  int               id_iso
+)
+{
+  if (isos->iso_owner_connec[id_iso]!=NULL) {
+    for (int i_part=0; i_part<isos->iso_n_part; ++i_part) {
+      if (isos->iso_owner_connec[id_iso][i_part][PDM_CONNECTIVITY_TYPE_EDGE_VTX]==PDM_OWNERSHIP_KEEP) {
+        free(isos->iso_edge_vtx[id_iso][i_part]);
+      }
+      if (isos->iso_owner_gnum[id_iso][i_part][PDM_MESH_ENTITY_EDGE]==PDM_OWNERSHIP_KEEP) {
+        free(isos->iso_edge_gnum[id_iso][i_part]);
+      }
+      free(isos->iso_edge_lparent_idx[id_iso][i_part]);
+      free(isos->iso_edge_lparent    [id_iso][i_part]);
+      free(isos->iso_edge_group_idx  [id_iso][i_part]);
+      free(isos->iso_edge_group_lnum [id_iso][i_part]);
+      free(isos->iso_edge_group_gnum [id_iso][i_part]);
+      free(isos->isovalue_edge_idx   [id_iso][i_part]);
+    }
+  }
+  if (isos->iso_n_edge[id_iso]!=NULL) {
+    free(isos->iso_n_edge[id_iso]);
+  }
+  if (isos->iso_edge_vtx[id_iso]!=NULL) {
+    free(isos->iso_edge_vtx[id_iso]);
+  }
+  if (isos->iso_edge_gnum[id_iso]!=NULL) {
+    free(isos->iso_edge_gnum[id_iso]);
+  }
+  if (isos->iso_edge_lparent_idx[id_iso]!=NULL) {
+    free(isos->iso_edge_lparent_idx[id_iso]);
+  }
+  if (isos->iso_edge_lparent[id_iso]!=NULL) {
+    free(isos->iso_edge_lparent[id_iso]);
+  }
+  if (isos->iso_edge_group_idx[id_iso]!=NULL) {
+    free(isos->iso_edge_group_idx[id_iso]);
+  }
+  if (isos->iso_edge_group_lnum[id_iso]!=NULL) {
+    free(isos->iso_edge_group_lnum[id_iso]);
+  }
+  if (isos->iso_edge_group_gnum[id_iso]!=NULL) {
+    free(isos->iso_edge_group_gnum[id_iso]);
+  }
+  if (isos->isovalue_edge_idx[id_iso]!=NULL) {
+    free(isos->isovalue_edge_idx[id_iso]);
+  }
+}
+
+
+static void
+_free_iso_face
+(
+  PDM_isosurface_t *isos,
+  int               id_iso
+)
+{
+  if (isos->iso_owner_connec[id_iso]!=NULL) {
+    for (int i_part=0; i_part<isos->iso_n_part; ++i_part) {
+      if (isos->iso_owner_connec[id_iso][i_part][PDM_CONNECTIVITY_TYPE_FACE_VTX]==PDM_OWNERSHIP_KEEP) {
+        free(isos->iso_face_vtx_idx   [id_iso][i_part]);
+        free(isos->iso_face_vtx       [id_iso][i_part]);
+      }
+      if (isos->iso_owner_gnum[id_iso][i_part][PDM_MESH_ENTITY_FACE]==PDM_OWNERSHIP_KEEP) {
+        free(isos->iso_face_gnum      [id_iso][i_part]);
+      }
+      free(isos->iso_face_lparent_idx[id_iso][i_part]);
+      free(isos->iso_face_lparent    [id_iso][i_part]);
+      free(isos->isovalue_face_idx   [id_iso][i_part]);
+    }
+  }
+
+  if (isos->iso_n_face[id_iso]!=NULL) {
+    free(isos->iso_n_face[id_iso]);
+  }
+  if (isos->iso_face_gnum[id_iso]!=NULL) {
+    free(isos->iso_face_gnum[id_iso]);
+  }
+  if (isos->iso_face_vtx_idx[id_iso]!=NULL) {
+    free(isos->iso_face_vtx_idx[id_iso]);
+  }
+  if (isos->iso_face_vtx[id_iso]!=NULL) {
+    free(isos->iso_face_vtx[id_iso]);
+  }
+  if (isos->iso_face_lparent_idx[id_iso]!=NULL) {
+    free(isos->iso_face_lparent_idx[id_iso]);
+  }
+  if (isos->iso_face_lparent[id_iso]!=NULL) {
+    free(isos->iso_face_lparent[id_iso]);
+  }
+  if (isos->isovalue_face_idx[id_iso]!=NULL) {
+    free(isos->isovalue_face_idx[id_iso]);
+  }
+}
+
+
+static void
+_free_field
+(
+  PDM_isosurface_t *isos,
+  int               id_iso
+)
+{
+  if (isos->field[id_iso]!=NULL) {
+    for (int i_part=0; i_part<isos->iso_n_part; ++i_part) { // TODO: fix this n_part (volumic)
+      if (isos->kind[id_iso]!=PDM_ISO_SURFACE_KIND_FIELD && isos->field[id_iso][i_part]!=NULL) {
+        free(isos->field[id_iso][i_part]);
+      }
+    }
+    free(isos->field[id_iso]);
+  }
+}
+
+
+static void
+_free_owner
+(
+  PDM_isosurface_t *isos,
+  int               id_iso
+)
+{
+  free(isos->iso_owner_vtx_coord        [id_iso]);
+  free(isos->iso_owner_vtx_parent_weight[id_iso]);
+  for (int i_part=0; i_part<isos->iso_n_part; ++i_part) {
+    if (isos->iso_owner_gnum[id_iso]!=NULL) {
+      free(isos->iso_owner_gnum   [id_iso][i_part]);
+    }
+    if (isos->iso_owner_connec[id_iso]!=NULL) {
+      free(isos->iso_owner_connec [id_iso][i_part]);
+    }
+    if (isos->iso_owner_lparent[id_iso]!=NULL) {
+      free(isos->iso_owner_lparent[id_iso][i_part]);
+    }
+  }
+  if (isos->iso_owner_gnum[id_iso]!=NULL) {
+    free(isos->iso_owner_gnum   [id_iso]);
+  }
+  if (isos->iso_owner_connec[id_iso]!=NULL) {
+    free(isos->iso_owner_connec [id_iso]);
+  }
+  if (isos->iso_owner_lparent[id_iso]!=NULL) {
+    free(isos->iso_owner_lparent[id_iso]);
+  }
+  if (isos->iso_owner_edge_bnd[id_iso]!=NULL) {
+    free(isos->iso_owner_edge_bnd[id_iso]);
+  }
+}
+
+
 void
 _check_entry_mesh_coherence
 (
@@ -639,8 +839,23 @@ PDM_isosurface_reset
  int               id_isosurface
 )
 {
-  PDM_UNUSED(isos);
-  PDM_UNUSED(id_isosurface);
+  // > Distributed
+  if (isos->is_dist_or_part==0) {
+    PDM_error(__FILE__, __LINE__, 0, "PDM_isosurface_reset not implemented for dist_entry\n");
+  }
+  // > Partitioned
+  else if (isos->is_dist_or_part==1) {
+    for (int i_part=0; i_part<isos->iso_n_part; ++i_part) {
+      _free_iso_vtx (isos, id_isosurface);
+      _free_iso_edge(isos, id_isosurface);
+      _free_iso_face(isos, id_isosurface);
+      _free_owner(isos, id_isosurface);
+      _free_field(isos, id_isosurface);
+    }
+  }
+  else {
+    PDM_error(__FILE__, __LINE__, 0, "Isosurface is_dist_or_part = %d is invalid.\n", isos->is_dist_or_part);
+  }
 }
 
 
@@ -754,137 +969,15 @@ PDM_isosurface_free
   free(isos->field_function);
   free(isos->dfield);
   for (int id_iso=0; id_iso<isos->n_isosurface; ++id_iso) {
-    if (isos->field[id_iso]!=NULL) {
-      for (int i_part=0; i_part<isos->iso_n_part; ++i_part) { // TODO: fix this n_part (volumic)
-        if (isos->kind[id_iso]!=PDM_ISO_SURFACE_KIND_FIELD && isos->field[id_iso][i_part]!=NULL) {
-          free(isos->field[id_iso][i_part]);
-        }
-      }
-      free(isos->field[id_iso]);
-    }
+    _free_field(isos, id_iso);
   }
   free(isos->field);
   free(isos->kind);
 
   for (int id_iso=0; id_iso<isos->n_isosurface; ++id_iso) {
-    if (isos->iso_owner_vtx_coord[id_iso]!=NULL) {
-      for (int i_part=0; i_part<isos->iso_n_part; ++i_part) {
-        if (isos->iso_owner_vtx_coord[id_iso][i_part]==PDM_OWNERSHIP_KEEP) {
-          free(isos->iso_vtx_coord[id_iso][i_part]);
-        }
-        if (isos->iso_owner_gnum[id_iso][i_part][PDM_MESH_ENTITY_VTX]==PDM_OWNERSHIP_KEEP) {
-          free(isos->iso_vtx_gnum[id_iso][i_part]);
-        }
-        free(isos->iso_vtx_lparent_idx   [id_iso][i_part]);
-        free(isos->iso_vtx_lparent       [id_iso][i_part]);
-        if (isos->iso_owner_vtx_parent_weight[id_iso][i_part]==PDM_OWNERSHIP_KEEP) {
-          free(isos->iso_vtx_parent_weight[id_iso][i_part]);
-        }
-        free(isos->isovalue_vtx_idx[id_iso][i_part]);
-      }
-    }
-    if (isos->iso_n_vtx[id_iso]!=NULL) {
-      free(isos->iso_n_vtx            [id_iso]);
-    }
-    if (isos->iso_vtx_coord[id_iso]!=NULL) {
-      free(isos->iso_vtx_coord[id_iso]);
-    }
-    if (isos->iso_vtx_gnum[id_iso]!=NULL) {
-      free(isos->iso_vtx_gnum[id_iso]);
-    }
-    if (isos->iso_vtx_lparent_idx[id_iso]!=NULL) {
-      free(isos->iso_vtx_lparent_idx[id_iso]);
-    }
-    if (isos->iso_vtx_lparent[id_iso]!=NULL) {
-      free(isos->iso_vtx_lparent[id_iso]);
-    }
-    if (isos->iso_vtx_parent_weight[id_iso]!=NULL) {
-      free(isos->iso_vtx_parent_weight[id_iso]);
-    }
-    if (isos->isovalue_vtx_idx[id_iso]!=NULL) {
-      free(isos->isovalue_vtx_idx[id_iso]);
-    }
-    
-    if (isos->iso_owner_connec[id_iso]!=NULL) {
-      for (int i_part=0; i_part<isos->iso_n_part; ++i_part) {
-        if (isos->iso_owner_connec[id_iso][i_part][PDM_CONNECTIVITY_TYPE_EDGE_VTX]==PDM_OWNERSHIP_KEEP) {
-          free(isos->iso_edge_vtx[id_iso][i_part]);
-        }
-        if (isos->iso_owner_gnum[id_iso][i_part][PDM_MESH_ENTITY_EDGE]==PDM_OWNERSHIP_KEEP) {
-          free(isos->iso_edge_gnum[id_iso][i_part]);
-        }
-        free(isos->iso_edge_lparent_idx[id_iso][i_part]);
-        free(isos->iso_edge_lparent    [id_iso][i_part]);
-        free(isos->iso_edge_group_idx  [id_iso][i_part]);
-        free(isos->iso_edge_group_lnum [id_iso][i_part]);
-        free(isos->iso_edge_group_gnum [id_iso][i_part]);
-        free(isos->isovalue_edge_idx   [id_iso][i_part]);
-      }
-    }
-    if (isos->iso_n_edge[id_iso]!=NULL) {
-      free(isos->iso_n_edge[id_iso]);
-    }
-    if (isos->iso_edge_vtx[id_iso]!=NULL) {
-      free(isos->iso_edge_vtx[id_iso]);
-    }
-    if (isos->iso_edge_gnum[id_iso]!=NULL) {
-      free(isos->iso_edge_gnum[id_iso]);
-    }
-    if (isos->iso_edge_lparent_idx[id_iso]!=NULL) {
-      free(isos->iso_edge_lparent_idx[id_iso]);
-    }
-    if (isos->iso_edge_lparent[id_iso]!=NULL) {
-      free(isos->iso_edge_lparent[id_iso]);
-    }
-    if (isos->iso_edge_group_idx[id_iso]!=NULL) {//TODO: aled plz make a safe dealloc
-      free(isos->iso_edge_group_idx[id_iso]);
-    }
-    if (isos->iso_edge_group_lnum[id_iso]!=NULL) {//TODO: aled plz make a safe dealloc
-      free(isos->iso_edge_group_lnum[id_iso]);
-    }
-    if (isos->iso_edge_group_gnum[id_iso]!=NULL) {//TODO: aled plz make a safe dealloc
-      free(isos->iso_edge_group_gnum[id_iso]);
-    }
-    if (isos->isovalue_edge_idx[id_iso]!=NULL) {
-      free(isos->isovalue_edge_idx[id_iso]);
-    }
-
-    
-    if (isos->iso_owner_connec[id_iso]!=NULL) {
-      for (int i_part=0; i_part<isos->iso_n_part; ++i_part) {
-        if (isos->iso_owner_connec[id_iso][i_part][PDM_CONNECTIVITY_TYPE_FACE_VTX]==PDM_OWNERSHIP_KEEP) {
-          free(isos->iso_face_vtx_idx   [id_iso][i_part]);
-          free(isos->iso_face_vtx       [id_iso][i_part]);
-        }
-        if (isos->iso_owner_gnum[id_iso][i_part][PDM_MESH_ENTITY_FACE]==PDM_OWNERSHIP_KEEP) {
-          free(isos->iso_face_gnum      [id_iso][i_part]);
-        }
-        free(isos->iso_face_lparent_idx[id_iso][i_part]);
-        free(isos->iso_face_lparent    [id_iso][i_part]);
-        free(isos->isovalue_face_idx   [id_iso][i_part]);
-      }
-    }
-    if (isos->iso_n_face[id_iso]!=NULL) {
-      free(isos->iso_n_face[id_iso]);
-    }
-    if (isos->iso_face_gnum[id_iso]!=NULL) {
-      free(isos->iso_face_gnum[id_iso]);
-    }
-    if (isos->iso_face_vtx_idx[id_iso]!=NULL) {
-      free(isos->iso_face_vtx_idx[id_iso]);
-    }
-    if (isos->iso_face_vtx[id_iso]!=NULL) {
-      free(isos->iso_face_vtx[id_iso]);
-    }
-    if (isos->iso_face_lparent_idx[id_iso]!=NULL) {
-      free(isos->iso_face_lparent_idx[id_iso]);
-    }
-    if (isos->iso_face_lparent[id_iso]!=NULL) {
-      free(isos->iso_face_lparent[id_iso]);
-    }
-    if (isos->isovalue_face_idx[id_iso]!=NULL) {
-      free(isos->isovalue_face_idx[id_iso]);
-    }
+    _free_iso_vtx (isos, id_iso);
+    _free_iso_edge(isos, id_iso);
+    _free_iso_face(isos, id_iso);
   }
 
   free(isos->iso_n_vtx);
@@ -938,31 +1031,7 @@ PDM_isosurface_free
 
 
   for (int id_iso=0; id_iso<isos->n_isosurface; ++id_iso) {
-    free(isos->iso_owner_vtx_coord        [id_iso]);
-    free(isos->iso_owner_vtx_parent_weight[id_iso]);
-    for (int i_part=0; i_part<isos->iso_n_part; ++i_part) {
-      if (isos->iso_owner_gnum[id_iso]!=NULL) {
-        free(isos->iso_owner_gnum   [id_iso][i_part]);
-      }
-      if (isos->iso_owner_connec[id_iso]!=NULL) {
-        free(isos->iso_owner_connec [id_iso][i_part]);
-      }
-      if (isos->iso_owner_lparent[id_iso]!=NULL) {
-        free(isos->iso_owner_lparent[id_iso][i_part]);
-      }
-    }
-    if (isos->iso_owner_gnum[id_iso]!=NULL) {
-      free(isos->iso_owner_gnum   [id_iso]);
-    }
-    if (isos->iso_owner_connec[id_iso]!=NULL) {
-      free(isos->iso_owner_connec [id_iso]);
-    }
-    if (isos->iso_owner_lparent[id_iso]!=NULL) {
-      free(isos->iso_owner_lparent[id_iso]);
-    }
-    if (isos->iso_owner_edge_bnd[id_iso]!=NULL) {
-      free(isos->iso_owner_edge_bnd[id_iso]);
-    }
+    _free_owner(isos, id_iso);
   }
   free(isos->iso_owner_vtx_coord);
   free(isos->iso_owner_vtx_parent_weight);

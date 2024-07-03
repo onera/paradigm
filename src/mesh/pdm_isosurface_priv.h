@@ -242,8 +242,8 @@ struct _pdm_isosurface_t {
   PDM_ownership_t ***iso_owner_gnum;
   PDM_ownership_t ***iso_owner_connec;
   PDM_ownership_t ***iso_owner_lparent;
-  PDM_ownership_t  **iso_owner_ptp;
   PDM_ownership_t  **iso_owner_edge_bnd;
+  PDM_ownership_t  **iso_owner_ptp;
 
 
   // ===============

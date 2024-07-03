@@ -441,7 +441,8 @@ int main(int argc, char *argv[])
    *  Compute isosurface
    */
   PDM_isosurface_compute(isos, iso1);
-
+  PDM_isosurface_reset(isos, iso1);
+  PDM_isosurface_compute(isos, iso1);
 
   /*
    *  Visu isosurfaces

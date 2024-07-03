@@ -82,6 +82,7 @@ PDM_isosurface_n_part_set
   _check_entry_mesh_coherence(isos, -1);
 
   isos->n_part = n_part;
+  isos->iso_n_part = n_part;
 
   /*
    * TODO: malloc des tableaux 
@@ -235,6 +236,7 @@ PDM_isosurface_part_mesh_set
    */
 
   isos->pmesh = pmesh;
+  isos->iso_n_part = PDM_part_mesh_n_part_get(pmesh);
 }
 
 
@@ -253,6 +255,7 @@ PDM_isosurface_mesh_nodal_set
    */
 
   isos->pmesh_nodal = pmn;
+  isos->iso_n_part = PDM_part_mesh_nodal_n_part_get(pmn);
 }
 
 
@@ -551,6 +554,7 @@ PDM_isosurface_enable_part_to_part
 }
 
 
+// TODO: changer le nom "source to iso ptp" ?
 void
 PDM_isosurface_part_to_part_get
 (
