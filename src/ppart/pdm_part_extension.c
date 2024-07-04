@@ -2071,7 +2071,7 @@ _part_extension_3d
                                                                        pface_extended_to_pface_idx,
                                                                        pface_extended_to_pface_triplet,
                                                                        pface_extended_to_pface_interface,
-                                                                       NULL,
+                                                                       pface_extended_to_pface_sens,
                                                                        0,
                                                                       &pn_vtx_extended,
                                                                       &pvtx_extended_ln_to_gn,
