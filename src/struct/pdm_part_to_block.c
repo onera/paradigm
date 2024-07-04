@@ -852,7 +852,7 @@ _distrib_data_hilbert
                       ptb->i_recv_data,
                       PDM__PDM_MPI_G_NUM,
                       ptb->comm);
-  
+
     PDM_MPI_Alltoallv(send_codes,
                       ptb->n_send_data,
                       ptb->i_send_data,
@@ -874,7 +874,7 @@ _distrib_data_hilbert
                           ptb->i_recv_data,
                           PDM__PDM_MPI_G_NUM,
                           ptb->comm);
-  
+
     PDM_MPI_Alltoallv_p2p(send_codes,
                           ptb->n_send_data,
                           ptb->i_send_data,
@@ -1148,7 +1148,7 @@ _distrib_data_morton
                       ptb->i_recv_data,
                       PDM__PDM_MPI_G_NUM,
                       ptb->comm);
-  
+
     PDM_MPI_Datatype mpi_morton_type;
     PDM_MPI_Type_create_contiguous(4, PDM_MPI_INT, &mpi_morton_type);
     PDM_MPI_Type_commit(&mpi_morton_type);
@@ -1175,7 +1175,7 @@ _distrib_data_morton
                           ptb->i_recv_data,
                           PDM__PDM_MPI_G_NUM,
                           ptb->comm);
-  
+
     PDM_MPI_Datatype mpi_morton_type;
     PDM_MPI_Type_create_contiguous(4, PDM_MPI_INT, &mpi_morton_type);
     PDM_MPI_Type_commit(&mpi_morton_type);
@@ -1191,7 +1191,7 @@ _distrib_data_morton
     PDM_MPI_Type_free(&mpi_morton_type);
   }
 
-  
+
   free(send_gnum);
   free(send_codes);
   free(part_idx);
@@ -1724,7 +1724,7 @@ _prepare_reverse_exchange
                          ptb->n_send_data,
                          ptb->i_send_data,
                          PDM_MPI_INT,
-                         ptb->comm); 
+                         ptb->comm);
     }
     else {
       PDM_MPI_Alltoallv_p2p (_send_stride,
@@ -1735,7 +1735,7 @@ _prepare_reverse_exchange
                              ptb->n_send_data,
                              ptb->i_send_data,
                              PDM_MPI_INT,
-                             ptb->comm);      
+                             ptb->comm);
     }
 
     if(0 == 1) {
@@ -2071,9 +2071,9 @@ _post_treatment
       if (ptb->t_post == PDM_PART_TO_BLOCK_POST_CLEANUP) {
         _block_data = realloc (_block_data, sizeof(unsigned char) * idx2);
         *block_data = _block_data;
-
-        _block_stride = realloc (_block_stride, sizeof(int) * ptb->n_elt_block);
-
+        if (ptb->tn_recv_data > 0) {
+          _block_stride = realloc (_block_stride, sizeof(int) * ptb->n_elt_block);
+        }
         *block_stride = _block_stride;
         s_block_data = idx2 / (int) s_data;
       }
@@ -3084,7 +3084,7 @@ PDM_part_to_block_exch
    */
   int mandatory_size = PDM_size_idx_from_stride (n_send_buffer, ptb->s_comm, ptb->comm);
   mandatory_size = PDM_MAX(PDM_size_idx_from_stride (n_send_buffer, ptb->s_comm, ptb->comm), mandatory_size);
-  
+
   if (mandatory_size > 32) {
     PDM_MPI_Alltoallv_p2p_l(send_buffer,
                             n_send_buffer,
@@ -3098,12 +3098,12 @@ PDM_part_to_block_exch
   }
 
   else {
- 
+
     if (ptb->p2p_factor < ptb->part_active_rank) {
-     
+
       int *_i_send_buffer = (int *) malloc(sizeof(int) * ptb->s_comm);
       int *_i_recv_buffer = (int *) malloc(sizeof(int) * ptb->s_comm);
-     
+
       for (int i = 0; i < ptb->s_comm; i++) {
         _i_send_buffer[i] = (int) i_send_buffer[i];
         _i_recv_buffer[i] = (int) i_recv_buffer[i];
@@ -3119,8 +3119,8 @@ PDM_part_to_block_exch
                         mpi_type,
                         ptb->comm);
 
-      free (_i_send_buffer); 
-      free (_i_recv_buffer); 
+      free (_i_send_buffer);
+      free (_i_recv_buffer);
     }
 
     else {
@@ -3136,7 +3136,7 @@ PDM_part_to_block_exch
                               ptb->comm);
 
     }
-  } 
+  }
 
   /*
    * Statistics
@@ -3262,7 +3262,7 @@ PDM_part_to_block_reverse_exch
   /*
    * Data exchange
    */
-  
+
   int mandatory_size = PDM_size_idx_from_stride (n_send_buffer, ptb->s_comm, ptb->comm);
   mandatory_size = PDM_MAX(PDM_size_idx_from_stride (n_send_buffer, ptb->s_comm, ptb->comm), mandatory_size);
 
@@ -3279,12 +3279,12 @@ PDM_part_to_block_reverse_exch
   }
 
   else {
- 
+
     if (ptb->p2p_factor < ptb->part_active_rank) {
-     
+
       int *_i_send_buffer = (int *) malloc(sizeof(int) * ptb->s_comm);
       int *_i_recv_buffer = (int *) malloc(sizeof(int) * ptb->s_comm);
-     
+
       for (int i = 0; i < ptb->s_comm; i++) {
         _i_send_buffer[i] = (int) i_send_buffer[i];
         _i_recv_buffer[i] = (int) i_recv_buffer[i];
@@ -3300,8 +3300,8 @@ PDM_part_to_block_reverse_exch
                         mpi_type,
                         ptb->comm);
 
-      free (_i_send_buffer); 
-      free (_i_recv_buffer); 
+      free (_i_send_buffer);
+      free (_i_recv_buffer);
     }
 
     else {
@@ -3317,7 +3317,7 @@ PDM_part_to_block_reverse_exch
                               ptb->comm);
 
     }
-  } 
+  }
 
   _post_treatment_reverse(ptb,
                           s_data,
