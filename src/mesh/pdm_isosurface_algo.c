@@ -943,7 +943,7 @@ _build_active_faces
             key_count[key]++;
             s_face_vtx += section_face_vtx_idx[i_face+1] - section_face_vtx_idx[i_face];
             break;
-          }
+          } // End if all_zero
         } // End of loop on isovalues
         section_n_face_tot[i_section]++;
       } // End of loop on faces
@@ -960,7 +960,7 @@ _build_active_faces
     key_count[i] = 0;
   }
 
-  int *key_face  = malloc(sizeof(int) * key_idx[max_key]);
+  int *key_face = malloc(sizeof(int) * key_idx[max_key]);
 
   if (debug==1) log_trace("n_active_faces = %d\n", key_idx[max_key]);
   if (debug==1) log_trace("face_vtx_size  = %d\n", s_face_vtx);
@@ -1017,7 +1017,6 @@ _build_active_faces
         int face_id = 0;
         for (int i_isovalue = 0; i_isovalue < n_isovalues; i_isovalue++) {
           int all_zero = 1;
-
           for (int i = section_face_vtx_idx[i_face]; i < section_face_vtx_idx[i_face+1]; i++) {
             int i_vtx = _connec[section_face_vtx[i]] - 1;
             if (PDM_ABS(vtx_field[i_vtx] - isovalues[i_isovalue]) > ISOSURFACE_EPS) {

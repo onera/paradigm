@@ -57,6 +57,13 @@ PDM_g_num_t* PDM_array_zeros_gnum(const int size) {
   for (int i = 0; i < size; i++) array[i] = 0;
   return array;
 }
+double* PDM_array_zeros_double(const int size) {
+  assert (size >= 0);
+  double *array = (double *) malloc(size * sizeof(double));
+  assert (array != NULL);
+  for (int i = 0; i < size; i++) array[i] = 0.;
+  return array;
+}
 
 /*
  * Allocate a new array of size size and fill it with value

@@ -516,6 +516,7 @@ PDM_isosurface_create
 
   // // > Isosurface mesh information
   // isos->iso_elt_type = elt_type; 
+  isos->extract_kind = PDM_EXTRACT_PART_KIND_LOCAL; 
 
   // > Link with entry mesh
   isos->compute_ptp = NULL;
@@ -657,7 +658,6 @@ PDM_isosurface_add
   int id_isosurface = isos->n_isosurface;
   isos->n_isosurface++;
   
-  printf("isos->n_isosurface = %d\n", isos->n_isosurface);
   isos->kind           = realloc(isos->kind          , sizeof(PDM_iso_surface_kind_t          ) * isos->n_isosurface);
   isos->eq_coeffs      = realloc(isos->eq_coeffs     , sizeof(double                         *) * isos->n_isosurface);
   isos->field_function = realloc(isos->field_function, sizeof(PDM_isosurface_field_function_t ) * isos->n_isosurface);

@@ -377,28 +377,34 @@ PDM_isosurface_local_parent_get
     PDM_error(__FILE__, __LINE__, 0, "PDM_isosurface_t: extract_kind is not PDM_EXTRACT_PART_KIND_LOCAL.\n");
   }
 
-  int n_entity = 0;
-  isos->iso_owner_lparent[id_isosurface][i_part][entity_type] = ownership;
-  
-  if (entity_type==PDM_MESH_ENTITY_VTX ) {
-    n_entity = isos->iso_n_vtx[id_isosurface][i_part];
-    *entity_parent_idx = isos->iso_vtx_lparent_idx[id_isosurface][i_part];
-    *entity_parent     = isos->iso_vtx_lparent    [id_isosurface][i_part];
-  }
-  else if (entity_type==PDM_MESH_ENTITY_EDGE) {
-    n_entity = isos->iso_n_edge[id_isosurface][i_part];
-    *entity_parent_idx = isos->iso_edge_lparent_idx[id_isosurface][i_part];
-    *entity_parent     = isos->iso_edge_lparent    [id_isosurface][i_part];
-  }
-  else if (entity_type==PDM_MESH_ENTITY_FACE) {
-    n_entity = isos->iso_n_face   [id_isosurface][i_part];
-    *entity_parent_idx = isos->iso_face_lparent_idx[id_isosurface][i_part];
-    *entity_parent     = isos->iso_face_lparent    [id_isosurface][i_part];
+  if (isos->iso_owner_lparent[id_isosurface]!=NULL) {
+    int n_entity = 0;
+    isos->iso_owner_lparent[id_isosurface][i_part][entity_type] = ownership;
+    
+    if (entity_type==PDM_MESH_ENTITY_VTX) {
+      n_entity = isos->iso_n_vtx[id_isosurface][i_part];
+      *entity_parent_idx = isos->iso_vtx_lparent_idx[id_isosurface][i_part];
+      *entity_parent     = isos->iso_vtx_lparent    [id_isosurface][i_part];
+    }
+    else if (entity_type==PDM_MESH_ENTITY_EDGE) {
+      n_entity = isos->iso_n_edge[id_isosurface][i_part];
+      *entity_parent_idx = isos->iso_edge_lparent_idx[id_isosurface][i_part];
+      *entity_parent     = isos->iso_edge_lparent    [id_isosurface][i_part];
+    }
+    else if (entity_type==PDM_MESH_ENTITY_FACE) {
+      n_entity = isos->iso_n_face   [id_isosurface][i_part];
+      *entity_parent_idx = isos->iso_face_lparent_idx[id_isosurface][i_part];
+      *entity_parent     = isos->iso_face_lparent    [id_isosurface][i_part];
+    }
+    else {
+      PDM_error(__FILE__, __LINE__, 0, "PDM_isosurface_t: has no mesh entity of type %d.\n", entity_type);
+    }
+    return n_entity;
   }
   else {
-    PDM_error(__FILE__, __LINE__, 0, "PDM_isosurface_t: has no cell mesh entity.\n");
+    PDM_error(__FILE__, __LINE__, 0, "PDM_isosurface_local_parent_get: Isosurface with id %d seems not computed.\n", id_isosurface);
+    return 0;
   }
-  return n_entity;
 }
 
 
@@ -414,10 +420,16 @@ PDM_isosurface_vtx_parent_weight_get
 {
   _check_is_not_dist(isos);
 
-  isos->iso_owner_vtx_parent_weight[id_isosurface][i_part] = ownership;
-  *vtx_parent_weight = isos->iso_vtx_parent_weight[id_isosurface][i_part];
-  
-  return isos->iso_n_vtx[id_isosurface][i_part];
+  if (isos->iso_owner_vtx_parent_weight[id_isosurface]!=NULL) {
+    isos->iso_owner_vtx_parent_weight[id_isosurface][i_part] = ownership;
+    *vtx_parent_weight = isos->iso_vtx_parent_weight[id_isosurface][i_part];
+    
+    return isos->iso_n_vtx[id_isosurface][i_part];
+  }
+  else {
+    PDM_error(__FILE__, __LINE__, 0, "PDM_isosurface_vtx_parent_weight_get: Isosurface with id %d seems not computed.\n", id_isosurface);
+    return 0;
+  }
 }
 
 
