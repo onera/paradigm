@@ -691,9 +691,9 @@ PDM_isosurface_add
     isos->field[id_isosurface] = malloc(sizeof(double *) * n_part);
   }
 
-  isos->n_isovalues    = realloc(isos->n_isovalues   , sizeof(int                             ) * isos->n_isosurface);
-  isos->isovalues      = realloc(isos->isovalues     , sizeof(double                         *) * isos->n_isosurface);
-  isos->use_gradient   = realloc(isos->use_gradient  , sizeof(int                            *) * isos->n_isosurface);
+  isos->n_isovalues    = realloc(isos->n_isovalues   , sizeof(int     ) * isos->n_isosurface);
+  isos->isovalues      = realloc(isos->isovalues     , sizeof(double *) * isos->n_isosurface);
+  isos->use_gradient   = realloc(isos->use_gradient  , sizeof(int    *) * isos->n_isosurface);
 
   // > Partitioned iso vertices
   isos->iso_n_vtx             = realloc(isos->iso_n_vtx            , sizeof(int           *) * isos->n_isosurface);

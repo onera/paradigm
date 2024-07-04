@@ -872,7 +872,7 @@ _build_active_faces
   int n_section = PDM_part_mesh_nodal_n_section_get(pmn);
 
   // Prepare edge hash table
-  const int max_key = 1024; // ?
+  const int max_key = 1024;
 
   int key_count[max_key];
   int key_idx  [max_key+1];
@@ -1031,7 +1031,7 @@ _build_active_faces
             // if (debug_loop) log_trace("\t _n_vtx = %d\n", _n_vtx);
             for (int i = 0; i < _n_vtx; i++) {
               tmp_face_vtx[i] = _connec[section_face_vtx[section_face_vtx_idx[i_face]+i]];
-              key += tmp_face_vtx[i] - 1;
+              key += tmp_face_vtx[i];
             }
             key = key % max_key;
 
