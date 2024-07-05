@@ -2184,6 +2184,8 @@ PDM_part_domain_interface_to_domain_interface
   int                          ***is_entity1_on_itrf_out
 )
 {
+  int debug = 0;
+
   int i_rank;
   PDM_MPI_Comm_rank(dom_intrf->comm, &i_rank);
 
@@ -2261,7 +2263,8 @@ PDM_part_domain_interface_to_domain_interface
                                       &pinterface_ids_idx,
                                       &pinterface_dom);
 
-        if(0 == 1) {
+        if(debug == 1) {
+          PDM_log_trace_array_long(pinterface_ln_to_gn,   ln_interface, "pinterface_ln_to_gn ::");
           PDM_log_trace_array_int (pinterface_sgn     ,   ln_interface, "pinterface_sgn      ::");
           PDM_log_trace_array_int (pinterface_sens    ,   ln_interface, "pinterface_sens     ::");
           PDM_log_trace_array_int (pinterface_dom     , 2*ln_interface, "pinterface_dom      ::");
@@ -2594,6 +2597,8 @@ PDM_part_domain_interface_add
  int                            connectivity_is_signed
 )
 {
+  int debug = 0;
+
   // log_trace("PDM_part_domain_interface_to_domain_interface %i to %i \n", interface_kind1, interface_kind2);
   int i_rank;
   PDM_MPI_Comm_rank(dom_intrf->comm, &i_rank);
@@ -2692,7 +2697,7 @@ PDM_part_domain_interface_add
       /*
        * Realloc
        */
-      if(0 == 1) {
+      if(debug == 1) {
         PDM_log_trace_connectivity_long(_filter_entity2_entity1_idx, _filter_entity2_entity1, n_filter_entity2[i_part], "_filter_entity2_entity1 ::");
       }
 
@@ -2742,7 +2747,7 @@ PDM_part_domain_interface_add
     dn_entity2[i_dom]                  = PDM_part_to_block_n_elt_block_get  (ptb);
     dfilter_entity2_entity1_idx[i_dom] = PDM_array_new_idx_from_sizes_int(dfilter_entity2_entity1_n, dn_entity2[i_dom] );
 
-    if(0 == 1) {
+    if(debug == 1) {
       PDM_log_trace_connectivity_long(dfilter_entity2_entity1_idx[i_dom], dfilter_entity2_entity1[i_dom], dn_entity2[i_dom] , "dfilter_entity2_entity1 ::");
     }
 
@@ -2819,7 +2824,7 @@ PDM_part_domain_interface_add
                                                  kind2_dinterface_ids,
                                                  kind2_dinterface_dom);
 
-  if(0 == 1) {
+  if(debug == 1) {
     for(int i = 0; i < ditrf->n_interface; ++i) {
       PDM_log_trace_array_long((*kind2_dinterface_ids)[i], 2 *  (*kind2_interface_dn)[i], "kind2_dinterface_ids ::");
     }
