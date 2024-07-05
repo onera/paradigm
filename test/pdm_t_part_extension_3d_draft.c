@@ -669,6 +669,8 @@ int main
                                      NULL,
                                      NULL);
         }
+
+        free(pcell_vtx[i_dom][i_part]);
       }
     } // end loop on partitions
   } // end loop on domains

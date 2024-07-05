@@ -1669,6 +1669,8 @@ _part_extension_3d
                                  pface_vtx     [i_part],
                                 &pcell_vtx_idx [i_part],
                                 &pcell_vtx     [i_part]);
+
+        free(pface_vtx[i_part]);
       }
     }
     else {
@@ -1755,6 +1757,12 @@ _part_extension_3d
     prev_dcell_itrf_blk_path_itrf       = next_dcell_itrf_blk_path_itrf;
     prev_dcell_itrf_gnum_and_itrf_strid = next_dcell_itrf_gnum_and_itrf_strid;
     prev_dcell_itrf_gnum_and_itrf_data  = next_dcell_itrf_gnum_and_itrf_data;
+
+    for(int i_part = 0; i_part < part_ext->ln_part_tot; ++i_part) {
+      free(pcell_vtx_idx[i_part]);
+      free(pcell_vtx    [i_part]);
+    }
+
 
     /*
      * Update with descending connectivity :
@@ -1894,6 +1902,12 @@ _part_extension_3d
     prev_dface_itrf_gnum_and_itrf_data  = next_dface_itrf_gnum_and_itrf_data;
     prev_dface_itrf_gnum_and_itrf_sens  = next_dface_itrf_gnum_and_itrf_sens;
 
+    part_ext->dentity_itrf_n_blk              [PDM_BOUND_TYPE_FACE] = prev_dface_itrf_n_blk;
+    part_ext->dentity_itrf_blk_gnum           [PDM_BOUND_TYPE_FACE] = prev_dface_itrf_blk_gnum;
+    part_ext->dentity_itrf_gnum_and_itrf_strid[PDM_BOUND_TYPE_FACE] = prev_dface_itrf_gnum_and_itrf_strid;
+    part_ext->dentity_itrf_gnum_and_itrf_data [PDM_BOUND_TYPE_FACE] = prev_dface_itrf_gnum_and_itrf_data;
+    part_ext->dentity_itrf_gnum_and_itrf_sens [PDM_BOUND_TYPE_FACE] = prev_dface_itrf_gnum_and_itrf_sens;
+
 
     if(part_ext->have_edge == 1) {
       log_trace("\n\n\n\n");
@@ -2022,11 +2036,6 @@ _part_extension_3d
       log_trace("PDM_part_extension_pentity1_entity2_to_extended_pentity1_entity2 end (Edge->Vtx)\n");
       log_trace("================================================================================\n");
 
-      for(int i_part = 0; i_part < part_ext->ln_part_tot; ++i_part) {
-        free(pedge_extended_to_pedge_sens[i_part]);
-      }
-      free(pedge_extended_to_pedge_sens);
-      
       free(prev_dvtx_itrf_blk_gnum);
       free(prev_dvtx_itrf_blk_ancstr_strd);
       free(prev_dvtx_itrf_blk_ancstr);
@@ -2506,6 +2515,10 @@ _part_extension_3d
                                    NULL,
                                    NULL);
 
+        if (part_ext->have_edge==1) {
+          free(_pface_vtx);
+        }
+        free(cell_vtx);
       } // End visu
 
 
@@ -2559,11 +2572,15 @@ _part_extension_3d
       free(pvtx_extended_to_pvtx_triplet  [i_part]);
       free(pvtx_extended_to_pvtx_interface[i_part]);
 
+      free(pextended_cell_face_idx[i_part]);
+      free(pextended_cell_face    [i_part]);
+
       if (part_ext->have_edge==1) {
         free(pedge_extended_ln_to_gn          [i_part]);
         free(pedge_extended_to_pedge_idx      [i_part]);
         free(pedge_extended_to_pedge_triplet  [i_part]);
         free(pedge_extended_to_pedge_interface[i_part]);
+        free(pedge_extended_to_pedge_sens     [i_part]);
 
         free(pextended_face_edge_idx[i_part]);
         free(pextended_face_edge    [i_part]);
@@ -2579,6 +2596,7 @@ _part_extension_3d
       free(pface_extended_to_pface_idx      [i_part]);
       free(pface_extended_to_pface_triplet  [i_part]);
       free(pface_extended_to_pface_interface[i_part]);
+      free(pface_extended_to_pface_sens     [i_part]);
 
       free(pcell_extended_ln_to_gn          [i_part]);
       free(pcell_extended_to_pcell_idx      [i_part]);
@@ -2596,11 +2614,13 @@ _part_extension_3d
     free(pedge_extended_to_pedge_idx);
     free(pedge_extended_to_pedge_triplet);
     free(pedge_extended_to_pedge_interface);
+    free(pedge_extended_to_pedge_sens);
 
     free(pface_extended_ln_to_gn);
     free(pface_extended_to_pface_idx);
     free(pface_extended_to_pface_triplet);
     free(pface_extended_to_pface_interface);
+    free(pface_extended_to_pface_sens);
 
     free(pcell_extended_ln_to_gn);
     free(pcell_extended_to_pcell_idx);
@@ -2728,13 +2748,10 @@ _part_extension_3d
   free(prev_dcell_itrf_gnum_and_itrf_strid);
   free(prev_dcell_itrf_gnum_and_itrf_data );
 
-  free(prev_dface_itrf_blk_gnum           );
   free(prev_dface_itrf_blk_ancstr_strd    );
   free(prev_dface_itrf_blk_ancstr         );
   free(prev_dface_itrf_blk_path_itrf_strd );
   free(prev_dface_itrf_blk_path_itrf      );
-  free(prev_dface_itrf_gnum_and_itrf_strid);
-  free(prev_dface_itrf_gnum_and_itrf_data );
 
   if (part_ext->have_edge==1) {
     free(prev_dedge_itrf_blk_ancstr_strd    );
@@ -2750,35 +2767,40 @@ _part_extension_3d
 
   for(int i_part = 0; i_part < part_ext->ln_part_tot; ++i_part) {
     free(pvtx_ln_to_gn      [i_part]);
-    free(pedge_ln_to_gn     [i_part]);
+    if (part_ext->have_edge==1) {
+      free(pedge_ln_to_gn     [i_part]);
+    }
     free(pface_ln_to_gn     [i_part]);
     free(pcell_ln_to_gn     [i_part]);
     free(pcell_alrdy_sent   [i_part]);
     free(pcell_face_idx     [i_part]);
     free(pcell_face         [i_part]);
     if (part_ext->have_edge==1) {
-      free(pface_edge_idx     [i_part]);
-      free(pface_edge         [i_part]);
-      free(pedge_vtx_idx      [i_part]);
-      free(pedge_vtx          [i_part]);
+      free(pface_edge_idx   [i_part]);
+      free(pface_edge       [i_part]);
+      free(pedge_vtx_idx    [i_part]);
+      free(pedge_vtx        [i_part]);
     }
     else {
-      free(pface_vtx_idx      [i_part]);
-      free(pface_vtx          [i_part]);
+      free(pface_vtx_idx    [i_part]);
+      free(pface_vtx        [i_part]);
     }
     free(pvtx_coords        [i_part]);
   }
 
-  free(pn_vtx             );
-  free(pvtx_ln_to_gn      );
-  free(pn_edge       );
+  free(pn_vtx);
+  free(pvtx_ln_to_gn);
+  free(pn_edge);
   free(pedge_ln_to_gn);
-  free(pn_face       );
+  free(pn_face);
   free(pface_ln_to_gn);
+  free(pn_cell);
   free(pcell_ln_to_gn);
   free(pcell_alrdy_sent);
   free(pcell_face_idx);
   free(pcell_face);
+  free(pcell_vtx_idx);
+  free(pcell_vtx);
   free(pface_edge_idx);
   free(pface_edge);
   free(pface_vtx_idx);

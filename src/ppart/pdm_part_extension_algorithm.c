@@ -4842,7 +4842,7 @@ PDM_part_extension_pentity1_entity2_to_extended_pentity1_entity2
         log_trace("\n");
         log_trace("i_part = %d\n", i_part);
         PDM_log_trace_array_int(gnum1_come_from_strd[i_part], n_ref_lnum2[i_part], "gnum1_come_from_strd :: ");
-        PDM_log_trace_array_int(gnum1_come_from_sens[i_part], n_sens                     , "gnum1_come_from_sens :: ");
+        PDM_log_trace_array_int(gnum1_come_from_sens[i_part], n_sens             , "gnum1_come_from_sens :: ");
       }
     }
 
@@ -5010,6 +5010,7 @@ PDM_part_extension_pentity1_entity2_to_extended_pentity1_entity2
   PDM_part_to_part_reverse_iexch_wait(ptp, exch_request);
 
   for(int i_part = 0; i_part < n_part; ++i_part) {
+    free(pentity1_extended_gnum                [i_part]);
     if (entity1_has_sens==1) {
       free(gnum1_come_from_sens                [i_part]);
       free(gnum1_come_from_strd                [i_part]);
@@ -5019,6 +5020,7 @@ PDM_part_extension_pentity1_entity2_to_extended_pentity1_entity2
     free(gnum1_com_from_entity1_entity2_sign   [i_part]);
     free(gnum1_com_from_entity1_entity2_triplet[i_part]);
   }
+  free(pentity1_extended_gnum);
   if (entity1_has_sens==1) {
     free(gnum1_come_from_strd);
     free(gnum1_come_from_sens);
