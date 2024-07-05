@@ -593,7 +593,7 @@ int main
         PDM_multipart_part_connectivity_get(mpart,
                                             i_dom,
                                             i_part,
-                                            PDM_CONNECTIVITY_TYPE_EDGE_VTX,
+                                            PDM_CONNECTIVITY_TYPE_FACE_EDGE,
                                            &pface_edge_idx[i_dom][i_part],
                                            &pface_edge    [i_dom][i_part],
                                             PDM_OWNERSHIP_KEEP);

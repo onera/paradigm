@@ -4893,28 +4893,56 @@ PDM_part_extension_pentity1_entity2_to_extended_pentity1_entity2
           sens = gnum1_come_from_sens[i_part][k];
         }
         gnum1_com_from_entity1_entity2_n[i_part][k] = pentity1_entity2_idx[i_part][i_entity1+1] - pentity1_entity2_idx[i_part][i_entity1];
-        if (sens==1) {
-          for(int idx_entity2 = pentity1_entity2_idx[i_part][i_entity1]; idx_entity2 < pentity1_entity2_idx[i_part][i_entity1+1]; ++idx_entity2) {
-            int i_entity2      = PDM_ABS (pentity1_entity2[i_part][idx_entity2])-1;
-            int i_entity2_sign = PDM_SIGN(pentity1_entity2[i_part][idx_entity2]);
-            gnum1_com_from_entity1_entity2        [i_part][  n_send_part2  ] = pentity2_ln_to_gn[i_part][i_entity2];
-            gnum1_com_from_entity1_entity2_sign   [i_part][  n_send_part2  ] = i_entity2_sign;
-            gnum1_com_from_entity1_entity2_triplet[i_part][3*n_send_part2  ] = i_rank;
-            gnum1_com_from_entity1_entity2_triplet[i_part][3*n_send_part2+1] = i_part;
-            gnum1_com_from_entity1_entity2_triplet[i_part][3*n_send_part2+2] = i_entity2;
-            n_send_part2++;
+        if (entity2_has_sens==0) { // > typically face_vtx: to inverse orientation we need to change vtx order and not vtx sign
+          if (sens==1) {
+            for(int idx_entity2 = pentity1_entity2_idx[i_part][i_entity1]; idx_entity2 < pentity1_entity2_idx[i_part][i_entity1+1]; ++idx_entity2) {
+              int i_entity2      = PDM_ABS (pentity1_entity2[i_part][idx_entity2])-1;
+              int i_entity2_sign = PDM_SIGN(pentity1_entity2[i_part][idx_entity2]);
+              gnum1_com_from_entity1_entity2        [i_part][  n_send_part2  ] = pentity2_ln_to_gn[i_part][i_entity2];
+              gnum1_com_from_entity1_entity2_sign   [i_part][  n_send_part2  ] = i_entity2_sign;
+              gnum1_com_from_entity1_entity2_triplet[i_part][3*n_send_part2  ] = i_rank;
+              gnum1_com_from_entity1_entity2_triplet[i_part][3*n_send_part2+1] = i_part;
+              gnum1_com_from_entity1_entity2_triplet[i_part][3*n_send_part2+2] = i_entity2;
+              n_send_part2++;
+            }
+          }
+          else {
+            for(int idx_entity2 = pentity1_entity2_idx[i_part][i_entity1+1]-1; idx_entity2 >= pentity1_entity2_idx[i_part][i_entity1]; --idx_entity2) {
+              int i_entity2      = PDM_ABS (pentity1_entity2[i_part][idx_entity2])-1;
+              int i_entity2_sign = PDM_SIGN(pentity1_entity2[i_part][idx_entity2]);
+              gnum1_com_from_entity1_entity2        [i_part][  n_send_part2  ] = pentity2_ln_to_gn[i_part][i_entity2];
+              gnum1_com_from_entity1_entity2_sign   [i_part][  n_send_part2  ] = i_entity2_sign;
+              gnum1_com_from_entity1_entity2_triplet[i_part][3*n_send_part2  ] = i_rank;
+              gnum1_com_from_entity1_entity2_triplet[i_part][3*n_send_part2+1] = i_part;
+              gnum1_com_from_entity1_entity2_triplet[i_part][3*n_send_part2+2] = i_entity2;
+              n_send_part2++;
+            }
           }
         }
-        else {
-          for(int idx_entity2 = pentity1_entity2_idx[i_part][i_entity1+1]-1; idx_entity2 >= pentity1_entity2_idx[i_part][i_entity1]; --idx_entity2) {
-            int i_entity2      = PDM_ABS (pentity1_entity2[i_part][idx_entity2])-1;
-            int i_entity2_sign = PDM_SIGN(pentity1_entity2[i_part][idx_entity2]);
-            gnum1_com_from_entity1_entity2        [i_part][  n_send_part2  ] = pentity2_ln_to_gn[i_part][i_entity2];
-            gnum1_com_from_entity1_entity2_sign   [i_part][  n_send_part2  ] = i_entity2_sign;
-            gnum1_com_from_entity1_entity2_triplet[i_part][3*n_send_part2  ] = i_rank;
-            gnum1_com_from_entity1_entity2_triplet[i_part][3*n_send_part2+1] = i_part;
-            gnum1_com_from_entity1_entity2_triplet[i_part][3*n_send_part2+2] = i_entity2;
-            n_send_part2++;
+        else { // > typically face_edge: to inverse orientation we need to change edge sign and not edge order
+          if (sens==1) {
+            for(int idx_entity2 = pentity1_entity2_idx[i_part][i_entity1]; idx_entity2 < pentity1_entity2_idx[i_part][i_entity1+1]; ++idx_entity2) {
+              int i_entity2      = PDM_ABS (pentity1_entity2[i_part][idx_entity2])-1;
+              int i_entity2_sign = PDM_SIGN(pentity1_entity2[i_part][idx_entity2]);
+              gnum1_com_from_entity1_entity2        [i_part][  n_send_part2  ] = pentity2_ln_to_gn[i_part][i_entity2];
+              gnum1_com_from_entity1_entity2_sign   [i_part][  n_send_part2  ] = i_entity2_sign;
+              gnum1_com_from_entity1_entity2_triplet[i_part][3*n_send_part2  ] = i_rank;
+              gnum1_com_from_entity1_entity2_triplet[i_part][3*n_send_part2+1] = i_part;
+              gnum1_com_from_entity1_entity2_triplet[i_part][3*n_send_part2+2] = i_entity2;
+              n_send_part2++;
+            }
+          }
+          else {
+            for(int idx_entity2 = pentity1_entity2_idx[i_part][i_entity1]; idx_entity2 < pentity1_entity2_idx[i_part][i_entity1+1]; ++idx_entity2) {
+              int i_entity2      = PDM_ABS (pentity1_entity2[i_part][idx_entity2])-1;
+              int i_entity2_sign = PDM_SIGN(pentity1_entity2[i_part][idx_entity2]);
+              gnum1_com_from_entity1_entity2        [i_part][  n_send_part2  ] = pentity2_ln_to_gn[i_part][i_entity2];
+              gnum1_com_from_entity1_entity2_sign   [i_part][  n_send_part2  ] = -i_entity2_sign;
+              gnum1_com_from_entity1_entity2_triplet[i_part][3*n_send_part2  ] = i_rank;
+              gnum1_com_from_entity1_entity2_triplet[i_part][3*n_send_part2+1] = i_part;
+              gnum1_com_from_entity1_entity2_triplet[i_part][3*n_send_part2+2] = i_entity2;
+              n_send_part2++;
+            }
           }
         }
 
