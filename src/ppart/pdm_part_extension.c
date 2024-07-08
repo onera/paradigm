@@ -3373,7 +3373,7 @@ _part_extension_2d
 
       PDM_part_extension_pentity1_entity2_to_extended_pentity1_entity2(part_ext->ln_part_tot,
                                                                        part_ext->n_interface,
-                                                                       shift_by_domain_vtx, // Attention il va evoluer lui
+                                                                       shift_by_domain_vtx,
                                                                        prev_dvtx_itrf_n_blk,
                                                                        prev_dvtx_itrf_blk_gnum,
                                                                        prev_dvtx_itrf_blk_ancstr_strd,
@@ -3831,8 +3831,6 @@ _part_extension_2d
           free(_pface_vtx);
         }
       } // End visu
-
-
 
     } /* End loop part */
 
