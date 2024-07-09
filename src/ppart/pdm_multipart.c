@@ -1365,7 +1365,7 @@ _warm_up_for_split
     PDM_log_trace_connectivity_long(delmt_to_arc_idx, delmt_to_arc, dn_node, "delmt_to_arc : ");
   }
 
-  if(delmt_to_arc == NULL) {
+  if(delmt_to_arc_idx == NULL) {
     if(dmesh->n_g_cell != 0) { // Donc 3D
       PDM_dconnectivity_transpose(comm,
                                   distrib_arc,
