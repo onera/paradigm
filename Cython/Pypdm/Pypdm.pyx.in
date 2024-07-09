@@ -625,6 +625,10 @@ include "pdm_geom.pxi"
 # --------------------
 @COMMENT_NOT_PDMA@include "pdm_mesh_deform.pxi"
 
+# PDM_part_mesh_reorient_geom :
+# --------------------
+@COMMENT_NOT_PDMA@include "pdm_part_mesh_reorient_geom.pxi"
+
 # PDM_mesh_eval :
 # --------------------
 @COMMENT_NOT_PDMA@include "pdm_mesh_eval.pxi"
