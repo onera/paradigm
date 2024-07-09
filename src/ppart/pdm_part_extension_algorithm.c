@@ -61,6 +61,67 @@ extern "C" {
 
 static
 void
+_tell_me_more_data_base
+(
+  int          n_entity,
+  PDM_g_num_t *pentity_gnum,
+  int         *pentity_ancstr_strd,
+  PDM_g_num_t *pentity_ancstr,
+  int         *pentity_path_itrf_strd,
+  int         *pentity_path_itrf,
+  int         *pentity_data_strd,
+  PDM_g_num_t *pentity_data,
+  PDM_g_num_t  wanted_gnum
+)
+{
+  int i_read_ancstr    = 0;
+  int i_read_path_itrf = 0;
+  int i_read_data      = 0;
+  for (int i_entity=0; i_entity<n_entity; ++i_entity) {
+    if (pentity_gnum[i_entity]==wanted_gnum) {
+      log_trace("\ndata_base:: entity gnum = "PDM_FMT_G_NUM" :\n", pentity_gnum[i_entity]);
+
+      // > print ancestor
+      int l_i_read_ancstr    = i_read_ancstr   ;
+      log_trace("\t ancestor = ");
+      for (int i_ancstr=0; i_ancstr<pentity_ancstr_strd[i_entity]; ++i_ancstr) {
+        log_trace("%d ", pentity_ancstr[l_i_read_ancstr]);
+        l_i_read_ancstr++;
+      }
+      log_trace("\n");
+
+      // > print path itrf
+      int l_i_read_path_itrf = i_read_path_itrf;
+      log_trace("\t path itrf = ");
+      for (int i_path_itrf=0; i_path_itrf<pentity_path_itrf_strd[i_entity]; ++i_path_itrf) {
+        log_trace("%d ", pentity_path_itrf[l_i_read_path_itrf]);
+        l_i_read_path_itrf++;
+      }
+      log_trace("\n");
+
+      // > print data
+      int l_i_read_data = i_read_data;
+      log_trace("\t is linked with :\n");
+      for (int i_data=0; i_data<pentity_data_strd[i_entity]; ++i_data) {
+        log_trace("gnum = "PDM_FMT_G_NUM" via itrf = "PDM_FMT_G_NUM" \n",
+                        pentity_data[2*l_i_read_data  ],
+                        pentity_data[2*l_i_read_data+1]);
+        l_i_read_data++;
+      }
+      log_trace("\n");
+    }
+    else {
+      i_read_data      += pentity_data_strd     [i_entity];
+      i_read_ancstr    += pentity_ancstr_strd   [i_entity];
+      i_read_path_itrf += pentity_path_itrf_strd[i_entity];
+    }
+  }
+}
+
+
+
+static
+void
 _tell_me_more_valid_entities
 (
   int          pn_entity1,
@@ -85,7 +146,7 @@ _tell_me_more_valid_entities
         if (pentity1_entity2_sign!=NULL) {
           log_trace(" with sign = %d", pentity1_entity2_sign[i_entity2]);
         }
-        log_trace("\t\t became: \n");
+        log_trace(" became: \n");
         log_trace("\t\t   kind = %d\n", pentity1_entity2_kind[i_entity2]);
         log_trace("\t\t   lnum = %d\n", pentity1_entity2_lnum[i_entity2]);
         log_trace("\t\t   itrf = %d\n", pentity1_entity2_itrf[i_entity2]);
@@ -3600,6 +3661,16 @@ PDM_part_extension_entity1_to_entity2
     log_trace("\n\n");
     log_trace("---------------------------\n");
     log_trace("BTP to find valid entities2\n");
+
+    _tell_me_more_data_base(prev_dentity2_itrf_n_blk, 
+                            prev_dentity2_itrf_blk_gnum, 
+                            prev_dentity2_itrf_blk_ancstr_strd, 
+                            prev_dentity2_itrf_blk_ancstr, 
+                            prev_dentity2_itrf_blk_path_itrf_strd, 
+                            prev_dentity2_itrf_blk_path_itrf, 
+                            prev_dentity2_itrf_gnum_and_itrf_strid, 
+                            prev_dentity2_itrf_gnum_and_itrf_data, 
+                            278);
   }
 
   int         **pextract_entity2_kind = NULL;
@@ -3784,6 +3855,14 @@ PDM_part_extension_entity1_to_entity2
       PDM_log_trace_array_int (pextended_entity2_to_entity2_idx  [i_part], pn_entity2_extended[i_part]+1, "pextended_entity2_to_entity2_idx   ::");
       PDM_log_trace_array_int (pextended_entity2_to_entity2_trplt[i_part], n_triplet_data               , "pextended_entity2_to_entity2_trplt ::");
       PDM_log_trace_array_int (pextended_entity2_to_entity2_itrf [i_part], n_triplet_data/3             , "pextended_entity2_to_entity2_itrf  ::");
+
+      _tell_me_more_link(pn_entity2_extended               [i_part],
+                         pextended_entity2_gnum            [i_part],
+                         pextended_entity2_to_entity2_idx  [i_part],
+                         pextended_entity2_to_entity2_trplt[i_part],
+                         pextended_entity2_to_entity2_itrf [i_part],
+                         NULL,
+           (PDM_g_num_t) 282);
     }
   }
 
@@ -4898,6 +4977,7 @@ PDM_part_extension_pentity1_entity2_to_extended_pentity1_entity2
                                  pentity1_entity2[i_part],
                                  pentity2_ln_to_gn[i_part],
                    (PDM_g_num_t) 97);
+
       log_trace("\n");
       PDM_log_trace_array_long(pentity1_extended_ln_to_gn[i_part], pn_entity1_extended[i_part], "pentity1_extended_ln_to_gn ::");
       
