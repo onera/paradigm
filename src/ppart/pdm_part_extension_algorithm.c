@@ -126,6 +126,7 @@ _tell_me_more_valid_entities
 (
   int          pn_entity1,
   PDM_g_num_t *pentity1_gnum,
+  int         *pentity1_to_pentity1_idx,
   int         *pentity1_entity2_idx,
   PDM_g_num_t *pentity1_entity2_gnum,
   int         *pentity1_entity2_sign,
@@ -139,21 +140,26 @@ _tell_me_more_valid_entities
   for (int i_entity1=0; i_entity1<pn_entity1; ++i_entity1) {
     if (pentity1_gnum[i_entity1]==wanted_gnum) {
       log_trace("\nvalid_entities:: entity1 gnum = "PDM_FMT_G_NUM" connectivity :\n", pentity1_gnum[i_entity1]);
-      int i_beg = pentity1_entity2_idx[i_entity1  ];
-      int i_end = pentity1_entity2_idx[i_entity1+1];
-      for (int i_entity2=i_beg; i_entity2<i_end; ++i_entity2) {
-        log_trace("\t entity2 gnum = "PDM_FMT_G_NUM" ", pentity1_entity2_gnum[i_entity2]);
-        if (pentity1_entity2_sign!=NULL) {
-          log_trace(" with sign = %d", pentity1_entity2_sign[i_entity2]);
+      int i_beg1 = pentity1_to_pentity1_idx[i_entity1  ]/3;
+      int i_end1 = pentity1_to_pentity1_idx[i_entity1+1]/3;
+      int n_read1 = i_end1-i_beg1;
+      for (int i_read1=i_beg1; i_read1<i_end1; ++i_read1) {
+        log_trace("\t candidate %d/%d \n", i_read1-i_beg1+1, n_read1);
+        int i_beg = pentity1_entity2_idx[i_read1  ];
+        int i_end = pentity1_entity2_idx[i_read1+1];
+        for (int i_entity2=i_beg; i_entity2<i_end; ++i_entity2) {
+          log_trace("\t\t entity2 gnum = "PDM_FMT_G_NUM" ", pentity1_entity2_gnum[i_entity2]);
+          if (pentity1_entity2_sign!=NULL) {
+            log_trace(" with sign = %d", pentity1_entity2_sign[i_entity2]);
+          }
+          log_trace(" became: \n");
+          log_trace("\t\t\t   kind = %d\n", pentity1_entity2_kind[i_entity2]);
+          log_trace("\t\t\t   lnum = %d\n", pentity1_entity2_lnum[i_entity2]);
+          log_trace("\t\t\t   itrf = %d\n", pentity1_entity2_itrf[i_entity2]);
+          if (pentity1_entity2_sens!=NULL) {
+            log_trace("\t\t\t   sens = %d\n", pentity1_entity2_sens[i_entity2]);
+          }
         }
-        log_trace(" became: \n");
-        log_trace("\t\t   kind = %d\n", pentity1_entity2_kind[i_entity2]);
-        log_trace("\t\t   lnum = %d\n", pentity1_entity2_lnum[i_entity2]);
-        log_trace("\t\t   itrf = %d\n", pentity1_entity2_itrf[i_entity2]);
-        if (pentity1_entity2_sens!=NULL) {
-          log_trace("\t\t   sens = %d\n", pentity1_entity2_sens[i_entity2]);
-        }
-        log_trace("\n");
       }
     }
   }
@@ -165,6 +171,7 @@ _tell_me_more_received
 (
   int          pn_entity1,
   PDM_g_num_t *pentity1_gnum,
+  int         *pentity1_to_pentity1_idx,
   int         *pentity1_entity2_idx,
   PDM_g_num_t *pentity1_entity2_gnum,
   int         *pentity1_entity2_trplt,
@@ -175,17 +182,23 @@ _tell_me_more_received
   for (int i_entity1=0; i_entity1<pn_entity1; ++i_entity1) {
     if (pentity1_gnum[i_entity1]==wanted_gnum) {
       log_trace("\nreceived:: entity1 gnum = "PDM_FMT_G_NUM" connectivity :\n", pentity1_gnum[i_entity1]);
-      int i_beg = pentity1_entity2_idx[i_entity1  ];
-      int i_end = pentity1_entity2_idx[i_entity1+1];
-      for (int i_entity2=i_beg; i_entity2<i_end; ++i_entity2) {
-        log_trace("\t entity2 gnum = "PDM_FMT_G_NUM" ", pentity1_entity2_gnum[i_entity2]);
-        log_trace("(%d, %d, %d) ", pentity1_entity2_trplt[3*i_entity2  ]
-                                 , pentity1_entity2_trplt[3*i_entity2+1]
-                                 , pentity1_entity2_trplt[3*i_entity2+2]);
-        if (pentity1_entity2_sign!=NULL) {
-          log_trace(" with sign = %d", pentity1_entity2_sign[i_entity2]);
+      int i_beg1 = pentity1_to_pentity1_idx[i_entity1  ]/3;
+      int i_end1 = pentity1_to_pentity1_idx[i_entity1+1]/3;
+      int n_read1 = i_end1-i_beg1;
+      for (int i_read1=i_beg1; i_read1<i_end1; ++i_read1) {
+        log_trace("\t candidate %d/%d \n", i_read1-i_beg1+1, n_read1);
+        int i_beg2 = pentity1_entity2_idx[i_read1  ];
+        int i_end2 = pentity1_entity2_idx[i_read1+1];
+        for (int i_entity2=i_beg2; i_entity2<i_end2; ++i_entity2) {
+          log_trace("\t\t entity2 gnum = "PDM_FMT_G_NUM" ", pentity1_entity2_gnum[i_entity2]);
+          log_trace("(%d, %d, %d) ", pentity1_entity2_trplt[3*i_entity2  ]
+                                   , pentity1_entity2_trplt[3*i_entity2+1]
+                                   , pentity1_entity2_trplt[3*i_entity2+2]);
+          if (pentity1_entity2_sign!=NULL) {
+            log_trace(" with sign = %d", pentity1_entity2_sign[i_entity2]);
+          }
+          log_trace("\n");
         }
-        log_trace("\n");
       }
     }
   }

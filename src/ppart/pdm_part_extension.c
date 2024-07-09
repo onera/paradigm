@@ -1284,7 +1284,6 @@ double              ***pvtx_extended_coords_out
   int **_pvtx_extended_to_pvtx_trplt = malloc(part_ext->ln_part_tot * sizeof(int *));
   int **_pvtx_extended_to_pvtx_itrf  = malloc(part_ext->ln_part_tot * sizeof(int *));
   for(int i_part = 0; i_part < part_ext->ln_part_tot; ++i_part) {
-    int trplt_size = pvtx_extended_to_pvtx_idx[i_part][pn_vtx_extended[i_part]];
     _pvtx_extended_to_pvtx_idx  [i_part] = malloc( (pn_vtx_extended[i_part]+1) * sizeof(int));
     _pvtx_extended_to_pvtx_trplt[i_part] = malloc(3*pn_vtx_extended[i_part]    * sizeof(int));
     _pvtx_extended_to_pvtx_itrf [i_part] = malloc(  pn_vtx_extended[i_part]    * sizeof(int));
