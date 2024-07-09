@@ -199,6 +199,40 @@ _lexicographic_equal_long
   return x[0] == y[0];
 }
 
+inline
+static
+int
+_lexicographic_compare_int
+(
+  const int *x,
+  const int *y,
+  const int  stride
+)
+{
+  int res = x[0] == y[0];
+  if(res == 1 && stride > 1) {
+    return _lexicographic_compare_int(&x[1], &y[1], stride-1);
+  }
+  return x[0] < y[0];
+}
+
+inline
+static
+int
+_lexicographic_equal_int
+(
+  const int *x,
+  const int *y,
+  const int  stride
+)
+{
+  int res = x[0] == y[0];
+  if(res == 1 && stride > 1) {
+    return _lexicographic_equal_int(&x[1], &y[1], stride-1);
+  }
+  return x[0] == y[0];
+}
+
 /*=============================================================================
  * Public function definitions
  *============================================================================*/
@@ -471,6 +505,43 @@ const size_t           stride,
   free(last_value);
 
   return new_size;
+}
+
+
+int
+PDM_order_binary_search_int
+(
+ const int         elt   [],
+ const int         array [],
+ const size_t      stride,
+ const size_t      nb_ent
+)
+{
+  int left  = 0;
+  int right = nb_ent - 1;
+  int ind   = (left + right) / 2;
+
+  while ((right - left) > 1) {
+
+    if(_lexicographic_compare_int(elt, &array[stride*ind], stride)) {
+      right = ind;
+    } else {
+      left = ind;
+    }
+
+    ind = (left + right) / 2;
+  }
+
+  if (_lexicographic_equal_int(elt, &array[stride*ind], stride)) {
+    return ind;
+  }
+
+  if (_lexicographic_equal_int(elt, &array[stride*right], stride)) {
+    return right;
+  } else {
+    return -1;
+  }
+
 }
 
 

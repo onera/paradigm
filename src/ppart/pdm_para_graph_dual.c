@@ -117,8 +117,14 @@ const int         *dual_graph_n,
     // printf("g_num : "PDM_FMT_G_NUM" | --> ipos::%i\n", g_num, ipos);
 
     if( ipos != -1 ) { /* So the global number of current line appears */
-      // printf(" Suppress : "PDM_FMT_G_NUM"\n", dual_graph[idx_comp+ipos]);
-      dual_graph[idx_comp+ipos] = dual_graph[idx_comp+n_cell_connect_comp-1];
+      // printf(" Suppress : "PDM_FMT_G_NUM"\n", dual_graph[idx_comp+ipos]);      // Break order
+      // Better -> Keep entry sorted :p - Very important for scotch / metis weight
+      int idx_write = idx_comp;
+      for(int k = 0; k < n_cell_connect_comp; ++k) {
+        if(k != ipos) {
+          dual_graph[idx_write++] = dual_graph[idx_comp+k];
+        }
+      }
       n_cell_connect_comp--;
     }
 
@@ -920,13 +926,6 @@ const PDM_MPI_Comm      comm
 {
   int i_rank;
   int n_rank;
-
-  PDM_UNUSED(part_fraction);
-  PDM_UNUSED(dual_graph_idx);
-  PDM_UNUSED(dual_graph);
-  PDM_UNUSED(node_weight);
-  PDM_UNUSED(arc_weight);
-  PDM_UNUSED(n_part);
 
   PDM_MPI_Comm_rank(comm, &i_rank);
   PDM_MPI_Comm_size(comm, &n_rank);
