@@ -480,10 +480,10 @@ PDM_g_num_t  **dmissing_child_parent_g_num
   }
 
   // printf(" realloc dentity_elmt : %i --> %i \n", n_tot_entity_per_key, _dentity_elmt_idx[i_abs_entity]);
-  *dentity_elmt = realloc(*dentity_elmt, sizeof(PDM_g_num_t) *  _dentity_elmt_idx[i_abs_entity] );
+  PDM_realloc(*dentity_elmt ,*dentity_elmt ,  _dentity_elmt_idx[i_abs_entity] ,PDM_g_num_t);
   _dentity_elmt = *dentity_elmt;
 
-  *dentity_parent_element_position = realloc(*dentity_parent_element_position, sizeof(int) * _dentity_elmt_idx[i_abs_entity] );
+  PDM_realloc(*dentity_parent_element_position ,*dentity_parent_element_position , _dentity_elmt_idx[i_abs_entity] ,int);
   _dentity_parent_element_position = *dentity_parent_element_position;
 
   /*
@@ -514,10 +514,10 @@ PDM_g_num_t  **dmissing_child_parent_g_num
   /*
    * Realloc
    */
-  *dentity_vtx_idx = (int *        ) realloc(*dentity_vtx_idx, (_dn_entity + 1) * sizeof(int * ) );
+  PDM_realloc(*dentity_vtx_idx ,*dentity_vtx_idx , (_dn_entity + 1) ,int);
   _dentity_vtx_idx = *dentity_vtx_idx;
 
-  *dentity_vtx     = (PDM_g_num_t *) realloc(*dentity_vtx    , _dentity_vtx_idx[_dn_entity] * sizeof(PDM_g_num_t * ));
+  PDM_realloc(*dentity_vtx     ,*dentity_vtx     , _dentity_vtx_idx[_dn_entity] ,PDM_g_num_t);
   _dentity_vtx     = *dentity_vtx;
 
   /*
@@ -2795,7 +2795,7 @@ PDM_g_num_t  **dentity_elmt
   }
 
   // printf(" realloc dentity_elmt : %i --> %i \n", n_tot_entity_per_key, _dentity_elmt_idx[i_abs_entity]);
-  *dentity_elmt = realloc(*dentity_elmt, sizeof(PDM_g_num_t) *  _dentity_elmt_idx[i_abs_entity] );
+  PDM_realloc(*dentity_elmt ,*dentity_elmt ,  _dentity_elmt_idx[i_abs_entity] ,PDM_g_num_t);
   _dentity_elmt = *dentity_elmt;
 
   /*
@@ -2834,10 +2834,10 @@ PDM_g_num_t  **dentity_elmt
   /*
    * Realloc
    */
-  *dentity_vtx_idx = (int *        ) realloc(*dentity_vtx_idx, (_dn_entity + 1) * sizeof(int * ) );
+  PDM_realloc(*dentity_vtx_idx ,*dentity_vtx_idx , (_dn_entity + 1) ,int);
   _dentity_vtx_idx = *dentity_vtx_idx;
 
-  *dentity_vtx     = (PDM_g_num_t *) realloc(*dentity_vtx    , _dentity_vtx_idx[_dn_entity] * sizeof(PDM_g_num_t * ));
+  PDM_realloc(*dentity_vtx     ,*dentity_vtx     , _dentity_vtx_idx[_dn_entity] ,PDM_g_num_t);
   _dentity_vtx     = *dentity_vtx;
 
   /*

@@ -444,11 +444,11 @@ int main(int argc, char *argv[])
       }
     }
 
-    target_g_num  [i_part] = realloc(target_g_num[i_part], n_target_cell * sizeof(PDM_g_num_t));
+    PDM_realloc(target_g_num  [i_part] ,target_g_num  [i_part] , n_target_cell ,PDM_g_num_t);
     pn_target_cell[i_part] = n_target_cell;
 
 
-    selected_l_num[i_part] = realloc(selected_l_num[i_part], n_select_cell * sizeof(int        ));
+    PDM_realloc(selected_l_num[i_part] ,selected_l_num[i_part] , n_select_cell ,int        );
     pn_select_cell[i_part] = n_select_cell;
 
     PDM_gnum_location_elements_set(gnum_loc,

@@ -737,7 +737,7 @@ PDM_dreorder_from_length
 
   /* Reorder locally */
   assert (sizeof(double) == sizeof(PDM_hilbert_code_t));
-  hilbert_order = (int * ) realloc(hilbert_order,  n_vtx_block * sizeof(int));
+  PDM_realloc(hilbert_order ,hilbert_order ,  n_vtx_block ,int);
   for (int i = 0; i < n_vtx_block; ++i) {
     hilbert_order [i] = i;
   }

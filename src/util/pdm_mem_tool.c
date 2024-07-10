@@ -1301,6 +1301,7 @@ void *PDM_REALLOC
 	size_t s_alloc = nb * size_type;
 
   if (s_alloc == 0) {
+  	free (old_ptr);
 		new_ptr = malloc (s_alloc);
 	}
 

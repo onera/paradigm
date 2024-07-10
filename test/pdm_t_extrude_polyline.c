@@ -365,7 +365,7 @@ const PDM_Mesh_nodal_elt_t   elt_type,
   }
 
 
-  *vtx_ln_to_gn = realloc(face_vtx_gnum, sizeof(PDM_g_num_t) * (*n_vtx));
+  PDM_realloc(*vtx_ln_to_gn ,*vtx_ln_to_gn , (*n_vtx),PDM_g_num_t);
   *vtx_coord = malloc(sizeof(double) * (*n_vtx) * 3);
 
   double step = 1. / (double) n_layer;
@@ -452,13 +452,13 @@ main
   //               &base_n_vtx2,
   //               &base_vtx_coord2);
 
-  base_edge_vtx = realloc(base_edge_vtx, sizeof(int) * (base_n_edge + base_n_edge2) * 2);
+  // PDM_realloc(base_edge_vtx ,base_edge_vtx , 2,int) * (base_n_edge + base_n_edge2);
   for (int i = 0; i < 2*base_n_edge2; i++) {
     base_edge_vtx[2*base_n_edge + i] = base_edge_vtx2[i] + base_n_vtx;
   }
   base_n_edge += base_n_edge2;
 
-  base_vtx_coord = realloc(base_vtx_coord, sizeof(double) * (base_n_vtx + base_n_vtx2) * 3);
+  // PDM_realloc(base_vtx_coord ,base_vtx_coord , 3,double) * (base_n_vtx + base_n_vtx2);
   for (int i = 0; i < base_n_vtx2; i++) {
     base_vtx_coord[3*base_n_vtx + 3*i  ] = base_vtx_coord2[3*i  ];
     base_vtx_coord[3*base_n_vtx + 3*i+1] = base_vtx_coord2[3*i+1];

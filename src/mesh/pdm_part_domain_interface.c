@@ -144,7 +144,7 @@ _unique_quadruplet
     }
   }
 
-  _unique_neighbor_entity = realloc(_unique_neighbor_entity, 4 * neighbor_entity_idx[n_entity] * sizeof(int));
+  PDM_realloc(_unique_neighbor_entity ,_unique_neighbor_entity , 4 * neighbor_entity_idx[n_entity] ,int);
 
   *unique_neighbor_entity_idx = _unique_neighbor_entity_idx;
   *unique_neighbor_entity_n   = _unique_neighbor_entity_n;
@@ -455,7 +455,7 @@ _exchange_and_sort_neighbor
     /*
      * Realloc
      */
-    filter_neighbor_desc[i_part] = realloc(filter_neighbor_desc[i_part], 4 * (_filter_neighbor_idx[n_entity[i_part]]) * sizeof(int));
+    PDM_realloc(filter_neighbor_desc[i_part] ,filter_neighbor_desc[i_part] , 4 * (_filter_neighbor_idx[n_entity[i_part]]) ,int);
     free(_concat_neighbor_opp_idx);
     free(_concat_neighbor_opp);
 
@@ -1513,9 +1513,9 @@ PDM_part_domain_interface_as_graph
    * Realloc
    */
   free(composed_id_tmp);
-  composed_id_idx = realloc(composed_id_idx, (i_composed_interface+1)              * sizeof(int        ));
-  composed_id     = realloc(composed_id    , composed_id_idx[i_composed_interface] * sizeof(int        ));
-  composed_key    = realloc(composed_key   , (i_composed_interface+1)              * sizeof(PDM_g_num_t));
+  PDM_realloc(composed_id_idx ,composed_id_idx , (i_composed_interface+1)              ,int        );
+  PDM_realloc(composed_id     ,composed_id     , composed_id_idx[i_composed_interface] ,int        );
+  PDM_realloc(composed_key    ,composed_key    , (i_composed_interface+1)              ,PDM_g_num_t);
 
   /*
    * Generate table to give from interface number the composed one
@@ -2693,8 +2693,8 @@ PDM_part_domain_interface_add
         PDM_log_trace_connectivity_long(_filter_entity2_entity1_idx, _filter_entity2_entity1, n_filter_entity2[i_part], "_filter_entity2_entity1 ::");
       }
 
-      filter_entity2_entity1    [i_part] = realloc(filter_entity2_entity1    [i_part], _filter_entity2_entity1_idx[n_filter_entity2[i_part]] * sizeof(PDM_g_num_t));
-      filter_entity2_entity1_idx[i_part] = realloc(filter_entity2_entity1_idx[i_part],  (n_filter_entity2[i_part] + 1)                       * sizeof(int        ));
+      PDM_realloc(filter_entity2_entity1    [i_part] ,filter_entity2_entity1    [i_part] , _filter_entity2_entity1_idx[n_filter_entity2[i_part]] ,PDM_g_num_t);
+      PDM_realloc(filter_entity2_entity1_idx[i_part] ,filter_entity2_entity1_idx[i_part] ,  (n_filter_entity2[i_part] + 1)                       ,int        );
       filter_entity2_ln_to_gn   [i_part] = entity2_ln_to_gn[i_dom][i_part];
 
       assert(n_filter_entity2[i_part] == n_entity2);
@@ -2974,8 +2974,8 @@ PDM_part_domain_interface_face2vtx
         PDM_log_trace_connectivity_long(_filter_face_vtx_idx, _filter_face_vtx, n_filter_face[i_part], "_filter_face_vtx ::");
       }
 
-      filter_face_vtx     [i_part] = realloc(filter_face_vtx    [i_part], _filter_face_vtx_idx[n_filter_face[i_part]] * sizeof(PDM_g_num_t));
-      filter_face_vtx_idx [i_part] = realloc(filter_face_vtx_idx[i_part],  (n_filter_face[i_part] + 1)                       * sizeof(int        ));
+      PDM_realloc(filter_face_vtx     [i_part] ,filter_face_vtx     [i_part] , _filter_face_vtx_idx[n_filter_face[i_part]] ,PDM_g_num_t);
+      PDM_realloc(filter_face_vtx_idx [i_part] ,filter_face_vtx_idx [i_part] ,  (n_filter_face[i_part] + 1)                       ,int        );
       filter_face_ln_to_gn[i_part] = pface_ln_to_gn[i_dom][i_part];
 
       assert(n_filter_face[i_part] == n_face);

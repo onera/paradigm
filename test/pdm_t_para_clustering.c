@@ -93,7 +93,7 @@ _mean_data_per_leaf
       extract_leaf_node_id[_n_leaf++] = i_node;
     }
   }
-  extract_leaf_node_id = realloc(extract_leaf_node_id, _n_leaf * sizeof(int));
+  PDM_realloc(extract_leaf_node_id ,extract_leaf_node_id , _n_leaf ,int);
 
   double *_leaf_data_octree = malloc(stride * _n_leaf * sizeof(double));
 
@@ -918,8 +918,8 @@ int main(int argc, char *argv[])
 
     }
 
-    gnum_bnd_vtx_min_dist[i_part] = realloc (gnum_bnd_vtx_min_dist[i_part], sizeof(PDM_g_num_t)     * n_bnd_vtx_min_dist[i_part]);
-    bnd_vtx_min_dist     [i_part] = realloc (bnd_vtx_min_dist     [i_part], sizeof(double     ) * 3 * n_bnd_vtx_min_dist[i_part]);
+    PDM_realloc(gnum_bnd_vtx_min_dist[i_part] ,gnum_bnd_vtx_min_dist[i_part] , n_bnd_vtx_min_dist[i_part],PDM_g_num_t);
+    PDM_realloc(bnd_vtx_min_dist     [i_part] ,bnd_vtx_min_dist     [i_part] , 3 * n_bnd_vtx_min_dist[i_part],double     );
 
     free(sorted_gnum);
     free(order);
@@ -1294,8 +1294,8 @@ int main(int argc, char *argv[])
     free(sorted_gnum);
     free(order);
 
-    red_blk_int_to_bnd_vtx_triplet = realloc (red_blk_int_to_bnd_vtx_triplet, 3 * red_blk_int_to_bnd_vtx_idx[blk_n_int_vtx] * sizeof(int        ));
-    red_blk_int_to_bnd_vtx         = realloc (red_blk_int_to_bnd_vtx,             red_blk_int_to_bnd_vtx_idx[blk_n_int_vtx] * sizeof(PDM_g_num_t));
+    PDM_realloc(red_blk_int_to_bnd_vtx_triplet ,red_blk_int_to_bnd_vtx_triplet , 3 * red_blk_int_to_bnd_vtx_idx[blk_n_int_vtx] ,int        );
+    PDM_realloc(red_blk_int_to_bnd_vtx         ,red_blk_int_to_bnd_vtx         ,             red_blk_int_to_bnd_vtx_idx[blk_n_int_vtx] ,PDM_g_num_t);
 
     printf("Reduction of data size : ini = %i ; end = %i\n", blk_int_to_bnd_vtx_idx[blk_n_int_vtx], red_blk_int_to_bnd_vtx_idx[blk_n_int_vtx]);
 

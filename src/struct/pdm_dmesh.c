@@ -954,8 +954,8 @@ PDM_dmesh_find_topological_ridges
   free(dedge_face_group);
   free(group_list);
 
-  pridge_face_group_idx = realloc(pridge_face_group_idx,                    (dn_ridge+1) * sizeof(int));
-  pridge_face_group     = realloc(pridge_face_group    , pridge_face_group_idx[dn_ridge] * sizeof(int));
+  PDM_realloc(pridge_face_group_idx ,pridge_face_group_idx ,                    (dn_ridge+1) ,int);
+  PDM_realloc(pridge_face_group     ,pridge_face_group     , pridge_face_group_idx[dn_ridge] ,int);
 
   PDM_gnum_set_from_parents(gen_gnum, 0, dn_ridge, edge_doublet);
   // PDM_gnum_set_parents_nuplet(gen_gnum, 2);

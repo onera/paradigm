@@ -463,7 +463,7 @@ main
 
   //           if (box_pts_idx[ibox+1] >= s_box_pts) {
   //             s_box_pts *= 2;
-  //             box_pts = realloc(box_pts, sizeof(int) * s_box_pts);
+  // PDM_realloc(//             box_pts ,//             box_pts , s_box_pts,int);
   //           }
   //           box_pts[box_pts_idx[ibox+1]++] = point_id;
   //         }

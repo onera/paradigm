@@ -377,7 +377,7 @@ int main(int argc, char *argv[])
       }
     }
 
-    target_g_num  [i_part] = realloc(target_g_num[i_part], n_target_cell * sizeof(PDM_g_num_t));
+    PDM_realloc(target_g_num  [i_part] ,target_g_num  [i_part] , n_target_cell ,PDM_g_num_t);
     pn_target_cell[i_part] = n_target_cell;
 
     if(0 == 1) {

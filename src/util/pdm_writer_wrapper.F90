@@ -74,7 +74,7 @@ module pdm_writer_wrapper
     type(c_ptr)                                  :: wrt = C_NULL_PTR
     integer, allocatable                         :: id_var_elt_field(:)
     integer, allocatable                         :: id_var_vtx_field(:)
-    integer                                      :: ierr
+    !integer                                      :: ierr
     integer                                      :: i_part, i, id_block, id_geom, id_var_part, id_var_elt_gnum
     logical                                      :: is_3d_nodal, is_2d
     integer                                      :: n_vtx_field, n_elt_field

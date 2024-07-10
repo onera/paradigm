@@ -178,7 +178,7 @@ const double tolerance
           else {
             *s_couple *= 2;
           }
-          *local_couple = realloc(*local_couple, sizeof(int) * (*s_couple) * 4);
+          PDM_realloc(*local_couple ,*local_couple , 4 * (*s_couple),int) ;
         }
 
         int _n_couple = *n_couple;
@@ -335,7 +335,7 @@ const double   tolerance
           else {
             *s_couple *= 2;
           }
-          *distant_couple = realloc(*distant_couple, sizeof(int) * (*s_couple) * 5);
+          PDM_realloc(*distant_couple ,*distant_couple , 5  * (*s_couple) ,int);
         }
 
         int _n_couple = *n_couple;
@@ -677,7 +677,7 @@ PDM_points_merge_process
           if (_intersect_extents(box, _extents_proc)) {
             if (n_tmp_store >= s_tmp_store) {
               s_tmp_store *= 2;
-              tmp_store = realloc (tmp_store, sizeof(int) * s_tmp_store * 3);
+              PDM_realloc(tmp_store ,tmp_store , s_tmp_store * 3,int);
             }
             tmp_store[3*n_tmp_store]   = curr_rank;
             tmp_store[3*n_tmp_store+1] = i_cloud;

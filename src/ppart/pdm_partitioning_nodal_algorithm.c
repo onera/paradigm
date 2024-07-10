@@ -997,7 +997,7 @@ PDM_reverse_dparent_gnum
     int* unique_order = (int *) malloc( pn_child_tmp * sizeof(int));
 
     _pn_child   [i_part] = PDM_inplace_unique_long2(_pchild_gnum[i_part], unique_order, 0, pn_child_tmp-1);
-    _pchild_gnum[i_part] = realloc(_pchild_gnum[i_part], _pn_child[i_part] * sizeof(PDM_g_num_t));
+    PDM_realloc(_pchild_gnum[i_part] ,_pchild_gnum[i_part] , _pn_child[i_part] ,PDM_g_num_t);
 
     _pchild_parent_gnum[i_part] = (PDM_g_num_t *) malloc( pn_child_tmp * sizeof(PDM_g_num_t));
     _pelmt_to_entity[i_part]    = (int         *) malloc( pn_child_tmp * sizeof(int));
@@ -1264,7 +1264,7 @@ PDM_generate_ho_vtx_ln_to_gn
     PDM_sort_long(sorted_vtx_ln_to_gn, NULL, pn_vtx[i_part]);
 
     int s_tot_unique = PDM_inplace_unique_long(concat_connec, NULL, 0, s_tot-1);
-    concat_connec = realloc(concat_connec, sizeof(PDM_g_num_t) * s_tot_unique);
+    PDM_realloc(concat_connec ,concat_connec , s_tot_unique,PDM_g_num_t);
 
     all_vtx_ln_to_gn[i_part] = malloc(s_tot_unique * sizeof(PDM_g_num_t)); // s_tot_unique is a majorant
 

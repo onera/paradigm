@@ -162,7 +162,7 @@ void           *data
   if (_ht->nDataKey[_key] == 0) {
     if (_ht->n_key_info >= _ht->l_key_info) {
       _ht->l_key_info += PDM_MAX (1, _ht->l_key_info/3);
-      _ht->key_info = realloc(_ht->key_info, sizeof(PDM_g_num_t) *  _ht->l_key_info);
+      PDM_realloc(_ht->key_info ,_ht->key_info ,  _ht->l_key_info,PDM_g_num_t);
     }
     _ht->key_info[_ht->n_key_info] = _key;
     _ht->n_key_info += 1;

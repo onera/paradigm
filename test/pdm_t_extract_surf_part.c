@@ -428,7 +428,7 @@ int main(int argc, char *argv[])
 
     }
 
-    selected_face_l_num[i_part] = realloc(selected_face_l_num[i_part], n_select_face * sizeof(int        ));
+    PDM_realloc(selected_face_l_num[i_part] ,selected_face_l_num[i_part] , n_select_face ,int        );
     pn_select_face     [i_part] = n_select_face;
 
     // PDM_log_trace_array_int (selected_face_l_num[i_part], n_select_face, "selected_face_l_num : ");

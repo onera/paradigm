@@ -486,7 +486,7 @@ _lexicographic_equal_int
 //     }
 //   }
 
-//   _unique_neighbor_entity = realloc(_unique_neighbor_entity, 3 * neighbor_entity_idx[n_entity] * sizeof(int));
+//PDM_realloc(//   _unique_neighbor_entity ,//   _unique_neighbor_entity , 3 * neighbor_entity_idx[n_entity] ,int);
 
 //   *unique_neighbor_entity_idx = _unique_neighbor_entity_idx;
 //   *unique_neighbor_entity_n   = _unique_neighbor_entity_n;
@@ -647,7 +647,7 @@ _unique_quadruplet
     }
   }
 
-  _unique_neighbor_entity = realloc(_unique_neighbor_entity, 4 * neighbor_entity_idx[n_entity] * sizeof(int));
+  PDM_realloc(_unique_neighbor_entity ,_unique_neighbor_entity , 4 * neighbor_entity_idx[n_entity] ,int);
 
   *unique_neighbor_entity_idx = _unique_neighbor_entity_idx;
   *unique_neighbor_entity_n   = _unique_neighbor_entity_n;
@@ -1162,7 +1162,7 @@ _exchange_and_sort_neighbor
     /*
      * Realloc
      */
-    filter_neighbor_desc[i_part] = realloc(filter_neighbor_desc[i_part], 4 * (_filter_neighbor_idx[n_entity[i_part]]) * sizeof(int));
+    PDM_realloc(filter_neighbor_desc[i_part] ,filter_neighbor_desc[i_part] , 4 * (_filter_neighbor_idx[n_entity[i_part]]) ,int);
     free(_concat_neighbor_opp_idx);
     free(_concat_neighbor_opp);
 
@@ -1662,7 +1662,7 @@ _generate_graph_comm_with_extended
     }
     bucket_idx[ n_bucket+1] = n_entity_extended[i_part];
     n_bucket++;
-    bucket_idx = realloc(bucket_idx,  (n_bucket+1) * sizeof(int));
+    PDM_realloc(bucket_idx ,bucket_idx ,  (n_bucket+1) ,int);
 
     // PDM_log_trace_array_int(bucket_idx,  n_bucket+1, "bucket_idx :");
     // PDM_log_trace_array_int(sort_neighbor_n,  n_entity_extended[i_part], "sort_neighbor_n :");
@@ -2773,9 +2773,9 @@ _warm_up_domain_interface
       free(current_lentity       [i_part+shift_part]);
       free(current_sens          [i_part+shift_part]);
 
-      unique_opp_interface_and_gnum = realloc(unique_opp_interface_and_gnum, 2 * n_unique * sizeof(PDM_g_num_t));
-      unique_current_lentity        = realloc(unique_current_lentity       ,     n_unique * sizeof(int        ));
-      unique_current_sens           = realloc(unique_current_sens          ,     n_unique * sizeof(int        ));
+      PDM_realloc(unique_opp_interface_and_gnum ,unique_opp_interface_and_gnum , 2 * n_unique ,PDM_g_num_t);
+      PDM_realloc(unique_current_lentity        ,unique_current_lentity        ,     n_unique ,int        );
+      PDM_realloc(unique_current_sens           ,unique_current_sens           ,     n_unique ,int        );
 
       opp_interface_and_gnum[i_part+shift_part] = unique_opp_interface_and_gnum;
       current_lentity       [i_part+shift_part] = unique_current_lentity;
@@ -3289,7 +3289,7 @@ _create_cell_graph_comm
           part_ext->border_cell_list[i_part+shift_part][idx_indic++] = i_cell;
         }
       }
-      part_ext->border_cell_list[i_part+shift_part] = realloc(part_ext->border_cell_list[i_part+shift_part], idx_indic * sizeof(int));
+      PDM_realloc(part_ext->border_cell_list[i_part+shift_part] ,part_ext->border_cell_list[i_part+shift_part] , idx_indic ,int);
       /* Because cell can be associated twice */
       part_ext->n_cell_border[i_part+shift_part] = idx_indic;
 
@@ -4047,7 +4047,7 @@ _compute_dual_graph
       free(part_ext->cell_cell_extended_n  [i_depth][i_part+shift_part]);
       free(part_ext->cell_cell_extended    [i_depth][i_part+shift_part]);
 
-      _ncell_cell_extended  = realloc(_ncell_cell_extended , 4 * _ncell_cell_extended_idx[n_cell] * sizeof(int));
+      PDM_realloc(_ncell_cell_extended  ,_ncell_cell_extended  , 4 * _ncell_cell_extended_idx[n_cell] ,int);
 
       part_ext->cell_cell_extended_idx[i_depth][i_part+shift_part] = _ncell_cell_extended_idx;
       part_ext->cell_cell_extended_n  [i_depth][i_part+shift_part] = _ncell_cell_extended_n;
@@ -4514,8 +4514,8 @@ _prune_cell_cell_extented
         _cell_cell_extended_pruned_idx[i+1] = _cell_cell_extended_pruned_idx[i];
       }
 
-      part_ext->cell_cell_extended_pruned [i_part+shift_part] = realloc(part_ext->cell_cell_extended_pruned [i_part+shift_part], 3 * idx_unique * sizeof(int));
-      part_ext->cell_cell_interface_pruned[i_part+shift_part] = realloc(part_ext->cell_cell_interface_pruned[i_part+shift_part],     idx_unique * sizeof(int));
+      PDM_realloc(part_ext->cell_cell_extended_pruned [i_part+shift_part] ,part_ext->cell_cell_extended_pruned [i_part+shift_part] , 3 * idx_unique ,int);
+      PDM_realloc(part_ext->cell_cell_interface_pruned[i_part+shift_part] ,part_ext->cell_cell_interface_pruned[i_part+shift_part] ,     idx_unique ,int);
 
       if(0 == 1) {
         _cell_cell_extended_pruned     = part_ext->cell_cell_extended_pruned    [i_part+shift_part];
@@ -4642,8 +4642,8 @@ _generate_extended_partition_connectivity
   }
 
   int n_unique_test = PDM_order_inplace_unique_long(s_tot, 2, _border_entity2_ln_to_gn_and_interface, order_tmp );
-  _border_entity2_ln_to_gn_and_interface = realloc(_border_entity2_ln_to_gn_and_interface, 2 * n_unique_test * sizeof(PDM_g_num_t));
-  // _border_entity2_ln_to_gn               = realloc(_border_entity2_ln_to_gn              ,     n_unique_test * sizeof(PDM_g_num_t));
+  PDM_realloc(_border_entity2_ln_to_gn_and_interface ,_border_entity2_ln_to_gn_and_interface , 2 * n_unique_test ,PDM_g_num_t);
+  //PDM_realloc(// _border_entity2_ln_to_gn               ,// _border_entity2_ln_to_gn               ,     n_unique_test ,PDM_g_num_t);
 
   PDM_g_num_t *_border_entity2_ln_to_gn = malloc( n_unique_test * sizeof(PDM_g_num_t));
   // int         *border_entity2_iterface  = malloc( n_unique_test * sizeof(int        ));
@@ -4804,7 +4804,7 @@ _generate_extended_partition_connectivity
   for(int i = 1; i < n_entity2; ++i) {
     _entity2_entity2_extended_idx[i+1] = _entity2_entity2_extended_idx[i];
   }
-  *entity2_entity2_extended = realloc(*entity2_entity2_extended,  (3 * n_entity2_extended) * sizeof(int));
+  PDM_realloc(*entity2_entity2_extended ,*entity2_entity2_extended ,  (3 * n_entity2_extended) ,int);
 
   if(0 == 1) {
     _entity2_entity2_extended = *entity2_entity2_extended;
@@ -4892,7 +4892,7 @@ _generate_extended_partition_connectivity
   free(border_gentity1_entity2_interface);
 
   // Mise à jour
-  _border_entity2_ln_to_gn = realloc(_border_entity2_ln_to_gn, n_entity2_extended * sizeof(PDM_g_num_t));
+  PDM_realloc(_border_entity2_ln_to_gn ,_border_entity2_ln_to_gn , n_entity2_extended ,PDM_g_num_t);
   *border_entity2_ln_to_gn = _border_entity2_ln_to_gn;
   for(int i = 0; i < n_entity2_extended; ++i){
     _border_entity2_ln_to_gn[i] = entity2_extended_gnum[2*i];

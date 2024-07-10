@@ -1013,8 +1013,8 @@ static int _match_internal_edges
   // Some pairs can be still unresolved, eg if a edge is internal from one interface point of view but
   // external for the other
   int rsvd_gnum_n_occurences_tot = idx_w;
-  results_edge     = (PDM_g_num_t *) realloc(results_edge,     rsvd_gnum_n_occurences_tot*sizeof(PDM_g_num_t));
-  results_edge_opp = (PDM_g_num_t *) realloc(results_edge_opp, rsvd_gnum_n_occurences_tot*sizeof(PDM_g_num_t));
+  PDM_realloc(results_edge     ,results_edge     ,     rsvd_gnum_n_occurences_tot,PDM_g_num_t);
+  PDM_realloc(results_edge_opp ,results_edge_opp , rsvd_gnum_n_occurences_tot,PDM_g_num_t);
 
 
   free(blk_edge_g_num);
@@ -1335,8 +1335,8 @@ PDM_MPI_Comm   comm
 
     //Update
     vtx_interface_size[i_interface] = n_pairs_u;
-    interface_vtx_ids[i_interface] = (PDM_g_num_t *) realloc(interface_vtx_ids[i_interface], 2*n_pairs_u*sizeof(PDM_g_num_t));
-    interface_vtx_dom_ids[i_interface] = (int *) realloc(interface_vtx_dom_ids[i_interface], 2*n_pairs_u*sizeof(int));
+    PDM_realloc(interface_vtx_ids[i_interface] ,interface_vtx_ids[i_interface] , 2*n_pairs_u,PDM_g_num_t);
+    PDM_realloc(interface_vtx_dom_ids[i_interface] ,interface_vtx_dom_ids[i_interface] , 2*n_pairs_u,int);
   }
 
   PDM_part_to_block_free(ptb);
@@ -2603,9 +2603,9 @@ PDM_domain_interface_translate_entity1_entity2
       }
     }
 
-    entity2_lids       [i_domain] = (int * ) realloc(entity2_lids       [i_domain], ( n_entity2_intf[i_domain]   )                          * sizeof(int) );
-    entity2_intf_no_idx[i_domain] = (int * ) realloc(entity2_intf_no_idx[i_domain], ( n_entity2_intf[i_domain]+1 )                          * sizeof(int) );
-    entity2_intf_no    [i_domain] = (int * ) realloc(entity2_intf_no    [i_domain], entity2_intf_no_idx[i_domain][n_entity2_intf[i_domain]] * sizeof(int) );
+    PDM_realloc(entity2_lids       [i_domain] ,entity2_lids       [i_domain] , ( n_entity2_intf[i_domain]   )                          ,int);
+    PDM_realloc(entity2_intf_no_idx[i_domain] ,entity2_intf_no_idx[i_domain] , ( n_entity2_intf[i_domain]+1 )                          ,int);
+    PDM_realloc(entity2_intf_no    [i_domain] ,entity2_intf_no    [i_domain] , entity2_intf_no_idx[i_domain][n_entity2_intf[i_domain]] ,int);
 
     if(0 == 1) {
       PDM_log_trace_array_int(entity2_lids       [i_domain], n_entity2_intf[i_domain]  , " n_entity2_intf ::");
@@ -3240,8 +3240,8 @@ PDM_domain_interface_translate_entity1_entity2
   free(dkey_gnum_entity2);
 
   for(int i_interface = 0; i_interface < n_interface; ++i_interface) {
-    _interface_ids_entity2[i_interface] = (PDM_g_num_t *) realloc( _interface_ids_entity2[i_interface], 2 * _interface_dn_entity2 [i_interface] * sizeof(PDM_g_num_t));
-    _interface_dom_entity2[i_interface] = (int         *) realloc( _interface_dom_entity2[i_interface], 2 * _interface_dn_entity2 [i_interface] * sizeof(int        ));
+    PDM_realloc(_interface_ids_entity2[i_interface] ,_interface_ids_entity2[i_interface] , 2 * _interface_dn_entity2 [i_interface] ,PDM_g_num_t);
+    PDM_realloc(_interface_dom_entity2[i_interface] ,_interface_dom_entity2[i_interface] , 2 * _interface_dn_entity2 [i_interface] ,int        );
 
     if(0 == 1) {
       PDM_log_trace_array_long(_interface_ids_entity2[i_interface], 2 * _interface_dn_entity2 [i_interface], "_interface_ids_entity2 : " );
@@ -4857,7 +4857,7 @@ PDM_ddomain_interface_to_pdomain_interface
           pres_interface_ln_to_gn[i_domain][i_part][i_interface][i] = _linterface_gnum[s_i_part][i];
         }
 
-        precv_entity_desc_post = (int*) realloc(precv_entity_desc_post, 3 * interface_ids_idx[_ln_interface[s_i_part]] * sizeof(int) );
+        PDM_realloc(precv_entity_desc_post ,precv_entity_desc_post , 3 * interface_ids_idx[_ln_interface[s_i_part]] ,int);
 
         // PDM_log_trace_array_int(precv_sgn, _ln_interface[s_i_part], "precv_sgn ::");
 

@@ -175,7 +175,7 @@ PDM_combine_connectivity
   // PDM_log_trace_array_int(_entity1_entity3_idx, n_entity1+1                     , "_entity1_entity3_idx::");
   // PDM_log_trace_array_int(_entity1_entity3    , _entity1_entity3_idx[n_entity1], "_entity1_entity3::");
 
-  _entity1_entity3 = realloc(_entity1_entity3, _entity1_entity3_idx[n_entity1] * sizeof(int));
+  PDM_realloc(_entity1_entity3 ,_entity1_entity3 , _entity1_entity3_idx[n_entity1] ,int);
 
   *entity1_entity3_idx = _entity1_entity3_idx;
   *entity1_entity3     = _entity1_entity3;
@@ -435,7 +435,7 @@ const int   *n_entity1,
       }
     }
 
-    _entity1_entity2    [i_part] = realloc(_entity1_entity2    [i_part], idx * sizeof(int));
+    PDM_realloc(_entity1_entity2    [i_part] ,_entity1_entity2    [i_part] , idx ,int);
 
 
   }

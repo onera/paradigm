@@ -593,7 +593,7 @@ _cll_to_polydata
 
     if (n_vtx > size_min -1) {
       size_min *= 2;
-      vtx_coord = realloc(vtx_coord, sizeof(double) * size_min * 3);
+      PDM_realloc(vtx_coord ,vtx_coord , size_min * 3,double);
     }
 
     memcpy(vtx_coord + n_vtx * 3, current->coord, sizeof(double) * 3);
@@ -684,7 +684,7 @@ _cll_to_polydata2
 
     if (n_vtx > size_min -1) {
       size_min *= 2;
-      vtx_coord = realloc(vtx_coord, sizeof(double) * size_min * 3);
+      PDM_realloc(vtx_coord ,vtx_coord , size_min * 3,double);
     }
 
     memcpy(vtx_coord + n_vtx * 3, coord + 3*current, sizeof(double) * 3);

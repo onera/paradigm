@@ -943,14 +943,14 @@ PDM_triangulate_polygon(int                             dim,
     int n_edges_tot_max = n_edges_max * (n_edges_max - 1) / 2;
 
     state->n_vertices_max = n_vertices_max;
-    state->triangle_vertices = realloc (state->triangle_vertices, sizeof(int) * (n_vertices_max - 2) * 3);
-    state->coords            = realloc (state->coords,            sizeof(double) * n_vertices_max*3);
-    state->list_previous     = realloc (state->list_previous,     sizeof(int) * n_vertices_max);
-    state->list_next         = realloc (state->list_next,         sizeof(int) * n_vertices_max);
-    state->edge_vertices     = realloc (state->edge_vertices,     sizeof(int) * n_edges_tot_max*2);
-    state->edge_neighbors    = realloc (state->edge_neighbors,    sizeof(int) * n_edges_tot_max*2);
-    state->edge_is_delaunay  = realloc (state->edge_is_delaunay,  sizeof(PDM_bool_t) * n_edges_tot_max);
-    state->concave           = realloc (state->concave,           sizeof(PDM_bool_t) * n_vertices_max);
+    PDM_realloc(state->triangle_vertices ,state->triangle_vertices , 3 * (n_vertices_max - 2) ,int) ;
+    PDM_realloc(state->coords            ,state->coords            , n_vertices_max*3,double);
+    PDM_realloc(state->list_previous     ,state->list_previous     , n_vertices_max,int);
+    PDM_realloc(state->list_next         ,state->list_next         , n_vertices_max,int);
+    PDM_realloc(state->edge_vertices     ,state->edge_vertices     , n_edges_tot_max*2,int);
+    PDM_realloc(state->edge_neighbors    ,state->edge_neighbors    , n_edges_tot_max*2,int);
+    PDM_realloc(state->edge_is_delaunay  ,state->edge_is_delaunay  , n_edges_tot_max,PDM_bool_t);
+    PDM_realloc(state->concave           ,state->concave           , n_vertices_max,PDM_bool_t);
   }
 
   if (parent_vertex_num != NULL) {

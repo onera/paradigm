@@ -649,7 +649,7 @@ _adaptative_tree2
      * Make sort
      */
     int n_unique_box_pts = PDM_inplace_unique(blk_box_to_coarse_box_pts, 0, blk_size-1);
-    blk_box_to_coarse_box_pts = realloc(blk_box_to_coarse_box_pts, n_unique_box_pts * sizeof(int));
+    PDM_realloc(blk_box_to_coarse_box_pts ,blk_box_to_coarse_box_pts , n_unique_box_pts ,int);
 
     if(0 == 1) {
       PDM_log_trace_array_int(blk_box_to_coarse_box_pts, n_unique_box_pts, "blk_box_to_coarse_box_pts :");
@@ -1365,8 +1365,8 @@ _adaptative_tree3
     }
     free(current_pts_coarse_btree_leaf_n);
     current_n_pts = n_pruned_pts;
-    current_pts_coord = realloc(current_pts_coord, sizeof(double     ) * current_n_pts * 3);
-    current_pts_gnum  = realloc(current_pts_gnum,  sizeof(PDM_g_num_t) * current_n_pts);
+    PDM_realloc(current_pts_coord ,current_pts_coord , current_n_pts * 3,double     );
+    PDM_realloc(current_pts_gnum  ,current_pts_gnum  , current_n_pts,PDM_g_num_t);
 
 
     if (dbg_enabled) {
@@ -1459,8 +1459,8 @@ _adaptative_tree3
     free(current_box_keep);
     free(current_box_init_location); // prune and keep?
     current_n_box = n_pruned_box;
-    current_box_extents = realloc(current_box_extents, sizeof(double     ) * current_n_box * 6);
-    current_box_gnum    = realloc(current_box_gnum,    sizeof(PDM_g_num_t) * current_n_box);
+    PDM_realloc(current_box_extents ,current_box_extents , current_n_box * 6,double     );
+    PDM_realloc(current_box_gnum    ,current_box_gnum    , current_n_box,PDM_g_num_t);
 
 
     if (visu) {
@@ -1973,8 +1973,8 @@ _adaptative_tree4
 
     if(idx_write_box_pts+box_pts_idx[ln_box] >= approx_size_box_pts) {
       approx_size_box_pts = PDM_MAX(2 * approx_size_box_pts, idx_write_box_pts+box_pts_idx[ln_box]) ;
-      res_box_pts        = realloc(res_box_pts       ,     approx_size_box_pts * sizeof(PDM_g_num_t));
-      res_box_pts_coords = realloc(res_box_pts_coords, 3 * approx_size_box_pts * sizeof(double     ));
+      PDM_realloc(res_box_pts        ,res_box_pts        ,     approx_size_box_pts ,PDM_g_num_t);
+      PDM_realloc(res_box_pts_coords ,res_box_pts_coords , 3 * approx_size_box_pts ,double     );
     }
 
     // On compress ici
@@ -2255,7 +2255,7 @@ char *argv[]
     src_g_num[i+n_src] = back_distrib_vtx[n_rank] + back_distrib_vtx[i_rank] + i + 1;
   }
 
-  src_coord = realloc(src_coord, sizeof(double) * 2*n_src * 3);
+  PDM_realloc(src_coord ,src_coord , 2*n_src * 3,double);
   memcpy(src_coord + 3*n_src, src_coord2, sizeof(double) * n_src * 3);
   free(src_coord2);
 

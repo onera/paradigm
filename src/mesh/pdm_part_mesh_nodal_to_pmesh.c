@@ -803,8 +803,8 @@ _generate_faces_from_part_mesh_nodal
     int         *surf_elmt_face_kind       = &elmt_face_kind      [n_face_elt_vol_tot];
     PDM_g_num_t *surf_elmt_face_cell       = &elmt_face_cell      [n_face_elt_vol_tot];
 
-    elmt_face_vtx_idx  = realloc(elmt_face_vtx_idx,  (n_face_elt_tot+1) * sizeof(int));
-    elmt_cell_face_idx = realloc(elmt_cell_face_idx, (n_elmt_tot+1)     * sizeof(int));
+    PDM_realloc(elmt_face_vtx_idx  ,elmt_face_vtx_idx  ,  (n_face_elt_tot+1) ,int);
+    PDM_realloc(elmt_cell_face_idx ,elmt_cell_face_idx , (n_elmt_tot+1)     ,int);
     // int         *surf_elmt_face_vtx_idx   = malloc((n_face_elt_surf_tot+1) * sizeof(int        ));
     // surf_elmt_face_vtx_idx[0] = 0;
     PDM_part_mesh_nodal_elmts_sections_decompose_faces(pmn->surfacic,
@@ -896,7 +896,7 @@ _generate_faces_from_part_mesh_nodal
     }
 
     pn_face      [i_part] = PDM_inplace_unique_long2(face_ln_to_gn[i_part], unique_order, 0, pn_cell_face_idx-1);
-    face_ln_to_gn[i_part] = realloc(face_ln_to_gn[i_part], pn_face[i_part] * sizeof(PDM_g_num_t));
+    PDM_realloc(face_ln_to_gn[i_part] ,face_ln_to_gn[i_part] , pn_face[i_part] ,PDM_g_num_t);
 
     // PDM_log_trace_array_long(face_ln_to_gn[i_part], pn_face[i_part], "face_ln_to_gn ::");
 
@@ -1281,7 +1281,7 @@ _generate_edges_from_part_mesh_nodal
     }
 
     pn_edge[i_part] = PDM_inplace_unique_long2(edge_ln_to_gn[i_part], unique_order, 0, pn_cell_edge_idx-1);
-    edge_ln_to_gn[i_part] = realloc(edge_ln_to_gn[i_part], pn_edge[i_part] * sizeof(PDM_g_num_t));
+    PDM_realloc(edge_ln_to_gn[i_part] ,edge_ln_to_gn[i_part] , pn_edge[i_part] ,PDM_g_num_t);
 
     // PDM_log_trace_array_long(edge_ln_to_gn[i_part], pn_edge[i_part], "edge_ln_to_gn ::");
 

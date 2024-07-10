@@ -810,9 +810,9 @@ _select_elements_by_global_bbox
         n_extract_elmt[i_part]++;
       }
     }
-    extract_box_extents       [i_part] = realloc(extract_box_extents       [i_part], 6 * n_entity * sizeof(double     ));
-    extract_elmt_init_location[i_part] = realloc(extract_elmt_init_location[i_part], 3 * n_entity * sizeof(int        ));
-    extract_elmt_ln_to_gn     [i_part] = realloc(extract_elmt_ln_to_gn     [i_part],     n_entity * sizeof(PDM_g_num_t));
+    PDM_realloc(extract_box_extents       [i_part] ,extract_box_extents       [i_part] , 6 * n_entity ,double     );
+    PDM_realloc(extract_elmt_init_location[i_part] ,extract_elmt_init_location[i_part] , 3 * n_entity ,int        );
+    PDM_realloc(extract_elmt_ln_to_gn     [i_part] ,extract_elmt_ln_to_gn     [i_part] ,     n_entity ,PDM_g_num_t);
 
   }
 
@@ -950,9 +950,9 @@ _select_elements_by_global_bbox_nodal
 
     }
 
-    extract_box_extents       [i_part] = realloc(extract_box_extents       [i_part], 6 * n_entity * sizeof(double     ));
-    extract_elmt_init_location[i_part] = realloc(extract_elmt_init_location[i_part], 3 * n_entity * sizeof(int        ));
-    extract_elmt_ln_to_gn     [i_part] = realloc(extract_elmt_ln_to_gn     [i_part],     n_entity * sizeof(PDM_g_num_t));
+    PDM_realloc(extract_box_extents       [i_part] ,extract_box_extents       [i_part] , 6 * n_entity ,double     );
+    PDM_realloc(extract_elmt_init_location[i_part] ,extract_elmt_init_location[i_part] , 3 * n_entity ,int        );
+    PDM_realloc(extract_elmt_ln_to_gn     [i_part] ,extract_elmt_ln_to_gn     [i_part] ,     n_entity ,PDM_g_num_t);
   }
 
   *n_extract_elmt_out             = n_extract_elmt;
@@ -1931,11 +1931,11 @@ _build_ptp
     idx_read += n;
   }
   if (idx_write < idx_read) {
-      // elt_a_elt_b        = realloc(elt_a_elt_b,        sizeof(int   ) * idx_write);
-    elt_a_elt_b_g_num      = realloc(elt_a_elt_b_g_num,      sizeof(PDM_g_num_t) * idx_write);
-    // elt_a_elt_b_volume     = realloc(elt_a_elt_b_volume,     sizeof(double     ) * idx_write);
-    elt_a_elt_b_init_loc_n = realloc(elt_a_elt_b_init_loc_n, sizeof(int        ) * idx_write);
-    elt_a_elt_b_init_loc   = realloc(elt_a_elt_b_init_loc,   sizeof(int        ) * idx_write_init_loc * 3);
+//      PDM_realloc(// elt_a_elt_b        ,// elt_a_elt_b        , idx_write,int   );
+    PDM_realloc(elt_a_elt_b_g_num      ,elt_a_elt_b_g_num      , idx_write,PDM_g_num_t);
+//    PDM_realloc(// elt_a_elt_b_volume     ,// elt_a_elt_b_volume     , idx_write,double     );
+    PDM_realloc(elt_a_elt_b_init_loc_n ,elt_a_elt_b_init_loc_n , idx_write,int        );
+    PDM_realloc(elt_a_elt_b_init_loc   ,elt_a_elt_b_init_loc   , idx_write_init_loc * 3,int        );
   }
   // free(elt_b_init_loc);
   free(elt_b_init_loc_n);

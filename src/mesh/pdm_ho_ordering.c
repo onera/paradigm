@@ -935,7 +935,7 @@ PDM_ho_ordering_user_to_ijk_add
     /* Create new user ordering */
     if (n_ho_orderings >= s_ho_orderings) {
       s_ho_orderings *= 2;
-      ho_orderings = realloc (ho_orderings, sizeof(PDM_ho_ordering_t) * s_ho_orderings);
+      PDM_realloc(ho_orderings ,ho_orderings , s_ho_orderings,PDM_ho_ordering_t *);
     }
 
     id = _ho_ordering_create(name);

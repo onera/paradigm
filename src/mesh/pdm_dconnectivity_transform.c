@@ -267,7 +267,7 @@ PDM_deduce_combine_connectivity
   /*
    * Realloc
    */
-  *dentity1_entity3 = (PDM_g_num_t *) realloc(*dentity1_entity3, sizeof(PDM_g_num_t) * _dentity1_entity3_idx[dn_entity1] );
+  PDM_realloc(*dentity1_entity3 ,*dentity1_entity3 , _dentity1_entity3_idx[dn_entity1] ,PDM_g_num_t);
   _dentity1_entity3 = *dentity1_entity3;
 
   // PDM_log_trace_array_int (_dentity1_entity3_idx, dn_entity1+1              , "after -> _dentity1_entity3_idx::");
@@ -376,7 +376,7 @@ PDM_deduce_combine_connectivity_dual
   /*
    * Realloc
    */
-  *dentity1_entity3 = (PDM_g_num_t *) realloc(*dentity1_entity3, sizeof(PDM_g_num_t) * _dentity1_entity3_idx[dn_entity1] );
+  PDM_realloc(*dentity1_entity3 ,*dentity1_entity3 , _dentity1_entity3_idx[dn_entity1] ,PDM_g_num_t);
 
   // PDM_log_trace_array_long(_dentity1_entity3_idx, dn_entity1+1              , "after -> _dentity1_entity3_idx::");
   // PDM_log_trace_array_int(dentity1_entity3_n   , dn_entity1                , "after -> dentity1_entity3_n::");
@@ -538,7 +538,7 @@ PDM_dconnectivity_transpose
   /*
    * Realloc
    */
-  *dentity2_entity1 = realloc(recv_data, _dentity2_entity1_idx[dn_entity2_recv] * sizeof(PDM_g_num_t));
+  PDM_realloc(*dentity2_entity1 ,*dentity2_entity1 , _dentity2_entity1_idx[dn_entity2_recv] ,PDM_g_num_t);
   free(dentity2_entity1_n);
 }
 
@@ -834,7 +834,7 @@ PDM_dgroup_entity_transpose
     PDM_log_trace_connectivity_int(_dentity_group_idx, _dentity_group, dn_entity, "_dentity_group ::");
   }
 
-  *dentity_group = realloc(*dentity_group, _dentity_group_idx[dn_entity] * sizeof(int));
+  PDM_realloc(*dentity_group ,*dentity_group , _dentity_group_idx[dn_entity] ,int);
   if (*dentity_group == NULL) {
     *dentity_group = malloc(sizeof(int) * _dentity_group_idx[dn_entity]);
     assert(*dentity_group != NULL);

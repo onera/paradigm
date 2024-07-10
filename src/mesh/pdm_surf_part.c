@@ -317,7 +317,7 @@ PDM_surf_part_t *part
    * Re-allocation to real size
    */
 
-  part->edgeVtx = (int *) realloc(part->edgeVtx, sizeof(int) * 2 * nEdge);
+  PDM_realloc(part->edgeVtx ,part->edgeVtx , 2 * nEdge,int);
 
   /*
    * edge -> face connectivity

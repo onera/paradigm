@@ -455,7 +455,7 @@ int main(int argc, char *argv[])
 
     }
 
-    selected_l_num[i_part] = realloc(selected_l_num[i_part], n_select_cell * sizeof(int        ));
+    PDM_realloc(selected_l_num[i_part] ,selected_l_num[i_part] , n_select_cell ,int        );
     pn_select_cell[i_part] = n_select_cell;
 
   }

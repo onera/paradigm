@@ -1532,9 +1532,9 @@ PDM_doctree_build
           n_lbox_compress++;
         }
       }
-      res_box_weight[i_shm] = realloc(res_box_weight[i_shm], n_lbox_compress * sizeof(double     ));
-      res_box_strid [i_shm] = realloc(res_box_strid [i_shm], n_lbox_compress * sizeof(int        ));
-      res_box_g_num [i_shm] = realloc(res_box_g_num [i_shm], n_lbox_compress * sizeof(PDM_g_num_t));
+      PDM_realloc(res_box_weight[i_shm] ,res_box_weight[i_shm] , n_lbox_compress ,double     );
+      PDM_realloc(res_box_strid [i_shm] ,res_box_strid [i_shm] , n_lbox_compress ,int        );
+      PDM_realloc(res_box_g_num [i_shm] ,res_box_g_num [i_shm] , n_lbox_compress ,PDM_g_num_t);
       part_n_box    [i_shm] = n_lbox_compress;
 
       if(verbose && n_lbox_compress < n_lbox) {

@@ -153,9 +153,9 @@ PDM_Handles_store
   if (handles->n_handles >= handles->s_array) {
     int p_s_array = handles->s_array;
     handles->s_array *= 2;
-    handles->array   = realloc(handles->array  , sizeof(void*) * handles->s_array);
-    handles->idx     = realloc(handles->idx    , sizeof(int  ) * handles->s_array);
-    handles->idx_inv = realloc(handles->idx_inv, sizeof(int  ) * handles->s_array);
+    PDM_realloc(handles->array   ,handles->array   , handles->s_array, const void*);
+    PDM_realloc(handles->idx     ,handles->idx     , handles->s_array,int  );
+    PDM_realloc(handles->idx_inv ,handles->idx_inv , handles->s_array,int  );
 
     for (int i = p_s_array; i < handles->s_array; i++) {
       handles->array[i]   = NULL;

@@ -495,9 +495,9 @@ _adapt_tree_weight_for_intersect_line
      */
 
     n_child_to_extract = 0;
-    child_ids_to_extract          = realloc(child_ids_to_extract         ,                    n_g_extract_boxes[i_rank]  * sizeof(int));
-    all_child_ids                 = realloc(all_child_ids                , (n_all_child_ids + n_g_extract_boxes[i_rank]) * sizeof(int));
-    all_g_count_by_sampling_boxes = realloc(all_g_count_by_sampling_boxes, (n_all_child_ids + n_g_extract_boxes[i_rank]) * sizeof(int));
+    PDM_realloc(child_ids_to_extract          ,child_ids_to_extract          ,                    n_g_extract_boxes[i_rank]  ,int);
+    PDM_realloc(all_child_ids                 ,all_child_ids                 , (n_all_child_ids + n_g_extract_boxes[i_rank]) ,int);
+    PDM_realloc(all_g_count_by_sampling_boxes ,all_g_count_by_sampling_boxes , (n_all_child_ids + n_g_extract_boxes[i_rank]) ,int);
 
     for(int i = 0; i < n_g_extract_boxes[i_rank]; ++i) {
       // if(g_count_by_sampling_boxes[i] > 0) {
@@ -1307,7 +1307,7 @@ PDM_dbbtree_boxes_set_with_init_location
 
     free (allNBoxes);
 
-    allGExtents = (double *) realloc (allGExtents, sizeof(double) * sExtents * nUsedRank);
+    PDM_realloc(allGExtents ,allGExtents , sExtents * nUsedRank,double);
 
     int *initLocation_proc = PDM_array_zeros_int(3 * nUsedRank);
 
@@ -1624,7 +1624,7 @@ PDM_dbbtree_boxes_set_for_intersect_line
 
     free (allNBoxes);
 
-    allGExtents = (double *) realloc (allGExtents, sizeof(double) * sExtents * nUsedRank);
+    PDM_realloc(allGExtents ,allGExtents , sExtents * nUsedRank,double);
 
     int *initLocation_proc = PDM_array_zeros_int(3 * nUsedRank);
 
@@ -1996,7 +1996,7 @@ PDM_dbbtree_intersect_boxes_with_init_location_set
   free (*box_index);
   *box_index = newIndex;
 
-  *box_l_num = (int *) realloc (*box_l_num, sizeof (int) * newIndex[nBoxesA]);
+  PDM_realloc(*box_l_num ,*box_l_num , newIndex[nBoxesA],int);
 
   if (1 == 0) {
     printf ("Intersections : %d\n", boxes->local_boxes->n_boxes);
@@ -2649,7 +2649,7 @@ PDM_dbbtree_closest_upper_bound_dist_boxes_get
     *box_index = box_index_tmp;
 
 
-    *box_g_num = realloc (*box_g_num, sizeof(PDM_g_num_t) * box_index_tmp[n_pts]);
+    PDM_realloc(*box_g_num ,*box_g_num , box_index_tmp[n_pts],PDM_g_num_t);
 
     /*
      * Deallocate stuff
@@ -3343,8 +3343,8 @@ PDM_dbbtree_closest_upper_bound_dist_boxes_pts_shared_get
   }
   free(pts_unique_order);
   free(tmp_coord);
-  dbox_pts_g_num = realloc(dbox_pts_g_num, sizeof(PDM_g_num_t) * idx_write);
-  dbox_pts_coord = realloc(dbox_pts_coord, sizeof(double     ) * idx_write*3);
+  PDM_realloc(dbox_pts_g_num ,dbox_pts_g_num , idx_write,PDM_g_num_t);
+  PDM_realloc(dbox_pts_coord ,dbox_pts_coord , idx_write*3,double     );
 
   n_recv_data = idx_write;
 
@@ -3357,7 +3357,7 @@ PDM_dbbtree_closest_upper_bound_dist_boxes_pts_shared_get
     idx_read += dbox_init_location_n[i];
   }
   free(dbox_init_location_n);
-  dbox_init_location = realloc(dbox_init_location, sizeof(int) * n_equi_box*3);
+  PDM_realloc(dbox_init_location ,dbox_init_location , n_equi_box*3,int);
 
 
 
@@ -4071,7 +4071,7 @@ PDM_dbbtree_closest_upper_bound_dist_boxes_get_async
     *box_index = box_index_tmp;
 
 
-    *box_g_num = realloc (*box_g_num, sizeof(PDM_g_num_t) * box_index_tmp[n_pts]);
+    PDM_realloc(*box_g_num ,*box_g_num , box_index_tmp[n_pts],PDM_g_num_t);
 
     /*
      * Deallocate stuff
@@ -4438,7 +4438,7 @@ PDM_dbbtree_points_inside_boxes_block_frame
       free (order);
 
       if (n_copied_ranks > 0) {
-        copied_ranks = realloc (copied_ranks, sizeof(int) * n_copied_ranks);
+        PDM_realloc(copied_ranks ,copied_ranks , n_copied_ranks,int);
         n_pts_recv_copied_ranks = realloc (n_pts_recv_copied_ranks,
                                            sizeof(int) * n_copied_ranks);
       }
@@ -5476,7 +5476,7 @@ PDM_dbbtree_boxes_containing_points
       free (order);
 
       if (n_copied_ranks > 0) {
-        copied_ranks = realloc (copied_ranks, sizeof(int) * n_copied_ranks);
+        PDM_realloc(copied_ranks ,copied_ranks , n_copied_ranks,int);
         n_pts_recv_copied_ranks = realloc (n_pts_recv_copied_ranks,
                                            sizeof(int) * n_copied_ranks);
       }
@@ -6061,7 +6061,7 @@ _lines_intersect_shared_box_tree
       free (order);
 
       if (*n_copied_ranks > 0) {
-        copied_ranks = realloc (copied_ranks, sizeof(int) * (*n_copied_ranks));
+        PDM_realloc(copied_ranks ,copied_ranks , (*n_copied_ranks),int);
         n_line_recv_copied_ranks = realloc (n_line_recv_copied_ranks,
                                            sizeof(int) * (*n_copied_ranks));
       }
@@ -6461,7 +6461,7 @@ PDM_dbbtree_lines_intersect_boxes
       free (order);
 
       if (n_copied_ranks > 0) {
-        copied_ranks = realloc (copied_ranks, sizeof(int) * n_copied_ranks);
+        PDM_realloc(copied_ranks ,copied_ranks , n_copied_ranks,int);
         n_line_recv_copied_ranks = realloc (n_line_recv_copied_ranks,
                                            sizeof(int) * n_copied_ranks);
       }
@@ -7679,7 +7679,7 @@ PDM_dbbtree_volumes_intersect_boxes
       free(order);
 
       if (n_copied_ranks > 0) {
-        copied_ranks = realloc(copied_ranks, sizeof(int) * n_copied_ranks);
+        PDM_realloc(copied_ranks ,copied_ranks , n_copied_ranks,int);
         jsubtree_to_copy_total_n_volume = realloc(jsubtree_to_copy_total_n_volume,
                                            sizeof(int) * n_copied_ranks);
       }
@@ -7848,8 +7848,8 @@ PDM_dbbtree_volumes_intersect_boxes
               // Realloc if necessary
               if ( 3*(_rank_idx_plane+1) > tmp_n_copied_planes) {
                 tmp_n_copied_planes *= 2;
-                copied_plane_normal   = realloc(copied_plane_normal   , sizeof(double) * tmp_n_copied_planes);
-                copied_plane_pt_coord = realloc(copied_plane_pt_coord , sizeof(double) * tmp_n_copied_planes);
+                PDM_realloc(copied_plane_normal   ,copied_plane_normal   , tmp_n_copied_planes,double);
+                PDM_realloc(copied_plane_pt_coord ,copied_plane_pt_coord , tmp_n_copied_planes,double);
               }
               for (int j = 0; j < 3; j++) {
                 copied_plane_normal[3*_rank_idx_plane + j]   = plane_normal_normalized[3*iplane + j];
@@ -7867,8 +7867,8 @@ PDM_dbbtree_volumes_intersect_boxes
               // Realloc if necessary
               if ( 3*(rank_idx_plane+1) > tmp_n_send_planes) {
                 tmp_n_send_planes *= 2;
-                send_plane_normal   = realloc(send_plane_normal   , sizeof(double) * tmp_n_send_planes);
-                send_plane_pt_coord = realloc(send_plane_pt_coord , sizeof(double) * tmp_n_send_planes);
+                PDM_realloc(send_plane_normal   ,send_plane_normal   , tmp_n_send_planes,double);
+                PDM_realloc(send_plane_pt_coord ,send_plane_pt_coord , tmp_n_send_planes,double);
               }
               for (int j = 0; j < 3; j++) {
                 send_plane_normal[3* rank_idx_plane + j]   = plane_normal_normalized[3*iplane + j];
@@ -7887,8 +7887,8 @@ PDM_dbbtree_volumes_intersect_boxes
             // Realloc if necessary
             if ( 3*(rank_idx_plane+1) > tmp_n_send_planes) {
               tmp_n_send_planes *= 2;
-              send_plane_normal   = realloc(send_plane_normal   , sizeof(double) * tmp_n_send_planes);
-              send_plane_pt_coord = realloc(send_plane_pt_coord , sizeof(double) * tmp_n_send_planes);
+              PDM_realloc(send_plane_normal   ,send_plane_normal   , tmp_n_send_planes,double);
+              PDM_realloc(send_plane_pt_coord ,send_plane_pt_coord , tmp_n_send_planes,double);
             }
             for (int j = 0; j < 3; j++) {
               send_plane_normal[3*rank_idx_plane + j]   = plane_normal_normalized[3*iplane + j];
@@ -7914,8 +7914,8 @@ PDM_dbbtree_volumes_intersect_boxes
       receive_plane_idx[i+1]  *= 3;
     }
 
-    send_plane_normal   = realloc(send_plane_normal   , sizeof(double) * send_plane_idx[n_rank]);
-    send_plane_pt_coord = realloc(send_plane_pt_coord , sizeof(double) * send_plane_idx[n_rank]);
+    PDM_realloc(send_plane_normal   ,send_plane_normal   , send_plane_idx[n_rank],double);
+    PDM_realloc(send_plane_pt_coord ,send_plane_pt_coord , send_plane_idx[n_rank],double);
 
     // Exchange plane data
     receive_plane_normal = malloc(sizeof(double) * 3 * receive_plane_idx[n_rank]);

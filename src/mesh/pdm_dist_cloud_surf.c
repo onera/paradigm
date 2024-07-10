@@ -1543,7 +1543,7 @@ _dist_cloud_surf_compute_optim
                                                  unique_order,
                                                  0,
                                                  dbox_pts_idx[n_extract_boxes]-1);
-    pts_ln_to_gn = realloc(pts_ln_to_gn, n_extract_pts * sizeof(PDM_g_num_t));
+    PDM_realloc(pts_ln_to_gn ,pts_ln_to_gn , n_extract_pts ,PDM_g_num_t);
 
     // log_trace("Reduce to pts connectivity = %i / %i \n", dbox_pts_idx[n_extract_boxes], n_extract_pts);
 
@@ -2356,9 +2356,9 @@ _dist_cloud_surf_compute_optim
       block_pts_elt_dist2[i] = min_dist2;
     }
     free(block_pts_elt_n);
-    block_pts_elt_dist2 = realloc(block_pts_elt_dist2, sizeof(double     ) * block_n_pts);
-    block_pts_elt_g_num = realloc(block_pts_elt_g_num, sizeof(PDM_g_num_t) * block_n_pts);
-    block_pts_elt_proj  = realloc(block_pts_elt_proj,  sizeof(double     ) * block_n_pts * 3);
+    PDM_realloc(block_pts_elt_dist2 ,block_pts_elt_dist2 , block_n_pts,double     );
+    PDM_realloc(block_pts_elt_g_num ,block_pts_elt_g_num , block_n_pts,PDM_g_num_t);
+    PDM_realloc(block_pts_elt_proj  ,block_pts_elt_proj  , block_n_pts * 3,double     );
 
     /* Send back */
     /* Or send directly to user frame ?? */

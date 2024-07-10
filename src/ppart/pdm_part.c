@@ -361,7 +361,7 @@ _dual_graph_from_face_cell
    * Reallocate to free unused memory
    */
 
-  ppart->ddual_graph = realloc(ppart->ddual_graph, k1 * sizeof(PDM_g_num_t));
+  PDM_realloc(ppart->ddual_graph ,ppart->ddual_graph , k1 ,PDM_g_num_t);
   PDM_array_idx_from_sizes_gnum(n_neighbour, ppart->dn_cell, ppart->ddual_graph_idx);
 
   /*
@@ -650,7 +650,7 @@ _dual_graph_from_cell_face
    * Reallocate to free unused memory
    */
 
-  ppart->ddual_graph = realloc(ppart->ddual_graph, k1 * sizeof(PDM_g_num_t));
+  PDM_realloc(ppart->ddual_graph ,ppart->ddual_graph , k1 ,PDM_g_num_t);
   PDM_array_idx_from_sizes_gnum(n_neighbour,  ppart->dn_cell, ppart->ddual_graph_idx);
 
   /* Verifier tous les tableaux ..... */

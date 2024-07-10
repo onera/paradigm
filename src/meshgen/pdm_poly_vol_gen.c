@@ -946,7 +946,7 @@ PDM_poly_vol_gen
       }
     }
   }
-  *dface_vtx = realloc (*dface_vtx, sizeof(PDM_g_num_t) * _dface_vtx_idx[*dn_face]);
+  PDM_realloc(*dface_vtx ,*dface_vtx , _dface_vtx_idx[*dn_face],PDM_g_num_t);
 
 
 
@@ -1293,7 +1293,7 @@ PDM_poly_vol_gen
     }
 
   }
-  *dcell_face = realloc (*dcell_face, sizeof(PDM_g_num_t) * _dcell_face_idx[*dn_cell]);
+  PDM_realloc(*dcell_face ,*dcell_face , _dcell_face_idx[*dn_cell],PDM_g_num_t);
 
 
   /* TOUT DUR: switch orientation of all faces -> normals pointing outwards */

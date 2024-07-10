@@ -1125,11 +1125,11 @@ int PDM_geom_elem_compute_polygon_barycentric_coordinates(const int           nP
     }
     else {
       if (prev_n_sommets < n_sommets) {
-        coords_sommets = (double*)realloc(coords_sommets,sizeof(double)* 3 * n_sommets);
-        s              = (double*)realloc(s,      sizeof(double)* 3 * n_sommets);
-        dist           = (double*)realloc(dist,   sizeof(double)* n_sommets);
-        aire           = (double*)realloc(aire,   sizeof(double)* n_sommets);
-        proScal        = (double*)realloc(proScal,sizeof(double)* n_sommets);
+        PDM_realloc(coords_sommets ,coords_sommets , 3 * n_sommets,double);
+        PDM_realloc(s              ,s              , 3 * n_sommets,double);
+        PDM_realloc(dist           ,dist           , n_sommets,double);
+        PDM_realloc(aire           ,aire           , n_sommets,double);
+        PDM_realloc(proScal        ,proScal        , n_sommets,double);
       }
     }
 
@@ -1260,7 +1260,7 @@ int PDM_geom_elem_compute_polygon_barycentric_coordinates(const int           nP
     _barCoordsIndex[ipoint+1] = _barCoordsIndex[ipoint] + n_sommets;
     //Vector/Pointer containing Barycentric coordinates
 
-    *barCoords = (double*)realloc( *barCoords, sizeof(double)*(_barCoordsIndex[ipoint+1]) );
+    PDM_realloc(*barCoords ,*barCoords ,(_barCoordsIndex[ipoint+1]) ,double);
 
     double *_barCoords = *barCoords;
 
@@ -2031,7 +2031,7 @@ PDM_geom_elem_polyhedra_properties
 
           if (nKeyPoly >= sKeyPoly) {
             sKeyPoly *= 2;
-            keyPoly = (int *) realloc (keyPoly, sizeof(int) * sKeyPoly);
+            PDM_realloc(keyPoly ,keyPoly , sKeyPoly,int);
           }
 
           keyPoly[nKeyPoly++] = key;

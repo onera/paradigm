@@ -274,7 +274,7 @@ _update_elmt_sections_id
   }
 
   if (dmn_elts->n_section < n_section) {
-    dmn_elts->sections_id = (int *) realloc(dmn_elts->sections_id, sizeof(int) * n_section);
+    PDM_realloc(dmn_elts->sections_id ,dmn_elts->sections_id , n_section,int);
   }
 
   int k = 0;
@@ -443,7 +443,7 @@ const PDM_Mesh_nodal_elt_t     t_elt
   int id_block = -1;
   dmn_elts->n_section++;
 
-  dmn_elts->sections_id  = realloc(dmn_elts->sections_id , sizeof(int) * dmn_elts->n_section);
+  PDM_realloc(dmn_elts->sections_id  ,dmn_elts->sections_id  , dmn_elts->n_section,int);
 
   int elt_dim = PDM_Mesh_nodal_elt_dim_get(t_elt);
 
@@ -492,7 +492,7 @@ const PDM_Mesh_nodal_elt_t     t_elt
     {
       id_block = dmn_elts->n_section_std++;
 
-      dmn_elts->sections_std = realloc(dmn_elts->sections_std, dmn_elts->n_section_std * sizeof(PDM_DMesh_nodal_section_std_t * ));
+      PDM_realloc(dmn_elts->sections_std ,dmn_elts->sections_std , dmn_elts->n_section_std ,PDM_DMesh_nodal_section_std_t * );
       dmn_elts->sections_std[id_block]              = malloc( sizeof(PDM_DMesh_nodal_section_std_t) );
       dmn_elts->sections_std[id_block]->t_elt       = t_elt;
       dmn_elts->sections_std[id_block]->n_elt       = -1;
@@ -511,7 +511,7 @@ const PDM_Mesh_nodal_elt_t     t_elt
       assert(dmn_elts->mesh_dimension == 2);
       id_block = dmn_elts->n_section_poly2d++;
 
-      dmn_elts->sections_poly2d = realloc(dmn_elts->sections_poly2d, dmn_elts->n_section_poly2d * sizeof(PDM_DMesh_nodal_section_poly2d_t *));
+      PDM_realloc(dmn_elts->sections_poly2d ,dmn_elts->sections_poly2d , dmn_elts->n_section_poly2d ,PDM_DMesh_nodal_section_poly2d_t *);
       dmn_elts->sections_poly2d[id_block]              = malloc( sizeof(PDM_DMesh_nodal_section_poly2d_t) );
       dmn_elts->sections_poly2d[id_block]->n_elt       = -1;
       dmn_elts->sections_poly2d[id_block]->_connec     = NULL;
@@ -530,7 +530,7 @@ const PDM_Mesh_nodal_elt_t     t_elt
       id_block = dmn_elts->n_section_poly3d++;
       assert(dmn_elts->mesh_dimension == 3);
 
-      dmn_elts->sections_poly3d = realloc(dmn_elts->sections_poly3d, dmn_elts->n_section_poly3d * sizeof(PDM_DMesh_nodal_section_poly3d_t *));
+      PDM_realloc(dmn_elts->sections_poly3d ,dmn_elts->sections_poly3d , dmn_elts->n_section_poly3d ,PDM_DMesh_nodal_section_poly3d_t *);
       dmn_elts->sections_poly3d[id_block]                 = malloc( sizeof(PDM_DMesh_nodal_section_poly3d_t) );
       dmn_elts->sections_poly3d[id_block]->n_elt          = -1;
       dmn_elts->sections_poly3d[id_block]->n_face         = -1;
@@ -579,7 +579,7 @@ const char                    *ho_ordering
   int id_block = -1;
   dmn_elts->n_section++;
 
-  dmn_elts->sections_id  = realloc(dmn_elts->sections_id , sizeof(int) * dmn_elts->n_section);
+  PDM_realloc(dmn_elts->sections_id  ,dmn_elts->sections_id  , dmn_elts->n_section,int);
 
   if(t_elt == PDM_MESH_NODAL_POINT) {
     if(dmn_elts->mesh_dimension != 0){
@@ -604,7 +604,7 @@ const char                    *ho_ordering
 
   id_block = dmn_elts->n_section_std++;
 
-  dmn_elts->sections_std = realloc(dmn_elts->sections_std, dmn_elts->n_section_std * sizeof(PDM_DMesh_nodal_section_std_t * ));
+  PDM_realloc(dmn_elts->sections_std ,dmn_elts->sections_std , dmn_elts->n_section_std ,PDM_DMesh_nodal_section_std_t * );
   dmn_elts->sections_std[id_block]              = malloc( sizeof(PDM_DMesh_nodal_section_std_t) );
   dmn_elts->sections_std[id_block]->t_elt       = t_elt;
   dmn_elts->sections_std[id_block]->n_elt       = -1;

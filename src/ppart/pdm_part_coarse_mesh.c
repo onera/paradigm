@@ -1073,7 +1073,7 @@ _build_face_coarse_cell
    * realloc of the correct size
    */
 
-  *face_coarse_cell = realloc((*face_coarse_cell), 2 * (*n_face_checked) * sizeof(int));
+  PDM_realloc(*face_coarse_cell ,*face_coarse_cell , 2 * (*n_face_checked) ,int);
 
   /*
    * Fine face - coarse face connectivity (size = n_face)
@@ -1104,7 +1104,7 @@ _build_face_coarse_cell
 
   assert(idx_coarse_face_to_fine_face == (*n_face_checked));
 
-  *coarse_face_to_fine_face = realloc((*coarse_face_to_fine_face), idx_coarse_face_to_fine_face * sizeof(int));
+  PDM_realloc(*coarse_face_to_fine_face ,*coarse_face_to_fine_face , idx_coarse_face_to_fine_face ,int);
 
   if(0 == 1) {
     PDM_printf("Valeur finale de (*n_face_checked) : %d \n", (*n_face_checked));
@@ -1311,8 +1311,8 @@ _build_face_vtx
     }
   }
 
-  *face_vtx_idx = realloc((*face_vtx_idx), (n_face_checked + 1) * sizeof(int));
-  *face_vtx = realloc((*face_vtx), (*face_vtx_idx)[n_face_checked] * sizeof(int));
+  PDM_realloc(*face_vtx_idx ,*face_vtx_idx , (n_face_checked + 1) ,int);
+  PDM_realloc(*face_vtx ,*face_vtx , (*face_vtx_idx)[n_face_checked] ,int);
 
   if (0 == 1) {
     PDM_printf("Valeur de (*face_vtx_idx)[n_face_checked] : %d \n", (*face_vtx_idx)[n_face_checked]);
@@ -1372,7 +1372,7 @@ _build_face_vtx
 
   (*n_vtx_checked) = idx_write_coarse_vtx_to_fine_vtx;
 
-  (*coarse_vtx_to_fine_vtx) = realloc((*coarse_vtx_to_fine_vtx), (*n_vtx_checked) * sizeof(int));
+  PDM_realloc((*coarse_vtx_to_fine_vtx) ,(*coarse_vtx_to_fine_vtx) , (*n_vtx_checked) ,int);
 
   if (0 == 1) {
     PDM_printf("\nFinal content of coarse_vtx_to_fine_vtx: ");
@@ -1476,7 +1476,7 @@ _build_vtx
   }
 
   //Reallocation of vtx at the suitable size
-  *vtx = realloc((*vtx), 3 * n_vtx_checked * sizeof(double));
+  PDM_realloc(*vtx ,*vtx , 3 * n_vtx_checked ,double);
 
   assert(3 * n_vtx_checked == idx_write);
 
@@ -1578,7 +1578,7 @@ _build_face_tag
     (*face_tag)[i] = (*face_tag)[coarse_face_to_fine_face[i] - 1];
   }
 
-  (*face_tag) = realloc((*face_tag), n_face_checked * sizeof(int));
+  PDM_realloc((*face_tag) ,(*face_tag) , n_face_checked ,int);
 
   if(0 == 1) {
     PDM_printf("Contenu de (*face_tag)\n");
@@ -1617,7 +1617,7 @@ _build_vtx_tag
     (*vtx_tag)[i] = (*vtx_tag)[coarse_vtx_to_fine_vtx[i] - 1];
   }
 
-  (*vtx_tag) = realloc((*vtx_tag), n_vtx_checked * sizeof(int));
+  PDM_realloc((*vtx_tag) ,(*vtx_tag) , n_vtx_checked ,int);
 
   if(0 == 1) {
     PDM_printf("Contenu de (*vtx_tag)\n");
@@ -1702,8 +1702,8 @@ _build_faceGroup
   //Update of face_group_idx
   PDM_array_idx_from_sizes_int(cptFacesPerGroup, n_face_group, *face_group_idx);
 
-  (*face_group) = realloc((*face_group), (*face_group_idx)[n_face_group] * sizeof(int));
-  (*coarse_face_group_to_fine_face_group) = realloc((*coarse_face_group_to_fine_face_group), (*face_group_idx)[n_face_group] * sizeof(int));
+  PDM_realloc((*face_group) ,(*face_group) , (*face_group_idx)[n_face_group] ,int);
+  PDM_realloc((*coarse_face_group_to_fine_face_group) ,(*coarse_face_group_to_fine_face_group) , (*face_group_idx)[n_face_group] ,int);
 
   if (0 == 1) {
     PDM_printf("Final content of face_group_idx: ");

@@ -329,8 +329,8 @@ PDM_part_mesh_nodal_add_part_mesh_nodal_elmts
 
   if (pmn->n_section + n_section >= pmn->s_section) {
     pmn->s_section = PDM_MAX(pmn->s_section, pmn->n_section + n_section);
-    pmn->section_kind = realloc(pmn->section_kind, sizeof(PDM_geometry_kind_t) * pmn->s_section);
-    pmn->section_id   = realloc(pmn->section_id,   sizeof(int                ) * pmn->s_section);
+    PDM_realloc(pmn->section_kind ,pmn->section_kind , pmn->s_section,PDM_geometry_kind_t);
+    PDM_realloc(pmn->section_id   ,pmn->section_id   , pmn->s_section,int                );
   }
 
 
@@ -616,8 +616,8 @@ const PDM_Mesh_nodal_elt_t   t_elt
 
   if (pmn->n_section >= pmn->s_section) {
     pmn->s_section *= 2;
-    pmn->section_kind = realloc(pmn->section_kind, sizeof(PDM_geometry_kind_t) * pmn->s_section);
-    pmn->section_id   = realloc(pmn->section_id,   sizeof(int                ) * pmn->s_section);
+    PDM_realloc(pmn->section_kind ,pmn->section_kind , pmn->s_section,PDM_geometry_kind_t);
+    PDM_realloc(pmn->section_id   ,pmn->section_id   , pmn->s_section,int                );
   }
 
   int _id_section = pmn->n_section++;
@@ -2124,8 +2124,8 @@ const PDM_ownership_t         ownership
                                                                       PDM_GEOMETRY_KIND_VOLUMIC);
   if (pmn->n_section + n_section_after - n_section_before >= pmn->s_section) {
     pmn->s_section = PDM_MAX(pmn->s_section, pmn->n_section + n_section_after - n_section_before);
-    pmn->section_kind = realloc(pmn->section_kind, sizeof(PDM_geometry_kind_t) * pmn->s_section);
-    pmn->section_id   = realloc(pmn->section_id,   sizeof(int                ) * pmn->s_section);
+    PDM_realloc(pmn->section_kind ,pmn->section_kind , pmn->s_section,PDM_geometry_kind_t);
+    PDM_realloc(pmn->section_id   ,pmn->section_id   , pmn->s_section,int                );
   }
 
   for (int i = n_section_before; i < n_section_after; i++) {
@@ -2200,8 +2200,8 @@ const PDM_ownership_t         ownership
 
   if (pmn->n_section + n_section_after - n_section_before >= pmn->s_section) {
     pmn->s_section = PDM_MAX(pmn->s_section, pmn->n_section + n_section_after - n_section_before);
-    pmn->section_kind = realloc(pmn->section_kind, sizeof(PDM_geometry_kind_t) * pmn->s_section);
-    pmn->section_id   = realloc(pmn->section_id,   sizeof(int                ) * pmn->s_section);
+    PDM_realloc(pmn->section_kind ,pmn->section_kind , pmn->s_section,PDM_geometry_kind_t);
+    PDM_realloc(pmn->section_id   ,pmn->section_id   , pmn->s_section,int                );
   }
 
   for (int i = n_section_before; i < n_section_after; i++) {
@@ -2266,8 +2266,8 @@ const PDM_ownership_t         ownership
 
   if (pmn->n_section + n_section_after - n_section_before >= pmn->s_section) {
     pmn->s_section = PDM_MAX(pmn->s_section, pmn->n_section + n_section_after - n_section_before);
-    pmn->section_kind = realloc(pmn->section_kind, sizeof(PDM_geometry_kind_t) * pmn->s_section);
-    pmn->section_id   = realloc(pmn->section_id,   sizeof(int                ) * pmn->s_section);
+    PDM_realloc(pmn->section_kind ,pmn->section_kind , pmn->s_section,PDM_geometry_kind_t);
+    PDM_realloc(pmn->section_id   ,pmn->section_id   , pmn->s_section,int                );
   }
 
   for (int i = n_section_before; i < n_section_after; i++) {
@@ -2332,8 +2332,8 @@ const PDM_ownership_t         ownership
 
   if (pmn->n_section + n_section_after - n_section_before >= pmn->s_section) {
     pmn->s_section = PDM_MAX(pmn->s_section, pmn->n_section + n_section_after - n_section_before);
-    pmn->section_kind = realloc(pmn->section_kind, sizeof(PDM_geometry_kind_t) * pmn->s_section);
-    pmn->section_id   = realloc(pmn->section_id,   sizeof(int                ) * pmn->s_section);
+    PDM_realloc(pmn->section_kind ,pmn->section_kind , pmn->s_section,PDM_geometry_kind_t);
+    PDM_realloc(pmn->section_id   ,pmn->section_id   , pmn->s_section,int                );
   }
 
   for (int i = n_section_before; i < n_section_after; i++) {

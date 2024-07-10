@@ -322,9 +322,9 @@ const int              compute_dnode_to_arc,
   }
 
 
-  node_strid     = realloc(node_strid,     dn_arc_int    * sizeof(int)         );
-  dnode_ln_to_gn = realloc(dnode_ln_to_gn, dn_arc_int    * sizeof(PDM_g_num_t) );
-  dopposite_node = realloc(dopposite_node, idx_data_node * sizeof(PDM_g_num_t) );
+  PDM_realloc(node_strid     ,node_strid     ,     dn_arc_int    ,int);
+  PDM_realloc(dnode_ln_to_gn ,dnode_ln_to_gn , dn_arc_int    ,PDM_g_num_t);
+  PDM_realloc(dopposite_node ,dopposite_node , idx_data_node ,PDM_g_num_t);
 
   /*
    * Initialize part_to_block for the computation of node_node
@@ -455,7 +455,7 @@ const int              compute_dnode_to_arc,
   /*
    * Realloc
    */
-  *dual_graph = (PDM_g_num_t *) realloc(*dual_graph, sizeof(PDM_g_num_t) * _dual_graph_idx[n_node_block] );
+  PDM_realloc(*dual_graph ,*dual_graph , _dual_graph_idx[n_node_block] ,PDM_g_num_t);
   _dual_graph = (PDM_g_num_t *) *dual_graph;
 
   // For now we can change it later
@@ -837,7 +837,7 @@ const PDM_g_num_t   *dface_vtx,
 
 
   // Realloc
-  *dual_graph = (PDM_g_num_t *) realloc(*dual_graph, (*dual_graph_idx)[dn_cell] * sizeof(PDM_g_num_t));
+  PDM_realloc(*dual_graph ,*dual_graph , (*dual_graph_idx)[dn_cell] ,PDM_g_num_t);
 
   PDM_g_num_t* _dual_graph_idx = *dual_graph_idx;
   PDM_g_num_t* _dual_graph     = *dual_graph;
@@ -884,7 +884,7 @@ const PDM_g_num_t   *dface_vtx,
   // free(_dual_graph);
   // free(_dual_graph_idx);
 
-  // _dual_comp_graph = (PDM_g_num_t *) realloc(_dual_comp_graph, _dual_comp_graph_idx[dn_cell] * sizeof(PDM_g_num_t));
+  //PDM_realloc(// _dual_comp_graph ,// _dual_comp_graph , _dual_comp_graph_idx[dn_cell] ,PDM_g_num_t);
 
   // *dual_graph_idx = _dual_comp_graph_idx;
   // *dual_graph     = _dual_comp_graph;
@@ -926,6 +926,13 @@ const PDM_MPI_Comm      comm
 {
   int i_rank;
   int n_rank;
+
+  PDM_UNUSED(dual_graph_idx);
+  PDM_UNUSED(dual_graph);
+  PDM_UNUSED(node_weight);
+  PDM_UNUSED(arc_weight);
+  PDM_UNUSED(n_part);
+  PDM_UNUSED(part_fraction);
 
   PDM_MPI_Comm_rank(comm, &i_rank);
   PDM_MPI_Comm_size(comm, &n_rank);

@@ -1008,12 +1008,12 @@ _cube_mesh2
       memcpy((*pcell_ln_to_gn)[i_part] + n_cell, ext_cell_ln_to_gn, sizeof(PDM_g_num_t) * n_ext_cell);
 
       /* Faces */
-      (*pface_vtx_idx)[i_part] = realloc((*pface_vtx_idx)[i_part], sizeof(int) * (n_face + n_ext_face + 1));
+      PDM_realloc((*pface_vtx_idx)[i_part] ,(*pface_vtx_idx)[i_part] , (n_face + n_ext_face + 1),int);
       for (int i = 1; i <= n_ext_face; i++) {
         (*pface_vtx_idx)[i_part][n_face + i] = (*pface_vtx_idx)[i_part][n_face] + ext_face_vtx_idx[i];
       }
 
-      (*pface_vtx)[i_part] = realloc((*pface_vtx)[i_part], sizeof(int) * s_face_vtx);
+      PDM_realloc((*pface_vtx)[i_part] ,(*pface_vtx)[i_part] , s_face_vtx,int);
       memcpy((*pface_vtx)[i_part] + (*pface_vtx_idx)[i_part][n_face],
              ext_face_vtx,
              sizeof(int) * ext_face_vtx_idx[n_ext_face]);

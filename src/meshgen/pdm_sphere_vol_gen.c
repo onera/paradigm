@@ -632,7 +632,7 @@ const int  *face_vtx,
   free(key_edge_idx);
   free(key_edge);
 
-  *edge_vtx = realloc(*edge_vtx, sizeof(int) * (*n_edge) * 2);
+  PDM_realloc(*edge_vtx ,*edge_vtx , 2  * (*n_edge),int);
 }
 
 static void
@@ -728,7 +728,7 @@ const int  *cell_vtx,
   free(key_face_idx);
   free(key_face);
 
-  *face_vtx  = realloc(*face_vtx, sizeof(int) * (*n_face) * 3);
+  PDM_realloc(*face_vtx  ,*face_vtx  , 3  * (*n_face) ,int);
   *face_edge = malloc(sizeof(int) * (*n_face) * 3);
 
   /* Build edges */
@@ -796,7 +796,7 @@ const int  *cell_vtx,
     }
   }
 
-  *edge_vtx = realloc(*edge_vtx, sizeof(int) * (*n_edge) * 2);
+  PDM_realloc(*edge_vtx ,*edge_vtx , 2  * (*n_edge),int);
 
 
 
@@ -1469,7 +1469,7 @@ _gen_from_base_mesh
       base_bdr_face[base_n_bdr_face++] = PDM_SIGN(base_face_tag[iface]) * (iface+1);
     }
   }
-  base_bdr_face = realloc(base_bdr_face, sizeof(int) * base_n_bdr_face);
+  PDM_realloc(base_bdr_face ,base_bdr_face , base_n_bdr_face,int);
 
 
   PDM_g_num_t face_subface_n = (n+1)*(n+1);
@@ -1850,7 +1850,7 @@ _extrude_base_surface_mesh
     }
   }
   free(base_edge_tag);
-  base_bdr_edge = realloc(base_bdr_edge, sizeof(int) * base_n_bdr_edge);
+  PDM_realloc(base_bdr_edge ,base_bdr_edge , base_n_bdr_edge,int);
 
   assert(base_n_bdr_edge == 0);
 

@@ -137,8 +137,8 @@ _generate_sections
       post_section_n[n_section_post-1] += g_section_n[i];
     }
   }
-  post_section_kind = realloc(post_section_kind, n_section_post * sizeof(int        ));
-  post_section_n    = realloc(post_section_n   , n_section_post * sizeof(PDM_g_num_t));
+  PDM_realloc(post_section_kind ,post_section_kind , n_section_post ,int        );
+  PDM_realloc(post_section_n    ,post_section_n    , n_section_post ,PDM_g_num_t);
 
   free(g_section_kind);
   free(g_section_n);
@@ -334,8 +334,8 @@ _rebuild_dmesh_nodal_2d
     n_section_tot++;
     ln_vtx_old = ln_vtx;
   }
-  section_n    = realloc(section_n   , (n_section_tot+1) * sizeof(PDM_g_num_t         ));
-  section_kind = realloc(section_kind,  n_section_tot    * sizeof(PDM_Mesh_nodal_elt_t));
+  PDM_realloc(section_n    ,section_n    , (n_section_tot+1) ,PDM_g_num_t         );
+  PDM_realloc(section_kind ,section_kind ,  n_section_tot    ,PDM_Mesh_nodal_elt_t);
 
   PDM_g_num_t *post_section_n         = NULL;
   int         *post_section_kind      = NULL;
@@ -1596,8 +1596,8 @@ _rebuild_dmesh_nodal_3d
     cell_kind_old = cell_type;
   }
 
-  section_n    = realloc(section_n   , (n_section_tot+1) * sizeof(PDM_g_num_t         ));
-  section_kind = realloc(section_kind,  n_section_tot    * sizeof(PDM_Mesh_nodal_elt_t));
+  PDM_realloc(section_n    ,section_n    , (n_section_tot+1) ,PDM_g_num_t         );
+  PDM_realloc(section_kind ,section_kind ,  n_section_tot    ,PDM_Mesh_nodal_elt_t);
 
   PDM_g_num_t *post_section_n         = NULL;
   int         *post_section_kind      = NULL;
@@ -1807,8 +1807,8 @@ _rebuild_dmesh_nodal_3d
     n_section_face_bnd_tot++;
     ln_vtx_old = ln_vtx;
   }
-  section_face_bnd_n    = realloc(section_face_bnd_n   ,  n_section_face_bnd_tot * sizeof(PDM_g_num_t         ));
-  section_face_bnd_kind = realloc(section_face_bnd_kind,  n_section_face_bnd_tot * sizeof(PDM_Mesh_nodal_elt_t));
+  PDM_realloc(section_face_bnd_n    ,section_face_bnd_n    ,  n_section_face_bnd_tot ,PDM_g_num_t         );
+  PDM_realloc(section_face_bnd_kind ,section_face_bnd_kind ,  n_section_face_bnd_tot ,PDM_Mesh_nodal_elt_t);
 
 
 

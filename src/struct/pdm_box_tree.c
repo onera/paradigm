@@ -1822,8 +1822,8 @@ _split_node_3d(PDM_box_tree_t       *bt,
   if (n_init_nodes + 8 > next_bt->local_data->n_max_nodes) {
     assert(next_bt->local_data->n_max_nodes > 0);
     next_bt->local_data->n_max_nodes += PDM_MAX (9, next_bt->local_data->n_max_nodes/3);
-    next_bt->local_data->nodes = (_node_t *) realloc((void *) next_bt->local_data->nodes, next_bt->local_data->n_max_nodes * sizeof(_node_t));
-    next_bt->local_data->child_ids = (int *) realloc((void *) next_bt->local_data->child_ids, next_bt->local_data->n_max_nodes*8 * sizeof(int));
+    PDM_realloc(next_bt->local_data->nodes ,next_bt->local_data->nodes , next_bt->local_data->n_max_nodes ,_node_t);
+    PDM_realloc(next_bt->local_data->child_ids ,next_bt->local_data->child_ids , next_bt->local_data->n_max_nodes*8 ,int);
 
   }
 
@@ -2018,8 +2018,8 @@ _split_node_cartesian_3d(PDM_box_tree_t       *bt,
   if (n_init_nodes + 8 > next_bt->local_data->n_max_nodes) {
     assert(next_bt->local_data->n_max_nodes > 0);
     next_bt->local_data->n_max_nodes += PDM_MAX (9, next_bt->local_data->n_max_nodes/3);
-    next_bt->local_data->nodes = (_node_t *) realloc((void *) next_bt->local_data->nodes, next_bt->local_data->n_max_nodes * sizeof(_node_t));
-    next_bt->local_data->child_ids = (int *) realloc((void *) next_bt->local_data->child_ids, next_bt->local_data->n_max_nodes*8 * sizeof(int));
+    PDM_realloc(next_bt->local_data->nodes ,next_bt->local_data->nodes , next_bt->local_data->n_max_nodes ,_node_t);
+    PDM_realloc(next_bt->local_data->child_ids ,next_bt->local_data->child_ids , next_bt->local_data->n_max_nodes*8 ,int);
 
   }
 
@@ -2141,8 +2141,8 @@ _split_node_2d(PDM_box_tree_t       *bt,
   if (n_init_nodes + 4 > next_bt->local_data->n_max_nodes) {
     assert(next_bt->local_data->n_max_nodes > 0);
     next_bt->local_data->n_max_nodes += PDM_MAX(5, next_bt->local_data->n_max_nodes/3);
-    next_bt->local_data->nodes = (_node_t *) realloc((void *) next_bt->local_data->nodes, next_bt->local_data->n_max_nodes * sizeof(_node_t));
-    next_bt->local_data->child_ids = (int *) realloc((void *) next_bt->local_data->child_ids, next_bt->local_data->n_max_nodes*4 * sizeof(int));
+    PDM_realloc(next_bt->local_data->nodes ,next_bt->local_data->nodes , next_bt->local_data->n_max_nodes ,_node_t);
+    PDM_realloc(next_bt->local_data->child_ids ,next_bt->local_data->child_ids , next_bt->local_data->n_max_nodes*4 ,int);
   }
 
   /* Define a Morton code for each child and create the children nodes */
@@ -2322,8 +2322,8 @@ _split_node_1d(PDM_box_tree_t       *bt,
   if (n_init_nodes + 2 > next_bt->local_data->n_max_nodes) {
     assert(next_bt->local_data->n_max_nodes > 0);
     next_bt->local_data->n_max_nodes += PDM_MAX (3, next_bt->local_data->n_max_nodes/3);
-    next_bt->local_data->nodes = (_node_t *) realloc((void *) next_bt->local_data->nodes, next_bt->local_data->n_max_nodes * sizeof(_node_t));
-    next_bt->local_data->child_ids = (int *) realloc((void *) next_bt->local_data->child_ids, next_bt->local_data->n_max_nodes*2 * sizeof(int));
+    PDM_realloc(next_bt->local_data->nodes ,next_bt->local_data->nodes , next_bt->local_data->n_max_nodes ,_node_t);
+    PDM_realloc(next_bt->local_data->child_ids ,next_bt->local_data->child_ids , next_bt->local_data->n_max_nodes*2 ,int);
   }
 
   /* Define a Morton code for each child and create the children nodes */
@@ -3808,12 +3808,12 @@ PDM_box_tree_set_boxes(PDM_box_tree_t      *bt,
     /* Optimize memory usage */
 
     bt->local_data->n_max_nodes = bt->local_data->n_nodes;
-    bt->local_data->nodes = (_node_t *) realloc((void *) bt->local_data->nodes, bt->local_data->n_nodes * sizeof(_node_t));
+    PDM_realloc(bt->local_data->nodes ,bt->local_data->nodes , bt->local_data->n_nodes ,_node_t);
     bt->local_data->child_ids = (int *) realloc((void *) bt->local_data->child_ids,
 						bt->local_data->n_max_nodes*bt->n_children * sizeof(int));
 
     /* Define a box ids list for the next level of the boxtree */
-    tmp_bt.local_data->box_ids = (int*) realloc((void *) tmp_bt.local_data->box_ids, next_box_ids_size * sizeof(int));
+    PDM_realloc(tmp_bt.local_data->box_ids ,tmp_bt.local_data->box_ids , next_box_ids_size ,int);
     shift = 0;
 
     if(build_cartesian == 0) {
@@ -3914,8 +3914,8 @@ PDM_box_tree_get_distrib(PDM_box_tree_t        *bt,
 
   // PDM_log_trace_array_int(weight, n_leaves, "weight : ");
 
-  leaf_codes = (PDM_morton_code_t *) realloc((void *) leaf_codes, n_leaves * sizeof(PDM_morton_code_t));
-  weight = (double *) realloc((void *) weight, n_leaves * sizeof(double));
+  PDM_realloc(leaf_codes ,leaf_codes , n_leaves ,PDM_morton_code_t);
+  PDM_realloc(weight ,weight , n_leaves ,double);
 
   /* Compute the resulting Morton index */
 
@@ -4099,7 +4099,7 @@ PDM_box_tree_get_boxes_intersects(PDM_box_tree_t       *bt,
     _index[i+1] = _index[i] + counter[i];
   }
 
-  _l_num = realloc (_l_num, sizeof(int) * _index[boxes->local_boxes->n_boxes]);
+  PDM_realloc(_l_num ,_l_num , _index[boxes->local_boxes->n_boxes],int);
 
   free(counter);
 
@@ -4893,7 +4893,7 @@ PDM_box_tree_closest_upper_bound_dist_boxes_get
               if ((box_min_dist2 <= upper_bound_dist2[i]) || (inbox == 1)) {
                 if (idx_box >= tmp_s_boxes) {
                   tmp_s_boxes += PDM_MAX(1, tmp_s_boxes/3);
-                  *boxes = realloc (*boxes, sizeof(int) * tmp_s_boxes);
+                  PDM_realloc(*boxes ,*boxes , tmp_s_boxes,int);
                   _boxes = *boxes;
                 }
                 _boxes[idx_box++] = _box_id;
@@ -4921,7 +4921,7 @@ PDM_box_tree_closest_upper_bound_dist_boxes_get
     _pts_box_idx[i+1] += _pts_box_idx[i];
   }
 
-  *boxes = realloc (*boxes, sizeof(int) * _pts_box_idx[n_pts]);
+  PDM_realloc(*boxes ,*boxes , _pts_box_idx[n_pts],int);
   if (pts != _pts) {
     free (_pts);
   }
@@ -5101,7 +5101,7 @@ _box_tree_closest_upper_bound_dist_boxes_impl
               if ((box_min_dist2 <= upper_bound_dist2[i]) || (inbox == 1)) {
                 if (idx_box >= tmp_s_boxes) {
                   tmp_s_boxes += PDM_MAX (1, tmp_s_boxes/3);
-                  *pts_box = realloc (*pts_box, sizeof(int) * tmp_s_boxes);
+                  PDM_realloc(*pts_box ,*pts_box , tmp_s_boxes,int);
                   _pts_box = *pts_box;
                 }
                 _pts_box[idx_box++] = _box_id;
@@ -5128,7 +5128,7 @@ _box_tree_closest_upper_bound_dist_boxes_impl
     _pts_box_idx[i+1] += _pts_box_idx[i];
   }
 
-  *pts_box = realloc (*pts_box, sizeof(int) * _pts_box_idx[n_pts]);
+  PDM_realloc(*pts_box ,*pts_box , _pts_box_idx[n_pts],int);
   if (pts != _pts) {
     free (_pts);
   }
@@ -5364,7 +5364,7 @@ PDM_box_tree_copy_to_ranks
       bt->copied_ranks[bt->n_copied_ranks++] = copied_ranks[i];
     }
   }
-  bt->copied_ranks = (int *) realloc (bt->copied_ranks, sizeof(int) * bt->n_copied_ranks);
+  PDM_realloc(bt->copied_ranks ,bt->copied_ranks , bt->n_copied_ranks,int);
 
   bt->rank_data = (PDM_box_tree_data_t *) malloc (sizeof(PDM_box_tree_data_t) * bt->n_copied_ranks);
   for (i = 0; i < bt->n_copied_ranks; i++) {
@@ -5721,7 +5721,7 @@ PDM_box_tree_points_inside_boxes
             if (_point_inside_box (dim, box_extents, _pt)) {
               if (boxes_idx[ipt+1] >= tmp_s_boxes) {
                 tmp_s_boxes *= 2;
-                boxes_l_num = realloc (boxes_l_num, sizeof(int) * tmp_s_boxes);
+                PDM_realloc(boxes_l_num ,boxes_l_num , tmp_s_boxes,int);
               }
               boxes_l_num[boxes_idx[ipt+1]++] = box_id;
               pts_in_box_count[box_id]++;
@@ -5897,7 +5897,7 @@ _box_tree_boxes_containing_points_impl
             if (_point_inside_box (dim, box_extents, _pt)) {
               if (_box_idx[ipt+1] >= tmp_s_boxes) {
                 tmp_s_boxes *= 2;
-                *box_l_num = realloc (*box_l_num, sizeof(int) * tmp_s_boxes);
+                PDM_realloc(*box_l_num ,*box_l_num , tmp_s_boxes,int);
                 _box_l_num = *box_l_num;
               }
               _box_l_num[_box_idx[ipt+1]++] = box_id;
@@ -5939,7 +5939,7 @@ _box_tree_boxes_containing_points_impl
   free (stack);
   free (visited_boxes);
 
-  *box_l_num = realloc (*box_l_num, sizeof(int) * _box_idx[n_pts]);
+  PDM_realloc(*box_l_num ,*box_l_num , _box_idx[n_pts],int);
 }
 
 /**
@@ -6070,7 +6070,7 @@ PDM_box_tree_boxes_containing_points
   //           if (_point_inside_box (dim, box_extents, _pt)) {
   //             if (_box_idx[ipt+1] >= tmp_s_boxes) {
   //               tmp_s_boxes *= 2;
-  //               *box_l_num = realloc (*box_l_num, sizeof(int) * tmp_s_boxes);
+  //PDM_realloc(//               *box_l_num ,//               *box_l_num , tmp_s_boxes,int);
   //               _box_l_num = *box_l_num;
   //             }
   //             _box_l_num[_box_idx[ipt+1]++] = box_id;
@@ -6112,7 +6112,7 @@ PDM_box_tree_boxes_containing_points
   // free (stack);
   // free (visited_boxes);
 
-  // *box_l_num = realloc (*box_l_num, sizeof(int) * _box_idx[n_pts]);
+  //PDM_realloc(// *box_l_num ,// *box_l_num , _box_idx[n_pts],int);
 }
 
 
@@ -6276,7 +6276,7 @@ PDM_box_tree_ellipsoids_containing_points
             if (_point_inside_ellipsoid (dim, box_extents, _pt)) {
               if (_box_idx[ipt+1] >= tmp_s_boxes) {
                 tmp_s_boxes *= 2;
-                *box_l_num = realloc (*box_l_num, sizeof(int) * tmp_s_boxes);
+                PDM_realloc(*box_l_num ,*box_l_num , tmp_s_boxes,int);
                 _box_l_num = *box_l_num;
               }
               _box_l_num[_box_idx[ipt+1]++] = box_id;
@@ -6318,7 +6318,7 @@ PDM_box_tree_ellipsoids_containing_points
   free (stack);
   free (visited_boxes);
 
-  *box_l_num = realloc (*box_l_num, sizeof(int) * _box_idx[n_pts]);
+  PDM_realloc(*box_l_num ,*box_l_num , _box_idx[n_pts],int);
 }
 
 static
@@ -6455,7 +6455,7 @@ _box_tree_intersect_lines_boxes_impl
             if (_intersect_line_box (dim, box_extents, origin, invdir)) {
               if (_box_idx[iline+1] >= tmp_s_boxes) {
                 tmp_s_boxes *= 2;
-                *box_l_num = realloc (*box_l_num, sizeof(int) * tmp_s_boxes);
+                PDM_realloc(*box_l_num ,*box_l_num , tmp_s_boxes,int);
                 _box_l_num = *box_l_num;
               }
               _box_l_num[_box_idx[iline+1]++] = box_id;
@@ -6502,7 +6502,7 @@ _box_tree_intersect_lines_boxes_impl
   free (stack);
   free (visited_boxes);
 
-  *box_l_num = realloc (*box_l_num, sizeof(int) * _box_idx[n_line]);
+  PDM_realloc(*box_l_num ,*box_l_num , _box_idx[n_line],int);
   free(node_extents);
 
   // double t2 = PDM_MPI_Wtime();
@@ -6809,7 +6809,7 @@ PDM_box_tree_intersect_boxes_boxes
             if (_intersect_box_box (dim, box_extents, lextents)) {
               if (_tgt_box_idx[itgt_box+1] >= tmp_s_boxes) {
                 tmp_s_boxes *= 2;
-                *tgt_box_l_num = realloc (*tgt_box_l_num, sizeof(int) * tmp_s_boxes);
+                PDM_realloc(*tgt_box_l_num ,*tgt_box_l_num , tmp_s_boxes,int);
                 _tgt_box_l_num = *tgt_box_l_num;
               }
               _tgt_box_l_num[_tgt_box_idx[itgt_box+1]++] = box_id;
@@ -6852,7 +6852,7 @@ PDM_box_tree_intersect_boxes_boxes
   free (stack);
   free (visited_boxes);
 
-  *tgt_box_l_num = realloc (*tgt_box_l_num, sizeof(int) * _tgt_box_idx[n_tgt_box]);
+  PDM_realloc(*tgt_box_l_num ,*tgt_box_l_num , _tgt_box_idx[n_tgt_box],int);
 
 }
 
@@ -7054,7 +7054,7 @@ PDM_box_tree_intersect_volume_boxes
               // Avoid table overflow
               if (_volume_box_idx[ivolume+1] >= tmp_s_boxes) {
                 tmp_s_boxes *= 2;
-                *volume_box_l_num = realloc (*volume_box_l_num, sizeof(int) * tmp_s_boxes);
+                PDM_realloc(*volume_box_l_num ,*volume_box_l_num , tmp_s_boxes,int);
                 _volume_box_l_num = *volume_box_l_num;
               }
               _volume_box_l_num[_volume_box_idx[ivolume+1]++] = box_id;
@@ -7102,7 +7102,7 @@ PDM_box_tree_intersect_volume_boxes
   free (visited_boxes);
 
 
-  *volume_box_l_num = realloc (*volume_box_l_num, sizeof(int) * _volume_box_idx[n_volumes]);
+  PDM_realloc(*volume_box_l_num ,*volume_box_l_num , _volume_box_idx[n_volumes],int);
 }
 
 
@@ -7422,8 +7422,8 @@ PDM_box_tree_extract_extents
   free(stack);
   free(node_depth);
 
-  _extract_extents  = realloc(_extract_extents , _n_extract_boxes * 6 * sizeof(double));
-  _extract_child_id = realloc(_extract_child_id, _n_extract_child     * sizeof(int   ));
+  PDM_realloc(_extract_extents  ,_extract_extents  , _n_extract_boxes * 6 ,double);
+  PDM_realloc(_extract_child_id ,_extract_child_id , _n_extract_child     ,int   );
 
   *n_extract_child  = _n_extract_child;
   *n_extract_boxes  = _n_extract_boxes;
@@ -7483,15 +7483,15 @@ PDM_box_tree_extract_leaves
   }
   free(stack);
 
-  // _extract_extents  = realloc(_extract_extents , _n_extract_boxes * 6 * sizeof(double));
-  // _extract_child_id = realloc(_extract_child_id, _n_extract_child     * sizeof(int   ));
+  // PDM_realloc(// _extract_extents  ,// _extract_extents  , _n_extract_boxes * 6 ,double);
+  // PDM_realloc(// _extract_child_id ,// _extract_child_id , _n_extract_child     ,int   );
 
   // *n_extract_child  = _n_extract_child;
   // *n_extract_boxes  = _n_extract_boxes;
   // *extract_extents  = _extract_extents;
   // *extract_child_id = _extract_child_id;
 
-  _leaf_id = realloc(_leaf_id, _n_leaf * sizeof(int));
+  PDM_realloc(_leaf_id ,_leaf_id , _n_leaf ,int);
   *n_leaf  = _n_leaf;
   *leaf_id = _leaf_id;
 }
@@ -7605,9 +7605,9 @@ PDM_box_tree_extract_extents_by_child_ids
     }
   }
 
-  _extract_extents  = realloc(_extract_extents , _n_extract_boxes * 6 * sizeof(double));
-  _extract_child_id = realloc(_extract_child_id, _n_extract_child     * sizeof(int   ));
-  _extract_is_leaf  = realloc(_extract_is_leaf , _n_extract_child     * sizeof(int   ));
+  PDM_realloc(_extract_extents  ,_extract_extents  , _n_extract_boxes * 6 ,double);
+  PDM_realloc(_extract_child_id ,_extract_child_id , _n_extract_child     ,int   );
+  PDM_realloc(_extract_is_leaf  ,_extract_is_leaf  , _n_extract_child     ,int   );
 
   *n_extract_child  = _n_extract_child;
   *n_extract_boxes  = _n_extract_boxes;
@@ -7673,7 +7673,7 @@ PDM_box_tree_get_box_ids
   free(is_visited);
 
 
-  _box_ids = realloc(_box_ids, n_box_ids * sizeof(int));
+  PDM_realloc(_box_ids ,_box_ids , n_box_ids ,int);
   *box_ids = _box_ids;
 
   return n_box_ids;
@@ -8267,11 +8267,11 @@ PDM_tree_intersection_point_box
             // Check size!!!
             if (new_n_queue >= s_queue) {
               s_queue *= 2;
-              queues[0] = realloc(queues[0], sizeof(int) * s_queue * 2);
-              queues[1] = realloc(queues[1], sizeof(int) * s_queue * 2);
+              PDM_realloc(queues[0] ,queues[0] , s_queue * 2,int);
+              PDM_realloc(queues[1] ,queues[1] , s_queue * 2,int);
               if (subdiv_crit == SUBDIVISION_CRITERION_DEPTH) {
-                queues_depth[0] = realloc(queues_depth[0], sizeof(int) * s_queue);
-                queues_depth[1] = realloc(queues_depth[1], sizeof(int) * s_queue);
+                PDM_realloc(queues_depth[0] ,queues_depth[0] , s_queue,int);
+                PDM_realloc(queues_depth[1] ,queues_depth[1] , s_queue,int);
               }
             }
 
@@ -8319,11 +8319,11 @@ PDM_tree_intersection_point_box
             // Check size!!!
             if (new_n_queue >= s_queue) {
               s_queue *= 2;
-              queues[0] = realloc(queues[0], sizeof(int) * s_queue * 2);
-              queues[1] = realloc(queues[1], sizeof(int) * s_queue * 2);
+              PDM_realloc(queues[0] ,queues[0] , s_queue * 2,int);
+              PDM_realloc(queues[1] ,queues[1] , s_queue * 2,int);
               if (subdiv_crit == SUBDIVISION_CRITERION_DEPTH) {
-                queues_depth[0] = realloc(queues_depth[0], sizeof(int) * s_queue);
-                queues_depth[1] = realloc(queues_depth[1], sizeof(int) * s_queue);
+                PDM_realloc(queues_depth[0] ,queues_depth[0] , s_queue,int);
+                PDM_realloc(queues_depth[1] ,queues_depth[1] , s_queue,int);
               }
             }
 

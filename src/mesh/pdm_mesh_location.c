@@ -3138,12 +3138,12 @@ PDM_mesh_location_compute
     dn_elt2 = tmp_dn_elt2;
 
     if (delt_g_num_geom2 != NULL) {
-      delt_g_num_geom2 = realloc(delt_g_num_geom2, sizeof(PDM_g_num_t) * dn_elt2);
+      PDM_realloc(delt_g_num_geom2 ,delt_g_num_geom2 , dn_elt2,PDM_g_num_t);
     }
     if (delt_parent_g_num2 != NULL) {
-      delt_parent_g_num2 = realloc(delt_parent_g_num2, sizeof(PDM_g_num_t) * dn_elt2);
+      PDM_realloc(delt_parent_g_num2 ,delt_parent_g_num2 , dn_elt2,PDM_g_num_t);
     }
-    delt_pts_n2 = realloc(delt_pts_n2, sizeof(int) * dn_elt2);
+    PDM_realloc(delt_pts_n2 ,delt_pts_n2 , dn_elt2,int);
 
     if (dbg_enabled) {
       log_trace("after compression\n");
@@ -3450,7 +3450,7 @@ PDM_mesh_location_compute
                                                 pts_unique_order,
                                                 0,
                                                 n_pts2-1);
-    pts_ln_to_gn = realloc(pts_ln_to_gn, sizeof(PDM_g_num_t) * n_pts_unique);
+    PDM_realloc(pts_ln_to_gn ,pts_ln_to_gn , n_pts_unique,PDM_g_num_t);
     if (dbg_enabled) {
       log_trace("%d unique pts / %d\n", n_pts_unique, n_pts2);
     }
@@ -3649,13 +3649,13 @@ PDM_mesh_location_compute
     free(pts_ln_to_gn);
 
     int final_n_pts = idx;
-    final_elt_pts_g_num_geom = realloc(final_elt_pts_g_num_geom, sizeof(PDM_g_num_t) * final_n_pts);
-    final_elt_pts_coord      = realloc(final_elt_pts_coord     , sizeof(double     ) * final_n_pts*3);
-    final_elt_pts_distance   = realloc(final_elt_pts_distance  , sizeof(double     ) * final_n_pts);
-    final_elt_pts_proj_coord = realloc(final_elt_pts_proj_coord, sizeof(double     ) * final_n_pts*3);
-    final_elt_pts_weight_idx = realloc(final_elt_pts_weight_idx, sizeof(int        ) * (final_n_pts+1));
-    final_elt_pts_weight     = realloc(final_elt_pts_weight    , sizeof(double     ) * final_elt_pts_weight_idx[final_n_pts]);
-    final_elt_pts_uvw        = realloc(final_elt_pts_uvw       , sizeof(double     ) * final_n_pts*3);
+    PDM_realloc(final_elt_pts_g_num_geom ,final_elt_pts_g_num_geom , final_n_pts,PDM_g_num_t);
+    PDM_realloc(final_elt_pts_coord      ,final_elt_pts_coord      , final_n_pts*3,double     );
+    PDM_realloc(final_elt_pts_distance   ,final_elt_pts_distance   , final_n_pts,double     );
+    PDM_realloc(final_elt_pts_proj_coord ,final_elt_pts_proj_coord , final_n_pts*3,double     );
+    PDM_realloc(final_elt_pts_weight_idx ,final_elt_pts_weight_idx , (final_n_pts+1),int        );
+    PDM_realloc(final_elt_pts_weight     ,final_elt_pts_weight     , final_elt_pts_weight_idx[final_n_pts],double     );
+    PDM_realloc(final_elt_pts_uvw        ,final_elt_pts_uvw        , final_n_pts*3,double     );
 
 
     /*

@@ -303,7 +303,7 @@ PDM_unique_long_with_distrib
     }
   }
 
-  _unique_dentity1_entity2_gnum = realloc(_unique_dentity1_entity2_gnum, unique_size * sizeof(PDM_g_num_t));
+  PDM_realloc(_unique_dentity1_entity2_gnum ,_unique_dentity1_entity2_gnum , unique_size ,PDM_g_num_t);
 
   free(rank_id_idx);
   free(rank_id_n);

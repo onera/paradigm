@@ -174,7 +174,7 @@ _update_blocks_id
   }
 
   if (mesh->n_blocks < n_blocks) {
-    mesh->blocks_id = (int *) realloc(mesh->blocks_id, sizeof(int) * n_blocks);
+    PDM_realloc(mesh->blocks_id ,mesh->blocks_id , n_blocks,int);
   }
 
   int k = 0;
@@ -2347,7 +2347,7 @@ const PDM_ownership_t       ownership
 
       mesh->n_block_std++;
 
-      mesh->blocks_std = realloc(mesh->blocks_std, mesh->n_block_std * sizeof(PDM_Mesh_nodal_block_std_t *));
+      PDM_realloc(mesh->blocks_std ,mesh->blocks_std , mesh->n_block_std ,PDM_Mesh_nodal_block_std_t *);
 
       id_block = mesh->n_block_std-1;
 
@@ -2394,7 +2394,7 @@ const PDM_ownership_t       ownership
 
       mesh->n_block_poly2d++;
 
-      mesh->blocks_poly2d = realloc(mesh->blocks_poly2d, mesh->n_block_poly2d * sizeof(PDM_Mesh_nodal_block_poly2d_t *));
+      PDM_realloc(mesh->blocks_poly2d ,mesh->blocks_poly2d , mesh->n_block_poly2d ,PDM_Mesh_nodal_block_poly2d_t *);
 
       id_block = mesh->n_block_poly2d-1;
 
@@ -2439,7 +2439,7 @@ const PDM_ownership_t       ownership
     {
       mesh->n_block_poly3d++;
 
-      mesh->blocks_poly3d = realloc(mesh->blocks_poly3d, mesh->n_block_poly3d * sizeof(PDM_Mesh_nodal_block_poly3d_t *));
+      PDM_realloc(mesh->blocks_poly3d ,mesh->blocks_poly3d , mesh->n_block_poly3d ,PDM_Mesh_nodal_block_poly3d_t *);
 
       id_block = mesh->n_block_poly3d-1;
 
@@ -3312,7 +3312,7 @@ static void _compute_cell_vtx_connectivity
 
         if (n_vtx_cell + _cell_vtx_idx[icell] >= (int) s_cell_vtx) {
           s_cell_vtx = PDM_MAX ((int) (2*s_cell_vtx), n_vtx_cell + _cell_vtx_idx[icell]);
-          *cell_vtx = realloc (*cell_vtx, sizeof(PDM_l_num_t) * s_cell_vtx);
+          PDM_realloc(*cell_vtx ,*cell_vtx , s_cell_vtx,PDM_l_num_t);
           _cell_vtx = *cell_vtx + _cell_vtx_idx[icell];
         }
 
@@ -3338,7 +3338,7 @@ static void _compute_cell_vtx_connectivity
 
   } // End of loop on cells
 
-  *cell_vtx = realloc (*cell_vtx, sizeof(PDM_l_num_t) * _cell_vtx_idx[n_cell]);
+  PDM_realloc(*cell_vtx ,*cell_vtx , _cell_vtx_idx[n_cell],PDM_l_num_t);
 }
 
 

@@ -951,7 +951,7 @@ _create_pchild_local_num
     /*
      * Realloc
      */
-    _pchild_ln_to_gn[i_part] = (PDM_g_num_t *) realloc(_pchild_ln_to_gn[i_part], n_elmt_sort * sizeof(PDM_g_num_t) );
+    PDM_realloc(_pchild_ln_to_gn[i_part] ,_pchild_ln_to_gn[i_part] , n_elmt_sort ,PDM_g_num_t);
 
   }
 }
@@ -1512,7 +1512,7 @@ PDM_part_dconnectivity_to_pconnectivity_hash
     /*
      * Realloc
      */
-    _pchild_ln_to_gn[i_part] = (PDM_g_num_t *) realloc(_pchild_ln_to_gn[i_part], nbUnique * sizeof(PDM_g_num_t) );
+    PDM_realloc(_pchild_ln_to_gn[i_part] ,_pchild_ln_to_gn[i_part] , nbUnique ,PDM_g_num_t);
   }
 
 
@@ -1851,7 +1851,7 @@ PDM_part_generate_entity_graph_comm
   /*
    * Compress data
    */
-  blk_data = (int *) realloc(blk_data, idx_comp * sizeof(int));
+  PDM_realloc(blk_data ,blk_data , idx_comp ,int);
 
   /*
    * Panic verbose
@@ -2187,7 +2187,7 @@ PDM_compute_graph_comm_entity_ownership
         _lnum_owned_entity[i_part][_n_owned_entity[i_part]++] = i_entity+1;
       }
     }
-    _lnum_owned_entity[i_part] = realloc(_lnum_owned_entity[i_part], _n_owned_entity[i_part]*sizeof(int));
+    PDM_realloc(_lnum_owned_entity[i_part] ,_lnum_owned_entity[i_part] , _n_owned_entity[i_part],int);
   }
 
   for (int i_part = 0; i_part < n_part; i_part++) {
@@ -2276,7 +2276,7 @@ PDM_compute_graph_comm_entity_ownership_single_part
     }
   }
 
-  _lnum_owned_entity = realloc(_lnum_owned_entity, _n_owned_entity*sizeof(int));
+  PDM_realloc(_lnum_owned_entity ,_lnum_owned_entity , _n_owned_entity,int);
 
   free(tmp_rank_clean[0]);
   free(tmp_rank_clean   );
@@ -2669,7 +2669,7 @@ PDM_extend_mesh
 
     // Realloc and setup size
     _pn_entity_extented[i_part] = n_new_cell;
-    _pentity_ln_to_gn_extended[i_part] = (PDM_g_num_t *) realloc( _pentity_ln_to_gn_extended[i_part], n_new_cell * sizeof(PDM_g_num_t));
+    PDM_realloc(_pentity_ln_to_gn_extended[i_part] ,_pentity_ln_to_gn_extended[i_part] , n_new_cell ,PDM_g_num_t);
 
   }
 
@@ -2717,7 +2717,7 @@ PDM_setup_connectivity_idx
     }
   }
 
-  _dentity1_dentity2_new = realloc(_dentity1_dentity2_new, _dentity1_dentity2_idx[dn_entity1] * sizeof(PDM_g_num_t));
+  PDM_realloc(_dentity1_dentity2_new ,_dentity1_dentity2_new , _dentity1_dentity2_idx[dn_entity1] ,PDM_g_num_t);
 
   *dentity1_dentity2_idx = _dentity1_dentity2_idx;
   *dentity1_dentity2_new = _dentity1_dentity2_new;
@@ -3160,7 +3160,7 @@ PDM_pconnectivity_to_pconnectivity_keep
     int n_extract_entity2 = PDM_inplace_unique_long2(_part2_entity2_ln_to_gn[i_part], unique_order_entity2, 0, n_recv_entity1_entity2-1);
 
     _n_part2_entity2[i_part] = n_extract_entity2;
-    _part2_entity2_ln_to_gn[i_part] = realloc(_part2_entity2_ln_to_gn[i_part],  n_extract_entity2      * sizeof(PDM_g_num_t));
+    PDM_realloc(_part2_entity2_ln_to_gn[i_part] ,_part2_entity2_ln_to_gn[i_part] ,  n_extract_entity2      ,PDM_g_num_t);
 
     /* Recompute local numbering */
     _part2_entity1_entity2 [i_part] = malloc( n_recv_entity1_entity2 * sizeof(int        ));
@@ -3508,7 +3508,7 @@ PDM_pconnectivity_to_pconnectivity_from_location_keep
                                                      n_recv_entity1_entity2-1);
 
     _n_part2_entity2[i_part] = n_extract_entity2;
-    _part2_entity2_ln_to_gn[i_part] = realloc(_part2_entity2_ln_to_gn[i_part],  n_extract_entity2      * sizeof(PDM_g_num_t));
+    PDM_realloc(_part2_entity2_ln_to_gn[i_part] ,_part2_entity2_ln_to_gn[i_part] ,  n_extract_entity2      ,PDM_g_num_t);
 
     // Keep location link
     _part2_entity2_to_part1_entity2[i_part] = malloc( 3 * n_extract_entity2 * sizeof(int  ));

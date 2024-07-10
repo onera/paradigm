@@ -377,7 +377,9 @@ static void _dist_data_update
   assert (r_idx == n_to_update);
 
   //Should we realloc ?
-  PDM_g_num_t *_data_realloc = realloc(_data, w_idx*sizeof(PDM_g_num_t));
+
+  PDM_g_num_t *_data_realloc = NULL;
+  PDM_realloc( _data_realloc , _data , w_idx,PDM_g_num_t);
   *data = _data_realloc;
 
   free(recv_stride);

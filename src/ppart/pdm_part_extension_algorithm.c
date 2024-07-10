@@ -2218,7 +2218,7 @@ PDM_part_extension_pconnectivity_to_extented_pconnectivity
                                                                                    2,
                                                                                    pentity2_ext_opp_gnum_and_itrf[i_part],
                                                                                    order);
-    pentity2_ext_opp_gnum_and_itrf[i_part] = realloc(pentity2_ext_opp_gnum_and_itrf[i_part], 2 * pn_entity2_ext_opp_gnum_and_itrf[i_part] * sizeof(PDM_g_num_t));
+    PDM_realloc(pentity2_ext_opp_gnum_and_itrf[i_part] ,pentity2_ext_opp_gnum_and_itrf[i_part] , 2 * pn_entity2_ext_opp_gnum_and_itrf[i_part] ,PDM_g_num_t);
 
 
     free(order);
@@ -2436,7 +2436,7 @@ PDM_part_extension_pconnectivity_to_extented_pconnectivity
     PDM_g_num_t* extented_from_itrf_entity2_ln_to_gn = PDM_gnum_get(gen_gnum_entity2, i_part);
 
     // Erase and realloc :
-    pentity2_extented_ln_to_gn_by_interface[i_part] = realloc(pentity2_extented_ln_to_gn_by_interface[i_part], pn_entity2_extented_by_interface[i_part] * sizeof(PDM_g_num_t));
+    PDM_realloc(pentity2_extented_ln_to_gn_by_interface[i_part] ,pentity2_extented_ln_to_gn_by_interface[i_part] , pn_entity2_extented_by_interface[i_part] ,PDM_g_num_t);
     for(int i_entity2 = 0; i_entity2 < pn_entity2_extented_by_interface[i_part]; ++i_entity2) {
       pentity2_extented_ln_to_gn_by_interface[i_part][i_entity2] = extented_from_itrf_entity2_ln_to_gn[i_entity2] + shift_by_domain_entity2[n_domain];
     }
@@ -2453,7 +2453,7 @@ PDM_part_extension_pconnectivity_to_extented_pconnectivity
                                                                        NULL,
                                                                        0,
                                                                        pn_entity2_extented_by_interface[i_part]-1);
-    extented_from_itrf_entity2_ln_to_gn_sorted = realloc(extented_from_itrf_entity2_ln_to_gn_sorted, pn_entity2_extented_by_interface[i_part] * sizeof(PDM_g_num_t));
+    PDM_realloc(extented_from_itrf_entity2_ln_to_gn_sorted ,extented_from_itrf_entity2_ln_to_gn_sorted , pn_entity2_extented_by_interface[i_part] ,PDM_g_num_t);
     int         *extented_from_itrf_entity2_order = malloc( pn_entity2_extented_by_interface[i_part] * sizeof(int        ));
     for(int i_entity2 = 0; i_entity2 < pn_entity2_extented_by_interface[i_part]; ++i_entity2) {
       extented_from_itrf_entity2_order[i_entity2] = -1;
@@ -2475,7 +2475,7 @@ PDM_part_extension_pconnectivity_to_extented_pconnectivity
                                                                        0,
                                                                        pn_entity2_extented_by_partition[i_part]-1);
     int *extented_from_part_entity2_order = malloc( pn_entity2_extented_by_partition[i_part] * sizeof(int        ));
-    extented_from_part_entity2_ln_to_gn_sorted = realloc(extented_from_part_entity2_ln_to_gn_sorted, pn_entity2_extented_by_partition[i_part] * sizeof(PDM_g_num_t));
+    PDM_realloc(extented_from_part_entity2_ln_to_gn_sorted ,extented_from_part_entity2_ln_to_gn_sorted , pn_entity2_extented_by_partition[i_part] ,PDM_g_num_t);
     for(int i_entity2 = 0; i_entity2 < pn_entity2_extented_by_partition[i_part]; ++i_entity2) {
       extented_from_part_entity2_order[i_entity2] = -1;
     }

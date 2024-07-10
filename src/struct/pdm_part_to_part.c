@@ -244,8 +244,8 @@ _check_async_alltoall_alloc
   if (ptp->async_alltoall_n_free == 0) {
     const int pre_val = ptp->async_alltoall_l_array;
     ptp->async_alltoall_l_array   *= 2;
-    ptp->async_alltoall_free       = realloc (ptp->async_alltoall_free      , sizeof(int) * ptp->async_alltoall_l_array);
-    ptp->async_alltoall_subrequest = realloc (ptp->async_alltoall_subrequest, sizeof(int) * 3 * ptp->async_alltoall_l_array);
+    PDM_realloc(ptp->async_alltoall_free       ,ptp->async_alltoall_free       , ptp->async_alltoall_l_array,int);
+    PDM_realloc(ptp->async_alltoall_subrequest ,ptp->async_alltoall_subrequest , 3 * ptp->async_alltoall_l_array,int);
 
     for (int i = pre_val; i < ptp->async_alltoall_l_array; i++) {
       ptp->async_alltoall_free[ptp->async_alltoall_n_free++] = i;
@@ -297,14 +297,14 @@ _check_async_send_alloc
   if (ptp->async_send_n_free == 0) {
     const int pre_val = ptp->async_send_l_array;
     ptp->async_send_l_array *= 2;
-    ptp->async_send_free       = realloc (ptp->async_send_free       , sizeof(int) * ptp->async_send_l_array);
-    ptp->async_send_s_data     = realloc (ptp->async_send_s_data     , sizeof(size_t) * ptp->async_send_l_array);
-    ptp->async_send_cst_stride = realloc (ptp->async_send_cst_stride , sizeof(int) * ptp->async_send_l_array);
-    ptp->async_send_tag        = realloc (ptp->async_send_tag        , sizeof(int) * ptp->async_send_l_array);
-    ptp->async_send_request    = realloc (ptp->async_send_request    , sizeof(PDM_MPI_Request *) * ptp->async_send_l_array);
-    ptp->async_send_buffer     = realloc (ptp->async_send_buffer     , sizeof(unsigned char *) * ptp->async_send_l_array);
-    ptp->async_n_send_buffer   = realloc (ptp->async_n_send_buffer   , sizeof(int *) * ptp->async_send_l_array);
-    ptp->async_i_send_buffer   = realloc (ptp->async_i_send_buffer   , sizeof(int *) * ptp->async_send_l_array);
+    PDM_realloc(ptp->async_send_free       ,ptp->async_send_free       , ptp->async_send_l_array,int);
+    PDM_realloc(ptp->async_send_s_data     ,ptp->async_send_s_data     , ptp->async_send_l_array,size_t);
+    PDM_realloc(ptp->async_send_cst_stride ,ptp->async_send_cst_stride , ptp->async_send_l_array,int);
+    PDM_realloc(ptp->async_send_tag        ,ptp->async_send_tag        , ptp->async_send_l_array,int);
+    PDM_realloc(ptp->async_send_request    ,ptp->async_send_request    , ptp->async_send_l_array,PDM_MPI_Request *);
+    PDM_realloc(ptp->async_send_buffer     ,ptp->async_send_buffer     , ptp->async_send_l_array,unsigned char *);
+    PDM_realloc(ptp->async_n_send_buffer   ,ptp->async_n_send_buffer   , ptp->async_send_l_array,int *);
+    PDM_realloc(ptp->async_i_send_buffer   ,ptp->async_i_send_buffer   , ptp->async_send_l_array,int *);
 
     for (int i = pre_val; i < ptp->async_send_l_array; i++) {
       ptp->async_send_free[ptp->async_send_n_free++] = i;
@@ -362,15 +362,15 @@ _check_async_recv_alloc
   if (ptp->async_recv_n_free == 0) {
     const int pre_val = ptp->async_recv_l_array;
     ptp->async_recv_l_array *= 2;
-    ptp->async_recv_free       = realloc (ptp->async_recv_free       , sizeof(int) * ptp->async_recv_l_array);
-    ptp->async_recv_s_data     = realloc (ptp->async_recv_s_data     , sizeof(size_t) * ptp->async_recv_l_array);
-    ptp->async_recv_cst_stride = realloc (ptp->async_recv_cst_stride , sizeof(int) * ptp->async_recv_l_array);
-    ptp->async_recv_tag        = realloc (ptp->async_recv_tag        , sizeof(int) * ptp->async_recv_l_array);
-    ptp->async_recv_request    = realloc (ptp->async_recv_request    , sizeof(PDM_MPI_Request *) * ptp->async_recv_l_array);
-    ptp->async_recv_buffer     = realloc (ptp->async_recv_buffer     , sizeof(unsigned char *) * ptp->async_recv_l_array);
-    ptp->async_n_recv_buffer   = realloc (ptp->async_n_recv_buffer   , sizeof(int *) * ptp->async_recv_l_array);
-    ptp->async_i_recv_buffer   = realloc (ptp->async_i_recv_buffer   , sizeof(int *) * ptp->async_recv_l_array);
-    ptp->async_recv_part2_data = realloc (ptp->async_recv_part2_data , sizeof(void *) * ptp->async_recv_l_array);
+    PDM_realloc(ptp->async_recv_free       ,ptp->async_recv_free       , ptp->async_recv_l_array,int);
+    PDM_realloc(ptp->async_recv_s_data     ,ptp->async_recv_s_data     , ptp->async_recv_l_array,size_t);
+    PDM_realloc(ptp->async_recv_cst_stride ,ptp->async_recv_cst_stride , ptp->async_recv_l_array,int);
+    PDM_realloc(ptp->async_recv_tag        ,ptp->async_recv_tag        , ptp->async_recv_l_array,int);
+    PDM_realloc(ptp->async_recv_request    ,ptp->async_recv_request    , ptp->async_recv_l_array,PDM_MPI_Request *);
+    PDM_realloc(ptp->async_recv_buffer     ,ptp->async_recv_buffer     , ptp->async_recv_l_array,unsigned char *);
+    PDM_realloc(ptp->async_n_recv_buffer   ,ptp->async_n_recv_buffer   , ptp->async_recv_l_array,int *);
+    PDM_realloc(ptp->async_i_recv_buffer   ,ptp->async_i_recv_buffer   , ptp->async_recv_l_array,int *);
+    PDM_realloc(ptp->async_recv_part2_data ,ptp->async_recv_part2_data , ptp->async_recv_l_array,void *);
 
     for (int i = pre_val; i < ptp->async_recv_l_array; i++) {
       ptp->async_recv_free[ptp->async_recv_n_free++] = i;
@@ -430,14 +430,14 @@ _check_async_exch_alloc
   if (ptp->async_exch_n_free == 0) {
     const int pre_val = ptp->async_exch_l_array;
     ptp->async_exch_l_array      *= 2;
-    ptp->async_exch_free          = realloc (ptp->async_exch_free       , sizeof(int) * ptp->async_exch_l_array);
-    ptp->async_exch_subrequest_s  = realloc (ptp->async_exch_subrequest_s , sizeof(int) * ptp->async_exch_l_array);
-    ptp->async_exch_subrequest    = realloc (ptp->async_exch_subrequest , sizeof(int *) *  ptp->async_exch_l_array);
-    ptp->async_exch_t_stride      = realloc (ptp->async_exch_t_stride,    sizeof(int) * ptp->async_exch_l_array);
-    ptp->async_exch_k_comm        = realloc (ptp->async_exch_k_comm,      sizeof(int) * ptp->async_exch_l_array);
-    ptp->async_exch_recv_n        = realloc (ptp->async_exch_recv_n     , sizeof(int *) * ptp->async_exch_l_array);
-    ptp->async_exch_recv_idx      = realloc (ptp->async_exch_recv_idx   , sizeof(int *) * ptp->async_exch_l_array);
-    ptp->async_exch_part2_stride  = realloc (ptp->async_exch_part2_stride, sizeof(int **) * ptp->async_exch_l_array);
+    PDM_realloc(ptp->async_exch_free          ,ptp->async_exch_free          , ptp->async_exch_l_array,int);
+    PDM_realloc(ptp->async_exch_subrequest_s  ,ptp->async_exch_subrequest_s  , ptp->async_exch_l_array,int);
+    PDM_realloc(ptp->async_exch_subrequest    ,ptp->async_exch_subrequest    ,  ptp->async_exch_l_array,int *);
+    PDM_realloc(ptp->async_exch_t_stride      ,ptp->async_exch_t_stride      , ptp->async_exch_l_array,int);
+    PDM_realloc(ptp->async_exch_k_comm        ,ptp->async_exch_k_comm        , ptp->async_exch_l_array,int);
+    PDM_realloc(ptp->async_exch_recv_n        ,ptp->async_exch_recv_n        , ptp->async_exch_l_array,int *);
+    PDM_realloc(ptp->async_exch_recv_idx      ,ptp->async_exch_recv_idx      , ptp->async_exch_l_array,int *);
+    PDM_realloc(ptp->async_exch_part2_stride  ,ptp->async_exch_part2_stride  , ptp->async_exch_l_array,int **);
 
     for (int i = pre_val; i < ptp->async_exch_l_array; i++) {
       ptp->async_exch_free[ptp->async_exch_n_free++] = i;
@@ -2851,9 +2851,9 @@ _create
       }
     }
 
-    ptp->ref_lnum2[i]           = realloc (ptp->ref_lnum2[i], sizeof (int) * ptp->n_ref_lnum2[i]);
-    ptp->unref_lnum2[i]         = realloc (ptp->unref_lnum2[i], sizeof (int) * ptp->n_unref_lnum2[i]);
-    ptp->gnum1_come_from_idx[i] = realloc (ptp->gnum1_come_from_idx[i], sizeof (int) * (ptp->n_ref_lnum2[i] + 1));
+    PDM_realloc(ptp->ref_lnum2[i]           ,ptp->ref_lnum2[i]           , ptp->n_ref_lnum2[i],int);
+    PDM_realloc(ptp->unref_lnum2[i]         ,ptp->unref_lnum2[i]         , ptp->n_unref_lnum2[i],int);
+    PDM_realloc(ptp->gnum1_come_from_idx[i] ,ptp->gnum1_come_from_idx[i] , (ptp->n_ref_lnum2[i] + 1),int);
 
     for (int j = 0; j < ptp->n_ref_lnum2[i]; j++) {
       ptp->gnum1_come_from_idx[i][j+1] += ptp->gnum1_come_from_idx[i][j];
@@ -2978,9 +2978,9 @@ _create
       ptp->recv_buffer_to_duplicate_idx[i][j+1] = cpt1;
     }
 
-    ptp->gnum1_come_from[i]          = realloc (ptp->gnum1_come_from[i], cpt * sizeof(PDM_g_num_t));
-    ptp->recv_buffer_to_ref_lnum2[i] = realloc (ptp->recv_buffer_to_ref_lnum2[i], cpt * sizeof(int));
-    ptp->recv_buffer_to_duplicate[i] = realloc (ptp->recv_buffer_to_duplicate[i], sizeof(int) * 2 * cpt1);
+    PDM_realloc(ptp->gnum1_come_from[i]          ,ptp->gnum1_come_from[i]          , cpt ,PDM_g_num_t);
+    PDM_realloc(ptp->recv_buffer_to_ref_lnum2[i] ,ptp->recv_buffer_to_ref_lnum2[i] , cpt ,int);
+    PDM_realloc(ptp->recv_buffer_to_duplicate[i] ,ptp->recv_buffer_to_duplicate[i] , 2 * cpt1,int);
 
     free (_old_gnum1_come_from_idx);
 
@@ -4259,7 +4259,7 @@ PDM_part_to_part_iexch
   if (t_stride == PDM_STRIDE_CST_INTERLEAVED) {
 
     ptp->async_exch_subrequest_s[_request] = cst_stride;
-    ptp->async_exch_subrequest[_request] = realloc (ptp->async_exch_subrequest[_request], sizeof(int) * 2 * cst_stride);
+    PDM_realloc(ptp->async_exch_subrequest[_request] ,ptp->async_exch_subrequest[_request] , 2 * cst_stride,int);
     for (int i = 0; i < 2*cst_stride; i++) {
       ptp->async_exch_subrequest[_request][i] = -1;
     }
@@ -4895,7 +4895,7 @@ PDM_part_to_part_reverse_iexch
   if (t_stride == PDM_STRIDE_CST_INTERLEAVED) {
 
     ptp->async_exch_subrequest_s[_request] = cst_stride;
-    ptp->async_exch_subrequest[_request] = realloc (ptp->async_exch_subrequest[_request], sizeof(int) * 2 * cst_stride);
+    PDM_realloc(ptp->async_exch_subrequest[_request] ,ptp->async_exch_subrequest[_request] , 2 * cst_stride,int);
     for (int i = 0; i < 2*cst_stride; i++) {
       ptp->async_exch_subrequest[_request][i] = -1;
     }

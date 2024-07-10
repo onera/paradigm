@@ -301,8 +301,8 @@ _closest_points_reverse_results
     // PDM_log_trace_array_int(tgt_in_src_n[i_part]     , cls->src_cloud->n_points[i_part], "cls->src_cloud->n_points[i_part]:: " );
     cls->src_cloud->tgt_in_src_idx[i_part] = PDM_array_new_idx_from_sizes_int(tgt_in_src_n[i_part], cls->src_cloud->n_points[i_part]);
     /* Réallocation à la bonne taille sans doublon */
-    cls->src_cloud->tgt_in_src     [i_part] = realloc(cls->src_cloud->tgt_in_src     [i_part], sizeof(PDM_g_num_t) * cls->src_cloud->tgt_in_src_idx[i_part][cls->src_cloud->n_points[i_part]]);
-    cls->src_cloud->tgt_in_src_dist[i_part] = realloc(cls->src_cloud->tgt_in_src_dist[i_part], sizeof(double)      * cls->src_cloud->tgt_in_src_idx[i_part][cls->src_cloud->n_points[i_part]]);
+    PDM_realloc(cls->src_cloud->tgt_in_src     [i_part] ,cls->src_cloud->tgt_in_src     [i_part] , cls->src_cloud->tgt_in_src_idx[i_part][cls->src_cloud->n_points[i_part]],PDM_g_num_t);
+    PDM_realloc(cls->src_cloud->tgt_in_src_dist[i_part] ,cls->src_cloud->tgt_in_src_dist[i_part] , cls->src_cloud->tgt_in_src_idx[i_part][cls->src_cloud->n_points[i_part]],double);
     free(tgt_in_src_n[i_part]);
     free(useless_stride[i_part]);
   }

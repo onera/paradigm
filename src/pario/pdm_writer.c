@@ -370,7 +370,7 @@ _pdm_writer_geom_tab_add
 
   if (geom_tab->n_geom >= geom_tab->s_geom) {
     geom_tab->s_geom = PDM_MAX(2*geom_tab->s_geom, geom_tab->n_geom+1);
-    geom_tab->geom = (PDM_writer_geom_t **) realloc(geom_tab->geom, sizeof(PDM_writer_geom_t *) * geom_tab->s_geom);
+    PDM_realloc(geom_tab->geom ,geom_tab->geom , geom_tab->s_geom,PDM_writer_geom_t *);
 
     for (int i = geom_tab->n_geom+1; i < geom_tab->s_geom; i++) {
       geom_tab->geom[i] = NULL;
@@ -437,7 +437,7 @@ _pdm_writer_var_tab_add
 
   if (var_tab->n_var >= var_tab->s_var) {
     var_tab->s_var = PDM_MAX(2*var_tab->s_var, var_tab->n_var+1);
-    var_tab->var = (PDM_writer_var_t **) realloc(var_tab->var, sizeof(PDM_writer_var_t *) * var_tab->s_var);
+    PDM_realloc(var_tab->var ,var_tab->var , var_tab->s_var,PDM_writer_var_t *);
 
     for (int i = var_tab->n_var+1; i < var_tab->s_var; i++) {
       var_tab->var[i] = NULL;
@@ -504,7 +504,7 @@ _pdm_writer_name_map_tab_add
 
   if (name_map_tab->n_name_map >= name_map_tab->s_name_map) {
     name_map_tab->s_name_map = PDM_MAX(2*name_map_tab->s_name_map, name_map_tab->n_name_map+1);
-    name_map_tab->name_map = (PDM_writer_name_map_t **) realloc(name_map_tab->name_map, sizeof(PDM_writer_name_map_t *) * name_map_tab->s_name_map);
+    PDM_realloc(name_map_tab->name_map ,name_map_tab->name_map , name_map_tab->s_name_map,PDM_writer_name_map_t *);
 
     for (int i = name_map_tab->n_name_map+1; i < name_map_tab->s_name_map; i++) {
       name_map_tab->name_map[i] = NULL;
@@ -1428,7 +1428,7 @@ PDM_writer_geom_bloc_add
 
   if (id_block >= geom->s_section) {
     geom->s_section = PDM_MAX(geom->s_section, id_block);
-    geom->section_owner = realloc(geom->section_owner, sizeof(PDM_ownership_t) * geom->s_section);
+    PDM_realloc(geom->section_owner ,geom->section_owner , geom->s_section,PDM_ownership_t);
   }
   geom->section_owner[id_block] = owner;
 
@@ -2691,7 +2691,7 @@ PDM_writer_fmt_add
 
   if (n_fmt_tab >= s_fmt_tab) {
     s_fmt_tab = PDM_MAX (2*s_fmt_tab, n_fmt_tab+1);
-    fmt_tab = realloc(fmt_tab, sizeof(PDM_writer_fmt_t *) * s_fmt_tab);
+    PDM_realloc(fmt_tab ,fmt_tab , s_fmt_tab,PDM_writer_fmt_t *);
   }
 
   PDM_writer_fmt_t *fmt_ptr = malloc (sizeof(PDM_writer_fmt_t));

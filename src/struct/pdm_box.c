@@ -1957,7 +1957,7 @@ PDM_box_copy_boxes_to_ranks
       boxes->copied_ranks[boxes->n_copied_ranks++] = copied_ranks[i];
     }
   }
-  boxes->copied_ranks = (int *) realloc (boxes->copied_ranks, sizeof(int) * boxes->n_copied_ranks);
+  PDM_realloc(boxes->copied_ranks ,boxes->copied_ranks , boxes->n_copied_ranks,int);
 
   boxes->rank_boxes = (PDM_boxes_t *) malloc (sizeof(PDM_boxes_t) * boxes->n_copied_ranks);
 
@@ -2313,7 +2313,7 @@ PDM_box_distrib_clean(PDM_box_distrib_t  *distrib)
 
   /* Memory management */
   free(distrib->index);
-  distrib->list = (int *) realloc(distrib->list, new_index[distrib->n_ranks] * sizeof(int));
+  PDM_realloc(distrib->list ,distrib->list , new_index[distrib->n_ranks] ,int);
   distrib->index = new_index;
 
   free(counter);

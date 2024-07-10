@@ -191,7 +191,7 @@ const int          nFac,
 
             //     nFacApprox[0] *= 2;
             //     // printf("Realloc :  %d - %d - %d \n", nFacApprox[0], nFacApprox2, iAbsFace);
-            //     connect   = (PDM_g_num_t *) realloc(connect,  sizeof(PDM_g_num_t) * nFacApprox[0] );
+//            PDM_realloc(//     connect   ,//     connect   , nFacApprox[0] ,PDM_g_num_t);
             // }
 
             /*
@@ -568,8 +568,8 @@ PDM_elt_parent_find_from_distrib
   PDM_g_num_t dn_face = 0; //FIXME: Attention : dn_face doit probabement etre declare en entier puis caster en long
 
   int nFacLocApprox = 10;
-  int         *IdxFace      = (int         *) malloc( sizeof(int         *) * nFacLocApprox + 1);
-  PDM_g_num_t *connectLocal = (PDM_g_num_t *) malloc( sizeof(PDM_g_num_t *) * nFacLocApprox    );
+  int         *IdxFace      = (int         *) malloc( sizeof(int         ) * nFacLocApprox + 1);
+  PDM_g_num_t *connectLocal = (PDM_g_num_t *) malloc( sizeof(PDM_g_num_t ) * nFacLocApprox    );
 
   /*
    * Loop over BlkData : Each block correspond to a key
@@ -614,8 +614,8 @@ PDM_elt_parent_find_from_distrib
     if(nFac >= nFacLocApprox){
         printf("Realloc IdxFace -> nFac %d // nFacLocApprox : %d \n", nFac, nFacLocApprox);
         nFacLocApprox = nFac;
-        IdxFace       = (int *)         realloc( IdxFace     , sizeof(int *        ) * nFac + 1);
-        connectLocal  = (PDM_g_num_t *) realloc( connectLocal, sizeof(PDM_g_num_t *) * nFac    );
+        PDM_realloc(IdxFace       ,IdxFace       , nFac + 1,int        );
+        PDM_realloc(connectLocal  ,connectLocal  , nFac    ,PDM_g_num_t );
     }
 
     /** New **/
@@ -660,7 +660,7 @@ PDM_elt_parent_find_from_distrib
     if(dn_face + iAbsFace > nFacApprox){
         printf("[%d/%d] - Realloc :  "PDM_FMT_G_NUM" - "PDM_FMT_G_NUM" \n", i_rank, n_rank, nFacApprox, dn_face + iAbsFace);
         nFacApprox *= 2;
-        connect   = (PDM_g_num_t *) realloc(connect,  sizeof(PDM_g_num_t) * nFacApprox );
+        PDM_realloc(connect   ,connect   , nFacApprox ,PDM_g_num_t);
     }
 
     /* Copy on current array */
@@ -695,7 +695,7 @@ PDM_elt_parent_find_from_distrib
 
   /* Realloc the connect array */
   if(dn_face > 0){
-    connect   = (PDM_g_num_t *) realloc(connect,  sizeof(PDM_g_num_t) * dn_face );
+    PDM_realloc(connect   ,connect   , dn_face ,PDM_g_num_t);
   }
 
   /*

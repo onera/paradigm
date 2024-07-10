@@ -253,7 +253,7 @@ _generate_surface_mesh
                dvtx_coord);
 
 
-  if(0 == 1) {
+  if(1 == 1) {
     PDM_dmesh_nodal_dump_vtk(dmn,
                              PDM_GEOMETRY_KIND_SURFACIC,
                              "surface_mesh_");

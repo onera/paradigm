@@ -232,9 +232,9 @@ _loop_backward
       }
     }
   }
-  extract_leaf_id = realloc(extract_leaf_id, n_leaf * sizeof(int));
+  PDM_realloc(extract_leaf_id ,extract_leaf_id , n_leaf ,int);
 
-  current_ancestor   = realloc(current_ancestor, n_ancestor * sizeof(int));
+  PDM_realloc(current_ancestor   ,current_ancestor   , n_ancestor ,int);
   int *next_ancestor = malloc(n_ancestor * sizeof(int));
 
   // PDM_log_trace_array_int(extract_leaf_id, n_leaf, "extract_leaf_id :");

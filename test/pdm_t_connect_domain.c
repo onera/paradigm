@@ -317,7 +317,7 @@ int main(int argc, char *argv[])
     }
 
     /* A bit stupid but complicated to made it in ohter way for a clear test */
-    dface_join = realloc(dface_join, dface_join_idx[i_jn-1] * sizeof(PDM_g_num_t));
+    PDM_realloc(dface_join ,dface_join , dface_join_idx[i_jn-1] ,PDM_g_num_t);
 
     // Second pass to copy
     dface_bnd [i_domain] = (PDM_g_num_t *) malloc(dface_bnd_idx [i_domain][n_bnd        ] * sizeof(PDM_g_num_t));

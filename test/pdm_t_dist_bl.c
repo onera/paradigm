@@ -619,8 +619,8 @@ _create_wall_surf
     // printf("n_surf_face = %i \n", n_surf_face[i_part]);
     // printf("n_surf_vtx  = %i \n", n_surf_vtx [i_part]);
 
-    psurf_vtx_coord    [i_part] = realloc(psurf_vtx_coord    [i_part], 3 * n_surf_vtx[i_part] * sizeof(double     ));
-    psurf_vtx_ln_to_gn [i_part] = realloc(psurf_vtx_ln_to_gn [i_part],     n_surf_vtx[i_part] * sizeof(PDM_g_num_t));
+    PDM_realloc(psurf_vtx_coord    [i_part] ,psurf_vtx_coord    [i_part] , 3 * n_surf_vtx[i_part] ,double     );
+    PDM_realloc(psurf_vtx_ln_to_gn [i_part] ,psurf_vtx_ln_to_gn [i_part] ,     n_surf_vtx[i_part] ,PDM_g_num_t);
 
     PDM_gnum_set_from_parents(gnum_face, i_part, n_surf_face[i_part], _psurf_face_ln_to_gn);
     PDM_gnum_set_from_parents(gnum_vtx , i_part, n_surf_vtx [i_part], psurf_vtx_ln_to_gn [i_part] );

@@ -446,9 +446,9 @@ int main(int argc, char *argv[])
       selected_g_num_idx[i_part][i_cell+1] = selected_g_num_idx[i_part][i_cell] + inside;
     }
 
-    selected_g_num         [i_part] = realloc(selected_g_num[i_part], n_select_cell * sizeof(PDM_g_num_t));
+    PDM_realloc(selected_g_num         [i_part] ,selected_g_num         [i_part] , n_select_cell ,PDM_g_num_t);
     pn_select_cell         [i_part] = n_select_cell;
-    tmp_extract_cell_center[i_part] = realloc(tmp_extract_cell_center[i_part], 3 * n_select_cell * sizeof(double));
+    PDM_realloc(tmp_extract_cell_center[i_part] ,tmp_extract_cell_center[i_part] , 3 * n_select_cell ,double);
 
     weight        [i_part] = malloc(n_select_cell * sizeof(double));
     for(int i = 0; i < n_select_cell; ++i) {

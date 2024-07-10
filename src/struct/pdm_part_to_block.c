@@ -634,7 +634,7 @@ _distrib_data
       }
     }
     ptb->n_elt_block = n_elt_block;
-    ptb->block_gnum = realloc (ptb->block_gnum, sizeof(PDM_g_num_t) * ptb->n_elt_block);
+    PDM_realloc(ptb->block_gnum ,ptb->block_gnum , ptb->n_elt_block,PDM_g_num_t);
 
     ptb->block_gnum_count = malloc (sizeof(int) * ptb->n_elt_block);
     n_elt_block = 0;
@@ -942,7 +942,7 @@ _distrib_data_hilbert
       }
     }
     ptb->n_elt_block = n_elt_block;
-    ptb->block_gnum = realloc (ptb->block_gnum, sizeof(PDM_g_num_t) * ptb->n_elt_block);
+    PDM_realloc(ptb->block_gnum ,ptb->block_gnum , ptb->n_elt_block,PDM_g_num_t);
 
     ptb->block_gnum_count = malloc (sizeof(int) * ptb->n_elt_block);
     n_elt_block = 0;
@@ -1246,7 +1246,7 @@ _distrib_data_morton
       }
     }
     ptb->n_elt_block = n_elt_block;
-    ptb->block_gnum = realloc (ptb->block_gnum, sizeof(PDM_g_num_t) * ptb->n_elt_block);
+    PDM_realloc(ptb->block_gnum ,ptb->block_gnum , ptb->n_elt_block,PDM_g_num_t);
 
     ptb->block_gnum_count = malloc (sizeof(int) * ptb->n_elt_block);
     n_elt_block = 0;
@@ -2069,10 +2069,10 @@ _post_treatment
       /* Cleanup */
 
       if (ptb->t_post == PDM_PART_TO_BLOCK_POST_CLEANUP) {
-        _block_data = realloc (_block_data, sizeof(unsigned char) * idx2);
+        PDM_realloc(_block_data ,_block_data , idx2,unsigned char);
         *block_data = _block_data;
 
-        _block_stride = realloc (_block_stride, sizeof(int) * ptb->n_elt_block);
+        PDM_realloc(_block_stride ,_block_stride , ptb->n_elt_block,int);
 
         *block_stride = _block_stride;
         s_block_data = idx2 / (int) s_data;
@@ -2125,7 +2125,7 @@ _post_treatment
       }
 
       if (ptb->t_post == PDM_PART_TO_BLOCK_POST_CLEANUP) {
-        _block_data = realloc (_block_data, sizeof(unsigned char) * idx2);
+        PDM_realloc(_block_data ,_block_data , idx2,unsigned char);
         *block_data = _block_data;
         s_block_data = idx2 / (int) s_data;
       }
@@ -4433,7 +4433,7 @@ PDM_part_to_block_adapt_partial_block_to_block
     block_n_tmp[i] = _block_n[i1];
   }
 
-  *block_n = realloc(*block_n, sizeof(int) * block_n_elt_tot);
+  PDM_realloc(*block_n ,*block_n , block_n_elt_tot,int);
   _block_n = *block_n;
   for (int i1 = 0; i1 < block_n_elt_tot; i1++) {
     _block_n[i1] = block_n_tmp[i1];
@@ -4449,7 +4449,7 @@ PDM_part_to_block_adapt_partial_block_to_block
 
   if (ptb->i_rank == (ptb->s_comm - 1)) {
     int new_size = block_n_elt_tot + diff_last;
-    *block_n = realloc(*block_n, sizeof(int) * new_size);
+    PDM_realloc(*block_n ,*block_n , new_size,int);
     _block_n = *block_n;
     for (int i = block_n_elt_tot; i < new_size; i++) {
       _block_n[i] = 0;

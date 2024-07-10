@@ -708,8 +708,8 @@ _mixing_plane
       if (_face_band_idx[face_id+1] >= s_face_band) {
         s_face_band = PDM_MAX(2*s_face_band,
                               _face_band_idx[face_id+1]);
-        (*face_band     )[ipart] = realloc((*face_band     )[ipart], sizeof(int   ) * s_face_band);
-        (*face_band_area)[ipart] = realloc((*face_band_area)[ipart], sizeof(double) * s_face_band);
+        PDM_realloc((*face_band     )[ipart] ,(*face_band     )[ipart] , s_face_band,int   );
+        PDM_realloc((*face_band_area)[ipart] ,(*face_band_area)[ipart] , s_face_band,double);
         _face_band      = (*face_band     )[ipart];
         _face_band_area = (*face_band_area)[ipart];
       }
@@ -915,8 +915,8 @@ _mixing_plane
     } // End of loop on current part's faces
 
     s_face_band = _face_band_idx[n_face[ipart]];
-    (*face_band     )[ipart] = realloc((*face_band     )[ipart], sizeof(int   ) * s_face_band);
-    (*face_band_area)[ipart] = realloc((*face_band_area)[ipart], sizeof(double) * s_face_band);
+    PDM_realloc((*face_band     )[ipart] ,(*face_band     )[ipart] , s_face_band,int   );
+    PDM_realloc((*face_band_area)[ipart] ,(*face_band_area)[ipart] , s_face_band,double);
 
   } // End of loop on parts
 

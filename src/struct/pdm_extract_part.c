@@ -1198,7 +1198,7 @@ _compute_dual_graph
     }
   }
 
-  dual_graph = realloc(dual_graph, dual_graph_idx[dn_cell_equi] * sizeof(PDM_g_num_t));
+  PDM_realloc(dual_graph ,dual_graph , dual_graph_idx[dn_cell_equi] ,PDM_g_num_t);
 
   free(parc_to_elmt_n);
   free(parc_to_elmt  );
@@ -1273,8 +1273,8 @@ int         ***old_to_new_entity2_no
         }
       }
     }
-    _extract_entity2_lnum           [i_part] = realloc(_extract_entity2_lnum           [i_part], _n_extract_entity2[i_part] * sizeof(int        ));
-    _extract_parent_entity2_ln_to_gn[i_part] = realloc(_extract_parent_entity2_ln_to_gn[i_part], _n_extract_entity2[i_part] * sizeof(PDM_g_num_t));
+    PDM_realloc(_extract_entity2_lnum           [i_part] ,_extract_entity2_lnum           [i_part] , _n_extract_entity2[i_part] ,int        );
+    PDM_realloc(_extract_parent_entity2_ln_to_gn[i_part] ,_extract_parent_entity2_ln_to_gn[i_part] , _n_extract_entity2[i_part] ,PDM_g_num_t);
 
     free(is_visited);
   }
@@ -1358,7 +1358,7 @@ int                 ***extract_entity2_lnum
 
     assert(idx_write == _selected_entity1_entity2_idx[i_part][n_extract_entity1[i_part]]);
 
-    _selected_entity1_entity2[i_part] = realloc(_selected_entity1_entity2[i_part], idx_write * sizeof(int));
+    PDM_realloc(_selected_entity1_entity2[i_part] ,_selected_entity1_entity2[i_part] , idx_write ,int);
     free(old_to_new_entity2_no[i_part]);
   }
   free(old_to_new_entity2_no);
@@ -1594,13 +1594,13 @@ _extract_part_nodal
       }
 
 
-      idx_selected_section[i_part][i_section] = realloc(idx_selected_section[i_part][i_section], n_selected_section  [i_part][i_section] * sizeof(int));
-      extract_parent_num  [i_part][i_section] = realloc(extract_parent_num  [i_part][i_section], n_selected_section  [i_part][i_section] * sizeof(int));
+      PDM_realloc(idx_selected_section[i_part][i_section] ,idx_selected_section[i_part][i_section] , n_selected_section  [i_part][i_section] ,int);
+      PDM_realloc(extract_parent_num  [i_part][i_section] ,extract_parent_num  [i_part][i_section] , n_selected_section  [i_part][i_section] ,int);
 
     } /* End section */
 
-    extract_vtx_lnum        [i_part] = realloc(extract_vtx_lnum        [i_part], n_extract_vtx[i_part] * sizeof(int        ));
-    extract_parent_vtx_g_num[i_part] = realloc(extract_parent_vtx_g_num[i_part], n_extract_vtx[i_part] * sizeof(PDM_g_num_t));
+    PDM_realloc(extract_vtx_lnum        [i_part] ,extract_vtx_lnum        [i_part] , n_extract_vtx[i_part] ,int        );
+    PDM_realloc(extract_parent_vtx_g_num[i_part] ,extract_parent_vtx_g_num[i_part] , n_extract_vtx[i_part] ,PDM_g_num_t);
 
     extrp->pextract_entity_parent_ln_to_gn[PDM_MESH_ENTITY_VTX][i_part] = extract_parent_vtx_g_num[i_part];
     extrp->pextract_entity_parent_lnum    [PDM_MESH_ENTITY_VTX][i_part] = extract_vtx_lnum[i_part];
@@ -2589,7 +2589,7 @@ _extract_part_and_reequilibrate_nodal_from_target
 
     int *unique_order_entity2 = malloc( n_tot_size * sizeof(int));
     int n_lextract_vtx = PDM_inplace_unique_long2(recv_elmt_vtx[i_part], unique_order_entity2, 0, n_tot_size-1);
-    recv_elmt_vtx[i_part] = realloc(recv_elmt_vtx[i_part], n_lextract_vtx * sizeof(PDM_g_num_t));
+    PDM_realloc(recv_elmt_vtx[i_part] ,recv_elmt_vtx[i_part] , n_lextract_vtx ,PDM_g_num_t);
 
     extrp->pextract_n_entity              [PDM_MESH_ENTITY_VTX][i_part] = n_lextract_vtx;
     extrp->pextract_entity_parent_ln_to_gn[PDM_MESH_ENTITY_VTX][i_part] = recv_elmt_vtx[i_part];

@@ -478,10 +478,10 @@ _min_heap_push
   /* make sure the heap is large enough to contain the new element */
   if (h->count >= h->size) {
     h->size  = (h->size) ? 2*h->size : 10;
-    h->code  = realloc (h->code,  sizeof(PDM_morton_code_t) * h->size);
-    h->start = realloc (h->start, sizeof(int)               * h->size);
-    h->end   = realloc (h->end,   sizeof(int)               * h->size);
-    h->dist2 = realloc (h->dist2, sizeof(double)            * h->size);
+    PDM_realloc(h->code  ,h->code  , h->size,PDM_morton_code_t);
+    PDM_realloc(h->start ,h->start , h->size,int);
+    PDM_realloc(h->end   ,h->end   , h->size,int);
+    PDM_realloc(h->dist2 ,h->dist2 , h->size,double);
 
     for (i = h->count+1; i < h->size; i++) {
       h->dist2[i] = HUGE_VAL;
@@ -1949,7 +1949,7 @@ _distribute_points
   free (send_shift);
   free (recv_shift);
 
-  __points = realloc (__points, sizeof(double)  * 3 * _n_points);
+  PDM_realloc(__points ,__points , 3 * _n_points,double);
 
   __points_icloud =
     realloc (__points_icloud, sizeof(int) * _n_points);
@@ -2232,9 +2232,9 @@ _compress_octants
   free (code_stack);
 
   if (*n_nodes < octants->n_nodes) {
-    *nodes       = realloc (*nodes,       sizeof(int)    * (*n_nodes) * 4);
-    *n_pts       = realloc (*n_pts,       sizeof(int)    * (*n_nodes));
-    *pts_extents = realloc (*pts_extents, sizeof(double) * (*n_nodes) * 6);
+    PDM_realloc(*nodes       ,*nodes       , 4 * (*n_nodes),int)    ;
+    PDM_realloc(*n_pts       ,*n_pts       , (*n_nodes),int);
+    PDM_realloc(*pts_extents ,*pts_extents , 6 * (*n_nodes),double) ;
   }
 
   /* Fix extents for empty nodes */
@@ -2690,7 +2690,7 @@ _compute_connected_parts
     max++;
     if (s_connected <= octree->n_connected) {
       s_connected *= 2;
-      octree->connected_idx = realloc (octree->connected_idx, sizeof(int) * s_connected);
+      PDM_realloc(octree->connected_idx ,octree->connected_idx , s_connected,int);
     }
     octree->connected_idx[++octree->n_connected] = max;
   }
@@ -5033,7 +5033,7 @@ _points_inside_boxes
 
       if (tmp_size <= new_size) {
         tmp_size = PDM_MAX (2*tmp_size, new_size);
-        *pts_l_num = realloc (*pts_l_num, sizeof(int) * tmp_size);
+        PDM_realloc(*pts_l_num ,*pts_l_num , tmp_size,int);
         _pts_l_num = *pts_l_num;
 
         for (int i = 0; i < octants->n_nodes; i++) {
@@ -5077,7 +5077,7 @@ _points_inside_boxes
           if (pt_inside_box) {
             if (_pts_idx[ibox+1] >= tmp_size) {
               tmp_size = PDM_MAX (2*tmp_size, _pts_idx[ibox+1] + 1);
-              *pts_l_num = realloc (*pts_l_num, sizeof(int) * tmp_size);
+              PDM_realloc(*pts_l_num ,*pts_l_num , tmp_size,int);
               _pts_l_num = *pts_l_num;
             }
 
@@ -5162,7 +5162,7 @@ _points_inside_boxes
 
                 if (tmp_size <= new_size) {
                   tmp_size = PDM_MAX (2*tmp_size, new_size);
-                  *pts_l_num = realloc (*pts_l_num, sizeof(int) * tmp_size);
+                  PDM_realloc(*pts_l_num ,*pts_l_num , tmp_size,int);
                   _pts_l_num = *pts_l_num;
                 }
 
@@ -5193,7 +5193,7 @@ _points_inside_boxes
   free (end_stack);
   free (code_stack);
 
-  *pts_l_num = realloc (*pts_l_num, sizeof(int) * _pts_idx[n_box]);
+  PDM_realloc(*pts_l_num ,*pts_l_num , _pts_idx[n_box],int);
 }
 
 
@@ -5324,7 +5324,7 @@ _points_inside_boxes_explicit
 
       if (tmp_size <= new_size) {
         tmp_size = PDM_MAX (2*tmp_size, new_size);
-        *pts_l_num = realloc (*pts_l_num, sizeof(int) * tmp_size);
+        PDM_realloc(*pts_l_num ,*pts_l_num , tmp_size,int);
         _pts_l_num = *pts_l_num;
 
       }
@@ -5372,7 +5372,7 @@ _points_inside_boxes_explicit
           if (pt_inside_box) {
             if (_pts_idx[ibox+1] >= tmp_size) {
               tmp_size = PDM_MAX (2*tmp_size, _pts_idx[ibox+1] + 1);
-              *pts_l_num = realloc (*pts_l_num, sizeof(int) * tmp_size);
+              PDM_realloc(*pts_l_num ,*pts_l_num , tmp_size,int);
               _pts_l_num = *pts_l_num;
             }
 
@@ -5433,7 +5433,7 @@ _points_inside_boxes_explicit
 
               if (tmp_size <= new_size) {
                 tmp_size = PDM_MAX (2*tmp_size, new_size);
-                *pts_l_num = realloc (*pts_l_num, sizeof(int) * tmp_size);
+                PDM_realloc(*pts_l_num ,*pts_l_num , tmp_size,int);
                 _pts_l_num = *pts_l_num;
               }
 
@@ -5455,7 +5455,7 @@ _points_inside_boxes_explicit
 
   free (stack_id);
 
-  *pts_l_num = realloc (*pts_l_num, sizeof(int) * _pts_idx[n_box]);
+  PDM_realloc(*pts_l_num ,*pts_l_num , _pts_idx[n_box],int);
 }
 
 
@@ -5551,7 +5551,7 @@ _points_inside_boxes_shared_explicit
 
       if (tmp_size <= new_size) {
         tmp_size = PDM_MAX (2*tmp_size, new_size);
-        *pts_l_num = realloc (*pts_l_num, sizeof(int) * tmp_size);
+        PDM_realloc(*pts_l_num ,*pts_l_num , tmp_size,int);
         _pts_l_num = *pts_l_num;
 
       }
@@ -5599,7 +5599,7 @@ _points_inside_boxes_shared_explicit
           if (pt_inside_box) {
             if (_pts_idx[ibox+1] >= tmp_size) {
               tmp_size = PDM_MAX (2*tmp_size, _pts_idx[ibox+1] + 1);
-              *pts_l_num = realloc (*pts_l_num, sizeof(int) * tmp_size);
+              PDM_realloc(*pts_l_num ,*pts_l_num , tmp_size,int);
               _pts_l_num = *pts_l_num;
             }
 
@@ -5660,7 +5660,7 @@ _points_inside_boxes_shared_explicit
 
               if (tmp_size <= new_size) {
                 tmp_size = PDM_MAX (2*tmp_size, new_size);
-                *pts_l_num = realloc (*pts_l_num, sizeof(int) * tmp_size);
+                PDM_realloc(*pts_l_num ,*pts_l_num , tmp_size,int);
                 _pts_l_num = *pts_l_num;
               }
 
@@ -5682,7 +5682,7 @@ _points_inside_boxes_shared_explicit
 
   free (stack_id);
 
-  *pts_l_num = realloc (*pts_l_num, sizeof(int) * _pts_idx[n_box]);
+  PDM_realloc(*pts_l_num ,*pts_l_num , _pts_idx[n_box],int);
 }
 
 
@@ -5777,13 +5777,13 @@ _build_explicit_nodes
 
     if (exp->n_nodes + n_child >= tmp_size) {
       tmp_size = PDM_MAX (2*tmp_size, exp->n_nodes + n_child + 1);
-      exp->codes       = realloc (exp->codes,       sizeof(PDM_morton_code_t) * tmp_size);
-      exp->n_points    = realloc (exp->n_points,    sizeof(int              ) * tmp_size);
-      exp->range       = realloc (exp->range,       sizeof(int              ) * tmp_size);
-      exp->ancestor_id = realloc (exp->ancestor_id, sizeof(int              ) * tmp_size);
-      exp->children_id = realloc (exp->children_id, sizeof(int              ) * tmp_size * n_child);
-      exp->leaf_id     = realloc (exp->leaf_id,     sizeof(int              ) * tmp_size);
-      exp->pts_extents = realloc (exp->pts_extents, sizeof(double           ) * tmp_size * 6);
+      PDM_realloc(exp->codes       ,exp->codes       , tmp_size,PDM_morton_code_t);
+      PDM_realloc(exp->n_points    ,exp->n_points    , tmp_size,int              );
+      PDM_realloc(exp->range       ,exp->range       , tmp_size,int              );
+      PDM_realloc(exp->ancestor_id ,exp->ancestor_id , tmp_size,int              );
+      PDM_realloc(exp->children_id ,exp->children_id , tmp_size * n_child,int              );
+      PDM_realloc(exp->leaf_id     ,exp->leaf_id     , tmp_size,int              );
+      PDM_realloc(exp->pts_extents ,exp->pts_extents , tmp_size * 6,double           );
     }
 
     PDM_morton_get_children (dim,
@@ -5908,13 +5908,13 @@ _build_explicit_nodes
   free (stack_id);
 
 
-  exp->codes       = realloc (exp->codes,       sizeof(PDM_morton_code_t) * exp->n_nodes);
-  exp->n_points    = realloc (exp->n_points,    sizeof(int              ) * exp->n_nodes);
-  exp->range       = realloc (exp->range,       sizeof(int              ) * exp->n_nodes);
-  exp->ancestor_id = realloc (exp->ancestor_id, sizeof(int              ) * exp->n_nodes);
-  exp->children_id = realloc (exp->children_id, sizeof(int              ) * exp->n_nodes * n_child);
-  exp->leaf_id     = realloc (exp->leaf_id,     sizeof(int              ) * exp->n_nodes);
-  exp->pts_extents = realloc (exp->pts_extents, sizeof(double           ) * exp->n_nodes * 6);
+  PDM_realloc(exp->codes       ,exp->codes       , exp->n_nodes,PDM_morton_code_t);
+  PDM_realloc(exp->n_points    ,exp->n_points    , exp->n_nodes,int              );
+  PDM_realloc(exp->range       ,exp->range       , exp->n_nodes,int              );
+  PDM_realloc(exp->ancestor_id ,exp->ancestor_id , exp->n_nodes,int              );
+  PDM_realloc(exp->children_id ,exp->children_id , exp->n_nodes * n_child,int              );
+  PDM_realloc(exp->leaf_id     ,exp->leaf_id     , exp->n_nodes,int              );
+  PDM_realloc(exp->pts_extents ,exp->pts_extents , exp->n_nodes * 6,double           );
 }
 
 static void
@@ -6154,7 +6154,7 @@ _prepare_copies
   free (order);
 
   if (*n_copied_ranks > 0) {
-    *copied_ranks = realloc (*copied_ranks, sizeof(int) * (*n_copied_ranks));
+    PDM_realloc(*copied_ranks ,*copied_ranks , (*n_copied_ranks),int);
     *n_request_copied_ranks = realloc (*n_request_copied_ranks,
                                        sizeof(int) * (*n_copied_ranks));
 
@@ -8631,7 +8631,7 @@ PDM_para_octree_build
           if (i >= (int) s_ngb_octree) {
             s_ngb_octree = PDM_MAX (2*s_ngb_octree,
                                     (size_t) _octree->octants->n_nodes_max);
-            ngb_octree = realloc (ngb_octree, sizeof(_neighbours_tmp_t) * s_ngb_octree);
+            PDM_realloc(ngb_octree ,ngb_octree , s_ngb_octree,_neighbours_tmp_t);
           }
 
           /* copy ngb_heap[h] into ngb_octree[i],
@@ -8683,7 +8683,7 @@ PDM_para_octree_build
 
   if (NGB_ON_THE_FLY) {
     if (_octree->neighboursToBuild) {
-      ngb_octree = realloc (ngb_octree, sizeof(_neighbours_tmp_t) * _octree->octants->n_nodes);
+      PDM_realloc(ngb_octree ,ngb_octree , _octree->octants->n_nodes,_neighbours_tmp_t);
 
       for (PDM_para_octree_direction_t dir = PDM_BOTTOM; dir < 6; dir++) {
         free (parent_ngb.neighbours[dir]);
@@ -9868,7 +9868,7 @@ if (_octree->use_win_shared) {
 
         if (tmp_size <= close_ranks_idx[i+1]) {
           tmp_size *= 2;
-          close_ranks = realloc (close_ranks, sizeof(int) * tmp_size);
+          PDM_realloc(close_ranks ,close_ranks , tmp_size,int);
         }
 
         close_ranks[close_ranks_idx[i+1]++] = rank;
@@ -10058,9 +10058,9 @@ if (_octree->use_win_shared) {
   double      *pts_coord2 = malloc (sizeof(double)      * n_pts2 * dim);
   double      *_closest_pts_dist22 = malloc (sizeof(double) * n_pts2 * n_closest_points);
 
-  send_g_num = realloc (send_g_num, sizeof(PDM_g_num_t) * send_shift[n_rank]);
+  PDM_realloc(send_g_num ,send_g_num , send_shift[n_rank],PDM_g_num_t);
   int s_data = dim + 1;
-  send_coord = realloc (send_coord, sizeof(double) * send_shift[n_rank] * s_data);
+  PDM_realloc(send_coord ,send_coord , send_shift[n_rank] * s_data,double);
 
   recv_g_num = pts_g_num2 + idx_pts2[1];
   recv_coord = pts_coord2 + idx_pts2[1] * dim;
@@ -10236,7 +10236,7 @@ if (_octree->use_win_shared) {
   free (recv_shift);
 
 
-  _closest_pts_g_num = realloc (_closest_pts_g_num, sizeof(PDM_g_num_t) * n_pts2 * n_closest_points);
+  PDM_realloc(_closest_pts_g_num ,_closest_pts_g_num , n_pts2 * n_closest_points,PDM_g_num_t);
   PDM_array_reset_gnum(_closest_pts_g_num, n_pts2 * n_closest_points, -1);
 
   if (_octree->explicit_nodes_to_build) {
@@ -11457,7 +11457,7 @@ if (_octree->use_win_shared) {
 
         if (tmp_size <= close_ranks_idx[i+1]) {
           tmp_size *= 2;
-          close_ranks = realloc (close_ranks, sizeof(int) * tmp_size);
+          PDM_realloc(close_ranks ,close_ranks , tmp_size,int);
         }
 
         close_ranks[close_ranks_idx[i+1]++] = rank;
@@ -11715,9 +11715,9 @@ if (_octree->use_win_shared) {
   double      *pts_coord2 = malloc (sizeof(double)      * n_pts2 * dim);
   double      *_closest_pt_dist22 = malloc (sizeof(double) * n_pts2);
 
-  send_g_num = realloc (send_g_num, sizeof(PDM_g_num_t) * send_shift[n_rank]);
+  PDM_realloc(send_g_num ,send_g_num , send_shift[n_rank],PDM_g_num_t);
   int s_data = dim + 1;
-  send_coord = realloc (send_coord, sizeof(double) * send_shift[n_rank] * s_data);
+  PDM_realloc(send_coord ,send_coord , send_shift[n_rank] * s_data,double);
 
   recv_g_num = pts_g_num2 + idx_pts2[1];
   recv_coord = pts_coord2 + idx_pts2[1] * dim;
@@ -11926,7 +11926,7 @@ if (_octree->use_win_shared) {
   free (recv_count);
   free (recv_shift);
 
-  _closest_pt_g_num = realloc (_closest_pt_g_num, sizeof(PDM_g_num_t) * n_pts2);
+  PDM_realloc(_closest_pt_g_num ,_closest_pt_g_num , n_pts2,PDM_g_num_t);
   PDM_array_reset_gnum(_closest_pt_g_num, n_pts2, -1);
 
   if (_octree->explicit_nodes_to_build) {
@@ -12531,7 +12531,7 @@ PDM_para_octree_points_inside_boxes_block_frame
           if (intersect) {
             if (tmp_size <= box_rank_idx[ibox+1]) {
               tmp_size *= 2;
-              box_rank = realloc (box_rank, sizeof(int) * tmp_size);
+              PDM_realloc(box_rank ,box_rank , tmp_size,int);
             }
             box_rank[box_rank_idx[ibox+1]++] = rank;
             tag_rank[rank] = 1;
@@ -12566,7 +12566,7 @@ PDM_para_octree_points_inside_boxes_block_frame
         int new_size = box_rank_idx[ibox] + (int) (end - start);
         if (tmp_size <= new_size) {
           tmp_size = PDM_MAX (2*tmp_size, new_size);
-          box_rank = realloc (box_rank, sizeof(int) * tmp_size);
+          PDM_realloc(box_rank ,box_rank , tmp_size,int);
         }
 
         box_rank_idx[ibox+1] = box_rank_idx[ibox];
@@ -13586,7 +13586,7 @@ PDM_para_octree_copy_ranks_win_shared
         }
       }
     }
-    copied_ranks_in_node = realloc (copied_ranks_in_node, sizeof(int) * n_copied_ranks_in_node);
+    PDM_realloc(copied_ranks_in_node ,copied_ranks_in_node , n_copied_ranks_in_node,int);
   }
 
   if (dbg_enabled && i_rank_in_shm == 0) {
@@ -14191,7 +14191,7 @@ PDM_para_octree_points_inside_boxes_shared_block_frame
           if (intersect) {
             if (tmp_size <= box_rank_idx[ibox+1]) {
               tmp_size *= 2;
-              box_rank = realloc (box_rank, sizeof(int) * tmp_size);
+              PDM_realloc(box_rank ,box_rank , tmp_size,int);
             }
             box_rank[box_rank_idx[ibox+1]++] = rank;
             tag_rank[rank] = 1;

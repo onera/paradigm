@@ -265,7 +265,7 @@ int main(int argc, char *argv[])
   }
 
 
-  dfield_post = realloc(dfield_post, dn_data * sizeof(PDM_g_num_t));
+  PDM_realloc(dfield_post ,dfield_post , dn_data ,PDM_g_num_t);
   int idx_write = 0;
   for(int i = 0; i < n_elmt_in_block; ++i) {
     for(int k = 0; k < dfield_strid[i]; ++k) {

@@ -386,13 +386,13 @@ int main(int argc, char *argv[])
   /* 2 consecutive iexch in stride var with same stride */
   for (int ipart = 0; ipart < n_part1; ipart++) {
     int s_part1_data = 0;
-    part1_stride[ipart] = realloc(part1_stride[ipart], sizeof(int) * n_elt1[ipart]);
+    PDM_realloc(part1_stride[ipart] ,part1_stride[ipart] , n_elt1[ipart],int);
     for (int i = 0; i < n_elt1[ipart]; i++) {
       part1_stride[ipart][i] = (int) (gnum_elt1[ipart][i] % 2) + 1;
       s_part1_data += part1_stride[ipart][i];
     }
 
-    part1_data[ipart] = realloc(part1_data[ipart], sizeof(PDM_g_num_t) * s_part1_data);
+    PDM_realloc(part1_data[ipart] ,part1_data[ipart] , s_part1_data,PDM_g_num_t);
     int idx = 0;
     for (int i = 0; i < n_elt1[ipart]; i++) {
       for (int j = 0; j < part1_stride[ipart][i]; j++) {
@@ -466,13 +466,13 @@ int main(int argc, char *argv[])
   /* 2 consecutive reverse iexch in stride var with same stride */
   for (int ipart = 0; ipart < n_part2; ipart++) {
     int s_part2_data = 0;
-    part2_stride[ipart] = realloc(part2_stride[ipart], sizeof(int) * n_elt2[ipart]);
+    PDM_realloc(part2_stride[ipart] ,part2_stride[ipart] , n_elt2[ipart],int);
     for (int i = 0; i < n_elt2[ipart]; i++) {
       part2_stride[ipart][i] = (int) (gnum_elt2[ipart][i] % 2) + 1;
       s_part2_data += part2_stride[ipart][i];
     }
 
-    part2_data[ipart] = realloc(part2_data[ipart], sizeof(PDM_g_num_t) * s_part2_data);
+    PDM_realloc(part2_data[ipart] ,part2_data[ipart] , s_part2_data,PDM_g_num_t);
     int idx = 0;
     for (int i = 0; i < n_elt2[ipart]; i++) {
       for (int j = 0; j < part2_stride[ipart][i]; j++) {
