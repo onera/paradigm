@@ -61,8 +61,9 @@
 		_ptr = (_type*) PDM_MALLOC(_ni,sizeof(_type),__func__,__FILE__,__LINE__,#_ptr)
 	
 	#define PDM_realloc(_old_ptr,_new_ptr,_ni,_type) \
-		_new_ptr = (_type*) PDM_REALLOC(_old_ptr,_new_ptr,_ni,sizeof(_type),__func__,__FILE__,__LINE__,#_new_ptr)
+		_new_ptr = (_type*) PDM_REALLOC(_old_ptr,_ni,sizeof(_type),__func__,__FILE__,__LINE__,#_new_ptr)
 	
+//		_new_ptr = (_type*) PDM_REALLOC(_old_ptr,_new_ptr,_ni,sizeof(_type),__func__,__FILE__,__LINE__,#_new_ptr)
 	#define PDM_calloc(_ptr,_ni,_type) \
 		_ptr = (_type*) PDM_CALLOC(_ni,sizeof(_type),__func__,__FILE__,__LINE__,#_ptr)
 	
@@ -434,7 +435,7 @@ void *PDM_MALLOC
 void *PDM_REALLOC
 (
  void *old_ptr,
- void *new_ptr,
+// void *new_ptr,
  size_t nb,
  size_t size_type,
  const char *func_name,

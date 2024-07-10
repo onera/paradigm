@@ -538,7 +538,7 @@ PDM_dconnectivity_transpose
   /*
    * Realloc
    */
-  PDM_realloc(*dentity2_entity1 ,*dentity2_entity1 , _dentity2_entity1_idx[dn_entity2_recv] ,PDM_g_num_t);
+  PDM_realloc(recv_data, *dentity2_entity1, _dentity2_entity1_idx[dn_entity2_recv] ,PDM_g_num_t);
   free(dentity2_entity1_n);
 }
 

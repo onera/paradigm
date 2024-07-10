@@ -1288,7 +1288,7 @@ void *PDM_MALLOC
 void *PDM_REALLOC
 (
  void *old_ptr,
- void *new_ptr,
+// void *new_ptr,
  size_t nb,
  size_t size_type,
  const char *func_name,
@@ -1298,11 +1298,17 @@ void *PDM_REALLOC
 )
 {
 
+  void *new_ptr = NULL;
 	size_t s_alloc = nb * size_type;
 
   if (s_alloc == 0) {
-  	free (old_ptr);
-		new_ptr = malloc (s_alloc);
+    if (old_ptr == NULL) {
+      new_ptr = NULL;
+    }
+    else  {
+  	  free (old_ptr);
+		  new_ptr = malloc (s_alloc);
+    }
 	}
 
   else {

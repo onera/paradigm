@@ -360,6 +360,8 @@ const PDM_Mesh_nodal_elt_t   elt_type,
                                     0,
                                     s_face_vtx-1);
 
+  free (face_vtx_gnum);
+
   for (int i = 0; i < s_face_vtx; i++) {
     (*face_vtx)[i]++;
   }

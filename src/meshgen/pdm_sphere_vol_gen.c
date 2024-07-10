@@ -1850,7 +1850,9 @@ _extrude_base_surface_mesh
     }
   }
   free(base_edge_tag);
-  PDM_realloc(base_bdr_edge ,base_bdr_edge , base_n_bdr_edge,int);
+
+  //PDM_realloc(base_bdr_edge ,base_bdr_edge , base_n_bdr_edge,int);
+  free(base_bdr_edge);
 
   assert(base_n_bdr_edge == 0);
 
