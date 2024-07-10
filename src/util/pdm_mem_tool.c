@@ -1365,9 +1365,12 @@ void *PDM_CALLOC
 
 void PDM_FREE
 (
- void *ptr
+ void **ptr
 )
 {
-	free(ptr);
+	if (*ptr != NULL) {
+		free(*ptr);
+		*ptr = NULL;
+	}
 }
 

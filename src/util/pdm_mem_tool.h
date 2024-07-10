@@ -67,7 +67,7 @@
 		_ptr = (_type*) PDM_CALLOC(_ni,sizeof(_type),__func__,__FILE__,__LINE__,#_ptr)
 	
 	#define PDM_free(_ptr) \
-		PDM_FREE(_ptr)
+		PDM_FREE(&(_ptr))
 
 // #endif
 
@@ -478,7 +478,7 @@ void *PDM_CALLOC
 
 void PDM_FREE
 (
- void *ptr
+ void **ptr
 );
 
 
