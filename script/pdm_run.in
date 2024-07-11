@@ -8,6 +8,7 @@ RED='\033[0;31m'
 NC='\033[0m' # No Color
 GREEN='\033[0;32m'
 PURPLE='\033[0;35m'
+ORANGE='\033[0;33m'
 
 Help()
 {
@@ -16,6 +17,7 @@ Help()
   echo "Syntax: pdm_run [-m|mpiexec|no_log_vtk|h|n_avail_rank] -n <number of ranks> -t <test name and its options>"
   echo "options:"
   echo "-u                                  Print Python without buffer"
+  echo "-v                                  Verbose"
   echo "-ws <Work directory>                Work space directory (default : current directory)"                                  
   echo "-m                                  Make test before run"
   echo "-h                                  Print this Help"
@@ -130,22 +132,36 @@ Wait_job()
 
     wait $pid
 
+    if [[ "${Ws}" != "" ]]
+    then
+      wdir="${Ws}/${TestNamel1[0]}_d"
+    else  
+      wdir="${TestDir1}/${TestNamel1[0]}_d"
+    fi  
+    cd ${wdir}
+
     if [ "$?" -ne "0" ]
     then
-      Testoutput=1
-      printf  "${PURPLE}[%3.3d/%3.3d] - %s: ${RED}Failed${NC}\n" ${j1} ${nTest} ${TestNamel1[0]}
-      failedTest=(${failedTest[@]} "$i1")
- 
-      ((ifailed=ifailed+1))
-    else        
 
-      if [[ "${Ws}" != "" ]]
+      flag_sanitize_failed=0
+      for file in `ls *_e.[0-9]*`
+      do 
+        flag_file=`cat $file | grep 'LeakSanitizer has encountered a fatal error' | wc -l` 
+        ((flag_sanitize_failed=flag_sanitize_failed+flag_file)) 
+      done
+    
+      if [ $flag_sanitize_failed -gt 0 ]
       then
-        wdir="${Ws}/${TestNamel1[0]}_d"
+        printf  "${PURPLE}[%3.3d/%3.3d] - %s: ${ORANGE}Not taken into account{NC}\n" ${j1} ${nTest} ${TestNamel1[0]}
+        notAccountTest=(${notAccountTest[@]} "$i1")
+        ((inotAccount=inotAccount+1))      
       else  
-        wdir="${TestDir1}/${TestNamel1[0]}_d"
+        Testoutput=1
+        printf  "${PURPLE}[%3.3d/%3.3d] - %s: ${RED}Failed${NC}\n" ${j1} ${nTest} ${TestNamel1[0]}
+        failedTest=(${failedTest[@]} "$i1")
+        ((ifailed=ifailed+1))
       fi  
-      cd ${wdir}
+    else        
 
       #
       # Compute elapsed time
@@ -198,10 +214,12 @@ Testoutput=0
 ForbidVtk=0
 NrankUser=0
 runMake=0
+Verbose=0
 Test=""
 IsSrunMPI=0
 NAvailRank=24
 failedTest=()
+notAccountTest=()
 testWithOutput=()
 exportjunit=1
 JUnitFile=""
@@ -233,6 +251,7 @@ case "$1" in
     -timeout) Timeout="$2"
         shift;;
     -u) PythonUnbuffered="-u";;
+    -v) Verbose=1;;
     -h) Help
         exit 1;;
     *) echo "Error : $1 is not an option"
@@ -281,6 +300,9 @@ IsIntelMPI=$(echo $(${ExeMPI} --version) | grep -c Intel)
 
 i=0
 ifailed=0
+inotAccount=0
+
+
 ivtk=0
 nTest=${#listComputedTest[@]}
 
@@ -398,7 +420,12 @@ do
     done
 
     CmdLine="${CmdLine} 2>/dev/null &"
+    if [ $Verbose -gt 0 ]
+    then
+      echo "${CmdLine}"
+    fi  
     eval "${CmdLine}"
+
     pids=(${pids[@]} "$!")
 
   else
@@ -436,6 +463,10 @@ do
       done 
 
       CmdLine="${CmdLine} 2>/dev/null &"
+      if [ $Verbose -gt 0 ]
+      then
+        echo "${CmdLine}"
+      fi  
       eval "${CmdLine}"
       pids=(${pids[@]} "$!")
 
@@ -457,6 +488,10 @@ do
       done 
 
       CmdLine="${CmdLine} 2>/dev/null >/dev/null &"
+      if [ $Verbose -gt 0 ]
+      then
+        echo "${CmdLine}"
+      fi  
       eval "${CmdLine}"
       pids=(${pids[@]} "$!")
 
@@ -489,6 +524,16 @@ done
 
 printf  "\n      ${PURPLE}%3.3d tests produce vtk or log files out of %3.3d : \n${NC}" ${ivtk} ${nTest} 
 for i in "${testWithOutput[@]}"
+do
+  TestPath=$(echo ${listComputedTest[$i]} | awk '{print $1}')
+  TestName=$(basename ${TestPath})
+  TestNamel=($(echo ${TestName} | tr ":" " "))
+  TestDir=$(dirname ${TestPath})
+  printf "          - ${RED}%s\n${NC}" ${TestNamel[0]}  
+done
+
+printf  "\n      ${PURPLE}%3.3d tests not taken into account of %3.3d : \n${NC}" ${inotAccount} ${nTest} 
+for i in "${notAccountTest[@]}"
 do
   TestPath=$(echo ${listComputedTest[$i]} | awk '{print $1}')
   TestName=$(basename ${TestPath})
