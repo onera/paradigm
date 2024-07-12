@@ -2520,21 +2520,12 @@ PDM_dist_cloud_surf_n_part_cloud_set
 {
 
   dist->points_cloud[i_point_cloud].n_part = n_part;
-  dist->points_cloud[i_point_cloud].n_points =
-    realloc(dist->points_cloud[i_point_cloud].n_points, n_part * sizeof(int));
-  dist->points_cloud[i_point_cloud].coords =
-    realloc(dist->points_cloud[i_point_cloud].coords,
-            n_part * sizeof(double *));
-  dist->points_cloud[i_point_cloud].gnum =
-    realloc(dist->points_cloud[i_point_cloud].gnum,
-            n_part * sizeof(PDM_g_num_t *));
-  dist->points_cloud[i_point_cloud].dist =
-    realloc(dist->points_cloud[i_point_cloud].dist, n_part * sizeof(double *));
-  dist->points_cloud[i_point_cloud].proj =
-    realloc(dist->points_cloud[i_point_cloud].proj, n_part * sizeof(double *));
-  dist->points_cloud[i_point_cloud].closest_elt_gnum =
-    realloc(dist->points_cloud[i_point_cloud].closest_elt_gnum,
-            n_part * sizeof(PDM_g_num_t * ));
+  dist->points_cloud[i_point_cloud].n_points = realloc(dist->points_cloud[i_point_cloud].n_points, n_part * sizeof(int));
+  dist->points_cloud[i_point_cloud].coords =    realloc(dist->points_cloud[i_point_cloud].coords,            n_part * sizeof(double *));
+  dist->points_cloud[i_point_cloud].gnum =    realloc(dist->points_cloud[i_point_cloud].gnum,            n_part * sizeof(PDM_g_num_t *));
+  dist->points_cloud[i_point_cloud].dist =    realloc(dist->points_cloud[i_point_cloud].dist, n_part * sizeof(double *));
+  dist->points_cloud[i_point_cloud].proj =    realloc(dist->points_cloud[i_point_cloud].proj, n_part * sizeof(double *));
+  dist->points_cloud[i_point_cloud].closest_elt_gnum =    realloc(dist->points_cloud[i_point_cloud].closest_elt_gnum,            n_part * sizeof(PDM_g_num_t * ));
 
   for (int i = 0; i < n_part; i++) {
     dist->points_cloud[i_point_cloud].n_points[i] = -1;

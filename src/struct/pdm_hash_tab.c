@@ -155,8 +155,7 @@ void           *data
 
   if (_ht->nDataKey[_key] >= _ht->mDataKey[_key]) {
     _ht->mDataKey[_key] += PDM_MAX (1, _ht->mDataKey[_key]);
-    _ht->data[_key] = realloc (_ht->data[_key], sizeof(void *) *
-                                                _ht->mDataKey[_key]);
+    _ht->data[_key] = realloc (_ht->data[_key], sizeof(void *) *                                                _ht->mDataKey[_key]);
   }
 
   if (_ht->nDataKey[_key] == 0) {

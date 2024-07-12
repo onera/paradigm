@@ -720,8 +720,7 @@ _mixing_plane
       if (face_band_n > max_face_band_n) {
         max_face_band_n = PDM_MAX(2*max_face_band_n,
                                   face_band_n);
-        nodes = realloc(nodes,
-                        sizeof(_ll_node_t) * (3+4*(max_face_band_n-1)));
+        nodes = realloc(nodes,                        sizeof(_ll_node_t) * (3+4*(max_face_band_n-1)));
       }
 
       /* Initialize face-band areas */

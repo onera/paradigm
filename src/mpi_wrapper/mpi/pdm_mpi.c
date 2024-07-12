@@ -520,9 +520,7 @@ static PDM_MPI_Comm _mpi_2_pdm_mpi_comm(MPI_Comm comm)
     if (l_mpi_comm <= n_mpi_comm) {
       int  p_l_mpi_comm = l_mpi_comm;
       l_mpi_comm = 2 * l_mpi_comm;
-      mpi_comm = (MPI_Comm **) realloc((void*) mpi_comm,
-                                       l_mpi_comm *
-                                       sizeof(MPI_Comm *));
+      mpi_comm = (MPI_Comm **) realloc((void*) mpi_comm,                                       l_mpi_comm *                                       sizeof(MPI_Comm *));
       for (int i = p_l_mpi_comm; i < l_mpi_comm; i++)
         mpi_comm[i] = NULL;
     }
@@ -696,9 +694,7 @@ static PDM_MPI_Request _mpi_2_pdm_mpi_request_add(MPI_Request request)
     if (l_mpi_request <= n_mpi_request) {
       int  p_l_mpi_request = l_mpi_request;
       l_mpi_request = 2 * l_mpi_request;
-      mpi_request = (MPI_Request **) realloc((void*) mpi_request,
-                                             l_mpi_request *
-                                             sizeof(MPI_Request *));
+      mpi_request = (MPI_Request **) realloc((void*) mpi_request,                                             l_mpi_request *                                             sizeof(MPI_Request *));
       for (int i = p_l_mpi_request; i < l_mpi_request; i++)
         mpi_request[i] = NULL;
     }
@@ -750,9 +746,7 @@ static PDM_MPI_Win _mpi_2_pdm_mpi_win_add(MPI_Win win)
     if (l_mpi_win <= n_mpi_win) {
       int  p_l_mpi_win = l_mpi_win;
       l_mpi_win = 2 * l_mpi_win;
-      mpi_win = (MPI_Win **) realloc((void*) mpi_win,
-                                             l_mpi_win *
-                                             sizeof(MPI_Win *));
+      mpi_win = (MPI_Win **) realloc((void*) mpi_win,                                             l_mpi_win *                                             sizeof(MPI_Win *));
       for (int i = p_l_mpi_win; i < l_mpi_win; i++)
         mpi_win[i] = NULL;
     }
@@ -904,9 +898,7 @@ static PDM_MPI_Datatype _mpi_2_pdm_mpi_datatype(MPI_Datatype datatype)
     if (l_mpi_datatype <= n_mpi_datatype) {
       int  p_l_mpi_datatype = l_mpi_datatype;
       l_mpi_datatype = 2 * l_mpi_datatype;
-      mpi_datatype = (MPI_Datatype **) realloc((void*) mpi_datatype,
-                                       l_mpi_datatype *
-                                       sizeof(MPI_Datatype *));
+      mpi_datatype = (MPI_Datatype **) realloc((void*) mpi_datatype,                                       l_mpi_datatype *                                       sizeof(MPI_Datatype *));
       for (int i = p_l_mpi_datatype; i < l_mpi_datatype; i++)
         mpi_datatype[i] = NULL;
     }
@@ -948,9 +940,7 @@ static PDM_MPI_File _pdm_mpi_file_create(void)
   if (l_mpi_file <= n_mpi_file) {
     int  p_l_mpi_file = l_mpi_file;
     l_mpi_file = 2 * l_mpi_file;
-    mpi_file = (MPI_File **) realloc((void*) mpi_file,
-                                     l_mpi_file *
-                                     sizeof(MPI_File *));
+    mpi_file = (MPI_File **) realloc((void*) mpi_file,                                     l_mpi_file *                                     sizeof(MPI_File *));
     for (int i = p_l_mpi_file; i < l_mpi_file; i++)
       mpi_file[i] = NULL;
   }

@@ -1424,8 +1424,7 @@ _adaptative_tree3
       }
     }
     free(block_stride);
-    coarse_btree_leaf_ptree_leaf_n = realloc(coarse_btree_leaf_ptree_leaf_n,
-                                             sizeof(int) * n_coarse_btree_leaf);
+    coarse_btree_leaf_ptree_leaf_n = realloc(coarse_btree_leaf_ptree_leaf_n,                                             sizeof(int) * n_coarse_btree_leaf);
 
 
 

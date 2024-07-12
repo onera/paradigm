@@ -878,8 +878,7 @@ const int                n_part,
 
             if (nNewLocalGhost >= sNewLocalGhost) {
               sNewLocalGhost *= 2;
-              newLocalGhost = (int *) realloc (newLocalGhost,
-                                               sizeof(int) * 2 * sNewLocalGhost);
+              newLocalGhost = (int *) realloc (newLocalGhost,                                               sizeof(int) * 2 * sNewLocalGhost);
             }
 
             newLocalGhost[2*nNewLocalGhost]   = dataLoc2 ;
@@ -1153,11 +1152,9 @@ const int                n_part,
     }
   }
 
-  newGhostEltEltPart = (int *) realloc (newGhostEltEltPart,
-                                        sizeof (int) * newGhostEltEltIdx2[nTotalNewGhost]);
+  newGhostEltEltPart = (int *) realloc (newGhostEltEltPart,                                        sizeof (int) * newGhostEltEltIdx2[nTotalNewGhost]);
 
-  newGhostEltElt = (int *) realloc (newGhostEltElt,
-                                    sizeof (int) * newGhostEltEltIdx2[nTotalNewGhost]);
+  newGhostEltElt = (int *) realloc (newGhostEltElt,                                    sizeof (int) * newGhostEltEltIdx2[nTotalNewGhost]);
 
   free (tagEltElt);
 

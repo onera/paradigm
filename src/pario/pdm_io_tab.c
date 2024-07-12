@@ -415,9 +415,7 @@ void PDM_io_array_write_end
 
           if (n_donnees_total > t_n_composantes_concatene) {
             t_n_composantes_concatene = n_donnees_total;
-            n_composantes_concatene = (PDM_l_num_t *)
-              realloc((void *) n_composantes_concatene,
-                      t_n_composantes_concatene * sizeof(PDM_l_num_t));
+            n_composantes_concatene = (PDM_l_num_t *)              realloc((void *) n_composantes_concatene,                      t_n_composantes_concatene * sizeof(PDM_l_num_t));
           }
         }
 
@@ -437,9 +435,7 @@ void PDM_io_array_write_end
 
           if (n_donnees_total > t_indirection_concatene) {
             t_indirection_concatene = n_donnees_total;
-            indirection_concatene = (PDM_g_num_t *)
-              realloc((void *)indirection_concatene,
-                      t_indirection_concatene * sizeof(PDM_g_num_t));
+            indirection_concatene = (PDM_g_num_t *)              realloc((void *)indirection_concatene,                      t_indirection_concatene * sizeof(PDM_g_num_t));
           }
 
         }
@@ -455,9 +451,7 @@ void PDM_io_array_write_end
         else {
           if (t_donnees_concatene < n_composantes_total * tab->taille_donnee) {
             t_donnees_concatene = n_composantes_total * tab->taille_donnee;
-            donnees_concatene = (unsigned char*)
-              realloc((void *) donnees_concatene,
-                      t_donnees_concatene * sizeof(unsigned char));
+            donnees_concatene = (unsigned char*)              realloc((void *) donnees_concatene,                      t_donnees_concatene * sizeof(unsigned char));
           }
         }
 
@@ -807,9 +801,7 @@ void PDM_io_array_read_end
 
           if (n_donnees_total > t_n_composantes_concatene) {
             t_n_composantes_concatene = n_donnees_total;
-            n_composantes_concatene = (PDM_l_num_t *)
-              realloc((void *) n_composantes_concatene,
-                      t_n_composantes_concatene * sizeof(PDM_l_num_t));
+            n_composantes_concatene = (PDM_l_num_t *)              realloc((void *) n_composantes_concatene,                      t_n_composantes_concatene * sizeof(PDM_l_num_t));
           }
         }
 
@@ -829,9 +821,7 @@ void PDM_io_array_read_end
 
           if (n_donnees_total > t_indirection_concatene) {
             t_indirection_concatene = n_donnees_total;
-            indirection_concatene = (PDM_g_num_t *)
-              realloc((void *)indirection_concatene,
-                      t_indirection_concatene * sizeof(PDM_g_num_t));
+            indirection_concatene = (PDM_g_num_t *)              realloc((void *)indirection_concatene,                      t_indirection_concatene * sizeof(PDM_g_num_t));
           }
 
         }
@@ -847,9 +837,7 @@ void PDM_io_array_read_end
         else {
           if (t_donnees_concatene < n_composantes_total * tab->taille_donnee) {
             t_donnees_concatene = n_composantes_total * tab->taille_donnee;
-            donnees_concatene = (unsigned char*)
-              realloc((void *) donnees_concatene,
-                      t_donnees_concatene * sizeof(unsigned char));
+            donnees_concatene = (unsigned char*)              realloc((void *) donnees_concatene,                      t_donnees_concatene * sizeof(unsigned char));
           }
         }
 

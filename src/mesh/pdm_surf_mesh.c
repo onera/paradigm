@@ -1081,10 +1081,8 @@ PDM_surf_mesh_t *mesh
     vtxToRecvN[i] = 0;
   }
 
-  vtxToRecv = (PDM_g_num_t *) realloc((void *) vtxToRecv,
-                                     vtxToRecvIdx[lComm]*sizeof(PDM_g_num_t));
-  vtx_to_send = (PDM_g_num_t *) realloc((void *) vtx_to_send,
-                                     vtx_to_sendIdx[lComm]*sizeof(PDM_g_num_t));
+  vtxToRecv = (PDM_g_num_t *) realloc((void *) vtxToRecv,                                     vtxToRecvIdx[lComm]*sizeof(PDM_g_num_t));
+  vtx_to_send = (PDM_g_num_t *) realloc((void *) vtx_to_send,                                     vtx_to_sendIdx[lComm]*sizeof(PDM_g_num_t));
 
   for (int i = 0; i < nKeyProc; i++) {
     int idx        = dHashTableIdx[i];
@@ -1329,8 +1327,7 @@ PDM_surf_mesh_build_ghost_element
      * Update allocation
      */
 
-    part->faceEdgeIdx = (int *) realloc (part->faceEdgeIdx,
-                                         (part->nTotalFace + 1) * sizeof(int));
+    part->faceEdgeIdx = (int *) realloc (part->faceEdgeIdx,                                         (part->nTotalFace + 1) * sizeof(int));
 
     int *ghostFaceEdgeIdx = part->faceEdgeIdx + part->n_face + 1;
 
@@ -1345,9 +1342,7 @@ PDM_surf_mesh_build_ghost_element
       part->faceEdgeIdx[j+1] += part->faceEdgeIdx[j];
     }
 
-    part->faceEdge =
-      (int *) realloc (part->faceEdge,
-                       part->faceEdgeIdx[part->nTotalFace] * sizeof(int));
+    part->faceEdge =      (int *) realloc (part->faceEdge,                       part->faceEdgeIdx[part->nTotalFace] * sizeof(int));
 
     /*
      * Update faceEdge
@@ -1387,8 +1382,7 @@ PDM_surf_mesh_build_ghost_element
      * Update allocation
      */
 
-    part->edgeVtx =
-      (int *) realloc (part->edgeVtx, 2 * part->nTotalEdge * sizeof(int));
+    part->edgeVtx =      (int *) realloc (part->edgeVtx, 2 * part->nTotalEdge * sizeof(int));
 
     /*
      * Update edgeVtx

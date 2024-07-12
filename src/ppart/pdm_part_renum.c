@@ -140,8 +140,7 @@ _PDM_part_renum_method_add
     s_renum_methods[entity] = PDM_MAX(2*s_renum_methods[entity],
                                       n_renum_methods[entity] + 1);
 
-    renum_methods[entity] = realloc(renum_methods[entity],
-                                    sizeof(_renum_method_t *) * s_renum_methods[entity]);
+    renum_methods[entity] = realloc(renum_methods[entity],                                    sizeof(_renum_method_t *) * s_renum_methods[entity]);
   }
 
   _renum_method_t *method_ptr = malloc (sizeof(_renum_method_t));
@@ -791,8 +790,7 @@ _dual_graph_firstrank
 
   //We reallocate the memory in case of duplicated values removed
   //The new array size is idx_write (stored in (*cell_cell_comp_idx)[part_ini->n_cell])
-  *cell_cell_comp = realloc(*cell_cell_comp,
-                                (*cell_cell_comp_idx)[part_ini->n_cell] * sizeof(int));
+  *cell_cell_comp = realloc(*cell_cell_comp,                                (*cell_cell_comp_idx)[part_ini->n_cell] * sizeof(int));
 
 }
 

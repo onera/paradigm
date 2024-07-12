@@ -4439,8 +4439,7 @@ PDM_dbbtree_points_inside_boxes_block_frame
 
       if (n_copied_ranks > 0) {
         PDM_realloc(copied_ranks ,copied_ranks , n_copied_ranks,int);
-        n_pts_recv_copied_ranks = realloc (n_pts_recv_copied_ranks,
-                                           sizeof(int) * n_copied_ranks);
+        n_pts_recv_copied_ranks = realloc (n_pts_recv_copied_ranks,                                           sizeof(int) * n_copied_ranks);
       }
     }
 
@@ -5477,8 +5476,7 @@ PDM_dbbtree_boxes_containing_points
 
       if (n_copied_ranks > 0) {
         PDM_realloc(copied_ranks ,copied_ranks , n_copied_ranks,int);
-        n_pts_recv_copied_ranks = realloc (n_pts_recv_copied_ranks,
-                                           sizeof(int) * n_copied_ranks);
+        n_pts_recv_copied_ranks = realloc (n_pts_recv_copied_ranks,                                           sizeof(int) * n_copied_ranks);
       }
     }
 
@@ -6062,8 +6060,7 @@ _lines_intersect_shared_box_tree
 
       if (*n_copied_ranks > 0) {
         PDM_realloc(copied_ranks ,copied_ranks , (*n_copied_ranks),int);
-        n_line_recv_copied_ranks = realloc (n_line_recv_copied_ranks,
-                                           sizeof(int) * (*n_copied_ranks));
+        n_line_recv_copied_ranks = realloc (n_line_recv_copied_ranks,                                           sizeof(int) * (*n_copied_ranks));
       }
     }
 
@@ -6462,8 +6459,7 @@ PDM_dbbtree_lines_intersect_boxes
 
       if (n_copied_ranks > 0) {
         PDM_realloc(copied_ranks ,copied_ranks , n_copied_ranks,int);
-        n_line_recv_copied_ranks = realloc (n_line_recv_copied_ranks,
-                                           sizeof(int) * n_copied_ranks);
+        n_line_recv_copied_ranks = realloc (n_line_recv_copied_ranks,                                           sizeof(int) * n_copied_ranks);
       }
     }
 
@@ -7680,8 +7676,7 @@ PDM_dbbtree_volumes_intersect_boxes
 
       if (n_copied_ranks > 0) {
         PDM_realloc(copied_ranks ,copied_ranks , n_copied_ranks,int);
-        jsubtree_to_copy_total_n_volume = realloc(jsubtree_to_copy_total_n_volume,
-                                           sizeof(int) * n_copied_ranks);
+        jsubtree_to_copy_total_n_volume = realloc(jsubtree_to_copy_total_n_volume,                                           sizeof(int) * n_copied_ranks);
       }
 
     } // end if we want to copy subtrees

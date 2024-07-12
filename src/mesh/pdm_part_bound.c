@@ -610,17 +610,13 @@ PDM_part_bound_adjust_size
   }
 
   _part_bound->nEltPartBound = nEltPartBound;
-  _part_bound->eltPartBoundIdx = (int *) realloc(_part_bound->eltPartBoundIdx,
-                                                 sizeof(int) * (nEltPartBound + 1));
+  _part_bound->eltPartBoundIdx = (int *) realloc(_part_bound->eltPartBoundIdx,                                                 sizeof(int) * (nEltPartBound + 1));
 
   if (_part_bound->cplx == PDM_PART_BOUND_CPLX)
-    _part_bound->nConnectedElt = (int *) realloc(_part_bound->nConnectedElt,
-                                                 sizeof(int) * nEltPartBound);
+    _part_bound->nConnectedElt = (int *) realloc(_part_bound->nConnectedElt,                                                 sizeof(int) * nEltPartBound);
 
   _part_bound->eltPartBound =
-    (int *) realloc(_part_bound->eltPartBound,
-		    sizeof(int) *
-		    _part_bound->eltPartBoundIdx[nEltPartBound]);
+    (int *) realloc(_part_bound->eltPartBound,		    sizeof(int) *		    _part_bound->eltPartBoundIdx[nEltPartBound]);
 
 }
 

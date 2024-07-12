@@ -131,8 +131,7 @@ _add_time(PDM_writer_ensight_case_time_t  *const time_set,
 
   time_set->n_time_values += 1;
 
-  time_set->time_value = (double *) realloc (time_set->time_value,
-                                             time_set->n_time_values * sizeof(double));
+  time_set->time_value = (double *) realloc (time_set->time_value,                                             time_set->n_time_values * sizeof(double));
 
   time_set->time_value[time_set->n_time_values - 1] = time_value;
 
@@ -329,8 +328,7 @@ _add_var(PDM_writer_ensight_case_t       *const this_case,
             this_case->case_file_name, name);
   }
 
-  this_case->var =
-    (PDM_writer_ensight_case_var_t **) realloc (this_case->var, this_case->n_vars * sizeof(PDM_writer_ensight_case_var_t *));
+  this_case->var =    (PDM_writer_ensight_case_var_t **) realloc (this_case->var, this_case->n_vars * sizeof(PDM_writer_ensight_case_var_t *));
 
   this_case->var[this_case->n_vars - 1] = var;
 

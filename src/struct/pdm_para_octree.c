@@ -1034,12 +1034,9 @@ _octants_check_alloc
     //octants->n_nodes_max *= 2;
     octants->n_nodes_max = PDM_MAX (2*octants->n_nodes_max, octants->n_nodes + n_free_node);
 
-    octants->codes    = realloc (octants->codes,
-                                 sizeof(PDM_morton_code_t) * octants->n_nodes_max);
-    octants->n_points = realloc (octants->n_points,
-                                 sizeof(int) * octants->n_nodes_max);
-    octants->range = realloc (octants->range,
-                              sizeof(int) * (octants->n_nodes_max+1));
+    octants->codes    = realloc (octants->codes,                                 sizeof(PDM_morton_code_t) * octants->n_nodes_max);
+    octants->n_points = realloc (octants->n_points,                                 sizeof(int) * octants->n_nodes_max);
+    octants->range = realloc (octants->range,                              sizeof(int) * (octants->n_nodes_max+1));
     octants->neighbour_idx = NULL;
     octants->neighbours    = NULL;
 
@@ -1951,16 +1948,13 @@ _distribute_points
 
   PDM_realloc(__points ,__points , 3 * _n_points,double);
 
-  __points_icloud =
-    realloc (__points_icloud, sizeof(int) * _n_points);
+  __points_icloud =    realloc (__points_icloud, sizeof(int) * _n_points);
 
-  __points_gnum =
-    realloc (__points_gnum, sizeof(PDM_g_num_t) * _n_points);
+  __points_gnum =    realloc (__points_gnum, sizeof(PDM_g_num_t) * _n_points);
 
   /* Re-encode points */
 
-  __points_code = realloc (__points_code,
-                           sizeof(PDM_morton_code_t) * _n_points);
+  __points_code = realloc (__points_code,                           sizeof(PDM_morton_code_t) * _n_points);
 
   double d[3];
   double s[3];
@@ -2697,8 +2691,7 @@ _compute_connected_parts
   free (visited);
   free (stack);
 
-  octree->connected_idx = realloc (octree->connected_idx,
-                                   sizeof(int) * (octree->n_connected+1));
+  octree->connected_idx = realloc (octree->connected_idx,                                   sizeof(int) * (octree->n_connected+1));
 }
 
 
@@ -2797,16 +2790,14 @@ _compute_neighbours
                 if (neighbours_tmp[i].n_neighbour[j] >= neighbours_tmp[i].s_neighbour[j]) {
                   neighbours_tmp[i].s_neighbour[j] *= 2;
                   neighbours_tmp[i].neighbours[j] =
-                    realloc (neighbours_tmp[i].neighbours[j],
-                             sizeof(int) * neighbours_tmp[i].s_neighbour[j]);
+                    realloc (neighbours_tmp[i].neighbours[j],                             sizeof(int) * neighbours_tmp[i].s_neighbour[j]);
                 }
                 neighbours_tmp[i].neighbours[j][neighbours_tmp[i].n_neighbour[j]++] = idx;
 
                 if (neighbours_tmp[idx].n_neighbour[inv_j] >= neighbours_tmp[idx].s_neighbour[inv_j]) {
                   neighbours_tmp[idx].s_neighbour[inv_j] *= 2;
                   neighbours_tmp[idx].neighbours[inv_j] =
-                    realloc (neighbours_tmp[idx].neighbours[inv_j],
-                             sizeof(int) * neighbours_tmp[idx].s_neighbour[inv_j]);
+                    realloc (neighbours_tmp[idx].neighbours[inv_j],                             sizeof(int) * neighbours_tmp[idx].s_neighbour[inv_j]);
                 }
                 neighbours_tmp[idx].neighbours[inv_j][neighbours_tmp[idx].n_neighbour[inv_j]++] = i;
               }
@@ -2819,8 +2810,7 @@ _compute_neighbours
           else {
             if (neighbours_tmp[i].n_neighbour[j] >= neighbours_tmp[i].s_neighbour[j]) {
               neighbours_tmp[i].s_neighbour[j] *= 2;
-              neighbours_tmp[i].neighbours[j] = realloc (neighbours_tmp[i].neighbours[j],
-                                                         sizeof(int) * neighbours_tmp[i].s_neighbour[j]);
+              neighbours_tmp[i].neighbours[j] = realloc (neighbours_tmp[i].neighbours[j],                                                         sizeof(int) * neighbours_tmp[i].s_neighbour[j]);
             }
             neighbours_tmp[i].neighbours[j][neighbours_tmp[i].n_neighbour[j]++] = - (neighbour_rank + 1);
           }
@@ -2876,8 +2866,7 @@ _compute_neighbours
           if (neighbour_rank != rank) {
             if (neighbours_tmp[i].n_neighbour[j] >= neighbours_tmp[i].s_neighbour[j]) {
               neighbours_tmp[i].s_neighbour[j] *= 2;
-              neighbours_tmp[i].neighbours[j] = realloc (neighbours_tmp[i].neighbours[j],
-                                                         sizeof(int) * neighbours_tmp[i].s_neighbour[j]);
+              neighbours_tmp[i].neighbours[j] = realloc (neighbours_tmp[i].neighbours[j],                                                         sizeof(int) * neighbours_tmp[i].s_neighbour[j]);
             }
             neighbours_tmp[i].neighbours[j][neighbours_tmp[i].n_neighbour[j]++] = - (neighbour_rank + 1);
           }
@@ -3209,8 +3198,7 @@ _compute_neighbours
 
                   if ((s_part_boundary_elt - idx_part_boundary_elt) <= 3) {
                     s_part_boundary_elt *= 2;
-                    octree->part_boundary_elt = realloc (octree->part_boundary_elt,
-                                                         sizeof(int) * s_part_boundary_elt);
+                    octree->part_boundary_elt = realloc (octree->part_boundary_elt,                                                         sizeof(int) * s_part_boundary_elt);
                   }
                   octree->part_boundary_elt_idx[n_part_boundary_elt+1]++;
                   octree->part_boundary_elt[idx_part_boundary_elt++] = i; // rank
@@ -3473,8 +3461,7 @@ _finalize_neighbours
 
           if (neighbours_tmp[i].n_neighbour[dir] >= neighbours_tmp[i].s_neighbour[dir]) {
             neighbours_tmp[i].s_neighbour[dir] *= 2;
-            neighbours_tmp[i].neighbours[dir] = realloc (neighbours_tmp[i].neighbours[dir],
-                                                         sizeof(int) * neighbours_tmp[i].s_neighbour[dir]);
+            neighbours_tmp[i].neighbours[dir] = realloc (neighbours_tmp[i].neighbours[dir],                                                         sizeof(int) * neighbours_tmp[i].s_neighbour[dir]);
           }
           neighbours_tmp[i].neighbours[dir][neighbours_tmp[i].n_neighbour[dir]++] = - (neighbour_rank + 1);
           neighbour_rank_n[neighbour_rank*n_direction + dir]++;
@@ -3751,8 +3738,7 @@ _finalize_neighbours
 
                   if ((s_part_boundary_elt - idx_part_boundary_elt) <= 3) {
                     s_part_boundary_elt *= 2;
-                    octree->part_boundary_elt = realloc (octree->part_boundary_elt,
-                                                         sizeof(int) * s_part_boundary_elt);
+                    octree->part_boundary_elt = realloc (octree->part_boundary_elt,                                                         sizeof(int) * s_part_boundary_elt);
                   }
                   octree->part_boundary_elt_idx[n_part_boundary_elt+1]++;
                   octree->part_boundary_elt[idx_part_boundary_elt++] = i; // rank
@@ -6155,8 +6141,7 @@ _prepare_copies
 
   if (*n_copied_ranks > 0) {
     PDM_realloc(*copied_ranks ,*copied_ranks , (*n_copied_ranks),int);
-    *n_request_copied_ranks = realloc (*n_request_copied_ranks,
-                                       sizeof(int) * (*n_copied_ranks));
+    *n_request_copied_ranks = realloc (*n_request_copied_ranks,                                       sizeof(int) * (*n_copied_ranks));
 
     PDM_sort_int (*copied_ranks, NULL, *n_copied_ranks);
   }
@@ -7677,14 +7662,10 @@ PDM_para_octree_point_cloud_set
   const int idx = _octree->n_points;
 
   _octree->n_points += n_points;
-  _octree->points =
-    realloc (_octree->points, _octree->n_points * sizeof(double) * _octree->dim);
-  _octree->points_icloud =
-    realloc (_octree->points_icloud, _octree->n_points * sizeof(int));
-  _octree->points_gnum =
-    realloc (_octree->points_gnum, _octree->n_points * sizeof(PDM_g_num_t));
-  _octree->points_code =
-    realloc (_octree->points_code, _octree->n_points * sizeof(PDM_morton_code_t));
+  _octree->points =    realloc (_octree->points, _octree->n_points * sizeof(double) * _octree->dim);
+  _octree->points_icloud =    realloc (_octree->points_icloud, _octree->n_points * sizeof(int));
+  _octree->points_gnum =    realloc (_octree->points_gnum, _octree->n_points * sizeof(PDM_g_num_t));
+  _octree->points_code =    realloc (_octree->points_code, _octree->n_points * sizeof(PDM_morton_code_t));
 
   for (int i = 0; i < _octree->dim * n_points; i++) {
     _octree->points[_octree->dim*idx + i] = coords[i];
@@ -8405,8 +8386,7 @@ PDM_para_octree_build
               if (ngb_heap[h].n_neighbour[dir] >= ngb_heap[h].s_neighbour[dir]) {
                 ngb_heap[h].s_neighbour[dir] = PDM_MAX (2*ngb_heap[h].s_neighbour[dir],
                                                         ngb_heap[h].n_neighbour[dir] + 1);
-                ngb_heap[h].neighbours[dir] = realloc (ngb_heap[h].neighbours[dir],
-                                                       sizeof(int) * ngb_heap[h].s_neighbour[dir]);
+                ngb_heap[h].neighbours[dir] = realloc (ngb_heap[h].neighbours[dir],                                                       sizeof(int) * ngb_heap[h].s_neighbour[dir]);
               }
               ngb_heap[h].neighbours[dir][ngb_heap[h].n_neighbour[dir]++] = -(j+1);
 
@@ -8414,8 +8394,7 @@ PDM_para_octree_build
               if (ngb_heap[j].n_neighbour[inv_dir] >= ngb_heap[j].s_neighbour[inv_dir]) {
                 ngb_heap[j].s_neighbour[inv_dir] = PDM_MAX (2*ngb_heap[j].s_neighbour[inv_dir],
                                                             ngb_heap[j].n_neighbour[inv_dir] + 1);
-                ngb_heap[j].neighbours[inv_dir] = realloc (ngb_heap[j].neighbours[inv_dir],
-                                                           sizeof(int) * ngb_heap[j].s_neighbour[inv_dir]);
+                ngb_heap[j].neighbours[inv_dir] = realloc (ngb_heap[j].neighbours[inv_dir],                                                           sizeof(int) * ngb_heap[j].s_neighbour[inv_dir]);
               }
               ngb_heap[j].neighbours[inv_dir][ngb_heap[j].n_neighbour[inv_dir]++] = -(h+1);
             }
@@ -8460,8 +8439,7 @@ PDM_para_octree_build
                 parent_ngb.n_neighbour[dir]);*/
               parent_ngb.s_neighbour[dir] = parent_ngb.n_neighbour[dir];
 
-              parent_ngb.neighbours[dir] = realloc (parent_ngb.neighbours[dir],
-                                                    sizeof(int) * parent_ngb.s_neighbour[dir]);
+              parent_ngb.neighbours[dir] = realloc (parent_ngb.neighbours[dir],                                                    sizeof(int) * parent_ngb.s_neighbour[dir]);
             }
             for (int j = 0; j < parent_ngb.n_neighbour[dir]; j++) {
               parent_ngb.neighbours[dir][j] = ngb_heap[h_parent].neighbours[dir][j];
@@ -8555,8 +8533,7 @@ PDM_para_octree_build
                     parent_ngb.n_neighbour[dir]);*/
                   ngb_heap[h_child].s_neighbour[dir] = parent_ngb.n_neighbour[dir];
 
-                  ngb_heap[h_child].neighbours[dir] = realloc (ngb_heap[h_child].neighbours[dir],
-                                                               sizeof(int) * ngb_heap[h_child].s_neighbour[dir]);
+                  ngb_heap[h_child].neighbours[dir] = realloc (ngb_heap[h_child].neighbours[dir],                                                               sizeof(int) * ngb_heap[h_child].s_neighbour[dir]);
                 }
               }
 
@@ -8598,8 +8575,7 @@ PDM_para_octree_build
                         ngb->n_neighbour[inv_dir]);*/
                       ngb->s_neighbour[inv_dir] = ngb->n_neighbour[inv_dir] + 1;
 
-                      ngb->neighbours[inv_dir] = realloc (ngb->neighbours[inv_dir],
-                                                          sizeof(int) * ngb->s_neighbour[inv_dir]);
+                      ngb->neighbours[inv_dir] = realloc (ngb->neighbours[inv_dir],                                                          sizeof(int) * ngb->s_neighbour[inv_dir]);
                     }
                     ngb->neighbours[inv_dir][ngb->n_neighbour[inv_dir]++] = -(h_child+1);
                   }

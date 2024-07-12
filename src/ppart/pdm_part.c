@@ -1069,8 +1069,7 @@ _distrib_cell
 
     mesh_part->n_face = k_compress;
 
-    mesh_part->face_ln_to_gn = (PDM_g_num_t *) realloc(mesh_part->face_ln_to_gn,
-                                                    mesh_part->n_face * sizeof(PDM_g_num_t));
+    mesh_part->face_ln_to_gn = (PDM_g_num_t *) realloc(mesh_part->face_ln_to_gn,                                                    mesh_part->n_face * sizeof(PDM_g_num_t));
 
     if (1 == 0) {
       PDM_printf("mesh_part->n_cell : %i\n", mesh_part->n_cell);
@@ -1371,8 +1370,7 @@ _distrib_face
 
       mesh_part->n_vtx = k_compress;
 
-      mesh_part->vtx_ln_to_gn =
-        (PDM_g_num_t *) realloc(mesh_part->vtx_ln_to_gn, mesh_part->n_vtx * sizeof(PDM_g_num_t));
+      mesh_part->vtx_ln_to_gn =        (PDM_g_num_t *) realloc(mesh_part->vtx_ln_to_gn, mesh_part->n_vtx * sizeof(PDM_g_num_t));
 
       /* Free */
 
@@ -2315,11 +2313,8 @@ _distrib_face_groups
                                     * sizeof(PDM_g_num_t));
         }
         else {
-          mesh_part->face_group =
-            (int *) realloc(mesh_part->face_group, mesh_part->face_group_idx[igroup+1] * sizeof(int));
-          mesh_part->face_group_ln_to_gn =
-            (PDM_g_num_t *) realloc(mesh_part->face_group_ln_to_gn, mesh_part->face_group_idx[igroup+1]
-                                     * sizeof(PDM_g_num_t));
+          mesh_part->face_group =            (int *) realloc(mesh_part->face_group, mesh_part->face_group_idx[igroup+1] * sizeof(int));
+          mesh_part->face_group_ln_to_gn =            (PDM_g_num_t *) realloc(mesh_part->face_group_ln_to_gn, mesh_part->face_group_idx[igroup+1]                                     * sizeof(PDM_g_num_t));
         }
 
         idx = mesh_part->face_group_idx[igroup];
