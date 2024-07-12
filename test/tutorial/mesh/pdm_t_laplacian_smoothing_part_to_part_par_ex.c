@@ -190,7 +190,7 @@ PDM_multipart_t      **_mpart
   /* Run */
   PDM_multipart_compute (mpart);
 
-  free(n_part_domains);
+ PDM_free(n_part_domains);
 
   *_mpart = mpart;
 
@@ -429,8 +429,8 @@ int main(int argc, char *argv[])
 
   int *pvtx_edge_idx = tmp_pvtx_edge_idx[i_part];
   int *pvtx_edge     = tmp_pvtx_edge[i_part];
-  free(tmp_pvtx_edge_idx);
-  free(tmp_pvtx_edge);
+ PDM_free(tmp_pvtx_edge_idx);
+ PDM_free(tmp_pvtx_edge);
 
   // Combine into vtx_vtx
 
@@ -444,7 +444,7 @@ int main(int argc, char *argv[])
                            pedge_vtx,
                            &pvtx_vtx_idx,
                            &pvtx_vtx);
-  free(pedge_vtx_idx);
+ PDM_free(pedge_vtx_idx);
 
   // Create vtx_vtx stride
   int *pstrid = malloc(pn_vtx * sizeof(int));
@@ -539,7 +539,7 @@ int main(int argc, char *argv[])
   int val = 0;
   int *tmp_idx = PDM_array_new_idx_from_sizes_int(dstrid_vtx_vtx_gnum, nelmt_proc);
   // PDM_log_trace_connectivity_long(tmp_idx, dvtx_vtx_gnum, nelmt_proc, "before dvtx_vtx_gnum : ");
-  free(tmp_idx);
+ PDM_free(tmp_idx);
 
   for (int i = 0; i < nelmt_proc; i++) {
 
@@ -555,14 +555,14 @@ int main(int argc, char *argv[])
       } // end loop on neighbours to be shifted
     } // end if shifted
   } // end loop on vertices
-  free(dstrid_vtx_vtx_gnum);
+ PDM_free(dstrid_vtx_vtx_gnum);
 
   // PDM_log_trace_array_int(dstrid_vtx_vtx_gnum_sorted, nelmt_proc, "dstrid_vtx_vtx_gnum_sorted: ");
   // PDM_log_trace_array_long(dvtx_vtx_gnum, idx_comp, "dvtx_vtx_gnum : ");
   tmp_idx = PDM_array_new_idx_from_sizes_int(dstrid_vtx_vtx_gnum_sorted, nelmt_proc);
   // PDM_log_trace_connectivity_long(tmp_idx, dvtx_vtx_gnum, nelmt_proc, "after dvtx_vtx_gnum : ");
-  free(tmp_idx);
-  free(pvtx_vtx_gnum);
+ PDM_free(tmp_idx);
+ PDM_free(pvtx_vtx_gnum);
 
   /* block_to_part */
   int         **pstrid_new       = NULL;
@@ -581,8 +581,8 @@ int main(int argc, char *argv[])
                 (void *) dvtx_vtx_gnum,
                          &pstrid_new,
               (void ***) &pvtx_vtx_gnum_new);
-  free(dstrid_vtx_vtx_gnum_sorted);
-  free(dvtx_vtx_gnum);
+ PDM_free(dstrid_vtx_vtx_gnum_sorted);
+ PDM_free(dvtx_vtx_gnum);
 
   int size = PDM_block_to_part_n_elt_get(btp, i_part);
   int size_neighbours = 0;
@@ -617,8 +617,8 @@ int main(int argc, char *argv[])
                                   &tmp_pedge_group);
   int *pedge_group_idx = tmp_pedge_group_idx[i_part];
   int *pedge_group     = tmp_pedge_group    [i_part];
-  free(tmp_pedge_group_idx);
-  free(tmp_pedge_group);
+ PDM_free(tmp_pedge_group_idx);
+ PDM_free(tmp_pedge_group);
 
   /* Combine into vtx_group */
 
@@ -632,8 +632,8 @@ int main(int argc, char *argv[])
                            pedge_group,
                            &pvtx_group_idx,
                            &pvtx_group);
-  free(pvtx_edge_idx);
-  free(pvtx_edge    );
+ PDM_free(pvtx_edge_idx);
+ PDM_free(pvtx_edge    );
   // part_to_part
 
   // Create
@@ -706,8 +706,8 @@ int main(int argc, char *argv[])
       } // end if no group
     } // end loop on vertices
 
-    free(pvtx_coord_neighbours[i_part]);
-    free(pvtx_coord_neighbours);
+   PDM_free(pvtx_coord_neighbours[i_part]);
+   PDM_free(pvtx_coord_neighbours);
   } // end loop Laplace Smoothing stepping
 
   /* Free entities */
@@ -716,19 +716,19 @@ int main(int argc, char *argv[])
   PDM_block_to_part_free(btp);
   PDM_part_to_part_free (ptp);
   PDM_multipart_free(mpart);
-  free(tmp_coord);
-  free(pstrid_new[i_part]);
-  free(pstrid_new);
-  free(pstrid);
-  free(pvtx_vtx_gnum_new[i_part]);
-  free(pvtx_vtx_gnum_new);
-  free(pvtx_vtx_idx);
-  free(pvtx_vtx);
-  free(pedge_group_idx);
-  free(pedge_group    );
-  free(pvtx_group_idx );
-  free(pvtx_group     );
-  free(pvtx_vtx_gnum_new_idx);
+ PDM_free(tmp_coord);
+ PDM_free(pstrid_new[i_part]);
+ PDM_free(pstrid_new);
+ PDM_free(pstrid);
+ PDM_free(pvtx_vtx_gnum_new[i_part]);
+ PDM_free(pvtx_vtx_gnum_new);
+ PDM_free(pvtx_vtx_idx);
+ PDM_free(pvtx_vtx);
+ PDM_free(pedge_group_idx);
+ PDM_free(pedge_group    );
+ PDM_free(pvtx_group_idx );
+ PDM_free(pvtx_group     );
+ PDM_free(pvtx_vtx_gnum_new_idx);
 
   PDM_MPI_Finalize();
   return 0;

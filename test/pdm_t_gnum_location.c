@@ -252,13 +252,13 @@ PDM_part_split_t           method,
       PDM_printf (" - %d %d %d\n", location[3*k], location[3*k+1], location[3*k+2]);
     }
   }
-  free(location_idx);
-  free(location);
+ PDM_free(location_idx);
+ PDM_free(location);
 
   PDM_gnum_location_free (gnum_loc);
 
-  free (_numabs2);
-  free (char_size);
+ PDM_free(_numabs2);
+ PDM_free(char_size);
 
   PDM_gnum_free (gen_gnum);
 
@@ -366,7 +366,7 @@ PDM_part_split_t           method,
                                        dedge_group_idx,
                                        dedge_group);
 
-  free (dcell_part);
+ PDM_free(dcell_part);
 
   double  *elapsed = NULL;
   double  *cpu = NULL;
@@ -427,15 +427,15 @@ PDM_part_split_t           method,
   /*   PDM_printf ("       * total              : %i\n", bound_part_faces_sum);    */
   /* } */
 
-  free (dvtx_coord);
-  free (dface_vtx_idx);
-  free (dface_vtx);
-  free (dface_edge);
-  free (dedge_vtxIdx);
-  free (dedge_vtx);
-  free (dedge_face);
-  free (dedge_group_idx);
-  free (dedge_group);
+ PDM_free(dvtx_coord);
+ PDM_free(dface_vtx_idx);
+ PDM_free(dface_vtx);
+ PDM_free(dface_edge);
+ PDM_free(dedge_vtxIdx);
+ PDM_free(dedge_vtx);
+ PDM_free(dedge_face);
+ PDM_free(dedge_group_idx);
+ PDM_free(dedge_group);
 
   for (int i_part = 0; i_part < n_part; i_part++) {
 

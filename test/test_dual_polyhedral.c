@@ -366,13 +366,13 @@ _compute_dual_closed
       printf("vtx %d: (%f %f %f)   mag = %g\n", i_vtx, coords[3*i_vtx], coords[3*i_vtx+1], coords[3*i_vtx+2], mag);
     }
   }
-  free(vtx_dual_surf);
+ PDM_free(vtx_dual_surf);
 
 
-  free(edge_surf);
-  free(face_center);
-  free(cell_center);
-  free(edge_center);
+ PDM_free(edge_surf);
+ PDM_free(face_center);
+ PDM_free(cell_center);
+ PDM_free(edge_center);
 }
 
 
@@ -523,7 +523,7 @@ int main(int argc, char *argv[])
                               NULL,
                               tmp_parent_elmt_pos);
   assert(n_edge_current == n_edge_elt_tot);
-  free(tmp_parent_elmt_pos);
+ PDM_free(tmp_parent_elmt_pos);
 
   int  dn_edge = -1;
   PDM_g_num_t  *dedge_distrib;

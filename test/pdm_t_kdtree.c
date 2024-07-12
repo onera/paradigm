@@ -292,7 +292,7 @@ char *argv[]
                                                            &n_src,
                                                            1,
                                                            comm);
-  free(weight);
+ PDM_free(weight);
   // double t2 = PDM_MPI_Wtime();
   // log_trace("PDM_part_to_block_geom_create = %12.5e \n", t2 -t1);
 
@@ -364,15 +364,15 @@ char *argv[]
 
   PDM_part_to_block_free(ptb);
 
-  free(blk_src_coord);
+ PDM_free(blk_src_coord);
 
 
 
 
   /* Free */
 
-  free (src_coord);
-  free (src_g_num);
+ PDM_free(src_coord);
+ PDM_free(src_g_num);
 
   if (i_rank == 0) {
     PDM_printf ("-- End\n");

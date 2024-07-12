@@ -331,7 +331,7 @@ _strip_cloud
   *g_num =  PDM_gnum_get (gen_gnum_pts, 0);
 
   PDM_gnum_free(gen_gnum_pts);
-  free(char_length);
+ PDM_free(char_length);
 }
 
 
@@ -526,7 +526,7 @@ int main(int argc, char *argv[])
                                       dface_group_idx,
                                       dface_group);
 
-  free(dcell_part);
+ PDM_free(dcell_part);
 
   fflush(stdout);
 
@@ -1189,15 +1189,15 @@ int main(int argc, char *argv[])
                 p_location[pt_id], err, recv_field[0][i], f);
     }
   }
-  free(recv_field[0]);
-  free(recv_field);
+ PDM_free(recv_field[0]);
+ PDM_free(recv_field);
 
   for (int ipart = 0; ipart < n_part; ipart++) {
-    free(src_field [ipart]);
-    free(send_field[ipart]);
+   PDM_free(src_field [ipart]);
+   PDM_free(send_field[ipart]);
   }
-  free(src_field );
-  free(send_field);
+ PDM_free(src_field );
+ PDM_free(send_field);
 
 
   double gmax_err;
@@ -1218,8 +1218,8 @@ int main(int argc, char *argv[])
 
   PDM_part_free (ppart);
 
-  free (pts_coords);
-  free (pts_gnum);
+ PDM_free(pts_coords);
+ PDM_free(pts_gnum);
 
   PDM_dcube_gen_free(dcube);
  

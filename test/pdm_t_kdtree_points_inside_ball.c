@@ -319,9 +319,9 @@ char *argv[]
   //               pts_inside_ball_dist2[j], ball_radius2[i]);
   //   }
   // }
-  free(pts_inside_ball_idx);
-  free(pts_inside_ball_l_num);
-  free(pts_inside_ball_dist2);
+ PDM_free(pts_inside_ball_idx);
+ PDM_free(pts_inside_ball_l_num);
+ PDM_free(pts_inside_ball_dist2);
 
 
 
@@ -398,10 +398,10 @@ char *argv[]
     //             closest_octree_pt_id[2*i], closest_octree_pt_id[2*i+1], closest_octree_pt_dist2[i]);
     // }
 
-    free(closest_kdtree_pt_id);
-    free(closest_kdtree_pt_dist2);
-    free(closest_octree_pt_id);
-    free(closest_octree_pt_dist2);
+   PDM_free(closest_kdtree_pt_id);
+   PDM_free(closest_kdtree_pt_dist2);
+   PDM_free(closest_octree_pt_id);
+   PDM_free(closest_octree_pt_dist2);
   }
 
 
@@ -410,14 +410,14 @@ char *argv[]
   /* Free */
   PDM_kdtree_seq_free(kdt);
   PDM_octree_seq_free(oct);
-  free (src_coord);
-  free (src_g_num);
-  free (tgt_coord);
-  free (tgt_g_num);
-  free(ball_radius2);
-  free(pts_inside_ball_idx);
-  free(pts_inside_ball_l_num);
-  free(pts_inside_ball_dist2);
+ PDM_free(src_coord);
+ PDM_free(src_g_num);
+ PDM_free(tgt_coord);
+ PDM_free(tgt_g_num);
+ PDM_free(ball_radius2);
+ PDM_free(pts_inside_ball_idx);
+ PDM_free(pts_inside_ball_l_num);
+ PDM_free(pts_inside_ball_dist2);
 
   if (i_rank == 0) {
     PDM_printf ("-- End\n");

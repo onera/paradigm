@@ -190,7 +190,7 @@ PDM_multipart_t      **_mpart
   /* Run */
   PDM_multipart_compute (mpart);
 
-  free(n_part_domains);
+ PDM_free(n_part_domains);
 
   *_mpart = mpart;
 
@@ -538,7 +538,7 @@ int main(int argc, char *argv[])
       pvtx_coord_extension[3*i+1] = pvtx_coord_extension_new[i_part][3*i+1];
     } // end loop on extension coordinates
 
-    free(pvtx_coord_extension_new);
+   PDM_free(pvtx_coord_extension_new);
 
   } // end Laplacian Smoothing loop
 

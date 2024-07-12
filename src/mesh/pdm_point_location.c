@@ -908,7 +908,7 @@ _locate_in_tetrahedron
 
 
   if (n_pts_out == 0) {
-    free (pts_out);
+   PDM_free(pts_out);
     return;
   }
 
@@ -968,12 +968,12 @@ _locate_in_tetrahedron
     distance[id_pt] = distance_face[ipt];
   }
 
-  free (pts_out);
-  free (pts_out_coord);
-  free (id_face);
-  free (bar_coord_face);
-  free (distance_face);
-  free (closest_point_face);
+ PDM_free(pts_out);
+ PDM_free(pts_out_coord);
+ PDM_free(id_face);
+ PDM_free(bar_coord_face);
+ PDM_free(distance_face);
+ PDM_free(closest_point_face);
 }
 
 
@@ -1252,7 +1252,7 @@ _locate_in_cell_3d
   } // End loop on points
 
   if (elt_type != PDM_MESH_NODAL_PRISM6) {
-    free (_cell_coord);
+   PDM_free(_cell_coord);
   }
 
 
@@ -1644,12 +1644,12 @@ _locate_in_cell_3d
     //   distance[_ipt] = PDM_DOT_PRODUCT (v_p_cp, v_p_cp);
     // }
 
-    // free (closest_face);
-    // free (closest_point);
-    // free (inside_polygon);
+    //PDM_free(closest_face);
+    //PDM_free(closest_point);
+    //PDM_free(inside_polygon);
   }
 
-  free (pts_out);
+ PDM_free(pts_out);
 
 }
 
@@ -2222,7 +2222,7 @@ _locate_in_polyhedron
   }
 
   if (_tri_vtx != tri_vtx) {
-    free(_tri_vtx);
+   PDM_free(_tri_vtx);
   }
 
 
@@ -2488,7 +2488,7 @@ PDM_point_location_nodal
             _uvw[3*ipt] = _uvw[3*ipt+1] = _uvw[3*ipt+2] = -1.;
           }
         } // End of loop on polygons
-        free(poly_coord);
+       PDM_free(poly_coord);
 
       } // end if PDM_MESH_NODAL_POLY_2D
 
@@ -2617,12 +2617,12 @@ PDM_point_location_nodal
           }
         } // End of loop on polyhedra
 
-        free(_vtx_id);
-        free(_face_orientation);
-        free(_face_vtx_idx);
-        free(_face_vtx);
-        free(_vtx_coord);
-        free(_tri_vtx);
+       PDM_free(_vtx_id);
+       PDM_free(_face_orientation);
+       PDM_free(_face_vtx_idx);
+       PDM_free(_face_vtx);
+       PDM_free(_vtx_coord);
+       PDM_free(_tri_vtx);
         PDM_triangulate_state_destroy(_tri_state);
 
       } // end if PDM_MESH_NODAL_POLY_3D
@@ -2950,8 +2950,8 @@ PDM_point_location_nodal
 
             } // End of loop on elt
             // log_trace("%d converged / %d\n", count_converged, count);
-            free(elt_coord);
-            free(work_array);
+           PDM_free(elt_coord);
+           PDM_free(work_array);
             break;
           } // end case HO LAGRANGE
 

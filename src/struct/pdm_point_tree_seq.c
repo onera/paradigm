@@ -136,7 +136,7 @@ _median_point
     int h = n_pts / 2;
     // log_trace("n_pts = %d, h = %d\n", n_pts, h);
     mid = 0.5*(x[h] + x[h+1]);
-    free(x);
+   PDM_free(x);
   }
 
   return mid;
@@ -254,7 +254,7 @@ _update_sampling(int     n_sample,
 
   new_sampling[n_sample] = _sampling[n_sample];
 
-  free(_sampling);
+ PDM_free(_sampling);
 
   /* Return pointers */
   *sampling = new_sampling;
@@ -343,7 +343,7 @@ _approx_median_point
     }
 
   } /* End of while */
-  free(sampling);
+ PDM_free(sampling);
 
   // PDM_log_trace_array_double(best_sampling, n_sample+1, "best_sampling : ");
 
@@ -1131,7 +1131,7 @@ _build_point_tree
                                ptree,
                                point_range,
                                tmp_new_to_old);
-  free(tmp_new_to_old);
+ PDM_free(tmp_new_to_old);
 
 
   if (ptree->n_nodes > 1) {
@@ -1304,7 +1304,7 @@ _build_point_tree_from_boxes
                                           ptree,
                                           point_range,
                                           tmp_new_to_old);
-  free(tmp_new_to_old);
+ PDM_free(tmp_new_to_old);
 
 
   if (ptree->n_nodes > 1) {
@@ -1396,17 +1396,17 @@ _l_nodes_free
 {
   if (ptree->nodes != NULL) {
 
-    free(ptree->nodes->ancestor_id);
-    free(ptree->nodes->is_leaf);
-    free(ptree->nodes->depth);
-    free(ptree->nodes->location_in_ancestor);
-    free(ptree->nodes->children_id);
-    free(ptree->nodes->range);
-    free(ptree->nodes->idx);
-    free(ptree->nodes->n_points);
-    free(ptree->nodes->extents);
+   PDM_free(ptree->nodes->ancestor_id);
+   PDM_free(ptree->nodes->is_leaf);
+   PDM_free(ptree->nodes->depth);
+   PDM_free(ptree->nodes->location_in_ancestor);
+   PDM_free(ptree->nodes->children_id);
+   PDM_free(ptree->nodes->range);
+   PDM_free(ptree->nodes->idx);
+   PDM_free(ptree->nodes->n_points);
+   PDM_free(ptree->nodes->extents);
 
-    free(ptree->nodes);
+   PDM_free(ptree->nodes);
 
     ptree->nodes = NULL;
   }
@@ -1556,30 +1556,30 @@ PDM_point_tree_seq_free
 {
   if (ptree != NULL) {
     if (ptree->_pts_coord != NULL) {
-      free(ptree->_pts_coord);
+     PDM_free(ptree->_pts_coord);
     }
 
     if (ptree->new_to_old != NULL) {
-      free(ptree->new_to_old);
+     PDM_free(ptree->new_to_old);
     }
 
     if (ptree->old_to_new != NULL) {
-      free(ptree->old_to_new);
+     PDM_free(ptree->old_to_new);
     }
 
     if(ptree->leaf_box_ids != NULL) {
-      free(ptree->leaf_box_ids);
+     PDM_free(ptree->leaf_box_ids);
     }
     if(ptree->leaf_box_idx != NULL) {
-      free(ptree->leaf_box_idx);
+     PDM_free(ptree->leaf_box_idx);
     }
     if(ptree->leaf_ids != NULL) {
-      free(ptree->leaf_ids);
+     PDM_free(ptree->leaf_ids);
     }
 
     _l_nodes_free(ptree);
 
-    free(ptree);
+   PDM_free(ptree);
   }
 }
 
@@ -1927,8 +1927,8 @@ PDM_point_tree_seq_extract_nodes
       }
     }
   }
-  free(stack_id);
-  free(stack_depth);
+ PDM_free(stack_id);
+ PDM_free(stack_depth);
 
   double* _extents = malloc(n_extract * 6 * sizeof(double));
   int   * _n_pts   = malloc(n_extract *     sizeof(int   ));
@@ -2186,9 +2186,9 @@ double               *closest_ptree_pt_dist2
 
   }
 
-  free (inbox_stack);
-  free (min_dist2_stack);
-  free (stack);
+ PDM_free(inbox_stack);
+ PDM_free(min_dist2_stack);
+ PDM_free(stack);
 
 }
 
@@ -2390,7 +2390,7 @@ PDM_point_tree_seq_points_inside_boxes
     } /* End While */
   } /* End boxe loop */
 
-  free (stack_id);
+ PDM_free(stack_id);
   PDM_realloc(*box_pts ,*box_pts , _box_pts_idx[n_box],int);
 }
 
@@ -2554,7 +2554,7 @@ PDM_point_tree_seq_points_inside_balls
 
 
   } // End of loop on points
-  free(stack);
+ PDM_free(stack);
 
   s_pib = pib_idx[n_ball];
   PDM_realloc(*ball_pts       ,*ball_pts       , s_pib,int   );
@@ -2661,7 +2661,7 @@ PDM_point_tree_make_shared
   }
 
 
-  free(s_shm_data_in_all_nodes);
+ PDM_free(s_shm_data_in_all_nodes);
   shm_ptree->shared_nodes_idx = shared_nodes_idx;
   shm_ptree->shared_pts_idx   = shared_pts_idx;
 
@@ -2713,16 +2713,16 @@ PDM_point_tree_seq_shm_free
 )
 {
 
-  free(shm_ptree->shm_n_nodes    );
-  free(shm_ptree->shm_is_leaf    );
-  free(shm_ptree->shm_children_id);
-  free(shm_ptree->shm_range      );
-  free(shm_ptree->shm_n_points   );
-  free(shm_ptree->shm_extents    );
-  free(shm_ptree->shm_n_pts      );
-  free(shm_ptree->shm_pts_coord  );
-  free(shm_ptree->shm_new_to_old );
-  free(shm_ptree->shm_old_to_new );
+ PDM_free(shm_ptree->shm_n_nodes    );
+ PDM_free(shm_ptree->shm_is_leaf    );
+ PDM_free(shm_ptree->shm_children_id);
+ PDM_free(shm_ptree->shm_range      );
+ PDM_free(shm_ptree->shm_n_points   );
+ PDM_free(shm_ptree->shm_extents    );
+ PDM_free(shm_ptree->shm_n_pts      );
+ PDM_free(shm_ptree->shm_pts_coord  );
+ PDM_free(shm_ptree->shm_new_to_old );
+ PDM_free(shm_ptree->shm_old_to_new );
 
   PDM_mpi_win_shared_free(shm_ptree->w_is_leaf    );
   PDM_mpi_win_shared_free(shm_ptree->w_children_id);
@@ -2734,11 +2734,11 @@ PDM_point_tree_seq_shm_free
   PDM_mpi_win_shared_free(shm_ptree->w_new_to_old);
   PDM_mpi_win_shared_free(shm_ptree->w_old_to_new);
 
-  free(shm_ptree->shared_nodes_idx);
-  free(shm_ptree->shared_pts_idx  );
+ PDM_free(shm_ptree->shared_nodes_idx);
+ PDM_free(shm_ptree->shared_pts_idx  );
 
-  free(shm_ptree->ptrees);
-  free(shm_ptree);
+ PDM_free(shm_ptree->ptrees);
+ PDM_free(shm_ptree);
 }
 
 
@@ -3019,7 +3019,7 @@ PDM_point_tree_seq_points_inside_boxes_shared
 
   } // End of loop on boxes
 
-  free (stack_id);
+ PDM_free(stack_id);
   PDM_realloc(*box_pts ,*box_pts , _box_pts_idx[n_box],int);
 }
 
@@ -3734,10 +3734,10 @@ PDM_tree_intersection_point_box2
     n_queue = new_n_queue;
 
   } // End of while loop
-  free(__box_pts_s);
-  // free(_pts_coord);
-  free(queues[0]);
-  free(queues[1]);
+ PDM_free(__box_pts_s);
+  //PDM_free(_pts_coord);
+ PDM_free(queues[0]);
+ PDM_free(queues[1]);
 
   /* Re-arrange result */
   *box_pts_idx = PDM_array_new_idx_from_sizes_int(__box_pts_n, n_boxes);
@@ -3750,13 +3750,13 @@ PDM_tree_intersection_point_box2
       bp[j] = __box_pts[i][j];
     }
 
-    free(__box_pts[i]);
+   PDM_free(__box_pts[i]);
   }
-  free(__box_pts_n);
-  free(__box_pts);
+ PDM_free(__box_pts_n);
+ PDM_free(__box_pts);
 
-  free(queue0);
-  free(queue1);
+ PDM_free(queue0);
+ PDM_free(queue1);
 
 }
 
@@ -3896,7 +3896,7 @@ PDM_point_tree_seq_intersect_box_leaf
     } /* End While */
   } /* End boxe loop */
 
-  free (stack_id);
+ PDM_free(stack_id);
   PDM_realloc(*box_leaf ,*box_leaf , _box_leaf_idx[n_box],int);
 
 }

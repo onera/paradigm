@@ -1051,11 +1051,11 @@ PDM_g_num_t    **dedge_group
   }
 
 
-  free(dn_edgeLim13Rank);
-  free(dn_edgeLim24Rank);
-  free(dn_vtx_rank);
-  free(dn_face_rank);
-  free(dn_edge_rank);
+ PDM_free(dn_edgeLim13Rank);
+ PDM_free(dn_edgeLim24Rank);
+ PDM_free(dn_vtx_rank);
+ PDM_free(dn_face_rank);
+ PDM_free(dn_edge_rank);
 }
 
 

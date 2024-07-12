@@ -325,7 +325,7 @@ int main(int argc, char *argv[])
                                face_ln_to_gn,
                                face_flags);
 
-        free(face_flags);
+       PDM_free(face_flags);
       }
 
     } else {
@@ -393,7 +393,7 @@ int main(int argc, char *argv[])
                                    field_name,
                                    edge_field);
 
-        free(edge_flags);
+       PDM_free(edge_flags);
       }
     }
 

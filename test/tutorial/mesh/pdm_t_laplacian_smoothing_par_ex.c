@@ -184,7 +184,7 @@ PDM_multipart_t      **_mpart
   /* Run */
   PDM_multipart_compute (mpart);
 
-  free(n_part_domains);
+ PDM_free(n_part_domains);
 
   *_mpart = mpart;
 
@@ -424,8 +424,8 @@ int main(int argc, char *argv[])
 
   int *pedge_group_idx = tmp_pedge_group_idx[i_part];
   int *pedge_group     = tmp_pedge_group    [i_part];
-  free(tmp_pedge_group_idx);
-  free(tmp_pedge_group    );
+ PDM_free(tmp_pedge_group_idx);
+ PDM_free(tmp_pedge_group    );
 
   /* Transpose into vtx_edge */
   int **tmp_pvtx_edge_idx = NULL;
@@ -443,8 +443,8 @@ int main(int argc, char *argv[])
 
   int *pvtx_edge_idx = tmp_pvtx_edge_idx[i_part];
   int *pvtx_edge     = tmp_pvtx_edge    [i_part];
-  free(tmp_pvtx_edge_idx);
-  free(tmp_pvtx_edge    );
+ PDM_free(tmp_pvtx_edge_idx);
+ PDM_free(tmp_pvtx_edge    );
 
   /* Combine into vtx_group */
 
@@ -654,27 +654,27 @@ int main(int argc, char *argv[])
     PDM_part_to_block_free(ptb);
     PDM_block_to_part_free(btp);
 
-    free(dstrid_new_vtx_coord);
-    free(dnew_vtx_coord);
+   PDM_free(dstrid_new_vtx_coord);
+   PDM_free(dnew_vtx_coord);
 
   } // end loop on Laplacian Smoothing steps
 
 
-  free(pedge_vtx_idx    );
-  free(pstrid        );
-  free(pnormalisation);
-  free(pnew_vtx_coord);
-  free(dnormalisation_summed);
-  free(dnew_vtx_coord_summed);
-  free(dstrid_normalisation);
-  free(dnormalisation);
+ PDM_free(pedge_vtx_idx    );
+ PDM_free(pstrid        );
+ PDM_free(pnormalisation);
+ PDM_free(pnew_vtx_coord);
+ PDM_free(dnormalisation_summed);
+ PDM_free(dnew_vtx_coord_summed);
+ PDM_free(dstrid_normalisation);
+ PDM_free(dnormalisation);
 
-  free(pvtx_edge_idx);
-  free(pvtx_edge    );
-  free(pvtx_group_idx);
-  free(pvtx_group    );
-  free(pedge_group_idx);
-  free(pedge_group    );
+ PDM_free(pvtx_edge_idx);
+ PDM_free(pvtx_edge    );
+ PDM_free(pvtx_group_idx);
+ PDM_free(pvtx_group    );
+ PDM_free(pedge_group_idx);
+ PDM_free(pedge_group    );
 
   /* Free entities */
   // TO DO add free of mallocs

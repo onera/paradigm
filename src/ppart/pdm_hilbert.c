@@ -652,7 +652,7 @@ _define_rank_distrib(int                       dim,
   /* Define the global distribution */
   PDM_MPI_Allreduce(l_distrib, g_distrib, n_samples, PDM_MPI_DOUBLE, PDM_MPI_SUM, comm);
 
-  free(l_distrib);
+ PDM_free(l_distrib);
 
   /* Define the cumulative frequency related to g_distribution */
   cfreq[0] = 0.;
@@ -690,7 +690,7 @@ _define_rank_distrib(int                       dim,
             i, 1.0, 1.0, 1.0, 0);
 
     fclose(dbg_file);
-    free(rfilename);
+   PDM_free(rfilename);
 
   }
 
@@ -803,7 +803,7 @@ _update_sampling(int                  dim,
 
   new_sampling[n_samples] = 1.0;
 
-  free(_sampling);
+ PDM_free(_sampling);
 
   /* Return pointers */
 
@@ -941,9 +941,9 @@ _bucket_sampling(int                       dim,
 
   /* Free memory */
 
-  free(cfreq);
-  free(distrib);
-  free(_sampling);
+ PDM_free(cfreq);
+ PDM_free(distrib);
+ PDM_free(_sampling);
 
   *sampling = best_sampling;
 
@@ -1287,7 +1287,7 @@ PDM_hilbert_local_order_coords(int                  dim,
 
   PDM_hilbert_local_order(n_coords, h_code, order);
 
-  free(h_code);
+ PDM_free(h_code);
 }
 
 /*----------------------------------------------------------------------------
@@ -1410,7 +1410,7 @@ PDM_hilbert_build_rank_index(int                       dim,
 
   /* Free memory */
 
-  free(sampling);
+ PDM_free(sampling);
 
   return best_fit;
 }

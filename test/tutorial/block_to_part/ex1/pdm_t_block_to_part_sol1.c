@@ -215,15 +215,15 @@ int main(int argc, char *argv[])
    */
   PDM_block_to_part_free(btp);
 
-  free(drand_number   );
-  free(distrib_elmt   );
+ PDM_free(drand_number   );
+ PDM_free(distrib_elmt   );
   for(int i_part = 0; i_part < n_part; ++i_part) {
-    free(pelmts_ln_to_gn[i_part]);
-    free(prand_number   [i_part]);
+   PDM_free(pelmts_ln_to_gn[i_part]);
+   PDM_free(prand_number   [i_part]);
   }
-  free(pelmts_ln_to_gn);
-  free(prand_number);
-  free(pn_elmts);
+ PDM_free(pelmts_ln_to_gn);
+ PDM_free(prand_number);
+ PDM_free(pn_elmts);
 
   PDM_MPI_Finalize ();
   return 0;

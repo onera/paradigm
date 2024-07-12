@@ -64,8 +64,8 @@ int main(int argc, char *argv[])
 
   printf(PDM_FMT_G_NUM" vertices, %d holes\n", n_vtx, n_holes);
 
-  free(face_vtx);
-  free(coords);
+ PDM_free(face_vtx);
+ PDM_free(coords);
 
   PDM_MPI_Finalize();
 

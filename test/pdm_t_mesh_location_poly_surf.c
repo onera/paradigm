@@ -291,12 +291,12 @@ _point_cloud_from_mesh_vtx
   *n_pts_l = dNVtx;
   *coord   = dVtxCoord;
 
-  free (dFaceVtxIdx);
-  free (dFaceVtx);
-  free (dEdgeVtx);
-  free (dEdgeFace);
-  free (dEdgeGroupIdx);
-  free (dEdgeGroup);
+ PDM_free(dFaceVtxIdx);
+ PDM_free(dFaceVtx);
+ PDM_free(dEdgeVtx);
+ PDM_free(dEdgeFace);
+ PDM_free(dEdgeGroupIdx);
+ PDM_free(dEdgeGroup);
 }
 
 
@@ -392,7 +392,7 @@ static int _set_rank_has_mesh
                         current_rank_has_mesh,
                         rank,
                         meshComm);
-    free (rankInNodes);
+   PDM_free(rankInNodes);
   }
 
   return current_rank_has_mesh;
@@ -568,7 +568,7 @@ _get_connectivity
       vtxEdgeN[ivtx1] += 1;
       vtxEdgeN[ivtx2] += 1;
     }
-    free(vtxEdgeN);
+   PDM_free(vtxEdgeN);
 
     for (int i = 0; i < _nFace; i++) {
       int idx = _faceEdgeIdx[i];
@@ -610,8 +610,8 @@ _get_connectivity
       }
     }
 
-    free (vtxEdge);
-    free (vtxEdgeIdx);
+   PDM_free(vtxEdge);
+   PDM_free(vtxEdgeIdx);
 
   }
 }
@@ -765,17 +765,17 @@ _create_split_mesh
                                          dEdgeGroupIdx,
                                          dEdgeGroup);
 
-    free (dCellPart);
+   PDM_free(dCellPart);
 
-    free (dVtxCoord);
-    free (dFaceVtxIdx);
-    free (dFaceVtx);
-    free (dFaceEdge);
-    free (dEdgeVtxIdx);
-    free (dEdgeVtx);
-    free (dEdgeFace);
-    free (dEdgeGroupIdx);
-    free (dEdgeGroup);
+   PDM_free(dVtxCoord);
+   PDM_free(dFaceVtxIdx);
+   PDM_free(dFaceVtx);
+   PDM_free(dFaceEdge);
+   PDM_free(dEdgeVtxIdx);
+   PDM_free(dEdgeVtx);
+   PDM_free(dEdgeFace);
+   PDM_free(dEdgeGroupIdx);
+   PDM_free(dEdgeGroup);
 
     _get_connectivity (ppart,
                        n_part,
@@ -1071,7 +1071,7 @@ int main(int argc, char *argv[])
     pts_gnum = PDM_gnum_get(gen_gnum, 0);
 
     PDM_gnum_free (gen_gnum);
-    free (char_length);
+   PDM_free(char_length);
   #else
   PDM_g_num_t *distrib = PDM_compute_entity_distribution (PDM_MPI_COMM_WORLD,
                                                           n_pts_l);
@@ -1080,7 +1080,7 @@ int main(int argc, char *argv[])
     pts_gnum[i] = distrib[i_rank] + i + 1;
   }
 
-  free (distrib);
+ PDM_free(distrib);
   #endif
   }
 
@@ -1339,8 +1339,8 @@ int main(int argc, char *argv[])
                                   (const PDM_g_num_t **) pelt_pts_gnum,
                                   PDM_MPI_COMM_WORLD);
 
-    free(pelt_pts_idx );
-    free(pelt_pts_gnum);
+   PDM_free(pelt_pts_idx );
+   PDM_free(pelt_pts_gnum);
   }
 
 
@@ -1437,8 +1437,8 @@ int main(int argc, char *argv[])
     }
   }
 
-  free(recv_field[0]);
-  free(recv_field);
+ PDM_free(recv_field[0]);
+ PDM_free(recv_field);
 
 
   double gmax_err;
@@ -1459,49 +1459,49 @@ int main(int argc, char *argv[])
                           
 
   for (int ipart = 0; ipart < n_part; ipart++) {
-    free(faceEdgeIdx[ipart]);
-    free(faceEdge[ipart]);
-    free(faceVtxIdx[ipart]);
-    free(faceVtx[ipart]);
-    free(faceLNToGN[ipart]);
-    free(edgeVtxIdx[ipart]);
-    free(edgeVtx[ipart]);
-    free(vtxCoord[ipart]);
-    free(vtxLNToGN[ipart]);
+   PDM_free(faceEdgeIdx[ipart]);
+   PDM_free(faceEdge[ipart]);
+   PDM_free(faceVtxIdx[ipart]);
+   PDM_free(faceVtx[ipart]);
+   PDM_free(faceLNToGN[ipart]);
+   PDM_free(edgeVtxIdx[ipart]);
+   PDM_free(edgeVtx[ipart]);
+   PDM_free(vtxCoord[ipart]);
+   PDM_free(vtxLNToGN[ipart]);
 
-    free(src_field[ipart]);
-    free(send_field[ipart]);
+   PDM_free(src_field[ipart]);
+   PDM_free(send_field[ipart]);
   }
-  free(faceVtxIdx);
-  free(faceVtx);
-  free(nFace);
-  free(faceEdgeIdx);
-  free(faceEdge);
-  free(faceLNToGN);
-  free(nEdge);
-  free(edgeVtxIdx);
-  free(edgeVtx);
-  free(nVtx);
-  free(vtxCoord);
-  free(vtxLNToGN);
+ PDM_free(faceVtxIdx);
+ PDM_free(faceVtx);
+ PDM_free(nFace);
+ PDM_free(faceEdgeIdx);
+ PDM_free(faceEdge);
+ PDM_free(faceLNToGN);
+ PDM_free(nEdge);
+ PDM_free(edgeVtxIdx);
+ PDM_free(edgeVtx);
+ PDM_free(nVtx);
+ PDM_free(vtxCoord);
+ PDM_free(vtxLNToGN);
 
-  free(src_field);
-  free(send_field);
+ PDM_free(src_field);
+ PDM_free(send_field);
   /*PDM_part_free (ppart_id);
 
 
-  free (dvtx_coord);
-  free (dface_vtx_idx);
-  free (dface_vtx);
-  free (dFaceEdge);
-  free (dEdgeVtx);
-  free (dEdgeFace);
-  free (dEdgeGroupIdx);
-  free (dEdgeGroup);
-  free (dEdgeVtxIdx);*/
+ PDM_free(dvtx_coord);
+ PDM_free(dface_vtx_idx);
+ PDM_free(dface_vtx);
+ PDM_free(dFaceEdge);
+ PDM_free(dEdgeVtx);
+ PDM_free(dEdgeFace);
+ PDM_free(dEdgeGroupIdx);
+ PDM_free(dEdgeGroup);
+ PDM_free(dEdgeVtxIdx);*/
 
-  free (pts_coords);
-  free (pts_gnum);
+ PDM_free(pts_coords);
+ PDM_free(pts_gnum);
 
   PDM_MPI_Finalize();
 

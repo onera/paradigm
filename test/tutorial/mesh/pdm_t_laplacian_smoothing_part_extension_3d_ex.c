@@ -192,7 +192,7 @@ PDM_multipart_t      **_mpart
   /* Run */
   PDM_multipart_compute (mpart);
 
-  free(n_part_domains);
+ PDM_free(n_part_domains);
 
   *_mpart = mpart;
 
@@ -865,8 +865,8 @@ int main(int argc, char *argv[])
       pvtx_coord_extension[3*i+2] = pvtx_coord_extension_new[i_part][3*i+2];
     } // end loop on extension coordinates
 
-    free(pvtx_coord_extension_new[i_part]);
-    free(pvtx_coord_extension_new);
+   PDM_free(pvtx_coord_extension_new[i_part]);
+   PDM_free(pvtx_coord_extension_new);
 
     // PDM_writer_step_end(id_cs);
   } // end Laplacian Smoothing loop
@@ -877,27 +877,27 @@ int main(int argc, char *argv[])
   PDM_part_extension_free(pe);
   PDM_part_to_part_free(ptp);
 
-  free(face_vtx_n  );
-  free(cell_face_n );
-  free(extension_vtx_gnum_idx );
+ PDM_free(face_vtx_n  );
+ PDM_free(cell_face_n );
+ PDM_free(extension_vtx_gnum_idx );
 
-  free(pvtx_edge_idx);
-  free(pvtx_edge);
-  free(pedge_group_idx);
-  free(pedge_group);
-  free(pedge_face_idx);
-  free(pedge_face);
-  free(pedge_vtx_idx);
-  free(pface_vtx);
-  free(pface_cell_idx);
-  free(pface_cell);
-  free(pface_group_idx);
-  free(pface_group);
-  free(pvtx_group_idx);
-  free(pvtx_group    );
+ PDM_free(pvtx_edge_idx);
+ PDM_free(pvtx_edge);
+ PDM_free(pedge_group_idx);
+ PDM_free(pedge_group);
+ PDM_free(pedge_face_idx);
+ PDM_free(pedge_face);
+ PDM_free(pedge_vtx_idx);
+ PDM_free(pface_vtx);
+ PDM_free(pface_cell_idx);
+ PDM_free(pface_cell);
+ PDM_free(pface_group_idx);
+ PDM_free(pface_group);
+ PDM_free(pvtx_group_idx);
+ PDM_free(pvtx_group    );
 
-  free(normalisation );
-  free(pvtx_coord_new);
+ PDM_free(normalisation );
+ PDM_free(pvtx_coord_new);
 
   PDM_MPI_Finalize();
   return 0;

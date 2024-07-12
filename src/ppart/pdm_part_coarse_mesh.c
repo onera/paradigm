@@ -339,9 +339,9 @@ int                *cell_part
       }
 
       if (flag_weights != 0) {
-          free(ubvec);
-          free(tpwgts);
-          free(adjwgt);
+         PDM_free(ubvec);
+         PDM_free(tpwgts);
+         PDM_free(adjwgt);
       }
 
       (*n_coarse_cell_computed) = n_part;
@@ -521,9 +521,9 @@ _quickSort_int
 
 //   /* Free temporary arrays*/
 
-//   free(cell_cellN);
-//   free(cell_cell);
-//   free(cell_cell_idx);
+//  PDM_free(cell_cellN);
+//  PDM_free(cell_cell);
+//  PDM_free(cell_cell_idx);
 
 //   //Remove duplicate cells of the dual graph
 //   //We use the following scheme:
@@ -718,7 +718,7 @@ _part_cell_from_cell_part
   }
 
   //Free
-  free(cpt_cells_per_partitions);
+ PDM_free(cpt_cells_per_partitions);
 
 }
 
@@ -974,7 +974,7 @@ _adapt_Connectedness
     cpt_cells_per_partitions[color]++;
   }
 
-  free(cpt_cells_per_partitions);
+ PDM_free(cpt_cells_per_partitions);
 }
 
 /**
@@ -1132,7 +1132,7 @@ _build_face_coarse_cell
     PDM_printf("\n");
   }
 
-  free(face_cell_temp);
+ PDM_free(face_cell_temp);
 }
 
 /**
@@ -1253,7 +1253,7 @@ _coarsecell_face_from_face_coarse_cell
     PDM_printf("\n");
   }
 
-  free(cpt_faces_per_coarse_cell);
+ PDM_free(cpt_faces_per_coarse_cell);
 }
 
 /**
@@ -1724,7 +1724,7 @@ _build_faceGroup
     }
     PDM_printf("\n\n");
   }
-  free(cptFacesPerGroup);
+ PDM_free(cptFacesPerGroup);
 }
 
 /**
@@ -1959,10 +1959,10 @@ _coarse_grid_compute
                        (int **) &(part_res->coarse_cell_cell),
                        (int **) &(part_res->coarse_cell_cell_idx));
 
-  free(part_cell_idx);
-  free(part_cell);
+ PDM_free(part_cell_idx);
+ PDM_free(part_cell);
 
-  free(cell_part);
+ PDM_free(cell_part);
 
   PDM_timer_hang_on(cm->timer);
   cm->times_elapsed[itime] = PDM_timer_elapsed(cm->timer);
@@ -2173,14 +2173,14 @@ _coarse_grid_compute
   // }
   // Conflict with New renumbering for OpenMP/Better vecto - Add part_to_block option VOID
 
-  free(cell_coarse_cell);
+ PDM_free(cell_coarse_cell);
 
-  free(dualGraphIdx);
-  free(dualGraph);
+ PDM_free(dualGraphIdx);
+ PDM_free(dualGraph);
 
-  free(fine_face_to_coarse_face);
+ PDM_free(fine_face_to_coarse_face);
 
-  free(fine_vtx_to_coarse_vtx);
+ PDM_free(fine_vtx_to_coarse_vtx);
 }
 
 /**
@@ -2410,22 +2410,22 @@ PDM_coarse_mesh_t * cm
     PDM_printf("\n");
   }
 
-  free(face_ln_to_gn_part);
-  free(n_facePart);
+ PDM_free(face_ln_to_gn_part);
+ PDM_free(n_facePart);
 
   for (int i = 0; i < cm->n_part; i++) {
-    free(face_ln_to_gnTag[i]);
+   PDM_free(face_ln_to_gnTag[i]);
   }
-  free(face_ln_to_gnTag);
+ PDM_free(face_ln_to_gnTag);
 
   for (int i = 0; i < cm->n_part; i++) {
-    free(face_ln_to_gnFine[i]);
+   PDM_free(face_ln_to_gnFine[i]);
   }
-  free(face_ln_to_gnFine);
+ PDM_free(face_ln_to_gnFine);
 
-  free (b_stride_one);
-  free (part_stride);
-  free (b_tIntersects);
+ PDM_free(b_stride_one);
+ PDM_free(part_stride);
+ PDM_free(b_tIntersects);
 
   PDM_part_to_block_free(ptb);
   PDM_block_to_part_free(btp);
@@ -2604,22 +2604,22 @@ PDM_coarse_mesh_t * cm
     PDM_printf("\n");
   }
 
-  free(vtx_ln_to_gn_part);
-  free(n_vtxPart);
+ PDM_free(vtx_ln_to_gn_part);
+ PDM_free(n_vtxPart);
 
   for (int i = 0; i < cm->n_part; i++) {
-    free(vtx_ln_to_gnTag[i]);
+   PDM_free(vtx_ln_to_gnTag[i]);
   }
-  free(vtx_ln_to_gnTag);
+ PDM_free(vtx_ln_to_gnTag);
 
   for (int i = 0; i < cm->n_part; i++) {
-    free(vtx_ln_to_gnFine[i]);
+   PDM_free(vtx_ln_to_gnFine[i]);
   }
-  free(vtx_ln_to_gnFine);
+ PDM_free(vtx_ln_to_gnFine);
 
-  free (b_stride_one);
-  free (part_stride);
-  free (b_tIntersects);
+ PDM_free(b_stride_one);
+ PDM_free(part_stride);
+ PDM_free(b_tIntersects);
 
   PDM_part_to_block_free(ptb);
   PDM_block_to_part_free(btp);
@@ -2705,9 +2705,9 @@ PDM_coarse_mesh_t * cm
   }
 
   for (int i = 0; i < cm->n_part; i++) {
-    free(face_ln_to_gnTag[i]);
+   PDM_free(face_ln_to_gnTag[i]);
   }
-  free(face_ln_to_gnTag);
+ PDM_free(face_ln_to_gnTag);
 
   for (int i = 0; i < cm->n_part; i++) {
     _part_t *cmp = cm->part_res[i]->part;
@@ -2879,22 +2879,22 @@ PDM_coarse_mesh_t * cm
       }
     }
 
-    free(faceGroupLNToGn_part);
-    free(n_face_groupPart);
+   PDM_free(faceGroupLNToGn_part);
+   PDM_free(n_face_groupPart);
 
     for (int i = 0; i < cm->n_part; i++) {
-      free(faceGroupLNToGNTagGroup[i]);
+     PDM_free(faceGroupLNToGNTagGroup[i]);
     }
-    free(faceGroupLNToGNTagGroup);
+   PDM_free(faceGroupLNToGNTagGroup);
 
     for (int i = 0; i < cm->n_part; i++) {
-      free(faceGroupLNToGNFine[i]);
+     PDM_free(faceGroupLNToGNFine[i]);
     }
-    free(faceGroupLNToGNFine);
+   PDM_free(faceGroupLNToGNFine);
 
-    free (b_stride_one);
-    free (part_stride);
-    free (b_tIntersects);
+   PDM_free(b_stride_one);
+   PDM_free(part_stride);
+   PDM_free(b_tIntersects);
 
     PDM_part_to_block_free(ptb);
     PDM_block_to_part_free(btp);
@@ -2902,9 +2902,9 @@ PDM_coarse_mesh_t * cm
   }
 
   for (int i = 0; i < cm->n_part; i++) {
-    free(faceGroupLNToGNTag[i]);
+   PDM_free(faceGroupLNToGNTag[i]);
   }
-  free(faceGroupLNToGNTag);
+ PDM_free(faceGroupLNToGNTag);
 
   if (0 == 1) {
     for (int i = 0; i < cm->n_part; i++) {
@@ -3134,20 +3134,20 @@ PDM_coarse_mesh_t * cm
 
   for (int i_part = 0; i_part < cm->n_part; i_part++) { //Modif : n_partB => cm->n_part
 
-    free(fine_face_to_coarse_face[i_part]);
-    free(iFaceLocToIPartBound[i_part]);
+   PDM_free(fine_face_to_coarse_face[i_part]);
+   PDM_free(iFaceLocToIPartBound[i_part]);
   }
 
-  free(fine_face_to_coarse_face);
-  free(iFaceLocToIPartBound);
+ PDM_free(fine_face_to_coarse_face);
+ PDM_free(iFaceLocToIPartBound);
 
-  free(sendN);
-  free(sendIdx);
-  free(sendBuff);
+ PDM_free(sendN);
+ PDM_free(sendIdx);
+ PDM_free(sendBuff);
 
-  free(recvN);
-  free(recvIdx);
-  free(recvBuff);
+ PDM_free(recvN);
+ PDM_free(recvIdx);
+ PDM_free(recvBuff);
 }
 
 /**
@@ -3441,86 +3441,86 @@ _part_free
   }
 
   if (part->cell_face_idx != NULL)
-    free(part->cell_face_idx);
+   PDM_free(part->cell_face_idx);
   part->cell_face_idx = NULL;
 
   if (part->gcell_face != NULL)
-    free(part->gcell_face);
+   PDM_free(part->gcell_face);
   part->gcell_face = NULL;
 
   if (part->cell_face != NULL)
-    free(part->cell_face);
+   PDM_free(part->cell_face);
   part->cell_face = NULL;
 
   if (part->cell_ln_to_gn != NULL)
-    free(part->cell_ln_to_gn);
+   PDM_free(part->cell_ln_to_gn);
   part->cell_ln_to_gn = NULL;
 
   if (part->cell_tag != NULL)
-    free(part->cell_tag);
+   PDM_free(part->cell_tag);
   part->cell_tag = NULL;
 
   if (part->face_cell != NULL)
-    free(part->face_cell);
+   PDM_free(part->face_cell);
   part->face_cell = NULL;
 
   if (part->face_vtx_idx != NULL)
-    free(part->face_vtx_idx);
+   PDM_free(part->face_vtx_idx);
   part->face_vtx_idx = NULL;
 
   if (part->gface_vtx != NULL)
-    free(part->gface_vtx);
+   PDM_free(part->gface_vtx);
   part->gface_vtx = NULL;
 
   if (part->face_vtx != NULL)
-    free(part->face_vtx);
+   PDM_free(part->face_vtx);
   part->face_vtx = NULL;
 
   if (part->face_ln_to_gn != NULL)
-    free(part->face_ln_to_gn);
+   PDM_free(part->face_ln_to_gn);
   part->face_ln_to_gn = NULL;
 
   if (part->face_tag != NULL)
-    free(part->face_tag);
+   PDM_free(part->face_tag);
   part->face_tag = NULL;
 
   if (part->face_part_bound_proc_idx != NULL)
-    free(part->face_part_bound_proc_idx);
+   PDM_free(part->face_part_bound_proc_idx);
   part->face_part_bound_proc_idx = NULL;
 
   if (part->face_part_bound_part_idx != NULL)
-    free(part->face_part_bound_part_idx);
+   PDM_free(part->face_part_bound_part_idx);
   part->face_part_bound_part_idx = NULL;
 
   if (part->face_part_bound != NULL)
-    free(part->face_part_bound);
+   PDM_free(part->face_part_bound);
   part->face_part_bound = NULL;
 
   if (part->face_group_idx != NULL)
-    free(part->face_group_idx);
+   PDM_free(part->face_group_idx);
   part->face_group_idx = NULL;
 
   if (part->face_group != NULL)
-    free(part->face_group);
+   PDM_free(part->face_group);
   part->face_group = NULL;
 
   if (part->face_group_ln_to_gn != NULL)
-    free(part->face_group_ln_to_gn);
+   PDM_free(part->face_group_ln_to_gn);
   part->face_group_ln_to_gn = NULL;
 
   if (part->vtx != NULL)
-    free(part->vtx);
+   PDM_free(part->vtx);
   part->vtx = NULL;
 
   if (part->vtx_ln_to_gn != NULL)
-    free(part->vtx_ln_to_gn);
+   PDM_free(part->vtx_ln_to_gn);
   part->vtx_ln_to_gn = NULL;
 
   if (part->vtx_tag != NULL)
-    free(part->vtx_tag);
+   PDM_free(part->vtx_tag);
   part->vtx_tag = NULL;
 
-  free(part);
+ PDM_free(part);
 }
 
 /**
@@ -3540,30 +3540,30 @@ _coarse_part_free
   _part_free(coarse_part->part);
 
   if (coarse_part->specific_data != NULL) {
-    free (coarse_part->specific_data);
+   PDM_free(coarse_part->specific_data);
   }
 
   if (coarse_part->coarse_cell_cell != NULL)
-    free(coarse_part->coarse_cell_cell);
+   PDM_free(coarse_part->coarse_cell_cell);
   coarse_part->coarse_cell_cell = NULL;
 
   if (coarse_part->coarse_cell_cell_idx != NULL)
-    free(coarse_part->coarse_cell_cell_idx);
+   PDM_free(coarse_part->coarse_cell_cell_idx);
   coarse_part->coarse_cell_cell_idx = NULL;
 
   if (coarse_part->coarse_face_group_to_fine_face_group != NULL)
-    free(coarse_part->coarse_face_group_to_fine_face_group);
+   PDM_free(coarse_part->coarse_face_group_to_fine_face_group);
   coarse_part->coarse_face_group_to_fine_face_group = NULL;
 
   if (coarse_part->coarse_face_to_fine_face != NULL)
-    free(coarse_part->coarse_face_to_fine_face);
+   PDM_free(coarse_part->coarse_face_to_fine_face);
   coarse_part->coarse_face_to_fine_face = NULL;
 
   if (coarse_part->coarse_vtx_to_fine_vtx != NULL)
-    free(coarse_part->coarse_vtx_to_fine_vtx);
+   PDM_free(coarse_part->coarse_vtx_to_fine_vtx);
   coarse_part->coarse_vtx_to_fine_vtx = NULL;
 
-  free(coarse_part);
+ PDM_free(coarse_part);
 }
 
 /*=============================================================================
@@ -4147,18 +4147,18 @@ PDM_part_coarse_mesh_free
 )
 {
   for (int i = 0; i < cm->n_part; i++) {
-    free(cm->part_ini[i]);
+   PDM_free(cm->part_ini[i]);
     _coarse_part_free(cm->part_res[i]);
     cm->part_ini[i] = NULL;
     cm->part_res[i] = NULL;
   }
 
   if (cm->specific_data != NULL) {
-    free (cm->specific_data);
+   PDM_free(cm->specific_data);
   }
 
-  free(cm->part_ini);
-  free(cm->part_res);
+ PDM_free(cm->part_ini);
+ PDM_free(cm->part_res);
 
   cm->part_ini = NULL;
   cm->part_res = NULL;
@@ -4166,7 +4166,7 @@ PDM_part_coarse_mesh_free
   PDM_timer_free(cm->timer);
   cm->timer = NULL;
 
-  free(cm);
+ PDM_free(cm);
 }
 
 
@@ -4398,13 +4398,13 @@ void
 
     for (int i = 0; i < n_coarse_mesh_methods; i++) {
       if (_coarse_mesh_methods[i] != NULL) {
-        free (_coarse_mesh_methods[i]->name);
-        free (_coarse_mesh_methods[i]);
+       PDM_free(_coarse_mesh_methods[i]->name);
+       PDM_free(_coarse_mesh_methods[i]);
         _coarse_mesh_methods[i] = NULL;
       }
     }
 
-    free (_coarse_mesh_methods);
+   PDM_free(_coarse_mesh_methods);
     _coarse_mesh_methods = NULL;
   }
 }

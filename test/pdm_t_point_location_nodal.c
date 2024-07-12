@@ -276,14 +276,14 @@ _gen_mesh
     PDM_multipart_compute(mpart);
 
     PDM_dmesh_free(dmesh);
-    free(dvtx_coord);
-    free(dcell_face_idx);
-    free(dcell_face);
-    free(dface_cell);
-    free(dface_vtx_idx);
-    free(dface_vtx);
-    free(dface_group_idx);
-    free(dface_group);
+   PDM_free(dvtx_coord);
+   PDM_free(dcell_face_idx);
+   PDM_free(dcell_face);
+   PDM_free(dface_cell);
+   PDM_free(dface_vtx_idx);
+   PDM_free(dface_vtx);
+   PDM_free(dface_group_idx);
+   PDM_free(dface_group);
 
 
     /* Get parts */
@@ -359,12 +359,12 @@ _gen_mesh
                              (const double           **) (*pvtx_coord),
                              (const PDM_g_num_t      **) (*pelt_ln_to_gn),
                                                          comm);
-    free(pn_face       );
-    free(pface_vtx_idx );
-    free(pface_vtx     );
-    free(pcell_face_idx);
-    free(pcell_face    );
-    free(pface_ln_to_gn);
+   PDM_free(pn_face       );
+   PDM_free(pface_vtx_idx );
+   PDM_free(pface_vtx     );
+   PDM_free(pcell_face_idx);
+   PDM_free(pcell_face    );
+   PDM_free(pface_ln_to_gn);
   }
 
   else if (t_elt == PDM_MESH_NODAL_POLY_2D) {
@@ -473,17 +473,17 @@ _gen_mesh
     PDM_multipart_compute(mpart);
 
     PDM_dmesh_free(dmesh);
-    free(dedge_bnd_idx   );
-    free(dedge_bnd       );
-    free(dvtx_coord      );
-    free(dface_edge_idx  );
-    free(dface_vtx       );
-    free(dface_edge      );
-    free(dedge_vtx_idx   );
-    free(dedge_vtx       );
-    free(dedge_face      );
-    free(dedge_group_idx );
-    free(dedge_group     );
+   PDM_free(dedge_bnd_idx   );
+   PDM_free(dedge_bnd       );
+   PDM_free(dvtx_coord      );
+   PDM_free(dface_edge_idx  );
+   PDM_free(dface_vtx       );
+   PDM_free(dface_edge      );
+   PDM_free(dedge_vtx_idx   );
+   PDM_free(dedge_vtx       );
+   PDM_free(dedge_face      );
+   PDM_free(dedge_group_idx );
+   PDM_free(dedge_group     );
 
     /* Get parts */
     int  *pn_edge        = malloc(sizeof(int  ) * n_part);
@@ -564,11 +564,11 @@ _gen_mesh
                                    (const int         **) pface_edge,
                                    (const PDM_g_num_t **) (*pelt_ln_to_gn),
                                                           comm);
-     free(pn_edge       );
-     free(pedge_vtx_idx );
-     free(pedge_vtx     );
-     free(pface_edge_idx);
-     free(pface_edge    );
+    PDM_free(pn_edge       );
+    PDM_free(pedge_vtx_idx );
+    PDM_free(pedge_vtx     );
+    PDM_free(pface_edge_idx);
+    PDM_free(pface_edge    );
 
   }
 
@@ -657,7 +657,7 @@ _gen_mesh
                                                      *pn_elt,
                                                      *pelt_ln_to_gn,
                                                      NULL);
-    free(pvtx_ln_to_gn);
+   PDM_free(pvtx_ln_to_gn);
 
     PDM_dcube_nodal_gen_free(dcube);
 
@@ -749,7 +749,7 @@ _mesh_from_file
                                                    *pn_elt,
                                                    *pelt_ln_to_gn,
                                                    NULL);
-  free(pvtx_ln_to_gn);
+ PDM_free(pvtx_ln_to_gn);
 
   PDM_multipart_free(mpart);
   PDM_DMesh_nodal_free(dmn);
@@ -1147,7 +1147,7 @@ int main(int argc, char *argv[])
                                      NULL);
         }
 
-        free(gnum);
+       PDM_free(gnum);
       }
     }
   }
@@ -1238,29 +1238,29 @@ int main(int argc, char *argv[])
 
   /* Free memory */
   for (int ipart = 0; ipart < n_part; ipart++) {
-    free(pts_idx        [ipart]);
-    free(pts_coord      [ipart]);
-    free(distance       [ipart]);
-    free(projected_coord[ipart]);
-    free(bar_coord_idx  [ipart]);
-    free(bar_coord      [ipart]);
-    free(uvw            [ipart]);
-    free(pelt_ln_to_gn  [ipart]);
-    free(pvtx_coord     [ipart]);
+   PDM_free(pts_idx        [ipart]);
+   PDM_free(pts_coord      [ipart]);
+   PDM_free(distance       [ipart]);
+   PDM_free(projected_coord[ipart]);
+   PDM_free(bar_coord_idx  [ipart]);
+   PDM_free(bar_coord      [ipart]);
+   PDM_free(uvw            [ipart]);
+   PDM_free(pelt_ln_to_gn  [ipart]);
+   PDM_free(pvtx_coord     [ipart]);
   }
-  free(pts_idx);
-  free(pts_coord);
-  free(distance);
-  free(projected_coord);
-  free(bar_coord_idx);
-  free(bar_coord);
-  free(uvw);
-  free(pelt_ln_to_gn);
-  free(pvtx_coord);
+ PDM_free(pts_idx);
+ PDM_free(pts_coord);
+ PDM_free(distance);
+ PDM_free(projected_coord);
+ PDM_free(bar_coord_idx);
+ PDM_free(bar_coord);
+ PDM_free(uvw);
+ PDM_free(pelt_ln_to_gn);
+ PDM_free(pvtx_coord);
 
-  free(pn_pts);
-  free(pn_vtx);
-  free(pn_elt);
+ PDM_free(pn_pts);
+ PDM_free(pn_vtx);
+ PDM_free(pn_elt);
 
   PDM_part_mesh_nodal_elmts_free(pmne);
 

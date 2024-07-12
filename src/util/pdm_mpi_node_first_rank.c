@@ -20,6 +20,8 @@
  *  Header for the current file
  *----------------------------------------------------------------------------*/
 
+#include "pdm.h"
+#include "pdm_priv.h"
 #include "pdm_mpi.h"
 #include "pdm_mpi_node_first_rank.h"
 #include "pdm_printf.h"
@@ -222,21 +224,21 @@ PDM_MPI_Comm comm
     nodeRank = nodeRank2;
 
     PDM_MPI_Comm_free(&nodeComm2);
-    free(hostInComm);
+   PDM_free(hostInComm);
 
   }
 
   // Clean up.
 
-  free(send);
+ PDM_free(send);
   send = NULL;
 
-  free(recv);
+ PDM_free(recv);
   recv = NULL;
 
   PDM_MPI_Comm_free(&nodeComm);
 
-  free(hostname);
+ PDM_free(hostname);
   hostname = NULL;
 
   // Affichage
@@ -292,7 +294,7 @@ PDM_MPI_Comm comm
   size_t hostnameLength;
 
   PDM_io_get_hostname(&hostname, &hostnameLength);
-  free(hostname);
+ PDM_free(hostname);
   hostname = NULL;
 
   return nodeRank;
@@ -344,10 +346,10 @@ size_t *hostname_length
     if (error == -1) {
       if (errno == ENAMETOOLONG) {
         allocateMore = 1;
-        free(hostname); hostname = NULL;
+       PDM_free(hostname); hostname = NULL;
       }
       else {
-        free(hostname);
+       PDM_free(hostname);
         hostname = NULL;
 
         PDM_error(__FILE__, __LINE__, 0, "gethostname failed with error %d: %s.\n", errno, strerror(errno));

@@ -412,10 +412,10 @@ int main(int argc, char *argv[])
                        (const double **) &vector_normal);
 
   }
-  free(face_vtx);
-  free(face_g_num);
-  free(vtx_g_num);
-  free(vtx_field);
+ PDM_free(face_vtx);
+ PDM_free(face_g_num);
+ PDM_free(vtx_g_num);
+ PDM_free(vtx_field);
 
   PDM_MPI_Finalize ();
 

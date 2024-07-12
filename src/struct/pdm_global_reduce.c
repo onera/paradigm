@@ -138,22 +138,22 @@ PDM_global_reduce_free
     gre->btp = PDM_block_to_part_free (gre->btp);
   }
 
-  free (gre->g_nums);
-  free (gre->n_elts);
-  free (gre->local_field);
-  free (gre->global_reduced_field);
+ PDM_free(gre->g_nums);
+ PDM_free(gre->n_elts);
+ PDM_free(gre->local_field);
+ PDM_free(gre->global_reduced_field);
 
   for (int i = 0; i < gre->n_part; i++) {
     if (gre->strides[i] != NULL) {
-      free (gre->strides[i]);
+     PDM_free(gre->strides[i]);
     }
   }
 
   if (gre->strides != NULL) {
-    free (gre->strides);
+   PDM_free(gre->strides);
   }
 
-  free(gre);
+ PDM_free(gre);
 }
 
 
@@ -345,8 +345,8 @@ PDM_global_reduce_field_compute
       }
     }
   }
-  free (stride_idx);
-  free (block_field_stride);
+ PDM_free(stride_idx);
+ PDM_free(block_field_stride);
 
 
   PDM_block_to_part_exch_in_place (gre->btp,
@@ -356,7 +356,7 @@ PDM_global_reduce_field_compute
                           block_field,
                           NULL,
                           (void **) gre->global_reduced_field);
-  free (block_field);
+ PDM_free(block_field);
 
   for (int i = 0; i < gre->n_part; i++) {
     gre->local_field         [i] = NULL;

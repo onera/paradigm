@@ -236,7 +236,7 @@ main
                          NULL,
                (void **) &blk_check_gnum);
 
-  // free(blk_check_gnum);
+  //PDM_free(blk_check_gnum);
   // int *part_strid = PDM_array_const_int(n_src, 1);
   // PDM_log_trace_array_int(part_strid, n_src, "part_stride ::");
   // int *blk_strid  = NULL;
@@ -248,7 +248,7 @@ main
   //              (void **) &src_g_num,
   //                        &blk_strid,
   //              (void **) &blk_check_gnum);
-  // free(part_strid);
+  //PDM_free(part_strid);
 
 
   int          n_parent    = PDM_part_to_block_n_elt_block_get  (ptb);
@@ -309,7 +309,7 @@ main
                               debug_gnum,
                               NULL);
 
-    free(debug_gnum);
+   PDM_free(debug_gnum);
   }
 
   /*
@@ -338,16 +338,16 @@ main
       first = hilbert_codes[i];
     }
     // PDM_log_trace_array_double(hilbert_codes, n_parent, "hilbert_codes ::");
-    free (hilbert_codes);
+   PDM_free(hilbert_codes);
   }
   PDM_part_to_block_free(ptb);
 
   /* Free */
-  free (blk_src_coord);
-  free (blk_check_gnum);
-  free (weight);
-  free (src_coord);
-  free (src_g_num);
+ PDM_free(blk_src_coord);
+ PDM_free(blk_check_gnum);
+ PDM_free(weight);
+ PDM_free(src_coord);
+ PDM_free(src_g_num);
 
   PDM_MPI_Barrier (PDM_MPI_COMM_WORLD);
   if (i_rank == 0) {

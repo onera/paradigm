@@ -1050,7 +1050,7 @@ PDM_geom_elem_quad_properties
                                                  characteristicLength,
                                                  isDegenerated);
 
-  free (connectivityIndex);
+ PDM_free(connectivityIndex);
 
   return convergence;
 }
@@ -1375,11 +1375,11 @@ int PDM_geom_elem_compute_polygon_barycentric_coordinates(const int           nP
     }
   }
 
-  free(coords_sommets);
-  free(s);
-  free(aire);
-  free(dist);
-  free(proScal);
+ PDM_free(coords_sommets);
+ PDM_free(s);
+ PDM_free(aire);
+ PDM_free(dist);
+ PDM_free(proScal);
 
   return convergence;
 }
@@ -1665,10 +1665,10 @@ PDM_geom_elem_hexa_properties
    * Free
    */
 
-  free (faceConnectivity);
-  free (faceConnectivityIdx);
-  free (cellToFaceConnectivity);
-  free (cellToFaceConnectivityIdx);
+ PDM_free(faceConnectivity);
+ PDM_free(faceConnectivityIdx);
+ PDM_free(cellToFaceConnectivity);
+ PDM_free(cellToFaceConnectivityIdx);
 
 }
 
@@ -1756,10 +1756,10 @@ PDM_geom_elem_prism_properties
    * Free
    */
 
-  free (faceConnectivity);
-  free (faceConnectivityIdx);
-  free (cellToFaceConnectivity);
-  free (cellToFaceConnectivityIdx);
+ PDM_free(faceConnectivity);
+ PDM_free(faceConnectivityIdx);
+ PDM_free(cellToFaceConnectivity);
+ PDM_free(cellToFaceConnectivityIdx);
 
 }
 
@@ -1845,10 +1845,10 @@ PDM_geom_elem_pyramid_properties
    * Free
    */
 
-  free (faceConnectivity);
-  free (faceConnectivityIdx);
-  free (cellToFaceConnectivity);
-  free (cellToFaceConnectivityIdx);
+ PDM_free(faceConnectivity);
+ PDM_free(faceConnectivityIdx);
+ PDM_free(cellToFaceConnectivity);
+ PDM_free(cellToFaceConnectivityIdx);
 
 }
 
@@ -2126,8 +2126,8 @@ PDM_geom_elem_polyhedra_properties
                         }
                       }
 
-                      free (data[j]);
-                      free (data[jCurrentEdge]);
+                     PDM_free(data[j]);
+                     PDM_free(data[jCurrentEdge]);
                       data[j] = NULL;
                       data[jCurrentEdge] = NULL;
 
@@ -2326,12 +2326,12 @@ PDM_geom_elem_polyhedra_properties
   }
   PDM_UNUSED(volume_t);
 
-  free (polyhedraVertices);
+ PDM_free(polyhedraVertices);
 
   if (!isOriented) {
-    free (keyPoly);
-    free (tagFace);
-    free (stack);
+   PDM_free(keyPoly);
+   PDM_free(tagFace);
+   PDM_free(stack);
     PDM_hash_tab_free (hashOrient);
   }
 
@@ -2375,9 +2375,9 @@ PDM_geom_elem_polyhedra_properties
 
   }
 
-  free (surface_vector);
-  free (faceCenter);
-  free (colorVertice);
+ PDM_free(surface_vector);
+ PDM_free(faceCenter);
+ PDM_free(colorVertice);
 
   if (!convergence)
     PDM_printf( "Warning polyhedraProperties : some polyhedra faces are not planar\n");
@@ -2533,9 +2533,9 @@ PDM_geom_elem_polyhedra_properties_triangulated
     }
 
   }
-  // free(surface_vector);
-  free(face_tria_idx);
-  free(tria_vtx);
+  //PDM_free(surface_vector);
+ PDM_free(face_tria_idx);
+ PDM_free(tria_vtx);
 }
 
 
@@ -2700,7 +2700,7 @@ PDM_geom_elem_edge_upwind_and_downwind
           vtx_cell_gnum[idx_write++] = cell_ln_to_gn[cell_id];
         }
         PDM_order_gnum_s(vtx_cell_gnum, 1, order, n_cell_per_vtx);
-        free(vtx_cell_gnum);
+       PDM_free(vtx_cell_gnum);
       } else {
         for(int i = 0; i < n_cell_per_vtx; ++i) {
           order[i] = i;
@@ -2818,7 +2818,7 @@ PDM_geom_elem_edge_upwind_and_downwind
 
       } // End of loop on current vertex's cells
 
-      free(order);
+     PDM_free(order);
 
       /* Reverse ray direction */
       ray_direction[0] = -ray_direction[0];
@@ -2829,19 +2829,19 @@ PDM_geom_elem_edge_upwind_and_downwind
 
   } // End of loop on edges
 
-  free(is_visited_face);
-  free(visited_face);
+ PDM_free(is_visited_face);
+ PDM_free(visited_face);
 
   if (tri_state != NULL) {
     PDM_triangulate_state_destroy(tri_state);
   }
 
   if (tri_vtx != NULL) {
-    free(tri_vtx);
+   PDM_free(tri_vtx);
   }
 
   if (poly_coord != NULL) {
-    free(poly_coord);
+   PDM_free(poly_coord);
   }
 }
 

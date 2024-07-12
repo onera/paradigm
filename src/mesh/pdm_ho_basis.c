@@ -362,12 +362,12 @@ _basis_tria_pn
       }
     }
 
-    free (u);
-    free (v);
-    free (w);
-    free (fu);
-    free (fv);
-    free (fw);
+   PDM_free(u);
+   PDM_free(v);
+   PDM_free(w);
+   PDM_free(fu);
+   PDM_free(fv);
+   PDM_free(fw);
 
   }
 }
@@ -443,7 +443,7 @@ _set_L2_basis_equi
     }
   }
 
-  free (xi);
+ PDM_free(xi);
 }
 
 
@@ -583,10 +583,10 @@ _basis_quad_qn
       }
     }
 
-    free (lagrangeL2_u);
-    free (lagrangeL2_v);
-    free (u);
-    free (v);
+   PDM_free(lagrangeL2_u);
+   PDM_free(lagrangeL2_v);
+   PDM_free(u);
+   PDM_free(v);
   }
 }
 
@@ -698,14 +698,14 @@ _basis_tetra_pn
         }
       }
     }
-    free (u);
-    free (v);
-    free (w);
-    free (t);
-    free (fu);
-    free (fv);
-    free (fw);
-    free (ft);
+   PDM_free(u);
+   PDM_free(v);
+   PDM_free(w);
+   PDM_free(t);
+   PDM_free(fu);
+   PDM_free(fv);
+   PDM_free(fw);
+   PDM_free(ft);
   }
 
 }
@@ -977,14 +977,14 @@ _basis_prism_pn
         }
       }
     }
-    free(u);
-    free(v);
-    free(w);
-    free(t);
-    free(fu);
-    free(fv);
-    free(ft);
-    free(lagrangeL2_w);
+   PDM_free(u);
+   PDM_free(v);
+   PDM_free(w);
+   PDM_free(t);
+   PDM_free(fu);
+   PDM_free(fv);
+   PDM_free(ft);
+   PDM_free(lagrangeL2_w);
   }
 }
 
@@ -1169,12 +1169,12 @@ _basis_hexa_pn
         }
       }
     }
-    free(u);
-    free(v);
-    free(w);
-    free(lagrangeL2_u);
-    free(lagrangeL2_v);
-    free(lagrangeL2_w);
+   PDM_free(u);
+   PDM_free(v);
+   PDM_free(w);
+   PDM_free(lagrangeL2_u);
+   PDM_free(lagrangeL2_v);
+   PDM_free(lagrangeL2_w);
   }
 }
 

@@ -171,8 +171,8 @@ _read_args
 //     PDM_sort_int(rand_edge, perm_edge, *base_n_edge);
 //     PDM_sort_int(rand_vtx,  perm_vtx,  *base_n_vtx);
 //   }
-//   free(rand_edge);
-//   free(rand_vtx);
+//  PDM_free(rand_edge);
+//  PDM_free(rand_vtx);
 
 //   *base_edge_vtx = malloc(sizeof(int) * 2 * (*base_n_edge));
 //   for (int i = 0; i < *base_n_edge; i++) {
@@ -191,8 +191,8 @@ _read_args
 //     (*base_vtx_coord)[3*perm_vtx[i]+2] = atan(x);
 //   }
 
-//   free(perm_edge);
-//   free(perm_vtx);
+//  PDM_free(perm_edge);
+//  PDM_free(perm_vtx);
 // }
 
 
@@ -227,8 +227,8 @@ _gen_circle
     PDM_sort_int(rand_edge, perm_edge, *base_n_edge);
     PDM_sort_int(rand_vtx,  perm_vtx,  *base_n_vtx);
   }
-  free(rand_edge);
-  free(rand_vtx);
+ PDM_free(rand_edge);
+ PDM_free(rand_vtx);
 
   *base_edge_vtx = malloc(sizeof(int) * 2 * (*base_n_edge));
   for (int i = 0; i < *base_n_edge; i++) {
@@ -247,8 +247,8 @@ _gen_circle
     (*base_vtx_coord)[3*perm_vtx[i]+2] = 0;
   }
 
-  free(perm_edge);
-  free(perm_vtx);
+ PDM_free(perm_edge);
+ PDM_free(perm_vtx);
 }
 
 
@@ -350,7 +350,7 @@ const PDM_Mesh_nodal_elt_t   elt_type,
       abort();
     }
   }
-  free(distrib_face);
+ PDM_free(distrib_face);
 
 
   /* Unique vertices */
@@ -360,7 +360,7 @@ const PDM_Mesh_nodal_elt_t   elt_type,
                                     0,
                                     s_face_vtx-1);
 
-  free (face_vtx_gnum);
+ PDM_free(face_vtx_gnum);
 
   for (int i = 0; i < s_face_vtx; i++) {
     (*face_vtx)[i]++;
@@ -468,8 +468,8 @@ main
   }
   base_n_vtx += base_n_vtx2;
 
-  free(base_edge_vtx2);
-  free(base_vtx_coord2);
+ PDM_free(base_edge_vtx2);
+ PDM_free(base_vtx_coord2);
 
   if (visu && i_rank == 0) {
     PDM_vtk_write_std_elements("base_polyline.vtk",
@@ -578,7 +578,7 @@ main
                          id_var_part);
     PDM_writer_var_free(wrt,
                         id_var_part);
-    free(val_part);
+   PDM_free(val_part);
 
     PDM_writer_step_end(wrt);
 
@@ -588,14 +588,14 @@ main
 
 
   /* Free memory */
-  free(base_edge_vtx);
-  free(base_vtx_coord);
+ PDM_free(base_edge_vtx);
+ PDM_free(base_vtx_coord);
 
-  free(face_vtx_idx );
-  free(face_vtx     );
-  free(face_ln_to_gn);
-  free(vtx_coord    );
-  free(vtx_ln_to_gn );
+ PDM_free(face_vtx_idx );
+ PDM_free(face_vtx     );
+ PDM_free(face_ln_to_gn);
+ PDM_free(vtx_coord    );
+ PDM_free(vtx_ln_to_gn );
 
   PDM_MPI_Finalize();
 

@@ -357,7 +357,7 @@ _create_split_mesh
                                        dEdgeGroupIdx,
                                        dEdgeGroup);
 
-  free (dcell_part);
+ PDM_free(dcell_part);
 
   double *elapsed  = NULL;
   double *cpu      = NULL;
@@ -418,15 +418,15 @@ _create_split_mesh
   /*   PDM_printf ("       * total              : %i\n", bound_part_faces_sum);    */
   /* } */
 
-  free (dvtx_coord);
-  free (dface_vtx_idx);
-  free (dface_vtx);
-  free (dFaceEdge);
-  free (dEdgeVtxIdx);
-  free (dEdgeVtx);
-  free (dEdgeFace);
-  free (dEdgeGroupIdx);
-  free (dEdgeGroup);
+ PDM_free(dvtx_coord);
+ PDM_free(dface_vtx_idx);
+ PDM_free(dface_vtx);
+ PDM_free(dFaceEdge);
+ PDM_free(dEdgeVtxIdx);
+ PDM_free(dEdgeVtx);
+ PDM_free(dEdgeFace);
+ PDM_free(dEdgeGroupIdx);
+ PDM_free(dEdgeGroup);
 
   for (int i_part = 0; i_part < n_part; i_part++) {
 
@@ -560,7 +560,7 @@ _export_ini_mesh
     debPartProcs[i+1] = debPartProcs[i] + n_partProcs[i];
   }
 
-  free(n_partProcs);
+ PDM_free(n_partProcs);
 
   PDM_writer_step_beg (id_cs, 0.);
 
@@ -673,16 +673,16 @@ _export_ini_mesh
                         id_geom);
 
   for (int i_part = 0; i_part < n_part; i_part++) {
-    free (edgeVtxIdx1[i_part]);
-    free (edgeVtxNB1[i_part]);
-    free (faceEdgeIdx1[i_part]);
-    free (faceEdgeNB1[i_part]);
+   PDM_free(edgeVtxIdx1[i_part]);
+   PDM_free(edgeVtxNB1[i_part]);
+   PDM_free(faceEdgeIdx1[i_part]);
+   PDM_free(faceEdgeNB1[i_part]);
   }
 
-  free (edgeVtxIdx1);
-  free (edgeVtxNB1);
-  free (faceEdgeIdx1);
-  free (faceEdgeNB1);
+ PDM_free(edgeVtxIdx1);
+ PDM_free(edgeVtxNB1);
+ PDM_free(faceEdgeIdx1);
+ PDM_free(faceEdgeNB1);
 
   /* Creation des variables :
      - numero de partition
@@ -818,15 +818,15 @@ _export_ini_mesh
                        id_var_coo_xyz);
 
   for (int i_part = 0; i_part < n_part; i_part++) {
-    free (val_num_part[i_part]);
-    free (val_coo_x[i_part]);
-    free (val_coo_xyz[i_part]);
+   PDM_free(val_num_part[i_part]);
+   PDM_free(val_coo_x[i_part]);
+   PDM_free(val_coo_xyz[i_part]);
   }
 
-  free (val_num_part);
-  free (val_coo_x);
-  free (val_coo_xyz);
-  free (nsom_part);
+ PDM_free(val_num_part);
+ PDM_free(val_coo_x);
+ PDM_free(val_coo_xyz);
+ PDM_free(nsom_part);
 
   PDM_writer_step_end (id_cs);
   PDM_writer_geom_data_free (id_cs,
@@ -836,7 +836,7 @@ _export_ini_mesh
                         id_geom);
   PDM_writer_free (id_cs);
 
-  free (debPartProcs);
+ PDM_free(debPartProcs);
 
 
 }
@@ -946,7 +946,7 @@ _export_ini_mesh
 //     debPartProcs[i+1] = debPartProcs[i] + n_partProcs[i];
 //   }
 
-//   free(n_partProcs);
+//  PDM_free(n_partProcs);
 
 //   PDM_writer_step_beg (id_cs, 0.);
 
@@ -1072,16 +1072,16 @@ _export_ini_mesh
 //               id_geom);
 
 //   for (int i_part = 0; i_part < n_part; i_part++) {
-//     free (edgeVtxIdx1[i_part]);
-//     free (edgeVtxNB1[i_part]);
-//     free (faceEdgeIdx1[i_part]);
-//     free (faceEdgeNB1[i_part]);
+//    PDM_free(edgeVtxIdx1[i_part]);
+//    PDM_free(edgeVtxNB1[i_part]);
+//    PDM_free(faceEdgeIdx1[i_part]);
+//    PDM_free(faceEdgeNB1[i_part]);
 //   }
 
-//   free (edgeVtxIdx1);
-//   free (edgeVtxNB1);
-//   free (faceEdgeIdx1);
-//   free (faceEdgeNB1);
+//  PDM_free(edgeVtxIdx1);
+//  PDM_free(edgeVtxNB1);
+//  PDM_free(faceEdgeIdx1);
+//  PDM_free(faceEdgeNB1);
 
 //   /* Creation des variables :
 //      - numero de partition
@@ -1217,15 +1217,15 @@ _export_ini_mesh
 //               id_var_coo_xyz);
 
 //   for (int i_part = 0; i_part < n_part; i_part++) {
-//     free (val_num_part[i_part]);
-//     free (val_coo_x[i_part]);
-//     free (val_coo_xyz[i_part]);
+//    PDM_free(val_num_part[i_part]);
+//    PDM_free(val_coo_x[i_part]);
+//    PDM_free(val_coo_xyz[i_part]);
 //   }
 
-//   free (val_num_part);
-//   free (val_coo_x);
-//   free (val_coo_xyz);
-//   free (nsom_part);
+//  PDM_free(val_num_part);
+//  PDM_free(val_coo_x);
+//  PDM_free(val_coo_xyz);
+//  PDM_free(nsom_part);
 
 //   PDM_writer_step_end (id_cs);
 //   PDM_writer_geom_data_free (id_cs,
@@ -1235,7 +1235,7 @@ _export_ini_mesh
 //                id_geom);
 //   PDM_writer_free (id_cs);
 
-//   free (debPartProcs);
+//  PDM_free(debPartProcs);
 
 
 // }
@@ -1367,7 +1367,7 @@ char *argv[]
                                                        have_face_group);
 
   if (_agglo_method != NULL) {
-    free (_agglo_method);
+   PDM_free(_agglo_method);
   }
 
   for (int i_part = 0; i_part < n_part; i_part++) {
@@ -1485,14 +1485,14 @@ char *argv[]
 
  /* for (int imesh = 0; imesh < 2; imesh++) { */
  /*   for (int i_part = 0; i_part < n_part; i_part++) { */
- /*     free (face_vtx[imesh][i_part]); */
+ /*    PDM_free(face_vtx[imesh][i_part]); */
  /*   } */
- /*   free (face_vtx[imesh]); */
+ /*  PDM_free(face_vtx[imesh]); */
 
  /*   PDM_part_free (ppart_id[imesh]); */
  /* } */
 
- /* free (face_vtx); */
+ /*PDM_free(face_vtx); */
  if (i_rank == 0) {
    PDM_printf ("-- End\n");
  }

@@ -270,7 +270,7 @@ void         *array
     }
   }
 
-  free(old_array);
+ PDM_free(old_array);
 }
 
 /**
@@ -455,7 +455,7 @@ const size_t           stride,
     }
   }
 
-  free(last_value);
+ PDM_free(last_value);
 
   return new_size;
 }
@@ -502,7 +502,7 @@ const size_t           stride,
     }
   }
 
-  free(last_value);
+ PDM_free(last_value);
 
   return new_size;
 }

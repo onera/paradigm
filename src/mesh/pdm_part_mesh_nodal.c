@@ -72,12 +72,12 @@ _vtx_free
     }
 
     if (vtx->_coords != NULL && vtx->owner == PDM_OWNERSHIP_KEEP) {
-      free (vtx->_coords);
+     PDM_free(vtx->_coords);
       vtx->_coords = NULL;
     }
 
     if (vtx->_numabs != NULL && vtx->owner == PDM_OWNERSHIP_KEEP) {
-      free (vtx->_numabs);
+     PDM_free(vtx->_numabs);
       vtx->_numabs = NULL;
     }
   }
@@ -1085,26 +1085,26 @@ PDM_part_mesh_nodal_free
       if(pmn->vtx[i_part]->owner == PDM_OWNERSHIP_KEEP){
         _vtx_free (pmn->vtx[i_part]);
       }
-      free(pmn->vtx[i_part]);
+     PDM_free(pmn->vtx[i_part]);
     }
 
-    free(pmn->vtx);
+   PDM_free(pmn->vtx);
     pmn->vtx = NULL;
   }
 
-  free(pmn->n_vol   );
-  free(pmn->n_surf  );
-  free(pmn->n_ridge );
-  free(pmn->n_corner);
+ PDM_free(pmn->n_vol   );
+ PDM_free(pmn->n_surf  );
+ PDM_free(pmn->n_ridge );
+ PDM_free(pmn->n_corner);
 
   if (pmn->section_kind != NULL) {
-    free(pmn->section_kind);
+   PDM_free(pmn->section_kind);
   }
   if (pmn->section_id != NULL) {
-    free(pmn->section_id);
+   PDM_free(pmn->section_id);
   }
 
-  free(pmn);
+ PDM_free(pmn);
 }
 
 
@@ -1262,7 +1262,7 @@ PDM_part_mesh_nodal_dump_vtk
                                         0,
                                         NULL,
                                         NULL);
-          free(pcell_vtx_out);
+         PDM_free(pcell_vtx_out);
         } else {
 
           const char  *field_name[] = {"groud_id"};
@@ -1295,7 +1295,7 @@ PDM_part_mesh_nodal_dump_vtk
       }
       shift += n_elt;
     }
-    free(group_id);
+   PDM_free(group_id);
   }
 }
 
@@ -1749,7 +1749,7 @@ PDM_part_mesh_nodal_reset
         pmn->vtx[i]->parent = NULL;
       }
       if (pmn->vtx[i]->coords != NULL) {
-        free (pmn->vtx[i]->coords);
+       PDM_free(pmn->vtx[i]->coords);
         pmn->vtx[i]->coords = NULL;
       }
     }

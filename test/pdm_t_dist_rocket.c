@@ -203,7 +203,7 @@ _gen_cloud_random
     }
   }
 
-  free (distrib);
+ PDM_free(distrib);
 }
 
 
@@ -308,7 +308,7 @@ _gen_cloud_grid
                                        dface_group_idx,
                                        dface_group);
 
-  free(dcell_part);
+ PDM_free(dcell_part);
 
 
   *n_pts     = malloc (sizeof(int)           * n_part);
@@ -403,7 +403,7 @@ _gen_cloud_grid
                                         (*pts_coord)[i_part],
                                         NULL,
                                         NULL);
-    free (cell_volume);
+   PDM_free(cell_volume);
   }
 
   PDM_part_free (ppart);
@@ -607,7 +607,7 @@ _gen_rocket
       ivtx++;
     }
   }
-  free (distrib_vtx);
+ PDM_free(distrib_vtx);
 
 
   /*
@@ -740,7 +740,7 @@ _gen_rocket
       ifac += n_tri_k;
     }
   }
-  free (distrib_edge);
+ PDM_free(distrib_edge);
 
 
   /* Edge groups */
@@ -755,7 +755,7 @@ _gen_rocket
   for (PDM_g_num_t i = distrib_edge_lim[i_rank]; i < distrib_edge_lim[i_rank+1]; i++) {
     _dedge_group[_dedge_group_idx[1]++] = 1 + i;
   }
-  free (distrib_edge_lim);
+ PDM_free(distrib_edge_lim);
 
   /*
    *  Faces
@@ -875,7 +875,7 @@ _gen_rocket
       iedg += n_edge_k;
     }
   }
-  free (distrib_face);
+ PDM_free(distrib_face);
 }
 
 
@@ -1056,7 +1056,7 @@ _get_connectivity
       vtxEdgeN[ivtx1] += 1;
       vtxEdgeN[ivtx2] += 1;
     }
-    free(vtxEdgeN);
+   PDM_free(vtxEdgeN);
 
     for (int i = 0; i < _nFace; i++) {
       int idx = _faceEdgeIdx[i];
@@ -1108,8 +1108,8 @@ _get_connectivity
         printf("\n");*/
     }
 
-    free (vtxEdge);
-    free (vtxEdgeIdx);
+   PDM_free(vtxEdge);
+   PDM_free(vtxEdgeIdx);
 
   }
 }
@@ -1229,16 +1229,16 @@ _gen_src_mesh
                                          dedge_group_idx,
                                          dedge_group);
 
-    free (dface_part);
-    free (dvtx_coord);
-    free (dface_vtx_idx);
-    free (dface_vtx);
-    free (dface_edge);
-    free (dedge_vtx_idx);
-    free (dedge_vtx);
-    free (dedge_face);
-    free (dedge_group_idx);
-    free (dedge_group);
+   PDM_free(dface_part);
+   PDM_free(dvtx_coord);
+   PDM_free(dface_vtx_idx);
+   PDM_free(dface_vtx);
+   PDM_free(dface_edge);
+   PDM_free(dedge_vtx_idx);
+   PDM_free(dedge_vtx);
+   PDM_free(dedge_face);
+   PDM_free(dedge_group_idx);
+   PDM_free(dedge_group);
 
 
     int **face_edge_idx = NULL;
@@ -1262,16 +1262,16 @@ _gen_src_mesh
                        vtx_g_num);
 
     for (int i_part = 0; i_part < n_part; i_part++) {
-      free (face_edge_idx[i_part]);
-      free (face_edge[i_part]);
-      free (edge_vtx_idx[i_part]);
-      free (edge_vtx[i_part]);
+     PDM_free(face_edge_idx[i_part]);
+     PDM_free(face_edge[i_part]);
+     PDM_free(edge_vtx_idx[i_part]);
+     PDM_free(edge_vtx[i_part]);
     }
-    free (n_edge);
-    free (face_edge_idx);
-    free (face_edge);
-    free (edge_vtx_idx);
-    free (edge_vtx);
+   PDM_free(n_edge);
+   PDM_free(face_edge_idx);
+   PDM_free(face_edge);
+   PDM_free(edge_vtx_idx);
+   PDM_free(edge_vtx);
 
     PDM_part_free (ppart);
   }
@@ -1557,7 +1557,7 @@ int main(int argc, char *argv[])
 
     PDM_MPI_Comm_split (PDM_MPI_COMM_WORLD, active_rank_src, i_rank, &src_comm);
 
-    free (rank_in_nodes);
+   PDM_free(rank_in_nodes);
   }
 
 
@@ -1700,27 +1700,27 @@ int main(int argc, char *argv[])
    *  Finalize
    */
   for (int i_part = 0; i_part < n_part_tgt; i_part++) {
-    free (tgt_coord[i_part]);
-    free (tgt_g_num[i_part]);
+   PDM_free(tgt_coord[i_part]);
+   PDM_free(tgt_g_num[i_part]);
   }
-  free (n_tgt);
-  free (tgt_coord);
-  free (tgt_g_num);
+ PDM_free(n_tgt);
+ PDM_free(tgt_coord);
+ PDM_free(tgt_g_num);
 
   for (int i_part = 0; i_part < n_part_src; i_part++) {
-    free (vtx_coord[i_part]);
-    free (vtx_g_num[i_part]);
-    free (face_vtx_idx[i_part]);
-    free (face_vtx[i_part]);
-    free (face_g_num[i_part]);
+   PDM_free(vtx_coord[i_part]);
+   PDM_free(vtx_g_num[i_part]);
+   PDM_free(face_vtx_idx[i_part]);
+   PDM_free(face_vtx[i_part]);
+   PDM_free(face_g_num[i_part]);
   }
-  free (n_vtx);
-  free (vtx_coord);
-  free (vtx_g_num);
-  free (n_face);
-  free (face_vtx_idx);
-  free (face_vtx);
-  free (face_g_num);
+ PDM_free(n_vtx);
+ PDM_free(vtx_coord);
+ PDM_free(vtx_g_num);
+ PDM_free(n_face);
+ PDM_free(face_vtx_idx);
+ PDM_free(face_vtx);
+ PDM_free(face_g_num);
 
 
   PDM_MPI_Finalize();

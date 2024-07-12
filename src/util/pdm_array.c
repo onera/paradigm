@@ -13,8 +13,10 @@
  *  Header for the current file
  *----------------------------------------------------------------------------*/
 
+#include "pdm.h"
 #include "pdm_array.h"
 #include "pdm_config.h"
+#include "pdm_priv.h"
 
 /*----------------------------------------------------------------------------*/
 
@@ -223,7 +225,7 @@ void PDM_array_repart_per_col_int
     int col = elem_col[i_elem];
     ordered[ordered_idx[col] + count[col]++] = i_elem;
   }
-  free(count);
+ PDM_free(count);
 }
 
 #ifdef __cplusplus

@@ -825,7 +825,7 @@ PDM_polygon_status_t PDM_polygon_point_in_3d
                                                        //char_length,
                                                        NULL);
 
-  free (xy);
+ PDM_free(xy);
   return stat;
 }
 
@@ -943,7 +943,7 @@ int PDM_polygon_3d_to_2d
   }
 
   if (normal == NULL) {
-    free (_normal);
+   PDM_free(_normal);
   }
 
   return 1;

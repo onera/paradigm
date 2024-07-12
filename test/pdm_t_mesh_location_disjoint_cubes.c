@@ -468,14 +468,14 @@ _cube_mesh2
     PDM_multipart_compute(mpart);
 
     PDM_dmesh_free(dmesh);
-    free(dvtx_coord);
-    free(dcell_face_idx);
-    free(dcell_face);
-    free(dface_cell);
-    free(dface_vtx_idx);
-    free(dface_vtx);
-    free(dface_group_idx);
-    free(dface_group);
+   PDM_free(dvtx_coord);
+   PDM_free(dcell_face_idx);
+   PDM_free(dcell_face);
+   PDM_free(dface_cell);
+   PDM_free(dface_vtx_idx);
+   PDM_free(dface_vtx);
+   PDM_free(dface_group_idx);
+   PDM_free(dface_group);
   }
 
 
@@ -542,7 +542,7 @@ _cube_mesh2
     memcpy((*pface_vtx)[i_part], _face_vtx, sizeof(int) * _face_vtx_idx[n_face]);
 
     if (_face_vtx != face_vtx) {
-      free(_face_vtx);
+     PDM_free(_face_vtx);
     }
   }
 
@@ -1043,12 +1043,12 @@ _cube_mesh2
                                (*pface_ln_to_gn)[i_part],
                                is_extended);
 
-        free(is_extended);
+       PDM_free(is_extended);
       }
     }
 
     // if(_face_vtx != face_vtx) {
-    //   free(_face_vtx);
+    //  PDM_free(_face_vtx);
     // }
   }
 
@@ -1347,7 +1347,7 @@ int main(int argc, char *argv[])
                                           NULL,
                                           NULL);
 
-      free (cell_volume);
+     PDM_free(cell_volume);
     }
   }
 
@@ -1856,9 +1856,9 @@ int main(int argc, char *argv[])
                   tgt_location[ipart][pt_id], err, recv_field[ipart][i], f);
       }
     }
-    free(recv_field[ipart]);
+   PDM_free(recv_field[ipart]);
   }
-  free(recv_field);
+ PDM_free(recv_field);
 
 
   double gmax_err;
@@ -1880,68 +1880,68 @@ int main(int argc, char *argv[])
    *  Free memory
    */
   for (int ipart = 0; ipart < n_part; ipart++) {
-    free(src_cell_face_idx[ipart]);
-    free(src_cell_face    [ipart]);
-    free(src_face_vtx_idx [ipart]);
-    free(src_face_vtx     [ipart]);
-    free(src_vtx_coord    [ipart]);
-    free(src_cell_ln_to_gn[ipart]);
-    free(src_face_ln_to_gn[ipart]);
-    free(src_vtx_ln_to_gn [ipart]);
+   PDM_free(src_cell_face_idx[ipart]);
+   PDM_free(src_cell_face    [ipart]);
+   PDM_free(src_face_vtx_idx [ipart]);
+   PDM_free(src_face_vtx     [ipart]);
+   PDM_free(src_vtx_coord    [ipart]);
+   PDM_free(src_cell_ln_to_gn[ipart]);
+   PDM_free(src_face_ln_to_gn[ipart]);
+   PDM_free(src_vtx_ln_to_gn [ipart]);
 
-    free(tgt_cell_face_idx[ipart]);
-    free(tgt_cell_face    [ipart]);
-    free(tgt_face_vtx_idx [ipart]);
-    free(tgt_face_vtx     [ipart]);
-    free(tgt_vtx_coord    [ipart]);
-    free(tgt_cell_ln_to_gn[ipart]);
-    free(tgt_face_ln_to_gn[ipart]);
-    free(tgt_vtx_ln_to_gn [ipart]);
+   PDM_free(tgt_cell_face_idx[ipart]);
+   PDM_free(tgt_cell_face    [ipart]);
+   PDM_free(tgt_face_vtx_idx [ipart]);
+   PDM_free(tgt_face_vtx     [ipart]);
+   PDM_free(tgt_vtx_coord    [ipart]);
+   PDM_free(tgt_cell_ln_to_gn[ipart]);
+   PDM_free(tgt_face_ln_to_gn[ipart]);
+   PDM_free(tgt_vtx_ln_to_gn [ipart]);
 
-    free (tgt_location[ipart]);
-    free (tgt_proj_coord[ipart]);
+   PDM_free(tgt_location[ipart]);
+   PDM_free(tgt_proj_coord[ipart]);
 
     if (!use_tgt_nodes) {
-      free(tgt_coord[ipart]);
+     PDM_free(tgt_coord[ipart]);
     }
 
-    free(src_field [ipart]);
-    free(send_field[ipart]);
+   PDM_free(src_field [ipart]);
+   PDM_free(send_field[ipart]);
   }
 
-  free(src_n_cell       );
-  free(src_n_face       );
-  free(src_n_vtx        );
-  free(src_cell_face_idx);
-  free(src_cell_face    );
-  free(src_face_vtx_idx );
-  free(src_face_vtx     );
-  free(src_vtx_coord    );
-  free(src_cell_ln_to_gn);
-  free(src_face_ln_to_gn);
-  free(src_vtx_ln_to_gn );
+ PDM_free(src_n_cell       );
+ PDM_free(src_n_face       );
+ PDM_free(src_n_vtx        );
+ PDM_free(src_cell_face_idx);
+ PDM_free(src_cell_face    );
+ PDM_free(src_face_vtx_idx );
+ PDM_free(src_face_vtx     );
+ PDM_free(src_vtx_coord    );
+ PDM_free(src_cell_ln_to_gn);
+ PDM_free(src_face_ln_to_gn);
+ PDM_free(src_vtx_ln_to_gn );
 
-  free(tgt_n_cell       );
-  free(tgt_n_face       );
-  free(tgt_n_vtx        );
-  free(tgt_cell_face_idx);
-  free(tgt_cell_face    );
-  free(tgt_face_vtx_idx );
-  free(tgt_face_vtx     );
-  free(tgt_vtx_coord    );
-  free(tgt_cell_ln_to_gn);
-  free(tgt_face_ln_to_gn);
-  free(tgt_vtx_ln_to_gn );
+ PDM_free(tgt_n_cell       );
+ PDM_free(tgt_n_face       );
+ PDM_free(tgt_n_vtx        );
+ PDM_free(tgt_cell_face_idx);
+ PDM_free(tgt_cell_face    );
+ PDM_free(tgt_face_vtx_idx );
+ PDM_free(tgt_face_vtx     );
+ PDM_free(tgt_vtx_coord    );
+ PDM_free(tgt_cell_ln_to_gn);
+ PDM_free(tgt_face_ln_to_gn);
+ PDM_free(tgt_vtx_ln_to_gn );
 
-  free (tgt_location);
-  free (tgt_proj_coord);
+ PDM_free(tgt_location);
+ PDM_free(tgt_proj_coord);
 
   if (!use_tgt_nodes) {
-    free(tgt_coord);
+   PDM_free(tgt_coord);
   }
 
-  free(src_field);
-  free(send_field);
+ PDM_free(src_field);
+ PDM_free(send_field);
 
   PDM_mesh_location_free(mesh_loc);
   PDM_part_to_part_free (ptp);

@@ -521,9 +521,9 @@ int main(int argc, char *argv[])
                  &src_vtx_field2);
 
   for (int i_part = 0; i_part < src_n_part; i_part++) {
-    free(src_elt_field_values[i_part]);
+   PDM_free(src_elt_field_values[i_part]);
   }
-  free(src_elt_field_values);
+ PDM_free(src_elt_field_values);
 
 
   writer_wrapper(comm,
@@ -556,62 +556,62 @@ int main(int argc, char *argv[])
   PDM_part_to_part_free(ptp); // /!\ Ownership
 
   for (int i_part = 0; i_part < src_n_part; i_part++) {
-    free(src_vtx_coord    [i_part]);
-    free(src_edge_vtx     [i_part]);
-    free(src_face_edge_idx[i_part]);
-    free(src_face_edge    [i_part]);
-    free(src_face_vtx     [i_part]);
-    free(src_vtx_ln_to_gn [i_part]);
-    free(src_edge_ln_to_gn[i_part]);
-    free(src_face_ln_to_gn[i_part]);
-    free(src_vtx_field2   [i_part]);
-    free(src_send_field2  [i_part]);
+   PDM_free(src_vtx_coord    [i_part]);
+   PDM_free(src_edge_vtx     [i_part]);
+   PDM_free(src_face_edge_idx[i_part]);
+   PDM_free(src_face_edge    [i_part]);
+   PDM_free(src_face_vtx     [i_part]);
+   PDM_free(src_vtx_ln_to_gn [i_part]);
+   PDM_free(src_edge_ln_to_gn[i_part]);
+   PDM_free(src_face_ln_to_gn[i_part]);
+   PDM_free(src_vtx_field2   [i_part]);
+   PDM_free(src_send_field2  [i_part]);
   }
-  free(src_n_vtx        );
-  free(src_n_edge       );
-  free(src_n_face       );
-  free(src_vtx_coord    );
-  free(src_edge_vtx     );
-  free(src_face_edge_idx);
-  free(src_face_edge    );
-  free(src_face_vtx     );
-  free(src_vtx_ln_to_gn );
-  free(src_edge_ln_to_gn);
-  free(src_face_ln_to_gn);
-  free(src_vtx_field2   );
-  free(src_send_field2  ); // can be free'd right after PDM_part_to_part_iexch_wait(ptp, &request2);
+ PDM_free(src_n_vtx        );
+ PDM_free(src_n_edge       );
+ PDM_free(src_n_face       );
+ PDM_free(src_vtx_coord    );
+ PDM_free(src_edge_vtx     );
+ PDM_free(src_face_edge_idx);
+ PDM_free(src_face_edge    );
+ PDM_free(src_face_vtx     );
+ PDM_free(src_vtx_ln_to_gn );
+ PDM_free(src_edge_ln_to_gn);
+ PDM_free(src_face_ln_to_gn);
+ PDM_free(src_vtx_field2   );
+ PDM_free(src_send_field2  ); // can be free'd right after PDM_part_to_part_iexch_wait(ptp, &request2);
 
   for (int i_part = 0; i_part < tgt_n_part; i_part++) {
-    free(tgt_vtx_coord    [i_part]);
-    free(tgt_edge_vtx     [i_part]);
-    free(tgt_face_edge_idx[i_part]);
-    free(tgt_face_edge    [i_part]);
-    free(tgt_face_vtx     [i_part]);
-    free(tgt_vtx_ln_to_gn [i_part]);
-    free(tgt_edge_ln_to_gn[i_part]);
-    free(tgt_face_ln_to_gn[i_part]);
-    free(tgt_recv_field1  [i_part]);
-    free(tgt_recv_field2  [i_part]);
-    free(tgt_field[0][i_part]);
-    free(tgt_field[1][i_part]);
-    free(tgt_field[2][i_part]);
+   PDM_free(tgt_vtx_coord    [i_part]);
+   PDM_free(tgt_edge_vtx     [i_part]);
+   PDM_free(tgt_face_edge_idx[i_part]);
+   PDM_free(tgt_face_edge    [i_part]);
+   PDM_free(tgt_face_vtx     [i_part]);
+   PDM_free(tgt_vtx_ln_to_gn [i_part]);
+   PDM_free(tgt_edge_ln_to_gn[i_part]);
+   PDM_free(tgt_face_ln_to_gn[i_part]);
+   PDM_free(tgt_recv_field1  [i_part]);
+   PDM_free(tgt_recv_field2  [i_part]);
+   PDM_free(tgt_field[0][i_part]);
+   PDM_free(tgt_field[1][i_part]);
+   PDM_free(tgt_field[2][i_part]);
   }
-  free(tgt_n_vtx        );
-  free(tgt_n_edge       );
-  free(tgt_n_face       );
-  free(tgt_vtx_coord    );
-  free(tgt_edge_vtx     );
-  free(tgt_face_edge_idx);
-  free(tgt_face_edge    );
-  free(tgt_face_vtx     );
-  free(tgt_vtx_ln_to_gn );
-  free(tgt_edge_ln_to_gn);
-  free(tgt_face_ln_to_gn);
-  free(tgt_recv_field1  );
-  free(tgt_recv_field2  );
-  free(tgt_field[0]);
-  free(tgt_field[1]);
-  free(tgt_field[2]);
+ PDM_free(tgt_n_vtx        );
+ PDM_free(tgt_n_edge       );
+ PDM_free(tgt_n_face       );
+ PDM_free(tgt_vtx_coord    );
+ PDM_free(tgt_edge_vtx     );
+ PDM_free(tgt_face_edge_idx);
+ PDM_free(tgt_face_edge    );
+ PDM_free(tgt_face_vtx     );
+ PDM_free(tgt_vtx_ln_to_gn );
+ PDM_free(tgt_edge_ln_to_gn);
+ PDM_free(tgt_face_ln_to_gn);
+ PDM_free(tgt_recv_field1  );
+ PDM_free(tgt_recv_field2  );
+ PDM_free(tgt_field[0]);
+ PDM_free(tgt_field[1]);
+ PDM_free(tgt_field[2]);
 
   // Finalize
   PDM_MPI_Finalize();

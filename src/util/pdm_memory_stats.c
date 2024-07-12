@@ -25,6 +25,8 @@
 #include "pdm_printf.h"
 #include "pdm_error.h"
 #include "pdm_logging.h"
+#include "pdm.h"
+#include "pdm_priv.h"
 
 /*----------------------------------------------------------------------------*/
 
@@ -201,17 +203,17 @@ PDM_memory_stats_free
 {
   for(int i = 0; i < ms->n_memory_snapshot; ++i) {
     if(ms->snapshot_name[i] != NULL) {
-      free(ms->snapshot_name[i]);
+     PDM_free(ms->snapshot_name[i]);
     }
   }
 
-  free(ms->snapshot_name);
-  free(ms->curr_real_mem);
-  free(ms->peak_real_mem);
-  free(ms->curr_virt_mem);
-  free(ms->peak_virt_mem);
+ PDM_free(ms->snapshot_name);
+ PDM_free(ms->curr_real_mem);
+ PDM_free(ms->peak_real_mem);
+ PDM_free(ms->curr_virt_mem);
+ PDM_free(ms->peak_virt_mem);
 
-  free(ms);
+ PDM_free(ms);
 }
 
 

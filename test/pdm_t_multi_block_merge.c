@@ -241,19 +241,19 @@ int main(int argc, char *argv[])
 
   PDM_domain_interface_free(dom_intrf);
 
-  free(n_group_elt);
-  free(dgroup_elmt_idx);
-  free(dgroup_elmt);
-  free(dn_vtx);
-  free(dn_face);
+ PDM_free(n_group_elt);
+ PDM_free(dgroup_elmt_idx);
+ PDM_free(dgroup_elmt);
+ PDM_free(dn_vtx);
+ PDM_free(dn_face);
   for (int i_block = 0; i_block < n_block; i_block++) {
-    free(dface_vtx_idx[i_block]);
+   PDM_free(dface_vtx_idx[i_block]);
   }
-  free(dface_vtx_idx);
-  free(dface_vtx);
+ PDM_free(dface_vtx_idx);
+ PDM_free(dface_vtx);
 
-  free(interface_face_ids);
-  free(interface_face_dom);
+ PDM_free(interface_face_ids);
+ PDM_free(interface_face_dom);
 
   /*
    * Concatenate blocks
@@ -339,7 +339,7 @@ int main(int argc, char *argv[])
 
 
 
-  free(dvtx_coord);
+ PDM_free(dvtx_coord);
 
   /*
    * Same protocol for cells
@@ -402,8 +402,8 @@ int main(int argc, char *argv[])
                                (int **) NULL,
                                        &dmerge_elmt_vtx_stride,
                                        &dmerge_elmt_vtx); 
-  free(dmerge_elmt_vtx_stride);
-  free(stride_cst_ptr);
+ PDM_free(dmerge_elmt_vtx_stride);
+ PDM_free(stride_cst_ptr);
 
   /*
    * Visualisation
@@ -455,7 +455,7 @@ int main(int argc, char *argv[])
                  (const PDM_g_num_t **) &pvtx_ln_to_gn,
                                         &tmp_pvtx_coord);
   double* pvtx_coord_out = tmp_pvtx_coord[0];
-  free(tmp_pvtx_coord);
+ PDM_free(tmp_pvtx_coord);
 
 
   char filename_elmt[999];
@@ -484,41 +484,41 @@ int main(int argc, char *argv[])
                             merge_vtx_ln_to_gn,
                             NULL);
 
-  free(dmerge_vtx_coord);
-  free(merge_vtx_ln_to_gn);
-  free(merge_elmt_ln_to_gn);
-  free(dconnec_idx);
-  free(pvtx_ln_to_gn);
-  free(pcell_vtx_idx);
-  free(pcell_vtx);
-  free(pvtx_coord_out);
+ PDM_free(dmerge_vtx_coord);
+ PDM_free(merge_vtx_ln_to_gn);
+ PDM_free(merge_elmt_ln_to_gn);
+ PDM_free(dconnec_idx);
+ PDM_free(pvtx_ln_to_gn);
+ PDM_free(pcell_vtx_idx);
+ PDM_free(pcell_vtx);
+ PDM_free(pvtx_coord_out);
 
   PDM_multi_block_merge_free(mbm);
   PDM_multi_block_merge_free(mbm_elmt);
 
-  free(dmerge_elmt_vtx);
+ PDM_free(dmerge_elmt_vtx);
   for(int i_block = 0; i_block < n_block ; ++i_block) {
-    free(selected_g_num[i_block]);
-    free(selected_elmt_g_num[i_block]);
+   PDM_free(selected_g_num[i_block]);
+   PDM_free(selected_elmt_g_num[i_block]);
   }
   for(int i_block = 0; i_block < n_block ; ++i_block) {
-    free(stride_one[i_block]);
+   PDM_free(stride_one[i_block]);
   }
-  free(stride_one);
-  free(block_elmt_vtx);
-  free(selected_g_num);
-  free(selected_elmt_g_num);
-  free(dmerge_elmt_idx     );
-  free(dmerge_elmt_block_id);
-  free(dmerge_elmt_g_num   );
-  free(graph_vtx_idx);
-  free(graph_vtx_ids);
-  free(graph_vtx_dom);
+ PDM_free(stride_one);
+ PDM_free(block_elmt_vtx);
+ PDM_free(selected_g_num);
+ PDM_free(selected_elmt_g_num);
+ PDM_free(dmerge_elmt_idx     );
+ PDM_free(dmerge_elmt_block_id);
+ PDM_free(dmerge_elmt_g_num   );
+ PDM_free(graph_vtx_idx);
+ PDM_free(graph_vtx_ids);
+ PDM_free(graph_vtx_dom);
 
-  free(block_distrib_idx);
-  free(block_elmt_distrib_idx);
-  free(n_selected);
-  free(n_elmt_selected);
+ PDM_free(block_distrib_idx);
+ PDM_free(block_elmt_distrib_idx);
+ PDM_free(n_selected);
+ PDM_free(n_elmt_selected);
 
 
   PDM_dcube_nodal_gen_free(dcube1);

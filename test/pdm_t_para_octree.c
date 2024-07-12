@@ -181,7 +181,7 @@ _loop_forward
       }
     }
   }
-  free(stack_id);
+ PDM_free(stack_id);
 }
 
 
@@ -272,10 +272,10 @@ _loop_backward
     }
   }
 
-  free(extract_leaf_id);
-  free(next_ancestor);
-  free(current_ancestor);
-  free(node_tag);
+ PDM_free(extract_leaf_id);
+ PDM_free(next_ancestor);
+ PDM_free(current_ancestor);
+ PDM_free(node_tag);
 
 }
 
@@ -461,18 +461,18 @@ char *argv[]
                      (void ***)  &tmp_check_gnum,
                                  &request);
   PDM_g_num_t *check_gnum = tmp_check_gnum[0];
-  free(tmp_check_gnum);
+ PDM_free(tmp_check_gnum);
   PDM_part_to_part_reverse_iexch_wait(ptp, request);
 
 
   // PDM_log_trace_array_long(check_gnum     , n_pts_octree, "check_gnum ::");
   // PDM_log_trace_array_long(pts_gnum_octree, n_pts_octree, "pts_gnum_octree ::");
 
-  free(check_gnum);
+ PDM_free(check_gnum);
 
   PDM_part_to_part_free(ptp);
 
-  free(part_octree_to_part_user_idx);
+ PDM_free(part_octree_to_part_user_idx);
 
   /* Loop  descending */
   _loop_forward(n_explicit_nodes,
@@ -501,8 +501,8 @@ char *argv[]
 
   PDM_para_octree_free(octree);
 
-  free (src_coord);
-  free (src_g_num);
+ PDM_free(src_coord);
+ PDM_free(src_g_num);
 
   if (i_rank == 0) {
     PDM_printf ("-- End\n");

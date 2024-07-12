@@ -136,7 +136,7 @@ _median_point
     int h = n_pts / 2;
     // log_trace("n_pts = %d, h = %d\n", n_pts, h);
     mid = 0.5*(x[h] + x[h+1]);
-    free(x);
+   PDM_free(x);
   }
 
   return mid;
@@ -254,7 +254,7 @@ _update_sampling(int     n_sample,
 
   new_sampling[n_sample] = _sampling[n_sample];
 
-  free(_sampling);
+ PDM_free(_sampling);
 
   /* Return pointers */
   *sampling = new_sampling;
@@ -343,7 +343,7 @@ _approx_median_point
     }
 
   } /* End of while */
-  free(sampling);
+ PDM_free(sampling);
 
   // PDM_log_trace_array_double(best_sampling, n_sample+1, "best_sampling : ");
 
@@ -700,7 +700,7 @@ _build_kdtree
                            kdtree,
                            point_range,
                            tmp_new_to_old);
-  free(tmp_new_to_old);
+ PDM_free(tmp_new_to_old);
 
 
   if (kdtree->n_nodes > 1) {
@@ -752,16 +752,16 @@ _l_nodes_free
 {
   if (kdtree->nodes != NULL) {
 
-    free(kdtree->nodes->ancestor_id);
-    free(kdtree->nodes->is_leaf);
-    free(kdtree->nodes->depth);
-    free(kdtree->nodes->children_id);
-    free(kdtree->nodes->range);
-    free(kdtree->nodes->idx);
-    free(kdtree->nodes->n_points);
-    free(kdtree->nodes->extents);
+   PDM_free(kdtree->nodes->ancestor_id);
+   PDM_free(kdtree->nodes->is_leaf);
+   PDM_free(kdtree->nodes->depth);
+   PDM_free(kdtree->nodes->children_id);
+   PDM_free(kdtree->nodes->range);
+   PDM_free(kdtree->nodes->idx);
+   PDM_free(kdtree->nodes->n_points);
+   PDM_free(kdtree->nodes->extents);
 
-    free(kdtree->nodes);
+   PDM_free(kdtree->nodes);
 
     kdtree->nodes = NULL;
   }
@@ -890,20 +890,20 @@ PDM_kdtree_seq_free
 )
 {
   if (kdtree->_pts_coord != NULL) {
-    free(kdtree->_pts_coord);
+   PDM_free(kdtree->_pts_coord);
   }
 
   if (kdtree->new_to_old != NULL) {
-    free(kdtree->new_to_old);
+   PDM_free(kdtree->new_to_old);
   }
 
   if (kdtree->old_to_new != NULL) {
-    free(kdtree->old_to_new);
+   PDM_free(kdtree->old_to_new);
   }
 
   _l_nodes_free(kdtree);
 
-  free (kdtree);
+ PDM_free(kdtree);
 }
 
 
@@ -1207,7 +1207,7 @@ PDM_kdtree_seq_points_inside_balls
 
 
   } // End of loop on points
-  free(stack);
+ PDM_free(stack);
 
   s_pib = pib_idx[n_ball];
   PDM_realloc(*ball_pts_l_num ,*ball_pts_l_num , s_pib,int   );
@@ -1284,8 +1284,8 @@ PDM_kdtree_seq_extract_extent
       }
     }
   }
-  free(stack_id);
-  free(stack_depth);
+ PDM_free(stack_id);
+ PDM_free(stack_depth);
 
   double* _extents = malloc(n_extract * 6 * sizeof(double));
   int   * _n_pts   = malloc(n_extract *     sizeof(int   ));
@@ -1506,7 +1506,7 @@ PDM_kdtree_seq_points_inside_boxes
     } /* End While */
   } /* End boxe loop */
 
-  free (stack_id);
+ PDM_free(stack_id);
   PDM_realloc(*pts_l_num ,*pts_l_num , _pts_idx[n_box],int);
 }
 
@@ -1667,9 +1667,9 @@ double           *closest_kdtree_pt_dist2
 
   }
 
-  free (inbox_stack);
-  free (min_dist2_stack);
-  free (stack);
+ PDM_free(inbox_stack);
+ PDM_free(min_dist2_stack);
+ PDM_free(stack);
 
 }
 

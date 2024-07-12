@@ -368,10 +368,10 @@ int main(int argc, char *argv[])
 
 
   /* Free memory */
-  free(face_edge_idx );
-  free(face_edge     );
-  free(edge_vtx      );
-  free(vtx_coord     );
+ PDM_free(face_edge_idx );
+ PDM_free(face_edge     );
+ PDM_free(edge_vtx      );
+ PDM_free(vtx_coord     );
 
   PDM_MPI_Finalize();
   return 0;

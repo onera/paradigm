@@ -404,7 +404,7 @@ _compute_faceVtx
       vtxEdgeN[ivtx1] += 1;
       vtxEdgeN[ivtx2] += 1;
     }
-    free(vtxEdgeN);
+   PDM_free(vtxEdgeN);
 
     for (int i = 0; i < _nFace; i++) {
       int idx = _faceEdgeIdx[i];
@@ -446,8 +446,8 @@ _compute_faceVtx
       }
     }
 
-    free (vtxEdge);
-    free (vtxEdgeIdx);
+   PDM_free(vtxEdge);
+   PDM_free(vtxEdgeIdx);
 
   }
 
@@ -649,7 +649,7 @@ _create_split_mesh
                                          NULL,
                                          dEdgeGroupIdx,
                                          dEdgeGroup);
-    free (dCellPart);
+   PDM_free(dCellPart);
 
     double  *elapsed = NULL;
     double  *cpu = NULL;
@@ -710,15 +710,15 @@ _create_split_mesh
       PDM_printf ("       * total              : %i\n", bound_part_faces_sum);
     }
 
-    free (dVtxCoord);
-    free (dFaceVtxIdx);
-    free (dFaceVtx);
-    free (dFaceEdge);
-    free (dEdgeVtxIdx);
-    free (dEdgeVtx);
-    free (dEdgeFace);
-    free (dEdgeGroupIdx);
-    free (dEdgeGroup);
+   PDM_free(dVtxCoord);
+   PDM_free(dFaceVtxIdx);
+   PDM_free(dFaceVtx);
+   PDM_free(dFaceEdge);
+   PDM_free(dEdgeVtxIdx);
+   PDM_free(dEdgeVtx);
+   PDM_free(dEdgeFace);
+   PDM_free(dEdgeGroupIdx);
+   PDM_free(dEdgeGroup);
 
     _compute_faceVtx (ppart,
                       n_part,
@@ -904,7 +904,7 @@ _export_ini_mesh
       debPartProcs[i+1] = debPartProcs[i] + n_part_procs[i];
     }
 
-    free(n_part_procs);
+   PDM_free(n_part_procs);
 
     PDM_writer_step_beg (id_cs[imesh], 0.);
 
@@ -940,12 +940,12 @@ _export_ini_mesh
     }
 
     for (int ipart = 0; ipart < n_part; ipart++) {
-      free (_face_nb[ipart]);
-      free (_face_idx[ipart]);
+     PDM_free(_face_nb[ipart]);
+     PDM_free(_face_idx[ipart]);
     }
 
-    free(_face_nb);
-    free(_face_idx);
+   PDM_free(_face_nb);
+   PDM_free(_face_idx);
 
     PDM_writer_geom_write(id_cs[imesh],
                           id_geom[imesh]);
@@ -1040,15 +1040,15 @@ _export_ini_mesh
                          id_var_coo_xyz[imesh]);
 
     for (int ipart = 0; ipart < n_part; ipart++) {
-      free (val_num_part[ipart]);
-      free (val_coo_x[ipart]);
-      free (val_coo_xyz[ipart]);
+     PDM_free(val_num_part[ipart]);
+     PDM_free(val_coo_x[ipart]);
+     PDM_free(val_coo_xyz[ipart]);
     }
 
-    free (val_num_part);
-    free (val_coo_x);
-    free (val_coo_xyz);
-    free (nsom_part);
+   PDM_free(val_num_part);
+   PDM_free(val_coo_x);
+   PDM_free(val_coo_xyz);
+   PDM_free(nsom_part);
 
     PDM_writer_step_end (id_cs[imesh]);
     PDM_writer_geom_data_free (id_cs[imesh],
@@ -1058,7 +1058,7 @@ _export_ini_mesh
                  id_geom[imesh]);
     PDM_writer_free (id_cs[imesh]);
 
-    free (debPartProcs);
+   PDM_free(debPartProcs);
 
   }
 
@@ -1203,7 +1203,7 @@ _export_ol_mesh
       debPartProcs[i+1] = debPartProcs[i] + n_part_procs[i];
     }
 
-    free(n_part_procs);
+   PDM_free(n_part_procs);
 
     /*
      * Debut des ecritures
@@ -1366,8 +1366,8 @@ _export_ol_mesh
                           id_geom[imesh]);
 
     for (int ipart = 0; ipart < n_part; ipart++) {
-      free (_olface_nb[ipart]);
-      free (_olface_idx[ipart]);
+     PDM_free(_olface_nb[ipart]);
+     PDM_free(_olface_idx[ipart]);
     }
 
     PDM_writer_var_write (id_cs[imesh],
@@ -1401,16 +1401,16 @@ _export_ol_mesh
                          id_var_field[imesh]);
 
     for (int ipart = 0; ipart < n_part; ipart++) {
-      free (val_num_part[ipart]);
-      free (val_match[ipart]);
-      free (val_cell_match[ipart]);
-      free (val_origin[ipart]);
+     PDM_free(val_num_part[ipart]);
+     PDM_free(val_match[ipart]);
+     PDM_free(val_cell_match[ipart]);
+     PDM_free(val_origin[ipart]);
     }
 
-    free (val_num_part);
-    free (val_match);
-    free (val_cell_match);
-    free (val_origin);
+   PDM_free(val_num_part);
+   PDM_free(val_match);
+   PDM_free(val_cell_match);
+   PDM_free(val_origin);
 
     PDM_writer_step_end (id_cs[imesh]);
     PDM_writer_geom_data_free (id_cs[imesh],
@@ -1420,9 +1420,9 @@ _export_ol_mesh
                           id_geom[imesh]);
     PDM_writer_free (id_cs[imesh]);
 
-    free (_olface_nb);
-    free (_olface_idx);
-    free (debPartProcs);
+   PDM_free(_olface_nb);
+   PDM_free(_olface_idx);
+   PDM_free(debPartProcs);
   }
 
 }
@@ -1585,7 +1585,7 @@ char *argv[]
 
     PDM_MPI_Comm_split(PDM_MPI_COMM_WORLD, activeRankMesh, i_rank, &meshComm);
 
-    free (rankInNodes);
+   PDM_free(rankInNodes);
   }
 
   for (int imesh = 0; imesh < 2; imesh++) {
@@ -1979,10 +1979,10 @@ char *argv[]
           }
         }
 
-        free (ol_surface_vector);
-        free (ol_center);
-        free (ol_characteristicLength);
-        free (ol_isDegenerated);
+       PDM_free(ol_surface_vector);
+       PDM_free(ol_center);
+       PDM_free(ol_characteristicLength);
+       PDM_free(ol_isDegenerated);
       }
     }
   }
@@ -2048,11 +2048,11 @@ char *argv[]
                     d_recv, n_recv, i_recv, PDM_MPI_DOUBLE,
                     PDM_MPI_COMM_WORLD);
 
-  free (n_send);
-  free (b_send);
-  free (i_send);
-  free (n_recv);
-  free (d_send);
+ PDM_free(n_send);
+ PDM_free(b_send);
+ PDM_free(i_send);
+ PDM_free(n_recv);
+ PDM_free(d_send);
 
   int **check_graph = malloc (sizeof(int*) * n_part);
 
@@ -2076,7 +2076,7 @@ char *argv[]
     check_graph[ipart2][2*ielt2+1] = ielt1;
   }
 
-  free (d_recv);
+ PDM_free(d_recv);
 
   for (int ipart = 0; ipart < n_part; ipart++) {
     for (int i = 0; i < nFace[1][ipart]; i++) {
@@ -2106,12 +2106,12 @@ char *argv[]
   }
 
   for (int ipart = 0; ipart < n_part; ipart++) {
-    free (check_graph[ipart]);
+   PDM_free(check_graph[ipart]);
   }
-  free (check_graph);
+ PDM_free(check_graph);
 
-  free (i_recv);
-  free (b_recv);
+ PDM_free(i_recv);
+ PDM_free(b_recv);
 
   /*
    *  Export overlay mesh
@@ -2144,68 +2144,68 @@ char *argv[]
    */
 
   for (int ipart = 0; ipart < n_part; ipart++) {
-    free (sFieldOlA[ipart]);
-    free (sFieldA[ipart]);
-    free (centerA[ipart]);
-    free (rFieldOlB[ipart]);
-    free (rFieldB[ipart]);
-    free (surfB[ipart]);
-    free (surfOlB[ipart]);
+   PDM_free(sFieldOlA[ipart]);
+   PDM_free(sFieldA[ipart]);
+   PDM_free(centerA[ipart]);
+   PDM_free(rFieldOlB[ipart]);
+   PDM_free(rFieldB[ipart]);
+   PDM_free(surfB[ipart]);
+   PDM_free(surfOlB[ipart]);
   }
 
-  free (sFieldA);
-  free (sFieldOlA);
-  free (centerA);
-  free (rFieldB);
-  free (rFieldOlB);
-  free (surfB);
-  free (surfOlB);
+ PDM_free(sFieldA);
+ PDM_free(sFieldOlA);
+ PDM_free(centerA);
+ PDM_free(rFieldB);
+ PDM_free(rFieldOlB);
+ PDM_free(surfB);
+ PDM_free(surfOlB);
 
   for (int imesh = 0; imesh < 2; imesh++) {
 
     for (int ipart = 0; ipart < n_part; ipart++) {
-      free (faceVtxIdx[imesh][ipart]);
-      free (faceVtx[imesh][ipart]);
-      free (faceLNToGN[imesh][ipart]);
-      free (vtxCoord[imesh][ipart]);
-      free (vtxLNToGN[imesh][ipart]);
-      free (_olFaceIniVtxIdx[imesh][ipart]);
-      free (_olFaceIniVtx[imesh][ipart]);
-      free (_olface_vtx_idx[imesh][ipart]);
-      free (_olface_vtx[imesh][ipart]);
-      free (_olLinkedface_procIdx[imesh][ipart]);
-      free (_olLinkedFace[imesh][ipart]);
-      free (_olface_ln_to_gn[imesh][ipart]);
-      free (_olCoords[imesh][ipart]);
-      free (_olvtx_ln_to_gn[imesh][ipart]);
-      free (_initToOlFaceIdx[imesh][ipart]);
-      free (_initToOlFace[imesh][ipart]);
+     PDM_free(faceVtxIdx[imesh][ipart]);
+     PDM_free(faceVtx[imesh][ipart]);
+     PDM_free(faceLNToGN[imesh][ipart]);
+     PDM_free(vtxCoord[imesh][ipart]);
+     PDM_free(vtxLNToGN[imesh][ipart]);
+     PDM_free(_olFaceIniVtxIdx[imesh][ipart]);
+     PDM_free(_olFaceIniVtx[imesh][ipart]);
+     PDM_free(_olface_vtx_idx[imesh][ipart]);
+     PDM_free(_olface_vtx[imesh][ipart]);
+     PDM_free(_olLinkedface_procIdx[imesh][ipart]);
+     PDM_free(_olLinkedFace[imesh][ipart]);
+     PDM_free(_olface_ln_to_gn[imesh][ipart]);
+     PDM_free(_olCoords[imesh][ipart]);
+     PDM_free(_olvtx_ln_to_gn[imesh][ipart]);
+     PDM_free(_initToOlFaceIdx[imesh][ipart]);
+     PDM_free(_initToOlFace[imesh][ipart]);
     }
 
-    free (faceVtxIdx[imesh]);
-    free (faceVtx[imesh]);
-    free (faceLNToGN[imesh]);
-    free (vtxCoord[imesh]);
-    free (vtxLNToGN[imesh]);
-    free (nFace[imesh]);
-    free (nVtx[imesh]);
-    free (_olFaceIniVtxIdx[imesh]);
-    free (_olFaceIniVtx[imesh]);
-    free (_olface_vtx_idx[imesh]);
-    free (_olface_vtx[imesh]);
-    free (_olLinkedface_procIdx[imesh]);
-    free (_olLinkedFace[imesh]);
-    free (_olface_ln_to_gn[imesh]);
-    free (_olCoords[imesh]);
-    free (_olvtx_ln_to_gn[imesh]);
-    free (_initToOlFaceIdx[imesh]);
-    free (_initToOlFace[imesh]);
+   PDM_free(faceVtxIdx[imesh]);
+   PDM_free(faceVtx[imesh]);
+   PDM_free(faceLNToGN[imesh]);
+   PDM_free(vtxCoord[imesh]);
+   PDM_free(vtxLNToGN[imesh]);
+   PDM_free(nFace[imesh]);
+   PDM_free(nVtx[imesh]);
+   PDM_free(_olFaceIniVtxIdx[imesh]);
+   PDM_free(_olFaceIniVtx[imesh]);
+   PDM_free(_olface_vtx_idx[imesh]);
+   PDM_free(_olface_vtx[imesh]);
+   PDM_free(_olLinkedface_procIdx[imesh]);
+   PDM_free(_olLinkedFace[imesh]);
+   PDM_free(_olface_ln_to_gn[imesh]);
+   PDM_free(_olCoords[imesh]);
+   PDM_free(_olvtx_ln_to_gn[imesh]);
+   PDM_free(_initToOlFaceIdx[imesh]);
+   PDM_free(_initToOlFace[imesh]);
 
-    free (_nOlFace[imesh]);
-    free (_nOlLinkedFace[imesh]);
-    free (_nOlVtx[imesh]);
-    free (_sOlface_vtx[imesh]);
-    free (_sInitToOlFace[imesh]);
+   PDM_free(_nOlFace[imesh]);
+   PDM_free(_nOlLinkedFace[imesh]);
+   PDM_free(_nOlVtx[imesh]);
+   PDM_free(_sOlface_vtx[imesh]);
+   PDM_free(_sInitToOlFace[imesh]);
   }
 
   /*

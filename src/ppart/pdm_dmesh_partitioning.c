@@ -355,7 +355,7 @@ PDM_dmesh_partitioning_free
 {
   _dmesh_partitioning_t* _dmp = (_dmesh_partitioning_t *) dmp;
 
-  free (_dmp);
+ PDM_free(_dmp);
   _dmp = NULL;
 }
 

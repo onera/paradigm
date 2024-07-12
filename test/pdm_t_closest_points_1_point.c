@@ -169,7 +169,7 @@ _random_pts
     }
   }
 
-  free (distrib_pts);
+ PDM_free(distrib_pts);
 }
 
 
@@ -305,14 +305,14 @@ main (int argc, char *argv[])
 
   PDM_closest_points_free (clsp);
 
-  free (tgt_coord);
-  free (tgt_g_num);
-  free (closest_src_idx);
+ PDM_free(tgt_coord);
+ PDM_free(tgt_g_num);
+ PDM_free(closest_src_idx);
 
   if (i_rank == 0) {
     printf("-- End\n");
-    free (src_coord);
-    free (src_g_num);
+   PDM_free(src_coord);
+   PDM_free(src_g_num);
   }
 
 

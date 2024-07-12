@@ -29,6 +29,8 @@
 #include "pdm_timer.h"
 #include "pdm_printf.h"
 #include "pdm_error.h"
+#include "pdm.h"
+#include "pdm_priv.h"
 
 /*----------------------------------------------------------------------------*/
 
@@ -287,7 +289,7 @@ double PDM_timer_elapsed(PDM_timer_t *timer)
 
 void PDM_timer_free(PDM_timer_t *timer)
 {
-  free(timer);
+ PDM_free(timer);
 }
 
 #ifdef __cplusplus

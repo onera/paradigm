@@ -235,11 +235,11 @@ PDM_part_graph_split
 
         if (flag_weights != 0) {
           if(ubvec!= NULL)
-            free(ubvec);
+           PDM_free(ubvec);
           if(tpwgts!= NULL)
-            free(tpwgts);
+           PDM_free(tpwgts);
           // if(adjwgt!= NULL)
-          //   free(adjwgt);
+          //  PDM_free(adjwgt);
         }
 
 #else
@@ -360,8 +360,8 @@ PDM_part_graph_split
 
         /** CHECK H_CODES **/
 
-        free(cellCenter);
-        free(cellPond);
+       PDM_free(cellCenter);
+       PDM_free(cellPond);
 
         int *newToOldOrder = (int *) malloc (part_ini->n_cell * sizeof(int));
         for(int i = 0; i < part_ini->n_cell; ++i) {
@@ -371,8 +371,8 @@ PDM_part_graph_split
         PDM_sort_double (hilbert_codes, *cell_part, part_ini->n_cell);
 
         /* Free */
-        free (hilbert_codes);
-        free (newToOldOrder);
+       PDM_free(hilbert_codes);
+       PDM_free(newToOldOrder);
 
         break;
       }
@@ -480,9 +480,9 @@ PDM_part_graph_compute_from_face_cell
 
   /* Free temporary arrays*/
 
-  free(cell_cell_n);
-  free(cell_cell);
-  free(cell_cell_idx);
+ PDM_free(cell_cell_n);
+ PDM_free(cell_cell);
+ PDM_free(cell_cell_idx);
 
   //Remove duplicate cells of the dual graph
   //We use the following scheme:
@@ -673,11 +673,11 @@ PDM_part_graph_split_bis
 
       if (flag_weights != 0) {
         if(ubvec!= NULL)
-          free(ubvec);
+         PDM_free(ubvec);
         if(tpwgts!= NULL)
-          free(tpwgts);
+         PDM_free(tpwgts);
         // if(adjwgt!= NULL)
-        //   free(adjwgt);
+        //  PDM_free(adjwgt);
       }
 
 #else

@@ -221,8 +221,8 @@ int main(int argc, char *argv[])
   PDM_dmesh_extract_dmesh_nodal_set(dme, dmn);
   PDM_dmesh_extract_compute(dme);
 
-  free(distrib_cell);
-  free(selected_cell_gnum);
+ PDM_free(distrib_cell);
+ PDM_free(selected_cell_gnum);
 
   PDM_dmesh_nodal_t* extract_dmn = NULL;
   PDM_dmesh_extract_dmesh_nodal_get(dme, &extract_dmn, PDM_OWNERSHIP_KEEP);

@@ -430,21 +430,21 @@ _compute_uvw
     if (dist <= tolerance2) {
       // log_trace("converged :) %e %e %e\n", uvw[0], uvw[1], uvw[2]);
 
-      free(weight    );
-      free(dweight_du);
-      free(dweight_dv);
-      free(dweight_dw);
-      free(_weight);
+     PDM_free(weight    );
+     PDM_free(dweight_du);
+     PDM_free(dweight_dv);
+     PDM_free(dweight_dw);
+     PDM_free(_weight);
       return 1;
     }
 
   }
 
-  free(weight    );
-  free(dweight_du);
-  free(dweight_dv);
-  free(dweight_dw);
-  free(_weight);
+ PDM_free(weight    );
+ PDM_free(dweight_du);
+ PDM_free(dweight_dv);
+ PDM_free(dweight_dw);
+ PDM_free(_weight);
   return 0;
 }
 
@@ -611,7 +611,7 @@ int main(int argc, char *argv[])
                                        order,
                                        PDM_Mesh_nodal_n_vtx_elt_get(type, order),
                                        ijk);
-      free (ijk);
+     PDM_free(ijk);
     }
   }
 
@@ -1012,20 +1012,20 @@ int main(int argc, char *argv[])
                                       (const char   **) field_name,
                                       (const double **) field);
   }
-  free(connec);
+ PDM_free(connec);
 
-  free(node_coord);
-  free(pts_coord);
-  // free(pts_ln_to_gn);
-  free(proj_coord);
-  free(pts_uvw);
-  free(pts_weight);
-  free(pts_uvw_init);
+ PDM_free(node_coord);
+ PDM_free(pts_coord);
+  //PDM_free(pts_ln_to_gn);
+ PDM_free(proj_coord);
+ PDM_free(pts_uvw);
+ PDM_free(pts_weight);
+ PDM_free(pts_uvw_init);
 
-  free(node_uvw);
-  free(node_field);
-  free(interp_field);
-  free(proj_field);
+ PDM_free(node_uvw);
+ PDM_free(node_field);
+ PDM_free(interp_field);
+ PDM_free(proj_field);
 
 
 

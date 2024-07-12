@@ -227,11 +227,11 @@ PDM_block_to_block_exch
                     _btb->comm);
 
   if (t_stride == PDM_STRIDE_VAR_INTERLACED) {
-    free(n_send_buffer);
-    free(n_recv_buffer);
+   PDM_free(n_send_buffer);
+   PDM_free(n_recv_buffer);
   }
-  free(i_send_buffer);
-  free(i_recv_buffer);
+ PDM_free(i_send_buffer);
+ PDM_free(i_recv_buffer);
 
   PDM_MPI_Type_free(&mpi_type);
 
@@ -326,11 +326,11 @@ PDM_block_to_block_exch_with_mpi_type
                     _btb->comm);
 
   if (t_stride == PDM_STRIDE_VAR_INTERLACED) {
-    free(n_send_buffer);
-    free(n_recv_buffer);
+   PDM_free(n_send_buffer);
+   PDM_free(n_recv_buffer);
   }
-  free(i_send_buffer);
-  free(i_recv_buffer);
+ PDM_free(i_send_buffer);
+ PDM_free(i_recv_buffer);
 
   *block_data_end = recv_buffer;
 
@@ -357,12 +357,12 @@ PDM_block_to_block_free
 {
   _pdm_block_to_block_t *_btb = (_pdm_block_to_block_t *) btb;
 
-  free (_btb->block_distrib_ini_idx);
-  free (_btb->block_distrib_end_idx);
-  free (_btb->n_send_buffer);
-  free (_btb->n_recv_buffer);
+ PDM_free(_btb->block_distrib_ini_idx);
+ PDM_free(_btb->block_distrib_end_idx);
+ PDM_free(_btb->n_send_buffer);
+ PDM_free(_btb->n_recv_buffer);
 
-  free (_btb);
+ PDM_free(_btb);
 
   return NULL;
 }

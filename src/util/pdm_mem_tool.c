@@ -590,7 +590,7 @@
 //                         char len_fct = strlen(fct);
 //                         memcpy(pdm_mem_tool.mempeak.cs[i],fct,len_fct);
 //                         pdm_mem_tool.mempeak.cs[i][len_fct] = '\0';
-//                         free(fct);
+//                        PDM_free(fct);
 //                 }
 // 		free(pdm_mem_tool.cs_peak);
 
@@ -1042,10 +1042,10 @@
 //                         pdm_mem_tool.mempeak.peak = pdm_mem_tool.real_time_mem;
 //                         pdm_mem_tool.mempeak.time_peak = time;
 //                         pdm_mem_tool.mempeak.size_cs = size_cs;
-//                         free(pdm_mem_tool.cs_peak);
+//                        PDM_free(pdm_mem_tool.cs_peak);
 //                         pdm_mem_tool.cs_peak = functions;
 //                 } else {
-//                         free(functions);
+//                        PDM_free(functions);
 // 		}
 // 		#else
 // 		free(functions);
@@ -1306,7 +1306,7 @@ void *PDM_REALLOC
       new_ptr = NULL;
     }
     else  {
-  	  free (old_ptr);
+  	 PDM_free(old_ptr);
 		  new_ptr = malloc (s_alloc);
     }
 	}

@@ -320,8 +320,8 @@ void get_ordered_face_vtx
 
   // PDM_log_trace_array_int((*face_vtx_ordered_idx), n_face, "(*face_vtx_ordered_idx): ");
   // PDM_log_trace_array_int((*face_vtx_ordered), count, "(*face_vtx_ordered): ");
-  free(face_vtx_long     );
-  free(face_vtx_long_idx );
+ PDM_free(face_vtx_long     );
+ PDM_free(face_vtx_long_idx );
 
 }
 
@@ -460,7 +460,7 @@ int main(int argc, char *argv[])
                            edge_vtx,
                            &vtx_vtx_idx,
                            &vtx_vtx);
-  free(edge_vtx_idx);
+ PDM_free(edge_vtx_idx);
   int *vtx_face_idx = NULL;
   int *vtx_face = NULL;
 
@@ -605,28 +605,28 @@ int main(int argc, char *argv[])
   }
 
   /* Free memory */
-  free(face_edge_idx );
-  free(face_edge     );
-  free(edge_vtx      );
-  free(vtx_coord     );
-  free(vtx_edge_idx  );
-  free(vtx_edge      );
-  free(edge_face_idx );
-  free(edge_face     );
-  free(vtx_vtx_idx   );
-  free(vtx_vtx       );
-  free(vtx_vtx_edge);
-  free(vtx_face_idx);
-  free(vtx_face);
-  free(face_vtx);
+ PDM_free(face_edge_idx );
+ PDM_free(face_edge     );
+ PDM_free(edge_vtx      );
+ PDM_free(vtx_coord     );
+ PDM_free(vtx_edge_idx  );
+ PDM_free(vtx_edge      );
+ PDM_free(edge_face_idx );
+ PDM_free(edge_face     );
+ PDM_free(vtx_vtx_idx   );
+ PDM_free(vtx_vtx       );
+ PDM_free(vtx_vtx_edge);
+ PDM_free(vtx_face_idx);
+ PDM_free(vtx_face);
+ PDM_free(face_vtx);
 
-  free(vtx_ordered_face_neighbours    );
-  free(vtx_ordered_face_neighbours_idx);
-  free(vtx_ordered_vtx_neighbours     );
-  free(vtx_ordered_vtx_neighbours_idx );
+ PDM_free(vtx_ordered_face_neighbours    );
+ PDM_free(vtx_ordered_face_neighbours_idx);
+ PDM_free(vtx_ordered_vtx_neighbours     );
+ PDM_free(vtx_ordered_vtx_neighbours_idx );
 
-  free(face_vtx_ordered);
-  free(face_vtx_ordered_idx);
+ PDM_free(face_vtx_ordered);
+ PDM_free(face_vtx_ordered_idx);
 
   PDM_MPI_Finalize();
   return 0;

@@ -255,7 +255,7 @@ PDM_g_num_t **box_ln_to_gn
   for (PDM_g_num_t i = 0; i < 6*distrib_box[i_rank]; i++) {
     rand();
   }
-  free (distrib_box);
+ PDM_free(distrib_box);
 
   double *box_centers = malloc (sizeof(double) * n_box * 3);
   *box_extents = malloc (sizeof(double) * n_box * 6);
@@ -290,7 +290,7 @@ PDM_g_num_t **box_ln_to_gn
   *box_ln_to_gn = PDM_gnum_get (gen_gnum, 0);
 
   PDM_gnum_free (gen_gnum);
-  free (box_centers);
+ PDM_free(box_centers);
 
   return n_box;
 }
@@ -533,18 +533,18 @@ int main(int argc, char *argv[])
   }
 
 
-  free(box_extents_plane);
-  free(box_ln_to_gn_plane);
-  free(box_extents);
-  free(box_ln_to_gn);
+ PDM_free(box_extents_plane);
+ PDM_free(box_ln_to_gn_plane);
+ PDM_free(box_extents);
+ PDM_free(box_ln_to_gn);
 
   for (int j = 0; j < n_box; j++) {
-    free(box_tag_names[j]);
-    free(box_tag[j]);
+   PDM_free(box_tag_names[j]);
+   PDM_free(box_tag[j]);
   }
-  free(box_tag_names);
-  free(box_tag);
-  free(box_intersects_box);
+ PDM_free(box_tag_names);
+ PDM_free(box_tag);
+ PDM_free(box_intersects_box);
 
   PDM_MPI_Finalize ();
 

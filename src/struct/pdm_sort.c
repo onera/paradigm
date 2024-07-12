@@ -295,7 +295,7 @@ PDM_sort_long
       }
     }
   }
-  free (istack);
+ PDM_free(istack);
   return;
 
 }
@@ -483,7 +483,7 @@ PDM_sort_int
       }
     }
   }
-  free (istack);
+ PDM_free(istack);
   return;
 
 }
@@ -673,7 +673,7 @@ PDM_sort_double
       }
     }
   }
-  free (istack);
+ PDM_free(istack);
   return;
 }
 
@@ -778,7 +778,7 @@ PDM_sort_int_special
       }
     }
   }
-  free (istack);
+ PDM_free(istack);
   return;
 
 }

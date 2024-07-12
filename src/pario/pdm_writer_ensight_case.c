@@ -350,17 +350,17 @@ _del_vars(PDM_writer_ensight_case_t  *const this_case)
 
     PDM_writer_ensight_case_var_t  *var = this_case->var[i];
 
-    free(var->name);
-    free(var->case_line);
-    free(var->file_name_base);
+   PDM_free(var->name);
+   PDM_free(var->case_line);
+   PDM_free(var->file_name_base);
     if (var->file_name != NULL)
-      free(var->file_name);
+     PDM_free(var->file_name);
 
-    free(var);
+   PDM_free(var);
 
   }
 
-  free(this_case->var);
+ PDM_free(this_case->var);
 }
 
 /*============================================================================
@@ -778,13 +778,13 @@ const int                   append
 
    /* Free names */
 
-   free(this_case->name);
-   free(this_case->case_file_name);
-   free(this_case->file_name_prefix);
+  PDM_free(this_case->name);
+  PDM_free(this_case->case_file_name);
+  PDM_free(this_case->file_name_prefix);
 
-   free(this_case->geom_file_name_base);
+  PDM_free(this_case->geom_file_name_base);
     if (this_case->geom_file_name != NULL)
-      free(this_case->geom_file_name);
+     PDM_free(this_case->geom_file_name);
 
    /* Free variable entries */
 
@@ -794,16 +794,16 @@ const int                   append
 
    if (this_case->time_set != NULL) {
      if (this_case->time_set->time_value != NULL) {
-       free(this_case->time_set->time_value);
+      PDM_free(this_case->time_set->time_value);
        this_case->time_set->time_value = NULL;
      }
-     free(this_case->time_set);
+    PDM_free(this_case->time_set);
      this_case->time_set = NULL;
    }
 
   /* Free structure and return */
 
-  free(this_case);
+ PDM_free(this_case);
 
   return NULL;
 }

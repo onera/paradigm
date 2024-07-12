@@ -651,7 +651,7 @@ _calcul_numabs_face_poly3d
     face_abs[i] += n_face_procs[i_proc];
   }
 
-  free(n_face_procs);
+ PDM_free(n_face_procs);
 
   /* Retour à l'envoyeur de la numérotation absolue */
 
@@ -670,7 +670,7 @@ _calcul_numabs_face_poly3d
     current_octet += n_octet_exch;
   }
 
-  free(face_abs);
+ PDM_free(face_abs);
 
   PDM_MPI_Alltoallv((void *) recv_buff_data,
                     recv_buff_n,
@@ -711,13 +711,13 @@ _calcul_numabs_face_poly3d
 
   /* Liberation memoire */
 
-  free(send_buff_n);
-  free(send_buff_idx);
-  free(send_buff_data);
-  free(recv_buff_n);
-  free(recv_buff_idx);
-  free(recv_buff_data);
-  free(d_elt_proc);
+ PDM_free(send_buff_n);
+ PDM_free(send_buff_idx);
+ PDM_free(send_buff_data);
+ PDM_free(recv_buff_n);
+ PDM_free(recv_buff_idx);
+ PDM_free(recv_buff_data);
+ PDM_free(d_elt_proc);
 
 }
 
@@ -872,7 +872,7 @@ PDM_writer_t *cs
   _geom_close(cs);
   PDM_writer_ensight_t *PDM_writer_ensight = (PDM_writer_ensight_t *) cs->sortie_fmt;
   PDM_writer_ensight_case_lib(PDM_writer_ensight->ensight_case);
-  free(cs->sortie_fmt);
+ PDM_free(cs->sortie_fmt);
 }
 
 /*----------------------------------------------------------------------------
@@ -1100,8 +1100,8 @@ PDM_writer_ensight_geom_write
                          coord_tmp);
   }
 
-  free(coord_tmp);
-  free(numabs_tmp);
+ PDM_free(coord_tmp);
+ PDM_free(numabs_tmp);
 
   /* Ecriture des blocs standard */
   const int n_blocks   = PDM_part_mesh_nodal_n_section_get  (geom->mesh_nodal);
@@ -1234,8 +1234,8 @@ PDM_writer_ensight_geom_write
                          numabs_tmp,
                          connec_tmp);
 
-      free(numabs_tmp);
-      free(connec_tmp);
+     PDM_free(numabs_tmp);
+     PDM_free(connec_tmp);
 
     }
 
@@ -1359,9 +1359,9 @@ PDM_writer_ensight_geom_write
                          numabs_tmp,
                          connec_tmp);
 
-      free(numabs_tmp);
-      free(connec_tmp);
-      free(n_comp_tmp);
+     PDM_free(numabs_tmp);
+     PDM_free(connec_tmp);
+     PDM_free(n_comp_tmp);
 
     }
 
@@ -1538,9 +1538,9 @@ PDM_writer_ensight_geom_write
       }
 
       for (int i = 0; i < n_part; i++) {
-        free(numabs_face[i]);
+       PDM_free(numabs_face[i]);
       }
-      free(numabs_face);
+     PDM_free(numabs_face);
 
       _ecr_entrelace_int(_cs,
                          PDM_WRITER_OFF,
@@ -1612,9 +1612,9 @@ PDM_writer_ensight_geom_write
 
       /* Libération mémoire */
 
-      free(numabs);
-      free(buff_int32);
-      free(n_comp_tmp);
+     PDM_free(numabs);
+     PDM_free(buff_int32);
+     PDM_free(n_comp_tmp);
 
     }
 
@@ -1649,7 +1649,7 @@ PDM_writer_ensight_geom_free
 )
 {
   if (geom->geom_fmt != NULL)
-    free(geom->geom_fmt);
+   PDM_free(geom->geom_fmt);
 }
 
 
@@ -1818,8 +1818,8 @@ PDM_writer_ensight_var_write
 
         }
 
-        free(buff);
-        free(numabs);
+       PDM_free(buff);
+       PDM_free(numabs);
 
       }
 
@@ -1918,9 +1918,9 @@ PDM_writer_ensight_var_write
 
         /* Libération */
 
-        free(ideb);
-        free(buff);
-        free(numabs);
+       PDM_free(ideb);
+       PDM_free(buff);
+       PDM_free(numabs);
 
       }
 
@@ -1972,7 +1972,7 @@ PDM_writer_ensight_var_free
                 &rank);
   _var_close((PDM_writer_var_ensight_t *) var->var_fmt, rank);
   if (var->var_fmt != NULL)
-    free(var->var_fmt);
+   PDM_free(var->var_fmt);
 }
 
 #ifdef __cplusplus

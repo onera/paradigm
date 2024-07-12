@@ -411,7 +411,7 @@ int main(int argc, char *argv[])
       cell_center[i_part][3*i_cell+2] = cell_center[i_part][3*i_cell+2] / n_face_on_cell;
     }
 
-    free(face_center);
+   PDM_free(face_center);
 
     selected_l_num[i_part] = (int         *) malloc(  n_cell          * sizeof(int        ));
 
@@ -459,7 +459,7 @@ int main(int argc, char *argv[])
     pn_select_cell[i_part] = n_select_cell;
 
   }
-  // free(dface_join_idx);
+  //PDM_free(dface_join_idx);
 
   /*
    * Extract
@@ -753,48 +753,48 @@ int main(int argc, char *argv[])
   }
 
   for(int i_part = 0; i_part < n_part; ++i_part) {
-    free(fake_group_vtx[i_part]);
-    free(fake_group_face[i_part]);
-    free(fake_group_face_idx[i_part]);
-    free(fake_face_group_ln_to_gn[i_part]);
+   PDM_free(fake_group_vtx[i_part]);
+   PDM_free(fake_group_face[i_part]);
+   PDM_free(fake_group_face_idx[i_part]);
+   PDM_free(fake_face_group_ln_to_gn[i_part]);
   }
-  free(fake_group_vtx);
-  free(fake_group_face);
-  free(fake_group_face_idx);
-  free(fake_face_group_ln_to_gn);
+ PDM_free(fake_group_vtx);
+ PDM_free(fake_group_face);
+ PDM_free(fake_group_face_idx);
+ PDM_free(fake_face_group_ln_to_gn);
 
-  free(pn_extract_face);
-  free(pn_extract_vtx);
-  free(pextract_face_vtx     );
-  free(pextract_face_vtx_idx );
-  free(pextract_vtx          );
-  free(pextract_face_ln_to_gn);
-  free(pextract_vtx_ln_to_gn );
+ PDM_free(pn_extract_face);
+ PDM_free(pn_extract_vtx);
+ PDM_free(pextract_face_vtx     );
+ PDM_free(pextract_face_vtx_idx );
+ PDM_free(pextract_vtx          );
+ PDM_free(pextract_face_ln_to_gn);
+ PDM_free(pextract_vtx_ln_to_gn );
 
   PDM_extract_part_free(extrp);
 
 
   for (int i_part = 0; i_part < n_part_domains; i_part++){
-    free(cell_center        [i_part]);
-    free(selected_l_num     [i_part]);
-    free(pextract_face_group[i_part]);
+   PDM_free(cell_center        [i_part]);
+   PDM_free(selected_l_num     [i_part]);
+   PDM_free(pextract_face_group[i_part]);
   }
-  free(pextract_face_group);
-  free(cell_center);
-  free(selected_l_num);
-  free(pn_cell);
-  free(pn_face);
-  free(pn_vtx);
-  free(pn_select_cell);
+ PDM_free(pextract_face_group);
+ PDM_free(cell_center);
+ PDM_free(selected_l_num);
+ PDM_free(pn_cell);
+ PDM_free(pn_face);
+ PDM_free(pn_vtx);
+ PDM_free(pn_select_cell);
 
-  free(pcell_ln_to_gn  );
-  free(pface_ln_to_gn  );
-  free(pvtx_ln_to_gn  );
-  free(pcell_face    );
-  free(pcell_face_idx);
-  free(pface_vtx     );
-  free(pface_vtx_idx );
-  free(pvtx_coord    );
+ PDM_free(pcell_ln_to_gn  );
+ PDM_free(pface_ln_to_gn  );
+ PDM_free(pvtx_ln_to_gn  );
+ PDM_free(pcell_face    );
+ PDM_free(pcell_face_idx);
+ PDM_free(pface_vtx     );
+ PDM_free(pface_vtx_idx );
+ PDM_free(pvtx_coord    );
 
   PDM_multipart_free(mpart);
   PDM_dcube_gen_free(dcube);

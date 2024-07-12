@@ -115,8 +115,8 @@ _compute_unique_idx
   // PDM_log_trace_array_int (order_unique, nb_ent, "order_unique::");
   // PDM_log_trace_array_int (reverse_order_unique, nb_ent, "reverse_order_unique::");
 
-  // free(reverse_order_unique);
-  // free(new_order);
+  //PDM_free(reverse_order_unique);
+  //PDM_free(new_order);
 
   if(0 == 1){
     // int check = -1;
@@ -447,7 +447,7 @@ const int           *n_entity,
   /*
    * Free
    */
-  free(requested_data);
+ PDM_free(requested_data);
 
   return (PDM_distant_neighbor_t* ) dn;
 }
@@ -632,10 +632,10 @@ PDM_distant_neighbor_exch
     // log_trace("PDM_distant_neighbor_exch::send_buffer END \n ");
 
     for(int i_part = 0; i_part < dn->n_part; i_part++){
-      free (stride_idx[i_part]);
+     PDM_free(stride_idx[i_part]);
     }
-    free (stride_idx);
-    free (send_stride);
+   PDM_free(stride_idx);
+   PDM_free(send_stride);
 
   } else if (t_stride == PDM_STRIDE_CST_INTERLACED) {
 
@@ -691,10 +691,10 @@ PDM_distant_neighbor_exch
                       PDM_MPI_BYTE,
                       dn->comm);
 
-  free(send_buffer);
-  free(n_send_buffer);
-  free(n_recv_buffer);
-  free(i_recv_buffer);
+ PDM_free(send_buffer);
+ PDM_free(n_send_buffer);
+ PDM_free(n_recv_buffer);
+ PDM_free(i_recv_buffer);
 
   *recv_entity_data = malloc( dn->n_part * sizeof(unsigned char *) );
   unsigned char **_recv_entity_data = (*(unsigned char ***) recv_entity_data);
@@ -763,9 +763,9 @@ PDM_distant_neighbor_exch
      * Free
      */
     for(int i_part = 0; i_part < dn->n_part; i_part++){
-     free(_recv_entity_stride_idx[i_part]);
+    PDM_free(_recv_entity_stride_idx[i_part]);
     }
-    free(_recv_entity_stride_idx);
+   PDM_free(_recv_entity_stride_idx);
 
   } else if (t_stride == PDM_STRIDE_CST_INTERLACED) {
 
@@ -791,13 +791,13 @@ PDM_distant_neighbor_exch
   /*
    * Free
    */
-  free(i_send_buffer);
-  free(recv_buffer);
+ PDM_free(i_send_buffer);
+ PDM_free(recv_buffer);
   if(recv_stride_idx != NULL){
-    free(recv_stride_idx);
+   PDM_free(recv_stride_idx);
   }
   if(recv_stride != NULL){
-    free(recv_stride);
+   PDM_free(recv_stride);
   }
 
 }
@@ -985,10 +985,10 @@ PDM_distant_neighbor_exch_int
     // log_trace("PDM_distant_neighbor_exch::send_buffer END \n ");
 
     for(int i_part = 0; i_part < dn->n_part; i_part++){
-      free (stride_idx[i_part]);
+     PDM_free(stride_idx[i_part]);
     }
-    free (stride_idx);
-    free (send_stride);
+   PDM_free(stride_idx);
+   PDM_free(send_stride);
 
   } else if (t_stride == PDM_STRIDE_CST_INTERLACED) {
 
@@ -1062,10 +1062,10 @@ PDM_distant_neighbor_exch_int
                       dn->comm);
 
 
-  free(send_buffer);
-  free(n_send_buffer);
-  free(n_recv_buffer);
-  free(i_recv_buffer);
+ PDM_free(send_buffer);
+ PDM_free(n_send_buffer);
+ PDM_free(n_recv_buffer);
+ PDM_free(i_recv_buffer);
 
   /*
    * Une seule valeur est echangé mais plusieurs occurence peuvent exister donc on passe du buffer MPI
@@ -1139,9 +1139,9 @@ PDM_distant_neighbor_exch_int
      * Free
      */
     for(int i_part = 0; i_part < dn->n_part; i_part++){
-     free(_recv_entity_stride_idx[i_part]);
+    PDM_free(_recv_entity_stride_idx[i_part]);
     }
-    free(_recv_entity_stride_idx);
+   PDM_free(_recv_entity_stride_idx);
 
 
   } else if (t_stride == PDM_STRIDE_CST_INTERLACED) {
@@ -1172,13 +1172,13 @@ PDM_distant_neighbor_exch_int
   /*
    * Free
    */
-  free(i_send_buffer);
-  free(recv_buffer);
+ PDM_free(i_send_buffer);
+ PDM_free(recv_buffer);
   if(recv_stride_idx != NULL){
-    free(recv_stride_idx);
+   PDM_free(recv_stride_idx);
   }
   if(recv_stride != NULL){
-    free(recv_stride);
+   PDM_free(recv_stride);
   }
 
 }
@@ -1200,24 +1200,24 @@ PDM_distant_neighbor_free
 {
 
   for(int i_part = 0; i_part < dn->n_part; i_part++){
-    free(dn->order[i_part]);
-    free(dn->order_unique[i_part]);
-    free(dn->ind[i_part]);
+   PDM_free(dn->order[i_part]);
+   PDM_free(dn->order_unique[i_part]);
+   PDM_free(dn->ind[i_part]);
   }
-  free(dn->order);
-  free(dn->order_unique);
-  free(dn->ind);
+ PDM_free(dn->order);
+ PDM_free(dn->order_unique);
+ PDM_free(dn->ind);
 
-  free(dn->requested_data_n);
-  free(dn->requested_data_idx);
-  free(dn->distributed_part_idx);
-  free(dn->distributed_part_n);
+ PDM_free(dn->requested_data_n);
+ PDM_free(dn->requested_data_idx);
+ PDM_free(dn->distributed_part_idx);
+ PDM_free(dn->distributed_part_n);
 
-  free(dn->distributed_data);
-  free(dn->distributed_data_n);
-  free(dn->distributed_data_idx);
+ PDM_free(dn->distributed_data);
+ PDM_free(dn->distributed_data_n);
+ PDM_free(dn->distributed_data_idx);
 
-  free (dn);
+ PDM_free(dn);
 
 }
 

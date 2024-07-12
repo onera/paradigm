@@ -259,22 +259,22 @@ char *argv[]
                                           &box_pts,
                                           &pts_coord);
 
-    free(box_pts_idx);
-    free(box_pts    );
-    free(pts_coord  );
+   PDM_free(box_pts_idx);
+   PDM_free(box_pts    );
+   PDM_free(pts_coord  );
   }
 
 
   PDM_doctree_free(doct);
 
 
-  free(box_gnum);
-  free(box_extents);
-  free(init_location_box);
-  free(init_location_pts);
+ PDM_free(box_gnum);
+ PDM_free(box_extents);
+ PDM_free(init_location_box);
+ PDM_free(init_location_pts);
 
-  free (src_coord);
-  free (src_g_num);
+ PDM_free(src_coord);
+ PDM_free(src_g_num);
 
   if (i_rank == 0) {
     PDM_printf ("-- End\n");

@@ -174,7 +174,7 @@ int main(int argc, char *argv[])
                (void **) &pfield,
                          &block_stride,
                (void **) &block_data);
-  free(part_stride);
+ PDM_free(part_stride);
 
 
 
@@ -262,7 +262,7 @@ int main(int argc, char *argv[])
                          &part_stride2,
               (void ***) &part_data2);
   PDM_block_to_part_free(btp);
-  free(distrib_full);
+ PDM_free(distrib_full);
 
 
 
@@ -276,20 +276,20 @@ int main(int argc, char *argv[])
 
   PDM_part_to_block_free(ptb);
 
-  free(pln_to_to_gn);
-  free(distrib_init_elmt);
-  free(pfield);
+ PDM_free(pln_to_to_gn);
+ PDM_free(distrib_init_elmt);
+ PDM_free(pfield);
 
-  free(block_data);
-  free(block_stride);
-  free(summed_block_data);
+ PDM_free(block_data);
+ PDM_free(block_stride);
+ PDM_free(summed_block_data);
 
   for (int i_part = 0; i_part < n_part; i_part++) {
-    free(part_stride2[i_part]);
-    free(part_data2[i_part]);
+   PDM_free(part_stride2[i_part]);
+   PDM_free(part_data2[i_part]);
   }
-  free(part_stride2);
-  free(part_data2);
+ PDM_free(part_stride2);
+ PDM_free(part_data2);
 
   PDM_MPI_Finalize ();
   return 0;

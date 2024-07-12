@@ -94,13 +94,13 @@ _exchange_point_list
     }
 
     PDM_block_to_part_free(btp);
-    free(join_ln_to_gn);
+   PDM_free(join_ln_to_gn);
   }
 
   for(int i_group_join = 0; i_group_join < n_group_join; ++i_group_join) {
-    free(distrib_join[i_group_join]);
+   PDM_free(distrib_join[i_group_join]);
   }
-  free(distrib_join);
+ PDM_free(distrib_join);
 }
 
 
@@ -427,41 +427,41 @@ int main(int argc, char *argv[])
 
   /* Free memory */
   for (int i_domain = 0; i_domain < n_domain; i_domain++) {
-    free(dface_bnd_idx [i_domain]);
-    free(dface_bnd     [i_domain]);
+   PDM_free(dface_bnd_idx [i_domain]);
+   PDM_free(dface_bnd     [i_domain]);
     PDM_dcube_gen_free(dcube[i_domain]);
   }
-  free(dcube);
-  free(dn_cell);
-  free(dn_face);
-  free(dn_vtx);
-  free(n_face_group);
-  free(dface_group_s);
-  free(dface_vtx_s);
-  free(dface_cell);
-  free(dface_vtx_idx);
-  free(dface_vtx);
-  free(dvtx_coord);
-  free(dface_group_idx);
-  free(dface_group);
-  free(dface_bnd_idx);
-  free(dface_bnd);
-  free(dface_join_idx);
-  free(dface_join);
-  free(dface_join_opp);
+ PDM_free(dcube);
+ PDM_free(dn_cell);
+ PDM_free(dn_face);
+ PDM_free(dn_vtx);
+ PDM_free(n_face_group);
+ PDM_free(dface_group_s);
+ PDM_free(dface_vtx_s);
+ PDM_free(dface_cell);
+ PDM_free(dface_vtx_idx);
+ PDM_free(dface_vtx);
+ PDM_free(dvtx_coord);
+ PDM_free(dface_group_idx);
+ PDM_free(dface_group);
+ PDM_free(dface_bnd_idx);
+ PDM_free(dface_bnd);
+ PDM_free(dface_join_idx);
+ PDM_free(dface_join);
+ PDM_free(dface_join_opp);
 
-  free(group_join_to_domain_cur);
-  free(group_join_to_domain_opp);
-  free(group_join_to_join_opp);
+ PDM_free(group_join_to_domain_cur);
+ PDM_free(group_join_to_domain_opp);
+ PDM_free(group_join_to_join_opp);
 
   for (i_interface = 0; i_interface < n_interface; i_interface++)
   {
-    free(interface_ids_f[i_interface]);
-    free(interface_dom_f[i_interface]);
+   PDM_free(interface_ids_f[i_interface]);
+   PDM_free(interface_dom_f[i_interface]);
   }
-  free(interface_dn_f );
-  free(interface_ids_f);
-  free(interface_dom_f);
+ PDM_free(interface_dn_f );
+ PDM_free(interface_ids_f);
+ PDM_free(interface_dom_f);
 
   PDM_MPI_Finalize();
 

@@ -147,7 +147,7 @@ PDM_box_gen_random
                               NULL);
 
     PDM_gnum_compute (gen_gnum);
-    free (box_centers);
+   PDM_free(box_centers);
 
     *box_ln_to_gn = PDM_gnum_get (gen_gnum, 0);
 
@@ -159,7 +159,7 @@ PDM_box_gen_random
       (*box_ln_to_gn)[i] = distrib_box[i_rank] + i + 1;
     }
   }
-  free (distrib_box);
+ PDM_free(distrib_box);
 
 }
 
@@ -248,7 +248,7 @@ PDM_box_gen_cartesian
 
   }
 
-  free (distrib);
+ PDM_free(distrib);
 
 
   *box_extents  = _box_extents;

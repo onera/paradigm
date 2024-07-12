@@ -181,10 +181,10 @@ int main(int argc, char *argv[])
 
   PDM_gnum_free (gen_gnum);
 
-  free(pln_to_to_gn);
-  free(ppair_ln_to_gn);
-  free(distrib_init_elmt);
-  free(pfield);
+ PDM_free(pln_to_to_gn);
+ PDM_free(ppair_ln_to_gn);
+ PDM_free(distrib_init_elmt);
+ PDM_free(pfield);
 
 
   PDM_MPI_Finalize ();

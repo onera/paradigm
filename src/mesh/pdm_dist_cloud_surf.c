@@ -406,7 +406,7 @@ _dist_cloud_surf_compute
     }
     // PDM_log_trace_array_long(closest_vertices_gnum, n_pts_rank, "closest_vertices_gnum::");
     // PDM_log_trace_array_double(closest_vertices_dist2, n_pts_rank, "closest_vertices_dist2::");
-    free (closest_vertices_gnum);
+   PDM_free(closest_vertices_gnum);
 
     if (i_point_cloud == n_point_cloud -1) { //Octree is not needed anymore
       if (octree_type == PDM_OCTREE_SERIAL) {
@@ -474,7 +474,7 @@ _dist_cloud_surf_compute
       }
     }
 
-    free (closest_vertices_dist2);
+   PDM_free(closest_vertices_dist2);
 
     if (i_point_cloud == n_point_cloud -1 ) { //Now useless
       PDM_dbbtree_free (dbbt);
@@ -523,7 +523,7 @@ _dist_cloud_surf_compute
                                                          &(part_pts_elt_idx[n_pts_rank]),
                                                          1,
                                                          comm);
-    free (elt_weight);
+   PDM_free(elt_weight);
 
     /*******************************************************************
      *  Send pts coords & gnum from TARGET parts to SOURCE blocks
@@ -538,7 +538,7 @@ _dist_cloud_surf_compute
         }
       }
     }
-    free (pts_rank);
+   PDM_free(pts_rank);
 
     int *block_elt_pts_n = NULL;
     PDM_g_num_t *block_elt_pts_g_num = NULL;
@@ -550,7 +550,7 @@ _dist_cloud_surf_compute
                             (void **) &part_pts_g_num,
                             &block_elt_pts_n,
                             (void **) &block_elt_pts_g_num);
-    free (part_pts_g_num);
+   PDM_free(part_pts_g_num);
 
 
     /*for (int i = 0; i < part_pts_elt_idx[n_pts_rank]; i++) {
@@ -567,10 +567,10 @@ _dist_cloud_surf_compute
                             (void **) &part_pts_coord,
                             &block_elt_pts_n3,
                             (void **) &block_elt_pts_coord);
-    free (part_pts_coord);
-    free (block_elt_pts_n3);
-    free (part_stride);
-    free (part_pts_elt_g_num);
+   PDM_free(part_pts_coord);
+   PDM_free(block_elt_pts_n3);
+   PDM_free(part_stride);
+   PDM_free(part_pts_elt_g_num);
 
     /*******************************************************************
      *  Transfer element coords from parts to blocks
@@ -642,11 +642,11 @@ _dist_cloud_surf_compute
                             &block_elt_vtx_n,
                             (void **) &block_elt_vtx_coord);
     for (int ipart = 0; ipart < n_part_mesh; ipart++) {
-      free (part_elt_vtx_n[ipart]);
-      free (part_elt_vtx_coord[ipart]);
+     PDM_free(part_elt_vtx_n[ipart]);
+     PDM_free(part_elt_vtx_coord[ipart]);
     }
-    free (part_elt_vtx_n);
-    free (part_elt_vtx_coord);
+   PDM_free(part_elt_vtx_n);
+   PDM_free(part_elt_vtx_coord);
 
 
     /*******************************************************************
@@ -743,9 +743,9 @@ _dist_cloud_surf_compute
 
     } // End of loop on elements
 
-    free (block_elt_vtx_n);
-    free (block_elt_vtx_coord);
-    free (block_elt_pts_coord);
+   PDM_free(block_elt_vtx_n);
+   PDM_free(block_elt_vtx_coord);
+   PDM_free(block_elt_pts_coord);
     ptb_elt = PDM_part_to_block_free (ptb_elt);
 
 
@@ -778,7 +778,7 @@ _dist_cloud_surf_compute
     for (int i = 0; i < n_pts_rank; i++) {
       part_pts_weight[i] = (double) (part_pts_elt_idx[i+1] - part_pts_elt_idx[i]);
     }
-    free (part_pts_elt_idx);
+   PDM_free(part_pts_elt_idx);
 
     /* Build block distribution for points, weighted by number of candidate elements */
     PDM_part_to_block_t *ptb_pts = PDM_part_to_block_create (PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
@@ -789,7 +789,7 @@ _dist_cloud_surf_compute
                                                              &n_pts_rank,
                                                              1,
                                                              comm);
-    free (part_pts_weight);
+   PDM_free(part_pts_weight);
 
 
     PDM_g_num_t *block_pts_distrib_idx = PDM_part_to_block_distrib_index_get (ptb_pts);
@@ -811,7 +811,7 @@ _dist_cloud_surf_compute
         part_block_elt_g_num[idx++] = block_elt_g_num[ielt];
       }
     }
-    free (block_elt_pts_n);
+   PDM_free(block_elt_pts_n);
 
 
     part_stride = malloc (sizeof(int) * l_block_elt_pts);
@@ -828,8 +828,8 @@ _dist_cloud_surf_compute
                             (void **) &part_block_elt_g_num,
                             &block_pts_elt_n,
                             (void **) &tmp_block_pts_elt_g_num);
-    free (block_pts_elt_n);
-    free (part_block_elt_g_num);
+   PDM_free(block_pts_elt_n);
+   PDM_free(part_block_elt_g_num);
 
 
     double *tmp_block_pts_elt_dist2 = NULL;
@@ -841,7 +841,7 @@ _dist_cloud_surf_compute
                             (void **) &block_elt_pts_dist2,
                             &block_pts_elt_n,
                             (void **) &tmp_block_pts_elt_dist2);
-    free (block_elt_pts_dist2);
+   PDM_free(block_elt_pts_dist2);
 
 
     /*for (int i = 0; i < l_block_elt_pts; i++) {
@@ -857,9 +857,9 @@ _dist_cloud_surf_compute
                             (void **) &block_elt_pts_proj,
                             &block_pts_elt_n3,
                             (void **) &tmp_block_pts_elt_proj);
-    free (block_elt_pts_proj);
-    free (part_stride);
-    free (block_pts_elt_n3);
+   PDM_free(block_elt_pts_proj);
+   PDM_free(part_stride);
+   PDM_free(block_pts_elt_n3);
 
 
     /* Merge block data (keep closest element for each point) */
@@ -900,14 +900,14 @@ _dist_cloud_surf_compute
         block_pts_elt_proj[3*i + k] = _tmp_proj[3*order[jmin] + k];
       }
     }
-    free (order);
-    free (tmp_block_pts_elt_g_num);
-    free (tmp_block_pts_elt_dist2);
-    free (tmp_block_pts_elt_proj);
-    free (block_pts_elt_n);
+   PDM_free(order);
+   PDM_free(tmp_block_pts_elt_g_num);
+   PDM_free(tmp_block_pts_elt_dist2);
+   PDM_free(tmp_block_pts_elt_proj);
+   PDM_free(block_pts_elt_n);
 
     ptb2 = PDM_part_to_block_free (ptb2);
-    free (block_elt_pts_g_num);
+   PDM_free(block_elt_pts_g_num);
 
 
 
@@ -936,7 +936,7 @@ _dist_cloud_surf_compute
                             block_pts_elt_dist2,
                             NULL,
                             (void **) pt_cloud->dist);
-    free (block_pts_elt_dist2);
+   PDM_free(block_pts_elt_dist2);
 
     int three = 3;
     PDM_block_to_part_exch_in_place (btp,
@@ -946,7 +946,7 @@ _dist_cloud_surf_compute
                             block_pts_elt_proj,
                             NULL,
                             (void **) pt_cloud->proj);
-    free (block_pts_elt_proj);
+   PDM_free(block_pts_elt_proj);
 
     PDM_block_to_part_exch_in_place (btp,
                             sizeof(PDM_g_num_t),
@@ -955,15 +955,15 @@ _dist_cloud_surf_compute
                             block_pts_elt_g_num,
                             NULL,
                             (void **) pt_cloud->closest_elt_gnum);
-    free (block_pts_elt_g_num);
+   PDM_free(block_pts_elt_g_num);
 
 
-    if (_block_elt_distrib_idx != block_elt_distrib_idx) free (_block_elt_distrib_idx);
+    if (_block_elt_distrib_idx != block_elt_distrib_idx)PDM_free(_block_elt_distrib_idx);
     btp = PDM_block_to_part_free (btp);
     ptb_pts = PDM_part_to_block_free (ptb_pts);
     ptb = PDM_part_to_block_free (ptb);
 
-    free (pts_g_num_rank);
+   PDM_free(pts_g_num_rank);
 
     PDM_timer_hang_on(dist->timer);
     e_t_elapsed = PDM_timer_elapsed(dist->timer);
@@ -979,9 +979,9 @@ _dist_cloud_surf_compute
     PDM_timer_resume(dist->timer);
 
   } // End of loop on point clouds
-  free (part_n_elt);
-  free(part_elt_g_num);
-  free(part_elt_extents);
+ PDM_free(part_n_elt);
+ PDM_free(part_elt_g_num);
+ PDM_free(part_elt_extents);
 
   PDM_timer_hang_on(dist->timer);
   dist->times_elapsed[END] = PDM_timer_elapsed(dist->timer);
@@ -1234,7 +1234,7 @@ _dist_cloud_surf_compute_optim
           memcpy(part_elt_extents[i_part] + 6*idx, _extents + 6*i, sizeof(double)*6);
         }
       }
-      free(_extents);
+     PDM_free(_extents);
     }
   }
   else if (surf_mesh != NULL) {
@@ -1448,7 +1448,7 @@ _dist_cloud_surf_compute_optim
     }
     // PDM_log_trace_array_long(closest_vertices_gnum, n_pts_rank, "closest_vertices_gnum::");
     // PDM_log_trace_array_double(closest_vertices_dist2, n_pts_rank, "closest_vertices_dist2::");
-    free (closest_vertices_gnum);
+   PDM_free(closest_vertices_gnum);
 
     if (i_point_cloud == n_point_cloud -1) { //Octree is not needed anymore
       if (octree_type == PDM_OCTREE_SERIAL) {
@@ -1494,8 +1494,8 @@ _dist_cloud_surf_compute_optim
                                                                &dbox_pts_idx,
                                                                &dbox_pts_g_num,
                                                                &dbox_pts_coord);
-    free(pts_rank);
-    free(pts_g_num_rank);
+   PDM_free(pts_rank);
+   PDM_free(pts_g_num_rank);
     // printf("PDM_dbbtree_closest_upper_bound_dist_boxes_pts_shared_get END \n");
 
     if (0 == 1) {
@@ -1508,7 +1508,7 @@ _dist_cloud_surf_compute_optim
                                       "dbox_pts_g_num : ");
     }
 
-    free (closest_vertices_dist2);
+   PDM_free(closest_vertices_dist2);
 
     if (i_point_cloud == n_point_cloud -1 ) { //Now useless
       PDM_dbbtree_free (dbbt);
@@ -1559,8 +1559,8 @@ _dist_cloud_surf_compute_optim
       pts_coords[3*l_elmt+1] = dbox_pts_coord[3*idx+1];
       pts_coords[3*l_elmt+2] = dbox_pts_coord[3*idx+2];
     }
-    free(unique_order);
-    free(dbox_pts_coord);
+   PDM_free(unique_order);
+   PDM_free(dbox_pts_coord);
 
 
     PDM_extract_part_t *extrp = PDM_extract_part_create(2, // dim 1?
@@ -1684,18 +1684,18 @@ _dist_cloud_surf_compute_optim
     }
 
     PDM_extract_part_compute(extrp);
-    free(box_init_location);
+   PDM_free(box_init_location);
 
     if (i_point_cloud == n_point_cloud -1 ) { //Now useless
-      free(part_n_elt);
+     PDM_free(part_n_elt);
       if (mesh_nodal != NULL) {
         for (int i = 0; i < n_part_mesh; i++) {
-          free(part_elt_g_num  [i]);
-          free(part_elt_extents[i]);
+         PDM_free(part_elt_g_num  [i]);
+         PDM_free(part_elt_extents[i]);
         }
       }
-      free(part_elt_g_num);
-      free(part_elt_extents);
+     PDM_free(part_elt_g_num);
+     PDM_free(part_elt_extents);
     }
 
     PDM_part_mesh_nodal_elmts_t *extract_pmne = NULL;
@@ -2230,26 +2230,26 @@ _dist_cloud_surf_compute_optim
       }
 
     }
-    free(lvtx_coords);
-    free(box_pts);
-    free(pts_coords);
-    free(elt_order);
-    free(elt_type);
+   PDM_free(lvtx_coords);
+   PDM_free(box_pts);
+   PDM_free(pts_coords);
+   PDM_free(elt_order);
+   PDM_free(elt_type);
 
     if (work_array != NULL) {
-      free(work_array);
+     PDM_free(work_array);
     }
 
     if (pmne != NULL) {
-      free(pextract_face_vtx    );
-      free(pextract_face_vtx_idx);
+     PDM_free(pextract_face_vtx    );
+     PDM_free(pextract_face_vtx_idx);
     }
 
 
     PDM_extract_part_free(extrp);
 
-    free(box_gnum         );
-    free(dbox_pts_idx     );
+   PDM_free(box_gnum         );
+   PDM_free(dbox_pts_idx     );
 
     PDM_timer_hang_on(dist->timer);
     e_t_elapsed = PDM_timer_elapsed(dist->timer);
@@ -2294,8 +2294,8 @@ _dist_cloud_surf_compute_optim
                                                         &n_extract_pts,
                                                         1,
                                                         dist->comm);
-    free(part_weight);
-    free(pts_ln_to_gn);
+   PDM_free(part_weight);
+   PDM_free(pts_ln_to_gn);
 
     int    *block_pts_elt_n     = NULL;
     double *block_pts_elt_dist2 = NULL;
@@ -2307,8 +2307,8 @@ _dist_cloud_surf_compute_optim
                  (void **) &pts_dist2,
                            &block_pts_elt_n,
                  (void **) &block_pts_elt_dist2);
-    free(pts_dist2);
-    free(block_pts_elt_n);
+   PDM_free(pts_dist2);
+   PDM_free(block_pts_elt_n);
 
     PDM_g_num_t *block_pts_elt_g_num = NULL;
     PDM_part_to_block_exch(ptb,
@@ -2319,8 +2319,8 @@ _dist_cloud_surf_compute_optim
                  (void **) &pts_closest_face_g_num,
                            &block_pts_elt_n,
                  (void **) &block_pts_elt_g_num);
-    free(pts_closest_face_g_num);
-    free(block_pts_elt_n);
+   PDM_free(pts_closest_face_g_num);
+   PDM_free(block_pts_elt_n);
 
     double *block_pts_elt_proj = NULL;
     PDM_part_to_block_exch(ptb,
@@ -2331,8 +2331,8 @@ _dist_cloud_surf_compute_optim
                  (void **) &pts_proj,
                            &block_pts_elt_n,
                  (void **) &block_pts_elt_proj);
-    free(pts_proj);
-    free(part_stride);
+   PDM_free(pts_proj);
+   PDM_free(part_stride);
 
 
     /* Pick closest elt for each point in current block */
@@ -2355,7 +2355,7 @@ _dist_cloud_surf_compute_optim
       }
       block_pts_elt_dist2[i] = min_dist2;
     }
-    free(block_pts_elt_n);
+   PDM_free(block_pts_elt_n);
     PDM_realloc(block_pts_elt_dist2 ,block_pts_elt_dist2 , block_n_pts,double     );
     PDM_realloc(block_pts_elt_g_num ,block_pts_elt_g_num , block_n_pts,PDM_g_num_t);
     PDM_realloc(block_pts_elt_proj  ,block_pts_elt_proj  , block_n_pts * 3,double     );
@@ -2385,7 +2385,7 @@ _dist_cloud_surf_compute_optim
                          (void   *) block_pts_elt_dist2,
                                     NULL,
                           (void **) pt_cloud->dist);
-    free(block_pts_elt_dist2);
+   PDM_free(block_pts_elt_dist2);
 
     PDM_block_to_part_exch_in_place(btp,
                                     sizeof(PDM_g_num_t),
@@ -2394,7 +2394,7 @@ _dist_cloud_surf_compute_optim
                          (void   *) block_pts_elt_g_num,
                                     NULL,
                          (void **)  pt_cloud->closest_elt_gnum);
-    free(block_pts_elt_g_num);
+   PDM_free(block_pts_elt_g_num);
 
     PDM_block_to_part_exch_in_place(btp,
                                     3 * sizeof(double),
@@ -2403,7 +2403,7 @@ _dist_cloud_surf_compute_optim
                          (void   *) block_pts_elt_proj,
                                     NULL,
                          (void **)  pt_cloud->proj);
-    free(block_pts_elt_proj);
+   PDM_free(block_pts_elt_proj);
 
     PDM_block_to_part_free(btp);
 
@@ -2855,18 +2855,18 @@ PDM_dist_cloud_surf_distri_data
   PDM_part_to_part_reverse_iexch_wait(ptp,request_tag);
 
   PDM_part_to_part_free(ptp);
-  free(n_face_surf);
-  free(n_pts_cloud);
-  free(face_ln_to_gn);
-  free(pts_ln_to_gn);
+ PDM_free(n_face_surf);
+ PDM_free(n_pts_cloud);
+ PDM_free(face_ln_to_gn);
+ PDM_free(pts_ln_to_gn);
   for (int i_part = 0; i_part < n_part_cloud; i_part++) {
     if (1==0) {
       PDM_log_trace_array_double(*cloud_data[i_part], n_pts_cloud[i_part], "clouddata");
     }
-    free(closest_elt_gnum_idx[i_part]);
+   PDM_free(closest_elt_gnum_idx[i_part]);
   }
-  free(closest_elt_gnum_idx);
-  free(closest_elt_gnum);
+ PDM_free(closest_elt_gnum_idx);
+ PDM_free(closest_elt_gnum);
 }
 
 
@@ -2894,9 +2894,9 @@ PDM_dist_cloud_surf_free
          i_point_cloud++) {
 
       for (int i = 0; i < (dist->points_cloud[i_point_cloud]).n_part; i++) {
-        free (dist->points_cloud[i_point_cloud].dist[i]);
-        free (dist->points_cloud[i_point_cloud].proj[i]);
-        free (dist->points_cloud[i_point_cloud].closest_elt_gnum[i]);
+       PDM_free(dist->points_cloud[i_point_cloud].dist[i]);
+       PDM_free(dist->points_cloud[i_point_cloud].proj[i]);
+       PDM_free(dist->points_cloud[i_point_cloud].closest_elt_gnum[i]);
       }
     }
   }
@@ -2905,15 +2905,15 @@ PDM_dist_cloud_surf_free
        i_point_cloud < dist->n_point_cloud;
        i_point_cloud++) {
 
-    free (dist->points_cloud[i_point_cloud].n_points);
-    free (dist->points_cloud[i_point_cloud].coords);
-    free (dist->points_cloud[i_point_cloud].gnum);
-    free (dist->points_cloud[i_point_cloud].dist);
-    free (dist->points_cloud[i_point_cloud].proj);
-    free (dist->points_cloud[i_point_cloud].closest_elt_gnum);
+   PDM_free(dist->points_cloud[i_point_cloud].n_points);
+   PDM_free(dist->points_cloud[i_point_cloud].coords);
+   PDM_free(dist->points_cloud[i_point_cloud].gnum);
+   PDM_free(dist->points_cloud[i_point_cloud].dist);
+   PDM_free(dist->points_cloud[i_point_cloud].proj);
+   PDM_free(dist->points_cloud[i_point_cloud].closest_elt_gnum);
   }
 
-  free (dist->points_cloud);
+ PDM_free(dist->points_cloud);
 
   PDM_timer_free(dist->timer);
 
@@ -2923,7 +2923,7 @@ PDM_dist_cloud_surf_free
     }
   }
 
-  free (dist);
+ PDM_free(dist);
 }
 
 

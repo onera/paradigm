@@ -12,6 +12,7 @@
  *----------------------------------------------------------------------------*/
 
 #include "pdm.h"
+#include "pdm_priv.h"
 #include "pdm_array.h"
 #include "pdm_radix_sort.h"
 
@@ -280,7 +281,7 @@ _cc_radix_sort
   place = 1;
   while(place < place_init){
     int* range = _counting_sort(v, tmp, beg, end, place);
-    free(range);
+   PDM_free(range);
     place *= _radix_base;
   }
 
@@ -306,7 +307,7 @@ _cc_radix_sort
 //   printf("_cc_radix_sort_with_order::%d --> %d :: %d \n", end-beg, place_init, place_power);
 //   while(place < place_init){
 //     int* range = _counting_sort_with_order(v, tmp, order, order_tmp, beg, end, place, place_power);
-//     free(range);
+//    PDM_free(range);
 //     place *= _radix_base;
 //     place_power += _radix_shift;
 //   }
@@ -363,8 +364,8 @@ _cc_radix_sort_with_order
   }
   // printf("_cc_radix_sort_with_order end ::%d --> %d :: %d \n", end-beg, place_init, place_power);
 
-  free(count_curr);
-  free(count_next);
+ PDM_free(count_curr);
+ PDM_free(count_next);
 
 }
 
@@ -393,7 +394,7 @@ _std_radix_sort
   place /= _radix_base;
 
   if(place == 0) {
-    free(range);
+   PDM_free(range);
     return;
   }
 
@@ -410,7 +411,7 @@ _std_radix_sort
     }
   }
 
-  free(range);
+ PDM_free(range);
 
 }
 
@@ -451,7 +452,7 @@ _std_radix_sort_with_order
   }
 
   if(place == 0) {
-    free(range);
+   PDM_free(range);
     return;
   }
 
@@ -465,7 +466,7 @@ _std_radix_sort_with_order
     }
   }
 
-  free(range);
+ PDM_free(range);
 
 }
 
@@ -522,11 +523,11 @@ PDM_radix_sort_long
     int* order_tmp = (int *) malloc( (lArray+1) * sizeof(int));
     _std_radix_sort_with_order(array, tmp, order, order_tmp, 0, lArray, place, place_power);
     // _std_radix_sort(array, tmp, 0, lArray, place);
-    free(order_tmp);
+   PDM_free(order_tmp);
   }
 
 
-  free(tmp);
+ PDM_free(tmp);
 
 }
 

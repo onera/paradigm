@@ -9,6 +9,7 @@
 #include <assert.h>
 
 #include "pdm.h"
+#include "pdm_priv.h"
 #include "pdm_mpi.h"
 #include "pdm_config.h"
 #include "pdm_part.h"
@@ -3675,8 +3676,8 @@ PDM_printf ("****  PDM_edges_intersect_poly_add  OK  ***************************
     vtxBOnEdgeAEir[i] = NULL;
   }
   PDM_printf ("oNewPoints : \n  0 : PDM_EDGES_INTERSECT_POINT_NEW\n  1 : PDM_EDGES_INTERSECT_POINT_VTXA_ON_EDGEB\n  2 : PDM_EDGES_INTERSECT_POINT_VTXB_ON_EDGEA\n  3 : PDM_EDGES_INTERSECT_POINT_VTXA_ON_VTXB\n");
-  free(vtxAOnEdgeBEir);
-  free(vtxBOnEdgeAEir);
+ PDM_free(vtxAOnEdgeBEir);
+ PDM_free(vtxBOnEdgeAEir);
 
   for (int iedgeA = 0; iedgeA < nVtxA; iedgeA++) {
 
@@ -3739,7 +3740,7 @@ PDM_printf ("****  PDM_edges_intersect_poly_add  OK  ***************************
   			}
   		}
       if(eir != NULL){
-        free(eir);
+       PDM_free(eir);
       }
   	}
   }
@@ -3805,7 +3806,7 @@ PDM_printf ("****  PDM_edges_intersect_poly_add  OK  ***************************
 	  		}
 	  	}
       if(eir != NULL){
-        free(eir);
+       PDM_free(eir);
       }
 	  }
   }
@@ -3818,18 +3819,18 @@ PDM_printf ("****  PDM_edges_intersect_poly_add  OK  ***************************
    PDM_printf ("vtxBOnEdgeA[%d] : %d \n", iedgeB, vtxBOnEdgeA[iedgeB]);
   }
 
-  free (faceToEdgeA);
-  free (faceToVtxA);
-  free (faceVtxCooA);
-  free (faceVtxEpsA);
+ PDM_free(faceToEdgeA);
+ PDM_free(faceToVtxA);
+ PDM_free(faceVtxCooA);
+ PDM_free(faceVtxEpsA);
 
-  free (faceToEdgeB);
-  free (faceToVtxB);
-  free (faceVtxCooB);
-  free (faceVtxEpsB);
+ PDM_free(faceToEdgeB);
+ PDM_free(faceToVtxB);
+ PDM_free(faceVtxCooB);
+ PDM_free(faceVtxEpsB);
 
-  free(vtxBOnEdgeA);
-  free(vtxAOnEdgeB);
+ PDM_free(vtxBOnEdgeA);
+ PDM_free(vtxAOnEdgeB);
 
   PDM_edges_intersect_free (ei);
   PDM_MPI_Finalize ();

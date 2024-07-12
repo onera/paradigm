@@ -18,6 +18,8 @@
 #include "pdm_file_par.h"
 #include "pdm_printf.h"
 #include "pdm_error.h"
+#include "pdm.h"
+#include "pdm_priv.h"
 
 /*----------------------------------------------------------------------------*/
 
@@ -653,7 +655,7 @@ PDM_file_par_close
 {
 
   if (PDM_file_par != NULL) {
-    free(PDM_file_par->nom);
+   PDM_free(PDM_file_par->nom);
 
     PDM_MPI_File_close(&(PDM_file_par->fichier));
 

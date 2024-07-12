@@ -240,7 +240,7 @@ PDM_multi_block_to_part_create
     PDM_log_trace_array_int(mbtp->distributed_data    , mbtp->distributed_data_idx[mbtp->n_rank], "mbtp->distributed_data:: ");
   }
 
-  free (requested_data);
+ PDM_free(requested_data);
 
   return (PDM_multi_block_to_part_t *) mbtp;
 }
@@ -386,7 +386,7 @@ PDM_multi_block_to_part_exch2
 
     }
 
-    free(send_stride);
+   PDM_free(send_stride);
 
     s_send_buffer = i_send_buffer[n_rank1] + n_send_buffer[n_rank1];
     s_recv_buffer = i_recv_buffer[n_rank1] + n_recv_buffer[n_rank1];
@@ -425,9 +425,9 @@ PDM_multi_block_to_part_exch2
       }
     }
     for(int i_block = 0; i_block < mbtp->n_block; ++i_block) {
-      free(block_stride_idx[i_block]);
+     PDM_free(block_stride_idx[i_block]);
     }
-    free(block_stride_idx);
+   PDM_free(block_stride_idx);
 
   } else if (t_stride == PDM_STRIDE_CST_INTERLACED) {
 
@@ -490,11 +490,11 @@ PDM_multi_block_to_part_exch2
                       i_recv_buffer,
                       PDM_MPI_BYTE,
                       mbtp->comm);
-  free(send_buffer);
-  free(n_send_buffer);
-  free(i_send_buffer);
-  free(n_recv_buffer);
-  free(i_recv_buffer);
+ PDM_free(send_buffer);
+ PDM_free(n_send_buffer);
+ PDM_free(i_send_buffer);
+ PDM_free(n_recv_buffer);
+ PDM_free(i_recv_buffer);
 
   *part_data = malloc(sizeof(unsigned char *) * mbtp->n_part);
   _part_data = (*(unsigned char ***) part_data);
@@ -530,11 +530,11 @@ PDM_multi_block_to_part_exch2
     }
 
     for (int i = 0; i < mbtp->n_part; i++) {
-      free (part_idx[i]);
+     PDM_free(part_idx[i]);
     }
-    free(recv_idx);
-    free(part_idx);
-    free(recv_stride);
+   PDM_free(recv_idx);
+   PDM_free(part_idx);
+   PDM_free(recv_stride);
 
   } else if (t_stride == PDM_STRIDE_CST_INTERLACED) {
 
@@ -561,7 +561,7 @@ PDM_multi_block_to_part_exch2
     }
   }
 
-  free(recv_buffer);
+ PDM_free(recv_buffer);
 }
 
 
@@ -582,29 +582,29 @@ PDM_multi_block_to_part_free
 {
 
   for(int i_block = 0; i_block < mbtp->n_block; ++i_block) {
-    free (mbtp->block_distrib_idx[i_block]);
+   PDM_free(mbtp->block_distrib_idx[i_block]);
   }
-  free(mbtp->block_distrib_idx);
-  free(mbtp->multi_distrib_idx);
+ PDM_free(mbtp->block_distrib_idx);
+ PDM_free(mbtp->multi_distrib_idx);
 
   for (int i = 0; i < mbtp->n_part; i++) {
-    free (mbtp->ind[i]);
+   PDM_free(mbtp->ind[i]);
   }
-  free (mbtp->ind);
+ PDM_free(mbtp->ind);
 
-  free (mbtp->n_elt);
-  free (mbtp->distributed_data);
-  free (mbtp->distributed_data_idx);
-  free (mbtp->distributed_data_n);
-  free (mbtp->distributed_block_idx);
-  free (mbtp->distributed_block_n);
-  free (mbtp->requested_data_idx);
-  free (mbtp->requested_data_n);
-  free (mbtp->requested_block_idx);
-  free (mbtp->requested_block_n);
+ PDM_free(mbtp->n_elt);
+ PDM_free(mbtp->distributed_data);
+ PDM_free(mbtp->distributed_data_idx);
+ PDM_free(mbtp->distributed_data_n);
+ PDM_free(mbtp->distributed_block_idx);
+ PDM_free(mbtp->distributed_block_n);
+ PDM_free(mbtp->requested_data_idx);
+ PDM_free(mbtp->requested_data_n);
+ PDM_free(mbtp->requested_block_idx);
+ PDM_free(mbtp->requested_block_n);
 
 
-  free (mbtp);
+ PDM_free(mbtp);
 
   return NULL;
 }

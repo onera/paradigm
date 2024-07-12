@@ -81,15 +81,15 @@ int main(int argc, char *argv[])
     }
 
     if (it > 0) {
-      free(coords);
+     PDM_free(coords);
       coords = NULL;
-      free(elt_vtx_idx);
+     PDM_free(elt_vtx_idx);
       elt_vtx_idx = NULL;
-      free(elt_vtx);
+     PDM_free(elt_vtx);
       elt_vtx = NULL;
-      free(vtx_ln_to_gn);
+     PDM_free(vtx_ln_to_gn);
       vtx_ln_to_gn = NULL;
-      free(elt_ln_to_gn);
+     PDM_free(elt_ln_to_gn);
       elt_ln_to_gn = NULL;
     }
 
@@ -161,7 +161,7 @@ int main(int argc, char *argv[])
     elt_ln_to_gn = PDM_gnum_get(gnum_elt, 0);
 
     PDM_gnum_free(gnum_elt);
-    free(elt_center);
+   PDM_free(elt_center);
 
 
     PDM_writer_step_beg(wrt, time);
@@ -205,11 +205,11 @@ int main(int argc, char *argv[])
 
   PDM_writer_free(wrt);
 
-  free(coords);
-  free(elt_vtx_idx);
-  free(elt_vtx);
-  free(vtx_ln_to_gn);
-  free(elt_ln_to_gn);
+ PDM_free(coords);
+ PDM_free(elt_vtx_idx);
+ PDM_free(elt_vtx);
+ PDM_free(vtx_ln_to_gn);
+ PDM_free(elt_ln_to_gn);
 
 
   PDM_MPI_Finalize();

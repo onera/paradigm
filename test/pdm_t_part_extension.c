@@ -11,6 +11,7 @@
 #include "pdm_writer.h"
 #include "pdm_vtk.h"
 #include "pdm.h"
+#include "pdm_priv.h"
 #include "pdm_config.h"
 #include "pdm_mpi.h"
 #include "pdm_part.h"
@@ -220,7 +221,7 @@ _visu
     distrib_part[i+1] = distrib_part[i] + n_part_procs[i];
   }
 
-  free(n_part_procs);
+ PDM_free(n_part_procs);
 
   /* Creation des variables */
 
@@ -365,20 +366,20 @@ _visu
   PDM_writer_step_end(id_cs);
 
   for (int i_part = 0; i_part < n_part; i_part++) {
-    free (face_vtx_n[i_part]);
-    free (cell_face_n[i_part]);
-    free (val_num_part[i_part]);
-    free (val_cell_num[i_part]);
-    free (val_num_rank[i_part]);
-    free (val_cell_gnum[i_part]);
+   PDM_free(face_vtx_n[i_part]);
+   PDM_free(cell_face_n[i_part]);
+   PDM_free(val_num_part[i_part]);
+   PDM_free(val_cell_num[i_part]);
+   PDM_free(val_num_rank[i_part]);
+   PDM_free(val_cell_gnum[i_part]);
   }
-  free (distrib_part);
-  free (face_vtx_n);
-  free (val_num_part);
-  free (val_cell_num);
-  free (val_cell_gnum);
-  free (val_num_rank);
-  free (cell_face_n);
+ PDM_free(distrib_part);
+ PDM_free(face_vtx_n);
+ PDM_free(val_num_part);
+ PDM_free(val_cell_num);
+ PDM_free(val_cell_gnum);
+ PDM_free(val_num_rank);
+ PDM_free(cell_face_n);
 
   // PDM_writer_geom_free(id_cs,
   //                      id_geom);
@@ -810,17 +811,17 @@ int main(int argc, char *argv[])
            pvtx_ln_to_gn);
   }
 
-  free(pn_cell       );
-  free(pn_face       );
-  free(pn_vtx        );
-  free(pcell_face_idx);
-  free(pcell_face    );
-  free(pface_vtx_idx );
-  free(pface_vtx     );
-  free(pcell_ln_to_gn);
-  free(pface_ln_to_gn);
-  free(pvtx_ln_to_gn );
-  free(pvtx          );
+ PDM_free(pn_cell       );
+ PDM_free(pn_face       );
+ PDM_free(pn_vtx        );
+ PDM_free(pcell_face_idx);
+ PDM_free(pcell_face    );
+ PDM_free(pface_vtx_idx );
+ PDM_free(pface_vtx     );
+ PDM_free(pcell_ln_to_gn);
+ PDM_free(pface_ln_to_gn);
+ PDM_free(pvtx_ln_to_gn );
+ PDM_free(pvtx          );
 
 
   PDM_part_extension_compute(part_ext);
@@ -848,7 +849,7 @@ int main(int argc, char *argv[])
   PDM_part_extension_free(part_ext);
 
 
-  free(dcell_part);
+ PDM_free(dcell_part);
   PDM_part_free(ppart);
 
   PDM_dcube_gen_free(dcube);

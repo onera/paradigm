@@ -9,6 +9,7 @@
 #include <assert.h>
 
 #include "pdm.h"
+#include "pdm_priv.h"
 #include "pdm_printf.h"
 #include "pdm_gnum.h"
 
@@ -156,7 +157,7 @@ int main(int argc, char *argv[])
                                &n_elts[i_part],
                                &coords[i_part],
                                &gnum);
-    free(gnum);
+   PDM_free(gnum);
   }
 
   /*
@@ -208,14 +209,14 @@ int main(int argc, char *argv[])
   /*
    * Free memory
    */
-  free(char_length);
+ PDM_free(char_length);
   for (int i_part = 0; i_part < n_part; i_part++) {
-    free(coords[i_part]);
-    free(gnum  [i_part]);
+   PDM_free(coords[i_part]);
+   PDM_free(gnum  [i_part]);
   }
-  free(n_elts);
-  free(coords);
-  free(gnum);
+ PDM_free(n_elts);
+ PDM_free(coords);
+ PDM_free(gnum);
 
 
 

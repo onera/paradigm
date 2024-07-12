@@ -130,26 +130,26 @@ PDM_surf_part_free
     part->face_vtx_idx = NULL;
     part->face_vtx = NULL;
     if (part->faceEdgeIdx != NULL)
-      free(part->faceEdgeIdx);
+     PDM_free(part->faceEdgeIdx);
     if (part->faceEdge != NULL)
-      free(part->faceEdge);
+     PDM_free(part->faceEdge);
 
     part->face_ln_to_gn = NULL;
     part->coords = NULL;
     if (part->vtxEdgeIdx != NULL)
-      free(part->vtxEdgeIdx);
+     PDM_free(part->vtxEdgeIdx);
     if (part->vtxEdge != NULL)
-      free(part->vtxEdge);
+     PDM_free(part->vtxEdge);
     part->vtx_ln_to_gn = NULL;
 
     if (part->edgeFace != NULL)
-      free(part->edgeFace);
+     PDM_free(part->edgeFace);
 
     if (part->edgeVtx != NULL)
-      free(part->edgeVtx);
+     PDM_free(part->edgeVtx);
 
     if (part->edgeLnToGn != NULL)
-      free(part->edgeLnToGn);
+     PDM_free(part->edgeLnToGn);
 
     if (part->edgePartBound != NULL)
       part->edgePartBound = PDM_part_bound_free(part->edgePartBound);
@@ -157,15 +157,15 @@ PDM_surf_part_free
       part->vtxPartBound = PDM_part_bound_free(part->vtxPartBound);
 
     if (part->carLgthVtx != NULL)
-      free (part->carLgthVtx);
+     PDM_free(part->carLgthVtx);
 
     if (part->faceNormal != NULL)
-      free (part->faceNormal);
+     PDM_free(part->faceNormal);
 
     if (part->extents != NULL)
-      free (part->extents);
+     PDM_free(part->extents);
 
-    free(part);
+   PDM_free(part);
   }
 
   return NULL;
@@ -237,7 +237,7 @@ PDM_surf_part_t *part
     }
   }
 
-  free(nHashTable);
+ PDM_free(nHashTable);
 
   /*
    * Compress edges
@@ -307,11 +307,11 @@ PDM_surf_part_t *part
     part->vtxEdge[part->vtxEdgeIdx[vtx1] + n_vtxEdge[vtx1]++] = i+1;
     part->vtxEdge[part->vtxEdgeIdx[vtx2] + n_vtxEdge[vtx2]++] = i+1;
   }
-  free(n_vtxEdge);
+ PDM_free(n_vtxEdge);
 
-  free(hashTable);
-  free(hashTableIdx);
-  free(listEdges);
+ PDM_free(hashTable);
+ PDM_free(hashTableIdx);
+ PDM_free(listEdges);
 
   /*
    * Re-allocation to real size
@@ -349,7 +349,7 @@ PDM_surf_part_t *part
     }
   }
 
-  free(edgesToCompressEdges);
+ PDM_free(edgesToCompressEdges);
 
   /*
    * face -> edge connectivity
@@ -456,10 +456,10 @@ PDM_surf_part_t *part
     }
   }
 
-  free (vtxEdge);
+ PDM_free(vtxEdge);
 
-  free(edgeFaceUncompress);
-  free(n_faceEdge);
+ PDM_free(edgeFaceUncompress);
+ PDM_free(n_faceEdge);
 
 }
 

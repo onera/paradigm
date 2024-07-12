@@ -537,7 +537,7 @@ int main(int argc, char *argv[])
                                        order,
                                        PDM_Mesh_nodal_n_vtx_elt_get(type, order),
                                        ijk);
-      free (ijk);
+     PDM_free(ijk);
     }
   }
 
@@ -810,8 +810,8 @@ int main(int argc, char *argv[])
 
     err_max = PDM_MAX(err_max, err);
   }
-  free(recv_field[0]);
-  free(recv_field);
+ PDM_free(recv_field[0]);
+ PDM_free(recv_field);
 
 
   PDM_g_num_t g_n_wrong = 0;
@@ -899,7 +899,7 @@ int main(int argc, char *argv[])
                                                    1,
                                                    field_name,
                                                    field_value);
-      free(pcell_vtx_out);
+     PDM_free(pcell_vtx_out);
     }
   }
 
@@ -907,18 +907,18 @@ int main(int argc, char *argv[])
   PDM_mesh_location_free(mesh_loc);
   PDM_part_mesh_nodal_free(src_pmn);
   PDM_multipart_free(src_mpart);
-  free(pts_coord);
-  free(pts_ln_to_gn);
+ PDM_free(pts_coord);
+ PDM_free(pts_ln_to_gn);
 
-  free(tgt_field_interp);
-  free(tgt_field_exact);
+ PDM_free(tgt_field_interp);
+ PDM_free(tgt_field_exact);
 
   for (int i = 0; i < n_part; i++) {
-    free(send_field[i]);
-    free(src_field [i]);
+   PDM_free(send_field[i]);
+   PDM_free(src_field [i]);
   }
-  free(send_field);
-  free(src_field );
+ PDM_free(send_field);
+ PDM_free(src_field );
 
   PDM_MPI_Finalize();
 

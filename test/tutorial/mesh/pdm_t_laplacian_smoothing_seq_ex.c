@@ -423,21 +423,21 @@ int main(int argc, char *argv[])
   }
 
   // Additional free
-  free(bdr_group);
-  free(vtx_new_coord);
-  free(vtx_edge_idx);
-  free(vtx_edge);
-  free(laplace_smoothing_vtx_coord);
+ PDM_free(bdr_group);
+ PDM_free(vtx_new_coord);
+ PDM_free(vtx_edge_idx);
+ PDM_free(vtx_edge);
+ PDM_free(laplace_smoothing_vtx_coord);
 
-  free(face_edge_idx);
-  free(face_edge    );
-  free(face_vtx     );
-  free(edge_vtx     );
-  free(vtx_coord    );
+ PDM_free(face_edge_idx);
+ PDM_free(face_edge    );
+ PDM_free(face_vtx     );
+ PDM_free(edge_vtx     );
+ PDM_free(vtx_coord    );
 
-  free(edge_face_idx);
-  free(edge_face);
-  free(edge_vtx_idx);
+ PDM_free(edge_face_idx);
+ PDM_free(edge_face);
+ PDM_free(edge_vtx_idx);
   PDM_MPI_Finalize();
   return 0;
 }

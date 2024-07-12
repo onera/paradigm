@@ -350,7 +350,7 @@ main
     edge_vtx[2*i+1] = order[i+1] + 1;
   }
 
-  free(pts_code2);
+ PDM_free(pts_code2);
 
   double *_order = malloc(sizeof(double) * n_pts);
   for (int i = 0; i < n_pts; i++) {
@@ -378,7 +378,7 @@ main
   //                                              field_name,
   //                                              field_value);
 
-  free(edge_vtx);
+ PDM_free(edge_vtx);
 
 
   double *box_extents = malloc(sizeof(double) * n_pts * 6);
@@ -405,8 +405,8 @@ main
   //                     n_pts,
   //                     box_extents,
   //                     g_num);
-  free(box_extents);
-  free(g_num);
+ PDM_free(box_extents);
+ PDM_free(g_num);
 
 
   int *order2 = malloc(sizeof(int) * n_pts);
@@ -421,7 +421,7 @@ main
   // for (int i = 0; i < n_pts; i++) {
   //   log_trace("%6d / %6d\n", order[i], order2[i]);
   // }
-  free(order2);
+ PDM_free(order2);
 
 
   for (int i = 0; i < n_pts; i++) {
@@ -438,12 +438,12 @@ main
     //           flat_code[i], dble);
   }
 
-  free(pts_coord);
-  free(pts_code);
-  free(order);
-  free(reverse_order);
-  free(_order);
-  free(flat_code);
+ PDM_free(pts_coord);
+ PDM_free(pts_code);
+ PDM_free(order);
+ PDM_free(reverse_order);
+ PDM_free(_order);
+ PDM_free(flat_code);
 
   PDM_MPI_Finalize ();
 

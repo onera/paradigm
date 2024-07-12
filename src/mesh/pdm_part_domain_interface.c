@@ -149,7 +149,7 @@ _unique_quadruplet
   *unique_neighbor_entity_idx = _unique_neighbor_entity_idx;
   *unique_neighbor_entity_n   = _unique_neighbor_entity_n;
   *unique_neighbor_entity     = _unique_neighbor_entity;
-  free(order);
+ PDM_free(order);
 }
 
 static
@@ -247,9 +247,9 @@ _concatenate_neighbor
 
     // printf("is_same = %i\n", is_same);
 
-    free(_concat_neighbor_idx [i_part]);
-    free(_concat_neighbor_desc[i_part]);
-    free(_unique_concat_neighbor_n);
+   PDM_free(_concat_neighbor_idx [i_part]);
+   PDM_free(_concat_neighbor_desc[i_part]);
+   PDM_free(_unique_concat_neighbor_n);
     _concat_neighbor_idx [i_part] = _unique_concat_neighbor_idx;
     _concat_neighbor_desc[i_part] = _unique_concat_neighbor_desc;
 
@@ -323,9 +323,9 @@ _exchange_and_sort_neighbor
 
 
     for(int i_part = 0; i_part < n_part; ++i_part) {
-      free(prev_neighbor_n[i_part]);
+     PDM_free(prev_neighbor_n[i_part]);
     }
-    free(prev_neighbor_n);
+   PDM_free(prev_neighbor_n);
 
     is_same = _concatenate_neighbor(n_part,
                                     n_entity,
@@ -343,22 +343,22 @@ _exchange_and_sort_neighbor
     /* Init next step */
     if(!first_step) {
       for(int i_part = 0; i_part < n_part; ++i_part) {
-        free(prev_neighbor_idx  [i_part]);
-        free(prev_neighbor_desc [i_part]);
+       PDM_free(prev_neighbor_idx  [i_part]);
+       PDM_free(prev_neighbor_desc [i_part]);
       }
-      free(prev_neighbor_idx);
-      free(prev_neighbor_desc);
+     PDM_free(prev_neighbor_idx);
+     PDM_free(prev_neighbor_desc);
     }
     prev_neighbor_idx  = concat_neighbor_opp_idx;
     prev_neighbor_desc = concat_neighbor_opp;
 
 
     for(int i_part = 0; i_part < n_part; ++i_part) {
-      free(next_neighbor_opp_n[i_part]);
-      free(next_neighbor_opp  [i_part]);
+     PDM_free(next_neighbor_opp_n[i_part]);
+     PDM_free(next_neighbor_opp  [i_part]);
     }
-    free(next_neighbor_opp_n);
-    free(next_neighbor_opp);
+   PDM_free(next_neighbor_opp_n);
+   PDM_free(next_neighbor_opp);
 
     first_step = 0;
     i_step++;
@@ -456,8 +456,8 @@ _exchange_and_sort_neighbor
      * Realloc
      */
     PDM_realloc(filter_neighbor_desc[i_part] ,filter_neighbor_desc[i_part] , 4 * (_filter_neighbor_idx[n_entity[i_part]]) ,int);
-    free(_concat_neighbor_opp_idx);
-    free(_concat_neighbor_opp);
+   PDM_free(_concat_neighbor_opp_idx);
+   PDM_free(_concat_neighbor_opp);
 
     if(0 == 1) {
       PDM_log_trace_graph_nuplet_int(_filter_neighbor_idx, filter_neighbor_desc[i_part], 4, n_entity[i_part], "filter_neighbor_desc OOOO :");
@@ -466,8 +466,8 @@ _exchange_and_sort_neighbor
 
   }
 
-  free(concat_neighbor_opp_idx);
-  free(concat_neighbor_opp    );
+ PDM_free(concat_neighbor_opp_idx);
+ PDM_free(concat_neighbor_opp    );
 
   *all_neighbor_idx  = filter_neighbor_idx;
   *all_neighbor_desc = filter_neighbor_desc;
@@ -767,143 +767,143 @@ PDM_part_domain_interface_free
 
       if(dom_intrf->ownership == PDM_OWNERSHIP_KEEP) {
         if(dom_intrf->interface_pn_vtx       [i_domain][i_part] != NULL) {
-          free(dom_intrf->interface_pn_vtx       [i_domain][i_part]);
+         PDM_free(dom_intrf->interface_pn_vtx       [i_domain][i_part]);
           dom_intrf->interface_pn_vtx       [i_domain][i_part] = NULL;
         };
         if(dom_intrf->interface_vtx_ln_to_gn [i_domain][i_part] != NULL) {
           for(int i_interface = 0; i_interface < dom_intrf->n_interface; ++i_interface){
-            free(dom_intrf->interface_vtx_ln_to_gn [i_domain][i_part][i_interface]);
+           PDM_free(dom_intrf->interface_vtx_ln_to_gn [i_domain][i_part][i_interface]);
           }
-          free(dom_intrf->interface_vtx_ln_to_gn [i_domain][i_part]);
+         PDM_free(dom_intrf->interface_vtx_ln_to_gn [i_domain][i_part]);
           dom_intrf->interface_vtx_ln_to_gn [i_domain][i_part] = NULL;
         };
         if(dom_intrf->interface_sgn_vtx      [i_domain][i_part] != NULL) {
           for(int i_interface = 0; i_interface < dom_intrf->n_interface; ++i_interface){
-            free(dom_intrf->interface_sgn_vtx      [i_domain][i_part][i_interface]);
+           PDM_free(dom_intrf->interface_sgn_vtx      [i_domain][i_part][i_interface]);
           }
-          free(dom_intrf->interface_sgn_vtx      [i_domain][i_part]);
+         PDM_free(dom_intrf->interface_sgn_vtx      [i_domain][i_part]);
           dom_intrf->interface_sgn_vtx      [i_domain][i_part] = NULL;
         };
         if(dom_intrf->interface_sens_vtx      [i_domain][i_part] != NULL) {
           for(int i_interface = 0; i_interface < dom_intrf->n_interface; ++i_interface){
-            free(dom_intrf->interface_sens_vtx      [i_domain][i_part][i_interface]);
+           PDM_free(dom_intrf->interface_sens_vtx      [i_domain][i_part][i_interface]);
           }
-          free(dom_intrf->interface_sens_vtx      [i_domain][i_part]);
+         PDM_free(dom_intrf->interface_sens_vtx      [i_domain][i_part]);
           dom_intrf->interface_sens_vtx      [i_domain][i_part] = NULL;
         };
         if(dom_intrf->interface_ids_vtx      [i_domain][i_part] != NULL) {
           for(int i_interface = 0; i_interface < dom_intrf->n_interface; ++i_interface){
-            free(dom_intrf->interface_ids_vtx      [i_domain][i_part][i_interface]);
+           PDM_free(dom_intrf->interface_ids_vtx      [i_domain][i_part][i_interface]);
           }
-          free(dom_intrf->interface_ids_vtx      [i_domain][i_part]);
+         PDM_free(dom_intrf->interface_ids_vtx      [i_domain][i_part]);
           dom_intrf->interface_ids_vtx      [i_domain][i_part] = NULL;
         };
         if(dom_intrf->interface_ids_vtx_idx  [i_domain][i_part] != NULL) {
           for(int i_interface = 0; i_interface < dom_intrf->n_interface; ++i_interface){
-            free(dom_intrf->interface_ids_vtx_idx  [i_domain][i_part][i_interface]);
+           PDM_free(dom_intrf->interface_ids_vtx_idx  [i_domain][i_part][i_interface]);
           }
-          free(dom_intrf->interface_ids_vtx_idx  [i_domain][i_part]);
+         PDM_free(dom_intrf->interface_ids_vtx_idx  [i_domain][i_part]);
           dom_intrf->interface_ids_vtx_idx  [i_domain][i_part] = NULL;
         };
         if(dom_intrf->interface_dom_vtx      [i_domain][i_part] != NULL) {
           for(int i_interface = 0; i_interface < dom_intrf->n_interface; ++i_interface){
-            free(dom_intrf->interface_dom_vtx      [i_domain][i_part][i_interface]);
+           PDM_free(dom_intrf->interface_dom_vtx      [i_domain][i_part][i_interface]);
           }
-          free(dom_intrf->interface_dom_vtx      [i_domain][i_part]);
+         PDM_free(dom_intrf->interface_dom_vtx      [i_domain][i_part]);
           dom_intrf->interface_dom_vtx      [i_domain][i_part] = NULL;
         };
 
         if(dom_intrf->interface_pn_edge      [i_domain][i_part] != NULL) {
-          free(dom_intrf->interface_pn_edge      [i_domain][i_part]);
+         PDM_free(dom_intrf->interface_pn_edge      [i_domain][i_part]);
           dom_intrf->interface_pn_edge      [i_domain][i_part] = NULL;
         };
         if(dom_intrf->interface_edge_ln_to_gn[i_domain][i_part] != NULL) {
           for(int i_interface = 0; i_interface < dom_intrf->n_interface; ++i_interface){
-            free(dom_intrf->interface_edge_ln_to_gn[i_domain][i_part][i_interface]);
+           PDM_free(dom_intrf->interface_edge_ln_to_gn[i_domain][i_part][i_interface]);
           }
-          free(dom_intrf->interface_edge_ln_to_gn[i_domain][i_part]);
+         PDM_free(dom_intrf->interface_edge_ln_to_gn[i_domain][i_part]);
           dom_intrf->interface_edge_ln_to_gn[i_domain][i_part] = NULL;
         };
         if(dom_intrf->interface_sgn_edge     [i_domain][i_part] != NULL) {
           for(int i_interface = 0; i_interface < dom_intrf->n_interface; ++i_interface){
-            free(dom_intrf->interface_sgn_edge     [i_domain][i_part][i_interface]);
+           PDM_free(dom_intrf->interface_sgn_edge     [i_domain][i_part][i_interface]);
           }
-          free(dom_intrf->interface_sgn_edge     [i_domain][i_part]);
+         PDM_free(dom_intrf->interface_sgn_edge     [i_domain][i_part]);
           dom_intrf->interface_sgn_edge     [i_domain][i_part] = NULL;
         };
         if(dom_intrf->interface_sens_edge     [i_domain][i_part] != NULL) {
           for(int i_interface = 0; i_interface < dom_intrf->n_interface; ++i_interface){
-            free(dom_intrf->interface_sens_edge     [i_domain][i_part][i_interface]);
+           PDM_free(dom_intrf->interface_sens_edge     [i_domain][i_part][i_interface]);
           }
-          free(dom_intrf->interface_sens_edge     [i_domain][i_part]);
+         PDM_free(dom_intrf->interface_sens_edge     [i_domain][i_part]);
           dom_intrf->interface_sens_edge     [i_domain][i_part] = NULL;
         };
         if(dom_intrf->interface_ids_edge     [i_domain][i_part] != NULL) {
           for(int i_interface = 0; i_interface < dom_intrf->n_interface; ++i_interface){
-            free(dom_intrf->interface_ids_edge     [i_domain][i_part][i_interface]);
+           PDM_free(dom_intrf->interface_ids_edge     [i_domain][i_part][i_interface]);
           }
-          free(dom_intrf->interface_ids_edge     [i_domain][i_part]);
+         PDM_free(dom_intrf->interface_ids_edge     [i_domain][i_part]);
           dom_intrf->interface_ids_edge     [i_domain][i_part] = NULL;
         };
         if(dom_intrf->interface_ids_edge_idx [i_domain][i_part] != NULL) {
           for(int i_interface = 0; i_interface < dom_intrf->n_interface; ++i_interface){
-            free(dom_intrf->interface_ids_edge_idx [i_domain][i_part][i_interface]);
+           PDM_free(dom_intrf->interface_ids_edge_idx [i_domain][i_part][i_interface]);
           }
-          free(dom_intrf->interface_ids_edge_idx [i_domain][i_part]);
+         PDM_free(dom_intrf->interface_ids_edge_idx [i_domain][i_part]);
           dom_intrf->interface_ids_edge_idx [i_domain][i_part] = NULL;
         };
         if(dom_intrf->interface_dom_edge     [i_domain][i_part] != NULL) {
           for(int i_interface = 0; i_interface < dom_intrf->n_interface; ++i_interface){
-            free(dom_intrf->interface_dom_edge     [i_domain][i_part][i_interface]);
+           PDM_free(dom_intrf->interface_dom_edge     [i_domain][i_part][i_interface]);
           }
-          free(dom_intrf->interface_dom_edge     [i_domain][i_part]);
+         PDM_free(dom_intrf->interface_dom_edge     [i_domain][i_part]);
           dom_intrf->interface_dom_edge     [i_domain][i_part] = NULL;
         };
 
         if(dom_intrf->interface_pn_face      [i_domain][i_part] != NULL) {
-          free(dom_intrf->interface_pn_face      [i_domain][i_part]);
+         PDM_free(dom_intrf->interface_pn_face      [i_domain][i_part]);
           dom_intrf->interface_pn_face      [i_domain][i_part] = NULL;
         };
         if(dom_intrf->interface_face_ln_to_gn[i_domain][i_part] != NULL) {
           for(int i_interface = 0; i_interface < dom_intrf->n_interface; ++i_interface){
-            free(dom_intrf->interface_face_ln_to_gn[i_domain][i_part][i_interface]);
+           PDM_free(dom_intrf->interface_face_ln_to_gn[i_domain][i_part][i_interface]);
           }
-          free(dom_intrf->interface_face_ln_to_gn[i_domain][i_part]);
+         PDM_free(dom_intrf->interface_face_ln_to_gn[i_domain][i_part]);
           dom_intrf->interface_face_ln_to_gn[i_domain][i_part] = NULL;
         };
         if(dom_intrf->interface_sgn_face     [i_domain][i_part] != NULL) {
           for(int i_interface = 0; i_interface < dom_intrf->n_interface; ++i_interface){
-            free(dom_intrf->interface_sgn_face     [i_domain][i_part][i_interface]);
+           PDM_free(dom_intrf->interface_sgn_face     [i_domain][i_part][i_interface]);
           }
-          free(dom_intrf->interface_sgn_face     [i_domain][i_part]);
+         PDM_free(dom_intrf->interface_sgn_face     [i_domain][i_part]);
           dom_intrf->interface_sgn_face     [i_domain][i_part] = NULL;
         };
         if(dom_intrf->interface_sens_face     [i_domain][i_part] != NULL) {
           for(int i_interface = 0; i_interface < dom_intrf->n_interface; ++i_interface){
-            free(dom_intrf->interface_sens_face     [i_domain][i_part][i_interface]);
+           PDM_free(dom_intrf->interface_sens_face     [i_domain][i_part][i_interface]);
           }
-          free(dom_intrf->interface_sens_face     [i_domain][i_part]);
+         PDM_free(dom_intrf->interface_sens_face     [i_domain][i_part]);
           dom_intrf->interface_sens_face     [i_domain][i_part] = NULL;
         };
         if(dom_intrf->interface_ids_face     [i_domain][i_part] != NULL) {
           for(int i_interface = 0; i_interface < dom_intrf->n_interface; ++i_interface){
-            free(dom_intrf->interface_ids_face     [i_domain][i_part][i_interface]);
+           PDM_free(dom_intrf->interface_ids_face     [i_domain][i_part][i_interface]);
           }
-          free(dom_intrf->interface_ids_face     [i_domain][i_part]);
+         PDM_free(dom_intrf->interface_ids_face     [i_domain][i_part]);
           dom_intrf->interface_ids_face     [i_domain][i_part] = NULL;
         };
         if(dom_intrf->interface_ids_face_idx [i_domain][i_part] != NULL) {
           for(int i_interface = 0; i_interface < dom_intrf->n_interface; ++i_interface){
-            free(dom_intrf->interface_ids_face_idx [i_domain][i_part][i_interface]);
+           PDM_free(dom_intrf->interface_ids_face_idx [i_domain][i_part][i_interface]);
           }
-          free(dom_intrf->interface_ids_face_idx [i_domain][i_part]);
+         PDM_free(dom_intrf->interface_ids_face_idx [i_domain][i_part]);
           dom_intrf->interface_ids_face_idx [i_domain][i_part] = NULL;
         };
         if(dom_intrf->interface_dom_face     [i_domain][i_part] != NULL) {
           for(int i_interface = 0; i_interface < dom_intrf->n_interface; ++i_interface){
-            free(dom_intrf->interface_dom_face     [i_domain][i_part][i_interface]);
+           PDM_free(dom_intrf->interface_dom_face     [i_domain][i_part][i_interface]);
           }
-          free(dom_intrf->interface_dom_face     [i_domain][i_part]);
+         PDM_free(dom_intrf->interface_dom_face     [i_domain][i_part]);
           dom_intrf->interface_dom_face     [i_domain][i_part] = NULL;
         };
 
@@ -912,78 +912,78 @@ PDM_part_domain_interface_free
       }
     }
 
-    free(dom_intrf->interface_pn_vtx       [i_domain]);
-    free(dom_intrf->interface_vtx_ln_to_gn [i_domain]);
-    free(dom_intrf->interface_sgn_vtx      [i_domain]);
-    free(dom_intrf->interface_sens_vtx     [i_domain]);
-    free(dom_intrf->interface_ids_vtx      [i_domain]);
-    free(dom_intrf->interface_ids_vtx_idx  [i_domain]);
-    free(dom_intrf->interface_dom_vtx      [i_domain]);
+   PDM_free(dom_intrf->interface_pn_vtx       [i_domain]);
+   PDM_free(dom_intrf->interface_vtx_ln_to_gn [i_domain]);
+   PDM_free(dom_intrf->interface_sgn_vtx      [i_domain]);
+   PDM_free(dom_intrf->interface_sens_vtx     [i_domain]);
+   PDM_free(dom_intrf->interface_ids_vtx      [i_domain]);
+   PDM_free(dom_intrf->interface_ids_vtx_idx  [i_domain]);
+   PDM_free(dom_intrf->interface_dom_vtx      [i_domain]);
 
-    free(dom_intrf->interface_pn_edge      [i_domain]);
-    free(dom_intrf->interface_edge_ln_to_gn[i_domain]);
-    free(dom_intrf->interface_sgn_edge     [i_domain]);
-    free(dom_intrf->interface_sens_edge    [i_domain]);
-    free(dom_intrf->interface_ids_edge     [i_domain]);
-    free(dom_intrf->interface_ids_edge_idx [i_domain]);
-    free(dom_intrf->interface_dom_edge     [i_domain]);
+   PDM_free(dom_intrf->interface_pn_edge      [i_domain]);
+   PDM_free(dom_intrf->interface_edge_ln_to_gn[i_domain]);
+   PDM_free(dom_intrf->interface_sgn_edge     [i_domain]);
+   PDM_free(dom_intrf->interface_sens_edge    [i_domain]);
+   PDM_free(dom_intrf->interface_ids_edge     [i_domain]);
+   PDM_free(dom_intrf->interface_ids_edge_idx [i_domain]);
+   PDM_free(dom_intrf->interface_dom_edge     [i_domain]);
 
-    free(dom_intrf->interface_pn_face      [i_domain]);
-    free(dom_intrf->interface_face_ln_to_gn[i_domain]);
-    free(dom_intrf->interface_sgn_face     [i_domain]);
-    free(dom_intrf->interface_sens_face    [i_domain]);
-    free(dom_intrf->interface_ids_face     [i_domain]);
-    free(dom_intrf->interface_ids_face_idx [i_domain]);
-    free(dom_intrf->interface_dom_face     [i_domain]);
+   PDM_free(dom_intrf->interface_pn_face      [i_domain]);
+   PDM_free(dom_intrf->interface_face_ln_to_gn[i_domain]);
+   PDM_free(dom_intrf->interface_sgn_face     [i_domain]);
+   PDM_free(dom_intrf->interface_sens_face    [i_domain]);
+   PDM_free(dom_intrf->interface_ids_face     [i_domain]);
+   PDM_free(dom_intrf->interface_ids_face_idx [i_domain]);
+   PDM_free(dom_intrf->interface_dom_face     [i_domain]);
 
   }
-  free(dom_intrf->n_part);
+ PDM_free(dom_intrf->n_part);
 
-  free(dom_intrf->interface_pn_vtx       );
-  free(dom_intrf->interface_vtx_ln_to_gn );
-  free(dom_intrf->interface_sgn_vtx      );
-  free(dom_intrf->interface_sens_vtx     );
-  free(dom_intrf->interface_ids_vtx      );
-  free(dom_intrf->interface_ids_vtx_idx  );
-  free(dom_intrf->interface_dom_vtx      );
+ PDM_free(dom_intrf->interface_pn_vtx       );
+ PDM_free(dom_intrf->interface_vtx_ln_to_gn );
+ PDM_free(dom_intrf->interface_sgn_vtx      );
+ PDM_free(dom_intrf->interface_sens_vtx     );
+ PDM_free(dom_intrf->interface_ids_vtx      );
+ PDM_free(dom_intrf->interface_ids_vtx_idx  );
+ PDM_free(dom_intrf->interface_dom_vtx      );
 
-  free(dom_intrf->interface_pn_edge       );
-  free(dom_intrf->interface_edge_ln_to_gn );
-  free(dom_intrf->interface_sgn_edge      );
-  free(dom_intrf->interface_sens_edge     );
-  free(dom_intrf->interface_ids_edge      );
-  free(dom_intrf->interface_ids_edge_idx  );
-  free(dom_intrf->interface_dom_edge      );
+ PDM_free(dom_intrf->interface_pn_edge       );
+ PDM_free(dom_intrf->interface_edge_ln_to_gn );
+ PDM_free(dom_intrf->interface_sgn_edge      );
+ PDM_free(dom_intrf->interface_sens_edge     );
+ PDM_free(dom_intrf->interface_ids_edge      );
+ PDM_free(dom_intrf->interface_ids_edge_idx  );
+ PDM_free(dom_intrf->interface_dom_edge      );
 
-  free(dom_intrf->interface_pn_face      );
-  free(dom_intrf->interface_face_ln_to_gn);
-  free(dom_intrf->interface_sgn_face     );
-  free(dom_intrf->interface_sens_face    );
-  free(dom_intrf->interface_ids_face     );
-  free(dom_intrf->interface_ids_face_idx );
-  free(dom_intrf->interface_dom_face     );
+ PDM_free(dom_intrf->interface_pn_face      );
+ PDM_free(dom_intrf->interface_face_ln_to_gn);
+ PDM_free(dom_intrf->interface_sgn_face     );
+ PDM_free(dom_intrf->interface_sens_face    );
+ PDM_free(dom_intrf->interface_ids_face     );
+ PDM_free(dom_intrf->interface_ids_face_idx );
+ PDM_free(dom_intrf->interface_dom_face     );
 
   for(int i_interface = 0; i_interface < dom_intrf->n_interface; ++i_interface) {
     if(dom_intrf->translation_vect[i_interface]   != NULL) {
-      free(dom_intrf->translation_vect[i_interface]);
+     PDM_free(dom_intrf->translation_vect[i_interface]);
       dom_intrf->translation_vect[i_interface] = NULL;
     }
     if(dom_intrf->rotation_direction[i_interface]   != NULL) {
-      free(dom_intrf->rotation_direction[i_interface]);
+     PDM_free(dom_intrf->rotation_direction[i_interface]);
       dom_intrf->rotation_direction[i_interface] = NULL;
     }
     if(dom_intrf->rotation_center[i_interface]   != NULL) {
-      free(dom_intrf->rotation_center[i_interface]);
+     PDM_free(dom_intrf->rotation_center[i_interface]);
       dom_intrf->rotation_center[i_interface] = NULL;
     }
   }
 
-  free(dom_intrf->translation_vect  );
-  free(dom_intrf->rotation_direction);
-  free(dom_intrf->rotation_center   );
-  free(dom_intrf->rotation_angle    );
+ PDM_free(dom_intrf->translation_vect  );
+ PDM_free(dom_intrf->rotation_direction);
+ PDM_free(dom_intrf->rotation_center   );
+ PDM_free(dom_intrf->rotation_angle    );
 
-  free(dom_intrf);
+ PDM_free(dom_intrf);
 }
 
 
@@ -1322,13 +1322,13 @@ PDM_part_domain_interface_as_graph
         PDM_log_trace_graph_nuplet_int(_neighbor_opp_idx, _neighbor_opp_desc, 4, n_entity_bound[i_part+shift_part], "_neighbor_opp_desc :");
       }
 
-      free(interface_pn      );
-      free(interface_ln_to_gn);
-      free(interface_sgn     );
-      free(interface_sens    );
-      free(interface_ids     );
-      free(interface_ids_idx );
-      free(interface_dom     );
+     PDM_free(interface_pn      );
+     PDM_free(interface_ln_to_gn);
+     PDM_free(interface_sgn     );
+     PDM_free(interface_sens    );
+     PDM_free(interface_ids     );
+     PDM_free(interface_ids_idx );
+     PDM_free(interface_dom     );
 
     }
     shift_part   += dom_intrf->n_part[i_domain];
@@ -1501,7 +1501,7 @@ PDM_part_domain_interface_as_graph
 
     }
 
-    free(_neighbor_entity_idx);
+   PDM_free(_neighbor_entity_idx);
     (*neighbor_entity_idx)[i_part] = _filter_neighbor_entity_idx;
 
     if(0 == 1) {
@@ -1512,7 +1512,7 @@ PDM_part_domain_interface_as_graph
   /*
    * Realloc
    */
-  free(composed_id_tmp);
+ PDM_free(composed_id_tmp);
   PDM_realloc(composed_id_idx ,composed_id_idx , (i_composed_interface+1)              ,int        );
   PDM_realloc(composed_id     ,composed_id     , composed_id_idx[i_composed_interface] ,int        );
   PDM_realloc(composed_key    ,composed_key    , (i_composed_interface+1)              ,PDM_g_num_t);
@@ -1541,7 +1541,7 @@ PDM_part_domain_interface_as_graph
       PDM_log_trace_graph_nuplet_int(_neighbor_entity_idx, _neighbor_entity_desc, 4, n_elmt, "_neighbor_entity_desc :");
     }
   }
-  free(composed_key_update_idx);
+ PDM_free(composed_key_update_idx);
 
   int n_rank = -1;
   PDM_MPI_Comm_size(dom_intrf->comm, &n_rank);
@@ -1552,7 +1552,7 @@ PDM_part_domain_interface_as_graph
     max_loc = PDM_MAX(max_loc, composed_id_gnum[i]);
     composed_id_n[i] = composed_id_idx[i+1] - composed_id_idx[i];
   }
-  free(composed_id_idx);
+ PDM_free(composed_id_idx);
   PDM_g_num_t max_glob = -1;
   PDM_MPI_Allreduce(&max_loc, &max_glob, 1, PDM__PDM_MPI_G_NUM, PDM_MPI_MAX, dom_intrf->comm);
 
@@ -1575,7 +1575,7 @@ PDM_part_domain_interface_as_graph
                                                                    1,
                                                                    dom_intrf->comm);
 
-  // free(composed_id_gnum);
+  //PDM_free(composed_id_gnum);
   int *_composed_id_n = NULL;
   int *_composed_id   = NULL;
   PDM_part_to_block_exch(ptb,
@@ -1587,22 +1587,22 @@ PDM_part_domain_interface_as_graph
                          &_composed_id_n,
              (void **)   &_composed_id);
 
-  free(composed_id);
-  free(composed_id_n);
+ PDM_free(composed_id);
+ PDM_free(composed_id_n);
 
   int _n_g_interface = PDM_part_to_block_n_elt_block_get(ptb);
   PDM_g_num_t *ptb_composed_ln_to_gn_sorted = PDM_part_to_block_block_gnum_get(ptb);
 
   if(i_rank > 0) {
     assert(_n_g_interface == 0);
-    free(_composed_id);
+   PDM_free(_composed_id);
   }
 
 
-  free(distrib_interf);
+ PDM_free(distrib_interf);
 
-  free(composed_key);
-  free(sgn_interf_to_interf);
+ PDM_free(composed_key);
+ PDM_free(sgn_interf_to_interf);
 
 
   /*
@@ -1626,7 +1626,7 @@ PDM_part_domain_interface_as_graph
       _composed_id_idx[i+1] = _composed_id_idx[i] + _composed_id_n[i];
     }
   }
-  free(_composed_id_n);
+ PDM_free(_composed_id_n);
 
   PDM_part_to_block_free(ptb);
 
@@ -1644,24 +1644,24 @@ PDM_part_domain_interface_as_graph
 
 
   for(int i_part = 0; i_part < n_part_loc_all_domain; ++i_part) {
-    free(neighbor_n        [i_part]);
-    free(neighbor_idx      [i_part]);
-    free(neighbor_desc     [i_part]);
-    free(neighbor_interface[i_part]);
-    free(neighbor_opp_n    [i_part]);
-    free(neighbor_opp_idx  [i_part]);
-    free(neighbor_opp_desc [i_part]);
+   PDM_free(neighbor_n        [i_part]);
+   PDM_free(neighbor_idx      [i_part]);
+   PDM_free(neighbor_desc     [i_part]);
+   PDM_free(neighbor_interface[i_part]);
+   PDM_free(neighbor_opp_n    [i_part]);
+   PDM_free(neighbor_opp_idx  [i_part]);
+   PDM_free(neighbor_opp_desc [i_part]);
   }
-  free(neighbor_n        );
-  free(neighbor_idx      );
-  free(neighbor_desc     );
-  free(neighbor_interface);
-  free(neighbor_opp_n    );
-  free(neighbor_opp_idx  );
-  free(neighbor_opp_desc );
+ PDM_free(neighbor_n        );
+ PDM_free(neighbor_idx      );
+ PDM_free(neighbor_desc     );
+ PDM_free(neighbor_interface);
+ PDM_free(neighbor_opp_n    );
+ PDM_free(neighbor_opp_idx  );
+ PDM_free(neighbor_opp_desc );
 
-  free(n_entity_bound);
-  free(n_tot_part_by_domain);
+ PDM_free(n_entity_bound);
+ PDM_free(n_tot_part_by_domain);
 
 
   *n_g_interface                = _n_g_interface;
@@ -1868,8 +1868,8 @@ PDM_part_domain_interface_view_by_part
         }
       } /* End i_interface */
 
-      free(pentity_cur_n);
-      free(pentity_cur_idx);
+     PDM_free(pentity_cur_n);
+     PDM_free(pentity_cur_idx);
 
     }
     s_part += pdi->n_part[i_dom];
@@ -1943,7 +1943,7 @@ PDM_part_domain_interface_view_by_part
       // PDM_log_trace_array_int(part1_to_part2_triplet  [li_part], n_connect_tot     , "part1_to_part2_triplet   ::");
       // PDM_log_trace_array_int(part1_to_part2_interface[li_part], n_connect_tot/3   , "part1_to_part2_interface ::");
 
-      free(part1_to_part2_n);
+     PDM_free(part1_to_part2_n);
 
       li_part += 1;
     }
@@ -2003,15 +2003,15 @@ PDM_part_domain_interface_view_by_part
 
 
   for(int i_part = 0; i_part < n_part_loc_all_domain; ++i_part) {
-    free(part1_to_part2_gnum     [i_part]);
-    free(part1_to_part2_idx      [i_part]);
-    free(part1_to_part2_triplet  [i_part]);
-    free(part1_to_part2_interface[i_part]);
+   PDM_free(part1_to_part2_gnum     [i_part]);
+   PDM_free(part1_to_part2_idx      [i_part]);
+   PDM_free(part1_to_part2_triplet  [i_part]);
+   PDM_free(part1_to_part2_interface[i_part]);
   }
-  free(part1_to_part2_gnum     );
-  free(part1_to_part2_idx      );
-  free(part1_to_part2_triplet  );
-  free(part1_to_part2_interface);
+ PDM_free(part1_to_part2_gnum     );
+ PDM_free(part1_to_part2_idx      );
+ PDM_free(part1_to_part2_triplet  );
+ PDM_free(part1_to_part2_interface);
 
   PDM_part_to_part_free(ptp);
 
@@ -2066,9 +2066,9 @@ PDM_part_domain_interface_translate
                                      &composed_interface_idx,
                                      &composed_interface,
                                      &composed_ln_to_gn_sorted);
-  free(composed_interface_idx);
-  free(composed_interface);
-  free(composed_ln_to_gn_sorted);
+ PDM_free(composed_interface_idx);
+ PDM_free(composed_interface);
+ PDM_free(composed_ln_to_gn_sorted);
 
   int n_part_loc_all_domain = 0;
   for(int i_dom = 0; i_dom < dom_intrf->n_domain; ++i_dom) {
@@ -2096,15 +2096,15 @@ PDM_part_domain_interface_translate
         neighbor_interface[i_part][  i  ] = pdi_neighbor[i_part][4*i+3];
       }
       PDM_log_trace_graph_nuplet_int(neighbor_idx[i_part], neighbor_desc[i_part], 3, pn_entity1[i_dom][i_part], "neighbor_desc (debug) :");
-      free(pdi_neighbor[i_part]);
+     PDM_free(pdi_neighbor[i_part]);
 
       n_entity1[i_part+shift_part] = pn_entity1[i_dom][i_part];
 
     }
     shift_part += n_part[i_dom];
   }
-  free(pdi_neighbor_idx);
-  free(pdi_neighbor);
+ PDM_free(pdi_neighbor_idx);
+ PDM_free(pdi_neighbor);
 
   /*
    * Prepare exchange by transform with local interface information - We change frame
@@ -2159,14 +2159,14 @@ PDM_part_domain_interface_translate
 
 
   for(int i_part = 0; i_part < n_part_loc_all_domain; ++i_part) {
-    free(neighbor_interface[i_part]);
-    free(neighbor_idx      [i_part]);
-    free(neighbor_desc     [i_part]);
+   PDM_free(neighbor_interface[i_part]);
+   PDM_free(neighbor_idx      [i_part]);
+   PDM_free(neighbor_desc     [i_part]);
   }
-  free(neighbor_interface);
-  free(neighbor_idx      );
-  free(neighbor_desc     );
-  free(n_entity1);
+ PDM_free(neighbor_interface);
+ PDM_free(neighbor_idx      );
+ PDM_free(neighbor_desc     );
+ PDM_free(n_entity1);
 
 
 
@@ -2341,7 +2341,7 @@ PDM_part_domain_interface_to_domain_interface
                  (void **) interface_entity1_ln_to_gn[i_interface],
                            &dblk_strid,
                  (void **) &dentity1_gnum);
-    free(dblk_strid);
+   PDM_free(dblk_strid);
 
     PDM_part_to_block_exch(ptb,
                            sizeof(int),
@@ -2351,7 +2351,7 @@ PDM_part_domain_interface_to_domain_interface
                  (void **) interface_sgn[i_interface],
                            &dblk_strid,
                  (void **) &dentity1_sgn);
-    free(dblk_strid);
+   PDM_free(dblk_strid);
 
     PDM_part_to_block_exch(ptb,
                            sizeof(int),
@@ -2361,7 +2361,7 @@ PDM_part_domain_interface_to_domain_interface
                  (void **) interface_sens[i_interface],
                            &dblk_strid,
                  (void **) &dentity1_sens);
-    free(dblk_strid);
+   PDM_free(dblk_strid);
 
     PDM_part_to_block_exch(ptb,
                            sizeof(int),
@@ -2374,18 +2374,18 @@ PDM_part_domain_interface_to_domain_interface
 
 
     for(int i_part = 0; i_part < n_part_loc_all_domain; ++i_part) {
-      free(interface_entity1_ln_to_gn[i_interface][i_part]);
-      // free(interface_sgn             [i_interface][i_part]);
-      free(interface_dom             [i_interface][i_part]);
-      free(stride_one[i_part]);
+     PDM_free(interface_entity1_ln_to_gn[i_interface][i_part]);
+      //PDM_free(interface_sgn             [i_interface][i_part]);
+     PDM_free(interface_dom             [i_interface][i_part]);
+     PDM_free(stride_one[i_part]);
     }
 
-    free(pn_interface              [i_interface]);
-    free(interface_entity1_ln_to_gn[i_interface]);
-    free(interface_ln_to_gn        [i_interface]);
-    free(interface_sgn             [i_interface]);
-    free(interface_sens            [i_interface]);
-    free(interface_dom             [i_interface]);
+   PDM_free(pn_interface              [i_interface]);
+   PDM_free(interface_entity1_ln_to_gn[i_interface]);
+   PDM_free(interface_ln_to_gn        [i_interface]);
+   PDM_free(interface_sgn             [i_interface]);
+   PDM_free(interface_sens            [i_interface]);
+   PDM_free(interface_dom             [i_interface]);
 
     int          n_gnum     = PDM_part_to_block_n_elt_block_get  (ptb);
     // PDM_g_num_t* block_gnum = PDM_part_to_block_block_gnum_get   (ptb);
@@ -2463,12 +2463,12 @@ PDM_part_domain_interface_to_domain_interface
       idx_read += dblk_strid[i];
     }
 
-    free(order);
-    free(tmp_dentity1_sgn );
-    free(tmp_dentity1_sens);
-    free(tmp_dentity1_dom );
-    free(tmp_dentity1_gnum);
-    free(dblk_strid);
+   PDM_free(order);
+   PDM_free(tmp_dentity1_sgn );
+   PDM_free(tmp_dentity1_sens);
+   PDM_free(tmp_dentity1_dom );
+   PDM_free(tmp_dentity1_gnum);
+   PDM_free(dblk_strid);
     dblk_strid = dblk_strid_unique;
 
     n_data = 0;
@@ -2543,12 +2543,12 @@ PDM_part_domain_interface_to_domain_interface
       }
     }
 
-    free(dentity1_gnum);
-    free(dentity1_sgn);
-    free(dentity1_sens);
-    free(dentity1_dom);
-    free(dblk_strid);
-    free(stride_one);
+   PDM_free(dentity1_gnum);
+   PDM_free(dentity1_sgn);
+   PDM_free(dentity1_sens);
+   PDM_free(dentity1_dom);
+   PDM_free(dblk_strid);
+   PDM_free(stride_one);
 
     // PDM_log_trace_array_long(dinterface_ids[i_interface], 2 * dinterface_dn[i_interface], "PDM_part_domain_interface_to_domain_interface : dinterface_ids ::");
 
@@ -2563,12 +2563,12 @@ PDM_part_domain_interface_to_domain_interface
                            dinterface_ids,
                            dinterface_dom);
 
-  free(pn_interface);
-  free(interface_ln_to_gn);
-  free(interface_entity1_ln_to_gn);
-  free(interface_sgn             );
-  free(interface_sens            );
-  free(interface_dom             );
+ PDM_free(pn_interface);
+ PDM_free(interface_ln_to_gn);
+ PDM_free(interface_entity1_ln_to_gn);
+ PDM_free(interface_sgn             );
+ PDM_free(interface_sens            );
+ PDM_free(interface_dom             );
 
   // log_trace("PDM_part_domain_interface_to_domain_interface end\n");
 
@@ -2725,16 +2725,16 @@ PDM_part_domain_interface_add
 
 
     for(int i_part = 0; i_part < n_part[i_dom]; ++i_part) {
-      free(filter_entity2_entity1    [i_part]);
-      free(filter_entity2_entity1_idx[i_part]);
-      free(filter_entity2_entity1_n  [i_part]);
+     PDM_free(filter_entity2_entity1    [i_part]);
+     PDM_free(filter_entity2_entity1_idx[i_part]);
+     PDM_free(filter_entity2_entity1_n  [i_part]);
 
     }
-    free(filter_entity2_entity1    );
-    free(filter_entity2_entity1_idx);
-    free(filter_entity2_entity1_n  );
-    free(filter_entity2_ln_to_gn   );
-    free(n_filter_entity2);
+   PDM_free(filter_entity2_entity1    );
+   PDM_free(filter_entity2_entity1_idx);
+   PDM_free(filter_entity2_entity1_n  );
+   PDM_free(filter_entity2_ln_to_gn   );
+   PDM_free(n_filter_entity2);
 
     dn_entity2[i_dom]                  = PDM_part_to_block_n_elt_block_get  (ptb);
     dfilter_entity2_entity1_idx[i_dom] = PDM_array_new_idx_from_sizes_int(dfilter_entity2_entity1_n, dn_entity2[i_dom] );
@@ -2743,7 +2743,7 @@ PDM_part_domain_interface_add
       PDM_log_trace_connectivity_long(dfilter_entity2_entity1_idx[i_dom], dfilter_entity2_entity1[i_dom], dn_entity2[i_dom] , "dfilter_entity2_entity1 ::");
     }
 
-    free(dfilter_entity2_entity1_n);
+   PDM_free(dfilter_entity2_entity1_n);
 
     PDM_part_to_block_free(ptb);
 
@@ -2757,9 +2757,9 @@ PDM_part_domain_interface_add
   }
 
   for(int i_part = 0; i_part < n_part_loc_all_domain; ++i_part) {
-    free(is_entity1_on_itrf[i_part]);
+   PDM_free(is_entity1_on_itrf[i_part]);
   }
-  free(is_entity1_on_itrf);
+ PDM_free(is_entity1_on_itrf);
 
   /*
    * Translate in distributed
@@ -2836,15 +2836,15 @@ PDM_part_domain_interface_add
                                              pn_entity2,
                                              entity2_ln_to_gn,
                                              dom_intrf);
-  free(dn_entity1);
-  free(dn_entity2);
+ PDM_free(dn_entity1);
+ PDM_free(dn_entity2);
 
   for(int i_dom = 0; i_dom < dom_intrf->n_domain; ++i_dom) {
-    free(dfilter_entity2_entity1_idx[i_dom]);
-    free(dfilter_entity2_entity1    [i_dom]);
+   PDM_free(dfilter_entity2_entity1_idx[i_dom]);
+   PDM_free(dfilter_entity2_entity1    [i_dom]);
   }
-  free(dfilter_entity2_entity1_idx);
-  free(dfilter_entity2_entity1);
+ PDM_free(dfilter_entity2_entity1_idx);
+ PDM_free(dfilter_entity2_entity1);
 
 
   PDM_domain_interface_free(ditrf);
@@ -3005,16 +3005,16 @@ PDM_part_domain_interface_face2vtx
 
 
     for(int i_part = 0; i_part < n_part[i_dom]; ++i_part) {
-      free(filter_face_vtx    [i_part]);
-      free(filter_face_vtx_idx[i_part]);
-      free(filter_face_vtx_n  [i_part]);
+     PDM_free(filter_face_vtx    [i_part]);
+     PDM_free(filter_face_vtx_idx[i_part]);
+     PDM_free(filter_face_vtx_n  [i_part]);
 
     }
-    free(filter_face_vtx    );
-    free(filter_face_vtx_idx);
-    free(filter_face_vtx_n  );
-    free(filter_face_ln_to_gn);
-    free(n_filter_face);
+   PDM_free(filter_face_vtx    );
+   PDM_free(filter_face_vtx_idx);
+   PDM_free(filter_face_vtx_n  );
+   PDM_free(filter_face_ln_to_gn);
+   PDM_free(n_filter_face);
 
     dn_face[i_dom]                  = PDM_part_to_block_n_elt_block_get  (ptb);
     dfilter_face_vtx_idx[i_dom] = PDM_array_new_idx_from_sizes_int(dfilter_face_vtx_n, dn_face[i_dom] );
@@ -3023,7 +3023,7 @@ PDM_part_domain_interface_face2vtx
       PDM_log_trace_connectivity_long(dfilter_face_vtx_idx[i_dom], dfilter_face_vtx[i_dom], dn_face[i_dom] , "dfilter_face_vtx ::");
     }
 
-    free(dfilter_face_vtx_n);
+   PDM_free(dfilter_face_vtx_n);
 
     PDM_part_to_block_free(ptb);
 
@@ -3039,9 +3039,9 @@ PDM_part_domain_interface_face2vtx
   }
 
   for(int i_part = 0; i_part < n_part_loc_all_domain; ++i_part) {
-    free(is_face_on_itrf[i_part]);
+   PDM_free(is_face_on_itrf[i_part]);
   }
-  free(is_face_on_itrf);
+ PDM_free(is_face_on_itrf);
 
   PDM_domain_interface_translate_face2vtx(ditrf,
                                           dn_vtx,
@@ -3065,33 +3065,33 @@ PDM_part_domain_interface_face2vtx
                                              pvtx_ln_to_gn,
                                              dom_intrf);
   ditrf->is_result[PDM_BOUND_TYPE_VTX] = 1;
-  free(dn_vtx);
-  free(dn_face);
+ PDM_free(dn_vtx);
+ PDM_free(dn_face);
 
   for(int i_dom = 0; i_dom < dom_intrf->n_domain; ++i_dom) {
-    free(dfilter_face_vtx_idx[i_dom]);
-    free(dfilter_face_vtx    [i_dom]);
+   PDM_free(dfilter_face_vtx_idx[i_dom]);
+   PDM_free(dfilter_face_vtx    [i_dom]);
   }
-  free(dfilter_face_vtx_idx);
-  free(dfilter_face_vtx);
+ PDM_free(dfilter_face_vtx_idx);
+ PDM_free(dfilter_face_vtx);
 
 
   PDM_domain_interface_free(ditrf);
 
   for(int i_interface = 0; i_interface < n_interface; ++i_interface) {
-    free(pn_interface           [i_interface]);
-    free(interface_face_ln_to_gn[i_interface]);
-    free(interface_ln_to_gn     [i_interface]);
-    free(interface_sgn          [i_interface]);
-    free(interface_sens         [i_interface]);
-    free(interface_dom          [i_interface]);
+   PDM_free(pn_interface           [i_interface]);
+   PDM_free(interface_face_ln_to_gn[i_interface]);
+   PDM_free(interface_ln_to_gn     [i_interface]);
+   PDM_free(interface_sgn          [i_interface]);
+   PDM_free(interface_sens         [i_interface]);
+   PDM_free(interface_dom          [i_interface]);
   }
-  free(pn_interface);
-  free(interface_ln_to_gn);
-  free(interface_face_ln_to_gn);
-  free(interface_sgn             );
-  free(interface_sens            );
-  free(interface_dom             );
+ PDM_free(pn_interface);
+ PDM_free(interface_ln_to_gn);
+ PDM_free(interface_face_ln_to_gn);
+ PDM_free(interface_sgn             );
+ PDM_free(interface_sens            );
+ PDM_free(interface_dom             );
 
 }
 

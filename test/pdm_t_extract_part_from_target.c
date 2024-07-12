@@ -393,7 +393,7 @@ int main(int argc, char *argv[])
                                              pn_target_cell[i_part],
                                              target_g_num  [i_part]);
   }
-  free(distrib_cell);
+ PDM_free(distrib_cell);
 
   PDM_gnum_location_compute(gnum_loc);
 
@@ -539,8 +539,8 @@ int main(int argc, char *argv[])
       pface_field[i_part][iface] = center[3*iface];
     }
 
-    free(surface_vector);
-    free(center);
+   PDM_free(surface_vector);
+   PDM_free(center);
   }
 
   // // 1.5) Test
@@ -612,9 +612,9 @@ int main(int argc, char *argv[])
 
   // 4) Send back to origin frame
   for (int i_part = 0; i_part < n_part_domains; i_part++) {
-    free(part1_stride[i_part]);
+   PDM_free(part1_stride[i_part]);
   }
-  free(part1_stride);
+ PDM_free(part1_stride);
   double **pface_field2 = NULL;
   PDM_part_to_part_iexch(ptp_face,
                          PDM_MPI_COMM_KIND_P2P,
@@ -640,9 +640,9 @@ int main(int argc, char *argv[])
     for (int iface = 0; iface < n_ref_face[i_part]; iface++) {
       pface_field[i_part][ref_face[i_part][iface] - 1] = pface_field2[i_part][iface];
     }
-    free(pface_field2[i_part]);
+   PDM_free(pface_field2[i_part]);
   }
-  free(pface_field2);
+ PDM_free(pface_field2);
 
 
 
@@ -708,22 +708,22 @@ int main(int argc, char *argv[])
   }
 
   for (int i_part = 0; i_part < n_part_domains; i_part++) {
-    free(pface_field[i_part]);
+   PDM_free(pface_field[i_part]);
   }
-  free(pface_field);
+ PDM_free(pface_field);
 
   for (int i_part = 0; i_part < n_part_out; i_part++) {
-    free(pextract_face_field[i_part]);
+   PDM_free(pextract_face_field[i_part]);
   }
-  free(pextract_face_field);
+ PDM_free(pextract_face_field);
 
-  free(pn_extract_face);
-  free(pn_extract_vtx);
-  free(pextract_face_vtx     );
-  free(pextract_face_vtx_idx );
-  free(pextract_vtx          );
-  free(pextract_face_ln_to_gn);
-  free(pextract_vtx_ln_to_gn );
+ PDM_free(pn_extract_face);
+ PDM_free(pn_extract_vtx);
+ PDM_free(pextract_face_vtx     );
+ PDM_free(pextract_face_vtx_idx );
+ PDM_free(pextract_vtx          );
+ PDM_free(pextract_face_ln_to_gn);
+ PDM_free(pextract_vtx_ln_to_gn );
 
 
 
@@ -731,22 +731,22 @@ int main(int argc, char *argv[])
 
 
   for (int i_part = 0; i_part < n_part_domains; i_part++){
-    free(target_g_num    [i_part]);
+   PDM_free(target_g_num    [i_part]);
   }
-  free(pn_target_cell);
-  free(target_g_num);
-  free(pn_cell);
-  free(pn_face);
-  free(pn_vtx);
+ PDM_free(pn_target_cell);
+ PDM_free(target_g_num);
+ PDM_free(pn_cell);
+ PDM_free(pn_face);
+ PDM_free(pn_vtx);
 
-  free(pcell_ln_to_gn  );
-  free(pface_ln_to_gn  );
-  free(pvtx_ln_to_gn  );
-  free(pcell_face    );
-  free(pcell_face_idx);
-  free(pface_vtx     );
-  free(pface_vtx_idx );
-  free(pvtx_coord    );
+ PDM_free(pcell_ln_to_gn  );
+ PDM_free(pface_ln_to_gn  );
+ PDM_free(pvtx_ln_to_gn  );
+ PDM_free(pcell_face    );
+ PDM_free(pcell_face_idx);
+ PDM_free(pface_vtx     );
+ PDM_free(pface_vtx_idx );
+ PDM_free(pvtx_coord    );
 
   PDM_multipart_free(mpart);
   PDM_dcube_gen_free(dcube);

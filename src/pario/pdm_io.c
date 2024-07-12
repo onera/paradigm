@@ -490,7 +490,7 @@ static void _calcul_parametres_distribution_bloc
 
   }
 
-  free(n_absolue_bloc_rangs);
+ PDM_free(n_absolue_bloc_rangs);
 
   /* Calcul des index  */
 
@@ -554,7 +554,7 @@ static void _calcul_parametres_distribution_bloc
         n_donnees_a_recevoir[i-1];
     }
 
-    free(n_composantes_recues);
+   PDM_free(n_composantes_recues);
 
   }
 
@@ -708,8 +708,8 @@ void PDM_io_open
     FILE *testf2 = fopen (nouveau_fichier->nom, "r");
     if (testf2 == NULL) {
       *ierr = 1;
-      free (nouveau_fichier->nom);
-      free (nouveau_fichier);
+     PDM_free(nouveau_fichier->nom);
+     PDM_free(nouveau_fichier);
       return;
     }
     else {
@@ -791,7 +791,7 @@ void PDM_io_open
         else {
           PDM_printf("PDM_io_open : backup du fichier %s avant reecriture\n", nouveau_fichier->nom);
         }
-        free(fichier_backup);
+       PDM_free(fichier_backup);
       }
     }
   }
@@ -1190,7 +1190,7 @@ void PDM_io_global_write
         }
       }
 
-      free(string_donnee);
+     PDM_free(string_donnee);
     }
 
     else {
@@ -1218,7 +1218,7 @@ void PDM_io_global_write
                                                                 (void *) _donnees);
 
         if (_donnees != donnees) {
-          free (_donnees);
+         PDM_free(_donnees);
         }
 
       	/* Traitement de l'erreur de lecture */
@@ -1274,7 +1274,7 @@ void PDM_io_global_write
                                                             (void *) _donnees);
 
           if (_donnees != donnees) {
-            free (_donnees);
+           PDM_free(_donnees);
           }
 
 	  /* Traitement de l'erreur de lecture */
@@ -1432,7 +1432,7 @@ void PDM_io_par_interlaced_read
           }
         }
 
-        free(index);
+       PDM_free(index);
       }
 
       else if (t_n_composantes == PDM_STRIDE_CST_INTERLACED) {
@@ -1443,7 +1443,7 @@ void PDM_io_par_interlaced_read
         }
       }
 
-      free(buffer);
+     PDM_free(buffer);
 
       PDM_timer_hang_on(timer_distribution);
     }
@@ -1591,7 +1591,7 @@ void PDM_io_par_interlaced_read
                     PDM__PDM_MPI_G_NUM,
                     fichier->comm);
 
-      free(num_absolue_envoyee);
+     PDM_free(num_absolue_envoyee);
 
       /*------------------------------------------------------------
        * Determination de la taille du bloc de chaque rang
@@ -1636,7 +1636,7 @@ void PDM_io_par_interlaced_read
                       PDM_MPI_INT,
                       fichier->comm);
 
-        free(n_composantes_envoyee);
+       PDM_free(n_composantes_envoyee);
 
         /* Determination du debut et de la taille du bloc en octet
            en fonction de la taille du type et du nombre de composantes
@@ -1654,7 +1654,7 @@ void PDM_io_par_interlaced_read
           }
         }
 
-        free(tag);
+       PDM_free(tag);
 
         PDM_MPI_Allgather(&n_donnees_bloc, 1, PDM_MPI_INT,
                            n_donnees_blocs, 1, PDM_MPI_INT,
@@ -1764,7 +1764,7 @@ void PDM_io_par_interlaced_read
 
             }
 
-            free(buffer_tmp);
+           PDM_free(buffer_tmp);
           }
 
           else if (fichier->rang_actif == 1) {
@@ -1789,7 +1789,7 @@ void PDM_io_par_interlaced_read
 
       PDM_timer_hang_on(timer_fichier);
 
-      free(n_donnees_blocs);
+     PDM_free(n_donnees_blocs);
 
       /*------------------------------------
        * Distribution suivant l'indirection
@@ -1848,8 +1848,8 @@ void PDM_io_par_interlaced_read
           }
         }
 
-        free(buffer);
-        free(n_composantes_ordonnees);
+       PDM_free(buffer);
+       PDM_free(n_composantes_ordonnees);
 
         /* n_donnees_a_envoyer et n_donnees_a_recevoir sont inverses
            par rapports au premier alltoallv */
@@ -1901,7 +1901,7 @@ void PDM_io_par_interlaced_read
                       PDM_MPI_BYTE,
                       fichier->comm);
 
-        free(buffer_ordonne);
+       PDM_free(buffer_ordonne);
 
         /* Tri des donnees recues */
 
@@ -1924,8 +1924,8 @@ void PDM_io_par_interlaced_read
           }
         }
 
-        free(i_composantes);
-        free(donnees_tmp);
+       PDM_free(i_composantes);
+       PDM_free(donnees_tmp);
 
       }
 
@@ -1944,7 +1944,7 @@ void PDM_io_par_interlaced_read
               buffer[idx * _n_octet_composantes + k];
         }
 
-        free(buffer);
+       PDM_free(buffer);
 
         for (int i = 0; i < fichier->n_rangs; i++) {
           n_donnees_a_envoyer[i]  = n_donnees_a_envoyer[i]  *
@@ -1975,7 +1975,7 @@ void PDM_io_par_interlaced_read
                       PDM_MPI_BYTE,
                       fichier->comm);
 
-        free(buffer_ordonne);
+       PDM_free(buffer_ordonne);
 
         /* Tri des donnees recues */
 
@@ -1989,7 +1989,7 @@ void PDM_io_par_interlaced_read
           }
         }
 
-        free(donnees_tmp);
+       PDM_free(donnees_tmp);
       }
 
       PDM_timer_hang_on(timer_distribution);
@@ -2019,23 +2019,23 @@ void PDM_io_par_interlaced_read
 
       PDM_timer_resume(timer_distribution);
 
-      free(n_donnees_rangs);       /* n_rangs */
+     PDM_free(n_donnees_rangs);       /* n_rangs */
 
-      free(n_donnees_a_envoyer);   /* n_rangs */
-      free(n_donnees_a_recevoir);  /* n_rangs */
-      free(i_donnees_a_envoyer);   /* n_rangs */
-      free(i_donnees_a_recevoir);  /* n_rangs */
+     PDM_free(n_donnees_a_envoyer);   /* n_rangs */
+     PDM_free(n_donnees_a_recevoir);  /* n_rangs */
+     PDM_free(i_donnees_a_envoyer);   /* n_rangs */
+     PDM_free(i_donnees_a_recevoir);  /* n_rangs */
 
-      free(indirection_locale);    /* n_donnees */
+     PDM_free(indirection_locale);    /* n_donnees */
 
-      free(donnees_proc);          /* n_donnees */
+     PDM_free(donnees_proc);          /* n_donnees */
 
-      free(num_absolue_recues);    /* n_donnees_buffer */
+     PDM_free(num_absolue_recues);    /* n_donnees_buffer */
 
-      /* free(rangs_actifs);          /\* n_rangs_actifs *\/ */
+      /*PDM_free(rangs_actifs);          /\* n_rangs_actifs *\/ */
 
       if (t_n_composantes == PDM_STRIDE_VAR_INTERLACED) {
-        free(n_composantes_recues);
+       PDM_free(n_composantes_recues);
       }
 
       PDM_timer_hang_on(timer_distribution);
@@ -2224,7 +2224,7 @@ void PDM_io_par_block_read
           debut_bloc_actif += n_donnees_blocs_actifs[i];
         }
 
-        free(n_donnees_blocs_actifs);
+       PDM_free(n_donnees_blocs_actifs);
 
         if (0 == 1) {
           PDM_printf("distribution lec: %i ", fichier->rang);
@@ -2297,7 +2297,7 @@ void PDM_io_par_block_read
             debut_bloc_actif += n_donnees_blocs_actifs[i];
           }
 
-          free(n_donnees_blocs_actifs);
+         PDM_free(n_donnees_blocs_actifs);
         }
 
         else {
@@ -2390,7 +2390,7 @@ void PDM_io_par_block_read
 
             }
 
-            free(buffer_tmp);
+           PDM_free(buffer_tmp);
 
           }
           else if (fichier->rang_actif == 1) {
@@ -2410,7 +2410,7 @@ void PDM_io_par_block_read
             abort();
           }
 
-          free(n_donnees_blocs_actifs);
+         PDM_free(n_donnees_blocs_actifs);
 
           break;
         }
@@ -2434,16 +2434,16 @@ void PDM_io_par_block_read
                       PDM_MPI_BYTE,
                       fichier->comm);
 
-        free(n_donnees_a_envoyer);
-        free(i_donnees_a_envoyer);
+       PDM_free(n_donnees_a_envoyer);
+       PDM_free(i_donnees_a_envoyer);
 
-        free(n_donnees_a_recevoir);
-        free(i_donnees_a_recevoir);
+       PDM_free(n_donnees_a_recevoir);
+       PDM_free(i_donnees_a_recevoir);
 
       }
 
       if (donnees != buffer)
-        free(buffer);
+       PDM_free(buffer);
 
       PDM_timer_hang_on(timer_fichier);
 
@@ -2586,7 +2586,7 @@ void PDM_io_par_interlaced_write
           }
         }
 
-        free(index);
+       PDM_free(index);
       }
 
       else if (t_n_composantes == PDM_STRIDE_CST_INTERLACED) {
@@ -2700,10 +2700,10 @@ void PDM_io_par_interlaced_write
           }
         }
 
-        free(string_donnee);
+       PDM_free(string_donnee);
 
         if (fichier->fmt_t == PDM_IO_FMT_TXT) {
-          free(n_composante_trie);
+         PDM_free(n_composante_trie);
         }
 
         if (fichier->acces != PDM_IO_KIND_SEQ) {
@@ -2743,7 +2743,7 @@ void PDM_io_par_interlaced_write
       }
 
       PDM_timer_resume(timer_total);
-      free(buffer);
+     PDM_free(buffer);
 
     }
 
@@ -2877,7 +2877,7 @@ void PDM_io_par_interlaced_write
                         PDM__PDM_MPI_G_NUM,
                         fichier->comm);
 
-      free(num_absolue_envoyee);
+     PDM_free(num_absolue_envoyee);
 
       int *n_donnees_blocs = (int *) malloc(sizeof(int) * fichier->n_rangs);
       int  n_donnees_bloc = 0;
@@ -2966,7 +2966,7 @@ void PDM_io_par_interlaced_write
 
         }
 
-        free(n_composantes_envoyee);
+       PDM_free(n_composantes_envoyee);
 
         /*----------------------------------------------------------
          *  Rangement des donnees pour l'echange croise
@@ -3002,7 +3002,7 @@ void PDM_io_par_interlaced_write
           }
         }
 
-        free(idx_init);
+       PDM_free(idx_init);
 
         blocs_alltoall = (unsigned char *)
           malloc(sizeof(unsigned char) * l_blocs_alltoall);
@@ -3065,8 +3065,8 @@ void PDM_io_par_interlaced_write
 
       }
 
-      free(donnees_proc);
-      free(indirection_locale);
+     PDM_free(donnees_proc);
+     PDM_free(indirection_locale);
 
       PDM_MPI_Alltoallv(donnees_alltoall,
                         n_donnees_a_envoyer,
@@ -3078,12 +3078,12 @@ void PDM_io_par_interlaced_write
                         PDM_MPI_BYTE,
                         fichier->comm);
 
-      free(donnees_alltoall);
-      free(n_donnees_a_envoyer);
-      free(i_donnees_a_envoyer);
+     PDM_free(donnees_alltoall);
+     PDM_free(n_donnees_a_envoyer);
+     PDM_free(i_donnees_a_envoyer);
 
-      free(n_donnees_a_recevoir);
-      free(i_donnees_a_recevoir);
+     PDM_free(n_donnees_a_recevoir);
+     PDM_free(i_donnees_a_recevoir);
 
 
       /*----------------------------------------------------------
@@ -3211,7 +3211,7 @@ void PDM_io_par_interlaced_write
             s_tmp++;
             n_donnees_bloc += 1;
           }
-          free(buffer);
+         PDM_free(buffer);
           buffer = (unsigned char *) s_buffer;
         }
 
@@ -3219,9 +3219,9 @@ void PDM_io_par_interlaced_write
                           n_donnees_blocs, 1, PDM_MPI_INT,
                           fichier->comm);
 
-        free(index_buffer);
-        free(n_composantes_recues);
-        free(tag);
+       PDM_free(index_buffer);
+       PDM_free(n_composantes_recues);
+       PDM_free(tag);
       }
 
       else if (t_n_composantes == PDM_STRIDE_CST_INTERLACED) {
@@ -3282,21 +3282,21 @@ void PDM_io_par_interlaced_write
             s_tmp++;
             n_donnees_bloc += 1;
           }
-          free(buffer);
+         PDM_free(buffer);
           buffer = (unsigned char *) s_buffer;
         }
 
         PDM_MPI_Allgather(&n_donnees_bloc, 1, PDM_MPI_INT,
                           n_donnees_blocs, 1, PDM_MPI_INT,
                           fichier->comm);
-        free(tag);
+       PDM_free(tag);
       }
 
       if (n_composante_trie != NULL)
-        free(n_composante_trie);
+       PDM_free(n_composante_trie);
 
-      free(blocs_alltoall);
-      free(n_donnees_rangs);
+     PDM_free(blocs_alltoall);
+     PDM_free(n_donnees_rangs);
 
       PDM_timer_hang_on(timer_distribution);
 
@@ -3410,10 +3410,10 @@ void PDM_io_par_interlaced_write
       PDM_timer_resume(timer_distribution);
 
       if (buffer != NULL)
-        free(buffer);
+       PDM_free(buffer);
 
-      free(n_donnees_blocs);       /* n_rangs */
-      free(num_absolue_recues);    /* n_donnees_buffer */
+     PDM_free(n_donnees_blocs);       /* n_rangs */
+     PDM_free(num_absolue_recues);    /* n_donnees_buffer */
 
       PDM_timer_hang_on(timer_distribution);
     }
@@ -3513,7 +3513,7 @@ void PDM_io_par_block_write
                           _donnees);
 
       if (fichier->swap_endian) {
-        free (_donnees);
+       PDM_free(_donnees);
       }
       PDM_timer_resume(timer_total);
 
@@ -3606,7 +3606,7 @@ void PDM_io_par_block_write
           debut_bloc_actif += n_donnees_blocs_actifs[i];
         }
 
-        free(n_donnees_blocs_actifs);
+       PDM_free(n_donnees_blocs_actifs);
 
         /*------------------------------------------------------------
          * Prise en compte de la taille de la donnee
@@ -3659,11 +3659,11 @@ void PDM_io_par_block_write
                       PDM_MPI_BYTE,
                       fichier->comm);
 
-        free(n_donnees_a_envoyer);
-        free(i_donnees_a_envoyer);
+       PDM_free(n_donnees_a_envoyer);
+       PDM_free(i_donnees_a_envoyer);
 
-        free(n_donnees_a_recevoir);
-        free(i_donnees_a_recevoir);
+       PDM_free(n_donnees_a_recevoir);
+       PDM_free(i_donnees_a_recevoir);
 
       }
 
@@ -3696,7 +3696,7 @@ void PDM_io_par_block_write
             debut_bloc_actif += n_donnees_blocs_actifs[i];
           }
 
-          free(n_donnees_blocs_actifs);
+         PDM_free(n_donnees_blocs_actifs);
         }
 
         else {
@@ -3707,7 +3707,7 @@ void PDM_io_par_block_write
         }
       }
 
-      free(n_donnees_traitees_rangs);
+     PDM_free(n_donnees_traitees_rangs);
 
       PDM_timer_hang_on(timer_distribution);
 
@@ -3750,7 +3750,7 @@ void PDM_io_par_block_write
                                           _buffer,
                                           debut_bloc_actif);
           if (buffer != _buffer) {
-            free (_buffer);
+           PDM_free(_buffer);
           }
 
         }
@@ -3806,7 +3806,7 @@ void PDM_io_par_block_write
                                                              n_donnees_blocs_tmp,
                                                              _buffer);
             if (buffer != _buffer) {
-              free (_buffer);
+             PDM_free(_buffer);
             }
 
             if (buffer == donnees)
@@ -3867,7 +3867,7 @@ void PDM_io_par_block_write
                          PDM_io_tag, fichier->comm);
 
             if (buffer !=_buffer) {
-              free (_buffer);
+             PDM_free(_buffer);
             }
           }
 
@@ -3879,7 +3879,7 @@ void PDM_io_par_block_write
             abort();
           }
 
-          free(n_donnees_blocs_actifs);
+         PDM_free(n_donnees_blocs_actifs);
 
           break;
         }
@@ -3897,7 +3897,7 @@ void PDM_io_par_block_write
     }
 
     if (buffer != donnees)
-      free(buffer);
+     PDM_free(buffer);
 
     PDM_timer_hang_on(timer_total);
   }
@@ -3936,18 +3936,18 @@ void PDM_io_close
 
     if (fichier->PDM_file_seq != NULL)  {
       PDM_file_seq_close(fichier->PDM_file_seq);
-      free(fichier->PDM_file_seq);
+     PDM_free(fichier->PDM_file_seq);
       fichier->PDM_file_seq = NULL;
     }
 
     if (fichier->PDM_file_par != NULL) {
       PDM_file_par_close(fichier->PDM_file_par);
-      free(fichier->PDM_file_par);
+     PDM_free(fichier->PDM_file_par);
       fichier->PDM_file_par = NULL;
     }
 
     if (fichier->fmt != NULL) {
-      free(fichier->fmt);
+     PDM_free(fichier->fmt);
       fichier->fmt = NULL;
     }
 
@@ -3977,7 +3977,7 @@ void PDM_io_close
           remove(fichier_backup);
         }
 
-        free(fichier_backup);
+       PDM_free(fichier_backup);
       }
     }
 
@@ -4021,7 +4021,7 @@ void PDM_io_free
 
   if (fichier != NULL) {
 
-    free(fichier->nom);
+   PDM_free(fichier->nom);
 
     PDM_timer_free(fichier->timer_fichier);
 
@@ -4032,24 +4032,24 @@ void PDM_io_free
     PDM_timer_free(fichier->timer_total);
 
     if (fichier->rangs_actifs != NULL) {
-      free(fichier->rangs_actifs);
+     PDM_free(fichier->rangs_actifs);
       fichier->rangs_actifs = NULL;
     }
 
     if (fichier->rangs_inactifs != NULL) {
-      free(fichier->rangs_inactifs);
+     PDM_free(fichier->rangs_inactifs);
       fichier->rangs_inactifs = NULL;
     }
 
     if (fichier->tag_rangs_actifs != NULL) {
-      free(fichier->tag_rangs_actifs);
+     PDM_free(fichier->tag_rangs_actifs);
       fichier->tag_rangs_actifs = NULL;
     }
 
     if (fichier->scomm != PDM_MPI_COMM_NULL) {
       PDM_MPI_Comm_free (&(fichier->scomm));
     }
-    free(fichier);
+   PDM_free(fichier);
   }
 
   if (err_code){
@@ -4442,7 +4442,7 @@ void PDM_io_fmt_data_set
   if (fichier != NULL) {
     fichier->swap_endian = 0;
     if (fichier->fmt != NULL)
-      free(fichier->fmt);
+     PDM_free(fichier->fmt);
     fichier->fmt        = (char *) malloc(sizeof(char) * (strlen(fmt) + 1));
     strcpy(fichier->fmt, fmt);
     fichier->n_char_fmt = n_char_fmt;
@@ -4490,7 +4490,7 @@ int PDM_io_mkdir
       tmp_path[idx] = '\0';
       err = _mkdir(tmp_path);
       if (err != 0) {
-        free(tmp_path);
+       PDM_free(tmp_path);
         return 0;
       }
       tmp_path[idx] = '/';
@@ -4501,7 +4501,7 @@ int PDM_io_mkdir
     }
     idx += 1;
   }
-  free(tmp_path);
+ PDM_free(tmp_path);
   return err;
 }
 
@@ -4693,7 +4693,7 @@ PDM_io_n_data_get
                       PDM_MPI_LONG,
                       fichier->comm);
 
-        free (num_absolue_envoyee);
+       PDM_free(num_absolue_envoyee);
 
         int *n_composantes_recues  = NULL;
         int *n_composantes_envoyee = NULL;
@@ -4737,7 +4737,7 @@ PDM_io_n_data_get
                       PDM_MPI_INT,
                       fichier->comm);
 
-        free(n_composantes_envoyee);
+       PDM_free(n_composantes_envoyee);
 
         /*----------------------------------------------------------
          *  Rangement des donnees pour l'echange croise
@@ -4758,19 +4758,19 @@ PDM_io_n_data_get
                       PDM_MPI_LONG, PDM_MPI_SUM, fichier->comm);
 
 
-        free(donnees_proc);
-        free(indirection_locale);
+       PDM_free(donnees_proc);
+       PDM_free(indirection_locale);
 
-        free(donnees_alltoall);
-        free(n_donnees_a_envoyer);
-        free(i_donnees_a_envoyer);
+       PDM_free(donnees_alltoall);
+       PDM_free(n_donnees_a_envoyer);
+       PDM_free(i_donnees_a_envoyer);
 
-        free(n_donnees_a_recevoir);
-        free(i_donnees_a_recevoir);
+       PDM_free(n_donnees_a_recevoir);
+       PDM_free(i_donnees_a_recevoir);
 
-        free (n_comp_bloc);
-        free (num_absolue_recues);
-        free (n_composantes_recues);
+       PDM_free(n_comp_bloc);
+       PDM_free(num_absolue_recues);
+       PDM_free(n_composantes_recues);
 
       }
 
@@ -4785,7 +4785,7 @@ PDM_io_n_data_get
 
       PDM_timer_hang_on(timer_distribution);
 
-      free (n_donnees_rangs);
+     PDM_free(n_donnees_rangs);
 
     }
 

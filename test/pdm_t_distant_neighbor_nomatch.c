@@ -294,20 +294,20 @@ char *argv[]
    * Free
    */
   PDM_distant_neighbor_free(dn);
-  free(candidates_idx);
-  free(candidates_desc);
-  free(n_entity);
-  free(send_entity_data);
-  free(send_entity_var_data);
-  free(send_entity_var_stri);
+ PDM_free(candidates_idx);
+ PDM_free(candidates_desc);
+ PDM_free(n_entity);
+ PDM_free(send_entity_data);
+ PDM_free(send_entity_var_data);
+ PDM_free(send_entity_var_stri);
   for(int i_cloud = 0; i_cloud < n_cloud; i_cloud++){
-    free(recv_entity_data[i_cloud]);
-    free(recv_entity_var_stri[i_cloud]);
-    free(recv_entity_var_data[i_cloud]);
+   PDM_free(recv_entity_data[i_cloud]);
+   PDM_free(recv_entity_var_stri[i_cloud]);
+   PDM_free(recv_entity_var_data[i_cloud]);
   }
-  free(recv_entity_data);
-  free(recv_entity_var_stri);
-  free(recv_entity_var_data);
+ PDM_free(recv_entity_data);
+ PDM_free(recv_entity_var_stri);
+ PDM_free(recv_entity_var_data);
   PDM_MPI_Finalize();
 
   if (i_rank == 0) {

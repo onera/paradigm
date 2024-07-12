@@ -365,14 +365,14 @@ main
         }
 
         PDM_sort_int(rand_val, order, n_box);
-        free(rand_val);
+       PDM_free(rand_val);
 
         for (int i = 0; i < n_box; i++) {
           memcpy(_box_extents + 6*i, box_extents + 6*order[i], sizeof(double) * 6);
           box_g_num[order[i]] = i+1;
         }
-        free(order);
-        free(box_extents);
+       PDM_free(order);
+       PDM_free(box_extents);
         box_extents = _box_extents;
       }
 
@@ -458,14 +458,14 @@ main
       }
 
       PDM_sort_int(rand_val, order, n_pts);
-      free(rand_val);
+     PDM_free(rand_val);
 
       for (int i = 0; i < n_pts; i++) {
         memcpy(_pts_coord + 3*i, pts_coord + 3*order[i], sizeof(double) * 3);
         pts_g_num[order[i]] = i+1;
       }
-      free(order);
-      free(pts_coord);
+     PDM_free(order);
+     PDM_free(pts_coord);
       pts_coord = _pts_coord;
     }
 
@@ -564,7 +564,7 @@ main
   t2 = PDM_MPI_Wtime();
   double t_box_tree = t2 - t1;
   printf("PDM_box_tree_set_boxes          : %12.5es\n", t2 - t1);
-  free(init_location_box);
+ PDM_free(init_location_box);
 
 
   if (visu) {
@@ -608,7 +608,7 @@ main
     //                                 box_pts_g_num,
     //                                 n_box,
     //                                 "box_pts  : ");
-    free(box_pts_g_num);
+   PDM_free(box_pts_g_num);
   }
 
 
@@ -640,9 +640,9 @@ main
     //                                 n_box,
     //                                 "box_pts2 : ");
   }
-  free(box_pts_idx2);
-  free(box_pts_g_num2);
-  free(box_pts_coord2);
+ PDM_free(box_pts_idx2);
+ PDM_free(box_pts_g_num2);
+ PDM_free(box_pts_coord2);
 
 
 
@@ -740,7 +740,7 @@ main
   printf("Total old          : %12.5es\n", t_box_tree + t_old);
   printf("Total intersection2: %12.5es\n", t_point_tree + t_point_box_tree + t_intersection2);
 
-  free(box_center);
+ PDM_free(box_center);
   PDM_point_tree_seq_free(pbtree);
 
 
@@ -760,10 +760,10 @@ main
 
     printf("n_err = %d\n", n_err);
   }
-  free(box_pts_idx3);
-  free(box_pts3);
-  free(box_pts_idx);
-  free(box_pts);
+ PDM_free(box_pts_idx3);
+ PDM_free(box_pts3);
+ PDM_free(box_pts_idx);
+ PDM_free(box_pts);
 
 
   /* Free */
@@ -771,11 +771,11 @@ main
   PDM_box_tree_destroy(&btree);
   PDM_box_set_destroy (&box_set);
 
-  free(pts_coord);
-  free(pts_g_num);
+ PDM_free(pts_coord);
+ PDM_free(pts_g_num);
 
-  free(box_extents);
-  free(box_g_num);
+ PDM_free(box_extents);
+ PDM_free(box_g_num);
   PDM_MPI_Finalize ();
 
   return 0;

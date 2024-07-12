@@ -253,14 +253,14 @@ int main(int argc, char *argv[])
   PDM_gnum_free(gen_gnum);
   PDM_part_to_block_free(ptb);
   PDM_block_to_part_free(btp);
-  free(dfield);
-  free(pstrid);
-  free(dstrid);
-  free(dfield_summed);
+ PDM_free(dfield);
+ PDM_free(pstrid);
+ PDM_free(dstrid);
+ PDM_free(dfield_summed);
 
-  free(pln_to_to_gn);
-  free(distrib_init_elmt);
-  free(pfield);
+ PDM_free(pln_to_to_gn);
+ PDM_free(distrib_init_elmt);
+ PDM_free(pfield);
 
   PDM_MPI_Finalize ();
   return 0;

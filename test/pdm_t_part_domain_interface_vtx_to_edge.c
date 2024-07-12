@@ -545,46 +545,46 @@ int main
   }
   PDM_UNUSED(pdi);
 
-  // free(dm);
-  // free(dn_vtx);
-  // free(dn_face);
-  // free(dn_edge);
-  // free(dface_vtx_idx);
-  // free(dface_vtx);
-  // free(dedge_vtx_idx);
-  // free(dedge_vtx);
+  //PDM_free(dm);
+  //PDM_free(dn_vtx);
+  //PDM_free(dn_face);
+  //PDM_free(dn_edge);
+  //PDM_free(dface_vtx_idx);
+  //PDM_free(dface_vtx);
+  //PDM_free(dedge_vtx_idx);
+  //PDM_free(dedge_vtx);
 
   // PDM_dmesh_nodal_to_dmesh_free(dmn_to_dm);
   PDM_domain_interface_free(dom_intrf);
-  free(n_part_by_domain);
-  free(dcube);
-  free(dmn);
+ PDM_free(n_part_by_domain);
+ PDM_free(dcube);
+ PDM_free(dmn);
 
   for (int i_dom = 0; i_dom < n_domain; i_dom++) {
     for (int i_part = 0; i_part < pn_n_part[i_dom]; i_part++) {
-      free(pedge_vtx_idx [i_dom][i_part]);
+     PDM_free(pedge_vtx_idx [i_dom][i_part]);
     }
-    free(pn_face       [i_dom]);
-    free(pn_edge       [i_dom]);
-    free(pface_ln_to_gn[i_dom]);
-    free(pedge_ln_to_gn[i_dom]);
-    free(pn_vtx        [i_dom]);
-    free(pvtx_ln_to_gn [i_dom]);
-    free(pface_vtx     [i_dom]);
-    free(pedge_vtx_idx [i_dom]);
-    free(pedge_vtx     [i_dom]);
+   PDM_free(pn_face       [i_dom]);
+   PDM_free(pn_edge       [i_dom]);
+   PDM_free(pface_ln_to_gn[i_dom]);
+   PDM_free(pedge_ln_to_gn[i_dom]);
+   PDM_free(pn_vtx        [i_dom]);
+   PDM_free(pvtx_ln_to_gn [i_dom]);
+   PDM_free(pface_vtx     [i_dom]);
+   PDM_free(pedge_vtx_idx [i_dom]);
+   PDM_free(pedge_vtx     [i_dom]);
   }
 
-  free(pn_n_part     );
-  free(pn_face       );
-  free(pn_edge       );
-  free(pface_ln_to_gn);
-  free(pedge_ln_to_gn);
-  free(pn_vtx        );
-  free(pvtx_ln_to_gn );
-  free(pface_vtx     );
-  free(pedge_vtx_idx );
-  free(pedge_vtx     );
+ PDM_free(pn_n_part     );
+ PDM_free(pn_face       );
+ PDM_free(pn_edge       );
+ PDM_free(pface_ln_to_gn);
+ PDM_free(pedge_ln_to_gn);
+ PDM_free(pn_vtx        );
+ PDM_free(pvtx_ln_to_gn );
+ PDM_free(pface_vtx     );
+ PDM_free(pedge_vtx_idx );
+ PDM_free(pedge_vtx     );
 
   if (i_rank == 0) {
     printf("-- End\n");

@@ -190,8 +190,8 @@ char *argv[]
 
   PDM_gnum_free(gen_gnum);
 
-  free(distrib);
-  free(elmts_ln_to_gn);
+ PDM_free(distrib);
+ PDM_free(elmts_ln_to_gn);
   PDM_MPI_Finalize ();
 
   return 0;

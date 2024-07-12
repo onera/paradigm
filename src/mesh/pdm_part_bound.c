@@ -643,25 +643,25 @@ PDM_part_bound_t *part_bound
   _part_bound_t *_part_bound = (_part_bound_t *) part_bound;
  if (_part_bound != NULL) {
     if (_part_bound->eltPartBoundIdx != NULL)
-      free(_part_bound->eltPartBoundIdx);
+     PDM_free(_part_bound->eltPartBoundIdx);
     if (_part_bound->eltPartBound != NULL)
-      free(_part_bound->eltPartBound);
+     PDM_free(_part_bound->eltPartBound);
     if (_part_bound->connectedEltIdx != NULL)
-      free(_part_bound->connectedEltIdx);
+     PDM_free(_part_bound->connectedEltIdx);
     if (_part_bound->nConnectedElt != NULL)
-      free(_part_bound->nConnectedElt);
+     PDM_free(_part_bound->nConnectedElt);
     if (_part_bound->localElt2BoundElt != NULL)
-      free(_part_bound->localElt2BoundElt);
+     PDM_free(_part_bound->localElt2BoundElt);
     if (_part_bound->nOfferElt != NULL)
-      free(_part_bound->nOfferElt);
+     PDM_free(_part_bound->nOfferElt);
     if (_part_bound->offerEltIdx != NULL)
-      free(_part_bound->offerEltIdx);
+     PDM_free(_part_bound->offerEltIdx);
     if (_part_bound->offerElt != NULL)
-      free(_part_bound->offerElt);
+     PDM_free(_part_bound->offerElt);
     if (_part_bound->offerLnToGn != NULL)
-      free(_part_bound->offerLnToGn);
+     PDM_free(_part_bound->offerLnToGn);
 
-    free(_part_bound);
+   PDM_free(_part_bound);
   }
   return NULL;
 }

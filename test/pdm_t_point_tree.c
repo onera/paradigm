@@ -243,7 +243,7 @@ main
                                                            &n_pts,
                                                            1,
                                                            comm);
-  free(weight);
+ PDM_free(weight);
   // double t2 = PDM_MPI_Wtime();
   // log_trace("PDM_part_to_block_geom_create = %12.5e \n", t2 -t1);
 
@@ -297,10 +297,10 @@ main
   PDM_point_tree_seq_free(ptree);
   PDM_part_to_block_free(ptb);
 
-  free(blk_pts_coord);
+ PDM_free(blk_pts_coord);
 
-  free (pts_coord);
-  free (pts_g_num);
+ PDM_free(pts_coord);
+ PDM_free(pts_g_num);
 
   if (i_rank == 0) {
     PDM_printf ("-- End\n");

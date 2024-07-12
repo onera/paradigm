@@ -285,7 +285,7 @@ int main(int argc, char *argv[])
                                      order,
                                      PDM_Mesh_nodal_n_vtx_elt_get(PDM_MESH_NODAL_TRIAHO, order),
                                      ijk);
-    free (ijk);
+   PDM_free(ijk);
   }
 
 
@@ -383,7 +383,7 @@ int main(int argc, char *argv[])
   PDM_CROSS_PRODUCT(normal, dpdu, dpdv);
 
   for (int i = 0; i < 2; i++) {
-    free(deriv[i]);
+   PDM_free(deriv[i]);
   }
 
   // check weights
@@ -417,8 +417,8 @@ int main(int argc, char *argv[])
     //   }
     // }
 
-    free(weight);
-    free(weight2);
+   PDM_free(weight);
+   PDM_free(weight2);
   }
 
 
@@ -594,7 +594,7 @@ int main(int argc, char *argv[])
                                0,
                                NULL,
                                NULL);
-    free(connec);
+   PDM_free(connec);
 
 
 
@@ -620,16 +620,16 @@ int main(int argc, char *argv[])
   /*
    *  Free memory
    */
-  free(node_uv);
-  free(node_xyz);
-  free(tria_node);
+ PDM_free(node_uv);
+ PDM_free(node_xyz);
+ PDM_free(tria_node);
   for (int i = 0; i < 3; i++) {
-    free(sub3_node_xyz[i]);
+   PDM_free(sub3_node_xyz[i]);
   }
   for (int i = 0; i < 4; i++) {
-    free(sub_node_xyz[i]);
+   PDM_free(sub_node_xyz[i]);
   }
-  free(sub1_node_xyz);
+ PDM_free(sub1_node_xyz);
 
   PDM_MPI_Finalize();
 

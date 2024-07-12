@@ -1703,7 +1703,7 @@ PDM_edges_intersect_t *ei
   PDM_hash_tab_free (_ei->htA);
   PDM_hash_tab_free (_ei->htB);
 
-  free (_ei);
+ PDM_free(_ei);
 
   return NULL;
 }
@@ -2484,40 +2484,40 @@ double                 *face_vtxEpsB
    */
 
 
-  free (vtxAOnEdgeBEir);
+ PDM_free(vtxAOnEdgeBEir);
 
-  free (vtxBOnEdgeAEir);
+ PDM_free(vtxBOnEdgeAEir);
 
   if (_faceToEdgeA != faceToEdgeA) {
-    free (_faceToEdgeA);
+   PDM_free(_faceToEdgeA);
   }
 
   if (_faceToVtxA  != faceToVtxA) { /* EQU == */
-    free (_faceToVtxA);
+   PDM_free(_faceToVtxA);
   }
 
   if (_face_vtxCooA != face_vtxCooA) { /* EQU == */
-    free (_face_vtxCooA);
+   PDM_free(_face_vtxCooA);
   }
 
   if (_face_vtxEpsA != face_vtxEpsA) { /* EQU == */
-    free (_face_vtxEpsA);
+   PDM_free(_face_vtxEpsA);
   }
 
   if (_faceToEdgeB != faceToEdgeB) {
-    free (_faceToEdgeB);
+   PDM_free(_faceToEdgeB);
   }
 
   if (_faceToVtxB != faceToVtxB) { /* EQU == */
-    free (_faceToVtxB);
+   PDM_free(_faceToVtxB);
   }
 
   if (_face_vtxCooB != face_vtxCooB) { /* EQU == */
-    free (_face_vtxCooB);
+   PDM_free(_face_vtxCooB);
   }
 
   if (_face_vtxEpsB != face_vtxEpsB) { /* EQU == */
-    free (_face_vtxEpsB);
+   PDM_free(_face_vtxEpsB);
   }
   if (vb) {
     PDM_printf ("==== PDM_edges_intersect_poly_add ==== terminated ====\n");
@@ -2761,7 +2761,7 @@ PDM_g_num_t            *nAbsNewVtxB
                           &b_stride_one,
                           (void **) &b_tIntersects);
 
-  free (b_stride_one);
+ PDM_free(b_stride_one);
 
   PDM_g_num_t *b_gNumEdgeA = NULL;
   PDM_part_to_block_exch (ptb,
@@ -2774,7 +2774,7 @@ PDM_g_num_t            *nAbsNewVtxB
                          (void **) &b_gNumEdgeA);
 
 
-  free (b_stride_one);
+ PDM_free(b_stride_one);
   PDM_g_num_t *b_gNumEdgeB = NULL;
   PDM_part_to_block_exch (ptb,
                          sizeof(PDM_g_num_t),
@@ -2796,9 +2796,9 @@ PDM_g_num_t            *nAbsNewVtxB
                          &b_nNewPointsA,
                          (void **)&b_oNewPointsA);
 
-  free (b_stride_one);
+ PDM_free(b_stride_one);
 
-  free(b_nNewPointsA);
+ PDM_free(b_nNewPointsA);
 
   PDM_g_num_t *b_connectPointA = NULL;
   PDM_part_to_block_exch (ptb,
@@ -2810,7 +2810,7 @@ PDM_g_num_t            *nAbsNewVtxB
                          &b_nNewPointsA,
                          (void **)&b_connectPointA);
 
-  free(b_nNewPointsA);
+ PDM_free(b_nNewPointsA);
 
   PDM_g_num_t *b_gNumA = NULL;
   PDM_part_to_block_exch (ptb,
@@ -2822,7 +2822,7 @@ PDM_g_num_t            *nAbsNewVtxB
                          &b_nNewPointsA,
                          (void **)&b_gNumA);
 
-  free(b_nNewPointsA);
+ PDM_free(b_nNewPointsA);
 
   double *b_uPointA = NULL;
   PDM_part_to_block_exch (ptb,
@@ -2834,7 +2834,7 @@ PDM_g_num_t            *nAbsNewVtxB
                          &b_nNewPointsA,
                          (void **)&b_uPointA);
 
-  free(b_nNewPointsA);
+ PDM_free(b_nNewPointsA);
 
   for (int k = 0; k < n_procData; k++) {
     nNewPointsA[k] = 3 * nNewPointsA[k];
@@ -2854,7 +2854,7 @@ PDM_g_num_t            *nAbsNewVtxB
     nNewPointsA[k] = nNewPointsA[k] / 3;
   }
 
-  free (b_nNewPointsA);
+ PDM_free(b_nNewPointsA);
   PDM_part_to_block_exch (ptb,
                          sizeof(int),
                          PDM_STRIDE_VAR_INTERLACED,
@@ -2868,7 +2868,7 @@ PDM_g_num_t            *nAbsNewVtxB
   // for (int k = 0; k < n_elt_block; k++) {
   //   sum1+=b_stride_one[k];
   // }
-  free (b_stride_one);
+ PDM_free(b_stride_one);
 
   /*
    * B info
@@ -2885,7 +2885,7 @@ PDM_g_num_t            *nAbsNewVtxB
                          &b_nNewPointsB,
                          (void **)&b_oNewPointsB);
 
-  free(b_nNewPointsB);
+ PDM_free(b_nNewPointsB);
 
   PDM_g_num_t *b_connectPointB = NULL;
   PDM_part_to_block_exch (ptb,
@@ -2897,7 +2897,7 @@ PDM_g_num_t            *nAbsNewVtxB
                          &b_nNewPointsB,
                          (void **)&b_connectPointB);
 
-  free(b_nNewPointsB);
+ PDM_free(b_nNewPointsB);
 
   PDM_g_num_t *b_gNumB = NULL;
   PDM_part_to_block_exch (ptb,
@@ -2909,7 +2909,7 @@ PDM_g_num_t            *nAbsNewVtxB
                          &b_nNewPointsB,
                          (void **)&b_gNumB);
 
-  free(b_nNewPointsB);
+ PDM_free(b_nNewPointsB);
 
   double *b_uPointB = NULL;
   PDM_part_to_block_exch (ptb,
@@ -2921,7 +2921,7 @@ PDM_g_num_t            *nAbsNewVtxB
                          &b_nNewPointsB,
                          (void **)&b_uPointB);
 
-  free(b_nNewPointsB);
+ PDM_free(b_nNewPointsB);
 
 
   for (int k = 0; k < n_procData; k++) {
@@ -2942,7 +2942,7 @@ PDM_g_num_t            *nAbsNewVtxB
     nNewPointsB[k] = nNewPointsB[k] / 3;
   }
 
-  free (b_nNewPointsB);
+ PDM_free(b_nNewPointsB);
   PDM_part_to_block_exch (ptb,
                          sizeof(int),
                          PDM_STRIDE_VAR_INTERLACED,
@@ -2952,25 +2952,25 @@ PDM_g_num_t            *nAbsNewVtxB
                          &b_stride_one,
                          (void **) &b_nNewPointsB);
 
-  free (stride_one);
-  free (tIntersects);
+ PDM_free(stride_one);
+ PDM_free(tIntersects);
 
-  free (gNumEdgeA);
-  free (gNumEdgeB);
-  free (oNewPointsA);
-  free (connectPointA);
-  free (gNumA);
-  free (coordsPointA);
-  free (uPointA);
+ PDM_free(gNumEdgeA);
+ PDM_free(gNumEdgeB);
+ PDM_free(oNewPointsA);
+ PDM_free(connectPointA);
+ PDM_free(gNumA);
+ PDM_free(coordsPointA);
+ PDM_free(uPointA);
 
-  free (oNewPointsB);
-  free (connectPointB);
-  free (gNumB);
-  free (coordsPointB);
-  free (uPointB);
+ PDM_free(oNewPointsB);
+ PDM_free(connectPointB);
+ PDM_free(gNumB);
+ PDM_free(coordsPointB);
+ PDM_free(uPointB);
 
-  free (nNewPointsA);
-  free (nNewPointsB);
+ PDM_free(nNewPointsA);
+ PDM_free(nNewPointsB);
 
 
   /* PDM_MPI_Barrier (_ei->comm); */
@@ -2988,7 +2988,7 @@ PDM_g_num_t            *nAbsNewVtxB
   int *b_stride_one_idx = PDM_array_new_idx_from_sizes_int(b_stride_one, n_elt_block);
   int *b_nNewPointsA_idx = PDM_array_new_idx_from_sizes_int(b_nNewPointsA, b_stride_one_idx[n_elt_block]);
   int *b_nNewPointsB_idx = PDM_array_new_idx_from_sizes_int(b_nNewPointsB, b_stride_one_idx[n_elt_block]);
-  free (b_stride_one);
+ PDM_free(b_stride_one);
 
   int *tag = PDM_array_zeros_int(b_stride_one_idx[n_elt_block]);
 
@@ -3517,24 +3517,24 @@ PDM_g_num_t            *nAbsNewVtxB
      }
    }
 
-  free (tag);
-  free (b_nNewPointsB_idx);
-  free (b_nNewPointsA_idx);
+ PDM_free(tag);
+ PDM_free(b_nNewPointsB_idx);
+ PDM_free(b_nNewPointsA_idx);
 
-  free (b_connectPointA);
-  free (b_connectPointB);
-  free (b_gNumA);
-  free (b_gNumB);
-  free (b_coordsPointA);
-  free (b_coordsPointB);
-  free (b_gNumEdgeA);
-  free (b_gNumEdgeB);
-  free (b_nNewPointsA);
-  free (b_nNewPointsB);
-  free (b_oNewPointsA);
-  free (b_oNewPointsB);
-  free (b_stride_one_idx);
-  free (b_tIntersects);
+ PDM_free(b_connectPointA);
+ PDM_free(b_connectPointB);
+ PDM_free(b_gNumA);
+ PDM_free(b_gNumB);
+ PDM_free(b_coordsPointA);
+ PDM_free(b_coordsPointB);
+ PDM_free(b_gNumEdgeA);
+ PDM_free(b_gNumEdgeB);
+ PDM_free(b_nNewPointsA);
+ PDM_free(b_nNewPointsB);
+ PDM_free(b_oNewPointsA);
+ PDM_free(b_oNewPointsB);
+ PDM_free(b_stride_one_idx);
+ PDM_free(b_tIntersects);
 
   /* PDM_MPI_Barrier (_ei->comm); */
   /* if (i_rank == 0) { */
@@ -3689,8 +3689,8 @@ PDM_g_num_t            *nAbsNewVtxB
                           &b_b_stride_packA,
                           (void **)&b_b_cNewPointsA_true_pack);
 
-  free (b_cNewPointsA_true_pack);
-  free (b_b_stride_packA);
+ PDM_free(b_cNewPointsA_true_pack);
+ PDM_free(b_b_stride_packA);
   for (int i = 0; i < nPtsFromBForA; i++) {
     b_stride_packA[i] = 1;
   }
@@ -3705,8 +3705,8 @@ PDM_g_num_t            *nAbsNewVtxB
                          &b_b_stride_packA,
                          (void **)&b_b_oNewPointsA_true_pack);
 
-  free (b_oNewPointsA_true_pack);
-  free (b_stride_packA);
+ PDM_free(b_oNewPointsA_true_pack);
+ PDM_free(b_stride_packA);
 
   /* PDM_MPI_Barrier (_ei->comm); */
   /* if (i_rank == 0) { */
@@ -3810,8 +3810,8 @@ PDM_g_num_t            *nAbsNewVtxB
     }
   }
 
-  free (b_b_oNewPointsA_true_pack);
-  free (b_b_idx_packA);
+ PDM_free(b_b_oNewPointsA_true_pack);
+ PDM_free(b_b_idx_packA);
 
   beg_n_BForA_gnum += -1;
 
@@ -3875,9 +3875,9 @@ PDM_g_num_t            *nAbsNewVtxB
                          &b_b_stride_packB,
                          (void **)&b_b_cNewPointsB_true_pack);
 
-  free (b_cNewPointsB_true_pack);
+ PDM_free(b_cNewPointsB_true_pack);
 
-  free (b_b_stride_packB);
+ PDM_free(b_b_stride_packB);
   for (int i = 0; i < nPtsFromAForB; i++) {
     b_stride_packB[i] = 1;
   }
@@ -3891,8 +3891,8 @@ PDM_g_num_t            *nAbsNewVtxB
                          (void **)&b_oNewPointsB_true_pack,
                          &b_b_stride_packB,
                          (void **)&b_b_oNewPointsB_true_pack);
-  free (b_stride_packB);
-  free (b_oNewPointsB_true_pack);
+ PDM_free(b_stride_packB);
+ PDM_free(b_oNewPointsB_true_pack);
 
 
   int *b_b_idx_packB = malloc(sizeof(int) * (n_AForB_gnum +1));
@@ -3998,8 +3998,8 @@ PDM_g_num_t            *nAbsNewVtxB
     }
   }
 
-  free (b_b_idx_packB);
-  free (b_b_oNewPointsB_true_pack);
+ PDM_free(b_b_idx_packB);
+ PDM_free(b_b_oNewPointsB_true_pack);
 
   beg_n_AForB_gnum += -1;
 
@@ -4041,7 +4041,7 @@ PDM_g_num_t            *nAbsNewVtxB
     _b_b_stride_packA[idx_block] = b_b_stride_packA[i];
   }
 
-  free (b_b_stride_packA);
+ PDM_free(b_b_stride_packA);
 
   int    **part_strideA = NULL;
   double **b_cNewPointsA_true_merge = NULL;
@@ -4059,8 +4059,8 @@ PDM_g_num_t            *nAbsNewVtxB
     _b_b_stride_packA[i] *= 3;
   }
 
-  free (part_strideA[0]);
-  free (part_strideA);
+ PDM_free(part_strideA[0]);
+ PDM_free(part_strideA);
 
   PDM_block_to_part_exch (btpBForA,
                           sizeof(double),
@@ -4070,8 +4070,8 @@ PDM_g_num_t            *nAbsNewVtxB
                           &part_strideA,
                           (void ***) &b_cNewPointsA_true_merge);
 
-  free (part_strideA[0]);
-  free (part_strideA);
+ PDM_free(part_strideA[0]);
+ PDM_free(part_strideA);
 
   nPtsFromBForA = 0;
   for (int i = 0; i < idx_newPtA; i++) {
@@ -4096,7 +4096,7 @@ PDM_g_num_t            *nAbsNewVtxB
                                                             1,
                                                             _ei->comm);
 
-  free (b_lNewPointsB_true_pack);
+ PDM_free(b_lNewPointsB_true_pack);
 
   int btpAForB_n_elt_block = blockDistribIdxB[i_rank+1] - blockDistribIdxB[i_rank];
   int *_b_b_stride_packB = PDM_array_zeros_int(btpAForB_n_elt_block);
@@ -4122,8 +4122,8 @@ PDM_g_num_t            *nAbsNewVtxB
     _b_b_stride_packB[i] *= 3;
   }
 
-  free (part_strideB[0]);
-  free (part_strideB);
+ PDM_free(part_strideB[0]);
+ PDM_free(part_strideB);
 
   PDM_block_to_part_exch (btpAForB,
                           sizeof(double),
@@ -4133,8 +4133,8 @@ PDM_g_num_t            *nAbsNewVtxB
                           &part_strideB,
                           (void ***) &b_cNewPointsB_true_merge);
 
-  free (part_strideB[0]);
-  free (part_strideB);
+ PDM_free(part_strideB[0]);
+ PDM_free(part_strideB);
   nPtsFromAForB = 0;
 
   for (int i = 0; i < idx_newPtB; i++) {
@@ -4150,29 +4150,29 @@ PDM_g_num_t            *nAbsNewVtxB
     }
   }
 
-  free (b_cNewPointsB_true_gnum[0]);
-  free (b_cNewPointsB_true_gnum);
+ PDM_free(b_cNewPointsB_true_gnum[0]);
+ PDM_free(b_cNewPointsB_true_gnum);
 
-  free (b_cNewPointsB_true_merge[0]);
-  free (b_cNewPointsB_true_merge);
+ PDM_free(b_cNewPointsB_true_merge[0]);
+ PDM_free(b_cNewPointsB_true_merge);
 
-  free (b_cNewPointsA_true_gnum[0]);
-  free (b_cNewPointsA_true_gnum);
+ PDM_free(b_cNewPointsA_true_gnum[0]);
+ PDM_free(b_cNewPointsA_true_gnum);
 
-  free (b_cNewPointsA_true_merge[0]);
-  free (b_cNewPointsA_true_merge);
+ PDM_free(b_cNewPointsA_true_merge[0]);
+ PDM_free(b_cNewPointsA_true_merge);
 
   PDM_block_to_part_free (btpBForA);
   PDM_part_to_block_free (ptbBForA);
 
   if (b_lNewPointsA_true_pack != NULL)
-    free (b_lNewPointsA_true_pack);
+   PDM_free(b_lNewPointsA_true_pack);
 
   PDM_block_to_part_free (btpAForB);
   PDM_part_to_block_free (ptbAForB);
 
-  free (b_uPointA);
-  free (b_uPointB);
+ PDM_free(b_uPointA);
+ PDM_free(b_uPointB);
 
   /* PDM_MPI_Barrier (_ei->comm); */
   /* if (i_rank == 0) { */
@@ -4209,7 +4209,7 @@ PDM_g_num_t            *nAbsNewVtxB
                                                        &n_procData,
                                                        1,
                                                        _ei->comm);
-  free (keys);
+ PDM_free(keys);
 
   if (vb) {
     printf("\n\n------------\n Bilan 2\n");
@@ -4265,8 +4265,8 @@ PDM_g_num_t            *nAbsNewVtxB
                           (void *) b_tIntersects_true,
                           &r_stride_one_true,
                           (void ***) &r_tIntersects_true);
-  free (*r_stride_one_true);
-  free (r_stride_one_true);
+ PDM_free(*r_stride_one_true);
+ PDM_free(r_stride_one_true);
 
   PDM_g_num_t **r_gNumEdgeA_true = NULL;
   PDM_block_to_part_exch (btp,
@@ -4276,8 +4276,8 @@ PDM_g_num_t            *nAbsNewVtxB
                           (void *) b_gNumEdgeA_true,
                           &r_stride_one_true,
                           (void ***) &r_gNumEdgeA_true);
-  free (*r_stride_one_true);
-  free (r_stride_one_true);
+ PDM_free(*r_stride_one_true);
+ PDM_free(r_stride_one_true);
 
   PDM_g_num_t **r_gNumEdgeB_true = NULL;
   PDM_block_to_part_exch (btp,
@@ -4287,8 +4287,8 @@ PDM_g_num_t            *nAbsNewVtxB
                           (void *) b_gNumEdgeB_true,
                           &r_stride_one_true,
                           (void ***) &r_gNumEdgeB_true);
-  free (*r_stride_one_true);
-  free (r_stride_one_true);
+ PDM_free(*r_stride_one_true);
+ PDM_free(r_stride_one_true);
 
   int **r_nNewPointsA_true = NULL;
   PDM_block_to_part_exch (btp,
@@ -4298,8 +4298,8 @@ PDM_g_num_t            *nAbsNewVtxB
                           (void *) b_nNewPointsA_true,
                           &r_stride_one_true,
                           (void ***) &r_nNewPointsA_true);
-  free (*r_stride_one_true);
-  free (r_stride_one_true);
+ PDM_free(*r_stride_one_true);
+ PDM_free(r_stride_one_true);
 
   int *b_stridePtsADep_true = PDM_array_zeros_int(n_elt_block);
 
@@ -4321,8 +4321,8 @@ PDM_g_num_t            *nAbsNewVtxB
                           &r_stridePtsADep_true,
                           (void ***) &r_oNewPointsA_true);
 
-  free (*r_stridePtsADep_true);
-  free (r_stridePtsADep_true);
+ PDM_free(*r_stridePtsADep_true);
+ PDM_free(r_stridePtsADep_true);
   PDM_g_num_t **r_connectPointA_true = NULL;
   PDM_block_to_part_exch (btp,
                           sizeof(PDM_g_num_t),
@@ -4332,8 +4332,8 @@ PDM_g_num_t            *nAbsNewVtxB
                           &r_stridePtsADep_true,
                           (void ***) &r_connectPointA_true);
 
-  free (*r_stridePtsADep_true);
-  free (r_stridePtsADep_true);
+ PDM_free(*r_stridePtsADep_true);
+ PDM_free(r_stridePtsADep_true);
   double **r_uPointA_true = NULL;
   PDM_block_to_part_exch (btp,
                           sizeof(double),
@@ -4342,9 +4342,9 @@ PDM_g_num_t            *nAbsNewVtxB
                           (void *) b_uPointA_true,
                           &r_stridePtsADep_true,
                           (void ***) &r_uPointA_true);
-  free (b_uPointA_true);
-  free (*r_stridePtsADep_true);
-  free (r_stridePtsADep_true);
+ PDM_free(b_uPointA_true);
+ PDM_free(*r_stridePtsADep_true);
+ PDM_free(r_stridePtsADep_true);
   for (int i = 0; i < n_elt_block; i++) {
     b_stridePtsADep_true[i] *= 3;
   }
@@ -4360,8 +4360,8 @@ PDM_g_num_t            *nAbsNewVtxB
     b_stridePtsADep_true[i] = b_stridePtsADep_true[i]/3;
   }
 
-  free (*r_stridePtsADep_true);
-  free (r_stridePtsADep_true);
+ PDM_free(*r_stridePtsADep_true);
+ PDM_free(r_stridePtsADep_true);
   PDM_g_num_t **r_gNumA_true = NULL;
   PDM_block_to_part_exch (btp,
                           sizeof(PDM_g_num_t),
@@ -4380,7 +4380,7 @@ PDM_g_num_t            *nAbsNewVtxB
                            &r_stride_one_true,
                            (void ***) &r_nNewPointsB_true);
 
-  free (b_stride_one_true);
+ PDM_free(b_stride_one_true);
 
   int *b_stridePtsBDep_true = PDM_array_zeros_int(n_elt_block);
 
@@ -4403,8 +4403,8 @@ PDM_g_num_t            *nAbsNewVtxB
                           &r_stridePtsBDep_true,
                           (void ***) &r_oNewPointsB_true);
 
-  free (*r_stridePtsBDep_true);
-  free (r_stridePtsBDep_true);
+ PDM_free(*r_stridePtsBDep_true);
+ PDM_free(r_stridePtsBDep_true);
   PDM_g_num_t **r_connectPointB_true = NULL;
   PDM_block_to_part_exch (btp,
                           sizeof(PDM_g_num_t),
@@ -4414,8 +4414,8 @@ PDM_g_num_t            *nAbsNewVtxB
                           &r_stridePtsBDep_true,
                           (void ***) &r_connectPointB_true);
 
-  free (*r_stridePtsBDep_true);
-  free (r_stridePtsBDep_true);
+ PDM_free(*r_stridePtsBDep_true);
+ PDM_free(r_stridePtsBDep_true);
   double **r_uPointB_true = NULL;
   PDM_block_to_part_exch (btp,
                           sizeof(double),
@@ -4424,9 +4424,9 @@ PDM_g_num_t            *nAbsNewVtxB
                           (void *) b_uPointB_true,
                           &r_stridePtsBDep_true,
                           (void ***) &r_uPointB_true);
-  free (b_uPointB_true);
-  free (*r_stridePtsBDep_true);
-  free (r_stridePtsBDep_true);
+ PDM_free(b_uPointB_true);
+ PDM_free(*r_stridePtsBDep_true);
+ PDM_free(r_stridePtsBDep_true);
   for (int i = 0; i < n_elt_block; i++) {
     b_stridePtsBDep_true[i] *= 3;
   }
@@ -4442,8 +4442,8 @@ PDM_g_num_t            *nAbsNewVtxB
     b_stridePtsBDep_true[i] = b_stridePtsBDep_true[i]/3;
   }
 
-  free (*r_stridePtsBDep_true);
-  free (r_stridePtsBDep_true);
+ PDM_free(*r_stridePtsBDep_true);
+ PDM_free(r_stridePtsBDep_true);
   PDM_g_num_t **r_gNumB_true = NULL;
   PDM_block_to_part_exch (btp,
                           sizeof(PDM_g_num_t),
@@ -4453,7 +4453,7 @@ PDM_g_num_t            *nAbsNewVtxB
                           &r_stridePtsBDep_true,
                           (void ***) &r_gNumB_true);
 
-  free (b_stridePtsBDep_true);
+ PDM_free(b_stridePtsBDep_true);
 
   /* PDM_MPI_Barrier (_ei->comm); */
   /* if (i_rank == 0) { */
@@ -4468,31 +4468,31 @@ PDM_g_num_t            *nAbsNewVtxB
   PDM_part_to_block_free (ptb);
   PDM_block_to_part_free (btp);
 
-  free (b_connectPointA_true);
-  free (b_connectPointB_true);
-  free (b_gNumA_true);
-  free (b_gNumB_true);
-  free (b_coordsPointA_true);
-  free (b_coordsPointB_true);
-  free (b_gNumEdgeA_true);
-  free (b_gNumEdgeB_true);
-  free (b_nNewPointsA_true);
-  free (b_nNewPointsB_true);
-  free (b_oNewPointsA_true);
-  free (b_oNewPointsB_true);
-  free (b_stride_one_idx_true);
-  free (b_tIntersects_true);
+ PDM_free(b_connectPointA_true);
+ PDM_free(b_connectPointB_true);
+ PDM_free(b_gNumA_true);
+ PDM_free(b_gNumB_true);
+ PDM_free(b_coordsPointA_true);
+ PDM_free(b_coordsPointB_true);
+ PDM_free(b_gNumEdgeA_true);
+ PDM_free(b_gNumEdgeB_true);
+ PDM_free(b_nNewPointsA_true);
+ PDM_free(b_nNewPointsB_true);
+ PDM_free(b_oNewPointsA_true);
+ PDM_free(b_oNewPointsB_true);
+ PDM_free(b_stride_one_idx_true);
+ PDM_free(b_tIntersects_true);
 
-  free (b_b_gNumVtxFromAForB);
-  free (_b_b_stride_packB);
-  free (b_b_stride_packB);
-  free (b_b_cNewPointsB_true_pack);
+ PDM_free(b_b_gNumVtxFromAForB);
+ PDM_free(_b_b_stride_packB);
+ PDM_free(b_b_stride_packB);
+ PDM_free(b_b_cNewPointsB_true_pack);
 
-  free (b_b_gNumVtxFromBForA);
-  free (_b_b_stride_packA);
-  free (b_b_cNewPointsA_true_pack);
+ PDM_free(b_b_gNumVtxFromBForA);
+ PDM_free(_b_b_stride_packA);
+ PDM_free(b_b_cNewPointsA_true_pack);
 
-  free (b_stridePtsADep_true);
+ PDM_free(b_stridePtsADep_true);
 
   /*
    * Update edges intersection structure structures
@@ -4648,51 +4648,51 @@ PDM_g_num_t            *nAbsNewVtxB
    * Cleanup
    */
 
-  free (r_stride_one_idx_true);
-  free (r_stridePtsADep_idx_true);
-  free (r_stridePtsBDep_idx_true);
+ PDM_free(r_stride_one_idx_true);
+ PDM_free(r_stridePtsADep_idx_true);
+ PDM_free(r_stridePtsBDep_idx_true);
 
-  free (r_stride_one_true[0]);
-  free (r_tIntersects_true[0]);
-  free (r_gNumEdgeA_true[0]);
-  free (r_gNumEdgeB_true[0]);
+ PDM_free(r_stride_one_true[0]);
+ PDM_free(r_tIntersects_true[0]);
+ PDM_free(r_gNumEdgeA_true[0]);
+ PDM_free(r_gNumEdgeB_true[0]);
 
-  free (r_stridePtsADep_true[0]);
-  free (r_nNewPointsA_true[0]);
-  free (r_oNewPointsA_true[0]);
-  free (r_connectPointA_true[0]);
-  free (r_gNumA_true[0]);
-  free (r_gNumA_true);
-  free (r_uPointA_true[0]);
-  free (r_coordsPointA_true[0]);
+ PDM_free(r_stridePtsADep_true[0]);
+ PDM_free(r_nNewPointsA_true[0]);
+ PDM_free(r_oNewPointsA_true[0]);
+ PDM_free(r_connectPointA_true[0]);
+ PDM_free(r_gNumA_true[0]);
+ PDM_free(r_gNumA_true);
+ PDM_free(r_uPointA_true[0]);
+ PDM_free(r_coordsPointA_true[0]);
 
-  free (r_stridePtsBDep_true[0]);
-  free (r_nNewPointsB_true[0]);
-  free (r_oNewPointsB_true[0]);
-  free (r_connectPointB_true[0]);
-  free (r_gNumB_true[0]);
-  free (r_gNumB_true);
-  free (r_uPointB_true[0]);
-  free (r_coordsPointB_true[0]);
+ PDM_free(r_stridePtsBDep_true[0]);
+ PDM_free(r_nNewPointsB_true[0]);
+ PDM_free(r_oNewPointsB_true[0]);
+ PDM_free(r_connectPointB_true[0]);
+ PDM_free(r_gNumB_true[0]);
+ PDM_free(r_gNumB_true);
+ PDM_free(r_uPointB_true[0]);
+ PDM_free(r_coordsPointB_true[0]);
 
-  free (r_stride_one_true);
-  free (r_tIntersects_true);
-  free (r_gNumEdgeA_true);
-  free (r_gNumEdgeB_true);
+ PDM_free(r_stride_one_true);
+ PDM_free(r_tIntersects_true);
+ PDM_free(r_gNumEdgeA_true);
+ PDM_free(r_gNumEdgeB_true);
 
-  free (r_stridePtsADep_true);
-  free (r_nNewPointsA_true);
-  free (r_oNewPointsA_true);
-  free (r_connectPointA_true);
-  free (r_uPointA_true);
-  free (r_coordsPointA_true);
+ PDM_free(r_stridePtsADep_true);
+ PDM_free(r_nNewPointsA_true);
+ PDM_free(r_oNewPointsA_true);
+ PDM_free(r_connectPointA_true);
+ PDM_free(r_uPointA_true);
+ PDM_free(r_coordsPointA_true);
 
-  free (r_stridePtsBDep_true);
-  free (r_nNewPointsB_true);
-  free (r_oNewPointsB_true);
-  free (r_connectPointB_true);
-  free (r_uPointB_true);
-  free (r_coordsPointB_true);
+ PDM_free(r_stridePtsBDep_true);
+ PDM_free(r_nNewPointsB_true);
+ PDM_free(r_oNewPointsB_true);
+ PDM_free(r_connectPointB_true);
+ PDM_free(r_uPointB_true);
+ PDM_free(r_coordsPointB_true);
 
   if (vb >= 1) PDM_printf ("==== PDM_edges_intersect_synchronize ==== terminated ====\n");
 

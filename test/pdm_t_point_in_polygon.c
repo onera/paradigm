@@ -272,7 +272,7 @@ int main (int argc, char *argv[])
 
 
 
-  free (vtx_coord);
+ PDM_free(vtx_coord);
 
   return 0;
 }

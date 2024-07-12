@@ -510,20 +510,20 @@ int main(int argc, char *argv[])
   /* Free memory */
 
   // Additionnal frees
-  free(tmp_bouding_box);
-  free(cell_bouding_box);
+ PDM_free(tmp_bouding_box);
+ PDM_free(cell_bouding_box);
 
-  free(cell_centers);
-  free(vtx_visited);
-  free(vtx_currently_visited);
+ PDM_free(cell_centers);
+ PDM_free(vtx_visited);
+ PDM_free(vtx_currently_visited);
 
-  free(cell_face_idx);
-  free(cell_face    );
-  free(face_edge_idx);
-  free(face_edge    );
-  free(edge_vtx     );
-  free(vtx_coord    );
-  free(cell_vtx     );
+ PDM_free(cell_face_idx);
+ PDM_free(cell_face    );
+ PDM_free(face_edge_idx);
+ PDM_free(face_edge    );
+ PDM_free(edge_vtx     );
+ PDM_free(vtx_coord    );
+ PDM_free(cell_vtx     );
 
   PDM_MPI_Finalize();
   return 0;

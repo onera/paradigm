@@ -592,15 +592,15 @@ const int     *face_vtx
     }
   }
 
-  free (edges);
-  free (stackFace);
-  free (tagFace);
-  free (stackCell);
-  free (tagCell);
-  free (orientedface_cell);
-  free (processedFace);
+ PDM_free(edges);
+ PDM_free(stackFace);
+ PDM_free(tagFace);
+ PDM_free(stackCell);
+ PDM_free(tagCell);
+ PDM_free(orientedface_cell);
+ PDM_free(processedFace);
   if (face_cell == NULL) {
-    free (_faceCell);
+   PDM_free(_faceCell);
   }
 
   PDM_timer_hang_on (t1);

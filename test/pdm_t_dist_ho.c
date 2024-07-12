@@ -477,10 +477,10 @@ int main(int argc, char *argv[])
                                       2,
                                       field_name,
                                       field_value);
-    free(_closest_elt_gnum);
-    free(coord);
-    free(g_num);
-    free(connec);
+   PDM_free(_closest_elt_gnum);
+   PDM_free(coord);
+   PDM_free(g_num);
+   PDM_free(connec);
   }
 
 
@@ -493,8 +493,8 @@ int main(int argc, char *argv[])
   PDM_multipart_free(mpart_surf);
   PDM_DMesh_nodal_free(dmn_surf);
 
-  free(pts_coord);
-  free(pts_g_num);
+ PDM_free(pts_coord);
+ PDM_free(pts_g_num);
 
 
   PDM_MPI_Barrier(comm);

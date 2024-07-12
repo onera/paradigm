@@ -286,15 +286,15 @@ int main(int argc, char *argv[])
   PDM_block_to_part_free(btp);
 
   // other free
-  free(dfield);
-  free(block_stride);
-  free(dfield_summed);
-  free(pstrid);
-  free(dstrid);
+ PDM_free(dfield);
+ PDM_free(block_stride);
+ PDM_free(dfield_summed);
+ PDM_free(pstrid);
+ PDM_free(dstrid);
 
-  free(pln_to_to_gn);
-  free(distrib_init_elmt);
-  free(pfield);
+ PDM_free(pln_to_to_gn);
+ PDM_free(distrib_init_elmt);
+ PDM_free(pfield);
 
   PDM_MPI_Finalize ();
   return 0;

@@ -502,10 +502,10 @@ PDM_mean_values_polygon_2d
     }
   }
 
-  free (s);
-  free (r);
-  free (A);
-  free (D);
+ PDM_free(s);
+ PDM_free(r);
+ PDM_free(A);
+ PDM_free(D);
 }
 
 
@@ -568,8 +568,8 @@ PDM_mean_values_polygon_3d
                               pts_uv,
                               mean_value_coord);
 
-  free (vtx_uv);
-  free (pts_uv);
+ PDM_free(vtx_uv);
+ PDM_free(pts_uv);
 }
 
 
@@ -635,8 +635,8 @@ PDM_mean_values_polyhedron
     // handle special case when the point is really close to a vertex
     if (l2 < eps2) {
       weights[i] = 1.0;
-      free (inv_dist);
-      free (u);
+     PDM_free(inv_dist);
+     PDM_free(u);
       return;
     }
 
@@ -819,10 +819,10 @@ PDM_mean_values_polyhedron
         }
       }
 
-      free (inv_dist);
-      free (u);
-      free (tan_half_alpha);
-      free (theta);
+     PDM_free(inv_dist);
+     PDM_free(u);
+     PDM_free(tan_half_alpha);
+     PDM_free(theta);
       return;
     }
 
@@ -854,10 +854,10 @@ PDM_mean_values_polyhedron
     }
   }
 
-  free (inv_dist);
-  free (u);
-  free (tan_half_alpha);
-  free (theta);
+ PDM_free(inv_dist);
+ PDM_free(u);
+ PDM_free(tan_half_alpha);
+ PDM_free(theta);
 }
 
 
@@ -910,8 +910,8 @@ PDM_mean_values_polygon
       }
 
       weights[i] = 1.0;
-      free (dist);
-      free (u);
+     PDM_free(dist);
+     PDM_free(u);
       return;
     }
 
@@ -978,9 +978,9 @@ PDM_mean_values_polygon
 
       weights[i] = dist[ip] / (dist[i] + dist[ip]);
       weights[ip] = dist[i] / (dist[i] + dist[ip]);
-      free (dist);
-      free (u);
-      free (normal);
+     PDM_free(dist);
+     PDM_free(u);
+     PDM_free(normal);
       return;
 
     } else {
@@ -990,7 +990,7 @@ PDM_mean_values_polygon
       }
     }
   }
-  free (normal);
+ PDM_free(normal);
 
   double sum_w = 0.0;
   for (i = 0; i < n_vtx; i++) {
@@ -1005,9 +1005,9 @@ PDM_mean_values_polygon
     }
   }
 
-  free (dist);
-  free (u);
-  free (tan_half_theta);
+ PDM_free(dist);
+ PDM_free(u);
+ PDM_free(tan_half_theta);
 }
 
 void
@@ -1054,8 +1054,8 @@ PDM_mean_value_coordinates_polyhedron
     if (uu < eps2) {
       mean_value_coord[ivtx] = 1.;
 
-      free (u);
-      free (d);
+     PDM_free(u);
+     PDM_free(d);
       return;
     }
 
@@ -1209,13 +1209,13 @@ PDM_mean_value_coordinates_polyhedron
             mean_value_coord[id_vtx] = mean_value_coord_face[j];
           }
 
-          free (face_coord);
-          free (mean_value_coord_face);
+         PDM_free(face_coord);
+         PDM_free(mean_value_coord_face);
         }
 
-        free (u);
-        free (d);
-        free (tri_vtx);
+       PDM_free(u);
+       PDM_free(d);
+       PDM_free(tri_vtx);
 
         if (dbg_enabled) {
           printf("point located on face %d (PDM_PI - h = %g)\n", iface, PDM_PI - h);
@@ -1278,9 +1278,9 @@ PDM_mean_value_coordinates_polyhedron
     }
   }
 
-  free (u);
-  free (d);
-  free (tri_vtx);
+ PDM_free(u);
+ PDM_free(d);
+ PDM_free(tri_vtx);
 }
 
 

@@ -207,13 +207,13 @@ int main(int argc, char *argv[])
    *  Enjoy using multiple procs and see in paradigm_*.log how data is selected among all procs
    */
 
-  free(drand_number   );
-  free(distrib_elmt   );
+ PDM_free(drand_number   );
+ PDM_free(distrib_elmt   );
   for(int i_part = 0; i_part < n_part; ++i_part) {
-    free(pelmts_ln_to_gn[i_part]);
+   PDM_free(pelmts_ln_to_gn[i_part]);
   }
-  free(pelmts_ln_to_gn);
-  free(pn_elmts);
+ PDM_free(pelmts_ln_to_gn);
+ PDM_free(pn_elmts);
 
   PDM_MPI_Finalize ();
   return 0;

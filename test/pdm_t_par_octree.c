@@ -220,24 +220,24 @@ _read_cloud_from_mesh
 
     if (n_vtx_field > 0) {
       for (int i = 0; i < n_vtx_field; i++) {
-        free(vtx_field_name [i]);
-        free(vtx_field_value[i]);
+       PDM_free(vtx_field_name [i]);
+       PDM_free(vtx_field_value[i]);
       }
-      free(vtx_field_name );
-      free(vtx_field_type );
-      free(vtx_field_stride);
-      free(vtx_field_value);
+     PDM_free(vtx_field_name );
+     PDM_free(vtx_field_type );
+     PDM_free(vtx_field_stride);
+     PDM_free(vtx_field_value);
     }
 
     if (n_elt_field > 0) {
       for (int i = 0; i < n_elt_field; i++) {
-        free(elt_field_name [i]);
-        // free(elt_field_value[i]);
+       PDM_free(elt_field_name [i]);
+        //PDM_free(elt_field_value[i]);
       }
-      free(elt_field_name );
-      free(elt_field_type );
-      free(elt_field_stride);
-      free(elt_field_value);
+     PDM_free(elt_field_name );
+     PDM_free(elt_field_type );
+     PDM_free(elt_field_stride);
+     PDM_free(elt_field_value);
     }
   }
   else if (strcmp(file_extension, "mesh") == 0) {
@@ -359,7 +359,7 @@ _read_cloud_from_mesh
 
     PDM_writer_free(wrt);
 
-    free(val_rank);
+   PDM_free(val_rank);
 
 
     PDM_part_mesh_nodal_free(pmn);
@@ -476,8 +476,8 @@ char *argv[]
 
   /* Free */
 
-  free (coords);
-  free (gnum);
+ PDM_free(coords);
+ PDM_free(gnum);
 
   if (i_rank == 0) {
     PDM_printf ("-- End\n");

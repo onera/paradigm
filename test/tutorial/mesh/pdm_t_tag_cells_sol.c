@@ -498,10 +498,10 @@ int main(int argc, char *argv[])
 
     i_step++;
   }
-  free(tmp_cells);
-  free(newly_tagged_cells);
-  free(face_cell_idx);
-  free(face_cell);
+ PDM_free(tmp_cells);
+ PDM_free(newly_tagged_cells);
+ PDM_free(face_cell_idx);
+ PDM_free(face_cell);
 
 
   /*
@@ -523,15 +523,15 @@ int main(int argc, char *argv[])
 
 
   /* Free memory */
-  free(cell_face_idx);
-  free(cell_face    );
-  free(face_edge_idx);
-  free(face_edge    );
-  free(edge_vtx     );
-  free(vtx_coord    );
-  free(cell_vtx     );
-  free(vtx_field    );
-  free(cell_tag     );
+ PDM_free(cell_face_idx);
+ PDM_free(cell_face    );
+ PDM_free(face_edge_idx);
+ PDM_free(face_edge    );
+ PDM_free(edge_vtx     );
+ PDM_free(vtx_coord    );
+ PDM_free(cell_vtx     );
+ PDM_free(vtx_field    );
+ PDM_free(cell_tag     );
 
   PDM_MPI_Finalize();
   return 0;

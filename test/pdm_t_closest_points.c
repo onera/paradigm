@@ -210,7 +210,7 @@ main
     char *version = PDM_version_get();
 
     printf("Version de ParaDiGM : %s\n", version);
-    free(version);
+   PDM_free(version);
   }
 
   int         n_closest_points = 10;
@@ -412,12 +412,12 @@ main
       }
     }
 
-    free(recv_coord[0]);
-    free(recv_coord   );
+   PDM_free(recv_coord[0]);
+   PDM_free(recv_coord   );
 
 
     PDM_part_to_part_free(ptp2);
-    free(tgt_to_src_idx);
+   PDM_free(tgt_to_src_idx);
 
     // define field on src cloud
     double *src_field = malloc(sizeof(double) * n_src);
@@ -450,8 +450,8 @@ main
                                  &recv_field[0]   [n_closest_points*i],
                                  &closest_src_dist[n_closest_points*i]);
     }
-    free(recv_field[0]);
-    free(recv_field);
+   PDM_free(recv_field[0]);
+   PDM_free(recv_field);
 
     if (visu) {
       char filename[999];
@@ -484,8 +484,8 @@ main
                         (const double **) &field[i]);
       }
     }
-    free(src_field);
-    free(tgt_field);
+   PDM_free(src_field);
+   PDM_free(tgt_field);
   }
 
 
@@ -499,10 +499,10 @@ main
 
   /* Free */
 
-  free (src_coord);
-  free (src_g_num);
-  free (tgt_coord);
-  free (tgt_g_num);
+ PDM_free(src_coord);
+ PDM_free(src_g_num);
+ PDM_free(tgt_coord);
+ PDM_free(tgt_g_num);
 
   if (i_rank == 0) {
 

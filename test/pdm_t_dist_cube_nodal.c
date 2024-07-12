@@ -327,8 +327,8 @@ int main(int argc, char *argv[])
   PDM_dcube_nodal_gen_free(dcube);
   PDM_part_mesh_nodal_free(pmesh_nodal);
 
-  free(pn_selected);
-  free(selected_l_num);
+ PDM_free(pn_selected);
+ PDM_free(selected_l_num);
 
   if (i_rank == 0) {
     printf("-- End\n");

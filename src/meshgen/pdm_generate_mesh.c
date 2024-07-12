@@ -1178,7 +1178,7 @@ PDM_generate_mesh_rectangle_ngon
                                         &(*pedge_vtx)[ipart],
                                         PDM_OWNERSHIP_USER);
     if (edge_vtx_idx != NULL) {
-      free (edge_vtx_idx);
+     PDM_free(edge_vtx_idx);
     }
 
     int *face_vtx_idx = NULL;
@@ -1189,7 +1189,7 @@ PDM_generate_mesh_rectangle_ngon
                                         &face_vtx_idx,
                                         &(*pface_vtx)[ipart],
                                         PDM_OWNERSHIP_USER);
-    free(face_vtx_idx);
+   PDM_free(face_vtx_idx);
   }
 
   PDM_multipart_free(mpart);
@@ -1298,7 +1298,7 @@ PDM_generate_mesh_sphere_ngon
                                         &(*pedge_vtx)[ipart],
                                         PDM_OWNERSHIP_USER);
     if (edge_vtx_idx != NULL) {
-      free (edge_vtx_idx);
+     PDM_free(edge_vtx_idx);
     }
 
     PDM_compute_face_vtx_from_face_and_edge((*pn_face)[ipart],
@@ -1454,7 +1454,7 @@ PDM_generate_mesh_ball_ngon
                                         &(*pedge_vtx)[ipart],
                                         PDM_OWNERSHIP_USER);
     if (edge_vtx_idx != NULL) {
-      free (edge_vtx_idx);
+     PDM_free(edge_vtx_idx);
     }
 
     PDM_compute_face_vtx_from_face_and_edge((*pn_face)[ipart],
@@ -1630,7 +1630,7 @@ PDM_generate_mesh_parallelepiped_ngon
                                         &(*pedge_vtx)[ipart],
                                         PDM_OWNERSHIP_USER);
     if (edge_vtx_idx != NULL) {
-      free (edge_vtx_idx);
+     PDM_free(edge_vtx_idx);
     }
 
     PDM_compute_face_vtx_from_face_and_edge((*pn_face)[ipart],

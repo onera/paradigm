@@ -239,12 +239,12 @@ _build_extract_part_bound
 
   //for (int i = 0; i < pmesh->n_part; i++) {
     //free(selected_l_num[i]);
-    // free(selected_g_num[i]);
-    // free(selected_loc  [i]);
+    //PDM_free(selected_g_num[i]);
+    //PDM_free(selected_loc  [i]);
   //}
   //free(selected_l_num);
-  // free(selected_g_num);
-  // free(selected_loc  );
+  //PDM_free(selected_g_num);
+  //PDM_free(selected_loc  );
 }
 
 /*=============================================================================
@@ -868,21 +868,21 @@ PDM_part_mesh_free
       if(pmesh->is_owner_connectivity[i] == PDM_TRUE) {
         for(int i_part = 0; i_part < pmesh->n_part; ++i_part) {
           if(pmesh->pconnectivity[i] != NULL && pmesh->pconnectivity[i][i_part] != NULL) {
-            free(pmesh->pconnectivity[i][i_part]);
+           PDM_free(pmesh->pconnectivity[i][i_part]);
           }
           if(pmesh->pconnectivity_idx[i] != NULL && pmesh->pconnectivity_idx[i][i_part] != NULL) {
-            free(pmesh->pconnectivity_idx[i][i_part]);
+           PDM_free(pmesh->pconnectivity_idx[i][i_part]);
           }
         }
       }
 
       if(pmesh->pconnectivity[i] != NULL) {
-        free(pmesh->pconnectivity[i]);
+       PDM_free(pmesh->pconnectivity[i]);
         pmesh->pconnectivity[i] = NULL;
       }
 
       if(pmesh->pconnectivity_idx[i] != NULL) {
-        free(pmesh->pconnectivity_idx[i]);
+       PDM_free(pmesh->pconnectivity_idx[i]);
         pmesh->pconnectivity_idx[i] = NULL;
       }
     }
@@ -892,13 +892,13 @@ PDM_part_mesh_free
       if(pmesh->is_owner_ln_to_gn[i] == PDM_TRUE) {
         for(int i_part = 0; i_part < pmesh->n_part; ++i_part) {
           if(pmesh->pentity_ln_to_gn[i] != NULL && pmesh->pentity_ln_to_gn[i][i_part] != NULL) {
-            free(pmesh->pentity_ln_to_gn[i][i_part]);
+           PDM_free(pmesh->pentity_ln_to_gn[i][i_part]);
           }
         }
       }
 
       if(pmesh->pentity_ln_to_gn[i] != NULL) {
-        free(pmesh->pentity_ln_to_gn[i]);
+       PDM_free(pmesh->pentity_ln_to_gn[i]);
         pmesh->pentity_ln_to_gn[i] = NULL;
       }
     }
@@ -908,13 +908,13 @@ PDM_part_mesh_free
       if(pmesh->is_owner_color[i] == PDM_TRUE) {
         for(int i_part = 0; i_part < pmesh->n_part; ++i_part) {
           if(pmesh->pentity_color[i] != NULL && pmesh->pentity_color[i][i_part] != NULL) {
-            free(pmesh->pentity_color[i][i_part]);
+           PDM_free(pmesh->pentity_color[i][i_part]);
           }
         }
       }
 
       if(pmesh->pentity_color[i] != NULL) {
-        free(pmesh->pentity_color[i]);
+       PDM_free(pmesh->pentity_color[i]);
         pmesh->pentity_color[i] = NULL;
       }
     }
@@ -922,11 +922,11 @@ PDM_part_mesh_free
     /* Free vtx__coord */
     if(pmesh->is_owner_vtx_coord == PDM_TRUE) {
       for(int i_part = 0; i_part < pmesh->n_part; ++i_part) {
-        free(pmesh->vtx_coords[i_part]);
+       PDM_free(pmesh->vtx_coords[i_part]);
         pmesh->vtx_coords[i_part] = NULL;
       }
     }
-    free(pmesh->vtx_coords);
+   PDM_free(pmesh->vtx_coords);
 
     /* Free group */
     for(int i = 0; i < PDM_BOUND_TYPE_MAX; ++i) {
@@ -934,37 +934,37 @@ PDM_part_mesh_free
         for(int i_part = 0; i_part < pmesh->n_part; ++i_part) {
           for(int i_group = 0; i_group < pmesh->n_group_bnd[i]; ++i_group) {
             if(pmesh->pbound[i][i_part][i_group] != NULL) {
-              free(pmesh->pbound[i][i_part][i_group]);
+             PDM_free(pmesh->pbound[i][i_part][i_group]);
             }
             if(pmesh->pbound_ln_to_gn[i][i_part][i_group] != NULL) {
-              free(pmesh->pbound_ln_to_gn[i][i_part][i_group]);
+             PDM_free(pmesh->pbound_ln_to_gn[i][i_part][i_group]);
             }
           }
 
           if(pmesh->pn_bound[i][i_part] != NULL) {
-            free(pmesh->pn_bound[i][i_part]);
+           PDM_free(pmesh->pn_bound[i][i_part]);
           }
           if(pmesh->pbound[i][i_part] != NULL) {
-            free(pmesh->pbound[i][i_part]);
+           PDM_free(pmesh->pbound[i][i_part]);
           }
           if(pmesh->pbound_ln_to_gn[i][i_part] != NULL) {
-            free(pmesh->pbound_ln_to_gn[i][i_part]);
+           PDM_free(pmesh->pbound_ln_to_gn[i][i_part]);
           }
         }
       }
 
       if(pmesh->pn_bound[i] != NULL) {
-        free(pmesh->pn_bound[i]);
+       PDM_free(pmesh->pn_bound[i]);
         pmesh->pn_bound[i] = NULL;
       }
 
       if(pmesh->pbound[i] != NULL) {
-        free(pmesh->pbound[i]);
+       PDM_free(pmesh->pbound[i]);
         pmesh->pbound[i] = NULL;
       }
 
       if(pmesh->pbound_ln_to_gn[i] != NULL) {
-        free(pmesh->pbound_ln_to_gn[i]);
+       PDM_free(pmesh->pbound_ln_to_gn[i]);
         pmesh->pbound_ln_to_gn[i] = NULL;
       }
     }
@@ -975,29 +975,29 @@ PDM_part_mesh_free
       if(pmesh->is_owner_concat_bound[i] == PDM_TRUE) {
         for(int i_part = 0; i_part < pmesh->n_part; ++i_part) {
           if(pmesh->pconcat_bound_idx[i][i_part] != NULL) {
-            free(pmesh->pconcat_bound_idx[i][i_part]);
+           PDM_free(pmesh->pconcat_bound_idx[i][i_part]);
           }
           if(pmesh->pconcat_bound[i][i_part] != NULL) {
-            free(pmesh->pconcat_bound[i][i_part]);
+           PDM_free(pmesh->pconcat_bound[i][i_part]);
           }
           if(pmesh->pconcat_bound_ln_to_gn[i][i_part] != NULL) {
-            free(pmesh->pconcat_bound_ln_to_gn[i][i_part]);
+           PDM_free(pmesh->pconcat_bound_ln_to_gn[i][i_part]);
           }
         }
       }
 
       if(pmesh->pconcat_bound_idx[i] != NULL) {
-        free(pmesh->pconcat_bound_idx[i]);
+       PDM_free(pmesh->pconcat_bound_idx[i]);
         pmesh->pconcat_bound_idx[i] = NULL;
       }
 
       if(pmesh->pconcat_bound[i] != NULL) {
-        free(pmesh->pconcat_bound[i]);
+       PDM_free(pmesh->pconcat_bound[i]);
         pmesh->pconcat_bound[i] = NULL;
       }
 
       if(pmesh->pconcat_bound_ln_to_gn[i] != NULL) {
-        free(pmesh->pconcat_bound_ln_to_gn[i]);
+       PDM_free(pmesh->pconcat_bound_ln_to_gn[i]);
         pmesh->pconcat_bound_ln_to_gn[i] = NULL;
       }
     }
@@ -1007,29 +1007,29 @@ PDM_part_mesh_free
       if(pmesh->is_owner_part_bound[i] == PDM_TRUE) {
         for(int i_part = 0; i_part < pmesh->n_part; ++i_part) {
           if(pmesh->ppart_bound_proc_idx[i] != NULL && pmesh->ppart_bound_proc_idx[i][i_part] != NULL) {
-            free(pmesh->ppart_bound_proc_idx[i][i_part]);
+           PDM_free(pmesh->ppart_bound_proc_idx[i][i_part]);
           }
           if(pmesh->ppart_bound_part_idx[i] != NULL && pmesh->ppart_bound_part_idx[i][i_part] != NULL) {
-            free(pmesh->ppart_bound_part_idx[i][i_part]);
+           PDM_free(pmesh->ppart_bound_part_idx[i][i_part]);
           }
           if(pmesh->ppart_bound[i] != NULL && pmesh->ppart_bound[i][i_part] != NULL) {
-            free(pmesh->ppart_bound[i][i_part]);
+           PDM_free(pmesh->ppart_bound[i][i_part]);
           }
         }
       }
 
       if(pmesh->ppart_bound_proc_idx[i] != NULL) {
-        free(pmesh->ppart_bound_proc_idx[i]);
+       PDM_free(pmesh->ppart_bound_proc_idx[i]);
         pmesh->ppart_bound_proc_idx[i] = NULL;
       }
 
       if(pmesh->ppart_bound_part_idx[i] != NULL) {
-        free(pmesh->ppart_bound_part_idx[i]);
+       PDM_free(pmesh->ppart_bound_part_idx[i]);
         pmesh->ppart_bound_part_idx[i] = NULL;
       }
 
       if(pmesh->ppart_bound[i] != NULL) {
-        free(pmesh->ppart_bound[i]);
+       PDM_free(pmesh->ppart_bound[i]);
         pmesh->ppart_bound[i] = NULL;
       }
     }
@@ -1037,36 +1037,36 @@ PDM_part_mesh_free
 
     for(int i = 0; i < PDM_MESH_ENTITY_MAX; ++i) {
       if(pmesh->pn_entity[i] !=NULL){
-        free(pmesh->pn_entity[i]);
+       PDM_free(pmesh->pn_entity[i]);
       }
     }
 
-    free(pmesh->pn_entity);
-    free(pmesh->pconnectivity);
-    free(pmesh->pconnectivity_idx);
-    free(pmesh->pentity_ln_to_gn);
-    free(pmesh->pentity_color);
-    free(pmesh->is_owner_connectivity);
-    free(pmesh->is_owner_ln_to_gn    );
-    free(pmesh->is_owner_color       );
+   PDM_free(pmesh->pn_entity);
+   PDM_free(pmesh->pconnectivity);
+   PDM_free(pmesh->pconnectivity_idx);
+   PDM_free(pmesh->pentity_ln_to_gn);
+   PDM_free(pmesh->pentity_color);
+   PDM_free(pmesh->is_owner_connectivity);
+   PDM_free(pmesh->is_owner_ln_to_gn    );
+   PDM_free(pmesh->is_owner_color       );
 
-    free(pmesh->pn_bound       );
-    free(pmesh->pbound         );
-    free(pmesh->pbound_ln_to_gn);
-    free(pmesh->is_owner_bound );
+   PDM_free(pmesh->pn_bound       );
+   PDM_free(pmesh->pbound         );
+   PDM_free(pmesh->pbound_ln_to_gn);
+   PDM_free(pmesh->is_owner_bound );
 
-    free(pmesh->pconcat_bound         );
-    free(pmesh->pconcat_bound_ln_to_gn);
-    free(pmesh->pconcat_bound_idx);
-    free(pmesh->is_owner_concat_bound);
-    free(pmesh->is_compute_concat_bound);
+   PDM_free(pmesh->pconcat_bound         );
+   PDM_free(pmesh->pconcat_bound_ln_to_gn);
+   PDM_free(pmesh->pconcat_bound_idx);
+   PDM_free(pmesh->is_owner_concat_bound);
+   PDM_free(pmesh->is_compute_concat_bound);
 
-    free(pmesh->ppart_bound_proc_idx);
-    free(pmesh->ppart_bound_part_idx);
-    free(pmesh->ppart_bound         );
-    free(pmesh->is_owner_part_bound );
+   PDM_free(pmesh->ppart_bound_proc_idx);
+   PDM_free(pmesh->ppart_bound_part_idx);
+   PDM_free(pmesh->ppart_bound         );
+   PDM_free(pmesh->is_owner_part_bound );
 
-    free(pmesh);
+   PDM_free(pmesh);
     pmesh = NULL;
   }
 }
@@ -1482,21 +1482,21 @@ PDM_part_mesh_dump_ensight
                        id_geom,
                        i_part,
                        val_num_part[i_part]);
-    free(val_num_part[i_part]);
+   PDM_free(val_num_part[i_part]);
 
     PDM_writer_var_set(wrt,
                        id_var_bound_id,
                        id_geom,
                        i_part,
                        val_bound_id[i_part]);
-    free(val_bound_id[i_part]);
+   PDM_free(val_bound_id[i_part]);
 
     PDM_writer_var_set(wrt,
                        id_var_bound_type,
                        id_geom,
                        i_part,
                        val_bound_type[i_part]);
-    free(val_bound_type[i_part]);
+   PDM_free(val_bound_type[i_part]);
   }
 
   for (int bound_type = 0; bound_type < PDM_BOUND_TYPE_MAX; bound_type++) {
@@ -1539,21 +1539,21 @@ PDM_part_mesh_dump_ensight
                            id_geom_bound[bound_type],
                            i_part,
                            val_num_part[i_part]);
-        free(val_num_part[i_part]);
+       PDM_free(val_num_part[i_part]);
 
         PDM_writer_var_set(wrt,
                            id_var_bound_id,
                            id_geom_bound[bound_type],
                            i_part,
                            val_bound_id[i_part]);
-        free(val_bound_id[i_part]);
+       PDM_free(val_bound_id[i_part]);
 
         PDM_writer_var_set(wrt,
                            id_var_bound_type,
                            id_geom_bound[bound_type],
                            i_part,
                            val_bound_type[i_part]);
-        free(val_bound_type[i_part]);
+       PDM_free(val_bound_type[i_part]);
       }
     }
   }
@@ -1582,19 +1582,19 @@ PDM_part_mesh_dump_ensight
 
   if (mesh_dimension == 3 && !has_face_vtx) {
     for (int i = 0; i < pmesh->n_part; i++) {
-      free(pface_vtx[i]);
+     PDM_free(pface_vtx[i]);
     }
   }
-  free(pface_vtx_idx );
-  free(pface_vtx     );
-  free(val_num_part  );
-  free(val_bound_id  );
-  free(val_bound_type);
+ PDM_free(pface_vtx_idx );
+ PDM_free(pface_vtx     );
+ PDM_free(val_num_part  );
+ PDM_free(val_bound_id  );
+ PDM_free(val_bound_type);
 
   if (vtx_vtx != NULL) {
     for (int i = 0; i < pmesh->n_part; i++) {
-      free(vtx_vtx[i]);
+     PDM_free(vtx_vtx[i]);
     }
-    free(vtx_vtx);
+   PDM_free(vtx_vtx);
   }
 }

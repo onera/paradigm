@@ -339,8 +339,8 @@ _ho_bounding_box_line_intersect_points_get
           count_plane_intersect++;
         } // end if on the face
 
-        free(*intersection_point);
-        free(intersection_point);
+       PDM_free(*intersection_point);
+       PDM_free(intersection_point);
 
       } // end if there is an intersection
 
@@ -367,8 +367,8 @@ _ho_bounding_box_line_intersect_points_get
           count_plane_intersect++;
         } // end if on the face
 
-        free(*intersection_point);
-        free(intersection_point);
+       PDM_free(*intersection_point);
+       PDM_free(intersection_point);
 
       } // end if there is an intersection
 
@@ -395,8 +395,8 @@ _ho_bounding_box_line_intersect_points_get
           count_plane_intersect++;
         } // end if on the face
 
-        free(*intersection_point);
-        free(intersection_point);
+       PDM_free(*intersection_point);
+       PDM_free(intersection_point);
 
       } // end if there is an intersection
 
@@ -423,8 +423,8 @@ _ho_bounding_box_line_intersect_points_get
           count_plane_intersect++;
         } // end if on the face
 
-        free(*intersection_point);
-        free(intersection_point);
+       PDM_free(*intersection_point);
+       PDM_free(intersection_point);
 
       } // end if there is an intersection
 
@@ -451,8 +451,8 @@ _ho_bounding_box_line_intersect_points_get
           count_plane_intersect++;
         } // end if on the face
 
-        free(*intersection_point);
-        free(intersection_point);
+       PDM_free(*intersection_point);
+       PDM_free(intersection_point);
 
       } // end if there is an intersection
 
@@ -479,8 +479,8 @@ _ho_bounding_box_line_intersect_points_get
           count_plane_intersect++;
         } // end if on the face
 
-        free(*intersection_point);
-        free(intersection_point);
+       PDM_free(*intersection_point);
+       PDM_free(intersection_point);
 
       } // end if there is an intersection
 

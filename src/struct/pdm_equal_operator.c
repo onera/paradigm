@@ -11,6 +11,7 @@
  *----------------------------------------------------------------------------*/
 
 #include "pdm.h"
+#include "pdm_priv.h"
 #include "pdm_quick_sort.h"
 #include "pdm_sort.h"
 #include "pdm_compare_operator.h"
@@ -122,14 +123,14 @@ const void* b,
       for(int k = 0; k < ni; ++k){
         // printf(" \t sort_arr_i[%d] = %d | sort_arr_j[%d] = %d \n", k, sort_arr_i[k], k, sort_arr_j[k]);
         if(sort_arr_i[k] != sort_arr_j[k]) {
-          free(sort_arr_i);
-          free(sort_arr_j);
+         PDM_free(sort_arr_i);
+         PDM_free(sort_arr_j);
           return 0;
         }
       }
 
-      free(sort_arr_i);
-      free(sort_arr_j);
+     PDM_free(sort_arr_i);
+     PDM_free(sort_arr_j);
     } else {
       return 0;
     }

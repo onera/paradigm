@@ -193,7 +193,7 @@ _split_surface_mesh
   PDM_multipart_dmesh_nodal_set(mpart, 0, dmn);
   PDM_multipart_compute(mpart);
 
-  free(n_part_domains);
+ PDM_free(n_part_domains);
 
   *_mpart = mpart;
 }
@@ -420,21 +420,21 @@ int main(int argc, char *argv[])
 
   PDM_dist_cloud_surf_free(ics);
 
-  free(pts_coord);
-  free(pts_g_num);
-  free(surf_pn_edge       );
-  free(surf_pn_vtx        );
-  free(surf_pn_face       );
-  free(surf_pface_edge    );
-  free(surf_pface_edge_idx);
+ PDM_free(pts_coord);
+ PDM_free(pts_g_num);
+ PDM_free(surf_pn_edge       );
+ PDM_free(surf_pn_vtx        );
+ PDM_free(surf_pn_face       );
+ PDM_free(surf_pface_edge    );
+ PDM_free(surf_pface_edge_idx);
   for(int i_part = 0; i_part < n_part; i_part++) {
-    free(surf_pface_vtx[i_part]);
+   PDM_free(surf_pface_vtx[i_part]);
   }
-  free(surf_pface_vtx     );
-  free(surf_pedge_vtx     );
-  free(surf_pvtx_coord    );
-  free(surf_pvtx_ln_to_gn );
-  free(surf_pface_ln_to_gn);
+ PDM_free(surf_pface_vtx     );
+ PDM_free(surf_pedge_vtx     );
+ PDM_free(surf_pvtx_coord    );
+ PDM_free(surf_pvtx_ln_to_gn );
+ PDM_free(surf_pface_ln_to_gn);
 
 
   PDM_DMesh_nodal_free(dmn);

@@ -542,9 +542,9 @@ _compute_overlay_planes
                                                   extentsA,
                                                   gNumA);
 
-  free (nEltsA);
-  free (gNumA);
-  free (extentsA);
+ PDM_free(nEltsA);
+ PDM_free(gNumA);
+ PDM_free(extentsA);
 
   PDM_MPI_Barrier (ol->comm);
   PDM_timer_hang_on(ol->timer);
@@ -580,9 +580,9 @@ _compute_overlay_planes
 
 
   PDM_dbbtree_free (dbbtreeA);
-  free (nEltsB);
-  free (gNumB);
-  free (extentsB);
+ PDM_free(nEltsB);
+ PDM_free(gNumB);
+ PDM_free(extentsB);
 
   /*
    * Check boxesA and boxesB entities
@@ -680,7 +680,7 @@ _compute_overlay_planes
     blockA_boxesB_idx[i+1] = blockA_boxesB_idx[i] + blockA_boxesB_stride[i];
   }
 
-  free (blockA_boxesB_stride);
+ PDM_free(blockA_boxesB_stride);
 
   int idx = 0;
   int *blockA_boxesB_idx_new = PDM_array_zeros_int(n_elt_blockA + 1);
@@ -710,7 +710,7 @@ _compute_overlay_planes
     blockA_boxesB_idx[i] = blockA_boxesB_idx_new[i];
   }
 
-  free (blockA_boxesB_idx_new);
+ PDM_free(blockA_boxesB_idx_new);
 
   /*****************************************************************************
    *                                                                           *
@@ -795,12 +795,12 @@ _compute_overlay_planes
 
   block_gnumA = _block_gnumA;
 
-  free (boxesB_intersection_g_num);
-  free (boxesB_intersection_l_num);
-  free (boxesB_intersection_index);
-  free (part_strideA);
-  free (countEltsA);
-  free (countEltsB);
+ PDM_free(boxesB_intersection_g_num);
+ PDM_free(boxesB_intersection_l_num);
+ PDM_free(boxesB_intersection_index);
+ PDM_free(part_strideA);
+ PDM_free(countEltsA);
+ PDM_free(countEltsB);
 
   PDM_box_distrib_clean (distribA);
   PDM_box_distrib_clean (distribB);
@@ -945,18 +945,18 @@ _compute_overlay_planes
                                                (void **) &face_vtxCooCurrent[imesh]);
 
     for (int i = 0; i < n_part; i++) {
-      free (faceStrideOrigin[i]);
-      free (faceToEdgeOrigin[i]);
-      free (faceToVtxOrigin[i]);
-      free (face_vtxCooOrigin[i]);
-      free (face_vtxEpsOrigin[i]);
+     PDM_free(faceStrideOrigin[i]);
+     PDM_free(faceToEdgeOrigin[i]);
+     PDM_free(faceToVtxOrigin[i]);
+     PDM_free(face_vtxCooOrigin[i]);
+     PDM_free(face_vtxEpsOrigin[i]);
     }
 
-    free (faceStrideOrigin);
-    free (faceToEdgeOrigin);
-    free (faceToVtxOrigin);
-    free (face_vtxCooOrigin);
-    free (face_vtxEpsOrigin);
+   PDM_free(faceStrideOrigin);
+   PDM_free(faceToEdgeOrigin);
+   PDM_free(faceToVtxOrigin);
+   PDM_free(face_vtxCooOrigin);
+   PDM_free(face_vtxEpsOrigin);
 
   }
 
@@ -994,8 +994,8 @@ _compute_overlay_planes
     blockA_boxesB_lnum_data[i] = lnum[idx1];
   }
 
-  free (lnum);
-  free (gnum_eltB_cp);
+ PDM_free(lnum);
+ PDM_free(gnum_eltB_cp);
 
   gnum_eltA = (PDM_g_num_t *) PDM_box_set_get_g_num (boxesA);
 
@@ -1014,7 +1014,7 @@ _compute_overlay_planes
   PDM_sort_long (gnum_eltA_cp, blockA_lnum_data, n_eltA);
 
 
-  free (gnum_eltA_cp);
+ PDM_free(gnum_eltA_cp);
 
   PDM_MPI_Barrier (ol->comm);
   PDM_timer_hang_on(ol->timer);
@@ -1422,24 +1422,24 @@ _compute_overlay_planes
       }
 
       if (polyClippIdxB != polyClippIdxA) {
-        free (polyClippIdxB);
+       PDM_free(polyClippIdxB);
         polyClippIdxB = NULL;
       }
 
       if (polyClippConnecB != NULL) {
-        free (polyClippConnecB);
+       PDM_free(polyClippConnecB);
         polyClippConnecB = NULL;
       }
 
       if (polyClippIdxA != NULL) {
-        free (polyClippIdxA);
+       PDM_free(polyClippIdxA);
       }
 
       if (polyClippConnecA != NULL) {
-        free (polyClippConnecA);
+       PDM_free(polyClippConnecA);
       }
       if (polyClippCoordsA != NULL) {
-        free (polyClippCoordsA);
+       PDM_free(polyClippCoordsA);
       }
 
     }
@@ -1545,7 +1545,7 @@ _compute_overlay_planes
   PDM_MPI_Allreduce(&_max, &n_g_newVtxA, 1, PDM__PDM_MPI_G_NUM, PDM_MPI_MAX, ol->comm);
 
   PDM_gnum_free (gnum_B_into_A);
-  free (elt_B_into_A_g_num);
+ PDM_free(elt_B_into_A_g_num);
 
   PDM_gen_gnum_t *gnum_A_into_B = PDM_gnum_create (dim, n_part, merge, tolerance, ol->comm, PDM_OWNERSHIP_KEEP);
 
@@ -1582,7 +1582,7 @@ _compute_overlay_planes
   PDM_MPI_Allreduce(&_max, &n_g_newVtxB, 1, PDM__PDM_MPI_G_NUM, PDM_MPI_MAX, ol->comm);
 
   PDM_gnum_free (gnum_A_into_B);
-  free (elt_A_into_B_g_num);
+ PDM_free(elt_A_into_B_g_num);
 
   if (1 == 0) {
     printf("\n-- Liste des sous-facettes des elements de A (intersection)\n");
@@ -1921,7 +1921,7 @@ _compute_overlay_planes
         }
       }
 
-      free (eirA);
+     PDM_free(eirA);
 
     }
 
@@ -2048,8 +2048,8 @@ _compute_overlay_planes
       }
     }
 
-    free (oneRef);
-    free (coordsOneRef);
+   PDM_free(oneRef);
+   PDM_free(coordsOneRef);
 
     for (int k1 = 0; k1 < nAddSubFace; k1++) {
       addSubFaceIdx[k1+1] += addSubFaceIdx[k1];
@@ -2098,7 +2098,7 @@ _compute_overlay_planes
     for (int k1 = 0; k1 < 3*addSubFaceIdx[nAddSubFace]; k1++) {
       subFacesCoordsA[ibeg2++] = addSubFaceCoords[k1];
     }
-    free (addSubFaceCoords);
+   PDM_free(addSubFaceCoords);
 
     for (int k1 = 0; k1 < nAddSubFace; k1++) {
       subFacesConnecIdx[iclipp+1] = subFacesConnecIdx[iclipp] +
@@ -2118,9 +2118,9 @@ _compute_overlay_planes
 
     /* Free */
 
-    free (tag);
-    free (addSubFaceIdx);
-    free (addSubFace);
+   PDM_free(tag);
+   PDM_free(addSubFaceIdx);
+   PDM_free(addSubFace);
 
     faceIniVtxIdxA[i+1] = idxFaceIni;
 
@@ -2128,12 +2128,12 @@ _compute_overlay_planes
 
   }
 
-  free (u_inter);
-  free (coords_inter);
-  free (nG_inter);
-  free (coords_inter_tmp);
-  free (nG_inter_tmp);
-  free (order);
+ PDM_free(u_inter);
+ PDM_free(coords_inter);
+ PDM_free(nG_inter);
+ PDM_free(coords_inter_tmp);
+ PDM_free(nG_inter_tmp);
+ PDM_free(order);
 
   PDM_hash_tab_purge (htSubEdgeA, PDM_TRUE);
   PDM_hash_tab_free (htSubEdgeA);
@@ -2366,7 +2366,7 @@ _compute_overlay_planes
                                                               &n_boxesB_without_dupl,
                                                               1,
                                                               ol->comm);
-  free (weight);
+ PDM_free(weight);
 
   int *recv_stride1 = NULL;
 
@@ -2402,7 +2402,7 @@ _compute_overlay_planes
                          &recv_stride1,
                          (void **) &recvSubFacesConnecBN);
 
-  free (subFacesConnecN);
+ PDM_free(subFacesConnecN);
 
   /* Send Connectivity for each sub-face */
 
@@ -2434,7 +2434,7 @@ _compute_overlay_planes
     }
   }
 
-  free (subFacesConnecB);
+ PDM_free(subFacesConnecB);
   PDM_g_num_t *recvSubFacesConnecB;
   PDM_part_to_block_exch (ptb_boxesB,
                          sizeof(PDM_g_num_t),
@@ -2445,7 +2445,7 @@ _compute_overlay_planes
                          &recv_stride2,
                          (void **) &recvSubFacesConnecB);
 
-  free (subFacesConnecB_ordered);
+ PDM_free(subFacesConnecB_ordered);
 
   PDM_array_reset_int(_tmp_stride, n_boxesB_without_dupl, 0);
 
@@ -2474,7 +2474,7 @@ _compute_overlay_planes
                          &recv_stride21,
                          (void **) &recvSubFacesCoordsB);
 
-  free (subFacesCoordsA_ordered);
+ PDM_free(subFacesCoordsA_ordered);
 
   /* Send result of intersection */
 
@@ -2563,7 +2563,7 @@ _compute_overlay_planes
 
           sendFaceToEdgeNPtInt[_idx1] += _nNewPointsB;
         }
-        free (eirB);
+       PDM_free(eirB);
         _tmp_stride2[idx_without_dupl[i]] += (int) sendFaceToEdgeNPtInt[_idx1];
         s_properties += (int) sendFaceToEdgeNPtInt[_idx1++];
         sendFaceToEdgeNPtInt[_idx1++] = vtx1;
@@ -2588,7 +2588,7 @@ _compute_overlay_planes
                          &recv_stride4,
                          (void **) &recvFaceToEdgeNPtInt);
 
-  free (sendFaceToEdgeNPtInt);
+ PDM_free(sendFaceToEdgeNPtInt);
 
   PDM_array_reset_int(_tmp_stride, n_boxesB_without_dupl, 0);
 
@@ -2631,7 +2631,7 @@ _compute_overlay_planes
                          &recv_stride41,
                          (void **) &recvFaceToEdgeCoordsvtx);
 
-  free (sendFaceToEdgeCoordsvtx);
+ PDM_free(sendFaceToEdgeCoordsvtx);
 
   /* Send origin, global number and U for each intersection point */
 
@@ -2707,18 +2707,18 @@ _compute_overlay_planes
             sendFaceToEdgeUPtInt[_idx3++]         = _coordsB[3*k11+2];
           }
         }
-        free (eirB);
+       PDM_free(eirB);
       }
       _tmp_stride[idx_without_dupl[i]]++;
     }
   }
 
-  free (idx_without_dupl);
+ PDM_free(idx_without_dupl);
 
   PDM_edges_intersect_free (intersect);
 
-  free (faceIdxCurrent[0]);
-  free (faceIdxCurrent[1]);
+ PDM_free(faceIdxCurrent[0]);
+ PDM_free(faceIdxCurrent[1]);
 
   // int s_prop2 = 0;
   // for (int i = 0; i < n_boxesB_without_dupl; i++) {
@@ -2735,8 +2735,8 @@ _compute_overlay_planes
                          &recv_stride5,
                          (void **) &recvFaceToEdgeOrAndGnumPtInt);
 
-  free (sendFaceToEdgeOrAndGnumPtInt);
-  free (recv_stride5);
+ PDM_free(sendFaceToEdgeOrAndGnumPtInt);
+ PDM_free(recv_stride5);
 
   for (int i = 0; i < n_boxesB_without_dupl; i++) {
     _tmp_stride2[i] = (_tmp_stride2[i]/3) * 4;
@@ -2752,13 +2752,13 @@ _compute_overlay_planes
                          &recv_stride6,
                          (void **) &recvFaceToEdgeUPtInt);
 
-  free (_tmp_stride);
-  free (_tmp_stride2);
-  free (_tmp_idx);
-  free (_tmp_idx2);
+ PDM_free(_tmp_stride);
+ PDM_free(_tmp_stride2);
+ PDM_free(_tmp_idx);
+ PDM_free(_tmp_idx2);
 
-  free (sendFaceToEdgeUPtInt);
-  free (recv_stride6);
+ PDM_free(sendFaceToEdgeUPtInt);
+ PDM_free(recv_stride6);
 
   /* Cleanup */
 
@@ -2860,9 +2860,9 @@ _compute_overlay_planes
       _sub_vertices_origin_edge_t **data =
         (_sub_vertices_origin_edge_t **) PDM_hash_tab_data_get (htEdgeB, &_key);
       for (int j1 = 0; j1 < n_data; j1++) {
-        free (data[j1]->vtxIntEdge);
-        free (data[j1]->uIntEdge);
-        free (data[j1]->coordsIntEdge);
+       PDM_free(data[j1]->vtxIntEdge);
+       PDM_free(data[j1]->uIntEdge);
+       PDM_free(data[j1]->coordsIntEdge);
       }
     }
 
@@ -3262,8 +3262,8 @@ _compute_overlay_planes
       }
       facesToSubFacesBIdx[i+1] = facesToSubFacesBIdx[i]
         + n_SubFaceFace;
-      free(oneRef);
-      free(coordsOneRef);
+     PDM_free(oneRef);
+     PDM_free(coordsOneRef);
     }
     else {
 
@@ -3349,7 +3349,7 @@ _compute_overlay_planes
         }
       }
 
-      free (tag);
+     PDM_free(tag);
 
       for (int k11 = 0; k11 < nAddSubFace; k11++) {
         addSubFaceIdx[k11+1] += addSubFaceIdx[k11];
@@ -3429,11 +3429,11 @@ _compute_overlay_planes
         + nAddSubFace;
       /* Cleanup */
 
-      free (oneRef);
-      free (coordsOneRef);
-      free (addSubFaceIdx);
-      free (addSubFace);
-      free (addSubFaceCoords);
+     PDM_free(oneRef);
+     PDM_free(coordsOneRef);
+     PDM_free(addSubFaceIdx);
+     PDM_free(addSubFace);
+     PDM_free(addSubFaceCoords);
     }
 
   }
@@ -3443,7 +3443,7 @@ _compute_overlay_planes
   }
 
   if (sum_vtx != NULL) {
-    free (sum_vtx);
+   PDM_free(sum_vtx);
   }
 
   int n_used_keys = PDM_hash_tab_n_used_keys_get (htEdgeB);
@@ -3455,9 +3455,9 @@ _compute_overlay_planes
     _sub_vertices_origin_edge_t **data =
       (_sub_vertices_origin_edge_t **) PDM_hash_tab_data_get (htEdgeB, &_key);
     for (int j1 = 0; j1 < n_data; j1++) {
-      free (data[j1]->vtxIntEdge);
-      free (data[j1]->uIntEdge);
-      free (data[j1]->coordsIntEdge);
+     PDM_free(data[j1]->vtxIntEdge);
+     PDM_free(data[j1]->uIntEdge);
+     PDM_free(data[j1]->coordsIntEdge);
     }
   }
   PDM_hash_tab_purge (htEdgeB, PDM_TRUE);
@@ -3550,44 +3550,44 @@ _compute_overlay_planes
    * Cleanup
    */
 
-  free (coordsIntEdgeSorted);
-  free (vtxIntEdgeSorted);
-  free (order);
+ PDM_free(coordsIntEdgeSorted);
+ PDM_free(vtxIntEdgeSorted);
+ PDM_free(order);
 
   // sous-facettes calculees
 
-  free (recv_stride1);
-  free (recvSubFacesConnecBN);
+ PDM_free(recv_stride1);
+ PDM_free(recvSubFacesConnecBN);
 
-  free (recv_stride2);
-  free (recvSubFacesConnecB);
+ PDM_free(recv_stride2);
+ PDM_free(recvSubFacesConnecB);
 
-  free (recv_stride21);
-  free (recvSubFacesCoordsB);
+ PDM_free(recv_stride21);
+ PDM_free(recvSubFacesCoordsB);
 
   // arete initiales du contour
 
-  free (recv_stride4);
-  free (recvFaceToEdgeNPtInt);
+ PDM_free(recv_stride4);
+ PDM_free(recvFaceToEdgeNPtInt);
 
-  free (recv_stride41);
-  free (recvFaceToEdgeCoordsvtx);
+ PDM_free(recv_stride41);
+ PDM_free(recvFaceToEdgeCoordsvtx);
 
-  free (recvFaceToEdgeOrAndGnumPtInt);
+ PDM_free(recvFaceToEdgeOrAndGnumPtInt);
 
-  free (recvFaceToEdgeUPtInt);
+ PDM_free(recvFaceToEdgeUPtInt);
 
-  free (blockA_boxesB_idx);
-  free (blockA_boxesB_gnum_data);
-  free (blockA_boxesB_lnum_data);
+ PDM_free(blockA_boxesB_idx);
+ PDM_free(blockA_boxesB_gnum_data);
+ PDM_free(blockA_boxesB_lnum_data);
 
   for (int i = 0; i < 2; i++) {
-    free (faceStrideCurrent[i]);
-    free (faceStrideCurrent3[i]);
-    free (faceToEdgeCurrent[i]);
-    free (faceToVtxCurrent[i]);
-    free (face_vtxCooCurrent[i]);
-    free (face_vtxEpsCurrent[i]);
+   PDM_free(faceStrideCurrent[i]);
+   PDM_free(faceStrideCurrent3[i]);
+   PDM_free(faceToEdgeCurrent[i]);
+   PDM_free(faceToVtxCurrent[i]);
+   PDM_free(face_vtxCooCurrent[i]);
+   PDM_free(face_vtxEpsCurrent[i]);
   }
 
   PDM_MPI_Barrier (ol->comm);
@@ -3793,8 +3793,8 @@ _compute_overlay_planes
     }
   }
 
-  free (faceIniVtxIdxA);
-  free (faceIniVtxA);
+ PDM_free(faceIniVtxIdxA);
+ PDM_free(faceIniVtxA);
 
   int **fourthRecvStrideA = malloc (sizeof(int *) * n_partA);
   for (int i = 0; i < n_partA; i++) {
@@ -3817,21 +3817,21 @@ _compute_overlay_planes
 
   PDM_box_set_destroy (&boxesA);
 
-  free (firstSend);
-  free (secondSend);
-  free (thirdSend);
-  free (fourthSend);
-  free (block_gnumA);
-  free (firstSendStride);
-  free (blockA_lnum_data);
+ PDM_free(firstSend);
+ PDM_free(secondSend);
+ PDM_free(thirdSend);
+ PDM_free(fourthSend);
+ PDM_free(block_gnumA);
+ PDM_free(firstSendStride);
+ PDM_free(blockA_lnum_data);
 
-  free (subFacesConnecIdx);
-  free (subFacesCoordsA);
-  free (facesToSubFacesAIdx);
-  free (facesToAddSubFacesAIdx);
-  free (gNumSubFacesA);
-  free (subFacesToFaces);
-  free (subFacesConnecA);
+ PDM_free(subFacesConnecIdx);
+ PDM_free(subFacesCoordsA);
+ PDM_free(facesToSubFacesAIdx);
+ PDM_free(facesToAddSubFacesAIdx);
+ PDM_free(gNumSubFacesA);
+ PDM_free(subFacesToFaces);
+ PDM_free(subFacesConnecA);
 
   PDM_MPI_Barrier (ol->comm);
   PDM_timer_hang_on(ol->timer);
@@ -3897,7 +3897,7 @@ _compute_overlay_planes
     distribB->list[idxB2] = i;
   }
 
-  free (countEltsB);
+ PDM_free(countEltsB);
 
   PDM_box_distrib_clean (distribB);
   PDM_box_set_redistribute (distribB, boxesB);
@@ -3968,7 +3968,7 @@ _compute_overlay_planes
   }
 
   PDM_part_to_block_free (ptb_boxesB);
-  free (blockA_boxesB_gnum_data_cp);
+ PDM_free(blockA_boxesB_gnum_data_cp);
 
   PDM_box_set_send_data_to_origin_distrib (boxesB,
                                            PDM_STRIDE_VAR_INTERLACED,
@@ -3980,7 +3980,7 @@ _compute_overlay_planes
                                            (void ** )firstRecvB);
 
 
-  free (firstSend);
+ PDM_free(firstSend);
 
   secondSend = malloc (sizeof(PDM_g_num_t) * n_T_vertex);
   thirdSend = malloc (3 * sizeof(double) * n_T_vertex);
@@ -4008,7 +4008,7 @@ _compute_overlay_planes
     }
   }
 
-  free (subFacesCoordsB);
+ PDM_free(subFacesCoordsB);
 
   int **secondRecvStrideB = malloc (sizeof(int *) * n_partB);
 
@@ -4061,8 +4061,8 @@ _compute_overlay_planes
     }
   }
 
-  free (faceIniVtxIdxB);
-  free (faceIniVtxB);
+ PDM_free(faceIniVtxIdxB);
+ PDM_free(faceIniVtxB);
 
   int **fourthRecvStrideB = malloc (sizeof(int *) * n_partB);
   for (int i = 0; i < n_partB; i++) {
@@ -4081,20 +4081,20 @@ _compute_overlay_planes
                                            fourthRecvStrideB,
                                            (void ** )fourthRecvB);
 
-  free (firstSendStride);
-  free (secondSend);
-  free (thirdSend);
-  free (fourthSend);
-  free (blockB_lnum_data);
+ PDM_free(firstSendStride);
+ PDM_free(secondSend);
+ PDM_free(thirdSend);
+ PDM_free(fourthSend);
+ PDM_free(blockB_lnum_data);
 
-  free (subFacesConnecB);
-  free (subFacesConnecIdxB);
+ PDM_free(subFacesConnecB);
+ PDM_free(subFacesConnecIdxB);
 
-  free (subFacesToFaceB);
-  free (gNumSubFacesB);
-  free (subFacesToLinkA);
+ PDM_free(subFacesToFaceB);
+ PDM_free(gNumSubFacesB);
+ PDM_free(subFacesToLinkA);
 
-  free (facesToSubFacesBIdx);
+ PDM_free(facesToSubFacesBIdx);
 
   PDM_box_set_destroy (&boxesB);
 
@@ -4314,8 +4314,8 @@ _compute_overlay_planes
       }
     }
 
-    free (orderVtxA);
-    free (cpIniGNumVtxA);
+   PDM_free(orderVtxA);
+   PDM_free(cpIniGNumVtxA);
 
     olp->nLinkedFace = n_linked_faces;
     PDM_realloc(olp->linkedFaces ,olp->linkedFaces , 4 * n_linked_faces,int);
@@ -4340,9 +4340,9 @@ _compute_overlay_planes
       initToOlTmpN[j]++;
     }
 
-    free (initToOlTmp1);
-    free (initToOlTmp2);
-    free (initToOlTmpN);
+   PDM_free(initToOlTmp1);
+   PDM_free(initToOlTmp2);
+   PDM_free(initToOlTmpN);
 
     PDM_g_num_t *cpgface_vtxPart = malloc (sizeof(PDM_g_num_t) * idx3);
     int *ordergface_vtxPart = malloc (sizeof(int) * idx3);
@@ -4382,7 +4382,7 @@ _compute_overlay_planes
       }
     }
 
-    free (ordergface_vtxPart);
+   PDM_free(ordergface_vtxPart);
 
     int n_vtxPart = inin_vtx + k2;
 
@@ -4396,8 +4396,8 @@ _compute_overlay_planes
     for (int j = 0; j < k2; j++) {
       vtx_ln_to_gn_part[inin_vtx + j] = cpgface_vtxPart[j];
     }
-    free (cpgface_vtxPart);
-    free (gface_vtxPart);
+   PDM_free(cpgface_vtxPart);
+   PDM_free(gface_vtxPart);
 
     PDM_g_num_t *cpvtx_ln_to_gn_part = malloc (sizeof(PDM_g_num_t) * n_vtxPart);
     int *ordervtx_ln_to_gn_part = malloc (sizeof(int) * n_vtxPart);
@@ -4487,8 +4487,8 @@ _compute_overlay_planes
       }
     }
 
-    free (ordervtx_ln_to_gn_part);
-    free (cpvtx_ln_to_gn_part);
+   PDM_free(ordervtx_ln_to_gn_part);
+   PDM_free(cpvtx_ln_to_gn_part);
   }
 
   if (1 == 0) {
@@ -4517,39 +4517,39 @@ _compute_overlay_planes
 
 
   for (int i = 0; i < n_partA; i++) {
-    free (firstRecvA[i]);
-    free (firstRecvStrideA[i]);
+   PDM_free(firstRecvA[i]);
+   PDM_free(firstRecvStrideA[i]);
   }
 
-  free (firstRecvA);
-  free (firstRecvStrideA);
+ PDM_free(firstRecvA);
+ PDM_free(firstRecvStrideA);
 
   for (int i = 0; i < n_partA; i++) {
-    free (secondRecvA[i]);
-    free (secondRecvStrideA[i]);
+   PDM_free(secondRecvA[i]);
+   PDM_free(secondRecvStrideA[i]);
   }
 
-  free (secondRecvA);
-  free (secondRecvStrideA);
+ PDM_free(secondRecvA);
+ PDM_free(secondRecvStrideA);
 
   for (int i = 0; i < n_partA; i++) {
-    free (thirdRecvA[i]);
-    free (thirdRecvStrideA[i]);
+   PDM_free(thirdRecvA[i]);
+   PDM_free(thirdRecvStrideA[i]);
   }
 
-  free (thirdRecvA);
-  free (thirdRecvStrideA);
+ PDM_free(thirdRecvA);
+ PDM_free(thirdRecvStrideA);
 
   for (int i = 0; i < n_partA; i++) {
-    free (fourthRecvA[i]);
-    free (fourthRecvStrideA[i]);
+   PDM_free(fourthRecvA[i]);
+   PDM_free(fourthRecvStrideA[i]);
   }
-  free (fourthRecvA);
-  free (fourthRecvStrideA);
+ PDM_free(fourthRecvA);
+ PDM_free(fourthRecvStrideA);
 
-  free (nUnChangedFacePartA);
-  free (nSubFacePartA);
-  free (s_olface_vtxA);
+ PDM_free(nUnChangedFacePartA);
+ PDM_free(nSubFacePartA);
+ PDM_free(s_olface_vtxA);
 
   PDM_MPI_Barrier (ol->comm);
   PDM_timer_hang_on(ol->timer);
@@ -4765,8 +4765,8 @@ _compute_overlay_planes
       }
     }
 
-    free (orderVtxB);
-    free (cpIniGNumVtxB);
+   PDM_free(orderVtxB);
+   PDM_free(cpIniGNumVtxB);
 
     olp->nLinkedFace = n_linked_faces;
     PDM_realloc(olp->linkedFaces ,olp->linkedFaces , 4 *n_linked_faces,int);
@@ -4791,9 +4791,9 @@ _compute_overlay_planes
       initToOlTmpN[j]++;
     }
 
-    free (initToOlTmp1);
-    free (initToOlTmp2);
-    free (initToOlTmpN);
+   PDM_free(initToOlTmp1);
+   PDM_free(initToOlTmp2);
+   PDM_free(initToOlTmpN);
 
     PDM_g_num_t *cpgface_vtxPart = malloc (sizeof(PDM_g_num_t) * idx3);
     int *ordergface_vtxPart = malloc (sizeof(int) * idx3);
@@ -4832,7 +4832,7 @@ _compute_overlay_planes
       }
     }
 
-    free (ordergface_vtxPart);
+   PDM_free(ordergface_vtxPart);
 
     int n_vtxPart = inin_vtx + k2;
 
@@ -4847,8 +4847,8 @@ _compute_overlay_planes
       vtx_ln_to_gn_part[inin_vtx + j] = cpgface_vtxPart[j];
     }
 
-    free (cpgface_vtxPart);
-    free (gface_vtxPart);
+   PDM_free(cpgface_vtxPart);
+   PDM_free(gface_vtxPart);
 
     PDM_g_num_t *cpvtx_ln_to_gn_part = malloc (sizeof(PDM_g_num_t) * n_vtxPart);
     int *ordervtx_ln_to_gn_part = malloc (sizeof(int) * n_vtxPart);
@@ -4940,8 +4940,8 @@ _compute_overlay_planes
       }
     }
 
-    free (ordervtx_ln_to_gn_part);
-    free (cpvtx_ln_to_gn_part);
+   PDM_free(ordervtx_ln_to_gn_part);
+   PDM_free(cpvtx_ln_to_gn_part);
 
   }
 
@@ -4969,36 +4969,36 @@ _compute_overlay_planes
   }
 
   for (int i = 0; i < n_partB; i++) {
-    free (firstRecvB[i]);
-    free (firstRecvStrideB[i]);
+   PDM_free(firstRecvB[i]);
+   PDM_free(firstRecvStrideB[i]);
   }
-  free (firstRecvB);
-  free (firstRecvStrideB);
+ PDM_free(firstRecvB);
+ PDM_free(firstRecvStrideB);
 
   for (int i = 0; i < n_partB; i++) {
-    free (secondRecvB[i]);
-    free (secondRecvStrideB[i]);
+   PDM_free(secondRecvB[i]);
+   PDM_free(secondRecvStrideB[i]);
   }
-  free (secondRecvB);
-  free (secondRecvStrideB);
+ PDM_free(secondRecvB);
+ PDM_free(secondRecvStrideB);
 
   for (int i = 0; i < n_partB; i++) {
-    free (thirdRecvB[i]);
-    free (thirdRecvStrideB[i]);
+   PDM_free(thirdRecvB[i]);
+   PDM_free(thirdRecvStrideB[i]);
   }
-  free (thirdRecvB);
-  free (thirdRecvStrideB);
+ PDM_free(thirdRecvB);
+ PDM_free(thirdRecvStrideB);
 
   for (int i = 0; i < n_partB; i++) {
-    free (fourthRecvB[i]);
-    free (fourthRecvStrideB[i]);
+   PDM_free(fourthRecvB[i]);
+   PDM_free(fourthRecvStrideB[i]);
   }
-  free (fourthRecvB);
-  free (fourthRecvStrideB);
+ PDM_free(fourthRecvB);
+ PDM_free(fourthRecvStrideB);
 
-  free (nUnChangedFacePartB);
-  free (nSubFacePartB);
-  free (s_olface_vtxB);
+ PDM_free(nUnChangedFacePartB);
+ PDM_free(nSubFacePartB);
+ PDM_free(s_olface_vtxB);
 
   PDM_MPI_Barrier (ol->comm);
   PDM_timer_hang_on(ol->timer);
@@ -5153,14 +5153,14 @@ _compute_overlay_planes
   }
 
   for (int i = 0; i < n_partB; i++) {
-    free (face_ln_to_gnBSorted[i]);
-    free (face_ln_to_gnBOrder[i]);
-    free (faceToLinked[i]);
+   PDM_free(face_ln_to_gnBSorted[i]);
+   PDM_free(face_ln_to_gnBOrder[i]);
+   PDM_free(faceToLinked[i]);
   }
 
-  free (face_ln_to_gnBSorted);
-  free (face_ln_to_gnBOrder);
-  free (faceToLinked);
+ PDM_free(face_ln_to_gnBSorted);
+ PDM_free(face_ln_to_gnBOrder);
+ PDM_free(faceToLinked);
 
   for (int i = 0; i < lComm; i++) {
     sendN[i]   = sendN[i]/3;
@@ -5187,13 +5187,13 @@ _compute_overlay_planes
     }
   }
 
-  free (sendN);
-  free (sendIdx);
-  free (sendBuff);
+ PDM_free(sendN);
+ PDM_free(sendIdx);
+ PDM_free(sendBuff);
 
-  free (recvN);
-  free (recvIdx);
-  free (recvBuff);
+ PDM_free(recvN);
+ PDM_free(recvIdx);
+ PDM_free(recvBuff);
 
   PDM_MPI_Barrier (ol->comm);
   PDM_timer_hang_on(ol->timer);
@@ -5254,7 +5254,7 @@ _compute_overlay_planes
       tmpLinkedFaces[4*j + 3] = olp->linkedFaces[4*newId + 3];
     }
 
-    free (olp->linkedFaces);
+   PDM_free(olp->linkedFaces);
     olp->linkedFaces = tmpLinkedFaces;
 
     if (1 == 0) {
@@ -5267,8 +5267,8 @@ _compute_overlay_planes
                 olp->linkedFaces[4*j + 3]);
       }
     }
-    free (sortGraph);
-    free (orderGraph);
+   PDM_free(sortGraph);
+   PDM_free(orderGraph);
 
   }
 
@@ -5317,7 +5317,7 @@ _compute_overlay_planes
 
     }
 
-    free (olp->linkedFaces);
+   PDM_free(olp->linkedFaces);
     olp->linkedFaces = tmpLinkedFaces;
 
     if (1 == 0) {
@@ -5332,8 +5332,8 @@ _compute_overlay_planes
     }
 
 
-    free (sortGraph);
-    free (orderGraph);
+   PDM_free(sortGraph);
+   PDM_free(orderGraph);
 
   }
 
@@ -6091,7 +6091,7 @@ PDM_ol_del
      * Update storaged array
      */
 
-    free(ol);
+   PDM_free(ol);
   }
 }
 

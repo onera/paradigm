@@ -4,6 +4,7 @@
 #include <assert.h>
 
 #include "pdm.h"
+#include "pdm_priv.h"
 #include "pdm_config.h"
 #include "pdm_mpi.h"
 #include "pdm_multipart.h"
@@ -233,10 +234,10 @@ int main
     }
 
     // free
-    free(elt_ln_to_gn);
-    free(elt_vtx_idx);
-    free(elt_vtx);
-    free(coords);
+   PDM_free(elt_ln_to_gn);
+   PDM_free(elt_vtx_idx);
+   PDM_free(elt_vtx);
+   PDM_free(coords);
     PDM_part_mesh_nodal_free(pmn);
   }
 
@@ -275,7 +276,7 @@ int main
     //                                     &edge_vtx,
     //                                     PDM_OWNERSHIP_USER);
 
-    // if (edge_vtx_idx != NULL) free (edge_vtx_idx);
+    // if (edge_vtx_idx != NULL)PDM_free(edge_vtx_idx);
 
     PDM_g_num_t *face_ln_to_gn = NULL;
     int n_face = PDM_multipart_part_ln_to_gn_get(mpart,
@@ -645,37 +646,37 @@ int main
                     NULL); // vtx_field_values
 
     // free fusion
-    free(total_cell_color);
-    free(total_cell_ln_to_gn);
-    free(total_cell_face_idx);
-    free(total_cell_face);
-    free(total_face_ln_to_gn);
-    // free(total_face_edge_idx);
-    // free(total_face_edge);
-    // free(total_edge_ln_to_gn);
-    // free(total_edge_vtx);
-    free(total_vtx_ln_to_gn);
-    free(total_coords);
-    free(total_face_vtx_idx);
-    free(total_face_vtx);
+   PDM_free(total_cell_color);
+   PDM_free(total_cell_ln_to_gn);
+   PDM_free(total_cell_face_idx);
+   PDM_free(total_cell_face);
+   PDM_free(total_face_ln_to_gn);
+    //PDM_free(total_face_edge_idx);
+    //PDM_free(total_face_edge);
+    //PDM_free(total_edge_ln_to_gn);
+    //PDM_free(total_edge_vtx);
+   PDM_free(total_vtx_ln_to_gn);
+   PDM_free(total_coords);
+   PDM_free(total_face_vtx_idx);
+   PDM_free(total_face_vtx);
 
     // step 5 : free
     PDM_part_extension_free(part_ext);
 
     // free
-    free(vtx_ln_to_gn);
-    free(coords);
-    // free(edge_ln_to_gn);
-    // free(edge_vtx_idx);
-    // free(edge_vtx);
-    free(face_ln_to_gn);
-    // free(face_edge_idx);
-    // free(face_edge);
-    free(face_vtx_idx);
-    free(face_vtx);
-    free(cell_ln_to_gn);
-    free(cell_face_idx);
-    free(cell_face);
+   PDM_free(vtx_ln_to_gn);
+   PDM_free(coords);
+    //PDM_free(edge_ln_to_gn);
+    //PDM_free(edge_vtx_idx);
+    //PDM_free(edge_vtx);
+   PDM_free(face_ln_to_gn);
+    //PDM_free(face_edge_idx);
+    //PDM_free(face_edge);
+   PDM_free(face_vtx_idx);
+   PDM_free(face_vtx);
+   PDM_free(cell_ln_to_gn);
+   PDM_free(cell_face_idx);
+   PDM_free(cell_face);
   }
 
   // free

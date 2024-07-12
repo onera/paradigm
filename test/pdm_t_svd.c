@@ -222,10 +222,10 @@ int main
     printf("\n");
   }
 
-  free(a);
-  free(b);
-  free(x);
-  free(_a);
+ PDM_free(a);
+ PDM_free(b);
+ PDM_free(x);
+ PDM_free(_a);
 
   PDM_MPI_Finalize();
 

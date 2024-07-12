@@ -704,22 +704,22 @@ PDM_reader_gamma_dmesh_nodal
   //               (void **) &dhexa_group);
 
 
-  if (gvtx_coord   != NULL) free(gvtx_coord);
-  if (gvtx_tag     != NULL) free(gvtx_tag  );
-  if (gedge_vtx    != NULL) free(gedge_vtx);
-  if (gedge_group  != NULL) free(gedge_group);
-  if (gtria_vtx    != NULL) free(gtria_vtx);
-  if (gtria_group  != NULL) free(gtria_group);
-  if (gquad_vtx    != NULL) free(gquad_vtx);
-  if (gquad_group  != NULL) free(gquad_group);
-  if (gtetra_vtx   != NULL) free(gtetra_vtx);
-  if (gtetra_group != NULL) free(gtetra_group);
-  if (gpyra_vtx    != NULL) free(gpyra_vtx);
-  if (gpyra_group  != NULL) free(gpyra_group);
-  if (gprism_vtx   != NULL) free(gprism_vtx);
-  if (gprism_group != NULL) free(gprism_group);
-  if (ghexa_vtx    != NULL) free(ghexa_vtx);
-  if (ghexa_group  != NULL) free(ghexa_group);
+  if (gvtx_coord   != NULL)PDM_free(gvtx_coord);
+  if (gvtx_tag     != NULL)PDM_free(gvtx_tag  );
+  if (gedge_vtx    != NULL)PDM_free(gedge_vtx);
+  if (gedge_group  != NULL)PDM_free(gedge_group);
+  if (gtria_vtx    != NULL)PDM_free(gtria_vtx);
+  if (gtria_group  != NULL)PDM_free(gtria_group);
+  if (gquad_vtx    != NULL)PDM_free(gquad_vtx);
+  if (gquad_group  != NULL)PDM_free(gquad_group);
+  if (gtetra_vtx   != NULL)PDM_free(gtetra_vtx);
+  if (gtetra_group != NULL)PDM_free(gtetra_group);
+  if (gpyra_vtx    != NULL)PDM_free(gpyra_vtx);
+  if (gpyra_group  != NULL)PDM_free(gpyra_group);
+  if (gprism_vtx   != NULL)PDM_free(gprism_vtx);
+  if (gprism_group != NULL)PDM_free(gprism_group);
+  if (ghexa_vtx    != NULL)PDM_free(ghexa_vtx);
+  if (ghexa_group  != NULL)PDM_free(ghexa_group);
 
   PDM_block_to_block_free(btb_vtx);
   PDM_block_to_block_free(btb_edge);
@@ -730,14 +730,14 @@ PDM_reader_gamma_dmesh_nodal
   PDM_block_to_block_free(btb_prism);
   PDM_block_to_block_free(btb_hexa);
 
-  free(init_distrib_vtx  );
-  free(init_distrib_edge );
-  free(init_distrib_tria );
-  free(init_distrib_quad );
-  free(init_distrib_tetra);
-  free(init_distrib_pyra );
-  free(init_distrib_prism);
-  free(init_distrib_hexa );
+ PDM_free(init_distrib_vtx  );
+ PDM_free(init_distrib_edge );
+ PDM_free(init_distrib_tria );
+ PDM_free(init_distrib_quad );
+ PDM_free(init_distrib_tetra);
+ PDM_free(init_distrib_pyra );
+ PDM_free(init_distrib_prism);
+ PDM_free(init_distrib_hexa );
 
   if (i_rank == 0) {
     if (0) {
@@ -787,7 +787,7 @@ PDM_reader_gamma_dmesh_nodal
                                           dedge_vtx,
                                           PDM_OWNERSHIP_KEEP);
   } else {
-    free(dedge_vtx);
+   PDM_free(dedge_vtx);
   }
 
   // -------- Surfacic section
@@ -803,7 +803,7 @@ PDM_reader_gamma_dmesh_nodal
                                           dtria_vtx,
                                           PDM_OWNERSHIP_KEEP);
   } else {
-    free(dtria_vtx);
+   PDM_free(dtria_vtx);
   }
 
   // ------------ Quad surfacic section
@@ -820,7 +820,7 @@ PDM_reader_gamma_dmesh_nodal
       PDM_OWNERSHIP_KEEP
     );
   } else {
-    free(dquad_vtx);
+   PDM_free(dquad_vtx);
   }
 
   if (mesh_dimension == 3) {
@@ -835,7 +835,7 @@ PDM_reader_gamma_dmesh_nodal
                                             dtetra_vtx,
                                             PDM_OWNERSHIP_KEEP);
     } else {
-      free(dtetra_vtx);
+     PDM_free(dtetra_vtx);
     }
 
     if (gn_pyra > 0) {
@@ -847,7 +847,7 @@ PDM_reader_gamma_dmesh_nodal
                                             dpyra_vtx,
                                             PDM_OWNERSHIP_KEEP);
     } else {
-      free(dpyra_vtx);
+     PDM_free(dpyra_vtx);
     }
 
     if (gn_prism > 0) {
@@ -859,7 +859,7 @@ PDM_reader_gamma_dmesh_nodal
                                             dprism_vtx,
                                             PDM_OWNERSHIP_KEEP);
     } else {
-      free(dprism_vtx);
+     PDM_free(dprism_vtx);
     }
 
     if (gn_hexa > 0) {
@@ -871,7 +871,7 @@ PDM_reader_gamma_dmesh_nodal
                                             dhexa_vtx,
                                             PDM_OWNERSHIP_KEEP);
     } else {
-      free(dhexa_vtx);
+     PDM_free(dhexa_vtx);
     }
   }
 
@@ -903,8 +903,8 @@ PDM_reader_gamma_dmesh_nodal
                               &dgroup_edge,
                               dmn->comm);
   }
-  free(dedge_group_idx);
-  free(dedge_group);
+ PDM_free(dedge_group_idx);
+ PDM_free(dedge_group);
 
   // PDM_log_trace_array_int(dgroup_edge_idx, n_group_edge+1, "dgroup_edge_idx : ");
 
@@ -978,8 +978,8 @@ PDM_reader_gamma_dmesh_nodal
 
     counters[grp]++;
   }
-  free(dtria_group);
-  free(dquad_group);
+ PDM_free(dtria_group);
+ PDM_free(dquad_group);
 
   // -------- Set groups
   PDM_DMesh_nodal_elmts_group_set(
@@ -988,10 +988,10 @@ PDM_reader_gamma_dmesh_nodal
     PDM_OWNERSHIP_KEEP
   );
 
-  free(distrib_group);
-  free(tria_ln_to_gn);
-  free(quad_ln_to_gn);
-  free(counters);
+ PDM_free(distrib_group);
+ PDM_free(tria_ln_to_gn);
+ PDM_free(quad_ln_to_gn);
+ PDM_free(counters);
 
   /* Tetra groups */
   int _n_group_tetra = 0;
@@ -1014,8 +1014,8 @@ PDM_reader_gamma_dmesh_nodal
                               &dgroup_tetra_idx,
                               &dgroup_tetra,
                               dmn->comm);
-  free(dtetra_group_idx);
-  free(dtetra_group);
+ PDM_free(dtetra_group_idx);
+ PDM_free(dtetra_group);
 
   // PDM_log_trace_array_int(dgroup_face_idx, n_group_face+1, "dgroup_face_idx : ");
 
@@ -1025,14 +1025,14 @@ PDM_reader_gamma_dmesh_nodal
                                   dgroup_tetra,
                                   PDM_OWNERSHIP_KEEP);
 
-  free(distrib_vtx  );
-  free(distrib_edge );
-  free(distrib_tria );
-  free(distrib_quad );
-  free(distrib_tetra);
-  free(distrib_pyra );
-  free(distrib_prism);
-  free(distrib_hexa );
+ PDM_free(distrib_vtx  );
+ PDM_free(distrib_edge );
+ PDM_free(distrib_tria );
+ PDM_free(distrib_quad );
+ PDM_free(distrib_tetra);
+ PDM_free(distrib_pyra );
+ PDM_free(distrib_prism);
+ PDM_free(distrib_hexa );
 
   return dmn;
 }

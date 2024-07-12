@@ -351,8 +351,8 @@ int main(int argc, char *argv[])
                  (const PDM_g_num_t **) &pextract_vtx_ln_to_gn,
                                         &tmp_pextract_vtx_coord);
   double* pextract_vtx_coord = tmp_pextract_vtx_coord[0];
-  free(tmp_pextract_vtx_coord);
-  free(extract_vtx_distribution);
+ PDM_free(tmp_pextract_vtx_coord);
+ PDM_free(extract_vtx_distribution);
 
   if (post) {
     char filename[999];
@@ -368,18 +368,18 @@ int main(int argc, char *argv[])
                            NULL);
   }
 
-  free(pextract_vtx_ln_to_gn);
-  free(pextract_face_vtx_idx);
-  free(pextract_face_vtx    );
-  free(pextract_vtx_coord   );
+ PDM_free(pextract_vtx_ln_to_gn);
+ PDM_free(pextract_face_vtx_idx);
+ PDM_free(pextract_face_vtx    );
+ PDM_free(pextract_vtx_coord   );
 
-  free(distrib_cell);
-  free(selected_cell_gnum);
+ PDM_free(distrib_cell);
+ PDM_free(selected_cell_gnum);
 
-  free(distrib_face_extract);
-  free(extract_face_ln_to_gn);
+ PDM_free(distrib_face_extract);
+ PDM_free(extract_face_ln_to_gn);
 
-  free(dextract_face_vtx    );
+ PDM_free(dextract_face_vtx    );
 
   PDM_dmesh_extract_free(dme);
 

@@ -499,15 +499,15 @@ int main(int argc, char *argv[])
 
 
   for (int i_part = 0; i_part < n_part; i_part++) {
-    free (part_vtx_ln_to_gn[i_part]);
-    free (part_local_field[i_part]);
-    free (part_reduced_field[i_part]);
+   PDM_free(part_vtx_ln_to_gn[i_part]);
+   PDM_free(part_local_field[i_part]);
+   PDM_free(part_reduced_field[i_part]);
   }
-  free (part_n_vtx);
-  free (part_vtx_ln_to_gn);
-  free (part_local_field);
-  free (part_reduced_field);
-  free (dcell_part);
+ PDM_free(part_n_vtx);
+ PDM_free(part_vtx_ln_to_gn);
+ PDM_free(part_local_field);
+ PDM_free(part_reduced_field);
+ PDM_free(dcell_part);
 
   PDM_part_free (ppart);
 

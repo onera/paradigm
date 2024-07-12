@@ -628,9 +628,9 @@ const int  *face_vtx,
       _face_edge[idx_edge] = edge_id;
     }
   }
-  free(key_edge_n);
-  free(key_edge_idx);
-  free(key_edge);
+ PDM_free(key_edge_n);
+ PDM_free(key_edge_idx);
+ PDM_free(key_edge);
 
   PDM_realloc(*edge_vtx ,*edge_vtx , 2  * (*n_edge),int);
 }
@@ -724,9 +724,9 @@ const int  *cell_vtx,
       _cell_face[idx_face] = face_id;
     }
   }
-  free(key_face_n);
-  free(key_face_idx);
-  free(key_face);
+ PDM_free(key_face_n);
+ PDM_free(key_face_idx);
+ PDM_free(key_face);
 
   PDM_realloc(*face_vtx  ,*face_vtx  , 3  * (*n_face) ,int);
   *face_edge = malloc(sizeof(int) * (*n_face) * 3);
@@ -832,9 +832,9 @@ const int  *cell_vtx,
       _cell_edge[idx_edge] = edge_id;
     }
   }
-  free(key_edge_n);
-  free(key_edge_idx);
-  free(key_edge);
+ PDM_free(key_edge_n);
+ PDM_free(key_edge_idx);
+ PDM_free(key_edge);
 
 }
 
@@ -1182,12 +1182,12 @@ _gen_from_base_mesh
     }
 
   } // End of loop on vertices
-  free(tria_j_idx);
+ PDM_free(tria_j_idx);
   for (int k = 0; k < n-2; k++) {
-    free(tetra_j_idx[k]);
+   PDM_free(tetra_j_idx[k]);
   }
-  free(tetra_j_idx);
-  free(tetra_k_idx);
+ PDM_free(tetra_j_idx);
+ PDM_free(tetra_k_idx);
 
 
 
@@ -1442,12 +1442,12 @@ _gen_from_base_mesh
 
   } // End of loop on cells
 
-  free(base_cell_face_perm);
+ PDM_free(base_cell_face_perm);
 
 
-  free(hextet_k_idx[0]);
-  free(hextet_k_idx[1]);
-  free(hextet_k_idx[5]);
+ PDM_free(hextet_k_idx[0]);
+ PDM_free(hextet_k_idx[1]);
+ PDM_free(hextet_k_idx[5]);
 
 
 
@@ -1572,8 +1572,8 @@ _gen_from_base_mesh
   } // End of loop on faces
 
 
-  free(base_bdr_face);
-  free(base_face_tag);
+ PDM_free(base_bdr_face);
+ PDM_free(base_face_tag);
 
 }
 
@@ -1738,8 +1738,8 @@ _extrude_base_surface_mesh
     }
 
   }
-  free(tria_j_idx);
-  free(base_vtx_normal);
+ PDM_free(tria_j_idx);
+ PDM_free(base_vtx_normal);
 
 
   /*
@@ -1849,10 +1849,10 @@ _extrude_base_surface_mesh
       base_bdr_edge[base_n_bdr_edge++] = PDM_SIGN(base_edge_tag[iedge]) * (iedge+1);
     }
   }
-  free(base_edge_tag);
+ PDM_free(base_edge_tag);
 
   //PDM_realloc(base_bdr_edge ,base_bdr_edge , base_n_bdr_edge,int);
-  free(base_bdr_edge);
+ PDM_free(base_bdr_edge);
 
   assert(base_n_bdr_edge == 0);
 
@@ -1941,7 +1941,7 @@ _extrude_base_surface_mesh
     (*dgroup_face)[dn_group_face+i] = gn_cell_layer + distrib_group[i_rank] + i + 1;
   }
 
-  free(distrib_group);
+ PDM_free(distrib_group);
 }
 
 
@@ -2256,7 +2256,7 @@ PDM_sphere_vol_gen_nodal
     dgroup_elt[i] = distrib_face[i_rank] + i + 1;
   }
 
-  free(distrib_face);
+ PDM_free(distrib_face);
 
   PDM_DMesh_nodal_elmts_group_set((*dmn)->surfacic,
                                   n_group,
@@ -2522,15 +2522,15 @@ PDM_sphere_vol_icosphere_gen
     (*dvtx_coord)[3*i+1] = y_center + scale*(*dvtx_coord)[3*i+1];
     (*dvtx_coord)[3*i+2] = z_center + scale*(*dvtx_coord)[3*i+2];
   }
-  free(ibase_cell);
-  free(w);
+ PDM_free(ibase_cell);
+ PDM_free(w);
 
 
-  free(base_edge_vtx);
-  free(base_face_vtx);
-  free(base_face_edge);
-  free(base_cell_face);
-  free(base_cell_edge);
+ PDM_free(base_edge_vtx);
+ PDM_free(base_face_vtx);
+ PDM_free(base_face_edge);
+ PDM_free(base_cell_face);
+ PDM_free(base_cell_edge);
 }
 
 
@@ -2596,9 +2596,9 @@ PDM_sphere_vol_icosphere_gen_nodal
                           NULL,
                           PDM_MESH_NODAL_TETRA4);
 
-  free(distrib_vtx);
-  free(distrib_face);
-  free(distrib_cell);
+ PDM_free(distrib_vtx);
+ PDM_free(distrib_face);
+ PDM_free(distrib_cell);
 }
 
 
@@ -2746,8 +2746,8 @@ PDM_sphere_vol_hollow_gen_nodal
                              &distrib_vtx,
                              &distrib_face,
                              &distrib_cell);
-  free(base_edge_vtx);
-  free(base_face_edge);
+ PDM_free(base_edge_vtx);
+ PDM_free(base_face_edge);
 
 
 
@@ -2812,9 +2812,9 @@ PDM_GCC_SUPPRESS_WARNING_POP
                           dgroup_face,
                           PDM_MESH_NODAL_PRISM6);
 
-  free(distrib_vtx);
-  free(distrib_face);
-  free(distrib_cell);
+ PDM_free(distrib_vtx);
+ PDM_free(distrib_face);
+ PDM_free(distrib_cell);
 }
 
 

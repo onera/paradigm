@@ -320,7 +320,7 @@ _read_distributed_stl
                            char_length);
 
   PDM_gnum_compute(gen_gnum);
-  free(char_length);
+ PDM_free(char_length);
 
   PDM_g_num_t* _dface_vtx = PDM_gnum_get(gen_gnum, 0);
   PDM_gnum_free(gen_gnum);
@@ -357,7 +357,7 @@ _read_distributed_stl
                          NULL,
                 (void**) &_dvtx_coord);
 
-  free(dface_vtx_coord);
+ PDM_free(dface_vtx_coord);
 
   if (debug) {
     char outfilename[999];
@@ -384,25 +384,25 @@ _read_distributed_stl
   *distrib_face = _distrib_face;
 
 
-  // free(_dvtx_coord);
-  // free(_dface_vtx);
+  //PDM_free(_dvtx_coord);
+  //PDM_free(_dface_vtx);
 
-  free(tmp_dface_vtx_idx);
-  // free(tmp_dface_vtx);
+ PDM_free(tmp_dface_vtx_idx);
+  //PDM_free(tmp_dface_vtx);
 
-  free(tmp_dface_vtx_n  );
-  // free(tmp_dvtx_coord  );
+ PDM_free(tmp_dface_vtx_n  );
+  //PDM_free(tmp_dvtx_coord  );
 
-  free(init_distrib_vtx );
-  free(init_distrib_face);
+ PDM_free(init_distrib_vtx );
+ PDM_free(init_distrib_face);
 
   if(i_rank == 0) {
-    free(face_normal  );
-    free(vtx_coord    );
-    free(face_vtx_idx );
-    free(face_vtx     );
-    free(face_vtx_n   );
-    free(face_vtx_coord);
+   PDM_free(face_normal  );
+   PDM_free(vtx_coord    );
+   PDM_free(face_vtx_idx );
+   PDM_free(face_vtx     );
+   PDM_free(face_vtx_n   );
+   PDM_free(face_vtx_coord);
   }
 }
 
@@ -502,7 +502,7 @@ PDM_reader_stl_dmesh_nodal
   /* Split mesh */
   /* !!! We assume we only have triangles */
   if (dface_vtx_idx != NULL){
-    free(dface_vtx_idx);
+   PDM_free(dface_vtx_idx);
   }
 
   PDM_dmesh_nodal_t *dmn = _create_dmesh_nodal(comm,
@@ -510,8 +510,8 @@ PDM_reader_stl_dmesh_nodal
                                                distrib_face,
                                                dvtx_coord,
                                                dface_vtx);
-  free(distrib_vtx);
-  free(distrib_face);
+ PDM_free(distrib_vtx);
+ PDM_free(distrib_face);
 
   return dmn;
 }

@@ -88,27 +88,27 @@ _vtx_free
 {
   if (vtx != NULL) {
     if (vtx->distrib != NULL) {
-      free (vtx->distrib);
+     PDM_free(vtx->distrib);
       vtx->distrib = NULL;
     }
 
     if(vtx->owner == PDM_OWNERSHIP_KEEP) {
       if(vtx->_coords != NULL) {
-        free(vtx->_coords);
+       PDM_free(vtx->_coords);
         vtx->_coords = NULL;
       }
 
       if(vtx->dvtx_tag != NULL) {
-        free(vtx->dvtx_tag);
+       PDM_free(vtx->dvtx_tag);
         vtx->dvtx_tag = NULL;
       }
 
       if(vtx->dvtx_parent_g_num != NULL) {
-        free(vtx->dvtx_parent_g_num);
+       PDM_free(vtx->dvtx_parent_g_num);
         vtx->dvtx_parent_g_num = NULL;
       }
     }
-    free (vtx);
+   PDM_free(vtx);
   }
   return NULL;
 }
@@ -259,7 +259,7 @@ PDM_DMesh_nodal_free
       PDM_DMesh_nodal_elmts_free(dmesh_nodal->corner);
     }
 
-    free(dmesh_nodal);
+   PDM_free(dmesh_nodal);
   }
 }
 
@@ -1207,8 +1207,8 @@ int PDM_concat_elt_sections
   // }
 
   // // 3. free
-  // free(n_elt_vtx_by_section);
-  // free(n_vtx_by_elt_by_section);
+  //PDM_free(n_elt_vtx_by_section);
+  //PDM_free(n_vtx_by_elt_by_section);
 
   return n_section;
 }
@@ -1301,8 +1301,8 @@ int PDM_concat_cell_sections
   // }
 
   // // 3. free
-  // free(n_cell_vtx_by_section);
-  // free(n_vtx_by_cell_by_section);
+  //PDM_free(n_cell_vtx_by_section);
+  //PDM_free(n_vtx_by_cell_by_section);
 
   return n_cell_section;
 }
@@ -1443,7 +1443,7 @@ PDM_dmesh_nodal_transfer_to_new_dmesh_nodal
                              NULL,
                   (void ***) &tmp_delmt_vtx_new);
     PDM_g_num_t *delmt_vtx_new = tmp_delmt_vtx_new[0];
-    free(tmp_delmt_vtx_new);
+   PDM_free(tmp_delmt_vtx_new);
 
     int id_section_post = PDM_DMesh_nodal_section_add(dmn_out,
                                                       geom_kind,
@@ -1514,10 +1514,10 @@ PDM_dmesh_nodal_transfer_to_new_dmesh_nodal_gen
                              &tmp_delmt_vtx_new_n,
                   (void ***) &tmp_delmt_vtx_new);
     PDM_g_num_t *delmt_vtx_new = tmp_delmt_vtx_new[0];
-    free(tmp_delmt_vtx_new);
-    free(tmp_delmt_vtx_new_n[0]);
-    free(tmp_delmt_vtx_new_n);
-    free(dvtx_old_to_n);
+   PDM_free(tmp_delmt_vtx_new);
+   PDM_free(tmp_delmt_vtx_new_n[0]);
+   PDM_free(tmp_delmt_vtx_new_n);
+   PDM_free(dvtx_old_to_n);
 
     int id_section_post = PDM_DMesh_nodal_section_add(dmn_out,
                                                       geom_kind,
@@ -1667,8 +1667,8 @@ PDM_dmesh_nodal_dump_vtk
                                               &tmp_elt_group);
       int *pelt_group_idx = tmp_elt_group_idx[0];
       int *pelt_group     = tmp_elt_group    [0];
-      free (tmp_elt_group_idx);
-      free (tmp_elt_group);
+     PDM_free(tmp_elt_group_idx);
+     PDM_free(tmp_elt_group);
 
       n_field = 1;
       field = malloc (sizeof(double *) * n_field);
@@ -1677,8 +1677,8 @@ PDM_dmesh_nodal_dump_vtk
         assert (pelt_group_idx[i+1] == pelt_group_idx[i] + 1);
         field[0][i] = (double) pelt_group[i];
       }
-      free (pelt_group);
-      free (pelt_group_idx);
+     PDM_free(pelt_group);
+     PDM_free(pelt_group_idx);
     }
 
     /*
@@ -1711,30 +1711,30 @@ PDM_dmesh_nodal_dump_vtk
                   (const char   **) &field_name,
                   (const double **) field);
     }
-    free(tmp_pvtx_coord);
-    free(pvtx_ln_to_gn);
-    free(pcell_vtx_idx);
-    free(pcell_vtx);
+   PDM_free(tmp_pvtx_coord);
+   PDM_free(pvtx_ln_to_gn);
+   PDM_free(pcell_vtx_idx);
+   PDM_free(pcell_vtx);
 
     if (t_elt != PDM_MESH_NODAL_POLY_2D) {
-      free(dconnec_idx);
+     PDM_free(dconnec_idx);
     }
-    free(delmt_ln_to_gn);
+   PDM_free(delmt_ln_to_gn);
 
-    free(pvtx_coord_out);
+   PDM_free(pvtx_coord_out);
 
     shift += delmt_distribution[n_rank];
 
     if (dmne != NULL) {
-      free (field[0]);
-      free (field);
+     PDM_free(field[0]);
+     PDM_free(field);
     }
   }
 
   if (dmne != NULL) {
-    free (delt_group_idx);
-    free (delt_group);
-    free (distrib_elt);
+   PDM_free(delt_group_idx);
+   PDM_free(delt_group);
+   PDM_free(distrib_elt);
   }
 }
 
@@ -1970,7 +1970,7 @@ PDM_dmesh_nodal_find_topological_ridge
                          NULL,
              (void ***) &dedge_face_group_tmp);
   int *dedge_face_group = dedge_face_group_tmp[0];
-  free(dedge_face_group_tmp);
+ PDM_free(dedge_face_group_tmp);
   PDM_block_to_part_free(btp);
 
   // PDM_log_trace_array_int(dedge_face_group, dn_edge_twice, "dedge_face_group ::");
@@ -2152,7 +2152,7 @@ PDM_dmesh_nodal_find_topological_ridge
                    (const PDM_g_num_t **) &pvtx_ln_to_gn,
                                           &tmp_pvtx_coord);
     double *pvtx_coord = tmp_pvtx_coord[0];
-    free(tmp_pvtx_coord);
+   PDM_free(tmp_pvtx_coord);
 
     const char *field_name[] = {0 };
     const int  *field[1] = {NULL};
@@ -2173,32 +2173,32 @@ PDM_dmesh_nodal_find_topological_ridge
 
 
 
-    free(pvtx_coord);
-    free(pridge_vtx);
-    free(pridge_vtx_idx);
-    free(pvtx_ln_to_gn);
-    free(pridge_ln_to_gn);
-    free(dridge_vtx_idx);
+   PDM_free(pvtx_coord);
+   PDM_free(pridge_vtx);
+   PDM_free(pridge_vtx_idx);
+   PDM_free(pvtx_ln_to_gn);
+   PDM_free(pridge_ln_to_gn);
+   PDM_free(dridge_vtx_idx);
 
   }
 
   // Hold by dmesh_nodal
-  // free(dgroup_edge_idx);
-  // free(dgroup_edge);
-  // free(dridge_vtx);
+  //PDM_free(dgroup_edge_idx);
+  //PDM_free(dgroup_edge);
+  //PDM_free(dridge_vtx);
 
-  free(distrib_ridge);
-  free(dgroup_edge_n);
+ PDM_free(distrib_ridge);
+ PDM_free(dgroup_edge_n);
 
-  free(edge_doublet);
-  free(edge_group  );
-  free(pridge_edge );
+ PDM_free(edge_doublet);
+ PDM_free(edge_group  );
+ PDM_free(pridge_edge );
 
   PDM_gnum_free(gen_gnum);
 
-  free(pface_group);
-  free(dface_group);
-  free(dedge_face_group);
+ PDM_free(pface_group);
+ PDM_free(dface_group);
+ PDM_free(dedge_face_group);
 
   PDM_dmesh_nodal_to_dmesh_free(dmn_to_dm);
 
@@ -2234,7 +2234,7 @@ PDM_dmesh_nodal_revert_orientation
         dconnec[i*n_vtx_per_elmt+k] = tmp[n_vtx_per_elmt-k-1];
       }
     }
-    free(tmp);
+   PDM_free(tmp);
   }
 }
 

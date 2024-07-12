@@ -274,7 +274,7 @@ _vertex_poly_t * vtxp
    vtxp->previous->next = vtxp->next;
    vtxp->next->previous = vtxp->previous;
  }
- free (vtxp);
+PDM_free(vtxp);
  return NULL;
 }
 
@@ -469,8 +469,8 @@ double nB[3]
     vtx_currA = vtx_currA->next;
   }
 
-  free (boundsA);
-  free (boundsB);
+ PDM_free(boundsA);
+ PDM_free(boundsB);
 
 }
 
@@ -1249,7 +1249,7 @@ double                **polyClippCoordsB
                                           &coordsB,
                                           &uB);
 
-        free (_eir);
+       PDM_free(_eir);
 
         /*
          * Add new intersections vertex or switch vertex to intersection
@@ -1401,8 +1401,8 @@ double                **polyClippCoordsB
       }
     }
   }
-  free (vtxA_origin);
-  free (vtxB_origin);
+ PDM_free(vtxA_origin);
+ PDM_free(vtxB_origin);
 
   /*
    * Tag Intersection points
@@ -1825,7 +1825,7 @@ double                **polyClippCoordsB
 
             } while ((inext == -1) ? false : used_vtx[inext] == 0);
 
-            free (used_vtx);
+           PDM_free(used_vtx);
           }
 
           // Verification
@@ -1851,10 +1851,10 @@ double                **polyClippCoordsB
 
       } while ((curr != first) && (curr->neighbor != first)); // On blinde le teste de sortie
 
-      free (clipped_vtx);
-      free (clipped_multi);
-      free (origin_vtx);
-      free (link_multi);
+     PDM_free(clipped_vtx);
+     PDM_free(clipped_multi);
+     PDM_free(origin_vtx);
+     PDM_free(link_multi);
 
     }
 
@@ -2093,7 +2093,7 @@ double                **polyClippCoordsB
 
       } while (curr != first_out);
 
-      free (clipped_vtx);
+     PDM_free(clipped_vtx);
 
     }
 
@@ -2218,7 +2218,7 @@ double                **polyClippCoordsB
 
       } while (curr != first_out);
 
-      free (clipped_vtx);
+     PDM_free(clipped_vtx);
     }
 
     /*
@@ -2267,27 +2267,27 @@ double                **polyClippCoordsB
   _poly_clipp_free (vtxB);;
 
   if (_faceToEdgeA != faceToEdgeA) {
-    free (_faceToEdgeA);
+   PDM_free(_faceToEdgeA);
   }
 
   if (_faceToVtxA  != faceToVtxA) {
-    free (_faceToVtxA);
+   PDM_free(_faceToVtxA);
   }
 
   if (_face_vtxCooA != face_vtxCooA) {
-    free (_face_vtxCooA);
+   PDM_free(_face_vtxCooA);
   }
 
   if (_faceToEdgeB != faceToEdgeB) {
-    free (_faceToEdgeB);
+   PDM_free(_faceToEdgeB);
   }
 
   if (_faceToVtxB != faceToVtxB) {
-    free (_faceToVtxB);
+   PDM_free(_faceToVtxB);
   }
 
   if (_face_vtxCooB != face_vtxCooB) {
-    free (_face_vtxCooB);
+   PDM_free(_face_vtxCooB);
   }
 
 }

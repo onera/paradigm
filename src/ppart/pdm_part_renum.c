@@ -214,7 +214,7 @@ const int  n_face,
   PDM_part_renum_array_face_cell (n_face,
                                   old_to_new_order,
                                   face_cell);
-  free (old_to_new_order);
+ PDM_free(old_to_new_order);
 
 }
 
@@ -245,7 +245,7 @@ int         *face_cell
     face_cell[i*2+1] = oldface_cell[new_to_old_order[i]*2+1];
   }
 
-  free(oldface_cell);
+ PDM_free(oldface_cell);
 }
 
 
@@ -278,7 +278,7 @@ int       *array
     array[i] = sign * (old_to_new_order[old_idx-1] + 1);
   }
 
-  free(old_array);
+ PDM_free(old_array);
 }
 
 /**
@@ -324,8 +324,8 @@ int         start
     entity1_entity1[i] = sign * (old_to_new_order[old_idx-start] + start);
   }
 
-  free(old_array);
-  free(old_to_new_order);
+ PDM_free(old_array);
+ PDM_free(old_to_new_order);
 }
 
 
@@ -363,7 +363,7 @@ int       *array
     }
   }
 
-  free(old_array);
+ PDM_free(old_array);
 }
 
 /**
@@ -414,8 +414,8 @@ int       *connectivities
     }
   }
 
-  free(old_connectivities);
-  free(old_connectivity_idx);
+ PDM_free(old_connectivities);
+ PDM_free(old_connectivity_idx);
 
 }
 
@@ -521,12 +521,12 @@ double  *cell_center
       }
 
       /* Free */
-      free(cell_weight);
+     PDM_free(cell_weight);
 
     }
 
     /* Free */
-    free (volume);
+   PDM_free(volume);
   }
   else {   /* is_poly_3d */
     double *surface_vector = (double * ) malloc( sizeof(double) * 3 * part->n_cell);
@@ -579,8 +579,8 @@ double  *cell_center
                                       NULL,
                                       &is_degenerated);
 
-    free (surface_vector);
-    free (connectivity);
+   PDM_free(surface_vector);
+   PDM_free(connectivity);
 
   }
 
@@ -723,9 +723,9 @@ _dual_graph_firstrank
 
   /* Free temporary arrays*/
 
-  free(cell_cell_n);
-  free(cell_cell);
-  free(cell_cell_idx);
+ PDM_free(cell_cell_n);
+ PDM_free(cell_cell);
+ PDM_free(cell_cell_idx);
 
   //Remove duplicate cells of the dual graph
   //We use the following scheme:
@@ -834,7 +834,7 @@ _renum_cells_hilbert
 
     /** CHECK H_CODES **/
 
-    free(cell_center);
+   PDM_free(cell_center);
 
     int *new_to_old_order = (int *) malloc (part->n_cell * sizeof(int));
     for(int i = 0; i < part->n_cell; ++i) {
@@ -845,8 +845,8 @@ _renum_cells_hilbert
 
     PDM_part_reorder_cell (part, new_to_old_order);
 
-    free (hilbert_codes);
-    free (new_to_old_order);
+   PDM_free(hilbert_codes);
+   PDM_free(new_to_old_order);
 
   }
 }
@@ -909,9 +909,9 @@ _renum_cells_cuthill
     }
 
     /** Free memory **/
-    free(order);
-    free(dual_graph_idx);
-    free(dual_graph);
+   PDM_free(order);
+   PDM_free(dual_graph_idx);
+   PDM_free(dual_graph);
   }
 }
 
@@ -950,7 +950,7 @@ _renum_cells_random
       }
     }
 
-    free (order);
+   PDM_free(order);
   }
 }
 
@@ -990,7 +990,7 @@ _renum_faces_random
       }
     }
 
-    free (order);
+   PDM_free(order);
   }
 }
 
@@ -1049,8 +1049,8 @@ _renum_faces_lexicographic
     }
 
     /** Free memory **/
-    free (order);
-    free (face_cell_tmp);
+   PDM_free(order);
+   PDM_free(face_cell_tmp);
   }
 }
 
@@ -1100,8 +1100,8 @@ _renum_vtx_sort_int_ext
       order[idx] = i;
       type_n[priority]++;
     }
-    free(type_n);
-    free(type_idx);
+   PDM_free(type_n);
+   PDM_free(type_idx);
 
     /*
      * Verbose
@@ -1124,7 +1124,7 @@ _renum_vtx_sort_int_ext
       }
     }
 
-    free (order   );
+   PDM_free(order   );
   }
 }
 
@@ -1150,12 +1150,12 @@ PDM_part_renum_method_purge
     if (renum_methods[i] != NULL) {
       for (int j = 0; j < n_renum_methods[i]; j++) {
         if (renum_methods[i][j] != NULL) {
-          free(renum_methods[i][j]->name);
-          free(renum_methods[i][j]);
+         PDM_free(renum_methods[i][j]->name);
+         PDM_free(renum_methods[i][j]);
           renum_methods[i][j] = NULL;
         }
       }
-      free(renum_methods[i]);
+     PDM_free(renum_methods[i]);
       renum_methods[i] = NULL;
     }
   }
@@ -1899,7 +1899,7 @@ int     *new_to_old_order
   }
 
   /* Free */
-  free (old_to_new_order);
+ PDM_free(old_to_new_order);
 
 }
 
@@ -1978,7 +1978,7 @@ int     *new_to_old_order
                      part->edge_ln_to_gn); // OK
   }
 
-  free (old_to_new_order);
+ PDM_free(old_to_new_order);
 }
 
 /**
@@ -2072,7 +2072,7 @@ int     *new_to_old_order
                    part->vtx_ln_to_gn); // OK
 
   /* Free */
-  free (old_to_new_order);
+ PDM_free(old_to_new_order);
 
 }
 

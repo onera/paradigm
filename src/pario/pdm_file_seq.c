@@ -17,6 +17,8 @@
 #include "pdm_file_seq.h"
 #include "pdm_printf.h"
 #include "pdm_error.h"
+#include "pdm.h"
+#include "pdm_priv.h"
 
 /*----------------------------------------------------------------------------*/
 
@@ -224,7 +226,7 @@ long PDM_file_seq_tell(PDM_file_seq_t *fichier)
 
 void PDM_file_seq_close(PDM_file_seq_t *fichier)
 {
-  free(fichier->nom);
+ PDM_free(fichier->nom);
   fclose(fichier->fichier);
 }
 

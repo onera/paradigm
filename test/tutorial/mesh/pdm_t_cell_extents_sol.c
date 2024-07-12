@@ -417,8 +417,8 @@ int main(int argc, char *argv[])
     }
 
   } // end of loop on cells
-  free(is_visited_vtx);
-  free(visited_vtx);
+ PDM_free(is_visited_vtx);
+ PDM_free(visited_vtx);
 
 
   /* Visualize cells */
@@ -449,18 +449,18 @@ int main(int argc, char *argv[])
                               NULL);
   }
 
-  free(cell_extents);
-  free(cell_center);
+ PDM_free(cell_extents);
+ PDM_free(cell_center);
 
 
   /* Free memory */
-  free(cell_face_idx);
-  free(cell_face    );
-  free(face_edge_idx);
-  free(face_edge    );
-  free(edge_vtx     );
-  free(vtx_coord    );
-  free(cell_vtx     );
+ PDM_free(cell_face_idx);
+ PDM_free(cell_face    );
+ PDM_free(face_edge_idx);
+ PDM_free(face_edge    );
+ PDM_free(edge_vtx     );
+ PDM_free(vtx_coord    );
+ PDM_free(cell_vtx     );
 
   PDM_MPI_Finalize();
   return 0;

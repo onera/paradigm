@@ -88,9 +88,9 @@ main
 
   PDM_log_trace_array_int (recv_data, index[n_rank], "recv_data : ");
 
-  free (all_n);
-  free (index);
-  free (all_data);
+ PDM_free(all_n);
+ PDM_free(index);
+ PDM_free(all_data);
 
   /* Finalize */
   log_trace("-- End\n");
@@ -218,7 +218,7 @@ main
               i, codes[i].L, codes[i].X[0], codes[i].X[1], codes[i].X[2]);
   }
 
-  free (codes);
+ PDM_free(codes);
 
 
 
@@ -291,7 +291,7 @@ main
               nodes[i].pts_extents[3], nodes[i].pts_extents[4], nodes[i].pts_extents[5]);
   }
 
-  free (nodes);
+ PDM_free(nodes);
 
 
 
@@ -358,7 +358,7 @@ main
 
   PDM_mpi_win_shared_free(win);
 
-  if (nodes_to_copy != NULL) free (nodes_to_copy);
+  if (nodes_to_copy != NULL)PDM_free(nodes_to_copy);
 
 
 

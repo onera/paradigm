@@ -507,11 +507,11 @@ int main(int argc, char *argv[])
     n_current_cell_tag_new = 0; // pourquoi ça fonctionne mieux quand lui pas mis à 0
   } // end loop on domain
 
-  free(face_cell_idx);
-  free(face_cell);
-  free(current_cell_tag);
-  free(current_cell_tag_new);
-  free(zeros);
+ PDM_free(face_cell_idx);
+ PDM_free(face_cell);
+ PDM_free(current_cell_tag);
+ PDM_free(current_cell_tag_new);
+ PDM_free(zeros);
 
   /*
    *  Visualize 'expanded' cell tags
@@ -535,15 +535,15 @@ int main(int argc, char *argv[])
   }
 
   /* Free memory */
-  free(cell_face_idx);
-  free(cell_face    );
-  free(face_edge_idx);
-  free(face_edge    );
-  free(edge_vtx     );
-  free(vtx_coord    );
-  free(cell_vtx     );
-  free(vtx_field    );
-  free(cell_tag     );
+ PDM_free(cell_face_idx);
+ PDM_free(cell_face    );
+ PDM_free(face_edge_idx);
+ PDM_free(face_edge    );
+ PDM_free(edge_vtx     );
+ PDM_free(vtx_coord    );
+ PDM_free(cell_vtx     );
+ PDM_free(vtx_field    );
+ PDM_free(cell_tag     );
 
   PDM_MPI_Finalize();
   return 0;

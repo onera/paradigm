@@ -685,17 +685,17 @@ int main(int argc, char *argv[])
       }
     }
 
-    free (local_field[i_part]);
-    free (local_weight[i_part]);
-    free (global_mean_field_ptr[i_part]);
-    free (cellVtxGN[i_part]);
+   PDM_free(local_field[i_part]);
+   PDM_free(local_weight[i_part]);
+   PDM_free(global_mean_field_ptr[i_part]);
+   PDM_free(cellVtxGN[i_part]);
   }
 
-  free (local_field);
-  free (local_weight);
-  free (global_mean_field_ptr);
-  free (cellVtxGN);
-  free (dcell_part);
+ PDM_free(local_field);
+ PDM_free(local_weight);
+ PDM_free(global_mean_field_ptr);
+ PDM_free(cellVtxGN);
+ PDM_free(dcell_part);
 
   PDM_part_free(ppart);
 

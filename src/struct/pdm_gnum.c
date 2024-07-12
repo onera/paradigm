@@ -458,8 +458,8 @@ _gnum_from_coords_compute
       fflush(stdout);
     }
 
-    // free(order);
-    free(weight);
+    //PDM_free(order);
+   PDM_free(weight);
     c_rank = malloc (n_entities * sizeof(int));
 
     for (int i = 0; i < n_entities; i++) {
@@ -469,8 +469,8 @@ _gnum_from_coords_compute
       c_rank[i] = (int) _c_rank;
     }
 
-    free(morton_index);
-    free(m_code);
+   PDM_free(morton_index);
+   PDM_free(m_code);
 
     /* Build send_buf, send_count and send_shift
        to build a rank to coords indexed list */
@@ -528,7 +528,7 @@ _gnum_from_coords_compute
       fflush(stdout);
     }
 
-    free(send_coords);
+   PDM_free(send_coords);
 
     /* Now re-build Morton codes on block distribution */
 
@@ -561,15 +561,15 @@ _gnum_from_coords_compute
        such that for each slice, the global number of an entity is equal to
        the cumulative number of sub-entities */
 
-    free(m_code);
-    free(recv_coords);
+   PDM_free(m_code);
+   PDM_free(recv_coords);
     block_global_num = malloc(n_block_ents * sizeof(PDM_g_num_t));
 
     for (int i = 0; i < n_block_ents; i++) {
       block_global_num[order[i]] = (PDM_g_num_t) i + 1;
     }
 
-    free(order);
+   PDM_free(order);
 
     current_global_num = (PDM_g_num_t) n_block_ents;
 
@@ -763,12 +763,12 @@ _gnum_from_coords_compute
          gen_gnum->g_nums[i_part][ipt] = gnum;
       }
 
-      free (send_buff);
-      free (recv_buff);
-      free (send_count2);
-      free (recv_count2);
-      free (send_shift2);
-      free (recv_shift2);
+     PDM_free(send_buff);
+     PDM_free(recv_buff);
+     PDM_free(send_count2);
+     PDM_free(recv_count2);
+     PDM_free(send_shift2);
+     PDM_free(recv_shift2);
 
     }
 
@@ -788,15 +788,15 @@ _gnum_from_coords_compute
 
     /* Free memory */
 
-    free(c_rank);
+   PDM_free(c_rank);
 
-    free(block_global_num);
-    free(part_global_num);
+   PDM_free(block_global_num);
+   PDM_free(part_global_num);
 
-    free(send_count);
-    free(recv_count);
-    free(send_shift);
-    free(recv_shift);
+   PDM_free(send_count);
+   PDM_free(recv_count);
+   PDM_free(send_shift);
+   PDM_free(recv_shift);
 
     /* Get final maximum global number value */
 
@@ -817,7 +817,7 @@ _gnum_from_coords_compute
 
     _check_morton_ordering(gen_gnum->dim, n_entities, coords, m_code, order);
 
-    free(m_code);
+   PDM_free(m_code);
 
     PDM_g_num_t *tmp_gnum = malloc (sizeof(PDM_g_num_t) * n_entities);
 
@@ -846,7 +846,7 @@ _gnum_from_coords_compute
         k += 1;
       }
 
-      free (_entities);
+     PDM_free(_entities);
 
       for (int i_part = 0; i_part < gen_gnum->n_part; i_part++) {
         int *candidates_idx;
@@ -880,8 +880,8 @@ _gnum_from_coords_compute
       }
     }
 
-    free(order);
-    free(tmp_gnum);
+   PDM_free(order);
+   PDM_free(tmp_gnum);
 
     gen_gnum->n_g_elt = n_entities;
 
@@ -889,13 +889,13 @@ _gnum_from_coords_compute
 
   if (gen_gnum->merge) {
     for (int i_part = 0; i_part < gen_gnum->n_part; i_part++) {
-      free (gen_gnum->index[i_part]);
+     PDM_free(gen_gnum->index[i_part]);
     }
-    free(gen_gnum->index);
+   PDM_free(gen_gnum->index);
     PDM_points_merge_free (pts_merge);
   }
 
-  free (coords);
+ PDM_free(coords);
 
 }
 
@@ -1163,15 +1163,15 @@ _gnum_from_parent_compute
 
   /* Liberation memoire */
 
-  free(send_buff_idx);
-  free(send_buff_n);
-  free(recv_buff_idx);
-  free(recv_buff_n);
-  free(send_buff_numabs);
-  free(recv_buff_numabs);
-  free(d_elt_proc);
-  free(numabs_tmp);
-  free(n_elt_stocke_procs);
+ PDM_free(send_buff_idx);
+ PDM_free(send_buff_n);
+ PDM_free(recv_buff_idx);
+ PDM_free(recv_buff_n);
+ PDM_free(send_buff_numabs);
+ PDM_free(recv_buff_numabs);
+ PDM_free(d_elt_proc);
+ PDM_free(numabs_tmp);
+ PDM_free(n_elt_stocke_procs);
 
 }
 
@@ -1298,7 +1298,7 @@ _gnum_from_parent_compute_opt
     recv_gnum[i] = (PDM_g_num_t) unique_order[i] + global_num_shift + 1;
   }
 
-  free(unique_order);
+ PDM_free(unique_order);
 
   /*
    * Reverse exchange
@@ -1333,15 +1333,15 @@ _gnum_from_parent_compute_opt
     }
   }
 
-  free(send_gnum);
-  free(recv_gnum);
+ PDM_free(send_gnum);
+ PDM_free(recv_gnum);
 
-  free(send_buff_n  );
-  free(send_buff_idx);
-  free(recv_buff_n  );
-  free(recv_buff_idx);
+ PDM_free(send_buff_n  );
+ PDM_free(send_buff_idx);
+ PDM_free(recv_buff_n  );
+ PDM_free(recv_buff_idx);
 
-  free(distrib);
+ PDM_free(distrib);
 
 }
 
@@ -1600,13 +1600,13 @@ _gnum_from_parent_compute_nuplet
     }
   }
 
-  free(already_treat  );
-  free(same_entity_idx);
-  free(tmp_parent     );
-  free(order_parent   );
+ PDM_free(already_treat  );
+ PDM_free(same_entity_idx);
+ PDM_free(tmp_parent     );
+ PDM_free(order_parent   );
 
-  free(order);
-  free(key_conflict_idx);
+ PDM_free(order);
+ PDM_free(key_conflict_idx);
 
 
   PDM_g_num_t current_global_num = i_abs_entity;
@@ -1651,20 +1651,20 @@ _gnum_from_parent_compute_nuplet
   }
 
   for(int i_part = 0; i_part < gen_gnum->n_part; ++i_part) {
-    free(key_ln_to_gn[i_part]);
+   PDM_free(key_ln_to_gn[i_part]);
   }
-  free(key_ln_to_gn);
-  free(send_key);
-  free(send_elmts);
-  free(recv_key);
-  free(recv_elmts);
+ PDM_free(key_ln_to_gn);
+ PDM_free(send_key);
+ PDM_free(send_elmts);
+ PDM_free(recv_key);
+ PDM_free(recv_elmts);
 
-  free(send_buff_n  );
-  free(send_buff_idx);
-  free(recv_buff_n  );
-  free(recv_buff_idx);
+ PDM_free(send_buff_n  );
+ PDM_free(send_buff_idx);
+ PDM_free(recv_buff_n  );
+ PDM_free(recv_buff_idx);
 
-  free(distrib);
+ PDM_free(distrib);
 }
 
 /*=============================================================================
@@ -1903,28 +1903,28 @@ PDM_gen_gnum_t *gen_gnum
 {
 
   if (gen_gnum->coords != NULL) {
-    free (gen_gnum->coords);
+   PDM_free(gen_gnum->coords);
   }
 
   if (gen_gnum->char_length != NULL) {
-    free (gen_gnum->char_length);
+   PDM_free(gen_gnum->char_length);
   }
 
   if (gen_gnum->parent != NULL) {
-    free (gen_gnum->parent);
+   PDM_free(gen_gnum->parent);
   }
 
   if(( gen_gnum->owner == PDM_OWNERSHIP_KEEP ) ||
      ( gen_gnum->owner == PDM_OWNERSHIP_UNGET_RESULT_IS_FREE && !gen_gnum->results_is_getted)){
     for (int i = 0; i < gen_gnum->n_part; i++) {
-      free (gen_gnum->g_nums[i]);
+     PDM_free(gen_gnum->g_nums[i]);
     }
   }
 
-  free (gen_gnum->g_nums);
-  free (gen_gnum->n_elts);
+ PDM_free(gen_gnum->g_nums);
+ PDM_free(gen_gnum->n_elts);
 
-  free (gen_gnum);
+ PDM_free(gen_gnum);
 
 }
 

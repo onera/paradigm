@@ -218,31 +218,31 @@ int    *part
   }
 
   if (__xadj != NULL) {
-    free (__xadj);
+   PDM_free(__xadj);
   }
 
   if (__adjncy != NULL) {
-    free (__adjncy);
+   PDM_free(__adjncy);
   }
 
   if (__part != NULL) {
-    free (__part);
+   PDM_free(__part);
   }
 
   if (__vwgt != NULL) {
-    free (__vwgt);
+   PDM_free(__vwgt);
   }
 
   if (__adjwgt != NULL) {
-    free (__adjwgt);
+   PDM_free(__adjwgt);
   }
 
   if (__tpwgts != NULL) {
-    free (__tpwgts);
+   PDM_free(__tpwgts);
   }
 
   if (__ubvec != NULL) {
-    free (__ubvec);
+   PDM_free(__ubvec);
   }
 
   return rval;
@@ -413,31 +413,31 @@ int    *part
   }
 
   if (__xadj != NULL) {
-    free (__xadj);
+   PDM_free(__xadj);
   }
 
   if (__adjncy != NULL) {
-    free (__adjncy);
+   PDM_free(__adjncy);
   }
 
   if (__part != NULL) {
-    free (__part);
+   PDM_free(__part);
   }
 
   if (__vwgt != NULL) {
-    free (__vwgt);
+   PDM_free(__vwgt);
   }
 
   if (__adjwgt != NULL) {
-    free (__adjwgt);
+   PDM_free(__adjwgt);
   }
 
   if (__tpwgts != NULL) {
-    free (__tpwgts);
+   PDM_free(__tpwgts);
   }
 
   if (__ubvec != NULL) {
-    free (__ubvec);
+   PDM_free(__ubvec);
   }
 
   return rval;
@@ -590,23 +590,23 @@ int *part
   SCOTCH_graphExit (&grafptr);
 
   if (__verttab != NULL) {
-    free (__verttab);
+   PDM_free(__verttab);
   }
 
   if (__edgetab != NULL) {
-    free (__edgetab);
+   PDM_free(__edgetab);
   }
 
   if (__velotab != NULL) {
-    free (__velotab);
+   PDM_free(__velotab);
   }
 
   if (__part != NULL) {
-    free (__part);
+   PDM_free(__part);
   }
 
   if (__edlotab != NULL) {
-    free (__edlotab);
+   PDM_free(__edlotab);
   }
 
 }

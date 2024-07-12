@@ -330,7 +330,7 @@ _create_split_mesh
                                        dedge_group_idx,
                                        dedge_group);
 
-  free (dcell_part);
+ PDM_free(dcell_part);
 
   double  *elapsed = NULL;
   double  *cpu = NULL;
@@ -391,15 +391,15 @@ _create_split_mesh
   /*   PDM_printf ("       * total              : %i\n", bound_part_faces_sum);    */
   /* } */
 
-  free (dvtx_coord);
-  free (dface_vtx_idx);
-  free (dface_vtx);
-  free (dface_edge);
-  free (dedge_vtxIdx);
-  free (dedge_vtx);
-  free (dedge_face);
-  free (dedge_group_idx);
-  free (dedge_group);
+ PDM_free(dvtx_coord);
+ PDM_free(dface_vtx_idx);
+ PDM_free(dface_vtx);
+ PDM_free(dface_edge);
+ PDM_free(dedge_vtxIdx);
+ PDM_free(dedge_vtx);
+ PDM_free(dedge_face);
+ PDM_free(dedge_group_idx);
+ PDM_free(dedge_group);
 
   for (int i_part = 0; i_part < n_part; i_part++) {
 
@@ -509,7 +509,7 @@ char *argv[]
   // PDM_memory_stats_add(ms, 1, "Step 1 : ");
 
 
-  // free(test);
+  //PDM_free(test);
   // PDM_memory_stats_add(ms, 2, "End    : ");
 
   // PDM_memory_stats_log(ms);

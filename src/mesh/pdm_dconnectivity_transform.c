@@ -123,7 +123,7 @@ _deduce_combine_connectivity_impl
              (void *  )   dentity2_entity3,
              (int  ***)  &pentity1_entity3_n,
              (void ***)  &pentity1_entity3);
-  free(dentity2_entity3_n);
+ PDM_free(dentity2_entity3_n);
 
   if(is_signed) {
     int idx_read = 0;
@@ -164,8 +164,8 @@ _deduce_combine_connectivity_impl
   /*
    * Free first level of pointer - the second level is hold by dentity1_entity3/dentity1_entity3_n
    */
-  free(pentity1_entity3  );
-  free(pentity1_entity3_n);
+ PDM_free(pentity1_entity3  );
+ PDM_free(pentity1_entity3_n);
 
 }
 
@@ -257,7 +257,7 @@ PDM_deduce_combine_connectivity
   // printf("dentity1_entity2_idx[dn_entity1]::%i\n", dentity1_entity2_idx[dn_entity1]);
 
   assert(idx == dentity1_entity2_idx[dn_entity1]);
-  free(pentity1_entity3_n);
+ PDM_free(pentity1_entity3_n);
 
   // PDM_log_trace_array_int(_dentity1_entity3_idx, dn_entity1+1, "_dentity1_entity3_idx::");
   // PDM_log_trace_array_int(dentity1_entity3_n  , dn_entity1  , "dentity1_entity3_n::");
@@ -277,7 +277,7 @@ PDM_deduce_combine_connectivity
   /*
    * Free
    */
-  free(dentity1_entity3_n);
+ PDM_free(dentity1_entity3_n);
 }
 
 
@@ -362,7 +362,7 @@ PDM_deduce_combine_connectivity_dual
   }
 
   assert(idx == dentity1_entity2_idx[dn_entity1]);
-  free(pentity1_entity3_n);
+ PDM_free(pentity1_entity3_n);
 
   // PDM_log_trace_array_long(_dentity1_entity3_idx, dn_entity1+1, "_dentity1_entity3_idx::");
   // PDM_log_trace_array_int (dentity1_entity3_n   , dn_entity1  , "dentity1_entity3_n::");
@@ -385,7 +385,7 @@ PDM_deduce_combine_connectivity_dual
   /*
    * Free
    */
-  free(dentity1_entity3_n);
+ PDM_free(dentity1_entity3_n);
 }
 
 /**
@@ -496,7 +496,7 @@ PDM_dconnectivity_transpose
                                                       &dentity2_entity1_n,
                                                       entity2_distrib[n_rank]);
     dn_entity2_recv = distrib2_idx_full[i_rank+1] - distrib2_idx_full[i_rank];
-    free(distrib2_idx_full);
+   PDM_free(distrib2_idx_full);
   }
 
   if(save_entity_distrib == 1) {
@@ -511,8 +511,8 @@ PDM_dconnectivity_transpose
    * Free
    */
   PDM_part_to_block_free(ptb);
-  free(gnum);
-  free(send_stri);
+ PDM_free(gnum);
+ PDM_free(send_stri);
 
   /*
    * Allocate
@@ -539,7 +539,7 @@ PDM_dconnectivity_transpose
    * Realloc
    */
   PDM_realloc(recv_data, *dentity2_entity1, _dentity2_entity1_idx[dn_entity2_recv] ,PDM_g_num_t);
-  free(dentity2_entity1_n);
+ PDM_free(dentity2_entity1_n);
 }
 
 /**
@@ -601,8 +601,8 @@ void PDM_dfacecell_to_dcellface
   /*int dn_cell = cell_distri[i_rank+1] - cell_distri[i_rank];*/
   /*PDM_log_trace_connectivity_long(dcell_face_idx[0], dcell_face[0], dn_cell, "dcell_face");*/
 
-  free(_dface_cell_idx);
-  free(_dface_cell);
+ PDM_free(_dface_cell_idx);
+ PDM_free(_dface_cell);
 }
 
 /**
@@ -677,8 +677,8 @@ void PDM_dcellface_to_dfacecell
   }
 
   /*PDM_log_trace_array_long(*dface_cell, 2*dn_face, "dface_cell");*/
-  free(_dface_cell_idx);
-  free(_dface_cell);
+ PDM_free(_dface_cell_idx);
+ PDM_free(_dface_cell);
 }
 
 
@@ -732,7 +732,7 @@ PDM_dorder_reverse
                 (void **) &gnum,
                            NULL,
                  (void **) &recv_data);
-  free(gnum);
+ PDM_free(gnum);
 
   *dentity2_entity1 = recv_data;
   PDM_part_to_block_free(ptb);
@@ -791,14 +791,14 @@ PDM_dgroup_entity_transpose
                               (void **) &pgroup_id,
                                         &tmp_dentity_group_n,
                               (void **) &tmp_dentity_group);
-  free(pgroup_id_n);
-  free(pgroup_id);
+ PDM_free(pgroup_id_n);
+ PDM_free(pgroup_id);
 
 
   int dn_entity = distrib_entity[i_rank+1] - distrib_entity[i_rank];
 
   PDM_g_num_t* tmp_distrib = PDM_part_to_block_adapt_partial_block_to_block(ptb, &tmp_dentity_group_n, distrib_entity[n_rank]);
-  free(tmp_distrib);
+ PDM_free(tmp_distrib);
   PDM_part_to_block_free (ptb);
 
   /*
@@ -827,8 +827,8 @@ PDM_dgroup_entity_transpose
     idx_read += n_id;
   }
 
-  free(tmp_dentity_group_n);
-  free(tmp_dentity_group);
+ PDM_free(tmp_dentity_group_n);
+ PDM_free(tmp_dentity_group);
 
   if(0 == 1) {
     PDM_log_trace_connectivity_int(_dentity_group_idx, _dentity_group, dn_entity, "_dentity_group ::");
@@ -943,12 +943,12 @@ PDM_dentity_group_signed_transpose
 
 
   for(int i_group = 0; i_group < n_group; ++i_group) {
-    free(select_entity[i_group]);
+   PDM_free(select_entity[i_group]);
     PDM_part_to_block_free(ptb[i_group]);
   }
-  free(ptb);
-  free(select_entity_n);
-  free(select_entity  );
+ PDM_free(ptb);
+ PDM_free(select_entity_n);
+ PDM_free(select_entity  );
 
   *dgroup_entity_idx = _dgroup_entity_idx;
   *dgroup_entity     = _dgroup_entity;
@@ -1064,9 +1064,9 @@ PDM_dconnectivity_to_extract_dconnectivity_bis
 
   int*         pextract_entity1_entity2_n = tmp_pextract_entity1_entity2_n[0];
   PDM_g_num_t* pextract_entity1_entity2   = tmp_pextract_entity1_entity2[0];
-  free(tmp_pextract_entity1_entity2_n);
-  free(tmp_pextract_entity1_entity2);
-  free(dentity1_entity2_n);
+ PDM_free(tmp_pextract_entity1_entity2_n);
+ PDM_free(tmp_pextract_entity1_entity2);
+ PDM_free(dentity1_entity2_n);
 
   PDM_block_to_part_free(btp);
 
@@ -1103,8 +1103,8 @@ PDM_dconnectivity_to_extract_dconnectivity_bis
                           NULL,
                 (void **) &_dparent_entity1_g_num);
 
-  free(pextract_entity1_entity2_n);
-  free(pextract_entity1_entity2  );
+ PDM_free(pextract_entity1_entity2_n);
+ PDM_free(pextract_entity1_entity2  );
 
   /*
    * Post-Treatment
@@ -1117,7 +1117,7 @@ PDM_dconnectivity_to_extract_dconnectivity_bis
   for(int i = 0; i < dn_extract_entity1; ++i) {
     _dextract_entity1_entity2_idx[i+1] = _dextract_entity1_entity2_idx[i] + _dextract_entity1_entity2_n[i];
   }
-  free(_dextract_entity1_entity2_n);
+ PDM_free(_dextract_entity1_entity2_n);
 
   /*
    * Revert information
@@ -1133,8 +1133,8 @@ PDM_dconnectivity_to_extract_dconnectivity_bis
     PDM_log_trace_array_long(extract_entity1_ln_to_gn  , n_selected_entity1, "extract_entity1_ln_to_gn:: ");
     PDM_log_trace_array_long(*entity1_old_to_new, n_selected_entity1, "entity1_old_to_new:: ");
   }
-  // free(old_to_new_entity_ln_to_gn);
-  free(entity1_init_distrib);
+  //PDM_free(old_to_new_entity_ln_to_gn);
+ PDM_free(entity1_init_distrib);
 
 
   /*
@@ -1197,8 +1197,8 @@ PDM_dconnectivity_to_extract_dconnectivity_bis
     _dextract_entity1_entity2[i] = extract_entity2_ln_to_gn[i];
   }
 
-  free(extract_entity1_ln_to_gn);
-  free(extract_entity2_ln_to_gn);
+ PDM_free(extract_entity1_ln_to_gn);
+ PDM_free(extract_entity2_ln_to_gn);
   *dextract_entity1_entity2_idx = _dextract_entity1_entity2_idx;
   *dextract_entity1_entity2     = _dextract_entity1_entity2;
   *dparent_entity1_g_num        = _dparent_entity1_g_num;
@@ -1273,16 +1273,16 @@ PDM_dconnectivity_to_extract_dconnectivity_block
 
   int*         pextract_entity1_entity2_n = tmp_pextract_entity1_entity2_n[0];
   PDM_g_num_t* pextract_entity1_entity2   = tmp_pextract_entity1_entity2  [0];
-  free(tmp_pextract_entity1_entity2_n);
-  free(tmp_pextract_entity1_entity2);
-  free(dentity1_entity2_n);
+ PDM_free(tmp_pextract_entity1_entity2_n);
+ PDM_free(tmp_pextract_entity1_entity2);
+ PDM_free(dentity1_entity2_n);
 
   int* _dextract_entity1_entity2_idx = malloc( (dn_extract_entity1 + 1) * sizeof(int));
   _dextract_entity1_entity2_idx[0] = 0;
   for(int i = 0; i < dn_extract_entity1; ++i) {
     _dextract_entity1_entity2_idx[i+1] = _dextract_entity1_entity2_idx[i] + pextract_entity1_entity2_n[i];
   }
-  free(pextract_entity1_entity2_n);
+ PDM_free(pextract_entity1_entity2_n);
 
   /*
    * Prepare next renumbering
@@ -1327,12 +1327,12 @@ PDM_dconnectivity_to_extract_dconnectivity_block
                              pextract_entity1_entity2);
   PDM_gnum_compute (gen_gnum_entity2);
   PDM_g_num_t* _dextract_entity1_entity2 = PDM_gnum_get(gen_gnum_entity2, 0);
-  free(pextract_entity1_entity2);
+ PDM_free(pextract_entity1_entity2);
 
   for(int i = 0; i < _dextract_entity1_entity2_idx[dn_extract_entity1]; ++i) {
     _dextract_entity1_entity2[i] = _dextract_entity1_entity2[i] * dextract_entity1_entity2_sgn[i];
   }
-  free(dextract_entity1_entity2_sgn);
+ PDM_free(dextract_entity1_entity2_sgn);
 
 
   PDM_gnum_free(gen_gnum_entity2);
@@ -1378,7 +1378,7 @@ PDM_dconnectivity_to_extract_dconnectivity
                                                       &n_selected_entity1,
                                                       1,
                                                       comm);
-  free(weight);
+ PDM_free(weight);
 
   int          dn_extract_entity1      = PDM_part_to_block_n_elt_block_get  (ptb);
   PDM_g_num_t *dextract_gnum_entity1   = PDM_part_to_block_block_gnum_get   (ptb);
@@ -1443,7 +1443,7 @@ PDM_dconnectivity_dface_vtx_from_face_and_edge
                                                           &pvtx_ln_to_gn,
                                                           &pedge_vtx_idx,
                                                           &pedge_vtx);
-  free(dedge_vtx_idx);
+ PDM_free(dedge_vtx_idx);
 
 
 
@@ -1463,12 +1463,12 @@ PDM_dconnectivity_dface_vtx_from_face_and_edge
     (*dface_vtx)[i] = pvtx_ln_to_gn[pface_vtx[i]-1];
   }
    
-  free(pface_edge);
-  free(pface_vtx);
+ PDM_free(pface_edge);
+ PDM_free(pface_vtx);
 
-  free(pvtx_ln_to_gn);
-  free(pedge_vtx_idx);
-  free(pedge_vtx);
+ PDM_free(pvtx_ln_to_gn);
+ PDM_free(pedge_vtx_idx);
+ PDM_free(pedge_vtx);
 }
 
 
