@@ -4261,7 +4261,7 @@ PDM_coarse_mesh_method_add
   if (n_coarse_mesh_methods >= s_coarse_mesh_methods) {
     s_coarse_mesh_methods = PDM_MAX(2*s_coarse_mesh_methods,
                                     n_coarse_mesh_methods + 1);
-    _coarse_mesh_methods = realloc (_coarse_mesh_methods,                                    sizeof(_coarse_mesh_method_t *) * s_coarse_mesh_methods);
+    PDM_realloc(_coarse_mesh_methods ,_coarse_mesh_methods , s_coarse_mesh_methods,_coarse_mesh_method_t *);
   }
 
   _coarse_mesh_method_t *method_ptr = malloc (sizeof(_coarse_mesh_method_t));

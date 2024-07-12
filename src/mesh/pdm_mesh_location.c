@@ -1092,7 +1092,7 @@ PDM_mesh_location_n_part_cloud_set
 )
 {
   ml->point_clouds[i_point_cloud].n_part = n_part;
-  ml->point_clouds[i_point_cloud].n_points =    realloc(ml->point_clouds[i_point_cloud].n_points, n_part * sizeof(int));
+  PDM_realloc(ml->point_clouds[i_point_cloud].n_points ,ml->point_clouds[i_point_cloud].n_points , n_part ,int);
   ml->point_clouds[i_point_cloud].coords =    realloc(ml->point_clouds[i_point_cloud].coords,
             n_part * sizeof(double *));
   ml->point_clouds[i_point_cloud].gnum =    realloc(ml->point_clouds[i_point_cloud].gnum,
@@ -2366,7 +2366,7 @@ PDM_mesh_location_compute
           }
         } // End of loop on current parition's points
 
-        select_pts_l_num[ipart] = realloc(select_pts_l_num[ipart],                                          sizeof(int) * n_select_pts[ipart]);
+        PDM_realloc(select_pts_l_num[ipart] ,select_pts_l_num[ipart] , n_select_pts[ipart],int);
 
       } // End of loop on current point cloud's partitions
 
@@ -2527,7 +2527,7 @@ PDM_mesh_location_compute
 
         } // End of loop on current part's boxes
 
-        select_elt_l_num[ipart] = realloc(select_elt_l_num[ipart],                                          sizeof(int) * n_select_elt[ipart]);
+        PDM_realloc(select_elt_l_num[ipart] ,select_elt_l_num[ipart] , n_select_elt[ipart],int);
 
       } // End of loop on mesh parts
 

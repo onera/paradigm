@@ -3809,7 +3809,7 @@ PDM_box_tree_set_boxes(PDM_box_tree_t      *bt,
 
     bt->local_data->n_max_nodes = bt->local_data->n_nodes;
     PDM_realloc(bt->local_data->nodes ,bt->local_data->nodes , bt->local_data->n_nodes ,_node_t);
-    bt->local_data->child_ids = (int *) realloc((void *) bt->local_data->child_ids,						bt->local_data->n_max_nodes*bt->n_children * sizeof(int));
+    PDM_realloc(bt->local_data->child_ids ,bt->local_data->child_ids ,						bt->local_data->n_max_nodes*bt->n_children ,int);
 
     /* Define a box ids list for the next level of the boxtree */
     PDM_realloc(tmp_bt.local_data->box_ids ,tmp_bt.local_data->box_ids , next_box_ids_size ,int);
@@ -7925,7 +7925,7 @@ _insertion_sort
 
     if ((*box_pts_s) <= (*box_pts_n)) {
       (*box_pts_s) *= 2;
-      (*box_pts)    = realloc((*box_pts),                              sizeof(int) * (*box_pts_s));
+      PDM_realloc((*box_pts)    ,(*box_pts)    , (*box_pts_s),int);
     }
 
     for (int j = (*box_pts_n); j > i; j--) {

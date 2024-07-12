@@ -1556,10 +1556,10 @@ double                **polyClippCoordsB
               while (n_vtxClipp >= s_clipped_vtx) {
                 s_clipped_vtx *= 2;
               }
-              clipped_vtx =                realloc (clipped_vtx, sizeof(_vertex_poly_t*) * s_clipped_vtx);
-              clipped_multi =                realloc (clipped_multi, sizeof(int) * s_clipped_vtx);
-              origin_vtx =                realloc (origin_vtx, sizeof(int) * s_clipped_vtx);
-              link_multi =                realloc (link_multi, sizeof(int) * s_clipped_vtx);
+              PDM_realloc(clipped_vtx ,clipped_vtx , s_clipped_vtx,_vertex_poly_t*);
+              PDM_realloc(clipped_multi ,clipped_multi , s_clipped_vtx,int);
+              PDM_realloc(origin_vtx ,origin_vtx , s_clipped_vtx,int);
+              PDM_realloc(link_multi ,link_multi , s_clipped_vtx,int);
             }
 
             origin_vtx[n_vtxClipp] = onPolyA;
@@ -2034,7 +2034,7 @@ double                **polyClippCoordsB
                 while (n_vtxClipp >= s_clipped_vtx) {
                   s_clipped_vtx *= 2;
                 }
-                clipped_vtx =                realloc (clipped_vtx, sizeof(_vertex_poly_t*) * s_clipped_vtx);
+                PDM_realloc(clipped_vtx ,clipped_vtx , s_clipped_vtx,_vertex_poly_t*);
               }
 
               clipped_vtx[n_vtxClipp++] = curr;
@@ -2159,7 +2159,7 @@ double                **polyClippCoordsB
                 while (n_vtxClipp >= s_clipped_vtx) {
                   s_clipped_vtx *= 2;
                 }
-                clipped_vtx =                realloc (clipped_vtx, sizeof(_vertex_poly_t*) * s_clipped_vtx);
+                PDM_realloc(clipped_vtx ,clipped_vtx , s_clipped_vtx,_vertex_poly_t*);
               }
 
               clipped_vtx[n_vtxClipp++] = curr;

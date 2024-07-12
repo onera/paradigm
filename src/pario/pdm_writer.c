@@ -2235,7 +2235,7 @@ PDM_writer_cst_global_var_create
 
   if (cs->cst_global_var_tab.n_var >= cs->cst_global_var_tab.s_var) {
     cs->cst_global_var_tab.s_var = PDM_MAX(2*cs->cst_global_var_tab.s_var, cs->cst_global_var_tab.n_var+1);
-    cs->cst_global_var_tab.var =     (PDM_writer_cst_global_var_t **) realloc(cs->cst_global_var_tab.var, sizeof(PDM_writer_cst_global_var_t *) * cs->cst_global_var_tab.s_var);
+    PDM_realloc(cs->cst_global_var_tab.var ,cs->cst_global_var_tab.var , cs->cst_global_var_tab.s_var,PDM_writer_cst_global_var_t *);
 
     for (int i = cs->cst_global_var_tab.n_var+1; i < cs->cst_global_var_tab.s_var; i++) {
       cs->cst_global_var_tab.var[i] = NULL;

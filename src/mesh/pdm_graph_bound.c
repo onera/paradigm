@@ -878,7 +878,7 @@ const int                n_part,
 
             if (nNewLocalGhost >= sNewLocalGhost) {
               sNewLocalGhost *= 2;
-              newLocalGhost = (int *) realloc (newLocalGhost,                                               sizeof(int) * 2 * sNewLocalGhost);
+              PDM_realloc(newLocalGhost ,newLocalGhost , 2 * sNewLocalGhost,int);
             }
 
             newLocalGhost[2*nNewLocalGhost]   = dataLoc2 ;
@@ -1152,9 +1152,9 @@ const int                n_part,
     }
   }
 
-  newGhostEltEltPart = (int *) realloc (newGhostEltEltPart,                                        sizeof (int) * newGhostEltEltIdx2[nTotalNewGhost]);
+  PDM_realloc(newGhostEltEltPart ,newGhostEltEltPart , newGhostEltEltIdx2[nTotalNewGhost],int);
 
-  newGhostEltElt = (int *) realloc (newGhostEltElt,                                    sizeof (int) * newGhostEltEltIdx2[nTotalNewGhost]);
+  PDM_realloc(newGhostEltElt ,newGhostEltElt , newGhostEltEltIdx2[nTotalNewGhost],int);
 
   free (tagEltElt);
 

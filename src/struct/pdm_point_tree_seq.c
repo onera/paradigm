@@ -3352,7 +3352,7 @@ _insertion_sort
 
     if ((*box_pts_s) <= (*box_pts_n)) {
       (*box_pts_s) *= 2;
-      (*box_pts)    = realloc((*box_pts),                              sizeof(int) * (*box_pts_s));
+      PDM_realloc((*box_pts)    ,(*box_pts)    , (*box_pts_s),int);
     }
 
     for (int j = (*box_pts_n); j > i; j--) {

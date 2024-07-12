@@ -2049,7 +2049,7 @@ PDM_geom_elem_polyhedra_properties
 
           if (nPolyhedraVertices >= lPolyhedraVertices) {
             lPolyhedraVertices *= 2;
-            polyhedraVertices = (int *) realloc(polyhedraVertices, lPolyhedraVertices*sizeof(int));
+            PDM_realloc(polyhedraVertices ,polyhedraVertices , lPolyhedraVertices,int);
           }
           polyhedraVertices[nPolyhedraVertices++] = vertex;
         }

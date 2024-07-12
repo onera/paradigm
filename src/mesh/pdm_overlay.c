@@ -1352,7 +1352,7 @@ _compute_overlay_planes
         while (newSize > s_subFacesConnecIdx) {
           s_subFacesConnecIdx += PDM_MAX(1, s_subFacesConnecIdx/3);
         }
-        subFacesConnecIdx = realloc (subFacesConnecIdx,                                  sizeof(int) * s_subFacesConnecIdx);
+        PDM_realloc(subFacesConnecIdx ,subFacesConnecIdx , s_subFacesConnecIdx,int);
       }
 
       newSize = iclipp + nPolyClippA;
@@ -1360,7 +1360,7 @@ _compute_overlay_planes
         while (newSize > s_gNumSubFacesA) {
           s_gNumSubFacesA += PDM_MAX(1, s_gNumSubFacesA/3);
         }
-        gNumSubFacesA  = realloc (gNumSubFacesA,                                  sizeof(PDM_g_num_t) * s_gNumSubFacesA);
+        PDM_realloc(gNumSubFacesA  ,gNumSubFacesA  , s_gNumSubFacesA,PDM_g_num_t);
       }
 
       int ibeg = subFacesConnecIdx[iclipp];
@@ -1370,14 +1370,14 @@ _compute_overlay_planes
         while (newSize > s_subFacesConnecA) {
           s_subFacesConnecA += PDM_MAX(1, s_subFacesConnecA/3);
         }
-        subFacesConnecA = realloc (subFacesConnecA,                                  sizeof(PDM_g_num_t) * s_subFacesConnecA);
+        PDM_realloc(subFacesConnecA ,subFacesConnecA , s_subFacesConnecA,PDM_g_num_t);
       }
 
       if (newSize > s_subFacesConnecB) {
         while (newSize > s_subFacesConnecB) {
           s_subFacesConnecB += PDM_MAX(1, s_subFacesConnecB/3);
         }
-        subFacesConnecB = realloc (subFacesConnecB,                                  sizeof(PDM_g_num_t) * s_subFacesConnecB);
+        PDM_realloc(subFacesConnecB ,subFacesConnecB , s_subFacesConnecB,PDM_g_num_t);
       }
 
       newSize = 3 * (ibeg + polyClippIdxA[nPolyClippA]);
@@ -1385,7 +1385,7 @@ _compute_overlay_planes
         while (newSize > s_subFacesCoordsA) {
           s_subFacesCoordsA += PDM_MAX(1, s_subFacesCoordsA/3);
         }
-        subFacesCoordsA = realloc (subFacesCoordsA,                                  sizeof(double) * s_subFacesCoordsA);
+        PDM_realloc(subFacesCoordsA ,subFacesCoordsA , s_subFacesCoordsA,double);
       }
 
       newSize = 5*(iclipp + nPolyClippA);
@@ -1393,7 +1393,7 @@ _compute_overlay_planes
         while (newSize > s_subFacesToFaces) {
           s_subFacesToFaces += PDM_MAX(1, s_subFacesToFaces/3);
         }
-        subFacesToFaces = realloc (subFacesToFaces,                                  sizeof(PDM_g_num_t) * s_subFacesToFaces);
+        PDM_realloc(subFacesToFaces ,subFacesToFaces , s_subFacesToFaces,PDM_g_num_t);
       }
 
       for (int k = 0; k < nPolyClippA; k++) {
@@ -1784,7 +1784,7 @@ _compute_overlay_planes
         while (newSize > s_faceIniVtxA) {
           s_faceIniVtxA += PDM_MAX(1, s_faceIniVtxA);
         }
-        faceIniVtxA = realloc (faceIniVtxA,                               sizeof(PDM_g_num_t) * s_faceIniVtxA);
+        PDM_realloc(faceIniVtxA ,faceIniVtxA , s_faceIniVtxA,PDM_g_num_t);
       }
 
       int next = (j+1) % n_vtxA;
@@ -2060,7 +2060,7 @@ _compute_overlay_planes
       while (newSize > s_subFacesConnecIdx) {
         s_subFacesConnecIdx += PDM_MAX (1, s_subFacesConnecIdx/3);
       }
-      subFacesConnecIdx = realloc(subFacesConnecIdx,                                sizeof(int) * s_subFacesConnecIdx);
+      PDM_realloc(subFacesConnecIdx ,subFacesConnecIdx , s_subFacesConnecIdx,int);
     }
 
     int ibeg = subFacesConnecIdx[iclipp];
@@ -2070,7 +2070,7 @@ _compute_overlay_planes
       while (newSize > s_subFacesConnecA) {
         s_subFacesConnecA += PDM_MAX (1, s_subFacesConnecA/3);
       }
-      subFacesConnecA = realloc(subFacesConnecA,                                sizeof(PDM_g_num_t) * s_subFacesConnecA);
+      PDM_realloc(subFacesConnecA ,subFacesConnecA , s_subFacesConnecA,PDM_g_num_t);
     }
 
     int ibeg2 = 3 * ibeg;
@@ -2080,7 +2080,7 @@ _compute_overlay_planes
       while (newSize > s_subFacesCoordsA) {
         s_subFacesCoordsA += PDM_MAX (1, s_subFacesCoordsA/3);
       }
-      subFacesCoordsA = realloc (subFacesCoordsA,                                sizeof(double) * s_subFacesCoordsA);
+      PDM_realloc(subFacesCoordsA ,subFacesCoordsA , s_subFacesCoordsA,double);
     }
 
     newSize = 5*(iclipp + nAddSubFace);
@@ -2088,7 +2088,7 @@ _compute_overlay_planes
       while (newSize > s_subFacesToFaces) {
         s_subFacesToFaces += PDM_MAX (1, s_subFacesToFaces/3);
       }
-      subFacesToFaces = realloc(subFacesToFaces,                                sizeof(PDM_g_num_t) * s_subFacesToFaces);
+      PDM_realloc(subFacesToFaces ,subFacesToFaces , s_subFacesToFaces,PDM_g_num_t);
     }
 
     for (int k1 = 0; k1 < addSubFaceIdx[nAddSubFace]; k1++) {
@@ -2144,17 +2144,17 @@ _compute_overlay_planes
    * Update Memory
    */
 
-  faceIniVtxA = realloc (faceIniVtxA,                          sizeof(PDM_g_num_t) * faceIniVtxIdxA[n_elt_blockA]);
+  PDM_realloc(faceIniVtxA ,faceIniVtxA , faceIniVtxIdxA[n_elt_blockA],PDM_g_num_t);
 
-  subFacesConnecA = realloc (subFacesConnecA,                             sizeof(PDM_g_num_t) * subFacesConnecIdx[nSubFaces]);
+  PDM_realloc(subFacesConnecA ,subFacesConnecA , subFacesConnecIdx[nSubFaces],PDM_g_num_t);
 
   subFacesCoordsA = realloc (subFacesCoordsA,                             3 * sizeof(double) * subFacesConnecIdx[nSubFaces]);
 
-  subFacesConnecB = realloc (subFacesConnecB,                             sizeof(PDM_g_num_t) * subFacesConnecIdx[nSharedSubFaces]);
+  PDM_realloc(subFacesConnecB ,subFacesConnecB , subFacesConnecIdx[nSharedSubFaces],PDM_g_num_t);
 
-  subFacesConnecIdx = realloc (subFacesConnecIdx,                               sizeof(int) * (nSubFaces + 1));
+  PDM_realloc(subFacesConnecIdx ,subFacesConnecIdx , (nSubFaces + 1),int);
 
-  subFacesToFaces = realloc (subFacesToFaces,                             sizeof(PDM_g_num_t) *  5 * nSubFaces);
+  PDM_realloc(subFacesToFaces ,subFacesToFaces ,  5 * nSubFaces,PDM_g_num_t);
 
 
   if (1 == 0) {
@@ -2877,8 +2877,8 @@ _compute_overlay_planes
       while (newSize > s_subFacesToFaceB) {
         s_subFacesToFaceB += PDM_MAX (1, s_subFacesToFaceB/3);
       }
-      subFacesToFaceB = realloc(subFacesToFaceB,                                sizeof(PDM_g_num_t) * s_subFacesToFaceB);
-      gNumSubFacesB = realloc(gNumSubFacesB,                                sizeof(PDM_g_num_t) * s_subFacesToFaceB);
+      PDM_realloc(subFacesToFaceB ,subFacesToFaceB , s_subFacesToFaceB,PDM_g_num_t);
+      PDM_realloc(gNumSubFacesB ,gNumSubFacesB , s_subFacesToFaceB,PDM_g_num_t);
     }
 
     newSize =  3 * (nSubFacesB + n_SubFaceFace);
@@ -2886,7 +2886,7 @@ _compute_overlay_planes
       while (newSize > s_subFacesToLinkA) {
         s_subFacesToLinkA += PDM_MAX (1, s_subFacesToLinkA/3);
       }
-      subFacesToLinkA = realloc(subFacesToLinkA,                                sizeof(PDM_g_num_t) * s_subFacesToLinkA);
+      PDM_realloc(subFacesToLinkA ,subFacesToLinkA , s_subFacesToLinkA,PDM_g_num_t);
     }
 
     newSize =  nSubFacesB + n_SubFaceFace + 1;
@@ -2894,7 +2894,7 @@ _compute_overlay_planes
       while (newSize > s_subFacesConnecIdxB) {
         s_subFacesConnecIdxB += PDM_MAX (1, s_subFacesConnecIdxB/3);
       }
-      subFacesConnecIdxB = realloc(subFacesConnecIdxB,                                   sizeof(int) * s_subFacesConnecIdxB);
+      PDM_realloc(subFacesConnecIdxB ,subFacesConnecIdxB , s_subFacesConnecIdxB,int);
     }
 
     int ideb  = nSubFacesB;
@@ -2928,7 +2928,7 @@ _compute_overlay_planes
         while (newSize > s_subFacesConnecB) {
           s_subFacesConnecB += PDM_MAX (1, s_subFacesConnecB/3);
         }
-        subFacesConnecB = realloc(subFacesConnecB,                                  sizeof(PDM_g_num_t) * s_subFacesConnecB);
+        PDM_realloc(subFacesConnecB ,subFacesConnecB , s_subFacesConnecB,PDM_g_num_t);
       }
 
       newSize = 3 * subFacesConnecIdxB[ideb2];
@@ -2936,7 +2936,7 @@ _compute_overlay_planes
         while (newSize > s_subFacesCoordsB) {
           s_subFacesCoordsB += PDM_MAX (1, s_subFacesCoordsB/3);
         }
-        subFacesCoordsB = realloc(subFacesCoordsB,                                  sizeof(double) * s_subFacesCoordsB);
+        PDM_realloc(subFacesCoordsB ,subFacesCoordsB , s_subFacesCoordsB,double);
       }
 
       int iBeg1 = subFacesConnecIdxB[ideb2-1];
@@ -3083,16 +3083,16 @@ _compute_overlay_planes
             curr_svoe->sIntEdge += PDM_MAX (1, curr_svoe->sIntEdge/3);
           }
 
-          curr_svoe->vtxIntEdge =            realloc (curr_svoe->vtxIntEdge, sizeof(PDM_g_num_t) * curr_svoe->sIntEdge);
-          curr_svoe->uIntEdge =            realloc (curr_svoe->uIntEdge, sizeof(double) * curr_svoe->sIntEdge);
-          curr_svoe->coordsIntEdge =            realloc (curr_svoe->coordsIntEdge, sizeof(double) * 3 * curr_svoe->sIntEdge);
+          PDM_realloc(curr_svoe->vtxIntEdge ,curr_svoe->vtxIntEdge , curr_svoe->sIntEdge,PDM_g_num_t);
+          PDM_realloc(curr_svoe->uIntEdge ,curr_svoe->uIntEdge , curr_svoe->sIntEdge,double);
+          PDM_realloc(curr_svoe->coordsIntEdge ,curr_svoe->coordsIntEdge , 3 * curr_svoe->sIntEdge,double);
         }
 
         if (sIntEdge <= curr_svoe->sIntEdge) {
           sIntEdge = curr_svoe->sIntEdge;
-          vtxIntEdgeSorted =            realloc (vtxIntEdgeSorted, sizeof(PDM_g_num_t) * sIntEdge);
-          coordsIntEdgeSorted =            realloc (coordsIntEdgeSorted, sizeof(double) * 3 * sIntEdge);
-          order =            realloc (order, sizeof(int) * sIntEdge);
+          PDM_realloc(vtxIntEdgeSorted ,vtxIntEdgeSorted , sIntEdge,PDM_g_num_t);
+          PDM_realloc(coordsIntEdgeSorted ,coordsIntEdgeSorted , 3 * sIntEdge,double);
+          PDM_realloc(order ,order , sIntEdge,int);
         }
 
         if (_oNewPtB != PDM_EDGES_INTERSECT_POINT_VTXA_ON_VTXB) {
@@ -3171,7 +3171,7 @@ _compute_overlay_planes
         while (_newSize > s_faceIniVtxB) {
           s_faceIniVtxB += PDM_MAX (1, s_faceIniVtxB/3);
         }
-        faceIniVtxB = realloc (faceIniVtxB,                               sizeof(PDM_g_num_t) * s_faceIniVtxB);
+        PDM_realloc(faceIniVtxB ,faceIniVtxB , s_faceIniVtxB,PDM_g_num_t);
       }
 
       for (int k3 = 0; k3 < _nIntEdge; k3++) {
@@ -3360,7 +3360,7 @@ _compute_overlay_planes
         while (newSize > s_subFacesConnecIdxB) {
           s_subFacesConnecIdxB += PDM_MAX (1, s_subFacesConnecIdxB/3);
         }
-        subFacesConnecIdxB = realloc(subFacesConnecIdxB,                                     sizeof(int) * s_subFacesConnecIdxB);
+        PDM_realloc(subFacesConnecIdxB ,subFacesConnecIdxB , s_subFacesConnecIdxB,int);
       }
 
       newSize =  nSubFacesB + nAddSubFace;
@@ -3368,8 +3368,8 @@ _compute_overlay_planes
         while (newSize > s_subFacesToFaceB) {
           s_subFacesToFaceB += PDM_MAX (1, s_subFacesToFaceB/3);
         }
-        subFacesToFaceB = realloc(subFacesToFaceB,                                  sizeof(PDM_g_num_t) * s_subFacesToFaceB);
-        gNumSubFacesB = realloc(gNumSubFacesB,                                sizeof(PDM_g_num_t) * s_subFacesToFaceB);
+        PDM_realloc(subFacesToFaceB ,subFacesToFaceB , s_subFacesToFaceB,PDM_g_num_t);
+        PDM_realloc(gNumSubFacesB ,gNumSubFacesB , s_subFacesToFaceB,PDM_g_num_t);
       }
 
       newSize =  3 * (nSubFacesB + nAddSubFace);
@@ -3377,7 +3377,7 @@ _compute_overlay_planes
         while (newSize > s_subFacesToLinkA) {
           s_subFacesToLinkA += PDM_MAX (1, s_subFacesToLinkA/3) ;
         }
-        subFacesToLinkA = realloc(subFacesToLinkA,                                  sizeof(PDM_g_num_t) * s_subFacesToLinkA);
+        PDM_realloc(subFacesToLinkA ,subFacesToLinkA , s_subFacesToLinkA,PDM_g_num_t);
       }
 
       n_t_nAddSubFace += nAddSubFace;
@@ -3402,7 +3402,7 @@ _compute_overlay_planes
           while (newSize > s_subFacesConnecB) {
             s_subFacesConnecB += PDM_MAX(1, s_subFacesConnecB/3) ;
           }
-          subFacesConnecB = realloc(subFacesConnecB,                                    sizeof(PDM_g_num_t) * s_subFacesConnecB);
+          PDM_realloc(subFacesConnecB ,subFacesConnecB , s_subFacesConnecB,PDM_g_num_t);
         }
 
         newSize = 3 * subFacesConnecIdxB[nSubFacesB];
@@ -3410,7 +3410,7 @@ _compute_overlay_planes
           while (newSize > s_subFacesCoordsB) {
             s_subFacesCoordsB += PDM_MAX(1, s_subFacesCoordsB/3);
           }
-          subFacesCoordsB = realloc(subFacesCoordsB,                                    sizeof(double) * s_subFacesCoordsB);
+          PDM_realloc(subFacesCoordsB ,subFacesCoordsB , s_subFacesCoordsB,double);
         }
 
         int _ideb2 =     subFacesConnecIdxB[nSubFacesB-1];

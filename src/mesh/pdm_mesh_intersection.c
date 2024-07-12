@@ -1911,7 +1911,7 @@ _build_ptp
         if (idx_write_init_loc + elt_b_init_loc[elt_b_id] >= s_elt_a_elt_b_init_loc) {
           s_elt_a_elt_b_init_loc = PDM_MAX(2*s_elt_a_elt_b_init_loc,
                                            idx_write_init_loc + elt_b_init_loc[elt_b_id]);
-          elt_a_elt_b_init_loc = realloc(elt_a_elt_b_init_loc,                                         sizeof(int) * s_elt_a_elt_b_init_loc * 3);
+          PDM_realloc(elt_a_elt_b_init_loc ,elt_a_elt_b_init_loc , s_elt_a_elt_b_init_loc * 3,int);
         }
 
         for (int j = 0; j < elt_b_init_loc_n[elt_b_id]; j++) {
@@ -6044,7 +6044,7 @@ PDM_mesh_intersection_elt_volume_get
         for (int i = 0; i < n_face; i++) {
           mi->elt_volume[imesh][ipart][i] = PDM_MODULE(mi->elt_volume[imesh][ipart] + 3*i);
         }
-        mi->elt_volume[imesh][ipart] = realloc(mi->elt_volume[imesh][ipart],                                               sizeof(double) * n_face);
+        PDM_realloc(mi->elt_volume[imesh][ipart] ,mi->elt_volume[imesh][ipart] , n_face,double);
         break;
       }
       case 3: {

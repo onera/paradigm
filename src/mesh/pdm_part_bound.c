@@ -12,6 +12,8 @@
 #include "pdm_part_bound_priv.h"
 #include "pdm_printf.h"
 #include "pdm_error.h"
+#include "pdm.h"
+#include "pdm_priv.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -610,10 +612,10 @@ PDM_part_bound_adjust_size
   }
 
   _part_bound->nEltPartBound = nEltPartBound;
-  _part_bound->eltPartBoundIdx = (int *) realloc(_part_bound->eltPartBoundIdx,                                                 sizeof(int) * (nEltPartBound + 1));
+  PDM_realloc(_part_bound->eltPartBoundIdx ,_part_bound->eltPartBoundIdx , (nEltPartBound + 1),int);
 
   if (_part_bound->cplx == PDM_PART_BOUND_CPLX)
-    _part_bound->nConnectedElt = (int *) realloc(_part_bound->nConnectedElt,                                                 sizeof(int) * nEltPartBound);
+    PDM_realloc(_part_bound->nConnectedElt ,_part_bound->nConnectedElt , nEltPartBound,int);
 
   _part_bound->eltPartBound =
     (int *) realloc(_part_bound->eltPartBound,		    sizeof(int) *		    _part_bound->eltPartBoundIdx[nEltPartBound]);

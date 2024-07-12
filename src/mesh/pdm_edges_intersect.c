@@ -2180,7 +2180,7 @@ double                 *face_vtxEpsB
 
                 /* From B */
 
-                _preEir->oNewPointsB = realloc(_preEir->oNewPointsB, (_preEir->nNewPointsB + 1) * sizeof(PDM_edges_intersect_point_t));
+                PDM_realloc(_preEir->oNewPointsB ,_preEir->oNewPointsB , (_preEir->nNewPointsB + 1) ,PDM_edges_intersect_point_t);
                 oNewPointsB = _preEir->oNewPointsB;
 
                 PDM_realloc(_preEir->linkB ,_preEir->linkB , (_preEir->nNewPointsB + 1),PDM_g_num_t);
@@ -2192,7 +2192,7 @@ double                 *face_vtxEpsB
                 PDM_realloc(_preEir->uB  ,_preEir->uB  , (_preEir->nNewPointsB + 1),double);
                 uB = _preEir->uB;
 
-                _preEir->coordsB  = realloc(_preEir->coordsB, sizeof(double) * 3 * (_preEir->nNewPointsB + 1));
+                PDM_realloc(_preEir->coordsB  ,_preEir->coordsB  , 3 * (_preEir->nNewPointsB + 1),double);
                 coordsB = _preEir->coordsB;
 
                 _preEir->oNewPointsB[_preEir->nNewPointsB] = PDM_EDGES_INTERSECT_POINT_VTXA_ON_VTXB;
@@ -2211,7 +2211,7 @@ double                 *face_vtxEpsB
 
                 _preEir->nNewPointsB += 1 ;
 
-                _eir->oNewPointsB = realloc(_eir->oNewPointsB,                                            (_eir->nNewPointsB + 1) * sizeof(PDM_edges_intersect_point_t));
+                PDM_realloc(_eir->oNewPointsB ,_eir->oNewPointsB ,                                            (_eir->nNewPointsB + 1) ,PDM_edges_intersect_point_t);
                 oNewPointsB = _eir->oNewPointsB;
 
                 PDM_realloc(_eir->linkB ,_eir->linkB , (_eir->nNewPointsB + 1),PDM_g_num_t);
@@ -2400,7 +2400,7 @@ double                 *face_vtxEpsB
 
                 /* From A */
 
-                _preEir->oNewPointsA =                  realloc(_preEir->oNewPointsA,                          (_preEir->nNewPointsA + 1) * sizeof(PDM_edges_intersect_point_t));
+                PDM_realloc(_preEir->oNewPointsA ,_preEir->oNewPointsA ,                          (_preEir->nNewPointsA + 1) ,PDM_edges_intersect_point_t);
                 oNewPointsA = _preEir->oNewPointsA;
 
                 PDM_realloc(_preEir->linkA ,_preEir->linkA , (_preEir->nNewPointsA + 1),PDM_g_num_t);
@@ -2412,7 +2412,7 @@ double                 *face_vtxEpsB
                 PDM_realloc(_preEir->uA  ,_preEir->uA  , (_preEir->nNewPointsA + 1),double);
                 uA = _preEir->uA;
 
-                _preEir->coordsA  =                   realloc(_preEir->coordsA, sizeof(double) * 3 * (_preEir->nNewPointsA + 1));
+                PDM_realloc(_preEir->coordsA  ,_preEir->coordsA  , 3 * (_preEir->nNewPointsA + 1),double);
                 coordsA = _preEir->coordsA;
 
                 _preEir->oNewPointsA[_preEir->nNewPointsA] = PDM_EDGES_INTERSECT_POINT_VTXA_ON_VTXB;
@@ -2431,7 +2431,7 @@ double                 *face_vtxEpsB
 
                 _preEir->nNewPointsA += 1 ;
 
-                _eir->oNewPointsA = realloc(_eir->oNewPointsA,                                            (_eir->nNewPointsA + 1) * sizeof(PDM_edges_intersect_point_t));
+                PDM_realloc(_eir->oNewPointsA ,_eir->oNewPointsA ,                                            (_eir->nNewPointsA + 1) ,PDM_edges_intersect_point_t);
                 oNewPointsA = _eir->oNewPointsA;
 
                 PDM_realloc(_eir->linkA ,_eir->linkA , (_eir->nNewPointsA + 1),PDM_g_num_t);
@@ -4566,7 +4566,7 @@ PDM_g_num_t            *nAbsNewVtxB
           PDM_realloc(_data->coordsA     ,_data->coordsA     , 3 * _nNewPointsA,double);
           PDM_realloc(_data->linkA       ,_data->linkA       , _nNewPointsA,PDM_g_num_t);
           PDM_realloc(_data->gNumA       ,_data->gNumA       , _nNewPointsA,PDM_g_num_t);
-          _data->oNewPointsA =            realloc (_data->oNewPointsA, sizeof(PDM_edges_intersect_point_t) * _nNewPointsA);
+          PDM_realloc(_data->oNewPointsA ,_data->oNewPointsA , _nNewPointsA,PDM_edges_intersect_point_t);
         }
 
         _data->nNewPointsA = _nNewPointsA;
@@ -4599,7 +4599,7 @@ PDM_g_num_t            *nAbsNewVtxB
           PDM_realloc(_data->coordsB     ,_data->coordsB     , 3 * _nNewPointsB,double);
           PDM_realloc(_data->linkB       ,_data->linkB       , _nNewPointsB,PDM_g_num_t);
           PDM_realloc(_data->gNumB       ,_data->gNumB       , _nNewPointsB,PDM_g_num_t);
-          _data->oNewPointsB =            realloc (_data->oNewPointsB, sizeof(PDM_edges_intersect_point_t) * _nNewPointsB);
+          PDM_realloc(_data->oNewPointsB ,_data->oNewPointsB , _nNewPointsB,PDM_edges_intersect_point_t);
         }
 
         _data->nNewPointsB = _nNewPointsB;

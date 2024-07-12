@@ -547,7 +547,7 @@ PDM_part_graph_compute_from_face_cell
 
   //We reallocate the memory in case of duplicated values removed
   //The new array size is idx_write (stored in (*cell_cell_idxCompressed)[part_ini->n_cell])
-  *cell_cellCompressed = realloc(*cell_cellCompressed,                                (*cell_cell_idxCompressed)[part_ini->n_cell] * sizeof(int));
+  PDM_realloc(*cell_cellCompressed ,*cell_cellCompressed ,                                (*cell_cell_idxCompressed)[part_ini->n_cell] ,int);
 
 }
 

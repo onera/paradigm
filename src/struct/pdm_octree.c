@@ -453,7 +453,7 @@ PDM_octree_build
 
   free (n_pts_proc);
 
-  extents_proc = (double *) realloc (extents_proc,                                   sizeof(double) * s_extents * n_used_rank);
+  PDM_realloc(extents_proc ,extents_proc , s_extents * n_used_rank,double);
 
   int *initLocation_proc = (int *) malloc (sizeof(int) * n_info_location * n_used_rank);
   for (int i = 0; i < n_info_location * n_used_rank; i++) {
@@ -1611,11 +1611,11 @@ double           *closest_octree_pt_dist2
 
     if (s_closest_octree_pt_dist2 < i_recv_gnum[n_rank]) {
       s_closest_octree_pt_dist2 = i_recv_gnum[n_rank];
-      _closest_octree_pt_id =        realloc (_closest_octree_pt_id,                 sizeof(int) * 2 * s_closest_octree_pt_dist2);
+      PDM_realloc(_closest_octree_pt_id ,_closest_octree_pt_id , 2 * s_closest_octree_pt_dist2,int);
 
-      _closest_octree_pt_dist2 =        realloc (_closest_octree_pt_dist2,                 sizeof(double) * s_closest_octree_pt_dist2);
+      PDM_realloc(_closest_octree_pt_dist2 ,_closest_octree_pt_dist2 , s_closest_octree_pt_dist2,double);
 
-      _closest_octree_pt_g_num =        realloc (_closest_octree_pt_g_num,                 sizeof(PDM_g_num_t) * s_closest_octree_pt_dist2);
+      PDM_realloc(_closest_octree_pt_g_num ,_closest_octree_pt_g_num , s_closest_octree_pt_dist2,PDM_g_num_t);
     }
 
     /* for (int j1 = 0; j1 < i_recv_gnum[n_rank]; j1++) { */
