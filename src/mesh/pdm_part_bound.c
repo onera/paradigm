@@ -617,8 +617,7 @@ PDM_part_bound_adjust_size
   if (_part_bound->cplx == PDM_PART_BOUND_CPLX)
     PDM_realloc(_part_bound->nConnectedElt ,_part_bound->nConnectedElt , nEltPartBound,int);
 
-  _part_bound->eltPartBound =
-    (int *) realloc(_part_bound->eltPartBound,		    sizeof(int) *		    _part_bound->eltPartBoundIdx[nEltPartBound]);
+  PDM_realloc(_part_bound->eltPartBound, _part_bound->eltPartBound, _part_bound->eltPartBoundIdx[nEltPartBound], int);
 
 }
 

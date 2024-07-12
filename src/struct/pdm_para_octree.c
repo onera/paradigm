@@ -2789,15 +2789,13 @@ _compute_neighbours
 
                 if (neighbours_tmp[i].n_neighbour[j] >= neighbours_tmp[i].s_neighbour[j]) {
                   neighbours_tmp[i].s_neighbour[j] *= 2;
-                  neighbours_tmp[i].neighbours[j] =
-                    realloc (neighbours_tmp[i].neighbours[j],                             sizeof(int) * neighbours_tmp[i].s_neighbour[j]);
+                  PDM_realloc (neighbours_tmp[i].neighbours[j], neighbours_tmp[i].neighbours[j],neighbours_tmp[i].s_neighbour[j], int);
                 }
                 neighbours_tmp[i].neighbours[j][neighbours_tmp[i].n_neighbour[j]++] = idx;
 
                 if (neighbours_tmp[idx].n_neighbour[inv_j] >= neighbours_tmp[idx].s_neighbour[inv_j]) {
                   neighbours_tmp[idx].s_neighbour[inv_j] *= 2;
-                  neighbours_tmp[idx].neighbours[inv_j] =
-                    realloc (neighbours_tmp[idx].neighbours[inv_j],                             sizeof(int) * neighbours_tmp[idx].s_neighbour[inv_j]);
+                  PDM_realloc (neighbours_tmp[idx].neighbours[inv_j], neighbours_tmp[idx].neighbours[inv_j], neighbours_tmp[idx].s_neighbour[inv_j], int);
                 }
                 neighbours_tmp[idx].neighbours[inv_j][neighbours_tmp[idx].n_neighbour[inv_j]++] = i;
               }
@@ -7662,7 +7660,8 @@ PDM_para_octree_point_cloud_set
   const int idx = _octree->n_points;
 
   _octree->n_points += n_points;
-  _octree->points =    realloc (_octree->points, _octree->n_points * sizeof(double) * _octree->dim);
+
+  PDM_realloc(_octree->points, _octree->points, _octree->n_points * _octree->dim, double);
   PDM_realloc(_octree->points_icloud ,_octree->points_icloud , _octree->n_points ,int);
   PDM_realloc(_octree->points_gnum ,_octree->points_gnum , _octree->n_points ,PDM_g_num_t);
   PDM_realloc(_octree->points_code ,_octree->points_code , _octree->n_points ,PDM_morton_code_t);

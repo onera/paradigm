@@ -1093,10 +1093,8 @@ PDM_mesh_location_n_part_cloud_set
 {
   ml->point_clouds[i_point_cloud].n_part = n_part;
   PDM_realloc(ml->point_clouds[i_point_cloud].n_points ,ml->point_clouds[i_point_cloud].n_points , n_part ,int);
-  ml->point_clouds[i_point_cloud].coords =    realloc(ml->point_clouds[i_point_cloud].coords,
-            n_part * sizeof(double *));
-  ml->point_clouds[i_point_cloud].gnum =    realloc(ml->point_clouds[i_point_cloud].gnum,
-            n_part * sizeof(PDM_g_num_t *));
+  PDM_realloc(ml->point_clouds[i_point_cloud].coords, ml->point_clouds[i_point_cloud].coords, n_part, double *);
+  PDM_realloc(ml->point_clouds[i_point_cloud].gnum, ml->point_clouds[i_point_cloud].gnum, n_part, PDM_g_num_t *);
 
   for (int i = 0; i < n_part; i++) {
     ml->point_clouds[i_point_cloud].n_points[i] = -1;

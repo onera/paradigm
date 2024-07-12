@@ -3813,8 +3813,7 @@ void PDM_io_par_block_write
               buffer = (unsigned char *) malloc (sizeof(unsigned char) *
                                                  max_n_donnees_blocs_actif * taille_donnee);
             else
-              buffer = (unsigned char *) realloc (buffer,                                                  sizeof(unsigned char) *
-                                                  max_n_donnees_blocs_actif * taille_donnee);
+              PDM_realloc (buffer, buffer, max_n_donnees_blocs_actif * taille_donnee, unsigned char);
 
             if (donnees_ecrites != n_donnees_blocs_tmp)
               etat_ecriture = 0;

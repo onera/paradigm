@@ -2148,7 +2148,7 @@ _compute_overlay_planes
 
   PDM_realloc(subFacesConnecA ,subFacesConnecA , subFacesConnecIdx[nSubFaces],PDM_g_num_t);
 
-  subFacesCoordsA = realloc (subFacesCoordsA,                             3 * sizeof(double) * subFacesConnecIdx[nSubFaces]);
+  PDM_realloc (subFacesCoordsA, subFacesCoordsA, 3  * subFacesConnecIdx[nSubFaces], double);
 
   PDM_realloc(subFacesConnecB ,subFacesConnecB , subFacesConnecIdx[nSharedSubFaces],PDM_g_num_t);
 

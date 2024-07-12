@@ -1940,14 +1940,14 @@ double                **polyClippCoordsB
      * Update size
      */
 
-    *polyClippIdxA =            realloc (*polyClippIdxA, (sizeof(int) * (*nPolyClippA + 1)));
+    PDM_realloc (*polyClippIdxA, *polyClippIdxA, *nPolyClippA + 1, int);
 
-    *polyClippConnecA =            realloc (*polyClippConnecA, (sizeof(PDM_g_num_t) * (*polyClippIdxA)[*nPolyClippA]));
-
-    *polyClippCoordsA =            realloc (*polyClippCoordsA, (sizeof(double) * 3 * (*polyClippIdxA)[*nPolyClippA]));
+    PDM_realloc (*polyClippConnecA, *polyClippConnecA, (*polyClippIdxA)[*nPolyClippA], PDM_g_num_t);
+    PDM_realloc (*polyClippCoordsA, *polyClippCoordsA,  3 * (*polyClippIdxA)[*nPolyClippA], double);
 
     *polyClippIdxB = *polyClippIdxA;
-    *polyClippConnecB =            realloc (*polyClippConnecB, (sizeof(PDM_g_num_t) * (*polyClippIdxB)[*nPolyClippB]));
+     
+    PDM_realloc (*polyClippConnecB, *polyClippConnecB, (*polyClippIdxB)[*nPolyClippB], PDM_g_num_t);
 
     *polyClippCoordsB = *polyClippCoordsA;
 
@@ -2225,14 +2225,12 @@ double                **polyClippCoordsB
      * Update size
      */
 
-    *polyClippIdxA =            realloc (*polyClippIdxA, (sizeof(int) * (*nPolyClippA + 1)));
-    *polyClippConnecA =            realloc (*polyClippConnecA, (sizeof(PDM_g_num_t) * (*polyClippIdxA)[*nPolyClippA]));
-    *polyClippCoordsA =            realloc (*polyClippCoordsA, (sizeof(double)* 3 * (*polyClippIdxA)[*nPolyClippA]));
-
-    *polyClippIdxB =            realloc (*polyClippIdxB, (sizeof(int) * (*nPolyClippB + 1)));
-    *polyClippConnecB =            realloc (*polyClippConnecB, (sizeof(PDM_g_num_t) * (*polyClippIdxB)[*nPolyClippB]));
-
-    *polyClippCoordsB =            realloc (*polyClippCoordsB, (sizeof(double)* 3 * (*polyClippIdxB)[*nPolyClippB]));
+    PDM_realloc (*polyClippIdxA, *polyClippIdxA, (*nPolyClippA + 1), int);
+    PDM_realloc (*polyClippConnecA, *polyClippConnecA, (*polyClippIdxA)[*nPolyClippA], PDM_g_num_t);
+    PDM_realloc (*polyClippCoordsA, *polyClippCoordsA, 3 * (*polyClippIdxA)[*nPolyClippA], double);
+    PDM_realloc (*polyClippIdxB, *polyClippIdxB, (*nPolyClippB + 1), int);
+    PDM_realloc (*polyClippConnecB, *polyClippConnecB, (*polyClippIdxB)[*nPolyClippB], PDM_g_num_t);
+    PDM_realloc (*polyClippCoordsB, *polyClippCoordsB,  3 * (*polyClippIdxB)[*nPolyClippB], double);
   }
 
   if (1 == 0) {
