@@ -130,8 +130,6 @@ Wait_job()
 
     printf  "${PURPLE}[%3.3d/%3.3d] - %s: Finalize${NC}\n" ${j1} ${nTest} ${TestNamel1[0]} 
 
-    wait $pid
-
     if [[ "${Ws}" != "" ]]
     then
       wdir="${Ws}/${TestNamel1[0]}_d"
@@ -140,11 +138,13 @@ Wait_job()
     fi  
     cd ${wdir}
 
+    wait $pid
+
     if [ "$?" -ne "0" ]
     then
 
       flag_sanitize_failed=0
-      for file in `ls *_e.[0-9]*`
+      for file in `ls *_e.[0-9]* 2>/dev/null`
       do 
         flag_file=`cat $file | grep 'LeakSanitizer has encountered a fatal error' | wc -l` 
         ((flag_sanitize_failed=flag_sanitize_failed+flag_file)) 
