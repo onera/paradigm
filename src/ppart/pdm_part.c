@@ -183,7 +183,8 @@ _dual_graph_from_face_cell
   int *cell_to_send_idx = PDM_array_new_idx_from_sizes_int(cell_to_send_n, n_rank);
   PDM_array_reset_int(cell_to_send_n, n_rank, 0);
 
-  PDM_g_num_t *cell_to_send = (PDM_g_num_t *) malloc(cell_to_send_idx[n_rank] * sizeof(PDM_g_num_t));
+  PDM_g_num_t *cell_to_send;
+  PDM_malloc(cell_to_send,cell_to_send_idx[n_rank] ,PDM_g_num_t);
 
   /*
    * Stores pair of cells to send to the others processes
@@ -214,7 +215,8 @@ _dual_graph_from_face_cell
    * Receive pair of Cells from the others processes
    */
 
-  int *cell_to_recv_n = (int *) malloc(n_rank * sizeof(int));
+  int *cell_to_recv_n;
+  PDM_malloc(cell_to_recv_n,n_rank ,int);
 
   PDM_MPI_Alltoall(cell_to_send_n,
                    1,
@@ -226,7 +228,8 @@ _dual_graph_from_face_cell
 
   int *cell_to_recv_idx =  PDM_array_new_idx_from_sizes_int(cell_to_recv_n, n_rank);
 
-  PDM_g_num_t *cell_to_recv = (PDM_g_num_t *) malloc(cell_to_recv_idx[n_rank]*sizeof(PDM_g_num_t));
+  PDM_g_num_t *cell_to_recv;
+  PDM_malloc(cell_to_recv,cell_to_recv_idx[n_rank],PDM_g_num_t);
 
   PDM_MPI_Alltoallv(cell_to_send,
                     cell_to_send_n,
@@ -260,7 +263,8 @@ _dual_graph_from_face_cell
    * Count neighbour cells for each cell
    */
 
-  int *n_neighbour = (int *) malloc(ppart->dn_cell * sizeof(int));
+  int *n_neighbour;
+  PDM_malloc(n_neighbour,ppart->dn_cell ,int);
 
   int have_dcell_face = 0;
   if (ppart->_dcell_face_idx != NULL)
@@ -457,7 +461,8 @@ _dual_graph_from_cell_face
    * Receive faces from the others processes
    */
 
-  int *face_to_recv_n = (int *) malloc(n_rank * sizeof(int));
+  int *face_to_recv_n;
+  PDM_malloc(face_to_recv_n,n_rank ,int);
 
   PDM_MPI_Alltoall(face_to_send_n,
                    1,
@@ -593,7 +598,7 @@ _dual_graph_from_cell_face
    * Allocate dual graph
    */
 
-  ppart->ddual_graph_idx = (PDM_g_num_t *) malloc((1+ppart->dn_cell) * sizeof(PDM_g_num_t));
+  PDM_malloc(ppart->ddual_graph_idx,(1+ppart->dn_cell) ,PDM_g_num_t);
   int *n_neighbour      = PDM_array_zeros_int(ppart->dn_cell);
 
   ppart->ddual_graph_idx[0] = 0;
@@ -704,12 +709,14 @@ _split
       int edgecut;
       int ncon       = 1;
 
-      double *ubvec = (double *) malloc(ncon * sizeof(double));
+      double *ubvec;
+      PDM_malloc(ubvec,ncon ,double);
       for (int i = 0; i < ncon; i++) {
         ubvec[i] = 1.05;
       }
 
-      double *tpwgts = (double *) malloc(ncon * ppart->tn_part * sizeof(double));
+      double *tpwgts;
+      PDM_malloc(tpwgts,ncon * ppart->tn_part ,double);
 
       for (int i = 0; i < ncon * ppart->tn_part; i++) {
         tpwgts[i] = (double) (1./ppart->tn_part);
@@ -719,7 +726,8 @@ _split
        * Call metis
        */
 
-      PDM_g_num_t *_dcell_proc = (PDM_g_num_t *) malloc((n_rank+1) * sizeof(PDM_g_num_t));
+      PDM_g_num_t *_dcell_proc;
+      PDM_malloc(_dcell_proc,(n_rank+1) ,PDM_g_num_t);
 
       for (int i = 0; i < n_rank + 1; i++) {
         _dcell_proc[i] = ppart->dcell_proc[i] - 1;
@@ -758,7 +766,8 @@ _split
       // printf("chech : %i \n", check);
       int *edgeWeight = NULL;
 
-      // int* dual_graph_n = (int*) malloc( sizeof(int) * ppart->dn_cell);
+      // int *dual_graph_n;
+ PDM_malloc(dual_graph_n,ppart->dn_cell,int);
       // for(int i_entity = 0; i_entity < ppart->dn_cell; ++i_entity) {
       //   dual_graph_n[i_entity] = ppart->ddual_graph_idx[i_entity+1] - ppart->ddual_graph_idx[i_entity];
       // }
@@ -917,8 +926,10 @@ _distrib_cell
   }
 
   PDM_g_num_t *face_to_recv     = NULL;
-  int         *face_to_recv_n   = (int *) malloc(n_rank * sizeof(int));
-  int         *face_to_recv_idx = (int *) malloc((n_rank + 1) * sizeof(int));
+  int *face_to_recv_n;
+  PDM_malloc(face_to_recv_n,n_rank ,int);
+  int *face_to_recv_idx;
+  PDM_malloc(face_to_recv_idx,(n_rank + 1) ,int);
 
   _alltoall(face_to_send,
             face_to_send_n,
@@ -973,12 +984,12 @@ _distrib_cell
 
     _part_t *mesh_part  = ppart->mesh_parts[i];
 
-    mesh_part->cell_face_idx    = (int *)          malloc((mesh_part->n_cell + 1) * sizeof(int));
+    PDM_malloc(mesh_part->cell_face_idx,(mesh_part->n_cell + 1) ,int);
     mesh_part->cell_face_idx[0] = 0;
-    mesh_part->gcell_face       = (PDM_g_num_t *) malloc(mesh_part->n_face * sizeof(PDM_g_num_t));
-    mesh_part->cell_ln_to_gn    = (PDM_g_num_t *) malloc(mesh_part->n_cell * sizeof(PDM_g_num_t));
+    PDM_malloc(mesh_part->gcell_face,mesh_part->n_face ,PDM_g_num_t);
+    PDM_malloc(mesh_part->cell_ln_to_gn,mesh_part->n_cell ,PDM_g_num_t);
     if (ppart->_dcell_tag != NULL)
-      mesh_part->cell_tag      = (int *)          malloc(mesh_part->n_cell * sizeof(int));
+      PDM_malloc(mesh_part->cell_tag,mesh_part->n_cell ,int);
 
     mesh_part->n_cell          = 0; /* reset temporary */
 
@@ -1017,8 +1028,9 @@ _distrib_cell
 
     _part_t *mesh_part  = ppart->mesh_parts[i];
 
-    int *initial_idx     = (int *) malloc(mesh_part->n_face * sizeof(int));
-    mesh_part->cell_face  = (int *) malloc(mesh_part->n_face * sizeof(int));
+    int *initial_idx;
+    PDM_malloc(initial_idx,mesh_part->n_face ,int);
+    PDM_malloc(mesh_part->cell_face,mesh_part->n_face ,int);
 
     /* Map on gcell_face */
 
@@ -1095,11 +1107,11 @@ _distrib_cell
     }
 
     /* reordering cells and faces */
-    mesh_part->new_to_old_order_cell = (int *) malloc (sizeof(int) * mesh_part->n_cell);
+    PDM_malloc(mesh_part->new_to_old_order_cell,mesh_part->n_cell,int);
     for (int i1 = 0; i1 < mesh_part->n_cell; i1++){
       mesh_part->new_to_old_order_cell[i1] = i1;
     }
-    mesh_part->new_to_old_order_face = (int *) malloc (sizeof(int) * mesh_part->n_face);
+    PDM_malloc(mesh_part->new_to_old_order_face,mesh_part->n_face,int);
     for (int i1 = 0; i1 < mesh_part->n_face; i1++){
       mesh_part->new_to_old_order_face[i1] = i1;
     }
@@ -1138,12 +1150,16 @@ _distrib_face
   if (ppart->_dface_tag != NULL)
     n_data_face += 1;
 
-  int          *face_to_send_idx = (int *) malloc((n_rank + 1) * sizeof(int));
-  int          *face_to_send_n   = (int *) malloc(n_rank * sizeof(int));
+  int *face_to_send_idx;
+  PDM_malloc(face_to_send_idx,(n_rank + 1) ,int);
+  int *face_to_send_n;
+  PDM_malloc(face_to_send_n,n_rank ,int);
   PDM_g_num_t *face_to_send    = NULL;
 
-  int          *requested_face_n   = (int *) malloc(n_rank * sizeof(int));
-  int          *requested_face_idx = (int *) malloc((n_rank + 1) * sizeof(int));
+  int *requested_face_n;
+  PDM_malloc(requested_face_n,n_rank ,int);
+  int *requested_face_idx;
+  PDM_malloc(requested_face_idx,(n_rank + 1) ,int);
 
   for (int i_part = 0; i_part < ppart->mn_part; i_part++) {
 
@@ -1158,7 +1174,7 @@ _distrib_face
     if (i_part < ppart->n_part) {
 
       mesh_part  = ppart->mesh_parts[i_part];
-      all_to_all_n_to_ln = (int *) malloc(mesh_part->n_face * sizeof(int));
+      PDM_malloc(all_to_all_n_to_ln,mesh_part->n_face ,int);
 
       /*
        *  Processes exchange list of faces which they want receive information
@@ -1175,7 +1191,7 @@ _distrib_face
         face_to_send_idx[i+1] += face_to_send_idx[i] ;
       }
 
-      face_to_send = (PDM_g_num_t *) malloc(face_to_send_idx[n_rank] * sizeof(PDM_g_num_t));
+      PDM_malloc(face_to_send,face_to_send_idx[n_rank] ,PDM_g_num_t);
 
       for (int i = 0; i < mesh_part->n_face; i++) {
 
@@ -1288,8 +1304,8 @@ _distrib_face
       /* Complete face_tag, face_vtx_idx gface_vtx */
 
       if (ppart->_dface_tag != NULL)
-        mesh_part->face_tag  = (int *) malloc(mesh_part->n_face * sizeof(int));
-      mesh_part->face_vtx_idx = (int *) malloc((mesh_part->n_face + 1) * sizeof(int));
+        PDM_malloc(mesh_part->face_tag,mesh_part->n_face ,int);
+      PDM_malloc(mesh_part->face_vtx_idx,(mesh_part->n_face + 1) ,int);
 
       int k = 0;
       for (int i = 0; i < mesh_part->n_face; i++) {
@@ -1325,8 +1341,9 @@ _distrib_face
 
       /* Vertex local numbering vtx_ln_to_gn */
 
-      int *initial_idx   = (int *) malloc(mesh_part->face_vtx_idx[mesh_part->n_face] * sizeof(int));
-      mesh_part->face_vtx = (int *) malloc(mesh_part->face_vtx_idx[mesh_part->n_face] * sizeof(int));
+      int *initial_idx;
+      PDM_malloc(initial_idx,mesh_part->face_vtx_idx[mesh_part->n_face] ,int);
+      PDM_malloc(mesh_part->face_vtx,mesh_part->face_vtx_idx[mesh_part->n_face] ,int);
 
       /* Map on gface_vtx */
 
@@ -1438,12 +1455,16 @@ _distrib_vtx
   PDM_MPI_Comm_rank(ppart->comm, &i_rank);
   PDM_MPI_Comm_size(ppart->comm, &n_rank);
 
-  int          *vtx_to_send_idx = (int *) malloc((n_rank + 1) * sizeof(int));
-  int          *vtx_to_send_n   = (int *) malloc(n_rank * sizeof(int));
+  int *vtx_to_send_idx;
+  PDM_malloc(vtx_to_send_idx,(n_rank + 1) ,int);
+  int *vtx_to_send_n;
+  PDM_malloc(vtx_to_send_n,n_rank ,int);
   PDM_g_num_t  *vtx_to_send    = NULL;
 
-  int          *requested_vtx_n   = (int *) malloc(n_rank * sizeof(int));
-  int          *requested_vtx_idx = (int *) malloc((n_rank + 1) * sizeof(int));
+  int *requested_vtx_n;
+  PDM_malloc(requested_vtx_n,n_rank ,int);
+  int *requested_vtx_idx;
+  PDM_malloc(requested_vtx_idx,(n_rank + 1) ,int);
 
   for (int i_part = 0; i_part < ppart->mn_part; i_part++) {
 
@@ -1458,7 +1479,7 @@ _distrib_vtx
     if (i_part < ppart->n_part) {
 
       mesh_part  = ppart->mesh_parts[i_part];
-      all_to_all_n_to_ln = (int *) malloc(mesh_part->n_vtx * sizeof(int));
+      PDM_malloc(all_to_all_n_to_ln,mesh_part->n_vtx ,int);
 
       /*
        *  Processes exchange list of vtxs which they want receive information
@@ -1474,7 +1495,7 @@ _distrib_vtx
         vtx_to_send_idx[i+1] += vtx_to_send_idx[i] ;
       }
 
-      vtx_to_send = (PDM_g_num_t *) malloc(vtx_to_send_idx[n_rank] * sizeof(PDM_g_num_t));
+      PDM_malloc(vtx_to_send,vtx_to_send_idx[n_rank] ,PDM_g_num_t);
 
       for (int i = 0; i < mesh_part->n_vtx; i++) {
 
@@ -1580,10 +1601,10 @@ _distrib_vtx
       /* Complete vtx_tag, vtx */
 
       if (ppart->_dvtx_tag != NULL)
-        mesh_part->vtx_tag  = (int *) malloc(mesh_part->n_vtx * sizeof(int));
-      mesh_part->vtx = (double *) malloc(3 * mesh_part->n_vtx * sizeof(double));
+        PDM_malloc(mesh_part->vtx_tag,mesh_part->n_vtx ,int);
+      PDM_malloc(mesh_part->vtx,3 * mesh_part->n_vtx ,double);
 
-      // mesh_part->new_to_old_order_vtx = (int *) malloc (sizeof(int) * mesh_part->n_vtx);
+      // PDM_malloc(mesh_part->new_to_old_order_vtx,mesh_part->n_vtx,int);
       // for (int i1 = 0; i1 < mesh_part->n_vtx; i1++){
       //   mesh_part->new_to_old_order_vtx[i1] = i1;
       // }
@@ -1692,12 +1713,16 @@ _search_part_bound_face
   PDM_MPI_Comm_rank(ppart->comm, &i_rank);
   PDM_MPI_Comm_size(ppart->comm, &n_rank);
 
-  int          *face_to_send_idx = (int *) malloc((n_rank + 1) * sizeof(int));
-  int          *face_to_send_n   = (int *) malloc(n_rank * sizeof(int));
+  int *face_to_send_idx;
+  PDM_malloc(face_to_send_idx,(n_rank + 1) ,int);
+  int *face_to_send_n;
+  PDM_malloc(face_to_send_n,n_rank ,int);
   PDM_g_num_t  *face_to_send     = NULL;
 
-  int          *requested_face_n   = (int *) malloc(n_rank * sizeof(int));
-  int          *requested_face_idx = (int *) malloc((n_rank + 1) * sizeof(int));
+  int *requested_face_n;
+  PDM_malloc(requested_face_n,n_rank ,int);
+  int *requested_face_idx;
+  PDM_malloc(requested_face_idx,(n_rank + 1) ,int);
 
   int n_data_pb = 6;
 
@@ -1741,7 +1766,7 @@ _search_part_bound_face
         face_to_send_idx[i+1] += face_to_send_idx[i] ;
       }
 
-      face_to_send = (PDM_g_num_t *) malloc(face_to_send_idx[n_rank] * sizeof(PDM_g_num_t));
+      PDM_malloc(face_to_send,face_to_send_idx[n_rank] ,PDM_g_num_t);
 
       for (int i = 0; i < mesh_part->n_face; i++) {
 
@@ -1822,7 +1847,8 @@ _search_part_bound_face
   for (int i = 0; i < n_rank; i++)
     face_to_send_idx[i + 1] += face_to_send_idx[i];
 
-  int *face_to_sendInt = (int *) malloc(face_to_send_idx[n_rank] * sizeof(int));
+  int *face_to_sendInt;
+  PDM_malloc(face_to_sendInt,face_to_send_idx[n_rank] ,int);
 
   idx = 0;
   for(int i = 0; i < ppart->dn_face; i++) {
@@ -1928,17 +1954,20 @@ _search_part_bound_face
   for (int i = 0; i < ppart->n_part; i++) {
     _part_t *mesh_part  = ppart->mesh_parts[i];
 
-    int *work_array  = (int *) malloc(mesh_part->n_face_part_bound * sizeof(int));
+    int *work_array;
+    PDM_malloc(work_array,mesh_part->n_face_part_bound ,int);
     PDM_g_num_t *work_array2;
     if (sizeof(PDM_g_num_t) == sizeof(int)) {
       work_array2 = (PDM_g_num_t *) work_array;
     }
     else {
-      work_array2  = (PDM_g_num_t *) malloc(mesh_part->n_face_part_bound * sizeof(PDM_g_num_t));
+      PDM_malloc(work_array2,mesh_part->n_face_part_bound ,PDM_g_num_t);
     }
 
-    int *ind         = (int *) malloc(mesh_part->n_face_part_bound * sizeof(int));
-    int *copy_face_part_bound = (int *) malloc(n_data_face_part_bound * mesh_part->n_face_part_bound * sizeof(int));
+    int *ind;
+    PDM_malloc(ind,mesh_part->n_face_part_bound ,int);
+    int *copy_face_part_bound;
+    PDM_malloc(copy_face_part_bound,n_data_face_part_bound * mesh_part->n_face_part_bound ,int);
 
     /* Sort by procs */
 
@@ -2075,15 +2104,21 @@ _distrib_face_groups
   PDM_MPI_Comm_rank(ppart->comm, &i_rank);
   PDM_MPI_Comm_size(ppart->comm, &n_rank);
 
-  int          *face_to_send_idx = (int *) malloc((n_rank + 1) * sizeof(int));
-  int          *face_to_send_n   = (int *) malloc(n_rank * sizeof(int));
+  int *face_to_send_idx;
+  PDM_malloc(face_to_send_idx,(n_rank + 1) ,int);
+  int *face_to_send_n;
+  PDM_malloc(face_to_send_n,n_rank ,int);
   PDM_g_num_t  *face_to_send    = NULL;
 
-  int          *requested_face_n   = (int *) malloc(n_rank * sizeof(int));
-  int          *requested_face_idx = (int *) malloc((n_rank + 1) * sizeof(int));
+  int *requested_face_n;
+  PDM_malloc(requested_face_n,n_rank ,int);
+  int *requested_face_idx;
+  PDM_malloc(requested_face_idx,(n_rank + 1) ,int);
 
-  PDM_g_num_t *dface_group_proc = (PDM_g_num_t *) malloc((n_rank + 1) * sizeof(PDM_g_num_t));
-  PDM_g_num_t *dface_group     = (PDM_g_num_t *) malloc(ppart->dn_face * sizeof(PDM_g_num_t));
+  PDM_g_num_t *dface_group_proc;
+  PDM_malloc(dface_group_proc,(n_rank + 1) ,PDM_g_num_t);
+  PDM_g_num_t *dface_group;
+  PDM_malloc(dface_group,ppart->dn_face ,PDM_g_num_t);
 
   for (int igroup = 0; igroup < ppart->n_face_group; igroup++) {
 
@@ -2127,7 +2162,7 @@ _distrib_face_groups
       face_to_send_idx[i+1] += face_to_send_idx[i] ;
     }
 
-    face_to_send = (PDM_g_num_t *) malloc(face_to_send_idx[n_rank] * sizeof(PDM_g_num_t));
+    PDM_malloc(face_to_send,face_to_send_idx[n_rank] ,PDM_g_num_t);
     for (int i = ppart->_dface_group_idx[igroup];
          i < ppart->_dface_group_idx[igroup+1];
          i++) {
@@ -2183,7 +2218,7 @@ _distrib_face_groups
       if (i_part < ppart->n_part) {
 
         mesh_part  = ppart->mesh_parts[i_part];
-        all_to_all_n_to_ln = (int *) malloc(mesh_part->n_face * sizeof(int));
+        PDM_malloc(all_to_all_n_to_ln,mesh_part->n_face ,int);
 
         /*
          *  Processes exchange list of faces which they want receive information
@@ -2199,7 +2234,7 @@ _distrib_face_groups
           face_to_send_idx[i+1] += face_to_send_idx[i] ;
         }
 
-        face_to_send = (PDM_g_num_t *) malloc(face_to_send_idx[n_rank] * sizeof(PDM_g_num_t));
+        PDM_malloc(face_to_send,face_to_send_idx[n_rank] ,PDM_g_num_t);
 
         for (int i = 0; i < mesh_part->n_face; i++) {
 
@@ -2307,7 +2342,7 @@ _distrib_face_groups
             mesh_part->face_group_idx[igroup+1] += 1;
 
         if (igroup == 0) {
-          mesh_part->face_group = (int *) malloc(mesh_part->face_group_idx[igroup+1] * sizeof(int));
+          PDM_malloc(mesh_part->face_group,mesh_part->face_group_idx[igroup+1] ,int);
           mesh_part->face_group_ln_to_gn =
             (PDM_g_num_t *) malloc(mesh_part->face_group_idx[igroup+1]
                                     * sizeof(PDM_g_num_t));
@@ -2949,7 +2984,8 @@ PDM_part_create
 
   PDM_part_renum_method_load_local();
 
-  _PDM_part_t *_ppart = malloc(sizeof(_PDM_part_t));
+  _PDM_part_t *_ppart;
+  PDM_malloc(_ppart,1,_PDM_part_t);
 
   char *use_multipart_var;
   _ppart->use_multipart = 0;
@@ -3024,7 +3060,7 @@ PDM_part_create
     _ppart->n_property_face       = n_property_face;
     _ppart->renum_properties_face = renum_properties_face;
 
-    _ppart->dcell_proc = (PDM_g_num_t *) malloc((n_rank+1) * sizeof(PDM_g_num_t));
+    PDM_malloc(_ppart->dcell_proc,(n_rank+1) ,PDM_g_num_t);
     PDM_g_num_t _dn_cell = (PDM_g_num_t) dn_cell;
     PDM_MPI_Allgather((void *) &_dn_cell,
                       1,
@@ -3055,8 +3091,9 @@ PDM_part_create
     _ppart->_dface_vtx_idx = dface_vtx_idx;
     _ppart->_dface_vtx     = dface_vtx;
 
-    _ppart->dface_proc = (PDM_g_num_t *) malloc((n_rank+1) * sizeof(PDM_g_num_t));
-    int *dn_face_proc = (int *) malloc((n_rank) * sizeof(int));
+    PDM_malloc(_ppart->dface_proc,(n_rank+1) ,PDM_g_num_t);
+    int *dn_face_proc;
+    PDM_malloc(dn_face_proc,(n_rank) ,int);
 
     PDM_MPI_Allgather((void *) &dn_face,
                       1,
@@ -3077,8 +3114,9 @@ PDM_part_create
     _ppart->_dvtx_coord    = dvtx_coord;
     _ppart->_dvtx_tag      = dvtx_tag;
 
-    _ppart->dvtx_proc = (PDM_g_num_t *) malloc((n_rank+1) * sizeof(PDM_g_num_t));
-    int *dn_vtx_proc = (int *) malloc((n_rank) * sizeof(int));
+    PDM_malloc(_ppart->dvtx_proc,(n_rank+1) ,PDM_g_num_t);
+    int *dn_vtx_proc;
+    PDM_malloc(dn_vtx_proc,(n_rank) ,int);
 
     PDM_MPI_Allgather((void *) &dn_vtx,
                       1,
@@ -3110,7 +3148,7 @@ PDM_part_create
 
     _ppart->mn_part = -1;
 
-    _ppart->dpart_proc = (int *) malloc((n_rank + 1) * sizeof(int));
+    PDM_malloc(_ppart->dpart_proc,(n_rank + 1) ,int);
     PDM_MPI_Allgather((void *) &n_part,
                       1,
                       PDM_MPI_INT,
@@ -3127,7 +3165,7 @@ PDM_part_create
 
     _ppart->tn_part =  _ppart->dpart_proc[n_rank];
 
-    _ppart->gpart_to_lproc_part = (int *) malloc(2*_ppart->tn_part * sizeof(int));
+    PDM_malloc(_ppart->gpart_to_lproc_part,2*_ppart->tn_part ,int);
 
     for (int i = 0; i < n_rank; i++) {
       for (int j = _ppart->dpart_proc[i]; j < _ppart->dpart_proc[i+1]; j++) {
@@ -3136,7 +3174,7 @@ PDM_part_create
       }
     }
 
-    _ppart->mesh_parts = (_part_t **) malloc(_ppart->n_part * sizeof(_part_t *));
+    PDM_malloc(_ppart->mesh_parts,_ppart->n_part ,_part_t *);
 
     for (int i = 0; i < _ppart->n_part; i++)
       _ppart->mesh_parts[i] = NULL;
@@ -3196,7 +3234,7 @@ PDM_part_create
     int *cell_part;
 
     if (have_dcell_part == 0) {
-      cell_part = (int *) malloc(dn_cell * sizeof(int));
+      PDM_malloc(cell_part,dn_cell ,int);
       _split(_ppart,
              cell_part);
       for (int i = 0; i < dn_cell; i++) {
@@ -3795,11 +3833,15 @@ int         *bound_part_faces_sum
   int n_rank;
   PDM_MPI_Comm_size(_ppart->comm, &n_rank);
 
-  int *n_loc = (int *) malloc(_ppart->n_part * sizeof(int));
-  int *n_tot = (int *) malloc(_ppart->dpart_proc[n_rank] * sizeof(int));
+  int *n_loc;
+  PDM_malloc(n_loc,_ppart->n_part ,int);
+  int *n_tot;
+  PDM_malloc(n_tot,_ppart->dpart_proc[n_rank] ,int);
 
-  int *s_loc = (int *) malloc(_ppart->n_part * sizeof(int));
-  int *s_tot = (int *) malloc(_ppart->dpart_proc[n_rank] * sizeof(int));
+  int *s_loc;
+  PDM_malloc(s_loc,_ppart->n_part ,int);
+  int *s_tot;
+  PDM_malloc(s_tot,_ppart->dpart_proc[n_rank] ,int);
 
   for (int i = 0; i < _ppart->n_part; i++) {
     n_loc[i] = 0;
@@ -3816,7 +3858,8 @@ int         *bound_part_faces_sum
     s_loc[i] = _ppart->mesh_parts[i]->n_face_part_bound;
   }
 
-  int *n_partProc = (int *) malloc((n_rank) * sizeof(int));
+  int *n_partProc;
+  PDM_malloc(n_partProc,(n_rank) ,int);
 
   for (int i = 0; i < n_rank; i++) {
     n_partProc[i] = _ppart->dpart_proc[i+1] - _ppart->dpart_proc[i];

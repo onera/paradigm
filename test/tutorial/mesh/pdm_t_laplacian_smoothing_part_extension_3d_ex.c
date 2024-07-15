@@ -168,7 +168,8 @@ PDM_multipart_t      **_mpart
 
 
   int n_domain = 1;
-  int *n_part_domains = (int *) malloc(sizeof(int) * n_domain);
+  int *n_part_domains;
+  PDM_malloc(n_part_domains,n_domain,int);
   n_part_domains[0] = n_part;
 
   PDM_multipart_t *mpart = PDM_multipart_create(n_domain,
@@ -263,7 +264,7 @@ _compute_face_vtx
  )
 {
   int dbg = 0;
-  *pface_vtx = (int *) malloc(sizeof(int) * pface_edge_idx[n_face]);
+  PDM_malloc(*pface_vtx,pface_edge_idx[n_face],int);
 
   for (int i = 0; i < n_face; i++) {
 
@@ -693,8 +694,10 @@ int main(int argc, char *argv[])
   char    filename[999];
   int     vtx1_idx;
   int     vtx2_idx;
-  double *normalisation  = malloc(    pn_vtx * sizeof(double));
-  double *pvtx_coord_new = malloc(3 * pn_vtx * sizeof(double));
+  double *normalisation;
+  PDM_malloc(normalisation,    pn_vtx ,double);
+  double *pvtx_coord_new;
+  PDM_malloc(pvtx_coord_new,3 * pn_vtx ,double);
 
   /* Set up of Ensight output */
 
@@ -714,8 +717,10 @@ int main(int argc, char *argv[])
   //                                      n_part);
 
 
-  int *face_vtx_n  = (int *) malloc (sizeof(int) * pn_face);
-  int *cell_face_n = (int *) malloc (sizeof(int) * pn_cell);
+  int *face_vtx_n;
+  PDM_malloc(face_vtx_n,pn_face,int);
+  int *cell_face_n;
+  PDM_malloc(cell_face_n,pn_cell,int);
 
   for (int i = 0; i < pn_face; i++) {
     face_vtx_n[i] = pface_edge_idx[i+1] - pface_edge_idx[i];

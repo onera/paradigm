@@ -133,7 +133,7 @@ _gen_random_tetrahedron
   *n_cell = 1;
 
   /* Four random points uniformly distributed on the surface of an ellipsoid */
-  *vtx_coord = malloc(sizeof(double) * 12);
+  PDM_malloc(*vtx_coord,12,double);
   for (int ivtx = 0; ivtx < 4; ivtx++) {
     double *p = *vtx_coord + 3*ivtx;
 
@@ -166,7 +166,7 @@ _gen_random_tetrahedron
 
   /* Faces */
   *face_vtx_idx = PDM_array_new_idx_from_const_stride_int(3, *n_face);
-  *face_vtx = malloc(sizeof(int) * 12);
+  PDM_malloc(*face_vtx,12,int);
   int *_face_vtx = *face_vtx;
   _face_vtx[ 0] = 2; _face_vtx[ 1] = 3; _face_vtx[ 2] = 4;
   _face_vtx[ 3] = 1; _face_vtx[ 4] = 4; _face_vtx[ 5] = 3;
@@ -174,7 +174,7 @@ _gen_random_tetrahedron
   _face_vtx[ 9] = 1; _face_vtx[10] = 3; _face_vtx[11] = 2;
 
   *cell_face_idx = PDM_array_new_idx_from_const_stride_int(4, *n_cell);
-  *cell_face = malloc(sizeof(int) * 4);
+  PDM_malloc(*cell_face,4,int);
   int *_cell_face = *cell_face;
   _cell_face[0] = 1; _cell_face[1] = 2; _cell_face[2] = 3; _cell_face[3] = 4;
 }

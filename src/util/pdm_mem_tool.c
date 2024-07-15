@@ -17,7 +17,6 @@
 #include <stdint.h>
 #include <unistd.h>
 #include <fcntl.h>
-#include <mpi.h>
 #include <time.h>
 #include <malloc.h>
 
@@ -98,7 +97,8 @@
 
 //         int len = (int) (end_name - start_name);
 
-//         char *name = (char *) malloc(len * sizeof(char));
+//         char *name;
+         PDM_malloc(name,len ,char);
 // 	PDM_mem_error(name,__FILE__,__LINE__);
 
 //         if (name != NULL) {
@@ -468,7 +468,8 @@
 	
 // 		int file_name_size = strlen(file_name)+strlen(rank_to_str)+1;
 	
-// 		char *mem_file = (char *) malloc(file_name_size * sizeof(char));
+// 		char *mem_file;
+ //		PDM_malloc(mem_file,file_name_size ,char); erreur du script
 // 		PDM_mem_error(mem_file,__FILE__,__LINE__);
 
 // 		strcpy(mem_file,file_name);
@@ -608,7 +609,7 @@
 // 		PDM_mempeak_t *recvpeaks = NULL;
 
 // 		if (pdm_mem_tool.rank == 0) {
-// 			recvpeaks = (PDM_mempeak_t *) malloc(pdm_mem_tool.size_mpi * sizeof(PDM_mempeak_t));
+// 			PDM_malloc(recvpeaks,pdm_mem_tool.size_mpi ,PDM_mempeak_t);
 // 			PDM_mem_error(recvpeaks,__FILE__,__LINE__);
 // 		}
 	
@@ -1307,9 +1308,9 @@ void *PDM_REALLOC
     }
     else  {
   	 PDM_free(old_ptr);
-		  new_ptr = malloc (s_alloc);
+	   new_ptr = malloc (s_alloc);
     }
-	}
+  }
 
   else {
 		new_ptr = realloc(old_ptr, nb * size_type);

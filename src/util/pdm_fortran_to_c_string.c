@@ -42,7 +42,7 @@ PDM_fortran_to_c_string
 {
   char *chaine_c = NULL;
   if (l_chaine_f == 0) {
-    chaine_c = (char *) malloc(sizeof(char));
+    PDM_malloc(chaine_c,1,char);
     chaine_c[0] = '\0';
   }
   else {
@@ -58,12 +58,12 @@ PDM_fortran_to_c_string
     imax = l_chaine_f-imax-1;
 
     if ((imax < imin) || (imax == l_chaine_f) || (imin == l_chaine_f)) {
-      chaine_c = (char *) malloc(sizeof(char));
+      PDM_malloc(chaine_c,1,char);
       chaine_c[0] = '\0';
     }
     else {
       int size = imax - imin + 2;
-      chaine_c = (char *) malloc(sizeof(char) * size);;
+      PDM_malloc(chaine_c,size,char);;
       int index = 0;
       for (int k = imin; k <= imax; k++)
         chaine_c[index++] = chaine_f[k];

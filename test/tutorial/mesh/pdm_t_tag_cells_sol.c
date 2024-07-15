@@ -220,25 +220,25 @@ int                        **cell_vtx
 
 
   *n_cell = dn_cell;
-  *cell_face_idx = malloc(sizeof(int) * (dn_cell + 1));
+  PDM_malloc(*cell_face_idx,(dn_cell + 1),int);
   memcpy(*cell_face_idx, dcell_face_idx, sizeof(int) * (dn_cell + 1));
-  *cell_face = malloc(sizeof(int) * dcell_face_idx[dn_cell]);
+  PDM_malloc(*cell_face,dcell_face_idx[dn_cell],int);
   for (int i = 0; i < dcell_face_idx[dn_cell]; i++) {
     (*cell_face)[i] = (int) dcell_face[i];
   }
 
 
   *n_face = dn_face;
-  *face_edge_idx = malloc(sizeof(int) * (dn_face + 1));
+  PDM_malloc(*face_edge_idx,(dn_face + 1),int);
   memcpy(*face_edge_idx, dface_edge_idx, sizeof(int) * (dn_face + 1));
-  *face_edge = malloc(sizeof(int) * dface_edge_idx[dn_face]);
+  PDM_malloc(*face_edge,dface_edge_idx[dn_face],int);
   for (int i = 0; i < dface_edge_idx[dn_face]; i++) {
     (*face_edge)[i] = (int) dface_edge[i];
   }
 
 
   *n_edge = dn_edge;
-  *edge_vtx = malloc(sizeof(int) * 2*dn_edge);
+  PDM_malloc(*edge_vtx,2*dn_edge,int);
   for (int i = 0; i < 2*dn_edge; i++) {
     (*edge_vtx)[i] = (int) dedge_vtx[i];
   }
@@ -250,7 +250,7 @@ int                        **cell_vtx
   dn_vtx = distrib_vtx[i_rank+1] - distrib_vtx[i_rank];
 
   *n_vtx = dn_vtx;
-  *vtx_coord = malloc(sizeof(double) * dn_vtx * 3);
+  PDM_malloc(*vtx_coord,dn_vtx * 3,double);
   memcpy(*vtx_coord, dvtx_coord, sizeof(double) * dn_vtx * 3);
 
 
@@ -261,7 +261,7 @@ int                        **cell_vtx
   PDM_g_num_t *dcell_vtx = PDM_DMesh_nodal_elmts_section_std_get(dmne, id_section);
 
   int cell_vtx_n = PDM_Mesh_nodal_n_vertices_element(elt_type, 1);
-  *cell_vtx = malloc(sizeof(int) * dn_cell * cell_vtx_n);
+  PDM_malloc(*cell_vtx,dn_cell * cell_vtx_n,int);
   for (int i = 0; i < dn_cell * cell_vtx_n; i++) {
     (*cell_vtx)[i] = (int) dcell_vtx[i];
   }
@@ -346,7 +346,8 @@ int main(int argc, char *argv[])
 
 
   /* Compute field values at vertices */
-  int *vtx_field = malloc(sizeof(int) * n_vtx);
+  int *vtx_field;
+  PDM_malloc(vtx_field,n_vtx,int);
   for (int ivtx = 0; ivtx < n_vtx; ivtx++) {
     double val = _eval_field(vtx_coord[3*ivtx  ],
                              vtx_coord[3*ivtx+1],
@@ -379,7 +380,8 @@ int main(int argc, char *argv[])
    *
    */
 
-  int *cell_tag = malloc(sizeof(int) * n_cell);
+  int *cell_tag;
+  PDM_malloc(cell_tag,n_cell,int);
 
 
   for (int icell = 0; icell < n_cell; icell++) {
@@ -456,7 +458,8 @@ int main(int argc, char *argv[])
                              &face_cell_idx,
                              &face_cell);
 
-  int *newly_tagged_cells = malloc(sizeof(int) * n_cell);
+  int *newly_tagged_cells;
+  PDM_malloc(newly_tagged_cells,n_cell,int);
   int n_newly_tagged_cells = 0;
   for (int icell = 0; icell < n_cell; icell++) {
     if (cell_tag[icell] != 0) {
@@ -464,7 +467,8 @@ int main(int argc, char *argv[])
     }
   }
 
-  int *tmp_cells = malloc(sizeof(int) * n_cell);
+  int *tmp_cells;
+  PDM_malloc(tmp_cells,n_cell,int);
 
 
   int i_step = 1;

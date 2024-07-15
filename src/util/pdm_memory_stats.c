@@ -104,16 +104,17 @@ PDM_memory_stats_create
  PDM_MPI_Comm comm
 )
 {
-  PDM_memory_stats_t* ms = malloc(sizeof(PDM_memory_stats_t));
+  PDM_memory_stats_t *ms;
+  PDM_malloc(ms,1,PDM_memory_stats_t);
 
   ms->comm              = comm;
   ms->n_memory_snapshot = n_memory_snapshot;
 
-  ms->snapshot_name = malloc( n_memory_snapshot * sizeof(char *));
-  ms->curr_real_mem = malloc( n_memory_snapshot * sizeof(long  ));
-  ms->peak_real_mem = malloc( n_memory_snapshot * sizeof(long  ));
-  ms->curr_virt_mem = malloc( n_memory_snapshot * sizeof(long  ));
-  ms->peak_virt_mem = malloc( n_memory_snapshot * sizeof(long  ));
+  PDM_malloc(ms->snapshot_name, n_memory_snapshot ,char *);
+  PDM_malloc(ms->curr_real_mem, n_memory_snapshot ,long  );
+  PDM_malloc(ms->peak_real_mem, n_memory_snapshot ,long  );
+  PDM_malloc(ms->curr_virt_mem, n_memory_snapshot ,long  );
+  PDM_malloc(ms->peak_virt_mem, n_memory_snapshot ,long  );
 
   for(int i = 0; i < ms->n_memory_snapshot; ++i) {
     ms->snapshot_name[i] = NULL;
@@ -131,7 +132,7 @@ PDM_memory_stats_add
 )
 {
   assert(ms->snapshot_name[i_snapshot] == NULL);
-  ms->snapshot_name[i_snapshot] = malloc( (strlen(name)+1) * sizeof(char));
+  PDM_malloc(ms->snapshot_name[i_snapshot], (strlen(name)+1) ,char);
   strcpy(ms->snapshot_name[i_snapshot], name);
 
   PDM_get_current_memory(&ms->curr_real_mem[i_snapshot],

@@ -211,9 +211,12 @@ _dist_cloud_surf_compute
   /*
    * Build octree
    */
-  int                *part_n_elt       = malloc (sizeof(int          ) * n_part_mesh);
-  const double      **part_elt_extents = malloc (sizeof(double      *) * n_part_mesh);
-  const PDM_g_num_t **part_elt_g_num   = malloc (sizeof(PDM_g_num_t *) * n_part_mesh);
+  int *part_n_elt;
+  PDM_malloc(part_n_elt,n_part_mesh,int          );
+  double **part_elt_extents;
+  PDM_malloc(part_elt_extents,n_part_mesh,  double      *);
+  PDM_g_num_t **part_elt_g_num;
+  PDM_malloc(part_elt_g_num,n_part_mesh,  PDM_g_num_t *);
 
   if (mesh_nodal != NULL) {
     //...
@@ -223,9 +226,9 @@ _dist_cloud_surf_compute
     for (int i_part = 0; i_part < n_part_mesh; i_part++) {
       part_n_elt[i_part] = PDM_surf_mesh_part_n_face_get (surf_mesh, i_part);
 
-      part_elt_g_num[i_part] = PDM_surf_mesh_part_face_g_num_get (surf_mesh, i_part);
+      part_elt_g_num[i_part] = (PDM_g_num_t *) PDM_surf_mesh_part_face_g_num_get (surf_mesh, i_part);
 
-      part_elt_extents[i_part] = PDM_surf_mesh_part_extents_get (surf_mesh, i_part);
+      part_elt_extents[i_part] = (double *) PDM_surf_mesh_part_extents_get (surf_mesh, i_part);
 
     }
   }
@@ -287,8 +290,8 @@ _dist_cloud_surf_compute
   PDM_box_set_t  *surf_mesh_boxes = PDM_dbbtree_boxes_set (dbbt,
       n_part_mesh,
       part_n_elt,
-      part_elt_extents,
-      part_elt_g_num);
+      (const double **) part_elt_extents,
+      (const PDM_g_num_t **)part_elt_g_num);
 
   if (idebug) {
     printf ("surf_mesh_boxes->n_boxes : %d\n", PDM_box_set_get_size (surf_mesh_boxes));
@@ -365,8 +368,10 @@ _dist_cloud_surf_compute
       n_pts_rank += pt_cloud->n_points[i_part];
     }
 
-    double      *pts_rank       = malloc (sizeof(double)      * n_pts_rank * 3);
-    PDM_g_num_t *pts_g_num_rank = malloc (sizeof(PDM_g_num_t) * n_pts_rank);
+    double *pts_rank;
+    PDM_malloc(pts_rank,n_pts_rank * 3,double);
+    PDM_g_num_t *pts_g_num_rank;
+    PDM_malloc(pts_g_num_rank,n_pts_rank,PDM_g_num_t);
 
     n_pts_rank = 0;
     for (int i_part = 0; i_part < n_part; i_part++) {
@@ -384,7 +389,8 @@ _dist_cloud_surf_compute
     PDM_g_num_t *closest_vertices_gnum =
       malloc (sizeof(PDM_g_num_t) * n_pts_rank);
 
-    double *closest_vertices_dist2 =  malloc (sizeof(double) * n_pts_rank);
+    double *closest_vertices_dist2;
+    PDM_malloc(closest_vertices_dist2,n_pts_rank,double);
     // log_trace("n_pts_rank:: %d\n", n_pts_rank);
 
     if (octree_type == PDM_OCTREE_SERIAL) {
@@ -507,8 +513,10 @@ _dist_cloud_surf_compute
     b_t_cpu_s   = PDM_timer_cpu_sys(dist->timer);
     PDM_timer_resume(dist->timer);
 
-    double *elt_weight  = malloc (sizeof(double) * part_pts_elt_idx[n_pts_rank]);
-    int    *part_stride = malloc (sizeof(int)    * part_pts_elt_idx[n_pts_rank]);
+    double *elt_weight;
+    PDM_malloc(elt_weight,part_pts_elt_idx[n_pts_rank],double);
+    int *part_stride;
+    PDM_malloc(part_stride,part_pts_elt_idx[n_pts_rank],int);
 
     for (int i = 0; i < part_pts_elt_idx[n_pts_rank]; i++) {
       elt_weight[i] = 1.;
@@ -528,8 +536,10 @@ _dist_cloud_surf_compute
     /*******************************************************************
      *  Send pts coords & gnum from TARGET parts to SOURCE blocks
      *******************************************************************/
-    PDM_g_num_t *part_pts_g_num = malloc (sizeof(PDM_g_num_t) * part_pts_elt_idx[n_pts_rank]);
-    double      *part_pts_coord = malloc (sizeof(double) *      part_pts_elt_idx[n_pts_rank] * 3);
+    PDM_g_num_t *part_pts_g_num;
+    PDM_malloc(part_pts_g_num,part_pts_elt_idx[n_pts_rank],PDM_g_num_t);
+    double *part_pts_coord;
+    PDM_malloc(part_pts_coord,part_pts_elt_idx[n_pts_rank] * 3,double);
     for (int i = 0; i < n_pts_rank; i++) {
       for (int j = part_pts_elt_idx[i]; j < part_pts_elt_idx[i+1]; j++) {
         part_pts_g_num[j] = pts_g_num_rank[i];
@@ -591,7 +601,7 @@ _dist_cloud_surf_compute
     PDM_g_num_t g_max_elt_g_num = PDM_surf_mesh_n_g_face_get (surf_mesh);
 
     if (block_elt_distrib_idx[n_rank] < g_max_elt_g_num) {
-      _block_elt_distrib_idx = malloc (sizeof(PDM_g_num_t) * (n_rank + 1));
+      PDM_malloc(_block_elt_distrib_idx,(n_rank + 1),PDM_g_num_t);
       for (int i = 0; i < n_rank; i++) {
         _block_elt_distrib_idx[i] = block_elt_distrib_idx[i];
       }
@@ -607,15 +617,17 @@ _dist_cloud_surf_compute
                                                               n_part_mesh,
                                                               comm);
 
-    int **part_elt_vtx_n = malloc (sizeof(int *) * n_part_mesh);
-    double **part_elt_vtx_coord = malloc (sizeof(double *) * n_part_mesh);
+    int **part_elt_vtx_n;
+    PDM_malloc(part_elt_vtx_n,n_part_mesh,int *);
+    double **part_elt_vtx_coord;
+    PDM_malloc(part_elt_vtx_coord,n_part_mesh,double *);
     for (int ipart = 0; ipart < n_part_mesh; ipart++) {
 
       const int *part_face_vtx = PDM_surf_mesh_part_face_vtx_get (surf_mesh, ipart);
       const int *part_face_vtx_idx = PDM_surf_mesh_part_face_vtx_idx_get (surf_mesh, ipart);
       const double *part_vtx = PDM_surf_mesh_part_vtx_get (surf_mesh, ipart);
 
-      part_elt_vtx_n[ipart] = malloc (sizeof(int) * part_n_elt[ipart]);
+      PDM_malloc(part_elt_vtx_n[ipart],part_n_elt[ipart],int);
       part_elt_vtx_coord[ipart] =
         malloc (sizeof(double) * part_face_vtx_idx[part_n_elt[ipart]] * 3);
 
@@ -669,8 +681,10 @@ _dist_cloud_surf_compute
       l_block_elt_pts += block_elt_pts_n[ielt];
     }
 
-    double *block_elt_pts_dist2 = malloc (sizeof(double) * l_block_elt_pts);
-    double *block_elt_pts_proj  = malloc (sizeof(double) * l_block_elt_pts * 3);
+    double *block_elt_pts_dist2;
+    PDM_malloc(block_elt_pts_dist2,l_block_elt_pts,double);
+    double *block_elt_pts_proj;
+    PDM_malloc(block_elt_pts_proj,l_block_elt_pts * 3,double);
 
     double *_vtx_coord = block_elt_vtx_coord;
     double *_pts_coord = block_elt_pts_coord;
@@ -774,7 +788,8 @@ _dist_cloud_surf_compute
     b_t_cpu_s   = PDM_timer_cpu_sys(dist->timer);
     PDM_timer_resume(dist->timer);
 
-    double *part_pts_weight = malloc (sizeof(double) * n_pts_rank);
+    double *part_pts_weight;
+    PDM_malloc(part_pts_weight,n_pts_rank,double);
     for (int i = 0; i < n_pts_rank; i++) {
       part_pts_weight[i] = (double) (part_pts_elt_idx[i+1] - part_pts_elt_idx[i]);
     }
@@ -804,7 +819,8 @@ _dist_cloud_surf_compute
                                                            1,
                                                            comm);
 
-    PDM_g_num_t *part_block_elt_g_num = malloc (sizeof(PDM_g_num_t) * l_block_elt_pts);
+    PDM_g_num_t *part_block_elt_g_num;
+    PDM_malloc(part_block_elt_g_num,l_block_elt_pts,PDM_g_num_t);
     int idx = 0;
     for (int ielt = 0; ielt < n_elt_block; ielt++) {
       for (int i = 0; i < block_elt_pts_n[ielt]; i++) {
@@ -814,7 +830,7 @@ _dist_cloud_surf_compute
    PDM_free(block_elt_pts_n);
 
 
-    part_stride = malloc (sizeof(int) * l_block_elt_pts);
+    PDM_malloc(part_stride,l_block_elt_pts,int);
     for (int i = 0; i < l_block_elt_pts; i++) {
       part_stride[i] = 1;
     }
@@ -864,16 +880,20 @@ _dist_cloud_surf_compute
 
     /* Merge block data (keep closest element for each point) */
     int n_pts_block = PDM_part_to_block_n_elt_block_get (ptb_pts);
-    PDM_g_num_t *block_pts_elt_g_num = malloc (sizeof(PDM_g_num_t) * n_pts_block);
-    double      *block_pts_elt_dist2 = malloc (sizeof(double)      * n_pts_block);
-    double      *block_pts_elt_proj  = malloc (sizeof(double)      * n_pts_block * 3);
+    PDM_g_num_t *block_pts_elt_g_num;
+    PDM_malloc(block_pts_elt_g_num,n_pts_block,PDM_g_num_t);
+    double *block_pts_elt_dist2;
+    PDM_malloc(block_pts_elt_dist2,n_pts_block,double);
+    double *block_pts_elt_proj;
+    PDM_malloc(block_pts_elt_proj,n_pts_block * 3,double);
 
     idx = 0;
     int n_max = 0;
     for (int i = 0; i < n_pts_block; i++) {
       n_max = PDM_MAX (n_max, block_pts_elt_n[i]);
     }
-    int *order = malloc (sizeof(int) * n_max);
+    int *order;
+    PDM_malloc(order,n_max,int);
 
     for (int i = 0; i < n_pts_block; i++) {
       block_pts_elt_dist2[i] = HUGE_VAL;
@@ -923,9 +943,9 @@ _dist_cloud_surf_compute
 
     for (int i = 0; i < n_part; i++) {
       int n_pts = pt_cloud->n_points[i];
-      pt_cloud->dist[i] = malloc (sizeof(double) * n_pts);
-      pt_cloud->proj[i] = malloc (sizeof(double) * n_pts * 3);
-      pt_cloud->closest_elt_gnum[i] = malloc (sizeof(PDM_g_num_t) * n_pts);
+      PDM_malloc(pt_cloud->dist[i],n_pts,double);
+      PDM_malloc(pt_cloud->proj[i],n_pts * 3,double);
+      PDM_malloc(pt_cloud->closest_elt_gnum[i],n_pts,PDM_g_num_t);
     }
 
     int one = 1;
@@ -1126,9 +1146,12 @@ _dist_cloud_surf_compute_optim
   /*
    * Build octree
    */
-  int          *part_n_elt       = malloc (sizeof(int          ) * n_part_mesh);
-  double      **part_elt_extents = malloc (sizeof(double      *) * n_part_mesh);
-  PDM_g_num_t **part_elt_g_num   = malloc (sizeof(PDM_g_num_t *) * n_part_mesh);
+  int *part_n_elt;
+  PDM_malloc(part_n_elt,n_part_mesh,int          );
+  double **part_elt_extents;
+  PDM_malloc(part_elt_extents,n_part_mesh,double      *);
+  PDM_g_num_t **part_elt_g_num;
+  PDM_malloc(part_elt_g_num,n_part_mesh,PDM_g_num_t *);
 
   PDM_geometry_kind_t geom_kind;
 
@@ -1190,10 +1213,11 @@ _dist_cloud_surf_compute_optim
         max_n_elt = PDM_MAX(max_n_elt, n_elt);
       }
 
-      part_elt_g_num  [i_part] = malloc(sizeof(PDM_g_num_t) * part_n_elt[i_part]);
-      part_elt_extents[i_part] = malloc(sizeof(double     ) * part_n_elt[i_part] * 6);
+      part_elt_g_num  PDM_malloc([i_part],part_n_elt[i_part],PDM_g_num_t);
+      PDM_malloc(part_elt_extents[i_part],part_n_elt[i_part] * 6,double);
 
-      double *_extents = malloc(sizeof(double) * max_n_elt * 6);
+      double *_extents;
+      PDM_malloc(_extents,max_n_elt * 6,double);
 
       const double *vtx_coord = NULL;
       if (mesh_nodal != NULL) {
@@ -1396,8 +1420,10 @@ _dist_cloud_surf_compute_optim
       n_pts_rank += pt_cloud->n_points[i_part];
     }
 
-    double      *pts_rank       = malloc (sizeof(double)      * n_pts_rank * 3);
-    PDM_g_num_t *pts_g_num_rank = malloc (sizeof(PDM_g_num_t) * n_pts_rank);
+    double *pts_rank;
+    PDM_malloc(pts_rank,n_pts_rank * 3,double);
+    PDM_g_num_t *pts_g_num_rank;
+    PDM_malloc(pts_g_num_rank,n_pts_rank,PDM_g_num_t);
 
     n_pts_rank = 0;
     for (int i_part = 0; i_part < n_part; i_part++) {
@@ -1426,7 +1452,8 @@ _dist_cloud_surf_compute_optim
     PDM_g_num_t *closest_vertices_gnum =
       malloc (sizeof(PDM_g_num_t) * n_pts_rank);
 
-    double *closest_vertices_dist2 =  malloc (sizeof(double) * n_pts_rank);
+    double *closest_vertices_dist2;
+    PDM_malloc(closest_vertices_dist2,n_pts_rank,double);
     // log_trace("n_pts_rank:: %d\n", n_pts_rank);
 
     if (octree_type == PDM_OCTREE_SERIAL) {
@@ -1538,7 +1565,8 @@ _dist_cloud_surf_compute_optim
      *    - Extract part on boxes
      */
     PDM_g_num_t *pts_ln_to_gn = dbox_pts_g_num;
-    int* unique_order = malloc(dbox_pts_idx[n_extract_boxes] * sizeof(int));
+    int *unique_order;
+    PDM_malloc(unique_order,dbox_pts_idx[n_extract_boxes] ,int);
     int n_extract_pts = PDM_inplace_unique_long2(pts_ln_to_gn,
                                                  unique_order,
                                                  0,
@@ -1550,8 +1578,10 @@ _dist_cloud_surf_compute_optim
     /*
      * Deduce local numbering and coords
      */
-    int    *box_pts    = malloc(    dbox_pts_idx[n_extract_boxes] * sizeof(int   ));
-    double *pts_coords = malloc(3 * n_extract_pts                 * sizeof(double));
+    int *box_pts;
+    PDM_malloc(box_pts,    dbox_pts_idx[n_extract_boxes] ,int   );
+    double *pts_coords;
+    PDM_malloc(pts_coords,3 * n_extract_pts                 ,double);
     for(int idx = 0; idx < dbox_pts_idx[n_extract_boxes] ; ++idx) {
       int l_elmt = unique_order[idx];
       box_pts[idx] = (l_elmt + 1);
@@ -1714,8 +1744,10 @@ _dist_cloud_surf_compute_optim
                                    &pextract_vtx_coord,
                                    PDM_OWNERSHIP_KEEP);
 
-    PDM_Mesh_nodal_elt_t *elt_type  = malloc(sizeof(PDM_Mesh_nodal_elt_t) * n_extract_boxes);
-    int                  *elt_order = malloc(sizeof(int                 ) * n_extract_boxes);
+    PDM_Mesh_nodal_elt_t *elt_type;
+    PDM_malloc(elt_type,n_extract_boxes,PDM_Mesh_nodal_elt_t);
+    int *elt_order;
+    PDM_malloc(elt_order,n_extract_boxes,int                 );
     int *pextract_face_vtx     = NULL;
     int *pextract_face_vtx_idx = NULL;
     int pn_extract_face = 0;
@@ -1734,7 +1766,7 @@ _dist_cloud_surf_compute_optim
       }
 
       /* Fill face_vtx_idx */
-      pextract_face_vtx_idx = malloc(sizeof(int) * (pn_extract_face + 1));
+      PDM_malloc(pextract_face_vtx_idx,(pn_extract_face + 1),int);
       pextract_face_vtx_idx[0] = 0;
 
       for (int i = 0; i < n_section; i++) {
@@ -1821,7 +1853,7 @@ _dist_cloud_surf_compute_optim
       }
 
       /* Fill face_vtx */
-      pextract_face_vtx = malloc(sizeof(int) * pextract_face_vtx_idx[pn_extract_face]);
+      PDM_malloc(pextract_face_vtx,pextract_face_vtx_idx[pn_extract_face],int);
 
       for (int i = 0; i < n_section; i++) {
         int id_section = sections_id[i];
@@ -2013,10 +2045,14 @@ _dist_cloud_surf_compute_optim
     // }
 
 
-    double      *pts_dist2        = malloc(    n_extract_pts * sizeof(double));
-    double      *pts_proj         = malloc(3*  n_extract_pts * sizeof(double));
-    PDM_g_num_t *pts_closest_face_g_num = malloc(    n_extract_pts * sizeof(PDM_g_num_t));
-    // int         *pts_closest_face_init_loc = malloc(3*  n_extract_pts * sizeof(int));
+    double *pts_dist2;
+    PDM_malloc(pts_dist2,    n_extract_pts ,double);
+    double *pts_proj;
+    PDM_malloc(pts_proj,3*  n_extract_pts ,double);
+    PDM_g_num_t *pts_closest_face_g_num;
+    PDM_malloc(pts_closest_face_g_num,    n_extract_pts ,PDM_g_num_t);
+    // int *pts_closest_face_init_loc;
+    //PDM_malloc(pts_closest_face_init_loc,3*  n_extract_pts ,int);
 
     double *work_array = NULL;
     int s_work_array = 0;
@@ -2030,7 +2066,7 @@ _dist_cloud_surf_compute_optim
     }
 
     if (s_work_array > 0) {
-      work_array = malloc(sizeof(double) * s_work_array);
+      PDM_malloc(work_array,s_work_array,double);
     }
 
 
@@ -2043,7 +2079,8 @@ _dist_cloud_surf_compute_optim
     for(int i_elmt = 0; i_elmt < n_extract_boxes; ++i_elmt) {
       max_elmt_vtx = PDM_MAX(max_elmt_vtx, pextract_face_vtx_idx[i_elmt+1] - pextract_face_vtx_idx[i_elmt]);
     }
-    double *lvtx_coords = malloc(3 * max_elmt_vtx * sizeof(double));
+    double *lvtx_coords;
+    PDM_malloc(lvtx_coords,3 * max_elmt_vtx ,double);
 
     for(int i_elmt = 0; i_elmt < n_extract_boxes; ++i_elmt) {
 
@@ -2272,7 +2309,8 @@ _dist_cloud_surf_compute_optim
      *  Pass in block frame for points to select closest element
      */
     int    *part_stride = PDM_array_const_int(n_extract_pts, 1);
-    double *part_weight = malloc(sizeof(double) * n_extract_pts);
+    double *part_weight;
+    PDM_malloc(part_weight,n_extract_pts,double);
     for (int i = 0; i < n_extract_pts; i++) {
       part_weight[i] = 1.;
     }
@@ -2372,9 +2410,9 @@ _dist_cloud_surf_compute_optim
     PDM_part_to_block_free(ptb);
     for (int i = 0; i < n_part; i++) {
       int n_pts = pt_cloud->n_points[i];
-      pt_cloud->dist[i] = malloc (sizeof(double) * n_pts);
-      pt_cloud->proj[i] = malloc (sizeof(double) * n_pts * 3);
-      pt_cloud->closest_elt_gnum[i] = malloc (sizeof(PDM_g_num_t) * n_pts);
+      PDM_malloc(pt_cloud->dist[i],n_pts,double);
+      PDM_malloc(pt_cloud->proj[i],n_pts * 3,double);
+      PDM_malloc(pt_cloud->closest_elt_gnum[i],n_pts,PDM_g_num_t);
     }
 
     int one = 1;
@@ -2463,7 +2501,8 @@ PDM_dist_cloud_surf_create
  const PDM_ownership_t   owner
 )
 {
-  PDM_dist_cloud_surf_t *dist = (PDM_dist_cloud_surf_t *) malloc(sizeof(PDM_dist_cloud_surf_t));
+  PDM_dist_cloud_surf_t *dist;
+  PDM_malloc(dist,1,PDM_dist_cloud_surf_t);
 
   dist->comm              = comm;
   dist->owner             = owner;
@@ -2474,7 +2513,7 @@ PDM_dist_cloud_surf_create
   dist->surf_mesh     = NULL;
   dist->_surf_mesh    = NULL;
   dist->n_point_cloud = n_point_cloud;
-  dist->points_cloud  = (_points_cloud_t*) malloc (sizeof(_points_cloud_t) * n_point_cloud);
+  PDM_malloc(dist->points_cloud,n_point_cloud,_points_cloud_t);
 
   for (int i = 0; i <  n_point_cloud; i++) {
     dist->points_cloud[i].n_part           = -1;
@@ -2779,19 +2818,25 @@ PDM_dist_cloud_surf_distri_data
    *  Number of elements and global numbering
    */
 
-  int *n_face_surf = malloc(n_part_surf  * sizeof(int ));
-  int *n_pts_cloud = malloc(n_part_cloud * sizeof(int ));
+  int *n_face_surf;
+  PDM_malloc(n_face_surf,n_part_surf  ,int );
+  int *n_pts_cloud;
+  PDM_malloc(n_pts_cloud,n_part_cloud ,int );
 
-  const PDM_g_num_t **face_ln_to_gn = (const PDM_g_num_t **) malloc(n_part_surf  * sizeof(PDM_g_num_t *));
-        PDM_g_num_t **pts_ln_to_gn  = (      PDM_g_num_t **) malloc(n_part_cloud * sizeof(PDM_g_num_t *));
+  PDM_g_num_t **face_ln_to_gn;
+  PDM_malloc(face_ln_to_gn,n_part_surf  ,PDM_g_num_t *);
+  PDM_g_num_t **pts_ln_to_gn;
+  PDM_malloc(pts_ln_to_gn,n_part_cloud ,PDM_g_num_t *);
 
-  int         **closest_elt_gnum_idx = (int **)         malloc(n_part_cloud * sizeof(int         *));
-  PDM_g_num_t **closest_elt_gnum     = (PDM_g_num_t **) malloc(n_part_cloud * sizeof(PDM_g_num_t *));
+  int **closest_elt_gnum_idx;
+  PDM_malloc(closest_elt_gnum_idx,n_part_cloud ,int         *);
+  PDM_g_num_t **closest_elt_gnum;
+  PDM_malloc(closest_elt_gnum,n_part_cloud ,PDM_g_num_t *);
 
   for (int i_part = 0; i_part < n_part_surf; i_part++) {
 
     n_face_surf[i_part] = PDM_surf_mesh_part_n_face_get(dist->surf_mesh, i_part);
-    face_ln_to_gn[i_part] = PDM_surf_mesh_part_face_g_num_get(dist->surf_mesh, i_part);
+    face_ln_to_gn[i_part] = (PDM_g_num_t *) PDM_surf_mesh_part_face_g_num_get(dist->surf_mesh, i_part);
 
     if (1==0) {
       PDM_log_trace_array_long(face_ln_to_gn[i_part], n_face_surf[i_part], "face");
@@ -2809,7 +2854,8 @@ PDM_dist_cloud_surf_distri_data
       PDM_log_trace_array_long(pts_ln_to_gn[i_part], n_pts_cloud[i_part], "pts");
     }
 
-    int *_closest_elt_gnum_idx = (int *) malloc((n_pts_cloud[i_part]+1) * sizeof(int ));
+    int *_closest_elt_gnum_idx;
+    PDM_malloc(_closest_elt_gnum_idx,(n_pts_cloud[i_part]+1) ,int );
     _closest_elt_gnum_idx[0] = 0;
     for (int i = 0; i < n_pts_cloud[i_part]; i++) {
       _closest_elt_gnum_idx[i+1] = _closest_elt_gnum_idx[i] + 1;

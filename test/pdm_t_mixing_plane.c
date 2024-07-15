@@ -530,7 +530,8 @@ _get_polygon
   }
 
   int connec_idx[2] = {0, _n_vtx};
-  int *connec = malloc(sizeof(int) * _n_vtx);
+  int *connec;
+  PDM_malloc(connec,_n_vtx,int);
   for (int i = 0; i < _n_vtx; i++) {
     connec[i] = i+1;
   }
@@ -583,7 +584,7 @@ _mixing_plane
 
   double *dbg_coord = NULL;
   if (visu) {
-    dbg_coord = malloc(sizeof(double) * 120); // size?
+    PDM_malloc(dbg_coord,120,double); // size?
   }
 
   /* Prepare for triangulation */
@@ -602,15 +603,16 @@ _mixing_plane
     tri_state = PDM_triangulate_state_create(max_face_vtx_n);
   }
 
-  tri_vtx = malloc(sizeof(int) * (max_face_vtx_n - 2) * 3);
+  PDM_malloc(tri_vtx,(max_face_vtx_n - 2) * 3,int);
 
 
-  *face_band_idx  = malloc(sizeof(int    *) * n_part);
-  *face_band      = malloc(sizeof(int    *) * n_part);
-  *face_band_area = malloc(sizeof(double *) * n_part);
+  PDM_malloc(*face_band_idx,n_part,int    *);
+  PDM_malloc(*face_band,n_part,int    *);
+  PDM_malloc(*face_band_area,n_part,double *);
 
   int max_face_band_n = 3;
-  _ll_node_t *nodes = malloc(sizeof(_ll_node_t) * (3+4*(max_face_band_n-1)));
+  _ll_node_t *nodes;
+  PDM_malloc(nodes,(3+4*(max_face_band_n-1)),_ll_node_t);
 
   /* Intial nodes : triangle vertices */
   nodes[0].u = 0.;
@@ -645,9 +647,10 @@ _mixing_plane
     }
 
     int s_face_band = 4*n_face[ipart];
-    (*face_band_idx )[ipart]  = malloc(sizeof(int) * (n_face[ipart] + 1));
-    (*face_band     )[ipart] = malloc(sizeof(int   ) * s_face_band);
-    (*face_band_area)[ipart] = malloc(sizeof(double) * s_face_band);
+    (*face_band_idx PDM_malloc()[ipart],(n_face[ipart] + 1),int);
+    (*face_band     PDM_malloc()[ipart],s_face_band,int   );
+    ( *face_band_area)[ipart];
+    PDM_malloc(face_band_area)[ipart],s_face_band,double);
 
     int    *_face_band_idx  = (*face_band_idx )[ipart];
     int    *_face_band      = (*face_band     )[ipart];
@@ -997,7 +1000,8 @@ char *argv[]
                  &mpart);
 
   /* Define bands */
-  double *levels = malloc(sizeof(double) * (n_band + 1));
+  double *levels;
+  PDM_malloc(levels,(n_band + 1),double);
   _define_levels(n_band+1,
                  0,     //val_min,
                  length,//val_max,
@@ -1011,14 +1015,22 @@ char *argv[]
 
 
   /* Mixing plane */
-  int          *n_vtx         = malloc(sizeof(int          ) * n_part);
-  double      **vtx_coord     = malloc(sizeof(double      *) * n_part);
-  double      **vtx_field     = malloc(sizeof(double      *) * n_part);
-  int          *n_face        = malloc(sizeof(int          ) * n_part);
-  int         **face_vtx_idx  = malloc(sizeof(int         *) * n_part);
-  int         **face_vtx      = malloc(sizeof(int         *) * n_part);
-  PDM_g_num_t **vtx_ln_to_gn  = malloc(sizeof(PDM_g_num_t *) * n_part);
-  PDM_g_num_t **face_ln_to_gn = malloc(sizeof(PDM_g_num_t *) * n_part);
+  int *n_vtx;
+  PDM_malloc(n_vtx,n_part,int          );
+  double **vtx_coord;
+  PDM_malloc(*vtx_coord,n_part,double      *);
+  double **vtx_field;
+  PDM_malloc(*vtx_field,n_part,double      *);
+  int *n_face;
+  PDM_malloc(n_face,n_part,int          );
+  int **face_vtx_idx;
+  PDM_malloc(*face_vtx_idx,n_part,int         *);
+  int **face_vtx;
+  PDM_malloc(*face_vtx,n_part,int         *);
+  PDM_g_num_t **vtx_ln_to_gn;
+  PDM_malloc(*vtx_ln_to_gn,n_part,PDM_g_num_t *);
+  PDM_g_num_t **face_ln_to_gn;
+  PDM_malloc(*face_ln_to_gn,n_part,PDM_g_num_t *);
   for (int ipart = 0; ipart < n_part; ipart++) {
     int *face_edge_idx;
     int *face_edge;
@@ -1054,7 +1066,7 @@ char *argv[]
                                                     PDM_OWNERSHIP_KEEP);
 
 
-    vtx_field[ipart] = malloc(sizeof(double) * n_vtx[ipart]);
+    PDM_malloc(vtx_field[ipart],n_vtx[ipart],double);
     for (int i = 0; i < n_vtx[ipart]; i++) {
       vtx_field[ipart][i] = _eval_field(vtx_coord[ipart][3*i  ],
                                         vtx_coord[ipart][3*i+1],
@@ -1099,7 +1111,8 @@ char *argv[]
 
 
 
-  double *local_band_area = malloc(sizeof(double) * n_band);
+  double *local_band_area;
+  PDM_malloc(local_band_area,n_band,double);
   for (int band_id = 0; band_id < n_band; band_id++) {
     local_band_area[band_id] = 0;
   }
@@ -1115,7 +1128,8 @@ char *argv[]
   }
 
 
-  double *global_band_area = malloc(sizeof(double) * n_band);
+  double *global_band_area;
+  PDM_malloc(global_band_area,n_band,double);
   PDM_MPI_Allreduce(local_band_area, global_band_area, n_band,
                     PDM_MPI_DOUBLE, PDM_MPI_SUM, comm);
  PDM_free(local_band_area);

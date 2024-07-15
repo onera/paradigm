@@ -237,7 +237,8 @@ _cube_mesh
   // int ppart_id = 0;
   int have_dcell_part = 0;
 
-  int *dcell_part = (int *) malloc(dn_cell*sizeof(int));
+  int *dcell_part;
+  PDM_malloc(dcell_part,dn_cell,int);
 
   int *renum_properties_cell = NULL;
   int *renum_properties_face = NULL;
@@ -399,11 +400,15 @@ int main(int argc, char *argv[])
   PDM_mesh_location_n_part_cloud_set (id_loc2,
                                       0,
                                       n_part);
-  double **cell_volume1 = malloc (sizeof(double *) * n_part);
-  double **cell_center1 = malloc (sizeof(double *) * n_part);
+  double **cell_volume1;
+  PDM_malloc(*cell_volume1,n_part,double *);
+  double **cell_center1;
+  PDM_malloc(*cell_center1,n_part,double *);
 
-  double **cell_volume2 = malloc (sizeof(double *) * n_part);
-  double **cell_center2 = malloc (sizeof(double *) * n_part);
+  double **cell_volume2;
+  PDM_malloc(*cell_volume2,n_part,double *);
+  double **cell_center2;
+  PDM_malloc(*cell_center2,n_part,double *);
 
   for (int ipart = 0; ipart < n_part; ipart++) {
     int n_cell;
@@ -471,8 +476,8 @@ int main(int argc, char *argv[])
                            &face_group_ln_to_gn);
 
     const int is_oriented = 0;
-    cell_volume2[ipart] = malloc(sizeof(double) * n_cell);
-    cell_center2[ipart] = malloc(sizeof(double) * 3 * n_cell);
+    PDM_malloc(cell_volume2[ipart],n_cell,double);
+    PDM_malloc(cell_center2[ipart],3 * n_cell,double);
 
     PDM_geom_elem_polyhedra_properties (is_oriented,
                                         n_cell,
@@ -564,8 +569,8 @@ int main(int argc, char *argv[])
                            &face_group_ln_to_gn);
 
     const int is_oriented = 0;
-    cell_volume1[ipart] = malloc(sizeof(double) * n_cell);
-    cell_center1[ipart] = malloc(sizeof(double) * 3 * n_cell);
+    PDM_malloc(cell_volume1[ipart],n_cell,double);
+    PDM_malloc(cell_center1[ipart],3 * n_cell,double);
 
     PDM_geom_elem_polyhedra_properties (is_oriented,
                                         n_cell,
@@ -791,20 +796,34 @@ int main(int argc, char *argv[])
 
   PDM_mesh_location_dump_times (id_loc2);
 
-  int         **elt_pts_inside_idx      = malloc (sizeof(int         *) * n_part);
-  PDM_g_num_t **location                = malloc (sizeof(PDM_g_num_t *) * n_part);
-  int         **location_idx            = malloc (sizeof(int         *) * n_part);
-  PDM_g_num_t **points_gnum             = malloc (sizeof(PDM_g_num_t *) * n_part);
-  double      **points_coords           = malloc (sizeof(double      *) * n_part);
-  double      **points_uvw              = malloc (sizeof(double      *) * n_part);
-  int         **points_weights_idx      = malloc (sizeof(int         *) * n_part);
-  double      **points_weights          = malloc (sizeof(double      *) * n_part);
-  double      **points_dist2            = malloc (sizeof(double      *) * n_part);
-  double      **points_projected_coords = malloc (sizeof(double      *) * n_part);
-  PDM_g_num_t **gnum_elt1               = malloc (sizeof(PDM_g_num_t *) * n_part);
-  int          *n_elt1                  = malloc (sizeof(int          ) * n_part);
-  PDM_g_num_t **gnum_elt2               = malloc (sizeof(PDM_g_num_t *) * n_part);
-  int          *n_elt2                  = malloc (sizeof(int          ) * n_part);
+  int **elt_pts_inside_idx;
+  PDM_malloc(*elt_pts_inside_idx,n_part,int         *);
+  PDM_g_num_t **location;
+  PDM_malloc(*location,n_part,PDM_g_num_t *);
+  int **location_idx;
+  PDM_malloc(*location_idx,n_part,int         *);
+  PDM_g_num_t **points_gnum;
+  PDM_malloc(*points_gnum,n_part,PDM_g_num_t *);
+  double **points_coords;
+  PDM_malloc(*points_coords,n_part,double      *);
+  double **points_uvw;
+  PDM_malloc(*points_uvw,n_part,double      *);
+  int **points_weights_idx;
+  PDM_malloc(*points_weights_idx,n_part,int         *);
+  double **points_weights;
+  PDM_malloc(*points_weights,n_part,double      *);
+  double **points_dist2;
+  PDM_malloc(*points_dist2,n_part,double      *);
+  double **points_projected_coords;
+  PDM_malloc(*points_projected_coords,n_part,double      *);
+  PDM_g_num_t **gnum_elt1;
+  PDM_malloc(*gnum_elt1,n_part,PDM_g_num_t *);
+  int *n_elt1;
+  PDM_malloc(n_elt1,n_part,int          );
+  PDM_g_num_t **gnum_elt2;
+  PDM_malloc(*gnum_elt2,n_part,PDM_g_num_t *);
+  int *n_elt2;
+  PDM_malloc(n_elt2,n_part,int          );
 
   for (int ipart = 0; ipart < n_part; ipart++) {
 
@@ -831,7 +850,7 @@ int main(int argc, char *argv[])
                            &s_face_group_tgt,
                            &n_edge_group2_tgt);
 
-    location_idx[ipart] = malloc (sizeof(int) * (n_elt2[ipart]+1));
+    PDM_malloc(location_idx[ipart],(n_elt2[ipart]+1),int);
     for (int i = 0; i < n_elt2[ipart]+1; i++) {
       location_idx[ipart][i] = 0;
     }
@@ -1084,9 +1103,10 @@ int main(int argc, char *argv[])
 
   int send_request = -1;
 
-  PDM_g_num_t **gnum1_gnum2_data = malloc (sizeof(PDM_g_num_t *) * n_part);
+  PDM_g_num_t **gnum1_gnum2_data;
+  PDM_malloc(*gnum1_gnum2_data,n_part,PDM_g_num_t *);
   for (int i = 0; i < n_part; i++) {
-    gnum1_gnum2_data[i] = malloc (sizeof(PDM_g_num_t) * elt_pts_inside_idx[i][n_elt1[i]]);
+    PDM_malloc(gnum1_gnum2_data[i],elt_pts_inside_idx[i][n_elt1[i]],PDM_g_num_t);
     for (int j = 0; j < n_elt1[i]; j++) {
       for (int k = elt_pts_inside_idx[i][j]; k < elt_pts_inside_idx[i][j+1]; k++) {
         gnum1_gnum2_data[i][k] = gnum_elt1[i][j];
@@ -1104,9 +1124,10 @@ int main(int argc, char *argv[])
 
 
   int recv_request = -1;
-  PDM_g_num_t **gnum_elt1_recv = malloc (sizeof(PDM_g_num_t*)  * n_part);
+  PDM_g_num_t **gnum_elt1_recv;
+  PDM_malloc(*gnum_elt1_recv,n_part,PDM_g_num_t*);
   for (int i = 0; i < n_part; i++) {
-    gnum_elt1_recv[i] = malloc (sizeof(PDM_g_num_t)  * gnum1_come_from_idx[i][n_ref_lnum2[i]]);
+    PDM_malloc(gnum_elt1_recv[i],gnum1_come_from_idx[i][n_ref_lnum2[i]],PDM_g_num_t);
   }
 
   PDM_part_to_part_irecv (ptp,
@@ -1128,9 +1149,10 @@ int main(int argc, char *argv[])
  PDM_free(gnum1_gnum2_data);
 
 
-  PDM_g_num_t **ptp2_s_data = malloc (sizeof(PDM_g_num_t *) * n_part);
+  PDM_g_num_t **ptp2_s_data;
+  PDM_malloc(*ptp2_s_data,n_part,PDM_g_num_t *);
   for (int i = 0; i < n_part; i++) {
-    ptp2_s_data[i] = malloc (sizeof(PDM_g_num_t) * location_idx[i][n_elt2[i]]);
+    PDM_malloc(ptp2_s_data[i],location_idx[i][n_elt2[i]],PDM_g_num_t);
     for (int j = 0; j < n_elt2[i]; j++) {
       for (int k = location_idx[i][j]; k < location_idx[i][j+1]; k++) {
         ptp2_s_data[i][k] = gnum_elt2[i][j];
@@ -1147,9 +1169,10 @@ int main(int argc, char *argv[])
                            &send_request);
 
   recv_request = -1;
-  PDM_g_num_t **gnum_elt2_recv = malloc (sizeof(PDM_g_num_t*)  * n_part);
+  PDM_g_num_t **gnum_elt2_recv;
+  PDM_malloc(*gnum_elt2_recv,n_part,PDM_g_num_t*);
   for (int i = 0; i < n_part; i++) {
-    gnum_elt2_recv[i] = malloc (sizeof(PDM_g_num_t)  * ptp2_gnum1_come_from_idx[i][ptp2_n_ref_lnum2[i]]);
+    PDM_malloc(gnum_elt2_recv[i],ptp2_gnum1_come_from_idx[i][ptp2_n_ref_lnum2[i]],PDM_g_num_t);
   }
 
   PDM_part_to_part_irecv (ptp2,

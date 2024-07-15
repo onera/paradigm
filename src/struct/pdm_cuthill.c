@@ -485,7 +485,8 @@ int node_num
   }
 
   /** Allocate memory for the degree array. **/
-  int *deg = (int *) malloc( sizeof(int) * node_num); // deg = new int[node_num];
+  int *deg;
+  PDM_malloc(deg,node_num,int); // deg = new int[node_num];
 
   /** Find the degrees of the nodes in the component specified by MASK and ROOT. **/
 
@@ -627,7 +628,8 @@ int perm[]
   int num;
   int root;
 
-  int *level_row  = (int *) malloc(sizeof(int) * (node_num + 1)); //level_row = new int[node_num+1];
+  int *level_row;
+  PDM_malloc(level_row,(node_num + 1),int); //level_row = new int[node_num+1];
   int *mask       = PDM_array_const_int(node_num, 1); //mask = new int[node_num];
 
   num = 1;
@@ -695,8 +697,10 @@ PDM_cuthill_checkbandwidth
 {
 
   /** Do a copy since graph seems to be modified (?) **/
-  int *dual_graph_idx_tmp = (int *) malloc((n_elm + 1) * sizeof(int));
-  int *dual_graph_tmp     = (int *) malloc(dual_graph_idx[n_elm] * sizeof(int));
+  int *dual_graph_idx_tmp;
+  PDM_malloc(dual_graph_idx_tmp,(n_elm + 1) ,int);
+  int *dual_graph_tmp;
+  PDM_malloc(dual_graph_tmp,dual_graph_idx[n_elm] ,int);
 
   /** Offset Graph and Arr **/
   for (int i = 0; i < n_elm; i++){
@@ -736,8 +740,10 @@ PDM_cuthill_generate
 {
 
   /** Do a copy since graph seems to be modified (?) **/
-  int *dual_graph_idx_tmp = (int *) malloc((n_elm + 1) * sizeof(int));
-  int *dual_graph_tmp     = (int *) malloc(dual_graph_idx[n_elm] * sizeof(int));
+  int *dual_graph_idx_tmp;
+  PDM_malloc(dual_graph_idx_tmp,(n_elm + 1) ,int);
+  int *dual_graph_tmp;
+  PDM_malloc(dual_graph_tmp,dual_graph_idx[n_elm] ,int);
 
   /** Offset Graph and Arr **/
   for (int i = 0; i < n_elm; i++){

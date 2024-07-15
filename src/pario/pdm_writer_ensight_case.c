@@ -165,9 +165,9 @@ _add_var(PDM_writer_ensight_case_t       *const this_case,
   size_t l = strlen(name);
 
   this_case->n_vars += 1;
-  var = (PDM_writer_ensight_case_var_t *) malloc (sizeof(PDM_writer_ensight_case_var_t));
+  PDM_malloc(var,1,PDM_writer_ensight_case_var_t);
 
-  var->name = (char *) malloc( (l + 1) * sizeof(char));
+  PDM_malloc(var->name, (l + 1) ,char);
   strcpy(var->name, name);
 
   /* Create description (49 chars max) */
@@ -398,11 +398,11 @@ const int                   append
 
   /* Create and initialize structure */
 
-  this_case = (PDM_writer_ensight_case_t *) malloc (sizeof(PDM_writer_ensight_case_t));
+  PDM_malloc(this_case,1,PDM_writer_ensight_case_t);
 
   /* Initialize base name and partial file names */
 
-  this_case->name = (char *) malloc((strlen(name) + 1) * sizeof(char));
+  PDM_malloc(this_case->name,(strlen(name) + 1) ,char);
   strcpy(this_case->name, name);
   name_len = strlen(name);
 
@@ -419,7 +419,7 @@ const int                   append
 
   this_case->dir_name_length = (int) prefix_len;
 
-  this_case->case_file_name = (char *) malloc((prefix_len + name_len + 6) * sizeof(char));
+  PDM_malloc(this_case->case_file_name,(prefix_len + name_len + 6) ,char);
   if (dir_prefix != NULL) {
     strcpy(this_case->case_file_name, dir_prefix);
     strcat(this_case->case_file_name, "/");
@@ -689,7 +689,7 @@ const int                   append
 
       if (retval != NULL) {
 
-        this_case->time_set = (PDM_writer_ensight_case_time_t *) malloc(sizeof(PDM_writer_ensight_case_time_t));
+        PDM_malloc(this_case->time_set,1,PDM_writer_ensight_case_time_t);
         this_case->time_set->time_value = NULL;
         this_case->time_set->n_time_values = 0;
 
@@ -979,7 +979,7 @@ const double time_value
 )
 {
   if (this_case->time_set == NULL) {
-    this_case->time_set = (PDM_writer_ensight_case_time_t *) malloc(sizeof(PDM_writer_ensight_case_time_t));
+    PDM_malloc(this_case->time_set,1,PDM_writer_ensight_case_time_t);
     this_case->time_set->time_value = NULL;
     this_case->time_set->n_time_values = 0;
   }
@@ -989,7 +989,7 @@ const double time_value
   if (this_case->time_dependency != PDM_WRITER_TOPO_CST) {
 
     if (this_case->geom_file_name == NULL) {
-      this_case->geom_file_name = (char *) malloc(sizeof(char) * strlen(this_case->geom_file_name_base) + 7);
+      PDM_malloc(this_case->geom_file_name,strlen(this_case->geom_file_name_base) + 7,char);
     }
 
     int geom_index = this_case->time_set->n_time_values;
@@ -1004,7 +1004,7 @@ const double time_value
     PDM_writer_ensight_case_var_t  *var = this_case->var[i];
     if (var->time_dep == PDM_WRITER_ON) {
       if (var->file_name == NULL) {
-        var->file_name = (char *) malloc(sizeof(char) * strlen(var->file_name_base) + 7);
+        PDM_malloc(var->file_name,strlen(var->file_name_base) + 7,char);
       }
 
       int geom_index = this_case->time_set->n_time_values;

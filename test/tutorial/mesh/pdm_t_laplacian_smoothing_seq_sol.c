@@ -118,7 +118,7 @@ const int      n_vtx_seg,
   double step = 1. / (double) (n_vtx_seg - 1);
   double noise = 0.49 * step;
 
-  *vtx_coord = (double *) malloc(sizeof(double) * (*n_vtx) * 3);
+  PDM_malloc(*vtx_coord,(*n_vtx) * 3,double);
   int idx = 0;
   for (int j = 0; j < n_vtx_seg; j++) {
     double y = step * j;
@@ -136,7 +136,7 @@ const int      n_vtx_seg,
   }
 
   /* Edges */
-  *edge_vtx = (int *) malloc(sizeof(int) * (*n_edge) * 2);
+  PDM_malloc(*edge_vtx,(*n_edge) * 2,int);
   idx = 0;
   /* Horizontal edges */
   for (int j = 0; j < n_vtx_seg; j++) {
@@ -176,8 +176,8 @@ const int      n_vtx_seg,
   int idx_diagonal = 2*n_vtx_seg*(n_vtx_seg - 1);
 
   /* Faces */
-  *face_edge = (int *) malloc(sizeof(int) * (*n_face) * 3);
-  *face_vtx  = (int *) malloc(sizeof(int) * (*n_face) * 3);
+  PDM_malloc(*face_edge,(*n_face) * 3,int);
+  PDM_malloc(*face_vtx,(*n_face) * 3,int);
   int idx2 = 0;
   idx = 0;
   for (int j = 0; j < n_vtx_seg-1; j++) {
@@ -286,7 +286,8 @@ int main(int argc, char *argv[])
  PDM_free(edge_face_n);
 
   /* Compute normalization factor for each vtx (constant over time) */
-  double *normalization = malloc(sizeof(double) * n_vtx);
+  double *normalization;
+  PDM_malloc(normalization,n_vtx,double);
 
   for (int i = 0; i < n_vtx; i++) {
     normalization[i] = 0;
@@ -302,7 +303,8 @@ int main(int argc, char *argv[])
 
 
 
-  double *new_vtx_coord = malloc(sizeof(double) * n_vtx * 3);
+  double *new_vtx_coord;
+  PDM_malloc(new_vtx_coord,n_vtx * 3,double);
 
   for (int i_step = 0; i_step <= n_steps; i_step++) {
 

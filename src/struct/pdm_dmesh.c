@@ -106,11 +106,12 @@ PDM_dmesh_create
        PDM_MPI_Comm    comm
 )
 {
-  PDM_dmesh_t *dmesh = (PDM_dmesh_t *) malloc(sizeof(PDM_dmesh_t));
+  PDM_dmesh_t *dmesh;
+  PDM_malloc(dmesh,1,PDM_dmesh_t);
 
   dmesh->comm              = comm;
   dmesh->owner             = owner;
-  dmesh->results_is_getted = malloc( PDM_CONNECTIVITY_TYPE_MAX * sizeof(PDM_bool_t) );
+  PDM_malloc(dmesh->results_is_getted, PDM_CONNECTIVITY_TYPE_MAX ,PDM_bool_t);
 
   dmesh->dn_cell           = dn_cell;
   dmesh->dn_face           = dn_face;
@@ -140,9 +141,9 @@ PDM_dmesh_create
   dmesh->_dvtx_coord       = NULL;
   dmesh->is_owner_vtx_coord  = PDM_TRUE;
 
-  dmesh->dconnectivity         = malloc( PDM_CONNECTIVITY_TYPE_MAX * sizeof(PDM_g_num_t *) );
-  dmesh->dconnectivity_idx     = malloc( PDM_CONNECTIVITY_TYPE_MAX * sizeof(int         *) );
-  dmesh->is_owner_connectivity = malloc( PDM_CONNECTIVITY_TYPE_MAX * sizeof(PDM_bool_t   ) );
+  PDM_malloc(dmesh->dconnectivity, PDM_CONNECTIVITY_TYPE_MAX ,PDM_g_num_t *);
+  PDM_malloc(dmesh->dconnectivity_idx, PDM_CONNECTIVITY_TYPE_MAX ,int         *);
+  PDM_malloc(dmesh->is_owner_connectivity, PDM_CONNECTIVITY_TYPE_MAX ,PDM_bool_t   );
 
   for(int i = 0; i < PDM_CONNECTIVITY_TYPE_MAX; ++i) {
     dmesh->is_owner_connectivity[i] = PDM_FALSE;
@@ -150,9 +151,9 @@ PDM_dmesh_create
     dmesh->dconnectivity_idx    [i] = NULL;
   }
 
-  dmesh->dbound          = malloc( PDM_BOUND_TYPE_MAX * sizeof(PDM_g_num_t *) );
-  dmesh->dbound_idx      = malloc( PDM_BOUND_TYPE_MAX * sizeof(int         *) );
-  dmesh->is_owner_bound  = malloc( PDM_BOUND_TYPE_MAX * sizeof(PDM_bool_t   ) );
+  PDM_malloc(dmesh->dbound, PDM_BOUND_TYPE_MAX ,PDM_g_num_t *);
+  PDM_malloc(dmesh->dbound_idx, PDM_BOUND_TYPE_MAX ,int         *);
+  PDM_malloc(dmesh->is_owner_bound, PDM_BOUND_TYPE_MAX ,PDM_bool_t   );
 
   for(int i = 0; i < PDM_BOUND_TYPE_MAX; ++i ) {
     dmesh->n_group_bnd[i] = 0;
@@ -715,10 +716,14 @@ PDM_dmesh_find_topological_ridges
   int dn_face_extract = distrib_extract_face[i_rank+1] - distrib_extract_face[i_rank];
 
   int n_edge_elt_tot = dextract_face_vtx_idx[dn_face_extract];
-  PDM_g_num_t* tmp_dface_edge         = (PDM_g_num_t *) malloc(     n_edge_elt_tot    * sizeof(PDM_g_num_t) );
-  int*         tmp_parent_elmt_pos    = (int         *) malloc(     n_edge_elt_tot    * sizeof(int        ) );
-  int*         tmp_dface_edge_vtx_idx = (int         *) malloc( ( n_edge_elt_tot + 1) * sizeof(int        ) );
-  PDM_g_num_t* tmp_dface_edge_vtx     = (PDM_g_num_t *) malloc( 2 * n_edge_elt_tot    * sizeof(PDM_g_num_t) );
+  PDM_g_num_t *tmp_dface_edge;
+  PDM_malloc(tmp_dface_edge,     n_edge_elt_tot    ,PDM_g_num_t);
+  int *tmp_parent_elmt_pos;
+  PDM_malloc(tmp_parent_elmt_pos,     n_edge_elt_tot    ,int        );
+  int *tmp_dface_edge_vtx_idx;
+  PDM_malloc(tmp_dface_edge_vtx_idx, ( n_edge_elt_tot + 1) ,int        );
+  PDM_g_num_t *tmp_dface_edge_vtx;
+  PDM_malloc(tmp_dface_edge_vtx, 2 * n_edge_elt_tot    ,PDM_g_num_t);
 
   int n_elmt_current = 0;
   int n_edge_current = 0;
@@ -779,8 +784,10 @@ PDM_dmesh_find_topological_ridges
                                                                    1,
                                                                    comm);
 
-  int *pface_group   = malloc(dgroup_face_idx[n_group_face] * sizeof(int));
-  int *pface_group_n = malloc(dgroup_face_idx[n_group_face] * sizeof(int));
+  int *pface_group;
+  PDM_malloc(pface_group,dgroup_face_idx[n_group_face] ,int);
+  int *pface_group_n;
+  PDM_malloc(pface_group_n,dgroup_face_idx[n_group_face] ,int);
   for(int i_group = 0; i_group < n_group_face; ++i_group) {
     for(int idx_face = dgroup_face_idx[i_group]; idx_face < dgroup_face_idx[i_group+1]; ++idx_face) {
       pface_group  [idx_face] = (i_group+1);
@@ -883,19 +890,24 @@ PDM_dmesh_find_topological_ridges
   }
 
   PDM_g_num_t *edge_group   = NULL;
-  int         *pridge_edge  = malloc( dn_edge       * sizeof(int        ));
+  int *pridge_edge;
+  PDM_malloc(pridge_edge, dn_edge       ,int        );
 
   /* For each ridge keep the link with the face group associated */
-  int         *pridge_face_group_idx  = malloc( (dn_edge+1)            * sizeof(int        ));
-  int         *pridge_face_group      = malloc( n_max_nuplet * dn_edge * sizeof(int        ));
+  int *pridge_face_group_idx;
+  PDM_malloc(pridge_face_group_idx, (dn_edge+1)            ,int        );
+  int *pridge_face_group;
+  PDM_malloc(pridge_face_group, n_max_nuplet * dn_edge ,int        );
 
   int          dn_ridge     = 0;
 
   PDM_gnum_set_parents_nuplet(gen_gnum, n_max_nuplet);
 
-  PDM_g_num_t *edge_doublet = malloc( n_max_nuplet * dn_edge * sizeof(PDM_g_num_t));
+  PDM_g_num_t *edge_doublet;
+  PDM_malloc(edge_doublet, n_max_nuplet * dn_edge ,PDM_g_num_t);
 
-  int *group_list = malloc(n_max_nuplet * sizeof(int));
+  int *group_list;
+  PDM_malloc(group_list,n_max_nuplet ,int);
   int idx_write = 0;
   pridge_face_group_idx[0] = 0;
   for(int i = 0; i < dn_edge; ++i) {
@@ -978,7 +990,8 @@ PDM_dmesh_find_topological_ridges
   /*
    * Hook edge
    */
-  PDM_g_num_t *dridge_vtx = malloc(2 * dn_ridge * sizeof(PDM_g_num_t));
+  PDM_g_num_t *dridge_vtx;
+  PDM_malloc(dridge_vtx,2 * dn_ridge ,PDM_g_num_t);
   for(int i = 0; i < dn_ridge; ++i) {
     int i_edge = pridge_edge[i];
     dridge_vtx[2*i  ] = dedge_vtx[2*i_edge  ];
@@ -990,7 +1003,8 @@ PDM_dmesh_find_topological_ridges
   /*
    * Re-création des groupes
    */
-  int *dgroup_edge_n = malloc(n_group_ridge * sizeof(int));
+  int *dgroup_edge_n;
+  PDM_malloc(dgroup_edge_n,n_group_ridge ,int);
 
   for(int i = 0; i < n_group_ridge; ++i) {
     dgroup_edge_n[i] = 0;
@@ -1004,14 +1018,16 @@ PDM_dmesh_find_topological_ridges
     PDM_log_trace_array_int(dgroup_edge_n, n_group_ridge, "dgroup_edge_n ::");
   }
 
-  int *dgroup_edge_idx = malloc((n_group_ridge+1) * sizeof(int));
+  int *dgroup_edge_idx;
+  PDM_malloc(dgroup_edge_idx,(n_group_ridge+1) ,int);
   dgroup_edge_idx[0] = 0;
   for(int i = 0; i < n_group_ridge; ++i) {
     dgroup_edge_idx[i+1] = dgroup_edge_idx[i] + dgroup_edge_n[i];
     dgroup_edge_n[i] = 0;
   }
 
-  PDM_g_num_t* dgroup_edge = malloc(dgroup_edge_idx[n_group_ridge] * sizeof(PDM_g_num_t));
+  PDM_g_num_t *dgroup_edge;
+  PDM_malloc(dgroup_edge,dgroup_edge_idx[n_group_ridge] ,PDM_g_num_t);
 
   PDM_g_num_t* distrib_ridge = PDM_compute_entity_distribution(comm, dn_ridge);
 

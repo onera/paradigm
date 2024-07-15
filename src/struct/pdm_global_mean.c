@@ -77,13 +77,14 @@ PDM_global_mean_create
 )
 {
 
-  PDM_global_point_mean_t *gmean = (PDM_global_point_mean_t *) malloc(sizeof(PDM_global_point_mean_t));
+  PDM_global_point_mean_t *gmean;
+  PDM_malloc(gmean,1,PDM_global_point_mean_t);
 
   gmean->n_part  = n_part;
   gmean->comm    = comm;
-  gmean->g_nums  = (PDM_g_num_t **) malloc (sizeof(PDM_g_num_t *) * n_part);
-  gmean->n_elts  = (int          *) malloc (sizeof(int          ) * n_part);
-  gmean->strides = (int         **) malloc (sizeof(int         *) * n_part);
+  PDM_malloc(gmean->g_nums,n_part,PDM_g_num_t *);
+  PDM_malloc(gmean->n_elts,n_part,int          );
+  PDM_malloc(gmean->strides,n_part,int         *);
   gmean->ptb     = NULL;
   gmean->btp     = NULL;
 
@@ -94,9 +95,9 @@ PDM_global_mean_create
     gmean->strides[i] = NULL;
   }
 
-  gmean->local_field       = (double **) malloc (sizeof(double * ) * n_part);
-  gmean->local_weight      = (double **) malloc (sizeof(double * ) * n_part);
-  gmean->global_mean_field = (double **) malloc (sizeof(double * ) * n_part);
+  PDM_malloc(gmean->local_field,n_part,double * );
+  PDM_malloc(gmean->local_weight,n_part,double * );
+  PDM_malloc(gmean->global_mean_field,n_part,double * );
 
   for (int i = 0; i < n_part; i++) {
     gmean->local_field      [i] = NULL;
@@ -130,7 +131,7 @@ PDM_global_mean_set
 {
   gmean->g_nums [i_part] = (PDM_g_num_t *) numabs;
   gmean->n_elts [i_part] = n_point;
-  gmean->strides[i_part] = malloc (sizeof(int) * n_point);
+  PDM_malloc(gmean->strides[i_part],n_point,int);
 }
 
 /**
@@ -238,7 +239,7 @@ PDM_global_mean_field_compute
 
     int n_elt_block = PDM_part_to_block_n_elt_block_get(gmean->ptb);
 
-    gmean->s_weight = malloc (sizeof(double) * n_elt_block);
+    PDM_malloc(gmean->s_weight,n_elt_block,double);
 
   }
 
@@ -274,7 +275,7 @@ PDM_global_mean_field_compute
   int **_stride_w = NULL;
   if (gmean->local_weight[0] != NULL) {
 
-    _stride_w = malloc (sizeof(int *) * gmean->n_part);
+    PDM_malloc(_stride_w,gmean->n_part,int *);
     for (int i = 0; i < gmean->n_part; i++) {
       _stride_w[i] = PDM_array_const_int(gmean->n_elts[i], 1);
     }
@@ -301,7 +302,8 @@ PDM_global_mean_field_compute
   // Attention la definition de block_field_stride n'est pas la bonne
   // il faut creer un tableau stride_idx
 
-  int *stride_idx = malloc(sizeof(int) * (n_elt_block + 1));
+  int *stride_idx;
+  PDM_malloc(stride_idx,(n_elt_block + 1),int);
   stride_idx[0] = 0;
 
   for (int i = 0; i < n_elt_block; i++) {

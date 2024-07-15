@@ -160,7 +160,8 @@ PDM_multipart_t      **_mpart
 
 
   int n_domain = 1;
-  int *n_part_domains = (int *) malloc(sizeof(int) * n_domain);
+  int *n_part_domains;
+  PDM_malloc(n_part_domains,n_domain,int);
   n_part_domains[0] = n_part;
 
   PDM_multipart_t *mpart = PDM_multipart_create(n_domain,
@@ -465,7 +466,8 @@ int main(int argc, char *argv[])
   int                  pvtx_idx2             = 0;
   int                 *pstrid                = PDM_array_const_int (pn_vtx, 1);
   int                 *pnormalisation        = PDM_array_const_int (pn_vtx, 0);
-  double              *pnew_vtx_coord        = malloc(3 * pn_vtx * sizeof(double));
+  double *pnew_vtx_coord;
+  PDM_malloc(pnew_vtx_coord,3 * pn_vtx ,double);
   PDM_block_to_part_t *btp                   = NULL;
   PDM_part_to_block_t *ptb                   = NULL;
   int                 *dnormalisation        = NULL;
@@ -579,8 +581,8 @@ int main(int argc, char *argv[])
     nelmt_proc = PDM_part_to_block_n_elt_block_get(ptb);
 
     if (i_step ==0) {
-      dnormalisation_summed = malloc(    nelmt_proc * sizeof(double));
-      dnew_vtx_coord_summed = malloc(3 * nelmt_proc * sizeof(double));
+      PDM_malloc(dnormalisation_summed,    nelmt_proc ,double);
+      PDM_malloc(dnew_vtx_coord_summed,3 * nelmt_proc ,double);
     }
 
 

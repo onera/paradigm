@@ -161,7 +161,7 @@ const int                n_part,
    * Build list of exchanged ranks
    */
 
-  graph_bound->exchRank= (int *) malloc (graph_bound->nExchRank * sizeof(int));
+  PDM_malloc(graph_bound->exchRank,graph_bound->nExchRank ,int);
   graph_bound->nExchRank = 0;
 
   for (int i = 0; i < lComm; i++) {
@@ -661,9 +661,12 @@ const int                n_part,
    */
 
   int *hashTableN = PDM_array_zeros_int(nKeys);
-  PDM_g_num_t *hashTableGnum = (PDM_g_num_t *) malloc (sizeof(PDM_g_num_t) * hashTableIdx[nKeys]);
-  int *hashTableDataLoc         = (int *) malloc (sizeof(int) * hashTableIdx[nKeys]);
-  int *hashTableDataNumLoc      = (int *) malloc (sizeof(int) * hashTableIdx[nKeys]);
+  PDM_g_num_t *hashTableGnum;
+  PDM_malloc(hashTableGnum,hashTableIdx[nKeys],PDM_g_num_t);
+  int *hashTableDataLoc;
+  PDM_malloc(hashTableDataLoc,hashTableIdx[nKeys],int);
+  int *hashTableDataNumLoc;
+  PDM_malloc(hashTableDataNumLoc,hashTableIdx[nKeys],int);
 
 
   for (int i = 0; i < graph_bound->nGhostElt; i++) {
@@ -704,7 +707,8 @@ const int                n_part,
    * Remove elements already in local offered elements
    */
 
-  int **eltToPartBound = (int **) malloc(sizeof(int *) * n_part);
+  int **eltToPartBound;
+  PDM_malloc(eltToPartBound,n_part,int *);
   for (int i = 0; i < n_part; i++) {
     PDM_part_bound_t *_partBound = graph_bound->partBound[i];
 
@@ -770,13 +774,15 @@ const int                n_part,
 
   int sNewLocalGhost = 10;
   int nNewLocalGhost = 0;
-  int *newLocalGhost = (int *) malloc (sizeof(int) * 2 * sNewLocalGhost);
+  int *newLocalGhost;
+  PDM_malloc(newLocalGhost,2 * sNewLocalGhost,int);
 
   /*
    * Launch irecv about tag
    */
 
-  int *recvTagGhostElt = (int *) malloc (graph_bound->nSendElt * sizeof(int));
+  int *recvTagGhostElt;
+  PDM_malloc(recvTagGhostElt,graph_bound->nSendElt ,int);
   for (int i = 0; i < graph_bound->nExchRank; i++) {
     int iProc = graph_bound->exchRank[i];
     int idx   = offeredEltsRankIdx[iProc];
@@ -995,8 +1001,10 @@ const int                n_part,
 
   /* - ghostEltIdx */
 
-  int *newGhostEltIdx = (int *) malloc (sizeof(int) * (lComm+1));
-  int *oldToNewGhost = (int *) malloc (sizeof(int) * graph_bound->nGhostElt);
+  int *newGhostEltIdx;
+  PDM_malloc(newGhostEltIdx,(lComm+1),int);
+  int *oldToNewGhost;
+  PDM_malloc(oldToNewGhost,graph_bound->nGhostElt,int);
 
   memcpy (oldToNewGhost, tagGhostElt, sizeof(int) * graph_bound->nGhostElt);
 
@@ -1108,7 +1116,8 @@ const int                n_part,
    * Remove double elt in ghostEltElt
    */
 
-  int *tagEltElt = (int *) malloc (sizeof(int) * newGhostEltEltIdx[nTotalNewGhost]);
+  int *tagEltElt;
+  PDM_malloc(tagEltElt,newGhostEltEltIdx[nTotalNewGhost],int);
   int *newGhostEltEltIdx2 = PDM_array_zeros_int(nTotalNewGhost + 1);
 
   for (int i = 0; i < newGhostEltEltIdx[nTotalNewGhost]; i++) {
@@ -1218,8 +1227,10 @@ const int                n_part,
     newSendEltIdx[i+1] += newSendEltIdx[i];
   }
 
-  int *newSendEltPart = (int *) malloc (newSendEltIdx[lComm] * sizeof(int));
-  int *newSendElt     = (int *) malloc (newSendEltIdx[lComm] * sizeof(int));
+  int *newSendEltPart;
+  PDM_malloc(newSendEltPart,newSendEltIdx[lComm] ,int);
+  int *newSendElt;
+  PDM_malloc(newSendElt,newSendEltIdx[lComm] ,int);
 
   for (int i = 0; i < graph_bound->nExchRank; i++) {
     int iProc = graph_bound->exchRank[i];
@@ -1294,12 +1305,13 @@ const int                n_part,
     PDM_printf("\n");
   }
 
-  graph_bound->nGhostEltPart = (int *) malloc (n_part * sizeof(int));
-  graph_bound->ghostEltPart2GhostElt = (int **) malloc (n_part * sizeof(int *));
-  graph_bound->ghostEltPartIdx = (int **) malloc (n_part * sizeof(int *));
-  graph_bound->ghostEltPartElt = (int **) malloc (n_part * sizeof(int *));
+  PDM_malloc(graph_bound->nGhostEltPart,n_part ,int);
+  PDM_malloc(graph_bound->ghostEltPart2GhostElt,n_part ,int *);
+  PDM_malloc(graph_bound->ghostEltPartIdx,n_part ,int *);
+  PDM_malloc(graph_bound->ghostEltPartElt,n_part ,int *);
 
-  int **tagGhostEltPart =  (int **) malloc (n_part * sizeof(int *));
+  int **tagGhostEltPart;
+  PDM_malloc(tagGhostEltPart,n_part ,int *);
 
   for (int i = 0; i < n_part; i++) {
     tagGhostEltPart[i] = PDM_array_zeros_int(graph_bound->nGhostElt);
@@ -1323,9 +1335,12 @@ const int                n_part,
 
     int nGhostEltPart = graph_bound->nGhostEltPart[i];
 
-    int *ghostEltPart2GhostElt = (int *) malloc (nGhostEltPart * sizeof(int));
-    int *ghostEltPartIdx = (int *) malloc ((nGhostEltPart + 1) * sizeof(int));
-    int *ghostEltPartElt = (int *) malloc (lGhostEltPartElt * sizeof(int));
+    int *ghostEltPart2GhostElt;
+    PDM_malloc(ghostEltPart2GhostElt,nGhostEltPart ,int);
+    int *ghostEltPartIdx;
+    PDM_malloc(ghostEltPartIdx,(nGhostEltPart + 1) ,int);
+    int *ghostEltPartElt;
+    PDM_malloc(ghostEltPartElt,lGhostEltPartElt ,int);
 
     graph_bound->ghostEltPart2GhostElt[i] = ghostEltPart2GhostElt;
     graph_bound->ghostEltPartIdx[i] = ghostEltPartIdx;
@@ -1415,8 +1430,10 @@ const PDM_data_t         tData,
   switch (tData) {
 
   case PDM_INT : {
-    int *_sendBuffer = (int *) malloc(sizeof(int) * graph_bound->nSendElt * nComp);
-    int *_recvBuffer = (int *) malloc(sizeof(int) * graph_bound->nGhostElt * nComp);
+    int *_sendBuffer;
+    PDM_malloc(_sendBuffer,graph_bound->nSendElt * nComp,int);
+    int *_recvBuffer;
+    PDM_malloc(_recvBuffer,graph_bound->nGhostElt * nComp,int);
     int **_field = (int **) field;
     sizeExchType = sizeof(int);
 
@@ -1435,8 +1452,10 @@ const PDM_data_t         tData,
   }
 
   case PDM_DOUBLE : {
-    double *_sendBuffer = (double *) malloc(sizeof(double) * graph_bound->nSendElt * nComp);
-    double *_recvBuffer = (double *) malloc(sizeof(double) * graph_bound->nGhostElt * nComp);
+    double *_sendBuffer;
+    PDM_malloc(_sendBuffer,graph_bound->nSendElt * nComp,double);
+    double *_recvBuffer;
+    PDM_malloc(_recvBuffer,graph_bound->nGhostElt * nComp,double);
     double **_field = (double **) field;
     sizeExchType = sizeof(double);
 

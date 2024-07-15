@@ -151,10 +151,14 @@ PDM_poly_vol_gen
   *n_face_group = 6;
 
   /* Define distributions */
-  PDM_g_num_t *distrib_vtx  = (PDM_g_num_t *) malloc (sizeof(PDM_g_num_t) * (n_rank + 1));
-  PDM_g_num_t *distrib_face = (PDM_g_num_t *) malloc (sizeof(PDM_g_num_t) * (n_rank + 1));
-  PDM_g_num_t *distrib_cell = (PDM_g_num_t *) malloc (sizeof(PDM_g_num_t) * (n_rank + 1));
-  PDM_g_num_t *distrib_face_lim = (PDM_g_num_t *) malloc (sizeof(PDM_g_num_t) * (n_rank + 1));
+  PDM_g_num_t *distrib_vtx;
+  PDM_malloc(distrib_vtx,(n_rank + 1),PDM_g_num_t);
+  PDM_g_num_t *distrib_face;
+  PDM_malloc(distrib_face,(n_rank + 1),PDM_g_num_t);
+  PDM_g_num_t *distrib_cell;
+  PDM_malloc(distrib_cell,(n_rank + 1),PDM_g_num_t);
+  PDM_g_num_t *distrib_face_lim;
+  PDM_malloc(distrib_face_lim,(n_rank + 1),PDM_g_num_t);
   distrib_vtx[0]      = 0;
   distrib_face[0]     = 0;
   distrib_cell[0]     = 0;
@@ -205,7 +209,7 @@ PDM_poly_vol_gen
   /*
    *  Vertices
    */
-  *dvtx_coord = malloc (sizeof(double) * (*dn_vtx) * 3);
+  PDM_malloc(*dvtx_coord,(*dn_vtx) * 3,double);
   double *_dvtx_coord = *dvtx_coord;
 
   double stepx = lengthx / (double) (3*nx);
@@ -305,14 +309,14 @@ PDM_poly_vol_gen
   PDM_g_num_t idx_quadV11 = idx_quadV10 + ny - 1;    // corners
 
 
-  *dface_vtx_idx = malloc (sizeof(int) * (*dn_face + 1));
+  PDM_malloc(*dface_vtx_idx,(*dn_face + 1),int);
   int *_dface_vtx_idx = *dface_vtx_idx;
   _dface_vtx_idx[0] = 0;
 
   int s_face_vtx = 8*(*dn_face);
-  *dface_vtx = malloc (sizeof(PDM_g_num_t) * s_face_vtx);
+  PDM_malloc(*dface_vtx,s_face_vtx,PDM_g_num_t);
 
-  *dface_cell = malloc (sizeof(PDM_g_num_t) * 2 * (*dn_face));
+  PDM_malloc(*dface_cell,2 * (*dn_face),PDM_g_num_t);
 
   for (int ifac = 0; ifac < (*dn_face); ifac++) {
 
@@ -956,7 +960,7 @@ PDM_poly_vol_gen
   *dface_group_idx = PDM_array_zeros_int (*n_face_group + 1);
   int *_dface_group_idx = *dface_group_idx;
 
-  *dface_group = malloc (sizeof(PDM_g_num_t) * dn_face_lim);
+  PDM_malloc(*dface_group,dn_face_lim,PDM_g_num_t);
   PDM_g_num_t *_dface_group = *dface_group;
 
   PDM_g_num_t idx_group1 = n_faceH_z_cst;
@@ -1101,12 +1105,12 @@ PDM_poly_vol_gen
   /*
    *  Cell-face
    */
-  *dcell_face_idx = malloc (sizeof(int) * (*dn_cell + 1));
+  PDM_malloc(*dcell_face_idx,(*dn_cell + 1),int);
   int *_dcell_face_idx = *dcell_face_idx;
   _dcell_face_idx[0] = 0;
 
   int s_cell_face = 10 * (*dn_cell);
-  *dcell_face = malloc (sizeof(PDM_g_num_t) * s_cell_face);
+  PDM_malloc(*dcell_face,s_cell_face,PDM_g_num_t);
 
   for (int icel = 0; icel < (*dn_cell); icel++) {
 

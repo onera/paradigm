@@ -62,7 +62,8 @@ const double           zero_z,
   PDM_MPI_Comm_size(comm, &n_rank);
   PDM_MPI_Comm_rank(comm, &i_rank);
 
-  PDM_dcube_t *dcube = (PDM_dcube_t *) malloc(sizeof(PDM_dcube_t));
+  PDM_dcube_t *dcube;
+  PDM_malloc(dcube,1,PDM_dcube_t);
 
   /*
    * Build dcube structure
@@ -84,10 +85,14 @@ const double           zero_z,
   PDM_g_num_t n_vtx_face  = n_vtx_seg * n_vtx_seg;
   PDM_g_num_t n_face_lim  = 6 * n_face_face;
   double step = length / (double) n_face_seg;
-  PDM_g_num_t *distrib_vtx      = (PDM_g_num_t *) malloc((n_rank + 1) * sizeof(PDM_g_num_t));
-  PDM_g_num_t *distrib_face     = (PDM_g_num_t *) malloc((n_rank + 1) * sizeof(PDM_g_num_t));
-  PDM_g_num_t *distrib_cell     = (PDM_g_num_t *) malloc((n_rank + 1) * sizeof(PDM_g_num_t));
-  PDM_g_num_t *distrib_face_lim = (PDM_g_num_t *) malloc((n_rank + 1) * sizeof(PDM_g_num_t));
+  PDM_g_num_t *distrib_vtx;
+  PDM_malloc(distrib_vtx,(n_rank + 1) ,PDM_g_num_t);
+  PDM_g_num_t *distrib_face;
+  PDM_malloc(distrib_face,(n_rank + 1) ,PDM_g_num_t);
+  PDM_g_num_t *distrib_cell;
+  PDM_malloc(distrib_cell,(n_rank + 1) ,PDM_g_num_t);
+  PDM_g_num_t *distrib_face_lim;
+  PDM_malloc(distrib_face_lim,(n_rank + 1) ,PDM_g_num_t);
 
   //
   // Define distribution
@@ -142,12 +147,12 @@ const double           zero_z,
   PDM_g_num_t _dn_face_lim = distrib_face_lim[i_rank+1] - distrib_face_lim[i_rank];
   int dn_face_lim = (int) _dn_face_lim;
 
-  dcube->dface_cell      = (PDM_g_num_t *) malloc(2*(dcube->dn_face    ) * sizeof(PDM_g_num_t *));
-  dcube->dface_vtx_idx   = (int         *) malloc(  (dcube->dn_face + 1) * sizeof(int         *));
-  dcube->dface_vtx       = (PDM_g_num_t *) malloc(4*(dcube->dn_face    ) * sizeof(PDM_g_num_t *));
-  dcube->dvtx_coord      = (double      *) malloc(3*(dcube->dn_vtx     ) * sizeof(double      *));
-  dcube->dface_group_idx = (int         *) malloc(  (dcube->n_face_group + 1) * sizeof(int *));
-  dcube->dface_group     = (PDM_g_num_t *) malloc(   dn_face_lim              * sizeof(PDM_g_num_t *));
+  PDM_malloc(dcube->dface_cell,2*(dcube->dn_face    ) ,PDM_g_num_t );
+  PDM_malloc(dcube->dface_vtx_idx,  (dcube->dn_face + 1) ,int         );
+  PDM_malloc(dcube->dface_vtx,4*(dcube->dn_face    ) ,PDM_g_num_t );
+  PDM_malloc(dcube->dvtx_coord,3*(dcube->dn_vtx     ) ,double      );
+  PDM_malloc(dcube->dface_group_idx,  (dcube->n_face_group + 1) ,int );
+  PDM_malloc(dcube->dface_group,   dn_face_lim              ,PDM_g_num_t );
 
   PDM_g_num_t  *_dface_cell      = dcube->dface_cell;
   int          *_dface_vtx_idx   = dcube->dface_vtx_idx;

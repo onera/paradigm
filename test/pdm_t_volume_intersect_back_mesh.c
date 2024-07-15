@@ -234,7 +234,7 @@ _projection_on_background_mesh_get
   int dim   = PDM_Mesh_nodal_elt_dim_get(back_elt_type);
 
   double best_min_dist2 = 1.0e15;
-  *proj_pt_coord = malloc(sizeof(double) * 3);
+  PDM_malloc(*proj_pt_coord,3,double);
   double tmp_pt_to_project_coord[3];
 
   if (dim == 2) {
@@ -351,7 +351,8 @@ int main(int argc, char *argv[])
 
   PDM_split_dual_t part_method = PDM_SPLIT_DUAL_WITH_HILBERT;
   int n_domain                 = 1;
-  int *n_part_domains          = (int *) malloc(sizeof(int) * n_domain);
+  int *n_part_domains;
+  PDM_malloc(n_part_domains,n_domain,int);
   n_part_domains[0]            = n_part;
 
   PDM_multipart_t *mpart = PDM_multipart_create(n_domain,
@@ -443,14 +444,16 @@ int main(int argc, char *argv[])
 
   int dn_back_face = back_distrib_face[i_rank+1] - back_distrib_face[i_rank];
 
-  PDM_g_num_t *d_back_face_ln_to_gn = (PDM_g_num_t * ) malloc(dn_back_face * sizeof(PDM_g_num_t));
+  PDM_g_num_t *d_back_face_ln_to_gn;
+  PDM_malloc(d_back_face_ln_to_gn,dn_back_face ,PDM_g_num_t);
   for (int i = 0; i < dn_back_face; ++i) {
     d_back_face_ln_to_gn[i] = back_distrib_face[i_rank] + i + 1;
   }
 
   int dn_back_vtx = back_distrib_vtx[i_rank+1] - back_distrib_vtx[i_rank];
 
-  PDM_g_num_t *d_back_vtx_ln_to_gn = (PDM_g_num_t * ) malloc(dn_back_vtx * sizeof(PDM_g_num_t));
+  PDM_g_num_t *d_back_vtx_ln_to_gn;
+  PDM_malloc(d_back_vtx_ln_to_gn,dn_back_vtx ,PDM_g_num_t);
   for (int i = 0; i < dn_back_vtx; ++i) {
     d_back_vtx_ln_to_gn[i] = back_distrib_face[i_rank] + i + 1;
   }
@@ -471,7 +474,8 @@ int main(int argc, char *argv[])
                                                            &p_back_face_vtx_idx,
                                                            &p_back_face_vtx);
 
-  int      *n_part_p_back_n_vtx            = malloc(sizeof(int) * n_part);
+  int *n_part_p_back_n_vtx;
+  PDM_malloc(n_part_p_back_n_vtx,n_part,int);
   n_part_p_back_n_vtx[0]                   = p_back_n_vtx;
   double  **n_part_p_back_vtx_coord = NULL;
   PDM_part_dcoordinates_to_pcoordinates(comm,
@@ -485,7 +489,8 @@ int main(int argc, char *argv[])
  PDM_free(n_part_p_back_vtx_coord);
 
   // Create the extents faces as a partition and get associated coords
-  double      *background_box_extents = malloc(sizeof(double)      * dn_back_face * 6);
+  double *background_box_extents;
+  PDM_malloc(background_box_extents,dn_back_face * 6,double);
   double       eps                    = 1.0e-6;
   for (int iface = 0; iface < dn_back_face; iface++) {
     double *tmp_extents = background_box_extents + 6*iface;
@@ -557,10 +562,13 @@ int main(int argc, char *argv[])
   // Create volumes using normals (first "volume" mesh then background mesh)
 
   int    *edge_face_normal_stride = PDM_array_zeros_int(p_vol_n_edge);
-  double *edge_face_normal        = malloc(sizeof(double) * 3 * p_vol_n_edge * 2);
+  double *edge_face_normal;
+  PDM_malloc(edge_face_normal,3 * p_vol_n_edge * 2,double);
 
-  double *face_center             = malloc(sizeof(double) * 3 * p_vol_n_face);
-  double *face_normal             = malloc(sizeof(double) * 3 * p_vol_n_face);
+  double *face_center;
+  PDM_malloc(face_center,3 * p_vol_n_face,double);
+  double *face_normal;
+  PDM_malloc(face_normal,3 * p_vol_n_face,double);
 
   for (int iface = 0; iface < p_vol_n_face; iface++) {
     // compute normal vector
@@ -681,13 +689,17 @@ int main(int argc, char *argv[])
   // compute volume angle
 
   // only for vtk
-  // double *middle_pt_coord = malloc(sizeof(double) * 3 * p_vol_n_edge);
-  double *direction_vect  = malloc(sizeof(double) * 3 * p_vol_n_edge);
+  // double *middle_pt_coord;
+ PDM_malloc(middle_pt_coord,3 * p_vol_n_edge,double);
+  double *direction_vect;
+  PDM_malloc(direction_vect,3 * p_vol_n_edge,double);
 
   double  theta_min         = 1.0e-1; // WARNING: randomly chosen value
   double  eps2              = 1.0e-1; // WARNING: randomly chosen value
-  double *edge_normal       = malloc(sizeof(double) * p_vol_n_edge * 3 * 4);
-  double *edge_pt_plane     = malloc(sizeof(double) * p_vol_n_edge * 3 * 4);
+  double *edge_normal;
+  PDM_malloc(edge_normal,p_vol_n_edge * 3 * 4,double);
+  double *edge_pt_plane;
+  PDM_malloc(edge_pt_plane,p_vol_n_edge * 3 * 4,double);
   for (int iedge = 0; iedge < p_vol_n_edge; iedge++) {
     double theta;
     double direction[3];
@@ -854,7 +866,8 @@ int main(int argc, char *argv[])
 
   int n_boxes = volume_boxes_idx[p_vol_n_edge];
 
-  PDM_g_num_t *p_box_volume_g_num  = malloc(sizeof(PDM_g_num_t) * n_boxes);
+  PDM_g_num_t *p_box_volume_g_num;
+  PDM_malloc(p_box_volume_g_num,n_boxes,PDM_g_num_t);
 
   for (int ivol = 0; ivol < p_vol_n_edge; ivol++) {
     for (int ibox = volume_boxes_idx[ivol]; ibox < volume_boxes_idx[ivol+1]; ibox++) {
@@ -917,12 +930,14 @@ int main(int argc, char *argv[])
   PDM_dmesh_nodal_to_dmesh_free(dmn_to_dm);
   PDM_DMesh_nodal_free(vol_dmn);
 
-  int  **volume       = malloc(sizeof(int  *) * total_n_edges);
-  char **volume_names = malloc(sizeof(char *) * total_n_edges);
+  int **volume;
+  PDM_malloc(*volume,total_n_edges,int  *);
+  char **volume_names;
+  PDM_malloc(*volume_names,total_n_edges,char *);
 
   for (int ivol = 0; ivol < total_n_edges; ivol++) {
     volume[ivol] = PDM_array_zeros_int(dn_back_face);
-    volume_names[ivol] = malloc(sizeof(char) * 99);
+    PDM_malloc(volume_names[ivol],99,char);
     sprintf(volume_names[ivol], "edge_%d.vtk", ivol+1);
 
   }
@@ -985,7 +1000,8 @@ int main(int argc, char *argv[])
   // Create a fake cavity distribution to mimic the pdm_mesh_adaptation setting
 
   int d_n_cavity = p_vol_n_edge;
-  PDM_g_num_t *distrib_cavity  = malloc (sizeof(PDM_g_num_t) * (d_n_cavity + 1));
+  PDM_g_num_t *distrib_cavity;
+  PDM_malloc(distrib_cavity,(d_n_cavity + 1),PDM_g_num_t);
   PDM_distrib_compute(d_n_cavity,
                       distrib_cavity,
                       -1,
@@ -1007,10 +1023,12 @@ int main(int argc, char *argv[])
 
   // Unique sort
 
-  PDM_g_num_t *toto_g_num = malloc(sizeof(PDM_g_num_t) * seed_edge_back_face_idx[p_vol_n_edge]);
+  PDM_g_num_t *toto_g_num;
+  PDM_malloc(toto_g_num,seed_edge_back_face_idx[p_vol_n_edge],PDM_g_num_t);
   memcpy(toto_g_num, seed_edge_back_face_g_num, sizeof(PDM_g_num_t) * seed_edge_back_face_idx[p_vol_n_edge]);
 
-  int* order = (int *) malloc(seed_edge_back_face_idx[p_vol_n_edge] * sizeof(int));
+  int *order;
+  PDM_malloc(order,seed_edge_back_face_idx[p_vol_n_edge] ,int);
   for(int i = 0; i < seed_edge_back_face_idx[p_vol_n_edge]; ++i){
     order[i] = i;
   }
@@ -1020,9 +1038,11 @@ int main(int argc, char *argv[])
     PDM_log_trace_array_int(order, seed_edge_back_face_idx[p_vol_n_edge],"order: ");
   }
 
-  int *seed_edge_back_face_l_num = malloc(sizeof(int) * seed_edge_back_face_idx[p_vol_n_edge]);
+  int *seed_edge_back_face_l_num;
+  PDM_malloc(seed_edge_back_face_l_num,seed_edge_back_face_idx[p_vol_n_edge],int);
   seed_edge_back_face_l_num[order[0]] = 0;
-  PDM_g_num_t *p_back_face_ln_to_gn = malloc(sizeof(PDM_g_num_t) * seed_edge_back_face_idx[p_vol_n_edge]);
+  PDM_g_num_t *p_back_face_ln_to_gn;
+  PDM_malloc(p_back_face_ln_to_gn,seed_edge_back_face_idx[p_vol_n_edge],PDM_g_num_t);
   p_back_face_ln_to_gn[0] = seed_edge_back_face_g_num[0];
 
   int read_idx = 0;
@@ -1041,7 +1061,8 @@ int main(int argc, char *argv[])
 
   p_n_back_face = write_idx;
 
-  int* unique_order = (int *) malloc(seed_edge_back_face_idx[p_vol_n_edge] * sizeof(int));
+  int *unique_order;
+  PDM_malloc(unique_order,seed_edge_back_face_idx[p_vol_n_edge] ,int);
   int new_size = PDM_inplace_unique_long2(toto_g_num, unique_order, 0, seed_edge_back_face_idx[p_vol_n_edge]-1);
 
   if(verbose) {
@@ -1079,7 +1100,7 @@ int main(int argc, char *argv[])
  PDM_free(p_back_face_ln_to_gn);
  PDM_free(p_back_vtx_coord);
 
-  n_part_p_back_n_vtx    = malloc(sizeof(int) * n_part);
+  PDM_malloc(n_part_p_back_n_vtx,n_part,int);
   n_part_p_back_n_vtx[0] = p_back_n_vtx;
   // double  **n_part_p_back_vtx_coord = NULL;
   PDM_part_dcoordinates_to_pcoordinates(comm,
@@ -1097,8 +1118,10 @@ int main(int argc, char *argv[])
   // Do projections
 
   // for VTK
-  // double *back_face_proj_pts = malloc(sizeof(double) * p_n_back_face * 3);
-  double *back_face_proj_pts = malloc(sizeof(double) * p_n_back_face * 3);
+  // double *back_face_proj_pts;
+ PDM_malloc(back_face_proj_pts,p_n_back_face * 3,double);
+  double *back_face_proj_pts;
+  PDM_malloc(back_face_proj_pts,p_n_back_face * 3,double);
   // int     n_back_face_proj_pts;
 
   for (int icav = 0; icav < d_n_cavity; icav++) {

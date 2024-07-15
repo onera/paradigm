@@ -276,14 +276,14 @@ _compute_faceVtx
 )
 {
 
-  *nFace = (int *) malloc(sizeof(int) * n_part);
-  *faceVtxIdx = (int **) malloc(sizeof(int *) * n_part);
-  *faceVtx = (int **) malloc(sizeof(int *) * n_part);
-  *faceLNToGN = (PDM_g_num_t **) malloc(sizeof(PDM_g_num_t *) * n_part);
+  PDM_malloc(*nFace,n_part,int);
+  PDM_malloc(*faceVtxIdx,n_part,int *);
+  PDM_malloc(*faceVtx,n_part,int *);
+  PDM_malloc(*faceLNToGN,n_part,PDM_g_num_t *);
 
-  *nVtx = (int *) malloc(sizeof(int) * n_part);
-  *vtxCoord = (double **) malloc(sizeof(double *) * n_part);
-  *vtxLNToGN = (PDM_g_num_t **) malloc(sizeof(PDM_g_num_t *) * n_part);
+  PDM_malloc(*nVtx,n_part,int);
+  PDM_malloc(*vtxCoord,n_part,double *);
+  PDM_malloc(*vtxLNToGN,n_part,PDM_g_num_t *);
 
   // int id_ppart = ppartId;
 
@@ -354,23 +354,28 @@ _compute_faceVtx
                            &_edgeGroupLNToGN);
 
     (*nFace)[ipart] = _nFace;
-    (*faceVtxIdx) [ipart] = (int *) malloc(sizeof(int) * (_nFace + 1));
-    (*faceVtx)[ipart] = (int *) malloc(sizeof(int) * _sFaceEdge);
-    (*faceLNToGN)[ipart] = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * _nFace);
+    (*faceVtxIdx) PDM_malloc([ipart],(_nFace + 1),int);
+    ( *faceVtx)[ipart];
+    PDM_malloc(faceVtx)[ipart],_sFaceEdge,int);
+    ( *faceLNToGN)[ipart];
+    PDM_malloc(faceLNToGN)[ipart],_nFace,PDM_g_num_t);
 
     memcpy ((*faceVtxIdx)[ipart], _faceEdgeIdx, (_nFace + 1) * sizeof(int));
     memcpy ((*faceLNToGN)[ipart], _faceLNToGN, _nFace * sizeof(PDM_g_num_t));
 
     (*nVtx)[ipart] = _nVtx;
-    (*vtxCoord)[ipart] = (double *) malloc(sizeof(double) * (3 * _nVtx));
-    (*vtxLNToGN)[ipart] = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * _nVtx);
+    ( *vtxCoord)[ipart];
+    PDM_malloc(vtxCoord)[ipart],(3 * _nVtx),double);
+    ( *vtxLNToGN)[ipart];
+    PDM_malloc(vtxLNToGN)[ipart],_nVtx,PDM_g_num_t);
 
     memcpy ((*vtxCoord)[ipart], _vtx, 3 *_nVtx * sizeof(double));
     memcpy ((*vtxLNToGN)[ipart], _vtxLNToGN, _nVtx * sizeof(PDM_g_num_t));
 
     int *_faceVtx = (*faceVtx)[ipart];
 
-    int *vtxEdgeIdx = (int *) malloc(sizeof(int) * (_nVtx + 1));
+    int *vtxEdgeIdx;
+    PDM_malloc(vtxEdgeIdx,(_nVtx + 1),int);
 
     for (int i = 0; i < _nVtx + 1; i++) {
       vtxEdgeIdx[i] = 0;
@@ -388,8 +393,10 @@ _compute_faceVtx
       vtxEdgeIdx[i] = vtxEdgeIdx[i] + vtxEdgeIdx[i-1];
     }
 
-    int *vtxEdge = (int *) malloc(sizeof(int) * vtxEdgeIdx[_nVtx]);
-    int *vtxEdgeN = (int *) malloc(sizeof(int) * _nVtx);
+    int *vtxEdge;
+    PDM_malloc(vtxEdge,vtxEdgeIdx[_nVtx],int);
+    int *vtxEdgeN;
+    PDM_malloc(vtxEdgeN,_nVtx,int);
     for (int i = 0; i < _nVtx; i++) {
       vtxEdgeN[i] = 0;
     }
@@ -573,8 +580,10 @@ _create_split_mesh
 
     int have_dCellPart = 0;
 
-    int *dCellPart = (int *) malloc (dNFace*sizeof(int));
-    int *dEdgeVtxIdx = (int *) malloc ((dNEdge+1)*sizeof(int));
+    int *dCellPart;
+    PDM_malloc(dCellPart,dNFace,int);
+    int *dEdgeVtxIdx;
+    PDM_malloc(dEdgeVtxIdx,(dNEdge+1),int);
 
     dEdgeVtxIdx[0] = 0;
     for (int i = 0; i < dNEdge; i++) {
@@ -734,28 +743,32 @@ _create_split_mesh
 
   }
   else {
-    *nFace = (int *) malloc(sizeof(int) * n_part);
-    *faceVtxIdx = (int **) malloc(sizeof(int *) * n_part);
-    *faceVtx = (int **) malloc(sizeof(int *) * n_part);
-    *faceLNToGN = (PDM_g_num_t **) malloc(sizeof(PDM_g_num_t *) * n_part);
+    PDM_malloc(*nFace,n_part,int);
+    PDM_malloc(*faceVtxIdx,n_part,int *);
+    PDM_malloc(*faceVtx,n_part,int *);
+    PDM_malloc(*faceLNToGN,n_part,PDM_g_num_t *);
 
-    *nVtx = (int *) malloc(sizeof(int) * n_part);
-    *vtxCoord = (double **) malloc(sizeof(double *) * n_part);
-    *vtxLNToGN = (PDM_g_num_t **) malloc(sizeof(PDM_g_num_t *) * n_part);
+    PDM_malloc(*nVtx,n_part,int);
+    PDM_malloc(*vtxCoord,n_part,double *);
+    PDM_malloc(*vtxLNToGN,n_part,PDM_g_num_t *);
 
     for (int ipart = 0; ipart < n_part; ipart++) {
       int _nFace = 0;
       int _sFaceEdge = 0;
       (*nFace)[ipart] = _nFace;
-      (*faceVtxIdx) [ipart] = (int *) malloc(sizeof(int) * (_nFace + 1));
+      (*faceVtxIdx) PDM_malloc([ipart],(_nFace + 1),int);
       (*faceVtxIdx) [ipart][0] = 0;
-      (*faceVtx)[ipart] = (int *) malloc(sizeof(int) * _sFaceEdge);
-      (*faceLNToGN)[ipart] = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * _nFace);
+      ( *faceVtx)[ipart];
+      PDM_malloc(faceVtx)[ipart],_sFaceEdge,int);
+      ( *faceLNToGN)[ipart];
+      PDM_malloc(faceLNToGN)[ipart],_nFace,PDM_g_num_t);
 
       int _nVtx = 0;
       (*nVtx)[ipart] = _nVtx;
-      (*vtxCoord)[ipart] = (double *) malloc(sizeof(double) * (3 * _nVtx));
-      (*vtxLNToGN)[ipart] = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * _nVtx);
+      ( *vtxCoord)[ipart];
+      PDM_malloc(vtxCoord)[ipart],(3 * _nVtx),double);
+      ( *vtxLNToGN)[ipart];
+      PDM_malloc(vtxLNToGN)[ipart],_nVtx,PDM_g_num_t);
     }
   }
 
@@ -889,15 +902,18 @@ _export_ini_mesh
      * Debut des ecritures
      */
 
-    int *nsom_part  = (int *) malloc(sizeof(int) * n_part);
+    int *nsom_part;
+    PDM_malloc(nsom_part,n_part,int);
 
-    int *n_part_procs = (int *) malloc(sizeof(int) * numProcs);
+    int *n_part_procs;
+    PDM_malloc(n_part_procs,numProcs,int);
 
     PDM_MPI_Allgather ((void *) &n_part,      1, PDM_MPI_INT,
                    (void *) n_part_procs, 1, PDM_MPI_INT,
                    PDM_MPI_COMM_WORLD);
 
-    int *debPartProcs = (int *) malloc(sizeof(int) * (numProcs + 1));
+    int *debPartProcs;
+    PDM_malloc(debPartProcs,(numProcs + 1),int);
 
     debPartProcs[0] = 0;
     for (int i = 0; i < numProcs; i++) {
@@ -908,8 +924,10 @@ _export_ini_mesh
 
     PDM_writer_step_beg (id_cs[imesh], 0.);
 
-    int **_face_nb =  malloc(sizeof(int *) * n_part);
-    int **_face_idx =  malloc(sizeof(int *) * n_part);
+    int **_face_nb;
+    PDM_malloc(*_face_nb,n_part,int *);
+    int **_face_idx;
+    PDM_malloc(*_face_idx,n_part,int *);
 
     for (int ipart = 0; ipart < n_part; ipart++) {
 
@@ -921,8 +939,8 @@ _export_ini_mesh
                                  vtxLNToGN[imesh][ipart],
                                 PDM_OWNERSHIP_USER);
 
-      _face_nb[ipart] = malloc(sizeof(int) * nFace[imesh][ipart]);
-      _face_idx[ipart] = malloc(sizeof(int) * nFace[imesh][ipart]);
+      PDM_malloc(_face_nb[ipart],nFace[imesh][ipart],int);
+      PDM_malloc(_face_idx[ipart],nFace[imesh][ipart],int);
 
       for (int j = 0; j < nFace[imesh][ipart]; j++) {
         _face_nb[ipart][j]  = faceVtxIdx[imesh][ipart][j+1] - faceVtxIdx[imesh][ipart][j];
@@ -957,15 +975,18 @@ _export_ini_mesh
        - tenseur
     */
 
-    PDM_real_t **val_num_part = (PDM_real_t **) malloc (sizeof(PDM_real_t *) * n_part);
-    PDM_real_t **val_coo_x    = (PDM_real_t **) malloc (sizeof(PDM_real_t *) * n_part);
-    PDM_real_t **val_coo_xyz  = (PDM_real_t **) malloc (sizeof(PDM_real_t *) * n_part);
+    PDM_real_t **val_num_part;
+    PDM_malloc(*val_num_part,n_part,PDM_real_t *);
+    PDM_real_t **val_coo_x;
+    PDM_malloc(*val_coo_x,n_part,PDM_real_t *);
+    PDM_real_t **val_coo_xyz;
+    PDM_malloc(*val_coo_xyz,n_part,PDM_real_t *);
 
     for (int ipart = 0; ipart < n_part; ipart++) {
 
-      val_num_part[ipart] = (PDM_real_t *) malloc (sizeof(PDM_real_t) * nFace[imesh][ipart]);
-      val_coo_x[ipart]    = (PDM_real_t *) malloc (sizeof(PDM_real_t) * nVtx[imesh][ipart]);
-      val_coo_xyz[ipart]  = (PDM_real_t *) malloc (sizeof(PDM_real_t) * 3 * nVtx[imesh][ipart]);
+      PDM_malloc(val_num_part[ipart],nFace[imesh][ipart],PDM_real_t);
+      PDM_malloc(val_coo_x[ipart],nVtx[imesh][ipart],PDM_real_t);
+      PDM_malloc(val_coo_xyz[ipart],3 * nVtx[imesh][ipart],PDM_real_t);
       nsom_part[ipart]    = nVtx[imesh][ipart];
 
       for (int i = 0; i < nFace[imesh][ipart]; i++) {
@@ -1190,13 +1211,15 @@ _export_ol_mesh
     id_geom[imesh] = PDM_writer_geom_create (id_cs[imesh],
                                              nom_geom,
                                              n_part);
-    int *n_part_procs = (int *) malloc(sizeof(int) * numProcs);
+    int *n_part_procs;
+    PDM_malloc(n_part_procs,numProcs,int);
 
     PDM_MPI_Allgather ((void *) &n_part,      1, PDM_MPI_INT,
                    (void *) n_part_procs, 1, PDM_MPI_INT,
                    PDM_MPI_COMM_WORLD);
 
-    int *debPartProcs = (int *) malloc(sizeof(int) * (numProcs + 1));
+    int *debPartProcs;
+    PDM_malloc(debPartProcs,(numProcs + 1),int);
 
     debPartProcs[0] = 0;
     for (int i = 0; i < numProcs; i++) {
@@ -1217,12 +1240,18 @@ _export_ol_mesh
                          &nGOlFace,
                          &nGOlVtx);
 
-    int **_olface_nb =  malloc(sizeof(int *) * n_part);
-    int **_olface_idx =  malloc(sizeof(int *) * n_part);
-    PDM_real_t **val_num_part = (PDM_real_t **) malloc (sizeof(PDM_real_t *) * n_part);
-    PDM_real_t **val_match = (PDM_real_t **) malloc (sizeof(PDM_real_t *) * n_part);
-    PDM_real_t **val_cell_match = (PDM_real_t **) malloc (sizeof(PDM_real_t *) * n_part);
-    PDM_real_t **val_origin = (PDM_real_t **) malloc (sizeof(PDM_real_t *) * n_part);
+    int **_olface_nb;
+    PDM_malloc(*_olface_nb,n_part,int *);
+    int **_olface_idx;
+    PDM_malloc(*_olface_idx,n_part,int *);
+    PDM_real_t **val_num_part;
+    PDM_malloc(*val_num_part,n_part,PDM_real_t *);
+    PDM_real_t **val_match;
+    PDM_malloc(*val_match,n_part,PDM_real_t *);
+    PDM_real_t **val_cell_match;
+    PDM_malloc(*val_cell_match,n_part,PDM_real_t *);
+    PDM_real_t **val_origin;
+    PDM_malloc(*val_origin,n_part,PDM_real_t *);
     PDM_writer_step_beg (id_cs[imesh], 0.);
 
     for (int ipart = 0; ipart < n_part; ipart++) {
@@ -1272,10 +1301,10 @@ _export_ol_mesh
                                 &initToOlFace);
 
 
-      val_num_part[ipart] = (PDM_real_t *) malloc (sizeof(PDM_real_t) * nOlFace);
-      val_match[ipart] = (PDM_real_t *) malloc (sizeof(PDM_real_t) * nOlFace);
-      val_cell_match[ipart] = (PDM_real_t *) malloc (sizeof(PDM_real_t) * nOlFace);
-      val_origin[ipart] = (PDM_real_t *) malloc (sizeof(PDM_real_t) * nOlFace);
+      PDM_malloc(val_num_part[ipart],nOlFace,PDM_real_t);
+      PDM_malloc(val_match[ipart],nOlFace,PDM_real_t);
+      PDM_malloc(val_cell_match[ipart],nOlFace,PDM_real_t);
+      PDM_malloc(val_origin[ipart],nOlFace,PDM_real_t);
 
       PDM_writer_geom_coord_set (id_cs[imesh],
                                  id_geom[imesh],
@@ -1285,8 +1314,8 @@ _export_ol_mesh
                                  olvtx_ln_to_gn,
                                 PDM_OWNERSHIP_USER);
 
-      _olface_nb[ipart] = malloc(sizeof(int) * nOlFace);
-      _olface_idx[ipart] = malloc(sizeof(int) * nOlFace);
+      PDM_malloc(_olface_nb[ipart],nOlFace,int);
+      PDM_malloc(_olface_idx[ipart],nOlFace,int);
 
       for (int j = 0; j < nOlFace; j++) {
         _olface_nb[ipart][j]  = olface_vtx_idx[j+1] - olface_vtx_idx[j];
@@ -1553,7 +1582,8 @@ char *argv[]
       masterRank = 1;
     }
 
-    int *rankInNodes = malloc(sizeof(int) * numProcs);
+    int *rankInNodes;
+    PDM_malloc(rankInNodes,numProcs,int);
 
     PDM_MPI_Allreduce (&masterRank, &nNode, 1, PDM_MPI_INT, PDM_MPI_SUM, PDM_MPI_COMM_WORLD);
     PDM_MPI_Allgather (&rankInNode, 1, PDM_MPI_INT, rankInNodes, 1, PDM_MPI_INT, PDM_MPI_COMM_WORLD);
@@ -1708,17 +1738,20 @@ char *argv[]
    *  Create field
    */
 
-  double **sFieldA = malloc(sizeof(double *) * n_part);
-  double **centerA = malloc(sizeof(double *) * n_part);
-  double **rFieldB = malloc(sizeof(double *) * n_part);
+  double **sFieldA;
+  PDM_malloc(*sFieldA,n_part,double *);
+  double **centerA;
+  PDM_malloc(*centerA,n_part,double *);
+  double **rFieldB;
+  PDM_malloc(*rFieldB,n_part,double *);
 
   for (int ipart = 0; ipart < n_part; ipart++) {
-    centerA[ipart] = malloc(sizeof(double) * 3 * nFace[0][ipart]);
+    PDM_malloc(centerA[ipart],3 * nFace[0][ipart],double);
     for (int i = 0; i < 3*nFace[0][ipart]; i++) {
       centerA[ipart][i] = 0.;
     }
-    sFieldA[ipart] = malloc(sizeof(double) * nFace[0][ipart]);
-    rFieldB[ipart] = malloc(sizeof(double) * nFace[1][ipart]);
+    PDM_malloc(sFieldA[ipart],nFace[0][ipart],double);
+    PDM_malloc(rFieldB[ipart],nFace[1][ipart],double);
   }
 
   /*
@@ -1827,28 +1860,32 @@ char *argv[]
   int **_initToOlFaceIdx[2];
   int **_initToOlFace[2];
 
-  double **sFieldOlA = malloc(sizeof(double *) * n_part);
-  double **rFieldOlB = malloc(sizeof(double *) * n_part);
-  double **surfB = malloc(sizeof(double *) * n_part);
-  double **surfOlB = malloc(sizeof(double *) * n_part);
+  double **sFieldOlA;
+  PDM_malloc(*sFieldOlA,n_part,double *);
+  double **rFieldOlB;
+  PDM_malloc(*rFieldOlB,n_part,double *);
+  double **surfB;
+  PDM_malloc(*surfB,n_part,double *);
+  double **surfOlB;
+  PDM_malloc(*surfOlB,n_part,double *);
 
   for (int imesh = 0; imesh < 2; imesh++) {
-    _nOlFace[imesh] = malloc (sizeof(int) * n_part);
-    _nOlLinkedFace[imesh] = malloc (sizeof(int) * n_part);
-    _nOlVtx[imesh] = malloc (sizeof(int) * n_part);
-    _sOlface_vtx[imesh] = malloc (sizeof(int) * n_part);
-    _sInitToOlFace[imesh] = malloc (sizeof(int) * n_part);
-    _olFaceIniVtxIdx[imesh] = malloc (sizeof(int*) * n_part);
-    _olFaceIniVtx[imesh] = malloc (sizeof(int*) * n_part);
-    _olface_vtx_idx[imesh] = malloc (sizeof(int*) * n_part);
-    _olface_vtx[imesh] = malloc (sizeof(int*) * n_part);
-    _olLinkedface_procIdx[imesh] = malloc (sizeof(int*) * n_part);
-    _olLinkedFace[imesh] = malloc (sizeof(int*) * n_part);
-    _olface_ln_to_gn[imesh] = malloc (sizeof(PDM_g_num_t*) * n_part);
-    _olCoords[imesh] = malloc (sizeof(double*) * n_part);;
-    _olvtx_ln_to_gn[imesh] = malloc (sizeof(PDM_g_num_t*) * n_part);;
-    _initToOlFaceIdx[imesh] = malloc (sizeof(int*) * n_part);
-    _initToOlFace[imesh] = malloc (sizeof(int*) * n_part);
+    PDM_malloc(_nOlFace[imesh],n_part,int);
+    PDM_malloc(_nOlLinkedFace[imesh],n_part,int);
+    PDM_malloc(_nOlVtx[imesh],n_part,int);
+    PDM_malloc(_sOlface_vtx[imesh],n_part,int);
+    PDM_malloc(_sInitToOlFace[imesh],n_part,int);
+    PDM_malloc(_olFaceIniVtxIdx[imesh],n_part,int*);
+    PDM_malloc(_olFaceIniVtx[imesh],n_part,int*);
+    PDM_malloc(_olface_vtx_idx[imesh],n_part,int*);
+    PDM_malloc(_olface_vtx[imesh],n_part,int*);
+    PDM_malloc(_olLinkedface_procIdx[imesh],n_part,int*);
+    PDM_malloc(_olLinkedFace[imesh],n_part,int*);
+    PDM_malloc(_olface_ln_to_gn[imesh],n_part,PDM_g_num_t*);
+    PDM_malloc(_olCoords[imesh],n_part,double*);;
+    PDM_malloc(_olvtx_ln_to_gn[imesh],n_part,PDM_g_num_t*);;
+    PDM_malloc(_initToOlFaceIdx[imesh],n_part,int*);
+    PDM_malloc(_initToOlFace[imesh],n_part,int*);
   }
 
   for (int imesh = 0; imesh < 2; imesh++) {
@@ -1939,7 +1976,7 @@ char *argv[]
       _initToOlFace[imesh][ipart] = initToOlFace;
 
       if (imesh == 0) {
-        sFieldOlA[ipart] = malloc(sizeof(double) * nOlFace);
+        PDM_malloc(sFieldOlA[ipart],nOlFace,double);
 
         for (int i = 0; i < nFace[imesh][ipart]; i++) {
           for (int j = initToOlFaceIdx[i]; j < initToOlFaceIdx[i+1]; j++) {
@@ -1949,15 +1986,19 @@ char *argv[]
       }
 
       if (imesh == 1) {
-        rFieldOlB[ipart] = malloc(sizeof(double) * nOlFace);
+        PDM_malloc(rFieldOlB[ipart],nOlFace,double);
 
-        surfB[ipart] = malloc(sizeof(double) * nFace[imesh][ipart]);
-        surfOlB[ipart] = malloc(sizeof(double) * nOlFace);
+        PDM_malloc(surfB[ipart],nFace[imesh][ipart],double);
+        PDM_malloc(surfOlB[ipart],nOlFace,double);
 
-        double   *ol_surface_vector = malloc(sizeof(double) * 3 * nOlFace);
-        double   *ol_center = malloc(sizeof(double) * 3 * nOlFace);
-        double   *ol_characteristicLength = malloc(sizeof(double) * nOlFace);
-        int      *ol_isDegenerated = malloc(sizeof(int) * nOlFace);
+        double *ol_surface_vector;
+        PDM_malloc(ol_surface_vector,3 * nOlFace,double);
+        double *ol_center;
+        PDM_malloc(ol_center,3 * nOlFace,double);
+        double *ol_characteristicLength;
+        PDM_malloc(ol_characteristicLength,nOlFace,double);
+        int *ol_isDegenerated;
+        PDM_malloc(ol_isDegenerated,nOlFace,int);
 
         PDM_geom_elem_polygon_properties(nOlFace,
                                          _olface_vtx_idx[imesh][ipart],
@@ -1987,8 +2028,10 @@ char *argv[]
     }
   }
 
-  int *n_send = malloc (sizeof(int) * numProcs);
-  int *n_recv = malloc (sizeof(int) * numProcs);
+  int *n_send;
+  PDM_malloc(n_send,numProcs,int);
+  int *n_recv;
+  PDM_malloc(n_recv,numProcs,int);
   for (int iproc = 0; iproc < numProcs; iproc++) {
     n_send[iproc] = 0;
     n_recv[iproc] = 0;
@@ -2001,8 +2044,10 @@ char *argv[]
     }
   }
 
-  int *i_send = malloc (sizeof(int) * (numProcs+1));
-  int *i_recv = malloc (sizeof(int) * (numProcs+1));
+  int *i_send;
+  PDM_malloc(i_send,(numProcs+1),int);
+  int *i_recv;
+  PDM_malloc(i_recv,(numProcs+1),int);
 
   i_send[0] = 0;
   i_recv[0] = 0;
@@ -2013,11 +2058,15 @@ char *argv[]
     n_recv[iproc] *= 4;
   }
 
-  int *b_send = malloc (sizeof(int) * i_send[numProcs]);
-  int *b_recv = malloc (sizeof(int) * i_recv[numProcs]);
+  int *b_send;
+  PDM_malloc(b_send,i_send[numProcs],int);
+  int *b_recv;
+  PDM_malloc(b_recv,i_recv[numProcs],int);
 
-  double *d_send = malloc (sizeof(double) * i_send[numProcs]);
-  double *d_recv = malloc (sizeof(double) * i_recv[numProcs]);
+  double *d_send;
+  PDM_malloc(d_send,i_send[numProcs],double);
+  double *d_recv;
+  PDM_malloc(d_recv,i_recv[numProcs],double);
 
   for (int ipart = 0; ipart < n_part; ipart++) {
     for (int ilinked = 0; ilinked < _nOlLinkedFace[0][ipart]; ilinked++) {
@@ -2054,10 +2103,11 @@ char *argv[]
  PDM_free(n_recv);
  PDM_free(d_send);
 
-  int **check_graph = malloc (sizeof(int*) * n_part);
+  int **check_graph;
+  PDM_malloc(*check_graph,n_part,int*);
 
   for (int ipart = 0; ipart < n_part; ipart++) {
-    check_graph[ipart] = malloc (sizeof(int) * 2 * _nOlFace[1][ipart]);
+    PDM_malloc(check_graph[ipart],2 * _nOlFace[1][ipart],int);
     for (int j = 0; j < 2 * _nOlFace[1][ipart]; j++) {
       check_graph[ipart][j] = -1;
     }

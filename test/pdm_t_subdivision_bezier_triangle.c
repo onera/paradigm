@@ -123,8 +123,8 @@ _tri_mesh
   *n_node = (n+1) * (n+2) / 2;
   *n_tria = n*n;
 
-  *node_uv   = malloc(sizeof(double) * (*n_node) * 2);
-  *tria_node = malloc(sizeof(int   ) * (*n_tria) * 3);
+  PDM_malloc(*node_uv,(*n_node) * 2,double);
+  PDM_malloc(*tria_node,(*n_tria) * 3,int);
 
   double step = 1. / (double) n;
 
@@ -304,7 +304,8 @@ int main(int argc, char *argv[])
 
   double ctr[3] = {0, 0, -1};
   double rad = 2;
-  double *node_xyz = malloc(sizeof(double) * n_node * 3);
+  double *node_xyz;
+  PDM_malloc(node_xyz,n_node * 3,double);
   for (int i = 0; i < n_node; i++) {
     double u = node_uv[2*i  ];
     double v = node_uv[2*i+1];
@@ -343,7 +344,7 @@ int main(int argc, char *argv[])
    */
   double *deriv[2];
   for (int i = 0; i < 2; i++) {
-    deriv[i] = malloc(sizeof(double) * 3 * order*(order+1)/2);
+    PDM_malloc(deriv[i],3 * order*(order+1)/2,double);
   }
   PDM_ho_bezier_triangle_derivatives(3,
                                      order,
@@ -360,7 +361,7 @@ int main(int argc, char *argv[])
   double p[3];
   double *sub3_node_xyz[3];
   for (int i = 0; i < 3; i++) {
-    sub3_node_xyz[i] = malloc(sizeof(double) * n_node * 3);
+    PDM_malloc(sub3_node_xyz[i],n_node * 3,double);
   }
   PDM_ho_bezier_de_casteljau_triangle(3,
                                       order,
@@ -388,7 +389,8 @@ int main(int argc, char *argv[])
 
   // check weights
   if (order <= 3) {
-    double *weight = malloc(sizeof(double) * n_node);
+    double *weight;
+    PDM_malloc(weight,n_node,double);
     PDM_ho_bezier_basis(PDM_MESH_NODAL_TRIAHO_BEZIER,
                         order,
                         1,
@@ -403,7 +405,8 @@ int main(int argc, char *argv[])
     }
     // log_trace("diff p = %f %f %f\n", q[0], q[1], q[2]);
 
-    double *weight2 = malloc(sizeof(double) * n_node);
+    double *weight2;
+    PDM_malloc(weight2,n_node,double);
     // de Casteljau to compute weights
     PDM_ho_bezier_de_casteljau_triangle(n_node, order, uv[0], uv[1],
                                         NULL, weight2, NULL, NULL, NULL);
@@ -427,7 +430,7 @@ int main(int argc, char *argv[])
    */
   double *sub_node_xyz[4];
   for (int i = 0; i < 4; i++) {
-    sub_node_xyz[i] = malloc(sizeof(double) * n_node * 3);
+    PDM_malloc(sub_node_xyz[i],n_node * 3,double);
   }
   _subdivide_bezier_triangle(3,
                              order,
@@ -445,7 +448,8 @@ int main(int argc, char *argv[])
   double umin = 0.1;
   double vmin = 0.2;
   double wmin = 0.3;
-  double *sub1_node_xyz = malloc(sizeof(double) * n_node * 3);
+  double *sub1_node_xyz;
+  PDM_malloc(sub1_node_xyz,n_node * 3,double);
   _subdivide_bezier_triangle2(3,
                               order,
                               umin,
@@ -466,7 +470,8 @@ int main(int argc, char *argv[])
                                                       PDM_MESH_NODAL_TRIAHO_BEZIER,
                                                       order);
 
-    int *connec = malloc(sizeof(int) * n_node);
+    int *connec;
+    PDM_malloc(connec,n_node,int);
     for (int i = 0; i < n_node; i++) {
       connec[ijk_to_vtk[i]] = i+1;
     }

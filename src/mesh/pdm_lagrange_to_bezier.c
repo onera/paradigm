@@ -191,7 +191,8 @@ _bezier_matrix_quad
 {
   int n_nodes = PDM_Mesh_nodal_n_vtx_elt_get(PDM_MESH_NODAL_QUADHO, order);
 
-  double *a = malloc(sizeof(double) * (order+1)*(order+1));
+  double *a;
+  PDM_malloc(a,(order+1)*(order+1),double);
   _bezier_matrix_bar(order, a);
 
   for (int i = 0; i <= order; i++) {
@@ -281,7 +282,7 @@ PDM_lagrange_to_bezier_bar
 
     double *B = matrix;
     if (matrix == NULL) {
-      B = malloc(sizeof(double) * n_nodes * n_nodes);
+      PDM_malloc(B,n_nodes * n_nodes,double);
     }
     _bezier_matrix_bar(order, B);
 
@@ -397,7 +398,7 @@ PDM_lagrange_to_bezier_tria
 
     double *B = matrix;
     if (matrix == NULL) {
-      B = malloc(sizeof(double) * n_nodes * n_nodes);
+      PDM_malloc(B,n_nodes * n_nodes,double);
     }
     _bezier_matrix_tria(order, B);
 
@@ -553,7 +554,7 @@ PDM_lagrange_to_bezier_quad
 
     double *B = matrix;
     if (matrix == NULL) {
-      B = malloc(sizeof(double) * n_nodes * n_nodes);
+      PDM_malloc(B,n_nodes * n_nodes,double);
     }
     _bezier_matrix_quad(order, B);
 
@@ -599,11 +600,12 @@ PDM_lagrange_to_bezier_tetra
   else {
     int n_nodes_tria = PDM_Mesh_nodal_n_vtx_elt_get(PDM_MESH_NODAL_TRIAHO, order);
 
-    double *work = malloc(sizeof(double) * n_nodes_tria * 3 * 4);
+    double *work;
+    PDM_malloc(work,n_nodes_tria * 3 * 4,double);
 
     double *B = matrix;
     if (matrix == NULL) {
-      B = malloc(sizeof(double) * n_nodes_tria * n_nodes_tria);
+      PDM_malloc(B,n_nodes_tria * n_nodes_tria,double);
     }
     _bezier_matrix_tria(order, B);
 
@@ -755,11 +757,12 @@ PDM_lagrange_to_bezier_pyramid
     int n_nodes_tria = PDM_Mesh_nodal_n_vtx_elt_get(PDM_MESH_NODAL_TRIAHO, order);
     int n_nodes_quad = PDM_Mesh_nodal_n_vtx_elt_get(PDM_MESH_NODAL_QUADHO, order);
 
-    double *work = malloc(sizeof(double) * n_nodes_tria * 3 * 4);
+    double *work;
+    PDM_malloc(work,n_nodes_tria * 3 * 4,double);
 
     double *B = matrix;
     if (matrix == NULL) {
-      B = malloc(sizeof(double) * n_nodes_quad * n_nodes_quad);
+      PDM_malloc(B,n_nodes_quad * n_nodes_quad,double);
     }
 
     // hack for internal nodes
@@ -918,11 +921,12 @@ PDM_lagrange_to_bezier_prism
     int n_nodes_tria = PDM_Mesh_nodal_n_vtx_elt_get(PDM_MESH_NODAL_TRIAHO, order);
     int n_nodes_quad = PDM_Mesh_nodal_n_vtx_elt_get(PDM_MESH_NODAL_QUADHO, order);
 
-    double *work = malloc(sizeof(double) * n_nodes_quad * 3 * 3);
+    double *work;
+    PDM_malloc(work,n_nodes_quad * 3 * 3,double);
 
     double *B = matrix;
     if (matrix == NULL) {
-      B = malloc(sizeof(double) * n_nodes_quad * n_nodes_quad);
+      PDM_malloc(B,n_nodes_quad * n_nodes_quad,double);
     }
 
     // hack for internal nodes
@@ -1104,11 +1108,12 @@ PDM_lagrange_to_bezier_hexa
   else {
     int n_nodes_quad = PDM_Mesh_nodal_n_vtx_elt_get(PDM_MESH_NODAL_QUADHO, order);
 
-    double *work = malloc(sizeof(double) * n_nodes_quad * 3 * 6);
+    double *work;
+    PDM_malloc(work,n_nodes_quad * 3 * 6,double);
 
     double *B = matrix;
     if (matrix == NULL) {
-      B = malloc(sizeof(double) * n_nodes_quad * n_nodes_quad);
+      PDM_malloc(B,n_nodes_quad * n_nodes_quad,double);
     }
     _bezier_matrix_quad(order, B);
 
@@ -1285,11 +1290,12 @@ PDM_bezier_bounding_boxes
  double                     **extents
 )
 {
-  double *bezier_coord = malloc (sizeof(double) * n_nodes * 3);
+  double *bezier_coord;
+  PDM_malloc(bezier_coord,n_nodes * 3,double);
 
   double *matrix = NULL;
   if (order > 3) {
-    matrix = malloc(sizeof(double) * n_nodes * n_nodes);
+    PDM_malloc(matrix,n_nodes * n_nodes,double);
   }
 
   for (int i = 0; i < n_elt; i++) {

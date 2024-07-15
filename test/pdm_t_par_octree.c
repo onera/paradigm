@@ -295,10 +295,10 @@ _read_cloud_from_mesh
   // *pts_coord    = vtx_coord;
   // *pts_ln_to_gn = vtx_ln_to_gn;
 
-  *pts_coord = malloc(sizeof(double) * n_vtx * 3);
+  PDM_malloc(*pts_coord,n_vtx * 3,double);
   memcpy(*pts_coord, vtx_coord, sizeof(double) * n_vtx * 3);
 
-  *pts_ln_to_gn = malloc(sizeof(PDM_g_num_t) * n_vtx);
+  PDM_malloc(*pts_ln_to_gn,n_vtx,PDM_g_num_t);
   memcpy(*pts_ln_to_gn, vtx_ln_to_gn, sizeof(PDM_g_num_t) * n_vtx);
 
   if (visu) {
@@ -339,7 +339,8 @@ _read_cloud_from_mesh
                                                 geom_kind,
                                                 0);
 
-    PDM_real_t *val_rank = malloc(sizeof(PDM_real_t) * n_elt);
+    PDM_real_t *val_rank;
+    PDM_malloc(val_rank,n_elt,PDM_real_t);
     for (int i = 0; i < n_elt; i++) {
       val_rank[i] = (PDM_real_t) i_rank;
     }

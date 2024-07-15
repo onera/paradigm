@@ -145,7 +145,7 @@ _gen_ho_elt
 {
   int n_node = PDM_Mesh_nodal_n_vtx_elt_get(t_elt, order);
 
-  *node_coord = malloc(sizeof(double) * n_node * 3);
+  PDM_malloc(*node_coord,n_node * 3,double);
 
   switch (t_elt) {
     case PDM_MESH_NODAL_BARHO:
@@ -333,8 +333,10 @@ int main(int argc, char *argv[])
     uvw[i] = 0.5 + 1.0*(2*((double) rand() / (double) RAND_MAX) - 1);
   }
 
-  double *pts_coord = malloc(sizeof(double) * 3 * n_pts);
-  double *weight = malloc(sizeof(double) * n_node);
+  double *pts_coord;
+  PDM_malloc(pts_coord,3 * n_pts,double);
+  double *weight;
+  PDM_malloc(weight,n_node,double);
   PDM_ho_basis(t_elt,
                order,
                n_node,
@@ -353,10 +355,12 @@ int main(int argc, char *argv[])
   }
 
   const double tolerance = 1e-6;
-  double *work_array = malloc(sizeof(double) * n_node * 4);
+  double *work_array;
+  PDM_malloc(work_array,n_node * 4,double);
   double uvw2[3];
   double dist2 = 0;
-  double *proj_coord = malloc(sizeof(double) * n_pts * 3);
+  double *proj_coord;
+  PDM_malloc(proj_coord,n_pts * 3,double);
   int converged;
   dist2 = PDM_ho_location_newton(t_elt,
                                  order,
@@ -373,7 +377,8 @@ int main(int argc, char *argv[])
 
 
   double uvw3[3];
-  double *proj_coord3 = malloc(sizeof(double) * n_pts * 3);
+  double *proj_coord3;
+  PDM_malloc(proj_coord3,n_pts * 3,double);
   double dist3 = PDM_ho_location(t_elt,
                                  order,
                                  n_node,
@@ -447,7 +452,8 @@ int main(int argc, char *argv[])
                                NULL,
                                NULL);
 
-    int *connec = malloc(sizeof(int) * n_node);
+    int *connec;
+    PDM_malloc(connec,n_node,int);
 
     int *ijk_to_user = PDM_ho_ordering_ijk_to_user_get("PDM_HO_ORDERING_VTK",
                                                        t_elt,

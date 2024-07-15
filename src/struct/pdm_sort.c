@@ -141,7 +141,8 @@ PDM_sort_long
   int ir = lArray - 1;
   PDM_g_num_t a;
   int        b;
-  int *istack = (int *) malloc (sizeof(int) * sizeStack);
+  int *istack;
+  PDM_malloc(istack,sizeStack,int);
 
   if (order != NULL) {
 
@@ -330,7 +331,8 @@ PDM_sort_int
   int ir = lArray - 1;
   int  a;
   int  b;
-  int *istack = (int *) malloc (sizeof(int) * sizeStack);
+  int *istack;
+  PDM_malloc(istack,sizeStack,int);
 
   if (order != NULL) {
     for (;;) {
@@ -520,7 +522,8 @@ PDM_sort_double
   int ir = lArray - 1;
   double  a;
   int  b;
-  int *istack = (int *) malloc (sizeof(int) * sizeStack);
+  int *istack;
+  PDM_malloc(istack,sizeStack,int);
 
   if (order != NULL) {
     for (;;) {
@@ -708,7 +711,8 @@ PDM_sort_int_special
   int ir = lArray - 1;
   PDM_g_num_t a;
   // int        b;
-  int *istack = (int *) malloc (sizeof(int) * sizeStack);
+  int *istack;
+  PDM_malloc(istack,sizeStack,int);
 
   for (;;) {
     if ( ir-l < M ) {

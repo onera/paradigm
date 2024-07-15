@@ -59,12 +59,12 @@ const char *str1
     assert(imax >= imin);
 
     if ((imax == l_str) || (imin == l_str)) {
-      str_without_blank = (char *) malloc(sizeof(char));
+      PDM_malloc(str_without_blank,1,char);
       str_without_blank[0] = '\0';
     }
     else {
       int size = imax - imin + 2;
-      str_without_blank = (char *) malloc(sizeof(char) * size);
+      PDM_malloc(str_without_blank,size,char);
       int index = 0;
       for (int k = imin; k <= imax; k++)
         str_without_blank[index++] = str1[k];

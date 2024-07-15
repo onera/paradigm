@@ -184,8 +184,8 @@ PDM_reader_gamma_dmesh_nodal
         fscanf(f, "%ld", &_gn_vtx);
         gn_vtx = (PDM_g_num_t) _gn_vtx;
 
-        gvtx_coord = malloc(sizeof(double) * gn_vtx * 3);
-        gvtx_tag   = malloc(sizeof(int   ) * gn_vtx);
+        PDM_malloc(gvtx_coord,gn_vtx * 3,double);
+        PDM_malloc(gvtx_tag,gn_vtx,int   );
         for (PDM_g_num_t i = 0; i < gn_vtx; i++) {
           for (int j = 0; j < dim; j++) {
             fscanf(f, "%lf", &gvtx_coord[3*i + j]);
@@ -204,8 +204,8 @@ PDM_reader_gamma_dmesh_nodal
         fscanf(f, "%ld", &_gn_edge);
         gn_edge = (PDM_g_num_t) _gn_edge;
 
-        gedge_vtx   = malloc(sizeof(PDM_g_num_t) * gn_edge * 2);
-        gedge_group = malloc(sizeof(int        ) * gn_edge);
+        PDM_malloc(gedge_vtx,gn_edge * 2,PDM_g_num_t);
+        PDM_malloc(gedge_group,gn_edge,int        );
         for (PDM_g_num_t i = 0; i < gn_edge; i++) {
           for (int j = 0; j < 2; j++) {
             fscanf(f, PDM_FMT_G_NUM, &gedge_vtx[2*i + j]);
@@ -221,8 +221,8 @@ PDM_reader_gamma_dmesh_nodal
         fscanf(f, "%ld", &_gn_tria);
         gn_tria = (PDM_g_num_t) _gn_tria;
 
-        gtria_vtx   = malloc(sizeof(PDM_g_num_t) * gn_tria * 3);
-        gtria_group = malloc(sizeof(int        ) * gn_tria);
+        PDM_malloc(gtria_vtx,gn_tria * 3,PDM_g_num_t);
+        PDM_malloc(gtria_group,gn_tria,int        );
         for (PDM_g_num_t i = 0; i < gn_tria; i++) {
           for (int j = 0; j < 3; j++) {
             fscanf(f, PDM_FMT_G_NUM, &gtria_vtx[3*i + j]);
@@ -238,8 +238,8 @@ PDM_reader_gamma_dmesh_nodal
         fscanf(f, "%ld", &_gn_tetra);
         gn_tetra = (PDM_g_num_t) _gn_tetra;
 
-        gtetra_vtx   = malloc(sizeof(PDM_g_num_t) * gn_tetra * 4);
-        gtetra_group = malloc(sizeof(int        ) * gn_tetra);
+        PDM_malloc(gtetra_vtx,gn_tetra * 4,PDM_g_num_t);
+        PDM_malloc(gtetra_group,gn_tetra,int        );
         for (PDM_g_num_t i = 0; i < gn_tetra; i++) {
           for (int j = 0; j < 4; j++) {
             fscanf(f, PDM_FMT_G_NUM, &gtetra_vtx[4*i + j]);
@@ -255,8 +255,8 @@ PDM_reader_gamma_dmesh_nodal
         fscanf(f, "%ld", &_gn_pyra);
         gn_pyra = (PDM_g_num_t) _gn_pyra;
 
-        gpyra_vtx   = malloc(sizeof(PDM_g_num_t) * gn_pyra * 5);
-        gpyra_group = malloc(sizeof(int        ) * gn_pyra);
+        PDM_malloc(gpyra_vtx,gn_pyra * 5,PDM_g_num_t);
+        PDM_malloc(gpyra_group,gn_pyra,int        );
         for (PDM_g_num_t i = 0; i < gn_pyra; i++) {
           for (int j = 0; j < 5; j++) {
             fscanf(f, PDM_FMT_G_NUM, &gpyra_vtx[5*i + j]);
@@ -272,8 +272,8 @@ PDM_reader_gamma_dmesh_nodal
         fscanf(f, "%ld", &_gn_prism);
         gn_prism = (PDM_g_num_t) _gn_prism;
 
-        gprism_vtx   = malloc(sizeof(PDM_g_num_t) * gn_prism * 6);
-        gprism_group = malloc(sizeof(int        ) * gn_prism);
+        PDM_malloc(gprism_vtx,gn_prism * 6,PDM_g_num_t);
+        PDM_malloc(gprism_group,gn_prism,int        );
         for (PDM_g_num_t i = 0; i < gn_prism; i++) {
           for (int j = 0; j < 6; j++) {
             fscanf(f, PDM_FMT_G_NUM, &gprism_vtx[6*i + j]);
@@ -289,8 +289,8 @@ PDM_reader_gamma_dmesh_nodal
         fscanf(f, "%ld", &_gn_hexa);
         gn_hexa = (PDM_g_num_t) _gn_hexa;
 
-        ghexa_vtx   = malloc(sizeof(PDM_g_num_t) * gn_hexa * 8);
-        ghexa_group = malloc(sizeof(int        ) * gn_hexa);
+        PDM_malloc(ghexa_vtx,gn_hexa * 8,PDM_g_num_t);
+        PDM_malloc(ghexa_group,gn_hexa,int        );
         for (PDM_g_num_t i = 0; i < gn_hexa; i++) {
           for (int j = 0; j < 8; j++) {
             fscanf(f, PDM_FMT_G_NUM, &ghexa_vtx[8*i + j]);
@@ -306,8 +306,8 @@ PDM_reader_gamma_dmesh_nodal
         fscanf(f, "%ld", &_gn_quad);
         gn_quad = (PDM_g_num_t) _gn_quad;
 
-        gquad_vtx   = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * gn_quad * 4);
-        gquad_group = (int *)         malloc (sizeof(int) * gn_quad);
+        PDM_malloc(gquad_vtx,gn_quad * 4,PDM_g_num_t);
+        PDM_malloc(gquad_group,gn_quad,int);
 
         for (PDM_g_num_t i_quad=0; i_quad<gn_quad; i_quad++) {
           for (int idx=0; idx<4; idx++) {
@@ -932,8 +932,10 @@ PDM_reader_gamma_dmesh_nodal
 
   // -------- Compute global numbers for triangles & quadrilaterals
   // -------- Compute face distribution among groups
-  PDM_g_num_t *tria_ln_to_gn   = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * dn_tria);
-  PDM_g_num_t *quad_ln_to_gn   = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * dn_quad);
+  PDM_g_num_t *tria_ln_to_gn;
+  PDM_malloc(tria_ln_to_gn,dn_tria,PDM_g_num_t);
+  PDM_g_num_t *quad_ln_to_gn;
+  PDM_malloc(quad_ln_to_gn,dn_quad,PDM_g_num_t);
   int         *distrib_group   = (int *)         calloc(n_group_face, sizeof(int));
 
   for (PDM_g_num_t i_tria=0; i_tria<dn_tria; i_tria++) {
@@ -949,7 +951,8 @@ PDM_reader_gamma_dmesh_nodal
   }
 
   // -------- Compute group face index
-  int *dgroup_face_idx = (int *) malloc(sizeof(int) * (n_group_face+1));
+  int *dgroup_face_idx;
+  PDM_malloc(dgroup_face_idx,(n_group_face+1),int);
 
   dgroup_face_idx[0] = 0;
   for (int i_group=1; i_group<=n_group_face; i_group++) {
@@ -959,7 +962,8 @@ PDM_reader_gamma_dmesh_nodal
   // -------- Compute group face
   int          dn_face     = dn_tria + dn_quad;
   int         *counters    = (int *)         calloc(n_group_face, sizeof(int));
-  PDM_g_num_t *dgroup_face = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * dn_face);
+  PDM_g_num_t *dgroup_face;
+  PDM_malloc(dgroup_face,dn_face,PDM_g_num_t);
 
   for (int i_tria=0; i_tria<dn_tria; i_tria++) {
     int grp = dtria_group[i_tria] - 1;
@@ -1388,8 +1392,8 @@ PDM_read_gamma_sol_at_vertices
       // Get number of vertices
       fscanf(f, "%d", &n_vtx);
       fscanf(f, "%d", n_field);
-      *field_stride = malloc(sizeof(int     ) * (*n_field));
-      *field_values = malloc(sizeof(double *) * (*n_field));
+      PDM_malloc(*field_stride,(*n_field),int);
+      PDM_malloc(*field_values,(*n_field),double *);
 
       for (int i_field = 0; i_field < (*n_field); i_field++) {
         int field_type = -1;
@@ -1417,7 +1421,7 @@ PDM_read_gamma_sol_at_vertices
           }
         }
 
-        (*field_values)[i_field] = malloc(sizeof(double) * (*field_stride)[i_field] * n_vtx);
+        PDM_malloc(( *field_values)[i_field],(*field_stride)[i_field] * n_vtx,double);
       }
 
 

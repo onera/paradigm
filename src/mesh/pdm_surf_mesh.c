@@ -137,14 +137,15 @@ PDM_MPI_Comm comm
 )
 {
 
-  PDM_surf_mesh_t *mesh = malloc (sizeof(PDM_surf_mesh_t));
+  PDM_surf_mesh_t *mesh;
+  PDM_malloc(mesh,1,PDM_surf_mesh_t);
 
   mesh->nGFace  = -1;
   mesh->nGVtx   = -1;
 
   mesh->comm    = comm;
   mesh->n_part   = n_part;
-  mesh->part    = (PDM_surf_part_t **) malloc(n_part * sizeof(PDM_surf_part_t *));
+  PDM_malloc(mesh->part,n_part ,PDM_surf_part_t *);
 
   PDM_MPI_Allreduce ((void *)&n_part, (void *)&(mesh->nGPart), 1,
                      PDM_MPI_INT, PDM_MPI_SUM, mesh->comm);
@@ -234,7 +235,8 @@ PDM_surf_mesh_build_edges_gn_and_edge_part_bound
 
   int nEdgeProc = 0;
   int n_vtxProc = 0;
-  int *nIntEdgePart = (int *) malloc(sizeof(int) * (n_part + 1));
+  int *nIntEdgePart;
+  PDM_malloc(nIntEdgePart,(n_part + 1),int);
   nIntEdgePart[0] = 0;
   for (int i = 0; i < n_part; i++) {
     PDM_surf_part_t *part =  mesh->part[i];
@@ -247,7 +249,8 @@ PDM_surf_mesh_build_edges_gn_and_edge_part_bound
   int  keyMax        = 2 * n_vtxProc;
   int  lHashTableIdx = keyMax + 1;
   int *hashTableIdx  = PDM_array_zeros_int(lHashTableIdx);
-  int *hashTable     = (int *) malloc(sizeof(int) * 2 * nEdgeProc);
+  int *hashTable;
+  PDM_malloc(hashTable,2 * nEdgeProc,int);
   int *nHashTable    = PDM_array_zeros_int(keyMax);
 
   for (int i = 0; i < n_part; i++) {
@@ -276,7 +279,8 @@ PDM_surf_mesh_build_edges_gn_and_edge_part_bound
 
   int nIntEdgeProc = nIntEdgePart[n_part];
 
-  int *nEdgeBoundPart = (int *) malloc(sizeof(int) * n_part);
+  int *nEdgeBoundPart;
+  PDM_malloc(nEdgeBoundPart,n_part,int);
 
   for (int i = 0; i < 2*nEdgeProc; i++) {
     hashTable[i]=-1;
@@ -311,7 +315,8 @@ PDM_surf_mesh_build_edges_gn_and_edge_part_bound
    * Build exchange communication graph between boundary edges
    */
 
-  int *edgePartCur = (int *) malloc(sizeof(int) * mesh->n_part);
+  int *edgePartCur;
+  PDM_malloc(edgePartCur,mesh->n_part,int);
 
   for (int i = 0; i < n_part; i++) {
     edgePartCur[i] = 0;
@@ -430,7 +435,8 @@ PDM_surf_mesh_build_edges_gn_and_edge_part_bound
                 (void *) _nIntEdgeProcs, 1, PDM__PDM_MPI_G_NUM, mesh->comm);
 
   int nEdgeWithoutNG = 0;
-  int *edgeWithoutNG = (int *) malloc(sizeof(int) * (2 * nEdgeProc));
+  int *edgeWithoutNG;
+  PDM_malloc(edgeWithoutNG,(2 * nEdgeProc),int);
 
   for (int i = 1; i < lComm + 1; i++)
     nIntEdgeProcs[i] = nIntEdgeProcs[i] +  nIntEdgeProcs[i-1];
@@ -453,7 +459,8 @@ PDM_surf_mesh_build_edges_gn_and_edge_part_bound
    * inter partition boundary edges (inter processus)
    */
 
-  PDM_g_num_t *nKeyProcs = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * (lComm + 1));
+  PDM_g_num_t *nKeyProcs;
+  PDM_malloc(nKeyProcs,(lComm + 1),PDM_g_num_t);
 
   _n_g_enttities_compute(mesh);
   
@@ -542,7 +549,8 @@ PDM_surf_mesh_build_edges_gn_and_edge_part_bound
   /*
    * Receive keys from the others processes
    */
-  int *edgeToRecvN = (int *) malloc(lComm * sizeof(int));
+  int *edgeToRecvN;
+  PDM_malloc(edgeToRecvN,lComm ,int);
 
   PDM_MPI_Alltoall(edgeToSendN,
                1,
@@ -844,7 +852,8 @@ PDM_surf_mesh_t *mesh
    *
    */
 
-  int *nKeyProcs = (int *) malloc(sizeof(int) * (lComm + 1));
+  int *nKeyProcs;
+  PDM_malloc(nKeyProcs,(lComm + 1),int);
 
   _n_g_enttities_compute(mesh);
 
@@ -1135,9 +1144,12 @@ PDM_surf_mesh_t *mesh
  PDM_free(vtxToRecvN);
  PDM_free(vtxToRecvIdx);
 
-  int **nConnectedElt = (int **) malloc(sizeof(int *) * mesh->n_part);
-  int **nOfferElt = (int **) malloc(sizeof(int *) * mesh->n_part);
-  int *nEltPartBound = (int *) malloc(sizeof(int) * mesh->n_part);
+  int **nConnectedElt;
+  PDM_malloc(nConnectedElt,mesh->n_part,int *);
+  int **nOfferElt;
+  PDM_malloc(nOfferElt,mesh->n_part,int *);
+  int *nEltPartBound;
+  PDM_malloc(nEltPartBound,mesh->n_part,int);
   for (int i = 0; i < n_part; i++) {
     nConnectedElt[i] = NULL;
     nEltPartBound[i] = 0;
@@ -1167,8 +1179,8 @@ PDM_surf_mesh_t *mesh
   }
 
   for (int i = 0; i < n_part; i++) {
-    nConnectedElt[i] = (int *) malloc(sizeof(int) * nEltPartBound[i]);
-    nOfferElt[i] = (int *) malloc(sizeof(int) * nEltPartBound[i]);
+    PDM_malloc(nConnectedElt[i],nEltPartBound[i],int);
+    PDM_malloc(nOfferElt[i],nEltPartBound[i],int);
     nEltPartBound[i] = 0;
   }
 
@@ -1416,7 +1428,8 @@ PDM_surf_mesh_build_ghost_element
       newVtxEdgeIdx[i1+1] += newVtxEdgeIdx[i1];
     }
 
-    int *newVtxEdge = (int *) malloc (newVtxEdgeIdx[part->n_vtx] * sizeof(int));
+    int *newVtxEdge;
+    PDM_malloc(newVtxEdge,newVtxEdgeIdx[part->n_vtx] ,int);
 
     int *cptVtxEdge = PDM_array_zeros_int(part->n_vtx);
 
@@ -1519,8 +1532,10 @@ PDM_surf_mesh_t *mesh
   assert (mesh != NULL);
 
   const int n_part = mesh->n_part;
-  double **lEdge = (double **) malloc (sizeof(double *) * n_part);
-  double **lEdgeGhost = (double **) malloc (sizeof(double *) * n_part);
+  double **lEdge;
+  PDM_malloc(lEdge,n_part,double *);
+  double **lEdgeGhost;
+  PDM_malloc(lEdgeGhost,n_part,double *);
 
   /*
    * Compute edge length
@@ -1545,7 +1560,7 @@ PDM_surf_mesh_t *mesh
       abort();
     }
 
-    lEdge[i] = (double *) malloc (sizeof(double) * nTotalEdge);
+    PDM_malloc(lEdge[i],nTotalEdge,double);
     lEdgeGhost[i] = lEdge[i] + nEdge;
 
     for (int j = 0; j < nEdge; j++) {
@@ -1596,7 +1611,7 @@ PDM_surf_mesh_t *mesh
     const int n_vtx = part->n_vtx;
     double *_lEdge = lEdge[i];
 
-    part->carLgthVtx = (double *) malloc (sizeof(double) * n_vtx);
+    PDM_malloc(part->carLgthVtx,n_vtx,double);
     for (int j = 0; j < n_vtx; j++) {
       part->carLgthVtx[j] = DBL_MAX;
     }
@@ -1671,7 +1686,7 @@ PDM_surf_mesh_face_normal_get
   const int *face_vtx = part->face_vtx;
 
   if (part->faceNormal  == NULL) {
-    part->faceNormal = (double *) malloc (sizeof(double) * 3 * n_face);
+    PDM_malloc(part->faceNormal,3 * n_face,double);
 
     //TODO : vectorisation par paquet
 
@@ -1816,7 +1831,8 @@ PDM_surf_mesh_is_plane_surface
   if (isPlane == lComm) {
 
     isPlane = 1;
-    double *normalSums = (double *) malloc (sizeof(double) * 3 * lComm);
+    double *normalSums;
+    PDM_malloc(normalSums,3 * lComm,double);
 
     PDM_MPI_Allgather(normalSum, 3, PDM__PDM_MPI_REAL,
                   normalSums, 3, PDM__PDM_MPI_REAL,
@@ -1866,9 +1882,12 @@ PDM_surf_mesh_is_plane_surface
 
   if (isPlane) {
 
-    PDM_g_num_t **_gnums = (PDM_g_num_t **) malloc (sizeof(PDM_g_num_t *) * n_part);
-    int *_n_elts = (int *) malloc (sizeof(int) * n_part);
-    double **_coords = (double **) malloc (sizeof(double *) * n_part);
+    PDM_g_num_t **_gnums;
+    PDM_malloc(_gnums,n_part,PDM_g_num_t *);
+    int *_n_elts;
+    PDM_malloc(_n_elts,n_part,int);
+    double **_coords;
+    PDM_malloc(_coords,n_part,double *);
 
     for (int i = 0; i < n_part; i++) {
       PDM_surf_part_t *part = mesh->part[i];
@@ -1971,7 +1990,7 @@ PDM_surf_mesh_compute_faceExtentsMesh
     const int *face_vtx_idx = part->face_vtx_idx;
     const double *coords = part->coords;
 
-    part->extents = (double *) malloc (sizeof(double) * 6 * n_face);
+    PDM_malloc(part->extents,6 * n_face,double);
 
     /*
      * TODO : Optimization : Split this boucle by blocks (vectorization)

@@ -213,10 +213,10 @@ main
     n_pts = (int) (distrib[i_rank+1] - distrib[i_rank]);
     double *dvtx_coord = PDM_DMesh_nodal_vtx_get(dmn);
 
-    pts_coord = malloc(sizeof(double) * n_pts * 3);
+    PDM_malloc(pts_coord,n_pts * 3,double);
     memcpy(pts_coord, dvtx_coord, sizeof(double) * n_pts * 3);
 
-    pts_g_num = malloc(sizeof(PDM_g_num_t) * n_pts);
+    PDM_malloc(pts_g_num,n_pts,PDM_g_num_t);
     for (int i = 0; i < n_pts; i++) {
       pts_g_num[i] = distrib[i_rank] + i + 1;
     }
@@ -227,7 +227,8 @@ main
 
 
   /* Rearrange points (Hilbert) */
-  double *weight =  malloc( n_pts * sizeof(double));
+  double *weight;
+  PDM_malloc(weight, n_pts ,double);
   for(int i = 0; i < n_pts; ++i) {
     weight[i] = 1.;
   }

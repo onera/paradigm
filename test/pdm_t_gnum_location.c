@@ -213,7 +213,8 @@ PDM_part_split_t           method,
   PDM_gen_gnum_t* gen_gnum = PDM_gnum_create (3, 1, PDM_TRUE, 1e-3, pdm_mpi_comm, PDM_OWNERSHIP_KEEP);
   // fin validation
 
-  double *char_size = malloc (sizeof(double) *   dn_vtx);
+  double *char_size;
+  PDM_malloc(char_size,dn_vtx,double);
   for (int j = 0; j < dn_vtx; j++) {
     char_size[j] = 1e-3;
   }
@@ -223,7 +224,8 @@ PDM_part_split_t           method,
 
   const PDM_g_num_t *_numabs = PDM_gnum_get (gen_gnum, 0);
 
-  PDM_g_num_t *_numabs2 = malloc(sizeof(PDM_g_num_t) * dn_vtx);
+  PDM_g_num_t *_numabs2;
+  PDM_malloc(_numabs2,dn_vtx,PDM_g_num_t);
 
 
   for (int j = 0; j < dn_vtx; j++) {
@@ -319,8 +321,10 @@ PDM_part_split_t           method,
 
   int have_dcell_part = 0;
 
-  int *dcell_part = (int *) malloc (dn_face*sizeof(int));
-  int *dedge_vtxIdx = (int *) malloc ((dnedge+1)*sizeof(int));
+  int *dcell_part;
+  PDM_malloc(dcell_part,dn_face,int);
+  int *dedge_vtxIdx;
+  PDM_malloc(dedge_vtxIdx,(dnedge+1),int);
 
   dedge_vtxIdx[0] = 0;
   for (int i = 0; i < dnedge; i++) {

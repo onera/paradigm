@@ -148,7 +148,8 @@ _loop_forward
   PDM_UNUSED(n_explicit_nodes);
   PDM_UNUSED(ancestor_id);
 
-  int *stack_id = malloc (sizeof(int) * stack_size);
+  int *stack_id;
+  PDM_malloc(stack_id,stack_size,int);
   int pos_stack = 0;
   stack_id[pos_stack++] = 0;
 
@@ -211,15 +212,18 @@ _loop_backward
   // PDM_log_trace_array_int(ancestor_id, n_explicit_nodes, "ancestor_id :");
 
 
-  int *node_tag = malloc(n_explicit_nodes * sizeof(int));
+  int *node_tag;
+  PDM_malloc(node_tag,n_explicit_nodes ,int);
   int n_ancestor = 0;
   for(int i = 0; i < n_explicit_nodes; ++i){
     node_tag[i] = -1;
   }
 
   /* Recupération des leafs */
-  int *extract_leaf_id  = malloc(n_explicit_nodes * sizeof(int));
-  int *current_ancestor = malloc(n_explicit_nodes * sizeof(int));
+  int *extract_leaf_id;
+  PDM_malloc(extract_leaf_id,n_explicit_nodes ,int);
+  int *current_ancestor;
+  PDM_malloc(current_ancestor,n_explicit_nodes ,int);
   int n_leaf = 0;
   for(int i = 0; i < n_explicit_nodes; ++i) {
     if(leaf_id[i] != -1){
@@ -235,7 +239,8 @@ _loop_backward
   PDM_realloc(extract_leaf_id ,extract_leaf_id , n_leaf ,int);
 
   PDM_realloc(current_ancestor   ,current_ancestor   , n_ancestor ,int);
-  int *next_ancestor = malloc(n_ancestor * sizeof(int));
+  int *next_ancestor;
+  PDM_malloc(next_ancestor,n_ancestor ,int);
 
   // PDM_log_trace_array_int(extract_leaf_id, n_leaf, "extract_leaf_id :");
   // PDM_log_trace_array_int(current_ancestor, n_ancestor, "current_ancestor :");
@@ -433,7 +438,8 @@ char *argv[]
   /*
    * Echange frame octree <-> user
    */
-  int *part_octree_to_part_user_idx = malloc((n_pts_octree+1) * sizeof(int));
+  int *part_octree_to_part_user_idx;
+  PDM_malloc(part_octree_to_part_user_idx,(n_pts_octree+1) ,int);
   for(int i = 0; i < n_pts_octree+1; ++i) {
     part_octree_to_part_user_idx[i] = i;
   }

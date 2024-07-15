@@ -168,8 +168,9 @@ PDM_g_num_t **box_ln_to_gn
   }
  PDM_free(distrib_box);
 
-  double *box_centers = malloc (sizeof(double) * n_box * 3);
-  *box_extents = malloc (sizeof(double) * n_box * 6);
+  double *box_centers;
+  PDM_malloc(box_centers,n_box * 3,double);
+  PDM_malloc(*box_extents,n_box * 6,double);
   double *_box_extents = *box_extents;
   for (int i = 0; i < n_box; i++) {
     for (int j = 0; j < 3; j++) {

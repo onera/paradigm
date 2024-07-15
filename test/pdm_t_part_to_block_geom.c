@@ -187,7 +187,8 @@ main
                               &src_g_num);
   _rotate(n_src, src_coord);
 
-  double *weight =  malloc( n_src * sizeof(double));
+  double *weight;
+  PDM_malloc(weight, n_src ,double);
   for(int i = 0; i < n_src; ++i) {
     weight[i] = 1.;
   }
@@ -285,7 +286,8 @@ main
                               NULL);
 
 
-    PDM_g_num_t *debug_gnum = malloc( n_parent * sizeof(PDM_g_num_t));
+    PDM_g_num_t *debug_gnum;
+    PDM_malloc(debug_gnum, n_parent ,PDM_g_num_t);
 
     for(int i = 0; i < n_parent; ++i) {
       debug_gnum[i] = distrib_pts[i_rank] + i + 1;
@@ -323,7 +325,8 @@ main
     PDM_hilbert_get_coord_extents_par(dim, n_parent, blk_src_coord, extents, comm);
     PDM_extents_conformize(dim, extents, 1e-3);
 
-    PDM_hilbert_code_t* hilbert_codes = (PDM_hilbert_code_t * ) malloc(n_parent * sizeof(PDM_hilbert_code_t));
+    PDM_hilbert_code_t *hilbert_codes;
+    PDM_malloc(hilbert_codes,n_parent ,PDM_hilbert_code_t);
     PDM_hilbert_encode_coords(dim, PDM_HILBERT_CS, extents, n_parent, blk_src_coord, hilbert_codes);
 
     PDM_hilbert_code_t first = 0.;

@@ -110,8 +110,10 @@ const void* b,
       int* arr_j = (int*) &us->arr[us->idx[j]*sizeof(int)];
 
       /* Dans notre cas on veut sort les entiers avant de les comparers */
-      int* sort_arr_i = (int*) malloc( ni * sizeof(int));
-      int* sort_arr_j = (int*) malloc( ni * sizeof(int));
+      int *sort_arr_i;
+      PDM_malloc(sort_arr_i, ni ,int);
+      int *sort_arr_j;
+      PDM_malloc(sort_arr_j, ni ,int);
 
       for(int k = 0; k < ni; ++k){
         sort_arr_i[k] = arr_i[k];

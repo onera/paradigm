@@ -41,9 +41,12 @@ char *argv[]
 
   int n_elt_proc = 10;
 
-  PDM_g_num_t *numabs = malloc(sizeof(PDM_g_num_t) * n_elt_proc);
-  double *weights = malloc(sizeof(double) * n_elt_proc);
-  int *stride = malloc(sizeof(stride) * n_elt_proc);
+  PDM_g_num_t *numabs;
+  PDM_malloc(numabs,n_elt_proc,PDM_g_num_t);
+  double *weights;
+  PDM_malloc(weights,n_elt_proc,double);
+  int *stride;
+  PDM_malloc(stride,n_elt_proc,stride);
 
   for (int i = 0; i < n_elt_proc; i++) {
     numabs[i] = i_rank * n_elt_proc + i + 1;
@@ -82,7 +85,8 @@ char *argv[]
     weight_sum += block_weights[i];
   }
 
-  double *weights_sum_procs = malloc(sizeof(double) * numProcs);
+  double *weights_sum_procs;
+  PDM_malloc(weights_sum_procs,numProcs,double);
 
   printf("distrib_index : ");
   for (int i = 0; i < numProcs + 1; i++) {

@@ -142,8 +142,8 @@ _gen_lines
   int n = (int) (distrib[i_rank+1] - distrib[i_rank]);
 
   *n_vtx = n + 1;
-  *vtx_g_num = malloc (sizeof(PDM_g_num_t) * (*n_vtx));
-  *vtx_coord = malloc (sizeof(double     ) * (*n_vtx) * 3);
+  PDM_malloc(*vtx_g_num,(*n_vtx),PDM_g_num_t);
+  PDM_malloc(*vtx_coord,(*n_vtx) * 3,double);
   for (int i = 0; i < (*n_vtx); i++) {
     PDM_g_num_t g = distrib[i_rank] + i;
     (*vtx_g_num)[i] = 1 + g%gn;
@@ -157,9 +157,9 @@ _gen_lines
 
 
   *n_line = n;
-  *line_g_num   = malloc (sizeof(PDM_g_num_t) * (*n_line));
-  *line_vtx_idx = malloc (sizeof(int        ) * (*n_line + 1));
-  *line_vtx     = malloc (sizeof(int        ) * (*n_line) * 2);
+  PDM_malloc(*line_g_num,(*n_line),PDM_g_num_t);
+  PDM_malloc(*line_vtx_idx,(*n_line + 1),int);
+  PDM_malloc(*line_vtx,(*n_line) * 2,int);
   (*line_vtx_idx)[0] = 0;
   for (int i = 0; i < *n_line; i++) {
     (*line_g_num)[i] = distrib[i_rank] + i + 1;
@@ -202,7 +202,7 @@ _gen_point_cloud
     rand();
   }
 
-  *pts_coord = malloc (sizeof(double) * (*n_pts) * 3);
+  PDM_malloc(*pts_coord,(*n_pts) * 3,double);
   for (int i = 0; i < *n_pts; i++) {
     for (int j = 0; j < 3; j++) {
       (*pts_coord)[3*i + j] = length * (double) rand() / ((double) RAND_MAX);
@@ -211,7 +211,8 @@ _gen_point_cloud
 
 
   PDM_gen_gnum_t *gen_gnum = PDM_gnum_create (3, 1, PDM_FALSE, 1e-3, comm, PDM_OWNERSHIP_USER);
-  double *char_length = malloc (sizeof(double) * (*n_pts));
+  double *char_length;
+  PDM_malloc(char_length,(*n_pts),double);
   for (int i = 0; i < *n_pts; i++) {
     char_length[i] = length * 1e-6;
   }
@@ -360,7 +361,8 @@ int main(int argc, char *argv[])
 
     char filename[999];
 
-    double *line_coord = malloc (sizeof(double) * n_line * 6);
+    double *line_coord;
+    PDM_malloc(line_coord,n_line * 6,double);
     int idx = 0;
     for (int i = 0; i < n_line; i++) {
       for (int j = line_vtx_idx[i]; j < line_vtx_idx[i+1]; j++) {
@@ -399,7 +401,7 @@ int main(int argc, char *argv[])
                              &projected,
                              &closest_elt_gnum);
 
-    line_coord = malloc (sizeof(double) * n_pts * 6);
+    PDM_malloc(line_coord,n_pts * 6,double);
     idx = 0;
     for (int i = 0; i < n_pts; i++) {
 

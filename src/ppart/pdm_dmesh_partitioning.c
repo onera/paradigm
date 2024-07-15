@@ -107,7 +107,8 @@ PDM_dmesh_partitioning_create
   PDM_UNUSED(comm);
   PDM_UNUSED(split_method);
 
-  _dmesh_partitioning_t *_dmp = (_dmesh_partitioning_t *) malloc(sizeof(_dmesh_partitioning_t));
+  _dmesh_partitioning_t *_dmp;
+  PDM_malloc(_dmp,1,_dmesh_partitioning_t);
 
   return (PDM_dmesh_partitioning_t *) _dmp;
 }

@@ -108,7 +108,8 @@ const int          nNewPointsA,
 const int          nNewPointsB
 )
 {
-  _edges_intersect_res_t *newInter = malloc (sizeof(_edges_intersect_res_t));
+  _edges_intersect_res_t *newInter;
+  PDM_malloc(newInter,1,_edges_intersect_res_t);
 
   newInter->nGEdgeA     = nGEdgeA;
   newInter->nGEdgeB     = nGEdgeB;
@@ -119,18 +120,18 @@ const int          nNewPointsB
   newInter->tIntersect  = PDM_LINE_INTERSECT_UNDEF;
 
   newInter->nNewPointsA = nNewPointsA;
-  newInter->uA          = malloc (sizeof(double) * nNewPointsA);
-  newInter->coordsA     = malloc (sizeof(double) * 3 * nNewPointsA);
-  newInter->linkA       = malloc (sizeof(PDM_g_num_t) * nNewPointsA);
-  newInter->gNumA       = malloc (sizeof(PDM_g_num_t) * nNewPointsA);
-  newInter->oNewPointsA = malloc (sizeof(PDM_edges_intersect_point_t) * nNewPointsA);
+  PDM_malloc(newInter->uA,nNewPointsA,double);
+  PDM_malloc(newInter->coordsA,3 * nNewPointsA,double);
+  PDM_malloc(newInter->linkA,nNewPointsA,PDM_g_num_t);
+  PDM_malloc(newInter->gNumA,nNewPointsA,PDM_g_num_t);
+  PDM_malloc(newInter->oNewPointsA,nNewPointsA,PDM_edges_intersect_point_t);
 
   newInter->nNewPointsB = nNewPointsB;
-  newInter->uB          = malloc (sizeof(double) * nNewPointsB);
-  newInter->coordsB     = malloc (sizeof(double) * 3 * nNewPointsB);
-  newInter->linkB       = malloc (sizeof(PDM_g_num_t) * nNewPointsB);
-  newInter->gNumB       = malloc (sizeof(PDM_g_num_t) * nNewPointsB);
-  newInter->oNewPointsB = malloc (sizeof(PDM_edges_intersect_point_t) * nNewPointsB);
+  PDM_malloc(newInter->uB,nNewPointsB,double);
+  PDM_malloc(newInter->coordsB,3 * nNewPointsB,double);
+  PDM_malloc(newInter->linkB,nNewPointsB,PDM_g_num_t);
+  PDM_malloc(newInter->gNumB,nNewPointsB,PDM_g_num_t);
+  PDM_malloc(newInter->oNewPointsB,nNewPointsB,PDM_edges_intersect_point_t);
 
   return newInter;
 }
@@ -208,7 +209,8 @@ const PDM_MPI_Comm   comm
   int sMSGComm;
   PDM_MPI_Comm_size (comm, &sMSGComm);
 
-  _edges_intersect_t *ei = malloc( sizeof(_edges_intersect_t));
+  _edges_intersect_t *ei;
+  PDM_malloc(ei,1,_edges_intersect_t);
 
   PDM_g_num_t _keyMax = (maxGNEdgeA + maxGNEdgeB) / sMSGComm + 1;
 
@@ -1857,10 +1859,10 @@ double                 *face_vtxEpsB
 
   if (revert) {
 
-    _faceToEdgeB = malloc (sizeof(PDM_g_num_t) * n_vtxB);
-    _faceToVtxB  = malloc (sizeof(PDM_g_num_t) * n_vtxB);
-    _face_vtxCooB = malloc (sizeof(double) * 3 * n_vtxB);
-    _face_vtxEpsB = malloc (sizeof(double) * n_vtxB);
+    PDM_malloc(_faceToEdgeB,n_vtxB,PDM_g_num_t);
+    PDM_malloc(_faceToVtxB,n_vtxB,PDM_g_num_t);
+    PDM_malloc(_face_vtxCooB,3 * n_vtxB,double);
+    PDM_malloc(_face_vtxEpsB,n_vtxB,double);
 
     int j = n_vtxB - 1;
     for (int i = 0; i < n_vtxB; i++) {
@@ -1876,7 +1878,7 @@ double                 *face_vtxEpsB
 
   }
 
-  _face_vtxCooA = malloc (sizeof(double) * 3 * n_vtxA);
+  PDM_malloc(_face_vtxCooA,3 * n_vtxA,double);
   for (int i = 0; i < n_vtxA; i++) {
     PDM_plane_projection (face_vtxCooA + 3 * i, baryA, nA, _face_vtxCooA + 3 * i);
   }
@@ -1888,7 +1890,7 @@ double                 *face_vtxEpsB
     }
   }
   else {
-    _face_vtxCooB = malloc (sizeof(double) * 3 * n_vtxB);
+    PDM_malloc(_face_vtxCooB,3 * n_vtxB,double);
     for (int i = 0; i < n_vtxB; i++) {
       PDM_plane_projection (face_vtxCooB + 3 * i, baryA, nA, _face_vtxCooB + 3 * i);
     }
@@ -1909,12 +1911,14 @@ double                 *face_vtxEpsB
   // Mise a jour des clipping concernes
   //
 
-  _edges_intersect_res_t **vtxAOnEdgeBEir = malloc(sizeof(_edges_intersect_res_t *) * n_vtxA);
+  _edges_intersect_res_t **vtxAOnEdgeBEir;
+  PDM_malloc(vtxAOnEdgeBEir,n_vtxA,_edges_intersect_res_t *);
   for (int i = 0; i < n_vtxA; i++) {
     vtxAOnEdgeBEir[i] = NULL;
   }
 
-  _edges_intersect_res_t **vtxBOnEdgeAEir = malloc(sizeof(_edges_intersect_res_t *) * n_vtxB);
+  _edges_intersect_res_t **vtxBOnEdgeAEir;
+  PDM_malloc(vtxBOnEdgeAEir,n_vtxB,_edges_intersect_res_t *);
   for (int i = 0; i < n_vtxB; i++) {
     vtxBOnEdgeAEir[i] = NULL;
   }
@@ -2569,7 +2573,8 @@ PDM_g_num_t            *nAbsNewVtxB
   PDM_hash_tab_t *ht = _ei->ht;
 
   int keyMax  = * ((int *) PDM_hash_tab_keyMax_get (ht));
-  // int *nDataKey = malloc (sizeof(int) * keyMax);
+  // int *nDataKey;
+ // PDM_malloc(nDataKey,keyMax,int);
 
   /* for (int key = 0; key < keyMax; key++) { */
   /*   nDataKey[key] = 0; */
@@ -2589,29 +2594,43 @@ PDM_g_num_t            *nAbsNewVtxB
   /* } */
 
 
-  PDM_g_num_t *keys        = malloc (sizeof(PDM_g_num_t) * n_procData);
+  PDM_g_num_t *keys;
+  PDM_malloc(keys,n_procData,PDM_g_num_t);
 
-  int        *tIntersects = malloc (sizeof(int) * n_procData);
+  int *tIntersects;
+  PDM_malloc(tIntersects,n_procData,int);
 
-  PDM_g_num_t *gNumEdgeA   = malloc (sizeof(PDM_g_num_t) * n_procData);
-  PDM_g_num_t *gNumEdgeB   = malloc (sizeof(PDM_g_num_t) * n_procData);
-  int        *nNewPointsA = malloc (sizeof(int) * n_procData);
+  PDM_g_num_t *gNumEdgeA;
+  PDM_malloc(gNumEdgeA,n_procData,PDM_g_num_t);
+  PDM_g_num_t *gNumEdgeB;
+  PDM_malloc(gNumEdgeB,n_procData,PDM_g_num_t);
+  int *nNewPointsA;
+  PDM_malloc(nNewPointsA,n_procData,int);
   PDM_edges_intersect_point_t *oNewPointsA =
     malloc (sizeof(PDM_edges_intersect_point_t) * 2 * n_procData);
 
-  PDM_g_num_t *connectPointA = malloc (sizeof(PDM_g_num_t) * 2 * n_procData);
-  PDM_g_num_t *gNumA = malloc (sizeof(PDM_g_num_t) * 2 * n_procData);
-  double *uPointA = malloc (sizeof(double) * 2 * n_procData);
-  double *coordsPointA = malloc (sizeof(double) * 6 * n_procData);
+  PDM_g_num_t *connectPointA;
+  PDM_malloc(connectPointA,2 * n_procData,PDM_g_num_t);
+  PDM_g_num_t *gNumA;
+  PDM_malloc(gNumA,2 * n_procData,PDM_g_num_t);
+  double *uPointA;
+  PDM_malloc(uPointA,2 * n_procData,double);
+  double *coordsPointA;
+  PDM_malloc(coordsPointA,6 * n_procData,double);
 
-  int        *nNewPointsB = malloc (sizeof(int) * n_procData);
+  int *nNewPointsB;
+  PDM_malloc(nNewPointsB,n_procData,int);
   PDM_edges_intersect_point_t *oNewPointsB =
     malloc (sizeof(PDM_edges_intersect_point_t) * 2 * n_procData);
 
-  PDM_g_num_t *connectPointB = malloc (sizeof(PDM_g_num_t) * 2 * n_procData);
-  PDM_g_num_t *gNumB = malloc (sizeof(PDM_g_num_t) * 2 * n_procData);
-  double *uPointB = malloc (sizeof(double) * 2 * n_procData);
-  double *coordsPointB = malloc (sizeof(double) * 6 * n_procData);
+  PDM_g_num_t *connectPointB;
+  PDM_malloc(connectPointB,2 * n_procData,PDM_g_num_t);
+  PDM_g_num_t *gNumB;
+  PDM_malloc(gNumB,2 * n_procData,PDM_g_num_t);
+  double *uPointB;
+  PDM_malloc(uPointB,2 * n_procData,double);
+  double *coordsPointB;
+  PDM_malloc(coordsPointB,6 * n_procData,double);
 
   n_procData = 0;
   int idxA = 0;
@@ -2744,7 +2763,8 @@ PDM_g_num_t            *nAbsNewVtxB
    * A info
    */
 
-  int *stride_one   = malloc (sizeof(PDM_g_num_t) * n_procData);
+  int *stride_one;
+  PDM_malloc(stride_one,n_procData, int);
   for (int i = 0; i < n_procData; i++) {
     stride_one[i] = 1;
   }
@@ -2992,13 +3012,18 @@ PDM_g_num_t            *nAbsNewVtxB
 
   int *tag = PDM_array_zeros_int(b_stride_one_idx[n_elt_block]);
 
-  int *b_stride_one_idx_true = malloc(sizeof(int) * (n_elt_block + 1));
+  int *b_stride_one_idx_true;
+  PDM_malloc(b_stride_one_idx_true,(n_elt_block + 1),int);
 
-  int *b_tIntersects_true = malloc(sizeof(int) * b_stride_one_idx[n_elt_block]);
-  PDM_g_num_t *b_gNumEdgeA_true = malloc(sizeof(PDM_g_num_t) * b_stride_one_idx[n_elt_block]);
-  PDM_g_num_t *b_gNumEdgeB_true = malloc(sizeof(PDM_g_num_t) * b_stride_one_idx[n_elt_block]);
+  int *b_tIntersects_true;
+  PDM_malloc(b_tIntersects_true,b_stride_one_idx[n_elt_block],int);
+  PDM_g_num_t *b_gNumEdgeA_true;
+  PDM_malloc(b_gNumEdgeA_true,b_stride_one_idx[n_elt_block],PDM_g_num_t);
+  PDM_g_num_t *b_gNumEdgeB_true;
+  PDM_malloc(b_gNumEdgeB_true,b_stride_one_idx[n_elt_block],PDM_g_num_t);
 
-  int *b_nNewPointsA_true = malloc(sizeof(int) * b_stride_one_idx[n_elt_block]);
+  int *b_nNewPointsA_true;
+  PDM_malloc(b_nNewPointsA_true,b_stride_one_idx[n_elt_block],int);
 
   PDM_edges_intersect_point_t *b_oNewPointsA_true =
           malloc(sizeof(PDM_edges_intersect_point_t) * 2 * b_stride_one_idx[n_elt_block]);
@@ -3011,15 +3036,18 @@ PDM_g_num_t            *nAbsNewVtxB
   double *b_coordsPointA_true =
           malloc(sizeof(double) * 6 * b_stride_one_idx[n_elt_block]);
 
-  int *b_nNewPointsB_true = malloc(sizeof(int) * b_stride_one_idx[n_elt_block]);
+  int *b_nNewPointsB_true;
+  PDM_malloc(b_nNewPointsB_true,b_stride_one_idx[n_elt_block],int);
   PDM_edges_intersect_point_t *b_oNewPointsB_true =
           malloc(sizeof(PDM_edges_intersect_point_t) * 2 * b_stride_one_idx[n_elt_block]);
   PDM_g_num_t *b_connectPointB_true =
           malloc(sizeof(PDM_g_num_t) * 2 * b_stride_one_idx[n_elt_block]);
   PDM_g_num_t *b_gNumB_true =
           malloc(sizeof(PDM_g_num_t) * 2 * b_stride_one_idx[n_elt_block]);
-  double *b_uPointB_true = malloc(sizeof(double) * 2 * b_stride_one_idx[n_elt_block]);
-  double *b_coordsPointB_true = malloc(sizeof(double) * 6 * b_stride_one_idx[n_elt_block]);
+  double *b_uPointB_true;
+  PDM_malloc(b_uPointB_true,2 * b_stride_one_idx[n_elt_block],double);
+  double *b_coordsPointB_true;
+  PDM_malloc(b_coordsPointB_true,6 * b_stride_one_idx[n_elt_block],double);
 
   int idx_true   = 0;
   int idx_newPtA = 0;
@@ -3623,7 +3651,8 @@ PDM_g_num_t            *nAbsNewVtxB
   /*   fflush(stdout); */
   /* } */
 
-  //PDM_g_num_t *b_gNumPointsB_true = malloc(sizeof(PDM_g_num_t) * idx_newPtB);
+  //PDM_g_num_t *b_gNumPointsB_true;
+  // PDM_malloc(b_gNumPointsB_true,idx_newPtB,PDM_g_num_t);
   PDM_g_num_t end_nNewPtsB = beg_nNewPtsB + nAbsVtxB + 1;
   beg_nNewPtsB += -nNewPtsB + 1 + nAbsVtxB;
 
@@ -3645,10 +3674,12 @@ PDM_g_num_t            *nAbsNewVtxB
    *    - Synchronize coordinates
    */
 
-  double *b_cNewPointsA_true_pack = malloc (sizeof(double) * 3 * nPtsFromBForA);
+  double *b_cNewPointsA_true_pack;
+  PDM_malloc(b_cNewPointsA_true_pack,3 * nPtsFromBForA,double);
   PDM_edges_intersect_point_t *b_oNewPointsA_true_pack =
     malloc (sizeof(PDM_edges_intersect_point_t) * nPtsFromBForA);
-  PDM_g_num_t *b_lNewPointsA_true_pack = malloc (sizeof(PDM_g_num_t) * nPtsFromBForA);
+  PDM_g_num_t *b_lNewPointsA_true_pack;
+  PDM_malloc(b_lNewPointsA_true_pack,nPtsFromBForA,PDM_g_num_t);
 
   nPtsFromBForA = 0;
   for (int i = 0; i < idx_newPtA; i++) {
@@ -3716,7 +3747,8 @@ PDM_g_num_t            *nAbsNewVtxB
 
   /* Synchronize coordinates for A */
 
-  int *b_b_idx_packA = malloc(sizeof(int) * (n_BForA_gnum +1));
+  int *b_b_idx_packA;
+  PDM_malloc(b_b_idx_packA,(n_BForA_gnum +1),int);
   b_b_idx_packA[0] = 0;
   for (int i = 0; i < n_BForA_gnum; i++) {
     b_b_idx_packA[i+1] = b_b_idx_packA[i] + b_b_stride_packA[i];
@@ -3783,7 +3815,8 @@ PDM_g_num_t            *nAbsNewVtxB
    * Define and copy A Numabs
    */
 
-  PDM_g_num_t *b_b_gNumVtxFromBForA = malloc (sizeof(PDM_g_num_t) * b_b_idx_packA[n_BForA_gnum]);
+  PDM_g_num_t *b_b_gNumVtxFromBForA;
+  PDM_malloc(b_b_gNumVtxFromBForA,b_b_idx_packA[n_BForA_gnum],PDM_g_num_t);
 
   PDM_g_num_t beg_n_BForA_gnum;
 
@@ -3833,10 +3866,12 @@ PDM_g_num_t            *nAbsNewVtxB
    *   - Synchronize coordinates
    */
 
-  double *b_cNewPointsB_true_pack = malloc (sizeof(double) * 3 * nPtsFromAForB);
+  double *b_cNewPointsB_true_pack;
+  PDM_malloc(b_cNewPointsB_true_pack,3 * nPtsFromAForB,double);
   PDM_edges_intersect_point_t *b_oNewPointsB_true_pack =
           malloc (sizeof(PDM_edges_intersect_point_t) * nPtsFromAForB);
-  PDM_g_num_t *b_lNewPointsB_true_pack = malloc (sizeof(PDM_g_num_t) * nPtsFromAForB);
+  PDM_g_num_t *b_lNewPointsB_true_pack;
+  PDM_malloc(b_lNewPointsB_true_pack,nPtsFromAForB,PDM_g_num_t);
 
   nPtsFromAForB = 0;
   for (int i = 0; i < idx_newPtB; i++) {
@@ -3895,7 +3930,8 @@ PDM_g_num_t            *nAbsNewVtxB
  PDM_free(b_oNewPointsB_true_pack);
 
 
-  int *b_b_idx_packB = malloc(sizeof(int) * (n_AForB_gnum +1));
+  int *b_b_idx_packB;
+  PDM_malloc(b_b_idx_packB,(n_AForB_gnum +1),int);
   b_b_idx_packB[0] = 0;
   for (int i = 0; i < n_AForB_gnum; i++) {
     b_b_idx_packB[i+1] = b_b_idx_packB[i] + b_b_stride_packB[i];
@@ -3971,7 +4007,8 @@ PDM_g_num_t            *nAbsNewVtxB
    * Define and copy B Numabs
    */
 
-  PDM_g_num_t *b_b_gNumVtxFromAForB = malloc (sizeof(PDM_g_num_t) * b_b_idx_packB[n_AForB_gnum]);
+  PDM_g_num_t *b_b_gNumVtxFromAForB;
+  PDM_malloc(b_b_gNumVtxFromAForB,b_b_idx_packB[n_AForB_gnum],PDM_g_num_t);
 
   PDM_g_num_t beg_n_AForB_gnum;
 
@@ -4505,9 +4542,12 @@ PDM_g_num_t            *nAbsNewVtxB
 
   int idxData = 0;
 
-  int *r_stride_one_idx_true     = malloc (sizeof(int) * (n_procData + 1));
-  int *r_stridePtsADep_idx_true = malloc (sizeof(int) * (n_procData + 1));
-  int *r_stridePtsBDep_idx_true = malloc (sizeof(int) * (n_procData + 1));
+  int *r_stride_one_idx_true;
+  PDM_malloc(r_stride_one_idx_true,(n_procData + 1),int);
+  int *r_stridePtsADep_idx_true;
+  PDM_malloc(r_stridePtsADep_idx_true,(n_procData + 1),int);
+  int *r_stridePtsBDep_idx_true;
+  PDM_malloc(r_stridePtsBDep_idx_true,(n_procData + 1),int);
 
   r_stride_one_idx_true[0]     = 0;
   r_stridePtsADep_idx_true[0] = 0;

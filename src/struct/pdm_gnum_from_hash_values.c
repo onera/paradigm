@@ -326,10 +326,14 @@ _gnum_from_hv_compute
   /*
    * Remapping of partition data in block data according to the hash values distribution
    */
-  int* n_key_send  = (int *) malloc( _gnum_from_hv->n_rank * sizeof(int));
-  int* n_key_recv  = (int *) malloc( _gnum_from_hv->n_rank * sizeof(int));
-  int* n_data_send = (int *) malloc( _gnum_from_hv->n_rank * sizeof(int));
-  int* n_data_recv = (int *) malloc( _gnum_from_hv->n_rank * sizeof(int));
+  int *n_key_send;
+  PDM_malloc(n_key_send, _gnum_from_hv->n_rank ,int);
+  int *n_key_recv;
+  PDM_malloc(n_key_recv, _gnum_from_hv->n_rank ,int);
+  int *n_data_send;
+  PDM_malloc(n_data_send, _gnum_from_hv->n_rank ,int);
+  int *n_data_recv;
+  PDM_malloc(n_data_recv, _gnum_from_hv->n_rank ,int);
 
   for(int i = 0; i < _gnum_from_hv->n_rank; ++i){
     n_key_send[i] = 0;
@@ -339,9 +343,10 @@ _gnum_from_hv_compute
   /*
    * Prepare send
    */
-  int** elmt_to_proc = (int **) malloc(_gnum_from_hv->n_part * sizeof(int*));
+  int* *elmt_to_proc;
+  PDM_malloc(elmt_to_proc,_gnum_from_hv->n_part ,int*);
   for(int i_part = 0; i_part < _gnum_from_hv->n_part; ++i_part){
-    elmt_to_proc[i_part] = (int *) malloc( _gnum_from_hv->n_elts[i_part] * sizeof(int));
+    PDM_malloc(elmt_to_proc[i_part], _gnum_from_hv->n_elts[i_part] ,int);
     for(int ielt = 0; ielt < _gnum_from_hv->n_elts[i_part]; ++ielt){
 
       size_t g_key = _gnum_from_hv->part_hkeys[i_part][ielt];
@@ -409,10 +414,14 @@ _gnum_from_hv_compute
   /*
    * Prepare utility array to setup the second exchange
    */
-  int* i_key_send  = (int *) malloc( (_gnum_from_hv->n_rank+1) * sizeof(int));
-  int* i_key_recv  = (int *) malloc( (_gnum_from_hv->n_rank+1) * sizeof(int));
-  int* i_data_send = (int *) malloc( (_gnum_from_hv->n_rank+1) * sizeof(int));
-  int* i_data_recv = (int *) malloc( (_gnum_from_hv->n_rank+1) * sizeof(int));
+  int *i_key_send;
+  PDM_malloc(i_key_send, (_gnum_from_hv->n_rank+1) ,int);
+  int *i_key_recv;
+  PDM_malloc(i_key_recv, (_gnum_from_hv->n_rank+1) ,int);
+  int *i_data_send;
+  PDM_malloc(i_data_send, (_gnum_from_hv->n_rank+1) ,int);
+  int *i_data_recv;
+  PDM_malloc(i_data_recv, (_gnum_from_hv->n_rank+1) ,int);
 
   i_key_send[0] = 0;
   i_key_recv[0] = 0;
@@ -444,14 +453,20 @@ _gnum_from_hv_compute
   /*
    * Allocate
    */
-  size_t *send_buffer_keys = (size_t *) malloc(sizeof(size_t) * s_send_keys );
-  size_t *recv_buffer_keys = (size_t *) malloc(sizeof(size_t) * s_recv_keys );
+  size_t *send_buffer_keys;
+  PDM_malloc(send_buffer_keys,s_send_keys ,size_t);
+  size_t *recv_buffer_keys;
+  PDM_malloc(recv_buffer_keys,s_recv_keys ,size_t);
 
-  int *send_buffer_stri = (int *) malloc(sizeof(int) * ( s_send_keys + 1) );
-  int *recv_buffer_stri = (int *) malloc(sizeof(int) * ( s_recv_keys + 1) );
+  int *send_buffer_stri;
+  PDM_malloc(send_buffer_stri,( s_send_keys + 1) ,int);
+  int *recv_buffer_stri;
+  PDM_malloc(recv_buffer_stri,( s_recv_keys + 1) ,int);
 
-  unsigned char *send_buffer_data = (unsigned char *) malloc(sizeof(unsigned char) * s_send_data);
-  unsigned char *recv_buffer_data = (unsigned char *) malloc(sizeof(unsigned char) * s_recv_data);
+  unsigned char *send_buffer_data;
+ PDM_malloc(send_buffer_data,s_send_data,unsigned char);
+  unsigned char *recv_buffer_data;
+ PDM_malloc(recv_buffer_data,s_recv_data,unsigned char);
 
   /*
    * Setup send_buffer
@@ -613,7 +628,8 @@ _gnum_from_hv_compute
 
   // if(0 == 0){
   //   // PDM_log_trace_array_int(recv_buffer_stri, s_recv_keys+1, "recv_buffer_stri:: ");
-  //   char* t = (char*) malloc( sizeof(char) * (s_recv_data + 1));
+  //   char *t;
+   PDM_malloc(t,(s_recv_data + 1),char);
   //   // char* t = (char* )recv_buffer_data;
   //   for(int k = 0; k < s_recv_data; ++k){
   //     t[k] = (char) recv_buffer_data[k];
@@ -628,7 +644,8 @@ _gnum_from_hv_compute
   /*
    * Generate global numbering from the block_data
    */
-  int* order = (int *) malloc( sizeof(int) * s_recv_keys);
+  int *order;
+  PDM_malloc(order,s_recv_keys,int);
   for(int i = 0; i < s_recv_keys; ++i){
     order[i] = i;
   }
@@ -636,7 +653,8 @@ _gnum_from_hv_compute
   // _gnum_from_hv->fcompare = PDM_operator_compare_connectivity;
   // _gnum_from_hv->fequal   = PDM_operator_equal_connectivity;
 
-  PDM_user_defined_sort* us = (PDM_user_defined_sort *) malloc( sizeof(PDM_user_defined_sort) );
+  PDM_user_defined_sort *us;
+  PDM_malloc(us,1,PDM_user_defined_sort);
   us->idx = recv_buffer_stri;
   us->arr = recv_buffer_data;
   us->key = recv_buffer_keys;
@@ -687,7 +705,8 @@ _gnum_from_hv_compute
   /*
    * Use operator == to have an global numbering
    */
-  PDM_g_num_t* blk_ln_to_gn = (PDM_g_num_t*) malloc( sizeof(PDM_g_num_t*) * s_recv_keys);
+  PDM_g_num_t *blk_ln_to_gn;
+  PDM_malloc(blk_ln_to_gn,s_recv_keys,PDM_g_num_t*);
   PDM_g_num_t next_id = 0;
   PDM_g_num_t n_id    = 0;
   PDM_g_num_t last_id = -1;
@@ -765,7 +784,8 @@ _gnum_from_hv_compute
   /*
    * Reverse all_to_all exchange in order to remap global id on current partition
    */
-  PDM_g_num_t* part_ln_to_gn = (PDM_g_num_t*) malloc( sizeof(PDM_g_num_t*) * s_send_keys);
+  PDM_g_num_t *part_ln_to_gn;
+  PDM_malloc(part_ln_to_gn,s_send_keys,PDM_g_num_t*);
 
   PDM_MPI_Alltoallv(blk_ln_to_gn , n_key_recv, i_key_recv, PDM__PDM_MPI_G_NUM,
                     part_ln_to_gn, n_key_send, i_key_send, PDM__PDM_MPI_G_NUM, _gnum_from_hv->comm);
@@ -869,7 +889,8 @@ PDM_gnum_from_hash_values_create
   PDM_MPI_Comm_size (comm, &n_rank);
 
 
-  _pdm_gnum_from_hv_t *_gnum_from_hv = (_pdm_gnum_from_hv_t *) malloc(sizeof(_pdm_gnum_from_hv_t));
+  _pdm_gnum_from_hv_t *_gnum_from_hv;
+  PDM_malloc(_gnum_from_hv,1,_pdm_gnum_from_hv_t);
 
   _gnum_from_hv->fcompare    = fcompare;
   _gnum_from_hv->fequal      = fequal;
@@ -879,13 +900,13 @@ PDM_gnum_from_hash_values_create
   _gnum_from_hv->comm        = comm;
   _gnum_from_hv->n_rank      = n_rank;
   _gnum_from_hv->n_g_elt     = -1;
-  _gnum_from_hv->g_nums      = (PDM_g_num_t **) malloc (sizeof(PDM_g_num_t * ) * n_part);
+  PDM_malloc(_gnum_from_hv->g_nums,n_part,PDM_g_num_t * );
 
   _gnum_from_hv->s_data      = s_data;
-  _gnum_from_hv->n_elts      = (int            *) malloc (sizeof(int            ) * n_part);
-  _gnum_from_hv->part_hkeys  = (size_t        **) malloc (sizeof(size_t        *) * n_part);
-  _gnum_from_hv->part_hstri  = (int           **) malloc (sizeof(int           *) * n_part);
-  _gnum_from_hv->part_hdata  = (unsigned char **) malloc (sizeof(unsigned char *) * n_part);
+  PDM_malloc(_gnum_from_hv->n_elts,n_part,int            );
+  PDM_malloc(_gnum_from_hv->part_hkeys,n_part,size_t        *);
+  PDM_malloc(_gnum_from_hv->part_hstri,n_part,int           *);
+  PDM_malloc(_gnum_from_hv->part_hdata,n_part,unsigned char *);
 
   for (int i = 0; i < n_part; i++) {
     _gnum_from_hv->g_nums[i]     = NULL;
@@ -894,7 +915,7 @@ PDM_gnum_from_hash_values_create
     _gnum_from_hv->part_hdata[i] = NULL;
   }
 
-  _gnum_from_hv->distribution = (size_t *) malloc (sizeof(size_t ) * ( n_rank + 1 ));
+  PDM_malloc(_gnum_from_hv->distribution,( n_rank + 1 ),size_t );
 
   _gnum_from_hv->timer = PDM_timer_create();
 
@@ -969,7 +990,7 @@ PDM_gnum_set_hash_values
   // log_trace(" -------------- \n ");
 
 
-  _gnum_from_hv->g_nums[i_part] = (PDM_g_num_t * ) malloc( n_elts * sizeof(PDM_g_num_t));
+  PDM_malloc(_gnum_from_hv->g_nums[i_part], n_elts ,PDM_g_num_t);
 
 }
 

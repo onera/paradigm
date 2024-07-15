@@ -588,15 +588,24 @@ _set_mesh_nodal
   if (pmn == NULL) {
     int n_part = 1;//!!!!!!
 
-    int          *n_cell        = malloc(sizeof(int          ) * n_part);
-    int          *n_face        = malloc(sizeof(int          ) * n_part);
-    int         **face_vtx_idx  = malloc(sizeof(int         *) * n_part);
-    int         **face_vtx      = malloc(sizeof(int         *) * n_part);
-    PDM_g_num_t **face_ln_to_gn = malloc(sizeof(PDM_g_num_t *) * n_part);
-    int         **cell_face_idx = malloc(sizeof(int         *) * n_part);
-    int         **cell_face     = malloc(sizeof(int         *) * n_part);
-    double      **vtx_coord     = malloc(sizeof(double      *) * n_part);
-    PDM_g_num_t **cell_ln_to_gn = malloc(sizeof(PDM_g_num_t *) * n_part);
+    int *n_cell;
+    PDM_malloc(n_cell,n_part,int          );
+    int *n_face;
+    PDM_malloc(n_face,n_part,int          );
+    int **face_vtx_idx;
+    PDM_malloc(*face_vtx_idx,n_part,int         *);
+    int **face_vtx;
+    PDM_malloc(*face_vtx,n_part,int         *);
+    PDM_g_num_t **face_ln_to_gn;
+    PDM_malloc(*face_ln_to_gn,n_part,PDM_g_num_t *);
+    int **cell_face_idx;
+    PDM_malloc(*cell_face_idx,n_part,int         *);
+    int **cell_face;
+    PDM_malloc(*cell_face,n_part,int         *);
+    double **vtx_coord;
+    PDM_malloc(*vtx_coord,n_part,double      *);
+    PDM_g_num_t **cell_ln_to_gn;
+    PDM_malloc(*cell_ln_to_gn,n_part,PDM_g_num_t *);
 
     pmn = PDM_part_mesh_nodal_create(3, n_part, mi->comm);
 
@@ -757,8 +766,10 @@ _set_mesh_nodal
   //                                                               id_section,
   //                                                               ipart);
 
-  //       double *volume = malloc(sizeof(double) * n_elt);
-  //       double *center = malloc(sizeof(double) * n_elt * 3);
+  //       double *volume;
+       PDM_malloc(volume,n_elt,double);
+  //       double *center;
+       PDM_malloc(center,n_elt * 3,double);
 
   //       switch (t_elt) {
 
@@ -956,7 +967,8 @@ main
   double               noise_a               = 0;
   double               noise_b               = 0;
   point_t              tetraisation_pt_type  = TETRA_POINT;
-  double              *tetraisation_pt_coord = malloc(sizeof(double) * 3);
+  double *tetraisation_pt_coord;
+  PDM_malloc(tetraisation_pt_coord,3,double);
   double               shift_b[3]            = {0.5, 0.5, 0.5};
   char                *filenames[2]          = {NULL, NULL};
 
@@ -1133,8 +1145,10 @@ main
     if (verbose) {
       log_trace("FROM A USER POV\n");
     }
-    int    **pelt_a_elt_b_n      = malloc(sizeof(int    *) * n_part);
-    double **pelt_a_elt_b_volume = malloc(sizeof(double *) * n_part);
+    int **pelt_a_elt_b_n;
+    PDM_malloc(*pelt_a_elt_b_n,n_part,int    *);
+    double **pelt_a_elt_b_volume;
+    PDM_malloc(*pelt_a_elt_b_volume,n_part,double *);
 
 
     for (int ipart = 0; ipart < n_part; ipart++) {
@@ -1154,7 +1168,7 @@ main
                                                     &elt_a_ln_to_gn,
                                                     PDM_OWNERSHIP_KEEP);
 
-      pelt_a_elt_b_n[ipart] = malloc(sizeof(int) * n_elt_a);
+      PDM_malloc(pelt_a_elt_b_n[ipart],n_elt_a,int);
       for (int i = 0; i < n_elt_a; i++) {
         pelt_a_elt_b_n[ipart][i] = elt_a_elt_b_idx[i+1] - elt_a_elt_b_idx[i];
 

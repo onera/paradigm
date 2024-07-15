@@ -76,7 +76,8 @@ const double     *coords,
 const PDM_g_num_t *vtx_ln_to_gn
 )
 {
-  PDM_surf_part_t *_part = (PDM_surf_part_t *) malloc(sizeof(PDM_surf_part_t));
+  PDM_surf_part_t *_part;
+  PDM_malloc(_part,1,PDM_surf_part_t);
 
   _part->n_face                = n_face;
   _part->nGhostFace           = 0;
@@ -214,8 +215,10 @@ PDM_surf_part_t *part
   hashTableIdx[0] = 0;
   PDM_array_accumulate_int(hashTableIdx, lHashTableIdx);
 
-  int *listEdges = (int *) malloc(sizeof(int) * l_edges);
-  int *edgeFaceUncompress = (int *) malloc(sizeof(int) * l_edges/2);
+  int *listEdges;
+  PDM_malloc(listEdges,l_edges,int);
+  int *edgeFaceUncompress;
+  PDM_malloc(edgeFaceUncompress,l_edges/2,int);
   l_edges = 0;
 
   int max_n_vtx_face = 0;
@@ -250,7 +253,7 @@ PDM_surf_part_t *part
    * First allocation to l_edges
    */
 
-  part->edgeVtx  = (int *) malloc(sizeof(int) * l_edges);
+  PDM_malloc(part->edgeVtx,l_edges,int);
   part->nEdge    = 0;
 
   /*
@@ -298,7 +301,7 @@ PDM_surf_part_t *part
   for (int i = 0; i < part->n_vtx; i++) {
     part->vtxEdgeIdx[i+1] = part->vtxEdgeIdx[i+1] + part->vtxEdgeIdx[i];
   }
-  part->vtxEdge  = (int *) malloc(sizeof(int) * part->vtxEdgeIdx[part->n_vtx]);
+  PDM_malloc(part->vtxEdge,part->vtxEdgeIdx[part->n_vtx],int);
   int *n_vtxEdge  = PDM_array_zeros_int(part->n_vtx);
 
   for (int i = 0; i < part->nEdge; i++) {
@@ -355,10 +358,10 @@ PDM_surf_part_t *part
    * face -> edge connectivity
    */
 
-  part->faceEdgeIdx = (int *) malloc(sizeof(int) * (part->n_face + 1));
+  PDM_malloc(part->faceEdgeIdx,(part->n_face + 1),int);
   memcpy(part->faceEdgeIdx, part->face_vtx_idx, sizeof(int) * (part->n_face + 1));
   const int *faceEdgeIdx = part->faceEdgeIdx;
-  part->faceEdge = (int *) malloc(sizeof(int) * faceEdgeIdx[part->n_face]);
+  PDM_malloc(part->faceEdge,faceEdgeIdx[part->n_face],int);
   int *n_faceEdge = PDM_array_zeros_int(part->n_face);
 
   for (int i = 0; i < nEdge; i++) {

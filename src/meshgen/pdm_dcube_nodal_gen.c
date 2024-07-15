@@ -142,7 +142,8 @@ _generate_tria_surf
   int dn_elt = 2 * dcube->dn_quad;
 
   /* Set up surface part */
-  PDM_g_num_t *delt_vtx = (PDM_g_num_t *) malloc((n_vtx_elt * dn_elt) * sizeof(PDM_g_num_t));
+  PDM_g_num_t *delt_vtx;
+  PDM_malloc(delt_vtx,(n_vtx_elt * dn_elt) ,PDM_g_num_t);
   int idx = 0;
   for (int iquad = 0; iquad < dcube->dn_quad; iquad++) {
     PDM_g_num_t g = dcube->distrib_quad[i_rank] + iquad;
@@ -197,7 +198,8 @@ _generate_quad_surf
   int dn_elt = dcube->dn_quad;
 
   /* Set up surface part */
-  PDM_g_num_t *delt_vtx = (PDM_g_num_t *) malloc((n_vtx_elt * dn_elt) * sizeof(PDM_g_num_t));
+  PDM_g_num_t *delt_vtx;
+  PDM_malloc(delt_vtx,(n_vtx_elt * dn_elt) ,PDM_g_num_t);
   int idx = 0;
   for (int iquad = 0; iquad < dcube->dn_quad; iquad++) {
     PDM_g_num_t g = dcube->distrib_quad[i_rank] + iquad;
@@ -246,7 +248,8 @@ _generate_tetra_vol
   int dn_elt = 5 * dcube->dn_hexa;
 
   /* Set up volume part */
-  PDM_g_num_t *delt_vtx = (PDM_g_num_t *) malloc((n_vtx_elt * dn_elt) * sizeof(PDM_g_num_t));
+  PDM_g_num_t *delt_vtx;
+  PDM_malloc(delt_vtx,(n_vtx_elt * dn_elt) ,PDM_g_num_t);
   int idx = 0;
   for (int ihexa = 0; ihexa < dcube->dn_hexa; ihexa++) {
     PDM_g_num_t g = dcube->distrib_hexa[i_rank] + ihexa;
@@ -375,7 +378,8 @@ _generate_pyramid_vol
   int dn_elt = 3 * dcube->dn_hexa;
 
   /* Set up volume part */
-  PDM_g_num_t *delt_vtx = (PDM_g_num_t *) malloc((n_vtx_elt * dn_elt) * sizeof(PDM_g_num_t));
+  PDM_g_num_t *delt_vtx;
+  PDM_malloc(delt_vtx,(n_vtx_elt * dn_elt) ,PDM_g_num_t);
   int idx = 0;
   for (int ihexa = 0; ihexa < dcube->dn_hexa; ihexa++) {
     PDM_g_num_t g = dcube->distrib_hexa[i_rank] + ihexa;
@@ -520,7 +524,8 @@ _generate_prism_vol
   int dn_elt = 2 * dcube->dn_hexa;
 
   /* Set up volume part */
-  PDM_g_num_t *delt_vtx = (PDM_g_num_t *) malloc((n_vtx_elt * dn_elt) * sizeof(PDM_g_num_t));
+  PDM_g_num_t *delt_vtx;
+  PDM_malloc(delt_vtx,(n_vtx_elt * dn_elt) ,PDM_g_num_t);
   int idx = 0;
   for (int ihexa = 0; ihexa < dcube->dn_hexa; ihexa++) {
     PDM_g_num_t g = dcube->distrib_hexa[i_rank] + ihexa;
@@ -580,7 +585,8 @@ _generate_hexa_vol
   int dn_elt = dcube->dn_hexa;
 
   /* Set up volume part */
-  PDM_g_num_t *delt_vtx = (PDM_g_num_t *) malloc((n_vtx_elt * dn_elt) * sizeof(PDM_g_num_t));
+  PDM_g_num_t *delt_vtx;
+  PDM_malloc(delt_vtx,(n_vtx_elt * dn_elt) ,PDM_g_num_t);
   int idx = 0;
   for (int ihexa = 0; ihexa < dcube->dn_hexa; ihexa++) {
     PDM_g_num_t g = dcube->distrib_hexa[i_rank] + ihexa;
@@ -632,7 +638,8 @@ _generate_corners
   PDM_g_num_t *distrib_corner = PDM_compute_uniform_entity_distribution(dcube->comm, gn_corner);
   int dn_corner = (int) (distrib_corner[i_rank+1] - distrib_corner[i_rank]);
 
-  PDM_g_num_t *delt_vtx = malloc (sizeof(PDM_g_num_t) * dn_corner);
+  PDM_g_num_t *delt_vtx;
+  PDM_malloc(delt_vtx,dn_corner,PDM_g_num_t);
   for (int icorner = 0; icorner < dn_corner; icorner++) {
     PDM_g_num_t g = distrib_corner[i_rank] + icorner;
 
@@ -657,7 +664,8 @@ _generate_corners
 
   // TODO: single group
   int n_group = (int) gn_corner;
-  int *dgroup_elt_idx = malloc(sizeof(int) * (n_group + 1));
+  int *dgroup_elt_idx;
+  PDM_malloc(dgroup_elt_idx,(n_group + 1),int);
   dgroup_elt_idx[0] = 0;
   for (int i = 0; i < n_group; i++) {
     dgroup_elt_idx[i+1] = dgroup_elt_idx[i];
@@ -668,7 +676,8 @@ _generate_corners
   assert(dgroup_elt_idx[n_group] == dn_corner);
 
 
-  PDM_g_num_t *dgroup_elt = malloc(sizeof(PDM_g_num_t) * dgroup_elt_idx[n_group]);
+  PDM_g_num_t *dgroup_elt;
+  PDM_malloc(dgroup_elt,dgroup_elt_idx[n_group],PDM_g_num_t);
   for (int i = 0; i < dgroup_elt_idx[n_group]; i++) {
     dgroup_elt[i] = distrib_corner[i_rank] + i + 1;
   }
@@ -748,7 +757,8 @@ _generate_ridges
 
 
   /* Set up ridge part */
-  PDM_g_num_t *delt_vtx = (PDM_g_num_t *) malloc((n_vtx_elt * dn_elt) * sizeof(PDM_g_num_t));
+  PDM_g_num_t *delt_vtx;
+  PDM_malloc(delt_vtx,(n_vtx_elt * dn_elt) ,PDM_g_num_t);
   int idx = 0;
   for (int ielt = 0; ielt < dn_elt; ielt++) {
 
@@ -864,7 +874,8 @@ _generate_ridges
     dn[i] = (int) (distrib[i][i_rank+1] - distrib[i][i_rank]);
   }
 
-  int *dgroup_elt_idx = malloc (sizeof(int) * (n_group + 1));
+  int *dgroup_elt_idx;
+  PDM_malloc(dgroup_elt_idx,(n_group + 1),int);
   dgroup_elt_idx[0] = 0;
   for (int k = 0; k < dim-1; k++) {
     for (int j = 0; j < 2; j++) {
@@ -882,7 +893,8 @@ _generate_ridges
   }
 
 
-  PDM_g_num_t *dgroup_elt = malloc (sizeof(PDM_g_num_t) * dgroup_elt_idx[n_group]);
+  PDM_g_num_t *dgroup_elt;
+  PDM_malloc(dgroup_elt,dgroup_elt_idx[n_group],PDM_g_num_t);
 
   idx = 0;
   for (int k = 0; k < dim-1; k++) {
@@ -1022,7 +1034,8 @@ _set_surf_groups
     dn[i] = (int) (distrib[i][i_rank+1] - distrib[i][i_rank]);
   }
 
-  int *dgroup_elt_idx = malloc (sizeof(int) * (n_group + 1));
+  int *dgroup_elt_idx;
+  PDM_malloc(dgroup_elt_idx,(n_group + 1),int);
   dgroup_elt_idx[0] = 0;
   for (int j = 0; j < 3; j++) {
     for (int i = 0; i < 2; i++) {
@@ -1031,7 +1044,8 @@ _set_surf_groups
     }
   }
 
-  PDM_g_num_t *dgroup_elt = malloc (sizeof(PDM_g_num_t) * dgroup_elt_idx[n_group]);
+  PDM_g_num_t *dgroup_elt;
+  PDM_malloc(dgroup_elt,dgroup_elt_idx[n_group],PDM_g_num_t);
   int idx = 0;
   PDM_g_num_t shift = 0;
   for (int j = 0; j < 3; j++) {
@@ -1102,7 +1116,8 @@ _generate_tetra_surf
   group_idx[6] = group_idx[5] + dcube->nz*dcube->nx;
 
   /* Set up surface part */
-  PDM_g_num_t *delt_vtx = (PDM_g_num_t *) malloc((n_vtx_elt * dn_elt) * sizeof(PDM_g_num_t));
+  PDM_g_num_t *delt_vtx;
+  PDM_malloc(delt_vtx,(n_vtx_elt * dn_elt) ,PDM_g_num_t);
   int idx = 0;
   for (int iquad = 0; iquad < dcube->dn_quad; iquad++) {
 
@@ -1260,7 +1275,8 @@ _generate_pyramid_surf
   group_type[5] = (dcube->ny%2 == 1);
 
   /* Triangles */
-  PDM_g_num_t *dtria_vtx = (PDM_g_num_t *) malloc((n_vtx_tria * dn_tria) * sizeof(PDM_g_num_t));
+  PDM_g_num_t *dtria_vtx;
+  PDM_malloc(dtria_vtx,(n_vtx_tria * dn_tria) ,PDM_g_num_t);
   int idx = 0;
   for (int itria = 0; itria < dn_tria; itria++) {
 
@@ -1338,7 +1354,8 @@ _generate_pyramid_surf
 
 
   /* Quadrangles */
-  PDM_g_num_t *dquad_vtx = (PDM_g_num_t *) malloc((n_vtx_quad * dn_quad) * sizeof(PDM_g_num_t));
+  PDM_g_num_t *dquad_vtx;
+  PDM_malloc(dquad_vtx,(n_vtx_quad * dn_quad) ,PDM_g_num_t);
   idx = 0;
   for (int iquad = 0; iquad < dn_quad; iquad++) {
 
@@ -1427,13 +1444,15 @@ _generate_pyramid_surf
   }
 
 
-  int *dgroup_elt_idx = malloc (sizeof(int) * (n_group + 1));
+  int *dgroup_elt_idx;
+  PDM_malloc(dgroup_elt_idx,(n_group + 1),int);
   dgroup_elt_idx[0] = 0;
   for (int i = 0; i < n_group; i++) {
     dgroup_elt_idx[i+1] = dgroup_elt_idx[i] + dn[i];
   }
 
-  PDM_g_num_t *dgroup_elt = malloc (sizeof(PDM_g_num_t) * dgroup_elt_idx[n_group]);
+  PDM_g_num_t *dgroup_elt;
+  PDM_malloc(dgroup_elt,dgroup_elt_idx[n_group],PDM_g_num_t);
   PDM_g_num_t shift[2] = {0, gn_tria};
   idx = 0;
   for (int i = 0; i < n_group; i++) {
@@ -1514,7 +1533,8 @@ _generate_prism_surf
 
   /* Set up surface part */
   /* Triangles */
-  PDM_g_num_t *dtria_vtx = (PDM_g_num_t *) malloc((n_vtx_tria * dn_tria) * sizeof(PDM_g_num_t));
+  PDM_g_num_t *dtria_vtx;
+  PDM_malloc(dtria_vtx,(n_vtx_tria * dn_tria) ,PDM_g_num_t);
   int idx = 0;
   for (int itria = 0; itria < dn_tria; itria++) {
 
@@ -1574,7 +1594,8 @@ _generate_prism_surf
                                         PDM_OWNERSHIP_KEEP);
 
   /* Quadrangles */
-  PDM_g_num_t *dquad_vtx = (PDM_g_num_t *) malloc((n_vtx_quad * dn_quad) * sizeof(PDM_g_num_t));
+  PDM_g_num_t *dquad_vtx;
+  PDM_malloc(dquad_vtx,(n_vtx_quad * dn_quad) ,PDM_g_num_t);
   idx = 0;
   for (int iquad = 0; iquad < dn_quad; iquad++) {
 
@@ -1663,7 +1684,8 @@ _generate_hexa_surf
   group_idx[6] = group_idx[5] + dcube->nz*dcube->nx;
 
   /* Set up surface part */
-  PDM_g_num_t *delt_vtx = (PDM_g_num_t *) malloc((n_vtx_elt * dn_elt) * sizeof(PDM_g_num_t));
+  PDM_g_num_t *delt_vtx;
+  PDM_malloc(delt_vtx,(n_vtx_elt * dn_elt) ,PDM_g_num_t);
   int idx = 0;
   for (int iquad = 0; iquad < dcube->dn_quad; iquad++) {
 
@@ -1734,7 +1756,8 @@ _gen_poly2d
 
   int dn_vtx = distrib_vtx[i_rank+1] - distrib_vtx[i_rank];
 
-  double *dvtx_coord = malloc(sizeof(double) * dn_vtx * 3);
+  double *dvtx_coord;
+  PDM_malloc(dvtx_coord,dn_vtx * 3,double);
 
 
   double stepx = length / (double) (3*nx);
@@ -1818,7 +1841,8 @@ _gen_poly2d
 
   int dn_tria = distrib_tria[i_rank+1] - distrib_tria[i_rank];
 
-  PDM_g_num_t *dtria_vtx = malloc(sizeof(PDM_g_num_t) * dn_tria * 3);
+  PDM_g_num_t *dtria_vtx;
+  PDM_malloc(dtria_vtx,dn_tria * 3,PDM_g_num_t);
 
   for (int iface = 0; iface < dn_tria; iface++) {
 
@@ -1883,7 +1907,8 @@ _gen_poly2d
 
   int dn_quad = distrib_quad[i_rank+1] - distrib_quad[i_rank];
 
-  PDM_g_num_t *dquad_vtx = malloc(sizeof(PDM_g_num_t) * dn_quad * 4);
+  PDM_g_num_t *dquad_vtx;
+  PDM_malloc(dquad_vtx,dn_quad * 4,PDM_g_num_t);
 
   for (int iface = 0; iface < dn_quad; iface++) {
 
@@ -1910,7 +1935,8 @@ _gen_poly2d
 
   int dn_poly = distrib_poly[i_rank+1] - distrib_poly[i_rank];
 
-  PDM_g_num_t *dpoly_vtx = malloc(sizeof(PDM_g_num_t) * dn_poly * 8);
+  PDM_g_num_t *dpoly_vtx;
+  PDM_malloc(dpoly_vtx,dn_poly * 8,PDM_g_num_t);
 
   for (int iface = 0; iface < dn_poly; iface++) {
 
@@ -1953,7 +1979,8 @@ _gen_poly2d
 
   int dn_bar = distrib_bar[i_rank+1] - distrib_bar[i_rank];
 
-  PDM_g_num_t *dbar_vtx = malloc(sizeof(PDM_g_num_t) * dn_bar * 2);
+  PDM_g_num_t *dbar_vtx;
+  PDM_malloc(dbar_vtx,dn_bar * 2,PDM_g_num_t);
 
   for (int ibar = 0; ibar < dn_bar; ibar++) {
 
@@ -2033,7 +2060,8 @@ _gen_poly2d
   PDM_g_num_t *distrib_point = PDM_compute_uniform_entity_distribution(comm, gn_point);
   int dn_point = (int) (distrib_point[i_rank+1] - distrib_point[i_rank]);
 
-  PDM_g_num_t *dpoint_vtx = malloc (sizeof(PDM_g_num_t) * dn_point);
+  PDM_g_num_t *dpoint_vtx;
+  PDM_malloc(dpoint_vtx,dn_point,PDM_g_num_t);
   for (int ipoint = 0; ipoint < dn_point; ipoint++) {
     PDM_g_num_t g = distrib_point[i_rank] + ipoint;
 
@@ -2123,11 +2151,13 @@ _gen_poly2d
    */
   /* Corners */
   int n_corner = 1;
-  int *dcorner_elt_idx = malloc(sizeof(int) * (n_corner + 1));
+  int *dcorner_elt_idx;
+  PDM_malloc(dcorner_elt_idx,(n_corner + 1),int);
   dcorner_elt_idx[0] = 0;
   dcorner_elt_idx[1] = distrib_point[i_rank+1] - distrib_point[i_rank];
 
-  PDM_g_num_t *dcorner_elt = malloc(sizeof(PDM_g_num_t) * dcorner_elt_idx[n_corner]);
+  PDM_g_num_t *dcorner_elt;
+  PDM_malloc(dcorner_elt,dcorner_elt_idx[n_corner],PDM_g_num_t);
   assert(dcorner_elt_idx[n_corner] == dn_point);
   for (int i = 0; i < dn_point; i++) {
     dcorner_elt[i] = distrib_point[i_rank] + i + 1;
@@ -2147,14 +2177,16 @@ _gen_poly2d
   distrib_ridge[1] = PDM_compute_uniform_entity_distribution(comm,
                                                              ridge_idx[3] - ridge_idx[2]);
 
-  int *dridge_elt_idx = malloc(sizeof(int) * (n_ridge + 1));
+  int *dridge_elt_idx;
+  PDM_malloc(dridge_elt_idx,(n_ridge + 1),int);
   dridge_elt_idx[0] = 0;
   for (int i = 0; i < n_ridge; i++) {
     int dn_ridge = distrib_ridge[i/2][i_rank+1] - distrib_ridge[i/2][i_rank];
     dridge_elt_idx[i+1] = dridge_elt_idx[i] + dn_ridge;
   }
 
-  PDM_g_num_t *dridge_elt = malloc(sizeof(PDM_g_num_t) * dridge_elt_idx[n_ridge]);
+  PDM_g_num_t *dridge_elt;
+  PDM_malloc(dridge_elt,dridge_elt_idx[n_ridge],PDM_g_num_t);
   for (int i = 0; i < n_ridge; i++) {
     int dn_ridge = dridge_elt_idx[i+1] - dridge_elt_idx[i];
     for (int j = 0; j < dn_ridge; j++) {
@@ -2260,7 +2292,8 @@ PDM_dcube_nodal_gen_create
   PDM_MPI_Comm_size(comm, &n_rank);
   PDM_MPI_Comm_rank(comm, &i_rank);
 
-  PDM_dcube_nodal_t *dcube = (PDM_dcube_nodal_t *) malloc(sizeof(PDM_dcube_nodal_t));
+  PDM_dcube_nodal_t *dcube;
+  PDM_malloc(dcube,1,PDM_dcube_nodal_t);
 
   dcube->comm   = comm;
   dcube->nx     = n_vtx_x-1;
@@ -2457,7 +2490,8 @@ PDM_dcube_nodal_gen_build
   PDM_g_num_t *distrib_vtx = PDM_compute_uniform_entity_distribution (dcube->comm, gn_vtx);
   int dn_vtx = (int) (distrib_vtx[i_rank+1] - distrib_vtx[i_rank]);
 
-  double *dvtx_coord = malloc(sizeof(double) * dn_vtx * 3);
+  double *dvtx_coord;
+  PDM_malloc(dvtx_coord,dn_vtx * 3,double);
   PDM_DMesh_nodal_coord_set(dcube->dmesh_nodal,
                             dn_vtx,
                             dvtx_coord,
@@ -2681,7 +2715,7 @@ PDM_dcube_nodal_cart_topo
 
   int n_domain = n_dom_i * n_dom_j * n_dom_k;
 
-  *dcube = (PDM_dcube_nodal_t **) malloc(sizeof(PDM_dcube_nodal_t *) * n_domain);
+  PDM_malloc(*dcube,n_domain,PDM_dcube_nodal_t *);
   PDM_dcube_nodal_t** _dcube = *dcube;
 
   int i_domain = 0;
@@ -2717,9 +2751,12 @@ PDM_dcube_nodal_cart_topo
   /*
    *  Interfaces
    */
-  int          *interface_dn  = (int          *) malloc(sizeof(int          ) * n_interface);
-  PDM_g_num_t **interface_ids = (PDM_g_num_t **) malloc(sizeof(PDM_g_num_t *) * n_interface);
-  int         **interface_dom = (int         **) malloc(sizeof(int         *) * n_interface);
+  int *interface_dn;
+  PDM_malloc(interface_dn,n_interface,int          );
+  PDM_g_num_t **interface_ids;
+  PDM_malloc(interface_ids,n_interface,PDM_g_num_t *);
+  int **interface_dom;
+  PDM_malloc(interface_dom,n_interface,int         *);
 
   int *i_period = PDM_array_zeros_int(n_interface);
 
@@ -2738,11 +2775,11 @@ PDM_dcube_nodal_cart_topo
 
         interface_dn[i_interface] = (int) (distrib_i[i_rank+1] - distrib_i[i_rank]);
 
-        interface_dom[i_interface] = (int *) malloc(sizeof(int) * 2);
+        PDM_malloc(interface_dom[i_interface],2,int);
         interface_dom[i_interface][0] = i_domain1;
         interface_dom[i_interface][1] = i_domain2;
 
-        interface_ids[i_interface] = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * 2 * interface_dn[i_interface]);
+        PDM_malloc(interface_ids[i_interface],2 * interface_dn[i_interface],PDM_g_num_t);
 
         for (int idx = 0; idx < interface_dn[i_interface]; idx++) {
           PDM_g_num_t g = distrib_i[i_rank] + idx;
@@ -2777,11 +2814,11 @@ PDM_dcube_nodal_cart_topo
 
         interface_dn[i_interface] = (int) (distrib_j[i_rank+1] - distrib_j[i_rank]);
 
-        interface_dom[i_interface] = (int *) malloc(sizeof(int) * 2);
+        PDM_malloc(interface_dom[i_interface],2,int);
         interface_dom[i_interface][0] = i_domain1;
         interface_dom[i_interface][1] = i_domain2;
 
-        interface_ids[i_interface] = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * 2 * interface_dn[i_interface]);
+        PDM_malloc(interface_ids[i_interface],2 * interface_dn[i_interface],PDM_g_num_t);
 
         for (int idx = 0; idx < interface_dn[i_interface]; idx++) {
           PDM_g_num_t g = distrib_j[i_rank] + idx;
@@ -2817,11 +2854,11 @@ PDM_dcube_nodal_cart_topo
 
         interface_dn[i_interface] = (int) (distrib_k[i_rank+1] - distrib_k[i_rank]);
 
-        interface_dom[i_interface] = (int *) malloc(sizeof(int) * 2);
+        PDM_malloc(interface_dom[i_interface],2,int);
         interface_dom[i_interface][0] = i_domain1;
         interface_dom[i_interface][1] = i_domain2;
 
-        interface_ids[i_interface] = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * 2 * interface_dn[i_interface]);
+        PDM_malloc(interface_ids[i_interface],2 * interface_dn[i_interface],PDM_g_num_t);
 
         for (int idx = 0; idx < interface_dn[i_interface]; idx++) {
           PDM_g_num_t g = distrib_k[i_rank] + idx;
@@ -2917,7 +2954,8 @@ PDM_generate_lines
   int dn_vtx  = (int) (distrib_vtx [i_rank+1] - distrib_vtx [i_rank]);
   int dn_edge = (int) (distrib_edge[i_rank+1] - distrib_edge[i_rank]);
 
-  double *dvtx_coord = malloc(sizeof(double) * dn_vtx * 3);
+  double *dvtx_coord;
+  PDM_malloc(dvtx_coord,dn_vtx * 3,double);
 
   double step_x = length / (double) (n_g_pts - 1);
 
@@ -2933,7 +2971,8 @@ PDM_generate_lines
   }
 
 
-  PDM_g_num_t *dedge_vtx     = malloc( 2 * dn_edge * sizeof(PDM_g_num_t));
+  PDM_g_num_t *dedge_vtx;
+  PDM_malloc(dedge_vtx, 2 * dn_edge ,PDM_g_num_t);
 
   for (int i_edge = 0; i_edge < dn_edge; ++i_edge) {
 
@@ -2979,10 +3018,14 @@ PDM_generate_cart_topo_lines
 
   int n_domain = n_dom_i;
 
-  PDM_g_num_t **distrib_edge = malloc( n_domain * sizeof(PDM_g_num_t *));
-  PDM_g_num_t **distrib_vtx  = malloc( n_domain * sizeof(PDM_g_num_t *));
-  PDM_g_num_t **dedge_vtx    = malloc( n_domain * sizeof(PDM_g_num_t *));
-  double      **dvtx_coord   = malloc( n_domain * sizeof(double      *));
+  PDM_g_num_t **distrib_edge;
+  PDM_malloc(distrib_edge, n_domain ,PDM_g_num_t *);
+  PDM_g_num_t **distrib_vtx;
+  PDM_malloc(distrib_vtx, n_domain ,PDM_g_num_t *);
+  PDM_g_num_t **dedge_vtx;
+  PDM_malloc(dedge_vtx, n_domain ,PDM_g_num_t *);
+  double **dvtx_coord;
+  PDM_malloc(dvtx_coord, n_domain ,double      *);
 
   *distrib_edge_out = distrib_edge;
   *distrib_vtx_out  = distrib_vtx;
@@ -3012,9 +3055,12 @@ PDM_generate_cart_topo_lines
   /*
    *  Interfaces
    */
-  int          *interface_dn  = (int          *) malloc(sizeof(int          ) * n_interface);
-  PDM_g_num_t **interface_ids = (PDM_g_num_t **) malloc(sizeof(PDM_g_num_t *) * n_interface);
-  int         **interface_dom = (int         **) malloc(sizeof(int         *) * n_interface);
+  int *interface_dn;
+  PDM_malloc(interface_dn,n_interface,int          );
+  PDM_g_num_t **interface_ids;
+  PDM_malloc(interface_ids,n_interface,PDM_g_num_t *);
+  int **interface_dom;
+  PDM_malloc(interface_dom,n_interface,int         *);
 
   int *i_period = PDM_array_zeros_int(n_interface);
 
@@ -3030,11 +3076,11 @@ PDM_generate_cart_topo_lines
 
     interface_dn[i_interface] = (int) (distrib_i[i_rank+1] - distrib_i[i_rank]);
 
-    interface_dom[i_interface] = (int *) malloc(sizeof(int) * 2);
+    PDM_malloc(interface_dom[i_interface],2,int);
     interface_dom[i_interface][0] = i_domain1;
     interface_dom[i_interface][1] = i_domain2;
 
-    interface_ids[i_interface] = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * 2 * interface_dn[i_interface]);
+    PDM_malloc(interface_ids[i_interface],2 * interface_dn[i_interface],PDM_g_num_t);
 
     for (int idx = 0; idx < interface_dn[i_interface]; idx++) {
       interface_ids[i_interface][2*idx  ] = 1 + n_g_pts-1;

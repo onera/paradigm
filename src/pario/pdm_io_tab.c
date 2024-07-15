@@ -209,7 +209,7 @@ static void _def_var
   /* Au premier appel : création du tableau lié à la variable CEDRE num_var_cedre */
 
   if (tab == NULL) {
-    PDM_io_tabs[_num_var_cedre] = (PDM_io_array_t *) malloc(sizeof(PDM_io_array_t));
+    PDM_malloc(PDM_io_tabs[_num_var_cedre],1,PDM_io_array_t);
     tab = PDM_io_tabs[_num_var_cedre];
     tab->taille_donnee = taille_donnee;
     tab->t_n_composantes = t_n_composantes;
@@ -253,7 +253,7 @@ void PDM_io_array_write_beg
 {
   if (PDM_io_tabs == NULL) {
     _num_var_cedre_max = num_var_cedre_max;
-    PDM_io_tabs = (PDM_io_array_t **) malloc(_num_var_cedre_max * sizeof(PDM_io_array_t *));
+    PDM_malloc(PDM_io_tabs,_num_var_cedre_max ,PDM_io_array_t *);
 
     for (int i = 0; i < _num_var_cedre_max; i++)
       PDM_io_tabs[i] = NULL;

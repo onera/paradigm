@@ -138,9 +138,12 @@ int main(int argc, char *argv[])
   }
   int dn_elmt = (distrib_init_elmt[i_rank+1] - distrib_init_elmt[i_rank]) / freq ;
 
-  int          *pn_elmt      = malloc(n_part * sizeof(int           ));
-  PDM_g_num_t **pln_to_to_gn = malloc(n_part * sizeof(PDM_g_num_t * ));
-  int         **pfield       = malloc(n_part * sizeof(int         * ));
+  int *pn_elmt;
+  PDM_malloc(pn_elmt,n_part ,int           );
+  PDM_g_num_t **pln_to_to_gn;
+  PDM_malloc(*pln_to_to_gn,n_part ,PDM_g_num_t * );
+  int **pfield;
+  PDM_malloc(*pfield,n_part ,int         * );
 
   for(int i_part = 0; i_part < n_part; ++i_part) {
 
@@ -148,8 +151,8 @@ int main(int argc, char *argv[])
     PDM_g_num_t n_elmt_add_rand = rand() % ( percent ) - percent / 2;
     pn_elmt[i_part] = dn_elmt + n_elmt_add_rand;
 
-    pln_to_to_gn[i_part] = malloc(pn_elmt[i_part] * sizeof(PDM_g_num_t));
-    pfield      [i_part] = malloc(pn_elmt[i_part] * sizeof(int        ));
+    PDM_malloc(pln_to_to_gn[i_part],pn_elmt[i_part] ,PDM_g_num_t);
+    pfield      PDM_malloc([i_part],pn_elmt[i_part] ,int        );
     for(int i = 0; i < pn_elmt[i_part]; ++i) {
       unsigned int seed = (unsigned int) (distrib_init_elmt[i_rank] + i);
       srand(seed);
@@ -205,7 +208,8 @@ int main(int argc, char *argv[])
   /*
    *   Stride CST check
    */
-  PDM_g_num_t* dfield_post = malloc(n_elmt_in_block * sizeof(PDM_g_num_t));
+  PDM_g_num_t *dfield_post;
+  PDM_malloc(dfield_post,n_elmt_in_block ,PDM_g_num_t);
   for(int i = 0; i < n_elmt_in_block; ++i) {
     // dfield_post[i] = i;
     dfield_post[i] = blk_gnum[i];
@@ -242,7 +246,8 @@ int main(int argc, char *argv[])
   /*
    * Stride Var check
    */
-  int* dfield_strid = malloc(n_elmt_in_block * sizeof(int));
+  int *dfield_strid;
+  PDM_malloc(dfield_strid,n_elmt_in_block ,int);
   for(int i = 0; i < n_elmt_in_block; ++i) {
     dfield_strid[i] = 1; // TO DO --> Generation aléatoire de strid entre 1 et 6 par exemple
   }

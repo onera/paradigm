@@ -48,10 +48,14 @@ int main(int argc, char *argv[])
   int n_part1 = 3;
   int n_part2 = 3;
 
-  int *n_elt1 = malloc(sizeof(int) * n_part1);
-  PDM_g_num_t **gnum_elt1 = malloc(sizeof(PDM_g_num_t *) * n_part1);
-  int **part1_to_part2_idx = malloc(sizeof(int *) * n_part1);
-  PDM_g_num_t **part1_to_part2 = malloc(sizeof(PDM_g_num_t *) * n_part1);
+  int *n_elt1;
+  PDM_malloc(n_elt1,n_part1,int);
+  PDM_g_num_t **gnum_elt1;
+  PDM_malloc(*gnum_elt1,n_part1,PDM_g_num_t *);
+  int **part1_to_part2_idx;
+  PDM_malloc(*part1_to_part2_idx,n_part1,int *);
+  PDM_g_num_t **part1_to_part2;
+  PDM_malloc(*part1_to_part2,n_part1,PDM_g_num_t *);
 
   int *n_elt2 = n_elt1;
   PDM_g_num_t **gnum_elt2 = gnum_elt1;
@@ -68,8 +72,8 @@ int main(int argc, char *argv[])
   }
 
   for (int i = 0; i < n_part1; i++) {
-    gnum_elt1[i]          = malloc(sizeof(PDM_g_num_t) * n_elt1[i]);
-    part1_to_part2_idx[i] = malloc(sizeof(int)         * (n_elt1[i] + 1));
+    PDM_malloc(gnum_elt1[i],n_elt1[i],PDM_g_num_t);
+    PDM_malloc(part1_to_part2_idx[i],(n_elt1[i] + 1),int);
   }
 
 
@@ -130,7 +134,7 @@ int main(int argc, char *argv[])
   }
 
   for (int i = 0; i < n_part1; i++) {
-    part1_to_part2[i] = malloc(sizeof(PDM_g_num_t) * part1_to_part2_idx[i][n_elt1[i]]);
+    PDM_malloc(part1_to_part2[i],part1_to_part2_idx[i][n_elt1[i]],PDM_g_num_t);
   }
 
   if (i_rank == 0) {
@@ -216,14 +220,16 @@ int main(int argc, char *argv[])
   // }
 
 
-  int         **part1_stride = malloc(sizeof(int         *) * n_part1);
-  PDM_g_num_t **part1_data   = malloc(sizeof(PDM_g_num_t *) * n_part1);
+  int **part1_stride;
+  PDM_malloc(*part1_stride,n_part1,int         *);
+  PDM_g_num_t **part1_data;
+  PDM_malloc(*part1_data,n_part1,PDM_g_num_t *);
 
   for (int i = 0; i < n_part1; i++) {
 
     // log_trace("\npart1 %d\n", i);
 
-    part1_stride[i] = malloc(sizeof(int) * n_elt1[i]);
+    PDM_malloc(part1_stride[i],n_elt1[i],int);
 
     int s_part1_data = 0;
     for (int j = 0; j < n_elt1[i]; j++) {
@@ -234,7 +240,7 @@ int main(int argc, char *argv[])
     // PDM_log_trace_array_int(part1_stride[i], n_elt1[i], "part1_stride : ");
 
     // log_trace("g_num -> data:\n");
-    part1_data[i] = malloc(sizeof(PDM_g_num_t) * s_part1_data);
+    PDM_malloc(part1_data[i],s_part1_data,PDM_g_num_t);
     int idx = 0;
     for (int j = 0; j < n_elt1[i]; j++) {
       // int idx0 = idx;
@@ -300,10 +306,11 @@ int main(int argc, char *argv[])
    *  Exchange an interleaved, constant-stride field
    */
   // log_trace("\n\n---- Exchange an interleaved, constant-stride field ----\n");
-  PDM_g_num_t **part1_field = malloc(sizeof(PDM_g_num_t *) * n_part1);
+  PDM_g_num_t **part1_field;
+  PDM_malloc(*part1_field,n_part1,PDM_g_num_t *);
   for (int i = 0; i < n_part1; i++) {
     // int n = part1_to_part2_idx[i][n_elt1[i]];
-    // part1_field[i] = malloc(sizeof(PDM_g_num_t) * n * 2);
+    // PDM_malloc(part1_field[i],n * 2,PDM_g_num_t);
 
     // for (int j = 0; j < n_elt1[i]; j++) {
     //   for (int k = part1_to_part2_idx[i][j]; k < part1_to_part2_idx[i][j+1]; k++) {
@@ -312,7 +319,7 @@ int main(int argc, char *argv[])
     //   }
     // }
     int n = n_elt1[i];
-    part1_field[i] = malloc(sizeof(PDM_g_num_t) * n * 2);
+    PDM_malloc(part1_field[i],n * 2,PDM_g_num_t);
 
     for (int j = 0; j < n_elt1[i]; j++) {
       part1_field[i][j  ] = gnum_elt1[i][j];

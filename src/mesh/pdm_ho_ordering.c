@@ -530,10 +530,10 @@ _ho_ordering_create
  )
 {
   int id = n_ho_orderings;
-  ho_orderings[id] = malloc (sizeof(PDM_ho_ordering_t));
+  PDM_malloc(ho_orderings[id],1,PDM_ho_ordering_t);
 
   PDM_ho_ordering_t *hoo = ho_orderings[id];
-  hoo->name = malloc (sizeof(char) * (strlen(name) + 1));
+  PDM_malloc(hoo->name,(strlen(name) + 1),char);
   strcpy(hoo->name, name);
 
   for (PDM_Mesh_nodal_elt_t type = PDM_MESH_NODAL_POINT;
@@ -622,7 +622,7 @@ void
 
     s_ho_orderings = 2*n_default_orderings;
     n_ho_orderings = 0;
-    ho_orderings = malloc (sizeof(PDM_ho_ordering_t *) * s_ho_orderings);
+    PDM_malloc(ho_orderings,s_ho_orderings,PDM_ho_ordering_t *);
 
 
     int order, n_nodes;
@@ -1007,10 +1007,12 @@ PDM_ho_ordering_user_to_ijk_add
               name, (int) t_elt, order);
   }
 
-  int *_user_to_ijk = malloc (sizeof(int) * n_nodes * elt_dim);
+  int *_user_to_ijk;
+  PDM_malloc(_user_to_ijk,n_nodes * elt_dim,int);
   memcpy (_user_to_ijk, user_to_ijk, sizeof(int) * n_nodes * elt_dim);
 
-  _ordering_t *_ord = malloc (sizeof(_ordering_t));
+  _ordering_t *_ord;
+  PDM_malloc(_ord,1,_ordering_t);
   _ord->order = order;
   _ord->user_to_ijk = _user_to_ijk;
   _ord->ijk_to_user = ijk_to_user;

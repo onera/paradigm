@@ -241,8 +241,10 @@ _dmesh_nodal_dump_vtk
     PDM_g_num_t          *dconnec            = PDM_DMesh_nodal_section_std_get    (dmn, geom_kind, id_section);
     PDM_Mesh_nodal_elt_t  t_elt              = PDM_DMesh_nodal_section_type_get   (dmn, geom_kind, id_section);
 
-    int         *dconnec_idx    = (int         * ) malloc( (n_elt+1) * sizeof(int        ));
-    PDM_g_num_t *delmt_ln_to_gn = (PDM_g_num_t * ) malloc( (n_elt  ) * sizeof(PDM_g_num_t));
+    int *dconnec_idx;
+    PDM_malloc(dconnec_idx, (n_elt+1) ,int        );
+    PDM_g_num_t *delmt_ln_to_gn;
+    PDM_malloc(delmt_ln_to_gn, (n_elt  ) ,PDM_g_num_t);
 
     int strid = PDM_Mesh_nodal_n_vtx_elt_get(t_elt, order);
     dconnec_idx[0] = 0;
@@ -314,8 +316,8 @@ _dmesh_nodal_dump_vtk
       PDM_log_trace_array_long(delmt_ln_to_gn, n_elt, "  delmt_ln_to_gn (shifted) : ");
 
       n_field = 1;
-      field = malloc (sizeof(double *) * n_field);
-      field[0] = malloc (sizeof(double) * n_elt);
+      PDM_malloc(field,n_field,double *);
+      PDM_malloc(field[0],n_elt,double);
       for (int i = 0; i < n_elt; i++) {
         assert (pelt_group_idx[i+1] == pelt_group_idx[i] + 1);
         field[0][i] = (double) pelt_group[i];
@@ -423,8 +425,10 @@ _bezier_bounding_boxes
         t_elt != PDM_MESH_NODAL_HEXA8     &&
         t_elt != PDM_MESH_NODAL_HEXAHO) continue;
 
-    int         *dconnec_idx    = (int         * ) malloc( (n_elt+1) * sizeof(int        ));
-    PDM_g_num_t *delmt_ln_to_gn = (PDM_g_num_t * ) malloc( (n_elt  ) * sizeof(PDM_g_num_t));
+    int *dconnec_idx;
+    PDM_malloc(dconnec_idx, (n_elt+1) ,int        );
+    PDM_g_num_t *delmt_ln_to_gn;
+    PDM_malloc(delmt_ln_to_gn, (n_elt  ) ,PDM_g_num_t);
 
     int strid = PDM_Mesh_nodal_n_vtx_elt_get(t_elt, order);
     dconnec_idx[0] = 0;
@@ -472,18 +476,23 @@ _bezier_bounding_boxes
     double* pvtx_coord_out = tmp_pvtx_coord[0];
 
     int n_nodes = PDM_Mesh_nodal_n_vtx_elt_get(t_elt, order);
-    double *lagrange_coord = malloc (sizeof(double) * n_nodes * 3);
-    double *bezier_coord   = malloc (sizeof(double) * n_nodes * 3);
-    double *elt_coord      = malloc (sizeof(double) * n_elt * n_nodes * 3);
-    int    *elt_vtx        = malloc (sizeof(int)    * n_elt * n_nodes);
+    double *lagrange_coord;
+    PDM_malloc(lagrange_coord,n_nodes * 3,double);
+    double *bezier_coord;
+    PDM_malloc(bezier_coord,n_nodes * 3,double);
+    double *elt_coord;
+    PDM_malloc(elt_coord,n_elt * n_nodes * 3,double);
+    int *elt_vtx;
+    PDM_malloc(elt_vtx,n_elt * n_nodes,int);
 
     double *matrix = NULL;
     if (order > 3) {
       int n_nodes_quad = PDM_Mesh_nodal_n_vtx_elt_get(PDM_MESH_NODAL_QUADHO, order);
-      matrix = malloc(sizeof(double) * n_nodes_quad * n_nodes_quad);
+      PDM_malloc(matrix,n_nodes_quad * n_nodes_quad,double);
     }
 
-    double *extents = malloc (sizeof(double) * n_elt * 6);
+    double *extents;
+    PDM_malloc(extents,n_elt * 6,double);
     int idx2 = 0;
     for (int i = 0; i < n_elt; i++) {
       double *_min = extents + 6*i;

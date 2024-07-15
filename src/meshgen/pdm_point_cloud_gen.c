@@ -123,7 +123,8 @@ PDM_point_cloud_gen_random
 
     double _char_length = 1e-6 * PDM_MAX(length[0], PDM_MAX(length[1], length[2]));
 
-    double *char_length = malloc(sizeof(double) * (*ln_pts));
+    double *char_length;
+    PDM_malloc(char_length,(*ln_pts),double);
 
     for (int i = 0; i < *ln_pts; i++) {
       char_length[i] = _char_length;
@@ -142,7 +143,7 @@ PDM_point_cloud_gen_random
   }
 
   else {
-    *g_num = malloc(sizeof(PDM_g_num_t) * (*ln_pts));
+    PDM_malloc(*g_num,(*ln_pts),PDM_g_num_t);
     for (int i = 0; i < *ln_pts; i++) {
       (*g_num)[i] = distrib_pts[i_rank] + i + 1;
     }
@@ -178,7 +179,8 @@ PDM_dpoint_cloud_gen_random
    */
 
   int dn_pts = (int) (_distrib_pts[i_rank+1] - _distrib_pts[i_rank]);
-  double* _dpts_coord = malloc (dn_pts * 3 * sizeof(double));
+  double *_dpts_coord;
+  PDM_malloc(_dpts_coord,dn_pts * 3 ,double);
 
   if (_dpts_coord == NULL) {
     PDM_error(__FILE__, __LINE__, 0, "Failed to allocate coords (size = %d * 3 * sizeof(double))\n", dn_pts);
@@ -260,8 +262,10 @@ PDM_point_cloud_gen_cartesian
 
   *n_pts = (int) (distrib[i_rank+1] - distrib[i_rank]);
 
-  double      *_pts_coord    = malloc(sizeof(double)      * (*n_pts) * 3);
-  PDM_g_num_t *_pts_ln_to_gn = malloc(sizeof(PDM_g_num_t) * (*n_pts));
+  double *_pts_coord;
+  PDM_malloc(_pts_coord,(*n_pts) * 3,double);
+  PDM_g_num_t *_pts_ln_to_gn;
+  PDM_malloc(_pts_ln_to_gn,(*n_pts),PDM_g_num_t);
 
   double step_x = (x_max - x_min) / (double) (nx - 1);
   double step_y = (y_max - y_min) / (double) (ny - 1);
@@ -317,7 +321,8 @@ PDM_dpoint_cloud_gen_cartesian
 
   int dn_pts = (int) (distrib[i_rank+1] - distrib[i_rank]);
 
-  double      *_pts_coord    = malloc(sizeof(double)      * dn_pts * 3);
+  double *_pts_coord;
+  PDM_malloc(_pts_coord,dn_pts * 3,double);
 
   double step_x = 0;
   double step_y = 0;

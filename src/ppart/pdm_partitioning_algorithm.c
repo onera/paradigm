@@ -16,6 +16,7 @@
  *----------------------------------------------------------------------------*/
 
 #include "pdm.h"
+#include "pdm_priv.h"
 #include "pdm_mpi.h"
 #include "pdm_config.h"
 #include "pdm_priv.h"
@@ -141,7 +142,8 @@ PDM_part_assemble_partitions
    * On recréer un tableau pourtant dans scotch et metis le part est en int64 ...
    *     Il faudrait changer le ext_dependancies ..
    */
-  PDM_g_num_t* dpart_ln_to_gn = (PDM_g_num_t * ) malloc( sizeof(PDM_g_num_t) * dn_entity );
+  PDM_g_num_t *dpart_ln_to_gn;
+  PDM_malloc(dpart_ln_to_gn,dn_entity ,PDM_g_num_t);
   for(int i = 0; i < dn_entity; ++i){
     dpart_ln_to_gn[i] = (PDM_g_num_t) dentity_to_part[i] + 1;
   }
@@ -166,11 +168,12 @@ PDM_part_assemble_partitions
   /*
    * Generate global numbering
    */
-  int*             dentity_stri = (int         *) malloc( sizeof(int        ) * dn_entity );
+  int *dentity_stri;
+  PDM_malloc(dentity_stri,dn_entity ,int        );
 
   PDM_g_num_t* dentity_ln_to_gn = NULL;
   if(dentity_gnum == NULL) {
-    dentity_ln_to_gn = (PDM_g_num_t *) malloc( sizeof(PDM_g_num_t) * dn_entity );
+    PDM_malloc(dentity_ln_to_gn,dn_entity ,PDM_g_num_t);
     PDM_g_num_t shift_g = entity_distribution[i_rank] + 1;
     for(int i = 0; i < dn_entity; ++i){
       dentity_stri    [i] = 1;
@@ -247,12 +250,12 @@ PDM_part_assemble_partitions
 
 
   /* Reshape pentity_ln_to_gn */
-  *pentity_ln_to_gn = (PDM_g_num_t **) malloc( sizeof(PDM_g_num_t *) * n_part_block);
+  PDM_malloc(*pentity_ln_to_gn,n_part_block,PDM_g_num_t *);
   PDM_g_num_t **_pentity_ln_to_gn = *pentity_ln_to_gn;
 
   int **_pentity_init_location = NULL;
   if(have_init_location == 1) {
-    *pentity_init_location = (int **) malloc( sizeof(int *) * n_part_block);
+    PDM_malloc(*pentity_init_location,n_part_block,int *);
     _pentity_init_location = *pentity_init_location;
   }
 
@@ -260,14 +263,14 @@ PDM_part_assemble_partitions
   for(int i_part = 0; i_part < n_part_block; ++i_part){
 
     // int _pn_entity = (*pn_entity)[i_part];
-    _pentity_ln_to_gn[i_part] = (PDM_g_num_t *) malloc( sizeof(PDM_g_num_t) * _pn_entity[i_part]);
+    PDM_malloc(_pentity_ln_to_gn[i_part],_pn_entity[i_part],PDM_g_num_t);
 
     for(int i_elmt = 0; i_elmt < _pn_entity[i_part]; ++i_elmt){
       _pentity_ln_to_gn[i_part][i_elmt] = pentity_ln_to_gn_tmp[offset + i_elmt];
     }
 
     if(have_init_location == 1) {
-      _pentity_init_location[i_part] = (int *) malloc( sizeof(int) * 3 * _pn_entity[i_part]);
+      PDM_malloc(_pentity_init_location[i_part],3 * _pn_entity[i_part],int);
       for(int i_elmt = 0; i_elmt < _pn_entity[i_part]; ++i_elmt){
         _pentity_init_location[i_part][3*i_elmt  ] = pentity_init_location_tmp[3*(offset + i_elmt)  ];
         _pentity_init_location[i_part][3*i_elmt+1] = pentity_init_location_tmp[3*(offset + i_elmt)+1];
@@ -291,13 +294,13 @@ PDM_part_assemble_partitions
    PDM_free(*pn_entity);
     *pn_entity = PDM_array_zeros_int(dn_part);
    PDM_free(*pentity_ln_to_gn);
-    *pentity_ln_to_gn = (PDM_g_num_t **) malloc( sizeof(PDM_g_num_t *) * dn_part);
+    PDM_malloc(*pentity_ln_to_gn,dn_part,PDM_g_num_t *);
     for(int i_part = 0; i_part < dn_part; ++i_part) {
       (*pentity_ln_to_gn)[i_part] = NULL;
     }
     if(pentity_init_location != NULL) {
      PDM_free(*pentity_init_location);
-      *pentity_init_location = (int **) malloc( sizeof(int *) * dn_part);
+      PDM_malloc(*pentity_init_location,dn_part,int *);
       for(int i_part = 0; i_part < dn_part; ++i_part) {
         (*pentity_init_location)[i_part] = NULL;
       }
@@ -345,7 +348,7 @@ PDM_part_reverse_pcellface
         int      ***pface_cell
 )
 {
-  *pface_cell = (int **) malloc( n_part * sizeof(int *) );
+  PDM_malloc(*pface_cell, n_part ,int *);
 
   for (int i_part = 0; i_part < n_part; i_part++)
   {
@@ -502,7 +505,8 @@ PDM_part_distgroup_to_partgroup
   /*
    * Compute the groups distribution - Mandatory to have the link between rank and group
    */
-  PDM_g_num_t** groups_distribution = (PDM_g_num_t **) malloc( n_group * sizeof(PDM_g_num_t *));
+  PDM_g_num_t* *groups_distribution;
+  PDM_malloc(groups_distribution, n_group ,PDM_g_num_t *);
 
   for(int i_group = 0; i_group < n_group; ++i_group) {
     int dn_entity_group = dgroup_idx[i_group+1] - dgroup_idx[i_group];
@@ -529,7 +533,8 @@ PDM_part_distgroup_to_partgroup
                                                       comm);
   } else {
 
-    double* weights = malloc(dgroup_tot_size * sizeof(double));
+    double *weights;
+    PDM_malloc(weights,dgroup_tot_size ,double);
     for(int i = 0; i < dgroup_tot_size; ++i) {
       weights[i] = 1.;
     }
@@ -555,8 +560,10 @@ PDM_part_distgroup_to_partgroup
    *       - All rank have a distribution of each group
    * part_data should contains : ( position in distributed array + group_id )
    */
-  int*         part_stri = (int         *) malloc( sizeof(int        )     * dgroup_tot_size );
-  PDM_g_num_t* part_data = (PDM_g_num_t *) malloc( sizeof(PDM_g_num_t) * 2 * dgroup_tot_size );
+  int *part_stri;
+  PDM_malloc(part_stri,dgroup_tot_size ,int        );
+  PDM_g_num_t *part_data;
+  PDM_malloc(part_data,2 * dgroup_tot_size ,PDM_g_num_t);
 
   int idx_data = 0;
   int idx_stri = 0;
@@ -670,22 +677,23 @@ PDM_part_distgroup_to_partgroup
    * Donc sur chaque partition on a dans la numerotation des faces la liste des frontières
    * On doit maintenant recréer les tableaux identiques à pdm_part
    */
-  *pgroup_ln_to_gn = (PDM_g_num_t **) malloc( n_part * sizeof(PDM_g_num_t *) );
-  *pgroup          = (int         **) malloc( n_part * sizeof(int         *) );
-  *pgroup_idx      = (int         **) malloc( n_part * sizeof(int         *) );
+  PDM_malloc(*pgroup_ln_to_gn, n_part ,PDM_g_num_t *);
+  PDM_malloc(*pgroup, n_part ,int         *);
+  PDM_malloc(*pgroup_idx, n_part ,int         *);
 
   /* Shortcut */
   PDM_g_num_t** _group_ln_to_gn = *pgroup_ln_to_gn;
   int**         _group          = *pgroup;
   int**         _group_idx      = *pgroup_idx;
 
-  int* count_group = (int *) malloc( (n_group + 1) * sizeof(int));
+  int *count_group;
+  PDM_malloc(count_group, (n_group + 1) ,int);
   for(int i_part = 0; i_part < n_part; ++i_part) {
 
     /*
      * All partition allocate is own array of size n_group
      */
-    _group_idx[i_part] = (int *) malloc( (n_group + 1) * sizeof(int) );
+    PDM_malloc(_group_idx[i_part], (n_group + 1) ,int);
     for(int i_group = 0; i_group < n_group+1; ++i_group){
       _group_idx[i_part][i_group] = 0;
       count_group[i_group] = 0;
@@ -711,8 +719,8 @@ PDM_part_distgroup_to_partgroup
     }
     int pgroup_tot_size = _group_idx[i_part][n_group];
 
-    _group_ln_to_gn[i_part] = (PDM_g_num_t * ) malloc( pgroup_tot_size * sizeof(PDM_g_num_t));
-    _group[i_part]          = (int         * ) malloc( pgroup_tot_size * sizeof(int        ));
+    PDM_malloc(_group_ln_to_gn[i_part], pgroup_tot_size ,PDM_g_num_t);
+    PDM_malloc(_group[i_part], pgroup_tot_size ,int        );
 
     /*
      * Panic verbose
@@ -839,7 +847,8 @@ _dconnectivity_to_pconnectivity_abs
   /*
    * Prepare data
    */
-  int* blk_stri = (int *) malloc( sizeof(int) * dn_entity);
+  int *blk_stri;
+  PDM_malloc(blk_stri,dn_entity,int);
   for(int i_elmt = 0; i_elmt < dn_entity; ++i_elmt){
     blk_stri[i_elmt] = dconnectivity_idx[i_elmt+1] - dconnectivity_idx[i_elmt];
   }
@@ -876,7 +885,7 @@ _dconnectivity_to_pconnectivity_abs
     }
   }
 
-  *pconnectivity_idx = (int         **) malloc( n_part * sizeof(int         *) );
+  PDM_malloc(*pconnectivity_idx, n_part ,int         *);
   int** _pconnectivity_idx       = *pconnectivity_idx;
 
   for(int i_part = 0; i_part < n_part; ++i_part){
@@ -914,18 +923,18 @@ _create_pchild_local_num
   int         ***unique_order_ptr
 )
 {
-  *pn_child_entity   = (int          *) malloc( n_part * sizeof(int          ) );
-  *pchild_ln_to_gn   = (PDM_g_num_t **) malloc( n_part * sizeof(PDM_g_num_t *) );
+  PDM_malloc(*pn_child_entity, n_part ,int          );
+  PDM_malloc(*pchild_ln_to_gn, n_part ,PDM_g_num_t *);
   int*  _pn_child_entity         = *pn_child_entity;
   PDM_g_num_t** _pchild_ln_to_gn = *pchild_ln_to_gn;
-  *unique_order_ptr = (int**) malloc(n_part * sizeof(int*));
+  PDM_malloc(*unique_order_ptr,n_part ,int*);
   int** unique_order = *unique_order_ptr;
   for(int i_part = 0; i_part < n_part; ++i_part){
     /*
      * Save array
      */
     int n_child = pn_child[i_part];
-    _pchild_ln_to_gn[i_part] = (PDM_g_num_t *) malloc( n_child * sizeof(PDM_g_num_t));
+    PDM_malloc(_pchild_ln_to_gn[i_part], n_child ,PDM_g_num_t);
 
     for(int i_child = 0; i_child < n_child; ++i_child) {
       _pchild_ln_to_gn[i_part][i_child] = PDM_ABS(pconnectivity_abs[i_part][i_child]);
@@ -935,7 +944,7 @@ _create_pchild_local_num
      * Deduce ln_to_gn
      */
     // printf("Sort data between : 0 and %d \n", n_child);
-    unique_order[i_part] = (int *) malloc( n_child* sizeof(int));
+    PDM_malloc(unique_order[i_part], n_child,int);
     int n_elmt_sort = PDM_inplace_unique_long2(_pchild_ln_to_gn[i_part], unique_order[i_part], 0, n_child-1);
     _pn_child_entity[i_part] = n_elmt_sort;
 
@@ -976,7 +985,7 @@ _pconnectivity_with_local_num
   int         ***pconnectivity
 )
 {
-  *pconnectivity = (int**) malloc( n_part * sizeof(int*) );
+  PDM_malloc(*pconnectivity, n_part ,int*);
   int** _pconnectivity = *pconnectivity;
   for(int i_part = 0; i_part < n_part; ++i_part){
     /*
@@ -999,7 +1008,7 @@ _pconnectivity_with_local_num
     // }
 
     int n_child = pn_child[i_part];
-    _pconnectivity[i_part]   = (int*) malloc( n_child * sizeof(int        ));
+    PDM_malloc(_pconnectivity[i_part], n_child ,int        );
     for(int idx = 0; idx < n_child; ++idx) {
       int g_sgn  = PDM_SIGN(pconnectivity_abs[i_part][idx]);
       int l_elmt = unique_order[i_part][idx];
@@ -1033,15 +1042,18 @@ PDM_part_multi_dconnectivity_to_pconnectivity_sort
   PDM_MPI_Comm_rank(comm, &i_rank);
   PDM_MPI_Comm_size(comm, &n_rank);
 
-  *pconnectivity_idx = (int***) malloc(n_section * sizeof(int**));
-  int* pn_vtx = (int*)malloc(n_part * sizeof(int));
+  PDM_malloc(*pconnectivity_idx,n_section ,int**);
+  int *pn_vtx;
+  PDM_malloc(pn_vtx,n_part ,int);
   for (int i=0; i<n_part; ++i) pn_vtx[i]=0;
-  PDM_g_num_t*** pconnectivity_abs = (PDM_g_num_t***) malloc(n_section * sizeof(PDM_g_num_t**));
+  PDM_g_num_t** *pconnectivity_abs;
+  PDM_malloc(pconnectivity_abs,n_section ,PDM_g_num_t**);
 
   for (int i_section=0; i_section<n_section; ++i_section) {
     int* dconnectivity_section_idx = dconnectivity_idx + section_idx[i_section];
     int dn_entity = entity_distribution[i_section][i_rank+1] - entity_distribution[i_section][i_rank];
-    int* dconnectivity_section_idx_at_0 = (int*)malloc((dn_entity+1) * sizeof(int));
+    int *dconnectivity_section_idx_at_0;
+    PDM_malloc(dconnectivity_section_idx_at_0,(dn_entity+1) ,int);
     for (int i=0; i<dn_entity+1; ++i) {
       dconnectivity_section_idx_at_0[i] = dconnectivity_section_idx[i] - dconnectivity_section_idx[0];
     }
@@ -1068,9 +1080,10 @@ PDM_part_multi_dconnectivity_to_pconnectivity_sort
 
   // 1. Create local numbering
   // Caution the recv connectivity can be negative
-  PDM_g_num_t** pconnectivity_abs_cat = (PDM_g_num_t**)malloc( n_part *sizeof(PDM_g_num_t*));
+  PDM_g_num_t* *pconnectivity_abs_cat;
+  PDM_malloc(pconnectivity_abs_cat, n_part ,PDM_g_num_t*);
   for (int i_part=0; i_part<n_part; ++i_part) {
-    pconnectivity_abs_cat[i_part] = (PDM_g_num_t*)malloc( pn_vtx[i_part] *sizeof(PDM_g_num_t));
+    PDM_malloc(pconnectivity_abs_cat[i_part], pn_vtx[i_part] ,PDM_g_num_t);
     int pos = 0;
     for (int i_section=0; i_section<n_section; ++i_section) {
       int n_elt = pn_entity[i_section][i_part];
@@ -1091,9 +1104,10 @@ PDM_part_multi_dconnectivity_to_pconnectivity_sort
     &unique_order
   );
   // 2. create pconnectivity with local numbering
-  int** pconnectivity_cat = (int**)malloc(n_part * sizeof(int*));
+  int* *pconnectivity_cat;
+  PDM_malloc(pconnectivity_cat,n_part ,int*);
   for (int i_part=0; i_part<n_part; ++i_part) {
-    pconnectivity_cat[i_part] = (int*)malloc(pn_vtx[i_part] * sizeof(int));
+    PDM_malloc(pconnectivity_cat[i_part],pn_vtx[i_part] ,int);
   }
   _pconnectivity_with_local_num(
     n_part,
@@ -1103,15 +1117,15 @@ PDM_part_multi_dconnectivity_to_pconnectivity_sort
     &pconnectivity_cat
   );
   int pos = 0;
-  *pconnectivity = (int***)malloc(n_section * sizeof(int**));
+  PDM_malloc(*pconnectivity,n_section ,int**);
   for (int i_section=0; i_section<n_section; ++i_section) {
-    (*pconnectivity)[i_section] = (int**)malloc(n_part * sizeof(int*));
+    PDM_malloc((*pconnectivity)[i_section],n_part ,int*);
     assert(n_part==1); // TODOUX
     for(int i_part = 0; i_part < n_part; ++i_part) {
       int n_elmts = pn_entity[i_section][i_part];
       int n_vtx_section = (*pconnectivity_idx)[i_section][i_part][n_elmts];
 
-      (*pconnectivity)[i_section][i_part] = (int*)malloc(n_vtx_section * sizeof(int));
+      PDM_malloc((*pconnectivity)[i_section][i_part],n_vtx_section ,int);
       for (int i=0; i<n_vtx_section; ++i) {
         (*pconnectivity)[i_section][i_part][i] = pconnectivity_cat[i_part][pos];
         ++pos;
@@ -1122,13 +1136,14 @@ PDM_part_multi_dconnectivity_to_pconnectivity_sort
   ///*
   // * Free
   // */
+
   for(int i_section = 0; i_section < n_section; ++i_section) {
     for(int i_part = 0; i_part < n_part; ++i_part) {
-     PDM_free(pconnectivity_abs[i_section][i_part]);
+      PDM_free(pconnectivity_abs[i_section][i_part]);
     }
-   PDM_free(pconnectivity_abs[i_section]);
+    PDM_free(pconnectivity_abs[i_section]);
   }
- PDM_free(pconnectivity_abs);
+  PDM_free(pconnectivity_abs);
 
   for(int i_part = 0; i_part < n_part; ++i_part) {
    PDM_free(pconnectivity_abs_cat[i_part]);
@@ -1210,7 +1225,8 @@ PDM_part_dconnectivity_to_pconnectivity_sort
   // 1. Create local numbering
   // Caution the recv connectivity can be negative
   int** unique_order;
-  int* pn_child = (int*)malloc(n_part * sizeof(int));
+  int *pn_child;
+  PDM_malloc(pn_child,n_part ,int);
   for(int i_part = 0; i_part < n_part; ++i_part) {
     int n_elmts = pn_entity[i_part];
     pn_child[i_part] = _pconnectivity_idx[i_part][n_elmts];
@@ -1371,7 +1387,8 @@ PDM_part_dconnectivity_to_pconnectivity_hash
   /*
    * Prepare data
    */
-  int* blk_stri = (int *) malloc( sizeof(int) * dn_entity);
+  int *blk_stri;
+  PDM_malloc(blk_stri,dn_entity,int);
   for(int i_elmt = 0; i_elmt < dn_entity; ++i_elmt){
     blk_stri[i_elmt] = dconnectivity_idx[i_elmt+1] - dconnectivity_idx[i_elmt];
   }
@@ -1413,10 +1430,10 @@ PDM_part_dconnectivity_to_pconnectivity_hash
   /*
    * Post-treatment - Caution the recv connectivity can be negative
    */
-  *pchild_ln_to_gn   = (PDM_g_num_t **) malloc( n_part * sizeof(PDM_g_num_t *) );
-  *pconnectivity     = (int         **) malloc( n_part * sizeof(int         *) );
-  *pconnectivity_idx = (int         **) malloc( n_part * sizeof(int         *) );
-  *pn_child_entity   = (int          *) malloc( n_part * sizeof(int          ) );
+  PDM_malloc(*pchild_ln_to_gn, n_part ,PDM_g_num_t *);
+  PDM_malloc(*pconnectivity, n_part ,int         *);
+  PDM_malloc(*pconnectivity_idx, n_part ,int         *);
+  PDM_malloc(*pn_child_entity, n_part ,int          );
 
   /* Shortcut */
   PDM_g_num_t** _pchild_ln_to_gn = *pchild_ln_to_gn;
@@ -1437,10 +1454,11 @@ PDM_part_dconnectivity_to_pconnectivity_hash
     /*
      * Save array
      */
-    _pchild_ln_to_gn[i_part] = (PDM_g_num_t *) malloc( _pconnectivity_idx[i_part][n_elmts] * sizeof(PDM_g_num_t));
-    _pconnectivity[i_part]   = (int *        ) malloc( _pconnectivity_idx[i_part][n_elmts] * sizeof(int        ));
+    PDM_malloc(_pchild_ln_to_gn[i_part], _pconnectivity_idx[i_part][n_elmts] ,PDM_g_num_t);
+    PDM_malloc(_pconnectivity[i_part], _pconnectivity_idx[i_part][n_elmts] ,int        );
 
-    PDM_g_num_t *_keys_and_values = (PDM_g_num_t *) malloc( 2*_pconnectivity_idx[i_part][n_elmts] * sizeof(PDM_g_num_t));
+    PDM_g_num_t *_keys_and_values;
+    PDM_malloc(_keys_and_values, 2*_pconnectivity_idx[i_part][n_elmts] ,PDM_g_num_t);
 
     /* Create hash table */
     int keymax = (int) (1.3 * _pconnectivity_idx[i_part][n_elmts]); //next prime number following 1.3*nbofvalues
@@ -1630,10 +1648,12 @@ PDM_part_generate_entity_graph_comm
   /*
    * First part : we put in data the triplet (iRank, iPart, iEntityLoc)
    */
-  int** part_stri = (int ** ) malloc( n_part * sizeof(int *));
-  int** part_data = (int ** ) malloc( n_part * sizeof(int *));
+  int* *part_stri;
+  PDM_malloc(part_stri, n_part ,int *);
+  int* *part_data;
+  PDM_malloc(part_data, n_part ,int *);
   for(int i_part = 0; i_part < n_part; ++i_part) {
-    part_stri[i_part] = (int *) malloc( pn_entity[i_part] * sizeof(int));
+    PDM_malloc(part_stri[i_part], pn_entity[i_part] ,int);
     int idx_data = 0;
     if (pentity_hint != NULL) {
       //First pass to count
@@ -1646,7 +1666,7 @@ PDM_part_generate_entity_graph_comm
       idx_data = pn_entity[i_part];
     }
     //Second pass to fill
-    part_data[i_part] = (int *) malloc( 3 * idx_data * sizeof(int));
+    PDM_malloc(part_data[i_part], 3 * idx_data ,int);
     if (pentity_hint != NULL){
       idx_data = 0;
       for(int i_entity = 0; i_entity < pn_entity[i_part]; ++i_entity) {
@@ -1700,7 +1720,7 @@ PDM_part_generate_entity_graph_comm
                                    comm);
 
     PDM_g_num_t* ptb_entity_distribution = PDM_part_to_block_distrib_index_get(ptb);
-    _entity_distribution = malloc((n_rank+1) * sizeof(PDM_g_num_t));
+    PDM_malloc(_entity_distribution,(n_rank+1) ,PDM_g_num_t);
 
     for(int i = 0; i < n_rank+1; ++i) {
       _entity_distribution[i] = ptb_entity_distribution[i];
@@ -1724,13 +1744,16 @@ PDM_part_generate_entity_graph_comm
                           &blk_stri,
                 (void **) &blk_data);
   // get the procs from which the data comes from
-  int** proc_part_stri = (int ** ) malloc( n_part * sizeof(int *));
-  int** proc_part_data = (int ** ) malloc( n_part * sizeof(int *));
-  int** part_part_data = (int ** ) malloc( n_part * sizeof(int *));
+  int* *proc_part_stri;
+  PDM_malloc(proc_part_stri, n_part ,int *);
+  int* *proc_part_data;
+  PDM_malloc(proc_part_data, n_part ,int *);
+  int* *part_part_data;
+  PDM_malloc(part_part_data, n_part ,int *);
   for(int i_part = 0; i_part < n_part; ++i_part) {
-    proc_part_stri[i_part] = (int *) malloc( pn_entity[i_part] * sizeof(int));
-    proc_part_data[i_part] = (int *) malloc( pn_entity[i_part] * sizeof(int));
-    part_part_data[i_part] = (int *) malloc( pn_entity[i_part] * sizeof(int));
+    PDM_malloc(proc_part_stri[i_part], pn_entity[i_part] ,int);
+    PDM_malloc(proc_part_data[i_part], pn_entity[i_part] ,int);
+    PDM_malloc(part_part_data[i_part], pn_entity[i_part] ,int);
     for (int i=0; i<pn_entity[i_part]; ++i) {
       proc_part_stri[i_part][i] = 1;
       proc_part_data[i_part][i] = i_rank;
@@ -1807,7 +1830,7 @@ PDM_part_generate_entity_graph_comm
    */
   int* blk_priority_data = NULL;
   if(setup_priority == 1){
-    blk_priority_data = (int * ) malloc( n_entity_block * sizeof(int));
+    PDM_malloc(blk_priority_data, n_entity_block ,int);
   }
 
   int idx_comp = 0;     /* Compressed index use to fill the buffer */
@@ -1944,9 +1967,9 @@ PDM_part_generate_entity_graph_comm
   // printf(" PDM_part_assemble_partitions PDM_part_generate_entity_graph_comm flag 5 \n");
   // PDM_MPI_Barrier(comm);
   /* Allocate */
-  *pproc_bound_idx   = (int **) malloc( ( n_part ) * sizeof(int * ));
-  *ppart_bound_idx   = (int **) malloc( ( n_part ) * sizeof(int * ));
-  *pentity_bound     = (int **) malloc( ( n_part ) * sizeof(int * ));
+  PDM_malloc(*pproc_bound_idx, ( n_part ) ,int * );
+  PDM_malloc(*ppart_bound_idx, ( n_part ) ,int * );
+  PDM_malloc(*pentity_bound, ( n_part ) ,int * );
 
   /* Shortcut */
   int** _pproc_bound_idx   = *pproc_bound_idx;
@@ -1971,8 +1994,10 @@ PDM_part_generate_entity_graph_comm
 
     /* Rebuild in a specific array all the information to sort properly */
     n_connect = n_connect/3;
-    PDM_g_num_t* connect_entity = (PDM_g_num_t * ) malloc( n_connect * 3 * sizeof(PDM_g_num_t ));
-    int*         connect_info   = (int         * ) malloc( n_connect * 2 * sizeof(int         ));
+    PDM_g_num_t *connect_entity;
+    PDM_malloc(connect_entity, n_connect * 3 ,PDM_g_num_t );
+    int *connect_info;
+    PDM_malloc(connect_info, n_connect * 2 ,int         );
     //printf("[%i][%i] n_connect::%d\n", i_rank, i_part, n_connect);
 
     idx_part  = 0;
@@ -2009,7 +2034,8 @@ PDM_part_generate_entity_graph_comm
     /*
      * Sort
      */
-    int* order = (int *) malloc( n_connect * sizeof(int) );
+    int *order;
+    PDM_malloc(order, n_connect ,int);
     PDM_order_gnum_s(connect_entity, 3, order, n_connect);
 
     /*
@@ -2026,7 +2052,7 @@ PDM_part_generate_entity_graph_comm
     /* We need to recompute for each opposite part */
     _pproc_bound_idx[i_part]   = PDM_array_zeros_int(n_rank + 1);
     _ppart_bound_idx[i_part]   = PDM_array_zeros_int(part_distribution[n_rank] + 1);
-    _pentity_bound[i_part]     = (int *) malloc( ( 4 * n_connect                ) * sizeof(int));
+    PDM_malloc(_pentity_bound[i_part], ( 4 * n_connect                ) ,int);
 
 
     /* Rebuild */
@@ -2140,10 +2166,11 @@ PDM_compute_graph_comm_entity_ownership
                                                       n_part,
                                                       comm);
 
-  int **tmp_rank_and_part = malloc(sizeof(int *) * n_part);
+  int **tmp_rank_and_part;
+  PDM_malloc(*tmp_rank_and_part,n_part,int *);
 
   for (int i_part = 0; i_part < n_part; i_part++) {
-    tmp_rank_and_part[i_part] = malloc(sizeof(int) * n_entity[i_part] * 2);
+    PDM_malloc(tmp_rank_and_part[i_part],n_entity[i_part] * 2,int);
     for (int i_entity = 0; i_entity < n_entity[i_part]; i_entity++) {
       tmp_rank_and_part[i_part][2*i_entity    ] = i_rank;
       tmp_rank_and_part[i_part][2*i_entity + 1] = i_part;
@@ -2175,11 +2202,13 @@ PDM_compute_graph_comm_entity_ownership
                                  NULL,
                      (void ***) &tmp_rank_and_part);
 
-  int  *_n_owned_entity    = malloc(sizeof(int  ) * n_part);
-  int **_lnum_owned_entity = malloc(sizeof(int *) * n_part);
+  int *_n_owned_entity;
+  PDM_malloc(_n_owned_entity,n_part,int  );
+  int **_lnum_owned_entity;
+  PDM_malloc(*_lnum_owned_entity,n_part,int *);
 
   for (int i_part = 0; i_part < n_part; i_part++) {
-    _lnum_owned_entity[i_part] = malloc(sizeof(int) * n_entity[i_part]);
+    PDM_malloc(_lnum_owned_entity[i_part],n_entity[i_part],int);
     _n_owned_entity   [i_part] = 0;
     for (int i_entity = 0; i_entity < n_entity[i_part]; i_entity++) {
       if (tmp_rank_and_part[i_part][2*i_entity    ] == i_rank &&
@@ -2237,7 +2266,8 @@ PDM_compute_graph_comm_entity_ownership_single_part
                                                       1,
                                                       comm);
 
-  int *tmp_rank = malloc(sizeof(int) * n_entity);
+  int *tmp_rank;
+  PDM_malloc(tmp_rank,n_entity,int);
 
   for (int i_entity = 0; i_entity < n_entity; i_entity++) {
     tmp_rank[i_entity] = i_rank;
@@ -2268,7 +2298,8 @@ PDM_compute_graph_comm_entity_ownership_single_part
                      (void ***) &tmp_rank_clean);
 
   int  _n_owned_entity    = 0;
-  int *_lnum_owned_entity = malloc(sizeof(int) * n_entity);
+  int *_lnum_owned_entity;
+  PDM_malloc(_lnum_owned_entity,n_entity,int);
 
   for (int i_entity = 0; i_entity < n_entity; i_entity++) {
     if (tmp_rank_clean[0][i_entity] == i_rank) {
@@ -2468,7 +2499,8 @@ PDM_part_dentity_group_to_pentity_group
 
   int dn_entity = entity_distribution[i_rank+1] - entity_distribution[i_rank];
 
-  int* dentity_group_n = (int * ) malloc( dn_entity * sizeof(int));
+  int *dentity_group_n;
+  PDM_malloc(dentity_group_n, dn_entity ,int);
   for(int i = 0; i < dn_entity; ++i) {
     dentity_group_n[i] = dentity_group_idx[i+1] - dentity_group_idx[i];
   }
@@ -2486,9 +2518,10 @@ PDM_part_dentity_group_to_pentity_group
          (unsigned char ***) pentity_group);
 
 
-  int **_pentity_group_idx = malloc( (n_part) * sizeof(int *));
+  int **_pentity_group_idx;
+  PDM_malloc(*_pentity_group_idx, (n_part) ,int *);
   for(int i_part = 0; i_part < n_part; ++i_part) {
-    _pentity_group_idx[i_part] = malloc( (pn_entity[i_part]+1) * sizeof(int));
+    PDM_malloc(_pentity_group_idx[i_part], (pn_entity[i_part]+1) ,int);
     _pentity_group_idx[i_part][0] = 0;
     //log_trace("pn_entity[i_part] = %i \n", pn_entity[i_part]);
     for(int i = 0; i < pn_entity[i_part]; ++i) {
@@ -2584,7 +2617,8 @@ PDM_extend_mesh
                                                       n_part,
                                                       comm);
 
-  int* dual_graph_n = (int *) malloc( dn_entity * sizeof(int));
+  int *dual_graph_n;
+  PDM_malloc(dual_graph_n, dn_entity ,int);
   for(int i = 0; i < dn_entity; ++i){
     dual_graph_n[i] = dual_graph_idx[i+1] - dual_graph_idx[i];
   }
@@ -2606,7 +2640,8 @@ PDM_extend_mesh
              (void ***)  &part_dual_graph);
  PDM_free(dual_graph_n);
 
-  int** part_dual_graph_idx = (int ** ) malloc( n_part * sizeof(int*));
+  int* *part_dual_graph_idx;
+  PDM_malloc(part_dual_graph_idx, n_part ,int*);
   for(int i_part = 0; i_part < n_part; ++i_part) {
     part_dual_graph_idx[i_part] = PDM_array_new_idx_from_sizes_int(part_dual_graph_n[i_part], pn_entity[i_part]);
     // PDM_log_trace_array_int(part_dual_graph_n[i_part], pn_entity[i_part], "part_dual_graph_n[i_part]::");
@@ -2620,10 +2655,10 @@ PDM_extend_mesh
    *     - We collect all boundary cells
    *     - we append to the older ln_to_gn all new entitiy
    */
-  *pn_entity_extented = (int *) malloc( sizeof(int) * n_part);
+  PDM_malloc(*pn_entity_extented,n_part,int);
   int* _pn_entity_extented = *pn_entity_extented;
 
-  *pentity_ln_to_gn_extended = (PDM_g_num_t **) malloc( sizeof(PDM_g_num_t *) * n_part);
+  PDM_malloc(*pentity_ln_to_gn_extended,n_part,PDM_g_num_t *);
   PDM_g_num_t** _pentity_ln_to_gn_extended = *pentity_ln_to_gn_extended;
   for(int i_part = 0; i_part < n_part; ++i_part) {
 
@@ -2631,7 +2666,7 @@ PDM_extend_mesh
     printf(" new_size         :: %i \n", new_size);
     printf(" pn_entity[i_part]:: %i \n", pn_entity[i_part]);
 
-    _pentity_ln_to_gn_extended[i_part] = (PDM_g_num_t *) malloc( new_size * sizeof(PDM_g_num_t));
+    PDM_malloc(_pentity_ln_to_gn_extended[i_part], new_size ,PDM_g_num_t);
 
     for(int i_entity = 0; i_entity < pn_entity[i_part]; ++i_entity ) {
       _pentity_ln_to_gn_extended[i_part][i_entity] = pentity_ln_to_gn[i_part][i_entity];
@@ -2704,8 +2739,10 @@ PDM_setup_connectivity_idx
  PDM_g_num_t **dentity1_dentity2_new
 )
 {
-  int         *_dentity1_dentity2_idx = (int         *) malloc( (dn_entity1 + 1     ) * sizeof(int        ));
-  PDM_g_num_t *_dentity1_dentity2_new = (PDM_g_num_t *) malloc( (stride * dn_entity1) * sizeof(PDM_g_num_t));
+  int *_dentity1_dentity2_idx;
+  PDM_malloc(_dentity1_dentity2_idx, (dn_entity1 + 1     ) ,int        );
+  PDM_g_num_t *_dentity1_dentity2_new;
+  PDM_malloc(_dentity1_dentity2_new, (stride * dn_entity1) ,PDM_g_num_t);
 
   _dentity1_dentity2_idx[0] = 0;
   for(int i = 0; i < dn_entity1; ++i) {
@@ -2772,16 +2809,18 @@ PDM_compute_face_edge_from_face_vtx
   PDM_MPI_Comm_size(comm, &n_rank);
 
   PDM_g_num_t _max_vtx_gnum = 0;
-  PDM_g_num_t **pface_vtx_g_num  = (PDM_g_num_t **) malloc(n_part * sizeof(PDM_g_num_t *));
-  int         **pface_vtx_n      = (int         **) malloc(n_part * sizeof(int         *));
+  PDM_g_num_t **pface_vtx_g_num;
+  PDM_malloc(*pface_vtx_g_num,n_part ,PDM_g_num_t *);
+  int **pface_vtx_n;
+  PDM_malloc(*pface_vtx_n,n_part ,int         *);
 
   for(int i_part = 0; i_part < n_part; ++i_part) {
     for(int i_vtx = 0; i_vtx < pn_vtx[i_part]; ++i_vtx) {
       _max_vtx_gnum = PDM_MAX(pvtx_ln_to_gn[i_part][i_vtx], _max_vtx_gnum);
     }
 
-    pface_vtx_n     [i_part] = (int         *) malloc(                       pn_face[i_part]  * sizeof(int        ));
-    pface_vtx_g_num [i_part] = (PDM_g_num_t *) malloc( pface_vtx_idx[i_part][pn_face[i_part]] * sizeof(PDM_g_num_t));
+    pface_vtx_n     PDM_malloc([i_part],                       pn_face[i_part]  ,int        );
+    pface_vtx_g_num PDM_malloc([i_part], pface_vtx_idx[i_part][pn_face[i_part]] ,PDM_g_num_t);
     for(int i_face = 0; i_face < pn_face[i_part]; ++i_face) {
 
       pface_vtx_n[i_part][i_face] = pface_vtx_idx[i_part][i_face+1] - pface_vtx_idx[i_part][i_face];
@@ -2823,7 +2862,8 @@ PDM_compute_face_edge_from_face_vtx
 
   int dn_face = PDM_part_to_block_n_elt_block_get(ptb);
 
-  int *dface_vtx_idx = malloc( (dn_face+1) * sizeof(int));
+  int *dface_vtx_idx;
+  PDM_malloc(dface_vtx_idx, (dn_face+1) ,int);
   dface_vtx_idx[0] = 0;
   for(int i = 0; i < dn_face; ++i) {
     dface_vtx_idx[i+1] = dface_vtx_idx[i] + dface_vtx_n[i];
@@ -2840,10 +2880,14 @@ PDM_compute_face_edge_from_face_vtx
   PDM_g_num_t* face_distribution = PDM_part_to_block_distrib_index_get(ptb);
 
   int n_edge_elt_tot = dface_vtx_idx[dn_face];
-  PDM_g_num_t* tmp_dface_edge         = (PDM_g_num_t *) malloc(     n_edge_elt_tot    * sizeof(PDM_g_num_t) );
-  int*         tmp_parent_elmt_pos    = (int         *) malloc(     n_edge_elt_tot    * sizeof(int        ) );
-  int*         tmp_dface_edge_vtx_idx = (int         *) malloc( ( n_edge_elt_tot + 1) * sizeof(int        ) );
-  PDM_g_num_t* tmp_dface_edge_vtx     = (PDM_g_num_t *) malloc( 2 * n_edge_elt_tot    * sizeof(PDM_g_num_t) );
+  PDM_g_num_t *tmp_dface_edge;
+  PDM_malloc(tmp_dface_edge,     n_edge_elt_tot    ,PDM_g_num_t);
+  int *tmp_parent_elmt_pos;
+  PDM_malloc(tmp_parent_elmt_pos,     n_edge_elt_tot    ,int        );
+  int *tmp_dface_edge_vtx_idx;
+  PDM_malloc(tmp_dface_edge_vtx_idx, ( n_edge_elt_tot + 1) ,int        );
+  PDM_g_num_t *tmp_dface_edge_vtx;
+  PDM_malloc(tmp_dface_edge_vtx, 2 * n_edge_elt_tot    ,PDM_g_num_t);
 
   int n_elmt_current = 0;
   int n_edge_current = 0;
@@ -2944,7 +2988,8 @@ PDM_compute_face_edge_from_face_vtx
    */
   for(int i_part = 0; i_part < n_part; ++i_part) {
 
-    int* order = malloc(pn_vtx[i_part] * sizeof(int));
+    int *order;
+    PDM_malloc(order,pn_vtx[i_part] ,int);
 
     assert(pn_vtx[i_part] == _ptmp_n_vtx[i_part]);
     assert(_pedge_vtx_idx[i_part][_pn_edge[i_part]] == 2 * _pn_edge[i_part]);
@@ -3067,14 +3112,16 @@ PDM_pconnectivity_to_pconnectivity_keep
   PDM_part_to_part_gnum1_come_from_get(ptp, &gnum1_come_from_idx, &gnum1_come_from);
 
   /* Create buffer */
-  int         **send_entity1_entity2_n = malloc(n_part1 * sizeof(int         *));
-  PDM_g_num_t **send_entity1_entity2   = malloc(n_part1 * sizeof(PDM_g_num_t *));
+  int **send_entity1_entity2_n;
+  PDM_malloc(*send_entity1_entity2_n,n_part1 ,int         *);
+  PDM_g_num_t **send_entity1_entity2;
+  PDM_malloc(*send_entity1_entity2,n_part1 ,PDM_g_num_t *);
   for(int i_part = 0; i_part < n_part1; ++i_part) {
 
     /*
      * Compute stride size
      */
-    send_entity1_entity2_n[i_part] = malloc( gnum1_come_from_idx[i_part][n_ref_entity1[i_part]] * sizeof(int));
+    PDM_malloc(send_entity1_entity2_n[i_part], gnum1_come_from_idx[i_part][n_ref_entity1[i_part]] ,int);
 
     int n_tot_send = 0;
     for(int j = 0; j < n_ref_entity1[i_part]; ++j) {
@@ -3086,13 +3133,14 @@ PDM_pconnectivity_to_pconnectivity_keep
       }
     }
 
-    // int* send_entity1_entity2_idx = malloc( (gnum1_come_from_idx[i_part][n_ref_entity1[i_part]] + 1) * sizeof(int));
+    // int *send_entity1_entity2_idx;
+ PDM_malloc(send_entity1_entity2_idx, (gnum1_come_from_idx[i_part][n_ref_entity1[i_part]] + 1) ,int);
     // send_entity1_entity2_idx[0] = 0;
     // for(int i = 0; i < gnum1_come_from_idx[i_part][n_ref_entity1[i_part]]; ++i) {
     //   send_entity1_entity2_idx[i+1] = send_entity1_entity2_idx[i] + send_entity1_entity2_n[i_part][i];
     // }
 
-    send_entity1_entity2[i_part] = malloc( n_tot_send * sizeof(PDM_g_num_t));
+    PDM_malloc(send_entity1_entity2[i_part], n_tot_send ,PDM_g_num_t);
     int idx_write = 0;
     for(int j = 0; j < n_ref_entity1[i_part]; ++j) {
       int i_entity1 = ref_l_num_entity1[i_part][j]-1;
@@ -3135,13 +3183,17 @@ PDM_pconnectivity_to_pconnectivity_keep
   /*
    * Post-treatment
    */
-  int          *_n_part2_entity2           = malloc(n_part2 * sizeof(int          ));
-  int         **_part2_entity1_entity2_idx = malloc(n_part2 * sizeof(int         *));
-  int         **_part2_entity1_entity2     = malloc(n_part2 * sizeof(int         *));
-  PDM_g_num_t **_part2_entity2_ln_to_gn    = malloc(n_part2 * sizeof(PDM_g_num_t *));
+  int *_n_part2_entity2;
+  PDM_malloc(_n_part2_entity2,n_part2 ,int          );
+  int **_part2_entity1_entity2_idx;
+  PDM_malloc(*_part2_entity1_entity2_idx,n_part2 ,int         *);
+  int **_part2_entity1_entity2;
+  PDM_malloc(*_part2_entity1_entity2,n_part2 ,int         *);
+  PDM_g_num_t **_part2_entity2_ln_to_gn;
+  PDM_malloc(*_part2_entity2_ln_to_gn,n_part2 ,PDM_g_num_t *);
   for(int i_part = 0; i_part < n_part2; ++i_part) {
 
-    _part2_entity1_entity2_idx[i_part] = malloc( (n_part2_entity1[i_part] + 1) * sizeof(int));
+    PDM_malloc(_part2_entity1_entity2_idx[i_part], (n_part2_entity1[i_part] + 1) ,int);
 
     /* Compute recv stride */
     _part2_entity1_entity2_idx[i_part][0] = 0;
@@ -3150,9 +3202,10 @@ PDM_pconnectivity_to_pconnectivity_keep
     }
     int n_recv_entity1_entity2 = _part2_entity1_entity2_idx[i_part][n_part2_entity1[i_part]];
 
-    _part2_entity2_ln_to_gn[i_part] = malloc( n_recv_entity1_entity2      * sizeof(PDM_g_num_t));
+    PDM_malloc(_part2_entity2_ln_to_gn[i_part], n_recv_entity1_entity2      ,PDM_g_num_t);
 
-    int *unique_order_entity2     = (int         * ) malloc(n_recv_entity1_entity2 * sizeof(int        ));
+    int *unique_order_entity2;
+    PDM_malloc(unique_order_entity2,n_recv_entity1_entity2 ,int        );
     for(int i = 0; i < n_recv_entity1_entity2; ++i) {
       _part2_entity2_ln_to_gn[i_part][i] = PDM_ABS(recv_entity1_entity2[i_part][i]);
     }
@@ -3163,7 +3216,7 @@ PDM_pconnectivity_to_pconnectivity_keep
     PDM_realloc(_part2_entity2_ln_to_gn[i_part] ,_part2_entity2_ln_to_gn[i_part] ,  n_extract_entity2      ,PDM_g_num_t);
 
     /* Recompute local numbering */
-    _part2_entity1_entity2 [i_part] = malloc( n_recv_entity1_entity2 * sizeof(int        ));
+    _part2_entity1_entity2 PDM_malloc([i_part], n_recv_entity1_entity2 ,int        );
 
     for(int idx = 0; idx < n_recv_entity1_entity2; ++idx) {
       int g_sgn  = PDM_SIGN(recv_entity1_entity2[i_part][idx]);
@@ -3196,7 +3249,8 @@ PDM_pconnectivity_to_pconnectivity_keep
   for(int i_part = 0; i_part < n_part2; ++i_part) {
     PDM_gnum_set_from_parents (gnum_extract, i_part, _n_part2_entity2[i_part], _part2_entity2_ln_to_gn[i_part]);
   }
-  PDM_g_num_t **_part2_entity2_child_ln_to_gn = (PDM_g_num_t **) malloc( n_part2 * sizeof(PDM_g_num_t *));
+  PDM_g_num_t **_part2_entity2_child_ln_to_gn;
+  PDM_malloc(*_part2_entity2_child_ln_to_gn, n_part2 ,PDM_g_num_t *);
   PDM_gnum_compute(gnum_extract);
 
   for (int i_part = 0; i_part < n_part2; i_part++){
@@ -3374,15 +3428,18 @@ PDM_pconnectivity_to_pconnectivity_from_location_keep
   PDM_part_to_part_gnum1_come_from_get(ptp, &gnum1_come_from_idx, &gnum1_come_from);
 
   /* Create buffer */
-  int         **send_entity1_entity2_n        = malloc(n_part1 * sizeof(int         *));
-  PDM_g_num_t **send_entity1_entity2          = malloc(n_part1 * sizeof(PDM_g_num_t *));
-  int         **send_entity1_entity2_location = malloc(n_part1 * sizeof(int         *));
+  int **send_entity1_entity2_n;
+  PDM_malloc(*send_entity1_entity2_n,n_part1 ,int         *);
+  PDM_g_num_t **send_entity1_entity2;
+  PDM_malloc(*send_entity1_entity2,n_part1 ,PDM_g_num_t *);
+  int **send_entity1_entity2_location;
+  PDM_malloc(*send_entity1_entity2_location,n_part1 ,int         *);
   for(int i_part = 0; i_part < n_part1; ++i_part) {
 
     /*
      * Compute stride size
      */
-    send_entity1_entity2_n[i_part] = malloc( gnum1_come_from_idx[i_part][n_ref_entity1[i_part]] * sizeof(int));
+    PDM_malloc(send_entity1_entity2_n[i_part], gnum1_come_from_idx[i_part][n_ref_entity1[i_part]] ,int);
 
     int n_tot_send = 0;
     for(int j = 0; j < n_ref_entity1[i_part]; ++j) {
@@ -3394,8 +3451,8 @@ PDM_pconnectivity_to_pconnectivity_from_location_keep
       }
     }
 
-    send_entity1_entity2         [i_part] = malloc(     n_tot_send * sizeof(PDM_g_num_t));
-    send_entity1_entity2_location[i_part] = malloc( 3 * n_tot_send * sizeof(int        ));
+    send_entity1_entity2         PDM_malloc([i_part],     n_tot_send ,PDM_g_num_t);
+    PDM_malloc(send_entity1_entity2_location[i_part], 3 * n_tot_send ,int        );
     int idx_write = 0;
     for(int j = 0; j < n_ref_entity1[i_part]; ++j) {
       for(int k = gnum1_come_from_idx[i_part][j]; k < gnum1_come_from_idx[i_part][j+1]; ++k) {
@@ -3468,14 +3525,19 @@ PDM_pconnectivity_to_pconnectivity_from_location_keep
   /*
    * Post-treatment
    */
-  int          *_n_part2_entity2                = malloc(n_part2 * sizeof(int          ));
-  int         **_part2_entity1_entity2_idx      = malloc(n_part2 * sizeof(int         *));
-  int         **_part2_entity1_entity2          = malloc(n_part2 * sizeof(int         *));
-  PDM_g_num_t **_part2_entity2_ln_to_gn         = malloc(n_part2 * sizeof(PDM_g_num_t *));
-  int         **_part2_entity2_to_part1_entity2 = malloc(n_part2 * sizeof(int         *));
+  int *_n_part2_entity2;
+  PDM_malloc(_n_part2_entity2,n_part2 ,int          );
+  int **_part2_entity1_entity2_idx;
+  PDM_malloc(*_part2_entity1_entity2_idx,n_part2 ,int         *);
+  int **_part2_entity1_entity2;
+  PDM_malloc(*_part2_entity1_entity2,n_part2 ,int         *);
+  PDM_g_num_t **_part2_entity2_ln_to_gn;
+  PDM_malloc(*_part2_entity2_ln_to_gn,n_part2 ,PDM_g_num_t *);
+  int **_part2_entity2_to_part1_entity2;
+  PDM_malloc(*_part2_entity2_to_part1_entity2,n_part2 ,int         *);
   for(int i_part = 0; i_part < n_part2; ++i_part) {
 
-    _part2_entity1_entity2_idx[i_part] = malloc( (n_part2_entity1[i_part] + 1) * sizeof(int));
+    PDM_malloc(_part2_entity1_entity2_idx[i_part], (n_part2_entity1[i_part] + 1) ,int);
 
     // PDM_log_trace_array_int(recv_entity1_entity2_n[i_part], n_connect, "recv_entity1_entity2_n ::");
     // PDM_log_trace_array_int(recv_entity1_entity2_n[i_part],
@@ -3495,10 +3557,12 @@ PDM_pconnectivity_to_pconnectivity_from_location_keep
     int n_recv_entity1_entity2 = _part2_entity1_entity2_idx[i_part][n_part2_entity1[i_part]];
 
 
-    _part2_entity2_ln_to_gn        [i_part] = malloc(     n_recv_entity1_entity2      * sizeof(PDM_g_num_t));
+    _part2_entity2_ln_to_gn        PDM_malloc([i_part],     n_recv_entity1_entity2      ,PDM_g_num_t);
 
-    int *unique_order_entity2     = malloc( n_recv_entity1_entity2 * sizeof(int));
-    // int* order                    = malloc( n_recv_entity1_entity2 * sizeof(int));
+    int *unique_order_entity2;
+    PDM_malloc(unique_order_entity2, n_recv_entity1_entity2 ,int);
+    // int *order;
+ PDM_malloc(order, n_recv_entity1_entity2 ,int);
     for(int i = 0; i < n_recv_entity1_entity2; ++i) {
       _part2_entity2_ln_to_gn[i_part][i] = PDM_ABS(recv_entity1_entity2[i_part][i]);
     }
@@ -3511,7 +3575,7 @@ PDM_pconnectivity_to_pconnectivity_from_location_keep
     PDM_realloc(_part2_entity2_ln_to_gn[i_part] ,_part2_entity2_ln_to_gn[i_part] ,  n_extract_entity2      ,PDM_g_num_t);
 
     // Keep location link
-    _part2_entity2_to_part1_entity2[i_part] = malloc( 3 * n_extract_entity2 * sizeof(int  ));
+    PDM_malloc(_part2_entity2_to_part1_entity2[i_part], 3 * n_extract_entity2 ,int  );
     for(int i = 0; i < n_recv_entity1_entity2; ++i) {
       int l_elmt = unique_order_entity2[i];
       // C'est maybe ecraser plusieurs fois
@@ -3523,7 +3587,7 @@ PDM_pconnectivity_to_pconnectivity_from_location_keep
     // PDM_log_trace_array_int(_part2_entity2_to_part1_entity2[i_part], 3*n_extract_entity2, "_part2_entity2_to_part1_entity2 :");
 
     /* Recompute local numbering */
-    _part2_entity1_entity2 [i_part] = malloc( n_recv_entity1_entity2 * sizeof(int        ));
+    _part2_entity1_entity2 PDM_malloc([i_part], n_recv_entity1_entity2 ,int        );
 
     for(int idx = 0; idx < n_recv_entity1_entity2; ++idx) {
       int g_sgn  = PDM_SIGN(recv_entity1_entity2[i_part][idx]);

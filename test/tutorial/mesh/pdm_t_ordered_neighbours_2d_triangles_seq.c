@@ -122,7 +122,7 @@ const int      n_vtx_seg,
   double step = 1. / (double) (n_vtx_seg - 1);
   double noise = 0.49 * step;
 
-  *vtx_coord = (double *) malloc(sizeof(double) * (*n_vtx) * 3);
+  PDM_malloc(*vtx_coord,(*n_vtx) * 3,double);
   int idx = 0;
   for (int j = 0; j < n_vtx_seg; j++) {
     double y = step * j;
@@ -140,7 +140,7 @@ const int      n_vtx_seg,
   }
 
   /* Edges */
-  *edge_vtx = (int *) malloc(sizeof(int) * (*n_edge) * 2);
+  PDM_malloc(*edge_vtx,(*n_edge) * 2,int);
   idx = 0;
   /* Horizontal edges */
   for (int j = 0; j < n_vtx_seg; j++) {
@@ -180,8 +180,8 @@ const int      n_vtx_seg,
   int idx_diagonal = 2*n_vtx_seg*(n_vtx_seg - 1);
 
   /* Faces */
-  *face_edge = (int *) malloc(sizeof(int) * (*n_face) * 3);
-  *face_vtx  = (int *) malloc(sizeof(int) * (*n_face) * 3);
+  PDM_malloc(*face_edge,(*n_face) * 3,int);
+  PDM_malloc(*face_vtx,(*n_face) * 3,int);
   int idx2 = 0;
   idx = 0;
   for (int j = 0; j < n_vtx_seg-1; j++) {
@@ -260,9 +260,11 @@ void get_ordered_face_vtx
   }
 
   int idx = 0;
-  int *face_vtx_long     = malloc( 2* count * sizeof(int));
-  int *face_vtx_long_idx = malloc( (n_face+1) * sizeof(int));
-  *face_vtx_ordered_idx = (int * ) malloc( (n_face+1) * sizeof(int));
+  int *face_vtx_long;
+  PDM_malloc(face_vtx_long, 2* count ,int);
+  int *face_vtx_long_idx;
+  PDM_malloc(face_vtx_long_idx, (n_face+1) ,int);
+  PDM_malloc(*face_vtx_ordered_idx, (n_face+1) ,int);
 
   for (int i = 0; i < n_face; i++) {
     face_vtx_long_idx[i] = idx;
@@ -294,7 +296,7 @@ void get_ordered_face_vtx
   int idx_get;
   int length;
   int target;
-  *face_vtx_ordered     = (int * ) malloc(count * sizeof(int));
+  PDM_malloc(*face_vtx_ordered,count ,int);
 
   for (int i = 0; i < n_face; i++) {
 
@@ -497,10 +499,14 @@ int main(int argc, char *argv[])
   int idx_vtx_ordered_face_neighbours = 0;
   int idx_vtx_ordered_vtx_neighbours  = 0;
 
-  int *vtx_ordered_face_neighbours     = malloc(vtx_face_idx[n_vtx] * sizeof(int));
-  int *vtx_ordered_face_neighbours_idx = malloc((n_vtx+1) * sizeof(int));
-  int *vtx_ordered_vtx_neighbours      = malloc(vtx_vtx_idx[n_vtx] * sizeof(int));
-  int *vtx_ordered_vtx_neighbours_idx  = malloc((n_vtx+1) * sizeof(int));
+  int *vtx_ordered_face_neighbours;
+  PDM_malloc(vtx_ordered_face_neighbours,vtx_face_idx[n_vtx] ,int);
+  int *vtx_ordered_face_neighbours_idx;
+  PDM_malloc(vtx_ordered_face_neighbours_idx,(n_vtx+1) ,int);
+  int *vtx_ordered_vtx_neighbours;
+  PDM_malloc(vtx_ordered_vtx_neighbours,vtx_vtx_idx[n_vtx] ,int);
+  int *vtx_ordered_vtx_neighbours_idx;
+  PDM_malloc(vtx_ordered_vtx_neighbours_idx,(n_vtx+1) ,int);
 
   vtx_ordered_face_neighbours_idx[0] = idx_vtx_ordered_face_neighbours;
   vtx_ordered_vtx_neighbours_idx[0]  = idx_vtx_ordered_vtx_neighbours;

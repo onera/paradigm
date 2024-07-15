@@ -1033,7 +1033,8 @@ PDM_geom_elem_quad_properties
  int         *isDegenerated
 )
 {
-  int *connectivityIndex = (int *) malloc (sizeof(int) * (nQuadrangle + 1));
+  int *connectivityIndex;
+  PDM_malloc(connectivityIndex,(nQuadrangle + 1),int);
   int convergence;
 
   connectivityIndex[0] = 0;
@@ -1093,7 +1094,7 @@ int PDM_geom_elem_compute_polygon_barycentric_coordinates(const int           nP
   double* aire = NULL;
   double* proScal = NULL;
 
-  *barCoordsIndex = (int*) malloc(sizeof(int) * (nPoints+1) );
+  PDM_malloc(*barCoordsIndex,(nPoints+1) ,int);
   int* _barCoordsIndex = *barCoordsIndex;
 
   int prev_n_sommets = 0;
@@ -1117,11 +1118,11 @@ int PDM_geom_elem_compute_polygon_barycentric_coordinates(const int           nP
     local_pts[2] = pts_coords[3*ipoint + 2];
 
     if (ipoint == 0) {
-      coords_sommets = (double*)malloc(sizeof(double)* 3 * n_sommets);
-      s              = (double*)malloc(sizeof(double)* 3 * n_sommets);
-      dist           = (double*)malloc(sizeof(double)* n_sommets);
-      aire           = (double*)malloc(sizeof(double)* n_sommets);
-      proScal        = (double*)malloc(sizeof(double)* n_sommets);
+      PDM_malloc(coords_sommets,3 * n_sommets,double);
+      PDM_malloc(s,3 * n_sommets,double);
+      PDM_malloc(dist,n_sommets,double);
+      PDM_malloc(aire,n_sommets,double);
+      PDM_malloc(proScal,n_sommets,double);
     }
     else {
       if (prev_n_sommets < n_sommets) {
@@ -1617,10 +1618,14 @@ PDM_geom_elem_hexa_properties
   const int nHexahedraFaces = nQuadrangle + nTriangle;
   const int n_faces = nHexahedraFaces * nHexahedra;
 
-  int *faceConnectivity          = (int *) malloc (sizeof(int) * ((nQuadrangle*4 + nTriangle*3) * nHexahedra));
-  int *faceConnectivityIdx       = (int *) malloc (sizeof(int) * (n_faces + 1));
-  int *cellToFaceConnectivityIdx = (int *) malloc (sizeof(int) * (nHexahedra + 1));
-  int *cellToFaceConnectivity    = (int *) malloc (sizeof(int) * (n_faces));
+  int *faceConnectivity;
+  PDM_malloc(faceConnectivity,((nQuadrangle*4 + nTriangle*3) * nHexahedra),int);
+  int *faceConnectivityIdx;
+  PDM_malloc(faceConnectivityIdx,(n_faces + 1),int);
+  int *cellToFaceConnectivityIdx;
+  PDM_malloc(cellToFaceConnectivityIdx,(nHexahedra + 1),int);
+  int *cellToFaceConnectivity;
+  PDM_malloc(cellToFaceConnectivity,(n_faces),int);
 
   /*
    * Get hexahedra faces
@@ -1707,10 +1712,14 @@ PDM_geom_elem_prism_properties
   const int nPrismFaces = nQuadrangle + nTriangle;
   const int n_faces = nPrismFaces * nPrism;
 
-  int *faceConnectivity          = (int *) malloc (sizeof(int) * ((nQuadrangle*4 + nTriangle*3) * nPrism));
-  int *faceConnectivityIdx       = (int *) malloc (sizeof(int) * (n_faces + 1));
-  int *cellToFaceConnectivityIdx = (int *) malloc (sizeof(int) * (nPrism + 1));
-  int *cellToFaceConnectivity    = (int *) malloc (sizeof(int) * (n_faces));
+  int *faceConnectivity;
+  PDM_malloc(faceConnectivity,((nQuadrangle*4 + nTriangle*3) * nPrism),int);
+  int *faceConnectivityIdx;
+  PDM_malloc(faceConnectivityIdx,(n_faces + 1),int);
+  int *cellToFaceConnectivityIdx;
+  PDM_malloc(cellToFaceConnectivityIdx,(nPrism + 1),int);
+  int *cellToFaceConnectivity;
+  PDM_malloc(cellToFaceConnectivity,(n_faces),int);
 
   /*
    * Get prism faces
@@ -1797,10 +1806,14 @@ PDM_geom_elem_pyramid_properties
   const int nPyramidFaces = nQuadrangle + nTriangle;
   const int n_faces = nPyramidFaces * nPyramid;
 
-  int *faceConnectivity          = (int *) malloc (sizeof(int) * ((nQuadrangle*4 + nTriangle*3) * nPyramid));
-  int *faceConnectivityIdx       = (int *) malloc (sizeof(int) * (n_faces + 1));
-  int *cellToFaceConnectivityIdx = (int *) malloc (sizeof(int) * (nPyramid + 1));
-  int *cellToFaceConnectivity    = (int *) malloc (sizeof(int) * (n_faces));
+  int *faceConnectivity;
+  PDM_malloc(faceConnectivity,((nQuadrangle*4 + nTriangle*3) * nPyramid),int);
+  int *faceConnectivityIdx;
+  PDM_malloc(faceConnectivityIdx,(n_faces + 1),int);
+  int *cellToFaceConnectivityIdx;
+  PDM_malloc(cellToFaceConnectivityIdx,(nPyramid + 1),int);
+  int *cellToFaceConnectivity;
+  PDM_malloc(cellToFaceConnectivity,(n_faces),int);
 
   /*
    * Get pyramid faces
@@ -1893,10 +1906,12 @@ PDM_geom_elem_polyhedra_properties
 {
   const double big = 1e30;
   int convergence = 1;
-  int *colorVertice = (int *) malloc (sizeof(int) * nVertices);
+  int *colorVertice;
+  PDM_malloc(colorVertice,nVertices,int);
 
   int  lPolyhedraVertices = 24;
-  int *polyhedraVertices = (int *) malloc (sizeof(int) *lPolyhedraVertices); //First allocation
+  int *polyhedraVertices;
+  PDM_malloc(polyhedraVertices,lPolyhedraVertices,int); //First allocation
 
   for (int i = 0; i < nVertices; i++)
     colorVertice[i] = false;
@@ -1905,8 +1920,10 @@ PDM_geom_elem_polyhedra_properties
    * Compute face properties
    */
 
-  double *surface_vector = (double *) malloc (sizeof(double) * 3 *n_face);
-  double *faceCenter    = (double *) malloc (sizeof(double) * 3 *n_face);
+  double *surface_vector;
+  PDM_malloc(surface_vector,3 *n_face,double);
+  double *faceCenter;
+  PDM_malloc(faceCenter,3 *n_face,double);
 
   // PDM_printf( "faceConnectivity : \n");
   // for (int ipoly = 0; ipoly < n_face; ipoly++) {
@@ -1974,7 +1991,7 @@ PDM_geom_elem_polyhedra_properties
 
     hashOrient = PDM_hash_tab_create (PDM_HASH_TAB_KEY_INT, &keyMax);
 
-    keyPoly = (int *) malloc (sizeof(int) * sKeyPoly);
+    PDM_malloc(keyPoly,sKeyPoly,int);
 
     for (int ipoly = 0; ipoly < nPolyhedra; ipoly++) {
       const int polyIdx   = cellToFaceConnectivityIdx[ipoly];
@@ -1982,8 +1999,8 @@ PDM_geom_elem_polyhedra_properties
       maxNPolyFace = PDM_MAX (maxNPolyFace, nPolyFace);
     }
 
-    stack = (int *) malloc (sizeof(int) * maxNPolyFace);
-    tagFace = (int *) malloc (sizeof(int) * maxNPolyFace);
+    PDM_malloc(stack,maxNPolyFace,int);
+    PDM_malloc(tagFace,maxNPolyFace,int);
 
   }
 
@@ -2036,7 +2053,8 @@ PDM_geom_elem_polyhedra_properties
 
           keyPoly[nKeyPoly++] = key;
 
-          int *edge = malloc (sizeof(int)*3);
+          int *edge;
+          PDM_malloc(edge,3,int);
           edge[0] = vertex;
           edge[1] = vertexNext;
           edge[2] = iface;
@@ -2418,7 +2436,8 @@ PDM_geom_elem_polyhedra_properties_triangulated
    */
 
   int max_face_vtx_n = 0;
-  int *face_tria_idx = malloc(sizeof(int) * (n_face + 1));
+  int *face_tria_idx;
+  PDM_malloc(face_tria_idx,(n_face + 1),int);
   face_tria_idx[0] = 0;
   for (int iface = 0; iface < n_face; iface++) {
     int face_vtx_n = faceConnectivityIdx[iface+1] - faceConnectivityIdx[iface];
@@ -2429,7 +2448,8 @@ PDM_geom_elem_polyhedra_properties_triangulated
 
   PDM_triangulate_state_t *tri_state = PDM_triangulate_state_create(max_face_vtx_n);
 
-  int *tria_vtx = malloc(sizeof(int) * face_tria_idx[n_face] * 3);
+  int *tria_vtx;
+  PDM_malloc(tria_vtx,face_tria_idx[n_face] * 3,int);
 
   for (int iface = 0; iface < n_face; iface++) {
 
@@ -2593,12 +2613,12 @@ PDM_geom_elem_edge_upwind_and_downwind
 )
 {
   /* Allocate stuff */
-  *upwind_cell_out    = malloc(sizeof(int   ) * n_edge);
-  *downwind_cell_out  = malloc(sizeof(int   ) * n_edge);
-  *upwind_face_out    = malloc(sizeof(int   ) * n_edge);
-  *downwind_face_out  = malloc(sizeof(int   ) * n_edge);
-  *upwind_point_out   = malloc(sizeof(double) * n_edge * 3);
-  *downwind_point_out = malloc(sizeof(double) * n_edge * 3);
+  PDM_malloc(*upwind_cell_out,n_edge,int   );
+  PDM_malloc(*downwind_cell_out,n_edge,int   );
+  PDM_malloc(*upwind_face_out,n_edge,int   );
+  PDM_malloc(*downwind_face_out,n_edge,int   );
+  PDM_malloc(*upwind_point_out,n_edge * 3,double);
+  PDM_malloc(*downwind_point_out,n_edge * 3,double);
 
   int    *upwind_cell    = *upwind_cell_out;
   int    *downwind_cell  = *downwind_cell_out;
@@ -2639,14 +2659,15 @@ PDM_geom_elem_edge_upwind_and_downwind
       tri_state = PDM_triangulate_state_create(max_face_vtx_n);
     }
 
-    tri_vtx = malloc(sizeof(int) * (max_face_vtx_n - 2)*3);
+    PDM_malloc(tri_vtx,(max_face_vtx_n - 2)*3,int);
   }
   else {
-    poly_coord = malloc(sizeof(double) * max_face_vtx_n * 3);
+    PDM_malloc(poly_coord,max_face_vtx_n * 3,double);
   }
 
   int *is_visited_face = PDM_array_zeros_int(n_face);
-  int *visited_face    = malloc(sizeof(int) * n_face);
+  int *visited_face;
+  PDM_malloc(visited_face,n_face,int);
   int n_visited_face = 0;
 
   for (int iedge = 0; iedge < n_edge; iedge++) {
@@ -2690,10 +2711,12 @@ PDM_geom_elem_edge_upwind_and_downwind
       int vtx_id  = edge_vtx[2*iedge + idx_vtx] - 1;
 
       int n_cell_per_vtx = (vtx_cell_idx[vtx_id+1]-vtx_cell_idx[vtx_id]);
-      int *order = malloc(n_cell_per_vtx * sizeof(int));
+      int *order;
+      PDM_malloc(order,n_cell_per_vtx ,int);
 
       if(cell_ln_to_gn != NULL) {
-        PDM_g_num_t *vtx_cell_gnum = malloc(n_cell_per_vtx * sizeof(PDM_g_num_t));
+        PDM_g_num_t *vtx_cell_gnum;
+        PDM_malloc(vtx_cell_gnum,n_cell_per_vtx ,PDM_g_num_t);
         int idx_write = 0;
         for (int idx_cell = vtx_cell_idx[vtx_id]; idx_cell < vtx_cell_idx[vtx_id+1]; idx_cell++) {
           int cell_id = PDM_ABS(vtx_cell[idx_cell]) - 1;

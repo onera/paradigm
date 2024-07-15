@@ -85,8 +85,8 @@ _rebuild_group
   assert(dme->btp_bound_entity_to_extract_entity[bound_type] == NULL);
   assert(dme->btp_bound_ownership               [bound_type] == NULL);
 
-  dme->btp_bound_entity_to_extract_entity[bound_type] = malloc(n_group_entity * sizeof(PDM_block_to_part_t *));
-  dme->btp_bound_ownership               [bound_type] = malloc(n_group_entity * sizeof(PDM_ownership_t      ));
+  PDM_malloc(dme->btp_bound_entity_to_extract_entity[bound_type],n_group_entity ,PDM_block_to_part_t *);
+  dme->btp_bound_ownership               PDM_malloc([bound_type],n_group_entity ,PDM_ownership_t      );
 
   dme->n_bound[bound_type] = n_group_entity;
 
@@ -154,7 +154,8 @@ _rebuild_group
   /*
    * Reminder : block(view as part) is implicit
    */
-  PDM_g_num_t *dextract_bound_entity_gnum = malloc(dextract_bound_entity_idx[n_group_entity] * sizeof(PDM_g_num_t));
+  PDM_g_num_t *dextract_bound_entity_gnum;
+  PDM_malloc(dextract_bound_entity_gnum,dextract_bound_entity_idx[n_group_entity] ,PDM_g_num_t);
   for(int i = 0; i < dextract_bound_entity_idx[n_group_entity]; ++i) {
     dextract_bound_entity_gnum[i] = dme->distrib_extract[entity_type][i_rank] + dextract_bound_entity[i];
   }
@@ -218,8 +219,8 @@ _rebuild_group_nodal
   assert(dme->btp_bound_entity_to_extract_entity[bound_type] == NULL);
   assert(dme->btp_bound_ownership               [bound_type] == NULL);
 
-  dme->btp_bound_entity_to_extract_entity[bound_type] = malloc(n_group_entity * sizeof(PDM_block_to_part_t *));
-  dme->btp_bound_ownership               [bound_type] = malloc(n_group_entity * sizeof(PDM_ownership_t      ));
+  PDM_malloc(dme->btp_bound_entity_to_extract_entity[bound_type],n_group_entity ,PDM_block_to_part_t *);
+  dme->btp_bound_ownership               PDM_malloc([bound_type],n_group_entity ,PDM_ownership_t      );
 
   dme->n_bound[bound_type] = n_group_entity;
 
@@ -298,7 +299,8 @@ _rebuild_group_nodal
   /*
    * Reminder : block(view as part) is implicit
    */
-  PDM_g_num_t *dextract_bound_entity_gnum = malloc(dextract_bound_entity_idx[n_group_entity] * sizeof(PDM_g_num_t));
+  PDM_g_num_t *dextract_bound_entity_gnum;
+  PDM_malloc(dextract_bound_entity_gnum,dextract_bound_entity_idx[n_group_entity] ,PDM_g_num_t);
   for(int i = 0; i < dextract_bound_entity_idx[n_group_entity]; ++i) {
     dextract_bound_entity_gnum[i] = dme->distrib_extract[entity_type][i_rank] + dextract_bound_entity[i];
   }
@@ -420,7 +422,7 @@ _dmesh_extract_3d
                                PDM_OWNERSHIP_BAD_VALUE);
     int *_dedge_vtx_idx = NULL;
     if(dedge_vtx_idx == NULL)  {
-      _dedge_vtx_idx = malloc( (dn_edge+1) * sizeof(int));
+      PDM_malloc(_dedge_vtx_idx, (dn_edge+1) ,int);
       for(int i_edge = 0; i_edge < dn_edge+1; ++i_edge) {
         _dedge_vtx_idx[i_edge] = 2*i_edge;
       }
@@ -565,7 +567,7 @@ _dmesh_extract_2d
                                PDM_OWNERSHIP_BAD_VALUE);
     int *_dedge_vtx_idx = NULL;
     if(dedge_vtx_idx == NULL)  {
-      _dedge_vtx_idx = malloc( (dn_edge+1) * sizeof(int));
+      PDM_malloc(_dedge_vtx_idx, (dn_edge+1) ,int);
       for(int i_edge = 0; i_edge < dn_edge+1; ++i_edge) {
         _dedge_vtx_idx[i_edge] = 2*i_edge;
       }
@@ -657,7 +659,7 @@ _dmesh_extract_1d
                              PDM_OWNERSHIP_BAD_VALUE);
   int *_dedge_vtx_idx = NULL;
   if(dedge_vtx_idx == NULL)  {
-    _dedge_vtx_idx = malloc( (dn_edge+1) * sizeof(int));
+    PDM_malloc(_dedge_vtx_idx, (dn_edge+1) ,int);
     for(int i_edge = 0; i_edge < dn_edge+1; ++i_edge) {
       _dedge_vtx_idx[i_edge] = 2*i_edge;
     }
@@ -718,7 +720,8 @@ _dmesh_extract_0d
 
   PDM_g_num_t* distrib_vtx  = PDM_compute_entity_distribution(dme->comm, dn_vtx );
 
-  double *weight = malloc(dme->n_selected * sizeof(double));
+  double *weight;
+  PDM_malloc(weight,dme->n_selected ,double);
   for(int i = 0; i < dme->n_selected; ++i) {
     weight[i] = 1.;
   }
@@ -739,7 +742,7 @@ _dmesh_extract_0d
 
   dme->dmesh_extract->dn_vtx = dme->distrib_extract[PDM_MESH_ENTITY_VTX][i_rank+1] - dme->distrib_extract[PDM_MESH_ENTITY_VTX][i_rank];
 
-  dme->parent_extract_gnum[PDM_MESH_ENTITY_VTX] = malloc(dme->dmesh_extract->dn_vtx * sizeof(PDM_g_num_t));
+  PDM_malloc(dme->parent_extract_gnum[PDM_MESH_ENTITY_VTX],dme->dmesh_extract->dn_vtx ,PDM_g_num_t);
   for(int i = 0; i < dme->dmesh_extract->dn_vtx; ++i) {
     dme->parent_extract_gnum[PDM_MESH_ENTITY_VTX][i] = dextract_gnum_vtx[i];
   }
@@ -880,7 +883,8 @@ PDM_dmesh_extract_create
        PDM_MPI_Comm            comm
 )
 {
-  PDM_dmesh_extract_t *dme = (PDM_dmesh_extract_t *) malloc(sizeof(PDM_dmesh_extract_t));
+  PDM_dmesh_extract_t *dme;
+  PDM_malloc(dme,1,PDM_dmesh_extract_t);
 
   dme->dim  = dim;
   dme->comm = comm;

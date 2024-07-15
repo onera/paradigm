@@ -188,7 +188,7 @@ PDM_io_file_t  *fichier
                                     pour les acces paralleles */
       fichier->n_rangs_inactifs = 0;
 
-      fichier->rangs_actifs = (int *) malloc(sizeof(int) * fichier->n_rangs_actifs);
+      PDM_malloc(fichier->rangs_actifs,fichier->n_rangs_actifs,int);
       fichier->rangs_inactifs = NULL;
       fichier->rangs_actifs[0] = 0;
     }
@@ -223,7 +223,7 @@ PDM_io_file_t  *fichier
           fichier->rang_actif = 1;
       }
 
-      fichier->tag_rangs_actifs = (int *) malloc(sizeof(int) * fichier->n_rangs);
+      PDM_malloc(fichier->tag_rangs_actifs,fichier->n_rangs,int);
 
       PDM_MPI_Allgather((void *) &fichier->rang_actif, 1, PDM_MPI_INT,
 		    (void *) fichier->tag_rangs_actifs, 1, PDM_MPI_INT,
@@ -269,9 +269,9 @@ PDM_io_file_t  *fichier
 
       /* Determination des rangs actifs */
 
-      fichier->rangs_actifs = (int *) malloc(sizeof(int) * fichier->n_rangs_actifs);
+      PDM_malloc(fichier->rangs_actifs,fichier->n_rangs_actifs,int);
       fichier->n_rangs_inactifs = fichier->n_rangs - fichier->n_rangs_actifs;
-      fichier->rangs_inactifs = (int *) malloc(sizeof(int) * fichier->n_rangs_inactifs);
+      PDM_malloc(fichier->rangs_inactifs,fichier->n_rangs_inactifs,int);
 
       fichier->n_rangs_actifs = 0;
       fichier->n_rangs_inactifs = 0;
@@ -631,7 +631,7 @@ void PDM_io_open
   *ierr = 0;
 
   /* Initialisation de la structure PDM_io_file_t */
-  *unite = (PDM_io_file_t*) malloc(sizeof(PDM_io_file_t));
+  PDM_malloc(*unite,1,PDM_io_file_t);
   PDM_io_file_t *nouveau_fichier = *unite;
 
   /* Initialisation des timer */
@@ -769,7 +769,8 @@ void PDM_io_open
       if (testf != NULL) {
         nouveau_fichier->backup = PDM_IO_BACKUP_ON;
         fclose(testf);
-        char *fichier_backup = malloc(sizeof(char) * (strlen(nouveau_fichier->nom) + 2)); /* caratère ~ + \0 */
+        char *fichier_backup;
+        PDM_malloc(fichier_backup,(strlen(nouveau_fichier->nom) + 2),char); /* caratère ~ + \0 */
         strcpy(fichier_backup, nouveau_fichier->nom);
         strcat(fichier_backup, "~");
 
@@ -1103,7 +1104,8 @@ void PDM_io_global_write
 
       unsigned char* _donnees = (unsigned char*) donnees;
       const PDM_g_num_t l_string_donnee = n_donnees * fichier->n_char_fmt + 2;
-      char *string_donnee = (char *) malloc(sizeof(char) * l_string_donnee);
+      char *string_donnee;
+      PDM_malloc(string_donnee,l_string_donnee,char);
 
       for (PDM_g_num_t i = 0; i < l_string_donnee; i++) {
         string_donnee[i] = '\0';
@@ -1201,7 +1203,7 @@ void PDM_io_global_write
 
           PDM_timer_resume(timer_swap_endian);
 
-          _donnees = malloc (sizeof(unsigned char) * taille_donnee * n_donnees);
+          PDM_malloc(_donnees,taille_donnee * n_donnees,unsigned char);
 
           PDM_io_swap_endian(taille_donnee,
                              n_donnees,
@@ -1257,7 +1259,7 @@ void PDM_io_global_write
 
             PDM_timer_resume(timer_swap_endian);
 
-            _donnees = malloc (sizeof(unsigned char) * taille_donnee * n_donnees_shortint);
+            PDM_malloc(_donnees,taille_donnee * n_donnees_shortint,unsigned char);
 
             PDM_io_swap_endian(taille_donnee,
                                n_donnees_shortint,
@@ -1508,8 +1510,10 @@ void PDM_io_par_interlaced_read
 
       /* Pour chaque donnee le proc ou elle va etre envoyee */
 
-      int *donnees_proc = (int *) malloc(sizeof(int) * n_donnees);
-      int *indirection_locale = (int *) malloc(sizeof(int) * n_donnees);
+      int *donnees_proc;
+      PDM_malloc(donnees_proc,n_donnees,int);
+      int *indirection_locale;
+      PDM_malloc(indirection_locale,n_donnees,int);
 
       /* Calcul du nombre de donnees a envoyer a chaque procesus */
 
@@ -1598,7 +1602,8 @@ void PDM_io_par_interlaced_read
        * (prise en compte du nombre de composantes de chaque donnees)
        *------------------------------------------------------------ */
 
-      int *n_donnees_blocs = (int *) malloc(sizeof(int) * fichier->n_rangs);
+      int *n_donnees_blocs;
+      PDM_malloc(n_donnees_blocs,fichier->n_rangs,int);
       int  n_donnees_bloc = 0;
       int *n_composantes_recues = NULL;
 
@@ -1905,7 +1910,8 @@ void PDM_io_par_interlaced_read
 
         /* Tri des donnees recues */
 
-        int *i_composantes = (int*) malloc(sizeof(int) * (n_donnees + 1));
+        int *i_composantes;
+        PDM_malloc(i_composantes,(n_donnees + 1),int);
         i_composantes[0] = 0;
         for (int i = 1; i < n_donnees + 1; i++) {
           i_composantes[i] = i_composantes[i-1] +
@@ -2618,7 +2624,8 @@ void PDM_io_par_interlaced_write
         }
         l_string_donnee += 1; /* +1 pour '\0' en fin de chaine */
 
-        char *string_donnee = (char *) malloc(sizeof(char) * l_string_donnee);
+        char *string_donnee;
+        PDM_malloc(string_donnee,l_string_donnee,char);
         for (int i = 0; i < l_string_donnee; i++) {
           string_donnee[i] = '\0';
         }
@@ -2797,8 +2804,10 @@ void PDM_io_par_interlaced_write
 
       /* Pour chaque donnee le proc ou elle va etre envoyee */
 
-      int *donnees_proc = (int *) malloc(sizeof(int) * n_donnees);
-      int *indirection_locale = (int *) malloc(sizeof(int) * n_donnees);
+      int *donnees_proc;
+      PDM_malloc(donnees_proc,n_donnees,int);
+      int *indirection_locale;
+      PDM_malloc(indirection_locale,n_donnees,int);
 
       /* Calcul du nombre de donnees a envoyer a chaque procesus */
 
@@ -2879,7 +2888,8 @@ void PDM_io_par_interlaced_write
 
      PDM_free(num_absolue_envoyee);
 
-      int *n_donnees_blocs = (int *) malloc(sizeof(int) * fichier->n_rangs);
+      int *n_donnees_blocs;
+      PDM_malloc(n_donnees_blocs,fichier->n_rangs,int);
       int  n_donnees_bloc = 0;
 
       int *n_composantes_recues  = NULL;
@@ -2984,7 +2994,8 @@ void PDM_io_par_interlaced_write
           malloc(sizeof(unsigned char) *
                  l_donnees_alltoall);
 
-        int *idx_init = (int*) malloc(sizeof(int) * (n_donnees+1));
+        int *idx_init;
+        PDM_malloc(idx_init,(n_donnees+1),int);
 
         idx_init[0] = 0;
         for (int i = 1; i < n_donnees + 1; i++)
@@ -3104,7 +3115,7 @@ void PDM_io_par_interlaced_write
             malloc(sizeof(unsigned char) * max_l_blocs_alltoall);
           if (fichier->fmt_t == PDM_IO_FMT_TXT) {
             l_s_buffer = (max_l_blocs_alltoall / taille_donnee) * (fichier->n_char_fmt + 1) + 1;
-            s_buffer = (char *) malloc(sizeof(char) * l_s_buffer);
+            PDM_malloc(s_buffer,l_s_buffer,char);
             for (size_t i = 0; i < l_s_buffer; i++)
               s_buffer[i] = '\0';
           }
@@ -3114,7 +3125,7 @@ void PDM_io_par_interlaced_write
             malloc(sizeof(unsigned char) * l_blocs_alltoall);
           if (fichier->fmt_t == PDM_IO_FMT_TXT) {
             l_s_buffer = (l_blocs_alltoall / taille_donnee) * (fichier->n_char_fmt + 1) + 1;
-            s_buffer = (char *) malloc(sizeof(char) * l_s_buffer);
+            PDM_malloc(s_buffer,l_s_buffer,char);
             for (size_t i = 0; i < l_s_buffer; i++)
               s_buffer[i] = '\0';
           }
@@ -3125,8 +3136,7 @@ void PDM_io_par_interlaced_write
           malloc(sizeof(unsigned char) * l_blocs_alltoall);
 
         if (fichier->fmt_t == PDM_IO_FMT_TXT) {
-          s_buffer = (char *) malloc(sizeof(char) * ((l_blocs_alltoall / taille_donnee)
-                                                     * (fichier->n_char_fmt + 1) + 1));
+          PDM_malloc(s_buffer,((l_blocs_alltoall * (fichier->n_char_fmt + 1) + 1)) / taille_donnee, char);
         }
       }
 
@@ -3144,7 +3154,7 @@ void PDM_io_par_interlaced_write
         int *index_buffer = PDM_array_zeros_int(_n_quantites+1);
 
         if (fichier->fmt_t == PDM_IO_FMT_TXT) {
-          n_composante_trie =  (int*) malloc(sizeof(int) * _n_donnees_rang);
+          PDM_malloc(n_composante_trie,_n_donnees_rang,int);
         }
 
         for (int i = 0; i < _n_quantites; i++) {
@@ -3495,7 +3505,7 @@ void PDM_io_par_block_write
 
       if (fichier->swap_endian) {
 
-        _donnees = malloc (sizeof(unsigned char) * l_donnees * taille_donnee);
+        PDM_malloc(_donnees,l_donnees * taille_donnee,unsigned char);
 
         PDM_timer_resume(timer_swap_endian);
 
@@ -3732,7 +3742,7 @@ void PDM_io_par_block_write
             PDM_timer_resume(timer_swap_endian);
 
             if (buffer == donnees) {
-              _buffer = malloc (sizeof(unsigned char) * taille_donnee * n_donnees_bloc_actif);
+              PDM_malloc(_buffer,taille_donnee * n_donnees_bloc_actif,unsigned char);
             }
 
             PDM_io_swap_endian(taille_donnee,
@@ -3789,7 +3799,7 @@ void PDM_io_par_block_write
               PDM_timer_resume(timer_swap_endian);
 
               if (buffer == donnees) {
-                _buffer = malloc (sizeof(unsigned char) * taille_donnee * n_donnees_bloc_actif);
+                PDM_malloc(_buffer,taille_donnee * n_donnees_bloc_actif,unsigned char);
               }
 
               PDM_io_swap_endian(taille_donnee,
@@ -3851,7 +3861,7 @@ void PDM_io_par_block_write
               PDM_timer_resume(timer_swap_endian);
 
               if (buffer == donnees) {
-                _buffer = malloc (sizeof(unsigned char) * taille_donnee * n_donnees_bloc_actif);
+                PDM_malloc(_buffer,taille_donnee * n_donnees_bloc_actif,unsigned char);
               }
 
               PDM_io_swap_endian(taille_donnee,
@@ -3967,7 +3977,8 @@ void PDM_io_close
 
       if (proc_actif == 1) {
 
-        char *fichier_backup = malloc(sizeof(char) * (strlen(fichier->nom) + 2)); /* caratère ~ + \0 */
+        char *fichier_backup;
+        PDM_malloc(fichier_backup,(strlen(fichier->nom) + 2),char); /* caratère ~ + \0 */
         strcpy(fichier_backup, fichier->nom);
         strcat(fichier_backup, "~");
 
@@ -4443,7 +4454,7 @@ void PDM_io_fmt_data_set
     fichier->swap_endian = 0;
     if (fichier->fmt != NULL)
      PDM_free(fichier->fmt);
-    fichier->fmt        = (char *) malloc(sizeof(char) * (strlen(fmt) + 1));
+    PDM_malloc(fichier->fmt,(strlen(fmt) + 1),char);
     strcpy(fichier->fmt, fmt);
     fichier->n_char_fmt = n_char_fmt;
     fichier->data_type  = data_type;
@@ -4472,7 +4483,8 @@ int PDM_io_mkdir
  const char* path
 )
 {
-  char *tmp_path = (char *) malloc((strlen(path) + 1)*sizeof(char));
+  char *tmp_path;
+  PDM_malloc(tmp_path,(strlen(path) + 1),char);
   strcpy(tmp_path, path);
   int idx = 0;
   size_t _l_path = strlen(path);
@@ -4576,7 +4588,8 @@ PDM_io_n_data_get
        *  chaque rang
        *----------------------------------------------------------*/
 
-      PDM_g_num_t *n_donnees_rangs = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * (fichier->n_rangs + 1));
+      PDM_g_num_t *n_donnees_rangs;
+      PDM_malloc(n_donnees_rangs,(fichier->n_rangs + 1),PDM_g_num_t);
 
       int  n_donnees_rang_min = 0;
       int  n_donnees_rang_max = 0;
@@ -4609,12 +4622,15 @@ PDM_io_n_data_get
          *---------------------------------------*/
 
         int *n_donnees_a_envoyer = PDM_array_zeros_int(fichier->n_rangs);
-        int *n_donnees_a_recevoir = (int *) malloc(sizeof(int) * fichier->n_rangs);
+        int *n_donnees_a_recevoir;
+        PDM_malloc(n_donnees_a_recevoir,fichier->n_rangs,int);
 
         /* Pour chaque donnee le proc ou elle va etre envoyee */
 
-        int *donnees_proc = (int *) malloc(sizeof(int) * n_donnees);
-        int *indirection_locale = (int *) malloc(sizeof(int) * n_donnees);
+        int *donnees_proc;
+        PDM_malloc(donnees_proc,n_donnees,int);
+        int *indirection_locale;
+        PDM_malloc(indirection_locale,n_donnees,int);
 
         /* Calcul du nombre de donnees a envoyer a chaque procesus */
 
@@ -4725,7 +4741,7 @@ PDM_io_n_data_get
           n_donnees_a_envoyer[iproc] += 1;
         }
 
-        n_composantes_recues = (int *) malloc(sizeof(int) * l_data_recv);
+        PDM_malloc(n_composantes_recues,l_data_recv,int);
 
         PDM_MPI_Alltoallv(n_composantes_envoyee,
                       n_donnees_a_envoyer,

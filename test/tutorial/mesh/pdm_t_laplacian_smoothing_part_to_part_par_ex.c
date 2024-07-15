@@ -166,7 +166,8 @@ PDM_multipart_t      **_mpart
 
 
   int n_domain = 1;
-  int *n_part_domains = (int *) malloc(sizeof(int) * n_domain);
+  int *n_part_domains;
+  PDM_malloc(n_part_domains,n_domain,int);
   n_part_domains[0] = n_part;
 
   PDM_multipart_t *mpart = PDM_multipart_create(n_domain,
@@ -447,7 +448,8 @@ int main(int argc, char *argv[])
  PDM_free(pedge_vtx_idx);
 
   // Create vtx_vtx stride
-  int *pstrid = malloc(pn_vtx * sizeof(int));
+  int *pstrid;
+  PDM_malloc(pstrid,pn_vtx ,int);
   for (int i = 0; i < pn_vtx; i++) {
     pstrid[i] = pvtx_vtx_idx[i+1] - pvtx_vtx_idx[i];
   }
@@ -456,7 +458,8 @@ int main(int argc, char *argv[])
   int adapted_size = pvtx_vtx_idx[pn_vtx] - pn_vtx;
   int adapted_index = 0;
   int index_normal = 0;
-  PDM_g_num_t *pvtx_vtx_gnum = malloc(adapted_size * sizeof(PDM_g_num_t));
+  PDM_g_num_t *pvtx_vtx_gnum;
+  PDM_malloc(pvtx_vtx_gnum,adapted_size ,PDM_g_num_t);
   for (int i = 0; i < pn_vtx; i++) {
     for (int j = 0; j < pstrid[i]; j++) {
       if (vtx_ln_to_gn[pvtx_vtx[index_normal]-1] != vtx_ln_to_gn[i]) { // if not my gnum
@@ -468,7 +471,8 @@ int main(int argc, char *argv[])
   }
 
   // // Create pvtx_vtx_gnum
-  // PDM_g_num_t *pvtx_vtx_gnum = malloc(pvtx_vtx_idx[pn_vtx] * sizeof(PDM_g_num_t));
+  // PDM_g_num_t *pvtx_vtx_gnum;
+ PDM_malloc(pvtx_vtx_gnum,pvtx_vtx_idx[pn_vtx] ,PDM_g_num_t);
   // for (int i = 0; i < pvtx_vtx_idx[pn_vtx]; i++) {
   //   pvtx_vtx_gnum[i] = vtx_ln_to_gn[pvtx_vtx[i]-1];
   // }
@@ -532,7 +536,8 @@ int main(int argc, char *argv[])
 
   /* Remove duplicate */
 
-  int *dstrid_vtx_vtx_gnum_sorted = malloc(nelmt_proc *sizeof(int));
+  int *dstrid_vtx_vtx_gnum_sorted;
+  PDM_malloc(dstrid_vtx_vtx_gnum_sorted,nelmt_proc ,int);
   int idx_comp  = 0; // Compressed index use to fill the buffer
   int idx_block = 0; // Index in the block to post-treat
 
@@ -653,7 +658,8 @@ int main(int argc, char *argv[])
   // Needed entities
   int      request;
   double **pvtx_coord_neighbours = NULL;
-  double  *tmp_coord             = malloc(3 * sizeof(double));
+  double *tmp_coord;
+  PDM_malloc(tmp_coord,3 ,double);
 
   // Step
   for (int i_step = 0; i_step <= n_steps; i_step++) {

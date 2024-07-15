@@ -315,7 +315,8 @@ int main(int argc, char *argv[])
 
   PDM_g_num_t *distrib_face_extract = PDM_compute_entity_distribution(comm, dn_extract_face);
 
-  PDM_g_num_t* extract_face_ln_to_gn = malloc(dn_extract_face * sizeof(PDM_g_num_t));
+  PDM_g_num_t *extract_face_ln_to_gn;
+  PDM_malloc(extract_face_ln_to_gn,dn_extract_face ,PDM_g_num_t);
   for(int i = 0; i < dn_extract_face; ++i) {
     extract_face_ln_to_gn[i] = distrib_face_extract[i_rank] + i + 1;
   }

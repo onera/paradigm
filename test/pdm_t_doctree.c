@@ -201,7 +201,8 @@ char *argv[]
                                            NULL, // global_extents
                                            local_tree_kind);
 
-  int *init_location_pts = malloc(3 * n_src * sizeof(int));
+  int *init_location_pts;
+  PDM_malloc(init_location_pts,3 * n_src ,int);
   for(int i = 0; i < n_src; ++i) {
     init_location_pts[3*i  ] = i_rank;
     init_location_pts[3*i+1] = 0; // i_part
@@ -230,7 +231,8 @@ char *argv[]
                         &box_extents,
                         &box_gnum);
 
-  int *init_location_box = malloc(3 * n_box * sizeof(int));
+  int *init_location_box;
+  PDM_malloc(init_location_box,3 * n_box ,int);
   for(int i = 0; i < n_box; ++i) {
     init_location_box[3*i  ] = i_rank;
     init_location_box[3*i+1] = 0; // i_part

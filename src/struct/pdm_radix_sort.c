@@ -123,7 +123,8 @@ _counting_sort
 // {
 //   /* First step - Count */
 //   int n_buckets = _radix_base;
-//   int* count = malloc( (n_buckets + 1) * sizeof(int));
+//   int *count;
+   PDM_malloc(count, (n_buckets + 1) ,int);
 
 //   /* Set to zero */
 //   for(int i = 0; i < n_buckets+1; ++i){
@@ -335,8 +336,10 @@ _cc_radix_sort_with_order
 
   int iteration = 0;
 
-  int* count_curr = malloc( (_radix_base + 1) * sizeof(int));
-  int* count_next = malloc( (_radix_base + 1) * sizeof(int));
+  int *count_curr;
+  PDM_malloc(count_curr, (_radix_base + 1) ,int);
+  int *count_next;
+  PDM_malloc(count_next, (_radix_base + 1) ,int);
 
   int* count_tmp;
   int* _count_curr = count_curr;
@@ -507,7 +510,8 @@ PDM_radix_sort_long
 
   // Il faut trouver le max dans la base pour reprensenter le min et le max
   //  --> si beaucoup d'écart on tente la moyenne
-  PDM_g_num_t* tmp = (PDM_g_num_t *) malloc( (lArray+1) * sizeof(PDM_g_num_t));
+  PDM_g_num_t *tmp;
+  PDM_malloc(tmp, (lArray+1) ,PDM_g_num_t);
 
   int place = (int) pow(_radix_base, (n_step-1));
   int place_power = _radix_shift*(n_step-1);
@@ -520,7 +524,8 @@ PDM_radix_sort_long
   if(order == NULL){
     _std_radix_sort(array, tmp, 0, lArray, place);
   } else {
-    int* order_tmp = (int *) malloc( (lArray+1) * sizeof(int));
+    int *order_tmp;
+    PDM_malloc(order_tmp, (lArray+1) ,int);
     _std_radix_sort_with_order(array, tmp, order, order_tmp, 0, lArray, place, place_power);
     // _std_radix_sort(array, tmp, 0, lArray, place);
    PDM_free(order_tmp);

@@ -315,7 +315,8 @@ _dmesh_extract_from_group_id
 
   PDM_g_num_t *distrib_face_extract = PDM_compute_entity_distribution(comm, dn_extract_face);
 
-  PDM_g_num_t* extract_face_ln_to_gn = malloc(dn_extract_face * sizeof(PDM_g_num_t));
+  PDM_g_num_t *extract_face_ln_to_gn;
+  PDM_malloc(extract_face_ln_to_gn,dn_extract_face ,PDM_g_num_t);
   for(int i = 0; i < dn_extract_face; ++i) {
     extract_face_ln_to_gn[i] = distrib_face_extract[i_rank] + i + 1;
   }
@@ -412,7 +413,8 @@ _dmesh_extract_from_group_id
 //     abort();
 //   } else {
 
-//     int *dedge_vtx_idx = malloc((dn_edge+1) * sizeof(int));
+//     int *dedge_vtx_idx;
+     PDM_malloc(dedge_vtx_idx,(dn_edge+1) ,int);
 //     for(int i = 0; i < dn_edge+1; ++i) {
 //       dedge_vtx_idx[i] = 2 * i;
 //     }
@@ -469,7 +471,8 @@ _dmesh_extract_from_group_id
 //   PDM_block_to_part_free(btp);
 //  PDM_free(dvtx_vtx    );
 
-//   double *char_length = malloc(dn_vtx * sizeof(double));
+//   double *char_length;
+   PDM_malloc(char_length,dn_vtx ,double);
 
 //   // double tol = 1e-6;
 //   // const double eps_base = 1e-12;

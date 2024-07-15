@@ -218,10 +218,10 @@ char *argv[]
     n_src = (int) (distrib[i_rank+1] - distrib[i_rank]);
     double *dvtx_coord = PDM_DMesh_nodal_vtx_get(dmn);
 
-    src_coord = malloc(sizeof(double) * n_src * 3);
+    PDM_malloc(src_coord,n_src * 3,double);
     memcpy(src_coord, dvtx_coord, sizeof(double) * n_src * 3);
 
-    src_g_num = malloc(sizeof(PDM_g_num_t) * n_src);
+    PDM_malloc(src_g_num,n_src,PDM_g_num_t);
     for (int i = 0; i < n_src; i++) {
       src_g_num[i] = distrib[i_rank] + i + 1;
     }
@@ -276,7 +276,8 @@ char *argv[]
 
 
 
-  double *weight =  malloc( n_src * sizeof(double));
+  double *weight;
+  PDM_malloc(weight, n_src ,double);
   for(int i = 0; i < n_src; ++i) {
     weight[i] = 1.;
   }

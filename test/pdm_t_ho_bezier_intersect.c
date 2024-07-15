@@ -316,11 +316,15 @@ int main(int argc, char *argv[])
   char filename1[999];
   sprintf(filename1, "P%d_triangle_ho.vtk", order);
 
-  PDM_g_num_t *vtx_g_num = malloc(sizeof(PDM_g_num_t) * n_vtx);
-  int *face_vtx = malloc(sizeof(int) * n_vtx_triangle);
-  PDM_g_num_t *face_g_num = malloc(sizeof(PDM_g_num_t) * 1);
+  PDM_g_num_t *vtx_g_num;
+  PDM_malloc(vtx_g_num,n_vtx,PDM_g_num_t);
+  int *face_vtx;
+  PDM_malloc(face_vtx,n_vtx_triangle,int);
+  PDM_g_num_t *face_g_num;
+  PDM_malloc(face_g_num,1,PDM_g_num_t);
   const char  *vtx_field_name = "ho_bezier_basis";
-  double      *vtx_field = malloc(sizeof(double) * n_vtx);
+  double *vtx_field;
+  PDM_malloc(vtx_field,n_vtx,double);
 
   for (int j = 0; j < n_vtx_triangle; j++) {
     vtx_g_num[j] = j + 1;

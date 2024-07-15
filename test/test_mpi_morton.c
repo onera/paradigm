@@ -59,7 +59,8 @@ main
   }
 
 
-  int *all_n = malloc (sizeof(int) * n_rank);
+  int *all_n;
+  PDM_malloc(all_n,n_rank,int);
   PDM_MPI_Allgather(&n, 1, PDM_MPI_INT, all_n, 1, PDM_MPI_INT, comm);
 
   PDM_log_trace_array_int(all_n, n_rank, "all_n : ");
@@ -68,7 +69,8 @@ main
   int *index = PDM_array_new_idx_from_sizes_int (all_n, n_rank);
 
 
-  int *all_data = malloc (sizeof(int) * index[n_rank]);
+  int *all_data;
+  PDM_malloc(all_data,index[n_rank],int);
 
   int *send_data = all_data + index[i_rank];
   for (int i = 0; i < n; i++) {
@@ -77,7 +79,8 @@ main
 
   PDM_log_trace_array_int (send_data, n, "send_data : ");
 
-  /*int *recv_data = malloc (sizeof(int) * index[n_rank]);
+  /*int *recv_data;
+  PDM_malloc(recv_data,index[n_rank],int);
   PDM_MPI_Allgatherv (send_data, n,            PDM_MPI_INT,
                       recv_data, all_n, index, PDM_MPI_INT,
                       comm);*/
@@ -185,7 +188,7 @@ main
     n_codes = 3;
     PDM_MPI_Send (&n_codes, 1, PDM_MPI_INT, 1, 0, comm);
 
-    codes = malloc (sizeof(PDM_morton_code_t) * n_codes);
+    PDM_malloc(codes,n_codes,PDM_morton_code_t);
 
     codes[0].L = 3;
     codes[0].X[0] = 0;
@@ -208,7 +211,7 @@ main
   else {
     PDM_MPI_Recv (&n_codes, 1, PDM_MPI_INT, 0, 0, comm);
 
-    codes = malloc (sizeof(PDM_morton_code_t) * n_codes);
+    PDM_malloc(codes,n_codes,PDM_morton_code_t);
 
     PDM_MPI_Recv (codes, n_codes*sizeof(PDM_morton_code_t), PDM_MPI_BYTE, 0, 1, comm);
   }
@@ -234,7 +237,7 @@ main
     n_nodes = 3;
     PDM_MPI_Send (&n_nodes, 1, PDM_MPI_INT, 1, 0, comm);
 
-    nodes = malloc (sizeof(_node_t) * n_nodes);
+    PDM_malloc(nodes,n_nodes,_node_t);
 
     nodes[0].code.L = 3;
     nodes[0].code.X[0] = 0;
@@ -278,7 +281,7 @@ main
   else {
     PDM_MPI_Recv (&n_nodes, 1, PDM_MPI_INT, 0, 0, comm);
 
-    nodes = malloc (sizeof(_node_t) * n_nodes);
+    PDM_malloc(nodes,n_nodes,_node_t);
 
     PDM_MPI_Recv (nodes, n_nodes*sizeof(_node_t), PDM_MPI_BYTE, 0, 1, comm);
   }
@@ -307,7 +310,7 @@ main
   _node_t *nodes_to_copy = NULL;
 
   if (i_rank_in_node == 1) {
-    nodes_to_copy = malloc (sizeof(_node_t) * n_nodes_shared);
+    PDM_malloc(nodes_to_copy,n_nodes_shared,_node_t);
     nodes_to_copy[0].code.L = 3;
     nodes_to_copy[0].code.X[0] = 0;
     nodes_to_copy[0].code.X[1] = 1;

@@ -82,7 +82,8 @@ const PDM_hash_tab_key_t  tKey,
 void                     *keyMax
 )
 {
-  _hash_tab_t *ht = malloc (sizeof(_hash_tab_t));
+  _hash_tab_t *ht;
+  PDM_malloc(ht,1,_hash_tab_t);
   const int nDataDefault = 0;
 
   ht->tKey = tKey;
@@ -99,16 +100,16 @@ void                     *keyMax
   }
 
   ht->l_key_info = PDM_MAX (ht->keyMax/10, 2);
-  ht->key_info = malloc (sizeof(PDM_g_num_t)*ht->l_key_info);
+  PDM_malloc(ht->key_info,ht->l_key_info,PDM_g_num_t);
   ht->n_key_info = 0;
 
-  ht->data = malloc (sizeof(void **) * ht->keyMax);
-  ht->nDataKey = malloc (sizeof(int) * ht->keyMax);
-  ht->mDataKey = malloc (sizeof(int) * ht->keyMax);
+  PDM_malloc(ht->data,ht->keyMax,void **);
+  PDM_malloc(ht->nDataKey,ht->keyMax,int);
+  PDM_malloc(ht->mDataKey,ht->keyMax,int);
   for (int i = 0; i < ht->keyMax; i++) {
     ht->nDataKey[i] = 0;
     ht->mDataKey[i] = nDataDefault;
-    ht->data[i] = malloc (sizeof(void *) * nDataDefault);
+    PDM_malloc(ht->data[i],nDataDefault,void *);
     for (int j = 0; j < nDataDefault; j++) {
       ht->data[i][j] = NULL;
     }

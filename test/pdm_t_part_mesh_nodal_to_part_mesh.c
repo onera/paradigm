@@ -289,7 +289,8 @@ int main(int argc, char *argv[])
                                        &face_vtx_idx,
                                        PDM_OWNERSHIP_KEEP);
 
-        int *face_flags = malloc(pn_face * sizeof(int));
+        int *face_flags;
+        PDM_malloc(face_flags,pn_face ,int);
         for(int i_face = 0; i_face < pn_face; ++i_face) {
           face_flags[i_face] = -1;
         }
@@ -353,7 +354,8 @@ int main(int argc, char *argv[])
                                        &edge_vtx_idx,
                                        PDM_OWNERSHIP_KEEP);
         assert(edge_vtx_idx == NULL);
-        int *edge_flags = malloc(pn_edge * sizeof(int));
+        int *edge_flags;
+        PDM_malloc(edge_flags,pn_edge ,int);
         for(int i_edge = 0; i_edge < pn_edge; ++i_edge) {
           edge_flags[i_edge] = -1;
         }

@@ -144,11 +144,11 @@ _read_args
       *method = 1;
     }
     else if (strcmp (argv[i], "-agglo_scotch") == 0) {
-      *method_agglo = (char *) malloc (sizeof (char) * (strlen("PDM_COARSE_MESH_SCOTCH") + 1));
+      PDM_malloc(*method_agglo,(strlen("PDM_COARSE_MESH_SCOTCH") + 1),char);
       strcpy(*method_agglo, "PDM_COARSE_MESH_SCOTCH");
     }
     else if (strcmp (argv[i], "-agglo_metis") == 0) {
-      *method_agglo = (char *) malloc (sizeof (char) * (strlen("PDM_COARSE_MESH_METIS") + 1));
+      PDM_malloc(*method_agglo,(strlen("PDM_COARSE_MESH_METIS") + 1),char);
       strcpy(*method_agglo, "PDM_COARSE_MESH_METIS");
     }
     else
@@ -312,8 +312,10 @@ _create_split_mesh
 
   int have_dcell_part = 0;
 
-  int *dcell_part = (int *) malloc (dn_face*sizeof(int));
-  int *dEdgeVtxIdx = (int *) malloc ((dNEdge+1)*sizeof(int));
+  int *dcell_part;
+  PDM_malloc(dcell_part,dn_face,int);
+  int *dEdgeVtxIdx;
+  PDM_malloc(dEdgeVtxIdx,(dNEdge+1),int);
 
   dEdgeVtxIdx[0] = 0;
   for (int i = 0; i < dNEdge; i++) {
@@ -540,20 +542,27 @@ _export_ini_mesh
    * Debut des ecritures
    */
 
-  int       **edgeVtxIdx1  = (PDM_l_num_t **) malloc (sizeof(PDM_l_num_t *) * n_part);
-  int       **edgeVtxNB1   = (PDM_l_num_t **) malloc (sizeof(PDM_l_num_t *) * n_part);
-  int       **faceEdgeIdx1 = (PDM_l_num_t **) malloc (sizeof(PDM_l_num_t *) * n_part);
-  int       **faceEdgeNB1  = (PDM_l_num_t **) malloc (sizeof(PDM_l_num_t *) * n_part);
+  int **edgeVtxIdx1;
+  PDM_malloc(*edgeVtxIdx1,n_part,PDM_l_num_t *);
+  int **edgeVtxNB1;
+  PDM_malloc(*edgeVtxNB1,n_part,PDM_l_num_t *);
+  int **faceEdgeIdx1;
+  PDM_malloc(*faceEdgeIdx1,n_part,PDM_l_num_t *);
+  int **faceEdgeNB1;
+  PDM_malloc(*faceEdgeNB1,n_part,PDM_l_num_t *);
 
-  int *nsom_part  = (int *) malloc(sizeof(int) * n_part);
+  int *nsom_part;
+  PDM_malloc(nsom_part,n_part,int);
 
-  int *n_partProcs = (int *) malloc(sizeof(int) * numProcs);
+  int *n_partProcs;
+  PDM_malloc(n_partProcs,numProcs,int);
 
   PDM_MPI_Allgather ((void *) &n_part,      1, PDM_MPI_INT,
                  (void *) n_partProcs, 1, PDM_MPI_INT,
                  PDM_MPI_COMM_WORLD);
 
-  int *debPartProcs = (int *) malloc(sizeof(int) * (numProcs + 1));
+  int *debPartProcs;
+  PDM_malloc(debPartProcs,(numProcs + 1),int);
 
   debPartProcs[0] = 0;
   for (int i = 0; i < numProcs; i++) {
@@ -632,10 +641,10 @@ _export_ini_mesh
                            &edgeGroup,
                            &edgeGroupLNToGN);
 
-    edgeVtxIdx1[i_part]  = (PDM_l_num_t *) malloc (sizeof(PDM_l_num_t) * nEdge);
-    edgeVtxNB1[i_part]   = (PDM_l_num_t *) malloc (sizeof(PDM_l_num_t) * nEdge);
-    faceEdgeIdx1[i_part] = (PDM_l_num_t *) malloc (sizeof(PDM_l_num_t) * n_face);
-    faceEdgeNB1[i_part]  = (PDM_l_num_t *) malloc (sizeof(PDM_l_num_t) * n_face);
+    PDM_malloc(edgeVtxIdx1[i_part],nEdge,PDM_l_num_t);
+    PDM_malloc(edgeVtxNB1[i_part],nEdge,PDM_l_num_t);
+    PDM_malloc(faceEdgeIdx1[i_part],n_face,PDM_l_num_t);
+    PDM_malloc(faceEdgeNB1[i_part],n_face,PDM_l_num_t);
 
     for (int i = 0; i < n_face; i++) {
       faceEdgeNB1[i_part][i] = faceEdgeIdx[i+1] - faceEdgeIdx[i];
@@ -691,9 +700,12 @@ _export_ini_mesh
      - tenseur
   */
 
-  PDM_real_t **val_num_part = (PDM_real_t **) malloc (sizeof(PDM_real_t *) * n_part);
-  PDM_real_t **val_coo_x    = (PDM_real_t **) malloc (sizeof(PDM_real_t *) * n_part);
-  PDM_real_t **val_coo_xyz  = (PDM_real_t **) malloc (sizeof(PDM_real_t *) * n_part);
+  PDM_real_t **val_num_part;
+  PDM_malloc(*val_num_part,n_part,PDM_real_t *);
+  PDM_real_t **val_coo_x;
+  PDM_malloc(*val_coo_x,n_part,PDM_real_t *);
+  PDM_real_t **val_coo_xyz;
+  PDM_malloc(*val_coo_xyz,n_part,PDM_real_t *);
 
   for (int i_part = 0; i_part < n_part; i_part++) {
 
@@ -763,9 +775,9 @@ _export_ini_mesh
                            &edgeGroup,
                            &edgeGroupLNToGN);
 
-    val_num_part[i_part] = (PDM_real_t *) malloc (sizeof(PDM_real_t) * n_face);
-    val_coo_x[i_part]    = (PDM_real_t *) malloc (sizeof(PDM_real_t) * n_vtx);
-    val_coo_xyz[i_part]  = (PDM_real_t *) malloc (sizeof(PDM_real_t) * 3 * n_vtx);
+    PDM_malloc(val_num_part[i_part],n_face,PDM_real_t);
+    PDM_malloc(val_coo_x[i_part],n_vtx,PDM_real_t);
+    PDM_malloc(val_coo_xyz[i_part],3 * n_vtx,PDM_real_t);
     nsom_part[i_part]    = n_vtx;
 
     for (int i = 0; i < n_face; i++) {
@@ -926,20 +938,27 @@ _export_ini_mesh
 //    * Debut des ecritures
 //    */
 
-//   int       **edgeVtxIdx1  = (PDM_l_num_t **) malloc (sizeof(PDM_l_num_t *) * n_part);
-//   int       **edgeVtxNB1   = (PDM_l_num_t **) malloc (sizeof(PDM_l_num_t *) * n_part);
-//   int       **faceEdgeIdx1 = (PDM_l_num_t **) malloc (sizeof(PDM_l_num_t *) * n_part);
-//   int       **faceEdgeNB1  = (PDM_l_num_t **) malloc (sizeof(PDM_l_num_t *) * n_part);
+//   int **edgeVtxIdx1;
+   PDM_malloc(*edgeVtxIdx1,n_part,PDM_l_num_t *);
+//   int **edgeVtxNB1;
+   PDM_malloc(*edgeVtxNB1,n_part,PDM_l_num_t *);
+//   int **faceEdgeIdx1;
+   PDM_malloc(*faceEdgeIdx1,n_part,PDM_l_num_t *);
+//   int **faceEdgeNB1;
+   PDM_malloc(*faceEdgeNB1,n_part,PDM_l_num_t *);
 
-//   int *nsom_part  = (int *) malloc(sizeof(int) * n_part);
+//   int *nsom_part;
+   PDM_malloc(nsom_part,n_part,int);
 
-//   int *n_partProcs = (int *) malloc(sizeof(int) * numProcs);
+//   int *n_partProcs;
+   PDM_malloc(n_partProcs,numProcs,int);
 
 //   PDM_MPI_Allgather ((void *) &n_part,      1, PDM_MPI_INT,
 //                  (void *) n_partProcs, 1, PDM_MPI_INT,
 //                  PDM_MPI_COMM_WORLD);
 
-//   int *debPartProcs = (int *) malloc(sizeof(int) * (numProcs + 1));
+//   int *debPartProcs;
+   PDM_malloc(debPartProcs,(numProcs + 1),int);
 
 //   debPartProcs[0] = 0;
 //   for (int i = 0; i < numProcs; i++) {
@@ -1032,10 +1051,10 @@ _export_ini_mesh
 //                                   &edgePartBoundPartIdx,
 //                                   &edgePartBound);
 
-//     edgeVtxIdx1[i_part]  = (PDM_l_num_t *) malloc (sizeof(PDM_l_num_t) * nEdge);
-//     edgeVtxNB1[i_part]   = (PDM_l_num_t *) malloc (sizeof(PDM_l_num_t) * nEdge);
-//     faceEdgeIdx1[i_part] = (PDM_l_num_t *) malloc (sizeof(PDM_l_num_t) * n_face);
-//     faceEdgeNB1[i_part]  = (PDM_l_num_t *) malloc (sizeof(PDM_l_num_t) * n_face);
+//     PDM_malloc(edgeVtxIdx1[i_part],nEdge,PDM_l_num_t);
+//     PDM_malloc(edgeVtxNB1[i_part],nEdge,PDM_l_num_t);
+//     PDM_malloc(faceEdgeIdx1[i_part],n_face,PDM_l_num_t);
+//     PDM_malloc(faceEdgeNB1[i_part],n_face,PDM_l_num_t);
 
 //     for (int i = 0; i < n_face; i++) {
 //       faceEdgeNB1[i_part][i] = faceEdgeIdx[i+1] - faceEdgeIdx[i];
@@ -1090,9 +1109,12 @@ _export_ini_mesh
 //      - tenseur
 //   */
 
-//   PDM_real_t **val_num_part = (PDM_real_t **) malloc (sizeof(PDM_real_t *) * n_part);
-//   PDM_real_t **val_coo_x    = (PDM_real_t **) malloc (sizeof(PDM_real_t *) * n_part);
-//   PDM_real_t **val_coo_xyz  = (PDM_real_t **) malloc (sizeof(PDM_real_t *) * n_part);
+//   PDM_real_t **val_num_part;
+   PDM_malloc(*val_num_part,n_part,PDM_real_t *);
+//   PDM_real_t **val_coo_x;
+   PDM_malloc(*val_coo_x,n_part,PDM_real_t *);
+//   PDM_real_t **val_coo_xyz;
+   PDM_malloc(*val_coo_xyz,n_part,PDM_real_t *);
 
 //   for (int i_part = 0; i_part < n_part; i_part++) {
 
@@ -1162,9 +1184,9 @@ _export_ini_mesh
 //                         &edgeGroup,
 //                         &edgeGroupLNToGN);
 
-//     val_num_part[i_part] = (PDM_real_t *) malloc (sizeof(PDM_real_t) * n_face);
-//     val_coo_x[i_part]    = (PDM_real_t *) malloc (sizeof(PDM_real_t) * n_vtx);
-//     val_coo_xyz[i_part]  = (PDM_real_t *) malloc (sizeof(PDM_real_t) * 3 * n_vtx);
+//     PDM_malloc(val_num_part[i_part],n_face,PDM_real_t);
+//     PDM_malloc(val_coo_x[i_part],n_vtx,PDM_real_t);
+//     PDM_malloc(val_coo_xyz[i_part],3 * n_vtx,PDM_real_t);
 //     nsom_part[i_part]    = n_vtx;
 
 //     for (int i = 0; i < n_face; i++) {

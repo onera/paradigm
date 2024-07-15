@@ -99,18 +99,19 @@ PDM_gnum_location_create
 )
 {
 
-  PDM_gnum_location_t *gnum_loc = (PDM_gnum_location_t *) malloc(sizeof(PDM_gnum_location_t));
+  PDM_gnum_location_t *gnum_loc;
+  PDM_malloc(gnum_loc,1,PDM_gnum_location_t);
 
   gnum_loc->n_part_in  = n_part_in;
   gnum_loc->n_part_out = n_part_out;
 
-  gnum_loc->n_elts_in = (      int          *) malloc (sizeof(      int          ) * n_part_in);
-  gnum_loc->g_nums_in = (const PDM_g_num_t **) malloc (sizeof(const PDM_g_num_t *) * n_part_in);
+  PDM_malloc(gnum_loc->n_elts_in,n_part_in,int          );
+  PDM_malloc(gnum_loc->g_nums_in,n_part_in,const PDM_g_num_t *);
   for (int i = 0; i < n_part_in; i++) {
     gnum_loc->g_nums_in[i] = NULL;
   }
-  gnum_loc->n_elts_out = (      int          *) malloc (sizeof(      int          ) * n_part_out);
-  gnum_loc->g_nums_out = (const PDM_g_num_t **) malloc (sizeof(const PDM_g_num_t *) * n_part_out);
+  PDM_malloc(gnum_loc->n_elts_out,n_part_out,int          );
+  PDM_malloc(gnum_loc->g_nums_out,n_part_out,const PDM_g_num_t *);
   for (int i = 0; i < n_part_out; i++) {
     gnum_loc->g_nums_out[i] = NULL;
   }
@@ -214,12 +215,14 @@ PDM_gnum_location_compute
   const PDM_stride_t t_stride = PDM_STRIDE_VAR_INTERLACED;
   const int cst_stride = 3;
 
-  int  **part_stride = (int **) malloc (sizeof(int *) * gnum_loc->n_part_in);
-  int  **part_data = (int **) malloc (sizeof(int *) * gnum_loc->n_part_in);
+  int **part_stride;
+  PDM_malloc(*part_stride,gnum_loc->n_part_in,int *);
+  int **part_data;
+  PDM_malloc(*part_data,gnum_loc->n_part_in,int *);
 
   for (int i = 0; i < gnum_loc->n_part_in; i++) {
-    part_stride[i] = malloc (sizeof(int) * gnum_loc->n_elts_in[i]);
-    part_data[i] = malloc (sizeof(int) * 3 * gnum_loc->n_elts_in[i]);
+    PDM_malloc(part_stride[i],gnum_loc->n_elts_in[i],int);
+    PDM_malloc(part_data[i],3 * gnum_loc->n_elts_in[i],int);
     for (int j = 0; j < gnum_loc->n_elts_in[i]; j++) {
       part_stride[i][j]   = 3;
       part_data[i][3*j]   = rank;
@@ -279,9 +282,9 @@ PDM_gnum_location_compute
                           &part_stride,
                (void ***) &gnum_loc->location);
 
-  gnum_loc->location_idx = (int **) malloc (sizeof(int *) * gnum_loc->n_part_out);
+  PDM_malloc(gnum_loc->location_idx,gnum_loc->n_part_out,int *);
   for (int i = 0; i < gnum_loc->n_part_out; i++) {
-    gnum_loc->location_idx[i] = malloc (sizeof(int) * (gnum_loc->n_elts_out[i] + 1));
+    PDM_malloc(gnum_loc->location_idx[i],(gnum_loc->n_elts_out[i] + 1),int);
     gnum_loc->location_idx[i][0] = 0;
     for (int j = 0; j < gnum_loc->n_elts_out[i]; j++) {
       gnum_loc->location_idx[i][j+1] = gnum_loc->location_idx[i][j] + part_stride[i][j];

@@ -245,7 +245,8 @@ _create_split_mesh
 
   /*   } */
 
-  /*   double *dd = malloc (sizeof(double) * dn_vtx); */
+  /*   double *dd;
+   PDM_malloc(dd,dn_vtx,double); */
 
   /*   for (int j = 0; j < dn_vtx; j++) { */
   /*     dd[j] = 1e-5; */
@@ -350,8 +351,10 @@ _create_split_mesh
 
   int have_dcell_part = 0;
 
-  int *dcell_part = (int *) malloc (dn_face*sizeof(int));
-  int *dedge_vtx_idx = (int *) malloc ((dn_edge+1)*sizeof(int));
+  int *dcell_part;
+  PDM_malloc(dcell_part,dn_face,int);
+  int *dedge_vtx_idx;
+  PDM_malloc(dedge_vtx_idx,(dn_edge+1),int);
 
   dedge_vtx_idx[0] = 0;
   for (int i = 0; i < dn_edge; i++) {
@@ -369,7 +372,8 @@ _create_split_mesh
   int n_property_face = 0;
   int *renum_properties_face = NULL;
 
-  PDM_g_num_t *distrib = (PDM_g_num_t *) malloc((num_procs+1) * sizeof(PDM_g_num_t));
+  PDM_g_num_t *distrib;
+  PDM_malloc(distrib,(num_procs+1) ,PDM_g_num_t);
   PDM_g_num_t _dn_vtx = (PDM_g_num_t) dn_vtx;
 
   PDM_MPI_Allgather((void *) &_dn_vtx,
@@ -470,10 +474,13 @@ _create_split_mesh
 
   PDM_gen_gnum_t* gen_gnum2 = PDM_gnum_create (3, n_part, PDM_TRUE, 1e-3, pdm_mpi_comm, PDM_OWNERSHIP_KEEP);
 
-  double **char_length = malloc(sizeof(double *) * n_part);
+  double **char_length;
+  PDM_malloc(*char_length,n_part,double *);
 
-  int *n_vtxs = malloc (sizeof(int) * n_part);
-  PDM_g_num_t **vtx_ln_to_gns = malloc (sizeof(PDM_g_num_t *) * n_part);
+  int *n_vtxs;
+  PDM_malloc(n_vtxs,n_part,int);
+  PDM_g_num_t **vtx_ln_to_gns;
+  PDM_malloc(*vtx_ln_to_gns,n_part,PDM_g_num_t *);
 
   for (int i_part = 0; i_part < n_part; i_part++) {
 
@@ -502,7 +509,7 @@ _create_split_mesh
 
     n_vtxs[i_part] = n_vtx;
 
-    char_length[i_part] = malloc (sizeof(double) * n_vtx);
+    PDM_malloc(char_length[i_part],n_vtx,double);
 
     for (int j = 0; j < n_vtx; j++) {
       char_length[i_part][j] = HUGE_VAL;
@@ -576,11 +583,13 @@ _create_split_mesh
   fflush(stdout);
   PDM_timer_free(timer);
 
-  const PDM_g_num_t **_numabs = malloc (sizeof(PDM_g_num_t *) * n_part);
+  const PDM_g_num_t **_numabs;
+ PDM_malloc(*_numabs,n_part,PDM_g_num_t *);
 
   // Check
 
-  PDM_g_num_t *numabs_init = malloc(sizeof(PDM_g_num_t) * dn_vtx);
+  PDM_g_num_t *numabs_init;
+  PDM_malloc(numabs_init,dn_vtx,PDM_g_num_t);
 
   for (int i = 0; i < dn_vtx; i++) {
     numabs_init[i] = distrib[i_rank] + 1 + i;

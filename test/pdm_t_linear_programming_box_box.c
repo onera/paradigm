@@ -257,8 +257,9 @@ PDM_g_num_t **box_ln_to_gn
   }
  PDM_free(distrib_box);
 
-  double *box_centers = malloc (sizeof(double) * n_box * 3);
-  *box_extents = malloc (sizeof(double) * n_box * 6);
+  double *box_centers;
+  PDM_malloc(box_centers,n_box * 3,double);
+  PDM_malloc(*box_extents,n_box * 6,double);
   double *_box_extents = *box_extents;
   for (int i = 0; i < n_box; i++) {
     for (int j = 0; j < 3; j++) {
@@ -467,10 +468,13 @@ int main(int argc, char *argv[])
   double n_plane[18];
   double pt_plane_box[18];
 
-  double *box_intersects_box = malloc(sizeof(double) * n_box);
+  double *box_intersects_box;
+  PDM_malloc(box_intersects_box,n_box,double);
 
-  double **box_tag = malloc(sizeof(double *) * n_box_plane);
-  char **box_tag_names = malloc(sizeof(char *) * n_box_plane);
+  double **box_tag;
+  PDM_malloc(*box_tag,n_box_plane,double *);
+  char **box_tag_names;
+  PDM_malloc(*box_tag_names,n_box_plane,char *);
 
   int check1, check2;
 
@@ -503,11 +507,11 @@ int main(int argc, char *argv[])
 
     }
 
-    box_tag[i] = malloc(sizeof(double) * n_box);
+    PDM_malloc(box_tag[i],n_box,double);
     memcpy(box_tag[i], box_intersects_box, sizeof(double) * n_box);
     char tmp[90];
     sprintf(tmp, "intersects_box_%d", i);
-    box_tag_names[i] = malloc(sizeof(char) * 90);
+    PDM_malloc(box_tag_names[i],90,char);
     strcpy(box_tag_names[i], tmp);
 
 

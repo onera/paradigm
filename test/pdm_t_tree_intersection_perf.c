@@ -276,7 +276,8 @@ main
 
 
   /* Build box tree */
-  int *init_location_box = malloc(3 * n_box * sizeof(int));
+  int *init_location_box;
+  PDM_malloc(init_location_box,3 * n_box ,int);
   for(int i = 0; i < n_box; ++i) {
     init_location_box[3*i  ] = i_rank;
     init_location_box[3*i+1] = 0; // i_part

@@ -86,13 +86,14 @@ PDM_global_reduce_create
  const PDM_MPI_Comm comm
 )
 {
-  PDM_global_reduce_t *gre = (PDM_global_reduce_t *) malloc (sizeof(PDM_global_reduce_t));
+  PDM_global_reduce_t *gre;
+  PDM_malloc(gre,1,PDM_global_reduce_t);
 
   gre->n_part  = n_part;
   gre->comm    = comm;
-  gre->g_nums  = (PDM_g_num_t **) malloc (sizeof(PDM_g_num_t *) * n_part);
-  gre->n_elts  = (int          *) malloc (sizeof(int          ) * n_part);
-  gre->strides = (int         **) malloc (sizeof(int         *) * n_part);
+  PDM_malloc(gre->g_nums,n_part,PDM_g_num_t *);
+  PDM_malloc(gre->n_elts,n_part,int          );
+  PDM_malloc(gre->strides,n_part,int         *);
   gre->ptb     = NULL;
   gre->btp     = NULL;
 
@@ -103,8 +104,8 @@ PDM_global_reduce_create
     gre->strides[i] = NULL;
   }
 
-  gre->local_field          = (double **) malloc (sizeof(double * ) * n_part);
-  gre->global_reduced_field = (double **) malloc (sizeof(double * ) * n_part);
+  PDM_malloc(gre->local_field,n_part,double * );
+  PDM_malloc(gre->global_reduced_field,n_part,double * );
 
   for (int i = 0; i < n_part; i++) {
     gre->local_field         [i] = NULL;
@@ -179,7 +180,7 @@ PDM_global_reduce_g_num_set
  {
   gre->g_nums [i_part] = (PDM_g_num_t *) pts_ln_to_gn;
   gre->n_elts [i_part] = n_pts;
-  gre->strides[i_part] = malloc (sizeof(int) * n_pts);
+  PDM_malloc(gre->strides[i_part],n_pts,int);
  }
 
 
@@ -286,7 +287,8 @@ PDM_global_reduce_field_compute
 
   int n_elt_block = PDM_part_to_block_n_elt_block_get(gre->ptb);
 
-  int *stride_idx = malloc(sizeof(int) * (n_elt_block + 1));
+  int *stride_idx;
+  PDM_malloc(stride_idx,(n_elt_block + 1),int);
   stride_idx[0] = 0;
 
   for (int i = 0; i < n_elt_block; i++) {

@@ -152,14 +152,16 @@ PDM_MPI_Comm comm
 
   nSend += 1; /* \0 */
 
-  char *send = (char *)malloc(sizeof(char) * nSend);
+  char *send;
+  PDM_malloc(send,nSend,char);
 
   for (int i = 0; i < nSend; i++)
     send[i] = 0x00;
 
   strncpy(send, hostname, nSend);
 
-  char * recv = (char *)malloc(sizeof(char) * nSend * nodeSize);
+  char *recv;
+  PDM_malloc(recv,nSend * nodeSize,char);
   PDM_MPI_Allgather((void * )send, nSend, PDM_MPI_CHAR, (void *)recv, nSend, PDM_MPI_CHAR, nodeComm);
 
   char *neighbor = recv;
@@ -188,7 +190,8 @@ PDM_MPI_Comm comm
     /* Traitement des collisions */
 
     neighbor = recv;
-    char *hostInComm = (char *) malloc(sizeof(char) * nSend * nodeSize);
+    char *hostInComm;
+    PDM_malloc(hostInComm,nSend * nodeSize,char);
     strncpy(hostInComm, recv, nSend);
     int nHostInComm = 1;
 
@@ -331,7 +334,7 @@ size_t *hostname_length
   do {
     nHostname += local_hostname_default_len;
 
-    hostname = (char *)malloc(sizeof(char) * nHostname);
+    PDM_malloc(hostname,nHostname,char);
 
     if (hostname == NULL) {
       PDM_error(__FILE__, __LINE__, 0, "allocating %lu bytes of memory for hostname failed: %s.\n",

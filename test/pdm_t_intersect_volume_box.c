@@ -331,8 +331,9 @@ PDM_g_num_t **box_ln_to_gn
   }
  PDM_free(distrib_box);
 
-  double *box_centers = malloc (sizeof(double) * n_box * 3);
-  *box_extents = malloc (sizeof(double) * n_box * 6);
+  double *box_centers;
+  PDM_malloc(box_centers,n_box * 3,double);
+  PDM_malloc(*box_extents,n_box * 6,double);
   double *_box_extents = *box_extents;
   for (int i = 0; i < n_box; i++) {
     for (int j = 0; j < 3; j++) {
@@ -498,7 +499,8 @@ int main(int argc, char *argv[])
   // vtk output of atomic test case
 
   const char *filename1 = "box.vtk";
-  PDM_g_num_t *box_g_num = malloc(sizeof(PDM_g_num_t) * 1);
+  PDM_g_num_t *box_g_num;
+  PDM_malloc(box_g_num,1,PDM_g_num_t);
   box_g_num[0] = 1;
 
   if (visu) {
@@ -509,14 +511,16 @@ int main(int argc, char *argv[])
   }
 
   const char *filename2 = "line.vtk";
-  double *coord = malloc(sizeof(double) * 6);
+  double *coord;
+  PDM_malloc(coord,6,double);
   coord[0] = edge[3];
   coord[1] = edge[4];
   coord[2] = edge[5];
   coord[3] = direction_pt[0];
   coord[4] = direction_pt[1];
   coord[5] = direction_pt[2];
-  PDM_g_num_t *line_g_num = malloc(sizeof(PDM_g_num_t) * 1);
+  PDM_g_num_t *line_g_num;
+  PDM_malloc(line_g_num,1,PDM_g_num_t);
   line_g_num[0] = 1;
 
   if(visu) {
@@ -528,9 +532,12 @@ int main(int argc, char *argv[])
   }
 
   const char *filename3 = "planes.vtk";
-  double *vtx_coord = malloc(sizeof(double) * 30);
-  PDM_g_num_t *vtx_g_num = malloc(sizeof(PDM_g_num_t) * 10);
-  int *face_vtx = malloc(sizeof(int) * 12);
+  double *vtx_coord;
+  PDM_malloc(vtx_coord,30,double);
+  PDM_g_num_t *vtx_g_num;
+  PDM_malloc(vtx_g_num,10,PDM_g_num_t);
+  int *face_vtx;
+  PDM_malloc(face_vtx,12,int);
 
   // A
   vtx_coord[0] = edge[0];
@@ -644,8 +651,10 @@ int main(int argc, char *argv[])
 
   /* Higher scale box-box test case */
 
-  // double *n_box = malloc(sizeof(double) * 18);
-  // double *pt_plane_box = malloc(sizeof(double) * 18);
+  // double *n_box;
+ PDM_malloc(n_box,18,double);
+  // double *pt_plane_box;
+ PDM_malloc(pt_plane_box,18,double);
 
   // _box_extents_to_plane(box_extents, n_box, pt_plane_box);
 
@@ -703,12 +712,15 @@ int main(int argc, char *argv[])
   double n_plane[18];
   double pt_plane_box[18];
 
-  double *box_intersects_box = malloc(sizeof(double) * n_box);
+  double *box_intersects_box;
+  PDM_malloc(box_intersects_box,n_box,double);
 
   //int  *box_tag[n_box_plane];
-  double **box_tag = malloc(sizeof(double *) * n_box_plane);
+  double **box_tag;
+  PDM_malloc(*box_tag,n_box_plane,double *);
   //char *box_tag_names[n_box_plane];
-  char **box_tag_names = malloc(sizeof(char *) * n_box_plane);
+  char **box_tag_names;
+  PDM_malloc(*box_tag_names,n_box_plane,char *);
 
   int check2;
 
@@ -730,11 +742,11 @@ int main(int argc, char *argv[])
       box_intersects_box[j] = (double) check;
     }
 
-    box_tag[i] = malloc(sizeof(double) * n_box);
+    PDM_malloc(box_tag[i],n_box,double);
     memcpy(box_tag[i], box_intersects_box, sizeof(double) * n_box);
     char tmp[90];
     sprintf(tmp, "intersects_box_%d", i);
-    box_tag_names[i] = malloc(sizeof(char) * 90);
+    PDM_malloc(box_tag_names[i],90,char);
     strcpy(box_tag_names[i], tmp);
 
 

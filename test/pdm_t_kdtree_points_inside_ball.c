@@ -222,10 +222,10 @@ char *argv[]
     n_src = (int) (distrib[i_rank+1] - distrib[i_rank]);
     double *dvtx_coord = PDM_DMesh_nodal_vtx_get(dmn);
 
-    src_coord = malloc(sizeof(double) * n_src * 3);
+    PDM_malloc(src_coord,n_src * 3,double);
     memcpy(src_coord, dvtx_coord, sizeof(double) * n_src * 3);
 
-    src_g_num = malloc(sizeof(PDM_g_num_t) * n_src);
+    PDM_malloc(src_g_num,n_src,PDM_g_num_t);
     for (int i = 0; i < n_src; i++) {
       src_g_num[i] = distrib[i_rank] + i + 1;
     }
@@ -270,7 +270,8 @@ char *argv[]
   //   }
   // }
 
-  double *ball_radius2 = malloc(sizeof(double) * n_tgt);
+  double *ball_radius2;
+  PDM_malloc(ball_radius2,n_tgt,double);
   for (int i = 0; i < n_tgt; i++) {
     double r = 0.8*length;
     ball_radius2[i] = r*r;
@@ -373,16 +374,20 @@ char *argv[]
   //   }
   // }
   if (1) {
-    int    *closest_kdtree_pt_id    = malloc(sizeof(int   ) * n_tgt);
-    double *closest_kdtree_pt_dist2 = malloc(sizeof(double) * n_tgt);
+    int *closest_kdtree_pt_id;
+    PDM_malloc(closest_kdtree_pt_id,n_tgt,int   );
+    double *closest_kdtree_pt_dist2;
+    PDM_malloc(closest_kdtree_pt_dist2,n_tgt,double);
     PDM_kdtree_seq_closest_point(kdt,
                                  n_tgt,
                                  tgt_coord,
                                  closest_kdtree_pt_id,
                                  closest_kdtree_pt_dist2);
 
-    int    *closest_octree_pt_id    = malloc(sizeof(int   ) * n_tgt * 2);
-    double *closest_octree_pt_dist2 = malloc(sizeof(double) * n_tgt);
+    int *closest_octree_pt_id;
+    PDM_malloc(closest_octree_pt_id,n_tgt * 2,int);
+    double *closest_octree_pt_dist2;
+    PDM_malloc(closest_octree_pt_dist2,n_tgt,double);
     PDM_octree_seq_closest_point(oct,
                                  n_tgt,
                                  tgt_coord,

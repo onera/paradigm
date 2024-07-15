@@ -525,7 +525,7 @@ _determine_A_outside
       // update A and B
       (*cll)->head = in[0];
      PDM_free(*outside);
-      *outside = malloc(sizeof(List));
+      PDM_malloc(*outside,1,List);
       (*outside)->head = out[0];
     } // 2 intersections
 
@@ -585,7 +585,8 @@ _cll_to_polydata
   int size_min = 3;
 
   int  n_vtx        = 0;
-  double *vtx_coord = malloc(sizeof(double) * size_min * 3);
+  double *vtx_coord;
+  PDM_malloc(vtx_coord,size_min * 3,double);
 
   Element *current = cll->head;
 
@@ -605,7 +606,8 @@ _cll_to_polydata
 
   int face_vtx_idx[2] = {0, n_vtx};
 
-  int *face_vtx = malloc(sizeof(int) * n_vtx);
+  int *face_vtx;
+  PDM_malloc(face_vtx,n_vtx,int);
   for (int i = 0; i < n_vtx; i++) {
     face_vtx[i] = i + 1;
   }
@@ -676,7 +678,8 @@ _cll_to_polydata2
   }
 
   int n_vtx = 0;
-  double *vtx_coord = malloc(sizeof(double) * size_min * 3);
+  double *vtx_coord;
+  PDM_malloc(vtx_coord,size_min * 3,double);
 
   int current = head;
 
@@ -696,7 +699,8 @@ _cll_to_polydata2
 
   int face_vtx_idx[2] = {0, n_vtx};
 
-  int *face_vtx = malloc(sizeof(int) * n_vtx);
+  int *face_vtx;
+  PDM_malloc(face_vtx,n_vtx,int);
   for (int i = 0; i < n_vtx; i++) {
     face_vtx[i] = i + 1;
   }
@@ -1529,17 +1533,20 @@ PDM_mesh_intersection_vol_vol_atomic_compute
   PDM_UNUSED(n_faceB);
 
   // malloc List structure
-  List *A = malloc(sizeof(List));
-  List *B = malloc(sizeof(List));
+  List *A;
+  PDM_malloc(A,1,List);
+  List *B;
+  PDM_malloc(B,1,List);
 
   // int dbg_enabled = 0;
   int idx = 0;
 
   // Triangle cll
   int max_size = 10*2 + 3;
-  Element **cll_storage = malloc(sizeof(Element *) * max_size);
+  Element **cll_storage;
+  PDM_malloc(cll_storage,max_size,Element *);
   for (int i = 0; i < max_size; i++) {
-    cll_storage[i] = malloc(sizeof(Element));
+    PDM_malloc(cll_storage[i],1,Element);
   }
   Element *pt0 = cll_storage[idx++];
   memcpy(pt0->coord, triaB_coord,     sizeof(double)*3);

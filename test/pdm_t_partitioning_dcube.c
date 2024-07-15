@@ -187,19 +187,24 @@ compute_dual_mesh_metrics
   /*
    * Compute cell_center and face center coordinates
    */
-  double** center_cell        = (double **) malloc( n_part * sizeof(double *) );
-  double** center_face        = (double **) malloc( n_part * sizeof(double *) );
-  double** surface_face       = (double **) malloc( n_part * sizeof(double *) );
-  double** ponderate_face_vtx = (double **) malloc( n_part * sizeof(double *) );
+  double* *center_cell;
+  PDM_malloc(center_cell, n_part ,double *);
+  double* *center_face;
+  PDM_malloc(center_face, n_part ,double *);
+  double* *surface_face;
+  PDM_malloc(surface_face, n_part ,double *);
+  double* *ponderate_face_vtx;
+  PDM_malloc(ponderate_face_vtx, n_part ,double *);
 
   for (int i_part = 0; i_part < n_part; i_part++){
 
-    center_cell [i_part] = (double *) malloc( 3 * pn_cell[i_part]  * sizeof(double) );
-    center_face [i_part] = (double *) malloc( 3 * pn_faces[i_part] * sizeof(double) );
-    surface_face[i_part] = (double *) malloc( 3 * pn_faces[i_part] * sizeof(double) );
+    center_cell PDM_malloc([i_part], 3 * pn_cell[i_part]  ,double);
+    center_face PDM_malloc([i_part], 3 * pn_faces[i_part] ,double);
+    PDM_malloc(surface_face[i_part], 3 * pn_faces[i_part] ,double);
 
-    ponderate_face_vtx[i_part] = (double *) malloc( pface_vtx_idx[i_part][pn_faces[i_part]] * sizeof(double) );
-    int* count_cell      = (int    *) malloc(     pn_cell[i_part]  * sizeof(int   ) );
+    PDM_malloc(ponderate_face_vtx[i_part], pface_vtx_idx[i_part][pn_faces[i_part]] ,double);
+    int *count_cell;
+    PDM_malloc(count_cell,     pn_cell[i_part]  ,int   );
 
     for (int iface = 0 ; iface < pn_faces[i_part]; iface++) {
       center_face[i_part][3*iface  ] = 0.;
@@ -335,15 +340,17 @@ compute_dual_mesh_metrics
   /*
    * Compute normal associate to edge
    */
-  double** edge_surf = (double **) malloc( n_part * sizeof(double *) );
-  double** dual_vol  = (double **) malloc( n_part * sizeof(double *) );
+  double* *edge_surf;
+  PDM_malloc(edge_surf, n_part ,double *);
+  double* *dual_vol;
+  PDM_malloc(dual_vol, n_part ,double *);
   for (int i_part = 0; i_part < n_part; i_part++){
 
     int    *_pedge_vtx  = pedge_vtx [i_part];
     double *_pvtx_coord = pvtx_coord[i_part];
 
-    edge_surf[i_part]  = (double *) malloc( 3 * pn_edge[i_part] * sizeof(double *) );
-    dual_vol [i_part]  = (double *) malloc(     pn_vtx [i_part] * sizeof(double *) );
+    PDM_malloc(edge_surf[i_part], 3 * pn_edge[i_part] ,double *);
+    dual_vol PDM_malloc([i_part],     pn_vtx [i_part] ,double *);
     double *_edge_surf = edge_surf[i_part];
     double *_dual_vol  = dual_vol[i_part];
 
@@ -488,7 +495,8 @@ compute_dual_mesh_metrics
     printf(" tot_volume = %12.5e \n", tot_volume);
 
     /* Flux balance */
-    double *flux_bal = (double *) malloc( 3 * pn_vtx [i_part] * sizeof(double *) );
+    double *flux_bal;
+    PDM_malloc(flux_bal, 3 * pn_vtx [i_part] ,double *);
     for(int ivtx = 0; ivtx < pn_vtx[i_part]; ++ivtx) {
       flux_bal[3*ivtx  ] = 0.;
       flux_bal[3*ivtx+1] = 0.;
@@ -696,10 +704,14 @@ int main(int argc, char *argv[])
    * Generate edge numbering
    */
   int n_edge_elt_tot = dface_vtx_idx[dn_face];
-  PDM_g_num_t* tmp_dface_edge         = (PDM_g_num_t *) malloc(     n_edge_elt_tot    * sizeof(PDM_g_num_t) );
-  int*         tmp_parent_elmt_pos    = (int         *) malloc(     n_edge_elt_tot    * sizeof(int        ) );
-  int*         tmp_dface_edge_vtx_idx = (int         *) malloc( ( n_edge_elt_tot + 1) * sizeof(int        ) );
-  PDM_g_num_t* tmp_dface_edge_vtx     = (PDM_g_num_t *) malloc( 2 * n_edge_elt_tot    * sizeof(PDM_g_num_t) );
+  PDM_g_num_t *tmp_dface_edge;
+  PDM_malloc(tmp_dface_edge,     n_edge_elt_tot    ,PDM_g_num_t);
+  int *tmp_parent_elmt_pos;
+  PDM_malloc(tmp_parent_elmt_pos,     n_edge_elt_tot    ,int        );
+  int *tmp_dface_edge_vtx_idx;
+  PDM_malloc(tmp_dface_edge_vtx_idx, ( n_edge_elt_tot + 1) ,int        );
+  PDM_g_num_t *tmp_dface_edge_vtx;
+  PDM_malloc(tmp_dface_edge_vtx, 2 * n_edge_elt_tot    ,PDM_g_num_t);
 
   int n_elmt_current = 0;
   int n_edge_current = 0;
@@ -854,8 +866,10 @@ int main(int argc, char *argv[])
    * Split it !!! CAUTION dn_cell can be different of the size of dual graph !!!
    */
   // printf("PDM_split_graph\n");
-  int* cell_part    = (int *) malloc( sizeof(int) * dn_cell );
-  int* dcell_weight = (int *) malloc( sizeof(int) * dn_cell );
+  int *cell_part;
+  PDM_malloc(cell_part,dn_cell ,int);
+  int *dcell_weight;
+  PDM_malloc(dcell_weight,dn_cell ,int);
   for(int i = 0; i < dn_cell; ++i){
     dcell_weight[i] = dual_graph_idx[i+1] - dual_graph_idx[i];
   }
@@ -876,7 +890,7 @@ int main(int argc, char *argv[])
 
   double *part_frac = NULL;
   if (1 == 0) {
-    part_frac = (double *) malloc(sizeof(double) * tn_part );
+    PDM_malloc(part_frac,tn_part ,double);
     for (int i_part = 0; i_part < tn_part-1; i_part++)
     {
       if (i_part % 2 == 0) part_frac[i_part] = (double) 0.5*(1./tn_part);
@@ -987,8 +1001,10 @@ int main(int argc, char *argv[])
             (const int ** )  pcell_face,
             (      int ***) &pface_cell);
 
-  // int* face_cell_idx = (int *) malloc( (pn_faces[0] + 1 ) * sizeof(int));
-  // int* face_cell     = (int *) malloc( (2 * pn_faces[0] ) * sizeof(int));
+  // int *face_cell_idx;
+ PDM_malloc(face_cell_idx, (pn_faces[0] + 1 ) ,int);
+  // int *face_cell;
+ PDM_malloc(face_cell, (2 * pn_faces[0] ) ,int);
   // int idx = 0;
   // face_cell_idx[0] = 0;
   // for(int i_face = 0; i_face < pn_faces[0]; ++i_face) {
@@ -1197,9 +1213,10 @@ int main(int argc, char *argv[])
   int** ppart_face_bound_idx;
   int** pface_bound;
 
-  int **face_is_bnd = (int **) malloc(n_part * sizeof(int*));
+  int **face_is_bnd;
+  PDM_malloc(*face_is_bnd,n_part ,int*);
   for (int i_part = 0; i_part < n_res_part; i_part++) {
-    face_is_bnd[i_part] = (int *) malloc(pn_faces[i_part]*sizeof(int));
+    PDM_malloc(face_is_bnd[i_part],pn_faces[i_part],int);
     for (int i_face = 0; i_face < pn_faces[i_part]; i_face++){
       if (pface_cell[i_part][2*i_face+1] > 0)
         face_is_bnd[i_part][i_face] = 0;

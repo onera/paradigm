@@ -252,7 +252,8 @@ main
 
   double step = 1. / (double) n_seg;
 
-  double *pts_coord = malloc(sizeof(double) * n_pts * 3);
+  double *pts_coord;
+  PDM_malloc(pts_coord,n_pts * 3,double);
   int idx = 0;
   // for (int k = 0; k < n_seg; k++) {
   //   for (int j = 0; j < n_seg; j++) {
@@ -267,7 +268,8 @@ main
     pts_coord[i] = (double) rand() / (double) RAND_MAX;
   }
 
-  PDM_morton_code_t *pts_code = malloc(sizeof(PDM_morton_code_t) * n_pts);
+  PDM_morton_code_t *pts_code;
+  PDM_malloc(pts_code,n_pts,PDM_morton_code_t);
   // for (int i = 0; i < n_pts; i++) {
   //   PDM_morton_code_t code = PDM_morton_encode(3,
   //                                              (PDM_morton_int_t) level,
@@ -287,14 +289,16 @@ main
                            d,
                            s);
 
-  PDM_morton_code_t *pts_code2 = malloc(sizeof(PDM_morton_code_t) * n_pts);
+  PDM_morton_code_t *pts_code2;
+  PDM_malloc(pts_code2,n_pts,PDM_morton_code_t);
   memcpy(pts_code2, pts_code, sizeof(PDM_morton_code_t) * n_pts);
 
   PDM_morton_local_sort(n_pts,
                         pts_code2);
 
 
-  int *order = malloc(sizeof(int) * n_pts);
+  int *order;
+  PDM_malloc(order,n_pts,int);
   PDM_morton_local_order(n_pts,
                          pts_code,
                          order);
@@ -308,7 +312,8 @@ main
   //             order[i]);
   // }
 
-  int *reverse_order = malloc(sizeof(int) * n_pts);
+  int *reverse_order;
+  PDM_malloc(reverse_order,n_pts,int);
   for (int i = 0; i < n_pts; i++) {
     reverse_order[order[i]] = i;
   }
@@ -318,7 +323,8 @@ main
   double normalization = (double) (1 << level_max);
   normalization = 1. / (normalization*normalization*normalization);
   // log_trace("normalization = %e\n", normalization);
-  double *flat_code = malloc(sizeof(double) * n_pts);
+  double *flat_code;
+  PDM_malloc(flat_code,n_pts,double);
   for (int i = 0; i < n_pts; i++) {
     flat_code[i] = _code_to_double(3, pts_code[i]);
     flat_code[i] *= normalization;
@@ -344,7 +350,8 @@ main
   //             flat_code[j]);
   // }
 
-  int *edge_vtx = malloc(sizeof(int) * 2 * (n_pts-1));
+  int *edge_vtx;
+  PDM_malloc(edge_vtx,2 * (n_pts-1),int);
   for (int i = 0; i < n_pts-1; i++) {
     edge_vtx[2*i  ] = order[i  ] + 1;
     edge_vtx[2*i+1] = order[i+1] + 1;
@@ -352,7 +359,8 @@ main
 
  PDM_free(pts_code2);
 
-  double *_order = malloc(sizeof(double) * n_pts);
+  double *_order;
+  PDM_malloc(_order,n_pts,double);
   for (int i = 0; i < n_pts; i++) {
     _order[i] = (double) reverse_order[i];
   }
@@ -381,7 +389,8 @@ main
  PDM_free(edge_vtx);
 
 
-  double *box_extents = malloc(sizeof(double) * n_pts * 6);
+  double *box_extents;
+  PDM_malloc(box_extents,n_pts * 6,double);
   idx = 0;
   for (int k = 0; k < n_seg; k++) {
     for (int j = 0; j < n_seg; j++) {
@@ -396,7 +405,8 @@ main
     }
   }
 
-  PDM_g_num_t *g_num = malloc(sizeof(PDM_g_num_t) * n_pts);
+  PDM_g_num_t *g_num;
+  PDM_malloc(g_num,n_pts,PDM_g_num_t);
   for (int i = 0; i < n_pts; i++) {
     g_num[i] = (PDM_g_num_t) reverse_order[i];
   }
@@ -409,7 +419,8 @@ main
  PDM_free(g_num);
 
 
-  int *order2 = malloc(sizeof(int) * n_pts);
+  int *order2;
+  PDM_malloc(order2,n_pts,int);
   for (int i = 0; i < n_pts; i++) {
     order2[i] = i;
   }

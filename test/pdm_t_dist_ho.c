@@ -444,21 +444,25 @@ int main(int argc, char *argv[])
                             &projected,
                             &closest_elt_gnum);
 
-    double *coord = malloc(sizeof(double) * n_pts_clouds * 2 * 3);
+    double *coord;
+    PDM_malloc(coord,n_pts_clouds * 2 * 3,double);
     memcpy(coord,                  pts_coord, sizeof(double) * n_pts_clouds * 3);
     memcpy(coord + 3*n_pts_clouds, projected, sizeof(double) * n_pts_clouds * 3);
 
-    int *connec = malloc(sizeof(int) * n_pts_clouds * 2);
+    int *connec;
+    PDM_malloc(connec,n_pts_clouds * 2,int);
     for (int i = 0; i < n_pts_clouds; i++) {
       connec[2*i  ] = i+1;
       connec[2*i+1] = i+1 + n_pts_clouds;
     }
 
-    PDM_g_num_t *g_num = malloc(sizeof(PDM_g_num_t) * n_pts_clouds * 2);
+    PDM_g_num_t *g_num;
+    PDM_malloc(g_num,n_pts_clouds * 2,PDM_g_num_t);
     memcpy(g_num,                pts_g_num,        sizeof(PDM_g_num_t) * n_pts_clouds);
     memcpy(g_num + n_pts_clouds, closest_elt_gnum, sizeof(PDM_g_num_t) * n_pts_clouds);
 
-    double *_closest_elt_gnum = malloc(sizeof(double) * n_pts_clouds);
+    double *_closest_elt_gnum;
+    PDM_malloc(_closest_elt_gnum,n_pts_clouds,double);
     for (int i = 0; i < n_pts_clouds; i++) {
       _closest_elt_gnum[i] = (double) closest_elt_gnum[i];
     }

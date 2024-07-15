@@ -132,15 +132,16 @@ PDM_part_mesh_nodal_create
  const PDM_MPI_Comm comm
 )
 {
-  PDM_part_mesh_nodal_t *pmn = (PDM_part_mesh_nodal_t *) malloc (sizeof(PDM_part_mesh_nodal_t));
+  PDM_part_mesh_nodal_t *pmn;
+  PDM_malloc(pmn,1,PDM_part_mesh_nodal_t);
 
   pmn->comm           = comm;
   pmn->mesh_dimension = mesh_dimension;
   pmn->n_part         = n_part;
 
-  pmn->vtx      = malloc(n_part * sizeof(PDM_Mesh_nodal_vtx_t *));
+  PDM_malloc(pmn->vtx,n_part ,PDM_Mesh_nodal_vtx_t *);
   for (int i = 0; i < n_part; i++) {
-    pmn->vtx[i] = malloc(sizeof(PDM_Mesh_nodal_vtx_t));
+    PDM_malloc(pmn->vtx[i],1,PDM_Mesh_nodal_vtx_t);
     pmn->vtx[i]->_coords    = NULL;
     pmn->vtx[i]->_numabs    = NULL;
     pmn->vtx[i]->_numparent = NULL;
@@ -162,8 +163,8 @@ PDM_part_mesh_nodal_create
 
   pmn->s_section = 10;
   pmn->n_section = 0;
-  pmn->section_kind = malloc(sizeof(PDM_geometry_kind_t) * pmn->s_section);
-  pmn->section_id   = malloc(sizeof(int                ) * pmn->s_section);
+  PDM_malloc(pmn->section_kind,pmn->s_section,PDM_geometry_kind_t);
+  PDM_malloc(pmn->section_id,pmn->s_section,int                );
 
   return pmn;
 }
@@ -257,7 +258,7 @@ PDM_part_mesh_nodal_coord_from_parent_set
     PDM_error(__FILE__, __LINE__, 0, "Vertices are already defined\n");
   }
 
-  vtx->parent = (PDM_Mesh_nodal_vtx_t *) malloc (sizeof (PDM_Mesh_nodal_vtx_t));
+  PDM_malloc(vtx->parent,1,PDM_Mesh_nodal_vtx_t);
   PDM_Mesh_nodal_vtx_t *_parent = vtx->parent;
   _parent->parent = NULL;
   _parent->n_vtx = n_vtx_parent;
@@ -270,7 +271,7 @@ PDM_part_mesh_nodal_coord_from_parent_set
 
 
   vtx->n_vtx      = n_vtx;
-  vtx->coords     = malloc (sizeof(double) * 3 * n_vtx);
+  PDM_malloc(vtx->coords,3 * n_vtx,double);
   vtx->_coords    = (double *) vtx->coords;
   vtx->_numabs    = (PDM_g_num_t *) numabs;
   vtx->_numparent = (int *) num_parent;
@@ -1237,7 +1238,8 @@ PDM_part_mesh_nodal_dump_vtk
                                                        PDM_OWNERSHIP_BAD_VALUE);
 
           int n_vtx_per_elmt = PDM_Mesh_nodal_n_vtx_elt_get (t_elt, order);
-          int *pcell_vtx_out = malloc(n_vtx_per_elmt * n_elt * sizeof(int));
+          int *pcell_vtx_out;
+          PDM_malloc(pcell_vtx_out,n_vtx_per_elmt * n_elt ,int);
           for(int i = 0; i < n_vtx_per_elmt * n_elt; ++i) {
             pcell_vtx_out[i] = pcell_vtx[i];
           }
@@ -2639,7 +2641,7 @@ PDM_part_mesh_nodal_cell_vtx_connect_get
   PDM_array_accumulate_int(*cell_vtx_idx, n_cell+1);
 
 
-  *cell_vtx = malloc(sizeof(int) * (*cell_vtx_idx)[n_cell]);
+  PDM_malloc(*cell_vtx,(*cell_vtx_idx)[n_cell],int);
 
   for (int isection = 0; isection < n_section; isection++) {
 

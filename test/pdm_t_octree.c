@@ -224,7 +224,8 @@ char *argv[]
 
   PDM_octree_seq_free(oct_orig);
 
-  double *weight =  malloc( n_src * sizeof(double));
+  double *weight;
+  PDM_malloc(weight, n_src ,double);
   for(int i = 0; i < n_src; ++i) {
     weight[i] = 1.;
   }

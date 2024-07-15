@@ -87,7 +87,8 @@ struct _pdm_timer_t {
 
 PDM_timer_t *PDM_timer_create(void)
 {
-  PDM_timer_t *timer = (PDM_timer_t *) malloc(sizeof(PDM_timer_t));
+  PDM_timer_t *timer;
+  PDM_malloc(timer,1,PDM_timer_t);
   PDM_timer_init(timer);
 
   return timer;

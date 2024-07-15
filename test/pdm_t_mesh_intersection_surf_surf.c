@@ -290,7 +290,8 @@ _generate_surface_mesh
 
   int n_domain = 1;
   // int n_part_domains = {n_part};
-  int *n_part_domains = (int *) malloc(sizeof(int) * n_domain);
+  int *n_part_domains;
+  PDM_malloc(n_part_domains,n_domain,int);
   n_part_domains[0] = n_part;
 
   PDM_multipart_t *mpart = PDM_multipart_create(n_domain,
@@ -597,8 +598,10 @@ char *argv[]
     if (verbose) {
       log_trace("FROM A USER POV\n");
     }
-    int    **pelt_a_elt_b_n      = malloc(sizeof(int    *) * n_part);
-    double **pelt_a_elt_b_volume = malloc(sizeof(double *) * n_part);
+    int **pelt_a_elt_b_n;
+    PDM_malloc(*pelt_a_elt_b_n,n_part,int    *);
+    double **pelt_a_elt_b_volume;
+    PDM_malloc(*pelt_a_elt_b_volume,n_part,double *);
 
     for (int ipart = 0; ipart < n_part; ipart++) {
       int         *elt_a_elt_b_idx = NULL;
@@ -617,7 +620,7 @@ char *argv[]
                                                     &elt_a_ln_to_gn,
                                                     PDM_OWNERSHIP_KEEP);
 
-      pelt_a_elt_b_n[ipart] = malloc(sizeof(int) * n_elt_a);
+      PDM_malloc(pelt_a_elt_b_n[ipart],n_elt_a,int);
       for (int i = 0; i < n_elt_a; i++) {
         pelt_a_elt_b_n[ipart][i] = elt_a_elt_b_idx[i+1] - elt_a_elt_b_idx[i];
 

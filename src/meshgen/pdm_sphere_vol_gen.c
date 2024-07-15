@@ -563,7 +563,7 @@ const int  *face_vtx,
       int **face_edge
  )
 {
-  *face_edge = malloc(sizeof(int) * n_face * 3);
+  PDM_malloc(*face_edge,n_face * 3,int);
 
   int key_max = PDM_MAX(0, 2*(n_vtx-1));
   int n_key = key_max + 1;
@@ -586,11 +586,12 @@ const int  *face_vtx,
   int *key_edge_idx = PDM_array_new_idx_from_sizes_int(key_edge_n, n_key);
   PDM_array_reset_int(key_edge_n, n_key, 0);
 
-  int *key_edge = (int *) malloc(sizeof(int) * key_edge_idx[n_key]);
+  int *key_edge;
+  PDM_malloc(key_edge,key_edge_idx[n_key],int);
 
   int n_edge_max = 3*n_face;
   *n_edge = 0;
-  *edge_vtx  = malloc(sizeof(int) * n_edge_max * 2);
+  PDM_malloc(*edge_vtx,n_edge_max * 2,int);
   for (int iface = 0; iface < n_face; iface++) {
     const int *_face_vtx  =  face_vtx  + 3*iface;
     int       *_face_edge = *face_edge + 3*iface;
@@ -650,8 +651,8 @@ const int  *cell_vtx,
       int **cell_edge
  )
 {
-  *cell_face = malloc(sizeof(int) * n_cell * 4);
-  *cell_edge = malloc(sizeof(int) * n_cell * 6);
+  PDM_malloc(*cell_face,n_cell * 4,int);
+  PDM_malloc(*cell_edge,n_cell * 6,int);
 
   /* Build faces */
   int key_max = PDM_MAX(0, 3*(n_vtx-1));
@@ -675,11 +676,12 @@ const int  *cell_vtx,
   int *key_face_idx = PDM_array_new_idx_from_sizes_int(key_face_n, n_key);
   PDM_array_reset_int(key_face_n, n_key, 0);
 
-  int *key_face = (int *) malloc(sizeof(int) * key_face_idx[n_key]);
+  int *key_face;
+  PDM_malloc(key_face,key_face_idx[n_key],int);
 
   int n_face_max = 4*n_cell;
   *n_face = 0;
-  *face_vtx  = malloc(sizeof(int) * n_face_max * 3);
+  PDM_malloc(*face_vtx,n_face_max * 3,int);
   for (int icell = 0; icell < n_cell; icell++) {
     const int *_cell_vtx  =  cell_vtx  + 4*icell;
     int       *_cell_face = *cell_face + 4*icell;
@@ -729,7 +731,7 @@ const int  *cell_vtx,
  PDM_free(key_face);
 
   PDM_realloc(*face_vtx  ,*face_vtx  , 3  * (*n_face) ,int);
-  *face_edge = malloc(sizeof(int) * (*n_face) * 3);
+  PDM_malloc(*face_edge,(*n_face) * 3,int);
 
   /* Build edges */
   key_max = PDM_MAX(0, 2*(n_vtx-1));
@@ -753,11 +755,12 @@ const int  *cell_vtx,
   int *key_edge_idx = PDM_array_new_idx_from_sizes_int(key_edge_n, n_key);
   PDM_array_reset_int(key_edge_n, n_key, 0);
 
-  int *key_edge = (int *) malloc(sizeof(int) * key_edge_idx[n_key]);
+  int *key_edge;
+  PDM_malloc(key_edge,key_edge_idx[n_key],int);
 
   int n_edge_max = 3*(*n_face);
   *n_edge = 0;
-  *edge_vtx  = malloc(sizeof(int) * n_edge_max * 2);
+  PDM_malloc(*edge_vtx,n_edge_max * 2,int);
   for (int iface = 0; iface < *n_face; iface++) {
     int *_face_vtx  = *face_vtx  + 3*iface;
     int *_face_edge = *face_edge + 3*iface;
@@ -1038,7 +1041,8 @@ _gen_from_base_mesh
   }
 
   /* Auxiliary arrays */
-  int *tria_j_idx = malloc(sizeof(int) * n);
+  int *tria_j_idx;
+  PDM_malloc(tria_j_idx,n,int);
   if (n > 0) {
     tria_j_idx[0] = 0;
     for (int j = 0; j < n-1; j++) {
@@ -1048,12 +1052,14 @@ _gen_from_base_mesh
 
   // PDM_log_trace_array_int(tria_j_idx, n, "tria_j_idx : ");
 
-  int **tetra_j_idx = malloc(sizeof(int *) * PDM_MAX(n-2, 0));
-  int  *tetra_k_idx = malloc(sizeof(int  ) * PDM_MAX(n-1, 0));
+  int **tetra_j_idx;
+  PDM_malloc(tetra_j_idx,PDM_MAX(n-2, 0),int *);
+  int *tetra_k_idx;
+  PDM_malloc(tetra_k_idx,PDM_MAX(n-1, 0),int  );
 
   if (n > 1) {
     for (int k = 0; k < n-2; k++) {
-      tetra_j_idx[k] = malloc(sizeof(int) * (n-1-k));
+      PDM_malloc(tetra_j_idx[k],(n-1-k),int);
       tetra_j_idx[k][0] = 0;
       for (int j = 0; j < n-2-k; j++) {
         tetra_j_idx[k][j+1] = tetra_j_idx[k][j] + n-2-k-j;
@@ -1088,7 +1094,7 @@ _gen_from_base_mesh
 
   int dn_vtx = (int) ((*distrib_vtx)[i_rank+1] - (*distrib_vtx)[i_rank]);
 
-  *dvtx_coord = malloc(sizeof(double) * dn_vtx * 3);
+  PDM_malloc(*dvtx_coord,dn_vtx * 3,double);
 
   PDM_g_num_t idx_vtx_edge = base_n_vtx;
   PDM_g_num_t idx_vtx_face = idx_vtx_edge + base_n_edge*n;
@@ -1225,7 +1231,7 @@ _gen_from_base_mesh
 
   int dn_cell = (int) ((*distrib_cell)[i_rank+1] - (*distrib_cell)[i_rank]);
 
-  *dcell_vtx = malloc(sizeof(PDM_g_num_t) * dn_cell * 4);
+  PDM_malloc(*dcell_vtx,dn_cell * 4,PDM_g_num_t);
 
   // //-->> tmp
   // for (int i = 0; i < 4*dn_cell; i++) {
@@ -1234,7 +1240,8 @@ _gen_from_base_mesh
   // //<<--
 
 
-  int *base_cell_face_perm = malloc(sizeof(int) * 4 * base_n_cell);
+  int *base_cell_face_perm;
+  PDM_malloc(base_cell_face_perm,4 * base_n_cell,int);
   for (int icell = 0; icell < base_n_cell; icell++) {
     for (int idx_face = 0; idx_face < 4; idx_face++) {
       int face_id = PDM_ABS(base_cell_face[4*icell+idx_face]) - 1;
@@ -1252,7 +1259,7 @@ _gen_from_base_mesh
 
 
   int *hextet_k_idx[6];
-  hextet_k_idx[0] = malloc(sizeof(int) * (n+2));
+  PDM_malloc(hextet_k_idx[0],(n+2),int);
   hextet_k_idx[0][0] = 0;
   for (int k = 0; k < n+1; k++) {
     int p = n-k;
@@ -1260,7 +1267,7 @@ _gen_from_base_mesh
   }
   assert(hextet_k_idx[0][n+1] == subcell_hextet_n[0]);
 
-  hextet_k_idx[1] = malloc(sizeof(int) * (n+1));
+  PDM_malloc(hextet_k_idx[1],(n+1),int);
   hextet_k_idx[1][0] = 0;
   for (int k = 0; k < n; k++) {
     int p = n-1-k;
@@ -1272,7 +1279,7 @@ _gen_from_base_mesh
   hextet_k_idx[3] = hextet_k_idx[1];
   hextet_k_idx[4] = hextet_k_idx[1];
 
-  hextet_k_idx[5] = malloc(sizeof(int) * n);
+  PDM_malloc(hextet_k_idx[5],n,int);
   if (n > 0) {
     hextet_k_idx[5][0] = 0;
     for (int k = 0; k < n-1; k++) {
@@ -1463,7 +1470,8 @@ _gen_from_base_mesh
 
 
   int base_n_bdr_face = 0;
-  int *base_bdr_face = malloc(sizeof(int) * base_n_face);
+  int *base_bdr_face;
+  PDM_malloc(base_bdr_face,base_n_face,int);
   for (int iface = 0; iface < base_n_face; iface++) {
     if (base_face_tag[iface] != 0) {
       base_bdr_face[base_n_bdr_face++] = PDM_SIGN(base_face_tag[iface]) * (iface+1);
@@ -1495,7 +1503,7 @@ _gen_from_base_mesh
 
   int dn_face = (int) ((*distrib_face)[i_rank+1] - (*distrib_face)[i_rank]);
 
-  *dface_vtx = malloc(sizeof(PDM_g_num_t) * dn_face * 3);
+  PDM_malloc(*dface_vtx,dn_face * 3,PDM_g_num_t);
 
   // //-->> tmp
   for (int i = 0; i < 3*dn_face; i++) {
@@ -1610,7 +1618,8 @@ _extrude_base_surface_mesh
   /*
    *  Compute unit normals at base vertices
    */
-  double *base_vtx_normal = malloc(sizeof(double) * base_n_vtx * 3);
+  double *base_vtx_normal;
+  PDM_malloc(base_vtx_normal,base_n_vtx * 3,double);
   for (int i = 0; i < 3*base_n_vtx; i++) {
     base_vtx_normal[i] = 0.;
   }
@@ -1645,7 +1654,8 @@ _extrude_base_surface_mesh
   }
 
   /* Auxiliary arrays */
-  int *tria_j_idx = malloc(sizeof(int) * n);
+  int *tria_j_idx;
+  PDM_malloc(tria_j_idx,n,int);
   if (n > 0) {
     tria_j_idx[0] = 0;
     for (int j = 0; j < n-1; j++) {
@@ -1670,7 +1680,7 @@ _extrude_base_surface_mesh
 
   int dn_vtx = (int) ((*distrib_vtx)[i_rank+1] - (*distrib_vtx)[i_rank]);
 
-  *dvtx_coord = malloc(sizeof(double) * dn_vtx * 3);
+  PDM_malloc(*dvtx_coord,dn_vtx * 3,double);
 
   PDM_g_num_t idx_vtx_edge = base_n_vtx;
   PDM_g_num_t idx_vtx_face = idx_vtx_edge + base_n_edge*n;
@@ -1768,7 +1778,7 @@ _extrude_base_surface_mesh
 
   int dn_cell = (int) ((*distrib_cell)[i_rank+1] - (*distrib_cell)[i_rank]);
 
-  *dcell_vtx = malloc(sizeof(PDM_g_num_t) * dn_cell * 6);
+  PDM_malloc(*dcell_vtx,dn_cell * 6,PDM_g_num_t);
 
   for (int icell = 0; icell < dn_cell; icell++) {
 
@@ -1843,7 +1853,8 @@ _extrude_base_surface_mesh
 
 
   int base_n_bdr_edge = 0;
-  int *base_bdr_edge = malloc(sizeof(int) * base_n_edge);
+  int *base_bdr_edge;
+  PDM_malloc(base_bdr_edge,base_n_edge,int);
   for (int iedge = 0; iedge < base_n_edge; iedge++) {
     if (base_edge_tag[iedge] != 0) {
       base_bdr_edge[base_n_bdr_edge++] = PDM_SIGN(base_edge_tag[iedge]) * (iedge+1);
@@ -1863,7 +1874,7 @@ _extrude_base_surface_mesh
 
   int dn_face = (int) ((*distrib_face)[i_rank+1] - (*distrib_face)[i_rank]);
 
-  *dface_vtx = malloc(sizeof(PDM_g_num_t) * dn_face * 3); // !!! if quads
+  PDM_malloc(*dface_vtx,dn_face * 3,PDM_g_num_t); // !!! if quads
 
   for (int iface = 0; iface < dn_face; iface++) {
 
@@ -1930,11 +1941,11 @@ _extrude_base_surface_mesh
   int dn_group_face = (int) (distrib_group[i_rank+1] - distrib_group[i_rank]);
 
   *n_group         = 2;
-  *dgroup_face_idx = malloc(sizeof(int) * 3);
+  PDM_malloc(*dgroup_face_idx,3,int);
   (*dgroup_face_idx)[0] = 0;
   (*dgroup_face_idx)[1] = dn_group_face;
   (*dgroup_face_idx)[2] = 2*dn_group_face;
-  *dgroup_face     = malloc(sizeof(PDM_g_num_t) * dn_group_face * 2);
+  PDM_malloc(*dgroup_face,dn_group_face * 2,PDM_g_num_t);
 
   for (int i = 0; i < dn_group_face; i++) {
     (*dgroup_face)[i] = distrib_group[i_rank] + i + 1;
@@ -2004,11 +2015,11 @@ _set_dmesh_nodal
   PDM_g_num_t *_dgroup_face     = dgroup_face;
   if (_dgroup_face == NULL) {
     _n_group = 1;
-    _dgroup_face_idx = (int *) malloc(sizeof(int) * (_n_group + 1));
+    PDM_malloc(_dgroup_face_idx,(_n_group + 1),int);
     _dgroup_face_idx[0] = 0;
     _dgroup_face_idx[1] = dn_face;
 
-    _dgroup_face = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * _dgroup_face_idx[_n_group]);
+    PDM_malloc(_dgroup_face,_dgroup_face_idx[_n_group],PDM_g_num_t);
     for (int i = 0; i < dn_face; i++) {
       _dgroup_face[i] = distrib_face[i_rank] + i + 1;
     }
@@ -2030,11 +2041,13 @@ _set_dmesh_nodal
                                         PDM_OWNERSHIP_KEEP);
 
   // int n_group = 1;
-  // int *dgroup_cell_idx = (int *) malloc(sizeof(int) * (n_group + 1));
+  // int *dgroup_cell_idx;
+ // PDM_malloc(dgroup_cell_idx,(n_group + 1),int);
   // dgroup_cell_idx[0] = 0;
   // dgroup_cell_idx[1] = dn_cell;
 
-  // PDM_g_num_t *dgroup_cell = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * dgroup_cell_idx[n_group]);
+  // PDM_g_num_t *dgroup_cell;
+ // PDM_malloc(dgroup_cell,dgroup_cell_idx[n_group],PDM_g_num_t);
   // for (int i = 0; i < dn_face; i++) {
   //   dgroup_cell[i] = distrib_cell[i_rank] + i + 1;
   // }
@@ -2124,7 +2137,8 @@ PDM_sphere_vol_gen_nodal
 
   double center[3] = {center_x, center_y, center_z};
 
-  double *_dvtx_coord = malloc(sizeof(double) * dn_vtx * 3);
+  double *_dvtx_coord;
+  PDM_malloc(_dvtx_coord,dn_vtx * 3,double);
   for (int i = 0; i < dn_vtx; i++) {
 
     // double r2 = 0., rinf = 0.;
@@ -2190,7 +2204,8 @@ PDM_sphere_vol_gen_nodal
     PDM_Mesh_nodal_elt_t  elt_type    = PDM_DMesh_nodal_section_type_get   (_dmn, geom_kind, id_section);
 
     int elt_vtx_n = PDM_Mesh_nodal_n_vtx_elt_get(elt_type, order);
-    PDM_g_num_t *_delt_vtx = malloc(sizeof(PDM_g_num_t) * dn_elt * elt_vtx_n);
+    PDM_g_num_t *_delt_vtx;
+    PDM_malloc(_delt_vtx,dn_elt * elt_vtx_n,PDM_g_num_t);
     memcpy(_delt_vtx, delt_vtx, sizeof(PDM_g_num_t) * dn_elt * elt_vtx_n);
 
     int _id_section = PDM_DMesh_nodal_elmts_section_ho_add((*dmn)->volumic,
@@ -2225,7 +2240,8 @@ PDM_sphere_vol_gen_nodal
     PDM_Mesh_nodal_elt_t  elt_type    = PDM_DMesh_nodal_section_type_get   (_dmn, geom_kind, id_section);
 
     int elt_vtx_n = PDM_Mesh_nodal_n_vtx_elt_get(elt_type, order);
-    PDM_g_num_t *_delt_vtx = malloc(sizeof(PDM_g_num_t) * dn_elt * elt_vtx_n);
+    PDM_g_num_t *_delt_vtx;
+    PDM_malloc(_delt_vtx,dn_elt * elt_vtx_n,PDM_g_num_t);
     memcpy(_delt_vtx, delt_vtx, sizeof(PDM_g_num_t) * dn_elt * elt_vtx_n);
 
     int _id_section = PDM_DMesh_nodal_elmts_section_ho_add((*dmn)->surfacic,
@@ -2247,11 +2263,13 @@ PDM_sphere_vol_gen_nodal
   PDM_g_num_t *distrib_face = PDM_compute_uniform_entity_distribution(comm,
                                                                       gn_elt_surf);
   int n_group = 1;
-  int *dgroup_elt_idx = malloc(sizeof(int) * (n_group + 1));
+  int *dgroup_elt_idx;
+  PDM_malloc(dgroup_elt_idx,(n_group + 1),int);
   dgroup_elt_idx[0] = 0;
   dgroup_elt_idx[n_group] = (int) (distrib_face[i_rank+1] - distrib_face[i_rank]);
 
-  PDM_g_num_t *dgroup_elt = malloc(sizeof(PDM_g_num_t) * dgroup_elt_idx[n_group]);
+  PDM_g_num_t *dgroup_elt;
+  PDM_malloc(dgroup_elt,dgroup_elt_idx[n_group],PDM_g_num_t);
   for (int i = 0; i < dgroup_elt_idx[n_group]; i++) {
     dgroup_elt[i] = distrib_face[i_rank] + i + 1;
   }
@@ -2440,7 +2458,8 @@ PDM_sphere_vol_icosphere_gen
   int dn_vtx = (*distrib_vtx)[i_rank+1] - (*distrib_vtx)[i_rank];
 
   int *ibase_cell = PDM_array_const_int(dn_vtx, -1);
-  double *w = malloc(sizeof(double) * dn_vtx);
+  double *w;
+  PDM_malloc(w,dn_vtx,double);
 
   for (int icell = 0; icell < base_n_cell; icell++) {
 

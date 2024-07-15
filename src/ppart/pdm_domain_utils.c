@@ -70,7 +70,8 @@ PDM_compute_offset_ln_to_gn_by_domain
 {
 
   PDM_g_num_t *shift_by_domain_loc = PDM_array_const_gnum(n_domain, 0);
-  PDM_g_num_t *shift_by_domain     = (PDM_g_num_t *) malloc((n_domain+1) * sizeof(PDM_g_num_t));
+  PDM_g_num_t *shift_by_domain;
+  PDM_malloc(shift_by_domain,(n_domain+1) ,PDM_g_num_t);
 
   for(int i_domain = 0; i_domain < n_domain; ++i_domain) {
     for(int i_part = 0; i_part < n_part[i_domain]; ++i_part) {

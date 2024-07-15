@@ -192,7 +192,8 @@ _generate_surface_mesh
 
   int n_domain = 1;
   // int n_part_domains = {n_part};
-  int *n_part_domains = (int *) malloc(sizeof(int) * n_domain);
+  int *n_part_domains;
+  PDM_malloc(n_part_domains,n_domain,int);
   n_part_domains[0] = n_part;
 
   PDM_multipart_t *mpart = PDM_multipart_create(n_domain,
@@ -316,16 +317,26 @@ int main(int argc, char *argv[])
                           &dmn_surf,
                           &mpart_surf);
 
-  int          *surf_pn_vtx          = (int          *) malloc(sizeof(int          ) * n_part);
-  int          *surf_pn_face         = (int          *) malloc(sizeof(int          ) * n_part);
-  int          *surf_pn_edge         = (int          *) malloc(sizeof(int          ) * n_part);
-  int         **surf_pface_edge_idx  = (int         **) malloc(sizeof(int         *) * n_part);
-  int         **surf_pface_edge      = (int         **) malloc(sizeof(int         *) * n_part);
-  int         **surf_pedge_vtx       = (int         **) malloc(sizeof(int         *) * n_part);
-  int         **surf_pface_vtx       = (int         **) malloc(sizeof(int         *) * n_part);
-  double      **surf_pvtx_coord      = (double      **) malloc(sizeof(double      *) * n_part);
-  PDM_g_num_t **surf_pvtx_ln_to_gn   = (PDM_g_num_t **) malloc(sizeof(PDM_g_num_t *) * n_part);
-  PDM_g_num_t **surf_pface_ln_to_gn  = (PDM_g_num_t **) malloc(sizeof(PDM_g_num_t *) * n_part);
+  int *surf_pn_vtx;
+  PDM_malloc(surf_pn_vtx,n_part,int          );
+  int *surf_pn_face;
+  PDM_malloc(surf_pn_face,n_part,int          );
+  int *surf_pn_edge;
+  PDM_malloc(surf_pn_edge,n_part,int          );
+  int **surf_pface_edge_idx;
+  PDM_malloc(*surf_pface_edge_idx,n_part,int         *);
+  int **surf_pface_edge;
+  PDM_malloc(*surf_pface_edge,n_part,int         *);
+  int **surf_pedge_vtx;
+  PDM_malloc(*surf_pedge_vtx,n_part,int         *);
+  int **surf_pface_vtx;
+  PDM_malloc(*surf_pface_vtx,n_part,int         *);
+  double **surf_pvtx_coord;
+  PDM_malloc(*surf_pvtx_coord,n_part,double      *);
+  PDM_g_num_t **surf_pvtx_ln_to_gn;
+  PDM_malloc(*surf_pvtx_ln_to_gn,n_part,PDM_g_num_t *);
+  PDM_g_num_t **surf_pface_ln_to_gn;
+  PDM_malloc(*surf_pface_ln_to_gn,n_part,PDM_g_num_t *);
 
   for (int i_part = 0; i_part < n_part; i_part++) {
     surf_pn_vtx[i_part] = PDM_multipart_part_vtx_coord_get(mpart_surf,

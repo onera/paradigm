@@ -125,7 +125,8 @@ int main(int argc, char *argv[])
     PDM_gnum_free(gnum_vtx);
 
 
-    double *elt_center = malloc(sizeof(double) * n_elt * 3);
+    double *elt_center;
+    PDM_malloc(elt_center,n_elt * 3,double);
     for (int i = 0; i < n_elt; i++) {
       for (int j = 0; j < 3; j++) {
         elt_center[3*i+j] = 0;

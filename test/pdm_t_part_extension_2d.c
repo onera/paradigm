@@ -231,7 +231,7 @@ _compute_face_vtx
 {
   int dbg = 0;
 
-  *face_vtx = malloc (sizeof(int) * face_edge_idx[n_face]);
+  PDM_malloc(*face_vtx,face_edge_idx[n_face],int);
 
   for(int i_face = 0; i_face <  face_edge_idx[n_face]; ++i_face) {
     (*face_vtx)[i_face] = 10000;
@@ -327,7 +327,8 @@ _part_extension
   PDM_MPI_Comm_rank(comm, &i_rank);
   PDM_MPI_Comm_size(comm, &n_rank);
 
-  int* n_part_g = malloc(n_domain * sizeof(int));
+  int *n_part_g;
+  PDM_malloc(n_part_g,n_domain ,int);
   printf("n_domain = %i \n", n_domain);
   PDM_MPI_Allreduce(n_part, n_part_g, n_domain, PDM_MPI_INT, PDM_MPI_SUM, comm);
 
@@ -339,38 +340,55 @@ _part_extension
     }
   }
 
-  int          **pn_vtx              = (int          **) malloc( n_domain * sizeof(int          *));
-  int          **pn_edge             = (int          **) malloc( n_domain * sizeof(int          *));
-  int          **pn_face             = (int          **) malloc( n_domain * sizeof(int          *));
-  PDM_g_num_t ***pvtx_ln_to_gn       = (PDM_g_num_t ***) malloc( n_domain * sizeof(PDM_g_num_t **));
-  PDM_g_num_t ***pedge_ln_to_gn      = (PDM_g_num_t ***) malloc( n_domain * sizeof(PDM_g_num_t **));
-  PDM_g_num_t ***pface_ln_to_gn      = (PDM_g_num_t ***) malloc( n_domain * sizeof(PDM_g_num_t **));
-  int         ***pface_vtx_idx       = (int         ***) malloc( n_domain * sizeof(int         **));
-  int         ***pface_vtx           = (int         ***) malloc( n_domain * sizeof(int         **));
+  int **pn_vtx;
+  PDM_malloc(*pn_vtx, n_domain ,int          *);
+  int **pn_edge;
+  PDM_malloc(*pn_edge, n_domain ,int          *);
+  int **pn_face;
+  PDM_malloc(*pn_face, n_domain ,int          *);
+  PDM_g_num_t ***pvtx_ln_to_gn;
+  PDM_malloc(**pvtx_ln_to_gn, n_domain ,PDM_g_num_t **);
+  PDM_g_num_t ***pedge_ln_to_gn;
+  PDM_malloc(**pedge_ln_to_gn, n_domain ,PDM_g_num_t **);
+  PDM_g_num_t ***pface_ln_to_gn;
+  PDM_malloc(**pface_ln_to_gn, n_domain ,PDM_g_num_t **);
+  int ***pface_vtx_idx;
+  PDM_malloc(**pface_vtx_idx, n_domain ,int         **);
+  int ***pface_vtx;
+  PDM_malloc(**pface_vtx, n_domain ,int         **);
 
-  int           *pflat_n_vtx         = (int           *) malloc( ln_part_tot * sizeof(int           ));
-  int           *pflat_n_edge        = (int           *) malloc( ln_part_tot * sizeof(int           ));
-  int           *pflat_n_face        = (int           *) malloc( ln_part_tot * sizeof(int           ));
-  int          **pflat_face_vtx      = (int          **) malloc( ln_part_tot * sizeof(int          *));
-  int          **pflat_face_vtx_idx  = (int          **) malloc( ln_part_tot * sizeof(int          *));
+  int *pflat_n_vtx;
+  PDM_malloc(pflat_n_vtx, ln_part_tot ,int           );
+  int *pflat_n_edge;
+  PDM_malloc(pflat_n_edge, ln_part_tot ,int           );
+  int *pflat_n_face;
+  PDM_malloc(pflat_n_face, ln_part_tot ,int           );
+  int **pflat_face_vtx;
+  PDM_malloc(*pflat_face_vtx, ln_part_tot ,int          *);
+  int **pflat_face_vtx_idx;
+  PDM_malloc(*pflat_face_vtx_idx, ln_part_tot ,int          *);
 
-  PDM_g_num_t  **pflat_vtx_ln_to_gn  = (PDM_g_num_t  **) malloc( ln_part_tot * sizeof(PDM_g_num_t  *));
-  PDM_g_num_t  **pflat_edge_ln_to_gn = (PDM_g_num_t  **) malloc( ln_part_tot * sizeof(PDM_g_num_t  *));
-  PDM_g_num_t  **pflat_face_ln_to_gn = (PDM_g_num_t  **) malloc( ln_part_tot * sizeof(PDM_g_num_t  *));
-  double       **pflat_vtx_coords    = (double       **) malloc( ln_part_tot * sizeof(double       *));
+  PDM_g_num_t **pflat_vtx_ln_to_gn;
+  PDM_malloc(*pflat_vtx_ln_to_gn, ln_part_tot ,PDM_g_num_t  *);
+  PDM_g_num_t **pflat_edge_ln_to_gn;
+  PDM_malloc(*pflat_edge_ln_to_gn, ln_part_tot ,PDM_g_num_t  *);
+  PDM_g_num_t **pflat_face_ln_to_gn;
+  PDM_malloc(*pflat_face_ln_to_gn, ln_part_tot ,PDM_g_num_t  *);
+  double **pflat_vtx_coords;
+  PDM_malloc(*pflat_vtx_coords, ln_part_tot ,double       *);
 
 
   ln_part_tot = 0;
   for(int i_dom = 0; i_dom < n_domain; ++i_dom) {
 
-    pn_vtx            [i_dom]  = (int          *) malloc( n_part[i_dom] * sizeof(int          ));
-    pn_edge           [i_dom]  = (int          *) malloc( n_part[i_dom] * sizeof(int          ));
-    pn_face           [i_dom]  = (int          *) malloc( n_part[i_dom] * sizeof(int          ));
-    pvtx_ln_to_gn     [i_dom]  = (PDM_g_num_t **) malloc( n_part[i_dom] * sizeof(PDM_g_num_t *));
-    pedge_ln_to_gn    [i_dom]  = (PDM_g_num_t **) malloc( n_part[i_dom] * sizeof(PDM_g_num_t *));
-    pface_ln_to_gn    [i_dom]  = (PDM_g_num_t **) malloc( n_part[i_dom] * sizeof(PDM_g_num_t *));
-    pface_vtx_idx     [i_dom]  = (int         **) malloc( n_part[i_dom] * sizeof(int         *));
-    pface_vtx         [i_dom]  = (int         **) malloc( n_part[i_dom] * sizeof(int         *));
+    pn_vtx            PDM_malloc([i_dom], n_part[i_dom] ,int          );
+    pn_edge           PDM_malloc([i_dom], n_part[i_dom] ,int          );
+    pn_face           PDM_malloc([i_dom], n_part[i_dom] ,int          );
+    pvtx_ln_to_gn     PDM_malloc([i_dom], n_part[i_dom] ,PDM_g_num_t *);
+    pedge_ln_to_gn    PDM_malloc([i_dom], n_part[i_dom] ,PDM_g_num_t *);
+    pface_ln_to_gn    PDM_malloc([i_dom], n_part[i_dom] ,PDM_g_num_t *);
+    pface_vtx_idx     PDM_malloc([i_dom], n_part[i_dom] ,int         *);
+    pface_vtx         PDM_malloc([i_dom], n_part[i_dom] ,int         *);
 
     for(int i_part = 0; i_part < n_part[i_dom]; ++i_part) {
 
@@ -613,11 +631,16 @@ _part_extension
   if(pdi != NULL) {
     n_interface = PDM_part_domain_interface_n_interface_get(pdi);
   }
-  double  **translation_vector = malloc(n_interface * sizeof(double *  ));
-  double ***rotation_matrix    = malloc(n_interface * sizeof(double ** ));
-  double  **rotation_direction = malloc(n_interface * sizeof(double *  ));
-  double  **rotation_center    = malloc(n_interface * sizeof(double *  ));
-  double   *rotation_angle     = malloc(n_interface * sizeof(double    ));
+  double **translation_vector;
+  PDM_malloc(*translation_vector,n_interface ,double *  );
+  double ***rotation_matrix;
+  PDM_malloc(**rotation_matrix,n_interface ,double ** );
+  double **rotation_direction;
+  PDM_malloc(*rotation_direction,n_interface ,double *  );
+  double **rotation_center;
+  PDM_malloc(*rotation_center,n_interface ,double *  );
+  double *rotation_angle;
+  PDM_malloc(rotation_angle,n_interface ,double    );
   for(int i_interf = 0; i_interf < n_interface; ++i_interf) {
     translation_vector[i_interf] = NULL;
     PDM_part_domain_interface_translation_get(pdi, i_interf, &translation_vector[i_interf]);
@@ -630,9 +653,9 @@ _part_extension
                                               &rotation_angle    [i_interf]);
 
     if(rotation_center    [i_interf] != NULL) {
-      rotation_matrix[i_interf] = malloc(3 * sizeof(double *));
+      PDM_malloc(rotation_matrix[i_interf],3 ,double *);
       for(int k = 0; k < 3; ++k) {
-        rotation_matrix[i_interf][k] = malloc(3 * sizeof(double));
+        PDM_malloc(rotation_matrix[i_interf][k],3 ,double);
       }
     }
   }
@@ -676,13 +699,19 @@ _part_extension
       int pn_concat_vtx  = pflat_n_vtx [i_part] + pn_vtx_extented [i_part];
       int pn_concat_face = pflat_n_face[i_part] + pn_face_extented[i_part];
 
-      int *face_kind = malloc(pn_concat_face * sizeof(int));
+      int *face_kind;
+      PDM_malloc(face_kind,pn_concat_face ,int);
 
-      int         *concat_face_vtx_n    = malloc( (pn_concat_face  ) * sizeof(int         ));
-      int         *concat_face_vtx_idx  = malloc( (pn_concat_face+1) * sizeof(int         ));
-      PDM_g_num_t *concat_face_ln_to_gn = malloc(     pn_concat_face * sizeof(PDM_g_num_t ));
-      double      *concat_vtx_coord     = malloc( 3 * pn_concat_vtx  * sizeof(double      ));
-      PDM_g_num_t *concat_vtx_ln_to_gn  = malloc(     pn_concat_vtx  * sizeof(PDM_g_num_t ));
+      int *concat_face_vtx_n;
+      PDM_malloc(concat_face_vtx_n, (pn_concat_face  ) ,int         );
+      int *concat_face_vtx_idx;
+      PDM_malloc(concat_face_vtx_idx, (pn_concat_face+1) ,int         );
+      PDM_g_num_t *concat_face_ln_to_gn;
+      PDM_malloc(concat_face_ln_to_gn,     pn_concat_face ,PDM_g_num_t );
+      double *concat_vtx_coord;
+      PDM_malloc(concat_vtx_coord, 3 * pn_concat_vtx  ,double      );
+      PDM_g_num_t *concat_vtx_ln_to_gn;
+      PDM_malloc(concat_vtx_ln_to_gn,     pn_concat_vtx  ,PDM_g_num_t );
 
       for(int i = 0; i < pn_concat_face; ++i) {
         concat_face_vtx_n[i] = 0;
@@ -690,7 +719,8 @@ _part_extension
 
       int n_face_vtx = pflat_face_vtx_idx[i_part][pflat_n_face[i_part]] + pextented_face_vtx_idx[i_part][pn_face_extented[i_part]];
 
-      int *concat_face_vtx     = malloc(n_face_vtx  * sizeof(int         ));
+      int *concat_face_vtx;
+      PDM_malloc(concat_face_vtx,n_face_vtx  ,int         );
 
       for(int i_face = 0; i_face < pflat_n_face[i_part]; ++i_face) {
         for(int idx_vtx = pflat_face_vtx_idx[i_part][i_face]; idx_vtx < pflat_face_vtx_idx[i_part][i_face+1]; ++idx_vtx) {
@@ -1079,8 +1109,10 @@ int main
 
   int n_domain = n_dom_i * n_dom_j * n_dom_k;
 
-  // PDM_dcube_nodal_t **dcube = (PDM_dcube_nodal_t **) malloc(sizeof(PDM_dcube_nodal_t *) * n_domain);
-  PDM_dmesh_nodal_t **dmn   = (PDM_dmesh_nodal_t **) malloc(sizeof(PDM_dmesh_nodal_t *) * n_domain);
+  // PDM_dcube_nodal_t **dcube;
+ PDM_malloc(*dcube,n_domain,PDM_dcube_nodal_t *);
+  PDM_dmesh_nodal_t **dmn;
+  PDM_malloc(*dmn,n_domain,PDM_dmesh_nodal_t *);
   PDM_dcube_nodal_t **dcube = NULL;
   PDM_domain_interface_t *dom_intrf = NULL;
 
@@ -1109,7 +1141,8 @@ int main
   /*
    * Partitionnement
    */
-  int* n_part_by_domain = (int *) malloc(n_domain * sizeof(int));
+  int *n_part_by_domain;
+  PDM_malloc(n_part_by_domain,n_domain ,int);
   for(int i = 0; i < n_domain; ++i) {
     n_part_by_domain[i] = n_part;
   }
@@ -1146,27 +1179,37 @@ int main
   /*
    *  Prepare pointer by domain and by part
    */
-  int           *pn_n_part      = (int           *) malloc( n_domain * sizeof(int          *));
-  int          **pn_face        = (int          **) malloc( n_domain * sizeof(int          *));
-  int          **pn_edge        = (int          **) malloc( n_domain * sizeof(int          *));
-  PDM_g_num_t ***pface_ln_to_gn = (PDM_g_num_t ***) malloc( n_domain * sizeof(PDM_g_num_t **));
-  PDM_g_num_t ***pedge_ln_to_gn = (PDM_g_num_t ***) malloc( n_domain * sizeof(PDM_g_num_t **));
-  int          **pn_vtx         = (int          **) malloc( n_domain * sizeof(int          *));
-  PDM_g_num_t ***pvtx_ln_to_gn  = (PDM_g_num_t ***) malloc( n_domain * sizeof(PDM_g_num_t **));
-  int         ***pface_vtx      = (int         ***) malloc( n_domain * sizeof(int         **));
-  int         ***pedge_vtx      = (int         ***) malloc( n_domain * sizeof(int         **));
-  int         ***pedge_vtx_idx  = (int         ***) malloc( n_domain * sizeof(int         **));
+  int *pn_n_part;
+  PDM_malloc(pn_n_part, n_domain ,int          *);
+  int **pn_face;
+  PDM_malloc(*pn_face, n_domain ,int          *);
+  int **pn_edge;
+  PDM_malloc(*pn_edge, n_domain ,int          *);
+  PDM_g_num_t ***pface_ln_to_gn;
+  PDM_malloc(**pface_ln_to_gn, n_domain ,PDM_g_num_t **);
+  PDM_g_num_t ***pedge_ln_to_gn;
+  PDM_malloc(**pedge_ln_to_gn, n_domain ,PDM_g_num_t **);
+  int **pn_vtx;
+  PDM_malloc(*pn_vtx, n_domain ,int          *);
+  PDM_g_num_t ***pvtx_ln_to_gn;
+  PDM_malloc(**pvtx_ln_to_gn, n_domain ,PDM_g_num_t **);
+  int ***pface_vtx;
+  PDM_malloc(**pface_vtx, n_domain ,int         **);
+  int ***pedge_vtx;
+  PDM_malloc(**pedge_vtx, n_domain ,int         **);
+  int ***pedge_vtx_idx;
+  PDM_malloc(**pedge_vtx_idx, n_domain ,int         **);
   for (int i_dom = 0; i_dom < n_domain; i_dom++) {
     pn_n_part     [i_dom] = n_part;
-    pn_face       [i_dom] = (int          *) malloc( n_part * sizeof(int          ));
-    pn_edge       [i_dom] = (int          *) malloc( n_part * sizeof(int          ));
-    pface_ln_to_gn[i_dom] = (PDM_g_num_t **) malloc( n_part * sizeof(PDM_g_num_t *));
-    pedge_ln_to_gn[i_dom] = (PDM_g_num_t **) malloc( n_part * sizeof(PDM_g_num_t *));
-    pn_vtx        [i_dom] = (int          *) malloc( n_part * sizeof(int          ));
-    pvtx_ln_to_gn [i_dom] = (PDM_g_num_t **) malloc( n_part * sizeof(PDM_g_num_t *));
-    pface_vtx     [i_dom] = (int         **) malloc( n_part * sizeof(int         *));
-    pedge_vtx     [i_dom] = (int         **) malloc( n_part * sizeof(int         *));
-    pedge_vtx_idx [i_dom] = (int         **) malloc( n_part * sizeof(int         *));
+    pn_face       PDM_malloc([i_dom], n_part ,int          );
+    pn_edge       PDM_malloc([i_dom], n_part ,int          );
+    PDM_malloc(pface_ln_to_gn[i_dom], n_part ,PDM_g_num_t *);
+    PDM_malloc(pedge_ln_to_gn[i_dom], n_part ,PDM_g_num_t *);
+    pn_vtx        PDM_malloc([i_dom], n_part ,int          );
+    pvtx_ln_to_gn PDM_malloc([i_dom], n_part ,PDM_g_num_t *);
+    pface_vtx     PDM_malloc([i_dom], n_part ,int         *);
+    pedge_vtx     PDM_malloc([i_dom], n_part ,int         *);
+    pedge_vtx_idx PDM_malloc([i_dom], n_part ,int         *);
     for (int i_part = 0; i_part < pn_n_part[i_dom]; i_part++) {
       pn_face[i_dom][i_part] = PDM_multipart_part_ln_to_gn_get(mpart,
                                                                i_dom,
@@ -1197,7 +1240,7 @@ int main
 
       assert(pedge_vtx_idx [i_dom][i_part] == NULL);
 
-      pedge_vtx_idx [i_dom][i_part] = malloc((pn_edge[i_dom][i_part]+1) * sizeof(int));
+      pedge_vtx_idx PDM_malloc([i_dom][i_part],(pn_edge[i_dom][i_part]+1) ,int);
       for(int i_edge = 0; i_edge < pn_edge[i_dom][i_part]+1; ++i_edge) {
         pedge_vtx_idx [i_dom][i_part][i_edge] = 2*i_edge;
       }

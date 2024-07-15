@@ -175,7 +175,7 @@ _polygon_plane_3d(const int    n_vertices,
     /* First rotation of axis (Oz) and angle (Ox, normal proj. on Oxy) */
 
     if (n_vertices > _N_VERTICES_AUTO_MAX) {
-      _tmp_coords_p  = malloc (sizeof(double) * n_vertices*3);
+      PDM_malloc(_tmp_coords_p,n_vertices*3,double);
       tmp_coords = _tmp_coords_p;
     }
 
@@ -831,17 +831,17 @@ PDM_triangulate_state_create(const int  n_vertices_max)
   int n_edges_max = (2*n_vertices_max) - 3;
   int n_edges_tot_max = n_edges_max * (n_edges_max - 1) / 2;
 
-  this_state = malloc (sizeof(PDM_triangulate_state_t));
+  PDM_malloc(this_state,1,PDM_triangulate_state_t);
 
   if (n_vertices_max > 3) {
-    this_state->triangle_vertices = malloc (sizeof(int) * (n_vertices_max - 2) * 3);
-    this_state->coords            = malloc (sizeof(double) * n_vertices_max*3);
-    this_state->list_previous     = malloc (sizeof(int) * n_vertices_max);
-    this_state->list_next         = malloc (sizeof(int) * n_vertices_max);
-    this_state->edge_vertices     = malloc (sizeof(int) * n_edges_tot_max*2);
-    this_state->edge_neighbors    = malloc (sizeof(int) * n_edges_tot_max*2);
-    this_state->edge_is_delaunay  = malloc (sizeof(PDM_bool_t) * n_edges_tot_max);
-    this_state->concave           = malloc (sizeof(PDM_bool_t) * n_vertices_max);
+    PDM_malloc(this_state->triangle_vertices,(n_vertices_max - 2) * 3,int);
+    PDM_malloc(this_state->coords,n_vertices_max*3,double);
+    PDM_malloc(this_state->list_previous,n_vertices_max,int);
+    PDM_malloc(this_state->list_next,n_vertices_max,int);
+    PDM_malloc(this_state->edge_vertices,n_edges_tot_max*2,int);
+    PDM_malloc(this_state->edge_neighbors,n_edges_tot_max*2,int);
+    PDM_malloc(this_state->edge_is_delaunay,n_edges_tot_max,PDM_bool_t);
+    PDM_malloc(this_state->concave,n_vertices_max,PDM_bool_t);
   }
   else {
     this_state->triangle_vertices = NULL;
@@ -1073,7 +1073,7 @@ PDM_triangulate_polygon(int                             dim,
      to obtain a Delaunay triangulation */
 
   int *_triangle_vertices;
-  _triangle_vertices = malloc (sizeof(int) * (state->n_vertices_max - 2) * 3);
+  PDM_malloc(_triangle_vertices,(state->n_vertices_max - 2) * 3,int);
 
   for (int iii = 0; iii <  (state->n_vertices_max - 2) * 3; iii++) {
     _triangle_vertices[iii] =  state->triangle_vertices[iii];

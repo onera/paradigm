@@ -72,7 +72,8 @@ PDM_multi_block_merge_create
        PDM_MPI_Comm   comm
 )
 {
-  PDM_multi_block_merge_t *mbm = (PDM_multi_block_merge_t *) malloc (sizeof(PDM_multi_block_merge_t));
+  PDM_multi_block_merge_t *mbm;
+  PDM_malloc(mbm,1,PDM_multi_block_merge_t);
 
   PDM_MPI_Comm_size (comm, &mbm->n_rank);
   PDM_MPI_Comm_rank (comm, &mbm->i_rank);
@@ -80,8 +81,8 @@ PDM_multi_block_merge_create
   mbm->comm        = comm;
   mbm->n_block     = n_block;
 
-  mbm->blocks_ini_dn = (int *) malloc(n_block*sizeof(int));
-  mbm->multi_block_distrib = malloc( (n_block + 1) * sizeof(PDM_g_num_t));
+  PDM_malloc(mbm->blocks_ini_dn,n_block,int);
+  PDM_malloc(mbm->multi_block_distrib, (n_block + 1) ,PDM_g_num_t);
   mbm->multi_block_distrib[0] = 0;
   for(int i_block = 0; i_block < n_block; ++i_block) {
     mbm->multi_block_distrib[i_block+1] = mbm->multi_block_distrib[i_block] + block_distrib_idx[i_block][mbm->n_rank];
@@ -91,15 +92,19 @@ PDM_multi_block_merge_create
   /*
    * Shift des données d'entrés
    */
-  PDM_g_num_t **_selected_g_num  = malloc( (n_block + 1) * sizeof(PDM_g_num_t *));
-  PDM_g_num_t **_send_orig_g_num = malloc( (n_block + 1) * sizeof(PDM_g_num_t *));
-  int         **_send_stride     = malloc( (n_block + 1) * sizeof(int         *));
-  int          *_n_selected      = malloc( (n_block + 1) * sizeof(int          ));
+  PDM_g_num_t **_selected_g_num;
+  PDM_malloc(*_selected_g_num, (n_block + 1) ,PDM_g_num_t *);
+  PDM_g_num_t **_send_orig_g_num;
+  PDM_malloc(*_send_orig_g_num, (n_block + 1) ,PDM_g_num_t *);
+  int **_send_stride;
+  PDM_malloc(*_send_stride, (n_block + 1) ,int         *);
+  int *_n_selected;
+  PDM_malloc(_n_selected, (n_block + 1) ,int          );
   for(int i_block = 0; i_block < n_block; ++i_block) {
 
     _n_selected     [i_block] = n_selected[i_block];
-    _selected_g_num [i_block] = malloc(n_selected[i_block] * sizeof(PDM_g_num_t));
-    _send_stride    [i_block] = malloc(n_selected[i_block] * sizeof(int        ));
+    _selected_g_num PDM_malloc([i_block],n_selected[i_block] ,PDM_g_num_t);
+    _send_stride    PDM_malloc([i_block],n_selected[i_block] ,int        );
     _send_orig_g_num[i_block] = _selected_g_num[i_block];
 
     for(int i = 0; i < n_selected[i_block]; ++i) {
@@ -110,9 +115,9 @@ PDM_multi_block_merge_create
 
   // Add graph as partition
   _n_selected     [n_block] = dmerge_idx[graph_size];
-  _selected_g_num [n_block] = malloc(dmerge_idx[graph_size] * sizeof(PDM_g_num_t));
-  _send_orig_g_num[n_block] = malloc(2*(dmerge_idx[graph_size]-graph_size) * sizeof(PDM_g_num_t));
-  _send_stride    [n_block] = malloc(dmerge_idx[graph_size] * sizeof(int        ));
+  _selected_g_num PDM_malloc([n_block],dmerge_idx[graph_size] ,PDM_g_num_t);
+  PDM_malloc(_send_orig_g_num[n_block],2*(dmerge_idx[graph_size]-graph_size) ,PDM_g_num_t);
+  _send_stride    PDM_malloc([n_block],dmerge_idx[graph_size] ,int        );
   int w_idx = 0;
   for(int i = 0; i < graph_size; ++i) {
     // First vertex in the graph becomes the reference. We send to corresponding gnum
@@ -190,7 +195,8 @@ PDM_multi_block_merge_create
   // for numbering, we just select gnums who did not receive a 0
   // for old to new, we will just invert the recv field which is in a fact the new to old order
   int* recv_idx = PDM_array_new_idx_from_sizes_int (recv_stride, dn_merge);
-  int* dnew_to_old_idx = (int *) malloc( (dn_merge+1) * sizeof(int));
+  int *dnew_to_old_idx;
+  PDM_malloc(dnew_to_old_idx, (dn_merge+1) ,int);
   dnew_to_old_idx[0] = 0;
   mbm->dn_new_block = 0;
 
@@ -327,7 +333,8 @@ static void _dist_data_update
   for (int i = 0; i < dn_data; i++)
     n_to_update += stride[i];
 
-  int *data_sign = (int *) malloc (n_to_update * sizeof(int));
+  int *data_sign;
+  PDM_malloc(data_sign,n_to_update ,int);
   for (int i = 0; i < n_to_update; i++) {
     data_sign[i] = PDM_SIGN(_data[i]);
     _data[i]      = PDM_ABS (_data[i]);
@@ -335,7 +342,8 @@ static void _dist_data_update
 
   // Prepare stride for old_to_new to send. Should be 0 or 1 !
   int dn_old_to_new = old_to_new_distri[i_rank+1] - old_to_new_distri[i_rank];
-  int *dold_to_new_n = (int * ) malloc( dn_old_to_new * sizeof(int));
+  int *dold_to_new_n;
+  PDM_malloc(dold_to_new_n, dn_old_to_new ,int);
   for(int i = 0; i < dn_old_to_new; ++i) {
     dold_to_new_n[i] = dold_to_new_idx[i+1] - dold_to_new_idx[i];
     assert(dold_to_new_n[i] <= 1);
@@ -347,7 +355,8 @@ static void _dist_data_update
                                                                       1,
                                                                       comm);
 
-  int *recv_stride = (int *) malloc(n_to_update*sizeof(int));
+  int *recv_stride;
+  PDM_malloc(recv_stride,n_to_update,int);
   PDM_block_to_part_exch_in_place (btp_update,
                           sizeof(PDM_g_num_t),
                           PDM_STRIDE_VAR_INTERLACED,
@@ -402,7 +411,8 @@ PDM_multi_block_merge_exch_and_update
   
   // 1. Shift the connectivity to exchange to make it related to its domain
   int n_block = mbm_cur->n_block;
-  PDM_g_num_t **shifted_block_data = (PDM_g_num_t **) malloc(n_block*sizeof(PDM_g_num_t*));
+  PDM_g_num_t **shifted_block_data;
+  PDM_malloc(*shifted_block_data,n_block,PDM_g_num_t*);
   for (int i_block = 0; i_block < n_block; i_block++) {
     int n_data_block = 0;
     if (t_stride == PDM_STRIDE_CST_INTERLACED) {
@@ -413,7 +423,7 @@ PDM_multi_block_merge_exch_and_update
         n_data_block += block_stride[i_block][i];
       }
     }
-    shifted_block_data[i_block] = (PDM_g_num_t *) malloc(n_data_block*sizeof(PDM_g_num_t));
+    PDM_malloc(shifted_block_data[i_block],n_data_block,PDM_g_num_t);
     if (update_domain == NULL) {
       PDM_g_num_t shift = mbm_for_update->multi_block_distrib[i_block];
       for (int i = 0; i < n_data_block; i++) {

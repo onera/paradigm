@@ -213,14 +213,14 @@ _compute_face_vtx
 )
 {
 
-  *n_face = (int *) malloc(sizeof(int) * n_part);
-  *face_vtx_idx = (int **) malloc(sizeof(int *) * n_part);
-  *face_vtx = (int **) malloc(sizeof(int *) * n_part);
-  *face_ln_to_gn = (PDM_g_num_t **) malloc(sizeof(PDM_g_num_t *) * n_part);
+  PDM_malloc(*n_face,n_part,int);
+  PDM_malloc(*face_vtx_idx,n_part,int *);
+  PDM_malloc(*face_vtx,n_part,int *);
+  PDM_malloc(*face_ln_to_gn,n_part,PDM_g_num_t *);
 
-  *n_vtx = (int *) malloc(sizeof(int) * n_part);
-  *vtx_coord = (double **) malloc(sizeof(double *) * n_part);
-  *vtx_ln_to_gn = (PDM_g_num_t **) malloc(sizeof(PDM_g_num_t *) * n_part);
+  PDM_malloc(*n_vtx,n_part,int);
+  PDM_malloc(*vtx_coord,n_part,double *);
+  PDM_malloc(*vtx_ln_to_gn,n_part,PDM_g_num_t *);
 
 
   for (int ipart = 0; ipart < n_part; ipart++) {
@@ -290,23 +290,28 @@ _compute_face_vtx
                            &_edgeGroupLNToGN);
 
     (*n_face)[ipart] = _n_face;
-    (*face_vtx_idx) [ipart] = (int *) malloc(sizeof(int) * (_n_face + 1));
-    (*face_vtx)[ipart] = (int *) malloc(sizeof(int) * _sFaceEdge);
-    (*face_ln_to_gn)[ipart] = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * _n_face);
+    (*face_vtx_idx) PDM_malloc([ipart],(_n_face + 1),int);
+    ( *face_vtx)[ipart];
+    PDM_malloc(face_vtx)[ipart],_sFaceEdge,int);
+    ( *face_ln_to_gn)[ipart];
+    PDM_malloc(face_ln_to_gn)[ipart],_n_face,PDM_g_num_t);
 
     memcpy ((*face_vtx_idx)[ipart], _faceEdgeIdx, (_n_face + 1) * sizeof(int));
     memcpy ((*face_ln_to_gn)[ipart], _face_ln_to_gn, _n_face * sizeof(PDM_g_num_t));
 
     (*n_vtx)[ipart] = _n_vtx;
-    (*vtx_coord)[ipart] = (double *) malloc(sizeof(double) * (3 * _n_vtx));
-    (*vtx_ln_to_gn)[ipart] = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * _n_vtx);
+    ( *vtx_coord)[ipart];
+    PDM_malloc(vtx_coord)[ipart],(3 * _n_vtx),double);
+    ( *vtx_ln_to_gn)[ipart];
+    PDM_malloc(vtx_ln_to_gn)[ipart],_n_vtx,PDM_g_num_t);
 
     memcpy ((*vtx_coord)[ipart], _vtx, 3 *_n_vtx * sizeof(double));
     memcpy ((*vtx_ln_to_gn)[ipart], _vtx_ln_to_gn, _n_vtx * sizeof(PDM_g_num_t));
 
     int *_face_vtx = (*face_vtx)[ipart];
 
-    int *vtxEdgeIdx = (int *) malloc(sizeof(int) * (_n_vtx + 1));
+    int *vtxEdgeIdx;
+    PDM_malloc(vtxEdgeIdx,(_n_vtx + 1),int);
 
     for (int i = 0; i < _n_vtx + 1; i++) {
       vtxEdgeIdx[i] = 0;
@@ -324,8 +329,10 @@ _compute_face_vtx
       vtxEdgeIdx[i] = vtxEdgeIdx[i] + vtxEdgeIdx[i-1];
     }
 
-    int *vtxEdge = (int *) malloc(sizeof(int) * vtxEdgeIdx[_n_vtx]);
-    int *vtxEdgeN = (int *) malloc(sizeof(int) * _n_vtx);
+    int *vtxEdge;
+    PDM_malloc(vtxEdge,vtxEdgeIdx[_n_vtx],int);
+    int *vtxEdgeN;
+    PDM_malloc(vtxEdgeN,_n_vtx,int);
     for (int i = 0; i < _n_vtx; i++) {
       vtxEdgeN[i] = 0;
     }
@@ -509,8 +516,10 @@ _create_split_mesh
 
     int have_dCellPart = 0;
 
-    int *dCellPart = (int *) malloc (dn_face*sizeof(int));
-    int *dEdgeVtxIdx = (int *) malloc ((dNEdge+1)*sizeof(int));
+    int *dCellPart;
+    PDM_malloc(dCellPart,dn_face,int);
+    int *dEdgeVtxIdx;
+    PDM_malloc(dEdgeVtxIdx,(dNEdge+1),int);
 
     dEdgeVtxIdx[0] = 0;
     for (int i = 0; i < dNEdge; i++) {
@@ -670,28 +679,32 @@ _create_split_mesh
 
   }
   else {
-    *n_face = (int *) malloc(sizeof(int) * n_part);
-    *face_vtx_idx = (int **) malloc(sizeof(int *) * n_part);
-    *face_vtx = (int **) malloc(sizeof(int *) * n_part);
-    *face_ln_to_gn = (PDM_g_num_t **) malloc(sizeof(PDM_g_num_t *) * n_part);
+    PDM_malloc(*n_face,n_part,int);
+    PDM_malloc(*face_vtx_idx,n_part,int *);
+    PDM_malloc(*face_vtx,n_part,int *);
+    PDM_malloc(*face_ln_to_gn,n_part,PDM_g_num_t *);
 
-    *n_vtx = (int *) malloc(sizeof(int) * n_part);
-    *vtx_coord = (double **) malloc(sizeof(double *) * n_part);
-    *vtx_ln_to_gn = (PDM_g_num_t **) malloc(sizeof(PDM_g_num_t *) * n_part);
+    PDM_malloc(*n_vtx,n_part,int);
+    PDM_malloc(*vtx_coord,n_part,double *);
+    PDM_malloc(*vtx_ln_to_gn,n_part,PDM_g_num_t *);
 
     for (int ipart = 0; ipart < n_part; ipart++) {
       int _n_face = 0;
       int _sFaceEdge = 0;
       (*n_face)[ipart] = _n_face;
-      (*face_vtx_idx) [ipart] = (int *) malloc(sizeof(int) * (_n_face + 1));
+      (*face_vtx_idx) PDM_malloc([ipart],(_n_face + 1),int);
       (*face_vtx_idx) [ipart][0] = 0;
-      (*face_vtx)[ipart] = (int *) malloc(sizeof(int) * _sFaceEdge);
-      (*face_ln_to_gn)[ipart] = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * _n_face);
+      ( *face_vtx)[ipart];
+      PDM_malloc(face_vtx)[ipart],_sFaceEdge,int);
+      ( *face_ln_to_gn)[ipart];
+      PDM_malloc(face_ln_to_gn)[ipart],_n_face,PDM_g_num_t);
 
       int _n_vtx = 0;
       (*n_vtx)[ipart] = _n_vtx;
-      (*vtx_coord)[ipart] = (double *) malloc(sizeof(double) * (3 * _n_vtx));
-      (*vtx_ln_to_gn)[ipart] = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * _n_vtx);
+      ( *vtx_coord)[ipart];
+      PDM_malloc(vtx_coord)[ipart],(3 * _n_vtx),double);
+      ( *vtx_ln_to_gn)[ipart];
+      PDM_malloc(vtx_ln_to_gn)[ipart],_n_vtx,PDM_g_num_t);
     }
   }
 
@@ -787,15 +800,18 @@ _export_ini_mesh
      * Debut des ecritures
      */
 
-    int *nsom_part  = (int *) malloc(sizeof(int) * n_part);
+    int *nsom_part;
+    PDM_malloc(nsom_part,n_part,int);
 
-    int *n_part_procs = (int *) malloc(sizeof(int) * numProcs);
+    int *n_part_procs;
+    PDM_malloc(n_part_procs,numProcs,int);
 
     PDM_MPI_Allgather ((void *) &n_part,      1, PDM_MPI_INT,
                        (void *) n_part_procs, 1, PDM_MPI_INT,
                        PDM_MPI_COMM_WORLD);
 
-    int *debPartProcs = (int *) malloc(sizeof(int) * (numProcs + 1));
+    int *debPartProcs;
+    PDM_malloc(debPartProcs,(numProcs + 1),int);
 
     debPartProcs[0] = 0;
     for (int i = 0; i < numProcs; i++) {
@@ -806,8 +822,10 @@ _export_ini_mesh
 
     PDM_writer_step_beg (id_cs, 0.);
 
-    int **_face_nb =  malloc(sizeof(int *) * n_part);
-    int **_face_idx =  malloc(sizeof(int *) * n_part);
+    int **_face_nb;
+    PDM_malloc(*_face_nb,n_part,int *);
+    int **_face_idx;
+    PDM_malloc(*_face_idx,n_part,int *);
 
     for (int ipart = 0; ipart < n_part; ipart++) {
 
@@ -819,8 +837,8 @@ _export_ini_mesh
                                  vtx_ln_to_gn[ipart],
                                  PDM_OWNERSHIP_USER);
 
-      _face_nb[ipart] = malloc(sizeof(int) * n_face[ipart]);
-      _face_idx[ipart] = malloc(sizeof(int) * n_face[ipart]);
+      PDM_malloc(_face_nb[ipart],n_face[ipart],int);
+      PDM_malloc(_face_idx[ipart],n_face[ipart],int);
 
       for (int j = 0; j < n_face[ipart]; j++) {
         _face_nb[ipart][j]  = face_vtx_idx[ipart][j+1] - face_vtx_idx[ipart][j];
@@ -855,15 +873,18 @@ _export_ini_mesh
        - tenseur
     */
 
-    PDM_real_t **val_num_part = (PDM_real_t **) malloc (sizeof(PDM_real_t *) * n_part);
-    PDM_real_t **val_coo_x    = (PDM_real_t **) malloc (sizeof(PDM_real_t *) * n_part);
-    PDM_real_t **val_coo_xyz  = (PDM_real_t **) malloc (sizeof(PDM_real_t *) * n_part);
+    PDM_real_t **val_num_part;
+    PDM_malloc(*val_num_part,n_part,PDM_real_t *);
+    PDM_real_t **val_coo_x;
+    PDM_malloc(*val_coo_x,n_part,PDM_real_t *);
+    PDM_real_t **val_coo_xyz;
+    PDM_malloc(*val_coo_xyz,n_part,PDM_real_t *);
 
     for (int ipart = 0; ipart < n_part; ipart++) {
 
-      val_num_part[ipart] = (PDM_real_t *) malloc (sizeof(PDM_real_t) * n_face[ipart]);
-      val_coo_x[ipart]    = (PDM_real_t *) malloc (sizeof(PDM_real_t) * n_vtx[ipart]);
-      val_coo_xyz[ipart]  = (PDM_real_t *) malloc (sizeof(PDM_real_t) * 3 * n_vtx[ipart]);
+      PDM_malloc(val_num_part[ipart],n_face[ipart],PDM_real_t);
+      PDM_malloc(val_coo_x[ipart],n_vtx[ipart],PDM_real_t);
+      PDM_malloc(val_coo_xyz[ipart],3 * n_vtx[ipart],PDM_real_t);
       nsom_part[ipart]    = n_vtx[ipart];
 
       for (int i = 0; i < n_face[ipart]; i++) {
@@ -1042,7 +1063,8 @@ char *argv[]
       masterRank = 1;
     }
 
-    int *rankInNodes = malloc(sizeof(int) * numProcs);
+    int *rankInNodes;
+    PDM_malloc(rankInNodes,numProcs,int);
 
     PDM_MPI_Allreduce (&masterRank, &nNode, 1, PDM_MPI_INT, PDM_MPI_SUM, PDM_MPI_COMM_WORLD);
     PDM_MPI_Allgather (&rankInNode, 1, PDM_MPI_INT, rankInNodes, 1, PDM_MPI_INT, PDM_MPI_COMM_WORLD);

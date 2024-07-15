@@ -239,7 +239,8 @@ _generate_volume_mesh
 
   int n_domain = 1;
   // int n_part_domains = {n_part};
-  int *n_part_domains = (int *) malloc(sizeof(int) * n_domain);
+  int *n_part_domains;
+  PDM_malloc(n_part_domains,n_domain,int);
   n_part_domains[0] = n_part;
 
   PDM_multipart_t *mpart = PDM_multipart_create(n_domain,
@@ -295,7 +296,8 @@ _cell_center_3d
   }
   assert(pvtx_coord     != NULL);
 
-  double* entity_center = malloc(3 * pn_cell * sizeof(double ));
+  double *entity_center;
+  PDM_malloc(entity_center,3 * pn_cell ,double );
 
   if(from_face == 1) {
     for(int i_cell = 0; i_cell < pn_cell; ++i_cell) {
@@ -409,21 +411,33 @@ _create_wall_surf
   int n_rank;
   PDM_MPI_Comm_size (comm, &n_rank);
 
-  int          *n_surf_vtx           = malloc(n_part * sizeof(int          ));
-  int          *n_surf_face          = malloc(n_part * sizeof(int          ));
+  int *n_surf_vtx;
+  PDM_malloc(n_surf_vtx,n_part ,int          );
+  int *n_surf_face;
+  PDM_malloc(n_surf_face,n_part ,int          );
 
-  double      **cell_center          = malloc(n_part * sizeof(double      *));
-  double      **psurf_vtx_coord      = malloc(n_part * sizeof(double      *));
-  int         **psurf_face_vtx_idx   = malloc(n_part * sizeof(int         *));
-  int         **psurf_face_vtx_n     = malloc(n_part * sizeof(int         *));
-  int         **psurf_face_vtx       = malloc(n_part * sizeof(int         *));
-  PDM_g_num_t **psurf_face_ln_to_gn  = malloc(n_part * sizeof(PDM_g_num_t *));
-  PDM_g_num_t **psurf_vtx_ln_to_gn   = malloc(n_part * sizeof(PDM_g_num_t *));
+  double **cell_center;
+  PDM_malloc(*cell_center,n_part ,double      *);
+  double **psurf_vtx_coord;
+  PDM_malloc(*psurf_vtx_coord,n_part ,double      *);
+  int **psurf_face_vtx_idx;
+  PDM_malloc(*psurf_face_vtx_idx,n_part ,int         *);
+  int **psurf_face_vtx_n;
+  PDM_malloc(*psurf_face_vtx_n,n_part ,int         *);
+  int **psurf_face_vtx;
+  PDM_malloc(*psurf_face_vtx,n_part ,int         *);
+  PDM_g_num_t **psurf_face_ln_to_gn;
+  PDM_malloc(*psurf_face_ln_to_gn,n_part ,PDM_g_num_t *);
+  PDM_g_num_t **psurf_vtx_ln_to_gn;
+  PDM_malloc(*psurf_vtx_ln_to_gn,n_part ,PDM_g_num_t *);
 
-  PDM_g_num_t **psurf_face_vtx_g_num = malloc(n_part * sizeof(PDM_g_num_t *));
+  PDM_g_num_t **psurf_face_vtx_g_num;
+  PDM_malloc(*psurf_face_vtx_g_num,n_part ,PDM_g_num_t *);
 
-  int          *pn_cell        = malloc(n_part * sizeof(int          ));
-  PDM_g_num_t **pcell_ln_to_gn = malloc(n_part * sizeof(PDM_g_num_t *));
+  int *pn_cell;
+  PDM_malloc(pn_cell,n_part ,int          );
+  PDM_g_num_t **pcell_ln_to_gn;
+  PDM_malloc(*pcell_ln_to_gn,n_part ,PDM_g_num_t *);
 
   /* Compute gnum for vtx and faces */
   PDM_gen_gnum_t* gnum_face = PDM_gnum_create(3,
@@ -541,7 +555,8 @@ _create_wall_surf
     n_surf_face[i_part] = 0;
     int n_surf_face_vtx = 0;
     int n_face_in_group = group_face_idx[i_group+1] - group_face_idx[i_group];
-    int* face_bnd = malloc(n_face_in_group * sizeof(int));
+    int *face_bnd;
+    PDM_malloc(face_bnd,n_face_in_group ,int);
     for(int idx_face = group_face_idx[i_group]; idx_face < group_face_idx[i_group+1]; ++idx_face) {
       int i_face = group_face[idx_face]-1;
 
@@ -564,13 +579,13 @@ _create_wall_surf
     }
 
 
-    psurf_vtx_coord     [i_part] = malloc(3 * n_surf_face_vtx          * sizeof(double     ));
-    psurf_face_vtx_idx  [i_part] = malloc(   ( n_surf_face[i_part] +1) * sizeof(int        ));
-    psurf_face_vtx_n    [i_part] = malloc(   ( n_surf_face[i_part]   ) * sizeof(int        ));
-    psurf_face_vtx      [i_part] = malloc(    n_surf_face_vtx          * sizeof(int        ));
-    psurf_face_ln_to_gn [i_part] = malloc(    n_surf_face[i_part]      * sizeof(PDM_g_num_t));
-    psurf_vtx_ln_to_gn  [i_part] = malloc(    n_surf_face_vtx          * sizeof(PDM_g_num_t));
-    psurf_face_vtx_g_num[i_part] = malloc(    n_surf_face_vtx          * sizeof(PDM_g_num_t));
+    psurf_vtx_coord     PDM_malloc([i_part],3 * n_surf_face_vtx          ,double     );
+    psurf_face_vtx_idx  PDM_malloc([i_part],   ( n_surf_face[i_part] +1) ,int        );
+    psurf_face_vtx_n    PDM_malloc([i_part],   ( n_surf_face[i_part]   ) ,int        );
+    psurf_face_vtx      PDM_malloc([i_part],    n_surf_face_vtx          ,int        );
+    psurf_face_ln_to_gn PDM_malloc([i_part],    n_surf_face[i_part]      ,PDM_g_num_t);
+    psurf_vtx_ln_to_gn  PDM_malloc([i_part],    n_surf_face_vtx          ,PDM_g_num_t);
+    PDM_malloc(psurf_face_vtx_g_num[i_part],    n_surf_face_vtx          ,PDM_g_num_t);
 
     double      *_psurf_vtx_coord      = psurf_vtx_coord     [i_part];
     int         *_psurf_face_vtx_idx   = psurf_face_vtx_idx  [i_part];
@@ -580,7 +595,8 @@ _create_wall_surf
     PDM_g_num_t *_psurf_vtx_ln_to_gn   = psurf_vtx_ln_to_gn  [i_part];
     PDM_g_num_t *_psurf_face_vtx_g_num = psurf_face_vtx_g_num[i_part];
 
-    int *vtx_flags = malloc(n_vtx * sizeof(int));
+    int *vtx_flags;
+    PDM_malloc(vtx_flags,n_vtx ,int);
     for(int i_vtx = 0; i_vtx < n_vtx; ++i_vtx) {
       vtx_flags[i_vtx] = -100;
     }
@@ -724,8 +740,10 @@ _create_wall_surf
 
   PDM_g_num_t *distrib_face_child = PDM_compute_entity_distribution(comm, dn_face);
 
-  PDM_g_num_t* dface_ln_to_gn        = malloc(dn_face * sizeof(PDM_g_num_t));
-  PDM_g_num_t* pface_parent_ln_to_gn = malloc(dn_face * sizeof(PDM_g_num_t));
+  PDM_g_num_t *dface_ln_to_gn;
+  PDM_malloc(dface_ln_to_gn,dn_face ,PDM_g_num_t);
+  PDM_g_num_t *pface_parent_ln_to_gn;
+  PDM_malloc(pface_parent_ln_to_gn,dn_face ,PDM_g_num_t);
   for(int i_face = 0; i_face < dn_face; ++i_face) {
     dface_ln_to_gn       [i_face] = distrib_face_child[i_rank] + i_face + 1;
     pface_parent_ln_to_gn[i_face] = blk_face_gnum[i_face];
@@ -969,15 +987,21 @@ _create_wall_ray
     pn_ray += n_surf_face[i_part];
   }
 
-  PDM_g_num_t *pray_ln_to_gn = malloc(    pn_ray * sizeof(PDM_g_num_t));
-  PDM_g_num_t *pvtx_ln_to_gn = malloc(2 * pn_ray * sizeof(PDM_g_num_t));
-  double      *pray_coord    = malloc(6 * pn_ray * sizeof(double     ));
-  double      *pface_normal  = malloc(3 * pn_ray * sizeof(double     ));
-  double      *pface_center  = malloc(3 * pn_ray * sizeof(double     ));
+  PDM_g_num_t *pray_ln_to_gn;
+  PDM_malloc(pray_ln_to_gn,    pn_ray ,PDM_g_num_t);
+  PDM_g_num_t *pvtx_ln_to_gn;
+  PDM_malloc(pvtx_ln_to_gn,2 * pn_ray ,PDM_g_num_t);
+  double *pray_coord;
+  PDM_malloc(pray_coord,6 * pn_ray ,double     );
+  double *pface_normal;
+  PDM_malloc(pface_normal,3 * pn_ray ,double     );
+  double *pface_center;
+  PDM_malloc(pface_center,3 * pn_ray ,double     );
 
   PDM_g_num_t *distrib_vtx = PDM_compute_entity_distribution (comm, 2 * pn_ray);
 
-  int *pray_vtx = malloc(2 * pn_ray * sizeof(int));
+  int *pray_vtx;
+  PDM_malloc(pray_vtx,2 * pn_ray ,int);
 
   pn_ray = 0;
   int pn_vtx = 0;
@@ -1213,7 +1237,8 @@ char *argv[]
 
   PDM_dist_cloud_surf_compute(dist);
 
-  PDM_g_num_t **closest_elt_gnum = malloc(n_part * sizeof(PDM_g_num_t *));
+  PDM_g_num_t **closest_elt_gnum;
+  PDM_malloc(*closest_elt_gnum,n_part ,PDM_g_num_t *);
   for (int i_part = 0; i_part < n_part; i_part++) {
 
     double      *distance;
@@ -1249,7 +1274,8 @@ char *argv[]
   }
 
   /* Create field of speed */
-  double **velocity = malloc(n_part * sizeof(double));
+  double **velocity;
+  PDM_malloc(*velocity,n_part ,double);
   for (int i_part = 0; i_part < n_part; i_part++) {
 
     double      *distance;
@@ -1262,7 +1288,7 @@ char *argv[]
                              &projected,
                              &closest_elt_gnum[i_part]);
 
-    velocity[i_part] = malloc(pn_cell[i_part] * sizeof(double));
+    PDM_malloc(velocity[i_part],pn_cell[i_part] ,double);
 
     for(int i_cell = 0; i_cell < pn_cell[i_part]; ++i_cell) {
       if(cell_center   [i_part][3*i_cell+1] < 0.1 * cell_center   [i_part][3*i_cell]) {
@@ -1474,11 +1500,15 @@ char *argv[]
   // PDM_log_trace_connectivity_long(_gnum1_come_from_idx, _gnum1_come_from, n_ref_b[0], "_gnum1_come_from ::");
   assert(n_lines == n_ref_b[0]);
 
-  double *pseudo_distance = malloc(    _gnum1_come_from_idx[n_lines] * sizeof(double));
-  double *pseudo_coords   = malloc(3 * _gnum1_come_from_idx[n_lines] * sizeof(double));
-  int    *order_by_dist   = malloc(3 * _gnum1_come_from_idx[n_lines] * sizeof(int   ));
+  double *pseudo_distance;
+  PDM_malloc(pseudo_distance,    _gnum1_come_from_idx[n_lines] ,double);
+  double *pseudo_coords;
+  PDM_malloc(pseudo_coords,3 * _gnum1_come_from_idx[n_lines] ,double);
+  int *order_by_dist;
+  PDM_malloc(order_by_dist,3 * _gnum1_come_from_idx[n_lines] ,int   );
 
-  double *dline_data = malloc(n_lines * sizeof(double));
+  double *dline_data;
+  PDM_malloc(dline_data,n_lines ,double);
 
   for(int idx_line = 0; idx_line < n_ref_b[0]; ++idx_line) {
     int i_line = ref_b[0][idx_line] - 1;

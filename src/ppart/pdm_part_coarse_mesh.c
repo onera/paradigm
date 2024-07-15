@@ -112,7 +112,8 @@ _coarse_mesh_create
 
  )
 {
-   PDM_coarse_mesh_t *cm = (PDM_coarse_mesh_t *) malloc(sizeof(PDM_coarse_mesh_t));
+   PDM_coarse_mesh_t *cm;
+   PDM_malloc(cm,1,PDM_coarse_mesh_t);
 
    cm->n_part = n_part;
    cm->comm  = comm;
@@ -158,9 +159,9 @@ _coarse_mesh_create
    cm->have_face_weight = have_face_weight;
    cm->have_face_group  = have_face_group;
 
-   cm->part_ini = malloc(sizeof(_part_t *) * n_part); //On déclare un tableau de partitions
+   PDM_malloc(cm->part_ini,n_part,_part_t *); //On déclare un tableau de partitions
 
-   cm->part_res = malloc(sizeof(_coarse_part_t *) * n_part);
+   PDM_malloc(cm->part_res,n_part,_coarse_part_t *);
 
    cm->specific_data = NULL;
    cm->specific_func = NULL;
@@ -275,7 +276,8 @@ int                *cell_part
       int *adjwgt = face_weight; //Weights of the edges of the graph (NULL if unused)
 
       if (flag_weights != 0) {
-        double *tpwgts = (double *) malloc(ncon * n_part * sizeof(double));
+        double *tpwgts;
+        PDM_malloc(tpwgts,ncon * n_part ,double);
         for (int i = 0; i < ncon * n_part; i++){
           tpwgts[i] = (double) (1./n_part);
         }
@@ -284,7 +286,8 @@ int                *cell_part
       double *tpwgts = NULL;
 
       if (flag_weights != 0) {
-        double *ubvec = (double *) malloc(ncon * sizeof(double));
+        double *ubvec;
+        PDM_malloc(ubvec,ncon ,double);
         for (int i = 0; i < ncon; i++) {
           ubvec[i] = 1.05;
         }
@@ -455,7 +458,8 @@ _quickSort_int
 //   int *cell_cellN = PDM_array_zeros_int(part_ini->n_cell);
 //   int *cell_cell = PDM_array_const_int(part_ini->cell_face_idx[part_ini->n_cell], -1);
 
-//   int *cell_cell_idx = (int *) malloc((part_ini->n_cell + 1) * sizeof(int));
+//   int *cell_cell_idx;
+   // PDM_malloc(cell_cell_idx,(part_ini->n_cell + 1) ,int);
 //   for(int i = 0; i < part_ini->n_cell + 1; i++) {
 //     cell_cell_idx[i] = part_ini->cell_face_idx[i];
 //   }
@@ -496,7 +500,8 @@ _quickSort_int
 //   //We have then n_face elements in cell_cell whereas it needs to be composed of n_cell elements
 
 //   //    PDM_printf("(*cell_cell_idxCompressed)[part_ini->n_cell] : %d \n", (*cell_cell_idxCompressed)[part_ini->n_cell]);
-//   *cell_cellCompressed = malloc((*cell_cell_idxCompressed)[part_ini->n_cell] * sizeof(int));
+// *cell_cellCompressed;
+// PDM_malloc(cell_cellCompressed,(*cell_cell_idxCompressed)[part_ini->n_cell] ,int);
 
 //   int cpt_cell_cellCompressed = 0;
 //   for(int i = 0; i < part_ini->cell_face_idx[part_ini->n_cell]; i++) {
@@ -692,7 +697,7 @@ _part_cell_from_cell_part
     PDM_printf("\n");
   }
 
-  *part_cell = (int *) malloc((*part_cell_idx)[n_coarse_cell] * sizeof(int));
+  PDM_malloc(*part_cell,(*part_cell_idx)[n_coarse_cell] ,int);
 
   //cpt_cells_per_partitions is reused for building part_cell
   PDM_array_reset_int(cpt_cells_per_partitions, n_coarse_cell, 0);
@@ -959,7 +964,7 @@ _adapt_Connectedness
    * Creation of coarse_cell_cell from cell_coarse_cell and cell_coarse_cell_idx
    */
 
-  *coarse_cell_cell = (int *) malloc(n_cell * sizeof(int));
+  PDM_malloc(*coarse_cell_cell,n_cell ,int);
 
   int *cpt_cells_per_partitions = PDM_array_zeros_int(*n_coarse_cell_checked);
 
@@ -1045,7 +1050,7 @@ _build_face_coarse_cell
     PDM_printf("\n");
   }
 
-  *face_coarse_cell = (int *) malloc(2 * n_face * sizeof(int));
+  PDM_malloc(*face_coarse_cell,2 * n_face ,int);
 
   /*
    * Loop over face_cell_temp which is to be compressed. i = face number
@@ -1079,7 +1084,7 @@ _build_face_coarse_cell
    * Fine face - coarse face connectivity (size = n_face)
    */
 
-  *coarse_face_to_fine_face = malloc(n_face * sizeof(int));
+  PDM_malloc(*coarse_face_to_fine_face,n_face ,int);
 
   int idx_coarse_face_to_fine_face = 0;
 
@@ -1197,7 +1202,7 @@ _coarsecell_face_from_face_coarse_cell
 
   *coarsecell_face_idx = PDM_array_new_idx_from_sizes_int(cpt_faces_per_coarse_cell, n_coarse_cell_checked);
 
-  *coarsecell_face = (int *) malloc((*coarsecell_face_idx)[n_coarse_cell_checked] * sizeof(int));
+  PDM_malloc(*coarsecell_face,(*coarsecell_face_idx)[n_coarse_cell_checked] ,int);
 
   /*
    *  cpt_faces_per_coarse_cell is reused for building coarsecell_face
@@ -1339,7 +1344,7 @@ _build_face_vtx
    * Creation of a correspondence table coarse vertex to fine vertex
    */
 
-  *coarse_vtx_to_fine_vtx = malloc((*face_vtx_idx)[n_face_checked] * sizeof(int));
+  PDM_malloc(*coarse_vtx_to_fine_vtx,(*face_vtx_idx)[n_face_checked] ,int);
 
   int idx_write_coarse_vtx_to_fine_vtx = 0;
 
@@ -1519,7 +1524,7 @@ _build_coarsecell_tag
       return;
   }
 
-  *coarsecell_tag = (int *) malloc(n_coarse_cell_checked * sizeof(int));
+  PDM_malloc(*coarsecell_tag,n_coarse_cell_checked ,int);
 
   //Loop over coarse_cell_cell_idx, i = index of coarse cell
   for (int i = 0; i < n_coarse_cell_checked; i++) {
@@ -1653,7 +1658,7 @@ _build_faceGroup
   if(*face_group == NULL || *face_group_idx == NULL || n_face_group == 0) {
     return;
   }
-  *coarse_face_group_to_fine_face_group = malloc((*face_group_idx)[n_face_group] * sizeof(int));
+  PDM_malloc(*coarse_face_group_to_fine_face_group,(*face_group_idx)[n_face_group] ,int);
 
   //Renumbering of partGroup from the fine numbering to the coarse one
   //Loop over face_group, i = face number
@@ -2002,11 +2007,11 @@ _coarse_grid_compute
   part_res->part->face_group_ln_to_gn = NULL;
 
   if (part_ini->n_face_group > 0) {
-    part_res->part->face_group_idx = malloc((part_ini->n_face_group + 1) * sizeof(int));
+    PDM_malloc(part_res->part->face_group_idx,(part_ini->n_face_group + 1) ,int);
     for (int i = 0; i < (part_ini->n_face_group + 1); i++) {
       part_res->part->face_group_idx[i] = part_ini->face_group_idx[i];
     }
-    part_res->part->face_group = malloc(part_res->part->face_group_idx[part_ini->n_face_group] * sizeof(int));
+    PDM_malloc(part_res->part->face_group,part_res->part->face_group_idx[part_ini->n_face_group] ,int);
     for (int i = 0; i < part_ini->face_group_idx[part_ini->n_face_group]; i++) {
       part_res->part->face_group[i] = fine_face_to_coarse_face[part_ini->face_group[i] - 1];
     }
@@ -2047,12 +2052,12 @@ _coarse_grid_compute
 
   part_res->part->n_vtx = part_ini->n_vtx;
 
-  part_res->part->face_vtx_idx = malloc((part_ini->n_face + 1) * sizeof(int));
+  PDM_malloc(part_res->part->face_vtx_idx,(part_ini->n_face + 1) ,int);
   for (int i = 0; i < (part_ini->n_face + 1); i++) {
     part_res->part->face_vtx_idx[i] = part_ini->face_vtx_idx[i];
   }
 
-  part_res->part->face_vtx = malloc(part_res->part->face_vtx_idx[part_ini->n_face] * sizeof(int));
+  PDM_malloc(part_res->part->face_vtx,part_res->part->face_vtx_idx[part_ini->n_face] ,int);
   for (int i = 0; i < part_res->part->face_vtx_idx[part_ini->n_face]; i++) {
     part_res->part->face_vtx[i] = part_ini->face_vtx[i];
   }
@@ -2081,7 +2086,7 @@ _coarse_grid_compute
 
   PDM_timer_resume(cm->timer);
 
-  part_res->part->vtx = malloc(3 * part_ini->n_vtx * sizeof(double));
+  PDM_malloc(part_res->part->vtx,3 * part_ini->n_vtx ,double);
   for (int i = 0; i < 3 * part_ini->n_vtx; i++) {
     part_res->part->vtx[i] = part_ini->vtx[i];
   }
@@ -2118,7 +2123,7 @@ _coarse_grid_compute
   PDM_timer_resume(cm->timer);
 
   if (part_ini->face_tag != NULL) {
-    part_res->part->face_tag = malloc(part_ini->n_face * sizeof(int));
+    PDM_malloc(part_res->part->face_tag,part_ini->n_face ,int);
     for (int i = 0; i < part_ini->n_face; i++) {
       part_res->part->face_tag[i] = part_ini->face_tag[i];
     }
@@ -2140,7 +2145,7 @@ _coarse_grid_compute
 
   PDM_timer_resume(cm->timer);
   if (part_ini->vtx_tag != NULL) {
-    part_res->part->vtx_tag = malloc(part_ini->n_vtx * sizeof(int));
+    PDM_malloc(part_res->part->vtx_tag,part_ini->n_vtx ,int);
     for (int i = 0; i < part_ini->n_vtx; i++) {
       part_res->part->vtx_tag[i] = part_ini->vtx_tag[i];
     }
@@ -2163,11 +2168,11 @@ _coarse_grid_compute
   /* reordering cells and faces */
   // Conflict with New renumbering for OpenMP/Better vecto - Add part_to_block option
   // HEAD ---------------------
-  // part_res->part->new_to_old_order_cell = (int *) malloc (sizeof(int) * part_res->part->n_cell);
+  // PDM_malloc(part_res->part->new_to_old_order_cell,part_res->part->n_cell,int);
   // for (int i = 0; i < part_res->part->n_cell; i++){
   //   part_res->part->new_to_old_order_cell[i] = i;
   // }
-  // part_res->part->new_to_old_order_face = (int *) malloc (sizeof(int) * part_res->part->n_face);
+  // PDM_malloc(part_res->part->new_to_old_order_face,part_res->part->n_face,int);
   // for (int i = 0; i < part_res->part->n_face; i++){
   //   part_res->part->new_to_old_order_face[i] = i;
   // }
@@ -2220,7 +2225,7 @@ _build_coarsecell_ln_to_gn
   for (int i = 0; i < cm->n_part; i++) {
     _part_t *cmp = cm->part_res[i]->part;
     int n_cell = cm->part_res[i]->part->n_cell;
-    cmp->cell_ln_to_gn = (PDM_g_num_t *) malloc(n_cell * sizeof(PDM_g_num_t));
+    PDM_malloc(cmp->cell_ln_to_gn,n_cell ,PDM_g_num_t);
     //Loop over the partition cells, j = cell number
     for (int j = 0; j < n_cell; j++) {
       cmp->cell_ln_to_gn[j] = beg_NumAbs + idx_write + 1;
@@ -2254,8 +2259,10 @@ _build_face_ln_to_gn
 PDM_coarse_mesh_t * cm
 )
 {
-  PDM_g_num_t **face_ln_to_gn_part = (PDM_g_num_t **) malloc(cm->n_part * sizeof(PDM_g_num_t *));
-  int *n_facePart = (int *) malloc(cm->n_part * sizeof(int));
+  PDM_g_num_t **face_ln_to_gn_part;
+  PDM_malloc(face_ln_to_gn_part,cm->n_part ,PDM_g_num_t *);
+  int *n_facePart;
+  PDM_malloc(n_facePart,cm->n_part ,int);
 
   for (int i = 0; i < cm->n_part; i++) {
     face_ln_to_gn_part[i] = cm->part_ini[i]->face_ln_to_gn;
@@ -2282,7 +2289,8 @@ PDM_coarse_mesh_t * cm
                                                      cm->n_part,
                                                      cm->comm);
 
-  PDM_g_num_t **face_ln_to_gnTag = (PDM_g_num_t **) malloc(cm->n_part * sizeof(PDM_g_num_t *));
+  PDM_g_num_t **face_ln_to_gnTag;
+  PDM_malloc(face_ln_to_gnTag,cm->n_part ,PDM_g_num_t *);
 
   int idx_write = 0;
 
@@ -2363,10 +2371,11 @@ PDM_coarse_mesh_t * cm
                                                        cm->n_part,
                                                        cm->comm);
 
-  PDM_g_num_t  **face_ln_to_gnFine = (PDM_g_num_t **) malloc(cm->n_part * sizeof(PDM_g_num_t *));
+  PDM_g_num_t **face_ln_to_gnFine;
+  PDM_malloc(face_ln_to_gnFine,cm->n_part ,PDM_g_num_t *);
 
   for (int i = 0; i < cm->n_part; i++) {
-    face_ln_to_gnFine[i] = (PDM_g_num_t *) malloc(cm->part_ini[i]->n_face * sizeof(PDM_g_num_t));
+    PDM_malloc(face_ln_to_gnFine[i],cm->part_ini[i]->n_face ,PDM_g_num_t);
   }
 
   int stride_one = 1;
@@ -2393,7 +2402,7 @@ PDM_coarse_mesh_t * cm
   for (int i = 0; i < cm->n_part; i++) {
     _part_t *cmp = cm->part_res[i]->part;
     int n_face = cm->part_res[i]->part->n_face;
-    cmp->face_ln_to_gn = (PDM_g_num_t *) malloc(n_face * sizeof(PDM_g_num_t));
+    PDM_malloc(cmp->face_ln_to_gn,n_face ,PDM_g_num_t);
     for (int j = 0; j < n_face; j++) {
       cmp->face_ln_to_gn[j] = (PDM_g_num_t) face_ln_to_gnFine[i][cm->part_res[i]->coarse_face_to_fine_face[j] - 1];
     }
@@ -2445,8 +2454,10 @@ _build_vtx_ln_to_gn
 PDM_coarse_mesh_t * cm
 )
 {
-  PDM_g_num_t **vtx_ln_to_gn_part = (PDM_g_num_t **) malloc(cm->n_part * sizeof(PDM_g_num_t *));
-  int *n_vtxPart = (int *) malloc(cm->n_part * sizeof(int));
+  PDM_g_num_t **vtx_ln_to_gn_part;
+  PDM_malloc(vtx_ln_to_gn_part,cm->n_part ,PDM_g_num_t *);
+  int *n_vtxPart;
+  PDM_malloc(n_vtxPart,cm->n_part ,int);
 
   for (int i = 0; i < cm->n_part; i++) {
     vtx_ln_to_gn_part[i] = cm->part_ini[i]->vtx_ln_to_gn;
@@ -2476,7 +2487,8 @@ PDM_coarse_mesh_t * cm
                                                      cm->n_part,
                                                      cm->comm);
 
-  PDM_g_num_t **vtx_ln_to_gnTag = (PDM_g_num_t **) malloc(cm->n_part * sizeof(PDM_g_num_t *));
+  PDM_g_num_t **vtx_ln_to_gnTag;
+  PDM_malloc(vtx_ln_to_gnTag,cm->n_part ,PDM_g_num_t *);
 
   int idx_write = 0;
 
@@ -2557,10 +2569,11 @@ PDM_coarse_mesh_t * cm
                                                        cm->n_part,
                                                        cm->comm);
 
-  PDM_g_num_t  **vtx_ln_to_gnFine = (PDM_g_num_t **) malloc(cm->n_part * sizeof(PDM_g_num_t *));
+  PDM_g_num_t **vtx_ln_to_gnFine;
+  PDM_malloc(vtx_ln_to_gnFine,cm->n_part ,PDM_g_num_t *);
 
   for (int i = 0; i < cm->n_part; i++) {
-    vtx_ln_to_gnFine[i] = (PDM_g_num_t *) malloc(cm->part_ini[i]->n_vtx * sizeof(PDM_g_num_t));
+    PDM_malloc(vtx_ln_to_gnFine[i],cm->part_ini[i]->n_vtx ,PDM_g_num_t);
   }
 
   int stride_one = 1;
@@ -2587,7 +2600,7 @@ PDM_coarse_mesh_t * cm
   for (int i = 0; i < cm->n_part; i++) {
     _part_t *cmp = cm->part_res[i]->part;
     int n_vtx = cm->part_res[i]->part->n_vtx;
-    cmp->vtx_ln_to_gn = (PDM_g_num_t *) malloc(n_vtx * sizeof(PDM_g_num_t));
+    PDM_malloc(cmp->vtx_ln_to_gn,n_vtx ,PDM_g_num_t);
     for (int j = 0; j < n_vtx; j++) {
       cmp->vtx_ln_to_gn[j] = (PDM_g_num_t) vtx_ln_to_gnFine[i][cm->part_res[i]->coarse_vtx_to_fine_vtx[j] - 1];
     }
@@ -2647,7 +2660,8 @@ PDM_coarse_mesh_t * cm
     }
   }
 
-  int **face_ln_to_gnTag = (int **) malloc(cm->n_part * sizeof(int *));
+  int **face_ln_to_gnTag;
+  PDM_malloc(face_ln_to_gnTag,cm->n_part ,int *);
 
   int idx_write = 0;
 
@@ -2674,7 +2688,8 @@ PDM_coarse_mesh_t * cm
     PDM_printf("\n");
   }
 
-  int **faceGroupLNToGNTag = (int **) malloc(cm->n_part * sizeof(int *));
+  int **faceGroupLNToGNTag;
+  PDM_malloc(faceGroupLNToGNTag,cm->n_part ,int *);
 
   idx_write = 0;
 
@@ -2686,7 +2701,7 @@ PDM_coarse_mesh_t * cm
     _part_t *cmp_coarse = cm->part_res[i]->part;
     _part_t *cmp_fine = cm->part_ini[i];
     fflush(stdout);
-    faceGroupLNToGNTag[i] = (int *) malloc(cmp_coarse->face_group_idx[cm->n_face_group] * sizeof(int));
+    PDM_malloc(faceGroupLNToGNTag[i],cmp_coarse->face_group_idx[cm->n_face_group] ,int);
 
     //Loop over face_group_idx, i = index of group of faces (from 0 to cm->part_res[i_part]->part->n_face_group)
     for (int j = 0; j < cmp_fine->face_group_idx[cm->n_face_group]; j++) {
@@ -2711,13 +2726,15 @@ PDM_coarse_mesh_t * cm
 
   for (int i = 0; i < cm->n_part; i++) {
     _part_t *cmp = cm->part_res[i]->part;
-    cmp->face_group_ln_to_gn = (PDM_g_num_t *) malloc(cmp->face_group_idx[cm->n_face_group] * sizeof(PDM_g_num_t));
+    PDM_malloc(cmp->face_group_ln_to_gn,cmp->face_group_idx[cm->n_face_group] ,PDM_g_num_t);
   }
 
   for(int iGroup = 0; iGroup < cm->n_face_group; iGroup++) {
 
-    PDM_g_num_t **faceGroupLNToGn_part = (PDM_g_num_t **) malloc(cm->n_part * sizeof(PDM_g_num_t *));
-    int *n_face_groupPart = (int *) malloc(cm->n_part * sizeof(int));
+    PDM_g_num_t **faceGroupLNToGn_part;
+    PDM_malloc(faceGroupLNToGn_part,cm->n_part ,PDM_g_num_t *);
+    int *n_face_groupPart;
+    PDM_malloc(n_face_groupPart,cm->n_part ,int);
 
     for (int i = 0; i < cm->n_part; i++) {
       _part_t *cmp = cm->part_ini[i];
@@ -2757,12 +2774,13 @@ PDM_coarse_mesh_t * cm
     int *b_stride_one = NULL;
     int *part_stride = NULL;
 
-    PDM_g_num_t **faceGroupLNToGNTagGroup = (PDM_g_num_t **) malloc(cm->n_part * sizeof(PDM_g_num_t *));
+    PDM_g_num_t **faceGroupLNToGNTagGroup;
+    PDM_malloc(faceGroupLNToGNTagGroup,cm->n_part ,PDM_g_num_t *);
 
     for (int i = 0; i < cm->n_part; i++) {
       _part_t *cmp = cm->part_res[i]->part;
       int n_facePerGroup = cmp->face_group_idx[iGroup + 1] - cmp->face_group_idx[iGroup];
-      faceGroupLNToGNTagGroup[i] = (PDM_g_num_t *) malloc(n_facePerGroup * sizeof(PDM_g_num_t));
+      PDM_malloc(faceGroupLNToGNTagGroup[i],n_facePerGroup ,PDM_g_num_t);
 
       idx_write = 0;
       //Copy of the sub-array face_group_ln_to_gn for each group
@@ -2839,12 +2857,13 @@ PDM_coarse_mesh_t * cm
                                                          cm->n_part,
                                                          cm->comm);
 
-    PDM_g_num_t  **faceGroupLNToGNFine = (PDM_g_num_t **) malloc(cm->n_part * sizeof(PDM_g_num_t *));
+    PDM_g_num_t **faceGroupLNToGNFine;
+    PDM_malloc(faceGroupLNToGNFine,cm->n_part ,PDM_g_num_t *);
 
     for (int i = 0; i < cm->n_part; i++) {
       _part_t *cmp = cm->part_ini[i];
       int n_facePerGroup = cmp->face_group_idx[iGroup + 1] - cmp->face_group_idx[iGroup];
-      faceGroupLNToGNFine[i] = (PDM_g_num_t *) malloc(n_facePerGroup * sizeof(PDM_g_num_t));
+      PDM_malloc(faceGroupLNToGNFine[i],n_facePerGroup ,PDM_g_num_t);
     }
 
     int stride_one = 1;
@@ -2945,21 +2964,24 @@ PDM_coarse_mesh_t * cm
     _part_t *cmp_coarse = cm->part_res[i_part]->part;
 
     //Copy of face_part_bound_part_idx for the coarse mesh
-    int *coarseFacePartBoundPartIdx = (int *) malloc((cm->n_total_part + 1) * sizeof(int));
+    int *coarseFacePartBoundPartIdx;
+    PDM_malloc(coarseFacePartBoundPartIdx,(cm->n_total_part + 1) ,int);
     for (int i = 0; i < cm->n_total_part + 1; i++) {
       coarseFacePartBoundPartIdx[i] = cmp_fine->face_part_bound_part_idx[i];
     }
     cmp_coarse->face_part_bound_part_idx = coarseFacePartBoundPartIdx;
 
     //Copy of face_part_bound_proc_idx for the coarse mesh
-    int *coarseFacePartBoundProcIdx = (int *) malloc((n_proc + 1) * sizeof(int));
+    int *coarseFacePartBoundProcIdx;
+    PDM_malloc(coarseFacePartBoundProcIdx,(n_proc + 1) ,int);
     for (int i = 0; i < n_proc + 1; i++) {
       coarseFacePartBoundProcIdx[i] = cmp_fine->face_part_bound_proc_idx[i];
     }
     cmp_coarse->face_part_bound_proc_idx = coarseFacePartBoundProcIdx;
   }
 
-  int **fine_face_to_coarse_face = (int **) malloc(cm->n_part * sizeof(int *));
+  int **fine_face_to_coarse_face;
+  PDM_malloc(fine_face_to_coarse_face,cm->n_part ,int *);
 
   for (int i_part = 0; i_part < cm->n_part; i_part++) {
     _part_t *cmp_fine = cm->part_ini[i_part];
@@ -2986,12 +3008,15 @@ PDM_coarse_mesh_t * cm
 
   }
 
-  int *sendIdx = malloc(sizeof(int) * (n_proc+1));
+  int *sendIdx;
+  PDM_malloc(sendIdx,(n_proc+1),int);
   int *sendN = PDM_array_zeros_int(n_proc);
   PDM_g_num_t *sendBuff = NULL;
 
-  int *recvIdx = malloc(sizeof(int) * (n_proc+1));
-  int *recvN = malloc(sizeof(int) * n_proc);
+  int *recvIdx;
+  PDM_malloc(recvIdx,(n_proc+1),int);
+  int *recvN;
+  PDM_malloc(recvN,n_proc,int);
   PDM_g_num_t *recvBuff = NULL;
 
 
@@ -3020,10 +3045,11 @@ PDM_coarse_mesh_t * cm
   PDM_array_idx_from_sizes_int(sendN, n_proc, sendIdx);
   PDM_array_reset_int(sendN, n_proc, 0);
 
-  sendBuff = malloc(sizeof(PDM_g_num_t) * n_t_send * 3);
-  recvBuff = malloc(sizeof(PDM_g_num_t) * n_t_recv * 3);
+  PDM_malloc(sendBuff,n_t_send * 3,PDM_g_num_t);
+  PDM_malloc(recvBuff,n_t_recv * 3,PDM_g_num_t);
 
-  int **iFaceLocToIPartBound = (int **) malloc(cm->n_part * sizeof(int *));
+  int **iFaceLocToIPartBound;
+  PDM_malloc(iFaceLocToIPartBound,cm->n_part ,int *);
 
   for (int i = 0; i < cm->n_part; i++) {
     _part_t *cmp = cm->part_ini[i];
@@ -3095,7 +3121,8 @@ PDM_coarse_mesh_t * cm
     _part_t *cmp = cm->part_ini[i_part];
     _part_t *cmp_coarse = cm->part_res[i_part]->part;
     //Memory allocation of coarseFacePartBound (linked to part_res after)
-    int *coarseFacePartBound = (int  *) malloc(4 * cmp->n_face_part_bound * sizeof(int));
+    int *coarseFacePartBound;
+    PDM_malloc(coarseFacePartBound,4 * cmp->n_face_part_bound ,int);
 
     //Copy of the face_part_bound of part_ini
     for (int i = 0; i < 4 * cmp->n_face_part_bound; i++) {
@@ -4264,12 +4291,13 @@ PDM_coarse_mesh_method_add
     PDM_realloc(_coarse_mesh_methods ,_coarse_mesh_methods , s_coarse_mesh_methods,_coarse_mesh_method_t *);
   }
 
-  _coarse_mesh_method_t *method_ptr = malloc (sizeof(_coarse_mesh_method_t));
+  _coarse_mesh_method_t *method_ptr;
+  PDM_malloc(method_ptr,1,_coarse_mesh_method_t);
 
   int idx = n_coarse_mesh_methods;
   _coarse_mesh_methods[n_coarse_mesh_methods++] = method_ptr;
 
-  method_ptr->name = malloc (sizeof(char) * (strlen(name) + 1));
+  PDM_malloc(method_ptr->name,(strlen(name) + 1),char);
   strcpy (method_ptr->name, name);
 
   method_ptr->fct = fct;
@@ -4426,7 +4454,7 @@ void
     const int n_default_methods = 2;
     s_coarse_mesh_methods = n_default_methods;
     n_coarse_mesh_methods = 0;
-    _coarse_mesh_methods = (_coarse_mesh_method_t **) malloc(sizeof(_coarse_mesh_method_t *) * s_coarse_mesh_methods);
+    PDM_malloc(_coarse_mesh_methods,s_coarse_mesh_methods,_coarse_mesh_method_t *);
 
     PDM_coarse_mesh_method_add ("PDM_COARSE_MESH_SCOTCH",
                              _coarse_from_scotch);

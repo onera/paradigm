@@ -283,7 +283,8 @@ _dump_mesh
                                           PDM_WRITER_POLY_2D,
                                           PDM_OWNERSHIP_USER);
 
-  PDM_real_t **val_num_part = malloc(sizeof(PDM_real_t  *) * n_part);
+  PDM_real_t **val_num_part;
+  PDM_malloc(*val_num_part,n_part,PDM_real_t  *);
 
   for (int ipart = 0; ipart < n_part; ipart++) {
     PDM_writer_geom_coord_set(wrt,
@@ -303,7 +304,7 @@ _dump_mesh
                                     pface_vtx[ipart],
                                     pface_ln_to_gn[ipart]);
 
-    val_num_part[ipart] = malloc(sizeof(PDM_real_t) * pn_face[ipart]);
+    PDM_malloc(val_num_part[ipart],pn_face[ipart],PDM_real_t);
     for (int i = 0; i < pn_face[ipart]; i++) {
       val_num_part[ipart][i] = n_part*i_rank + ipart;
     }
@@ -420,8 +421,10 @@ _dump_point_cloud
                                           PDM_WRITER_POINT,
                                           PDM_OWNERSHIP_USER);
 
-  PDM_real_t **val_num_part = malloc(sizeof(PDM_real_t  *) * n_part);
-  int **connec = malloc(sizeof(int *) * n_part);
+  PDM_real_t **val_num_part;
+  PDM_malloc(*val_num_part,n_part,PDM_real_t  *);
+  int **connec;
+  PDM_malloc(*connec,n_part,int *);
 
   for (int ipart = 0; ipart < n_part; ipart++) {
     PDM_writer_geom_coord_set(wrt,
@@ -432,7 +435,7 @@ _dump_point_cloud
                               ppts_ln_to_gn[ipart],
                               PDM_OWNERSHIP_USER);
 
-    connec[ipart] = malloc(sizeof(int) * pn_pts[ipart]);
+    PDM_malloc(connec[ipart],pn_pts[ipart],int);
     for (int i = 0; i < pn_pts[ipart]; i++) {
       connec[ipart][i] = i+1;
     }
@@ -444,7 +447,7 @@ _dump_point_cloud
                                  connec[ipart],
                                  ppts_ln_to_gn[ipart]);
 
-    val_num_part[ipart] = malloc(sizeof(PDM_real_t) * pn_pts[ipart]);
+    PDM_malloc(val_num_part[ipart],pn_pts[ipart],PDM_real_t);
     for (int i = 0; i < pn_pts[ipart]; i++) {
       val_num_part[ipart][i] = n_part*i_rank + ipart;
     }
@@ -697,14 +700,22 @@ int main(int argc, char *argv[])
   /*
    *  Exchange data between point cloud and mesh
    */
-  int                 **pelt_pts_idx        = malloc(sizeof(int         *) * n_part_mesh);
-  PDM_g_num_t         **pelt_pts_gnum       = malloc(sizeof(PDM_g_num_t *) * n_part_mesh);
-  double              **pelt_pts_coord      = malloc(sizeof(double      *) * n_part_mesh);
-  double              **pelt_pts_uvw        = malloc(sizeof(double      *) * n_part_mesh);
-  int                 **pelt_pts_weight_idx = malloc(sizeof(int         *) * n_part_mesh);
-  double              **pelt_pts_weight     = malloc(sizeof(double      *) * n_part_mesh);
-  double              **pelt_pts_dist2      = malloc(sizeof(double      *) * n_part_mesh);
-  double              **pelt_pts_proj_coord = malloc(sizeof(double      *) * n_part_mesh);
+  int **pelt_pts_idx;
+  PDM_malloc(*pelt_pts_idx,n_part_mesh,int         *);
+  PDM_g_num_t **pelt_pts_gnum;
+  PDM_malloc(*pelt_pts_gnum,n_part_mesh,PDM_g_num_t *);
+  double **pelt_pts_coord;
+  PDM_malloc(*pelt_pts_coord,n_part_mesh,double      *);
+  double **pelt_pts_uvw;
+  PDM_malloc(*pelt_pts_uvw,n_part_mesh,double      *);
+  int **pelt_pts_weight_idx;
+  PDM_malloc(*pelt_pts_weight_idx,n_part_mesh,int         *);
+  double **pelt_pts_weight;
+  PDM_malloc(*pelt_pts_weight,n_part_mesh,double      *);
+  double **pelt_pts_dist2;
+  PDM_malloc(*pelt_pts_dist2,n_part_mesh,double      *);
+  double **pelt_pts_proj_coord;
+  PDM_malloc(*pelt_pts_proj_coord,n_part_mesh,double      *);
 
   for (int ipart = 0; ipart < n_part_mesh; ipart++) {
     PDM_mesh_location_points_in_elt_get(mesh_loc,
@@ -795,9 +806,10 @@ int main(int argc, char *argv[])
   /*
    *  Exchange mesh (cell-centered) -> point cloud
    */
-  double **pface_field1 = malloc(sizeof(double *) * n_part_mesh);
+  double **pface_field1;
+  PDM_malloc(*pface_field1,n_part_mesh,double *);
   for (int ipart = 0; ipart < n_part_mesh; ipart++) {
-    pface_field1[ipart] = malloc(sizeof(double) * pn_face[ipart]);
+    PDM_malloc(pface_field1[ipart],pn_face[ipart],double);
 
     for (int i = 0; i < pn_face[ipart]; i++) {
       double y = 0.;
@@ -815,9 +827,10 @@ int main(int argc, char *argv[])
     }
   }
 
-  double **pface_field1_p1p2 = malloc(sizeof(double *) * n_part_mesh);
+  double **pface_field1_p1p2;
+  PDM_malloc(*pface_field1_p1p2,n_part_mesh,double *);
   for (int ipart = 0; ipart < n_part_mesh; ipart++) {
-    pface_field1_p1p2[ipart] = malloc(sizeof(double) * pelt_pts_idx[ipart][pn_face[ipart]]);
+    PDM_malloc(pface_field1_p1p2[ipart],pelt_pts_idx[ipart][pn_face[ipart]],double);
 
     for (int i = 0; i < pn_face[ipart]; i++) {
       for (int idx = pelt_pts_idx[ipart][i]; idx < pelt_pts_idx[ipart][i+1]; idx++) {
@@ -849,9 +862,10 @@ int main(int argc, char *argv[])
 
 
 
-  double **ppts_field1 = malloc(sizeof(double *) * n_part_cloud);
+  double **ppts_field1;
+  PDM_malloc(*ppts_field1,n_part_cloud,double *);
   for (int ipart = 0; ipart < n_part_cloud; ipart++) {
-    ppts_field1[ipart] = malloc(sizeof(double) * pn_pts[ipart]);
+    PDM_malloc(ppts_field1[ipart],pn_pts[ipart],double);
 
     for (int i = 0; i < pn_pts[ipart]; i++) {
       ppts_field1[ipart][i] = 0.;
@@ -872,9 +886,10 @@ int main(int argc, char *argv[])
   /*
    *  Exchange mesh <- point cloud
    */
-  double **ppts_field2 = malloc(sizeof(double *) * n_part_cloud);
+  double **ppts_field2;
+  PDM_malloc(*ppts_field2,n_part_cloud,double *);
   for (int ipart = 0; ipart < n_part_cloud; ipart++) {
-    ppts_field2[ipart] = malloc(sizeof(double) * pn_pts[ipart]);
+    PDM_malloc(ppts_field2[ipart],pn_pts[ipart],double);
 
     for (int i = 0; i < pn_pts[ipart]; i++) {
       ppts_field2[ipart][i] = cos(3*ppts_coord[ipart][3*i]);
@@ -897,9 +912,10 @@ int main(int argc, char *argv[])
 
   PDM_part_to_part_reverse_iexch_wait(ptp, request_pts_elt);
 
-  double **pface_field2 = malloc(sizeof(double *) * n_part_mesh);
+  double **pface_field2;
+  PDM_malloc(*pface_field2,n_part_mesh,double *);
   for (int ipart = 0; ipart < n_part_mesh; ipart++) {
-    pface_field2[ipart] = malloc(sizeof(double) * pn_face[ipart]);
+    PDM_malloc(pface_field2[ipart],pn_face[ipart],double);
 
     for (int i = 0; i < pn_face[ipart]; i++) {
       pface_field2[ipart][i] = 0.;
@@ -922,15 +938,17 @@ int main(int argc, char *argv[])
   /*
    *  Exchange mesh (node-centered) -> point cloud
    */
-  double **pvtx_field3      = malloc(sizeof(double *) * n_part_mesh);
-  double **pface_pts_field3 = malloc(sizeof(double *) * n_part_mesh);
+  double **pvtx_field3;
+  PDM_malloc(*pvtx_field3,n_part_mesh,double *);
+  double **pface_pts_field3;
+  PDM_malloc(*pface_pts_field3,n_part_mesh,double *);
   for (int ipart = 0; ipart < n_part_mesh; ipart++) {
-    pvtx_field3     [ipart] = malloc(sizeof(double) * pn_vtx[ipart]);
+    pvtx_field3     PDM_malloc([ipart],pn_vtx[ipart],double);
     for (int i = 0; i < pn_vtx[ipart]; i++) {
       pvtx_field3[ipart][i] = cos(6*pvtx_coord[ipart][3*i+2]);
     }
 
-    pface_pts_field3[ipart] = malloc(sizeof(double) * pelt_pts_idx[ipart][pn_face[ipart]]);
+    PDM_malloc(pface_pts_field3[ipart],pelt_pts_idx[ipart][pn_face[ipart]],double);
     for (int i = 0; i < pn_face[ipart]; i++) {
 
       int *fv = pface_vtx[ipart] + pface_vtx_idx[ipart][i];
@@ -962,9 +980,10 @@ int main(int argc, char *argv[])
 
   PDM_part_to_part_iexch_wait(ptp, request_elt_pts3);
 
-  double **ppts_field3 = malloc(sizeof(double *) * n_part_cloud);
+  double **ppts_field3;
+  PDM_malloc(*ppts_field3,n_part_cloud,double *);
   for (int ipart = 0; ipart < n_part_cloud; ipart++) {
-    ppts_field3[ipart] = malloc(sizeof(double) * pn_pts[ipart]);
+    PDM_malloc(ppts_field3[ipart],pn_pts[ipart],double);
 
     for (int i = 0; i < pn_pts[ipart]; i++) {
       ppts_field3[ipart][i] = 0.;
@@ -1005,9 +1024,10 @@ int main(int argc, char *argv[])
                vtx_field_name,
                vtx_field_value);
 
-    double **ppts_located = malloc(sizeof(double *) * n_part_cloud);
+    double **ppts_located;
+    PDM_malloc(*ppts_located,n_part_cloud,double *);
     for (int ipart = 0; ipart < n_part_cloud; ipart++) {
-      ppts_located[ipart] = malloc(sizeof(double) * pn_pts[ipart]);
+      PDM_malloc(ppts_located[ipart],pn_pts[ipart],double);
       for (int i = 0; i < pn_pts[ipart]; i++) {
         ppts_located[ipart][i] = 0.;
       }

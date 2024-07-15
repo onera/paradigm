@@ -114,7 +114,7 @@ int    *part
 
     if(tpwgts != NULL){
 
-      __tpwgts = malloc (sizeof(real_t) * _ncon * _n_parts);
+      PDM_malloc(__tpwgts,_ncon * _n_parts,real_t);
       _tpwgts  = __tpwgts;
 
       for (int i = 0; i < _ncon * _n_parts; i++) {
@@ -123,7 +123,7 @@ int    *part
     } /* End if tpwgts */
 
     if(ubvec != NULL){
-      __ubvec = malloc (sizeof(real_t) * _ncon);
+      PDM_malloc(__ubvec,_ncon,real_t);
       _ubvec  = __ubvec;
 
       for (int i = 0; i < _ncon; i++) {
@@ -156,8 +156,8 @@ int    *part
   }
 
   else {
-    __xadj    = (idx_t *) malloc (sizeof(idx_t) * (_n_vtxs + 1));
-    __adjncy  = (idx_t *) malloc (sizeof(idx_t) * nEdge);
+    PDM_malloc(__xadj,(_n_vtxs + 1),idx_t);
+    PDM_malloc(__adjncy,nEdge,idx_t);
     _xadj    = __xadj;
     _adjncy  = __adjncy;
 
@@ -170,7 +170,7 @@ int    *part
     }
 
     if (vwgt != NULL) {
-      __vwgt = (idx_t *) malloc (sizeof(idx_t) * _n_vtxs);
+      PDM_malloc(__vwgt,_n_vtxs,idx_t);
       for (int i = 0; i < _n_vtxs; i++) {
         __vwgt[i] = vwgt[i];
       }
@@ -180,7 +180,7 @@ int    *part
     }
 
     if (adjwgt != NULL) {
-      __adjwgt = (idx_t *) malloc (sizeof(idx_t) * nEdge);
+      PDM_malloc(__adjwgt,nEdge,idx_t);
       for (int i = 0; i < nEdge; i++) {
         __adjwgt[i] = adjwgt[i];
       }
@@ -189,7 +189,7 @@ int    *part
       __adjwgt = NULL;
     }
 
-    __part = (idx_t *) malloc (sizeof(idx_t) * _n_vtxs);
+    PDM_malloc(__part,_n_vtxs,idx_t);
 
     _vwgt   = __vwgt;
     _adjwgt = __adjwgt;
@@ -309,7 +309,7 @@ int    *part
 
     if(tpwgts != NULL){
 
-      __tpwgts = malloc (sizeof(real_t) * _ncon * _n_parts);
+      PDM_malloc(__tpwgts,_ncon * _n_parts,real_t);
       _tpwgts  = __tpwgts;
 
       for (int i = 0; i < _ncon * _n_parts; i++) {
@@ -318,7 +318,7 @@ int    *part
     } /* End if tpwgts */
 
     if(ubvec != NULL){
-      __ubvec = malloc (sizeof(real_t) * _ncon);
+      PDM_malloc(__ubvec,_ncon,real_t);
       _ubvec  = __ubvec;
 
       for (int i = 0; i < _ncon; i++) {
@@ -351,8 +351,8 @@ int    *part
   }
 
   else {
-    __xadj    = (idx_t *) malloc (sizeof(idx_t) * (_n_vtxs + 1));
-    __adjncy  = (idx_t *) malloc (sizeof(idx_t) * nEdge);
+    PDM_malloc(__xadj,(_n_vtxs + 1),idx_t);
+    PDM_malloc(__adjncy,nEdge,idx_t);
     _xadj    = __xadj;
     _adjncy  = __adjncy;
 
@@ -365,7 +365,7 @@ int    *part
     }
 
     if (vwgt != NULL) {
-      __vwgt = (idx_t *) malloc (sizeof(idx_t) * _n_vtxs);
+      PDM_malloc(__vwgt,_n_vtxs,idx_t);
       for (int i = 0; i < _n_vtxs; i++) {
         __vwgt[i] = vwgt[i];
       }
@@ -375,7 +375,7 @@ int    *part
     }
 
     if (adjwgt != NULL) {
-      __adjwgt = (idx_t *) malloc (sizeof(idx_t) * nEdge);
+      PDM_malloc(__adjwgt,nEdge,idx_t);
       for (int i = 0; i < nEdge; i++) {
         __adjwgt[i] = adjwgt[i];
       }
@@ -384,7 +384,7 @@ int    *part
       __adjwgt = NULL;
     }
 
-    __part = (idx_t *) malloc (sizeof(idx_t) * _n_vtxs);
+    PDM_malloc(__part,_n_vtxs,idx_t);
 
     _vwgt   = __vwgt;
     _adjwgt = __adjwgt;
@@ -502,10 +502,10 @@ int *part
   }
 
   else {
-    __verttab = (SCOTCH_Num *) malloc (sizeof(SCOTCH_Num) * (_vertnbr + 1));
+    PDM_malloc(__verttab,(_vertnbr + 1),SCOTCH_Num);
     __vendtab = __verttab + 1;
-    __edgetab = (SCOTCH_Num *) malloc (sizeof(SCOTCH_Num) * _edgesiz);
-    __part    = (SCOTCH_Num *) malloc (sizeof(SCOTCH_Num) * _vertnbr);
+    PDM_malloc(__edgetab,_edgesiz,SCOTCH_Num);
+    PDM_malloc(__part,_vertnbr,SCOTCH_Num);
 
     for (int i = 0; i < _vertnbr + 1; i++) {
       __verttab[i] = dualGraphIdx[i];
@@ -519,14 +519,14 @@ int *part
     __edlotab = NULL;
 
     if (cell_weight != NULL) {
-      __velotab = (SCOTCH_Num *) malloc (sizeof(SCOTCH_Num) * _vertnbr);
+      PDM_malloc(__velotab,_vertnbr,SCOTCH_Num);
       for (int i = 0; i < _vertnbr; i++) {
         __velotab[i] = cell_weight[i];
       }
     }
 
     if (edgeWeight != NULL) {
-      __edlotab = (SCOTCH_Num *) malloc (sizeof(SCOTCH_Num) * _edgesiz);
+      PDM_malloc(__edlotab,_edgesiz,SCOTCH_Num);
       for (int i = 0; i < _edgesiz; i++) {
         __edlotab[i] = edgeWeight[i];
       }

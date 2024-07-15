@@ -283,8 +283,10 @@ _create_split_mesh
 
   int have_dcell_part = 0;
 
-  int *dcell_part = (int *) malloc (dn_face*sizeof(int));
-  int *dedge_vtxIdx = (int *) malloc ((dNEdge+1)*sizeof(int));
+  int *dcell_part;
+  PDM_malloc(dcell_part,dn_face,int);
+  int *dedge_vtxIdx;
+  PDM_malloc(dedge_vtxIdx,(dNEdge+1),int);
 
   dedge_vtxIdx[0] = 0;
   for (int i = 0; i < dNEdge; i++) {
@@ -502,7 +504,8 @@ char *argv[]
   // PDM_memory_stats_add(ms, 0, "Start  : ");
 
   // int size = 2000000000;
-  // double* test = malloc(size * sizeof(double));
+  // double *test;
+ PDM_malloc(test,size ,double);
   // for(int i = 0; i < size; ++i) {
   //   test[i] = 1.;
   // }
