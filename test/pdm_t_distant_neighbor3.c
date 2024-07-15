@@ -65,9 +65,9 @@ char *argv[]
   }
 
   int **neighbor_idx;
-  PDM_malloc(*neighbor_idx,n_part,int *);
+  PDM_malloc(neighbor_idx,n_part,int *);
   int **neighbor_desc;
-  PDM_malloc(*neighbor_desc,n_part,int *);
+  PDM_malloc(neighbor_desc,n_part,int *);
 
   for (int i = 0; i < n_part; i++) {
     PDM_malloc(neighbor_idx[i],(n_elt[i] + 1),int);
@@ -166,7 +166,7 @@ char *argv[]
 
   /* Exchange */
   int **send_n;
-  PDM_malloc(*send_n,n_part,int *);
+  PDM_malloc(send_n,n_part,int *);
   for (int i = 0; i < n_part; i++) {
     PDM_malloc(send_n[i],n_elt[i],int);
     for (int j = 0; j < n_elt[i]; j++) {
@@ -200,7 +200,7 @@ char *argv[]
   // }
 
   int **send_i;
-  PDM_malloc(*send_i,n_part,int *);
+  PDM_malloc(send_i,n_part,int *);
   for (int i = 0; i < n_part; i++) {
     int i_part = i_rank*n_part + i;
     // PDM_malloc(send_i[i],n_elt[i],int);

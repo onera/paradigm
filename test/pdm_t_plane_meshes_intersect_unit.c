@@ -193,17 +193,17 @@ _export_ol_mesh
                          &nGOlVtx);
 
     int **_olface_nb;
-    PDM_malloc(*_olface_nb,n_part,int *);
+    PDM_malloc(_olface_nb,n_part,int *);
     int **_olface_idx;
-    PDM_malloc(*_olface_idx,n_part,int *);
+    PDM_malloc(_olface_idx,n_part,int *);
     PDM_real_t **val_num_part;
-    PDM_malloc(*val_num_part,n_part,PDM_real_t *);
+    PDM_malloc(val_num_part,n_part,PDM_real_t *);
     PDM_real_t **val_match;
-    PDM_malloc(*val_match,n_part,PDM_real_t *);
+    PDM_malloc(val_match,n_part,PDM_real_t *);
     PDM_real_t **val_cell_match;
-    PDM_malloc(*val_cell_match,n_part,PDM_real_t *);
+    PDM_malloc(val_cell_match,n_part,PDM_real_t *);
     PDM_real_t **val_origin;
-    PDM_malloc(*val_origin,n_part,PDM_real_t *);
+    PDM_malloc(val_origin,n_part,PDM_real_t *);
     PDM_writer_step_beg (id_cs[imesh], 0.);
 
     for (int ipart = 0; ipart < n_part; ipart++) {

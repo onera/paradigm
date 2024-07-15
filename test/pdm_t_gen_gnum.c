@@ -148,7 +148,7 @@ int main(int argc, char *argv[])
   int *n_elts;
   PDM_malloc(n_elts,n_part,int     );
   double **coords;
-  PDM_malloc(*coords,n_part,double *);
+  PDM_malloc(coords,n_part,double *);
   for (int i_part = 0; i_part < n_part; i_part++) {
     PDM_g_num_t *gnum = NULL;
     PDM_point_cloud_gen_random(PDM_MPI_COMM_WORLD,
@@ -190,7 +190,7 @@ int main(int argc, char *argv[])
 
   // Finally, retrieve the computed global id arrays
   PDM_g_num_t **gnum;
-  PDM_malloc(*gnum,n_part,PDM_g_num_t *);
+  PDM_malloc(gnum,n_part,PDM_g_num_t *);
   for (int i_part = 0; i_part < n_part; i_part++) {
     gnum[i_part] = PDM_gnum_get(gen_gnum,
                                 i_part);

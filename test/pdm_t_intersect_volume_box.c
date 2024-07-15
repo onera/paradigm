@@ -717,10 +717,10 @@ int main(int argc, char *argv[])
 
   //int  *box_tag[n_box_plane];
   double **box_tag;
-  PDM_malloc(*box_tag,n_box_plane,double *);
+  PDM_malloc(box_tag,n_box_plane,double *);
   //char *box_tag_names[n_box_plane];
   char **box_tag_names;
-  PDM_malloc(*box_tag_names,n_box_plane,char *);
+  PDM_malloc(box_tag_names,n_box_plane,char *);
 
   int check2;
 

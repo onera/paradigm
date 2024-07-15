@@ -166,27 +166,27 @@ int main(int argc, char *argv[])
   PDM_malloc(dface_group_s,n_domain ,int);
 
   PDM_g_num_t **dface_cell;
-  PDM_malloc(*dface_cell,n_domain ,PDM_g_num_t*);
+  PDM_malloc(dface_cell,n_domain ,PDM_g_num_t*);
   int **dface_vtx_idx;
-  PDM_malloc(*dface_vtx_idx,n_domain ,int*);
+  PDM_malloc(dface_vtx_idx,n_domain ,int*);
   PDM_g_num_t **dface_vtx;
-  PDM_malloc(*dface_vtx,n_domain ,PDM_g_num_t*);
+  PDM_malloc(dface_vtx,n_domain ,PDM_g_num_t*);
   double **dvtx_coord;
-  PDM_malloc(*dvtx_coord,n_domain ,double*);
+  PDM_malloc(dvtx_coord,n_domain ,double*);
   int **dface_group_idx;
-  PDM_malloc(*dface_group_idx,n_domain ,int*);
+  PDM_malloc(dface_group_idx,n_domain ,int*);
   PDM_g_num_t **dface_group;
-  PDM_malloc(*dface_group,n_domain ,PDM_g_num_t*);
+  PDM_malloc(dface_group,n_domain ,PDM_g_num_t*);
   int **dface_bnd_idx;
-  PDM_malloc(*dface_bnd_idx,n_domain ,int*);
+  PDM_malloc(dface_bnd_idx,n_domain ,int*);
   PDM_g_num_t **dface_bnd;
-  PDM_malloc(*dface_bnd,n_domain ,PDM_g_num_t*);
+  PDM_malloc(dface_bnd,n_domain ,PDM_g_num_t*);
   int **dface_join_idx;
-  PDM_malloc(*dface_join_idx,n_domain ,int*);
+  PDM_malloc(dface_join_idx,n_domain ,int*);
   PDM_g_num_t **dface_join;
-  PDM_malloc(*dface_join,n_domain ,PDM_g_num_t*);
+  PDM_malloc(dface_join,n_domain ,PDM_g_num_t*);
   int **djoins_ids;
-  PDM_malloc(*djoins_ids,n_domain ,int*);
+  PDM_malloc(djoins_ids,n_domain ,int*);
 
   /* Initialize multipart */
   int *n_part_domains;
@@ -203,9 +203,9 @@ int main(int argc, char *argv[])
 
   /* Generate mesh */
   PDM_dcube_t **dcube;
-  PDM_malloc(*dcube,n_domain ,PDM_dcube_t *);
+  PDM_malloc(dcube,n_domain ,PDM_dcube_t *);
   PDM_dmesh_t **dmesh;
-  PDM_malloc(*dmesh,n_domain ,PDM_dmesh_t *);
+  PDM_malloc(dmesh,n_domain ,PDM_dmesh_t *);
   for (int i_domain = 0; i_domain < n_domain; i_domain++)
   {
     // Create a cube for this domain
@@ -398,15 +398,15 @@ int main(int argc, char *argv[])
 
     /* Get results */
     int **pface_vtx_n;
-    PDM_malloc(*pface_vtx_n,tn_part_proc ,int *);
+    PDM_malloc(pface_vtx_n,tn_part_proc ,int *);
     int **pcell_face_n;
-    PDM_malloc(*pcell_face_n,tn_part_proc ,int *);
+    PDM_malloc(pcell_face_n,tn_part_proc ,int *);
     int *pn_cell;
     PDM_malloc(pn_cell,tn_part_proc ,int  );
     int *pn_vtx;
     PDM_malloc(pn_vtx,tn_part_proc ,int  );
     int **comm_visu;
-    PDM_malloc(*comm_visu,tn_part_proc ,int *);
+    PDM_malloc(comm_visu,tn_part_proc ,int *);
 
     int ipartdomain = 0;
     /* Write geometry */

@@ -1214,7 +1214,7 @@ int main(int argc, char *argv[])
   int** pface_bound;
 
   int **face_is_bnd;
-  PDM_malloc(*face_is_bnd,n_part ,int*);
+  PDM_malloc(face_is_bnd,n_part ,int*);
   for (int i_part = 0; i_part < n_res_part; i_part++) {
     PDM_malloc(face_is_bnd[i_part],pn_faces[i_part],int);
     for (int i_face = 0; i_face < pn_faces[i_part]; i_face++){

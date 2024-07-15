@@ -925,9 +925,9 @@ _export_ini_mesh
     PDM_writer_step_beg (id_cs[imesh], 0.);
 
     int **_face_nb;
-    PDM_malloc(*_face_nb,n_part,int *);
+    PDM_malloc(_face_nb,n_part,int *);
     int **_face_idx;
-    PDM_malloc(*_face_idx,n_part,int *);
+    PDM_malloc(_face_idx,n_part,int *);
 
     for (int ipart = 0; ipart < n_part; ipart++) {
 
@@ -976,11 +976,11 @@ _export_ini_mesh
     */
 
     PDM_real_t **val_num_part;
-    PDM_malloc(*val_num_part,n_part,PDM_real_t *);
+    PDM_malloc(val_num_part,n_part,PDM_real_t *);
     PDM_real_t **val_coo_x;
-    PDM_malloc(*val_coo_x,n_part,PDM_real_t *);
+    PDM_malloc(val_coo_x,n_part,PDM_real_t *);
     PDM_real_t **val_coo_xyz;
-    PDM_malloc(*val_coo_xyz,n_part,PDM_real_t *);
+    PDM_malloc(val_coo_xyz,n_part,PDM_real_t *);
 
     for (int ipart = 0; ipart < n_part; ipart++) {
 
@@ -1241,17 +1241,17 @@ _export_ol_mesh
                          &nGOlVtx);
 
     int **_olface_nb;
-    PDM_malloc(*_olface_nb,n_part,int *);
+    PDM_malloc(_olface_nb,n_part,int *);
     int **_olface_idx;
-    PDM_malloc(*_olface_idx,n_part,int *);
+    PDM_malloc(_olface_idx,n_part,int *);
     PDM_real_t **val_num_part;
-    PDM_malloc(*val_num_part,n_part,PDM_real_t *);
+    PDM_malloc(val_num_part,n_part,PDM_real_t *);
     PDM_real_t **val_match;
-    PDM_malloc(*val_match,n_part,PDM_real_t *);
+    PDM_malloc(val_match,n_part,PDM_real_t *);
     PDM_real_t **val_cell_match;
-    PDM_malloc(*val_cell_match,n_part,PDM_real_t *);
+    PDM_malloc(val_cell_match,n_part,PDM_real_t *);
     PDM_real_t **val_origin;
-    PDM_malloc(*val_origin,n_part,PDM_real_t *);
+    PDM_malloc(val_origin,n_part,PDM_real_t *);
     PDM_writer_step_beg (id_cs[imesh], 0.);
 
     for (int ipart = 0; ipart < n_part; ipart++) {
@@ -1739,11 +1739,11 @@ char *argv[]
    */
 
   double **sFieldA;
-  PDM_malloc(*sFieldA,n_part,double *);
+  PDM_malloc(sFieldA,n_part,double *);
   double **centerA;
-  PDM_malloc(*centerA,n_part,double *);
+  PDM_malloc(centerA,n_part,double *);
   double **rFieldB;
-  PDM_malloc(*rFieldB,n_part,double *);
+  PDM_malloc(rFieldB,n_part,double *);
 
   for (int ipart = 0; ipart < n_part; ipart++) {
     PDM_malloc(centerA[ipart],3 * nFace[0][ipart],double);
@@ -1861,13 +1861,13 @@ char *argv[]
   int **_initToOlFace[2];
 
   double **sFieldOlA;
-  PDM_malloc(*sFieldOlA,n_part,double *);
+  PDM_malloc(sFieldOlA,n_part,double *);
   double **rFieldOlB;
-  PDM_malloc(*rFieldOlB,n_part,double *);
+  PDM_malloc(rFieldOlB,n_part,double *);
   double **surfB;
-  PDM_malloc(*surfB,n_part,double *);
+  PDM_malloc(surfB,n_part,double *);
   double **surfOlB;
-  PDM_malloc(*surfOlB,n_part,double *);
+  PDM_malloc(surfOlB,n_part,double *);
 
   for (int imesh = 0; imesh < 2; imesh++) {
     PDM_malloc(_nOlFace[imesh],n_part,int);
@@ -2104,7 +2104,7 @@ char *argv[]
  PDM_free(d_send);
 
   int **check_graph;
-  PDM_malloc(*check_graph,n_part,int*);
+  PDM_malloc(check_graph,n_part,int*);
 
   for (int ipart = 0; ipart < n_part; ipart++) {
     PDM_malloc(check_graph[ipart],2 * _nOlFace[1][ipart],int);

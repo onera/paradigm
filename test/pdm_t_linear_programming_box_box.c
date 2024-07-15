@@ -472,9 +472,9 @@ int main(int argc, char *argv[])
   PDM_malloc(box_intersects_box,n_box,double);
 
   double **box_tag;
-  PDM_malloc(*box_tag,n_box_plane,double *);
+  PDM_malloc(box_tag,n_box_plane,double *);
   char **box_tag_names;
-  PDM_malloc(*box_tag_names,n_box_plane,char *);
+  PDM_malloc(box_tag_names,n_box_plane,char *);
 
   int check1, check2;
 

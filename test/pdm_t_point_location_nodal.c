@@ -288,15 +288,15 @@ _gen_mesh
 
     /* Get parts */
     int **pcell_face_idx;
-    PDM_malloc(*pcell_face_idx,n_part,int         *);
+    PDM_malloc(pcell_face_idx,n_part,int         *);
     int **pcell_face;
-    PDM_malloc(*pcell_face,n_part,int         *);
+    PDM_malloc(pcell_face,n_part,int         *);
     int **pface_vtx_idx;
-    PDM_malloc(*pface_vtx_idx,n_part,int         *);
+    PDM_malloc(pface_vtx_idx,n_part,int         *);
     int **pface_vtx;
-    PDM_malloc(*pface_vtx,n_part,int         *);
+    PDM_malloc(pface_vtx,n_part,int         *);
     PDM_g_num_t **pface_ln_to_gn;
-    PDM_malloc(*pface_ln_to_gn,n_part,PDM_g_num_t *);
+    PDM_malloc(pface_ln_to_gn,n_part,PDM_g_num_t *);
 
     int *pn_face;
     PDM_malloc(pn_face,n_part,int);
@@ -497,13 +497,13 @@ _gen_mesh
     int *pn_edge;
     PDM_malloc(pn_edge,n_part,int  );
     int **pface_edge_idx;
-    PDM_malloc(*pface_edge_idx,n_part,int *);
+    PDM_malloc(pface_edge_idx,n_part,int *);
     int **pface_edge;
-    PDM_malloc(*pface_edge,n_part,int *);
+    PDM_malloc(pface_edge,n_part,int *);
     int **pedge_vtx_idx;
-    PDM_malloc(*pedge_vtx_idx,n_part,int *);
+    PDM_malloc(pedge_vtx_idx,n_part,int *);
     int **pedge_vtx;
-    PDM_malloc(*pedge_vtx,n_part,int *);
+    PDM_malloc(pedge_vtx,n_part,int *);
 
     for (int ipart = 0; ipart < n_part; ipart++) {
 
@@ -635,7 +635,7 @@ _gen_mesh
     PDM_multipart_compute(mpart);
 
     PDM_g_num_t **pvtx_ln_to_gn;
-    PDM_malloc(*pvtx_ln_to_gn,n_part,PDM_g_num_t *);
+    PDM_malloc(pvtx_ln_to_gn,n_part,PDM_g_num_t *);
     for (int ipart = 0; ipart < n_part; ipart++) {
       PDM_g_num_t *_elt_ln_to_gn;
       (*pn_elt)[ipart] = PDM_multipart_part_ln_to_gn_get(mpart,
@@ -726,7 +726,7 @@ _mesh_from_file
   PDM_malloc(*pvtx_coord,n_part,double      *);
 
   PDM_g_num_t **pvtx_ln_to_gn;
-  PDM_malloc(*pvtx_ln_to_gn,n_part,PDM_g_num_t *);
+  PDM_malloc(pvtx_ln_to_gn,n_part,PDM_g_num_t *);
   for (int ipart = 0; ipart < n_part; ipart++) {
     PDM_g_num_t *_elt_ln_to_gn;
     (*pn_elt)[ipart] = PDM_multipart_part_ln_to_gn_get(mpart,
@@ -1181,7 +1181,7 @@ int main(int argc, char *argv[])
                         &pts_coord);
 
   int **pts_idx;
-  PDM_malloc(*pts_idx,n_part,int *);
+  PDM_malloc(pts_idx,n_part,int *);
   for (int ipart = 0; ipart < n_part; ipart++) {
     pts_idx[ipart] = PDM_array_new_idx_from_const_stride_int(1,
                                                              pn_pts[ipart]);

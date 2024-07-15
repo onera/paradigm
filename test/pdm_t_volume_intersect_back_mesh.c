@@ -931,9 +931,9 @@ int main(int argc, char *argv[])
   PDM_DMesh_nodal_free(vol_dmn);
 
   int **volume;
-  PDM_malloc(*volume,total_n_edges,int  *);
+  PDM_malloc(volume,total_n_edges,int  *);
   char **volume_names;
-  PDM_malloc(*volume_names,total_n_edges,char *);
+  PDM_malloc(volume_names,total_n_edges,char *);
 
   for (int ivol = 0; ivol < total_n_edges; ivol++) {
     volume[ivol] = PDM_array_zeros_int(dn_back_face);

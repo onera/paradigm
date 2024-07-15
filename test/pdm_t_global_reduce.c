@@ -259,11 +259,11 @@ int main(int argc, char *argv[])
   int *part_n_vtx;
   PDM_malloc(part_n_vtx,n_part,int);
   PDM_g_num_t **part_vtx_ln_to_gn;
-  PDM_malloc(*part_vtx_ln_to_gn,n_part,PDM_g_num_t *);
+  PDM_malloc(part_vtx_ln_to_gn,n_part,PDM_g_num_t *);
   double **part_local_field;
-  PDM_malloc(*part_local_field,n_part,double *);
+  PDM_malloc(part_local_field,n_part,double *);
   double **part_reduced_field;
-  PDM_malloc(*part_reduced_field,n_part,double *);
+  PDM_malloc(part_reduced_field,n_part,double *);
 
   for (int i_part = 0; i_part < n_part; i_part++) {
 

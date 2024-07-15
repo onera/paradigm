@@ -1420,9 +1420,9 @@ int main(int argc, char *argv[])
    *  Check result from target PoV
    */
   PDM_g_num_t **tgt_location;
-  PDM_malloc(*tgt_location,n_part,PDM_g_num_t *);
+  PDM_malloc(tgt_location,n_part,PDM_g_num_t *);
   double **tgt_proj_coord;
-  PDM_malloc(*tgt_proj_coord,n_part,double *);
+  PDM_malloc(tgt_proj_coord,n_part,double *);
 
   int n_wrong = 0;
   const PDM_g_num_t n_cell_seg = n_vtx_seg - 1;
@@ -1733,7 +1733,7 @@ int main(int argc, char *argv[])
    *  Check location (interpolation of an affine field)
    */
   double **src_field;
-  PDM_malloc(*src_field,n_part,double *);
+  PDM_malloc(src_field,n_part,double *);
   for (int ipart = 0; ipart < n_part; ipart++) {
     PDM_malloc(src_field[ipart],src_n_vtx[ipart],double);
     for (int i = 0; i < src_n_vtx[ipart]; i++) {
@@ -1753,7 +1753,7 @@ int main(int argc, char *argv[])
                                      PDM_OWNERSHIP_USER);
 
   double **send_field;
-  PDM_malloc(*send_field,n_part,double *);
+  PDM_malloc(send_field,n_part,double *);
   for (int ipart = 0; ipart < n_part; ipart++) {
     int         *elt_pts_idx        = NULL;
     PDM_g_num_t *elt_pts_gnum       = NULL;

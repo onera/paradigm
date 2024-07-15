@@ -1318,7 +1318,7 @@ int main(int argc, char *argv[])
    *  Check location (interpolation of an affine field)
    */
   double **src_field;
-  PDM_malloc(*src_field,n_part,double *);
+  PDM_malloc(src_field,n_part,double *);
   for (int ipart = 0; ipart < n_part; ipart++) {
     PDM_malloc(src_field[ipart],nVtx[ipart],double);
     for (int i = 0; i < nVtx[ipart]; i++) {
@@ -1334,9 +1334,9 @@ int main(int argc, char *argv[])
                                      PDM_OWNERSHIP_USER);
   if (ptp == NULL) {
     int **pelt_pts_idx;
-    PDM_malloc(*pelt_pts_idx,n_part,int         *);
+    PDM_malloc(pelt_pts_idx,n_part,int         *);
     PDM_g_num_t **pelt_pts_gnum;
-    PDM_malloc(*pelt_pts_gnum,n_part,PDM_g_num_t *);
+    PDM_malloc(pelt_pts_gnum,n_part,PDM_g_num_t *);
     for (int ipart = 0; ipart < n_part; ipart++) {
       double *elt_pts_coord      = NULL;
       double *elt_pts_uvw        = NULL;
@@ -1373,7 +1373,7 @@ int main(int argc, char *argv[])
 
 
   double **send_field;
-  PDM_malloc(*send_field,n_part,double *);
+  PDM_malloc(send_field,n_part,double *);
   for (int ipart = 0; ipart < n_part; ipart++) {
     int         *elt_pts_idx        = NULL;
     PDM_g_num_t *elt_pts_gnum       = NULL;

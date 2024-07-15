@@ -599,9 +599,9 @@ char *argv[]
       log_trace("FROM A USER POV\n");
     }
     int **pelt_a_elt_b_n;
-    PDM_malloc(*pelt_a_elt_b_n,n_part,int    *);
+    PDM_malloc(pelt_a_elt_b_n,n_part,int    *);
     double **pelt_a_elt_b_volume;
-    PDM_malloc(*pelt_a_elt_b_volume,n_part,double *);
+    PDM_malloc(pelt_a_elt_b_volume,n_part,double *);
 
     for (int ipart = 0; ipart < n_part; ipart++) {
       int         *elt_a_elt_b_idx = NULL;

@@ -543,13 +543,13 @@ _export_ini_mesh
    */
 
   int **edgeVtxIdx1;
-  PDM_malloc(*edgeVtxIdx1,n_part,PDM_l_num_t *);
+  PDM_malloc(edgeVtxIdx1,n_part,PDM_l_num_t *);
   int **edgeVtxNB1;
-  PDM_malloc(*edgeVtxNB1,n_part,PDM_l_num_t *);
+  PDM_malloc(edgeVtxNB1,n_part,PDM_l_num_t *);
   int **faceEdgeIdx1;
-  PDM_malloc(*faceEdgeIdx1,n_part,PDM_l_num_t *);
+  PDM_malloc(faceEdgeIdx1,n_part,PDM_l_num_t *);
   int **faceEdgeNB1;
-  PDM_malloc(*faceEdgeNB1,n_part,PDM_l_num_t *);
+  PDM_malloc(faceEdgeNB1,n_part,PDM_l_num_t *);
 
   int *nsom_part;
   PDM_malloc(nsom_part,n_part,int);
@@ -701,11 +701,11 @@ _export_ini_mesh
   */
 
   PDM_real_t **val_num_part;
-  PDM_malloc(*val_num_part,n_part,PDM_real_t *);
+  PDM_malloc(val_num_part,n_part,PDM_real_t *);
   PDM_real_t **val_coo_x;
-  PDM_malloc(*val_coo_x,n_part,PDM_real_t *);
+  PDM_malloc(val_coo_x,n_part,PDM_real_t *);
   PDM_real_t **val_coo_xyz;
-  PDM_malloc(*val_coo_xyz,n_part,PDM_real_t *);
+  PDM_malloc(val_coo_xyz,n_part,PDM_real_t *);
 
   for (int i_part = 0; i_part < n_part; i_part++) {
 
@@ -939,19 +939,19 @@ _export_ini_mesh
 //    */
 
 //   int **edgeVtxIdx1;
-   PDM_malloc(*edgeVtxIdx1,n_part,PDM_l_num_t *);
+//   PDM_malloc(edgeVtxIdx1,n_part,PDM_l_num_t *);
 //   int **edgeVtxNB1;
-   PDM_malloc(*edgeVtxNB1,n_part,PDM_l_num_t *);
+//   PDM_malloc(edgeVtxNB1,n_part,PDM_l_num_t *);
 //   int **faceEdgeIdx1;
-   PDM_malloc(*faceEdgeIdx1,n_part,PDM_l_num_t *);
+//   PDM_malloc(faceEdgeIdx1,n_part,PDM_l_num_t *);
 //   int **faceEdgeNB1;
-   PDM_malloc(*faceEdgeNB1,n_part,PDM_l_num_t *);
+//   PDM_malloc(faceEdgeNB1,n_part,PDM_l_num_t *);
 
 //   int *nsom_part;
-   PDM_malloc(nsom_part,n_part,int);
+//   PDM_malloc(nsom_part,n_part,int);
 
 //   int *n_partProcs;
-   PDM_malloc(n_partProcs,numProcs,int);
+//   PDM_malloc(n_partProcs,numProcs,int);
 
 //   PDM_MPI_Allgather ((void *) &n_part,      1, PDM_MPI_INT,
 //                  (void *) n_partProcs, 1, PDM_MPI_INT,
@@ -1110,11 +1110,11 @@ _export_ini_mesh
 //   */
 
 //   PDM_real_t **val_num_part;
-   PDM_malloc(*val_num_part,n_part,PDM_real_t *);
+//   PDM_malloc(val_num_part,n_part,PDM_real_t *);
 //   PDM_real_t **val_coo_x;
-   PDM_malloc(*val_coo_x,n_part,PDM_real_t *);
+//   PDM_malloc(val_coo_x,n_part,PDM_real_t *);
 //   PDM_real_t **val_coo_xyz;
-   PDM_malloc(*val_coo_xyz,n_part,PDM_real_t *);
+//   PDM_malloc(val_coo_xyz,n_part,PDM_real_t *);
 
 //   for (int i_part = 0; i_part < n_part; i_part++) {
 

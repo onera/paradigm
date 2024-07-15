@@ -513,9 +513,9 @@ int main
   int n_domain = n_dom_i * n_dom_j * n_dom_k;
 
   // PDM_dcube_nodal_t **dcube;
- PDM_malloc(*dcube,n_domain,PDM_dcube_nodal_t *);
+  // PDM_malloc(dcube,n_domain,PDM_dcube_nodal_t *);
   PDM_dmesh_nodal_t **dmn;
-  PDM_malloc(*dmn,n_domain,PDM_dmesh_nodal_t *);
+  PDM_malloc(dmn,n_domain,PDM_dmesh_nodal_t *);
   PDM_dcube_nodal_t **dcube = NULL;
   PDM_domain_interface_t *dom_intrf = NULL;
 
@@ -551,7 +551,7 @@ int main
   //   };
 
   //   double **all_coord;
-   PDM_malloc(*all_coord,n_domain,double *);
+  //   PDM_malloc(all_coord,n_domain,double *);
   //   for (int i = 0; i < n_domain; i++) {
   //     all_coord[i] = PDM_DMesh_nodal_vtx_get(dmn[i]);
   //   }
@@ -653,7 +653,7 @@ int main
                                    PDM_DMESH_NODAL_TO_DMESH_TRANSLATE_GROUP_TO_FACE);
 
   PDM_dmesh_t **dm;
-  PDM_malloc(*dm,n_domain ,PDM_dmesh_t *);
+  PDM_malloc(dm,n_domain ,PDM_dmesh_t *);
 
   int *dn_vtx;
   PDM_malloc(dn_vtx, n_domain ,int          );
@@ -662,13 +662,13 @@ int main
   int *dn_edge;
   PDM_malloc(dn_edge, n_domain ,int          );
   int **dface_vtx_idx;
-  PDM_malloc(*dface_vtx_idx, n_domain ,int         *);
+  PDM_malloc(dface_vtx_idx, n_domain ,int         *);
   PDM_g_num_t **dface_vtx;
-  PDM_malloc(*dface_vtx, n_domain ,PDM_g_num_t *);
+  PDM_malloc(dface_vtx, n_domain ,PDM_g_num_t *);
   PDM_g_num_t **dedge_vtx;
-  PDM_malloc(*dedge_vtx, n_domain ,PDM_g_num_t *);
+  PDM_malloc(dedge_vtx, n_domain ,PDM_g_num_t *);
   int **dedge_vtx_idx;
-  PDM_malloc(*dedge_vtx_idx, n_domain ,int *        );
+  PDM_malloc(dedge_vtx_idx, n_domain ,int *        );
  
   for (int i = 0; i < n_domain; i++) {
     PDM_dmesh_nodal_to_dmesh_get_dmesh(dmn_to_dm, i, &dm[i]);
@@ -719,19 +719,19 @@ int main
   int *pn_n_part;
   PDM_malloc(pn_n_part, n_domain ,int          *);
   int **pn_face;
-  PDM_malloc(*pn_face, n_domain ,int          *);
+  PDM_malloc(pn_face, n_domain ,int          *);
   int **pn_edge;
-  PDM_malloc(*pn_edge, n_domain ,int          *);
+  PDM_malloc(pn_edge, n_domain ,int          *);
   PDM_g_num_t ***pface_ln_to_gn;
-  PDM_malloc(**pface_ln_to_gn, n_domain ,PDM_g_num_t **);
+  PDM_malloc(pface_ln_to_gn, n_domain ,PDM_g_num_t **);
   PDM_g_num_t ***pedge_ln_to_gn;
-  PDM_malloc(**pedge_ln_to_gn, n_domain ,PDM_g_num_t **);
+  PDM_malloc(pedge_ln_to_gn, n_domain ,PDM_g_num_t **);
   int **pn_vtx;
-  PDM_malloc(*pn_vtx, n_domain ,int          *);
+  PDM_malloc(pn_vtx, n_domain ,int          *);
   PDM_g_num_t ***pvtx_ln_to_gn;
-  PDM_malloc(**pvtx_ln_to_gn, n_domain ,PDM_g_num_t **);
+  PDM_malloc(pvtx_ln_to_gn, n_domain ,PDM_g_num_t **);
   int ***pface_vtx;
-  PDM_malloc(**pface_vtx, n_domain ,int         **);
+  PDM_malloc(pface_vtx, n_domain ,int         **);
   for (int i_dom = 0; i_dom < n_domain; i_dom++) {
     pn_n_part     [i_dom] = n_part;
     pn_face       PDM_malloc([i_dom], n_part ,int          );
@@ -1139,7 +1139,7 @@ int main
       /* Apply periodicity */
       int n_interface = PDM_part_domain_interface_n_interface_get(pdi);
       double **translation_vector;
-      PDM_malloc(*translation_vector,n_interface ,double * );
+      PDM_malloc(translation_vector,n_interface ,double * );
       for(int i_interf = 0; i_interf < n_interface; ++i_interf) {
         translation_vector[i_interf] = NULL;
         PDM_part_domain_interface_translation_get(pdi, i_interf, &translation_vector[i_interf]);

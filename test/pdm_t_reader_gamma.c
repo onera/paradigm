@@ -198,17 +198,17 @@ int main(int argc, char *argv[])
     PDM_writer_step_beg(id_cs, 0.);
 
     int **face_vtx_n;
-    PDM_malloc(*face_vtx_n,n_part,int *);
+    PDM_malloc(face_vtx_n,n_part,int *);
     int **cell_face_n;
-    PDM_malloc(*cell_face_n,n_part,int *);
+    PDM_malloc(cell_face_n,n_part,int *);
 
     int **pface_vtx_idx;
-    PDM_malloc(*pface_vtx_idx,n_part,int *);
+    PDM_malloc(pface_vtx_idx,n_part,int *);
     int **pface_vtx;
-    PDM_malloc(*pface_vtx,n_part,int *);
+    PDM_malloc(pface_vtx,n_part,int *);
 
     PDM_real_t **val_num_part;
-    PDM_malloc(*val_num_part,n_part,PDM_real_t *);
+    PDM_malloc(val_num_part,n_part,PDM_real_t *);
 
     int use_edge = 0;
 

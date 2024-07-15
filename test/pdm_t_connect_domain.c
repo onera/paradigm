@@ -45,9 +45,9 @@ _exchange_point_list
    * We have for all extraction domain, we need to exchange id
    */
   PDM_g_num_t **distrib_join;
-  PDM_malloc(*distrib_join,n_group_join ,PDM_g_num_t *);
+  PDM_malloc(distrib_join,n_group_join ,PDM_g_num_t *);
   // PDM_g_num_t **dface_join_opp;
- PDM_malloc(*dface_join_opp,n_group_join ,PDM_g_num_t *);
+  // PDM_malloc(*dface_join_opp,n_group_join ,PDM_g_num_t *);
   for(int i_group_join = 0; i_group_join < n_group_join; ++i_group_join) {
     int dn_face_join = dface_join_idx[i_group_join+1] - dface_join_idx[i_group_join];
     distrib_join[i_group_join] = PDM_compute_entity_distribution(comm, dn_face_join);
@@ -226,23 +226,23 @@ int main(int argc, char *argv[])
   PDM_malloc(dface_group_s,n_domain ,int);
 
   PDM_g_num_t **dface_cell;
-  PDM_malloc(*dface_cell,n_domain ,PDM_g_num_t *);
+  PDM_malloc(dface_cell,n_domain ,PDM_g_num_t *);
   int **dface_vtx_idx;
-  PDM_malloc(*dface_vtx_idx,n_domain ,int         *);
+  PDM_malloc(dface_vtx_idx,n_domain ,int         *);
   PDM_g_num_t **dface_vtx;
-  PDM_malloc(*dface_vtx,n_domain ,PDM_g_num_t *);
+  PDM_malloc(dface_vtx,n_domain ,PDM_g_num_t *);
   double **dvtx_coord;
-  PDM_malloc(*dvtx_coord,n_domain ,double      *);
+  PDM_malloc(dvtx_coord,n_domain ,double      *);
   int **dface_group_idx;
-  PDM_malloc(*dface_group_idx,n_domain ,int         *);
+  PDM_malloc(dface_group_idx,n_domain ,int         *);
   PDM_g_num_t **dface_group;
-  PDM_malloc(*dface_group,n_domain ,PDM_g_num_t *);
+  PDM_malloc(dface_group,n_domain ,PDM_g_num_t *);
 
 
   int **dface_bnd_idx;
-  PDM_malloc(*dface_bnd_idx,n_domain ,int         *);
+  PDM_malloc(dface_bnd_idx,n_domain ,int         *);
   PDM_g_num_t **dface_bnd;
-  PDM_malloc(*dface_bnd,n_domain ,PDM_g_num_t *);
+  PDM_malloc(dface_bnd,n_domain ,PDM_g_num_t *);
 
   int n_group_join = 2*(n_domain-1);
   int *dface_join_idx;
@@ -274,7 +274,7 @@ int main(int argc, char *argv[])
   }
 
   PDM_dcube_t **dcube;
-  PDM_malloc(*dcube,n_domain ,PDM_dcube_t *);
+  PDM_malloc(dcube,n_domain ,PDM_dcube_t *);
   int tmp_i_group_join = 0;
   for (int i_domain = 0; i_domain < n_domain; i_domain++) {
 
@@ -391,9 +391,9 @@ int main(int argc, char *argv[])
   int *interface_dn_f;
   PDM_malloc(interface_dn_f,n_interface ,int);
   PDM_g_num_t **interface_ids_f;
-  PDM_malloc(*interface_ids_f,n_interface ,PDM_g_num_t*);
+  PDM_malloc(interface_ids_f,n_interface ,PDM_g_num_t*);
   int **interface_dom_f;
-  PDM_malloc(*interface_dom_f,n_interface ,int*);
+  PDM_malloc(interface_dom_f,n_interface ,int*);
 
   int i_interface = 0;
   for (int i_join = 0; i_join < n_group_join; i_join++) {

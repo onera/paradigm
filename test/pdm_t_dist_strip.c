@@ -307,30 +307,30 @@ int main(int argc, char *argv[])
                                                             PDM_OWNERSHIP_KEEP);
 
   int **select_face;
-  PDM_malloc(*select_face,n_part,int *);
+  PDM_malloc(select_face,n_part,int *);
   int *n_select_face;
   PDM_malloc(n_select_face,n_part,int);
   int **select_vtx;
-  PDM_malloc(*select_vtx,n_part,int *);
+  PDM_malloc(select_vtx,n_part,int *);
   int *n_select_vtx;
   PDM_malloc(n_select_vtx,n_part,int);
 
   int **surface_face_vtx_idx;
-  PDM_malloc(*surface_face_vtx_idx,n_part,int *);
+  PDM_malloc(surface_face_vtx_idx,n_part,int *);
   int **surface_face_vtx;
-  PDM_malloc(*surface_face_vtx,n_part,int *);
+  PDM_malloc(surface_face_vtx,n_part,int *);
   double **surface_coords;
-  PDM_malloc(*surface_coords,n_part,double *);
+  PDM_malloc(surface_coords,n_part,double *);
 
   PDM_g_num_t **surface_face_parent_gnum;
-  PDM_malloc(*surface_face_parent_gnum,n_part,PDM_g_num_t *);
+  PDM_malloc(surface_face_parent_gnum,n_part,PDM_g_num_t *);
   PDM_g_num_t **surface_vtx_parent_gnum;
-  PDM_malloc(*surface_vtx_parent_gnum,n_part,PDM_g_num_t *);
+  PDM_malloc(surface_vtx_parent_gnum,n_part,PDM_g_num_t *);
 
   const PDM_g_num_t **surface_face_gnum;
- PDM_malloc(*surface_face_gnum,n_part,PDM_g_num_t *);
+ PDM_malloc(surface_face_gnum,n_part,PDM_g_num_t *);
   const PDM_g_num_t **surface_vtx_gnum;
- PDM_malloc(*surface_vtx_gnum,n_part,PDM_g_num_t *);
+ PDM_malloc(surface_vtx_gnum,n_part,PDM_g_num_t *);
 
   PDM_gen_gnum_t* gen_gnum_face = PDM_gnum_create (3, n_part, PDM_FALSE, 1e-3, PDM_MPI_COMM_WORLD, PDM_OWNERSHIP_KEEP);
   PDM_gen_gnum_t* gen_gnum_vtx  = PDM_gnum_create (3, n_part, PDM_FALSE, 1e-3, PDM_MPI_COMM_WORLD, PDM_OWNERSHIP_KEEP);

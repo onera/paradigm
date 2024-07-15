@@ -417,27 +417,27 @@ _create_wall_surf
   PDM_malloc(n_surf_face,n_part ,int          );
 
   double **cell_center;
-  PDM_malloc(*cell_center,n_part ,double      *);
+  PDM_malloc(cell_center,n_part ,double      *);
   double **psurf_vtx_coord;
-  PDM_malloc(*psurf_vtx_coord,n_part ,double      *);
+  PDM_malloc(psurf_vtx_coord,n_part ,double      *);
   int **psurf_face_vtx_idx;
-  PDM_malloc(*psurf_face_vtx_idx,n_part ,int         *);
+  PDM_malloc(psurf_face_vtx_idx,n_part ,int         *);
   int **psurf_face_vtx_n;
-  PDM_malloc(*psurf_face_vtx_n,n_part ,int         *);
+  PDM_malloc(psurf_face_vtx_n,n_part ,int         *);
   int **psurf_face_vtx;
-  PDM_malloc(*psurf_face_vtx,n_part ,int         *);
+  PDM_malloc(psurf_face_vtx,n_part ,int         *);
   PDM_g_num_t **psurf_face_ln_to_gn;
-  PDM_malloc(*psurf_face_ln_to_gn,n_part ,PDM_g_num_t *);
+  PDM_malloc(psurf_face_ln_to_gn,n_part ,PDM_g_num_t *);
   PDM_g_num_t **psurf_vtx_ln_to_gn;
-  PDM_malloc(*psurf_vtx_ln_to_gn,n_part ,PDM_g_num_t *);
+  PDM_malloc(psurf_vtx_ln_to_gn,n_part ,PDM_g_num_t *);
 
   PDM_g_num_t **psurf_face_vtx_g_num;
-  PDM_malloc(*psurf_face_vtx_g_num,n_part ,PDM_g_num_t *);
+  PDM_malloc(psurf_face_vtx_g_num,n_part ,PDM_g_num_t *);
 
   int *pn_cell;
   PDM_malloc(pn_cell,n_part ,int          );
   PDM_g_num_t **pcell_ln_to_gn;
-  PDM_malloc(*pcell_ln_to_gn,n_part ,PDM_g_num_t *);
+  PDM_malloc(pcell_ln_to_gn,n_part ,PDM_g_num_t *);
 
   /* Compute gnum for vtx and faces */
   PDM_gen_gnum_t* gnum_face = PDM_gnum_create(3,
@@ -1238,7 +1238,7 @@ char *argv[]
   PDM_dist_cloud_surf_compute(dist);
 
   PDM_g_num_t **closest_elt_gnum;
-  PDM_malloc(*closest_elt_gnum,n_part ,PDM_g_num_t *);
+  PDM_malloc(closest_elt_gnum,n_part ,PDM_g_num_t *);
   for (int i_part = 0; i_part < n_part; i_part++) {
 
     double      *distance;
@@ -1275,7 +1275,7 @@ char *argv[]
 
   /* Create field of speed */
   double **velocity;
-  PDM_malloc(*velocity,n_part ,double);
+  PDM_malloc(velocity,n_part ,double);
   for (int i_part = 0; i_part < n_part; i_part++) {
 
     double      *distance;

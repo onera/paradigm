@@ -189,9 +189,9 @@ char *argv[]
   int *n_entity;
   PDM_malloc(n_entity, n_cloud ,int );
   int **candidates_idx;
-  PDM_malloc(*candidates_idx, n_cloud ,int*);
+  PDM_malloc(candidates_idx, n_cloud ,int*);
   int **candidates_desc;
-  PDM_malloc(*candidates_desc, n_cloud ,int*);
+  PDM_malloc(candidates_desc, n_cloud ,int*);
   for(int i_cloud = 0; i_cloud < n_cloud; i_cloud++){
     int n_cloud_points = -1;
     int n_desc   = -1;

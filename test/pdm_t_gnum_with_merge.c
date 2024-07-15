@@ -475,12 +475,12 @@ _create_split_mesh
   PDM_gen_gnum_t* gen_gnum2 = PDM_gnum_create (3, n_part, PDM_TRUE, 1e-3, pdm_mpi_comm, PDM_OWNERSHIP_KEEP);
 
   double **char_length;
-  PDM_malloc(*char_length,n_part,double *);
+  PDM_malloc(char_length,n_part,double *);
 
   int *n_vtxs;
   PDM_malloc(n_vtxs,n_part,int);
   PDM_g_num_t **vtx_ln_to_gns;
-  PDM_malloc(*vtx_ln_to_gns,n_part,PDM_g_num_t *);
+  PDM_malloc(vtx_ln_to_gns,n_part,PDM_g_num_t *);
 
   for (int i_part = 0; i_part < n_part; i_part++) {
 
@@ -584,7 +584,7 @@ _create_split_mesh
   PDM_timer_free(timer);
 
   const PDM_g_num_t **_numabs;
- PDM_malloc(*_numabs,n_part,PDM_g_num_t *);
+ PDM_malloc(_numabs,n_part,PDM_g_num_t *);
 
   // Check
 

@@ -482,9 +482,9 @@ int main
   int n_domain = n_dom_i * n_dom_j * n_dom_k;
 
   // PDM_dcube_nodal_t **dcube;
- PDM_malloc(*dcube,n_domain,PDM_dcube_nodal_t *);
+  // PDM_malloc(dcube,n_domain,PDM_dcube_nodal_t *);
   PDM_dmesh_nodal_t **dmn;
-  PDM_malloc(*dmn,n_domain,PDM_dmesh_nodal_t *);
+  PDM_malloc(dmn,n_domain,PDM_dmesh_nodal_t *);
   PDM_dcube_nodal_t **dcube = NULL;
   PDM_domain_interface_t *dom_intrf = NULL;
 
@@ -529,7 +529,7 @@ int main
 
   PDM_dmesh_nodal_to_dmesh_t* dmn_to_dm = PDM_dmesh_nodal_to_dmesh_create(n_domain, comm, PDM_OWNERSHIP_KEEP);
   PDM_dmesh_t **dm;
-  PDM_malloc(*dm,n_domain ,PDM_dmesh_t *);
+  PDM_malloc(dm,n_domain ,PDM_dmesh_t *);
 
   int *dn_vtx;
   PDM_malloc(dn_vtx, n_domain ,int          );
@@ -538,13 +538,13 @@ int main
   int *dn_edge;
   PDM_malloc(dn_edge, n_domain ,int          );
   int **dface_vtx_idx;
-  PDM_malloc(*dface_vtx_idx, n_domain ,int         *);
+  PDM_malloc(dface_vtx_idx, n_domain ,int         *);
   PDM_g_num_t **dface_vtx;
-  PDM_malloc(*dface_vtx, n_domain ,PDM_g_num_t *);
+  PDM_malloc(dface_vtx, n_domain ,PDM_g_num_t *);
   int **dedge_vtx_idx;
-  PDM_malloc(*dedge_vtx_idx, n_domain ,int *        );
+  PDM_malloc(dedge_vtx_idx, n_domain ,int *        );
   PDM_g_num_t **dedge_vtx;
-  PDM_malloc(*dedge_vtx, n_domain ,PDM_g_num_t *);
+  PDM_malloc(dedge_vtx, n_domain ,PDM_g_num_t *);
   for (int i = 0; i < n_domain; i++) {
     dmn[i] = PDM_dcube_nodal_gen_dmesh_nodal_get(dcube[i]);
     PDM_dmesh_nodal_generate_distribution(dmn[i]);
@@ -608,33 +608,33 @@ int main
   int *pn_n_part;
   PDM_malloc(pn_n_part, n_domain ,int          *);
   int **pn_cell;
-  PDM_malloc(*pn_cell, n_domain ,int          *);
+  PDM_malloc(pn_cell, n_domain ,int          *);
   int **pn_face;
-  PDM_malloc(*pn_face, n_domain ,int          *);
+  PDM_malloc(pn_face, n_domain ,int          *);
   int **pn_edge;
-  PDM_malloc(*pn_edge, n_domain ,int          *);
+  PDM_malloc(pn_edge, n_domain ,int          *);
   int **pn_vtx;
-  PDM_malloc(*pn_vtx, n_domain ,int          *);
+  PDM_malloc(pn_vtx, n_domain ,int          *);
   PDM_g_num_t ***pcell_ln_to_gn;
-  PDM_malloc(**pcell_ln_to_gn, n_domain ,PDM_g_num_t **);
+  PDM_malloc(pcell_ln_to_gn, n_domain ,PDM_g_num_t **);
   PDM_g_num_t ***pface_ln_to_gn;
-  PDM_malloc(**pface_ln_to_gn, n_domain ,PDM_g_num_t **);
+  PDM_malloc(pface_ln_to_gn, n_domain ,PDM_g_num_t **);
   PDM_g_num_t ***pedge_ln_to_gn;
-  PDM_malloc(**pedge_ln_to_gn, n_domain ,PDM_g_num_t **);
+  PDM_malloc(pedge_ln_to_gn, n_domain ,PDM_g_num_t **);
   PDM_g_num_t ***pvtx_ln_to_gn;
-  PDM_malloc(**pvtx_ln_to_gn, n_domain ,PDM_g_num_t **);
+  PDM_malloc(pvtx_ln_to_gn, n_domain ,PDM_g_num_t **);
   int ***pcell_face;
-  PDM_malloc(**pcell_face, n_domain ,int         **);
+  PDM_malloc(pcell_face, n_domain ,int         **);
   int ***pcell_face_idx;
-  PDM_malloc(**pcell_face_idx, n_domain ,int         **);
+  PDM_malloc(pcell_face_idx, n_domain ,int         **);
   int ***pface_vtx_idx;
-  PDM_malloc(**pface_vtx_idx, n_domain ,int         **);
+  PDM_malloc(pface_vtx_idx, n_domain ,int         **);
   int ***pface_vtx;
-  PDM_malloc(**pface_vtx, n_domain ,int         **);
+  PDM_malloc(pface_vtx, n_domain ,int         **);
   double ***pvtx_coord;
-  PDM_malloc(**pvtx_coord, n_domain ,double      **);
+  PDM_malloc(pvtx_coord, n_domain ,double      **);
   double ***cell_center;
-  PDM_malloc(**cell_center, n_domain ,double      **);
+  PDM_malloc(cell_center, n_domain ,double      **);
 
   int *n_group_by_domain;
   PDM_malloc(n_group_by_domain,n_domain ,int);
@@ -895,9 +895,9 @@ int main
    */
   int n_face_group_field = 1;
   double ***pfield;
-  PDM_malloc(**pfield,n_domain ,double  **);
+  PDM_malloc(pfield,n_domain ,double  **);
   double ****pfield_bound;
-  PDM_malloc(***pfield_bound,n_domain ,double ***);
+  PDM_malloc(pfield_bound,n_domain ,double ***);
   for(int i_domain = 0; i_domain < n_domain; ++i_domain) {
     pfield      PDM_malloc([i_domain],n_part_by_domain[i_domain] ,double  *);
     PDM_malloc(pfield_bound[i_domain],n_part_by_domain[i_domain] ,double **);
