@@ -124,7 +124,7 @@ _counting_sort
 //   /* First step - Count */
 //   int n_buckets = _radix_base;
 //   int *count;
-   PDM_malloc(count, (n_buckets + 1) ,int);
+//   PDM_malloc(count, (n_buckets + 1) ,int);
 
 //   /* Set to zero */
 //   for(int i = 0; i < n_buckets+1; ++i){

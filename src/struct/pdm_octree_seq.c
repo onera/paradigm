@@ -601,8 +601,8 @@ PDM_octree_seq_create
   octree->n_nodes = 0;
   octree->n_nodes_max = 0;
 
-  PDM_malloc(octree->n_points,n_point_cloud,double);
-  PDM_malloc(octree->point_clouds,n_point_cloud,double *);
+  PDM_malloc(octree->n_points,n_point_cloud, int);
+  PDM_malloc(octree->point_clouds,n_point_cloud, const double *);
   for (int i = 0; i < n_point_cloud; i++) {
     octree->n_points[i] = 0;
     octree->point_clouds[i] = NULL;

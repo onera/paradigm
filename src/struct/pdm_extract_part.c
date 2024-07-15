@@ -73,7 +73,7 @@ _map_with_part_t
 {
   int n_part = extrp->n_part_out;
   _part_t **pdm_part;
-  PDM_malloc(*pdm_part,n_part ,_part_t *);
+  PDM_malloc(pdm_part,n_part ,_part_t *);
   for(int i_part = 0; i_part < n_part; ++i_part) {
 
     pdm_part[i_part] = _part_create();
@@ -585,13 +585,13 @@ _extract_part_group
   PDM_g_num_t ***group_entity_ln_to_gn = extrp->group_entity_ln_to_gn[bound_type];
 
   int **entity_tag;
-  PDM_malloc(*entity_tag,extrp->n_part_in ,int         *);
+  PDM_malloc(entity_tag,extrp->n_part_in ,int         *);
   int **entity_send_n;
-  PDM_malloc(*entity_send_n,extrp->n_part_in ,int         *);
+  PDM_malloc(entity_send_n,extrp->n_part_in ,int         *);
   int **entity_init_location;
-  PDM_malloc(*entity_init_location,extrp->n_part_in ,int         *);
+  PDM_malloc(entity_init_location,extrp->n_part_in ,int         *);
   PDM_g_num_t **entity_ln_to_gn;
-  PDM_malloc(*entity_ln_to_gn,extrp->n_part_in ,PDM_g_num_t *);
+  PDM_malloc(entity_ln_to_gn,extrp->n_part_in ,PDM_g_num_t *);
 
   for(int i_part = 0; i_part < extrp->n_part_in; ++i_part) {
 
@@ -683,17 +683,17 @@ _extract_part_group
   PDM_part_to_part_reverse_iexch_wait(ptp, exch_request);
 
   int **pextract_n_group_entity;
-  PDM_malloc(*pextract_n_group_entity,n_group ,int          *);
+  PDM_malloc(pextract_n_group_entity,n_group ,int          *);
   int ***pextract_group_entity;
-  PDM_malloc(**pextract_group_entity,n_group ,int         **);
+  PDM_malloc(pextract_group_entity,n_group ,int         **);
   int ***pextract_group_entity_init_location;
-  PDM_malloc(**pextract_group_entity_init_location,n_group ,int         **);
+  PDM_malloc(pextract_group_entity_init_location,n_group ,int         **);
   PDM_g_num_t ***pextract_group_entity_ln_to_gn;
-  PDM_malloc(**pextract_group_entity_ln_to_gn,n_group ,PDM_g_num_t **);
+  PDM_malloc(pextract_group_entity_ln_to_gn,n_group ,PDM_g_num_t **);
   PDM_g_num_t ***pextract_group_entity_parent_ln_to_gn;
-  PDM_malloc(**pextract_group_entity_parent_ln_to_gn,n_group ,PDM_g_num_t **);
+  PDM_malloc(pextract_group_entity_parent_ln_to_gn,n_group ,PDM_g_num_t **);
   // int ***pextract_group_entity;
- PDM_malloc(**pextract_group_entity,n_group ,int *);
+  // PDM_malloc(pextract_group_entity,n_group ,int *);
 
   for(int i_group = 0; i_group < n_group; ++i_group) {
     pextract_n_group_entity              PDM_malloc([i_group],extrp->n_part_out ,int          );
@@ -726,9 +726,9 @@ _extract_part_group
     }
 
     for(int i_group = 0; i_group < n_group; ++i_group) {
-      pextract_group_entity                PDM_malloc([i_group][i_part],    pextract_n_group_entity[i_group][i_part] ,int         *);
-      pextract_group_entity_init_location  PDM_malloc([i_group][i_part],3 * pextract_n_group_entity[i_group][i_part] ,int         *);
-      PDM_malloc(pextract_group_entity_parent_ln_to_gn[i_group][i_part],    pextract_n_group_entity[i_group][i_part] ,PDM_g_num_t *);
+      PDM_malloc(pextract_group_entity[i_group][i_part],    pextract_n_group_entity[i_group][i_part] ,int);
+      PDM_malloc(pextract_group_entity_init_location[i_group][i_part],3 * pextract_n_group_entity[i_group][i_part] ,int);
+      PDM_malloc(pextract_group_entity_parent_ln_to_gn[i_group][i_part],    pextract_n_group_entity[i_group][i_part] ,PDM_g_num_t);
       pextract_n_group_entity              [i_group][i_part] = 0;
     }
 
@@ -828,7 +828,7 @@ _extract_part_group
     PDM_gnum_free(gen_gnum);
 
     int **part2_entity1_to_part1_entity1_idx;
-    PDM_malloc(*part2_entity1_to_part1_entity1_idx,extrp->n_part_out ,int *);
+    PDM_malloc(part2_entity1_to_part1_entity1_idx,extrp->n_part_out ,int *);
     for(int i_part = 0; i_part < extrp->n_part_out; ++i_part) {
       int n_entity_in_group = pextract_n_group_entity[i_group][i_part];
       PDM_malloc(part2_entity1_to_part1_entity1_idx[i_part],(n_entity_in_group+1) ,int);
@@ -952,7 +952,7 @@ _extract_gnum_and_compute_child
   }
 
   PDM_g_num_t **child_selected_g_num;
-  PDM_malloc(*child_selected_g_num, n_part ,PDM_g_num_t *);
+  PDM_malloc(child_selected_g_num, n_part ,PDM_g_num_t *);
   for(int i_part = 0; i_part < n_part; ++i_part)  {
     child_selected_g_num[i_part] = NULL;
   }
@@ -989,9 +989,9 @@ _compute_dual_graph
 
   int dn_cell_equi = cell_distri[i_rank+1] - cell_distri[i_rank];
   int **pelmt_to_arc_n;
-  PDM_malloc(*pelmt_to_arc_n,extrp->n_part_in ,int         *);
+  PDM_malloc(pelmt_to_arc_n,extrp->n_part_in ,int         *);
   PDM_g_num_t **pelmt_to_arc_g_num;
-  PDM_malloc(*pelmt_to_arc_g_num,extrp->n_part_in ,PDM_g_num_t *);
+  PDM_malloc(pelmt_to_arc_g_num,extrp->n_part_in ,PDM_g_num_t *);
 
   int from_face_edge = 0;
   int from_face_vtx  = 0;
@@ -1261,13 +1261,13 @@ int         ***old_to_new_entity2_no
 )
 {
   int **_extract_entity2_lnum;
-  PDM_malloc(*_extract_entity2_lnum,n_part ,int         *);
+  PDM_malloc(_extract_entity2_lnum,n_part ,int         *);
   PDM_g_num_t **_extract_parent_entity2_ln_to_gn;
-  PDM_malloc(*_extract_parent_entity2_ln_to_gn,n_part ,PDM_g_num_t *);
+  PDM_malloc(_extract_parent_entity2_ln_to_gn,n_part ,PDM_g_num_t *);
   int *_n_extract_entity2;
   PDM_malloc(_n_extract_entity2,n_part ,int          );
   int **_old_to_new_entity2_no;
-  PDM_malloc(*_old_to_new_entity2_no,n_part ,int         *);
+  PDM_malloc(_old_to_new_entity2_no,n_part ,int         *);
 
   for(int i_part = 0; i_part < n_part; ++i_part) {
     int n_extract = n_extract_entity1[i_part];
@@ -1359,9 +1359,9 @@ int                 ***extract_entity2_lnum
   int *_n_extract_entity2 = *n_extract_entity2;
 
   int **_selected_entity1_entity2_idx;
-  PDM_malloc(*_selected_entity1_entity2_idx,n_part ,int         *);
+  PDM_malloc(_selected_entity1_entity2_idx,n_part ,int         *);
   int **_selected_entity1_entity2;
-  PDM_malloc(*_selected_entity1_entity2,n_part ,int         *);
+  PDM_malloc(_selected_entity1_entity2,n_part ,int         *);
   for(int i_part = 0; i_part < n_part; ++i_part) {
 
     int  _pn_entity1           = n_entity1          [i_part];
@@ -1397,7 +1397,7 @@ int                 ***extract_entity2_lnum
 
 
   PDM_g_num_t **_child_entity2_ln_to_gn;
-  PDM_malloc(*_child_entity2_ln_to_gn,n_part ,PDM_g_num_t *);
+  PDM_malloc(_child_entity2_ln_to_gn,n_part ,PDM_g_num_t *);
 
   for(int i_part = 0; i_part < n_part; ++i_part) {
     _child_entity2_ln_to_gn[i_part] = NULL;
@@ -1476,7 +1476,7 @@ _extract_part_nodal
    * Global numering computation
    */
   PDM_g_num_t **child_selected_g_num;
-  PDM_malloc(*child_selected_g_num, extrp->n_part_in ,PDM_g_num_t *);
+  PDM_malloc(child_selected_g_num, extrp->n_part_in ,PDM_g_num_t *);
   PDM_gnum_compute(gnum_extract);
 
   for (int i_part = 0; i_part < extrp->n_part_in; i_part++){
@@ -1519,22 +1519,22 @@ _extract_part_nodal
   int *n_extract_vtx;
   PDM_malloc(n_extract_vtx, extrp->n_part_in ,int          );
   int **is_selected;
-  PDM_malloc(*is_selected, extrp->n_part_in ,int         *);
+  PDM_malloc(is_selected, extrp->n_part_in ,int         *);
   int **is_selected_vtx;
-  PDM_malloc(*is_selected_vtx, extrp->n_part_in ,int         *);
+  PDM_malloc(is_selected_vtx, extrp->n_part_in ,int         *);
   int **old_to_new_vtx;
-  PDM_malloc(*old_to_new_vtx, extrp->n_part_in ,int         *);
+  PDM_malloc(old_to_new_vtx, extrp->n_part_in ,int         *);
   int **extract_vtx_lnum;
-  PDM_malloc(*extract_vtx_lnum, extrp->n_part_in ,int         *);
+  PDM_malloc(extract_vtx_lnum, extrp->n_part_in ,int         *);
   PDM_g_num_t **extract_parent_vtx_g_num;
-  PDM_malloc(*extract_parent_vtx_g_num, extrp->n_part_in ,PDM_g_num_t *);
+  PDM_malloc(extract_parent_vtx_g_num, extrp->n_part_in ,PDM_g_num_t *);
 
   int **n_selected_section;
-  PDM_malloc(*n_selected_section, extrp->n_part_in ,int         *);
+  PDM_malloc(n_selected_section, extrp->n_part_in ,int         *);
   int ***idx_selected_section;
-  PDM_malloc(**idx_selected_section, extrp->n_part_in ,int        **);
+  PDM_malloc(idx_selected_section, extrp->n_part_in ,int        **);
   int ***extract_parent_num;
-  PDM_malloc(**extract_parent_num, extrp->n_part_in ,int        **);
+  PDM_malloc(extract_parent_num, extrp->n_part_in ,int        **);
 
   for(int i_part = 0; i_part < extrp->pmne->n_part; ++i_part) {
     extrp->pextract_entity_parent_ln_to_gn[PDM_MESH_ENTITY_VTX][i_part] = NULL;
@@ -1893,7 +1893,7 @@ _extract_part_and_reequilibrate_nodal_from_target
   assert(extrp->pmne != NULL);
 
   int **part2_cell_to_part1_cell_idx;
-  PDM_malloc(*part2_cell_to_part1_cell_idx, extrp->n_part_out ,int * );
+  PDM_malloc(part2_cell_to_part1_cell_idx, extrp->n_part_out ,int * );
   for(int i_part = 0; i_part < extrp->n_part_out; ++i_part) {
     PDM_malloc(part2_cell_to_part1_cell_idx[i_part], (extrp->n_target[i_part]+1) ,int);
     part2_cell_to_part1_cell_idx[i_part][0] = 0;
@@ -1937,25 +1937,25 @@ _extract_part_and_reequilibrate_nodal_from_target
   int *n_extract_vtx;
   PDM_malloc(n_extract_vtx,extrp->n_part_in ,int                   );
   int **is_selected;
-  PDM_malloc(*is_selected,extrp->n_part_in ,int                  *);
+  PDM_malloc(is_selected,extrp->n_part_in ,int                  *);
 
   int **elmt_vtx_n;
-  PDM_malloc(*elmt_vtx_n,extrp->n_part_in ,int                  *);
+  PDM_malloc(elmt_vtx_n,extrp->n_part_in ,int                  *);
   PDM_Mesh_nodal_elt_t **elmt_type;
-  PDM_malloc(*elmt_type,extrp->n_part_in ,PDM_Mesh_nodal_elt_t *);
+  PDM_malloc(elmt_type,extrp->n_part_in ,PDM_Mesh_nodal_elt_t *);
   PDM_g_num_t **elmt_vtx;
-  PDM_malloc(*elmt_vtx,extrp->n_part_in ,PDM_g_num_t          *);
+  PDM_malloc(elmt_vtx,extrp->n_part_in ,PDM_g_num_t          *);
   int **vtx_init_location;
-  PDM_malloc(*vtx_init_location,extrp->n_part_in ,int                  *);
+  PDM_malloc(vtx_init_location,extrp->n_part_in ,int                  *);
   int **elmt_section_id;
-  PDM_malloc(*elmt_section_id,extrp->n_part_in ,int                  *);
+  PDM_malloc(elmt_section_id,extrp->n_part_in ,int                  *);
 
   int **elmt_face_n;
-  PDM_malloc(*elmt_face_n,extrp->n_part_in ,int                  *);
+  PDM_malloc(elmt_face_n,extrp->n_part_in ,int                  *);
   int **elmt_face_vtx_n;
-  PDM_malloc(*elmt_face_vtx_n,extrp->n_part_in ,int                  *);
+  PDM_malloc(elmt_face_vtx_n,extrp->n_part_in ,int                  *);
   PDM_g_num_t **elmt_face;
-  PDM_malloc(*elmt_face,extrp->n_part_in ,PDM_g_num_t          *);
+  PDM_malloc(elmt_face,extrp->n_part_in ,PDM_g_num_t          *);
 
   for(int i_part = 0; i_part < extrp->n_part_in; ++i_part) {
 
@@ -2630,10 +2630,10 @@ _extract_part_and_reequilibrate_nodal_from_target
    * Post-traitement
    */
   assert(extrp->pextract_n_entity[PDM_MESH_ENTITY_VTX] == NULL);
-  extrp->pextract_n_entity              PDM_malloc([PDM_MESH_ENTITY_VTX],extrp->n_part_out ,int         *);
+  PDM_malloc(extrp->pextract_n_entity[PDM_MESH_ENTITY_VTX],extrp->n_part_out , int);
   PDM_malloc(extrp->pextract_entity_parent_ln_to_gn[PDM_MESH_ENTITY_VTX],extrp->n_part_out ,PDM_g_num_t *);
   int **target_vtx_to_part1_vtx;
-  PDM_malloc(*target_vtx_to_part1_vtx,extrp->n_part_out ,int *);
+  PDM_malloc(target_vtx_to_part1_vtx,extrp->n_part_out ,int *);
 
   for(int i_part = 0; i_part < extrp->n_part_out; ++i_part) {
 
@@ -2669,21 +2669,21 @@ _extract_part_and_reequilibrate_nodal_from_target
     }
 
     int **elmt_face_idx_by_section;
-    PDM_malloc(*elmt_face_idx_by_section,n_section ,int         *);
+    PDM_malloc(elmt_face_idx_by_section,n_section ,int         *);
     int **elmt_vtx_idx_by_section;
-    PDM_malloc(*elmt_vtx_idx_by_section,n_section ,int         *);
+    PDM_malloc(elmt_vtx_idx_by_section,n_section ,int         *);
     int **elmt_vtx_by_section;
-    PDM_malloc(*elmt_vtx_by_section,n_section ,int         *);
+    PDM_malloc(elmt_vtx_by_section,n_section ,int         *);
     PDM_g_num_t **elmt_face_by_section;
-    PDM_malloc(*elmt_face_by_section,n_section ,PDM_g_num_t *);
+    PDM_malloc(elmt_face_by_section,n_section ,PDM_g_num_t *);
     int **elmt_face_sign_by_section;
-    PDM_malloc(*elmt_face_sign_by_section,n_section ,int         *);
+    PDM_malloc(elmt_face_sign_by_section,n_section ,int         *);
     int **elmt_face_vtx_n_by_section;
-    PDM_malloc(*elmt_face_vtx_n_by_section,n_section ,int         *);
+    PDM_malloc(elmt_face_vtx_n_by_section,n_section ,int         *);
     int **extract_parent_num;
-    PDM_malloc(*extract_parent_num,n_section ,int         *);
+    PDM_malloc(extract_parent_num,n_section ,int         *);
     PDM_g_num_t **extract_parent_g_num;
-    PDM_malloc(*extract_parent_g_num,n_section ,PDM_g_num_t *);
+    PDM_malloc(extract_parent_g_num,n_section ,PDM_g_num_t *);
     for(int i_section = 0; i_section < n_section; ++i_section) {
 
       PDM_Mesh_nodal_elt_t t_elt = PDM_part_mesh_nodal_elmts_section_type_get(extrp->pmne, sections_id[i_section]);
@@ -2986,7 +2986,7 @@ _extract_part_and_reequilibrate_nodal_from_target
    * Vtx only
    */
   int **part2_vtx_to_part1_vtx_idx;
-  PDM_malloc(*part2_vtx_to_part1_vtx_idx,extrp->n_part_out ,int *);
+  PDM_malloc(part2_vtx_to_part1_vtx_idx,extrp->n_part_out ,int *);
   for(int i_part = 0; i_part < extrp->n_part_out; ++i_part) {
     int n_vtx = extrp->pextract_n_entity[PDM_MESH_ENTITY_VTX][i_part];
     part2_vtx_to_part1_vtx_idx[i_part] =  PDM_array_new_idx_from_const_stride_int(3, n_vtx);;
@@ -3161,7 +3161,7 @@ _extract_part
                                               &extrp->pextract_entity_parent_lnum    [PDM_MESH_ENTITY_EDGE]);
 
       int **pedge_vtx_idx;
-      PDM_malloc(*pedge_vtx_idx,extrp->n_part_in ,int *);
+      PDM_malloc(pedge_vtx_idx,extrp->n_part_in ,int *);
       for(int i_part = 0; i_part < extrp->n_part_in; ++i_part) {
         PDM_malloc(pedge_vtx_idx[i_part],(extrp->n_edge[i_part]+1) ,int);
         pedge_vtx_idx[i_part][0] = 0;
@@ -3232,7 +3232,7 @@ _extract_part
                                               &extrp->pextract_entity_parent_ln_to_gn[PDM_MESH_ENTITY_EDGE],
                                               &extrp->pextract_entity_parent_lnum    [PDM_MESH_ENTITY_EDGE]);
       int **pedge_vtx_idx;
-      PDM_malloc(*pedge_vtx_idx,extrp->n_part_in ,int *);
+      PDM_malloc(pedge_vtx_idx,extrp->n_part_in ,int *);
       for(int i_part = 0; i_part < extrp->n_part_in; ++i_part) {
         PDM_malloc(pedge_vtx_idx[i_part],(extrp->n_edge[i_part]+1) ,int);
         pedge_vtx_idx[i_part][0] = 0;
@@ -3284,7 +3284,7 @@ _extract_part
   }
   else if (extrp->dim == 1) {
     int **pedge_vtx_idx;
-    PDM_malloc(*pedge_vtx_idx,extrp->n_part_in,int *);
+    PDM_malloc(pedge_vtx_idx,extrp->n_part_in,int *);
     for (int i = 0; i < extrp->n_part_in; i++) {
       pedge_vtx_idx[i] = PDM_array_new_idx_from_const_stride_int(2, extrp->n_edge[i]);
     }
@@ -3311,9 +3311,9 @@ _extract_part
   }
   else {
     int **pvtx_vtx_idx;
-    PDM_malloc(*pvtx_vtx_idx,extrp->n_part_in,int *);
+    PDM_malloc(pvtx_vtx_idx,extrp->n_part_in,int *);
     int **pvtx_vtx;
-    PDM_malloc(*pvtx_vtx,extrp->n_part_in,int *);
+    PDM_malloc(pvtx_vtx,extrp->n_part_in,int *);
     for (int i = 0; i < extrp->n_part_in; i++) {
       pvtx_vtx_idx[i] = PDM_array_new_idx_from_const_stride_int(1, extrp->n_vtx[i]);
       pvtx_vtx    [i] = pvtx_vtx_idx[i] + 1;
@@ -3444,11 +3444,11 @@ _extract_part_from_target_rebuild_connectivities_3d
 
 
   int **part2_cell_to_part1_cell_idx;
-  PDM_malloc(*part2_cell_to_part1_cell_idx, extrp->n_part_out ,int * );
+  PDM_malloc(part2_cell_to_part1_cell_idx, extrp->n_part_out ,int * );
   int **part2_face_to_part1_face_idx;
-  PDM_malloc(*part2_face_to_part1_face_idx, extrp->n_part_out ,int * );
+  PDM_malloc(part2_face_to_part1_face_idx, extrp->n_part_out ,int * );
   int **part2_edge_to_part1_edge_idx;
-  PDM_malloc(*part2_edge_to_part1_edge_idx, extrp->n_part_out ,int * );
+  PDM_malloc(part2_edge_to_part1_edge_idx, extrp->n_part_out ,int * );
 
   int **pextract_face_to_face_location = NULL;
   int **pextract_edge_to_edge_location = NULL;
@@ -3547,7 +3547,7 @@ _extract_part_from_target_rebuild_connectivities_3d
 
     if(have_edge_vtx == 1) {
       int **pedge_vtx_idx;
-      PDM_malloc(*pedge_vtx_idx,extrp->n_part_in ,int *);
+      PDM_malloc(pedge_vtx_idx,extrp->n_part_in ,int *);
       for(int i_part = 0; i_part < extrp->n_part_in; ++i_part) {
         PDM_malloc(pedge_vtx_idx[i_part],(extrp->n_edge[i_part]+1) ,int);
         pedge_vtx_idx[i_part][0] = 0;
@@ -3706,9 +3706,9 @@ _extract_part_from_target_rebuild_connectivities_2d
   PDM_MPI_Allreduce(&from_face_vtx_l,  &from_face_vtx,  1, PDM_MPI_INT, PDM_MPI_MAX, extrp->comm);
 
   int **part2_face_to_part1_face_idx;
-  PDM_malloc(*part2_face_to_part1_face_idx, extrp->n_part_out ,int * );
+  PDM_malloc(part2_face_to_part1_face_idx, extrp->n_part_out ,int * );
   int **part2_edge_to_part1_edge_idx;
-  PDM_malloc(*part2_edge_to_part1_edge_idx, extrp->n_part_out ,int * );
+  PDM_malloc(part2_edge_to_part1_edge_idx, extrp->n_part_out ,int * );
 
   int **pextract_face_to_face_location = NULL;
   int **pextract_edge_to_edge_location = NULL;
@@ -3767,7 +3767,7 @@ _extract_part_from_target_rebuild_connectivities_2d
     if(have_edge_vtx == 1) {
 
       int **pedge_vtx_idx;
-      PDM_malloc(*pedge_vtx_idx,extrp->n_part_in ,int *);
+      PDM_malloc(pedge_vtx_idx,extrp->n_part_in ,int *);
       for(int i_part = 0; i_part < extrp->n_part_in; ++i_part) {
         PDM_malloc(pedge_vtx_idx[i_part],(extrp->n_edge[i_part]+1) ,int);
         pedge_vtx_idx[i_part][0] = 0;
@@ -3971,7 +3971,7 @@ _extract_part_and_reequilibrate_from_target
   int **part2_face_to_part1_face_idx = NULL;
   int **part2_edge_to_part1_edge_idx = NULL;
   int **part2_vtx_to_part1_vtx_idx;
-  PDM_malloc(*part2_vtx_to_part1_vtx_idx,extrp->n_part_out ,int *);
+  PDM_malloc(part2_vtx_to_part1_vtx_idx,extrp->n_part_out ,int *);
 
   /*
    * Extraction des connectivités
@@ -4026,7 +4026,7 @@ _extract_part_and_reequilibrate_from_target
     }
 
     int **pedge_vtx_idx;
-    PDM_malloc(*pedge_vtx_idx,extrp->n_part_in ,int *);
+    PDM_malloc(pedge_vtx_idx,extrp->n_part_in ,int *);
     for(int i_part = 0; i_part < extrp->n_part_in; ++i_part) {
       PDM_malloc(pedge_vtx_idx[i_part],(extrp->n_edge[i_part]+1) ,int);
       pedge_vtx_idx[i_part][0] = 0;
@@ -4175,13 +4175,13 @@ _extract_part_and_reequilibrate_from_target
     extrp->pextract_entity_color[PDM_MESH_ENTITY_VTX PDM_malloc(],extrp->n_part_out ,int *);
 
     int **cell_order;
-    PDM_malloc(*cell_order,extrp->n_part_out ,int *);
+    PDM_malloc(cell_order,extrp->n_part_out ,int *);
     int **face_order;
-    PDM_malloc(*face_order,extrp->n_part_out ,int *);
+    PDM_malloc(face_order,extrp->n_part_out ,int *);
     int **edge_order;
-    PDM_malloc(*edge_order,extrp->n_part_out ,int *);
+    PDM_malloc(edge_order,extrp->n_part_out ,int *);
     int **vtx_order;
-    PDM_malloc(*vtx_order,extrp->n_part_out ,int *);
+    PDM_malloc(vtx_order,extrp->n_part_out ,int *);
 
     for (int i_part = 0; i_part < extrp->n_part_out; i_part++) {
 
@@ -4530,9 +4530,9 @@ _extract_part_and_reequilibrate
   }
 
   double **weight;
-  PDM_malloc(*weight,extrp->n_part_in,double      *);
+  PDM_malloc(weight,extrp->n_part_in,double      *);
   PDM_g_num_t **extract_entity_gnum;
-  PDM_malloc(*extract_entity_gnum,extrp->n_part_in,PDM_g_num_t *);
+  PDM_malloc(extract_entity_gnum,extrp->n_part_in,PDM_g_num_t *);
   for (int i_part = 0; i_part < extrp->n_part_in; i_part++) {
     weight             [i_part] = PDM_array_const_double(extrp->n_extract[i_part], 1.);
     PDM_malloc(extract_entity_gnum[i_part],extrp->n_extract[i_part] ,PDM_g_num_t);
@@ -4590,7 +4590,7 @@ _extract_part_and_reequilibrate
     extrp->pextract_entity_parent_ln_to_gn[entity_type][i_part0] = _parent_entity_ln_to_gn;
 
     int **extract_init_location;
-    PDM_malloc(*extract_init_location,extrp->n_part_in,int *);
+    PDM_malloc(extract_init_location,extrp->n_part_in,int *);
     for (int i_part = 0; i_part < extrp->n_part_in; i_part++) {
       PDM_malloc(extract_init_location[i_part],3 * extrp->n_extract[i_part] ,int);
       for(int i = 0; i < extrp->n_extract[i_part]; ++i) {
@@ -4661,7 +4661,7 @@ _extract_part_and_reequilibrate
 
 
   int **extract_init_location;
-  PDM_malloc(*extract_init_location,extrp->n_part_in,int *);
+  PDM_malloc(extract_init_location,extrp->n_part_in,int *);
   for (int i_part = 0; i_part < extrp->n_part_in; i_part++) {
     PDM_malloc(extract_init_location[i_part],3 * extrp->n_extract[i_part] ,int);
     for(int i = 0; i < extrp->n_extract[i_part]; ++i) {

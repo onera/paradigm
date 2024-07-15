@@ -343,7 +343,7 @@ _gnum_from_hv_compute
   /*
    * Prepare send
    */
-  int* *elmt_to_proc;
+  int **elmt_to_proc;
   PDM_malloc(elmt_to_proc,_gnum_from_hv->n_part ,int*);
   for(int i_part = 0; i_part < _gnum_from_hv->n_part; ++i_part){
     PDM_malloc(elmt_to_proc[i_part], _gnum_from_hv->n_elts[i_part] ,int);
@@ -629,7 +629,7 @@ _gnum_from_hv_compute
   // if(0 == 0){
   //   // PDM_log_trace_array_int(recv_buffer_stri, s_recv_keys+1, "recv_buffer_stri:: ");
   //   char *t;
-   PDM_malloc(t,(s_recv_data + 1),char);
+  //   PDM_malloc(t,(s_recv_data + 1),char);
   //   // char* t = (char* )recv_buffer_data;
   //   for(int k = 0; k < s_recv_data; ++k){
   //     t[k] = (char) recv_buffer_data[k];
@@ -706,7 +706,7 @@ _gnum_from_hv_compute
    * Use operator == to have an global numbering
    */
   PDM_g_num_t *blk_ln_to_gn;
-  PDM_malloc(blk_ln_to_gn,s_recv_keys,PDM_g_num_t*);
+  PDM_malloc(blk_ln_to_gn,s_recv_keys, PDM_g_num_t);
   PDM_g_num_t next_id = 0;
   PDM_g_num_t n_id    = 0;
   PDM_g_num_t last_id = -1;
@@ -785,7 +785,7 @@ _gnum_from_hv_compute
    * Reverse all_to_all exchange in order to remap global id on current partition
    */
   PDM_g_num_t *part_ln_to_gn;
-  PDM_malloc(part_ln_to_gn,s_send_keys,PDM_g_num_t*);
+  PDM_malloc(part_ln_to_gn,s_send_keys, PDM_g_num_t);
 
   PDM_MPI_Alltoallv(blk_ln_to_gn , n_key_recv, i_key_recv, PDM__PDM_MPI_G_NUM,
                     part_ln_to_gn, n_key_send, i_key_send, PDM__PDM_MPI_G_NUM, _gnum_from_hv->comm);

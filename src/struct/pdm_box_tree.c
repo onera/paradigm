@@ -4984,7 +4984,7 @@ _box_tree_closest_upper_bound_dist_boxes_impl
 
   double *_pts = pts;
   /* if (normalized) { */
-  / *_pts;
+  /* _pts;
   PDM_malloc(_pts,3 * n_pts,double);
     for (int i = 0; i < n_pts; i++) {
       const double *_pt_origin = pts + 3 * i;
@@ -5987,7 +5987,7 @@ PDM_box_tree_boxes_containing_points
   // Done inside _box_tree_boxes_containing_points_impl
   // /* if (normalized) { */
   // double *_pts_coord;
- PDM_malloc(_pts_coord,dim * n_pts,double);
+  // PDM_malloc(_pts_coord,dim * n_pts,double);
   // /*for (int i = 0; i < n_pts; i++) {
   //   const double *_pt_origin = pts_coord + dim * i;
   //   double *_pt              = _pts_coord + dim * i;
@@ -6020,13 +6020,13 @@ PDM_box_tree_boxes_containing_points
   // int n_boxes = boxes->n_boxes;
 
   // *box_idx;
-  PDM_malloc(box_idx,(n_pts + 1),int);
+  // PDM_malloc(box_idx,(n_pts + 1),int);
   // int *_box_idx = *box_idx;
   // _box_idx[0] = 0;
 
   // int tmp_s_boxes = 4 * n_pts;
   // *box_l_num;
-  PDM_malloc(box_l_num,tmp_s_boxes,int);
+  // PDM_malloc(box_l_num,tmp_s_boxes,int);
   // int *_box_l_num = *box_l_num;
 
   // int s_stack = ((bt->n_children - 1) * (bt->max_level - 1) + bt->n_children);
@@ -6035,13 +6035,13 @@ PDM_box_tree_boxes_containing_points
 
   // int n_visited_boxes = 0;
   // PDM_bool_t *is_visited_box;
- PDM_malloc(is_visited_box,n_boxes,PDM_bool_t);
+  // PDM_malloc(is_visited_box,n_boxes,PDM_bool_t);
   // for (int i = 0; i < n_boxes; i++) {
   //   is_visited_box[i] = PDM_FALSE;
   // }
 
   // int *visited_boxes;
- PDM_malloc(visited_boxes,n_boxes,int); // A optimiser
+  // PDM_malloc(visited_boxes,n_boxes,int); // A optimiser
 
   // double node_extents[2*dim];
 
@@ -8030,7 +8030,7 @@ PDM_tree_intersection_point_box
 
   double *_pts_coord = ptree_pts_coord;
   // double *_pts_coord;
- PDM_malloc(_pts_coord,3 * n_pts,double);
+  // PDM_malloc(_pts_coord,3 * n_pts,double);
   // PDM_box_set_normalize_robust ((PDM_box_set_t *) btree->boxes,
   //                               n_pts,
   //                    (double *) ptree_pts_coord,
@@ -8102,7 +8102,7 @@ PDM_tree_intersection_point_box
   int  *__box_pts_n = PDM_array_zeros_int(n_boxes);
   int  *__box_pts_s = PDM_array_const_int(n_boxes, 4);
   int **__box_pts;
-  PDM_malloc(*__box_pts,n_boxes,int *);
+  PDM_malloc(__box_pts,n_boxes,int *);
   for (int i = 0; i < n_boxes; i++) {
     PDM_malloc(__box_pts[i],__box_pts_s[i],int);
   }

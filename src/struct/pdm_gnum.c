@@ -1379,7 +1379,7 @@ _gnum_from_parent_compute_nuplet
   /* Generate a keys */
   int nuplet = gen_gnum->nuplet;
   PDM_g_num_t **key_ln_to_gn;
-  PDM_malloc(*key_ln_to_gn,gen_gnum->n_part ,PDM_g_num_t *);
+  PDM_malloc(key_ln_to_gn,gen_gnum->n_part ,PDM_g_num_t *);
   for(int i_part = 0; i_part < gen_gnum->n_part; ++i_part) {
     PDM_malloc(key_ln_to_gn[i_part],gen_gnum->n_elts[i_part] ,PDM_g_num_t);
     for(int i = 0; i < gen_gnum->n_elts[i_part]; ++i) {

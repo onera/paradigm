@@ -1512,9 +1512,9 @@ _ptb_create
   PDM_malloc(ptb->part_data, ptb->max_exch_request ,void          ***);
 
   PDM_malloc(ptb->comm_kind, ptb->max_exch_request ,PDM_mpi_comm_kind_t  );
-  PDM_malloc(ptb->win_send, ptb->max_exch_request ,PDM_MPI_Win         *);
-  PDM_malloc(ptb->win_recv, ptb->max_exch_request ,PDM_MPI_Win         *);
-  PDM_malloc(ptb->mpi_type, ptb->max_exch_request ,PDM_MPI_Datatype    *);
+  PDM_malloc(ptb->win_send, ptb->max_exch_request , PDM_MPI_Win);
+  PDM_malloc(ptb->win_recv, ptb->max_exch_request , PDM_MPI_Win);
+  PDM_malloc(ptb->mpi_type, ptb->max_exch_request , PDM_MPI_Datatype);
 
   for(int i_req = 0; i_req < ptb->max_exch_request; ++i_req) {
     ptb->send_buffer  [i_req] = NULL;
@@ -2184,7 +2184,7 @@ _post_treatment_reverse
   void               ***part_data
 )
 {
-  PDM_malloc(*part_data,ptb->n_part ,unsigned char *);
+  PDM_malloc(*((unsigned char ***) part_data),ptb->n_part ,unsigned char *);
   unsigned char **_part_data = (unsigned char **) *part_data;
 
   for (int i = 0; i <  ptb->s_comm; i++) {
@@ -2196,7 +2196,7 @@ _post_treatment_reverse
     PDM_malloc(*part_stride,ptb->n_part ,int *);
     int **_part_stride = *part_stride;
     int **_part_idx;
-    PDM_malloc(*_part_idx,ptb->n_part ,int *);
+    PDM_malloc(_part_idx,ptb->n_part ,int *);
 
     int *n_recv_strid;
     PDM_malloc(n_recv_strid,ptb->s_comm ,int);

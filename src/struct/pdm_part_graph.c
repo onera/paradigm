@@ -460,8 +460,7 @@ PDM_part_graph_compute_from_face_cell
   //    PDM_printf("(*cell_cell_idxCompressed)[part_ini->n_cell] : %d \n", (*cell_cell_idxCompressed)[part_ini->n_cell]);
   //
   assert( (*cell_cellCompressed) == NULL);
-  ( *cell_cellCompressed);
-  PDM_malloc(cell_cellCompressed),(*cell_cell_idxCompressed)[part_ini->n_cell] ,int);
+  PDM_malloc(*cell_cellCompressed,(*cell_cell_idxCompressed)[part_ini->n_cell] ,int);
 
   int cpt_cell_cellCompressed = 0;
   for(int i = 0; i < part_ini->cell_face_idx[part_ini->n_cell]; i++) {

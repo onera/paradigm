@@ -1144,11 +1144,11 @@ int PDM_MPI_File_open(PDM_MPI_Comm comm, char *filename, int amode, PDM_MPI_File
     MPI_Info_create (&hints_mpi);
 
     char *cp_hints;
-    PDM_malloc(cp_hints,(strlen(hints) + 1),char *);
+    PDM_malloc(cp_hints,(strlen(hints) + 1), char);
     char *name;
-    PDM_malloc(name,(strlen(hints) + 1),char *);
+    PDM_malloc(name,(strlen(hints) + 1), char);
     char *value;
-    PDM_malloc(value,(strlen(hints) + 1),char *);
+    PDM_malloc(value,(strlen(hints) + 1), char);
     strcpy (cp_hints, hints);
 
     char *pch;
@@ -2458,8 +2458,8 @@ int PDM_MPI_Ialltoallv_p2p (void *sendbuf, int *sendcounts, int *sdispls, PDM_MP
   int size;
   MPI_Comm_size(_pdm_mpi_2_mpi_comm(comm), &size);
 
-  PDM_malloc(*request_r,size,MPI_Request);
-  PDM_malloc(*request_s,size,MPI_Request);
+  PDM_malloc(*request_r,size, PDM_MPI_Request);
+  PDM_malloc(*request_s,size, PDM_MPI_Request);
 
   *n_request_r = 0;
   *n_request_s = 0; 
@@ -2511,8 +2511,8 @@ int PDM_MPI_Ialltoallv_p2p_l (void *sendbuf, int *sendcounts, size_t *sdispls, P
   int size;
   MPI_Comm_size(_pdm_mpi_2_mpi_comm(comm), &size);
 
-  PDM_malloc(*request_r,size,MPI_Request);
-  PDM_malloc(*request_s,size,MPI_Request);
+  PDM_malloc(*request_r,size, PDM_MPI_Request);
+  PDM_malloc(*request_s,size, PDM_MPI_Request);
 
   *n_request_r = 0;
   *n_request_s = 0; 

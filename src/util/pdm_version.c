@@ -13,6 +13,7 @@
 
 #include "pdm_version.h"
 #include "pdm_config.h"
+#include "pdm_priv.h"
 
 /*----------------------------------------------------------------------------*/
 

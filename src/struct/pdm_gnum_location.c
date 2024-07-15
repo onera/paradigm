@@ -216,9 +216,9 @@ PDM_gnum_location_compute
   const int cst_stride = 3;
 
   int **part_stride;
-  PDM_malloc(*part_stride,gnum_loc->n_part_in,int *);
+  PDM_malloc(part_stride,gnum_loc->n_part_in,int *);
   int **part_data;
-  PDM_malloc(*part_data,gnum_loc->n_part_in,int *);
+  PDM_malloc(part_data,gnum_loc->n_part_in,int *);
 
   for (int i = 0; i < gnum_loc->n_part_in; i++) {
     PDM_malloc(part_stride[i],gnum_loc->n_elts_in[i],int);

@@ -401,7 +401,7 @@ PDM_multi_block_to_part_exch2
     PDM_malloc(recv_buffer,s_recv_buffer,unsigned char);
 
     int **block_stride_idx;
-    PDM_malloc(*block_stride_idx,(mbtp->n_block),int*);
+    PDM_malloc(block_stride_idx,(mbtp->n_block),int*);
     for(int i_block = 0; i_block < mbtp->n_block; ++i_block) {
       int n_elt_block = mbtp->block_distrib_idx[i_block][mbtp->i_rank+1] - mbtp->block_distrib_idx[i_block][mbtp->i_rank];
       // printf(" n_elt_block :: %i \n", n_elt_block);
@@ -503,7 +503,7 @@ PDM_multi_block_to_part_exch2
  PDM_free(n_recv_buffer);
  PDM_free(i_recv_buffer);
 
-  PDM_malloc(*part_data,mbtp->n_part,unsigned char *);
+  PDM_malloc(*(unsigned char ***) part_data, mbtp->n_part,unsigned char *);
   _part_data = (*(unsigned char ***) part_data);
 
   if (t_stride == PDM_STRIDE_VAR_INTERLACED) {
@@ -511,7 +511,7 @@ PDM_multi_block_to_part_exch2
     int s_recv_elt = mbtp->requested_data_idx[n_rank1] + mbtp->requested_data_n[n_rank1];
 
     int **part_idx;
-    PDM_malloc(*part_idx,(mbtp->n_part ),int *);
+    PDM_malloc(part_idx,(mbtp->n_part ),int *);
     int  *recv_idx = PDM_array_new_idx_from_sizes_int(recv_stride, s_recv_elt);
 
     for (int i_part = 0; i_part < mbtp->n_part; i_part++) {

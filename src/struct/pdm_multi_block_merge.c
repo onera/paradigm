@@ -93,11 +93,11 @@ PDM_multi_block_merge_create
    * Shift des données d'entrés
    */
   PDM_g_num_t **_selected_g_num;
-  PDM_malloc(*_selected_g_num, (n_block + 1) ,PDM_g_num_t *);
+  PDM_malloc(_selected_g_num, (n_block + 1) ,PDM_g_num_t *);
   PDM_g_num_t **_send_orig_g_num;
-  PDM_malloc(*_send_orig_g_num, (n_block + 1) ,PDM_g_num_t *);
+  PDM_malloc(_send_orig_g_num, (n_block + 1) ,PDM_g_num_t *);
   int **_send_stride;
-  PDM_malloc(*_send_stride, (n_block + 1) ,int         *);
+  PDM_malloc(_send_stride, (n_block + 1) ,int         *);
   int *_n_selected;
   PDM_malloc(_n_selected, (n_block + 1) ,int          );
   for(int i_block = 0; i_block < n_block; ++i_block) {
@@ -412,7 +412,7 @@ PDM_multi_block_merge_exch_and_update
   // 1. Shift the connectivity to exchange to make it related to its domain
   int n_block = mbm_cur->n_block;
   PDM_g_num_t **shifted_block_data;
-  PDM_malloc(*shifted_block_data,n_block,PDM_g_num_t*);
+  PDM_malloc(shifted_block_data,n_block,PDM_g_num_t*);
   for (int i_block = 0; i_block < n_block; i_block++) {
     int n_data_block = 0;
     if (t_stride == PDM_STRIDE_CST_INTERLACED) {

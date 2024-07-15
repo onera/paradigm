@@ -98,7 +98,7 @@ PDM_Handles_create
 
   new_handle->s_array   = init_size;
   new_handle->n_handles = 0;
-  PDM_malloc(new_handle->array,init_size,void*);
+  PDM_malloc(new_handle->array,init_size,const void*);
   PDM_malloc(new_handle->idx,init_size,int  );
   PDM_malloc(new_handle->idx_inv,init_size,int  );
 

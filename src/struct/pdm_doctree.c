@@ -71,9 +71,9 @@ _redistribute_pts_geom
    * Redistribute all pts and impose hilbert ordering
    */
   int **stride_one;
-  PDM_malloc(*stride_one,doct->n_part_cloud ,int    *);
+  PDM_malloc(stride_one,doct->n_part_cloud ,int    *);
   double **weight;
-  PDM_malloc(*weight,doct->n_part_cloud ,double *);
+  PDM_malloc(weight,doct->n_part_cloud ,double *);
   for(int i_part = 0; i_part < doct->n_part_cloud; ++i_part) {
     weight    PDM_malloc([i_part],doct->n_point_cloud[i_part] ,double);
     PDM_malloc(stride_one[i_part],doct->n_point_cloud[i_part] ,int   );
@@ -627,7 +627,7 @@ PDM_doctree_build
    *  Optim = can shared coarse_boxes_gnum -> distribution par noeuds
    */
   // int *weight;
- PDM_malloc(weight,n_shared_boxes ,int);
+  // PDM_malloc(weight,n_shared_boxes ,int);
   // for(int i = 0; i < n_shared_boxes; ++i) {
   //   weight[i] = coarse_tree_box_to_box_idx[i+1] - coarse_tree_box_to_box_idx[i];
   // }
@@ -645,7 +645,7 @@ PDM_doctree_build
   double *extract_shared_box_center;
   PDM_malloc(extract_shared_box_center,3 * n_extract_shared_boxes ,double     );
   // int *weight;
- PDM_malloc(weight,    n_extract_shared_boxes ,int        );
+  // PDM_malloc(weight,    n_extract_shared_boxes ,int        );
   double *weight;
   PDM_malloc(weight,    n_extract_shared_boxes ,double     );
   PDM_g_num_t *extraxt_box_lnum;
@@ -959,7 +959,7 @@ PDM_doctree_build
 
 
   // int *shm_equi_init_location_pts_tot_idx;
- PDM_malloc(shm_equi_init_location_pts_tot_idx, (n_rank_in_shm + 1) ,int);
+  // PDM_malloc(shm_equi_init_location_pts_tot_idx, (n_rank_in_shm + 1) ,int);
   // shm_equi_init_location_pts_tot_idx[0] = 0;
   // int equi_n_init_locatation_pts_tot_idx = equi_n_pts_tot + 1;
   // PDM_MPI_Allgather(&equi_n_init_locatation_pts_tot_idx     , 1, PDM_MPI_INT,
@@ -1002,7 +1002,7 @@ PDM_doctree_build
   // if(have_pts_init_location == 1) {
   //   abort();
   //   int *equi_pts_init_location_n;
-   PDM_malloc(equi_pts_init_location_n,equi_n_pts_tot ,int);
+  //   PDM_malloc(equi_pts_init_location_n,equi_n_pts_tot ,int);
 
   //   PDM_block_to_part_exch_in_place(btp,
   //                                   sizeof(int),
@@ -1041,7 +1041,7 @@ PDM_doctree_build
   //   int *lequi_pts_init_location = &equi_pts_init_location[3 * shm_equi_pts_init_location_tot_idx[i_rank_in_shm]];
 
   //   int *tmp_n;
-   PDM_malloc(tmp_n,dn_equi_tree ,int);
+  //   PDM_malloc(tmp_n,dn_equi_tree ,int);
 
   //   if(0 == 1) {
   //     PDM_log_trace_array_int(coarse_box_n_pts, n_coarse_box, "coarse_box_n_pts :");
@@ -1212,7 +1212,7 @@ PDM_doctree_build
   double *send_extents;
   PDM_malloc(send_extents,6 * send_entity_idx[n_rank] ,double     );
   int *send_init_location;
-  PDM_malloc(send_init_location,3 * send_entity_idx[n_rank] ,double     );
+  PDM_malloc(send_init_location,3 * send_entity_idx[n_rank] , int);
 
   PDM_MPI_Datatype mpi_entity_type;
   PDM_MPI_Datatype mpi_init_location_type;
@@ -1507,21 +1507,21 @@ PDM_doctree_build
 
   int n_part_out = n_rank_in_shm;
   int *part_n_box;
-  PDM_malloc(part_n_box,n_part_out,int          );
+  PDM_malloc(part_n_box,n_part_out, int);
   int **box_pts_idx;
-  PDM_malloc(*box_pts_idx,n_part_out,int         *);
+  PDM_malloc(box_pts_idx,n_part_out, int *);
   int **box_pts_l_num;
-  PDM_malloc(*box_pts_l_num,n_part_out,int         *);
+  PDM_malloc(box_pts_l_num,n_part_out, int *);
   PDM_g_num_t **res_box_g_num;
-  PDM_malloc(*res_box_g_num,n_part_out,PDM_g_num_t *);
+  PDM_malloc(res_box_g_num,n_part_out, PDM_g_num_t *);
   int **res_box_strid;
-  PDM_malloc(*res_box_strid,n_part_out,int         *);
+  PDM_malloc(res_box_strid,n_part_out, int *);
   double **res_box_weight;
-  PDM_malloc(*res_box_weight,n_part_out,double      *);
+  PDM_malloc(res_box_weight,n_part_out, double *);
   double **res_box_pts_coords;
-  PDM_malloc(*res_box_pts_coords,n_part_out,double      *);
+  PDM_malloc(res_box_pts_coords,n_part_out, double *);
   PDM_g_num_t **res_box_pts_gnum;
-  PDM_malloc(*res_box_pts_gnum,n_part_out,PDM_g_num_t *);
+  PDM_malloc(res_box_pts_gnum,n_part_out, PDM_g_num_t *);
 
   PDM_g_num_t *shm_box_gnum    = &shared_entity_gnum [     distrib_search[i_rank_in_shm]];
   double      *shm_box_extents = &shared_entity_coord[ 6 * distrib_search[i_rank_in_shm]];

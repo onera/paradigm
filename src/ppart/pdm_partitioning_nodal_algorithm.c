@@ -92,15 +92,15 @@ _delmt_vtx_to_pelmt_vtx
 {
   int n_section = dmne->n_section;
   PDM_g_num_t **block_elmts_disbrib_idx;
-  PDM_malloc(*block_elmts_disbrib_idx, n_section ,PDM_g_num_t          *);
+  PDM_malloc(block_elmts_disbrib_idx, n_section ,PDM_g_num_t          *);
   PDM_g_num_t **block_elmts_connec;
-  PDM_malloc(*block_elmts_connec, n_section ,PDM_g_num_t          *);
+  PDM_malloc(block_elmts_connec, n_section ,PDM_g_num_t          *);
   int **block_elmts_n_vtx;
-  PDM_malloc(*block_elmts_n_vtx, n_section ,int                  *);
+  PDM_malloc(block_elmts_n_vtx, n_section ,int                  *);
   PDM_Mesh_nodal_elt_t **block_elmts_types;
-  PDM_malloc(*block_elmts_types, n_section ,PDM_Mesh_nodal_elt_t *);
+  PDM_malloc(block_elmts_types, n_section ,PDM_Mesh_nodal_elt_t *);
   int **stride_one;
-  PDM_malloc(*stride_one, n_section ,int                  *);
+  PDM_malloc(stride_one, n_section ,int                  *);
 
   for (int i_section = 0; i_section < n_section; i_section++) {
     int id_section = dmne->sections_id[i_section];
@@ -204,7 +204,7 @@ _delmt_vtx_to_pelmt_vtx
                      (void ***) &pelmts_connec);
 
   int **pelmts_stride_idx;
-  PDM_malloc(*pelmts_stride_idx, n_part ,int *);
+  PDM_malloc(pelmts_stride_idx, n_part ,int *);
   for(int i_part = 0; i_part < n_part; ++i_part) {
     pelmts_stride_idx[i_part] = PDM_array_new_idx_from_sizes_int(pelmts_stride[i_part], pn_elmt[i_part]);
    PDM_free(pelmts_stride[i_part]);
@@ -272,21 +272,21 @@ PDM_dmesh_nodal_elmts_to_part_mesh_nodal_elmts
 
   int n_section = dmne->n_section;
   PDM_g_num_t **block_elmts_disbrib_idx;
-  PDM_malloc(*block_elmts_disbrib_idx, n_section ,PDM_g_num_t          *);
+  PDM_malloc(block_elmts_disbrib_idx, n_section ,PDM_g_num_t          *);
   PDM_g_num_t **block_elmts_connec;
-  PDM_malloc(*block_elmts_connec, n_section ,PDM_g_num_t          *);
+  PDM_malloc(block_elmts_connec, n_section ,PDM_g_num_t          *);
   int **block_elmts_n_vtx;
-  PDM_malloc(*block_elmts_n_vtx, n_section ,int                  *);
+  PDM_malloc(block_elmts_n_vtx, n_section ,int                  *);
   PDM_Mesh_nodal_elt_t **block_elmts_types;
-  PDM_malloc(*block_elmts_types, n_section ,PDM_Mesh_nodal_elt_t *);
+  PDM_malloc(block_elmts_types, n_section ,PDM_Mesh_nodal_elt_t *);
   int **stride_one;
-  PDM_malloc(*stride_one, n_section ,int                  *);
+  PDM_malloc(stride_one, n_section , int *);
   int *pid_section;
   PDM_malloc(pid_section, n_section ,int                   );
   int *section_order;
   PDM_malloc(section_order, n_section ,int                   );
   const char **section_ho_ordering;
- PDM_malloc(*section_ho_ordering, n_section ,char                 *);
+  PDM_malloc(section_ho_ordering, n_section ,const char *);
 
   for (int i_section = 0; i_section < n_section; i_section++) {
     int id_section = dmne->sections_id[i_section];
@@ -417,7 +417,7 @@ PDM_dmesh_nodal_elmts_to_part_mesh_nodal_elmts
                      (void ***) &pelmts_connec);
 
   int **pelmts_stride_idx;
-  PDM_malloc(*pelmts_stride_idx, n_part ,int *);
+  PDM_malloc(pelmts_stride_idx, n_part ,int *);
   for(int i_part = 0; i_part < n_part; ++i_part) {
     pelmts_stride_idx[i_part] = PDM_array_new_idx_from_sizes_int(pelmts_stride[i_part], pn_elmt[i_part]);
   }
@@ -504,9 +504,9 @@ PDM_dmesh_nodal_elmts_to_part_mesh_nodal_elmts
    * A priori le vtx_ln_to_gn n'est pas trié
    */
   PDM_g_num_t **sorted_vtx_ln_to_gn;
-  PDM_malloc(*sorted_vtx_ln_to_gn, n_part ,PDM_g_num_t *);
+  PDM_malloc(sorted_vtx_ln_to_gn, n_part ,PDM_g_num_t *);
   int **vtx_order;
-  PDM_malloc(*vtx_order, n_part ,int         *);
+  PDM_malloc(vtx_order, n_part ,int         *);
   for(int i_part = 0; i_part < n_part; ++i_part) {
     PDM_malloc(sorted_vtx_ln_to_gn[i_part],pn_vtx[i_part] ,PDM_g_num_t);
     vtx_order          PDM_malloc([i_part],pn_vtx[i_part] ,int        );
@@ -525,17 +525,17 @@ PDM_dmesh_nodal_elmts_to_part_mesh_nodal_elmts
   int *pelmt_by_section_n;
   PDM_malloc(pelmt_by_section_n, (n_section) ,int          );
   int **connec;
-  PDM_malloc(*connec, (n_section) ,int         *);
+  PDM_malloc(connec, (n_section) ,int         *);
   int **connec_idx;
-  PDM_malloc(*connec_idx, (n_section) ,int         *);
+  PDM_malloc(connec_idx, (n_section) ,int         *);
   PDM_g_num_t **numabs;
-  PDM_malloc(*numabs, (n_section) ,PDM_g_num_t *);
+  PDM_malloc(numabs, (n_section) ,PDM_g_num_t *);
   int **parent_num;
-  PDM_malloc(*parent_num, (n_section) ,int         *);
+  PDM_malloc(parent_num, (n_section) ,int         *);
   PDM_g_num_t **sparent_entitity_ln_to_gn;
-  PDM_malloc(*sparent_entitity_ln_to_gn, (n_section) ,PDM_g_num_t *);
+  PDM_malloc(sparent_entitity_ln_to_gn, (n_section) ,PDM_g_num_t *);
   PDM_g_num_t **section_elmts_ln_to_gn;
-  PDM_malloc(*section_elmts_ln_to_gn, (n_part   ) ,PDM_g_num_t *);
+  PDM_malloc(section_elmts_ln_to_gn, (n_part   ) ,PDM_g_num_t *);
 
   for(int i_section = 0; i_section < n_section; ++i_section){
     sparent_entitity_ln_to_gn[i_section] = NULL;
@@ -843,9 +843,9 @@ PDM_reverse_dparent_gnum
   int *n_elts_both;
   PDM_malloc(n_elts_both,(n_part+1) ,int);
   PDM_g_num_t **lngn_both;
-  PDM_malloc(*lngn_both,(n_part+1) ,PDM_g_num_t*);
+  PDM_malloc(lngn_both,(n_part+1) ,PDM_g_num_t*);
   double **weights_both;
-  PDM_malloc(*weights_both,(n_part+1) ,double*);
+  PDM_malloc(weights_both,(n_part+1) ,double*);
   //Parent
   for (int i_part=0; i_part < n_part; i_part++){
     n_elts_both[i_part] = pn_parent[i_part];
@@ -1000,9 +1000,9 @@ PDM_reverse_dparent_gnum
   PDM_malloc(*pn_child,n_part ,int);
   int* _pn_child = *pn_child;
   PDM_g_num_t **_pchild_parent_gnum;
-  PDM_malloc(*_pchild_parent_gnum,n_part ,PDM_g_num_t *);
+  PDM_malloc(_pchild_parent_gnum,n_part ,PDM_g_num_t *);
   int **_pelmt_to_entity;
-  PDM_malloc(*_pelmt_to_entity,n_part ,int *);
+  PDM_malloc(_pelmt_to_entity,n_part ,int *);
   int **_pchild_parent_sign = NULL;
   if(blk_dparent_sign != NULL) {
     PDM_malloc(_pchild_parent_sign,n_part ,int *);
@@ -1271,7 +1271,7 @@ PDM_generate_ho_vtx_ln_to_gn
    *  -> We need to unify with current vtx
    */
   PDM_g_num_t **all_vtx_ln_to_gn;
-  PDM_malloc(*all_vtx_ln_to_gn,n_part ,PDM_g_num_t *);
+  PDM_malloc(all_vtx_ln_to_gn,n_part ,PDM_g_num_t *);
   int *nall_vtx;
   PDM_malloc(nall_vtx,n_part ,int          );
 
@@ -1433,9 +1433,9 @@ PDM_dmesh_nodal_elmts_to_extract_dmesh_nodal_elmts
   int *dn_extract_elmt;
   PDM_malloc(dn_extract_elmt,n_section ,int          );
   PDM_g_num_t **extract_gnum_elmt;
-  PDM_malloc(*extract_gnum_elmt,n_section ,PDM_g_num_t *);
+  PDM_malloc(extract_gnum_elmt,n_section ,PDM_g_num_t *);
   PDM_g_num_t **dextract_block_elmts_gnum;
-  PDM_malloc(*dextract_block_elmts_gnum,n_section ,PDM_g_num_t *);
+  PDM_malloc(dextract_block_elmts_gnum,n_section ,PDM_g_num_t *);
   int dn_extract_elmt_tot = 0;
 
   PDM_gen_gnum_t* gen_gnum = PDM_gnum_create(3, n_section, PDM_FALSE, 1e-3, dmne->comm, PDM_OWNERSHIP_USER);

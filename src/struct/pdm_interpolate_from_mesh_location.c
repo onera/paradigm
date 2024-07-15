@@ -183,10 +183,10 @@ PDM_interpolate_from_mesh_location_exch
   /*
    * For now only first order with
    */
-  double* *cloud_data_in_current_src;
+  double **cloud_data_in_current_src;
   PDM_malloc(cloud_data_in_current_src, interp_from_ml->n_part_src ,double *);
   int **cloud_data_in_current_src_n;
-  PDM_malloc(*cloud_data_in_current_src_n, interp_from_ml->n_part_src ,int    *);
+  PDM_malloc(cloud_data_in_current_src_n, interp_from_ml->n_part_src ,int    *);
   assert(_points_in_elements->n_part == interp_from_ml->n_part_src );
 
   _point_cloud_t *pcloud = interp_from_ml->point_clouds + i_point_cloud;
@@ -339,9 +339,9 @@ PDM_interpolate_from_mesh_location_exch_inplace
    * For now only first order with
    */
   double **cloud_data_in_current_src;
-  PDM_malloc(*cloud_data_in_current_src, interp_from_ml->n_part_src ,double *);
+  PDM_malloc(cloud_data_in_current_src, interp_from_ml->n_part_src ,double *);
   int **cloud_data_in_current_src_n;
-  PDM_malloc(*cloud_data_in_current_src_n, interp_from_ml->n_part_src ,int    *);
+  PDM_malloc(cloud_data_in_current_src_n, interp_from_ml->n_part_src ,int    *);
   assert(_points_in_elements->n_part == interp_from_ml->n_part_src );
 
   _point_cloud_t *pcloud = interp_from_ml->point_clouds + i_point_cloud;
@@ -554,14 +554,14 @@ PDM_interpolate_from_mesh_location_mesh_global_data_set
   PDM_malloc(interp_from_ml->n_cell,n_part ,int     );
   PDM_malloc(interp_from_ml->cell_face_idx,n_part ,int    *);
   PDM_malloc(interp_from_ml->cell_face,n_part ,int    *);
-  PDM_malloc(interp_from_ml->cell_ln_to_gn,n_part ,int    *);
+  PDM_malloc(interp_from_ml->cell_ln_to_gn,n_part , PDM_g_num_t *);
   PDM_malloc(interp_from_ml->n_face,n_part ,int     );
   PDM_malloc(interp_from_ml->face_vtx_idx,n_part ,int    *);
   PDM_malloc(interp_from_ml->face_vtx,n_part ,int    *);
-  PDM_malloc(interp_from_ml->face_ln_to_gn,n_part ,int    *);
+  PDM_malloc(interp_from_ml->face_ln_to_gn,n_part , PDM_g_num_t *);
   PDM_malloc(interp_from_ml->n_vtx,n_part ,int     );
   PDM_malloc(interp_from_ml->coords,n_part ,double *);
-  PDM_malloc(interp_from_ml->vtx_ln_to_gn,n_part ,int    *);
+  PDM_malloc(interp_from_ml->vtx_ln_to_gn,n_part , PDM_g_num_t *);
 
 }
 

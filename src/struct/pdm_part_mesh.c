@@ -120,11 +120,11 @@ _build_extract_part_bound
   int **group_entity     = pmesh->pconcat_bound    [bound_type];
 
   //int **selected_l_num;
-  PDM_malloc(*selected_l_num,pmesh->n_part,int         *);
+  // PDM_malloc(*selected_l_num,pmesh->n_part,int         *);
   // PDM_g_num_t **selected_g_num;
- PDM_malloc(*selected_g_num,pmesh->n_part,PDM_g_num_t *);
+  // PDM_malloc(*selected_g_num,pmesh->n_part,PDM_g_num_t *);
   // int **selected_loc;
- PDM_malloc(*selected_loc,pmesh->n_part,int         *);
+  // PDM_malloc(*selected_loc,pmesh->n_part,int         *);
 
   *extrp = PDM_extract_part_create(dim,
                                    pmesh->n_part,
@@ -139,7 +139,7 @@ _build_extract_part_bound
   /* Set parts */
   for (int i_part = 0; i_part < pmesh->n_part; i_part++) {
 
-    PDM_malloc(//selected_l_num[i_part],group_entity_idx[i_part][n_group],int        );
+    // PDM_malloc(selected_l_num[i_part],group_entity_idx[i_part][n_group],int        );
     // PDM_malloc(selected_g_num[i_part],group_entity_idx[i_part][n_group],PDM_g_num_t);
     // selected_loc  PDM_malloc([i_part],group_entity_idx[i_part][n_group] * 3,int);
     //for (int i = 0; i < group_entity_idx[i_part][n_group]; i++) {
@@ -351,7 +351,7 @@ PDM_part_mesh_create
   }
 
 
-  PDM_malloc(pmesh->vtx_coords,pmesh->n_part ,double);
+  PDM_malloc(pmesh->vtx_coords,pmesh->n_part , double *);
   for(int i_part = 0; i_part < n_part; ++i_part) {
     pmesh->vtx_coords[i_part] = NULL;
   }
@@ -809,9 +809,9 @@ PDM_part_mesh_part_graph_comm_set
 {
   if(pmesh->ppart_bound[bound_type] == NULL) {
 
-    PDM_malloc(pmesh->ppart_bound_proc_idx[bound_type], pmesh->n_part ,int         *);
-    PDM_malloc(pmesh->ppart_bound_part_idx[bound_type], pmesh->n_part ,int         *);
-    pmesh->ppart_bound         PDM_malloc([bound_type], pmesh->n_part ,PDM_g_num_t *);
+    PDM_malloc(pmesh->ppart_bound_proc_idx[bound_type], pmesh->n_part , int *);
+    PDM_malloc(pmesh->ppart_bound_part_idx[bound_type], pmesh->n_part , int *);
+    PDM_malloc(pmesh->ppart_bound[bound_type], pmesh->n_part , int *);
     for(int j = 0; j < pmesh->n_part; ++j) {
       pmesh->ppart_bound_proc_idx[bound_type][j] = NULL;
       pmesh->ppart_bound_part_idx[bound_type][j] = NULL;
@@ -1241,9 +1241,9 @@ PDM_part_mesh_dump_ensight
   }
 
   int **pface_vtx_idx;
-  PDM_malloc(*pface_vtx_idx,pmesh->n_part,int *);
+  PDM_malloc(pface_vtx_idx,pmesh->n_part, int *);
   int **pface_vtx;
-  PDM_malloc(*pface_vtx,pmesh->n_part,int *);
+  PDM_malloc(pface_vtx,pmesh->n_part, int *);
 
   if (mesh_dimension == 3) {
     for (int i_part = 0; i_part < pmesh->n_part; i_part++) {
@@ -1463,11 +1463,11 @@ PDM_part_mesh_dump_ensight
 
   /* Set variables */
   PDM_real_t **val_num_part;
-  PDM_malloc(*val_num_part,pmesh->n_part,PDM_real_t *);
+  PDM_malloc(val_num_part,pmesh->n_part,PDM_real_t *);
   PDM_real_t **val_bound_id;
-  PDM_malloc(*val_bound_id,pmesh->n_part,PDM_real_t *);
+  PDM_malloc(val_bound_id,pmesh->n_part,PDM_real_t *);
   PDM_real_t **val_bound_type;
-  PDM_malloc(*val_bound_type,pmesh->n_part,PDM_real_t *);
+  PDM_malloc(val_bound_type,pmesh->n_part,PDM_real_t *);
   for (int i_part = 0; i_part < pmesh->n_part; i_part++) {
     int n_entity = 0;
     if (mesh_dimension == 2) {

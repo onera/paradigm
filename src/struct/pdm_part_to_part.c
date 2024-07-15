@@ -869,7 +869,7 @@ _p2p_stride_var_data_issend
    */
 
   int **part1_to_part2_data_idx;
-  PDM_malloc(*part1_to_part2_data_idx,ptp->n_part1 ,int * );
+  PDM_malloc(part1_to_part2_data_idx,ptp->n_part1 ,int * );
   for (int i = 0; i < ptp->n_part1; i++) {
     PDM_malloc(part1_to_part2_data_idx[i],(ptp->part1_to_part2_idx[i][ptp->n_elt1[i]]+1) ,int);
     part1_to_part2_data_idx[i][0] = 0;
@@ -972,7 +972,7 @@ _p2p_stride_var_data_reverse_issend
    */
 
   int **part2_to_part1_data_idx;
-  PDM_malloc(*part2_to_part1_data_idx,ptp->n_part2 ,int *);
+  PDM_malloc(part2_to_part1_data_idx,ptp->n_part2 ,int *);
   for (int i = 0; i < ptp->n_part2; i++) {
 
     PDM_malloc(part2_to_part1_data_idx[i],(ptp->gnum1_come_from_idx[i][ptp->n_ref_lnum2[i]]+1) ,int);//
@@ -1268,7 +1268,7 @@ _alltotall_stride_var_iexch
    * Fill send buffer
    */
   int **part1_to_part2_data_idx;
-  PDM_malloc(*part1_to_part2_data_idx,ptp->n_part1 ,int * );
+  PDM_malloc(part1_to_part2_data_idx,ptp->n_part1 ,int * );
   for (int i = 0; i < ptp->n_part1; i++) {
     PDM_malloc(part1_to_part2_data_idx[i],(ptp->part1_to_part2_idx[i][ptp->n_elt1[i]]+1) ,int);
     part1_to_part2_data_idx[i][0] = 0;
@@ -1409,7 +1409,7 @@ _alltotall_stride_var_wait_and_post
   int  *blk_recv_idx = ptp->async_exch_recv_idx[request];
 
   int **part2_idx;
-  PDM_malloc(*part2_idx,ptp->n_part2 ,int * );
+  PDM_malloc(part2_idx,ptp->n_part2 ,int * );
   for (int i = 0; i < ptp->n_part2; i++) {
     PDM_malloc(part2_idx[i],(ptp->gnum1_come_from_idx[i][ptp->n_ref_lnum2[i]]+1) ,int);
     part2_idx[i][0] = 0;
@@ -2031,7 +2031,7 @@ _p2p_stride_var_iexch_wait
   unsigned char ** _part2_data = (unsigned char **) ptp->async_recv_part2_data[request_irecv];
 
   int **part2_idx;
-  PDM_malloc(*part2_idx,ptp->n_part2 ,int * );
+  PDM_malloc(part2_idx,ptp->n_part2 ,int * );
   for (int i = 0; i < ptp->n_part2; i++) {
     PDM_malloc(part2_idx[i],(ptp->gnum1_come_from_idx[i][ptp->n_ref_lnum2[i]]+1) ,int);
     part2_idx[i][0] = 0;
@@ -2115,7 +2115,7 @@ _p2p_stride_var_reverse_iexch_wait
   unsigned char ** _part1_data = (unsigned char **) ptp->async_recv_part2_data[request_irecv];
 
   int **part1_idx;
-  PDM_malloc(*part1_idx,ptp->n_part1 ,int * );
+  PDM_malloc(part1_idx,ptp->n_part1 ,int * );
   for (int i = 0; i < ptp->n_part1; i++) {
     PDM_malloc(part1_idx[i],(ptp->part1_to_part2_idx[i][ptp->n_elt1[i]] +1) ,int);
     part1_idx[i][0] = 0;
@@ -2685,7 +2685,7 @@ _create
   PDM_malloc(ptp->gnum1_to_send_buffer_idx,n_part1,int*);
   PDM_malloc(ptp->gnum1_to_send_buffer,n_part1,int*);
   int **gnum1_to_send_buffer_n;
-  PDM_malloc(*gnum1_to_send_buffer_n,n_part1,int*);
+  PDM_malloc(gnum1_to_send_buffer_n,n_part1,int*);
 
   for (int i = 0; i < n_part1; i++) {
     PDM_malloc(ptp->gnum1_to_send_buffer_idx[i],(ptp->part1_to_part2_idx[i][n_elt1[i]]+1),int);
@@ -2854,7 +2854,7 @@ _create
   //ptp->recv_buffer_to_ref_lnum2 = NULL;
 
   int **tag_elt2;
-  PDM_malloc(*tag_elt2,n_part2,int *);
+  PDM_malloc(tag_elt2,n_part2,int *);
 
   for (int i = 0; i < n_part2; i++) {
     PDM_malloc(tag_elt2[i],n_elt2[i],int);
@@ -2876,7 +2876,7 @@ _create
   }
 
   int **ielt_to_ref;
-  PDM_malloc(*ielt_to_ref,n_part2,int *);
+  PDM_malloc(ielt_to_ref,n_part2,int *);
   for (int i = 0; i < n_part2; i++) {
     PDM_malloc(ielt_to_ref[i],n_elt2[i],int);
     ptp->n_ref_lnum2[i]   = 0;
@@ -4327,14 +4327,14 @@ PDM_part_to_part_iexch
       }
     }
 
-    PDM_malloc(*part2_data,ptp->n_part2,void *);
+    PDM_malloc(*part2_data,ptp->n_part2, void *);
     void **_part2_data = *part2_data;
     for (int i = 0; i < ptp->n_part2; i++) {
       _part2_data[i] = malloc(s_data * cst_stride * ptp->gnum1_come_from_idx[i][ptp->n_ref_lnum2[i]]);
     }
 
     unsigned char **___part2_data;
- PDM_malloc(*___part2_data,ptp->n_part2,unsigned char*);
+    PDM_malloc(___part2_data,ptp->n_part2,unsigned char*);
     for (int i = 0; i < ptp->n_part2; i++) {
       ___part2_data[i] = (unsigned char *) _part2_data[i];
     }
@@ -4953,7 +4953,7 @@ PDM_part_to_part_reverse_iexch
     }
 
     void **__part2_to_part1_data;
-    PDM_malloc(*__part2_to_part1_data,ptp->n_part2,void*);
+    PDM_malloc(__part2_to_part1_data,ptp->n_part2,void*);
     void **_part2_to_part1_data  = __part2_to_part1_data;
 
     if (t_part2_data_def == PDM_PART_TO_PART_DATA_DEF_ORDER_PART2) {
@@ -4974,7 +4974,7 @@ PDM_part_to_part_reverse_iexch
     }
 
     unsigned char **___part1_data;
- PDM_malloc(*___part1_data,ptp->n_part1,unsigned char*);
+    PDM_malloc(___part1_data,ptp->n_part1,unsigned char*);
     for (int i = 0; i < ptp->n_part1; i++) {
       ___part1_data[i] = (unsigned char *) _part1_data[i];
     }

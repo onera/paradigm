@@ -79,9 +79,9 @@ _compute_unique_idx
   int last_elmt  = -1;
 
   // int *reverse_order_unique;
- PDM_malloc(reverse_order_unique,nb_ent ,int);
+  // PDM_malloc(reverse_order_unique,nb_ent ,int);
   // int *new_order;
- PDM_malloc(new_order,nb_ent ,int);
+  // PDM_malloc(new_order,nb_ent ,int);
   for(int i = 0; i < nb_ent; i++){
 
     int old_order = order[i];
@@ -706,7 +706,7 @@ PDM_distant_neighbor_exch
  PDM_free(n_recv_buffer);
  PDM_free(i_recv_buffer);
 
-  PDM_malloc(*recv_entity_data, dn->n_part ,unsigned char *);
+  PDM_malloc((*(unsigned char ***) recv_entity_data), dn->n_part ,unsigned char *);
   unsigned char **_recv_entity_data = (*(unsigned char ***) recv_entity_data);
 
   if (t_stride == PDM_STRIDE_VAR_INTERLACED) {

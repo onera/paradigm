@@ -2167,7 +2167,7 @@ PDM_compute_graph_comm_entity_ownership
                                                       comm);
 
   int **tmp_rank_and_part;
-  PDM_malloc(*tmp_rank_and_part,n_part,int *);
+  PDM_malloc(tmp_rank_and_part,n_part,int *);
 
   for (int i_part = 0; i_part < n_part; i_part++) {
     PDM_malloc(tmp_rank_and_part[i_part],n_entity[i_part] * 2,int);
@@ -2205,7 +2205,7 @@ PDM_compute_graph_comm_entity_ownership
   int *_n_owned_entity;
   PDM_malloc(_n_owned_entity,n_part,int  );
   int **_lnum_owned_entity;
-  PDM_malloc(*_lnum_owned_entity,n_part,int *);
+  PDM_malloc(_lnum_owned_entity,n_part,int *);
 
   for (int i_part = 0; i_part < n_part; i_part++) {
     PDM_malloc(_lnum_owned_entity[i_part],n_entity[i_part],int);
@@ -2519,7 +2519,7 @@ PDM_part_dentity_group_to_pentity_group
 
 
   int **_pentity_group_idx;
-  PDM_malloc(*_pentity_group_idx, (n_part) ,int *);
+  PDM_malloc(_pentity_group_idx, (n_part) ,int *);
   for(int i_part = 0; i_part < n_part; ++i_part) {
     PDM_malloc(_pentity_group_idx[i_part], (pn_entity[i_part]+1) ,int);
     _pentity_group_idx[i_part][0] = 0;
@@ -2810,9 +2810,9 @@ PDM_compute_face_edge_from_face_vtx
 
   PDM_g_num_t _max_vtx_gnum = 0;
   PDM_g_num_t **pface_vtx_g_num;
-  PDM_malloc(*pface_vtx_g_num,n_part ,PDM_g_num_t *);
+  PDM_malloc(pface_vtx_g_num,n_part ,PDM_g_num_t *);
   int **pface_vtx_n;
-  PDM_malloc(*pface_vtx_n,n_part ,int         *);
+  PDM_malloc(pface_vtx_n,n_part ,int         *);
 
   for(int i_part = 0; i_part < n_part; ++i_part) {
     for(int i_vtx = 0; i_vtx < pn_vtx[i_part]; ++i_vtx) {
@@ -3113,9 +3113,9 @@ PDM_pconnectivity_to_pconnectivity_keep
 
   /* Create buffer */
   int **send_entity1_entity2_n;
-  PDM_malloc(*send_entity1_entity2_n,n_part1 ,int         *);
+  PDM_malloc(send_entity1_entity2_n,n_part1 ,int         *);
   PDM_g_num_t **send_entity1_entity2;
-  PDM_malloc(*send_entity1_entity2,n_part1 ,PDM_g_num_t *);
+  PDM_malloc(send_entity1_entity2,n_part1 ,PDM_g_num_t *);
   for(int i_part = 0; i_part < n_part1; ++i_part) {
 
     /*
@@ -3134,7 +3134,7 @@ PDM_pconnectivity_to_pconnectivity_keep
     }
 
     // int *send_entity1_entity2_idx;
- PDM_malloc(send_entity1_entity2_idx, (gnum1_come_from_idx[i_part][n_ref_entity1[i_part]] + 1) ,int);
+    // PDM_malloc(send_entity1_entity2_idx, (gnum1_come_from_idx[i_part][n_ref_entity1[i_part]] + 1) ,int);
     // send_entity1_entity2_idx[0] = 0;
     // for(int i = 0; i < gnum1_come_from_idx[i_part][n_ref_entity1[i_part]]; ++i) {
     //   send_entity1_entity2_idx[i+1] = send_entity1_entity2_idx[i] + send_entity1_entity2_n[i_part][i];
@@ -3186,11 +3186,11 @@ PDM_pconnectivity_to_pconnectivity_keep
   int *_n_part2_entity2;
   PDM_malloc(_n_part2_entity2,n_part2 ,int          );
   int **_part2_entity1_entity2_idx;
-  PDM_malloc(*_part2_entity1_entity2_idx,n_part2 ,int         *);
+  PDM_malloc(_part2_entity1_entity2_idx,n_part2 ,int         *);
   int **_part2_entity1_entity2;
-  PDM_malloc(*_part2_entity1_entity2,n_part2 ,int         *);
+  PDM_malloc(_part2_entity1_entity2,n_part2 ,int         *);
   PDM_g_num_t **_part2_entity2_ln_to_gn;
-  PDM_malloc(*_part2_entity2_ln_to_gn,n_part2 ,PDM_g_num_t *);
+  PDM_malloc(_part2_entity2_ln_to_gn,n_part2 ,PDM_g_num_t *);
   for(int i_part = 0; i_part < n_part2; ++i_part) {
 
     PDM_malloc(_part2_entity1_entity2_idx[i_part], (n_part2_entity1[i_part] + 1) ,int);
@@ -3250,7 +3250,7 @@ PDM_pconnectivity_to_pconnectivity_keep
     PDM_gnum_set_from_parents (gnum_extract, i_part, _n_part2_entity2[i_part], _part2_entity2_ln_to_gn[i_part]);
   }
   PDM_g_num_t **_part2_entity2_child_ln_to_gn;
-  PDM_malloc(*_part2_entity2_child_ln_to_gn, n_part2 ,PDM_g_num_t *);
+  PDM_malloc(_part2_entity2_child_ln_to_gn, n_part2 ,PDM_g_num_t *);
   PDM_gnum_compute(gnum_extract);
 
   for (int i_part = 0; i_part < n_part2; i_part++){
@@ -3429,11 +3429,11 @@ PDM_pconnectivity_to_pconnectivity_from_location_keep
 
   /* Create buffer */
   int **send_entity1_entity2_n;
-  PDM_malloc(*send_entity1_entity2_n,n_part1 ,int         *);
+  PDM_malloc(send_entity1_entity2_n,n_part1 ,int         *);
   PDM_g_num_t **send_entity1_entity2;
-  PDM_malloc(*send_entity1_entity2,n_part1 ,PDM_g_num_t *);
+  PDM_malloc(send_entity1_entity2,n_part1 ,PDM_g_num_t *);
   int **send_entity1_entity2_location;
-  PDM_malloc(*send_entity1_entity2_location,n_part1 ,int         *);
+  PDM_malloc(send_entity1_entity2_location,n_part1 ,int         *);
   for(int i_part = 0; i_part < n_part1; ++i_part) {
 
     /*
@@ -3528,13 +3528,13 @@ PDM_pconnectivity_to_pconnectivity_from_location_keep
   int *_n_part2_entity2;
   PDM_malloc(_n_part2_entity2,n_part2 ,int          );
   int **_part2_entity1_entity2_idx;
-  PDM_malloc(*_part2_entity1_entity2_idx,n_part2 ,int         *);
+  PDM_malloc(_part2_entity1_entity2_idx,n_part2 ,int         *);
   int **_part2_entity1_entity2;
-  PDM_malloc(*_part2_entity1_entity2,n_part2 ,int         *);
+  PDM_malloc(_part2_entity1_entity2,n_part2 ,int         *);
   PDM_g_num_t **_part2_entity2_ln_to_gn;
-  PDM_malloc(*_part2_entity2_ln_to_gn,n_part2 ,PDM_g_num_t *);
+  PDM_malloc(_part2_entity2_ln_to_gn,n_part2 ,PDM_g_num_t *);
   int **_part2_entity2_to_part1_entity2;
-  PDM_malloc(*_part2_entity2_to_part1_entity2,n_part2 ,int         *);
+  PDM_malloc(_part2_entity2_to_part1_entity2,n_part2 ,int         *);
   for(int i_part = 0; i_part < n_part2; ++i_part) {
 
     PDM_malloc(_part2_entity1_entity2_idx[i_part], (n_part2_entity1[i_part] + 1) ,int);
@@ -3562,7 +3562,7 @@ PDM_pconnectivity_to_pconnectivity_from_location_keep
     int *unique_order_entity2;
     PDM_malloc(unique_order_entity2, n_recv_entity1_entity2 ,int);
     // int *order;
- PDM_malloc(order, n_recv_entity1_entity2 ,int);
+    // PDM_malloc(order, n_recv_entity1_entity2 ,int);
     for(int i = 0; i < n_recv_entity1_entity2; ++i) {
       _part2_entity2_ln_to_gn[i_part][i] = PDM_ABS(recv_entity1_entity2[i_part][i]);
     }

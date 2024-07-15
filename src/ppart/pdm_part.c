@@ -767,7 +767,7 @@ _split
       int *edgeWeight = NULL;
 
       // int *dual_graph_n;
- PDM_malloc(dual_graph_n,ppart->dn_cell,int);
+      // PDM_malloc(dual_graph_n,ppart->dn_cell,int);
       // for(int i_entity = 0; i_entity < ppart->dn_cell; ++i_entity) {
       //   dual_graph_n[i_entity] = ppart->ddual_graph_idx[i_entity+1] - ppart->ddual_graph_idx[i_entity];
       // }

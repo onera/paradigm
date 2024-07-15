@@ -13,6 +13,7 @@
  *  Header for the current file
  *----------------------------------------------------------------------------*/
 
+#include "pdm_priv.h"
 #include "pdm_block_to_part.h"
 #include "pdm_block_to_part_priv.h"
 #include "pdm_binary_search.h"
@@ -22,9 +23,7 @@
 #include "pdm_distrib.h"
 #include "pdm_timer.h"
 #include "pdm_size_idx_from_stride.h"
-
 #include "pdm_io.h"
-#include <string.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -1382,7 +1381,7 @@ PDM_block_to_part_exch_in_place
       btp->requested_data_n[n_rank1];
 
     int **part_idx;
-    PDM_malloc(*part_idx,btp->n_part,int *);
+    PDM_malloc(part_idx,btp->n_part,int *);
     int  *recv_idx = PDM_array_new_idx_from_sizes_int(recv_stride, s_recv_elt);
 
     for (int i = 0; i < btp->n_part; i++) {
@@ -1641,7 +1640,7 @@ PDM_block_to_part_exch
     PDM_malloc(recv_buffer,s_recv_buffer,unsigned char);
 
     // int *send_stride_idx;
- PDM_malloc(send_stride_idx,(s_distributed_data+1),int);
+    // PDM_malloc(send_stride_idx,(s_distributed_data+1),int);
     // send_stride_idx[0] = 0;
     // for (int i = 0; i < s_distributed_data; i++) {
     //   send_stride_idx[i+1] = send_stride_idx[i] + send_stride[i];
@@ -1820,7 +1819,7 @@ PDM_block_to_part_exch
    * Partitions filling
    */
 
-  PDM_malloc(*part_data,btp->n_part,unsigned char *);
+  PDM_malloc(*((unsigned char ***) part_data),btp->n_part,unsigned char *);
   _part_data = (*(unsigned char ***) part_data);
 
   if (t_stride == PDM_STRIDE_VAR_INTERLACED) {
@@ -1829,7 +1828,7 @@ PDM_block_to_part_exch
                      btp->requested_data_n[n_rank1];
 
     int **part_idx;
-    PDM_malloc(*part_idx,btp->n_part,int *);
+    PDM_malloc(part_idx,btp->n_part,int *);
     int *recv_idx = PDM_array_new_idx_from_sizes_int(recv_stride, s_recv_elt);
 
     for (int i = 0; i < btp->n_part; i++) {

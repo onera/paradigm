@@ -435,7 +435,7 @@ PDM_octree_build
   }
 
   int *num_proc;
-  PDM_malloc(num_proc,n_used_rank,int *);
+  PDM_malloc(num_proc,n_used_rank, int);
 
   _octree->used_rank = num_proc;
   _octree->n_used_rank = n_used_rank;

@@ -3502,7 +3502,7 @@ PDM_tree_intersection_point_box2
   int  *__box_pts_n = PDM_array_zeros_int(n_boxes);
   int  *__box_pts_s = PDM_array_const_int(n_boxes, 4);
   int **__box_pts;
-  PDM_malloc(*__box_pts,n_boxes,int *);
+  PDM_malloc(__box_pts,n_boxes,int *);
   for (int i = 0; i < n_boxes; i++) {
     PDM_malloc(__box_pts[i],__box_pts_s[i],int);
   }

@@ -3990,7 +3990,7 @@ _check_neighbours_area
   PDM_malloc(area,octants->n_nodes,double);
 
   int *rank_ngb_n;
-  PDM_malloc(rank_ngb_n,n_ranks,double);
+  PDM_malloc(rank_ngb_n,n_ranks, int);
   for (int i = 0; i < n_ranks; i++)
     rank_ngb_n[i] = 0;
 
@@ -9815,7 +9815,7 @@ if (_octree->use_win_shared) {
 
   //   if (block_stride[i] > n_closest_points) {
   //     int *order;
-     PDM_malloc(order,block_stride[i],int);
+  //     PDM_malloc(order,block_stride[i],int);
   //     for (int j = 0; j < block_stride[i]; j++) {
   //       order[j] = j;
   //     }
@@ -12973,9 +12973,9 @@ PDM_para_octree_points_inside_boxes_block_frame
   part_n_box[0] = n_box_local + n_box_recv;
 
   int **box_pts_idx;
-  PDM_malloc(*box_pts_idx,n_part,int *);
+  PDM_malloc(box_pts_idx,n_part,int *);
   int **box_pts_l_num;
-  PDM_malloc(*box_pts_l_num,n_part,int *);
+  PDM_malloc(box_pts_l_num,n_part,int *);
 
   int size_box_pts = 0;
 
@@ -13083,7 +13083,7 @@ PDM_para_octree_points_inside_boxes_block_frame
     // *pts_in_box_coord = box_pts_coord;
 
     // *pts_in_box_idx;
-    PDM_malloc(pts_in_box_idx,(n_boxes + 1),int);
+    // PDM_malloc(pts_in_box_idx,(n_boxes + 1),int);
     // memcpy (*pts_in_box_idx, box_pts_idx[0], sizeof(int) * (n_boxes + 1));
 
    PDM_free(box_pts_idx[0]);
@@ -14196,7 +14196,7 @@ PDM_para_octree_points_inside_boxes_shared_block_frame
   PDM_MPI_Comm_size (_octree->comm_shared, &n_rank_in_shm);
 
   // int *parent_rank;
- PDM_malloc(parent_rank,n_rank_in_shm ,int);
+  // PDM_malloc(parent_rank,n_rank_in_shm ,int);
   // PDM_MPI_Allgather(&i_rank,     1, PDM_MPI_INT,
   //                   parent_rank, 1, PDM_MPI_INT,
   //                   comm_shared);
@@ -14405,9 +14405,9 @@ PDM_para_octree_points_inside_boxes_shared_block_frame
       // log_trace("box_set->d = %12.5e / %12.5e / %12.5e \n", box_set->d[0], box_set->d[1], box_set->d[2]);
       // log_trace("box_set->s = %12.5e / %12.5e / %12.5e \n", box_set->s[0], box_set->s[1], box_set->s[2]);
       // int *box_init_location;
- PDM_malloc(box_init_location,n_boxes * n_info_location,int);
+      // PDM_malloc(box_init_location,n_boxes * n_info_location,int);
       // double *normalize_box_extents;
- PDM_malloc(normalize_box_extents,6 * n_boxes ,double);
+      // PDM_malloc(normalize_box_extents,6 * n_boxes ,double);
 
       // for(int i = 0; i < n_boxes; ++i) {
       //   normalize_box_extents[6*i  ] = box_extents[6*i  ];
@@ -14638,7 +14638,7 @@ PDM_para_octree_points_inside_boxes_shared_block_frame
 
     int  dn_search = distrib_search[i_rank_in_shm+1] - distrib_search[i_rank_in_shm];
     // int *check;
- PDM_malloc(check,dn_search ,int);
+    // PDM_malloc(check,dn_search ,int);
 
     PDM_malloc(distrib_search_by_rank_idx,(n_rank_in_shm+1) ,int);
     int *distrib_search_by_rank_n;
@@ -14723,19 +14723,19 @@ PDM_para_octree_points_inside_boxes_shared_block_frame
   int *part_n_box;
   PDM_malloc(part_n_box,n_part,int          );
   int **box_pts_idx;
-  PDM_malloc(*box_pts_idx,n_part,int         *);
+  PDM_malloc(box_pts_idx,n_part,int         *);
   int **box_pts_l_num;
-  PDM_malloc(*box_pts_l_num,n_part,int         *);
+  PDM_malloc(box_pts_l_num,n_part,int         *);
   PDM_g_num_t **res_box_g_num;
-  PDM_malloc(*res_box_g_num,n_part,PDM_g_num_t *);
+  PDM_malloc(res_box_g_num,n_part,PDM_g_num_t *);
   int **res_box_strid;
-  PDM_malloc(*res_box_strid,n_part,int         *);
+  PDM_malloc(res_box_strid,n_part,int         *);
   double **res_box_weight;
-  PDM_malloc(*res_box_weight,n_part,double      *);
+  PDM_malloc(res_box_weight,n_part,double      *);
   double **res_box_pts_coords;
-  PDM_malloc(*res_box_pts_coords,n_part,double      *);
+  PDM_malloc(res_box_pts_coords,n_part,double      *);
   PDM_g_num_t **res_box_pts_gnum;
-  PDM_malloc(*res_box_pts_gnum,n_part,PDM_g_num_t *);
+  PDM_malloc(res_box_pts_gnum,n_part,PDM_g_num_t *);
 
   if (_octree->explicit_nodes_to_build) {
 

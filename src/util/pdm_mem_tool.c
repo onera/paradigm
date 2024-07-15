@@ -98,7 +98,7 @@
 //         int len = (int) (end_name - start_name);
 
 //         char *name;
-         PDM_malloc(name,len ,char);
+//         PDM_malloc(name,len ,char);
 // 	PDM_mem_error(name,__FILE__,__LINE__);
 
 //         if (name != NULL) {
