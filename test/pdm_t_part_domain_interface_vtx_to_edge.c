@@ -446,7 +446,7 @@ int main
    *  Prepare pointer by domain and by part
    */
   int *pn_n_part;
-  PDM_malloc(pn_n_part, n_domain ,int          *);
+  PDM_malloc(pn_n_part, n_domain, int);
   int **pn_face;
   PDM_malloc(pn_face, n_domain ,int          *);
   int **pn_edge;

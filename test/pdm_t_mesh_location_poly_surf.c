@@ -504,16 +504,11 @@ _get_connectivity
 
     /* Faces */
     (*nFace)[ipart] = _nFace;
-    ( *faceEdgeIdx)[ipart];
-    PDM_malloc(faceEdgeIdx)[ipart],(_nFace + 1),int);
-    ( *faceEdge)[ipart];
-    PDM_malloc(faceEdge)[ipart],_sFaceEdge,int);
-    ( *faceVtxIdx)[ipart];
-    PDM_malloc(faceVtxIdx)[ipart],(_nFace + 1),int);
-    ( *faceVtx)[ipart];
-    PDM_malloc(faceVtx)[ipart],_sFaceEdge,int);
-    ( *faceLNToGN)[ipart];
-    PDM_malloc(faceLNToGN)[ipart],_nFace,PDM_g_num_t);
+    PDM_malloc((*faceEdgeIdx)[ipart],(_nFace + 1),int);
+    PDM_malloc((*faceEdge)[ipart],_sFaceEdge,int);
+    PDM_malloc((*faceVtxIdx)[ipart],(_nFace + 1),int);
+    PDM_malloc((*faceVtx)[ipart],_sFaceEdge,int);
+    PDM_malloc((*faceLNToGN)[ipart],_nFace,PDM_g_num_t);
 
     memcpy ((*faceEdgeIdx)[ipart], _faceEdgeIdx, (_nFace + 1) * sizeof(int));
     memcpy ((*faceEdge)[ipart], _faceEdge, _sFaceEdge * sizeof(int));
@@ -523,18 +518,15 @@ _get_connectivity
     /* Edges */
     (*nEdge)[ipart] = _nEdge;
     (*edgeVtxIdx) PDM_malloc([ipart],(_nEdge + 1),int);
-    ( *edgeVtx)[ipart];
-    PDM_malloc(edgeVtx)[ipart],_sEdgeVtx,int);
+    PDM_malloc((*edgeVtx)[ipart],_sEdgeVtx,int);
 
     memcpy ((*edgeVtxIdx)[ipart], _edgeVtxIdx, (_nEdge + 1) * sizeof(int));
     memcpy ((*edgeVtx)[ipart], _edgeVtx, _sEdgeVtx * sizeof(int));
 
     /* Vertices */
     (*nVtx)[ipart] = _nVtx;
-    ( *vtxCoord)[ipart];
-    PDM_malloc(vtxCoord)[ipart],(3 * _nVtx),double);
-    ( *vtxLNToGN)[ipart];
-    PDM_malloc(vtxLNToGN)[ipart],_nVtx,PDM_g_num_t);
+    PDM_malloc((*vtxCoord)[ipart],(3 * _nVtx),double);
+    PDM_malloc((*vtxLNToGN)[ipart],_nVtx,PDM_g_num_t);
 
     memcpy ((*vtxCoord)[ipart], _vtx, 3 *_nVtx * sizeof(double));
     memcpy ((*vtxLNToGN)[ipart], _vtxLNToGN, _nVtx * sizeof(PDM_g_num_t));
@@ -829,34 +821,25 @@ _create_split_mesh
       int _nFace = 0;
       int _sFaceEdge = 0;
       (*nFace)[ipart] = _nFace;
-      ( *faceEdgeIdx)[ipart];
-      PDM_malloc(faceEdgeIdx)[ipart],(_nFace + 1),int);
+      PDM_malloc((*faceEdgeIdx)[ipart],(_nFace + 1),int);
       (*faceEdgeIdx)[ipart][0] = 0;
-      ( *faceEdge)[ipart];
-      PDM_malloc(faceEdge)[ipart],_sFaceEdge,int);
-      ( *faceVtxIdx)[ipart];
-      PDM_malloc(faceVtxIdx)[ipart],(_nFace + 1),int);
+      PDM_malloc((*faceEdge)[ipart],_sFaceEdge,int);
+      PDM_malloc((*faceVtxIdx)[ipart],(_nFace + 1),int);
       (*faceVtxIdx)[ipart][0] = 0;
-      ( *faceVtx)[ipart];
-      PDM_malloc(faceVtx)[ipart],_sFaceEdge,int);
-      ( *faceLNToGN)[ipart];
-      PDM_malloc(faceLNToGN)[ipart],_nFace,PDM_g_num_t);
+      PDM_malloc((*faceVtx)[ipart],_sFaceEdge,int);
+      PDM_malloc((*faceLNToGN)[ipart],_nFace,PDM_g_num_t);
 
       int _nEdge = 0;
       int _sEdgeVtx = 0;
       (*nEdge)[ipart] = _nEdge;
-      ( *edgeVtxIdx)[ipart];
-      PDM_malloc(edgeVtxIdx)[ipart],(_nEdge + 1),int);
+      PDM_malloc((*edgeVtxIdx)[ipart],(_nEdge + 1),int);
       (*edgeVtxIdx)[ipart][0] = 0;
-      ( *edgeVtx)[ipart];
-      PDM_malloc(edgeVtx)[ipart],_sEdgeVtx,int);
+      PDM_malloc((*edgeVtx)[ipart],_sEdgeVtx,int);
 
       int _nVtx = 0;
       (*nVtx)[ipart] = _nVtx;
-      ( *vtxCoord)[ipart];
-      PDM_malloc(vtxCoord)[ipart],(3 * _nVtx),double);
-      ( *vtxLNToGN)[ipart];
-      PDM_malloc(vtxLNToGN)[ipart],_nVtx,PDM_g_num_t);
+      PDM_malloc((*vtxCoord)[ipart],(3 * _nVtx),double);
+      PDM_malloc((*vtxLNToGN)[ipart],_nVtx,PDM_g_num_t);
     }
   }
 

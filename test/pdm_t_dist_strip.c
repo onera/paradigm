@@ -328,9 +328,9 @@ int main(int argc, char *argv[])
   PDM_malloc(surface_vtx_parent_gnum,n_part,PDM_g_num_t *);
 
   const PDM_g_num_t **surface_face_gnum;
- PDM_malloc(surface_face_gnum,n_part,PDM_g_num_t *);
+  PDM_malloc(surface_face_gnum,n_part, const PDM_g_num_t *);
   const PDM_g_num_t **surface_vtx_gnum;
- PDM_malloc(surface_vtx_gnum,n_part,PDM_g_num_t *);
+  PDM_malloc(surface_vtx_gnum,n_part, const PDM_g_num_t *);
 
   PDM_gen_gnum_t* gen_gnum_face = PDM_gnum_create (3, n_part, PDM_FALSE, 1e-3, PDM_MPI_COMM_WORLD, PDM_OWNERSHIP_KEEP);
   PDM_gen_gnum_t* gen_gnum_vtx  = PDM_gnum_create (3, n_part, PDM_FALSE, 1e-3, PDM_MPI_COMM_WORLD, PDM_OWNERSHIP_KEEP);
@@ -344,9 +344,9 @@ int main(int argc, char *argv[])
   double strip = 0.1;
 
   double **pts_coords;
-  PDM_malloc(*pts_coords,n_part,double *);
+  PDM_malloc(pts_coords,n_part, double *);
   double **char_length;
-  PDM_malloc(*char_length,n_part,double *);
+  PDM_malloc(char_length,n_part, double *);
 
   int n_pts   = ((n_vtx_seg * n_vtx_seg * n_vtx_seg) / n_rank) / n_part;
   int n_pts_x = (int) (n_pts/(1.+(1.-4.*strip)+(1.-4.*strip) * (1.-4.*strip)));

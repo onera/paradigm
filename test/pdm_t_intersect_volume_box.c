@@ -652,9 +652,9 @@ int main(int argc, char *argv[])
   /* Higher scale box-box test case */
 
   // double *n_box;
- PDM_malloc(n_box,18,double);
+  // PDM_malloc(n_box,18,double);
   // double *pt_plane_box;
- PDM_malloc(pt_plane_box,18,double);
+  // PDM_malloc(pt_plane_box,18,double);
 
   // _box_extents_to_plane(box_extents, n_box, pt_plane_box);
 

@@ -717,7 +717,7 @@ int main
    *  Prepare pointer by domain and by part
    */
   int *pn_n_part;
-  PDM_malloc(pn_n_part, n_domain ,int          *);
+  PDM_malloc(pn_n_part, n_domain, int);
   int **pn_face;
   PDM_malloc(pn_face, n_domain ,int          *);
   int **pn_edge;
@@ -1236,7 +1236,7 @@ int main
 
       // int n_edge_tot  = n_edge + n_edge_extended;
       // PDM_g_num_t *concat_edge_ln_to_gn;
- PDM_malloc(concat_edge_ln_to_gn,    n_edge_tot  ,PDM_g_num_t);
+      // PDM_malloc(concat_edge_ln_to_gn,    n_edge_tot  ,PDM_g_num_t);
       // for(int i_edge = 0; i_edge < n_edge; ++i_edge) {
       //   concat_edge_ln_to_gn[i_edge] = edge_ln_to_gn[i_edge];
       // }

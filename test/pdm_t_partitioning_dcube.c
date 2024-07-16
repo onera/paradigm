@@ -340,17 +340,17 @@ compute_dual_mesh_metrics
   /*
    * Compute normal associate to edge
    */
-  double* *edge_surf;
+  double **edge_surf;
   PDM_malloc(edge_surf, n_part ,double *);
-  double* *dual_vol;
+  double **dual_vol;
   PDM_malloc(dual_vol, n_part ,double *);
   for (int i_part = 0; i_part < n_part; i_part++){
 
     int    *_pedge_vtx  = pedge_vtx [i_part];
     double *_pvtx_coord = pvtx_coord[i_part];
 
-    PDM_malloc(edge_surf[i_part], 3 * pn_edge[i_part] ,double *);
-    dual_vol PDM_malloc([i_part],     pn_vtx [i_part] ,double *);
+    PDM_malloc(edge_surf[i_part], 3 * pn_edge[i_part] , double);
+    dual_vol PDM_malloc([i_part],     pn_vtx [i_part] , double);
     double *_edge_surf = edge_surf[i_part];
     double *_dual_vol  = dual_vol[i_part];
 
@@ -496,7 +496,7 @@ compute_dual_mesh_metrics
 
     /* Flux balance */
     double *flux_bal;
-    PDM_malloc(flux_bal, 3 * pn_vtx [i_part] ,double *);
+    PDM_malloc(flux_bal, 3 * pn_vtx [i_part], double);
     for(int ivtx = 0; ivtx < pn_vtx[i_part]; ++ivtx) {
       flux_bal[3*ivtx  ] = 0.;
       flux_bal[3*ivtx+1] = 0.;
@@ -1002,9 +1002,9 @@ int main(int argc, char *argv[])
             (      int ***) &pface_cell);
 
   // int *face_cell_idx;
- PDM_malloc(face_cell_idx, (pn_faces[0] + 1 ) ,int);
+  // PDM_malloc(face_cell_idx, (pn_faces[0] + 1 ) ,int);
   // int *face_cell;
- PDM_malloc(face_cell, (2 * pn_faces[0] ) ,int);
+  // PDM_malloc(face_cell, (2 * pn_faces[0] ) ,int);
   // int idx = 0;
   // face_cell_idx[0] = 0;
   // for(int i_face = 0; i_face < pn_faces[0]; ++i_face) {

@@ -565,7 +565,7 @@ int main
     memcpy(total_face_ln_to_gn + n_face, face_ln_to_gn_ext, sizeof(PDM_g_num_t) * n_face_ext);
 
     // int *total_face_edge_idx;
- PDM_malloc(total_face_edge_idx,(total_n_face + 1),int);
+    // PDM_malloc(total_face_edge_idx,(total_n_face + 1),int);
     // memcpy(total_face_edge_idx, face_edge_idx, sizeof(int) * (n_face + 1));
 
     // for (int i = 0; i <= n_face_ext; i++) {
@@ -573,7 +573,7 @@ int main
     // } // end loop on extension faces
 
     // int *total_face_edge;
- PDM_malloc(total_face_edge,total_face_edge_idx[total_n_face],int);
+    // PDM_malloc(total_face_edge,total_face_edge_idx[total_n_face],int);
     // memcpy(total_face_edge,                         face_edge,     sizeof(int) * face_edge_idx[n_face]);
     // memcpy(total_face_edge + face_edge_idx[n_face], face_edge_ext, sizeof(int) * face_edge_ext_idx[n_face_ext]);
     int *total_face_vtx_idx;
@@ -591,12 +591,12 @@ int main
 
     // // Edge
     // PDM_g_num_t *total_edge_ln_to_gn;
- PDM_malloc(total_edge_ln_to_gn,total_n_edge,PDM_g_num_t);
+    // PDM_malloc(total_edge_ln_to_gn,total_n_edge,PDM_g_num_t);
     // memcpy(total_edge_ln_to_gn,          edge_ln_to_gn,     sizeof(PDM_g_num_t) * n_edge);
     // memcpy(total_edge_ln_to_gn + n_edge, edge_ln_to_gn_ext, sizeof(PDM_g_num_t) * n_edge_ext);
 
     // int *total_edge_vtx;
- PDM_malloc(total_edge_vtx,2 * total_n_edge,int);
+    // PDM_malloc(total_edge_vtx,2 * total_n_edge,int);
     // memcpy(total_edge_vtx,              edge_vtx,     sizeof(int) * 2 * n_edge);
     // memcpy(total_edge_vtx + 2 * n_edge, edge_vtx_ext, sizeof(int) * 2 * n_edge_ext);
 
@@ -620,7 +620,7 @@ int main
     //                                         &total_face_vtx);
 
     // int *total_face_vtx_idx;
- PDM_malloc(total_face_vtx_idx,(total_n_face+1),int);
+    // PDM_malloc(total_face_vtx_idx,(total_n_face+1),int);
     // for (int i = 0; i < total_n_face + 1; i++) {
     //   total_face_vtx_idx[i] = 3 * i; // triangle
     // }

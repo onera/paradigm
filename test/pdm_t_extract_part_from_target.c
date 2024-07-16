@@ -539,7 +539,7 @@ int main(int argc, char *argv[])
 
   // 1) Compute field on origin faces
   int **part1_stride;
-  PDM_malloc(part1_stride,n_part_domains,double *);
+  PDM_malloc(part1_stride,n_part_domains, int *);
   double **pface_field;
   PDM_malloc(pface_field,n_part_domains,double *);
   for (int i_part = 0; i_part < n_part_domains; i_part++) {

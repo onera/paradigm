@@ -52,7 +52,7 @@
 /* ) */
 /* { */
 /* PDM_printf ("myRank : %d\n", myRank); */
-/* (*faceVtxCooA);
+/* (*faceVtxCooA); */
 /* PDM_malloc((*faceVtxCooA),5,double); */
 /*   for (int i=0; i<5; i++) */
 /* 	  (*faceVtxCooA)[i] = i * 2.5; */
@@ -408,7 +408,7 @@ static int init_cas3(
     PDM_malloc((*faceToEdgeA),(*nVtxA),PDM_g_num_t);
     PDM_malloc((*faceToVtxA),(*nVtxA),PDM_g_num_t);
     PDM_malloc((*faceVtxCooA),3 * (*nVtxA),double);
-    PDM_malloc(f(*faceVtxEpsA),(*nVtxA),double);
+    PDM_malloc((*faceVtxEpsA),(*nVtxA),double);
 
     for (int i = 0; i < (*nVtxA); i++) {
       (*faceToEdgeA)[i] = i+1;

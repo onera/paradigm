@@ -383,16 +383,14 @@ _gen_cloud_grid
                            &face_group_ln_to_gn);
 
     (*n_pts)[i_part] = n_cell;
-    ( *pts_g_num)[i_part];
-    PDM_malloc(pts_g_num)[i_part],n_cell,PDM_g_num_t);
+    PDM_malloc((*pts_g_num)[i_part],n_cell,PDM_g_num_t);
     for (int i = 0; i < n_cell; i++) {
       (*pts_g_num)[i_part][i] = cell_ln_to_gn[i];
     }
 
 
     const int is_oriented = 0;
-    ( *pts_coord)[i_part];
-    PDM_malloc(pts_coord)[i_part],n_cell * 3,double);
+    PDM_malloc((*pts_coord)[i_part],n_cell * 3,double);
     double *cell_volume;
     PDM_malloc(cell_volume,n_cell,double);
     PDM_geom_elem_polyhedra_properties (is_oriented,
@@ -1000,16 +998,11 @@ _get_connectivity
 
     /* Faces */
     (*nFace)[ipart] = _nFace;
-    ( *faceEdgeIdx)[ipart];
-    PDM_malloc(faceEdgeIdx)[ipart],(_nFace + 1),int);
-    ( *faceEdge)[ipart];
-    PDM_malloc(faceEdge)[ipart],_sFaceEdge,int);
-    ( *faceVtxIdx)[ipart];
-    PDM_malloc(faceVtxIdx)[ipart],(_nFace + 1),int);
-    ( *faceVtx)[ipart];
-    PDM_malloc(faceVtx)[ipart],_sFaceEdge,int);
-    ( *faceLNToGN)[ipart];
-    PDM_malloc(faceLNToGN)[ipart],_nFace,PDM_g_num_t);
+    PDM_malloc((*faceEdgeIdx)[ipart],(_nFace + 1),int);
+    PDM_malloc((*faceEdge)[ipart],_sFaceEdge,int);
+    PDM_malloc((*faceVtxIdx)[ipart],(_nFace + 1),int);
+    PDM_malloc((*faceVtx)[ipart],_sFaceEdge,int);
+    PDM_malloc((*faceLNToGN)[ipart],_nFace,PDM_g_num_t);
 
     memcpy ((*faceEdgeIdx)[ipart], _faceEdgeIdx, (_nFace + 1) * sizeof(int));
     memcpy ((*faceEdge)[ipart], _faceEdge, _sFaceEdge * sizeof(int));
@@ -1019,18 +1012,15 @@ _get_connectivity
     /* Edges */
     (*nEdge)[ipart] = _nEdge;
     (*edgeVtxIdx) PDM_malloc([ipart],(_nEdge + 1),int);
-    ( *edgeVtx)[ipart];
-    PDM_malloc(edgeVtx)[ipart],_sEdgeVtx,int);
+    PDM_malloc((*edgeVtx)[ipart],_sEdgeVtx,int);
 
     memcpy ((*edgeVtxIdx)[ipart], _edgeVtxIdx, (_nEdge + 1) * sizeof(int));
     memcpy ((*edgeVtx)[ipart], _edgeVtx, _sEdgeVtx * sizeof(int));
 
     /* Vertices */
     (*nVtx)[ipart] = _nVtx;
-    ( *vtxCoord)[ipart];
-    PDM_malloc(vtxCoord)[ipart],(3 * _nVtx),double);
-    ( *vtxLNToGN)[ipart];
-    PDM_malloc(vtxLNToGN)[ipart],_nVtx,PDM_g_num_t);
+    PDM_malloc((*vtxCoord)[ipart],(3 * _nVtx),double);
+    PDM_malloc((*vtxLNToGN)[ipart],_nVtx,PDM_g_num_t);
 
     memcpy ((*vtxCoord)[ipart], _vtx, 3 *_nVtx * sizeof(double));
     memcpy ((*vtxLNToGN)[ipart], _vtxLNToGN, _nVtx * sizeof(PDM_g_num_t));
@@ -1309,19 +1299,14 @@ _gen_src_mesh
 
     for (int i_part = 0; i_part < n_part; i_part++) {
       (*n_vtx)[i_part] = 0;
-      ( *vtx_g_num)[i_part];
-      PDM_malloc(vtx_g_num)[i_part],(*n_vtx)[i_part],PDM_g_num_t);
-      ( *vtx_coord)[i_part];
-      PDM_malloc(vtx_coord)[i_part],(*n_vtx)[i_part] * 3,double);
+      PDM_malloc((*vtx_g_num)[i_part],(*n_vtx)[i_part],PDM_g_num_t);
+      PDM_malloc((*vtx_coord)[i_part],(*n_vtx)[i_part] * 3,double);
 
       (*n_face)[i_part] = 0;
-      ( *face_g_num)[i_part];
-      PDM_malloc(face_g_num)[i_part],(*n_face)[i_part],PDM_g_num_t);
-      ( *face_vtx_idx)[i_part];
-      PDM_malloc(face_vtx_idx)[i_part],((*n_face)[i_part] + 1),int);
+      PDM_malloc((*face_g_num)[i_part],(*n_face)[i_part],PDM_g_num_t);
+      PDM_malloc((*face_vtx_idx)[i_part],((*n_face)[i_part] + 1),int);
       (*face_vtx_idx)[i_part][0] = 0;
-      ( *face_vtx)[i_part];
-      PDM_malloc(face_vtx)[i_part],(*face_vtx_idx)[i_part][(*n_face)[i_part]],int);
+      PDM_malloc((*face_vtx)[i_part],(*face_vtx_idx)[i_part][(*n_face)[i_part]],int);
     }
   }
 }

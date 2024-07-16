@@ -446,11 +446,11 @@ main
   // PDM_log_trace_connectivity_int(ptree->leaf_box_idx, ptree->leaf_box_ids, ptree->n_leaf, "leaf_box :");
 
   // int *box_pts_idx;
- PDM_malloc(box_pts_idx,(n_box + 1),int);
+  // PDM_malloc(box_pts_idx,(n_box + 1),int);
   // box_pts_idx[0] = 0;
   // int s_box_pts = 4*n_box;
   // int *box_pts;
- PDM_malloc(box_pts,s_box_pts,int);
+  // PDM_malloc(box_pts,s_box_pts,int);
 
   // for (int ibox = 0; ibox < n_box; ibox++) {
   //   box_pts_idx[ibox+1] = box_pts_idx[ibox];

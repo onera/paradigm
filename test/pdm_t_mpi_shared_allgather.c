@@ -107,7 +107,7 @@
 //   log_trace("n_val = %i \n", n_val);
 
 //   int *val;
-   PDM_malloc(val,n_val ,int);
+//   PDM_malloc(val,n_val ,int);
 //   for(int i = 0; i < n_val; ++i) {
 //     val[i] = i_rank;
 //   }
@@ -134,9 +134,9 @@
 //    * Ce qu'on souhaite c'est  obtenir le même resultat que sur le comm classique (même ordre que avec l'échange via comm_same_numa_id)
 //    */
 //   int *recv_count;
-   PDM_malloc(recv_count, n_rank_same_numa_id    ,int);
+//   PDM_malloc(recv_count, n_rank_same_numa_id    ,int);
 //   int *recv_shift;
-   PDM_malloc(recv_shift,(n_rank_same_numa_id+1) ,int);
+//   PDM_malloc(recv_shift,(n_rank_same_numa_id+1) ,int);
 //   recv_shift[0] = 0;
 //   for(int i = 0; i < n_rank_same_numa_id; ++i) {
 //     recv_count[i  ] = lval_tot_n[i];
@@ -144,7 +144,7 @@
 //   }
 
 //   int *recv_val;
-   PDM_malloc(recv_val,recv_shift[n_rank_same_numa_id] ,int);
+//   PDM_malloc(recv_val,recv_shift[n_rank_same_numa_id] ,int);
 
 
 //   PDM_MPI_Allgatherv(val     , n_val,                  PDM_MPI_INT,
@@ -246,7 +246,7 @@
 //    */
 //   if(comm_master_of_shm != PDM_MPI_COMM_NULL) {
 //     int *lnuma_core_gid;
-     PDM_malloc(lnuma_core_gid,n_rank_in_shm ,int);
+//     PDM_malloc(lnuma_core_gid,n_rank_in_shm ,int);
 //     for(int i = 0; i < n_rank_in_shm; ++i) {
 //       lnuma_core_gid[i] = numa_core_gid[numa_by_numa_idx[i_rank_master_of_shm]+i];
 //     }
@@ -263,13 +263,13 @@
 //    * Computation of degree_in
 //    */
 //   int *send_n;
-   PDM_malloc(send_n,  n_rank    ,int);
+//   PDM_malloc(send_n,  n_rank    ,int);
 //   int *recv_n;
-   PDM_malloc(recv_n,  n_rank    ,int);
+//   PDM_malloc(recv_n,  n_rank    ,int);
 //   int *send_idx;
-   PDM_malloc(send_idx, (n_rank+1) ,int);
+//   PDM_malloc(send_idx, (n_rank+1) ,int);
 //   int *recv_idx;
-   PDM_malloc(recv_idx, (n_rank+1) ,int);
+//   PDM_malloc(recv_idx, (n_rank+1) ,int);
 
 //   for(int i = 0; i < n_rank; ++i) {
 //     send_n[i] = 0;
@@ -287,7 +287,7 @@
 //   }
 
 //   int *neighbor_in;
-   PDM_malloc(neighbor_in, (n_degree_in ) ,int);
+//   PDM_malloc(neighbor_in, (n_degree_in ) ,int);
 //   n_degree_in = 0;
 //   for(int i = 0; i < n_rank_master_of_shm; ++i) {
 //     for(int j = numa_by_numa_idx[i]; j < numa_by_numa_idx[i+1]; ++j) {
@@ -311,7 +311,7 @@
 //   }
 
 //   int *send_cur_i_rank;
-   PDM_malloc(send_cur_i_rank,send_idx[n_rank] ,int);
+//   PDM_malloc(send_cur_i_rank,send_idx[n_rank] ,int);
 
 //   for(int i = 0; i < n_degree_in; ++i) {
 //     int idx_write = send_idx[neighbor_in[i]] + send_n[neighbor_in[i]]++;
@@ -327,7 +327,7 @@
 //     recv_idx[i+1] = recv_idx[i] + recv_n[i];
 //   }
 //   int *recv_opp_i_rank;
-   PDM_malloc(recv_opp_i_rank,recv_idx[n_rank] ,int);
+//   PDM_malloc(recv_opp_i_rank,recv_idx[n_rank] ,int);
 
 //   PDM_MPI_Alltoallv(send_cur_i_rank, send_n, send_idx, PDM_MPI_INT,
 //                     recv_opp_i_rank, recv_n, recv_idx, PDM_MPI_INT, comm);
@@ -374,7 +374,7 @@
 //   srand(i_rank+11);
 
 //   int *n_vals;
-   PDM_malloc(n_vals,n_degrees_out ,int);
+//   PDM_malloc(n_vals,n_degrees_out ,int);
 
 //   for(int i = 0; i < n_degrees_out; ++i) {
 //     n_vals[i] = (rand() % 8)+1;
@@ -382,7 +382,7 @@
 
 
 //   int *n_vals_out;
-   PDM_malloc(n_vals_out,n_degree_in ,int);
+//   PDM_malloc(n_vals_out,n_degree_in ,int);
 
 //   PDM_MPI_Neighbor_alltoall(n_vals    , 1, PDM_MPI_INT,
 //                             n_vals_out, 1, PDM_MPI_INT, comm_dist_graph);
@@ -454,13 +454,13 @@
 
 //   // Hook local recv_shift
 //   int *recv_shift;
-   PDM_malloc(recv_shift,n_degree_in ,int);
+//   PDM_malloc(recv_shift,n_degree_in ,int);
 //   for(int i = 0; i < n_degree_in; ++i) {
 //     recv_shift[i] = shared_vals_out_idx[neighbor_in[i]];
 //   }
 
 //   int *val;
-   PDM_malloc(val,n_val ,int);
+//   PDM_malloc(val,n_val ,int);
 //   for(int i = 0; i < n_val; ++i) {
 //     val[i] = i_rank;
 //   }

@@ -1275,7 +1275,7 @@ char *argv[]
 
   /* Create field of speed */
   double **velocity;
-  PDM_malloc(velocity,n_part ,double);
+  PDM_malloc(velocity,n_part , double *);
   for (int i_part = 0; i_part < n_part; i_part++) {
 
     double      *distance;

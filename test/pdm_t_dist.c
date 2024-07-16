@@ -325,9 +325,9 @@ int main(int argc, char *argv[])
   PDM_malloc(surface_vtx_parent_gnum,n_part,PDM_g_num_t *);
 
   const PDM_g_num_t **surface_face_gnum;
- PDM_malloc(surface_face_gnum,n_part,PDM_g_num_t *);
+  PDM_malloc(surface_face_gnum,n_part, const PDM_g_num_t *);
   const PDM_g_num_t **surface_vtx_gnum;
- PDM_malloc(surface_vtx_gnum,n_part,PDM_g_num_t *);
+  PDM_malloc(surface_vtx_gnum,n_part, const PDM_g_num_t *);
 
   PDM_gen_gnum_t* gen_gnum_face = PDM_gnum_create (3, n_part, PDM_FALSE, 1e-3, PDM_MPI_COMM_WORLD, PDM_OWNERSHIP_KEEP);
   PDM_gen_gnum_t* gen_gnum_vtx  = PDM_gnum_create (3, n_part, PDM_FALSE, 1e-3, PDM_MPI_COMM_WORLD, PDM_OWNERSHIP_KEEP);

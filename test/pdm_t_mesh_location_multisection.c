@@ -262,10 +262,9 @@ _gen_mesh
 
     for (int iblock = 0; iblock < n_block; iblock++) {
       (*n_cell)         [iblock] = PDM_array_zeros_int(n_part);
-      (*cell_vtx)       PDM_malloc([iblock],n_part,int         *);
-      (*cell_g_num)     PDM_malloc([iblock],n_part,PDM_g_num_t *);
-      ( *cell_parent_num)[iblock];
-      PDM_malloc(cell_parent_num)[iblock],n_part,int         *);
+      PDM_malloc((*cell_vtx)       [iblock],n_part,int         *);
+      PDM_malloc((*cell_g_num)     [iblock],n_part,PDM_g_num_t *);
+      PDM_malloc((*cell_parent_num)[iblock],n_part,int         *);
     }
 
     for (int ipart = 0; ipart < n_part; ipart++) {
@@ -296,21 +295,18 @@ _gen_mesh
 
       int idx = 0;
       for (int iblock = 0; iblock < n_block; iblock++) {
-        ( *cell_vtx)[iblock][ipart];
-        PDM_malloc(cell_vtx)[iblock][ipart],elt_vtx_n * (*n_cell)[iblock][ipart],int);
+        PDM_malloc((*cell_vtx)[iblock][ipart],elt_vtx_n * (*n_cell)[iblock][ipart],int);
 
         memcpy((*cell_vtx)[iblock][ipart],
                connec + elt_vtx_n * idx,
                sizeof(int) * elt_vtx_n * (*n_cell)[iblock][ipart]);
 
-        ( *cell_g_num)[iblock][ipart];
-        PDM_malloc(cell_g_num)[iblock][ipart],(*n_cell)[iblock][ipart],PDM_g_num_t);
+        PDM_malloc((*cell_g_num)[iblock][ipart],(*n_cell)[iblock][ipart],PDM_g_num_t);
         memcpy((*cell_g_num)[iblock][ipart],
                numabs + idx,
                sizeof(PDM_g_num_t) * (*n_cell)[iblock][ipart]);
 
-        ( *cell_parent_num)[iblock][ipart];
-        PDM_malloc(cell_parent_num)[iblock][ipart],(*n_cell)[iblock][ipart],int);
+        PDM_malloc((*cell_parent_num)[iblock][ipart],(*n_cell)[iblock][ipart],int);
         for (int i = 0; i < (*n_cell)[iblock][ipart]; i++) {
           (*cell_parent_num)[iblock][ipart][i] = idx + i;
         }
@@ -322,14 +318,12 @@ _gen_mesh
       double      *_vtx_coord = PDM_part_mesh_nodal_vtx_coord_get(pmn, ipart);
       PDM_g_num_t *_vtx_g_num = PDM_part_mesh_nodal_vtx_g_num_get(pmn, ipart);
 
-      ( *vtx_coord)[ipart];
-      PDM_malloc(vtx_coord)[ipart],(*n_vtx)[ipart] * 3,double);
+      PDM_malloc((*vtx_coord)[ipart],(*n_vtx)[ipart] * 3,double);
       memcpy((*vtx_coord)[ipart],
              _vtx_coord,
              sizeof(double) * (*n_vtx)[ipart] * 3);
 
-      ( *vtx_g_num)[ipart];
-      PDM_malloc(vtx_g_num)[ipart],(*n_vtx)[ipart],PDM_g_num_t);
+      PDM_malloc((*vtx_g_num)[ipart],(*n_vtx)[ipart],PDM_g_num_t);
       memcpy((*vtx_g_num)[ipart],
              _vtx_g_num,
              sizeof(PDM_g_num_t) * (*n_vtx)[ipart]);
@@ -342,25 +336,21 @@ _gen_mesh
 
     for (int iblock = 0; iblock < n_block; iblock++) {
       (*n_cell)         [iblock] = PDM_array_zeros_int(n_part);
-      (*cell_vtx)       PDM_malloc([iblock],n_part,int         *);
-      (*cell_g_num)     PDM_malloc([iblock],n_part,PDM_g_num_t *);
-      ( *cell_parent_num)[iblock];
-      PDM_malloc(cell_parent_num)[iblock],n_part,int         *);
+      PDM_malloc((*cell_vtx)       [iblock],n_part,int         *);
+      PDM_malloc((*cell_g_num)     [iblock],n_part,PDM_g_num_t *);
+      PDM_malloc((*cell_parent_num)[iblock],n_part,int         *);
     }
 
     for (int ipart = 0; ipart < n_part; ipart++) {
       for (int iblock = 0; iblock < n_block; iblock++) {
-        (*cell_vtx)       PDM_malloc([iblock][ipart],elt_vtx_n * (*n_cell)[iblock][ipart],int);
-        (*cell_g_num)     PDM_malloc([iblock][ipart],elt_vtx_n,PDM_g_num_t);
-        ( *cell_parent_num)[iblock][ipart];
-        PDM_malloc(cell_parent_num)[iblock][ipart],elt_vtx_n,int);
+        PDM_malloc((*cell_vtx)       [iblock][ipart],elt_vtx_n * (*n_cell)[iblock][ipart],int);
+        PDM_malloc((*cell_g_num)     [iblock][ipart],elt_vtx_n,PDM_g_num_t);
+        PDM_malloc((*cell_parent_num)[iblock][ipart],elt_vtx_n,int);
       }
 
       (*n_vtx)    [ipart] = 0;
-      ( *vtx_coord)[ipart];
-      PDM_malloc(vtx_coord)[ipart],(*n_vtx)[ipart] * 3,double);
-      ( *vtx_g_num)[ipart];
-      PDM_malloc(vtx_g_num)[ipart],(*n_vtx)[ipart],PDM_g_num_t);
+      PDM_malloc((*vtx_coord)[ipart],(*n_vtx)[ipart] * 3,double);
+      PDM_malloc((*vtx_g_num)[ipart],(*n_vtx)[ipart],PDM_g_num_t);
     }
 
   }

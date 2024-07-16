@@ -584,7 +584,7 @@ _create_split_mesh
   PDM_timer_free(timer);
 
   const PDM_g_num_t **_numabs;
- PDM_malloc(_numabs,n_part,PDM_g_num_t *);
+  PDM_malloc(_numabs,n_part, const PDM_g_num_t *);
 
   // Check
 

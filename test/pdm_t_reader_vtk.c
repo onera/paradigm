@@ -215,7 +215,7 @@ int main(int argc, char *argv[])
     int *pn_vtx;
     PDM_malloc(pn_vtx,n_part,int        );
     PDM_g_num_t **pvtx_ln_to_gn;
-    PDM_malloc(pvtx_ln_to_gn,n_part,PDM_g_num_t);
+    PDM_malloc(pvtx_ln_to_gn,n_part, PDM_g_num_t *);
     for (int i = 0; i < n_part; i++) {
       pn_vtx[i] = PDM_part_mesh_nodal_n_vtx_get(pmn, i);
       pvtx_ln_to_gn[i] = PDM_part_mesh_nodal_vtx_g_num_get(pmn, i);
@@ -230,7 +230,7 @@ int main(int argc, char *argv[])
                                                         comm);
 
     void ***pvtx_field;
-    PDM_malloc(pvtx_field,n_vtx_field,void *);
+    PDM_malloc(pvtx_field,n_vtx_field, void **);
 
     for (int i = 0; i < n_vtx_field; i++) {
 
@@ -350,7 +350,7 @@ int main(int argc, char *argv[])
     //   for (int j = 0; j < n_part; j++) {
 
     //     double *val;
-     PDM_malloc(val,pn_vtx[j],double);
+    //     PDM_malloc(val,pn_vtx[j],double);
 
     //     for (int i = 0; i < n_vtx_field; i++) {
     //       for (int k = 0; k < vtx_field_stride[i]; k++) {

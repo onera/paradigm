@@ -154,18 +154,18 @@ _read_args
 //   *base_n_vtx  = (int) (n + 1);
 
 //   int *rand_edge;
-   PDM_malloc(rand_edge,(*base_n_edge),int);
+//   PDM_malloc(rand_edge,(*base_n_edge),int);
 //   int *perm_edge;
-   PDM_malloc(perm_edge,(*base_n_edge),int);
+//   PDM_malloc(perm_edge,(*base_n_edge),int);
 //   for (int i = 0; i < *base_n_edge; i++) {
 //     rand_edge[i] = rand();
 //     perm_edge[i] = i;
 //   }
 
 //   int *rand_vtx;
-   PDM_malloc(rand_vtx,(*base_n_vtx),int);
+//   PDM_malloc(rand_vtx,(*base_n_vtx),int);
 //   int *perm_vtx;
-   PDM_malloc(perm_vtx,(*base_n_vtx),int);
+//   PDM_malloc(perm_vtx,(*base_n_vtx),int);
 //   for (int i = 0; i < *base_n_vtx; i++) {
 //     rand_vtx[i] = rand();
 //     perm_vtx[i] = i;
@@ -179,7 +179,7 @@ _read_args
 //  PDM_free(rand_vtx);
 
 // *base_edge_vtx;
-PDM_malloc(base_edge_vtx,2 * (*base_n_edge),int);
+// PDM_malloc(base_edge_vtx,2 * (*base_n_edge),int);
 //   for (int i = 0; i < *base_n_edge; i++) {
 //     int iedge = perm_edge[i];
 //     (*base_edge_vtx)[2*iedge  ] = perm_vtx[i  ]+1;
@@ -188,7 +188,7 @@ PDM_malloc(base_edge_vtx,2 * (*base_n_edge),int);
 
 
 // *base_vtx_coord;
-PDM_malloc(base_vtx_coord,3 * (*base_n_vtx),double);
+// PDM_malloc(base_vtx_coord,3 * (*base_n_vtx),double);
 //   double step = 2*PDM_PI / (double) n;
 //   for (int i = 0; i < *base_n_vtx; i++) {
 //     double x = -PDM_PI + i*step;

@@ -767,9 +767,9 @@ _set_mesh_nodal
   //                                                               ipart);
 
   //       double *volume;
-       PDM_malloc(volume,n_elt,double);
+  //       PDM_malloc(volume,n_elt,double);
   //       double *center;
-       PDM_malloc(center,n_elt * 3,double);
+  //       PDM_malloc(center,n_elt * 3,double);
 
   //       switch (t_elt) {
 

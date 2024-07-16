@@ -526,7 +526,7 @@ int main(int argc, char *argv[])
   // double *blk_cell_center = NULL;
 
   // int* *cell_center_n;
- PDM_malloc(cell_center_n,n_part_domains ,int * );
+  // PDM_malloc(cell_center_n,n_part_domains ,int * );
   // for(int i_part = 0; i_part < n_part_domains; ++i_part) {
   //   PDM_malloc(cell_center_n[i_part], pn_cell[i_part] ,int);
   //   for(int i = 0; i < pn_cell[i_part]; ++i) {
@@ -557,7 +557,7 @@ int main(int argc, char *argv[])
   // PDM_log_trace_array_long(distrib_extract_cell_equi, n_rank+1, "distrib_extract_cell_equi : ");
 
   // PDM_g_num_t *dequi_cell_ln_to_gn;
- PDM_malloc(dequi_cell_ln_to_gn, dn_cell_equi ,PDM_g_num_t);
+  // PDM_malloc(dequi_cell_ln_to_gn, dn_cell_equi ,PDM_g_num_t);
   // PDM_dreorder_from_coords(PDM_PART_GEOM_HILBERT,
   //                          3,
   //                          distrib_extract_cell_equi,

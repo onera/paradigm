@@ -866,7 +866,7 @@ int main(int argc, char *argv[])
   int *history_elt;
   PDM_malloc(history_elt,n_elt,int);
   double *history_proj;
-  PDM_malloc(history_proj,n_elt * 3,int);
+  PDM_malloc(history_proj,n_elt * 3, double);
 
   // Pick a random elt to start from
   int start = rand() % n_elt;

@@ -535,12 +535,10 @@ _cube_mesh2
                                               _edge_vtx,
                                               &_face_vtx);
     }
-    ( *pface_vtx_idx)[i_part];
-    PDM_malloc(pface_vtx_idx)[i_part],(n_face + 1),int);
+    PDM_malloc((*pface_vtx_idx)[i_part],(n_face + 1),int);
     memcpy((*pface_vtx_idx)[i_part], _face_vtx_idx, sizeof(int) * (n_face + 1));
 
-    ( *pface_vtx)[i_part];
-    PDM_malloc(pface_vtx)[i_part],_face_vtx_idx[n_face],int);
+    PDM_malloc((*pface_vtx)[i_part],_face_vtx_idx[n_face],int);
     memcpy((*pface_vtx)[i_part], _face_vtx, sizeof(int) * _face_vtx_idx[n_face]);
 
     if (_face_vtx != face_vtx) {
@@ -726,15 +724,15 @@ _cube_mesh2
   }
 
 
-  PDM_malloc(*pn_cell,n_part,int *);
-  PDM_malloc(*pn_face,n_part,int *);
-  PDM_malloc(*pn_vtx,n_part,int *);
-  PDM_malloc(*pcell_face_idx,n_part,int **);
-  PDM_malloc(*pcell_face,n_part,int **);
-  PDM_malloc(*pcell_ln_to_gn,n_part,PDM_g_num_t **);
-  PDM_malloc(*pface_ln_to_gn,n_part,PDM_g_num_t **);
-  PDM_malloc(*pvtx_ln_to_gn,n_part,PDM_g_num_t **);
-  PDM_malloc(*pvtx_coord,n_part,double **);
+  PDM_malloc(*pn_cell, n_part, int);
+  PDM_malloc(*pn_face, n_part, int);
+  PDM_malloc(*pn_vtx,  n_part, int);
+  PDM_malloc(*pcell_face_idx,n_part,int*);
+  PDM_malloc(*pcell_face,n_part,int*);
+  PDM_malloc(*pcell_ln_to_gn,n_part,PDM_g_num_t*);
+  PDM_malloc(*pface_ln_to_gn,n_part,PDM_g_num_t*);
+  PDM_malloc(*pvtx_ln_to_gn,n_part,PDM_g_num_t*);
+  PDM_malloc(*pvtx_coord,n_part,double*);
 
   for (int i_part = 0; i_part < n_part; i_part++) {
 
@@ -955,49 +953,41 @@ _cube_mesh2
     (*pn_vtx)[i_part]  = n_vtx  + n_ext_vtx;
 
     /* Vertices */
-    ( *pvtx_coord)[i_part];
-    PDM_malloc(pvtx_coord)[i_part],3 * (n_vtx + n_ext_vtx),double);
+    PDM_malloc((*pvtx_coord)[i_part],3 * (n_vtx + n_ext_vtx),double);
     memcpy((*pvtx_coord)[i_part], vtx, sizeof(double) * 3 * n_vtx);
 
-    ( *pvtx_ln_to_gn)[i_part];
-    PDM_malloc(pvtx_ln_to_gn)[i_part],(n_vtx + n_ext_vtx),PDM_g_num_t);
+    PDM_malloc((*pvtx_ln_to_gn)[i_part],(n_vtx + n_ext_vtx),PDM_g_num_t);
     memcpy((*pvtx_ln_to_gn)[i_part], vtx_ln_to_gn, sizeof(PDM_g_num_t) * n_vtx);
 
 
     /* Cells */
-    ( *pcell_face_idx)[i_part];
-    PDM_malloc(pcell_face_idx)[i_part],(n_cell + n_ext_cell + 1),int);
+    PDM_malloc((*pcell_face_idx)[i_part],(n_cell + n_ext_cell + 1),int);
     memcpy((*pcell_face_idx)[i_part], cell_face_idx, sizeof(int) * (n_cell + 1));
 
     int s_cell_face = cell_face_idx[n_cell];
     if (part_extension_depth > 0) {
       s_cell_face += ext_cell_face_idx[n_ext_cell];
     }
-    ( *pcell_face)[i_part];
-    PDM_malloc(pcell_face)[i_part],s_cell_face,int);
+    PDM_malloc((*pcell_face)[i_part],s_cell_face,int);
     memcpy((*pcell_face)[i_part], cell_face, sizeof(int) * cell_face_idx[n_cell]);
 
-    ( *pcell_ln_to_gn)[i_part];
-    PDM_malloc(pcell_ln_to_gn)[i_part],(n_cell + n_ext_cell),PDM_g_num_t);
+    PDM_malloc((*pcell_ln_to_gn)[i_part],(n_cell + n_ext_cell),PDM_g_num_t);
     memcpy((*pcell_ln_to_gn)[i_part], cell_ln_to_gn, sizeof(PDM_g_num_t) * n_cell);
 
 
     /* Faces */
-    // ( *pface_vtx_idx)[i_part];
- PDM_malloc(pface_vtx_idx)[i_part],(n_face + n_ext_face + 1),int);
+    PDM_malloc((*pface_vtx_idx)[i_part],(n_face + n_ext_face + 1),int);
     // memcpy((*pface_vtx_idx)[i_part], face_vtx_idx, sizeof(int) * (n_face + 1));
 
     int s_face_vtx = (*pface_vtx_idx)[i_part][n_face];
     if (part_extension_depth > 0) {
       s_face_vtx += ext_face_vtx_idx[n_ext_face];
     }
-    // ( *pface_vtx)[i_part];
- PDM_malloc(pface_vtx)[i_part],s_face_vtx,int);
+    // PDM_malloc((*pface_vtx)[i_part],s_face_vtx,int);
     // memcpy((*pface_vtx)[i_part], face_vtx, sizeof(int) * face_vtx_idx[n_face]);
 
 
-    ( *pface_ln_to_gn)[i_part];
-    PDM_malloc(pface_ln_to_gn)[i_part],(n_face + n_ext_face),PDM_g_num_t);
+    PDM_malloc((*pface_ln_to_gn)[i_part],(n_face + n_ext_face),PDM_g_num_t);
     memcpy((*pface_ln_to_gn)[i_part], face_ln_to_gn, sizeof(PDM_g_num_t) * n_face);
 
 

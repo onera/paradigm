@@ -505,7 +505,7 @@ char *argv[]
 
   // int size = 2000000000;
   // double *test;
- PDM_malloc(test,size ,double);
+  // PDM_malloc(test,size ,double);
   // for(int i = 0; i < size; ++i) {
   //   test[i] = 1.;
   // }

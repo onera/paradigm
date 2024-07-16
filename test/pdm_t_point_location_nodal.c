@@ -735,8 +735,7 @@ _mesh_from_file
                                                        PDM_MESH_ENTITY_CELL,
                                                        &_elt_ln_to_gn,
                                                        PDM_OWNERSHIP_USER);
-    ( *pelt_ln_to_gn)[ipart];
-    PDM_malloc(pelt_ln_to_gn)[ipart],(*pn_elt)[ipart],PDM_g_num_t);
+    PDM_malloc((*pelt_ln_to_gn)[ipart],(*pn_elt)[ipart],PDM_g_num_t);
     memcpy((*pelt_ln_to_gn)[ipart], _elt_ln_to_gn, sizeof(PDM_g_num_t) * (*pn_elt)[ipart]);
 
     (*pn_vtx)[ipart] = PDM_multipart_part_ln_to_gn_get(mpart,
@@ -752,8 +751,7 @@ _mesh_from_file
                                      ipart,
                                      &_vtx_coord,
                                      PDM_OWNERSHIP_USER);
-    ( *pvtx_coord)[ipart];
-    PDM_malloc(pvtx_coord)[ipart],(*pn_vtx)[ipart] * 3,double);
+    PDM_malloc((*pvtx_coord)[ipart],(*pn_vtx)[ipart] * 3,double);
     memcpy((*pvtx_coord)[ipart], _vtx_coord, sizeof(double) * (*pn_vtx)[ipart] * 3);
   }
 
@@ -802,8 +800,7 @@ _compute_cell_centers
     }
 
     (*pn_pts)   [ipart] = pn_elt;
-    ( *pts_coord)[ipart];
-    PDM_malloc(pts_coord)[ipart],pn_elt * 3,double);
+    PDM_malloc((*pts_coord)[ipart],pn_elt * 3,double);
 
     for (int isection = 0; isection < n_section; isection++) {
 

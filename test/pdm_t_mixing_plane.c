@@ -647,10 +647,9 @@ _mixing_plane
     }
 
     int s_face_band = 4*n_face[ipart];
-    (*face_band_idx PDM_malloc()[ipart],(n_face[ipart] + 1),int);
-    (*face_band     PDM_malloc()[ipart],s_face_band,int   );
-    ( *face_band_area)[ipart];
-    PDM_malloc(face_band_area)[ipart],s_face_band,double);
+    PDM_malloc((*face_band_idx )[ipart],(n_face[ipart] + 1),int);
+    PDM_malloc((*face_band     )[ipart],s_face_band,int   );
+    PDM_malloc((*face_band_area)[ipart],s_face_band,double);
 
     int    *_face_band_idx  = (*face_band_idx )[ipart];
     int    *_face_band      = (*face_band     )[ipart];

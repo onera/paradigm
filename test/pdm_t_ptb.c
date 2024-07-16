@@ -46,7 +46,7 @@ char *argv[]
   double *weights;
   PDM_malloc(weights,n_elt_proc,double);
   int *stride;
-  PDM_malloc(stride,n_elt_proc,stride);
+  PDM_malloc(stride,n_elt_proc, int);
 
   for (int i = 0; i < n_elt_proc; i++) {
     numabs[i] = i_rank * n_elt_proc + i + 1;

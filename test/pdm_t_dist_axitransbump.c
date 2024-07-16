@@ -264,12 +264,12 @@ _gen_distributed_mesh
 
   *n_face_group = 6;
 
-  PDM_malloc(*dface_cell,2*(*dn_face    )    ,PDM_g_num_t *);
-  PDM_malloc(*dface_vtx_idx,  (*dn_face + 1)    ,int         *);
-  PDM_malloc(*dface_vtx,4*(*dn_face    )    ,PDM_g_num_t *);
-  PDM_malloc(*dvtx_coord,3*(*dn_vtx     )    ,double      *);
-  PDM_malloc(*dface_group_idx,(*n_face_group + 1) ,int         *);
-  PDM_malloc(*dface_group,dn_face_lim         ,PDM_g_num_t *);
+  PDM_malloc(*dface_cell,2*(*dn_face    )    ,PDM_g_num_t);
+  PDM_malloc(*dface_vtx_idx,  (*dn_face + 1)    ,int        );
+  PDM_malloc(*dface_vtx,4*(*dn_face    )    ,PDM_g_num_t);
+  PDM_malloc(*dvtx_coord,3*(*dn_vtx     )    ,double     );
+  PDM_malloc(*dface_group_idx,(*n_face_group + 1) ,int        );
+  PDM_malloc(*dface_group,dn_face_lim         ,PDM_g_num_t);
 
   PDM_g_num_t  *_dface_cell      = *dface_cell;
   int          *_dface_vtx_idx   = *dface_vtx_idx;
@@ -1057,9 +1057,9 @@ int main(int argc, char *argv[])
   PDM_malloc(surface_vtx_parent_gnum,n_part,PDM_g_num_t *);
 
   const PDM_g_num_t **surface_face_gnum;
- PDM_malloc(surface_face_gnum,n_part,PDM_g_num_t *);
+  PDM_malloc(surface_face_gnum,n_part, const PDM_g_num_t *);
   const PDM_g_num_t **surface_vtx_gnum;
- PDM_malloc(surface_vtx_gnum,n_part,PDM_g_num_t *);
+  PDM_malloc(surface_vtx_gnum,n_part, const PDM_g_num_t *);
 
   PDM_gen_gnum_t *id_gnum_face = PDM_gnum_create (3, n_part, PDM_FALSE, 1e-3, PDM_MPI_COMM_WORLD, PDM_OWNERSHIP_KEEP);
   PDM_gen_gnum_t *id_gnum_vtx  = PDM_gnum_create (3, n_part, PDM_FALSE, 1e-3, PDM_MPI_COMM_WORLD, PDM_OWNERSHIP_KEEP);

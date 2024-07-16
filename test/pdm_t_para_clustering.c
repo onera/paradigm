@@ -616,9 +616,9 @@ int main(int argc, char *argv[])
   PDM_g_num_t **gnum_layer_vtx;
   PDM_malloc(gnum_layer_vtx,n_layer   ,PDM_g_num_t *);
   PDM_g_num_t **distri_layer_vtx;
-  PDM_malloc(distri_layer_vtx,n_layer   ,int         *);
+  PDM_malloc(distri_layer_vtx,n_layer, PDM_g_num_t *);
   PDM_g_num_t **distri_layer_vtx_transposed;
-  PDM_malloc(distri_layer_vtx_transposed,n_rank    ,int         *);
+  PDM_malloc(distri_layer_vtx_transposed,n_rank, PDM_g_num_t *);
   double **layer_vtx;
   PDM_malloc(layer_vtx,n_layer   ,double      *);
   double **data_layer_vtx;
@@ -964,7 +964,7 @@ int main(int argc, char *argv[])
     int_to_bnd_vtx_idx[i_part] = PDM_array_new_idx_from_sizes_int(n_int_to_bnd_vtx[i_part], n_int_vtx[i_part]);
 
     int_to_bnd_vtx        PDM_malloc([i_part],int_to_bnd_vtx_idx[i_part][n_int_vtx[i_part]],PDM_g_num_t);
-    PDM_malloc(int_to_bnd_vtx_triplet[i_part],3 * int_to_bnd_vtx_idx[i_part][n_int_vtx[i_part]],PDM_g_num_t);
+    PDM_malloc(int_to_bnd_vtx_triplet[i_part],3 * int_to_bnd_vtx_idx[i_part][n_int_vtx[i_part]], int);
 
     for (int i_vtx = 0; i_vtx < n_int_vtx[i_part]; i_vtx++) {
 

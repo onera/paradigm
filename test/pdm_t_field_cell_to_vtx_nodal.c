@@ -557,7 +557,7 @@ int main
    *  Prepare pointer by domain and by part
    */
   int *pn_n_part;
-  PDM_malloc(pn_n_part, n_domain ,int          *);
+  PDM_malloc(pn_n_part, n_domain , int);
   int **pn_cell;
   PDM_malloc(pn_cell, n_domain ,int          *);
   int **pn_face;
@@ -862,9 +862,9 @@ int main
   //       int n_vtx = pn_vtx[i_domain][i_part];
 
   //       int *elmt_vtx;
-       PDM_malloc(elmt_vtx,pn_vtx[i_domain][i_part] ,int);
+  //       PDM_malloc(elmt_vtx,pn_vtx[i_domain][i_part] ,int);
   //       double *field_transpose;
-       PDM_malloc(field_transpose,3* pn_vtx[i_domain][i_part] ,double);
+  //       PDM_malloc(field_transpose,3* pn_vtx[i_domain][i_part] ,double);
   //       for(int i_vtx = 0; i_vtx < pn_vtx[i_domain][i_part]; ++i_vtx) {
   //         elmt_vtx[i_vtx] = i_vtx+1;
   //         field_transpose[        i_vtx] = result_field[i_domain][i_part][3*i_vtx];

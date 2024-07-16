@@ -338,7 +338,7 @@ int main(int argc, char *argv[])
 
   // Create group
   int *bdr_group;
-  PDM_malloc(bdr_group,10 * n_vtx ,double); // il y a plus élégant...
+  PDM_malloc(bdr_group,10 * n_vtx , int); // il y a plus élégant...
   int size = 0;
 
   for (int i = 0; i < n_vtx; i++) {
