@@ -152,7 +152,7 @@ Wait_job()
     
       if [ $flag_sanitize_failed -gt 0 ]
       then
-        printf  "${PURPLE}[%3.3d/%3.3d] - %s: ${ORANGE}Not taken into account{NC}\n" ${j1} ${nTest} ${TestNamel1[0]}
+        printf  "${PURPLE}[%3.3d/%3.3d] - %s: ${ORANGE}Not taken into account${NC}\n" ${j1} ${nTest} ${TestNamel1[0]}
         notAccountTest=(${notAccountTest[@]} "$i1")
         ((inotAccount=inotAccount+1))      
       else  
@@ -190,10 +190,11 @@ Wait_job()
       else
         printf  "${PURPLE}[%3.3d/%3.3d] - %s: ${GREEN}Passed${NC} - %s s\n" ${j1} ${nTest} ${TestNamel1[0]} ${elapsed} 
       fi
-
-      cd - 1>/dev/null 2>/dev/null
-  
+ 
     fi
+
+    cd - 1>/dev/null 2>/dev/null
+
     ((i1=i1+1))
     ((j1=j1+1))
   
@@ -529,17 +530,17 @@ do
   TestName=$(basename ${TestPath})
   TestNamel=($(echo ${TestName} | tr ":" " "))
   TestDir=$(dirname ${TestPath})
-  printf "          - ${RED}%s\n${NC}" ${TestNamel[0]}  
+  printf "          - ${ORANGE}%s\n${NC}" ${TestNamel[0]}  
 done
 
-printf  "\n      ${PURPLE}%3.3d tests not taken into account of %3.3d : \n${NC}" ${inotAccount} ${nTest} 
+printf  "\n      ${PURPLE}%3.3d tests not taken into account out of %3.3d : \n${NC}" ${inotAccount} ${nTest} 
 for i in "${notAccountTest[@]}"
 do
   TestPath=$(echo ${listComputedTest[$i]} | awk '{print $1}')
   TestName=$(basename ${TestPath})
   TestNamel=($(echo ${TestName} | tr ":" " "))
   TestDir=$(dirname ${TestPath})
-  printf "          - ${RED}%s\n${NC}" ${TestNamel[0]}  
+  printf "          - ${ORANGE}%s\n${NC}" ${TestNamel[0]}  
 done
 
 end=$(($(date +%s%N)/1000000))
