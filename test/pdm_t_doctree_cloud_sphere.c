@@ -1602,13 +1602,13 @@ _adaptative_tree4
   int *pn_object;
   PDM_malloc(pn_object,n_part ,int          );
   int **pobject_weight;
-  PDM_malloc(*pobject_weight,n_part ,int         *);
+  PDM_malloc(pobject_weight,n_part ,int         *);
   double **pobject_coords;
-  PDM_malloc(*pobject_coords,n_part ,double      *);
+  PDM_malloc(pobject_coords,n_part ,double      *);
   double **pobject_extents;
-  PDM_malloc(*pobject_extents,n_part ,double      *);
+  PDM_malloc(pobject_extents,n_part ,double      *);
   PDM_g_num_t **pobject_gnum;
-  PDM_malloc(*pobject_gnum,n_part ,PDM_g_num_t *);
+  PDM_malloc(pobject_gnum,n_part ,PDM_g_num_t *);
 
   pn_object[0] = n_pts;
   pn_object[1] = n_box;
@@ -1990,9 +1990,9 @@ _adaptative_tree4
   int idx_read_pts = 0;
   int idx_read_box = 0;
   // int **box_pts;
- PDM_malloc(*box_pts,dn_leaf ,int *);
+  // PDM_malloc(box_pts,dn_leaf ,int *);
   // int **box_pts_idx;
- PDM_malloc(*box_pts_idx,dn_leaf ,int *);
+  // PDM_malloc(box_pts_idx,dn_leaf ,int *);
 
   int n_box_tot = 0;
   for(int i_leaf = 0; i_leaf < dn_leaf; ++i_leaf) {
@@ -2914,18 +2914,18 @@ char *argv[]
 //     //
 //     int *target_rank = PDM_part_to_block_destination_get(ptb_equi_pts_box);
 //     int **boxes_ids;
-     PDM_malloc(*boxes_ids,n_coarse_box_box ,int *);
+//     PDM_malloc(boxes_ids,n_coarse_box_box ,int *);
 //     int *n_boxes_send;
-     PDM_malloc(n_boxes_send,n_coarse_box_box ,int);
+//     PDM_malloc(n_boxes_send,n_coarse_box_box ,int);
 
 //     int *send_box_n;
-     PDM_malloc(send_box_n, n_rank    ,int);
+//     PDM_malloc(send_box_n, n_rank    ,int);
 //     int *recv_box_n;
-     PDM_malloc(recv_box_n, n_rank    ,int);
+//     PDM_malloc(recv_box_n, n_rank    ,int);
 //     int *send_box_idx;
-     PDM_malloc(send_box_idx,(n_rank+1) ,int);
+//     PDM_malloc(send_box_idx,(n_rank+1) ,int);
 //     int *recv_box_idx;
-     PDM_malloc(recv_box_idx,(n_rank+1) ,int);
+//     PDM_malloc(recv_box_idx,(n_rank+1) ,int);
 //     send_box_idx[0] = 0;
 //     recv_box_idx[0] = 0;
 //     for(int i = 0; i < n_rank; ++i) {

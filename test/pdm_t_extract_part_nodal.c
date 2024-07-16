@@ -234,17 +234,17 @@ int main(int argc, char *argv[])
   int i_domain = 0;
 
   double **cell_center;
-  PDM_malloc(*cell_center, n_part_domains ,double      *);
+  PDM_malloc(cell_center, n_part_domains ,double      *);
   int **selected_l_num;
-  PDM_malloc(*selected_l_num, n_part_domains ,int         *);
+  PDM_malloc(selected_l_num, n_part_domains ,int         *);
   PDM_g_num_t **pcell_ln_to_gn;
-  PDM_malloc(*pcell_ln_to_gn, n_part_domains ,PDM_g_num_t *);
+  PDM_malloc(pcell_ln_to_gn, n_part_domains ,PDM_g_num_t *);
   PDM_g_num_t **pface_ln_to_gn;
-  PDM_malloc(*pface_ln_to_gn, n_part_domains ,PDM_g_num_t *);
+  PDM_malloc(pface_ln_to_gn, n_part_domains ,PDM_g_num_t *);
   PDM_g_num_t **pedge_ln_to_gn;
-  PDM_malloc(*pedge_ln_to_gn, n_part_domains ,PDM_g_num_t *);
+  PDM_malloc(pedge_ln_to_gn, n_part_domains ,PDM_g_num_t *);
   PDM_g_num_t **pvtx_ln_to_gn;
-  PDM_malloc(*pvtx_ln_to_gn, n_part_domains ,PDM_g_num_t *);
+  PDM_malloc(pvtx_ln_to_gn, n_part_domains ,PDM_g_num_t *);
   int *pn_cell;
   PDM_malloc(pn_cell, n_part_domains ,int          );
   int *pn_face;
@@ -256,22 +256,22 @@ int main(int argc, char *argv[])
   int *pn_select_cell;
   PDM_malloc(pn_select_cell, n_part_domains ,int          );
   // double **weight;
- PDM_malloc(*weight, n_part_domains ,double      *);
+  // PDM_malloc(weight, n_part_domains ,double      *);
   int **pcell_face;
-  PDM_malloc(*pcell_face, n_part_domains ,int         *);
+  PDM_malloc(pcell_face, n_part_domains ,int         *);
   int **pcell_face_idx;
-  PDM_malloc(*pcell_face_idx, n_part_domains ,int         *);
+  PDM_malloc(pcell_face_idx, n_part_domains ,int         *);
   int **pface_edge;
-  PDM_malloc(*pface_edge, n_part_domains ,int         *);
+  PDM_malloc(pface_edge, n_part_domains ,int         *);
   int **pface_edge_idx;
-  PDM_malloc(*pface_edge_idx, n_part_domains ,int         *);
+  PDM_malloc(pface_edge_idx, n_part_domains ,int         *);
   int **pedge_vtx;
-  PDM_malloc(*pedge_vtx, n_part_domains ,int         *);
+  PDM_malloc(pedge_vtx, n_part_domains ,int         *);
   double **pvtx_coord;
-  PDM_malloc(*pvtx_coord, n_part_domains ,double      *);
+  PDM_malloc(pvtx_coord, n_part_domains ,double      *);
 
   PDM_g_num_t **target_g_num;
-  PDM_malloc(*target_g_num, n_part_domains ,PDM_g_num_t *);
+  PDM_malloc(target_g_num, n_part_domains ,PDM_g_num_t *);
   int *pn_target_cell;
   PDM_malloc(pn_target_cell, n_part_domains ,int          );
 
@@ -558,11 +558,11 @@ int main(int argc, char *argv[])
   int *pn_extract_vtx;
   PDM_malloc(pn_extract_vtx,n_part_out ,int          );
   double **pextract_vtx;
-  PDM_malloc(*pextract_vtx,n_part_out ,double      *);
+  PDM_malloc(pextract_vtx,n_part_out ,double      *);
   PDM_g_num_t **pextract_cell_ln_to_gn;
-  PDM_malloc(*pextract_cell_ln_to_gn,n_part_out ,PDM_g_num_t *);
+  PDM_malloc(pextract_cell_ln_to_gn,n_part_out ,PDM_g_num_t *);
   PDM_g_num_t **pextract_vtx_ln_to_gn;
-  PDM_malloc(*pextract_vtx_ln_to_gn,n_part_out ,PDM_g_num_t *);
+  PDM_malloc(pextract_vtx_ln_to_gn,n_part_out ,PDM_g_num_t *);
 
 
   for(int i_part = 0; i_part < n_part_out; ++i_part) {

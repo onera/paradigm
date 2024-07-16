@@ -291,15 +291,15 @@ PDM_part_assemble_partitions
   }
 
   if (n_part_block==0) { // in this case, the ln_to_gn is empty, but the size (i.e. 0) still needs to be there
-   PDM_free(*pn_entity);
+    PDM_free(*pn_entity);
     *pn_entity = PDM_array_zeros_int(dn_part);
-   PDM_free(*pentity_ln_to_gn);
+    PDM_free(*pentity_ln_to_gn);
     PDM_malloc(*pentity_ln_to_gn,dn_part,PDM_g_num_t *);
     for(int i_part = 0; i_part < dn_part; ++i_part) {
       (*pentity_ln_to_gn)[i_part] = NULL;
     }
     if(pentity_init_location != NULL) {
-     PDM_free(*pentity_init_location);
+      PDM_free(*pentity_init_location);
       PDM_malloc(*pentity_init_location,dn_part,int *);
       for(int i_part = 0; i_part < dn_part; ++i_part) {
         (*pentity_init_location)[i_part] = NULL;
@@ -309,11 +309,11 @@ PDM_part_assemble_partitions
 
   PDM_part_to_block_free (ptb_partition);
 
- PDM_free(pentity_ln_to_gn_tmp);
+  PDM_free(pentity_ln_to_gn_tmp);
   if(have_init_location == 1) {
-   PDM_free(pentity_init_location_tmp);
+    PDM_free(pentity_init_location_tmp);
   }
- PDM_free(dpart_ln_to_gn);
+  PDM_free(dpart_ln_to_gn);
 
   return n_part_block;
 

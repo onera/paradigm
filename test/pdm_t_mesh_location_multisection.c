@@ -643,7 +643,7 @@ int main(int argc, char *argv[])
                                      PDM_OWNERSHIP_KEEP);
 
   double **send_field;
-  PDM_malloc(*send_field,n_part,double *);
+  PDM_malloc(send_field,n_part,double *);
   for (int i_part = 0; i_part < n_part; i_part++) {
 
     double *vtx_coord = PDM_part_mesh_nodal_vtx_coord_get(src_pmn, i_part);

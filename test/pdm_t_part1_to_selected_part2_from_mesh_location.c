@@ -401,14 +401,14 @@ int main(int argc, char *argv[])
                                       0,
                                       n_part);
   double **cell_volume1;
-  PDM_malloc(*cell_volume1,n_part,double *);
+  PDM_malloc(cell_volume1,n_part,double *);
   double **cell_center1;
-  PDM_malloc(*cell_center1,n_part,double *);
+  PDM_malloc(cell_center1,n_part,double *);
 
   double **cell_volume2;
-  PDM_malloc(*cell_volume2,n_part,double *);
+  PDM_malloc(cell_volume2,n_part,double *);
   double **cell_center2;
-  PDM_malloc(*cell_center2,n_part,double *);
+  PDM_malloc(cell_center2,n_part,double *);
 
   for (int ipart = 0; ipart < n_part; ipart++) {
     int n_cell;
@@ -797,31 +797,31 @@ int main(int argc, char *argv[])
   PDM_mesh_location_dump_times (id_loc2);
 
   int **elt_pts_inside_idx;
-  PDM_malloc(*elt_pts_inside_idx,n_part,int         *);
+  PDM_malloc(elt_pts_inside_idx,n_part,int         *);
   PDM_g_num_t **location;
-  PDM_malloc(*location,n_part,PDM_g_num_t *);
+  PDM_malloc(location,n_part,PDM_g_num_t *);
   int **location_idx;
-  PDM_malloc(*location_idx,n_part,int         *);
+  PDM_malloc(location_idx,n_part,int         *);
   PDM_g_num_t **points_gnum;
-  PDM_malloc(*points_gnum,n_part,PDM_g_num_t *);
+  PDM_malloc(points_gnum,n_part,PDM_g_num_t *);
   double **points_coords;
-  PDM_malloc(*points_coords,n_part,double      *);
+  PDM_malloc(points_coords,n_part,double      *);
   double **points_uvw;
-  PDM_malloc(*points_uvw,n_part,double      *);
+  PDM_malloc(points_uvw,n_part,double      *);
   int **points_weights_idx;
-  PDM_malloc(*points_weights_idx,n_part,int         *);
+  PDM_malloc(points_weights_idx,n_part,int         *);
   double **points_weights;
-  PDM_malloc(*points_weights,n_part,double      *);
+  PDM_malloc(points_weights,n_part,double      *);
   double **points_dist2;
-  PDM_malloc(*points_dist2,n_part,double      *);
+  PDM_malloc(points_dist2,n_part,double      *);
   double **points_projected_coords;
-  PDM_malloc(*points_projected_coords,n_part,double      *);
+  PDM_malloc(points_projected_coords,n_part,double      *);
   PDM_g_num_t **gnum_elt1;
-  PDM_malloc(*gnum_elt1,n_part,PDM_g_num_t *);
+  PDM_malloc(gnum_elt1,n_part,PDM_g_num_t *);
   int *n_elt1;
   PDM_malloc(n_elt1,n_part,int          );
   PDM_g_num_t **gnum_elt2;
-  PDM_malloc(*gnum_elt2,n_part,PDM_g_num_t *);
+  PDM_malloc(gnum_elt2,n_part,PDM_g_num_t *);
   int *n_elt2;
   PDM_malloc(n_elt2,n_part,int          );
 
@@ -1104,7 +1104,7 @@ int main(int argc, char *argv[])
   int send_request = -1;
 
   PDM_g_num_t **gnum1_gnum2_data;
-  PDM_malloc(*gnum1_gnum2_data,n_part,PDM_g_num_t *);
+  PDM_malloc(gnum1_gnum2_data,n_part,PDM_g_num_t *);
   for (int i = 0; i < n_part; i++) {
     PDM_malloc(gnum1_gnum2_data[i],elt_pts_inside_idx[i][n_elt1[i]],PDM_g_num_t);
     for (int j = 0; j < n_elt1[i]; j++) {
@@ -1125,7 +1125,7 @@ int main(int argc, char *argv[])
 
   int recv_request = -1;
   PDM_g_num_t **gnum_elt1_recv;
-  PDM_malloc(*gnum_elt1_recv,n_part,PDM_g_num_t*);
+  PDM_malloc(gnum_elt1_recv,n_part,PDM_g_num_t*);
   for (int i = 0; i < n_part; i++) {
     PDM_malloc(gnum_elt1_recv[i],gnum1_come_from_idx[i][n_ref_lnum2[i]],PDM_g_num_t);
   }
@@ -1150,7 +1150,7 @@ int main(int argc, char *argv[])
 
 
   PDM_g_num_t **ptp2_s_data;
-  PDM_malloc(*ptp2_s_data,n_part,PDM_g_num_t *);
+  PDM_malloc(ptp2_s_data,n_part,PDM_g_num_t *);
   for (int i = 0; i < n_part; i++) {
     PDM_malloc(ptp2_s_data[i],location_idx[i][n_elt2[i]],PDM_g_num_t);
     for (int j = 0; j < n_elt2[i]; j++) {
@@ -1170,7 +1170,7 @@ int main(int argc, char *argv[])
 
   recv_request = -1;
   PDM_g_num_t **gnum_elt2_recv;
-  PDM_malloc(*gnum_elt2_recv,n_part,PDM_g_num_t*);
+  PDM_malloc(gnum_elt2_recv,n_part,PDM_g_num_t*);
   for (int i = 0; i < n_part; i++) {
     PDM_malloc(gnum_elt2_recv[i],ptp2_gnum1_come_from_idx[i][ptp2_n_ref_lnum2[i]],PDM_g_num_t);
   }

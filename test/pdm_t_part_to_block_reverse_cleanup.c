@@ -141,9 +141,9 @@ int main(int argc, char *argv[])
   int *pn_elmt;
   PDM_malloc(pn_elmt,n_part ,int           );
   PDM_g_num_t **pln_to_to_gn;
-  PDM_malloc(*pln_to_to_gn,n_part ,PDM_g_num_t * );
+  PDM_malloc(pln_to_to_gn,n_part ,PDM_g_num_t * );
   int **pfield;
-  PDM_malloc(*pfield,n_part ,int         * );
+  PDM_malloc(pfield,n_part ,int         * );
 
   for(int i_part = 0; i_part < n_part; ++i_part) {
 

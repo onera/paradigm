@@ -191,17 +191,17 @@ int main(int argc, char *argv[])
   int *n_group_elt;
   PDM_malloc(n_group_elt,n_block ,int);
   int **dgroup_elmt_idx;
-  PDM_malloc(*dgroup_elmt_idx,n_block ,int*);
+  PDM_malloc(dgroup_elmt_idx,n_block ,int*);
   PDM_g_num_t **dgroup_elmt;
-  PDM_malloc(*dgroup_elmt,n_block ,PDM_g_num_t*);
+  PDM_malloc(dgroup_elmt,n_block ,PDM_g_num_t*);
   int *dn_vtx;
   PDM_malloc(dn_vtx,n_block ,int);
   int *dn_face;
   PDM_malloc(dn_face,n_block ,int);
   int **dface_vtx_idx;
-  PDM_malloc(*dface_vtx_idx,n_block ,int*);
+  PDM_malloc(dface_vtx_idx,n_block ,int*);
   PDM_g_num_t **dface_vtx;
-  PDM_malloc(*dface_vtx,n_block ,PDM_g_num_t*);
+  PDM_malloc(dface_vtx,n_block ,PDM_g_num_t*);
 
 
   PDM_dmesh_nodal_t* dmn[] = {dmn1, dmn2};
@@ -411,7 +411,7 @@ int main(int argc, char *argv[])
   int         *dmerge_elmt_vtx_stride = NULL;
   PDM_g_num_t *dmerge_elmt_vtx = NULL;
   int **stride_cst_ptr;
-  PDM_malloc(*stride_cst_ptr,n_block,int*);
+  PDM_malloc(stride_cst_ptr,n_block,int*);
   for (int ib = 0; ib < n_block; ib++) {
     stride_cst_ptr[ib] = &strid_cst;
   }

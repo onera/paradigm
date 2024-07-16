@@ -3372,7 +3372,7 @@ _extract_part
   */
   /*if (extrp->n_group[PDM_BOUND_TYPE_FACE] > 0){
     int **part2_face_to_part1_face_idx;
-    PDM_malloc(*part2_face_to_part1_face_idx, extrp->n_part_out ,int * );
+    PDM_malloc(part2_face_to_part1_face_idx, extrp->n_part_out ,int * );
 
     for(int i_part = 0; i_part < extrp->n_part_out; ++i_part) {
       int n_face = extrp->pextract_n_entity[PDM_MESH_ENTITY_FACE][i_part];

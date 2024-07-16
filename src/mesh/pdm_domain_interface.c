@@ -4150,7 +4150,7 @@ PDM_ddomain_interface_to_pdomain_interface
   int **send_data_itrf_sgn;
   PDM_malloc(send_data_itrf_sgn,n_interface ,int         *);
   // int **send_data_dom;
- // PDM_malloc(*send_data_dom,n_interface ,int         *);
+  // PDM_malloc(send_data_dom,n_interface ,int         *);
   int **send_data_intno;
   PDM_malloc(send_data_intno,n_interface ,int         *);
   double **weight;
@@ -4476,7 +4476,7 @@ PDM_ddomain_interface_to_pdomain_interface
   int **pinterface_itrf_sgn;
   PDM_malloc(pinterface_itrf_sgn, n_part_tot ,int          *);
   // int **pinterface_dom;
- // PDM_malloc(*pinterface_dom, n_part_tot ,int          *);
+  // PDM_malloc(pinterface_dom, n_part_tot ,int          *);
   int **pinterface_sens;
   PDM_malloc(pinterface_sens, n_part_tot ,int          *);
   PDM_g_num_t **pinterface_gnum;

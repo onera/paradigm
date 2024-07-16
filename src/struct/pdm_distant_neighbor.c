@@ -544,7 +544,7 @@ PDM_distant_neighbor_exch
     /*
      * Fill the recv stride for all parts / entity
      */
-    PDM_malloc(*recv_entity_stride,dn->n_part ,int *);
+    PDM_malloc((*(int ***) recv_entity_stride),dn->n_part ,int *);
     int **_recv_entity_stride = (*(int ***) recv_entity_stride);
 
     for(int i_part = 0; i_part < dn->n_part; i_part++){
@@ -901,7 +901,7 @@ PDM_distant_neighbor_exch_int
     /*
      * Fill the recv stride for all parts / entity
      */
-    PDM_malloc(*recv_entity_stride, dn->n_part ,int *);
+    PDM_malloc((*(int ***) recv_entity_stride), dn->n_part ,int *);
     int **_recv_entity_stride = (*(int ***) recv_entity_stride);
 
     for(int i_part = 0; i_part < dn->n_part; i_part++){
@@ -1088,7 +1088,7 @@ PDM_distant_neighbor_exch_int
    * Une seule valeur est echangé mais plusieurs occurence peuvent exister donc on passe du buffer MPI
    * au donné sans le sort/unique
    */
-  PDM_malloc(*recv_entity_data, dn->n_part ,int *);
+  PDM_malloc((*(int ***) recv_entity_data), dn->n_part ,int *);
   int **_recv_entity_data = (*(int ***) recv_entity_data);
 
   if (t_stride == PDM_STRIDE_VAR_INTERLACED) {

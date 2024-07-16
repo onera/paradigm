@@ -568,9 +568,9 @@ const int                           n_part,
 //    *  Brute force (could be accelerated using octree)
 //    */
 //   int *n_select_pts;
-   // PDM_malloc(n_select_pts,pcloud->n_part,int  );
+//   PDM_malloc(n_select_pts,pcloud->n_part,int  );
 //   int **select_pts_l_num;
-   // PDM_malloc(*select_pts_l_num,pcloud->n_part,int *);
+//   PDM_malloc(select_pts_l_num,pcloud->n_part,int *);
 
 //   for (int ipart = 0; ipart < pcloud->n_part; ipart++) {
 
@@ -705,9 +705,9 @@ const int                           n_part,
 //    *  Brute force (could be accelerated using bbtree)
 //    */
 //   int *n_select_elt;
-   // PDM_malloc(n_select_elt,n_part_mesh,int  );
+//   PDM_malloc(n_select_elt,n_part_mesh,int  );
 //   int **select_elt_l_num;
-   // PDM_malloc(*select_elt_l_num,n_part_mesh,int *);
+//   PDM_malloc(select_elt_l_num,n_part_mesh,int *);
 
 //   for (int ipart = 0; ipart < n_part_mesh; ipart++) {
 
@@ -4160,9 +4160,9 @@ PDM_mesh_location_compute
 
     if (dbg_enabled) {
       double **is_located;
-      PDM_malloc(*is_located,pcloud->n_part,double);
+      PDM_malloc(is_located,pcloud->n_part, double *);
       double **location;
-      PDM_malloc(*location,pcloud->n_part,double);
+      PDM_malloc(location,pcloud->n_part, double *);
       for (int ipart = 0; ipart < pcloud->n_part; ipart++) {
         PDM_malloc(is_located[ipart],pcloud->n_points[ipart],double);
         location  PDM_malloc([ipart],pcloud->n_points[ipart],double);

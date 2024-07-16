@@ -346,16 +346,16 @@ int main(int argc, char *argv[])
   PDM_writer_step_beg(id_cs, 0.);
 
   int **face_vtxNb;
-  PDM_malloc(*face_vtxNb,n_part,int *);
+  PDM_malloc(face_vtxNb,n_part,int *);
   int **cell_faceNb;
-  PDM_malloc(*cell_faceNb,n_part,int *);
+  PDM_malloc(cell_faceNb,n_part,int *);
 
   PDM_real_t **val_num_part;
-  PDM_malloc(*val_num_part,n_part,PDM_real_t *);
+  PDM_malloc(val_num_part,n_part,PDM_real_t *);
   PDM_real_t **val_coo_x;
-  PDM_malloc(*val_coo_x,n_part,PDM_real_t *);
+  PDM_malloc(val_coo_x,n_part,PDM_real_t *);
   PDM_real_t **val_coo_xyz;
-  PDM_malloc(*val_coo_xyz,n_part,PDM_real_t *);
+  PDM_malloc(val_coo_xyz,n_part,PDM_real_t *);
   int *nsom_part;
   PDM_malloc(nsom_part,n_part,int);
 

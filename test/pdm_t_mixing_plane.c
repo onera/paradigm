@@ -1018,19 +1018,19 @@ char *argv[]
   int *n_vtx;
   PDM_malloc(n_vtx,n_part,int          );
   double **vtx_coord;
-  PDM_malloc(*vtx_coord,n_part,double      *);
+  PDM_malloc(vtx_coord,n_part,double      *);
   double **vtx_field;
-  PDM_malloc(*vtx_field,n_part,double      *);
+  PDM_malloc(vtx_field,n_part,double      *);
   int *n_face;
   PDM_malloc(n_face,n_part,int          );
   int **face_vtx_idx;
-  PDM_malloc(*face_vtx_idx,n_part,int         *);
+  PDM_malloc(face_vtx_idx,n_part,int         *);
   int **face_vtx;
-  PDM_malloc(*face_vtx,n_part,int         *);
+  PDM_malloc(face_vtx,n_part,int         *);
   PDM_g_num_t **vtx_ln_to_gn;
-  PDM_malloc(*vtx_ln_to_gn,n_part,PDM_g_num_t *);
+  PDM_malloc(vtx_ln_to_gn,n_part,PDM_g_num_t *);
   PDM_g_num_t **face_ln_to_gn;
-  PDM_malloc(*face_ln_to_gn,n_part,PDM_g_num_t *);
+  PDM_malloc(face_ln_to_gn,n_part,PDM_g_num_t *);
   for (int ipart = 0; ipart < n_part; ipart++) {
     int *face_edge_idx;
     int *face_edge;

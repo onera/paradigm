@@ -1011,7 +1011,7 @@ int main(int argc, char *argv[])
    *  Check location (interpolation of an affine field)
    */
   double **src_field;
-  PDM_malloc(*src_field,n_part,double *);
+  PDM_malloc(src_field,n_part,double *);
   for (int ipart = 0; ipart < n_part; ipart++) {
     int n_cell;
     int n_face;
@@ -1090,7 +1090,7 @@ int main(int argc, char *argv[])
                                      PDM_OWNERSHIP_USER);
 
   double **send_field;
-  PDM_malloc(*send_field,n_part,double *);
+  PDM_malloc(send_field,n_part,double *);
   for (int ipart = 0; ipart < n_part; ipart++) {
     int         *elt_pts_idx        = NULL;
     PDM_g_num_t *elt_pts_gnum       = NULL;

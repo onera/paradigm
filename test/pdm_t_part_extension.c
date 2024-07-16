@@ -254,17 +254,17 @@ _visu
 
 
   PDM_real_t **val_num_part;
-  PDM_malloc(*val_num_part,n_part,PDM_real_t *);
+  PDM_malloc(val_num_part,n_part,PDM_real_t *);
   PDM_real_t **val_num_rank;
-  PDM_malloc(*val_num_rank,n_part,PDM_real_t *);
+  PDM_malloc(val_num_rank,n_part,PDM_real_t *);
   PDM_real_t **val_cell_num;
-  PDM_malloc(*val_cell_num,n_part,PDM_real_t *);
+  PDM_malloc(val_cell_num,n_part,PDM_real_t *);
   PDM_real_t **val_cell_gnum;
-  PDM_malloc(*val_cell_gnum,n_part,PDM_real_t *);
+  PDM_malloc(val_cell_gnum,n_part,PDM_real_t *);
   int **face_vtx_n;
-  PDM_malloc(*face_vtx_n,n_part,int *);
+  PDM_malloc(face_vtx_n,n_part,int *);
   int **cell_face_n;
-  PDM_malloc(*cell_face_n,n_part,int *);
+  PDM_malloc(cell_face_n,n_part,int *);
   PDM_writer_step_beg (id_cs, 0.);
   for (int i_part = 0; i_part < n_part; i_part++) {
 
@@ -588,21 +588,21 @@ int main(int argc, char *argv[])
   int *pn_vtx;
   PDM_malloc(pn_vtx,n_part ,int          );
   int **pcell_face_idx;
-  PDM_malloc(*pcell_face_idx,n_part ,int         *);
+  PDM_malloc(pcell_face_idx,n_part ,int         *);
   int **pcell_face;
-  PDM_malloc(*pcell_face,n_part ,int         *);
+  PDM_malloc(pcell_face,n_part ,int         *);
   int **pface_vtx_idx;
-  PDM_malloc(*pface_vtx_idx,n_part ,int         *);
+  PDM_malloc(pface_vtx_idx,n_part ,int         *);
   int **pface_vtx;
-  PDM_malloc(*pface_vtx,n_part ,int         *);
+  PDM_malloc(pface_vtx,n_part ,int         *);
   PDM_g_num_t **pcell_ln_to_gn;
-  PDM_malloc(*pcell_ln_to_gn,n_part ,PDM_g_num_t *);
+  PDM_malloc(pcell_ln_to_gn,n_part ,PDM_g_num_t *);
   PDM_g_num_t **pface_ln_to_gn;
-  PDM_malloc(*pface_ln_to_gn,n_part ,PDM_g_num_t *);
+  PDM_malloc(pface_ln_to_gn,n_part ,PDM_g_num_t *);
   PDM_g_num_t **pvtx_ln_to_gn;
-  PDM_malloc(*pvtx_ln_to_gn,n_part ,PDM_g_num_t *);
+  PDM_malloc(pvtx_ln_to_gn,n_part ,PDM_g_num_t *);
   double **pvtx;
-  PDM_malloc(*pvtx,n_part ,double      *);
+  PDM_malloc(pvtx,n_part ,double      *);
 
 
   for (int i_part = 0; i_part < n_part; i_part++) {

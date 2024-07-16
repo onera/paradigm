@@ -147,7 +147,7 @@ int main(int argc, char *argv[])
   int *pn_elmts;
   PDM_malloc(pn_elmts, n_part ,int           );
   PDM_g_num_t **pelmts_ln_to_gn;
-  PDM_malloc(*pelmts_ln_to_gn, n_part ,PDM_g_num_t * );
+  PDM_malloc(pelmts_ln_to_gn, n_part ,PDM_g_num_t * );
 
   for(int i_part = 0; i_part < n_part; ++i_part) {
     pn_elmts       [i_part] = dn_elmt / freq;

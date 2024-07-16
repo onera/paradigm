@@ -823,9 +823,9 @@ _export_ini_mesh
     PDM_writer_step_beg (id_cs, 0.);
 
     int **_face_nb;
-    PDM_malloc(*_face_nb,n_part,int *);
+    PDM_malloc(_face_nb,n_part,int *);
     int **_face_idx;
-    PDM_malloc(*_face_idx,n_part,int *);
+    PDM_malloc(_face_idx,n_part,int *);
 
     for (int ipart = 0; ipart < n_part; ipart++) {
 
@@ -874,11 +874,11 @@ _export_ini_mesh
     */
 
     PDM_real_t **val_num_part;
-    PDM_malloc(*val_num_part,n_part,PDM_real_t *);
+    PDM_malloc(val_num_part,n_part,PDM_real_t *);
     PDM_real_t **val_coo_x;
-    PDM_malloc(*val_coo_x,n_part,PDM_real_t *);
+    PDM_malloc(val_coo_x,n_part,PDM_real_t *);
     PDM_real_t **val_coo_xyz;
-    PDM_malloc(*val_coo_xyz,n_part,PDM_real_t *);
+    PDM_malloc(val_coo_xyz,n_part,PDM_real_t *);
 
     for (int ipart = 0; ipart < n_part; ipart++) {
 

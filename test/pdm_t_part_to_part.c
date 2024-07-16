@@ -51,11 +51,11 @@ int main(int argc, char *argv[])
   int *n_elt1;
   PDM_malloc(n_elt1,n_part1,int);
   PDM_g_num_t **gnum_elt1;
-  PDM_malloc(*gnum_elt1,n_part1,PDM_g_num_t *);
+  PDM_malloc(gnum_elt1,n_part1,PDM_g_num_t *);
   int **part1_to_part2_idx;
-  PDM_malloc(*part1_to_part2_idx,n_part1,int *);
+  PDM_malloc(part1_to_part2_idx,n_part1,int *);
   PDM_g_num_t **part1_to_part2;
-  PDM_malloc(*part1_to_part2,n_part1,PDM_g_num_t *);
+  PDM_malloc(part1_to_part2,n_part1,PDM_g_num_t *);
 
   int *n_elt2 = n_elt1;
   PDM_g_num_t **gnum_elt2 = gnum_elt1;
@@ -221,9 +221,9 @@ int main(int argc, char *argv[])
 
 
   int **part1_stride;
-  PDM_malloc(*part1_stride,n_part1,int         *);
+  PDM_malloc(part1_stride,n_part1,int         *);
   PDM_g_num_t **part1_data;
-  PDM_malloc(*part1_data,n_part1,PDM_g_num_t *);
+  PDM_malloc(part1_data,n_part1,PDM_g_num_t *);
 
   for (int i = 0; i < n_part1; i++) {
 
@@ -307,7 +307,7 @@ int main(int argc, char *argv[])
    */
   // log_trace("\n\n---- Exchange an interleaved, constant-stride field ----\n");
   PDM_g_num_t **part1_field;
-  PDM_malloc(*part1_field,n_part1,PDM_g_num_t *);
+  PDM_malloc(part1_field,n_part1,PDM_g_num_t *);
   for (int i = 0; i < n_part1; i++) {
     // int n = part1_to_part2_idx[i][n_elt1[i]];
     // PDM_malloc(part1_field[i],n * 2,PDM_g_num_t);

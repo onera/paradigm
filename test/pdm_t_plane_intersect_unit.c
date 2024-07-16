@@ -4018,7 +4018,7 @@ PDM_printf ("****  PDM_edges_intersect_poly_add  OK  ***************************
   int *vtxAOnEdgeB;
   PDM_malloc(vtxAOnEdgeB,nVtxA,int);
   PDM_edges_intersect_res_t **vtxAOnEdgeBEir;
-  PDM_malloc(*vtxAOnEdgeBEir,nVtxA,PDM_edges_intersect_res_t *);
+  PDM_malloc(vtxAOnEdgeBEir,nVtxA,PDM_edges_intersect_res_t *);
   for (int i = 0; i < nVtxA; i++) {
     vtxAOnEdgeB[i] = -1;
     vtxAOnEdgeBEir[i] = NULL;
@@ -4027,7 +4027,7 @@ PDM_printf ("****  PDM_edges_intersect_poly_add  OK  ***************************
   int *vtxBOnEdgeA;
   PDM_malloc(vtxBOnEdgeA,nVtxB,int);
   PDM_edges_intersect_res_t **vtxBOnEdgeAEir;
-  PDM_malloc(*vtxBOnEdgeAEir,nVtxB,PDM_edges_intersect_res_t *);
+  PDM_malloc(vtxBOnEdgeAEir,nVtxB,PDM_edges_intersect_res_t *);
   for (int i = 0; i < nVtxB; i++) {
     vtxBOnEdgeA[i] = -1;
     vtxBOnEdgeAEir[i] = NULL;

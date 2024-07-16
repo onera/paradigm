@@ -351,7 +351,7 @@ int main(int argc, char *argv[])
 
   // Interpolate second field (node-based)
   double **src_vtx_field2;
-  PDM_malloc(*src_vtx_field2,src_n_part,double *);
+  PDM_malloc(src_vtx_field2,src_n_part,double *);
   for (int i_part = 0; i_part < src_n_part; i_part++) {
     PDM_malloc(src_vtx_field2[i_part],src_n_vtx[i_part],double);
     for (int i_vtx = 0; i_vtx < src_n_vtx[i_part]; i_vtx++) {
@@ -360,7 +360,7 @@ int main(int argc, char *argv[])
   }
 
   double **src_send_field2;
-  PDM_malloc(*src_send_field2,src_n_part,double *);
+  PDM_malloc(src_send_field2,src_n_part,double *);
   for (int i_part = 0; i_part < src_n_part; i_part++) {
     int         *src_to_tgt_idx          = NULL;
     PDM_g_num_t *points_gnum             = NULL;
@@ -492,7 +492,7 @@ int main(int argc, char *argv[])
 
 
   double **src_elt_field_values;
-  PDM_malloc(*src_elt_field_values,src_n_part,double *);
+  PDM_malloc(src_elt_field_values,src_n_part,double *);
   for (int i_part = 0; i_part < src_n_part; i_part++) {
     PDM_malloc(src_elt_field_values[i_part],src_n_face[i_part],double);
     for (int i_elt = 0; i_elt < src_n_face[i_part]; i_elt++) {

@@ -292,9 +292,9 @@ int main
   int n_domain = n_dom_i * n_dom_j * n_dom_k;
 
   // PDM_dcube_nodal_t **dcube;
- PDM_malloc(*dcube,n_domain,PDM_dcube_nodal_t *);
+  // PDM_malloc(dcube,n_domain,PDM_dcube_nodal_t *);
   PDM_dmesh_nodal_t **dmn;
-  PDM_malloc(*dmn,n_domain,PDM_dmesh_nodal_t *);
+  PDM_malloc(dmn,n_domain,PDM_dmesh_nodal_t *);
   PDM_dcube_nodal_t **dcube = NULL;
   PDM_domain_interface_t *dom_intrf = NULL;
 
@@ -343,7 +343,7 @@ int main
   }
 
   PDM_dmesh_t **dm;
-  PDM_malloc(*dm,n_domain ,PDM_dmesh_t *);
+  PDM_malloc(dm,n_domain ,PDM_dmesh_t *);
 
   int *dn_vtx;
   PDM_malloc(dn_vtx, n_domain ,int          );
@@ -352,13 +352,13 @@ int main
   int *dn_edge;
   PDM_malloc(dn_edge, n_domain ,int          );
   int **dface_vtx_idx;
-  PDM_malloc(*dface_vtx_idx, n_domain ,int         *);
+  PDM_malloc(dface_vtx_idx, n_domain ,int         *);
   PDM_g_num_t **dface_vtx;
-  PDM_malloc(*dface_vtx, n_domain ,PDM_g_num_t *);
+  PDM_malloc(dface_vtx, n_domain ,PDM_g_num_t *);
   PDM_g_num_t **dedge_vtx;
-  PDM_malloc(*dedge_vtx, n_domain ,PDM_g_num_t *);
+  PDM_malloc(dedge_vtx, n_domain ,PDM_g_num_t *);
   int **dedge_vtx_idx;
-  PDM_malloc(*dedge_vtx_idx, n_domain ,int *        );
+  PDM_malloc(dedge_vtx_idx, n_domain ,int *        );
  
   for (int i = 0; i < n_domain; i++) {
     PDM_dmesh_nodal_to_dmesh_get_dmesh(dmn_to_dm, i, &dm[i]);

@@ -652,7 +652,7 @@ _separate_groups
   }
 
   const PDM_g_num_t **pedge_ln_to_gn;
- PDM_malloc(*pedge_ln_to_gn,(*n_ridge),PDM_g_num_t *);
+  PDM_malloc(pedge_ln_to_gn,(*n_ridge),PDM_g_num_t *);
   for (int iridge = 0; iridge < *n_ridge; iridge++) {
     pedge_ln_to_gn[iridge] = dridge_edge + dridge_edge_idx[iridge];
   }
@@ -714,7 +714,7 @@ _separate_groups
   }
 
   const PDM_g_num_t **pface_ln_to_gn;
- PDM_malloc(*pface_ln_to_gn,(*n_surface),PDM_g_num_t *);
+  PDM_malloc(pface_ln_to_gn,(*n_surface),PDM_g_num_t *);
   for (int isurface = 0; isurface < *n_surface; isurface++) {
     pface_ln_to_gn[isurface] = dsurface_face + dsurface_face_idx[isurface];
   }

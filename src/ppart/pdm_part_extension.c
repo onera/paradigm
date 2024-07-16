@@ -5070,15 +5070,15 @@ _generate_extended_partition_connectivity
 
 //   /* Prepare */
 //   int **cell_face_n;
-   // PDM_malloc(*cell_face_n, n_part_loc_all_domain ,int         *);
+//   PDM_malloc(cell_face_n, n_part_loc_all_domain ,int         *);
 //   PDM_g_num_t **gcell_face;
-   // PDM_malloc(*gcell_face, n_part_loc_all_domain ,PDM_g_num_t *);
+//   PDM_malloc(gcell_face, n_part_loc_all_domain ,PDM_g_num_t *);
 //   int **lcell_face;
-   // PDM_malloc(*lcell_face, n_part_loc_all_domain ,int         *);
+//   PDM_malloc(lcell_face, n_part_loc_all_domain ,int         *);
 //   PDM_g_num_t **cell_ln_to_gn;
-   // PDM_malloc(*cell_ln_to_gn, n_part_loc_all_domain ,PDM_g_num_t *);
+//   PDM_malloc(cell_ln_to_gn, n_part_loc_all_domain ,PDM_g_num_t *);
 //   // PDM_g_num_t **cell_flags;
- // PDM_malloc(*cell_flags, n_part_loc_all_domain ,PDM_g_num_t *);
+//   // PDM_malloc(cell_flags, n_part_loc_all_domain ,PDM_g_num_t *);
 
 //   int shift_part = 0;
 //   for(int i_domain = 0; i_domain < part_ext->n_domain; ++i_domain) {
@@ -6694,9 +6694,9 @@ PDM_part_extension_compute
 
   // // Debug
   // PDM_g_num_t **gnum_check;
- // PDM_malloc(*gnum_check, n_part_loc_all_domain ,PDM_g_num_t *);
+  // PDM_malloc(gnum_check, n_part_loc_all_domain ,PDM_g_num_t *);
   // PDM_g_num_t **stride;
- // PDM_malloc(*stride, n_part_loc_all_domain ,int *);
+  // PDM_malloc(stride, n_part_loc_all_domain ,int *);
 
   // shift_part = 0;
   // for(int i_domain = 0; i_domain < part_ext->n_domain; ++i_domain) {

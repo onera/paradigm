@@ -6564,9 +6564,9 @@ PDM_Mesh_nodal_extract_selection
 #if 0
   int  *n_select_vtx = PDM_array_zeros_int (parent_mesh->n_part);
   int **select_vtx_l_num;
-  PDM_malloc(*select_vtx_l_num,parent_mesh->n_part,int *);
+  PDM_malloc(select_vtx_l_num,parent_mesh->n_part,int *);
   int **parent_to_child_l_num;
-  PDM_malloc(*parent_to_child_l_num,parent_mesh->n_part,int *);
+  PDM_malloc(parent_to_child_l_num,parent_mesh->n_part,int *);
 
   /* Tag vertices incident to selected elements */
   PDM_l_num_t *cell_vtx     = NULL;

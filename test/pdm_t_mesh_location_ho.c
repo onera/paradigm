@@ -675,7 +675,7 @@ int main(int argc, char *argv[])
    *  Check interpolation
    */
   double **src_field;
-  PDM_malloc(*src_field,n_part,double *);
+  PDM_malloc(src_field,n_part,double *);
   for (int ipart = 0; ipart < n_part; ipart++) {
     int n_vtx = PDM_part_mesh_nodal_n_vtx_get(src_pmn, ipart);
     double *vtx_coord = PDM_part_mesh_nodal_vtx_coord_get(src_pmn, ipart);
@@ -690,7 +690,7 @@ int main(int argc, char *argv[])
   }
 
   double **send_field;
-  PDM_malloc(*send_field,n_part,double *);
+  PDM_malloc(send_field,n_part,double *);
   for (int ipart = 0; ipart < n_part; ipart++) {
     int         *elt_pts_idx        = NULL;
     PDM_g_num_t *elt_pts_gnum       = NULL;

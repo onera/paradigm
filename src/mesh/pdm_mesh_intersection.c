@@ -2083,7 +2083,7 @@ _build_ptp
   int **user_elt_a_b_init_loc_idx;
   PDM_malloc(user_elt_a_b_init_loc_idx,mi->n_part_mesh[0],int         *);// size = user_a_b_idx[user_n_elt_a]+1
   // int **user_a_b_init_loc;
- // PDM_malloc(*user_a_b_init_loc,mi->n_part_mesh[0]);// size = user_a_b_init_loc_idx[user_a_b_idx[user_n_elt_a]] (*3?,int         *)
+  // PDM_malloc(user_a_b_init_loc,mi->n_part_mesh[0]);// size = user_a_b_init_loc_idx[user_a_b_idx[user_n_elt_a]] (*3?,int         *)
   for (int ipart = 0; ipart < mi->n_part_mesh[0]; ipart++) {
    PDM_free(user_elt_a_b_init_loc_stride[ipart]);
     if (mi->mesh_nodal[0] == NULL && mi->mesh[0] != NULL) {

@@ -836,11 +836,11 @@ _recurse_and_filter
 
   // /* Init step */
   // int **pborder_entity1_to_pentity2_n;
- // PDM_malloc(*pborder_entity1_to_pentity2_n,n_part_tot ,int         *);
+  // PDM_malloc(pborder_entity1_to_pentity2_n,n_part_tot ,int         *);
   // int **pborder_gnum_and_interface_n;
- // PDM_malloc(*pborder_gnum_and_interface_n,n_part_tot ,int         *);
+  // PDM_malloc(pborder_gnum_and_interface_n,n_part_tot ,int         *);
   // PDM_g_num_t **pborder_gnum_and_interface;
- // PDM_malloc(*pborder_gnum_and_interface,n_part_tot ,PDM_g_num_t *);
+  // PDM_malloc(pborder_gnum_and_interface,n_part_tot ,PDM_g_num_t *);
   // for(int i_part = 0; i_part < n_part_tot; ++i_part) {
 
   //   // Compute index related of each entity1

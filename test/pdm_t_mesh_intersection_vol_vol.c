@@ -593,19 +593,19 @@ _set_mesh_nodal
     int *n_face;
     PDM_malloc(n_face,n_part,int          );
     int **face_vtx_idx;
-    PDM_malloc(*face_vtx_idx,n_part,int         *);
+    PDM_malloc(face_vtx_idx,n_part,int         *);
     int **face_vtx;
-    PDM_malloc(*face_vtx,n_part,int         *);
+    PDM_malloc(face_vtx,n_part,int         *);
     PDM_g_num_t **face_ln_to_gn;
-    PDM_malloc(*face_ln_to_gn,n_part,PDM_g_num_t *);
+    PDM_malloc(face_ln_to_gn,n_part,PDM_g_num_t *);
     int **cell_face_idx;
-    PDM_malloc(*cell_face_idx,n_part,int         *);
+    PDM_malloc(cell_face_idx,n_part,int         *);
     int **cell_face;
-    PDM_malloc(*cell_face,n_part,int         *);
+    PDM_malloc(cell_face,n_part,int         *);
     double **vtx_coord;
-    PDM_malloc(*vtx_coord,n_part,double      *);
+    PDM_malloc(vtx_coord,n_part,double      *);
     PDM_g_num_t **cell_ln_to_gn;
-    PDM_malloc(*cell_ln_to_gn,n_part,PDM_g_num_t *);
+    PDM_malloc(cell_ln_to_gn,n_part,PDM_g_num_t *);
 
     pmn = PDM_part_mesh_nodal_create(3, n_part, mi->comm);
 
@@ -1146,9 +1146,9 @@ main
       log_trace("FROM A USER POV\n");
     }
     int **pelt_a_elt_b_n;
-    PDM_malloc(*pelt_a_elt_b_n,n_part,int    *);
+    PDM_malloc(pelt_a_elt_b_n,n_part,int    *);
     double **pelt_a_elt_b_volume;
-    PDM_malloc(*pelt_a_elt_b_volume,n_part,double *);
+    PDM_malloc(pelt_a_elt_b_volume,n_part,double *);
 
 
     for (int ipart = 0; ipart < n_part; ipart++) {

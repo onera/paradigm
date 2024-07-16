@@ -524,7 +524,7 @@ _determine_A_outside
 
       // update A and B
       (*cll)->head = in[0];
-     PDM_free(*outside);
+      PDM_free(*outside);
       PDM_malloc(*outside,1,List);
       (*outside)->head = out[0];
     } // 2 intersections

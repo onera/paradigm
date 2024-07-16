@@ -234,11 +234,11 @@ _dump_mesh
 
 
   PDM_real_t **val_num_part;
-  PDM_malloc(*val_num_part,n_part,PDM_real_t  *);
+  PDM_malloc(val_num_part,n_part,PDM_real_t  *);
   int **pface_vtx_n;
-  PDM_malloc(*pface_vtx_n,n_part,int *);
+  PDM_malloc(pface_vtx_n,n_part,int *);
   int **pcell_face_n;
-  PDM_malloc(*pcell_face_n,n_part,int *);
+  PDM_malloc(pcell_face_n,n_part,int *);
 
   for (int ipart = 0; ipart < n_part; ipart++) {
     PDM_writer_geom_coord_set(wrt,
@@ -397,9 +397,9 @@ _dump_point_cloud
                                           PDM_OWNERSHIP_USER);
 
   PDM_real_t **val_num_part;
-  PDM_malloc(*val_num_part,n_part,PDM_real_t  *);
+  PDM_malloc(val_num_part,n_part,PDM_real_t  *);
   int **connec;
-  PDM_malloc(*connec,n_part,int *);
+  PDM_malloc(connec,n_part,int *);
 
   for (int ipart = 0; ipart < n_part; ipart++) {
     PDM_writer_geom_coord_set(wrt,
@@ -714,9 +714,9 @@ int main(int argc, char *argv[])
   int *pn_pts;
   PDM_malloc(pn_pts,n_part_cloud,int          );
   double **ppts_coord;
-  PDM_malloc(*ppts_coord,n_part_cloud,double      *);
+  PDM_malloc(ppts_coord,n_part_cloud,double      *);
   PDM_g_num_t **ppts_ln_to_gn;
-  PDM_malloc(*ppts_ln_to_gn,n_part_cloud,PDM_g_num_t *);
+  PDM_malloc(ppts_ln_to_gn,n_part_cloud,PDM_g_num_t *);
   PDM_point_cloud_gen_random(comm,
                              0, // seed
                              0, // geometric_g_num
@@ -772,26 +772,26 @@ int main(int argc, char *argv[])
                                          n_part_mesh);
 
   int **pcell_face_idx;
-  PDM_malloc(*pcell_face_idx,n_part_mesh,int *);
+  PDM_malloc(pcell_face_idx,n_part_mesh,int *);
   int **pcell_face;
-  PDM_malloc(*pcell_face,n_part_mesh,int *);
+  PDM_malloc(pcell_face,n_part_mesh,int *);
   int **pface_vtx_idx;
-  PDM_malloc(*pface_vtx_idx,n_part_mesh,int *);
+  PDM_malloc(pface_vtx_idx,n_part_mesh,int *);
   int **pface_vtx;
-  PDM_malloc(*pface_vtx,n_part_mesh,int *);
+  PDM_malloc(pface_vtx,n_part_mesh,int *);
 
   int *pn_face;
   PDM_malloc(pn_face,n_part_mesh,int          );
   int *pn_elt;
   PDM_malloc(pn_elt,n_part_mesh,int          );
   PDM_g_num_t **pelt_ln_to_gn;
-  PDM_malloc(*pelt_ln_to_gn,n_part_mesh,PDM_g_num_t *);
+  PDM_malloc(pelt_ln_to_gn,n_part_mesh,PDM_g_num_t *);
   int *pn_vtx;
   PDM_malloc(pn_vtx,n_part_mesh,int          );
   PDM_g_num_t **pvtx_ln_to_gn;
-  PDM_malloc(*pvtx_ln_to_gn,n_part_mesh,PDM_g_num_t *);
+  PDM_malloc(pvtx_ln_to_gn,n_part_mesh,PDM_g_num_t *);
   double **pvtx_coord;
-  PDM_malloc(*pvtx_coord,n_part_mesh,double      *);
+  PDM_malloc(pvtx_coord,n_part_mesh,double      *);
 
   int use_edge = 0;
 
@@ -970,26 +970,26 @@ int main(int argc, char *argv[])
    *  Exchange data between point cloud and mesh
    */
   int **pelt_pts_idx;
-  PDM_malloc(*pelt_pts_idx,n_part_mesh,int         *);
+  PDM_malloc(pelt_pts_idx,n_part_mesh,int         *);
   PDM_g_num_t **pelt_pts_gnum;
-  PDM_malloc(*pelt_pts_gnum,n_part_mesh,PDM_g_num_t *);
+  PDM_malloc(pelt_pts_gnum,n_part_mesh,PDM_g_num_t *);
   double **pelt_pts_coord;
-  PDM_malloc(*pelt_pts_coord,n_part_mesh,double      *);
+  PDM_malloc(pelt_pts_coord,n_part_mesh,double      *);
   double **pelt_pts_uvw;
-  PDM_malloc(*pelt_pts_uvw,n_part_mesh,double      *);
+  PDM_malloc(pelt_pts_uvw,n_part_mesh,double      *);
   int **pelt_pts_weight_idx;
-  PDM_malloc(*pelt_pts_weight_idx,n_part_mesh,int         *);
+  PDM_malloc(pelt_pts_weight_idx,n_part_mesh,int         *);
   double **pelt_pts_weight;
-  PDM_malloc(*pelt_pts_weight,n_part_mesh,double      *);
+  PDM_malloc(pelt_pts_weight,n_part_mesh,double      *);
   double **pelt_pts_dist2;
-  PDM_malloc(*pelt_pts_dist2,n_part_mesh,double      *);
+  PDM_malloc(pelt_pts_dist2,n_part_mesh,double      *);
   double **pelt_pts_proj_coord;
-  PDM_malloc(*pelt_pts_proj_coord,n_part_mesh,double      *);
+  PDM_malloc(pelt_pts_proj_coord,n_part_mesh,double      *);
 
   int **pelt_vtx_idx;
-  PDM_malloc(*pelt_vtx_idx,n_part_mesh,int         *);
+  PDM_malloc(pelt_vtx_idx,n_part_mesh,int         *);
   int **pelt_vtx;
-  PDM_malloc(*pelt_vtx,n_part_mesh,int         *);
+  PDM_malloc(pelt_vtx,n_part_mesh,int         *);
 
   for (int ipart = 0; ipart < n_part_mesh; ipart++) {
     PDM_mesh_location_points_in_elt_get(mesh_loc,
@@ -1079,7 +1079,7 @@ int main(int argc, char *argv[])
    *  Exchange mesh (cell-centered) -> point cloud
    */
   double **pelt_field1;
-  PDM_malloc(*pelt_field1,n_part_mesh,double *);
+  PDM_malloc(pelt_field1,n_part_mesh,double *);
   for (int ipart = 0; ipart < n_part_mesh; ipart++) {
     PDM_malloc(pelt_field1[ipart],pn_elt[ipart],double);
 
@@ -1123,7 +1123,7 @@ int main(int argc, char *argv[])
                                  &located);
 
   double **ppts_field1;
-  PDM_malloc(*ppts_field1,n_part_cloud,double *);
+  PDM_malloc(ppts_field1,n_part_cloud,double *);
   for (int ipart = 0; ipart < n_part_cloud; ipart++) {
     PDM_malloc(ppts_field1[ipart],pn_pts[ipart],double);
 
@@ -1147,7 +1147,7 @@ int main(int argc, char *argv[])
    *  Exchange mesh <- point cloud
    */
   double **ppts_field2;
-  PDM_malloc(*ppts_field2,n_part_cloud,double *);
+  PDM_malloc(ppts_field2,n_part_cloud,double *);
   for (int ipart = 0; ipart < n_part_cloud; ipart++) {
     PDM_malloc(ppts_field2[ipart],pn_pts[ipart],double);
 
@@ -1173,7 +1173,7 @@ int main(int argc, char *argv[])
   PDM_part_to_part_reverse_iexch_wait(ptp, request_pts_elt);
 
   double **pelt_field2;
-  PDM_malloc(*pelt_field2,n_part_mesh,double *);
+  PDM_malloc(pelt_field2,n_part_mesh,double *);
   for (int ipart = 0; ipart < n_part_mesh; ipart++) {
     PDM_malloc(pelt_field2[ipart],pn_elt[ipart],double);
 
@@ -1200,9 +1200,9 @@ int main(int argc, char *argv[])
    */
 
   double **pvtx_field3;
-  PDM_malloc(*pvtx_field3,n_part_mesh,double *);
+  PDM_malloc(pvtx_field3,n_part_mesh,double *);
   double **pelt_pts_field3;
-  PDM_malloc(*pelt_pts_field3,n_part_mesh,double *);
+  PDM_malloc(pelt_pts_field3,n_part_mesh,double *);
   for (int ipart = 0; ipart < n_part_mesh; ipart++) {
     pvtx_field3     PDM_malloc([ipart],pn_vtx[ipart],double);
     for (int i = 0; i < pn_vtx[ipart]; i++) {
@@ -1246,7 +1246,7 @@ int main(int argc, char *argv[])
   double max_err = 0.;
 
   double **ppts_field3;
-  PDM_malloc(*ppts_field3,n_part_cloud,double *);
+  PDM_malloc(ppts_field3,n_part_cloud,double *);
   for (int ipart = 0; ipart < n_part_cloud; ipart++) {
     PDM_malloc(ppts_field3[ipart],pn_pts[ipart],double);
 

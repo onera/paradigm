@@ -293,19 +293,19 @@ int main(int argc, char *argv[])
   int *surf_pn_edge;
   PDM_malloc(surf_pn_edge,n_part,int          );
   int **surf_pface_edge_idx;
-  PDM_malloc(*surf_pface_edge_idx,n_part,int         *);
+  PDM_malloc(surf_pface_edge_idx,n_part,int         *);
   int **surf_pface_edge;
-  PDM_malloc(*surf_pface_edge,n_part,int         *);
+  PDM_malloc(surf_pface_edge,n_part,int         *);
   int **surf_pedge_vtx;
-  PDM_malloc(*surf_pedge_vtx,n_part,int         *);
+  PDM_malloc(surf_pedge_vtx,n_part,int         *);
   int **surf_pface_vtx;
-  PDM_malloc(*surf_pface_vtx,n_part,int         *);
+  PDM_malloc(surf_pface_vtx,n_part,int         *);
   double **surf_pvtx_coord;
-  PDM_malloc(*surf_pvtx_coord,n_part,double      *);
+  PDM_malloc(surf_pvtx_coord,n_part,double      *);
   PDM_g_num_t **surf_pvtx_ln_to_gn;
-  PDM_malloc(*surf_pvtx_ln_to_gn,n_part,PDM_g_num_t *);
+  PDM_malloc(surf_pvtx_ln_to_gn,n_part,PDM_g_num_t *);
   PDM_g_num_t **surf_pface_ln_to_gn;
-  PDM_malloc(*surf_pface_ln_to_gn,n_part,PDM_g_num_t *);
+  PDM_malloc(surf_pface_ln_to_gn,n_part,PDM_g_num_t *);
 
   for (int i_part = 0; i_part < n_part; i_part++) {
     surf_pn_vtx[i_part] = PDM_multipart_part_vtx_coord_get(mpart_surf,

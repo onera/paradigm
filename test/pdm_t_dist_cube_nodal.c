@@ -256,7 +256,7 @@ int main(int argc, char *argv[])
   int *pn_selected;
   PDM_malloc(pn_selected,n_part ,int  );
   int **selected_l_num;
-  PDM_malloc(*selected_l_num,n_part ,int *);
+  PDM_malloc(selected_l_num,n_part ,int *);
   // for(int i_part = 0; i_part < n_part; ++i_part) {
 
   //   PDM_g_num_t *vtx_ln_to_gn  = NULL;
