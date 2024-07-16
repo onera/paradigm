@@ -175,10 +175,10 @@ int main(int argc, char *argv[])
 
   // Choose to use part or multipart
   char *buffer;
-  PDM_malloc(buffer,8+1,int);
+  PDM_malloc(buffer,8+1, char);
   sprintf(buffer, "%d", use_multipart);
   setenv("PDM_USE_MULTIPART", buffer, 1);
- PDM_free(buffer);
+  PDM_free(buffer);
 
   // debug
   int dbg_part_dcube = 0;

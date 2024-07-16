@@ -52,8 +52,8 @@
 /* ) */
 /* { */
 /* PDM_printf ("myRank : %d\n", myRank); */
-/ *(*faceVtxCooA);
-PDM_malloc((*faceVtxCooA),5,double); */
+/* (*faceVtxCooA);
+/* PDM_malloc((*faceVtxCooA),5,double); */
 /*   for (int i=0; i<5; i++) */
 /* 	  (*faceVtxCooA)[i] = i * 2.5; */
 /*  PDM_printf ("faceVtxCooA[2] : %e\n", (*faceVtxCooA)[2]); */
@@ -89,14 +89,10 @@ static int init_cas1(
     (*maxGNEdgeB) = (*nGvtxB);
 
     (*nVtxA) = 3;
-    ( *faceToEdgeA);
-    PDM_malloc(faceToEdgeA),(*nVtxA),PDM_g_num_t);
-    ( *faceToVtxA);
-    PDM_malloc(faceToVtxA),(*nVtxA),PDM_g_num_t);
-    ( *faceVtxCooA);
-    PDM_malloc(faceVtxCooA),3 * (*nVtxA),double);
-    ( *faceVtxEpsA);
-    PDM_malloc(faceVtxEpsA),(*nVtxA),double);
+    PDM_malloc((*faceToEdgeA),(*nVtxA),PDM_g_num_t);
+    PDM_malloc((*faceToVtxA),(*nVtxA),PDM_g_num_t);
+    PDM_malloc((*faceVtxCooA),3 * (*nVtxA),double);
+    PDM_malloc((*faceVtxEpsA),(*nVtxA),double);
 
     for (int i = 0; i < (*nVtxA); i++) {
       (*faceToEdgeA)[i] = i+1;
@@ -123,14 +119,10 @@ static int init_cas1(
 
 
     (*nVtxB) = 4;
-    ( *faceToEdgeB);
-    PDM_malloc(faceToEdgeB),(*nVtxB),PDM_g_num_t);
-    ( *faceToVtxB);
-    PDM_malloc(faceToVtxB),(*nVtxB),PDM_g_num_t);
-    ( *faceVtxCooB);
-    PDM_malloc(faceVtxCooB),3 * (*nVtxB),double);
-    ( *faceVtxEpsB);
-    PDM_malloc(faceVtxEpsB),(*nVtxB),double);
+    PDM_malloc((*faceToEdgeB),(*nVtxB),PDM_g_num_t);
+    PDM_malloc((*faceToVtxB),(*nVtxB),PDM_g_num_t);
+    PDM_malloc((*faceVtxCooB),3 * (*nVtxB),double);
+    PDM_malloc((*faceVtxEpsB),(*nVtxB),double);
 
     for (int i = 0; i < (*nVtxB); i++) {
       (*faceToEdgeB)[i] = i+1;
@@ -166,14 +158,10 @@ static int init_cas1(
     (*maxGNEdgeB) = (*nGvtxB);
 
     (*nVtxA) = 4;
-    ( *faceToEdgeA);
-    PDM_malloc(faceToEdgeA),(*nVtxA),PDM_g_num_t);
-    ( *faceToVtxA);
-    PDM_malloc(faceToVtxA),(*nVtxA),PDM_g_num_t);
-    ( *faceVtxCooA);
-    PDM_malloc(faceVtxCooA),3 * (*nVtxA),double);
-    ( *faceVtxEpsA);
-    PDM_malloc(faceVtxEpsA),(*nVtxA),double);
+    PDM_malloc((*faceToEdgeA),(*nVtxA),PDM_g_num_t);
+    PDM_malloc((*faceToVtxA),(*nVtxA),PDM_g_num_t);
+    PDM_malloc((*faceVtxCooA),3 * (*nVtxA),double);
+    PDM_malloc((*faceVtxEpsA),(*nVtxA),double);
 
     for (int i = 0; i < (*nVtxA); i++) {
       (*faceToEdgeA)[i] = i+1;
@@ -204,14 +192,10 @@ static int init_cas1(
     (*faceVtxCooA)[3*j+2] = 0.;
 
     (*nVtxB) = 3;
-    ( *faceToEdgeB);
-    PDM_malloc(faceToEdgeB),(*nVtxB),PDM_g_num_t);
-    ( *faceToVtxB);
-    PDM_malloc(faceToVtxB),(*nVtxB),PDM_g_num_t);
-    ( *faceVtxCooB);
-    PDM_malloc(faceVtxCooB),3 * (*nVtxB),double);
-    ( *faceVtxEpsB);
-    PDM_malloc(faceVtxEpsB),(*nVtxB),double);
+    PDM_malloc((*faceToEdgeB),(*nVtxB),PDM_g_num_t);
+    PDM_malloc((*faceToVtxB),(*nVtxB),PDM_g_num_t);
+    PDM_malloc((*faceVtxCooB),3 * (*nVtxB),double);
+    PDM_malloc((*faceVtxEpsB),(*nVtxB),double);
 
     for (int i = 0; i < (*nVtxB); i++) {
       (*faceToEdgeB)[i] = i+1;
@@ -269,14 +253,10 @@ static int init_cas2(
     (*maxGNEdgeB) = (*nGvtxB);
 
     (*nVtxA) = (*nGvtxA);
-    ( *faceToEdgeA);
-    PDM_malloc(faceToEdgeA),(*nVtxA),PDM_g_num_t);
-    ( *faceToVtxA);
-    PDM_malloc(faceToVtxA),(*nVtxA),PDM_g_num_t);
-    ( *faceVtxCooA);
-    PDM_malloc(faceVtxCooA),3 * (*nVtxA),double);
-    ( *faceVtxEpsA);
-    PDM_malloc(faceVtxEpsA),(*nVtxA),double);
+    PDM_malloc((*faceToEdgeA),(*nVtxA),PDM_g_num_t);
+    PDM_malloc((*faceToVtxA),(*nVtxA),PDM_g_num_t);
+    PDM_malloc((*faceVtxCooA),3 * (*nVtxA),double);
+    PDM_malloc((*faceVtxEpsA),(*nVtxA),double);
 
     for (int i = 0; i < (*nVtxA); i++) {
       (*faceToEdgeA)[i] = i+1;
@@ -303,14 +283,10 @@ static int init_cas2(
 
 
     (*nVtxB) = (*nGvtxB);
-    ( *faceToEdgeB);
-    PDM_malloc(faceToEdgeB),(*nVtxB),PDM_g_num_t);
-    ( *faceToVtxB);
-    PDM_malloc(faceToVtxB),(*nVtxB),PDM_g_num_t);
-    ( *faceVtxCooB);
-    PDM_malloc(faceVtxCooB),3 * (*nVtxB),double);
-    ( *faceVtxEpsB);
-    PDM_malloc(faceVtxEpsB),(*nVtxB),double);
+    PDM_malloc((*faceToEdgeB),(*nVtxB),PDM_g_num_t);
+    PDM_malloc((*faceToVtxB),(*nVtxB),PDM_g_num_t);
+    PDM_malloc((*faceVtxCooB),3 * (*nVtxB),double);
+    PDM_malloc((*faceVtxEpsB),(*nVtxB),double);
 
     for (int i = 0; i < (*nVtxB); i++) {
       (*faceToEdgeB)[i] = i+1;
@@ -341,14 +317,10 @@ static int init_cas2(
     (*maxGNEdgeB) = (*nGvtxB);
 
     (*nVtxA) = (*nGvtxA);
-    ( *faceToEdgeA);
-    PDM_malloc(faceToEdgeA),(*nVtxA),PDM_g_num_t);
-    ( *faceToVtxA);
-    PDM_malloc(faceToVtxA),(*nVtxA),PDM_g_num_t);
-    ( *faceVtxCooA);
-    PDM_malloc(faceVtxCooA),3 * (*nVtxA),double);
-    ( *faceVtxEpsA);
-    PDM_malloc(faceVtxEpsA),(*nVtxA),double);
+    PDM_malloc((*faceToEdgeA),(*nVtxA),PDM_g_num_t);
+    PDM_malloc((*faceToVtxA),(*nVtxA),PDM_g_num_t);
+    PDM_malloc((*faceVtxCooA),3 * (*nVtxA),double);
+    PDM_malloc((*faceVtxEpsA),(*nVtxA),double);
 
     for (int i = 0; i < (*nVtxA); i++) {
       (*faceToEdgeA)[i] = i+1;
@@ -374,14 +346,10 @@ static int init_cas2(
     (*faceVtxCooA)[3*j+2] = 0.;
 
     (*nVtxB) = (*nGvtxB);
-    ( *faceToEdgeB);
-    PDM_malloc(faceToEdgeB),(*nVtxB),PDM_g_num_t);
-    ( *faceToVtxB);
-    PDM_malloc(faceToVtxB),(*nVtxB),PDM_g_num_t);
-    ( *faceVtxCooB);
-    PDM_malloc(faceVtxCooB),3 * (*nVtxB),double);
-    ( *faceVtxEpsB);
-    PDM_malloc(faceVtxEpsB),(*nVtxB),double);
+    PDM_malloc((*faceToEdgeB),(*nVtxB),PDM_g_num_t);
+    PDM_malloc((*faceToVtxB),(*nVtxB),PDM_g_num_t);
+    PDM_malloc((*faceVtxCooB),3 * (*nVtxB),double);
+    PDM_malloc((*faceVtxEpsB),(*nVtxB),double);
 
     for (int i = 0; i < (*nVtxB); i++) {
       (*faceToEdgeB)[i] = i+1;
@@ -437,14 +405,10 @@ static int init_cas3(
     (*maxGNEdgeB) = (*nGvtxB);
 
     (*nVtxA) = (*nGvtxA);
-    ( *faceToEdgeA);
-    PDM_malloc(faceToEdgeA),(*nVtxA),PDM_g_num_t);
-    ( *faceToVtxA);
-    PDM_malloc(faceToVtxA),(*nVtxA),PDM_g_num_t);
-    ( *faceVtxCooA);
-    PDM_malloc(faceVtxCooA),3 * (*nVtxA),double);
-    ( *faceVtxEpsA);
-    PDM_malloc(faceVtxEpsA),(*nVtxA),double);
+    PDM_malloc((*faceToEdgeA),(*nVtxA),PDM_g_num_t);
+    PDM_malloc((*faceToVtxA),(*nVtxA),PDM_g_num_t);
+    PDM_malloc((*faceVtxCooA),3 * (*nVtxA),double);
+    PDM_malloc(f(*faceVtxEpsA),(*nVtxA),double);
 
     for (int i = 0; i < (*nVtxA); i++) {
       (*faceToEdgeA)[i] = i+1;
@@ -471,14 +435,10 @@ static int init_cas3(
 
 
     (*nVtxB) = (*nGvtxB);
-    ( *faceToEdgeB);
-    PDM_malloc(faceToEdgeB),(*nVtxB),PDM_g_num_t);
-    ( *faceToVtxB);
-    PDM_malloc(faceToVtxB),(*nVtxB),PDM_g_num_t);
-    ( *faceVtxCooB);
-    PDM_malloc(faceVtxCooB),3 * (*nVtxB),double);
-    ( *faceVtxEpsB);
-    PDM_malloc(faceVtxEpsB),(*nVtxB),double);
+    PDM_malloc((*faceToEdgeB),(*nVtxB),PDM_g_num_t);
+    PDM_malloc((*faceToVtxB),(*nVtxB),PDM_g_num_t);
+    PDM_malloc((*faceVtxCooB),3 * (*nVtxB),double);
+    PDM_malloc((*faceVtxEpsB),(*nVtxB),double);
 
     for (int i = 0; i < (*nVtxB); i++) {
       (*faceToEdgeB)[i] = i+1;
@@ -509,14 +469,10 @@ static int init_cas3(
     (*maxGNEdgeB) = (*nGvtxB);
 
     (*nVtxA) = (*nGvtxA);
-    ( *faceToEdgeA);
-    PDM_malloc(faceToEdgeA),(*nVtxA),PDM_g_num_t);
-    ( *faceToVtxA);
-    PDM_malloc(faceToVtxA),(*nVtxA),PDM_g_num_t);
-    ( *faceVtxCooA);
-    PDM_malloc(faceVtxCooA),3 * (*nVtxA),double);
-    ( *faceVtxEpsA);
-    PDM_malloc(faceVtxEpsA),(*nVtxA),double);
+    PDM_malloc((*faceToEdgeA),(*nVtxA),PDM_g_num_t);
+    PDM_malloc((*faceToVtxA),(*nVtxA),PDM_g_num_t);
+    PDM_malloc((*faceVtxCooA),3 * (*nVtxA),double);
+    PDM_malloc((*faceVtxEpsA),(*nVtxA),double);
 
     for (int i = 0; i < (*nVtxA); i++) {
       (*faceToEdgeA)[i] = i+1;
@@ -542,14 +498,10 @@ static int init_cas3(
     (*faceVtxCooA)[3*j+2] = 0.;
 
     (*nVtxB) = (*nGvtxB);
-    ( *faceToEdgeB);
-    PDM_malloc(faceToEdgeB),(*nVtxB),PDM_g_num_t);
-    ( *faceToVtxB);
-    PDM_malloc(faceToVtxB),(*nVtxB),PDM_g_num_t);
-    ( *faceVtxCooB);
-    PDM_malloc(faceVtxCooB),3 * (*nVtxB),double);
-    ( *faceVtxEpsB);
-    PDM_malloc(faceVtxEpsB),(*nVtxB),double);
+    PDM_malloc((*faceToEdgeB),(*nVtxB),PDM_g_num_t);
+    PDM_malloc((*faceToVtxB),(*nVtxB),PDM_g_num_t);
+    PDM_malloc((*faceVtxCooB),3 * (*nVtxB),double);
+    PDM_malloc((*faceVtxEpsB),(*nVtxB),double);
 
     for (int i = 0; i < (*nVtxB); i++) {
       (*faceToEdgeB)[i] = i+1;
@@ -594,14 +546,10 @@ static int init_cas4(
     (*maxGNEdgeB) = (*nGvtxB);
 
     (*nVtxA) = (*nGvtxA);
-    ( *faceToEdgeA);
-    PDM_malloc(faceToEdgeA),(*nVtxA),PDM_g_num_t);
-    ( *faceToVtxA);
-    PDM_malloc(faceToVtxA),(*nVtxA),PDM_g_num_t);
-    ( *faceVtxCooA);
-    PDM_malloc(faceVtxCooA),3 * (*nVtxA),double);
-    ( *faceVtxEpsA);
-    PDM_malloc(faceVtxEpsA),(*nVtxA),double);
+    PDM_malloc((*faceToEdgeA),(*nVtxA),PDM_g_num_t);
+    PDM_malloc((*faceToVtxA),(*nVtxA),PDM_g_num_t);
+    PDM_malloc((*faceVtxCooA),3 * (*nVtxA),double);
+    PDM_malloc((*faceVtxEpsA),(*nVtxA),double);
 
     for (int i = 0; i < (*nVtxA); i++) {
       (*faceToEdgeA)[i] = i+1;
@@ -628,14 +576,11 @@ static int init_cas4(
 
 
     (*nVtxB) = (*nGvtxB);
-    ( *faceToEdgeB);
-    PDM_malloc(faceToEdgeB),(*nVtxB),PDM_g_num_t);
-    ( *faceToVtxB);
-    PDM_malloc(faceToVtxB),(*nVtxB),PDM_g_num_t);
-    ( *faceVtxCooB);
-    PDM_malloc(faceVtxCooB),3 * (*nVtxB),double);
-    ( *faceVtxEpsB);
-    PDM_malloc(faceVtxEpsB),(*nVtxB),double);
+    ;
+    PDM_malloc((*faceToEdgeB),(*nVtxB),PDM_g_num_t);
+    PDM_malloc((*faceToVtxB),(*nVtxB),PDM_g_num_t);
+    PDM_malloc((*faceVtxCooB),3 * (*nVtxB),double);
+    PDM_malloc((*faceVtxEpsB),(*nVtxB),double);
 
     for (int i = 0; i < (*nVtxB); i++) {
       (*faceToEdgeB)[i] = i+1;
@@ -666,14 +611,10 @@ static int init_cas4(
     (*maxGNEdgeB) = (*nGvtxB);
 
     (*nVtxA) = (*nGvtxA);
-    ( *faceToEdgeA);
-    PDM_malloc(faceToEdgeA),(*nVtxA),PDM_g_num_t);
-    ( *faceToVtxA);
-    PDM_malloc(faceToVtxA),(*nVtxA),PDM_g_num_t);
-    ( *faceVtxCooA);
-    PDM_malloc(faceVtxCooA),3 * (*nVtxA),double);
-    ( *faceVtxEpsA);
-    PDM_malloc(faceVtxEpsA),(*nVtxA),double);
+    PDM_malloc((*faceToEdgeA),(*nVtxA),PDM_g_num_t);
+    PDM_malloc((*faceToVtxA),(*nVtxA),PDM_g_num_t);
+    PDM_malloc((*faceVtxCooA),3 * (*nVtxA),double);
+    PDM_malloc((*faceVtxEpsA),(*nVtxA),double);
 
     for (int i = 0; i < (*nVtxA); i++) {
       (*faceToEdgeA)[i] = i+1;
@@ -699,14 +640,10 @@ static int init_cas4(
     (*faceVtxCooA)[3*j+2] = 0.;
 
     (*nVtxB) = (*nGvtxB);
-    ( *faceToEdgeB);
-    PDM_malloc(faceToEdgeB),(*nVtxB),PDM_g_num_t);
-    ( *faceToVtxB);
-    PDM_malloc(faceToVtxB),(*nVtxB),PDM_g_num_t);
-    ( *faceVtxCooB);
-    PDM_malloc(faceVtxCooB),3 * (*nVtxB),double);
-    ( *faceVtxEpsB);
-    PDM_malloc(faceVtxEpsB),(*nVtxB),double);
+    PDM_malloc((*faceToEdgeB),(*nVtxB),PDM_g_num_t);
+    PDM_malloc((*faceToVtxB),(*nVtxB),PDM_g_num_t);
+    PDM_malloc((*faceVtxCooB),3 * (*nVtxB),double);
+    PDM_malloc((*faceVtxEpsB),(*nVtxB),double);
 
     for (int i = 0; i < (*nVtxB); i++) {
       (*faceToEdgeB)[i] = i+1;
@@ -751,14 +688,10 @@ static int init_cas5(
     (*maxGNEdgeB) = (*nGvtxB);
 
     (*nVtxA) = (*nGvtxA);
-    ( *faceToEdgeA);
-    PDM_malloc(faceToEdgeA),(*nVtxA),PDM_g_num_t);
-    ( *faceToVtxA);
-    PDM_malloc(faceToVtxA),(*nVtxA),PDM_g_num_t);
-    ( *faceVtxCooA);
-    PDM_malloc(faceVtxCooA),3 * (*nVtxA),double);
-    ( *faceVtxEpsA);
-    PDM_malloc(faceVtxEpsA),(*nVtxA),double);
+    PDM_malloc((*faceToEdgeA),(*nVtxA),PDM_g_num_t);
+    PDM_malloc((*faceToVtxA),(*nVtxA),PDM_g_num_t);
+    PDM_malloc((*faceVtxCooA),3 * (*nVtxA),double);
+    PDM_malloc((*faceVtxEpsA),(*nVtxA),double);
 
     for (int i = 0; i < (*nVtxA); i++) {
       (*faceToEdgeA)[i] = i+1;
@@ -785,14 +718,10 @@ static int init_cas5(
 
 
     (*nVtxB) = (*nGvtxB);
-    ( *faceToEdgeB);
-    PDM_malloc(faceToEdgeB),(*nVtxB),PDM_g_num_t);
-    ( *faceToVtxB);
-    PDM_malloc(faceToVtxB),(*nVtxB),PDM_g_num_t);
-    ( *faceVtxCooB);
-    PDM_malloc(faceVtxCooB),3 * (*nVtxB),double);
-    ( *faceVtxEpsB);
-    PDM_malloc(faceVtxEpsB),(*nVtxB),double);
+    PDM_malloc((*faceToEdgeB),(*nVtxB),PDM_g_num_t);
+    PDM_malloc((*faceToVtxB),(*nVtxB),PDM_g_num_t);
+    PDM_malloc((*faceVtxCooB),3 * (*nVtxB),double);
+    PDM_malloc((*faceVtxEpsB),(*nVtxB),double);
 
     for (int i = 0; i < (*nVtxB); i++) {
       (*faceToEdgeB)[i] = i+1;
@@ -823,14 +752,10 @@ static int init_cas5(
     (*maxGNEdgeB) = (*nGvtxB);
 
     (*nVtxA) = (*nGvtxA);
-    ( *faceToEdgeA);
-    PDM_malloc(faceToEdgeA),(*nVtxA),PDM_g_num_t);
-    ( *faceToVtxA);
-    PDM_malloc(faceToVtxA),(*nVtxA),PDM_g_num_t);
-    ( *faceVtxCooA);
-    PDM_malloc(faceVtxCooA),3 * (*nVtxA),double);
-    ( *faceVtxEpsA);
-    PDM_malloc(faceVtxEpsA),(*nVtxA),double);
+    PDM_malloc((*faceToEdgeA),(*nVtxA),PDM_g_num_t);
+    PDM_malloc((*faceToVtxA),(*nVtxA),PDM_g_num_t);
+    PDM_malloc((*faceVtxCooA),3 * (*nVtxA),double);
+    PDM_malloc((*faceVtxEpsA),(*nVtxA),double);
 
     for (int i = 0; i < (*nVtxA); i++) {
       (*faceToEdgeA)[i] = i+1;
@@ -856,14 +781,10 @@ static int init_cas5(
     (*faceVtxCooA)[3*j+2] = 0.;
 
     (*nVtxB) = (*nGvtxB);
-    ( *faceToEdgeB);
-    PDM_malloc(faceToEdgeB),(*nVtxB),PDM_g_num_t);
-    ( *faceToVtxB);
-    PDM_malloc(faceToVtxB),(*nVtxB),PDM_g_num_t);
-    ( *faceVtxCooB);
-    PDM_malloc(faceVtxCooB),3 * (*nVtxB),double);
-    ( *faceVtxEpsB);
-    PDM_malloc(faceVtxEpsB),(*nVtxB),double);
+    PDM_malloc((*faceToEdgeB),(*nVtxB),PDM_g_num_t);
+    PDM_malloc((*faceToVtxB),(*nVtxB),PDM_g_num_t);
+    PDM_malloc((*faceVtxCooB),3 * (*nVtxB),double);
+    PDM_malloc((*faceVtxEpsB),(*nVtxB),double);
 
     for (int i = 0; i < (*nVtxB); i++) {
       (*faceToEdgeB)[i] = i+1;
@@ -908,14 +829,10 @@ static int init_cas6(
     (*maxGNEdgeB) = (*nGvtxB);
 
     (*nVtxA) = (*nGvtxA);
-    ( *faceToEdgeA);
-    PDM_malloc(faceToEdgeA),(*nVtxA),PDM_g_num_t);
-    ( *faceToVtxA);
-    PDM_malloc(faceToVtxA),(*nVtxA),PDM_g_num_t);
-    ( *faceVtxCooA);
-    PDM_malloc(faceVtxCooA),3 * (*nVtxA),double);
-    ( *faceVtxEpsA);
-    PDM_malloc(faceVtxEpsA),(*nVtxA),double);
+    PDM_malloc((*faceToEdgeA),(*nVtxA),PDM_g_num_t);
+    PDM_malloc((*faceToVtxA),(*nVtxA),PDM_g_num_t);
+    PDM_malloc((*faceVtxCooA),3 * (*nVtxA),double);
+    PDM_malloc((*faceVtxEpsA),(*nVtxA),double);
 
     for (int i = 0; i < (*nVtxA); i++) {
       (*faceToEdgeA)[i] = i+1;
@@ -942,14 +859,10 @@ static int init_cas6(
 
 
     (*nVtxB) = (*nGvtxB);
-    ( *faceToEdgeB);
-    PDM_malloc(faceToEdgeB),(*nVtxB),PDM_g_num_t);
-    ( *faceToVtxB);
-    PDM_malloc(faceToVtxB),(*nVtxB),PDM_g_num_t);
-    ( *faceVtxCooB);
-    PDM_malloc(faceVtxCooB),3 * (*nVtxB),double);
-    ( *faceVtxEpsB);
-    PDM_malloc(faceVtxEpsB),(*nVtxB),double);
+    PDM_malloc((*faceToEdgeB),(*nVtxB),PDM_g_num_t);
+    PDM_malloc((*faceToVtxB),(*nVtxB),PDM_g_num_t);
+    PDM_malloc((*faceVtxCooB),3 * (*nVtxB),double);
+    PDM_malloc((*faceVtxEpsB),(*nVtxB),double);
 
     for (int i = 0; i < (*nVtxB); i++) {
       (*faceToEdgeB)[i] = i+1;
@@ -980,14 +893,10 @@ static int init_cas6(
     (*maxGNEdgeB) = (*nGvtxB);
 
     (*nVtxA) = (*nGvtxA);
-    ( *faceToEdgeA);
-    PDM_malloc(faceToEdgeA),(*nVtxA),PDM_g_num_t);
-    ( *faceToVtxA);
-    PDM_malloc(faceToVtxA),(*nVtxA),PDM_g_num_t);
-    ( *faceVtxCooA);
-    PDM_malloc(faceVtxCooA),3 * (*nVtxA),double);
-    ( *faceVtxEpsA);
-    PDM_malloc(faceVtxEpsA),(*nVtxA),double);
+    PDM_malloc((*faceToEdgeA),(*nVtxA),PDM_g_num_t);
+    PDM_malloc((*faceToVtxA),(*nVtxA),PDM_g_num_t);
+    PDM_malloc((*faceVtxCooA),3 * (*nVtxA),double);
+    PDM_malloc((*faceVtxEpsA),(*nVtxA),double);
 
     for (int i = 0; i < (*nVtxA); i++) {
       (*faceToEdgeA)[i] = i+1;
@@ -1013,14 +922,10 @@ static int init_cas6(
     (*faceVtxCooA)[3*j+2] = 0.;
 
     (*nVtxB) = (*nGvtxB);
-    ( *faceToEdgeB);
-    PDM_malloc(faceToEdgeB),(*nVtxB),PDM_g_num_t);
-    ( *faceToVtxB);
-    PDM_malloc(faceToVtxB),(*nVtxB),PDM_g_num_t);
-    ( *faceVtxCooB);
-    PDM_malloc(faceVtxCooB),3 * (*nVtxB),double);
-    ( *faceVtxEpsB);
-    PDM_malloc(faceVtxEpsB),(*nVtxB),double);
+    PDM_malloc((*faceToEdgeB),(*nVtxB),PDM_g_num_t);
+    PDM_malloc((*faceToVtxB),(*nVtxB),PDM_g_num_t);
+    PDM_malloc((*faceVtxCooB),3 * (*nVtxB),double);
+    PDM_malloc((*faceVtxEpsB),(*nVtxB),double);
 
     for (int i = 0; i < (*nVtxB); i++) {
       (*faceToEdgeB)[i] = i+1;
@@ -1065,14 +970,10 @@ static int init_cas7(
     (*maxGNEdgeB) = (*nGvtxB);
 
     (*nVtxA) = (*nGvtxA);
-    ( *faceToEdgeA);
-    PDM_malloc(faceToEdgeA),(*nVtxA),PDM_g_num_t);
-    ( *faceToVtxA);
-    PDM_malloc(faceToVtxA),(*nVtxA),PDM_g_num_t);
-    ( *faceVtxCooA);
-    PDM_malloc(faceVtxCooA),3 * (*nVtxA),double);
-    ( *faceVtxEpsA);
-    PDM_malloc(faceVtxEpsA),(*nVtxA),double);
+    PDM_malloc((*faceToEdgeA),(*nVtxA),PDM_g_num_t);
+    PDM_malloc((*faceToVtxA),(*nVtxA),PDM_g_num_t);
+    PDM_malloc((*faceVtxCooA),3 * (*nVtxA),double);
+    PDM_malloc((*faceVtxEpsA),(*nVtxA),double);
 
     for (int i = 0; i < (*nVtxA); i++) {
       (*faceToEdgeA)[i] = i+1;
@@ -1099,14 +1000,10 @@ static int init_cas7(
 
 
     (*nVtxB) = (*nGvtxB);
-    ( *faceToEdgeB);
-    PDM_malloc(faceToEdgeB),(*nVtxB),PDM_g_num_t);
-    ( *faceToVtxB);
-    PDM_malloc(faceToVtxB),(*nVtxB),PDM_g_num_t);
-    ( *faceVtxCooB);
-    PDM_malloc(faceVtxCooB),3 * (*nVtxB),double);
-    ( *faceVtxEpsB);
-    PDM_malloc(faceVtxEpsB),(*nVtxB),double);
+    PDM_malloc((*faceToEdgeB),(*nVtxB),PDM_g_num_t);
+    PDM_malloc((*faceToVtxB),(*nVtxB),PDM_g_num_t);
+    PDM_malloc((*faceVtxCooB),3 * (*nVtxB),double);
+    PDM_malloc((*faceVtxEpsB),(*nVtxB),double);
 
     for (int i = 0; i < (*nVtxB); i++) {
       (*faceToEdgeB)[i] = i+1;
@@ -1137,14 +1034,10 @@ static int init_cas7(
     (*maxGNEdgeB) = (*nGvtxB);
 
     (*nVtxA) = (*nGvtxA);
-    ( *faceToEdgeA);
-    PDM_malloc(faceToEdgeA),(*nVtxA),PDM_g_num_t);
-    ( *faceToVtxA);
-    PDM_malloc(faceToVtxA),(*nVtxA),PDM_g_num_t);
-    ( *faceVtxCooA);
-    PDM_malloc(faceVtxCooA),3 * (*nVtxA),double);
-    ( *faceVtxEpsA);
-    PDM_malloc(faceVtxEpsA),(*nVtxA),double);
+    PDM_malloc((*faceToEdgeA),(*nVtxA),PDM_g_num_t);
+    PDM_malloc((*faceToVtxA),(*nVtxA),PDM_g_num_t);
+    PDM_malloc((*faceVtxCooA),3 * (*nVtxA),double);
+    PDM_malloc((*faceVtxEpsA),(*nVtxA),double);
 
     for (int i = 0; i < (*nVtxA); i++) {
       (*faceToEdgeA)[i] = i+1;
@@ -1170,14 +1063,10 @@ static int init_cas7(
     (*faceVtxCooA)[3*j+2] = 0.;
 
     (*nVtxB) = (*nGvtxB);
-    ( *faceToEdgeB);
-    PDM_malloc(faceToEdgeB),(*nVtxB),PDM_g_num_t);
-    ( *faceToVtxB);
-    PDM_malloc(faceToVtxB),(*nVtxB),PDM_g_num_t);
-    ( *faceVtxCooB);
-    PDM_malloc(faceVtxCooB),3 * (*nVtxB),double);
-    ( *faceVtxEpsB);
-    PDM_malloc(faceVtxEpsB),(*nVtxB),double);
+    PDM_malloc((*faceToEdgeB),(*nVtxB),PDM_g_num_t);
+    PDM_malloc((*faceToVtxB),(*nVtxB),PDM_g_num_t);
+    PDM_malloc((*faceVtxCooB),3 * (*nVtxB),double);
+    PDM_malloc((*faceVtxEpsB),(*nVtxB),double);
 
     for (int i = 0; i < (*nVtxB); i++) {
       (*faceToEdgeB)[i] = i+1;
@@ -1222,14 +1111,10 @@ static int init_cas8(
     (*maxGNEdgeB) = (*nGvtxB);
 
     (*nVtxA) = (*nGvtxA);
-    ( *faceToEdgeA);
-    PDM_malloc(faceToEdgeA),(*nVtxA),PDM_g_num_t);
-    ( *faceToVtxA);
-    PDM_malloc(faceToVtxA),(*nVtxA),PDM_g_num_t);
-    ( *faceVtxCooA);
-    PDM_malloc(faceVtxCooA),3 * (*nVtxA),double);
-    ( *faceVtxEpsA);
-    PDM_malloc(faceVtxEpsA),(*nVtxA),double);
+    PDM_malloc((*faceToEdgeA),(*nVtxA),PDM_g_num_t);
+    PDM_malloc((*faceToVtxA),(*nVtxA),PDM_g_num_t);
+    PDM_malloc((*faceVtxCooA),3 * (*nVtxA),double);
+    PDM_malloc((*faceVtxEpsA),(*nVtxA),double);
 
     for (int i = 0; i < (*nVtxA); i++) {
       (*faceToEdgeA)[i] = i+1;
@@ -1256,14 +1141,10 @@ static int init_cas8(
 
 
     (*nVtxB) = (*nGvtxB);
-    ( *faceToEdgeB);
-    PDM_malloc(faceToEdgeB),(*nVtxB),PDM_g_num_t);
-    ( *faceToVtxB);
-    PDM_malloc(faceToVtxB),(*nVtxB),PDM_g_num_t);
-    ( *faceVtxCooB);
-    PDM_malloc(faceVtxCooB),3 * (*nVtxB),double);
-    ( *faceVtxEpsB);
-    PDM_malloc(faceVtxEpsB),(*nVtxB),double);
+    PDM_malloc((*faceToEdgeB),(*nVtxB),PDM_g_num_t);
+    PDM_malloc((*faceToVtxB),(*nVtxB),PDM_g_num_t);
+    PDM_malloc((*faceVtxCooB),3 * (*nVtxB),double);
+    PDM_malloc((*faceVtxEpsB),(*nVtxB),double);
 
     for (int i = 0; i < (*nVtxB); i++) {
       (*faceToEdgeB)[i] = i+1;
@@ -1294,14 +1175,10 @@ static int init_cas8(
     (*maxGNEdgeB) = (*nGvtxB);
 
     (*nVtxA) = (*nGvtxA);
-    ( *faceToEdgeA);
-    PDM_malloc(faceToEdgeA),(*nVtxA),PDM_g_num_t);
-    ( *faceToVtxA);
-    PDM_malloc(faceToVtxA),(*nVtxA),PDM_g_num_t);
-    ( *faceVtxCooA);
-    PDM_malloc(faceVtxCooA),3 * (*nVtxA),double);
-    ( *faceVtxEpsA);
-    PDM_malloc(faceVtxEpsA),(*nVtxA),double);
+    PDM_malloc((*faceToEdgeA),(*nVtxA),PDM_g_num_t);
+    PDM_malloc((*faceToVtxA),(*nVtxA),PDM_g_num_t);
+    PDM_malloc((*faceVtxCooA),3 * (*nVtxA),double);
+    PDM_malloc((*faceVtxEpsA),(*nVtxA),double);
 
     for (int i = 0; i < (*nVtxA); i++) {
       (*faceToEdgeA)[i] = i+1;
@@ -1327,14 +1204,10 @@ static int init_cas8(
     (*faceVtxCooA)[3*j+2] = 0.;
 
     (*nVtxB) = (*nGvtxB);
-    ( *faceToEdgeB);
-    PDM_malloc(faceToEdgeB),(*nVtxB),PDM_g_num_t);
-    ( *faceToVtxB);
-    PDM_malloc(faceToVtxB),(*nVtxB),PDM_g_num_t);
-    ( *faceVtxCooB);
-    PDM_malloc(faceVtxCooB),3 * (*nVtxB),double);
-    ( *faceVtxEpsB);
-    PDM_malloc(faceVtxEpsB),(*nVtxB),double);
+    PDM_malloc((*faceToEdgeB),(*nVtxB),PDM_g_num_t);
+    PDM_malloc((*faceToVtxB),(*nVtxB),PDM_g_num_t);
+    PDM_malloc((*faceVtxCooB),3 * (*nVtxB),double);
+    PDM_malloc((*faceVtxEpsB),(*nVtxB),double);
 
     for (int i = 0; i < (*nVtxB); i++) {
       (*faceToEdgeB)[i] = i+1;
@@ -1379,14 +1252,10 @@ static int init_cas9(
     (*maxGNEdgeB) = (*nGvtxB);
 
     (*nVtxA) = (*nGvtxA);
-    ( *faceToEdgeA);
-    PDM_malloc(faceToEdgeA),(*nVtxA),PDM_g_num_t);
-    ( *faceToVtxA);
-    PDM_malloc(faceToVtxA),(*nVtxA),PDM_g_num_t);
-    ( *faceVtxCooA);
-    PDM_malloc(faceVtxCooA),3 * (*nVtxA),double);
-    ( *faceVtxEpsA);
-    PDM_malloc(faceVtxEpsA),(*nVtxA),double);
+    PDM_malloc((*faceToEdgeA),(*nVtxA),PDM_g_num_t);
+    PDM_malloc((*faceToVtxA),(*nVtxA),PDM_g_num_t);
+    PDM_malloc((*faceVtxCooA),3 * (*nVtxA),double);
+    PDM_malloc((*faceVtxEpsA),(*nVtxA),double);
 
     for (int i = 0; i < (*nVtxA); i++) {
       (*faceToEdgeA)[i] = i+1;
@@ -1413,14 +1282,10 @@ static int init_cas9(
 
 
     (*nVtxB) = (*nGvtxB);
-    ( *faceToEdgeB);
-    PDM_malloc(faceToEdgeB),(*nVtxB),PDM_g_num_t);
-    ( *faceToVtxB);
-    PDM_malloc(faceToVtxB),(*nVtxB),PDM_g_num_t);
-    ( *faceVtxCooB);
-    PDM_malloc(faceVtxCooB),3 * (*nVtxB),double);
-    ( *faceVtxEpsB);
-    PDM_malloc(faceVtxEpsB),(*nVtxB),double);
+    PDM_malloc((*faceToEdgeB),(*nVtxB),PDM_g_num_t);
+    PDM_malloc((*faceToVtxB),(*nVtxB),PDM_g_num_t);
+    PDM_malloc((*faceVtxCooB),3 * (*nVtxB),double);
+    PDM_malloc((*faceVtxEpsB),(*nVtxB),double);
 
     for (int i = 0; i < (*nVtxB); i++) {
       (*faceToEdgeB)[i] = i+1;
@@ -1451,14 +1316,10 @@ static int init_cas9(
     (*maxGNEdgeB) = (*nGvtxB);
 
     (*nVtxA) = (*nGvtxA);
-    ( *faceToEdgeA);
-    PDM_malloc(faceToEdgeA),(*nVtxA),PDM_g_num_t);
-    ( *faceToVtxA);
-    PDM_malloc(faceToVtxA),(*nVtxA),PDM_g_num_t);
-    ( *faceVtxCooA);
-    PDM_malloc(faceVtxCooA),3 * (*nVtxA),double);
-    ( *faceVtxEpsA);
-    PDM_malloc(faceVtxEpsA),(*nVtxA),double);
+    PDM_malloc((*faceToEdgeA),(*nVtxA),PDM_g_num_t);
+    PDM_malloc((*faceToVtxA),(*nVtxA),PDM_g_num_t);
+    PDM_malloc((*faceVtxCooA),3 * (*nVtxA),double);
+    PDM_malloc((*faceVtxEpsA),(*nVtxA),double);
 
     for (int i = 0; i < (*nVtxA); i++) {
       (*faceToEdgeA)[i] = i+1;
@@ -1484,14 +1345,10 @@ static int init_cas9(
     (*faceVtxCooA)[3*j+2] = 0.;
 
     (*nVtxB) = (*nGvtxB);
-    ( *faceToEdgeB);
-    PDM_malloc(faceToEdgeB),(*nVtxB),PDM_g_num_t);
-    ( *faceToVtxB);
-    PDM_malloc(faceToVtxB),(*nVtxB),PDM_g_num_t);
-    ( *faceVtxCooB);
-    PDM_malloc(faceVtxCooB),3 * (*nVtxB),double);
-    ( *faceVtxEpsB);
-    PDM_malloc(faceVtxEpsB),(*nVtxB),double);
+    PDM_malloc((*faceToEdgeB),(*nVtxB),PDM_g_num_t);
+    PDM_malloc((*faceToVtxB),(*nVtxB),PDM_g_num_t);
+    PDM_malloc((*faceVtxCooB),3 * (*nVtxB),double);
+    PDM_malloc((*faceVtxEpsB),(*nVtxB),double);
 
     for (int i = 0; i < (*nVtxB); i++) {
       (*faceToEdgeB)[i] = i+1;
@@ -1537,14 +1394,10 @@ static int init_cas10(
     (*maxGNEdgeB) = (*nGvtxB);
 
     (*nVtxA) = (*nGvtxA);
-    ( *faceToEdgeA);
-    PDM_malloc(faceToEdgeA),(*nVtxA),PDM_g_num_t);
-    ( *faceToVtxA);
-    PDM_malloc(faceToVtxA),(*nVtxA),PDM_g_num_t);
-    ( *faceVtxCooA);
-    PDM_malloc(faceVtxCooA),3 * (*nVtxA),double);
-    ( *faceVtxEpsA);
-    PDM_malloc(faceVtxEpsA),(*nVtxA),double);
+    PDM_malloc((*faceToEdgeA),(*nVtxA),PDM_g_num_t);
+    PDM_malloc((*faceToVtxA),(*nVtxA),PDM_g_num_t);
+    PDM_malloc((*faceVtxCooA),3 * (*nVtxA),double);
+    PDM_malloc((*faceVtxEpsA),(*nVtxA),double);
 
     for (int i = 0; i < (*nVtxA); i++) {
       (*faceToEdgeA)[i] = i+1;
@@ -1570,14 +1423,10 @@ static int init_cas10(
     (*faceVtxCooA)[3*j+2] = 0.;
 
     (*nVtxB) = (*nGvtxB);
-    ( *faceToEdgeB);
-    PDM_malloc(faceToEdgeB),(*nVtxB),PDM_g_num_t);
-    ( *faceToVtxB);
-    PDM_malloc(faceToVtxB),(*nVtxB),PDM_g_num_t);
-    ( *faceVtxCooB);
-    PDM_malloc(faceVtxCooB),3 * (*nVtxB),double);
-    ( *faceVtxEpsB);
-    PDM_malloc(faceVtxEpsB),(*nVtxB),double);
+    PDM_malloc((*faceToEdgeB),(*nVtxB),PDM_g_num_t);
+    PDM_malloc((*faceToVtxB),(*nVtxB),PDM_g_num_t);
+    PDM_malloc((*faceVtxCooB),3 * (*nVtxB),double);
+    PDM_malloc((*faceVtxEpsB),(*nVtxB),double);
 
     for (int i = 0; i < (*nVtxB); i++) {
       (*faceToEdgeB)[i] = i+1;
@@ -1613,14 +1462,10 @@ static int init_cas10(
     (*maxGNEdgeB) = (*nGvtxB);
 
     (*nVtxA) = (*nGvtxA);
-    ( *faceToEdgeA);
-    PDM_malloc(faceToEdgeA),(*nVtxA),PDM_g_num_t);
-    ( *faceToVtxA);
-    PDM_malloc(faceToVtxA),(*nVtxA),PDM_g_num_t);
-    ( *faceVtxCooA);
-    PDM_malloc(faceVtxCooA),3 * (*nVtxA),double);
-    ( *faceVtxEpsA);
-    PDM_malloc(faceVtxEpsA),(*nVtxA),double);
+    PDM_malloc((*faceToEdgeA),(*nVtxA),PDM_g_num_t);
+    PDM_malloc((*faceToVtxA),(*nVtxA),PDM_g_num_t);
+    PDM_malloc((*faceVtxCooA),3 * (*nVtxA),double);
+    PDM_malloc((*faceVtxEpsA),(*nVtxA),double);
 
     for (int i = 0; i < (*nVtxA); i++) {
       (*faceToEdgeA)[i] = i+1;
@@ -1651,14 +1496,10 @@ static int init_cas10(
     (*faceVtxCooA)[3*j+2] = 0.;
 
     (*nVtxB) = (*nGvtxB);
-    ( *faceToEdgeB);
-    PDM_malloc(faceToEdgeB),(*nVtxB),PDM_g_num_t);
-    ( *faceToVtxB);
-    PDM_malloc(faceToVtxB),(*nVtxB),PDM_g_num_t);
-    ( *faceVtxCooB);
-    PDM_malloc(faceVtxCooB),3 * (*nVtxB),double);
-    ( *faceVtxEpsB);
-    PDM_malloc(faceVtxEpsB),(*nVtxB),double);
+    PDM_malloc((*faceToEdgeB),(*nVtxB),PDM_g_num_t);
+    PDM_malloc((*faceToVtxB),(*nVtxB),PDM_g_num_t);
+    PDM_malloc((*faceVtxCooB),3 * (*nVtxB),double);
+    PDM_malloc((*faceVtxEpsB),(*nVtxB),double);
 
     for (int i = 0; i < (*nVtxB); i++) {
       (*faceToEdgeB)[i] = i+1;
@@ -1715,14 +1556,10 @@ static int init_cas11(
     (*maxGNEdgeB) = (*nGvtxB);
 
     (*nVtxA) = (*nGvtxA);
-    ( *faceToEdgeA);
-    PDM_malloc(faceToEdgeA),(*nVtxA),PDM_g_num_t);
-    ( *faceToVtxA);
-    PDM_malloc(faceToVtxA),(*nVtxA),PDM_g_num_t);
-    ( *faceVtxCooA);
-    PDM_malloc(faceVtxCooA),3 * (*nVtxA),double);
-    ( *faceVtxEpsA);
-    PDM_malloc(faceVtxEpsA),(*nVtxA),double);
+    PDM_malloc((*faceToEdgeA),(*nVtxA),PDM_g_num_t);
+    PDM_malloc((*faceToVtxA),(*nVtxA),PDM_g_num_t);
+    PDM_malloc((*faceVtxCooA),3 * (*nVtxA),double);
+    PDM_malloc((*faceVtxEpsA),(*nVtxA),double);
 
     for (int i = 0; i < (*nVtxA); i++) {
       (*faceToEdgeA)[i] = i+1;
@@ -1749,14 +1586,10 @@ static int init_cas11(
 
 
     (*nVtxB) = (*nGvtxB);
-    ( *faceToEdgeB);
-    PDM_malloc(faceToEdgeB),(*nVtxB),PDM_g_num_t);
-    ( *faceToVtxB);
-    PDM_malloc(faceToVtxB),(*nVtxB),PDM_g_num_t);
-    ( *faceVtxCooB);
-    PDM_malloc(faceVtxCooB),3 * (*nVtxB),double);
-    ( *faceVtxEpsB);
-    PDM_malloc(faceVtxEpsB),(*nVtxB),double);
+    PDM_malloc((*faceToEdgeB),(*nVtxB),PDM_g_num_t);
+    PDM_malloc((*faceToVtxB),(*nVtxB),PDM_g_num_t);
+    PDM_malloc((*faceVtxCooB),3 * (*nVtxB),double);
+    PDM_malloc((*faceVtxEpsB),(*nVtxB),double);
 
     for (int i = 0; i < (*nVtxB); i++) {
       (*faceToEdgeB)[i] = i+1;
@@ -1787,14 +1620,10 @@ static int init_cas11(
     (*maxGNEdgeB) = (*nGvtxB);
 
     (*nVtxA) = (*nGvtxA);
-    ( *faceToEdgeA);
-    PDM_malloc(faceToEdgeA),(*nVtxA),PDM_g_num_t);
-    ( *faceToVtxA);
-    PDM_malloc(faceToVtxA),(*nVtxA),PDM_g_num_t);
-    ( *faceVtxCooA);
-    PDM_malloc(faceVtxCooA),3 * (*nVtxA),double);
-    ( *faceVtxEpsA);
-    PDM_malloc(faceVtxEpsA),(*nVtxA),double);
+    PDM_malloc((*faceToEdgeA),(*nVtxA),PDM_g_num_t);
+    PDM_malloc((*faceToVtxA),(*nVtxA),PDM_g_num_t);
+    PDM_malloc((*faceVtxCooA),3 * (*nVtxA),double);
+    PDM_malloc((*faceVtxEpsA),(*nVtxA),double);
 
     for (int i = 0; i < (*nVtxA); i++) {
       (*faceToEdgeA)[i] = i+1;
@@ -1820,14 +1649,10 @@ static int init_cas11(
     (*faceVtxCooA)[3*j+2] = 0.;
 
     (*nVtxB) = (*nGvtxB);
-    ( *faceToEdgeB);
-    PDM_malloc(faceToEdgeB),(*nVtxB),PDM_g_num_t);
-    ( *faceToVtxB);
-    PDM_malloc(faceToVtxB),(*nVtxB),PDM_g_num_t);
-    ( *faceVtxCooB);
-    PDM_malloc(faceVtxCooB),3 * (*nVtxB),double);
-    ( *faceVtxEpsB);
-    PDM_malloc(faceVtxEpsB),(*nVtxB),double);
+    PDM_malloc((*faceToEdgeB),(*nVtxB),PDM_g_num_t);
+    PDM_malloc((*faceToVtxB),(*nVtxB),PDM_g_num_t);
+    PDM_malloc((*faceVtxCooB),3 * (*nVtxB),double);
+    PDM_malloc((*faceVtxEpsB),(*nVtxB),double);
 
     for (int i = 0; i < (*nVtxB); i++) {
       (*faceToEdgeB)[i] = i+1;
@@ -1883,14 +1708,10 @@ static int init_cas12(
     (*maxGNEdgeB) = (*nGvtxB);
 
     (*nVtxA) = (*nGvtxA);
-    ( *faceToEdgeA);
-    PDM_malloc(faceToEdgeA),(*nVtxA),PDM_g_num_t);
-    ( *faceToVtxA);
-    PDM_malloc(faceToVtxA),(*nVtxA),PDM_g_num_t);
-    ( *faceVtxCooA);
-    PDM_malloc(faceVtxCooA),3 * (*nVtxA),double);
-    ( *faceVtxEpsA);
-    PDM_malloc(faceVtxEpsA),(*nVtxA),double);
+    PDM_malloc((*faceToEdgeA),(*nVtxA),PDM_g_num_t);
+    PDM_malloc((*faceToVtxA),(*nVtxA),PDM_g_num_t);
+    PDM_malloc((*faceVtxCooA),3 * (*nVtxA),double);
+    PDM_malloc((*faceVtxEpsA),(*nVtxA),double);
 
     for (int i = 0; i < (*nVtxA); i++) {
       (*faceToEdgeA)[i] = i+1;
@@ -1917,14 +1738,10 @@ static int init_cas12(
 
 
     (*nVtxB) = (*nGvtxB);
-    ( *faceToEdgeB);
-    PDM_malloc(faceToEdgeB),(*nVtxB),PDM_g_num_t);
-    ( *faceToVtxB);
-    PDM_malloc(faceToVtxB),(*nVtxB),PDM_g_num_t);
-    ( *faceVtxCooB);
-    PDM_malloc(faceVtxCooB),3 * (*nVtxB),double);
-    ( *faceVtxEpsB);
-    PDM_malloc(faceVtxEpsB),(*nVtxB),double);
+    PDM_malloc((*faceToEdgeB),(*nVtxB),PDM_g_num_t);
+    PDM_malloc((*faceToVtxB),(*nVtxB),PDM_g_num_t);
+    PDM_malloc((*faceVtxCooB),3 * (*nVtxB),double);
+    PDM_malloc((*faceVtxEpsB),(*nVtxB),double);
 
     for (int i = 0; i < (*nVtxB); i++) {
       (*faceToEdgeB)[i] = i+1;
@@ -1955,14 +1772,10 @@ static int init_cas12(
     (*maxGNEdgeB) = (*nGvtxB);
 
     (*nVtxA) = (*nGvtxA);
-    ( *faceToEdgeA);
-    PDM_malloc(faceToEdgeA),(*nVtxA),PDM_g_num_t);
-    ( *faceToVtxA);
-    PDM_malloc(faceToVtxA),(*nVtxA),PDM_g_num_t);
-    ( *faceVtxCooA);
-    PDM_malloc(faceVtxCooA),3 * (*nVtxA),double);
-    ( *faceVtxEpsA);
-    PDM_malloc(faceVtxEpsA),(*nVtxA),double);
+    PDM_malloc((*faceToEdgeA),(*nVtxA),PDM_g_num_t);
+    PDM_malloc((*faceToVtxA),(*nVtxA),PDM_g_num_t);
+    PDM_malloc((*faceVtxCooA),3 * (*nVtxA),double);
+    PDM_malloc((*faceVtxEpsA),(*nVtxA),double);
 
     for (int i = 0; i < (*nVtxA); i++) {
       (*faceToEdgeA)[i] = i+1;
@@ -1988,14 +1801,10 @@ static int init_cas12(
     (*faceVtxCooA)[3*j+2] = 0.;
 
     (*nVtxB) = (*nGvtxB);
-    ( *faceToEdgeB);
-    PDM_malloc(faceToEdgeB),(*nVtxB),PDM_g_num_t);
-    ( *faceToVtxB);
-    PDM_malloc(faceToVtxB),(*nVtxB),PDM_g_num_t);
-    ( *faceVtxCooB);
-    PDM_malloc(faceVtxCooB),3 * (*nVtxB),double);
-    ( *faceVtxEpsB);
-    PDM_malloc(faceVtxEpsB),(*nVtxB),double);
+    PDM_malloc((*faceToEdgeB),(*nVtxB),PDM_g_num_t);
+    PDM_malloc((*faceToVtxB),(*nVtxB),PDM_g_num_t);
+    PDM_malloc((*faceVtxCooB),3 * (*nVtxB),double);
+    PDM_malloc((*faceVtxEpsB),(*nVtxB),double);
 
     for (int i = 0; i < (*nVtxB); i++) {
       (*faceToEdgeB)[i] = i+1;
@@ -2048,14 +1857,10 @@ static int init_cas13(
     (*maxGNEdgeB) = (*nGvtxB);
 
     (*nVtxA) = (*nGvtxA);
-    ( *faceToEdgeA);
-    PDM_malloc(faceToEdgeA),(*nVtxA),PDM_g_num_t);
-    ( *faceToVtxA);
-    PDM_malloc(faceToVtxA),(*nVtxA),PDM_g_num_t);
-    ( *faceVtxCooA);
-    PDM_malloc(faceVtxCooA),3 * (*nVtxA),double);
-    ( *faceVtxEpsA);
-    PDM_malloc(faceVtxEpsA),(*nVtxA),double);
+    PDM_malloc((*faceToEdgeA),(*nVtxA),PDM_g_num_t);
+    PDM_malloc((*faceToVtxA),(*nVtxA),PDM_g_num_t);
+    PDM_malloc((*faceVtxCooA),3 * (*nVtxA),double);
+    PDM_malloc((*faceVtxEpsA),(*nVtxA),double);
 
     for (int i = 0; i < (*nVtxA); i++) {
       (*faceToEdgeA)[i] = i+1;
@@ -2082,14 +1887,10 @@ static int init_cas13(
 
 
     (*nVtxB) = (*nGvtxB);
-    ( *faceToEdgeB);
-    PDM_malloc(faceToEdgeB),(*nVtxB),PDM_g_num_t);
-    ( *faceToVtxB);
-    PDM_malloc(faceToVtxB),(*nVtxB),PDM_g_num_t);
-    ( *faceVtxCooB);
-    PDM_malloc(faceVtxCooB),3 * (*nVtxB),double);
-    ( *faceVtxEpsB);
-    PDM_malloc(faceVtxEpsB),(*nVtxB),double);
+    PDM_malloc((*faceToEdgeB),(*nVtxB),PDM_g_num_t);
+    PDM_malloc((*faceToVtxB),(*nVtxB),PDM_g_num_t);
+    PDM_malloc((*faceVtxCooB),3 * (*nVtxB),double);
+    PDM_malloc((*faceVtxEpsB),(*nVtxB),double);
 
     for (int i = 0; i < (*nVtxB); i++) {
       (*faceToEdgeB)[i] = i+1;
@@ -2120,14 +1921,10 @@ static int init_cas13(
     (*maxGNEdgeB) = (*nGvtxB);
 
     (*nVtxA) = (*nGvtxA);
-    ( *faceToEdgeA);
-    PDM_malloc(faceToEdgeA),(*nVtxA),PDM_g_num_t);
-    ( *faceToVtxA);
-    PDM_malloc(faceToVtxA),(*nVtxA),PDM_g_num_t);
-    ( *faceVtxCooA);
-    PDM_malloc(faceVtxCooA),3 * (*nVtxA),double);
-    ( *faceVtxEpsA);
-    PDM_malloc(faceVtxEpsA),(*nVtxA),double);
+    PDM_malloc((*faceToEdgeA),(*nVtxA),PDM_g_num_t);
+    PDM_malloc((*faceToVtxA),(*nVtxA),PDM_g_num_t);
+    PDM_malloc((*faceVtxCooA),3 * (*nVtxA),double);
+    PDM_malloc((*faceVtxEpsA),(*nVtxA),double);
 
     for (int i = 0; i < (*nVtxA); i++) {
       (*faceToEdgeA)[i] = i+1;
@@ -2153,14 +1950,10 @@ static int init_cas13(
     (*faceVtxCooA)[3*j+2] = 0.;
 
     (*nVtxB) = (*nGvtxB);
-    ( *faceToEdgeB);
-    PDM_malloc(faceToEdgeB),(*nVtxB),PDM_g_num_t);
-    ( *faceToVtxB);
-    PDM_malloc(faceToVtxB),(*nVtxB),PDM_g_num_t);
-    ( *faceVtxCooB);
-    PDM_malloc(faceVtxCooB),3 * (*nVtxB),double);
-    ( *faceVtxEpsB);
-    PDM_malloc(faceVtxEpsB),(*nVtxB),double);
+    PDM_malloc((*faceToEdgeB),(*nVtxB),PDM_g_num_t);
+    PDM_malloc((*faceToVtxB),(*nVtxB),PDM_g_num_t);
+    PDM_malloc((*faceVtxCooB),3 * (*nVtxB),double);
+    PDM_malloc((*faceVtxEpsB),(*nVtxB),double);
 
     for (int i = 0; i < (*nVtxB); i++) {
       (*faceToEdgeB)[i] = i+1;
@@ -2216,14 +2009,10 @@ static int init_cas14(
     (*maxGNEdgeB) = (*nGvtxB);
 
     (*nVtxA) = (*nGvtxA);
-    ( *faceToEdgeA);
-    PDM_malloc(faceToEdgeA),(*nVtxA),PDM_g_num_t);
-    ( *faceToVtxA);
-    PDM_malloc(faceToVtxA),(*nVtxA),PDM_g_num_t);
-    ( *faceVtxCooA);
-    PDM_malloc(faceVtxCooA),3 * (*nVtxA),double);
-    ( *faceVtxEpsA);
-    PDM_malloc(faceVtxEpsA),(*nVtxA),double);
+    PDM_malloc((*faceToEdgeA),(*nVtxA),PDM_g_num_t);
+    PDM_malloc((*faceToVtxA),(*nVtxA),PDM_g_num_t);
+    PDM_malloc((*faceVtxCooA),3 * (*nVtxA),double);
+    PDM_malloc((*faceVtxEpsA),(*nVtxA),double);
 
     for (int i = 0; i < (*nVtxA); i++) {
       (*faceToEdgeA)[i] = i+1;
@@ -2250,14 +2039,10 @@ static int init_cas14(
 
 
     (*nVtxB) = (*nGvtxB);
-    ( *faceToEdgeB);
-    PDM_malloc(faceToEdgeB),(*nVtxB),PDM_g_num_t);
-    ( *faceToVtxB);
-    PDM_malloc(faceToVtxB),(*nVtxB),PDM_g_num_t);
-    ( *faceVtxCooB);
-    PDM_malloc(faceVtxCooB),3 * (*nVtxB),double);
-    ( *faceVtxEpsB);
-    PDM_malloc(faceVtxEpsB),(*nVtxB),double);
+    PDM_malloc((*faceToEdgeB),(*nVtxB),PDM_g_num_t);
+    PDM_malloc((*faceToVtxB),(*nVtxB),PDM_g_num_t);
+    PDM_malloc((*faceVtxCooB),3 * (*nVtxB),double);
+    PDM_malloc((*faceVtxEpsB),(*nVtxB),double);
 
     for (int i = 0; i < (*nVtxB); i++) {
       (*faceToEdgeB)[i] = i+1;
@@ -2288,14 +2073,10 @@ static int init_cas14(
     (*maxGNEdgeB) = (*nGvtxB);
 
     (*nVtxA) = (*nGvtxA);
-    ( *faceToEdgeA);
-    PDM_malloc(faceToEdgeA),(*nVtxA),PDM_g_num_t);
-    ( *faceToVtxA);
-    PDM_malloc(faceToVtxA),(*nVtxA),PDM_g_num_t);
-    ( *faceVtxCooA);
-    PDM_malloc(faceVtxCooA),3 * (*nVtxA),double);
-    ( *faceVtxEpsA);
-    PDM_malloc(faceVtxEpsA),(*nVtxA),double);
+    PDM_malloc((*faceToEdgeA),(*nVtxA),PDM_g_num_t);
+    PDM_malloc((*faceToVtxA),(*nVtxA),PDM_g_num_t);
+    PDM_malloc((*faceVtxCooA),3 * (*nVtxA),double);
+    PDM_malloc((*faceVtxEpsA),(*nVtxA),double);
 
     for (int i = 0; i < (*nVtxA); i++) {
       (*faceToEdgeA)[i] = i+1;
@@ -2321,14 +2102,10 @@ static int init_cas14(
     (*faceVtxCooA)[3*j+2] = 0.;
 
     (*nVtxB) = (*nGvtxB);
-    ( *faceToEdgeB);
-    PDM_malloc(faceToEdgeB),(*nVtxB),PDM_g_num_t);
-    ( *faceToVtxB);
-    PDM_malloc(faceToVtxB),(*nVtxB),PDM_g_num_t);
-    ( *faceVtxCooB);
-    PDM_malloc(faceVtxCooB),3 * (*nVtxB),double);
-    ( *faceVtxEpsB);
-    PDM_malloc(faceVtxEpsB),(*nVtxB),double);
+    PDM_malloc((*faceToEdgeB),(*nVtxB),PDM_g_num_t);
+    PDM_malloc((*faceToVtxB),(*nVtxB),PDM_g_num_t);
+    PDM_malloc((*faceVtxCooB),3 * (*nVtxB),double);
+    PDM_malloc((*faceVtxEpsB),(*nVtxB),double);
 
     for (int i = 0; i < (*nVtxB); i++) {
       (*faceToEdgeB)[i] = i+1;
@@ -2385,14 +2162,10 @@ static int init_cas15(
     (*maxGNEdgeB) = (*nGvtxB);
 
     (*nVtxA) = (*nGvtxA);
-    ( *faceToEdgeA);
-    PDM_malloc(faceToEdgeA),(*nVtxA),PDM_g_num_t);
-    ( *faceToVtxA);
-    PDM_malloc(faceToVtxA),(*nVtxA),PDM_g_num_t);
-    ( *faceVtxCooA);
-    PDM_malloc(faceVtxCooA),3 * (*nVtxA),double);
-    ( *faceVtxEpsA);
-    PDM_malloc(faceVtxEpsA),(*nVtxA),double);
+    PDM_malloc((*faceToEdgeA),(*nVtxA),PDM_g_num_t);
+    PDM_malloc((*faceToVtxA),(*nVtxA),PDM_g_num_t);
+    PDM_malloc((*faceVtxCooA),3 * (*nVtxA),double);
+    PDM_malloc((*faceVtxEpsA),(*nVtxA),double);
 
     for (int i = 0; i < (*nVtxA); i++) {
       (*faceToEdgeA)[i] = i+1;
@@ -2419,14 +2192,10 @@ static int init_cas15(
 
 
     (*nVtxB) = (*nGvtxB);
-    ( *faceToEdgeB);
-    PDM_malloc(faceToEdgeB),(*nVtxB),PDM_g_num_t);
-    ( *faceToVtxB);
-    PDM_malloc(faceToVtxB),(*nVtxB),PDM_g_num_t);
-    ( *faceVtxCooB);
-    PDM_malloc(faceVtxCooB),3 * (*nVtxB),double);
-    ( *faceVtxEpsB);
-    PDM_malloc(faceVtxEpsB),(*nVtxB),double);
+    PDM_malloc((*faceToEdgeB),(*nVtxB),PDM_g_num_t);
+    PDM_malloc((*faceToVtxB),(*nVtxB),PDM_g_num_t);
+    PDM_malloc((*faceVtxCooB),3 * (*nVtxB),double);
+    PDM_malloc((*faceVtxEpsB),(*nVtxB),double);
 
     for (int i = 0; i < (*nVtxB); i++) {
       (*faceToEdgeB)[i] = i+1;
@@ -2457,14 +2226,10 @@ static int init_cas15(
     (*maxGNEdgeB) = (*nGvtxB);
 
     (*nVtxA) = (*nGvtxA);
-    ( *faceToEdgeA);
-    PDM_malloc(faceToEdgeA),(*nVtxA),PDM_g_num_t);
-    ( *faceToVtxA);
-    PDM_malloc(faceToVtxA),(*nVtxA),PDM_g_num_t);
-    ( *faceVtxCooA);
-    PDM_malloc(faceVtxCooA),3 * (*nVtxA),double);
-    ( *faceVtxEpsA);
-    PDM_malloc(faceVtxEpsA),(*nVtxA),double);
+    PDM_malloc((*faceToEdgeA),(*nVtxA),PDM_g_num_t);
+    PDM_malloc((*faceToVtxA),(*nVtxA),PDM_g_num_t);
+    PDM_malloc((*faceVtxCooA),3 * (*nVtxA),double);
+    PDM_malloc((*faceVtxEpsA),(*nVtxA),double);
 
     for (int i = 0; i < (*nVtxA); i++) {
       (*faceToEdgeA)[i] = i+1;
@@ -2490,14 +2255,10 @@ static int init_cas15(
     (*faceVtxCooA)[3*j+2] = 0.;
 
     (*nVtxB) = (*nGvtxB);
-    ( *faceToEdgeB);
-    PDM_malloc(faceToEdgeB),(*nVtxB),PDM_g_num_t);
-    ( *faceToVtxB);
-    PDM_malloc(faceToVtxB),(*nVtxB),PDM_g_num_t);
-    ( *faceVtxCooB);
-    PDM_malloc(faceVtxCooB),3 * (*nVtxB),double);
-    ( *faceVtxEpsB);
-    PDM_malloc(faceVtxEpsB),(*nVtxB),double);
+    PDM_malloc((*faceToEdgeB),(*nVtxB),PDM_g_num_t);
+    PDM_malloc((*faceToVtxB),(*nVtxB),PDM_g_num_t);
+    PDM_malloc((*faceVtxCooB),3 * (*nVtxB),double);
+    PDM_malloc((*faceVtxEpsB),(*nVtxB),double);
 
     for (int i = 0; i < (*nVtxB); i++) {
       (*faceToEdgeB)[i] = i+1;
@@ -2553,14 +2314,10 @@ static int init_cas16(
     (*maxGNEdgeB) = (*nGvtxB);
 
     (*nVtxA) = (*nGvtxA);
-    ( *faceToEdgeA);
-    PDM_malloc(faceToEdgeA),(*nVtxA),PDM_g_num_t);
-    ( *faceToVtxA);
-    PDM_malloc(faceToVtxA),(*nVtxA),PDM_g_num_t);
-    ( *faceVtxCooA);
-    PDM_malloc(faceVtxCooA),3 * (*nVtxA),double);
-    ( *faceVtxEpsA);
-    PDM_malloc(faceVtxEpsA),(*nVtxA),double);
+    PDM_malloc((*faceToEdgeA),(*nVtxA),PDM_g_num_t);
+    PDM_malloc((*faceToVtxA),(*nVtxA),PDM_g_num_t);
+    PDM_malloc((*faceVtxCooA),3 * (*nVtxA),double);
+    PDM_malloc((*faceVtxEpsA),(*nVtxA),double);
 
     for (int i = 0; i < (*nVtxA); i++) {
       (*faceToEdgeA)[i] = i+1;
@@ -2587,14 +2344,10 @@ static int init_cas16(
 
 
     (*nVtxB) = (*nGvtxB);
-    ( *faceToEdgeB);
-    PDM_malloc(faceToEdgeB),(*nVtxB),PDM_g_num_t);
-    ( *faceToVtxB);
-    PDM_malloc(faceToVtxB),(*nVtxB),PDM_g_num_t);
-    ( *faceVtxCooB);
-    PDM_malloc(faceVtxCooB),3 * (*nVtxB),double);
-    ( *faceVtxEpsB);
-    PDM_malloc(faceVtxEpsB),(*nVtxB),double);
+    PDM_malloc((*faceToEdgeB),(*nVtxB),PDM_g_num_t);
+    PDM_malloc((*faceToVtxB),(*nVtxB),PDM_g_num_t);
+    PDM_malloc((*faceVtxCooB),3 * (*nVtxB),double);
+    PDM_malloc((*faceVtxEpsB),(*nVtxB),double);
 
     for (int i = 0; i < (*nVtxB); i++) {
       (*faceToEdgeB)[i] = i+1;
@@ -2625,14 +2378,10 @@ static int init_cas16(
     (*maxGNEdgeB) = (*nGvtxB);
 
     (*nVtxA) = (*nGvtxA);
-    ( *faceToEdgeA);
-    PDM_malloc(faceToEdgeA),(*nVtxA),PDM_g_num_t);
-    ( *faceToVtxA);
-    PDM_malloc(faceToVtxA),(*nVtxA),PDM_g_num_t);
-    ( *faceVtxCooA);
-    PDM_malloc(faceVtxCooA),3 * (*nVtxA),double);
-    ( *faceVtxEpsA);
-    PDM_malloc(faceVtxEpsA),(*nVtxA),double);
+    PDM_malloc((*faceToEdgeA),(*nVtxA),PDM_g_num_t);
+    PDM_malloc((*faceToVtxA),(*nVtxA),PDM_g_num_t);
+    PDM_malloc((*faceVtxCooA),3 * (*nVtxA),double);
+    PDM_malloc((*faceVtxEpsA),(*nVtxA),double);
 
     for (int i = 0; i < (*nVtxA); i++) {
       (*faceToEdgeA)[i] = i+1;
@@ -2658,14 +2407,10 @@ static int init_cas16(
     (*faceVtxCooA)[3*j+2] = 0.;
 
     (*nVtxB) = (*nGvtxB);
-    ( *faceToEdgeB);
-    PDM_malloc(faceToEdgeB),(*nVtxB),PDM_g_num_t);
-    ( *faceToVtxB);
-    PDM_malloc(faceToVtxB),(*nVtxB),PDM_g_num_t);
-    ( *faceVtxCooB);
-    PDM_malloc(faceVtxCooB),3 * (*nVtxB),double);
-    ( *faceVtxEpsB);
-    PDM_malloc(faceVtxEpsB),(*nVtxB),double);
+    PDM_malloc((*faceToEdgeB),(*nVtxB),PDM_g_num_t);
+    PDM_malloc((*faceToVtxB),(*nVtxB),PDM_g_num_t);
+    PDM_malloc((*faceVtxCooB),3 * (*nVtxB),double);
+    PDM_malloc((*faceVtxEpsB),(*nVtxB),double);
 
     for (int i = 0; i < (*nVtxB); i++) {
       (*faceToEdgeB)[i] = i+1;
@@ -2721,14 +2466,10 @@ static int init_cas17(
     (*maxGNEdgeB) = (*nGvtxB);
 
     (*nVtxA) = (*nGvtxA);
-    ( *faceToEdgeA);
-    PDM_malloc(faceToEdgeA),(*nVtxA),PDM_g_num_t);
-    ( *faceToVtxA);
-    PDM_malloc(faceToVtxA),(*nVtxA),PDM_g_num_t);
-    ( *faceVtxCooA);
-    PDM_malloc(faceVtxCooA),3 * (*nVtxA),double);
-    ( *faceVtxEpsA);
-    PDM_malloc(faceVtxEpsA),(*nVtxA),double);
+    PDM_malloc((*faceToEdgeA),(*nVtxA),PDM_g_num_t);
+    PDM_malloc((*faceToVtxA),(*nVtxA),PDM_g_num_t);
+    PDM_malloc((*faceVtxCooA),3 * (*nVtxA),double);
+    PDM_malloc((*faceVtxEpsA),(*nVtxA),double);
 
     for (int i = 0; i < (*nVtxA); i++) {
       (*faceToEdgeA)[i] = i+1;
@@ -2755,14 +2496,10 @@ static int init_cas17(
 
 
     (*nVtxB) = (*nGvtxB);
-    ( *faceToEdgeB);
-    PDM_malloc(faceToEdgeB),(*nVtxB),PDM_g_num_t);
-    ( *faceToVtxB);
-    PDM_malloc(faceToVtxB),(*nVtxB),PDM_g_num_t);
-    ( *faceVtxCooB);
-    PDM_malloc(faceVtxCooB),3 * (*nVtxB),double);
-    ( *faceVtxEpsB);
-    PDM_malloc(faceVtxEpsB),(*nVtxB),double);
+    PDM_malloc((*faceToEdgeB),(*nVtxB),PDM_g_num_t);
+    PDM_malloc((*faceToVtxB),(*nVtxB),PDM_g_num_t);
+    PDM_malloc((*faceVtxCooB),3 * (*nVtxB),double);
+    PDM_malloc((*faceVtxEpsB),(*nVtxB),double);
 
     for (int i = 0; i < (*nVtxB); i++) {
       (*faceToEdgeB)[i] = i+1;
@@ -2793,14 +2530,10 @@ static int init_cas17(
     (*maxGNEdgeB) = (*nGvtxB);
 
     (*nVtxA) = (*nGvtxA);
-    ( *faceToEdgeA);
-    PDM_malloc(faceToEdgeA),(*nVtxA),PDM_g_num_t);
-    ( *faceToVtxA);
-    PDM_malloc(faceToVtxA),(*nVtxA),PDM_g_num_t);
-    ( *faceVtxCooA);
-    PDM_malloc(faceVtxCooA),3 * (*nVtxA),double);
-    ( *faceVtxEpsA);
-    PDM_malloc(faceVtxEpsA),(*nVtxA),double);
+    PDM_malloc((*faceToEdgeA),(*nVtxA),PDM_g_num_t);
+    PDM_malloc((*faceToVtxA),(*nVtxA),PDM_g_num_t);
+    PDM_malloc((*faceVtxCooA),3 * (*nVtxA),double);
+    PDM_malloc((*faceVtxEpsA),(*nVtxA),double);
 
     for (int i = 0; i < (*nVtxA); i++) {
       (*faceToEdgeA)[i] = i+1;
@@ -2826,14 +2559,10 @@ static int init_cas17(
     (*faceVtxCooA)[3*j+2] = 0.;
 
     (*nVtxB) = (*nGvtxB);
-    ( *faceToEdgeB);
-    PDM_malloc(faceToEdgeB),(*nVtxB),PDM_g_num_t);
-    ( *faceToVtxB);
-    PDM_malloc(faceToVtxB),(*nVtxB),PDM_g_num_t);
-    ( *faceVtxCooB);
-    PDM_malloc(faceVtxCooB),3 * (*nVtxB),double);
-    ( *faceVtxEpsB);
-    PDM_malloc(faceVtxEpsB),(*nVtxB),double);
+    PDM_malloc((*faceToEdgeB),(*nVtxB),PDM_g_num_t);
+    PDM_malloc((*faceToVtxB),(*nVtxB),PDM_g_num_t);
+    PDM_malloc((*faceVtxCooB),3 * (*nVtxB),double);
+    PDM_malloc((*faceVtxEpsB),(*nVtxB),double);
 
     for (int i = 0; i < (*nVtxB); i++) {
       (*faceToEdgeB)[i] = i+1;
@@ -2889,14 +2618,10 @@ static int init_cas18(
     (*maxGNEdgeB) = (*nGvtxB);
 
     (*nVtxA) = (*nGvtxA);
-    ( *faceToEdgeA);
-    PDM_malloc(faceToEdgeA),(*nVtxA),PDM_g_num_t);
-    ( *faceToVtxA);
-    PDM_malloc(faceToVtxA),(*nVtxA),PDM_g_num_t);
-    ( *faceVtxCooA);
-    PDM_malloc(faceVtxCooA),3 * (*nVtxA),double);
-    ( *faceVtxEpsA);
-    PDM_malloc(faceVtxEpsA),(*nVtxA),double);
+    PDM_malloc((*faceToEdgeA),(*nVtxA),PDM_g_num_t);
+    PDM_malloc((*faceToVtxA),(*nVtxA),PDM_g_num_t);
+    PDM_malloc((*faceVtxCooA),3 * (*nVtxA),double);
+    PDM_malloc((*faceVtxEpsA),(*nVtxA),double);
 
     for (int i = 0; i < (*nVtxA); i++) {
       (*faceToEdgeA)[i] = i+1;
@@ -2923,14 +2648,10 @@ static int init_cas18(
 
 
     (*nVtxB) = (*nGvtxB);
-    ( *faceToEdgeB);
-    PDM_malloc(faceToEdgeB),(*nVtxB),PDM_g_num_t);
-    ( *faceToVtxB);
-    PDM_malloc(faceToVtxB),(*nVtxB),PDM_g_num_t);
-    ( *faceVtxCooB);
-    PDM_malloc(faceVtxCooB),3 * (*nVtxB),double);
-    ( *faceVtxEpsB);
-    PDM_malloc(faceVtxEpsB),(*nVtxB),double);
+    PDM_malloc((*faceToEdgeB),(*nVtxB),PDM_g_num_t);
+    PDM_malloc((*faceToVtxB),(*nVtxB),PDM_g_num_t);
+    PDM_malloc((*faceVtxCooB),3 * (*nVtxB),double);
+    PDM_malloc((*faceVtxEpsB),(*nVtxB),double);
 
     for (int i = 0; i < (*nVtxB); i++) {
       (*faceToEdgeB)[i] = i+1;
@@ -2961,14 +2682,10 @@ static int init_cas18(
     (*maxGNEdgeB) = (*nGvtxB);
 
     (*nVtxA) = (*nGvtxA);
-    ( *faceToEdgeA);
-    PDM_malloc(faceToEdgeA),(*nVtxA),PDM_g_num_t);
-    ( *faceToVtxA);
-    PDM_malloc(faceToVtxA),(*nVtxA),PDM_g_num_t);
-    ( *faceVtxCooA);
-    PDM_malloc(faceVtxCooA),3 * (*nVtxA),double);
-    ( *faceVtxEpsA);
-    PDM_malloc(faceVtxEpsA),(*nVtxA),double);
+    PDM_malloc((*faceToEdgeA),(*nVtxA),PDM_g_num_t);
+    PDM_malloc((*faceToVtxA),(*nVtxA),PDM_g_num_t);
+    PDM_malloc((*faceVtxCooA),3 * (*nVtxA),double);
+    PDM_malloc((*faceVtxEpsA),(*nVtxA),double);
 
     for (int i = 0; i < (*nVtxA); i++) {
       (*faceToEdgeA)[i] = i+1;
@@ -2994,14 +2711,10 @@ static int init_cas18(
     (*faceVtxCooA)[3*j+2] = 0.;
 
     (*nVtxB) = (*nGvtxB);
-    ( *faceToEdgeB);
-    PDM_malloc(faceToEdgeB),(*nVtxB),PDM_g_num_t);
-    ( *faceToVtxB);
-    PDM_malloc(faceToVtxB),(*nVtxB),PDM_g_num_t);
-    ( *faceVtxCooB);
-    PDM_malloc(faceVtxCooB),3 * (*nVtxB),double);
-    ( *faceVtxEpsB);
-    PDM_malloc(faceVtxEpsB),(*nVtxB),double);
+    PDM_malloc((*faceToEdgeB),(*nVtxB),PDM_g_num_t);
+    PDM_malloc((*faceToVtxB),(*nVtxB),PDM_g_num_t);
+    PDM_malloc((*faceVtxCooB),3 * (*nVtxB),double);
+    PDM_malloc((*faceVtxEpsB),(*nVtxB),double);
 
     for (int i = 0; i < (*nVtxB); i++) {
       (*faceToEdgeB)[i] = i+1;
@@ -3057,14 +2770,10 @@ static int init_cas19(
     (*maxGNEdgeB) = (*nGvtxB);
 
     (*nVtxA) = (*nGvtxA);
-    ( *faceToEdgeA);
-    PDM_malloc(faceToEdgeA),(*nVtxA),PDM_g_num_t);
-    ( *faceToVtxA);
-    PDM_malloc(faceToVtxA),(*nVtxA),PDM_g_num_t);
-    ( *faceVtxCooA);
-    PDM_malloc(faceVtxCooA),3 * (*nVtxA),double);
-    ( *faceVtxEpsA);
-    PDM_malloc(faceVtxEpsA),(*nVtxA),double);
+    PDM_malloc((*faceToEdgeA),(*nVtxA),PDM_g_num_t);
+    PDM_malloc((*faceToVtxA),(*nVtxA),PDM_g_num_t);
+    PDM_malloc((*faceVtxCooA),3 * (*nVtxA),double);
+    PDM_malloc((*faceVtxEpsA),(*nVtxA),double);
 
     for (int i = 0; i < (*nVtxA); i++) {
       (*faceToEdgeA)[i] = i+1;
@@ -3091,14 +2800,10 @@ static int init_cas19(
 
 
     (*nVtxB) = (*nGvtxB);
-    ( *faceToEdgeB);
-    PDM_malloc(faceToEdgeB),(*nVtxB),PDM_g_num_t);
-    ( *faceToVtxB);
-    PDM_malloc(faceToVtxB),(*nVtxB),PDM_g_num_t);
-    ( *faceVtxCooB);
-    PDM_malloc(faceVtxCooB),3 * (*nVtxB),double);
-    ( *faceVtxEpsB);
-    PDM_malloc(faceVtxEpsB),(*nVtxB),double);
+    PDM_malloc((*faceToEdgeB),(*nVtxB),PDM_g_num_t);
+    PDM_malloc((*faceToVtxB),(*nVtxB),PDM_g_num_t);
+    PDM_malloc((*faceVtxCooB),3 * (*nVtxB),double);
+    PDM_malloc((*faceVtxEpsB),(*nVtxB),double);
 
     for (int i = 0; i < (*nVtxB); i++) {
       (*faceToEdgeB)[i] = i+1;
@@ -3129,14 +2834,10 @@ static int init_cas19(
     (*maxGNEdgeB) = (*nGvtxB);
 
     (*nVtxA) = (*nGvtxA);
-    ( *faceToEdgeA);
-    PDM_malloc(faceToEdgeA),(*nVtxA),PDM_g_num_t);
-    ( *faceToVtxA);
-    PDM_malloc(faceToVtxA),(*nVtxA),PDM_g_num_t);
-    ( *faceVtxCooA);
-    PDM_malloc(faceVtxCooA),3 * (*nVtxA),double);
-    ( *faceVtxEpsA);
-    PDM_malloc(faceVtxEpsA),(*nVtxA),double);
+    PDM_malloc((*faceToEdgeA),(*nVtxA),PDM_g_num_t);
+    PDM_malloc((*faceToVtxA),(*nVtxA),PDM_g_num_t);
+    PDM_malloc((*faceVtxCooA),3 * (*nVtxA),double);
+    PDM_malloc((*faceVtxEpsA),(*nVtxA),double);
 
     for (int i = 0; i < (*nVtxA); i++) {
       (*faceToEdgeA)[i] = i+1;
@@ -3162,14 +2863,10 @@ static int init_cas19(
     (*faceVtxCooA)[3*j+2] = 0.;
 
     (*nVtxB) = (*nGvtxB);
-    ( *faceToEdgeB);
-    PDM_malloc(faceToEdgeB),(*nVtxB),PDM_g_num_t);
-    ( *faceToVtxB);
-    PDM_malloc(faceToVtxB),(*nVtxB),PDM_g_num_t);
-    ( *faceVtxCooB);
-    PDM_malloc(faceVtxCooB),3 * (*nVtxB),double);
-    ( *faceVtxEpsB);
-    PDM_malloc(faceVtxEpsB),(*nVtxB),double);
+    PDM_malloc((*faceToEdgeB),(*nVtxB),PDM_g_num_t);
+    PDM_malloc((*faceToVtxB),(*nVtxB),PDM_g_num_t);
+    PDM_malloc((*faceVtxCooB),3 * (*nVtxB),double);
+    PDM_malloc((*faceVtxEpsB),(*nVtxB),double);
 
     for (int i = 0; i < (*nVtxB); i++) {
       (*faceToEdgeB)[i] = i+1;
@@ -3225,14 +2922,10 @@ static int init_cas20(
     (*maxGNEdgeB) = (*nGvtxB);
 
     (*nVtxA) = (*nGvtxA);
-    ( *faceToEdgeA);
-    PDM_malloc(faceToEdgeA),(*nVtxA),PDM_g_num_t);
-    ( *faceToVtxA);
-    PDM_malloc(faceToVtxA),(*nVtxA),PDM_g_num_t);
-    ( *faceVtxCooA);
-    PDM_malloc(faceVtxCooA),3 * (*nVtxA),double);
-    ( *faceVtxEpsA);
-    PDM_malloc(faceVtxEpsA),(*nVtxA),double);
+    PDM_malloc((*faceToEdgeA),(*nVtxA),PDM_g_num_t);
+    PDM_malloc((*faceToVtxA),(*nVtxA),PDM_g_num_t);
+    PDM_malloc((*faceVtxCooA),3 * (*nVtxA),double);
+    PDM_malloc((*faceVtxEpsA),(*nVtxA),double);
 
     for (int i = 0; i < (*nVtxA); i++) {
       (*faceToEdgeA)[i] = i+1;
@@ -3259,14 +2952,10 @@ static int init_cas20(
 
 
     (*nVtxB) = (*nGvtxB);
-    ( *faceToEdgeB);
-    PDM_malloc(faceToEdgeB),(*nVtxB),PDM_g_num_t);
-    ( *faceToVtxB);
-    PDM_malloc(faceToVtxB),(*nVtxB),PDM_g_num_t);
-    ( *faceVtxCooB);
-    PDM_malloc(faceVtxCooB),3 * (*nVtxB),double);
-    ( *faceVtxEpsB);
-    PDM_malloc(faceVtxEpsB),(*nVtxB),double);
+    PDM_malloc((*faceToEdgeB),(*nVtxB),PDM_g_num_t);
+    PDM_malloc((*faceToVtxB),(*nVtxB),PDM_g_num_t);
+    PDM_malloc((*faceVtxCooB),3 * (*nVtxB),double);
+    PDM_malloc((*faceVtxEpsB),(*nVtxB),double);
 
     for (int i = 0; i < (*nVtxB); i++) {
       (*faceToEdgeB)[i] = i+1;
@@ -3297,14 +2986,10 @@ static int init_cas20(
     (*maxGNEdgeB) = (*nGvtxB);
 
     (*nVtxA) = (*nGvtxA);
-    ( *faceToEdgeA);
-    PDM_malloc(faceToEdgeA),(*nVtxA),PDM_g_num_t);
-    ( *faceToVtxA);
-    PDM_malloc(faceToVtxA),(*nVtxA),PDM_g_num_t);
-    ( *faceVtxCooA);
-    PDM_malloc(faceVtxCooA),3 * (*nVtxA),double);
-    ( *faceVtxEpsA);
-    PDM_malloc(faceVtxEpsA),(*nVtxA),double);
+    PDM_malloc((*faceToEdgeA),(*nVtxA),PDM_g_num_t);
+    PDM_malloc((*faceToVtxA),(*nVtxA),PDM_g_num_t);
+    PDM_malloc((*faceVtxCooA),3 * (*nVtxA),double);
+    PDM_malloc((*faceVtxEpsA),(*nVtxA),double);
 
     for (int i = 0; i < (*nVtxA); i++) {
       (*faceToEdgeA)[i] = i+1;
@@ -3330,14 +3015,10 @@ static int init_cas20(
     (*faceVtxCooA)[3*j+2] = 0.;
 
     (*nVtxB) = (*nGvtxB);
-    ( *faceToEdgeB);
-    PDM_malloc(faceToEdgeB),(*nVtxB),PDM_g_num_t);
-    ( *faceToVtxB);
-    PDM_malloc(faceToVtxB),(*nVtxB),PDM_g_num_t);
-    ( *faceVtxCooB);
-    PDM_malloc(faceVtxCooB),3 * (*nVtxB),double);
-    ( *faceVtxEpsB);
-    PDM_malloc(faceVtxEpsB),(*nVtxB),double);
+    PDM_malloc((*faceToEdgeB),(*nVtxB),PDM_g_num_t);
+    PDM_malloc((*faceToVtxB),(*nVtxB),PDM_g_num_t);
+    PDM_malloc((*faceVtxCooB),3 * (*nVtxB),double);
+    PDM_malloc((*faceVtxEpsB),(*nVtxB),double);
 
     for (int i = 0; i < (*nVtxB); i++) {
       (*faceToEdgeB)[i] = i+1;
@@ -3393,14 +3074,10 @@ static int init_cas21(
     (*maxGNEdgeB) = (*nGvtxB);
 
     (*nVtxA) = (*nGvtxA);
-    ( *faceToEdgeA);
-    PDM_malloc(faceToEdgeA),(*nVtxA),PDM_g_num_t);
-    ( *faceToVtxA);
-    PDM_malloc(faceToVtxA),(*nVtxA),PDM_g_num_t);
-    ( *faceVtxCooA);
-    PDM_malloc(faceVtxCooA),3 * (*nVtxA),double);
-    ( *faceVtxEpsA);
-    PDM_malloc(faceVtxEpsA),(*nVtxA),double);
+    PDM_malloc((*faceToEdgeA),(*nVtxA),PDM_g_num_t);
+    PDM_malloc((*faceToVtxA),(*nVtxA),PDM_g_num_t);
+    PDM_malloc((*faceVtxCooA),3 * (*nVtxA),double);
+    PDM_malloc((*faceVtxEpsA),(*nVtxA),double);
 
     for (int i = 0; i < (*nVtxA); i++) {
       (*faceToEdgeA)[i] = i+1;
@@ -3427,14 +3104,10 @@ static int init_cas21(
 
 
     (*nVtxB) = (*nGvtxB);
-    ( *faceToEdgeB);
-    PDM_malloc(faceToEdgeB),(*nVtxB),PDM_g_num_t);
-    ( *faceToVtxB);
-    PDM_malloc(faceToVtxB),(*nVtxB),PDM_g_num_t);
-    ( *faceVtxCooB);
-    PDM_malloc(faceVtxCooB),3 * (*nVtxB),double);
-    ( *faceVtxEpsB);
-    PDM_malloc(faceVtxEpsB),(*nVtxB),double);
+    PDM_malloc((*faceToEdgeB),(*nVtxB),PDM_g_num_t);
+    PDM_malloc((*faceToVtxB),(*nVtxB),PDM_g_num_t);
+    PDM_malloc((*faceVtxCooB),3 * (*nVtxB),double);
+    PDM_malloc((*faceVtxEpsB),(*nVtxB),double);
 
     for (int i = 0; i < (*nVtxB); i++) {
       (*faceToEdgeB)[i] = i+1;
@@ -3465,14 +3138,10 @@ static int init_cas21(
     (*maxGNEdgeB) = (*nGvtxB);
 
     (*nVtxA) = (*nGvtxA);
-    ( *faceToEdgeA);
-    PDM_malloc(faceToEdgeA),(*nVtxA),PDM_g_num_t);
-    ( *faceToVtxA);
-    PDM_malloc(faceToVtxA),(*nVtxA),PDM_g_num_t);
-    ( *faceVtxCooA);
-    PDM_malloc(faceVtxCooA),3 * (*nVtxA),double);
-    ( *faceVtxEpsA);
-    PDM_malloc(faceVtxEpsA),(*nVtxA),double);
+    PDM_malloc((*faceToEdgeA),(*nVtxA),PDM_g_num_t);
+    PDM_malloc((*faceToVtxA),(*nVtxA),PDM_g_num_t);
+    PDM_malloc((*faceVtxCooA),3 * (*nVtxA),double);
+    PDM_malloc((*faceVtxEpsA),(*nVtxA),double);
 
     for (int i = 0; i < (*nVtxA); i++) {
       (*faceToEdgeA)[i] = i+1;
@@ -3498,14 +3167,10 @@ static int init_cas21(
     (*faceVtxCooA)[3*j+2] = 0.;
 
     (*nVtxB) = (*nGvtxB);
-    ( *faceToEdgeB);
-    PDM_malloc(faceToEdgeB),(*nVtxB),PDM_g_num_t);
-    ( *faceToVtxB);
-    PDM_malloc(faceToVtxB),(*nVtxB),PDM_g_num_t);
-    ( *faceVtxCooB);
-    PDM_malloc(faceVtxCooB),3 * (*nVtxB),double);
-    ( *faceVtxEpsB);
-    PDM_malloc(faceVtxEpsB),(*nVtxB),double);
+    PDM_malloc((*faceToEdgeB),(*nVtxB),PDM_g_num_t);
+    PDM_malloc((*faceToVtxB),(*nVtxB),PDM_g_num_t);
+    PDM_malloc((*faceVtxCooB),3 * (*nVtxB),double);
+    PDM_malloc((*faceVtxEpsB),(*nVtxB),double);
 
     for (int i = 0; i < (*nVtxB); i++) {
       (*faceToEdgeB)[i] = i+1;
@@ -3561,14 +3226,10 @@ static int init_cas22(
     (*maxGNEdgeB) = (*nGvtxB);
 
     (*nVtxA) = (*nGvtxA);
-    ( *faceToEdgeA);
-    PDM_malloc(faceToEdgeA),(*nVtxA),PDM_g_num_t);
-    ( *faceToVtxA);
-    PDM_malloc(faceToVtxA),(*nVtxA),PDM_g_num_t);
-    ( *faceVtxCooA);
-    PDM_malloc(faceVtxCooA),3 * (*nVtxA),double);
-    ( *faceVtxEpsA);
-    PDM_malloc(faceVtxEpsA),(*nVtxA),double);
+    PDM_malloc((*faceToEdgeA),(*nVtxA),PDM_g_num_t);
+    PDM_malloc((*faceToVtxA),(*nVtxA),PDM_g_num_t);
+    PDM_malloc((*faceVtxCooA),3 * (*nVtxA),double);
+    PDM_malloc((*faceVtxEpsA),(*nVtxA),double);
 
     for (int i = 0; i < (*nVtxA); i++) {
       (*faceToEdgeA)[i] = i+1;
@@ -3595,14 +3256,10 @@ static int init_cas22(
 
 
     (*nVtxB) = (*nGvtxB);
-    ( *faceToEdgeB);
-    PDM_malloc(faceToEdgeB),(*nVtxB),PDM_g_num_t);
-    ( *faceToVtxB);
-    PDM_malloc(faceToVtxB),(*nVtxB),PDM_g_num_t);
-    ( *faceVtxCooB);
-    PDM_malloc(faceVtxCooB),3 * (*nVtxB),double);
-    ( *faceVtxEpsB);
-    PDM_malloc(faceVtxEpsB),(*nVtxB),double);
+    PDM_malloc((*faceToEdgeB),(*nVtxB),PDM_g_num_t);
+    PDM_malloc((*faceToVtxB),(*nVtxB),PDM_g_num_t);
+    PDM_malloc((*faceVtxCooB),3 * (*nVtxB),double);
+    PDM_malloc((*faceVtxEpsB),(*nVtxB),double);
 
     for (int i = 0; i < (*nVtxB); i++) {
       (*faceToEdgeB)[i] = i+1;
@@ -3633,14 +3290,10 @@ static int init_cas22(
     (*maxGNEdgeB) = (*nGvtxB);
 
     (*nVtxA) = (*nGvtxA);
-    ( *faceToEdgeA);
-    PDM_malloc(faceToEdgeA),(*nVtxA),PDM_g_num_t);
-    ( *faceToVtxA);
-    PDM_malloc(faceToVtxA),(*nVtxA),PDM_g_num_t);
-    ( *faceVtxCooA);
-    PDM_malloc(faceVtxCooA),3 * (*nVtxA),double);
-    ( *faceVtxEpsA);
-    PDM_malloc(faceVtxEpsA),(*nVtxA),double);
+    PDM_malloc((*faceToEdgeA),(*nVtxA),PDM_g_num_t);
+    PDM_malloc((*faceToVtxA),(*nVtxA),PDM_g_num_t);
+    PDM_malloc((*faceVtxCooA),3 * (*nVtxA),double);
+    PDM_malloc((*faceVtxEpsA),(*nVtxA),double);
 
     for (int i = 0; i < (*nVtxA); i++) {
       (*faceToEdgeA)[i] = i+1;
@@ -3666,14 +3319,10 @@ static int init_cas22(
     (*faceVtxCooA)[3*j+2] = 0.;
 
     (*nVtxB) = (*nGvtxB);
-    ( *faceToEdgeB);
-    PDM_malloc(faceToEdgeB),(*nVtxB),PDM_g_num_t);
-    ( *faceToVtxB);
-    PDM_malloc(faceToVtxB),(*nVtxB),PDM_g_num_t);
-    ( *faceVtxCooB);
-    PDM_malloc(faceVtxCooB),3 * (*nVtxB),double);
-    ( *faceVtxEpsB);
-    PDM_malloc(faceVtxEpsB),(*nVtxB),double);
+    PDM_malloc((*faceToEdgeB),(*nVtxB),PDM_g_num_t);
+    PDM_malloc((*faceToVtxB),(*nVtxB),PDM_g_num_t);
+    PDM_malloc((*faceVtxCooB),3 * (*nVtxB),double);
+    PDM_malloc((*faceVtxEpsB),(*nVtxB),double);
 
     for (int i = 0; i < (*nVtxB); i++) {
       (*faceToEdgeB)[i] = i+1;

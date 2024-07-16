@@ -690,7 +690,7 @@ int main(int argc, char *argv[])
 
   // only for vtk
   // double *middle_pt_coord;
- PDM_malloc(middle_pt_coord,3 * p_vol_n_edge,double);
+  // PDM_malloc(middle_pt_coord,3 * p_vol_n_edge,double);
   double *direction_vect;
   PDM_malloc(direction_vect,3 * p_vol_n_edge,double);
 
@@ -1119,7 +1119,7 @@ int main(int argc, char *argv[])
 
   // for VTK
   // double *back_face_proj_pts;
- PDM_malloc(back_face_proj_pts,p_n_back_face * 3,double);
+  // PDM_malloc(back_face_proj_pts,p_n_back_face * 3,double);
   double *back_face_proj_pts;
   PDM_malloc(back_face_proj_pts,p_n_back_face * 3,double);
   // int     n_back_face_proj_pts;

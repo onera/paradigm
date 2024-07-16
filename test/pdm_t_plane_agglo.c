@@ -958,7 +958,7 @@ _export_ini_mesh
 //                  PDM_MPI_COMM_WORLD);
 
 //   int *debPartProcs;
-   PDM_malloc(debPartProcs,(numProcs + 1),int);
+//   PDM_malloc(debPartProcs,(numProcs + 1),int);
 
 //   debPartProcs[0] = 0;
 //   for (int i = 0; i < numProcs; i++) {

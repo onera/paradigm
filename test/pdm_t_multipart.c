@@ -341,7 +341,7 @@ int main(int argc, char *argv[])
   /* Connection between domains */
   // int n_total_joins = 2*(n_domain-1);
   // int *join_to_opposite;
- PDM_malloc(join_to_opposite,n_total_joins,int);
+  // PDM_malloc(join_to_opposite,n_total_joins,int);
   // for (int ijoin = 0; ijoin < n_total_joins; ijoin++){
   //   if (ijoin % 2 == 0)
   //     join_to_opposite[ijoin] = ijoin + 1;

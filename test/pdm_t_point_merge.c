@@ -414,7 +414,7 @@ _dmesh_extract_from_group_id
 //   } else {
 
 //     int *dedge_vtx_idx;
-     PDM_malloc(dedge_vtx_idx,(dn_edge+1) ,int);
+//     PDM_malloc(dedge_vtx_idx,(dn_edge+1) ,int);
 //     for(int i = 0; i < dn_edge+1; ++i) {
 //       dedge_vtx_idx[i] = 2 * i;
 //     }
@@ -472,7 +472,7 @@ _dmesh_extract_from_group_id
 //  PDM_free(dvtx_vtx    );
 
 //   double *char_length;
-   PDM_malloc(char_length,dn_vtx ,double);
+//   PDM_malloc(char_length,dn_vtx ,double);
 
 //   // double tol = 1e-6;
 //   // const double eps_base = 1e-12;

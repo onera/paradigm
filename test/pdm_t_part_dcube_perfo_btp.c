@@ -329,8 +329,8 @@ int main(int argc, char *argv[])
                                                              &pcell_face_in);
 
    PDM_free(dcell_ln_to_gn);
-    // PDM_g_num_t *pcell_face;
- PDM_malloc(pcell_face, pcell_face_idx_in[dn_cell] ,PDM_g_num_t);
+   // PDM_g_num_t *pcell_face;
+   // PDM_malloc(pcell_face, pcell_face_idx_in[dn_cell] ,PDM_g_num_t);
 
     for(int i = 0; i < dn_cell; ++i) {
       dcell_face_idx[i+1] = pcell_face_idx_in[i+1];
