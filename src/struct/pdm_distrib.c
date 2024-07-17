@@ -341,7 +341,7 @@ PDM_distrib_compute
   /* Compute distribution for element */
 
   // PDM_g_num_t *elt_distrib;
- PDM_malloc(elt_distrib,(n_rank+1) ,PDM_g_num_t);
+  // PDM_malloc(elt_distrib,(n_rank+1) ,PDM_g_num_t);
   PDM_g_num_t  _dnelt      = (PDM_g_num_t) dnelt;
 
   PDM_MPI_Allgather((void *) &_dnelt,
