@@ -255,7 +255,7 @@ _read_and_split_distributed_mesh
   PDM_malloc(*face_vtx_idx,(*n_face + 1),int);
   memcpy(*face_vtx_idx, _face_edge_idx, sizeof(int) * (*n_face + 1));
   // *face_vtx;
-  PDM_malloc(face_vtx,_face_vtx_idx[*n_face],int);
+  // PDM_malloc(face_vtx,_face_vtx_idx[*n_face],int);
   // memcpy(*face_vtx, _face_vtx, sizeof(int) * _face_vtx_idx[*n_face]);
 
 

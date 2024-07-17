@@ -60,9 +60,9 @@
     //  * Unique id of boxes
     //  */
     // int *shared_box_tag;
- PDM_malloc(shared_box_tag,g_extract_boxes_idx[n_rank] ,int); // Suralloc
+    // PDM_malloc(shared_box_tag,g_extract_boxes_idx[n_rank] ,int); // Suralloc
     // int *shared_box_id;
- PDM_malloc(shared_box_id,g_extract_boxes_idx[n_rank] ,int); // Suralloc
+    // PDM_malloc(shared_box_id,g_extract_boxes_idx[n_rank] ,int); // Suralloc
     // for(int i = 0; i < g_extract_boxes_idx[n_rank]; ++i) {
     //   shared_box_tag[i] = -1;
     // }
@@ -86,15 +86,15 @@
 
     // // Ok now we know with wich proc we communicate
     // int *neighbor_in;
- PDM_malloc(neighbor_in,n_rank ,int); // A adpater avec le nombre de range voisin courant
+    // PDM_malloc(neighbor_in,n_rank ,int); // A adpater avec le nombre de range voisin courant
     // // int *neighbor_tag;
- PDM_malloc(neighbor_tag,n_rank ,int); // A adpater avec le nombre de range voisin courant
+    // PDM_malloc(neighbor_tag,n_rank ,int); // A adpater avec le nombre de range voisin courant
     // for(int i = 0; i < n_rank; ++i) {
     //   neighbor_tag[i] = -1;
     // }
 
     // int *shared_id_rank;
- PDM_malloc(shared_id_rank,n_shared_box_in ,int);
+    // PDM_malloc(shared_id_rank,n_shared_box_in ,int);
 
     // for(int i = 0; i < n_shared_box_in; ++i) {
     //   int t_rank = PDM_binary_search_gap_long((PDM_g_num_t) shared_box_id[i], g_extract_boxes_idx, n_rank+1);
@@ -118,9 +118,9 @@
     // PDM_MPI_Dist_graph_neighbors_count(comm_dist_graph, &n_sources, &n_destinations, &is_weight);
 
     // int *sources;
- PDM_malloc(sources,n_sources      ,int);
+    // PDM_malloc(sources,n_sources      ,int);
     // int *destinations;
- PDM_malloc(destinations,n_destinations ,int);
+    // PDM_malloc(destinations,n_destinations ,int);
 
     // PDM_MPI_Dist_graph_neighbors(comm_dist_graph, n_sources, sources, n_destinations, destinations);
 
@@ -141,9 +141,9 @@
     //  * On connait les rang qui ont la data qu'on souhaite
     //  */
     // int *send_n;
- PDM_malloc(send_n,   n_sources   ,int);
+    // PDM_malloc(send_n,   n_sources   ,int);
     // int *recv_n;
- PDM_malloc(recv_n,n_destinations ,int);
+    // PDM_malloc(recv_n,n_destinations ,int);
 
     // for(int i = 0; i < n_sources; ++i) {
     //   send_n[i] = 0;
@@ -163,9 +163,9 @@
     //  * On connait le nombre de request
     //  */
     // int *send_idx;
- PDM_malloc(send_idx,(n_sources     +1) ,int);
+    // PDM_malloc(send_idx,(n_sources     +1) ,int);
     // int *recv_idx;
- PDM_malloc(recv_idx,(n_destinations+1) ,int);
+    // PDM_malloc(recv_idx,(n_destinations+1) ,int);
     // send_idx[0] = 0;
     // recv_idx[0] = 0;
     // for(int i = 0; i < n_sources; ++i) {
@@ -2513,11 +2513,11 @@ char *argv[]
 //    * Hilbert of points AND boxes
 //    */
 //   int *weight_pts;
-   PDM_malloc(weight_pts,    n_pts ,int   );
+//   PDM_malloc(weight_pts,    n_pts ,int   );
 //   int *weight_box;
-   PDM_malloc(weight_box,    n_box ,int   );
+//   PDM_malloc(weight_box,    n_box ,int   );
 //   double *box_center;
-   PDM_malloc(box_center,3 * n_box ,double);
+//   PDM_malloc(box_center,3 * n_box ,double);
 //   for(int i = 0; i < n_pts; ++i) {
 //     weight_pts[i] = 1;
 //   }
@@ -2667,9 +2667,9 @@ char *argv[]
 //      * Creation of box tree
 //      */
 //     PDM_g_num_t *blk_box_gnum;
-     PDM_malloc(blk_box_gnum,dn_box ,PDM_g_num_t);
+//     PDM_malloc(blk_box_gnum,dn_box ,PDM_g_num_t);
 //     int *init_location_box;
-     PDM_malloc(init_location_box,3 * dn_box ,int);
+//     PDM_malloc(init_location_box,3 * dn_box ,int);
 //     for(int i = 0; i < dn_box; ++i) {
 //       blk_box_gnum[i] = i + 1;
 //       init_location_box[3*i  ] = 0;
@@ -2734,18 +2734,18 @@ char *argv[]
 //                                      &coarse_pts_box_n_pts);
 
 //     int *n_g_coarse_pts_box;
-     PDM_malloc(n_g_coarse_pts_box,n_rank ,int);
+//     PDM_malloc(n_g_coarse_pts_box,n_rank ,int);
 //     PDM_MPI_Allgather (&n_coarse_pts_box , 1, PDM_MPI_INT,
 //                        n_g_coarse_pts_box, 1, PDM_MPI_INT, comm);
 
 //     int *g_extract_boxes_idx;
-     PDM_malloc(g_extract_boxes_idx,(n_rank+1),int);
+//     PDM_malloc(g_extract_boxes_idx,(n_rank+1),int);
 //     g_extract_boxes_idx[0] = 0;
 //     for(int i = 0; i < n_rank; ++i) {
 //       g_extract_boxes_idx[i+1] = g_extract_boxes_idx[i] + n_g_coarse_pts_box[i];
 //     }
 //     double *g_coarse_pts_box_extents;
-     PDM_malloc(g_coarse_pts_box_extents,6 * g_extract_boxes_idx[n_rank] ,double);
+//     PDM_malloc(g_coarse_pts_box_extents,6 * g_extract_boxes_idx[n_rank] ,double);
 
 //     PDM_MPI_Allgatherv(coarse_pts_box_extents  , n_coarse_pts_box, mpi_extent_type,
 //                        g_coarse_pts_box_extents, n_g_coarse_pts_box,
@@ -2753,7 +2753,7 @@ char *argv[]
 //                        mpi_extent_type, comm);
 
 //     int *g_coarse_pts_box_id;
-     PDM_malloc(g_coarse_pts_box_id, g_extract_boxes_idx[n_rank] ,int);
+//     PDM_malloc(g_coarse_pts_box_id, g_extract_boxes_idx[n_rank] ,int);
 //     PDM_MPI_Allgatherv(coarse_pts_box_id  , n_coarse_pts_box, PDM_MPI_INT,
 //                        g_coarse_pts_box_id, n_g_coarse_pts_box,
 //                        g_extract_boxes_idx,
@@ -2770,9 +2770,9 @@ char *argv[]
 //      * Build tree
 //      */
 //     PDM_g_num_t *coarse_pts_box_gnum;
-     PDM_malloc(coarse_pts_box_gnum,    g_extract_boxes_idx[n_rank] ,PDM_g_num_t);
+//     PDM_malloc(coarse_pts_box_gnum,    g_extract_boxes_idx[n_rank] ,PDM_g_num_t);
 //     int *init_location_coase_pts_box;
-     PDM_malloc(init_location_coase_pts_box,3 * g_extract_boxes_idx[n_rank] ,int        );
+//     PDM_malloc(init_location_coase_pts_box,3 * g_extract_boxes_idx[n_rank] ,int        );
 //     for(int i = 0; i < g_extract_boxes_idx[n_rank]; ++i) {
 //       // coarse_pts_box_gnum[i] = g_coarse_pts_box_id[i] + 1;
 //       coarse_pts_box_gnum[i] = g_coarse_pts_box_id[i]; // On suppose que root = 0 donc g_id lineraire a partir de 1
@@ -2886,9 +2886,9 @@ char *argv[]
 //      */
 //     int n_connect_box_coarse_box_pts = coarse_box_to_coarse_box_pts_idx[n_coarse_box_box];
 //     PDM_g_num_t *coarse_box_to_coarse_box_pts_gnum;
-     PDM_malloc(coarse_box_to_coarse_box_pts_gnum,n_connect_box_coarse_box_pts ,PDM_g_num_t);
+//     PDM_malloc(coarse_box_to_coarse_box_pts_gnum,n_connect_box_coarse_box_pts ,PDM_g_num_t);
 //     double *weight;
-     PDM_malloc(weight,n_connect_box_coarse_box_pts ,double     );
+//     PDM_malloc(weight,n_connect_box_coarse_box_pts ,double     );
 
 //     for(int i = 0; i < n_connect_box_coarse_box_pts; ++i) {
 //       coarse_box_to_coarse_box_pts_gnum[i] = box_pts_gnum[coarse_box_to_coarse_box_pts[i]]; // + 1;
@@ -2963,14 +2963,14 @@ char *argv[]
 //     }
 
 //     double *send_box_extents;
-     PDM_malloc(send_box_extents,6 * send_box_idx[n_rank] ,double);
+//     PDM_malloc(send_box_extents,6 * send_box_idx[n_rank] ,double);
 //     double *recv_box_extents;
-     PDM_malloc(recv_box_extents,6 * recv_box_idx[n_rank] ,double);
+//     PDM_malloc(recv_box_extents,6 * recv_box_idx[n_rank] ,double);
 
 //     // PDM_g_num_t *send_box_gnum;
- PDM_malloc(send_box_gnum,send_box_idx[n_rank] ,PDM_g_num_t);
+//     // PDM_malloc(send_box_gnum,send_box_idx[n_rank] ,PDM_g_num_t);
 //     // PDM_g_num_t *recv_box_gnum;
- PDM_malloc(recv_box_gnum,recv_box_idx[n_rank] ,PDM_g_num_t);
+//     // PDM_malloc(recv_box_gnum,recv_box_idx[n_rank] ,PDM_g_num_t);
 
 //     idx = 0;
 //     for(int i_coarse_box = 0; i_coarse_box < n_coarse_box_box; ++i_coarse_box) {
@@ -3060,7 +3060,7 @@ char *argv[]
 
 //     int point_range[2];
 //     int *n_pts_in_leaf;
-     PDM_malloc(n_pts_in_leaf,n_coarse_pts_box ,int);
+//     PDM_malloc(n_pts_in_leaf,n_coarse_pts_box ,int);
 //     PDM_log_trace_array_int(coarse_pts_box_id, n_coarse_pts_box, "coarse_pts_box_id ::");
 //     assert(n_coarse_pts_box == 8);
 //     for(int i = 0; i < n_coarse_pts_box; ++i) {

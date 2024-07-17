@@ -1574,7 +1574,7 @@ _create_extract_part_nodal
   /*  Setup target frame */
   PDM_extract_part_target_set(extrp_mesh, 0, n_elt_mesh, target_g_num, init_location_elt_mesh);
   // PDM_g_num_t *target_g_num;
- PDM_malloc(target_g_num,n_elt_mesh,PDM_g_num_t);
+  // PDM_malloc(target_g_num,n_elt_mesh,PDM_g_num_t);
   // memcpy(target_g_num, gnum_elt_mesh, sizeof(PDM_g_num_t) * n_elt_mesh);
   // PDM_extract_part_target_set(extrp_mesh, 0, n_elt_mesh, target_g_num, init_location_elt_mesh);
 

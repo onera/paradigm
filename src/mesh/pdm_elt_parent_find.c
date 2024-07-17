@@ -440,7 +440,7 @@ PDM_elt_parent_find_from_distrib
   PDM_g_num_t *connect;
   PDM_malloc(connect,nFacApprox ,PDM_g_num_t);
   // PDM_g_num_t *connect;
- PDM_malloc(connect,18 ,PDM_g_num_t);
+  // PDM_malloc(connect,18 ,PDM_g_num_t);
 
   /** Initialisation of some data **/
   int n_face  = 0;
