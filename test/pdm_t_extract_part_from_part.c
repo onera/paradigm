@@ -936,7 +936,7 @@ int main(int argc, char *argv[])
   //                                 &send_request);
 
   // PDM_g_num_t *equi_extract_face_vtx;
- PDM_malloc(equi_extract_face_vtx, 1 * n_extract_face ,PDM_g_num_t);
+  // PDM_malloc(equi_extract_face_vtx, 1 * n_extract_face ,PDM_g_num_t);
 
   // for(int i = 0; i < 1 * n_extract_face; ++i) {
   //   equi_extract_face_vtx[i] = -1;

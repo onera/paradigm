@@ -472,7 +472,7 @@ int main(int argc, char *argv[])
 
   // // Create pvtx_vtx_gnum
   // PDM_g_num_t *pvtx_vtx_gnum;
- PDM_malloc(pvtx_vtx_gnum,pvtx_vtx_idx[pn_vtx] ,PDM_g_num_t);
+  // PDM_malloc(pvtx_vtx_gnum,pvtx_vtx_idx[pn_vtx] ,PDM_g_num_t);
   // for (int i = 0; i < pvtx_vtx_idx[pn_vtx]; i++) {
   //   pvtx_vtx_gnum[i] = vtx_ln_to_gn[pvtx_vtx[i]-1];
   // }

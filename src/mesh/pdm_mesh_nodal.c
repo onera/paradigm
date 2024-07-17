@@ -6897,7 +6897,7 @@ PDM_Mesh_nodal_reorder_elt_vtx
   // assert(ijk_to_user != NULL;)
 
   // int *tmp;
- PDM_malloc(tmp,stride,int);
+  // PDM_malloc(tmp,stride,int);
 
   // for (int ielt = 0; ielt < n_elt; ielt++) {
   //   int *ev = elt_vtx_out + stride*i;

@@ -769,11 +769,11 @@ _generate_faces_from_part_mesh_nodal
   // PDM_malloc(elmt_cell_face_idx,(n_elmt_tot+1)     ,int        );
 
   // int *elmt_face_vtx_idx;
- PDM_malloc(elmt_face_vtx_idx,(n_face_elt_tot+1) ,int        );
+  // PDM_malloc(elmt_face_vtx_idx,(n_face_elt_tot+1) ,int        );
   PDM_g_num_t *elmt_face_vtx;
   PDM_malloc(elmt_face_vtx,n_sum_vtx_face_tot ,PDM_g_num_t);
   // int *elmt_cell_face_idx;
- PDM_malloc(elmt_cell_face_idx,(n_elmt_tot+1)     ,int        );
+  // PDM_malloc(elmt_cell_face_idx,(n_elmt_tot+1)     ,int        );
   int *parent_elmt_position;
   PDM_malloc(parent_elmt_position,n_face_elt_tot     ,int        );
   int *elmt_face_kind;
@@ -853,7 +853,7 @@ _generate_faces_from_part_mesh_nodal
     PDM_realloc(elmt_face_vtx_idx  ,elmt_face_vtx_idx  ,  (n_face_elt_tot+1) ,int);
     PDM_realloc(elmt_cell_face_idx ,elmt_cell_face_idx , (n_elmt_tot+1)     ,int);
     // int *surf_elmt_face_vtx_idx;
- PDM_malloc(surf_elmt_face_vtx_idx,(n_face_elt_surf_tot+1) ,int        );
+    // PDM_malloc(surf_elmt_face_vtx_idx,(n_face_elt_surf_tot+1) ,int        );
     // surf_elmt_face_vtx_idx[0] = 0;
     PDM_part_mesh_nodal_elmts_sections_decompose_faces(pmn->surfacic,
                                                        vtx_ln_to_gn,
