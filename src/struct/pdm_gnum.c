@@ -707,10 +707,10 @@ _gnum_from_coords_compute
        * Send values
        */
 
-      PDM_g_num_t *send_buff = (PDM_g_num_t *)
-              malloc (sizeof(PDM_g_num_t)*send_shift2[n_ranks]);
-      PDM_g_num_t *recv_buff = (PDM_g_num_t *)
-              malloc (sizeof(PDM_g_num_t)*recv_shift2[n_ranks]);
+      PDM_g_num_t *send_buff;
+      PDM_malloc(send_buff, send_shift2[n_ranks], PDM_g_num_t);
+      PDM_g_num_t *recv_buff;
+      PDM_malloc(recv_buff, recv_shift2[n_ranks], PDM_g_num_t);
 
       for (int i_part = 0; i_part < gen_gnum->n_part; i_part++) {
 
@@ -963,8 +963,8 @@ _gnum_from_parent_compute
     recv_buff_idx[j] = 0;
   }
 
-  PDM_g_num_t *d_elt_proc =
-          (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * (n_procs + 1));
+  PDM_g_num_t *d_elt_proc;
+  PDM_malloc(d_elt_proc, n_procs + 1, PDM_g_num_t);
 
 
   PDM_g_num_t div_entiere = max_parent / n_procs;
@@ -1022,11 +1022,10 @@ _gnum_from_parent_compute
   PDM_g_num_t *n_elt_stocke_procs;
   PDM_malloc(n_elt_stocke_procs,(n_procs+1),PDM_g_num_t);
 
-  PDM_g_num_t *send_buff_numabs = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) *
-                                                       n_elt_loc_total);
-  PDM_g_num_t *recv_buff_numabs = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) *
-                                                      (recv_buff_idx[n_procs - 1] +
-                                                       recv_buff_n[n_procs - 1]));
+  PDM_g_num_t *send_buff_numabs;
+  PDM_malloc(send_buff_numabs, n_elt_loc_total, PDM_g_num_t);
+  PDM_g_num_t *recv_buff_numabs;
+  PDM_malloc(recv_buff_numabs, recv_buff_idx[n_procs - 1] + recv_buff_n[n_procs - 1], PDM_g_num_t);
 
   for (int j = 0; j < n_procs; j++) {
     send_buff_n[j] = 0;

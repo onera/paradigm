@@ -1098,7 +1098,7 @@ _alltotall_stride_var_iexch
         }
       }
 
-      _part1_to_part2_data[i] = malloc (s_data * s_part_data);
+      PDM_malloc(_part1_to_part2_data[i], s_data * s_part_data, unsigned char);
       unsigned char *map_part1_to_part2_data = (unsigned char*) _part1_to_part2_data[i];
 
       int beg_data = 0;
@@ -1497,7 +1497,7 @@ _p2p_stride_var_iexch
         }
       }
 
-      _part1_to_part2_data[i] = malloc (s_data * s_part_data);
+      PDM_malloc(_part1_to_part2_data[i], s_data * s_part_data, unsigned char);
       unsigned char *map_part1_to_part2_data = (unsigned char*) _part1_to_part2_data[i];
 
       int beg_data = 0;
@@ -1783,7 +1783,7 @@ _p2p_stride_var_reverse_iexch
         }
       }
 
-      _part2_to_part1_data[i] = malloc (s_data * s);
+      PDM_malloc(_part2_to_part1_data[i], s_data * s, unsigned char);
 
       unsigned char *map_part2_to_part1_data = (unsigned char*) _part2_to_part1_data[i];
       unsigned char *map_part2_data = (unsigned char*) part2_data[i];
@@ -4315,14 +4315,16 @@ PDM_part_to_part_iexch
     }
 
     void  * *__part1_to_part2_data;
-  PDM_malloc(__part1_to_part2_data,ptp->n_part1,void*);
+   PDM_malloc(__part1_to_part2_data,ptp->n_part1,void*);
     void  ** _part1_to_part2_data  = __part1_to_part2_data;
 
     if (t_part1_data_def == PDM_PART_TO_PART_DATA_DEF_ORDER_PART1) {
 
       for (int i = 0; i < ptp->n_part1; i++) {
 
-        _part1_to_part2_data[i] = malloc (s_data * cst_stride * ptp->part1_to_part2_idx[i][ptp->n_elt1[i]]);
+        char *tmp_part1_to_part2_data_i;
+        PDM_malloc(tmp_part1_to_part2_data_i, s_data * cst_stride * ptp->part1_to_part2_idx[i][ptp->n_elt1[i]], char);
+        _part1_to_part2_data[i] = (void *) tmp_part1_to_part2_data_i;
 
       }
     }
@@ -4330,7 +4332,9 @@ PDM_part_to_part_iexch
     PDM_malloc(*part2_data,ptp->n_part2, void *);
     void **_part2_data = *part2_data;
     for (int i = 0; i < ptp->n_part2; i++) {
-      _part2_data[i] = malloc(s_data * cst_stride * ptp->gnum1_come_from_idx[i][ptp->n_ref_lnum2[i]]);
+      char *tmp_part2_data_i;
+      PDM_malloc(tmp_part2_data_i, s_data * cst_stride * ptp->gnum1_come_from_idx[i][ptp->n_ref_lnum2[i]], char);
+      _part2_data[i] = (void *) tmp_part2_data_i;
     }
 
     unsigned char **___part2_data;
@@ -4471,7 +4475,7 @@ PDM_part_to_part_iexch
 
       for (int i = 0; i < ptp->n_part1; i++) {
 
-        _part1_to_part2_data[i] = malloc (s_data * cst_stride * ptp->part1_to_part2_idx[i][ptp->n_elt1[i]]);
+        PDM_malloc(_part1_to_part2_data[i], s_data * cst_stride * ptp->part1_to_part2_idx[i][ptp->n_elt1[i]], unsigned char);
         unsigned char *map_part1_to_part2_data = (unsigned char*) _part1_to_part2_data[i];
 
         int k        = 0;
@@ -4491,7 +4495,9 @@ PDM_part_to_part_iexch
     PDM_malloc(*part2_data,ptp->n_part2,void *);
     void **_part2_data = *part2_data;
     for (int i = 0; i < ptp->n_part2; i++) {
-      _part2_data[i] = malloc(s_data * cst_stride * ptp->gnum1_come_from_idx[i][ptp->n_ref_lnum2[i]]);
+      char *tmp_part2_data_i;
+      PDM_malloc(tmp_part2_data_i, s_data * cst_stride * ptp->gnum1_come_from_idx[i][ptp->n_ref_lnum2[i]], char);
+      _part2_data[i] = (void *) tmp_part2_data_i;
     }
 
     if (k_comm == PDM_MPI_COMM_KIND_P2P) {
@@ -4960,7 +4966,9 @@ PDM_part_to_part_reverse_iexch
 
       for (int i = 0; i < ptp->n_part2; i++) {
 
-        _part2_to_part1_data[i] = malloc (s_data * ptp->gnum1_come_from_idx[i][ptp->n_ref_lnum2[i]]);
+        char *tmp_part2_to_part1_data_i;
+        PDM_malloc(tmp_part2_to_part1_data_i, s_data * ptp->gnum1_come_from_idx[i][ptp->n_ref_lnum2[i]], char);
+        _part2_to_part1_data[i] = (void *) tmp_part2_to_part1_data_i;
 
       }
     }
@@ -4970,7 +4978,9 @@ PDM_part_to_part_reverse_iexch
     void **_part1_data = *part1_data;
 
     for (int i = 0; i < ptp->n_part1; i++) {
-      _part1_data[i] = malloc(s_data * cst_stride * ptp->part1_to_part2_idx[i][ptp->n_elt1[i]]);
+      char *tmp__part1_data_i;
+      PDM_malloc(tmp__part1_data_i, s_data * cst_stride * ptp->part1_to_part2_idx[i][ptp->n_elt1[i]], char);
+      _part1_data[i] = (void *) tmp__part1_data_i;
     }
 
     unsigned char **___part1_data;
@@ -5111,7 +5121,9 @@ PDM_part_to_part_reverse_iexch
 
       for (int i = 0; i < ptp->n_part2; i++) {
 
-        _part2_to_part1_data[i] = malloc (s_data * ptp->gnum1_come_from_idx[i][ptp->n_ref_lnum2[i]] * cst_stride);
+        char *_part2_to_part1_data_i;
+        PDM_malloc(_part2_to_part1_data_i, s_data * ptp->gnum1_come_from_idx[i][ptp->n_ref_lnum2[i]] * cst_stride, char);
+        _part2_to_part1_data[i] = (void *) _part2_to_part1_data_i;
 
         unsigned char *map_part2_to_part1_data = (unsigned char*) _part2_to_part1_data[i];
         unsigned char *map_part2_data = (unsigned char*) part2_data[i];
@@ -5131,7 +5143,9 @@ PDM_part_to_part_reverse_iexch
     PDM_malloc(*part1_data,ptp->n_part1,void *);
     void **_part1_data = *part1_data;
     for (int i = 0; i < ptp->n_part1; i++) {
-      _part1_data[i] = malloc(s_data * cst_stride * ptp->part1_to_part2_idx[i][ptp->n_elt1[i]]);
+      char *tmp_part1_data_i;
+      PDM_malloc(tmp_part1_data_i, s_data * cst_stride * ptp->part1_to_part2_idx[i][ptp->n_elt1[i]], char);
+      _part1_data[i] = (void *) tmp_part1_data_i;
     }
 
     if (k_comm == PDM_MPI_COMM_KIND_P2P) {

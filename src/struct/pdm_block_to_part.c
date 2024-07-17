@@ -371,7 +371,8 @@ PDM_block_to_part_time_per_step_dump
 
   // Global write times
   size_t s_buffer = 219; // buffer size for %.5f + 1
-  char *buffer = malloc(s_buffer);
+  char *buffer;
+  PDM_malloc(buffer,s_buffer, char);
 
   for (int i = 0; i < (int) s_buffer; i++) {
     buffer[i] = '\0';
@@ -444,7 +445,8 @@ PDM_block_to_part_comm_graph_dump
 
   // Block write i_rank, node and number of send data
   int s_buffer = btp->n_rank * 11 + 40 + 2 + 1; // (10 + 1 space) * n_rank + chaine + space + \n + 1
-  char *buffer = malloc(s_buffer);
+  char *buffer;
+  PDM_malloc(buffer, s_buffer, char);
 
   for (int i = 0; i < (int) s_buffer; i++) {
     buffer[i] = '\0';
@@ -752,8 +754,7 @@ PDM_block_to_part_create
 
   btp->distributed_data_idx = PDM_array_new_idx_from_sizes_int(btp->distributed_data_n, btp->n_rank);
 
-  btp->distributed_data = malloc (sizeof(int) *
-                                  btp->distributed_data_idx[btp->n_rank]);
+  PDM_malloc(btp->distributed_data, btp->distributed_data_idx[btp->n_rank], int);
 
   PDM_MPI_Partofactiverank (btp->requested_data_n,
                             btp->distributed_data_n,

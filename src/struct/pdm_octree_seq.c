@@ -1106,9 +1106,12 @@ double           *closest_octree_pt_dist2
   double dist_child[n_children];
   int inbox_child[n_children];
 
-  int *stack = malloc ((sizeof(int)) * s_pt_stack);
-  int *inbox_stack = malloc ((sizeof(int)) * s_pt_stack);
-  double *min_dist2_stack = malloc ((sizeof(double)) * s_pt_stack);
+  int *stack;
+  PDM_malloc(stack, s_pt_stack, int);
+  int *inbox_stack;
+  PDM_malloc(inbox_stack, s_pt_stack, int);
+  double *min_dist2_stack;
+  PDM_malloc(min_dist2_stack, s_pt_stack, double);
 
   _l_nodes_t *nodes = octree->nodes;
 

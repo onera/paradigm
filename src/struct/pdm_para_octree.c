@@ -1429,8 +1429,8 @@ _distribute_octants
 
   /* Build send and receive buffers */
 
-  PDM_morton_int_t *send_codes =
-    malloc (send_shift[n_ranks] * sizeof(PDM_morton_int_t));
+  PDM_morton_int_t *send_codes;
+  PDM_malloc(send_codes, send_shift[n_ranks], PDM_morton_int_t);
 
   PDM_array_reset_int(send_count, n_ranks, 0);
 
@@ -1932,13 +1932,13 @@ _distribute_points
                     recv_points_icloud, recv_count, recv_shift, PDM_MPI_INT,
                     comm);
 
- PDM_free(send_points_icloud);
+  PDM_free(send_points_icloud);
 
 
   /* Build send and receive buffers : points_gnum*/
 
-  PDM_g_num_t *send_points_gnum =
-    malloc (send_shift[n_ranks] * sizeof(PDM_g_num_t));
+  PDM_g_num_t *send_points_gnum;
+  PDM_malloc(send_points_gnum, send_shift[n_ranks], PDM_g_num_t);
 
   PDM_array_reset_int(send_count, n_ranks, 0);
 
@@ -1949,10 +1949,10 @@ _distribute_points
     send_count[rank_id] += 1;
   }
 
- PDM_free(c_rank);
+  PDM_free(c_rank);
 
-  PDM_g_num_t *recv_points_gnum =
-    malloc (recv_shift[n_ranks] * sizeof(PDM_g_num_t));
+  PDM_g_num_t *recv_points_gnum;
+  PDM_malloc(recv_points_gnum, recv_shift[n_ranks], PDM_g_num_t);
 
   /* Exchange points_gnum between processes */
 
@@ -2008,12 +2008,12 @@ _distribute_points
     }
   }
 
- PDM_free(recv_points_icloud);
- PDM_free(recv_points_gnum);
- PDM_free(recv_coords);
+  PDM_free(recv_points_icloud);
+  PDM_free(recv_points_gnum);
+  PDM_free(recv_coords);
 
-  PDM_morton_code_t *_points_code =
-    malloc (sizeof(PDM_morton_code_t) * _n_points);
+  PDM_morton_code_t *_points_code;
+  PDM_malloc(_points_code, _n_points, PDM_morton_code_t);
 
   for (int i = 0; i < _n_points; i++) {
     _points_code[i].L = __points_code[order[i]].L;
@@ -2022,8 +2022,8 @@ _distribute_points
     _points_code[i].X[2] = __points_code[order[i]].X[2];
   }
 
- PDM_free(__points_code);
- PDM_free(order);
+  PDM_free(__points_code);
+  PDM_free(order);
 
   *points_code = _points_code;
 
@@ -2077,8 +2077,10 @@ _compress_octants
   const int depth_max = 31;
   int s_stack = ((n_child - 1) * (depth_max - 1) + n_child);
 
-  int *start_stack = malloc ((sizeof(int)) * s_stack);
-  int *end_stack   = malloc ((sizeof(int)) * s_stack);
+  int *start_stack;
+  PDM_malloc(start_stack, s_stack, int);
+  int *end_stack;
+  PDM_malloc(end_stack, s_stack, int);
   PDM_morton_code_t *code_stack;
   PDM_malloc(code_stack,s_stack,PDM_morton_code_t);
 
@@ -2534,8 +2536,8 @@ _block_partition
 
   /* Build send and receive buffers */
 
-  PDM_morton_int_t *send_codes =
-    malloc (send_shift[n_ranks] * sizeof(PDM_morton_int_t));
+  PDM_morton_int_t *send_codes;
+  PDM_malloc(send_codes, send_shift[n_ranks], PDM_morton_int_t);
 
   PDM_array_reset_int(send_count, n_ranks, 0);
 
@@ -2566,10 +2568,10 @@ _block_partition
     send_count[active_ranks[irank]] += octant_list->dim + 2;
   }
 
- PDM_free(rank_codes);
+  PDM_free(rank_codes);
 
-  PDM_morton_int_t *recv_codes =
-    malloc (recv_shift[n_ranks] * sizeof(PDM_morton_int_t));
+  PDM_morton_int_t *recv_codes;
+  PDM_malloc(recv_codes, recv_shift[n_ranks], PDM_morton_int_t);
 
   /* - exchange codes between processes */
 
@@ -2578,15 +2580,15 @@ _block_partition
                     comm);
 
 
- PDM_free(send_codes);
- PDM_free(send_count);
- PDM_free(send_shift);
- PDM_free(recv_count);
+  PDM_free(send_codes);
+  PDM_free(send_count);
+  PDM_free(send_shift);
+  PDM_free(recv_count);
 
   const int _stride = octant_list->dim + 2;
   const int n_recv_codes = recv_shift[n_ranks] / _stride;
 
- PDM_free(recv_shift);
+  PDM_free(recv_shift);
 
   int *weight = PDM_array_zeros_int(G->n_nodes);
 
@@ -2979,8 +2981,8 @@ _compute_neighbours
 
     int *neighbour_rank_node_id;
     PDM_malloc(neighbour_rank_node_id,neighbour_rank_idx[n_quantile],int);
-    PDM_morton_code_t *neighbour_rank_code = malloc (sizeof(PDM_morton_code_t) *
-                                                     neighbour_rank_idx[n_quantile]);
+    PDM_morton_code_t *neighbour_rank_code;
+    PDM_malloc(neighbour_rank_code, neighbour_rank_idx[n_quantile], PDM_morton_code_t);
     int *neighbour_rank_node_k;
     PDM_malloc(neighbour_rank_node_k,neighbour_rank_idx[n_quantile],int);
     int *neighbour_rank_node_part;
@@ -3082,14 +3084,12 @@ _compute_neighbours
     PDM_malloc(recv_neighbour_rank_node_id,recv_neighbour_rank_idx[n_quantile],int);
     int *recv_neighbour_rank_node_part;
     PDM_malloc(recv_neighbour_rank_node_part,recv_neighbour_rank_idx[n_quantile],int);
-    PDM_morton_code_t *recv_neighbour_rank_code =
-      malloc (sizeof(PDM_morton_code_t) * recv_neighbour_rank_idx[n_quantile]);
-
-
-    unsigned int *_neighbour_rank_code =
-      malloc (sizeof(unsigned int) * 4 * neighbour_rank_idx[n_quantile]);
-    unsigned int *_recv_neighbour_rank_code =
-      malloc (sizeof(unsigned int) * 4 * recv_neighbour_rank_idx[n_quantile]);
+    PDM_morton_code_t *recv_neighbour_rank_code;
+    PDM_malloc(recv_neighbour_rank_code, recv_neighbour_rank_idx[n_quantile], PDM_morton_code_t);
+    unsigned int *_neighbour_rank_code;
+    PDM_malloc(_neighbour_rank_code, 4 * neighbour_rank_idx[n_quantile], unsigned int);
+    unsigned int *_recv_neighbour_rank_code;
+    PDM_malloc(_recv_neighbour_rank_code, 4 * recv_neighbour_rank_idx[n_quantile], unsigned int);
 
     int idx = 0;
     for (int i = 0; i < neighbour_rank_idx[n_quantile]; i++) {
@@ -3333,8 +3333,7 @@ _compute_neighbours
    * Copy temporary neighbours in the neighbour structure
    *
    *************************************************************************/
-  octree->octants->neighbour_idx =
-    malloc(sizeof(int) * (n_direction * octree->octants->n_nodes + 1));
+  PDM_malloc(octree->octants->neighbour_idx, n_direction * octree->octants->n_nodes + 1, int);
 
   int idx = 0;
   octree->octants->neighbour_idx[0] = 0;
@@ -3353,9 +3352,7 @@ _compute_neighbours
     }
   }
 
-  octree->octants->neighbours =
-    malloc(sizeof(int) *
-           octree->octants->neighbour_idx[n_direction * octree->octants->n_nodes]);
+  PDM_malloc(octree->octants->neighbours, octree->octants->neighbour_idx[n_direction * octree->octants->n_nodes], int);
 
   idx = 0;
   for (int i = 0; i < octree->octants->n_nodes; i++) {
@@ -3537,8 +3534,8 @@ _finalize_neighbours
     /* Allocation */
     int *neighbour_rank_node_id;
     PDM_malloc(neighbour_rank_node_id,neighbour_rank_idx[n_quantile],int);
-    PDM_morton_code_t *neighbour_rank_code = malloc (sizeof(PDM_morton_code_t) *
-                                                     neighbour_rank_idx[n_quantile]);
+    PDM_morton_code_t *neighbour_rank_code;
+    PDM_malloc(neighbour_rank_code, neighbour_rank_idx[n_quantile], PDM_morton_code_t);
     int *neighbour_rank_node_k;
     PDM_malloc(neighbour_rank_node_k,neighbour_rank_idx[n_quantile],int);
     int *neighbour_rank_node_part;
@@ -3639,14 +3636,12 @@ _finalize_neighbours
     PDM_malloc(recv_neighbour_rank_node_id,recv_neighbour_rank_idx[n_quantile],int);
     int *recv_neighbour_rank_node_part;
     PDM_malloc(recv_neighbour_rank_node_part,recv_neighbour_rank_idx[n_quantile],int);
-    PDM_morton_code_t *recv_neighbour_rank_code =
-      malloc (sizeof(PDM_morton_code_t) * recv_neighbour_rank_idx[n_quantile]);
-
-
-    unsigned int *_neighbour_rank_code =
-      malloc (sizeof(unsigned int) * 4 * neighbour_rank_idx[n_quantile]);
-    unsigned int *_recv_neighbour_rank_code =
-      malloc (sizeof(unsigned int) * 4 * recv_neighbour_rank_idx[n_quantile]);
+    PDM_morton_code_t *recv_neighbour_rank_code;
+    PDM_malloc(recv_neighbour_rank_code, recv_neighbour_rank_idx[n_quantile], PDM_morton_code_t);
+    unsigned int *_neighbour_rank_code;
+    PDM_malloc(_neighbour_rank_code, 4 * neighbour_rank_idx[n_quantile], unsigned int);
+    unsigned int *_recv_neighbour_rank_code;
+    PDM_malloc(_recv_neighbour_rank_code, 4 * recv_neighbour_rank_idx[n_quantile], unsigned int);
 
     int idx = 0;
     for (int i = 0; i < neighbour_rank_idx[n_quantile]; i++) {
@@ -3907,9 +3902,7 @@ _finalize_neighbours
     }
   }
 
-  octree->octants->neighbours =
-    malloc(sizeof(int) *
-           octree->octants->neighbour_idx[n_direction * octree->octants->n_nodes]);
+  PDM_malloc(octree->octants->neighbours, octree->octants->neighbour_idx[n_direction * octree->octants->n_nodes], int);
 
   idx = 0;
   for (int i = 0; i < octree->octants->n_nodes; i++) {
@@ -5050,8 +5043,10 @@ _points_inside_boxes
   const int depth_max = 31;
   int s_stack = ((n_child - 1) * (depth_max - 1) + n_child);
 
-  int *start_stack = malloc ((sizeof(int)) * s_stack);
-  int *end_stack   = malloc ((sizeof(int)) * s_stack);
+  int *start_stack;
+  PDM_malloc(start_stack, s_stack, int);
+  int *end_stack;
+  PDM_malloc(end_stack, s_stack, int);
   PDM_morton_code_t *code_stack;
   PDM_malloc(code_stack,s_stack,PDM_morton_code_t);
 
@@ -7929,8 +7924,8 @@ PDM_para_octree_build
 
     double *weight = PDM_array_const_double(_octree->n_points, 1.);
 
-    PDM_morton_code_t *morton_index =
-      malloc (sizeof(PDM_morton_code_t) * (n_ranks + 1));
+    PDM_morton_code_t *morton_index;
+    PDM_malloc(morton_index, n_ranks + 1, PDM_morton_code_t);
 
     PDM_morton_build_rank_index(dim,
                                 max_level,
@@ -7997,8 +7992,8 @@ PDM_para_octree_build
    PDM_free(_octree->points_gnum);
     _octree->points_gnum = _points_gnum;
 
-    PDM_morton_code_t *_points_code =
-      malloc (sizeof(PDM_morton_code_t) * _octree->n_points);
+    PDM_morton_code_t *_points_code;
+    PDM_malloc(_points_code, _octree->n_points, PDM_morton_code_t);
 
     for (int i = 0; i < _octree->n_points; i++) {
       _points_code[i].L = _octree->points_code[order[i]].L;

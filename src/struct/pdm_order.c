@@ -255,7 +255,8 @@ const int    *new_to_old_order,
 void         *array
 )
 {
-  unsigned char *old_array = (unsigned char *) malloc (size_array * elt_size);
+  unsigned char *old_array;
+  PDM_malloc(old_array, size_array * elt_size, unsigned char);
   unsigned char *_array    = (unsigned char *) array;
 
   for (int i = 0; i < size_array; ++i) {

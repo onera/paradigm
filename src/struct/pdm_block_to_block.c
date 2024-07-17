@@ -86,8 +86,8 @@ PDM_block_to_block_create
   PDM_MPI_Comm_size (comm, &n_rank);
   PDM_MPI_Comm_rank (comm, &i_rank);
 
-  _pdm_block_to_block_t *btb =
-    (_pdm_block_to_block_t *) malloc (sizeof(_pdm_block_to_block_t));
+  _pdm_block_to_block_t *btb;
+  PDM_malloc(btb, 1, _pdm_block_to_block_t);
 
   btb->comm = comm;
   btb->i_rank = i_rank;
@@ -313,7 +313,8 @@ PDM_block_to_block_exch_with_mpi_type
   PDM_MPI_Type_size(mpi_type, &s_type);
 
   size_t tot_size = ((size_t) s_type ) * ((size_t) s_recv_buffer);
-  unsigned char *recv_buffer = (unsigned char *) malloc(tot_size);
+  unsigned char *recv_buffer;
+  PDM_malloc(recv_buffer, tot_size, unsigned char);
 
   /*
    * Data exchange

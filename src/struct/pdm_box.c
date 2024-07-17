@@ -997,10 +997,8 @@ PDM_box_set_redistribute(const PDM_box_distrib_t  *distrib,
 
   PDM_malloc(send_g_num,distrib->index[distrib->n_ranks] ,PDM_g_num_t);
 
-  send_extents = (double *) malloc(distrib->index[distrib->n_ranks] * boxes->dim * 2
-                                   * sizeof(double));
-  send_origin = (int *) malloc(distrib->index[distrib->n_ranks] * 3
-                                   * sizeof(int));
+  PDM_malloc(send_extents, distrib->index[distrib->n_ranks] * boxes->dim * 2, double);
+  PDM_malloc(send_origin, distrib->index[distrib->n_ranks] * 3, int);
 
   PDM_array_reset_int(send_count, distrib->n_ranks, 0);
 
@@ -1427,11 +1425,10 @@ PDM_box_set_recv_data_from_origin_distrib
       orig_count[i] *= (int) data_size;
     }
 
-    unsigned char *orig_data = (unsigned char *) malloc (sizeof(unsigned char)
-                                                         * orig_shift[s_comm]);
-
-    unsigned char *curr_data = (unsigned char *) malloc (sizeof(unsigned char)
-                                                         * curr_shift[s_comm]);
+    unsigned char *orig_data;
+    PDM_malloc(orig_data, orig_shift[s_comm], unsigned char);
+    unsigned char *curr_data;
+     PDM_malloc(curr_data, curr_shift[s_comm], unsigned char);
 
     int **_origin_distrib_idx;
     PDM_malloc(_origin_distrib_idx,_local_boxes->n_part_orig,int *);
@@ -1458,14 +1455,14 @@ PDM_box_set_recv_data_from_origin_distrib
     for (int i = 0; i < _local_boxes->n_part_orig; i++) {
      PDM_free(_origin_distrib_idx[i]);
     }
-   PDM_free(_origin_distrib_idx);
+    PDM_free(_origin_distrib_idx);
 
     PDM_MPI_Alltoallv(orig_data, orig_count, orig_shift, PDM_MPI_UNSIGNED_CHAR,
                   curr_data, curr_count, curr_shift, PDM_MPI_UNSIGNED_CHAR,
                   boxes->comm);
 
-    unsigned char *_current_distrib_data = (unsigned char *) malloc (sizeof(unsigned char)
-                                                                     * curr_shift[s_comm]);
+    unsigned char *_current_distrib_data;
+    PDM_malloc(_current_distrib_data, curr_shift[s_comm], unsigned char);
 
     int *curr_data_idx;
     PDM_malloc(curr_data_idx,(_local_boxes->n_boxes + 1),int);
@@ -1515,13 +1512,11 @@ PDM_box_set_recv_data_from_origin_distrib
 
     int s_block = stride_cst * (int) data_size;
 
-    unsigned char *orig_data = (unsigned char *) malloc (sizeof(unsigned char)
-                                                         * orig_shift[s_comm]
-                                                         * s_block);
+    unsigned char *orig_data;
+    PDM_malloc(orig_data, orig_shift[s_comm] * s_block, unsigned char);
 
-    unsigned char *curr_data = (unsigned char *) malloc (sizeof(unsigned char)
-                                                         * curr_shift[s_comm]
-                                                         * s_block);
+    unsigned char *curr_data;
+    PDM_malloc(curr_data, curr_shift[s_comm] * s_block, unsigned char);
 
     for (int i = 0; i < s_comm+1; i++) {
       curr_shift[i] *= s_block;
@@ -1545,9 +1540,8 @@ PDM_box_set_recv_data_from_origin_distrib
                       curr_data, curr_count, curr_shift, PDM_MPI_UNSIGNED_CHAR,
                       boxes->comm);
 
-    unsigned char *_current_distrib_data = (unsigned char *) malloc (sizeof(unsigned char)
-                                                                     * curr_shift[s_comm]
-                                                                     * s_block);
+    unsigned char *_current_distrib_data;
+    PDM_malloc(_current_distrib_data, curr_shift[s_comm] * s_block, unsigned char);
 
     for (int i = 0; i < curr_shift[s_comm]; i++) {
       for (int k = 0; k < s_block; k++) {
@@ -1771,11 +1765,11 @@ PDM_box_set_send_data_to_origin_distrib
 
     PDM_array_reset_int(curr_count, s_comm, 0);
 
-    unsigned char *curr_data = (unsigned char *) malloc (sizeof(unsigned char)
-                                                         * curr_shift[s_comm]);
+    unsigned char *curr_data;
+    PDM_malloc(curr_data, curr_shift[s_comm], unsigned char);
 
-    unsigned char *orig_data = (unsigned char *) malloc (sizeof(unsigned char)
-                                                         * orig_shift[s_comm]);
+    unsigned char *orig_data;
+    PDM_malloc(orig_data, orig_shift[s_comm], unsigned char);
 
     int *current_distrib_idx = PDM_array_zeros_int(_local_boxes->n_boxes + 1);
 
@@ -1898,9 +1892,9 @@ PDM_box_set_send_data_to_origin_distrib
 
 
     for (int i = 0; i < _local_boxes->n_part_orig; i++) {
-      unsigned char *_origin_distrib_data = (unsigned char *) malloc (sizeof(unsigned char)
-                                                                      * s_block
-                                                                      * _local_boxes->n_boxes_orig[i]);
+      unsigned char *_origin_distrib_data;
+      PDM_malloc(_origin_distrib_data, s_block * _local_boxes->n_boxes_orig[i], unsigned char);
+
       origin_distrib_data[i] = (void *) _origin_distrib_data;
     }
 

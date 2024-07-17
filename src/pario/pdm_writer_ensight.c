@@ -410,8 +410,8 @@ _calcul_numabs_face_poly3d
   PDM_MPI_Comm_rank(geom->pdm_mpi_comm,
                 &i_proc);
 
-  PDM_g_num_t *d_elt_proc =
-          (PDM_g_num_t *) malloc (sizeof(PDM_g_num_t) * (n_procs + 1));
+  PDM_g_num_t *d_elt_proc;
+  PDM_malloc(d_elt_proc, n_procs + 1, PDM_g_num_t);
 
   /* Calcul du nombre d'elements abs du bloc
      repartis sur l'ensemble des processus */
@@ -540,11 +540,10 @@ _calcul_numabs_face_poly3d
     recv_buff_n[j]   = recv_buff_n[j]   * n_octet_exch;
   }
 
-  unsigned char *send_buff_data =
-    (unsigned char *) malloc(sizeof(unsigned char) * n_elt_loc_total * n_octet_exch);
-  unsigned char *recv_buff_data =
-    (unsigned char *) malloc(sizeof(unsigned char) * (recv_buff_idx[n_procs - 1] +
-                                                      recv_buff_n[n_procs - 1]) * n_octet_exch);
+  unsigned char *send_buff_data;
+  PDM_malloc(send_buff_data, n_elt_loc_total * n_octet_exch, unsigned char);
+  unsigned char *recv_buff_data;
+  PDM_malloc(recv_buff_data, (recv_buff_idx[n_procs - 1] + recv_buff_n[n_procs - 1]) * n_octet_exch, unsigned char);
 
   PDM_array_reset_int(send_buff_n, n_procs, 0);
 
@@ -1071,8 +1070,8 @@ PDM_writer_ensight_geom_write
 
   float *coord_tmp;
   PDM_malloc(coord_tmp,n_som_proc ,float);
-  PDM_g_num_t *numabs_tmp =
-    (PDM_g_num_t *) malloc(n_som_proc * sizeof(PDM_g_num_t));
+  PDM_g_num_t *numabs_tmp;
+  PDM_malloc(numabs_tmp, n_som_proc, PDM_g_num_t);
   PDM_writer_status_t s_ecr_n_val;
   for (int idim = 0; idim < 3; idim++) {
     if (idim == 0)
@@ -1494,8 +1493,9 @@ PDM_writer_ensight_geom_write
 
       /* Calcul d'une numérotation absolue pour l'ensemble des faces de tous les polyèdres */
 
-      PDM_g_num_t **numabs_face =
-        (PDM_g_num_t **) malloc(sizeof(PDM_g_num_t *) * n_part);
+      PDM_g_num_t **numabs_face;
+      PDM_malloc(numabs_face, n_part, PDM_g_num_t *);
+
       for (int i = 0; i < n_part; i++) {
 
         int n_elt = PDM_part_mesh_nodal_section_n_elt_get(geom->mesh_nodal, ibloc, i);

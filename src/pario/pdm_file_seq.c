@@ -81,7 +81,7 @@ PDM_file_seq_t *PDM_file_seq_open(const char *nom,
   PDM_file_seq_t *fichier;
   PDM_malloc(fichier,1,PDM_file_seq_t);
 
-  fichier->nom = (char *) malloc(strlen(nom) + 1);
+  PDM_malloc(fichier->nom, strlen(nom) + 1, char);
   strcpy(fichier->nom, nom);
   fichier->mode = mode;
 

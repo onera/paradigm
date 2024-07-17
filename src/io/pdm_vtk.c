@@ -1168,7 +1168,9 @@ _vtk_read_field_values
  )
 {
   size_t s_data = _pdm_data_size(data_type);
-  *values = malloc(s_data * n * stride);
+  char *tmp_values;
+  PDM_malloc(tmp_values,s_data * n * stride, char);
+  *values = (void *) tmp_values;
 
   if (data_type == PDM_INT) {
     int *_field_value = (int *) *values;

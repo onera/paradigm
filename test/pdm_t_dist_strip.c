@@ -564,10 +564,8 @@ int main(int argc, char *argv[])
 
     PDM_malloc(surface_coords[i_part],3 * n_select_vtx[i_part],double);
 
-    surface_face_parent_gnum[i_part] =
-      malloc (sizeof(PDM_g_num_t) * n_select_face[i_part]);
-    surface_vtx_parent_gnum[i_part] =
-      malloc (sizeof(PDM_g_num_t) * n_select_vtx[i_part]);
+    PDM_malloc(surface_face_parent_gnum[i_part], n_select_face[i_part], PDM_g_num_t);
+    PDM_malloc(surface_vtx_parent_gnum[i_part], n_select_vtx[i_part], PDM_g_num_t);
 
     surface_face_gnum[i_part] = NULL;
     surface_vtx_gnum[i_part] = NULL;

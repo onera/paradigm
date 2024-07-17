@@ -112,7 +112,7 @@ PDM_file_par_t
   PDM_file_par_t *PDM_file_par;
   PDM_malloc(PDM_file_par,1,PDM_file_par_t);
 
-  PDM_file_par->nom = (char *) malloc(strlen(nom) + 1);
+  PDM_malloc(PDM_file_par->nom, strlen(nom) + 1, char);
   strcpy(PDM_file_par->nom, nom);
 
   PDM_file_par->mode = mode;

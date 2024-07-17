@@ -889,8 +889,7 @@ static PDM_MPI_Datatype _mpi_2_pdm_mpi_datatype(MPI_Datatype datatype)
 
     if (mpi_datatype == NULL) {
       l_mpi_datatype = 4;
-      mpi_datatype = (MPI_Datatype **)
-        malloc(sizeof(MPI_Datatype *) * l_mpi_datatype);
+      PDM_malloc(mpi_datatype, l_mpi_datatype, MPI_Datatype *);
       for (int i = 0; i < l_mpi_datatype; i++)
         mpi_datatype[i] = NULL;
     }
@@ -898,7 +897,7 @@ static PDM_MPI_Datatype _mpi_2_pdm_mpi_datatype(MPI_Datatype datatype)
     if (l_mpi_datatype <= n_mpi_datatype) {
       int  p_l_mpi_datatype = l_mpi_datatype;
       l_mpi_datatype = 2 * l_mpi_datatype;
-      PDM_realloc(mpi_datatype ,mpi_datatype ,                                       l_mpi_datatype ,MPI_Datatype *);
+      PDM_realloc(mpi_datatype ,mpi_datatype,l_mpi_datatype ,MPI_Datatype *);
       for (int i = p_l_mpi_datatype; i < l_mpi_datatype; i++)
         mpi_datatype[i] = NULL;
     }

@@ -71,8 +71,9 @@ PDM_multi_block_to_part_create
  const PDM_MPI_Comm   comm
 )
 {
-  PDM_multi_block_to_part_t *mbtp =
-    (PDM_multi_block_to_part_t *) malloc (sizeof(PDM_multi_block_to_part_t));
+
+  PDM_multi_block_to_part_t *mbtp;
+  PDM_malloc(mbtp, 1, PDM_multi_block_to_part_t);
 
   mbtp->comm        = comm;
   mbtp->pttopt_comm = 0;

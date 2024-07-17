@@ -276,9 +276,7 @@ _add_var(PDM_writer_ensight_case_t       *const this_case,
 
   size_t base_len = strlen(name);
 
-  var->file_name_base = (char *) malloc (
-             (  this_case->dir_name_length + prefix_len
-                + base_len + 1) * sizeof(char));
+  PDM_malloc(var->file_name_base, this_case->dir_name_length + prefix_len + base_len + 1, char);
   sprintf(var->file_name_base, "%s.", this_case->file_name_prefix);
 
   strcat(var->file_name_base, name);
@@ -306,9 +304,7 @@ _add_var(PDM_writer_ensight_case_t       *const this_case,
 
   /* Now we may finish associated case file line */
 
-  var->case_line = (char *) malloc (
-             (  strlen(line) + strlen(var->file_name_base) + 6
-                - this_case->dir_name_length + 1) * sizeof(char));
+  PDM_malloc(var->case_line, strlen(line) + strlen(var->file_name_base) + 6 - this_case->dir_name_length + 1, char);
 
   strcpy(var->case_line, line);
   strcat(var->case_line, var->file_name_base + this_case->dir_name_length);
@@ -431,8 +427,7 @@ const int                   append
     this_case->case_file_name[prefix_len + i] = (char) toupper(name[i]);
   this_case->case_file_name[prefix_len + name_len] = '\0';
 
-  this_case->file_name_prefix = (char *) malloc((strlen(this_case->case_file_name) + 1) *
-                                                sizeof(char));
+  PDM_malloc(this_case->file_name_prefix, strlen(this_case->case_file_name) + 1, char);
   strcpy(this_case->file_name_prefix, this_case->case_file_name);
   for (i = 0 ; i < name_len ; i++)
     this_case->file_name_prefix[prefix_len + i]
@@ -457,8 +452,7 @@ const int                   append
 
   char extension[5] = ".geo";
 
-  this_case->geom_file_name_base = (char *) malloc((strlen(this_case->file_name_prefix)
-                                                    + strlen(extension) + 1 ) * sizeof(char));
+  PDM_malloc(this_case->geom_file_name_base, strlen(this_case->file_name_prefix) + strlen(extension) + 1, char);
 
   strcpy(this_case->geom_file_name_base, this_case->file_name_prefix);
   strcat(this_case->geom_file_name_base, extension);

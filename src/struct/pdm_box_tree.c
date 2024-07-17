@@ -4591,9 +4591,13 @@ PDM_box_tree_min_dist_max_box
 
   int s_pt_stack = ((bt->n_children - 1) * (bt->max_level - 1) + bt->n_children);
 
-  int *stack = malloc ((sizeof(int)) * s_pt_stack);
-  int *inbox_stack = malloc ((sizeof(int)) * s_pt_stack);
-  double *min_dist2_stack = malloc ((sizeof(double)) * s_pt_stack);
+  int *stack;
+  PDM_malloc(stack, s_pt_stack, int);
+  int *inbox_stack;
+  PDM_malloc(inbox_stack, s_pt_stack, int);
+  double *min_dist2_stack;
+  PDM_malloc(min_dist2_stack, s_pt_stack, double);
+
   int pos_stack = 0;
 
   int dim = bt->boxes->dim;
@@ -4791,9 +4795,12 @@ PDM_box_tree_closest_upper_bound_dist_boxes_get
   PDM_malloc(*boxes,tmp_s_boxes,int);
   int *_boxes = *boxes;
 
-  int *stack = malloc ((sizeof(int)) * s_pt_stack);
-  int *inbox_stack = malloc ((sizeof(int)) * s_pt_stack);
-  double *min_dist2_stack = malloc ((sizeof(double)) * s_pt_stack);
+  int *stack;
+  PDM_malloc(stack, s_pt_stack, int);
+  int *inbox_stack;
+  PDM_malloc(inbox_stack, s_pt_stack, int);
+  double *min_dist2_stack;
+  PDM_malloc(min_dist2_stack, s_pt_stack, double);
 
   int pos_stack = 0;
 
@@ -5008,9 +5015,12 @@ _box_tree_closest_upper_bound_dist_boxes_impl
   PDM_malloc(*pts_box,tmp_s_boxes,int);
   int *_pts_box = *pts_box;
 
-  int *stack = malloc ((sizeof(int)) * s_pt_stack);
-  int *inbox_stack = malloc ((sizeof(int)) * s_pt_stack);
-  double *min_dist2_stack = malloc ((sizeof(double)) * s_pt_stack);
+  int *stack;
+  PDM_malloc(stack, s_pt_stack, int);
+  int *inbox_stack;
+  PDM_malloc(inbox_stack, s_pt_stack, int);
+  double *min_dist2_stack;
+  PDM_malloc(min_dist2_stack, s_pt_stack, double);
 
   int pos_stack = 0;
 
@@ -5672,7 +5682,8 @@ PDM_box_tree_points_inside_boxes
 
 
   int s_stack = ((bt->n_children - 1) * (bt->max_level - 1) + bt->n_children);
-  int *stack = malloc ((sizeof(int)) * s_stack);
+  int *stack;
+  PDM_malloc(stack, s_stack, int);
   int pos_stack = 0;
 
   int n_visited_boxes = 0;
@@ -5852,7 +5863,8 @@ _box_tree_boxes_containing_points_impl
   int *_box_l_num = *box_l_num;
 
   int s_stack = ((bt->n_children - 1) * (bt->max_level - 1) + bt->n_children);
-  int *stack = malloc ((sizeof(int)) * s_stack);
+  int *stack;
+  PDM_malloc(stack, s_stack, int);
   int pos_stack = 0;
 
   int n_visited_boxes = 0;
@@ -6030,7 +6042,8 @@ PDM_box_tree_boxes_containing_points
   // int *_box_l_num = *box_l_num;
 
   // int s_stack = ((bt->n_children - 1) * (bt->max_level - 1) + bt->n_children);
-  // int *stack = malloc ((sizeof(int)) * s_stack);
+  // int *stack;
+  // PDM_malloc(stack, s_stack, int);
   // int pos_stack = 0;
 
   // int n_visited_boxes = 0;
@@ -6239,7 +6252,8 @@ PDM_box_tree_ellipsoids_containing_points
   int *_box_l_num = *box_l_num;
 
   int s_stack = ((bt->n_children - 1) * (bt->max_level - 1) + bt->n_children);
-  int *stack = malloc ((sizeof(int)) * s_stack);
+  int *stack;
+  PDM_malloc(stack, s_stack, int);
   int pos_stack = 0;
 
   int n_visited_boxes = 0;
@@ -6388,7 +6402,8 @@ _box_tree_intersect_lines_boxes_impl
   int *_box_l_num = *box_l_num;
 
   int s_stack = ((bt->n_children - 1) * (bt->max_level - 1) + bt->n_children);
-  int *stack = malloc ((sizeof(int)) * s_stack);
+  int *stack;
+  PDM_malloc(stack, s_stack, int);
   int pos_stack = 0;
 
   int n_visited_boxes = 0;
@@ -6778,7 +6793,8 @@ PDM_box_tree_intersect_boxes_boxes
   int *_tgt_box_l_num = *tgt_box_l_num;
 
   int s_stack = ((bt->n_children - 1) * (bt->max_level - 1) + bt->n_children);
-  int *stack = malloc ((sizeof(int)) * s_stack);
+  int *stack;
+  PDM_malloc(stack, s_stack, int);
   int pos_stack = 0;
 
   int n_visited_boxes = 0;
@@ -7016,7 +7032,8 @@ PDM_box_tree_intersect_volume_boxes
 
   // Set up stack
   int s_stack = ((bt->n_children - 1) * (bt->max_level - 1) + bt->n_children);
-  int *stack = malloc ((sizeof(int)) * s_stack);
+  int *stack;
+  PDM_malloc(stack, s_stack, int);
   int pos_stack = 0;
 
   // Set up tracking if boxes have been dealt with yet
@@ -7177,7 +7194,8 @@ PDM_box_tree_write_vtk
 
   /* Depth */
   int s_stack = ((bt->n_children - 1) * (bt->max_level - 1) + bt->n_children);
-  int *stack = malloc ((sizeof(int)) * s_stack);
+  int *stack;
+  PDM_malloc(stack, s_stack, int);
   int pos_stack = 0;
 
   stack[pos_stack++] = 0;
@@ -7299,7 +7317,8 @@ PDM_box_tree_write_vtk2
 
   /* Depth */
   int s_stack = ((bt->n_children - 1) * (bt->max_level - 1) + bt->n_children);
-  int *stack = malloc ((sizeof(int)) * s_stack);
+  int *stack;
+  PDM_malloc(stack, s_stack, int);
   int pos_stack = 0;
 
   stack[pos_stack++] = 0;
@@ -7400,7 +7419,8 @@ PDM_box_tree_extract_extents
 
   /* Depth */
   int  s_stack = ((bt->n_children - 1) * (bt->max_level - 1) + bt->n_children);
-  int *stack = malloc ((sizeof(int)) * s_stack);
+  int *stack;
+  PDM_malloc(stack, s_stack, int);
   int pos_stack = 0;
 
   int    *node_depth        = PDM_array_zeros_int(n_nodes);
@@ -7487,7 +7507,8 @@ PDM_box_tree_extract_leaves
 
   /* Depth */
   int  s_stack = ((bt->n_children - 1) * (bt->max_level - 1) + bt->n_children);
-  int *stack = malloc ((sizeof(int)) * s_stack);
+  int *stack;
+  PDM_malloc(stack, s_stack, int);
   int pos_stack = 0;
 
   int *_leaf_id;

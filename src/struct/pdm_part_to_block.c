@@ -507,8 +507,8 @@ _distrib_data
   ptb->tn_send_data = ptb->i_send_data[ptb->s_comm - 1] +
                       ptb->n_send_data[ptb->s_comm - 1];
 
-  PDM_g_num_t *send_gnum =
-    (PDM_g_num_t *) malloc (sizeof(PDM_g_num_t) * ptb->tn_send_data) ;
+  PDM_g_num_t *send_gnum;
+  PDM_malloc(send_gnum, ptb->tn_send_data, PDM_g_num_t);
 
   for (int i = 0; i < ptb->s_comm; i++)
     ptb->n_send_data[i] = 0;
@@ -524,8 +524,7 @@ _distrib_data
     }
   }
 
-  ptb->sorted_recv_gnum =
-    (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * ptb->tn_recv_data);
+  PDM_malloc(ptb->sorted_recv_gnum, ptb->tn_recv_data, PDM_g_num_t);
 
   PDM_MPI_Partofactiverank (ptb->n_send_data,
                             ptb->n_recv_data,
@@ -2518,7 +2517,8 @@ PDM_part_to_block_time_per_step_dump
 
   // Global write times
   size_t s_buffer = 436; // buffer size for %.5f + 1
-  char *buffer = malloc(s_buffer);
+  char *buffer;
+  PDM_malloc(buffer, s_buffer, char);
 
   for (int i = 0; i < (int) s_buffer; i++) {
     buffer[i] = '\0';
@@ -2598,7 +2598,8 @@ PDM_part_to_block_comm_graph_dump
 
   // Block write i_rank, node and number of send data
   int s_buffer = ptb->s_comm * 11 + 40 + 2 + 1; // (10 + 1 space) * n_rank + chaine + space + \n + 1
-  char *buffer = malloc(s_buffer);
+  char *buffer;
+  PDM_malloc(buffer, s_buffer, char);
 
   for (int i = 0; i < (int) s_buffer; i++) {
     buffer[i] = '\0';
