@@ -726,10 +726,10 @@ PDM_points_merge_process
     val_send_n[i] = 0;
   }
 
-  unsigned char *val_send =
-        malloc (sizeof(unsigned char) * val_send_idx[n_rank]);
-  unsigned char *val_recv =
-        malloc (sizeof(unsigned char) * val_recv_idx[n_rank]);
+  unsigned char *val_send;
+  PDM_malloc(val_send, val_send_idx[n_rank], unsigned char);
+  unsigned char *val_recv;
+  PDM_malloc(val_recv, val_recv_idx[n_rank], unsigned char);
 
   for (int i = 0; i < n_tmp_store; i++) {
     int iproc   = tmp_store[3*i];

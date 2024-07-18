@@ -482,8 +482,8 @@ _compute_overlay_planes
 
   int *nEltsA;
   PDM_malloc(nEltsA,n_partA,int);
-  const PDM_g_num_t **gNumA =
-                  (const PDM_g_num_t **) malloc (sizeof(PDM_g_num_t *) * n_partA);
+  const PDM_g_num_t **gNumA;
+  PDM_malloc(gNumA, n_partA, const PDM_g_num_t *);
   const double **extentsA;
   PDM_malloc(extentsA,n_partA, const double *);
 
@@ -661,8 +661,8 @@ _compute_overlay_planes
   }
 
 
-  PDM_g_num_t *boxesB_intersection_g_num = (PDM_g_num_t *) malloc (sizeof(PDM_g_num_t) *
-                                                               boxesB_intersection_index[n_eltA]);
+  PDM_g_num_t *boxesB_intersection_g_num;
+  PDM_malloc(boxesB_intersection_g_num, boxesB_intersection_index[n_eltA], PDM_g_num_t);
 
   for (int k = 0; k < boxesB_intersection_index[n_eltA]; k++) {
     boxesB_intersection_g_num[k] =  gnum_eltB[boxesB_intersection_l_num[k]];
@@ -984,8 +984,8 @@ _compute_overlay_planes
    *                                                                           *
    ****************************************************************************/
 
-  int *blockA_boxesB_lnum_data =
-    (int *) malloc (sizeof(int) * blockA_boxesB_idx[n_elt_blockA]);
+  int *blockA_boxesB_lnum_data;
+  PDM_malloc(blockA_boxesB_lnum_data, blockA_boxesB_idx[n_elt_blockA], int);
 
   gnum_eltB = (PDM_g_num_t *) PDM_box_set_get_g_num (boxesB);
 
@@ -1017,8 +1017,8 @@ _compute_overlay_planes
 
   n_eltA    = PDM_box_set_get_size (boxesA);
 
-  int *blockA_lnum_data =
-    (int *) malloc (sizeof(int) * n_elt_blockA);
+  int *blockA_lnum_data;
+  PDM_malloc(blockA_lnum_data, n_elt_blockA, int);
 
   PDM_g_num_t *gnum_eltA_cp;
   PDM_malloc(gnum_eltA_cp,n_eltA,PDM_g_num_t);
@@ -2414,8 +2414,8 @@ _compute_overlay_planes
 
   int *recv_stride1 = NULL;
 
-  PDM_g_num_t *subFacesConnecN =
-          (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * 4* nSharedSubFaces);
+  PDM_g_num_t *subFacesConnecN;
+  PDM_malloc(subFacesConnecN, 4* nSharedSubFaces, PDM_g_num_t);
 
   originA = PDM_box_set_origin_get (boxesA);
 
@@ -2494,7 +2494,8 @@ _compute_overlay_planes
 
   PDM_array_reset_int(_tmp_stride, n_boxesB_without_dupl, 0);
 
-  double *subFacesCoordsA_ordered = malloc(3 * sizeof(double) * subFacesConnecIdx[nSharedSubFaces]);
+  double *subFacesCoordsA_ordered;
+  PDM_malloc(subFacesCoordsA_ordered, 3 * subFacesConnecIdx[nSharedSubFaces], double);
   for (int i = 0; i < blockA_boxesB_idx[n_elt_blockA]; i++) {
     int _idx = blockB_lnum_data[i];
     for (int j = facesToSubFacesBIdx[_idx]; j < facesToSubFacesBIdx[_idx+1]; j++) {
@@ -3691,8 +3692,8 @@ _compute_overlay_planes
    *                                                                                 *
    ***********************************************************************************/
 
-  PDM_g_num_t *firstSend = malloc (sizeof(PDM_g_num_t) *
-                          facesToAddSubFacesAIdx[n_elt_blockA] * 5);
+  PDM_g_num_t *firstSend;
+  PDM_malloc(firstSend, facesToAddSubFacesAIdx[n_elt_blockA] * 5, PDM_g_num_t);
 
   int *firstSendStride;
   PDM_malloc(firstSendStride,n_elt_blockA,int);
@@ -3771,7 +3772,8 @@ _compute_overlay_planes
 
   PDM_g_num_t *secondSend;
   PDM_malloc(secondSend,n_T_vertex,PDM_g_num_t);
-  double     *thirdSend = malloc (3 * sizeof(double) * n_T_vertex);
+  double      *thirdSend;
+  PDM_malloc(thirdSend, 3 * n_T_vertex, double);
 
   idx = 0;
   idx2 = 0;
@@ -4004,8 +4006,7 @@ _compute_overlay_planes
    *                                                                           *
    ****************************************************************************/
 
-  firstSend = malloc (sizeof(PDM_g_num_t) *
-                      facesToSubFacesBIdx[n_elt_blockB] * 5);
+  PDM_malloc(firstSend, facesToSubFacesBIdx[n_elt_blockB] * 5, PDM_g_num_t);
 
   PDM_malloc(firstSendStride,n_elt_blockB,int);
 
@@ -4064,7 +4065,7 @@ _compute_overlay_planes
  PDM_free(firstSend);
 
   PDM_malloc(secondSend,n_T_vertex,PDM_g_num_t);
-  thirdSend = malloc (3 * sizeof(double) * n_T_vertex);
+  PDM_malloc(thirdSend, 3 * n_T_vertex, double);
 
   idx = 0;
   idx2 = 0;

@@ -76,8 +76,10 @@ const PDM_g_num_t            *localOfferLnToGn
 )
 
 {
-  PDM_part_bound_t * part_bound =
-    (PDM_part_bound_t *) malloc(sizeof(_part_bound_t));
+  PDM_part_bound_t * part_bound;
+  _part_bound_t *tmp_part_bound;
+  PDM_malloc(tmp_part_bound, 1, _part_bound_t);
+  part_bound = (PDM_part_bound_t *) tmp_part_bound;
   _part_bound_t *_part_bound = (_part_bound_t *)  part_bound;
 
   _part_bound->nElt = nElt;
@@ -95,21 +97,15 @@ const PDM_g_num_t            *localOfferLnToGn
     PDM_malloc(_part_bound->nConnectedElt,1,int);
     PDM_malloc(_part_bound->connectedEltIdx,(nEltPartBound + 1),int);
     _part_bound->nConnectedElt[0] = *nConnectedElt;
-    _part_bound->eltPartBound = (int *) malloc(sizeof(int) *
-                                               (nDataEltPartBoundIni +
-                                                nDataEltPartBoundElt *
-                                                (*nConnectedElt)) *
-                                               _part_bound->nEltPartBound);
+    PDM_malloc(_part_bound->eltPartBound, (nDataEltPartBoundIni + nDataEltPartBoundElt * (*nConnectedElt)) * _part_bound->nEltPartBound, int);
     _part_bound->connectedEltIdx[0] = 0;
 
     PDM_malloc(_part_bound->nOfferElt,1,int);
     PDM_malloc(_part_bound->offerEltIdx,(nEltPartBound + 1),int);
     _part_bound->nOfferElt[0] = *nOfferElt;
     _part_bound->offerEltIdx[0] = 0;
-    _part_bound->offerElt = (int *) malloc(sizeof(int) * nEltPartBound *
-					   (*nOfferElt));
-    _part_bound->offerLnToGn = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) *
-						      nEltPartBound * (*nOfferElt));
+    PDM_malloc(_part_bound->offerElt, nEltPartBound * (*nOfferElt), int);
+    PDM_malloc(_part_bound->offerLnToGn, nEltPartBound * (*nOfferElt), PDM_g_num_t);
 
     for (int i = 0; i < nEltPartBound; i++) {
       _part_bound->connectedEltIdx[i+1] = _part_bound->connectedEltIdx[i] +
@@ -139,16 +135,10 @@ const PDM_g_num_t            *localOfferLnToGn
       tConnectedElt += nConnectedElt[i];
     }
 
-    _part_bound->offerElt = (int *) malloc(sizeof(int) *
-                                           _part_bound->offerEltIdx[nEltPartBound]);
-    _part_bound->offerLnToGn =
-      (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) *
-			    _part_bound->offerEltIdx[nEltPartBound]);
+    PDM_malloc(_part_bound->offerElt, _part_bound->offerEltIdx[nEltPartBound], int);
+    PDM_malloc(_part_bound->offerLnToGn, _part_bound->offerEltIdx[nEltPartBound], PDM_g_num_t);
 
-    _part_bound->eltPartBound =
-      (int *) malloc(sizeof(int) *
-		     (nDataEltPartBoundIni * _part_bound->nEltPartBound +
-		      nDataEltPartBoundElt * tConnectedElt));
+    PDM_malloc(_part_bound->eltPartBound, (nDataEltPartBoundIni * _part_bound->nEltPartBound + nDataEltPartBoundElt * tConnectedElt), int);
 
     for (int i = 0; i < nEltPartBound; i++) {
       _part_bound->eltPartBoundIdx[i+1] = _part_bound->eltPartBoundIdx[i] +

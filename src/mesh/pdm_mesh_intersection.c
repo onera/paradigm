@@ -1052,8 +1052,8 @@ _redistrib_boxes
   /*
    * Exchange connectivity box_a_to_box_b
    */
-  PDM_g_num_t *box_a_to_box_b_g_num = (PDM_g_num_t *) malloc (sizeof(PDM_g_num_t) *
-                                                              box_a_to_box_b_idx[n_elt_mesh_a]);
+  PDM_g_num_t *box_a_to_box_b_g_num;
+  PDM_malloc(box_a_to_box_b_g_num, box_a_to_box_b_idx[n_elt_mesh_a], PDM_g_num_t);
 
   for (int k = 0; k < box_a_to_box_b_idx[n_elt_mesh_a]; k++) {
     box_a_to_box_b_g_num[k] = gnum_elt_mesh_b[box_a_to_box_b[k]];

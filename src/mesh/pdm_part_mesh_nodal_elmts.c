@@ -5360,8 +5360,8 @@ const PDM_ownership_t               ownership
 
       /* Construction de la connectivite sommet-> arrete */
 
-      PDM_l_num_t *connec_som_are =
-        (PDM_l_num_t *) malloc(sizeof(PDM_l_num_t) * 2 * pmne->prepa_blocks->n_vtx[i_part]);
+      PDM_l_num_t *connec_som_are;
+      PDM_malloc(connec_som_are, 2 * pmne->prepa_blocks->n_vtx[i_part], PDM_l_num_t);
 
       PDM_l_num_t idx_tria   = 0;
       PDM_l_num_t idx_quad   = n_tria;

@@ -425,8 +425,8 @@ PDM_surf_mesh_build_edges_gn_and_edge_part_bound
    * Update global numbering
    */
 
-  PDM_g_num_t *nIntEdgeProcs =
-    (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * (lComm + 1));
+  PDM_g_num_t *nIntEdgeProcs;
+  PDM_malloc(nIntEdgeProcs, lComm + 1, PDM_g_num_t);
   nIntEdgeProcs[0] = 0;
   PDM_g_num_t *_nIntEdgeProcs = nIntEdgeProcs + 1;
 
@@ -516,8 +516,8 @@ PDM_surf_mesh_build_edges_gn_and_edge_part_bound
    * Store keys to send to the others processes
    */
 
-  PDM_g_num_t *edgeToSend =
-    (PDM_g_num_t *) malloc(edgeToSendIdx[lComm] * sizeof(PDM_g_num_t));
+  PDM_g_num_t *edgeToSend;
+  PDM_malloc(edgeToSend, edgeToSendIdx[lComm], PDM_g_num_t);
 
   for (int i = 0; i < nEdgeWithoutNG; i++) {
     int i_part = edgeWithoutNG[2*i];
@@ -562,8 +562,8 @@ PDM_surf_mesh_build_edges_gn_and_edge_part_bound
 
   int *edgeToRecvIdx =  PDM_array_new_idx_from_sizes_int(edgeToRecvN, lComm);
 
-  PDM_g_num_t *edgeToRecv =
-    (PDM_g_num_t *) malloc(edgeToRecvIdx[lComm]*sizeof(PDM_g_num_t));
+  PDM_g_num_t *edgeToRecv;
+  PDM_malloc(edgeToRecv, edgeToRecvIdx[lComm], PDM_g_num_t);
 
   PDM_MPI_Alltoallv(edgeToSend,
                 edgeToSendN,
@@ -583,8 +583,8 @@ PDM_surf_mesh_build_edges_gn_and_edge_part_bound
 
   const int nDatadHashTable = 2;
 
-  PDM_g_num_t *dHashTable =
-    (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * nDatadHashTable * nRecvKey);
+  PDM_g_num_t *dHashTable;
+  PDM_malloc(dHashTable, nDatadHashTable * nRecvKey, PDM_g_num_t);
 
 
   for (int i = 0; i < nRecvKey; i++) {
@@ -611,8 +611,8 @@ PDM_surf_mesh_build_edges_gn_and_edge_part_bound
 
  PDM_free(dNHashTable);
 
-  PDM_g_num_t *gNBoundPartEdge =
-    (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * 1 * nRecvKey);
+  PDM_g_num_t *gNBoundPartEdge;
+  PDM_malloc(gNBoundPartEdge, 1 * nRecvKey, PDM_g_num_t);
   PDM_g_num_t gNCurrent = 0;
 
   /*
@@ -703,8 +703,8 @@ PDM_surf_mesh_build_edges_gn_and_edge_part_bound
    * of global numbering of internal edges
    */
 
-  PDM_g_num_t *gNCurrentProcs =
-    (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * (lComm + 1));
+  PDM_g_num_t *gNCurrentProcs;
+  PDM_malloc(gNCurrentProcs, lComm + 1, PDM_g_num_t);
 
   PDM_MPI_Allgather((void *) &gNCurrent, 1, PDM__PDM_MPI_G_NUM,
                 (void *) (&gNCurrentProcs[1]), 1, PDM__PDM_MPI_G_NUM, mesh->comm);
@@ -926,8 +926,8 @@ PDM_surf_mesh_t *mesh
    * Store keys to send to the others processes
    */
 
-  PDM_g_num_t *vtx_to_send =
-    (PDM_g_num_t *) malloc(vtx_to_sendIdx[lComm] * sizeof(PDM_g_num_t));
+  PDM_g_num_t *vtx_to_send;
+  PDM_malloc(vtx_to_send, vtx_to_sendIdx[lComm], PDM_g_num_t);
 
   for (int i = 0; i < n_part; i++) {
     PDM_surf_part_t *part = mesh->part[i];
@@ -987,8 +987,8 @@ PDM_surf_mesh_t *mesh
 
   int *vtxToRecvIdx =  PDM_array_new_idx_from_sizes_int(vtxToRecvN, lComm);
 
-  PDM_g_num_t *vtxToRecv =
-    (PDM_g_num_t *) malloc(vtxToRecvIdx[lComm]*sizeof(PDM_g_num_t));
+  PDM_g_num_t *vtxToRecv;
+  PDM_malloc(vtxToRecv, vtxToRecvIdx[lComm], PDM_g_num_t);
 
 
   PDM_MPI_Alltoallv(vtx_to_send,
@@ -1008,8 +1008,8 @@ PDM_surf_mesh_t *mesh
    */
 
   const int nDatadHashTable = 2;
-  PDM_g_num_t *dHashTable =
-    (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * nDatadHashTable * n_vtxProc);
+  PDM_g_num_t *dHashTable;
+  PDM_malloc(dHashTable, nDatadHashTable * n_vtxProc, PDM_g_num_t);
 
   for (int i = 0; i < n_vtxProc; i++) {
     PDM_g_num_t key = vtxToRecv[i*nDataToSend] - nKeyProcs[myRank];
@@ -1072,8 +1072,8 @@ PDM_surf_mesh_t *mesh
    *  Backup vtxToRecv
    */
 
-  PDM_g_num_t *_cpVtxToRecv =
-    (PDM_g_num_t *) malloc(vtxToRecvIdx[lComm]*sizeof(PDM_g_num_t));
+  PDM_g_num_t *_cpVtxToRecv;
+  PDM_malloc(_cpVtxToRecv, vtxToRecvIdx[lComm], PDM_g_num_t);
   memcpy(_cpVtxToRecv, vtxToRecv, vtxToRecvIdx[lComm]*sizeof(PDM_g_num_t));
 
   /*
@@ -1489,10 +1489,8 @@ PDM_surf_mesh_build_exchange_graph
 
   PDM_surf_mesh_build_vtx_part_bound (mesh);
 
-  mesh->vtxPartBound =
-    (PDM_part_bound_t **) malloc (mesh->n_part * sizeof(PDM_part_bound_t *));
-  mesh->edgePartBound =
-    (PDM_part_bound_t **) malloc (mesh->n_part * sizeof(PDM_part_bound_t *));
+  PDM_malloc(mesh->vtxPartBound, mesh->n_part, PDM_part_bound_t *);
+  PDM_malloc(mesh->edgePartBound, mesh->n_part, PDM_part_bound_t *);
 
   for (int i = 0; i < mesh->n_part; i++) {
     PDM_surf_part_t *part = mesh->part[i];

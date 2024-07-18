@@ -187,7 +187,8 @@ _coarse_part_create
 void
  )
 {
-  _coarse_part_t *cp = (_coarse_part_t *) malloc(sizeof(_coarse_part_t));
+  _coarse_part_t *cp;
+  PDM_malloc(cp, 1, _coarse_part_t);
   cp->part = _part_create();
 
   cp->coarse_cell_cell = NULL;

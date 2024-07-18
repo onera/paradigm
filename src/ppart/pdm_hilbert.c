@@ -1377,8 +1377,8 @@ PDM_hilbert_build_rank_index(int                       dim,
   /* Allocations and Initialization */
   const int  n_samples = PDM_MAX(1, sampling_factor * n_t_part);
 
-  PDM_hilbert_code_t  *sampling =
-          (PDM_hilbert_code_t  *) malloc(sizeof(PDM_hilbert_code_t) * (n_samples + 1));
+  PDM_hilbert_code_t  *sampling;
+  PDM_malloc(sampling, n_samples + 1, PDM_hilbert_code_t);
 
   for (i = 0; i < (n_samples + 1); i++)
     sampling[i] = 0;

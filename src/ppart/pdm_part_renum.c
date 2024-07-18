@@ -545,9 +545,8 @@ double  *cell_center
     PDM_malloc(surface_vector,3 * part->n_cell,double);
     int is_degenerated;
 
-    int *connectivity = (int *) malloc (part->cell_face_idx[part->n_cell]
-                        * sizeof(int));
-
+    int *connectivity;
+    PDM_malloc(connectivity, part->cell_face_idx[part->n_cell], int);
 
     int idx = 0;
     for (int i_celll = 0; i_celll < part->n_cell; i_celll++) {
@@ -827,10 +826,10 @@ _renum_cells_hilbert
 
   for(int i_part = 0; i_part < n_part; ++i_part) {
     _part_t *part = mesh_parts[i_part];
-    double *cell_center =
-        (double *) malloc (part->n_cell * 3 * sizeof(double ));
-    PDM_hilbert_code_t *hilbert_codes =
-        (PDM_hilbert_code_t *) malloc (part->n_cell * sizeof(PDM_hilbert_code_t));
+    double *cell_center;
+    PDM_malloc(cell_center, part->n_cell * 3, double);
+    PDM_hilbert_code_t *hilbert_codes;
+    PDM_malloc(hilbert_codes, part->n_cell, PDM_hilbert_code_t);
 
     /** Barycentre computation **/
 

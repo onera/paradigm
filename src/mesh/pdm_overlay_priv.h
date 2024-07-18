@@ -196,7 +196,8 @@ _ol_part_create
 PDM_surf_part_t          *initPart
 )
 {
-  _ol_part_t *_ol_part = (_ol_part_t *) malloc(sizeof(_ol_part_t));
+  _ol_part_t *_ol_part;
+  PDM_malloc(_ol_part, 1, _ol_part_t);
 
   _ol_part->initPart        = (PDM_surf_part_t *) initPart;
   _ol_part->part            = NULL;
@@ -317,12 +318,13 @@ const PDM_g_num_t  nGVtx,
 const int         n_part
 )
 {
-  _ol_mesh_t *_ol_mesh = (_ol_mesh_t *) malloc(sizeof(_ol_mesh_t));
+  _ol_mesh_t *_ol_mesh;
+  PDM_malloc(_ol_mesh, 1, _ol_mesh_t);
 
   _ol_mesh->nGFace  = nGFace;
   _ol_mesh->nGVtx   = nGVtx;
   _ol_mesh->n_part   = n_part;
-  _ol_mesh->part = (_ol_part_t **) malloc(n_part * sizeof(_ol_part_t *));
+  PDM_malloc(_ol_mesh->part, n_part, _ol_part_t *);
 
 
   return _ol_mesh;

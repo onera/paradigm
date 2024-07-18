@@ -386,8 +386,8 @@ _dist_cloud_surf_compute
     /*
      * Look for closest surface mesh vertices
      */
-    PDM_g_num_t *closest_vertices_gnum =
-      malloc (sizeof(PDM_g_num_t) * n_pts_rank);
+    PDM_g_num_t *closest_vertices_gnum;
+    PDM_malloc(closest_vertices_gnum, n_pts_rank, PDM_g_num_t);
 
     double *closest_vertices_dist2;
     PDM_malloc(closest_vertices_dist2,n_pts_rank,double);
@@ -628,8 +628,7 @@ _dist_cloud_surf_compute
       const double *part_vtx = PDM_surf_mesh_part_vtx_get (surf_mesh, ipart);
 
       PDM_malloc(part_elt_vtx_n[ipart],part_n_elt[ipart],int);
-      part_elt_vtx_coord[ipart] =
-        malloc (sizeof(double) * part_face_vtx_idx[part_n_elt[ipart]] * 3);
+      PDM_malloc(part_elt_vtx_coord[ipart], part_face_vtx_idx[part_n_elt[ipart]] * 3, double);
 
       for (int i = 0; i < part_n_elt[ipart]; i++) {
         int face_vtx_n = part_face_vtx_idx[i+1] - part_face_vtx_idx[i];
@@ -1449,8 +1448,8 @@ _dist_cloud_surf_compute_optim
     /*
      * Look for closest surface mesh vertices
      */
-    PDM_g_num_t *closest_vertices_gnum =
-      malloc (sizeof(PDM_g_num_t) * n_pts_rank);
+    PDM_g_num_t *closest_vertices_gnum;
+    PDM_malloc(closest_vertices_gnum, n_pts_rank, PDM_g_num_t);
 
     double *closest_vertices_dist2;
     PDM_malloc(closest_vertices_dist2,n_pts_rank,double);

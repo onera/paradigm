@@ -905,8 +905,7 @@ PDM_mesh_location_create
   ml->use_user_extract = 0;
   ml->is_elmt_select_by_user = NULL;
 
-  ml->point_clouds =
-    (_point_cloud_t*) malloc (sizeof(_point_cloud_t) * n_point_cloud);
+  PDM_malloc(ml->point_clouds, n_point_cloud, _point_cloud_t);
 
   PDM_malloc(ml->ptp,n_point_cloud,PDM_part_to_part_t *);
 

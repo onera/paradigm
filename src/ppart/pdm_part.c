@@ -115,7 +115,9 @@ _alltoall
 
   PDM_array_idx_from_sizes_int(recv_buff_n, n_rank, recv_buff_idx);
 
-  *recv_buff = malloc(recv_buff_idx[n_rank] * MPIDataTypeSize);
+  char *tmp_recv_buff;
+  PDM_malloc(tmp_recv_buff, recv_buff_idx[n_rank] * MPIDataTypeSize, char);
+  *recv_buff = (void *) tmp_recv_buff;
 
   /* Receive data from each process */
 
@@ -438,8 +440,8 @@ _dual_graph_from_cell_face
   int *face_to_send_idx = PDM_array_new_idx_from_sizes_int(face_to_send_n, n_rank);
   PDM_array_reset_int(face_to_send_n, n_rank, 0);
 
-  PDM_g_num_t *face_to_send =
-    (PDM_g_num_t *) malloc(face_to_send_idx[n_rank] * sizeof(PDM_g_num_t));
+  PDM_g_num_t *face_to_send;
+  PDM_malloc(face_to_send, face_to_send_idx[n_rank], PDM_g_num_t);
 
   /*
    * Stores faces to send to the others processes
@@ -474,8 +476,8 @@ _dual_graph_from_cell_face
 
   int *face_to_recv_idx = PDM_array_new_idx_from_sizes_int(face_to_recv_n, n_rank);
 
-  PDM_g_num_t *face_to_recv =
-    (PDM_g_num_t *) malloc(face_to_recv_idx[n_rank]*sizeof(PDM_g_num_t));
+  PDM_g_num_t *face_to_recv;
+  PDM_malloc(face_to_recv, face_to_recv_idx[n_rank], PDM_g_num_t);
 
   PDM_MPI_Alltoallv(face_to_send,
                     face_to_send_n,
@@ -496,8 +498,8 @@ _dual_graph_from_cell_face
   int *cell_to_send_idx = face_to_recv_idx;
   int *cell_to_send_n   = face_to_recv_n;
 
-  PDM_g_num_t *cell_to_send =
-    (PDM_g_num_t *) malloc(face_to_recv_idx[n_rank]*sizeof(PDM_g_num_t));
+  PDM_g_num_t *cell_to_send;
+  PDM_malloc(cell_to_send, face_to_recv_idx[n_rank], PDM_g_num_t);
 
   int         *cell_to_recv_idx = face_to_send_idx;
   PDM_g_num_t *cell_to_recv    = face_to_send;
@@ -891,8 +893,8 @@ _distrib_cell
   PDM_array_accumulate_int(face_to_send_idx, n_rank+1);
 
   int         *face_to_send_n = PDM_array_zeros_int(n_rank);
-  PDM_g_num_t *face_to_send  =
-    (PDM_g_num_t *) malloc(face_to_send_idx[n_rank] * sizeof(PDM_g_num_t));
+  PDM_g_num_t *face_to_send;
+  PDM_malloc(face_to_send, face_to_send_idx[n_rank], PDM_g_num_t);
 
 
   /* 2nde boucle pour remplir le tableau a envoyer via alltoallv */
@@ -1252,8 +1254,8 @@ _distrib_face
       sface_info_idx[i+1] += sface_info_idx[i] ;
     }
 
-    PDM_g_num_t *sface_info = (PDM_g_num_t *)
-      malloc(sface_info_idx[n_rank] * sizeof(PDM_g_num_t));
+    PDM_g_num_t *sface_info;
+    PDM_malloc(sface_info, sface_info_idx[n_rank], PDM_g_num_t);
 
     for (int i = 0; i < n_rank; i++) {
       for (int k = requested_face_idx[i]; k < requested_face_idx[i+1]; k+=n_data) {
@@ -1321,8 +1323,7 @@ _distrib_face
       mesh_part->face_vtx_idx[0] = 0;
       PDM_array_accumulate_int(mesh_part->face_vtx_idx, mesh_part->n_face+1);
 
-      mesh_part->gface_vtx =
-        (PDM_g_num_t *) malloc(mesh_part->face_vtx_idx[mesh_part->n_face] * sizeof(PDM_g_num_t));
+      PDM_malloc(mesh_part->gface_vtx, mesh_part->face_vtx_idx[mesh_part->n_face], PDM_g_num_t);
 
       k = 0;
       for (int i = 0; i < mesh_part->n_face; i++) {
@@ -1550,8 +1551,8 @@ _distrib_vtx
       svtx_info_idx[i+1] += svtx_info_idx[i];
     }
 
-    unsigned char *svtx_info = (unsigned char *)
-      malloc(svtx_info_idx[n_rank] * sizeof(unsigned char));
+    unsigned char *svtx_info;
+    PDM_malloc(svtx_info, svtx_info_idx[n_rank], unsigned char);
 
     for (int i = 0; i < n_rank; i++) {
       for (int k = requested_vtx_idx[i]; k < requested_vtx_idx[i+1]; k+=n_data) {
@@ -1913,8 +1914,7 @@ _search_part_bound_face
 
   for (int i = 0; i < ppart->n_part; i++) {
     _part_t *mesh_part  = ppart->mesh_parts[i];
-    mesh_part->face_part_bound =
-      (int *) malloc(n_data_face_part_bound * mesh_part->n_face_part_bound * sizeof(int));
+    PDM_malloc(mesh_part->face_part_bound, n_data_face_part_bound * mesh_part->n_face_part_bound, int);
     mesh_part->n_face_part_bound = 0;
 
     mesh_part->face_part_bound_proc_idx = PDM_array_zeros_int(n_rank+1);
@@ -2292,8 +2292,8 @@ _distrib_face_groups
         sface_info_idx[i+1] += sface_info_idx[i] ;
       }
 
-      PDM_g_num_t *sface_info = (PDM_g_num_t *)
-        malloc(sface_info_idx[n_rank] * sizeof(PDM_g_num_t));
+      PDM_g_num_t *sface_info;
+      PDM_malloc(sface_info, sface_info_idx[n_rank], PDM_g_num_t);
 
       for (int i = 0; i < n_rank; i++) {
         for (int k = requested_face_idx[i]; k < requested_face_idx[i+1]; k+=n_data) {
@@ -2343,13 +2343,11 @@ _distrib_face_groups
 
         if (igroup == 0) {
           PDM_malloc(mesh_part->face_group,mesh_part->face_group_idx[igroup+1] ,int);
-          mesh_part->face_group_ln_to_gn =
-            (PDM_g_num_t *) malloc(mesh_part->face_group_idx[igroup+1]
-                                    * sizeof(PDM_g_num_t));
+          PDM_malloc(mesh_part->face_group_ln_to_gn, mesh_part->face_group_idx[igroup+1], PDM_g_num_t);
         }
         else {
           PDM_realloc(mesh_part->face_group ,mesh_part->face_group , mesh_part->face_group_idx[igroup+1] ,int);
-          PDM_realloc(mesh_part->face_group_ln_to_gn ,mesh_part->face_group_ln_to_gn , mesh_part->face_group_idx[igroup+1]                                     ,PDM_g_num_t);
+          PDM_realloc(mesh_part->face_group_ln_to_gn ,mesh_part->face_group_ln_to_gn , mesh_part->face_group_idx[igroup+1],PDM_g_num_t);
         }
 
         idx = mesh_part->face_group_idx[igroup];
