@@ -408,7 +408,7 @@
 
 void *PDM_MALLOC
 (
- size_t nb,
+ long nb,
  size_t size_type,
  const char *func_name,
  const char *file_name,
@@ -436,7 +436,7 @@ void *PDM_REALLOC
 (
  void *old_ptr,
 // void *new_ptr,
- size_t nb,
+ long nb,
  size_t size_type,
  const char *func_name,
  const char *file_name,
@@ -460,7 +460,7 @@ void *PDM_REALLOC
 
 void *PDM_CALLOC
 (
- size_t nb,
+ long nb,
  size_t size_type,
  const char *func_name,
  const char *file_name,
