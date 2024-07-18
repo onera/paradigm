@@ -936,7 +936,8 @@ PDM_reader_gamma_dmesh_nodal
   PDM_malloc(tria_ln_to_gn,dn_tria,PDM_g_num_t);
   PDM_g_num_t *quad_ln_to_gn;
   PDM_malloc(quad_ln_to_gn,dn_quad,PDM_g_num_t);
-  int         *distrib_group   = (int *)         calloc(n_group_face, sizeof(int));
+  int         *distrib_group;
+  PDM_calloc(distrib_group, n_group_face, int);
 
   for (PDM_g_num_t i_tria=0; i_tria<dn_tria; i_tria++) {
     tria_ln_to_gn[i_tria] = i_tria + distrib_tria[i_rank] + 1;
@@ -961,7 +962,8 @@ PDM_reader_gamma_dmesh_nodal
 
   // -------- Compute group face
   int          dn_face     = dn_tria + dn_quad;
-  int         *counters    = (int *)         calloc(n_group_face, sizeof(int));
+  int         *counters;
+  PDM_calloc(counters, n_group_face, int);
   PDM_g_num_t *dgroup_face;
   PDM_malloc(dgroup_face,dn_face,PDM_g_num_t);
 
