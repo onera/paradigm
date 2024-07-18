@@ -175,16 +175,16 @@ PDM_isosurface_dgroup_set
       isos->  dgroup_face_idx = dgroup_entity_idx;
       isos->  dgroup_face     = dgroup_entity;
       break;
-    case PDM_MESH_ENTITY_EDGE:
-      isos->n_dgroup_edge     = n_group;
-      isos->  dgroup_edge_idx = dgroup_entity_idx;
-      isos->  dgroup_edge     = dgroup_entity;
-      break;
-    case PDM_MESH_ENTITY_VTX:
-      isos->n_dgroup_vtx      = n_group;
-      isos->  dgroup_vtx_idx  = dgroup_entity_idx;
-      isos->  dgroup_vtx      = dgroup_entity;
-      break;
+    // case PDM_MESH_ENTITY_EDGE:
+    //   isos->n_dgroup_edge     = n_group;
+    //   isos->  dgroup_edge_idx = dgroup_entity_idx;
+    //   isos->  dgroup_edge     = dgroup_entity;
+    //   break;
+    // case PDM_MESH_ENTITY_VTX:
+    //   isos->n_dgroup_vtx      = n_group;
+    //   isos->  dgroup_vtx_idx  = dgroup_entity_idx;
+    //   isos->  dgroup_vtx      = dgroup_entity;
+    //   break;
     default:
       PDM_error(__FILE__, __LINE__, 0, "invalid entity_type (%d) for isosurface boundary.\n", entity_type);
       break;

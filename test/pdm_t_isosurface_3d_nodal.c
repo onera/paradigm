@@ -677,7 +677,7 @@ int main(int argc, char *argv[])
                                    "pmn_iso_face_iso_mesh");
 
       PDM_part_mesh_nodal_free(iso_pmn1);
-      _output_iso_result(isos, iso1, n_part, comm);
+      // _output_iso_result(isos, iso1, n_part, comm);
       _output_iso_result(isos, iso2, n_part, iso_itp_field, comm);
     }
   }

@@ -18,14 +18,16 @@
   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
+#include <stdlib.h>
+
 /*----------------------------------------------------------------------------
  *  Local headers
  *----------------------------------------------------------------------------*/
-
 #include "pdm.h"
 #include "pdm_mpi.h"
 #include "pdm_error.h"
 #include "pdm_mesh_nodal.h"
+#include "pdm_array.h"
 #include "pdm_isosurface.h"
 #include "pdm_isosurface_priv.h"
 
@@ -81,12 +83,51 @@ PDM_isosurface_n_part_set
   _check_is_not_dist(isos);
   _check_entry_mesh_coherence(isos, -1);
 
-  isos->n_part = n_part;
+  isos->n_part     = n_part;
   isos->iso_n_part = n_part;
 
-  /*
-   * TODO: malloc des tableaux 
-   */
+  isos->n_cell = PDM_array_const_int(n_part, -1);
+  isos->n_face = PDM_array_const_int(n_part, -1);
+  isos->n_edge = PDM_array_const_int(n_part, -1);
+  isos->n_vtx  = PDM_array_const_int(n_part, -1);
+
+  isos->cell_face     = malloc(sizeof(int         *) * n_part);
+  isos->cell_face_idx = malloc(sizeof(int         *) * n_part);
+  isos->face_edge     = malloc(sizeof(int         *) * n_part);
+  isos->face_edge_idx = malloc(sizeof(int         *) * n_part);
+  isos->face_vtx      = malloc(sizeof(int         *) * n_part);
+  isos->face_vtx_idx  = malloc(sizeof(int         *) * n_part);
+  isos->edge_vtx      = malloc(sizeof(int         *) * n_part);
+  isos->vtx_coord     = malloc(sizeof(double      *) * n_part);
+  isos->cell_gnum     = malloc(sizeof(PDM_g_num_t *) * n_part);
+  isos->face_gnum     = malloc(sizeof(PDM_g_num_t *) * n_part);
+  isos->edge_gnum     = malloc(sizeof(PDM_g_num_t *) * n_part);
+  isos->vtx_gnum      = malloc(sizeof(PDM_g_num_t *) * n_part);
+
+  isos->n_group_face   = malloc(sizeof(int  ) * n_part);
+  isos->group_face_idx = malloc(sizeof(int *) * n_part);
+  isos->group_face     = malloc(sizeof(int *) * n_part);
+
+  //TODO: groups?
+
+  for (int i_part = 0; i_part < n_part; i_part++) {
+    isos->cell_face    [i_part] = NULL;
+    isos->cell_face_idx[i_part] = NULL;
+    isos->face_edge    [i_part] = NULL;
+    isos->face_edge_idx[i_part] = NULL;
+    isos->face_vtx     [i_part] = NULL;
+    isos->face_vtx_idx [i_part] = NULL;
+    isos->edge_vtx     [i_part] = NULL;
+    isos->vtx_coord    [i_part] = NULL;
+    isos->cell_gnum    [i_part] = NULL;
+    isos->face_gnum    [i_part] = NULL;
+    isos->edge_gnum    [i_part] = NULL;
+    isos->vtx_gnum     [i_part] = NULL;
+
+    isos->n_group_face  [i_part] = 0;
+    isos->group_face_idx[i_part] = NULL;
+    isos->group_face    [i_part] = NULL;
+  }
 }
 
 void
@@ -204,16 +245,16 @@ PDM_isosurface_group_set
       isos->  group_face_idx[i_part] = group_entity_idx;
       isos->  group_face    [i_part] = group_entity;
       break;
-    case PDM_MESH_ENTITY_EDGE:
-      isos->n_group_edge    [i_part] = n_group;
-      isos->  group_edge_idx[i_part] = group_entity_idx;
-      isos->  group_edge    [i_part] = group_entity;
-      break;
-    case PDM_MESH_ENTITY_VTX:
-      isos->n_group_vtx    [i_part]  = n_group;
-      isos->  group_vtx_idx[i_part]  = group_entity_idx;
-      isos->  group_vtx    [i_part]  = group_entity;
-      break;
+    // case PDM_MESH_ENTITY_EDGE:
+    //   isos->n_group_edge    [i_part] = n_group;
+    //   isos->  group_edge_idx[i_part] = group_entity_idx;
+    //   isos->  group_edge    [i_part] = group_entity;
+    //   break;
+    // case PDM_MESH_ENTITY_VTX:
+    //   isos->n_group_vtx    [i_part]  = n_group;
+    //   isos->  group_vtx_idx[i_part]  = group_entity_idx;
+    //   isos->  group_vtx    [i_part]  = group_entity;
+    //   break;
     default:
       PDM_error(__FILE__, __LINE__, 0, "invalid entity_type (%d) for isosurface boundary.\n", entity_type);
       break;
@@ -236,6 +277,7 @@ PDM_isosurface_part_mesh_set
    */
 
   isos->pmesh = pmesh;
+  isos->n_part     = PDM_part_mesh_n_part_get(pmesh);
   isos->iso_n_part = PDM_part_mesh_n_part_get(pmesh);
 }
 
@@ -255,6 +297,7 @@ PDM_isosurface_mesh_nodal_set
    */
 
   isos->pmesh_nodal = pmn;
+  isos->n_part     = PDM_part_mesh_nodal_n_part_get(pmn);
   isos->iso_n_part = PDM_part_mesh_nodal_n_part_get(pmn);
 }
 
@@ -615,6 +658,35 @@ PDM_isosurface_part_to_part_get
     PDM_error(__FILE__, __LINE__, 0, "PDM_isosurface_t: has no cell entity.\n");
   }
 
+}
+
+
+int
+PDM_isosurface_isovalue_entity_idx_get
+(
+ PDM_isosurface_t     *isos,
+ int                   id_isosurface,
+ int                   i_part,
+ PDM_mesh_entities_t   entity_type,
+ int                 **isovalue_entity_idx
+ )
+{
+  _check_is_not_dist(isos);
+
+  if (entity_type==PDM_MESH_ENTITY_VTX) {
+    *isovalue_entity_idx = isos->isovalue_vtx_idx[id_isosurface][i_part];
+  }
+  else if (entity_type==PDM_MESH_ENTITY_EDGE) {
+    *isovalue_entity_idx = isos->isovalue_edge_idx[id_isosurface][i_part];
+  }
+  else if (entity_type==PDM_MESH_ENTITY_FACE) {
+    *isovalue_entity_idx = isos->isovalue_face_idx[id_isosurface][i_part];
+  }
+  else {
+    PDM_error(__FILE__, __LINE__, 0, "PDM_isosurface_t: has no cell entity.\n");
+  }
+
+  return isos->n_isovalues[id_isosurface];
 }
 
 

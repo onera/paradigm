@@ -1037,6 +1037,13 @@ PDM_isosurface_marching_algo
 );
 
 
+void
+PDM_isosurface_ngon_algo
+(
+  PDM_isosurface_t        *isos,
+  int                      id_iso
+);
+
 /*
  * End Algorithms
  * ==============

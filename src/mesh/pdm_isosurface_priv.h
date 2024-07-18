@@ -132,13 +132,13 @@ struct _pdm_isosurface_t {
   int         *dgroup_face_idx;
   PDM_g_num_t *dgroup_face;
 
-  int          n_dgroup_edge;
-  int         *dgroup_edge_idx;
-  PDM_g_num_t *dgroup_edge;
+  // int          n_dgroup_edge;
+  // int         *dgroup_edge_idx;
+  // PDM_g_num_t *dgroup_edge;
   
-  int          n_dgroup_vtx;
-  int         *dgroup_vtx_idx;
-  PDM_g_num_t *dgroup_vtx;
+  // int          n_dgroup_vtx;
+  // int         *dgroup_vtx_idx;
+  // PDM_g_num_t *dgroup_vtx;
 
   // > Field
   double **dfield;
@@ -181,13 +181,13 @@ struct _pdm_isosurface_t {
   int **group_face_idx;
   int **group_face;
 
-  int  *n_group_edge;
-  int **group_edge_idx;
-  int **group_edge;
+  // int  *n_group_edge;
+  // int **group_edge_idx;
+  // int **group_edge;
   
-  int  *n_group_vtx;
-  int **group_vtx_idx;
-  int **group_vtx;
+  // int  *n_group_vtx;
+  // int **group_vtx_idx;
+  // int **group_vtx;
 
   // > Field
   double ***field;
