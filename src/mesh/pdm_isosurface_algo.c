@@ -3606,23 +3606,23 @@ PDM_isosurface_ngon_algo
       PDM_part_mesh_connectivity_get(isos->pmesh,
                                      i_part,
                                      PDM_CONNECTIVITY_TYPE_CELL_FACE,
-                                     &cell_face_idx,
                                      &cell_face,
+                                     &cell_face_idx,
                                      PDM_OWNERSHIP_BAD_VALUE);
 
       PDM_part_mesh_connectivity_get(isos->pmesh,
                                      i_part,
                                      PDM_CONNECTIVITY_TYPE_FACE_EDGE,
-                                     &face_edge_idx,
                                      &face_edge,
+                                     &face_edge_idx,
                                      PDM_OWNERSHIP_BAD_VALUE);
 
       int *edge_vtx_idx = NULL;
       PDM_part_mesh_connectivity_get(isos->pmesh,
                                      i_part,
                                      PDM_CONNECTIVITY_TYPE_EDGE_VTX,
-                                     &edge_vtx_idx,
                                      &edge_vtx,
+                                     &edge_vtx_idx,
                                      PDM_OWNERSHIP_BAD_VALUE);
 
       PDM_part_mesh_vtx_coord_get(isos->pmesh,
@@ -3648,9 +3648,15 @@ PDM_isosurface_ngon_algo
                                         &vtx_ln_to_gn,
                                         PDM_OWNERSHIP_BAD_VALUE);
 
-      // TODO: get surfaces
-      // surface_face_idx = ...
-      // surface_face     = ...
+      // Get surfaces
+      PDM_g_num_t *surface_face_ln_to_gn = NULL;
+      PDM_part_mesh_bound_concat_get(isos->pmesh,
+                                     i_part,
+                                     PDM_BOUND_TYPE_FACE,
+                                     &surface_face_idx,
+                                     &surface_face,
+                                     &surface_face_ln_to_gn,
+                                     PDM_OWNERSHIP_BAD_VALUE);
     }
     else { // isos->entry_mesh_type == -1
       n_cell = isos->n_cell[i_part];
@@ -3792,8 +3798,8 @@ PDM_isosurface_ngon_algo
   t_start = PDM_MPI_Wtime();
 
 
-  // TODO: factorize this section (identical to PDM_isosurface_marching_algo) -->>
-  // ans use "fast gnums"?
+  // TODO: factorize this section (similar to PDM_isosurface_marching_algo) -->>
+  // and use "fast gnums"?
   PDM_gen_gnum_t *gen_gnum_vtx = PDM_gnum_create(3,  // unused,
                                                  isos->n_part,
                                                  PDM_FALSE,
@@ -3845,7 +3851,6 @@ PDM_isosurface_ngon_algo
   PDM_gnum_free(gen_gnum_edge);
   PDM_gnum_free(gen_gnum_face);
 
-  // TODO: edge_group gnums
   PDM_g_num_t **iso_edge_group_parent_gnum = malloc(sizeof(PDM_g_num_t *) * isos->n_part);
   for (int i_part = 0; i_part < isos->n_part; i_part++) {
     iso_edge_group_parent_gnum[i_part] = malloc(sizeof(PDM_g_num_t) * iso_edge_group_idx[i_part][n_surface]);
