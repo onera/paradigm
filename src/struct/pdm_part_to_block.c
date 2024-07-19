@@ -449,8 +449,7 @@ _distrib_data
   PDM_malloc(ptb->n_recv_data,ptb->s_comm,int);
 
   /* Pour chaque donnee le proc ou elle va etre envoyee */
-
-  PDM_malloc(ptb->dest_proc,ptb->n_elt_proc,int);
+  PDM_malloc(ptb->dest_proc, ptb->n_elt_proc, int);
 
   /* Calcul du nombre de donnees a envoyer a chaque procesus */
 
