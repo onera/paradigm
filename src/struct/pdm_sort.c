@@ -11,6 +11,7 @@
  *----------------------------------------------------------------------------*/
 
 #include "pdm.h"
+#include "pdm_priv.h"
 #include "pdm_sort.h"
 #include "pdm_quick_sort.h"
 #include "pdm_radix_sort.h"
@@ -140,7 +141,8 @@ PDM_sort_long
   int ir = lArray - 1;
   PDM_g_num_t a;
   int        b;
-  int *istack = (int *) malloc (sizeof(int) * sizeStack);
+  int *istack;
+  PDM_malloc(istack,sizeStack,int);
 
   if (order != NULL) {
 
@@ -208,7 +210,7 @@ PDM_sort_long
 
         if (jstack >= sizeStack) {
           sizeStack *= 2;
-          istack = (int *) realloc (istack, sizeof(int) * sizeStack);
+          PDM_realloc(istack ,istack , sizeStack,int);
         }
 
         if (ir-i+1 >= j-1) {
@@ -278,7 +280,7 @@ PDM_sort_long
 
         if (jstack >= sizeStack) {
           sizeStack *= 2;
-          istack = (int *) realloc (istack, sizeof(int) * sizeStack);
+          PDM_realloc(istack ,istack , sizeStack,int);
         }
 
         if (ir-i+1 >= j-1) {
@@ -294,7 +296,7 @@ PDM_sort_long
       }
     }
   }
-  free (istack);
+ PDM_free(istack);
   return;
 
 }
@@ -329,7 +331,8 @@ PDM_sort_int
   int ir = lArray - 1;
   int  a;
   int  b;
-  int *istack = (int *) malloc (sizeof(int) * sizeStack);
+  int *istack;
+  PDM_malloc(istack,sizeStack,int);
 
   if (order != NULL) {
     for (;;) {
@@ -396,7 +399,7 @@ PDM_sort_int
 
         if (jstack >= sizeStack) {
           sizeStack *= 2;
-          istack = (int *) realloc (istack, sizeof(int) * sizeStack);
+          PDM_realloc(istack ,istack , sizeStack,int);
         }
 
         if (ir-i+1 >= j-1) {
@@ -466,7 +469,7 @@ PDM_sort_int
 
         if (jstack >= sizeStack) {
           sizeStack *= 2;
-          istack = (int *) realloc (istack, sizeof(int) * sizeStack);
+          PDM_realloc(istack ,istack , sizeStack,int);
         }
 
         if (ir-i+1 >= j-1) {
@@ -482,7 +485,7 @@ PDM_sort_int
       }
     }
   }
-  free (istack);
+ PDM_free(istack);
   return;
 
 }
@@ -519,7 +522,8 @@ PDM_sort_double
   int ir = lArray - 1;
   double  a;
   int  b;
-  int *istack = (int *) malloc (sizeof(int) * sizeStack);
+  int *istack;
+  PDM_malloc(istack,sizeStack,int);
 
   if (order != NULL) {
     for (;;) {
@@ -586,7 +590,7 @@ PDM_sort_double
 
         if (jstack >= sizeStack) {
           sizeStack *= 2;
-          istack = (int *) realloc (istack, sizeof(int) * sizeStack);
+          PDM_realloc(istack ,istack , sizeStack,int);
         }
 
         if (ir-i+1 >= j-1) {
@@ -656,7 +660,7 @@ PDM_sort_double
 
         if (jstack >= sizeStack) {
           sizeStack *= 2;
-          istack = (int *) realloc (istack, sizeof(int) * sizeStack);
+          PDM_realloc(istack ,istack , sizeStack,int);
         }
 
         if (ir-i+1 >= j-1) {
@@ -672,7 +676,7 @@ PDM_sort_double
       }
     }
   }
-  free (istack);
+ PDM_free(istack);
   return;
 }
 
@@ -707,7 +711,8 @@ PDM_sort_int_special
   int ir = lArray - 1;
   PDM_g_num_t a;
   // int        b;
-  int *istack = (int *) malloc (sizeof(int) * sizeStack);
+  int *istack;
+  PDM_malloc(istack,sizeStack,int);
 
   for (;;) {
     if ( ir-l < M ) {
@@ -762,7 +767,7 @@ PDM_sort_int_special
 
       if (jstack >= sizeStack) {
         sizeStack *= 2;
-        istack = (int *) realloc (istack, sizeof(int) * sizeStack);
+        PDM_realloc(istack ,istack , sizeStack,int);
       }
 
       if (ir-i+1 >= j-1) {
@@ -777,7 +782,7 @@ PDM_sort_int_special
       }
     }
   }
-  free (istack);
+ PDM_free(istack);
   return;
 
 }

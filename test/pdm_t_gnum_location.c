@@ -213,7 +213,8 @@ PDM_part_split_t           method,
   PDM_gen_gnum_t* gen_gnum = PDM_gnum_create (3, 1, PDM_TRUE, 1e-3, pdm_mpi_comm, PDM_OWNERSHIP_KEEP);
   // fin validation
 
-  double *char_size = malloc (sizeof(double) *   dn_vtx);
+  double *char_size;
+  PDM_malloc(char_size,dn_vtx,double);
   for (int j = 0; j < dn_vtx; j++) {
     char_size[j] = 1e-3;
   }
@@ -223,7 +224,8 @@ PDM_part_split_t           method,
 
   const PDM_g_num_t *_numabs = PDM_gnum_get (gen_gnum, 0);
 
-  PDM_g_num_t *_numabs2 = malloc(sizeof(PDM_g_num_t) * dn_vtx);
+  PDM_g_num_t *_numabs2;
+  PDM_malloc(_numabs2,dn_vtx,PDM_g_num_t);
 
 
   for (int j = 0; j < dn_vtx; j++) {
@@ -252,13 +254,13 @@ PDM_part_split_t           method,
       PDM_printf (" - %d %d %d\n", location[3*k], location[3*k+1], location[3*k+2]);
     }
   }
-  free(location_idx);
-  free(location);
+ PDM_free(location_idx);
+ PDM_free(location);
 
   PDM_gnum_location_free (gnum_loc);
 
-  free (_numabs2);
-  free (char_size);
+ PDM_free(_numabs2);
+ PDM_free(char_size);
 
   PDM_gnum_free (gen_gnum);
 
@@ -319,8 +321,10 @@ PDM_part_split_t           method,
 
   int have_dcell_part = 0;
 
-  int *dcell_part = (int *) malloc (dn_face*sizeof(int));
-  int *dedge_vtxIdx = (int *) malloc ((dnedge+1)*sizeof(int));
+  int *dcell_part;
+  PDM_malloc(dcell_part,dn_face,int);
+  int *dedge_vtxIdx;
+  PDM_malloc(dedge_vtxIdx,(dnedge+1),int);
 
   dedge_vtxIdx[0] = 0;
   for (int i = 0; i < dnedge; i++) {
@@ -366,7 +370,7 @@ PDM_part_split_t           method,
                                        dedge_group_idx,
                                        dedge_group);
 
-  free (dcell_part);
+ PDM_free(dcell_part);
 
   double  *elapsed = NULL;
   double  *cpu = NULL;
@@ -427,15 +431,15 @@ PDM_part_split_t           method,
   /*   PDM_printf ("       * total              : %i\n", bound_part_faces_sum);    */
   /* } */
 
-  free (dvtx_coord);
-  free (dface_vtx_idx);
-  free (dface_vtx);
-  free (dface_edge);
-  free (dedge_vtxIdx);
-  free (dedge_vtx);
-  free (dedge_face);
-  free (dedge_group_idx);
-  free (dedge_group);
+ PDM_free(dvtx_coord);
+ PDM_free(dface_vtx_idx);
+ PDM_free(dface_vtx);
+ PDM_free(dface_edge);
+ PDM_free(dedge_vtxIdx);
+ PDM_free(dedge_vtx);
+ PDM_free(dedge_face);
+ PDM_free(dedge_group_idx);
+ PDM_free(dedge_group);
 
   for (int i_part = 0; i_part < n_part; i_part++) {
 

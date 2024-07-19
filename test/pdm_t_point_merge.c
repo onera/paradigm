@@ -315,7 +315,8 @@ _dmesh_extract_from_group_id
 
   PDM_g_num_t *distrib_face_extract = PDM_compute_entity_distribution(comm, dn_extract_face);
 
-  PDM_g_num_t* extract_face_ln_to_gn = malloc(dn_extract_face * sizeof(PDM_g_num_t));
+  PDM_g_num_t *extract_face_ln_to_gn;
+  PDM_malloc(extract_face_ln_to_gn,dn_extract_face ,PDM_g_num_t);
   for(int i = 0; i < dn_extract_face; ++i) {
     extract_face_ln_to_gn[i] = distrib_face_extract[i_rank] + i + 1;
   }
@@ -347,8 +348,8 @@ _dmesh_extract_from_group_id
                  (const PDM_g_num_t **) &pextract_vtx_ln_to_gn,
                                         &tmp_pextract_vtx_coord);
   double* pextract_vtx_coord = tmp_pextract_vtx_coord[0];
-  free(tmp_pextract_vtx_coord);
-  free(extract_vtx_distribution);
+ PDM_free(tmp_pextract_vtx_coord);
+ PDM_free(extract_vtx_distribution);
 
   if (post) {
     char filename[999];
@@ -364,14 +365,14 @@ _dmesh_extract_from_group_id
                            NULL);
   }
 
-  // free(dextract_face_vtx);
-  free(pextract_vtx_ln_to_gn);
-  free(pextract_face_vtx_idx);
-  free(pextract_face_vtx    );
-  free(pextract_vtx_coord    );
+  //PDM_free(dextract_face_vtx);
+ PDM_free(pextract_vtx_ln_to_gn);
+ PDM_free(pextract_face_vtx_idx);
+ PDM_free(pextract_face_vtx    );
+ PDM_free(pextract_vtx_coord    );
 
-  free(distrib_face_extract);
-  free(extract_face_ln_to_gn);
+ PDM_free(distrib_face_extract);
+ PDM_free(extract_face_ln_to_gn);
 
   PDM_dmesh_extract_free(dme);
 
@@ -412,7 +413,8 @@ _dmesh_extract_from_group_id
 //     abort();
 //   } else {
 
-//     int *dedge_vtx_idx = malloc((dn_edge+1) * sizeof(int));
+//     int *dedge_vtx_idx;
+//     PDM_malloc(dedge_vtx_idx,(dn_edge+1) ,int);
 //     for(int i = 0; i < dn_edge+1; ++i) {
 //       dedge_vtx_idx[i] = 2 * i;
 //     }
@@ -438,9 +440,9 @@ _dmesh_extract_from_group_id
 //                                          &dvtx_vtx_idx,
 //                                          &dvtx_vtx);
 
-//     free(dedge_vtx_idx);
-//     free(dvtx_edge_idx);
-//     free(dvtx_edge    );
+//    PDM_free(dedge_vtx_idx);
+//    PDM_free(dvtx_edge_idx);
+//    PDM_free(dvtx_edge    );
 //   }
 
 //   // PDM_log_trace_connectivity_long(dvtx_vtx_idx, dvtx_vtx, dn_vtx, "dvtx_vtx ::");
@@ -465,11 +467,12 @@ _dmesh_extract_from_group_id
 //                          NULL,
 //           (void ***)    &tmp_vtx_vtx_coord);
 //   double *pvtx_vtx_coord = tmp_vtx_vtx_coord[0];
-//   free(tmp_vtx_vtx_coord);
+//  PDM_free(tmp_vtx_vtx_coord);
 //   PDM_block_to_part_free(btp);
-//   free(dvtx_vtx    );
+//  PDM_free(dvtx_vtx    );
 
-//   double *char_length = malloc(dn_vtx * sizeof(double));
+//   double *char_length;
+//   PDM_malloc(char_length,dn_vtx ,double);
 
 //   // double tol = 1e-6;
 //   // const double eps_base = 1e-12;
@@ -501,11 +504,11 @@ _dmesh_extract_from_group_id
 //   *dchar_length_out = char_length;
 
 
-//   free(distrib_vtx );
-//   free(distrib_edge);
-//   free(pvtx_vtx_coord);
+//  PDM_free(distrib_vtx );
+//  PDM_free(distrib_edge);
+//  PDM_free(pvtx_vtx_coord);
 
-//   free(dvtx_vtx_idx);
+//  PDM_free(dvtx_vtx_idx);
 
 
 // }
@@ -718,38 +721,38 @@ int main(int argc, char *argv[])
                                   &itrf_gnum_opp);
 
   for(int i_itrf = 0; i_itrf < n_g_interface; ++i_itrf) {
-    free(itrf_gnum_cur[i_itrf]);
-    free(itrf_gnum_opp[i_itrf]);
+   PDM_free(itrf_gnum_cur[i_itrf]);
+   PDM_free(itrf_gnum_opp[i_itrf]);
   }
 
-  free(interface_cloud_pair);
-  free(dn_vtx_itrf);
-  free(itrf_gnum_cur);
-  free(itrf_gnum_opp);
+ PDM_free(interface_cloud_pair);
+ PDM_free(dn_vtx_itrf);
+ PDM_free(itrf_gnum_cur);
+ PDM_free(itrf_gnum_opp);
 
   PDM_points_merge_free(pts_merge);
 
-  free(dextract_m1_face_edge_idx   );
-  free(dextract_m1_face_edge       );
-  free(dextract_m1_face_vtx        );
-  free(dextract_m1_edge_vtx        );
-  free(dextract_m1_face_parent_gnum);
-  free(dextract_m1_edge_parent_gnum);
-  free(dextract_m1_vtx_parent_gnum );
-  free(dextract_m1_vtx_coord       );
+ PDM_free(dextract_m1_face_edge_idx   );
+ PDM_free(dextract_m1_face_edge       );
+ PDM_free(dextract_m1_face_vtx        );
+ PDM_free(dextract_m1_edge_vtx        );
+ PDM_free(dextract_m1_face_parent_gnum);
+ PDM_free(dextract_m1_edge_parent_gnum);
+ PDM_free(dextract_m1_vtx_parent_gnum );
+ PDM_free(dextract_m1_vtx_coord       );
 
-  free(dextract_m2_face_edge_idx   );
-  free(dextract_m2_face_edge       );
-  free(dextract_m2_face_vtx        );
-  free(dextract_m2_edge_vtx        );
-  free(dextract_m2_face_parent_gnum);
-  free(dextract_m2_edge_parent_gnum);
-  free(dextract_m2_vtx_parent_gnum );
-  free(dextract_m2_vtx_coord       );
+ PDM_free(dextract_m2_face_edge_idx   );
+ PDM_free(dextract_m2_face_edge       );
+ PDM_free(dextract_m2_face_vtx        );
+ PDM_free(dextract_m2_edge_vtx        );
+ PDM_free(dextract_m2_face_parent_gnum);
+ PDM_free(dextract_m2_edge_parent_gnum);
+ PDM_free(dextract_m2_vtx_parent_gnum );
+ PDM_free(dextract_m2_vtx_coord       );
 
 
-  free(dchar_lenght_m1);
-  free(dchar_lenght_m2);
+ PDM_free(dchar_lenght_m1);
+ PDM_free(dchar_lenght_m2);
 
 
   PDM_dmesh_free(dm1);

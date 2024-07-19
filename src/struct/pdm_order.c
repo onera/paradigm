@@ -255,7 +255,8 @@ const int    *new_to_old_order,
 void         *array
 )
 {
-  unsigned char *old_array = (unsigned char *) malloc (size_array * elt_size);
+  unsigned char *old_array;
+  PDM_malloc(old_array, size_array * elt_size, unsigned char);
   unsigned char *_array    = (unsigned char *) array;
 
   for (int i = 0; i < size_array; ++i) {
@@ -270,7 +271,7 @@ void         *array
     }
   }
 
-  free(old_array);
+ PDM_free(old_array);
 }
 
 /**
@@ -433,7 +434,8 @@ const size_t           stride,
   /* Apply sort */
   PDM_order_array (n_entity, stride * sizeof(PDM_g_num_t), order, array);
 
-  PDM_g_num_t *last_value = malloc(stride * sizeof(PDM_g_num_t));
+  PDM_g_num_t *last_value;
+  PDM_malloc(last_value,stride ,PDM_g_num_t);
 
   int new_size  = 1;
   int idx_write = 1;
@@ -455,7 +457,7 @@ const size_t           stride,
     }
   }
 
-  free(last_value);
+ PDM_free(last_value);
 
   return new_size;
 }
@@ -479,7 +481,8 @@ const size_t           stride,
   /* Apply sort */
   PDM_order_array (n_entity, stride * sizeof(PDM_g_num_t), order, array);
 
-  PDM_g_num_t *last_value = malloc(stride * sizeof(PDM_g_num_t));
+  PDM_g_num_t *last_value;
+  PDM_malloc(last_value,stride ,PDM_g_num_t);
 
   int new_size  = 1;
   int idx_write = 1;
@@ -502,7 +505,7 @@ const size_t           stride,
     }
   }
 
-  free(last_value);
+ PDM_free(last_value);
 
   return new_size;
 }

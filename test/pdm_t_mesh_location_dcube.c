@@ -253,9 +253,10 @@ _strip_cloud
     n_pts_x = n_pts - ( n_pts_y + n_pts_z);
 
   *ln_pts = n_pts;
-  *pts_coords_out  = malloc (sizeof(double) * 3 * n_pts);
+  PDM_malloc(*pts_coords_out,3 * n_pts,double);
   double *pts_coords  = *pts_coords_out;
-  double *char_length = malloc (sizeof(double) * n_pts);
+  double *char_length;
+  PDM_malloc(char_length,n_pts,double);
 
   double _char_length = (xmax-xmin)/n_vtx_seg;
   srand(i_rank+1); // Pas independant du parallèlisme mais pas de point double ...
@@ -331,7 +332,7 @@ _strip_cloud
   *g_num =  PDM_gnum_get (gen_gnum_pts, 0);
 
   PDM_gnum_free(gen_gnum_pts);
-  free(char_length);
+ PDM_free(char_length);
 }
 
 
@@ -486,7 +487,8 @@ int main(int argc, char *argv[])
 
   int have_dcell_part = 0;
 
-  int *dcell_part = (int *) malloc(dn_cell*sizeof(int));
+  int *dcell_part;
+  PDM_malloc(dcell_part,dn_cell,int);
 
   int *renum_properties_cell = NULL;
   int *renum_properties_face = NULL;
@@ -526,7 +528,7 @@ int main(int argc, char *argv[])
                                       dface_group_idx,
                                       dface_group);
 
-  free(dcell_part);
+ PDM_free(dcell_part);
 
   fflush(stdout);
 
@@ -1008,7 +1010,8 @@ int main(int argc, char *argv[])
   /*
    *  Check location (interpolation of an affine field)
    */
-  double **src_field = malloc(sizeof(double *) * n_part);
+  double **src_field;
+  PDM_malloc(src_field,n_part,double *);
   for (int ipart = 0; ipart < n_part; ipart++) {
     int n_cell;
     int n_face;
@@ -1074,7 +1077,7 @@ int main(int argc, char *argv[])
                            &face_group,
                            &face_group_ln_to_gn);
 
-    src_field[ipart] = malloc(sizeof(double) * n_vtx);
+    PDM_malloc(src_field[ipart],n_vtx,double);
     for (int i = 0; i < n_vtx; i++) {
       src_field[ipart][i] = _eval_field(&vtx[3*i]);
     }
@@ -1086,7 +1089,8 @@ int main(int argc, char *argv[])
                                      &ptp,
                                      PDM_OWNERSHIP_USER);
 
-  double **send_field = malloc(sizeof(double *) * n_part);
+  double **send_field;
+  PDM_malloc(send_field,n_part,double *);
   for (int ipart = 0; ipart < n_part; ipart++) {
     int         *elt_pts_idx        = NULL;
     PDM_g_num_t *elt_pts_gnum       = NULL;
@@ -1139,7 +1143,7 @@ int main(int argc, char *argv[])
                           &s_face_group,
                           &n_edge_group2);
 
-    send_field[ipart] = malloc(sizeof(double) * elt_pts_idx[n_cell]);
+    PDM_malloc(send_field[ipart],elt_pts_idx[n_cell],double);
     for (int ielt = 0; ielt < n_cell; ielt++) {
 
       int *cv = cell_vtx + cell_vtx_idx[ielt];
@@ -1189,15 +1193,15 @@ int main(int argc, char *argv[])
                 p_location[pt_id], err, recv_field[0][i], f);
     }
   }
-  free(recv_field[0]);
-  free(recv_field);
+ PDM_free(recv_field[0]);
+ PDM_free(recv_field);
 
   for (int ipart = 0; ipart < n_part; ipart++) {
-    free(src_field [ipart]);
-    free(send_field[ipart]);
+   PDM_free(src_field [ipart]);
+   PDM_free(send_field[ipart]);
   }
-  free(src_field );
-  free(send_field);
+ PDM_free(src_field );
+ PDM_free(send_field);
 
 
   double gmax_err;
@@ -1218,8 +1222,8 @@ int main(int argc, char *argv[])
 
   PDM_part_free (ppart);
 
-  free (pts_coords);
-  free (pts_gnum);
+ PDM_free(pts_coords);
+ PDM_free(pts_gnum);
 
   PDM_dcube_gen_free(dcube);
  

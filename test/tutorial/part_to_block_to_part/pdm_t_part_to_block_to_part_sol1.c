@@ -130,8 +130,10 @@ int main(int argc, char *argv[])
   PDM_UNUSED(n_part);
   int pn_elmt = freq * (distrib_init_elmt[i_rank+1] - distrib_init_elmt[i_rank]) ;
 
-  PDM_g_num_t *pln_to_to_gn = malloc(pn_elmt * sizeof(PDM_g_num_t));
-  int         *pfield       = malloc(pn_elmt * sizeof(int        ));
+  PDM_g_num_t *pln_to_to_gn;
+  PDM_malloc(pln_to_to_gn,pn_elmt ,PDM_g_num_t);
+  int *pfield;
+  PDM_malloc(pfield,pn_elmt ,int        );
   for(int i = 0; i < pn_elmt; ++i) {
     unsigned int seed = (unsigned int) (distrib_init_elmt[i_rank] + i);
     srand(seed);
@@ -174,7 +176,7 @@ int main(int argc, char *argv[])
                (void **) &pfield,
                          &block_stride,
                (void **) &block_data);
-  free(part_stride);
+ PDM_free(part_stride);
 
 
 
@@ -182,7 +184,8 @@ int main(int argc, char *argv[])
    *  2) Compute sum in block-vision
    */
   int n_elt_block = PDM_part_to_block_n_elt_block_get(ptb);
-  int *summed_block_data = malloc(sizeof(int) * n_elt_block);
+  int *summed_block_data;
+  PDM_malloc(summed_block_data,n_elt_block,int);
   int idx = 0;
   for (int i = 0; i < n_elt_block; i++) {
     summed_block_data[i] = 0.;
@@ -262,7 +265,7 @@ int main(int argc, char *argv[])
                          &part_stride2,
               (void ***) &part_data2);
   PDM_block_to_part_free(btp);
-  free(distrib_full);
+ PDM_free(distrib_full);
 
 
 
@@ -276,20 +279,20 @@ int main(int argc, char *argv[])
 
   PDM_part_to_block_free(ptb);
 
-  free(pln_to_to_gn);
-  free(distrib_init_elmt);
-  free(pfield);
+ PDM_free(pln_to_to_gn);
+ PDM_free(distrib_init_elmt);
+ PDM_free(pfield);
 
-  free(block_data);
-  free(block_stride);
-  free(summed_block_data);
+ PDM_free(block_data);
+ PDM_free(block_stride);
+ PDM_free(summed_block_data);
 
   for (int i_part = 0; i_part < n_part; i_part++) {
-    free(part_stride2[i_part]);
-    free(part_data2[i_part]);
+   PDM_free(part_stride2[i_part]);
+   PDM_free(part_data2[i_part]);
   }
-  free(part_stride2);
-  free(part_data2);
+ PDM_free(part_stride2);
+ PDM_free(part_data2);
 
   PDM_MPI_Finalize ();
   return 0;

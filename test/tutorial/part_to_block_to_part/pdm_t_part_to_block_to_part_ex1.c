@@ -129,9 +129,12 @@ int main(int argc, char *argv[])
   int n_part  = 1;
   int pn_elmt = freq * (distrib_init_elmt[i_rank+1] - distrib_init_elmt[i_rank]) ;
 
-  PDM_g_num_t *pln_to_to_gn = malloc(pn_elmt * sizeof(PDM_g_num_t));
-  int         *pfield       = malloc(pn_elmt * sizeof(int        ));
-  int         *pstrid       = malloc(pn_elmt * sizeof(int        )); // Added
+  PDM_g_num_t *pln_to_to_gn;
+  PDM_malloc(pln_to_to_gn,pn_elmt ,PDM_g_num_t);
+  int *pfield;
+  PDM_malloc(pfield,pn_elmt ,int        );
+  int *pstrid;
+  PDM_malloc(pstrid,pn_elmt ,int        ); // Added
   for(int i = 0; i < pn_elmt; ++i) {
     unsigned int seed = (unsigned int) (distrib_init_elmt[i_rank] + i);
     srand(seed);
@@ -205,7 +208,8 @@ int main(int argc, char *argv[])
 
   // Do the summation
 
-  int *dfield_summed = malloc(size_block_stride * sizeof(int));
+  int *dfield_summed;
+  PDM_malloc(dfield_summed,size_block_stride ,int);
 
   int idx = 0;
   int tmp = 0;
@@ -248,7 +252,8 @@ int main(int argc, char *argv[])
 
   int n_gnum_rank = (distrib_init_elmt[i_rank+1] - distrib_init_elmt[i_rank]);
 
-  int *dstrid = malloc(n_gnum_rank * sizeof(int));
+  int *dstrid;
+  PDM_malloc(dstrid,n_gnum_rank ,int);
 
   for (int i = 0; i < n_gnum_rank; i++) {
     dstrid[i] = 0;
@@ -286,15 +291,15 @@ int main(int argc, char *argv[])
   PDM_block_to_part_free(btp);
 
   // other free
-  free(dfield);
-  free(block_stride);
-  free(dfield_summed);
-  free(pstrid);
-  free(dstrid);
+ PDM_free(dfield);
+ PDM_free(block_stride);
+ PDM_free(dfield_summed);
+ PDM_free(pstrid);
+ PDM_free(dstrid);
 
-  free(pln_to_to_gn);
-  free(distrib_init_elmt);
-  free(pfield);
+ PDM_free(pln_to_to_gn);
+ PDM_free(distrib_init_elmt);
+ PDM_free(pfield);
 
   PDM_MPI_Finalize ();
   return 0;

@@ -160,7 +160,8 @@ _gen_cube_cell_centers
   PDM_MPI_Comm_size(comm, &n_rank);
   PDM_MPI_Comm_rank(comm, &i_rank);
 
-  PDM_g_num_t *distribCell = (PDM_g_num_t *) malloc((n_rank + 1) * sizeof(PDM_g_num_t));
+  PDM_g_num_t *distribCell;
+  PDM_malloc(distribCell,(n_rank + 1) ,PDM_g_num_t);
 
   PDM_g_num_t n_cell      = n_faceSeg * n_faceSeg * n_faceSeg;
   PDM_g_num_t n_face_face = n_faceSeg * n_faceSeg;
@@ -185,8 +186,8 @@ _gen_cube_cell_centers
 
   const double step = length / (double) n_faceSeg;
 
-  *g_num = malloc (sizeof(PDM_g_num_t) * _dn_cell);
-  *coord = malloc (sizeof(double)      * _dn_cell * 3);
+  PDM_malloc(*g_num,_dn_cell,PDM_g_num_t);
+  PDM_malloc(*coord,_dn_cell * 3,double);
 
   int _npts = 0;
   for (PDM_g_num_t g = distribCell[i_rank]; g < distribCell[i_rank+1]; g++) {
@@ -202,7 +203,7 @@ _gen_cube_cell_centers
 
   *npts = _npts;
 
-  free (distribCell);
+ PDM_free(distribCell);
 }
 
 
@@ -230,7 +231,7 @@ int main(int argc, char *argv[])
   char *version = PDM_version_get();
 
   printf("Version de ParaDiGM : %s\n", version);
-  free(version);
+ PDM_free(version);
 
   /*
    *  Set default values
@@ -339,8 +340,10 @@ int main(int argc, char *argv[])
   PDM_g_num_t n_wrong = 0;
   PDM_g_num_t n_tgt = 0;
 
-  PDM_g_num_t *true_closest_src_gnum = malloc (sizeof(PDM_g_num_t) * n_closest_points);
-  double      *true_closest_src_dist = malloc (sizeof(double) * n_closest_points);
+  PDM_g_num_t *true_closest_src_gnum;
+  PDM_malloc(true_closest_src_gnum,n_closest_points,PDM_g_num_t);
+  double *true_closest_src_dist;
+  PDM_malloc(true_closest_src_dist,n_closest_points,double);
   int n_cells_radius = (int) ceil(0.5 * pow((double) n_closest_points, 1./3.));
 
   int ijk0;
@@ -452,8 +455,8 @@ int main(int argc, char *argv[])
       n_wrong++;
     }
   }
-  free (true_closest_src_gnum);
-  free (true_closest_src_dist);
+ PDM_free(true_closest_src_gnum);
+ PDM_free(true_closest_src_dist);
 
   /*PDM_g_num_t wrong_percentage = 0;
   if (n_tgt > 0) {
@@ -505,11 +508,11 @@ int main(int argc, char *argv[])
   /* Free */
   PDM_closest_points_free (clsp);
 
-  free (tgt_coords);
-  free (tgt_gnum);
+ PDM_free(tgt_coords);
+ PDM_free(tgt_gnum);
 
-  free (src_coords);
-  free (src_gnum);
+ PDM_free(src_coords);
+ PDM_free(src_gnum);
 
 
   PDM_MPI_Finalize();

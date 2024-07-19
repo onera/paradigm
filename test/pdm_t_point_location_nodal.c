@@ -171,10 +171,10 @@ _gen_mesh
 {
   const int randomize = 0;
 
-  *pn_elt        = malloc(sizeof(int          ) * n_part);
-  *pelt_ln_to_gn = malloc(sizeof(PDM_g_num_t *) * n_part);
-  *pn_vtx        = malloc(sizeof(int          ) * n_part);
-  *pvtx_coord    = malloc(sizeof(double      *) * n_part);
+  PDM_malloc(*pn_elt,n_part,int          );
+  PDM_malloc(*pelt_ln_to_gn,n_part,PDM_g_num_t *);
+  PDM_malloc(*pn_vtx,n_part,int          );
+  PDM_malloc(*pvtx_coord,n_part,double      *);
 
   int n_domain = 1;
   int n_part_domains = n_part;
@@ -276,24 +276,30 @@ _gen_mesh
     PDM_multipart_compute(mpart);
 
     PDM_dmesh_free(dmesh);
-    free(dvtx_coord);
-    free(dcell_face_idx);
-    free(dcell_face);
-    free(dface_cell);
-    free(dface_vtx_idx);
-    free(dface_vtx);
-    free(dface_group_idx);
-    free(dface_group);
+   PDM_free(dvtx_coord);
+   PDM_free(dcell_face_idx);
+   PDM_free(dcell_face);
+   PDM_free(dface_cell);
+   PDM_free(dface_vtx_idx);
+   PDM_free(dface_vtx);
+   PDM_free(dface_group_idx);
+   PDM_free(dface_group);
 
 
     /* Get parts */
-    int         **pcell_face_idx = malloc(sizeof(int         *) * n_part);
-    int         **pcell_face     = malloc(sizeof(int         *) * n_part);
-    int         **pface_vtx_idx  = malloc(sizeof(int         *) * n_part);
-    int         **pface_vtx      = malloc(sizeof(int         *) * n_part);
-    PDM_g_num_t **pface_ln_to_gn = malloc(sizeof(PDM_g_num_t *) * n_part);
+    int **pcell_face_idx;
+    PDM_malloc(pcell_face_idx,n_part,int         *);
+    int **pcell_face;
+    PDM_malloc(pcell_face,n_part,int         *);
+    int **pface_vtx_idx;
+    PDM_malloc(pface_vtx_idx,n_part,int         *);
+    int **pface_vtx;
+    PDM_malloc(pface_vtx,n_part,int         *);
+    PDM_g_num_t **pface_ln_to_gn;
+    PDM_malloc(pface_ln_to_gn,n_part,PDM_g_num_t *);
 
-    int  *pn_face        = malloc(sizeof(int) * n_part);
+    int *pn_face;
+    PDM_malloc(pn_face,n_part,int);
 
     for (int ipart = 0; ipart < n_part; ipart++) {
 
@@ -359,12 +365,12 @@ _gen_mesh
                              (const double           **) (*pvtx_coord),
                              (const PDM_g_num_t      **) (*pelt_ln_to_gn),
                                                          comm);
-    free(pn_face       );
-    free(pface_vtx_idx );
-    free(pface_vtx     );
-    free(pcell_face_idx);
-    free(pcell_face    );
-    free(pface_ln_to_gn);
+   PDM_free(pn_face       );
+   PDM_free(pface_vtx_idx );
+   PDM_free(pface_vtx     );
+   PDM_free(pcell_face_idx);
+   PDM_free(pcell_face    );
+   PDM_free(pface_ln_to_gn);
   }
 
   else if (t_elt == PDM_MESH_NODAL_POLY_2D) {
@@ -415,7 +421,8 @@ _gen_mesh
 
     int n_bound = n_edge_group;
 
-    int *dedge_bnd_idx  = (int *) malloc((n_bound + 1) * sizeof(int));
+    int *dedge_bnd_idx;
+    PDM_malloc(dedge_bnd_idx,(n_bound + 1) ,int);
     dedge_bnd_idx[0] = 0;
 
     // First pass to count and allocate
@@ -429,7 +436,8 @@ _gen_mesh
     }
 
     // Second pass to copy
-    PDM_g_num_t *dedge_bnd  = (PDM_g_num_t *) malloc(dedge_bnd_idx[n_bound] * sizeof(PDM_g_num_t));
+    PDM_g_num_t *dedge_bnd;
+    PDM_malloc(dedge_bnd,dedge_bnd_idx[n_bound] ,PDM_g_num_t);
 
     i_bnd = 0;
     for (int igroup = 0; igroup < n_edge_group; igroup++) {
@@ -473,24 +481,29 @@ _gen_mesh
     PDM_multipart_compute(mpart);
 
     PDM_dmesh_free(dmesh);
-    free(dedge_bnd_idx   );
-    free(dedge_bnd       );
-    free(dvtx_coord      );
-    free(dface_edge_idx  );
-    free(dface_vtx       );
-    free(dface_edge      );
-    free(dedge_vtx_idx   );
-    free(dedge_vtx       );
-    free(dedge_face      );
-    free(dedge_group_idx );
-    free(dedge_group     );
+   PDM_free(dedge_bnd_idx   );
+   PDM_free(dedge_bnd       );
+   PDM_free(dvtx_coord      );
+   PDM_free(dface_edge_idx  );
+   PDM_free(dface_vtx       );
+   PDM_free(dface_edge      );
+   PDM_free(dedge_vtx_idx   );
+   PDM_free(dedge_vtx       );
+   PDM_free(dedge_face      );
+   PDM_free(dedge_group_idx );
+   PDM_free(dedge_group     );
 
     /* Get parts */
-    int  *pn_edge        = malloc(sizeof(int  ) * n_part);
-    int **pface_edge_idx = malloc(sizeof(int *) * n_part);
-    int **pface_edge     = malloc(sizeof(int *) * n_part);
-    int **pedge_vtx_idx  = malloc(sizeof(int *) * n_part);
-    int **pedge_vtx      = malloc(sizeof(int *) * n_part);
+    int *pn_edge;
+    PDM_malloc(pn_edge,n_part,int  );
+    int **pface_edge_idx;
+    PDM_malloc(pface_edge_idx,n_part,int *);
+    int **pface_edge;
+    PDM_malloc(pface_edge,n_part,int *);
+    int **pedge_vtx_idx;
+    PDM_malloc(pedge_vtx_idx,n_part,int *);
+    int **pedge_vtx;
+    PDM_malloc(pedge_vtx,n_part,int *);
 
     for (int ipart = 0; ipart < n_part; ipart++) {
 
@@ -564,11 +577,11 @@ _gen_mesh
                                    (const int         **) pface_edge,
                                    (const PDM_g_num_t **) (*pelt_ln_to_gn),
                                                           comm);
-     free(pn_edge       );
-     free(pedge_vtx_idx );
-     free(pedge_vtx     );
-     free(pface_edge_idx);
-     free(pface_edge    );
+    PDM_free(pn_edge       );
+    PDM_free(pedge_vtx_idx );
+    PDM_free(pedge_vtx     );
+    PDM_free(pface_edge_idx);
+    PDM_free(pface_edge    );
 
   }
 
@@ -621,7 +634,8 @@ _gen_mesh
 
     PDM_multipart_compute(mpart);
 
-    PDM_g_num_t **pvtx_ln_to_gn  = malloc(sizeof(PDM_g_num_t *) * n_part);
+    PDM_g_num_t **pvtx_ln_to_gn;
+    PDM_malloc(pvtx_ln_to_gn,n_part,PDM_g_num_t *);
     for (int ipart = 0; ipart < n_part; ipart++) {
       PDM_g_num_t *_elt_ln_to_gn;
       (*pn_elt)[ipart] = PDM_multipart_part_ln_to_gn_get(mpart,
@@ -657,7 +671,7 @@ _gen_mesh
                                                      *pn_elt,
                                                      *pelt_ln_to_gn,
                                                      NULL);
-    free(pvtx_ln_to_gn);
+   PDM_free(pvtx_ln_to_gn);
 
     PDM_dcube_nodal_gen_free(dcube);
 
@@ -706,12 +720,13 @@ _mesh_from_file
   PDM_multipart_dmesh_nodal_set(mpart, 0, dmn);
   PDM_multipart_compute(mpart);
 
-  *pn_elt        = malloc(sizeof(int          ) * n_part);
-  *pelt_ln_to_gn = malloc(sizeof(PDM_g_num_t *) * n_part);
-  *pn_vtx        = malloc(sizeof(int          ) * n_part);
-  *pvtx_coord    = malloc(sizeof(double      *) * n_part);
+  PDM_malloc(*pn_elt,n_part,int          );
+  PDM_malloc(*pelt_ln_to_gn,n_part,PDM_g_num_t *);
+  PDM_malloc(*pn_vtx,n_part,int          );
+  PDM_malloc(*pvtx_coord,n_part,double      *);
 
-  PDM_g_num_t **pvtx_ln_to_gn  = malloc(sizeof(PDM_g_num_t *) * n_part);
+  PDM_g_num_t **pvtx_ln_to_gn;
+  PDM_malloc(pvtx_ln_to_gn,n_part,PDM_g_num_t *);
   for (int ipart = 0; ipart < n_part; ipart++) {
     PDM_g_num_t *_elt_ln_to_gn;
     (*pn_elt)[ipart] = PDM_multipart_part_ln_to_gn_get(mpart,
@@ -720,7 +735,7 @@ _mesh_from_file
                                                        PDM_MESH_ENTITY_CELL,
                                                        &_elt_ln_to_gn,
                                                        PDM_OWNERSHIP_USER);
-    (*pelt_ln_to_gn)[ipart] = malloc(sizeof(PDM_g_num_t) * (*pn_elt)[ipart]);
+    PDM_malloc((*pelt_ln_to_gn)[ipart],(*pn_elt)[ipart],PDM_g_num_t);
     memcpy((*pelt_ln_to_gn)[ipart], _elt_ln_to_gn, sizeof(PDM_g_num_t) * (*pn_elt)[ipart]);
 
     (*pn_vtx)[ipart] = PDM_multipart_part_ln_to_gn_get(mpart,
@@ -736,7 +751,7 @@ _mesh_from_file
                                      ipart,
                                      &_vtx_coord,
                                      PDM_OWNERSHIP_USER);
-    (*pvtx_coord)[ipart] = malloc(sizeof(double) * (*pn_vtx)[ipart] * 3);
+    PDM_malloc((*pvtx_coord)[ipart],(*pn_vtx)[ipart] * 3,double);
     memcpy((*pvtx_coord)[ipart], _vtx_coord, sizeof(double) * (*pn_vtx)[ipart] * 3);
   }
 
@@ -749,7 +764,7 @@ _mesh_from_file
                                                    *pn_elt,
                                                    *pelt_ln_to_gn,
                                                    NULL);
-  free(pvtx_ln_to_gn);
+ PDM_free(pvtx_ln_to_gn);
 
   PDM_multipart_free(mpart);
   PDM_DMesh_nodal_free(dmn);
@@ -766,8 +781,8 @@ _compute_cell_centers
  double                      ***pts_coord
  )
 {
-  *pn_pts    = malloc(sizeof(int     ) * n_part);
-  *pts_coord = malloc(sizeof(double *) * n_part);
+  PDM_malloc(*pn_pts,n_part,int     );
+  PDM_malloc(*pts_coord,n_part,double *);
 
   int  n_section   = PDM_part_mesh_nodal_elmts_n_section_get  (pmne);
   int *sections_id = PDM_part_mesh_nodal_elmts_sections_id_get(pmne);
@@ -785,7 +800,7 @@ _compute_cell_centers
     }
 
     (*pn_pts)   [ipart] = pn_elt;
-    (*pts_coord)[ipart] = malloc(sizeof(double) * pn_elt * 3);
+    PDM_malloc((*pts_coord)[ipart],pn_elt * 3,double);
 
     for (int isection = 0; isection < n_section; isection++) {
 
@@ -1049,7 +1064,8 @@ int main(int argc, char *argv[])
                                                                    PDM_OWNERSHIP_KEEP);
 
 
-        PDM_g_num_t *gnum = malloc(sizeof(PDM_g_num_t) * _n_elt);
+        PDM_g_num_t *gnum;
+        PDM_malloc(gnum,_n_elt,PDM_g_num_t);
         for (int i = 0; i < _n_elt; i++) {
           int icell = i;
           if (parent_num != NULL) {
@@ -1147,7 +1163,7 @@ int main(int argc, char *argv[])
                                      NULL);
         }
 
-        free(gnum);
+       PDM_free(gnum);
       }
     }
   }
@@ -1161,7 +1177,8 @@ int main(int argc, char *argv[])
                         &pn_pts,
                         &pts_coord);
 
-  int **pts_idx = malloc(sizeof(int *) * n_part);
+  int **pts_idx;
+  PDM_malloc(pts_idx,n_part,int *);
   for (int ipart = 0; ipart < n_part; ipart++) {
     pts_idx[ipart] = PDM_array_new_idx_from_const_stride_int(1,
                                                              pn_pts[ipart]);
@@ -1238,29 +1255,29 @@ int main(int argc, char *argv[])
 
   /* Free memory */
   for (int ipart = 0; ipart < n_part; ipart++) {
-    free(pts_idx        [ipart]);
-    free(pts_coord      [ipart]);
-    free(distance       [ipart]);
-    free(projected_coord[ipart]);
-    free(bar_coord_idx  [ipart]);
-    free(bar_coord      [ipart]);
-    free(uvw            [ipart]);
-    free(pelt_ln_to_gn  [ipart]);
-    free(pvtx_coord     [ipart]);
+   PDM_free(pts_idx        [ipart]);
+   PDM_free(pts_coord      [ipart]);
+   PDM_free(distance       [ipart]);
+   PDM_free(projected_coord[ipart]);
+   PDM_free(bar_coord_idx  [ipart]);
+   PDM_free(bar_coord      [ipart]);
+   PDM_free(uvw            [ipart]);
+   PDM_free(pelt_ln_to_gn  [ipart]);
+   PDM_free(pvtx_coord     [ipart]);
   }
-  free(pts_idx);
-  free(pts_coord);
-  free(distance);
-  free(projected_coord);
-  free(bar_coord_idx);
-  free(bar_coord);
-  free(uvw);
-  free(pelt_ln_to_gn);
-  free(pvtx_coord);
+ PDM_free(pts_idx);
+ PDM_free(pts_coord);
+ PDM_free(distance);
+ PDM_free(projected_coord);
+ PDM_free(bar_coord_idx);
+ PDM_free(bar_coord);
+ PDM_free(uvw);
+ PDM_free(pelt_ln_to_gn);
+ PDM_free(pvtx_coord);
 
-  free(pn_pts);
-  free(pn_vtx);
-  free(pn_elt);
+ PDM_free(pn_pts);
+ PDM_free(pn_vtx);
+ PDM_free(pn_elt);
 
   PDM_part_mesh_nodal_elmts_free(pmne);
 

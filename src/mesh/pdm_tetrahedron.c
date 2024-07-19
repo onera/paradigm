@@ -551,7 +551,7 @@ PDM_tetrahedron_ngon_to_nodal
  int **cell_vtx
  )
 {
-  *cell_vtx = malloc(sizeof(int) * n_cell * 4);
+  PDM_malloc(*cell_vtx,n_cell * 4,int);
 
   for (int i = 0; i < n_cell; i++) {
     int iface = cell_face[4*i+3];

@@ -155,8 +155,10 @@ main
 
 
   //Brute force expected results
-  PDM_g_num_t *expected_closest_gnum = (PDM_g_num_t *) malloc(n_tgt*sizeof(PDM_g_num_t));
-  double      *expected_closest_dist = (double *) malloc(n_tgt*sizeof(double));
+  PDM_g_num_t *expected_closest_gnum;
+  PDM_malloc(expected_closest_gnum,n_tgt,PDM_g_num_t);
+  double *expected_closest_dist;
+  PDM_malloc(expected_closest_dist,n_tgt,double);
   for (int i = 0; i < n_tgt; i++) {
     PDM_g_num_t arg_min = -1;
     double min_dist = 1E12;
@@ -221,10 +223,10 @@ main
   }
 
   
-  free(expected_closest_gnum);
-  free(expected_closest_dist);
-  free(closest_src_gnum);
-  free(closest_src_dist);
+ PDM_free(expected_closest_gnum);
+ PDM_free(expected_closest_dist);
+ PDM_free(closest_src_gnum);
+ PDM_free(closest_src_dist);
 
   PDM_MPI_Barrier (PDM_MPI_COMM_WORLD);
   PDM_MPI_Finalize ();

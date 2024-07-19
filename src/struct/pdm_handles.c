@@ -93,13 +93,14 @@ PDM_Handles_create
  const int init_size
 )
 {
-  PDM_Handles_t *new_handle =  malloc (sizeof(PDM_Handles_t));
+  PDM_Handles_t *new_handle;
+  PDM_malloc(new_handle,1,PDM_Handles_t);
 
   new_handle->s_array   = init_size;
   new_handle->n_handles = 0;
-  new_handle->array     = malloc(sizeof(void*) * init_size);
-  new_handle->idx       = malloc(sizeof(int  ) * init_size);
-  new_handle->idx_inv   = malloc(sizeof(int  ) * init_size);
+  PDM_malloc(new_handle->array,init_size,const void*);
+  PDM_malloc(new_handle->idx,init_size,int  );
+  PDM_malloc(new_handle->idx_inv,init_size,int  );
 
   for (int i = 0; i < new_handle->s_array; i++) {
     new_handle->array[i]   = NULL;
@@ -126,10 +127,10 @@ PDM_Handles_free
 )
 {
   if (handles != NULL) {
-    free (handles->array);
-    free (handles->idx);
-    free (handles->idx_inv);
-    free (handles);
+   PDM_free(handles->array);
+   PDM_free(handles->idx);
+   PDM_free(handles->idx_inv);
+   PDM_free(handles);
   }
   return NULL;
 }
@@ -153,9 +154,9 @@ PDM_Handles_store
   if (handles->n_handles >= handles->s_array) {
     int p_s_array = handles->s_array;
     handles->s_array *= 2;
-    handles->array   = realloc(handles->array  , sizeof(void*) * handles->s_array);
-    handles->idx     = realloc(handles->idx    , sizeof(int  ) * handles->s_array);
-    handles->idx_inv = realloc(handles->idx_inv, sizeof(int  ) * handles->s_array);
+    PDM_realloc(handles->array   ,handles->array   , handles->s_array, const void*);
+    PDM_realloc(handles->idx     ,handles->idx     , handles->s_array,int  );
+    PDM_realloc(handles->idx_inv ,handles->idx_inv , handles->s_array,int  );
 
     for (int i = p_s_array; i < handles->s_array; i++) {
       handles->array[i]   = NULL;
@@ -244,7 +245,7 @@ PDM_Handles_handle_free
 
   if (st_free_data) {
     if (handles->array[handle_idx] != NULL) {
-      free ((void *) handles->array[handle_idx]);
+     PDM_free(handles->array[handle_idx]);
     }
   }
 

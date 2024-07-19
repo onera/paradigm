@@ -119,8 +119,10 @@ _concatenate_part_graph
 {
   PDM_UNUSED(part1_to_part2_interface);
 
-  int         *concat_bentity1_entity2_n               = malloc(pn_entity1 * sizeof(int));;
-  int         *concat_bentity1_entity2_interface_tot_n = malloc(pn_entity1 * sizeof(int));;
+  int *concat_bentity1_entity2_n;
+  PDM_malloc(concat_bentity1_entity2_n,pn_entity1 ,int);;
+  int *concat_bentity1_entity2_interface_tot_n;
+  PDM_malloc(concat_bentity1_entity2_interface_tot_n,pn_entity1 ,int);;
 
   int n_concat_entity1_entity2      = 0;
   int n_concat_entity1_entity2_itrf = 0;
@@ -144,10 +146,14 @@ _concatenate_part_graph
   }
 
   /* Allocate */
-  PDM_g_num_t *concat_bentity1_entity2_gnum        = malloc(    n_concat_entity1_entity2      * sizeof(PDM_g_num_t));
-  int         *concat_bentity1_entity2_triplet     = malloc(3 * n_concat_entity1_entity2      * sizeof(int        ));
-  int         *concat_bentity1_entity2_interface_n = malloc(    n_concat_entity1_entity2      * sizeof(int        ));
-  int         *concat_bentity1_entity2_interface   = malloc(    n_concat_entity1_entity2_itrf * sizeof(int        ));
+  PDM_g_num_t *concat_bentity1_entity2_gnum;
+  PDM_malloc(concat_bentity1_entity2_gnum,    n_concat_entity1_entity2      ,PDM_g_num_t);
+  int *concat_bentity1_entity2_triplet;
+  PDM_malloc(concat_bentity1_entity2_triplet,3 * n_concat_entity1_entity2      ,int        );
+  int *concat_bentity1_entity2_interface_n;
+  PDM_malloc(concat_bentity1_entity2_interface_n,    n_concat_entity1_entity2      ,int        );
+  int *concat_bentity1_entity2_interface;
+  PDM_malloc(concat_bentity1_entity2_interface,    n_concat_entity1_entity2_itrf ,int        );
 
   n_concat_entity1_entity2      = 0;
   n_concat_entity1_entity2_itrf = 0;
@@ -350,7 +356,8 @@ exchange_and_concat_part_graph
       }
     }
 
-    int *pupdate_bentity1_entity2_interface = malloc(n_interface_tot * sizeof(int));
+    int *pupdate_bentity1_entity2_interface;
+    PDM_malloc(pupdate_bentity1_entity2_interface,n_interface_tot ,int);
 
     n_interface_tot = 0;
     int idx_read      = 0;
@@ -378,7 +385,7 @@ exchange_and_concat_part_graph
       }
     }
 
-    free(pnext_bentity1_entity2_interface[i_part]);
+   PDM_free(pnext_bentity1_entity2_interface[i_part]);
     pnext_bentity1_entity2_interface[i_part] = pupdate_bentity1_entity2_interface;
 
 
@@ -408,8 +415,10 @@ _update_in_part2_layout
  int **update_bentity1_entity2_interface_tot_n_out
 )
 {
-  int *update_bentity1_entity2_n               = malloc(pn_entity1 * sizeof(int));
-  int *update_bentity1_entity2_interface_tot_n = malloc(pn_entity1 * sizeof(int));
+  int *update_bentity1_entity2_n;
+  PDM_malloc(update_bentity1_entity2_n,pn_entity1 ,int);
+  int *update_bentity1_entity2_interface_tot_n;
+  PDM_malloc(update_bentity1_entity2_interface_tot_n,pn_entity1 ,int);
   for(int i = 0; i < pn_entity1; ++i) {
     update_bentity1_entity2_n              [i] = 0;
     update_bentity1_entity2_interface_tot_n[i] = 0;
@@ -461,18 +470,24 @@ _recurse_and_filter
    *     - bentity1_entity2_n
    *     - bentity1_entity2_gnum
    */
-  int         **bentity1_entity2_n               = malloc(n_part_tot * sizeof(int         *));
-  PDM_g_num_t **bentity1_entity2_gnum            = malloc(n_part_tot * sizeof(PDM_g_num_t *));
-  int         **bentity1_entity2_triplet         = malloc(n_part_tot * sizeof(int         *));
-  int         **bentity1_entity2_interface_tot_n = malloc(n_part_tot * sizeof(int         *));
-  int         **bentity1_entity2_interface       = malloc(n_part_tot * sizeof(int         *));
-  int         **bentity1_entity2_interface_n     = malloc(n_part_tot * sizeof(int         *));
+  int **bentity1_entity2_n;
+  PDM_malloc(bentity1_entity2_n,n_part_tot ,int         *);
+  PDM_g_num_t **bentity1_entity2_gnum;
+  PDM_malloc(bentity1_entity2_gnum,n_part_tot ,PDM_g_num_t *);
+  int **bentity1_entity2_triplet;
+  PDM_malloc(bentity1_entity2_triplet,n_part_tot ,int         *);
+  int **bentity1_entity2_interface_tot_n;
+  PDM_malloc(bentity1_entity2_interface_tot_n,n_part_tot ,int         *);
+  int **bentity1_entity2_interface;
+  PDM_malloc(bentity1_entity2_interface,n_part_tot ,int         *);
+  int **bentity1_entity2_interface_n;
+  PDM_malloc(bentity1_entity2_interface_n,n_part_tot ,int         *);
 
   /* Init */
   for(int i_part = 0; i_part < n_part_tot; ++i_part) {
 
-    bentity1_entity2_n              [i_part] = malloc(pn_entity1[i_part] * sizeof(int));
-    bentity1_entity2_interface_tot_n[i_part] = malloc(pn_entity1[i_part] * sizeof(int));
+    bentity1_entity2_n              PDM_malloc([i_part],pn_entity1[i_part] ,int);
+    PDM_malloc(bentity1_entity2_interface_tot_n[i_part],pn_entity1[i_part] ,int);
 
     int         *_pentity1_entity2_idx             = pentity1_entity2_idx            [i_part];
     int         *_pentity1_entity2                 = pentity1_entity2                [i_part];
@@ -490,10 +505,10 @@ _recurse_and_filter
       n_entity1_entity2 += _bentity1_entity2_n[i];
     }
 
-    bentity1_entity2_gnum       [i_part] = malloc(    n_entity1_entity2      * sizeof(PDM_g_num_t));
-    bentity1_entity2_triplet    [i_part] = malloc(3 * n_entity1_entity2      * sizeof(int        ));
-    bentity1_entity2_interface_n[i_part] = malloc(    n_entity1_entity2      * sizeof(int        ));
-    bentity1_entity2_interface  [i_part] = malloc(    n_entity1_entity2_itrf * sizeof(int        ));
+    bentity1_entity2_gnum       PDM_malloc([i_part],    n_entity1_entity2      ,PDM_g_num_t);
+    bentity1_entity2_triplet    PDM_malloc([i_part],3 * n_entity1_entity2      ,int        );
+    PDM_malloc(bentity1_entity2_interface_n[i_part],    n_entity1_entity2      ,int        );
+    bentity1_entity2_interface  PDM_malloc([i_part],    n_entity1_entity2_itrf ,int        );
     PDM_g_num_t *_bentity1_entity2_gnum        = bentity1_entity2_gnum       [i_part];
     int         *_bentity1_entity2_triplet     = bentity1_entity2_triplet    [i_part];
     int         *_bentity1_entity2_interface_n = bentity1_entity2_interface_n[i_part];
@@ -528,12 +543,18 @@ _recurse_and_filter
    * Previous concat
    *
    */
-  int         **prev_concat_bentity1_entity2_n               = malloc(n_part_tot * sizeof(int         *));
-  PDM_g_num_t **prev_concat_bentity1_entity2_gnum            = malloc(n_part_tot * sizeof(PDM_g_num_t *));
-  int         **prev_concat_bentity1_entity2_triplet         = malloc(n_part_tot * sizeof(int         *));
-  int         **prev_concat_bentity1_entity2_interface_n     = malloc(n_part_tot * sizeof(int         *));
-  int         **prev_concat_bentity1_entity2_interface_tot_n = malloc(n_part_tot * sizeof(int         *));
-  int         **prev_concat_bentity1_entity2_interface       = malloc(n_part_tot * sizeof(int         *));
+  int **prev_concat_bentity1_entity2_n;
+  PDM_malloc(prev_concat_bentity1_entity2_n,n_part_tot ,int         *);
+  PDM_g_num_t **prev_concat_bentity1_entity2_gnum;
+  PDM_malloc(prev_concat_bentity1_entity2_gnum,n_part_tot ,PDM_g_num_t *);
+  int **prev_concat_bentity1_entity2_triplet;
+  PDM_malloc(prev_concat_bentity1_entity2_triplet,n_part_tot ,int         *);
+  int **prev_concat_bentity1_entity2_interface_n;
+  PDM_malloc(prev_concat_bentity1_entity2_interface_n,n_part_tot ,int         *);
+  int **prev_concat_bentity1_entity2_interface_tot_n;
+  PDM_malloc(prev_concat_bentity1_entity2_interface_tot_n,n_part_tot ,int         *);
+  int **prev_concat_bentity1_entity2_interface;
+  PDM_malloc(prev_concat_bentity1_entity2_interface,n_part_tot ,int         *);
 
   for(int i_part = 0; i_part < n_part_tot; ++i_part) {
     prev_concat_bentity1_entity2_n              [i_part] = bentity1_entity2_n              [i_part];
@@ -544,12 +565,18 @@ _recurse_and_filter
     prev_concat_bentity1_entity2_interface      [i_part] = bentity1_entity2_interface      [i_part];
   }
 
-  int         **concat_bentity1_entity2_n               = malloc(n_part_tot * sizeof(int         *));
-  PDM_g_num_t **concat_bentity1_entity2_gnum            = malloc(n_part_tot * sizeof(PDM_g_num_t *));
-  int         **concat_bentity1_entity2_triplet         = malloc(n_part_tot * sizeof(int         *));
-  int         **concat_bentity1_entity2_interface_n     = malloc(n_part_tot * sizeof(int         *));
-  int         **concat_bentity1_entity2_interface_tot_n = malloc(n_part_tot * sizeof(int         *));
-  int         **concat_bentity1_entity2_interface       = malloc(n_part_tot * sizeof(int         *));
+  int **concat_bentity1_entity2_n;
+  PDM_malloc(concat_bentity1_entity2_n,n_part_tot ,int         *);
+  PDM_g_num_t **concat_bentity1_entity2_gnum;
+  PDM_malloc(concat_bentity1_entity2_gnum,n_part_tot ,PDM_g_num_t *);
+  int **concat_bentity1_entity2_triplet;
+  PDM_malloc(concat_bentity1_entity2_triplet,n_part_tot ,int         *);
+  int **concat_bentity1_entity2_interface_n;
+  PDM_malloc(concat_bentity1_entity2_interface_n,n_part_tot ,int         *);
+  int **concat_bentity1_entity2_interface_tot_n;
+  PDM_malloc(concat_bentity1_entity2_interface_tot_n,n_part_tot ,int         *);
+  int **concat_bentity1_entity2_interface;
+  PDM_malloc(concat_bentity1_entity2_interface,n_part_tot ,int         *);
 
   for(int i_step = 0; i_step < 2; ++i_step)  {
 
@@ -621,20 +648,20 @@ _recurse_and_filter
                               &update_bentity1_entity2_n,
                               &update_bentity1_entity2_interface_tot_n);
 
-      free(pnext_bentity1_entity2_n              [i_part]);
-      free(pnext_bentity1_entity2_interface_tot_n[i_part]);
+     PDM_free(pnext_bentity1_entity2_n              [i_part]);
+     PDM_free(pnext_bentity1_entity2_interface_tot_n[i_part]);
       pnext_bentity1_entity2_n              [i_part] = update_bentity1_entity2_n;
       pnext_bentity1_entity2_interface_tot_n[i_part] = update_bentity1_entity2_interface_tot_n;
 
       /*
        * Preapre for next step
        */
-      free(prev_concat_bentity1_entity2_n              [i_part]);
-      free(prev_concat_bentity1_entity2_gnum           [i_part]);
-      free(prev_concat_bentity1_entity2_triplet        [i_part]);
-      free(prev_concat_bentity1_entity2_interface_n    [i_part]);
-      free(prev_concat_bentity1_entity2_interface_tot_n[i_part]);
-      free(prev_concat_bentity1_entity2_interface      [i_part]);
+     PDM_free(prev_concat_bentity1_entity2_n              [i_part]);
+     PDM_free(prev_concat_bentity1_entity2_gnum           [i_part]);
+     PDM_free(prev_concat_bentity1_entity2_triplet        [i_part]);
+     PDM_free(prev_concat_bentity1_entity2_interface_n    [i_part]);
+     PDM_free(prev_concat_bentity1_entity2_interface_tot_n[i_part]);
+     PDM_free(prev_concat_bentity1_entity2_interface      [i_part]);
 
       prev_concat_bentity1_entity2_n              [i_part] = concat_bentity1_entity2_n              [i_part];
       prev_concat_bentity1_entity2_gnum           [i_part] = concat_bentity1_entity2_gnum           [i_part];
@@ -651,12 +678,12 @@ _recurse_and_filter
       concat_bentity1_entity2_interface      [i_part] = NULL;
 
       if(i_step > 0) {
-        free(bentity1_entity2_n              [i_part]);
-        free(bentity1_entity2_gnum           [i_part]);
-        free(bentity1_entity2_triplet        [i_part]);
-        free(bentity1_entity2_interface_n    [i_part]);
-        free(bentity1_entity2_interface_tot_n[i_part]);
-        free(bentity1_entity2_interface      [i_part]);
+       PDM_free(bentity1_entity2_n              [i_part]);
+       PDM_free(bentity1_entity2_gnum           [i_part]);
+       PDM_free(bentity1_entity2_triplet        [i_part]);
+       PDM_free(bentity1_entity2_interface_n    [i_part]);
+       PDM_free(bentity1_entity2_interface_tot_n[i_part]);
+       PDM_free(bentity1_entity2_interface      [i_part]);
       }
 
       bentity1_entity2_n              [i_part] = pnext_bentity1_entity2_n              [i_part];
@@ -688,61 +715,61 @@ _recurse_and_filter
      * Swap ptr
      */
 
-    free(pnext_bentity1_entity2_n              );
-    free(pnext_bentity1_entity2_gnum           );
-    free(pnext_bentity1_entity2_triplet        );
-    free(pnext_bentity1_entity2_interface_n    );
-    free(pnext_bentity1_entity2_interface_tot_n);
-    free(pnext_bentity1_entity2_interface      );
+   PDM_free(pnext_bentity1_entity2_n              );
+   PDM_free(pnext_bentity1_entity2_gnum           );
+   PDM_free(pnext_bentity1_entity2_triplet        );
+   PDM_free(pnext_bentity1_entity2_interface_n    );
+   PDM_free(pnext_bentity1_entity2_interface_tot_n);
+   PDM_free(pnext_bentity1_entity2_interface      );
 
   }
 
   for(int i_part = 0; i_part < n_part_tot; ++i_part) {
-    free(prev_concat_bentity1_entity2_n              [i_part]);
-    free(prev_concat_bentity1_entity2_gnum           [i_part]);
-    free(prev_concat_bentity1_entity2_triplet        [i_part]);
-    free(prev_concat_bentity1_entity2_interface_n    [i_part]);
-    free(prev_concat_bentity1_entity2_interface_tot_n[i_part]);
-    free(prev_concat_bentity1_entity2_interface      [i_part]);
+   PDM_free(prev_concat_bentity1_entity2_n              [i_part]);
+   PDM_free(prev_concat_bentity1_entity2_gnum           [i_part]);
+   PDM_free(prev_concat_bentity1_entity2_triplet        [i_part]);
+   PDM_free(prev_concat_bentity1_entity2_interface_n    [i_part]);
+   PDM_free(prev_concat_bentity1_entity2_interface_tot_n[i_part]);
+   PDM_free(prev_concat_bentity1_entity2_interface      [i_part]);
   }
-  free(prev_concat_bentity1_entity2_n              );
-  free(prev_concat_bentity1_entity2_gnum           );
-  free(prev_concat_bentity1_entity2_triplet        );
-  free(prev_concat_bentity1_entity2_interface_n    );
-  free(prev_concat_bentity1_entity2_interface_tot_n);
-  free(prev_concat_bentity1_entity2_interface      );
+ PDM_free(prev_concat_bentity1_entity2_n              );
+ PDM_free(prev_concat_bentity1_entity2_gnum           );
+ PDM_free(prev_concat_bentity1_entity2_triplet        );
+ PDM_free(prev_concat_bentity1_entity2_interface_n    );
+ PDM_free(prev_concat_bentity1_entity2_interface_tot_n);
+ PDM_free(prev_concat_bentity1_entity2_interface      );
 
 
   // for(int i_part = 0; i_part < n_part_tot; ++i_part) {
-  //   free(concat_bentity1_entity2_n              [i_part]);
-  //   free(concat_bentity1_entity2_gnum           [i_part]);
-  //   free(concat_bentity1_entity2_triplet        [i_part]);
-  //   free(concat_bentity1_entity2_interface_n    [i_part]);
-  //   free(concat_bentity1_entity2_interface_tot_n[i_part]);
-  //   free(concat_bentity1_entity2_interface      [i_part]);
+  //  PDM_free(concat_bentity1_entity2_n              [i_part]);
+  //  PDM_free(concat_bentity1_entity2_gnum           [i_part]);
+  //  PDM_free(concat_bentity1_entity2_triplet        [i_part]);
+  //  PDM_free(concat_bentity1_entity2_interface_n    [i_part]);
+  //  PDM_free(concat_bentity1_entity2_interface_tot_n[i_part]);
+  //  PDM_free(concat_bentity1_entity2_interface      [i_part]);
   // }
-  free(concat_bentity1_entity2_n              );
-  free(concat_bentity1_entity2_gnum           );
-  free(concat_bentity1_entity2_triplet        );
-  free(concat_bentity1_entity2_interface_n    );
-  free(concat_bentity1_entity2_interface_tot_n);
-  free(concat_bentity1_entity2_interface      );
+ PDM_free(concat_bentity1_entity2_n              );
+ PDM_free(concat_bentity1_entity2_gnum           );
+ PDM_free(concat_bentity1_entity2_triplet        );
+ PDM_free(concat_bentity1_entity2_interface_n    );
+ PDM_free(concat_bentity1_entity2_interface_tot_n);
+ PDM_free(concat_bentity1_entity2_interface      );
 
 
   for(int i_part = 0; i_part < n_part_tot; ++i_part) {
-    free(bentity1_entity2_gnum           [i_part]);
-    free(bentity1_entity2_n              [i_part]);
-    free(bentity1_entity2_interface_n    [i_part]);
-    free(bentity1_entity2_interface      [i_part]);
-    free(bentity1_entity2_triplet        [i_part]);
-    free(bentity1_entity2_interface_tot_n[i_part]);
+   PDM_free(bentity1_entity2_gnum           [i_part]);
+   PDM_free(bentity1_entity2_n              [i_part]);
+   PDM_free(bentity1_entity2_interface_n    [i_part]);
+   PDM_free(bentity1_entity2_interface      [i_part]);
+   PDM_free(bentity1_entity2_triplet        [i_part]);
+   PDM_free(bentity1_entity2_interface_tot_n[i_part]);
   }
-  free(bentity1_entity2_gnum           );
-  free(bentity1_entity2_n              );
-  free(bentity1_entity2_interface_n    );
-  free(bentity1_entity2_interface      );
-  free(bentity1_entity2_triplet        );
-  free(bentity1_entity2_interface_tot_n);
+ PDM_free(bentity1_entity2_gnum           );
+ PDM_free(bentity1_entity2_n              );
+ PDM_free(bentity1_entity2_interface_n    );
+ PDM_free(bentity1_entity2_interface      );
+ PDM_free(bentity1_entity2_triplet        );
+ PDM_free(bentity1_entity2_interface_tot_n);
 
 
   return;
@@ -771,19 +798,19 @@ _recurse_and_filter
   //  *  Free all recv
   //  */
   // for(int i_part = 0; i_part < n_part_tot; ++i_part) {
-  //   free(pnext_bentity1_entity2_n              [i_part]);
-  //   free(pnext_bentity1_entity2_gnum           [i_part]);
-  //   free(pnext_bentity1_entity2_triplet        [i_part]);
-  //   free(pnext_bentity1_entity2_interface_n    [i_part]);
-  //   free(pnext_bentity1_entity2_interface_tot_n[i_part]);
-  //   free(pnext_bentity1_entity2_interface      [i_part]);
+  //  PDM_free(pnext_bentity1_entity2_n              [i_part]);
+  //  PDM_free(pnext_bentity1_entity2_gnum           [i_part]);
+  //  PDM_free(pnext_bentity1_entity2_triplet        [i_part]);
+  //  PDM_free(pnext_bentity1_entity2_interface_n    [i_part]);
+  //  PDM_free(pnext_bentity1_entity2_interface_tot_n[i_part]);
+  //  PDM_free(pnext_bentity1_entity2_interface      [i_part]);
   // }
-  // free(pnext_bentity1_entity2_n              );
-  // free(pnext_bentity1_entity2_gnum           );
-  // free(pnext_bentity1_entity2_triplet        );
-  // free(pnext_bentity1_entity2_interface_n    );
-  // free(pnext_bentity1_entity2_interface_tot_n);
-  // free(pnext_bentity1_entity2_interface      );
+  //PDM_free(pnext_bentity1_entity2_n              );
+  //PDM_free(pnext_bentity1_entity2_gnum           );
+  //PDM_free(pnext_bentity1_entity2_triplet        );
+  //PDM_free(pnext_bentity1_entity2_interface_n    );
+  //PDM_free(pnext_bentity1_entity2_interface_tot_n);
+  //PDM_free(pnext_bentity1_entity2_interface      );
 
 
 
@@ -792,32 +819,35 @@ _recurse_and_filter
 
 
   // for(int i_part = 0; i_part < n_part_tot; ++i_part) {
-  //   free(bentity1_entity2_gnum           [i_part]);
-  //   free(bentity1_entity2_n              [i_part]);
-  //   free(bentity1_entity2_interface_n    [i_part]);
-  //   free(bentity1_entity2_interface      [i_part]);
-  //   free(bentity1_entity2_triplet        [i_part]);
-  //   free(bentity1_entity2_interface_tot_n[i_part]);
+  //  PDM_free(bentity1_entity2_gnum           [i_part]);
+  //  PDM_free(bentity1_entity2_n              [i_part]);
+  //  PDM_free(bentity1_entity2_interface_n    [i_part]);
+  //  PDM_free(bentity1_entity2_interface      [i_part]);
+  //  PDM_free(bentity1_entity2_triplet        [i_part]);
+  //  PDM_free(bentity1_entity2_interface_tot_n[i_part]);
   // }
-  // free(bentity1_entity2_gnum           );
-  // free(bentity1_entity2_n              );
-  // free(bentity1_entity2_interface_n    );
-  // free(bentity1_entity2_interface      );
-  // free(bentity1_entity2_triplet        );
-  // free(bentity1_entity2_interface_tot_n);
+  //PDM_free(bentity1_entity2_gnum           );
+  //PDM_free(bentity1_entity2_n              );
+  //PDM_free(bentity1_entity2_interface_n    );
+  //PDM_free(bentity1_entity2_interface      );
+  //PDM_free(bentity1_entity2_triplet        );
+  //PDM_free(bentity1_entity2_interface_tot_n);
 
 
   // /* Init step */
-  // int         **pborder_entity1_to_pentity2_n = malloc(n_part_tot * sizeof(int         *));
-  // int         **pborder_gnum_and_interface_n  = malloc(n_part_tot * sizeof(int         *));
-  // PDM_g_num_t **pborder_gnum_and_interface    = malloc(n_part_tot * sizeof(PDM_g_num_t *));
+  // int **pborder_entity1_to_pentity2_n;
+  // PDM_malloc(pborder_entity1_to_pentity2_n,n_part_tot ,int         *);
+  // int **pborder_gnum_and_interface_n;
+  // PDM_malloc(pborder_gnum_and_interface_n,n_part_tot ,int         *);
+  // PDM_g_num_t **pborder_gnum_and_interface;
+  // PDM_malloc(pborder_gnum_and_interface,n_part_tot ,PDM_g_num_t *);
   // for(int i_part = 0; i_part < n_part_tot; ++i_part) {
 
   //   // Compute index related of each entity1
   //   // int n_part1_to_part2 = part1_to_part2_idx[i_part][pn_entity1[i_part]]/3;
 
-  //   pborder_entity1_to_pentity2_n[i_part] = malloc( pn_entity1[i_part] * sizeof(int        ));
-  //   pborder_gnum_and_interface_n [i_part] = malloc( pn_entity1[i_part] * sizeof(int        ));
+  //   PDM_malloc(pborder_entity1_to_pentity2_n[i_part], pn_entity1[i_part] ,int        );
+  //   pborder_gnum_and_interface_n PDM_malloc([i_part], pn_entity1[i_part] ,int        );
 
   //   int n_send_gnum_and_interface = 0;
   //   for(int i_entity = 0; i_entity < pn_entity1[i_part]; ++i_entity) {
@@ -832,7 +862,7 @@ _recurse_and_filter
   //   }
 
   //   // pborder_entity1_to_pentity2_idx[i_part] = PDM_array_new_idx_from_sizes_int(pborder_entity1_to_pentity2_n[i_part], pn_entity1[i_part]);
-  //   pborder_gnum_and_interface[i_part] = malloc(n_send_gnum_and_interface * sizeof(PDM_g_num_t));
+  //   PDM_malloc(pborder_gnum_and_interface[i_part],n_send_gnum_and_interface ,PDM_g_num_t);
 
   //   n_send_gnum_and_interface = 0;
   //   int idx_read = 0;
@@ -963,28 +993,28 @@ _recurse_and_filter
 
 
   // for(int i_part = 0; i_part < n_part_tot; ++i_part) {
-  //   free(pborder_gnum_and_interface_n[i_part]);
-  //   free(pborder_gnum_and_interface  [i_part]);
+  //  PDM_free(pborder_gnum_and_interface_n[i_part]);
+  //  PDM_free(pborder_gnum_and_interface  [i_part]);
   // }
-  // free(pborder_gnum_and_interface_n);
-  // free(pborder_gnum_and_interface  );
+  //PDM_free(pborder_gnum_and_interface_n);
+  //PDM_free(pborder_gnum_and_interface  );
 
   // for(int i_part = 0; i_part < n_part_tot; ++i_part) {
-  //   free(pnext_extract_entity2_n      [i_part]);
-  //   free(pnext_extract_entity2_gnum   [i_part]);
-  //   free(pnext_extract_entity2_triplet[i_part]);
+  //  PDM_free(pnext_extract_entity2_n      [i_part]);
+  //  PDM_free(pnext_extract_entity2_gnum   [i_part]);
+  //  PDM_free(pnext_extract_entity2_triplet[i_part]);
 
-  //   free(pnext_gnum_and_interface_n   [i_part]);
-  //   free(pnext_gnum_and_interface_gnum[i_part]);
-  //   free(pborder_entity1_to_pentity2_n[i_part]);
+  //  PDM_free(pnext_gnum_and_interface_n   [i_part]);
+  //  PDM_free(pnext_gnum_and_interface_gnum[i_part]);
+  //  PDM_free(pborder_entity1_to_pentity2_n[i_part]);
 
   // }
-  // free(pnext_extract_entity2_n      );
-  // free(pnext_extract_entity2_triplet);
-  // free(pnext_gnum_and_interface_n   );
-  // free(pnext_gnum_and_interface_gnum);
-  // free(pnext_extract_entity2_gnum   );
-  // free(pborder_entity1_to_pentity2_n);
+  //PDM_free(pnext_extract_entity2_n      );
+  //PDM_free(pnext_extract_entity2_triplet);
+  //PDM_free(pnext_gnum_and_interface_n   );
+  //PDM_free(pnext_gnum_and_interface_gnum);
+  //PDM_free(pnext_extract_entity2_gnum   );
+  //PDM_free(pborder_entity1_to_pentity2_n);
 
 
 }
@@ -1030,16 +1060,22 @@ PDM_part_extension_interface_by_entity1_to_interface_by_entity2
     n_part_tot += n_part[i_domain];
   }
 
-  int          *pn_entity1            = malloc(n_part_tot * sizeof(int          ));
-  PDM_g_num_t **pentity1_ln_to_gn     = malloc(n_part_tot * sizeof(PDM_g_num_t *));
+  int *pn_entity1;
+  PDM_malloc(pn_entity1,n_part_tot ,int          );
+  PDM_g_num_t **pentity1_ln_to_gn;
+  PDM_malloc(pentity1_ln_to_gn,n_part_tot ,PDM_g_num_t *);
   int         **pentity1_hint         = NULL;
-  int          *pn_entity2            = malloc(n_part_tot * sizeof(int          ));
-  PDM_g_num_t **pentity2_ln_to_gn     = malloc(n_part_tot * sizeof(PDM_g_num_t *));
-  int         **pentity2_entity1_idx  = malloc(n_part_tot * sizeof(int         *));
-  int         **pentity2_entity1      = malloc(n_part_tot * sizeof(int         *));
+  int *pn_entity2;
+  PDM_malloc(pn_entity2,n_part_tot ,int          );
+  PDM_g_num_t **pentity2_ln_to_gn;
+  PDM_malloc(pentity2_ln_to_gn,n_part_tot ,PDM_g_num_t *);
+  int **pentity2_entity1_idx;
+  PDM_malloc(pentity2_entity1_idx,n_part_tot ,int         *);
+  int **pentity2_entity1;
+  PDM_malloc(pentity2_entity1,n_part_tot ,int         *);
 
   if(pentity1_hint_in != NULL) {
-    pentity1_hint = malloc(n_part_tot * sizeof(int         *));
+    PDM_malloc(pentity1_hint,n_part_tot ,int         *);
   }
 
   int ln_part_tot = 0;
@@ -1097,13 +1133,19 @@ PDM_part_extension_interface_by_entity1_to_interface_by_entity2
   /*
    * Prepare creation of part_to_part
    */
-  int         **part1_to_part2_idx              = malloc(n_part_tot * sizeof(int         *));
-  int         **part1_to_part2_triplet_idx      = NULL; //malloc(n_part_tot * sizeof(int *));
-  int         **part1_to_part2_triplet          = malloc(n_part_tot * sizeof(int         *));
-  int         **part1_to_part2_interface        = malloc(n_part_tot * sizeof(int         *));
+  int **part1_to_part2_idx;
+  PDM_malloc(part1_to_part2_idx,n_part_tot ,int         *);
+  int **part1_to_part2_triplet_idx;
+  PDM_malloc(part1_to_part2_triplet_idx,n_part_tot ,int *);
+  int **part1_to_part2_triplet;
+  PDM_malloc(part1_to_part2_triplet,n_part_tot ,int         *);
+  int **part1_to_part2_interface;
+  PDM_malloc(part1_to_part2_interface,n_part_tot ,int         *);
 
-  int         **part1_to_part2_entity2_n           = malloc(n_part_tot * sizeof(int         *));
-  int         **part1_to_part2_entity2_triplet     = malloc(n_part_tot * sizeof(int         *));
+  int **part1_to_part2_entity2_n;
+  PDM_malloc(part1_to_part2_entity2_n,n_part_tot ,int         *);
+  int **part1_to_part2_entity2_triplet;
+  PDM_malloc(part1_to_part2_entity2_triplet,n_part_tot ,int         *);
 
   int i_rank;
   int n_rank;
@@ -1128,9 +1170,10 @@ PDM_part_extension_interface_by_entity1_to_interface_by_entity2
                                       &ppart_entity1,
                                       NULL);
 
-  free(part_distribution);
+ PDM_free(part_distribution);
 
-  int* n_part_g = malloc(n_domain * sizeof(int));
+  int *n_part_g;
+  PDM_malloc(n_part_g,n_domain ,int);
   PDM_MPI_Allreduce(n_part, n_part_g, n_domain, PDM_MPI_INT, PDM_MPI_SUM, comm);
   int n_g_part_tot = 0;
   for(int i_dom = 0; i_dom < n_domain; ++i_dom) {
@@ -1141,7 +1184,8 @@ PDM_part_extension_interface_by_entity1_to_interface_by_entity2
   int li_part = 0;
   for(int i_dom = 0; i_dom < n_domain; ++i_dom) {
 
-    int *n_part_shift = (int *) malloc( (n_rank) * sizeof(int));
+    int *n_part_shift;
+    PDM_malloc(n_part_shift, (n_rank) ,int);
     PDM_MPI_Allgather(&li_part,
                       1,
                       PDM_MPI_INT,
@@ -1155,7 +1199,7 @@ PDM_part_extension_interface_by_entity1_to_interface_by_entity2
     }
 
     for(int i_part = 0; i_part < n_part[i_dom]; ++i_part) {
-      part1_to_part2_idx[li_part] = malloc((pn_entity1[li_part] + 1) *sizeof(int));
+      PDM_malloc(part1_to_part2_idx[li_part],(pn_entity1[li_part] + 1) ,int);
       part1_to_part2_idx[li_part][0] = 0;
 
       int *part1_to_part2_n = PDM_array_zeros_int(pn_entity1[li_part]);
@@ -1181,8 +1225,8 @@ PDM_part_extension_interface_by_entity1_to_interface_by_entity2
       }
 
       int n_connect_tot = part1_to_part2_idx[li_part][pn_entity1[li_part]];
-      part1_to_part2_triplet  [li_part] = malloc(n_connect_tot   * sizeof(int));
-      part1_to_part2_interface[li_part] = malloc(n_connect_tot/3 * sizeof(int));
+      part1_to_part2_triplet  PDM_malloc([li_part],n_connect_tot   ,int);
+      PDM_malloc(part1_to_part2_interface[li_part],n_connect_tot/3 ,int);
 
       // printf("n_connect_tot = %i \n", n_connect_tot);
 
@@ -1225,7 +1269,7 @@ PDM_part_extension_interface_by_entity1_to_interface_by_entity2
        * Creation des buffers d'envoi des connectivités
        */
       int n_send = part1_to_part2_idx[li_part][pn_entity1[li_part]]/3;
-      part1_to_part2_entity2_n    [li_part] = malloc(n_send * sizeof(int));
+      part1_to_part2_entity2_n    PDM_malloc([li_part],n_send ,int);
       int n_send_entity2     = 0;
 
       int *_pentity1_entity2_idx     = pentity1_entity2_idx    [li_part];
@@ -1244,7 +1288,7 @@ PDM_part_extension_interface_by_entity1_to_interface_by_entity2
       }
 
 
-      part1_to_part2_entity2_triplet    [li_part] = malloc(3 * n_send_entity2     * sizeof(int        ));
+      part1_to_part2_entity2_triplet    PDM_malloc([li_part],3 * n_send_entity2     ,int        );
       int         *_part1_to_part2_entity2_triplet   = part1_to_part2_entity2_triplet  [li_part];
 
       /* Fill loop */
@@ -1266,15 +1310,15 @@ PDM_part_extension_interface_by_entity1_to_interface_by_entity2
         }
       }
 
-      free(part1_to_part2_n);
+     PDM_free(part1_to_part2_n);
 
       li_part += 1;
     }
 
-    free(n_part_shift);
+   PDM_free(n_part_shift);
   }
 
-  free(n_part_g);
+ PDM_free(n_part_g);
 
   // TODO : Faire un part_to_block pour hook TOUTES les faces qui pointe sur le même sommet par exemple
 
@@ -1304,9 +1348,12 @@ PDM_part_extension_interface_by_entity1_to_interface_by_entity2
   /*
    * Prepare buffer
    */
-  int         **gnum1_com_from_triplet_n    = malloc(n_part_tot * sizeof(int         *));
-  int         **gnum1_com_from_triplet_send = malloc(n_part_tot * sizeof(int         *));
-  PDM_g_num_t **gnum1_com_from_gnum_send    = malloc(n_part_tot * sizeof(PDM_g_num_t *));
+  int **gnum1_com_from_triplet_n;
+  PDM_malloc(gnum1_com_from_triplet_n,n_part_tot ,int         *);
+  int **gnum1_com_from_triplet_send;
+  PDM_malloc(gnum1_com_from_triplet_send,n_part_tot ,int         *);
+  PDM_g_num_t **gnum1_com_from_gnum_send;
+  PDM_malloc(gnum1_com_from_gnum_send,n_part_tot ,PDM_g_num_t *);
   for(int i_part = 0; i_part < n_part_tot; ++i_part) {
 
     int n_gnum1_come_from = gnum1_come_from_idx[i_part][ n_ref_lnum2[i_part]];
@@ -1322,9 +1369,9 @@ PDM_part_extension_interface_by_entity1_to_interface_by_entity2
     }
 
     /* Allocate */
-    gnum1_com_from_triplet_n   [i_part] = malloc(    n_gnum1_come_from * sizeof(int        ));
-    gnum1_com_from_triplet_send[i_part] = malloc(3 * n_send_part2      * sizeof(int        ));
-    gnum1_com_from_gnum_send   [i_part] = malloc(    n_send_part2      * sizeof(PDM_g_num_t));
+    gnum1_com_from_triplet_n   PDM_malloc([i_part],    n_gnum1_come_from ,int        );
+    PDM_malloc(gnum1_com_from_triplet_send[i_part],3 * n_send_part2      ,int        );
+    gnum1_com_from_gnum_send   PDM_malloc([i_part],    n_send_part2      ,PDM_g_num_t);
 
     int         *_gnum1_com_from_triplet_n    = gnum1_com_from_triplet_n   [i_part];
     int         *_gnum1_com_from_triplet_send = gnum1_com_from_triplet_send[i_part];
@@ -1384,9 +1431,9 @@ PDM_part_extension_interface_by_entity1_to_interface_by_entity2
 
 
   for(int i_part = 0; i_part < n_part_tot; ++i_part) {
-    free(gnum1_com_from_triplet_n   [i_part]);
-    free(gnum1_com_from_triplet_send[i_part]);
-    free(gnum1_com_from_gnum_send   [i_part]);
+   PDM_free(gnum1_com_from_triplet_n   [i_part]);
+   PDM_free(gnum1_com_from_triplet_send[i_part]);
+   PDM_free(gnum1_com_from_gnum_send   [i_part]);
   }
 
 
@@ -1412,7 +1459,8 @@ PDM_part_extension_interface_by_entity1_to_interface_by_entity2
   }
 
 
-  int **pextract_entity2_idx = malloc(ln_part_tot * sizeof(int *));
+  int **pextract_entity2_idx;
+  PDM_malloc(pextract_entity2_idx,ln_part_tot ,int *);
   for(int i_part = 0; i_part < ln_part_tot; ++i_part) {
     int n_part1_to_part2 = part1_to_part2_idx[i_part][pn_entity1[i_part]]/3;
     pextract_entity2_idx[i_part] = PDM_array_new_idx_from_sizes_int(pextract_entity2_n[i_part], n_part1_to_part2);
@@ -1432,9 +1480,9 @@ PDM_part_extension_interface_by_entity1_to_interface_by_entity2
                       pextract_entity2_triplet,
                       comm);
 
-  free(gnum1_com_from_triplet_n   );
-  free(gnum1_com_from_triplet_send);
-  free(gnum1_com_from_gnum_send   );
+ PDM_free(gnum1_com_from_triplet_n   );
+ PDM_free(gnum1_com_from_triplet_send);
+ PDM_free(gnum1_com_from_gnum_send   );
 
 
   /*
@@ -1452,9 +1500,12 @@ PDM_part_extension_interface_by_entity1_to_interface_by_entity2
 
   PDM_gnum_set_parents_nuplet(gen_gnum_entity2, 2);
 
-  int          *pn_entity2_only_by_interface        = malloc(ln_part_tot * sizeof(int          ));
-  int         **pentity2_interface                  = malloc(ln_part_tot * sizeof(int         *));
-  PDM_g_num_t **pentity2_ln_to_gn_only_by_interface = malloc(ln_part_tot * sizeof(PDM_g_num_t *));
+  int *pn_entity2_only_by_interface;
+  PDM_malloc(pn_entity2_only_by_interface,ln_part_tot ,int          );
+  int **pentity2_interface;
+  PDM_malloc(pentity2_interface,ln_part_tot ,int         *);
+  PDM_g_num_t **pentity2_ln_to_gn_only_by_interface;
+  PDM_malloc(pentity2_ln_to_gn_only_by_interface,ln_part_tot ,PDM_g_num_t *);
 
   for(int i_part = 0; i_part < ln_part_tot; ++i_part) {
 
@@ -1474,8 +1525,8 @@ PDM_part_extension_interface_by_entity1_to_interface_by_entity2
       PDM_log_trace_array_long(_pextract_entity2_gnum, n_part1_to_part2_recv_tot, "_pextract_entity2_gnum ::");
     }
 
-    pentity2_ln_to_gn_only_by_interface[i_part] = malloc(2 * pn_entity2_only_by_interface[i_part] * sizeof(PDM_g_num_t));
-    pentity2_interface                 [i_part] = malloc(    n_part1_to_part2_recv_tot            * sizeof(int        ));
+    PDM_malloc(pentity2_ln_to_gn_only_by_interface[i_part],2 * pn_entity2_only_by_interface[i_part] ,PDM_g_num_t);
+    pentity2_interface                 PDM_malloc([i_part],    n_part1_to_part2_recv_tot            ,int        );
     PDM_g_num_t *_pentity2_ln_to_gn_only_by_interface = pentity2_ln_to_gn_only_by_interface[i_part];
 
     pn_entity2_only_by_interface[i_part] = 0;
@@ -1542,12 +1593,18 @@ PDM_part_extension_interface_by_entity1_to_interface_by_entity2
    *   - Remove duplicate
    *   - Remove same entity but wih different path
    */
-  int          *pn_entity2_extented                     = malloc(ln_part_tot * sizeof(int          ));
-  int         **pentity2_extented_to_pentity2_idx       = malloc(ln_part_tot * sizeof(int         *));
-  int         **pentity2_extented_to_pentity2_triplet   = malloc(ln_part_tot * sizeof(int         *));
-  PDM_g_num_t **pentity2_extented_ln_to_gn              = malloc(ln_part_tot * sizeof(PDM_g_num_t *));
-  PDM_g_num_t **extented_entity2_orig_gnum              = malloc(ln_part_tot * sizeof(PDM_g_num_t *));
-  int         **pentity2_extented_to_pentity2_interface = malloc(ln_part_tot * sizeof(int         *));
+  int *pn_entity2_extented;
+  PDM_malloc(pn_entity2_extented,ln_part_tot ,int          );
+  int **pentity2_extented_to_pentity2_idx;
+  PDM_malloc(pentity2_extented_to_pentity2_idx,ln_part_tot ,int         *);
+  int **pentity2_extented_to_pentity2_triplet;
+  PDM_malloc(pentity2_extented_to_pentity2_triplet,ln_part_tot ,int         *);
+  PDM_g_num_t **pentity2_extented_ln_to_gn;
+  PDM_malloc(pentity2_extented_ln_to_gn,ln_part_tot ,PDM_g_num_t *);
+  PDM_g_num_t **extented_entity2_orig_gnum;
+  PDM_malloc(extented_entity2_orig_gnum,ln_part_tot ,PDM_g_num_t *);
+  int **pentity2_extented_to_pentity2_interface;
+  PDM_malloc(pentity2_extented_to_pentity2_interface,ln_part_tot ,int         *);
 
   for(int i_part = 0; i_part < ln_part_tot; ++i_part) {
 
@@ -1558,7 +1615,8 @@ PDM_part_extension_interface_by_entity1_to_interface_by_entity2
     int n_part1_to_part2_recv_tot = _pextract_entity2_idx[n_part1_to_part2];
 
     // All gnum has be unified / shift w/r of interface, only sort along gnum
-    int *order = malloc(n_part1_to_part2_recv_tot * sizeof(int));
+    int *order;
+    PDM_malloc(order,n_part1_to_part2_recv_tot ,int);
     for(int i_entity2 = 0; i_entity2 < n_part1_to_part2_recv_tot; ++i_entity2) {
       order[i_entity2] = i_entity2;
     }
@@ -1569,16 +1627,16 @@ PDM_part_extension_interface_by_entity1_to_interface_by_entity2
                                                      n_part1_to_part2_recv_tot-1);
     pn_entity2_extented[i_part] = n_unique;
 
-    pentity2_extented_ln_to_gn[i_part] = malloc(n_unique * sizeof(PDM_g_num_t));
+    PDM_malloc(pentity2_extented_ln_to_gn[i_part],n_unique ,PDM_g_num_t);
     for(int i = 0; i < n_unique; ++i) {
       pentity2_extented_ln_to_gn[i_part][i] = _pextract_entity2_gnum[i];
     }
 
     // Extract all data
-    pentity2_extented_to_pentity2_idx      [i_part] = malloc( (     n_unique + 1) * sizeof(int        ));
-    pentity2_extented_to_pentity2_triplet  [i_part] = malloc( ( 3 * n_unique    ) * sizeof(int        ));
-    extented_entity2_orig_gnum             [i_part] = malloc( (     n_unique    ) * sizeof(PDM_g_num_t));
-    pentity2_extented_to_pentity2_interface[i_part] = malloc( (     n_unique    ) * sizeof(int        ));
+    pentity2_extented_to_pentity2_idx      PDM_malloc([i_part], (     n_unique + 1) ,int        );
+    pentity2_extented_to_pentity2_triplet  PDM_malloc([i_part], ( 3 * n_unique    ) ,int        );
+    extented_entity2_orig_gnum             PDM_malloc([i_part], (     n_unique    ) ,PDM_g_num_t);
+    PDM_malloc(pentity2_extented_to_pentity2_interface[i_part], (     n_unique    ) ,int        );
 
     /* Count */
     pentity2_extented_to_pentity2_idx    [i_part][0] = 0;
@@ -1605,7 +1663,7 @@ PDM_part_extension_interface_by_entity1_to_interface_by_entity2
       PDM_log_trace_array_int (pentity2_extented_to_pentity2_triplet  [i_part], n_triplet  , "pentity2_extented_to_pentity2_triplet  ::");
     }
 
-    free(order);
+   PDM_free(order);
 
   }
 
@@ -1632,95 +1690,95 @@ PDM_part_extension_interface_by_entity1_to_interface_by_entity2
 
 
   for(int i_part = 0; i_part < ln_part_tot; ++i_part) {
-    free(extented_entity2_orig_gnum[i_part]);
+   PDM_free(extented_entity2_orig_gnum[i_part]);
   }
-  free(extented_entity2_orig_gnum);
+ PDM_free(extented_entity2_orig_gnum);
 
   for(int i_part = 0; i_part < ln_part_tot; ++i_part) {
-    free(pentity2_ln_to_gn_only_by_interface[i_part]);
+   PDM_free(pentity2_ln_to_gn_only_by_interface[i_part]);
   }
 
-  free(pn_entity2_only_by_interface);
-  free(pentity2_ln_to_gn_only_by_interface);
+ PDM_free(pn_entity2_only_by_interface);
+ PDM_free(pentity2_ln_to_gn_only_by_interface);
 
   for(int i_part = 0; i_part < ln_part_tot; ++i_part) {
-    free(pextract_entity2_idx[i_part]);
-    free(pentity2_interface  [i_part]);
+   PDM_free(pextract_entity2_idx[i_part]);
+   PDM_free(pentity2_interface  [i_part]);
   }
-  free(pextract_entity2_idx);
-  free(pentity2_interface);
+ PDM_free(pextract_entity2_idx);
+ PDM_free(pentity2_interface);
 
 
 
   for(int i_part = 0; i_part < ln_part_tot; ++i_part) {
-    free(pextract_entity2_n        [i_part]);
-    free(pextract_entity2_gnum     [i_part]);
-    free(pextract_entity2_triplet  [i_part]);
-    free(pentity1_entity2_idx      [i_part]);
-    free(pentity1_entity2          [i_part]);
+   PDM_free(pextract_entity2_n        [i_part]);
+   PDM_free(pextract_entity2_gnum     [i_part]);
+   PDM_free(pextract_entity2_triplet  [i_part]);
+   PDM_free(pentity1_entity2_idx      [i_part]);
+   PDM_free(pentity1_entity2          [i_part]);
   }
-  free(pextract_entity2_n        );
-  free(pextract_entity2_gnum     );
-  free(pextract_entity2_triplet  );
-  free(pentity1_entity2_idx      );
-  free(pentity1_entity2          );
+ PDM_free(pextract_entity2_n        );
+ PDM_free(pextract_entity2_gnum     );
+ PDM_free(pextract_entity2_triplet  );
+ PDM_free(pentity1_entity2_idx      );
+ PDM_free(pentity1_entity2          );
 
 
   PDM_part_to_part_free(ptp);
 
 
   for(int i_part = 0; i_part < n_part_tot; ++i_part) {
-    free(ppart_entity1_proc_idx[i_part]);
-    free(ppart_entity1_part_idx[i_part]);
-    free(ppart_entity1         [i_part]);
+   PDM_free(ppart_entity1_proc_idx[i_part]);
+   PDM_free(ppart_entity1_part_idx[i_part]);
+   PDM_free(ppart_entity1         [i_part]);
   }
-  free(ppart_entity1_proc_idx);
-  free(ppart_entity1_part_idx);
-  free(ppart_entity1         );
+ PDM_free(ppart_entity1_proc_idx);
+ PDM_free(ppart_entity1_part_idx);
+ PDM_free(ppart_entity1         );
 
 
   for(int i_part = 0; i_part < n_part_tot; ++i_part) {
-    free(part1_to_part2_idx            [i_part] );
-    free(part1_to_part2_triplet        [i_part]);
-    free(part1_to_part2_interface      [i_part]);
-    free(part1_to_part2_entity2_n      [i_part]);
-    free(part1_to_part2_entity2_triplet[i_part]);
+   PDM_free(part1_to_part2_idx            [i_part] );
+   PDM_free(part1_to_part2_triplet        [i_part]);
+   PDM_free(part1_to_part2_interface      [i_part]);
+   PDM_free(part1_to_part2_entity2_n      [i_part]);
+   PDM_free(part1_to_part2_entity2_triplet[i_part]);
 
   }
 
-  free(part1_to_part2_idx            );
-  free(part1_to_part2_triplet        );
-  free(part1_to_part2_interface      );
-  free(part1_to_part2_entity2_n      );
-  free(part1_to_part2_entity2_triplet);
+ PDM_free(part1_to_part2_idx            );
+ PDM_free(part1_to_part2_triplet        );
+ PDM_free(part1_to_part2_interface      );
+ PDM_free(part1_to_part2_entity2_n      );
+ PDM_free(part1_to_part2_entity2_triplet);
 
-  free(pn_entity1          );
-  free(pentity1_ln_to_gn   );
-  free(pn_entity2          );
-  free(pentity2_ln_to_gn   );
-  free(pentity2_entity1_idx);
-  free(pentity2_entity1    );
+ PDM_free(pn_entity1          );
+ PDM_free(pentity1_ln_to_gn   );
+ PDM_free(pn_entity2          );
+ PDM_free(pentity2_ln_to_gn   );
+ PDM_free(pentity2_entity1_idx);
+ PDM_free(pentity2_entity1    );
 
   if(pentity1_hint_in != NULL) {
-    free(pentity1_hint);
+   PDM_free(pentity1_hint);
   }
 
   for(int i_part = 0; i_part < ln_part_tot; ++i_part) {
-    free(pentity1_num             [i_part]);
-    free(pentity1_opp_location_idx[i_part]);
-    free(pentity1_opp_location    [i_part]);
-    free(pentity1_opp_interface   [i_part]);
-    free(pentity1_opp_sens        [i_part]);
-    free(pentity1_opp_gnum        [i_part]);
+   PDM_free(pentity1_num             [i_part]);
+   PDM_free(pentity1_opp_location_idx[i_part]);
+   PDM_free(pentity1_opp_location    [i_part]);
+   PDM_free(pentity1_opp_interface   [i_part]);
+   PDM_free(pentity1_opp_sens        [i_part]);
+   PDM_free(pentity1_opp_gnum        [i_part]);
   }
-  free(pn_entity1_num            );
-  free(pentity1_num              );
-  free(pentity1_opp_location_idx );
-  free(pentity1_opp_location     );
-  free(pentity1_opp_interface_idx);
-  free(pentity1_opp_interface    );
-  free(pentity1_opp_sens         );
-  free(pentity1_opp_gnum         );
+ PDM_free(pn_entity1_num            );
+ PDM_free(pentity1_num              );
+ PDM_free(pentity1_opp_location_idx );
+ PDM_free(pentity1_opp_location     );
+ PDM_free(pentity1_opp_interface_idx);
+ PDM_free(pentity1_opp_interface    );
+ PDM_free(pentity1_opp_sens         );
+ PDM_free(pentity1_opp_gnum         );
 
 }
 
@@ -1820,19 +1878,25 @@ PDM_part_extension_pconnectivity_to_extented_pconnectivity
   }
 
   for(int i_part = 0; i_part < n_part_tot; ++i_part) {
-    free(is_entity2_on_itrf[i_part]);
+   PDM_free(is_entity2_on_itrf[i_part]);
   }
-  free(is_entity2_on_itrf);
+ PDM_free(is_entity2_on_itrf);
 
   PDM_domain_interface_free(ditrf);
 
-  int          *pn_entity1           = (int          * ) malloc(n_part_tot * sizeof(int          ));
-  PDM_g_num_t **pentity1_ln_to_gn    = (PDM_g_num_t ** ) malloc(n_part_tot * sizeof(PDM_g_num_t *));
-  int         **pentity1_entity2_idx = (int         ** ) malloc(n_part_tot * sizeof(int         *));
-  int         **pentity1_entity2     = (int         ** ) malloc(n_part_tot * sizeof(int         *));
+  int *pn_entity1;
+  PDM_malloc(pn_entity1,n_part_tot ,int          );
+  PDM_g_num_t **pentity1_ln_to_gn;
+  PDM_malloc(pentity1_ln_to_gn,n_part_tot ,PDM_g_num_t *);
+  int **pentity1_entity2_idx;
+  PDM_malloc(pentity1_entity2_idx,n_part_tot ,int         *);
+  int **pentity1_entity2;
+  PDM_malloc(pentity1_entity2,n_part_tot ,int         *);
 
-  int          *pn_entity2        = (int          * ) malloc(n_part_tot * sizeof(int          ));
-  PDM_g_num_t **pentity2_ln_to_gn = (PDM_g_num_t ** ) malloc(n_part_tot * sizeof(PDM_g_num_t *));
+  int *pn_entity2;
+  PDM_malloc(pn_entity2,n_part_tot ,int          );
+  PDM_g_num_t **pentity2_ln_to_gn;
+  PDM_malloc(pentity2_ln_to_gn,n_part_tot ,PDM_g_num_t *);
 
   int ln_part_tot = 0;
   for(int i_dom = 0; i_dom < n_domain; ++i_dom) {
@@ -1879,9 +1943,12 @@ PDM_part_extension_pconnectivity_to_extented_pconnectivity
    */
   // Supprmier ce bout et utiliser le flat view APRès l'écahnge
 
-  int          *pn_entity2_opp_gnum_and_itrf = malloc(ln_part_tot * sizeof(int          ));
-  PDM_g_num_t **pentity2_opp_gnum_and_itrf   = malloc(ln_part_tot * sizeof(PDM_g_num_t *));
-  int         **entity2_opp_position         = malloc(ln_part_tot * sizeof(int         *));
+  int *pn_entity2_opp_gnum_and_itrf;
+  PDM_malloc(pn_entity2_opp_gnum_and_itrf,ln_part_tot ,int          );
+  PDM_g_num_t **pentity2_opp_gnum_and_itrf;
+  PDM_malloc(pentity2_opp_gnum_and_itrf,ln_part_tot ,PDM_g_num_t *);
+  int **entity2_opp_position;
+  PDM_malloc(entity2_opp_position,ln_part_tot ,int         *);
   for(int i_part = 0; i_part < ln_part_tot; ++i_part) {
 
     // int *_pentity2_opp_location = pentity2_opp_location_idx[i_part];
@@ -1889,13 +1956,14 @@ PDM_part_extension_pconnectivity_to_extented_pconnectivity
     int n_connect_tot = _pentity2_opp_location_idx[pn_entity2_num[i_part]];
 
     // On garde le lien courant (indirect sort of pentity2_num) + également keep le sens_opp
-    pentity2_opp_gnum_and_itrf[i_part] = malloc(2 * n_connect_tot * sizeof(PDM_g_num_t));
+    PDM_malloc(pentity2_opp_gnum_and_itrf[i_part],2 * n_connect_tot ,PDM_g_num_t);
     PDM_g_num_t* _pentity2_opp_gnum_and_itrf = pentity2_opp_gnum_and_itrf[i_part];
 
     // log_trace("pn_entity2_num[i_part] = %i \n", pn_entity2_num[i_part]);
     // PDM_log_trace_array_int(_pentity2_opp_location_idx, pn_entity2_num[i_part]+1, "_pentity2_opp_location_idx ::");
 
-    int *tmp_opp_position = malloc(n_connect_tot * sizeof(int));
+    int *tmp_opp_position;
+    PDM_malloc(tmp_opp_position,n_connect_tot ,int);
     for(int idx_entity = 0; idx_entity < pn_entity2_num[i_part]; ++idx_entity) {
       int i_entity = pentity2_num[i_part][idx_entity];
       for(int idx_opp = _pentity2_opp_location_idx[idx_entity]; idx_opp < _pentity2_opp_location_idx[idx_entity+1]; ++idx_opp) {
@@ -1912,9 +1980,10 @@ PDM_part_extension_pconnectivity_to_extented_pconnectivity
       PDM_log_trace_array_int(tmp_opp_position, n_connect_tot, "tmp_opp_position ::");
     }
 
-    entity2_opp_position        [i_part] = malloc(n_connect_tot * sizeof(int));
+    entity2_opp_position        PDM_malloc([i_part],n_connect_tot ,int);
 
-    int* order = malloc(n_connect_tot * sizeof(int));
+    int *order;
+    PDM_malloc(order,n_connect_tot ,int);
     pn_entity2_opp_gnum_and_itrf[i_part] = PDM_order_inplace_unique_and_order_long(n_connect_tot,
                                                                                    2,
                                                                                    pentity2_opp_gnum_and_itrf[i_part],
@@ -1934,8 +2003,8 @@ PDM_part_extension_pconnectivity_to_extented_pconnectivity
     }
 
 
-    free(order);
-    free(tmp_opp_position);
+   PDM_free(order);
+   PDM_free(tmp_opp_position);
 
     if(0 == 1) {
       PDM_log_trace_array_int(entity2_opp_position[i_part],
@@ -1983,9 +2052,12 @@ PDM_part_extension_pconnectivity_to_extented_pconnectivity
   /*
    * Prepare buffer
    */
-  int         **gnum1_com_from_entity1_entity2_n       = malloc(n_part_tot * sizeof(int         *));
-  PDM_g_num_t **gnum1_com_from_entity1_entity2         = malloc(n_part_tot * sizeof(PDM_g_num_t *));
-  int         **gnum1_com_from_entity1_entity2_triplet = malloc(n_part_tot * sizeof(int         *));
+  int **gnum1_com_from_entity1_entity2_n;
+  PDM_malloc(gnum1_com_from_entity1_entity2_n,n_part_tot ,int         *);
+  PDM_g_num_t **gnum1_com_from_entity1_entity2;
+  PDM_malloc(gnum1_com_from_entity1_entity2,n_part_tot ,PDM_g_num_t *);
+  int **gnum1_com_from_entity1_entity2_triplet;
+  PDM_malloc(gnum1_com_from_entity1_entity2_triplet,n_part_tot ,int         *);
   for(int i_part = 0; i_part < n_part_tot; ++i_part) {
 
     int n_gnum1_come_from = gnum1_come_from_idx[i_part][ n_ref_lnum2[i_part]];
@@ -2002,9 +2074,9 @@ PDM_part_extension_pconnectivity_to_extented_pconnectivity
     }
 
     /* Allocate */
-    gnum1_com_from_entity1_entity2_n      [i_part] = malloc(     n_gnum1_come_from * sizeof(int        ));
-    gnum1_com_from_entity1_entity2        [i_part] = malloc(     n_send_part2      * sizeof(PDM_g_num_t));
-    gnum1_com_from_entity1_entity2_triplet[i_part] = malloc( 3 * n_send_part2      * sizeof(int        ));
+    gnum1_com_from_entity1_entity2_n      PDM_malloc([i_part],     n_gnum1_come_from ,int        );
+    gnum1_com_from_entity1_entity2        PDM_malloc([i_part],     n_send_part2      ,PDM_g_num_t);
+    PDM_malloc(gnum1_com_from_entity1_entity2_triplet[i_part], 3 * n_send_part2      ,int        );
 
     int         *_gnum1_com_from_triplet_n               = gnum1_com_from_entity1_entity2_n      [i_part];
     PDM_g_num_t *_gnum1_com_from_entity1_entity2         = gnum1_com_from_entity1_entity2        [i_part];
@@ -2059,17 +2131,18 @@ PDM_part_extension_pconnectivity_to_extented_pconnectivity
   PDM_part_to_part_reverse_iexch_wait(ptp, exch_request);
 
   for(int i_part = 0; i_part < ln_part_tot; ++i_part) {
-    free(gnum1_com_from_entity1_entity2_n      [i_part]);
-    free(gnum1_com_from_entity1_entity2        [i_part]);
-    free(gnum1_com_from_entity1_entity2_triplet[i_part]);
+   PDM_free(gnum1_com_from_entity1_entity2_n      [i_part]);
+   PDM_free(gnum1_com_from_entity1_entity2        [i_part]);
+   PDM_free(gnum1_com_from_entity1_entity2_triplet[i_part]);
   }
-  free(gnum1_com_from_entity1_entity2_n      );
-  free(gnum1_com_from_entity1_entity2        );
-  free(gnum1_com_from_entity1_entity2_triplet);
+ PDM_free(gnum1_com_from_entity1_entity2_n      );
+ PDM_free(gnum1_com_from_entity1_entity2        );
+ PDM_free(gnum1_com_from_entity1_entity2_triplet);
 
   PDM_part_to_part_free(ptp);
 
-  int **pextract_entity1_entity2_idx = malloc(ln_part_tot * sizeof(int *));
+  int **pextract_entity1_entity2_idx;
+  PDM_malloc(pextract_entity1_entity2_idx,ln_part_tot ,int *);
   for(int i_part = 0; i_part < ln_part_tot; ++i_part) {
     int n_part1_to_part2 = pentity1_extented_to_pentity1_idx[i_part][pn_entity1_extented[i_part]]/3;
     pextract_entity1_entity2_idx[i_part] = PDM_array_new_idx_from_sizes_int(pextract_entity1_entity2_n[i_part], n_part1_to_part2);
@@ -2081,16 +2154,20 @@ PDM_part_extension_pconnectivity_to_extented_pconnectivity
    * CAUTION we need to manage SENS and SIGN
    * We concatenate for all partition
    */
-  PDM_g_num_t ***query_itrf_gnum    = malloc(n_interface * sizeof(PDM_g_num_t **));
-  int          **query_itrf_n       = malloc(n_interface * sizeof(int          *));
-  int         ***recv_itrf_opp_n    = malloc(n_interface * sizeof(int         **));
-  PDM_g_num_t ***recv_itrf_opp_gnum = malloc(n_interface * sizeof(PDM_g_num_t **));
+  PDM_g_num_t ***query_itrf_gnum;
+  PDM_malloc(query_itrf_gnum,n_interface ,PDM_g_num_t **);
+  int **query_itrf_n;
+  PDM_malloc(query_itrf_n,n_interface ,int          *);
+  int ***recv_itrf_opp_n;
+  PDM_malloc(recv_itrf_opp_n,n_interface ,int         **);
+  PDM_g_num_t ***recv_itrf_opp_gnum;
+  PDM_malloc(recv_itrf_opp_gnum,n_interface ,PDM_g_num_t **);
 
   for(int i_interface = 0; i_interface < n_interface; ++i_interface) {
-    query_itrf_gnum   [i_interface] = malloc(ln_part_tot * sizeof(PDM_g_num_t *));
-    recv_itrf_opp_n   [i_interface] = malloc(ln_part_tot * sizeof(int         *));
-    recv_itrf_opp_gnum[i_interface] = malloc(ln_part_tot * sizeof(PDM_g_num_t *));
-    query_itrf_n      [i_interface] = malloc(ln_part_tot * sizeof(PDM_g_num_t  ));
+    query_itrf_gnum   PDM_malloc([i_interface],ln_part_tot ,PDM_g_num_t *);
+    recv_itrf_opp_n   PDM_malloc([i_interface],ln_part_tot ,int         *);
+    PDM_malloc(recv_itrf_opp_gnum[i_interface],ln_part_tot ,PDM_g_num_t *);
+    query_itrf_n      PDM_malloc([i_interface],ln_part_tot , int  );
 
     for(int i_part = 0; i_part < ln_part_tot; ++i_part) {
       query_itrf_n      [i_interface][i_part] = 0;
@@ -2114,9 +2191,9 @@ PDM_part_extension_pconnectivity_to_extented_pconnectivity
     }
 
     for(int i_interface = 0; i_interface < n_interface; ++i_interface) {
-      query_itrf_gnum   [i_interface][i_part] = malloc(query_itrf_n[i_interface][i_part] * sizeof(PDM_g_num_t));
-      recv_itrf_opp_n   [i_interface][i_part] = malloc(query_itrf_n[i_interface][i_part] * sizeof(int        ));
-      recv_itrf_opp_gnum[i_interface][i_part] = malloc(query_itrf_n[i_interface][i_part] * sizeof(PDM_g_num_t));
+      query_itrf_gnum   PDM_malloc([i_interface][i_part],query_itrf_n[i_interface][i_part] ,PDM_g_num_t);
+      recv_itrf_opp_n   PDM_malloc([i_interface][i_part],query_itrf_n[i_interface][i_part] ,int        );
+      PDM_malloc(recv_itrf_opp_gnum[i_interface][i_part],query_itrf_n[i_interface][i_part] ,PDM_g_num_t);
       query_itrf_n[i_interface][i_part] = 0;
     }
 
@@ -2143,11 +2220,13 @@ PDM_part_extension_pconnectivity_to_extented_pconnectivity
     }
   }
 
-  PDM_g_num_t ***recv_interface_entity2_opp_gnum   = malloc(n_interface * sizeof(PDM_g_num_t **));
-  int          **n_recv_interface_entity2_opp_gnum = malloc(n_interface * sizeof(int          *));
+  PDM_g_num_t ***recv_interface_entity2_opp_gnum;
+  PDM_malloc(recv_interface_entity2_opp_gnum,n_interface ,PDM_g_num_t **);
+  int **n_recv_interface_entity2_opp_gnum;
+  PDM_malloc(n_recv_interface_entity2_opp_gnum,n_interface ,int          *);
   for(int i_interface = 0; i_interface < n_interface; ++i_interface) {
 
-    n_recv_interface_entity2_opp_gnum[i_interface] = malloc(ln_part_tot * sizeof(int));
+    PDM_malloc(n_recv_interface_entity2_opp_gnum[i_interface],ln_part_tot ,int);
 
     int n_gnum            = PDM_part_to_block_n_elt_block_get(ptb_interface_entity2[i_interface]);
     PDM_g_num_t* blk_gnum = PDM_part_to_block_block_gnum_get (ptb_interface_entity2[i_interface]);
@@ -2167,7 +2246,7 @@ PDM_part_extension_pconnectivity_to_extented_pconnectivity
                            interface_entity2_opp_gnum[i_interface],
                            &recv_stride,
            (void ***)      &recv_interface_entity2_opp_gnum[i_interface]);
-    free(send_stride);
+   PDM_free(send_stride);
 
     for(int i_part = 0; i_part < ln_part_tot; ++i_part) {
       PDM_log_trace_array_int(recv_stride[i_part], query_itrf_n[i_interface][i_part], "recv_stride ::");
@@ -2177,30 +2256,32 @@ PDM_part_extension_pconnectivity_to_extented_pconnectivity
         n_recv_tot += recv_stride[i_part][i];
       }
       n_recv_interface_entity2_opp_gnum[i_interface][i_part] = n_recv_tot;
-      free(recv_stride[i_part]);
+     PDM_free(recv_stride[i_part]);
       PDM_log_trace_array_long(recv_interface_entity2_opp_gnum[i_interface][i_part], n_recv_tot, "recv_interface_entity2_opp_gnum ::");
     }
-    free(recv_stride);
+   PDM_free(recv_stride);
 
     PDM_block_to_part_free(btp);
   }
 
   for(int i_itrf = 0; i_itrf < n_interface; ++i_itrf) {
-    free(interface_entity2_opp_gnum[i_itrf]);
+   PDM_free(interface_entity2_opp_gnum[i_itrf]);
     PDM_part_to_block_free(ptb_interface_entity2[i_itrf]);
   }
-  free(interface_entity2_opp_gnum);
-  free(ptb_interface_entity2);
+ PDM_free(interface_entity2_opp_gnum);
+ PDM_free(ptb_interface_entity2);
 
-  int          *pn_entity2_ext_opp_gnum_and_itrf = malloc(ln_part_tot * sizeof(int          ));
-  PDM_g_num_t **pentity2_ext_opp_gnum_and_itrf   = malloc(ln_part_tot * sizeof(PDM_g_num_t *));
+  int *pn_entity2_ext_opp_gnum_and_itrf;
+  PDM_malloc(pn_entity2_ext_opp_gnum_and_itrf,ln_part_tot ,int          );
+  PDM_g_num_t **pentity2_ext_opp_gnum_and_itrf;
+  PDM_malloc(pentity2_ext_opp_gnum_and_itrf,ln_part_tot ,PDM_g_num_t *);
   for(int i_part = 0; i_part < ln_part_tot; ++i_part) {
 
     int n_recv_tot = 0;
     for(int i_interface = 0; i_interface < n_interface; ++i_interface) {
       n_recv_tot += n_recv_interface_entity2_opp_gnum[i_interface][i_part];
     }
-    pentity2_ext_opp_gnum_and_itrf[i_part] = malloc(2 * n_recv_tot * sizeof(PDM_g_num_t));
+    PDM_malloc(pentity2_ext_opp_gnum_and_itrf[i_part],2 * n_recv_tot ,PDM_g_num_t);
 
     n_recv_tot = 0;
     for(int i_interface = 0; i_interface < n_interface; ++i_interface) {
@@ -2213,15 +2294,16 @@ PDM_part_extension_pconnectivity_to_extented_pconnectivity
       }
     }
 
-    int *order = malloc(n_recv_tot * sizeof(int));
+    int *order;
+    PDM_malloc(order,n_recv_tot ,int);
     pn_entity2_ext_opp_gnum_and_itrf[i_part] = PDM_order_inplace_unique_and_order_long(n_recv_tot,
                                                                                    2,
                                                                                    pentity2_ext_opp_gnum_and_itrf[i_part],
                                                                                    order);
-    pentity2_ext_opp_gnum_and_itrf[i_part] = realloc(pentity2_ext_opp_gnum_and_itrf[i_part], 2 * pn_entity2_ext_opp_gnum_and_itrf[i_part] * sizeof(PDM_g_num_t));
+    PDM_realloc(pentity2_ext_opp_gnum_and_itrf[i_part] ,pentity2_ext_opp_gnum_and_itrf[i_part] , 2 * pn_entity2_ext_opp_gnum_and_itrf[i_part] ,PDM_g_num_t);
 
 
-    free(order);
+   PDM_free(order);
 
 
     PDM_log_trace_array_long(pentity2_ext_opp_gnum_and_itrf[i_part], 2 * pn_entity2_ext_opp_gnum_and_itrf[i_part], "pentity2_opp_gnum_and_itrf ::");
@@ -2231,25 +2313,25 @@ PDM_part_extension_pconnectivity_to_extented_pconnectivity
 
   for(int i_interface = 0; i_interface < n_interface; ++i_interface) {
     for(int i_part = 0; i_part < ln_part_tot; ++i_part) {
-      free(query_itrf_gnum   [i_interface][i_part]);
-      free(recv_itrf_opp_n   [i_interface][i_part]);
-      free(recv_itrf_opp_gnum[i_interface][i_part]);
-      free(recv_interface_entity2_opp_gnum[i_interface][i_part]);
+     PDM_free(query_itrf_gnum   [i_interface][i_part]);
+     PDM_free(recv_itrf_opp_n   [i_interface][i_part]);
+     PDM_free(recv_itrf_opp_gnum[i_interface][i_part]);
+     PDM_free(recv_interface_entity2_opp_gnum[i_interface][i_part]);
     }
-    free(query_itrf_gnum   [i_interface]);
-    free(recv_itrf_opp_n   [i_interface]);
-    free(recv_itrf_opp_gnum[i_interface]);
-    free(query_itrf_n      [i_interface]);
-    free(recv_interface_entity2_opp_gnum  [i_interface]);
-    free(n_recv_interface_entity2_opp_gnum[i_interface]);
+   PDM_free(query_itrf_gnum   [i_interface]);
+   PDM_free(recv_itrf_opp_n   [i_interface]);
+   PDM_free(recv_itrf_opp_gnum[i_interface]);
+   PDM_free(query_itrf_n      [i_interface]);
+   PDM_free(recv_interface_entity2_opp_gnum  [i_interface]);
+   PDM_free(n_recv_interface_entity2_opp_gnum[i_interface]);
   }
-  free(recv_interface_entity2_opp_gnum  );
-  free(n_recv_interface_entity2_opp_gnum);
+ PDM_free(recv_interface_entity2_opp_gnum  );
+ PDM_free(n_recv_interface_entity2_opp_gnum);
 
-  free(query_itrf_gnum   );
-  free(query_itrf_n      );
-  free(recv_itrf_opp_n   );
-  free(recv_itrf_opp_gnum);
+ PDM_free(query_itrf_gnum   );
+ PDM_free(query_itrf_n      );
+ PDM_free(recv_itrf_opp_n   );
+ PDM_free(recv_itrf_opp_gnum);
 
 
 
@@ -2267,15 +2349,17 @@ PDM_part_extension_pconnectivity_to_extented_pconnectivity
   /*
    * Prepare for unify
    */
-  int         **entity2_order            = malloc( ln_part_tot * sizeof(int         *));
-  PDM_g_num_t **pentity2_ln_to_gn_sorted = malloc( ln_part_tot * sizeof(PDM_g_num_t *));
+  int **entity2_order;
+  PDM_malloc(entity2_order, ln_part_tot ,int         *);
+  PDM_g_num_t **pentity2_ln_to_gn_sorted;
+  PDM_malloc(pentity2_ln_to_gn_sorted, ln_part_tot ,PDM_g_num_t *);
   for(int i_part = 0; i_part < ln_part_tot; ++i_part) {
 
     /*
      * Sort current part entity2_ln_to_gn
      */
-    entity2_order           [i_part] = malloc( pn_entity2[i_part] * sizeof(int        ));
-    pentity2_ln_to_gn_sorted[i_part] = malloc( pn_entity2[i_part] * sizeof(PDM_g_num_t));
+    entity2_order           PDM_malloc([i_part], pn_entity2[i_part] ,int        );
+    PDM_malloc(pentity2_ln_to_gn_sorted[i_part], pn_entity2[i_part] ,PDM_g_num_t);
     for(int i_entity2 = 0; i_entity2 < pn_entity2[i_part]; ++i_entity2) {
       pentity2_ln_to_gn_sorted[i_part][i_entity2] = pentity2_ln_to_gn[i_part][i_entity2];
       entity2_order           [i_part][i_entity2] = i_entity2;
@@ -2289,14 +2373,22 @@ PDM_part_extension_pconnectivity_to_extented_pconnectivity
    *   - From partition
    *   - From interfaces (request new gnum génération ...)
    */
-  int          *pn_entity2_extented_by_interface         = malloc(ln_part_tot * sizeof(int          ));
-  int          *pn_entity2_extented_by_partition         = malloc(ln_part_tot * sizeof(int          ));
-  PDM_g_num_t **pentity2_extented_ln_to_gn_by_interface  = malloc(ln_part_tot * sizeof(PDM_g_num_t *));
-  PDM_g_num_t **pentity2_extented_ln_to_gn_by_partition  = malloc(ln_part_tot * sizeof(PDM_g_num_t *));
-  int         **pentity2_extented_triplet_by_interface   = malloc(ln_part_tot * sizeof(int         *));
-  int         **pentity2_extented_triplet_by_partition   = malloc(ln_part_tot * sizeof(int         *));
-  int         **pentity2_extented_interface_by_interface = malloc(ln_part_tot * sizeof(int         *));
-  int         **pentity2_extented_interface_by_partition = malloc(ln_part_tot * sizeof(int         *));
+  int *pn_entity2_extented_by_interface;
+  PDM_malloc(pn_entity2_extented_by_interface,ln_part_tot ,int          );
+  int *pn_entity2_extented_by_partition;
+  PDM_malloc(pn_entity2_extented_by_partition,ln_part_tot ,int          );
+  PDM_g_num_t **pentity2_extented_ln_to_gn_by_interface;
+  PDM_malloc(pentity2_extented_ln_to_gn_by_interface,ln_part_tot ,PDM_g_num_t *);
+  PDM_g_num_t **pentity2_extented_ln_to_gn_by_partition;
+  PDM_malloc(pentity2_extented_ln_to_gn_by_partition,ln_part_tot ,PDM_g_num_t *);
+  int **pentity2_extented_triplet_by_interface;
+  PDM_malloc(pentity2_extented_triplet_by_interface,ln_part_tot ,int         *);
+  int **pentity2_extented_triplet_by_partition;
+  PDM_malloc(pentity2_extented_triplet_by_partition,ln_part_tot ,int         *);
+  int **pentity2_extented_interface_by_interface;
+  PDM_malloc(pentity2_extented_interface_by_interface,ln_part_tot ,int         *);
+  int **pentity2_extented_interface_by_partition;
+  PDM_malloc(pentity2_extented_interface_by_partition,ln_part_tot ,int         *);
 
   for(int i_part = 0; i_part < ln_part_tot; ++i_part) {
 
@@ -2347,12 +2439,12 @@ PDM_part_extension_pconnectivity_to_extented_pconnectivity
     }
 
     /* Fill */
-    pentity2_extented_ln_to_gn_by_interface [i_part] = malloc(2 * pn_entity2_extented_by_interface[i_part] * sizeof(PDM_g_num_t));
-    pentity2_extented_ln_to_gn_by_partition [i_part] = malloc(    pn_entity2_extented_by_partition[i_part] * sizeof(PDM_g_num_t));
-    pentity2_extented_triplet_by_interface  [i_part] = malloc(3 * pn_entity2_extented_by_interface[i_part] * sizeof(int        ));
-    pentity2_extented_triplet_by_partition  [i_part] = malloc(3 * pn_entity2_extented_by_partition[i_part] * sizeof(int        ));
-    pentity2_extented_interface_by_interface[i_part] = malloc(    pn_entity2_extented_by_interface[i_part] * sizeof(int        ));
-    pentity2_extented_interface_by_partition[i_part] = malloc(    pn_entity2_extented_by_partition[i_part] * sizeof(int        ));
+    pentity2_extented_ln_to_gn_by_interface PDM_malloc([i_part],2 * pn_entity2_extented_by_interface[i_part] ,PDM_g_num_t);
+    pentity2_extented_ln_to_gn_by_partition PDM_malloc([i_part],    pn_entity2_extented_by_partition[i_part] ,PDM_g_num_t);
+    pentity2_extented_triplet_by_interface  PDM_malloc([i_part],3 * pn_entity2_extented_by_interface[i_part] ,int        );
+    pentity2_extented_triplet_by_partition  PDM_malloc([i_part],3 * pn_entity2_extented_by_partition[i_part] ,int        );
+    PDM_malloc(pentity2_extented_interface_by_interface[i_part],    pn_entity2_extented_by_interface[i_part] ,int        );
+    PDM_malloc(pentity2_extented_interface_by_partition[i_part],    pn_entity2_extented_by_partition[i_part] ,int        );
 
     pn_entity2_extented_by_interface[i_part] = 0;
     pn_entity2_extented_by_partition[i_part] = 0;
@@ -2411,7 +2503,8 @@ PDM_part_extension_pconnectivity_to_extented_pconnectivity
   /*
    * Unify entity1_entity2
    */
-  int **pextract_entity1_entity2 = malloc(ln_part_tot * sizeof(int *));
+  int **pextract_entity1_entity2;
+  PDM_malloc(pextract_entity1_entity2,ln_part_tot ,int *);
   for(int i_part = 0; i_part < ln_part_tot; ++i_part) {
 
     PDM_g_num_t *_pentity2_opp_gnum_and_itrf  = pentity2_opp_gnum_and_itrf             [i_part];
@@ -2430,13 +2523,13 @@ PDM_part_extension_pconnectivity_to_extented_pconnectivity
     int n_part1_to_part2 = pentity1_extented_to_pentity1_idx[i_part][pn_entity1_extented[i_part]]/3;
 
 
-    pextract_entity1_entity2[i_part] = malloc( _pextract_entity1_entity2_idx[n_part1_to_part2] * sizeof(int));
+    PDM_malloc(pextract_entity1_entity2[i_part], _pextract_entity1_entity2_idx[n_part1_to_part2] ,int);
     int *_pextract_entity1_entity2  = pextract_entity1_entity2 [i_part];
 
     PDM_g_num_t* extented_from_itrf_entity2_ln_to_gn = PDM_gnum_get(gen_gnum_entity2, i_part);
 
     // Erase and realloc :
-    pentity2_extented_ln_to_gn_by_interface[i_part] = realloc(pentity2_extented_ln_to_gn_by_interface[i_part], pn_entity2_extented_by_interface[i_part] * sizeof(PDM_g_num_t));
+    PDM_realloc(pentity2_extented_ln_to_gn_by_interface[i_part] ,pentity2_extented_ln_to_gn_by_interface[i_part] , pn_entity2_extented_by_interface[i_part] ,PDM_g_num_t);
     for(int i_entity2 = 0; i_entity2 < pn_entity2_extented_by_interface[i_part]; ++i_entity2) {
       pentity2_extented_ln_to_gn_by_interface[i_part][i_entity2] = extented_from_itrf_entity2_ln_to_gn[i_entity2] + shift_by_domain_entity2[n_domain];
     }
@@ -2444,7 +2537,8 @@ PDM_part_extension_pconnectivity_to_extented_pconnectivity
     // PDM_log_trace_array_long(extented_from_itrf_entity2_ln_to_gn, pn_entity2_extented_by_interface[i_part], "extented_from_itrf_entity2_ln_to_gn ::");
 
     /* Sort unique the new gnum to unify */
-    PDM_g_num_t *extented_from_itrf_entity2_ln_to_gn_sorted = malloc( pn_entity2_extented_by_interface[i_part] * sizeof(PDM_g_num_t));
+    PDM_g_num_t *extented_from_itrf_entity2_ln_to_gn_sorted;
+    PDM_malloc(extented_from_itrf_entity2_ln_to_gn_sorted, pn_entity2_extented_by_interface[i_part] ,PDM_g_num_t);
     for(int i_entity2 = 0; i_entity2 < pn_entity2_extented_by_interface[i_part]; ++i_entity2) {
       extented_from_itrf_entity2_ln_to_gn_sorted[i_entity2] = extented_from_itrf_entity2_ln_to_gn[i_entity2];
     }
@@ -2453,8 +2547,9 @@ PDM_part_extension_pconnectivity_to_extented_pconnectivity
                                                                        NULL,
                                                                        0,
                                                                        pn_entity2_extented_by_interface[i_part]-1);
-    extented_from_itrf_entity2_ln_to_gn_sorted = realloc(extented_from_itrf_entity2_ln_to_gn_sorted, pn_entity2_extented_by_interface[i_part] * sizeof(PDM_g_num_t));
-    int         *extented_from_itrf_entity2_order = malloc( pn_entity2_extented_by_interface[i_part] * sizeof(int        ));
+    PDM_realloc(extented_from_itrf_entity2_ln_to_gn_sorted ,extented_from_itrf_entity2_ln_to_gn_sorted , pn_entity2_extented_by_interface[i_part] ,PDM_g_num_t);
+    int *extented_from_itrf_entity2_order;
+    PDM_malloc(extented_from_itrf_entity2_order, pn_entity2_extented_by_interface[i_part] ,int        );
     for(int i_entity2 = 0; i_entity2 < pn_entity2_extented_by_interface[i_part]; ++i_entity2) {
       extented_from_itrf_entity2_order[i_entity2] = -1;
     }
@@ -2463,7 +2558,8 @@ PDM_part_extension_pconnectivity_to_extented_pconnectivity
 
 
     /* Sort unique the new gnum to unify */
-    PDM_g_num_t *extented_from_part_entity2_ln_to_gn_sorted = malloc( pn_entity2_extented_by_partition[i_part] * sizeof(PDM_g_num_t));
+    PDM_g_num_t *extented_from_part_entity2_ln_to_gn_sorted;
+    PDM_malloc(extented_from_part_entity2_ln_to_gn_sorted, pn_entity2_extented_by_partition[i_part] ,PDM_g_num_t);
     for(int i_entity2 = 0; i_entity2 < pn_entity2_extented_by_partition[i_part]; ++i_entity2) {
       extented_from_part_entity2_ln_to_gn_sorted[i_entity2] = pentity2_extented_ln_to_gn_by_partition[i_part][i_entity2];
       // extented_from_part_entity2_order          [i_entity2] = i_entity2;
@@ -2474,8 +2570,9 @@ PDM_part_extension_pconnectivity_to_extented_pconnectivity
                                                                        NULL,
                                                                        0,
                                                                        pn_entity2_extented_by_partition[i_part]-1);
-    int *extented_from_part_entity2_order = malloc( pn_entity2_extented_by_partition[i_part] * sizeof(int        ));
-    extented_from_part_entity2_ln_to_gn_sorted = realloc(extented_from_part_entity2_ln_to_gn_sorted, pn_entity2_extented_by_partition[i_part] * sizeof(PDM_g_num_t));
+    int *extented_from_part_entity2_order;
+    PDM_malloc(extented_from_part_entity2_order, pn_entity2_extented_by_partition[i_part] ,int        );
+    PDM_realloc(extented_from_part_entity2_ln_to_gn_sorted ,extented_from_part_entity2_ln_to_gn_sorted , pn_entity2_extented_by_partition[i_part] ,PDM_g_num_t);
     for(int i_entity2 = 0; i_entity2 < pn_entity2_extented_by_partition[i_part]; ++i_entity2) {
       extented_from_part_entity2_order[i_entity2] = -1;
     }
@@ -2600,10 +2697,10 @@ PDM_part_extension_pconnectivity_to_extented_pconnectivity
                                      "pextract_entity1_entity2 ::");
     }
 
-    free(extented_from_itrf_entity2_order          );
-    free(extented_from_itrf_entity2_ln_to_gn_sorted);
-    free(extented_from_part_entity2_order          );
-    free(extented_from_part_entity2_ln_to_gn_sorted);
+   PDM_free(extented_from_itrf_entity2_order          );
+   PDM_free(extented_from_itrf_entity2_ln_to_gn_sorted);
+   PDM_free(extented_from_part_entity2_order          );
+   PDM_free(extented_from_part_entity2_ln_to_gn_sorted);
 
   }
 
@@ -2613,19 +2710,24 @@ PDM_part_extension_pconnectivity_to_extented_pconnectivity
   /*
    * Reconstruction
    */
-  int          *pn_entity2_extented              = malloc(ln_part_tot * sizeof(int          ));
-  PDM_g_num_t **pentity2_extented_ln_to_gn       = malloc(ln_part_tot * sizeof(PDM_g_num_t *));
-  int         **pentity2_extented_triplet        = malloc(ln_part_tot * sizeof(int         *));
-  int         **pentity2_extented_interface      = malloc(ln_part_tot * sizeof(int         *));
-  int         **pentity2_extented_to_entity2_idx = malloc(ln_part_tot * sizeof(int         *));
+  int *pn_entity2_extented;
+  PDM_malloc(pn_entity2_extented,ln_part_tot ,int          );
+  PDM_g_num_t **pentity2_extented_ln_to_gn;
+  PDM_malloc(pentity2_extented_ln_to_gn,ln_part_tot ,PDM_g_num_t *);
+  int **pentity2_extented_triplet;
+  PDM_malloc(pentity2_extented_triplet,ln_part_tot ,int         *);
+  int **pentity2_extented_interface;
+  PDM_malloc(pentity2_extented_interface,ln_part_tot ,int         *);
+  int **pentity2_extented_to_entity2_idx;
+  PDM_malloc(pentity2_extented_to_entity2_idx,ln_part_tot ,int         *);
 
   for(int i_part = 0; i_part < ln_part_tot; ++i_part) {
 
     pn_entity2_extented[i_part] = pn_entity2_extented_by_partition[i_part] + pn_entity2_extented_by_interface[i_part];
-    pentity2_extented_ln_to_gn      [i_part] = malloc(    pn_entity2_extented[i_part]      * sizeof(PDM_g_num_t));
-    pentity2_extented_triplet       [i_part] = malloc(3 * pn_entity2_extented[i_part]      * sizeof(int        ));
-    pentity2_extented_interface     [i_part] = malloc(    pn_entity2_extented[i_part]      * sizeof(int        ));
-    pentity2_extented_to_entity2_idx[i_part] = malloc( (  pn_entity2_extented[i_part] + 1) * sizeof(int        ));
+    pentity2_extented_ln_to_gn      PDM_malloc([i_part],    pn_entity2_extented[i_part]      ,PDM_g_num_t);
+    pentity2_extented_triplet       PDM_malloc([i_part],3 * pn_entity2_extented[i_part]      ,int        );
+    pentity2_extented_interface     PDM_malloc([i_part],    pn_entity2_extented[i_part]      ,int        );
+    PDM_malloc(pentity2_extented_to_entity2_idx[i_part], (  pn_entity2_extented[i_part] + 1) ,int        );
 
     for(int i_entity2 = 0; i_entity2 < pn_entity2_extented_by_partition[i_part]; ++i_entity2) {
       pentity2_extented_ln_to_gn [i_part][  i_entity2  ] = pentity2_extented_ln_to_gn_by_partition [i_part][  i_entity2  ];
@@ -2668,83 +2770,83 @@ PDM_part_extension_pconnectivity_to_extented_pconnectivity
 
 
   // for(int i_part = 0; i_part < ln_part_tot; ++i_part) {
-  //   free(pextract_entity1_entity2[i_part]);
+  //  PDM_free(pextract_entity1_entity2[i_part]);
   // }
-  // free(pextract_entity1_entity2);
+  //PDM_free(pextract_entity1_entity2);
 
 
   for(int i_part = 0; i_part < ln_part_tot; ++i_part) {
-    free(pextract_entity1_entity2_n      [i_part]);
-    free(pextract_entity1_entity2_gnum   [i_part]);
-    free(pextract_entity1_entity2_triplet[i_part]);
-    // free(pextract_entity1_entity2_idx [i_part]);
+   PDM_free(pextract_entity1_entity2_n      [i_part]);
+   PDM_free(pextract_entity1_entity2_gnum   [i_part]);
+   PDM_free(pextract_entity1_entity2_triplet[i_part]);
+    //PDM_free(pextract_entity1_entity2_idx [i_part]);
   }
-  free(pextract_entity1_entity2_n      );
-  free(pextract_entity1_entity2_gnum   );
-  free(pextract_entity1_entity2_triplet);
-  // free(pextract_entity1_entity2_idx );
+ PDM_free(pextract_entity1_entity2_n      );
+ PDM_free(pextract_entity1_entity2_gnum   );
+ PDM_free(pextract_entity1_entity2_triplet);
+  //PDM_free(pextract_entity1_entity2_idx );
 
 
   for(int i_part = 0; i_part < ln_part_tot; ++i_part) {
-    free(pentity2_extented_ln_to_gn_by_interface [i_part]);
-    free(pentity2_extented_ln_to_gn_by_partition [i_part]);
-    free(pentity2_extented_triplet_by_interface  [i_part]);
-    free(pentity2_extented_triplet_by_partition  [i_part]);
-    free(pentity2_extented_interface_by_interface[i_part]);
-    free(pentity2_extented_interface_by_partition[i_part]);
+   PDM_free(pentity2_extented_ln_to_gn_by_interface [i_part]);
+   PDM_free(pentity2_extented_ln_to_gn_by_partition [i_part]);
+   PDM_free(pentity2_extented_triplet_by_interface  [i_part]);
+   PDM_free(pentity2_extented_triplet_by_partition  [i_part]);
+   PDM_free(pentity2_extented_interface_by_interface[i_part]);
+   PDM_free(pentity2_extented_interface_by_partition[i_part]);
   }
-  free(pentity2_extented_ln_to_gn_by_interface );
-  free(pentity2_extented_ln_to_gn_by_partition );
-  free(pentity2_extented_triplet_by_interface  );
-  free(pentity2_extented_triplet_by_partition  );
-  free(pentity2_extented_interface_by_interface);
-  free(pentity2_extented_interface_by_partition);
+ PDM_free(pentity2_extented_ln_to_gn_by_interface );
+ PDM_free(pentity2_extented_ln_to_gn_by_partition );
+ PDM_free(pentity2_extented_triplet_by_interface  );
+ PDM_free(pentity2_extented_triplet_by_partition  );
+ PDM_free(pentity2_extented_interface_by_interface);
+ PDM_free(pentity2_extented_interface_by_partition);
 
-  free(pn_entity2_extented_by_interface );
-  free(pn_entity2_extented_by_partition );
+ PDM_free(pn_entity2_extented_by_interface );
+ PDM_free(pn_entity2_extented_by_partition );
 
   for(int i_part = 0; i_part < ln_part_tot; ++i_part) {
-    free(entity2_order           [i_part]);
-    free(pentity2_ln_to_gn_sorted[i_part]);
+   PDM_free(entity2_order           [i_part]);
+   PDM_free(pentity2_ln_to_gn_sorted[i_part]);
   }
-  free(entity2_order           );
-  free(pentity2_ln_to_gn_sorted);
+ PDM_free(entity2_order           );
+ PDM_free(pentity2_ln_to_gn_sorted);
 
 
   for(int i_part = 0; i_part < ln_part_tot; ++i_part) {
-    free(pentity2_opp_gnum_and_itrf[i_part]);
-    free(pentity2_ext_opp_gnum_and_itrf[i_part]);
-    free(entity2_opp_position      [i_part]);
+   PDM_free(pentity2_opp_gnum_and_itrf[i_part]);
+   PDM_free(pentity2_ext_opp_gnum_and_itrf[i_part]);
+   PDM_free(entity2_opp_position      [i_part]);
   }
-  free(entity2_opp_position        );
-  free(pentity2_opp_gnum_and_itrf  );
-  free(pentity2_ext_opp_gnum_and_itrf  );
-  free(pn_entity2_opp_gnum_and_itrf);
-  free(pn_entity2_ext_opp_gnum_and_itrf);
+ PDM_free(entity2_opp_position        );
+ PDM_free(pentity2_opp_gnum_and_itrf  );
+ PDM_free(pentity2_ext_opp_gnum_and_itrf  );
+ PDM_free(pn_entity2_opp_gnum_and_itrf);
+ PDM_free(pn_entity2_ext_opp_gnum_and_itrf);
 
   for(int i_part = 0; i_part < ln_part_tot; ++i_part) {
-    free(pentity2_num             [i_part]);
-    free(pentity2_opp_location_idx[i_part]);
-    free(pentity2_opp_location    [i_part]);
-    free(pentity2_opp_interface   [i_part]);
-    free(pentity2_opp_sens        [i_part]);
-    free(pentity2_opp_gnum        [i_part]);
+   PDM_free(pentity2_num             [i_part]);
+   PDM_free(pentity2_opp_location_idx[i_part]);
+   PDM_free(pentity2_opp_location    [i_part]);
+   PDM_free(pentity2_opp_interface   [i_part]);
+   PDM_free(pentity2_opp_sens        [i_part]);
+   PDM_free(pentity2_opp_gnum        [i_part]);
   }
-  free(pn_entity2_num            );
-  free(pentity2_num              );
-  free(pentity2_opp_location_idx );
-  free(pentity2_opp_location     );
-  free(pentity2_opp_interface_idx);
-  free(pentity2_opp_interface    );
-  free(pentity2_opp_sens         );
-  free(pentity2_opp_gnum         );
+ PDM_free(pn_entity2_num            );
+ PDM_free(pentity2_num              );
+ PDM_free(pentity2_opp_location_idx );
+ PDM_free(pentity2_opp_location     );
+ PDM_free(pentity2_opp_interface_idx);
+ PDM_free(pentity2_opp_interface    );
+ PDM_free(pentity2_opp_sens         );
+ PDM_free(pentity2_opp_gnum         );
 
-  free(pn_entity1          );
-  free(pentity1_ln_to_gn   );
-  free(pentity1_entity2_idx);
-  free(pentity1_entity2    );
-  free(pn_entity2          );
-  free(pentity2_ln_to_gn   );
+ PDM_free(pn_entity1          );
+ PDM_free(pentity1_ln_to_gn   );
+ PDM_free(pentity1_entity2_idx);
+ PDM_free(pentity1_entity2    );
+ PDM_free(pn_entity2          );
+ PDM_free(pentity2_ln_to_gn   );
 
 }
 

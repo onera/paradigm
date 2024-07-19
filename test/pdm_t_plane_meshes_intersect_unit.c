@@ -163,20 +163,22 @@ _export_ol_mesh
     id_geom[imesh] = PDM_writer_geom_create (id_cs[imesh],
                                              nom_geom,
                                              n_part);
-    int *n_part_procs = (int *) malloc(sizeof(int) * numProcs);
+    int *n_part_procs;
+    PDM_malloc(n_part_procs,numProcs,int);
 
     PDM_MPI_Allgather ((void *) &n_part,      1, PDM_MPI_INT,
                        (void *) n_part_procs, 1, PDM_MPI_INT,
                        PDM_MPI_COMM_WORLD);
 
-    int *debPartProcs = (int *) malloc(sizeof(int) * (numProcs + 1));
+    int *debPartProcs;
+    PDM_malloc(debPartProcs,(numProcs + 1),int);
 
     debPartProcs[0] = 0;
     for (int i = 0; i < numProcs; i++) {
       debPartProcs[i+1] = debPartProcs[i] + n_part_procs[i];
     }
 
-    free(n_part_procs);
+   PDM_free(n_part_procs);
 
     /*
      * Debut des ecritures
@@ -190,12 +192,18 @@ _export_ol_mesh
                          &nGOlFace,
                          &nGOlVtx);
 
-    int **_olface_nb =  malloc(sizeof(int *) * n_part);
-    int **_olface_idx =  malloc(sizeof(int *) * n_part);
-    PDM_real_t **val_num_part = (PDM_real_t **) malloc (sizeof(PDM_real_t *) * n_part);
-    PDM_real_t **val_match = (PDM_real_t **) malloc (sizeof(PDM_real_t *) * n_part);
-    PDM_real_t **val_cell_match = (PDM_real_t **) malloc (sizeof(PDM_real_t *) * n_part);
-    PDM_real_t **val_origin = (PDM_real_t **) malloc (sizeof(PDM_real_t *) * n_part);
+    int **_olface_nb;
+    PDM_malloc(_olface_nb,n_part,int *);
+    int **_olface_idx;
+    PDM_malloc(_olface_idx,n_part,int *);
+    PDM_real_t **val_num_part;
+    PDM_malloc(val_num_part,n_part,PDM_real_t *);
+    PDM_real_t **val_match;
+    PDM_malloc(val_match,n_part,PDM_real_t *);
+    PDM_real_t **val_cell_match;
+    PDM_malloc(val_cell_match,n_part,PDM_real_t *);
+    PDM_real_t **val_origin;
+    PDM_malloc(val_origin,n_part,PDM_real_t *);
     PDM_writer_step_beg (id_cs[imesh], 0.);
 
     for (int ipart = 0; ipart < n_part; ipart++) {
@@ -245,10 +253,10 @@ _export_ol_mesh
                                 &initToOlFace);
 
 
-      val_num_part[ipart] = (PDM_real_t *) malloc (sizeof(PDM_real_t) * nOlFace);
-      val_match[ipart] = (PDM_real_t *) malloc (sizeof(PDM_real_t) * nOlFace);
-      val_cell_match[ipart] = (PDM_real_t *) malloc (sizeof(PDM_real_t) * nOlFace);
-      val_origin[ipart] = (PDM_real_t *) malloc (sizeof(PDM_real_t) * nOlFace);
+      PDM_malloc(val_num_part[ipart],nOlFace,PDM_real_t);
+      PDM_malloc(val_match[ipart],nOlFace,PDM_real_t);
+      PDM_malloc(val_cell_match[ipart],nOlFace,PDM_real_t);
+      PDM_malloc(val_origin[ipart],nOlFace,PDM_real_t);
 
       PDM_writer_geom_coord_set (id_cs[imesh],
                                  id_geom[imesh],
@@ -258,8 +266,8 @@ _export_ol_mesh
                                  olvtx_ln_to_gn,
                                  PDM_OWNERSHIP_USER);
 
-      _olface_nb[ipart] = malloc(sizeof(int) * nOlFace);
-      _olface_idx[ipart] = malloc(sizeof(int) * nOlFace);
+      PDM_malloc(_olface_nb[ipart],nOlFace,int);
+      PDM_malloc(_olface_idx[ipart],nOlFace,int);
 
       for (int j = 0; j < nOlFace; j++) {
         _olface_nb[ipart][j]  = olface_vtx_idx[j+1] - olface_vtx_idx[j];
@@ -339,8 +347,8 @@ _export_ol_mesh
                           id_geom[imesh]);
 
     for (int ipart = 0; ipart < n_part; ipart++) {
-      free (_olface_nb[ipart]);
-      free (_olface_idx[ipart]);
+     PDM_free(_olface_nb[ipart]);
+     PDM_free(_olface_idx[ipart]);
     }
 
     PDM_writer_var_write (id_cs[imesh],
@@ -374,16 +382,16 @@ _export_ol_mesh
                          id_var_field[imesh]);
 
     for (int ipart = 0; ipart < n_part; ipart++) {
-      free (val_num_part[ipart]);
-      free (val_match[ipart]);
-      free (val_cell_match[ipart]);
-      free (val_origin[ipart]);
+     PDM_free(val_num_part[ipart]);
+     PDM_free(val_match[ipart]);
+     PDM_free(val_cell_match[ipart]);
+     PDM_free(val_origin[ipart]);
     }
 
-    free (val_num_part);
-    free (val_match);
-    free (val_cell_match);
-    free (val_origin);
+   PDM_free(val_num_part);
+   PDM_free(val_match);
+   PDM_free(val_cell_match);
+   PDM_free(val_origin);
 
     PDM_writer_step_end (id_cs[imesh]);
     PDM_writer_geom_data_free (id_cs[imesh],
@@ -393,9 +401,9 @@ _export_ol_mesh
                           id_geom[imesh]);
     PDM_writer_free (id_cs[imesh]);
 
-    free (_olface_nb);
-    free (_olface_idx);
-    free (debPartProcs);
+   PDM_free(_olface_nb);
+   PDM_free(_olface_idx);
+   PDM_free(debPartProcs);
   }
 
 }
@@ -674,12 +682,17 @@ main
   }
 
 
-  int *faceVtxIdxA_merge = malloc (sizeof(int) * (nFaceA_merge + 1));
-  int *faceVtxA_merge = malloc (sizeof(int) * 4 * nFaceA_merge);
-  PDM_g_num_t *faceLNToGNA_merge = malloc (sizeof(PDM_g_num_t) * 4 * nFaceA_merge);
+  int *faceVtxIdxA_merge;
+  PDM_malloc(faceVtxIdxA_merge,(nFaceA_merge + 1),int);
+  int *faceVtxA_merge;
+  PDM_malloc(faceVtxA_merge,4 * nFaceA_merge,int);
+  PDM_g_num_t *faceLNToGNA_merge;
+  PDM_malloc(faceLNToGNA_merge,4 * nFaceA_merge,PDM_g_num_t);
 
-  double *vtxCoordA_merge = malloc (sizeof(double) * 3 * nVtxA_merge);
-  PDM_g_num_t *vtxLNToGNA_merge = malloc (sizeof(PDM_g_num_t) * nVtxA_merge);
+  double *vtxCoordA_merge;
+  PDM_malloc(vtxCoordA_merge,3 * nVtxA_merge,double);
+  PDM_g_num_t *vtxLNToGNA_merge;
+  PDM_malloc(vtxLNToGNA_merge,nVtxA_merge,PDM_g_num_t);
 
   faceVtxIdxA_merge[0] = 0;
   for (int i = 0; i < nFaceA_merge; i++) {
@@ -726,7 +739,8 @@ main
   PDM_gen_gnum_t* gen_gnum = PDM_gnum_create (3, 1, PDM_TRUE, 1e-3,
                                               PDM_MPI_COMM_WORLD, PDM_OWNERSHIP_KEEP);
 
-  double *char_length = malloc(sizeof(double) * nVtxA_merge);
+  double *char_length;
+  PDM_malloc(char_length,nVtxA_merge,double);
 
   for (int i = 0; i < nVtxA_merge; i++) {
     char_length[i] = 1.e-3;
@@ -745,12 +759,17 @@ main
 
   printf("_nVtxA_merge, nVtxA_merge : %d %d\n", _nVtxA_merge, nVtxA_merge);
 
-  double *_vtxCoordA_merge = malloc (sizeof(double) * 3 * _nVtxA_merge);
-  PDM_g_num_t *_vtxLNToGNA_merge = malloc (sizeof(PDM_g_num_t) * _nVtxA_merge);
+  double *_vtxCoordA_merge;
+  PDM_malloc(_vtxCoordA_merge,3 * _nVtxA_merge,double);
+  PDM_g_num_t *_vtxLNToGNA_merge;
+  PDM_malloc(_vtxLNToGNA_merge,_nVtxA_merge,PDM_g_num_t);
 
-  /* int *_faceVtxIdxA_merge = malloc (sizeof(int) * (nFaceA_merge + 1)); */
-  int *_faceVtxA_merge = malloc (sizeof(int) * 4 * nFaceA_merge);
-  /* PDM_g_num_t *faceLNToGNA_merge = malloc (sizeof(PDM_g_num_t) * 4 * nFaceA_merge); */
+  /* int *_faceVtxIdxA_merge;
+ PDM_malloc(_faceVtxIdxA_merge,(nFaceA_merge + 1),int); */
+  int *_faceVtxA_merge;
+  PDM_malloc(_faceVtxA_merge,4 * nFaceA_merge,int);
+  /* PDM_g_num_t *faceLNToGNA_merge;
+ PDM_malloc(faceLNToGNA_merge,4 * nFaceA_merge,PDM_g_num_t); */
 
   for (int i = 0; i < nVtxA_merge; i++) {
     for (int j = 0; j < 3; j++) {
@@ -768,10 +787,10 @@ main
 
   PDM_gnum_free (gen_gnum);
 
-  free (char_length);
-  free (faceVtxA_merge);
-  free (vtxCoordA_merge);
-  free (vtxLNToGNA_merge);
+ PDM_free(char_length);
+ PDM_free(faceVtxA_merge);
+ PDM_free(vtxCoordA_merge);
+ PDM_free(vtxLNToGNA_merge);
 
   faceVtxA_merge = _faceVtxA_merge;
   vtxCoordA_merge = _vtxCoordA_merge;
@@ -1099,8 +1118,10 @@ main
   // Field exchange
   //
 
-  double *sFieldA = malloc(sizeof(double) * nFaceA_merge);
-  double *centerA = malloc(sizeof(double) * 3 * nFaceA_merge);
+  double *sFieldA;
+  PDM_malloc(sFieldA,nFaceA_merge,double);
+  double *centerA;
+  PDM_malloc(centerA,3 * nFaceA_merge,double);
   for (int i = 0; i < 3 * nFaceA_merge; i++) {
     centerA[i] = 0.;
   }
@@ -1135,7 +1156,7 @@ main
     sFieldA[i+2*nFaceA] = sFieldA[i];
   }
 
-  free (centerA);
+ PDM_free(centerA);
 
   int           nOlFaceA;
   int           nOlLinkedFaceA;
@@ -1226,8 +1247,10 @@ main
                             &initToOlFaceIdxB,
                             &initToOlFaceB);
 
-  double *sFieldOlA = malloc(sizeof(double) * nOlFaceA);
-  double *rFieldOlB = malloc(sizeof(double) * nOlFaceB);
+  double *sFieldOlA;
+  PDM_malloc(sFieldOlA,nOlFaceA,double);
+  double *rFieldOlB;
+  PDM_malloc(rFieldOlB,nOlFaceB,double);
 
   for (int i = 0; i < nOlFaceB; i++) {
     rFieldOlB[i] = 0.;
@@ -1245,13 +1268,19 @@ main
 
   // Calcul des surfaces a faire
 
-  double *surfB = malloc(sizeof(double) * nFaceB);
-  double *surfOlB = malloc(sizeof(double) * nOlFaceB);
+  double *surfB;
+  PDM_malloc(surfB,nFaceB,double);
+  double *surfOlB;
+  PDM_malloc(surfOlB,nOlFaceB,double);
 
-  double   *ol_surface_vector = malloc(sizeof(double) * 3 * nOlFaceB);
-  double   *ol_center = malloc(sizeof(double) * 3 * nOlFaceB);
-  double   *ol_characteristicLength = malloc(sizeof(double) * nOlFaceB);
-  int      *ol_isDegenerated = malloc(sizeof(int) * nOlFaceB);
+  double *ol_surface_vector;
+  PDM_malloc(ol_surface_vector,3 * nOlFaceB,double);
+  double *ol_center;
+  PDM_malloc(ol_center,3 * nOlFaceB,double);
+  double *ol_characteristicLength;
+  PDM_malloc(ol_characteristicLength,nOlFaceB,double);
+  int *ol_isDegenerated;
+  PDM_malloc(ol_isDegenerated,nOlFaceB,int);
 
   PDM_geom_elem_polygon_properties(nOlFaceB,
                                    olface_vtx_idxB,
@@ -1276,7 +1305,8 @@ main
   //
   // Definir le champ sur B
 
-  double *rFieldB = malloc(sizeof(double) * nFaceB);
+  double *rFieldB;
+  PDM_malloc(rFieldB,nFaceB,double);
 
   for (int i = 0; i < nFaceB; i++) {
     rFieldB[i] = 0.;
@@ -1320,7 +1350,8 @@ main
                              vtxLNToGNA_merge,
                              PDM_OWNERSHIP_USER);
 
-  int *faceVtxNA_merge =  malloc(sizeof(int) * nFaceA_merge);
+  int *faceVtxNA_merge;
+  PDM_malloc(faceVtxNA_merge,nFaceA_merge,int);
   for (int j = 0; j < nFaceA_merge; j++) {
     faceVtxNA_merge[j]  = faceVtxIdxA_merge[j+1] - faceVtxIdxA_merge[j];
   }
@@ -1350,7 +1381,8 @@ main
                              vtxLNToGNA,
                              PDM_OWNERSHIP_USER);
 
-  int *faceVtxNA =  malloc(sizeof(int) * nFaceA);
+  int *faceVtxNA;
+  PDM_malloc(faceVtxNA,nFaceA,int);
   for (int j = 0; j < nFaceA; j++) {
     faceVtxNA[j]  = faceVtxIdxA[j+1] - faceVtxIdxA[j];
   }
@@ -1401,8 +1433,8 @@ main
                         ens_geoA_merge);
 
   PDM_writer_free (ens_meshA);
-  free (faceVtxNA);
-  free (faceVtxNA_merge);
+ PDM_free(faceVtxNA);
+ PDM_free(faceVtxNA_merge);
 
 
   PDM_writer_t *ens_meshB = PDM_writer_create ("Ensight",
@@ -1435,7 +1467,8 @@ main
                              vtxLNToGNB,
                              PDM_OWNERSHIP_USER);
 
-  int *faceVtxNB =  malloc(sizeof(int) * nFaceB);
+  int *faceVtxNB;
+  PDM_malloc(faceVtxNB,nFaceB,int);
   for (int j = 0; j < nFaceB; j++) {
     faceVtxNB[j]  = faceVtxIdxB[j+1] - faceVtxIdxB[j];
   }
@@ -1474,7 +1507,7 @@ main
                         ens_geoB);
 
   PDM_writer_free (ens_meshB);
-  free (faceVtxNB);
+ PDM_free(faceVtxNB);
 
 
   _export_ol_mesh (PDM_MPI_COMM_WORLD,
@@ -1488,46 +1521,46 @@ main
   // Free
   //
 
-  free (sFieldA);
-  free (rFieldB);
-  free (sFieldOlA);
-  free (rFieldOlB);
-  free (surfB);
-  free (surfOlB);
-  free (ol_surface_vector);
-  free (ol_center);
-  free (ol_characteristicLength);
-  free (ol_isDegenerated);
+ PDM_free(sFieldA);
+ PDM_free(rFieldB);
+ PDM_free(sFieldOlA);
+ PDM_free(rFieldOlB);
+ PDM_free(surfB);
+ PDM_free(surfOlB);
+ PDM_free(ol_surface_vector);
+ PDM_free(ol_center);
+ PDM_free(ol_characteristicLength);
+ PDM_free(ol_isDegenerated);
 
-  free (olFaceIniVtxIdxA);
-  free (olFaceIniVtxA);
-  free (olface_vtx_idxA);
-  free (olface_vtxA);
-  free (olLinkedface_procIdxA);
-  free (olLinkedFaceA);
-  free (olface_ln_to_gnA);
-  free (olCoordsA);
-  free (olvtx_ln_to_gnA);
-  free (initToOlFaceIdxA);
-  free (initToOlFaceA);
+ PDM_free(olFaceIniVtxIdxA);
+ PDM_free(olFaceIniVtxA);
+ PDM_free(olface_vtx_idxA);
+ PDM_free(olface_vtxA);
+ PDM_free(olLinkedface_procIdxA);
+ PDM_free(olLinkedFaceA);
+ PDM_free(olface_ln_to_gnA);
+ PDM_free(olCoordsA);
+ PDM_free(olvtx_ln_to_gnA);
+ PDM_free(initToOlFaceIdxA);
+ PDM_free(initToOlFaceA);
 
-  free (olFaceIniVtxIdxB);
-  free (olFaceIniVtxB);
-  free (olface_vtx_idxB);
-  free (olface_vtxB);
-  free (olLinkedface_procIdxB);
-  free (olLinkedFaceB);
-  free (olface_ln_to_gnB);
-  free (olCoordsB);
-  free (olvtx_ln_to_gnB);
-  free (initToOlFaceIdxB);
-  free (initToOlFaceB);
+ PDM_free(olFaceIniVtxIdxB);
+ PDM_free(olFaceIniVtxB);
+ PDM_free(olface_vtx_idxB);
+ PDM_free(olface_vtxB);
+ PDM_free(olLinkedface_procIdxB);
+ PDM_free(olLinkedFaceB);
+ PDM_free(olface_ln_to_gnB);
+ PDM_free(olCoordsB);
+ PDM_free(olvtx_ln_to_gnB);
+ PDM_free(initToOlFaceIdxB);
+ PDM_free(initToOlFaceB);
 
-  free (faceVtxIdxA_merge);
-  free (faceVtxA_merge);
-  free (vtxCoordA_merge);
-  free (vtxLNToGNA_merge);
-  free (faceLNToGNA_merge);
+ PDM_free(faceVtxIdxA_merge);
+ PDM_free(faceVtxA_merge);
+ PDM_free(vtxCoordA_merge);
+ PDM_free(vtxLNToGNA_merge);
+ PDM_free(faceLNToGNA_merge);
 
   PDM_ol_del (ol);
 

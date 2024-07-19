@@ -167,7 +167,7 @@ _determine_A_outside
     }
 
     // cll remains as is
-    free(*outside);
+   PDM_free(*outside);
     *outside = NULL;
     return;
   }
@@ -228,14 +228,14 @@ _determine_A_outside
 
             if (i == 4) {
               (*outside)->head = (*cll)->head;
-              free(*cll);
+             PDM_free(*cll);
               *cll = NULL;
               return;
             } // plane X+Y+Z=1
 
             else {
-              free(*cll);
-              free(*outside);
+             PDM_free(*cll);
+             PDM_free(*outside);
               *cll     = NULL;
               *outside = NULL;
               return;
@@ -251,7 +251,7 @@ _determine_A_outside
 
             if (i == 4) {
               // cll remains as is
-              free(*outside);
+             PDM_free(*outside);
               *outside = NULL;
               return;
             } // plane X+Y+Z=1
@@ -270,14 +270,14 @@ _determine_A_outside
 
             if (i == 4) {
               // cll remains as is
-              free(*outside);
+             PDM_free(*outside);
               *outside = NULL;
               return;
             } // plane X+Y+Z=1
 
             else {
-              free(*cll);
-              free(*outside);
+             PDM_free(*cll);
+             PDM_free(*outside);
               *cll     = NULL;
               *outside = NULL;
               return;
@@ -298,14 +298,14 @@ _determine_A_outside
 
               if (i == 4) {
                 (*outside)->head = (*cll)->head;
-                free(*cll);
+               PDM_free(*cll);
                 *cll = NULL;
                 return;
               } // plane X+Y+Z=1
 
               else {
-               free(*cll);
-               free(*outside);
+              PDM_free(*cll);
+              PDM_free(*outside);
                *cll     = NULL;
                *outside = NULL;
                return;
@@ -321,7 +321,7 @@ _determine_A_outside
 
               if (i == 4) {
                 // cll remains as is
-                free(*outside);
+               PDM_free(*outside);
                 *outside = NULL;
                 return;
               } // plane X+Y+Z=1
@@ -346,7 +346,7 @@ _determine_A_outside
 
                 if (i == 4) {
                   // cll remains as is
-                  free(*outside);
+                 PDM_free(*outside);
                   *outside = NULL;
                   return;
                 } // plane X+Y+Z=1
@@ -365,14 +365,14 @@ _determine_A_outside
 
                 if (i == 4) {
                   (*outside)->head = (*cll)->head;
-                  free(*cll);
+                 PDM_free(*cll);
                   *cll = NULL;
                   return;
                 } // plane X+Y+Z=1
 
                 else {
-                  free(*cll);
-                  free(*outside);
+                 PDM_free(*cll);
+                 PDM_free(*outside);
                   *cll     = NULL;
                   *outside = NULL;
                   return;
@@ -477,14 +477,14 @@ _determine_A_outside
       if (fc < 0) {
         if (i == 4) {
           (*outside)->head = (*cll)->head;
-          free(*cll);
+         PDM_free(*cll);
           *cll = NULL;
           return;
         } // plane X+Y+Z=1
 
         else {
-          free(*cll);
-          free(*outside);
+         PDM_free(*cll);
+         PDM_free(*outside);
           *cll     = NULL;
           *outside = NULL;
           return;
@@ -494,7 +494,7 @@ _determine_A_outside
 
     // reconnect linked lists
     if (i == 4) {
-      free(*outside);
+     PDM_free(*outside);
       *outside = NULL;
     }
     if (intersect_idx == 2) {
@@ -524,8 +524,8 @@ _determine_A_outside
 
       // update A and B
       (*cll)->head = in[0];
-      free(*outside);
-      *outside = malloc(sizeof(List));
+      PDM_free(*outside);
+      PDM_malloc(*outside,1,List);
       (*outside)->head = out[0];
     } // 2 intersections
 
@@ -585,7 +585,8 @@ _cll_to_polydata
   int size_min = 3;
 
   int  n_vtx        = 0;
-  double *vtx_coord = malloc(sizeof(double) * size_min * 3);
+  double *vtx_coord;
+  PDM_malloc(vtx_coord,size_min * 3,double);
 
   Element *current = cll->head;
 
@@ -593,7 +594,7 @@ _cll_to_polydata
 
     if (n_vtx > size_min -1) {
       size_min *= 2;
-      vtx_coord = realloc(vtx_coord, sizeof(double) * size_min * 3);
+      PDM_realloc(vtx_coord ,vtx_coord , size_min * 3,double);
     }
 
     memcpy(vtx_coord + n_vtx * 3, current->coord, sizeof(double) * 3);
@@ -605,7 +606,8 @@ _cll_to_polydata
 
   int face_vtx_idx[2] = {0, n_vtx};
 
-  int *face_vtx = malloc(sizeof(int) * n_vtx);
+  int *face_vtx;
+  PDM_malloc(face_vtx,n_vtx,int);
   for (int i = 0; i < n_vtx; i++) {
     face_vtx[i] = i + 1;
   }
@@ -621,8 +623,8 @@ _cll_to_polydata
                          NULL,
                          NULL);
 
-  free(vtx_coord);
-  free(face_vtx);
+ PDM_free(vtx_coord);
+ PDM_free(face_vtx);
 }
 
 
@@ -676,7 +678,8 @@ _cll_to_polydata2
   }
 
   int n_vtx = 0;
-  double *vtx_coord = malloc(sizeof(double) * size_min * 3);
+  double *vtx_coord;
+  PDM_malloc(vtx_coord,size_min * 3,double);
 
   int current = head;
 
@@ -684,7 +687,7 @@ _cll_to_polydata2
 
     if (n_vtx > size_min -1) {
       size_min *= 2;
-      vtx_coord = realloc(vtx_coord, sizeof(double) * size_min * 3);
+      PDM_realloc(vtx_coord ,vtx_coord , size_min * 3,double);
     }
 
     memcpy(vtx_coord + n_vtx * 3, coord + 3*current, sizeof(double) * 3);
@@ -696,7 +699,8 @@ _cll_to_polydata2
 
   int face_vtx_idx[2] = {0, n_vtx};
 
-  int *face_vtx = malloc(sizeof(int) * n_vtx);
+  int *face_vtx;
+  PDM_malloc(face_vtx,n_vtx,int);
   for (int i = 0; i < n_vtx; i++) {
     face_vtx[i] = i + 1;
   }
@@ -711,8 +715,8 @@ _cll_to_polydata2
                          NULL,
                          NULL);
 
-  free(vtx_coord);
-  free(face_vtx);
+ PDM_free(vtx_coord);
+ PDM_free(face_vtx);
 
   // return n_vtx;
 }
@@ -1529,17 +1533,20 @@ PDM_mesh_intersection_vol_vol_atomic_compute
   PDM_UNUSED(n_faceB);
 
   // malloc List structure
-  List *A = malloc(sizeof(List));
-  List *B = malloc(sizeof(List));
+  List *A;
+  PDM_malloc(A,1,List);
+  List *B;
+  PDM_malloc(B,1,List);
 
   // int dbg_enabled = 0;
   int idx = 0;
 
   // Triangle cll
   int max_size = 10*2 + 3;
-  Element **cll_storage = malloc(sizeof(Element *) * max_size);
+  Element **cll_storage;
+  PDM_malloc(cll_storage,max_size,Element *);
   for (int i = 0; i < max_size; i++) {
-    cll_storage[i] = malloc(sizeof(Element));
+    PDM_malloc(cll_storage[i],1,Element);
   }
   Element *pt0 = cll_storage[idx++];
   memcpy(pt0->coord, triaB_coord,     sizeof(double)*3);
@@ -1630,12 +1637,12 @@ PDM_mesh_intersection_vol_vol_atomic_compute
   }
 
   // free List structure
-  if (A != NULL) free(A);
-  if (B != NULL) free(B);
+  if (A != NULL)PDM_free(A);
+  if (B != NULL)PDM_free(B);
   for (int i = 0; i < max_size; i++) {
-    free(cll_storage[i]);
+   PDM_free(cll_storage[i]);
   }
-  free(cll_storage);
+ PDM_free(cll_storage);
 
   return volumeA + volumeB;
 }

@@ -8,6 +8,7 @@
 #include <string.h>
 
 #include "pdm.h"
+#include "pdm_priv.h"
 #include "pdm_config.h"
 #include "pdm_mpi.h"
 #include "pdm_part.h"
@@ -255,7 +256,8 @@ int main(int argc, char *argv[])
 
   int have_dcell_part = 0;
 
-  int *dcell_part = (int *) malloc(dn_cell*sizeof(int));
+  int *dcell_part;
+  PDM_malloc(dcell_part,dn_cell,int);
   int *renum_properties_cell = NULL;
   int *renum_properties_face = NULL;
   int n_property_cell = 0;
@@ -516,9 +518,12 @@ int main(int argc, char *argv[])
   }
 
   /* Step 1 : Prepare edge hash_data */
-  int**    edge_data = (int    **) malloc( sizeof(int    *) * n_part);
-  int**    edge_stri = (int    **) malloc( sizeof(int    *) * n_part);
-  size_t** edge_hkey = (size_t **) malloc( sizeof(size_t *) * n_part);
+  int* *edge_data;
+  PDM_malloc(edge_data,n_part,int    *);
+  int* *edge_stri;
+  PDM_malloc(edge_stri,n_part,int    *);
+  size_t* *edge_hkey;
+  PDM_malloc(edge_hkey,n_part,size_t *);
 
   PDM_bool_t equilibrate = PDM_FALSE;
   PDM_gnum_from_hv_t *gnum_fhv_id = PDM_gnum_from_hash_values_create(n_part,
@@ -609,9 +614,9 @@ int main(int argc, char *argv[])
 
     int n_edge_max = face_vtx_idx[n_face];
     PDM_printf("n_edge_max : %i ", n_edge_max);
-    edge_data[i_part] = (int    *) malloc( sizeof(int   ) * n_edge_max * 2);
-    edge_stri[i_part] = (int    *) malloc( sizeof(int   ) * n_edge_max    );
-    edge_hkey[i_part] = (size_t *) malloc( sizeof(size_t) * n_edge_max    );
+    PDM_malloc(edge_data[i_part],n_edge_max * 2,int);
+    PDM_malloc(edge_stri[i_part],n_edge_max    ,int   );
+    PDM_malloc(edge_hkey[i_part],n_edge_max    ,size_t);
 
     int*    _edge_data = edge_data[i_part];
     int*    _edge_stri = edge_stri[i_part];
@@ -662,14 +667,14 @@ int main(int argc, char *argv[])
 
 
   for (int i_part = 0; i_part < n_part; i_part++) {
-    free(edge_data[i_part]);
-    free(edge_stri[i_part]);
-    free(edge_hkey[i_part]);
+   PDM_free(edge_data[i_part]);
+   PDM_free(edge_stri[i_part]);
+   PDM_free(edge_hkey[i_part]);
   }
-  free(edge_data);
-  free(edge_stri);
-  free(edge_hkey);
-  free(dcell_part);
+ PDM_free(edge_data);
+ PDM_free(edge_stri);
+ PDM_free(edge_hkey);
+ PDM_free(dcell_part);
 
   PDM_part_free(ppart);
 

@@ -177,10 +177,11 @@ int main(int argc, char *argv[])
              &use_multipart);
 
   // Choose to use part or multipart
-  char *buffer = malloc(sizeof(int)*8+1);
+  char *buffer;
+  PDM_malloc(buffer,8+1,int);
   sprintf(buffer, "%d", use_multipart);
   setenv("PDM_USE_MULTIPART", buffer, 1);
-  free(buffer);
+ PDM_free(buffer);
 
   // debug
   int dbg_part_dcube = 0;
@@ -292,7 +293,8 @@ int main(int argc, char *argv[])
 
   int have_dcell_part = 0;
 
-  int *dcell_part = (int *) malloc(dn_cell*sizeof(int));
+  int *dcell_part;
+  PDM_malloc(dcell_part,dn_cell,int);
   int *renum_properties_cell = NULL;
   int *renum_properties_face = NULL;
   int n_property_cell = 0;
@@ -723,7 +725,7 @@ int main(int argc, char *argv[])
       PDM_printf("       * total              : %i\n", bound_part_faces_sum);
     }
   }
-  free(dcell_part);
+ PDM_free(dcell_part);
   PDM_part_free(ppart);
 
   PDM_dcube_gen_free(dcube);

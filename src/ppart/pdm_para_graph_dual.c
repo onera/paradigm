@@ -250,15 +250,19 @@ const int              compute_dnode_to_arc,
    *    -> We can use part to block on arc2node to setup the correct connectivity
    *       because for each nodes we receive the contribution of each arc connectivity
    */
-  PDM_g_num_t* dnode_ln_to_gn = (PDM_g_num_t *) malloc( 2 * dn_arc * sizeof(PDM_g_num_t));
-  PDM_g_num_t* dopposite_node = (PDM_g_num_t *) malloc( 2 * dn_arc * sizeof(PDM_g_num_t));
+  PDM_g_num_t *dnode_ln_to_gn;
+  PDM_malloc(dnode_ln_to_gn, 2 * dn_arc ,PDM_g_num_t);
+  PDM_g_num_t *dopposite_node;
+  PDM_malloc(dopposite_node, 2 * dn_arc ,PDM_g_num_t);
   PDM_g_num_t* darc_g;
 
-  int* arc_strid  = (int *) malloc(sizeof(int) * 2 * dn_arc);
-  int* node_strid = (int *) malloc(sizeof(int) * 2 * dn_arc);
+  int *arc_strid;
+  PDM_malloc(arc_strid,2 * dn_arc,int);
+  int *node_strid;
+  PDM_malloc(node_strid,2 * dn_arc,int);
 
   if(compute_dnode_to_arc){
-    darc_g = (PDM_g_num_t *) malloc( 2 * dn_arc * sizeof(PDM_g_num_t));
+    PDM_malloc(darc_g, 2 * dn_arc ,PDM_g_num_t);
   }
 
   PDM_g_num_t shift_arc_g   = graph_arc_distrib[i_rank]+1; // Entre 1 et N
@@ -322,9 +326,9 @@ const int              compute_dnode_to_arc,
   }
 
 
-  node_strid     = realloc(node_strid,     dn_arc_int    * sizeof(int)         );
-  dnode_ln_to_gn = realloc(dnode_ln_to_gn, dn_arc_int    * sizeof(PDM_g_num_t) );
-  dopposite_node = realloc(dopposite_node, idx_data_node * sizeof(PDM_g_num_t) );
+  PDM_realloc(node_strid     ,node_strid     ,     dn_arc_int    ,int);
+  PDM_realloc(dnode_ln_to_gn ,dnode_ln_to_gn , dn_arc_int    ,PDM_g_num_t);
+  PDM_realloc(dopposite_node ,dopposite_node , idx_data_node ,PDM_g_num_t);
 
   /*
    * Initialize part_to_block for the computation of node_node
@@ -382,17 +386,18 @@ const int              compute_dnode_to_arc,
   /*
    * The data is recv in raw format - We need to post-treat them as int
    */
-  *dual_graph = (PDM_g_num_t *) malloc( n_data_recv * sizeof(PDM_g_num_t));
+  PDM_malloc(*dual_graph, n_data_recv ,PDM_g_num_t);
   PDM_g_num_t* _dual_graph     = (PDM_g_num_t  *) *dual_graph;
 
   /*
    * Allocate and setup convenient pointeur
    */
 
-  *dual_graph_idx      = (PDM_g_num_t * ) malloc( sizeof(PDM_g_num_t) * (n_node_block+1));
+  PDM_malloc(*dual_graph_idx,(n_node_block+1),PDM_g_num_t);
   PDM_g_num_t* _dual_graph_idx = *dual_graph_idx;
 
-  int* node_node_n   = (int *) malloc( (n_node_block+1) * sizeof(int)); /* Suralloc */
+  int *node_node_n;
+  PDM_malloc(node_node_n, (n_node_block+1) ,int); /* Suralloc */
 
   /*
    * Count - In our case we know that recv_strid == 1 or 0
@@ -436,8 +441,8 @@ const int              compute_dnode_to_arc,
     }
   }
 
-  free(recv_strid);
-  free(recv_node_node);
+ PDM_free(recv_strid);
+ PDM_free(recv_node_node);
 
   /*
    * Each block can have multiple same cell, we need to compress them
@@ -450,12 +455,12 @@ const int              compute_dnode_to_arc,
                                             node_node_n,
                                             _dual_graph);
 
-  free(node_node_n);
+ PDM_free(node_node_n);
 
   /*
    * Realloc
    */
-  *dual_graph = (PDM_g_num_t *) realloc(*dual_graph, sizeof(PDM_g_num_t) * _dual_graph_idx[n_node_block] );
+  PDM_realloc(*dual_graph ,*dual_graph , _dual_graph_idx[n_node_block] ,PDM_g_num_t);
   _dual_graph = (PDM_g_num_t *) *dual_graph;
 
   // For now we can change it later
@@ -497,12 +502,12 @@ const int              compute_dnode_to_arc,
                                                         req_id_node_arc,
                                                        &recv_node2arc_strid,
                                              (void **) &recv_node2arc);
-    free(recv_node2arc_strid); // Always 1
+   PDM_free(recv_node2arc_strid); // Always 1
 
     /*
      * Post treatment
      */
-    *dnode_to_arc      = (PDM_g_num_t *) malloc(  n_data_cf_recv  * sizeof(PDM_g_num_t));
+    PDM_malloc(*dnode_to_arc,  n_data_cf_recv  ,PDM_g_num_t);
     *dnode_to_arc_idx  = PDM_array_zeros_int(n_node_block+1);
     int* node_to_arc_n = PDM_array_zeros_int(n_node_block+1);
 
@@ -532,7 +537,7 @@ const int              compute_dnode_to_arc,
       _dnode_to_arc[_dnode_to_arc_idx[ielmt] + node_to_arc_n[ielmt]++] = recv_node2arc[i_recv];
     }
 
-    free(recv_node2arc);
+   PDM_free(recv_node2arc);
 
     if( 0 == 1 ){
       printf("n_node_block:: %d \n", n_node_block);
@@ -551,7 +556,7 @@ const int              compute_dnode_to_arc,
     // for(int i_node = 0; i_node < n_node_block; ++i_node){
     //   _dnode_to_arc_idx[i_node+1] = _dnode_to_arc_idx[i_node] + node_to_arc_n[i_node];
     // }
-    free(node_to_arc_n);
+   PDM_free(node_to_arc_n);
 
   }
 
@@ -560,12 +565,12 @@ const int              compute_dnode_to_arc,
   /*
    * Exchange is done we can free direclty memory
    */
-  free(dnode_ln_to_gn);
-  free(arc_strid);
-  free(node_strid);
-  free(dopposite_node);
+ PDM_free(dnode_ln_to_gn);
+ PDM_free(arc_strid);
+ PDM_free(node_strid);
+ PDM_free(dopposite_node);
   if(compute_dnode_to_arc){
-    free(darc_g);
+   PDM_free(darc_g);
   }
 
   PDM_part_to_block_free (ptb_dual);
@@ -617,8 +622,10 @@ const PDM_g_num_t     *dnode_arc,
   and will thus be able to construct its arc_to_node
   */
 
-  PDM_g_num_t* node_g       = (PDM_g_num_t *) malloc(dnode_arc_idx[dn_node] * sizeof(PDM_g_num_t));
-  PDM_g_num_t* arc_ln_to_gn = (PDM_g_num_t *) malloc(dnode_arc_idx[dn_node] * sizeof(PDM_g_num_t));
+  PDM_g_num_t *node_g;
+  PDM_malloc(node_g,dnode_arc_idx[dn_node] ,PDM_g_num_t);
+  PDM_g_num_t *arc_ln_to_gn;
+  PDM_malloc(arc_ln_to_gn,dnode_arc_idx[dn_node] ,PDM_g_num_t);
 
   PDM_g_num_t shift_node_g = graph_node_distrib[i_rank]+1; // Entre 1 et N
   for (int i_node = 0; i_node < dn_node; i_node++) {
@@ -647,7 +654,7 @@ const PDM_g_num_t     *dnode_arc,
                              comm);
 
   int* send_stride = PDM_array_const_int(dnode_arc_idx[dn_node], 1);
-  free(arc_ln_to_gn);
+ PDM_free(arc_ln_to_gn);
 
   int        *recv_stride = NULL;
   PDM_g_num_t  *recv_data = NULL;
@@ -678,7 +685,8 @@ const PDM_g_num_t     *dnode_arc,
     PDM_printf("\n");
   }
 
-  PDM_g_num_t *darc_to_node = (PDM_g_num_t *) malloc( 2*dn_arc * sizeof(PDM_g_num_t));
+  PDM_g_num_t *darc_to_node;
+  PDM_malloc(darc_to_node, 2*dn_arc ,PDM_g_num_t);
 
   int idx_recv_data = 0;
   for (int i_arc = 0; i_arc < dn_arc; i_arc++) {
@@ -708,10 +716,10 @@ const PDM_g_num_t     *dnode_arc,
   }
 
   PDM_part_to_block_free(ptb);
-  free(node_g);
-  free(send_stride);
-  free(recv_stride);
-  free(recv_data);
+ PDM_free(node_g);
+ PDM_free(send_stride);
+ PDM_free(recv_stride);
+ PDM_free(recv_data);
 
   /*
    * Now we have a arc_to_node connectivity, we can call graph_dual_from_arc2node
@@ -725,7 +733,7 @@ const PDM_g_num_t     *dnode_arc,
                                     0,
                                     NULL,
                                     NULL);
-  free(darc_to_node);
+ PDM_free(darc_to_node);
 }
 
 /**
@@ -786,14 +794,15 @@ const PDM_g_num_t   *dface_vtx,
                 ( int         **) &dcell_vtx_idx,
                 ( PDM_g_num_t **) &dcell_vtx);
 
-  // int* dcell_vtx_n = (int *) malloc( dn_cell * sizeof(int));
+  // int *dcell_vtx_n;
+ // PDM_malloc(dcell_vtx_n, dn_cell ,int);
   // for(int i_entity = 0; i_entity < dn_cell; ++i_entity) {
   //   dcell_vtx_n[i_entity] = dcell_vtx_idx[i_entity+1] - dcell_vtx_idx[i_entity];
   // }
   // PDM_log_trace_array_int (dcell_vtx_n  , dn_cell               , "dcell_vtx_n::");
   // PDM_log_trace_array_int (dcell_vtx_idx, dn_cell+1             , "dcell_vtx_idx::");
   // PDM_log_trace_array_long(dcell_vtx    , dcell_vtx_idx[dn_cell], "dcell_vtx::");
-  // free(dcell_vtx_n);
+  //PDM_free(dcell_vtx_n);
 
   int*         dvtx_cell_idx;
   PDM_g_num_t* dvtx_cell;
@@ -807,14 +816,15 @@ const PDM_g_num_t   *dface_vtx,
                                &dvtx_cell);
 
   // int dn_vtx = vtx_distrib[i_rank+1] - vtx_distrib[i_rank];
-  // int* dvtx_cell_n = (int *) malloc( dn_vtx * sizeof(int));
+  // int *dvtx_cell_n;
+ // PDM_malloc(dvtx_cell_n, dn_vtx ,int);
   // for(int i_entity = 0; i_entity < dn_vtx; ++i_entity) {
   //   dvtx_cell_n[i_entity] = dvtx_cell_idx[i_entity+1] - dvtx_cell_idx[i_entity];
   // }
   // PDM_log_trace_array_int (dvtx_cell_n  , dn_vtx               , "dvtx_cell_n::");
   // PDM_log_trace_array_int (dvtx_cell_idx, dn_vtx+1             , "dvtx_cell_idx::");
   // PDM_log_trace_array_long(dvtx_cell    , dvtx_cell_idx[dn_vtx], "dvtx_cell::");
-  // free(dvtx_cell_n);
+  //PDM_free(dvtx_cell_n);
 
   /*
    * Call the standard fonction : arc = vtx , node = cell
@@ -830,14 +840,14 @@ const PDM_g_num_t   *dface_vtx,
                                        dual_graph_idx,
                                        dual_graph);
 
-  free(dcell_vtx);
-  free(dcell_vtx_idx);
-  free(dvtx_cell_idx);
-  free(dvtx_cell);
+ PDM_free(dcell_vtx);
+ PDM_free(dcell_vtx_idx);
+ PDM_free(dvtx_cell_idx);
+ PDM_free(dvtx_cell);
 
 
   // Realloc
-  *dual_graph = (PDM_g_num_t *) realloc(*dual_graph, (*dual_graph_idx)[dn_cell] * sizeof(PDM_g_num_t));
+  PDM_realloc(*dual_graph ,*dual_graph , (*dual_graph_idx)[dn_cell] ,PDM_g_num_t);
 
   PDM_g_num_t* _dual_graph_idx = *dual_graph_idx;
   PDM_g_num_t* _dual_graph     = *dual_graph;
@@ -848,7 +858,8 @@ const PDM_g_num_t   *dface_vtx,
     // assert(_dual_graph[i_entity] >= 0);
     // assert(_dual_graph[i_entity] <  cell_distrib[n_rank]-1);
   }
-  // int* _dual_graph_n = (int *) malloc( dn_cell * sizeof(int));
+  // int *_dual_graph_n;
+ // PDM_malloc(_dual_graph_n, dn_cell ,int);
   // for(int i_entity = 0; i_entity < dn_cell; ++i_entity) {
   //   _dual_graph_n[i_entity] = _dual_graph_idx[i_entity+1] - _dual_graph_idx[i_entity];
   // }
@@ -860,8 +871,10 @@ const PDM_g_num_t   *dface_vtx,
   /*
    * Patch
    */
-  // int* _dual_comp_graph_idx = (int *) malloc( dn_cell * sizeof(int));
-  // PDM_g_num_t* _dual_comp_graph = (PDM_g_num_t *) malloc( _dual_graph_idx[dn_cell] * sizeof(PDM_g_num_t));
+  // int *_dual_comp_graph_idx;
+ // PDM_malloc(_dual_comp_graph_idx, dn_cell ,int);
+  // PDM_g_num_t *_dual_comp_graph;
+ // PDM_malloc(_dual_comp_graph, _dual_graph_idx[dn_cell] ,PDM_g_num_t);
 
   // _dual_comp_graph_idx[0] = 0;
   // for(int i_entity = 0; i_entity < dn_cell; ++i_entity) {
@@ -881,16 +894,16 @@ const PDM_g_num_t   *dface_vtx,
   /*
    * Realloc
    */
-  // free(_dual_graph);
-  // free(_dual_graph_idx);
+  //PDM_free(_dual_graph);
+  //PDM_free(_dual_graph_idx);
 
-  // _dual_comp_graph = (PDM_g_num_t *) realloc(_dual_comp_graph, _dual_comp_graph_idx[dn_cell] * sizeof(PDM_g_num_t));
+  //PDM_realloc(// _dual_comp_graph ,// _dual_comp_graph , _dual_comp_graph_idx[dn_cell] ,PDM_g_num_t);
 
   // *dual_graph_idx = _dual_comp_graph_idx;
   // *dual_graph     = _dual_comp_graph;
 
 
-  // free(_dual_graph_n);
+  //PDM_free(_dual_graph_n);
 }
 
 /**
@@ -927,6 +940,13 @@ const PDM_MPI_Comm      comm
   int i_rank;
   int n_rank;
 
+  PDM_UNUSED(dual_graph_idx);
+  PDM_UNUSED(dual_graph);
+  PDM_UNUSED(node_weight);
+  PDM_UNUSED(arc_weight);
+  PDM_UNUSED(n_part);
+  PDM_UNUSED(part_fraction);
+
   PDM_MPI_Comm_rank(comm, &i_rank);
   PDM_MPI_Comm_size(comm, &n_rank);
 
@@ -952,12 +972,12 @@ const PDM_MPI_Comm      comm
         double *tpwgts;       /* Fraction of (weighted) vertex wanted on each part */
         int edgecut;          /* Number of edges cutted by metis                   */
 
-        ubvec = (double *) malloc(ncon * sizeof(double));
+        PDM_malloc(ubvec,ncon ,double);
         for (int i = 0; i < ncon; i++) {
           ubvec[i] = 1.05;
         }
 
-        tpwgts = (double *) malloc(ncon * n_part * sizeof(double));
+        PDM_malloc(tpwgts,ncon * n_part ,double);
         if (part_fraction != NULL) {
           for (int i = 0; i < n_part; i++) {
             for (int j = 0; j < ncon; j++) {
@@ -994,8 +1014,8 @@ const PDM_MPI_Comm      comm
                                   comm);
         // printf("PDM_ParMETIS_dpart %d | %d  END\n", n_part, dn_elmt);
 
-        free(ubvec);
-        free(tpwgts);
+       PDM_free(ubvec);
+       PDM_free(tpwgts);
       #endif
         break;
     }
