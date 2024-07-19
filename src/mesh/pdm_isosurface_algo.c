@@ -30,6 +30,10 @@
 #include "pdm_isosurface_priv.h"
 #include "pdm_unique.h"
 #include "pdm_vtk.h"
+#include "pdm_order.h"
+#include "pdm_part_connectivity_transform.h"
+
+#include "pdm_writer_priv.h"
 
 /*----------------------------------------------------------------------------*/
 
@@ -412,6 +416,55 @@ _cross_any_level
 
   return n_crossings;
 }
+
+
+static inline int
+_sign
+(
+  const double v
+)
+{
+  // if (v < -ISOSURFACE_EPS) {
+  //   return -1;
+  // }
+  // else if (v > ISOSURFACE_EPS) {
+  //   return 1;
+  // }
+  // else {
+  //   return 0;
+  // }
+  return (v > ISOSURFACE_EPS);
+}
+
+
+static inline int
+_cross_0_level_ngon
+(
+  const double v0,
+  const double v1
+)
+{
+  return _sign(v0) != _sign(v1);
+}
+
+
+static inline int
+_cross_any_level_ngon
+(
+  const double v0,
+  const double v1,
+  const int    n_isovalues,
+  const double isovalues[]
+)
+{
+  int n_crossings = 0;
+  for (int i = 0; i < n_isovalues; i++) {
+    n_crossings += _cross_0_level_ngon(v0 - isovalues[i], v1 - isovalues[i]);
+  }
+
+  return n_crossings;
+}
+
 
 
 
@@ -2183,6 +2236,154 @@ _contouring_tetrahedra
 }
 
 
+static void
+_debug_ngon
+(
+ int     n_face,
+ int     n_edge,
+ int    *face_edge_idx,
+ int    *face_edge,
+ int    *edge_vtx,
+ double *vtx_coord,
+ double *vtx_field,
+ double  isovalue
+ )
+{
+  int *face_vtx = NULL;
+  PDM_compute_face_vtx_from_face_and_edge(n_face,
+                                          face_edge_idx,
+                                          face_edge,
+                                          edge_vtx,
+                                          &face_vtx);
+  int n_vtx = 0;
+  for (int i = 0; i < face_edge_idx[n_face]; i++) {
+    n_vtx = PDM_MAX(n_vtx, face_vtx[i]);
+  }
+
+  double *_vtx_field = malloc(sizeof(double) * n_vtx);
+  for (int i = 0; i < n_vtx; i++) {
+    _vtx_field[i] = vtx_field[i] - isovalue;
+  }
+
+  const char *name1 = "debug_ngon_faces.vtk";
+  PDM_vtk_write_polydata_field(name1,
+                               n_vtx,
+                               vtx_coord,
+                               NULL,
+                               n_face,
+                               face_edge_idx,
+                               face_vtx,
+                               NULL,
+                               NULL,
+                               NULL,
+                               "field",
+                               _vtx_field);
+  free(face_vtx);
+
+  const char   *name2 = "debug_ngon_edges.vtk";
+  const char   *field_name [] = {"field"};
+  const double *field_value[] = {_vtx_field};
+  PDM_vtk_write_std_elements_ho_with_vtx_field(name2,
+                                               1,
+                                               n_vtx,
+                                               vtx_coord,
+                                               NULL,
+                                               PDM_MESH_NODAL_BAR2,
+                                               n_edge,
+                                               edge_vtx,
+                                               NULL,
+                                               0,
+                                               NULL,
+                                               NULL,
+                                               1,
+                                               field_name,
+                                               field_value);
+  free(_vtx_field);
+}
+
+
+static void
+_debug_ngon_cell
+(
+ int     cell_face_n,
+ int    *cell_face,
+ int    *face_edge_idx,
+ int    *face_edge,
+ int    *edge_vtx,
+ double *vtx_coord,
+ double *vtx_field,
+ double  isovalue
+ )
+{
+  int *_face_vtx_idx = malloc(sizeof(int) * (cell_face_n + 1));
+  _face_vtx_idx[0] = 0;
+  for (int i = 0; i < cell_face_n; i++) {
+    int i_face = PDM_ABS(cell_face[i]) - 1;
+    _face_vtx_idx[i+1] = _face_vtx_idx[i] + face_edge_idx[i_face+1] - face_edge_idx[i_face];
+  }
+
+  int *_face_edge = malloc(sizeof(int) * _face_vtx_idx[cell_face_n]);
+  for (int i = 0; i < cell_face_n; i++) {
+    int i_face = PDM_ABS(cell_face[i]) - 1;
+    int k = _face_vtx_idx[i];
+    for (int j = face_edge_idx[i_face]; j < face_edge_idx[i_face+1]; j++) {
+      _face_edge[k++] = face_edge[j] * PDM_SIGN(cell_face[i]);
+    }
+  }
+  // PDM_log_trace_connectivity_int(_face_vtx_idx, _face_edge, cell_face_n, "_face_edge : ");
+
+  int *_face_vtx = NULL;
+  PDM_compute_face_vtx_from_face_and_edge(cell_face_n,
+                                          _face_vtx_idx,
+                                          _face_edge,
+                                          edge_vtx,
+                                          &_face_vtx);
+  free(_face_edge);
+
+  // PDM_log_trace_connectivity_int(_face_vtx_idx, _face_vtx, cell_face_n, "_face_vtx : ");
+  int *order_in_unique = malloc(sizeof(int) * _face_vtx_idx[cell_face_n]);
+  int _n_vtx = PDM_inplace_unique_int_with_order_in_unique(_face_vtx,
+                                                           order_in_unique,
+                                                           0,
+                                                           _face_vtx_idx[cell_face_n]-1);
+
+  double *_vtx_coord = malloc(sizeof(double) * _n_vtx * 3);
+  double *_vtx_field = malloc(sizeof(double) * _n_vtx);
+  for (int i = 0; i < _n_vtx; i++) {
+    int i_vtx = _face_vtx[i] - 1;
+    memcpy(&_vtx_coord[3*i], &vtx_coord[3*i_vtx], sizeof(double) * 3);
+    _vtx_field[i] = vtx_field[i_vtx] - isovalue;
+  }
+
+
+  // log_trace("_n_vtx = %d\n", _n_vtx);
+  // PDM_log_trace_array_int(_face_vtx,       _n_vtx,                     "_face_vtx (unique) : ");
+  // PDM_log_trace_array_int(order_in_unique, _face_vtx_idx[cell_face_n], "order_in_unique    : ");
+
+  for (int i = 0; i < _face_vtx_idx[cell_face_n]; i++) {
+    _face_vtx[i] = order_in_unique[i] + 1;
+  }
+
+  const char *name = "debug_ngon_cell.vtk";
+  PDM_vtk_write_polydata_field(name,
+                               _n_vtx,
+                               _vtx_coord,
+                               NULL,
+                               cell_face_n,
+                               _face_vtx_idx,
+                               _face_vtx,
+                               NULL,
+                               NULL,
+                               NULL,
+                               "field",
+                               _vtx_field);
+  free(_face_vtx_idx);
+  free(_face_vtx);
+  free(order_in_unique);
+  free(_vtx_coord);
+  free(_vtx_field);
+}
+
 
 static void
 _trace_isopolygon_in_cell
@@ -2192,6 +2393,9 @@ _trace_isopolygon_in_cell
  int  *face_edge_idx,
  int  *face_edge,
  int  *edge_vtx,
+ double *vtx_coord, // only for debug
+ double *vtx_field, // only for debug
+ double  isovalue,  // only for debug
  int  *is_active_face,
  int  *edge_to_iso_vtx,
  int  *i_edge_in_cell,
@@ -2238,14 +2442,14 @@ _trace_isopolygon_in_cell
     } // End of loop on edges incident to current face
   } // End of loop on faces incident to current cell
 
-  if (cell_edge_n == 0) {
+  if (dbg) {
+    PDM_log_trace_array_int(cell_edge, cell_edge_n, "  cell_edge : ");
+  }
+  if (cell_edge_n < 3) {//== 0) {
     // Current cell is not traversed by the isosurface
     return;
   }
 
-  if (dbg) {
-    PDM_log_trace_array_int(cell_edge, cell_edge_n, "  cell_edge : ");
-  }
 
 
   // Trace isopolygons in current cell
@@ -2381,7 +2585,24 @@ _trace_isopolygon_in_cell
                 iso_edge_dest = ifv[0];
               }
               else {
-                assert(is_used_edge[current_cell_edge] == 0);
+                // assert(is_used_edge[current_cell_edge] == 0);
+                if (is_used_edge[current_cell_edge]) {
+                  int i_wrong_edge = cell_edge[current_cell_edge];
+                  if (0) {
+                    _debug_ngon_cell(cell_face_n,
+                                     cell_face,
+                                     face_edge_idx,
+                                     face_edge,
+                                     edge_vtx,
+                                     vtx_coord,
+                                     vtx_field,
+                                     isovalue);
+                  }
+                  PDM_error(__FILE__, __LINE__, 0, "Edge %d : (%d %d) already used\n",
+                            i_wrong_edge,
+                            edge_vtx[2*i_wrong_edge  ],
+                            edge_vtx[2*i_wrong_edge+1]);
+                }
                 is_used_edge[current_cell_edge] = 1;
                 n_used_edge++;
 
@@ -2477,6 +2698,7 @@ _isosurface_ngon_single_part
   double  *vtx_coord,
   double  *vtx_field,
   int     *face_tag,
+  PDM_g_num_t *cell_ln_to_gn, // debug only
   int     *out_iso_n_vtx,
   double **out_iso_vtx_coord,
   int    **out_iso_vtx_parent_idx,
@@ -2504,10 +2726,10 @@ _isosurface_ngon_single_part
     int i_vtx0 = edge_vtx[2*i_edge  ] - 1;
     int i_vtx1 = edge_vtx[2*i_edge+1] - 1;
 
-    iso_n_vtx += _cross_any_level(vtx_field[i_vtx0],
-                                  vtx_field[i_vtx1],
-                                  n_isovalues,
-                                  isovalues);
+    iso_n_vtx += _cross_any_level_ngon(vtx_field[i_vtx0],
+                                       vtx_field[i_vtx1],
+                                       n_isovalues,
+                                       isovalues);
   }
 
   double *iso_vtx_coord         = malloc(sizeof(double) * iso_n_vtx * 3);
@@ -2625,7 +2847,7 @@ _isosurface_ngon_single_part
       double val0 = vtx_field[i_vtx0] - isovalues[i_isovalue];
       double val1 = vtx_field[i_vtx1] - isovalues[i_isovalue];
 
-      if (_cross_0_level(val0, val1)) {
+      if (_cross_0_level_ngon(val0, val1)) {
 
         isovalue_n_active_edge++;
 
@@ -2690,6 +2912,25 @@ _isosurface_ngon_single_part
       }
     } // End of loop on edges
 
+    if (dbg && 0) {
+      const char *field_name [] = {"edge_to_iso_vtx"};
+      const int  *field_value[] = {edge_to_iso_vtx};
+
+      char filename[999];
+      sprintf(filename, "active_edges_%d.vtk", i_isovalue);
+      PDM_vtk_write_std_elements(filename,
+                                 n_vtx,
+                                 vtx_coord,
+                                 NULL,
+                                 PDM_MESH_NODAL_BAR2,
+                                 n_edge,
+                                 edge_vtx,
+                                 NULL,
+                                 1,
+                                 field_name,
+                                 field_value);
+    }
+
     // Skip isovalue if zero active edge
     if (isovalue_n_active_edge == 0) {
       isovalue_vtx_idx [i_isovalue+1] = iso_n_vtx;
@@ -2713,17 +2954,33 @@ _isosurface_ngon_single_part
     }
 
     /* Polygonize isovalue */
+    if (dbg && 0) {
+      _debug_ngon(n_face,
+                  n_edge,
+                  face_edge_idx,
+                  face_edge,
+                  edge_vtx,
+                  vtx_coord,
+                  vtx_field,
+                  isovalues[i_isovalue]);
+    }
     for (int i_cell = 0; i_cell < n_cell; i_cell++) {
 
       int cell_face_n = cell_face_idx[i_cell+1] - cell_face_idx[i_cell];
 
       int tmp_s_iso_face = s_iso_face;
       int tmp_iso_n_face = iso_n_face;
+      if (dbg) {
+        log_trace("cell %d ("PDM_FMT_G_NUM"):\n", i_cell, cell_ln_to_gn[i_cell]);
+      }
       _trace_isopolygon_in_cell(cell_face_n,
                                 cell_face + cell_face_idx[i_cell],
                                 face_edge_idx,
                                 face_edge,
                                 edge_vtx,
+                                vtx_coord,
+                                vtx_field,
+                                isovalues[i_isovalue],
                                 is_active_face,
                                 edge_to_iso_vtx,
                                 i_edge_in_cell,
@@ -3679,7 +3936,7 @@ PDM_isosurface_ngon_algo
       surface_face     = isos->group_face    [i_part];
     }
 
-    // TODO: get face tags
+    // group_face -> face_tag
     int *face_tag = NULL;
     if (n_surface > 0) {
       face_tag = PDM_array_zeros_int(n_face);
@@ -3724,12 +3981,13 @@ PDM_isosurface_ngon_algo
                                  vtx_coord,
                                  isos->field[id_iso][i_part],
                                  face_tag,
+                                 cell_ln_to_gn,
                                  &iso_n_vtx            [i_part],
                                  &iso_vtx_coord        [i_part],
                                  &iso_vtx_parent_idx   [i_part],
                                  &iso_vtx_parent       [i_part],
                                  &iso_vtx_parent_weight[i_part],
-                                 &isovalue_vtx_idx    [i_part],
+                                 &isovalue_vtx_idx     [i_part],
                                  &iso_n_face           [i_part],
                                  &iso_face_vtx_idx     [i_part],
                                  &iso_face_vtx         [i_part],
@@ -3781,12 +4039,11 @@ PDM_isosurface_ngon_algo
     for (int i_edge = 0; i_edge < iso_n_edge[i_part]; i_edge++) {
       int i_face    = iso_edge_parent[i_part][iso_edge_parent_idx[i_part][i_edge]] - 1;
       int i_surface = face_tag[i_face]-1;
+      // TODO: handle case with face on multiple surfaces?
       iso_edge_group_lnum[i_part][iso_edge_group_idx[i_part][i_surface] + iso_edge_group_n[i_surface]] = i_edge+1;
       iso_edge_group_n[i_surface]++;
     }
     free(face_tag);
-
-    PDM_log_trace_array_int(iso_edge_group_idx[i_part], n_surface+1, "iso_edge_group_idx : ");
   }
   free(iso_edge_group_n);
 

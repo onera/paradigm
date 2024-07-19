@@ -165,7 +165,7 @@ _compute_iso_field
   int               id_isosurface
 )
 {
-  int debug = 1;
+  int debug = 0;
 
   PDM_part_mesh_nodal_t *pmn   = NULL;
   PDM_part_mesh_t       *pmesh = NULL;
