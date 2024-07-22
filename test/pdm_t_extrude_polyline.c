@@ -361,7 +361,7 @@ const PDM_Mesh_nodal_elt_t   elt_type,
       abort();
     }
   }
- PDM_free(distrib_face);
+  PDM_free(distrib_face);
 
 
   /* Unique vertices */
@@ -371,14 +371,12 @@ const PDM_Mesh_nodal_elt_t   elt_type,
                                     0,
                                     s_face_vtx-1);
 
- PDM_free(face_vtx_gnum);
 
   for (int i = 0; i < s_face_vtx; i++) {
     (*face_vtx)[i]++;
   }
 
-
-  PDM_realloc(*vtx_ln_to_gn ,*vtx_ln_to_gn , (*n_vtx),PDM_g_num_t);
+  PDM_realloc(face_vtx_gnum, *vtx_ln_to_gn, (*n_vtx),PDM_g_num_t);
   PDM_malloc(*vtx_coord,(*n_vtx) * 3,double);
 
   double step = 1. / (double) n_layer;
@@ -389,6 +387,7 @@ const PDM_Mesh_nodal_elt_t   elt_type,
 
     int ilayer    = (int) (g / base_n_vtx);
     int ibase_vtx = (int) (g % base_n_vtx);
+
 
     for (int i = 0; i < 3; i++) {
       (*vtx_coord)[3*ivtx+i] = base_vtx_coord[3*ibase_vtx+i] + ilayer*step*extrusion_vector[i];
@@ -465,13 +464,13 @@ main
   //               &base_n_vtx2,
   //               &base_vtx_coord2);
 
-  // PDM_realloc(base_edge_vtx ,base_edge_vtx , 2,int) * (base_n_edge + base_n_edge2);
+  PDM_realloc(base_edge_vtx ,base_edge_vtx , 2 * (base_n_edge + base_n_edge2),int) ;
   for (int i = 0; i < 2*base_n_edge2; i++) {
     base_edge_vtx[2*base_n_edge + i] = base_edge_vtx2[i] + base_n_vtx;
   }
   base_n_edge += base_n_edge2;
 
-  // PDM_realloc(base_vtx_coord ,base_vtx_coord , 3,double) * (base_n_vtx + base_n_vtx2);
+  PDM_realloc(base_vtx_coord ,base_vtx_coord , 3 * (base_n_vtx + base_n_vtx2),double) ;
   for (int i = 0; i < base_n_vtx2; i++) {
     base_vtx_coord[3*base_n_vtx + 3*i  ] = base_vtx_coord2[3*i  ];
     base_vtx_coord[3*base_n_vtx + 3*i+1] = base_vtx_coord2[3*i+1];
