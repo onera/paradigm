@@ -154,7 +154,7 @@ static const int pyramid_face_vtx[] = {
   0, 1, 4,
   1, 2, 4,
   2, 3, 4,
-  3, 0  , 4,
+  3, 0, 4,
   0, 3, 2, 1
 };
 
@@ -1960,11 +1960,11 @@ _contouring_tetrahedra
   if (debug==1) log_trace("iso_n_face_parent = %d\n", iso_n_face_parent);
   if (debug==1) log_trace("s_face_vtx        = %d\n", s_face_vtx);
 
-  PDM_g_num_t *iso_face_parent_gnum = realloc(*out_iso_face_parent_gnum, sizeof(int) * 3* iso_n_face);
-  int         *iso_face_vtx_idx     = realloc(*out_iso_face_vtx_idx,     sizeof(int) *   (iso_n_face + 1));
-  int         *iso_face_vtx         = realloc(*out_iso_face_vtx,         sizeof(int) *   (prev_size  + s_face_vtx));
-  int         *iso_face_parent_idx  = realloc(*out_iso_face_parent_idx,  sizeof(int) *   (iso_n_face + 1));
-  int         *iso_face_parent      = realloc(*out_iso_face_parent    ,  sizeof(int) *    iso_n_face_parent);
+  PDM_g_num_t *iso_face_parent_gnum = realloc(*out_iso_face_parent_gnum, sizeof(PDM_g_num_t) * 3* iso_n_face);
+  int         *iso_face_vtx_idx     = realloc(*out_iso_face_vtx_idx,     sizeof(int        ) *   (iso_n_face + 1));
+  int         *iso_face_vtx         = realloc(*out_iso_face_vtx,         sizeof(int        ) *   (prev_size  + s_face_vtx));
+  int         *iso_face_parent_idx  = realloc(*out_iso_face_parent_idx,  sizeof(int        ) *   (iso_n_face + 1));
+  int         *iso_face_parent      = realloc(*out_iso_face_parent    ,  sizeof(int        ) *    iso_n_face_parent);
   iso_face_vtx_idx   [0] = 0;
   PDM_array_reset_int(iso_face_def, n_face, 0);
   iso_face_parent_idx[0] = 0.;
@@ -3052,6 +3052,41 @@ _isosurface_ngon_single_part
   }
 }
 
+
+static void
+_generate_gnum_from_parents
+(
+ PDM_MPI_Comm  comm,
+ int           n_part,
+ int          *n_entity,
+ PDM_g_num_t **parent_gnum,
+ int           nuplet,
+ PDM_g_num_t **gnum
+)
+{
+  PDM_gen_gnum_t *gen_gnum = PDM_gnum_create(3,  // unused,
+                                             n_part,
+                                             PDM_FALSE,
+                                             1., // unused,
+                                             comm,
+                                             PDM_OWNERSHIP_USER);
+
+  for (int i_part = 0; i_part < n_part; i_part++) {
+    PDM_gnum_set_from_parents(gen_gnum, i_part, n_entity[i_part], parent_gnum[i_part]);
+  }
+
+  PDM_gnum_set_parents_nuplet(gen_gnum, nuplet);
+
+  PDM_gnum_compute(gen_gnum);
+
+  for (int i_part = 0; i_part < n_part; i_part++) {
+    gnum[i_part] = PDM_gnum_get(gen_gnum, i_part);
+    // free(parent_gnum[i_part]);
+  }
+  // free(parent_gnum);
+  PDM_gnum_free(gen_gnum);
+}
+
 /*=============================================================================
  * Public function definitions
  *============================================================================*/
@@ -3598,42 +3633,28 @@ PDM_isosurface_marching_algo
   /*
    * Build vertices/edges/faces gnum
    */
-  PDM_gen_gnum_t *gen_gnum_vtx  = PDM_gnum_create(mesh_dim-1, n_part, PDM_FALSE, 1., isos->comm, PDM_OWNERSHIP_USER);
-  PDM_gen_gnum_t *gen_gnum_edge = PDM_gnum_create(mesh_dim-1, n_part, PDM_FALSE, 1., isos->comm, PDM_OWNERSHIP_USER);
-  PDM_gen_gnum_t *gen_gnum_face = PDM_gnum_create(mesh_dim-1, n_part, PDM_FALSE, 1., isos->comm, PDM_OWNERSHIP_USER);
-  PDM_gnum_set_parents_nuplet(gen_gnum_vtx , 2);
-  PDM_gnum_set_parents_nuplet(gen_gnum_edge, 2);
-  PDM_gnum_set_parents_nuplet(gen_gnum_face, 3);
-
-  for (int i_part=0; i_part<n_part; i_part++) {
-    PDM_gnum_set_from_parents(gen_gnum_vtx , i_part, iso_n_vtx [i_part], iso_vtx_parent_gnum [i_part]);
-    PDM_gnum_set_from_parents(gen_gnum_edge, i_part, iso_n_edge[i_part], iso_edge_parent_gnum[i_part]);
-    PDM_gnum_set_from_parents(gen_gnum_face, i_part, iso_n_face[i_part], iso_face_parent_gnum[i_part]);
-    if (debug==1) {
-      PDM_log_trace_array_long(iso_vtx_parent_gnum [i_part], 2*iso_n_vtx [i_part], "iso_vtx_parent_gnum  :: ");
-      PDM_log_trace_array_long(iso_edge_parent_gnum[i_part], 2*iso_n_edge[i_part], "iso_edge_parent_gnum :: ");
-      PDM_log_trace_array_long(iso_face_parent_gnum[i_part], 3*iso_n_face[i_part], "iso_face_parent_gnum :: ");
-    }
-  }
-  PDM_gnum_compute(gen_gnum_vtx);
-  PDM_gnum_compute(gen_gnum_edge);
-  PDM_gnum_compute(gen_gnum_face);
-
   PDM_g_num_t **iso_vtx_gnum  = malloc(sizeof(PDM_g_num_t *) * n_part);
   PDM_g_num_t **iso_edge_gnum = malloc(sizeof(PDM_g_num_t *) * n_part);
   PDM_g_num_t **iso_face_gnum = malloc(sizeof(PDM_g_num_t *) * n_part);
-  for (int i_part=0; i_part<n_part; i_part++) {
-    iso_vtx_gnum [i_part] = PDM_gnum_get(gen_gnum_vtx , i_part);
-    iso_edge_gnum[i_part] = PDM_gnum_get(gen_gnum_edge, i_part);
-    iso_face_gnum[i_part] = PDM_gnum_get(gen_gnum_face, i_part);
-    if (debug==1) {
-      PDM_log_trace_array_long(iso_vtx_gnum [i_part], iso_n_vtx [i_part], "iso_vtx_gnum  :: ");
-      PDM_log_trace_array_long(iso_edge_gnum[i_part], iso_n_edge[i_part], "iso_edge_gnum :: ");
-      PDM_log_trace_array_long(iso_face_gnum[i_part], iso_n_face[i_part], "iso_face_gnum :: ");
-    }
-  }
-
-  for (int i_part=0; i_part<n_part; i_part++) {
+  _generate_gnum_from_parents(isos->comm,
+                              isos->n_part,
+                              iso_n_vtx,
+                              iso_vtx_parent_gnum,
+                              2,
+                              iso_vtx_gnum);
+  _generate_gnum_from_parents(isos->comm,
+                              isos->n_part,
+                              iso_n_edge,
+                              iso_edge_parent_gnum,
+                              2,
+                              iso_edge_gnum);
+  _generate_gnum_from_parents(isos->comm,
+                              isos->n_part,
+                              iso_n_face,
+                              iso_face_parent_gnum,
+                              3,
+                              iso_face_gnum);
+  for (int i_part = 0; i_part < isos->n_part; i_part++) {
     free(iso_vtx_parent_gnum [i_part]);
     free(iso_edge_parent_gnum[i_part]);
     free(iso_face_parent_gnum[i_part]);
@@ -3641,9 +3662,6 @@ PDM_isosurface_marching_algo
   free(iso_vtx_parent_gnum);
   free(iso_edge_parent_gnum);
   free(iso_face_parent_gnum);
-  PDM_gnum_free(gen_gnum_vtx);
-  PDM_gnum_free(gen_gnum_edge);
-  PDM_gnum_free(gen_gnum_face);
 
 
   /*
@@ -4055,48 +4073,26 @@ PDM_isosurface_ngon_algo
   t_start = PDM_MPI_Wtime();
 
 
-  // TODO: factorize this section (similar to PDM_isosurface_marching_algo) -->>
-  // and use "fast gnums"?
-  PDM_gen_gnum_t *gen_gnum_vtx = PDM_gnum_create(3,  // unused,
-                                                 isos->n_part,
-                                                 PDM_FALSE,
-                                                 1., // unused,
-                                                 isos->comm,
-                                                 PDM_OWNERSHIP_USER);
-
-  PDM_gen_gnum_t *gen_gnum_edge = PDM_gnum_create(3,  // unused,
-                                                  isos->n_part,
-                                                  PDM_FALSE,
-                                                  1., // unused,
-                                                  isos->comm,
-                                                  PDM_OWNERSHIP_USER);
-
-  PDM_gen_gnum_t *gen_gnum_face = PDM_gnum_create(3,  // unused,
-                                                  isos->n_part,
-                                                  PDM_FALSE,
-                                                  1., // unused,
-                                                  isos->comm,
-                                                  PDM_OWNERSHIP_USER);
-
+  // TODO: use "fast gnums"?
+  _generate_gnum_from_parents(isos->comm,
+                              isos->n_part,
+                              iso_n_vtx,
+                              iso_vtx_parent_gnum,
+                              2,
+                              iso_vtx_gnum);
+  _generate_gnum_from_parents(isos->comm,
+                              isos->n_part,
+                              iso_n_edge,
+                              iso_edge_parent_gnum,
+                              1,
+                              iso_edge_gnum);
+  _generate_gnum_from_parents(isos->comm,
+                              isos->n_part,
+                              iso_n_face,
+                              iso_face_parent_gnum,
+                              1,
+                              iso_face_gnum);
   for (int i_part = 0; i_part < isos->n_part; i_part++) {
-    PDM_gnum_set_from_parents(gen_gnum_vtx , i_part, iso_n_vtx [i_part], iso_vtx_parent_gnum [i_part]);
-    PDM_gnum_set_from_parents(gen_gnum_edge, i_part, iso_n_edge[i_part], iso_edge_parent_gnum[i_part]);
-    PDM_gnum_set_from_parents(gen_gnum_face, i_part, iso_n_face[i_part], iso_face_parent_gnum[i_part]);
-  }
-
-  PDM_gnum_set_parents_nuplet(gen_gnum_vtx , 2);
-  PDM_gnum_set_parents_nuplet(gen_gnum_edge, 1);
-  PDM_gnum_set_parents_nuplet(gen_gnum_face, 1);
-
-  PDM_gnum_compute(gen_gnum_vtx );
-  PDM_gnum_compute(gen_gnum_edge);
-  PDM_gnum_compute(gen_gnum_face);
-
-  for (int i_part = 0; i_part < isos->n_part; i_part++) {
-    iso_vtx_gnum [i_part] = PDM_gnum_get(gen_gnum_vtx , i_part);
-    iso_edge_gnum[i_part] = PDM_gnum_get(gen_gnum_edge, i_part);
-    iso_face_gnum[i_part] = PDM_gnum_get(gen_gnum_face, i_part);
-
     free(iso_vtx_parent_gnum [i_part]);
     free(iso_edge_parent_gnum[i_part]);
     free(iso_face_parent_gnum[i_part]);
@@ -4104,9 +4100,6 @@ PDM_isosurface_ngon_algo
   free(iso_vtx_parent_gnum);
   free(iso_edge_parent_gnum);
   free(iso_face_parent_gnum);
-  PDM_gnum_free(gen_gnum_vtx );
-  PDM_gnum_free(gen_gnum_edge);
-  PDM_gnum_free(gen_gnum_face);
 
   PDM_g_num_t **iso_edge_group_parent_gnum = malloc(sizeof(PDM_g_num_t *) * isos->n_part);
   for (int i_part = 0; i_part < isos->n_part; i_part++) {
@@ -4148,7 +4141,6 @@ PDM_isosurface_ngon_algo
     free(iso_edge_group_parent_gnum[i_part]);
   }
   free(iso_edge_group_parent_gnum);
-  //<<--
 
   t_end = PDM_MPI_Wtime();
   log_trace("Generate global IDs : %.3fs \n", t_end - t_start);
