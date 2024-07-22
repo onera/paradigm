@@ -61,9 +61,9 @@ inline
 double
 _plane_field
 (
-  double x,
-  double y,
-  double z,
+  const double x,
+  const double y,
+  const double z,
   double *plane_equation
 )
 {
@@ -80,9 +80,9 @@ inline
 double
 _sphere_field
 (
-  double x,
-  double y,
-  double z,
+  const double x,
+  const double y,
+  const double z,
   double *sphere_equation
 )
 {
@@ -99,9 +99,9 @@ inline
 double
 _ellipse_field
 (
-  double x,
-  double y,
-  double z,
+  const double x,
+  const double y,
+  const double z,
   double *ellipse_equation
 )
 {
@@ -118,9 +118,9 @@ inline
 double
 _quadric_field
 (
-  double x,
-  double y,
-  double z,
+  const double x,
+  const double y,
+  const double z,
   double *quadric_equation
 )
 {
@@ -137,9 +137,9 @@ inline
 double
 _heart_field
 (
-  double x,
-  double y,
-  double z,
+  const double x,
+  const double y,
+  const double z,
   double *heart_equation
 )
 {
@@ -157,7 +157,6 @@ _heart_field
 }
 
 
-
 static void
 _compute_iso_field
 (
@@ -165,118 +164,147 @@ _compute_iso_field
   int               id_isosurface
 )
 {
-  int debug = 0;
-
-  PDM_part_mesh_nodal_t *pmn   = NULL;
-  PDM_part_mesh_t       *pmesh = NULL;
-  switch (isos->entry_mesh_type) {
-    case -1: {
-      // OK ("alamano")
-      break;
-    }
-    case -2: {
-      pmesh = isos->pmesh;
-      break;
-    }
-    case -3: {
-      pmn = isos->pmesh_nodal;
-      break;
-    }
-    default: {
-      PDM_error(__FILE__, __LINE__, 0, "Expected partitioned but got block-distributed\n"); // tmp
-    }
+  /* TODO: what if extract part? */
+  if (isos->kind[id_isosurface] == PDM_ISO_SURFACE_KIND_FIELD) {
+    return;
   }
 
-  int n_part = isos->n_part;
+  int i_rank;
+  PDM_MPI_Comm_rank(isos->comm, &i_rank);
 
-  // > Allocate if 
-  if (isos->kind[id_isosurface]==PDM_ISO_SURFACE_KIND_PLANE    ||
-      isos->kind[id_isosurface]==PDM_ISO_SURFACE_KIND_SPHERE   ||
-      isos->kind[id_isosurface]==PDM_ISO_SURFACE_KIND_ELLIPSE  ||
-      isos->kind[id_isosurface]==PDM_ISO_SURFACE_KIND_QUADRIC  ||
-      isos->kind[id_isosurface]==PDM_ISO_SURFACE_KIND_HEART    ||
-      isos->kind[id_isosurface]==PDM_ISO_SURFACE_KIND_FUNCTION ) {
-    isos->field[id_isosurface] = malloc(sizeof(double *) * n_part); 
-  }
-  else if (isos->kind[id_isosurface]==PDM_ISO_SURFACE_KIND_FIELD) {
-    if (isos->field[id_isosurface]==NULL) {
-      PDM_error(__FILE__, __LINE__, 0, "PDM_isosurface_t: iso n°%d is PDM_ISO_SURFACE_KIND_FIELD, but field isn't defined.\n", id_isosurface);
-    }
-  }
+  /* Allocate if necessary */
+  double **field     = NULL;
+  int     _n_part    = 0;
+  int     *n_vtx     = NULL;
+  double **vtx_coord = NULL;
 
-  double **vtx_field = isos->field[id_isosurface];
-
-
-  for (int i_part=0; i_part<n_part; ++i_part) {
-    int     n_vtx     = 0;
-    double *vtx_coord = NULL;
-
+  if (isos->is_dist_or_part == 0) {
+    // Block-distributed
+    _n_part = 1;
+    n_vtx     = malloc(sizeof(int     ));
+    vtx_coord = malloc(sizeof(double *));
     switch (isos->entry_mesh_type) {
-      case -1: {
-        n_vtx     = isos->n_vtx    [i_part];
-        vtx_coord = isos->vtx_coord[i_part];
+      case 1: {
+        n_vtx    [0] = isos->distrib_vtx[i_rank+1] - isos->distrib_vtx[i_rank];
+        vtx_coord[0] = isos->dvtx_coord;
         break;
       }
-      case -2: {
-        n_vtx = PDM_part_mesh_n_entity_get(pmesh, i_part, PDM_MESH_ENTITY_VTX);
-        PDM_part_mesh_vtx_coord_get(pmesh, i_part, &vtx_coord, PDM_OWNERSHIP_BAD_VALUE);
+      case 2: {
+        n_vtx[0] = PDM_dmesh_dn_entity_get(isos->dmesh, PDM_MESH_ENTITY_VTX);
+        PDM_dmesh_vtx_coord_get(isos->dmesh, &vtx_coord[0], PDM_OWNERSHIP_BAD_VALUE);
         break;
       }
-      case -3: {
-        n_vtx     = PDM_part_mesh_nodal_n_vtx_get    (pmn, i_part);
-        vtx_coord = PDM_part_mesh_nodal_vtx_coord_get(pmn, i_part);
+      case 3: {
+        n_vtx    [0] = PDM_DMesh_nodal_n_vtx_get(isos->dmesh_nodal);
+        vtx_coord[0] = PDM_DMesh_nodal_vtx_get  (isos->dmesh_nodal);
         break;
       }
       default: {
-        PDM_error(__FILE__, __LINE__, 0, "Expected partitioned but got block-distributed\n"); // tmp
+        PDM_error(__FILE__, __LINE__, 0, "Expected block-distributed but got partitioned\n");
       }
     }
 
-    if (isos->kind[id_isosurface]==PDM_ISO_SURFACE_KIND_FIELD) {
-      if (isos->field[id_isosurface][i_part]==NULL) {
-        PDM_error(__FILE__, __LINE__, 0, "PDM_isosurface_t: iso n°%d is PDM_ISO_SURFACE_KIND_FIELD, but field of part n°%d isn't defined.\n", id_isosurface, i_part);
+    isos->dfield[id_isosurface] = malloc(sizeof(double) * n_vtx[0]);
+    field = &isos->dfield[id_isosurface];
+
+  }
+  else if (isos->is_dist_or_part == 1) {
+    // Partitioned
+    _n_part = isos->n_part;
+    n_vtx     = malloc(sizeof(int     ) * isos->n_part);
+    vtx_coord = malloc(sizeof(double *) * isos->n_part);
+
+    switch (isos->entry_mesh_type) {
+      case -1: {
+        for (int i_part = 0; i_part < isos->n_part; i_part++) {
+          n_vtx    [i_part] = isos->n_vtx    [i_part];
+          vtx_coord[i_part] = isos->vtx_coord[i_part];
+        }
+        break;
       }
-    } else {
-      
-      log_trace("id_isosurface = %d ; i_part = %d ; n_vtx = %d ; \n", id_isosurface, i_part, n_vtx);
-      vtx_field[i_part] = malloc(sizeof(double) * n_vtx); 
-
-      for (int i_vtx=0; i_vtx<n_vtx; ++i_vtx) {
-        
-        double x = vtx_coord[3*i_vtx  ];
-        double y = vtx_coord[3*i_vtx+1];
-        double z = vtx_coord[3*i_vtx+2];
-
-        if (isos->kind[id_isosurface]==PDM_ISO_SURFACE_KIND_PLANE   ) {
-          vtx_field[i_part][i_vtx] = _plane_field(x, y, z, isos->eq_coeffs[id_isosurface]);
+      case -2: {
+        for (int i_part = 0; i_part < isos->n_part; i_part++) {
+          n_vtx[i_part] = PDM_part_mesh_n_entity_get(isos->pmesh, i_part, PDM_MESH_ENTITY_VTX);
+          PDM_part_mesh_vtx_coord_get(isos->pmesh, i_part, &vtx_coord[i_part], PDM_OWNERSHIP_BAD_VALUE);
         }
-
-        else if (isos->kind[id_isosurface]==PDM_ISO_SURFACE_KIND_SPHERE  ) {
-          vtx_field[i_part][i_vtx] = _sphere_field(x, y, z, isos->eq_coeffs[id_isosurface]);
+        break;
+      }
+      case -3: {
+        for (int i_part = 0; i_part < isos->n_part; i_part++) {
+          n_vtx    [i_part] = PDM_part_mesh_nodal_n_vtx_get    (isos->pmesh_nodal, i_part);
+          vtx_coord[i_part] = PDM_part_mesh_nodal_vtx_coord_get(isos->pmesh_nodal, i_part);
         }
-
-        else if (isos->kind[id_isosurface]==PDM_ISO_SURFACE_KIND_ELLIPSE ) {
-          vtx_field[i_part][i_vtx] = _ellipse_field(x, y, z, isos->eq_coeffs[id_isosurface]);
-        }
-
-        else if (isos->kind[id_isosurface]==PDM_ISO_SURFACE_KIND_QUADRIC ) {
-          vtx_field[i_part][i_vtx] = _quadric_field(x, y, z, isos->eq_coeffs[id_isosurface]);
-        }
-
-        else if (isos->kind[id_isosurface]==PDM_ISO_SURFACE_KIND_HEART   ) {
-          vtx_field[i_part][i_vtx] = _heart_field(x, y, z, isos->eq_coeffs[id_isosurface]);
-        }
-
-        else if (isos->kind[id_isosurface]==PDM_ISO_SURFACE_KIND_FUNCTION) {
-          isos->iso_func[id_isosurface](x, y, z, &vtx_field[i_part][i_vtx]);
-        }
+        break;
+      }
+      default: {
+        PDM_error(__FILE__, __LINE__, 0, "Expected partitioned but got block-distributed\n");
       }
     }
 
-    if (debug==1) {
-      PDM_log_trace_array_double(vtx_field[i_part], n_vtx, "_compute_iso_field:: vtx_field [i_part]::");
+    isos->field[id_isosurface] = malloc(sizeof(double *) * isos->n_part);
+    for (int i_part = 0; i_part < isos->n_part; i_part++) {
+      isos->field[id_isosurface][i_part] = malloc(sizeof(double) * n_vtx[i_part]);
+    }
+    field = isos->field[id_isosurface];
+
+  }
+  else {
+    PDM_error(__FILE__, __LINE__, 0, "Undefined mesh\n");
+  }
+
+
+  /* Fill */
+  if (isos->kind[id_isosurface] == PDM_ISO_SURFACE_KIND_FUNCTION) {
+    for (int i_part = 0; i_part < _n_part; i_part++) {
+      for (int i_vtx = 0; i_vtx < n_vtx[i_part]; i_vtx++) {
+        isos->field_function[id_isosurface](vtx_coord[i_part][3*i_vtx  ],
+                                            vtx_coord[i_part][3*i_vtx+1],
+                                            vtx_coord[i_part][3*i_vtx+2],
+                                            &field[i_part][i_vtx]);
+      }
     }
   }
+  else {
+    double (*field_function) (const double, const double, const double, double *);
+
+    switch (isos->kind[id_isosurface]) {
+      case PDM_ISO_SURFACE_KIND_PLANE: {
+        field_function = &_plane_field;
+        break;
+      }
+      case PDM_ISO_SURFACE_KIND_SPHERE: {
+        field_function = &_sphere_field;
+        break;
+      }
+      case PDM_ISO_SURFACE_KIND_ELLIPSE: {
+        field_function = &_ellipse_field;
+        break;
+      }
+      case PDM_ISO_SURFACE_KIND_QUADRIC: {
+        field_function = &_quadric_field;
+        break;
+      }
+      case PDM_ISO_SURFACE_KIND_HEART: {
+        field_function = &_heart_field;
+        break;
+      }
+      default: {
+        PDM_error(__FILE__, __LINE__, 0, "Invalid isosurface type %d for id_isosurface %d.\n", isos->kind[id_isosurface], id_isosurface);
+      }
+    }
+
+    for (int i_part = 0; i_part < _n_part; i_part++) {
+      for (int i_vtx = 0; i_vtx < n_vtx[i_part]; i_vtx++) {
+        field[i_part][i_vtx] = field_function(vtx_coord[i_part][3*i_vtx  ],
+                                              vtx_coord[i_part][3*i_vtx+1],
+                                              vtx_coord[i_part][3*i_vtx+2],
+                                              isos->eq_coeffs[id_isosurface]);
+      }
+    }
+  }
+
+  free(n_vtx    );
+  free(vtx_coord);
 }
 
 /*=============================================================================
@@ -946,6 +974,8 @@ PDM_isosurface_compute
     log_trace("PDM_isosurface:: compute isosurface n°%d\n", id_isosurface);
   }
 
+  _compute_iso_field(isos, id_isosurface);
+
   if (isos->is_dist_or_part==0) { // Distributed entry
     if (isos->entry_mesh_type<0) {
       PDM_error(__FILE__, __LINE__, 0, "Isosurface is_dist_or_part = %d incoherent with isos->entry_mesh_type = %d < 0.\n", isos->is_dist_or_part, isos->entry_mesh_type);
@@ -967,8 +997,6 @@ PDM_isosurface_compute
     }
     else if (isos->entry_mesh_type == -1 ||
              isos->entry_mesh_type == -2) {
-      _compute_iso_field(isos, id_isosurface);
-
       PDM_isosurface_ngon_algo(isos,
                                id_isosurface);
     }
@@ -999,9 +1027,6 @@ PDM_isosurface_compute
        * and if user function is costful, would be costful once
        * TODO: compute field on extract part mesh
        */
-
-      _compute_iso_field(isos, id_isosurface);
-
       PDM_isosurface_marching_algo(isos,
                                    id_isosurface);
 

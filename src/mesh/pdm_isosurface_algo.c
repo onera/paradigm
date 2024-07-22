@@ -3795,9 +3795,6 @@ PDM_isosurface_ngon_algo
   PDM_MPI_Comm_rank(isos->comm, &i_rank);
   PDM_MPI_Comm_size(isos->comm, &n_rank);
 
-  printf("[%d] >> PDM_isosurface_ngon_algo\n", i_rank);
-  fflush(stdout);
-
 
   int     *iso_n_vtx             = malloc(sizeof(int     ) * isos->n_part);
   double **iso_vtx_coord         = malloc(sizeof(double *) * isos->n_part);
@@ -4213,9 +4210,6 @@ PDM_isosurface_ngon_algo
 
     isos->iso_owner_edge_bnd[id_iso][i_part] = PDM_OWNERSHIP_KEEP;
   }
-
-  printf("[%d] << PDM_isosurface_ngon_algo\n", i_rank);
-  fflush(stdout);
 }
 
 
