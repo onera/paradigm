@@ -1366,12 +1366,13 @@ _locate_in_cell_3d
                      _pt[2] > 10.0 && _pt[2] < 10.1);
           dbg = 0;
 
-          if (dbg) {
-            setenv("DBG_TRIANGLE", "1", 1);
-          }
-          else {
-            setenv("DBG_TRIANGLE", "0", 1);
-          }
+// Fix #74 setenv is not portable
+          // if (dbg) {
+          //   setenv("DBG_TRIANGLE", "1", 1);
+          // }
+          // else {
+          //   setenv("DBG_TRIANGLE", "0", 1);
+          // }
 
           double min_dist2, closest[3], weight[3];
           PDM_triangle_status_t error = PDM_triangle_evaluate_position(_pt,

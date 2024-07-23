@@ -2495,6 +2495,8 @@ PDM_dist_cloud_surf_create
     dist->times_cpu_s  [i] = 0.;
   }
 
+  dist->algo_implem = 0; // Default algorithm
+
   return dist;
 }
 
@@ -2702,18 +2704,8 @@ PDM_dist_cloud_surf_compute
  PDM_dist_cloud_surf_t *dist
 )
 {
-  int use_optim = 0;
 
-  char *env_var = NULL;
-  env_var = getenv ("PDM_DIST_CLOUD_SURF_OPTIM");
-
-
-  if (env_var != NULL) {
-    use_optim = atoi(env_var);
-  }
-
-
-  if (use_optim) {
+  if (dist->algo_implem == 1) {
     _dist_cloud_surf_compute_optim(dist);
   }
   else {
@@ -3059,6 +3051,36 @@ PDM_dist_cloud_surf_cloud_dim_get
   *n_points = dist->points_cloud[i_point_cloud].n_points[i_part];
 }
 
+
+/**
+ *
+ * \brief Distribute data from the surface mesh to a point cloud
+ *
+ * \param [in]   dist              Pointer to \ref PDM_dist_cloud_surf_t object
+ * \param [in]   property_name     Property name
+ * \param [in]   property_value    Property value
+ *
+ */
+
+void
+PDM_dist_cloud_property_set
+(
+       PDM_dist_cloud_surf_t  *dist,
+ const char                   *property_name,
+ const char                   *property_value
+)
+{
+  assert(dist != NULL);
+  if (!strcmp(property_name, "algorithm_implementation")) {
+    int num = atoi(property_value);
+    dist->algo_implem = num;
+  }
+  else {
+    PDM_error(__FILE__, __LINE__, 0, 
+      "PDM_dist_cloud_property_set error :"
+      "Unknown property name : '%s'", property_name);
+  }  
+}
 
 #ifdef	__cplusplus
 }

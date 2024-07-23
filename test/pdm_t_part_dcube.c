@@ -173,10 +173,11 @@ int main(int argc, char *argv[])
              &use_multipart);
 
   // Choose to use part or multipart
-  char *buffer = malloc(sizeof(int)*8+1);
-  sprintf(buffer, "%d", use_multipart);
-  setenv("PDM_USE_MULTIPART", buffer, 1);
-  free(buffer);
+// Fix #74 setenv is not portable
+  // char *buffer = malloc(sizeof(int)*8+1);
+  // sprintf(buffer, "%d", use_multipart);
+  // setenv("PDM_USE_MULTIPART", buffer, 1);
+  // free(buffer);
 
   // debug
   int dbg_part_dcube = 0;
