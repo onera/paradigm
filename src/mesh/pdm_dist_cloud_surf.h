@@ -319,6 +319,25 @@ PDM_dist_cloud_surf_distri_data
 );
 
 
+/**
+ *
+ * \brief Distribute data from the surface mesh to a point cloud
+ *
+ * \param [in]   dist              Pointer to \ref PDM_dist_cloud_surf_t object
+ * \param [in]   property_name     Property name
+ * \param [in]   property_value    Property value
+ *
+ */
+
+void
+PDM_dist_cloud_property_set
+(
+       PDM_dist_cloud_surf_t  *dist,
+ const char                   *property_name,
+ const char                   *property_value
+);
+
+
 #ifdef	__cplusplus
 }
 #endif

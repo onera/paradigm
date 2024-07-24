@@ -104,6 +104,7 @@ struct _pdm_dist_cloud_surf_t {
 
   double times_cpu_s[NTIMER];                /*!< System CPU time */
 
+  int  algo_implem;                          /*!< Algorithm implementation */
 
 } ;
 

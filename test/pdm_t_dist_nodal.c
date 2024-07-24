@@ -244,7 +244,8 @@ int main(int argc, char *argv[])
 
   PDM_split_dual_t part_method    = PDM_SPLIT_DUAL_WITH_HILBERT;
 
-  setenv("PDM_DIST_CLOUD_SURF_OPTIM", "1", 1);
+// Fix #74 setenv is not portable
+//  setenv("PDM_DIST_CLOUD_SURF_OPTIM", "1", 1);
 
   /*
    *  Read args
@@ -417,6 +418,9 @@ int main(int argc, char *argv[])
                                                            n_point_cloud,
                                                            PDM_MPI_COMM_WORLD,
                                                            PDM_OWNERSHIP_KEEP);
+
+ PDM_dist_cloud_property_set(dist, "algorithm_implementation", "1"); // for PDM_dist_cloud_surf_nodal_mesh_set 
+
 
   int n_part_cloud  = 1;
   int i_point_cloud = 0;
