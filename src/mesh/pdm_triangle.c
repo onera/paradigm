@@ -18,6 +18,7 @@
 #include "pdm_line.h"
 #include "pdm_plane.h"
 #include "pdm_logging.h"
+#include "pdm_predicate.h"
 
 /*=============================================================================
  * Macro definitions
@@ -1058,8 +1059,8 @@ PDM_triangle_evaluate_position
  *
  * \param [in]  n_face     Number of faces
  * \param [in]  face_edge  Face -> edge (signed) connectivity (1-based, size : 3 * \p n_face)
- * \param [in]  face_edge  Edge -> vertex connectivity (1-based, size : 2 * *n_edge*)
- * \param [out] face_vtx   Face -> vertex (signed) connectivity (size : 3 * \p n_face)
+ * \param [in]  edge_vtx   Edge -> vertex connectivity (1-based, size : 2 * *n_edge*)
+ * \param [out] face_vtx   Face -> vertex connectivity (1-based, size : 3 * \p n_face)
  *
  */
 
@@ -1072,7 +1073,7 @@ PDM_triangle_ngon_to_nodal
  int **face_vtx
  )
 {
-  *face_vtx = malloc(sizeof(int) * n_face * 3);
+  PDM_malloc(*face_vtx,n_face * 3,int);
 
   for (int iface = 0; iface < n_face; iface++) {
 
@@ -1103,6 +1104,48 @@ PDM_triangle_ngon_to_nodal
 
   }
 }
+
+
+double
+PDM_triangle_inscribed_circle
+(
+ const double*  vtx_coord[3]
+)
+{
+  double *a = (double *) vtx_coord[0];
+  double *b = (double *) vtx_coord[1];
+  double *c = (double *) vtx_coord[2];
+
+  double ab[3] = {b[0] - a[0],
+                  b[1] - a[1],
+                  b[2] - a[2]};
+
+  double bc[3] = {b[0] - a[0],
+                  b[1] - a[1],
+                  b[2] - a[2]};
+
+  double ac[3] = {c[0] - a[0],
+                  c[1] - a[1],
+                  c[2] - a[2]};
+
+  double lab = PDM_MODULE(ab);
+  double lbc = PDM_MODULE(bc);
+  double lac = PDM_MODULE(ac);
+
+  double A = 0.;
+  if (PDM_ABS(a[2]) > 1.e-15 ||
+      PDM_ABS(b[2]) > 1.e-15 ||
+      PDM_ABS(c[2]) > 1.e-15) {
+    double n[3] = {0., 0., 0.};
+    PDM_CROSS_PRODUCT(n, ab, ac);
+    A = 0.5 * PDM_MODULE(n);
+  } else {
+    A = 0.5 * PDM_predicate_orient2d(a, b, c);
+  }
+
+  return (2. * A) / (lab + lbc + lac);
+}
+
 
 
 #ifdef __cplusplus

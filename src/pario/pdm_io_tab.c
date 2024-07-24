@@ -158,8 +158,7 @@ static void _ajout_donnees
 
   /* Mise à jour de la structure par prise en compte de la partition */
 
-  tab->partitions_locales[_i_part] = (PDM_io_partition_locale_t *)
-    malloc(sizeof(PDM_io_partition_locale_t));
+  PDM_malloc(tab->partitions_locales[_i_part], 1, PDM_io_partition_locale_t);
 
   PDM_io_partition_locale_t *partition = tab->partitions_locales[_i_part];
 
@@ -209,7 +208,7 @@ static void _def_var
   /* Au premier appel : création du tableau lié à la variable CEDRE num_var_cedre */
 
   if (tab == NULL) {
-    PDM_io_tabs[_num_var_cedre] = (PDM_io_array_t *) malloc(sizeof(PDM_io_array_t));
+    PDM_malloc(PDM_io_tabs[_num_var_cedre],1,PDM_io_array_t);
     tab = PDM_io_tabs[_num_var_cedre];
     tab->taille_donnee = taille_donnee;
     tab->t_n_composantes = t_n_composantes;
@@ -217,8 +216,7 @@ static void _def_var
       tab->n_composantes_cst = n_composantes;
     tab->t_n_composantes = t_n_composantes;
     tab->num_indirection_cedre = num_indirection_cedre;
-    tab->partitions_locales = (PDM_io_partition_locale_t **)
-      malloc(_n_partition_local * sizeof(PDM_io_partition_locale_t *));
+    PDM_malloc(tab->partitions_locales, _n_partition_local, PDM_io_partition_locale_t *);
     for (int i = 0; i < _n_partition_local; i++)
       tab->partitions_locales[i] = NULL;
   }
@@ -253,7 +251,7 @@ void PDM_io_array_write_beg
 {
   if (PDM_io_tabs == NULL) {
     _num_var_cedre_max = num_var_cedre_max;
-    PDM_io_tabs = (PDM_io_array_t **) malloc(_num_var_cedre_max * sizeof(PDM_io_array_t *));
+    PDM_malloc(PDM_io_tabs,_num_var_cedre_max ,PDM_io_array_t *);
 
     for (int i = 0; i < _num_var_cedre_max; i++)
       PDM_io_tabs[i] = NULL;
@@ -405,8 +403,7 @@ void PDM_io_array_write_end
             tab->t_n_composantes == PDM_STRIDE_VAR_INTERLACED) {
 
           t_n_composantes_concatene = n_donnees_total;
-          n_composantes_concatene = (PDM_l_num_t *)
-            malloc(t_n_composantes_concatene * sizeof(PDM_l_num_t));
+          PDM_malloc(n_composantes_concatene, t_n_composantes_concatene, PDM_l_num_t);
 
         }
 
@@ -415,9 +412,7 @@ void PDM_io_array_write_end
 
           if (n_donnees_total > t_n_composantes_concatene) {
             t_n_composantes_concatene = n_donnees_total;
-            n_composantes_concatene = (PDM_l_num_t *)
-              realloc((void *) n_composantes_concatene,
-                      t_n_composantes_concatene * sizeof(PDM_l_num_t));
+            PDM_realloc(n_composantes_concatene ,n_composantes_concatene ,                      t_n_composantes_concatene ,PDM_l_num_t);
           }
         }
 
@@ -427,8 +422,7 @@ void PDM_io_array_write_end
             _t_rangement == PDM_STRIDE_CST_INTERLACED) {
 
           t_indirection_concatene = n_donnees_total;
-          indirection_concatene = (PDM_g_num_t *)
-            malloc(t_indirection_concatene * sizeof(PDM_g_num_t));
+          PDM_malloc(indirection_concatene, t_indirection_concatene, PDM_g_num_t);
 
         }
 
@@ -437,9 +431,7 @@ void PDM_io_array_write_end
 
           if (n_donnees_total > t_indirection_concatene) {
             t_indirection_concatene = n_donnees_total;
-            indirection_concatene = (PDM_g_num_t *)
-              realloc((void *)indirection_concatene,
-                      t_indirection_concatene * sizeof(PDM_g_num_t));
+            PDM_realloc(indirection_concatene ,indirection_concatene ,                      t_indirection_concatene ,PDM_g_num_t);
           }
 
         }
@@ -449,15 +441,12 @@ void PDM_io_array_write_end
         if (donnees_concatene == NULL) {
 
           t_donnees_concatene = n_composantes_total * tab->taille_donnee;
-          donnees_concatene = (unsigned char*)
-            malloc(t_donnees_concatene * sizeof(unsigned char));
+          PDM_malloc(donnees_concatene, t_donnees_concatene, unsigned char);
         }
         else {
           if (t_donnees_concatene < n_composantes_total * tab->taille_donnee) {
             t_donnees_concatene = n_composantes_total * tab->taille_donnee;
-            donnees_concatene = (unsigned char*)
-              realloc((void *) donnees_concatene,
-                      t_donnees_concatene * sizeof(unsigned char));
+            PDM_realloc(donnees_concatene ,donnees_concatene ,                      t_donnees_concatene ,unsigned char);
           }
         }
 
@@ -523,7 +512,7 @@ void PDM_io_array_write_end
               }
             }
 
-            free(partition);
+           PDM_free(partition);
 
           }
 
@@ -597,26 +586,26 @@ void PDM_io_array_write_end
                                     (const void *) donnees_ecrit);
       }
       if (_n_partition_local == 1)
-        free(partitions[0]);
+       PDM_free(partitions[0]);
 
-      free(tab->partitions_locales);
-      free(tab);
+     PDM_free(tab->partitions_locales);
+     PDM_free(tab);
     }
   }
 
   /* Libération mémoire de la structure  */
 
-  free(PDM_io_tabs);
+ PDM_free(PDM_io_tabs);
   PDM_io_tabs = NULL;
 
   /* Libération mémoire des tableaux de concatenation  */
 
   if (n_composantes_concatene != NULL)
-    free(n_composantes_concatene);
+   PDM_free(n_composantes_concatene);
   if (indirection_concatene != NULL)
-    free(indirection_concatene);
+   PDM_free(indirection_concatene);
   if (donnees_concatene != NULL)
-    free(donnees_concatene);
+   PDM_free(donnees_concatene);
 
 }
 
@@ -646,8 +635,7 @@ void PDM_io_array_read_beg
 {
   if (PDM_io_tabs == NULL) {
     _num_var_cedre_max = num_var_cedre_max;
-    PDM_io_tabs = (PDM_io_array_t **) malloc(_num_var_cedre_max *
-                                               sizeof(PDM_io_array_t *));
+    PDM_malloc(PDM_io_tabs, _num_var_cedre_max, PDM_io_array_t *);
 
     for (int i = 0; i < _num_var_cedre_max; i++)
       PDM_io_tabs[i] = NULL;
@@ -797,8 +785,7 @@ void PDM_io_array_read_end
             tab->t_n_composantes == PDM_STRIDE_VAR_INTERLACED) {
 
           t_n_composantes_concatene = n_donnees_total;
-          n_composantes_concatene = (PDM_l_num_t *)
-            malloc(t_n_composantes_concatene * sizeof(PDM_l_num_t));
+          PDM_malloc(n_composantes_concatene, t_n_composantes_concatene, PDM_l_num_t);
 
         }
 
@@ -807,9 +794,7 @@ void PDM_io_array_read_end
 
           if (n_donnees_total > t_n_composantes_concatene) {
             t_n_composantes_concatene = n_donnees_total;
-            n_composantes_concatene = (PDM_l_num_t *)
-              realloc((void *) n_composantes_concatene,
-                      t_n_composantes_concatene * sizeof(PDM_l_num_t));
+            PDM_realloc(n_composantes_concatene ,n_composantes_concatene ,                      t_n_composantes_concatene ,PDM_l_num_t);
           }
         }
 
@@ -819,8 +804,7 @@ void PDM_io_array_read_end
             _t_rangement == PDM_STRIDE_CST_INTERLACED) {
 
           t_indirection_concatene = n_donnees_total;
-          indirection_concatene = (PDM_g_num_t *)
-            malloc(t_indirection_concatene * sizeof(PDM_g_num_t));
+          PDM_malloc(indirection_concatene, t_indirection_concatene, PDM_g_num_t);
 
         }
 
@@ -829,9 +813,7 @@ void PDM_io_array_read_end
 
           if (n_donnees_total > t_indirection_concatene) {
             t_indirection_concatene = n_donnees_total;
-            indirection_concatene = (PDM_g_num_t *)
-              realloc((void *)indirection_concatene,
-                      t_indirection_concatene * sizeof(PDM_g_num_t));
+            PDM_realloc(indirection_concatene ,indirection_concatene ,                      t_indirection_concatene ,PDM_g_num_t);
           }
 
         }
@@ -841,15 +823,12 @@ void PDM_io_array_read_end
         if (donnees_concatene == NULL) {
 
           t_donnees_concatene = n_composantes_total * tab->taille_donnee;
-          donnees_concatene = (unsigned char*)
-            malloc(t_donnees_concatene * sizeof(unsigned char));
+          PDM_malloc(donnees_concatene, t_donnees_concatene, unsigned char);
         }
         else {
           if (t_donnees_concatene < n_composantes_total * tab->taille_donnee) {
             t_donnees_concatene = n_composantes_total * tab->taille_donnee;
-            donnees_concatene = (unsigned char*)
-              realloc((void *) donnees_concatene,
-                      t_donnees_concatene * sizeof(unsigned char));
+            PDM_realloc(donnees_concatene ,donnees_concatene ,                      t_donnees_concatene ,unsigned char);
           }
         }
 
@@ -994,7 +973,7 @@ void PDM_io_array_read_end
               }
             }
 
-            free(partition);
+           PDM_free(partition);
 
           }
         }
@@ -1003,27 +982,27 @@ void PDM_io_array_read_end
       /* Libération mémoire du tableau  */
 
       if (_n_partition_local == 1)
-        free(partitions[0]);
+       PDM_free(partitions[0]);
 
-      free(tab->partitions_locales);
-      free(tab);
+     PDM_free(tab->partitions_locales);
+     PDM_free(tab);
 
     }
   }
 
   /* Libération mémoire de la structure  */
 
-  free(PDM_io_tabs);
+ PDM_free(PDM_io_tabs);
   PDM_io_tabs = NULL;
 
   /* Libération mémoire des tableaux de concatenation  */
 
   if (n_composantes_concatene != NULL)
-    free(n_composantes_concatene);
+   PDM_free(n_composantes_concatene);
   if (indirection_concatene != NULL)
-    free(indirection_concatene);
+   PDM_free(indirection_concatene);
   if (donnees_concatene != NULL)
-    free(donnees_concatene);
+   PDM_free(donnees_concatene);
 
 }
 

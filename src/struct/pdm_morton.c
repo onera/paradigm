@@ -626,7 +626,8 @@ _define_rank_distrib(int                      dim,
   const int  n_samples = sampling_factor * n_ranks;
 
   /* Initialization */
-  double   *l_distrib = (double  *) malloc (n_samples * sizeof(double));
+  double *l_distrib;
+  PDM_malloc(l_distrib,n_samples ,double);
 
   for (int id = 0; id < n_samples; id++) {
     l_distrib[id] = 0;
@@ -672,7 +673,7 @@ _define_rank_distrib(int                      dim,
   /* Define the global distribution */
   PDM_MPI_Allreduce(l_distrib, g_distrib, n_samples, PDM_MPI_DOUBLE, PDM_MPI_SUM, comm);
 
-  free(l_distrib);
+ PDM_free(l_distrib);
 
   /* Define the cumulative frequency related to g_distribution */
 
@@ -692,7 +693,8 @@ _define_rank_distrib(int                      dim,
   /*   static int  loop_id1 = 0; */
 
   /*   len = strlen("DistribOutput_l.dat")+1+2; */
-  /*   rfilename = (char *) malloc(len * sizeof(char)); */
+  / *rfilename;
+  PDM_malloc(rfilename,len ,char); */
   /*   sprintf(rfilename, "DistribOutput_l%02d.dat", loop_id1); */
 
   /*   loop_id1++; */
@@ -710,7 +712,7 @@ _define_rank_distrib(int                      dim,
   /*           i, 1.0, 1.0, 1.0, 0); */
 
   /*   fclose(dbg_file); */
-  /*   free(rfilename); */
+  /*  PDM_free(rfilename); */
 
   /* } */
 
@@ -720,8 +722,8 @@ _define_rank_distrib(int                      dim,
 
   for (int rank_id = 0; rank_id < n_ranks; rank_id++) {
 
-    PDM_g_num_t   sum = 0;
-    int   shift = rank_id * sampling_factor;
+    double sum   = 0;
+    int    shift = rank_id * sampling_factor;
 
     for (int id = 0; id < sampling_factor; id++)
       sum += g_distrib[shift + id];
@@ -777,7 +779,7 @@ _update_sampling(int      dim,
 
   /* Compute new_sampling */
 
-  new_sampling = (double *) malloc((n_samples + 1) * sizeof(double));
+  PDM_malloc(new_sampling,(n_samples + 1) ,double);
 
   new_sampling[0] = _sampling[0];
   next_id = 1;
@@ -823,7 +825,7 @@ _update_sampling(int      dim,
 
   new_sampling[n_samples] = 1.0;
 
-  free(_sampling);
+ PDM_free(_sampling);
 
   /* Return pointers */
 
@@ -892,8 +894,8 @@ _bucket_sampling(int                      dim,
 
   /* Define the distribution associated to the current sampling array */
 
-  distrib = (double      *) malloc(n_samples       * sizeof(double     ));
-  cfreq   = (double      *) malloc((n_samples + 1) * sizeof(double     ));
+  PDM_malloc(distrib,n_samples       ,double     );
+  PDM_malloc(cfreq,(n_samples + 1) ,double     );
 
   _define_rank_distrib(dim,
                        n_ranks,
@@ -913,7 +915,7 @@ _bucket_sampling(int                      dim,
   fit = _evaluate_distribution(n_ranks, distrib, optim);
   best_fit = fit;
 
-  best_sampling = malloc((n_samples + 1) * sizeof(double));
+  PDM_malloc(best_sampling,(n_samples + 1) ,double);
 
   for (i = 0; i < n_samples + 1; i++) {
     best_sampling[i] = _sampling[i];
@@ -965,9 +967,9 @@ _bucket_sampling(int                      dim,
 
   /* Free memory */
 
-  free(cfreq);
-  free(distrib);
-  free(_sampling);
+ PDM_free(cfreq);
+ PDM_free(distrib);
+ PDM_free(_sampling);
 
   *sampling = best_sampling;
 
@@ -1918,7 +1920,8 @@ PDM_morton_ordered_build_rank_index
   PDM_UNUSED(dim);
   PDM_UNUSED(gmax_level);
 
-  PDM_g_num_t *_weight = malloc(sizeof(PDM_g_num_t) * n_codes);
+  PDM_g_num_t *_weight;
+  PDM_malloc(_weight,n_codes,PDM_g_num_t);
 
   int comm_size;
   PDM_MPI_Comm_size (comm, &comm_size);
@@ -1970,7 +1973,8 @@ PDM_morton_ordered_build_rank_index
 
   int idx = 0;
 
-  PDM_g_num_t *quantiles = malloc (sizeof(PDM_g_num_t) * (comm_size + 1));
+  PDM_g_num_t *quantiles;
+  PDM_malloc(quantiles,(comm_size + 1),PDM_g_num_t);
 
   for (int i = 0; i < comm_size; i++) {
     if (i < k) {
@@ -1982,7 +1986,8 @@ PDM_morton_ordered_build_rank_index
   }
   quantiles[comm_size] = total_weight + 1;
 
-  int *send_count = malloc (sizeof(int) * comm_size);
+  int *send_count;
+  PDM_malloc(send_count,comm_size,int);
   for (int i = 0; i < comm_size; i++) {
     send_count[i] = 0;
   }
@@ -1992,13 +1997,16 @@ PDM_morton_ordered_build_rank_index
     send_count[i_rank]++;
   }
 
-  int *recv_count = malloc (sizeof(int) * comm_size);
+  int *recv_count;
+  PDM_malloc(recv_count,comm_size,int);
   PDM_MPI_Alltoall (send_count, 1, PDM_MPI_INT,
                     recv_count, 1, PDM_MPI_INT,
                     comm);
 
-  int *send_idx = malloc (sizeof(int) * (comm_size + 1));
-  int *recv_idx = malloc (sizeof(int) * (comm_size + 1));
+  int *send_idx;
+  PDM_malloc(send_idx,(comm_size + 1),int);
+  int *recv_idx;
+  PDM_malloc(recv_idx,(comm_size + 1),int);
 
   send_idx[0] = 0;
   recv_idx[0] = 0;
@@ -2009,8 +2017,10 @@ PDM_morton_ordered_build_rank_index
     send_count[i] = 0;
   }
 
-  PDM_morton_int_t *send_data = malloc(sizeof(PDM_morton_int_t) * send_idx[comm_size]);
-  PDM_morton_int_t *recv_data = malloc(sizeof(PDM_morton_int_t) * recv_idx[comm_size]);
+  PDM_morton_int_t *send_data;
+  PDM_malloc(send_data,send_idx[comm_size],PDM_morton_int_t);
+  PDM_morton_int_t *recv_data;
+  PDM_malloc(recv_data,recv_idx[comm_size],PDM_morton_int_t);
 
 
   for (int i = 0; i < n_codes; i++) {
@@ -2029,8 +2039,8 @@ PDM_morton_ordered_build_rank_index
               send_data[4*i+3]);
               }*/
 
-  free (quantiles);
-  free (_weight);
+ PDM_free(quantiles);
+ PDM_free(_weight);
 
   PDM_MPI_Alltoallv(send_data, send_count, send_idx, PDM_MPI_UNSIGNED,
                     recv_data, recv_count, recv_idx, PDM_MPI_UNSIGNED,
@@ -2046,11 +2056,11 @@ PDM_morton_ordered_build_rank_index
               recv_data[4*i+3]);
               }*/
 
-  free (send_data);
-  free (send_count);
-  free (send_idx);
-  free (recv_count);
-  free (recv_idx);
+ PDM_free(send_data);
+ PDM_free(send_count);
+ PDM_free(send_idx);
+ PDM_free(recv_count);
+ PDM_free(recv_idx);
 
   PDM_morton_code_t min_code;
   min_code.L = 31u;
@@ -2101,11 +2111,13 @@ PDM_morton_ordered_build_rank_index
             send_min_code[2],
             send_min_code[3]);*/
 
-  free (recv_data);
+ PDM_free(recv_data);
 
-  PDM_morton_int_t *buff_min_codes = malloc(sizeof(PDM_morton_int_t) * 4 * comm_size);
+  PDM_morton_int_t *buff_min_codes;
+  PDM_malloc(buff_min_codes,4 * comm_size,PDM_morton_int_t);
 
-  int *n_nodes = malloc(sizeof(int) * comm_size);
+  int *n_nodes;
+  PDM_malloc(n_nodes,comm_size,int);
 
   PDM_MPI_Allgather (&n_recv_codes, 1, PDM_MPI_INT,
                      n_nodes, 1, PDM_MPI_INT,
@@ -2163,8 +2175,8 @@ PDM_morton_ordered_build_rank_index
     assert(_a_ge_b(rank_index[i+1], rank_index[i]));
   }
 
-  free (buff_min_codes);
-  free (n_nodes);
+ PDM_free(buff_min_codes);
+ PDM_free(n_nodes);
 
 }
 
@@ -2209,7 +2221,7 @@ PDM_morton_build_rank_index(int                     dim,
 
   n_samples = sampling_factor * n_ranks;
 
-  sampling = (double *) malloc((n_samples + 1) * sizeof(double));
+  PDM_malloc(sampling,(n_samples + 1) ,double);
 
   for (i = 0; i < n_samples + 1; i++)
     sampling[i] = 0.0;
@@ -2249,7 +2261,7 @@ PDM_morton_build_rank_index(int                     dim,
 
   /* Free memory */
 
-  free(sampling);
+ PDM_free(sampling);
 
   return best_fit;
 }

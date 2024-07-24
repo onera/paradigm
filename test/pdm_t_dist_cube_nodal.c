@@ -253,8 +253,10 @@ int main(int argc, char *argv[])
   // PDM_extract_part_part_nodal_set(extrp, pmne);
 
 
-  int  *pn_selected    = malloc(n_part * sizeof(int  ));
-  int **selected_l_num = malloc(n_part * sizeof(int *));
+  int *pn_selected;
+  PDM_malloc(pn_selected,n_part ,int  );
+  int **selected_l_num;
+  PDM_malloc(selected_l_num,n_part ,int *);
   // for(int i_part = 0; i_part < n_part; ++i_part) {
 
   //   PDM_g_num_t *vtx_ln_to_gn  = NULL;
@@ -327,8 +329,8 @@ int main(int argc, char *argv[])
   PDM_dcube_nodal_gen_free(dcube);
   PDM_part_mesh_nodal_free(pmesh_nodal);
 
-  free(pn_selected);
-  free(selected_l_num);
+ PDM_free(pn_selected);
+ PDM_free(selected_l_num);
 
   if (i_rank == 0) {
     printf("-- End\n");

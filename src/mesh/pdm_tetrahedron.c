@@ -537,8 +537,8 @@ PDM_tetrahedron_circumsphere
  *
  * \param [in]  n_cell     Number of cells
  * \param [in]  cell_face  Cell -> face (signed) connectivity (1-based, size : 4 * \p n_cell)
- * \param [in]  cell_face  Face -> vertex connectivity (1-based, size : 3 * *n_face*)
- * \param [out] cell_vtx   Cell -> vertex (signed) connectivity (size : 4 * \p n_cell)
+ * \param [in]  face_vtx   Face -> vertex connectivity (1-based, size : 3 * *n_face*)
+ * \param [out] cell_vtx   Cell -> vertex connectivity (1-based, size : 4 * \p n_cell)
  *
  */
 
@@ -551,7 +551,7 @@ PDM_tetrahedron_ngon_to_nodal
  int **cell_vtx
  )
 {
-  *cell_vtx = malloc(sizeof(int) * n_cell * 4);
+  PDM_malloc(*cell_vtx,n_cell * 4,int);
 
   for (int i = 0; i < n_cell; i++) {
     int iface = cell_face[4*i+3];

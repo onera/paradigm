@@ -85,7 +85,8 @@ PDM_polygon_bounds_get
  const double *pts
 )
 {
-  double *bounds = malloc (sizeof(double) * 6);
+  double *bounds;
+  PDM_malloc(bounds,6,double);
 
   bounds[0] = DBL_MAX;
   bounds[1] = -DBL_MAX;
@@ -803,7 +804,8 @@ PDM_polygon_status_t PDM_polygon_point_in_3d
   /*
    *  Projection onto median plane
    */
-  double *xy = malloc (sizeof(double) * (n_vtx + 1) * 2);
+  double *xy;
+  PDM_malloc(xy,(n_vtx + 1) * 2,double);
   double *p = xy + 2*n_vtx;
   PDM_polygon_3d_to_2d (n_vtx,
                         vtx_xyz,
@@ -825,7 +827,7 @@ PDM_polygon_status_t PDM_polygon_point_in_3d
                                                        //char_length,
                                                        NULL);
 
-  free (xy);
+ PDM_free(xy);
   return stat;
 }
 
@@ -872,7 +874,7 @@ int PDM_polygon_3d_to_2d
   /* Build a suitable orthonormal frame */
   double tangent_u[3] = {0., 0., 0.}, tangent_v[3];
   if (normal == NULL) {
-    _normal = malloc (sizeof(double) * 3);
+    PDM_malloc(_normal,3,double);
     PDM_plane_normal (n_vtx,
                       vtx_xyz,
                       _normal);
@@ -943,7 +945,7 @@ int PDM_polygon_3d_to_2d
   }
 
   if (normal == NULL) {
-    free (_normal);
+   PDM_free(_normal);
   }
 
   return 1;
@@ -1224,7 +1226,9 @@ PDM_polygon_ray_intersection
 
       PDM_polygon_status_t stat = PDM_POLYGON_OUTSIDE;
       *t = HUGE_VAL;
-      double s, _s, _t;
+      double s  = 0.;
+      double _s = 0.;
+      double _t = 0.;
       int iedge = -1;
       for (int i = 0; i < n_vtx; i++) {
         PDM_line_intersection_mean_square(vtx_coord + 3*i,

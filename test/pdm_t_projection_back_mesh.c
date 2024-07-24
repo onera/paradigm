@@ -146,6 +146,7 @@ _read_back_mesh
 
   fscanf(f, "%d %d %d %d\n", n_vtx, n_elt, &elt_dim, elt_order);
 
+  *elt_type = PDM_MESH_NODAL_N_ELEMENT_TYPES;
   if (elt_dim == 1) {
     if (*elt_order == 1) {
       *elt_type = PDM_MESH_NODAL_BAR2;
@@ -167,7 +168,7 @@ _read_back_mesh
   }
 
 
-  *vtx_coord = malloc(sizeof(double) * (*n_vtx) * 3);
+  PDM_malloc(*vtx_coord,(*n_vtx) * 3,double);
   for (int i = 0; i < *n_vtx; i++) {
     fscanf(f, "%lf %lf %lf\n",
            *vtx_coord + 3*i, *vtx_coord + 3*i+1, *vtx_coord + 3*i+2);
@@ -176,7 +177,7 @@ _read_back_mesh
   int elt_vtx_n = PDM_Mesh_nodal_n_vtx_elt_get(*elt_type,
                                                *elt_order);
 
-  *elt_vtx = malloc(sizeof(int) * elt_vtx_n * (*n_elt));
+  PDM_malloc(*elt_vtx,elt_vtx_n * (*n_elt),int);
   for (int i = 0; i < *n_elt; i++) {
     for (int j = 0; j < elt_vtx_n; j++) {
       fscanf(f, "%d", *elt_vtx + elt_vtx_n*i + j);
@@ -240,7 +241,7 @@ _build_edge_edge_connectivity
     }
   }
 
-  free(vtx_edge);
+ PDM_free(vtx_edge);
 }
 
 
@@ -290,7 +291,8 @@ _build_face_face_connectivity
   int *key_edge_idx = PDM_array_new_idx_from_sizes_int(key_edge_n, n_key);
   PDM_array_reset_int(key_edge_n, n_key, 0);
 
-  int *key_edge = (int *) malloc(sizeof(int) * key_edge_idx[n_key] * 2);
+  int *key_edge;
+  PDM_malloc(key_edge,key_edge_idx[n_key] * 2,int);
 
 
   for (int iface = 0; iface < n_face; iface++) {
@@ -340,14 +342,14 @@ _build_face_face_connectivity
       }
     } // End of loop on current face's edges
   } // End of loop on faces
-  free(key_edge_n);
-  free(key_edge_idx);
-  free(key_edge);
+ PDM_free(key_edge_n);
+ PDM_free(key_edge_idx);
+ PDM_free(key_edge);
 
   if (0) {
     int *idx = PDM_array_new_idx_from_const_stride_int(stride, n_face);
     PDM_log_trace_connectivity_int(idx, face_face, n_face, "face_face : ");
-    free(idx);
+   PDM_free(idx);
   }
 }
 
@@ -378,7 +380,8 @@ _projection_on_background_mesh_get2
   int stride = PDM_Mesh_nodal_n_vtx_elt_get(back_elt_type, 1);
 
   int *is_visited = PDM_array_zeros_int(n_back_elt);
-  int *stack      = malloc(sizeof(int) * n_back_elt);
+  int *stack;
+  PDM_malloc(stack,n_back_elt,int);
 
   int pos_stack = 0;
   stack[pos_stack++] = start_elt;
@@ -462,11 +465,10 @@ _projection_on_background_mesh_get2
                                        tria_coord,
                                        cp,
                                        &distance,
-                                       uvw);
+                                       weight);
         uvw[0] = weight[2];
         uvw[1] = weight[0];
         uvw[2] = weight[1];
-        // PERMUTATION??
       } else {
         double weight[3];
         PDM_triangle_closest_point(pt_to_project_coord,
@@ -595,8 +597,8 @@ _projection_on_background_mesh_get2
     }
 
   } // End of while loop
-  free(is_visited);
-  free(stack);
+ PDM_free(is_visited);
+ PDM_free(stack);
 
   *closest_back_elt = closest_elt;
 
@@ -624,20 +626,24 @@ _bezier_to_lagrange
        int                  *elt_vtx
  )
 {
-  double *lag = malloc(sizeof(double) * n_vtx * 3);
+  double *lag;
+  PDM_malloc(lag,n_vtx * 3,double);
 
   int *is_set = PDM_array_zeros_int(n_vtx);
 
   int stride = PDM_Mesh_nodal_n_vtx_elt_get(elt_type,
                                             elt_order);
-  double *ec = malloc(sizeof(double) * stride * 3);
+  double *ec;
+  PDM_malloc(ec,stride * 3,double);
 
   // double step = 1. / (double) elt_order;
 
   int elt_dim = PDM_Mesh_nodal_elt_dim_get(elt_type);
 
-  double *weight   = malloc(sizeof(double) * stride);
-  double *uvw_node = malloc(sizeof(double) * stride * elt_dim);
+  double *weight;
+  PDM_malloc(weight,stride,double);
+  double *uvw_node;
+  PDM_malloc(uvw_node,stride * elt_dim,double);
 
   if (elt_type != PDM_MESH_NODAL_BARHO_BEZIER &&
       elt_type != PDM_MESH_NODAL_TRIAHO_BEZIER) {
@@ -704,13 +710,13 @@ _bezier_to_lagrange
     }
 
   }
-  free(ec);
-  free(is_set);
-  free(weight);
-  free(uvw_node);
+ PDM_free(ec);
+ PDM_free(is_set);
+ PDM_free(weight);
+ PDM_free(uvw_node);
 
   memcpy(vtx_coord, lag, sizeof(double) * n_vtx * 3);
-  free(lag);
+ PDM_free(lag);
 }
 
 /**
@@ -790,7 +796,7 @@ int main(int argc, char *argv[])
   int stride = PDM_Mesh_nodal_n_vtx_elt_get(elt_type, 1);
   int *parent_node = NULL;
   if (elt_order > 1) {
-    parent_node = malloc(sizeof(int) * stride);
+    PDM_malloc(parent_node,stride,int);
     PDM_Mesh_nodal_ho_parent_node(elt_type,
                                   elt_order,
                                   NULL,
@@ -808,7 +814,8 @@ int main(int argc, char *argv[])
     }
   }
 
-  int *elt_elt = malloc(sizeof(int) * stride * n_elt);
+  int *elt_elt;
+  PDM_malloc(elt_elt,stride * n_elt,int);
   int elt_dim = PDM_Mesh_nodal_elt_dim_get(elt_type);
   if (elt_dim == 1) {
     _build_edge_edge_connectivity(elt_order,
@@ -827,7 +834,7 @@ int main(int argc, char *argv[])
                                   parent_node,
                                   elt_elt);
   }
-  if (parent_node != NULL) free(parent_node);
+  if (parent_node != NULL)PDM_free(parent_node);
 
 
   if (elt_type == PDM_MESH_NODAL_BARHO_BEZIER) {
@@ -856,8 +863,10 @@ int main(int argc, char *argv[])
 
   double  proj_pt_coord[3];
   int     closest_back_elt;
-  int    *history_elt  = malloc(sizeof(int) * n_elt);
-  double *history_proj = malloc(sizeof(int) * n_elt * 3);
+  int *history_elt;
+  PDM_malloc(history_elt,n_elt,int);
+  double *history_proj;
+  PDM_malloc(history_proj,n_elt * 3, double);
 
   // Pick a random elt to start from
   int start = rand() % n_elt;
@@ -891,7 +900,8 @@ int main(int argc, char *argv[])
   }
 
 
-  double *visiting_order = malloc(sizeof(double) * n_elt);
+  double *visiting_order;
+  PDM_malloc(visiting_order,n_elt,double);
   for (int i = 0; i < n_elt; i++) {
     visiting_order[i] = -n_step;
   }
@@ -915,7 +925,7 @@ int main(int argc, char *argv[])
                                   field_name,
                                   field);
   }
-  free(visiting_order);
+ PDM_free(visiting_order);
 
 
 
@@ -940,7 +950,8 @@ int main(int argc, char *argv[])
                                NULL);
   }
 
-  int *history_bar = malloc(sizeof(int) * (n_step-1) * 2);
+  int *history_bar;
+  PDM_malloc(history_bar,(n_step-1) * 2,int);
   for (int i = 0; i < n_step-1; i++) {
     history_bar[2*i  ] = i+1;
     history_bar[2*i+1] = i+2;
@@ -959,16 +970,16 @@ int main(int argc, char *argv[])
                                NULL,
                                NULL);
   }
-  free(history_bar);
+ PDM_free(history_bar);
 
 
 
-  free(vtx_coord);
-  free(elt_vtx);
-  free(elt_vtx_idx);
-  free(elt_elt);
-  free(history_elt);
-  free(history_proj);
+ PDM_free(vtx_coord);
+ PDM_free(elt_vtx);
+ PDM_free(elt_vtx_idx);
+ PDM_free(elt_elt);
+ PDM_free(history_elt);
+ PDM_free(history_proj);
 
   PDM_MPI_Finalize();
 

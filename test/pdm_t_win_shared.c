@@ -84,7 +84,7 @@ char *argv[]
 
   PDM_log_trace_array_int(buff, n_g_data, "buff::");
 
-  free(distrib_numa);
+ PDM_free(distrib_numa);
 
   PDM_MPI_Comm_free(&comm_shared);
   PDM_MPI_Comm_free(&comm_node);

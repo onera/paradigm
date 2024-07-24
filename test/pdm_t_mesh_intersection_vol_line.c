@@ -213,7 +213,8 @@ _generate_volume_mesh
 
   int n_domain = 1;
   // int n_part_domains = {n_part};
-  int *n_part_domains = (int *) malloc(sizeof(int) * n_domain);
+  int *n_part_domains;
+  PDM_malloc(n_part_domains,n_domain,int);
   n_part_domains[0] = n_part;
 
   PDM_multipart_t *mpart = PDM_multipart_create(n_domain,
@@ -234,7 +235,7 @@ _generate_volume_mesh
   PDM_multipart_dmesh_nodal_set(mpart, 0, dmn);
   PDM_multipart_compute(mpart);
 
-  free(n_part_domains);
+ PDM_free(n_part_domains);
 
 
   *_mpart = mpart;
@@ -383,10 +384,14 @@ _generate_ray
 
   int dn_vtx = 2 * dn_ray;
 
-  PDM_g_num_t *vtx_ln_to_gn  = malloc(    dn_vtx * sizeof(PDM_g_num_t));
-  PDM_g_num_t *edge_ln_to_gn = malloc(    dn_ray * sizeof(PDM_g_num_t));
-  double      *vtx_coord     = malloc(3 * dn_vtx * sizeof(double     ));
-  int         *edge_vtx      = malloc(3 * dn_ray * sizeof(int        ));
+  PDM_g_num_t *vtx_ln_to_gn;
+  PDM_malloc(vtx_ln_to_gn,    dn_vtx ,PDM_g_num_t);
+  PDM_g_num_t *edge_ln_to_gn;
+  PDM_malloc(edge_ln_to_gn,    dn_ray ,PDM_g_num_t);
+  double *vtx_coord;
+  PDM_malloc(vtx_coord,3 * dn_vtx ,double     );
+  int *edge_vtx;
+  PDM_malloc(edge_vtx,3 * dn_ray ,int        );
 
   int i_vtx = 0;
   for(int i = 0; i < dn_ray; ++i) {
@@ -414,7 +419,7 @@ _generate_ray
   *edge_vtx_out      = edge_vtx;
   *pn_ray            = dn_ray;
 
-  free(distrib_ray);
+ PDM_free(distrib_ray);
 }
 
 
@@ -488,8 +493,8 @@ char *argv[]
   int         *pedge_vtx      = NULL;
   PDM_g_num_t *pedge_ln_to_gn = NULL;
   PDM_g_num_t *pvtx_ln_to_gn = NULL;
-  int min_size = 0.25;
-  int max_size = 0.5;
+  double min_size = 0.25;
+  double max_size = 0.5;
   double x_min = 0.;
   double y_min = 0.;
   double z_min = 0.;
@@ -588,10 +593,10 @@ char *argv[]
 
   PDM_MPI_Barrier (PDM_MPI_COMM_WORLD);
 
-  free(pvtx_coord);
-  free(pedge_vtx);
-  free(pedge_ln_to_gn);
-  free(pvtx_ln_to_gn);
+ PDM_free(pvtx_coord);
+ PDM_free(pedge_vtx);
+ PDM_free(pedge_ln_to_gn);
+ PDM_free(pvtx_ln_to_gn);
   if (i_rank == 0) {
     PDM_printf ("-- End\n");
     fflush(stdout);

@@ -81,12 +81,13 @@ PDM_block_to_block_create
 )
 {
 
-  int i_rank, n_rank;
+  int i_rank = -1;
+  int n_rank = 0;
   PDM_MPI_Comm_size (comm, &n_rank);
   PDM_MPI_Comm_rank (comm, &i_rank);
 
-  _pdm_block_to_block_t *btb =
-    (_pdm_block_to_block_t *) malloc (sizeof(_pdm_block_to_block_t));
+  _pdm_block_to_block_t *btb;
+  PDM_malloc(btb, 1, _pdm_block_to_block_t);
 
   btb->comm = comm;
   btb->i_rank = i_rank;
@@ -96,20 +97,20 @@ PDM_block_to_block_create
    * Define requested data for each process
    */
 
-  btb->block_distrib_ini_idx = malloc (sizeof(PDM_g_num_t) * (n_rank + 1));
+  PDM_malloc(btb->block_distrib_ini_idx,(n_rank + 1),PDM_g_num_t);
   for (int i = 0; i < n_rank + 1; i++) {
     btb->block_distrib_ini_idx[i] = block_distrib_ini_idx[i];
   }
 
-  btb->block_distrib_end_idx = malloc (sizeof(PDM_g_num_t) * (n_rank + 1));
+  PDM_malloc(btb->block_distrib_end_idx,(n_rank + 1),PDM_g_num_t);
   for (int i = 0; i < n_rank + 1; i++) {
     btb->block_distrib_end_idx[i] = block_distrib_end_idx[i];
   }
 
-  btb->n_send_buffer = (int *) malloc (sizeof(int) * n_rank);
-  btb->n_recv_buffer = (int *) malloc (sizeof(int) * n_rank);
+  PDM_malloc(btb->n_send_buffer,(unsigned int) n_rank ,int);
+  PDM_malloc(btb->n_recv_buffer,(unsigned int) n_rank ,int);
   for (int i = 0; i < n_rank; ++i) {
-    btb->n_send_buffer[i] = _overlap_size(block_distrib_ini_idx[i_rank], block_distrib_ini_idx[i_rank+1], 
+    btb->n_send_buffer[i] = _overlap_size(block_distrib_ini_idx[i_rank], block_distrib_ini_idx[i_rank+1],
                                           block_distrib_end_idx[i], block_distrib_end_idx[i+1]);
     btb->n_recv_buffer[i] = _overlap_size(block_distrib_end_idx[i_rank], block_distrib_end_idx[i_rank+1],
                                           block_distrib_ini_idx[i], block_distrib_ini_idx[i+1]);
@@ -152,10 +153,12 @@ PDM_block_to_block_exch
 {
   _pdm_block_to_block_t *_btb = (_pdm_block_to_block_t *) btb;
 
-  int *n_send_buffer;
-  int *n_recv_buffer;
-  int *i_send_buffer = (int *) malloc (sizeof(int) * _btb->n_rank);
-  int *i_recv_buffer = (int *) malloc (sizeof(int) * _btb->n_rank);
+  int *n_send_buffer = NULL;
+  int *n_recv_buffer = NULL;
+  int *i_send_buffer;
+  PDM_malloc(i_send_buffer,_btb->n_rank,int);
+  int *i_recv_buffer;
+  PDM_malloc(i_recv_buffer,_btb->n_rank,int);
 
   int s_data_tot    = s_data;
 
@@ -177,8 +180,8 @@ PDM_block_to_block_exch
                       _btb->comm);
 
     // Re count n_send / n_recv knowing stride data
-    n_send_buffer = (int *) malloc (sizeof(int) * _btb->n_rank);
-    n_recv_buffer = (int *) malloc (sizeof(int) * _btb->n_rank);
+    PDM_malloc(n_send_buffer,_btb->n_rank,int);
+    PDM_malloc(n_recv_buffer,_btb->n_rank,int);
     int idx_send = 0;
     int idx_recv = 0;
     for (int i = 0; i < _btb->n_rank; ++i) {
@@ -203,7 +206,8 @@ PDM_block_to_block_exch
   int s_recv_buffer = i_recv_buffer[_btb->n_rank-1] + n_recv_buffer[_btb->n_rank-1];
 
   size_t tot_size = ((size_t) s_data_tot ) * ((size_t) s_recv_buffer);
-  unsigned char *recv_buffer = (unsigned char *) malloc(sizeof(unsigned char) * tot_size);
+  unsigned char *recv_buffer;
+ PDM_malloc(recv_buffer,tot_size,unsigned char);
 
 
   PDM_MPI_Datatype mpi_type;
@@ -226,11 +230,11 @@ PDM_block_to_block_exch
                     _btb->comm);
 
   if (t_stride == PDM_STRIDE_VAR_INTERLACED) {
-    free(n_send_buffer);
-    free(n_recv_buffer);
+   PDM_free(n_send_buffer);
+   PDM_free(n_recv_buffer);
   }
-  free(i_send_buffer);
-  free(i_recv_buffer);
+ PDM_free(i_send_buffer);
+ PDM_free(i_recv_buffer);
 
   PDM_MPI_Type_free(&mpi_type);
 
@@ -256,10 +260,12 @@ PDM_block_to_block_exch_with_mpi_type
 {
   _pdm_block_to_block_t *_btb = (_pdm_block_to_block_t *) btb;
 
-  int *n_send_buffer;
-  int *n_recv_buffer;
-  int *i_send_buffer = (int *) malloc (sizeof(int) * _btb->n_rank);
-  int *i_recv_buffer = (int *) malloc (sizeof(int) * _btb->n_rank);
+  int *n_send_buffer = NULL;
+  int *n_recv_buffer = NULL;
+  int *i_send_buffer;
+  PDM_malloc(i_send_buffer,_btb->n_rank,int);
+  int *i_recv_buffer;
+  PDM_malloc(i_recv_buffer,_btb->n_rank,int);
 
 
   if (t_stride == PDM_STRIDE_VAR_INTERLACED) {
@@ -280,8 +286,8 @@ PDM_block_to_block_exch_with_mpi_type
                       _btb->comm);
 
     // Re count n_send / n_recv knowing stride data
-    n_send_buffer = (int *) malloc (sizeof(int) * _btb->n_rank);
-    n_recv_buffer = (int *) malloc (sizeof(int) * _btb->n_rank);
+    PDM_malloc(n_send_buffer,_btb->n_rank,int);
+    PDM_malloc(n_recv_buffer,_btb->n_rank,int);
     int idx_send = 0;
     int idx_recv = 0;
     for (int i = 0; i < _btb->n_rank; ++i) {
@@ -301,13 +307,14 @@ PDM_block_to_block_exch_with_mpi_type
   _compute_displ(n_send_buffer, i_send_buffer, _btb->n_rank);
   _compute_displ(n_recv_buffer, i_recv_buffer, _btb->n_rank);
 
-  int s_recv_buffer = i_recv_buffer[_btb->n_rank-1] + _btb->n_recv_buffer[_btb->n_rank-1];
+  int s_recv_buffer = i_recv_buffer[_btb->n_rank-1] + n_recv_buffer[_btb->n_rank-1];
 
   int s_type = 0;
   PDM_MPI_Type_size(mpi_type, &s_type);
 
   size_t tot_size = ((size_t) s_type ) * ((size_t) s_recv_buffer);
-  unsigned char *recv_buffer = (unsigned char *) malloc(tot_size);
+  unsigned char *recv_buffer;
+  PDM_malloc(recv_buffer, tot_size, unsigned char);
 
   /*
    * Data exchange
@@ -325,11 +332,11 @@ PDM_block_to_block_exch_with_mpi_type
                     _btb->comm);
 
   if (t_stride == PDM_STRIDE_VAR_INTERLACED) {
-    free(n_send_buffer);
-    free(n_recv_buffer);
+   PDM_free(n_send_buffer);
+   PDM_free(n_recv_buffer);
   }
-  free(i_send_buffer);
-  free(i_recv_buffer);
+ PDM_free(i_send_buffer);
+ PDM_free(i_recv_buffer);
 
   *block_data_end = recv_buffer;
 
@@ -356,12 +363,12 @@ PDM_block_to_block_free
 {
   _pdm_block_to_block_t *_btb = (_pdm_block_to_block_t *) btb;
 
-  free (_btb->block_distrib_ini_idx);
-  free (_btb->block_distrib_end_idx);
-  free (_btb->n_send_buffer);
-  free (_btb->n_recv_buffer);
+ PDM_free(_btb->block_distrib_ini_idx);
+ PDM_free(_btb->block_distrib_end_idx);
+ PDM_free(_btb->n_send_buffer);
+ PDM_free(_btb->n_recv_buffer);
 
-  free (_btb);
+ PDM_free(_btb);
 
   return NULL;
 }

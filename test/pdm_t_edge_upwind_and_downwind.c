@@ -465,7 +465,7 @@ int main(int argc, char *argv[])
                                               face_edge,
                                               edge_vtx,
                                               &face_vtx);
-      face_vtx_idx = (int *) malloc(sizeof(int) * (n_face + 1));
+      PDM_malloc(face_vtx_idx,(n_face + 1),int);
       memcpy(face_vtx_idx, face_edge_idx, sizeof(int) * (n_face + 1));
 
       // PDM_log_trace_connectivity_int(face_vtx_idx, face_vtx, n_face, "face_vtx : ");
@@ -497,8 +497,8 @@ int main(int argc, char *argv[])
           }
         }
       }
-      free(_face_cell_idx);
-      free(_face_cell);
+     PDM_free(_face_cell_idx);
+     PDM_free(_face_cell);
 
       int *is_bdr_edge = PDM_array_zeros_int(n_edge);
       for (int iedge = 0; iedge < n_edge; iedge++) {
@@ -544,8 +544,8 @@ int main(int argc, char *argv[])
       double *face_center = NULL;
       double *face_normal = NULL;
       if (!triangulate) {
-        face_center = malloc(sizeof(double) * n_face * 3);
-        face_normal = malloc(sizeof(double) * n_face * 3);
+        PDM_malloc(face_center,n_face * 3,double);
+        PDM_malloc(face_normal,n_face * 3,double);
 
         PDM_geom_elem_polygon_properties(n_face,
                                          face_vtx_idx,
@@ -578,8 +578,8 @@ int main(int argc, char *argv[])
                                              &downwind_point_out);
 
       if (!triangulate) {
-        free(face_center);
-        free(face_normal);
+       PDM_free(face_center);
+       PDM_free(face_normal);
       }
 
       /* Check for errors */
@@ -593,9 +593,9 @@ int main(int argc, char *argv[])
         }
       }
 
-      free(is_bdr_face);
-      free(is_bdr_vtx);
-      free(is_bdr_edge);
+     PDM_free(is_bdr_face);
+     PDM_free(is_bdr_vtx);
+     PDM_free(is_bdr_edge);
 
 
       /* Visualisation */
@@ -622,7 +622,8 @@ int main(int argc, char *argv[])
                                    NULL,
                                    NULL);
 
-        double *updown = malloc(sizeof(double) * n_edge * 6);
+        double *updown;
+        PDM_malloc(updown,n_edge * 6,double);
         for (int i = 0; i < n_edge; i++) {
           int ivtx1 = edge_vtx[2*i  ]-1;
           int ivtx2 = edge_vtx[2*i+1]-1;
@@ -656,11 +657,16 @@ int main(int argc, char *argv[])
 
 
         int _n_face = 0;
-        int    *_face_vtx_idx = malloc(sizeof(int) * (2*n_edge + 1));
-        int    *_face_vtx     = malloc(sizeof(int) * 2*face_vtx_idx[n_face]);
-        double *_face_edge    = malloc(sizeof(double) * 2*n_edge);
-        double *_face_updown  = malloc(sizeof(double) * 2*n_edge);
-        PDM_g_num_t *_face_ln_to_gn = malloc(sizeof(PDM_g_num_t) * 2*n_edge);
+        int *_face_vtx_idx;
+        PDM_malloc(_face_vtx_idx,(2*n_edge + 1),int);
+        int *_face_vtx;
+        PDM_malloc(_face_vtx,2*face_vtx_idx[n_face],int);
+        double *_face_edge;
+        PDM_malloc(_face_edge,2*n_edge,double);
+        double *_face_updown;
+        PDM_malloc(_face_updown,2*n_edge,double);
+        PDM_g_num_t *_face_ln_to_gn;
+        PDM_malloc(_face_ln_to_gn,2*n_edge,PDM_g_num_t);
         _face_vtx_idx[0] = 0;
 
 
@@ -668,14 +674,19 @@ int main(int argc, char *argv[])
         int _n_cellface = 0;
         int _s_cellface = 6*2*n_edge;
         int _s_cellface_vtx = _s_cellface * 8;
-        int *_cellface_vtx_idx = malloc(sizeof(int) * (_s_cellface + 1));
-        int *_cellface_vtx     = malloc(sizeof(int) * _s_cellface_vtx);
+        int *_cellface_vtx_idx;
+        PDM_malloc(_cellface_vtx_idx,(_s_cellface + 1),int);
+        int *_cellface_vtx;
+        PDM_malloc(_cellface_vtx,_s_cellface_vtx,int);
         _cellface_vtx_idx[0] = 0;
 
-        double      *_cellface_updown   = malloc(sizeof(double     ) * _s_cellface);
-        PDM_g_num_t *_cellface_ln_to_gn = malloc(sizeof(PDM_g_num_t) * _s_cellface);
+        double *_cellface_updown;
+        PDM_malloc(_cellface_updown,_s_cellface,double     );
+        PDM_g_num_t *_cellface_ln_to_gn;
+        PDM_malloc(_cellface_ln_to_gn,_s_cellface,PDM_g_num_t);
 
-        double *_updown_pts = malloc(sizeof(double) * 2*n_edge*3);
+        double *_updown_pts;
+        PDM_malloc(_updown_pts,2*n_edge*3,double);
         for (int iedge = 0; iedge < n_edge; iedge++) {
 
           if (upwind_face_out[iedge] >= 0) {
@@ -782,34 +793,34 @@ int main(int argc, char *argv[])
                                           field_name,
                                           field_value);
 
-        free(_face_vtx_idx);
-        free(_face_vtx);
-        free(_face_edge);
-        free(_face_updown);
-        free(_face_ln_to_gn);
-        free(_cellface_vtx_idx);
-        free(_cellface_vtx);
-        free(_cellface_updown);
-        free(_cellface_ln_to_gn);
+       PDM_free(_face_vtx_idx);
+       PDM_free(_face_vtx);
+       PDM_free(_face_edge);
+       PDM_free(_face_updown);
+       PDM_free(_face_ln_to_gn);
+       PDM_free(_cellface_vtx_idx);
+       PDM_free(_cellface_vtx);
+       PDM_free(_cellface_updown);
+       PDM_free(_cellface_ln_to_gn);
       }
 
 
 
 
-      free(upwind_cell_out);
-      free(downwind_cell_out);
-      free(upwind_face_out);
-      free(downwind_face_out);
-      free(upwind_point_out);
-      free(downwind_point_out);
+     PDM_free(upwind_cell_out);
+     PDM_free(downwind_cell_out);
+     PDM_free(upwind_face_out);
+     PDM_free(downwind_face_out);
+     PDM_free(upwind_point_out);
+     PDM_free(downwind_point_out);
 
 
-      free(vtx_cell_idx);
-      free(vtx_cell);
-      free(cell_vtx_idx);
-      free(cell_vtx);
-      free(face_vtx_idx);
-      free(face_vtx);
+     PDM_free(vtx_cell_idx);
+     PDM_free(vtx_cell);
+     PDM_free(cell_vtx_idx);
+     PDM_free(cell_vtx);
+     PDM_free(face_vtx_idx);
+     PDM_free(face_vtx);
 
     }
   }

@@ -847,6 +847,35 @@ PDM_dmesh_nodal_have_ho
  PDM_dmesh_nodal_t         *dmn
 );
 
+
+/**
+ * \brief Retrieve ridges from surfaces in a Dmesh Nodal and build associated edges
+ *
+ * \param [in] dmesh_nodal  Pointer to \ref PDM_dmesh_nodal_t instance
+ *
+ */
+
+void
+PDM_dmesh_nodal_find_topological_ridge
+(
+ PDM_dmesh_nodal_t         *dmesh_nodal
+);
+
+/**
+ * \brief Reverse orientation of all sections of a given geometry kind in a Dmesh Nodal
+ *
+ * \param [in] dmesh_nodal  Pointer to \ref PDM_dmesh_nodal_t instance
+ * \param [in] geom_kind    Geometry kind (ridge, surface or volume)
+ *
+ */
+
+void
+PDM_dmesh_nodal_revert_orientation
+(
+ PDM_dmesh_nodal_t         *dmesh_nodal,
+ PDM_geometry_kind_t        geom_kind
+);
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

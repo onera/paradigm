@@ -81,7 +81,8 @@ const int          nFac,
       int n_vtx1  = data[curFac+2];
 
       /** Prepare ElemCon **/
-      int *ElmCon1 = (int *) malloc( sizeof(int *) * n_vtx1); /* To sort out of loop */
+      int *ElmCon1;
+      PDM_malloc(ElmCon1,n_vtx1,int); /* To sort out of loop */
       int  tKey1   = 0;
       for(int iVtx=0; iVtx < n_vtx1; iVtx++){
         ElmCon1[iVtx] = data[curFac+3+iVtx];
@@ -120,7 +121,8 @@ const int          nFac,
           /*
            * Allocate memory and copy
            */
-          int *ElmCon2 = (int *) malloc( sizeof(int *) * n_vtx1);
+          int *ElmCon2;
+          PDM_malloc(ElmCon2,n_vtx1,int);
           int  tKey2   = 0;
           for(int iVtx=0; iVtx < n_vtx1; iVtx++){
             ElmCon2[iVtx] = data[nexFac+3+iVtx];
@@ -191,7 +193,7 @@ const int          nFac,
 
             //     nFacApprox[0] *= 2;
             //     // printf("Realloc :  %d - %d - %d \n", nFacApprox[0], nFacApprox2, iAbsFace);
-            //     connect   = (PDM_g_num_t *) realloc(connect,  sizeof(PDM_g_num_t) * nFacApprox[0] );
+//            PDM_realloc(//     connect   ,//     connect   , nFacApprox[0] ,PDM_g_num_t);
             // }
 
             /*
@@ -203,13 +205,13 @@ const int          nFac,
           } /** End if (isSameFace) **/
 
           /** Free Cendidate ElemCon **/
-          free(ElmCon2);
+         PDM_free(ElmCon2);
 
         } /* Enf if Same Number of Vertex */
 
       }
       /** Free current ElemCon **/
-      free(ElmCon1);
+     PDM_free(ElmCon1);
 
     } /** End If alreadyTreat **/
 
@@ -240,7 +242,7 @@ const int          nFac,
 
 
   /** Free **/
-  free(AlreadyTreat);
+ PDM_free(AlreadyTreat);
 
   return iAbsFace;
 
@@ -295,7 +297,8 @@ PDM_elt_parent_find
 
   /* Compute distribution for element */
 
-  PDM_g_num_t* elt_distrib = (PDM_g_num_t *) malloc((n_rank+1) * sizeof(PDM_g_num_t));
+  PDM_g_num_t *elt_distrib;
+  PDM_malloc(elt_distrib,(n_rank+1) ,PDM_g_num_t);
   PDM_g_num_t  _dnelt      = (PDM_g_num_t) dnelt;
 
   PDM_MPI_Allgather((void *) &_dnelt,
@@ -322,7 +325,8 @@ PDM_elt_parent_find
   }
 
   /* Compute distribution for element to find */
-  PDM_g_num_t* elt_to_find_distrib = (PDM_g_num_t *) malloc((n_rank+1) * sizeof(PDM_g_num_t));
+  PDM_g_num_t *elt_to_find_distrib;
+  PDM_malloc(elt_to_find_distrib,(n_rank+1) ,PDM_g_num_t);
   PDM_g_num_t  _dnelt_to_find      = (PDM_g_num_t) dnelt_to_find;
 
   PDM_MPI_Allgather((void *) &_dnelt_to_find,
@@ -359,8 +363,8 @@ PDM_elt_parent_find
                                    parent);
 
   /* Free */
-  free(elt_distrib);
-  free(elt_to_find_distrib)  ;
+ PDM_free(elt_distrib);
+ PDM_free(elt_to_find_distrib)  ;
 
 }
 
@@ -427,11 +431,16 @@ PDM_elt_parent_find_from_distrib
   int nDataApprox = nFacApprox*8*2;
 
   /** Allocate (SurDim the part_data and part_stride ) **/
-  int*         part_data = (int *) malloc( sizeof(int) * nDataApprox );
-  int*         part_stri = (int *) malloc( sizeof(int) * nFacApprox  );
-  PDM_g_num_t* LNToGN    = (PDM_g_num_t *) malloc( sizeof(PDM_g_num_t) * nFacApprox );
-  PDM_g_num_t* connect   = (PDM_g_num_t *) malloc( sizeof(PDM_g_num_t) * nFacApprox );
-  // PDM_g_num_t* connect   = (PDM_g_num_t *) malloc( sizeof(PDM_g_num_t) * 18 );
+  int *part_data;
+  PDM_malloc(part_data,nDataApprox ,int);
+  int *part_stri;
+  PDM_malloc(part_stri,nFacApprox  ,int);
+  PDM_g_num_t *LNToGN;
+  PDM_malloc(LNToGN,nFacApprox ,PDM_g_num_t);
+  PDM_g_num_t *connect;
+  PDM_malloc(connect,nFacApprox ,PDM_g_num_t);
+  // PDM_g_num_t *connect;
+  // PDM_malloc(connect,18 ,PDM_g_num_t);
 
   /** Initialisation of some data **/
   int n_face  = 0;
@@ -561,15 +570,17 @@ PDM_elt_parent_find_from_distrib
    *  Creation of array of diplacement
    */
   int *BlkStriIdx = PDM_array_new_idx_from_sizes_int(BlkStri, BlkSize);
-  free(BlkStri);
+ PDM_free(BlkStri);
 
   /* Find parent in distributed hash table */
 
   PDM_g_num_t dn_face = 0; //FIXME: Attention : dn_face doit probabement etre declare en entier puis caster en long
 
   int nFacLocApprox = 10;
-  int         *IdxFace      = (int         *) malloc( sizeof(int         *) * nFacLocApprox + 1);
-  PDM_g_num_t *connectLocal = (PDM_g_num_t *) malloc( sizeof(PDM_g_num_t *) * nFacLocApprox    );
+  int *IdxFace;
+  PDM_malloc(IdxFace,nFacLocApprox + 1,int         );
+  PDM_g_num_t *connectLocal;
+  PDM_malloc(connectLocal,nFacLocApprox    ,PDM_g_num_t );
 
   /*
    * Loop over BlkData : Each block correspond to a key
@@ -614,8 +625,8 @@ PDM_elt_parent_find_from_distrib
     if(nFac >= nFacLocApprox){
         printf("Realloc IdxFace -> nFac %d // nFacLocApprox : %d \n", nFac, nFacLocApprox);
         nFacLocApprox = nFac;
-        IdxFace       = (int *)         realloc( IdxFace     , sizeof(int *        ) * nFac + 1);
-        connectLocal  = (PDM_g_num_t *) realloc( connectLocal, sizeof(PDM_g_num_t *) * nFac    );
+        PDM_realloc(IdxFace       ,IdxFace       , nFac + 1,int        );
+        PDM_realloc(connectLocal  ,connectLocal  , nFac    ,PDM_g_num_t );
     }
 
     /** New **/
@@ -660,7 +671,7 @@ PDM_elt_parent_find_from_distrib
     if(dn_face + iAbsFace > nFacApprox){
         printf("[%d/%d] - Realloc :  "PDM_FMT_G_NUM" - "PDM_FMT_G_NUM" \n", i_rank, n_rank, nFacApprox, dn_face + iAbsFace);
         nFacApprox *= 2;
-        connect   = (PDM_g_num_t *) realloc(connect,  sizeof(PDM_g_num_t) * nFacApprox );
+        PDM_realloc(connect   ,connect   , nFacApprox ,PDM_g_num_t);
     }
 
     /* Copy on current array */
@@ -678,8 +689,8 @@ PDM_elt_parent_find_from_distrib
   /*
    * Free
    */
-  free(IdxFace);
-  free(connectLocal);
+ PDM_free(IdxFace);
+ PDM_free(connectLocal);
 
 
   /* Verbose */
@@ -695,7 +706,7 @@ PDM_elt_parent_find_from_distrib
 
   /* Realloc the connect array */
   if(dn_face > 0){
-    connect   = (PDM_g_num_t *) realloc(connect,  sizeof(PDM_g_num_t) * dn_face );
+    PDM_realloc(connect   ,connect   , dn_face ,PDM_g_num_t);
   }
 
   /*
@@ -707,7 +718,8 @@ PDM_elt_parent_find_from_distrib
   beg_NumAbs -= dn_face;
 
   /** Compute the distribution of elements amont proc **/
-  PDM_g_num_t* FaceDistrib = (PDM_g_num_t *) malloc((n_rank+1) * sizeof(PDM_g_num_t));
+  PDM_g_num_t *FaceDistrib;
+  PDM_malloc(FaceDistrib,(n_rank+1) ,PDM_g_num_t);
   PDM_g_num_t _dn_face = (PDM_g_num_t) dn_face;
   PDM_MPI_Allgather((void *) &_dn_face,
                     1,
@@ -731,7 +743,8 @@ PDM_elt_parent_find_from_distrib
   }
 
   /* Return result in the same order of elt_to_find_def array */
-  PDM_g_num_t *LNToGNElem = (PDM_g_num_t *) malloc( sizeof(PDM_g_num_t) * dn_face );
+  PDM_g_num_t *LNToGNElem;
+  PDM_malloc(LNToGNElem,dn_face ,PDM_g_num_t);
   for (PDM_g_num_t i = FaceDistrib[i_rank]; i < FaceDistrib[i_rank+1]; i++) {
     int idx = (int) (i-FaceDistrib[i_rank]);
     LNToGNElem[idx] = i+1;
@@ -788,7 +801,8 @@ PDM_elt_parent_find_from_distrib
   }
 
 
-  PDM_g_num_t* FaceDistribNew = (PDM_g_num_t *) malloc((n_rank+1) * sizeof(PDM_g_num_t));
+  PDM_g_num_t *FaceDistribNew;
+  PDM_malloc(FaceDistribNew,(n_rank+1) ,PDM_g_num_t);
 
 
   FaceDistribNew[0] = 0;
@@ -812,15 +826,15 @@ PDM_elt_parent_find_from_distrib
 
   PDM_part_to_block_free(ptb2);
 
-  free(LNToGN);
-  free(LNToGNElem);
-  free(part_data);
-  free(part_stri);
-  free(BlkData   );
-  free(BlkStriIdx);
-  free(BlkData2   );
-  free(FaceDistrib);
-  free(connect);
+ PDM_free(LNToGN);
+ PDM_free(LNToGNElem);
+ PDM_free(part_data);
+ PDM_free(part_stri);
+ PDM_free(BlkData   );
+ PDM_free(BlkStriIdx);
+ PDM_free(BlkData2   );
+ PDM_free(FaceDistrib);
+ PDM_free(connect);
 
 }
 

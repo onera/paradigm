@@ -450,14 +450,14 @@ _generate_volume_mesh
 
   if (elt_type == PDM_MESH_NODAL_POLY_3D) {
     PDM_dmesh_free(dmesh);
-    free(dvtx_coord);
-    free(dcell_face_idx);
-    free(dcell_face);
-    free(dface_cell);
-    free(dface_vtx_idx);
-    free(dface_vtx);
-    free(dface_group_idx);
-    free(dface_group);
+   PDM_free(dvtx_coord);
+   PDM_free(dcell_face_idx);
+   PDM_free(dcell_face);
+   PDM_free(dface_cell);
+   PDM_free(dface_vtx_idx);
+   PDM_free(dface_vtx);
+   PDM_free(dface_group_idx);
+   PDM_free(dface_group);
   }
 
   *_mpart = mpart;
@@ -588,15 +588,24 @@ _set_mesh_nodal
   if (pmn == NULL) {
     int n_part = 1;//!!!!!!
 
-    int          *n_cell        = malloc(sizeof(int          ) * n_part);
-    int          *n_face        = malloc(sizeof(int          ) * n_part);
-    int         **face_vtx_idx  = malloc(sizeof(int         *) * n_part);
-    int         **face_vtx      = malloc(sizeof(int         *) * n_part);
-    PDM_g_num_t **face_ln_to_gn = malloc(sizeof(PDM_g_num_t *) * n_part);
-    int         **cell_face_idx = malloc(sizeof(int         *) * n_part);
-    int         **cell_face     = malloc(sizeof(int         *) * n_part);
-    double      **vtx_coord     = malloc(sizeof(double      *) * n_part);
-    PDM_g_num_t **cell_ln_to_gn = malloc(sizeof(PDM_g_num_t *) * n_part);
+    int *n_cell;
+    PDM_malloc(n_cell,n_part,int          );
+    int *n_face;
+    PDM_malloc(n_face,n_part,int          );
+    int **face_vtx_idx;
+    PDM_malloc(face_vtx_idx,n_part,int         *);
+    int **face_vtx;
+    PDM_malloc(face_vtx,n_part,int         *);
+    PDM_g_num_t **face_ln_to_gn;
+    PDM_malloc(face_ln_to_gn,n_part,PDM_g_num_t *);
+    int **cell_face_idx;
+    PDM_malloc(cell_face_idx,n_part,int         *);
+    int **cell_face;
+    PDM_malloc(cell_face,n_part,int         *);
+    double **vtx_coord;
+    PDM_malloc(vtx_coord,n_part,double      *);
+    PDM_g_num_t **cell_ln_to_gn;
+    PDM_malloc(cell_ln_to_gn,n_part,PDM_g_num_t *);
 
     pmn = PDM_part_mesh_nodal_create(3, n_part, mi->comm);
 
@@ -722,15 +731,15 @@ _set_mesh_nodal
 
     // PDM_part_mesh_nodal_add_part_mesh_nodal_elmts(pmn, pmne, PDM_OWNERSHIP_KEEP);
 
-    free(n_cell       );
-    free(n_face       );
-    free(face_vtx_idx );
-    free(face_vtx     );
-    free(face_ln_to_gn);
-    free(cell_face_idx);
-    free(cell_face    );
-    free(vtx_coord    );
-    free(cell_ln_to_gn);
+   PDM_free(n_cell       );
+   PDM_free(n_face       );
+   PDM_free(face_vtx_idx );
+   PDM_free(face_vtx     );
+   PDM_free(face_ln_to_gn);
+   PDM_free(cell_face_idx);
+   PDM_free(cell_face    );
+   PDM_free(vtx_coord    );
+   PDM_free(cell_ln_to_gn);
   }
 
   // if (1) {
@@ -757,8 +766,10 @@ _set_mesh_nodal
   //                                                               id_section,
   //                                                               ipart);
 
-  //       double *volume = malloc(sizeof(double) * n_elt);
-  //       double *center = malloc(sizeof(double) * n_elt * 3);
+  //       double *volume;
+  //       PDM_malloc(volume,n_elt,double);
+  //       double *center;
+  //       PDM_malloc(center,n_elt * 3,double);
 
   //       switch (t_elt) {
 
@@ -859,24 +870,24 @@ _read_volume_mesh
 
     if (n_vtx_field > 0) {
       for (int i = 0; i < n_vtx_field; i++) {
-        free(vtx_field_name [i]);
-        free(vtx_field_value[i]);
+       PDM_free(vtx_field_name [i]);
+       PDM_free(vtx_field_value[i]);
       }
-      free(vtx_field_name );
-      free(vtx_field_type );
-      free(vtx_field_stride);
-      free(vtx_field_value);
+     PDM_free(vtx_field_name );
+     PDM_free(vtx_field_type );
+     PDM_free(vtx_field_stride);
+     PDM_free(vtx_field_value);
     }
 
     if (n_elt_field > 0) {
       for (int i = 0; i < n_elt_field; i++) {
-        free(elt_field_name [i]);
-        // free(elt_field_value[i]);
+       PDM_free(elt_field_name [i]);
+        //PDM_free(elt_field_value[i]);
       }
-      free(elt_field_name );
-      free(elt_field_type );
-      free(elt_field_stride);
-      free(elt_field_value);
+     PDM_free(elt_field_name );
+     PDM_free(elt_field_type );
+     PDM_free(elt_field_stride);
+     PDM_free(elt_field_value);
     }
   }
   else if (strcmp(file_extension, "mesh") == 0) {
@@ -956,7 +967,8 @@ main
   double               noise_a               = 0;
   double               noise_b               = 0;
   point_t              tetraisation_pt_type  = TETRA_POINT;
-  double              *tetraisation_pt_coord = malloc(sizeof(double) * 3);
+  double *tetraisation_pt_coord;
+  PDM_malloc(tetraisation_pt_coord,3,double);
   double               shift_b[3]            = {0.5, 0.5, 0.5};
   char                *filenames[2]          = {NULL, NULL};
 
@@ -1133,8 +1145,10 @@ main
     if (verbose) {
       log_trace("FROM A USER POV\n");
     }
-    int    **pelt_a_elt_b_n      = malloc(sizeof(int    *) * n_part);
-    double **pelt_a_elt_b_volume = malloc(sizeof(double *) * n_part);
+    int **pelt_a_elt_b_n;
+    PDM_malloc(pelt_a_elt_b_n,n_part,int    *);
+    double **pelt_a_elt_b_volume;
+    PDM_malloc(pelt_a_elt_b_volume,n_part,double *);
 
 
     for (int ipart = 0; ipart < n_part; ipart++) {
@@ -1154,7 +1168,7 @@ main
                                                     &elt_a_ln_to_gn,
                                                     PDM_OWNERSHIP_KEEP);
 
-      pelt_a_elt_b_n[ipart] = malloc(sizeof(int) * n_elt_a);
+      PDM_malloc(pelt_a_elt_b_n[ipart],n_elt_a,int);
       for (int i = 0; i < n_elt_a; i++) {
         pelt_a_elt_b_n[ipart][i] = elt_a_elt_b_idx[i+1] - elt_a_elt_b_idx[i];
 
@@ -1214,15 +1228,15 @@ main
     PDM_part_to_part_free(ptp);
 
     for (int ipart = 0; ipart < n_part; ipart++) {
-      free(pelt_a_elt_b_n[ipart]);
+     PDM_free(pelt_a_elt_b_n[ipart]);
     }
-    free(pelt_a_elt_b_n     );
-    free(pelt_a_elt_b_volume);
+   PDM_free(pelt_a_elt_b_n     );
+   PDM_free(pelt_a_elt_b_volume);
 
     for (int ipart = 0; ipart < n_part; ipart++) {
-      free(pelt_b_elt_a_volume[ipart]);
+     PDM_free(pelt_b_elt_a_volume[ipart]);
     }
-    free(pelt_b_elt_a_volume);
+   PDM_free(pelt_b_elt_a_volume);
   }
 
 
@@ -1240,9 +1254,15 @@ main
         exact *= PDM_MAX(0, length_a - shift_b[i]);
       }
     }
+    double absolute_err = PDM_ABS(g_volume_AB - exact);
+    double relative_err = absolute_err;
+    PDM_GCC_SUPPRESS_WARNING_WITH_PUSH("-Wfloat-equal")
+    if (exact != 0) {
+      relative_err /= exact;
+    }
+    PDM_GCC_SUPPRESS_WARNING_POP
     printf("error : absolute = %e, relative = %e\n",
-           PDM_ABS(g_volume_AB - exact),
-           PDM_ABS(g_volume_AB - exact)/exact);
+           absolute_err, relative_err);
   }
 
 
@@ -1266,7 +1286,7 @@ main
   PDM_DMesh_nodal_free(dmn_a);
   PDM_multipart_free(mpart_a);
 
-  free(tetraisation_pt_coord);
+ PDM_free(tetraisation_pt_coord);
 
   PDM_MPI_Barrier(comm);
 

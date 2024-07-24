@@ -37,13 +37,18 @@ module pdm_gnum
   pdm_gnum_set_from_parents_
   end interface
 
+  interface PDM_gnum_set_parents_nuplet ; module procedure &
+  pdm_gnum_set_parents_nuplet_
+  end interface
+
   interface PDM_gnum_get ; module procedure &
   pdm_gnum_get_
   end interface
 
   private :: pdm_gnum_create_
-  ! private :: pdm_gnum_set_from_coords_
+  private :: pdm_gnum_set_from_coords_
   private :: pdm_gnum_set_from_parents_
+  private :: pdm_gnum_set_parents_nuplet
   private :: pdm_gnum_get_
 
   interface
@@ -146,6 +151,29 @@ module pdm_gnum
     type(c_ptr),    value :: parent_gnum
 
   end subroutine PDM_gnum_set_from_parents_cf
+
+
+  !>
+  !!
+  !! \brief Set size of tuple for nuplet
+  !!
+  !! \param [in]   gen_gnum     Pointer to \ref PDM_gen_gnum object
+  !! \param [in]   nuplet       Size of tuple
+  !!
+  !!
+
+  subroutine PDM_gnum_set_parents_nuplet_cf(gen_gnum, &
+                                            nuplet)   &
+    bind (c, name = 'PDM_gnum_set_parents_nuplet')
+
+    use iso_c_binding
+    implicit none
+
+    type(c_ptr),    value :: gen_gnum
+
+    integer(c_int), value :: nuplet
+
+  end subroutine PDM_gnum_set_parents_nuplet_cf
 
 
   !>
@@ -354,6 +382,22 @@ contains
                                        c_parent_gnum)
 
   end subroutine PDM_gnum_set_from_parents_
+
+
+
+  subroutine PDM_gnum_set_parents_nuplet_(gen_gnum, &
+                                          nuplet)
+    ! Set size of tuple for nuplet
+    use iso_c_binding
+    implicit none
+
+    type(c_ptr), value  :: gen_gnum ! C pointer to PDM_gen_gnum_t object
+    integer, intent(in) :: nuplet   ! Size of tuple
+
+    call PDM_gnum_set_parents_nuplet_cf(gen_gnum, &
+                                        nuplet)
+
+  end subroutine PDM_gnum_set_parents_nuplet_
 
 
 

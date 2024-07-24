@@ -28,7 +28,8 @@ int main(int argc, char *argv[])
   PDM_g_num_t n_vtx      = n_i * n_j;
   PDM_g_num_t l_face_vtx = 8;
 
-  double *coords = (double *) malloc(sizeof(double) * 3 * n_vtx);
+  double *coords;
+  PDM_malloc(coords,3 * n_vtx,double);
   int k = 0;
   for (int j = 0; j < n_j; j++) {
     for (int i = 0; i < n_i; i++) {
@@ -41,7 +42,8 @@ int main(int argc, char *argv[])
   }
 
 
-  PDM_g_num_t *face_vtx = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * l_face_vtx);
+  PDM_g_num_t *face_vtx;
+  PDM_malloc(face_vtx,l_face_vtx,PDM_g_num_t);
   face_vtx[0] = 1;
   face_vtx[1] = 2;
   face_vtx[2] = 5;
@@ -64,8 +66,8 @@ int main(int argc, char *argv[])
 
   printf(PDM_FMT_G_NUM" vertices, %d holes\n", n_vtx, n_holes);
 
-  free(face_vtx);
-  free(coords);
+ PDM_free(face_vtx);
+ PDM_free(coords);
 
   PDM_MPI_Finalize();
 

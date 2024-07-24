@@ -834,7 +834,8 @@ _heap_fill_pn_sub_edge
  const double *point_coords
  )
 {
-  double *uNodes = malloc (sizeof(double) * n_nodes);
+  double *uNodes;
+  PDM_malloc(uNodes,n_nodes,double);
 
   _u_ho_edge_nodes (order,
                     0., 1.,
@@ -897,7 +898,7 @@ _heap_fill_pn_sub_edge
 
 
   }
-  free (uNodes);
+ PDM_free(uNodes);
 }
 
 
@@ -1432,7 +1433,8 @@ _default_location_generic_1d
   _heap_l_t heap;
   _heap_l_t heap2;
 
-  double *weightsPn = malloc (sizeof(double) * n_nodes);
+  double *weightsPn;
+  PDM_malloc(weightsPn,n_nodes,double);
 
   /* Initialize heap */
 
@@ -1530,7 +1532,7 @@ _default_location_generic_1d
 
   }
 
-  free (weightsPn);
+ PDM_free(weightsPn);
 
   return dist2;
 
@@ -1781,7 +1783,8 @@ _heap_fill_pn_sub_tria
   int ibeg = 0;
   int iend = order;
 
-  double *uv_nodes = malloc (sizeof(double) * 2 * n_nodes);
+  double *uv_nodes;
+  PDM_malloc(uv_nodes,2 * n_nodes,double);
 
   _uv_ho_tria_nodes (order,
                      0., 1.,
@@ -1983,7 +1986,7 @@ _heap_fill_pn_sub_tria
     iend += order - j;
   }
 
-  free (uv_nodes);
+ PDM_free(uv_nodes);
 }
 
 
@@ -2011,7 +2014,8 @@ _heap_fill_qn_sub_tria
  const double *point_coords
  )
 {
-  double *uvNodes = malloc (sizeof(double) * 2 * n_nodes);
+  double *uvNodes;
+  PDM_malloc(uvNodes,2 * n_nodes,double);
 
   _uv_ho_quad_nodes (order,
                      0., 1.,
@@ -2146,7 +2150,7 @@ _heap_fill_qn_sub_tria
     }
   }
 
-  free (uvNodes);
+ PDM_free(uvNodes);
 }
 
 
@@ -2693,7 +2697,8 @@ _default_location_generic_2d
   _heap_s_t heap;
   _heap_s_t heap2;
 
-  double *weightsPn = malloc (sizeof(double) * n_nodes);
+  double *weightsPn;
+  PDM_malloc(weightsPn,n_nodes,double);
 
   /* Initialize heap */
 
@@ -2791,7 +2796,7 @@ _default_location_generic_2d
 
   }
 
-  free (weightsPn);
+ PDM_free(weightsPn);
 
   return dist2;
 
@@ -3161,7 +3166,8 @@ _heap_fill_pn_tetra_sub_tetra
  )
 {
 
-  double *uvw_nodes   = malloc (sizeof(double) * 3 * n_nodes);
+  double *uvw_nodes;
+  PDM_malloc(uvw_nodes,3 * n_nodes,double);
   double _vertex_tetra[48];
   double _uvw_vertex_tetra[48];
   _uvw_ho_tetra_nodes (order,
@@ -3365,7 +3371,7 @@ _heap_fill_pn_tetra_sub_tetra
     ibeg ++;
   }
 
-  free (uvw_nodes);
+ PDM_free(uvw_nodes);
 }
 
 
@@ -3447,7 +3453,8 @@ _heap_fill_pn_pyra_sub_tetra
  )
 {
 
-  double *uvw_nodes = malloc (sizeof(double) * 3 * n_nodes);
+  double *uvw_nodes;
+  PDM_malloc(uvw_nodes,3 * n_nodes,double);
   double _vertex_tetra[24];
   double _uvw_vertex_tetra[24];
 
@@ -3813,7 +3820,7 @@ _heap_fill_pn_pyra_sub_tetra
     ibeg += step;
   }
 
-  free(uvw_nodes);
+ PDM_free(uvw_nodes);
 }
 
 
@@ -3914,7 +3921,8 @@ _heap_fill_pn_prism_sub_tetra
   int k1;
   int n_nodes_basis = (order + 1)*(order + 2) / 2;
 
-  double *uvw_nodes = malloc (sizeof(double) * 3 * n_nodes);
+  double *uvw_nodes;
+  PDM_malloc(uvw_nodes,3 * n_nodes,double);
   double _vertex_tetra[36];
   double _uvw_vertex_tetra[36];
 
@@ -4238,7 +4246,7 @@ _heap_fill_pn_prism_sub_tetra
   } // End of k-loop
 
 
-  free (uvw_nodes);
+ PDM_free(uvw_nodes);
 }
 
 
@@ -4373,7 +4381,8 @@ _heap_fill_pn_hexa_sub_tetra
   int step = order + 1;
   int n_nodes_basis = step * step;
 
-  double *uvw_nodes = malloc (sizeof(double) * 3 * n_nodes);
+  double *uvw_nodes;
+  PDM_malloc(uvw_nodes,3 * n_nodes,double);
   double _vertex_tetra[60];
   double _uvw_vertex_tetra[60];
 
@@ -4513,7 +4522,7 @@ _heap_fill_pn_hexa_sub_tetra
     }
   }
 
-  free (uvw_nodes);
+ PDM_free(uvw_nodes);
 }
 
 
@@ -5127,7 +5136,8 @@ _default_location_generic_3d
   _heap_v_t heap;
   _heap_v_t heap2;
 
-  double *weightsPn = malloc (sizeof(double) * n_nodes);
+  double *weightsPn;
+  PDM_malloc(weightsPn,n_nodes,double);
 
   // Initialize heap
 
@@ -5222,7 +5232,7 @@ _default_location_generic_3d
 
   }
 
-  free (weightsPn);
+ PDM_free(weightsPn);
 
 
 
@@ -6385,7 +6395,8 @@ _compute_uvw_ho
   }
 
   if (1 && dbg_enabled) {
-    int *connec = malloc(sizeof(int) * n_node);
+    int *connec;
+    PDM_malloc(connec,n_node,int);
 
     int *ijk_to_user = PDM_ho_ordering_ijk_to_user_get("PDM_HO_ORDERING_VTK",
                                                        elt_type,
@@ -6410,7 +6421,7 @@ _compute_uvw_ho
                                   0,
                                   NULL,
                                   NULL);
-    free(connec);
+   PDM_free(connec);
   }
 
   double *weight     = work_array;
@@ -6810,7 +6821,7 @@ PDM_ho_location_newton
   double *_work_array = work_array;
   if (work_array == NULL) {
     int elt_dim = PDM_Mesh_nodal_elt_dim_get(type);
-    _work_array = malloc(sizeof(double) * n_nodes * (elt_dim + 1));
+    PDM_malloc(_work_array,n_nodes * (elt_dim + 1),double);
   }
   int stat = _compute_uvw_ho(type,
                              order,
@@ -6849,7 +6860,7 @@ PDM_ho_location_newton
   }
 
   if (work_array == NULL) {
-    free(_work_array);
+   PDM_free(_work_array);
   }
 
   return dist2;

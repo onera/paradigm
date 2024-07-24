@@ -152,6 +152,7 @@ MPI_TEST_CASE("[pdm_morton] - PDM_morton_local_sort", 1) {
                        0.25, 0.5, 0.,
                        0., 0., 0.   };
   PDM_morton_int_t level = 12;
+  PDM_UNUSED(level);
 
   int n_pts = 4;
 

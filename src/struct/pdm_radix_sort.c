@@ -12,6 +12,7 @@
  *----------------------------------------------------------------------------*/
 
 #include "pdm.h"
+#include "pdm_priv.h"
 #include "pdm_array.h"
 #include "pdm_radix_sort.h"
 
@@ -122,7 +123,8 @@ _counting_sort
 // {
 //   /* First step - Count */
 //   int n_buckets = _radix_base;
-//   int* count = malloc( (n_buckets + 1) * sizeof(int));
+//   int *count;
+//   PDM_malloc(count, (n_buckets + 1) ,int);
 
 //   /* Set to zero */
 //   for(int i = 0; i < n_buckets+1; ++i){
@@ -280,7 +282,7 @@ _cc_radix_sort
   place = 1;
   while(place < place_init){
     int* range = _counting_sort(v, tmp, beg, end, place);
-    free(range);
+   PDM_free(range);
     place *= _radix_base;
   }
 
@@ -306,7 +308,7 @@ _cc_radix_sort
 //   printf("_cc_radix_sort_with_order::%d --> %d :: %d \n", end-beg, place_init, place_power);
 //   while(place < place_init){
 //     int* range = _counting_sort_with_order(v, tmp, order, order_tmp, beg, end, place, place_power);
-//     free(range);
+//    PDM_free(range);
 //     place *= _radix_base;
 //     place_power += _radix_shift;
 //   }
@@ -334,8 +336,10 @@ _cc_radix_sort_with_order
 
   int iteration = 0;
 
-  int* count_curr = malloc( (_radix_base + 1) * sizeof(int));
-  int* count_next = malloc( (_radix_base + 1) * sizeof(int));
+  int *count_curr;
+  PDM_malloc(count_curr, (_radix_base + 1) ,int);
+  int *count_next;
+  PDM_malloc(count_next, (_radix_base + 1) ,int);
 
   int* count_tmp;
   int* _count_curr = count_curr;
@@ -363,8 +367,8 @@ _cc_radix_sort_with_order
   }
   // printf("_cc_radix_sort_with_order end ::%d --> %d :: %d \n", end-beg, place_init, place_power);
 
-  free(count_curr);
-  free(count_next);
+ PDM_free(count_curr);
+ PDM_free(count_next);
 
 }
 
@@ -393,7 +397,7 @@ _std_radix_sort
   place /= _radix_base;
 
   if(place == 0) {
-    free(range);
+   PDM_free(range);
     return;
   }
 
@@ -410,7 +414,7 @@ _std_radix_sort
     }
   }
 
-  free(range);
+ PDM_free(range);
 
 }
 
@@ -451,7 +455,7 @@ _std_radix_sort_with_order
   }
 
   if(place == 0) {
-    free(range);
+   PDM_free(range);
     return;
   }
 
@@ -465,7 +469,7 @@ _std_radix_sort_with_order
     }
   }
 
-  free(range);
+ PDM_free(range);
 
 }
 
@@ -506,7 +510,8 @@ PDM_radix_sort_long
 
   // Il faut trouver le max dans la base pour reprensenter le min et le max
   //  --> si beaucoup d'écart on tente la moyenne
-  PDM_g_num_t* tmp = (PDM_g_num_t *) malloc( (lArray+1) * sizeof(PDM_g_num_t));
+  PDM_g_num_t *tmp;
+  PDM_malloc(tmp, (lArray+1) ,PDM_g_num_t);
 
   int place = (int) pow(_radix_base, (n_step-1));
   int place_power = _radix_shift*(n_step-1);
@@ -519,14 +524,15 @@ PDM_radix_sort_long
   if(order == NULL){
     _std_radix_sort(array, tmp, 0, lArray, place);
   } else {
-    int* order_tmp = (int *) malloc( (lArray+1) * sizeof(int));
+    int *order_tmp;
+    PDM_malloc(order_tmp, (lArray+1) ,int);
     _std_radix_sort_with_order(array, tmp, order, order_tmp, 0, lArray, place, place_power);
     // _std_radix_sort(array, tmp, 0, lArray, place);
-    free(order_tmp);
+   PDM_free(order_tmp);
   }
 
 
-  free(tmp);
+ PDM_free(tmp);
 
 }
 

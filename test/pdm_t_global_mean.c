@@ -258,7 +258,8 @@ int main(int argc, char *argv[])
 
   int have_dcell_part = 0;
 
-  int *dcell_part = (int *) malloc(dn_cell*sizeof(int));
+  int *dcell_part;
+  PDM_malloc(dcell_part,dn_cell,int);
   int *renum_properties_cell = NULL;
   int *renum_properties_face = NULL;
   int n_property_cell = 0;
@@ -336,7 +337,8 @@ int main(int argc, char *argv[])
 
   PDM_printf("[%i]   - TEMPS DANS PART_CUBE  : %12.5e\n", i_rank,  t_elapsed);
 
-  PDM_g_num_t **cellVtxGN = malloc (sizeof(PDM_g_num_t *) * n_part);
+  PDM_g_num_t **cellVtxGN;
+  PDM_malloc(cellVtxGN,n_part,PDM_g_num_t *);
 
   for (int i_part = 0; i_part < n_part; i_part++) {
 
@@ -412,7 +414,7 @@ int main(int argc, char *argv[])
       }
     }
 
-    cellVtxGN[i_part] = malloc (sizeof(PDM_g_num_t) * n_cellVtx);
+    PDM_malloc(cellVtxGN[i_part],n_cellVtx,PDM_g_num_t);
 
   }
 
@@ -497,9 +499,12 @@ int main(int argc, char *argv[])
 
   }
 
-  double **local_field = malloc (sizeof(double *) * n_part);
-  double **local_weight = malloc (sizeof(double *) * n_part);
-  double **global_mean_field_ptr = malloc (sizeof(double *) * n_part);
+  double **local_field;
+  PDM_malloc(local_field,n_part,double *);
+  double **local_weight;
+  PDM_malloc(local_weight,n_part,double *);
+  double **global_mean_field_ptr;
+  PDM_malloc(global_mean_field_ptr,n_part,double *);
 
   for (int i_part = 0; i_part < n_part; i_part++) {
 
@@ -575,9 +580,9 @@ int main(int argc, char *argv[])
       }
     }
 
-    local_field[i_part] = malloc (sizeof(double) * n_cellVtx * 3);
-    local_weight[i_part] = malloc (sizeof(double) * n_cellVtx);
-    global_mean_field_ptr[i_part] = malloc (sizeof(double) * n_cellVtx * 3);
+    PDM_malloc(local_field[i_part],n_cellVtx * 3,double);
+    PDM_malloc(local_weight[i_part],n_cellVtx,double);
+    PDM_malloc(global_mean_field_ptr[i_part],n_cellVtx * 3,double);
 
     n_cellVtx = 0;
     for (int i = 0; i < n_cell; i++) {
@@ -685,17 +690,17 @@ int main(int argc, char *argv[])
       }
     }
 
-    free (local_field[i_part]);
-    free (local_weight[i_part]);
-    free (global_mean_field_ptr[i_part]);
-    free (cellVtxGN[i_part]);
+   PDM_free(local_field[i_part]);
+   PDM_free(local_weight[i_part]);
+   PDM_free(global_mean_field_ptr[i_part]);
+   PDM_free(cellVtxGN[i_part]);
   }
 
-  free (local_field);
-  free (local_weight);
-  free (global_mean_field_ptr);
-  free (cellVtxGN);
-  free (dcell_part);
+ PDM_free(local_field);
+ PDM_free(local_weight);
+ PDM_free(global_mean_field_ptr);
+ PDM_free(cellVtxGN);
+ PDM_free(dcell_part);
 
   PDM_part_free(ppart);
 

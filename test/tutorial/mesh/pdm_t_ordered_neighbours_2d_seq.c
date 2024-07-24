@@ -320,8 +320,10 @@ int main(int argc, char *argv[])
 
   assert(n_rank == 1);
 
-  int *face_edge = malloc(face_vtx_idx[n_face] * sizeof(int));
-  int *face_vtx  = malloc(face_vtx_idx[n_face] * sizeof(int));
+  int *face_edge;
+  PDM_malloc(face_edge,face_vtx_idx[n_face] ,int);
+  int *face_vtx;
+  PDM_malloc(face_vtx,face_vtx_idx[n_face] ,int);
 
   for (int i = 0; i < face_vtx_idx[n_face]; i ++) {
     face_edge[i] = dface_edge[i];
@@ -343,7 +345,8 @@ int main(int argc, char *argv[])
   int *vtx_edge = NULL;
 
   int *edge_vtx_idx = PDM_array_new_idx_from_const_stride_int(2, n_edge);
-  int *edge_vtx     = malloc(edge_vtx_idx[n_edge] * sizeof(int));
+  int *edge_vtx;
+  PDM_malloc(edge_vtx,edge_vtx_idx[n_edge] ,int);
 
 
   for (int i = 0; i < edge_vtx_idx[n_edge]; i ++) {
@@ -396,10 +399,14 @@ int main(int argc, char *argv[])
   int idx_vtx_ordered_face_neighbours = 0;
   int idx_vtx_ordered_vtx_neighbours  = 0;
 
-  int *vtx_ordered_face_neighbours     = malloc(vtx_face_idx[n_vtx] * sizeof(int));
-  int *vtx_ordered_face_neighbours_idx = malloc((n_vtx+1) * sizeof(int));
-  int *vtx_ordered_vtx_neighbours      = malloc(vtx_vtx_idx[n_vtx]*n_vtx * sizeof(int)); // TO DO mettre taille raisonnable
-  int *vtx_ordered_vtx_neighbours_idx  = malloc((n_vtx+1) * sizeof(int));
+  int *vtx_ordered_face_neighbours;
+  PDM_malloc(vtx_ordered_face_neighbours,vtx_face_idx[n_vtx] ,int);
+  int *vtx_ordered_face_neighbours_idx;
+  PDM_malloc(vtx_ordered_face_neighbours_idx,(n_vtx+1) ,int);
+  int *vtx_ordered_vtx_neighbours;
+  PDM_malloc(vtx_ordered_vtx_neighbours,vtx_vtx_idx[n_vtx]*n_vtx ,int); // TO DO mettre taille raisonnable
+  int *vtx_ordered_vtx_neighbours_idx;
+  PDM_malloc(vtx_ordered_vtx_neighbours_idx,(n_vtx+1) ,int);
 
   vtx_ordered_face_neighbours_idx[0] = idx_vtx_ordered_face_neighbours;
   vtx_ordered_vtx_neighbours_idx[0]  = idx_vtx_ordered_vtx_neighbours;
@@ -551,31 +558,31 @@ int main(int argc, char *argv[])
 
   /* Free memory */
   PDM_timer_free(timer                );
-  free(face_vtx_idx                   );
-  free(dface_vtx                      );
-  free(vtx_coord                      );
-  free(dface_edge                     );
-  free(dedge_vtx                      );
-  free(dedge_face                     );
-  free(edge_group_idx                 );
-  free(edge_group                     );
-  free(face_edge                      );
-  free(face_vtx                       );
-  free(edge_face_idx                  );
-  free(edge_face                      );
-  free(vtx_edge_idx                   );
-  free(vtx_edge                       );
-  free(edge_vtx_idx                   );
-  free(edge_vtx                       );
-  free(vtx_vtx_idx                    );
-  free(vtx_vtx                        );
-  free(vtx_face_idx                   );
-  free(vtx_face                       );
-  free(vtx_vtx_edge                   );
-  free(vtx_ordered_face_neighbours    );
-  free(vtx_ordered_face_neighbours_idx);
-  free(vtx_ordered_vtx_neighbours     );
-  free(vtx_ordered_vtx_neighbours_idx );
+ PDM_free(face_vtx_idx                   );
+ PDM_free(dface_vtx                      );
+ PDM_free(vtx_coord                      );
+ PDM_free(dface_edge                     );
+ PDM_free(dedge_vtx                      );
+ PDM_free(dedge_face                     );
+ PDM_free(edge_group_idx                 );
+ PDM_free(edge_group                     );
+ PDM_free(face_edge                      );
+ PDM_free(face_vtx                       );
+ PDM_free(edge_face_idx                  );
+ PDM_free(edge_face                      );
+ PDM_free(vtx_edge_idx                   );
+ PDM_free(vtx_edge                       );
+ PDM_free(edge_vtx_idx                   );
+ PDM_free(edge_vtx                       );
+ PDM_free(vtx_vtx_idx                    );
+ PDM_free(vtx_vtx                        );
+ PDM_free(vtx_face_idx                   );
+ PDM_free(vtx_face                       );
+ PDM_free(vtx_vtx_edge                   );
+ PDM_free(vtx_ordered_face_neighbours    );
+ PDM_free(vtx_ordered_face_neighbours_idx);
+ PDM_free(vtx_ordered_vtx_neighbours     );
+ PDM_free(vtx_ordered_vtx_neighbours_idx );
 
   PDM_MPI_Finalize();
   return 0;

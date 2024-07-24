@@ -525,8 +525,8 @@ PDM_generate_mesh_sphere_simplified
                         0.,
                         0.,
                         0.,
-                        100,
-                        100,
+                        20,
+                        20,
                         1,
                         PDM_SPLIT_DUAL_WITH_HILBERT,
                         &dmn,
@@ -566,7 +566,7 @@ PDM_generate_mesh_sphere_simplified
                                           edge_vtx,
                                           elt_vtx);
 
-  *elt_vtx_idx = malloc(sizeof(int) * ((*n_elt)+1));
+  PDM_malloc(*elt_vtx_idx,((*n_elt)+1),int);
   (*elt_vtx_idx)[0] = 0;
   for (int i = 0; i < (*n_elt); i++) {
     (*elt_vtx_idx)[i+1] = (*elt_vtx_idx)[i] + 3; // because PDM_MESH_NODAL_TRIA3
@@ -728,7 +728,7 @@ PDM_generate_mesh_ball_simplified
                                       PDM_OWNERSHIP_KEEP);
 
   *elt_vtx_idx = PDM_array_new_idx_from_const_stride_int(4, *n_elt);
-  *elt_vtx = malloc(sizeof(int) * (*elt_vtx_idx)[*n_elt]);
+  PDM_malloc(*elt_vtx,(*elt_vtx_idx)[*n_elt],int);
   memcpy(*elt_vtx, connec, sizeof(int) * (*elt_vtx_idx)[*n_elt]);
 
 
@@ -897,7 +897,7 @@ PDM_generate_mesh_rectangle_simplified
                                           edge_vtx,
                                           elt_vtx);
 
-  *elt_vtx_idx = malloc(sizeof(int) * ((*n_elt)+1));
+  PDM_malloc(*elt_vtx_idx,((*n_elt)+1),int);
   (*elt_vtx_idx)[0] = 0;
   for (int i = 0; i < (*n_elt); i++) {
     (*elt_vtx_idx)[i+1] = (*elt_vtx_idx)[i] + 3; // because PDM_MESH_NODAL_TRIA3
@@ -1055,7 +1055,7 @@ PDM_generate_mesh_parallelepiped_simplified
                                       PDM_OWNERSHIP_KEEP);
 
   *elt_vtx_idx = PDM_array_new_idx_from_const_stride_int(4, *n_elt);
-  *elt_vtx = malloc(sizeof(int) * (*elt_vtx_idx)[*n_elt]);
+  PDM_malloc(*elt_vtx,(*elt_vtx_idx)[*n_elt],int);
   memcpy(*elt_vtx, connec, sizeof(int) * (*elt_vtx_idx)[*n_elt]);
 
   // get coordinates
@@ -1121,17 +1121,17 @@ PDM_generate_mesh_rectangle_ngon
                            &mpart);
   PDM_DMesh_nodal_free(dmn);
 
-  *pn_vtx         = malloc(sizeof(int          ) * n_part);
-  *pn_edge        = malloc(sizeof(int          ) * n_part);
-  *pn_face        = malloc(sizeof(int          ) * n_part);
-  *pvtx_coord     = malloc(sizeof(double      *) * n_part);
-  *pedge_vtx      = malloc(sizeof(int         *) * n_part);
-  *pface_edge_idx = malloc(sizeof(int         *) * n_part);
-  *pface_edge     = malloc(sizeof(int         *) * n_part);
-  *pface_vtx      = malloc(sizeof(int         *) * n_part);
-  *pvtx_ln_to_gn  = malloc(sizeof(PDM_g_num_t *) * n_part);
-  *pedge_ln_to_gn = malloc(sizeof(PDM_g_num_t *) * n_part);
-  *pface_ln_to_gn = malloc(sizeof(PDM_g_num_t *) * n_part);
+  PDM_malloc(*pn_vtx,n_part,int          );
+  PDM_malloc(*pn_edge,n_part,int          );
+  PDM_malloc(*pn_face,n_part,int          );
+  PDM_malloc(*pvtx_coord,n_part,double      *);
+  PDM_malloc(*pedge_vtx,n_part,int         *);
+  PDM_malloc(*pface_edge_idx,n_part,int         *);
+  PDM_malloc(*pface_edge,n_part,int         *);
+  PDM_malloc(*pface_vtx,n_part,int         *);
+  PDM_malloc(*pvtx_ln_to_gn,n_part,PDM_g_num_t *);
+  PDM_malloc(*pedge_ln_to_gn,n_part,PDM_g_num_t *);
+  PDM_malloc(*pface_ln_to_gn,n_part,PDM_g_num_t *);
 
   for (int ipart = 0; ipart < n_part; ipart++) {
     (*pn_vtx)[ipart] = PDM_multipart_part_ln_to_gn_get(mpart,
@@ -1178,7 +1178,7 @@ PDM_generate_mesh_rectangle_ngon
                                         &(*pedge_vtx)[ipart],
                                         PDM_OWNERSHIP_USER);
     if (edge_vtx_idx != NULL) {
-      free (edge_vtx_idx);
+     PDM_free(edge_vtx_idx);
     }
 
     int *face_vtx_idx = NULL;
@@ -1189,7 +1189,7 @@ PDM_generate_mesh_rectangle_ngon
                                         &face_vtx_idx,
                                         &(*pface_vtx)[ipart],
                                         PDM_OWNERSHIP_USER);
-    free(face_vtx_idx);
+   PDM_free(face_vtx_idx);
   }
 
   PDM_multipart_free(mpart);
@@ -1241,17 +1241,17 @@ PDM_generate_mesh_sphere_ngon
                         &mpart);
   PDM_DMesh_nodal_free(dmn);
 
-  *pn_vtx         = malloc(sizeof(int          ) * n_part);
-  *pn_edge        = malloc(sizeof(int          ) * n_part);
-  *pn_face        = malloc(sizeof(int          ) * n_part);
-  *pvtx_coord     = malloc(sizeof(double      *) * n_part);
-  *pedge_vtx      = malloc(sizeof(int         *) * n_part);
-  *pface_edge_idx = malloc(sizeof(int         *) * n_part);
-  *pface_edge     = malloc(sizeof(int         *) * n_part);
-  *pface_vtx      = malloc(sizeof(int         *) * n_part);
-  *pvtx_ln_to_gn  = malloc(sizeof(PDM_g_num_t *) * n_part);
-  *pedge_ln_to_gn = malloc(sizeof(PDM_g_num_t *) * n_part);
-  *pface_ln_to_gn = malloc(sizeof(PDM_g_num_t *) * n_part);
+  PDM_malloc(*pn_vtx,n_part,int          );
+  PDM_malloc(*pn_edge,n_part,int          );
+  PDM_malloc(*pn_face,n_part,int          );
+  PDM_malloc(*pvtx_coord,n_part,double      *);
+  PDM_malloc(*pedge_vtx,n_part,int         *);
+  PDM_malloc(*pface_edge_idx,n_part,int         *);
+  PDM_malloc(*pface_edge,n_part,int         *);
+  PDM_malloc(*pface_vtx,n_part,int         *);
+  PDM_malloc(*pvtx_ln_to_gn,n_part,PDM_g_num_t *);
+  PDM_malloc(*pedge_ln_to_gn,n_part,PDM_g_num_t *);
+  PDM_malloc(*pface_ln_to_gn,n_part,PDM_g_num_t *);
 
   for (int ipart = 0; ipart < n_part; ipart++) {
     (*pn_vtx)[ipart] = PDM_multipart_part_ln_to_gn_get(mpart,
@@ -1298,7 +1298,7 @@ PDM_generate_mesh_sphere_ngon
                                         &(*pedge_vtx)[ipart],
                                         PDM_OWNERSHIP_USER);
     if (edge_vtx_idx != NULL) {
-      free (edge_vtx_idx);
+     PDM_free(edge_vtx_idx);
     }
 
     PDM_compute_face_vtx_from_face_and_edge((*pn_face)[ipart],
@@ -1374,25 +1374,25 @@ PDM_generate_mesh_ball_ngon
                       &mpart);
   PDM_DMesh_nodal_free(dmn);
 
-  *pn_vtx                 = malloc(sizeof(int          ) * n_part);
-  *pn_edge                = malloc(sizeof(int          ) * n_part);
-  *pn_face                = malloc(sizeof(int          ) * n_part);
-  *pn_cell                = malloc(sizeof(int          ) * n_part);
-  *pvtx_coord             = malloc(sizeof(double      *) * n_part);
-  *pedge_vtx              = malloc(sizeof(int         *) * n_part);
-  *pface_edge_idx         = malloc(sizeof(int         *) * n_part);
-  *pface_edge             = malloc(sizeof(int         *) * n_part);
-  *pface_vtx              = malloc(sizeof(int         *) * n_part);
-  *pcell_face_idx         = malloc(sizeof(int         *) * n_part);
-  *pcell_face             = malloc(sizeof(int         *) * n_part);
-  *pvtx_ln_to_gn          = malloc(sizeof(PDM_g_num_t *) * n_part);
-  *pedge_ln_to_gn         = malloc(sizeof(PDM_g_num_t *) * n_part);
-  *pface_ln_to_gn         = malloc(sizeof(PDM_g_num_t *) * n_part);
-  *pcell_ln_to_gn         = malloc(sizeof(PDM_g_num_t *) * n_part);
-  *pn_surface             = malloc(sizeof(int          ) * n_part);
-  *psurface_face_idx      = malloc(sizeof(int         *) * n_part);
-  *psurface_face          = malloc(sizeof(int         *) * n_part);
-  *psurface_face_ln_to_gn = malloc(sizeof(PDM_g_num_t *) * n_part);
+  PDM_malloc(*pn_vtx,n_part,int          );
+  PDM_malloc(*pn_edge,n_part,int          );
+  PDM_malloc(*pn_face,n_part,int          );
+  PDM_malloc(*pn_cell,n_part,int          );
+  PDM_malloc(*pvtx_coord,n_part,double      *);
+  PDM_malloc(*pedge_vtx,n_part,int         *);
+  PDM_malloc(*pface_edge_idx,n_part,int         *);
+  PDM_malloc(*pface_edge,n_part,int         *);
+  PDM_malloc(*pface_vtx,n_part,int         *);
+  PDM_malloc(*pcell_face_idx,n_part,int         *);
+  PDM_malloc(*pcell_face,n_part,int         *);
+  PDM_malloc(*pvtx_ln_to_gn,n_part,PDM_g_num_t *);
+  PDM_malloc(*pedge_ln_to_gn,n_part,PDM_g_num_t *);
+  PDM_malloc(*pface_ln_to_gn,n_part,PDM_g_num_t *);
+  PDM_malloc(*pcell_ln_to_gn,n_part,PDM_g_num_t *);
+  PDM_malloc(*pn_surface,n_part,int          );
+  PDM_malloc(*psurface_face_idx,n_part,int         *);
+  PDM_malloc(*psurface_face,n_part,int         *);
+  PDM_malloc(*psurface_face_ln_to_gn,n_part,PDM_g_num_t *);
 
   for (int ipart = 0; ipart < n_part; ipart++) {
     (*pn_vtx)[ipart] = PDM_multipart_part_ln_to_gn_get(mpart,
@@ -1454,7 +1454,7 @@ PDM_generate_mesh_ball_ngon
                                         &(*pedge_vtx)[ipart],
                                         PDM_OWNERSHIP_USER);
     if (edge_vtx_idx != NULL) {
-      free (edge_vtx_idx);
+     PDM_free(edge_vtx_idx);
     }
 
     PDM_compute_face_vtx_from_face_and_edge((*pn_face)[ipart],
@@ -1545,29 +1545,29 @@ PDM_generate_mesh_parallelepiped_ngon
 
   PDM_DMesh_nodal_free(dmn);
 
-  *pn_vtx                 = malloc(sizeof(int          ) * n_part);
-  *pn_edge                = malloc(sizeof(int          ) * n_part);
-  *pn_face                = malloc(sizeof(int          ) * n_part);
-  *pn_cell                = malloc(sizeof(int          ) * n_part);
-  *pvtx_coord             = malloc(sizeof(double      *) * n_part);
-  *pedge_vtx              = malloc(sizeof(int         *) * n_part);
-  *pface_edge_idx         = malloc(sizeof(int         *) * n_part);
-  *pface_edge             = malloc(sizeof(int         *) * n_part);
-  *pface_vtx              = malloc(sizeof(int         *) * n_part);
-  *pcell_face_idx         = malloc(sizeof(int         *) * n_part);
-  *pcell_face             = malloc(sizeof(int         *) * n_part);
-  *pvtx_ln_to_gn          = malloc(sizeof(PDM_g_num_t *) * n_part);
-  *pedge_ln_to_gn         = malloc(sizeof(PDM_g_num_t *) * n_part);
-  *pface_ln_to_gn         = malloc(sizeof(PDM_g_num_t *) * n_part);
-  *pcell_ln_to_gn         = malloc(sizeof(PDM_g_num_t *) * n_part);
-  *pn_surface             = malloc(sizeof(int          ) * n_part);
-  *psurface_face_idx      = malloc(sizeof(int         *) * n_part);
-  *psurface_face          = malloc(sizeof(int         *) * n_part);
-  *psurface_face_ln_to_gn = malloc(sizeof(PDM_g_num_t *) * n_part);
-  *pn_ridge               = malloc(sizeof(int          ) * n_part);
-  *pridge_edge_idx        = malloc(sizeof(int         *) * n_part);
-  *pridge_edge            = malloc(sizeof(int         *) * n_part);
-  *pridge_edge_ln_to_gn   = malloc(sizeof(PDM_g_num_t *) * n_part);
+  PDM_malloc(*pn_vtx,n_part,int          );
+  PDM_malloc(*pn_edge,n_part,int          );
+  PDM_malloc(*pn_face,n_part,int          );
+  PDM_malloc(*pn_cell,n_part,int          );
+  PDM_malloc(*pvtx_coord,n_part,double      *);
+  PDM_malloc(*pedge_vtx,n_part,int         *);
+  PDM_malloc(*pface_edge_idx,n_part,int         *);
+  PDM_malloc(*pface_edge,n_part,int         *);
+  PDM_malloc(*pface_vtx,n_part,int         *);
+  PDM_malloc(*pcell_face_idx,n_part,int         *);
+  PDM_malloc(*pcell_face,n_part,int         *);
+  PDM_malloc(*pvtx_ln_to_gn,n_part,PDM_g_num_t *);
+  PDM_malloc(*pedge_ln_to_gn,n_part,PDM_g_num_t *);
+  PDM_malloc(*pface_ln_to_gn,n_part,PDM_g_num_t *);
+  PDM_malloc(*pcell_ln_to_gn,n_part,PDM_g_num_t *);
+  PDM_malloc(*pn_surface,n_part,int          );
+  PDM_malloc(*psurface_face_idx,n_part,int         *);
+  PDM_malloc(*psurface_face,n_part,int         *);
+  PDM_malloc(*psurface_face_ln_to_gn,n_part,PDM_g_num_t *);
+  PDM_malloc(*pn_ridge,n_part,int          );
+  PDM_malloc(*pridge_edge_idx,n_part,int         *);
+  PDM_malloc(*pridge_edge,n_part,int         *);
+  PDM_malloc(*pridge_edge_ln_to_gn,n_part,PDM_g_num_t *);
 
   for (int ipart = 0; ipart < n_part; ipart++) {
     (*pn_vtx)[ipart] = PDM_multipart_part_ln_to_gn_get(mpart,
@@ -1630,7 +1630,7 @@ PDM_generate_mesh_parallelepiped_ngon
                                         &(*pedge_vtx)[ipart],
                                         PDM_OWNERSHIP_USER);
     if (edge_vtx_idx != NULL) {
-      free (edge_vtx_idx);
+     PDM_free(edge_vtx_idx);
     }
 
     PDM_compute_face_vtx_from_face_and_edge((*pn_face)[ipart],

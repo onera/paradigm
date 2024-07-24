@@ -295,6 +295,58 @@ PDM_dmesh_bound_set
  PDM_ownership_t   ownership
 );
 
+
+/**
+ *
+ * \brief Retrieve ridges from block-distributed faces with groups, and build associated edges
+ *
+ * \param [in]  comm                       MPI communicator
+ * \param [in]  distrib_face               Distribution of faces
+ * \param [in]  dface_vtx_idx              Index for block-distributed face->vertex connectivity
+ * \param [in]  dface_vtx                  Block-distributed face->vertex connectivity
+ * \param [in]  n_group_face               Number of face groups
+ * \param [in]  dgroup_face_idx            Index for block-distributed group->face connectivity
+ * \param [in]  dgroup_face                Block-distributed group->face connectivity
+ * \param [out] out_distrib_ridge          Distribution of edges (only those on ridges)
+ * \param [out] out_dridge_vtx             Block-distributed edge->vertex connectivity (only those on ridges)
+ * \param [out] out_n_group_ridge          Number of ridge groups
+ * \param [out] out_dgroup_edge_idx        Index for block-distributed group->edge connectivity
+ * \param [out] out_dgroup_edge            Block-distributed group->edge connectivity
+ * \param [out] out_dridge_face_group_idx  Index for ridge->surface connectivity
+ * \param [out] out_dridge_face_group      Ridge->surface connectivity
+ */
+void
+PDM_dmesh_find_topological_ridges
+(
+  PDM_MPI_Comm   comm,
+  PDM_g_num_t   *distrib_face,
+  int           *dface_vtx_idx,
+  PDM_g_num_t   *dface_vtx,
+  int            n_group_face,
+  int           *dgroup_face_idx,
+  PDM_g_num_t   *dgroup_face,
+  PDM_g_num_t  **out_distrib_ridge,
+  PDM_g_num_t  **out_dridge_vtx,
+  int           *out_n_group_ridge,
+  int          **out_dgroup_edge_idx,
+  PDM_g_num_t  **out_dgroup_edge,
+  int          **out_dridge_face_group_idx,
+  int          **out_dridge_face_group
+);
+
+
+/**
+ * \brief Compute distributions for all entities
+ *
+ * \param [inout] dmesh
+ */
+
+void
+PDM_dmesh_compute_distributions
+(
+ PDM_dmesh_t *dmesh
+);
+
 /*----------------------------------------------------------------------------*/
 
 #ifdef __cplusplus
