@@ -3114,7 +3114,8 @@ PDM_isosurface_marching_algo
   PDM_MPI_Comm_size(comm, &n_rank);
 
   // > Part mesh nodal
-  PDM_part_mesh_nodal_t *pmn = isos->pmesh_nodal;
+  PDM_part_mesh_nodal_t *pmn = isos->extract_pmesh_nodal;
+  assert(pmn != NULL);
 
   // > Isosurface information
   int   n_isovalues = isos->n_isovalues[id_iso];
@@ -3826,13 +3827,11 @@ PDM_isosurface_ngon_algo
   PDM_g_num_t **iso_face_parent_gnum = malloc(sizeof(PDM_g_num_t *) * isos->n_part);
 
 
-  int n_surface = 0;
-  if (isos->pmesh != NULL) {
-    n_surface = PDM_part_mesh_n_bound_get(isos->pmesh, PDM_BOUND_TYPE_FACE);
-  }
-  else {
-    n_surface = isos->n_group_face[0]; // same value for all partitions??
-  }
+
+  PDM_extract_part_t *extrp = isos->extrp[id_iso];
+  assert(extrp != NULL);
+
+  int n_surface = isos->n_group_face[0];
 
   int *iso_edge_group_n = malloc(sizeof(int) * n_surface);
 
@@ -3855,109 +3854,86 @@ PDM_isosurface_ngon_algo
     PDM_g_num_t *face_ln_to_gn = NULL;
     PDM_g_num_t *vtx_ln_to_gn  = NULL;
 
-    int *surface_face_idx = NULL;
-    int *surface_face     = NULL;
+    n_cell = PDM_extract_part_n_entity_get(extrp,
+                                           i_part,
+                                           PDM_MESH_ENTITY_CELL);
+    n_face = PDM_extract_part_n_entity_get(extrp,
+                                           i_part,
+                                           PDM_MESH_ENTITY_FACE);
+    n_edge = PDM_extract_part_n_entity_get(extrp,
+                                           i_part,
+                                           PDM_MESH_ENTITY_EDGE);
+    n_vtx  = PDM_extract_part_n_entity_get(extrp,
+                                           i_part,
+                                           PDM_MESH_ENTITY_VTX);
 
-    if (isos->pmesh != NULL) { // isos->entry_mesh_type == -2
-      n_cell = PDM_part_mesh_n_entity_get(isos->pmesh,
-                                          i_part,
-                                          PDM_MESH_ENTITY_CELL);
+    PDM_extract_part_connectivity_get(extrp,
+                                      i_part,
+                                      PDM_CONNECTIVITY_TYPE_CELL_FACE,
+                                      &cell_face,
+                                      &cell_face_idx,
+                                      PDM_OWNERSHIP_BAD_VALUE);
 
-      n_face = PDM_part_mesh_n_entity_get(isos->pmesh,
-                                          i_part,
-                                          PDM_MESH_ENTITY_FACE);
+    PDM_extract_part_connectivity_get(extrp,
+                                      i_part,
+                                      PDM_CONNECTIVITY_TYPE_FACE_EDGE,
+                                      &face_edge,
+                                      &face_edge_idx,
+                                      PDM_OWNERSHIP_BAD_VALUE);
 
-      n_edge = PDM_part_mesh_n_entity_get(isos->pmesh,
-                                          i_part,
-                                          PDM_MESH_ENTITY_EDGE);
+    int *edge_vtx_idx = NULL;
+    PDM_extract_part_connectivity_get(extrp,
+                                      i_part,
+                                      PDM_CONNECTIVITY_TYPE_EDGE_VTX,
+                                      &edge_vtx,
+                                      &edge_vtx_idx,
+                                      PDM_OWNERSHIP_BAD_VALUE);
 
-      n_vtx  = PDM_part_mesh_n_entity_get(isos->pmesh,
-                                          i_part,
-                                          PDM_MESH_ENTITY_VTX);
+    PDM_extract_part_vtx_coord_get(extrp,
+                                   i_part,
+                                   &vtx_coord,
+                                   PDM_OWNERSHIP_BAD_VALUE);
 
-      PDM_part_mesh_connectivity_get(isos->pmesh,
-                                     i_part,
-                                     PDM_CONNECTIVITY_TYPE_CELL_FACE,
-                                     &cell_face,
-                                     &cell_face_idx,
-                                     PDM_OWNERSHIP_BAD_VALUE);
+    PDM_extract_part_parent_ln_to_gn_get(extrp,
+                                         i_part,
+                                         PDM_MESH_ENTITY_CELL,
+                                         &cell_ln_to_gn,
+                                         PDM_OWNERSHIP_BAD_VALUE);
 
-      PDM_part_mesh_connectivity_get(isos->pmesh,
-                                     i_part,
-                                     PDM_CONNECTIVITY_TYPE_FACE_EDGE,
-                                     &face_edge,
-                                     &face_edge_idx,
-                                     PDM_OWNERSHIP_BAD_VALUE);
+    PDM_extract_part_parent_ln_to_gn_get(extrp,
+                                         i_part,
+                                         PDM_MESH_ENTITY_FACE,
+                                         &face_ln_to_gn,
+                                         PDM_OWNERSHIP_BAD_VALUE);
 
-      int *edge_vtx_idx = NULL;
-      PDM_part_mesh_connectivity_get(isos->pmesh,
-                                     i_part,
-                                     PDM_CONNECTIVITY_TYPE_EDGE_VTX,
-                                     &edge_vtx,
-                                     &edge_vtx_idx,
-                                     PDM_OWNERSHIP_BAD_VALUE);
-
-      PDM_part_mesh_vtx_coord_get(isos->pmesh,
-                                  i_part,
-                                  &vtx_coord,
-                                  PDM_OWNERSHIP_BAD_VALUE);
-
-      PDM_part_mesh_entity_ln_to_gn_get(isos->pmesh,
-                                        i_part,
-                                        PDM_MESH_ENTITY_CELL,
-                                        &cell_ln_to_gn,
-                                        PDM_OWNERSHIP_BAD_VALUE);
-
-      PDM_part_mesh_entity_ln_to_gn_get(isos->pmesh,
-                                        i_part,
-                                        PDM_MESH_ENTITY_FACE,
-                                        &face_ln_to_gn,
-                                        PDM_OWNERSHIP_BAD_VALUE);
-
-      PDM_part_mesh_entity_ln_to_gn_get(isos->pmesh,
-                                        i_part,
-                                        PDM_MESH_ENTITY_VTX,
-                                        &vtx_ln_to_gn,
-                                        PDM_OWNERSHIP_BAD_VALUE);
-
-      // Get surfaces
-      PDM_g_num_t *surface_face_ln_to_gn = NULL;
-      PDM_part_mesh_bound_concat_get(isos->pmesh,
-                                     i_part,
-                                     PDM_BOUND_TYPE_FACE,
-                                     &surface_face_idx,
-                                     &surface_face,
-                                     &surface_face_ln_to_gn,
-                                     PDM_OWNERSHIP_BAD_VALUE);
-    }
-    else { // isos->entry_mesh_type == -1
-      n_cell = isos->n_cell[i_part];
-      n_face = isos->n_face[i_part];
-      n_edge = isos->n_edge[i_part];
-      n_vtx  = isos->n_vtx [i_part];
-
-      cell_face_idx = isos->cell_face_idx[i_part];
-      cell_face     = isos->cell_face    [i_part];
-      face_edge_idx = isos->face_edge_idx[i_part];
-      face_edge     = isos->face_edge    [i_part];
-      edge_vtx      = isos->edge_vtx     [i_part];
-      vtx_coord     = isos->vtx_coord    [i_part];
-
-      cell_ln_to_gn = isos->cell_gnum[i_part];
-      face_ln_to_gn = isos->face_gnum[i_part];
-      vtx_ln_to_gn  = isos->vtx_gnum [i_part];
-
-      surface_face_idx = isos->group_face_idx[i_part];
-      surface_face     = isos->group_face    [i_part];
-    }
+    PDM_extract_part_parent_ln_to_gn_get(extrp,
+                                         i_part,
+                                         PDM_MESH_ENTITY_VTX,
+                                         &vtx_ln_to_gn,
+                                         PDM_OWNERSHIP_BAD_VALUE);
 
     // group_face -> face_tag
     int *face_tag = NULL;
     if (n_surface > 0) {
       face_tag = PDM_array_zeros_int(n_face);
       for (int i_surface = 0; i_surface < n_surface; i_surface++) {
-        for (int i = surface_face_idx[i_surface]; i < surface_face_idx[i_surface+1]; i++) {
-          face_tag[surface_face[i]-1] = i_surface + 1;
+
+        int          surface_face_n           = 0;
+        int         *surface_face_lnum        = NULL;
+        PDM_g_num_t *surface_face_gnum        = NULL;
+        PDM_g_num_t *surface_face_parent_gnum = NULL;
+        PDM_extract_part_group_get(isos->extrp[id_iso],
+                                   PDM_BOUND_TYPE_FACE,
+                                   i_part,
+                                   i_surface,
+                                   &surface_face_n,
+                                   &surface_face_lnum,
+                                   &surface_face_gnum,
+                                   &surface_face_parent_gnum,
+                                   PDM_OWNERSHIP_KEEP);
+
+        for (int i = 0; i < surface_face_n; i++) {
+          face_tag[surface_face_lnum[i]-1] = i_surface + 1;
         }
       }
     }
@@ -3994,7 +3970,7 @@ PDM_isosurface_ngon_algo
                                  face_edge,
                                  edge_vtx,
                                  vtx_coord,
-                                 isos->field[id_iso][i_part],
+                                 isos->extract_field[id_iso][i_part],
                                  face_tag,
                                  cell_ln_to_gn,
                                  &iso_n_vtx            [i_part],
@@ -4041,24 +4017,26 @@ PDM_isosurface_ngon_algo
 
 
     // Groups
-    PDM_array_reset_int(iso_edge_group_n, n_surface, 0);
-    for (int i_edge = 0; i_edge < iso_n_edge[i_part]; i_edge++) {
-      int i_face = iso_edge_parent[i_part][iso_edge_parent_idx[i_part][i_edge]] - 1;
-      assert(face_tag[i_face] > 0);
-      iso_edge_group_n[face_tag[i_face]-1]++;
-    }
+    if (n_surface > 0) {
+      PDM_array_reset_int(iso_edge_group_n, n_surface, 0);
+      for (int i_edge = 0; i_edge < iso_n_edge[i_part]; i_edge++) {
+        int i_face = iso_edge_parent[i_part][iso_edge_parent_idx[i_part][i_edge]] - 1;
+        assert(face_tag[i_face] > 0);
+        iso_edge_group_n[face_tag[i_face]-1]++;
+      }
 
-    iso_edge_group_idx [i_part] = PDM_array_new_idx_from_sizes_int(iso_edge_group_n, n_surface);
-    iso_edge_group_lnum[i_part] = malloc(sizeof(int        ) * iso_edge_group_idx[i_part][n_surface]);
-    PDM_array_reset_int(iso_edge_group_n, n_surface, 0);
-    for (int i_edge = 0; i_edge < iso_n_edge[i_part]; i_edge++) {
-      int i_face    = iso_edge_parent[i_part][iso_edge_parent_idx[i_part][i_edge]] - 1;
-      int i_surface = face_tag[i_face]-1;
-      // TODO: handle case with face on multiple surfaces?
-      iso_edge_group_lnum[i_part][iso_edge_group_idx[i_part][i_surface] + iso_edge_group_n[i_surface]] = i_edge+1;
-      iso_edge_group_n[i_surface]++;
+      iso_edge_group_idx [i_part] = PDM_array_new_idx_from_sizes_int(iso_edge_group_n, n_surface);
+      iso_edge_group_lnum[i_part] = malloc(sizeof(int        ) * iso_edge_group_idx[i_part][n_surface]);
+      PDM_array_reset_int(iso_edge_group_n, n_surface, 0);
+      for (int i_edge = 0; i_edge < iso_n_edge[i_part]; i_edge++) {
+        int i_face    = iso_edge_parent[i_part][iso_edge_parent_idx[i_part][i_edge]] - 1;
+        int i_surface = face_tag[i_face]-1;
+        // TODO: handle case with face on multiple surfaces?
+        iso_edge_group_lnum[i_part][iso_edge_group_idx[i_part][i_surface] + iso_edge_group_n[i_surface]] = i_edge+1;
+        iso_edge_group_n[i_surface]++;
+      }
+      free(face_tag);
     }
-    free(face_tag);
   }
   free(iso_edge_group_n);
 

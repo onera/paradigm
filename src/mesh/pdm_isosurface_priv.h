@@ -33,6 +33,8 @@
 #include "pdm_part_mesh.h"
 #include "pdm_dmesh.h"
 #include "pdm_part_to_part.h"
+#include "pdm_block_to_part.h"
+#include "pdm_extract_part.h"
 #include "pdm_isosurface.h"
 
 /*----------------------------------------------------------------------------*/
@@ -96,14 +98,17 @@ struct _pdm_isosurface_t {
   _pdm_isosurface_field_function_t *iso_func;
 
   // > Redistribution
-  PDM_extract_part_kind_t extract_kind;
-  PDM_split_dual_t        part_method;
+  PDM_extract_part_t      **extrp;
+  PDM_extract_part_kind_t   extract_kind;
+  PDM_split_dual_t          part_method;
 
   // > Link with entry mesh
   int **compute_ptp;
   
   // ========================
   // > Distributed entry data
+  int dist_to_part_computed;
+  PDM_block_to_part_t *btp_vtx;
 
   // > Mesh structs
   PDM_dmesh_t       *dmesh;
@@ -127,6 +132,8 @@ struct _pdm_isosurface_t {
   PDM_g_num_t *dface_vtx;
   PDM_g_num_t *dedge_vtx;
 
+  int we_have_edges;
+
   // > Boundaries
   int          n_dgroup_face;
   int         *dgroup_face_idx;
@@ -144,7 +151,8 @@ struct _pdm_isosurface_t {
   double **dfield;
   double **dgradient;
 
-
+  double ***extract_field;
+  PDM_part_mesh_nodal_t *extract_pmesh_nodal;
 
   // ========================
   // > Partitioned entry data
@@ -177,9 +185,10 @@ struct _pdm_isosurface_t {
   int **edge_vtx;
 
   // > Boundaries
-  int  *n_group_face;
-  int **group_face_idx;
-  int **group_face;
+  int          *n_group_face;
+  int         **group_face_idx;
+  int         **group_face;
+  PDM_g_num_t **group_face_gnum;
 
   // int  *n_group_edge;
   // int **group_edge_idx;
@@ -222,6 +231,9 @@ struct _pdm_isosurface_t {
   PDM_g_num_t   ***iso_edge_group_gnum;
   int           ***isovalue_edge_idx;
 
+  // PDM_g_num_t    **distrib_iso_edge;
+  // PDM_g_num_t    **diso_edge_vtx;
+
   // > Faces
   int            **iso_n_face;
   int           ***iso_face_vtx_idx;
@@ -231,7 +243,11 @@ struct _pdm_isosurface_t {
   int           ***iso_face_lparent;
   int           ***isovalue_face_idx;
 
-  // > Part_to_part between iso entities and entry mesh entites
+  // PDM_g_num_t    **distrib_iso_face;
+  // int            **diso_face_vtx_idx;
+  // PDM_g_num_t    **diso_face_vtx;
+
+  // > Part_to_part between iso entities and entry mesh entities
   PDM_part_to_part_t **iso_ptp_vtx;
   PDM_part_to_part_t **iso_ptp_edge;
   PDM_part_to_part_t **iso_ptp_face;

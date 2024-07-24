@@ -207,6 +207,85 @@ PDM_isosurface_dmesh_set
    */
 
   isos->dmesh = dmesh;
+
+  /* Unpack dmesh */
+  isos->entry_mesh_type = 1; // héhé
+  for (int i_entity = PDM_MESH_ENTITY_CELL; i_entity < PDM_MESH_ENTITY_MAX; i_entity++) {
+    PDM_g_num_t *distrib = NULL;
+    PDM_dmesh_distrib_get     (dmesh, i_entity, &distrib);
+    PDM_isosurface_distrib_set(isos,  i_entity,  distrib);
+  }
+
+  // Cells
+  int         *dcell_face_idx = NULL;
+  PDM_g_num_t *dcell_face     = NULL;
+  PDM_dmesh_connectivity_get(dmesh,
+                             PDM_CONNECTIVITY_TYPE_CELL_FACE,
+                             &dcell_face,
+                             &dcell_face_idx,
+                             PDM_OWNERSHIP_BAD_VALUE);
+  PDM_isosurface_dconnectivity_set(isos,
+                                   PDM_CONNECTIVITY_TYPE_CELL_FACE,
+                                   dcell_face_idx,
+                                   dcell_face);
+
+  // Faces
+  int         *dface_edge_idx = NULL;
+  PDM_g_num_t *dface_edge     = NULL;
+  PDM_dmesh_connectivity_get(dmesh,
+                             PDM_CONNECTIVITY_TYPE_FACE_EDGE,
+                             &dface_edge,
+                             &dface_edge_idx,
+                             PDM_OWNERSHIP_BAD_VALUE);
+  PDM_isosurface_dconnectivity_set(isos,
+                                   PDM_CONNECTIVITY_TYPE_FACE_EDGE,
+                                   dface_edge_idx,
+                                   dface_edge);
+
+  int         *dface_vtx_idx = NULL;
+  PDM_g_num_t *dface_vtx     = NULL;
+  PDM_dmesh_connectivity_get(dmesh,
+                             PDM_CONNECTIVITY_TYPE_FACE_VTX,
+                             &dface_vtx,
+                             &dface_vtx_idx,
+                             PDM_OWNERSHIP_BAD_VALUE);
+  PDM_isosurface_dconnectivity_set(isos,
+                                   PDM_CONNECTIVITY_TYPE_FACE_VTX,
+                                   dface_vtx_idx,
+                                   dface_vtx);
+
+  // Edges
+  int         *dedge_vtx_idx = NULL;
+  PDM_g_num_t *dedge_vtx     = NULL;
+  PDM_dmesh_connectivity_get(dmesh,
+                             PDM_CONNECTIVITY_TYPE_EDGE_VTX,
+                             &dedge_vtx,
+                             &dedge_vtx_idx,
+                             PDM_OWNERSHIP_BAD_VALUE);
+
+  PDM_isosurface_dconnectivity_set(isos,
+                                   PDM_CONNECTIVITY_TYPE_EDGE_VTX,
+                                   NULL,
+                                   dedge_vtx);
+
+  // Vertices
+  double *dvtx_coord = NULL;
+  PDM_dmesh_vtx_coord_get(dmesh, &dvtx_coord, PDM_OWNERSHIP_BAD_VALUE);
+  PDM_isosurface_dvtx_coord_set(isos, dvtx_coord);
+
+  // Groups (surfaces)
+  int         *dsurface_face_idx = NULL;
+  PDM_g_num_t *dsurface_face     = NULL;
+  int n_surface = PDM_dmesh_bound_get(dmesh,
+                                      PDM_BOUND_TYPE_FACE,
+                                      &dsurface_face,
+                                      &dsurface_face_idx,
+                                      PDM_OWNERSHIP_BAD_VALUE);
+  PDM_isosurface_dgroup_set(isos,
+                            PDM_MESH_ENTITY_FACE,
+                            n_surface,
+                            dsurface_face_idx,
+                            dsurface_face);
 }
 
 void
