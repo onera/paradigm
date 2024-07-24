@@ -2125,7 +2125,88 @@ PDM_mesh_location_compute
 
 
       if (g_n_pts[1] == 0) {
-        // Shortcut, TO DO...
+        /* We extracted zero points, take a shortcut */
+        for (int ipart = 0; ipart < pcloud->n_part; ipart++) {
+          PDM_free(select_pts_l_num[ipart]);
+        }
+        PDM_free(n_select_pts);
+        PDM_free(select_pts_l_num);
+
+        /* Result from mesh PoV */
+        _points_in_element_t *pts_in_elt = ml->points_in_elements + icloud;
+
+        pts_in_elt->n_part = n_part;
+        PDM_malloc(pts_in_elt->n_elts, n_part, int);
+        memcpy(pts_in_elt->n_elts, pn_elt, sizeof(int) * n_part);
+
+        PDM_malloc(pts_in_elt->pts_inside_idx,   n_part, int         *);
+        PDM_malloc(pts_in_elt->gnum,             n_part, PDM_g_num_t *);
+        PDM_malloc(pts_in_elt->coords,           n_part, double      *);
+        PDM_malloc(pts_in_elt->uvw,              n_part, double      *);
+        PDM_malloc(pts_in_elt->projected_coords, n_part, double      *);
+        PDM_malloc(pts_in_elt->weights_idx,      n_part, int         *);
+        PDM_malloc(pts_in_elt->weights,          n_part, double      *);
+        PDM_malloc(pts_in_elt->dist2,            n_part, double      *);
+
+        int **pts_in_elt_triplet_idx = NULL;
+        int **pts_in_elt_triplet     = NULL;
+        PDM_malloc(pts_in_elt_triplet_idx, n_part, int *);
+        PDM_malloc(pts_in_elt_triplet,     n_part, int *);
+        for (int ipart = 0; ipart < n_part; ipart++) {
+          pts_in_elt->pts_inside_idx[ipart] = PDM_array_zeros_int(pn_elt[ipart] + 1);
+          pts_in_elt->weights_idx   [ipart] = PDM_array_zeros_int(1);
+          PDM_malloc(pts_in_elt->gnum            [ipart], 0, PDM_g_num_t);
+          PDM_malloc(pts_in_elt->coords          [ipart], 0, double     );
+          PDM_malloc(pts_in_elt->uvw             [ipart], 0, double     );
+          PDM_malloc(pts_in_elt->projected_coords[ipart], 0, double     );
+          PDM_malloc(pts_in_elt->weights         [ipart], 0, double     );
+          PDM_malloc(pts_in_elt->dist2           [ipart], 0, double     );
+
+          pts_in_elt_triplet_idx[ipart] = PDM_array_zeros_int(1);
+          PDM_malloc(pts_in_elt_triplet[ipart], 0, int);
+        }
+
+        ml->ptp[icloud] = PDM_part_to_part_create_from_num2_triplet((const PDM_g_num_t **) elt_g_num,
+                                                                    (const int          *) pn_elt,
+                                                                    n_part,
+                                                                    (const int          *) pcloud->n_points,
+                                                                    pcloud->n_part,
+                                                                    (const int         **) pts_in_elt->pts_inside_idx, // size = n_elt
+                                                                    (const int         **) pts_in_elt_triplet_idx,     // size = pts_inside_idx[n_elt]
+                                                                    (const int         **) pts_in_elt_triplet,
+                                                                    ml->comm);
+        for (int ipart = 0; ipart < n_part; ipart++) {
+          PDM_free(pts_in_elt_triplet_idx[ipart]);
+          PDM_free(pts_in_elt_triplet    [ipart]);
+        }
+        PDM_free(pts_in_elt_triplet_idx);
+        PDM_free(pts_in_elt_triplet    );
+
+        /* Result from point cloud PoV */
+        PDM_malloc(pcloud->n_located,        pcloud->n_part, int          );
+        PDM_malloc(pcloud->n_un_located,     pcloud->n_part, int          );
+        PDM_malloc(pcloud->located,          pcloud->n_part, int         *);
+        PDM_malloc(pcloud->un_located,       pcloud->n_part, int         *);
+        PDM_malloc(pcloud->location,         pcloud->n_part, PDM_g_num_t *);
+        PDM_malloc(pcloud->projected_coords, pcloud->n_part, double      *);
+        PDM_malloc(pcloud->dist2,            pcloud->n_part, double      *);
+        for (int ipart = 0; ipart < pcloud->n_part; ipart++) {
+          pcloud->n_located   [ipart] = 0;
+          pcloud->n_un_located[ipart] = pcloud->n_points[ipart];
+
+          PDM_malloc(pcloud->located   [ipart], pcloud->n_located   [ipart], int);
+          PDM_malloc(pcloud->un_located[ipart], pcloud->n_un_located[ipart], int);
+
+          for (int i = 0; i < pcloud->n_points[ipart]; i++) {
+            pcloud->un_located[ipart][i] = i+1;
+          }
+
+          PDM_malloc(pcloud->location        [ipart], 0, PDM_g_num_t);
+          PDM_malloc(pcloud->projected_coords[ipart], 0, double     );
+          PDM_malloc(pcloud->dist2           [ipart], 0, double     );
+        }
+
+        continue; // move on the next point cloud
       }
 
       use_extracted_pts = (g_n_pts[1] < extraction_threshold * g_n_pts[0]);
