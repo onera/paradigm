@@ -204,13 +204,13 @@ _part_extension
   ln_part_tot = 0;
   for(int i_dom = 0; i_dom < n_domain; ++i_dom) {
 
-    pn_vtx        PDM_malloc([i_dom], n_part[i_dom] ,int          );
-    pvtx_ln_to_gn PDM_malloc([i_dom], n_part[i_dom] ,PDM_g_num_t *);
-    pn_edge       PDM_malloc([i_dom], n_part[i_dom] ,int          );
+    PDM_malloc(pn_vtx        [i_dom], n_part[i_dom] ,int          );
+    PDM_malloc(pvtx_ln_to_gn [i_dom], n_part[i_dom] ,PDM_g_num_t *);
+    PDM_malloc(pn_edge       [i_dom], n_part[i_dom] ,int          );
     PDM_malloc(pedge_ln_to_gn[i_dom], n_part[i_dom] ,PDM_g_num_t *);
 
-    pedge_vtx_idx PDM_malloc([i_dom], n_part[i_dom] ,int         *);
-    pedge_vtx     PDM_malloc([i_dom], n_part[i_dom] ,int         *);
+    PDM_malloc(pedge_vtx_idx [i_dom], n_part[i_dom] ,int         *);
+    PDM_malloc(pedge_vtx     [i_dom], n_part[i_dom] ,int         *);
 
     for(int i_part = 0; i_part < n_part[i_dom]; ++i_part) {
 
@@ -745,7 +745,7 @@ char *argv[]
 
   for(int i_dom = 0; i_dom < n_domain; ++i_dom) {
 
-    pn_vtx       PDM_malloc([i_dom], n_part[i_dom] ,int          );
+    PDM_malloc(pn_vtx       [i_dom], n_part[i_dom] ,int          );
     PDM_malloc(pvtx_ln_to_gn[i_dom], n_part[i_dom] ,PDM_g_num_t *);
 
     for(int i_part = 0; i_part < n_part[i_dom]; ++i_part) {

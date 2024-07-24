@@ -312,7 +312,7 @@ int main(int argc, char *argv[])
     }
     // Join numbering (left to right, increasing i_domain)
 
-    dface_bnd_idx PDM_malloc([i_domain],(n_bnd        + 1) ,int);
+    PDM_malloc(dface_bnd_idx [i_domain],(n_bnd        + 1) ,int);
 
     // First pass to count and allocate
     int i_bnd = 1;
@@ -342,7 +342,7 @@ int main(int argc, char *argv[])
     PDM_realloc(dface_join ,dface_join , dface_join_idx[i_jn-1] ,PDM_g_num_t);
 
     // Second pass to copy
-    dface_bnd PDM_malloc([i_domain],dface_bnd_idx [i_domain][n_bnd        ] ,PDM_g_num_t);
+    PDM_malloc(dface_bnd [i_domain],dface_bnd_idx [i_domain][n_bnd        ] ,PDM_g_num_t);
     i_bnd = 0;
     i_jn  = tmp_i_group_join;
     for (int igroup = 0; igroup < n_face_group[i_domain]; igroup++) {

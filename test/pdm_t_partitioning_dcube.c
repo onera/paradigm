@@ -198,8 +198,8 @@ compute_dual_mesh_metrics
 
   for (int i_part = 0; i_part < n_part; i_part++){
 
-    center_cell PDM_malloc([i_part], 3 * pn_cell[i_part]  ,double);
-    center_face PDM_malloc([i_part], 3 * pn_faces[i_part] ,double);
+    PDM_malloc(center_cell [i_part], 3 * pn_cell[i_part]  ,double);
+    PDM_malloc(center_face [i_part], 3 * pn_faces[i_part] ,double);
     PDM_malloc(surface_face[i_part], 3 * pn_faces[i_part] ,double);
 
     PDM_malloc(ponderate_face_vtx[i_part], pface_vtx_idx[i_part][pn_faces[i_part]] ,double);

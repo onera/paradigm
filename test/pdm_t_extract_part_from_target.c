@@ -543,7 +543,7 @@ int main(int argc, char *argv[])
   double **pface_field;
   PDM_malloc(pface_field,n_part_domains,double *);
   for (int i_part = 0; i_part < n_part_domains; i_part++) {
-    pface_field PDM_malloc([i_part],pn_face[i_part],double);
+    PDM_malloc(pface_field [i_part],pn_face[i_part],double);
     part1_stride[i_part] = PDM_array_const_int(pn_face[i_part], 1);
 
     double *surface_vector;

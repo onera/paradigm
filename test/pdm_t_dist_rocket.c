@@ -1011,7 +1011,7 @@ _get_connectivity
 
     /* Edges */
     (*nEdge)[ipart] = _nEdge;
-    (*edgeVtxIdx) PDM_malloc([ipart],(_nEdge + 1),int);
+    PDM_malloc((*edgeVtxIdx) [ipart],(_nEdge + 1),int);
     PDM_malloc((*edgeVtx)[ipart],_sEdgeVtx,int);
 
     memcpy ((*edgeVtxIdx)[ipart], _edgeVtxIdx, (_nEdge + 1) * sizeof(int));

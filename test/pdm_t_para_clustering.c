@@ -460,7 +460,7 @@ int main(int argc, char *argv[])
                                          PDM_OWNERSHIP_USER);
 
     bnd_to_all_vtx_idx[i_part] = PDM_array_new_idx_from_const_stride_int(1, n_bnd_vtx[i_part]);
-    data_bnd_vtx      PDM_malloc([i_part],n_var * n_bnd_vtx[i_part],double);
+    PDM_malloc(data_bnd_vtx      [i_part],n_var * n_bnd_vtx[i_part],double);
 
     for (int i_vtx = 0; i_vtx < n_bnd_vtx[i_part]; i_vtx++) {
       for (int i_var = 0; i_var < n_var; i_var++) {
@@ -573,7 +573,7 @@ int main(int argc, char *argv[])
     n_int_vtx[i_part] = n_unref_vtx[i_part];
 
     PDM_malloc(gnum_int_vtx[i_part],n_int_vtx[i_part],PDM_g_num_t);
-    int_vtx     PDM_malloc([i_part],3 * n_int_vtx[i_part],double);
+    PDM_malloc(int_vtx     [i_part],3 * n_int_vtx[i_part],double);
 
     for (int i_vtx = 0; i_vtx < n_int_vtx[i_part]; i_vtx++) {
       gnum_int_vtx[i_part][  i_vtx    ] = vtx_ln_to_gn[unref_vtx[i_part][i_vtx]-1];
@@ -781,7 +781,7 @@ int main(int argc, char *argv[])
   n_bnd_vtx[n_part_bnd] = layer_vtx_idx[n_layer];
 
   PDM_malloc(gnum_bnd_vtx[n_part_bnd],n_bnd_vtx[n_part_bnd],PDM_g_num_t);
-  bnd_vtx     PDM_malloc([n_part_bnd],3     * n_bnd_vtx[n_part_bnd],double);
+  PDM_malloc(bnd_vtx     [n_part_bnd],3     * n_bnd_vtx[n_part_bnd],double);
   PDM_malloc(data_bnd_vtx[n_part_bnd],n_var * n_bnd_vtx[n_part_bnd],double);
 
   int idx_write = 0;
@@ -892,10 +892,10 @@ int main(int argc, char *argv[])
   for (int i_part = 0; i_part < n_part; i_part++) {
 
     PDM_malloc(gnum_bnd_vtx_min_dist[i_part],n_int_vtx[i_part],PDM_g_num_t);
-    bnd_vtx_min_dist     PDM_malloc([i_part],3 * n_int_vtx[i_part],double);
+    PDM_malloc(bnd_vtx_min_dist     [i_part],3 * n_int_vtx[i_part],double);
     n_bnd_vtx_min_dist   [i_part] = 0;
 
-    n_int_to_bnd_vtx PDM_malloc([i_part],n_int_vtx[i_part],int);
+    PDM_malloc(n_int_to_bnd_vtx [i_part],n_int_vtx[i_part],int);
     PDM_malloc(id_int_to_bnd_vtx[i_part],n_int_vtx[i_part],int);
 
     PDM_g_num_t *sorted_gnum;
@@ -963,7 +963,7 @@ int main(int argc, char *argv[])
 
     int_to_bnd_vtx_idx[i_part] = PDM_array_new_idx_from_sizes_int(n_int_to_bnd_vtx[i_part], n_int_vtx[i_part]);
 
-    int_to_bnd_vtx        PDM_malloc([i_part],int_to_bnd_vtx_idx[i_part][n_int_vtx[i_part]],PDM_g_num_t);
+    PDM_malloc(int_to_bnd_vtx        [i_part],int_to_bnd_vtx_idx[i_part][n_int_vtx[i_part]],PDM_g_num_t);
     PDM_malloc(int_to_bnd_vtx_triplet[i_part],3 * int_to_bnd_vtx_idx[i_part][n_int_vtx[i_part]], int);
 
     for (int i_vtx = 0; i_vtx < n_int_vtx[i_part]; i_vtx++) {
@@ -1122,7 +1122,7 @@ int main(int argc, char *argv[])
   for (int i_part = 0; i_part < n_part; i_part++) {
 
     PDM_malloc(weight_int_vtx[i_part],n_int_vtx[i_part],double);
-    stride_3      PDM_malloc([i_part],n_int_vtx[i_part],int   );
+    PDM_malloc(stride_3      [i_part],n_int_vtx[i_part],int   );
 
     for (int i_vtx = 0; i_vtx < n_int_vtx[i_part]; i_vtx++) {
       weight_int_vtx[i_part][i_vtx] = (double) n_int_to_bnd_vtx[i_part][i_vtx];
