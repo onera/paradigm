@@ -858,7 +858,7 @@ _extract
     } // End 3D
 
     for (int i_part = 0; i_part < isos->n_part; i_part++) {
-      extract_lnum[i_part] = realloc(extract_lnum[i_part], sizeof(int) * n_extract[i_part]);
+      PDM_realloc(extract_lnum[i_part], extract_lnum[i_part], n_extract[i_part], int);
     }
 
   } // End Ngon
@@ -1614,21 +1614,21 @@ PDM_isosurface_add
   int id_isosurface = isos->n_isosurface;
   isos->n_isosurface++;
   
-  isos->kind           = realloc(isos->kind          , sizeof(PDM_iso_surface_kind_t          ) * isos->n_isosurface);
-  isos->eq_coeffs      = realloc(isos->eq_coeffs     , sizeof(double                         *) * isos->n_isosurface);
-  isos->field_function = realloc(isos->field_function, sizeof(PDM_isosurface_field_function_t ) * isos->n_isosurface);
+  PDM_realloc(isos->kind          , isos->kind          , isos->n_isosurface, PDM_iso_surface_kind_t          );
+  PDM_realloc(isos->eq_coeffs     , isos->eq_coeffs     , isos->n_isosurface, double                         *);
+  PDM_realloc(isos->field_function, isos->field_function, isos->n_isosurface, PDM_isosurface_field_function_t );
   
-  isos->field_function = realloc(isos->field_function, sizeof(PDM_isosurface_field_function_t ) * isos->n_isosurface);
+  PDM_realloc(isos->field_function, isos->field_function, isos->n_isosurface, PDM_isosurface_field_function_t);
   
-  isos->compute_ptp = realloc(isos->compute_ptp, sizeof(int *) * isos->n_isosurface);
+  PDM_realloc(isos->compute_ptp, isos->compute_ptp, isos->n_isosurface, int *);
   isos->compute_ptp[id_isosurface] = PDM_array_zeros_int(PDM_MESH_ENTITY_MAX);
 
   // TODO: status if its ok to allocate d and p variable (because set functions order not imposed ?)
-  isos->dfield         = realloc(isos->dfield        , sizeof(double                         *) * isos->n_isosurface);
-  isos->field          = realloc(isos->field         , sizeof(double                        **) * isos->n_isosurface);
+  PDM_realloc(isos->dfield, isos->dfield, isos->n_isosurface, double  *);
+  PDM_realloc(isos->field , isos->field , isos->n_isosurface, double **);
   isos->field[id_isosurface] = NULL;
 
-  isos->extract_field = realloc(isos->extract_field, sizeof(double **) * isos->n_isosurface);
+  PDM_realloc(isos->extract_field, isos->extract_field, isos->n_isosurface, double **);
   isos->extract_field[id_isosurface] = NULL;
 
   if (isos->is_dist_or_part == 1) {
@@ -1652,22 +1652,22 @@ PDM_isosurface_add
     PDM_malloc(isos->field[id_isosurface], n_part, double *);
   }
 
-  isos->n_isovalues    = realloc(isos->n_isovalues   , sizeof(int     ) * isos->n_isosurface);
-  isos->isovalues      = realloc(isos->isovalues     , sizeof(double *) * isos->n_isosurface);
-  isos->use_gradient   = realloc(isos->use_gradient  , sizeof(int    *) * isos->n_isosurface);
+  PDM_realloc(isos->n_isovalues , isos->n_isovalues , isos->n_isosurface, int     );
+  PDM_realloc(isos->isovalues   , isos->isovalues   , isos->n_isosurface, double *);
+  PDM_realloc(isos->use_gradient, isos->use_gradient, isos->n_isosurface, int     );
 
-  isos->extrp = realloc(isos->extrp, sizeof(PDM_extract_part_t *) * isos->n_isosurface);
+  PDM_realloc(isos->extrp, isos->extrp, isos->n_isosurface, PDM_extract_part_t *);
   isos->extrp[id_isosurface] = NULL;
 
 
   // > Partitioned iso vertices
-  isos->iso_n_vtx             = realloc(isos->iso_n_vtx            , sizeof(int           *) * isos->n_isosurface);
-  isos->iso_vtx_coord         = realloc(isos->iso_vtx_coord        , sizeof(double       **) * isos->n_isosurface);
-  isos->iso_vtx_gnum          = realloc(isos->iso_vtx_gnum         , sizeof(PDM_g_num_t  **) * isos->n_isosurface);
-  isos->iso_vtx_lparent_idx   = realloc(isos->iso_vtx_lparent_idx  , sizeof(int          **) * isos->n_isosurface);
-  isos->iso_vtx_lparent       = realloc(isos->iso_vtx_lparent      , sizeof(int          **) * isos->n_isosurface);
-  isos->iso_vtx_parent_weight = realloc(isos->iso_vtx_parent_weight, sizeof(double       **) * isos->n_isosurface);
-  isos->isovalue_vtx_idx      = realloc(isos->isovalue_vtx_idx     , sizeof(int          **) * isos->n_isosurface);
+  PDM_realloc(isos->iso_n_vtx            , isos->iso_n_vtx            , isos->n_isosurface, int           *);
+  PDM_realloc(isos->iso_vtx_coord        , isos->iso_vtx_coord        , isos->n_isosurface, double       **);
+  PDM_realloc(isos->iso_vtx_gnum         , isos->iso_vtx_gnum         , isos->n_isosurface, PDM_g_num_t  **);
+  PDM_realloc(isos->iso_vtx_lparent_idx  , isos->iso_vtx_lparent_idx  , isos->n_isosurface, int          **);
+  PDM_realloc(isos->iso_vtx_lparent      , isos->iso_vtx_lparent      , isos->n_isosurface, int          **);
+  PDM_realloc(isos->iso_vtx_parent_weight, isos->iso_vtx_parent_weight, isos->n_isosurface, double       **);
+  PDM_realloc(isos->isovalue_vtx_idx     , isos->isovalue_vtx_idx     , isos->n_isosurface, int          **);
   isos->iso_n_vtx            [id_isosurface] = NULL;
   isos->iso_vtx_coord        [id_isosurface] = NULL;
   isos->iso_vtx_gnum         [id_isosurface] = NULL;
@@ -1677,16 +1677,16 @@ PDM_isosurface_add
   isos->isovalue_vtx_idx     [id_isosurface] = NULL;
 
   // > Partitioned iso edges
-  isos->iso_n_edge           = realloc(isos->iso_n_edge          , sizeof(int           *) * isos->n_isosurface);
-  isos->iso_edge_vtx         = realloc(isos->iso_edge_vtx        , sizeof(int          **) * isos->n_isosurface);
-  isos->iso_edge_gnum        = realloc(isos->iso_edge_gnum       , sizeof(PDM_g_num_t  **) * isos->n_isosurface);
-  isos->iso_edge_lparent_idx = realloc(isos->iso_edge_lparent_idx, sizeof(int          **) * isos->n_isosurface);
-  isos->iso_edge_lparent     = realloc(isos->iso_edge_lparent    , sizeof(int          **) * isos->n_isosurface);
-  isos->iso_n_edge_group     = realloc(isos->iso_n_edge_group    , sizeof(int            ) * isos->n_isosurface);
-  isos->iso_edge_group_idx   = realloc(isos->iso_edge_group_idx  , sizeof(int          **) * isos->n_isosurface);
-  isos->iso_edge_group_lnum  = realloc(isos->iso_edge_group_lnum , sizeof(int          **) * isos->n_isosurface);
-  isos->iso_edge_group_gnum  = realloc(isos->iso_edge_group_gnum , sizeof(PDM_g_num_t  **) * isos->n_isosurface);
-  isos->isovalue_edge_idx    = realloc(isos->isovalue_edge_idx   , sizeof(int          **) * isos->n_isosurface);
+  PDM_realloc(isos->iso_n_edge          , isos->iso_n_edge          , isos->n_isosurface, int           *);
+  PDM_realloc(isos->iso_edge_vtx        , isos->iso_edge_vtx        , isos->n_isosurface, int          **);
+  PDM_realloc(isos->iso_edge_gnum       , isos->iso_edge_gnum       , isos->n_isosurface, PDM_g_num_t  **);
+  PDM_realloc(isos->iso_edge_lparent_idx, isos->iso_edge_lparent_idx, isos->n_isosurface, int          **);
+  PDM_realloc(isos->iso_edge_lparent    , isos->iso_edge_lparent    , isos->n_isosurface, int          **);
+  PDM_realloc(isos->iso_n_edge_group    , isos->iso_n_edge_group    , isos->n_isosurface, int            );
+  PDM_realloc(isos->iso_edge_group_idx  , isos->iso_edge_group_idx  , isos->n_isosurface, int          **);
+  PDM_realloc(isos->iso_edge_group_lnum , isos->iso_edge_group_lnum , isos->n_isosurface, int          **);
+  PDM_realloc(isos->iso_edge_group_gnum , isos->iso_edge_group_gnum , isos->n_isosurface, PDM_g_num_t  **);
+  PDM_realloc(isos->isovalue_edge_idx   , isos->isovalue_edge_idx   , isos->n_isosurface, int          **);
   isos->iso_n_edge          [id_isosurface] = NULL;
   isos->iso_edge_vtx        [id_isosurface] = NULL;
   isos->iso_edge_gnum       [id_isosurface] = NULL;
@@ -1699,13 +1699,13 @@ PDM_isosurface_add
   isos->isovalue_edge_idx   [id_isosurface] = NULL;
 
   // > Partitioned iso faces
-  isos->iso_n_face           = realloc(isos->iso_n_face          , sizeof(int           *) * isos->n_isosurface);
-  isos->iso_face_vtx_idx     = realloc(isos->iso_face_vtx_idx    , sizeof(int          **) * isos->n_isosurface);
-  isos->iso_face_vtx         = realloc(isos->iso_face_vtx        , sizeof(int          **) * isos->n_isosurface);
-  isos->iso_face_gnum        = realloc(isos->iso_face_gnum       , sizeof(PDM_g_num_t  **) * isos->n_isosurface);
-  isos->iso_face_lparent_idx = realloc(isos->iso_face_lparent_idx, sizeof(int          **) * isos->n_isosurface);
-  isos->iso_face_lparent     = realloc(isos->iso_face_lparent    , sizeof(int          **) * isos->n_isosurface);
-  isos->isovalue_face_idx    = realloc(isos->isovalue_face_idx   , sizeof(int          **) * isos->n_isosurface);
+  PDM_realloc(isos->iso_n_face          , isos->iso_n_face          , isos->n_isosurface, int           *);
+  PDM_realloc(isos->iso_face_vtx_idx    , isos->iso_face_vtx_idx    , isos->n_isosurface, int          **);
+  PDM_realloc(isos->iso_face_vtx        , isos->iso_face_vtx        , isos->n_isosurface, int          **);
+  PDM_realloc(isos->iso_face_gnum       , isos->iso_face_gnum       , isos->n_isosurface, PDM_g_num_t  **);
+  PDM_realloc(isos->iso_face_lparent_idx, isos->iso_face_lparent_idx, isos->n_isosurface, int          **);
+  PDM_realloc(isos->iso_face_lparent    , isos->iso_face_lparent    , isos->n_isosurface, int          **);
+  PDM_realloc(isos->isovalue_face_idx   , isos->isovalue_face_idx   , isos->n_isosurface, int          **);
   isos->iso_n_face          [id_isosurface] = NULL;
   isos->iso_face_vtx_idx    [id_isosurface] = NULL;
   isos->iso_face_vtx        [id_isosurface] = NULL;
@@ -1715,18 +1715,18 @@ PDM_isosurface_add
   isos->isovalue_face_idx   [id_isosurface] = NULL;
 
   // > Part_to_part between iso entities and entry mesh entites
-  isos->iso_ptp_vtx  = realloc(isos->iso_ptp_vtx , sizeof(PDM_part_to_part_t *) * isos->n_isosurface);
-  isos->iso_ptp_edge = realloc(isos->iso_ptp_edge, sizeof(PDM_part_to_part_t *) * isos->n_isosurface);
-  isos->iso_ptp_face = realloc(isos->iso_ptp_face, sizeof(PDM_part_to_part_t *) * isos->n_isosurface);
+  PDM_realloc(isos->iso_ptp_vtx , isos->iso_ptp_vtx , isos->n_isosurface, PDM_part_to_part_t *);
+  PDM_realloc(isos->iso_ptp_edge, isos->iso_ptp_edge, isos->n_isosurface, PDM_part_to_part_t *);
+  PDM_realloc(isos->iso_ptp_face, isos->iso_ptp_face, isos->n_isosurface, PDM_part_to_part_t *);
 
   // > Partitioned owners
-  isos->iso_owner_vtx_coord         = realloc(isos->iso_owner_vtx_coord         , sizeof(PDM_ownership_t  *) * isos->n_isosurface);
-  isos->iso_owner_vtx_parent_weight = realloc(isos->iso_owner_vtx_parent_weight , sizeof(PDM_ownership_t  *) * isos->n_isosurface);
-  isos->iso_owner_gnum              = realloc(isos->iso_owner_gnum              , sizeof(PDM_ownership_t **) * isos->n_isosurface);
-  isos->iso_owner_connec            = realloc(isos->iso_owner_connec            , sizeof(PDM_ownership_t **) * isos->n_isosurface);
-  isos->iso_owner_lparent           = realloc(isos->iso_owner_lparent           , sizeof(PDM_ownership_t **) * isos->n_isosurface);
-  isos->iso_owner_edge_bnd          = realloc(isos->iso_owner_edge_bnd          , sizeof(PDM_ownership_t **) * isos->n_isosurface);
-  isos->iso_owner_ptp               = realloc(isos->iso_owner_ptp               , sizeof(PDM_ownership_t  *) * isos->n_isosurface);
+  PDM_realloc(isos->iso_owner_vtx_coord        , isos->iso_owner_vtx_coord         , isos->n_isosurface, PDM_ownership_t  *);
+  PDM_realloc(isos->iso_owner_vtx_parent_weight, isos->iso_owner_vtx_parent_weight , isos->n_isosurface, PDM_ownership_t  *);
+  PDM_realloc(isos->iso_owner_gnum             , isos->iso_owner_gnum              , isos->n_isosurface, PDM_ownership_t **);
+  PDM_realloc(isos->iso_owner_connec           , isos->iso_owner_connec            , isos->n_isosurface, PDM_ownership_t **);
+  PDM_realloc(isos->iso_owner_lparent          , isos->iso_owner_lparent           , isos->n_isosurface, PDM_ownership_t **);
+  PDM_realloc(isos->iso_owner_edge_bnd         , isos->iso_owner_edge_bnd          , isos->n_isosurface, PDM_ownership_t  *);
+  PDM_realloc(isos->iso_owner_ptp              , isos->iso_owner_ptp               , isos->n_isosurface, PDM_ownership_t  *);
   isos->iso_owner_vtx_coord        [id_isosurface] = NULL;
   isos->iso_owner_vtx_parent_weight[id_isosurface] = NULL;
   isos->iso_owner_gnum             [id_isosurface] = NULL;

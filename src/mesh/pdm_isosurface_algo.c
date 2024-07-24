@@ -889,7 +889,7 @@ _build_active_edges
   *edge_bnd_tag     = _edge_bnd_tag;
   *edge_parent_idx  = _edge_parent_idx;
   *edge_parent      = _edge_parent;
-  *edge_vtx         = realloc(_edge_vtx, sizeof(int) * (*n_edge) * 2);
+  PDM_realloc(_edge_vtx, *edge_vtx, (*n_edge) * 2, int);
 
   // > Free tmp arrays
   free(_edge_count_parent);
@@ -1234,8 +1234,8 @@ _build_active_faces
   int _face_vtx_size = _face_vtx_idx[(*n_face)];
   *face_parent_idx = _face_parent_idx;
   *face_parent     = _face_parent;
-  *face_vtx_idx    = realloc(_face_vtx_idx, sizeof(int) * (*n_face+1));
-  *face_vtx        = realloc(_face_vtx    , sizeof(int) * _face_vtx_size);
+  PDM_realloc(_face_vtx_idx, *face_vtx_idx, *n_face+1     , int);
+  PDM_realloc(_face_vtx    , *face_vtx    , _face_vtx_size, int);
 
 
   // > Free
@@ -1516,12 +1516,18 @@ _contouring_triangles
   iso_n_edge         += *out_iso_n_edge;
   iso_n_edge_parent  += *out_iso_n_edge_parent;
   iso_n_edge_bnd_tag += *out_iso_n_edge_bnd_tag;
-  int         *iso_edge_vtx          = realloc(*out_iso_edge_vtx,         2 * iso_n_edge        * sizeof(int        ));
-  PDM_g_num_t *iso_edge_parent_gnum  = realloc(*out_iso_edge_parent_gnum, 2 * iso_n_edge        * sizeof(PDM_g_num_t));
-  int         *iso_edge_bnd_tag_idx  = realloc(*out_iso_edge_bnd_tag_idx,    (iso_n_edge+1)     * sizeof(int        ));
-  int         *iso_edge_bnd_tag      = realloc(*out_iso_edge_bnd_tag    ,     iso_n_edge_bnd_tag* sizeof(int        ));
-  int         *iso_edge_parent_idx   = realloc(*out_iso_edge_parent_idx ,    (iso_n_edge+1)     * sizeof(int        ));
-  int         *iso_edge_parent       = realloc(*out_iso_edge_parent     ,     iso_n_edge_parent * sizeof(int        ));
+  int         *iso_edge_vtx          = NULL;
+  PDM_g_num_t *iso_edge_parent_gnum  = NULL;
+  int         *iso_edge_bnd_tag_idx  = NULL;
+  int         *iso_edge_bnd_tag      = NULL;
+  int         *iso_edge_parent_idx   = NULL;
+  int         *iso_edge_parent       = NULL;
+  PDM_realloc(*out_iso_edge_vtx        , iso_edge_vtx        , 2 * iso_n_edge        , int        );
+  PDM_realloc(*out_iso_edge_parent_gnum, iso_edge_parent_gnum, 2 * iso_n_edge        , PDM_g_num_t);
+  PDM_realloc(*out_iso_edge_bnd_tag_idx, iso_edge_bnd_tag_idx,     iso_n_edge+1      , int        );
+  PDM_realloc(*out_iso_edge_bnd_tag    , iso_edge_bnd_tag    ,     iso_n_edge_bnd_tag, int        );
+  PDM_realloc(*out_iso_edge_parent_idx , iso_edge_parent_idx ,     iso_n_edge+1      , int        );
+  PDM_realloc(*out_iso_edge_parent     , iso_edge_parent     ,     iso_n_edge_parent , int        );
   PDM_array_reset_int(iso_edge_def, n_edge, 0);
   iso_edge_parent_idx [0] = 0;
   iso_edge_bnd_tag_idx[0] = 0;
@@ -1970,11 +1976,16 @@ _contouring_tetrahedra
   if (debug==1) log_trace("iso_n_face_parent = %d\n", iso_n_face_parent);
   if (debug==1) log_trace("s_face_vtx        = %d\n", s_face_vtx);
 
-  PDM_g_num_t *iso_face_parent_gnum = realloc(*out_iso_face_parent_gnum, sizeof(PDM_g_num_t) * 3* iso_n_face);
-  int         *iso_face_vtx_idx     = realloc(*out_iso_face_vtx_idx,     sizeof(int        ) *   (iso_n_face + 1));
-  int         *iso_face_vtx         = realloc(*out_iso_face_vtx,         sizeof(int        ) *   (prev_size  + s_face_vtx));
-  int         *iso_face_parent_idx  = realloc(*out_iso_face_parent_idx,  sizeof(int        ) *   (iso_n_face + 1));
-  int         *iso_face_parent      = realloc(*out_iso_face_parent    ,  sizeof(int        ) *    iso_n_face_parent);
+  PDM_g_num_t *iso_face_parent_gnum = NULL;
+  int         *iso_face_vtx_idx     = NULL;
+  int         *iso_face_vtx         = NULL;
+  int         *iso_face_parent_idx  = NULL;
+  int         *iso_face_parent      = NULL;
+  PDM_realloc(*out_iso_face_parent_gnum, *out_iso_face_parent_gnum, 3*iso_n_face,              PDM_g_num_t);
+  PDM_realloc(*out_iso_face_vtx_idx,     *out_iso_face_vtx_idx,       iso_n_face + 1,          int        );
+  PDM_realloc(*out_iso_face_vtx,         *out_iso_face_vtx,           prev_size  + s_face_vtx, int        );
+  PDM_realloc(*out_iso_face_parent_idx,  *out_iso_face_parent_idx,    iso_n_face + 1,          int        );
+  PDM_realloc(*out_iso_face_parent    ,  *out_iso_face_parent    ,    iso_n_face_parent,       int        );
   iso_face_vtx_idx   [0] = 0;
   PDM_array_reset_int(iso_face_def, n_face, 0);
   iso_face_parent_idx[0] = 0.;
@@ -2481,7 +2492,7 @@ _trace_isopolygon_in_cell
     // Start a new isopolygon
     if (*iso_n_face >= *tmp_iso_n_face) {
       *tmp_iso_n_face = PDM_MAX(*iso_n_face+1, 2*(*tmp_iso_n_face));
-      *iso_face_vtx_idx = realloc(*iso_face_vtx_idx, sizeof(int) * (*tmp_iso_n_face + 1));
+      PDM_realloc(*iso_face_vtx_idx, *iso_face_vtx_idx, *tmp_iso_n_face + 1, int);
     }
 
     for (int i = 0; i < cell_edge_n; i++) {
@@ -2639,9 +2650,9 @@ _trace_isopolygon_in_cell
                     // add 1 edge
                     if (*iso_n_edge >= *tmp_iso_n_edge) {
                       *tmp_iso_n_edge = PDM_MAX(*iso_n_edge+1, 2*(*tmp_iso_n_edge));
-                      *iso_edge_parent_idx = realloc(*iso_edge_parent_idx, sizeof(int) * (*tmp_iso_n_edge) + 1);
-                      *iso_edge_parent     = realloc(*iso_edge_parent,     sizeof(int) * (*tmp_iso_n_edge)); // Warning : fails if more than one parent
-                      *iso_edge_vtx        = realloc(*iso_edge_vtx,        sizeof(int) * (*tmp_iso_n_edge) * 2);
+                      PDM_realloc(*iso_edge_parent_idx, *iso_edge_parent_idx, *tmp_iso_n_edge + 1, int);
+                      PDM_realloc(*iso_edge_parent    , *iso_edge_parent,     *tmp_iso_n_edge    , int); // Warning : fails if more than one parent
+                      PDM_realloc(*iso_edge_vtx       , *iso_edge_vtx,        *tmp_iso_n_edge * 2, int);
                     }
                     (*iso_edge_parent_idx)[*iso_n_edge+1] = (*iso_edge_parent_idx)[*iso_n_edge] + 1;
                     (*iso_edge_parent)[(*iso_edge_parent_idx)[*iso_n_edge]] = face_id + 1;
@@ -3031,8 +3042,8 @@ _isosurface_ngon_single_part
 
       if (iso_n_face > tmp_s_iso_face) {
         // TODO: handle multiple parents??
-        iso_face_parent_idx = realloc(iso_face_parent_idx, sizeof(int) * (s_iso_face + 1));
-        iso_face_parent     = realloc(iso_face_parent    , sizeof(int) * s_iso_face);
+        PDM_realloc(iso_face_parent_idx, iso_face_parent_idx, s_iso_face + 1, int);
+        PDM_realloc(iso_face_parent    , iso_face_parent    , s_iso_face    , int);
       }
       for (int i = tmp_iso_n_face; i < iso_n_face; i++) {
         iso_face_parent_idx[i+1] = iso_face_parent_idx[i] + 1;
@@ -3061,24 +3072,27 @@ _isosurface_ngon_single_part
 
   /* Outputs */
   *out_iso_n_vtx             = iso_n_vtx;
-  *out_iso_vtx_coord         = realloc(iso_vtx_coord,         sizeof(double) * iso_n_vtx * 3);
-  *out_iso_vtx_parent_idx    = realloc(iso_vtx_parent_idx,    sizeof(int   ) * (iso_n_vtx + 1));
-  *out_iso_vtx_parent        = realloc(iso_vtx_parent,        sizeof(int   ) * (*out_iso_vtx_parent_idx)[iso_n_vtx]);
-  *out_iso_vtx_parent_weight = realloc(iso_vtx_parent_weight, sizeof(double) * (*out_iso_vtx_parent_idx)[iso_n_vtx]);;
+  PDM_realloc(iso_vtx_coord        , *out_iso_vtx_coord        ,  iso_n_vtx * 3                     , double);
+  PDM_realloc(iso_vtx_parent_idx   , *out_iso_vtx_parent_idx   ,  iso_n_vtx + 1                     , int   );
+  PDM_realloc(iso_vtx_parent       , *out_iso_vtx_parent       ,(*out_iso_vtx_parent_idx)[iso_n_vtx], int   );
+  PDM_realloc(iso_vtx_parent_weight, *out_iso_vtx_parent_weight,(*out_iso_vtx_parent_idx)[iso_n_vtx], double);
   *out_isovalue_vtx_idx      = isovalue_vtx_idx;
 
   *out_iso_n_face          = iso_n_face;
-  *out_iso_face_parent_idx = realloc(iso_face_parent_idx, sizeof(int) * (iso_n_face + 1));
-  *out_iso_face_parent     = realloc(iso_face_parent,     sizeof(int) * (*out_iso_face_parent_idx)[iso_n_face]);
-  *out_iso_face_vtx_idx    = realloc(iso_face_vtx_idx,    sizeof(int) * (iso_n_face + 1));
-  *out_iso_face_vtx        = realloc(iso_face_vtx,        sizeof(int) * (*out_iso_face_vtx_idx)[iso_n_face]);
+  PDM_realloc(iso_face_parent_idx, *out_iso_face_parent_idx,   iso_n_face + 1                      , int);
+  PDM_realloc(iso_face_parent    , *out_iso_face_parent    , (*out_iso_face_parent_idx)[iso_n_face], int);
+  PDM_realloc(iso_face_vtx_idx   , *out_iso_face_vtx_idx   ,   iso_n_face + 1                      , int);
+  PDM_realloc(iso_face_vtx       , *out_iso_face_vtx       , (*out_iso_face_vtx_idx)   [iso_n_face], int);
   *out_isovalue_face_idx   = isovalue_face_idx;
 
   if (face_tag != NULL) {
     *out_iso_n_edge          = iso_n_edge;
-    *out_iso_edge_parent_idx = realloc(iso_edge_parent_idx, sizeof(int) * (iso_n_edge + 1));
-    *out_iso_edge_parent     = realloc(iso_edge_parent,     sizeof(int) * (*out_iso_edge_parent_idx)[iso_n_edge]);
-    *out_iso_edge_vtx        = realloc(iso_edge_vtx,        sizeof(int) * iso_n_edge * 2);
+    *out_iso_edge_parent_idx = NULL;
+    *out_iso_edge_parent     = NULL;
+    *out_iso_edge_vtx        = NULL;
+    PDM_realloc(iso_edge_parent_idx, *out_iso_edge_parent_idx,   iso_n_edge + 1                      , int);
+    PDM_realloc(iso_edge_parent    , *out_iso_edge_parent    , (*out_iso_edge_parent_idx)[iso_n_edge], int);
+    PDM_realloc(iso_edge_vtx       , *out_iso_edge_vtx       ,   iso_n_edge * 2                      , int);
     *out_isovalue_edge_idx   = isovalue_edge_idx;
   }
 }
@@ -3574,7 +3588,7 @@ PDM_isosurface_marching_algo
     }
     free(iso_edge_bnd_tag_idx[i_part]);
     iso_edge_bnd_tag_idx[i_part] = PDM_array_new_idx_from_sizes_int(iso_edge_bnd_tag_unique_n, iso_n_edge[i_part]);
-    iso_edge_bnd_tag    [i_part] = realloc(iso_edge_bnd_tag[i_part], iso_edge_bnd_tag_idx[i_part][iso_n_edge[i_part]] * sizeof(int)); 
+    PDM_realloc(iso_edge_bnd_tag[i_part], iso_edge_bnd_tag[i_part], iso_edge_bnd_tag_idx[i_part][iso_n_edge[i_part]], int); 
     if (debug) {
       PDM_log_trace_array_int(iso_edge_bnd_tag_unique_n   , iso_n_edge[i_part], "iso_edge_bnd_tag_unique_n ::");
       PDM_log_trace_array_int(iso_edge_bnd_tag_idx[i_part], iso_n_edge[i_part], "iso_edge_bnd_tag_idx ::");
