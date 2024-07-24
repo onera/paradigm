@@ -1097,7 +1097,22 @@ PDM_dmesh_find_topological_ridges
 }
 
 
+void
+PDM_dmesh_compute_distributions
+(
+ PDM_dmesh_t *dmesh
+ )
+{
+  PDM_free(dmesh->cell_distrib);
+  PDM_free(dmesh->face_distrib);
+  PDM_free(dmesh->edge_distrib);
+  PDM_free(dmesh->vtx_distrib );
 
+  dmesh->cell_distrib = PDM_compute_entity_distribution(dmesh->comm, dmesh->dn_cell);
+  dmesh->face_distrib = PDM_compute_entity_distribution(dmesh->comm, dmesh->dn_face);
+  dmesh->edge_distrib = PDM_compute_entity_distribution(dmesh->comm, dmesh->dn_edge);
+  dmesh->vtx_distrib  = PDM_compute_entity_distribution(dmesh->comm, dmesh->dn_vtx );
+}
 
 
 #ifdef __cplusplus
