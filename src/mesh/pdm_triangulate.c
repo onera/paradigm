@@ -1484,10 +1484,10 @@ PDM_triangulate_faces
   }
 
 
-  *face_tria_idx = (int *) malloc(sizeof(int) * (n_face + 1));
+  PDM_malloc(*face_tria_idx, n_face + 1, int);
   (*face_tria_idx)[0] = 0;
 
-  *tria_vtx = (int *) malloc(sizeof(int) * 3*s_tria_vtx);
+  PDM_malloc(*tria_vtx, 3*s_tria_vtx, int);
 
   for (int i_face = 0; i_face < n_face; i_face++) {
     int *_tria_vtx = *tria_vtx + (*face_tria_idx)[i_face] * 3;

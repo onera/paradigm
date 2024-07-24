@@ -192,12 +192,18 @@ _gen_mesh
       PDM_dmesh_free(dmesh);
 
       // Make edges great again (ugly AF)
-      int          *pn_face        = malloc(sizeof(int          ) * n_part);
-      int          *pn_vtx         = malloc(sizeof(int          ) * n_part);
-      int         **pface_vtx_idx  = malloc(sizeof(int         *) * n_part);
-      int         **pface_vtx      = malloc(sizeof(int         *) * n_part);
-      PDM_g_num_t **pface_ln_to_gn = malloc(sizeof(PDM_g_num_t *) * n_part);
-      PDM_g_num_t **pvtx_ln_to_gn  = malloc(sizeof(PDM_g_num_t *) * n_part);
+      int          *pn_face        = NULL;
+      int          *pn_vtx         = NULL;
+      int         **pface_vtx_idx  = NULL;
+      int         **pface_vtx      = NULL;
+      PDM_g_num_t **pface_ln_to_gn = NULL;
+      PDM_g_num_t **pvtx_ln_to_gn  = NULL;
+      PDM_malloc(pn_face       , n_part, int          );
+      PDM_malloc(pn_vtx        , n_part, int          );
+      PDM_malloc(pface_vtx_idx , n_part, int         *);
+      PDM_malloc(pface_vtx     , n_part, int         *);
+      PDM_malloc(pface_ln_to_gn, n_part, PDM_g_num_t *);
+      PDM_malloc(pvtx_ln_to_gn , n_part, PDM_g_num_t *);
 
       int         **pface_edge_idx = NULL;
       int         **pface_edge     = NULL;
@@ -566,7 +572,7 @@ _read_args
     }
 
     else if (strcmp(argv[i], "-isovalues") == 0) {
-      *isovalues = malloc(sizeof(double) * (*n_isovalues));
+      PDM_malloc(*isovalues, *n_isovalues, double);
       for (int j = 0; j < *n_isovalues; j++) {
         i++;
         if (i >= argc)
@@ -676,7 +682,7 @@ int main
 
   if (isovalues == NULL) {
     n_isovalues = 1;
-    isovalues = malloc(sizeof(double) * n_isovalues);
+    PDM_malloc(isovalues, n_isovalues, double);
     isovalues[0] = 0.;
   }
 
@@ -706,7 +712,7 @@ int main
   double  *diso_field = NULL;
   if (n_part > 0) {
     // Partitioned
-    piso_field = malloc(sizeof(double *) * n_part);
+    PDM_malloc(piso_field, n_part, double *);
     for (int i_part = 0; i_part < n_part; i_part++) {
 
       double *vtx_coord = NULL;
@@ -716,7 +722,7 @@ int main
                                                    &vtx_coord,
                                                    PDM_OWNERSHIP_KEEP);
 
-      piso_field[i_part] = malloc(sizeof(double) * n_vtx);
+      PDM_malloc(piso_field[i_part], n_vtx, double);
       _compute_iso_field(n_vtx, vtx_coord, piso_field[i_part]);
     }
   }
@@ -727,7 +733,7 @@ int main
     double *dvtx_coord = NULL;
     PDM_dmesh_vtx_coord_get(dmesh, &dvtx_coord, PDM_OWNERSHIP_KEEP);
 
-    diso_field = malloc(sizeof(double) * dn_vtx);
+    PDM_malloc(diso_field, dn_vtx, double);
     _compute_iso_field(dn_vtx, dvtx_coord, diso_field);
   }
 
@@ -1102,7 +1108,8 @@ int main
                                                                     PDM_MESH_ENTITY_FACE,
                                                                     &isovalue_face_idx);
 
-          int *iso_face_isovalue = malloc(sizeof(int) * iso_n_face);
+          int *iso_face_isovalue = NULL;
+          PDM_malloc(iso_face_isovalue, iso_n_face, int);
           for (int i_isovalue = 0; i_isovalue < _n_isovalues; i_isovalue++) {
             for (int i_face = isovalue_face_idx[i_isovalue]; i_face < isovalue_face_idx[i_isovalue+1]; i_face++) {
               iso_face_isovalue[i_face] = i_isovalue;
@@ -1129,8 +1136,10 @@ int main
                                                                 PDM_MESH_ENTITY_EDGE,
                                                                 &isovalue_edge_idx);
 
-          int *iso_edge_isovalue = malloc(sizeof(int) * iso_n_edge);
-          int *iso_edge_group    = malloc(sizeof(int) * iso_n_edge);
+          int *iso_edge_isovalue = NULL;
+          int *iso_edge_group    = NULL;
+          PDM_malloc(iso_edge_isovalue, iso_n_edge, int);
+          PDM_malloc(iso_edge_group   , iso_n_edge, int);
           for (int i_isovalue = 0; i_isovalue < _n_isovalues; i_isovalue++) {
             for (int i_edge = isovalue_edge_idx[i_isovalue]; i_edge < isovalue_edge_idx[i_isovalue+1]; i_edge++) {
               iso_edge_isovalue[i_edge] = i_isovalue;

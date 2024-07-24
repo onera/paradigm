@@ -177,7 +177,8 @@ main
                                      NULL);
 
   if (visu) {
-    PDM_g_num_t *tria_parent = malloc(sizeof(PDM_g_num_t) * n_tria);
+    PDM_g_num_t *tria_parent = NULL;
+    PDM_malloc(tria_parent, n_tria, PDM_g_num_t);
     for (int i_face = 0; i_face < pn_face[0]; i_face++) {
       for (int i_tria = face_tria_idx[i_face]; i_tria < face_tria_idx[i_face+1]; i_tria++) {
         tria_parent[i_tria] = pface_ln_to_gn[0][i_face];

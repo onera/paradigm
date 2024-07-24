@@ -30,6 +30,7 @@
 #include "pdm_array.h"
 #include "pdm_isosurface.h"
 #include "pdm_isosurface_priv.h"
+#include "pdm_priv.h"
 
 /*----------------------------------------------------------------------------*/
 
@@ -91,23 +92,23 @@ PDM_isosurface_n_part_set
   isos->n_edge = PDM_array_const_int(n_part, -1);
   isos->n_vtx  = PDM_array_const_int(n_part, -1);
 
-  isos->cell_face     = malloc(sizeof(int         *) * n_part);
-  isos->cell_face_idx = malloc(sizeof(int         *) * n_part);
-  isos->face_edge     = malloc(sizeof(int         *) * n_part);
-  isos->face_edge_idx = malloc(sizeof(int         *) * n_part);
-  isos->face_vtx      = malloc(sizeof(int         *) * n_part);
-  isos->face_vtx_idx  = malloc(sizeof(int         *) * n_part);
-  isos->edge_vtx      = malloc(sizeof(int         *) * n_part);
-  isos->vtx_coord     = malloc(sizeof(double      *) * n_part);
-  isos->cell_gnum     = malloc(sizeof(PDM_g_num_t *) * n_part);
-  isos->face_gnum     = malloc(sizeof(PDM_g_num_t *) * n_part);
-  isos->edge_gnum     = malloc(sizeof(PDM_g_num_t *) * n_part);
-  isos->vtx_gnum      = malloc(sizeof(PDM_g_num_t *) * n_part);
+  PDM_malloc(isos->cell_face    , n_part, int         *);
+  PDM_malloc(isos->cell_face_idx, n_part, int         *);
+  PDM_malloc(isos->face_edge    , n_part, int         *);
+  PDM_malloc(isos->face_edge_idx, n_part, int         *);
+  PDM_malloc(isos->face_vtx     , n_part, int         *);
+  PDM_malloc(isos->face_vtx_idx , n_part, int         *);
+  PDM_malloc(isos->edge_vtx     , n_part, int         *);
+  PDM_malloc(isos->vtx_coord    , n_part, double      *);
+  PDM_malloc(isos->cell_gnum    , n_part, PDM_g_num_t *);
+  PDM_malloc(isos->face_gnum    , n_part, PDM_g_num_t *);
+  PDM_malloc(isos->edge_gnum    , n_part, PDM_g_num_t *);
+  PDM_malloc(isos->vtx_gnum     , n_part, PDM_g_num_t *);
 
-  isos->n_group_face    = malloc(sizeof(int          ) * n_part);
-  isos->group_face_idx  = malloc(sizeof(int         *) * n_part);
-  isos->group_face      = malloc(sizeof(int         *) * n_part);
-  isos->group_face_gnum = malloc(sizeof(PDM_g_num_t *) * n_part);
+  PDM_malloc(isos->n_group_face   , n_part, int          );
+  PDM_malloc(isos->group_face_idx , n_part, int         *);
+  PDM_malloc(isos->group_face     , n_part, int         *);
+  PDM_malloc(isos->group_face_gnum, n_part, PDM_g_num_t *);
 
   for (int i_part = 0; i_part < n_part; i_part++) {
     isos->cell_face    [i_part] = NULL;

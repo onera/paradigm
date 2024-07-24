@@ -286,7 +286,7 @@ _dist_to_part
     if (isos->entry_mesh_dim == 3) {
       n_cell = isos->distrib_cell[i_rank+1] - isos->distrib_cell[i_rank];
 
-      cell_ln_to_gn = malloc(sizeof(PDM_g_num_t) * n_cell);
+      PDM_malloc(cell_ln_to_gn, n_cell, PDM_g_num_t);
       for (int i = 0; i < n_cell; i++) {
         cell_ln_to_gn[i] = isos->distrib_cell[i_rank] + i + 1;
       }
@@ -305,7 +305,7 @@ _dist_to_part
     else if (isos->entry_mesh_dim == 2) {
       n_face = isos->distrib_face[i_rank+1] - isos->distrib_face[i_rank];
 
-      face_ln_to_gn = malloc(sizeof(PDM_g_num_t) * n_face);
+      PDM_malloc(face_ln_to_gn, n_face, PDM_g_num_t);
       for (int i = 0; i < n_face; i++) {
         face_ln_to_gn[i] = isos->distrib_face[i_rank] + i + 1;
       }
@@ -388,22 +388,22 @@ _dist_to_part
     /* Store in struct */
     isos->btp_vtx = btp_vtx; // useful to keep for transferring discrete fields
 
-    isos->n_cell        = malloc(sizeof(int          ));
-    isos->n_face        = malloc(sizeof(int          ));
-    isos->n_edge        = malloc(sizeof(int          ));
-    isos->n_vtx         = malloc(sizeof(int          ));
-    isos->cell_gnum     = malloc(sizeof(PDM_g_num_t *));
-    isos->face_gnum     = malloc(sizeof(PDM_g_num_t *));
-    isos->edge_gnum     = malloc(sizeof(PDM_g_num_t *));
-    isos->vtx_gnum      = malloc(sizeof(PDM_g_num_t *));
-    isos->cell_face_idx = malloc(sizeof(int         *));
-    isos->cell_face     = malloc(sizeof(int         *));
-    isos->face_edge_idx = malloc(sizeof(int         *));
-    isos->face_edge     = malloc(sizeof(int         *));
-    isos->face_vtx_idx  = malloc(sizeof(int         *));
-    isos->face_vtx      = malloc(sizeof(int         *));
-    isos->edge_vtx      = malloc(sizeof(int         *));
-    isos->n_group_face  = malloc(sizeof(int          ));
+    PDM_malloc(isos->n_cell       , 1, int          );
+    PDM_malloc(isos->n_face       , 1, int          );
+    PDM_malloc(isos->n_edge       , 1, int          );
+    PDM_malloc(isos->n_vtx        , 1, int          );
+    PDM_malloc(isos->cell_gnum    , 1, PDM_g_num_t *);
+    PDM_malloc(isos->face_gnum    , 1, PDM_g_num_t *);
+    PDM_malloc(isos->edge_gnum    , 1, PDM_g_num_t *);
+    PDM_malloc(isos->vtx_gnum     , 1, PDM_g_num_t *);
+    PDM_malloc(isos->cell_face_idx, 1, int         *);
+    PDM_malloc(isos->cell_face    , 1, int         *);
+    PDM_malloc(isos->face_edge_idx, 1, int         *);
+    PDM_malloc(isos->face_edge    , 1, int         *);
+    PDM_malloc(isos->face_vtx_idx , 1, int         *);
+    PDM_malloc(isos->face_vtx     , 1, int         *);
+    PDM_malloc(isos->edge_vtx     , 1, int         *);
+    PDM_malloc(isos->n_group_face , 1, int          );
 
     isos->n_cell       [0] = n_cell;
     isos->n_face       [0] = n_face;
@@ -436,7 +436,7 @@ _compute_iso_field
   if (isos->is_dist_or_part == 0) {
     // Block-distributed
     if (isos->field[id_isosurface] == NULL) {
-      isos->field[id_isosurface] = malloc(sizeof(double *) * isos->n_part);
+      PDM_malloc(isos->field[id_isosurface], isos->n_part, double *);
     }
     assert(isos->dist_to_part_computed);
   }
@@ -467,7 +467,7 @@ _compute_iso_field
         PDM_part_to_part_reverse_iexch_wait(ptp, request);
       }
       else if (isos->extract_kind == PDM_EXTRACT_PART_KIND_LOCAL) {
-        isos->extract_field[id_isosurface] = malloc(sizeof(double *) * isos->n_part);
+        PDM_malloc(isos->extract_field[id_isosurface], isos->n_part, double *);
 
         for (int i_part = 0; i_part < isos->iso_n_part; i_part++) {
           int *parent = NULL;
@@ -477,7 +477,7 @@ _compute_iso_field
                                                        &parent,
                                                        PDM_OWNERSHIP_KEEP);
 
-          isos->extract_field[id_isosurface][i_part] = malloc(sizeof(double) * n_vtx);
+          PDM_malloc(isos->extract_field[id_isosurface][i_part], n_vtx, double);
           for (int i = 0; i < n_vtx; i++) {
             isos->extract_field[id_isosurface][i_part][i] = isos->field[id_isosurface][i_part][parent[i] - 1];
           }
@@ -508,12 +508,14 @@ _compute_iso_field
     return;
   }
 
-  int     *n_vtx     = malloc(sizeof(int     ) * isos->n_part);
-  double **vtx_coord = malloc(sizeof(double *) * isos->n_part);
+  int     *n_vtx     = NULL;
+  double **vtx_coord = NULL;
+  PDM_malloc(n_vtx    , isos->n_part, int     );
+  PDM_malloc(vtx_coord, isos->n_part, double *);
   double **field     = NULL;
   if (use_extract) {
     if (isos->extract_field[id_isosurface] == NULL) {
-      isos->extract_field[id_isosurface] = malloc(sizeof(double *) * isos->n_part);
+      PDM_malloc(isos->extract_field[id_isosurface], isos->n_part, double *);
     }
     field = isos->extract_field[id_isosurface];
     for (int i_part = 0; i_part < isos->n_part; i_part++) {
@@ -540,7 +542,7 @@ _compute_iso_field
   }
 
   for (int i_part = 0; i_part < isos->n_part; i_part++) {
-    field[i_part] = malloc(sizeof(double) * n_vtx[i_part]);
+    PDM_malloc(field[i_part], n_vtx[i_part], double);
   }
 
   /* Fill */
@@ -676,7 +678,8 @@ _extract
 
 
   int  *n_extract    = PDM_array_zeros_int(isos->n_part);
-  int **extract_lnum = malloc(sizeof(int *) * isos->n_part);
+  int **extract_lnum = NULL;
+  PDM_malloc(extract_lnum, isos->n_part, int *);
 
   int          *pn_cell        = NULL;
   int          *pn_face        = NULL;
@@ -697,13 +700,13 @@ _extract
 
   if (_is_nodal(isos)) {
     // Nodal
-    pn_cell        = malloc(sizeof(int          ) * isos->n_part);
-    pn_face        = malloc(sizeof(int          ) * isos->n_part);
-    pn_edge        = malloc(sizeof(int          ) * isos->n_part);
-    pn_vtx         = malloc(sizeof(int          ) * isos->n_part);
-    pcell_ln_to_gn = malloc(sizeof(PDM_g_num_t *) * isos->n_part);
-    pface_ln_to_gn = malloc(sizeof(PDM_g_num_t *) * isos->n_part);
-    pvtx_ln_to_gn  = malloc(sizeof(PDM_g_num_t *) * isos->n_part);
+    PDM_malloc(pn_cell       , isos->n_part, int          );
+    PDM_malloc(pn_face       , isos->n_part, int          );
+    PDM_malloc(pn_edge       , isos->n_part, int          );
+    PDM_malloc(pn_vtx        , isos->n_part, int          );
+    PDM_malloc(pcell_ln_to_gn, isos->n_part, PDM_g_num_t *);
+    PDM_malloc(pface_ln_to_gn, isos->n_part, PDM_g_num_t *);
+    PDM_malloc(pvtx_ln_to_gn , isos->n_part, PDM_g_num_t *);
 
     if (isos->entry_mesh_dim == 2) {
       for (int i_part = 0; i_part < isos->n_part; i_part++) {
@@ -740,7 +743,7 @@ _extract
     if (isos->entry_mesh_dim == 2) {
       // 2D
       for (int i_part = 0; i_part < isos->n_part; i_part++) {
-        extract_lnum[i_part] = malloc(sizeof(int) * pn_face[i_part]);
+        PDM_malloc(extract_lnum[i_part], pn_face[i_part], int);
       }
 
       if (isos->we_have_edges) {
@@ -793,7 +796,7 @@ _extract
       // 3D
       assert(isos->entry_mesh_dim == 3);
       for (int i_part = 0; i_part < isos->n_part; i_part++) {
-        extract_lnum[i_part] = malloc(sizeof(int) * pn_cell[i_part]);
+        PDM_malloc(extract_lnum[i_part], pn_cell[i_part], int);
       }
       if (isos->we_have_edges == 0) {
         for (int i_part = 0; i_part < isos->n_part; i_part++) {
@@ -1448,7 +1451,8 @@ PDM_isosurface_create
  // PDM_Mesh_nodal_elt_t     elt_type
 )
 {
-  PDM_isosurface_t *isos = (PDM_isosurface_t *) malloc(sizeof(PDM_isosurface_t));
+  PDM_isosurface_t *isos = NULL;
+  PDM_malloc(isos, 1, PDM_isosurface_t);
 
   // > Save communicator
   isos->comm = comm;
@@ -1645,7 +1649,7 @@ PDM_isosurface_add
     else {
       PDM_error(__FILE__, __LINE__, 0, "PDM_isosurface_t: Impossible to defined manually field without setting mesh first.\n", isos->entry_mesh_type);
     }
-    isos->field[id_isosurface] = malloc(sizeof(double *) * n_part);
+    PDM_malloc(isos->field[id_isosurface], n_part, double *);
   }
 
   isos->n_isovalues    = realloc(isos->n_isovalues   , sizeof(int     ) * isos->n_isosurface);
@@ -1733,7 +1737,7 @@ PDM_isosurface_add
 
   isos->kind       [id_isosurface] = kind;
   isos->n_isovalues[id_isosurface] = n_isovalues;
-  isos->  isovalues[id_isosurface] = malloc(sizeof(double) * n_isovalues);
+  PDM_malloc(isos->isovalues[id_isosurface], n_isovalues, double);
   for (int i=0; i<n_isovalues; ++i) {
     isos->isovalues[id_isosurface][i] = isovalues[i];
   }
@@ -1743,19 +1747,19 @@ PDM_isosurface_add
   }
   else if (kind==PDM_ISO_SURFACE_KIND_PLANE) {
     int n_coeff = 4;
-    isos->eq_coeffs[id_isosurface] = malloc(sizeof(double) * n_coeff);
+    PDM_malloc(isos->eq_coeffs[id_isosurface], n_coeff, double);
   }
   else if (kind==PDM_ISO_SURFACE_KIND_SPHERE) {
     int n_coeff = 4;
-    isos->eq_coeffs[id_isosurface] = malloc(sizeof(double) * n_coeff);
+    PDM_malloc(isos->eq_coeffs[id_isosurface], n_coeff, double);
   }
   else if (kind==PDM_ISO_SURFACE_KIND_ELLIPSE) {
     int n_coeff = 6;
-    isos->eq_coeffs[id_isosurface] = malloc(sizeof(double) * n_coeff);
+    PDM_malloc(isos->eq_coeffs[id_isosurface], n_coeff, double);
   }
   else if (kind==PDM_ISO_SURFACE_KIND_QUADRIC) {
     int n_coeff = 10;
-    isos->eq_coeffs[id_isosurface] = malloc(sizeof(double) * n_coeff);
+    PDM_malloc(isos->eq_coeffs[id_isosurface], n_coeff, double);
   }
   else if (kind==PDM_ISO_SURFACE_KIND_HEART) {
     isos->eq_coeffs[id_isosurface] = NULL;

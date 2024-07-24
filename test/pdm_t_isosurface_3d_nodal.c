@@ -507,14 +507,14 @@ int main(int argc, char *argv[])
                                       PDM_SPLIT_DUAL_WITH_PARMETIS); // TODO: Allow various partitioning ?
     
     // > Fields initialisation
-    iso_field = malloc(sizeof(double *) * n_part);
-    itp_field = malloc(sizeof(double *) * n_part);
+    PDM_malloc(iso_field, n_part, double *);
+    PDM_malloc(itp_field, n_part, double *);
 
     for (int i_part=0; i_part<n_part; ++i_part) {
       int     n_vtx     = PDM_part_mesh_nodal_n_vtx_get(pmn, i_part);
       double *vtx_coord = PDM_part_mesh_nodal_vtx_coord_get(pmn, i_part);
-      iso_field[i_part] = malloc(sizeof(double) * n_vtx);
-      itp_field[i_part] = malloc(sizeof(double) * n_vtx);
+      PDM_malloc(iso_field[i_part], n_vtx, double);
+      PDM_malloc(itp_field[i_part], n_vtx, double);
       
       for (int i_vtx=0; i_vtx<n_vtx; ++i_vtx) {
         double c_4d[4] = {-0.08, 0.0, -0.8, -0.03};
@@ -616,7 +616,8 @@ int main(int argc, char *argv[])
   /*
    *  Interpolate field
    */
-  double ***iso_itp_field = malloc(n_iso * sizeof(double **));
+  double ***iso_itp_field = NULL;
+  PDM_malloc(iso_itp_field, n_iso, double **);
   for (int i_iso=0; i_iso<n_iso; ++i_iso) {
     iso_itp_field[i_iso] = NULL;
   } 
@@ -625,7 +626,7 @@ int main(int argc, char *argv[])
   }
   else if (dist_entry==0) {
     if (local==1) {
-      iso_itp_field[iso2] = malloc(n_part * sizeof(double **));
+      PDM_malloc(iso_itp_field[iso2], n_part, double *);
       for (int i_part=0; i_part<n_part; ++i_part) {
         
         int    *vtx_parent_idx  = NULL;

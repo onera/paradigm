@@ -108,7 +108,8 @@ PDM_inplace_unique_int_with_order_in_unique
     return array_size;
   }
   // printf("PDM_inplace_unique_int_with_order_in_unique::array_size::%d\n", array_size);
-  int* order = (int *) malloc( (array_size) * sizeof(int));
+  int* order = NULL;
+  PDM_malloc(order, array_size, int);
 
   for(int i = 0; i < array_size; ++i){
     order[i] = i;

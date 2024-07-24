@@ -372,12 +372,12 @@ int main(int argc, char *argv[])
                               iso3,
                               dfield);
   } else if (dist_entry==0) {
-    field = malloc(sizeof(double *) * n_part);
+    PDM_malloc(field, n_part, double *);
 
     for (int i_part=0; i_part<n_part; ++i_part) {
       int     n_vtx     = PDM_part_mesh_nodal_n_vtx_get(pmn, i_part);
       double *vtx_coord = PDM_part_mesh_nodal_vtx_coord_get(pmn, i_part);
-      field[i_part] = malloc(sizeof(double) * n_vtx);
+      PDM_malloc(field[i_part], n_vtx, double);
       
       for (int i_vtx=0; i_vtx<n_vtx; ++i_vtx) {
         _eval_mandelbrot( vtx_coord[3*i_vtx  ],
