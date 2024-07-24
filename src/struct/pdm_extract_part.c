@@ -5534,6 +5534,8 @@ PDM_extract_part_free
   PDM_extract_part_t  *extrp
 )
 {
+ if (extrp == NULL) return;
+  
  PDM_free(extrp->n_cell        );
  PDM_free(extrp->n_face        );
  PDM_free(extrp->n_edge        );
