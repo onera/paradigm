@@ -350,7 +350,7 @@ compute_dual_mesh_metrics
     double *_pvtx_coord = pvtx_coord[i_part];
 
     PDM_malloc(edge_surf[i_part], 3 * pn_edge[i_part] , double);
-    dual_vol PDM_malloc([i_part],     pn_vtx [i_part] , double);
+    PDM_malloc(dual_vol [i_part],     pn_vtx [i_part] , double);
     double *_edge_surf = edge_surf[i_part];
     double *_dual_vol  = dual_vol[i_part];
 
