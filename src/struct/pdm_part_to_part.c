@@ -852,9 +852,9 @@ _p2p_stride_var_data_issend
   ptp->async_send_s_data    [_request]    = s_data;
   ptp->async_send_cst_stride[_request]    = 1;
   ptp->async_send_tag       [_request]    = tag;
-  ptp->async_send_request   PDM_malloc([_request],ptp->n_active_rank_send,PDM_MPI_Request);
-  ptp->async_n_send_buffer  PDM_malloc([_request],ptp->n_rank,int);
-  ptp->async_i_send_buffer  PDM_malloc([_request],(ptp->n_rank + 1),int);
+  PDM_malloc(ptp->async_send_request   [_request],ptp->n_active_rank_send,PDM_MPI_Request);
+  PDM_malloc(ptp->async_n_send_buffer  [_request],ptp->n_rank,int);
+  PDM_malloc(ptp->async_i_send_buffer  [_request],(ptp->n_rank + 1),int);
   ptp->async_i_send_buffer  [_request][0] = 0;
 
   for (int i = 0; i < ptp->n_rank; i++) {
@@ -955,9 +955,9 @@ _p2p_stride_var_data_reverse_issend
   ptp->async_send_s_data    [_request]    = s_data;
   ptp->async_send_cst_stride[_request]    = 1;
   ptp->async_send_tag       [_request]    = tag;
-  ptp->async_send_request   PDM_malloc([_request],ptp->n_active_rank_recv,PDM_MPI_Request);
-  ptp->async_n_send_buffer  PDM_malloc([_request],ptp->n_rank,int);
-  ptp->async_i_send_buffer  PDM_malloc([_request],(ptp->n_rank + 1),int);
+  PDM_malloc(ptp->async_send_request   [_request],ptp->n_active_rank_recv,PDM_MPI_Request);
+  PDM_malloc(ptp->async_n_send_buffer  [_request],ptp->n_rank,int);
+  PDM_malloc(ptp->async_i_send_buffer  [_request],(ptp->n_rank + 1),int);
   ptp->async_i_send_buffer  [_request][0] = 0;
 
   for (int i = 0; i < ptp->n_rank; i++) {
@@ -3636,9 +3636,9 @@ PDM_part_to_part_issend_raw
   ptp->async_send_s_data    [_request] = s_data;
   ptp->async_send_cst_stride[_request] = cst_stride;
   ptp->async_send_tag       [_request] = tag;
-  ptp->async_send_request   PDM_malloc([_request],ptp->n_active_rank_send,PDM_MPI_Request);
-  ptp->async_n_send_buffer  PDM_malloc([_request],ptp->n_rank,int);
-  ptp->async_i_send_buffer  PDM_malloc([_request],(ptp->n_rank + 1),int);
+  PDM_malloc(ptp->async_send_request   [_request],ptp->n_active_rank_send,PDM_MPI_Request);
+  PDM_malloc(ptp->async_n_send_buffer  [_request],ptp->n_rank,int);
+  PDM_malloc(ptp->async_i_send_buffer  [_request],(ptp->n_rank + 1),int);
   ptp->async_i_send_buffer  [_request][0] = 0;
   for (int i = 0; i < ptp->n_rank; i++) {
     ptp->async_n_send_buffer[_request][i  ] = cst_stride * ptp->default_n_send_buffer[i  ] * (int) s_data;
@@ -3909,7 +3909,7 @@ PDM_part_to_part_irecv_raw
   ptp->async_recv_cst_stride[_request] = cst_stride;
   ptp->async_recv_tag       [_request] = tag;
 
-  ptp->async_recv_request PDM_malloc([_request],ptp->n_active_rank_recv,PDM_MPI_Request);
+  PDM_malloc(ptp->async_recv_request [_request],ptp->n_active_rank_recv,PDM_MPI_Request);
   PDM_malloc(ptp->async_n_recv_buffer[_request],ptp->n_rank,int);
   PDM_malloc(ptp->async_i_recv_buffer[_request],(ptp->n_rank + 1),int);
   ptp->async_i_recv_buffer[_request][0] = 0;

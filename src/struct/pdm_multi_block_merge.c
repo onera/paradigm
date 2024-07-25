@@ -103,8 +103,8 @@ PDM_multi_block_merge_create
   for(int i_block = 0; i_block < n_block; ++i_block) {
 
     _n_selected     [i_block] = n_selected[i_block];
-    _selected_g_num PDM_malloc([i_block],n_selected[i_block] ,PDM_g_num_t);
-    _send_stride    PDM_malloc([i_block],n_selected[i_block] ,int        );
+    PDM_malloc(_selected_g_num [i_block],n_selected[i_block] ,PDM_g_num_t);
+    PDM_malloc(_send_stride    [i_block],n_selected[i_block] ,int        );
     _send_orig_g_num[i_block] = _selected_g_num[i_block];
 
     for(int i = 0; i < n_selected[i_block]; ++i) {
@@ -115,9 +115,9 @@ PDM_multi_block_merge_create
 
   // Add graph as partition
   _n_selected     [n_block] = dmerge_idx[graph_size];
-  _selected_g_num PDM_malloc([n_block],dmerge_idx[graph_size] ,PDM_g_num_t);
+  PDM_malloc(_selected_g_num [n_block],dmerge_idx[graph_size] ,PDM_g_num_t);
   PDM_malloc(_send_orig_g_num[n_block],2*(dmerge_idx[graph_size]-graph_size) ,PDM_g_num_t);
-  _send_stride    PDM_malloc([n_block],dmerge_idx[graph_size] ,int        );
+  PDM_malloc(_send_stride    [n_block],dmerge_idx[graph_size] ,int        );
   int w_idx = 0;
   for(int i = 0; i < graph_size; ++i) {
     // First vertex in the graph becomes the reference. We send to corresponding gnum

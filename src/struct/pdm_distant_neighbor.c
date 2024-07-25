@@ -217,7 +217,7 @@ const int           *n_entity,
 
     // log_trace("[%i] - n_entity:: %d\n", i_part, n_entity[i_part]);
 
-    dn->order       PDM_malloc([i_part], _part_neighbor_idx[n_entity[i_part]] ,int);
+    PDM_malloc(dn->order       [i_part], _part_neighbor_idx[n_entity[i_part]] ,int);
     PDM_malloc(dn->order_unique[i_part], _part_neighbor_idx[n_entity[i_part]] ,int);
 
     // PDM_log_trace_array_int(_part_neighbor_idx , n_entity[i_part], "_part_neighbor_idx::");

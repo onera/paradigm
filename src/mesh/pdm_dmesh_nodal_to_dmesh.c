@@ -762,16 +762,16 @@ PDM_g_num_t  **dmissing_child_parent_g_num
   PDM_g_num_t key_mod = 4 * n_vtx_abs;
   for(int i_part = 0; i_part < n_part; ++i_part) {
     PDM_malloc(ln_to_gn[i_part], n_entity_elt_tot[i_part] ,PDM_g_num_t);
-    part_id PDM_malloc([i_part], n_entity_elt_tot[i_part] ,int        );
+    PDM_malloc(part_id [i_part], n_entity_elt_tot[i_part] ,int        );
     _compute_keys(n_entity_elt_tot[i_part],
                   delmt_entity_vtx_idx[i_part],
                   delmt_entity_vtx[i_part],
                   ln_to_gn[i_part],
                   key_mod);
 
-    weight            PDM_malloc([i_part], n_entity_elt_tot[i_part] ,double);
+    PDM_malloc(weight            [i_part], n_entity_elt_tot[i_part] ,double);
     PDM_malloc(delmt_entity_vtx_n[i_part], n_entity_elt_tot[i_part] ,int   );
-    stride_one        PDM_malloc([i_part], n_entity_elt_tot[i_part] ,int   );
+    PDM_malloc(stride_one        [i_part], n_entity_elt_tot[i_part] ,int   );
 
     for(int i = 0; i < n_entity_elt_tot[i_part]; ++i) {
       part_id           [i_part][i] = i_part;

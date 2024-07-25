@@ -75,7 +75,7 @@ _redistribute_pts_geom
   double **weight;
   PDM_malloc(weight,doct->n_part_cloud ,double *);
   for(int i_part = 0; i_part < doct->n_part_cloud; ++i_part) {
-    weight    PDM_malloc([i_part],doct->n_point_cloud[i_part] ,double);
+    PDM_malloc(weight    [i_part],doct->n_point_cloud[i_part] ,double);
     PDM_malloc(stride_one[i_part],doct->n_point_cloud[i_part] ,int   );
     for(int i = 0; i < doct->n_point_cloud[i_part]; ++i) {
       weight    [i_part][i] = 1;
@@ -1555,8 +1555,8 @@ PDM_doctree_build
                                                     &(box_pts_l_num[i_shm]));
 
       PDM_malloc(res_box_weight[i_shm],n_lbox ,double     );
-      res_box_strid PDM_malloc([i_shm],n_lbox ,int        );
-      res_box_g_num PDM_malloc([i_shm],n_lbox ,PDM_g_num_t);
+      PDM_malloc(res_box_strid [i_shm],n_lbox ,int        );
+      PDM_malloc(res_box_g_num [i_shm],n_lbox ,PDM_g_num_t);
 
       int n_lbox_compress = 0;
       for(int i = 0; i < n_lbox; ++i ){
@@ -1587,7 +1587,7 @@ PDM_doctree_build
       int *_box_pts_idx   = box_pts_idx  [i_shm];
       int *_box_pts_l_num = box_pts_l_num[i_shm];
       PDM_malloc(res_box_pts_coords[i_shm],3 * _box_pts_idx[n_lbox] ,double     );
-      res_box_pts_gnum  PDM_malloc([i_shm],    _box_pts_idx[n_lbox] ,PDM_g_num_t);
+      PDM_malloc(res_box_pts_gnum  [i_shm],    _box_pts_idx[n_lbox] ,PDM_g_num_t);
 
       PDM_g_num_t *shm_equi_pts_gnum          = &equi_pts_gnum      [  shm_equi_pts_tot_idx[i_shm]];
 

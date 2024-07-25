@@ -2208,7 +2208,7 @@ _post_treatment_reverse
     int idx = -1;
     for (int i = 0; i < ptb->n_part; i++) {
       PDM_malloc(_part_stride[i], ptb->n_elt[i]    ,int);
-      _part_idx   PDM_malloc([i],(ptb->n_elt[i]+1) ,int);
+      PDM_malloc(_part_idx   [i],(ptb->n_elt[i]+1) ,int);
 
       for (int j = 0; j < ptb->n_elt[i]; j++) {
         int iproc = ptb->dest_proc[++idx];
