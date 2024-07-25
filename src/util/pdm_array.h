@@ -43,7 +43,10 @@ int*         PDM_array_new_idx_from_sizes_int (const int *size_array, const int 
 PDM_g_num_t* PDM_array_new_idx_from_sizes_gnum(const int *size_array, const int size);
 int*         PDM_array_new_idx_from_const_stride_int(const int stride, const int size);
 
-/* Utils functions compararing arrays */
+// Create a size array from an index array
+int* PDM_array_new_size_from_idx_int(const int *idx_array, const int size);
+
+/* Utils functions comparing arrays */
 
 /* Utils functions for reducing arrays */
 int         PDM_array_max_int (const int         *array, const int size);

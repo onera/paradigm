@@ -57,7 +57,7 @@ extern "C" {
 
 struct _pdm_isosurface_t {
 
-  // ========================
+  // =========
   // > General
   PDM_MPI_Comm comm;
 
@@ -79,15 +79,18 @@ struct _pdm_isosurface_t {
   // > Isosurface options
 
   // > Isosurfaces
-  int                     n_isosurface;
+  int n_isosurface;
+
+  // > Isosurface tolerance
+  double ISOSURFACE_EPS;
 
   // > Isosurface type
   int                     mesh_dimension;
   PDM_iso_surface_kind_t *kind;
 
   // > Isovalues
-  int                    *n_isovalues;
-  double                **isovalues;
+  int     *n_isovalues;
+  double **isovalues;
 
   // > Equation args
   PDM_isosurface_field_function_t *field_function;

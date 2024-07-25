@@ -602,24 +602,23 @@ _compute_iso_field
 
 
 // --->> migrer dans priv?
-static const double ISOSURFACE_EPS = 1e-6;
-
 static inline int
 _sign
 (
-  const double v
+  const double v, 
+  const double tol
 )
 {
-  // if (v < -ISOSURFACE_EPS) {
+  // if (v < -tol) {
   //   return -1;
   // }
-  // else if (v > ISOSURFACE_EPS) {
+  // else if (v > tol) {
   //   return 1;
   // }
   // else {
   //   return 0;
   // }
-  return (v > ISOSURFACE_EPS);
+  return (v > tol);
 }
 
 
@@ -627,10 +626,11 @@ static inline int
 _cross_0_level_ngon
 (
   const double v0,
-  const double v1
+  const double v1,
+  const double tol
 )
 {
-  return _sign(v0) != _sign(v1);
+  return _sign(v0, tol) != _sign(v1, tol);
 }
 
 
@@ -640,12 +640,13 @@ _cross_any_level_ngon
   const double v0,
   const double v1,
   const int    n_isovalues,
-  const double isovalues[]
+  const double isovalues[],
+  const double tol
 )
 {
   int n_crossings = 0;
   for (int i = 0; i < n_isovalues; i++) {
-    n_crossings += _cross_0_level_ngon(v0 - isovalues[i], v1 - isovalues[i]);
+    n_crossings += _cross_0_level_ngon(v0 - isovalues[i], v1 - isovalues[i], tol);
   }
 
   return n_crossings;
@@ -756,7 +757,7 @@ _extract
               int i_vtx1 = pedge_vtx[i_part][2*i_edge+1] - 1;
               double val0 = isos->field[id_isosurface][i_part][i_vtx0];
               double val1 = isos->field[id_isosurface][i_part][i_vtx1];
-              if (_cross_any_level_ngon(val0, val1, isos->n_isovalues[id_isosurface], isos->isovalues[id_isosurface])) {
+              if (_cross_any_level_ngon(val0, val1, isos->n_isovalues[id_isosurface], isos->isovalues[id_isosurface], isos->ISOSURFACE_EPS)) {
                 is_selected = 1;
                 break;
               }
@@ -779,7 +780,7 @@ _extract
               int i_vtx1 = fv[(i+1)%face_vtx_n] - 1;
               double val0 = isos->field[id_isosurface][i_part][i_vtx0];
               double val1 = isos->field[id_isosurface][i_part][i_vtx1];
-              if (_cross_any_level_ngon(val0, val1, isos->n_isovalues[id_isosurface], isos->isovalues[id_isosurface])) {
+              if (_cross_any_level_ngon(val0, val1, isos->n_isovalues[id_isosurface], isos->isovalues[id_isosurface], isos->ISOSURFACE_EPS)) {
                 is_selected = 1;
                 break;
               }
@@ -811,7 +812,7 @@ _extract
                 int i_vtx1 = fv[(i+1)%face_vtx_n] - 1;
                 double val0 = isos->field[id_isosurface][i_part][i_vtx0];
                 double val1 = isos->field[id_isosurface][i_part][i_vtx1];
-                if (_cross_any_level_ngon(val0, val1, isos->n_isovalues[id_isosurface], isos->isovalues[id_isosurface])) {
+                if (_cross_any_level_ngon(val0, val1, isos->n_isovalues[id_isosurface], isos->isovalues[id_isosurface], isos->ISOSURFACE_EPS)) {
                   is_selected = 1;
                   break;
                 }
@@ -839,7 +840,7 @@ _extract
                 int i_vtx1 = pedge_vtx[i_part][2*i_edge+1] - 1;
                 double val0 = isos->field[id_isosurface][i_part][i_vtx0];
                 double val1 = isos->field[id_isosurface][i_part][i_vtx1];
-                if (_cross_any_level_ngon(val0, val1, isos->n_isovalues[id_isosurface], isos->isovalues[id_isosurface])) {
+                if (_cross_any_level_ngon(val0, val1, isos->n_isovalues[id_isosurface], isos->isovalues[id_isosurface], isos->ISOSURFACE_EPS)) {
                   is_selected = 1;
                   break;
                 }
@@ -1027,7 +1028,7 @@ _ngonize
 
 
 /**
- * \brief Block-distrubute isosurface mesh
+ * \brief Block-distribute isosurface mesh
  */
 static void
 _part_to_dist
@@ -1457,6 +1458,9 @@ PDM_isosurface_create
   // > Save communicator
   isos->comm = comm;
 
+  // > Init tolerance
+  isos->ISOSURFACE_EPS = 0.;
+
   // > Entry mesh information
   isos->is_dist_or_part = -1; 
   isos->entry_mesh_type =  0; 
@@ -1600,6 +1604,18 @@ PDM_isosurface_create
 }
 
 
+void
+PDM_isosurface_set_tolerance
+(
+  PDM_isosurface_t *isos,
+  double            tolerance
+)
+{
+  assert(tolerance>0.);
+  isos->ISOSURFACE_EPS = tolerance;
+}
+
+
 int
 PDM_isosurface_add
 (
@@ -1609,10 +1625,22 @@ PDM_isosurface_add
  double                 *isovalues
 )
 {
-  // TODO: check that difference between isovalues>ISOSURFACE_EPS
-  
   int id_isosurface = isos->n_isosurface;
   isos->n_isosurface++;
+  
+  // > Check that difference between isovalues>ISOSURFACE_EPS
+  for (int i_iso=0; i_iso<n_isovalues; ++i_iso) {
+    for (int j_iso=i_iso+1; j_iso<n_isovalues; ++j_iso) {
+      if (PDM_ABS(isovalues[i_iso]-isovalues[j_iso])<=isos->ISOSURFACE_EPS) {
+        PDM_error(__FILE__, __LINE__, 0, "PDM_isosurface_t: isovalue %d = %f too close from isovalue %d = %f (%.2e<=%.2e) for isosurface with id %d.\n",
+                                                        i_iso, isovalues[i_iso],
+                                                        j_iso, isovalues[j_iso],
+                                                        PDM_ABS(isovalues[i_iso]-isovalues[j_iso]), isos->ISOSURFACE_EPS,
+                                                        id_isosurface);
+
+      }
+    }
+  }
   
   PDM_realloc(isos->kind          , isos->kind          , isos->n_isosurface, PDM_iso_surface_kind_t          );
   PDM_realloc(isos->eq_coeffs     , isos->eq_coeffs     , isos->n_isosurface, double                         *);
@@ -1623,7 +1651,6 @@ PDM_isosurface_add
   PDM_realloc(isos->compute_ptp, isos->compute_ptp, isos->n_isosurface, int *);
   isos->compute_ptp[id_isosurface] = PDM_array_zeros_int(PDM_MESH_ENTITY_MAX);
 
-  // TODO: status if its ok to allocate d and p variable (because set functions order not imposed ?)
   PDM_realloc(isos->dfield, isos->dfield, isos->n_isosurface, double  *);
   PDM_realloc(isos->field , isos->field , isos->n_isosurface, double **);
   isos->field[id_isosurface] = NULL;

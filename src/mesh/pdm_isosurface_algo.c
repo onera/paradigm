@@ -361,14 +361,14 @@ static int _pattern_cell_edge_permutation[64][6] = { // from split_operator
 };
 
 static const double ISOSURFACE_EPS_T = 1e-6; // Epsilon for snapping isovtx to vtx (ngon algo)
-static const double ISOSURFACE_EPS   = 1e-6;
 
 static inline int
 _is_at_0_level(
-  const double v
+  const double v,
+  const double tol
 )
 {
-  return (PDM_ABS(v) <= ISOSURFACE_EPS);
+  return (PDM_ABS(v) <= tol);
 }
 
 
@@ -377,12 +377,13 @@ _is_at_any_level
 (
   const double v,
   const int    n_isovalues,
-  const double isovalues[]
+  const double isovalues[],
+  const double tol
 )
 {
   int n_crossings = 0;
   for (int i = 0; i < n_isovalues; i++) {
-    n_crossings += _is_at_0_level(v - isovalues[i]);
+    n_crossings += _is_at_0_level(v - isovalues[i], tol);
   }
 
   return n_crossings;
@@ -393,10 +394,11 @@ static inline int
 _cross_0_level
 (
   const double v0,
-  const double v1
+  const double v1,
+  const double tol
 )
 {
-  return (PDM_ABS(v0) > ISOSURFACE_EPS) && (PDM_ABS(v1) > ISOSURFACE_EPS) && (v0*v1 < 0);
+  return (PDM_ABS(v0) > tol) && (PDM_ABS(v1) > tol) && (v0*v1 < 0);
 }
 
 
@@ -406,12 +408,13 @@ _cross_any_level
   const double v0,
   const double v1,
   const int    n_isovalues,
-  const double isovalues[]
+  const double isovalues[],
+  const double tol
 )
 {
   int n_crossings = 0;
   for (int i = 0; i < n_isovalues; i++) {
-    n_crossings += _cross_0_level(v0 - isovalues[i], v1 - isovalues[i]);
+    n_crossings += _cross_0_level(v0 - isovalues[i], v1 - isovalues[i], tol);
   }
 
   return n_crossings;
@@ -421,19 +424,20 @@ _cross_any_level
 static inline int
 _sign
 (
-  const double v
+  const double v,
+  const double tol
 )
 {
-  // if (v < -ISOSURFACE_EPS) {
+  // if (v < -tol) {
   //   return -1;
   // }
-  // else if (v > ISOSURFACE_EPS) {
+  // else if (v > tol) {
   //   return 1;
   // }
   // else {
   //   return 0;
   // }
-  return (v > ISOSURFACE_EPS);
+  return (v > tol);
 }
 
 
@@ -441,10 +445,11 @@ static inline int
 _cross_0_level_ngon
 (
   const double v0,
-  const double v1
+  const double v1,
+  const double tol
 )
 {
-  return _sign(v0) != _sign(v1);
+  return _sign(v0, tol) != _sign(v1, tol);
 }
 
 
@@ -454,12 +459,13 @@ _cross_any_level_ngon
   const double v0,
   const double v1,
   const int    n_isovalues,
-  const double isovalues[]
+  const double isovalues[],
+  const double tol
 )
 {
   int n_crossings = 0;
   for (int i = 0; i < n_isovalues; i++) {
-    n_crossings += _cross_0_level_ngon(v0 - isovalues[i], v1 - isovalues[i]);
+    n_crossings += _cross_0_level_ngon(v0 - isovalues[i], v1 - isovalues[i], tol);
   }
 
   return n_crossings;
@@ -555,6 +561,7 @@ _build_active_edges
   const int               i_part,
   const int               n_isovalues,
   const double           *isovalues,
+  const double            tol,
   double                 *vtx_field,
   int                    *n_edge,
   int                   **edge_vtx,
@@ -633,15 +640,16 @@ _build_active_edges
         if (_cross_any_level(vtx_field[i_vtx0-1],
                              vtx_field[i_vtx1-1],
                              n_isovalues,
-                             isovalues)) {
+                             isovalues,
+                             tol)) {
           // This is an active edge
           int key = (i_vtx0 + i_vtx1 - 2) % max_key;
           key_count[key]++;
         }
         else {
           for (int i = 0; i < n_isovalues; i++) {
-            if (_is_at_0_level(vtx_field[i_vtx0-1] - isovalues[i]) &&
-                _is_at_0_level(vtx_field[i_vtx1-1] - isovalues[i])) {
+            if (_is_at_0_level(vtx_field[i_vtx0-1] - isovalues[i], tol) &&
+                _is_at_0_level(vtx_field[i_vtx1-1] - isovalues[i], tol)) {
               // This is an active edge with vertices on entry mesh vertices
               int key = (i_vtx0 + i_vtx1 - 2) % max_key;
               key_count[key]++;
@@ -731,7 +739,8 @@ _build_active_edges
         int _n_crossings = _cross_any_level(vtx_field[i_vtx0-1],
                                             vtx_field[i_vtx1-1],
                                             n_isovalues,
-                                            isovalues);
+                                            isovalues,
+                                            tol);
         
         /* Look for possible collision */
         for (int i = 0; i < key_count[key]; i++) {
@@ -759,8 +768,8 @@ _build_active_edges
 
         } else {
           for (int i = 0; i < n_isovalues; i++) {
-            if (_is_at_0_level(vtx_field[i_vtx0-1] - isovalues[i]) &&
-                _is_at_0_level(vtx_field[i_vtx1-1] - isovalues[i])) {
+            if (_is_at_0_level(vtx_field[i_vtx0-1] - isovalues[i], tol) &&
+                _is_at_0_level(vtx_field[i_vtx1-1] - isovalues[i], tol)) {
               
               if (edge_id == 0) {
                 _edge_vtx[2*(*n_edge)  ] = i_vtx0;
@@ -911,6 +920,7 @@ _build_active_faces
   const int               i_part,
   const int               n_isovalues,
   const double           *isovalues,
+  const double            tol,
   double                 *vtx_field,
   int                    *vtx_to_iso_vtx,
   int                    *n_face,
@@ -981,7 +991,7 @@ _build_active_faces
           int all_zero = 1;
           for (int i = section_face_vtx_idx[i_face]; i < section_face_vtx_idx[i_face+1]; i++) {
             int i_vtx = _connec[section_face_vtx[i]] - 1;
-            if (PDM_ABS(vtx_field[i_vtx] - isovalues[i_isovalue]) > ISOSURFACE_EPS) {
+            if (PDM_ABS(vtx_field[i_vtx] - isovalues[i_isovalue]) > tol) {
               all_zero = 0;
               break;
             }
@@ -1079,7 +1089,7 @@ _build_active_faces
           int all_zero = 1;
           for (int i = section_face_vtx_idx[i_face]; i < section_face_vtx_idx[i_face+1]; i++) {
             int i_vtx = _connec[section_face_vtx[i]] - 1;
-            if (PDM_ABS(vtx_field[i_vtx] - isovalues[i_isovalue]) > ISOSURFACE_EPS) {
+            if (PDM_ABS(vtx_field[i_vtx] - isovalues[i_isovalue]) > tol) {
               all_zero = 0;
               break;
             }
@@ -1248,6 +1258,7 @@ _build_iso_vtx
 (
   const int           n_isovalues,
   const double       *isovalues,
+  const double        tol,
   const int           n_vtx,
   const PDM_g_num_t  *vtx_gnum,
   const double       *vtx_coord,
@@ -1275,7 +1286,7 @@ _build_iso_vtx
   int n_vtx_on_vtx = 0;
   for (int i_vtx = 0; i_vtx < n_vtx; i_vtx++) {
     for (int i_isovalue = 0; i_isovalue < n_isovalues; i_isovalue++) {
-      if (_is_at_0_level(vtx_field[i_vtx] - isovalues[i_isovalue])) {
+      if (_is_at_0_level(vtx_field[i_vtx] - isovalues[i_isovalue], tol)) {
         n_vtx_on_vtx++;
       }
     }
@@ -1306,9 +1317,9 @@ _build_iso_vtx
   for (int i_isovalue = 0; i_isovalue < n_isovalues; i_isovalue++) {
     double isovalue = isovalues[i_isovalue];
 
-    // > Iso vertices on mesh vertices (one array for all isovalue is okay thx to ISOSURFACE_EPS)
+    // > Iso vertices on mesh vertices (one array for all isovalue is okay thx to isos->ISOSURFACE_EPS)
     for (int i_vtx = 0; i_vtx < n_vtx; i_vtx++) {
-      if (_is_at_0_level(vtx_field[i_vtx] - isovalue)) {
+      if (_is_at_0_level(vtx_field[i_vtx] - isovalue, tol)) {
         vtx_to_iso_vtx[i_vtx] = iso_n_vtx+1;
         memcpy(iso_vtx_coord + 3*iso_n_vtx,
                vtx_coord     + 3*i_vtx,
@@ -1330,7 +1341,7 @@ _build_iso_vtx
       double val0 = vtx_field[i_vtx0] - isovalue;
       double val1 = vtx_field[i_vtx1] - isovalue;
 
-      if (_cross_0_level(val0, val1)) {
+      if (_cross_0_level(val0, val1, tol)) {
         double t = val0 / (val0 - val1);
         for (int i = 0; i < 3; i++) {
           iso_vtx_coord[3*iso_n_vtx+i] = (1-t)*vtx_coord[3*i_vtx0+i] + t*vtx_coord[3*i_vtx1+i];
@@ -2713,6 +2724,7 @@ _isosurface_ngon_single_part
 (
   int      n_isovalues,
   double  *isovalues,
+  double   tol,
   int      n_cell,
   int      n_face,
   int      n_edge,
@@ -2756,7 +2768,8 @@ _isosurface_ngon_single_part
     iso_n_vtx += _cross_any_level_ngon(vtx_field[i_vtx0],
                                        vtx_field[i_vtx1],
                                        n_isovalues,
-                                       isovalues);
+                                       isovalues,
+                                       tol);
   }
 
   double *iso_vtx_coord         = NULL;
@@ -2889,7 +2902,7 @@ _isosurface_ngon_single_part
       double val0 = vtx_field[i_vtx0] - isovalues[i_isovalue];
       double val1 = vtx_field[i_vtx1] - isovalues[i_isovalue];
 
-      if (_cross_0_level_ngon(val0, val1)) {
+      if (_cross_0_level_ngon(val0, val1, tol)) {
 
         isovalue_n_active_edge++;
 
@@ -3265,6 +3278,7 @@ PDM_isosurface_marching_algo
                         i_part,
                         n_isovalues,
                         isovalues,
+                        isos->ISOSURFACE_EPS,
                         vtx_field[i_part],
                         &n_edge,
                         &edge_vtx,
@@ -3324,6 +3338,7 @@ PDM_isosurface_marching_algo
 
     _build_iso_vtx(n_isovalues, 
                    isovalues,
+                   isos->ISOSURFACE_EPS,
                    n_vtx,
                    vtx_gnum,
                    vtx_coord,
@@ -3379,6 +3394,7 @@ PDM_isosurface_marching_algo
                         i_part,
                         n_isovalues,
                         isovalues,
+                        isos->ISOSURFACE_EPS,
                         vtx_field[i_part],
                         vtx_to_iso_vtx,
                         &n_face,
@@ -3838,8 +3854,8 @@ PDM_isosurface_marching_algo
       isos->iso_owner_connec [id_iso][i_part][i_connec] = PDM_OWNERSHIP_BAD_VALUE;
     }
 
-    isos->iso_owner_gnum   [id_iso][i_part][PDM_MESH_ENTITY_VTX          ] = PDM_OWNERSHIP_KEEP;
-    isos->iso_owner_lparent[id_iso][i_part][PDM_MESH_ENTITY_VTX          ] = PDM_OWNERSHIP_KEEP;
+    isos->iso_owner_gnum   [id_iso][i_part][PDM_MESH_ENTITY_VTX           ] = PDM_OWNERSHIP_KEEP;
+    isos->iso_owner_lparent[id_iso][i_part][PDM_MESH_ENTITY_VTX           ] = PDM_OWNERSHIP_KEEP;
 
     isos->iso_owner_gnum   [id_iso][i_part][PDM_MESH_ENTITY_EDGE          ] = PDM_OWNERSHIP_KEEP;
     isos->iso_owner_lparent[id_iso][i_part][PDM_MESH_ENTITY_EDGE          ] = PDM_OWNERSHIP_KEEP;
@@ -4063,6 +4079,7 @@ PDM_isosurface_ngon_algo
 
     _isosurface_ngon_single_part(isos->n_isovalues[id_iso],
                                  isos->isovalues  [id_iso],
+                                 isos->ISOSURFACE_EPS,
                                  n_cell,
                                  n_face,
                                  n_edge,

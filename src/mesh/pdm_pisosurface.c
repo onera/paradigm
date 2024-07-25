@@ -680,15 +680,15 @@ PDM_isosurface_ln_to_gn_get
 int
 PDM_isosurface_group_get
 (
- PDM_isosurface_t     *isos,
- int                   id_isosurface,
- int                   i_part,
- PDM_mesh_entities_t   entity_type,
- int                  *n_group,
- int                 **group_entity_idx,
- int                 **group_entity,
- PDM_g_num_t         **group_entity_gnum,
- PDM_ownership_t       ownership
+  PDM_isosurface_t     *isos,
+  int                   id_isosurface,
+  int                   i_part,
+  PDM_mesh_entities_t   entity_type,
+  int                  *n_group,
+  int                 **group_entity_idx,
+  int                 **group_entity,
+  PDM_g_num_t         **group_entity_gnum,
+  PDM_ownership_t       ownership
 )
 {
   _check_is_not_dist(isos);
@@ -711,12 +711,21 @@ PDM_isosurface_group_get
 void
 PDM_isosurface_enable_part_to_part
 (
- PDM_isosurface_t     *isos,
- int                   id_isosurface,
- PDM_mesh_entities_t   entity_type
+  PDM_isosurface_t     *isos,
+  int                   id_isosurface,
+  PDM_mesh_entities_t   entity_type,
+  int                   unify_parent_info
 )
 {
+  /**
+   * TODO:
+   *  - unify_parent_info : allow demanding user to ask to get all parent over all procs (not urgent)
+   *      - build additional ptp to get info
+   */
   _check_is_not_dist(isos);
+  if (unify_parent_info!=0) {
+    PDM_error(__FILE__, __LINE__, 0, "PDM_isosurface_t: unify_parent_info option not implemented yet.\n");
+  }
 
   isos->compute_ptp[id_isosurface][entity_type] = 1;
 }

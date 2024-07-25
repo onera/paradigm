@@ -137,6 +137,18 @@ int* PDM_array_new_idx_from_const_stride_int(const int stride, const int size) {
   return idx_array;
 }
 
+
+/*
+ * Allocate a new size array (size=size) and fill it from
+ * the index array (which must be of size `size+1`)
+*/
+int* PDM_array_new_size_from_idx_int(const int *idx_array, const int size) {
+  int *size_array = (int *) malloc((size) * sizeof(int));
+  for (int i = 0; i < size; i++) size_array[i] = idx_array[i+1] - idx_array[i];
+  return size_array;
+}
+
+
 /* Utils functions compararing arrays */
 
 /*
