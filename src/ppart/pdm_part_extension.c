@@ -5887,7 +5887,7 @@ _rebuild_face_group
         face_group_n[i_part+shift_part][i_face] = 0;
       }
 
-      face_group_idg     PDM_malloc([i_part+shift_part], face_group_idx[pn_face] ,int        );
+      PDM_malloc(face_group_idg     [i_part+shift_part], face_group_idx[pn_face] ,int        );
       PDM_malloc(face_group_ln_to_gn[i_part+shift_part], face_group_idx[pn_face] ,PDM_g_num_t);
       PDM_malloc(face_ln_to_gn_check[i_part+shift_part], face_group_idx[pn_face] ,PDM_g_num_t);
 
@@ -6373,30 +6373,41 @@ PDM_part_extension_compute_test
     n_part_loc_all_domain += part_ext->n_part[i_domain];
   }
 
-  part_ext->border_face_vtx_idx    = (int         **) malloc(n_part_loc_all_domain * sizeof(int *));
-  part_ext->border_face_vtx        = (int         **) malloc(n_part_loc_all_domain * sizeof(int *));
-  part_ext->border_face_ln_to_gn   = (PDM_g_num_t **) malloc(n_part_loc_all_domain * sizeof(PDM_g_num_t *));
-  part_ext->border_vtx_ln_to_gn    = (PDM_g_num_t **) malloc(n_part_loc_all_domain * sizeof(PDM_g_num_t *));
-  part_ext->vtx_vtx_extended_idx   = (int         **) malloc(n_part_loc_all_domain * sizeof(int *));
-  part_ext->face_face_extended_idx = (int         **) malloc(n_part_loc_all_domain * sizeof(int *));
+  PDM_malloc(part_ext->border_face_vtx_idx   , n_part_loc_all_domain, int         *);
+  PDM_malloc(part_ext->border_face_vtx       , n_part_loc_all_domain, int         *);
+  PDM_malloc(part_ext->border_face_ln_to_gn  , n_part_loc_all_domain, PDM_g_num_t *);
+  PDM_malloc(part_ext->border_vtx_ln_to_gn   , n_part_loc_all_domain, PDM_g_num_t *);
+  PDM_malloc(part_ext->vtx_vtx_extended_idx  , n_part_loc_all_domain, int         *);
+  PDM_malloc(part_ext->face_face_extended_idx, n_part_loc_all_domain, int         *);
 
   int n_rank;
   PDM_MPI_Comm_size(part_ext->comm, &n_rank);
 
-  int ***pvtx_proc_bound_idx = malloc(part_ext->n_domain * sizeof(int **));
-  int ***pvtx_part_bound_idx = malloc(part_ext->n_domain * sizeof(int **));
-  int ***pvtx_bound          = malloc(part_ext->n_domain * sizeof(int **));
-  int ***pvtx_priority       = malloc(part_ext->n_domain * sizeof(int **));
+  int ***pvtx_proc_bound_idx = NULL;
+  int ***pvtx_part_bound_idx = NULL;
+  int ***pvtx_bound          = NULL;
+  int ***pvtx_priority       = NULL;
+  PDM_malloc(pvtx_proc_bound_idx, part_ext->n_domain, int **);
+  PDM_malloc(pvtx_part_bound_idx, part_ext->n_domain, int **);
+  PDM_malloc(pvtx_bound         , part_ext->n_domain, int **);
+  PDM_malloc(pvtx_priority      , part_ext->n_domain, int **);
 
   for(int i_domain = 0; i_domain < part_ext->n_domain; ++i_domain) {
 
-    int          *pn_vtx         = malloc(part_ext->n_part[i_domain] * sizeof(int          ));
-    PDM_g_num_t **pvtx_ln_to_gn  = malloc(part_ext->n_part[i_domain] * sizeof(PDM_g_num_t *));
-    int          *pn_face        = malloc(part_ext->n_part[i_domain] * sizeof(int          ));
-    PDM_g_num_t **pface_ln_to_gn = malloc(part_ext->n_part[i_domain] * sizeof(PDM_g_num_t *));
-    int         **pface_vtx_idx  = malloc(part_ext->n_part[i_domain] * sizeof(int         *));
-    int         **pface_vtx      = malloc(part_ext->n_part[i_domain] * sizeof(int         *));
-    double      **pvtx           = malloc(part_ext->n_part[i_domain] * sizeof(double      *));
+    int          *pn_vtx         = NULL;
+    PDM_g_num_t **pvtx_ln_to_gn  = NULL;
+    int          *pn_face        = NULL;
+    PDM_g_num_t **pface_ln_to_gn = NULL;
+    int         **pface_vtx_idx  = NULL;
+    int         **pface_vtx      = NULL;
+    double      **pvtx           = NULL;
+    PDM_malloc(pn_vtx        , part_ext->n_part[i_domain], int          );
+    PDM_malloc(pvtx_ln_to_gn , part_ext->n_part[i_domain], PDM_g_num_t *);
+    PDM_malloc(pn_face       , part_ext->n_part[i_domain], int          );
+    PDM_malloc(pface_ln_to_gn, part_ext->n_part[i_domain], PDM_g_num_t *);
+    PDM_malloc(pface_vtx_idx , part_ext->n_part[i_domain], int         *);
+    PDM_malloc(pface_vtx     , part_ext->n_part[i_domain], int         *);
+    PDM_malloc(pvtx          , part_ext->n_part[i_domain], double      *);
 
     for(int i_part = 0; i_part < part_ext->n_part[i_domain]; ++i_part) {
       pn_vtx        [i_part] = part_ext->parts[i_domain][i_part].n_vtx;
@@ -6424,25 +6435,32 @@ PDM_part_extension_compute_test
                                         &pvtx_bound         [i_domain],
                                         &pvtx_priority      [i_domain]);
 
-    printf(" PDM_part_extension_compute : graph ok\n");
+    //printf(" PDM_part_extension_compute : graph ok\n");
 
     /* Create part_to_part */
 
-    int          *n_vtx_bound                = malloc(part_ext->n_part[i_domain] * sizeof(int          ));
-    int         **vtx_bound                  = malloc(part_ext->n_part[i_domain] * sizeof(int         *));
-    int         **lnum_vtx_bound             = malloc(part_ext->n_part[i_domain] * sizeof(int         *));
-    PDM_g_num_t **vtx_bound_ln_to_gn         = malloc(part_ext->n_part[i_domain] * sizeof(PDM_g_num_t *));
-    int         **part1_to_part2_idx         = malloc(part_ext->n_part[i_domain] * sizeof(int         *));
-    int         **part1_to_part2_n           = malloc(part_ext->n_part[i_domain] * sizeof(int         *));
-    int         **part1_to_part2_triplet     = malloc(part_ext->n_part[i_domain] * sizeof(int         *));
+    int          *n_vtx_bound            = NULL;
+    int         **vtx_bound              = NULL;
+    int         **lnum_vtx_bound         = NULL;
+    PDM_g_num_t **vtx_bound_ln_to_gn     = NULL;
+    int         **part1_to_part2_idx     = NULL;
+    int         **part1_to_part2_n       = NULL;
+    int         **part1_to_part2_triplet = NULL;
+    PDM_malloc(n_vtx_bound           , part_ext->n_part[i_domain], int          );
+    PDM_malloc(vtx_bound             , part_ext->n_part[i_domain], int         *);
+    PDM_malloc(lnum_vtx_bound        , part_ext->n_part[i_domain], int         *);
+    PDM_malloc(vtx_bound_ln_to_gn    , part_ext->n_part[i_domain], PDM_g_num_t *);
+    PDM_malloc(part1_to_part2_idx    , part_ext->n_part[i_domain], int         *);
+    PDM_malloc(part1_to_part2_n      , part_ext->n_part[i_domain], int         *);
+    PDM_malloc(part1_to_part2_triplet, part_ext->n_part[i_domain], int         *);
 
     for(int i_part = 0; i_part < part_ext->n_part[i_domain]; ++i_part) {
 
       /* Search bound vtx */
 
-      part1_to_part2_n[i_part] = malloc(pn_vtx[i_part] * sizeof(int));
-      lnum_vtx_bound  [i_part] = malloc(pn_vtx[i_part] * sizeof(int));
-      vtx_bound       [i_part] = malloc(pn_vtx[i_part] * sizeof(int));
+      PDM_malloc(part1_to_part2_n[i_part], pn_vtx[i_part], int);
+      PDM_malloc(lnum_vtx_bound  [i_part], pn_vtx[i_part], int);
+      PDM_malloc(vtx_bound       [i_part], pn_vtx[i_part], int);
       n_vtx_bound[i_part] = 0;
       for (int i_vtx = 0; i_vtx < pn_vtx[i_part]; ++i_vtx) {
         part1_to_part2_n[i_part][i_vtx] =  0;
@@ -6460,12 +6478,12 @@ PDM_part_extension_compute_test
           part1_to_part2_n[i_part][vtx_bound[i_part][i_vtx]] += 1;
         }
       }
-      part1_to_part2_n[i_part] = realloc(part1_to_part2_n[i_part], n_vtx_bound[i_part]*sizeof(int));
-      lnum_vtx_bound  [i_part] = realloc(lnum_vtx_bound  [i_part], n_vtx_bound[i_part]*sizeof(int));
+      PDM_realloc(part1_to_part2_n[i_part], part1_to_part2_n[i_part], n_vtx_bound[i_part], int);
+      PDM_realloc(lnum_vtx_bound  [i_part], lnum_vtx_bound  [i_part], n_vtx_bound[i_part], int);
 
       /* Bound vtx gnum */
 
-      vtx_bound_ln_to_gn[i_part] = malloc(n_vtx_bound[i_part] * sizeof(PDM_g_num_t));
+      PDM_malloc(vtx_bound_ln_to_gn[i_part], n_vtx_bound[i_part], PDM_g_num_t);
 
       for (int i_vtx_bound = 0; i_vtx_bound < n_vtx_bound[i_part]; ++i_vtx_bound) {
         vtx_bound_ln_to_gn[i_part][i_vtx_bound] = pvtx_ln_to_gn[i_part][lnum_vtx_bound[i_part][i_vtx_bound]];
@@ -6473,7 +6491,7 @@ PDM_part_extension_compute_test
 
       /* Fill triplet for part_to_part */
 
-      part1_to_part2_idx[i_part] = malloc((n_vtx_bound[i_part]+1) * sizeof(int));
+      PDM_malloc(part1_to_part2_idx[i_part], n_vtx_bound[i_part]+1, int);
       part1_to_part2_idx[i_part][0] = 0;
 
       for(int i_vtx_bound = 0; i_vtx_bound < n_vtx_bound[i_part]; ++i_vtx_bound) {
@@ -6481,7 +6499,7 @@ PDM_part_extension_compute_test
         part1_to_part2_n[i_part][i_vtx_bound] = 0;
       }
 
-      part1_to_part2_triplet[i_part] = malloc((part1_to_part2_idx[i_part][n_vtx_bound[i_part]]) * sizeof(int));
+      PDM_malloc(part1_to_part2_triplet[i_part], part1_to_part2_idx[i_part][n_vtx_bound[i_part]], int);
 
       for (int i = 0; i < part_distribution[n_rank]; ++i){
         for (int idx = pvtx_part_bound_idx[i_domain][i_part][i]; idx < pvtx_part_bound_idx[i_domain][i_part][i+1]; ++idx) {
@@ -6500,12 +6518,14 @@ PDM_part_extension_compute_test
 
     }
 
-    printf(" PDM_part_extension_compute : ptp inputs ok \n");
+    //printf(" PDM_part_extension_compute : ptp inputs ok \n");
 
     /* Get vtx_face connectivity */
 
-    int **vtx_face_idx  = malloc(part_ext->n_part[i_domain] * sizeof(int *));
-    int **vtx_face      = malloc(part_ext->n_part[i_domain] * sizeof(int *));
+    int **vtx_face_idx  = NULL;
+    int **vtx_face      = NULL;
+    PDM_malloc(vtx_face_idx, part_ext->n_part[i_domain], int *);
+    PDM_malloc(vtx_face    , part_ext->n_part[i_domain], int *);
 
     for(int i_part = 0; i_part < part_ext->n_part[i_domain]; ++i_part) {
       PDM_connectivity_transpose(pn_face[i_part],
@@ -6516,7 +6536,7 @@ PDM_part_extension_compute_test
                                  &vtx_face[i_part]);
     }
 
-    printf(" PDM_part_extension_compute : prepare connectivity ok \n");
+    //printf(" PDM_part_extension_compute : prepare connectivity ok \n");
 
     /* Exchange vtx_face connectivity */
 
@@ -6547,7 +6567,7 @@ PDM_part_extension_compute_test
 
     PDM_part_to_part_free(ptp_vtx_face);
 
-    printf(" PDM_part_extension_compute : exchange connec ok \n");
+    //printf(" PDM_part_extension_compute : exchange connec ok \n");
 
     /* Extract part and get result */
 
@@ -6596,8 +6616,8 @@ PDM_part_extension_compute_test
 
     for(int i_part = 0; i_part < part_ext->n_part[i_domain]; ++i_part) {
 
-      part_ext->vtx_vtx_extended_idx  [shift_part+i_part] = malloc(pn_vtx[i_part]  * sizeof(int *));
-      part_ext->face_face_extended_idx[shift_part+i_part] = malloc(pn_face[i_part] * sizeof(int *));
+      PDM_malloc(part_ext->vtx_vtx_extended_idx  [shift_part+i_part], pn_vtx [i_part]+1, int);
+      PDM_malloc(part_ext->face_face_extended_idx[shift_part+i_part], pn_face[i_part]+1, int);
 
       part_ext->face_face_extended_idx[shift_part+i_part][pn_face[i_part]] = PDM_extract_part_connectivity_get(extrp,
                                                                                                                i_part,
@@ -6606,7 +6626,7 @@ PDM_part_extension_compute_test
                                                                                                                &part_ext->border_face_vtx_idx[shift_part+i_part],
                                                                                                                PDM_OWNERSHIP_USER);
 
-      part_ext->border_face_ln_to_gn[shift_part+i_part] = malloc(part_ext->face_face_extended_idx[shift_part+i_part][pn_face[i_part]]* sizeof(PDM_g_num_t *));
+      PDM_malloc(part_ext->border_face_ln_to_gn[shift_part+i_part], part_ext->face_face_extended_idx[shift_part+i_part][pn_face[i_part]], PDM_g_num_t);
       for (int i_face = 0; i_face < part_ext->face_face_extended_idx[shift_part+i_part][pn_face[i_part]]; ++i_face){
         part_ext->border_face_ln_to_gn[shift_part+i_part][i_face] = face_ext_ln_to_gn[i_part][i_face];
       }
@@ -6620,15 +6640,19 @@ PDM_part_extension_compute_test
                                                            PDM_OWNERSHIP_KEEP);
 
       int n_vtx_keep = 0;
-      PDM_g_num_t *vtx_keep_ln_to_gn = malloc(n_vtx_ext * sizeof(PDM_g_num_t));
-      int         *vtx_keep          = malloc(n_vtx_ext * sizeof(int        ));
+      PDM_g_num_t *vtx_keep_ln_to_gn = NULL;
+      int         *vtx_keep          = NULL;
+      PDM_malloc(vtx_keep_ln_to_gn, n_vtx_ext, PDM_g_num_t);
+      PDM_malloc(vtx_keep         , n_vtx_ext, int        );
 
       for (int i_vtx = 0; i_vtx < n_vtx_ext; ++i_vtx){
         vtx_keep[i_vtx] = -1;
       }
 
-      PDM_g_num_t *sorted_vtx_ln_to_gn = malloc(pn_vtx[i_part] * sizeof(PDM_g_num_t));
-      int         *vtx_order           = malloc(pn_vtx[i_part] * sizeof(int        ));
+      PDM_g_num_t *sorted_vtx_ln_to_gn = NULL;
+      int         *vtx_order           = NULL;
+      PDM_malloc(sorted_vtx_ln_to_gn, pn_vtx[i_part], PDM_g_num_t);
+      PDM_malloc(vtx_order          , pn_vtx[i_part], int        );
 
       for(int i_vtx = 0; i_vtx < pn_vtx[i_part]; ++i_vtx) {
         sorted_vtx_ln_to_gn[i_vtx] = pvtx_ln_to_gn[i_part][i_vtx];
@@ -6655,11 +6679,11 @@ PDM_part_extension_compute_test
         }
       }
 
-      free(sorted_vtx_ln_to_gn);
-      free(vtx_order          );
+      PDM_free(sorted_vtx_ln_to_gn);
+      PDM_free(vtx_order          );
 
       part_ext->vtx_vtx_extended_idx[shift_part+i_part][pn_vtx[i_part]] = n_vtx_keep;
-      part_ext->border_vtx_ln_to_gn[shift_part+i_part] = malloc(n_vtx_keep * sizeof(PDM_g_num_t));
+      PDM_malloc(part_ext->border_vtx_ln_to_gn[shift_part+i_part], n_vtx_keep, PDM_g_num_t);
 
       for (int i_vtx = 0; i_vtx < n_vtx_keep; ++i_vtx){
         part_ext->border_vtx_ln_to_gn[shift_part+i_part][i_vtx] = vtx_keep_ln_to_gn[i_vtx];
@@ -6672,69 +6696,69 @@ PDM_part_extension_compute_test
         }
       }
 
-      free(vtx_keep_ln_to_gn);
-      free(vtx_keep         );
+      PDM_free(vtx_keep_ln_to_gn);
+      PDM_free(vtx_keep         );
 
     }
 
-    printf(" PDM_part_extension_compute : get results ok\n");
+    //printf(" PDM_part_extension_compute : get results ok\n");
 
     /* Free all */
 
     PDM_extract_part_free(extrp);
 
     for(int i_part = 0; i_part < part_ext->n_part[i_domain]; ++i_part) {
-      free(pvtx_proc_bound_idx[i_domain][i_part]);
-      free(pvtx_part_bound_idx[i_domain][i_part]);
-      free(pvtx_bound         [i_domain][i_part]);
-      free(pvtx_priority      [i_domain][i_part]);
-      free(vtx_face_idx                 [i_part]);
-      free(vtx_face                     [i_part]);
-      free(vtx_face_ext_idx             [i_part]);
-      free(vtx_face_ext                 [i_part]);
-      free(face_ext_ln_to_gn            [i_part]);
-      free(face_ext_location            [i_part]);
-      free(vtx_bound                    [i_part]);
-      free(lnum_vtx_bound               [i_part]);
-      free(vtx_bound_ln_to_gn           [i_part]);
-      free(part1_to_part2_idx           [i_part]);
-      free(part1_to_part2_n             [i_part]);
-      free(part1_to_part2_triplet       [i_part]);
+      PDM_free(pvtx_proc_bound_idx[i_domain][i_part]);
+      PDM_free(pvtx_part_bound_idx[i_domain][i_part]);
+      PDM_free(pvtx_bound         [i_domain][i_part]);
+      PDM_free(pvtx_priority      [i_domain][i_part]);
+      PDM_free(vtx_face_idx                 [i_part]);
+      PDM_free(vtx_face                     [i_part]);
+      PDM_free(vtx_face_ext_idx             [i_part]);
+      PDM_free(vtx_face_ext                 [i_part]);
+      PDM_free(face_ext_ln_to_gn            [i_part]);
+      PDM_free(face_ext_location            [i_part]);
+      PDM_free(vtx_bound                    [i_part]);
+      PDM_free(lnum_vtx_bound               [i_part]);
+      PDM_free(vtx_bound_ln_to_gn           [i_part]);
+      PDM_free(part1_to_part2_idx           [i_part]);
+      PDM_free(part1_to_part2_n             [i_part]);
+      PDM_free(part1_to_part2_triplet       [i_part]);
     }
 
-    free(pvtx_proc_bound_idx[i_domain]);
-    free(pvtx_part_bound_idx[i_domain]);
-    free(pvtx_bound         [i_domain]);
-    free(pvtx_priority      [i_domain]);
-    free(part_distribution            );
-    free(pn_vtx                       );
-    free(pn_face                      );
-    free(pvtx_ln_to_gn                );
-    free(pface_ln_to_gn               );
-    free(pface_vtx_idx                );
-    free(pface_vtx                    );
-    free(pvtx                         );
-    free(vtx_face_idx                 );
-    free(vtx_face                     );
-    free(vtx_face_ext_idx             );
-    free(vtx_face_ext                 );
-    free(face_ext_ln_to_gn            );
-    free(face_ext_location            );
-    free(n_face_ext                   );
-    free(n_vtx_bound                  );
-    free(vtx_bound                    );
-    free(lnum_vtx_bound               );
-    free(vtx_bound_ln_to_gn           );
-    free(part1_to_part2_idx           );
-    free(part1_to_part2_n             );
-    free(part1_to_part2_triplet       );
+    PDM_free(pvtx_proc_bound_idx[i_domain]);
+    PDM_free(pvtx_part_bound_idx[i_domain]);
+    PDM_free(pvtx_bound         [i_domain]);
+    PDM_free(pvtx_priority      [i_domain]);
+    PDM_free(part_distribution            );
+    PDM_free(pn_vtx                       );
+    PDM_free(pn_face                      );
+    PDM_free(pvtx_ln_to_gn                );
+    PDM_free(pface_ln_to_gn               );
+    PDM_free(pface_vtx_idx                );
+    PDM_free(pface_vtx                    );
+    PDM_free(pvtx                         );
+    PDM_free(vtx_face_idx                 );
+    PDM_free(vtx_face                     );
+    PDM_free(vtx_face_ext_idx             );
+    PDM_free(vtx_face_ext                 );
+    PDM_free(face_ext_ln_to_gn            );
+    PDM_free(face_ext_location            );
+    PDM_free(n_face_ext                   );
+    PDM_free(n_vtx_bound                  );
+    PDM_free(vtx_bound                    );
+    PDM_free(lnum_vtx_bound               );
+    PDM_free(vtx_bound_ln_to_gn           );
+    PDM_free(part1_to_part2_idx           );
+    PDM_free(part1_to_part2_n             );
+    PDM_free(part1_to_part2_triplet       );
 
   }
 
-  free(pvtx_proc_bound_idx);
-  free(pvtx_part_bound_idx);
-  free(pvtx_bound         );
-  free(pvtx_priority      );
+  PDM_free(pvtx_proc_bound_idx);
+  PDM_free(pvtx_part_bound_idx);
+  PDM_free(pvtx_bound         );
+  PDM_free(pvtx_priority      );
 
 }
 
@@ -7415,37 +7439,37 @@ PDM_part_extension_free_test
     for(int i_domain = 0; i_domain < part_ext->n_domain; ++i_domain) {
       int shift_part = part_ext->n_part_idx[i_domain];
       for(int i_part = 0; i_part < part_ext->n_part[i_domain]; ++i_part) {
-        free(part_ext->border_face_vtx_idx [shift_part+i_part]);
-        free(part_ext->border_face_vtx     [shift_part+i_part]);
-        free(part_ext->border_face_ln_to_gn[shift_part+i_part]);
-        free(part_ext->border_vtx_ln_to_gn [shift_part+i_part]);
+        PDM_free(part_ext->border_face_vtx_idx [shift_part+i_part]);
+        PDM_free(part_ext->border_face_vtx     [shift_part+i_part]);
+        PDM_free(part_ext->border_face_ln_to_gn[shift_part+i_part]);
+        PDM_free(part_ext->border_vtx_ln_to_gn [shift_part+i_part]);
       }
     }
-    free(part_ext->border_face_vtx_idx   );
-    free(part_ext->border_face_vtx       );
-    free(part_ext->border_face_ln_to_gn  );
-    free(part_ext->border_vtx_ln_to_gn   );
+    PDM_free(part_ext->border_face_vtx_idx   );
+    PDM_free(part_ext->border_face_vtx       );
+    PDM_free(part_ext->border_face_ln_to_gn  );
+    PDM_free(part_ext->border_vtx_ln_to_gn   );
 
   }
 
   for(int i_domain = 0; i_domain < part_ext->n_domain; ++i_domain) {
     int shift_part = part_ext->n_part_idx[i_domain];
     for(int i_part = 0; i_part < part_ext->n_part[i_domain]; ++i_part) {
-      free(part_ext->vtx_vtx_extended_idx  [shift_part+i_part]);
-      free(part_ext->face_face_extended_idx[shift_part+i_part]);
+      PDM_free(part_ext->vtx_vtx_extended_idx  [shift_part+i_part]);
+      PDM_free(part_ext->face_face_extended_idx[shift_part+i_part]);
     }
   }
-  free(part_ext->vtx_vtx_extended_idx  );
-  free(part_ext->face_face_extended_idx);
+  PDM_free(part_ext->vtx_vtx_extended_idx  );
+  PDM_free(part_ext->face_face_extended_idx);
 
-  free(part_ext->n_part);
-  free(part_ext->n_part_idx);
-  free(part_ext->n_part_g_idx);
+  PDM_free(part_ext->n_part);
+  PDM_free(part_ext->n_part_idx);
+  PDM_free(part_ext->n_part_g_idx);
   for(int i_domain = 0; i_domain < part_ext->n_domain; ++i_domain) {
-    free(part_ext->parts[i_domain]);
+    PDM_free(part_ext->parts[i_domain]);
   }
-  free(part_ext->parts);
-  free(part_ext);
+  PDM_free(part_ext->parts);
+  PDM_free(part_ext);
 }
 
 
