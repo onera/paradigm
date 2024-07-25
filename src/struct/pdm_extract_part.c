@@ -1862,9 +1862,10 @@ _extract_part_and_reequilibrate_nodal_from_target
   PDM_extract_part_t        *extrp
 )
 {
-  int          *pn_entity       = NULL;
-  PDM_mesh_entities_t entity_type = PDM_MESH_ENTITY_MAX;
-  PDM_g_num_t **entity_g_num = NULL;
+  int                *pn_entity              = NULL;
+  PDM_mesh_entities_t entity_type            = PDM_MESH_ENTITY_MAX;
+  int               **entity_target_location = NULL;
+  PDM_g_num_t       **entity_g_num           = NULL;
   if(extrp->dim == 3) {
     pn_entity    = extrp->n_cell;
     entity_type = PDM_MESH_ENTITY_CELL;
@@ -1879,6 +1880,47 @@ _extract_part_and_reequilibrate_nodal_from_target
     entity_g_num = extrp->edge_ln_to_gn;
   } else {
     PDM_error(__FILE__, __LINE__, 0,"_extract_part_and_reequilibrate_nodal_from_target : wrong entity \n");
+  }
+
+  int have_init_location_l = 1;
+  int have_init_location   = 1;
+  for(int i_part = 0; i_part < extrp->n_part_out; ++i_part) {
+    if(extrp->target_location[i_part] == NULL) {
+      have_init_location_l = 0;
+    }
+  }
+  PDM_MPI_Allreduce(&have_init_location_l, &have_init_location, 1, PDM_MPI_INT, PDM_MPI_MAX, extrp->comm);
+
+  if(have_init_location == 0) {
+    PDM_gnum_location_t* gnum_loc = PDM_gnum_location_create(extrp->n_part_in,
+                                                             extrp->n_part_out,
+                                                             extrp->comm,
+                                                             PDM_OWNERSHIP_USER);
+    for(int i_part = 0; i_part < extrp->n_part_in; ++i_part) {
+      PDM_gnum_location_elements_set(gnum_loc,
+                                     i_part,
+                                     pn_entity[i_part],
+                                     entity_g_num[i_part]);
+    }
+    for(int i_part = 0; i_part < extrp->n_part_out; ++i_part) {
+      PDM_gnum_location_requested_elements_set(gnum_loc,
+                                               i_part,
+                                               extrp->n_target   [i_part],
+                                               extrp->target_gnum[i_part]);
+    }
+    PDM_gnum_location_compute(gnum_loc);
+
+    PDM_malloc(entity_target_location,extrp->n_part_out ,int *);
+
+    for(int i_part = 0; i_part < extrp->n_part_out; ++i_part) {
+      int *location_idx = NULL;
+      PDM_gnum_location_get(gnum_loc, i_part, &location_idx, &entity_target_location[i_part]);
+      PDM_free(location_idx);
+    }
+
+    PDM_gnum_location_free(gnum_loc);
+  } else {
+    entity_target_location = extrp->target_location;
   }
 
   int i_rank;
@@ -1909,7 +1951,7 @@ _extract_part_and_reequilibrate_nodal_from_target
                                                                                              extrp->n_part_in,
                                                                       (const int         **) part2_cell_to_part1_cell_idx,
                                                                                              NULL,
-                                                                      (const int         **) extrp->target_location,
+                                                                      (const int         **) entity_target_location,
                                                                       extrp->comm);
   extrp->ptp_entity[entity_type] = ptp;
 
@@ -2617,6 +2659,13 @@ _extract_part_and_reequilibrate_nodal_from_target
  PDM_free(elmt_face_n);
  PDM_free(elmt_face_vtx_n);
  PDM_free(elmt_face      );
+
+  if(have_init_location == 0) {
+    for(int i_part = 0; i_part < extrp->n_part_out; ++i_part) {
+      PDM_free(entity_target_location[i_part]);
+    }
+    PDM_free(entity_target_location);
+  }
 
   /*
    * Second pass to create the new part_mesh_nodal
@@ -3928,7 +3977,7 @@ _extract_part_and_reequilibrate_from_target
   int have_init_location   = 1;
   for(int i_part = 0; i_part < extrp->n_part_out; ++i_part) {
     if(extrp->target_location[i_part] == NULL) {
-      have_init_location = 0;
+      have_init_location_l = 0;
     }
   }
   PDM_MPI_Allreduce(&have_init_location_l, &have_init_location, 1, PDM_MPI_INT, PDM_MPI_MAX, extrp->comm);
@@ -5535,7 +5584,7 @@ PDM_extract_part_free
 )
 {
  if (extrp == NULL) return;
-  
+
  PDM_free(extrp->n_cell        );
  PDM_free(extrp->n_face        );
  PDM_free(extrp->n_edge        );
