@@ -223,7 +223,8 @@ _compute_mean_value_coord_polygon
       PDM_CROSS_PRODUCT(w, si, sj);
       A[ivtx] = PDM_DOT_PRODUCT(w, w);
 
-      if (A[ivtx] < eps_on_line2) {
+      int sign_w_dot_n = PDM_SIGN(PDM_DOT_PRODUCT(normal, w));
+      if (A[ivtx] < eps_on_line2 || sign_w_dot_n == 0) {
         /* Point on line */
         for (int kvtx = 0; kvtx < n_vtx; kvtx++) {
           m[kvtx] = 0.;
@@ -259,7 +260,7 @@ _compute_mean_value_coord_polygon
         break;
       }
 
-      A[ivtx] = PDM_SIGN(PDM_DOT_PRODUCT(normal, w)) * sqrt(A[ivtx]); // SIGN!!!
+      A[ivtx] = sign_w_dot_n * sqrt(A[ivtx]); // SIGN!!!
       if (dbg) {
         log_trace("D[%d] = %e, A[%d] = %e\n", ivtx, D[ivtx], ivtx, A[ivtx]);
       }
