@@ -166,7 +166,8 @@ PDM_multipart_t      **_mpart
 
 
   int n_domain = 1;
-  int *n_part_domains = (int *) malloc(sizeof(int) * n_domain);
+  int *n_part_domains;
+  PDM_malloc(n_part_domains,n_domain,int);
   n_part_domains[0] = n_part;
 
   PDM_multipart_t *mpart = PDM_multipart_create(n_domain,
@@ -190,7 +191,7 @@ PDM_multipart_t      **_mpart
   /* Run */
   PDM_multipart_compute (mpart);
 
-  free(n_part_domains);
+ PDM_free(n_part_domains);
 
   *_mpart = mpart;
 
@@ -433,8 +434,10 @@ int main(int argc, char *argv[])
   char    filename[999];
   int     vtx1_idx;
   int     vtx2_idx;
-  double *normalisation  = malloc(pn_vtx * sizeof(double));
-  double *pvtx_coord_new = malloc(3 * pn_vtx * sizeof(double));
+  double *normalisation;
+  PDM_malloc(normalisation,pn_vtx ,double);
+  double *pvtx_coord_new;
+  PDM_malloc(pvtx_coord_new,3 * pn_vtx ,double);
 
   // Step
   for (int i_step = 0; i_step <= n_steps; i_step++) {
@@ -538,7 +541,7 @@ int main(int argc, char *argv[])
       pvtx_coord_extension[3*i+1] = pvtx_coord_extension_new[i_part][3*i+1];
     } // end loop on extension coordinates
 
-    free(pvtx_coord_extension_new);
+   PDM_free(pvtx_coord_extension_new);
 
   } // end Laplacian Smoothing loop
 

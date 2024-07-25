@@ -170,12 +170,15 @@ const int     *face_vtx
     maxEdges = PDM_MAX (maxEdges, nEdgeCell);
   }
 
-  int *stackFace = (int *) malloc (sizeof(int) * maxNPolyFace);
+  int *stackFace;
+  PDM_malloc(stackFace,maxNPolyFace,int);
 
   int nStackCell = -1;
-  int *stackCell = (int *) malloc (sizeof(int) * n_cell);
+  int *stackCell;
+  PDM_malloc(stackCell,n_cell,int);
   int n_processedFace = 0;
-  int *processedFace = (int *) malloc (sizeof(int) * maxNPolyFace);
+  int *processedFace;
+  PDM_malloc(processedFace,maxNPolyFace,int);
   int *tagCell = PDM_array_const_int(n_cell, CELL_Un_procESSED);
   int *tagFace = PDM_array_const_int(maxNPolyFace, FACE_Un_procESSED);
 
@@ -184,7 +187,8 @@ const int     *face_vtx
 
   int nEdges = 0;
   const int nDataEdge = 3;
-  int *edges = malloc (sizeof(int) * maxEdges * nDataEdge);
+  int *edges;
+  PDM_malloc(edges,maxEdges * nDataEdge,int);
 
  /*
   * Orient the first cell of the first component
@@ -592,15 +596,15 @@ const int     *face_vtx
     }
   }
 
-  free (edges);
-  free (stackFace);
-  free (tagFace);
-  free (stackCell);
-  free (tagCell);
-  free (orientedface_cell);
-  free (processedFace);
+ PDM_free(edges);
+ PDM_free(stackFace);
+ PDM_free(tagFace);
+ PDM_free(stackCell);
+ PDM_free(tagCell);
+ PDM_free(orientedface_cell);
+ PDM_free(processedFace);
   if (face_cell == NULL) {
-    free (_faceCell);
+   PDM_free(_faceCell);
   }
 
   PDM_timer_hang_on (t1);

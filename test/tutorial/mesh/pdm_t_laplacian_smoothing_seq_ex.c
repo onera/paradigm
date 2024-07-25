@@ -120,7 +120,7 @@ const int      n_vtx_seg,
   double step = 1. / (double) (n_vtx_seg - 1);
   double noise = 0.49 * step;
 
-  *vtx_coord = (double *) malloc(sizeof(double) * (*n_vtx) * 3);
+  PDM_malloc(*vtx_coord,(*n_vtx) * 3,double);
   int idx = 0;
   for (int j = 0; j < n_vtx_seg; j++) {
     double y = step * j;
@@ -138,7 +138,7 @@ const int      n_vtx_seg,
   }
 
   /* Edges */
-  *edge_vtx = (int *) malloc(sizeof(int) * (*n_edge) * 2);
+  PDM_malloc(*edge_vtx,(*n_edge) * 2,int);
   idx = 0;
   /* Horizontal edges */
   for (int j = 0; j < n_vtx_seg; j++) {
@@ -178,8 +178,8 @@ const int      n_vtx_seg,
   int idx_diagonal = 2*n_vtx_seg*(n_vtx_seg - 1);
 
   /* Faces */
-  *face_edge = (int *) malloc(sizeof(int) * (*n_face) * 3);
-  *face_vtx  = (int *) malloc(sizeof(int) * (*n_face) * 3);
+  PDM_malloc(*face_edge,(*n_face) * 3,int);
+  PDM_malloc(*face_vtx,(*n_face) * 3,int);
   int idx2 = 0;
   idx = 0;
   for (int j = 0; j < n_vtx_seg-1; j++) {
@@ -286,10 +286,12 @@ int main(int argc, char *argv[])
    */
 
   // New coordinate data structure
-  double *vtx_new_coord = malloc(n_vtx*3 * sizeof(double));
+  double *vtx_new_coord;
+  PDM_malloc(vtx_new_coord,n_vtx*3 ,double);
 
   // Create edge_vtx_idx
-  int *edge_vtx_idx = malloc((n_edge+1) * sizeof(int)); // cf pdm_array
+  int *edge_vtx_idx;
+  PDM_malloc(edge_vtx_idx,(n_edge+1) ,int); // cf pdm_array
   for (int i = 0; i < n_edge+1; i++) {
     edge_vtx_idx[i] = 2*i;
   }
@@ -325,7 +327,8 @@ int main(int argc, char *argv[])
   int idx_vtx_other = 0;
   int idx_edge = 0;
   int n_face_edge = 0;
-  double *laplace_smoothing_vtx_coord = malloc(2 * sizeof(double));
+  double *laplace_smoothing_vtx_coord;
+  PDM_malloc(laplace_smoothing_vtx_coord,2 ,double);
 
   // Create face_vtx_idx
   int face_vtx_idx[n_face+1];
@@ -334,7 +337,8 @@ int main(int argc, char *argv[])
   }
 
   // Create group
-  int *bdr_group = malloc(10 * n_vtx * sizeof(double)); // il y a plus élégant...
+  int *bdr_group;
+  PDM_malloc(bdr_group,10 * n_vtx , int); // il y a plus élégant...
   int size = 0;
 
   for (int i = 0; i < n_vtx; i++) {
@@ -423,21 +427,21 @@ int main(int argc, char *argv[])
   }
 
   // Additional free
-  free(bdr_group);
-  free(vtx_new_coord);
-  free(vtx_edge_idx);
-  free(vtx_edge);
-  free(laplace_smoothing_vtx_coord);
+ PDM_free(bdr_group);
+ PDM_free(vtx_new_coord);
+ PDM_free(vtx_edge_idx);
+ PDM_free(vtx_edge);
+ PDM_free(laplace_smoothing_vtx_coord);
 
-  free(face_edge_idx);
-  free(face_edge    );
-  free(face_vtx     );
-  free(edge_vtx     );
-  free(vtx_coord    );
+ PDM_free(face_edge_idx);
+ PDM_free(face_edge    );
+ PDM_free(face_vtx     );
+ PDM_free(edge_vtx     );
+ PDM_free(vtx_coord    );
 
-  free(edge_face_idx);
-  free(edge_face);
-  free(edge_vtx_idx);
+ PDM_free(edge_face_idx);
+ PDM_free(edge_face);
+ PDM_free(edge_vtx_idx);
   PDM_MPI_Finalize();
   return 0;
 }

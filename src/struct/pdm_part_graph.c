@@ -156,7 +156,7 @@ PDM_part_graph_split
 
         double *tpwgts = NULL;
         if (flag_weights != 0) {
-          tpwgts = (double *) malloc(ncon * n_part * sizeof(double));
+          PDM_malloc(tpwgts,ncon * n_part ,double);
           for (int i = 0; i < ncon * n_part; i++){
             tpwgts[i] = (double) (1./n_part);
           }
@@ -164,7 +164,7 @@ PDM_part_graph_split
 
         double *ubvec = NULL;
         if (flag_weights != 0) {
-          ubvec = (double *) malloc(ncon * sizeof(double));
+          PDM_malloc(ubvec,ncon ,double);
           for (int i = 0; i < ncon; i++) {
             ubvec[i] = 1.05;
           }
@@ -235,11 +235,11 @@ PDM_part_graph_split
 
         if (flag_weights != 0) {
           if(ubvec!= NULL)
-            free(ubvec);
+           PDM_free(ubvec);
           if(tpwgts!= NULL)
-            free(tpwgts);
+           PDM_free(tpwgts);
           // if(adjwgt!= NULL)
-          //   free(adjwgt);
+          //  PDM_free(adjwgt);
         }
 
 #else
@@ -293,14 +293,17 @@ PDM_part_graph_split
         // To see with eric ...
         // abort();
         /* Allocation */
-        double *cellCenter = (double *) malloc (part_ini->n_cell * 3 * sizeof(double ));
+        double *cellCenter;
+        PDM_malloc(cellCenter,part_ini->n_cell * 3 ,double );
 
-        PDM_hilbert_code_t *hilbert_codes = (PDM_hilbert_code_t *) malloc (part_ini->n_cell * sizeof(PDM_hilbert_code_t));
+        PDM_hilbert_code_t *hilbert_codes;
+        PDM_malloc(hilbert_codes,part_ini->n_cell ,PDM_hilbert_code_t);
 
         /** Barycentre computation **/
 
         /* Allocate */
-        double *cellPond = (double *) malloc (part_ini->n_cell * sizeof(double));
+        double *cellPond;
+        PDM_malloc(cellPond,part_ini->n_cell ,double);
 
         /* Nulliffy cellCenterArray */
         for(int iCell = 0; iCell < part_ini->n_cell; iCell++) {
@@ -360,10 +363,11 @@ PDM_part_graph_split
 
         /** CHECK H_CODES **/
 
-        free(cellCenter);
-        free(cellPond);
+       PDM_free(cellCenter);
+       PDM_free(cellPond);
 
-        int *newToOldOrder = (int *) malloc (part_ini->n_cell * sizeof(int));
+        int *newToOldOrder;
+        PDM_malloc(newToOldOrder,part_ini->n_cell ,int);
         for(int i = 0; i < part_ini->n_cell; ++i) {
           newToOldOrder [i] = i;
         }
@@ -371,8 +375,8 @@ PDM_part_graph_split
         PDM_sort_double (hilbert_codes, *cell_part, part_ini->n_cell);
 
         /* Free */
-        free (hilbert_codes);
-        free (newToOldOrder);
+       PDM_free(hilbert_codes);
+       PDM_free(newToOldOrder);
 
         break;
       }
@@ -410,7 +414,8 @@ PDM_part_graph_compute_from_face_cell
 
   int *cell_cell = PDM_array_const_int(part_ini->cell_face_idx[part_ini->n_cell], -1);
 
-  int *cell_cell_idx = (int *) malloc((part_ini->n_cell + 1) * sizeof(int));
+  int *cell_cell_idx;
+  PDM_malloc(cell_cell_idx,(part_ini->n_cell + 1) ,int);
   for(int i = 0; i < part_ini->n_cell + 1; i++) {
     cell_cell_idx[i] = part_ini->cell_face_idx[i];
   }
@@ -455,7 +460,7 @@ PDM_part_graph_compute_from_face_cell
   //    PDM_printf("(*cell_cell_idxCompressed)[part_ini->n_cell] : %d \n", (*cell_cell_idxCompressed)[part_ini->n_cell]);
   //
   assert( (*cell_cellCompressed) == NULL);
-  (*cell_cellCompressed) = (int *) malloc((*cell_cell_idxCompressed)[part_ini->n_cell] * sizeof(int));
+  PDM_malloc(*cell_cellCompressed,(*cell_cell_idxCompressed)[part_ini->n_cell] ,int);
 
   int cpt_cell_cellCompressed = 0;
   for(int i = 0; i < part_ini->cell_face_idx[part_ini->n_cell]; i++) {
@@ -480,9 +485,9 @@ PDM_part_graph_compute_from_face_cell
 
   /* Free temporary arrays*/
 
-  free(cell_cell_n);
-  free(cell_cell);
-  free(cell_cell_idx);
+ PDM_free(cell_cell_n);
+ PDM_free(cell_cell);
+ PDM_free(cell_cell_idx);
 
   //Remove duplicate cells of the dual graph
   //We use the following scheme:
@@ -547,8 +552,7 @@ PDM_part_graph_compute_from_face_cell
 
   //We reallocate the memory in case of duplicated values removed
   //The new array size is idx_write (stored in (*cell_cell_idxCompressed)[part_ini->n_cell])
-  *cell_cellCompressed = realloc(*cell_cellCompressed,
-                                (*cell_cell_idxCompressed)[part_ini->n_cell] * sizeof(int));
+  PDM_realloc(*cell_cellCompressed ,*cell_cellCompressed ,                                (*cell_cell_idxCompressed)[part_ini->n_cell] ,int);
 
 }
 
@@ -594,7 +598,7 @@ PDM_part_graph_split_bis
 
       double *tpwgts = NULL;
       if (flag_weights != 0) {
-        tpwgts = (double *) malloc(ncon * n_part * sizeof(double));
+        PDM_malloc(tpwgts,ncon * n_part ,double);
         for (int i = 0; i < ncon * n_part; i++){
           tpwgts[i] = (double) (1./n_part);
         }
@@ -602,7 +606,7 @@ PDM_part_graph_split_bis
 
       double *ubvec = NULL;
       if (flag_weights != 0) {
-        ubvec = (double *) malloc(ncon * sizeof(double));
+        PDM_malloc(ubvec,ncon ,double);
         for (int i = 0; i < ncon; i++) {
           ubvec[i] = 1.05;
         }
@@ -674,11 +678,11 @@ PDM_part_graph_split_bis
 
       if (flag_weights != 0) {
         if(ubvec!= NULL)
-          free(ubvec);
+         PDM_free(ubvec);
         if(tpwgts!= NULL)
-          free(tpwgts);
+         PDM_free(tpwgts);
         // if(adjwgt!= NULL)
-        //   free(adjwgt);
+        //  PDM_free(adjwgt);
       }
 
 #else

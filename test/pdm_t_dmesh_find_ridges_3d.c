@@ -265,8 +265,10 @@ int main(int argc, char *argv[])
 
     int dn_extract_edge = distrib_ridge[i_rank+1] - distrib_ridge[i_rank];
 
-    int *dridge_vtx_idx = malloc((dn_extract_edge+1) * sizeof(int));
-    PDM_g_num_t *ridge_ln_to_gn = malloc(dn_extract_edge * sizeof(PDM_g_num_t));
+    int *dridge_vtx_idx;
+    PDM_malloc(dridge_vtx_idx,(dn_extract_edge+1) ,int);
+    PDM_g_num_t *ridge_ln_to_gn;
+    PDM_malloc(ridge_ln_to_gn,dn_extract_edge ,PDM_g_num_t);
 
     dridge_vtx_idx[0] = 0;
     for(int i = 0; i < dn_extract_edge; ++i) {
@@ -298,7 +300,7 @@ int main(int argc, char *argv[])
                    (const PDM_g_num_t **) &pextract_vtx_ln_to_gn,
                                           &tmp_pextract_vtx_coord);
     double* pextract_vtx_coord = tmp_pextract_vtx_coord[0];
-    free(tmp_pextract_vtx_coord);
+   PDM_free(tmp_pextract_vtx_coord);
 
     /* Recuperation des couleurs de ridges */
     int         **tmp_pgroup_ridge_idx = NULL;
@@ -319,9 +321,9 @@ int main(int argc, char *argv[])
     int         *pgroup_ridge     = tmp_pgroup_ridge    [0];
     PDM_g_num_t *pgroup_ln_to_gn  = tmp_pgroup_ln_to_gn [0];
 
-    free(tmp_pgroup_ridge_idx);
-    free(tmp_pgroup_ridge    );
-    free(tmp_pgroup_ln_to_gn );
+   PDM_free(tmp_pgroup_ridge_idx);
+   PDM_free(tmp_pgroup_ridge    );
+   PDM_free(tmp_pgroup_ln_to_gn );
 
     int *pedge_id = PDM_array_const_int(dn_extract_edge, -1);
 
@@ -347,27 +349,27 @@ int main(int argc, char *argv[])
                                field_name,
                                field);
 
-    free(dridge_vtx_idx);
-    free(ridge_ln_to_gn);
-    free(pextract_vtx_coord);
-    free(pextract_vtx_ln_to_gn);
-    free(pextract_edge_vtx_idx);
-    free(pextract_edge_vtx);
+   PDM_free(dridge_vtx_idx);
+   PDM_free(ridge_ln_to_gn);
+   PDM_free(pextract_vtx_coord);
+   PDM_free(pextract_vtx_ln_to_gn);
+   PDM_free(pextract_edge_vtx_idx);
+   PDM_free(pextract_edge_vtx);
 
-    free(pgroup_ridge_idx);
-    free(pgroup_ridge    );
-    free(pgroup_ln_to_gn );
-    free(pedge_id        );
+   PDM_free(pgroup_ridge_idx);
+   PDM_free(pgroup_ridge    );
+   PDM_free(pgroup_ln_to_gn );
+   PDM_free(pedge_id        );
 
   }
 
 
-  free(distrib_ridge  );
-  free(dridge_vtx     );
-  free(dgroup_edge_idx);
-  free(dgroup_edge    );
-  free(dridge_face_group_idx);
-  free(dridge_face_group    );
+ PDM_free(distrib_ridge  );
+ PDM_free(dridge_vtx     );
+ PDM_free(dgroup_edge_idx);
+ PDM_free(dgroup_edge    );
+ PDM_free(dridge_face_group_idx);
+ PDM_free(dridge_face_group    );
 
 
   PDM_dmesh_nodal_to_dmesh_free(dmntodm);

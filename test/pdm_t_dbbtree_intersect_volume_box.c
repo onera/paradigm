@@ -123,10 +123,11 @@ PDM_g_num_t **box_ln_to_gn
   for (PDM_g_num_t i = 0; i < 6*distrib_box[i_rank]; i++) {
     rand();
   }
-  free (distrib_box);
+ PDM_free(distrib_box);
 
-  double *box_centers = malloc (sizeof(double) * n_box * 3);
-  *box_extents = malloc (sizeof(double) * n_box * 6);
+  double *box_centers;
+  PDM_malloc(box_centers,n_box * 3,double);
+  PDM_malloc(*box_extents,n_box * 6,double);
   double *_box_extents = *box_extents;
   for (int i = 0; i < n_box; i++) {
     for (int j = 0; j < 3; j++) {
@@ -158,7 +159,7 @@ PDM_g_num_t **box_ln_to_gn
   *box_ln_to_gn = PDM_gnum_get (gen_gnum, 0);
 
   PDM_gnum_free (gen_gnum);
-  free (box_centers);
+ PDM_free(box_centers);
 
   return n_box;
 }
@@ -561,8 +562,10 @@ int main(int argc, char *argv[])
       }
     }
 
-    double *plane_normal   = malloc(sizeof(double) * 3 * n_volume_boxes * 6);
-    double *plane_pt_coord = malloc(sizeof(double) * 3 * n_volume_boxes * 6);
+    double *plane_normal;
+    PDM_malloc(plane_normal,3 * n_volume_boxes * 6,double);
+    double *plane_pt_coord;
+    PDM_malloc(plane_pt_coord,3 * n_volume_boxes * 6,double);
 
     for (int ibox = 0; ibox < n_volume_boxes; ibox++) {
       _box_extents_to_plane(volume_box_extents + 6 * ibox,
@@ -623,15 +626,15 @@ int main(int argc, char *argv[])
 
     PDM_dbbtree_free(dbbt);
     PDM_box_set_destroy(&box_set);
-    free(volume_boxes_idx);
-    free(volume_boxes_g_num);
-    free(plane_normal);
-    free(plane_pt_coord);
-    free(dbbtree_box_extents);
-    free(dbbtree_box_g_num);
-    free(volume_box_extents);
-    free(volume_box_g_num);
-    free(volume_plane_idx);
+   PDM_free(volume_boxes_idx);
+   PDM_free(volume_boxes_g_num);
+   PDM_free(plane_normal);
+   PDM_free(plane_pt_coord);
+   PDM_free(dbbtree_box_extents);
+   PDM_free(dbbtree_box_g_num);
+   PDM_free(volume_box_extents);
+   PDM_free(volume_box_g_num);
+   PDM_free(volume_plane_idx);
 
   } // end if RANDOM or RANDOM_VARIABLE_STRIDE
 
@@ -640,8 +643,10 @@ int main(int argc, char *argv[])
     // Create dbbtree boxes
 
     int          n_dbbtree_boxes     = 2;
-    double      *dbbtree_box_extents = malloc(sizeof(double)      * n_dbbtree_boxes * 6);
-    PDM_g_num_t *dbbtree_box_g_num   = malloc(sizeof(PDM_g_num_t) * n_dbbtree_boxes);
+    double *dbbtree_box_extents;
+    PDM_malloc(dbbtree_box_extents,n_dbbtree_boxes * 6,double);
+    PDM_g_num_t *dbbtree_box_g_num;
+    PDM_malloc(dbbtree_box_g_num,n_dbbtree_boxes,PDM_g_num_t);
 
     for (int j = 0; j < n_dbbtree_boxes; j++) {
         dbbtree_box_extents[0 + 6 * j] = 0 + j * n_rank + i_rank;
@@ -666,8 +671,10 @@ int main(int argc, char *argv[])
     // Create volume boxes
 
     int          n_volume_boxes     = 4;
-    double      *volume_box_extents = malloc(sizeof(double)      * n_volume_boxes * 6);
-    PDM_g_num_t *volume_box_g_num   = malloc(sizeof(PDM_g_num_t) * n_volume_boxes);
+    double *volume_box_extents;
+    PDM_malloc(volume_box_extents,n_volume_boxes * 6,double);
+    PDM_g_num_t *volume_box_g_num;
+    PDM_malloc(volume_box_g_num,n_volume_boxes,PDM_g_num_t);
 
     for (int j = 0; j < n_volume_boxes; j++) {
       if (j%2 == 0) {
@@ -732,8 +739,10 @@ int main(int argc, char *argv[])
 
     int *volume_plane_idx = PDM_array_new_idx_from_const_stride_int(6, n_volume_boxes);
 
-    double *plane_normal   = malloc(sizeof(double) * 3 * n_volume_boxes * 6);
-    double *plane_pt_coord = malloc(sizeof(double) * 3 * n_volume_boxes * 6);
+    double *plane_normal;
+    PDM_malloc(plane_normal,3 * n_volume_boxes * 6,double);
+    double *plane_pt_coord;
+    PDM_malloc(plane_pt_coord,3 * n_volume_boxes * 6,double);
 
     for (int ibox = 0; ibox < n_volume_boxes; ibox++) {
     _box_extents_to_plane(volume_box_extents + 6 * ibox,
@@ -762,8 +771,8 @@ int main(int argc, char *argv[])
         log_trace("\n");
       }
     }
-    free(volume_boxes_idx);
-    free(volume_boxes_g_num);
+   PDM_free(volume_boxes_idx);
+   PDM_free(volume_boxes_g_num);
 
     PDM_dbbtree_free(dbbt);
     PDM_box_set_destroy(&box_set);
@@ -774,8 +783,10 @@ int main(int argc, char *argv[])
     // Create dbbtree boxes
 
     int          n_dbbtree_boxes     = 2;
-    double      *dbbtree_box_extents = malloc(sizeof(double)      * n_dbbtree_boxes * 6);
-    PDM_g_num_t *dbbtree_box_g_num   = malloc(sizeof(PDM_g_num_t) * n_dbbtree_boxes);
+    double *dbbtree_box_extents;
+    PDM_malloc(dbbtree_box_extents,n_dbbtree_boxes * 6,double);
+    PDM_g_num_t *dbbtree_box_g_num;
+    PDM_malloc(dbbtree_box_g_num,n_dbbtree_boxes,PDM_g_num_t);
 
     for (int j = 0; j < n_dbbtree_boxes; j++) {
       dbbtree_box_extents[0 + 6 * j] = 0   + j * 0.5 + i_rank * 1;
@@ -800,8 +811,10 @@ int main(int argc, char *argv[])
     // Create volume boxes
 
     int          n_volume_boxes     = 1;
-    double      *volume_box_extents = malloc(sizeof(double)      * n_volume_boxes * 6);
-    PDM_g_num_t *volume_box_g_num   = malloc(sizeof(PDM_g_num_t) * n_volume_boxes);
+    double *volume_box_extents;
+    PDM_malloc(volume_box_extents,n_volume_boxes * 6,double);
+    PDM_g_num_t *volume_box_g_num;
+    PDM_malloc(volume_box_g_num,n_volume_boxes,PDM_g_num_t);
 
     for (int j = 0; j < n_volume_boxes; j++) {
       volume_box_extents[0 + 6 * j] = 0.5 + j * 0.5 + i_rank * 1;
@@ -858,8 +871,10 @@ int main(int argc, char *argv[])
 
     int *volume_plane_idx = PDM_array_new_idx_from_const_stride_int(6, n_volume_boxes);
 
-    double *plane_normal   = malloc(sizeof(double) * 3 * n_volume_boxes * 6);
-    double *plane_pt_coord = malloc(sizeof(double) * 3 * n_volume_boxes * 6);
+    double *plane_normal;
+    PDM_malloc(plane_normal,3 * n_volume_boxes * 6,double);
+    double *plane_pt_coord;
+    PDM_malloc(plane_pt_coord,3 * n_volume_boxes * 6,double);
 
     for (int ibox = 0; ibox < n_volume_boxes; ibox++) {
     _box_extents_to_plane(volume_box_extents + 6 * ibox,
@@ -892,9 +907,9 @@ int main(int argc, char *argv[])
     PDM_dbbtree_free(dbbt);
     PDM_box_set_destroy(&box_set);
 
-    free(volume_box_extents);
-    free(volume_box_g_num);
-    free(volume_boxes_idx);
+   PDM_free(volume_box_extents);
+   PDM_free(volume_box_g_num);
+   PDM_free(volume_boxes_idx);
   } // end if NO_COPIES
 
   PDM_MPI_Finalize ();

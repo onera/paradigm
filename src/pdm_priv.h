@@ -3,6 +3,7 @@
 
 #include <stdio.h>
 #include <math.h>
+#include "pdm_mem_tool.h"
 
 /*=============================================================================
  * Macro definitions

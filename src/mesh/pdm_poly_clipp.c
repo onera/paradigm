@@ -100,7 +100,8 @@ const PDM_g_num_t gN,
 const PDM_g_num_t gNEdge
 )
 {
-  _vertex_poly_t *vtxp = malloc (sizeof(_vertex_poly_t));
+  _vertex_poly_t *vtxp;
+  PDM_malloc(vtxp,1,_vertex_poly_t);
 
   vtxp->coords       = coords;
   vtxp->u            = 0.;
@@ -145,7 +146,8 @@ const _poly_clipp_loc_t  loc,
 _vertex_poly_t    *linked_vtxp
 )
 {
-  _vertex_poly_t *vtxp = malloc (sizeof(_vertex_poly_t));
+  _vertex_poly_t *vtxp;
+  PDM_malloc(vtxp,1,_vertex_poly_t);
 
   vtxp->coords       = coords;
   vtxp->u            = 0.;
@@ -198,7 +200,8 @@ const _poly_clipp_loc_t  loc,
 _vertex_poly_t          *linked_vtxp
 )
 {
-  _vertex_poly_t *vtxp = malloc (sizeof(_vertex_poly_t));
+  _vertex_poly_t *vtxp;
+  PDM_malloc(vtxp,1,_vertex_poly_t);
 
   vtxp->coords       = NULL;
   vtxp->u            = u;
@@ -274,7 +277,7 @@ _vertex_poly_t * vtxp
    vtxp->previous->next = vtxp->next;
    vtxp->next->previous = vtxp->previous;
  }
- free (vtxp);
+PDM_free(vtxp);
  return NULL;
 }
 
@@ -322,7 +325,8 @@ _vertex_poly_t *vtxp
 
     do {
 
-      _vertex_poly_t *cp_current = malloc(sizeof(_vertex_poly_t));
+      _vertex_poly_t *cp_current;
+      PDM_malloc(cp_current,1,_vertex_poly_t);
       if (vtxp_cp == NULL) {
         vtxp_cp = cp_current;
       }
@@ -469,8 +473,8 @@ double nB[3]
     vtx_currA = vtx_currA->next;
   }
 
-  free (boundsA);
-  free (boundsB);
+ PDM_free(boundsA);
+ PDM_free(boundsB);
 
 }
 
@@ -1071,9 +1075,9 @@ double                **polyClippCoordsB
 
   if (revert) {
 
-    _faceToEdgeB = malloc (sizeof(PDM_g_num_t) * n_vtxB);
-    _faceToVtxB  = malloc (sizeof(PDM_g_num_t) * n_vtxB);
-    _face_vtxCooB = malloc (sizeof(double) * 3 * n_vtxB);
+    PDM_malloc(_faceToEdgeB,n_vtxB,PDM_g_num_t);
+    PDM_malloc(_faceToVtxB,n_vtxB,PDM_g_num_t);
+    PDM_malloc(_face_vtxCooB,3 * n_vtxB,double);
 
     int j = n_vtxB - 1;
     for (int i = 0; i < n_vtxB; i++) {
@@ -1086,7 +1090,7 @@ double                **polyClippCoordsB
     }
   }
 
-  _face_vtxCooA = malloc (sizeof(double) * 3 * n_vtxA);
+  PDM_malloc(_face_vtxCooA,3 * n_vtxA,double);
   for (int i = 0; i < n_vtxA; i++) {
     PDM_plane_projection (face_vtxCooA + 3 * i, baryA, nA, _face_vtxCooA + 3 * i);
   }
@@ -1098,7 +1102,7 @@ double                **polyClippCoordsB
     }
   }
   else {
-    _face_vtxCooB = malloc (sizeof(double) * 3 * n_vtxB);
+    PDM_malloc(_face_vtxCooB,3 * n_vtxB,double);
     for (int i = 0; i < n_vtxB; i++) {
       PDM_plane_projection (face_vtxCooB + 3 * i, baryA, nA, _face_vtxCooB + 3 * i);
     }
@@ -1119,8 +1123,10 @@ double                **polyClippCoordsB
                                           *_faceToVtxB,
                                           PDM_ABS(*_faceToEdgeB));
 
-  _vertex_poly_t **vtxA_origin = malloc (sizeof(_vertex_poly_t *) *  n_vtxA);
-  _vertex_poly_t **vtxB_origin = malloc (sizeof(_vertex_poly_t *) *  n_vtxB);
+  _vertex_poly_t **vtxA_origin;
+  PDM_malloc(vtxA_origin,n_vtxA,_vertex_poly_t *);
+  _vertex_poly_t **vtxB_origin;
+  PDM_malloc(vtxB_origin,n_vtxB,_vertex_poly_t *);
 
   vtxA_origin[0] = vtxA;
   vtxB_origin[0] = vtxB;
@@ -1249,7 +1255,7 @@ double                **polyClippCoordsB
                                           &coordsB,
                                           &uB);
 
-        free (_eir);
+       PDM_free(_eir);
 
         /*
          * Add new intersections vertex or switch vertex to intersection
@@ -1401,8 +1407,8 @@ double                **polyClippCoordsB
       }
     }
   }
-  free (vtxA_origin);
-  free (vtxB_origin);
+ PDM_free(vtxA_origin);
+ PDM_free(vtxB_origin);
 
   /*
    * Tag Intersection points
@@ -1499,15 +1505,15 @@ double                **polyClippCoordsB
 
   if (performed_t == PDM_POLY_CLIPP_CLIP) {
 
-    *polyClippIdxA = malloc (sizeof(int) * (nPolyPredicA + 1));
+    PDM_malloc(*polyClippIdxA,(nPolyPredicA + 1),int);
     (*polyClippIdxA)[0] = 0;
 
     *polyClippIdxB = *polyClippIdxA;
 
-    *polyClippConnecA = malloc (sizeof(PDM_g_num_t) * sPolyConnecA);
-    *polyClippConnecB = malloc (sizeof(PDM_g_num_t) * sPolyConnecB);
+    PDM_malloc(*polyClippConnecA,sPolyConnecA,PDM_g_num_t);
+    PDM_malloc(*polyClippConnecB,sPolyConnecB,PDM_g_num_t);
 
-    *polyClippCoordsA = malloc (sizeof(double) * sPolyCoordA);
+    PDM_malloc(*polyClippCoordsA,sPolyCoordA,double);
     *polyClippCoordsB = *polyClippCoordsA;
 
     sPolyCoordB = sPolyCoordA;
@@ -1524,13 +1530,17 @@ double                **polyClippCoordsB
 
       int s_clipped_vtx = n_vtxA + n_vtxB;
 
-      _vertex_poly_t **clipped_vtx = malloc (sizeof(_vertex_poly_t*) * s_clipped_vtx);
-      int *clipped_multi = malloc (sizeof(int) * s_clipped_vtx);
-      int *origin_vtx = malloc (sizeof(int) * s_clipped_vtx); //  1  : A, -1   : B
+      _vertex_poly_t **clipped_vtx;
+      PDM_malloc(clipped_vtx,s_clipped_vtx,_vertex_poly_t*);
+      int *clipped_multi;
+      PDM_malloc(clipped_multi,s_clipped_vtx,int);
+      int *origin_vtx;
+      PDM_malloc(origin_vtx,s_clipped_vtx,int); //  1  : A, -1   : B
                                                               // 10  : A, -10  : B pour les points intersections
                                                               // 100 : A, -100 : B pour les points double (sans intersection)
 
-      int *link_multi = malloc (sizeof(int) * s_clipped_vtx);
+      int *link_multi;
+      PDM_malloc(link_multi,s_clipped_vtx,int);
       _vertex_poly_t *curr = first;
 
       do {
@@ -1556,14 +1566,10 @@ double                **polyClippCoordsB
               while (n_vtxClipp >= s_clipped_vtx) {
                 s_clipped_vtx *= 2;
               }
-              clipped_vtx =
-                realloc (clipped_vtx, sizeof(_vertex_poly_t*) * s_clipped_vtx);
-              clipped_multi =
-                realloc (clipped_multi, sizeof(int) * s_clipped_vtx);
-              origin_vtx =
-                realloc (origin_vtx, sizeof(int) * s_clipped_vtx);
-              link_multi =
-                realloc (link_multi, sizeof(int) * s_clipped_vtx);
+              PDM_realloc(clipped_vtx ,clipped_vtx , s_clipped_vtx,_vertex_poly_t*);
+              PDM_realloc(clipped_multi ,clipped_multi , s_clipped_vtx,int);
+              PDM_realloc(origin_vtx ,origin_vtx , s_clipped_vtx,int);
+              PDM_realloc(link_multi ,link_multi , s_clipped_vtx,int);
             }
 
             origin_vtx[n_vtxClipp] = onPolyA;
@@ -1647,7 +1653,7 @@ double                **polyClippCoordsB
               while (*nPolyClippA >= nPolyPredicA) {
                 nPolyPredicA *= 2;
               }
-              *polyClippIdxA = realloc (*polyClippIdxA, sizeof(int) * (nPolyPredicA + 1));
+              PDM_realloc(*polyClippIdxA ,*polyClippIdxA , (nPolyPredicA + 1),int);
               *polyClippIdxB = *polyClippIdxA;
             }
 
@@ -1658,16 +1664,16 @@ double                **polyClippCoordsB
               while ((*polyClippIdxA)[*nPolyClippA+1] >= sPolyConnecA) {
                 sPolyConnecA *= 2;
               }
-              *polyClippConnecA = realloc (*polyClippConnecA, sizeof(PDM_g_num_t) *sPolyConnecA);
+              PDM_realloc(*polyClippConnecA ,*polyClippConnecA ,sPolyConnecA,PDM_g_num_t);
               sPolyConnecB = sPolyConnecA;
-              *polyClippConnecB = realloc (*polyClippConnecB, sizeof(PDM_g_num_t) *sPolyConnecB);
+              PDM_realloc(*polyClippConnecB ,*polyClippConnecB ,sPolyConnecB,PDM_g_num_t);
             }
 
             if ((3 * ((*polyClippIdxA)[*nPolyClippA+1])) >= sPolyCoordA) {
               while ((3 * ((*polyClippIdxA)[*nPolyClippA+1])) >= sPolyCoordA) {
                 sPolyCoordA *= 2;
               }
-              *polyClippCoordsA = realloc (*polyClippCoordsA, sizeof(double) *sPolyCoordA);
+              PDM_realloc(*polyClippCoordsA ,*polyClippCoordsA ,sPolyCoordA,double);
               sPolyCoordB = sPolyCoordA;
               *polyClippCoordsB = *polyClippCoordsA;
 
@@ -1775,15 +1781,15 @@ double                **polyClippCoordsB
                 if (idx1 >= sPolyConnecA) {
                   sPolyConnecA *= 2;
 
-                  *polyClippConnecA = realloc (*polyClippConnecA, sizeof(PDM_g_num_t) *sPolyConnecA);
+                  PDM_realloc(*polyClippConnecA ,*polyClippConnecA ,sPolyConnecA,PDM_g_num_t);
                   sPolyConnecB = sPolyConnecA;
-                  *polyClippConnecB = realloc (*polyClippConnecB, sizeof(PDM_g_num_t) *sPolyConnecB);
+                  PDM_realloc(*polyClippConnecB ,*polyClippConnecB ,sPolyConnecB,PDM_g_num_t);
                 }
 
                 if (idx2+3 >= sPolyCoordA) {
                   sPolyCoordA *= 2;
 
-                  *polyClippCoordsA = realloc (*polyClippCoordsA, sizeof(double) *sPolyCoordA);
+                  PDM_realloc(*polyClippCoordsA ,*polyClippCoordsA ,sPolyCoordA,double);
                   sPolyCoordB = sPolyCoordA;
                   *polyClippCoordsB = *polyClippCoordsA;
                 }
@@ -1829,7 +1835,7 @@ double                **polyClippCoordsB
 
             } while ((inext == -1) ? false : used_vtx[inext] == 0);
 
-            free (used_vtx);
+           PDM_free(used_vtx);
           }
 
           // Verification
@@ -1855,10 +1861,10 @@ double                **polyClippCoordsB
 
       } while ((curr != first) && (curr->neighbor != first)); // On blinde le teste de sortie
 
-      free (clipped_vtx);
-      free (clipped_multi);
-      free (origin_vtx);
-      free (link_multi);
+     PDM_free(clipped_vtx);
+     PDM_free(clipped_multi);
+     PDM_free(origin_vtx);
+     PDM_free(link_multi);
 
     }
 
@@ -1944,18 +1950,14 @@ double                **polyClippCoordsB
      * Update size
      */
 
-    *polyClippIdxA =
-            realloc (*polyClippIdxA, (sizeof(int) * (*nPolyClippA + 1)));
+    PDM_realloc (*polyClippIdxA, *polyClippIdxA, *nPolyClippA + 1, int);
 
-    *polyClippConnecA =
-            realloc (*polyClippConnecA, (sizeof(PDM_g_num_t) * (*polyClippIdxA)[*nPolyClippA]));
-
-    *polyClippCoordsA =
-            realloc (*polyClippCoordsA, (sizeof(double) * 3 * (*polyClippIdxA)[*nPolyClippA]));
+    PDM_realloc (*polyClippConnecA, *polyClippConnecA, (*polyClippIdxA)[*nPolyClippA], PDM_g_num_t);
+    PDM_realloc (*polyClippCoordsA, *polyClippCoordsA,  3 * (*polyClippIdxA)[*nPolyClippA], double);
 
     *polyClippIdxB = *polyClippIdxA;
-    *polyClippConnecB =
-            realloc (*polyClippConnecB, (sizeof(PDM_g_num_t) * (*polyClippIdxB)[*nPolyClippB]));
+     
+    PDM_realloc (*polyClippConnecB, *polyClippConnecB, (*polyClippIdxB)[*nPolyClippB], PDM_g_num_t);
 
     *polyClippCoordsB = *polyClippCoordsA;
 
@@ -1967,14 +1969,14 @@ double                **polyClippCoordsB
 
   else if (performed_t == PDM_POLY_CLIPP_REVERSE) {
 
-    *polyClippIdxA = malloc (sizeof(int) * (nPolyPredicA + 1));
+    PDM_malloc(*polyClippIdxA,(nPolyPredicA + 1),int);
     (*polyClippIdxA)[0] = 0;
 
-    *polyClippIdxB = malloc (sizeof(int) * (nPolyPredicB + 1));
+    PDM_malloc(*polyClippIdxB,(nPolyPredicB + 1),int);
     (*polyClippIdxB)[0] = 0;
 
-    *polyClippCoordsA = malloc (sizeof(double) * sPolyCoordA);
-    *polyClippCoordsB = malloc (sizeof(double) * sPolyCoordB);
+    PDM_malloc(*polyClippCoordsA,sPolyCoordA,double);
+    PDM_malloc(*polyClippCoordsB,sPolyCoordB,double);
 
     /*
      * A Reverse clipping
@@ -1995,7 +1997,8 @@ double                **polyClippCoordsB
 
       int s_clipped_vtx = n_vtxA + n_vtxB;
 
-      _vertex_poly_t **clipped_vtx = malloc (sizeof(_vertex_poly_t*) * s_clipped_vtx);
+      _vertex_poly_t **clipped_vtx;
+      PDM_malloc(clipped_vtx,s_clipped_vtx,_vertex_poly_t*);
 
       _vertex_poly_t *curr = first_out;
 
@@ -2042,8 +2045,7 @@ double                **polyClippCoordsB
                 while (n_vtxClipp >= s_clipped_vtx) {
                   s_clipped_vtx *= 2;
                 }
-                clipped_vtx =
-                realloc (clipped_vtx, sizeof(_vertex_poly_t*) * s_clipped_vtx);
+                PDM_realloc(clipped_vtx ,clipped_vtx , s_clipped_vtx,_vertex_poly_t*);
               }
 
               clipped_vtx[n_vtxClipp++] = curr;
@@ -2061,7 +2063,7 @@ double                **polyClippCoordsB
               while (*nPolyClippA >= nPolyPredicA) {
                 nPolyPredicA *= 2;
               }
-              *polyClippIdxA = realloc (*polyClippIdxA, sizeof(int) * (nPolyPredicA + 1));
+              PDM_realloc(*polyClippIdxA ,*polyClippIdxA , (nPolyPredicA + 1),int);
             }
 
             *nPolyClippA += 1;
@@ -2072,14 +2074,14 @@ double                **polyClippCoordsB
               while ((*polyClippIdxA)[*nPolyClippA] >= sPolyConnecA) {
                 sPolyConnecA *= 2;
               }
-              *polyClippConnecA = realloc (*polyClippConnecA, sizeof(PDM_g_num_t) *sPolyConnecA);
+              PDM_realloc(*polyClippConnecA ,*polyClippConnecA ,sPolyConnecA,PDM_g_num_t);
             }
 
             if ((3 * ((*polyClippIdxA)[*nPolyClippA])) >= sPolyCoordA) {
               while ((3 * ((*polyClippIdxA)[*nPolyClippA])) >= sPolyCoordA) {
                 sPolyCoordA *= 2;
               }
-              *polyClippCoordsA = realloc (*polyClippCoordsA, sizeof(double) *sPolyCoordA);
+              PDM_realloc(*polyClippCoordsA ,*polyClippCoordsA ,sPolyCoordA,double);
             }
 
             for (int i = 0; i < n_vtxClipp; i++) {
@@ -2102,7 +2104,7 @@ double                **polyClippCoordsB
 
       } while (curr != first_out);
 
-      free (clipped_vtx);
+     PDM_free(clipped_vtx);
 
     }
 
@@ -2126,7 +2128,8 @@ double                **polyClippCoordsB
 
       int s_clipped_vtx = n_vtxA + n_vtxB;
 
-      _vertex_poly_t **clipped_vtx = malloc (sizeof(_vertex_poly_t*) * s_clipped_vtx);
+      _vertex_poly_t **clipped_vtx;
+      PDM_malloc(clipped_vtx,s_clipped_vtx,_vertex_poly_t*);
 
       _vertex_poly_t *curr = first_out;
 
@@ -2168,8 +2171,7 @@ double                **polyClippCoordsB
                 while (n_vtxClipp >= s_clipped_vtx) {
                   s_clipped_vtx *= 2;
                 }
-                clipped_vtx =
-                realloc (clipped_vtx, sizeof(_vertex_poly_t*) * s_clipped_vtx);
+                PDM_realloc(clipped_vtx ,clipped_vtx , s_clipped_vtx,_vertex_poly_t*);
               }
 
               clipped_vtx[n_vtxClipp++] = curr;
@@ -2187,7 +2189,7 @@ double                **polyClippCoordsB
               while (*nPolyClippB >= nPolyPredicB) {
                 nPolyPredicB *= 2;
               }
-              *polyClippIdxB = realloc (*polyClippIdxB, sizeof(int) * (nPolyPredicB + 1));
+              PDM_realloc(*polyClippIdxB ,*polyClippIdxB , (nPolyPredicB + 1),int);
             }
 
             *nPolyClippB += 1;
@@ -2198,14 +2200,14 @@ double                **polyClippCoordsB
               while ((*polyClippIdxB)[*nPolyClippB] >= sPolyConnecB) {
                 sPolyConnecB *= 2;
               }
-              *polyClippConnecB = realloc (*polyClippConnecB, sizeof(PDM_g_num_t) *sPolyConnecB);
+              PDM_realloc(*polyClippConnecB ,*polyClippConnecB ,sPolyConnecB,PDM_g_num_t);
             }
 
             if ((3 * ((*polyClippIdxB)[*nPolyClippB])) >= sPolyCoordB) {
               while ((3 * ((*polyClippIdxB)[*nPolyClippB])) >= sPolyCoordB) {
                 sPolyCoordB *= 2;
               }
-              *polyClippCoordsB = realloc (*polyClippCoordsB, sizeof(double) *sPolyCoordB);
+              PDM_realloc(*polyClippCoordsB ,*polyClippCoordsB ,sPolyCoordB,double);
             }
 
             for (int i = 0; i < n_vtxClipp; i++) {
@@ -2228,27 +2230,19 @@ double                **polyClippCoordsB
 
       } while (curr != first_out);
 
-      free (clipped_vtx);
+     PDM_free(clipped_vtx);
     }
 
     /*
      * Update size
      */
 
-    *polyClippIdxA =
-            realloc (*polyClippIdxA, (sizeof(int) * (*nPolyClippA + 1)));
-    *polyClippConnecA =
-            realloc (*polyClippConnecA, (sizeof(PDM_g_num_t) * (*polyClippIdxA)[*nPolyClippA]));
-    *polyClippCoordsA =
-            realloc (*polyClippCoordsA, (sizeof(double)* 3 * (*polyClippIdxA)[*nPolyClippA]));
-
-    *polyClippIdxB =
-            realloc (*polyClippIdxB, (sizeof(int) * (*nPolyClippB + 1)));
-    *polyClippConnecB =
-            realloc (*polyClippConnecB, (sizeof(PDM_g_num_t) * (*polyClippIdxB)[*nPolyClippB]));
-
-    *polyClippCoordsB =
-            realloc (*polyClippCoordsB, (sizeof(double)* 3 * (*polyClippIdxB)[*nPolyClippB]));
+    PDM_realloc (*polyClippIdxA, *polyClippIdxA, (*nPolyClippA + 1), int);
+    PDM_realloc (*polyClippConnecA, *polyClippConnecA, (*polyClippIdxA)[*nPolyClippA], PDM_g_num_t);
+    PDM_realloc (*polyClippCoordsA, *polyClippCoordsA, 3 * (*polyClippIdxA)[*nPolyClippA], double);
+    PDM_realloc (*polyClippIdxB, *polyClippIdxB, (*nPolyClippB + 1), int);
+    PDM_realloc (*polyClippConnecB, *polyClippConnecB, (*polyClippIdxB)[*nPolyClippB], PDM_g_num_t);
+    PDM_realloc (*polyClippCoordsB, *polyClippCoordsB,  3 * (*polyClippIdxB)[*nPolyClippB], double);
   }
 
   if (1 == 0) {
@@ -2285,27 +2279,27 @@ double                **polyClippCoordsB
   _poly_clipp_free (vtxB);;
 
   if (_faceToEdgeA != faceToEdgeA) {
-    free (_faceToEdgeA);
+   PDM_free(_faceToEdgeA);
   }
 
   if (_faceToVtxA  != faceToVtxA) {
-    free (_faceToVtxA);
+   PDM_free(_faceToVtxA);
   }
 
   if (_face_vtxCooA != face_vtxCooA) {
-    free (_face_vtxCooA);
+   PDM_free(_face_vtxCooA);
   }
 
   if (_faceToEdgeB != faceToEdgeB) {
-    free (_faceToEdgeB);
+   PDM_free(_faceToEdgeB);
   }
 
   if (_faceToVtxB != faceToVtxB) {
-    free (_faceToVtxB);
+   PDM_free(_faceToVtxB);
   }
 
   if (_face_vtxCooB != face_vtxCooB) {
-    free (_face_vtxCooB);
+   PDM_free(_face_vtxCooB);
   }
 
 }

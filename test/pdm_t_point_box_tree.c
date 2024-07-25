@@ -161,7 +161,8 @@ _split_surface_mesh
 )
 {
   int n_domain = 1;
-  int *n_part_domains = (int *) malloc(sizeof(int) * n_domain);
+  int *n_part_domains;
+  PDM_malloc(n_part_domains,n_domain,int);
   n_part_domains[0] = n_part;
 
   PDM_multipart_t *mpart = PDM_multipart_create(n_domain,
@@ -182,7 +183,7 @@ _split_surface_mesh
   PDM_multipart_dmesh_nodal_set(mpart, 0, dmn);
   PDM_multipart_compute(mpart);
 
-  free(n_part_domains);
+ PDM_free(n_part_domains);
 
   *_mpart = mpart;
 }
@@ -239,7 +240,7 @@ _read_and_split_distributed_mesh
                                             i_part,
                                             &_vtx_coord,
                                             PDM_OWNERSHIP_KEEP);
-  *vtx_coord = malloc(sizeof(double) * (*n_vtx) * 3);
+  PDM_malloc(*vtx_coord,(*n_vtx) * 3,double);
   memcpy(*vtx_coord, _vtx_coord, sizeof(double) * (*n_vtx) * 3);
 
   int *_face_edge_idx = NULL;
@@ -251,9 +252,10 @@ _read_and_split_distributed_mesh
                                                 &_face_edge_idx,
                                                 &_face_edge,
                                                 PDM_OWNERSHIP_KEEP);
-  *face_vtx_idx = malloc(sizeof(int) * (*n_face + 1));
+  PDM_malloc(*face_vtx_idx,(*n_face + 1),int);
   memcpy(*face_vtx_idx, _face_edge_idx, sizeof(int) * (*n_face + 1));
-  // *face_vtx = malloc(sizeof(int) * _face_vtx_idx[*n_face]);
+  // *face_vtx;
+  // PDM_malloc(face_vtx,_face_vtx_idx[*n_face],int);
   // memcpy(*face_vtx, _face_vtx, sizeof(int) * _face_vtx_idx[*n_face]);
 
 
@@ -280,7 +282,7 @@ _read_and_split_distributed_mesh
                                   PDM_MESH_ENTITY_VTX,
                                   &_vtx_ln_to_gn,
                                   PDM_OWNERSHIP_KEEP);
-  *vtx_ln_to_gn = malloc(sizeof(PDM_g_num_t) * (*n_vtx));
+  PDM_malloc(*vtx_ln_to_gn,(*n_vtx),PDM_g_num_t);
   memcpy(*vtx_ln_to_gn, _vtx_ln_to_gn, sizeof(PDM_g_num_t) * (*n_vtx));
 
   PDM_g_num_t *_face_ln_to_gn = NULL;
@@ -290,7 +292,7 @@ _read_and_split_distributed_mesh
                                   PDM_MESH_ENTITY_FACE,
                                   &_face_ln_to_gn,
                                   PDM_OWNERSHIP_KEEP);
-  *face_ln_to_gn = malloc(sizeof(PDM_g_num_t) * (*n_face));
+  PDM_malloc(*face_ln_to_gn,(*n_face),PDM_g_num_t);
   memcpy(*face_ln_to_gn, _face_ln_to_gn, sizeof(PDM_g_num_t) * (*n_face));
 
   PDM_DMesh_nodal_free(dmn);
@@ -361,8 +363,10 @@ main
                                    &sm_face_ln_to_gn,
                                    &sm_vtx_ln_to_gn);
 
-  double *box_extents = malloc(sizeof(double) * sm_n_face * 6);
-  double *box_coord   = malloc(sizeof(double) * sm_n_face * 3);
+  double *box_extents;
+  PDM_malloc(box_extents,sm_n_face * 6,double);
+  double *box_coord;
+  PDM_malloc(box_coord,sm_n_face * 3,double);
   for (int i = 0; i < sm_n_face; i++) {
     double *e = box_extents + 6*i;
 
@@ -403,7 +407,8 @@ main
 
 
 
-  double *weight = malloc(sm_n_face * sizeof(double));
+  double *weight;
+  PDM_malloc(weight,sm_n_face ,double);
   for(int i = 0; i < sm_n_face; ++i) {
     weight[i] = 1.;
   }
@@ -417,8 +422,8 @@ main
                                                                &sm_n_face,
                                                                1,
                                                                comm);
-  free(box_coord);
-  free(weight);
+ PDM_free(box_coord);
+ PDM_free(weight);
 
   double *blk_box_extents = NULL;
   PDM_part_to_block_exch(ptb_box,
@@ -456,7 +461,8 @@ main
   int   max_tree_depth = 40;
   float max_box_ratio  = 30;
 
-  int *init_location_box = malloc(3 * blk_n_box * sizeof(int));
+  int *init_location_box;
+  PDM_malloc(init_location_box,3 * blk_n_box ,int);
   for(int i = 0; i < blk_n_box; ++i) {
     init_location_box[3*i  ] = i_rank;
     init_location_box[3*i+1] = 0; // i_part
@@ -488,7 +494,7 @@ main
                           PDM_BOX_TREE_ASYNC_LEVEL);
   t2 = PDM_MPI_Wtime();
   printf("[%4d] PDM_box_tree_set_boxes  : %12.5es (%12.5es/box)\n", i_rank, t2 - t1, (t2 - t1) / (double) blk_n_box);
-  free(init_location_box);
+ PDM_free(init_location_box);
 
   if (visu) {
     char filename2[999];
@@ -501,7 +507,8 @@ main
 
 
   /* Build "point-box"_tree */
-  double *blk_box_center = malloc(sizeof(double) * 3 * blk_n_box);
+  double *blk_box_center;
+  PDM_malloc(blk_box_center,3 * blk_n_box,double);
   for (int i = 0; i < blk_n_box; i++) {
     for (int j = 0; j < 3; j++) {
       blk_box_center[3*i+j] = 0.5*(blk_box_extents[6*i+j] + blk_box_extents[6*i+j+3]);
@@ -522,7 +529,7 @@ main
   PDM_MPI_Barrier(comm);
   t1 = PDM_MPI_Wtime();
   PDM_point_tree_seq_build(pbtree);
-  free(blk_box_center);
+ PDM_free(blk_box_center);
 
   /* Fix extents */
   for (int i = 0; i < pbtree->n_nodes; i++) {
@@ -561,7 +568,7 @@ main
   PDM_box_tree_destroy(&btree);
   PDM_box_set_destroy (&box_set);
   PDM_part_to_block_free(ptb_box);
-  free(blk_box_extents);
+ PDM_free(blk_box_extents);
 
   PDM_MPI_Comm_free(&comm_alone);
 

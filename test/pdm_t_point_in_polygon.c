@@ -179,7 +179,8 @@ int main (int argc, char *argv[])
 
 
   /* Create polygon */
-  double *vtx_coord = malloc (sizeof(double) * n_vtx * 3);
+  double *vtx_coord;
+  PDM_malloc(vtx_coord,n_vtx * 3,double);
   for (int i = 0; i < n_vtx; i++) {
     double t = 2.* PDM_PI * i / (double) n_vtx;
     vtx_coord[3*i    ] = cos(t);
@@ -272,7 +273,7 @@ int main (int argc, char *argv[])
 
 
 
-  free (vtx_coord);
+ PDM_free(vtx_coord);
 
   return 0;
 }

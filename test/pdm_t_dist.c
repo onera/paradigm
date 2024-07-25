@@ -247,7 +247,8 @@ int main(int argc, char *argv[])
 
   int have_dcell_part = 0;
 
-  int *dcell_part = (int *) malloc(dn_cell*sizeof(int));
+  int *dcell_part;
+  PDM_malloc(dcell_part,dn_cell,int);
 
   int *renum_properties_cell = NULL;
   int *renum_properties_face = NULL;
@@ -287,14 +288,14 @@ int main(int argc, char *argv[])
                                       dface_group_idx,
                                       dface_group);
 
-  free(dcell_part);
+ PDM_free(dcell_part);
 
-  /* free (dface_cell); */
-  /* free (dface_vtx_idx); */
-  /* free (dface_vtx); */
-  /* free (dvtx_coord); */
-  /* free (dface_group_idx); */
-  /* free (dface_group); */
+  /*PDM_free(dface_cell); */
+  /*PDM_free(dface_vtx_idx); */
+  /*PDM_free(dface_vtx); */
+  /*PDM_free(dvtx_coord); */
+  /*PDM_free(dface_group_idx); */
+  /*PDM_free(dface_group); */
 
   int n_point_cloud = 1;
   PDM_dist_cloud_surf_t* dist = PDM_dist_cloud_surf_create (PDM_MESH_NATURE_MESH_SETTED,
@@ -302,26 +303,39 @@ int main(int argc, char *argv[])
                                                             PDM_MPI_COMM_WORLD,
                                                             PDM_OWNERSHIP_KEEP);
 
-  int **select_face   = malloc (sizeof(int *) * n_part);
-  int  *n_select_face = malloc (sizeof(int  ) * n_part);
-  int **select_vtx    = malloc (sizeof(int *) * n_part);
-  int  *n_select_vtx  = malloc (sizeof(int  ) * n_part);
+  int **select_face;
+  PDM_malloc(select_face,n_part,int *);
+  int *n_select_face;
+  PDM_malloc(n_select_face,n_part,int  );
+  int **select_vtx;
+  PDM_malloc(select_vtx,n_part,int *);
+  int *n_select_vtx;
+  PDM_malloc(n_select_vtx,n_part,int  );
 
-  int **surface_face_vtx_idx =  malloc (sizeof(int *) * n_part);
-  int **surface_face_vtx =  malloc (sizeof(int *) * n_part);
-  double **surface_coords = malloc (sizeof(double *) * n_part);
+  int **surface_face_vtx_idx;
+  PDM_malloc(surface_face_vtx_idx,n_part,int *);
+  int **surface_face_vtx;
+  PDM_malloc(surface_face_vtx,n_part,int *);
+  double **surface_coords;
+  PDM_malloc(surface_coords,n_part,double *);
 
-  PDM_g_num_t **surface_face_parent_gnum = malloc (sizeof(PDM_g_num_t *) * n_part);
-  PDM_g_num_t **surface_vtx_parent_gnum = malloc (sizeof(PDM_g_num_t *) * n_part);
+  PDM_g_num_t **surface_face_parent_gnum;
+  PDM_malloc(surface_face_parent_gnum,n_part,PDM_g_num_t *);
+  PDM_g_num_t **surface_vtx_parent_gnum;
+  PDM_malloc(surface_vtx_parent_gnum,n_part,PDM_g_num_t *);
 
-  const PDM_g_num_t **surface_face_gnum = malloc (sizeof(PDM_g_num_t *) * n_part);
-  const PDM_g_num_t **surface_vtx_gnum = malloc (sizeof(PDM_g_num_t *) * n_part);
+  const PDM_g_num_t **surface_face_gnum;
+  PDM_malloc(surface_face_gnum,n_part, const PDM_g_num_t *);
+  const PDM_g_num_t **surface_vtx_gnum;
+  PDM_malloc(surface_vtx_gnum,n_part, const PDM_g_num_t *);
 
   PDM_gen_gnum_t* gen_gnum_face = PDM_gnum_create (3, n_part, PDM_FALSE, 1e-3, PDM_MPI_COMM_WORLD, PDM_OWNERSHIP_KEEP);
   PDM_gen_gnum_t* gen_gnum_vtx  = PDM_gnum_create (3, n_part, PDM_FALSE, 1e-3, PDM_MPI_COMM_WORLD, PDM_OWNERSHIP_KEEP);
 
-  double **cell_volume = malloc (sizeof(double *) * n_part);
-  double **cell_center = malloc (sizeof(double *) * n_part);
+  double **cell_volume;
+  PDM_malloc(cell_volume,n_part,double *);
+  double **cell_center;
+  PDM_malloc(cell_center,n_part,double *);
 
   if (i_rank == 0) {
     printf("-- mesh dist set\n");
@@ -357,13 +371,13 @@ int main(int argc, char *argv[])
     n_select_face[i_part] = 0;
     n_select_vtx[i_part] = 0;
 
-    select_face[i_part] = malloc (sizeof(int) * n_face);
+    PDM_malloc(select_face[i_part],n_face,int);
 
     for (int i = 0; i < n_face; i++) {
       select_face[i_part][i] = 0;
     }
 
-    select_vtx[i_part] = malloc (sizeof(int) * n_vtx);
+    PDM_malloc(select_vtx[i_part],n_vtx,int);
 
     for (int i = 0; i < n_vtx; i++) {
       select_vtx[i_part][i] = 0;
@@ -450,16 +464,14 @@ int main(int argc, char *argv[])
     }
     n_select_vtx[i_part] = idx - 1;
 
-    surface_face_vtx_idx[i_part] = malloc (sizeof(int) * (n_select_face[i_part] + 1));
+    PDM_malloc(surface_face_vtx_idx[i_part],(n_select_face[i_part] + 1),int);
     surface_face_vtx_idx[i_part][0] = 0;
-    surface_face_vtx[i_part] = malloc (sizeof(int) * s_face_vtx);
+    PDM_malloc(surface_face_vtx[i_part],s_face_vtx,int);
 
-    surface_coords[i_part] = malloc (sizeof(double) * 3 * n_select_vtx[i_part]);
+    PDM_malloc(surface_coords[i_part],3 * n_select_vtx[i_part],double);
 
-    surface_face_parent_gnum[i_part] =
-      malloc (sizeof(PDM_g_num_t) * n_select_face[i_part]);
-    surface_vtx_parent_gnum[i_part] =
-      malloc (sizeof(PDM_g_num_t) * n_select_vtx[i_part]);
+    PDM_malloc(surface_face_parent_gnum[i_part], n_select_face[i_part], PDM_g_num_t);
+    PDM_malloc(surface_vtx_parent_gnum[i_part], n_select_vtx[i_part], PDM_g_num_t);
 
     surface_face_gnum[i_part] = NULL;
     surface_vtx_gnum[i_part] = NULL;
@@ -626,8 +638,8 @@ int main(int argc, char *argv[])
                            &face_group_ln_to_gn);
 
     const int     isOriented = 0;
-    cell_volume[i_part] = malloc(sizeof(double) * n_cell);
-    cell_center[i_part] = malloc(sizeof(double) * 3 * n_cell);
+    PDM_malloc(cell_volume[i_part],n_cell,double);
+    PDM_malloc(cell_center[i_part],3 * n_cell,double);
 
     PDM_geom_elem_polyhedra_properties (isOriented,
                                         n_cell,
@@ -841,11 +853,15 @@ int main(int argc, char *argv[])
     PDM_writer_step_beg (id_cs, 0.);
 
     /* Write geometry */
-    int **face_vtx_n  = malloc (sizeof(int *) * n_part);
-    int **cell_face_n = malloc (sizeof(int *) * n_part);
+    int **face_vtx_n;
+    PDM_malloc(face_vtx_n,n_part,int *);
+    int **cell_face_n;
+    PDM_malloc(cell_face_n,n_part,int *);
 
-    PDM_real_t **val_dist    = (PDM_real_t **) malloc (sizeof(PDM_real_t *) * n_part);
-    PDM_real_t **val_closest = (PDM_real_t **) malloc (sizeof(PDM_real_t *) * n_part);
+    PDM_real_t **val_dist;
+    PDM_malloc(val_dist,n_part,PDM_real_t *);
+    PDM_real_t **val_closest;
+    PDM_malloc(val_closest,n_part,PDM_real_t *);
 
     for (int i_part = 0; i_part < n_part; i_part++) {
       double      *distance;
@@ -931,12 +947,12 @@ int main(int argc, char *argv[])
                                  vtx_ln_to_gn,
                                 PDM_OWNERSHIP_USER);
 
-      face_vtx_n[i_part] = malloc (sizeof(int) * n_face);
+      PDM_malloc(face_vtx_n[i_part],n_face,int);
       for (int i = 0; i < n_face; i++) {
         face_vtx_n[i_part][i] = face_vtx_idx[i+1] - face_vtx_idx[i];
       }
 
-      cell_face_n[i_part] = malloc (sizeof(int) * n_cell);
+      PDM_malloc(cell_face_n[i_part],n_cell,int);
       for (int i = 0; i < n_cell; i++) {
         cell_face_n[i_part][i] = cell_face_idx[i+1] - cell_face_idx[i];
       }
@@ -954,8 +970,8 @@ int main(int argc, char *argv[])
                                            cell_face,
                                            cell_ln_to_gn);
 
-      val_dist[i_part]    = (PDM_real_t *) malloc(sizeof(PDM_real_t) * n_cell);
-      val_closest[i_part] = (PDM_real_t *) malloc(sizeof(PDM_real_t) * n_cell);
+      PDM_malloc(val_dist[i_part],n_cell,PDM_real_t);
+      PDM_malloc(val_closest[i_part],n_cell,PDM_real_t);
       for (int i = 0; i < n_cell; i++) {
         val_dist[i_part][i]    = (PDM_real_t) sqrt(distance[i]);
         val_closest[i_part][i] = (PDM_real_t) closest_elt_gnum[i];
@@ -993,15 +1009,15 @@ int main(int argc, char *argv[])
     PDM_writer_step_end (id_cs);
 
     for (int i_part = 0; i_part < n_part; i_part++) {
-      free (val_dist[i_part]);
-      free (val_closest[i_part]);
-      free (cell_face_n[i_part]);
-      free (face_vtx_n[i_part]);
+     PDM_free(val_dist[i_part]);
+     PDM_free(val_closest[i_part]);
+     PDM_free(cell_face_n[i_part]);
+     PDM_free(face_vtx_n[i_part]);
     }
-    free (val_dist);
-    free (val_closest);
-    free (cell_face_n);
-    free (face_vtx_n);
+   PDM_free(val_dist);
+   PDM_free(val_closest);
+   PDM_free(cell_face_n);
+   PDM_free(face_vtx_n);
 
     PDM_writer_geom_data_free (id_cs, id_geom);
     PDM_writer_geom_free (id_cs, id_geom);
@@ -1010,11 +1026,11 @@ int main(int argc, char *argv[])
 
 
   for (int i_part = 0; i_part < n_part; i_part++) {
-    free (cell_center[i_part]);
-    free (cell_volume[i_part]);
+   PDM_free(cell_center[i_part]);
+   PDM_free(cell_volume[i_part]);
   }
-  free (cell_center);
-  free (cell_volume);
+ PDM_free(cell_center);
+ PDM_free(cell_volume);
 
   PDM_part_free(ppart);
 
@@ -1023,33 +1039,33 @@ int main(int argc, char *argv[])
   PDM_dist_cloud_surf_free (dist);
 
   for (int i_part = 0; i_part < n_part; i_part++) {
-    free (select_face[i_part]);
-    free (select_vtx[i_part]);
+   PDM_free(select_face[i_part]);
+   PDM_free(select_vtx[i_part]);
 
-    free (surface_face_vtx_idx[i_part]);
-    free (surface_face_vtx[i_part]);
-    free (surface_coords[i_part]);
+   PDM_free(surface_face_vtx_idx[i_part]);
+   PDM_free(surface_face_vtx[i_part]);
+   PDM_free(surface_coords[i_part]);
 
-    free (surface_face_parent_gnum[i_part]);
-    free (surface_vtx_parent_gnum[i_part]);
+   PDM_free(surface_face_parent_gnum[i_part]);
+   PDM_free(surface_vtx_parent_gnum[i_part]);
 
   }
 
-  free (select_face);
-  free (select_vtx);
+ PDM_free(select_face);
+ PDM_free(select_vtx);
 
-  free (n_select_face);
-  free (n_select_vtx);
+ PDM_free(n_select_face);
+ PDM_free(n_select_vtx);
 
-  free (surface_face_vtx_idx);
-  free (surface_face_vtx);
-  free (surface_coords);
+ PDM_free(surface_face_vtx_idx);
+ PDM_free(surface_face_vtx);
+ PDM_free(surface_coords);
 
-  free (surface_face_parent_gnum);
-  free (surface_vtx_parent_gnum);
+ PDM_free(surface_face_parent_gnum);
+ PDM_free(surface_vtx_parent_gnum);
 
-  free (surface_face_gnum);
-  free (surface_vtx_gnum);
+ PDM_free(surface_face_gnum);
+ PDM_free(surface_vtx_gnum);
 
   PDM_gnum_free(gen_gnum_face);
   PDM_gnum_free(gen_gnum_vtx);

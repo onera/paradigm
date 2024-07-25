@@ -403,7 +403,8 @@ _part_create
 void
  )
 {
-  _part_t *part = (_part_t *) malloc(sizeof(_part_t));
+  _part_t *part;
+  PDM_malloc(part, 1, _part_t);
 
   part->n_vtx                    = 0;
   part->n_cell                   = 0;

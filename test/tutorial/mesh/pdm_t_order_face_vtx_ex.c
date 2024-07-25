@@ -123,7 +123,7 @@ const int      n_vtx_seg,
   double step = 1. / (double) (n_vtx_seg - 1);
   double noise = 0.49 * step;
 
-  *vtx_coord = (double *) malloc(sizeof(double) * (*n_vtx) * 3);
+  PDM_malloc(*vtx_coord,(*n_vtx) * 3,double);
   int idx = 0;
   for (int j = 0; j < n_vtx_seg; j++) {
     double y = step * j;
@@ -141,7 +141,7 @@ const int      n_vtx_seg,
   }
 
   /* Edges */
-  *edge_vtx = (int *) malloc(sizeof(int) * (*n_edge) * 2);
+  PDM_malloc(*edge_vtx,(*n_edge) * 2,int);
   idx = 0;
   /* Horizontal edges */
   for (int j = 0; j < n_vtx_seg; j++) {
@@ -181,8 +181,8 @@ const int      n_vtx_seg,
   int idx_diagonal = 2*n_vtx_seg*(n_vtx_seg - 1);
 
   /* Faces */
-  *face_edge = (int *) malloc(sizeof(int) * (*n_face) * 3);
-  *face_vtx  = (int *) malloc(sizeof(int) * (*n_face) * 3);
+  PDM_malloc(*face_edge,(*n_face) * 3,int);
+  PDM_malloc(*face_vtx,(*n_face) * 3,int);
   int idx2 = 0;
   idx = 0;
   for (int j = 0; j < n_vtx_seg-1; j++) {
@@ -295,8 +295,10 @@ int main(int argc, char *argv[])
   /* Create face edge->(vtx1, vtx2) table with inverted edges and output it */
 
   int idx = 0;
-  int *face_vtx_long = malloc( 2* count * sizeof(int));
-  int *face_vtx_long_idx = malloc( (n_face+1) * sizeof(int));
+  int *face_vtx_long;
+  PDM_malloc(face_vtx_long, 2* count ,int);
+  int *face_vtx_long_idx;
+  PDM_malloc(face_vtx_long_idx, (n_face+1) ,int);
 
   for (int i = 0; i < n_face; i++) {
     face_vtx_long_idx[i] = idx;
@@ -330,7 +332,8 @@ int main(int argc, char *argv[])
   int idx_get;
   int length;
   int target;
-  int *face_vtx_ordered = malloc(count * sizeof(int));
+  int *face_vtx_ordered;
+  PDM_malloc(face_vtx_ordered,count ,int);
 
   for (int i = 0; i < n_face; i++) {
 
@@ -368,10 +371,10 @@ int main(int argc, char *argv[])
 
 
   /* Free memory */
-  free(face_edge_idx );
-  free(face_edge     );
-  free(edge_vtx      );
-  free(vtx_coord     );
+ PDM_free(face_edge_idx );
+ PDM_free(face_edge     );
+ PDM_free(edge_vtx      );
+ PDM_free(vtx_coord     );
 
   PDM_MPI_Finalize();
   return 0;
